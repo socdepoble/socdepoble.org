@@ -10,5 +10,8 @@ services:
     volumes:
       - ./.iaia_auth:/app/bot/.iaia_auth
       - ./bot/var:/app/bot/var
+      # La Wiki només de lectura on la busca el bot (IAIA_PROJECT_ROOT=/app):
+      # publication-policy hi fa la frontera de la Wiki pública (QA-R2-07).
+      - ./_wiki_de_poble:/app/_wiki_de_poble:ro
     environment:
       - NODE_ENV=production

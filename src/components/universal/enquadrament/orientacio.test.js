@@ -3,7 +3,7 @@ import { llegixExif } from './exif.js';
 import {
   ORIENTACIO_AUTOMATICA_PER_DEFECTE, aplicaMatriu, navegadorAplicaOrientacio, segmentOrientacio, transformacioOrientacio,
 } from './orientacio.js';
-import { APP0_JFIF, IMATGE, SOI, concatena } from './jpegProva.js';
+import { APP0_JFIF, IMATGE, SOI, concatena } from '../../../../tests/helpers/jpegProva.js';
 
 /* Onada 4, T3a · Les huit orientacions EXIF (ADR multimèdia §3.2 i §5). Una
    foto guardada de 4×2 px: on ha d'anar cada cantó perquè isca dreta. Les

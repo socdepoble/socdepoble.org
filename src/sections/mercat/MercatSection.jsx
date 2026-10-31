@@ -15,6 +15,7 @@ import { EstatErrorDades } from '../mur/EstatErrorDades.jsx';
    l'actor (PublicacionsDeLActor) al peu d'una publicació oberta
    (PublicacioDetall; l'editor de Notes ja no en porta, F45). */
 import { TargetaDelMercat } from './TargetaDelMercat.jsx';
+import { totsPublics } from '../../components/universal/traduccio/visibilitatTraduible.js';
 
 /* Decisió 4 del Mestre (261007) · «Carregar-ne més». Un useMur sense
    paginació (un doble d'abans de la Decisió 4) no en porta: cap botó. */
@@ -49,7 +50,10 @@ export default function MercatSection() {
 
   return (
     <ContentProvider initialConfig={config}>
-      <UniversalPage>
+      {/* Gauntlet 261030 (Fase 3, TC3.2) · Traduir només si tots els
+          productes són públics: un del veïnat (només per als membres)
+          l'apaga (traduccio/visibilitatTraduible.js). */}
+      <UniversalPage traduccio={totsPublics(sortedMarketItems)}>
         {status === 'loading' ? <Carregant etiqueta={t('section.mercat.carregant', 'Carregant els productes…')} /> : null}
         {status === 'error'
           ? <EstatErrorDades titol={t('section.mercat.error', "No s'ha pogut carregar el Mercat")} error={error} onReintenta={refresh} />

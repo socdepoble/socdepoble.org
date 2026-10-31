@@ -40,15 +40,34 @@ export function dataDelMitja(item) {
 
 const primeraMajuscula = (text) => (text ? text.charAt(0).toLocaleUpperCase() + text.slice(1) : text);
 
+/** Si el motor d'Intl porta les dades de dates de `locale` (un locale invàlid, no). */
+function motorParla(locale) {
+  try {
+    return Intl.DateTimeFormat.supportedLocalesOf([locale]).length > 0;
+  } catch {
+    return false;
+  }
+}
+
 /** L'etiqueta d'un grup ('AAAA-MM') en la llengua `locale`: «Setembre de 2026»,
  *  «Septiembre de 2026»…; null si la clau no és d'un mes (SENSE_DATA).
  *  Revisió adversarial del 261016 · Qui pinta la Cronologia la crida amb el
- *  locale actiu (UIContext): abans els mesos eixien sempre en ca-ES. */
-export function etiquetaDelMes(clau, locale = 'ca-ES') {
+ *  locale actiu (UIContext): abans els mesos eixien sempre en ca-ES.
+ *  Gauntlet 261029 (cicle 1, i18n) · `calendari` ({ mesos: [12 noms],
+ *  plantilla amb {mes} i {any} }, textosEspaiMultimedia.calendariDe) és la
+ *  reserva per a un motor sense les dades de la llengua: el Chrome
+ *  d'escriptori no en porta d'eu ni de gl, i toLocaleDateString hi posava el
+ *  castellà sense cap error («Agosto de 2026» en basc). Si el motor la porta,
+ *  mana el motor (cap canvi en ca, es ni en). */
+export function etiquetaDelMes(clau, locale = 'ca-ES', calendari = null) {
   const trossos = /^(\d{4})-(\d{2})$/.exec(typeof clau === 'string' ? clau : '');
   if (!trossos) return null;
   const any = Number(trossos[1]);
   const mes = Number(trossos[2]);
+  const nom = calendari?.mesos?.[mes - 1];
+  if (typeof nom === 'string' && nom && typeof calendari.plantilla === 'string' && !motorParla(locale)) {
+    return primeraMajuscula(calendari.plantilla.replace('{mes}', () => nom).replace('{any}', () => String(any)));
+  }
   try {
     const data = new Date(Date.UTC(any, mes - 1, 15));
     return primeraMajuscula(data.toLocaleDateString(locale, { month: 'long', year: 'numeric', timeZone: 'UTC' }));

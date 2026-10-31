@@ -207,7 +207,13 @@ ${estat.text}
 1. Aconseguix la llista viva de l'Escriptori (§1) i llig el que hi haja.
 2. Contrasta el relleu amb l'última Acta Marmota de \`${ACTES}/\`.
 3. Espera les ordres del Mestre.
+
+## Vincles
+
+- [[00_index]]
 `;
+/* 31-10-2026 · La secció Vincles la porta el generador, no una edició a mà
+   posterior: sense ella, cada regeneració trencava la porta Frontmatter (F9). */
 }
 
 /**

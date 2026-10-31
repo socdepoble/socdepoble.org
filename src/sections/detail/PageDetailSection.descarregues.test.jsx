@@ -52,6 +52,7 @@ import PageDetailSection from './PageDetailSection.jsx';
 import { TITOL_INSTRUCCIONS } from './InstalaLaPwa.jsx';
 import { PAGE_COPY } from '../text/pageContent.js';
 import { INSTALACIO } from '../../pwa/instalacio.js';
+import { VERSIO_SISTEMA } from '../../config/versio.js';
 
 const visita = (ruta) => render(
   <MemoryRouter rutaInicial={ruta}>
@@ -177,9 +178,10 @@ test('/page/descarregues: un apartat per a cada camí i un per a la visió, amb 
     'Android',
     'iPhone i iPad',
     "A l'ordinador i des de qualsevol navegador",
+    'A la web del teu poble, amb WordPress',
     'Com funciona per dins: hui i demà'
   ]);
-  expect(text('h4')).toEqual(expect.arrayContaining(['Google Play', 'APK directe', 'Apple TestFlight', 'App Store', TITOL_INSTRUCCIONS]));
+  expect(text('h4')).toEqual(expect.arrayContaining(['Google Play', 'APK directe', 'Apple TestFlight', 'App Store', TITOL_INSTRUCCIONS, 'WordPress.org']));
   expect(text('h5')).toEqual(["A l'ordinador", 'Al mòbil i a la tauleta']);
   // Cap enllaç: ni botigues ni APK encara no són públics per a tothom.
   expect(cos().querySelectorAll('a')).toHaveLength(0);
@@ -444,4 +446,41 @@ test('dins de l’app nativa, /page/descarregues porta a l’inici; Drets d’au
   } finally {
     delete window.Capacitor;
   }
+});
+
+/* P1-46 (Llibre Mestre, Fita 10; guàrdia nocturna 261030, Fase 3) · La
+   pastilla de versió: l'última etiqueta de la fila de davall de l'H1, amb la
+   versió de package.json (config/versio.js) i un enllaç a /versions. En
+   qualsevol escenari (també sense cap botó d'instal·lar: Firefox d'escriptori
+   o fora de l'entrada pròpia), i cap «pròximament» (canalsDeBotiga.js). Cap
+   altra pàgina no la porta, i el cos no canvia. */
+describe('P1-46 · la pastilla de versió', () => {
+  const fila = () => capcalera().querySelector(':scope > ul.page-title-labels');
+  const etiquetes = () => [...fila().querySelectorAll(':scope > li')].map((li) => li.textContent);
+
+  test.each([
+    ['Chrome amb l’oferta', () => { ambAgent(AGENTS.chromeMac); entradaPropia(); }],
+    ['Firefox d’escriptori, sense cap botó', () => { ambAgent(AGENTS.firefoxWindows); entradaPropia({ suport: false }); }],
+    ['fora de l’entrada pròpia (paquet autònom)', () => {}]
+  ])('%s: «Versió X» és l’última etiqueta i porta a /versions', (_nom, prepara) => {
+    prepara();
+    visita('/page/descarregues');
+    expect(etiquetes()).toEqual([...PAGE_COPY.descarregues.labels.map((l) => l.text), `Versió ${VERSIO_SISTEMA}`]);
+    const enllac = screen.getByRole('link', { name: `Versió ${VERSIO_SISTEMA}` });
+    expect(enllac.getAttribute('href')).toBe('/versions');
+    expect(fila().lastElementChild.contains(enllac)).toBe(true);
+    expect(fila().lastElementChild.className).toBe('sp-card-label sdp-badge-tag');
+    expect(fila().textContent).not.toMatch(/prompte|aviat|pròximament|Google Play|App Store/i);
+    // Una sola pastilla a la pàgina i cap altre enllaç a /versions.
+    expect(document.querySelectorAll('a[href="/versions"]')).toHaveLength(1);
+  });
+
+  test('les altres pàgines del sistema conserven les seues etiquetes, sense cap pastilla', () => {
+    for (const ruta of ['/page/drets-autor', '/page/consola', '/page/xat']) {
+      visita(ruta);
+      expect(document.querySelector('a[href="/versions"]'), ruta).toBeNull();
+      expect(fila()?.textContent ?? '', ruta).not.toMatch(/Versió/);
+      cleanup();
+    }
+  });
 });

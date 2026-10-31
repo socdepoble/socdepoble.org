@@ -6,7 +6,7 @@ import React from 'react';
 import { afterEach, expect, test, vi } from 'vitest';
 import { cleanup, renderHook, waitFor } from '@testing-library/react';
 const m = vi.hoisted(() => ({ load: vi.fn() }));
-vi.mock('./IdentitatContext.jsx', () => ({ useIdentitat: () => ({ actorId: 'A', actorKey: 'A' }) }));
+vi.mock('./IdentitatContext.jsx', () => ({ useIdentitatOpcional: () => ({ actorId: 'A', actorKey: 'A' }) }));
 vi.mock('./SessionContext.jsx', () => ({ useSession: () => ({ generacio: 1, currentUser: { id: 'A' } }) }));
 vi.mock('../../data/backendPort.js', () => ({ loadCoreContent: m.load }));
 vi.mock('../../host.js', () => ({ quanLlest: async () => undefined }));

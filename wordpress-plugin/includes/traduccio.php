@@ -1,6 +1,10 @@
 <?php
 /**
- * Adaptador públic de traducció. La clau i el pressupost viuen al servidor.
+ * Adaptador públic de traducció. Les claus i el pressupost viuen al servidor.
+ * Proveïdors (IDEA-31, ordre del Mestre 261029; cicle 2 del Gauntlet, 261030):
+ * DeepL si hi ha DEEPL_API_KEY, per a totes les llengües (també GL i EU);
+ * sense clau, Apertium (programari lliure) per a ES, EN-GB, FR i GL, i per a
+ * DE i EU l'extrem compatible amb LibreTranslate de SDP_TRADUCCIO_URL. Cap Google.
  * El text no es registra; el transient només conserva la traducció 7 dies.
  * @package SocDePobleEnxufe
  */
@@ -58,10 +62,273 @@ function socdepoble_enxufe_traduccio_permis( $request ) {
 	if ( strlen( $request->get_body() ) > 32768 ) {
 		return socdepoble_enxufe_traduccio_error( 'mida', 413 );
 	}
-	if ( '' === socdepoble_enxufe_deepl_clau() ) {
+	// Sense DEEPL_API_KEY ja no és «sense servei»: hi ha el proveïdor lliure (IDEA-31).
+	return true;
+}
+
+/** URL https sense credencials ni blancs d'una constant de wp-config.php, o ''. */
+function socdepoble_enxufe_traduccio_url( $nom ) {
+	$url = defined( $nom ) ? constant( $nom ) : '';
+	if ( ! is_string( $url ) || '' === $url || preg_match( '/[\s\x00-\x1F\x7F]/', $url ) ) {
+		return '';
+	}
+	$parts = wp_parse_url( $url );
+	if ( ! is_array( $parts ) || 'https' !== strtolower( $parts['scheme'] ?? '' ) || empty( $parts['host'] ) || isset( $parts['user'] ) || isset( $parts['pass'] ) ) {
+		return '';
+	}
+	return $url;
+}
+
+/**
+ * Apertium per destí: el parell i els extrems en ordre. Rèplica de
+ * MOTORS_TRADUCCIO (src/data/traductorLliure.js), i una prova de contracte
+ * (tooling/vite/traductor-contracte.test.mjs) llig este bloc com a text: els
+ * URL hi van literals. Primer la beta i, si cau, l'extrem principal (G10). El
+ * gallec només a la beta: l'extrem principal no té cat|glg i torna 400 «That
+ * pair is not installed» (provat el 30-10-2026), que no canvia d'extrem.
+ */
+function socdepoble_enxufe_traduccio_apertium_motors() {
+	return array(
+		'ES' => array( 'cat|spa', array( 'https://beta.apertium.org/apy/translate', 'https://apertium.org/apy/translate' ) ),
+		'EN-GB' => array( 'cat|eng', array( 'https://beta.apertium.org/apy/translate', 'https://apertium.org/apy/translate' ) ),
+		'FR' => array( 'cat|fra', array( 'https://beta.apertium.org/apy/translate', 'https://apertium.org/apy/translate' ) ),
+		'GL' => array( 'cat|glg', array( 'https://beta.apertium.org/apy/translate' ) ),
+	);
+}
+
+/**
+ * El proveïdor de la petició, o l'error estable si el destí no en té cap.
+ * Amb DEEPL_API_KEY, DeepL per a tot i amb l'empremta de sempre: les
+ * traduccions ja guardades continuen valent. DeepL admet GL i EU com a
+ * target_lang (documentació oficial, d'ús general des del 8-1-2026). Sense
+ * clau, Apertium per a ES, EN-GB, FR i GL: SDP_TRADUCCIO_APERTIUM_URL, si és
+ * vàlida, és l'únic extrem; si no, els de socdepoble_enxufe_traduccio_apertium_motors().
+ * Apertium no té cap parell del català a l'alemany ni al basc: DE i EU van a
+ * l'extrem compatible amb LibreTranslate de SDP_TRADUCCIO_URL (clau opcional
+ * SDP_TRADUCCIO_URL_CLAU). Sense extrem, sdp_traduccio_sense_clau (503) i cap
+ * crida: és el codi que el client ja diu «no disponible»
+ * (useTraduccioPagina.js), i el missatge diu la veritat (D-3).
+ * L'empremta separa cache i pausa per proveïdor; cap URL ni clau en clar.
+ */
+function socdepoble_enxufe_traduccio_proveidor( $desti ) {
+	$clau = socdepoble_enxufe_deepl_clau();
+	if ( '' !== $clau ) {
+		return array( 'nom' => 'deepl', 'clau' => $clau, 'empremta' => hash_hmac( 'sha256', $clau, wp_salt( 'auth' ) ) );
+	}
+	$motors = socdepoble_enxufe_traduccio_apertium_motors();
+	if ( isset( $motors[ $desti ] ) ) {
+		$propi = socdepoble_enxufe_traduccio_url( 'SDP_TRADUCCIO_APERTIUM_URL' );
+		return array(
+			'nom' => 'apertium',
+			'parell' => $motors[ $desti ][0],
+			'extrems' => '' !== $propi ? array( $propi ) : $motors[ $desti ][1],
+			'empremta' => hash_hmac( 'sha256', 'sdp-apertium-v1', wp_salt( 'auth' ) ),
+		);
+	}
+	$url = socdepoble_enxufe_traduccio_url( 'SDP_TRADUCCIO_URL' );
+	if ( '' === $url ) {
 		return socdepoble_enxufe_traduccio_error( 'sense_clau', 503 );
 	}
-	return true;
+	$clau = defined( 'SDP_TRADUCCIO_URL_CLAU' ) ? constant( 'SDP_TRADUCCIO_URL_CLAU' ) : '';
+	return array(
+		'nom' => 'lliure',
+		'url' => $url,
+		'clau' => is_string( $clau ) && ! preg_match( '/[\r\n]/', $clau ) ? trim( $clau ) : '',
+		'empremta' => hash_hmac( 'sha256', 'sdp-lliure-v1|' . $url, wp_salt( 'auth' ) ),
+	);
+}
+
+/**
+ * Gauntlet 261030 (Fase 3, TC3.1) · Els destins que este servidor servix, en
+ * l'ordre del menú del client, amb les MATEIXES branques que
+ * socdepoble_enxufe_traduccio_proveidor(): amb DEEPL_API_KEY, els sis; sense,
+ * els d'Apertium (ES, GL, EN-GB i FR) i, amb SDP_TRADUCCIO_URL, també EU i DE.
+ * marcatge.php els declara a l'atribut traductor-llengues, i el client no
+ * demana cap destí que no hi siga (cap 503 sdp_traduccio_sense_clau a la
+ * consola). Cap crida de xarxa ni cap clau a l'eixida.
+ *
+ * @return string[] Codis de destí.
+ */
+function socdepoble_enxufe_traduccio_destins() {
+	$ordre = array( 'ES', 'GL', 'EU', 'EN-GB', 'FR', 'DE' );
+	if ( '' !== socdepoble_enxufe_deepl_clau() ) {
+		return $ordre;
+	}
+	$motors  = socdepoble_enxufe_traduccio_apertium_motors();
+	$lliure  = '' !== socdepoble_enxufe_traduccio_url( 'SDP_TRADUCCIO_URL' );
+	$destins = array();
+	foreach ( $ordre as $desti ) {
+		if ( isset( $motors[ $desti ] ) || $lliure ) {
+			$destins[] = $desti;
+		}
+	}
+	return $destins;
+}
+
+/**
+ * Segons que queden dels 30 de la petició per als proveïdors lliures, des de
+ * REQUEST_TIME (l'inici de la petició HTTP). Cada crida en té com a molt 12
+ * (decisió del Mestre 261030 §2): una sola crida lenta no esgota la petició.
+ */
+function socdepoble_enxufe_traduccio_queda() {
+	$ara = time();
+	$inici = isset( $_SERVER['REQUEST_TIME'] ) ? (int) $_SERVER['REQUEST_TIME'] : $ara;
+	return ( $inici > 0 && $inici <= $ara ? $inici : $ara ) + 30 - $ara;
+}
+
+/** Proveïdors lliures: l'agent honest del Mas, sense redireccions ni respostes grans. */
+function socdepoble_enxufe_traduccio_peticio( $queda, $tipus, $cos ) {
+	return array(
+		'timeout' => $queda < 12 ? $queda : 12,
+		'redirection' => 0,
+		'limit_response_size' => 131072,
+		'user-agent' => 'SocDePoble-Translation/1.1',
+		'headers' => array( 'Content-Type' => $tipus ),
+		'body' => $cos,
+	);
+}
+
+/**
+ * Null si la resposta és un 200. 403, 429 i 456 (la quota de DeepL) obrin la
+ * pausa curta del proveïdor (cap reintent automàtic). Un termini o un error de
+ * transport puntual és un 502 sense pausa (decisió del Mestre 261030 §2): la
+ * petició següent torna a provar. Qualsevol altre estat, 502.
+ */
+function socdepoble_enxufe_traduccio_fallada( $resposta, $pausa ) {
+	if ( is_wp_error( $resposta ) ) {
+		return socdepoble_enxufe_traduccio_error( 'proveidor', 502 );
+	}
+	$status = wp_remote_retrieve_response_code( $resposta );
+	if ( 403 === $status || 429 === $status || 456 === $status ) {
+		set_transient( $pausa, $status, 60 );
+		if ( 403 === $status ) {
+			return socdepoble_enxufe_traduccio_error( 'proveidor', 502 );
+		}
+		return socdepoble_enxufe_traduccio_error( 'limit', 429 );
+	}
+	if ( 200 !== $status ) {
+		return socdepoble_enxufe_traduccio_error( 'proveidor', 502 );
+	}
+	return null;
+}
+
+/** DeepL, com sempre: un lot amb la clau a la capçalera i 15 s. */
+function socdepoble_enxufe_traduccio_deepl( $clau, $pendents, $desti, $format, $pausa ) {
+	$url = substr( $clau, -3 ) === ':fx' ? 'https://api-free.deepl.com/v2/translate' : 'https://api.deepl.com/v2/translate';
+	$cos = array( 'text' => array_values( $pendents ), 'source_lang' => 'CA', 'target_lang' => $desti, 'preserve_formatting' => true );
+	if ( 'html' === $format ) {
+		$cos['tag_handling'] = 'html';
+	}
+	$resposta = wp_remote_post( $url, array(
+		'timeout' => 15,
+		'redirection' => 0,
+		'limit_response_size' => 131072,
+		'user-agent' => 'SocDePoble-Translation/1.0',
+		'headers' => array( 'Authorization' => 'DeepL-Auth-Key ' . $clau, 'Content-Type' => 'application/json' ),
+		'body' => wp_json_encode( $cos ),
+	) );
+	$fallada = socdepoble_enxufe_traduccio_fallada( $resposta, $pausa );
+	if ( $fallada ) {
+		return $fallada;
+	}
+	$cos = json_decode( wp_remote_retrieve_body( $resposta ), true );
+	$traduccions = is_array( $cos ) ? ( $cos['translations'] ?? null ) : null;
+	if ( ! is_array( $traduccions ) || count( $traduccions ) !== count( $pendents ) || array_keys( $traduccions ) !== range( 0, count( $pendents ) - 1 ) ) {
+		return socdepoble_enxufe_traduccio_error( 'proveidor', 502 );
+	}
+	foreach ( $traduccions as $traduccio ) {
+		if ( ! is_array( $traduccio ) || ! isset( $traduccio['text'] ) || ! is_string( $traduccio['text'] ) || '' === $traduccio['text'] ) {
+			return socdepoble_enxufe_traduccio_error( 'proveidor', 502 );
+		}
+	}
+	$traduits = array();
+	foreach ( array_keys( $pendents ) as $i => $id ) {
+		$traduits[ $id ] = $traduccions[ $i ]['text'];
+		set_transient( $id, $traduits[ $id ], 7 * DAY_IN_SECONDS );
+	}
+	return $traduits;
+}
+
+/**
+ * Apertium: una crida per text (l'APy només traduïx l'últim q d'una crida amb
+ * diversos), i cada traducció es guarda en arribar: un reintent continua on
+ * s'havia quedat. Si un extrem falla per transport o 5xx i n'hi ha un altre,
+ * la resta de la petició va al següent. Passats els 30 s, 502 amb el que ja
+ * s'haja guardat. El format sempre és explícit (C6): l'APy, sense format,
+ * desformata el text pla com a HTML.
+ */
+function socdepoble_enxufe_traduccio_apertium( $proveidor, $pendents, $format, $pausa ) {
+	$extrems = $proveidor['extrems'];
+	$extrem = 0;
+	$traduits = array();
+	foreach ( $pendents as $id => $text ) {
+		$cos = array( 'langpair' => $proveidor['parell'], 'q' => $text, 'markUnknown' => 'no', 'format' => 'html' === $format ? 'html' : 'txt' );
+		while ( true ) {
+			$queda = socdepoble_enxufe_traduccio_queda();
+			if ( $queda < 1 ) {
+				return socdepoble_enxufe_traduccio_error( 'proveidor', 502 );
+			}
+			$resposta = wp_remote_post( $extrems[ $extrem ], socdepoble_enxufe_traduccio_peticio( $queda, 'application/x-www-form-urlencoded; charset=UTF-8', $cos ) );
+			$caigut = is_wp_error( $resposta ) || wp_remote_retrieve_response_code( $resposta ) >= 500;
+			if ( ! $caigut || ! isset( $extrems[ $extrem + 1 ] ) ) {
+				break;
+			}
+			++$extrem;
+		}
+		$fallada = socdepoble_enxufe_traduccio_fallada( $resposta, $pausa );
+		if ( $fallada ) {
+			return $fallada;
+		}
+		$json = json_decode( wp_remote_retrieve_body( $resposta ), true );
+		$dades = is_array( $json ) && 200 === ( $json['responseStatus'] ?? null ) && is_array( $json['responseData'] ?? null ) ? $json['responseData'] : array();
+		if ( ! isset( $dades['translatedText'] ) || ! is_string( $dades['translatedText'] ) || '' === $dades['translatedText'] ) {
+			return socdepoble_enxufe_traduccio_error( 'proveidor', 502 );
+		}
+		$traduits[ $id ] = $dades['translatedText'];
+		set_transient( $id, $traduits[ $id ], 7 * DAY_IN_SECONDS );
+	}
+	return $traduits;
+}
+
+/**
+ * DE i EU sense DeepL: l'extrem compatible amb LibreTranslate, un lot, amb el
+ * `target` del destí (G3: mai un codi fix). La clau va al cos de la crida i
+ * mai a la resposta, a la cache ni a cap registre.
+ */
+function socdepoble_enxufe_traduccio_lliure( $proveidor, $pendents, $desti, $format, $pausa ) {
+	$codis = array( 'ES' => 'es', 'EN-GB' => 'en', 'FR' => 'fr', 'DE' => 'de', 'GL' => 'gl', 'EU' => 'eu' );
+	if ( ! isset( $codis[ $desti ] ) ) {
+		return socdepoble_enxufe_traduccio_error( 'sense_clau', 503 );
+	}
+	$queda = socdepoble_enxufe_traduccio_queda();
+	if ( $queda < 1 ) {
+		return socdepoble_enxufe_traduccio_error( 'proveidor', 502 );
+	}
+	$cos = array( 'q' => array_values( $pendents ), 'source' => 'ca', 'target' => $codis[ $desti ], 'format' => $format );
+	if ( '' !== $proveidor['clau'] ) {
+		$cos['api_key'] = $proveidor['clau'];
+	}
+	$resposta = wp_remote_post( $proveidor['url'], socdepoble_enxufe_traduccio_peticio( $queda, 'application/json', wp_json_encode( $cos ) ) );
+	$fallada = socdepoble_enxufe_traduccio_fallada( $resposta, $pausa );
+	if ( $fallada ) {
+		return $fallada;
+	}
+	$json = json_decode( wp_remote_retrieve_body( $resposta ), true );
+	$traduccions = is_array( $json ) ? ( $json['translatedText'] ?? null ) : null;
+	if ( ! is_array( $traduccions ) || count( $traduccions ) !== count( $pendents ) || array_keys( $traduccions ) !== range( 0, count( $pendents ) - 1 ) ) {
+		return socdepoble_enxufe_traduccio_error( 'proveidor', 502 );
+	}
+	foreach ( $traduccions as $traduccio ) {
+		if ( ! is_string( $traduccio ) || '' === $traduccio ) {
+			return socdepoble_enxufe_traduccio_error( 'proveidor', 502 );
+		}
+	}
+	$traduits = array();
+	foreach ( array_keys( $pendents ) as $i => $id ) {
+		$traduits[ $id ] = $traduccions[ $i ];
+		set_transient( $id, $traduits[ $id ], 7 * DAY_IN_SECONDS );
+	}
+	return $traduits;
 }
 
 /** Els límits 0 desactiven el consum. No s'accepten valors negatius ni no enters. */
@@ -173,7 +440,7 @@ function socdepoble_enxufe_traduir( $request ) {
 	$textos = $dades['textos'];
 	$desti = $dades['desti'] ?? null;
 	$format = $dades['format'] ?? null;
-	if ( count( $textos ) < 1 || count( $textos ) > 50 || ! in_array( $desti, array( 'ES', 'EN-GB', 'FR', 'DE' ), true ) || 'CA' !== ( $dades['origen'] ?? null ) || ! in_array( $format, array( 'text', 'html' ), true ) ) {
+	if ( count( $textos ) < 1 || count( $textos ) > 50 || ! in_array( $desti, array( 'ES', 'EN-GB', 'FR', 'DE', 'GL', 'EU' ), true ) || 'CA' !== ( $dades['origen'] ?? null ) || ! in_array( $format, array( 'text', 'html' ), true ) ) {
 		return socdepoble_enxufe_traduccio_error( 'invalida', 400 );
 	}
 	$caracters = 0;
@@ -193,13 +460,16 @@ function socdepoble_enxufe_traduir( $request ) {
 	if ( ! $te_text ) {
 		return socdepoble_enxufe_traduccio_error( 'invalida', 400 );
 	}
-	$clau = socdepoble_enxufe_deepl_clau();
-	$empremta = hash_hmac( 'sha256', $clau, wp_salt( 'auth' ) );
+	$proveidor = socdepoble_enxufe_traduccio_proveidor( $desti );
+	if ( is_wp_error( $proveidor ) ) {
+		return $proveidor;
+	}
+	$empremta = $proveidor['empremta'];
 	list( $resultats, $pendents ) = socdepoble_enxufe_traduccio_lot( $textos, $desti, $format, $empremta );
 	if ( ! $pendents ) {
 		return socdepoble_enxufe_traduccio_resposta( $textos, $desti, $format, $empremta, $resultats, true );
 	}
-	$pausa = 'sdp_tr_pause_' . hash_hmac( 'sha256', $clau, wp_salt( 'auth' ) );
+	$pausa = 'sdp_tr_pause_' . $empremta;
 	$estat_pausa = get_transient( $pausa );
 	if ( $estat_pausa ) {
 		return in_array( (int) $estat_pausa, array( 403, 502 ), true ) ? socdepoble_enxufe_traduccio_error( 'proveidor', 502 ) : socdepoble_enxufe_traduccio_error( 'limit', 429 );
@@ -253,47 +523,18 @@ function socdepoble_enxufe_traduir( $request ) {
 		if ( is_wp_error( $reserva ) ) {
 			return $reserva;
 		}
-		$url = substr( $clau, -3 ) === ':fx' ? 'https://api-free.deepl.com/v2/translate' : 'https://api.deepl.com/v2/translate';
-		$cos = array( 'text' => array_values( $pendents ), 'source_lang' => 'CA', 'target_lang' => $desti, 'preserve_formatting' => true );
-		if ( 'html' === $format ) {
-			$cos['tag_handling'] = 'html';
+		if ( 'apertium' === $proveidor['nom'] ) {
+			$traduits = socdepoble_enxufe_traduccio_apertium( $proveidor, $pendents, $format, $pausa );
+		} elseif ( 'lliure' === $proveidor['nom'] ) {
+			$traduits = socdepoble_enxufe_traduccio_lliure( $proveidor, $pendents, $desti, $format, $pausa );
+		} else {
+			$traduits = socdepoble_enxufe_traduccio_deepl( $proveidor['clau'], $pendents, $desti, $format, $pausa );
 		}
-		$resposta = wp_remote_post( $url, array(
-			'timeout' => 15,
-			'redirection' => 0,
-			'limit_response_size' => 131072,
-			'user-agent' => 'SocDePoble-Translation/1.0',
-			'headers' => array( 'Authorization' => 'DeepL-Auth-Key ' . $clau, 'Content-Type' => 'application/json' ),
-			'body' => wp_json_encode( $cos ),
-		) );
-		if ( is_wp_error( $resposta ) ) {
-			set_transient( $pausa, 502, 60 );
-			return socdepoble_enxufe_traduccio_error( 'proveidor', 502 );
+		if ( is_wp_error( $traduits ) ) {
+			return $traduits;
 		}
-		$status = wp_remote_retrieve_response_code( $resposta );
-		if ( 403 === $status || 429 === $status || 456 === $status ) {
-			set_transient( $pausa, $status, 60 );
-			if ( 403 === $status ) {
-				return socdepoble_enxufe_traduccio_error( 'proveidor', 502 );
-			}
-			return socdepoble_enxufe_traduccio_error( 'limit', 429 );
-		}
-		if ( 200 !== $status ) {
-			return socdepoble_enxufe_traduccio_error( 'proveidor', 502 );
-		}
-		$cos = json_decode( wp_remote_retrieve_body( $resposta ), true );
-		$traduccions = is_array( $cos ) ? ( $cos['translations'] ?? null ) : null;
-		if ( ! is_array( $traduccions ) || count( $traduccions ) !== count( $pendents ) || array_keys( $traduccions ) !== range( 0, count( $pendents ) - 1 ) ) {
-			return socdepoble_enxufe_traduccio_error( 'proveidor', 502 );
-		}
-		foreach ( $traduccions as $traduccio ) {
-			if ( ! is_array( $traduccio ) || ! isset( $traduccio['text'] ) || ! is_string( $traduccio['text'] ) || '' === $traduccio['text'] ) {
-				return socdepoble_enxufe_traduccio_error( 'proveidor', 502 );
-			}
-		}
-		foreach ( array_keys( $pendents ) as $i => $id ) {
-			$resultats[ $id ] = $traduccions[ $i ]['text'];
-			set_transient( $id, $resultats[ $id ], 7 * DAY_IN_SECONDS );
+		foreach ( $traduits as $id => $traduccio ) {
+			$resultats[ $id ] = $traduccio;
 		}
 		return socdepoble_enxufe_traduccio_resposta( $textos, $desti, $format, $empremta, $resultats, false );
 	} finally {

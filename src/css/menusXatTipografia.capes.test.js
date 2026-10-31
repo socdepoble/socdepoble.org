@@ -9,6 +9,11 @@
        (.sdp-xat-menu) també: al missatge penja de l'ol de les bombolles.
    (2) SemiCondensed (87.5%) a totes les barres pel token --sdp-font-barra,
        i als rètols de la llista de converses i dels menús del xat.
+   Ordre 0 del Mestre (261030 03:49; revertix P1-67 a la llista de
+   converses) · A la targeta de conversa de 96px (avatar de 76px), el nom
+   (.sdp-xat-fila__nom) fa --sdp-text-lead (20px) i l'avanç
+   (.sdp-xat-fila__previa), --sdp-text-base (18px). És l'única excepció: els
+   contenidors, els menús, l'hora i la fila senzilla de 72px continuen igual.
    jsdom no resol la cascada ni pinta: es comproven les regles escrites, amb
    la capa que les embolcalla i l'ordre del full, i la mida es calcula des
    dels tokens. Cada guarda es prova també contra una còpia literal de les
@@ -112,6 +117,13 @@ const MIDES_PERMESES = new Set(['inherit', 'var(--sdp-text-small)', 'var(--sdp-t
 /** La classe sencera, en qualsevol compost del selector: .sdp-xat-fila sí, .sdp-xat-fila__hora no. */
 const tocaLaClasse = (selector, classe) => new RegExp(`${classe.replace(/\./g, '\\.')}(?![\\w-])`).test(selector);
 const esAvatar = (selector) => /\.sdp-avatar(?![\w-])/.test(selector.split(/\s*[\s>+~]\s*/).pop());
+/* Ordre 0 del Mestre (261030 03:49) · L'única mida pròpia permesa dins de les
+   llistes: el nom i l'avanç de la targeta de conversa, amb el selector que
+   deixa fora la fila senzilla de 72px i amb el seu token exacte. */
+const ESCOPA_TARGETA = '.sdp-xat-fila:not(.sdp-xat-fila--senzilla)';
+const MIDES_DE_LA_TARGETA = Object.freeze({ '.sdp-xat-fila__nom': 'var(--sdp-text-lead)', '.sdp-xat-fila__previa': 'var(--sdp-text-base)' });
+const esMidaDeLaTargeta = (selector, propietat, valor) => propietat === 'font-size'
+  && Object.entries(MIDES_DE_LA_TARGETA).some(([retol, mida]) => selector === `${ESCOPA_TARGETA} ${retol}` && valor === mida);
 function auditaHerencia(fulls) {
   const fallades = [];
   for (const { fitxer, css } of fulls) {
@@ -120,7 +132,9 @@ function auditaHerencia(fulls) {
       if (!toca.length) continue;
       for (const propietat of ['font-size', 'font']) {
         const valor = valorDe(r, propietat);
-        if (valor !== undefined && !MIDES_PERMESES.has(valor)) fallades.push(`${fitxer}: ${toca.join(', ')} { ${propietat}: ${valor} }`);
+        if (valor === undefined || MIDES_PERMESES.has(valor)) continue;
+        const fora = toca.filter((s) => !esMidaDeLaTargeta(s, propietat, valor));
+        if (fora.length) fallades.push(`${fitxer}: ${fora.join(', ')} { ${propietat}: ${valor} }`);
       }
     }
   }
@@ -149,13 +163,15 @@ function auditaRetols(css) {
 
 /** (2) La barra: el token porta la paraula clau del 87.5% i cap consumidor no la desfà. */
 const PARAULES_AMPLADA = { 'ultra-condensed': 50, 'extra-condensed': 62.5, condensed: 75, 'semi-condensed': 87.5, normal: 100 };
+// Decisió del Mestre (30-10-2026) · El nom va en constant: tractor-tokens (T3) prendria «nom: text» per una declaració.
+const BARRA = '--sdp-font-barra';
 function auditaBarra(valor) {
   const fallades = [];
   const trossos = (valor || '').split(/\s+/);
   const paraula = trossos.find((t) => t in PARAULES_AMPLADA && t !== 'normal');
-  if (!paraula) fallades.push('--sdp-font-barra: sense amplada');
-  else if (PARAULES_AMPLADA[paraula] !== Number.parseFloat(token('--sdp-font-amplada-semi'))) fallades.push(`--sdp-font-barra: ${paraula} no és --sdp-font-amplada-semi`);
-  if (/\d+(\.\d+)?%|var\(--sdp-font-amplada/.test(valor || '')) fallades.push('--sdp-font-barra: un percentatge dins de l’abreujat font és invàlid');
+  if (!paraula) fallades.push(`${BARRA}: sense amplada`);
+  else if (PARAULES_AMPLADA[paraula] !== Number.parseFloat(token('--sdp-font-amplada-semi'))) fallades.push(`${BARRA}: ${paraula} no és --sdp-font-amplada-semi`);
+  if (/\d+(\.\d+)?%|var\(--sdp-font-amplada/.test(valor || '')) fallades.push(`${BARRA}: un percentatge dins de l’abreujat font és invàlid`);
   return fallades;
 }
 
@@ -212,9 +228,9 @@ describe('les guardes detecten les regles d’abans del torn', () => {
   });
 
   test('abans: la barra sense amplada; i un percentatge dins de l’abreujat no val', () => {
-    expect(auditaBarra(BARRA_ABANS)).toEqual(['--sdp-font-barra: sense amplada']);
+    expect(auditaBarra(BARRA_ABANS)).toEqual([`${BARRA}: sense amplada`]);
     expect(auditaBarra('600 var(--sdp-font-amplada-semi) var(--sdp-text-small)/1.5 var(--sdp-font)'))
-      .toContain('--sdp-font-barra: un percentatge dins de l’abreujat font és invàlid');
+      .toContain(`${BARRA}: un percentatge dins de l’abreujat font és invàlid`);
   });
 });
 
@@ -284,5 +300,59 @@ describe('P1-67 (2) · SemiCondensed 87.5% a les barres i als rètols del xat', 
     expect(valorDe(pestanya[0], 'font-stretch')).toBe('var(--sdp-font-amplada-semi)');
     expect(props.lastIndexOf('font-stretch')).toBeGreaterThan(props.lastIndexOf('font'));
     expect([valorDe(pestanya[0], 'font'), valorDe(pestanya[0], 'font-weight')]).toEqual(['inherit', '700']);
+  });
+});
+
+/* Ordre 0 del Mestre (261030 03:49, al xat; ordre de l'escriptori 261030_0252,
+   Fase 3 §0 B; revertix P1-67 a la llista de converses) · «Puja la mida de
+   lletra de la llista del xat (.sdp-xat-fila__nom a var(--sdp-text-lead) 20px
+   i .sdp-xat-fila__previa a var(--sdp-text-base) 18px) perquè faça joc amb la
+   fila de 96px i l'avatar de 76px.» */
+describe('Ordre 0 · el nom a 20px i l’avanç a 18px a la targeta de conversa', () => {
+  test('modules.css porta les dues mides a components, només a la targeta de 96px i amb el seu token', () => {
+    const totes = regles(MODULES);
+    for (const [retol, mida] of Object.entries(MIDES_DE_LA_TARGETA)) {
+      const mides = totes.filter((r) => nomena(r, retol) && valorDe(r, 'font-size'));
+      expect(mides.map((r) => [r.selectors.filter((s) => s.endsWith(retol)), valorDe(r, 'font-size'), r.context]))
+        .toEqual([[[`${ESCOPA_TARGETA} ${retol}`], mida, ['@layer components']]]);
+    }
+    expect(token('--sdp-text-lead')).toBe('1.25rem');
+    expect(token('--sdp-text-base')).toBe('1.125rem');
+    // L'hora es queda a 14px i cap regla no dona mida pròpia a la fila senzilla.
+    expect(totes.filter((r) => nomena(r, '.sdp-xat-fila__hora') && valorDe(r, 'font-size')).map((r) => valorDe(r, 'font-size'))).toEqual(['var(--sdp-text-meta)']);
+    expect(totes.filter((r) => r.selectors.some((s) => /\.sdp-xat-fila--senzilla(?![\w-])/.test(s) && !s.includes(':not(')) && valorDe(r, 'font-size'))).toEqual([]);
+  });
+
+  test('hi cap: nom + buit + avanç ≤ la fila de 96px menys el seu coixí, i és més gran que el menú principal', () => {
+    const px = (nom) => Number.parseFloat(token(nom));
+    const rem = (nom) => Number.parseFloat(token(nom)) * 16;
+    const fila = 2 * px('--sdp-touch');
+    expect(token('--sdp-xat-fila-mida')).toBe('calc(2 * var(--sdp-touch))');
+    expect(fila).toBe(96);
+    const interlineat = Number.parseFloat(token('--sdp-leading-cos'));
+    const text = rem('--sdp-text-lead') * interlineat + px('--sdp-space-1') + rem('--sdp-text-base') * interlineat;
+    expect(text).toBeCloseTo(64.8, 5);
+    expect(text).toBeLessThanOrEqual(fila - 2 * px('--sdp-space-2'));
+    expect([rem('--sdp-text-lead'), rem('--sdp-text-base')]).toEqual([20, 18]);
+    expect(rem('--sdp-text-base')).toBeGreaterThan(rem('--sdp-text-small'));
+  });
+
+  test('la guarda d’herència només deixa passar la decisió exacta: sense escopa, a la fila senzilla, amb un altre token o en un altre rètol, cau', () => {
+    const mal = [
+      { fitxer: 'src/css/modules.css', css: '@layer components { .sdp-xat-fila__nom { font-size: var(--sdp-text-lead); } }' },
+      { fitxer: 'src/css/modules.css', css: '@layer components { .sdp-xat-fila--senzilla .sdp-xat-fila__previa { font-size: var(--sdp-text-base); } }' },
+      { fitxer: 'src/css/modules.css', css: '@layer components { .sdp-xat-fila:not(.sdp-xat-fila--senzilla) .sdp-xat-fila__previa { font-size: var(--sdp-text-lead); } }' },
+      { fitxer: 'src/css/modules.css', css: '@layer components { .sdp-xat-fila:not(.sdp-xat-fila--senzilla) .sdp-xat-fila__hora { font-size: var(--sdp-text-base); } }' },
+      { fitxer: 'src/css/modules.css', css: '@layer components { .sdp-xat-fila:not(.sdp-xat-fila--senzilla) .sdp-xat-fila__nom { font: 700 var(--sdp-text-lead)/1.6 var(--sdp-font); } }' }
+    ];
+    expect(auditaHerencia(mal)).toEqual([
+      'src/css/modules.css: .sdp-xat-fila__nom { font-size: var(--sdp-text-lead) }',
+      'src/css/modules.css: .sdp-xat-fila--senzilla .sdp-xat-fila__previa { font-size: var(--sdp-text-base) }',
+      'src/css/modules.css: .sdp-xat-fila:not(.sdp-xat-fila--senzilla) .sdp-xat-fila__previa { font-size: var(--sdp-text-lead) }',
+      'src/css/modules.css: .sdp-xat-fila:not(.sdp-xat-fila--senzilla) .sdp-xat-fila__hora { font-size: var(--sdp-text-base) }',
+      'src/css/modules.css: .sdp-xat-fila:not(.sdp-xat-fila--senzilla) .sdp-xat-fila__nom { font: 700 var(--sdp-text-lead)/1.6 var(--sdp-font) }'
+    ]);
+    const be = [{ fitxer: 'src/css/modules.css', css: `@layer components { ${ESCOPA_TARGETA} .sdp-xat-fila__nom { font-size: var(--sdp-text-lead); } ${ESCOPA_TARGETA} .sdp-xat-fila__previa { font-size: var(--sdp-text-base); } }` }];
+    expect(auditaHerencia(be)).toEqual([]);
   });
 });

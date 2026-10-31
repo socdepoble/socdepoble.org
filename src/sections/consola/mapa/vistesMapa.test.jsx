@@ -456,8 +456,10 @@ describe('Llei del Píxel · les vistes no canvien quan els seus càlculs ixen a
       t.querySelector('h3').textContent, [...t.querySelectorAll('.sp-card-label')].map((l) => l.textContent)
     ])).toEqual([['2 llocs del sòl', ['Important']], ['04_escriptori', ['SENSE LECTOR']], ['AGENTS.md', []]]);
     expect(sol.querySelector('article h4').textContent).toBe('Documents i plantilles on treballen · 1 sense lector');
+    /* Ordre del Mestre, 30-10-2026 (/consola, punt 1.3) · A la coberta, el nom
+       curt de la ruta; la ruta sencera és a la pàgina de la xifra. */
     expect([...sol.querySelector('article.sp-card').querySelectorAll('.sdp-consola__problemes li')].map((li) => li.textContent))
-      .toEqual(['sense lector _wiki_de_poble/04_escriptori']);
+      .toEqual(['sense lector 04_escriptori']);
   });
 
   /* Derogat per l'ordre del Mestre del 261004 (xat: cap xifra solta): les

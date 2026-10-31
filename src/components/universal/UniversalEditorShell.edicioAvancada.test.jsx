@@ -55,6 +55,9 @@ const closca = (props = {}) => render(
   </UniversalEditorShell>
 );
 const fills = (el) => [...el.children].map((e) => e.className || e.dataset.testid);
+/* Cicle 3 (261030, VD) · Les ranures del desplegable es diuen amb data-sdp-ranura
+   (ganxo de focus, sense estil): la classe de cada fill i, si en porta, la ranura. */
+const fillsAmbRanura = (el) => [...el.children].map((e) => (e.dataset.sdpRanura ? `${e.className} [${e.dataset.sdpRanura}]` : e.className));
 
 test('sense la prop: el DOM de sempre (la ranura davall del títol, el copyright, la capçalera i el logotip a dalt)', () => {
   const { container } = closca();
@@ -115,13 +118,13 @@ test('amb edicioAvancada: les categories i etiquetes assignades es veuen al seu 
 test('dins del desplegable: Editar capçalera, Editar logotip, la botonera (amb «Emojis XL») i els drets', () => {
   const { container } = closca({ edicioAvancada: true });
   const cos = container.querySelector('details.sdp-edicio-avancada > .sdp-edicio-avancada__cos');
-  expect(fills(cos)).toEqual([
-    'sdp-edicio-avancada__imatge sdp-edicio-avancada__capcalera',
-    'sdp-edicio-avancada__imatge sdp-edicio-avancada__logotip',
+  expect(fillsAmbRanura(cos)).toEqual([
+    'sdp-edicio-avancada__imatge [capcalera]',
+    'sdp-edicio-avancada__imatge [logotip]',
     'page-title-classificacio'
   ]);
-  expect(cos.querySelector('.sdp-edicio-avancada__capcalera button').textContent).toContain('Editar capçalera');
-  expect(cos.querySelector('.sdp-edicio-avancada__logotip button').textContent).toContain('Editar logotip');
+  expect(cos.querySelector('[data-sdp-ranura="capcalera"] button').textContent).toContain('Editar capçalera');
+  expect(cos.querySelector('[data-sdp-ranura="logotip"] button').textContent).toContain('Editar logotip');
   const botons = [...cos.querySelectorAll('.sdp-classificacio-botonera > button')].map((b) => b.textContent);
   expect(botons).toEqual(['Mur', 'Sistema', 'Etiquetes (0)', 'Emojis XL (—)']);
   expect(cos.querySelector('.sdp-copyright-control button[data-sdp-drets]')).not.toBeNull();
@@ -134,10 +137,10 @@ test('dins del desplegable: Editar capçalera, Editar logotip, la botonera (amb 
 test('dins del desplegable, amb identitat: Capçalera → Avatar → Logotip → classificació', () => {
   const { container } = closca({ edicioAvancada: true, identitatEdicioAvancada: <p data-testid="avatar">Avatar</p> });
   const cos = container.querySelector('details.sdp-edicio-avancada > .sdp-edicio-avancada__cos');
-  expect(fills(cos)).toEqual([
-    'sdp-edicio-avancada__imatge sdp-edicio-avancada__capcalera',
+  expect(fillsAmbRanura(cos)).toEqual([
+    'sdp-edicio-avancada__imatge [capcalera]',
     'sdp-edicio-avancada__identitat',
-    'sdp-edicio-avancada__imatge sdp-edicio-avancada__logotip',
+    'sdp-edicio-avancada__imatge [logotip]',
     'page-title-classificacio'
   ]);
   expect(cos.querySelector('.sdp-edicio-avancada__identitat [data-testid="avatar"]')).not.toBeNull();
@@ -167,9 +170,9 @@ describe('posicioEdicioAvancada', () => {
     expect(desplegable.compareDocumentPosition(h1) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
     // El contingut, el de sempre: plegat, amb la capçalera, el logotip, la botonera i els drets.
     expect(desplegable.open).toBe(false);
-    expect(fills(desplegable.querySelector('.sdp-edicio-avancada__cos'))).toEqual([
-      'sdp-edicio-avancada__imatge sdp-edicio-avancada__capcalera',
-      'sdp-edicio-avancada__imatge sdp-edicio-avancada__logotip',
+    expect(fillsAmbRanura(desplegable.querySelector('.sdp-edicio-avancada__cos'))).toEqual([
+      'sdp-edicio-avancada__imatge [capcalera]',
+      'sdp-edicio-avancada__imatge [logotip]',
       'page-title-classificacio'
     ]);
     expect(container.querySelectorAll('[data-sdp-drets]')).toHaveLength(1);
@@ -241,8 +244,8 @@ test('el que es configura es veu al seu lloc real: la capçalera desada dalt i e
   expect(logo.nextElementSibling.tagName).toBe('H1');
   // I, dins del desplegable, les dues imatges per a canviar-les.
   const cos = container.querySelector('.sdp-edicio-avancada__cos');
-  expect(cos.querySelector('.sdp-edicio-avancada__capcalera img[role="button"]').getAttribute('src')).toBe('/assets/hort.webp');
-  expect(cos.querySelector('.sdp-edicio-avancada__logotip img[role="button"]').getAttribute('src')).toBe('/assets/logo-hort.png');
+  expect(cos.querySelector('[data-sdp-ranura="capcalera"] img[role="button"]').getAttribute('src')).toBe('/assets/hort.webp');
+  expect(cos.querySelector('[data-sdp-ranura="logotip"] img[role="button"]').getAttribute('src')).toBe('/assets/logo-hort.png');
 });
 
 test('placeholderTitol: el placeholder de l’H1 («Nota sense títol» al Bloc); sense, el de sempre', () => {
@@ -273,9 +276,9 @@ const premAccio = (container) => {
 };
 
 test.each([
-  ['la capçalera (sense imatge: el botó)', { camp: 'heroImage' }, '.sdp-edicio-avancada__capcalera button'],
-  ['la capçalera (amb imatge)', { camp: 'heroImage', heroImage: '/assets/h.webp' }, '.sdp-edicio-avancada__capcalera img[role="button"]'],
-  ['el logotip', { camp: 'logoImage' }, '.sdp-edicio-avancada__logotip button'],
+  ['la capçalera (sense imatge: el botó)', { camp: 'heroImage' }, '[data-sdp-ranura="capcalera"] button'],
+  ['la capçalera (amb imatge)', { camp: 'heroImage', heroImage: '/assets/h.webp' }, '[data-sdp-ranura="capcalera"] img[role="button"]'],
+  ['el logotip', { camp: 'logoImage' }, '[data-sdp-ranura="logotip"] button'],
   ['els drets', { camp: 'copyright' }, '.sdp-edicio-avancada [data-sdp-drets]'],
   ['l’emoticona (el botó «Emojis XL» de la botonera)', { camp: 'icon' }, '.sdp-edicio-avancada .sdp-classificacio-botonera > button:last-child']
 ])('després d’una acció d’avís de %s, el desplegable s’obri i el focus hi va', (_cas, props, desti) => {
@@ -297,8 +300,8 @@ test('un destí fora del desplegable (el títol) no l’obri', () => {
 /* P1-58 · Amb el desplegable dalt (la fitxa del Perfil), els destins del focus
    el troben igual: la ranura és dins de l'arrel de la closca. */
 test.each([
-  ['la capçalera', { camp: 'heroImage' }, '.sdp-edicio-avancada__capcalera button'],
-  ['el logotip', { camp: 'logoImage' }, '.sdp-edicio-avancada__logotip button'],
+  ['la capçalera', { camp: 'heroImage' }, '[data-sdp-ranura="capcalera"] button'],
+  ['el logotip', { camp: 'logoImage' }, '[data-sdp-ranura="logotip"] button'],
   ['els drets', { camp: 'copyright' }, '.sdp-edicio-avancada [data-sdp-drets]'],
   ['l’emoticona', { camp: 'icon' }, '.sdp-edicio-avancada .sdp-classificacio-botonera > button:last-child']
 ])('amb \'despres-autoria\', després d’una acció d’avís de %s, el desplegable s’obri i el focus hi va', (_cas, props, desti) => {

@@ -79,7 +79,7 @@ export default function CapcaleraConversa({
   const nomDeLaContrapart = String(nomContrapart || '').trim();
   const ambNom = (clau, reserva) => t(clau, reserva).replace('{nom}', () => nomDeLaContrapart);
 
-  /* El menú es tanca en clicar fora o amb Escape, sense tocar document.body.
+  /* El menú es tanca en clicar fora o amb Escape, sense tocar el cos del document.
      L'Escape que el tanca queda consumit (preventDefault): la selecció de
      xats de la llista, que també l'escolta, no l'ha de rebre dos vegades. */
   useEffect(() => {

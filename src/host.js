@@ -47,7 +47,9 @@ import { setBackendImplementation, getBackendImplementation, freezeImplementatio
 import { defineCustomElement } from './PedraSecaEmbed.jsx';
 import { CONTRACTE_NUCLI, CONTRACTE_BACKEND } from './data/contracte.js';
 import { ambXifratXat } from './data/xifratXat.js';
+import { pressupostBlobsAdjunts } from './data/xatMultimediaXifrat.js';
 import { E2EE_ACTIU_PER_DEFECTE } from './config/xifratXat.js';
+import { esAppNativa } from './config/origenPublic.js';
 import { adoptaSessioExterna, esborraSessio, configuraBackendSessio } from './data/identitat.js';
 import { normalizeBackendConfig, backendScope } from './config/backendConfig.js';
 import { setRuntimePolicy, getRuntimePolicy, esOrigenParePermes } from './config/runtimePolicy.js';
@@ -56,6 +58,7 @@ import { sanitizeHtml } from './utils/sanitize.js';
 import { registraAppExterna, registraModul as registraModulAlRegistre } from './apps/plataforma/registreApps.js';
 import { carregadorDelDocument } from './apps/plataforma/carregaModul.js';
 import { registraIncident } from './utils/autocuracio.js';
+import { expulsaPerLEixidaDeVeres } from './data/expulsioAmfitrio.js';
 
 /* ═══════════════════════ Estat de l'arrencada ═══════════════════════ */
 
@@ -86,6 +89,20 @@ let _deferArrenca = false;
 let arrencadaFallida = false;
 let backendExtern = false;
 
+/* P1-12 pas 17 (disseny §4.7) · Els senyals de l'aparell per al pressupost LRU
+   dels adjunts desxifrats (48 MB al mòbil, 100 MB a l'escriptori). Només es
+   lligen amb la bandera encesa; cap senyal que falle trenca l'arrencada. */
+function punterGruixut() {
+  try { return globalThis.matchMedia?.('(pointer: coarse)')?.matches === true; } catch { return false; }
+}
+function pressupostBlobsDeLAparell() {
+  let natiu = false;
+  try { natiu = esAppNativa() === true; } catch { natiu = false; }
+  let memoriaGb = null;
+  try { memoriaGb = globalThis.navigator?.deviceMemory ?? null; } catch { memoriaGb = null; }
+  return pressupostBlobsAdjunts({ natiu, punterGruixut: punterGruixut(), memoriaGb });
+}
+
 function backendAmbXifrat(impl) {
   // Apagat: mateixa instància, sense inspeccionar WebCrypto ni IndexedDB.
   if (!E2EE_ACTIU_PER_DEFECTE) return impl;
@@ -105,10 +122,12 @@ function backendAmbXifrat(impl) {
     ClasseClau: globalThis.CryptoKey,
     creaBlob: (parts, opcions) => new Blob(parts, opcions),
     creaUrl: (blob) => globalThis.URL?.createObjectURL?.(blob),
-    revocaUrl: (url) => globalThis.URL?.revokeObjectURL?.(url)
+    revocaUrl: (url) => globalThis.URL?.revokeObjectURL?.(url),
+    pressupostBlobs: pressupostBlobsDeLAparell()
     /* Els magatzems web de l'oblit (sessió i preferències) els passa qui crida
-       oblidaTotXat (la interfície, pas 17 del disseny), pel camí sancionat de
-       l'app: l'amfitrió no toca l'emmagatzematge directament (qualitat.amfitrio). */
+       oblidaTotXat (l'eixida de sessió, data/xifratXatEixida.js, pas 17 del
+       disseny), pel camí sancionat de l'app: l'amfitrió no toca
+       l'emmagatzematge directament (qualitat.amfitrio). */
   });
 }
 
@@ -396,11 +415,19 @@ export function injectaSessio(sessio, opcions = {}) {
   return adoptaSessioExterna(sessio, neta);
 }
 
-/** L'amfitrió tanca la sessió del seu costat. */
+/**
+ * L'amfitrió tanca la sessió del seu costat.
+ * QA-A01a (Gauntlet 261029_1858) · Passa per l'eixida de veres de la
+ * interfície (SessionContext, a través de data/expulsioAmfitrio.js): intent
+ * final, logout i, si ha anat bé, l'oblit d'este dispositiu (esborranys de
+ * Notes, carpetes locals recordades i, amb E2EE, el xat), com «Tancar sessió».
+ * Sense interfície carregada, el camí curt de sempre. Torna true de seguida;
+ * l'eixida continua en segon pla i no rebutja mai.
+ */
 export function expulsaSessio() {
   const backend = getBackendImplementation();
   if (backend && backend.logout) {
-    backend.logout().catch(() => {});
+    if (expulsaPerLEixidaDeVeres() === null) backend.logout().catch(() => {});
   } else {
     esborraSessio();
     if (typeof window !== 'undefined') {

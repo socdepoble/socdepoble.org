@@ -236,11 +236,14 @@ describe('Grup E · les pàgines del sistema al Mur de l’actor', () => {
   /* Onada 8 (261009) · Dotze: la Consola i el Cervell hi entren com a pàgines
      del sistema. Abans, deu.
      Ordre del Mestre (261026_2126; prompt 261026_2130, tasca 1) · Tretze: hi
-     entra «Descàrregues i Aplicacions». Abans, dotze. */
-  test('amb el contingut core: les tretze pàgines del Mur, memoritzades sobre pageCopy', () => {
+     entra «Descàrregues i Aplicacions». Abans, dotze.
+     Ordre del Mestre (30-10-2026; candidatura NLnet NGI Fediversity) ·
+     Catorze: hi entra «Candidatura Europea NLnet · NGI Fediversity». Abans,
+     tretze. */
+  test('amb el contingut core: les catorze pàgines del Mur, memoritzades sobre pageCopy', () => {
     mocks.core = NUCLI;
     const { result, rerender } = renderHook(() => useTargetesDeSistema());
-    expect(SYSTEM_PAGES).toHaveLength(13);
+    expect(SYSTEM_PAGES).toHaveLength(14);
     expect(result.current.map((targeta) => targeta.id)).toEqual(SYSTEM_PAGES.map((pagina) => pagina.key));
     expect(result.current.every((targeta) => targeta.isSystem && targeta.type === 'sistema')).toBe(true);
     // Les mateixes targetes que MurSection (targetesDeSistema), sense cap forma pròpia.

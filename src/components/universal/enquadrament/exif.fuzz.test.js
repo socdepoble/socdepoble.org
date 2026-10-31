@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'vitest';
 import { MAX_BYTES_EXIF, llegixExif, llegixMetadadesImatge, teExif } from './exif.js';
-import { IMATGE, SOI, TIPUS, app1Exif, concatena, dataOriginal, gpsTorre, jpegAmbExif, orientacio, segment, tiff } from './jpegProva.js';
+import { IMATGE, SOI, TIPUS, app1Exif, concatena, dataOriginal, gpsTorre, jpegAmbExif, orientacio, segment, tiff } from '../../../../tests/helpers/jpegProva.js';
 import { ESTAT_EXIF, ajustaPrecisioGps, analitzaTiff, extreuTiff, precisioDeGps } from './exifIncrustat.js';
 
 /* Onada 4 · revisió adversarial (K5) · Fuzz DETERMINISTA del lector d'EXIF.

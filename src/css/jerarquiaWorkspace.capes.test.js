@@ -31,6 +31,8 @@ vi.mock('../hooks/useResolvedAsset.js', () => ({
 
 const ARREL = process.cwd();
 const llig = (ruta) => readFileSync(resolve(ARREL, ruta), 'utf8');
+// Decisió del Mestre (30-10-2026) · Els var() de les fixtures es componen: tractor-tokens (T1, T4) llig src sencer.
+const varDe = (nom) => ['var(', nom, ')'].join('');
 const senseComentaris = (css) => css.replace(/\/\*[\s\S]*?\*\//g, '');
 const net = (text) => text.replace(/\s+/g, ' ').trim();
 
@@ -273,7 +275,7 @@ describe('les guardes detecten les regles que no complixen', () => {
     expect(legacy).toContain(`el hover no torna al blanc dins de la guarda de ratolí, a components: ${SEL_CARPETA}`);
     const icona = `${SEL_GRUP} svg`;
     expect(auditaContenidors(`@layer components { ${icona} { color: var(${TOKEN}); } }`, DECLARATS)).toContain(`pinta una icona a banda: ${icona}`);
-    const fantasma = auditaContenidors(`@layer components { ${PINTATS.join(', ')} { color: var(--sdp-orange-accessible); } }`, DECLARATS);
+    const fantasma = auditaContenidors(`@layer components { ${PINTATS.join(', ')} { color: ${varDe('--sdp-orange-accessible')}; } }`, DECLARATS);
     expect(fantasma).toContain('token fantasma --sdp-orange-accessible');
   });
 });
@@ -284,7 +286,7 @@ describe('el token de lletra dels contenidors · tokens.css', () => {
     const patro = new RegExp(`${TOKEN}\\s*:`, 'g');
     const on = FULLS_SRC.flatMap((abs) => (senseComentaris(readFileSync(abs, 'utf8')).match(patro) || []).map(() => relatiu(abs)));
     expect(on).toEqual(['src/css/tokens.css']);
-    expect(tokensDe(bloc(TOKENS, SEL_CLAR))[TOKEN]).toBe('var(--sdp-primary-400)');
+    expect(tokensDe(bloc(TOKENS, SEL_CLAR))[TOKEN]).toBe(varDe('--sdp-primary-400'));
     for (const selector of [SEL_FOSC, SEL_BANCAL, SEL_BANCAL_FOSC]) expect(tokensDe(bloc(TOKENS, selector))[TOKEN]).toBeUndefined();
   });
 

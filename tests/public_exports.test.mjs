@@ -8,7 +8,7 @@ import { spawnSync } from 'node:child_process';
 import { construeixManifest, verificaEnllacos } from '../tooling/wiki/compile-wiki-to-app.mjs';
 import { buildSlugIndex } from '../tooling/wiki/core/build_slug_index.mjs';
 import { buildIndex } from '../tooling/wiki/core/build_rag_index.mjs';
-import { publicMetadata, publicSeoRoute } from '../tooling/wiki/lib/publication-policy.mjs';
+import { emmascaraCamins, publicMetadata, publicSeoRoute } from '../tooling/wiki/lib/publication-policy.mjs';
 
 function fixture(t) {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), 'sdp-public-'));
@@ -165,6 +165,69 @@ test('un destí inexistent o un symlink no queda validat per l’índex físic',
   fs.symlinkSync(path.dirname(outside), path.join(root, '_wiki_de_poble/linked-dir'));
   const result = verificaEnllacos(root, construeixManifest(root), { log: { log() {}, error() {} } });
   assert.deepEqual(result.trencats.map(link => link.target), ['inexistent', 'link', 'external']);
+});
+
+/* Decisió del Mestre (31-10-2026) · El manifest públic no porta cap camí de
+   l'ordinador on es treballa: /Users/<usuari>/ passa a ~/ en el cos, el títol,
+   el subtítol i els atributs. Una URL amb /Users/ dins del camí no és local i
+   es queda tal qual. */
+test('el manifest públic emmascara /Users/<usuari>/ com a ~/', (t) => {
+  const { root, write } = fixture(t);
+  write('_wiki_de_poble/03_actuar/plantilles/prompt.md', doc(
+    'title: "Prompt de /Users/maria/Feina/"\ndescription: "Arrel a /Users/maria/Documents/Antigravity/Som de Poble/"\n',
+    'Directori Mare (`/Users/maria/Documents/Antigravity/Som de Poble/`), també /Users/pep.garcia/repo/src, i https://exemple.org/Users/nom/fitxa/'));
+  const [item] = construeixManifest(root).items;
+  const publicat = JSON.stringify(item);
+  assert.doesNotMatch(publicat.replaceAll('https://exemple.org/Users/', ''), /\/Users\//);
+  assert.doesNotMatch(publicat, /maria|pep\.garcia/);
+  assert.equal(item.title, 'Prompt de ~/Feina/');
+  assert.equal(item.subtitle, 'Arrel a ~/Documents/Antigravity/Som de Poble/');
+  assert.equal(item.attributes.description, item.subtitle);
+  assert.equal(item.content, 'Directori Mare (`~/Documents/Antigravity/Som de Poble/`), també ~/repo/src, i https://exemple.org/Users/nom/fitxa/');
+});
+
+/* Correcció del Gauntlet (31-10-2026) · L'usuari tampoc no ix quan el camí
+   acaba en el nom, en minúscula o escapat com en un JSON; les URL es queden. */
+test('emmascaraCamins: el nom d’usuari no ix mai, i les URL es queden', () => {
+  for (const [abans, despres] of [
+    ['cd /Users/maria', 'cd ~'],
+    ['`/Users/maria`', '`~`'],
+    ['(/Users/maria)', '(~)'],
+    ['a /Users/maria. B', 'a ~. B'],
+    ['/Users/pep.garcia/repo', '~/repo'],
+    ['/users/maria/x', '~/x'],
+    ['"\\/Users\\/maria\\/x"', '"~\\/x"'],
+    ['"\\/Users\\/maria"', '"~"'],
+    ['https://exemple.org/Users/nom/fitxa/', 'https://exemple.org/Users/nom/fitxa/'],
+    ['https://exemple.org/a+/Users/nom/fitxa/', 'https://exemple.org/a+/Users/nom/fitxa/'],
+    ['https://community.obsidian.md/users/mirnovov', 'https://community.obsidian.md/users/mirnovov']
+  ]) assert.equal(emmascaraCamins(abans), despres, abans);
+});
+
+/* La mateixa porta (readPublicWikiFile) servix el manifest, el RAG i els
+   slugs: cap dels tres porta el nom, tampoc a les etiquetes ni dins d'un JSON. */
+test('manifest, RAG i slugs: cap camí d’usuari, ni a les etiquetes ni als JSON', async (t) => {
+  const { root, write } = fixture(t);
+  write('_wiki_de_poble/03_actuar/plantilles/prompt.md', doc(
+    'title: "Prompt de /Users/maria"\ntags:\n  - /Users/maria/Feina/\n  - "cd /Users/maria"\n',
+    'Prefixa amb cd /Users/maria. També /users/maria/x.'));
+  write('_wiki_de_poble/03_actuar/camins.json', JSON.stringify({ visibility: 'public', title: 'Camins', arrel: '/Users/maria/Documents/' })
+    .replace('}', ', "escapat": "\\/Users\\/maria\\/repo"}'));
+  const manifest = construeixManifest(root);
+  const md = manifest.items.find((item) => item.id === 'prompt');
+  assert.deepEqual(md.tags, ['~/Feina/', 'cd ~']);
+  assert.equal(md.title, 'Prompt de ~');
+  assert.equal(md.content, 'Prefixa amb cd ~. També ~/x.');
+  const json = manifest.items.find((item) => item.id === 'camins');
+  assert.equal(json.attributes.arrel, '~/Documents/');
+  assert.equal(json.attributes.escapat, '~/repo');
+  const rag = await buildIndex(root);
+  const slugs = await buildSlugIndex(root);
+  for (const publicat of [JSON.stringify(manifest.items), JSON.stringify(rag), JSON.stringify(slugs)]) {
+    assert.doesNotMatch(publicat, /maria/i);
+    assert.doesNotMatch(publicat, /\/Users\b/i);
+  }
+  assert.equal(rag.inverted.users, undefined);
 });
 
 test('CLI --check --strict accepta privat existent i rebutja desaparegut sense escriure outputs', (t) => {

@@ -99,7 +99,7 @@ function CampToken({ token, valor, personalitzat, onCanvi, onCanon }) {
   const { nom, tipus } = token;
   const opcions = valor || tipus === 'color' ? OPCIONS_RADI : [{ valor: '', etiqueta: '(sense valor)', desactivat: true }, ...OPCIONS_RADI];
   return (
-    <Camp etiqueta={etiquetaDe(nom)} ajuda={nom} className={personalitzat ? 'sdp-estil__camp sdp-estil__camp--personalitzat' : 'sdp-estil__camp'}>
+    <Camp etiqueta={etiquetaDe(nom)} ajuda={nom} className={personalitzat ? 'sdp-estil__camp--personalitzat' : undefined}>
       {tipus === 'color'
         ? <CampText tipus="color" value={valor || '#000000'} onChange={(e) => onCanvi(nom, e.target.value)} />
         : <Selector opcions={opcions} value={valor} onChange={(e) => onCanvi(nom, e.target.value)} />}
@@ -293,7 +293,7 @@ export function FacetaEstil() {
       ) : null}
 
       {GRUPS.map(([grup, llegenda]) => (
-        <GrupCamps key={grup} llegenda={llegenda} className="sdp-estil__grup">
+        <GrupCamps key={grup} llegenda={llegenda}>
           {TOKENS_EDITABLES.filter((t) => t.grup === grup).map((t) => (
             <CampToken key={t.nom} token={t} valor={valorMostrat(t.nom)} personalitzat={tokens[t.nom] !== undefined}
               onCanvi={canvia} onCanon={reinicia} />
@@ -301,7 +301,7 @@ export function FacetaEstil() {
         </GrupCamps>
       ))}
 
-      <GrupCamps llegenda="Crom" className="sdp-estil__grup sdp-estil__grup--crom">
+      <GrupCamps llegenda="Crom" className="sdp-estil__grup--crom">
         <Camp etiqueta="Color principal"
           ajuda="Es pren només el to: la lluminositat i el croma de cada esglaó es conserven, i el taronja gira amb el mateix delta (crom.js).">
           <CampText tipus="color" value={colorMostrat || '#0984e3'} onChange={(e) => canviaCrom(e.target.value)} />

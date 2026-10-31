@@ -330,6 +330,42 @@ export const CASOS = Object.freeze([
       ];
     }
   }),
+  /* ── P1-27 · Capacitat 'cicleNotes' (paperera, arxiu i esborrat definitiu),
+     sobre la nota que han deixat createNote i updateNote (revisió 1). La
+     mateixa guarda de revisió que updateNote: una vella rebutja amb 409. ── */
+  cas({
+    metode: 'mouNota', capacitat: 'cicleNotes', escriu: true,
+    titol: "mouNota(id, 'arxivada', expectedRevision, config) → la mateixa nota, estat 'arxivada' i revision + 1",
+    requerix: ['notaId'],
+    arguments: (ctx) => [ctx.notaId, 'arxivada', 1, ctx.config],
+    comprova: (nota, ctx) => [
+      ...(String(nota?.id) === String(ctx.notaId) ? [] : ['torna una altra nota']),
+      ...(nota?.estat === 'arxivada' ? [] : [`estat havia de ser 'arxivada' i és ${JSON.stringify(nota?.estat)}`]),
+      ...(nota?.revision === 2 ? [] : [`revision havia de ser 2 i és ${JSON.stringify(nota?.revision)}`])
+    ]
+  }),
+  cas({
+    metode: 'mouNota', capacitat: 'cicleNotes', escriu: true, espera: 'rebutja',
+    titol: 'mouNota amb una revisió vella rebutja amb status 409',
+    requerix: ['notaId'],
+    arguments: (ctx) => [ctx.notaId, 'paperera', 1, ctx.config],
+    comprova: (error) => (error?.status === 409 ? [] : [`havia de ser status 409 i és ${JSON.stringify(error?.status)} (${error?.message})`])
+  }),
+  cas({
+    metode: 'esborraNota', capacitat: 'cicleNotes', escriu: true,
+    titol: 'esborraNota(id, expectedRevision, config) → { id } de la nota esborrada',
+    requerix: ['notaId'],
+    arguments: (ctx) => [ctx.notaId, 2, ctx.config],
+    comprova: (valor, ctx) => (String(valor?.id) === String(ctx.notaId) ? [] : [`havia de tornar { id: ${JSON.stringify(ctx.notaId)} } i torna ${JSON.stringify(valor)?.slice(0, 120)}`])
+  }),
+  /* Sense este cas, un esborrat que no esborra passaria per bo. */
+  cas({
+    metode: 'esborraNota', capacitat: 'cicleNotes', escriu: true, espera: 'rebutja',
+    titol: 'esborraNota d’una nota ja esborrada rebutja amb status 404',
+    requerix: ['notaId'],
+    arguments: (ctx) => [ctx.notaId, 2, ctx.config],
+    comprova: (error) => (error?.status === 404 ? [] : [`havia de ser status 404 i és ${JSON.stringify(error?.status)} (${error?.message})`])
+  }),
   cas({
     metode: 'enviaMissatge', escriu: true,
     titol: 'enviaMissatge(filId, { id, text }, config) → Missatge amb seq; el mateix id no duplica',
@@ -471,6 +507,43 @@ export const CASOS = Object.freeze([
     comprova: (error) => (error instanceof Error && esTextNoBuit(error.code)
       ? []
       : [`havia de rebutjar amb un Error amb code: ${tipusDe(error)} ${JSON.stringify(error?.code ?? null)}`])
+  }),
+  /* P1-27 (Llibre Mestre: «40 de 96 mètodes sense cas al kit»; guàrdia
+     nocturna 261030, Fase 3, P1Y) · Casos nous per a mètodes que cap cas no
+     provava. Com el de dalt, tots rebutgen ABANS d'escriure res: una
+     organització o una persona que no existixen no les administra ningú, un
+     correu que no ho és no es desa i una recuperació sense correu no ix cap a
+     GoTrue. Rebutgen amb un Error amb `code` (sense sessió, amb sessió, en
+     local o en remot), i cap no toca dades de veres. */
+  cas({
+    metode: 'desaMembreOrganitzacio', capacitat: 'membresOrganitzacio', espera: 'rebutja',
+    titol: 'desaMembreOrganitzacio(orgId, { tipus, id, rol }, config) en una organització que no existix rebutja amb un code',
+    arguments: (ctx) => ['conformitat-sense-organitzacio', { tipus: 'persona', id: 'conformitat-sense-persona', rol: 'member' }, ctx.config],
+    comprova: rebuigAmbCode
+  }),
+  cas({
+    metode: 'llevaMembreOrganitzacio', capacitat: 'membresOrganitzacio', espera: 'rebutja',
+    titol: 'llevaMembreOrganitzacio(orgId, { tipus, id }, config) en una organització que no existix rebutja amb un code',
+    arguments: (ctx) => ['conformitat-sense-organitzacio', { tipus: 'persona', id: 'conformitat-sense-persona' }, ctx.config],
+    comprova: rebuigAmbCode
+  }),
+  cas({
+    metode: 'llegeixContacteOrganitzacio', capacitat: 'contacteOrganitzacio', espera: 'rebutja',
+    titol: 'llegeixContacteOrganitzacio(orgId, config) d’una organització que no existix rebutja amb un code',
+    arguments: (ctx) => ['conformitat-sense-organitzacio', ctx.config],
+    comprova: rebuigAmbCode
+  }),
+  cas({
+    metode: 'desaContacteOrganitzacio', capacitat: 'contacteOrganitzacio', espera: 'rebutja',
+    titol: "desaContacteOrganitzacio(orgId, { correu: 'no és cap correu', public: true }, config) rebutja amb un code i no desa res",
+    arguments: (ctx) => ['conformitat-sense-organitzacio', { correu: 'no és cap correu', public: true }, ctx.config],
+    comprova: rebuigAmbCode
+  }),
+  cas({
+    metode: 'demanaRecuperacioContrasenya', capacitat: 'recuperacioContrasenya', espera: 'rebutja',
+    titol: "demanaRecuperacioContrasenya('', config) sense correu rebutja amb un code, sense cap petició",
+    arguments: (ctx) => ['', ctx.config],
+    comprova: rebuigAmbCode
   }),
   /* Onada 11 (261010; prompt 261010_1730, tasca 2) · El segon factor del
      superadmin. El kit no té cap aplicació d'autenticació: només pot

@@ -572,7 +572,12 @@ describe('el botó Obrir', () => {
      superadmin (RutaConsola d'App.jsx; systemPages.test.js). El que cau amb
      les proves és la superfície, no la regla: el botó de la pàgina no mira
      l'entorn, i si fora de desenvolupament ha de ser inert és una decisió
-     pendent de MarIA o del Mestre (systemPages.js, OBRIR_CONSOLA). */
+     pendent de MarIA o del Mestre (systemPages.js, OBRIR_CONSOLA).
+     Decisió del Mestre (ordre del 30-10-2026, prompt 2208, T2.2) · Derogat
+     «la barrera de producció és el rol de superadmin» i ja no és pendent: la
+     Consola és pública en qualsevol entorn i el botó hi és actiu. La ruta
+     /consola/* munta ConsolaSection sense RequireAuth ni guarda (App.jsx;
+     guardaConsola.js i RutaConsola, retirades el 31-10-2026). */
 
   /* Gauntlet 261022_0225 (F2) · Abans, un «Obrir el Bar (no disponible
      ací)» inert. Ara, el motiu i el camí de tornada: el botó de baix. */

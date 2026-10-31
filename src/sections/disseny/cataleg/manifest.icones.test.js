@@ -8,7 +8,7 @@ import { expect, test } from 'vitest';
 import { CATALOG_CATEGORIES, CATALOG_ITEMS, ICONES_ESPECIMENS } from './manifest.js';
 /* Revisió del 261007 (M2-14) · La guarda és una sola, compartida amb
    iconesWiki.test.js. */
-import { defecteSafari16 as defecte } from './guardaEmojisSafari16.js';
+import { defecteSafari16 as defecte } from '../../../../tests/helpers/guardaEmojisSafari16.js';
 
 test('la guarda de versió trau el que Safari 16 no pinta i deixa passar el que sí', () => {
   // Sondes: 🪪 (14), 🫠 (14), 🪿 (15), ⚙ sense selector (text) i una unió que

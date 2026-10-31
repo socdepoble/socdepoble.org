@@ -44,11 +44,16 @@ test('L’Ànima de la IAIA (/ia): les props exactes de la UniversalPage i el co
     heroFetchPriority: 'high',
     heroAlt: 'Il·lustració de la IAIA',
     showLogos: true,
-    labels: pagina.labels,
+    /* Gauntlet 261030 (cicle 3, tc3-lang-ca-sobre-interficie-traduida) · Les
+       etiquetes de PAGE_COPY declaren que són en valencià (PageFrame en posa
+       el lang només amb una altra interfície): el mateix text i classe. */
+    labels: pagina.labels.map((etiqueta) => ({ ...etiqueta, lang: 'ca' })),
     copyright: COPYRIGHT_SDP,
     ...dataHoraDeBarra({ creat: '2026-08-11T00:00:00.000Z' }),
     chrome: 'full',
-    topBarData: { showPin: false }
+    topBarData: { showPin: false },
+    // Gauntlet 261030 (Fase 3, TC3.3): PAGE_COPY és en valencià (lang amb una altra interfície).
+    llenguaDelContingut: 'ca'
   });
   // T4 del prompt 1140 (ordre del Mestre, 261001) · La data del copy és un
   // instant: la pastilla porta l'hora i el dia locals. L'Ànima encara no té
@@ -92,7 +97,8 @@ test('pàgina sense imatge, etiquetes, data ni chrome: les reserves de sempre', 
     copyright: COPYRIGHT_SDP,
     time: '', date: '', dateTime: '',
     chrome: 'full',
-    topBarData: { showPin: false }
+    topBarData: { showPin: false },
+    llenguaDelContingut: 'ca'
   });
   // L'HTML passa pel sanejador: el script no arriba al DOM.
   const cos = container.querySelector('article.cms-preview');
@@ -164,14 +170,16 @@ test('261007 · El Xat: les props de la seua UniversalPage', () => {
     heroFetchPriority: 'high',
     heroAlt: pagina.imageAlt,
     showLogos: true,
+    // Cicle 3 (tc3-lang-ca-sobre-interficie-traduida): les de PAGE_COPY declaren el valencià.
     labels: [
-      { text: 'Comunicació', className: 'sdp-badge-system' },
-      { text: 'Eina', className: 'sdp-badge-category' }
+      { text: 'Comunicació', className: 'sdp-badge-system', lang: 'ca' },
+      { text: 'Eina', className: 'sdp-badge-category', lang: 'ca' }
     ],
     copyright: COPYRIGHT_SDP,
     ...dataHoraDeBarra({ creat: '2026-10-07T01:30:00+02:00' }),
     chrome: 'full',
-    topBarData: { showPin: false }
+    topBarData: { showPin: false },
+    llenguaDelContingut: 'ca'
   });
   expect([mocks.props.time, mocks.props.date]).toEqual(['01:30', '07/10/26']);
   const cos = container.querySelector('[data-pagina] > article.cms-preview');

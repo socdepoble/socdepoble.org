@@ -117,3 +117,12 @@ test('T2 · l’Índex obert s’actualitza quan canvia el text d’un h5: l’o
   await act(async()=>{ container.querySelector('h5').firstChild.data='39 rebuts'; });
   expect(entradesIndex()).toContainEqual(['toc-item toc-level-5','39 rebuts']);
 });
+/* G5-07 · El text canviat viu dins d'un <strong> de l'encapçalament (TipTap al
+   Bloc de Notes): el pare del node de text no és l'h3, i l'Índex s'ha de refer igual. */
+test('G5-07 · l’Índex obert s’actualitza quan canvia el text d’un <strong> dins d’un encapçalament',async()=>{
+  const {container}=render(<PageFrame chrome="system" title="T"><h3>Preu <strong>vell</strong></h3></PageFrame>);
+  obriIndex(container);
+  expect(entradesIndex()).toEqual([TITOL_INDEX,['toc-item toc-level-3','Preu vell']]);
+  await act(async()=>{ container.querySelector('h3 strong').firstChild.data='nou'; });
+  expect(entradesIndex()).toEqual([TITOL_INDEX,['toc-item toc-level-3','Preu nou']]);
+});

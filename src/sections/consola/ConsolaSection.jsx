@@ -11,12 +11,13 @@ import { useUIState } from '../../app/contexts/UIContext';
 import { Link, Navigate, useParams } from '../../app/contexts/RouterContext';
 import { carregaConsola, dataLocal } from './consolaContent.js';
 import { useFontDev } from './useFontDev.js';
+import { ambInstantania } from './fontsConsola.js';
 import {
   RUTA_CONSOLA, avisosDeVigilancia, copyConsola, desaPrivacitat,
   estatsPagina, etiquetesPagina, llegixPrivacitat, llegixVistes, marcaVista, mesuresPagina,
   paginaConsola, paginesConsola, problemesPagina, resumPagina, segmentPagina, signaturaPagina
 } from './consolaPagines.js';
-import { Mono, Privat, PrivacitatConsola, TargetaConsola, tornaAlCim } from './peces.jsx';
+import { DestiVersions, Mono, Privat, PrivacitatConsola, TargetaConsola, tornaAlCim } from './peces.jsx';
 import { PaginaPanellPols, PaginaPols } from './PolsConsola.jsx';
 import { panellPols, segmentPols } from './polsConsola.js';
 import { GraellaXifres, PaginaXifra, XifresMas } from './XifresMas.jsx';
@@ -24,9 +25,13 @@ import { IndexConsola } from './IndexConsola.jsx';
 import { DiagnosiConsola } from './DiagnosiConsola.jsx';
 import { ETIQUETA_VERSIO } from './diagnosiConsola.js';
 import { versioCanonica } from '../../config/versio.js';
+import { resolvePageSlugPath } from '../../config/navigation.js';
 import { carregaEmpaquetats, esRutaEmpaquetats, paginaEmpaquetats } from './empaquetats.js';
 import { PaginaEmpaquetats, SeccioEmpaquetats } from './EmpaquetatsConsola.jsx';
-import { imatgeDePagina } from './imatgesConsola.js';
+import { miniaturaDePagina } from './imatgesConsola.js';
+import { metadadesDeSubpagina, metadadesDelTauler } from './seoConsola.js';
+// Ordre del Mestre (30-10-2026, prompt 2208; SEO-CRIT-02) · Del mòdul pur de config/, no de TextSection.jsx.
+import { opcionsDeLaImatgeSocial } from '../../config/opcionsImatgeSocial.js';
 import { XIFRA_DE_CODI, segmentXifra, xifraDelMas, xifresDeLaGraella, xifresDeVista } from './xifresMas.js';
 import { entradetaPlana } from './xifresComu.js';
 import { rutaDelNode } from './problemesConsola.js';
@@ -43,6 +48,10 @@ import { TEXTOS_AVIS } from './mapa/grafMapa.js';
 import { useGovern } from './govern/useGovern.js';
 import { PaginaDeGovern, SeccioGovern } from './govern/GovernConsola.jsx';
 import { TITOL_SALA_MAQUINES, paginaGovern, segmentGovern } from './govern/governConsola.js';
+
+/* IDEA-50 (pàgina de versions; pla 261029_1605, Bloc G) · La ruta de la
+   pàgina de versions, de la SSOT de rutes (config/navigation.js). */
+const RUTA_VERSIONS = resolvePageSlugPath('versions');
 
 /* La Consola és un tauler de nou targetes (/consola), una ruta per pàgina
    (/consola/<id>), una per panell del pols (/consola/pols/<id>) i una per
@@ -88,10 +97,11 @@ const ICONES = Object.freeze({
 const dataDelCopy = () => copyConsola().date;
 
 /** Una lectura de /__iaia/consola.json. Un error conserva l'última instantània bona.
-    `actiu: false` (o fora de DEV) no llig res, ni en muntar ni amb `carrega`.
+    `actiu: false` (o un paquet sense fonts) no llig res, ni en muntar ni amb `carrega`.
     Higiene d'amfitrió (ordre del Mestre, 261004, front «amfitrio-admin») ·
-    consola.json només el servix el middleware de desenvolupament: fora de DEV
-    l'estat és 'absent' des del principi, com useMapa.
+    en viu, consola.json només el servix el middleware de desenvolupament; al
+    build web, la instantània sanejada (decisió del Mestre, 31-10-2026); en un
+    paquet sense cap de les dues l'estat és 'absent' des del principi, com useMapa.
     Neteja 261007 (prompt 261007_1628, peça D) · La lectura és la de
     useFontDev (useFontDev.js), la mateixa del Mapa: ací només es diu `dades`
     el que el hook genèric diu `valor`. */
@@ -128,10 +138,16 @@ function AmbMapa({ font, vista, children }) {
   }
   return (
     <>
+      {/* Ordre del Mestre (30-10-2026, prompt 2208, T2.2) · La Consola és pública: el
+          text diu la causa real (cap instal·lació pendent).
+          Decisió del Mestre (31-10-2026) · La web publicada porta la instantània sanejada
+          del Mapa: este estat només ix en un paquet que no la porta (WordPress, l'app).
+          Derogat: «A la web publicada no hi és». */}
       <EstatBuit icona={Network} titol="Mapa no disponible">
-        Esta pàgina viu del Mapa (<Mono>GET /__iaia/mapa.json</Mono>), que només se servix al
-        servidor local de desenvolupament. Mentre el compilador <Mono>tooling/brain/mapa-consola.mjs</Mono> i
-        la ruta del middleware no s’instal·len, no hi ha dades i la Consola no en inventa.
+        Esta pàgina viu del Mapa, que el compila <Mono>tooling/brain/mapa-consola.mjs</Mono>. En viu només
+        el servix el servidor local de desenvolupament (<Mono>GET /__iaia/mapa.json</Mono>), i la web
+        publicada en porta la instantània sanejada de cada publicació. Este paquet no la porta, i la
+        Consola no n’inventa cap dada.
       </EstatBuit>
       {xifres}
     </>
@@ -231,7 +247,7 @@ export function ConsolaTauler({ consola, mapa, cimRef, ambImatges = false, alert
           const delMapa = p.id !== 'pols';
           return (
             <TargetaConsola key={p.id} icona={ICONES[p.id]} titol={p.title} subtitol={p.subtitle}
-              {...(ambImatges ? imatgeDePagina(p.id) : null)}
+              {...(ambImatges ? miniaturaDePagina(p.id) : null)}
               entradilla={p.lead} metriques={mesuresPagina(p.id, fonts)} dada={resumPagina(p.id, fonts)} a={p.ruta}
               estats={estatsPagina(p.id, fonts, ara)}
               problemes={problemesPagina(p.id, fonts)}
@@ -247,6 +263,27 @@ export function ConsolaTauler({ consola, mapa, cimRef, ambImatges = false, alert
 }
 
 /**
+ * Decisió del Mestre (31-10-2026) · A la web publicada, les dades del tauler
+ * són la instantània sanejada que el build emet a /__iaia/ (fontsConsola.js):
+ * dalt de tot es diu, amb la data en què es va generar (el `generat` de la
+ * primera font que l'ha portada), que són les dades reals d'eixe moment, no
+ * una lectura en viu. En desenvolupament i en un paquet sense instantània, res.
+ */
+function AvisInstantania({ consola, mapa, govern, locale }) {
+  if (!ambInstantania()) return null;
+  const generat = mapa.mapa?.generat ?? consola.dades?.generat ?? govern?.servidor?.generat ?? null;
+  return (
+    <Alerta to="info" titol="Instantània publicada" viva={false}>
+      {generat
+        ? `Són les dades reals del sistema tal com eren el ${dataLocal(generat, locale)}, quan es va publicar esta versió de la web. `
+        : 'Són les dades reals del sistema que es publiquen amb cada versió de la web. '}
+      Ixen sanejades, sense camins de l’ordinador, sense secrets i sense dades personals. Les lectures en viu i les
+      escriptures només es fan a l’ordinador de desenvolupament.
+    </Alerta>
+  );
+}
+
+/**
  * Pla 261027_0845 (Guarda Nocturna), §3 · El cap del tauler, un sol per a
  * /consola i per a la Consola incrustada de la Wiki, perquè no tornen a
  * divergir: l'alerta de vigilància al cim, el Govern del Mestre (SeccioGovern:
@@ -255,12 +292,15 @@ export function ConsolaTauler({ consola, mapa, cimRef, ambImatges = false, alert
  * l'alerta (alertaFora). `ara` és el rellotge de tota la pintada. Les
  * il·lustracions (ambImatges) continuen sent només del tauler de /consola, i
  * l'Índex i el Diagnòstic, que van darrere, també.
+ * Ordre del Mestre del 30-10-2026 (B1) · Les quatre targetes del Govern també
+ * porten la seua portada amb `ambImatges` (SeccioGovern).
  */
-function TaulerAmbGovern({ consola, mapa, govern, ara, cimRef, ambImatges = false }) {
+function TaulerAmbGovern({ consola, mapa, govern, ara, cimRef, ambImatges = false, locale = 'ca-ES' }) {
   return (
     <>
+      <AvisInstantania consola={consola} mapa={mapa} govern={govern} locale={locale} />
       <AlertaVigilancia mapa={mapa.mapa} />
-      <SeccioGovern govern={govern} ara={ara} />
+      <SeccioGovern govern={govern} ara={ara} ambImatges={ambImatges} />
       <h2>{TITOL_SALA_MAQUINES}</h2>
       <ConsolaTauler consola={consola} mapa={mapa} cimRef={cimRef} ambImatges={ambImatges} alertaFora ara={ara} />
     </>
@@ -269,17 +309,20 @@ function TaulerAmbGovern({ consola, mapa, govern, ara, cimRef, ambImatges = fals
 
 /** El tauler dins d'un altre marc (la Wiki): llig les seues fonts, i la
     privacitat que el visitant va deixar a la Consola, pel seu compte.
-    Higiene d'amfitrió (261004) · La Wiki és pública: fora de DEV les fonts
-    no es demanen i el tauler diu que no hi ha dades.
+    Higiene d'amfitrió (261004) · La Wiki és pública: en un paquet sense
+    fonts no es demanen i el tauler diu que no hi ha dades.
     Pla 261027_0845 (Guarda Nocturna), §3 · També el Govern del Mestre, amb
     el mateix cap que /consola (TaulerAmbGovern). useGovern es munta una sola
-    vegada per a tota la fitxa, com consola.json i el Mapa: fora de DEV no
-    demana /__iaia/govern.json, i el registre de certificacions és el d'este
-    navegador, el mateix que llig /consola. */
+    vegada per a tota la fitxa, com consola.json i el Mapa, i el registre de
+    certificacions és el d'este navegador, el mateix que llig /consola.
+    Decisió del Mestre (31-10-2026) · Les tres fonts es lligen on n'hi ha:
+    en viu a DEV i, al build web, la instantània sanejada (useFontDev i
+    fontsConsola.js decidixen). Derogat: «fora de DEV no demana
+    /__iaia/govern.json» (actiu només amb DEV). */
 export function ConsolaIncrustada() {
-  const consola = useConsola({ actiu: import.meta.env.DEV === true });
-  const mapa = useMapa({ actiu: import.meta.env.DEV === true });
-  const govern = useGovern({ actiu: import.meta.env.DEV === true });
+  const consola = useConsola();
+  const mapa = useMapa();
+  const govern = useGovern();
   const [privat] = useState(() => llegixPrivacitat());
   return (
     <PrivacitatConsola.Provider value={privat}>
@@ -299,12 +342,15 @@ function ControlsConsola({ pagina, consola, mapa, empaquetats, privat, onPrivat,
      solta al peu de totes les pàgines del pols: ara és la targeta
      «operacions-immunitaries» del pols. El peu només data la instantània.
      Cada pàgina data la seua pròpia font: el pols, consola.json; la resta, el Mapa. */
-  /* P1-35 · La pàgina dels empaquetats data la seua font, /__iaia/empaquetats.json. */
+  /* P1-35 · La pàgina dels empaquetats data la seua font, /__iaia/empaquetats.json.
+     Decisió del Mestre (31-10-2026) · A la web publicada, «Instantània publicada»:
+     la del build (fontsConsola.js), no una lectura en viu. */
+  const nom = ambInstantania() ? 'Instantània publicada' : 'Instantània';
   const instantania = pagina === 'pols'
-    ? (dades?.generat && `Instantània: ${dataLocal(dades.generat, locale)}`)
+    ? (dades?.generat && `${nom}: ${dataLocal(dades.generat, locale)}`)
     : pagina === 'empaquetats'
-      ? (empaquetats?.valor?.generat && `Instantània dels empaquetats: ${dataLocal(empaquetats.valor.generat, locale)}`)
-      : (mapa.mapa?.generat && `Instantània del Mapa: ${dataLocal(mapa.mapa.generat, locale)}`);
+      ? (empaquetats?.valor?.generat && `${nom} dels empaquetats: ${dataLocal(empaquetats.valor.generat, locale)}`)
+      : (mapa.mapa?.generat && `${nom} del Mapa: ${dataLocal(mapa.mapa.generat, locale)}`);
   return (
     <div className="sdp-consola__peu" ref={cimRef}>
       <p className="sdp-consola__instantania" role="status">
@@ -312,8 +358,11 @@ function ControlsConsola({ pagina, consola, mapa, empaquetats, privat, onPrivat,
       </p>
       {/* P1-35 (pla 261028_1526 §3.5.2) · La Versió Canònica del Sistema, la
           mateixa del Diagnòstic del Mas. Sense role=status: no canvia mai
-          mentre es mira, i el peu té una sola regió viva (la instantània). */}
-      <p className="sdp-consola__instantania">{`${ETIQUETA_VERSIO}: ${versioCanonica()}`}</p>
+          mentre es mira, i el peu té una sola regió viva (la instantània).
+          IDEA-50 (pàgina de versions; pla 261029_1605, Bloc G) · El número
+          porta a /versions amb un enllaç de prosa: cap modal, cap classe nova.
+          Gauntlet 261029 · El lector hi sent també on porta (DestiVersions). */}
+      <p className="sdp-consola__instantania">{`${ETIQUETA_VERSIO}: `}<Link to={RUTA_VERSIONS}>{versioCanonica()}<DestiVersions /></Link></p>
       <Boto varietat="secundari" icona={RefreshCw}
         carregant={consola.estat === 'loading' || mapa.estat === 'loading' || empaquetats?.estat === 'loading'}
         onClick={() => { consola.carrega(); mapa.carrega(); empaquetats?.carrega(); }}>Refrescar</Boto>
@@ -366,16 +415,24 @@ function seoDe({ copy, pagina, slugXifra, xifra, llegint, idPanell, panell, idGo
   // Onada 0.5 (pla 261016_1530) · Les pàgines del Govern del Mestre: el que no existix no s'indexa.
   if (idGovern !== null) {
     if (!paginaDeGovern) return { title: `Pàgina no trobada · ${copy.title}`, description: 'Esta adreça no correspon a cap pàgina del govern del Mestre.', index: false };
-    return { title: `${paginaDeGovern.title} · ${copy.title}`, description: paginaDeGovern.lead };
+    // Ordre del Mestre del 30-10-2026 (B1) · La portada de la targeta és la imatge SEO de la pàgina, com a la sala de màquines.
+    return headPublic(metadadesDeSubpagina(paginaDeGovern, copy, opcionsDeLaImatgeSocial()));
   }
   // P1-35 · /consola/empaquetats.
   if (deEmpaquetats) {
     const p = paginaEmpaquetats();
     return { title: `${p.title} · ${copy.title}`, description: p.lead };
   }
-  if (pagina) return { title: `${pagina.title} · ${copy.title}`, description: pagina.lead, image: imatgeDePagina(pagina.id).imatge || undefined };
-  return { title: copy.title, description: copy.lead };
+  if (pagina) return headPublic(metadadesDeSubpagina(pagina, copy, opcionsDeLaImatgeSocial()));
+  return headPublic(metadadesDelTauler(copy, opcionsDeLaImatgeSocial()));
 }
+
+/* Ordre del Mestre (30-10-2026, prompt 2208, T2.1) · El tauler, les nou pàgines
+   i les quatre del Govern porten el head que prerenderitza el build
+   (seoConsola.js): «títol · Consola», l'entradeta i la portada de la targeta pel
+   selector social (la seua variant JPEG de 1200x630), i el tauler, la de
+   PAGE_COPY.consola. Sense imatge, la targeta genèrica (image undefined). */
+const headPublic = ({ title, description, image }) => ({ title, description, image: image || undefined });
 
 export default function ConsolaSection() {
   const { locale } = useUIState();
@@ -481,12 +538,24 @@ export default function ConsolaSection() {
          ConsolaTauler: la Consola incrustada de la Wiki conserva els seus píxels».
          P1-35 (pla 261028_1526 §3.5.2) · Darrere de les xifres i abans de l'Índex, la secció
          dels empaquetats (EmpaquetatsConsola.jsx): el seu H2 i una targeta que porta a
-         /consola/empaquetats. Només ací: ni la Consola incrustada de la Wiki ni l'Índex. */
-      <UniversalPage title={copy.title} subtitle={copy.subtitle} lead={copy.lead} chrome="system" nivellMaxIndex={6}>
+         /consola/empaquetats. Només ací: ni la Consola incrustada de la Wiki ni l'Índex.
+         Gauntlet 261030 (cicle 4, ALT-C1 de Codex) · Sense Traductor (traduccio={false}): el
+         tauler pinta dades d'este ordinador (consola.json, el Mapa, la matriu del govern, els
+         empaquetats) i res no s'envia a cap motor de traducció. Traduir avisa; el botó no canvia
+         (Llei del Píxel). Les pàgines de la sala de màquines, avall, tampoc.
+         Ordre del Mestre, 30-10-2026 (punt 2.3, redacció didàctica) · L'Índex llig les mateixes
+         fonts que les targetes del tauler (fontsDe, el govern i els empaquetats) i el mateix
+         rellotge: el que diu de cada peça és el que diu la seua targeta. */
+      /* Gauntlet 261030 (cicle 4, lang-ca-nomes-a-textsection) · El títol, el subtítol i
+         l'entradilla són PAGE_COPY, sempre en valencià (decisió del Mestre 261030): amb la
+         interfície en una altra llengua en porten el lang (llenguaDelContingut). Les dades i
+         els botons de dins, no. */
+      <UniversalPage title={copy.title} subtitle={copy.subtitle} lead={copy.lead} chrome="system" nivellMaxIndex={6}
+        traduccio={false} llenguaDelContingut="ca">
         <PrivacitatConsola.Provider value={privat}>
-          <TaulerAmbGovern consola={consola} mapa={mapa} govern={govern} ara={ara} cimRef={cim} ambImatges />
+          <TaulerAmbGovern consola={consola} mapa={mapa} govern={govern} ara={ara} cimRef={cim} ambImatges locale={locale} />
           <SeccioEmpaquetats font={empaquetats} />
-          <IndexConsola mapa={mapa.mapa} dades={consola.dades} locale={locale} />
+          <IndexConsola fonts={fontsDe(consola, mapa)} govern={govern} empaquetats={empaquetats} locale={locale} ara={ara} />
           <DiagnosiConsola fonts={fontsDe(consola, mapa)} locale={locale} ara={ara} />
         </PrivacitatConsola.Provider>
       </UniversalPage>
@@ -494,7 +563,8 @@ export default function ConsolaSection() {
   }
 
   return (
-    <UniversalPage title={pagina.title} subtitle={pagina.subtitle} lead={pagina.lead} chrome="system" nivellMaxIndex={6}>
+    <UniversalPage title={pagina.title} subtitle={pagina.subtitle} lead={pagina.lead} chrome="system" nivellMaxIndex={6}
+      traduccio={false} llenguaDelContingut="ca">
       <PrivacitatConsola.Provider value={privat}>
         <MollaPa className="sdp-molla--panell"
           passos={[{ etiqueta: copy.title, a: RUTA_CONSOLA }, { etiqueta: pagina.title }]} />

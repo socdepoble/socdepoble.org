@@ -62,33 +62,22 @@
 /* 4 · Components canònics */
 @import url('./components.css'); /* @layer components            */
 @import url('./modules.css');    /* @layer components            */
+/* Ordre del Mestre (31-10-2026, prompt 2208, T3.1) · el Quadre de Comandament
+   compacte en full propi. Escriu dins de `@layer components` (sense layer():
+   amb layer(components) aniria a la subcapa components.components). */
+@import url('./taulers.css');    /* @layer components            */
 @import url('../components/layout/AppGridShell.css') layer(components);
 @import url('../sections/profile/PerfilShell.css') layer(components);
 @import url('../apps/plataforma/apps.css') layer(components);
-/* Peces de les apps i esquelet comú de catàleg i col·lecció (261002). Sense
-   layer(): els dos fulls ja escriuen dins de `@layer components`, i amb
-   layer(components) anirien a la subcapa components.components, que perd
-   sempre contra components.css i modules.css. */
-@import url('../components/PedraSeca/pecesApps.css');
-@import url('../components/PedraSeca/catalegColleccio.css');
-/* Icones d'al·lèrgens (ordre del Mestre, 261006: la Carta Digital i el TPV).
-   Sense layer(), per la mateixa raó, i davant de tpv.css, que hi posa la
-   cantonada de la rajola. */
-@import url('../components/PedraSeca/alergens.css');
-/* TPV Universal (ordre del Mestre, 261006: prompt 261006_1215). Sense
-   layer(), per la mateixa raó: el full ja escriu dins de `@layer components`
-   i ajusta peces de components.css i modules.css (.sdp-control, .sdp-pestanyes). */
-@import url('../components/PedraSeca/tpv.css');
-/* La llista viva d'«El Comú» (Fase E, 261020, tasca 2; pla 261020_2045). Sense
-   layer(), per la mateixa raó, i darrere de tpv.css: ajusta .sdp-pindola i
-   .sdp-control dins de la peça. */
-@import url('../components/PedraSeca/UniversalListCard/UniversalListCard.css');
-/* Xat: els fulls de les peces viatgen al CSS compartit que la SPA i el
-   component encastat injecten dins del seu Shadow DOM. Ja declaren capa. */
-@import url('../sections/xat/components/AdjuntXat.css');
-@import url('../sections/xat/components/ConsultaIAIA.css');
+/* Els fulls de les peces (pecesApps, catalegColleccio, alergens, tpv,
+   UniversalListCard, AdjuntXat i ConsultaIAIA) ja no entren per ací: des del
+   261030 (tractor-vocabulari, ordre del Mestre) són els blocs del final de
+   modules.css, en el mateix ordre i dins de `@layer components`. Arriben al
+   Shadow DOM de l'element incrustat dins d'este mateix full. */
 /* Ús de les amplades estretes de Noto Sans (261004). També escriu dins de
-   `@layer components`: sense layer(), per la mateixa raó. */
+   `@layer components`: sense layer(), perquè amb layer(components) aniria a
+   la subcapa components.components, que perd sempre contra components.css i
+   modules.css. */
 @import url('./tipografia-estreta.css');
 
 

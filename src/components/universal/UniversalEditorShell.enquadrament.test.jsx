@@ -1,7 +1,7 @@
 import { act, cleanup, fireEvent, render, within } from '@testing-library/react';
 import { afterEach, beforeEach, expect, test, vi } from 'vitest';
 import { ETIQUETA_CONSERVA_EXIF } from './enquadrament/exifIncrustat.js';
-import { dataOriginal, gpsTorre, jpegAmbExif } from './enquadrament/jpegProva.js';
+import { dataOriginal, gpsTorre, jpegAmbExif } from '../../../tests/helpers/jpegProva.js';
 
 /* T46 (ordre del Mestre, 260928) · el re-enquadrament dins de la closca. La
    closca sencera pinta una UniversalPage: fora el router, els avisos i el

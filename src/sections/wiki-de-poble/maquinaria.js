@@ -7,13 +7,13 @@
  *
  * La Wiki és pública (/wikidepoble no porta RequireAuth) i la Consola, per la
  * seua ruta, només s'obri a qui és superadmin fora de desenvolupament
- * (guardaConsola.js). La carpeta segueix el mateix criteri: en
+ * (guardaConsola.js, retirada el 31-10-2026). La carpeta segueix el mateix criteri: en
  * desenvolupament sempre (on les eines locals ja hi viuen) i, en qualsevol
  * build, només per a qui és superadmin.
  *
  * Pur i sense dependències: el llig la Wiki i la pantalla «Assignar» d'Emojis
  * XL (AssignacioEmoji.jsx), que no pot importar WikiDePobleSection en estàtic.
- * Rep els valors en lloc de llegir import.meta.env o la sessió, com
+ * Rep els valors en lloc de llegir import.meta.env o la sessió, com feia
  * consolaDemanaSessio: així les dues branques es proven (a vitest DEV sempre
  * és true). Només un true literal obri; qualsevol altra cosa tanca.
  *
@@ -25,11 +25,26 @@
  * les eines amb botons. La pantalla «Assignar» encara la llig per a la
  * carpeta sencera.
  *
- * @param {{ DEV?: unknown, esSuperadmin?: unknown }} [entorn]
- * @returns {boolean}
+ * Ordre del Mestre (30-10-2026, prompt 2208, T2.2) · «dejar público lo máximo
+ * posible… incluso hasta los datos de la Consola»: la Consola incrustada és a
+ * la vista de tothom, en qualsevol entorn i sense sessió, com la ruta /consola
+ * (App.jsx, sense RequireAuth ni guarda). Les eines amb botons d'escriptura local no depenen
+ * d'esta funció i continuen només de desenvolupament: modulsLocalsActius i
+ * EINES_LOCALS (WikiDePobleSection.jsx) i carregaEinesLocals
+ * (AssignacioEmoji.jsx) només les donen amb DEV === true. Derogat: «la
+ * Consola, només en desenvolupament o per a qui és superadmin» i «només un
+ * true literal obri». Els qui la criden encara li passen DEV i esSuperadmin;
+ * no els mira.
+ * Decisió del Mestre (31-10-2026) · Fora de DEV, la Consola incrustada llig
+ * la instantània sanejada que publica el build web a /__iaia/*.json (GET al
+ * mateix origen, sense credencials: useFontDev i fontsConsola.js); un paquet
+ * sense instantània (WordPress, l'app) no hi demana res. Derogat: «Fora de
+ * DEV, la Consola no demana res a /__iaia/*».
+ *
+ * @returns {boolean} sempre true
  */
-export function maquinariaALaVista(entorn) {
-  return entorn?.DEV === true || entorn?.esSuperadmin === true;
+export function maquinariaALaVista() {
+  return true;
 }
 
 /**

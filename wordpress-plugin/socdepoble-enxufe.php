@@ -53,7 +53,8 @@
  *                     els detalls» i la seua finestra, des del readme.txt local
  *                     (T5.1, ordre del Mestre 261029);
  *   salut.php         proves de Salut del lloc;
- *   traduccio.php     servei opcional DeepL (clau només al servidor);
+ *   traduccio.php     servei de traducció: Apertium sense clau per defecte,
+ *                     DeepL si hi ha clau (clau només al servidor);
  *   actualitzador.php canal propi d'actualitzacions signat. Amb
  *                     idioma-local.php i languages/, és el que l'empaquetador
  *                     lleva de la variant per al directori de WordPress.org,

@@ -99,6 +99,20 @@ const primerText = (entitat, propietat) => {
   return valor ? valor.trim() : null;
 };
 
+/* Regla del Mestre (261030): mai l'escut per als pobles ni per a «Gent de…»
+   (Gent de la Torre inclosa); l'escut és sempre exclusiu de la institució
+   Ajuntament. Tampoc la bandera (P41), el segell (P158) ni el logotip
+   (P154): una foto del poble no ha de semblar institucional. Es lligen
+   TOTES les declaracions amb valor, no sols la primera vigent: un municipi
+   pot declarar l'escut actual i l'històric, o la versió SVG i la PNG, i un
+   escut obsolet ('deprecated') continua sent un escut. */
+const PROPIETATS_INSIGNIA = Object.freeze(['P94', 'P41', 'P158', 'P154']);
+const insigniesDe = (entitat) => congela([...new Set(PROPIETATS_INSIGNIA.flatMap((propietat) => (
+  Array.isArray(entitat?.claims?.[propietat]) ? entitat.claims[propietat] : [])
+  .filter((declaracio) => declaracio?.mainsnak?.snaktype === 'value')
+  .map((declaracio) => nomDeFitxer(declaracio.mainsnak.datavalue?.value))
+  .filter(Boolean)))]);
+
 /* La població: la declaració preferent; si no n'hi ha, la de data (P585) més
    recent. Wikidata dona la quantitat com a text amb signe («+749»). */
 function poblacioDe(entitat) {
@@ -138,7 +152,7 @@ function traductorDEntitats(payload) {
       ine: ine && CODI_INE.test(ine) ? ine : null,
       poblacio: poblacioDe(entitat),
       p18: nomDeFitxer(primerText(entitat, 'P18')),
-      p94: nomDeFitxer(primerText(entitat, 'P94')),
+      insignies: insigniesDe(entitat),
       p131: congela(valorsItem(entitat, 'P131')),
       ...coordenadesDe(entitat)
     });

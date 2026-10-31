@@ -26,22 +26,37 @@
  *     l'entitat pel slug dins del poble (private.xat_subjecte,
  *     2609282100_xat_de_pagina.sql), com resol «En privat»
  *     (control/xatCorporatiu.js). Cap fil ni cap missatge inventat. En remot
- *     només quan el backend ja ha donat l'id de l'entitat
- *     (coneixIdRemotDelProjecte): sense, la comunitat de veres no es podria
- *     reconéixer i es veurien dos «Sóc de Poble», el duplicat que l'ordre
- *     prohibix;
+ *     porta a la comunitat només quan el backend ja ha donat l'id de
+ *     l'entitat (coneixIdRemotDelProjecte).
+ *     QA-R2-05 (Codex, Ronda 2) · Derogat «en remot sense l'id, cap fila»:
+ *     fins que arriba l'UUID, la reserva continua al seu lloc amb la mateixa
+ *     clau (CLAU_FILA_DE_SOC_DE_POBLE), però només és l'enllaç públic a
+ *     /socdepoble (COMUNITAT_PUBLICA_DE_SOC_DE_POBLE): cap acció pel slug.
+ *     Quan arriba, la mateixa fila porta a la comunitat i, si la comunitat de
+ *     veres ja és a la llista (reconeguda per l'UUID), la substituïx: cap
+ *     duplicat. Mentre l'UUID no ha arribat, la comunitat de veres no es pot
+ *     reconéixer (mai pel nom) i, si ja fos a la llista, hi hauria dues files
+ *     amb el mateix nom fins a la hidratació;
  *   · Javi Llinares · la seua fila sintètica, el seu xat de només lectura
  *     (fake-javi) o un directe real amb ell (jaTeElXat);
  *   · Gent de la Torre · la fila del poble (anteposaPoble, `delPoble`);
  *   · la IAIA · la seua fila sintètica, la de mostra (fake-iaia), el seu fil
  *     o un directe amb ella; si no n'hi ha cap, el xat públic de /iaia (on
  *     porta la fila en remot).
+ * P1-70 (ordre del Mestre, 261029 18:20: «No me veo a mí como Javi Llinares
+ * ni a la IAIA MarIA, esto es una regresión») · Derogat «un actor que falta
+ * no ocupa cap lloc» per a Javi i la IAIA: si la llista no els porta (una
+ * llista encara buida, un node sense poble, un adaptador que no les
+ * sintetitza, un fil seu arxivat), XatSection hi passa les files de reserva
+ * (FILA_DE_RESERVA_DE_JAVI i FILA_DE_RESERVA_DE_LA_IAIA), les mateixes que
+ * porta el port. Mai una segona: només si l'actor no hi és, per identificador.
  * Pur: cap React ni cap xarxa.
  */
 import { RUTA_FITXA_IAIA, RUTES_CANONIQUES, coneixIdRemotDelProjecte, esEntitatDelProjecte } from '../../config/navigation.js';
 import { rutaXatDePagina } from '../../config/objecteConnectable.js';
 import { ENTITAT_PILOT_SLUG, PERSONA_PILOT, esIAIA } from '../../data/identitatsSeed.js';
-import { AJUDA_PER_CLAU, ID_FIL_DE_MOSTRA_DE_JAVI, esLaPersonaDeContacte, esXatDeLaIAIA, jaTeElXat } from '../../data/xatsPerDefecte.js';
+import { AJUDA_PER_CLAU, ID_FIL_DE_MOSTRA_DE_JAVI, conversaPerDefecteDe, esLaPersonaDeContacte, esXatDeLaIAIA, jaTeElXat } from '../../data/xatsPerDefecte.js';
+import { mapejaFil } from './missatges.js';
 import { ID_FIL_DE_MOSTRA_DE_LA_IAIA } from './useObriXatPerDefecte.js';
 
 /* Els modes sense servidor de dades, com a useObriXatPerDefecte.js. */
@@ -60,6 +75,9 @@ export const COMUNITAT_DE_SOC_DE_POBLE = Object.freeze({
   avatar: AJUDA_PER_CLAU.socdepoble.avatar,
   ruta: RUTA_DE_SOC_DE_POBLE
 });
+
+/** QA-R2-05 · La reserva de la comunitat en remot mentre el backend encara no ha donat l'UUID de l'entitat: només l'enllaç públic a la seua pàgina (`ruta`). */
+export const COMUNITAT_PUBLICA_DE_SOC_DE_POBLE = Object.freeze({ ...COMUNITAT_DE_SOC_DE_POBLE, publica: true });
 
 /** La clau d'eixa fila a la llista (data-clau), com la del poble ('poble:<id>'). */
 export const CLAU_FILA_DE_SOC_DE_POBLE = `entitat:${ENTITAT_PILOT_SLUG}`;
@@ -82,6 +100,15 @@ export function esComunitatDeSocDePoble(comunitat) {
  */
 export const potPortarLaComunitat = (modeDades) => MODES_LOCALS.has(modeDades) || coneixIdRemotDelProjecte();
 
+/**
+ * QA-R2-05 · La comunitat de la fila de reserva (sempre la mateixa clau): la
+ * que porta a la comunitat si potPortarLaComunitat, o la pública (només
+ * /socdepoble) en remot mentre l'UUID de l'entitat encara no ha arribat.
+ */
+export const comunitatDeReserva = (modeDades) => (potPortarLaComunitat(modeDades)
+  ? COMUNITAT_DE_SOC_DE_POBLE
+  : COMUNITAT_PUBLICA_DE_SOC_DE_POBLE);
+
 const idDe = (fil) => String(fil?.id ?? '');
 
 /* Javi: la fila sintètica, el xat de mostra o un directe real amb ell. */
@@ -94,6 +121,22 @@ const esDirecteDeLaIAIA = (fil) => fil?.perDefecte === 'iaia' || idDe(fil) === I
 
 const esFila = (fila) => fila?.tipus === 'fil';
 
+/* P1-70 (261029) · Les files de reserva de Javi i de la IAIA: les mateixes
+   que porta el port (perDefecte, data/xatsPerDefecte.js), mapejades com les
+   mapeja el context. Constants de mòdul, congelades. */
+const filaPerDefecte = (clau) => {
+  const fil = mapejaFil(conversaPerDefecteDe(clau));
+  return Object.freeze({ clau: String(fil.id), tipus: 'fil', fil: Object.freeze(fil) });
+};
+export const FILA_DE_RESERVA_DE_JAVI = filaPerDefecte('javi');
+export const FILA_DE_RESERVA_DE_LA_IAIA = filaPerDefecte('iaia');
+
+/* P1-70 (261029) · La fila de Javi diu què és quan no porta cap últim text
+   (una còpia: la de reserva és congelada i un fil del port no es muta). */
+const ambSubtitol = (fila, subtitol) => (fila && subtitol && !fila.fil?.ultimText
+  ? { ...fila, fil: { ...fila.fil, ultimText: subtitol } }
+  : fila);
+
 /**
  * Les files de la llista (les de XatSection, després d'anteposaPoble) amb els
  * quatre actors al capdamunt i en l'ordre de l'ordre del Mestre; la resta,
@@ -101,19 +144,29 @@ const esFila = (fila) => fila?.tipus === 'fil';
  * `comunitat` (potPortarLaComunitat i la llista ja carregada), la comunitat
  * de Sóc de Poble que falta es pinta com una fila { tipus: 'entitat' } que
  * hi porta. Torna la MATEIXA referència si no canvia res. Pura.
+ * P1-70 (261029) · `reservaJavi` i `reservaIAIA` (XatSection les passa amb la
+ * fila virtual del poble) ocupen el lloc de Javi i de la IAIA quan la llista
+ * no els porta; `subtitolDeJavi`, el text de la seua fila sense últim missatge.
+ * QA-R2-05 · `comunitat` també pot ser la comunitat de la reserva
+ * (comunitatDeReserva): la fila porta eixa, amb la mateixa clau; `true` és
+ * COMUNITAT_DE_SOC_DE_POBLE.
  */
-export function anteposaActors(files, { comunitat = false } = {}) {
+export function anteposaActors(files, { comunitat = false, reservaJavi = null, reservaIAIA = null, subtitolDeJavi = '' } = {}) {
   if (!Array.isArray(files)) return files;
   const troba = (predicat) => files.find(predicat) || null;
+  const entitatDeReserva = comunitat && typeof comunitat === 'object' ? comunitat : COMUNITAT_DE_SOC_DE_POBLE;
   const deSocDePoble = troba((fila) => fila?.tipus === 'comunitat' && esComunitatDeSocDePoble(fila.comunitat))
-    || (comunitat ? { clau: CLAU_FILA_DE_SOC_DE_POBLE, tipus: 'entitat', entitat: COMUNITAT_DE_SOC_DE_POBLE } : null);
-  const deJavi = troba((fila) => esFila(fila) && esFilDeJavi(fila.fil));
+    || (comunitat ? { clau: CLAU_FILA_DE_SOC_DE_POBLE, tipus: 'entitat', entitat: entitatDeReserva } : null);
+  const javiTrobat = troba((fila) => esFila(fila) && esFilDeJavi(fila.fil));
+  const deJavi = ambSubtitol(javiTrobat || reservaJavi, subtitolDeJavi);
   const delPoble = troba((fila) => fila?.delPoble === true);
   const deLaIAIA = troba((fila) => esFila(fila) && esDirecteDeLaIAIA(fila.fil))
-    || troba((fila) => esFila(fila) && esXatDeLaIAIA(fila.fil));
+    || troba((fila) => esFila(fila) && esXatDeLaIAIA(fila.fil))
+    || reservaIAIA;
   const actors = [deSocDePoble, deJavi, delPoble, deLaIAIA].filter(Boolean);
   if (!actors.length) return files;
-  const dalt = new Set(actors);
+  /* La fila de Javi trobada també és «de dalt»: la còpia amb el subtítol no la duplica. */
+  const dalt = new Set([...actors, javiTrobat]);
   const resultat = [...actors, ...files.filter((fila) => !dalt.has(fila))];
   const igual = resultat.length === files.length && resultat.every((fila, i) => fila === files[i]);
   return igual ? files : resultat;

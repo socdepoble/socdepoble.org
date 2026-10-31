@@ -1,548 +1,508 @@
 /**
- * GestorMultimediaLocal.jsx — Gestor Multimèdia Local Intel·ligent sobre
- * `_multimedia_de_poble/` (IDEA-54 · Ordre del Mestre 261029).
+ * GestorMultimediaLocal.jsx — Gestor d'arxius i volums locals del Mas
+ * (`/multimedia` → «Carpeta local» · IDEA-54 + IDEA-55 · Onada 261029_1605).
  *
- * Reutilitza el mateix motor de lectura de carpetes locals de la Gestoria
- * (`fontNavegador.js`) per explorar `_multimedia_de_poble/` sense pujar res a
- * Internet, creuar els arxius amb el cens web (`CENS_IMATGES`) i provar en viu
- * la compressió WebP comprovant a ull que no es pixel·le abans de desar.
+ * L'orquestrador: tot el que toca el disc ho fa el motor
+ * (motorMultimediaLocal.js, l'únic import), i res no puja a Internet tret de
+ * «Enviar al Bloc de Notes», que ho diu.
+ *
+ *   · Volums: les carpetes recordades (biblioteca del navegador) en pastilles
+ *     d'1 clic. En muntar, la darrera s'obri sola si el permís és 'granted';
+ *     si és 'prompt', el bàner «Reconnectar amb 1 clic». El permís i el
+ *     selector són SEMPRE la primera espera del clic (l'activació caduca).
+ *     Sense selector (Safari, Firefox), un <input webkitdirectory> de només
+ *     lectura, que no es recorda mai.
+ *   · Fototeca mixta: arbre de carpetes i, per a la carpeta triada, TOTS els
+ *     seus fitxers, en «Graella d'àlbum» (24 per pàgina, miniatures reals) o
+ *     en «Explorador d'arxius (taula)» (100 per pàgina).
+ *   · Detall polimòrfic, duplicats exactes (SHA-256), laboratori WebP i
+ *     operacions al disc (moure, reanomenar, nova carpeta, eliminar).
+ *   · Testimonis de generació: obrir un volum, tornar a llegir-lo i la cerca
+ *     de duplicats porten el seu; una resposta tardana s'ignora. Els blob: els
+ *     tanquen els registres de cada pàgina i de cada detall.
+ *   · Amb canvis sense desar a l'editor, canviar de fitxer, de volum o tornar
+ *     a llegir demana confirmació, i les operacions del fitxer es bloquegen.
+ *
+ * IDEA-55 + P1-71 (Onada 261029_1605, Bloc E) · L'estat i els fluxos viuen a
+ * useGestorArxiusLocals.js (una sola lectura del disc, compartida amb les
+ * tres columnes de /multimedia). Ací queden les peces que es pinten:
+ *   · GestorMultimediaLocal: el mode AUTÒNOM (panell amb arbre propi i detall
+ *     en línia), amb el mateix DOM d'abans; la selecció és seua.
+ *   · PanellGestorLocal: el panell; en mode espai (la columna del detall de
+ *     /multimedia), sense capçalera, sense arbre i sense detall en línia: les
+ *     tessel·les porten a la fitxa de l'arxiu (onTriaArxiu).
+ *   · InputCarpetaLocal i DialegDescartaLocal: una sola instància, germanes
+ *     del panell en l'espai i dins de la secció en el mode autònom.
  */
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useId, useMemo, useRef, useState } from 'react';
+import { ChevronLeft, ChevronRight, ShieldCheck, Square } from 'lucide-react';
 import {
-  EXTENSIONS_RASTER_CONVERTIBLE,
-  analitzaCarpetaMultimediaLocal,
-  demanaCarpeta,
-  desarWebpEnHandleLocal,
-  fontDesDeFitxers,
-  fontDesDeHandle,
-  formatKb,
-  inspeccionaImatgeLocal,
-  oblidaFont,
-  potTriarCarpeta,
-  troncSenseExtensio
-} from './motorMultimediaLocal.js';
+  Alerta, Boto, Camp, CampText, Carregant, DialegConfirmacio, Insignia, PillToggle, Progres, Selector
+} from '../../components/PedraSeca/index.js';
+import { MOCK_TOWNS } from '../pobles/townsSeed.js';
+import { MIDA_PAGINA_ALBUM, MIDA_PAGINA_TAULA, PRESSUPOST_DUPLICATS, formatKb, paginaLocal } from './motorMultimediaLocal.js';
+import { ArbreCarpetesLocals } from './ArbreCarpetesLocals.jsx';
+import { AccionsCarpetaLocal } from './AccionsCarpetaLocal.jsx';
+import { BarraVolumsLocals } from './BarraVolumsLocals.jsx';
+import { DetallArxiuLocal } from './DetallArxiuLocal.jsx';
+import { GraellaAlbumLocal } from './GraellaAlbumLocal.jsx';
+import { TaulaArxiusLocals } from './TaulaArxiusLocals.jsx';
+import { nomVisibleLocal } from './suportGestorLocal.js';
+import {
+  TEXTOS_LOCAL as T, missatgeDErrorLocal, missatgeDeBibliotecaLocal, missatgeDeLimitacioLocal, traduccioDeReserva, tradueix
+} from './textosGestorLocal.js';
+import { useGestorArxiusLocals } from './useGestorArxiusLocals.js';
+import { useLocaleOpcional } from './useLocaleOpcional.js';
 
-const QUALITATS_LABORATORI = Object.freeze([
-  { valor: 0.72, etiqueta: '72% (Més lleuger)' },
-  { valor: 0.78, etiqueta: '78% (Equilibrat)' },
-  { valor: 0.84, etiqueta: '84% (Recomanat · Alta nitidesa)' },
-  { valor: 0.92, etiqueta: '92% (Màxima fidelitat)' }
+const CANCELA = ['common.cancela', 'Cancel·lar'];
+const FILTRES_ESTAT = Object.freeze([
+  ['tots', 'filtre.tots'], ['publicades', 'filtre.publicades'], ['inedites', 'filtre.inedites'],
+  ['bessones', 'filtre.bessones'], ['alertes', 'filtre.alertes']
+]);
+const TIPUS = Object.freeze([
+  ['imatge', 'tipus.imatge'], ['audio', 'tipus.audio'], ['video', 'tipus.video'], ['text', 'tipus.text'],
+  ['codi', 'tipus.codi'], ['document', 'tipus.document'], ['altre', 'tipus.altre']
 ]);
 
-const ESCALES_LABORATORI = Object.freeze([
-  { valor: 0, etiqueta: 'Mida original (100% píxels)' },
-  { valor: 1200, etiqueta: 'Màx. 1200 px' },
-  { valor: 1024, etiqueta: 'Màx. 1024 px' }
-]);
+/* El text d'un missatge desat com a descripció (es tradueix en pintar-lo). */
+function textDelMissatge(t, missatge) {
+  if (!missatge) return '';
+  if (missatge.error) return missatgeDErrorLocal(t, missatge.error, missatge.valors);
+  const text = tradueix(t, missatge.parell, missatge.valors);
+  return missatge.motiu ? `${text} ${missatgeDeBibliotecaLocal(t, missatge.motiu)}` : text;
+}
 
-export function GestorMultimediaLocal({ cens = null, mitjansWeb = [] }) {
-  const [fontActiva, setFontActiva] = useState(null);
-  const [handleNatiu, setHandleNatiu] = useState(null);
-  const [entrades, setEntrades] = useState([]);
-  const [carregant, setCarregant] = useState(false);
-  const [errorMsg, setErrorMsg] = useState('');
-  const [subcarpetaActiva, setSubcarpetaActiva] = useState('totes');
-  const [filtreEstat, setFiltreEstat] = useState('tots');
-  const [cerca, setCerca] = useState('');
+const SELECCIO_BUIDA = Object.freeze({ carpeta: '', ruta: null });
 
-  const [seleccionat, setSeleccionat] = useState(null);
-  const [detallSeleccionat, setDetallSeleccionat] = useState(null);
-  const [midesOriginals, setMidesOriginals] = useState(null);
-  const [qualitatWebp, setQualitatWebp] = useState(0.84);
-  const [maxCostat, setMaxCostat] = useState(0);
-  const [resultatWebp, setResultatWebp] = useState(null);
-  const [missatgeDesat, setMissatgeDesat] = useState('');
+/* La clau de les miniatures d'una pàgina (la mateixa que useMiniaturesLocals):
+   en l'espai, la graella es torna a muntar quan canvia, i el registre vell es
+   tanca DESPRÉS que el DOM ja no pinta cap de les seues URL. */
+const clauDeMiniatures = (elements) => elements
+  .filter((el) => el.vista === 'imatge' || el.vista === 'svg')
+  .map((el) => `${el.ruta}\u0000${el.mida}\u0000${el.modificat}`)
+  .join('\u0001');
 
-  const inputCarpetaRef = useRef(null);
-  const urlsTemporalsRef = useRef([]);
-
-  const netejaUrlsTemporals = () => {
-    for (const u of urlsTemporalsRef.current) {
-      try {
-        URL.revokeObjectURL(u);
-      } catch {
-        // Ignora errors en revocar URLs d'objecte
-      }
-    }
-    urlsTemporalsRef.current = [];
-  };
-
-  useEffect(() => () => netejaUrlsTemporals(), []);
-
-  const carregaFont = async (novaFont, nouHandle = null) => {
-    setCarregant(true);
-    setErrorMsg('');
-    setMissatgeDesat('');
-    try {
-      const llista = await novaFont.llista();
-      if (fontActiva) oblidaFont(fontActiva);
-      netejaUrlsTemporals();
-      setFontActiva(novaFont);
-      setHandleNatiu(nouHandle);
-      setEntrades(llista);
-      setSubcarpetaActiva('totes');
-      setFiltreEstat('tots');
-      setSeleccionat(null);
-      setDetallSeleccionat(null);
-      setResultatWebp(null);
-    } catch (err) {
-      setErrorMsg(err?.message || 'No s’ha pogut llegir la carpeta local.');
-    } finally {
-      setCarregant(false);
-    }
-  };
-
-  const connectaAmbSelectorNatiu = async () => {
-    setErrorMsg('');
-    if (!potTriarCarpeta()) {
-      inputCarpetaRef.current?.click();
-      return;
-    }
-    try {
-      const handle = await demanaCarpeta({ mode: 'read' });
-      const novaFont = fontDesDeHandle(handle);
-      await carregaFont(novaFont, handle);
-    } catch (err) {
-      if (err?.codi === 'SELECCIO_CANCELLADA') return;
-      setErrorMsg(err?.message || 'No s’ha pogut obrir el selector de carpetes.');
-    }
-  };
-
-  const enTriarInputCarpeta = async (e) => {
-    const files = e.target?.files;
-    if (!files || files.length === 0) return;
-    try {
-      const novaFont = fontDesDeFitxers(files);
-      await carregaFont(novaFont, null);
-    } catch (err) {
-      setErrorMsg(err?.message || 'No s’han pogut llegir els fitxers seleccionats.');
-    }
-  };
-
-  const desconnectaCarpeta = () => {
-    if (fontActiva) oblidaFont(fontActiva);
-    netejaUrlsTemporals();
-    setFontActiva(null);
-    setHandleNatiu(null);
-    setEntrades([]);
-    setSeleccionat(null);
-    setDetallSeleccionat(null);
-    setResultatWebp(null);
-    setErrorMsg('');
-    setMissatgeDesat('');
-  };
-
-  const analisi = useMemo(
-    () => analitzaCarpetaMultimediaLocal(entrades, { cens, mitjansWeb }),
-    [entrades, cens, mitjansWeb]
+/** L'<input webkitdirectory> de la reserva de només lectura: una sola instància. */
+export function InputCarpetaLocal({ gestor }) {
+  return (
+    <input
+      ref={gestor.inputRef}
+      type="file"
+      webkitdirectory=""
+      directory=""
+      multiple
+      hidden
+      onChange={gestor.enTriarFitxers}
+      data-testid="input-carpeta-multimedia-local"
+    />
   );
+}
 
-  const elementsFiltrats = useMemo(() => {
+/** L'avís del gestor (el resultat d'una operació, un error), tancable. */
+export function MissatgeLocal({ gestor, t = gestor.t }) {
+  const { missatge, setMissatge } = gestor;
+  if (!missatge) return null;
+  return <Alerta to={missatge.to} onTanca={() => setMissatge(null)}>{textDelMissatge(t, missatge)}</Alerta>;
+}
+
+/** «Descartar els canvis?» abans d'una acció del gestor (volums, tornar a llegir, fitxer nou). */
+export function DialegDescartaLocal({ gestor, t = gestor.t }) {
+  const tr = (parell, valors) => tradueix(t, parell, valors);
+  if (!gestor.pendent) return null;
+  return (
+    <DialegConfirmacio
+      obert
+      destructiu
+      titol={tr(T['text.descartaTitol'])}
+      descripcio={tr(T['text.descartaText'])}
+      etiquetaConfirma={tr(T['text.descarta'])}
+      etiquetaCancela={tr(CANCELA)}
+      onTanca={gestor.cancelaPendent}
+      onConfirma={gestor.confirmaPendent}
+    />
+  );
+}
+
+/**
+ * El panell del Gestor sobre la carpeta `carpeta` (recursiu: també els
+ * fitxers de les subcarpetes). `autonom`: el mode de sempre, amb capçalera,
+ * arbre i detall en línia. Sense: el mode espai de /multimedia (la columna
+ * del detall), on triar un fitxer és `onTriaArxiu(el)`. `barra`: props de
+ * BarraVolumsLocals que substituïxen les del gestor (la portada hi navega
+ * abans de l'acció).
+ */
+export function PanellGestorLocal({
+  gestor,
+  t = gestor.t,
+  carpeta = '',
+  seleccionat = null,
+  autonom = false,
+  onTriaArxiu,
+  onTriaCarpeta,
+  onTancaDetall,
+  onFet = gestor.enFet,
+  pobles = MOCK_TOWNS,
+  blocDeNotes = null,
+  registraTessela,
+  titolFitxersRef,
+  barra = null
+}) {
+  const tr = (parell, valors) => tradueix(t, parell, valors);
+  const locale = useLocaleOpcional();
+  const id = useId();
+  const idTitol = `${id}-titol`;
+  const idDiagnostic = `${id}-diagnostic`;
+  const idFitxers = `${id}-fitxers`;
+  const {
+    font, analisi, exactes, carpetes, comptes, filtreEstat, filtreTipus, cerca, vista, limitacions,
+    progresHash, duplicats, entrades, potEscriure, nomVolum, ocupat, canvisPendents, versioDetall
+  } = gestor;
+
+  const filtrats = useMemo(() => {
     const q = cerca.trim().toLowerCase();
     return analisi.elements.filter((el) => {
-      if (subcarpetaActiva !== 'totes' && el.subcarpeta !== subcarpetaActiva) return false;
-      if (filtreEstat === 'emparellades' && !el.emparelladaWeb) return false;
+      if (carpeta && !el.ruta.startsWith(`${carpeta}/`)) return false;
+      if (filtreTipus !== 'tots' && el.tipus !== filtreTipus) return false;
+      if (filtreEstat === 'publicades' && !el.emparelladaWeb) return false;
       if (filtreEstat === 'inedites' && !el.inedita) return false;
       if (filtreEstat === 'bessones' && !el.teBessonaLocal) return false;
-      if (filtreEstat === 'alertes' && !el.pesAlt && !el.duplicada) return false;
+      if (filtreEstat === 'alertes' && !el.pesAlt && !el.duplicada && !exactes?.has(el.ruta)) return false;
       if (q && !el.ruta.toLowerCase().includes(q)) return false;
       return true;
     });
-  }, [analisi.elements, subcarpetaActiva, filtreEstat, cerca]);
+  }, [analisi.elements, carpeta, filtreTipus, filtreEstat, cerca, exactes]);
 
-  const obriElementLocal = async (el) => {
-    setSeleccionat(el);
-    setDetallSeleccionat(null);
-    setMidesOriginals(null);
-    setResultatWebp(null);
-    setMissatgeDesat('');
-    if (!fontActiva || el.tipus !== 'imatge') return;
-    try {
-      const info = await inspeccionaImatgeLocal(fontActiva, el.ruta);
-      const url = URL.createObjectURL(info.blob);
-      urlsTemporalsRef.current.push(url);
-      setDetallSeleccionat({ ...info, url });
-    } catch (err) {
-      setErrorMsg(err?.message || `No s’ha pogut llegir «${el.nom}».`);
-    }
-  };
+  const triaPagina = (n) => gestor.triaPagina(carpeta, n);
+  const pag = paginaLocal(filtrats, gestor.paginaDe(carpeta), vista === 'taula' ? MIDA_PAGINA_TAULA : MIDA_PAGINA_ALBUM);
+  const elSeleccionat = autonom && seleccionat ? gestor.elementDe(seleccionat) : null;
+  const carpetaBuida = Boolean(carpeta) && !comptes.get(carpeta) && !carpetes.some((c) => c.startsWith(`${carpeta}/`));
 
-  const generaPrevisualitzacioWebp = async (imgElement, qualitat = qualitatWebp, limitCostat = maxCostat) => {
-    if (!imgElement || !imgElement.naturalWidth || !imgElement.naturalHeight) return;
-    const w0 = imgElement.naturalWidth;
-    const h0 = imgElement.naturalHeight;
-    setMidesOriginals({ ample: w0, alt: h0 });
+  /* Gauntlet 261029 (cicle 1, WCAG 4.1.3) · Cercar o filtrar canvia «Fitxers
+     a la vista (n)», que és un encapçalament: el recompte (o «cap fitxer») es
+     diu en una regió d'estat per al lector, mig segon després de l'última
+     tecla. En muntar no es diu res. */
+  const textRecompte = filtrats.length === 0
+    ? tr(carpetaBuida ? T.carpetaBuida : T.buit)
+    : tr(T.fitxers, { n: filtrats.length });
+  const clauFiltres = `${cerca}\u0000${filtreEstat}\u0000${filtreTipus}`;
+  const [clauFiltresInicial] = useState(clauFiltres);
+  const [anunciRecompte, setAnunciRecompte] = useState('');
+  useEffect(() => {
+    if (clauFiltres === clauFiltresInicial && anunciRecompte === '') return undefined;
+    const espera = setTimeout(() => setAnunciRecompte(textRecompte), 500);
+    return () => clearTimeout(espera);
+  }, [clauFiltres, clauFiltresInicial, textRecompte, anunciRecompte]);
 
-    let w = w0;
-    let h = h0;
-    if (limitCostat > 0 && Math.max(w0, h0) > limitCostat) {
-      const escala = limitCostat / Math.max(w0, h0);
-      w = Math.round(w0 * escala);
-      h = Math.round(h0 * escala);
-    }
+  const cos = (
+    <>
+      <BarraVolumsLocals {...gestor.propsBarra} t={t} {...barra} />
+      {autonom ? <InputCarpetaLocal gestor={gestor} /> : null}
 
-    const canvas = document.createElement('canvas');
-    canvas.width = w;
-    canvas.height = h;
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return;
-    ctx.drawImage(imgElement, 0, 0, w, h);
+      <MissatgeLocal gestor={gestor} t={t} />
+      {ocupat ? <Carregant etiqueta={tr(T.llegint)} /> : null}
 
-    const blobWebp = await new Promise((resolve) => {
-      if (typeof canvas.toBlob === 'function') {
-        canvas.toBlob((b) => resolve(b), 'image/webp', qualitat);
-      } else {
-        resolve(null);
-      }
-    });
-    if (!blobWebp) return;
-    const ab = await blobWebp.arrayBuffer();
-    const bytesWebp = new Uint8Array(ab);
-    const urlWebp = URL.createObjectURL(blobWebp);
-    urlsTemporalsRef.current.push(urlWebp);
-    setResultatWebp({
-      ample: w,
-      alt: h,
-      mida: bytesWebp.byteLength,
-      bytes: bytesWebp,
-      url: urlWebp,
-      qualitat
-    });
-  };
-
-  const descarregaWebpGenerat = () => {
-    if (!resultatWebp || !seleccionat) return;
-    const a = document.createElement('a');
-    a.href = resultatWebp.url;
-    const nomWebp = `${troncSenseExtensio(seleccionat.nom)}.webp`;
-    a.download = nomWebp;
-    a.click();
-  };
-
-  const desaWebpACarpetaLocal = async () => {
-    if (!resultatWebp || !seleccionat || !handleNatiu) return;
-    setErrorMsg('');
-    setMissatgeDesat('');
-    try {
-      const rutaWebp = `${troncSenseExtensio(seleccionat.ruta)}.webp`;
-      await desarWebpEnHandleLocal(handleNatiu, rutaWebp, resultatWebp.bytes);
-      const novaLlista = await fontActiva.llista();
-      setEntrades(novaLlista);
-      setMissatgeDesat(`S’ha desat «${rutaWebp}» (${formatKb(resultatWebp.mida)}) directament a la carpeta local.`);
-    } catch (err) {
-      setErrorMsg(err?.message || 'No s’ha pogut desar el fitxer WebP a la carpeta local.');
-    }
-  };
-
-  return (
-    <section className="stack-grid" aria-label="Gestor Multimèdia Local">
-      <div className="card card--soft">
-        <div className="card__body">
-          <div className="notes-list-header">
-            <div>
-              <h2 className="section-title">Arxiu Multimèdia Local (_multimedia_de_poble)</h2>
-              <p>
-                Explora la carpeta local del teu ordinador sense pujar cap fitxer a Internet. El motor creua les
-                imatges locals amb el cens publicat a la web, detecta originals sense <code>.webp</code> i et permet
-                ajustar la compressió comprovant a ull la nitidesa.
-              </p>
+      {font ? (
+        <>
+          <section className="sdp-arxiu-local__panell" aria-labelledby={idDiagnostic}>
+            <h3 id={idDiagnostic}>{tr(T.diagnostic, { nom: nomVisibleLocal(nomVolum) })}</h3>
+            <p>{tr(T.diagnosticXifres, { n: analisi.resum.totalFitxers, pes: formatKb(analisi.resum.pesTotalBytes, locale) })}</p>
+            <div className="sdp-arxiu-local__fila">
+              <Insignia to="exit">{tr(T['resum.publicades'], { n: analisi.resum.totalEmparelladesWeb })}</Insignia>
+              <Insignia to="avis">{tr(T['resum.inedites'], { n: analisi.resum.totalInedites })}</Insignia>
+              <Insignia to="info">
+                {tr(T['resum.bessones'], {
+                  n: analisi.resum.totalBessonesLocals,
+                  /* Un estalvi nul ja es diu «0 KB» (formatKb, Gauntlet 261029). */
+                  pes: formatKb(analisi.resum.estalviBessonesBytes, locale)
+                })}
+              </Insignia>
+              <Insignia to="neutre">{tr(T['resum.avisos'], { n: analisi.resum.totalPesAlt + analisi.resum.totalDuplicades })}</Insignia>
+              {exactes ? <Insignia to="error">{tr(T['resum.exactes'], { n: exactes.size })}</Insignia> : null}
             </div>
-            <div className="univ-manager-toolbar">
-              <button type="button" className="sdp-boto sdp-boto--primari" onClick={connectaAmbSelectorNatiu} disabled={carregant}>
-                {fontActiva ? `Canviar carpeta (${fontActiva.nom})` : 'Connectar carpeta local (_multimedia_de_poble)'}
-              </button>
-              {fontActiva && (
-                <button type="button" className="sdp-boto sdp-boto--secundari" onClick={desconnectaCarpeta}>
-                  Desconnectar
-                </button>
+            {limitacions.length > 0 ? (
+              <Alerta to="avis">
+                <ul className="sdp-arxiu-local__llista">
+                  {limitacions.map((l) => <li key={l.codi}>{missatgeDeLimitacioLocal(t, l.codi)}</li>)}
+                </ul>
+              </Alerta>
+            ) : null}
+            <div className="sdp-arxiu-local__fila">
+              {progresHash ? (
+                <>
+                  <Progres
+                    className="sdp-arxiu-local__progres"
+                    etiqueta={tr(T['hash.calculant'], { n: progresHash.fets, total: progresHash.total })}
+                    valor={progresHash.fets}
+                    max={Math.max(1, progresHash.total)}
+                  />
+                  <Boto icona={Square} onClick={gestor.aturaHash}>{tr(T['hash.atura'])}</Boto>
+                </>
+              ) : (
+                <Boto icona={ShieldCheck} disabled={entrades.length === 0} onClick={gestor.verificaDuplicats}>{tr(T['hash.verifica'])}</Boto>
               )}
-              <input
-                ref={inputCarpetaRef}
-                type="file"
-                webkitdirectory=""
-                directory=""
-                multiple
-                hidden
-                onChange={enTriarInputCarpeta}
-                data-testid="input-carpeta-multimedia-local"
-              />
             </div>
-          </div>
+            {duplicats ? (
+              <div role="status" className="sdp-arxiu-local__resultat">
+                <p>
+                  {duplicats.grups.length > 0 || duplicats.cancellat
+                    ? tr(T['hash.resultat'], { n: duplicats.grups.length })
+                    : tr(T['hash.cap'])}
+                </p>
+                {duplicats.cancellat ? <p>{tr(T['hash.aturada'])}</p> : null}
+                {duplicats.truncat ? (
+                  <p>{tr(T['hash.truncat'], { fitxers: PRESSUPOST_DUPLICATS.maxFitxers, pes: formatKb(PRESSUPOST_DUPLICATS.maxBytes, locale) })}</p>
+                ) : null}
+                {duplicats.omesos.length > 0 ? <p>{tr(T['hash.omesos'], { n: duplicats.omesos.length })}</p> : null}
+              </div>
+            ) : null}
+          </section>
 
-          {errorMsg && (
-            <p role="alert" className="sdp-workspace-state">
-              {errorMsg}
-            </p>
-          )}
-          {missatgeDesat && (
-            <p role="status" className="sdp-workspace-state">
-              {missatgeDesat}
-            </p>
-          )}
+          {autonom ? (
+            <div className="sdp-arxiu-local__explorador">
+              <ArbreCarpetesLocals
+                t={t}
+                carpetes={carpetes}
+                comptes={comptes}
+                total={analisi.resum.totalFitxers}
+                activa={carpeta}
+                onTria={onTriaCarpeta}
+              />
+              {principal()}
+            </div>
+          ) : principal()}
+        </>
+      ) : null}
+    </>
+  );
+
+  function principal() {
+    const triaFitxer = autonom ? onTriaArxiu : (el) => onTriaArxiu?.(el);
+    const llista = filtrats.length === 0 ? (
+      <p>{carpetaBuida ? tr(T.carpetaBuida) : tr(T.buit)}</p>
+    ) : vista === 'taula' ? (
+      <TaulaArxiusLocals
+        t={t}
+        elements={pag.elements}
+        seleccionat={seleccionat}
+        exactes={exactes}
+        onSelecciona={triaFitxer}
+        registraTessela={registraTessela}
+        ambEstat={autonom}
+      />
+    ) : (
+      <GraellaAlbumLocal
+        key={autonom ? undefined : clauDeMiniatures(pag.elements)}
+        t={t}
+        font={font}
+        elements={pag.elements}
+        seleccionat={seleccionat}
+        exactes={exactes}
+        onSelecciona={triaFitxer}
+        registraTessela={registraTessela}
+        ambEstat={autonom}
+      />
+    );
+    return (
+      <div className="sdp-arxiu-local__principal">
+        <div className="sdp-arxiu-local__panell sdp-arxiu-local__filtres">
+          <PillToggle
+            className="sdp-arxiu-local__pindola"
+            etiqueta={tr(T['filtre.estat'])}
+            valor={filtreEstat}
+            onCanvi={(valor) => {
+              gestor.setFiltreEstat(valor);
+              triaPagina(1);
+            }}
+            opcions={FILTRES_ESTAT.map(([valor, clau]) => ({ valor, text: tr(T[clau]) }))}
+          />
+          <div className="sdp-arxiu-local__controls">
+            <Camp etiqueta={tr(T['filtre.tipus'])}>
+              <Selector
+                opcions={[
+                  { valor: 'tots', etiqueta: tr(T['tipus.tots']) },
+                  ...TIPUS.map(([valor, clau]) => ({ valor, etiqueta: tr(T[clau]) }))
+                ]}
+                value={filtreTipus}
+                onChange={(event) => {
+                  gestor.setFiltreTipus(event.target.value);
+                  triaPagina(1);
+                }}
+              />
+            </Camp>
+            <Camp etiqueta={tr(T.cerca)}>
+              <CampText
+                tipus="search"
+                value={cerca}
+                autoComplete="off"
+                onChange={(event) => {
+                  gestor.setCerca(event.target.value);
+                  triaPagina(1);
+                }}
+              />
+            </Camp>
+          </div>
+          <PillToggle
+            className="sdp-arxiu-local__pindola"
+            etiqueta={tr(T.vista)}
+            valor={vista}
+            onCanvi={(valor) => {
+              gestor.setVista(valor);
+              triaPagina(1);
+            }}
+            opcions={[
+              { valor: 'graella', text: tr(T['vista.graella']) },
+              { valor: 'taula', text: tr(T['vista.taula']) }
+            ]}
+          />
+        </div>
+
+        {potEscriure ? (
+          <AccionsCarpetaLocal
+            t={t}
+            font={font}
+            carpeta={carpeta}
+            nomVolum={nomVolum}
+            buida={carpetaBuida}
+            onFet={onFet}
+            onNouFitxer={gestor.enNouFitxer}
+          />
+        ) : null}
+
+        <div className={elSeleccionat ? 'sdp-arxiu-local__cos sdp-arxiu-local__cos--amb-detall' : 'sdp-arxiu-local__cos'}>
+          <section className="sdp-arxiu-local__fitxers" aria-labelledby={idFitxers}>
+            <h3 id={idFitxers} ref={titolFitxersRef} tabIndex={-1}>{tr(T.fitxers, { n: filtrats.length })}</h3>
+            <p role="status" className="sdp-nomes-lector">{anunciRecompte}</p>
+            {llista}
+            {pag.pagines > 1 ? (
+              <nav className="sdp-arxiu-local__paginacio" aria-label={tr(T.paginacio)}>
+                <Boto icona={ChevronLeft} disabled={pag.pagina <= 1} onClick={() => triaPagina(pag.pagina - 1)}>{tr(T.anterior)}</Boto>
+                <p aria-live="polite">{tr(T.pagina, { n: pag.pagina, total: pag.pagines })}</p>
+                <Boto icona={ChevronRight} disabled={pag.pagina >= pag.pagines} onClick={() => triaPagina(pag.pagina + 1)}>{tr(T.seguent)}</Boto>
+              </nav>
+            ) : null}
+          </section>
+          {elSeleccionat ? (
+            <DetallArxiuLocal
+              key={`${elSeleccionat.ruta}\u0000${versioDetall}`}
+              t={t}
+              font={font}
+              el={elSeleccionat}
+              potEscriure={potEscriure}
+              carpetes={carpetes}
+              nomVolum={nomVolum}
+              pobles={pobles}
+              blocDeNotes={blocDeNotes}
+              exactes={exactes}
+              bloquejat={canvisPendents}
+              onTanca={onTancaDetall}
+              onCanvisPendents={gestor.marcaCanvis}
+              onFet={onFet}
+              onNouFitxer={gestor.enNouFitxer}
+              onDesat={gestor.enDesatText}
+            />
+          ) : null}
         </div>
       </div>
+    );
+  }
 
-      {fontActiva && (
-        <>
-          <div className="card card--soft">
-            <div className="card__body">
-              <div className="notes-list-header">
-                <strong className="univ-manager-facet-header">
-                  Diagnòstic intel·ligent de «{fontActiva.nom}» ({analisi.resum.totalFitxers} fitxers · {formatKb(analisi.resum.pesTotalBytes)})
-                </strong>
-                <div className="univ-manager-toolbar">
-                  <span className="pill">
-                    Emparellades Web: {analisi.resum.totalEmparelladesWeb}
-                  </span>
-                  <span className="pill">
-                    Inèdites sense WebP: {analisi.resum.totalInedites}
-                  </span>
-                  <span className="pill">
-                    Bessones locals: {analisi.resum.totalBessonesLocals} (estalvi {formatKb(analisi.resum.estalviBessonesBytes)})
-                  </span>
-                  <span className="pill">
-                    Avisos pes/duplicats: {analisi.resum.totalPesAlt + analisi.resum.totalDuplicades}
-                  </span>
-                </div>
-              </div>
-
-              <div className="notes-list-header">
-                <div className="univ-manager-toolbar" role="group" aria-label="Filtre per subcarpeta local">
-                  <button
-                    type="button"
-                    className={`pill ${subcarpetaActiva === 'totes' ? 'sdp-badge-system' : ''}`.trim()}
-                    aria-pressed={subcarpetaActiva === 'totes'}
-                    onClick={() => setSubcarpetaActiva('totes')}
-                  >
-                    Totes les carpetes ({analisi.resum.totalFitxers})
-                  </button>
-                  {analisi.subcarpetes.map((sub) => (
-                    <button
-                      key={sub.nom}
-                      type="button"
-                      className={`pill ${subcarpetaActiva === sub.nom ? 'sdp-badge-system' : ''}`.trim()}
-                      aria-pressed={subcarpetaActiva === sub.nom}
-                      onClick={() => setSubcarpetaActiva(sub.nom)}
-                    >
-                      {sub.nom} ({sub.total} · {formatKb(sub.bytes)})
-                    </button>
-                  ))}
-                </div>
-
-                <div className="univ-manager-toolbar" role="group" aria-label="Filtre per estat d'auditoria">
-                  {[
-                    ['tots', 'Tots els estats'],
-                    ['emparellades', 'Emparellades amb la Web'],
-                    ['inedites', 'Inèdites (pendents de WebP)'],
-                    ['bessones', 'Amb bessona .webp local'],
-                    ['alertes', 'Pes alt o duplicades']
-                  ].map(([codi, text]) => (
-                    <button
-                      key={codi}
-                      type="button"
-                      className={`pill ${filtreEstat === codi ? 'sdp-badge-category' : ''}`.trim()}
-                      aria-pressed={filtreEstat === codi}
-                      onClick={() => setFiltreEstat(codi)}
-                    >
-                      {text}
-                    </button>
-                  ))}
-                  <input
-                    type="search"
-                    className="sdp-camp__control"
-                    placeholder="Cerca per nom o ruta…"
-                    aria-label="Cerca per nom o ruta a la carpeta local"
-                    value={cerca}
-                    onChange={(e) => setCerca(e.target.value)}
-                  />
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {seleccionat && (
-            <div className="card card--soft" data-testid="laboratori-multimedia-local">
-              <div className="card__body">
-                <div className="notes-list-header">
-                  <div>
-                    <h3 className="section-title">{seleccionat.nom}</h3>
-                    <p>
-                      Ruta local: <code>{seleccionat.ruta}</code> · Pes original: <strong>{formatKb(seleccionat.mida)}</strong>
-                      {midesOriginals ? ` · Dimensions: ${midesOriginals.ample} × ${midesOriginals.alt} px` : ''}
-                    </p>
-                  </div>
-                  <button type="button" className="sdp-boto sdp-boto--secundari" onClick={() => setSeleccionat(null)}>
-                    Tancar inspector
-                  </button>
-                </div>
-
-                <ul>
-                  <li>
-                    <strong>Estat respecte al sistema web:</strong>{' '}
-                    {seleccionat.emparelladaWeb
-                      ? `Emparellada amb el cens web (${seleccionat.parellaWeb?.src || 'activa'})`
-                      : seleccionat.inedita
-                        ? 'Inèdita en local (encara no té versió .webp ni figura al cens web)'
-                        : 'Arxiu local de suport'}
-                  </li>
-                  {seleccionat.teBessonaLocal && (
-                    <li>
-                      <strong>Parella en carpeta local:</strong>{' '}
-                      {seleccionat.bessonaWebpRuta
-                        ? `Té bessona ${seleccionat.bessonaWebpRuta} (${formatKb(seleccionat.bessonaWebpMida)} · estalvi de ${formatKb(seleccionat.estalviBytes)})`
-                        : `És la bessona WebP de ${seleccionat.originalRasterRuta} (${formatKb(seleccionat.originalRasterMida)})`}
-                    </li>
-                  )}
-                  {seleccionat.coincidenciesMida.length > 0 && (
-                    <li>
-                      <strong>Possible duplicat exacte per mida:</strong>{' '}
-                      <code>{seleccionat.coincidenciesMida.join(', ')}</code>
-                    </li>
-                  )}
-                  {detallSeleccionat?.exif && (detallSeleccionat.exif.dataCaptura || detallSeleccionat.exif.camera || detallSeleccionat.exif.autor) && (
-                    <li>
-                      <strong>Metadades EXIF:</strong>{' '}
-                      {[
-                        detallSeleccionat.exif.dataCaptura && `Data: ${detallSeleccionat.exif.dataCaptura}`,
-                        detallSeleccionat.exif.camera && `Càmera: ${detallSeleccionat.exif.camera}`,
-                        detallSeleccionat.exif.autor && `Autor: ${detallSeleccionat.exif.autor}`,
-                        detallSeleccionat.exif.gps && `GPS: ${detallSeleccionat.exif.gps.lat.toFixed(4)}, ${detallSeleccionat.exif.gps.lng.toFixed(4)}`
-                      ].filter(Boolean).join(' · ')}
-                    </li>
-                  )}
-                </ul>
-
-                {detallSeleccionat?.url && (
-                  <div className="stack-grid">
-                    <div className="notes-list-header">
-                      <strong>Laboratori de Nitidesa i Compressió WebP (Comparació Humana Abans / Després)</strong>
-                      <div className="univ-manager-toolbar">
-                        <label>
-                          Qualitat WebP:{' '}
-                          <select
-                            className="sdp-camp__control"
-                            value={qualitatWebp}
-                            onChange={(e) => {
-                              const q = Number(e.target.value);
-                              setQualitatWebp(q);
-                              const img = document.getElementById('sdp-img-original-local');
-                              if (img) generaPrevisualitzacioWebp(img, q, maxCostat);
-                            }}
-                          >
-                            {QUALITATS_LABORATORI.map((op) => (
-                              <option key={op.valor} value={op.valor}>{op.etiqueta}</option>
-                            ))}
-                          </select>
-                        </label>
-                        <label>
-                          Resolució:{' '}
-                          <select
-                            className="sdp-camp__control"
-                            value={maxCostat}
-                            onChange={(e) => {
-                              const m = Number(e.target.value);
-                              setMaxCostat(m);
-                              const img = document.getElementById('sdp-img-original-local');
-                              if (img) generaPrevisualitzacioWebp(img, qualitatWebp, m);
-                            }}
-                          >
-                            {ESCALES_LABORATORI.map((op) => (
-                              <option key={op.valor} value={op.valor}>{op.etiqueta}</option>
-                            ))}
-                          </select>
-                        </label>
-                        {resultatWebp && (
-                          <>
-                            <button type="button" className="sdp-boto sdp-boto--primari" onClick={descarregaWebpGenerat}>
-                              Descarregar .webp ({formatKb(resultatWebp.mida)})
-                            </button>
-                            {handleNatiu && EXTENSIONS_RASTER_CONVERTIBLE.has(seleccionat.ext) && (
-                              <button type="button" className="sdp-boto sdp-boto--secundari" onClick={desaWebpACarpetaLocal}>
-                                Guardar .webp a la carpeta local
-                              </button>
-                            )}
-                          </>
-                        )}
-                      </div>
-                    </div>
-
-                    <div className="photo-grid">
-                      <figure className="card">
-                        <div className="card__body">
-                          <figcaption>
-                            <strong>Original ({seleccionat.ext.toUpperCase()} · {formatKb(seleccionat.mida)})</strong>
-                          </figcaption>
-                          <img
-                            id="sdp-img-original-local"
-                            src={detallSeleccionat.url}
-                            alt={seleccionat.nom}
-                            onLoad={(e) => generaPrevisualitzacioWebp(e.currentTarget, qualitatWebp, maxCostat)}
-                          />
-                        </div>
-                      </figure>
-
-                      {resultatWebp && (
-                        <figure className="card">
-                          <div className="card__body">
-                            <figcaption>
-                              <strong>
-                                Resultat WebP ({resultatWebp.ample} × {resultatWebp.alt} px · {formatKb(resultatWebp.mida)} ·{' '}
-                                {seleccionat.mida > resultatWebp.mida
-                                  ? `-${Math.round(((seleccionat.mida - resultatWebp.mida) / seleccionat.mida) * 100)}%`
-                                  : 'mateix pes'})
-                              </strong>
-                            </figcaption>
-                            <img src={resultatWebp.url} alt={`Previsualització WebP de ${seleccionat.nom}`} />
-                          </div>
-                        </figure>
-                      )}
-                    </div>
-                  </div>
-                )}
-              </div>
-            </div>
-          )}
-
-          <div className="card card--soft">
-            <div className="card__body">
-              <div className="notes-list-header">
-                <h3 className="section-title">
-                  Fitxers a la vista ({elementsFiltrats.length})
-                </h3>
-              </div>
-              <div className="stack-grid">
-                {elementsFiltrats.map((el) => (
-                  <div key={el.ruta} className="notes-list-header">
-                    <div>
-                      <strong>{el.nom}</strong>{' '}
-                      <span className="pill">{el.subcarpeta}</span>{' '}
-                      <span className="pill">{formatKb(el.mida)}</span>{' '}
-                      {el.emparelladaWeb && <span className="pill sdp-badge-system">Emparellada Web</span>}
-                      {el.inedita && <span className="pill sdp-badge-category">Inèdita (sense .webp)</span>}
-                      {el.teBessonaLocal && <span className="pill">Bessona .webp local</span>}
-                      {el.pesAlt && <span className="pill">Pes alt</span>}
-                      {el.duplicada && <span className="pill">Possible duplicat</span>}
-                      <div>
-                        <small><code>{el.ruta}</code></small>
-                      </div>
-                    </div>
-                    {el.tipus === 'imatge' && (
-                      <button
-                        type="button"
-                        className="sdp-boto sdp-boto--secundari"
-                        onClick={() => obriElementLocal(el)}
-                      >
-                        Inspeccionar i provar WebP
-                      </button>
-                    )}
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        </>
-      )}
+  if (!autonom) return <div className="sdp-arxiu-local">{cos}</div>;
+  return (
+    <section className="sdp-arxiu-local" aria-labelledby={idTitol}>
+      <header className="sdp-arxiu-local__capcalera">
+        <h2 id={idTitol}>{tr(T.titol)}</h2>
+        <p>{tr(T.entradeta)}</p>
+      </header>
+      {cos}
+      <DialegDescartaLocal gestor={gestor} t={t} />
     </section>
   );
 }
 
+/**
+ * El Gestor autònom: el panell amb arbre propi i detall en línia, amb el seu
+ * estat de selecció (carpeta i arxiu). El de les proves del Gestor i el banc
+ * de proves de la peça; /multimedia fa servir les tres columnes.
+ */
+export function GestorMultimediaLocal({ blocDeNotes = null, pobles = MOCK_TOWNS, t = traduccioDeReserva, ...opcions }) {
+  const [seleccio, setSeleccio] = useState(SELECCIO_BUIDA);
+  const seleccioRef = useRef(seleccio);
+  seleccioRef.current = seleccio;
+  const onSeleccio = useCallback((canvi) => {
+    setSeleccio((abans) => (canvi?.portada ? SELECCIO_BUIDA : {
+      carpeta: canvi?.carpeta !== undefined ? canvi.carpeta : abans.carpeta,
+      ruta: canvi?.ruta !== undefined ? canvi.ruta : abans.ruta
+    }));
+  }, []);
+  const gestor = useGestorArxiusLocals({ ...opcions, t, seleccioRef, onSeleccio });
+  const { carpeta: carpetaActiva, ruta: seleccionat } = seleccio;
+  const { font, carpetes, elementDe, demanaCanvi, descartaCanvis } = gestor;
+  const titolFitxersRef = useRef(null);
+  const tesseles = useRef(new Map());
+  const focusTornada = useRef(null);
+  const elSeleccionat = seleccionat ? elementDe(seleccionat) : null;
+
+  /* Una carpeta o una selecció que ja no hi són (moguda, esborrada des de fora) es deixen. */
+  useEffect(() => {
+    if (carpetaActiva && font && !carpetes.includes(carpetaActiva)) setSeleccio((abans) => ({ ...abans, carpeta: '' }));
+  }, [carpetaActiva, carpetes, font]);
+  useEffect(() => {
+    if (seleccionat && font && !elSeleccionat) {
+      setSeleccio((abans) => ({ ...abans, ruta: null }));
+      descartaCanvis();
+    }
+  }, [seleccionat, font, elSeleccionat, descartaCanvis]);
+
+  /* En tancar el detall, el focus torna a la tessel·la (o al títol de «Fitxers»). */
+  useEffect(() => {
+    if (seleccionat !== null || focusTornada.current === null) return;
+    const ruta = focusTornada.current;
+    focusTornada.current = null;
+    const node = tesseles.current.get(ruta);
+    (node?.isConnected ? node : titolFitxersRef.current)?.focus();
+  }, [seleccionat]);
+
+  const registraTessela = useCallback((ruta, node) => {
+    if (node) tesseles.current.set(ruta, node);
+    else tesseles.current.delete(ruta);
+  }, []);
+
+  const selecciona = (el) => {
+    if (el.ruta === seleccionat) return;
+    demanaCanvi(() => setSeleccio((abans) => ({ ...abans, ruta: el.ruta })));
+  };
+
+  const tancaDetall = () => demanaCanvi(() => {
+    focusTornada.current = seleccionat;
+    setSeleccio((abans) => ({ ...abans, ruta: null }));
+  });
+
+  const triaCarpeta = (ruta) => {
+    setSeleccio((abans) => ({ ...abans, carpeta: ruta }));
+    gestor.triaPagina(ruta, 1);
+  };
+
+  /* El resultat d'una operació: si deixa el detall, el focus torna a la tessel·la. */
+  const enFet = (resultat = {}) => {
+    if (resultat?.seleccio === null) focusTornada.current = seleccionat;
+    gestor.enFet(resultat);
+  };
+
+  return (
+    <PanellGestorLocal
+      autonom
+      gestor={gestor}
+      t={t}
+      carpeta={carpetaActiva}
+      seleccionat={seleccionat}
+      onTriaArxiu={selecciona}
+      onTriaCarpeta={triaCarpeta}
+      onTancaDetall={tancaDetall}
+      onFet={enFet}
+      pobles={pobles}
+      blocDeNotes={blocDeNotes}
+      registraTessela={registraTessela}
+      titolFitxersRef={titolFitxersRef}
+    />
+  );
+}

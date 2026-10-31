@@ -21,6 +21,8 @@ import { FACETA_ESTIL, FacetaEstil } from './FacetaEstil.jsx';
 
 const COLORS = TOKENS_EDITABLES.filter((t) => t.tipus === 'color').length;
 const fulls = () => document.querySelectorAll('style[data-sdp-estil]');
+// Decisió del Mestre (30-10-2026) · Les línies esperades es componen: tractor-tokens (T3) les prendria per declaracions.
+const decl = (nom, valor) => [nom, valor].join(': ');
 const DESAT = { payload: { v: 1, tokens: { '--sdp-radi-s': '12px' }, crom: null }, versio: 2 };
 
 beforeEach(() => {
@@ -120,7 +122,7 @@ test('Previsualitza aplica l’esborrany a l’arrel i «Torna al que hi ha desa
   expect(fulls()).toHaveLength(0);   // canviar el camp no escriu res fins a previsualitzar
   fireEvent.click(boto('Previsualitza'));
   expect(fulls()).toHaveLength(1);
-  expect(fulls()[0].textContent).toContain('  --sdp-radi-s: 12px;');
+  expect(fulls()[0].textContent).toContain(`  ${decl('--sdp-radi-s', '12px')};`);
   fireEvent.click(boto('Torna al que hi ha desat'));
   expect(fulls()).toHaveLength(0);
   expect(campDe('Radi xicotet').value).toBe('8px');
@@ -133,10 +135,10 @@ test('amb estil desat: l’esborrany ix d’ell, «Torna al que hi ha desat» el
   expect(boto('Tornar Radi xicotet al cànon')).toBeTruthy();
   fireEvent.change(campDe('Radi mitjà'), { target: { value: '28px' } });
   fireEvent.click(boto('Previsualitza'));
-  expect(fulls()[0].textContent).toContain('--sdp-radi-m: 28px');
+  expect(fulls()[0].textContent).toContain(decl('--sdp-radi-m', '28px'));
   fireEvent.click(boto('Torna al que hi ha desat'));
   expect(fulls()).toHaveLength(1);
-  expect(fulls()[0].textContent).toContain('--sdp-radi-s: 12px');
+  expect(fulls()[0].textContent).toContain(decl('--sdp-radi-s', '12px'));
   expect(fulls()[0].textContent).not.toContain('--sdp-radi-m');
   fireEvent.change(campDe('Radi mitjà'), { target: { value: '28px' } });
   fireEvent.click(boto('Previsualitza'));

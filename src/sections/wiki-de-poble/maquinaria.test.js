@@ -3,21 +3,23 @@
    maquinària interna de desenvolupament de l'aside en pantalles d'usuari») ·
    Qui veu la carpeta «Maquinària de la IAIA» de la Wiki (i la Consola
    incrustada): en desenvolupament o qui és superadmin. Només un true literal
-   obri, com consolaDemanaSessio (guardaConsola.js). */
+   obri, com feia consolaDemanaSessio (guardaConsola.js, retirada el
+   31-10-2026). */
 import { expect, test } from 'vitest';
 import { esperaElRol, maquinariaALaVista } from './maquinaria.js';
 
-test('en desenvolupament sempre; en un build, només qui és superadmin', () => {
-  expect(maquinariaALaVista({ DEV: true })).toBe(true);
-  expect(maquinariaALaVista({ DEV: true, esSuperadmin: false })).toBe(true);
-  expect(maquinariaALaVista({ DEV: false, esSuperadmin: true })).toBe(true);
-  expect(maquinariaALaVista({ DEV: false, esSuperadmin: false })).toBe(false);
-  expect(maquinariaALaVista({ DEV: false })).toBe(false);
-});
-
-test('qualsevol valor que no siga un true literal tanca', () => {
-  for (const entorn of [undefined, null, {}, { DEV: 'true' }, { DEV: 1 }, { esSuperadmin: 'true' }, { esSuperadmin: 1 }]) {
-    expect([entorn, maquinariaALaVista(entorn)]).toEqual([entorn, false]);
+/* Ordre del Mestre (30-10-2026, prompt 2208, T2.2) · Proves actualitzades a
+   propòsit: la Consola incrustada és a la vista de tothom, en qualsevol
+   entorn i sense sessió. Derogat: «en un build, només qui és superadmin» i
+   «qualsevol valor que no siga un true literal tanca». Que les eines amb
+   botons continuen només de DEV ho proven WikiDePobleSection.produccio.test.jsx
+   i destinsEmoji.test.js (modulsLocalsActius). */
+test('a la vista de tothom: en desenvolupament, en un build, amb sessió o sense', () => {
+  for (const entorn of [
+    { DEV: true }, { DEV: true, esSuperadmin: false }, { DEV: false, esSuperadmin: true },
+    { DEV: false, esSuperadmin: false }, { DEV: false }, undefined, null, {}, { DEV: 'true' }, { esSuperadmin: 1 }
+  ]) {
+    expect([entorn, maquinariaALaVista(entorn)]).toEqual([entorn, true]);
   }
 });
 

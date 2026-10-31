@@ -99,9 +99,14 @@ test('triar Castellà: un lot de text al servei, estat de càrrega i el títol i
   expect(h1.getAttribute('lang')).toBe('es');
   const cos = traduit(container);
   expect(cos.getAttribute('lang')).toBe('es');
+  /* Actualitzada a posta (Gauntlet 261030, Fase 3, TC3.3; vista-traduida-perd-entradilla):
+     motiu, el subtítol i l'entradilla tornen dins de div.page-intro, com a l'original. */
   expect([...cos.children].map((e) => [e.tagName.toLowerCase(), e.textContent])).toEqual([
-    ['h2', '[ES] Programa'], ['p', '[ES] Tres dies de festa.'], ['h3', '[ES] Divendres'],
+    ['div', '[ES] Programa[ES] Tres dies de festa.'], ['h3', '[ES] Divendres'],
     ['p', '[ES] Sopar a la plaça.'], ['ul', '[ES] Música[ES] Ball'],
+  ]);
+  expect([...cos.querySelector('.page-intro').children].map((e) => [e.tagName.toLowerCase(), e.className, e.textContent])).toEqual([
+    ['h2', '', '[ES] Programa'], ['p', 'lead', '[ES] Tres dies de festa.'],
   ]);
   // L'original no es desmunta: s'amaga i conserva els seus controls.
   expect(original(container).hasAttribute('hidden')).toBe(true);

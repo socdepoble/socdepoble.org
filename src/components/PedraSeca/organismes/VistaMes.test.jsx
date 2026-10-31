@@ -89,7 +89,7 @@ test('un acte de diversos dies és una barra per setmana, posicionada per les l�
   const { container } = pinta();
   const files = container.querySelectorAll('.sdp-cal-mes__fila');
   const barres = (fila) => [...fila.querySelectorAll('.sdp-cal-barra')]
-    .map((b) => [b.textContent, ...['col-inici', 'col-fi', 'carril'].map((n) => b.style.getPropertyValue(`--sdp-cal-${n}`))]);
+    .map((b) => [b.textContent, ...['col-inici', 'col-fi', 'carril'].map((n) => b.style.getPropertyValue(`--cal-${n}`))]);
   expect(barres(files[0])).toEqual([['Festes', '1', '7', '1']]);
   // L'exposició del 9 al 13: divendres i cap de setmana, i de dilluns a dimarts de la següent.
   expect(barres(files[1])).toEqual([['Exposició', '5', '8', '1']]);
@@ -147,8 +147,8 @@ test('cada peça porta la classe de color de la seua font; les desconegudes, la 
 test('amb més carrils hi caben tots; l’arrel diu quants n’hi ha', () => {
   const { container } = pinta({ maxCarrils: 6 });
   expect(container.querySelector('.sdp-cal-mes__mes')).toBeNull();
-  expect(container.querySelector('.sdp-cal-mes').style.getPropertyValue('--sdp-cal-carrils')).toBe('6');
-  for (const el of container.querySelectorAll('[style]')) expect(el.getAttribute('style')).toMatch(/^(--sdp-cal-[a-z-]+: ?[^;]+; ?)+$/);
+  expect(container.querySelector('.sdp-cal-mes').style.getPropertyValue('--cal-carrils')).toBe('6');
+  for (const el of container.querySelectorAll('[style]')) expect(el.getAttribute('style')).toMatch(/^(--cal-[a-z-]+: ?[^;]+; ?)+$/);
 });
 
 test('sense onTriaDia, els dies són quiets', () => {
@@ -222,7 +222,7 @@ test('dues setmanes des d’un dilluns: dues files, cap dia atenuat, l’1 d’o
   const numeros = [...container.querySelectorAll('.sdp-cal-dia__numero')].map((n) => n.textContent);
   expect(numeros[3]).toBe(new Date(2026, 9, 1).toLocaleDateString('ca-ES', { day: 'numeric', month: 'short' }));
   expect(numeros.filter((n) => /\D/.test(n))).toHaveLength(1);
-  expect(container.querySelector('.sdp-cal-mes').style.getPropertyValue('--sdp-cal-carrils')).toBe('6');
+  expect(container.querySelector('.sdp-cal-mes').style.getPropertyValue('--cal-carrils')).toBe('6');
   expect(container.querySelector('[aria-current="date"]').getAttribute('aria-label')).toBe(`${dataLlarga(avui)} · 0 esdeveniments`);
   // Les barres del període: les festes (28-09 a 03-10) i l'exposició, que continua després de l'11.
   expect([...container.querySelectorAll('.sdp-cal-barra')].map((b) => b.textContent)).toEqual(['Festes', 'Exposició']);

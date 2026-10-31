@@ -4,7 +4,7 @@
 import { describe, expect, test, vi } from 'vitest';
 import {
   ACTORS_PERMANENTS, AJUDA, AJUDA_PER_CLAU, CARA_DE_LA_IAIA, CONTACTE_HUMA, ID_FIL_DE_MOSTRA_DE_JAVI, MISSATGE_AUTOMATIC_DE_JAVI, PREFIX_PER_DEFECTE,
-  ambXatsPerDefecte, caraDeLaIAIA, clauPerDefecteDe, esIdPerDefecte, esLaIdentitatDAjuda, esLaPersonaDeContacte,
+  ambXatsPerDefecte, caraDeLaIAIA, clauPerDefecteDe, conversaPerDefecteDe, esIdPerDefecte, esLaIdentitatDAjuda, esLaPersonaDeContacte,
   esXatDeLaIAIA, filDeMostraDeJavi, gestionaLEntitatPilot, jaTeElXat, missatgesDeMostraDeJavi, senseLaIAIA, senseXatPerDefecte, vestixLaIAIA
 } from './xatsPerDefecte.js';
 import { AGENTS_IA_SEED, ENTITAT_PILOT_ID, IAIA_ID, PERSONA_PILOT } from './identitatsSeed.js';
@@ -416,5 +416,25 @@ describe('tasca 12 · amb el nivell d’IA a 0 la IAIA no apareix', () => {
     const sense = [real({ id: 'a' })];
     expect(senseLaIAIA(sense)).toBe(sense);
     expect(senseLaIAIA(null)).toBeNull();
+  });
+});
+
+/* P1-70 (261029) · La conversa d'atenció personal i servei tècnic sense cap
+   bombolla (qui mira és Javi, o el remot sense el seu compte declarat) i la
+   Conversa sintètica de cada actor permanent, per a les files de reserva. */
+describe('P1-70 · filDeMostraDeJavi sense missatge i conversaPerDefecteDe', () => {
+  test('sense missatge: cap últim text ni seq, de només lectura i amb el seu avís; per defecte, com sempre', () => {
+    expect(filDeMostraDeJavi({ avis: 'av', ambMissatge: false })).toMatchObject({
+      id: 'fake-javi', ultimText: null, ultimSeq: 0, llegitFinsSeq: 0, potEscriure: false, avisNomesLectura: 'av', noLlegits: 0
+    });
+    expect(filDeMostraDeJavi()).toMatchObject({ ultimText: MISSATGE_AUTOMATIC_DE_JAVI, ultimSeq: 1, llegitFinsSeq: 1 });
+  });
+  test('conversaPerDefecteDe: la mateixa Conversa que ambXatsPerDefecte, una còpia nova; una clau sense fila, null', () => {
+    const [javi, iaia] = ambXatsPerDefecte([]);
+    expect(conversaPerDefecteDe('javi')).toEqual(javi);
+    expect(conversaPerDefecteDe('iaia')).toEqual(iaia);
+    expect(conversaPerDefecteDe('javi')).not.toBe(conversaPerDefecteDe('javi'));
+    expect(conversaPerDefecteDe('socdepoble')).toBeNull();
+    expect(conversaPerDefecteDe('x')).toBeNull();
   });
 });

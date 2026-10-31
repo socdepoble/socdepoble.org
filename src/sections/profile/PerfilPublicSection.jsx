@@ -23,7 +23,7 @@
  *     de l'organització només ix si l'ha fet públic, amb un mailto validat.
  */
 import { useEffect, useState } from 'react';
-import { Bot, MessageCircle, PencilLine, UserCheck } from 'lucide-react';
+import { Bot, Contact, MessageCircle, PencilLine, UserCheck } from 'lucide-react';
 import { useNavigate, useParams } from '../../app/contexts/RouterContext';
 import { useIdentitat } from '../../app/contexts/IdentitatContext.jsx';
 /* Gauntlet 261025_0545 (CUR-01) · Qui mira: la persona i l'entrada de la
@@ -32,6 +32,7 @@ import { useSessioOpcional } from '../../app/contexts/SessionContext.jsx';
 import { entradaSessio } from '../../data/identitat.js';
 import { esRolQueMana } from '../../components/universal/identitat/rols.js';
 import { enllacMailto } from './contacteOrganitzacio.js';
+import { desaVcard, nomFitxerVcard, vcardDOrganitzacio } from './vcardOrganitzacio.js';
 import { FORMA_USERNAME } from '../onboarding/onboardingModel.js';
 import { rutaFitxaOrganitzacio } from './perfilModel.js';
 import { UniversalPage } from '../../components/universal/UniversalPage';
@@ -41,13 +42,14 @@ import { useUIActions, useUIState } from '../../app/contexts/UIContext';
 import { useSEO } from '../../hooks/useSEO';
 import { loadPerfilPublic, teCapacitat } from '../../data/backendPort.js';
 import { renderRichText } from '../detail/detailRichText.jsx';
+import { useLlenguaDelContingut } from '../../components/universal/traduccio/llenguaDelContingut.js';
 import { ProveidorSincronitzacioTargetes } from '../detail/SincronitzacioTargetes.jsx';
 /* Gauntlet 261016 (Bloc 3) · El tipus de perfil d'un agent del catàleg, de la
    seua font única a la capa de dades (abans, la còpia del directori): un
    personatge ANIMAL és una IA. */
 import { AGENTS_MAP, tipusDAgent } from '../../data/agentsSeed.js';
 import { normalizeBackendConfig } from '../../config/backendConfig.js';
-import { origenPublic } from '../../config/origenPublic.js';
+import { esAppNativa, origenPublic } from '../../config/origenPublic.js';
 /* T43 (ordre del Mestre, 260928) · Connectar una fitxa pública porta el seu
    descriptor i, per a una entitat o un grup, `organitzacio=ID`. La funció viu
    a config/navigation.js: el directori (ProfileSection) fa el mateix camí. */
@@ -518,6 +520,15 @@ export function PaginaDeLAgent({ identitat }) {
   return <FitxaPublica perfil={{ ...perfilDeLaIADelPaquet(agent), propietari: true }} ambEdita={false} chrome="context" />;
 }
 
+/* Gauntlet 261030 (cicle 4, lang-ca-nomes-a-textsection) · La presentació
+   de la fitxa, amb el lang que li dona la pàgina (useLlenguaDelContingut:
+   només la de la IAIA el declara, i només amb la interfície en una altra
+   llengua). Sense, renderRichText de sempre: el DOM no canvia. */
+function PresentacioDeLaFitxa({ html }) {
+  const lang = useLlenguaDelContingut();
+  return renderRichText(html, { lang });
+}
+
 /**
  * Ordre del Mestre (261021, prompt 261021_0015, tasca 7: «Pàgina Única
  * Atòmica») · La fitxa pública ja carregada: la pinta /iaia (i qualsevol
@@ -640,6 +651,15 @@ export function FitxaPublica({ perfil, ambEdita = true, ambXat = true, chrome = 
     : (perfil.esIA ? rutaFitxaOrganitzacio(perfil.id) : '/el-meu-perfil');
   const correuPublic = esOrganitzacio ? String(perfil.correu || '').trim() : '';
   const mailto = correuPublic ? enllacMailto(correuPublic) : null;
+  /* P1-59 (b) (Llibre Mestre, Fita 23 i IDEA-45; guàrdia nocturna 261030) ·
+     «📇 Descarrega el contacte (vCard)» a la fitxa d'una organització PÚBLICA
+     (entitat o grup; mai una persona ni una IA): la targeta es fa en local
+     amb el que la pàgina ja ensenya (nom, poble, el correu si és públic i
+     l'adreça de la fitxa; vcardOrganitzacio.js). Dins de l'app nativa un
+     enllaç blob: no desa res (vegeu DetallPrivacitat): allí, cap botó. */
+  const vcard = esOrganitzacio && perfil.publicat === true && !perfil.esIA && !esAppNativa()
+    ? vcardDOrganitzacio({ nom: perfil.nom, poble, correu: mailto ? correuPublic : '', url: urlCanonica(rutaCanonicaDePerfil(perfil) || rutaDAutoria({ tipus: perfil.tipus, id: perfil.id })) })
+    : null;
   /* Gauntlet 261016 (Bloc 3) · L'avís i el botó d'una IA porten el seu nom:
      abans deien «La IAIA MarIA» i «Parla amb la IAIA» per a qualsevol IA (un
      personatge del catàleg, com El Gall o Nano Banana). Per a la IAIA, pel seu
@@ -688,11 +708,30 @@ export function FitxaPublica({ perfil, ambEdita = true, ambXat = true, chrome = 
      del paquet de la persona pilot en remot amb sessió, P4b-3), la fila no es
      pinta: el seu marge deixava un forat davall de l'entradilla. */
   const ambAccions = Boolean(rutaDelXat) || (ambEdita && (perfil.propietari || administra)) || (administra && !actuaComEsta);
+  /* Gauntlet 261030 (cicle 2, traduir-fitxa-propia-veinat-connectat;
+     decisió 7) · La fitxa pròpia d'una persona, mirada per ella, porta al peu
+     el veïnat connectat amb ella («Esta llista només la veus tu»): Traduir no
+     hi envia res (el botó avisa). La fitxa que veuen els altres es traduïx. */
+  const ambVeinatConnectat = esPersona && perfil.propietari && esDeQuiMira;
+  /* Gauntlet 261030 (Fase 3, TC3.2; traduir-contingut-de-membres) · I només
+     una fitxa pública (DTO `publicat`: is_public de la persona, visibility
+     'public' de l'organització): la d'una entitat només per als membres, o
+     una fitxa privada que només veu qui la té, no ix cap al motor. Sense la
+     marca, tampoc (fallada tancada). */
+  const fitxaTraduible = perfil.publicat === true && !ambVeinatConnectat;
 
   return (
     <UniversalPage
       chrome={chrome}
       layout="contained"
+      traduccio={fitxaTraduible}
+      /* Gauntlet 261030 (cicle 4, lang-ca-nomes-a-textsection) · Decisió del
+         Mestre (261030): «lang="ca" al contingut original en valencià». La
+         fitxa de la IAIA (nom, presentació, lema i la targeta de l'Ànima) és
+         text del projecte, en valencià: amb la interfície en una altra llengua
+         en porta el lang. La d'una persona o una entitat no declara cap
+         llengua: l'escriu qui vol, en la llengua que vol. */
+      llenguaDelContingut={esLaIAIA ? 'ca' : null}
       title={perfil.nom}
       subtitle={perfil.bio || undefined}
       lead={perfil.lema || undefined}
@@ -788,11 +827,19 @@ export function FitxaPublica({ perfil, ambEdita = true, ambXat = true, chrome = 
           <a href={mailto}>{correuPublic}</a>
         </p>
       ) : null}
+      {/* P1-59 (b) · La targeta de contacte (.vcf), al costat del correu. */}
+      {vcard ? (
+        <div className="sdp-alerta__accions">
+          <Boto varietat="secundari" icona={Contact} onClick={() => desaVcard(vcard, nomFitxerVcard(perfil.nom))}>
+            {t('section.perfil.public.vcard', 'Descarrega el contacte (vCard)')}
+          </Boto>
+        </div>
+      ) : null}
       {/* Ordre del Mestre (261007, «cards de veritat») · Les targetes
           incrustades de la presentació, sincronitzades amb el seu original. */}
       {perfil.presentacioHtml ? (
         <ProveidorSincronitzacioTargetes>
-          {renderRichText(esLaIAIA ? presentacioAmbLaTargetaDeLAnima(perfil.presentacioHtml) : perfil.presentacioHtml)}
+          <PresentacioDeLaFitxa html={esLaIAIA ? presentacioAmbLaTargetaDeLAnima(perfil.presentacioHtml) : perfil.presentacioHtml} />
         </ProveidorSincronitzacioTargetes>
       ) : null}
       {/* Ordre del Mestre (261021, prompt 261021_0015, tasca 7) · Al peu de la
@@ -805,7 +852,7 @@ export function FitxaPublica({ perfil, ambEdita = true, ambXat = true, chrome = 
           (qui seguix una entitat ho veu qui l'administra, a «El compte»).
           Sense la capacitat 'seguiments', res.
           Gauntlet 261025_0545 (CUR-01) · I només per a qui mira ara, amb la seua clau. */}
-      {esPersona && perfil.propietari && esDeQuiMira ? <GentQueEtSegueix config={externalConfig} t={t} locale={locale} visor={visor} /> : null}
+      {ambVeinatConnectat ? <GentQueEtSegueix config={externalConfig} t={t} locale={locale} visor={visor} /> : null}
     </UniversalPage>
   );
 }

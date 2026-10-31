@@ -173,11 +173,17 @@ export function WorkspaceProvider({
     emitSelection({ categoryId: id, itemId }, 'user');
   }, [emitSelection, categoriaSenseElement]);
 
-  const selectItem = useCallback((itemId) => {
+  /* Gauntlet 261030 (cicle 2) · La raó d'una tria de la persona: 'user' (el
+     clic, l'Enter, la primera fletxa d'un recorregut: les seccions fan push)
+     o 'teclat' (les fletxes següents del mateix recorregut, IDEA-58: les
+     seccions escriuen la URL amb replace, i tot el recorregut és una sola
+     entrada de l'historial, com al Finder). Cap altra raó no hi entra. */
+  const selectItem = useCallback((itemId, opcions) => {
     if (statusRef.current !== 'ready') return;
     const id = itemId == null ? null : String(itemId);
+    const reason = opcions?.reason === 'teclat' ? 'teclat' : 'user';
     dispatch({ type: 'item/select', itemId: id });
-    emitSelection({ categoryId: stateRef.current.activeCategoryId, itemId: id }, 'user');
+    emitSelection({ categoryId: stateRef.current.activeCategoryId, itemId: id }, reason);
   }, [emitSelection]);
 
   const requestItem = useCallback((itemId) => {

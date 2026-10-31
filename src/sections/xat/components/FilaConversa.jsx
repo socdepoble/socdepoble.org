@@ -44,6 +44,7 @@ import MarquesEstat from './MarquesEstat.jsx';
 import PastillaNoLlegits from './PastillaNoLlegits.jsx';
 import { estatDeLUltim } from '../missatges.js';
 import { textDAdjunt } from '../conversa.js';
+import { senseMarquesDeNegreta } from '../negreta.js';
 import { etiquetaLlista } from '../temps.js';
 import { caraDeComunitat } from '../caraDeSocDePoble.js';
 
@@ -74,7 +75,7 @@ export function AvatarFil({ fil, nom, mida = 'md' }) {
   if (esCanal(fil) || (!fil?.avatar_url && esGrup(fil))) {
     const Icona = esCanal(fil) ? Megaphone : (fil?.comunitatId ? MessageCircleMore : Users);
     return (
-      <span className={`sdp-xat-avatar-icona${mida === 'sm' ? ' sdp-xat-avatar-icona--sm' : ''}`} aria-hidden="true">
+      <span className={mida === 'sm' ? 'sdp-xat-avatar-icona sdp-xat-avatar-icona--sm' : 'sdp-xat-avatar-icona'} aria-hidden="true">
         <Icona size={mida === 'sm' ? 20 : 24} aria-hidden="true" focusable="false" />
       </span>
     );
@@ -196,7 +197,9 @@ export default function FilaConversa({ fil, activa = false, onSelect, locale, t,
             {fil.ultimAmagat ? t('section.moderacio.bloquejat.previa', 'Missatge amagat') : (
               <>
                 {fil.ultimText || fil.ultimTipus ? <IniciPrevia fil={fil} joId={joId} t={t} /> : null}
-                {fil.ultimText || textDAdjunt(fil.ultimTipus, t) || t('section.xat.capMissatge', 'Cap missatge.')}
+                {/* IDEA-53 · La previa és una línia meta: sense les marques de
+                    la negreta i sense <strong> (el pes ja diu els no llegits). */}
+                {senseMarquesDeNegreta(fil.ultimText) || textDAdjunt(fil.ultimTipus, t) || t('section.xat.capMissatge', 'Cap missatge.')}
               </>
             )}
           </span>

@@ -2,7 +2,7 @@ import { describe, expect, test, vi } from 'vitest';
 import { MAX_BYTES_EXIF, coordenadesValides, llegixExif, llegixMetadadesImatge, senseDades, teExif } from './exif.js';
 import {
   APP0_JFIF, IMATGE, SOI, TIPUS, app1Exif, concatena, dataOriginal, gpsTorre, jpegAmbExif, orientacio, segment, tiff,
-} from './jpegProva.js';
+} from '../../../../tests/helpers/jpegProva.js';
 
 /* Onada 4, T3a · El lector d'EXIF propi (ADR multimèdia §3.1). Tots els JPEG
    es munten ací (jpegProva.js): cap foto real, cap ubicació de ningú. */

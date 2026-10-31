@@ -99,8 +99,10 @@ const oberts = [];
    producció) i l'app, que llig el mateix magatzem. `ambDestinacio: false`:
    el mòdul exporta `destinacioEnllac = null`, com AppLector en producció
    sense port. `fallaCarrega`: el mòdul no arriba. `senseDisc`: el navegador
-   no deixa obrir IndexedDB (navegació privada). */
-function lectorDeProva({ ambDestinacio = true, fallaCarrega = false, senseDisc = false } = {}) {
+   no deixa obrir IndexedDB (navegació privada). `discLent`: l'app no acaba
+   de llegir el seu magatzem fins que la prova crida `obriDisc()` (una màquina
+   carregada: «Obrint el lector…» dura el que la prova vol). */
+function lectorDeProva({ ambDestinacio = true, fallaCarrega = false, senseDisc = false, discLent = false } = {}) {
   const idb = creaIdbFals();
   const locks = creaLocksFals();
   const canal = creaCanalFals();
@@ -111,14 +113,20 @@ function lectorDeProva({ ambDestinacio = true, fallaCarrega = false, senseDisc =
   };
   const font = creaFontNoticies(creaAdaptadorLlavor({ ara: ARA }));
   const api = creaFontsPersonals({ obriMagatzem: obri, font: () => font });
+  let obriDisc = () => {};
+  const disc = new Promise((resol) => { obriDisc = resol; });
   function App() {
-    const [magatzem] = React.useState(obri);
+    const [magatzem] = React.useState(() => {
+      const delDisc = obri();
+      /* El magatzem és congelat: el lent n'hereta tot i només retarda `llegix`. */
+      return discLent ? Object.create(delDisc, { llegix: { value: () => disc.then(() => delDisc.llegix()) } }) : delDisc;
+    });
     return <AppLector magatzem={magatzem} font={font} ara={() => ARA} />;
   }
   const modul = { default: App, destinacioEnllac: ambDestinacio ? destinacioDe(api) : null };
   const carrega = vi.fn(() => (fallaCarrega ? Promise.reject(new Error('El paquet no ha arribat.')) : Promise.resolve(modul)));
   const registre = creaRegistre({ internes: [{ ...manifestLector, carrega }] });
-  return { api, registre, carrega };
+  return { api, registre, carrega, obriDisc };
 }
 
 /* Espera que el mòdul del Lector s'haja resolt (bé o malament) i que React ho haja pintat. */
@@ -168,6 +176,15 @@ const triaLlesta = () => screen.findByRole('group', { name: 'Per a què és este
 const opcio = (nom) => within(tria()).getByRole('radio', { name: nom });
 const nomFont = () => screen.findByRole('textbox', { name: /^Nom de la font/ });
 const categoria = () => screen.getByRole('combobox', { name: /^Categoria al Lector/ });
+/* L'arbre obert del Lector (CARPETES a #app-grid-sidebar, no el rail). L'app
+   llig el seu magatzem en muntar («Obrint el lector…»): l'arbre arriba quan
+   l'app l'ha llegit, no quan la prova ha llegit el seu (dos magatzems, dues
+   cadenes asíncrones). */
+const arbreDelLector = async () => within(await waitFor(() => {
+  const nav = document.querySelector('#app-grid-sidebar nav.sdp-workspace-column__body');
+  expect(nav).not.toBeNull();
+  return nav;
+}));
 
 beforeEach(() => {
   vi.stubGlobal('ResizeObserver', class { observe() {} unobserve() {} disconnect() {} });
@@ -291,7 +308,7 @@ describe('afegir al Lector', () => {
     /* Cap nota al Bloc. */
     expect(dades.creades).toEqual([]);
     /* El Lector, a l'arbre: la font, triada dins de la seua carpeta i pendent, amb el seu detall. */
-    const arbre = within(document.querySelector('#app-grid-sidebar nav.sdp-workspace-column__body'));
+    const arbre = await arbreDelLector();
     const fila = await arbre.findByRole('button', { name: 'La Veu del Barri · pendent' });
     expect(fila.getAttribute('aria-current')).toBe('page');
     expect(await screen.findByRole('region', { name: 'La Veu del Barri' })).toBeTruthy();
@@ -305,6 +322,20 @@ describe('afegir al Lector', () => {
     /* replace: Arrere no torna al snippet ja consumit. */
     act(() => { fireEvent.click(screen.getByRole('button', { name: 'Arrere de prova' })); });
     expect(url()).toBe(desti);
+  });
+
+  test('el Lector llig el seu disc tard (màquina carregada): «Obrint el lector…» i, quan l’ha llegit, l’arbre amb la font triada', async () => {
+    const lector = munta(LECTOR, { lector: lectorDeProva({ discLent: true }) });
+    fireEvent.change(await nomFont(), { target: { value: 'La Veu del Barri' } });
+    fireEvent.change(categoria(), { target: { value: 'festes' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Afegir al Lector' }));
+    await waitFor(() => expect(url()).toBe(`/app/lector/noticies/festes/${idFontPersonal(URL_PROVA)}`));
+    expect(await screen.findByText('Obrint el lector…')).toBeTruthy();
+    expect(document.querySelector('#app-grid-sidebar')).toBeNull();
+    lector.obriDisc();
+    const fila = await (await arbreDelLector()).findByRole('button', { name: 'La Veu del Barri · pendent' });
+    expect(fila.getAttribute('aria-current')).toBe('page');
+    expect(screen.queryByText('Obrint el lector…')).toBeNull();
   });
 
   test('sense nom: l’error al camp, amb el focus (correcció SN-R7), i res desat', async () => {

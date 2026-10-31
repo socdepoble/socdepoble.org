@@ -212,8 +212,15 @@ test('navegació fixa sense controls d’edició i ordenació per nom', () => {
   // Sense onCreate no hi ha botó de crear: ni actiu ni desactivat.
   expect(screen.queryByRole('button', { name: 'CREAR' })).toBeNull();
   fireEvent.click(screen.getByRole('button', { name: 'Ordenar per data o nom' }));
+  /* Corrector del Gauntlet f4 (30-10-2026) · L'opció triada la diu
+     aria-pressed, no només la classe .active: el lector sap quina hi ha. */
+  expect(screen.getByRole('button', { name: 'Data d\'actualització' }).getAttribute('aria-pressed')).toBe('true');
+  expect(screen.getByRole('button', { name: 'Nom (A-Z)' }).getAttribute('aria-pressed')).toBe('false');
   fireEvent.click(screen.getByRole('button', { name: 'Nom (A-Z)' }));
   expect([...container.querySelectorAll('.sdp-gestor-fitxa__titol')].map(el => el.textContent)).toEqual(['A', 'B']);
+  fireEvent.click(screen.getByRole('button', { name: 'Ordenar per data o nom' }));
+  expect(screen.getByRole('button', { name: 'Nom (A-Z)', pressed: true })).toBeTruthy();
+  expect(screen.getByRole('button', { name: 'Data d\'actualització', pressed: false })).toBeTruthy();
 });
 
 test('la roda dentada és sempre present: sense configuració pròpia obri la de l’espai de treball', () => {
@@ -266,28 +273,49 @@ test('la roda de CARPETES apareix amb onManageCategories i continua visible amb 
   expect(capcalera.lastElementChild.matches('nav.sdp-workspace-rail')).toBe(true);
 });
 
+/* Ordre d'usabilitat del Mestre (30-10-2026) · A Disseny, la Wiki i
+   Multimèdia (collapsibleNavigation false; abans, també replegaTotaCapcalera,
+   que l'espai ja no llig i que el corrector del Gauntlet f4 els ha llevat) la
+   fila ja no és un sol botó: el títol és text
+   fix i pleguen la icona de l'esquerra i el [|<], dos botons germans, cadascun
+   amb el seu nom, que declaren la columna (aria-expanded, aria-controls). El
+   rail plegat porta la mateixa icona dalt. Les altres accions (la roda)
+   continuen fora dels dos botons. */
 test.each([
   ['DISSENY', 'COMPONENTS'],
   ['WIKI DE POBLE', 'DOCUMENTS']
-])('la pastilla completa de %s i %s replega el panell sense absorbir les altres accions', (categories, items) => {
+])('%s i %s: la icona i el [|<] repleguen el panell, el títol és fix i les altres accions no hi entren', (categories, items) => {
   render(
     <UniversalWorkspace
       model={model}
       collapsibleNavigation={false}
-      replegaTotaCapcalera
       labels={{ categories, items }}
+      icons={{ categories: NotebookPen, items: FileText }}
     />
   );
-  for (const [nom, id] of [[categories, 'app-grid-sidebar'], [items, 'app-grid-list']]) {
-    const capcalera = screen.getByRole('button', { name: `Replegar ${nom}` });
-    expect(capcalera.getAttribute('aria-expanded')).toBe('true');
-    expect(capcalera.getAttribute('aria-controls')).toBe(id);
-    expect(capcalera.querySelector('button')).toBeNull();
-    fireEvent.click(within(capcalera).getByText(nom));
-    const expandir = screen.getByRole('button', { name: `Expandir ${nom}` });
-    expect(expandir.getAttribute('aria-expanded')).toBe('false');
-    fireEvent.click(expandir);
-    expect(screen.getByRole('button', { name: `Replegar ${nom}` })).toBeTruthy();
+  expect(document.querySelector('.app-grid-col-header--replegable')).toBeNull();
+  for (const [nom, id, glif] of [[categories, 'app-grid-sidebar', 'lucide-notebook-pen'], [items, 'app-grid-list', 'lucide-file-text']]) {
+    const titol = screen.getByText(nom, { selector: '.app-grid-col-header__titol' });
+    expect(titol.closest('button')).toBeNull();
+    const icona = screen.getByRole('button', { name: `Plegar la columna ${nom}` });
+    const replega = screen.getByRole('button', { name: `Replegar ${nom}` });
+    expect(icona).not.toBe(replega);
+    for (const boto of [icona, replega]) {
+      expect([boto.getAttribute('aria-expanded'), boto.getAttribute('aria-controls')]).toEqual(['true', id]);
+      expect(boto.querySelector('button')).toBeNull();
+    }
+    expect(icona.querySelector(`svg.${glif}`)).not.toBeNull();
+    /* El títol no plega res. */
+    fireEvent.click(titol);
+    expect(screen.queryByRole('button', { name: `Expandir ${nom}` })).toBeNull();
+    for (const boto of [`Plegar la columna ${nom}`, `Replegar ${nom}`]) {
+      fireEvent.click(screen.getByRole('button', { name: boto }));
+      const expandir = screen.getByRole('button', { name: `Expandir ${nom}` });
+      expect(expandir.getAttribute('aria-expanded')).toBe('false');
+      expect(expandir.querySelector(`svg.${glif}`)).not.toBeNull();
+      fireEvent.click(expandir);
+      expect(screen.getByRole('button', { name: `Replegar ${nom}` })).toBeTruthy();
+    }
   }
   fireEvent.click(screen.getByRole('button', { name: 'Configuració de l’espai de treball' }));
   expect(screen.getByRole('heading', { name: 'Configuració de l’espai de treball' })).toBeTruthy();
@@ -517,28 +545,25 @@ function renderWorkspaceAmbDetall() {
   );
 }
 
-test('T6 · en mitjà, triar una carpeta no deixa el focus retingut al panell esquerre i focusAfterLayout el porta a la llista', () => {
+/* Columnes fixes (ordre del Mestre, 30-10-2026) · Abans, a 820 («mitja») la
+   navegació era un panell que es tancava en triar una carpeta, i la guarda
+   T6 en traia el focus. Ara és la columna de la graella: no es tanca mai i
+   el focus es queda a la carpeta triada, com a 1400. La guarda T6 continua
+   a «estret» (davall) i a la closca (AppGridShell.test.jsx). */
+test('T6 · a 820 (columnes fixes), triar una carpeta deixa el focus a la carpeta: la navegació no es tanca ni es tapa', () => {
   ambAmpladaIFotogrames(820, (buidaFotogrames) => {
     const { container } = renderWorkspaceAmbDetall();
     const shell = container.querySelector('.app-grid-shell');
-    expect(shell.dataset.layout).toBe('mitja');
-    fireEvent.click(within(container.querySelector('#app-grid-main')).getByRole('button', { name: 'Obri la navegació' }));
-    expect(shell.dataset.panell).toBe('left');
+    expect([shell.dataset.layout, shell.dataset.panell]).toEqual(['ample', '']);
     const sidebar = container.querySelector('#app-grid-sidebar');
     const mercat = within(sidebar).getByRole('button', { name: 'Mercat' });
     mercat.focus();
     fireEvent.click(mercat);
     expect(shell.dataset.panell).toBe('');
-    /* Derogació (ordre del Mestre, 261004: la columna de la Wiki fixa i
-       visible, almenys plegada) · Abans, tancat el panell, la navegació
-       quedava aria-hidden. Ara torna al rail fix: oberta i sense aria-hidden.
-       El focus no s'hi queda (l'arbre del panell ja no hi és). */
-    expect(sidebar.getAttribute('aria-hidden')).toBeNull();
-    expect(sidebar.querySelector('.sdp-workspace-rail')).not.toBeNull();
-    /* Immediatament, abans de cap fotograma. */
-    expect(sidebar.contains(document.activeElement)).toBe(false);
+    expect([sidebar.hasAttribute('inert'), sidebar.getAttribute('aria-hidden')]).toEqual([false, null]);
     buidaFotogrames();
-    expect(document.activeElement).toBe(container.querySelector('#app-grid-list aside.sdp-workspace-column'));
+    expect(document.activeElement).toBe(within(sidebar).getByRole('button', { name: 'Mercat' }));
+    expect(document.activeElement.getAttribute('aria-current')).toBe('page');
   });
 });
 
@@ -586,7 +611,7 @@ function DetallAmbRailDeMostra() {
   );
 }
 
-test('T6 · en mitjà, triar una carpeta no porta el focus a les capçaleres del rail de mostra del detall', () => {
+test('T6 · a 820 (columnes fixes), triar una carpeta no porta el focus a les capçaleres del rail de mostra del detall', () => {
   ambAmpladaIFotogrames(820, (buidaFotogrames) => {
     const { container } = render(
       <UniversalWorkspace
@@ -597,28 +622,24 @@ test('T6 · en mitjà, triar una carpeta no porta el focus a les capçaleres del
       />
     );
     const shell = container.querySelector('.app-grid-shell');
-    expect(shell.dataset.layout).toBe('mitja');
+    expect(shell.dataset.layout).toBe('ample');
     const detall = container.querySelector('#app-grid-main');
     const mostres = [
       within(detall).getByRole('button', { name: 'Replegar Menú' }),
       within(detall).getByRole('button', { name: 'Expandir Menú' })
     ];
     mostres.forEach((b) => expect(b.getAttribute('aria-controls')).toBe('app-grid-sidebar'));
-    fireEvent.click(within(detall).getByRole('button', { name: 'Obri la navegació' }));
-    expect(shell.dataset.panell).toBe('left');
     const sidebar = container.querySelector('#app-grid-sidebar');
     const mercat = within(sidebar).getByRole('button', { name: 'Mercat' });
     mercat.focus();
     fireEvent.click(mercat);
     expect(shell.dataset.panell).toBe('');
-    /* Derogació (ordre del Mestre, 261004) · La navegació torna al rail
-       fix, oberta: abans quedava aria-hidden. */
     expect(sidebar.getAttribute('aria-hidden')).toBeNull();
-    /* Immediatament, abans de cap fotograma. */
+    /* Immediatament i després dels fotogrames: el focus, a la carpeta. */
     expect(mostres).not.toContain(document.activeElement);
-    expect(sidebar.contains(document.activeElement)).toBe(false);
     buidaFotogrames();
-    expect(document.activeElement).toBe(container.querySelector('#app-grid-list aside.sdp-workspace-column'));
+    expect(mostres).not.toContain(document.activeElement);
+    expect(document.activeElement).toBe(within(sidebar).getByRole('button', { name: 'Mercat' }));
   });
 });
 

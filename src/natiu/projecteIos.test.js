@@ -19,8 +19,12 @@
      · Gauntlet 261026_1615 (Codex C1615-03 / Gemini G1615-01, G1615-05): les
        còpies locals sobreviuen al load() i tornen (una setmana, deu com a molt),
        l'extensió rebutja els URL que no són web, i l'escena sense storyboard;
-     · .gitignore: el que genera `cap sync` no entra a git, el projecte sí.
-   Sense ios/App/App.xcodeproj (un arbre sense el projecte), se salta dient per què. */
+     · .gitignore: el que genera `cap sync` no entra a git, el projecte sí;
+     · D-C2 PWA (pla 261029_1605, Bloc C.2): les icones PWA de public/ (les PNG
+       del manifest, apple-touch-icon inclosa) al verd AAA del token, en un
+       bloc a banda que no depén d'ios/.
+   Sense ios/App/App.xcodeproj (un arbre sense el projecte), les proves d'iOS se
+   salten dient per què; les de les icones PWA corren igualment. */
 import { spawnSync } from 'node:child_process';
 import fs from 'node:fs';
 import path from 'node:path';
@@ -29,6 +33,7 @@ import zlib from 'node:zlib';
 import { describe, expect, test } from 'vitest';
 import { MAX_FITXERS_COMPARTITS } from '../config/compartirNatiu.js';
 import { esquemaInvertitDeGoogleIos } from '../config/publicCredentials.js';
+import { valorDelToken } from '../pwa/__fixtures__/tokens.js';
 import { CONNECTOR_COMPARTIR, ESDEVENIMENT_COMPARTIT } from './compartirNatiu.js';
 
 const ARREL = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
@@ -189,6 +194,77 @@ function constantSwift(codi, nom) {
   if (!trobada) return Number.NaN;
   const factors = trobada[1].trim().split('*').map((factor) => factor.trim().replace(/_/g, ''));
   return factors.every((factor) => /^\d+$/.test(factor)) ? factors.reduce((producte, factor) => producte * Number(factor), 1) : Number.NaN;
+}
+
+/* D-C2 (pla 261029_1305, M1.3) i D-C2 PWA (pla 261029_1605, Bloc C.2) ·
+   Descodificador PNG mínim (RGB 8 bits, sense entrellaçat): els cinc filtres de
+   la línia (None, Sub, Up, Average, Paeth), com els escriu qualsevol codificador;
+   així la prova no depén del filtre que trie el codificador. Ignora els trossos
+   que no són IDAT (iTXt, iCCP, pHYs…). Compta els píxels del verd 0F672F anterior
+   (antics) i del verd AAA 0e662e del token (nous). Un PNG que no és RGB de 8 bits
+   sense entrellaçat no es descodifica (els bpp no quadrarien): torna la capçalera
+   amb primerPixel null i antics i quotaNous NaN, perquè l'asserció diga el perquè. */
+function pixelsPngRgb(cami) {
+  const buf = fs.readFileSync(cami);
+  if (buf.length < 33 || buf.readUInt32BE(0) !== 0x89504e47 || buf.readUInt32BE(4) !== 0x0d0a1a0a || buf.toString('ascii', 12, 16) !== 'IHDR') {
+    throw new Error(`${path.relative(ARREL, cami)} no és cap PNG (falta la signatura o l'IHDR)`);
+  }
+  const ample = buf.readUInt32BE(16);
+  const alt = buf.readUInt32BE(20);
+  const profunditat = buf.readUInt8(24);
+  const tipusColor = buf.readUInt8(25);
+  const entrellacat = buf.readUInt8(28);
+  if (profunditat !== 8 || tipusColor !== 2 || entrellacat !== 0) {
+    return { ample, alt, profunditat, tipusColor, entrellacat, primerPixel: null, antics: Number.NaN, quotaNous: Number.NaN };
+  }
+  let pos = 8;
+  const trossos = [];
+  while (pos < buf.length) {
+    const mida = buf.readUInt32BE(pos);
+    const etiqueta = buf.toString('ascii', pos + 4, pos + 8);
+    if (etiqueta === 'IDAT') trossos.push(buf.subarray(pos + 8, pos + 8 + mida));
+    pos += 12 + mida;
+  }
+  const dades = zlib.inflateSync(Buffer.concat(trossos));
+  const bpp = 3;
+  const amplada = ample * bpp;
+  /* Unes dades curtes o un filtre desconegut no es poden llegir com a zeros: cap
+     recompte d'antics no valdria res. */
+  if (dades.length !== alt * (amplada + 1)) {
+    throw new Error(`${path.relative(ARREL, cami)}: ${dades.length} bytes descomprimits, n'esperava ${alt * (amplada + 1)}`);
+  }
+  const pixels = Buffer.alloc(alt * amplada);
+  for (let y = 0; y < alt; y += 1) {
+    const filtre = dades[y * (amplada + 1)];
+    if (filtre > 4) throw new Error(`${path.relative(ARREL, cami)}: filtre ${filtre} desconegut a la línia ${y}`);
+    const entrada = y * (amplada + 1) + 1;
+    const eixida = y * amplada;
+    for (let x = 0; x < amplada; x += 1) {
+      const cru = dades[entrada + x];
+      const a = x >= bpp ? pixels[eixida + x - bpp] : 0;
+      const b = y > 0 ? pixels[eixida - amplada + x] : 0;
+      const c = x >= bpp && y > 0 ? pixels[eixida - amplada + x - bpp] : 0;
+      let predit = 0;
+      if (filtre === 1) predit = a;
+      else if (filtre === 2) predit = b;
+      else if (filtre === 3) predit = (a + b) >> 1;
+      else if (filtre === 4) {
+        const p = a + b - c;
+        const pa = Math.abs(p - a);
+        const pb = Math.abs(p - b);
+        const pc = Math.abs(p - c);
+        predit = pa <= pb && pa <= pc ? a : (pb <= pc ? b : c);
+      }
+      pixels[eixida + x] = (cru + predit) & 0xff;
+    }
+  }
+  let antics = 0;
+  let nous = 0;
+  for (let i = 0; i < pixels.length; i += bpp) {
+    if (pixels[i] === 15 && pixels[i + 1] === 103 && pixels[i + 2] === 47) antics += 1;
+    else if (pixels[i] === 14 && pixels[i + 1] === 102 && pixels[i + 2] === 46) nous += 1;
+  }
+  return { ample, alt, profunditat, tipusColor, entrellacat, primerPixel: [pixels[0], pixels[1], pixels[2]], antics, quotaNous: nous / (ample * alt) };
 }
 
 describe.skipIf(!HI_HA_PROJECTE)('el projecte d’iOS (ios/)', () => {
@@ -670,65 +746,14 @@ describe.skipIf(!HI_HA_PROJECTE)('el projecte d’iOS (ios/)', () => {
      vores d'antialiàsing, resoltes per alfa). El literal és el píxel que hi ha
      de veres, i el control negatiu baix garantix que no en queda cap de
      l'antic: cap excepció de retard. Els hex van sense coixinet: design_guard
-     (raw-color) llig també els textos. */
+     (raw-color) llig també els textos. El descodificador (pixelsPngRgb) viu a
+     l'àmbit del mòdul perquè el bloc de les icones PWA, fora d'este, el
+     compartix. */
   test('Assets.xcassets: AppIcon (1024×1024) i Splash (2732×2732) en RGB sense alfa i amb el verd AAA 0e662e del token --sdp-verd, sense cap píxel del 0F672F anterior', () => {
-    /* Descodificador PNG mínim (RGB 8 bits, sense entrellaçat): els cinc filtres
-       de la línia (None, Sub, Up, Average, Paeth), com els escriu qualsevol
-       codificador; així la prova no depén del filtre que trie el codificador. */
-    const pixelsPng = (cami) => {
-      const buf = fs.readFileSync(cami);
-      const ample = buf.readUInt32BE(16);
-      const alt = buf.readUInt32BE(20);
-      const profunditat = buf.readUInt8(24);
-      const tipusColor = buf.readUInt8(25);
-      const entrellacat = buf.readUInt8(28);
-      let pos = 8;
-      const trossos = [];
-      while (pos < buf.length) {
-        const mida = buf.readUInt32BE(pos);
-        const etiqueta = buf.toString('ascii', pos + 4, pos + 8);
-        if (etiqueta === 'IDAT') trossos.push(buf.subarray(pos + 8, pos + 8 + mida));
-        pos += 12 + mida;
-      }
-      const dades = zlib.inflateSync(Buffer.concat(trossos));
-      const bpp = 3;
-      const amplada = ample * bpp;
-      const pixels = Buffer.alloc(alt * amplada);
-      for (let y = 0; y < alt; y += 1) {
-        const filtre = dades[y * (amplada + 1)];
-        const entrada = y * (amplada + 1) + 1;
-        const eixida = y * amplada;
-        for (let x = 0; x < amplada; x += 1) {
-          const cru = dades[entrada + x];
-          const a = x >= bpp ? pixels[eixida + x - bpp] : 0;
-          const b = y > 0 ? pixels[eixida - amplada + x] : 0;
-          const c = x >= bpp && y > 0 ? pixels[eixida - amplada + x - bpp] : 0;
-          let predit = 0;
-          if (filtre === 1) predit = a;
-          else if (filtre === 2) predit = b;
-          else if (filtre === 3) predit = (a + b) >> 1;
-          else if (filtre === 4) {
-            const p = a + b - c;
-            const pa = Math.abs(p - a);
-            const pb = Math.abs(p - b);
-            const pc = Math.abs(p - c);
-            predit = pa <= pb && pa <= pc ? a : (pb <= pc ? b : c);
-          }
-          pixels[eixida + x] = (cru + predit) & 0xff;
-        }
-      }
-      let antics = 0;
-      let nous = 0;
-      for (let i = 0; i < pixels.length; i += bpp) {
-        if (pixels[i] === 15 && pixels[i + 1] === 103 && pixels[i + 2] === 47) antics += 1;
-        else if (pixels[i] === 14 && pixels[i + 1] === 102 && pixels[i + 2] === 46) nous += 1;
-      }
-      return { ample, alt, profunditat, tipusColor, entrellacat, primerPixel: [pixels[0], pixels[1], pixels[2]], antics, quotaNous: nous / (ample * alt) };
-    };
-    const icona = pixelsPng(path.join(APP, 'Assets.xcassets', 'AppIcon.appiconset', 'AppIcon-512@2x.png'));
+    const icona = pixelsPngRgb(path.join(APP, 'Assets.xcassets', 'AppIcon.appiconset', 'AppIcon-512@2x.png'));
     expect(icona).toEqual({ ample: 1024, alt: 1024, profunditat: 8, tipusColor: 2, entrellacat: 0, primerPixel: [14, 102, 46], antics: 0, quotaNous: expect.any(Number) });
     expect(icona.quotaNous).toBeGreaterThan(0.8);
-    const splash = pixelsPng(path.join(APP, 'Assets.xcassets', 'Splash.imageset', 'splash-2732x2732.png'));
+    const splash = pixelsPngRgb(path.join(APP, 'Assets.xcassets', 'Splash.imageset', 'splash-2732x2732.png'));
     expect(splash).toEqual({ ample: 2732, alt: 2732, profunditat: 8, tipusColor: 2, entrellacat: 0, primerPixel: [14, 102, 46], antics: 0, quotaNous: expect.any(Number) });
     expect(splash.quotaNous).toBeGreaterThan(0.99);
     /* Les tres escales del Splash són el mateix fitxer byte a byte (Contents.json 1x/2x/3x). */
@@ -753,6 +778,37 @@ describe.skipIf(!HI_HA_PROJECTE)('el projecte d’iOS (ios/)', () => {
       'ios/App/App/App.entitlements', 'ios/App/App/PrivacyInfo.xcprivacy', 'ios/App/App/ca.lproj/InfoPlist.strings']) {
       expect(ignorat(rel), rel).toBe(false);
     }
+  });
+});
+
+/* D-C2 PWA (pla 261029_1605, Bloc C.2; 261029) · Les icones de la PWA (les PNG
+   del manifest, apple-touch-icon inclosa) van al mateix verd AAA que les
+   natives: el del token --sdp-verd, remapades una sola vegada amb el mateix
+   remapa exacte del 0F672F anterior (vores d'antialiàsing resoltes per alfa;
+   l'apple-touch-icon conserva els seus trossos iTXt, iCCP i pHYs). No depén
+   d'ios/: corre també en una còpia sense el projecte natiu. favicon.ico (el logo
+   oficial intacte, recursosEstatics.test.js) i favicon.svg (blanc) no porten
+   cap dels dos verds i no es toquen. */
+describe('icones PWA de public/: el verd AAA del token --sdp-verd, sense cap píxel del 0F672F anterior', () => {
+  const hex = valorDelToken('--sdp-verd');
+  const VERD_NOU = [1, 3, 5].map((i) => Number.parseInt(hex.slice(i, i + 2), 16));
+  const ICONES = JSON.parse(llig(ARREL, 'public', 'manifest.webmanifest')).icons.filter((icona) => icona.type === 'image/png');
+
+  test('el token és el píxel que pinten les natives i les PWA (14, 102, 46), i el manifest nomena les tres PNG', () => {
+    expect(VERD_NOU).toEqual([14, 102, 46]);
+    expect(ICONES.map((icona) => icona.src).sort()).toEqual(['/apple-touch-icon.png', '/icona-app-192.png', '/icona-app-512.png']);
+  });
+
+  test.each(ICONES.map((icona) => [icona.src, Number(icona.sizes.split('x')[0])]))('%s: %i px, RGB de 8 bits, primer píxel del verd nou i cap de l’antic', (src, costat) => {
+    const icona = pixelsPngRgb(path.join(ARREL, 'public', src));
+    expect(icona).toEqual({ ample: costat, alt: costat, profunditat: 8, tipusColor: 2, entrellacat: 0, primerPixel: VERD_NOU, antics: 0, quotaNous: expect.any(Number) });
+    expect(icona.quotaNous).toBeGreaterThan(0.8); // mesurat: 0,8258 (180), 0,8553 (192), 0,8637 (512)
+  });
+
+  test('icona-app-192.png i el llançador xxxhdpi d’Android són el mateix fitxer, byte a byte', (context) => {
+    const natiu = path.join(ARREL, 'android', 'app', 'src', 'main', 'res', 'mipmap-xxxhdpi', 'ic_launcher.png');
+    if (!fs.existsSync(natiu)) { context.skip(); return; }
+    expect(fs.readFileSync(path.join(ARREL, 'public', 'icona-app-192.png')).equals(fs.readFileSync(natiu))).toBe(true);
   });
 });
 

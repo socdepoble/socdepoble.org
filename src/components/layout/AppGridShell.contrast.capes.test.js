@@ -206,7 +206,9 @@ describe('C4 · els anells de focus de la capçalera es veuen sobre el crom en t
   const ANELLS = [
     ['capçalera replegable', '.app-grid-col-header--replegable:focus-visible'],
     ['títol amb icona', '.app-grid-col-header__plec:focus-visible'],
-    ['botons de la capçalera', GRUP]
+    ['botons de la capçalera', GRUP],
+    /* Ordre d'usabilitat del Mestre (30-10-2026) · La icona-botó germana del [|<]. */
+    ['icona que plega la columna', '.app-grid-col-header__icona:focus-visible']
   ];
 
   test('l’anell general (--sdp-focus) no servix sobre el crom: en clar no arriba a 3:1', () => {
@@ -248,7 +250,9 @@ describe('C4 · les icones de capçalera conserven el taronja i el mínim no tex
   test('3:1 o més (WCAG 1.4.11) sobre tots els fons i en tots els modes', () => {
     const SELECTORS = [
       '.app-grid-col-header .btn-icon,\n.app-grid-col-header .btn-icon:hover:not(:disabled),\n.app-grid-col-header .btn-icon:active:not(:disabled),\n.app-grid-col-header__accio-icon,\n.app-grid-col-header__accio-icon:hover:not(:disabled)',
-      '.app-grid-col-header__plec'
+      '.app-grid-col-header__plec',
+      /* Ordre d'usabilitat (30-10-2026) · La icona-botó de l'esquerra. */
+      '.app-grid-col-header__icona'
     ];
     for (const selector of SELECTORS) {
       const { color } = regla(GRAELLA, selector);

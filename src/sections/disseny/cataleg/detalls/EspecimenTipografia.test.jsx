@@ -49,6 +49,20 @@ describe('EspecimenTipografia · l’escala que ensenya és la de tokens.css', (
     }
   });
 
+  /* Llei de llistes · Ordre del Mestre (31-10-2026), F10-C4: el contracte
+     públic ensenya el marge del li i la llei; el valor ve de tokens.css. */
+  test('el contracte ensenya la Llei de llistes: el li, més junt que el p, sense gap afegit', () => {
+    const li = RITME.find(([el]) => el === 'li');
+    const p = RITME.find(([el]) => el === 'p');
+    expect(li, 'fila li').toBeDefined();
+    expect(li[3]).toBe('--sdp-li-gap');
+    expect(parseFloat(valor('--sdp-li-gap'))).toBeLessThan(parseFloat(valor(p[3])));
+    const { container } = render(<EspecimenTipografia />);
+    const text = container.textContent;
+    expect(text).toContain(`${valor('--sdp-li-gap')} (--sdp-li-gap)`);
+    expect(text).toMatch(/sempre més junts que els paràgrafs[^.]*mai un gap afegit/);
+  });
+
   test('les amplades són les de tokens.css i cada classe del mostrari existix a base.css', () => {
     for (const [token, percent, classe] of AMPLADES) {
       if (token) expect(valor(token), token).toBe(percent);

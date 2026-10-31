@@ -11,6 +11,9 @@
  * Consola i el Cervell es lligen com /page/consola i /page/cervell: el botó
  * «Obrir…» davall de l'H1 i repetit al final, darrere del cos, que ara són
  * sis paràgrafs (girada la prova [DEFECTE] de l'article buit).
+ * Gauntlet 261030, cicle 2 (ordres del Mestre del 30-10-2026, decisions
+ * 261030) · DEROGA els «sis paràgrafs»: el cos de la Consola i del Cervell
+ * seguix la llei T8 (lleiT8Prova.js), entradilla → H3 → p, H4 i ul.
  */
 import React from 'react';
 import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
@@ -46,6 +49,7 @@ import { publicacioComANota } from './masDeLUsuari.js';
 import { targetesDeSistema } from '../mur/targetesMur.js';
 import { propsDePaginaDeText } from '../text/paginaDeText.js';
 import { PAGE_COPY } from '../text/pageContent.js';
+import { infraccionsDelCosPintat } from '../../../tests/helpers/lleiT8Prova.js';
 import { ENTITAT_PILOT_ID, ENTITAT_PILOT_SLUG } from '../../data/identitatsSeed.js';
 import { TEXTOS_COMENTAR } from '../../components/PedraSeca/organismes/textosComentar.js';
 
@@ -171,10 +175,13 @@ describe('PublicacioDetall · una pàgina del sistema', () => {
      esta comprovació com qualsevol pàgina de text.
      Ordre del Mestre 261026_2126 (P1-38) · Descàrregues i Aplicacions
      (/page/descarregues) hi entra com a pàgina de text: ara en són deu, i
-     tretze pàgines en total. */
+     tretze pàgines en total.
+     Ordre del Mestre (30-10-2026; candidatura NLnet NGI Fediversity) ·
+     «Candidatura Europea NLnet · NGI Fediversity» (/page/fediversity) hi
+     entra com a pàgina de text: ara en són onze, i catorze en total. */
   const SENSE_COS = ['disseny', 'notes', 'wikidepoble'];
   test('una pàgina del sistema que no és de text (Disseny, Notes, Wiki) no pinta cap cos: la capçalera i «Obri la pàgina»', () => {
-    expect(SISTEMA).toHaveLength(13);
+    expect(SISTEMA).toHaveLength(14);
     for (const targeta of SISTEMA) {
       const { container, unmount } = render(<PublicacioDetall item={pagina(targeta.id)} />);
       const cos = container.querySelector('article.cms-preview');
@@ -191,15 +198,20 @@ describe('PublicacioDetall · una pàgina del sistema', () => {
      Girada la prova [DEFECTE] de l'Onada 8 (261009; requeriments
      261009_1300, punt 1: «fantasmes»), que reproduïa un
      <article class="cms-preview"> buit perquè la Consola i el Cervell no
-     tenien cos. Ara en tenen: sis paràgrafs, pel camí de sempre
-     (CosDeLaPagina), els mateixos de /page/consola i /page/cervell. */
-  test('Onada 10 · la Consola i el Cervell tenen cos: sis paràgrafs, cap article buit', () => {
+     tenien cos. Ara en tenen, pel camí de sempre (CosDeLaPagina), els
+     mateixos de /page/consola i /page/cervell.
+     Gauntlet 261030, cicle 2 (ordres del Mestre del 30-10-2026; troballa
+     proves-roges-sis-paragrafs-consola-cervell) · Ja no són «sis paràgrafs»:
+     el cos pintat és el de PAGE_COPY, peça a peça, amb la llei T8
+     (entradilla → H3, p, H4 i ul), i a la Consola, la caldera de coure. */
+  test('Onada 10 i cicle 2 · la Consola i el Cervell tenen cos: el de PAGE_COPY, amb la llei T8, cap article buit', () => {
     for (const clau of ['consola', 'cervell']) {
       expect([clau, typeof PAGE_COPY[clau].html]).toEqual([clau, 'string']);
       const { container, unmount } = render(<PublicacioDetall item={pagina(clau)} />);
       const cos = container.querySelector('article.cms-preview');
-      expect([clau, [...cos.children].map((fill) => fill.tagName)]).toEqual([clau, ['P', 'P', 'P', 'P', 'P', 'P']]);
-      expect([clau, [...cos.children].every((paragraf) => paragraf.textContent.trim().length > 0)]).toEqual([clau, true]);
+      expect([clau, cos.textContent.trim().length > 0]).toEqual([clau, true]);
+      expect([clau, infraccionsDelCosPintat(cos, PAGE_COPY[clau].html)]).toEqual([clau, []]);
+      expect([clau, Boolean(cos.querySelector('img[src="/assets/uploads/consola-caldera.webp"]'))]).toEqual([clau, clau === 'consola']);
       unmount();
     }
   });

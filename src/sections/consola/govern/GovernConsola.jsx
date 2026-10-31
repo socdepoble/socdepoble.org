@@ -32,9 +32,11 @@ import {
 } from '../../../components/PedraSeca';
 import { useSessioOpcional } from '../../../app/contexts/SessionContext.jsx';
 import { dataLocal } from '../consolaContent.js';
+import { ambEscriptures, ambInstantania } from '../fontsConsola.js';
 import { ETIQUETES, RUTA_CONSOLA, copyConsola } from '../consolaPagines.js';
 import { plural } from '../concordanca.js';
 import { Privat, PrivacitatConsola, TargetaConsola } from '../peces.jsx';
+import { miniaturaDePagina } from '../imatgesConsola.js';
 import {
   ENTRADETA_GOVERN, ETIQUETA_NAV_GOVERN, TITOL_GOVERN, paginaGovern, paginesGovern
 } from './governConsola.js';
@@ -50,13 +52,33 @@ const ICONES = Object.freeze({
   requeriments: ListChecks, balanc: Scale, certificacio: BadgeCheck, comunicacio: MessagesSquare
 });
 
-/** El text literal de l'estat buit (pla 261016_1530, Onada 0.5; encàrrec F1_govern). */
-export const TEXT_SENSE_MATRIU = 'Encara no hi ha cap matriu connectada: falta un pas que ha de fer MarIA al servidor de desenvolupament';
+/**
+ * El text de l'estat buit (pla 261016_1530, Onada 0.5; encàrrec F1_govern).
+ * Gauntlet f4b (govern, «text-falta-un-pas-de-maria-ara-fals») · Des de B2
+ * la ruta ja existix: l'estat buit només ix fora de DEV o amb un servidor
+ * sense el connector, i diu per què. Derogat: «falta un pas que ha de fer
+ * MarIA al servidor de desenvolupament».
+ */
+export const TEXT_SENSE_MATRIU = 'Encara no hi ha cap matriu connectada: la matriu viva només la servix el servidor de desenvolupament';
 export const TEXT_CERTIFICACIO_LOCAL = 'La certificació viu en aquest navegador fins que MarIA endolle el canal: cap agent la llig si no l’exportes.';
+/** Decisió del Mestre (31-10-2026) · Fora de desenvolupament no s'apunta cap decisió (ambEscriptures). */
+export const TEXT_CERTIFICACIO_PUBLICADA = 'A la web publicada no s’apunta cap decisió: el Mestre certifica a l’ordinador de desenvolupament, i ací es veu la matriu sencera.';
+/**
+ * Gauntlet f9 (F4-certificacio-publicada-amb-textos-contradictoris) · A la web
+ * publicada, els tres verbs s'expliquen sense prometre res a qui mira, i cap
+ * paràgraf de sessió, signatura, persistència ni empremtes (són de qui pot
+ * apuntar). Derogat, a la web publicada: el text de desenvolupament sencer
+ * darrere de TEXT_CERTIFICACIO_PUBLICADA i la columna «Accions» amb tres botons
+ * desactivats a cada fila.
+ */
+export const TEXT_VERBS_PUBLICADA = 'A l’ordinador de desenvolupament, el Mestre pot fer tres coses amb cada fila: «Valida» confirma que la fila diu la veritat; «Certifica», que la tasca està bé; i «Retorna amb nota» la torna a la tanda amb el que cal canviar. Cap decisió no canvia l’estat de la matriu, i una certificació d’una fila que la matriu no dona per feta no es pinta de verd.';
+export const TEXT_REGISTRE_PUBLICADA = 'A la web publicada no hi ha cap decisió apuntada: el registre de decisions viu a l’ordinador de desenvolupament.';
 
-/* Tot el que es deriva de la matriu per a una pintada, amb un sol rellotge. */
+/* Tot el que es deriva de la matriu per a una pintada, amb un sol rellotge.
+   Decisió del Mestre (31-10-2026) · La matriu de la instantània publicada, amb
+   el seu (govern.rellotge, useGovern.js). */
 function derivaGovern(govern, ara) {
-  const vista = vistaMatriu(govern.matriu, { head: govern.head, ara });
+  const vista = vistaMatriu(govern.matriu, { head: govern.head, ara: govern.rellotge ?? ara });
   const balanc = balancDe(vista);
   return {
     vista,
@@ -78,6 +100,8 @@ function senseMatriu(govern) {
 function cobertaDe(id, govern, { vista, balanc, comparacio, resums }) {
   const registres = govern.certificacions.registres;
   if (id === 'certificacio') {
+    // Gauntlet f9 (F4) · A la web publicada no s'apunta res: ni recompte d'este navegador ni «Sense desar».
+    if (!ambEscriptures()) return { metriques: ['cap decisió a la web publicada'], etiquetes: [] };
     const etiquetes = govern.certificacions.persistent ? [] : [{ text: 'Sense desar', to: 'avis' }];
     if (registres === null) return { dada: 'Llegint les decisions…', etiquetes };
     return { metriques: [`${plural(registres.length, 'decisió apuntada', 'decisions apuntades')} en este navegador`], etiquetes };
@@ -114,8 +138,13 @@ function cobertaDe(id, govern, { vista, balanc, comparacio, resums }) {
  * amb un separador: la sala de màquines porta el seu H2
  * (TITOL_SALA_MAQUINES), que pinta ConsolaSection darrere d'esta secció.
  * Derogat: el Divisor «La sala de màquines de la Consola».
+ * Ordre del Mestre del 30-10-2026 (B1) · Amb `ambImatges` (només el tauler
+ * de /consola, des de TaulerAmbGovern, com les nou targetes de la sala de
+ * màquines), cada targeta porta la portada de la seua pàgina
+ * (imatgesConsola.js, la miniatura .webp) en lloc de la icona. La Consola
+ * incrustada de la Wiki no la passa i conserva la icona.
  */
-export function SeccioGovern({ govern, ara = Date.now() }) {
+export function SeccioGovern({ govern, ara = Date.now(), ambImatges = false }) {
   const id = useId();
   const derivat = derivaGovern(govern, ara);
   return (
@@ -127,6 +156,7 @@ export function SeccioGovern({ govern, ara = Date.now() }) {
           const coberta = cobertaDe(p.id, govern, derivat);
           return (
             <TargetaConsola key={p.id} icona={ICONES[p.id]} titol={p.title} subtitol={p.subtitle} entradilla={p.lead}
+              {...(ambImatges ? miniaturaDePagina(p.id) : {})}
               metriques={coberta.metriques} dada={coberta.dada} etiquetes={coberta.etiquetes} a={p.ruta}
               creat={copyConsola().date} generat={p.id === 'certificacio' ? null : derivat.vista?.at ?? null} />
           );
@@ -162,6 +192,10 @@ const EstatDeFila = ({ fila }) => (
  * El que es diu abans del contingut de qualsevol pàgina del govern: la
  * lectura en curs, els errors, l'estat buit (el text literal de l'encàrrec)
  * i, amb una matriu caducada, per què és obsoleta. Torna si hi ha matriu.
+ * Gauntlet f4b (govern, «error-json-ignorat») · Amb un error del servidor,
+ * l'Alerta (amb el text del compilador) i prou: l'estat buit diria que no hi
+ * ha cap matriu connectada, i el que passa és que la del Llibre no es pot
+ * llegir. Derogat: l'Alerta i l'estat buit alhora.
  */
 function AvisosDeMatriu({ govern, vista }) {
   return (
@@ -171,12 +205,12 @@ function AvisosDeMatriu({ govern, vista }) {
         <Alerta to="error" titol="No s’ha pogut obrir el fitxer">{govern.errorFitxer}</Alerta>
       )}
       {govern.servidor.estat === 'error' && govern.origen !== 'fitxer' && (
-        <Alerta to="error" titol="No s’ha pogut llegir la matriu del servidor">
+        <Alerta to="error" titol={ambInstantania() ? 'No s’ha pogut llegir la matriu de la instantània publicada' : 'No s’ha pogut llegir la matriu del servidor'}>
           {govern.matriu ? 'Es conserva l’última matriu bona. ' : ''}
           {govern.servidor.error?.message || 'Torna a provar-ho amb Refrescar.'}
         </Alerta>
       )}
-      {!vista && !llegintMatriu(govern) && (
+      {!vista && !llegintMatriu(govern) && govern.servidor.estat !== 'error' && (
         <EstatBuit icona={ListChecks} titol={`${TEXT_SENSE_MATRIU}.`}>
           Mentrestant, pots obrir el fitxer de la matriu (mcr.json) amb el botó «Obri una matriu (mcr.json)» del peu de
           la pàgina: es llig en este navegador i no es puja enlloc.
@@ -211,17 +245,23 @@ function FiltreDeFiles({ files, valor, onCanvi }) {
 function PaginaRequeriments({ govern, vista, locale }) {
   const [filtre, setFiltre] = useState('tots');
   if (!vista) return null;
+  const publicada = govern.origen !== 'fitxer' && ambInstantania();
   const files = filtraFiles(vista.files, filtre);
   return (
     <>
       <Bloc titol="D’on ve la matriu">
         <p>
+          {/* Decisió del Mestre (31-10-2026) · A la web publicada, la matriu és la de la
+              instantània sanejada del build, i el codi es comprova amb el d'aquell moment. */}
           {govern.origen === 'fitxer'
             ? <>Oberta d’un fitxer d’este ordinador (<Privat>{govern.nomFitxer ?? 'sense nom'}</Privat>).</>
-            : 'Del servidor de desenvolupament.'}{' '}
+            : publicada
+              ? `De la instantània sanejada que es va publicar amb esta versió de la web${govern.servidor.generat ? `, el ${dataLocal(govern.servidor.generat, locale)}` : ''}.`
+              : 'Del servidor de desenvolupament.'}{' '}
           {vista.at ? `Es va fer el ${dataLocal(vista.at, locale)}.` : 'No diu quan es va fer.'}{' '}
           {vista.baselineHead ? <>Diu que es va fer sobre la versió del codi <Privat>{vista.baselineHead.slice(0, 8)}</Privat>.</> : null}{' '}
-          {vista.caducitat.commitComprovat ? 'La versió del codi s’ha comprovat amb la d’ara.'
+          {vista.caducitat.commitComprovat
+            ? (publicada ? 'La versió del codi s’ha comprovat amb la del moment de la instantània.' : 'La versió del codi s’ha comprovat amb la d’ara.')
             : 'Des d’ací la Consola no pot saber si el codi ha canviat després: només en comprova la data.'}
         </p>
         {vista.quadren === false && (
@@ -295,7 +335,7 @@ function ComparacioDelTrasllat({ govern, comparacio, balanc, obsoleta }) {
       <p>
         {govern.origenTrasllat === 'fitxer'
           ? <>Trasllat obert d’un fitxer d’este ordinador (<Privat>{govern.nomTrasllat ?? 'sense nom'}</Privat>)</>
-          : 'Trasllat del servidor de desenvolupament'}
+          : ambInstantania() ? 'Trasllat de la instantània publicada' : 'Trasllat del servidor de desenvolupament'}
         {`, amb ${plural(t.ids.length, 'identificador', 'identificadors')}.`}
         {comparacio.mateixMoment === false ? ' Atenció: el trasllat i la matriu no són del mateix moment.' : ''}
         {t.declaraIgual !== null ? ` El fitxer diu que ${t.declaraIgual ? 'quadra' : 'no quadra'}; la Consola ho torna a comptar.` : ''}
@@ -426,7 +466,11 @@ function PaginaCertificacio({ govern, vista, locale }) {
   const [avis, setAvis] = useState(null);
   const { registres, persistent, error, afegix, exporta } = govern.certificacions;
   const pla = vista?.pla ?? null;
-  const potDecidir = Boolean(vista && govern.empremtes);
+  /* Decisió del Mestre (31-10-2026) · Les certificacions són escriptures: només en
+     desenvolupament (ambEscriptures, fontsConsola.js). A la web publicada, la taula
+     es veu sencera i els botons no hi actuen. */
+  const escriptures = ambEscriptures();
+  const potDecidir = Boolean(escriptures && vista && govern.empremtes);
 
   /* Revisió adversarial del carril F1 (problema 3) · El diàleg fixa en obrir-se
      la fila que el Mestre ha vist: la seua empremta i el seu estat. Si mentre
@@ -496,29 +540,39 @@ function PaginaCertificacio({ govern, vista, locale }) {
   return (
     <div ref={arrel}>
       <Bloc titol="Com funciona">
-        <Alerta to="info" titol="On es guarden les decisions" viva={false}>
-          <p>{TEXT_CERTIFICACIO_LOCAL}</p>
-          <p>
-            Cada decisió porta la fila, el que has decidit, la nota, la data, el teu nom i l’empremta de la fila tal com
-            era. Si la fila canvia després, la decisió es diu «certificació d’una versió anterior». Cap decisió porta
-            signatura: qualsevol que tinga este navegador obert la pot apuntar.
-          </p>
-          <p>
-            «Valida» confirma que la fila diu la veritat; «Certifica» diu que la tasca està bé per al Mestre;
-            «Retorna amb nota» la torna a la tanda amb el que cal canviar. Els tres verbs ixen a totes les files.
-            L’estat de la matriu no canvia per cap decisió: una certificació d’una fila que la matriu no dona per feta
-            es diu així, al costat, i no es pinta de verd.
-          </p>
-          <p>{actor ? `Les decisions es desen amb el nom de la sessió: ${actor}.` : 'No hi ha cap sessió amb nom oberta: les decisions es desaran sense nom.'}</p>
-          {vista && <p>{textDelPla(vista, locale)}</p>}
-        </Alerta>
-        {!persistent && (
+        {/* Gauntlet f9 (F4) · A la web publicada, només el que hi és cert: cap decisió s'hi
+            apunta, què farien els tres verbs i de quin pla és la matriu. */}
+        {!escriptures ? (
+          <Alerta to="info" titol="On es guarden les decisions" viva={false}>
+            <p>{TEXT_CERTIFICACIO_PUBLICADA}</p>
+            <p>{TEXT_VERBS_PUBLICADA}</p>
+            {vista && <p>{textDelPla(vista, locale)}</p>}
+          </Alerta>
+        ) : (
+          <Alerta to="info" titol="On es guarden les decisions" viva={false}>
+            <p>{TEXT_CERTIFICACIO_LOCAL}</p>
+            <p>
+              Cada decisió porta la fila, el que has decidit, la nota, la data, el teu nom i l’empremta de la fila tal com
+              era. Si la fila canvia després, la decisió es diu «certificació d’una versió anterior». Cap decisió porta
+              signatura: qualsevol que tinga este navegador obert la pot apuntar.
+            </p>
+            <p>
+              «Valida» confirma que la fila diu la veritat; «Certifica» diu que la tasca està bé per al Mestre;
+              «Retorna amb nota» la torna a la tanda amb el que cal canviar. Els tres verbs ixen a totes les files.
+              L’estat de la matriu no canvia per cap decisió: una certificació d’una fila que la matriu no dona per feta
+              es diu així, al costat, i no es pinta de verd.
+            </p>
+            <p>{actor ? `Les decisions es desen amb el nom de la sessió: ${actor}.` : 'No hi ha cap sessió amb nom oberta: les decisions es desaran sense nom.'}</p>
+            {vista && <p>{textDelPla(vista, locale)}</p>}
+          </Alerta>
+        )}
+        {escriptures && !persistent && (
           <Alerta to="avis" titol="Este navegador no deixa desar">
             Les decisions es perdran en tancar la pestanya: exporta-les abans.
           </Alerta>
         )}
-        {error && <Alerta to="error" titol="No s’han pogut llegir les decisions">{error}</Alerta>}
-        {vista && govern.errorEmpremtes && (
+        {escriptures && error && <Alerta to="error" titol="No s’han pogut llegir les decisions">{error}</Alerta>}
+        {escriptures && vista && govern.errorEmpremtes && (
           <Alerta to="error" titol="No es pot apuntar cap decisió">
             Este navegador no pot calcular l’empremta de les files (cal obrir la Consola en https o en localhost).
           </Alerta>
@@ -535,7 +589,8 @@ function PaginaCertificacio({ govern, vista, locale }) {
                 <th scope="col">Requeriment</th>
                 <th scope="col">Estat de la matriu</th>
                 <th scope="col">Decisió del Mestre</th>
-                <th scope="col"><span className="sdp-nomes-lector">Accions</span></th>
+                {/* Gauntlet f9 (F4) · Sense escriptures no hi ha columna d'accions: cap botó desactivat per fila. */}
+                {escriptures && <th scope="col"><span className="sdp-nomes-lector">Accions</span></th>}
               </tr>
             </thead>
             <tbody>
@@ -546,15 +601,17 @@ function PaginaCertificacio({ govern, vista, locale }) {
                   <td><EstatDeFila fila={f} /></td>
                   <td><DecisioDeFila locale={locale} estat={estatCertificacio(registres ?? [],
                     { pla, id: f.id, empremta: govern.empremtes?.get(f.id) ?? null, estatVist: f.estatVist })} /></td>
-                  <td>
-                    {/* Tres verbs a cada fila; «Certifica» és el primari només on la matriu ja la dona per feta. */}
-                    {DECISIONS_GOVERN.map((d) => (
-                      <Boto key={d} varietat={d === 'certificat' && f.estatVist === 'fet' ? 'primari' : 'secundari'} disabled={!potDecidir}
-                        aria-label={`${VERB_DECISIO[d]} ${f.id}`} onClick={() => obri(f, d)}>
-                        {VERB_DECISIO[d]}
-                      </Boto>
-                    ))}
-                  </td>
+                  {escriptures && (
+                    <td>
+                      {/* Tres verbs a cada fila; «Certifica» és el primari només on la matriu ja la dona per feta. */}
+                      {DECISIONS_GOVERN.map((d) => (
+                        <Boto key={d} varietat={d === 'certificat' && f.estatVist === 'fet' ? 'primari' : 'secundari'} disabled={!potDecidir}
+                          aria-label={`${VERB_DECISIO[d]} ${f.id}`} onClick={() => obri(f, d)}>
+                          {VERB_DECISIO[d]}
+                        </Boto>
+                      ))}
+                    </td>
+                  )}
                 </tr>
               ))}
             </tbody>
@@ -563,8 +620,8 @@ function PaginaCertificacio({ govern, vista, locale }) {
       )}
       <Bloc titol="Registre de decisions">
         <LiniaDelTemps etiqueta="Decisions del Mestre, la més nova primer" apunts={apunts}
-          buit="Encara no hi ha cap decisió en este navegador." />
-        <Boto varietat="secundari" icona={Download} onClick={exportaTot}>Exporta les certificacions (JSONL)</Boto>
+          buit={escriptures ? 'Encara no hi ha cap decisió en este navegador.' : TEXT_REGISTRE_PUBLICADA} />
+        {escriptures && <Boto varietat="secundari" icona={Download} onClick={exportaTot}>Exporta les certificacions (JSONL)</Boto>}
       </Bloc>
       <DialegConfirmacio obert={obert !== null} onTanca={tanca} onConfirma={confirma} carregant={desant}
         titol={obert ? `${VERB_DECISIO[obert.decisio]} ${obert.fila.id}` : 'Decisió'}
@@ -680,7 +737,11 @@ export function PeuGovern({ govern, privat, onPrivat, locale, cimRef, ambTraslla
       {!matriu ? 'Encara no hi ha cap matriu connectada.'
         : matriuDeFitxer
           ? <>Matriu oberta d’un fitxer d’este ordinador (<Privat>{govern.nomFitxer ?? 'sense nom'}</Privat>), {quan}.</>
-          : `Matriu del servidor de desenvolupament, ${quan}.`}
+          // Decisió del Mestre (31-10-2026) · A la web publicada, la de la instantània sanejada.
+          /* Gauntlet f9 (F3) · I de quin dia és la instantània (el seu `generat`), com el peu de la resta de pàgines. */
+          : ambInstantania()
+            ? `Matriu de la instantània publicada${govern.servidor?.generat ? ` el ${dataLocal(govern.servidor.generat, locale)}` : ''}, ${quan}.`
+            : `Matriu del servidor de desenvolupament, ${quan}.`}
       {trasllatAlPeu ? <> Trasllat obert d’un fitxer d’este ordinador (<Privat>{govern.nomTrasllat ?? 'sense nom'}</Privat>).</> : null}
       {matriuDeFitxer && trasllatAlPeu ? ' Per a obrir una altra matriu o un altre trasllat, tanca primer els fitxers oberts.'
         : matriuDeFitxer ? ' Per a obrir-ne una altra, tanca primer els fitxers oberts.'
@@ -746,6 +807,11 @@ function ContingutGovern({ id, govern, derivat, locale }) {
  * UniversalPage chrome="system" que les pàgines de la maquinària: la molla
  * de pa al cim, el contingut i el peu de dades. Un id que no existix no peta:
  * la pàgina ho diu i torna a la Consola.
+ * Gauntlet 261030 (cicle 4, ALT-C1 de Codex) · Sense Traductor
+ * (traduccio={false}): la matriu oberta d'un fitxer, les seues fonts i
+ * evidències i el registre de certificacions són d'este ordinador i no
+ * s'envien a cap motor de traducció. Traduir avisa; el botó no canvia (Llei
+ * del Píxel).
  */
 export function PaginaDeGovern({ id, govern, privat, onPrivat, locale = 'ca-ES', cimRef, ara = Date.now() }) {
   const copy = copyConsola();
@@ -754,7 +820,8 @@ export function PaginaDeGovern({ id, govern, privat, onPrivat, locale = 'ca-ES',
   const titol = pagina?.title ?? 'Pàgina no trobada';
   return (
     <UniversalPage title={titol} subtitle={pagina?.subtitle ?? TITOL_GOVERN}
-      lead={pagina?.lead ?? 'Esta adreça no correspon a cap pàgina del govern del Mestre.'} chrome="system" nivellMaxIndex={6}>
+      lead={pagina?.lead ?? 'Esta adreça no correspon a cap pàgina del govern del Mestre.'} chrome="system" nivellMaxIndex={6}
+      traduccio={false} llenguaDelContingut="ca">
       <PrivacitatConsola.Provider value={privat}>
         <MollaPa className="sdp-molla--panell" passos={[{ etiqueta: copy.title, a: RUTA_CONSOLA }, { etiqueta: titol }]} />
         {pagina ? (

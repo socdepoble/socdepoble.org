@@ -88,13 +88,15 @@ describe('sense adjunts, el compositor de sempre', () => {
     render(<Prova />);
     expect(screen.queryByRole('button', { name: 'Adjunta' })).toBeNull();
     expect(screen.queryByRole('button', { name: 'Grava àudio' })).toBeNull();
-    expect(noms(within(camp().closest('form')).getAllByRole('button'))).toEqual(['Emoticones', 'Envia']);
+    expect(noms(within(camp().closest('form')).getAllByRole('button'))).toEqual(['Emoticones', 'Negreta', 'Envia']);
     expect(redo().type).toBe('submit');
     expect(redo().disabled).toBe(true);
     expect(redo().hasAttribute('data-accio')).toBe(false);
     // La carona viu dins del camp, abans del textarea.
     expect(screen.getByRole('button', { name: 'Emoticones' }).parentElement).toBe(camp().parentElement);
-    expect(camp().parentElement.className).toBe('sdp-xat-compositor__camp sdp-xat-compositor__camp--carona');
+    expect(camp().parentElement.className).toBe('sdp-xat-compositor__camp sdp-xat-compositor__camp--carona sdp-xat-compositor__camp--negreta');
+    // IDEA-53 · [N] també viu dins del camp, darrere del textarea.
+    expect(screen.getByRole('button', { name: 'Negreta' }).parentElement).toBe(camp().parentElement);
   });
 });
 
@@ -733,8 +735,8 @@ function valor(selector, propietat) {
 }
 
 describe('la geometria de la barra única', () => {
-  test('el +, la carona i el botó redó són dianes de 48px (--sdp-touch) amb el radi de botó', () => {
-    for (const selector of ['.sdp-xat-compositor__adjunta', '.sdp-xat-compositor__emojis', '.sdp-xat-compositor__envia']) {
+  test('el +, la carona, [N] i el botó redó són dianes de 48px (--sdp-touch) amb el radi de botó', () => {
+    for (const selector of ['.sdp-xat-compositor__adjunta', '.sdp-xat-compositor__emojis', '.sdp-xat-compositor__negreta', '.sdp-xat-compositor__envia']) {
       expect(valor(selector, 'width'), selector).toBe('var(--sdp-touch)');
       expect(valor(selector, 'height'), selector).toBe('var(--sdp-touch)');
       expect(valor(selector, 'border-radius'), selector).toBe('var(--sdp-radi-boto)');
@@ -760,6 +762,21 @@ describe('la geometria de la barra única', () => {
     expect(consulta).not.toMatch(/sdp-xat-compositor__camp--carona/);
   });
 
+  test('IDEA-53 · [N] a la tercera columna, només amb els dos modificadors; el mirall i el textarea, amb el mateix coixí', () => {
+    expect(valor('.sdp-xat-compositor__camp--carona.sdp-xat-compositor__camp--negreta', 'grid-template-columns')).toBe('auto minmax(0, 1fr) auto');
+    expect(valor('.sdp-xat-compositor__camp--negreta > .sdp-xat-compositor__negreta', 'grid-area')).toBe('1 / 3 / 2 / 4');
+    for (const selector of ['.sdp-xat-compositor__camp--negreta::after', '.sdp-xat-compositor__camp--negreta > .sdp-xat-compositor__textarea']) {
+      expect(valor(selector, 'padding-right'), selector).toBe('var(--sdp-space-1)');
+    }
+    /* L'àrea tàctil mai per davall del mínim de la casa. */
+    expect(valor('.sdp-xat-compositor__negreta', 'min-width')).toBe('var(--sdp-touch-min)');
+    expect(valor('.sdp-xat-compositor__negreta', 'min-height')).toBe('var(--sdp-touch-min)');
+    /* La negreta de la bombolla: l'extra de la casa, no el «bolder» del navegador. */
+    expect(valor('.sdp-xat-bombolla__text strong', 'font-weight')).toBe('var(--sdp-pes-extra)');
+    const consulta = llig('src/sections/xat/components/ConsultaIAIA.jsx');
+    expect(consulta).not.toMatch(/sdp-xat-compositor__camp--negreta/);
+  });
+
   test('la safata sense feina col·lapsa a 0: cap coixí ni filet (abans, 151px fixos en repòs)', () => {
     expect(valor('.sdp-xat-adjunts:not(.sdp-xat-adjunts--activa)', 'padding-block')).toBe('0');
     expect(valor('.sdp-xat-adjunts:not(.sdp-xat-adjunts--activa)', 'border-top')).toBe('0');
@@ -767,7 +784,13 @@ describe('la geometria de la barra única', () => {
     expect(controls).not.toMatch(/sdp-xat-adjunts__quota|sdp-xat-adjunts__accions/);
     /* La regió viva dels passos sempre hi és: buida, sense marge (és un ítem
        flex i el marge no col·lapsa cap a fora; sense la regla, 4px fixos). */
-    const adjuntXat = net(llig('src/sections/xat/components/AdjuntXat.css').replace(/\/\*[\s\S]*?\*\//g, ''));
+    /* tractor-vocabulari (261030) · El full dels adjunts és el bloc AdjuntXat de modules.css. */
+    const moduls = llig('src/css/modules.css');
+    const inici = moduls.indexOf('/* ═══ BLOC AdjuntXat · ');
+    const fi = moduls.indexOf('/* ═══ FI DEL BLOC AdjuntXat ═══ */');
+    expect(inici).toBeGreaterThan(-1);
+    expect(fi).toBeGreaterThan(inici);
+    const adjuntXat = net(moduls.slice(inici, fi).replace(/\/\*[\s\S]*?\*\//g, ''));
     expect(adjuntXat).toContain('.sdp-xat-adjunts .sdp-xat-adjunts__estat:empty { margin: 0; }');
   });
 

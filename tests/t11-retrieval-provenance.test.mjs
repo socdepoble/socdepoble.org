@@ -10,7 +10,8 @@ import {buildIndex,search} from '../tooling/wiki/core/edge_rag.mjs';
 import {readContextSource,writeGeneratedContext,renderGeneratedContext,groupIdenticalSources,GENOMA,GENOMA_SOURCES} from '../tooling/wiki/lib/retrieval-sources.mjs';
 const ROOT=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'..');
 const PRODUCER='tooling/wiki/compile-wiki-to-system-prompt.mjs';
-const TOOLS=[PRODUCER,'tooling/wiki/lib/retrieval-sources.mjs','tooling/wiki/lib/frontmatter.mjs'];
+/* Ordre del Mestre (30-10-2026) · retrieval-sources.mjs importa CAMINS de la SSOT de rutes. */
+const TOOLS=[PRODUCER,'tooling/wiki/lib/retrieval-sources.mjs','tooling/wiki/lib/frontmatter.mjs','tooling/lib/arrel.mjs'];
 const hash=b=>createHash('sha256').update(b).digest('hex');
 const doc=(body,metadata='')=>`---\ntype: document\nstatus: canonic\ndescription: Fixture de recuperació\n${metadata}---\n${body}\n`;
 function fixture(t){

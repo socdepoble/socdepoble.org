@@ -64,13 +64,29 @@ function viu(font) {
   return intern;
 }
 
+/* Gauntlet 261029 c1 (selector-carpetes-iframe-alie) · Dins d'un marc d'un
+   altre origen (el pont d'iframe de l'amfitrió), Chrome exposa
+   showDirectoryPicker però el rebutja sempre amb SecurityError: el marc és
+   alié si la pàgina de dalt no es deixa llegir. Sense `top`, o si `top` és el
+   mateix entorn, no hi ha marc. */
+function esMarcAlie(entorn) {
+  try {
+    const dalt = entorn.top;
+    if (!dalt || dalt === entorn) return false;
+    return typeof dalt.location.href !== 'string';
+  } catch {
+    return true;
+  }
+}
+
 /**
- * Cert si este navegador pot obrir el selector de carpetes del sistema.
+ * Cert si este navegador pot obrir el selector de carpetes del sistema: l'API
+ * hi és i no som en un marc d'un altre origen (llavors, el botó de pujar fitxers).
  * @param {object} [entorn] per defecte, globalThis
  * @returns {boolean}
  */
 export function potTriarCarpeta(entorn = globalThis) {
-  return typeof entorn?.showDirectoryPicker === 'function';
+  return typeof entorn?.showDirectoryPicker === 'function' && !esMarcAlie(entorn);
 }
 
 /**

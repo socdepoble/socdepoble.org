@@ -369,6 +369,9 @@ export default function SearchSection() {
 
   return (
     <UniversalPage
+      /* Decisions 261030 §7 · Els resultats porten les teues notes i converses:
+         Traduir no envia res fora (PageFrame ho diu en clicar-lo). */
+      traduccio={false}
       title={t('section.search.title', 'Cercador Universal')}
       subtitle={t('section.search.subtitle', 'Busca persones, pobles, publicacions i pàgines en un sol lloc')}
       chrome="system"

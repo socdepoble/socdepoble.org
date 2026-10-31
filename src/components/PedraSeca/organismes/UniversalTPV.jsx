@@ -4,8 +4,8 @@
  * l'estil («Clonar és copiar l'estructura, no l'estil», correcció del Mestre,
  * 261003): el tiquet blanc a l'esquerra, la graella de categories i
  * productes a la dreta, es veu més que es llig i la imatge mana. La pell és
- * Pedra Seca (tpv.css): només tokens, blau de control per a l'acció
- * principal i taronja per a la marca i l'acció secundària.
+ * Pedra Seca (src/css/modules.css, bloc tpv): només tokens, blau de control
+ * per a l'acció principal i taronja per a la marca i l'acció secundària.
  *
  * Una sola peça per a dues intel·ligències: el Bar de la Parròquia («Cobra»)
  * i la Llista de la Compra o el Rebost («Afig a la llista»). La peça no sap

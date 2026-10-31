@@ -8,16 +8,16 @@
       "data": "2026-10-28"
     },
     "cervell": {
-      "sha256": "851b3742533b81cdc557c2499537f82b8da0c3e87dd98937d789588cc3f450e4",
-      "html": 2699,
-      "aprovat_per": "Javi",
-      "data": "2026-10-10"
+      "sha256": "c17d818e1c8960e7ac23f878c1d13d949aa917bea7ffd7608463ec49aeda2ed1",
+      "html": 3297,
+      "aprovat_per": "javillinares",
+      "data": "2026-10-31"
     },
     "consola": {
-      "sha256": "f2a07d28c716647e1354c74ebceda0521992dafb910ae4ddce6f5ed070f5cdd2",
-      "html": 3223,
-      "aprovat_per": "Javi",
-      "data": "2026-10-10"
+      "sha256": "8e2d5cc8fb3783fb0278d3c44e2b82a5bf6ddaf04f724d9f907eea264caa4d6c",
+      "html": 5290,
+      "aprovat_per": "javillinares",
+      "data": "2026-10-31"
     },
     "constitucio": {
       "sha256": "6941a40e0d2bcd5716580aeac3385740af5d7eb92b336062da3b0707257818b3",
@@ -26,10 +26,10 @@
       "data": "2026-10-20"
     },
     "descarregues": {
-      "sha256": "5e3c1024bba8a099f29a1bc1a7b90f6513f042aefacc27bf6eb856b5c6dfe9f9",
-      "html": 5693,
-      "aprovat_per": "Mestre Javi Llinares",
-      "data": "2026-10-28"
+      "sha256": "0e924eb8569790bb68cc48e16ab184705d07f610e0fed897471a765e8a1b0097",
+      "html": 6432,
+      "aprovat_per": "Mestre Javi Llinares (ordre al xat 261031, executada per Claude)",
+      "data": "2026-10-31"
     },
     "disseny": {
       "sha256": "885021d3b6457430e7e24565b3f39b10516cb4bbd08243e922208a5960c1022f",
@@ -38,22 +38,28 @@
       "data": "2026-10-28"
     },
     "drets-autor": {
-      "sha256": "d9c24886bd44117e5391631c8cc02ba75e651ad1c6b0c5465b149f94aabf53a6",
-      "html": 10317,
-      "aprovat_per": "Mestre Javi Llinares",
-      "data": "2026-10-16"
+      "sha256": "bd73473fb86799f1f8ac83639cc8567a29d6e88aa3a9089479b3b387dd64ee37",
+      "html": 11195,
+      "aprovat_per": "Mestre Javi Llinares (ordre al xat 261030, executada per Claude)",
+      "data": "2026-10-30"
     },
     "fedivers": {
-      "sha256": "e86cd4bf60c4f9dca0c0595d2557fd8e054e58b692d3a792bf14dc0c0be0ad27",
-      "html": 2452,
-      "aprovat_per": "Mestre Javi Llinares (migració WebP)",
-      "data": "2026-10-21"
+      "sha256": "80c79de9d4e7a5382d6fafd7027394b50ef3bc43187679c7eb62e52588f1014f",
+      "html": 3371,
+      "aprovat_per": "Mestre Javi Llinares (ordre al xat 261030, executada per Claude)",
+      "data": "2026-10-30"
+    },
+    "fediversity": {
+      "sha256": "0a1a2a68a1dd9067188cd82d075d4a7c78338af38a96ac020e4e3431565944f8",
+      "html": 13652,
+      "aprovat_per": "Mestre Javi Llinares (ordre al xat 261031, executada per Claude)",
+      "data": "2026-10-31"
     },
     "legal": {
-      "sha256": "975922d356be3a4c245d4ca590e00cb5fdb9550fb897e9d07c869b4217e6f3c2",
-      "html": 45493,
-      "aprovat_per": "Mestre Javi Llinares",
-      "data": "2026-10-28"
+      "sha256": "751ae5e6127d4d2c3071e89a8ff2132cdcd6e0f9b1faf4b4552a21b06e96c8ab",
+      "html": 50239,
+      "aprovat_per": "Mestre Javi Llinares (ordre al xat 261030, executada per Claude)",
+      "data": "2026-10-30"
     },
     "notes": {
       "sha256": "39cf0339b0694fc1ed39bdcac47064fadb725d844e6410753a9af90e1fc4e94c",
@@ -74,10 +80,10 @@
       "data": "2026-10-17"
     },
     "versions": {
-      "sha256": "211e5ba27125d1bf46cf2d8cce8b5dd3b187577f1ae048823d2f037086aa5a4d",
-      "html": 10257,
-      "aprovat_per": "Mestre Javi",
-      "data": "2026-10-29"
+      "sha256": "8a9c1bf8f17d0458f95369772b729d36409771bf96222f210b8f6fca7957f53b",
+      "html": 10490,
+      "aprovat_per": "Mestre Javi Llinares (ordre al xat 261030, executada per Claude)",
+      "data": "2026-10-30"
     },
     "wikidepoble": {
       "sha256": "1c98790cc18d7d2d679ae2f0da114d90b38020d26500ad526cea88d261afb469",

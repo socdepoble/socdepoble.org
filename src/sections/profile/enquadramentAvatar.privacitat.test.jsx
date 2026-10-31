@@ -61,7 +61,7 @@ import { llegixExif, teExif } from '../../components/universal/enquadrament/exif
 import { ETIQUETA_CONSERVA_EXIF, extreuTiff, preparaTiff } from '../../components/universal/enquadrament/exifIncrustat.js';
 import {
   APP0_JFIF, IMATGE, SOI, app1Exif, concatena, dataOriginal, gpsTorre, orientacio, tiff,
-} from '../../components/universal/enquadrament/jpegProva.js';
+} from '../../../tests/helpers/jpegProva.js';
 
 const MARCA_MINIATURA = Uint8Array.from('MINIATURA-SENSE-RETALLAR', (c) => c.charCodeAt(0));
 /* Una càmera de veres guarda a l'IFD1 una miniatura de la foto SENCERA: ací,

@@ -3,9 +3,8 @@
  * l'onada 2 del Bloc H) · «📲 Instal·lar l'App (PWA)» a /page/descarregues,
  * DALT I AL FINAL, el patró de /page/consola (accioAlFinal): dins del bloc
  * blanc de l'H1 (div.page-title-accio, la ranura accioPrincipal de PageFrame)
- * i repetit després del cos (div.sdp-pagina-accio). El cos (PAGE_COPY) no
- * canvia ni un byte: l'empremta de la frontissa aprovada el 261028 continua
- * valent. La pàgina no té cap apartat «1. Aplicació web progressiva (PWA)»:
+ * i repetit després del cos (div.sdp-pagina-accio). El cos (PAGE_COPY) no el
+ * toca este component: la frontissa n'aprova l'empremta a part. La pàgina no té cap apartat «1. Aplicació web progressiva (PWA)»:
  * el seu és «A l'ordinador i des de qualsevol navegador», i la guia hi porta
  * (TITOL_INSTRUCCIONS, l'H4 de les instruccions de cada navegador).
  *

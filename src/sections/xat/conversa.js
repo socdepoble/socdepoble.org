@@ -11,6 +11,7 @@
  * `components/Conversa.jsx` només orquestra.
  */
 import { clauDia } from './temps.js';
+import { senseMarquesDeNegreta } from './negreta.js';
 
 /**
  * Distància al fons, en px, per davall de la qual ja «eres a baix»: 2rem
@@ -249,12 +250,14 @@ export function autorDeCita(msg, t) {
 /**
  * El text del missatge citat: «Missatge amagat» si és d'algú que has
  * bloquejat (Fase D, 261020, tasca 2: XatContext l'anota sense text), la
- * làpida si s'ha esborrat, i el text tal qual si no.
+ * làpida si s'ha esborrat, i el text si no. IDEA-53 (pla 261029_1605, Bloc
+ * B) · Sense les marques de la negreta: la cita, la barra de resposta i
+ * l'anunci en viu (el lector no diu «asterisc»). La resta, tal qual.
  */
 export function textDeCita(msg, t) {
   if (msg?.bloquejat) return t('section.moderacio.bloquejat.previa', 'Missatge amagat');
   if (msg?.esborrat || msg?.esborratAl) return t('section.xat.missatge.esborrat', "S'ha esborrat este missatge");
-  return String(msg?.text ?? msg?.content ?? '') || textDAdjunt(msg?.tipus, t);
+  return senseMarquesDeNegreta(String(msg?.text ?? msg?.content ?? '')) || textDAdjunt(msg?.tipus, t);
 }
 
 /* Gauntlet 261022_0225 (crítica Claude, ADV-MEDIA-1) · Un adjunt sense peu es

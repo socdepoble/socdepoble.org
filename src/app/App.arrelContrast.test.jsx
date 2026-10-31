@@ -300,7 +300,9 @@ describe('document alié: data-theme i lang de l’amfitrió', () => {
     vi.stubGlobal('innerWidth', 1440);
     const { container } = render(<PedraSecaEmbed config={{ routerType: 'memory', manageDocumentHead: false, language: 'es' }} />);
     await screen.findByRole('main');
-    const barra = () => screen.getByRole('navigation', { name: 'Navegació principal' });
+    /* Gauntlet 261029 (i18n-a11y, L4a) · El nom de la barra també seguix la
+       llengua: es llig després que arribe el diccionari, en castellà. */
+    const barra = () => screen.getByRole('navigation', { name: 'Navegación principal' });
     /* El tros pot haver arribat ja (l'efecte d'UIProvider el demana en muntar):
        l'estat d'abans no és determinista; el d'arribada, sí. */
     await act(async () => { await carregaDiccionari('es'); });

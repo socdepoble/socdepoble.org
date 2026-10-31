@@ -4,7 +4,6 @@ import makeWASocket, {
   BufferJSON,
   areJidsSameUser,
   downloadMediaMessage,
-  extractMessageContent,
   isJidBroadcast,
   isJidGroup,
   isJidNewsletter,

@@ -11,8 +11,9 @@
  *   panoramica   EXCEPCIÓ a la regla 1:1 (Pedra Seca §8), autoritzada pel
  *                Mestre el 261003 i només per al Lector de notícies: la
  *                miniatura i el marcador van en 16:9, amb l'alçada de
- *                --sdp-touch (agrupacio.jsx, catalegColleccio.css). La
- *                guarda és PedraSeca/qualitat.panoramica.test.js.
+ *                --sdp-touch (agrupacio.jsx i src/css/modules.css, bloc
+ *                catalegColleccio). La guarda és
+ *                PedraSeca/qualitat.panoramica.test.js.
  */
 import { useId } from 'react';
 import { Check } from 'lucide-react';

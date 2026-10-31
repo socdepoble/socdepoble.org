@@ -46,8 +46,9 @@ const TOTS = [...JSX_NOUS, ...TOCATS, ...PROVES];
 
 const senseComentaris = (codi) => codi.replace(/\/\*[\s\S]*?\*\//g, '').replace(/^\s*\/\/.*$/gm, '');
 const classesDelCss = (css) => new Set([...senseComentaris(css).matchAll(/\.(-?[_a-zA-Z][\w-]*)/g)].map((m) => m[1]));
-const CSS_CANONIC = readdirSync(path.join(ARREL, 'src/css')).filter((f) => f.endsWith('.css')).map((f) => llig(`src/css/${f}`))
-  .concat([llig(`${PS}/pecesApps.css`), llig(`${PS}/catalegColleccio.css`)]).join('\n');
+/* tractor-vocabulari (261030) · pecesApps i catalegColleccio són ara blocs de
+   modules.css: src/css ja els porta. */
+const CSS_CANONIC = readdirSync(path.join(ARREL, 'src/css')).filter((f) => f.endsWith('.css')).map((f) => llig(`src/css/${f}`)).join('\n');
 
 /* Els valors de className d'un JSX: literals, branques de ternària i elements d'una llista. */
 function classesDe(codi) {

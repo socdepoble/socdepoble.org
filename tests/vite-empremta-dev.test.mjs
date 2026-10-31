@@ -4,8 +4,11 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import vm from 'node:vm';
+import { loadConfigFromFile } from 'vite';
 
 import configDeVite, * as modulDeVite from '../vite.config.js';
+import { CODI_HMR_BFCACHE, RUTA_HMR_BFCACHE, instalaTancamentHmr } from '../tooling/vite/hmr-bfcache.mjs';
 
 /* T13 · L'empremta de src/config/dataMode.js és del PROCÉS `vite`. Els reinicis
    que Vite fa sol (canvis a vite.config.js, a les seues dependències de tooling/
@@ -108,4 +111,94 @@ test('Notes · cap còpia comparteix la memòria cau del viu ni hi escriu dins',
     assert.equal(path.dirname(cau), path.join(tmp, 'sdp-vite-cache'));
   }
   assert.notEqual(cacheDirPropi(enllacada, tmp), cacheDirPropi(mixta, tmp), 'cada arrel, la seua');
+});
+
+/* Gauntlet 261029 (c1, vite-hmr-ws-bfcache) · Arrere/Avant entre documents escrivia a la consola
+   «WebSocket connection to 'ws://localhost:3340/?token=…' failed: Page entered Back-Forward Cache.»:
+   el client de Vite no escolta pagehide. El connector només-dev (tooling/vite/hmr-bfcache.mjs)
+   tanca net el socket HMR en un pagehide persistent. */
+test('bfcache · el connector del socket HMR: només en serve, un script de la mateixa origen al principi del <head>', () => {
+  const connector = configServe().plugins.flat().find((p) => p?.name === 'sdp-hmr-bfcache');
+  assert.ok(connector, 'vite.config.js ha de portar el connector sdp-hmr-bfcache');
+  assert.equal(connector.apply, 'serve', 'ni el build ni el preview el porten');
+  // script-src 'self' (index.html): un src de la mateixa origen, mai un script en línia.
+  assert.deepEqual(connector.transformIndexHtml(), [{ tag: 'script', attrs: { src: RUTA_HMR_BFCACHE }, injectTo: 'head-prepend' }]);
+  const rutes = [];
+  connector.configureServer({ middlewares: { use: (ruta, servix) => rutes.push([ruta, servix]) } });
+  assert.deepEqual(rutes.map(([ruta]) => ruta), [RUTA_HMR_BFCACHE]);
+  const capcaleres = {};
+  let cos = null;
+  rutes[0][1]({}, { setHeader: (clau, valor) => { capcaleres[clau] = valor; }, end: (text) => { cos = text; } });
+  assert.match(capcaleres['Content-Type'], /^text\/javascript/);
+  assert.equal(cos, CODI_HMR_BFCACHE);
+});
+
+function finestraFalsa() {
+  const finestra = new EventTarget();
+  const tancats = [];
+  class SocketFals extends EventTarget {
+    static CONNECTING = 0;
+    static OPEN = 1;
+    static CLOSED = 3;
+    constructor(url, protocols) {
+      super();
+      this.url = url;
+      this.protocols = protocols;
+      this.readyState = SocketFals.OPEN;
+    }
+    close(codi, motiu) {
+      tancats.push([this.url, codi, motiu]);
+      this.readyState = SocketFals.CLOSED;
+      this.dispatchEvent(new Event('close'));
+    }
+  }
+  return {
+    SocketFals,
+    tancats,
+    entorn: { WebSocket: SocketFals, addEventListener: finestra.addEventListener.bind(finestra) },
+    amaga: (persisted) => finestra.dispatchEvent(Object.assign(new Event('pagehide'), { persisted }))
+  };
+}
+
+test('bfcache · en un pagehide persistent es tanquen nets (1000) els sockets HMR oberts, i cap altre', async () => {
+  /* El que servix de veres el servidor: Vite empaqueta el config (esbuild) abans d'avaluar-lo, i el
+     script ix del toString() de la funció ja empaquetada; cap ajudant d'esbuild hi pot faltar. */
+  const { config } = await loadConfigFromFile({ command: 'serve', mode: 'development', isPreview: true }, 'vite.config.js', ARREL, 'silent');
+  let servitPerVite = null;
+  config.plugins.flat().find((p) => p?.name === 'sdp-hmr-bfcache')
+    .configureServer({ middlewares: { use: (_ruta, servix) => servix({}, { setHeader() {}, end: (text) => { servitPerVite = text; } }) } });
+  assert.equal(typeof servitPerVite, 'string');
+  for (const [via, instala] of [
+    ['la funció', (entorn) => instalaTancamentHmr(entorn)],
+    ['el script servit', (entorn) => vm.runInContext(CODI_HMR_BFCACHE, vm.createContext(entorn))],
+    ['el script servit pel config empaquetat', (entorn) => vm.runInContext(servitPerVite, vm.createContext(entorn))]
+  ]) {
+    const { SocketFals, tancats, entorn, amaga } = finestraFalsa();
+    instala(entorn);
+    assert.notEqual(entorn.WebSocket, SocketFals, via);
+    const HMR = 'ws://localhost:3340/?token=t';
+    const hmr = new entorn.WebSocket(HMR, 'vite-hmr');
+    const hmrLlista = new entorn.WebSocket(`${HMR}&b`, ['vite-hmr']);
+    const connectant = new entorn.WebSocket(`${HMR}&c`, 'vite-hmr');
+    connectant.readyState = SocketFals.CONNECTING;
+    const ping = new entorn.WebSocket('ws://localhost:3340/', 'vite-ping');
+    const app = new entorn.WebSocket('wss://realtime.example.test/socket');
+    // El constructor de l'app no canvia: instanceof i les constants.
+    assert.ok(app instanceof entorn.WebSocket && app instanceof SocketFals, via);
+    assert.equal(entorn.WebSocket.OPEN, 1, via);
+
+    amaga(false); // una eixida de veres (sense bfcache): ni un tancament
+    assert.deepEqual(tancats, [], via);
+    amaga(true);
+    assert.deepEqual(tancats, [[HMR, 1000, 'bfcache'], [`${HMR}&b`, 1000, 'bfcache']], via);
+    assert.deepEqual([hmr, hmrLlista, connectant, ping, app].map((s) => s.readyState), [3, 3, 0, 1, 1], via);
+    amaga(true); // els ja tancats no es tornen a tancar
+    assert.equal(tancats.length, 2, via);
+  }
+  // Instal·lar-lo dues vegades no l'embolica dues vegades.
+  const { entorn } = finestraFalsa();
+  assert.equal(instalaTancamentHmr(entorn), true);
+  const embolicat = entorn.WebSocket;
+  assert.equal(instalaTancamentHmr(entorn), false);
+  assert.equal(entorn.WebSocket, embolicat);
 });

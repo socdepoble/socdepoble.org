@@ -27,6 +27,6 @@ test('sense font, o sense esdeveniment, es pinta com una publicació', () => {
 test('cada classe que pot eixir té regla al bloc SDP:calendari-vistes de modules.css', () => {
   const css = readFileSync(resolve(process.cwd(), 'src/css/modules.css'), 'utf8');
   for (const tipus of ['esdeveniment', 'publicacio', 'producte', 'pagina', 'agenda']) {
-    expect(css).toMatch(new RegExp(`\\.sdp-cal-font--${tipus}\\s*\\{[^}]*--sdp-cal-bloc-fons:`));
+    expect(css).toMatch(new RegExp(`\\.sdp-cal-font--${tipus}\\s*\\{[^}]*--cal-bloc-fons:`));
   }
 });

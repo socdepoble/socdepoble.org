@@ -3,7 +3,7 @@ import { MAX_FOTOS_GEO, TEMPS_HERO_MS, fotosGeoDelCos, geoDelHero, precisioDeCoo
 import { ajustaPrecisioGps } from '../../components/universal/enquadrament/exifIncrustat.js';
 import {
   APP0_JFIF, IMATGE, SOI, app1Exif, concatena, dataOriginal, gpsTorre, jpegAmbExif, tiff,
-} from '../../components/universal/enquadrament/jpegProva.js';
+} from '../../../tests/helpers/jpegProva.js';
 
 /* P1-64 (pla 261028_1526 §3.1.1; contracte de dades del Mapa, Mestre 261028)
    · L'índex de les fotos del cos (data-* de l'ordre «/» Imatge) i la ubicació

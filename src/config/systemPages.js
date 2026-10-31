@@ -39,16 +39,24 @@ const ANAR_AL_XAT = Object.freeze({
    Cervell són pàgines del sistema, no plugins: la seua pàgina porta el botó
    gran cap a l'eina. Les rutes són literals perquè este mòdul no importa
    res; systemPages.test.js les confronta amb RUTA_CONSOLA i amb les pàgines
-   de la Consola. Fora de desenvolupament, /consola demana el rol de
-   superadmin (App.jsx, RutaConsola).
+   de la Consola. /consola no demana compte ni rol en cap entorn (App.jsx:
+   la ruta /consola/* munta ConsolaSection sense RequireAuth ni guarda).
    Onada 10 (261010; pla 261010_1121; decisió del Mestre del 261010) ·
    Derogat de l'Onada 8 que la seua targeta porte el botó «com El Xat»: sense
    `targeta`, la targeta pinta les etiquetes; amb `final`, la pàgina repetix
    el botó després dels sis paràgrafs.
-   Pendent de decisió (MarIA o el Mestre) · Esta porta no mira l'entorn. Quan
-   eren plugins, la revisió P7-A deixava inert el seu «Obrir» fora de
-   desenvolupament (useDestiDelPlugin), perquè les dades de la Consola
-   (/__iaia/*) només les servix `vite serve`. Cap ordre ho ha derogat. */
+   Decisió del Mestre (ordre del 30-10-2026, prompt 2208, T2.2) · La Consola
+   és pública, també en producció, i el botó «Obrir la Consola» hi és actiu:
+   esta porta no mira l'entorn, a propòsit. Les lectures en viu (/__iaia/*)
+   continuen només a `vite serve`. Decisió del Mestre (31-10-2026) · Al build
+   web, la Consola llig la instantània sanejada que el build publica a
+   /__iaia/*.json (src/sections/consola/fontsConsola.js); només un paquet
+   sense instantània (WordPress, l'app) diu que no té dades. Derogat: «fora,
+   la Consola diu que no té dades».
+   Derogada, per a la Consola, la regla de la revisió P7-A que deixava inert
+   l'«Obrir» fora de desenvolupament, abans «pendent de decisió». La regla
+   continua viva per als plugins amb `entorn: 'desenvolupament'` (registrePlugins.js,
+   la Gestoria; useDestiDelPlugin.js), i el botó de la Consola no hi passa. */
 const OBRIR_CONSOLA = Object.freeze({
   id: 'obrir-consola',
   text: Object.freeze(['section.consola.obrir', 'Obrir la Consola']),
@@ -90,6 +98,13 @@ const OBRIR_CERVELL = Object.freeze({
  * Android, Google Play i l'APK, i la regla 2.3.10 de l'App Store no admet
  * noms d'altres plataformes dins de l'app; amagar només el botó no bastava.
  * Ho diu la marca `nomesWeb` del descriptor (esPaginaVisible).
+ * Ordre del Mestre (30-10-2026; candidatura NLnet NGI Fediversity, expedient
+ * 2026-08-1a6) · «Candidatura Europea NLnet · NGI Fediversity» viu a
+ * /page/fediversity (PageDetailSection, sense component propi) i la seua
+ * targeta ix al Mur i al Calendari com les germanes. /fediversity n'és
+ * l'adreça curta (App.jsx, una redirecció). Sense acció gran i sense
+ * `nomesWeb`: el cos no nomena cap altra plataforma mòbil ni cap botiga, i
+ * dins de l'app nativa es pinta igual (perAppNativa.test.js).
  */
 export const SYSTEM_PAGES = Object.freeze([
   { key: 'projecte', isAvis: false, href: '/projecte' },
@@ -104,7 +119,8 @@ export const SYSTEM_PAGES = Object.freeze([
   { key: 'legal', isAvis: false, href: '/legal' },
   { key: 'xat', isAvis: false, href: '/page/xat', accio: ANAR_AL_XAT },
   { key: 'drets-autor', isAvis: false, href: '/page/drets-autor' },
-  { key: 'descarregues', isAvis: false, href: '/page/descarregues', nomesWeb: true }
+  { key: 'descarregues', isAvis: false, href: '/page/descarregues', nomesWeb: true },
+  { key: 'fediversity', isAvis: false, href: '/page/fediversity' }
 ].map((page) => Object.freeze(page)));
 
 /**

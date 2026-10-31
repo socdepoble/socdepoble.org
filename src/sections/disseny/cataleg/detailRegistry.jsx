@@ -92,6 +92,8 @@ export const CATALOG_DETAIL_LOADERS = {
   'formularis/teclat-numeric': lazyRoute(() => import('./detalls/EspecimenTeclatNumeric.jsx')),
   'fonaments/linia-del-temps': lazyRoute(() => import('./detalls/EspecimenLiniaDelTemps.jsx')),
   'fonaments/histograma': lazyRoute(() => import('./detalls/EspecimenHistograma.jsx')),
+  /* Ordre del Mestre (31-10-2026, prompt 2208, T3.1) · el Quadre de Comandament compacte. */
+  'fonaments/quadre-comandament': lazyRoute(() => import('./detalls/EspecimenQuadreDeComandament.jsx')),
   /* Ordre del Mestre (261002, sinergies T4/T8) · l'esquelet comú de catàleg i col·lecció. */
   'fonaments/articles': lazyRoute(() => import('./detalls/EspecimenArticles.jsx')),
   'navegacio/seccions-categoria': lazyRoute(() => import('./detalls/EspecimenSeccionsCategoria.jsx')),

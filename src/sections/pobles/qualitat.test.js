@@ -6,7 +6,7 @@
    nom de poble escrit al codi) sobre els mòduls nous de la pestanya «Gent de
    …», del xat de la gent i del naixement. Fins ara cap porta d'ESLint cobria
    estos fitxers. Calcada de src/sections/xat/qualitat.test.js. */
-import { existsSync, readFileSync } from 'node:fs';
+import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 import { ESLint } from 'eslint';
 import { describe, expect, test } from 'vitest';
@@ -25,7 +25,14 @@ const MODULS_NOUS = Object.freeze([
   'src/sections/pobles/PublicacionsDelPoble.jsx',
   /* P1-11 (pla 261024_2230, T5B-01) · La pestanya «Empreses i entitats». */
   'src/sections/pobles/useEntitatsDelPoble.js',
-  'src/sections/pobles/EntitatsDelPoble.jsx'
+  'src/sections/pobles/EntitatsDelPoble.jsx',
+  /* VQ · Fase 3a de l'eina de pobles nous (261030) · La fitxa incompleta i la Viquipèdia. */
+  'src/sections/pobles/fitxaDelPoble.js',
+  'src/sections/pobles/cauDeViquipedia.js',
+  'src/sections/pobles/consentimentViquipedia.js',
+  'src/sections/pobles/usePobleHidratat.js',
+  'src/sections/pobles/CreditsDeViquipedia.jsx',
+  'src/sections/pobles/PanellDeViquipedia.jsx'
 ]);
 const FITXERS = Object.freeze([
   ...MODULS_NOUS,
@@ -48,7 +55,15 @@ const FITXERS = Object.freeze([
   'src/sections/notes/autoriaNota.test.js',
   'src/sections/notes/NotesContext.dataPublicacio.test.jsx',
   'src/components/PedraSeca/organismes/Pestanyes.jsx',
-  'src/components/PedraSeca/organismes/Pestanyes.test.jsx'
+  'src/components/PedraSeca/organismes/Pestanyes.test.jsx',
+  /* VQ · Fase 3a (261030) · Les proves de la Viquipèdia i el client tocat. */
+  'src/sections/pobles/fitxaDelPoble.test.js',
+  'src/sections/pobles/cauDeViquipedia.test.js',
+  'src/sections/pobles/PanellDeViquipedia.test.jsx',
+  'src/sections/pobles/PoblesSection.lleiDelPixel.test.jsx',
+  'src/sections/detail/ItemDetailSection.pobleIncomplet.test.jsx',
+  'src/data/adaptadors/viquipedia/client.js',
+  'src/data/adaptadors/viquipedia/client.test.js'
 ]);
 
 const llig = (ruta) => readFileSync(path.join(ARREL, ruta), 'utf8');
@@ -112,5 +127,30 @@ describe('cap poble escrit al codi', () => {
     // Sonda: el patró veu un nom entre cometes dobles i dins d'una plantilla.
     expect(entreCometes('Sella').test('const a = "Sella";')).toBe(true);
     expect(entreCometes('Gent de la Torre').test('const b = `Gent de la Torre`;')).toBe(true);
+  });
+});
+
+/* VQ · Fase 3a (261030; disseny nit/viquipedia_disseny.md §7, risc 13) · El
+   client de Wikimedia i l'algoritme (~25 kB de font) no han d'entrar al tros
+   principal: només el panell diferit importa pobleDeViquipedia.js, i la cau
+   (IndexedDB) només s'importa en diferit. Un import estàtic d'un altre mòdul
+   de l'app ho trencaria sense que cap altra prova se n'adonara. */
+describe('la Viquipèdia, només en diferit', () => {
+  const fonts = () => {
+    const arrel = path.join(ARREL, 'src');
+    return readdirSync(arrel, { recursive: true }).map(String)
+      .filter((f) => /\.(?:js|jsx)$/.test(f) && !/\.test\.(?:js|jsx)$/.test(f))
+      .map((f) => ({ fitxer: f.split(path.sep).join('/'), codi: senseComentaris(readFileSync(path.join(arrel, f), 'utf8')) }));
+  };
+  const importaEstatic = (codi, modul) => new RegExp(`(?:^|\\n)\\s*import\\s[^;]*?from\\s+['"][^'"]*/${escapa(modul)}['"]`).test(codi);
+
+  test('pobleDeViquipedia.js i cauDeViquipedia.js només els importa estàticament el panell', () => {
+    const quiImporta = (modul) => fonts().filter(({ codi }) => importaEstatic(codi, modul)).map(({ fitxer }) => fitxer).sort();
+    expect(quiImporta('pobleDeViquipedia.js')).toEqual(['sections/pobles/PanellDeViquipedia.jsx']);
+    expect(quiImporta('cauDeViquipedia.js')).toEqual(['sections/pobles/PanellDeViquipedia.jsx']);
+    expect(quiImporta('PanellDeViquipedia.jsx')).toEqual([]);
+    // Sonda: el patró veu un import estàtic de veres.
+    expect(importaEstatic("import { x } from '../pobles/pobleDeViquipedia.js';", 'pobleDeViquipedia.js')).toBe(true);
+    expect(importaEstatic("const P = lazyRoute(() => import('../pobles/pobleDeViquipedia.js'));", 'pobleDeViquipedia.js')).toBe(false);
   });
 });

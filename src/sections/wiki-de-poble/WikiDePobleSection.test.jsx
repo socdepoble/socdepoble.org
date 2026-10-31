@@ -232,6 +232,17 @@ test('el filtre explícit de carpeta es conserva amb un document obert', () => {
   expect(fixture.props.selection).toEqual({ categoryId: 'folder:02_saber', itemId: 'doc_llarg' });
 });
 
+/* IDEA-57 L5 (P1-16; Gauntlet 261029, cicle 1, àrea i18n-a11y) · El quadre
+   ISO és una taula amb nom i les seues etiquetes són capçaleres de fila. */
+test('quadre ISO: la taula té nom i cada etiqueta és una capçalera de fila', () => {
+  obri('doc_llarg');
+  const taula = screen.getByRole('table', { name: 'Quadre de Comandament ISO' });
+  const etiquetes = [...taula.querySelectorAll('th')];
+  expect(etiquetes.length).toBeGreaterThanOrEqual(3);
+  expect(etiquetes.every((th) => th.getAttribute('scope') === 'row')).toBe(true);
+  expect(screen.getAllByRole('rowheader').filter((th) => taula.contains(th))).toHaveLength(etiquetes.length);
+});
+
 /* Pla 261028_1526 (P1-61, Fase 2) · WikiDetail registra el seu <head> amb
    useSEO, que necessita UIProvider. Els contractes visuals d'esta suite són
    independents del head: el real té la seua suite (WikiDePobleSection.seo.test.jsx). */

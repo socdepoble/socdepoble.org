@@ -57,7 +57,7 @@ import {
 import { NotaPreparadaContext } from './notaPreparada.js';
 import { RUTA_PERFIL_PROJECTE } from '../../config/navigation.js';
 import { ENTITAT_PILOT_SLUG } from '../../data/identitatsSeed.js';
-import { dataOriginal, gpsTorre, jpegAmbExif } from '../../components/universal/enquadrament/jpegProva.js';
+import { dataOriginal, gpsTorre, jpegAmbExif } from '../../../tests/helpers/jpegProva.js';
 import { llegixExif } from '../../components/universal/enquadrament/exif.js';
 import { proposaCard } from './proposaCard.js';
 
@@ -410,6 +410,17 @@ test('P4 · l’adaptador del Bloc no porta la targeta viva: ni amb nota, ni a l
   expect(mocks.adapter.document.id).toBe('prova-local');
   expect(mocks.adapter).not.toHaveProperty('targetaViva');
   expect(mocks.adapter).not.toHaveProperty('avisTargetaViva');
+});
+
+/* Gauntlet 261030 (cicle 3, traduir-perfil-lectura-fitxa-no-publica) ·
+   DocumentEditor ja només deixa Traduir actiu a l'estat buit amb la marca
+   de l'adaptador (fallada tancada). L'estat buit del Bloc és la nota de
+   benvinguda, text del sistema i públic: la porta, com abans. */
+test('cicle 3 · la nota de benvinguda de l’estat buit es continua podent traduir', () => {
+  mocks.session = { currentUser: { id: 'U' } };
+  render(<NotesEditor />);
+  expect(mocks.adapter.document).toBeNull();
+  expect(mocks.adapter.emptyDocument.traduccio).toBe(true);
 });
 
 /* ── P4 · La «Nota sense títol» (notaPreparada.js) ────────────────────── */

@@ -40,7 +40,8 @@ describe('transport', () => {
     const [url, init] = fetchImpl.mock.calls[0];
     expect(parametres(url)).toEqual(parametres(SELLA.url));
     expect(new URL(url).origin).toBe('https://www.wikidata.org');
-    expect(init).toMatchObject({ method: 'GET', credentials: 'omit', redirect: 'error' });
+    /* Fase 3a (Legal §21) · Sense referent: ni la ruta ni l'origen de la pàgina. */
+    expect(init).toMatchObject({ method: 'GET', credentials: 'omit', redirect: 'error', referrerPolicy: 'no-referrer' });
     expect(init.headers).toEqual({ Accept: 'application/json', 'Api-User-Agent': AGENT_USUARI });
     expect(AGENT_USUARI).toMatch(/^SocDePoble\/\d+\.\d+ \(https:\/\/socdepoble\.org\//);
   });

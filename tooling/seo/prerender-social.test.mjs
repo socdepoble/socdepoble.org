@@ -106,8 +106,12 @@ test('cada ruta: un sol head marcat, canonical absolut, imatge del dist i els ma
   // L'àlies porta el canonical (i l'og:url) del destí.
   assert.equal(llig(dist,'descarregues/index.html').querySelector('link[rel="canonical"]').href,origin+'/page/descarregues');
   assert.equal(prop(llig(dist,'descarregues/index.html'),'og:url'),origin+'/page/descarregues');
-  // Cap fitxer per a les rutes privades.
-  for(const rel of ['notes','xat','disseny','consola','control'])assert.equal(fs.existsSync(path.join(dist,rel)),false,rel);
+  /* Cap fitxer per a les rutes privades. Ordre del Mestre (30-10-2026, prompt
+     2208, T2.1) · Expectativa actualitzada a posta: /disseny ja és pública i té
+     el seu fitxer; la fixture no porta la Consola (seoConsola.js). Abans,
+     'disseny' era a la llista de les privades. */
+  for(const rel of ['notes','xat','consola','control'])assert.equal(fs.existsSync(path.join(dist,rel)),false,rel);
+  assert.equal(llig(dist,'disseny/index.html').querySelector('link[rel="canonical"]').href,origin+'/disseny');
 });
 
 test('cada directori creat porta index.html; els que no són ruta, el shell byte a byte',async t=>{
@@ -216,7 +220,37 @@ test('dades de veres del repositori: /anima, /fedivers, la samarreta i el Llibre
   assert.equal(primer.status,0,primer.stderr);
   const rebut=JSON.parse(primer.stdout);
   for(const ruta of ['/anima','/fedivers','/projecte','/mercat/samarreta-socdepoble','/wikidepoble','/wikidepoble/03_llibre_d_or_memoria_episodica'])assert.ok(rebut.routesWritten.includes(ruta),ruta);
-  for(const ruta of ['/notes','/xat','/disseny','/consola'])assert.ok(!rebut.routesWritten.includes(ruta),ruta);
+  /* Ordre del Mestre (30-10-2026, prompt 2208, T2.1) · Expectativa actualitzada a
+     posta: /disseny i /consola ja són públiques i prerenderitzades (abans, a la
+     llista de les absents); /notes i /xat continuen fora. */
+  for(const ruta of ['/notes','/xat'])assert.ok(!rebut.routesWritten.includes(ruta),ruta);
+  for(const ruta of ['/disseny','/consola'])assert.ok(rebut.routesWritten.includes(ruta),ruta);
+  /* Ordre del Mestre (30-10-2026, prompt 2208; QA-VES-01 de Codex) · Cobertura
+     inventari ↔ head HTML servit: cada ruta nova té el seu fitxer, una sola
+     og:image igual a twitter:image, summary_large_image, el títol, la descripció
+     i el canonical del manifest, i la imatge és un JPEG o PNG del dist de
+     300 000 B com a molt (cap targeta genèrica). */
+  const {manifest}=await buildSocialManifest({root:projectRoot,origin,estricte:true});
+  const inventari=Object.keys(manifest.routes).filter(ruta=>/^\/(?:page\/(?:publicar_|vehicle_compartit|animalets|treball|habitatge|notes|wikidepoble)|plugin\/|consola(?:\/|$)|disseny$|wikidepoble$)/.test(ruta));
+  assert.equal(inventari.length,10+8+1+1+14,inventari.join(' '));
+  for(const ruta of inventari) {
+    const entrada=manifest.routes[ruta];
+    const d=llig(dist,`${ruta.slice(1)}/index.html`);
+    const meta=(atribut,nom)=>[...d.querySelectorAll(`meta[${atribut}="${nom}"]`)].map(n=>n.content);
+    assert.deepEqual(meta('property','og:image'),[entrada.image.url],ruta);
+    assert.deepEqual(meta('name','twitter:image'),[entrada.image.url],ruta);
+    assert.deepEqual(meta('name','twitter:card'),['summary_large_image'],ruta);
+    assert.equal(d.title,`${entrada.title} | Sóc de Poble`,ruta);
+    assert.deepEqual(meta('name','description'),[entrada.description],ruta);
+    const canonical=ruta==='/wikidepoble'?null:origin+ruta;
+    assert.equal(d.querySelector('link[rel="canonical"]')?.href??null,canonical,ruta);
+    const u=new URL(entrada.image.url);
+    assert.notEqual(u.pathname,'/assets/system/ui/og-socdepoble-1200x630.png',`${ruta}: la targeta genèrica`);
+    const bytes=fs.readFileSync(path.join(dist,decodeURIComponent(u.pathname)));
+    assert.ok(bytes.length<=300000,`${ruta}: ${bytes.length} B`);
+    assert.match(sniffImage(bytes)?.type??'',/^image\/(?:png|jpeg)$/,ruta);
+    assert.deepEqual(meta('property','og:image:type'),[sniffImage(bytes).type],ruta);
+  }
   const prop=(rel,nom)=>llig(dist,rel).querySelector(`meta[property="${nom}"]`)?.content??null;
   assert.equal(prop('fedivers/index.html','og:image'),origin+'/assets/ui/plugins/fedivers_vinyeta-social-1200x630.jpg');
   assert.equal(prop('mercat/samarreta-socdepoble/index.html','og:image'),origin+'/assets/uploads/empresa/soc-de-poble/mercat/samarreta-soc-de-poble/01-chica-jersey-social-1200x630.jpg');

@@ -9,9 +9,12 @@ import { clauSocialDeRuta } from '../config/rutaSocial.js';
 
 // Gestoria i tractors tracten fitxers personals: mai indexables. Robots no és
 // autorització; només evita que un cercador les llistes.
+// Ordre del Mestre (30-10-2026, prompt 2208, T2.1) · /disseny i /consola són
+// públiques i indexables («en principio no estamos escondiendo nada»): ixen
+// d'esta llista, com 'disseny' de PRIVATE_ROUTES (publication-policy.mjs).
 const PRIVATE = new Set(['notes', 'xat', 'chat', 'chats', 'control-xat', 'login', 'entrar', 'registre', 'accedir',
-  'crear-compte', 'perfil', 'el-meu-perfil', 'admin', 'consola', 'control', 'utilitats', 'connectar', 'cerca',
-  'dispositius', 'traduccions', 'disseny', 'skills', 'ia', 'realitat', 'gestoria', 'tractors']);
+  'crear-compte', 'perfil', 'el-meu-perfil', 'admin', 'control', 'utilitats', 'connectar', 'cerca',
+  'dispositius', 'traduccions', 'skills', 'ia', 'realitat', 'gestoria', 'tractors']);
 export function routeAllowsIndex(pathname) {
   return !PRIVATE.has(String(pathname).replace(/^\/+/, '').split(/[/?#]/)[0]);
 }

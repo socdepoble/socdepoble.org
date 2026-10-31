@@ -1,10 +1,11 @@
 import { StrictMode } from 'react';
-import { cleanup, render, waitFor } from '@testing-library/react';
+import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { afterEach, beforeEach, expect, test, vi } from 'vitest';
 import { XatProvider, useXat } from './XatContext.jsx';
 import { creaServeiAmbitXat } from '../../data/xifratXat.js';
 import { registraServeiXifratXat } from '../../data/xifratXatServei.js';
 import { clauIdentitat } from '../../data/xifratXatMagatzem.js';
+import { _reiniciaOblitXat, oblidaXatEnEixir } from '../../data/xifratXatEixida.js';
 
 const m=vi.hoisted(()=>({session:{},actorKey:'',backend:null,loadFils:vi.fn(),loadMissatges:vi.fn(),enviaMissatge:vi.fn(),marcaLlegit:vi.fn(),creaFilDirecte:vi.fn(),carregaMembres:vi.fn(),subscribeToXat:vi.fn(),unsubscribeFromXat:vi.fn(),obriFilDePagina:vi.fn(),teCapacitat:vi.fn(),showToast:vi.fn()}));
 vi.mock('../../app/contexts/SessionContext',()=>({useSession:()=>m.session}));
@@ -25,8 +26,9 @@ beforeEach(()=>{
  vi.clearAllMocks();m.hostReady=null;m.session={currentUser:{id:A},generacio:1,estat:'dins'};m.actorKey=`persona::${A}`;m.backend={};revocats=[];
  servei=creaServeiAmbitXat({revocaUrl:u=>revocats.push(u)});registraServeiXifratXat(m.backend,servei);
  m.loadFils.mockResolvedValue([]);m.loadMissatges.mockResolvedValue([]);m.subscribeToXat.mockResolvedValue({subscription:null,error:null});m.unsubscribeFromXat.mockResolvedValue(null);m.teCapacitat.mockReturnValue(false);
+ _reiniciaOblitXat();
 });
-afterEach(cleanup);
+afterEach(()=>{cleanup();_reiniciaOblitXat();});
 
 test('XatContext fixa el mateix ambitEstable i CI explícita; JWT no buida RAM ni generacions',async()=>{
  const v=await muntat();const e=servei.estatAmbit();expect(e.ambitEstable).toBe(value.ambitEstable);
@@ -64,4 +66,35 @@ test('backend instal·lat després del render rep l’àmbit abans de la primera
 test('desmuntar abans de hostReady impedix la connexió i les càrregues tardanes',async()=>{
  let llest;m.hostReady=new Promise(r=>{llest=r;});const backend=m.backend;m.backend={};const v=render(arbre());v.unmount();m.backend=backend;llest();await Promise.resolve();await Promise.resolve();
  expect(servei.estatAmbit().ambitEstable).toBeNull();expect(m.loadFils).not.toHaveBeenCalled();
+});
+
+/* P1-12 pas 17 (D-09; pla 261029_1605, C.1) · L'eixida no ha pogut oblidar el
+   xat d'este aparell: XatContext ho exposa (sense `visible`, la persona ja ha
+   eixit), pinta l'avís i el reintent torna a provar amb la MATEIXA CI de qui
+   va eixir. Amb una persona dins, l'avís no apareix. */
+const motorOblitFals=(servei,estats)=>{let n=0;return vi.fn(async()=>{const estat=estats[Math.min(n,estats.length-1)];n+=1;servei.desaEstatOblit(estat);return estat;});};
+const FALLIT=Object.freeze({estat:'OBLIT_FALLIT',pendents:Object.freeze(['indexeddb']),causes:Object.freeze([]),quanMs:10});
+const OBLIDAT=Object.freeze({estat:'oblidat',pendents:Object.freeze([]),causes:Object.freeze([]),quanMs:20});
+const ambOblitFals=(estats)=>{const motorRef={};servei=creaServeiAmbitXat({revocaUrl:u=>revocats.push(u),motorRef});registraServeiXifratXat(m.backend,servei);motorRef.oblidaTot=motorOblitFals(servei,estats);return motorRef.oblidaTot;};
+const CI_A=()=>clauIdentitat({backendId:'supabase',endpoint:CONFIG.supabaseUrl,joId:A});
+test('OBLIT_FALLIT en eixir: value l’exposa, l’avís apareix i el reintent usa la mateixa CI; en reeixir, «fet» i tancat',async()=>{
+ const oblida=ambOblitFals([FALLIT,OBLIDAT]);const v=await muntat();
+ expect(value.oblitXat).toBeNull();expect(value.oblitXatFallit).toBe(false);expect(document.querySelector('dialog')).toBeNull();
+ m.session={currentUser:null,generacio:2,estat:'fora'};v.rerender(arbre());expect(servei.estatAmbit().clauIdentitat).toBeNull();
+ await act(async()=>{await oblidaXatEnEixir({config:CONFIG,usuariId:A});});
+ expect(oblida).toHaveBeenCalledTimes(1);expect(oblida.mock.calls[0][0]).toMatchObject({clauIdentitat:CI_A(),mantenSessio:false});
+ expect(value.oblitXatFallit).toBe(true);expect(value.oblitXat).toMatchObject({estat:'OBLIT_FALLIT',pendents:['indexeddb']});
+ expect(Object.keys(value).filter(k=>/xifra|e2ee|clau/i.test(k))).toEqual([]);
+ const finestra=screen.getByRole('dialog',{name:'No s’han pogut esborrar les claus del xat'});expect(finestra.hasAttribute('open')).toBe(true);
+ await act(async()=>{fireEvent.click(screen.getByRole('button',{name:'Torna-ho a provar'}));});
+ await waitFor(()=>expect(value.oblitXatFallit).toBe(false));
+ expect(oblida).toHaveBeenCalledTimes(2);expect(oblida.mock.calls[1][0]).toMatchObject({clauIdentitat:CI_A(),mantenSessio:false});
+ expect(value.oblitXat).toMatchObject({estat:'oblidat'});expect(finestra.hasAttribute('open')).toBe(false);
+ expect(m.showToast).toHaveBeenCalledWith('Les claus del xat d’este aparell ja s’han esborrat.','success');
+});
+test('OBLIT_FALLIT amb una persona dins: value ho diu, però l’avís no apareix ni es reintenta sobre la seua RAM',async()=>{
+ const oblida=ambOblitFals([FALLIT]);await act(async()=>{await oblidaXatEnEixir({config:CONFIG,usuariId:B});});
+ await muntat();expect(value.oblitXatFallit).toBe(true);expect(document.querySelector('dialog')).toBeNull();
+ const abans=servei.estatAmbit();await act(async()=>{await value.reintentaOblitXat();});
+ expect(oblida).toHaveBeenCalledTimes(1);expect(servei.estatAmbit().clauIdentitat).toBe(abans.clauIdentitat);expect(servei.estatAmbit().clauIdentitat).not.toBeNull();
 });

@@ -811,7 +811,7 @@ describe('P1-31 · l’entrada nativa connecta el receptor al registre', () => {
     vi.stubGlobal('Capacitor', pont);
     let resol;
     vi.stubGlobal('fetch', vi.fn(() => new Promise((r) => { resol = r; })));
-    document.body.innerHTML = '<div id="root"></div>';
+    document.body.replaceChildren(Object.assign(document.createElement('div'), { id: 'root' }));
     await import('../natiu/entrada.jsx');
     const r = await import('./compartirNatiu.js');
     const buida = () => new Promise((fet) => { setTimeout(fet, 0); });

@@ -466,7 +466,12 @@ const NOTES_URL = [
   { id: 'm1', title: 'Samarreta', folderId: 'f-mercat', updatedAt: '2026-01-01T09:00:00Z' }
 ];
 const ambSondaUrl = () => Object.assign(dades, { notes: NOTES_URL, mediaStatus: 'loading', murStatus: undefined });
-const carpetaActiva = () => within(rail()).getAllByRole('button').find((b) => b.getAttribute('aria-current') === 'page')?.getAttribute('aria-label');
+/* Ordre del Mestre (30-10-2026) · A 1400 CARPETES ja arrenca oberta (l'arbre):
+   el nom és el de la fila; en el rail, l'aria-label. */
+const carpetaActiva = () => {
+  const activa = within(rail()).getAllByRole('button').find((b) => b.getAttribute('aria-current') === 'page');
+  return activa ? (activa.getAttribute('aria-label') ?? activa.querySelector('.sdp-workspace-nav-item__label')?.textContent ?? null) : undefined;
+};
 
 test('R8.9 · Multimèdia (carregant) triada al rail des d’una nota no peta ni crida resolveNote', () => {
   ambSondaUrl();

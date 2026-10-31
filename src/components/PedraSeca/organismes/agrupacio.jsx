@@ -7,8 +7,9 @@
  * La variant `panoramica` (true) és l'EXCEPCIÓ a la regla 1:1 de Pedra Seca
  * (§8), autoritzada pel Mestre el 261003 i limitada a les targetes del Lector
  * de notícies: posa .sdp-panoramica al contenidor i la imatge i el marcador
- * passen a 16:9 (catalegColleccio.css). Fora de src/apps/lector i del seu
- * espècimen no es pot fer servir (PedraSeca/qualitat.panoramica.test.js).
+ * passen a 16:9 (src/css/modules.css, bloc catalegColleccio). Fora de
+ * src/apps/lector i del seu espècimen no es pot fer servir
+ * (PedraSeca/qualitat.panoramica.test.js).
  *
  * Funció de pintat (no és cap component del catàleg).
  */

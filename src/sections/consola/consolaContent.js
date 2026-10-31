@@ -1,20 +1,28 @@
 /**
  * consolaContent.js — Transformació de dades de la Consola Termodinàmica.
- * La font és el middleware dev de tooling/vite/consola-iaia.mjs.
+ * La font és el middleware dev de tooling/vite/consola-iaia.mjs i, al build
+ * web, la seua instantània sanejada (decisió del Mestre, 31-10-2026).
  */
+import { errorDeLaInstantania, fontsLlegibles, opcionsDeLectura } from './fontsConsola.js';
+
 export const FONT_CONSOLA = '/__iaia/consola.json';
 
 export async function carregaConsola(signal) {
-  /* Higiene d'amfitrió (ordre del Mestre, 261004) · El middleware és només de
-     DEV (apply: 'serve'): fora de DEV és absència, sense cap petició a /__iaia/*. */
-  if (import.meta.env.DEV !== true) return null;
-  const r = await fetch(FONT_CONSOLA, { signal, cache: 'no-store' });
-  if (r.status === 404) return null;                 // producció: no hi ha consola
+  /* Higiene d'amfitrió (ordre del Mestre, 261004) · Sense font en este paquet
+     (WordPress, natiu), absència i cap petició a /__iaia/*.
+     Decisió del Mestre (31-10-2026) · En viu a DEV i, al build web, la
+     instantània sanejada (fontsConsola.js). */
+  if (!fontsLlegibles()) return null;
+  const r = await fetch(FONT_CONSOLA, opcionsDeLectura(signal));
+  if (r.status === 404) return null;                 // un paquet sense la font
   if (!r.ok) throw new Error(`Consola ${r.status} ${r.statusText}`);
   // Sense middleware, el servidor pot tornar l'HTML de l'aplicació (200): és
   // absència, no una consola trencada. Mateix criteri que carregaMapa.
   if (!(r.headers?.get?.('content-type') || '').includes('application/json')) return null;
-  return normalitza(await r.json());
+  const cos = await r.json();
+  const fallada = errorDeLaInstantania(cos);
+  if (fallada) throw fallada;
+  return normalitza(cos);
 }
 
 export function normalitza(brut) {

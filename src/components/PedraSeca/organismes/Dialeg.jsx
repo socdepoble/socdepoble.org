@@ -38,6 +38,11 @@ import { createPortal } from 'react-dom';
 import { X } from 'lucide-react';
 import { Boto } from '../atoms/Boto.jsx';
 import { obriModalLocal } from './modalLocal.js';
+import { tradueix, useTraductorOpcional } from '../hooks/useTraductorOpcional.js';
+
+/* Gauntlet 261029 (cicle 1, i18n-a11y) · El nom de la X, en la llengua de
+   la interfície; fora de l'app, la reserva de sempre. */
+const TANCA_DIALEG = Object.freeze(['common.tanca', 'Tancar']);
 
 export function Dialeg(props) {
   const origen = useRef(null);
@@ -76,6 +81,7 @@ function ContingutDialeg({
   const obertRef = useRef(obert);
   obertRef.current = obert;
   const id = useId();
+  const t = useTraductorOpcional();
 
   /* T2 (pla 261025_0045) · La finestra de la barra que no hi cap sencera, amunt. */
   /* En l'encastat (local) la capa modal ja dimensiona el diàleg (layout.css): no s'hi puja res. */
@@ -147,7 +153,16 @@ function ContingutDialeg({
     /* Escape: el navegador tancaria pel seu compte i l'estat de React
        quedaria mentint (obert=true amb el diàleg tancat). Ho prevenim i
        deixem que decidisca el pare. */
-    const onCancel = (e) => { e.preventDefault(); tancaRef.current?.('esc'); };
+    /* Gauntlet 261029 (cicle 1) · Un `cancel` que no es pot cancel·lar (un
+       <dialog> obert sense activació de la persona: Avant, F5, un segon
+       Escape) no avisa: el navegador el tanca igualment i el `close` d'ací
+       baix avisa UNA sola vegada. Abans s'avisava dues vegades i, a
+       /multimedia, cada avís era un navigate(-1): la persona eixia de l'Arxiu. */
+    const onCancel = (e) => {
+      if (!e.cancelable) return;
+      e.preventDefault();
+      tancaRef.current?.('esc');
+    };
     /* Poliment T40–T41 (ordre del Mestre, 260928) · Dos Escape seguits: el
        segon `cancel` ja no és cancel·lable (el navegador protegix l'eixida) i
        el <dialog> es tanca pel seu compte. Si React encara el volia obert,
@@ -194,7 +209,7 @@ function ContingutDialeg({
         <header className="sdp-dialeg__cap">
           <h2 id={`${id}-titol`} className="sdp-dialeg__titol">{titol}</h2>
           {ambTanca ? (
-            <button type="button" className="sdp-dialeg__tanca" onClick={() => onTanca?.('boto')} aria-label="Tancar">
+            <button type="button" className="sdp-dialeg__tanca" onClick={() => onTanca?.('boto')} aria-label={tradueix(t, TANCA_DIALEG)}>
               <X size={22} aria-hidden="true" focusable="false" />
             </button>
           ) : null}

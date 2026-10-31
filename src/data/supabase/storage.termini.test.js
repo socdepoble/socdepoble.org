@@ -4,17 +4,19 @@
    fetch propi: una pujada, una URL signada, una baixada, un llistat o un
    esborrat que no tornaven deixaven la vista «carregant» indefinidament. Ara
    cada crida té el seu termini (les pujades i les baixades, segons la mida;
-   la resta, 12 s), on storage-js accepta un senyal el termini també talla la
-   petició, i el temps esgotat arriba a la vista amb el codi neutral de «no ha
+   la resta, 12 s), el termini també talla la petició (P1-27: download i list
+   per l'API de storage-js; upload, createSignedUrl i remove pel fetch de la
+   seua instància), i el temps esgotat arriba a la vista amb el codi neutral de «no ha
    arribat al servidor». Les proves eren roges abans: la crida continuava
    pendent després de deu minuts de rellotge fals. */
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
+import { StorageClient } from '@supabase/storage-js';
 
-const m = vi.hoisted(() => ({ firma: vi.fn(), baixa: vi.fn(), puja: vi.fn(), llista: vi.fn(), esborra: vi.fn(), usuari: null }));
+const m = vi.hoisted(() => ({ firma: vi.fn(), baixa: vi.fn(), puja: vi.fn(), llista: vi.fn(), esborra: vi.fn(), usuari: null, client: null, peticions: [] }));
 vi.mock('./runtime.js', () => ({
   getResolvedConfig: (config = {}) => ({ ...config, runtimeDataMode: config.dataMode ?? 'remote' })
 }));
-vi.mock('./config.js', () => ({ getClient: async () => ({ storage: { from: (bucket) => ({
+vi.mock('./config.js', () => ({ getClient: async () => m.client ?? ({ storage: { from: (bucket) => ({
   createSignedUrl: (...args) => m.firma(bucket, ...args),
   download: (...args) => m.baixa(bucket, ...args),
   upload: (...args) => m.puja(bucket, ...args),
@@ -24,7 +26,7 @@ vi.mock('./config.js', () => ({ getClient: async () => ({ storage: { from: (buck
 }) } }) }));
 vi.mock('../identitat.js', () => ({ usuariDeSessio: () => m.usuari }));
 
-import { esborraElMeuMitja, llistaElsMeusMitjans, promoteToPublic, resolveAsset, uploadToStorage } from './storage.js';
+import { deleteFile, esborraElMeuMitja, llistaElsMeusMitjans, promoteToPublic, resolveAsset, uploadFile, uploadToStorage } from './storage.js';
 import { tempsLimitPujada } from '../xatMultimedia.js';
 import { CODI_BACKEND_INABASTABLE, esBackendInabastable } from '../errorsBackend.js';
 
@@ -145,5 +147,94 @@ describe('la biblioteca de fotos pròpies', () => {
     const estat = await estatDespres(esborrat, 1);
     expect(estat.nom).toBe('rebutjada');
     comprovaInabastable(estat.valor, 'No s’ha pogut esborrar la foto:');
+  });
+});
+
+/* P1-27 (C2120-03, G2120-06) · Amb el client real (@supabase/storage-js
+   2.112.4) i un transport que no contesta mai: en vèncer el termini, la
+   petició d'upload, createSignedUrl i remove ha rebut el senyal i està
+   avortada. Abans storage-js no en passava cap (init.signal undefined) i la
+   petició quedava viva després del termini. */
+describe('P1-27 · el termini també talla upload, createSignedUrl i remove (storage-js real)', () => {
+  const ARREL = 'https://storage.invalid/storage/v1';
+  const anota = (url, init = {}) => m.peticions.push({ url: String(url), metode: init.method, signal: init.signal });
+  const penjat = (url, init = {}) => {
+    anota(url, init);
+    return new Promise((_resol, rebutja) => init.signal?.addEventListener('abort',
+      () => rebutja(new DOMException('Avortada', 'AbortError')), { once: true }));
+  };
+  /* Una resposta de signatura: un objecte i no un Response, per a no dependre
+     dels streams d'undici amb el rellotge fals (storage-js només mira ok i json()). */
+  const signa = (url, init = {}) => {
+    anota(url, init);
+    return Promise.resolve({ ok: true, status: 200, json: async () => ({ signedURL: `/object/sign/mitjans_privats/${RUTA_PRIVADA}?token=t` }) });
+  };
+  const SIGNADA = `${ARREL}/object/sign/mitjans_privats/${RUTA_PRIVADA}?token=t`;
+  const peticio = (metode, tros) => m.peticions.find((p) => p.metode === metode && p.url.includes(tros));
+  beforeEach(() => {
+    m.peticions = [];
+    m.client = { storage: new StorageClient(ARREL, {}, penjat) };
+  });
+  afterEach(() => { m.client = null; });
+
+  test('uploadToStorage: la pujada penjada queda avortada en vèncer el termini de la seua mida', async () => {
+    const fitxer = webp(2_000_000);
+    const estat = await estatDespres(uploadToStorage(fitxer, { carpeta: 'avatars' }, CONFIG), tempsLimitPujada(fitxer.size));
+    expect(estat.nom).toBe('rebutjada');
+    comprovaInabastable(estat.valor, 'No s’ha pogut pujar el fitxer:');
+    expect(peticio('POST', `/object/mitjans/${POBLE}/${UID}/avatars/`)?.signal?.aborted).toBe(true);
+  });
+
+  test('uploadFile (la pujada de promoteToPublic): avortada en vèncer el termini', async () => {
+    const fitxer = webp(10);
+    await estatDespres(uploadFile('mitjans', 'x/y.webp', fitxer, CONFIG), tempsLimitPujada(fitxer.size));
+    expect(peticio('POST', '/object/mitjans/x/y.webp')?.signal?.aborted).toBe(true);
+  });
+
+  test('resolveAsset: la signatura penjada és viva als 11.999 ms i avortada als 12 s; torna la ref opaca', async () => {
+    const resolta = resolveAsset(REF_PRIVADA, CONFIG);
+    expect((await estatDespres(resolta, 11_999)).nom).toBe('pendent');
+    expect(peticio('POST', `/object/sign/mitjans_privats/${RUTA_PRIVADA}`)?.signal?.aborted).toBe(false);
+    expect(await estatDespres(resolta, 1)).toEqual({ nom: 'resolta', valor: REF_PRIVADA });
+    expect(peticio('POST', `/object/sign/mitjans_privats/${RUTA_PRIVADA}`).signal.aborted).toBe(true);
+  });
+
+  test('esborraElMeuMitja i deleteFile: l’esborrat penjat queda avortat als 12 s', async () => {
+    const estat = await estatDespres(esborraElMeuMitja(REF_AVATAR, CONFIG), 12_000);
+    expect(estat.nom).toBe('rebutjada');
+    expect(estat.valor.codi).toBe(CODI_BACKEND_INABASTABLE);
+    expect(peticio('DELETE', '/object/mitjans')?.signal?.aborted).toBe(true);
+    m.peticions = [];
+    await estatDespres(deleteFile('mitjans', 'x/y.webp', CONFIG), 12_000);
+    expect(peticio('DELETE', '/object/mitjans')?.signal?.aborted).toBe(true);
+  });
+
+  test('control · cada crida porta el seu senyal: una signatura que contesta no avorta res ni deixa temporitzadors, la següent no n’hereta cap i el client compartit queda net', async () => {
+    m.client = { storage: new StorageClient(ARREL, {}, signa) };
+    const primera = await resolveAsset(REF_PRIVADA, CONFIG);
+    const segona = await resolveAsset(REF_PRIVADA, CONFIG);
+    expect(primera).toBe(SIGNADA);
+    expect(segona).toBe(primera);
+    const [a, b] = m.peticions;
+    expect(a.signal).toBeInstanceOf(AbortSignal);
+    expect(b.signal).toBeInstanceOf(AbortSignal);
+    expect(b.signal).not.toBe(a.signal);
+    expect([a.signal.aborted, b.signal.aborted]).toEqual([false, false]);
+    expect(vi.getTimerCount()).toBe(0);
+    /* Una altra peça que use el mateix client després no rep cap senyal d'estes
+       crides: el fetch només s'ha tocat a la instància de cada from(). */
+    m.peticions = [];
+    await m.client.storage.from('mitjans_privats').createSignedUrl(RUTA_PRIVADA, 60);
+    expect(m.peticions).toHaveLength(1);
+    expect(m.peticions[0].signal).toBeUndefined();
+  });
+
+  test('control · un cubell que no deixa posar-hi el fetch (un doble congelat) fa la crida com abans, sense senyal', async () => {
+    const real = new StorageClient(ARREL, {}, signa);
+    m.client = { storage: { from: (bucket) => Object.freeze(real.from(bucket)) } };
+    expect(await resolveAsset(REF_PRIVADA, CONFIG)).toBe(SIGNADA);
+    expect(m.peticions).toHaveLength(1);
+    expect(m.peticions[0].signal).toBeUndefined();
+    expect(avis).not.toHaveBeenCalled();
   });
 });

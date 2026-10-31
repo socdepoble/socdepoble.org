@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import { teExif } from './exif.js';
 import { carregaImatge, exportaRetall } from './imatgeCanvas.js';
-import { APP0_JFIF, IMATGE, SOI, concatena, jpegAmbExif, gpsTorre, orientacio } from './jpegProva.js';
+import { APP0_JFIF, IMATGE, SOI, concatena, jpegAmbExif, gpsTorre, orientacio } from '../../../../tests/helpers/jpegProva.js';
 import { PES_MAXIM_ENTRADA } from './limits.js';
 
 /* Onada 4, T3a · La frontera amb el navegador. jsdom no té canvas ni

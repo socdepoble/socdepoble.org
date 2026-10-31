@@ -87,12 +87,12 @@ const enPx = (valor) => (valor.endsWith('rem') ? parseFloat(valor) * 16 : parseF
 test('cap forma demana més línies de les que caben, i cap en deixa una que hi cabria (normal i compacta)', () => {
   const linia = enPx(valorDe(TOKENS, '--sdp-text-meta')) * Number(valorDe(TOKENS, '--sdp-leading-tight'));
   const espai1 = enPx(valorDe(TOKENS, '--sdp-space-1'));
-  expect(valorDe(MODULES, '--sdp-cal-separacio')).toBe('var(--sdp-space-1)');
+  expect(valorDe(MODULES, '--cal-separacio')).toBe('var(--sdp-space-1)');
   expect(valorDe(cosDe('.sdp-cal-setmana__bloc'), 'padding-block')).toBe('var(--sdp-space-1) 0');
   expect(valorDe(cosDe('.sdp-cal-setmana--compacta .sdp-cal-setmana__bloc'), 'padding-block')).toBe('0');
   const metriques = {
-    normal: { hora: enPx(valorDe(cosDe('.sdp-cal-setmana'), '--sdp-cal-hora')), farciment: espai1 },
-    compacta: { hora: enPx(valorDe(cosDe('.sdp-cal-setmana--compacta'), '--sdp-cal-hora')), farciment: 0 }
+    normal: { hora: enPx(valorDe(cosDe('.sdp-cal-setmana'), '--cal-hora')), farciment: espai1 },
+    compacta: { hora: enPx(valorDe(cosDe('.sdp-cal-setmana--compacta'), '--cal-hora')), farciment: 0 }
   };
   expect([linia, metriques.normal.hora, metriques.compacta.hora]).toEqual([expect.closeTo(16.1, 5), 48, 40]);
   const LINIES = { curt: 1, 'una-linia': 2, 'dues-linies': 3, llarg: 4 };

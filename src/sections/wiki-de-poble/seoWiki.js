@@ -13,10 +13,27 @@
 import { extreuEditorial } from './parseMarkdown.js';
 import { SOCIAL_IMAGES } from '../../config/socialImages.js';
 import { camiDeDocumentWiki, idDeDocumentWiki } from '../../config/rutaSocial.js';
-import { LIMIT_DESCRIPCIO, LIMIT_TITOL, textPla } from '../../config/metadadesSocials.js';
+import { LIMIT_DESCRIPCIO, LIMIT_TITOL, metadadesDePagina, textPla } from '../../config/metadadesSocials.js';
+import { COVER_PAGE_KEYS } from '../../config/systemPages.js';
+import { PAGE_COPY } from '../text/pageContent.js';
 
 export const TITOL_WIKI = 'Wiki de Poble';
 export const DESCRIPCIO_WIKI = 'La base de coneixement de Sóc de Poble.';
+
+/**
+ * Ordre del Mestre (30-10-2026, prompt 2208, T1.3; QA-VES-02 de Codex) · La
+ * imatge social de la portada de la Wiki (/wikidepoble sense ?item=): la que
+ * pinta la portada (PAGE_COPY.wikidepoble.image, amb el seu alt), passada pel
+ * selector compartit (metadadesDePagina · primeraImatgeSocial), com les
+ * pàgines de text. Torna { imatge, image }: `imatge`, l'estat del selector (el
+ * prerender fa porta roja d'una 'bloquejada'); `image`, la del <head> o null.
+ * `portada` és el copy de la portada (per defecte, el de PAGE_COPY); `opcions`,
+ * les d'urlSocialDe.
+ */
+export function portadaSocialDeLaWiki(portada = PAGE_COPY[COVER_PAGE_KEYS.wiki], opcions) {
+  const { imatge, image } = metadadesDePagina(portada && typeof portada === 'object' ? portada : {}, opcions);
+  return { imatge, image };
+}
 
 /** Cert si els atributs d'un document el deixen publicar (publicMetadata). */
 export function atributsPublics(attributes) {
@@ -92,10 +109,13 @@ export function metadadesDeDocumentPublic(document, { imatges = SOCIAL_IMAGES } 
 /**
  * Les metadades del <head> de WikiDetail per a l'ítem que pinta (`item`) i la
  * consulta de la ruta (`search`):
- *   · sense ?item=: la portada, «Wiki de Poble», indexable;
+ *   · sense ?item=: la portada, «Wiki de Poble», indexable, amb la imatge de
+ *     la portada (portadaSocialDeLaWiki; ordre del Mestre del 30-10-2026);
  *   · un sol ?item= igual a l'id de l'ítem i públic a `items`: les seues;
  *   · qualsevol altra cosa (desconegut, privat, repetit, una eina): «Wiki de
  *     Poble» sense indexar, i per tant sense canonical ni og:url.
+ * `opcions`: { imatges } per als documents (SOCIAL_IMAGES), i { portada } més
+ * les d'urlSocialDe per a la portada; sense, PAGE_COPY i socdepoble.org.
  */
 export function metadadesDeDocumentWiki(item, search, items, opcions) {
   let demanats;
@@ -104,7 +124,10 @@ export function metadadesDeDocumentWiki(item, search, items, opcions) {
   } catch {
     demanats = [];
   }
-  if (demanats.length === 0) return { title: TITOL_WIKI, description: DESCRIPCIO_WIKI, index: true };
+  if (demanats.length === 0) {
+    const { image } = portadaSocialDeLaWiki(opcions && Object.hasOwn(opcions, 'portada') ? opcions.portada : undefined, opcions);
+    return { title: TITOL_WIKI, description: DESCRIPCIO_WIKI, index: true, ...(image ? { image } : null) };
+  }
   const document = demanats.length === 1 && demanats[0] === item?.id ? documentWikiPublic(item.id, items) : null;
   if (!document) return { title: TITOL_WIKI, description: DESCRIPCIO_WIKI, index: false };
   return metadadesDeDocumentPublic(document, opcions);

@@ -721,6 +721,8 @@ function ConnectarElementIntern() {
 
   return (
     <UniversalPage
+      /* Decisions 261030 §7 · Les carpetes i les notes del teu Bloc: Traduir no envia res fora. */
+      traduccio={false}
       chrome="system"
       title="Connectar"
       subtitle={t('section.connectar.where', 'On vols connectar-ho?')}
@@ -1085,6 +1087,7 @@ function ConnectarContingutExtern({ params }) {
 
   return (
     <UniversalPage
+      traduccio={false}
       chrome="system"
       title="Connectar"
       subtitle={t('section.connectar.where', 'On vols connectar-ho?')}

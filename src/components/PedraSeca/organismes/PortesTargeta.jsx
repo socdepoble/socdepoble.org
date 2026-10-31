@@ -133,7 +133,7 @@ function TextDeLaPorta({ porta, inerta }) {
 function Porta({ porta, obri }) {
   if (porta.desti) {
     return (
-      <Link to={porta.desti} className={`sdp-boto sdp-boto--${porta.varietat} sp-card-porta`}>
+      <Link to={porta.desti} className={porta.varietat === 'primari' ? 'sdp-boto sdp-boto--primari sp-card-porta' : 'sdp-boto sdp-boto--secundari sp-card-porta'}>
         <TextDeLaPorta porta={porta} />
       </Link>
     );

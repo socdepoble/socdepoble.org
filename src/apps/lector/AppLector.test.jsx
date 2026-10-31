@@ -62,11 +62,12 @@ async function obri(titol) {
   return titolDelLector(titol);
 }
 
-/* Les classes que existixen: els fulls canònics, els de Pedra Seca i el de la closca. */
+/* Les classes que existixen: els fulls canònics (modules.css ja porta els blocs
+   de Pedra Seca pecesApps i catalegColleccio, 261030) i el de la closca. */
 function classesConegudes() {
   const fulls = [
     ...readdirSync(path.join(process.cwd(), 'src/css')).filter((f) => f.endsWith('.css')).map((f) => `src/css/${f}`),
-    'src/components/PedraSeca/pecesApps.css', 'src/components/PedraSeca/catalegColleccio.css', 'src/components/layout/AppGridShell.css'
+    'src/components/layout/AppGridShell.css'
   ];
   const text = fulls.map((f) => readFileSync(path.join(process.cwd(), f), 'utf8')).join('\n').replace(/\/\*[\s\S]*?\*\//g, '');
   return new Set([...text.matchAll(/\.(-?[_a-zA-Z][\w-]*)/g)].map((m) => m[1]));
@@ -551,16 +552,41 @@ describe('l’enllaç vell de la gestió de fonts', () => {
 /* Bloc 0 (261016) · Derogades les tres proves de l'obridor «Carpetes» i de «Torna» (les
    columnes del 261004): en mitjana la navegació és el rail de l'espai, que en desplega el panell
    (espaiNoticies.test.jsx). La regla d'Esc amb un panell obert per damunt continua. */
-describe('en mitjana (800 px): la navegació en rail i la llista al costat', () => {
+/* Columnes fixes (ordre del Mestre, 30-10-2026 ~12:45) · Abans, a 800 px la
+   closca era «mitja»: la navegació en rail i, desplegada, un panell per
+   damunt de l'article. Ara és «ample», amb les tres columnes a la graella:
+   cap panell tapa l'article, i Esc des de l'arbre el tanca com a 1400. El
+   panell que tapa queda per a «estret», on es prova que Esc calla. */
+describe('a 800 px (columnes fixes): la navegació és la columna del costat', () => {
   beforeEach(() => { ambAmplada(800); });
 
-  test('amb el panell de la navegació obert, Esc no tanca l’article que queda davall', async () => {
+  test('cap panell tapa l’article: Esc des de l’arbre el tanca, com a 1400', async () => {
     munta('/app/lector/noticies/festes');
     await screen.findByRole('region', { name: 'Cultura i festes' });
-    await waitFor(() => expect(closca().dataset.layout).toBe('mitja'));
+    await waitFor(() => expect(closca().dataset.layout).toBe('ample'));
     await obri(CORREFOC);
-    const expandir = document.querySelector('#app-grid-sidebar button[aria-controls="app-grid-sidebar"]');
-    fireEvent.click(expandir);
+    expect(closca().dataset.panell).toBe('');
+    /* Cap obridor de panell de la navegació (data-obri-columna). Els botons
+       que la pleguen sí que la declaren (aria-controls, corrector del
+       Gauntlet, 30-10-2026). */
+    expect(document.querySelector('#app-grid-sidebar button[data-obri-columna][aria-controls="app-grid-sidebar"]')).toBeNull();
+    const esports = filaDeLArbre('Esports');
+    esports.focus();
+    fireEvent.keyDown(esports, { key: 'Escape' });
+    expect(ubicacio()).toBe('/app/lector/noticies/festes');
+  });
+});
+
+describe('en estret (375 px), amb el panell de la navegació per damunt de l’article', () => {
+  beforeEach(() => { ambAmplada(375); });
+
+  test('Esc no tanca l’article que queda davall', async () => {
+    munta('/app/lector/noticies/festes');
+    await waitFor(() => expect(closca().dataset.layout).toBe('estret'));
+    await waitFor(() => expect(fitxa(CORREFOC)).toBeTruthy());
+    await obri(CORREFOC);
+    await waitFor(() => expect(closca().dataset.panell).toBe(''));
+    fireEvent.click(document.querySelector('#app-grid-rail button[aria-controls="app-grid-sidebar"]'));
     await waitFor(() => expect(closca().dataset.panell).toBe('left'));
     fireEvent.keyDown(filaDeLArbre('Esports'), { key: 'Escape' });
     expect(ubicacio()).toMatch(/[?&]article=/);

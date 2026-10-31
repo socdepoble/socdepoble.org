@@ -15,7 +15,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '22.20.0'
       - name: Instal·lar dependències
         run: npm ci
       - name: Verificar Integristat Arquitectònica (SDP-LOCK)

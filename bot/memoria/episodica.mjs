@@ -100,7 +100,7 @@ ${loops}
 `.trim();
 }
 
-export async function updateMemory(jid, userText, iaiaText, opts = {}) {
+export async function updateMemory(jid, userText, iaiaText) {
   const hash = hashJid(jid);
   if (!hash || !userText?.trim()) return;
 

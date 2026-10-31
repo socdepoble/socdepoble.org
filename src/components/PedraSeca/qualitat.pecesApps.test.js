@@ -10,7 +10,7 @@
      les quatre peces, amb les mateixes expressions.
    Els patrons es componen a trossos perquè les portes que llegixen src/ no els
    troben ací. */
-import { readdirSync, readFileSync } from 'node:fs';
+import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 import { ESLint } from 'eslint';
 import { describe, expect, test } from 'vitest';
@@ -19,7 +19,18 @@ const ARREL = process.cwd();
 const llig = (ruta) => readFileSync(path.join(ARREL, ruta), 'utf8');
 const PS = 'src/components/PedraSeca';
 const CAT = 'src/sections/disseny/cataleg';
-const CSS = `${PS}/pecesApps.css`;
+/* tractor-vocabulari (ordre del Mestre, 261030) · El full ja no viu al costat de
+   les peces: és el bloc pecesApps de src/css/modules.css, entre les seues marques. */
+const MODULS = 'src/css/modules.css';
+const CSS_ANTIC = `${PS}/pecesApps.css`;
+const INICI_MIGRATS = '/* ═══ FULLS DE LES PECES, A LA CAPA CANÒNICA';
+const blocDeModuls = (nom) => {
+  const tot = llig(MODULS);
+  const inici = tot.indexOf(`/* ═══ BLOC ${nom} · `);
+  const fi = tot.indexOf(`/* ═══ FI DEL BLOC ${nom} ═══ */`);
+  if (inici < 0 || fi < inici) throw new Error(`${MODULS} no té el bloc ${nom}`);
+  return tot.slice(inici, fi);
+};
 
 const PECES = [
   ['Rajola', `${PS}/molecules/Rajola.jsx`, 'EspecimenRajola'],
@@ -49,7 +60,7 @@ function classesDe(codi) {
 const senseComentaris = (css) => css.replace(/\/\*[\s\S]*?\*\//g, '');
 const classesDelCss = (css) => new Set([...senseComentaris(css).matchAll(/\.(-?[_a-zA-Z][\w-]*)/g)].map((m) => m[1]));
 const CSS_CANONIC = readdirSync(path.join(ARREL, 'src/css')).filter((f) => f.endsWith('.css')).map((f) => llig(`src/css/${f}`)).join('\n');
-const FULL = llig(CSS);
+const FULL = blocDeModuls('pecesApps');
 const FULL_NET = senseComentaris(FULL);
 
 /* Les declaracions d'una regla: { selector → cos }. */
@@ -141,6 +152,18 @@ describe('Pedra Seca · pecesApps.css', () => {
     for (const quadrat of ['.sdp-rajola', '.sdp-rajola__media', '.sdp-rajola__imatge']) {
       expect(r.get(quadrat), quadrat).toMatch(/aspect-ratio:\s*1\s*\/\s*1/);
     }
+  });
+
+  test('viu a modules.css (tractor-vocabulari, 261030): un sol bloc, el primer dels migrats, i ni fitxer ni @import del full antic', () => {
+    const moduls = llig(MODULS);
+    const migrats = moduls.indexOf(INICI_MIGRATS);
+    const inici = moduls.indexOf('/* ═══ BLOC pecesApps · ');
+    expect(migrats).toBeGreaterThan(-1);
+    expect(moduls.split('/* ═══ BLOC pecesApps · ')).toHaveLength(2);
+    expect(inici).toBeGreaterThan(migrats);
+    expect(moduls.indexOf('/* ═══ BLOC catalegColleccio · ')).toBeGreaterThan(inici);
+    expect(existsSync(path.join(ARREL, CSS_ANTIC))).toBe(false);
+    expect(senseComentaris(llig('src/css/index.css'))).not.toMatch(/pecesApps\.css/);
   });
 });
 

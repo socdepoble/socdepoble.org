@@ -178,7 +178,10 @@
  *     reinjecció a identitat.js; després n'hi ha prou que `renovacio` exigisca
  *     també la mateixa entrada. Fora de l'abast d'este fitxer: pendent.
  */
-import { createContext, useCallback, useContext, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useContext, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
+/* P1-71 (Gauntlet 261029) · L'objecte de context viu a objectesDeContext.js,
+   que no importa res del projecte; ací es reexporta amb el mateix nom. */
+import { XatContext } from './objectesDeContext.js';
 import {
   loadFils,
   loadMissatges,
@@ -195,15 +198,19 @@ import {
 import { subjecteDeXat } from '../../data/contracte.js';
 import {
   ID_FIL_DE_MOSTRA_DE_JAVI, ambXatsPerDefecte, esIdPerDefecte, esLaPersonaDeContacte, esXatDeLaIAIA, filDeMostraDeJavi,
-  missatgesDeMostraDeJavi, senseLaIAIA, senseXatPerDefecte
+  missatgesDeMostraDeJavi, senseLaIAIA
 } from '../../data/xatsPerDefecte.js';
+/* P1-70 (261029) · Qui mira és Javi (el compte acreditat, mai pel nom) i on porta la seua fila en cada mode. */
+import { esComptePersonaPilot } from '../../data/identitatsSeed.js';
+import { rutaDelXatDeJavi } from './useObriXatPerDefecte.js';
 import useNivellIaia from '../realitat/useNivellIaia.js';
 import { useSession } from '../../app/contexts/SessionContext';
 import { useIdentitat } from '../../app/contexts/IdentitatContext.jsx';
 import { useCoreContent } from '../../app/contexts/CoreContentContext';
 import { filsAmbLaGentDelPoble } from '../pobles/xatDelPoble.js';
 import { normalizeBackendConfig, backendScope } from '../../config/backendConfig.js';
-import useXifratXat from './useXifratXat.js';
+import useXifratXat, { useOblitXat } from './useXifratXat.js';
+import AvisOblitXat from './components/AvisOblitXat.jsx';
 /* Gauntlet 261017 (WP7b, P2) · De la font, identitat.js: appSeed.js només el
    reexporta, i importar-lo d'allà arrossegava la llavor sencera (PAGE_COPY
    inclosa) al tros d'entrada. La mateixa funció, el mateix valor. */
@@ -257,7 +264,7 @@ import { tradueix } from '../../components/PedraSeca/hooks/useTraductorOpcional.
    el llig el poble i el servidor ja l'exigix. */
 const esXatPrivatDeLaIAIA = (fil) => esXatDeLaIAIA(fil) && fil?.subjecte?.tipus !== 'pagina';
 
-export const XatContext = createContext(null);
+export { XatContext };
 let hostPromise;
 function hostReady(signal) {
   // Compartir la importació en el doble muntatge de StrictMode i el sondeig.
@@ -444,7 +451,12 @@ const BUIT = {
   modeDades: 'remote',
   consumixEntrada: () => false,
   iaiaApagada: false,
-  esFilAmagat: () => false
+  esFilAmagat: () => false,
+  filServeiTecnic: null,
+  /* P1-12 pas 17 (D-09) · Fora del proveïdor no hi ha cap oblit que dir ni reintentar. */
+  oblitXat: null,
+  oblitXatFallit: false,
+  reintentaOblitXat: async () => null
 };
 
 /** Espera `ms` o fins que el senyal s'aborte. Torna `false` si s'ha abortat. */
@@ -503,16 +515,20 @@ function AvisadorXat({ registra, ambSessio }) {
      la consulta, on torna la fletxa de la conversa (origenDelXat.js). */
   useEffect(() => { recordaOrigenDelXat(pathname, search); }, [pathname, search]);
   useEffect(() => {
-    registra((nom, filId, { silenciat = false } = {}) => {
+    registra((nom, filId, { silenciat = false, vigent: deLaPersona = null } = {}) => {
       /* 261026 (prompt 261026_1615, tasca 3) · Amb l'App fora de la vista, l'avís
          és del sistema (so i vibració), també si es va quedar al xat. Com el
-         toast, només diu de quin xat és, mai el text del missatge. */
+         toast, només diu de quin xat és, mai el text del missatge.
+         Gauntlet 261030 (cicle 2, Codex C3) · `vigent` es torna a mirar just
+         abans del schedule: la pàgina encara amagada I la mateixa persona que
+         quan va nàixer l'avís (deLaPersona, la generació d'avisaSiCal). Sense
+         eixa guarda, l'avís no ix. */
       if (paginaAmagada() && !silenciat && avisaNatiu({
         id: idDAvis(filId),
         titol: nom || t('section.xat.avisNatiu.titol', 'Sóc de Poble'),
         cos: t('section.xat.avisNatiu.cos', 'Missatge nou'),
         filId,
-        vigent: paginaAmagada
+        vigent: () => paginaAmagada() && typeof deLaPersona === 'function' && deLaPersona() === true
       })) return;
       if (RUTA_XAT.test(String(pathname || ''))) return;
       const plantilla = t('section.xat.avisNouMissatge', 'Missatge nou de {nom}');
@@ -602,6 +618,27 @@ export function XatProvider({ children, config }) {
   const avisDeLaMostra = t('section.xat.fake.iaia2', "Si t'agrada el que veus, registra't per a entrar al xat de veritat!");
   const [araDeLaMostra] = useState(() => new Date().toISOString());
   const filDeMostra = useMemo(() => (convidat ? filDeMostraDeJavi({ avis: avisDeLaMostra }) : null), [convidat, avisDeLaMostra]);
+  /* P1-70 (ordre del Mestre, 261029 18:20: «Quiero que la gente […] pueda
+     hablar conmigo como servicio técnico») · La conversa d'atenció personal i
+     servei tècnic amb Javi quan no se'n pot obrir cap directe: la mateixa
+     peça de només lectura (fake-javi), sense cap bombolla en nom seu i amb
+     l'avís de per què al lloc del compositor:
+       · «tu mateix» · qui mira és Javi (per id o àlies del padró pilot, o el
+         seu compte remot acreditat: esComptePersonaPilot, mai pel nom). Ningú
+         no es parla a si mateix (SDP-XAT-002);
+       · «sense compte» · en remot, mentre el Mestre no declare l'UUID del seu
+         compte (IDS_REMOTS_FUNDACIONALS · rutaDelXatDeJavi).
+     El convidat continua amb el xat de mostra (filDeMostra). Sense sessió
+     comprovada (joId null), cap: la ruta de pas de XatSection espera. */
+  const quiMiraEsJavi = esLaPersonaDeContacte({ id: joId }) || esComptePersonaPilot(usuari);
+  const motiuServeiTecnic = !joId || convidat ? null : quiMiraEsJavi ? 'tuMateix' : rutaDelXatDeJavi(modeDades) ? null : 'senseCompte';
+  const avisTuMateix = t('section.xat.javi.tuMateix', 'Esta és la teua fila d’atenció personal i servei tècnic, tal com la veu la gent del poble. Les converses que t’escriguen arribaran a la llista com a directes.');
+  const avisSenseCompte = t('section.xat.javi.senseCompte', 'El compte de Javi Llinares encara no està connectat al xat d’este poble. Mentrestant, per a atenció personal i servei tècnic, escriu al grup General de la comunitat Sóc de Poble.');
+  const filServeiTecnic = useMemo(() => {
+    if (filDeMostra) return filDeMostra;
+    if (!motiuServeiTecnic) return null;
+    return filDeMostraDeJavi({ avis: motiuServeiTecnic === 'tuMateix' ? avisTuMateix : avisSenseCompte, ambMissatge: false });
+  }, [filDeMostra, motiuServeiTecnic, avisTuMateix, avisSenseCompte]);
   const missatgesDeMostra = useMemo(() => missatgesDeMostraDeJavi(araDeLaMostra), [araDeLaMostra]);
   const scopeKey = JSON.stringify([backendScope(config), joId, actorKey, generacio]);
   /* Revisió adversarial 260930 · Les claus que NO porten `generacio`: una
@@ -609,6 +646,11 @@ export function XatProvider({ children, config }) {
   const clauPersona = JSON.stringify([backendScope(config), joId]);
   const ambitEstable = JSON.stringify([backendScope(config), joId, actorKey]);
   const sincronitzaXifrat = useXifratXat({ config, joId, ambitEstable });
+  /* P1-12 pas 17 (D-09) · Si l'eixida no ha pogut oblidar el xat d'este aparell
+     (OBLIT_FALLIT, també després d'una recàrrega) i el reintent. No depén de
+     l'àmbit ni de `visible`: qui ho ha de saber ja ha eixit. Bandera apagada:
+     null, sense subscripció ni lectura. */
+  const { oblit: oblitXat, fallit: oblitXatFallit, reintenta: reintentaOblitXat } = useOblitXat();
   /* Decisió 1 del Mestre (261007) · `token` és la clau de l'OPERACIÓ (porta
      `generacio` i la config: cada petició nova captura el testimoni nou) i
      `ambit` hi viatja perquè l'efecte de més avall sàpia si el testimoni nou és
@@ -845,6 +887,21 @@ export function XatProvider({ children, config }) {
 
   const registraAvisador = useCallback((fn) => { avisadorRef.current = fn; }, []);
 
+  /* Gauntlet 261030 (cicle 2, Codex C3) · La generació de persona dels avisos
+     natius. Puja cada vegada que canvia la persona o el backend (clauPersona),
+     també en eixir (joId null) i en tornar a entrar: A → null → A en són dos.
+     Una renovació del JWT no la mou. Cada avís natiu la captura quan naix
+     (avisaSiCal) i l'adaptador la torna a mirar just abans del schedule: el
+     d'A ja no ix si mentrestant A ha eixit o ha entrat B. I en eixir o canviar
+     de persona, els avisos que ja són a la barra se'n van (eren d'A). */
+  const avisosPersonaRef = useRef({ clau: clauPersona, joId, generacio: 0 });
+  useLayoutEffect(() => {
+    const previ = avisosPersonaRef.current;
+    if (previ.clau === clauPersona) return;
+    avisosPersonaRef.current = { clau: clauPersona, joId, generacio: previ.generacio + 1 };
+    if (previ.joId) netejaAvisosNatius();
+  }, [clauPersona, joId]);
+
   /* Avisa una sola vegada per seq nou d'una altra persona (XAT-J01). El primer
      valor d'un fil és la línia base: en arrencar no s'avisa de res.
      Onada 6 (tasca 12) · Amb la IAIA apagada, el seu xat no avisa: la línia
@@ -871,7 +928,10 @@ export function XatProvider({ children, config }) {
        sonar el telèfon (com el comptador, que tampoc no els suma): l'avís
        natiu, no; el toast de dins de l'App, com sempre. */
     const fil = filsRef.current.find((f) => f.id === filId) || visitantsRef.current[filId];
-    avisadorRef.current?.(nom, filId, { silenciat: Boolean(fil?.silenciat || fil?.arxivat) });
+    /* Gauntlet 261030 (cicle 2, Codex C3) · L'avís és d'esta generació de persona. */
+    const generacio = avisosPersonaRef.current.generacio;
+    const deLaPersona = () => !desmuntat.current && avisosPersonaRef.current.generacio === generacio;
+    avisadorRef.current?.(nom, filId, { silenciat: Boolean(fil?.silenciat || fil?.arxivat), vigent: deLaPersona });
   }, [joId]);
 
   /* Decisió 1 · Desmuntar tanca l'àmbit: els getters guardats tornen buit i
@@ -1644,7 +1704,7 @@ export function XatProvider({ children, config }) {
   }, [sendChatMessage]);
 
   /* L'adjunt conserva la previsualització local fins a la confirmació.
-     No entra a la cua de text ni desa Blobs/URL temporals en localStorage.
+     No entra a la cua de text ni desa Blobs/URL temporals a l'emmagatzematge local.
      XAT-03 · `onProgres` (opcional) passa tal qual al port: el progrés de la pujada. */
   const sendChatMedia = useCallback(async (fil, adjunt, { signal, onProgres } = {}) => {
     const op = captura();
@@ -1813,8 +1873,12 @@ export function XatProvider({ children, config }) {
     if (!joId || !vigent(op)) return null;
     /* Auditoria adversarial 261016 (P3) · El ?amb= de Javi («Escriu-li al
        xat», «En privat») i «Nova conversa» porten el convidat al xat de només
-       lectura, per id o àlies del padró pilot: cap directe escrivible. */
-    if (convidat && esLaPersonaDeContacte({ id: altreUsuariId })) return ID_FIL_DE_MOSTRA_DE_JAVI;
+       lectura, per id o àlies del padró pilot: cap directe escrivible.
+       P1-70 (261029) · I tothom que té la conversa de servei tècnic
+       (filServeiTecnic: Javi mateix, o el remot sense el seu compte declarat)
+       hi va també, per id o àlies del padró pilot o per l'UUID declarat: cap
+       directe amb un mateix (SDP-XAT-002) ni cap DESTINATARI_INVALID. */
+    if (filServeiTecnic && esComptePersonaPilot({ id: altreUsuariId })) return ID_FIL_DE_MOSTRA_DE_JAVI;
     try {
       const filId = await creaFilDirecte(altreUsuariId, titol, { ...config, signal: op.controller.signal });
       if (vigent(op)) {
@@ -1825,7 +1889,7 @@ export function XatProvider({ children, config }) {
       if (vigent(op)) throw error;
     }
     return despresDelRelleu(op, accionsRef, 'creaFil', [altreUsuariId, titol]);
-  }, [joId, convidat, config, captura, vigent, accioVigent, carregaFils]);
+  }, [joId, filServeiTecnic, config, captura, vigent, accioVigent, carregaFils]);
 
   /* ── T63.2 i T67 · El xat comú d'una Pàgina Universal ──
      Null si el subjecte no en té; 'sense-capacitat' si el backend no el sap
@@ -1891,8 +1955,13 @@ export function XatProvider({ children, config }) {
      sintètica de Sóc de Poble (data/xatsPerDefecte.js · ACTORS_PERMANENTS), i
      ambXatsPerDefecte ja lleva la que arribe d'abans. El seu actor és la
      comunitat, i qui la gestiona també la veu. L'ordre dels quatre actors el
-     posa la llista (actorsDelXat.js). */
-  const quiMiraEsJavi = esLaPersonaDeContacte({ id: joId });
+     posa la llista (actorsDelXat.js).
+     P1-70 (ordre del Mestre, 261029 18:20: «No me veo a mí como Javi
+     Llinares […] esto es una regresión») · Derogat «Javi Llinares no veu la
+     seua pròpia fila»: la veu, com la gent del poble. La regla d'identitat es
+     conserva d'una altra manera: la fila li obri la conversa d'atenció
+     personal i servei tècnic de només lectura (filServeiTecnic, dalt), mai
+     cap directe amb ell mateix (SDP-XAT-002). */
   const paginaDeLaIAIA = modeDades === 'remote';
   /* Onada 6 (tasca 12) · Amb la IAIA apagada, cap xat seu (senseLaIAIA): la
      llista, les dues cerques i les comunitats lligen d'ací. */
@@ -1900,12 +1969,11 @@ export function XatProvider({ children, config }) {
     const ids = new Set(fils.map((f) => f.id));
     const extra = Object.values(visitants).filter((f) => !ids.has(f.id));
     const ambAjuda = ambXatsPerDefecte(extra.length ? [...fils, ...extra] : fils, { afig: false, paginaDeLaIAIA });
-    const senseJavi = quiMiraEsJavi ? senseXatPerDefecte(ambAjuda, 'javi') : ambAjuda;
-    const llista = filDeMostra && senseJavi.some((f) => f.perDefecte === 'javi')
-      ? senseJavi.map((f) => (f.perDefecte === 'javi' ? filDeMostra : f))
-      : senseJavi;
+    const llista = filDeMostra && ambAjuda.some((f) => f.perDefecte === 'javi')
+      ? ambAjuda.map((f) => (f.perDefecte === 'javi' ? filDeMostra : f))
+      : ambAjuda;
     return iaiaApagada ? senseLaIAIA(llista) : llista;
-  }, [fils, visitants, paginaDeLaIAIA, quiMiraEsJavi, filDeMostra, iaiaApagada]);
+  }, [fils, visitants, paginaDeLaIAIA, filDeMostra, iaiaApagada]);
   /* Integració Xat i Pobles (Onada 6, pla 261009_0245, ítem 4: «El fil de
      xat específic també es dirà 'Gent de la Torre'») · El xat d'un poble que
      és a les fitxes (useCoreContent) es diu com la seua gent a la llista, a
@@ -2110,6 +2178,8 @@ export function XatProvider({ children, config }) {
        ?sobre= porta a /registre en lloc de fer com si. */
     senseSessio: !joId && estatSessio !== 'comprovant',
     chatThreads: visible ? filsAmbBloquejos : [],
+    /* P1-70 (261029) · La conversa d'atenció personal i servei tècnic amb Javi (o null): XatSection l'obri a /xat/fake-javi. */
+    filServeiTecnic: visible ? filServeiTecnic : null,
     chatMessages: visible && filActiu ? missatgesDerivats[filActiu] || [] : [],
     totalNoLlegits,
     filActiu: visible ? filActiu : null,
@@ -2147,17 +2217,24 @@ export function XatProvider({ children, config }) {
     /* Onada 6 (tasca 12) · El nivell d'IA és 0 i la IAIA no apareix; i si un
        fil és un xat seu amagat per això. */
     iaiaApagada,
-    esFilAmagat: filAmagat
-  }), [visible, joId, joNom, joAvatar, entitatActiva, estatSessio, estat, avis, llistaFresca, avisLlista, scopeKey, ambitEstable, filsAmbBloquejos, missatgesDerivats,
+    esFilAmagat: filAmagat,
+    /* P1-12 pas 17 (D-09) · L'oblit en eixir: l'estat ({ estat, pendents,
+       quanMs } o null), si ha fallat i el reintent. Sense `visible`: la
+       persona ja ha eixit. Bandera apagada: null, false i un reintent buit. */
+    oblitXat,
+    oblitXatFallit,
+    reintentaOblitXat
+  }), [visible, joId, joNom, joAvatar, entitatActiva, estatSessio, estat, avis, llistaFresca, avisLlista, scopeKey, ambitEstable, filsAmbBloquejos, filServeiTecnic, missatgesDerivats,
     totalNoLlegits, filActiu, getThreadMessages, hiHaMesAntics, carregantAntics, esperaAntics, carregaMesAntics, filCarregat, avisFil, recarregaFil, tipusAvisFil, llegintFil,
     enviaAmbNormes, sendChatMedia, reintenta, descartaFallit, marcaVist,
     obriFil, creaFil, cercaMembres, carregaFils, obriFilDePagina, comunitats, contactesFrequents, marcaLlegides,
-    modeDades, consumixEntrada, iaiaApagada, filAmagat]);
+    modeDades, consumixEntrada, iaiaApagada, filAmagat, oblitXat, oblitXatFallit, reintentaOblitXat]);
 
   return (
     <XatContext.Provider value={value}>
       <AvisadorXat registra={registraAvisador} ambSessio={Boolean(joId)} />
       {children}
+      <AvisOblitXat oblit={oblitXat} reintenta={reintentaOblitXat} ambSessio={Boolean(joId)} />
     </XatContext.Provider>
   );
 }

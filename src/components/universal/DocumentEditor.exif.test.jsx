@@ -25,7 +25,7 @@ vi.mock('./richText/extensions', async (importOriginal) => {
 });
 import { DocumentEditor } from './DocumentEditor.jsx';
 import { ETIQUETA_CONSERVA_EXIF, exifPublicable } from './enquadrament/exifIncrustat.js';
-import { dataOriginal, gpsTorre, jpegAmbExif } from './enquadrament/jpegProva.js';
+import { dataOriginal, gpsTorre, jpegAmbExif } from '../../../tests/helpers/jpegProva.js';
 
 afterEach(() => {
   cleanup();

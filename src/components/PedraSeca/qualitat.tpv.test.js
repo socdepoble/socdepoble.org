@@ -19,7 +19,7 @@
      mostra dolenta. Una porta que no troba res perquè s'ha trencat no ix verd.
    Els patrons vetats es componen a trossos perquè les portes que llegixen
    src/ no els troben ací. */
-import { readdirSync, readFileSync } from 'node:fs';
+import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 import { ESLint } from 'eslint';
 import { describe, expect, test } from 'vitest';
@@ -28,7 +28,17 @@ const ARREL = process.cwd();
 const llig = (ruta) => readFileSync(path.join(ARREL, ruta), 'utf8');
 const PS = 'src/components/PedraSeca';
 const CAT = 'src/sections/disseny/cataleg';
-const CSS = `${PS}/tpv.css`;
+/* tractor-vocabulari (ordre del Mestre, 261030) · El full ja no viu al costat de
+   la peça: és el bloc tpv de src/css/modules.css, entre les seues marques. */
+const MODULS = 'src/css/modules.css';
+const CSS_ANTIC = `${PS}/tpv.css`;
+const blocDeModuls = (nom) => {
+  const tot = llig(MODULS);
+  const inici = tot.indexOf(`/* ═══ BLOC ${nom} · `);
+  const fi = tot.indexOf(`/* ═══ FI DEL BLOC ${nom} ═══ */`);
+  if (inici < 0 || fi < inici) throw new Error(`${MODULS} no té el bloc ${nom}`);
+  return tot.slice(inici, fi);
+};
 
 const NOM = 'UniversalTPV';
 const COMPONENT = `${PS}/organismes/UniversalTPV.jsx`;
@@ -42,9 +52,12 @@ const senseComentaris = (css) => css.replace(/\/\*[\s\S]*?\*\//g, '');
 const classesDelCss = (css) => new Set([...senseComentaris(css).matchAll(/\.(-?[_a-zA-Z][\w-]*)/g)].map((m) => m[1]));
 const CSS_SRC = readdirSync(path.join(ARREL, 'src/css')).filter((f) => f.endsWith('.css')).map((f) => llig(`src/css/${f}`)).join('\n');
 /* Els fulls canònics: src/css i els dos fulls germans de les peces de les apps. */
-const CSS_CANONIC = [CSS_SRC, llig(`${PS}/pecesApps.css`), llig(`${PS}/catalegColleccio.css`)].join('\n');
-const FULL = llig(CSS);
+const FULL = blocDeModuls('tpv');
 const FULL_NET = senseComentaris(FULL);
+/* Els fulls canònics sense el bloc mateix: src/css, amb els blocs germans
+   (pecesApps, catalegColleccio…) de modules.css. Sense el bloc, «cap CSS mort»
+   continua mirant les classes que només definix el TPV. */
+const CSS_CANONIC = CSS_SRC.replace(FULL, '');
 
 /* Les classes sdp-* que nomena un JSX: tot literal entre cometes que ho siga
    (className, ternàries, llistes i constants de classes). */
@@ -159,6 +172,8 @@ describe('Pedra Seca · JSX', () => {
   });
 
   test('cap CSS mort: tota classe pròpia de tpv.css la pinta la peça o l’espècimen', () => {
+    /* El bloc s'ha llevat de veres dels fulls externs (una sola vegada). */
+    expect(CSS_CANONIC.length).toBe(CSS_SRC.length - FULL.length);
     const externes = classesDelCss(CSS_CANONIC);
     const usades = new Set(JSX.flatMap((f) => classesNomenades(llig(f))));
     const mortes = [...classesDelCss(FULL)].filter((c) => !externes.has(c) && !usades.has(c));
@@ -268,12 +283,28 @@ describe('Pedra Seca · tpv.css', () => {
     expect(FULL_NET).toMatch(/\.sdp-tpv__pestanyes \.sdp-pestanyes__panell\[hidden\]\s*\{\s*display:\s*none;/);
   });
 
-  test('la capçalera prescriu l’@import SENSE layer() i index.css l’importa una sola vegada', () => {
-    expect(FULL).toContain("@import url('../components/PedraSeca/tpv.css');");
-    const index = senseComentaris(llig('src/css/index.css'));
-    expect([...index.matchAll(/@import[^;]*tpv\.css[^;]*;/g)].map((m) => m[0])).toEqual(["@import url('../components/PedraSeca/tpv.css');"]);
-    /* Darrere dels fulls germans: les seues regles es poden ajustar ací. */
-    expect(index.indexOf('tpv.css')).toBeGreaterThan(index.indexOf('catalegColleccio.css'));
+  /* tractor-vocabulari (261030) · El bloc viu una sola vegada a modules.css,
+     darrere dels blocs germans (les seues regles s'hi poden ajustar) i, com
+     abans darrere de modules.css, darrere de tota regla del full que ajusta:
+     cap regla posterior als blocs migrats no toca .sdp-control, .sdp-pindola
+     ni .sdp-pestanyes (si no, guanyaria per ordre on abans perdia). */
+  test('viu a modules.css: un sol bloc, darrere de catalegColleccio i alergens, cap regla posterior que l’ajuste, i ni fitxer ni @import del full antic', () => {
+    const moduls = llig(MODULS);
+    const posicio = (marca) => {
+      const i = moduls.indexOf(marca);
+      expect(i, marca).toBeGreaterThan(-1);
+      return i;
+    };
+    expect(moduls.split('/* ═══ BLOC tpv · ')).toHaveLength(2);
+    const inici = posicio('/* ═══ BLOC tpv · ');
+    expect(inici).toBeGreaterThan(posicio('/* ═══ FI DEL BLOC catalegColleccio ═══ */'));
+    expect(inici).toBeGreaterThan(posicio('/* ═══ FI DEL BLOC alergens ═══ */'));
+    const darrereDelsMigrats = moduls.slice(posicio('/* ═══ FI DEL BLOC ConsultaIAIA ═══ */'));
+    expect(senseComentaris(darrereDelsMigrats)).not.toMatch(/\.sdp-(?:control|pindola|pestanyes)(?![a-z0-9])/);
+    /* Sonda: la guarda veu una regla posterior que ajustaria les peces. */
+    expect(senseComentaris('/* x */ @layer components { .sdp-pestanyes__panell { padding: 0; } }')).toMatch(/\.sdp-(?:control|pindola|pestanyes)(?![a-z0-9])/);
+    expect(existsSync(path.join(ARREL, CSS_ANTIC))).toBe(false);
+    expect(senseComentaris(llig('src/css/index.css'))).not.toMatch(/tpv\.css/);
   });
 });
 
@@ -368,8 +399,8 @@ describe('dades sintètiques', () => {
       [/\bES\d{2}[\s]?\d{4}/, 'IBAN'],
       [new RegExp(['ht', 'tps?:', '\\/\\/'].join('')), 'URL']
     ];
-    const fitxers = [...JSX, ...PROVES, CSS];
-    const trobats = fitxers.flatMap((f) => vetats.filter(([patro]) => patro.test(llig(f))).map(([, que]) => `${f}: ${que}`));
+    const textos = [...[...JSX, ...PROVES].map((f) => [f, llig(f)]), [`${MODULS} · bloc tpv`, FULL]];
+    const trobats = textos.flatMap(([f, text]) => vetats.filter(([patro]) => patro.test(text)).map(([, que]) => `${f}: ${que}`));
     expect(trobats).toEqual([]);
   });
 
@@ -378,6 +409,8 @@ describe('dades sintètiques', () => {
       [0x202A, 0x202E], [0x2060, 0x2069], [0xFEFF, 0xFEFF]];
     const car = (cp) => String.fromCodePoint(cp);
     const re = new RegExp(`[${rangs.map(([a, b]) => (a === b ? car(a) : `${car(a)}-${car(b)}`)).join('')}]`, 'u');
-    for (const fitxer of [...JSX, ...PROVES, CSS, ...TOCATS]) expect(re.test(llig(fitxer)), fitxer).toBe(false);
+    for (const [fitxer, text] of [...[...JSX, ...PROVES, ...TOCATS].map((f) => [f, llig(f)]), [`${MODULS} · bloc tpv`, FULL]]) {
+      expect(re.test(text), fitxer).toBe(false);
+    }
   });
 });

@@ -59,6 +59,26 @@ test('un enllaç extern dins d’una resposta de la IAIA continua sent el de sem
   expect(interna.getAttribute('href')).toBe('/wikidepoble?item=genoma');
 });
 
+/* IDEA-56 (pla 261029_1605, Bloc F.2) · Una resposta de l'Atles cita la
+   ruta de la secció: a la bombolla de la IAIA és un enllaç intern; a la
+   d'una persona, el text de sempre. */
+test('una resposta de l’Atles: /mercat és un enllaç intern a la bombolla de la IAIA i text a la d’una persona', () => {
+  const atles = componResposta([{ id: 'atles:mercat', titol: 'El Mercat', fragment: 'El Mercat és un tauler d’anuncis.', ruta: '/mercat', font: 'atles' }]);
+  expect(atles.split('\n').at(-1)).toBe('· El Mercat — /mercat');
+  const onCanvi = vi.fn();
+  const { container } = pinta({ ...DE_LA_IAIA, text: atles }, {}, onCanvi);
+  const [enllac, ...altres] = [...textDeLaBombolla(container).querySelectorAll('a')];
+  expect(altres).toEqual([]);
+  expect([enllac.getAttribute('href'), enllac.textContent, enllac.className, enllac.hasAttribute('target')]).toEqual(['/mercat', '/mercat', 'sdp-xat-enllac', false]);
+  expect(textDeLaBombolla(container).textContent).toBe(atles);
+  fireEvent.click(enllac);
+  expect(onCanvi).toHaveBeenLastCalledWith('/mercat');
+  cleanup();
+  const persona = pinta({ author: 'Toni', usuariId: 'u-toni', text: atles });
+  const paragraf = textDeLaBombolla(persona.container);
+  expect([paragraf.querySelectorAll('a').length, paragraf.children.length, paragraf.children[0].tagName, paragraf.textContent]).toEqual([0, 1, 'SPAN', atles]);
+});
+
 test('la frase de sempre de la IAIA es pinta com abans: un sol span, cap enllaç', () => {
   const { container } = pinta({ ...DE_LA_IAIA, text: RESPOSTA_IAIA });
   expect(textDeLaBombolla(container).innerHTML).toBe(`<span>${RESPOSTA_IAIA}</span>`);

@@ -282,9 +282,15 @@ export function FacetaTaxonomia({ onBack = null }) {
      `onBack`, la fletxa de la barra blava torna al Tauler, no a l'historial. */
   const tornada = onBack || undefined;
 
+  /* Gauntlet 261030 (cicle 4, traduir-tauler-taxonomia-uuid-autors) · Com la
+     resta del Tauler (decisió 261030 §7): sense Traductor (traduccio={false}).
+     L'«Historial» porta a la columna Autor l'uuid de qui va desar cada
+     versió, i l'esborrany encara no és públic: res d'açò ix cap a un motor.
+     Traduir avisa; el botó no canvia (Llei del Píxel). */
   if (!ambCapacitat) {
     return (
-      <UniversalPage chrome="context" layout="contained" title={FACETA_TAXONOMIA.titol} lead={LEAD} onBack={tornada}>
+      <UniversalPage chrome="context" layout="contained" title={FACETA_TAXONOMIA.titol} lead={LEAD} onBack={tornada}
+        traduccio={false}>
         <EstatBuit icona={Tags} titol={TEXT_SENSE_CAPACITAT}
           accio={onBack ? <Boto varietat="secundari" onClick={onBack}>Tornar al Tauler</Boto> : null}>
           Les etiquetes i categories són les de sèrie: este node no oferix la capacitat de desar-ne de pròpies.
@@ -295,7 +301,8 @@ export function FacetaTaxonomia({ onBack = null }) {
 
   const treballant = Boolean(ocupat);
   return (
-    <UniversalPage chrome="context" layout="contained" title={FACETA_TAXONOMIA.titol} lead={LEAD} onBack={tornada}>
+    <UniversalPage chrome="context" layout="contained" title={FACETA_TAXONOMIA.titol} lead={LEAD} onBack={tornada}
+      traduccio={false}>
       <div className="sdp-superadmin-taxonomia">
         {missatge ? (
           <Alerta to={missatge.to} titol={missatge.titol} onTanca={() => setMissatge(null)}

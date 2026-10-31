@@ -56,7 +56,7 @@ test('cada dia és una llista ordenada amb el seu nom; cada bloc diu l’hora i 
 test('els blocs es posicionen per propietats CSS: minut d’inici, fi visual, columna i amplada', () => {
   const { getByRole } = pinta();
   const [primer, segon] = within(getByRole('list', { name: dataLlarga(new Date(2026, 8, 29)) })).getAllByRole('listitem');
-  const vars = (el) => ['inici', 'fi', 'col', 'cols', 'amplada'].map((n) => el.style.getPropertyValue(`--sdp-cal-${n}`));
+  const vars = (el) => ['inici', 'fi', 'col', 'cols', 'amplada'].map((n) => el.style.getPropertyValue(`--cal-${n}`));
   expect(vars(primer)).toEqual(['600', '690', '0', '2', '1']);
   expect(vars(segon)).toEqual(['630', '720', '1', '2', '1']);
 });
@@ -66,14 +66,14 @@ test('la franja de tot el dia: una barra per setmana amb les línies de graella'
   const franja = getByRole('list', { name: 'Tot el dia' });
   const [barra] = within(franja).getAllByRole('listitem');
   expect(barra.textContent).toBe('Festes');
-  expect(['col-inici', 'col-fi', 'carril'].map((n) => barra.style.getPropertyValue(`--sdp-cal-${n}`))).toEqual(['1', '7', '1']);
+  expect(['col-inici', 'col-fi', 'carril'].map((n) => barra.style.getPropertyValue(`--cal-${n}`))).toEqual(['1', '7', '1']);
 });
 
-test('cap atribut style escrit en JSX: només les propietats --sdp-cal-* que posa la ref', () => {
+test('cap atribut style escrit en JSX: només les propietats --cal-* que posa la ref', () => {
   const { container } = pinta();
   const ambEstil = [...container.querySelectorAll('[style]')];
   expect(ambEstil.length).toBeGreaterThan(0);
-  for (const el of ambEstil) expect(el.getAttribute('style')).toMatch(/^(--sdp-cal-[a-z-]+: ?[^;]+; ?)+$/);
+  for (const el of ambEstil) expect(el.getAttribute('style')).toMatch(/^(--cal-[a-z-]+: ?[^;]+; ?)+$/);
 });
 
 test('la línia d’«ara» només ix la setmana de hui, al dia i al minut d’ara', () => {
@@ -81,7 +81,7 @@ test('la línia d’«ara» només ix la setmana de hui, al dia i al minut d’a
   const linies = container.querySelectorAll('.sdp-cal-setmana__ara');
   expect(linies).toHaveLength(1);
   expect(linies[0].getAttribute('aria-hidden')).toBe('true');
-  expect(linies[0].style.getPropertyValue('--sdp-cal-minut')).toBe('754');
+  expect(linies[0].style.getPropertyValue('--cal-minut')).toBe('754');
   expect(linies[0].closest('.sdp-cal-setmana__columna').querySelector('ol').getAttribute('aria-label')).toBe(dataLlarga(new Date(2026, 9, 1)));
   rerender(<VistaSetmana esdeveniments={ESDEVENIMENTS} dilluns={new Date(2026, 9, 5)} avui={AVUI} ara={ARA} locale="ca-ES" />);
   expect(container.querySelector('.sdp-cal-setmana__ara')).toBeNull();
@@ -91,7 +91,7 @@ test('sense «ara» fixa, la línia baixa amb el rellotge al canvi de cada minut
   vi.useFakeTimers();
   vi.setSystemTime(new Date(2026, 9, 1, 12, 0, 30));
   const { container } = render(<VistaSetmana esdeveniments={[]} dilluns={DILLUNS} avui={new Date()} locale="ca-ES" />);
-  const minut = () => container.querySelector('.sdp-cal-setmana__ara').style.getPropertyValue('--sdp-cal-minut');
+  const minut = () => container.querySelector('.sdp-cal-setmana__ara').style.getPropertyValue('--cal-minut');
   expect(minut()).toBe('720');
   act(() => { vi.advanceTimersByTime(30000); });
   expect(minut()).toBe('721');
@@ -194,7 +194,7 @@ test('a la tira, la franja és la del dia mostrat: una columna, oberta pels dos 
   const { getByRole } = pinta({ onTriaDia: () => {} });
   const [barra] = within(getByRole('list', { name: 'Tot el dia' })).getAllByRole('listitem');
   expect(barra.textContent).toBe('Festes');
-  expect(['col-inici', 'col-fi', 'carril'].map((n) => barra.style.getPropertyValue(`--sdp-cal-${n}`))).toEqual(['1', '2', '1']);
+  expect(['col-inici', 'col-fi', 'carril'].map((n) => barra.style.getPropertyValue(`--cal-${n}`))).toEqual(['1', '2', '1']);
   expect(barra.classList.contains('sdp-cal-barra--abans')).toBe(true);
   expect(barra.classList.contains('sdp-cal-barra--despres')).toBe(true);
 });
@@ -215,7 +215,7 @@ test('cap atribut style escrit en JSX tampoc a la tira', () => {
   const { container } = pinta({ onTriaDia: () => {} });
   const ambEstil = [...container.querySelectorAll('[style]')];
   expect(ambEstil.length).toBeGreaterThan(0);
-  for (const el of ambEstil) expect(el.getAttribute('style')).toMatch(/^(--sdp-cal-[a-z-]+: ?[^;]+; ?)+$/);
+  for (const el of ambEstil) expect(el.getAttribute('style')).toMatch(/^(--cal-[a-z-]+: ?[^;]+; ?)+$/);
 });
 
 test('cada bloc i cada barra porten la classe de color de la seua font (i la resta, la de publicació)', () => {
@@ -265,8 +265,8 @@ test('blocs curts en una línia «HH:MM Títol»: la fi queda per al lector; els
 test('el rang d’hores és dinàmic: de 7 a 22 si cap acte en surt, sense rotular la primera hora', () => {
   const { container } = pinta({ esdeveniments: [concert, assaig] });
   const graella = container.querySelector('.sdp-cal-setmana__graella');
-  expect(graella.getAttribute('style')).toMatch(/--sdp-cal-hora-inicial: ?7;/);
-  expect(graella.getAttribute('style')).toMatch(/--sdp-cal-hores: ?15;/);
+  expect(graella.getAttribute('style')).toMatch(/--cal-hora-inicial: ?7;/);
+  expect(graella.getAttribute('style')).toMatch(/--cal-hores: ?15;/);
   const hores = [...container.querySelectorAll('.sdp-cal-setmana__hora')];
   expect(hores).toHaveLength(15);
   expect(hores[0].textContent).toBe('');
@@ -277,23 +277,23 @@ test('el rang s’estén fins als actes de matinada i de nit, i fins a la línia
   const { container, rerender } = pinta();
   const graella = () => container.querySelector('.sdp-cal-setmana__graella').getAttribute('style');
   // El Ball creua la mitjanit: de 0 a 24.
-  expect(graella()).toMatch(/--sdp-cal-hora-inicial: ?0;/);
-  expect(graella()).toMatch(/--sdp-cal-hores: ?24;/);
+  expect(graella()).toMatch(/--cal-hora-inicial: ?0;/);
+  expect(graella()).toMatch(/--cal-hores: ?24;/);
   rerender(<VistaSetmana esdeveniments={[]} dilluns={DILLUNS} avui={AVUI} ara={new Date(2026, 9, 1, 6, 15)} locale="ca-ES" titol="Setmana del poble" />);
-  expect(graella()).toMatch(/--sdp-cal-hora-inicial: ?6;/);
-  expect(graella()).toMatch(/--sdp-cal-hores: ?16;/);
+  expect(graella()).toMatch(/--cal-hora-inicial: ?6;/);
+  expect(graella()).toMatch(/--cal-hores: ?16;/);
 });
 
 test('un acte sense fi a les 23:56 es pinta des de les 23:30 (l’alçada mínima abans de mitjanit) i diu l’hora real', () => {
   const tard = creaEsdeveniment({ id: 'tard', titol: 'Acte tard', inici: { dataHora: '2026-10-01T23:56' } });
   const { container } = pinta({ esdeveniments: [tard] });
   const [bloc] = container.querySelectorAll('.sdp-cal-setmana__bloc');
-  expect(['inici', 'fi'].map((n) => bloc.style.getPropertyValue(`--sdp-cal-${n}`))).toEqual(['1410', '1440']);
+  expect(['inici', 'fi'].map((n) => bloc.style.getPropertyValue(`--cal-${n}`))).toEqual(['1410', '1440']);
   expect(bloc.textContent).toBe('23:56 Acte tard');
   expect(bloc.classList.contains('sdp-cal-setmana__bloc--curt')).toBe(true);
   const graella = container.querySelector('.sdp-cal-setmana__graella').getAttribute('style');
-  expect(graella).toMatch(/--sdp-cal-hora-inicial: ?7;/);
-  expect(graella).toMatch(/--sdp-cal-hores: ?17;/);
+  expect(graella).toMatch(/--cal-hora-inicial: ?7;/);
+  expect(graella).toMatch(/--cal-hores: ?17;/);
 });
 
 test('densitat compacta: la forma de cada bloc seguix els llindars de la compacta (70 i 90 minuts, una línia de títol menys)', () => {

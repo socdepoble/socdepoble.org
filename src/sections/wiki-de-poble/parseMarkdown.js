@@ -140,7 +140,7 @@ export function parseMarkdown(md, { entradilla = true } = {}) {
   html = html.replace(/^[ \t]*(`{3,}|~{3,})[ \t]*([\w+-]*)[^\n]*\n([\s\S]*?)^[ \t]*\1[ \t]*$/gm, (_m, _tanca, llengua, codi) => {
     const lang = llengua ? llengua.toLowerCase().trim() : '';
     if (lang === 'mermaid') {
-      blocs.push(`<div class="sdp-diagrama-card"><div class="sdp-diagrama-capcalera"><span class="sdp-diagrama-icona">📐</span> Diagrama d’arquitectura</div><pre class="sdp-diagrama-cos"><code class="language-mermaid">${escapaHtml(codi.replace(/\n$/, ''))}</code></pre></div>`);
+      blocs.push(`<div class="sdp-diagrama-card"><div class="sdp-diagrama-capcalera"><span>📐</span> Diagrama d’arquitectura</div><pre class="sdp-diagrama-cos"><code class="language-mermaid">${escapaHtml(codi.replace(/\n$/, ''))}</code></pre></div>`);
     } else {
       const classe = llengua ? ` class="language-${llengua}"` : '';
       blocs.push(`<pre><code${classe}>${escapaHtml(codi.replace(/\n$/, ''))}</code></pre>`);
@@ -184,21 +184,23 @@ export function parseMarkdown(md, { entradilla = true } = {}) {
   html = formatEnLinia(html);
 
   // Lists
+  // Decisió del Mestre (30-10-2026) · La marca provisional del tipus de llista
+  // és un atribut data-, no una classe: no ix mai a l'HTML i cap full l'estila.
   // Unordered Lists (-, *, +)
-  html = html.replace(/^[ \t]*[-*+][ \t]+(.*)$/gim, '<li class="ul">$1</li>');
+  html = html.replace(/^[ \t]*[-*+][ \t]+(.*)$/gim, '<li data-llista="ul">$1</li>');
   // Ordered Lists (1., 2., etc)
-  html = html.replace(/^[ \t]*\d+\.[ \t]+(.*)$/gim, '<li class="ol">$1</li>');
+  html = html.replace(/^[ \t]*\d+\.[ \t]+(.*)$/gim, '<li data-llista="ol">$1</li>');
 
   // Join consecutive li tags of the same type
-  html = html.replace(/<\/li>\n<li class="ul">/gim, '</li><li class="ul">');
-  html = html.replace(/<\/li>\n<li class="ol">/gim, '</li><li class="ol">');
+  html = html.replace(/<\/li>\n<li data-llista="ul">/gim, '</li><li data-llista="ul">');
+  html = html.replace(/<\/li>\n<li data-llista="ol">/gim, '</li><li data-llista="ol">');
 
   // Wrap entire sequences of consecutive li tags into a single ul or ol
-  html = html.replace(/((?:<li class="ul">[\s\S]*?<\/li>)+)/gi, '<ul>$1</ul>');
-  html = html.replace(/((?:<li class="ol">[\s\S]*?<\/li>)+)/gi, '<ol>$1</ol>');
+  html = html.replace(/((?:<li data-llista="ul">[\s\S]*?<\/li>)+)/gi, '<ul>$1</ul>');
+  html = html.replace(/((?:<li data-llista="ol">[\s\S]*?<\/li>)+)/gi, '<ol>$1</ol>');
 
-  // Clean up the temporary classes on li tags only
-  html = html.replace(/<li class="[uo]l">/g, '<li>');
+  // Lleva les marques provisionals dels <li>
+  html = html.replace(/<li data-llista="[uo]l">/g, '<li>');
 
   // Tables
   let taules = 0;

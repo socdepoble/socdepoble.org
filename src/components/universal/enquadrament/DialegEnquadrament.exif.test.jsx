@@ -7,7 +7,7 @@ import {
   ERROR_EXIF_NO_CONSERVABLE, ERROR_EXIF_NO_CONSERVABLE_CAMERA, ETIQUETA_CONSERVA_CAMERA, ETIQUETA_CONSERVA_EXIF, exifPublicable,
 } from './exifIncrustat.js';
 import { configDeForma } from './useEnquadramentImatge.jsx';
-import { TIPUS, dataOriginal, gpsTorre, jpegAmbExif, orientacio } from './jpegProva.js';
+import { TIPUS, dataOriginal, gpsTorre, jpegAmbExif, orientacio } from '../../../../tests/helpers/jpegProva.js';
 
 /* Gauntlet 261016 (Bloc 1.2, mandat del Mestre, pla §0.1.3) · La casella
    «Conserva la ubicació i la data de la foto» del DialegEnquadrament: marcada

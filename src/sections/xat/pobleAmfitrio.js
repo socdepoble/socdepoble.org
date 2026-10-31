@@ -44,8 +44,16 @@ export function pobleDeConfig(externalConfig) {
  * també sense amfitrió (socdepoble.org, el standalone, localhost). És el poble
  * pilot de la llavor (sections/pobles/townsSeed.js), amb el nom de l'ordre.
  * Un poble declarat per l'amfitrió mana i el substituïx.
+ * P1-70 (ordre del Mestre, 261029 18:20: «a Gent de la Torre le falta la
+ * imagen») · I la seua cara: la foto de la llavor (townsSeed.js, la mateixa
+ * de /pobles; el navegador en servix la bessona .webp), la reserva
+ * d'avatarDelPoble quan el node no en dona cap. Mai «GD».
  */
-export const POBLE_PER_DEFECTE = Object.freeze({ id: 'la-torre-de-les-macanes', nom: 'Gent de la Torre' });
+export const POBLE_PER_DEFECTE = Object.freeze({
+  id: 'la-torre-de-les-macanes',
+  nom: 'Gent de la Torre',
+  avatar: '/assets/towns/la-torre-de-les-macanes/2.jpg'
+});
 
 /**
  * El poble de la fila del xat: el de l'amfitrió o, sense, POBLE_PER_DEFECTE.
@@ -64,10 +72,16 @@ export const rutaDelPobleXat = (poble) => `/pobles/${enc(poble.id)}`;
  * slug, amb la mateixa precedència que la targeta de /pobles (PoblesSection:
  * avatar_url, si no image_url o imageSrc). null si el poble no hi és: cap
  * imatge inventada ni cap llavor en remot. Pura: qui la crida passa les fitxes.
+ * P1-70 (ordre del Mestre, 261029 18:20) · Derogat «cap llavor en remot» per
+ * a la Torre (POBLE_PER_DEFECTE, també quan un amfitrió la declara): sense
+ * fitxa, amb `towns` buit (local, o mentre carrega) o amb una fitxa sense
+ * avatar_url, la seua foto de la llavor (POBLE_PER_DEFECTE.avatar). L'avatar_url
+ * del node mana. Els altres pobles, com sempre: sense fitxa, null.
  */
 export function avatarDelPoble(poble, towns) {
   const fitxa = fitxaDelPoble(poble, towns);
-  return fitxa?.avatar_url || fitxa?.image_url || fitxa?.imageSrc || null;
+  const reserva = poble?.id === POBLE_PER_DEFECTE.id ? POBLE_PER_DEFECTE.avatar : null;
+  return fitxa?.avatar_url || reserva || fitxa?.image_url || fitxa?.imageSrc || null;
 }
 
 /**

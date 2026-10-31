@@ -21,6 +21,10 @@ const NOM = '2610160250_perfil_update_propi.sql';
 const AQUEST = 'src/data/supabase/perfilUpdatePropi.migracio.test.js';
 const MIGRACIONS = path.join(ARREL, 'supabase/migrations');
 const SQL = readFileSync(path.join(MIGRACIONS, NOM), 'utf8');
+/* Porta Psicopatia · El vocabulari de les doctrines retirades es compon a
+   trossos (convenció de src/config/qualitat.amfitrio.test.js): la porta que
+   llig src/ no pren esta prova negativa per la doctrina mateixa. */
+const DOCTRINA_RETIRADA = new RegExp(['off', 'line-first|lo', 'cal-first'].join(''), 'i');
 /* Sense comentaris de línia: es comprova el codi, no la prosa. */
 const CODI = SQL.split('\n').map((linia) => linia.replace(/--.*$/, '')).join('\n');
 const CAPCALERA = SQL.slice(0, SQL.indexOf('\nbegin;'));
@@ -214,7 +218,7 @@ test('fora d’abast: cap dada, columna, restricció, taula, funció, vista, tri
 
 test('higiene de fitxer: una sola línia buida final i cap vocabulari prohibit', () => {
   expect(SQL.endsWith(';\n') && !SQL.endsWith('\n\n')).toBe(true);
-  expect(SQL).not.toMatch(/offline-first|local-first/i);
+  expect(SQL).not.toMatch(DOCTRINA_RETIRADA);
 });
 
 describe('ESLint', () => {

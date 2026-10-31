@@ -118,6 +118,29 @@ test('l’últim és un adjunt sense peu: la previa diu el tipus, amb «Pep: » 
   expect(boto.textContent).not.toContain('Cap missatge.');
 });
 
+/* IDEA-53 (pla 261029_1605, Bloc B) · La previa és una línia meta: sense les
+   marques de la negreta i sense <strong>; la resta del text, tal qual. */
+test.each([
+  ['*Avís*: tall de llum', 'Pep: Avís: tall de llum'],
+  ['2 * 3 = 6', 'Pep: 2 * 3 = 6']
+])('la previa de %j no porta asteriscs de negreta ni <strong>', (ultimText, esperat) => {
+  const boto = fila({ id: 'g-9', tipus: 'grup', titol: 'Festes', ultimText, ultimTipus: 'text', ultimSeq: 3,
+    altres: [{ id: 'pep', nom: 'Pep' }], ultimAutorId: 'pep' });
+  expect(previa(boto).textContent).toBe(esperat);
+  expect(previa(boto).querySelector('strong')).toBeNull();
+});
+
+/* Gauntlet del Bloc B (QA-B03) · Una adreça és una peça opaca: la previa la
+   conserva sencera, asteriscs inclosos; només es lleven les marques de fora. */
+test.each([
+  ['https://example.test/?q=*x*', 'Pep: https://example.test/?q=*x*'],
+  ['*Mira* https://example.test/?q=*x*', 'Pep: Mira https://example.test/?q=*x*']
+])('QA-B03 · la previa de %j conserva sencera l’adreça', (ultimText, esperat) => {
+  const boto = fila({ id: 'g-9', tipus: 'grup', titol: 'Festes', ultimText, ultimTipus: 'text', ultimSeq: 3,
+    altres: [{ id: 'pep', nom: 'Pep' }], ultimAutorId: 'pep' });
+  expect(previa(boto).textContent).toBe(esperat);
+});
+
 test('un canal amb l’últim missatge meu també porta «Tu: »', () => {
   const boto = fila({ id: 'k-1', tipus: 'canal', titol: 'Avisos', rol: 'admin', ultimText: 'Tall d’aigua.', ultimAutorId: 'jo', ultimSeq: 1 });
   expect(within(boto).getByText('Tu: Tall d’aigua.')).toBe(previa(boto));

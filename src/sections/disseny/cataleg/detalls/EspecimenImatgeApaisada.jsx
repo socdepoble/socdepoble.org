@@ -31,7 +31,7 @@ export default function EspecimenImatgeApaisada() {
   const [avis, setAvis] = useState('Toca una notícia.');
   const Peca = vista === 'graella' ? GraellaArticles : LlistaArticles;
   return (
-    <Especimen id="imatge-apaisada" nom="Imatge apaïsada 16:9 · excepció del Lector" fitxer="src/components/PedraSeca/organismes/agrupacio.jsx · catalegColleccio.css (.sdp-panoramica)"
+    <Especimen id="imatge-apaisada" nom="Imatge apaïsada 16:9 · excepció del Lector" fitxer="src/components/PedraSeca/organismes/agrupacio.jsx · src/css/modules.css, bloc catalegColleccio (.sdp-panoramica)"
       descripcio="EXCEPCIÓ a la regla 1:1 (Pedra Seca §8), autoritzada pel Mestre el 261003 i limitada a les imatges de les targetes del Lector de notícies. La variant panoramica de GraellaArticles i LlistaArticles posa la classe .sdp-panoramica al contenidor: la imatge (només d’un origen que l’amfitrió permet) i el marcador d’inicials ocupen un marc 16:9. A la Revista, una miniatura apaïsada a l’esquerra de la fila; a les Targetes, la imatge a tota l’amplada damunt del títol."
       contracte={[
         ['panoramica', 'boolean', 'false', 'Només el Lector (src/apps/lector) i este espècimen: PedraSeca/qualitat.panoramica.test.js falla si una altra app la passa o escriu la classe a mà.'],

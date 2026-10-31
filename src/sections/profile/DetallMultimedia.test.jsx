@@ -1036,6 +1036,32 @@ describe('Relleu del Pla 2000 · el visor complet de l’Arxiu, amb les accions 
     expect(visor().querySelector('.sdp-visor__titol').textContent).toBe('Foto pujada el 12-10-2026');
   });
 
+  /* Ordre del Mestre (30-10-2026, prompt 2208, T4.2; QA-T3-UX-01) · El
+     visor del Perfil és fora de l'Arxiu: una pujada (sense enllaç públic) no
+     porta la fila «Enllaç de la imatge» ni «No té cap enllaç públic d’este
+     lloc»; una foto pública de /assets/, la URL. */
+  test('fora de l’Arxiu: la foto pujada no porta cap fila d’enllaç; una de /assets/ de l’organització, la URL', async () => {
+    m.llista.mockResolvedValue([mitja('nova.webp', { creat: '2026-10-12T10:00:00Z' })]);
+    pinta();
+    await esperaFitxer('nova.webp');
+    act(() => obridorDe(targetaDeFitxer('nova.webp')).click());
+    expect(visorObert()).toBe(true);
+    const etiquetes = () => [...visor().querySelectorAll('.sdp-visor__clau')].map((e) => e.textContent);
+    expect(etiquetes()).toContain('Resolució');
+    expect(etiquetes()).not.toContain('Enllaç de la imatge');
+    expect(visor().textContent).not.toContain('No té cap enllaç públic');
+    cleanup();
+    m.mediaItems = [{
+      id: 'feed-forn', src: '/assets/forn/forn-al-mati.jpg', title: 'El forn al matí', author_org_id: 'O',
+      article: { sectionId: 'mur', id: 'forn' },
+    }];
+    identitat = forn();
+    m.perfil.identitats = [identitat];
+    pinta();
+    act(() => obridorDe(targetaAmb('El forn al matí')).click());
+    expect(fila('Enllaç de la imatge').querySelector('[translate="no"]').textContent).toBe(`${window.location.origin}/assets/forn/forn-al-mati.jpg`);
+  });
+
   test('una foto de l’Arxiu d’una organització porta al visor el seu article i les seues accions', () => {
     m.mediaItems = [{
       id: 'feed-forn', src: '/assets/forn/forn-al-mati.jpg', title: 'El forn al matí', author_org_id: 'O',

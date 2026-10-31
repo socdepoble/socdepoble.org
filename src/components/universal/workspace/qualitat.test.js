@@ -73,7 +73,7 @@ const FITXERS = Object.freeze([
   'src/components/universal/insigniaEmoji.test.jsx',
   /* Revisió final (261007) · la guarda única d'Unicode per a Safari 16 i la
      prova de la revisió de la roda dentada. */
-  'src/sections/disseny/cataleg/guardaEmojisSafari16.js',
+  'tests/helpers/guardaEmojisSafari16.js',
   'src/components/universal/workspace/UniversalWorkspace.ajustos.revisio.test.jsx',
   'src/components/universal/targetaViva.js',
   'src/components/universal/targetaViva.test.js',

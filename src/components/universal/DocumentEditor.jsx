@@ -75,6 +75,10 @@ function campsQueTornen(actual, de, a) {
  *                          //    logoEntitat?, avatarAutor? }). Ordre del Mestre (261007,
  *                          // ordre E): logoEntitat i avatarAutor ({ src, alt }) pinten
  *                          // damunt de l'H1 el mateix que la fitxa pública, en lectura.
+ *                          // Gauntlet 261030 (cicle 3, traduir-perfil-lectura-fitxa-no-
+ *                          // publica) · `traduccio: true` si el document és públic i
+ *                          // Traduir el pot enviar al motor; sense, Traduir avisa i no
+ *                          // envia res (fallada tancada, TC3.2).
  *   classificacio: ReactNode // Opcional. Botonera de classificació (Carpetes, Categories,
  *                            // Etiquetes) davall del títol, al lloc de les píndoles.
  *   llicencia: ReactNode // Opcional. Ranura del botó de llicència, davall de la botonera.
@@ -263,7 +267,13 @@ function campsQueTornen(actual, de, a) {
    `logoEntitat` (el logotip d'una entitat) o `avatarAutor` (l'avatar redó
    d'una persona o d'un agent IA), les claus de PageFrame. És LECTURA: de
    l'avatar només passen src i alt, mai onCanvia. Sense les claus, cap prop
-   nova i el DOM de sempre. */
+   nova i el DOM de sempre.
+   Gauntlet 261030 (cicle 3, traduir-perfil-lectura-fitxa-no-publica; TC3.2)
+   · Traduir només és actiu si l'adaptador diu que el document és públic
+   (`traduccio: true`: la nota de benvinguda del Bloc, una fitxa publicada).
+   La fitxa en lectura d'una entitat només per als membres no ix cap al
+   motor. Sense la marca, tampoc (fallada tancada). El botó no canvia (Llei
+   del Píxel): PageFrame avisa (AVIS_PAGINA_SENSE_TRADUCCIO). */
 function EmptyDocumentPage({ emptyDocument, emptyPlaceholder, barAuthorAvatar, barAuthorName, barAuthorLocation, barAuthorHref, emoticona, t }) {
   const doc = emptyDocument || {};
   const title = doc.title || emptyPlaceholder || t('editor.open', 'Obre un document');
@@ -279,6 +289,7 @@ function EmptyDocumentPage({ emptyDocument, emptyPlaceholder, barAuthorAvatar, b
         <UniversalPage
           chrome="context"
           layout="contained"
+          traduccio={doc.traduccio === true}
           title={title}
           subtitle={doc.subtitle}
           lead={doc.lead}
@@ -358,6 +369,8 @@ export function DocumentEditor({ adapter, onToast }) {
     fotosDePublicacio = false,
     /* IDEA-41 (261028) · el motor de «🎴 Proposa Card» (null: cap botó). */
     proposaCard = null,
+    /* P1-59 (a) (261030) · el text fantasma del cos buit (null: cap, com sempre). */
+    placeholderCos = null,
     ...rest
   } = adapter;
 
@@ -404,13 +417,17 @@ export function DocumentEditor({ adapter, onToast }) {
      Revisió adversarial 261028 · demanaExif només amb fotosDePublicacio === true:
      el text d'una persona al Perfil és identitat i la foto hi entra neta. */
   const ambExifDelCos = fotosDePublicacio === true;
+  /* P1-59 (a) · El text fantasma del cos, només amb un text no buit (sense,
+     cap clau nova a la crida). Un text, no un objecte: el memo no es refà. */
+  const textFantasma = typeof placeholderCos === 'string' && placeholderCos.trim() ? placeholderCos : null;
   const extensions = useMemo(
     () => extensionsRiques({
       onImageUpload: uploadMedia, ambTargetes, onToast: avisaDelCos,
       ...(ambEmojis ? { obreEmojis: obreEmojisDelCos } : {}),
       ...(ambExifDelCos ? { demanaExif: demanaExifDelCos } : {}),
+      ...(textFantasma ? { placeholderCos: textFantasma } : {}),
     }),
-    [uploadMedia, ambTargetes, avisaDelCos, ambEmojis, obreEmojisDelCos, ambExifDelCos, demanaExifDelCos],
+    [uploadMedia, ambTargetes, avisaDelCos, ambEmojis, obreEmojisDelCos, ambExifDelCos, demanaExifDelCos, textFantasma],
   );
 
   const desaLocal = useCallback(

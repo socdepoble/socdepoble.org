@@ -107,8 +107,18 @@ describe('les guardes detecten les formes d’abans', () => {
   });
 });
 
-describe('Fase B · pecesApps.css', () => {
-  const PECES = llig('src/components/PedraSeca/pecesApps.css');
+/* tractor-vocabulari (261030) · El full de les peces és ara el bloc pecesApps
+   de modules.css, entre les seues marques. */
+function blocDeModuls(nom) {
+  const tot = llig('src/css/modules.css');
+  const inici = tot.indexOf(`/* ═══ BLOC ${nom} · `);
+  const fi = tot.indexOf(`/* ═══ FI DEL BLOC ${nom} ═══ */`);
+  if (inici < 0 || fi < inici) throw new Error(`modules.css no té el bloc ${nom}`);
+  return tot.slice(inici, fi);
+}
+
+describe('Fase B · bloc pecesApps (modules.css)', () => {
+  const PECES = blocDeModuls('pecesApps');
 
   test('tot :hover va dins de @media (hover: hover) and (pointer: fine)', () => {
     expect(hoversSenseGuarda(PECES)).toEqual([]);
@@ -129,8 +139,8 @@ describe('Fase C · cap hover alça ni engrandix (layout.css)', () => {
 
 describe('Q2 · sòl tàctil de 48px', () => {
   const FULLS = [
+    /* modules.css porta ara els blocs pecesApps i catalegColleccio (261030). */
     'src/css/modules.css', 'src/css/components.css', 'src/css/layout.css',
-    'src/components/PedraSeca/pecesApps.css', 'src/components/PedraSeca/catalegColleccio.css',
     'src/components/layout/AppGridShell.css'
   ];
 

@@ -47,7 +47,8 @@ import { useEffect, useState } from 'react';
  * fora del final del recorregut (on ja no es pot baixar més per a traure el
  * contingut de davall del botó) i sense cap peu ancorat (el botó cauria
  * damunt de «Desar autoria» o del compositor); només avisa quan canvia. La
- * posició viu en memòria (WeakMap): res a localStorage ni a sessionStorage.
+ * posició viu en memòria (WeakMap): res a l'emmagatzematge del navegador, ni
+ * el local ni el de sessió.
  *
  * Bloc 3.10 (pla 261016_1530) · Fora del compacte també s'activa en una
  * tauleta tàctil (l'iPad en horitzontal passa de 1023px) i en una caixa

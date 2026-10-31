@@ -33,19 +33,25 @@ afterEach(cleanup);
 const esDeComunitat = (id) => id.startsWith('fake-poble') || id.startsWith('fake-sdp');
 const directes = () => valor.chatThreads.map((f) => f.id).filter((id) => !esDeComunitat(id));
 
-test('encesa: les dues entrades d’ajuda i dos no llegits', async () => {
+/* Onada 261030 (cicle 2) · El total és la suma dels fils pintats (Avisos de
+   Sóc de Poble, Avisos del poble i, encesa, la IAIA), el mateix que la llista. */
+const sumaDelsFils = () => valor.chatThreads.reduce((suma, f) => suma + (f.noLlegits || 0), 0);
+
+test('encesa: les dues entrades d’ajuda i tres no llegits', async () => {
   munta(false);
   expect(directes()).toEqual(['fake-iaia', 'fake-javi']);
-  expect(valor.totalNoLlegits).toBe(2);
+  expect(valor.totalNoLlegits).toBe(sumaDelsFils());
+  expect(valor.totalNoLlegits).toBe(3);
   expect((await valor.cercaMembres()).map((m) => m.nom)).toEqual(['Sóc de Poble', 'IAIA MarIA']);
   expect(valor.esFilAmagat('fake-iaia')).toBe(false);
 });
 
-test('apagada: només Sóc de Poble, un no llegit, i la IAIA no es pot obrir', async () => {
+test('apagada: només Sóc de Poble, dos no llegits (els Avisos), i la IAIA no es pot obrir', async () => {
   munta(true);
   expect(directes()).toEqual(['fake-javi']);
   expect(valor.chatThreads.some((f) => f.id === 'fake-sdp' && f.tipus === 'comunitat')).toBe(true);
-  expect(valor.totalNoLlegits).toBe(1);
+  expect(valor.totalNoLlegits).toBe(sumaDelsFils());
+  expect(valor.totalNoLlegits).toBe(2);
   expect((await valor.cercaMembres()).map((m) => m.nom)).toEqual(['Sóc de Poble']);
   expect(await valor.creaFil('ajuda:ia')).toBe('fake-sdp');
   expect(valor.esFilAmagat('fake-iaia')).toBe(true);

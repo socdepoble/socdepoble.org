@@ -271,9 +271,15 @@ describe('els adaptadors natius', () => {
   /* 261026 (prompt 261026_1615) · El segon: els avisos del xat. El menú
      «Compartir» (compartirNatiu.js) no n'importa cap: el connector és propi de
      l'App i es crida pel pont global, com la plataforma. */
+  /* Ordre nocturna 261030_0252 (Fase 3, WP) · El tercer, els avisos push (fase
+     N1, inert: ningú no l'importa). És l'únic que importa el nucli del pont,
+     i només per a isPluginAvailable i registerPlugin d'un connector que no és
+     cap paquet instal·lat (D-WP-7, decisió del Mestre); avisosPushNatius.test.js
+     comprova que no n'importa cap altre ni carrega res per import(). */
   const ADAPTADORS_NATIUS = Object.freeze({
     [`${NATIU}/entradaSocial.js`]: [CAPGO_SOCIAL],
-    [`${NATIU}/avisosNatius.js`]: [AVISOS_LOCALS]
+    [`${NATIU}/avisosNatius.js`]: [AVISOS_LOCALS],
+    [`${NATIU}/avisosPushNatius.js`]: [`${CAP}/core`]
   });
 
   test('només els adaptadors natius importen paquets natius, i només els seus', () => {
@@ -292,7 +298,7 @@ describe('els adaptadors natius', () => {
     expect(codi.includes(`${CAP}/core`)).toBe(false);
   });
 
-  test('el connector dels avisos només arriba per import() dinàmic, i el nucli del pont no l’importa ningú', () => {
+  test('el connector dels avisos només arriba per import() dinàmic, i el nucli del pont no l’importen ni ell ni el menú Compartir', () => {
     const codi = llig(`${NATIU}/avisosNatius.js`);
     for (const forma of [FORMES[0], FORMES[1], FORMES[3]]) {
       expect([...codi.matchAll(forma)].map(textDe).filter(esCapacitor), String(forma)).toEqual([]);

@@ -226,7 +226,8 @@ function PaginaDelDetall({ titol, onBack = null, children }) {
   return (
     <aside className="perfil-detall">
       <AppGridColumn titol={titol} esquerra={onBack ? <FletxaAlTauler onBack={onBack} /> : <TornaALaLlista />} />
-      <UniversalPage>{children}</UniversalPage>
+      {/* Decisions 261030 §7 · Dades d'altres persones: Traduir no envia res fora. */}
+      <UniversalPage traduccio={false}>{children}</UniversalPage>
     </aside>
   );
 }
@@ -260,7 +261,7 @@ function PontDeTornada({ onCanvi }) {
    Universal, amb la barra taronja. Ací no hi ha cap Workspace que embolcallar
    (sdp-universal-page §5). */
 function PaginaDEstat({ children }) {
-  return <UniversalPage>{children}</UniversalPage>;
+  return <UniversalPage traduccio={false}>{children}</UniversalPage>;
 }
 
 function AdminUsersManager({ onBack }) {
@@ -408,7 +409,7 @@ export default function AdminSection() {
      mòdul), i del detall s'hi torna amb la fletxa blava. En mitja i en ample,
      res no canvia. */
   return (
-    <UniversalPage onBack={tornada || undefined}>
+    <UniversalPage traduccio={false} onBack={tornada || undefined}>
       <AppGridShell
         panellEstret="left"
         tornaEstret="left"

@@ -68,7 +68,7 @@ function Rail({ plegat, etiqueta, comunitats, setAvis }) {
     setAvis(`El rail portaria a ${ruta}.`);
   };
   return (
-    <div className={`sdp-xat sdp-xat-especimen sdp-xat-especimen--rail${plegat ? ' sdp-xat-especimen--carril' : ''}`} role="group" aria-label={etiqueta}>
+    <div className={plegat ? 'sdp-xat sdp-xat-especimen sdp-xat-especimen--rail sdp-xat-especimen--carril' : 'sdp-xat sdp-xat-especimen sdp-xat-especimen--rail'} role="group" aria-label={etiqueta}>
       <AppGridContext.Provider value={AMPLE}>
         <RailXat
           {...estat}

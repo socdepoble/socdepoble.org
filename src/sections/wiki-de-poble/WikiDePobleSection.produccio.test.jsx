@@ -101,17 +101,21 @@ test('l’entorn de la prova és el de producció', () => {
   expect(DOCUMENTACIO).toEqual(['tractors_aprovacio', 'sentinelles_panell', 'agents_panell']);
 });
 
-test('sense superadmin: la Maquinària de la IAIA amb la documentació de les tres peces, i ni la Consola ni cap eina', () => {
+/* Ordre del Mestre (30-10-2026, prompt 2208, T2.2) · Proves actualitzades a
+   propòsit: la Consola incrustada és de tothom (maquinaria.js), també sense
+   sessió; les eines amb botons, no (cap ítem ni cap panell fora de DEV).
+   Derogat: «sense superadmin, ni la Consola». */
+test('sense superadmin: la Maquinària de la IAIA amb la Consola i la documentació de les tres peces, i cap eina', () => {
   const esperat = () => {
     expect(fixture.props.model.categories.map((c) => c.id)).toEqual(['__intro_cat', 'maquinaria_cat']);
-    expect(fixture.props.model.items.map((i) => i.id)).toEqual(['__intro', ...DOCUMENTACIO]);
+    expect(fixture.props.model.items.map((i) => i.id)).toEqual(['__intro', 'consola_termodinamica', ...DOCUMENTACIO]);
   };
   render(<WikiDePobleSection />);
   esperat();
   /* La mateixa fitxa que l'eina (id, títol, entradilla, etiquetes i emoji),
      dins de la Maquinària, amb el tipus de la documentació. El subtítol, el
      de l'eina, menys el dels Sentinelles, que ja no convida a aprovar. */
-  const docs = fixture.props.model.items.filter((i) => i.categoryId === 'maquinaria_cat');
+  const docs = fixture.props.model.items.filter((i) => i.categoryId === 'maquinaria_cat' && i.id !== 'consola_termodinamica');
   expect(docs.map((d) => [d.id, d.title, d.lead, d.tags, d.icon]))
     .toEqual(DE_LES_EINES.map((e) => [e.id, e.title, e.lead, e.tags, ICONES_ITEMS_WIKI[e.id]]));
   expect(docs.map((d) => d.subtitle))
@@ -122,7 +126,7 @@ test('sense superadmin: la Maquinària de la IAIA amb la documentació de les tr
   for (const doc of docs) {
     expect(doc, doc.id).toMatchObject({ categoryIds: ['maquinaria_cat'], attributes: { type: TIPUS_DOCUMENTACIO, author: 'Sistema' }, content: '' });
   }
-  /* Una sessió que no és superadmin, o un valor que no és un true: igual, sense la Consola. */
+  /* Una sessió que no és superadmin, o un valor que no és un true: igual, amb la Consola. */
   for (const sessio of [{ esSuperadmin: false }, { esSuperadmin: 'true' }, { rol: 'veí' }]) {
     cleanup();
     fixture.sessio = sessio;
@@ -141,19 +145,24 @@ test('Bloc 3.4 · amb superadmin, la Consola encapçala la Maquinària; darrere,
     .toEqual(['Eina Interactiva', TIPUS_DOCUMENTACIO, TIPUS_DOCUMENTACIO, TIPUS_DOCUMENTACIO]);
 });
 
-/* El doble del workspace no reconcilia: la carpeta de la URL ja existix i es
-   conserva, i l'ítem de la Consola, que no hi és, deixa la portada. El
-   workspace de veres hi obri la primera fitxa de la carpeta
-   (WikiDePobleSection.sessio.test.jsx). */
-test('Bloc 3.4 · una URL vella amb ?item=consola_termodinamica no pinta la Consola a qui no és superadmin', async () => {
-  fixture.itemId = 'consola_termodinamica';
-  fixture.search = '?categoria=maquinaria_cat&item=consola_termodinamica';
-  const arrel = render(<WikiDePobleSection />).container;
-  expect(arrel.querySelector('header.page-title h1').textContent).toBe(PAGE_COPY.wikidepoble.title);
-  await Promise.resolve();
-  expect(screen.queryByText('Doble de la Consola')).toBeNull();
-  expect(fixture.props.model.items.map((i) => i.id)).not.toContain('consola_termodinamica');
-  expect(fixture.props.selection.categoryId).toBe('maquinaria_cat');
+/* Ordre del Mestre (30-10-2026, prompt 2208, T2.2) · Prova actualitzada a
+   propòsit: l'enllaç de la Consola la pinta a qualsevol visitant, sense
+   sessió o amb una sessió que no és superadmin, i sense cap eina.
+   Derogat: «una URL vella amb ?item=consola_termodinamica no pinta la
+   Consola a qui no és superadmin» (Bloc 3.4). */
+test('l’enllaç ?item=consola_termodinamica pinta la Consola també a qui no té sessió ni és superadmin', async () => {
+  for (const sessio of [null, { esSuperadmin: false }]) {
+    cleanup();
+    fixture.sessio = sessio;
+    fixture.itemId = 'consola_termodinamica';
+    fixture.search = '?categoria=maquinaria_cat&item=consola_termodinamica';
+    const arrel = render(<WikiDePobleSection />).container;
+    expect(await screen.findByText('Doble de la Consola')).toBeTruthy();
+    expect(arrel.querySelector('header.page-title h1').textContent).toBe(PAGE_COPY.consola.title);
+    expect(fixture.props.model.items.map((i) => i.id)).toContain('consola_termodinamica');
+    expect(fixture.props.selection.categoryId).toBe('maquinaria_cat');
+    expect(screen.queryByText(/^Doble (dels|d’|de la Gestoria)/)).toBeNull();
+  }
 });
 
 test('una URL vella de la Gestoria no la pinta: l’ítem no existix i es veu la portada', async () => {

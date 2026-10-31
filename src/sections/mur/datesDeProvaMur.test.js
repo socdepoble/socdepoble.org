@@ -92,8 +92,11 @@ describe('la llavor del Mur amb les dates de prova', () => {
     expect(N).toBeGreaterThanOrEqual(8);
     /* Ordre del Mestre (261026_2126; prompt 261026_2130, tasca 1) · Deu:
        «Descàrregues i Aplicacions» hi entra la primera, com El Xat (261007).
-       Abans, com a molt nou. */
-    expect(N).toBeLessThanOrEqual(10);
+       Abans, com a molt nou.
+       Ordre del Mestre (30-10-2026; candidatura NLnet NGI Fediversity) · Onze:
+       «Candidatura Europea NLnet · NGI Fediversity» hi entra la primera, com
+       Descàrregues. Abans, com a molt deu. */
+    expect(N).toBeLessThanOrEqual(11);
   });
 
   test.each(MOMENTS)('%s: les importants dalt, les tècniques del 2 al 15 de setembre i els actes al seu dia', (_, ara) => {

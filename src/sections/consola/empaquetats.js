@@ -28,6 +28,9 @@
 import { ETIQUETES, RUTA_CONSOLA, copyConsola } from './consolaPagines.js';
 import { plural } from './concordanca.js';
 import { VERSIO_SISTEMA } from '../../config/versio.js';
+import { esAppNativa } from '../../config/origenPublic.js';
+import { nomenaPlataformaAliena, textPerAppNativa } from '../text/perAppNativa.js';
+import { errorDeLaInstantania, fontsLlegibles, opcionsDeLectura } from './fontsConsola.js';
 
 export const FONT_EMPAQUETATS = '/__iaia/empaquetats.json';
 export const ESQUEMA_EMPAQUETATS = 'sdp.empaquetats.v1';
@@ -44,10 +47,20 @@ const COPY_PROVISIONAL = Object.freeze({
   lead: 'Android, iOS, la web i el connector de WordPress: la versió que declara cadascun, comparada amb la Versió Canònica del Sistema, els artefactes que ja hi ha a la carpeta de builds i l’ordre que la publica. Cap botó puja res: l’ordre es copia i s’executa al terminal.'
 });
 
-/** La pàgina dels empaquetats, amb la seua ruta i el seu copy. */
-export function paginaEmpaquetats() {
+/* Ordre del Mestre (30-10-2026, prompt 2208, T2.2) · La Consola és pública i
+   s'obri també dins de l'app nativa, on la regla 2.3.10 de l'App Store no
+   deixa nomenar cap altra plataforma mòbil (ordre del Mestre 261027;
+   perAppNativa.js). Allí el copy perd «Android» de la llista de plataformes
+   (la frase es queda) i, si encara en nomena alguna, textPerAppNativa en
+   lleva la frase. Fora de l'app nativa, el copy tal qual. */
+const ANDROID_A_LA_LLISTA = /\bAndroid\s*,\s*/g;
+const copyPerAppNativa = (text) => (typeof text === 'string' ? textPerAppNativa(text.replace(ANDROID_A_LA_LLISTA, '')) : text);
+
+/** La pàgina dels empaquetats, amb la seua ruta i el seu copy (dins de l'app nativa, sense cap altra plataforma). */
+export function paginaEmpaquetats({ nativa = esAppNativa() } = {}) {
   const copy = copyConsola().empaquetats ?? COPY_PROVISIONAL;
-  return { id: 'empaquetats', ruta: RUTA_EMPAQUETATS, title: copy.title, subtitle: copy.subtitle, lead: copy.lead };
+  const text = nativa ? copyPerAppNativa : (x) => x;
+  return { id: 'empaquetats', ruta: RUTA_EMPAQUETATS, title: text(copy.title), subtitle: text(copy.subtitle), lead: text(copy.lead) };
 }
 
 /** Cert si el comodí de /consola/* és la pàgina dels empaquetats (amb barres a les vores o sense). */
@@ -69,6 +82,16 @@ export const PLATAFORMES = Object.freeze([
   Object.freeze({ id: 'pwa', nom: 'Web (socdepoble.org)', pista: 'font' }),
   Object.freeze({ id: 'wordpress', nom: 'Connector de WordPress', pista: 'propia' })
 ]);
+
+/**
+ * Les plataformes que es pinten (la pàgina, el recompte de la targeta i
+ * l'Índex). Ordre del Mestre (30-10-2026, prompt 2208, T2.2) · Dins de l'app
+ * nativa, cap que en nomene una altra (regla 2.3.10; la d'Android no es
+ * pinta); fora, totes. La lectura (normalitzaEmpaquetats) no canvia.
+ */
+export function plataformesPerPintar({ nativa = esAppNativa() } = {}) {
+  return nativa ? PLATAFORMES.filter((p) => !nomenaPlataformaAliena(p.nom)) : PLATAFORMES;
+}
 
 /** El semàfor d'una plataforma, amb el vocabulari d'Insignia. */
 export const SEMAFOR = Object.freeze({
@@ -163,15 +186,20 @@ export function normalitzaEmpaquetats(brut) {
 
 /** Una lectura de /__iaia/empaquetats.json; null si no hi és (producció, o cap middleware). */
 export async function carregaEmpaquetats(signal) {
-  /* Higiene d'amfitrió (ordre del Mestre, 261004) · El middleware és només de
-     DEV (apply: 'serve'): fora de DEV és absència, sense cap petició a /__iaia/*. */
-  if (import.meta.env.DEV !== true) return null;
-  const r = await fetch(FONT_EMPAQUETATS, { signal, cache: 'no-store' });
+  /* Higiene d'amfitrió (ordre del Mestre, 261004) · Sense font en este paquet
+     (WordPress, natiu), absència i cap petició a /__iaia/*.
+     Decisió del Mestre (31-10-2026) · En viu a DEV i, al build web, la
+     instantània sanejada (fontsConsola.js). */
+  if (!fontsLlegibles()) return null;
+  const r = await fetch(FONT_EMPAQUETATS, opcionsDeLectura(signal));
   if (r.status === 404) return null;
   if (!r.ok) throw new Error(`Empaquetats ${r.status} ${r.statusText}`);
   // Sense middleware, el servidor pot tornar l'HTML de l'aplicació (200): és absència, no un error.
   if (!(r.headers?.get?.('content-type') || '').includes('application/json')) return null;
-  return normalitzaEmpaquetats(await r.json());
+  const cos = await r.json();
+  const fallada = errorDeLaInstantania(cos);
+  if (fallada) throw fallada;
+  return normalitzaEmpaquetats(cos);
 }
 
 /**
@@ -246,27 +274,36 @@ function semaforDe(plataforma, { versions, builds, estable }, canonica) {
  * és l'artefacte més recent amb versió al nom de la carpeta de builds;
  * `alDia`, si és el de la versió (i el build) que es declara. `fitxer`, el
  * que puja l'ordre, que no és cap d'eixos. Sense valor, cap plataforma.
+ * Dins de l'app nativa (`nativa`, per defecte esAppNativa), només les de
+ * plataformesPerPintar, i cap camp que en nomene una altra: el motiu i la
+ * nota perden la frase (textPerAppNativa); la font, l'ordre, el fitxer i
+ * els artefactes que en porten el nom, fora.
  */
-export function plataformesEmpaquetades(valor, canonica = VERSIO_SISTEMA) {
+export function plataformesEmpaquetades(valor, canonica = VERSIO_SISTEMA, { nativa = esAppNativa() } = {}) {
   if (!valor) return [];
-  return PLATAFORMES.map((p) => {
+  const fora = (v) => (nativa && typeof v === 'string' && nomenaPlataformaAliena(v) ? null : v);
+  const text = (v) => (nativa ? textPerAppNativa(v) : v);
+  return plataformesPerPintar({ nativa }).map((p) => {
     const dades = valor.plataformes[p.id];
     const versio = dades.versions.length === 1 ? dades.versions[0] : null;
     const build = dades.builds.length === 1 ? dades.builds[0] : null;
-    const ultim = dades.artefactes.find((a) => a.versio) ?? null;
+    const artefactes = nativa ? dades.artefactes.filter((a) => !nomenaPlataformaAliena(a.nom)) : dades.artefactes;
+    const ultim = artefactes.find((a) => a.versio) ?? null;
     const alDia = Boolean(ultim && versio && ultim.versio === versio && (!build || !ultim.build || ultim.build === build));
+    const semafor = semaforDe(p, dades, canonica);
     return {
       ...p,
       versio,
       build,
-      font: dades.font,
-      ...semaforDe(p, dades, canonica),
-      artefactes: dades.artefactes,
+      font: fora(dades.font),
+      ...semafor,
+      motiu: text(semafor.motiu),
+      artefactes,
       ultim,
       alDia,
-      ordre: ordrePublicacio(p.id, { versio, build }),
-      fitxer: fitxerDeLOrdre(p.id, { versio, build }),
-      nota: NOTA_ORDRE[p.id]
+      ordre: fora(ordrePublicacio(p.id, { versio, build })),
+      fitxer: fora(fitxerDeLOrdre(p.id, { versio, build })),
+      nota: text(NOTA_ORDRE[p.id])
     };
   });
 }

@@ -174,6 +174,18 @@ test('cap ombra animada: el canvi d’ombra és instantani', () => {
    resplendor d'ambient de la IAIA. Cap és una interacció. */
 const ANIMACIONS_EXEMPTES = new Set(['spin', 'sdp-xat-ressalt', 'sdp-iaia-resplendor']);
 
+/* tractor-vocabulari (ordre del Mestre, 261030) · Deute heretat amb el bloc
+   AdjuntXat, que fins ara era un full de secció fora de l'abast d'esta prova:
+   les dues transicions del reproductor de veu, de 150ms ease-out. Cap token no
+   val això (--sdp-durada-rapida fa 180ms i les corbes són cubic-bezier):
+   passar-les a token canviaria l'estil computat, i la migració no pot canviar
+   cap píxel. Queden nomenades i són les úniques: una de nova fa caure la prova,
+   i quan es tokenitzen s'han de llevar d'ací. */
+const TEMPS_LITERALS_HERETATS = [
+  '.sdp-xat-veu__boto { transition: background-color 150ms ease-out }',
+  '.sdp-xat-veu__velocitat { transition: background-color 150ms ease-out }'
+];
+
 test('cap temps literal a transicions ni animacions d’interacció: durada i corba de token', () => {
   const dolentes = [];
   for (const d of DECLS.filter((x) => /^(transition|animation)(-duration|-delay)?$/.test(x.propietat))) {
@@ -183,7 +195,7 @@ test('cap temps literal a transicions ni animacions d’interacció: durada i co
       if (parts.some((p) => TEMPS.test(p))) dolentes.push(on(d));
     }
   }
-  expect(dolentes).toEqual([]);
+  expect(dolentes).toEqual(TEMPS_LITERALS_HERETATS);
 });
 
 test('fora els @keyframes morts: sdp-reveal, sdp-parallax, sosp-spin i sosp-pulse', () => {
@@ -275,7 +287,7 @@ test('contracte de moviment reduït: escala i desplaçament d’aparició neutre
 
 /* ═══ Fase E · AAA, sòl de lletra, sòl tàctil i Bancal ═══ */
 
-test('AAA · la píndola premuda pinta blanc sobre --sdp-accio-control: ≥ 7:1 en clar i en fosc', () => {
+test('AAA · la píndola premuda pinta blanc sobre --sdp-accio-control, a 7:1 o més en clar i en fosc', () => {
   const PREMUDA = '.sdp-pindola__opcio[aria-pressed="true"], .sdp-pindola__opcio[aria-current="page"]';
   expect(valorDe(PREMUDA, 'background')).toBe('var(--sdp-accio-control)');
   expect(valorDe(PREMUDA, 'color')).toBe('var(--sdp-sobre-accio)');

@@ -58,11 +58,18 @@ function ambAmplada(amplada) {
   Object.defineProperty(HTMLElement.prototype, 'clientWidth', { configurable: true, get: () => amplada });
   globalThis.requestAnimationFrame = (cb) => { cua.push(cb); return cua.length; };
   globalThis.ResizeObserver = class { observe() {} unobserve() {} disconnect() {} };
+  /* Ordre del Mestre (30-10-2026) · La finestra fa el mateix que la closca,
+     com al navegador: de 721 a 1023 l'UniversalWorkspace arrenca amb
+     CARPETES plegada en rail (navegacioPlegadaEnArrencar). */
+  const finestra = Object.getOwnPropertyDescriptor(window, 'innerWidth');
+  Object.defineProperty(window, 'innerWidth', { configurable: true, get: () => amplada });
   restaura = () => {
     if (descriptor) Object.defineProperty(HTMLElement.prototype, 'clientWidth', descriptor);
     else delete HTMLElement.prototype.clientWidth;
     globalThis.requestAnimationFrame = rafAbans;
     globalThis.ResizeObserver = observadorAbans;
+    if (finestra) Object.defineProperty(window, 'innerWidth', finestra);
+    else delete window.innerWidth;
   };
   return () => act(() => { while (cua.length) cua.shift()(0); });
 }
@@ -83,10 +90,14 @@ const closca = (c) => c.querySelector('.app-grid-shell');
 const files = (c) => [...c.querySelectorAll('#app-grid-list aside.sdp-workspace-column > .app-grid-col-header')];
 const carpetaDeNotes = (c) => files(c)[0]?.querySelector('[aria-controls="app-grid-sidebar"]') ?? null;
 
-test('§6 · a 820 («mitja»): NOTES sense carpeta a l’esquerra, les dues files alineades a l’esquerra (NOTES, després la lupa), l’ordre de les peces i els glifs de 24px', () => {
+/* Columnes fixes (ordre del Mestre, 30-10-2026) · A 820 el Bloc ja no és
+   «mitja»: és «ample», amb CARPETES plegada en el seu rail de la graella
+   (la franja de 721 a 1023 de l'UniversalWorkspace; el Bloc ja no força
+   cap plegat), i el rail porta la carpeta, no la [|<]. */
+test('§6 · a 820 (columnes fixes): NOTES sense carpeta a l’esquerra, les dues files alineades a l’esquerra (NOTES, després la lupa), l’ordre de les peces i els glifs de 24px', () => {
   ambAmplada(820);
   const { container } = munta('/notes?carpeta=f-mur&nota=a1');
-  expect(closca(container).dataset.layout).toBe('mitja');
+  expect(closca(container).dataset.layout).toBe('ample');
   const [fila1, fila2] = files(container);
   expect(carpetaDeNotes(container)).toBeNull();
   expect(within(fila1).queryByRole('button', { name: 'CARPETES' })).toBeNull();
@@ -99,8 +110,10 @@ test('§6 · a 820 («mitja»): NOTES sense carpeta a l’esquerra, les dues fil
   // El buit de 12px (AppGridShell.css) el porta el Crear, el germà que seguix l'Ordenar.
   expect(ordenar.nextElementSibling.classList.contains('app-grid-col-header__accio')).toBe(true);
   expect(new Set([...fila1.querySelectorAll('svg'), ...fila2.querySelectorAll('svg')].map((svg) => svg.getAttribute('width')))).toEqual(new Set(['24']));
-  // CARPETES continua al rail fix de l'esquerra.
-  expect(within(container.querySelector('#app-grid-sidebar')).getByRole('navigation', { name: 'CARPETES' })).toBeTruthy();
+  // CARPETES continua al seu rail de l'esquerra, a la graella, amb la carpeta dalt.
+  const navegacio = container.querySelector('#app-grid-sidebar');
+  expect(within(navegacio).getByRole('navigation', { name: 'CARPETES' })).toBeTruthy();
+  expect(navegacio.querySelector('.app-grid-col-header__rail-top svg').classList.contains('lucide-folder')).toBe(true);
 });
 
 test('§6 · a 375 («estret»): la llista oberta tapa el rail; la carpeta de NOTES es queda i torna a CARPETES d’un toc', () => {

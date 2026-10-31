@@ -33,13 +33,18 @@ export default function PoblacioSection() {
       showLogos={true}
     >
       <div >
-        <div className="sdp-taula">
+        {/* Gauntlet 261029 (cicle 1, a11y; IDEA-57 L3, P1-16) · La caixa
+            desplaça la taula en horitzontal (.sdp-taula, overflow-x: auto): una
+            regió amb nom que rep el focus, perquè el teclat la puga desplaçar
+            (WCAG 2.1.1). Les dues classes es conserven: la doble vora és un
+            píxel i no es toca. Les capçaleres, traduïdes i amb scope. */}
+        <div className="sdp-taula" role="region" aria-label={t('section.poblacio.taula', 'Pobles per habitants')} tabIndex={0}>
           <table className="sdp-taula">
             <thead>
               <tr>
-                <th>Poble</th>
-                <th>Comarca</th>
-                <th className="sdp-num">Habitants</th>
+                <th scope="col">{t('section.poblacio.col.poble', 'Poble')}</th>
+                <th scope="col">{t('section.poblacio.col.comarca', 'Comarca')}</th>
+                <th scope="col" className="sdp-num">{t('section.poblacio.col.habitants', 'Habitants')}</th>
               </tr>
             </thead>
             <tbody>

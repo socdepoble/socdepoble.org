@@ -88,3 +88,16 @@ test('tractor ENTRADES equal the Vite entries plus the Consola, and every entry 
     'ENTRADES: les dels builds i la Consola, sense cap de més');
   for (const entrada of entrades) assert.ok(fs.existsSync(path.join(ROOT, entrada)), `${entrada}: entrada morta`);
 });
+
+/* Pedra Seca, part C (proposta 261031) · Les arrels de build de la LLEI 8 són
+   tots els configs de Vite de l'arrel, ni més ni menys (vitest.*.config.js
+   no: és de les proves). Un config nou que importe src/ sense entrar ací faria
+   orfe codi de build; un de més, que ja no existix, amagaria orfes de veres. */
+test('tractor ENTRADES_DE_BUILD equal the Vite configs at the root, and every one exists', () => {
+  const llig = (rel) => fs.readFileSync(path.join(ROOT, rel), 'utf8');
+  const literal = /const ENTRADES_DE_BUILD = \[([^\]]*)\];/.exec(llig('tooling/brain/tractor-pedra-seca.mjs'))?.[1];
+  assert.ok(literal, 'el literal de ENTRADES_DE_BUILD');
+  const deBuild = [...literal.matchAll(/'([^']+)'/g)].map((m) => m[1]);
+  const configs = fs.readdirSync(ROOT).filter((nom) => /^vite(?:\.[\w-]+)?\.config\.js$/.test(nom));
+  assert.deepEqual([...deBuild].sort(), configs.sort());
+});

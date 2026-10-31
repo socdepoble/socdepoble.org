@@ -63,9 +63,11 @@ export function creaAvisosNatius({ plataforma, canal = {}, carregaConnector = ca
     async avisa({ id, titol, cos, filId, vigent = null }) {
       await asseguraCanal();
       /* El canal pot tardar: si mentrestant la persona ha tornat a l'App (i la
-         barra s'ha netejat), este avís ja no ha d'eixir (Codex C1615-09). */
-      if (vigent && !vigent()) return;
-      await amb((ln) => ln.schedule({
+         barra s'ha netejat), este avís ja no ha d'eixir (Codex C1615-09).
+         Gauntlet 261030 (cicle 2, Codex C3) · Es mira dins d'amb, en el mateix
+         tic que el schedule: després de l'última espera (la del mòdul), on
+         encara podia eixir la persona o entrar-ne una altra. */
+      await amb((ln) => ((vigent && !vigent()) ? undefined : ln.schedule({
         notifications: [{
           id,
           title: titol,
@@ -80,7 +82,7 @@ export function creaAvisosNatius({ plataforma, canal = {}, carregaConnector = ca
           autoCancel: true,
           extra: { filId }
         }]
-      }));
+      })));
     },
     /* En tornar a l'App, els avisos ja vistos fora sobren a la barra. */
     netejaAvisos: () => amb((ln) => ln.removeAllDeliveredNotifications()),

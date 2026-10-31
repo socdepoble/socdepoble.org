@@ -11,7 +11,7 @@ import { wikiManifest } from '../../data/wikiManifest.js';
 import { GLIF_CARPETA } from '../../components/universal/workspace/NavGlyph.jsx';
 /* Revisió del 261007 (M2-14) · La guarda és una sola, compartida amb
    manifest.icones.test.js (abans, una còpia de la taula ací). */
-import { defecteSafari16 } from '../disseny/cataleg/guardaEmojisSafari16.js';
+import { defecteSafari16 } from '../../../tests/helpers/guardaEmojisSafari16.js';
 import {
   ICONA_ACTA, ICONA_ADR, ICONA_DOCUMENT, ICONA_INDEX, ICONA_PORTADA, ICONES_CARPETES_WIKI, ICONES_ITEMS_WIKI, ICONES_PER_ID,
   ICONES_PER_TIPUS, glifDeCarpetaWiki, iconaDeDocument

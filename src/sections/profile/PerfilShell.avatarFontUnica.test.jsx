@@ -179,7 +179,7 @@ function imatges(container) {
     barra: srcDe(barra?.querySelector('img.sp-card-avatar')),
     ...(avancada ? {
       editor: srcDe(avancada.querySelector(
-        '.sdp-edicio-avancada__identitat button.page-title-avatar--canvia img, .sdp-edicio-avancada__logotip img[role="button"]',
+        '.sdp-edicio-avancada__identitat button.page-title-avatar--canvia img, [data-sdp-ranura="logotip"] img[role="button"]',
       )),
     } : null),
     ...(titol ? { titol: srcDe(titol) } : null),
@@ -290,7 +290,7 @@ describe('Gauntlet 261016 (encàrrec D) · després d’un 403 al desat de la im
     expect(capcalera.querySelector('.page-title-logo-personalitzat, .page-title-avatar, img')).toBeNull();
     expect(capcalera.firstElementChild.tagName).toBe('H1');
     const avancada = obriEdicioAvancada(container);
-    expect(avancada.querySelector('.page-title-logo-personalitzat, .sdp-edicio-avancada__logotip')).toBeNull();
+    expect(avancada.querySelector('.page-title-logo-personalitzat, [data-sdp-ranura="logotip"]')).toBeNull();
     const identitat = avancada.querySelector('.sdp-edicio-avancada__identitat');
     /* Ordre del Mestre (18-10-2026, relleu del Pla 2000, punt 2) · Expectativa
        actualitzada a propòsit: sota el cercle no queda cap píndola; el cercle
@@ -311,7 +311,7 @@ describe('Gauntlet 261016 (encàrrec D) · després d’un 403 al desat de la im
        dins d'«Edició avançada», i el logotip desat es veu al seu lloc real,
        damunt de l'H1 (logoAlTitol): totes dues, la mateixa imatge. */
     expect(imatges(container)).toEqual({ llista: LOGO_VELL, barra: LOGO_VELL, editor: LOGO_VELL, titol: LOGO_VELL });
-    const ranura = obriEdicioAvancada(container).querySelector('.sdp-edicio-avancada__logotip');
+    const ranura = obriEdicioAvancada(container).querySelector('[data-sdp-ranura="logotip"]');
     await pujaIRebutja(container, within(ranura).getByRole('button', { name: 'Logotip' }), 'Retalla el logotip');
     expect(m.updateOrganization.mock.calls).toEqual([['R', { logo_url: NOVA }, CONFIG]]);
     expect(cuaDesament.llig({ ambit: AMBIT, entitat: 'organitzacio', id: 'R' }).errors.logoImage.tipus).toBe('servidor');

@@ -4,14 +4,20 @@
 
 import { GoogleGenAI, Type } from '@google/genai';
 import fs from 'node:fs/promises';
-import { join } from 'node:path';
+import { resolve } from 'node:path';
 import { search } from '../tooling/wiki/core/edge_rag.mjs';
+import { hydrateRagIndex } from '../tooling/wiki/core/rag-index-wire.mjs';
+import { parseFrontmatter } from '../tooling/wiki/lib/frontmatter.mjs';
+import { publicMetadata, readPublicWikiFile } from '../tooling/wiki/lib/publication-policy.mjs';
 import { getMemory, formatMemoryForPrompt, updateMemory, purgeExpired } from './memoria/episodica.mjs';
 import { RUTES } from './arrels.mjs'; // [FIX-1] rutes úniques i deterministes
 
 const TOP_K = 3;
 const MAX_CHARS_PER_DOC = 12000;
 const GEMINI_TIMEOUT_MS = 55_000;
+// P1-24 (C1645-04) · El prompt només porta els 8 darrers apunts del fil: la
+// sessió no en guarda cap més (abans l'historial creixia sense fi).
+const MAX_HISTORIAL = 8;
 
 // [FIX-5] Models en UN lloc, configurables per entorn. Adéu al drift 2.5/3.5
 // escampat per fitxers i actes.
@@ -25,7 +31,8 @@ const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 let ragIndex = null;
 let identitatText = null; // [FIX-2] una sola font d'identitat, resolta a l'arrancada
 
-const sessions = new Map();
+// P1-24 · Exportada: immunite.mjs la importa (sense l'export, el mòdul no linkava).
+export const sessions = new Map();
 
 function withTimeout(promise, ms, label = 'operació') {
   let timer;
@@ -90,28 +97,50 @@ export async function iniciaCervell() {
   }
 
   try {
-    console.log('[CERVELL] Carregant índex RAG pre-calculat des del disc...');
+    console.log(`[CERVELL] Carregant l'índex RAG del productor: ${RUTES.indexRag}`);
     const indexData = await fs.readFile(RUTES.indexRag, 'utf8');
-    ragIndex = JSON.parse(indexData);
-    console.log(`[CERVELL] Índex preparat: ${ragIndex.docCount || 0} fitxers processats.`);
+    // P1-24 (C1645-03) · El JSON porta llistes i objectes; search vol Set i Map.
+    // hydrateRagIndex els restaura i valida: un índex invàlid peta ací, no en cada missatge.
+    ragIndex = hydrateRagIndex(JSON.parse(indexData));
+    console.log(`[CERVELL] Índex preparat: ${ragIndex.docCount} fitxers processats.`);
   } catch (error) {
-    console.error('[CERVELL] rag_index.json no trobat o il·legible. Has d\'executar pre-build abans.', error.message);
-    throw new Error('RAG index no trobat. (Run pre-build)');
+    console.error(`[CERVELL] Índex RAG absent o invàlid a ${RUTES.indexRag}. Executa npm run rag:build.`, error.message);
+    throw new Error('RAG index absent o invàlid. (npm run rag:build)');
   }
 
   void purgeExpired();
+}
+
+/* P1-24 (C1645-03) · Els camins de l'índex són relatius a l'arrel del projecte
+   («_wiki_de_poble/02_saber/…»). Penjats de RUTES.wiki eixia
+   «_wiki_de_poble/_wiki_de_poble/…», que no existix: context sempre buit.
+   Frontera: la mateixa del productor (publication-policy) en el moment de llegir.
+   Una entrada que isca de la Wiki pública (.env, ../, camí absolut, symlink,
+   carpeta privada o visibility no pública) no es llig mai: un índex manipulat
+   no pot portar secrets ni textos interns al prompt. */
+function llegixDocumentPublic(cami) {
+  const text = readPublicWikiFile(RUTES.projecte, resolve(RUTES.projecte, cami));
+  if (text === null) return null;
+  const { data, malformed, errors } = parseFrontmatter(text);
+  return !malformed && !errors.length && publicMetadata(data) ? text : null;
+}
+
+function apunta(session, linia) {
+  session.history.push(linia);
+  if (session.history.length > MAX_HISTORIAL) session.history.splice(0, session.history.length - MAX_HISTORIAL);
 }
 
 async function construixContext(docs) {
   if (!docs?.length) return '';
   const parts = await Promise.all(
     docs.map(async (d) => {
-      try {
-        const text = await fs.readFile(join(RUTES.wiki, d.path), 'utf8');
-        return `--- Document: ${d.path} ---\n${text.slice(0, MAX_CHARS_PER_DOC)}`;
-      } catch {
+      let text = null;
+      try { text = llegixDocumentPublic(d.path); } catch { /* lectura fallida: com si no hi fora */ }
+      if (text === null) {
+        console.warn(`[CERVELL] Entrada de l'índex absent o fora de la Wiki pública; no es llig: ${JSON.stringify(d.path)}`);
         return '';
       }
+      return `--- Document: ${d.path} ---\n${text.slice(0, MAX_CHARS_PER_DOC)}`;
     }),
   );
   return parts.filter(Boolean).join('\n\n');
@@ -163,8 +192,8 @@ export async function pensa(pregunta, opts = {}) {
   const contextStr = await construixContext(docs);
   const memoryBlock = formatMemoryForPrompt(memory);
 
-  session.history.push(`Veí: ${pregunta}`);
-  const historialCurt = session.history.slice(-8).join('\n');
+  apunta(session, `Veí: ${pregunta}`);
+  const historialCurt = session.history.slice(-MAX_HISTORIAL).join('\n');
 
   const systemInstruction = `
 ETS AQUESTA IDENTITAT (LLEGEIX ATENTAMENT):
@@ -248,7 +277,7 @@ INSTRUCCIONS DE RESPOSTA I PATRIMONI ORAL:
       }
     }
 
-    session.history.push(`IAIA: ${textRespuesta}`);
+    apunta(session, `IAIA: ${textRespuesta}`);
     session.count++;
 
     if (sender && textRespuesta) {

@@ -8,7 +8,7 @@ import { geolocalitzacio } from './geolocalitzacio.js';
 import { llegixExif, teExif } from './exif.js';
 import {
   APP0_JFIF, IMATGE, SOI, TIPUS, app1Exif, concatena, dataOriginal, gpsTorre, orientacio, segment, tiff,
-} from './jpegProva.js';
+} from '../../../../tests/helpers/jpegProva.js';
 import { FORMAT_JPEG, FORMAT_PNG, FORMAT_WEBP } from './netejaMetadades.js';
 
 /* Gauntlet 261016 (Bloc 1.2, mandat del Mestre, pla §0.1.3) · Bytes sintètics:

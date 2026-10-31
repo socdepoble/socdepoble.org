@@ -33,7 +33,7 @@ vi.mock('./GlobalSaveManager.js', async importOriginal => {
 });
 import { NotesProvider, useNotes } from './NotesContext';
 import { ajustaPrecisioGps } from '../../components/universal/enquadrament/exifIncrustat.js';
-import { APP0_JFIF, IMATGE, SOI, app1Exif, concatena, dataOriginal, gpsTorre, tiff } from '../../components/universal/enquadrament/jpegProva.js';
+import { APP0_JFIF, IMATGE, SOI, app1Exif, concatena, dataOriginal, gpsTorre, tiff } from '../../../tests/helpers/jpegProva.js';
 
 const aBase64 = (bytes) => btoa(String.fromCharCode(...bytes));
 const heroAmbGps = (precisio) => `data:image/jpeg;base64,${aBase64(concatena(SOI, APP0_JFIF,

@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, expect, test, vi } from 'vitest';
 import {
-  CLAU_APAGADA, ESDEVENIMENT_DOM, configTelemetria, darrersEnviaments, declaraEncastada, estableixTelemetriaApagada,
-  registraEsdeveniment, registraVisita, seccioActual, telemetriaApagada, _reiniciaTelemetria
+  CLAU_APAGADA, ESDEVENIMENT_DOM, configTelemetria, darrersEnviaments, declaraEncastada, esServidorLocal,
+  estableixTelemetriaApagada, registraEsdeveniment, registraVisita, seccioActual, telemetriaApagada, _reiniciaTelemetria
 } from './telemetria.js';
 
 const ID = '0f8d6c1e-7a2b-4c3d-9e8f-1a2b3c4d5e6f';
@@ -146,4 +146,65 @@ test('les fitxes canòniques de primer nivell es tapen com qualsevol fitxa', () 
   }
   // Una secció que només comença igual no és cap fitxa.
   expect(seccioActual('/socdepoble-noticies')).toBe('socdepoble-noticies');
+});
+
+/* Ordre del Mestre (30-10-2026, prompt 2208, T3.3) · Des d'un servidor local,
+   la configuració de compilació (.env.local) no suma res al comptador públic.
+   jsdom servix des de http://localhost:3000; per a les altres adreces es
+   canvia la URL del document (jsdom.reconfigure) i es torna on era. */
+function ambComptadorDeCompilacio(url, prova) {
+  const original = window.location.href;
+  vi.stubEnv('VITE_UMAMI_WEBSITE_ID', ID);
+  vi.stubEnv('VITE_UMAMI_HOST', 'https://compta.socdepoble.org');
+  globalThis.jsdom.reconfigure({ url });
+  try {
+    prova();
+  } finally {
+    globalThis.jsdom.reconfigure({ url: original });
+    vi.unstubAllEnvs();
+  }
+}
+
+test.each([
+  'http://localhost:3340/mur',
+  'http://127.0.0.1:3340/mur',
+  'http://[::1]:3340/mur'
+])('T3.3: des de %s, sense cfg explícit, no envia res i el registre diu per què', (url) => {
+  ambComptadorDeCompilacio(url, () => {
+    expect(esServidorLocal()).toBe(true);
+    expect(configTelemetria().actiu).toBe(true);
+    expect(registraVisita('/mur')).toMatchObject({ enviat: false, motiu: 'servidor-local', url: '/mur' });
+    expect(registraEsdeveniment('connectar', { seccio: 'mur' })).toMatchObject({ enviat: false, motiu: 'servidor-local' });
+    expect(window.fetch).not.toHaveBeenCalled();
+    expect(darrersEnviaments().map((intent) => intent.motiu)).toEqual(['servidor-local', 'servidor-local']);
+  });
+});
+
+test('T3.3: des de la web pública, la mateixa configuració sí que envia', () => {
+  ambComptadorDeCompilacio('https://socdepoble.org/mur', () => {
+    expect(esServidorLocal()).toBe(false);
+    expect(registraVisita('/mur')).toMatchObject({ enviat: true, motiu: 'umami' });
+    expect(window.fetch).toHaveBeenCalledTimes(1);
+    expect(window.fetch.mock.calls[0][0]).toBe('https://compta.socdepoble.org/api/send');
+    expect(cos(window.fetch.mock.calls[0]).payload.hostname).toBe('socdepoble.org');
+  });
+});
+
+test('T3.3: les proves que passen cfg explícit hi envien també des de localhost', () => {
+  expect(esServidorLocal()).toBe(true);
+  expect(registraVisita('/mur', { cfg })).toMatchObject({ enviat: true, motiu: 'umami' });
+  expect(window.fetch).toHaveBeenCalledTimes(1);
+});
+
+/* L'app nativa també es diu localhost (https://localhost, capacitor://localhost),
+   però es compila sense comptador: ha de continuar dient «sense-configurar». */
+test('T3.3: un servidor local sense comptador configurat diu «sense-configurar», com l’app nativa', () => {
+  vi.stubEnv('VITE_UMAMI_WEBSITE_ID', '');
+  vi.stubEnv('VITE_UMAMI_HOST', '');
+  try {
+    expect(registraVisita('/mur')).toMatchObject({ enviat: false, motiu: 'sense-configurar' });
+    expect(window.fetch).not.toHaveBeenCalled();
+  } finally {
+    vi.unstubAllEnvs();
+  }
 });

@@ -121,7 +121,7 @@ const obriEdicioAvancada = () => {
 /* L'avatar redó de la persona o l'agent (identitatEdicioAvancada) i la ranura
    del logotip o de l'avatar buit (logoComponent), dins del desplegable. */
 const identitatAvancada = () => desplegable()?.querySelector('.sdp-edicio-avancada__identitat') ?? null;
-const ranuraAvancada = () => desplegable()?.querySelector('.sdp-edicio-avancada__logotip') ?? null;
+const ranuraAvancada = () => desplegable()?.querySelector('[data-sdp-ranura="logotip"]') ?? null;
 /* Damunt de l'H1 de la persona ja no hi ha res d'imatge: ni l'avatar redó, ni
    les seues píndoles, ni la ranura. */
 const capcaleraNeta = () => {
@@ -854,7 +854,7 @@ describe('Bloc 3.5.4 · un 403 al desat d’una imatge (P2 de Codex)', () => {
      Encàrrec d'harmonització (261018) · L'avatar redó i la ranura ja no són
      damunt de l'H1: el control de l'editor viu dins d'«Edició avançada». */
   const imatgesPropies = () => ({
-    editor: srcDe(desplegable()?.querySelector('.sdp-edicio-avancada__identitat button.page-title-avatar--canvia img, .sdp-edicio-avancada__logotip img[role="button"]')),
+    editor: srcDe(desplegable()?.querySelector('.sdp-edicio-avancada__identitat button.page-title-avatar--canvia img, [data-sdp-ranura="logotip"] img[role="button"]')),
     barra: srcDe(barraDeLEditor()?.querySelector('img.sp-card-avatar')),
     targeta: srcDe(targeta()?.querySelector('img.sp-card-avatar')),
   });
@@ -866,7 +866,7 @@ describe('Bloc 3.5.4 · un 403 al desat d’una imatge (P2 de Codex)', () => {
      viu dins d'«Edició avançada»; la capçalera desada es pinta, a més, dalt de
      la pàgina (.hero-image). Les tres, la mateixa imatge. */
   const capcaleres = () => ({
-    editor: srcDe(desplegable()?.querySelector('.sdp-edicio-avancada__capcalera img.sdp-hero__imatge')),
+    editor: srcDe(desplegable()?.querySelector('[data-sdp-ranura="capcalera"] img.sdp-hero__imatge')),
     pagina: srcDe(document.querySelector('.sdp-editor-document .hero-image img')),
     targeta: srcDe(targeta()?.querySelector('img.sp-card-media')),
   });
@@ -949,7 +949,7 @@ describe('Bloc 3.5.4 · un 403 al desat d’una imatge (P2 de Codex)', () => {
     expect(imatgesPropies()).toEqual(totes('/assets/rentonar.webp'));
     // Encàrrec d'harmonització (261018) · La ranura, dins d'«Edició avançada»; el logotip desat, també damunt de l'H1.
     expect(logoDelTitol()).toBe('/assets/rentonar.webp');
-    fireEvent.click(within(obriEdicioAvancada().querySelector('.sdp-edicio-avancada__logotip')).getByRole('button', { name: 'Logotip' }));
+    fireEvent.click(within(obriEdicioAvancada().querySelector('[data-sdp-ranura="logotip"]')).getByRole('button', { name: 'Logotip' }));
     await triaIGuardaSenseTancar('logoImage', 'Retalla el logotip');
     await waitFor(() => expect(avisDeLaFinestra('Retalla el logotip')).toBe(AVIS_403));
     expect(m.updateOrganization.mock.calls).toEqual([['R', { logo_url: NOVA }, CONFIG]]);

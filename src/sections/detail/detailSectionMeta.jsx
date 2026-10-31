@@ -33,6 +33,9 @@ import { Pestanyes } from '../../components/PedraSeca/organismes/Pestanyes.jsx';
 import { esErrorLazy, lazyRoute } from '../../apps/plataforma/lazyRoute.js';
 import { poblesAmbNaixement } from '../pobles/clauDelPoble.js';
 import { objecteDelPobleXat } from '../pobles/xatDelPoble.js';
+/* VQ · Fase 3a de l'eina de pobles nous (261030): la regla pura de si la
+   pàgina d'un poble porta el panell de la Viquipèdia (cap import del client). */
+import { pobleHidratable } from '../pobles/fitxaDelPoble.js';
 /* Ordre del Mestre (18-10-2026, relleu del Pla 2000, punt 1) · El producte
    del Mercat en un sol node: el selector de variants (píndoles amb
    role="radiogroup"), la fitxa de la variant triada i un sol botó del cabàs
@@ -48,6 +51,9 @@ const PublicacionsDelPoble = lazyRoute(() => import('../pobles/PublicacionsDelPo
 /* P1-11 (pla 261024_2230, T5B-01) · El panell «Empreses i entitats», també en
    diferit: la targeta del directori arrossega UniversalCard. */
 const EntitatsDelPoble = lazyRoute(() => import('../pobles/EntitatsDelPoble.jsx'));
+/* VQ · Fase 3a (261030) · «Porta-ho de la Viquipèdia», en diferit: el
+   client de Wikimedia i l'algoritme només baixen per a una fitxa incompleta. */
+const PanellDeViquipedia = lazyRoute(() => import('../pobles/PanellDeViquipedia.jsx'));
 
 /* T5 · Les imatges del cos (variacions del Mercat, Multimèdia) es resolen en
    pintar-les: incrustat, un '/assets/…' penja del paquet. Sense base, el de
@@ -631,6 +637,13 @@ export function buildPoblesDetailSectionMeta({ towns = [], t, publicacions = nul
     /* Onada 6 (pla 261009_0245, ítem 4) · El xat que obri «Comentar» a la
        pàgina del poble (ItemDetailSection · objecteXat): el de la gent. */
     getObjecteXat: objecteDelPobleXat,
+    /* Gauntlet 261030 (cicle 4, lang-ca-nomes-a-textsection) · Decisió del
+       Mestre (261030): «lang="ca" al contingut original en valencià». L'H1
+       («Gent de …»), el nom del poble i l'entradilla (el text de la llavor o
+       de la Viquipèdia en català) són en valencià: amb la interfície en una
+       altra llengua en porten el lang (ItemDetailSection el passa a
+       PageFrame). Les pestanyes i les publicacions de la gent, no. */
+    llenguaDelContingut: 'ca',
     /* Onada 6 (requisit 15 de l'Onada 5) · Amb les publicacions del Mur, cada
        fitxa porta el seu naixement a created_at (clauDelPoble.js ·
        poblesAmbNaixement: només les publicacions que declaren el poble amb
@@ -665,6 +678,25 @@ export function buildPoblesDetailSectionMeta({ towns = [], t, publicacions = nul
             <PortaDePagina porta={{ id: 'xat-del-poble', verb: verbDelXat(item), desti: rutaXatDelPoble(item), varietat: 'primari' }} />
           </div>
         )}
+        {/* VQ · Fase 3a (261030; disseny nit/viquipedia_disseny.md §4.3) ·
+            Només a la pàgina (detall) d'una fitxa incompleta, o ja completada
+            amb la Viquipèdia (els seus crèdits), i mai a l'app nativa
+            (pobleHidratable): una fitxa completa no hi pinta cap node. */}
+        {detall && pobleHidratable(item) ? (
+          <BarreraDelPanellDelPoble
+            key={`viquipedia-${String(item?.id ?? '')}`}
+            resetKey={String(item?.id ?? '')}
+            fallback={(
+              <Alerta to="error" titol={t('section.detail.pobles.viquipedia.error', 'No s’ha pogut carregar l’apartat de la Viquipèdia')}>
+                {t('section.notes.historic.fallada', 'La resta de la pàgina continua com sempre.')}
+              </Alerta>
+            )}
+          >
+            <React.Suspense fallback={null}>
+              <PanellDeViquipedia poble={item} t={t} />
+            </React.Suspense>
+          </BarreraDelPanellDelPoble>
+        ) : null}
         {detall ? <PestanyesDelPoble key={String(item?.id ?? '')} poble={item} gent={getTitle(item)} t={t} /> : null}
       </>
     )

@@ -8,7 +8,7 @@ import { act, cleanup, fireEvent, render, screen, waitFor, within } from '@testi
    veres i les targetes de veres: la secció del tauler (un H2 propi i quatre
    targetes damunt de les nou de la maquinària), les quatre pàgines
    /consola/govern/<id> (molla, contingut sense <pre> ni tipografia de
-   màquina, peu de dades), l'estat buit honest mentre govern.json no existix,
+   màquina, peu de dades), l'estat buit honest quan govern.json no arriba,
    el fitxer obert en este navegador, la caducitat que no pinta mai de verd, el
    balanç amb el trasllat, la certificació on només s'afig i els resums en
    paraules planes.
@@ -51,9 +51,13 @@ vi.mock('./govern/governContent.js', async (importOriginal) => ({
 import { RouterProvider, Route, Routes } from '../../app/contexts/RouterContext';
 import ConsolaSection, { ConsolaIncrustada } from './ConsolaSection.jsx';
 import { CLAU_PRIVACITAT } from './consolaPagines.js';
+import { IMATGES_CONSOLA } from './imatgesConsola.js';
+import { LIMIT_DESCRIPCIO, LIMIT_TITOL, textPla } from '../../config/metadadesSocials.js';
 import { normalitzaGovern } from './govern/governContent.js';
 import { ETIQUETA_NAV_GOVERN, TITOL_GOVERN, TITOL_SALA_MAQUINES, paginesGovern } from './govern/governConsola.js';
-import { TEXT_CERTIFICACIO_LOCAL, TEXT_SENSE_MATRIU } from './govern/GovernConsola.jsx';
+import {
+  TEXT_CERTIFICACIO_LOCAL, TEXT_CERTIFICACIO_PUBLICADA, TEXT_REGISTRE_PUBLICADA, TEXT_SENSE_MATRIU, TEXT_VERBS_PUBLICADA
+} from './govern/GovernConsola.jsx';
 import { TEXT_CERTIFICADA_SENSE_FET } from './govern/certificacions.js';
 
 // Les empremtes de les files es calculen amb WebCrypto, com al navegador (https o localhost).
@@ -144,15 +148,23 @@ describe('el tauler de /consola', () => {
     expect(Boolean(s.compareDocumentPosition(maquinaria) & Node.DOCUMENT_POSITION_FOLLOWING)).toBe(true);
     expect(s.contains(maquinaria)).toBe(false);
     expect([...s.querySelectorAll('h2')].map((h) => h.textContent)).toEqual([TITOL_GOVERN]);
-    // Quatre targetes de la Consola amb boina, sense imatge, que porten a la seua pàgina.
+    /* Ordre del Mestre del 30-10-2026 (B1) · Expectativa actualitzada a
+       propòsit: cada targeta del Govern porta la portada de la seua pàgina
+       (la miniatura .webp d'imatgesConsola.js) al mitjà, i ja no la icona a la
+       insígnia lateral. Abans: «sense imatge» (.sp-card-media-container nul). */
     const targetes = [...navGovern().querySelectorAll('article.sp-card')];
     expect(targetes).toHaveLength(4);
     expect(navGovern().className).toBe('sdp-card-grid sdp-consola__graella');
-    for (const t of targetes) {
+    for (const [i, t] of targetes.entries()) {
+      const id = paginesGovern()[i].id;
       expect(t.className).toBe('sp-card sdp-consola__targeta');
       expect(t.querySelector(':scope > .sp-card-header .sp-card-author-name').textContent).toBe('Sóc de Poble');
       expect(t.querySelector('h4.sp-card-subtitle').textContent).toMatch(/^Per a /);
-      expect(t.querySelector('.sp-card-media-container')).toBeNull();
+      const img = t.querySelector('.sp-card-media-container > img.sp-card-media');
+      expect([img?.getAttribute('src'), img?.getAttribute('alt')], id)
+        .toEqual([`/assets/nano_cards/govern_${id}_nano_card.webp`, IMATGES_CONSOLA[id].imatgeAlt]);
+      expect(img.getAttribute('loading'), id).toBe('lazy');
+      expect(t.querySelector('.sp-card-calendar-badge'), id).toBeNull();
       expect(t.querySelector('.sp-card-footer .sp-card-connect')).not.toBeNull();
     }
     expect([...navGovern().querySelectorAll('a.sp-card-link-overlay')].map((a) => a.getAttribute('href')))
@@ -192,6 +204,39 @@ describe('el tauler de /consola', () => {
     expect(metriques(t['Comunicació amb les IAs'])).toEqual(['2 P1 obertes', '3 responsables']);
     expect([...t['Comunicació amb les IAs'].querySelectorAll('.sp-card-label')].map((l) => l.textContent)).toEqual(['Hi ha P1 obertes']);
     expect(t['Estat dels requeriments'].querySelector('.sp-card-label')).toBeNull();
+    expect(errors).not.toHaveBeenCalled();
+  });
+
+  /* Ordre del Mestre, 30-10-2026 (/consola, punt 2.3: «Redacció DIDÀCTICA,
+     viva i ben lligada amb les dades reals de les targetes») · L'Índex de la
+     Consola calcula el govern amb les mateixes funcions pures que les
+     cobertes (recompteVist, balancDe, resumsExecutius i el registre de
+     decisions): cada mètrica de cada targeta del govern es llig, igual, en el
+     seu H4 de l'Índex. Si un dia una canvia i l'altra no, esta prova ho diu. */
+  test('l’Índex de la Consola diu del govern el mateix que les seues quatre targetes', async () => {
+    for (const govern of [null, delServidor()]) {
+      fonts.govern = govern;
+      await obri('/consola');
+      const index = screen.getByRole('region', { name: 'Índex de la Consola' });
+      for (const [titol, targeta] of Object.entries(perTitol(navGovern()))) {
+        const h4 = [...index.querySelectorAll('h4')].find((h) => h.textContent === titol);
+        expect(h4, titol).toBeTruthy();
+        const cos = [h4.nextElementSibling, h4.nextElementSibling.nextElementSibling, h4.nextElementSibling.nextElementSibling.nextElementSibling]
+          .map((p) => p.textContent).join(' ');
+        for (const m of metriques(targeta)) expect(cos, `${titol}: ${m}`).toContain(m);
+        /* Gauntlet 261030 (cicle 4, corrector de la Consola) · Expectativa
+           actualitzada a propòsit: sense matriu, l'H4 diu què hi dirà quan
+           arribe i porta l'etiqueta de la seua targeta («Sense font»). Abans:
+           «Sense matriu en este entorn» i «Sense semàfor». */
+        if (!metriques(targeta).length) {
+          expect(cos, titol).toMatch(/Sense matriu: quan arribe|Sense registre en este entorn/);
+          const etiquetes = [...targeta.querySelectorAll('.sp-card-labels .sp-card-label')].map((e) => e.textContent);
+          if (titol === 'Estat dels requeriments') expect(etiquetes).toEqual(['Sense font']);
+          for (const e of etiquetes) expect(cos, `${titol}: ${e}`).toContain(e);
+        }
+      }
+      cleanup();
+    }
     expect(errors).not.toHaveBeenCalled();
   });
 
@@ -261,15 +306,46 @@ describe('les quatre pàgines del govern', () => {
     expect(within(molla).getByRole('link', { name: 'Consola Termodinàmica' }).getAttribute('href')).toBe('/consola');
     // El text literal de l'encàrrec, i on es pot obrir el fitxer mentrestant.
     if (p.id !== 'certificacio') expect(screen.getByText(`${TEXT_SENSE_MATRIU}.`).className).toBe('sdp-buit__titol');
+    /* Gauntlet f4b (govern, «text-falta-un-pas-de-maria-ara-fals») · Des de B2 la ruta existix: l'estat
+       buit diu per què no arriba la matriu, i cap pas pendent de MarIA. */
+    expect(TEXT_SENSE_MATRIU).toMatch(/: la matriu viva només la servix el servidor de desenvolupament$/);
+    expect(main().textContent).not.toMatch(/falta un pas/);
     expect(peu().querySelector('[role="status"]').textContent).toBe('Encara no hi ha cap matriu connectada.');
     expect(within(peu()).getByRole('button', { name: 'La matriu de requeriments: Obri una matriu (mcr.json)' })).toBeTruthy();
     expect(within(peu()).getByRole('button', { name: /Refrescar/ })).toBeTruthy();
     expect(within(peu()).getByRole('switch')).toBeTruthy();
     expect([...main().children].filter((el) => el.tagName !== 'DIALOG').at(-1)).toBe(peu());
     senseTipografiaDeMaquina();
-    // El SEO de la pàgina és el seu.
-    expect(seo.crides.at(-1)).toEqual({ title: `${p.title} · Consola Termodinàmica`, description: p.lead });
+    /* El SEO de la pàgina és el seu. Ordre del Mestre del 30-10-2026 (B1) ·
+       Expectativa actualitzada a propòsit: amb la portada de la seua targeta
+       (el .jpg de la taula, no la miniatura), com les pàgines de la sala de
+       màquines. Abans: sense imatge. */
+    /* Ordre del Mestre (30-10-2026, prompt 2208, T2.1) · Expectativa actualitzada a
+       posta: el head és el que prerenderitza el build (seoConsola.js): la portada,
+       per la seua variant social de 1200x630 (≤300 KB) i amb el seu alt, i
+       l'entradeta en text pla, fitada a 300. Abans: el .jpg de 1024x1024 cru. */
+    expect(seo.crides.at(-1)).toEqual({
+      title: `${p.title} · Consola Termodinàmica`, description: textPla(p.lead, LIMIT_DESCRIPCIO), image: {
+        url: `https://socdepoble.org/assets/nano_cards/govern_${p.id}_nano_card-social-1200x630.jpg`,
+        alt: textPla(IMATGES_CONSOLA[p.id].imatgeAlt, LIMIT_TITOL)
+      }
+    });
     expect(errors).not.toHaveBeenCalled();
+  });
+
+  /* Gauntlet f4b (govern, «error-json-ignorat» i «text-falta-un-pas-de-maria-ara-fals») · Un error del
+     connector es pinta amb el text del compilador (carregaGovern), i sense l'estat buit, que diria que
+     no hi ha cap matriu connectada quan el que passa és que la del Llibre no es pot llegir. */
+  test.each(paginesGovern().map((p) => [p.id, p]))('/consola/govern/%s amb un error del servidor: l’Alerta amb el text del compilador i cap estat buit', async (_id, p) => {
+    const TEXT = 'La taula de la «Matriu P1» del Llibre Mestre no té les columnes «ID» i «Estat».';
+    fonts.govern = { then: (_resol, rebutja) => rebutja(Object.assign(new Error(TEXT), { codi: 'taula-mal-formada' })) };
+    await obri(p.ruta);
+    const alerta = screen.getByRole('alert');
+    expect(alerta.querySelector('.sdp-alerta__titol').textContent).toBe('No s’ha pogut llegir la matriu del servidor');
+    expect(alerta.querySelector('.sdp-alerta__text').textContent).toBe(TEXT);
+    expect(screen.queryByText(`${TEXT_SENSE_MATRIU}.`)).toBeNull();
+    expect([...main().querySelectorAll('.sdp-buit__titol')].map((el) => el.textContent).filter((t) => /matriu/.test(t))).toEqual([]);
+    expect(main().textContent).not.toMatch(/falta un pas/);
   });
 
   test('una pàgina del govern que no existix ho diu i no s’indexa', async () => {
@@ -686,5 +762,79 @@ describe('Comunicació amb les IAs', () => {
     senseTipografiaDeMaquina();
     expect(main().textContent).not.toMatch(/\/Users\/|sha256/);
     expect(errors).not.toHaveBeenCalled();
+  });
+});
+
+/* Decisió del Mestre (31-10-2026) · A la web publicada (build web: DEV fals i
+   la bandera SDP_CONSOLA_INSTANTANIA que segella el connector
+   sdp:consola-instantania), la matriu és la de la instantània sanejada:
+   1. es data amb l'instant en què es va generar, no amb el rellotge de qui la
+      mira (una instantània no envellix sola), i diu d'on ve;
+   2. la certificació es veu sencera, però cap botó hi actua: les escriptures
+      només en desenvolupament (ambEscriptures, fontsConsola.js). */
+describe('la instantània publicada (decisió del Mestre, 31-10-2026)', () => {
+  const aLaWebPublicada = () => { vi.stubEnv('DEV', false); vi.stubEnv('SDP_CONSOLA_INSTANTANIA', '1'); };
+  afterEach(() => { vi.unstubAllEnvs(); });
+  /* Una matriu feta una hora abans de la instantània, que es va publicar fa cinc dies. */
+  const publicada = () => {
+    const generat = Date.now() - 5 * 24 * 60 * 60 * 1000;
+    return delServidor({ generat: new Date(generat).toISOString(), mcr: MCR({ at: new Date(generat - 60 * 60 * 1000).toISOString() }) });
+  };
+
+  test('cinc dies després no és obsoleta, pinta el verd que tenia i diu d’on ve', async () => {
+    aLaWebPublicada();
+    fonts.govern = publicada();
+    await obri('/consola/govern/requeriments');
+    expect(screen.queryByText('La matriu és obsoleta')).toBeNull();
+    expect(main().textContent).toContain('De la instantània sanejada que es va publicar amb esta versió de la web, el ');
+    expect(main().textContent).toContain('La versió del codi s’ha comprovat amb la del moment de la instantània.');
+    // Gauntlet f9 (F3) · El peu diu de quin dia és la instantània, a més de quan es va fer la matriu.
+    expect(peu().querySelector('[role="status"]').textContent).toMatch(/^Matriu de la instantània publicada el .+, feta el /);
+    expect(screen.getByRole('region', { name: 'Matriu de requeriments' }).querySelector('.sdp-insignia--exit')).not.toBeNull();
+  });
+
+  test('el contrast: la mateixa matriu, al servidor de desenvolupament, sí que és obsoleta (rellotge d’ara)', async () => {
+    fonts.govern = publicada();
+    await obri('/consola/govern/requeriments');
+    expect(screen.getByText('La matriu és obsoleta')).toBeTruthy();
+    expect(peu().querySelector('[role="status"]').textContent).toMatch(/^Matriu del servidor de desenvolupament, feta el /);
+  });
+
+  /* Gauntlet f9 (F4-certificacio-publicada-amb-textos-contradictoris) · Només el que hi és
+     cert: cap decisió s'hi apunta, i cap text de sessió, signatura ni persistència, ni cap
+     botó desactivat per fila. Derogat: «els tres verbs a cada fila i cap no hi actua». */
+  test('la certificació: la matriu sencera, cap botó per fila i cap text que prometa apuntar res', async () => {
+    aLaWebPublicada();
+    fonts.govern = publicada();
+    await obri('/consola/govern/certificacio');
+    expect(screen.getByText(TEXT_CERTIFICACIO_PUBLICADA)).toBeTruthy();
+    expect(screen.getByText(TEXT_VERBS_PUBLICADA)).toBeTruthy();
+    expect(screen.getByText(TEXT_REGISTRE_PUBLICADA)).toBeTruthy();
+    expect(screen.queryByText(TEXT_CERTIFICACIO_LOCAL)).toBeNull();
+    await act(async () => { await new Promise((resol) => setTimeout(resol, 50)); });
+    const text = main().textContent;
+    for (const fals of ['la pot apuntar', 'es desaran sense nom', 'es desen amb el nom', 'Este navegador no deixa desar', 'exporta-les', 'No es pot apuntar cap decisió']) {
+      expect(text, fals).not.toContain(fals);
+    }
+    const taula = screen.getByRole('region', { name: 'Decisions sobre cada fila' });
+    expect(taula.querySelectorAll('tbody tr')).toHaveLength(4);
+    expect(taula.querySelectorAll('button')).toHaveLength(0);
+    expect([...taula.querySelectorAll('thead th')].map((th) => th.textContent)).toEqual(['Fila', 'Requeriment', 'Estat de la matriu', 'Decisió del Mestre']);
+    expect(screen.queryByRole('button', { name: /Exporta les certificacions/ })).toBeNull();
+  });
+
+  test('la targeta de la certificació al tauler no compta decisions d’este navegador', async () => {
+    aLaWebPublicada();
+    fonts.govern = publicada();
+    await obri('/consola');
+    expect(main().textContent).toContain('cap decisió a la web publicada');
+    expect(main().textContent).not.toContain('decisions apuntades en este navegador');
+  });
+
+  test('al servidor de desenvolupament, el text de la web publicada no hi és', async () => {
+    fonts.govern = delServidor();
+    await obri('/consola/govern/certificacio');
+    expect(screen.queryByText(TEXT_CERTIFICACIO_PUBLICADA)).toBeNull();
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Valida F04' }).disabled).toBe(false));
   });
 });

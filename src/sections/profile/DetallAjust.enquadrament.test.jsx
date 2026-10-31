@@ -31,7 +31,7 @@ import DetallAjust from './DetallAjust.jsx';
 import { AVISOS_DE_LA_FOTO } from '../../utils/pujadaImatge.js';
 import { AVIS_GPS_ELIMINAT_PERFIL } from '../../components/universal/enquadrament/DialegEnquadrament.jsx';
 import { ETIQUETA_CONSERVA_CAMERA, exifPublicable } from '../../components/universal/enquadrament/exifIncrustat.js';
-import { TIPUS, jpegAmbExif } from '../../components/universal/enquadrament/jpegProva.js';
+import { TIPUS, jpegAmbExif } from '../../../tests/helpers/jpegProva.js';
 
 const FOTO = Object.freeze({ id: 'avatar', lloc: 'fitxa', titol: 'Foto de perfil', camp: 'avatar_url', tipus: 'imatge', valor: '', obert: true });
 const jo = Object.freeze({ id: 'jo', mena: 'persona', nom: 'Pep', dades: {} });

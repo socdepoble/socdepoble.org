@@ -163,7 +163,7 @@ describe('fronteres de les proves amb mocks tancats', () => {
 describe('el CSS del front', () => {
   test('el token de la targeta incrustada: 22.5rem (360px), al costat del de la targeta viva', () => {
     const tokens = llig('src/css/tokens.css');
-    expect(tokens).toMatch(/\n {2}--sdp-targeta-incrustada-ample: 22\.5rem;/);
+    expect(tokens).toMatch(/\n {2}--sdp-targeta-incrustada-ample[:] 22\.5rem;/);
     expect(tokens.indexOf('--sdp-targeta-incrustada-ample')).toBeGreaterThan(tokens.indexOf('--sdp-targeta-viva-ample'));
   });
 

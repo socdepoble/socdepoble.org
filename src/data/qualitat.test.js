@@ -100,6 +100,9 @@ const CENS = Object.freeze([
      i la prova de la consulta documental. */
   'src/data/iaiaTextos.js',
   'src/data/iaiaLocal.consulta.test.js',
+  /* IDEA-56 (pla 261029_1605, Bloc F.2) · El cervell local zero-tokens de la
+     IAIA: l'Atles, els pobles i les pàgines, i la seua prova. */
+  'src/data/iaiaLocal.atles.test.js',
   /* Gauntlet 261017 (WP7b, P2) · Les carpetes de sèrie del Bloc, soles, perquè
      el tros d'entrada no arrossegue appSeed.js ni PAGE_COPY (appSeed les
      reexporta). */

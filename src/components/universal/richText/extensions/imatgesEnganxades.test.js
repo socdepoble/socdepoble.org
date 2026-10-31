@@ -6,7 +6,7 @@ import { netejaHtmlEnganxat } from './imatgesEnganxades.js';
 import { sanitizeHtml } from '../../../../utils/sanitize.js';
 import { netejaCamp } from '../../../../sections/notes/netejaCamp.js';
 import { llegixExif, teExif } from '../../enquadrament/exif.js';
-import { APP0_JFIF, IMATGE, SOI, concatena, dataOriginal, gpsTorre, jpegAmbExif, tiff } from '../../enquadrament/jpegProva.js';
+import { APP0_JFIF, IMATGE, SOI, concatena, dataOriginal, gpsTorre, jpegAmbExif, tiff } from '../../../../../tests/helpers/jpegProva.js';
 
 /* RICH-EXIF (Onada 4, ADR multimèdia D4) · Un data URL enganxat o arrossegat
    al text enriquit no entra mai amb metadades. Editor de veres (TipTap +

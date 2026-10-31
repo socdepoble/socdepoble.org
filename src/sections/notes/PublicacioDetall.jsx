@@ -31,6 +31,7 @@
  * producte: la mateixa foto, dins d'un botó.
  */
 import { useMemo } from 'react';
+import { elementTraduible } from '../../components/universal/traduccio/visibilitatTraduible.js';
 import { ExternalLink } from 'lucide-react';
 import { useNavigate } from '../../app/contexts/RouterContext';
 import { useUIActions } from '../../app/contexts/UIContext';
@@ -151,6 +152,9 @@ function LectorDePaginaDelSistema({ pagina, ruta, t, onObri, onShare, peu }) {
       onConnect={false}
       onShare={onShare}
       objecte={objecte}
+      /* Gauntlet 261030 (Fase 3, TC3.3) · PAGE_COPY és en valencià: el lang,
+         amb la interfície en una altra llengua, com a la seua ruta. */
+      llenguaDelContingut="ca"
       {...(porta ? { accioPrincipal: <PortaDePagina porta={porta} /> } : null)}
       {...peu}
     >
@@ -324,6 +328,11 @@ export function PublicacioDetall({ item }) {
       /* T63.2 · Comentar obri el xat comú de la publicació (Mur, Mercat o
          agenda), el mateix que la seua targeta: mai un de la vista del MAS. */
       objecte={objecteDe(publicacio, seccio)}
+      /* Gauntlet 261030 (Fase 3, TC3.2) · Una publicació pròpia del veïnat
+         (section_submissions, només per als membres) no ix cap al motor:
+         Traduir només amb un element públic d'una secció pública
+         (traduccio/visibilitatTraduible.js). El botó no canvia. */
+      traduccio={elementTraduible(seccio, publicacio)}
       {...peu}
     >
       <div className="sdp-alerta__accions">

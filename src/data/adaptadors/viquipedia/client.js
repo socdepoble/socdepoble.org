@@ -163,9 +163,14 @@ export function creaLectorViquipedia({
   /* El transport que veu la Frontissa: hi posa Api-User-Agent i, davant d'un
      «afluixa» del servidor, para la cua. MediaWiki torna el maxlag amb HTTP
      200 i la capçalera MediaWiki-API-Error (CORS l'exposa, igual que
-     Retry-After: captura del 261009); es tradueix en un 503 sense cos. */
+     Retry-After: captura del 261009); es tradueix en un 503 sense cos.
+     Fase 3a (disseny nit/viquipedia_disseny.md §4.10.1) · Sense referent:
+     Wikimedia no sap des de quina pàgina es consulta (Legal §21). La
+     Frontissa no el fixa i no es toca; les URL no canvien (les captures valen). */
   async function transport(url, init = {}) {
-    const resposta = await fetchImpl(url, { ...init, headers: { ...(init.headers || {}), 'Api-User-Agent': agent } });
+    const resposta = await fetchImpl(url, {
+      ...init, referrerPolicy: 'no-referrer', headers: { ...(init.headers || {}), 'Api-User-Agent': agent }
+    });
     const espera = retryAfterMs(resposta.headers?.get?.('retry-after'));
     if (resposta.status === 429 || resposta.status === 503) {
       para(espera || ESPERES_REINTENT_MS[0]);

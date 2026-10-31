@@ -138,8 +138,13 @@ export function divisionsDe(etiquetes) {
 /* ── Imatges ──────────────────────────────────────────────────────────── */
 
 /* Ni escuts, ni banderes, ni mapes, ni logotips, ni icones: l'avatar de
-   «Gent de…» no ha de semblar institucional, i un mapa no és una foto. */
-const NOM_EXCLOS = /escut|escudo|coat[ _-]?of[ _-]?arms|\barms\b|bandera|\bflag|\bmapa|\bmap\b|locator|locali[tz]?zaci|situaci|\blogo|\bicon|pl[àa]nol|\bplano\b|emblem|disambig|confusion/i;
+   «Gent de…» no ha de semblar institucional, i un mapa no és una foto.
+   Gauntlet 261030, tancament (escut-p94-nomes-primera-declaracio) · L'escut
+   també en les altres llengües de Commons (blasó, Wappen, CoA, stemma,
+   brasão, herb, heràldica, armoiries). El nom es mira amb espais en lloc de
+   «_», perquè «\b» no veu cap frontera en «Poble_CoA». */
+const NOM_EXCLOS = /escut|escudo|coat[ _-]?of[ _-]?arms|\barms\b|blas[oó]|wappen|\bcoa\b|stemma|bras[aã]o|\bherb\b|her[aàá]ldi|heraldry|armoiries|bandera|\bflag|\bmapa|\bmap\b|locator|locali[tz]?zaci|situaci|\blogo|\bicon|pl[àa]nol|\bplano\b|emblem|disambig|confusion/i;
+const esNomExclos = (nom) => NOM_EXCLOS.test(String(nom ?? '').replace(/_/g, ' '));
 const EXTENSIO_RASTER = /\.(?:jpe?g|png|webp)$/i;
 const MIME_RASTER = Object.freeze(['image/jpeg', 'image/png', 'image/webp']);
 
@@ -152,12 +157,16 @@ const mateixFitxer = (a, b) => Boolean(a && b) && clauDeFitxer(a) === clauDeFitx
 /**
  * Els noms de fitxer que val la pena preguntar a Commons, sense repetir i en
  * ordre de preferència: la imatge de Wikidata (P18), la de la pàgina i les de
- * l'article. Mai l'escut (P94) ni el que pel nom o l'extensió no és una foto.
+ * l'article. Mai cap de les `insignies` que declara Wikidata (tots els escuts
+ * P94, banderes P41, segells P158 i logotips P154; recursos.js), encara que
+ * el nom no ho diga, ni el que pel nom o l'extensió no és una foto.
  */
-export function candidatsDeFitxers({ p18 = null, p94 = null, imatgePagina = null, fitxers = [] } = {}) {
+export function candidatsDeFitxers({ p18 = null, insignies = [], imatgePagina = null, fitxers = [] } = {}) {
   const vistos = new Set();
+  const exclosos = [insignies].flat().filter((nom) => typeof nom === 'string');
   return [p18, imatgePagina, ...(Array.isArray(fitxers) ? fitxers : [])]
-    .filter((nom) => typeof nom === 'string' && EXTENSIO_RASTER.test(nom) && !NOM_EXCLOS.test(nom) && !mateixFitxer(nom, p94))
+    .filter((nom) => typeof nom === 'string' && EXTENSIO_RASTER.test(nom) && !esNomExclos(nom)
+      && !exclosos.some((insignia) => mateixFitxer(nom, insignia)))
     .map(clauDeFitxer)
     .filter((nom) => !vistos.has(nom) && vistos.add(nom))
     .slice(0, MAXIM_FITXERS);
@@ -174,7 +183,7 @@ export function esLlicenciaLliure(llicencia) {
 export function esFotoValida(fitxer) {
   return Boolean(fitxer?.src) && MIME_RASTER.includes(fitxer.mime)
     && fitxer.amplada >= AMPLADA_MINIMA && fitxer.alcada > 0
-    && !NOM_EXCLOS.test(fitxer.fitxer || '') && esLlicenciaLliure(fitxer.llicencia)
+    && !esNomExclos(fitxer.fitxer) && esLlicenciaLliure(fitxer.llicencia)
     && !String(fitxer.restriccions ?? '').trim();
 }
 
@@ -183,9 +192,22 @@ const dins = (valor, [minim, maxim]) => valor >= minim && valor <= maxim;
 const area = (f) => f.amplada * f.alcada;
 const diferent = (f, g) => !g || (f.fitxer !== g.fitxer && (!f.sha1 || f.sha1 !== g.sha1));
 
+/* Gauntlet 261030, cicle 3 (vq-autor-commons-llarg-rebutja-tota-la-proposta) ·
+   L'autor i la llicència són text d'un tercer (Artist i LicenseShortName de
+   Commons, recursos.js) sense sostre, i la cau en guarda com a molt
+   MAXIM_CREDIT punts de codi (cauDeViquipedia.js · netejaEntrada): una sola
+   foto amb un crèdit més llarg feia rebutjar tota la proposta. Es talla ací,
+   amb «…»; la pàgina del fitxer (fontUrl) continua tenint el crèdit sencer. */
+export const MAXIM_CREDIT = 200;
+export function credit(valor) {
+  if (typeof valor !== 'string') return null;
+  const punts = Array.from(valor);
+  return punts.length > MAXIM_CREDIT ? `${punts.slice(0, MAXIM_CREDIT - 1).join('').trimEnd()}…` : valor;
+}
+
 const imatge = (f) => (f ? Object.freeze({
   src: f.src, fitxer: f.fitxer, amplada: f.amplada, alcada: f.alcada,
-  autor: f.autor ?? null, llicencia: f.llicencia ?? null, llicenciaUrl: f.llicenciaUrl ?? null, fontUrl: f.fontUrl ?? null
+  autor: credit(f.autor), llicencia: credit(f.llicencia), llicenciaUrl: f.llicenciaUrl ?? null, fontUrl: f.fontUrl ?? null
 }) : null);
 
 /**
@@ -298,7 +320,7 @@ async function completa({ entitat, article: articleLlegit }, provinciaDonada, ll
   const divisions = await opcional(
     async () => (entitat.p131.length ? llista(await llig('etiquetes', { ids: entitat.p131.join('|') }, { signal })) : []), signal);
   const noms = candidatsDeFitxers({
-    p18: entitat.p18, p94: entitat.p94, imatgePagina: article?.imatgePagina, fitxers: article?.fitxers
+    p18: entitat.p18, insignies: entitat.insignies, imatgePagina: article?.imatgePagina, fitxers: article?.fitxers
   });
   const fitxers = await opcional(async () => {
     const grups = partixTitols(noms.map((nom) => `File:${nom}`));

@@ -129,6 +129,11 @@ const esperaElsConsumidors = (crides) => waitFor(() => {
 });
 
 test('a /multimedia, l’arbre real amb sessió munta IdentitatProvider i ProveidorModeracio dins de SessionProvider: cap error de proveïdor, l’Arxiu pintat', async () => {
+  /* Bloc E (IDEA-55 + P1-71, Onada 261029_1605) · /multimedia és un
+     UniversalWorkspace amb mestre-detall: jsdom mesura 0 px (el mòbil, on va
+     primer la navegació). Amb l'amplada de la prova (innerWidth 1024), la
+     portada de l'Arxiu és a la vista. */
+  vi.spyOn(HTMLElement.prototype, 'clientWidth', 'get').mockReturnValue(1024);
   await munta('/multimedia', async ({ crides, errors }) => {
     expect(await screen.findByRole('heading', { name: 'Arxiu visual' }, { timeout: 8000 })).toBeTruthy();
     await esperaElsConsumidors(crides);

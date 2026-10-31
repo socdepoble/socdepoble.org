@@ -9,12 +9,14 @@
  *       el de la plataforma (interruptors.js) i el text, textDelMotiu
  *       (PortalApps.jsx), el mateix que llig el portal /app.
  *
- * Una ruta que no és d'una app (/consola…) no passa per cap interruptor
- * d'app: la seua barrera és la de la ruta (RutaConsola a App.jsx). Però si el
- * registre la marca amb entorn 'desenvolupament' (revisió P7-A: la Consola
- * viu de /__iaia/*, que només servix `vite serve`), fora de desenvolupament
- * és 'no-disponible' amb el motiu de la plataforma 'entorn-desenvolupament'.
- * Cap enllaç mort: el que no es pot obrir no fa enllaç.
+ * Una ruta que no és d'una app no passa per cap interruptor d'app: la seua
+ * barrera, si en té, és la de la ruta a App.jsx. Però si el registre marca el
+ * plugin amb entorn 'desenvolupament' (revisió P7-A: hui, la Gestoria), fora
+ * de desenvolupament és 'no-disponible' amb el motiu de la plataforma
+ * 'entorn-desenvolupament'. Cap enllaç mort: el que no es pot obrir no fa
+ * enllaç. La Consola ja no és al registre (Onada 8) ni passa per ací: el seu
+ * botó és el de la pàgina (systemPages.js, OBRIR_CONSOLA), i /consola/* és
+ * pública en qualsevol entorn (ordre del Mestre 30-10-2026, T2.2).
  *
  * portaDelPlugin(plugin, desti, t) fa, d'eixe destí, la porta «Obrir» de
  * PortesTargeta (PortaDePagina a la pàgina; la graella del Control la pot

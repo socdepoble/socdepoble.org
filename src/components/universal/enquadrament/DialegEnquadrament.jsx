@@ -820,7 +820,10 @@ export function DialegEnquadrament({
           </>
         )}
       >
-        <div ref={arrelRef} className={ambFormes ? 'sdp-enquadrament sdp-enquadrament--senzill sdp-enquadrament--formes' : 'sdp-enquadrament sdp-enquadrament--senzill'}>
+        {/* Cicle 3 (261030, VD) · Sense sdp-enquadrament--senzill, que no tenia
+            cap regla ni el declarava el vocabulari: el mode senzill ja el diu
+            el diàleg (sdp-enquadrament__dialeg--senzill). */}
+        <div ref={arrelRef} className={ambFormes ? 'sdp-enquadrament sdp-enquadrament--formes' : 'sdp-enquadrament'}>
           {errorCarrega ? <Alerta to="error">{errorCarrega}</Alerta> : null}
           {errorDesat ? <Alerta key={errorDesat.intent} to="error">{errorDesat.text}</Alerta> : null}
           {!errorCarrega && !imatge ? <Carregant etiqueta="Obrint la imatge…" /> : null}

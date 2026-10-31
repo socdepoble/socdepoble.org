@@ -2,9 +2,10 @@ import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { describe, expect, test, vi } from 'vitest';
 import {
-  DRETS_IMATGES, DRETS_TEXT, candidatsDeFitxers, divisionsDe, entradillaDe, esLlicenciaLliure,
+  DRETS_IMATGES, DRETS_TEXT, MAXIM_CREDIT, candidatsDeFitxers, credit, divisionsDe, entradillaDe, esFotoValida, esLlicenciaLliure,
   pobleDeViquipedia, provinciaDeIne, triaImatges, triaMunicipi
 } from './pobleDeViquipedia.js';
+import { creaCauDeViquipedia } from './cauDeViquipedia.js';
 import { AGENT_USUARI, ErrorDades, creaLectorViquipedia } from '../../data/adaptadors/viquipedia/client.js';
 import { RECURSOS } from '../../data/adaptadors/viquipedia/recursos.js';
 import { MAXIM_LEMA } from '../../data/limitsText.js';
@@ -271,6 +272,24 @@ describe('les imatges', () => {
     expect(triaImatges([{ ...TORRE_FITXER, llicencia: 'GFDL' }]).hero).toBeNull();
   });
 
+  /* Gauntlet 261030, cicle 3 (vq-autor-commons-llarg-rebutja-tota-la-proposta) ·
+     El crèdit d'una foto és text de Commons sense sostre: si passava del que
+     guarda la cau, la cau rebutjava tota la proposta. Es talla amb «…». */
+  test('l’autor i la llicència d’una foto es tallen a MAXIM_CREDIT punts de codi, i la cau desa la proposta', async () => {
+    const tria = triaImatges([{ ...TORRE_FITXER, autor: `${'A'.repeat(230)}🌄`, llicencia: `CC BY-SA 4.0 ${'x'.repeat(250)}` }]);
+    expect(MAXIM_CREDIT).toBe(200);
+    expect(tria.hero.autor).toBe(`${'A'.repeat(MAXIM_CREDIT - 1)}…`);
+    expect(Array.from(tria.hero.llicencia)).toHaveLength(MAXIM_CREDIT);
+    expect(tria.hero.llicencia.startsWith('CC BY-SA 4.0 ')).toBe(true);
+    // Un crèdit que ja hi cap no es toca, i cap valor no s'inventa.
+    expect(triaImatges([TORRE_FITXER]).hero.autor).toBe(TORRE_FITXER.autor);
+    expect(credit('A'.repeat(MAXIM_CREDIT))).toBe('A'.repeat(MAXIM_CREDIT));
+    expect([credit(null), credit(undefined)]).toEqual([null, null]);
+    const cau = creaCauDeViquipedia({ idb: null, Canal: null, navegador: null });
+    const entrada = await cau.desa('la-torre', { estat: 'parcial', id: 'la-torre-de-les-macanes', title: 'La Torre de les Maçanes', imatges: tria });
+    expect(entrada.dto.imatges.hero.autor).toBe(tria.hero.autor);
+  });
+
   test('sense cap apaïsada no hi ha panoràmica', () => {
     expect(triaImatges([{ ...TORRE_FITXER, amplada: 1200, alcada: 2400 }])).toEqual({ hero: null, avatar: null, reserva: null });
   });
@@ -305,7 +324,84 @@ describe('les imatges', () => {
     const [entitatSella] = RECURSOS.entitats.traductor(captura('entitats-sella').body);
     expect(candidatsDeFitxers({ ...entitatSella, imatgePagina: sella.imatgePagina, fitxers: sella.fitxers }))
       .toEqual(['Sella-Panorama.jpg', 'Ermita de Sella (restos del Castillo de Santa Bárbara) 3.jpg']);
-    expect(candidatsDeFitxers({ p94: 'Escut de Sella.jpg', fitxers: ['Escut_de_Sella.jpg'] })).toEqual([]);
+    expect(candidatsDeFitxers({ insignies: ['Escut de Sella.jpg'], fitxers: ['Escut_de_Sella.jpg'] })).toEqual([]);
+  });
+
+  /* Regla del Mestre, confirmada el 261030: mai l'escut per als pobles ni per
+     a «Gent de…» (Gent de la Torre inclosa); l'escut és sempre exclusiu de la
+     institució Ajuntament. Dos guardes: el nom del fitxer (en valencià,
+     castellà i anglés) i l'escut que Wikidata declara (P94), encara que el
+     seu nom no ho diga. */
+  test.each([
+    'Escut de la Torre de les Maçanes.png', 'Escudo de Torremanzanas.jpg', 'Coat of arms of Sella.jpg',
+    'Sella_coat_of_arms.png', 'escut_oficial_de_Relleu.webp',
+    /* Gauntlet 261030, tancament (escut-p94-nomes-primera-declaracio) · També
+       en les altres llengües de Commons, i amb «_» en lloc d'espai. */
+    'Blasó de Poble.png', 'Wappen Poble.png', 'Poble CoA.png', 'Poble_CoA.png', 'Stemma di Poble.jpg',
+    'Brasão de Poble.png', 'Herb Poble.png', 'Poble heràldica.png', 'Poble heraldica.png', 'Armoiries de Poble.jpg'
+  ])('regla del Mestre: un escut pel nom ni es demana ni es pinta (%s)', (fitxer) => {
+    expect(candidatsDeFitxers({ p18: fitxer, imatgePagina: fitxer, fitxers: [fitxer] })).toEqual([]);
+    expect(esFotoValida({ ...TORRE_FITXER, fitxer })).toBe(false);
+    expect(triaImatges([{ ...TORRE_FITXER, fitxer }])).toEqual({ hero: null, avatar: null, reserva: null });
+  });
+
+  test('regla del Mestre: l’escut de Wikidata (P94) no es demana encara que el nom no diga «escut», ni si P18 o la pàgina el repetixen', () => {
+    const p94 = 'Torremanzanas.jpg';
+    expect(candidatsDeFitxers({ p18: p94, insignies: [p94], imatgePagina: 'torremanzanas.jpg', fitxers: ['Torremanzanas.jpg', 'Torre_Gran.jpg'] }))
+      .toEqual(['Torre Gran.jpg']);
+  });
+
+  /* Gauntlet 261030, tancament (escut-p94-nomes-primera-declaracio) · Un
+     municipi pot declarar dos escuts (SVG i PNG, l'actual i l'històric): cap
+     dels dos, ni la bandera, el segell o el logotip de l'Ajuntament. */
+  test('regla del Mestre: cap de les insígnies que declara Wikidata es demana, no sols la primera', () => {
+    // Cap d'estos noms no diu «escut»: només els para la declaració de Wikidata.
+    const insignies = ['Poble oficial.svg', 'Poble oficial.png', 'Poble antic.jpg', 'Senyera de Poble.png', 'Ajuntament de Poble.png'];
+    expect(candidatsDeFitxers({
+      p18: 'Poble antic.jpg', insignies, imatgePagina: 'Poble_oficial.png',
+      fitxers: ['Poble oficial.png', 'Senyera_de_Poble.png', 'ajuntament de Poble.png', 'Poble vista.jpg']
+    })).toEqual(['Poble vista.jpg']);
+    expect(candidatsDeFitxers({ fitxers: ['Poble oficial.png', 'Poble vista.jpg'] })).toEqual(['Poble oficial.png', 'Poble vista.jpg']);
+    // Una sola insígnia en text pelat també val.
+    expect(candidatsDeFitxers({ insignies: 'Poble antic.jpg', fitxers: ['Poble antic.jpg', 'Poble vista.jpg'] })).toEqual(['Poble vista.jpg']);
+  });
+
+  test.each([['P94', 'normal'], ['P94', 'deprecated'], ['P41', 'normal'], ['P158', 'normal'], ['P154', 'normal']])(
+    'regla del Mestre: si Wikidata declara la foto de la Torre Gran com a %s (%s) a més de l’escut, ni es demana ni es pinta',
+    async (propietat, rank) => {
+      const { llig: base, peticions } = wikimediaFals(TORRE);
+      const entitat = captura('entitats-la-torre-de-les-macanes').body.entities.Q1641908;
+      const [model] = entitat.claims.P94;
+      const insignia = {
+        ...model, rank, mainsnak: { ...model.mainsnak, property: propietat, datavalue: { ...model.mainsnak.datavalue, value: TORRE_GRAN.fitxer } }
+      };
+      const claims = { ...entitat.claims, [propietat]: [...(entitat.claims[propietat] || []), insignia] };
+      const llig = async (recurs, ...resta) => (recurs === 'entitats'
+        ? RECURSOS.entitats.traductor({ entities: { Q1641908: { ...entitat, claims } } })
+        : base(recurs, ...resta));
+      const poble = await pobleDeViquipedia('La Torre de les Maçanes', { llig });
+      expect(poble.author).toBe('Gent de la Torre de les Maçanes');
+      expect(poble.wikidata_id).toBe('Q1641908');
+      expect(poble.imatges).toEqual({ hero: null, avatar: null, reserva: null });
+      const demanats = peticions.map(({ url }) => decodeURIComponent(url).replace(/_/g, ' '));
+      expect(demanats.some((url) => url.includes(TORRE_GRAN.fitxer))).toBe(false);
+    }
+  );
+
+  test('regla del Mestre: si Wikidata diu que l’escut és la mateixa foto de la Torre Gran, cap foto del poble (ni la de «Gent de la Torre») la porta, i no es demana', async () => {
+    const { llig: base, peticions } = wikimediaFals(TORRE);
+    const llig = async (recurs, ...resta) => {
+      const valor = await base(recurs, ...resta);
+      return recurs === 'entitats' ? valor.map((entitat) => ({ ...entitat, insignies: [TORRE_GRAN.fitxer] })) : valor;
+    };
+    const poble = await pobleDeViquipedia('La Torre de les Maçanes', { llig });
+    expect(poble.author).toBe('Gent de la Torre de les Maçanes');
+    expect(poble.imatges).toEqual({ hero: null, avatar: null, reserva: null });
+    const demanats = peticions.map(({ url }) => decodeURIComponent(url).replace(/_/g, ' '));
+    expect(demanats.some((url) => url.includes(TORRE_GRAN.fitxer))).toBe(false);
+    // Sense l'escut declarat, la mateixa foto sí que és la panoràmica i l'avatar.
+    const sense = await pobleDeViquipedia('La Torre de les Maçanes', { llig: base });
+    expect([sense.imatges.hero.fitxer, sense.imatges.avatar.fitxer]).toEqual([TORRE_GRAN.fitxer, TORRE_GRAN.fitxer]);
   });
 
   test.each([

@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useFontDev } from '../useFontDev.js';
+import { ambInstantania } from '../fontsConsola.js';
 import { carregaGovern, llegixFitxerDeGovern } from './governContent.js';
 import { crearMagatzemCertificacions, empremtesDe } from './certificacions.js';
 
@@ -15,12 +16,19 @@ const ERROR_DE_TIPUS = Object.freeze({
  * el tauler i les quatre pàgines no torna a llegir res ni perd el fitxer obert.
  * Pla 261027_0845 (Guarda Nocturna), §3 · La Consola incrustada de la Wiki
  * (ConsolaIncrustada) en munta un altre, també una sola vegada per a tota la
- * fitxa, amb `actiu` només en desenvolupament: fora de DEV no demana
- * /__iaia/govern.json. Derogat: «es munta una sola vegada a ConsolaSection»
- * (ara, una per a /consola i una per a la fitxa de la Wiki).
+ * fitxa. Derogat: «es munta una sola vegada a ConsolaSection» (ara, una per a
+ * /consola i una per a la fitxa de la Wiki). Decisió del Mestre (31-10-2026) ·
+ * La fitxa de la Wiki també llig la instantània publicada. Derogat: «amb
+ * `actiu` només en desenvolupament: fora de DEV no demana /__iaia/govern.json».
  *
- *  · `servidor`: la lectura de /__iaia/govern.json (useFontDev). Fora de DEV,
- *    o mentre MarIA no endolle la ruta, 'absent'.
+ *  · `rellotge`: l'instant (ms) amb què es data la matriu de la instantània
+ *    publicada (decisió del Mestre, 31-10-2026); null, el rellotge d'ara.
+ *  · `servidor`: la lectura de /__iaia/govern.json (useFontDev): en viu a DEV
+ *    i, al build web, la instantània sanejada. En un paquet sense cap de les
+ *    dues, o amb un servidor sense el connector (404 o HTML), 'absent'; si el
+ *    connector no pot compilar el Llibre, 'error', amb el seu text
+ *    (carregaGovern). Gauntlet f4b (govern) · Derogat: «o mentre MarIA no
+ *    endolle la ruta» (la ruta ja la servix el connector, B2).
  *  · `matriu`: la del fitxer que el Mestre ha obert, si n'ha obert cap; si
  *    no, la del servidor; o null. `origen` diu quina: 'fitxer' | 'servidor'.
  *  · `head`: el commit d'ara, si el servidor el diu (la caducitat el compara
@@ -46,6 +54,14 @@ export function useGovern({ actiu = true, subtle, magatzem: injectat = null } = 
   const origen = fitxer ? 'fitxer' : deServidor?.matriu ? 'servidor' : null;
   const trasllat = trasllatFitxer?.trasllat ?? deServidor?.trasllat ?? null;
   const origenTrasllat = trasllatFitxer ? 'fitxer' : deServidor?.trasllat ? 'servidor' : null;
+  /* Decisió del Mestre (31-10-2026) · La matriu de la instantània publicada es
+     data amb l'instant en què es va generar (el seu `generat`), no amb el
+     rellotge de qui la mira: una instantània no envellix sola, i el llindar
+     de 24 h (caducitatDe) diu si el Llibre ja era vell quan es va publicar.
+     Sense pintar-ho tot d'obsolet l'endemà del desplegament. Una matriu oberta
+     d'un fitxer, o la del servidor de desenvolupament, amb el rellotge d'ara. */
+  const instantDeLaInstantania = origen === 'servidor' && ambInstantania() ? Date.parse(deServidor?.generat ?? '') : NaN;
+  const rellotge = Number.isFinite(instantDeLaInstantania) ? instantDeLaInstantania : null;
 
   /* Quants fitxers de cada classe no s'han pogut obrir. Revisió adversarial del
      carril F1 (selectors del peu) · El selector de cada classe la porta de
@@ -120,6 +136,7 @@ export function useGovern({ actiu = true, subtle, magatzem: injectat = null } = 
     servidor: { estat: servidor.estat, error: servidor.error, carrega: servidor.carrega, generat: deServidor?.generat ?? null },
     matriu,
     origen,
+    rellotge,
     nomFitxer: fitxer?.nom ?? null,
     head: deServidor?.head ?? null,
     trasllat,

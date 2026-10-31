@@ -21,8 +21,14 @@ export function gridSizeFromKey(key, value, min, max, step = DEFAULT_STEP) {
  *   min: number,
  *   max: number,
  *   onResize: (value: number) => void,
- *   className?: string
+ *   className?: string,
+ *   controls?: string
  * }} props
+ *
+ * Corrector del Gauntlet f4 (30-10-2026) · `controls` (opcional): l'id de la
+ * columna que redimensiona, per a aria-controls (patró «Window Splitter» de
+ * l'APG). `max` és el màxim real, el que deixa l'espai: el declara
+ * aria-valuemax i hi porten Fi i l'arrossegament.
  */
 export default function AppGridResizer({
   label,
@@ -31,6 +37,7 @@ export default function AppGridResizer({
   max,
   onResize,
   className = '',
+  controls = undefined,
 }) {
   const dragRef = useRef(null);
 
@@ -69,6 +76,7 @@ export default function AppGridResizer({
       className={`app-grid-resizer ${className}`.trim()}
       role="separator"
       aria-label={label}
+      aria-controls={controls}
       aria-orientation="vertical"
       aria-valuemin={min}
       aria-valuemax={max}

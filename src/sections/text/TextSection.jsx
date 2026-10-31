@@ -1,6 +1,7 @@
 import { UniversalPage } from '../../components/universal/UniversalPage';
 import { MARCA_GRUP, segmentsAmbTargetes } from '../../components/universal/richText/extensions/targetes/formaDelGrup.js';
 import { CosAmbTargetes } from '../../components/universal/richText/extensions/targetes/CosAmbTargetes.jsx';
+import { useLlenguaDelContingut } from '../../components/universal/traduccio/llenguaDelContingut.js';
 import { sanitizeHtml } from '../../utils/sanitize';
 /* T71 · les props de la pàgina viuen a paginaDeText.js: el lector de
    connexions del MAS pinta una pàgina de text amb les mateixes. */
@@ -11,30 +12,31 @@ import { useMemo } from 'react';
 import { useUIActions } from '../../app/contexts/UIContext';
 import { useSEO } from '../../hooks/useSEO';
 import { resolveAsset, resolRecursosDeHtml } from '../../config/assetResolver.js';
-import { esAppNativa, origenPublic } from '../../config/origenPublic.js';
+import { esAppNativa } from '../../config/origenPublic.js';
 /* Pla 261027_1154 (P1-61) · La imatge del <head>: el selector únic i la base
    del Supabase de la capa del paquet.
    Pla 261028_1526 (P1-61, Fase 2) · Títol, descripció i imatge ixen de
    metadadesDePagina, la mateixa funció que crida el prerender del build. */
 import { CAP_SOCIAL_BASE } from '../../config/imatgeSocial.js';
 import { metadadesDePagina } from '../../config/metadadesSocials.js';
-import { capaDelPaquet } from '../../config/capaDelPaquet.js';
+/* Pla 261027_1154 (P1-61) · Les opcions d'urlSocialDe, les mateixes que
+   detail/ItemDetailSection.jsx.
+   Ordre del Mestre (30-10-2026, prompt 2208; SEO-CRIT-02) · Viuen a
+   config/opcionsImatgeSocial.js: PluginPage, DesignSection i ConsolaSection
+   les prenen d'allí, sense carregar este component. */
+import { opcionsDeLaImatgeSocial } from '../../config/opcionsImatgeSocial.js';
 /* Pla 261027_0845 (Guarda Nocturna), T1-06 · el text de les pàgines dins de
    l'app nativa, sense cap altra plataforma mòbil (regla 2.3.10 de l'App Store). */
 import { htmlPerAppNativa, paginaPerAppNativa } from './perAppNativa.js';
 
-/* Pla 261027_1154 (P1-61) · Les opcions d'urlSocialDe, les mateixes que
-   detail/ItemDetailSection.jsx: l'origen públic només si és https (el de dev,
-   http://localhost, cau a socdepoble.org), la base del Supabase del paquet i
-   cap origen de tercers permés. */
-function opcionsDeLaImatgeSocial() {
-  const origen = origenPublic();
-  return {
-    ...(/^https:\/\//i.test(String(origen || '')) ? { origen } : null),
-    supabaseUrl: capaDelPaquet().supabaseUrl,
-    permesos: []
-  };
-}
+/* Gauntlet 261030 (cicle 3, tc3-lang-ca-sobre-interficie-traduida) · Una
+   etiqueta de PAGE_COPY que declara la seua llengua (PageFrame en posa el
+   lang només si la interfície és en una altra): el mateix text, la mateixa
+   classe i el mateix enllaç. */
+const etiquetaEnValencia = (label) => {
+  if (typeof label === 'string') return { text: label, lang: 'ca' };
+  return label && typeof label === 'object' ? { ...label, lang: 'ca' } : label;
+};
 
 /* Ordre del Mestre (261007) · El cos d'una pàgina de text amb targetes
    incrustades (un grup data-sdp-targetes de primer nivell: la de «Drets
@@ -52,20 +54,25 @@ function opcionsDeLaImatgeSocial() {
    (esAppNativa), el cos passa abans per htmlPerAppNativa: cap altra plataforma
    mòbil ni cap altra botiga (perAppNativa.js). Ho fa per a tots els qui el
    pinten (TextSection, PublicacioDetall i PluginPage). Fora de l'app, l'HTML
-   de sempre, byte a byte. */
+   de sempre, byte a byte.
+   Gauntlet 261030 (cicle 3, tc3-lang-ca-sobre-interficie-traduida) · El cos
+   és text de la pàgina: porta el lang que li dona PageFrame
+   (useLlenguaDelContingut; només amb llenguaDelContingut i la interfície en
+   una altra llengua). Sense, cap atribut. */
 export function CosDeLaPagina({ html }) {
+  const lang = useLlenguaDelContingut();
   const cos = esAppNativa() ? htmlPerAppNativa(html) : html;
   if (String(cos || '').includes(MARCA_GRUP)) {
     const segments = segmentsAmbTargetes(sanitizeHtml(resolRecursosDeHtml(cos)));
     if (segments.some((segment) => segment.tipus === 'targetes')) {
       return (
         <ProveidorSincronitzacioTargetes>
-          <CosAmbTargetes segments={segments} className="cms-preview" />
+          <CosAmbTargetes segments={segments} className="cms-preview" lang={lang} />
         </ProveidorSincronitzacioTargetes>
       );
     }
   }
-  return <article className="cms-preview" dangerouslySetInnerHTML={{ __html: sanitizeHtml(resolRecursosDeHtml(cos)) }} />;
+  return <article className="cms-preview" lang={lang} dangerouslySetInnerHTML={{ __html: sanitizeHtml(resolRecursosDeHtml(cos)) }} />;
 }
 
 /* `children`: peces vives que van davall del text (el Tauler de Telemetria a
@@ -92,10 +99,16 @@ export function CosDeLaPagina({ html }) {
    Pla 261027_0845 (Guarda Nocturna), T1-06 · Dins de l'app nativa, la pàgina
    que es pinta (capçalera, descripció de useSEO i cos) és la de
    paginaPerAppNativa: el Full de ruta i l'Avís legal no hi nomenen cap altra
-   plataforma mòbil. Fora de l'app, el mateix objecte. */
-export default function TextSection({ page: original, pageKey, accioPrincipal = null, onConnect = null, objecte = null, children = null }) {
+   plataforma mòbil. Fora de l'app, el mateix objecte.
+   P1-46 (guàrdia nocturna 261030, Fase 3) · `etiquetaFinal`: una etiqueta més
+   al final de la fila de davall de l'H1 (la pastilla de versió de
+   /page/descarregues, detail/pastillaDeVersio.js): l'etiqueta o una funció
+   que la torna amb el traductor d'ací (t). Com accioPrincipal, només es passa
+   quan n'hi ha: sense, o si la funció torna null, les etiquetes de sempre. */
+export default function TextSection({ page: original, pageKey, accioPrincipal = null, onConnect = null, objecte = null, etiquetaFinal = null, children = null }) {
   const page = useMemo(() => paginaPerAppNativa(original), [original]);
   const { t } = useUIActions();
+  const etiquetaExtra = typeof etiquetaFinal === 'function' ? etiquetaFinal(t) : etiquetaFinal;
   /* Pla 261027_1154 (P1-61), Fase 1 (ordre del Mestre, 261027) · Abans, la
      targeta genèrica sempre. Ara og:image és la imatge que l'autor ha triat
      per a xarxes (og_image, o si no, featured_image; Llibre Mestre, P1-61) o,
@@ -136,12 +149,26 @@ export default function TextSection({ page: original, pageKey, accioPrincipal = 
     image: seo.image,
     ...(enContext ? { fallback: true } : null)
   });
+  const propsDeText = propsDePaginaDeText(page, pageKey, t);
+  /* Gauntlet 261030 (cicle 3, tc3-lang-ca-sobre-interficie-traduida) · Les
+     etiquetes de la pàgina (page.labels, PAGE_COPY) són en valencià: cada una
+     ho declara i PageFrame en posa el lang amb la interfície en una altra
+     llengua. Les de reserva (la clau i «Pàgina», amb t) i la pastilla final
+     (etiquetaFinal, amb t) són de la interfície: tal qual. */
+  const etiquetes = Array.isArray(page.labels) ? propsDeText.labels.map(etiquetaEnValencia) : propsDeText.labels;
   return (
     <UniversalPage
-      {...propsDePaginaDeText(page, pageKey, t)}
+      {...propsDeText}
+      labels={etiquetaExtra ? [...etiquetes, etiquetaExtra] : etiquetes}
       showLogos={true}
       chrome={page.chrome || 'full'}
       topBarData={{ showPin: false }}
+      /* Gauntlet 261030 (Fase 3, TC3.3) · PAGE_COPY és sempre en valencià:
+         amb la interfície en una altra llengua, l'H1, l'entradilla, l'alt de
+         la portada i el cos en porten el lang (PageFrame ·
+         llenguaDelContingut); els fills d'ací baix (botons de la interfície),
+         no (cicle 3). */
+      llenguaDelContingut="ca"
       {...(accioPrincipal ? { accioPrincipal } : null)}
       {...(onConnect ? { onConnect } : null)}
       {...(objecte ? { objecte } : null)}

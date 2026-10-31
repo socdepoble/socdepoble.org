@@ -11,11 +11,17 @@
  * carregant: desactiva, anuncia "Treballant…" i conserva l'amplada.
  */
 import { LoaderCircle } from 'lucide-react';
+import { tradueix, useTraductorOpcional } from '../hooks/useTraductorOpcional.js';
+
+/* Gauntlet 261029 (cicle 1, i18n) · «Treballant…», en la llengua de la
+   interfície; fora de l'app, la reserva de sempre. */
+const TREBALLANT = Object.freeze(['common.treballant', 'Treballant…']);
 
 export function Boto({
   varietat = 'secundari', mida = 'normal', icona: Icona = null, carregant = false,
   ple = false, tipus = 'button', className, children, disabled, ...rest
 }) {
+  const t = useTraductorOpcional();
   const classes = ['sdp-boto', `sdp-boto--${varietat}`, mida === 'gran' && 'sdp-boto--gran',
     ple && 'sdp-boto--ple', className].filter(Boolean).join(' ');
   return (
@@ -24,7 +30,7 @@ export function Boto({
       {carregant
         ? <LoaderCircle className="sdp-boto__gir" size={20} aria-hidden="true" focusable="false" />
         : Icona ? <Icona size={20} aria-hidden="true" focusable="false" /> : null}
-      <span>{carregant ? 'Treballant…' : children}</span>
+      <span>{carregant ? tradueix(t, TREBALLANT) : children}</span>
     </button>
   );
 }

@@ -3,8 +3,10 @@
  *
  * La font és el middleware només-dev de tooling/vite/consola-iaia.mjs, que
  * crida el compilador tooling/brain/mapa-consola.mjs. El Mapa descriu la
- * maquinària interna: no entra al paquet públic ni al de WordPress
- * (04_contracte_de_dades.md, «On viu l'eixida»).
+ * maquinària interna. Decisió del Mestre (31-10-2026) · El build web en
+ * publica la instantània sanejada (/__iaia/mapa.json estàtic); el paquet de
+ * WordPress i el natiu no en porten (04_contracte_de_dades.md, «On viu
+ * l'eixida»). Derogat: «no entra al paquet públic».
  *
  * La validació és estricta i falla en veu alta: un tipus desconegut o una
  * aresta cap a un node absent vol dir que compilador i interfície ja no
@@ -12,19 +14,25 @@
  */
 import { ESQUEMA_MAPA, TIPUS_NODE, TIPUS_ARESTA, CONFIANCES, SEVERITATS, ESTATS_TASCA, UNITATS_METRICA } from './contracteMapa.js';
 import { plural } from '../concordanca.js';
+import { errorDeLaInstantania, fontsLlegibles, opcionsDeLectura } from '../fontsConsola.js';
 
 export const FONT_MAPA = '/__iaia/mapa.json';
 
 export async function carregaMapa(signal) {
-  /* Higiene d'amfitrió (ordre del Mestre, 261004) · El middleware és només de
-     DEV (apply: 'serve'): fora de DEV és absència, sense cap petició a /__iaia/*. */
-  if (import.meta.env.DEV !== true) return null;
-  const r = await fetch(FONT_MAPA, { signal, cache: 'no-store' });
-  if (r.status === 404) return null;                 // producció, o middleware sense instal·lar
+  /* Higiene d'amfitrió (ordre del Mestre, 261004) · Sense font en este paquet
+     (WordPress, natiu), absència i cap petició a /__iaia/*.
+     Decisió del Mestre (31-10-2026) · En viu a DEV i, al build web, la
+     instantània sanejada (../fontsConsola.js). */
+  if (!fontsLlegibles()) return null;
+  const r = await fetch(FONT_MAPA, opcionsDeLectura(signal));
+  if (r.status === 404) return null;                 // un paquet sense la font, o middleware sense instal·lar
   if (!r.ok) throw new Error(`Mapa ${r.status} ${r.statusText}`);
   // Sense middleware, el servidor pot tornar l'HTML de l'aplicació: és absència, no un mapa.
   if (!(r.headers?.get?.('content-type') || '').includes('application/json')) return null;
-  return normalitzaMapa(await r.json());
+  const cos = await r.json();
+  const fallada = errorDeLaInstantania(cos);
+  if (fallada) throw fallada;
+  return normalitzaMapa(cos);
 }
 
 export function normalitzaMapa(brut) {

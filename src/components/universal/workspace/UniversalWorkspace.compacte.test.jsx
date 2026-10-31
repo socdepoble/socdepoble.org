@@ -121,55 +121,57 @@ describe('mode compacte', () => {
   });
 
   /* Correcció T7C-R4 · Només camins que una persona pot fer: cap clic dins
-     d'una columna inert. En «mitja» la llista es veu i la seua capçalera
-     porta l'obridor de la navegació. */
-  test('en mitja, triar una carpeta al panell el tanca i torna al detall (no obri la llista)', () => {
+     d'una columna inert. Columnes fixes (ordre del Mestre, 30-10-2026) · A
+     800 el Snippet és «ample»: navegació i llista són els seus rails a la
+     graella (COLUMNES_COMPACTE), cap panell. Triar una carpeta del rail no
+     obri cap element ni la llista: el detall continua sent la vista. */
+  test('a 800 (columnes fixes), triar una carpeta del rail de la navegació no obri cap panell ni la llista; el detall continua', () => {
     ambAmpladaIFotogrames(800, (buidaFotogrames) => {
       const { container } = munta();
       const shell = container.querySelector('.app-grid-shell');
-      expect([shell.dataset.layout, shell.dataset.panell]).toEqual(['mitja', '']);
+      expect([shell.dataset.layout, shell.dataset.panell]).toEqual(['ample', '']);
       const llista = container.querySelector('#app-grid-list');
       expect([llista.hasAttribute('inert'), llista.getAttribute('aria-hidden')]).toEqual([false, null]);
-      /* L'obridor de la navegació viu a la capçalera de la llista, a la vista. */
-      fireEvent.click(within(llista).getByRole('button', { name: 'CARPETES' }));
-      expect(shell.dataset.panell).toBe('left');
-      fireEvent.click(within(container.querySelector('#app-grid-sidebar')).getByRole('button', { name: 'TIC' }));
+      expect(container.querySelector('.app-grid-content.has-left-collapsed.has-middle-collapsed')).not.toBeNull();
+      /* La navegació és al costat: cap obridor de panell a la llista. */
+      expect(within(llista).queryByRole('button', { name: 'CARPETES' })).toBeNull();
+      const rail = within(container.querySelector('#app-grid-sidebar')).getByRole('navigation', { name: 'CARPETES' });
+      fireEvent.click(within(rail).getByRole('button', { name: 'TIC' }));
       buidaFotogrames();
       expect(shell.dataset.panell).toBe('');
       expect(screen.getByTestId('detall').textContent).toBe('f-tic|cap');
-      expect(document.activeElement).toBe(container.querySelector('.sdp-workspace-detail'));
+      expect(container.querySelector('.app-grid-content.has-left-collapsed.has-middle-collapsed')).not.toBeNull();
     });
   });
 
-  /* Correcció dels verificadors (261004) · En «mitja» el Snippet no té el
-     rail de la navegació (railEsquerra, fora del mode compacte): l'obridor
+  /* Correcció dels verificadors (261004) · En «mitja» el Snippet no tenia el
+     rail fix de la navegació (retirat, decisió 4 del Mestre de 30-10-2026): l'obridor
      de la capçalera de la llista és l'única porta a la navegació. Era el
      toggleColumn d'«ample» i obria un toc de cada dos (la closca obri el
-     panell en desplegar, no en plegar). Ara obri al primer toc cada vegada
-     i es declara obridor de la closca. */
-  test('en mitja, l’obridor de la navegació de la llista obri al primer toc cada vegada, també després de triar una carpeta', () => {
+     panell en desplegar, no en plegar). Després obria al primer toc.
+     Columnes fixes (ordre del Mestre, 30-10-2026) · A 820 el Snippet és
+     «ample»: la porta a la navegació és el seu Expandir, a la graella, i la
+     desplega al primer toc cada vegada, sense panell; triar-hi una carpeta
+     la deixa desplegada. */
+  test('a 820 (columnes fixes), l’Expandir de la navegació la desplega a la graella al primer toc cada vegada, també després de triar una carpeta', () => {
     ambAmpladaIFotogrames(820, (buidaFotogrames) => {
       const { container } = munta();
       const shell = container.querySelector('.app-grid-shell');
-      expect([shell.dataset.layout, shell.hasAttribute('data-esquerra')]).toEqual(['mitja', false]);
-      const llista = container.querySelector('#app-grid-list');
-      const obridor = within(llista).getByRole('button', { name: 'CARPETES' });
-      expect(obridor.getAttribute('aria-controls')).toBe('app-grid-sidebar');
-      expect(obridor.hasAttribute('data-obri-columna')).toBe(true);
-      expect(obridor.getAttribute('aria-expanded')).toBe('false');
+      expect(shell.dataset.layout).toBe('ample');
+      const navegacio = container.querySelector('#app-grid-sidebar');
       for (const carpeta of ['TIC', 'Mur']) {
-        fireEvent.click(within(llista).getByRole('button', { name: 'CARPETES' }));
-        expect([carpeta, shell.dataset.panell]).toEqual([carpeta, 'left']);
-        fireEvent.click(within(container.querySelector('#app-grid-sidebar')).getByRole('button', { name: carpeta }));
+        fireEvent.click(within(navegacio).getByRole('button', { name: 'Expandir CARPETES' }));
+        buidaFotogrames();
+        expect([carpeta, shell.dataset.panell, Boolean(container.querySelector('.has-left-collapsed'))]).toEqual([carpeta, '', false]);
+        expect(container.querySelector('.app-grid-resizer--left')).not.toBeNull();
+        fireEvent.click(within(navegacio).getByRole('button', { name: carpeta }));
         buidaFotogrames();
         expect([carpeta, shell.dataset.panell]).toEqual([carpeta, '']);
+        expect(screen.getByTestId('detall').textContent).toBe(`${carpeta === 'TIC' ? 'f-tic' : 'f-mur'}|cap`);
+        fireEvent.click(within(navegacio).getByRole('button', { name: 'Replegar CARPETES' }));
+        buidaFotogrames();
+        expect(container.querySelector('.has-left-collapsed')).not.toBeNull();
       }
-      /* Amb el panell obert, el segon toc el tanca. */
-      fireEvent.click(within(llista).getByRole('button', { name: 'CARPETES' }));
-      expect(shell.dataset.panell).toBe('left');
-      expect(within(llista).getByRole('button', { name: 'CARPETES' }).getAttribute('aria-expanded')).toBe('true');
-      fireEvent.click(within(llista).getByRole('button', { name: 'CARPETES' }));
-      expect(shell.dataset.panell).toBe('');
     });
   });
 
@@ -177,29 +179,32 @@ describe('mode compacte', () => {
      «mitja» el tanca (tancaPanells) també sense el rail de la navegació.
      Abans commutava el plegat d'«ample»: en mode compacte la navegació
      arrenca plegada, i desplegar-la tornava a obrir el panell (el botó era
-     mort i el panell només es tancava triant una carpeta). El focus va a
-     l'obridor de la llista, per la guarda de la closca. */
-  test('en mitja, Replegar tanca el panell de la navegació i el focus torna a l’obridor de la llista', () => {
+     mort i el panell només es tancava triant una carpeta). Columnes fixes
+     (ordre del Mestre, 30-10-2026) · A 820 no hi ha panell: Replegar torna
+     la navegació al rail de la graella, amb el focus a l'Expandir, i cap
+     estat latent (l'Expandir la torna a desplegar al primer toc). */
+  test('a 820 (columnes fixes), Replegar torna la navegació al rail de la graella i el focus a l’Expandir', () => {
     ambAmpladaIFotogrames(820, (buidaFotogrames) => {
       const { container } = munta();
       const shell = container.querySelector('.app-grid-shell');
-      const llista = container.querySelector('#app-grid-list');
-      fireEvent.click(within(llista).getByRole('button', { name: 'CARPETES' }));
-      buidaFotogrames();
-      expect(shell.dataset.panell).toBe('left');
       const navegacio = container.querySelector('#app-grid-sidebar');
+      fireEvent.click(within(navegacio).getByRole('button', { name: 'Expandir CARPETES' }));
+      buidaFotogrames();
       for (let vegada = 0; vegada < 2; vegada += 1) {
         const replegar = within(navegacio).getByRole('button', { name: 'Replegar CARPETES' });
         replegar.focus();
         fireEvent.click(replegar);
         buidaFotogrames();
         expect([vegada, shell.dataset.panell]).toEqual([vegada, '']);
-        expect([navegacio.hasAttribute('inert'), navegacio.getAttribute('aria-hidden')]).toEqual([true, 'true']);
-        expect(document.activeElement).toBe(within(llista).getByRole('button', { name: 'CARPETES' }));
-        /* Cap estat latent: el mateix obridor la torna a obrir al primer toc. */
+        expect([navegacio.hasAttribute('inert'), navegacio.getAttribute('aria-hidden')]).toEqual([false, null]);
+        expect(document.activeElement).toBe(within(navegacio).getByRole('button', { name: 'Expandir CARPETES' }));
+        /* Cap estat latent: el mateix Expandir la torna a desplegar al primer toc. */
         fireEvent.click(document.activeElement);
         buidaFotogrames();
-        expect(shell.dataset.panell).toBe('left');
+        expect(container.querySelector('.has-left-collapsed')).toBeNull();
+        /* Ordre d'usabilitat (30-10-2026) · El focus, a la icona de l'esquerra
+           (germana del [|<]), al lloc del botó de dalt del rail. */
+        expect(document.activeElement).toBe(within(navegacio).getByRole('button', { name: 'Plegar la columna CARPETES' }));
       }
     });
   });

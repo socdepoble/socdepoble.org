@@ -487,7 +487,7 @@ function FilaAjust({ fila, etiqueta, valor = '', triada = false, onPrem }) {
   return (
     <button
       type="button"
-      className={`sdp-xat-ajustos__fila${fila.perill ? ' sdp-xat-ajustos__fila--perill' : ''}`}
+      className={fila.perill ? 'sdp-xat-ajustos__fila sdp-xat-ajustos__fila--perill' : 'sdp-xat-ajustos__fila'}
       data-sdp-fila={fila.id}
       aria-pressed={opcio ? (triada ? 'true' : 'false') : undefined}
       onClick={onPrem}

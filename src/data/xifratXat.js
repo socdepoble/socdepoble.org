@@ -44,6 +44,7 @@ import { E2EE_ACTIU_PER_DEFECTE, esOrigenDeConfianca } from '../config/xifratXat
 import { ambitDelFil, teMarcaApegalosa } from './xifratXatAbast.js';
 import { creaMagatzemXat } from './xifratXatMagatzem.js';
 import { ESTAT_OBLIT, creaMotorXifrat } from './xifratXatPipeline.js';
+import { PRESSUPOST_BLOBS_MOBIL, PRESSUPOST_BLOBS_ESCRIPTORI, creaRegistreBlobsAdjunts } from './xatMultimediaXifrat.js';
 
 import { serveiXifratXatDe, registraServeiXifratXat } from './xifratXatServei.js';
 
@@ -109,7 +110,7 @@ function normalitzaEntradaAmbit(entrada, segonaClau) {
  * Crea el gestor de les 4 claus (`clauIdentitat`, `ambitEstable`, `genAmbit`,
  * `genIdentitat`) i de les memòries en RAM de l'àmbit (§8.6 i §21.1).
  */
-export function creaServeiAmbitXat({ revocaUrl = () => {}, motorRef = {} } = {}) {
+export function creaServeiAmbitXat({ revocaUrl = () => {}, motorRef = {}, pressupostBlobs = null } = {}) {
   let ambitEstable = null;
   let clauIdentitat = null;
   let genAmbit = 0;
@@ -123,9 +124,21 @@ export function creaServeiAmbitXat({ revocaUrl = () => {}, motorRef = {} } = {})
   const marquesApegaloses = new Set();
   const blobsActius = new Set();
   /* Fase 4 (E1) · RAM de l'àmbit del motor: índex d'adjunts rebuts, URL blob: per
-     clau (adjunt, SHA-256(FK)) i l'últim estat de l'oblit (D-09, sobreviu a l'àmbit). */
+     clau (adjunt, SHA-256(FK)) i l'últim estat de l'oblit (D-09, sobreviu a l'àmbit).
+     Pas 17 (§4.7) · Les URL dels adjunts viuen en un LRU amb pressupost de bytes en
+     clar (48 MB al mòbil, 100 MB a l'escriptori; un valor invàlid o per damunt de
+     100 MB cau als 48 MB): en desallotjar es revoca i ix de blobsActius. */
   const adjuntsRebuts = new Map();
-  const urlsAdjunts = new Map();
+  const pressupost = Number.isSafeInteger(pressupostBlobs) && pressupostBlobs > 0 && pressupostBlobs <= PRESSUPOST_BLOBS_ESCRIPTORI
+    ? pressupostBlobs
+    : PRESSUPOST_BLOBS_MOBIL;
+  const urlsAdjunts = creaRegistreBlobsAdjunts({
+    pressupost,
+    revoca: (url) => {
+      blobsActius.delete(url);
+      revocaUrl(url);
+    }
+  });
   let estatOblit = null;
 
   const revocaTotsElsBlobs = () => {
@@ -139,10 +152,16 @@ export function creaServeiAmbitXat({ revocaUrl = () => {}, motorRef = {} } = {})
     for (const ck of clausEpocaRam.values()) netejaBytes(ck);
     clausEpocaRam.clear();
     resumUltimXifrat.clear();
+    /* Gauntlet c2 (C2, Codex 0256) · Les FK dels adjunts (`a.k`, 32 B en clar) són d'este
+       servei: els textos desxifrats i l'índex d'adjunts rebuts compartixen el mateix `a`, i cap
+       objecte que ix cap a la interfície no el porta (vesteix i eco només en donen les
+       metadades). A zero abans de soltar-ne les referències. */
+    for (const valor of textosDesxifrats.values()) netejaBytes(valor?.a);
+    for (const info of adjuntsRebuts.values()) netejaBytes(info?.a);
     textosDesxifrats.clear();
     registreFils.clear();
     adjuntsRebuts.clear();
-    urlsAdjunts.clear();
+    urlsAdjunts.buida();
     revocaTotsElsBlobs();
   };
 
@@ -167,16 +186,21 @@ export function creaServeiAmbitXat({ revocaUrl = () => {}, motorRef = {} } = {})
     return estatAmbit();
   };
 
-  const estatAmbit = () => Object.freeze({
-    ambitEstable,
-    clauIdentitat,
-    genAmbit,
-    genIdentitat,
-    viu,
-    midaResums: resumUltimXifrat.size,
-    midaFils: registreFils.size,
-    midaBlobs: blobsActius.size
-  });
+  const estatAmbit = () => {
+    const blobs = urlsAdjunts.estat();
+    return Object.freeze({
+      ambitEstable,
+      clauIdentitat,
+      genAmbit,
+      genIdentitat,
+      viu,
+      midaResums: resumUltimXifrat.size,
+      midaFils: registreFils.size,
+      midaBlobs: blobsActius.size,
+      bytesBlobs: blobs.bytes,
+      pressupostBlobs: blobs.pressupost
+    });
+  };
 
   const captura = (tipus = 'ambit') => {
     if (tipus !== 'ambit' && tipus !== 'identitat') {
@@ -305,16 +329,39 @@ export function creaServeiAmbitXat({ revocaUrl = () => {}, motorRef = {} } = {})
     textDesxifrat: (filId, id) => textosDesxifrats.get(`${filId}::${id}`) ?? null,
     desaTextDesxifrat: (filId, id, valor) => { textosDesxifrats.set(`${filId}::${id}`, valor); },
     adjuntDesat: (id) => adjuntsRebuts.get(id) ?? null,
-    desaAdjunt: (id, info) => { adjuntsRebuts.set(id, info); },
-    urlAdjuntDesada: (clau) => urlsAdjunts.get(clau) ?? null,
-    desaUrlAdjunt: (clau, url) => { urlsAdjunts.set(clau, url); blobsActius.add(url); },
+    /* Cicle 4 (tancament, e2ee-index-adjunts) · Un id d'adjunt és d'un sol (fil, emissor): la
+       primera entrada mana i una d'un altre fil o d'un altre emissor no la sobreescriu (torna
+       false i el motor tanca eixa fila). El mateix (fil, emissor) sí que la renova. */
+    desaAdjunt: (id, info) => {
+      const previ = adjuntsRebuts.get(id);
+      if (previ && (previ.fil !== info?.fil || previ.emissor !== info?.emissor)) return false;
+      adjuntsRebuts.set(id, info);
+      return true;
+    },
+    urlAdjuntDesada: (clau) => urlsAdjunts.obte(clau),
+    desaUrlAdjunt: (clau, url, bytes = 0) => {
+      blobsActius.add(url);
+      try {
+        urlsAdjunts.desa(clau, url, bytes);
+      } catch (error) {
+        /* Una entrada invàlida (o sense lloc dins del sostre de 100 MB) no deixa cap blob: penjat fora del registre. */
+        blobsActius.delete(url);
+        try { revocaUrl(url); } catch { /* ignora */ }
+        throw error;
+      }
+    },
+    /* QA-C01 (Gauntlet 261029_1858) · La retenció de la URL que una peça pinta o reprodueix
+       (el motor la pren en servir-la) i la pregunta del sostre abans de desxifrar. */
+    retenUrlAdjunt: (clau) => urlsAdjunts.reten(clau),
+    hiCapUrlAdjunt: (bytes) => urlsAdjunts.hiCap(bytes),
     /* La cua F7 i l'oblit (D-09) passen pel motor quan n'hi ha; sense motor, l'oblit és només RAM i ho diu. */
     drenaSafata: (config = {}) => (typeof motorRef.drena === 'function'
       ? motorRef.drena(config)
       : Promise.resolve(Object.freeze({ enviats: [], pendents: [], error: errorXifrat('sense-motor-xifrat', 'Este entorn no té el motor del pipeline xifrat.') }))),
     oblidaTotXat: (opcions = {}) => {
       if (typeof motorRef.oblidaTot === 'function') return motorRef.oblidaTot(opcions);
-      oblidaClausXat();
+      /* Gauntlet c1 · conservaAmbit: l'àmbit fixat és d'una altra persona que ja ha entrat (xifratXatEixida.js). */
+      if (opcions?.conservaAmbit !== true) oblidaClausXat();
       estatOblit = Object.freeze({ estat: ESTAT_OBLIT.oblidat, pendents: Object.freeze([]), causes: Object.freeze([]), nomesRam: true });
       return Promise.resolve(estatOblit);
     },
@@ -338,6 +385,14 @@ function comprovaEntornSegur(entorn = {}) {
   }
 }
 
+/* QA-C01 · Les opcions de urlAdjuntXat sense la retenció interna, per a l'adaptador. */
+function senseRetencio(opcions) {
+  if (!opcions || typeof opcions !== 'object' || !Object.hasOwn(opcions, 'reten')) return opcions;
+  const copia = { ...opcions };
+  delete copia.reten;
+  return copia;
+}
+
 /**
  * Embolcalla una implementació del backend amb el decorador d'E2EE (`§8.2`).
  * Quan `entorn.actiu !== true` (per defecte `false`), actua com a pass-through
@@ -351,7 +406,7 @@ export function ambXifratXat(impl, entorn = {}) {
   const modeDades = entorn?.modeDades ?? 'remote';
   if (actiu !== true || modeDades !== 'remote') return impl;
   const motorRef = {};
-  const servei = creaServeiAmbitXat({ revocaUrl: entorn?.revocaUrl, motorRef });
+  const servei = creaServeiAmbitXat({ revocaUrl: entorn?.revocaUrl, motorRef, pressupostBlobs: entorn?.pressupostBlobs ?? null });
   /* Fase 4 (pla 261029_1305, E1) · El motor del pipeline només quan l'entorn porta
      WebCrypto i un magatzem de claus (o IndexedDB amb IDBKeyRange i CryptoKey
      injectats); si no, el decorador es comporta com a la Fase 3 (fallar tancat). */
@@ -588,9 +643,13 @@ export function ambXifratXat(impl, entorn = {}) {
     /* Fase 4 · Un adjunt rebut xifrat es servix com a blob: desxifrat (hash abans de desxifrar);
        la resta d'ids van pel camí de sempre (URL signada). */
     if (motor && claus.has('urlAdjuntXat') && typeof impl.urlAdjuntXat === 'function') {
+      /* QA-C01 · `opcions.reten` (AdjuntXat, només amb la bandera encesa) rep l'alliberament
+         de la URL desxifrada que se li servix; és intern del paquet i no arriba mai a
+         l'adaptador (les URL signades no es revoquen). */
       decorat.urlAdjuntXat = async function urlAdjuntXatDecorat(id, config = {}, opcions = {}) {
-        if (!servei.adjuntDesat(typeof id === 'string' ? id : '')) return Reflect.apply(impl.urlAdjuntXat, impl, [id, config, opcions]);
-        return servei.guardaAmbit(async (exigix, anotaBlob) => anotaBlob(await motor.urlAdjunt({ id, config, exigix, renova: opcions?.renova === true })));
+        const reten = typeof opcions?.reten === 'function' ? opcions.reten : null;
+        if (!servei.adjuntDesat(typeof id === 'string' ? id : '')) return Reflect.apply(impl.urlAdjuntXat, impl, [id, config, senseRetencio(opcions)]);
+        return servei.guardaAmbit(async (exigix, anotaBlob) => anotaBlob(await motor.urlAdjunt({ id, config, exigix, renova: opcions?.renova === true, reten })));
       };
     }
 

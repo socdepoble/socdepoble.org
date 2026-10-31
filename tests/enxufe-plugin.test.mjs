@@ -192,7 +192,9 @@ test('l\'element només porta atributs del contracte (universals, l\'opt-in ruta
   const emesos = [...cos.matchAll(/ ([a-z-]+)="/g)].map((m) => m[1]).sort();
   /* Actualitzada a posta (pla 261028_1526, P1-22, TE-05): motiu, la llengua opt-in
      del lloc va pel JSON de l'atribut config (atributsDeConfig), sense canvi de contracte. */
-  assert.deepEqual(emesos, ['config', 'fonts-href', 'nom-poble', 'plugin-url', 'poble', 'ruta-a-url', 'ruta-inicial', 'traductor-url']);
+  /* Actualitzada a posta (Gauntlet 261030, Fase 3, TC3.1): motiu, l'opt-in
+     traductor-llengues (atributsOptIn) declara els destins del traductor-url. */
+  assert.deepEqual(emesos, ['config', 'fonts-href', 'nom-poble', 'plugin-url', 'poble', 'ruta-a-url', 'ruta-inicial', 'traductor-llengues', 'traductor-url']);
   for (const atribut of emesos) {
     assert.ok(CONTRACTE_AMFITRIO.atributs.includes(atribut) || CONTRACTE_AMFITRIO_V1.atributsOptIn.includes(atribut)
       || (atribut === 'config' && CONTRACTE_AMFITRIO_V1.atributsDeConfig.includes(atribut)), atribut);
@@ -202,7 +204,16 @@ test('l\'element només porta atributs del contracte (universals, l\'opt-in ruta
      declara la clàusula dels slugs, per defecte al fragment i només amb un
      mode del contracte. El marcatge de referència crida l'element sense
      serveis i es queda en sdp.markup.v1, sense cap opt-in. */
-  const nomesWordpress = cos.match(/\n\tif \( \$amb_serveis \) \{\n([^]*?)\n\t\}\n/)?.[1] ?? '';
+  /* IDEA-31 (QA-R2-13) · Tots els blocs de la instància pròpia: el del servei de
+     traducció ja no depén de la clau de DeepL (hi ha el proveïdor lliure) i té
+     el seu propi `if ( $amb_serveis )`, davant dels opt-in. */
+  const nomesWordpress = [...cos.matchAll(/\n\tif \( \$amb_serveis \) \{\n([^]*?)\n\t\}\n/g)].map((m) => m[1]).join('\n');
+  assert.match(nomesWordpress, / traductor-url="' \. esc_url\( rest_url\( 'socdepoble\/v1\/traduir' \) \) \. '"'/, 'el servei de traducció, sempre a la instància pròpia');
+  assert.doesNotMatch(cos, /deepl_clau/, 'traductor-url no depén de la clau de DeepL');
+  /* TC3.1 · Els destins, al mateix bloc de la instància pròpia, de la regla
+     única de traduccio.php i escapats. */
+  assert.match(nomesWordpress, / traductor-llengues="' \. esc_attr\( implode\( ' ', socdepoble_enxufe_traduccio_destins\(\) \) \) \. '"'/,
+    'els destins del servei, només a la instància pròpia i de traduccio.php');
   assert.match(nomesWordpress, / ruta-a-url="/, 'l\'opt-in només a la instància pròpia de WordPress');
   assert.match(nomesWordpress, /apply_filters\(\s*'socdepoble_enxufe_ruta_a_url',\s*'fragment'\s*\)/, 'per defecte, el fragment: no arriba al servidor');
   const modes = nomesWordpress.match(/in_array\(\s*\$ruta_a_url,\s*array\(([^)]*)\),\s*true\s*\)/)?.[1];

@@ -85,16 +85,16 @@ describe('Onada 8 · la Consola, el Cervell i Disseny són pàgines del sistema'
     expect(accioDeLaPagina('cervell', ca).verb).toBe('Obrir el Cervell');
   });
 
-  /* Decisió D3 de MarIA · El botó porta a la ruta de la Consola. Fora de
-     desenvolupament, la barrera és la de la ruta: el rol de superadmin. Esta
-     prova no diu que el botó haja de ser actiu en producció: la porta no
-     mira l'entorn, i la regla P7-A (inert fora de desenvolupament, cap
-     enllaç a una eina sense dades) no l'ha derogada cap ordre. Pendent de
-     decisió de MarIA o del Mestre (systemPages.js, OBRIR_CONSOLA). */
-  test('/consola es servix amb el comodí i, fora de desenvolupament, demana el rol de superadmin', () => {
-    expect(fontApp.includes('<Route path="/consola/*" element={<RutaConsola />} />')).toBe(true);
-    expect(fontApp.includes('<RequireAuth rol="superadmin"><ConsolaSection /></RequireAuth>')).toBe(true);
-  });
+  /* Decisió D3 de MarIA · El botó porta a la ruta de la Consola (la prova del
+     destí és la de dalt). Ordre del Mestre (30-10-2026, prompt 2208, T2.2) ·
+     La ruta és oberta a tothom, en qualsevol entorn («qualsevol investigador
+     que prenga el botó… puga entrar a la Consola»), i el botó és actiu també
+     en producció (systemPages.js, OBRIR_CONSOLA). Derogat: «fora de
+     desenvolupament, demana el rol de superadmin». La prova d'ací, que llegia
+     la font d'App.jsx i la guarda, ha eixit amb la guarda (31-10-2026): que
+     /consola i /consola/<id> es munten sense sessió, també amb DEV fals, ho
+     prova el comportament a App.test.jsx, App.appsLocals.test.jsx i
+     pageContent.fediversity.test.js. */
 
   test('les dates literals del Mestre (8, 9 i 10 de setembre, a les 00:00) i les imatges, a public/', () => {
     expect(PAGE_COPY.consola.date).toBe('2026-09-08T00:00:00+02:00');
@@ -249,7 +249,7 @@ describe('261026_2126 · Descàrregues i Aplicacions', () => {
     const { html } = PAGE_COPY.descarregues;
     expect(html).not.toMatch(/https?:\/\//i);
     expect(html).not.toMatch(/play\.google\.com|apps\.apple\.com|testflight\.apple\.com|internaltest/i);
-    for (const cami of ['Google Play', 'APK', 'TestFlight', 'App Store', 'Windows, Mac i Linux', 'CRDT', 'ADR-2026-08']) {
+    for (const cami of ['Google Play', 'APK', 'TestFlight', 'App Store', 'Windows, Mac i Linux', 'WordPress.org', 'CRDT', 'ADR-2026-08']) {
       expect([cami, html.includes(cami)]).toEqual([cami, true]);
     }
     const text = new DOMParser().parseFromString(html, 'text/html').body.textContent;
@@ -268,6 +268,48 @@ describe('261026_2126 · Descàrregues i Aplicacions', () => {
     expect(html).not.toContain('la fa servir el grup');
     expect(text).toContain("Hui encara no hi ha APK públic de Sóc de Poble. Quan n'hi haja un, l'enllaç oficial eixirà en esta pàgina.");
     expect(html).not.toContain('no instal·les');
+  });
+
+  /* 31-10-2026 (ordre del Mestre, Ronda 1) · WordPress.org ha aprovat el
+     connector (slug socdepoble), però la fitxa no és pública fins al primer
+     commit SVN: el cos diu l'aprovació, sense cap adreça ni enllaç, i no diu
+     que ja es puga instal·lar des del directori. L'enllaç, quan la fitxa siga
+     pública, el pinta la ranura wordpress-org (canalsDeBotiga.js). */
+  test('honestedat: de WordPress.org, l’aprovació i res més', () => {
+    const { html } = PAGE_COPY.descarregues;
+    const text = new DOMParser().parseFromString(html, 'text/html').body.textContent.replace(/\s+/g, ' ');
+    expect(text).toContain('ha aprovat el connector de Sóc de Poble, amb el nom «socdepoble»');
+    expect(text).toContain("La seua fitxa pública s'obri amb la primera versió que hi publiquem");
+    expect(html).not.toMatch(/wordpress\.org\/plugins|<a\s/i);
+    expect(text).not.toMatch(/ja (?:es pot|el pots|el podeu) (?:descarregar|instal·lar)/i);
+  });
+});
+
+/* Ordre del Mestre (30-10-2026; candidatura NLnet NGI Fediversity, expedient
+   2026-08-1a6) · «Candidatura Europea NLnet · NGI Fediversity» és una pàgina
+   del sistema més: /page/fediversity (PageDetailSection, sense component
+   propi), sense acció gran i sense `nomesWeb` (el cos no nomena cap altra
+   plataforma mòbil). /fediversity n'és l'adreça curta, una redirecció
+   d'App.jsx (src/app/App.fediversity.test.jsx). El text i les seues
+   afirmacions, a src/sections/text/pageContent.fediversity.test.js. */
+describe('30-10-2026 · Candidatura Europea NLnet · NGI Fediversity', () => {
+  test('viu a /page/fediversity, l’última de SYSTEM_PAGES, sense acció gran ni ruta canònica', () => {
+    expect(SYSTEM_PAGES.at(-1)).toEqual({ key: 'fediversity', isAvis: false, href: '/page/fediversity' });
+    expect(accioDeLaPagina('fediversity')).toBeNull();
+    expect(accioDeLaTargeta('fediversity')).toBeNull();
+    expect(accioAlFinal('fediversity')).toBe(false);
+    // Sense ruta canònica: /page/fediversity no redirigix a /fediversity, que hi redirigix (cap bucle).
+    expect(resolvePageSlugPath('fediversity')).toBeNull();
+    // Es veu a la web i dins de l'app nativa.
+    expect([esPaginaVisible('fediversity'), esPaginaVisible('fediversity', { nativa: true })]).toEqual([true, true]);
+  });
+
+  test('el copy: la portada a public/, amb alt, i les tres etiquetes', () => {
+    const copy = PAGE_COPY.fediversity;
+    expect(copy).toMatchObject({ title: 'Candidatura Europea NLnet · NGI Fediversity', image: '/assets/uploads/fediversity-hero.webp' });
+    expect(existsSync(path.join(process.cwd(), 'public', copy.image))).toBe(true);
+    expect(copy.imageAlt.trim().length).toBeGreaterThan(20);
+    expect(copy.labels.map((etiqueta) => etiqueta.className)).toEqual(['sdp-badge-system', 'sdp-badge-category', 'sdp-badge-tag']);
   });
 });
 

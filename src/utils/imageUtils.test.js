@@ -4,7 +4,7 @@ import { llegixExif, teExif } from '../components/universal/enquadrament/exif.js
 import { extreuTiff, precisioDeGps, preparaTiff } from '../components/universal/enquadrament/exifIncrustat.js';
 import {
   APP0_JFIF, IMATGE, SOI, app1Exif, concatena, dataOriginal, gpsTorre, jpegAmbExif, orientacio,
-} from '../components/universal/enquadrament/jpegProva.js';
+} from '../../tests/helpers/jpegProva.js';
 import { navegadorAplicaOrientacio, transformacioOrientacio } from '../components/universal/enquadrament/orientacio.js';
 import { creaOrdres } from '../components/universal/richText/extensions/index.js';
 

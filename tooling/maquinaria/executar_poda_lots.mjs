@@ -14,12 +14,15 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import crypto from 'node:crypto';
+/* Ordre del Mestre (30-10-2026) · les carpetes de la Wiki venen de la SSOT de rutes
+   (Porta Rutes, R1). Mateixes cadenes; l'arxiu fred és una carpeta germana, fora de la SSOT. */
+import { CAMINS } from '../lib/arrel.mjs';
 
 const REPO_ROOT = process.cwd();
 const ARXIU_FRED_ROOT = path.resolve(REPO_ROOT, '../_arxiu_wiki_de_poble');
-const HISTORIC_DIR = path.join(REPO_ROOT, '_wiki_de_poble/90_arxiu_historic');
-const INVESTIGACIO_DIR = path.join(REPO_ROOT, '_wiki_de_poble/04_escriptori/02_investigacio_ia');
-const ACTES_DIR = path.join(REPO_ROOT, '_wiki_de_poble/10_actes');
+const HISTORIC_DIR = path.join(REPO_ROOT, CAMINS.arxiuHistoric);
+const INVESTIGACIO_DIR = path.join(REPO_ROOT, CAMINS.escriptori, '02_investigacio_ia');
+const ACTES_DIR = path.join(REPO_ROOT, CAMINS.actes);
 
 const MANIFEST_FILE = path.join(ARXIU_FRED_ROOT, '00_manifest_arxiu_fred.json');
 
@@ -288,8 +291,8 @@ if (fs.existsSync(actaMarmotaSrc)) {
   console.log(`[LOT 1C REUBICAT] 261016_0035_acta_marmota_codex_gauntlet.md -> 10_actes/ (${size} B)`);
   manifest.reubicats.push({
     nom: '261016_0035_acta_marmota_codex_gauntlet.md',
-    origen: '_wiki_de_poble/90_arxiu_historic/',
-    desti: '_wiki_de_poble/10_actes/',
+    origen: `${CAMINS.arxiuHistoric}/`,
+    desti: `${CAMINS.actes}/`,
     sha256: sha,
     bytes: size
   });

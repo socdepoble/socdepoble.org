@@ -17,7 +17,10 @@
  * useInterruptorsApp, el pont de sessió) són a ContextApp.jsx, i ací es
  * reexporten per a la closca i les proves.
  */
-import { createContext, useCallback, useContext, useMemo, useSyncExternalStore } from 'react';
+import { useCallback, useContext, useMemo, useSyncExternalStore } from 'react';
+/* P1-71 (Gauntlet 261029) · L'objecte de context viu a objectesDeContext.js,
+   que no importa res del projecte. */
+import { RegistreContext } from './objectesDeContext.js';
 import { useLocation } from '../../app/contexts/RouterContext';
 import { useUIState } from '../../app/contexts/UIContext';
 import { teCapacitat } from '../../data/backendPort.js';
@@ -29,8 +32,6 @@ import { EntornContext, produccioDe, teDretDe, usePreferenciesApps } from './Con
 export {
   ProveidorApp, useApp, useInterruptorsApp, usePreferenciesApps, useSessioDeLEntorn, useSessioDeLaRuta
 } from './ContextApp.jsx';
-
-const RegistreContext = createContext(null);
 
 /**
  * `registre`: un registre de creaRegistre (per defecte, el del document).

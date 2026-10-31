@@ -13,7 +13,7 @@ import path from 'node:path';
 import { DialegEnquadrament, didacticaDeForma, etiquetaCurtaDeForma } from './DialegEnquadrament.jsx';
 import { FORMATS } from './enquadrament.js';
 import { ETIQUETA_CONSERVA_EXIF } from './exifIncrustat.js';
-import { dataOriginal, gpsTorre, jpegAmbExif } from './jpegProva.js';
+import { dataOriginal, gpsTorre, jpegAmbExif } from '../../../../tests/helpers/jpegProva.js';
 import {
   AJUDA_CAPCALERA_LLIURE, AJUDA_CAPCALERA_QUADRADA, AJUDA_RETALL, FORMES, configDeForma, costatDeSortida
 } from './useEnquadramentImatge.jsx';
@@ -345,8 +345,10 @@ describe('mode senzill · la forma de la capçalera', () => {
     expect(didactica.textContent).toBe(`${panoramic.etiqueta} · ${panoramic.ajuda}`);
     expect(didactica.getAttribute('aria-live')).toBe('polite');
     /* El visor, davant de tot: la caixa del visor és el primer fill del cos i el grup va després del zoom. */
-    const cos = dialeg(vista).querySelector('.sdp-enquadrament--senzill');
-    expect(cos.classList.contains('sdp-enquadrament--formes')).toBe(true);
+    /* Cicle 3 (261030, VD) · El mode senzill el diu el diàleg; el cos porta només classes amb regla. */
+    expect(dialeg(vista).classList.contains('sdp-enquadrament__dialeg--senzill')).toBe(true);
+    const cos = dialeg(vista).querySelector('.sdp-enquadrament');
+    expect(cos.className).toBe('sdp-enquadrament sdp-enquadrament--formes');
     expect(cos.firstElementChild.className).toBe('sdp-enquadrament__visor-caixa');
   });
 
@@ -365,7 +367,8 @@ describe('mode senzill · la forma de la capçalera', () => {
       expect(dialeg(vista).querySelector('fieldset'), forma).toBeNull();
       expect(dialeg(vista).classList.contains('sdp-dialeg--s'), forma).toBe(true);
       expect(within(dialeg(vista)).queryByRole('radio'), forma).toBeNull();
-      const cos = dialeg(vista).querySelector('.sdp-enquadrament--senzill');
+      const cos = dialeg(vista).querySelector('.sdp-enquadrament');
+      expect(cos.className, forma).toBe('sdp-enquadrament');
       expect([...cos.children].map((e) => e.className), forma).toEqual([
         `sdp-enquadrament__visor-caixa${forma === 'avatar' ? ' sdp-enquadrament__visor-caixa--cercle' : ''}`,
         'sdp-nomes-lector',

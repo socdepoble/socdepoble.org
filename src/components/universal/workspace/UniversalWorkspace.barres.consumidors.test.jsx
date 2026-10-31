@@ -5,7 +5,7 @@
    navegador; ací es munten les seccions DE VERITAT amb els detalls pesats
    simulats, com PerfilShell.espai.test.jsx i AdminSection.mestreDetall.test.jsx.
      · Admin (Usuaris, Entitats): navigationGroups buit i cap categoria. El
-       rail no hi va (railEsquerra només amb una navegació declarada): la
+       rail no hi anava (el rail fix de «mitja» només amb una navegació declarada): la
        navegació de «mitja», amagada com abans, i el detall sense perdre els
        56 px.
      · Perfil: té navegació (PERFIL, GRUPS I EMPRESES, APLICACIONS) i rep el
@@ -14,6 +14,10 @@
        entitat i aplicació; el detall conserva la seua classe (isolation de
        PerfilShell.css) i el panell desplegat no hi arriba (260 contra 56 +
        la llista, que en fa 240 com a mínim).
+   Ordre del Mestre (30-10-2026 ~12:45) · Columnes fixes: fora de mòbil el
+   Workspace no passa per «mitja». A 820 i a 764, Perfil i Admin són «ample»:
+   la navegació és la primera columna de la graella, desplegada, i plegar-la
+   és el rail d'«ample», mai un panell amb vel.
    jsdom no fa layout: l'amplària és la de la closca. Dades sintètiques. */
 import React from 'react';
 import { act, cleanup, fireEvent, render, within } from '@testing-library/react';
@@ -108,37 +112,43 @@ const navegacio = (c) => c.querySelector('#app-grid-sidebar');
 const tancada = (el) => [el.hasAttribute('inert'), el.getAttribute('aria-hidden')];
 
 for (const amplada of [820, 764]) {
-  test(`Perfil a ${amplada} (mitja): la navegació PERFIL és el rail fix, oberta, i el detall conserva la seua classe`, () => {
+  test(`Perfil a ${amplada} (columnes fixes): la navegació PERFIL és la primera columna de la graella i el detall conserva la seua classe`, () => {
     ambAmplada(amplada);
     const { container } = render(<PerfilShell />);
-    expect([closca(container).dataset.layout, closca(container).dataset.esquerra]).toEqual(['mitja', 'rail']);
+    expect([closca(container).dataset.layout, closca(container).dataset.panell]).toEqual(['ample', '']);
     expect(tancada(navegacio(container))).toEqual([false, null]);
     const nav = within(navegacio(container));
-    expect(nav.getByRole('button', { name: 'Expandir PERFIL' }).getAttribute('aria-controls')).toBe('app-grid-sidebar');
-    /* Una icona per persona, entitat i aplicació, totes a l'abast. */
+    /* Persona, entitat i aplicació, totes a l'abast a l'arbre desplegat. */
     for (const nom of ['Javi Llinares', 'Forn', 'Gestoria de Poble']) {
-      expect(nav.getByRole('button', { name: nom })).toBeTruthy();
+      expect(nav.getAllByRole('button', { name: new RegExp(nom) }).length).toBeGreaterThan(0);
     }
     expect(container.querySelector('#app-grid-main > .sdp-workspace-detail.perfil-espai__detall')).not.toBeNull();
     expect(container.querySelector('.app-grid-page.perfil-espai.sdp-workspace--universal')).not.toBeNull();
-    /* Expandir obri el panell de sempre, i Replegar el torna al rail. */
-    fireEvent.click(nav.getByRole('button', { name: 'Expandir PERFIL' }));
-    expect(closca(container).dataset.panell).toBe('left');
+    expect(container.querySelector('.app-grid-resizer--left')).not.toBeNull();
+    expect(container.querySelector('.app-grid-resizer--middle')).not.toBeNull();
+    /* Replegar el porta al rail d'«ample» i Expandir el torna a la graella:
+       cap panell. */
     fireEvent.click(nav.getByRole('button', { name: 'Replegar PERFIL' }));
     expect(closca(container).dataset.panell).toBe('');
-    expect(nav.getByRole('button', { name: 'Expandir PERFIL' })).toBeTruthy();
+    expect(container.querySelector('.has-left-collapsed')).not.toBeNull();
+    for (const nom of ['Javi Llinares', 'Forn', 'Gestoria de Poble']) {
+      expect(nav.getByRole('button', { name: nom })).toBeTruthy();
+    }
+    fireEvent.click(nav.getByRole('button', { name: 'Expandir PERFIL' }));
+    expect(closca(container).dataset.panell).toBe('');
+    expect(container.querySelector('.has-left-collapsed')).toBeNull();
+    expect(nav.getByRole('button', { name: 'Replegar PERFIL' })).toBeTruthy();
   });
 }
 
-test('Admin · Usuaris a 820 (mitja): cap rail (navegació buida), la navegació amagada com abans', async () => {
+test('Admin · Usuaris a 820 (columnes fixes): «ample», la navegació FILTRES és la columna de la graella, oberta, com a 1400', async () => {
   const redimensiona = ambAmplada(1400);
   const { container } = render(<AdminSection />);
-  /* El Tauler és una closca a mà (sense railEsquerra): en ample, el menú. */
+  /* El Tauler és una closca a mà (sense columnesFixes): en ample, el menú. */
   await act(async () => { fireEvent.click(within(navegacio(container)).getByRole('button', { name: 'Usuaris' })); });
   expect(container.querySelector('.app-grid-page.sdp-workspace--universal')).not.toBeNull();
   redimensiona(820);
-  expect(closca(container).dataset.layout).toBe('mitja');
-  expect(closca(container).hasAttribute('data-esquerra')).toBe(false);
-  expect(tancada(navegacio(container))).toEqual([true, 'true']);
+  expect([closca(container).dataset.layout, closca(container).dataset.panell]).toEqual(['ample', '']);
+  expect(tancada(navegacio(container))).toEqual([false, null]);
   expect(navegacio(container).querySelector('[aria-label="Expandir FILTRES"]')).toBeNull();
 });

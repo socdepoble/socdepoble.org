@@ -1,16 +1,31 @@
 let isBrowser = false;
 let hasSession = false;
+/* QA-C02 (Gauntlet 261029_1858) · «Navegador sense la capa» (fora del
+ * navegador, o la propietat absent) no és «capa bloquejada» (el getter llança:
+ * SecurityError amb les galetes blocades, en un marc de tercers o per política
+ * d'empresa). En el segon cas hi pot haver dades d'abans que no es poden
+ * esborrar: es guarda l'error per a qui ho ha de saber (magatzemWebPerAOblit). */
+let errorPreferencies = null;
+let errorSessio = null;
+
+function errorDeCapaBloquejada(error) {
+  /* Tal qual si és un objecte: una DOMException pot vindre d'un altre reialme (no instanceof Error). */
+  if (error !== null && typeof error === 'object') return error;
+  return Object.assign(new Error('La capa d’emmagatzematge del navegador està bloquejada.'), { name: 'SecurityError', cause: error });
+}
 
 try {
   isBrowser = typeof window !== 'undefined' && window.localStorage !== null && typeof window.localStorage !== 'undefined';
-} catch {
+} catch (error) {
   isBrowser = false;
+  errorPreferencies = errorDeCapaBloquejada(error);
 }
 
 try {
   hasSession = typeof window !== 'undefined' && window.sessionStorage !== null && typeof window.sessionStorage !== 'undefined';
-} catch {
+} catch (error) {
   hasSession = false;
+  errorSessio = errorDeCapaBloquejada(error);
 }
 
 /**
@@ -144,4 +159,56 @@ export function setPreferenciaLlegat(key, value, session = false) {
     else store.setItem(key, value);
     return true;
   } catch { return false; }
+}
+
+/* P1-12 pas 17 (D-09) · Façana mínima per a l'oblit del xat xifrat en eixir de
+ * la sessió: només veu les claus amb el prefix sdp_xat_ de la capa de sessió
+ * ('sessio') o de la de preferències ('preferencies'). Compta, nomena i esborra;
+ * cap lectura ni escriptura de valors, i cap esborrat fora del prefix (defensa
+ * en profunditat: el pipeline ja filtra). NO s'empassa els errors: l'oblit ha
+ * de saber-ho (OBLIT_FALLIT). Null si la capa no existix en este entorn.
+ * QA-C02 · Una capa BLOQUEJADA (el getter llança, ara o en carregar este
+ * mòdul) no és una capa absent: torna una façana amb la mateixa forma que
+ * llança l'error en cada accés, i l'oblit la declara pendent. La capa es torna
+ * a mirar en cada crida: una que en carregar estava bloquejada i ara s'obri
+ * s'esborra de veres. */
+const PREFIX_OBLIT_XAT = 'sdp_xat_';
+const capaBloquejada = (error) => Object.freeze({
+  get length() { throw error; },
+  key() { throw error; },
+  removeItem() { throw error; }
+});
+function obriCapaPerAOblit(capa) {
+  if (typeof window === 'undefined') return { web: null, error: null };
+  try {
+    const web = capa === 'sessio' ? window.sessionStorage : window.localStorage;
+    return { web: web ?? null, error: null };
+  } catch (error) {
+    return { web: null, error: errorDeCapaBloquejada(error) };
+  }
+}
+export function magatzemWebPerAOblit(capa) {
+  if (capa !== 'sessio' && capa !== 'preferencies') return null;
+  const { web, error } = obriCapaPerAOblit(capa);
+  const bloqueig = error ?? (web === null ? (capa === 'sessio' ? errorSessio : errorPreferencies) : null);
+  if (bloqueig) return capaBloquejada(bloqueig);
+  if (web === null) return null;
+  const clausDelXat = () => {
+    const claus = [];
+    for (let i = 0; i < web.length; i += 1) {
+      const clau = web.key(i);
+      if (typeof clau === 'string' && clau.startsWith(PREFIX_OBLIT_XAT)) claus.push(clau);
+    }
+    return claus;
+  };
+  return Object.freeze({
+    get length() { return clausDelXat().length; },
+    key: (index) => clausDelXat()[index] ?? null,
+    removeItem: (clau) => {
+      if (typeof clau !== 'string' || !clau.startsWith(PREFIX_OBLIT_XAT)) {
+        throw new TypeError('Només es poden esborrar claus del xat xifrat (sdp_xat_).');
+      }
+      web.removeItem(clau);
+    }
+  });
 }

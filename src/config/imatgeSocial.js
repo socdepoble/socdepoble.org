@@ -250,7 +250,46 @@ export const VARIANTS_SOCIALS = Object.freeze({
   '/assets/towns/la-torre-de-les-macanes/1.jpg': '/assets/towns/la-torre-de-les-macanes/1-social-1200x630.jpg',
   '/assets/towns/orxeta/1.jpg': '/assets/towns/orxeta/1-social-1200x630.jpg',
   '/assets/towns/sella/1.jpg': '/assets/towns/sella/1-social-1200x630.jpg',
-  '/assets/towns/tibi/1.jpg': '/assets/towns/tibi/1-social-1200x630.jpg'
+  '/assets/towns/tibi/1.jpg': '/assets/towns/tibi/1-social-1200x630.jpg',
+  /* Ordre del Mestre (30-10-2026; candidatura NLnet NGI Fediversity) · La
+     portada de /page/fediversity és una WebP de 1024x1024 (WhatsApp no en
+     pinta). Mateixa convenció: retall de cobertura centrat de la .webp,
+     JPEG baseline, ≤300 000 B, sense APP1. */
+  '/assets/uploads/fediversity-hero.webp': '/assets/uploads/fediversity-hero-social-1200x630.jpg',
+  /* Ordre del Mestre (30-10-2026, prompt 2208, T1 i T2.1) · Les portades de
+     les rutes públiques que el manifest social encara no portava: les deu
+     /page/* informatives, /wikidepoble, /disseny, les huit /plugin/*, les
+     nou /consola/<id> i les quatre /consola/govern/<id>. Una WebP, més de
+     300 000 B o un quadrat que no fa 1200x630 (el criteri d'OG-02). Mateixa
+     convenció: retall de cobertura centrat, JPEG baseline q85 (un punt menys
+     fins que hi cap), ≤300 000 B, sense APP1. De Disseny i de la Wiki, el
+     .png canònic (la .webp n'és la bessona i hi arriba per ambVariantSocial). */
+  '/assets/nano_cards/mur_nano_card.jpg': '/assets/nano_cards/mur_nano_card-social-1200x630.jpg',
+  '/assets/nano_cards/mercat_nano_card.webp': '/assets/nano_cards/mercat_nano_card-social-1200x630.jpg',
+  '/assets/nano_cards/calendari_nano_card.jpg': '/assets/nano_cards/calendari_nano_card-social-1200x630.jpg',
+  '/assets/nano_cards/vehicle_nano_card.jpg': '/assets/nano_cards/vehicle_nano_card-social-1200x630.jpg',
+  '/assets/nano_cards/animalets_nano_card.jpg': '/assets/nano_cards/animalets_nano_card-social-1200x630.jpg',
+  '/assets/notes/bloc_notes_vintage.jpg': '/assets/notes/bloc_notes_vintage-social-1200x630.jpg',
+  '/assets/uploads/empresa/soc-de-poble/posts/genotip/portada_genotip.png': '/assets/uploads/empresa/soc-de-poble/posts/genotip/portada_genotip-social-1200x630.jpg',
+  '/assets/uploads/brain/ibanez_pedra_seca_design_1780873465211.png': '/assets/uploads/brain/ibanez_pedra_seca_design_1780873465211-social-1200x630.jpg',
+  '/assets/ui/plugins/mapa_vinyeta.webp': '/assets/ui/plugins/mapa_vinyeta-social-1200x630.jpg',
+  '/assets/ui/plugins/treball_vinyeta.webp': '/assets/ui/plugins/treball_vinyeta-social-1200x630.jpg',
+  '/assets/ui/plugins/habitatge_vinyeta.webp': '/assets/ui/plugins/habitatge_vinyeta-social-1200x630.jpg',
+  '/assets/ui/plugins/vehicle_vinyeta.webp': '/assets/ui/plugins/vehicle_vinyeta-social-1200x630.jpg',
+  '/assets/ui/plugins/animalets_vinyeta.webp': '/assets/ui/plugins/animalets_vinyeta-social-1200x630.jpg',
+  '/assets/ui/plugins/gestoria_vinyeta.jpg': '/assets/ui/plugins/gestoria_vinyeta-social-1200x630.jpg',
+  '/assets/ui/plugins/rebost_vinyeta.webp': '/assets/ui/plugins/rebost_vinyeta-social-1200x630.jpg',
+  '/assets/ui/plugins/salut_vinyeta.webp': '/assets/ui/plugins/salut_vinyeta-social-1200x630.jpg',
+  '/assets/ui/plugins/rss_vinyeta.jpg': '/assets/ui/plugins/rss_vinyeta-social-1200x630.jpg',
+  '/assets/ui/plugins/tpv_vinyeta.webp': '/assets/ui/plugins/tpv_vinyeta-social-1200x630.jpg',
+  '/assets/ui/plugins/bascula_vinyeta.jpg': '/assets/ui/plugins/bascula_vinyeta-social-1200x630.jpg',
+  '/assets/nano_cards/metriques_nano_card.jpg': '/assets/nano_cards/metriques_nano_card-social-1200x630.jpg',
+  '/assets/nano_cards/lector_rss_nano_card.jpg': '/assets/nano_cards/lector_rss_nano_card-social-1200x630.jpg',
+  '/assets/nano_cards/cervell_nano_card.jpg': '/assets/nano_cards/cervell_nano_card-social-1200x630.jpg',
+  '/assets/nano_cards/govern_requeriments_nano_card.jpg': '/assets/nano_cards/govern_requeriments_nano_card-social-1200x630.jpg',
+  '/assets/nano_cards/govern_balanc_nano_card.jpg': '/assets/nano_cards/govern_balanc_nano_card-social-1200x630.jpg',
+  '/assets/nano_cards/govern_certificacio_nano_card.jpg': '/assets/nano_cards/govern_certificacio_nano_card-social-1200x630.jpg',
+  '/assets/nano_cards/govern_comunicacio_nano_card.jpg': '/assets/nano_cards/govern_comunicacio_nano_card-social-1200x630.jpg'
 });
 
 /* L'esquema d'una referència ('https', 'sdp-media', 'data'…), en minúscules, o

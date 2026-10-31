@@ -35,15 +35,21 @@
  *     /xat/sdp-per-defecte:<clau> s'encamina per la clau (XatSection), un
  *     enllaç vell sí que hi pot portar qui no té sessió en remot: va al seu
  *     xat de només lectura (fake-javi), com la fila del xat de mostra.
+ *     P1-70 (ordre del Mestre, 261029 18:20: «Quiero que la gente […] pueda
+ *     hablar conmigo como servicio técnico») · Derogat «no s'obri res i un
+ *     avís ho diu»: la fila obri SEMPRE una conversa, sense cap avís que la
+ *     bloquege. El directe de veres on es pot (llavor i local; en remot, només
+ *     amb l'UUID del compte de Javi declarat a IDS_REMOTS_FUNDACIONALS, mai
+ *     pel nom ni pel slug); si no, o si qui mira és Javi (`serveiTecnic`), la
+ *     conversa d'atenció personal i servei tècnic de només lectura
+ *     (RUTA_XAT_DE_SERVEI_TECNIC_DE_JAVI), que diu per què.
  * És l'ÚNIC punt que canvia si el Mestre tria una altra via per a la IAIA.
  */
 import { useNavigate } from '../../app/contexts/RouterContext';
-import { useTraductorOpcional, tradueix } from '../../components/PedraSeca/hooks/useTraductorOpcional.js';
-import { useToast } from '../../components/universal/NotificationContext.jsx';
 import { objecteDePagina, rutaXatDePagina, rutaXatPrivat } from '../../config/objecteConnectable.js';
 import { AGENTS_MAP } from '../../data/agentsSeed.js';
 import { PAGINES_AMB_XAT } from '../../data/contracte.js';
-import { IAIA_ID } from '../../data/identitatsSeed.js';
+import { IAIA_ID, IDS_REMOTS_FUNDACIONALS, PERSONA_PILOT } from '../../data/identitatsSeed.js';
 import { ID_FIL_DE_MOSTRA_DE_JAVI } from '../../data/xatsPerDefecte.js';
 
 /** La ruta del xat públic de la pàgina de la IAIA, amb el títol del contracte. */
@@ -95,45 +101,42 @@ export function rutaDelXatDeLaIAIA(modeDades, senseSessio = false) {
  * Gauntlet 261016 (Bloc 3.6.1) · On porta la fila de Javi Llinares en cada
  * mode de dades, o null en remot (vegeu la capçalera): el directe de la
  * llavor amb el seu id del padró, que creaFilDirecte troba o crea.
+ * P1-70 (261029) · En remot, el directe amb el compte de Javi NOMÉS si el
+ * Mestre n'ha declarat l'UUID (IDS_REMOTS_FUNDACIONALS, identitatsSeed.js):
+ * mai pel nom ni pel slug (un homònim o un slug pres per un altre). Sense,
+ * null, com sempre. `idsRemots` és per a les proves; per defecte, els declarats.
  */
-export function rutaDelXatDeJavi(modeDades) {
-  return MODES_LOCALS.has(modeDades) ? rutaXatPrivat({ id: AGENTS_MAP.JAVI.id }) : null;
+export function rutaDelXatDeJavi(modeDades, { idsRemots = IDS_REMOTS_FUNDACIONALS } = {}) {
+  if (MODES_LOCALS.has(modeDades)) return rutaXatPrivat({ id: AGENTS_MAP.JAVI.id });
+  const declarat = (idsRemots?.[PERSONA_PILOT.slug] || []).find((id) => typeof id === 'string' && id.trim());
+  return declarat ? rutaXatPrivat({ id: declarat.trim() }) : null;
 }
 
-/** [clau i18n, reserva] de l'avís de la fila de Javi quan el servidor no en
-    declara el compte.
-    Auditoria adversarial 261016 (P2) · Abans era el de SDP-XAT-016 («Esta
-    persona no està disponible al xat.»), que el servidor reserva per a qui no
-    ha donat el consentiment (supabase/xat.js): deia de Javi una cosa que no
-    és la causa. Ara és el del contacte que encara no està connectat al xat
-    del poble, el de FilaPersona, que ja és a les cinc llengües (i18n.js) i
-    diu el que passa: este poble encara no sap quin compte és el seu. */
-export const AVIS_JAVI_NO_DISPONIBLE = Object.freeze(['section.xat.padro.ajudaPendent', 'Este contacte encara no està connectat al xat del poble.']);
+/** P1-70 (261029) · La conversa d'atenció personal i servei tècnic amb Javi
+    quan no se'n pot obrir cap directe: el seu xat de només lectura
+    (fake-javi), que XatContext (filServeiTecnic) o el xat de mostra
+    (FakeChatOnboarding) resolen amb l'avís de per què. Substituïx l'avís
+    «Este contacte encara no està connectat al xat del poble» (AVIS_JAVI_NO_DISPONIBLE),
+    que tornava a la llista sense obrir res. */
+export const RUTA_XAT_DE_SERVEI_TECNIC_DE_JAVI = `/xat/${ID_FIL_DE_MOSTRA_DE_JAVI}`;
 
 /**
- * (clau, { modeDades, senseSessio }) => void: obri el xat real de la fila
- * `clau` ('javi' | 'iaia'; Gauntlet 261016_1530: ja cap 'socdepoble').
- * `modeDades` i `senseSessio` són els de useXat(); sense, el remot amb
- * sessió, com abans. Una clau desconeguda no fa res.
+ * (clau, { modeDades, senseSessio, serveiTecnic }) => void: obri el xat real
+ * de la fila `clau` ('javi' | 'iaia'; Gauntlet 261016_1530: ja cap
+ * 'socdepoble'). `modeDades` i `senseSessio` són els de useXat(); sense, el
+ * remot amb sessió, com abans. Una clau desconeguda no fa res.
+ * P1-70 (261029) · `serveiTecnic` (cert si useXat() porta filServeiTecnic:
+ * qui mira és Javi, o el remot sense el seu compte declarat) porta la fila de
+ * Javi a la conversa d'atenció personal i servei tècnic. Cap avís que la
+ * bloquege: Javi obri SEMPRE una conversa.
  */
 export default function useObriXatPerDefecte() {
   const navigate = useNavigate();
-  const { showToast } = useToast();
-  const t = useTraductorOpcional();
-  return (clau, { modeDades = 'remote', senseSessio = false } = {}) => {
+  return (clau, { modeDades = 'remote', senseSessio = false, serveiTecnic = false } = {}) => {
     if (clau === 'iaia') navigate(rutaDelXatDeLaIAIA(modeDades, senseSessio), { replace: true });
     else if (clau === 'javi') {
-      if (senseSessio) {
-        navigate(`/xat/${ID_FIL_DE_MOSTRA_DE_JAVI}`, { replace: true });
-        return;
-      }
-      const ruta = rutaDelXatDeJavi(modeDades);
-      if (ruta) {
-        navigate(ruta, { replace: true });
-        return;
-      }
-      showToast(tradueix(t, AVIS_JAVI_NO_DISPONIBLE), 'info');
-      navigate('/xat', { replace: true });
+      const ruta = senseSessio || serveiTecnic ? null : rutaDelXatDeJavi(modeDades);
+      navigate(ruta || RUTA_XAT_DE_SERVEI_TECNIC_DE_JAVI, { replace: true });
     }
   };
 }

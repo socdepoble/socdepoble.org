@@ -24,21 +24,12 @@ vi.mock('../sections/notes/GlobalSaveManager.js', async importOriginal => ({
   getDraftsForScope: async () => ({})
 }));
 
-/* A vitest DEV és true. `produccio` fa que App veja un build sense tocar
-   l'entorn; la resta de vegades la guarda real rep el DEV que li passa App. */
-const guarda = vi.hoisted(() => ({ produccio: false }));
-vi.mock('./guards/guardaConsola.js', async importOriginal => {
-  const real = await importOriginal();
-  return { ...real, consolaDemanaSessio: dev => guarda.produccio || real.consolaDemanaSessio(dev) };
-});
-
 /* T7 (261001) · La X de la franja es recorda a sessionStorage: cada prova
    comença sense. Les proves són fora de L2 (tractor-persistencia). */
 const CLAU_DESADA = STORAGE_PREFIX + CLAU_FRANJA_TANCADA;
 
 afterEach(() => {
   cleanup();
-  guarda.produccio = false;
   window.history.replaceState(null, '', '/');
   vi.unstubAllGlobals();
   vi.restoreAllMocks();
@@ -422,13 +413,24 @@ test('a vite serve una pàgina de la Consola (/consola/pols) es pinta sense sess
   });
 }, 10000);
 
-test('en un build (DEV false) /consola/pols sense sessió continua portant a /registre', async () => {
-  guarda.produccio = true;
-  await muntaSenseSessio('/consola/pols', async () => {
-    await waitFor(() => expect(window.location.pathname).toBe('/registre'));
-    expect(tornar()).toBe('/consola/pols');
-  });
-});
+/* Ordre del Mestre (30-10-2026, prompt 2208, T2.2) · Prova actualitzada a
+   propòsit: /consola/* és de lectura pública també en un build. Sense sessió
+   i amb DEV fals, la pàgina es pinta i no porta a /registre; fora de DEV no
+   demana res a /__iaia/* i ho diu. Derogat: «en un build (DEV false)
+   /consola/pols sense sessió continua portant a /registre». */
+test('en un build (DEV false) /consola/pols sense sessió es pinta i no porta a /registre', async () => {
+  vi.stubEnv('DEV', false);
+  try {
+    await muntaSenseSessio('/consola/pols', async () => {
+      expect(await screen.findByRole('heading', { name: paginaConsola('pols').title }, { timeout: 8000 })).toBeTruthy();
+      expect(window.location.pathname).toBe('/consola/pols');
+      expect(await screen.findByText('Consola no disponible')).toBeTruthy();
+      expect(screen.queryByText('Accés restringit')).toBeNull();
+    });
+  } finally {
+    vi.unstubAllEnvs();
+  }
+}, 10000);
 
 /* ── Lliscar per recarregar ──────────────────────────────────────────────
    Les regles del gest es proven a hooks/usePullToRefresh.test.js; ací només

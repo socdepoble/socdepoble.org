@@ -134,14 +134,14 @@ export default function UniversalToolbar({
       ref={containerRef}
       className="sdp-editor-tools" 
       data-compact={compact}
-      role="group" 
-      aria-label="Eines de l'editor"
+      role="group"
+      aria-label={t('section.notes.eines', "Eines de l'editor")}
     >
       <div className="sdp-editor-tools__formats">
         <button 
           type="button" 
-          aria-label="Tornar a la llista" 
-          title="Tornar a la llista"
+          aria-label={t('section.notes.tornaLlista', 'Tornar a la llista')}
+          title={t('section.notes.tornaLlista', 'Tornar a la llista')}
           onClick={handleBack} 
           className="sdp-bloc-icon d-mobile-only"
         >
@@ -149,21 +149,21 @@ export default function UniversalToolbar({
         </button>
         
         {compact && <button ref={toggleRef} type="button" className="sdp-bloc-icon"
-          aria-label="Format del text" aria-expanded={formatOpen} aria-controls={formatId}
+          aria-label={t('section.notes.format.menu', 'Format del text')} aria-expanded={formatOpen} aria-controls={formatId}
           onClick={() => setFormatOpen(value => !value)}>Aa</button>}
         <div id={formatId} className="sdp-editor-tools__group sdp-editor-tools__format-options"
-          hidden={compact && !formatOpen} role="group" aria-label="Opcions de format del text">
+          hidden={compact && !formatOpen} role="group" aria-label={t('section.notes.format.opcions', 'Opcions de format del text')}>
           <BlocIcon 
             icon={Heading3} 
             active={isSubheading} 
-            label="Alternar subtítol (H3)" 
+            label={t('section.notes.format.h3', 'Alternar subtítol (H3)')}
             onClick={toggleSubheading} 
             disabled={!toggleSubheading} 
           />
           <BlocIcon 
             icon={Heading2} 
             active={isHeading} 
-            label="Alternar títol (H2)" 
+            label={t('section.notes.format.h2', 'Alternar títol (H2)')}
             onClick={toggleHeading} 
             disabled={!toggleHeading} 
           />
@@ -212,7 +212,6 @@ export default function UniversalToolbar({
               label={t('section.notes.delete', 'Borrar')}
               disabled={deleteDisabled}
               onClick={onDelete}
-              className="sdp-bloc-action sdp-bloc-action--perill"
             />
           )}
           {onPublish && (

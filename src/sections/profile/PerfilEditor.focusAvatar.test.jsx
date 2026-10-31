@@ -115,13 +115,13 @@ const capcalera = () => document.querySelector('.sdp-editor-document header.page
 /* Encàrrec d'harmonització (261018, ordre del Mestre: «la gestió d'imatges va
    dins d'Edició avançada») · L'avatar redó i la ranura ja no són damunt de
    l'H1: viuen dins del desplegable PLEGAT «Edició avançada» (l'avatar a
-   .sdp-edicio-avancada__identitat, la ranura a .sdp-edicio-avancada__logotip).
+   .sdp-edicio-avancada__identitat, la ranura a [data-sdp-ranura="logotip"]).
    La persona l'obri clicant el resum abans de tocar-hi res. */
 const desplegable = () => document.querySelector('.sdp-editor-document details.sdp-edicio-avancada');
 const botoAvatar = () => desplegable().querySelector('.sdp-edicio-avancada__identitat button.page-title-avatar--canvia');
 /* La ranura, pel seu contenidor (el nom l'escriu l'adaptador: «Avatar»).
    Pla 2000 (punt 2) · La persona ja no en té: ha de ser sempre null. */
-const ranura = () => desplegable().querySelector('.sdp-edicio-avancada__logotip button');
+const ranura = () => desplegable().querySelector('[data-sdp-ranura="logotip"] button');
 const selector = (camp) => document.querySelector(`input[type="file"][data-imatge-de-fitxa="${camp}"]`);
 function obriEdicioAvancada() {
   expect(desplegable().open).toBe(false);

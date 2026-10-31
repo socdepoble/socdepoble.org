@@ -107,12 +107,15 @@ function senseEspecimens(container, tocats) {
   expect(dels.filter((el) => tocats.has(el)).map(nom)).toEqual([]);
 }
 
-test('a 820 («mitja», rail de la navegació): el rail, el cos de la llista i el detall, i cap scroller dels espècimens del Xat', () => {
+/* Columnes fixes (ordre del Mestre, 30-10-2026) · A 820 el Workspace és
+   «ample», amb les tres columnes desplegades: abans era «mitja», amb el rail
+   fix de la navegació. */
+test('a 820 («ample», columnes fixes): el cos de la navegació i de la llista i el detall, i cap scroller dels espècimens del Xat', () => {
   const { container } = munta(820);
-  expect(container.querySelector('.app-grid-shell').dataset.layout).toBe('mitja');
+  expect(container.querySelector('.app-grid-shell').dataset.layout).toBe('ample');
   const tocats = reservats(container);
   const esperats = [
-    container.querySelector('#app-grid-sidebar .sdp-workspace-rail'),
+    container.querySelector('#app-grid-sidebar .sdp-workspace-column__body'),
     container.querySelector('#app-grid-list .sdp-workspace-column__body'),
     container.querySelector('#app-grid-main > .sdp-workspace-detail')
   ];

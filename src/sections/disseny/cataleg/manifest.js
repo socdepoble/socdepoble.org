@@ -30,6 +30,8 @@ export const ICONES_ESPECIMENS = Object.freeze({
     identitat: '🎭', 'linia-del-temps': '🕰️', histograma: '📊',
     articles: '🏷️', colleccio: '🛍️', 'imatge-apaisada': '🌄', 'graella-targetes': '🎴',
     'icones-alergens': '🥜', 'carrusel-imatges': '🎠',
+    /* Ordre del Mestre (31-10-2026, prompt 2208, T3.1) · el tauler compacte. */
+    'quadre-comandament': '🕹️',
     /* Esmena 2 del pla 261007_1645 · el que l'actor ja té publicat. */
     'publicacions-actor': '📚'
   }),
@@ -165,7 +167,11 @@ const FONAMENTS = [
     'linia temps apunts hora jornada torn diari historial'),
   especimen('fonaments', 'histograma', 'Histograma', 'PedraSeca/organismes/Histograma.jsx', ['organisme', 'dades', 'grafic'],
     'Barres verticals fetes només amb CSS: l’alçada és una classe de nivell de 0 a 10, sense style= ni llibreries de gràfics. El lector de pantalla llig el valor sencer de cada barra.',
-    'histograma barres grafic hores setmana nivell')
+    'histograma barres grafic hores setmana nivell'),
+  /* Ordre del Mestre (31-10-2026, 00:20, prompt 2208, T3.1) · el motlle de tauler compacte. */
+  especimen('fonaments', 'quadre-comandament', 'Quadre de Comandament', 'PedraSeca/organismes/QuadreDeComandament.jsx', ['organisme', 'dades', 'grafic', 'tauler'],
+    'El tauler compacte de Telemetria, Consola, Gestoria i TPV: estat, targetes KPI d’etiqueta i xifra, l’explicació fora de les caixes, visitants i vistes per hora amb el detall de cada barra, i un rànquing d’una línia per fila.',
+    'quadre comandament tauler metriques kpi xifres grafica dues series ranquing umami holded loyverse')
 ];
 
 /* Estructura: primer l'arbre (qui és el pare de qui), després la closca
@@ -374,7 +380,7 @@ CATALOG_ITEMS.push(
    (§8): la imatge apaïsada 16:9 de les targetes del Lector de notícies, i només d'elles. */
 CATALOG_ITEMS.push(
   especimen('fonaments', 'imatge-apaisada', 'Imatge apaïsada 16:9', 'Variant panoràmica de GraellaArticles i LlistaArticles · excepció del Lector', ['organisme', 'imatge', 'excepcio'],
-    'L’única excepció a l’1:1 de les peces de Pedra Seca (§8; els fulls pecesApps.css i catalegColleccio.css), autoritzada pel Mestre el 261003 i limitada a les targetes del Lector de notícies: la imatge i el marcador ocupen un marc 16:9. Cap altra app la pot fer servir.',
+    'L’única excepció a l’1:1 de les peces de Pedra Seca (§8; els blocs pecesApps i catalegColleccio de src/css/modules.css), autoritzada pel Mestre el 261003 i limitada a les targetes del Lector de notícies: la imatge i el marcador ocupen un marc 16:9. Cap altra app la pot fer servir.',
     'apaisada 16:9 lector noticies rss targeta revista miniatura excepcio')
 );
 

@@ -7,6 +7,15 @@
    vista. On era l'única porta en «mitja» (el mode compacte, sense cap rail),
    també es queda. Sense la prop, el de sempre (Wiki, Disseny, Perfil…). I el glif
    d'ordenar ja no va forçat a 20px: 24, com tots els de les dues files.
+   Columnes fixes (ordre del Mestre, 30-10-2026) · Fora de mòbil el Workspace
+   no passa per «mitja»: a 820 la navegació és la columna del costat (o el
+   seu rail) i la capçalera de la llista no porta cap carpeta, amb la prop o
+   sense, també en el mode compacte. En «estret», el de sempre.
+   Decisió 4 del Mestre (30-10-2026 ~15:00) · Retirat el rail fix de «mitja»
+   (railEsquerra), obridorALaLlista ja no tenia cap efecte i l'espai ja no la
+   llig. Corrector del Gauntlet f4 (30-10-2026) · El Bloc ja no la passa, i
+   de davall només una prova la passa encara: la regressió explícita de
+   «s'ignora» (la capçalera fa el mateix que sense). Les altres, sense.
    jsdom no fa layout: l'amplària de la closca, l'observador i els fotogrames,
    a mà. Dades sintètiques. */
 import React from 'react';
@@ -85,11 +94,12 @@ const files = (c) => [...llista(c).querySelectorAll('aside.sdp-workspace-column 
 /* L'obridor de la navegació a l'esquerra del títol de la llista. */
 const carpetaDeLaCapcalera = (c) => files(c)[0]?.querySelector('[data-obri-columna][aria-controls="app-grid-sidebar"]') ?? null;
 
-test('§6 · sense la prop, la carpeta de la capçalera de la llista es queda (Wiki, Disseny, Perfil): en «mitja» i en «estret»', () => {
+test('§6 · sense la prop (Wiki, Disseny, Perfil), la carpeta de la capçalera de la llista: a 820 (columnes fixes) no hi és, la navegació és al costat; en «estret» es queda', () => {
   entorn(820, () => {
     const { container } = munta();
-    expect(closca(container).dataset.layout).toBe('mitja');
-    expect(carpetaDeLaCapcalera(container)).not.toBeNull();
+    expect(closca(container).dataset.layout).toBe('ample');
+    expect(carpetaDeLaCapcalera(container)).toBeNull();
+    expect(within(container.querySelector('#app-grid-sidebar')).getByRole('button', { name: 'Replegar CARPETES' })).toBeTruthy();
   });
   cleanup();
   entorn(375, () => {
@@ -100,22 +110,23 @@ test('§6 · sense la prop, la carpeta de la capçalera de la llista es queda (W
   });
 });
 
-test('§6 · obridorALaLlista={false} en «mitja»: cap carpeta a la capçalera; la navegació continua al rail fix de l’esquerra', () => {
+test('Decisió 4 · obridorALaLlista={false} (retirada) s’ignora: a 820 (columnes fixes), cap carpeta a la capçalera; la navegació és la columna de l’esquerra, o el seu rail', () => {
   entorn(820, () => {
-    const { container } = munta({ obridorALaLlista: false });
-    expect([closca(container).dataset.layout, closca(container).dataset.esquerra]).toEqual(['mitja', 'rail']);
+    const { container } = munta({ obridorALaLlista: false, columnesInicials: { left: true } });
+    expect(closca(container).dataset.layout).toBe('ample');
     expect(carpetaDeLaCapcalera(container)).toBeNull();
     // El títol de la llista obri la fila: la primera peça és el plec (icona i NOTES).
     expect(files(container)[0].firstElementChild.className).toContain('app-grid-col-header__plec');
     const rail = container.querySelector('#app-grid-sidebar');
     expect(within(rail).getByRole('navigation', { name: 'CARPETES' })).toBeTruthy();
-    expect(within(rail).getByRole('button', { name: 'Expandir CARPETES' }).hasAttribute('data-obri-columna')).toBe(true);
+    /* El rail d'«ample»: l'Expandir de sempre, no cap obridor de panell. */
+    expect(within(rail).getByRole('button', { name: 'Expandir CARPETES' }).hasAttribute('data-obri-columna')).toBe(false);
   });
 });
 
-test('§6 · obridorALaLlista={false} en «estret»: la llista oberta tapa el rail, la carpeta de NOTES es queda i obri CARPETES d’un toc', () => {
+test('§6 · en «estret»: la llista oberta tapa el rail, la carpeta de NOTES es queda i obri CARPETES d’un toc', () => {
   entorn(375, () => {
-    const { container } = munta({ obridorALaLlista: false });
+    const { container } = munta();
     fireEvent.click(within(container.querySelector('#app-grid-sidebar')).getByRole('button', { name: 'Mur' }));
     expect(panell(container)).toBe('middle');
     const obridor = carpetaDeLaCapcalera(container);
@@ -129,18 +140,22 @@ test('§6 · obridorALaLlista={false} en «estret»: la llista oberta tapa el ra
   });
 });
 
-test('§6 · on la capçalera és l’única porta (mode compacte en «mitja», sense rail), la carpeta es queda encara que es demane llevar-la', () => {
+/* Columnes fixes (30-10-2026) · El mode compacte en «mitja» era l'únic cas
+   on la capçalera de la llista era l'única porta. A 820 ja és «ample»: la
+   navegació té el seu rail a la graella i el rail de la llista no hi
+   duplica cap carpeta. */
+test('§6 · mode compacte a 820 (columnes fixes): la navegació té el seu rail a la graella i cap rail ni capçalera de la llista hi duplica la carpeta', () => {
   entorn(820, () => {
-    const { container } = munta({ obridorALaLlista: false, compacte: true, mestreDetall: false });
-    expect(closca(container).dataset.layout).toBe('mitja');
-    expect(closca(container).hasAttribute('data-esquerra')).toBe(false);
-    expect(carpetaDeLaCapcalera(container)).not.toBeNull();
+    const { container } = munta({ compacte: true, mestreDetall: false });
+    expect(closca(container).dataset.layout).toBe('ample');
+    expect(within(container.querySelector('#app-grid-sidebar')).getByRole('button', { name: 'Expandir CARPETES' })).toBeTruthy();
+    expect(llista(container).querySelector('[aria-controls="app-grid-sidebar"]')).toBeNull();
   });
 });
 
 test('§6 · el glif d’ordenar fa 24px, com la lupa, la icona del títol i el [|<]; tota icona viu en una cel·la de botó', () => {
   entorn(820, () => {
-    const { container } = munta({ obridorALaLlista: false });
+    const { container } = munta();
     const [fila1, fila2] = files(container);
     const ordenar = within(fila2).getByRole('button', { name: 'Ordenar per data o nom' });
     expect(ordenar.querySelector('svg').getAttribute('width')).toBe('24');

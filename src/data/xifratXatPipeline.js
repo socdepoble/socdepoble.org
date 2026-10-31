@@ -32,7 +32,7 @@
 import { aBase64url, deBase64url, exigixCripto, sha256 } from './xifratXatCripto.js';
 import { MOTIU_EPOCA, ROL_EPOCA, TIPUS_FIL } from './xifratXatFormats.js';
 import { CODI, aplicaEpoca, creaDirectori, creaEpoca, esErrorProtocol, estatFilNou, obriMissatge, publiquesDe, xifraMissatge } from './xifratXatProtocol.js';
-import { desxifraAdjuntXat, metadadesAdjuntDe, midaBlobAdjunt, TIPUS_DE_CLASSE, xifraAdjuntXat } from './xatMultimediaXifrat.js';
+import { desxifraAdjuntXat, errorPressupostBlobs, metadadesAdjuntDe, midaBlobAdjunt, TIPUS_DE_CLASSE, xifraAdjuntXat } from './xatMultimediaXifrat.js';
 
 export const VERSIO_SOBRE = 1;
 export const PREFIX_CLAUS_XAT = 'sdp_xat_';
@@ -158,6 +158,9 @@ export function creaMotorXifrat({ cripto, impl, servei, magatzem, ara = () => Da
         });
       }
     }
+    /* Gauntlet c2 (C1) · Entre l'última guarda d'aplicaEpoca i ací l'àmbit pot haver canviat:
+       el context (amb la meua identitat) mai no entra a la RAM d'un altre àmbit. */
+    exigix();
     const context = Object.freeze({ estat, directori, jo, membres });
     servei.desaEstatFil(fil.id, context);
     return context;
@@ -168,8 +171,12 @@ export function creaMotorXifrat({ cripto, impl, servei, magatzem, ara = () => Da
   /** El paquet xifrat d'un enviament; amb la gènesi (epocaNova) si el fil encara no té època meua. */
   const prepara = async ({ fil, tipusFil, cos, config, exigix }) => {
     const entrada = normalitzaCos(cos);
-    const ctx = await contextDelFil({ fil, tipusFil, config, exigix });
     const id = typeof entrada.id === 'string' ? entrada.id : cripto.randomUUID();
+    /* Cicle 4 (tancament, e2ee-index-adjunts) · Un adjunt és del missatge que el porta: `a.id`
+       és l'id de la fila (publicaAdjunt i el blob al servidor). Qui rep tanca la fila que no ho
+       complix; ací no s'arriba ni a enviar-la. */
+    if (entrada.a && entrada.a.id !== id) throw errorMotor(CODI.adjuntIncoherent, 'L’adjunt no és d’este missatge.', { reintentable: false });
+    const ctx = await contextDelFil({ fil, tipusFil, config, exigix });
     let epocaNova = null;
     if (ctx.estat.cap === null || ctx.estat.cap.ck === null) {
       const epoca = (ctx.estat.ultima?.epoca ?? 0) + 1;
@@ -207,26 +214,112 @@ export function creaMotorXifrat({ cripto, impl, servei, magatzem, ara = () => Da
   /* Si l'enviament que portava la gènesi falla, el servidor no té l'època: el context es refà del servidor. */
   const descarta = (filId) => { servei.desaEstatFil(filId, null); };
 
-  /* Una fila xifrada → text en clar i metadades de sempre; cap error de fila tomba la llista. */
-  const obriUna = async (ctx, filId, fila, exigix) => {
+  /* Gauntlet c2 (C1, Codex 0256) · Èpoques remotes noves. El context es construïx una vegada
+     per àmbit; si després un altre membre rota l'època, els seus missatges arriben amb
+     `epoca-desconeguda`. Aleshores, UNA resincronització: les èpoques posteriors a l'última
+     vista (es demana des d'eixa i es filtra ací, siga quin siga el límit del servidor), els
+     meus sobres i aplicaEpoca en ordre, que valida la cadena (encadenament, kids, firma,
+     transició, sobre i compromís) amb la guarda d'àmbit a cada espera. Una època que no valida
+     queda saltada (IS-12) i els seus missatges continuen tancats. Les crides concurrents sobre
+     el mateix context compartixen la mateixa resincronització. Torna si n'ha aplicat cap. */
+  const resincronitzacions = new WeakMap();
+  const resincronitza = (ctx, filId, config, exigix) => {
+    const enCurs = resincronitzacions.get(ctx);
+    if (enCurs) return enCurs;
+    const promesa = (async () => {
+      const des = ctx.estat.ultima?.epoca ?? 0;
+      exigixTransport('epoquesDelFilXat');
+      const noves = [...(await impl.epoquesDelFilXat(filId, des, config) ?? [])]
+        .filter((e) => Number.isSafeInteger(e?.epoca) && e.epoca > des).sort((a, b) => a.epoca - b.epoca);
+      exigix();
+      if (!noves.length) return false;
+      exigixTransport('sobresMeusXat');
+      const sobres = (await impl.sobresMeusXat(filId, noves.map((e) => e.epoca), config)) ?? [];
+      exigix();
+      let aplicades = 0;
+      for (const e of noves) {
+        try {
+          await aplicaEpoca(cripto, {
+            estat: ctx.estat, jo: ctx.jo, declaracio: deBase64url(e.declaracio), firma: deBase64url(e.firma), directori: ctx.directori, vigent: exigix,
+            sobres: sobres.filter((s) => s.epoca === e.epoca).map(desserialitzaSobre)
+          });
+          aplicades += 1;
+        } catch (error) {
+          if (esAmbitCanviat(error)) throw error;
+          /* No valida: aplicaEpoca l'ha marcada saltada (o no encadena) i la resta prova igual (IS-12). */
+        }
+      }
+      exigix();
+      return aplicades > 0;
+    })();
+    resincronitzacions.set(ctx, promesa);
+    const solta = () => { if (resincronitzacions.get(ctx) === promesa) resincronitzacions.delete(ctx); };
+    promesa.then(solta, solta);
+    return promesa;
+  };
+
+  const obre = (ctx, filId, fila, exigix) => obriMissatge(cripto, { estat: ctx.estat, fila: desserialitzaXifrat(fila, filId), directori: ctx.directori, vigent: exigix });
+  const filaTancada = (error) => Object.freeze({ text: null, seguretat: Object.freeze({ xifrat: true, verificat: false, codi: esErrorProtocol(error) ? error.codi : (error?.codi ?? 'sobre-invalid') }), a: null });
+  /* L'època de la fila és posterior a l'última que este context ha vist? Només eixes justifiquen anar al servidor. */
+  const esEpocaPosterior = (ctx, fila) => Number.isSafeInteger(fila?.xifrat?.epoca) && fila.xifrat.epoca > (ctx.estat.ultima?.epoca ?? 0);
+
+  /* Una fila xifrada → text en clar i metadades de sempre; cap error de fila tomba la llista.
+     `sincronitzaEpoques` (C1): la que fa la resincronització, com a molt una per crida d'obri. */
+  const obriUna = async (ctx, filId, fila, exigix, sincronitzaEpoques = null) => {
     const enCau = servei.textDesxifrat(filId, fila.id);
     if (enCau) return enCau;
-    let obert;
-    try {
-      obert = await obriMissatge(cripto, { estat: ctx.estat, fila: desserialitzaXifrat(fila, filId), directori: ctx.directori, vigent: exigix });
-    } catch (error) {
-      if (esAmbitCanviat(error)) throw error;
-      return Object.freeze({ text: null, seguretat: Object.freeze({ xifrat: true, verificat: false, codi: esErrorProtocol(error) ? error.codi : (error?.codi ?? 'sobre-invalid') }), a: null });
+    let obert = null;
+    let fallada = null;
+    try { obert = await obre(ctx, filId, fila, exigix); } catch (error) { fallada = error; }
+    if (fallada !== null && !esAmbitCanviat(fallada) && fallada?.codi === CODI.epocaDesconeguda && typeof sincronitzaEpoques === 'function' && esEpocaPosterior(ctx, fila)) {
+      try { await sincronitzaEpoques(); } catch (error) {
+        if (esAmbitCanviat(error)) throw error;
+        /* El transport ha fallat: la fila queda tancada amb el seu codi, i el pròxim sondeig ho torna a provar. */
+      }
+      exigix();
+      /* Un sol reintent, si l'època de la fila ja hi és amb una CK meua (l'haja aplicada esta
+         resincronització o una altra que ha acabat just abans). */
+      if (ctx.estat.epoques.get(fila.xifrat.epoca)?.ck) {
+        fallada = null;
+        try { obert = await obre(ctx, filId, fila, exigix); } catch (error) { fallada = error; }
+      }
     }
+    if (fallada !== null) {
+      if (esAmbitCanviat(fallada)) throw fallada;
+      return filaTancada(fallada);
+    }
+    /* Gauntlet c2 (C1) · Res desxifrat a la memòria cau d'un àmbit que ja no és el de l'operació.
+       Cicle 4 (MITJÀ-04, Gemini 1217) · Com a publicaAdjunt: fins que la RAM de l'àmbit no ho ha
+       desat tot, la FK (`a.k`, 32 B en clar) és només d'esta crida. Si la guarda o el desat
+       fallen, a zero abans de rellançar; si l'índex d'adjunts ja la tenia, l'adjunt queda tancat
+       (mai una clau viva sense cap fila oberta que la mostre). L'antirepetició del protocol
+       (`estat.vistos`) no deixa tornar a obrir la fila en este context: queda tancada amb
+       `repeticio` fins que l'àmbit es torna a fixar i el context es refà. */
     const a = obert.contingut?.a ?? null;
-    if (a) servei.desaAdjunt(a.id, Object.freeze({ fil: filId, emissor: obert.emissor, a }));
-    const valor = Object.freeze({
-      text: obert.contingut?.t ?? null,
-      seguretat: Object.freeze({ xifrat: true, firmada: obert.firmada === true, clauAntiga: obert.clauAntiga === true, verificat: true }),
-      a
-    });
-    servei.desaTextDesxifrat(filId, fila.id, valor);
-    return valor;
+    try {
+      exigix();
+      /* Cicle 4 (tancament, e2ee-index-adjunts) · L'índex d'adjunts va per id, i urlAdjunt hi
+         llig el fil i l'emissor amb què verifica el blob. Una fila amb l'`a` d'un altre id (un
+         membre que apunta a la foto d'una altra persona) o que l'índex no accepta (eixe id ja és
+         d'un altre fil o d'un altre emissor) es tanca amb `adjunt-incoherent`: la seua FK a zero
+         i el tancament a la cau, i l'adjunt legítim continua obrint-se. */
+      if (a && (a.id !== obert.id || servei.desaAdjunt(a.id, Object.freeze({ fil: filId, emissor: obert.emissor, a })) === false)) {
+        a.k?.fill?.(0);
+        const tancada = filaTancada({ codi: CODI.adjuntIncoherent });
+        servei.desaTextDesxifrat(filId, fila.id, tancada);
+        return tancada;
+      }
+      const valor = Object.freeze({
+        text: obert.contingut?.t ?? null,
+        seguretat: Object.freeze({ xifrat: true, firmada: obert.firmada === true, clauAntiga: obert.clauAntiga === true, verificat: true }),
+        a
+      });
+      servei.desaTextDesxifrat(filId, fila.id, valor);
+      return valor;
+    } catch (error) {
+      a?.k?.fill?.(0);
+      throw error;
+    }
   };
 
   const vesteix = (fila, valor) => {
@@ -247,10 +340,17 @@ export function creaMotorXifrat({ cripto, impl, servei, magatzem, ara = () => Da
       bloqueig = error?.codi ?? 'sense-context';
     }
     const resultat = [];
+    /* C1 · Com a molt una resincronització per crida, encara que moltes files siguen de l'època nova. */
+    let resincronitzat = false;
+    const unaResincronitzacio = () => {
+      if (resincronitzat) return Promise.resolve(false);
+      resincronitzat = true;
+      return resincronitza(ctx, fil.id, config, exigix);
+    };
     for (const fila of files) {
       if (!fila?.xifrat) { resultat.push(fila); continue; }
       if (ctx === null) { resultat.push({ ...fila, text: null, seguretat: Object.freeze({ xifrat: true, verificat: false, codi: bloqueig }) }); continue; }
-      resultat.push(vesteix(fila, await obriUna(ctx, fil.id, fila, exigix)));
+      resultat.push(vesteix(fila, await obriUna(ctx, fil.id, fila, exigix, unaResincronitzacio)));
     }
     return resultat;
   };
@@ -264,7 +364,8 @@ export function creaMotorXifrat({ cripto, impl, servei, magatzem, ara = () => Da
       if (esAmbitCanviat(error)) throw error;
       return null;
     }
-    const valor = await obriUna(ctx, fil.id, { id: u.id, usuariId: u.usuariId ?? u.emissor, comOrgId: u.comOrgId ?? null, respostaA: u.respostaA ?? null, xifrat: u.xifrat }, exigix);
+    const valor = await obriUna(ctx, fil.id, { id: u.id, usuariId: u.usuariId ?? u.emissor, comOrgId: u.comOrgId ?? null, respostaA: u.respostaA ?? null, xifrat: u.xifrat }, exigix,
+      () => resincronitza(ctx, fil.id, config, exigix));
     return valor.text;
   };
 
@@ -313,65 +414,143 @@ export function creaMotorXifrat({ cripto, impl, servei, magatzem, ara = () => Da
     const fitxer = entrada?.fitxer;
     if (!fitxer || typeof fitxer.arrayBuffer !== 'function') throw errorMotor('adjunt-invalid', 'Cal el fitxer de l’adjunt.', { reintentable: false });
     const bytes = new Uint8Array(await fitxer.arrayBuffer());
-    exigix();
     let xifrat;
+    /* Cicle 4 (C8, Codex 1224) · La guarda d'àmbit de després de llegir el fitxer, dins del
+       try: si l'àmbit ha canviat mentre es llegia, el clar ja és a la RAM i també ix a zero. */
     try {
+      exigix();
       xifrat = await xifraAdjuntXat({ cripto, fil: fil.id, adjunt: entrada.id, emissor: ctx.jo.usuari, bytes, mime: fitxer.type, durada: entrada.duradaMs ?? null, vigent: exigix });
     } finally {
       bytes.fill(0);
     }
-    const paquet = await prepara({ fil, tipusFil, cos: { id: entrada.id, text: typeof entrada.text === 'string' ? entrada.text : null, a: xifrat.a, respostaA: entrada.respostaA ?? null }, config, exigix });
-    let resultat;
+    /* Gauntlet c2 (G4, Gemini 0255) · Fins que no és a la RAM de l'àmbit (eco i desaAdjunt), la
+       FK (`a.k`, 32 B en clar) és només d'esta crida: si preparar, publicar, la guarda d'àmbit o
+       l'eco fallen, a zero abans de rellançar. Un cop desada, la posa a zero l'oblit (buidaRamAmbit). */
     try {
-      resultat = await impl.publicaAdjuntXifratXat(fil.id, { id: entrada.id, blob: xifrat.blob, mida: xifrat.mida, xifrat: paquet.xifrat, respostaA: paquet.respostaA, epocaNova: paquet.epocaNova }, config);
+      const paquet = await prepara({ fil, tipusFil, cos: { id: entrada.id, text: typeof entrada.text === 'string' ? entrada.text : null, a: xifrat.a, respostaA: entrada.respostaA ?? null }, config, exigix });
+      let resultat;
+      try {
+        resultat = await impl.publicaAdjuntXifratXat(fil.id, { id: entrada.id, blob: xifrat.blob, mida: xifrat.mida, xifrat: paquet.xifrat, respostaA: paquet.respostaA, epocaNova: paquet.epocaNova }, config);
+      } catch (error) {
+        if (paquet.epocaNova) descarta(fil.id);
+        throw error;
+      }
+      exigix();
+      /* L'eco comprova (abans de desar res) que el servidor ha desat el que s'ha enviat; si no, la FK no entra a la RAM. */
+      const vestit = eco(resultat, paquet, { text: entrada.text ?? null, a: xifrat.a }, fil.id);
+      servei.desaAdjunt(xifrat.a.id, Object.freeze({ fil: fil.id, emissor: ctx.jo.usuari, a: xifrat.a }));
+      return vesteix(vestit, { text: vestit.text, seguretat: vestit.seguretat, a: xifrat.a });
     } catch (error) {
-      if (paquet.epocaNova) descarta(fil.id);
+      xifrat.a.k.fill(0);
       throw error;
     }
-    exigix();
-    servei.desaAdjunt(xifrat.a.id, Object.freeze({ fil: fil.id, emissor: ctx.jo.usuari, a: xifrat.a }));
-    const vestit = eco(resultat, paquet, { text: entrada.text ?? null, a: xifrat.a }, fil.id);
-    return vesteix(vestit, { text: vestit.text, seguretat: vestit.seguretat, a: xifrat.a });
   };
 
-  const urlAdjunt = async ({ id, config, exigix, renova = false }) => {
+  /* Gauntlet c2 (G4, Gemini 0255) · Descàrregues en vol per (generació d'àmbit, clauCau): dues
+     peces que demanen alhora el mateix adjunt compartixen una sola descàrrega, un sol desxifrat
+     i un sol blob:, i cadascuna rep la seua retenció en el tic que se li servix. */
+  const urlsEnVol = new Map();
+
+  const urlAdjunt = async ({ id, config, exigix, renova = false, reten = null }) => {
     const info = servei.adjuntDesat(id);
     if (!info) return null;
     if (typeof creaBlob !== 'function' || typeof creaUrl !== 'function') throw errorMotor('sense-blob', 'Cal creaBlob i creaUrl per a servir un adjunt desxifrat.', { reintentable: false });
     exigixTransport('bytesAdjuntXat');
     const clauCau = `${id}:${aBase64url(await sha256(cripto, info.a.k))}`;
     exigix();
+    /* QA-C01 (Gauntlet 261029_1858) · Qui la pinta o la reprodueix (reten) rep
+       l'alliberament de la URL en el mateix tic que es servix: cap desa d'un
+       altre adjunt la pot desallotjar entremig. Si `reten` llança, s'allibera. */
+    const lliura = (url) => {
+      if (typeof reten !== 'function') return url;
+      const allibera = servei.retenUrlAdjunt?.(clauCau);
+      if (typeof allibera !== 'function') return url;
+      try { reten(allibera); } catch { allibera(); }
+      return url;
+    };
     const desada = renova ? null : servei.urlAdjuntDesada(clauCau);
-    if (desada) return desada;
-    const blob = await impl.bytesAdjuntXat(id, { midaEsperada: midaBlobAdjunt(info.a.b), ...config });
-    exigix();
-    const { bytes, mime } = await desxifraAdjuntXat({ cripto, fil: info.fil, emissor: info.emissor, a: info.a, blob, vigent: exigix });
-    const url = creaUrl(creaBlob([bytes], { type: mime }));
-    bytes.fill(0);
-    servei.desaUrlAdjunt(clauCau, url);
-    return url;
+    if (desada) return lliura(desada);
+    const clauVol = `${servei.estatAmbit().genAmbit}|${clauCau}`;
+    const enCurs = renova ? null : (urlsEnVol.get(clauVol) ?? null);
+    if (enCurs) {
+      /* La mateixa descàrrega (i el mateix error, si falla); la URL i la retenció, en un sol tic.
+         Si el LRU l'ha desallotjada entremig, esta crida se la baixa ella mateixa. */
+      await enCurs;
+      exigix();
+      const servida = servei.urlAdjuntDesada(clauCau);
+      if (servida) return lliura(servida);
+    }
+    const produccio = (async () => {
+      /* QA-C01 · Si ni desallotjant tot el que no és retingut hi cap (sostre de 100 MB),
+         cap descàrrega, cap desxifrat i cap blob: nou: la peça mostra «Torna-ho a provar». */
+      if (servei.hiCapUrlAdjunt?.(info.a.b) === false) throw errorPressupostBlobs();
+      const blob = await impl.bytesAdjuntXat(id, { midaEsperada: midaBlobAdjunt(info.a.b), ...config });
+      exigix();
+      const { bytes, mime } = await desxifraAdjuntXat({ cripto, fil: info.fil, emissor: info.emissor, a: info.a, blob, vigent: exigix });
+      let url;
+      try {
+        /* Pas 17 · Cap blob: nou si l'àmbit ha canviat mentre es desxifrava. */
+        exigix();
+        url = creaUrl(creaBlob([bytes], { type: mime }));
+      } finally {
+        /* El clar fora de la RAM també si exigix, creaBlob o creaUrl llancen. */
+        bytes.fill(0);
+      }
+      /* Al registre LRU (§4.7) amb els bytes en clar; renova revoca la URL vella de la mateixa clau. */
+      servei.desaUrlAdjunt(clauCau, url, info.a.b);
+      return url;
+    })();
+    urlsEnVol.set(clauVol, produccio);
+    try {
+      return lliura(await produccio);
+    } finally {
+      if (urlsEnVol.get(clauVol) === produccio) urlsEnVol.delete(clauVol);
+    }
   };
 
   /* ── Oblit (D-09) ── */
+  /* QA-C02 (Gauntlet 261029_1858) · null o undefined: la capa no existix en
+     este entorn i no hi ha res a esborrar. Qualsevol altra cosa és una capa
+     que s'ha de poder recórrer: si llança (bloquejada: SecurityError, també la
+     façana de storage.js) o no té una longitud vàlida, l'oblit la declara
+     pendent (OBLIT_FALLIT), mai un èxit fals. */
   const esborraClausDe = (magatzemWeb) => {
-    if (!magatzemWeb || typeof magatzemWeb.length !== 'number') return;
+    if (magatzemWeb === null || magatzemWeb === undefined) return;
+    const total = magatzemWeb.length;
+    if (!Number.isSafeInteger(total) || total < 0) throw new TypeError('La capa web de l’oblit no es pot recórrer.');
     const claus = [];
-    for (let i = 0; i < magatzemWeb.length; i += 1) {
+    for (let i = 0; i < total; i += 1) {
       const clau = magatzemWeb.key(i);
       if (typeof clau === 'string' && clau.startsWith(PREFIX_CLAUS_XAT)) claus.push(clau);
     }
     for (const clau of claus) magatzemWeb.removeItem(clau);
   };
 
-  const oblidaTot = async ({ sessio = null, preferencies = null, mantenSessio = false } = {}) => {
-    let ci = null;
-    try { ({ ci } = claus()); } catch { /* sense àmbit: només RAM i magatzems web */ }
+  /* Gauntlet c1 · Hi ha algú dins ara mateix (un àmbit fixat)? */
+  const hiHaAmbitFixat = () => {
+    try { return Boolean(servei.estatAmbit().clauIdentitat); } catch { return false; }
+  };
+
+  const oblidaTot = async ({ sessio = null, preferencies = null, mantenSessio = false, clauIdentitat = null, conservaAmbit = false } = {}) => {
+    /* Pas 17 · L'eixida passa la CI de qui ix: quan arriba ací la interfície ja pot
+       haver buidat l'àmbit (useXifratXat → oblidaClausXat), i sense ella IndexedDB no
+       s'esborraria i l'estat diria 'oblidat' (un èxit fals en un ordinador compartit).
+       Gauntlet c1 · conservaAmbit (xifratXatEixida.js): l'àmbit fixat és d'una altra
+       persona que ja ha entrat. Ni la seua RAM, ni la seua CI, ni la connexió que usa. */
+    const conserva = conservaAmbit === true;
+    let ci = typeof clauIdentitat === 'string' && clauIdentitat ? clauIdentitat : null;
+    if (ci === null && !conserva) {
+      try { ({ ci } = claus()); } catch { /* sense àmbit: només RAM i magatzems web */ }
+    }
     const causes = [];
     const pendents = [];
-    servei.oblidaClausXat();
+    if (!conserva) servei.oblidaClausXat();
     if (ci !== null) {
       try { await magatzem.oblidaEnTancar(ci, { mantenSessio }); } catch (error) { causes.push(error); pendents.push('indexeddb'); }
-      try { magatzem.tanca?.(); } catch { /* ja tancat */ }
+      /* Si algú ha entrat mentre s'esborrava (un àmbit fixat ara), la connexió ja és seua. */
+      if (!conserva && !hiHaAmbitFixat()) {
+        try { magatzem.tanca?.(); } catch { /* ja tancat */ }
+      }
     }
     try { esborraClausDe(sessio); } catch (error) { causes.push(error); pendents.push('sessio'); }
     try { esborraClausDe(preferencies); } catch (error) { causes.push(error); pendents.push('preferencies'); }

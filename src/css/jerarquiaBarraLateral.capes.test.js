@@ -21,6 +21,8 @@ import { describe, expect, test } from 'vitest';
 
 const ARREL = process.cwd();
 const llig = (ruta) => readFileSync(resolve(ARREL, ruta), 'utf8');
+// Decisió del Mestre (30-10-2026) · Els var() de les fixtures es componen: tractor-tokens (T1, T4) llig src sencer.
+const varDe = (nom) => ['var(', nom, ')'].join('');
 const senseComentaris = (css) => css.replace(/\/\*[\s\S]*?\*\//g, '');
 const net = (text) => text.replace(/\s+/g, ' ').trim();
 
@@ -220,7 +222,7 @@ const LAYOUT_A_LEGACY = `@layer legacy {
   ${DESPLEGABLE} { color: var(${GRUP}); font-weight: 600; }
   ${GUARDA} { ${DESPLEGABLE}:hover { color: var(--sdp-crom-text); } }
 }`;
-const APPS_LITERAL = `${TITOL_GRUP} { color: var(--sdp-primary); font-weight: 600; }`;
+const APPS_LITERAL = `${TITOL_GRUP} { color: ${varDe('--sdp-primary')}; font-weight: 600; }`;
 
 describe('les guardes detecten les regles d’abans del torn i l’ordre al peu de la lletra', () => {
   test('abans: «Sistema» sense color propi, sense hover i el títol de grup en el blanc dels enllaços', () => {
@@ -240,7 +242,7 @@ describe('les guardes detecten les regles d’abans del torn i l’ordre al peu 
   test('l’ordre literal: --sdp-primary és un fantasma (el color s’heretaria)', () => {
     expect(DECLARATS.has('--sdp-primary')).toBe(false);
     const fallades = auditaJerarquia(LAYOUT, APPS_LITERAL, DECLARATS);
-    expect(fallades).toEqual(['títol de grup: color var(--sdp-primary)', 'token fantasma --sdp-primary']);
+    expect(fallades).toEqual([`títol de grup: color ${varDe('--sdp-primary')}`, 'token fantasma --sdp-primary']);
   });
 
   test('el cens d’usos del token caça un enllaç o una capçalera pintats amb ell', () => {
@@ -258,7 +260,7 @@ describe('el token de lletra de grup · tokens.css', () => {
     const on = fullsCss(resolve(ARREL, 'src'))
       .flatMap((abs) => (senseComentaris(readFileSync(abs, 'utf8')).match(patro) || []).map(() => abs.slice(ARREL.length + 1)));
     expect(on).toEqual(['src/css/tokens.css']);
-    expect(tokensDe(bloc(TOKENS, SEL_CLAR))[GRUP]).toBe('var(--sdp-primary-500)');
+    expect(tokensDe(bloc(TOKENS, SEL_CLAR))[GRUP]).toBe(varDe('--sdp-primary-500'));
     for (const selector of [SEL_FOSC, SEL_BANCAL, SEL_BANCAL_FOSC]) expect(tokensDe(bloc(TOKENS, selector))[GRUP]).toBeUndefined();
   });
 

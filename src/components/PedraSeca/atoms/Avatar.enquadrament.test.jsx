@@ -7,7 +7,8 @@ import { cleanup, render } from '@testing-library/react';
 import { afterEach, expect, test } from 'vitest';
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
-import { Avatar, ENQUADRAMENTS_AVATAR } from './Avatar.jsx';
+import { Avatar } from './Avatar.jsx';
+import { ENQUADRAMENTS_AVATAR } from './enquadramentsAvatar.js';
 
 const SRC = '/assets/uploads/brain/xat_portada.webp';
 afterEach(cleanup);

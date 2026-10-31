@@ -226,6 +226,25 @@ describe('textos de la cita', () => {
     expect(textDeCita({ tipus: 'imatge', text: 'La bassa' }, t)).toBe('La bassa');
     expect(textDeCita({ tipus: 'text', text: '' }, t)).toBe('');
   });
+
+  /* IDEA-53 (pla 261029_1605, Bloc B) · La cita, la barra de resposta i
+     l'anunci en viu, sense les marques de la negreta; la resta, tal qual. */
+  test('sense les marques de la negreta: el lector no diu «asterisc»', () => {
+    expect(textDeCita({ text: '*Bon* dia' }, t)).toBe('Bon dia');
+    expect(textDeCita({ text: '2 * 3' }, t)).toBe('2 * 3');
+    expect(textDeCita({ tipus: 'imatge', text: '**La bassa**' }, t)).toBe('La bassa');
+    expect(anunciDeNous([m('1', 1, 'other', { text: '*Avís*: tall de llum' })], t)).toBe('Pep: Avís: tall de llum');
+  });
+
+  /* Gauntlet del Bloc B (QA-B03) · Una adreça és una peça opaca: la cita i
+     l'anunci la conserven sencera, asteriscs inclosos; només es lleven les
+     marques de fora. */
+  test('QA-B03 · la cita conserva sencera l’adreça amb asteriscs', () => {
+    expect(textDeCita({ text: 'https://example.test/?q=*x*' }, t)).toBe('https://example.test/?q=*x*');
+    expect(textDeCita({ text: '*Mira* https://example.test/?q=*x* ara' }, t)).toBe('Mira https://example.test/?q=*x* ara');
+    expect(textDeCita({ text: '**https://example.test/**' }, t)).toBe('https://example.test/');
+    expect(anunciDeNous([m('1', 1, 'other', { text: 'Mira https://example.test/?q=*x*' })], t)).toBe('Pep: Mira https://example.test/?q=*x*');
+  });
 });
 
 /* Revisió adversarial 260930, #11: només s'anuncien els nous d'altres. */

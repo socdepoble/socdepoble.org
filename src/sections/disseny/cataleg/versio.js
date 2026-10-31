@@ -15,7 +15,40 @@
  * src/sections/disseny/cataleg/detalls`, sense comptar les proves ni este
  * fitxer). Una versió que no és la darrera és una data falsa a la pastilla.
  *
- * Darrera posada al dia: EspecimenPage.jsx, 2026-10-29T00:01:53+01:00, pla 261028_1526 (Bloc H, P1-68;
+ * Darrera posada al dia: EspecimenTipografia.jsx, 2026-10-31T02:53:15+01:00, Gauntlet 261031 (f10, corrector,
+ * F10-C4; Llei de llistes, ordre del Mestre del 31-10-2026): la taula de ritme vertical afig la fila li (marge
+ * inferior --sdp-li-gap, 4px) i el «Fes» diu que els ítems d'una ul o d'una ol van sempre més junts que els
+ * paràgrafs, només amb el marge del li i mai amb un gap afegit. Només text: cap espècimen ni entrada de manifest
+ * nous.
+ * Versió anterior: EspecimenQuadreDeComandament.jsx, manifest.js, registre.js i detailRegistry.jsx,
+ * 2026-10-31T01:52:41+01:00, ordre del Mestre del 31-10-2026 (prompt 2208, T3.1; Gauntlet f8, F8-CRIT-03):
+ * l'espècimen nou QuadreDeComandament, el motlle de tauler compacte, amb dades inventades (un tauler de visites
+ * com el de /legal, la caixa del dia d'un TPV i el resultat de cada mes d'una gestoria, que pot ser negatiu),
+ * registrat a manifest.js, registre.js i detailRegistry.jsx. Nota posada pel corrector f10, que va trobar la
+ * versió sense posar al dia.
+ * Versió anterior: EspecimenUniversalWorkspace.jsx, 2026-10-30T19:44:39+01:00, Gauntlet 261030 (f4,
+ * corrector de l'àrea workspace, cataleg-obridorALaLlista-retirada-amb-railEsquerra; decisió 4 del Mestre del
+ * 30-10-2026): fora la fila obridorALaLlista del contracte. La prop ja no existix (l'espai no la llig i el Bloc de
+ * Notes ja no la passa), i la fila descrivia el rail fix de la navegació en «mitja» (railEsquerra), retirat amb la
+ * decisió 4. Només text: cap espècimen ni entrada de manifest nous.
+ * Versió anterior: EspecimenColumnes.jsx i EspecimenUniversalWorkspace.jsx, 2026-10-30T17:48:24+01:00, ordre
+ * del Mestre del 30-10-2026 (~15:00, restes de l'ordre d'usabilitat de les icones de columna): a EspecimenColumnes.jsx,
+ * la fila replegaTotaCapcalera i l'avís de la mostra «Replegable sencera» diuen que la fila sencera com a botó només
+ * és al Xat, i que als espais de treball pleguen la icona de l'esquerra i el [|<], amb el títol fix i l'acordió de
+ * paraula i chevron apegat (abans: «tota la fila és el botó (Disseny, en ample)»); a EspecimenUniversalWorkspace.jsx,
+ * la fila de tagFilter, collapsibleNavigation i sortable ja no nomena replegaTotaCapcalera, que l'espai no llig, i
+ * diu el mateix. Només text: cap espècimen ni entrada de manifest nous.
+ * Versió anterior: EspecimenImatgeApaisada.jsx i manifest.js, 2026-10-30T15:27:24+01:00, Gauntlet 261030
+ * (cicle 4, corrector de l'àrea vocab, C4-V-02): la migració dels CSS de secció va esborrar pecesApps.css i
+ * catalegColleccio.css, i l'espècimen «Imatge apaïsada 16:9» encara els anomenava. El rètol de fitxer diu ara
+ * «src/css/modules.css, bloc catalegColleccio» i l'entradilla del manifest, «els blocs pecesApps i
+ * catalegColleccio de src/css/modules.css». Només text: cap CSS, cap espècimen ni entrada de manifest nous.
+ * Versió anterior: EspecimenControlsBarra.jsx, 2026-10-30T05:51:18+01:00, Gauntlet 261030 (cicle 2,
+ * corrector de l'àrea traductor-client, especimen-menu-traduir-text-fals): el paràgraf del menú Traduir
+ * nomena les sis llengües que el menú pinta (Castellà, Gallec, Basc, Anglés, Francés i Alemany), diu que
+ * «Veure l'original» torna el focus a Traduir i que les marques van com a marques locals, sense que mai
+ * entre HTML del proveïdor (abans: quatre llengües i «mai HTML»). Cap espècimen ni entrada de manifest nous.
+ * Versió anterior: EspecimenPage.jsx, 2026-10-29T00:01:53+01:00, pla 261028_1526 (Bloc H, P1-68;
  * revisió adversarial final del 29-10-2026, R1): el contracte de peuDePagina diu que l'editor de la fitxa del
  * Perfil hi porta ara l'identificador i el poble (IdentitatAlPoble), dins del contenidor que fa
  * scroll, i ja no germà de l'editor, que es quedava sense alçada als telèfons. Cap espècimen ni
@@ -258,4 +291,4 @@
  * Quan el manifest porte `creat` i `modificat` per espècimen, manaran eixos
  * camps i esta constant només farà de versió del conjunt.
  */
-export const VERSIO_CATALEG = '2026-10-29T00:01:53+01:00';
+export const VERSIO_CATALEG = '2026-10-31T02:53:15+01:00';

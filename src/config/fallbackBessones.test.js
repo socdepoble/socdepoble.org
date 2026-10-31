@@ -15,7 +15,7 @@ let avis;
 beforeEach(() => { avis = vi.spyOn(console, 'warn').mockImplementation(() => {}); });
 afterEach(() => {
   fixaPoliticaDeMitjans(null);
-  document.body.innerHTML = '';
+  document.body.replaceChildren();
   avis.mockRestore();
 });
 

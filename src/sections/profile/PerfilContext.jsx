@@ -1,4 +1,7 @@
-import { createContext, useContext, useEffect, useState, useCallback, useMemo, useRef } from 'react';
+import { useContext, useEffect, useState, useCallback, useMemo, useRef } from 'react';
+/* P1-71 (Gauntlet 261029) · L'objecte de context viu a objectesDeContext.js,
+   que no importa res del projecte. */
+import { PerfilContext } from './objectesDeContext.js';
 import {
   getCurrentUser, listMyOrganizations, updateOrganization, updateProfile,
   updateUserPassword, getProfile, teCapacitat, uploadToStorage,
@@ -25,8 +28,6 @@ import { desaLlicenciaPerDefecte } from '../../components/universal/drets/herenc
 import { ENTITATS_FITXA } from './perfilEscriptor.js';
 import { esRolQueMana, etiquetaDeRol } from '../../components/universal/identitat/rols.js';
 import { ERROR_CORREU_INVALID, SENSE_CAPACITAT_CORREU, textAjudaCorreu, validaCorreu } from './contacteOrganitzacio.js';
-
-const PerfilContext = createContext(null);
 
 /* La capacitat 'agents' és nova al port: un backend (o un mock de proves) que
    no la declare no ha de fer caure el perfil ni en llegir-ne el nom. */

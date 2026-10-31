@@ -12,6 +12,8 @@ import { act, cleanup, fireEvent, render, screen, within } from '@testing-librar
 import { afterEach, expect, test, vi } from 'vitest';
 import { GraellaEmojis } from './GraellaEmojis.jsx';
 import { DialegEmoticona } from './DialegEmoticona.jsx';
+import { emojiSol } from '../../../utils/emoji.js';
+import { creaDetectorDePintat } from '../../../utils/emojiPintable.js';
 
 afterEach(cleanup);
 
@@ -316,28 +318,60 @@ test('dins d’un diàleg obert, amb el focus al <body> que no ha perdut la grae
   expect(document.activeElement).toBe(document.body);
 });
 
-test('textNoReconegut: un glif que este navegador no reconeix no arriba a onTria; l’avís va just damunt de la graella', async () => {
+/* P1-06 (abans: es pintava i es refusava en triar-lo) · Un glif que este
+   navegador no reconeix com a emoji ja no es pinta: ni botó, ni avís, i el
+   recompte de la família només compta els que es veuen. La cerca tampoc no
+   el troba. Amb textNoReconegut, el que es veu es tria i arriba a onTria. */
+test('P1-06 · un glif que este navegador no reconeix no es pinta: ni botó, ni avís, ni a la cerca', async () => {
   const onTria = vi.fn();
   const grups = [{ id: 'x', nom: 'Proves', emojis: [['00A9', '©', 'copyright'], ['1F345', '🍅', 'tomato']] }];
-  const { container } = render(<GraellaEmojis carregaCataleg={cataleg(grups)} onTria={onTria} textNoReconegut={(glif) => `No reconec ${glif}.`} />);
-  fireEvent.click(await screen.findByRole('button', { name: 'copyright' }));
-  expect(onTria).not.toHaveBeenCalled();
-  const avis = screen.getByText('No reconec ©.');
-  expect(avis.tagName).toBe('P');
-  expect(avis.className).toBe('sdp-classificacio-dialeg__avis');
-  expect(avis.getAttribute('role')).toBe('status');
-  expect(avis.nextElementSibling).toBe(container.querySelector('.sdp-graella-emojis'));
+  render(<GraellaEmojis carregaCataleg={cataleg(grups)} onTria={onTria} textNoReconegut={(glif) => `No reconec ${glif}.`} potPintar={null} />);
+  await screen.findByRole('button', { name: 'tomato' });
+  expect(screen.queryByRole('button', { name: 'copyright' })).toBeNull();
+  expect(screen.getByText('Proves (1)')).toBeTruthy();
+  fireEvent.change(screen.getByRole('searchbox', { name: 'Cerca un emoji' }), { target: { value: 'copy' } });
+  expect(screen.getByRole('status').textContent).toBe('Cap emoji amb eixe nom.');
+  fireEvent.change(screen.getByRole('searchbox', { name: 'Cerca un emoji' }), { target: { value: '' } });
   fireEvent.click(screen.getByRole('button', { name: 'tomato' }));
   expect(onTria).toHaveBeenCalledWith('🍅', 'tomato');
-  expect(screen.queryByText('No reconec ©.')).toBeNull();
+  expect(screen.queryByText(/^No reconec/)).toBeNull();
 });
 
-test('sense textNoReconegut, la graella no filtra: onTria rep el glif tal qual', async () => {
+test('sense textNoReconegut, onTria rep el glif tal qual i no hi ha cap avís', async () => {
   const onTria = vi.fn();
-  render(<GraellaEmojis carregaCataleg={cataleg([{ id: 'x', nom: 'Proves', emojis: [['00A9', '©', 'copyright']] }])} onTria={onTria} />);
-  fireEvent.click(await screen.findByRole('button', { name: 'copyright' }));
-  expect(onTria).toHaveBeenCalledWith('©', 'copyright');
+  render(<GraellaEmojis carregaCataleg={cataleg([{ id: 'x', nom: 'Proves', emojis: [['2764 FE0F', '❤️', 'red heart']] }])} onTria={onTria} />);
+  fireEvent.click(await screen.findByRole('button', { name: 'red heart' }));
+  expect(onTria).toHaveBeenCalledWith('❤️', 'red heart');
   expect(document.querySelector('.sdp-classificacio-dialeg__avis')).toBeNull();
+});
+
+/* P1-06 · El tipus de lletra: el detector de pintat (utils/emojiPintable.js)
+   s'injecta, i cap prova no depén del canvas de jsdom. Les amplades són les
+   del banc de Chrome 156 a macOS (261030): un emoji, 32; el tofu, 20,28. */
+test('P1-06 · el que el navegador no sap pintar (tofu, seqüència partida) no es pinta; una família buida desapareix', async () => {
+  const onTria = vi.fn();
+  const AMPLES = new Map([['\u{1FFFD}', 20.28], ['\u{1F600}‍\u{1F600}', 64], ['\u{1FAF9}', 20.28], ['\u{1FAF9}\u{1F3FB}', 52.28], ['\u{1F426}‍\u{1F525}', 64], ['\u{1F6D9}', 20.28]]);
+  const potPintar = creaDetectorDePintat((text) => AMPLES.get(text) ?? 32);
+  const grups = [
+    { id: 'mans', nom: 'Mans', emojis: [['1FAF9', '\u{1FAF9}', 'leftwards pushing hand nou'], ['1F44B', '👋', 'waving hand'], ['1FAF9 1F3FB', '\u{1FAF9}\u{1F3FB}', 'nou: to clar']] },
+    { id: 'aus', nom: 'Aus', emojis: [['1F426 200D 1F525', '\u{1F426}‍\u{1F525}', 'phoenix']] },
+    { id: 'llocs', nom: 'Llocs', emojis: [['1F345', '🍅', 'tomato']] }
+  ];
+  render(<GraellaEmojis carregaCataleg={cataleg(grups)} onTria={onTria} potPintar={potPintar} />);
+  await screen.findByRole('button', { name: 'waving hand' });
+  expect([...document.querySelectorAll('summary')].map((s) => s.textContent)).toEqual(['Mans (1)', 'Llocs (1)']);
+  expect(screen.queryByRole('button', { name: /nou/ })).toBeNull();
+  fireEvent.change(screen.getByRole('searchbox', { name: 'Cerca un emoji' }), { target: { value: 'phoenix' } });
+  expect(screen.getByRole('status').textContent).toBe('Cap emoji amb eixe nom.');
+});
+
+test('P1-06 · sota jsdom (cap canvas), el detector per defecte no filtra res que el motor reconega i no toca el canvas', async () => {
+  const getContext = vi.spyOn(HTMLCanvasElement.prototype, 'getContext');
+  render(<GraellaEmojis carregaCataleg={cataleg()} onTria={vi.fn()} />);
+  expect(await screen.findByRole('button', { name: 'grinning face' })).toBeTruthy();
+  expect([...document.querySelectorAll('summary')].map((s) => s.textContent)).toEqual(['Cares i emocions (3)', 'Menjar i beguda (2)']);
+  expect(getContext).not.toHaveBeenCalled();
+  getContext.mockRestore();
 });
 
 test('si les dades no arriben, ho diu i «Torna-ho a provar» les torna a demanar', async () => {
@@ -349,14 +383,18 @@ test('si les dades no arriben, ho diu i «Torna-ho a provar» les torna a demana
   expect(carrega).toHaveBeenCalledTimes(2);
 });
 
-test('amb el catàleg de veres: 3972 entrades, la primera família oberta i la de Persones sense cap botó', async () => {
+/* P1-06 · Del catàleg de veres (3972 entrades, Unicode 18) es pinten els que
+   el motor reconeix: Node 24 no en coneix 16 (🫪 🫹 🛙…), Chrome 156, 9. */
+test('amb el catàleg de veres: la primera família oberta, amb els que el motor reconeix, i la de Persones sense cap botó', async () => {
   const carrega = () => import('../../../sections/disseny/cataleg/dades/emojisUnicode18.js');
   render(<GraellaEmojis carregaCataleg={carrega} onTria={vi.fn()} />);
   await screen.findByRole('button', { name: 'grinning face' });
   const { GRUPS_EMOJIS } = await carrega();
-  expect(within(familia('Cares i emocions')).getAllByRole('button')).toHaveLength(GRUPS_EMOJIS[0].emojis.length);
+  const reconeguts = GRUPS_EMOJIS[0].emojis.filter(([, glif]) => emojiSol(glif));
+  expect(within(familia('Cares i emocions')).getAllByRole('button')).toHaveLength(reconeguts.length);
   expect(within(familia('Persones i cos')).queryAllByRole('button')).toEqual([]);
-  expect(document.querySelectorAll('.sdp-graella-emojis__boto')).toHaveLength(GRUPS_EMOJIS[0].emojis.length);
+  expect(document.querySelectorAll('.sdp-graella-emojis__boto')).toHaveLength(reconeguts.length);
+  expect(screen.getByText(`Cares i emocions (${reconeguts.length})`)).toBeTruthy();
 }, 30000);
 
 /* ── DialegEmoticona ───────────────────────────────────────────────────── */
@@ -390,11 +428,15 @@ test('DialegEmoticona amb carregaCataleg: la graella en lloc de la drecera, mida
   expect(onDesa).toHaveBeenLastCalledWith('');
 });
 
-test('DialegEmoticona · un glif que este navegador no reconeix com a emoji no es desa: un avís ho diu', async () => {
+/* P1-06 (abans: es pintava, es refusava i un avís ho deia) · Un glif que
+   este navegador no reconeix com a emoji ni es pinta: no hi ha res a desar
+   ni a refusar. */
+test('DialegEmoticona · P1-06 · un glif que este navegador no reconeix com a emoji no es pinta ni es desa', async () => {
   const onDesa = vi.fn();
-  const estranys = [{ id: 'x', nom: 'Proves', emojis: [['0061', 'a', 'latin small letter a']] }];
+  const estranys = [{ id: 'x', nom: 'Proves', emojis: [['0061', 'a', 'latin small letter a'], ['1F345', '🍅', 'tomato']] }];
   render(<DialegEmoticona obert onTanca={vi.fn()} onDesa={onDesa} carregaCataleg={cataleg(estranys)} />);
-  fireEvent.click(await screen.findByRole('button', { name: 'latin small letter a' }));
+  await screen.findByRole('button', { name: 'tomato' });
+  expect(screen.queryByRole('button', { name: 'latin small letter a' })).toBeNull();
   expect(onDesa).not.toHaveBeenCalled();
-  expect(screen.getByText('Este navegador encara no reconeix a com a emoji: no es pot desar.')).toBeTruthy();
+  expect(screen.queryByText(/encara no reconeix/)).toBeNull();
 });

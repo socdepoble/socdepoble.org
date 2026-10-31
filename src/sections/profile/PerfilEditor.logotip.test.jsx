@@ -89,12 +89,12 @@ function obriEdicioAvancada() {
   expect(details.open).toBe(true);
   return details;
 }
-const inputDeLaRanura = () => desplegable().querySelector('.sdp-edicio-avancada__logotip input[type="file"]');
+const inputDeLaRanura = () => desplegable().querySelector('[data-sdp-ranura="logotip"] input[type="file"]');
 /* Els botons d'imatge (abans damunt de l'H1), amb els noms d'abans i els de l'Onada 4. */
 const BOTONS_IMATGE = /^(Logotip|Avatar|Editar logotip|Canvia la teua imatge)$/;
 
 /* Encàrrec d'harmonització (261018) · «Logotip» ja no és damunt de l'H1: va
-   dins d'«Edició avançada» (.sdp-edicio-avancada__logotip). La intenció es
+   dins d'«Edició avançada» ([data-sdp-ranura="logotip"]). La intenció es
    queda: obri el selector del logotip de la fitxa, cap diàleg intermedi. */
 test('Onada 4 · una organització que no és la pilot: «Logotip» dins d’«Edició avançada», que obri el selector del logotip (cap diàleg intermedi)', () => {
   render(<PerfilEditor identitat={org('owner')} />);
@@ -105,7 +105,7 @@ test('Onada 4 · una organització que no és la pilot: «Logotip» dins d’«E
   expect(details.querySelector('.sdp-edicio-avancada__titol').textContent).toBe('Edició avançada de la fitxa');
   expect(details.querySelector('.sdp-edicio-avancada__subtitol').textContent).toBe('Canvia el logotip, afig la foto de capçalera i gestiona els drets i les dades');
   const boto = within(details).getByRole('button', { name: 'Logotip' });
-  expect(boto.closest('.sdp-edicio-avancada__logotip')).not.toBeNull();
+  expect(boto.closest('[data-sdp-ranura="logotip"]')).not.toBeNull();
   // Una organització no té avatar redó.
   expect(details.querySelector('.sdp-edicio-avancada__identitat')).toBeNull();
   const ranura = vi.spyOn(inputDeLaRanura(), 'click');
@@ -116,7 +116,7 @@ test('Onada 4 · una organització que no és la pilot: «Logotip» dins d’«E
   expect(screen.queryByRole('dialog', { name: 'Capçalera i avatar' })).toBeNull();
   // La capçalera té el seu botó, a part, i va abans del logotip.
   const botoCapcalera = within(details).getByRole('button', { name: 'Capçalera' });
-  expect(botoCapcalera.closest('.sdp-edicio-avancada__capcalera')).not.toBeNull();
+  expect(botoCapcalera.closest('[data-sdp-ranura="capcalera"]')).not.toBeNull();
   expect(abansDe(botoCapcalera, boto)).toBe(true);
 });
 
@@ -155,8 +155,8 @@ test('Onada 4 · una persona amb avatar: l’avatar redó amb la càmera, dins d
   expect(identitat.querySelector('.page-title-avatar-accions, .sdp-camp__ajuda')).toBeNull();
   expect(identitat.textContent).not.toContain('10 MB');
   // P1-58 · La capçalera és la primera del desplegable, l'avatar després; cap ranura.
-  expect(abansDe(details.querySelector('.sdp-edicio-avancada__capcalera'), identitat)).toBe(true);
-  expect(details.querySelector('.sdp-edicio-avancada__logotip')).toBeNull();
+  expect(abansDe(details.querySelector('[data-sdp-ranura="capcalera"]'), identitat)).toBe(true);
+  expect(details.querySelector('[data-sdp-ranura="logotip"]')).toBeNull();
   const obri = vi.spyOn(selector('logoImage'), 'click');
   await act(async () => { fireEvent.click(avatar); });
   expect(obri).not.toHaveBeenCalled();
@@ -178,7 +178,7 @@ test('Onada 4 · una persona sense avatar: el cercle buit dins d’«Edició ava
   expect(boto.querySelector('img')).toBeNull();
   expect(boto.querySelector('.page-title-avatar__marca')).not.toBeNull();
   expect(boto.hasAttribute('aria-haspopup')).toBe(false);
-  expect(details.querySelector('.sdp-edicio-avancada__logotip')).toBeNull();
+  expect(details.querySelector('[data-sdp-ranura="logotip"]')).toBeNull();
   expect(within(details).queryByRole('button', { name: 'Avatar' })).toBeNull();
   const avatar = vi.spyOn(selector('logoImage'), 'click');
   const hero = vi.spyOn(selector('heroImage'), 'click');
@@ -200,7 +200,7 @@ test('ordre E · l’entitat pilot: el logotip fix de Sóc de Poble damunt de l�
   /* Encàrrec d'harmonització (261018) · Tampoc cap ranura dins d'«Edició
      avançada», on ara viuria: només «Capçalera». */
   const details = obriEdicioAvancada();
-  expect(details.querySelector('.sdp-edicio-avancada__logotip')).toBeNull();
+  expect(details.querySelector('[data-sdp-ranura="logotip"]')).toBeNull();
   expect(within(details).queryByRole('button', { name: BOTONS_IMATGE })).toBeNull();
   expect(within(details).getByRole('button', { name: 'Capçalera' })).toBeTruthy();
 });
@@ -226,7 +226,7 @@ test('Auditoria 261007 · l’entitat pilot amb un id UUID i el slug declarat: c
   /* Encàrrec d'harmonització (261018) · Cap ranura tampoc dins d'«Edició
      avançada», on ara viuria; la capçalera conserva el seu botó, allí. */
   const details = obriEdicioAvancada();
-  expect(details.querySelector('.sdp-edicio-avancada__logotip')).toBeNull();
+  expect(details.querySelector('[data-sdp-ranura="logotip"]')).toBeNull();
   expect(within(details).queryByRole('button', { name: BOTONS_IMATGE })).toBeNull();
   expect(within(details).getByRole('button', { name: 'Capçalera' })).toBeTruthy();
   // El registre (com a PerfilPublicSection): les boines del pilot ja porten al seu perfil (Onada 8).
@@ -238,10 +238,10 @@ test('Auditoria 261007 · l’entitat pilot amb un id UUID i el slug declarat: c
 test('Auditoria 261007 · el slug només val per a una entitat: un altre slug o un grup amb el del pilot conserven la ranura i no es registren', () => {
   const uuid = '5b0c1d2e-3f40-4a51-8b62-7c83d94ea5f6';
   render(<PerfilEditor identitat={org('owner', { id: uuid, dades: { slug: 'forn' } })} />);
-  expect(within(obriEdicioAvancada()).getByRole('button', { name: 'Logotip' }).closest('.sdp-edicio-avancada__logotip')).not.toBeNull();
+  expect(within(obriEdicioAvancada()).getByRole('button', { name: 'Logotip' }).closest('[data-sdp-ranura="logotip"]')).not.toBeNull();
   cleanup();
   render(<PerfilEditor identitat={org('owner', { id: uuid, mena: 'grup', nom: 'Colla', dades: { slug: ENTITAT_PILOT_SLUG, kind: 'group' } })} />);
-  expect(within(obriEdicioAvancada()).getByRole('button', { name: 'Logotip' }).closest('.sdp-edicio-avancada__logotip')).not.toBeNull();
+  expect(within(obriEdicioAvancada()).getByRole('button', { name: 'Logotip' }).closest('[data-sdp-ranura="logotip"]')).not.toBeNull();
   expect(capcalera().querySelector('img.page-title-logo')).toBeNull();
   expect(rutaDAutoria({ tipus: 'entitat', id: uuid })).toBe(`/empresa/${uuid}`);
 });

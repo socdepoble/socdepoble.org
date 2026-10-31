@@ -12,11 +12,16 @@
  * regió viva (el lector ho llegiria tot de colp en aparéixer).
  */
 import { Info, CircleCheck, TriangleAlert, CircleX, X } from 'lucide-react';
+import { tradueix, useTraductorOpcional } from '../hooks/useTraductorOpcional.js';
 
 const ICONA = { info: Info, exit: CircleCheck, avis: TriangleAlert, error: CircleX };
+/* Gauntlet 261029 (cicle 1, i18n) · El nom accessible de la creu, en la
+   llengua de la interfície; fora de l'app, la reserva de sempre. */
+const TANCA_AVIS = Object.freeze(['common.tancaAvis', 'Tancar l\'avís']);
 
 export function Alerta({ to = 'info', titol, children, accions = null, onTanca = null, className, viva = true }) {
   const Icona = ICONA[to] || Info;
+  const t = useTraductorOpcional();
   return (
     <div role={viva ? (to === 'error' ? 'alert' : 'status') : undefined}
       className={['sdp-alerta', `sdp-alerta--${to}`, className].filter(Boolean).join(' ')}>
@@ -27,7 +32,7 @@ export function Alerta({ to = 'info', titol, children, accions = null, onTanca =
         {accions ? <div className="sdp-alerta__accions">{accions}</div> : null}
       </div>
       {onTanca ? (
-        <button type="button" className="sdp-alerta__tanca" onClick={onTanca} aria-label="Tancar l'avís">
+        <button type="button" className="sdp-alerta__tanca" onClick={onTanca} aria-label={tradueix(t, TANCA_AVIS)}>
           <X size={20} aria-hidden="true" focusable="false" />
         </button>
       ) : null}

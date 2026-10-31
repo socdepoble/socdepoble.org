@@ -30,6 +30,7 @@ import {
   esCorreu, extracteAmbContext, fitxes as fitxesDeConsulta, marcaTemps, partsRessaltades, plega
 } from '../search/indexCerca.js';
 import { segmentaEnllacos } from './enllacos.js';
+import { senseMarquesDeNegreta } from './negreta.js';
 
 /* La llista vertical de filtres, en l'ordre de la captura. `icona` és el nom
    de l'export de lucide-react; `etiqueta`, el text per defecte de `clauI18n`. */
@@ -100,9 +101,12 @@ function missatgesDe(font, filId) {
 const nomDeFil = (fil) => textDe(fil?.name) || textDe(fil?.title);
 const conteTotes = (textPlegat, llistaFitxes) => llistaFitxes.every((fitxa) => textPlegat.includes(fitxa));
 
-/* Una línia: els salts de línia d'un missatge no caben en una fila de resultat. */
+/* Una línia: els salts de línia d'un missatge no caben en una fila de resultat.
+   IDEA-53 (pla 261029_1605, Bloc B) · L'extracte es mostra sense les marques
+   de la negreta; la coincidència continua sobre el text cru (les fitxes són
+   alfanumèriques i els asteriscs no hi compten). */
 function partsDExtracte(text, llistaFitxes) {
-  const net = textDe(text).replace(/\s+/g, ' ').trim();
+  const net = senseMarquesDeNegreta(textDe(text)).replace(/\s+/g, ' ').trim();
   return partsRessaltades(extracteAmbContext(net, llistaFitxes, MAX_EXTRACTE), llistaFitxes);
 }
 

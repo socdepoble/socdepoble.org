@@ -243,9 +243,12 @@ describe('destinsDelSistema', () => {
        no es repetix. El Cervell és nou i hi és.
        Ordre del Mestre (261026_2126; prompt 261026_2130, tasca 1) ·
        «Descàrregues i Aplicacions», l'última de SYSTEM_PAGES, darrere de
-       Drets d'autor. */
+       Drets d'autor.
+       Ordre del Mestre (30-10-2026; candidatura NLnet NGI Fediversity) ·
+       «Candidatura Europea NLnet · NGI Fediversity», ara l'última de
+       SYSTEM_PAGES, darrere de Descàrregues. */
     const destins = destinsDelSistema(SYSTEM_PAGES, SECTIONS, copyDe, [COVER_PAGE_KEYS.wiki, COVER_PAGE_KEYS.disseny, COVER_PAGE_KEYS.consola]);
-    const claus = ['projecte', 'constitucio', 'roadmap', 'notes', 'cervell', 'versions', 'legal', 'xat', 'drets-autor', 'descarregues', 'anima', 'fedivers'];
+    const claus = ['projecte', 'constitucio', 'roadmap', 'notes', 'cervell', 'versions', 'legal', 'xat', 'drets-autor', 'descarregues', 'fediversity', 'anima', 'fedivers'];
     expect(destins.map((desti) => desti.id)).toEqual(claus.map((clau) => `sistema:${clau}`));
     expect(destins.map((desti) => desti.titol)).toEqual(claus.map((clau) => PAGE_COPY[clau].title));
     expect(destins.every((desti) => desti.grup === 'sistema' && desti.escriu === 'codi')).toBe(true);
@@ -260,7 +263,9 @@ describe('destinsDelSistema', () => {
       /* Onada 8 (261009) · /page/cervell no té entrada a la barra: el document. */
       'sistema:cervell': GLIF_DOCUMENT,
       /* 261026_2126 · /page/descarregues tampoc no en té: el document. */
-      'sistema:descarregues': GLIF_DOCUMENT
+      'sistema:descarregues': GLIF_DOCUMENT,
+      /* 30-10-2026 · /page/fediversity tampoc no en té: el document. */
+      'sistema:fediversity': GLIF_DOCUMENT
     });
     /* Sense exclusions, les portades de la Wiki i de Disseny també hi són. */
     expect(Object.keys(glifs)).toEqual(expect.arrayContaining(['sistema:wikidepoble', 'sistema:disseny']));

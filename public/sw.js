@@ -5,7 +5,7 @@
    ADR-2026-10-APPS-DEL-DISPOSITIU.md (esmena de l'ADR-2026-08).
 
    Online-first (ADR-2026-08): el servidor és la font de veritat i este worker
-   no en guarda cap dada. Fa tres coses i prou:
+   no en guarda cap dada. Fa quatre coses i prou:
      · navegacions de l'origen propi → xarxa, amb precàrrega de navegació (la
        petició ix mentre el worker arrenca); sense xarxa, una pàgina honesta
        «Sense connexió» que viu dins d'este fitxer;
@@ -27,7 +27,16 @@
        app (src/pwa/registre.js) li pot demanar, per missatge, que escalfe els
        que ja ha carregat abans que este worker la controlara, que els afija
        a la closca de l'app i que la refresque: amb els mateixos filtres i els
-       mateixos sostres.
+       mateixos sostres;
+     · els avisos push del Xat (ordre nocturna 261030_0252, Fase 3: Web Push
+       compatible amb l'E2EE, fase N1, inert mentre ningú no se subscriga):
+       un despertador cec. El servidor envia un push sense cos i este worker
+       MAI no llig el cos de l'esdeveniment, ni va a la xarxa, ni obri cap
+       memòria: sempre mostra el mateix avís, «Tens missatges nous», sense
+       text, remitent ni fil. En tocar-lo, enfoca una finestra pròpia i la
+       porta a /xat, o n'obri una. Cap versió d'este fitxer no pot eixir sense
+       el gestor de push mentre hi haja subscripcions: Chrome mostraria un
+       avís genèric i Safari les revocaria totes.
    Tota la resta passa sense tocar-la: API i autenticació (Supabase, /rest/,
    /auth/, /functions/, /storage/), qualsevol altre origen, peticions que no
    són GET, amb Authorization o Range, i recursos amb consulta.
@@ -318,6 +327,70 @@ function cachesAEsborrar(noms, actuals) {
 /** Si un missatge és l'ordre de saltar l'espera de la PWA de juny: un objecte amb `type` exactament 'SKIP_WAITING'. */
 function esOrdreLlegadaDeSaltarEspera(dades) {
   return Boolean(dades) && typeof dades === 'object' && dades.type === MISSATGE_LLEGAT_SALTA_ESPERA;
+}
+
+/* Avisos push del Xat (ordre nocturna 261030_0252, Fase 3, WP; fase N1).
+   Despertador cec: cap dada del push arriba a l'avís. Cada push mostra un avís
+   (la subscripció és userVisibleOnly): sense, Chrome en posaria un de genèric i
+   Safari revocaria la subscripció. Sense renotify: amb la mateixa etiqueta, un
+   avís nou substituïx l'anterior en silenci (el servidor ja agrupa amb Topic).
+   La llengua és la del navegador entre les cinc del Mas, i ca si no n'hi ha
+   cap: la que la persona tria dins de l'app viu a la pàgina, i el worker no
+   guarda res per a saber-la. L'etiqueta és la de src/pwa/avisosPush.js
+   (sw.test.js comprova que és la mateixa). */
+const ETIQUETA_AVIS_XAT = 'sdp-xat';
+const CAMI_DEL_XAT = '/xat';
+const ICONA_AVIS = '/icona-app-192.png';
+/* /xat i el que penja de /xat/ (no /xatxa). */
+const RUTA_DEL_XAT = /^\/xat(?:\/|$)/;
+const LLENGUA_DE_L_AVIS = 'ca';
+const TEXTOS_AVIS = Object.freeze({
+  ca: Object.freeze({ titol: 'Sóc de Poble', cos: 'Tens missatges nous' }),
+  es: Object.freeze({ titol: 'Sóc de Poble', cos: 'Tienes mensajes nuevos' }),
+  en: Object.freeze({ titol: 'Sóc de Poble', cos: 'You have new messages' }),
+  eu: Object.freeze({ titol: 'Sóc de Poble', cos: 'Mezu berriak dituzu' }),
+  gl: Object.freeze({ titol: 'Sóc de Poble', cos: 'Tes mensaxes novas' })
+});
+
+/** La llengua de l'avís: la primera de `llengues` que el Mas té, per
+ *  l'etiqueta primària (ca-ES-valencia → ca); si cap, ca. Pura. */
+function llenguaDeLAvis(llengues) {
+  for (const etiqueta of Array.isArray(llengues) ? llengues : []) {
+    const primaria = (typeof etiqueta === 'string' ? etiqueta : '').toLowerCase().split('-')[0];
+    if (Object.prototype.hasOwnProperty.call(TEXTOS_AVIS, primaria)) return primaria;
+  }
+  return LLENGUA_DE_L_AVIS;
+}
+
+/** L'avís cec: { titol, opcions }. No rep res del push: només les llengües del navegador. Pura. */
+function avisCec(llengues) {
+  const llengua = llenguaDeLAvis(llengues);
+  const { titol, cos } = TEXTOS_AVIS[llengua];
+  return { titol, opcions: { body: cos, tag: ETIQUETA_AVIS_XAT, lang: llengua, icon: ICONA_AVIS, data: { cami: CAMI_DEL_XAT } } };
+}
+
+/** Si un avís és del Xat (porta la nostra etiqueta). Pura. */
+function esAvisDelXat(avis) {
+  return Boolean(avis) && avis.tag === ETIQUETA_AVIS_XAT;
+}
+
+/**
+ * La finestra que s'ha d'enfocar en tocar l'avís: l'índex de la primera de
+ * l'origen propi que té el focus; si cap, de la primera visible; si cap, de la
+ * primera de l'origen propi; -1 si no n'hi ha cap de l'origen propi. Una URL
+ * que no es pot llegir no compta. `finestres`: [{ url, focused, visibilityState }]. Pura.
+ */
+function triaFinestra(finestres, origenPropi) {
+  const propies = (Array.isArray(finestres) ? finestres : []).map((finestra, index) => ({ finestra, index })).filter(({ finestra }) => {
+    try {
+      return new URL(finestra.url).origin === origenPropi;
+    } catch {
+      return false;
+    }
+  });
+  const tria = propies.find(({ finestra }) => finestra.focused === true) ||
+    propies.find(({ finestra }) => finestra.visibilityState === 'visible') || propies[0];
+  return tria ? tria.index : -1;
 }
 
 /**
@@ -634,6 +707,56 @@ function activaPrecarrega() {
   return precarrega ? Promise.resolve().then(() => precarrega.enable()).catch(() => {}) : Promise.resolve();
 }
 
+/* L'avís cec del Xat, en la llengua del navegador. */
+function mostraAvisCec() {
+  const { titol, opcions } = avisCec(self.navigator && self.navigator.languages);
+  return self.registration.showNotification(titol, opcions);
+}
+
+/* Porta una finestra pròpia (triaFinestra) al Xat i l'enfoca; si no n'hi ha
+   cap, o si no es deixa navegar, se n'obri una.
+   Gauntlet c3 (sw-notificationclick-openwindow-despres-de-focus) · Cada toc
+   d'un avís dona UN sol permís d'interacció, i tant focus() com openWindow()
+   el gasten (Chromium: ServiceWorkerWindowClient::focus i
+   ServiceWorkerClients::openWindow); navigate() no. Per això primer es
+   navega: en una finestra que este worker no controla (una recàrrega amb
+   Maj, una pestanya d'abans del claim) navigate() rebutja sense gastar-lo i
+   openWindow() encara el té. Només al final s'enfoca. Si la finestra ja era
+   al Xat i no es deixa enfocar, s'intenta obrir-ne una. */
+async function obriElXat() {
+  const desti = new URL(CAMI_DEL_XAT, self.location.origin).href;
+  let finestres = [];
+  try {
+    finestres = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
+  } catch {
+    finestres = [];
+  }
+  const llista = Array.isArray(finestres) ? finestres : [];
+  const index = triaFinestra(llista.map((f) => ({ url: f.url, focused: f.focused, visibilityState: f.visibilityState })), self.location.origin);
+  if (index < 0) return self.clients.openWindow(desti);
+  let finestra = llista[index];
+  let jaAlXat = false;
+  try {
+    jaAlXat = RUTA_DEL_XAT.test(new URL(finestra.url).pathname);
+  } catch {
+    jaAlXat = false;
+  }
+  if (!jaAlXat) {
+    try {
+      finestra = (await finestra.navigate(desti)) || finestra;
+    } catch {
+      /* no es deixa navegar: el permís d'interacció encara hi és */
+      return self.clients.openWindow(desti);
+    }
+  }
+  try {
+    await finestra.focus();
+  } catch {
+    /* ja és al Xat; només si ja hi era, se n'obri una */
+    if (jaAlXat) await self.clients.openWindow(desti);
+  }
+}
+
 self.addEventListener('activate', (event) => {
   event.waitUntil(
     Promise.all([
@@ -663,4 +786,21 @@ self.addEventListener('message', (event) => {
   if (!pla) return;
   const feina = escalfa(pla).catch(() => {});
   if (typeof event.waitUntil === 'function') event.waitUntil(feina);
+});
+
+/* Un push: sempre el mateix avís cec. El cos de l'esdeveniment no es llig
+   MAI (si un servidor n'enviara un, no arribaria enlloc). Si l'avís no es pot
+   mostrar, el push acaba igual. Sense pushsubscriptionchange: tornar a desar
+   des d'ací demanaria la sessió dins del worker; la pàgina ho sincronitza en
+   cada càrrega (src/pwa/avisosPush.js). */
+self.addEventListener('push', (event) => {
+  event.waitUntil(Promise.resolve().then(mostraAvisCec).catch(() => {}));
+});
+
+/* El toc d'un avís del Xat (els d'altres etiquetes no són nostres): el tanca i
+   porta la persona al Xat. */
+self.addEventListener('notificationclick', (event) => {
+  if (!esAvisDelXat(event.notification)) return;
+  event.notification.close();
+  event.waitUntil(obriElXat().catch(() => {}));
 });

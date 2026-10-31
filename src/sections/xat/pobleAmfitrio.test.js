@@ -1,11 +1,15 @@
+import { existsSync } from 'node:fs';
+import path from 'node:path';
 import { describe, expect, it } from 'vitest';
+import { MOCK_TOWNS } from '../pobles/townsSeed.js';
 import {
-  anteposaPoble, avatarDelPoble, comunitatsAmbCaraDelPoble, esComunitatDelPoble, filsAmbCaraDelPoble, generalDeComunitat,
+  POBLE_PER_DEFECTE, anteposaPoble, avatarDelPoble, comunitatsAmbCaraDelPoble, esComunitatDelPoble, filsAmbCaraDelPoble, generalDeComunitat,
   objecteDelPoble, pobleDeConfig, rutaSobreDelPoble
 } from './pobleAmfitrio.js';
 import { objecteDeSobre } from './XatSection.jsx';
 
 const POBLE = { id: 'la-torre-de-les-macanes', nom: 'Gent de la Torre' };
+const SELLA = { id: 'sella', nom: 'Gent de Sella' };
 
 const comunitat = (id, subjecte, fills = []) => ({ fil: { id, tipus: 'comunitat', subjecte }, fills });
 const filaDe = (c) => ({ clau: `comunitat:${c.fil.id}`, tipus: 'comunitat', comunitat: c });
@@ -59,20 +63,38 @@ describe('avatarDelPoble (Onada 3, P2)', () => {
 
   it('la cara de la fitxa de Pobles, amb la precedència de la targeta de /pobles', () => {
     expect(avatarDelPoble(POBLE, [{ id: 'sella', avatar_url: '/x.jpg' }, TORRE])).toBe(TORRE.avatar_url);
-    expect(avatarDelPoble(POBLE, [{ id: POBLE.id, image_url: TORRE.image_url }])).toBe(TORRE.image_url);
-    expect(avatarDelPoble(POBLE, [{ id: POBLE.id, imageSrc: '/assets/towns/a.jpg' }])).toBe('/assets/towns/a.jpg');
+    /* P1-70 (261029) · La precedència image_url / imageSrc es prova amb un
+       poble que no és la Torre: la Torre sense avatar_url porta la seua foto
+       de la llavor (prova de baix). */
+    expect(avatarDelPoble(SELLA, [{ id: SELLA.id, image_url: '/assets/towns/sella/1.jpg' }])).toBe('/assets/towns/sella/1.jpg');
+    expect(avatarDelPoble(SELLA, [{ id: SELLA.id, imageSrc: '/assets/towns/a.jpg' }])).toBe('/assets/towns/a.jpg');
   });
 
   it('en remot la fitxa pot portar un UUID: també es troba per slug', () => {
     expect(avatarDelPoble(POBLE, [{ id: '44444444-4444-4444-8444-444444444444', slug: POBLE.id, avatar_url: TORRE.avatar_url }])).toBe(TORRE.avatar_url);
   });
 
-  it('sense poble, sense fitxes o sense imatge: null, cap cara inventada', () => {
+  /* P1-70 (261029) · Derogat per a la Torre (prova de baix); per als altres pobles, igual. */
+  it('sense poble, o un altre poble sense fitxa o sense imatge: null, cap cara inventada', () => {
     expect(avatarDelPoble(null, [TORRE])).toBeNull();
-    expect(avatarDelPoble(POBLE, undefined)).toBeNull();
-    expect(avatarDelPoble(POBLE, [])).toBeNull();
-    expect(avatarDelPoble(POBLE, [null, { id: 'sella', avatar_url: '/x.jpg' }])).toBeNull();
-    expect(avatarDelPoble(POBLE, [{ id: POBLE.id }])).toBeNull();
+    expect(avatarDelPoble(SELLA, undefined)).toBeNull();
+    expect(avatarDelPoble(SELLA, [])).toBeNull();
+    expect(avatarDelPoble(SELLA, [null, { id: 'altea', avatar_url: '/x.jpg' }])).toBeNull();
+    expect(avatarDelPoble(SELLA, [{ id: SELLA.id }])).toBeNull();
+  });
+
+  /* P1-70 (ordre del Mestre, 261029 18:20) · «Gent de la Torre», mai «GD»: la
+     foto de la llavor (townsSeed.js) quan el node no en dona cap avatar_url. */
+  it('P1-70 · la Torre sense fitxa, sense fitxes o sense avatar_url porta la seua foto de la llavor; la fitxa del node mana', () => {
+    expect(POBLE_PER_DEFECTE.avatar).toBe('/assets/towns/la-torre-de-les-macanes/2.jpg');
+    expect(POBLE_PER_DEFECTE.avatar).toBe(MOCK_TOWNS.find((town) => town.id === POBLE.id).avatar_url);
+    expect(existsSync(path.join(process.cwd(), 'public', POBLE_PER_DEFECTE.avatar))).toBe(true);
+    expect(existsSync(path.join(process.cwd(), 'public', POBLE_PER_DEFECTE.avatar.replace(/\.jpg$/, '.webp')))).toBe(true);
+    for (const towns of [undefined, [], [null], [{ id: POBLE.id }], [{ id: POBLE.id, image_url: TORRE.image_url }]]) {
+      expect(avatarDelPoble(POBLE, towns)).toBe(POBLE_PER_DEFECTE.avatar);
+    }
+    expect(avatarDelPoble({ id: POBLE.id, nom: '' }, [])).toBe(POBLE_PER_DEFECTE.avatar);
+    expect(avatarDelPoble(POBLE, [{ id: POBLE.id, avatar_url: '/assets/towns/la-torre-de-les-macanes/2.webp' }])).toBe('/assets/towns/la-torre-de-les-macanes/2.webp');
   });
 });
 

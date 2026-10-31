@@ -30,10 +30,15 @@ import { dePagina } from '../search/indexCerca.js';
 const PROHIBIDES = /Google[\s_-]*Play|Android|Play[\s_-]*Store|APK/i;
 
 /* Tot el que es llig o se sent d'un HTML: el text com el pinta el navegador
-   (jsdom), el de llevaEtiquetes i els atributs que es lligen. */
+   (jsdom), el de llevaEtiquetes i els atributs que es lligen. El cos es pinta
+   dins d'un <div>, i ací s'analitza igual: un fragment amb la caixa de
+   context (createContextualFragment), no un document sencer, que trauria al
+   <head> un <style>, un <title> o un <meta> de davant i el text no es llegiria. */
 function lectures(html) {
   const caixa = document.createElement('div');
-  caixa.innerHTML = html;
+  const tros = document.createRange();
+  tros.selectNodeContents(caixa);
+  caixa.replaceChildren(tros.createContextualFragment(html));
   const atributs = [...caixa.querySelectorAll('*')]
     .flatMap((el) => ['title', 'alt', 'aria-label', 'aria-description', 'placeholder'].map((nom) => el.getAttribute(nom) || ''));
   return [caixa.textContent, llevaEtiquetes(html), ...atributs].join(' | ');

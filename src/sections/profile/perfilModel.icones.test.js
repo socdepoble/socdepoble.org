@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'vitest';
 import { ICONES_APARTATS, itemsDePerfil } from './perfilModel.js';
-import { defecteSafari16 } from '../disseny/cataleg/guardaEmojisSafari16.js';
+import { defecteSafari16 } from '../../../tests/helpers/guardaEmojisSafari16.js';
 import { emojiSol } from '../../utils/emoji.js';
 
 /* Pla 261015_1900 (Onada 1.3: «emoticones grans i riques als apartats») ·

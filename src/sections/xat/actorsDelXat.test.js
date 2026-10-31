@@ -5,8 +5,8 @@
    cada capçalera. Tot per identificador, mai pel nom. */
 import { afterEach, describe, expect, test } from 'vitest';
 import {
-  CLAU_FILA_DE_SOC_DE_POBLE, COMUNITAT_DE_SOC_DE_POBLE, RUTA_DE_JAVI, RUTA_DE_LA_IAIA, RUTA_DE_SOC_DE_POBLE, RUTA_SOBRE_DE_SOC_DE_POBLE,
-  anteposaActors, esComunitatDeSocDePoble, potPortarLaComunitat, rutaCanonicaDelXat
+  CLAU_FILA_DE_SOC_DE_POBLE, COMUNITAT_DE_SOC_DE_POBLE, COMUNITAT_PUBLICA_DE_SOC_DE_POBLE, FILA_DE_RESERVA_DE_JAVI, FILA_DE_RESERVA_DE_LA_IAIA, RUTA_DE_JAVI, RUTA_DE_LA_IAIA, RUTA_DE_SOC_DE_POBLE, RUTA_SOBRE_DE_SOC_DE_POBLE,
+  anteposaActors, comunitatDeReserva, esComunitatDeSocDePoble, potPortarLaComunitat, rutaCanonicaDelXat
 } from './actorsDelXat.js';
 import { mapejaFil } from './missatges.js';
 import { AJUDA_PER_CLAU, ambXatsPerDefecte, filDeMostraDeJavi } from '../../data/xatsPerDefecte.js';
@@ -106,5 +106,89 @@ describe('rutaCanonicaDelXat · on porta la capçalera', () => {
     expect(rutaCanonicaDelXat({ id: 'g', tipus: 'grup', subjecte: { tipus: 'pagina', id: '/iaia', ruta: '/iaia' } })).toBeNull();
     expect(rutaCanonicaDelXat({ id: 'd', tipus: 'directe', altres: [{ id: 'socdepoble', tipus: 'persona' }] })).toBeNull();
     expect(rutaCanonicaDelXat(null)).toBeNull();
+  });
+});
+
+/* P1-70 (ordre del Mestre, 261029 18:20) · Els quatre actors, sempre: si
+   la llista no porta Javi o la IAIA (una llista buida, un node sense poble,
+   un adaptador que no les sintetitza, un fil seu arxivat), la reserva hi
+   posa la mateixa fila que porta el port; mai una segona. */
+describe('anteposaActors · P1-70, les files de reserva', () => {
+  const RESERVES = { reservaJavi: FILA_DE_RESERVA_DE_JAVI, reservaIAIA: FILA_DE_RESERVA_DE_LA_IAIA };
+  test('les reserves són les files sintètiques del port, congelades', () => {
+    expect(FILA_DE_RESERVA_DE_JAVI).toEqual(javi);
+    expect(FILA_DE_RESERVA_DE_LA_IAIA).toEqual(iaia);
+    expect(Object.isFrozen(FILA_DE_RESERVA_DE_JAVI)).toBe(true);
+    expect(Object.isFrozen(FILA_DE_RESERVA_DE_JAVI.fil)).toBe(true);
+    expect(Object.isFrozen(FILA_DE_RESERVA_DE_LA_IAIA.fil)).toBe(true);
+  });
+  test('una llista buida o només amb el poble: Javi, el poble i la IAIA de reserva, en l’ordre del Mestre', () => {
+    expect(claus(anteposaActors([], RESERVES))).toEqual(['sdp-per-defecte:javi', 'sdp-per-defecte:iaia']);
+    expect(claus(anteposaActors([delPoble, pepa], { ...RESERVES, comunitat: true })))
+      .toEqual([CLAU_FILA_DE_SOC_DE_POBLE, 'sdp-per-defecte:javi', 'poble:la-torre-de-les-macanes', 'sdp-per-defecte:iaia', 'f-pepa']);
+  });
+  test('si ja hi són (la sintètica, el xat de mostra, un directe o el xat de /iaia), la reserva no en pinta cap segona', () => {
+    const mostra = deFil(filDeMostraDeJavi());
+    const paginaIaia = deFil(mapejaFil({ id: 'g-iaia', tipus: 'grup', titol: "L'ànima de la iaia", subjecte: { tipus: 'pagina', id: '/iaia', ruta: '/iaia' } }));
+    expect(claus(anteposaActors([delPoble, mostra, paginaIaia], RESERVES))).toEqual(['fake-javi', 'poble:la-torre-de-les-macanes', 'g-iaia']);
+    expect(claus(anteposaActors([javi, delPoble, iaia], RESERVES))).toEqual(['sdp-per-defecte:javi', 'poble:la-torre-de-les-macanes', 'sdp-per-defecte:iaia']);
+    const directeIaia = deFil(mapejaFil({ id: 'd-iaia', tipus: 'directe', titol: 'IAIA MarIA', altres: [{ id: IAIA_ID, tipus: 'ia' }] }));
+    expect(claus(anteposaActors([directeIaia, pepa], RESERVES))).toEqual(['sdp-per-defecte:javi', 'd-iaia', 'f-pepa']);
+  });
+  test('sense reserva de la IAIA (nivell d’IA 0), cap IAIA inventada', () => {
+    expect(claus(anteposaActors([delPoble], { reservaJavi: FILA_DE_RESERVA_DE_JAVI }))).toEqual(['sdp-per-defecte:javi', 'poble:la-torre-de-les-macanes']);
+  });
+  test('un homònim de Javi (un altre id amb el seu nom) no el substituïx: la reserva hi és igualment (mai pel nom)', () => {
+    const homonim = deFil(mapejaFil({ id: 'd-homonim', tipus: 'directe', titol: 'Javi Llinares', altres: [{ id: 'un-altre', tipus: 'persona', nom: 'Javi Llinares' }] }));
+    expect(claus(anteposaActors([homonim], RESERVES))).toEqual(['sdp-per-defecte:javi', 'sdp-per-defecte:iaia', 'd-homonim']);
+  });
+  test('el subtítol de Javi només on no hi ha cap últim text; el literal del xat de mostra i un missatge real es queden', () => {
+    const SUB = 'Atenció personal i servei tècnic';
+    const [primera] = anteposaActors([], { ...RESERVES, subtitolDeJavi: SUB });
+    expect(primera.fil.ultimText).toBe(SUB);
+    expect(FILA_DE_RESERVA_DE_JAVI.fil.ultimText).toBe('');
+    const mostra = deFil(filDeMostraDeJavi());
+    expect(anteposaActors([mostra], { subtitolDeJavi: SUB })[0].fil.ultimText).toBe(mostra.fil.ultimText);
+    const real = deFil(mapejaFil({ id: 'd-javi', tipus: 'directe', ultimText: 'Bon dia', altres: [{ id: '0001', tipus: 'persona' }] }));
+    expect(anteposaActors([real], { subtitolDeJavi: SUB })[0]).toBe(real);
+    /* La sintètica del port, trobada a la llista, es copia amb el subtítol i no es duplica. */
+    const ambSub = anteposaActors([pepa, javi], { subtitolDeJavi: SUB });
+    expect(claus(ambSub)).toEqual(['sdp-per-defecte:javi', 'f-pepa']);
+    expect(ambSub[0].fil.ultimText).toBe(SUB);
+    expect(javi.fil.ultimText).toBe('');
+  });
+});
+
+/* QA-R2-05 (Codex, Ronda 2) · En remot, fins que el backend dona l'UUID de
+   l'entitat pilot, la reserva de Sóc de Poble continua al seu lloc amb la
+   mateixa clau, però només és l'enllaç públic a /socdepoble: cap acció pel
+   slug. Quan arriba l'UUID, la mateixa fila porta a la comunitat i, si la
+   comunitat de veres ja és a la llista (reconeguda per l'UUID), la
+   substituïx sense duplicar. Un homònim alié (un altre UUID amb el mateix
+   nom) no la substituïx mai: mai pel nom. */
+describe('QA-R2-05 · la reserva de Sóc de Poble en remot sense UUID', () => {
+  test('comunitatDeReserva: en remot sense UUID, la pública (/socdepoble); en llavor, en local o amb l’UUID, la que porta a la comunitat', () => {
+    expect(comunitatDeReserva('remote')).toBe(COMUNITAT_PUBLICA_DE_SOC_DE_POBLE);
+    expect(COMUNITAT_PUBLICA_DE_SOC_DE_POBLE).toEqual({ ...COMUNITAT_DE_SOC_DE_POBLE, publica: true });
+    expect(Object.isFrozen(COMUNITAT_PUBLICA_DE_SOC_DE_POBLE)).toBe(true);
+    expect(COMUNITAT_PUBLICA_DE_SOC_DE_POBLE.ruta).toBe(RUTA_DE_SOC_DE_POBLE);
+    expect([comunitatDeReserva('seed'), comunitatDeReserva('local')]).toEqual([COMUNITAT_DE_SOC_DE_POBLE, COMUNITAT_DE_SOC_DE_POBLE]);
+    registraEntitatDelProjecte({ tipus: 'entitat', id: UUID_SDP, slug: 'socdepoble' });
+    expect(comunitatDeReserva('remote')).toBe(COMUNITAT_DE_SOC_DE_POBLE);
+  });
+
+  test('la mateixa clau abans i després de l’UUID; la comunitat reconeguda la substituïx; l’homònim alié no', () => {
+    const ambReserva = anteposaActors([delPoble, javi, iaia], { comunitat: comunitatDeReserva('remote') });
+    expect(ambReserva[0]).toEqual({ clau: CLAU_FILA_DE_SOC_DE_POBLE, tipus: 'entitat', entitat: COMUNITAT_PUBLICA_DE_SOC_DE_POBLE });
+    const alie = deComunitat(comunitatSdp(UUID_ALTRA));
+    expect(claus(anteposaActors([delPoble, alie, javi, iaia], { comunitat: comunitatDeReserva('remote') })))
+      .toEqual([CLAU_FILA_DE_SOC_DE_POBLE, 'sdp-per-defecte:javi', 'poble:la-torre-de-les-macanes', 'sdp-per-defecte:iaia', 'comunitat:c-sdp']);
+    registraEntitatDelProjecte({ tipus: 'entitat', id: UUID_SDP, slug: 'socdepoble' });
+    const hidratada = anteposaActors([delPoble, javi, iaia], { comunitat: comunitatDeReserva('remote') });
+    expect(hidratada[0]).toEqual({ clau: CLAU_FILA_DE_SOC_DE_POBLE, tipus: 'entitat', entitat: COMUNITAT_DE_SOC_DE_POBLE });
+    const deVeres = deComunitat(comunitatSdp(UUID_SDP));
+    expect(claus(anteposaActors([delPoble, alie, deVeres, javi, iaia], { comunitat: comunitatDeReserva('remote') })))
+      .toEqual(['comunitat:c-sdp', 'sdp-per-defecte:javi', 'poble:la-torre-de-les-macanes', 'sdp-per-defecte:iaia', 'comunitat:c-sdp']);
+    expect(anteposaActors([delPoble, alie, deVeres, javi, iaia], { comunitat: comunitatDeReserva('remote') })[0]).toBe(deVeres);
   });
 });

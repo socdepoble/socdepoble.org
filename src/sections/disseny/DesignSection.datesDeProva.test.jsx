@@ -29,6 +29,11 @@ vi.mock('../../app/contexts/UIContext', () => ({
 }));
 vi.mock('../../app/contexts/CoreContentContext', () => ({ useCoreContent: () => mocks.core }));
 vi.mock('./cataleg/detailRegistry', () => ({ CATALOG_DETAIL_LOADERS: {} }));
+/* Ordre del Mestre (30-10-2026, prompt 2208, T2.1) · La portada registra ara el
+   seu head (useSEO), que necessita la ubicació del router; esta suite mira dates i
+   el router fals no en porta: el head el proven DesignSection.seo.test.jsx i el
+   manifest social. */
+vi.mock('../../hooks/useSEO', () => ({ useSEO: () => {} }));
 /* La portada: el detall de l'element '__intro' del model. */
 vi.mock('../../components/universal/workspace/UniversalWorkspace', () => ({
   UniversalWorkspace: ({ model, renderDetail }) => renderDetail({ item: model.items.find((item) => item.id === '__intro') })

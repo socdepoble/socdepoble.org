@@ -62,14 +62,14 @@ describe('analitzaCarpetaMultimediaLocal (motor d’auditoria local)', () => {
 });
 
 describe('GestorMultimediaLocal (interfície Pedra Seca)', () => {
-  test('mostra la capçalera de connexió a _multimedia_de_poble i permet carregar fitxers locals', async () => {
+  test('mostra el Gestor d’arxius locals i, amb el selector de fitxers, la diagnosi de _multimedia_de_poble', async () => {
     const cens = new Map([
       ['/assets/uploads/brain/nano_versions_ibanez_v1_1_10.webp', { titol: 'El tauler de versions del poble', ambit: 'contingut' }]
     ]);
 
-    render(<GestorMultimediaLocal cens={cens} />);
-    expect(screen.getByText(/Arxiu Multimèdia Local \(_multimedia_de_poble\)/i)).not.toBeNull();
-    expect(screen.getByRole('button', { name: /Connectar carpeta local/i })).not.toBeNull();
+    render(<GestorMultimediaLocal cens={cens} entorn={{}} />);
+    expect(screen.getByRole('heading', { level: 2, name: 'Gestor d’arxius locals' })).not.toBeNull();
+    expect(screen.getByRole('button', { name: 'Vincular carpeta local' })).not.toBeNull();
 
     const input = screen.getByTestId('input-carpeta-multimedia-local');
     const f1 = new File([new Uint8Array(2048)], 'nano_versions_ibanez_v1_1_10.jpg', { type: 'image/jpeg' });
@@ -83,9 +83,9 @@ describe('GestorMultimediaLocal (interfície Pedra Seca)', () => {
 
     fireEvent.change(input, { target: { files: [f1, f2] } });
 
-    expect(await screen.findByText(/Diagnòstic intel·ligent de «_multimedia_de_poble»/i)).not.toBeNull();
-    expect(screen.getByText('Emparellades Web: 1')).not.toBeNull();
+    expect(await screen.findByRole('heading', { name: 'Diagnòstic de «_multimedia_de_poble»' })).not.toBeNull();
+    expect(screen.getByText('Publicades a la web: 1')).not.toBeNull();
     expect(screen.getByText('Inèdites sense WebP: 1')).not.toBeNull();
+    expect(screen.getByText('Només lectura')).not.toBeNull();
   });
 });
-

@@ -65,8 +65,14 @@ export const CONTRACTE_AMFITRIO_V1 = congela({
      Cap amfitrió no les ha d'emetre per defecte. Excepció per ordre del
      Mestre (Onada 5, 261009): WordPress declara ruta-a-url="fragment" a la
      seua instància pròpia; el marcatge de referència per a altres amfitrions,
-     no (marcatge.php, socdepoble_enxufe_element). */
-  atributsOptIn: ['ruta-a-url'],
+     no (marcatge.php, socdepoble_enxufe_element).
+     Gauntlet 261030 (Fase 3, TC3.1; decisió de l'orquestrador, pendent que
+     el Mestre la porte a sdp.markup) · `traductor-llengues`: els destins que
+     servix el `traductor-url` ('ES GL EN-GB FR'). Només va al costat de
+     traductor-url, a la instància pròpia de WordPress; el client no demana
+     cap destí que no hi siga (cap petició que sabem que fallarà). Sense
+     l'atribut, el client es comporta com abans. */
+  atributsOptIn: ['ruta-a-url', 'traductor-llengues'],
   /* Configuració en JSON (atribut o <script type="application/json">). */
   atributsDeConfig: ['config', 'config-id'],
   /* Permisos i arrencada: no són configuració de l'app. */
@@ -86,7 +92,7 @@ export const CONTRACTE_AMFITRIO_V1 = congela({
      desviar des de l'etiqueta. */
   clausDeConfig: {
     amfitrio: ['nomPoble', 'poble', 'rutaInicial', 'basePath', 'basename', 'routerType', 'manageDocumentHead',
-      'language', 'themeMode', 'fontsHref', 'pluginUrl', 'traductorUrl', 'apps', 'rutaAUrl'],
+      'language', 'themeMode', 'fontsHref', 'pluginUrl', 'traductorUrl', 'traductorLlengues', 'apps', 'rutaAUrl'],
     propiesDeSdP: ['supabaseUrl', 'supabaseAnonKey', 'dataMode', 'backendId', 'tenantId',
       'botApiUrl', 'oauthRelayUrl', 'sollutiaIssuer', 'version',
       /* CU (Onada 3): l'adreça d'instal·lació de l'extensió del Snippet. Un

@@ -67,18 +67,41 @@ export function publicWikiFiles(root, { extensions = ['.md', '.json'] } = {}) {
   return result;
 }
 
-/** Comprova la frontera immediatament abans de llegir i no seguix el link final. */
+/* Decisió del Mestre (31-10-2026) · Cap exportador públic (manifest, RAG i
+   slugs) porta el camí de l'ordinador on es treballa: /Users/<usuari>/ passa
+   a ~/, i /Users/<usuari> sense barra final, a ~ (el punt final de frase es
+   queda). També en minúscula (APFS no distingix majúscules) i en la forma
+   escapada dels JSON (\/Users\/…). Les fonts no es toquen: el hash de les
+   plantilles el fixen els rebuts. Una URL amb /Users/ dins del camí
+   (https://…/a+/Users/…, …md/users/…) no és un camí local i es queda.
+   /Users/Shared/ també passa a ~/: emmascara de més, mai de menys. */
+const CAMI_D_USUARI = /(?<![\w.~+%\\-])\\?\/Users\\?\/[A-Za-z0-9_][A-Za-z0-9._-]*?(?:\\?\/|(?=[^A-Za-z0-9._-]|\.(?![A-Za-z0-9_-])|$))/gi;
+
+/** Torna `text` amb cada /Users/<usuari> canviat per ~. Pur. */
+export function emmascaraCamins(text) {
+  return String(text).replace(CAMI_D_USUARI, (tros) => {
+    if (tros.endsWith('\\/')) return '~\\/';
+    return tros.endsWith('/') ? '~/' : '~';
+  });
+}
+
+/** Comprova la frontera immediatament abans de llegir i no seguix el link
+ * final. El text ix ja emmascarat (emmascaraCamins): és l'única porta de
+ * lectura dels exportadors públics. */
 export function readPublicWikiFile(root, file) {
   const safe = publicWikiFile(root, file);
   if (!safe) return null;
   const fd = fs.openSync(safe, fs.constants.O_RDONLY | fs.constants.O_NOFOLLOW);
-  try { return fs.readFileSync(fd, 'utf8'); } finally { fs.closeSync(fd); }
+  try { return emmascaraCamins(fs.readFileSync(fd, 'utf8')); } finally { fs.closeSync(fd); }
 }
 
 // Compartit per les rutes de llista i detall del manifest SEO. L'autenticació
 // no equival a robots: esta llista només controla indexació, mai autorització.
+// Ordre del Mestre (30-10-2026, prompt 2208, T2.1) · /disseny és pública i
+// indexable («dejar público lo máximo posible»): ix d'esta llista. /consola no
+// hi era; el mateix canvi a useSEO.js (PRIVATE) la fa indexable al client.
 const PRIVATE_ROUTES = new Set(['login', 'registre', 'perfil', 'control', 'connectar', 'cerca',
-  'dispositius', 'traduccions', 'disseny', 'skills', 'ia', 'realitat', 'notes', 'xat', 'chat', 'chats', 'gestoria', 'tractors']);
+  'dispositius', 'traduccions', 'skills', 'ia', 'realitat', 'notes', 'xat', 'chat', 'chats', 'gestoria', 'tractors']);
 export function publicSeoRoute(route, attributes = {}) {
   const section = String(route).replace(/^\/+/, '').split(/[/?#]/)[0];
   return publicMetadata(attributes) && !PRIVATE_ROUTES.has(section);

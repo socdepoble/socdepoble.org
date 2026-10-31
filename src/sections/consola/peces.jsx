@@ -1,18 +1,21 @@
 /* Peces internes de la Consola (sense classes noves fora de sdp-consola__*).
    Les comparteixen els panells de ConsolaSection i el Mapa. */
-import { createContext, forwardRef, useContext } from 'react';
+import { forwardRef, useContext } from 'react';
+/* P1-71 (Gauntlet 261029) · L'objecte de context viu a objectesDeContext.js,
+   que no importa res del projecte; ací es reexporta amb el mateix nom. */
+import { PrivacitatConsola } from './objectesDeContext.js';
 import { ChevronDown } from 'lucide-react';
 import { Insignia, UniversalCard } from '../../components/PedraSeca';
 import { useNavigate } from '../../app/contexts/RouterContext';
 import { dataHoraDeBarra } from '../../components/universal/editorial.js';
 import { AUTORIA_SOCDEPOBLE } from '../control/destinsControl.js';
-import { retallaProblemes } from './problemesConsola.js';
+import { resumDeProblemes } from './resumProblemes.js';
 import { semaforDEtiquetes } from './semafor.js';
 
 /* Mode privacitat (l'interruptor d'Emowe): amaga rutes, ordres i empremtes
    per a gravar o compartir pantalla sense repassar-la abans. Tot el que la
    Consola pinta amb <Mono> o <Privat> passa per ací. */
-export const PrivacitatConsola = createContext(false);
+export { PrivacitatConsola };
 
 /** Una ruta, ordre o empremta dins de text corrent: la mateixa tipografia, amagada si cal. */
 export function Privat({ children }) {
@@ -28,6 +31,16 @@ export function Privat({ children }) {
 
 export function Mono({ children }) {
   return <code className="sdp-consola__mono"><Privat>{children}</Privat></code>;
+}
+
+/* IDEA-50 · Gauntlet 261029 (cicle 1; WCAG 2.4.9, Propòsit de l'enllaç només
+   amb l'enllaç) · Va dins de l'enllaç del número de versió, a /versions, i
+   només el llig el lector de pantalla: fora del paràgraf (la llista d'enllaços
+   del lector, el rotor) el número sol no diu on porta. Cap píxel: la classe
+   amagada de sempre. Un sol text per als dos enllaços (el peu de la Consola i
+   la pàgina d'Empaquetats). */
+export function DestiVersions() {
+  return <span className="sdp-nomes-lector">, historial de versions</span>;
 }
 
 /* Una etiqueta amb `to` (el vocabulari d'Insignia: error, avis, info, exit,
@@ -66,6 +79,13 @@ export function TargetaResum({ icona: Icona, titol, descripcio, a, onObri, etiqu
 export function Xifra({ etiqueta, valor, icona, a }) {
   return <TargetaResum icona={icona} titol={String(valor)} descripcio={etiqueta} a={a} />;
 }
+
+/* Ordre del Mestre, 30-10-2026 (punt 1.3) · nomCurt i resumDeProblemes (el
+   resum dels problemes de la coberta). Gauntlet 261030 (cicle 4, corrector de
+   la Consola) · Viuen a resumProblemes.js, sense React, perquè l'Índex
+   (indexConsola.js) nomene els problemes d'una peça amb les mateixes línies
+   que la seua coberta; ací es reexporten amb el mateix nom. */
+export { nomCurt, resumDeProblemes } from './resumProblemes.js';
 
 /* La targeta que explica una part de la Consola és la UniversalCard
    sencera del Mur, no la recepta compacta del Control (ordre del Mestre,
@@ -130,7 +150,17 @@ export function Xifra({ etiqueta, valor, icona, a }) {
    · semafor; modules.css § CONSOLA, sense :has()) i el nom del quadrat diu el seu text
    («Inventari de skills · Important»): el color mai no va sol. «Canvis nous»
    i el que només informa no hi compten; sense cap color, el DOM de sempre.
-   Les targetes amb imatge no porten insígnia (front F, 13-10-2026). */
+   Les targetes amb imatge no porten insígnia (front F, 13-10-2026).
+   Ordre del Mestre, 30-10-2026 (punt 1.3, «resum net a la portada de la
+   targeta») · La coberta resumix els problemes (resumDeProblemes): cap ruta
+   sencera, que en una columna de 350px ocupava tres o quatre línies per
+   problema i triplicava l'alçada d'«Avisos i salut». Els iguals (la mateixa
+   marca i el mateix text, p. ex. cinc «porta-documents-roja» d'altes) fan
+   una sola línia amb quants casos són; un problema que només és una ruta (un
+   lloc sense lector, un torn caducat) es diu pel seu nom curt, l'últim tram,
+   en <Mono>. Com a molt MAX_PROBLEMES_TARGETA línies i «i N més», que compta
+   casos. La llista detallada, amb cada ruta, viu a la pàgina de la targeta.
+   Derogat EN PART (Onada 6, requisit 9): «La ruta va en <Mono>» a la coberta. */
 export function TargetaConsola({
   icona: Icona, titol, subtitol, entradilla, dada, metriques, estats, problemes, creat, generat, a, onObri, etiquetes,
   imatge = null, imatgeAlt = ''
@@ -140,7 +170,7 @@ export function TargetaConsola({
   const obri = a ? () => navigate(a) : onObri;
   const ambMetriques = Array.isArray(metriques) && metriques.length > 0;
   const ambEstats = Array.isArray(estats) && estats.length > 0;
-  const { visibles, resta } = retallaProblemes(problemes);
+  const { visibles, resta } = resumDeProblemes(problemes);
   const quan = dataHoraDeBarra({ creat, modificat: generat });
   const semafor = imatge ? null : semaforDEtiquetes(etiquetes);
   const iconaPart = imatge ? null : <Icona size={48} strokeWidth={1.5} aria-hidden="true" focusable="false" />;
@@ -177,10 +207,10 @@ export function TargetaConsola({
           )}
           {visibles.length > 0 && (
             <ul className="sdp-consola__evidencies sdp-consola__problemes" aria-label="Quins problemes hi ha">
-              {visibles.map((p) => (
-                <li key={p.clau}>
-                  {p.marca ? <><Insignia to={p.to ?? 'neutre'}>{p.marca}</Insignia>{' '}</> : null}
-                  {p.text}{p.text && p.ruta ? ' · ' : null}{p.ruta ? <Mono>{p.ruta}</Mono> : null}
+              {visibles.map((g) => (
+                <li key={g.clau}>
+                  {g.marca ? <><Insignia to={g.to}>{g.marca}</Insignia>{' '}</> : null}
+                  {g.text}{g.curt ? <Mono>{g.curt}</Mono> : null}{g.n > 1 ? ` (${g.n} casos)` : null}
                 </li>
               ))}
               {resta > 0 && <li>{`i ${resta} més`}</li>}

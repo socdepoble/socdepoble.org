@@ -34,7 +34,18 @@ function fitxersDe(directori, extensio = /\.(?:jsx?|css)$/) {
 const PS = 'src/components/PedraSeca';
 const ORG = `${PS}/organismes`;
 const CAT = 'src/sections/disseny/cataleg';
-const CSS = `${PS}/catalegColleccio.css`;
+/* tractor-vocabulari (ordre del Mestre, 261030) · El full ja no viu al costat de
+   les peces: és el bloc catalegColleccio de src/css/modules.css, entre les seues
+   marques. */
+const MODULS = 'src/css/modules.css';
+const CSS_ANTIC = `${PS}/catalegColleccio.css`;
+const blocDeModuls = (nom) => {
+  const tot = llig(MODULS);
+  const inici = tot.indexOf(`/* ═══ BLOC ${nom} · `);
+  const fi = tot.indexOf(`/* ═══ FI DEL BLOC ${nom} ═══ */`);
+  if (inici < 0 || fi < inici) throw new Error(`${MODULS} no té el bloc ${nom}`);
+  return tot.slice(inici, fi);
+};
 
 /* [nom, fitxer, espècimen que el munta] */
 const PECES = [
@@ -66,8 +77,12 @@ const JSX_PRODUCCIO = [...JSX_PS, ...COMU_PRODUCCIO.filter((f) => f.endsWith('.j
 
 const senseComentaris = (css) => css.replace(/\/\*[\s\S]*?\*\//g, '');
 const classesDelCss = (css) => new Set([...senseComentaris(css).matchAll(/\.(-?[_a-zA-Z][\w-]*)/g)].map((m) => m[1]));
-const CSS_CANONIC = [...fitxersDe('src/css', /\.css$/), `${PS}/pecesApps.css`, 'src/components/layout/AppGridShell.css'].map(llig).join('\n');
-const FULL = llig(CSS);
+const FULL = blocDeModuls('catalegColleccio');
+/* Els fulls canònics sense el bloc mateix: src/css (amb el bloc pecesApps de
+   modules.css) i el de la closca. Sense el bloc, «cap CSS mort» continua
+   mirant les classes que només definix l'esquelet. */
+const CSS_CANONIC_SENCER = [...fitxersDe('src/css', /\.css$/), 'src/components/layout/AppGridShell.css'].map(llig).join('\n');
+const CSS_CANONIC = CSS_CANONIC_SENCER.replace(FULL, '');
 const FULL_NET = senseComentaris(FULL);
 
 /* Les classes sdp-* que nomena un JSX: tot literal entre cometes que ho siga
@@ -131,6 +146,8 @@ describe('Pedra Seca · JSX', () => {
   });
 
   test('cap CSS mort: tota classe pròpia del full la pinta alguna peça', () => {
+    /* El bloc s'ha llevat de veres dels fulls externs (una sola vegada). */
+    expect(CSS_CANONIC.length).toBe(CSS_CANONIC_SENCER.length - FULL.length);
     const externes = classesDelCss(CSS_CANONIC);
     const usades = new Set(JSX_PS.flatMap((f) => classesNomenades(llig(f))));
     const mortes = [...classesDelCss(FULL)].filter((c) => !externes.has(c) && !usades.has(c));
@@ -237,22 +254,34 @@ describe('Pedra Seca · catalegColleccio.css', () => {
     expect(FULL_NET).toMatch(/\.sdp-afegit-rapid__opcions\[hidden\]\s*\{\s*display:\s*none;/);
   });
 
-  /* ESQ-R3 · Les regles ja són dins de `@layer components { }`. Importat amb
-     layer(components), el full aniria a la subcapa components.components, que
-     perd sempre contra les regles de components.css i modules.css (.sdp-pindola,
-     .sdp-camp): les sobreescriptures de les eines deixarien de funcionar. */
-  test('la capçalera del full prescriu l’@import SENSE layer(), com components.css i modules.css', () => {
-    expect(FULL).toContain("@import url('../components/PedraSeca/catalegColleccio.css');");
-    expect(FULL).not.toMatch(/catalegColleccio\.css'\)\s*layer\(/);
+  /* ESQ-R3 · Les regles són dins de `@layer components { }` mateix: en la
+     subcapa components.components (un @import amb layer(components)) perdrien
+     sempre contra les regles de components.css i modules.css (.sdp-pindola,
+     .sdp-camp) i les sobreescriptures de les eines deixarien de funcionar.
+     tractor-vocabulari (261030): el bloc viu a modules.css, que index.css
+     importa sense layer(). */
+  test('el bloc és de la capa components mateixa: modules.css entra per index.css sense layer()', () => {
+    const index = senseComentaris(llig('src/css/index.css'));
+    expect([...index.matchAll(/@import[^;]*modules\.css[^;]*;/g)].map((m) => m[0])).toEqual(["@import url('./modules.css');"]);
+    expect(senseComentaris(FULL).trim().startsWith('@layer components {')).toBe(true);
   });
 
-  /* ESQ-R2 · Sense esta línia les peces i els espècimens es pinten sense
-     estils i la porta Pedra Seca marca el full com a LLEI_08_SUBARBRE_ORFE.
-     La prova queda roja fins que index.css (fora de l'abast del lot) l'importe. */
-  test('index.css l’importa una sola vegada i sense layer()', () => {
-    const index = senseComentaris(llig('src/css/index.css'));
-    const imports = [...index.matchAll(/@import[^;]*catalegColleccio\.css[^;]*;/g)].map((m) => m[0]);
-    expect(imports).toEqual(["@import url('../components/PedraSeca/catalegColleccio.css');"]);
+  /* ESQ-R2 · Sense el bloc les peces i els espècimens es pinten sense estils.
+     tractor-vocabulari (261030): una sola vegada a modules.css, en l'ordre que
+     tenia l'@import (darrere de pecesApps, davant d'alergens), i ni el fitxer
+     ni l'@import antics. */
+  test('viu a modules.css: un sol bloc, darrere de pecesApps i davant d’alergens, i ni fitxer ni @import del full antic', () => {
+    const moduls = llig(MODULS);
+    const posicio = (marca) => {
+      const i = moduls.indexOf(marca);
+      expect(i, marca).toBeGreaterThan(-1);
+      return i;
+    };
+    expect(moduls.split('/* ═══ BLOC catalegColleccio · ')).toHaveLength(2);
+    expect(posicio('/* ═══ BLOC catalegColleccio · ')).toBeGreaterThan(posicio('/* ═══ FI DEL BLOC pecesApps ═══ */'));
+    expect(posicio('/* ═══ FI DEL BLOC catalegColleccio ═══ */')).toBeLessThan(posicio('/* ═══ BLOC alergens · '));
+    expect(existsSync(path.join(ARREL, CSS_ANTIC))).toBe(false);
+    expect(senseComentaris(llig('src/css/index.css'))).not.toMatch(/catalegColleccio\.css/);
   });
 });
 
@@ -318,6 +347,8 @@ describe('dades sintètiques', () => {
       [0x202A, 0x202E], [0x2060, 0x2069], [0xFEFF, 0xFEFF]];
     const car = (cp) => String.fromCodePoint(cp);
     const re = new RegExp(`[${rangs.map(([a, b]) => (a === b ? car(a) : `${car(a)}-${car(b)}`)).join('')}]`, 'u');
-    for (const fitxer of [...TOTS, CSS]) expect(re.test(llig(fitxer)), fitxer).toBe(false);
+    for (const [fitxer, text] of [...TOTS.map((f) => [f, llig(f)]), [`${MODULS} · bloc catalegColleccio`, FULL]]) {
+      expect(re.test(text), fitxer).toBe(false);
+    }
   });
 });

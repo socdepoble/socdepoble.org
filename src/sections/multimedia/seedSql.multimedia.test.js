@@ -5,9 +5,12 @@
  * Samarreta com a entrades de Multimèdia amb el text de venda sencer i el
  * logotip de foto: el segon «Mac Mini» que va trobar el Mestre.
  *
- * El seed.sql NO és l'eixida d'ara del generador (porta una llavor sintètica
- * amb un pseudònim per a la persona pilot, i la Porta Llavor veta que hi
- * entre el seu nom), i per això no es compara byte a byte amb APP_CONTENT_ROWS. El que
+ * El seed.sql NO és l'eixida d'ara del generador, i per això no es compara
+ * byte a byte amb APP_CONTENT_ROWS. Porta la identitat pública declarada de la
+ * persona pilot (PERSONA_PILOT, Bloc -1 Identitat Dual, 261016): Decisió del
+ * Mestre (30-10-2026, «Identitat de fundador») · la Porta Llavor l'accepta a
+ * ella sola i continua vetant correus, telèfons i NIF/NIE de terceres
+ * persones (fora de l'avís legal). El que
  * es fixa és la coherència del fitxer amb si mateix: les fotos derivades de
  * la seua fila 'mediaItems' són EXACTAMENT les que mediaContent.js trau de les
  * SEUES files 'marketItems' i 'towns', i cap imatge que nomena falta al disc.

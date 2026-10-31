@@ -102,16 +102,19 @@ const CAMPS_AMB_AVIS = Object.keys(ETIQUETES_CAMP);
    logotip, els drets i el botó «Emojis XL» de la botonera (l'últim) viuen
    dins del desplegable: cada destí afig el seu lloc d'allí, i el focus
    l'obri abans d'enfocar (el contingut d'un <details> plegat no rep el
-   focus). Sense el desplegable, els selectors de sempre casen primer. */
+   focus). Sense el desplegable, els selectors de sempre casen primer.
+   Cicle 3 del Gauntlet (261030, VD) · Les ranures de la capçalera i del
+   logotip del desplegable s'apunten amb data-sdp-ranura, no amb una classe:
+   són ganxos de focus sense cap estil (tractor-vocabulari, V1). */
 const DESTINS_FOCUS = Object.freeze({
   title: '.editor-title-input',
   subtitle: '.editor-subtitle-input',
   lead: '.editor-lead-input',
   content: '.ProseMirror[contenteditable="true"]',
-  heroImage: '.hero-image [role="button"], .hero-image button:not(:disabled), .sdp-edicio-avancada__capcalera [role="button"], .sdp-edicio-avancada__capcalera button:not(:disabled)',
+  heroImage: '.hero-image [role="button"], .hero-image button:not(:disabled), [data-sdp-ranura="capcalera"] [role="button"], [data-sdp-ranura="capcalera"] button:not(:disabled)',
   /* Encàrrec d'harmonització (261018) · L'avatar redó del Perfil també viu dins
      del desplegable (.sdp-edicio-avancada__identitat). */
-  logoImage: '.page-title-logo-personalitzat [role="button"], .page-title-logo-personalitzat button:not(:disabled), .page-title .page-title-avatar--canvia, .sdp-edicio-avancada__identitat .page-title-avatar--canvia, .sdp-edicio-avancada__logotip [role="button"], .sdp-edicio-avancada__logotip button:not(:disabled)',
+  logoImage: '.page-title-logo-personalitzat [role="button"], .page-title-logo-personalitzat button:not(:disabled), .page-title .page-title-avatar--canvia, .sdp-edicio-avancada__identitat .page-title-avatar--canvia, [data-sdp-ranura="logotip"] [role="button"], [data-sdp-ranura="logotip"] button:not(:disabled)',
   copyright: '[data-sdp-drets]',
   icon: '.bar-orange > button.sdp-emoticona-barra--boto, .sdp-edicio-avancada .sdp-classificacio-botonera > button:last-child',
 });
@@ -550,13 +553,15 @@ export function UniversalEditorShell({
         ) : ETIQUETA_EDICIO_AVANCADA}
       </summary>
       {/* P1-58 · L'ordre de lectura de la fitxa: Capçalera → Avatar →
-          Logotip. Les classes de cada embolcall no canvien: hi apunten els
-          destins del focus (DESTINS_FOCUS, DESTI_FOCUS_AVATAR del Perfil). */}
+          Logotip. Els ganxos de cada embolcall no canvien: hi apunten els
+          destins del focus (DESTINS_FOCUS, DESTI_FOCUS_AVATAR i
+          DESTI_FOCUS_RANURA del Perfil). Cicle 3 (261030, VD) · La ranura
+          es diu amb data-sdp-ranura: les classes d'abans no tenien estil. */}
       <div className="sdp-edicio-avancada__cos">
-        <div className="sdp-edicio-avancada__imatge sdp-edicio-avancada__capcalera">{shellData.topBarData.heroComponent}</div>
+        <div className="sdp-edicio-avancada__imatge" data-sdp-ranura="capcalera">{shellData.topBarData.heroComponent}</div>
         {identitatEdicioAvancada ? <div className="sdp-edicio-avancada__identitat">{identitatEdicioAvancada}</div> : null}
         {shellData.topBarData.logoComponent ? (
-          <div className="sdp-edicio-avancada__imatge sdp-edicio-avancada__logotip">{shellData.topBarData.logoComponent}</div>
+          <div className="sdp-edicio-avancada__imatge" data-sdp-ranura="logotip">{shellData.topBarData.logoComponent}</div>
         ) : null}
         {classificacio ? <div className="page-title-classificacio">{classificacio}</div> : null}
       </div>
@@ -976,7 +981,7 @@ function useEditorShell({
     if (!enfocaHero || !heroImgRef.current) return;
     const imatge = heroImgRef.current;
     const actiu = imatge.getRootNode().activeElement ?? document.activeElement;
-    const lliure = !actiu || actiu === document.body || Boolean(imatge.closest('.hero-image, .sdp-edicio-avancada__capcalera')?.contains(actiu));
+    const lliure = !actiu || actiu === document.body || Boolean(imatge.closest('.hero-image, [data-sdp-ranura="capcalera"]')?.contains(actiu));
     if (lliure) imatge.focus();
     setEnfocaHero(false);
   }, [enfocaHero, heroImage, heroHandler.isEditing]);

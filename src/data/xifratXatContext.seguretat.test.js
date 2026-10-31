@@ -1,7 +1,7 @@
 // @vitest-environment node
 import { describe, expect, test, vi } from 'vitest';
 import { backendScope } from '../config/backendConfig.js';
-import { clausDelContextXat } from './xifratXatContext.js';
+import { clauIdentitatDelContextXat, clausDelContextXat } from './xifratXatContext.js';
 import { clauIdentitat } from './xifratXatMagatzem.js';
 import { ambXifratXat, creaServeiAmbitXat, serveiXifratXat } from './xifratXat.js';
 import { CONTRACTE_NUCLI } from './contracte.js';
@@ -89,5 +89,31 @@ describe('CI explícita i àmbit autoritatiu de §21.1', () => {
     class Avi { metodePropi(){return this.valor;} }
     class Pare extends Avi {} class Fill extends Pare {}
     const impl=new Fill();impl.valor=17;expect(ambXifratXat(impl,{actiu:true}).metodePropi()).toBe(17);
+  });
+});
+
+/* P1-12 pas 17 · La CI de l'eixida de sessió surt del mateix lloc que la de l'àmbit (§21.1). */
+describe('clauIdentitatDelContextXat', () => {
+  test('és la CI de clausDelContextXat, per a la persona i per a una entitat', () => {
+    expect(clauIdentitatDelContextXat({ config, joId: A })).toBe(claus().clauIdentitat);
+    expect(clauIdentitatDelContextXat({ config, joId: A })).toBe(claus(`entitat::${B}`).clauIdentitat);
+    expect(clauIdentitatDelContextXat({ config, joId: A })).toBe(clauIdentitat({ backendId: 'supabase', endpoint: config.supabaseUrl, joId: A }));
+  });
+  test('null sense persona, en mode local o sense arguments', () => {
+    expect(clauIdentitatDelContextXat({ config, joId: null })).toBeNull();
+    expect(clauIdentitatDelContextXat({ config, joId: '' })).toBeNull();
+    expect(clauIdentitatDelContextXat({ config: { ...config, dataMode: 'local' }, joId: A })).toBeNull();
+    expect(clauIdentitatDelContextXat({ config: null, joId: null })).toBeNull();
+    expect(clauIdentitatDelContextXat()).toBeNull();
+  });
+  test('canvia amb la persona i amb l’endpoint; un altre tenant no la canvia', () => {
+    const base = clauIdentitatDelContextXat({ config, joId: A });
+    expect(clauIdentitatDelContextXat({ config, joId: B })).not.toBe(base);
+    expect(clauIdentitatDelContextXat({ config: { ...config, supabaseUrl: 'https://altre.example.test' }, joId: A })).not.toBe(base);
+    expect(clauIdentitatDelContextXat({ config: { ...config, tenantId: B }, joId: A })).toBe(base);
+  });
+  test('un joId que no és un uuid canònic no fabrica cap CI: llança', () => {
+    expect(() => clauIdentitatDelContextXat({ config, joId: 'no-es-uuid' })).toThrow();
+    expect(() => clauIdentitatDelContextXat({ config, joId: A.toUpperCase() })).toThrow();
   });
 });

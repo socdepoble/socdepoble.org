@@ -1,10 +1,15 @@
 /* Barres (ordre del Mestre, 261004: «La columna de la Wiki ha d'estar fixa
    i visible, almenys plegada, en tots els formats: les dues barres han
    d'estar sempre presents plegades, o com a mínim una d'elles visible que
-   permeta desplegar l'altra») · En «mitja» la navegació del Workspace és un
-   rail fix (AppGridShell railEsquerra): Expandir obri el panell amb el focus
-   a la carpeta activa, i Replegar el tanca i torna al rail, sense tocar el
-   plegat d'«ample». El mode compacte (Snippet, T7C-R4) no el porta.
+   permeta desplegar l'altra») · Derogat en part per l'ordre del Mestre del
+   30-10-2026 (~12:45): «fora de mòbil, l'UniversalWorkspace ha de mantindre
+   sempre les 3 columnes fixes en la graella, mai superposades com a calaix
+   flotant amb fons fosc». Abans, a 820 («mitja») la navegació era un rail
+   fix i Expandir obria un panell per damunt amb vel. Ara la closca del
+   Workspace (AppGridShell columnesFixes) és «ample» per damunt d'«estret»:
+   la navegació és la primera columna de la graella, plegable en el rail
+   d'«ample», i desplegar-la la torna a la graella amb el seu separador. El
+   requisit de 261004 (sempre una barra visible) continua: plegada, el rail.
    jsdom no fa layout: l'amplària, l'observador i els fotogrames, a mà, com a
    UniversalWorkspace.railCompacte.test.jsx. Dades sintètiques. */
 import React from 'react';
@@ -96,63 +101,65 @@ const tancada = (el) => [el.hasAttribute('inert'), el.getAttribute('aria-hidden'
 const enNavegacio = (c, nom) => within(navegacio(c)).getByRole('button', { name: nom });
 const potsEnNavegacio = (c, nom) => within(navegacio(c)).queryByRole('button', { name: nom });
 
-test('Barres · a 820 la navegació és el rail fix: Expandir (obridor de la closca), roda i carpetes, oberta i a l’abast', () => {
+test('Columnes fixes · a 820 la navegació és la primera columna de la graella, desplegada i a l’abast, amb els dos separadors; cap panell ni rail de «mitja»', () => {
   entorn(820, () => {
     const { container } = munta();
-    expect([closca(container).dataset.layout, panell(container), closca(container).dataset.esquerra]).toEqual(['mitja', '', 'rail']);
+    expect([closca(container).dataset.layout, panell(container)]).toEqual(['ample', '']);
     expect(tancada(navegacio(container))).toEqual([false, null]);
     expect(container.querySelector('.app-grid-page').classList.contains('sdp-workspace--universal')).toBe(true);
-    const expandir = enNavegacio(container, 'Expandir CARPETES');
-    expect(expandir.getAttribute('aria-controls')).toBe('app-grid-sidebar');
-    expect(expandir.getAttribute('aria-expanded')).toBe('false');
-    expect(expandir.hasAttribute('data-obri-columna')).toBe(true);
+    expect(enNavegacio(container, 'Replegar CARPETES')).toBeTruthy();
     expect(enNavegacio(container, 'Configuració de l’espai de treball')).toBeTruthy();
-    const rail = within(navegacio(container)).getByRole('navigation', { name: 'CARPETES' });
-    expect(rail.classList.contains('sdp-workspace-rail')).toBe(true);
-    expect(within(rail).getByRole('button', { name: 'Mur' }).getAttribute('aria-current')).toBe('page');
-    /* L'arbre desplegat no hi és: és el rail. */
-    expect(potsEnNavegacio(container, 'Replegar CARPETES')).toBeNull();
+    expect(enNavegacio(container, 'Mur').getAttribute('aria-current')).toBe('page');
+    expect(potsEnNavegacio(container, 'Expandir CARPETES')).toBeNull();
+    expect(container.querySelector('.app-grid-resizer--left')).not.toBeNull();
+    expect(container.querySelector('.app-grid-resizer--middle')).not.toBeNull();
+    /* Les desades (260 + 280) no hi caben amb els 320 del detall: es pinten
+       repartides (graella.js, pistesAjustades). */
+    const pagina = container.querySelector('.app-grid-page');
+    expect([pagina.style.getPropertyValue('--app-grid-col-sidebar'), pagina.style.getPropertyValue('--app-grid-col-list')]).toEqual(['234px', '264px']);
   });
 });
 
-test('Barres · a 820 Expandir obri el panell amb el focus a la carpeta activa; Replegar el tanca i torna al rail amb el focus a l’Expandir', () => {
+test('Columnes fixes · a 820 Replegar plega CARPETES en el rail amb el focus a l’Expandir, i Expandir la torna a la graella, mai com a panell', () => {
   entorn(820, ({ buida, redimensiona }) => {
     const { container } = munta();
-    const expandir = enNavegacio(container, 'Expandir CARPETES');
-    expandir.focus();
-    fireEvent.click(expandir);
-    expect(panell(container)).toBe('left');
-    /* En el mateix commit, el focus a la carpeta activa de l'arbre. */
-    expect(document.activeElement).toBe(enNavegacio(container, 'Mur'));
-    expect(document.activeElement.getAttribute('aria-current')).toBe('page');
-    expect(potsEnNavegacio(container, 'Expandir CARPETES')).toBeNull();
-
-    /* Abans, Replegar commutava el plegat d'«ample»: per davall del mínim
-       d'ample no feia res visible (el panell es quedava obert) i deixava
-       l'estat latent. */
     const replegar = enNavegacio(container, 'Replegar CARPETES');
     replegar.focus();
     fireEvent.click(replegar);
-    expect(panell(container)).toBe('');
-    expect(tancada(navegacio(container))).toEqual([false, null]);
     buida();
-    expect(document.activeElement).toBe(enNavegacio(container, 'Expandir CARPETES'));
+    expect(panell(container)).toBe('');
+    expect(container.querySelector('.has-left-collapsed')).not.toBeNull();
+    expect(container.querySelector('.app-grid-resizer--left')).toBeNull();
+    expect(tancada(navegacio(container))).toEqual([false, null]);
+    const expandir = enNavegacio(container, 'Expandir CARPETES');
+    expect(document.activeElement).toBe(expandir);
+    /* En «ample», l'Expandir de sempre: no és cap obridor de panell. */
+    expect(expandir.hasAttribute('data-obri-columna')).toBe(false);
 
-    /* Cap estat latent: en «ample» l'arbre arriba desplegat, com era. */
+    fireEvent.click(expandir);
+    buida();
+    expect([closca(container).dataset.layout, panell(container)]).toEqual(['ample', '']);
+    expect(container.querySelector('.has-left-collapsed')).toBeNull();
+    expect(container.querySelector('.app-grid-resizer--left')).not.toBeNull();
+    /* Ordre d'usabilitat (30-10-2026) · Desplegada, el focus va a la icona de
+       l'esquerra, l'equivalent del botó de dalt del rail (el mateix lloc). */
+    expect(document.activeElement).toBe(enNavegacio(container, 'Plegar la columna CARPETES'));
+
+    /* Cap estat latent: a 1400 l'arbre continua desplegat. */
     redimensiona(1400);
     expect(closca(container).dataset.layout).toBe('ample');
-    expect(closca(container).hasAttribute('data-esquerra')).toBe(false);
     expect(container.querySelector('.has-left-collapsed')).toBeNull();
     expect(enNavegacio(container, 'Replegar CARPETES')).toBeTruthy();
   });
 });
 
-/* Llei de la Roda Dentada (ordre del Mestre, 261007) · La roda del rail fix
-   de «mitja» és la mateixa de sempre: les carpetes amagades tampoc no hi
-   són, i tornar-les a la vista les torna al rail. */
-test('Barres · a 820 la roda del rail amaga i torna a mostrar una carpeta del rail fix', () => {
+/* Llei de la Roda Dentada (ordre del Mestre, 261007) · La roda del rail
+   plegat és la mateixa de sempre: les carpetes amagades tampoc no hi són, i
+   tornar-les a la vista les torna al rail. Columnes fixes (30-10-2026) · A
+   820, el rail d'«ample» (columnesInicials), no el de «mitja». */
+test('Barres · a 820 la roda del rail plegat amaga i torna a mostrar una carpeta del rail', () => {
   entorn(820, () => {
-    const { container } = munta();
+    const { container } = munta({ columnesInicials: { left: true } });
     const rail = () => within(navegacio(container)).getByRole('navigation', { name: 'CARPETES' });
     const delRail = () => within(rail()).getAllByRole('button').map((b) => b.getAttribute('aria-label'));
     expect(delRail()).toEqual(['Mur', 'Mercat']);
@@ -160,87 +167,82 @@ test('Barres · a 820 la roda del rail amaga i torna a mostrar una carpeta del r
     const dialeg = within(container.querySelector('dialog'));
     fireEvent.click(dialeg.getByRole('switch', { name: 'Vull vore Mercat' }));
     expect(delRail()).toEqual(['Mur']);
-    /* El rail continua fix i obert: amagar no toca la closca. */
-    expect([closca(container).dataset.esquerra, panell(container)]).toEqual(['rail', '']);
+    /* El rail continua a la graella i obert: amagar no toca la closca. */
+    expect([closca(container).dataset.layout, panell(container)]).toEqual(['ample', '']);
+    expect(container.querySelector('.has-left-collapsed')).not.toBeNull();
     fireEvent.click(dialeg.getByRole('switch', { name: 'Vull vore Mercat' }));
     expect(delRail()).toEqual(['Mur', 'Mercat']);
   });
 }, 30000);
 
-test('Barres · a 820 una carpeta del rail filtra la llista i porta el focus a la llista; el rail es queda', () => {
-  entorn(820, ({ buida }) => {
-    const { container } = munta();
+test('Barres · a 820 una carpeta del rail plegat filtra la llista; el rail es queda i cap panell s’obri', () => {
+  entorn(820, () => {
+    const { container } = munta({ columnesInicials: { left: true } });
     const rail = within(navegacio(container)).getByRole('navigation', { name: 'CARPETES' });
     fireEvent.click(within(rail).getByRole('button', { name: 'Mercat' }));
-    expect(panell(container)).toBe('');
-    buida();
+    expect([closca(container).dataset.layout, panell(container)]).toEqual(['ample', '']);
     const llista = container.querySelector('#app-grid-list');
-    expect(document.activeElement).toBe(llista.querySelector('aside.sdp-workspace-column'));
     expect(within(llista).getByRole('button', { name: /Tomaques/ })).toBeTruthy();
     expect(within(navegacio(container)).getByRole('button', { name: 'Mercat' }).getAttribute('aria-current')).toBe('page');
+    expect(container.querySelector('.has-left-collapsed')).not.toBeNull();
   });
 });
 
-test('Barres · d’ample amb la navegació plegada a mitjà el rail és el mateix, i de tornada a ample continua plegada', () => {
+test('Barres · d’ample a 820 i de tornada, la navegació plegada és el mateix rail d’«ample»', () => {
   entorn(1400, ({ redimensiona }) => {
     const { container } = munta({ columnesInicials: { left: true } });
     expect(container.querySelector('.has-left-collapsed')).not.toBeNull();
     redimensiona(820);
-    expect([closca(container).dataset.layout, closca(container).dataset.esquerra]).toEqual(['mitja', 'rail']);
-    expect(enNavegacio(container, 'Expandir CARPETES').hasAttribute('data-obri-columna')).toBe(true);
-    redimensiona(1400);
+    expect(closca(container).dataset.layout).toBe('ample');
     expect(container.querySelector('.has-left-collapsed')).not.toBeNull();
     /* En «ample», l'Expandir de sempre: no és cap obridor de panell. */
+    expect(enNavegacio(container, 'Expandir CARPETES').hasAttribute('data-obri-columna')).toBe(false);
+    redimensiona(1400);
+    expect(container.querySelector('.has-left-collapsed')).not.toBeNull();
     expect(enNavegacio(container, 'Expandir CARPETES').hasAttribute('data-obri-columna')).toBe(false);
   });
 });
 
-test('Barres · el mode compacte (Snippet, T7C-R4) no porta el rail de mitjà: la navegació, com abans', () => {
+test('Columnes fixes · el mode compacte (Snippet) a 820 és «ample»: la navegació, plegada en el rail de la graella, a l’abast', () => {
   entorn(820, () => {
     const { container } = munta({ compacte: true });
-    expect(closca(container).dataset.layout).toBe('mitja');
-    expect(closca(container).hasAttribute('data-esquerra')).toBe(false);
-    expect(tancada(navegacio(container))).toEqual([true, 'true']);
+    expect([closca(container).dataset.layout, panell(container)]).toEqual(['ample', '']);
+    expect(tancada(navegacio(container))).toEqual([false, null]);
+    expect(enNavegacio(container, 'Expandir CARPETES')).toBeTruthy();
   });
 });
 
-/* Correcció dels verificadors (261004) · El rail de «mitja» és per a una
-   navegació declarada. Admin passa navigationGroups: [] i cap categoria
-   (FILTRES sense cap filtre): el rail només hi portava un Expandir cap a un
-   panell buit i la roda, i llevava 56 px al detall. Ara, la closca d'abans. */
-test('Barres · sense cap navegació declarada (Admin) no hi ha rail a 820: la navegació, com abans', () => {
+/* Correcció dels verificadors (261004) · Admin passa navigationGroups: [] i
+   cap categoria (FILTRES sense cap filtre). Columnes fixes (30-10-2026) · A
+   820 és «ample», com a 1400: la navegació és la columna de la graella,
+   oberta, sense cap rail de «mitja». */
+test('Columnes fixes · sense cap navegació declarada (Admin) a 820 la navegació és la columna de la graella, com a 1400', () => {
   entorn(820, () => {
     const model = { status: 'ready', itemsComplete: true, navigationGroups: [], items: MODEL.items.map((item) => ({ ...item, categoryIds: [] })) };
     const { container } = munta({ model, labels: { categories: 'FILTRES', items: 'USUARIS' }, icons: {}, mestreDetall: 'navegacio' });
-    expect(closca(container).dataset.layout).toBe('mitja');
-    expect(closca(container).hasAttribute('data-esquerra')).toBe(false);
-    expect(tancada(navegacio(container))).toEqual([true, 'true']);
+    expect([closca(container).dataset.layout, panell(container)]).toEqual(['ample', '']);
+    expect(tancada(navegacio(container))).toEqual([false, null]);
     expect(potsEnNavegacio(container, 'Expandir FILTRES')).toBeNull();
   });
 });
 
-/* Es llig de l'estructura (grups declarats), no de les opcions: mentre les
-   carpetes carreguen el rail ja hi és, i el detall no es mou quan arriben. */
-test('Barres · amb els grups declarats però encara buits (carregant), el rail ja hi és i s’hi queda quan arriben les carpetes', () => {
+/* Mentre les carpetes carreguen, la closca ja és la de les columnes fixes i
+   no es mou quan arriben. */
+test('Columnes fixes · amb els grups declarats però encara buits (carregant), la closca ja és «ample» i s’hi queda quan arriben les carpetes', () => {
   entorn(820, () => {
     const carregant = { status: 'loading', navigationGroups: [{ id: 'folders', label: null, options: [] }], items: [] };
     const { container, rerender } = munta({ model: carregant });
-    expect(closca(container).dataset.esquerra).toBe('rail');
+    expect(closca(container).dataset.layout).toBe('ample');
     rerender(
       <UniversalWorkspace model={MODEL} labels={ETIQUETES} icons={ICONES} tagFilter={false} renderDetail={detall}
         initialSelection={{ categoryId: 'f-mur' }} />
     );
-    expect(closca(container).dataset.esquerra).toBe('rail');
-    expect(within(navegacio(container)).getByRole('navigation', { name: 'CARPETES' })).toBeTruthy();
+    expect([closca(container).dataset.layout, panell(container)]).toEqual(['ample', '']);
+    expect(enNavegacio(container, 'Mur')).toBeTruthy();
   });
 });
 
-test('Barres · a 1400 i a 375 cap data-esquerra: ample i estret no canvien', () => {
-  for (const amplada of [1400, 375]) {
-    entorn(amplada, () => {
-      const { container } = munta({ mestreDetall: 'navegacio' });
-      expect(closca(container).hasAttribute('data-esquerra'), `${amplada}`).toBe(false);
-      cleanup();
-    });
-  }
-});
+/* Corrector del Gauntlet f4 (30-10-2026, props-mortes-als-consumidors-i-a-les-proves)
+   · La prova «a 1400 i a 375 cap data-esquerra» mirava un atribut que ja no
+   produïx cap codi (railEsquerra, retirat amb la decisió 4 del Mestre): ara ho
+   vigila la CSS, a AppGridShell.rail.test.jsx («cap regla de data-esquerra»). */

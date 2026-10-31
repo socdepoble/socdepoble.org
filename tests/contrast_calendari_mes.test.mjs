@@ -34,9 +34,9 @@ function regla(selector) {
 }
 
 const FONTS = ['esdeveniment', 'publicacio', 'producte', 'pagina', 'agenda'];
-/* Els àlies de color de les vistes (--sdp-cal-hui-*, --sdp-cal-bloc-* per defecte…): la regla que declara --sdp-cal-hui-fons. */
-const cosAlies = /\{([^{}]*--sdp-cal-hui-fons\s*:[^{}]*)\}/.exec(modules)?.[1];
-assert(cosAlies, 'modules.css no declara els àlies --sdp-cal-*');
+/* Els àlies de color de les vistes (--cal-hui-*, --cal-bloc-* per defecte…): la regla que declara --cal-hui-fons. */
+const cosAlies = /\{([^{}]*--cal-hui-fons\s*:[^{}]*)\}/.exec(modules)?.[1];
+assert(cosAlies, 'modules.css no declara els àlies --cal-*');
 const ALIES = declaracions(cosAlies);
 const deFont = (font) => regla(`.sdp-cal-font--${font}`);
 
@@ -66,7 +66,7 @@ for (const [tema, mapaTema] of Object.entries(TEMES)) {
   test(`${tema}: el text de cada barra sobre el seu fons passa de 4,5:1`, (t) => {
     for (const font of FONTS) {
       const m = { ...mapa, ...deFont(font) };
-      const r = contrast('var(--sdp-cal-bloc-text)', 'var(--sdp-cal-bloc-fons)', m);
+      const r = contrast('var(--cal-bloc-text)', 'var(--cal-bloc-fons)', m);
       t.diagnostic(`${tema} · barra ${font}: ${r.toFixed(2)}:1`);
       assert(r >= 4.5, `${font}: ${r.toFixed(2)}:1`);
     }
@@ -83,8 +83,8 @@ for (const [tema, mapaTema] of Object.entries(TEMES)) {
   });
 
   test(`${tema}: el cercle de hui (número sobre el cercle) passa de 4,5:1 i el cercle es distingix de la cel·la`, (t) => {
-    const numero = contrast('var(--sdp-cal-hui-text)', 'var(--sdp-cal-hui-fons)', mapa);
-    const cercle = contrast('var(--sdp-cal-hui-fons)', 'var(--sdp-fons-targeta)', mapa);
+    const numero = contrast('var(--cal-hui-text)', 'var(--cal-hui-fons)', mapa);
+    const cercle = contrast('var(--cal-hui-fons)', 'var(--sdp-fons-targeta)', mapa);
     t.diagnostic(`${tema} · hui: número ${numero.toFixed(2)}:1, cercle ${cercle.toFixed(2)}:1`);
     assert(numero >= 4.5 && cercle >= 3);
   });
@@ -108,7 +108,7 @@ for (const [tema, mapaTema] of Object.entries(TEMES)) {
     for (const font of FONTS) {
       const m = { ...mapa, ...deFont(font) };
       for (const fons of SUPERFICIES) {
-        const r = contrast('var(--sdp-cal-bloc-text)', fons, m);
+        const r = contrast('var(--cal-bloc-text)', fons, m);
         t.diagnostic(`${tema} · punt i tira ${font} sobre ${fons}: ${r.toFixed(2)}:1`);
         assert(r >= 3, `${font} sobre ${fons}: ${r.toFixed(2)}:1`);
       }
@@ -142,23 +142,23 @@ test('les regles del mes pinten amb eixes parelles', () => {
   assert.equal(regla('.sdp-cal-mes').background, 'var(--sdp-fons-targeta)');
   assert.deepEqual(
     [regla('.sdp-cal-barra').background, regla('.sdp-cal-barra').color],
-    ['var(--sdp-cal-bloc-fons)', 'var(--sdp-cal-bloc-text)']
+    ['var(--cal-bloc-fons)', 'var(--cal-bloc-text)']
   );
   assert.equal(regla('.sdp-cal-barra--punt').background, 'transparent');
   assert.equal(regla('.sdp-cal-mes .sdp-cal-barra--punt').color, 'var(--sdp-text-cos)');
   assert.equal(regla('.sdp-cal-dia[aria-pressed="true"]').background, 'var(--sdp-accio-subtil)');
   // El punt (els dos modes) i la tira del compacte, plens amb el color del text de la font.
-  assert.equal(regla('.sdp-cal-mes__punt').background, 'var(--sdp-cal-bloc-text)');
-  assert.equal(regla('.sdp-cal-mes--compacte .sdp-cal-barra').background, 'var(--sdp-cal-bloc-text)');
+  assert.equal(regla('.sdp-cal-mes__punt').background, 'var(--cal-bloc-text)');
+  assert.equal(regla('.sdp-cal-mes--compacte .sdp-cal-barra').background, 'var(--cal-bloc-text)');
   assert.equal(regla('.sdp-cal-mes--compacte .sdp-cal-mes__punt').background, undefined);
   // L'agenda comparteix el color de la publicació (text de cos): la distingix la forma, anell i contorn.
-  assert.equal(deFont('agenda')['--sdp-cal-bloc-text'], deFont('publicacio')['--sdp-cal-bloc-text']);
+  assert.equal(deFont('agenda')['--cal-bloc-text'], deFont('publicacio')['--cal-bloc-text']);
   for (const selector of ['.sdp-cal-font--agenda .sdp-cal-mes__punt', '.sdp-cal-mes--compacte .sdp-cal-barra.sdp-cal-font--agenda:not(.sdp-cal-barra--punt)']) {
     const r = regla(selector);
-    assert.deepEqual([r.border, r.background], ['2px solid var(--sdp-cal-bloc-text)', 'transparent'], selector);
+    assert.deepEqual([r.border, r.background], ['2px solid var(--cal-bloc-text)', 'transparent'], selector);
   }
   const hui = regla('.sdp-cal-mes .sdp-cal-dia[aria-current="date"] .sdp-cal-dia__numero');
-  assert.deepEqual([hui.background, hui.color], ['var(--sdp-cal-hui-fons)', 'var(--sdp-cal-hui-text)']);
+  assert.deepEqual([hui.background, hui.color], ['var(--cal-hui-fons)', 'var(--cal-hui-text)']);
   assert.equal(regla('.sdp-cal-dia--fora').color, 'var(--sdp-text-suau)');
 });
 

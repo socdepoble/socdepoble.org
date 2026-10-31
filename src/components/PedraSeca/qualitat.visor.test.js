@@ -86,6 +86,7 @@ function blocAmb(full, classe) {
 
 const CSS_SRC = readdirSync(path.join(ARREL, 'src/css')).filter((f) => f.endsWith('.css')).map((f) => llig(`src/css/${f}`)).join('\n');
 const TOKENS_DEFINITS = new Set([...CSS_SRC.matchAll(/(--sdp-[\w-]+)\s*:/g)].map((m) => m[1]));
+const PROPIES_DEL_ZOOM = ['--visor-escala', '--visor-x', '--visor-y'];
 
 describe('ESLint', () => {
   test('zero missatges, avisos inclosos', async () => {
@@ -137,14 +138,19 @@ describe('el bloc VISOR D’IMATGES de components.css', () => {
   test('només tokens que existixen, cap color cru ni unitat de viewport', () => {
     const usats = [...bloc.text.matchAll(/var\(\s*(--[\w-]+)/g)].map((m) => m[1]);
     expect(usats.length).toBeGreaterThan(10);
-    expect(usats.filter((token) => !token.startsWith('--sdp-') || !TOKENS_DEFINITS.has(token))).toEqual([]);
+    /* Decisió del Mestre (30-10-2026) · Fora del tema només hi caben les tres
+       propietats locals del zoom, declarades al mateix bloc. */
+    expect(usats.filter((token) => !(token.startsWith('--sdp-') && TOKENS_DEFINITS.has(token)) && !PROPIES_DEL_ZOOM.includes(token))).toEqual([]);
     expect(bloc.text).not.toMatch(/#[0-9a-f]{3,8}\b|\b(?:rgba?|hsla?|oklch|color-mix)\(/i);
     expect(bloc.text).not.toMatch(/\d(?:d|s|l)?v(?:h|w)\b/);
   });
 
   test('el zoom: transform amb les tres propietats pròpies, declarades al mateix bloc', () => {
-    for (const propietat of ['--sdp-visor-escala', '--sdp-visor-x', '--sdp-visor-y']) expect(bloc.text).toContain(`${propietat}:`);
-    expect(bloc.text).toMatch(/transform:\s*translate\(var\(--sdp-visor-x\), var\(--sdp-visor-y\)\) scale\(var\(--sdp-visor-escala\)\)/);
+    for (const propietat of PROPIES_DEL_ZOOM) expect(bloc.text).toContain(`${propietat}:`);
+    expect(bloc.text).toMatch(/transform:\s*translate\(var\(--visor-x\), var\(--visor-y\)\) scale\(var\(--visor-escala\)\)/);
+    // Decisió del Mestre (30-10-2026) · Locals, fora de l'espai --sdp-* (tractor-tokens T1 i T3).
+    expect(bloc.text).not.toMatch(/--sdp-visor-/);
+    expect(llig(COMPONENT)).not.toMatch(/--sdp-visor-/);
     expect(bloc.text).not.toMatch(/(?:^|[;{\s])(?:rotate|scale|translate)\s*:/);
   });
 

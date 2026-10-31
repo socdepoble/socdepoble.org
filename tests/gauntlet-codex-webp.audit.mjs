@@ -14,7 +14,7 @@ import path from 'node:path';
 import { execFileSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
 import { fileURLToPath } from 'node:url';
-import { tiff, dataOriginal, gpsTorre, orientacio, TIPUS } from '../src/components/universal/enquadrament/jpegProva.js';
+import { tiff, dataOriginal, gpsTorre, orientacio, TIPUS } from './helpers/jpegProva.js';
 
 const converterUrl = new URL('../tooling/maquinaria/convertir_a_webp.mjs', import.meta.url);
 const converterPath = fileURLToPath(converterUrl);

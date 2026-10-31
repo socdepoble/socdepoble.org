@@ -68,6 +68,28 @@ describe('forma i paritat', () => {
   test('cap valor buit al valencià', () => {
     expect(Object.entries(CA).filter(([, valor]) => typeof valor !== 'string' || valor.trim() === '').map(([clau]) => clau)).toEqual([]);
   });
+
+  /* Corrector del Gauntlet f4 (30-10-2026, i18n-sense-paritat-de-marcadors-nav)
+     · Cada traducció porta els mateixos marcadors ({nom}, {n}, {llengua}…)
+     que el valencià. Sense, el text perd la peça que s'hi interpola: un
+     nav.replegaColumna sense {nom} faria dos botons «Pregar» iguals, sense el
+     nom de la columna (WCAG 2.4.6 i 4.1.2), i cap prova ho veia. Les
+     excepcions, en una llista tancada: section.traduir.traduint porta
+     {llengua} només en valencià. Si una excepció deixa de divergir, ix de la
+     llista (la segona prova). */
+  const MARCADORS_DIVERGENTS = new Set(['section.traduir.traduint']);
+  const marcadorsDe = (text) => [...new Set(String(text).match(/\{\w+\}/g) ?? [])].sort().join(' ');
+  const divergents = (dic) => Object.keys(CA)
+    .filter((clau) => Object.hasOwn(dic, clau) && marcadorsDe(CA[clau]) !== marcadorsDe(dic[clau]));
+
+  test.each(IDIOMES_DIFERITS)('%s: cada clau porta els mateixos marcadors {…} que el valencià', (codi) => {
+    expect(divergents(DICCIONARIS[codi]).filter((clau) => !MARCADORS_DIVERGENTS.has(clau))).toEqual([]);
+  });
+
+  test('les excepcions de marcadors divergixen de veres en alguna llengua', () => {
+    const totes = new Set(IDIOMES_DIFERITS.flatMap((codi) => divergents(DICCIONARIS[codi])));
+    expect([...MARCADORS_DIVERGENTS].filter((clau) => !totes.has(clau))).toEqual([]);
+  });
 });
 
 describe('peresa', () => {

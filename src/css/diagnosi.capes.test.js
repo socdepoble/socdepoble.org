@@ -132,7 +132,7 @@ describe('l’accés ràpid i la secció', () => {
       'min-inline-size': 'var(--sdp-touch)'
     });
     const tokens = readFileSync(path.join(process.cwd(), 'src/css/tokens.css'), 'utf8');
-    expect(tokens).toMatch(/--sdp-touch:\s*48px\s*;/);
+    expect(tokens).toMatch(/--sdp-touch[:]\s*48px\s*;/);
   });
 
   test('separada de l’Índex per dalt amb el mateix aire que l’Índex de les xifres', () => {

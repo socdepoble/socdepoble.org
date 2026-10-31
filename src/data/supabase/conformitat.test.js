@@ -238,6 +238,16 @@ function rutaDeNotes(url, metode, cos) {
     Object.assign(fila, cos, { revision: fila.revision + 1, updated_at: ARA });
     return resposta([fila]);
   }
+  /* P1-27 · L'esborrat definitiu (cicleNotes), com PostgREST amb
+     return=representation: la fila esborrada, o una llista buida si la nota no
+     hi és o la revisió és vella. Sense esta branca, el DELETE cauria en el
+     camí de lectura i el kit no veuria si s'esborra de veres. */
+  if (metode === 'DELETE') {
+    const fila = estat.notes.get(id);
+    if (!fila || fila.tenant_id !== eq(p.get('tenant_id')) || String(fila.revision) !== eq(p.get('revision'))) return resposta([]);
+    estat.notes.delete(id);
+    return resposta([fila]);
+  }
   const propies = [...estat.notes.values()].filter((n) => n.tenant_id === eq(p.get('tenant_id')));
   if (p.get('select') === 'id') return resposta(propies.filter((n) => n.id === id).map((n) => ({ id: n.id })));
   const actives = propies.filter((n) => n.owner_user_id === eq(p.get('owner_user_id')) && n.status === 'activa');
@@ -406,6 +416,9 @@ describe('conformitat del port · Supabase en mode remote (Auditoria 261007 B)',
     expect(estat.canalsTancats).toEqual([`xat:f:${FIL}`]);
     // L'enviament idempotent: un sol missatge nou, amb l'id de la persona.
     expect(estat.missatges.filter((m) => m.id === ctxRemot.idMissatge)).toHaveLength(1);
+    // P1-27 · El cicle de la nota del kit ha acabat de veres: el DELETE l'ha llevada del servidor.
+    expect(ctxRemot.notaId).toMatch(RE_UUID);
+    expect(estat.notes.has(ctxRemot.notaId)).toBe(false);
   });
 
   test('loadFils en remot porta les files d’ajuda a la cua, però el kit no les tria', async () => {

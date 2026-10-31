@@ -15,7 +15,7 @@
    · SONDES: cada detector denuncia una mostra dolenta.
    Els patrons vetats es componen a trossos perquè les portes que llegixen
    src/ no els troben ací. */
-import { readdirSync, readFileSync } from 'node:fs';
+import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 import { ESLint } from 'eslint';
 import { describe, expect, test } from 'vitest';
@@ -25,7 +25,18 @@ const llig = (ruta) => readFileSync(path.join(ARREL, ruta), 'utf8');
 const PS = 'src/components/PedraSeca';
 const DIR = `${PS}/UniversalListCard`;
 const CAT = 'src/sections/disseny/cataleg';
-const CSS = `${DIR}/UniversalListCard.css`;
+/* tractor-vocabulari (ordre del Mestre, 261030) · El full ja no viu al costat de
+   la peça: és el bloc UniversalListCard de src/css/modules.css, entre les seues
+   marques. */
+const MODULS = 'src/css/modules.css';
+const CSS_ANTIC = `${DIR}/UniversalListCard.css`;
+const blocDeModuls = (nom) => {
+  const tot = llig(MODULS);
+  const inici = tot.indexOf(`/* ═══ BLOC ${nom} · `);
+  const fi = tot.indexOf(`/* ═══ FI DEL BLOC ${nom} ═══ */`);
+  if (inici < 0 || fi < inici) throw new Error(`${MODULS} no té el bloc ${nom}`);
+  return tot.slice(inici, fi);
+};
 
 const NOM = 'UniversalListCard';
 const COMPONENT = `${DIR}/UniversalListCard.jsx`;
@@ -43,8 +54,11 @@ const TOTS = [...JSX, ...JS_PURS, ...PROVES, ...TOCATS];
 const senseComentaris = (css) => css.replace(/\/\*[\s\S]*?\*\//g, '');
 const classesDelCss = (css) => new Set([...senseComentaris(css).matchAll(/\.(-?[_a-zA-Z][\w-]*)/g)].map((m) => m[1]));
 const CSS_SRC = readdirSync(path.join(ARREL, 'src/css')).filter((f) => f.endsWith('.css')).map((f) => llig(`src/css/${f}`)).join('\n');
-const CSS_CANONIC = [CSS_SRC, llig(`${PS}/pecesApps.css`), llig(`${PS}/catalegColleccio.css`)].join('\n');
-const FULL = llig(CSS);
+const FULL = blocDeModuls('UniversalListCard');
+/* Els fulls canònics sense el bloc mateix: src/css, amb els blocs germans de
+   modules.css. Sense el bloc, «cap CSS mort» continua mirant les classes que
+   només definix la peça. */
+const CSS_CANONIC = CSS_SRC.replace(FULL, '');
 const FULL_NET = senseComentaris(FULL);
 
 const classesNomenades = (codi) => [...codi.matchAll(/["'`]([^"'`\n]*\bsdp-[^"'`\n]*)["'`]/g)]
@@ -143,6 +157,8 @@ describe('Pedra Seca · JSX i nucli', () => {
   });
 
   test('cap CSS mort: tota classe pròpia del full la pinta la peça o l’espècimen', () => {
+    /* El bloc s'ha llevat de veres dels fulls externs (una sola vegada). */
+    expect(CSS_CANONIC.length).toBe(CSS_SRC.length - FULL.length);
     const externes = classesDelCss(CSS_CANONIC);
     const usades = new Set(JSX.flatMap((f) => classesNomenades(llig(f))));
     const mortes = [...classesDelCss(FULL)].filter((c) => !externes.has(c) && !usades.has(c));
@@ -257,12 +273,20 @@ describe('Pedra Seca · UniversalListCard.css', () => {
     expect(REGLES.filter((r) => /overflow(?:-[xy])?:\s*(?:auto|scroll)/.test(r.cos)).flatMap((r) => r.selectors)).toEqual([]);
   });
 
-  test('la capçalera prescriu l’@import SENSE layer() i index.css l’importa una vegada, darrere de tpv.css', () => {
-    const importacio = "@import url('../components/PedraSeca/UniversalListCard/UniversalListCard.css');";
-    expect(FULL).toContain(importacio);
-    const index = senseComentaris(llig('src/css/index.css'));
-    expect([...index.matchAll(/@import[^;]*UniversalListCard\.css[^;]*;/g)].map((m) => m[0])).toEqual([importacio]);
-    expect(index.indexOf('UniversalListCard.css')).toBeGreaterThan(index.indexOf('tpv.css'));
+  /* tractor-vocabulari (261030) · El bloc viu una sola vegada a modules.css, en
+     l'ordre que tenia l'@import: darrere de tpv (ajusta .sdp-pindola i
+     .sdp-control dins de la peça). */
+  test('viu a modules.css: un sol bloc, darrere de tpv, i ni fitxer ni @import del full antic', () => {
+    const moduls = llig(MODULS);
+    const posicio = (marca) => {
+      const i = moduls.indexOf(marca);
+      expect(i, marca).toBeGreaterThan(-1);
+      return i;
+    };
+    expect(moduls.split('/* ═══ BLOC UniversalListCard · ')).toHaveLength(2);
+    expect(posicio('/* ═══ BLOC UniversalListCard · ')).toBeGreaterThan(posicio('/* ═══ FI DEL BLOC tpv ═══ */'));
+    expect(existsSync(path.join(ARREL, CSS_ANTIC))).toBe(false);
+    expect(senseComentaris(llig('src/css/index.css'))).not.toMatch(/UniversalListCard\.css/);
   });
 });
 
@@ -341,8 +365,8 @@ describe('dades sintètiques', () => {
       [/\bES\d{2}[\s]?\d{4}/, 'IBAN'],
       [new RegExp(['ht', 'tps?:', '\\/\\/'].join('')), 'URL']
     ];
-    const fitxers = [...JSX, ...JS_PURS, ...PROVES, CSS];
-    const trobats = fitxers.flatMap((f) => vetats.filter(([patro]) => patro.test(llig(f))).map(([, que]) => `${f}: ${que}`));
+    const textos = [...[...JSX, ...JS_PURS, ...PROVES].map((f) => [f, llig(f)]), [`${MODULS} · bloc UniversalListCard`, FULL]];
+    const trobats = textos.flatMap(([f, text]) => vetats.filter(([patro]) => patro.test(text)).map(([, que]) => `${f}: ${que}`));
     expect(trobats).toEqual([]);
   });
 
@@ -351,6 +375,8 @@ describe('dades sintètiques', () => {
       [0x202A, 0x202E], [0x2060, 0x2069], [0xFEFF, 0xFEFF]];
     const car = (cp) => String.fromCodePoint(cp);
     const re = new RegExp(`[${rangs.map(([a, b]) => (a === b ? car(a) : `${car(a)}-${car(b)}`)).join('')}]`, 'u');
-    for (const fitxer of [...JSX, ...JS_PURS, ...PROVES, CSS, ...TOCATS]) expect(re.test(llig(fitxer)), fitxer).toBe(false);
+    for (const [fitxer, text] of [...[...JSX, ...JS_PURS, ...PROVES, ...TOCATS].map((f) => [f, llig(f)]), [`${MODULS} · bloc UniversalListCard`, FULL]]) {
+      expect(re.test(text), fitxer).toBe(false);
+    }
   });
 });

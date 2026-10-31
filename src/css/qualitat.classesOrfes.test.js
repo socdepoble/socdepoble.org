@@ -25,7 +25,8 @@ import path from 'node:path';
 import { describe, expect, test } from 'vitest';
 
 const ARREL = process.cwd();
-const FULLS = ['src/css/modules.css', 'src/css/components.css', 'src/css/layout.css'];
+/* 31-10-2026 (ordre del Mestre, prompt 2208, T3.1) · i taulers.css, el Quadre de Comandament. */
+const FULLS = ['src/css/modules.css', 'src/css/components.css', 'src/css/layout.css', 'src/css/taulers.css'];
 const PROPI = 'src/css/qualitat.classesOrfes.test.js';
 const DIRS_EXCLOSOS = new Set(['node_modules', '.git', 'dist', 'var']);
 const RUTES_EXCLOSES = new Set(['wordpress-plugin/dist', '_wiki_de_poble/90_arxiu_historic']);

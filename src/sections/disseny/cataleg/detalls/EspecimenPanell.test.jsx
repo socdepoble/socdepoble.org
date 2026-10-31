@@ -31,6 +31,9 @@ vi.mock('../../../../sections/notes/GlobalSaveManager.js', async (importOriginal
 }));
 
 const FONT = readFileSync(resolve(process.cwd(), 'src/sections/disseny/cataleg/detalls/EspecimenPanell.jsx'), 'utf8');
+/* El mot vetat (regla del Mestre, 261025), en singular o plural i amb accent o
+   sense; no casa dins d'altres paraules («demasiado»). */
+const MOT_VETAT = /\bmas[ií](?:a|es)\b/i;
 const RUTA = '/disseny?categoria=fonaments&item=fonaments-panell';
 const html = document.documentElement;
 const ESPERA = { timeout: 15_000 };
@@ -100,7 +103,7 @@ describe('a la ruta del catàleg, dins de la closca real', () => {
     expect(boto.getAttribute('aria-checked')).toBe('false');
     expect(boto.disabled).toBe(false);
 
-    const targeta = within(container).getByRole('heading', { name: 'Masia El Roure' }).closest('article');
+    const targeta = within(container).getByRole('heading', { name: 'Mas del Roure' }).closest('article');
     expect(targeta.classList.contains('sp-card')).toBe(true);
     expect(within(targeta).getByText('Provant l’arquitectura de Pedra Seca')).toBeTruthy();
     expect(targeta.querySelector('img.sp-card-media').getAttribute('src')).toMatch(/assets\/ui\/plugins\/disseny_vinyeta\.jpg$/);
@@ -149,7 +152,7 @@ describe('a la ruta del catàleg, dins de la closca real', () => {
     const { container } = munta();
     await interruptor(container);
     const arrel = container.querySelector('.sdp-root');
-    const mostra = within(container).getByRole('heading', { name: 'Masia El Roure' }).closest('.sdp-especimen__mostra');
+    const mostra = within(container).getByRole('heading', { name: 'Mas del Roure' }).closest('.sdp-especimen__mostra');
     expect(mostra).toBeTruthy();
     const abans = estatHtml();
 
@@ -218,7 +221,7 @@ describe('dins de <soc-de-poble> (Shadow DOM tancat), la reproducció de Codex',
     expect(estatHtml()).toBe(abans);
 
     fireEvent.click(dins.getByRole('button', { name: 'Ombra elevada' }));
-    const mostra = dins.getByRole('heading', { name: 'Masia El Roure' }).closest('.sdp-especimen__mostra');
+    const mostra = dins.getByRole('heading', { name: 'Mas del Roure' }).closest('.sdp-especimen__mostra');
     expect(mostra.style.getPropertyValue('--sdp-ombra-2')).toBe('var(--sdp-ombra-3)');
     expect(element.style.getPropertyValue('--sdp-ombra-2')).toBe('');
     expect(estatHtml()).toBe(abans);
@@ -252,7 +255,10 @@ test('fora d’un UIProvider (el catàleg solt) es pinta i l’interruptor queda
   render(<MemoryRouter><EspecimenPanell /></MemoryRouter>);
   const boto = screen.getByRole('switch', { name: 'Activar el Mode Bancal' });
   expect(boto.disabled).toBe(true);
-  expect(screen.getByRole('heading', { name: 'Masia El Roure' })).toBeTruthy();
+  expect(screen.getByRole('heading', { name: 'Mas del Roure' })).toBeTruthy();
+  /* Regla del Mestre (261025): la plataforma és «el Mas», i el mot vetat no
+     ix mai en text visible. Gauntlet 261030 (cicle 4) el va trobar ací. */
+  expect(document.body.textContent).not.toMatch(MOT_VETAT);
 });
 
 describe('la font', () => {
@@ -268,5 +274,10 @@ describe('la font', () => {
     expect(FONT).toMatch(/import \{ UniversalCard \} from '[^']*\/UniversalCard\.jsx'/);
     for (const prop of ['title=', 'subtitle=', 'imageUrl=', 'body=']) expect(FONT).toContain(prop);
     for (const prop of ['titol=', 'subtitol=', 'imatgePortada=', 'cos=']) expect(FONT).not.toContain(prop);
+  });
+
+  test('cap mot vetat: la targeta d’exemple és el «Mas del Roure»', () => {
+    expect(FONT).not.toMatch(MOT_VETAT);
+    expect(FONT).toContain('title="Mas del Roure"');
   });
 });

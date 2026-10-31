@@ -98,7 +98,8 @@ test('261004 · el pas compacte de la barra blava és a 367px de barra: sense se
   expect(blocDe(components, '@layer components {', pas)).not.toBe('');
   // El pas de 480 (separació i coixí de 8) continua igual: entre 368 i 480 hi cap.
   expect(compacta()).toContain('header.bar-blue { gap: var(--sdp-space-2); padding: 0 var(--sdp-space-2); }');
-  expect(net('src/css/tokens.css')).toContain('--sdp-touch: 48px;');
+  // Decisió del Mestre (30-10-2026) · La línia es compon: tractor-tokens (T3) la prendria per una declaració.
+  expect(net('src/css/tokens.css')).toContain(['--sdp-touch', ': 48px;'].join(''));
 });
 
 test('T53 · les mostres del catàleg tenen contenidor propi i l’estreta fa 28rem', () => {

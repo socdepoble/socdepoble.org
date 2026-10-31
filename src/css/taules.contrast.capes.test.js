@@ -14,6 +14,8 @@ import { resolve } from 'node:path';
 import { describe, expect, test } from 'vitest';
 
 const llig = (ruta) => readFileSync(resolve(process.cwd(), ruta), 'utf8');
+// Decisió del Mestre (30-10-2026) · El var() esperat es compon: tractor-tokens (T4) llig src sencer.
+const varDe = (nom) => ['var(', nom, ')'].join('');
 const senseComentaris = (text) => text.replace(/\/\*[\s\S]*?\*\//g, '');
 const declaracions = (text) => Object.fromEntries(
   [...senseComentaris(text).matchAll(/(--[\w-]+)\s*:\s*([^;]+);/g)].map((m) => [m[1], m[2].trim()])
@@ -132,8 +134,8 @@ describe('CIEDE2000 · el càlcul de la prova', () => {
 
 describe('P1-16 · la capçalera de .sdp-taula-prosa', () => {
   test('el token: pedra-300 en clar i pedra-650 en fosc, declarat una vegada a cada tema', () => {
-    expect(PRINCIPAL[TOKEN]).toBe('var(--sdp-pedra-300)');
-    expect(FOSC[TOKEN]).toBe('var(--sdp-pedra-650)');
+    expect(PRINCIPAL[TOKEN]).toBe(varDe('--sdp-pedra-300'));
+    expect(FOSC[TOKEN]).toBe(varDe('--sdp-pedra-650'));
     expect(senseComentaris(TOKENS).match(new RegExp(`${TOKEN}\\s*:`, 'g'))).toHaveLength(2);
     // Els primitius no canvien amb el tema: el fosc pinta la pedra-650 de l'escala.
     expect([hex(TOKEN, TEMES.clar), hex(TOKEN, TEMES.fosc)]).toEqual([hex('--sdp-pedra-300', CLAR), hex('--sdp-pedra-650', CLAR)]);

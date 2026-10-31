@@ -1,5 +1,4 @@
 import {
-  createContext,
   useCallback,
   useContext,
   useEffect,
@@ -8,6 +7,9 @@ import {
   useRef,
   useState
 } from 'react';
+/* P1-71 (Gauntlet 261029) · L'objecte de context viu a objectesDeContext.js,
+   que no importa res del projecte. */
+import { NotesDataContext } from './objectesDeContext.js';
 
 import {
   loadNotes,
@@ -40,8 +42,6 @@ function assegurarHost(signal) {
 import { useRecarregaExterna } from '../../app/contexts/useRecarregaExterna.jsx';
 import { getDraftsForScope, draftFields, bgSaveManager } from './GlobalSaveManager.js';
 import { entradaSessio } from '../../data/identitat.js';
-
-const NotesDataContext = createContext(null);
 
 const unavailable = async () => {
   throw new Error('El bloc de notes encara no està disponible.');

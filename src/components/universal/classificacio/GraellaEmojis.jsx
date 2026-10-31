@@ -41,10 +41,20 @@
  *   carregaCataleg () => Promise<{ GRUPS_EMOJIS }>  (estable: es demana en muntar)
  *   onTria (glif, nom) => void
  *   textNoReconegut (glif) => String  (opcional i estable)
+ *   potPintar (glif) => Boolean | null  (opcional i estable; per defecte, el
+ *     detector del navegador d'utils/emojiPintable.js)
+ *
+ * P1-06 · La graella no ensenya cap emoji que este navegador no reconeix
+ * (emojiSol, el criteri que el refusaria en triar-lo) ni que no sap pintar
+ * (el tofu d'un punt de codi que el tipus de lletra encara no porta, o una
+ * seqüència que es partix en dos glifs): utils/emojiPintable.js. Es filtra
+ * una vegada, en arribar el catàleg; les famílies que es queden buides no
+ * es pinten i el recompte de cada una és el dels que es veuen.
  */
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Boto, Camp, CampText, Carregant } from '../../PedraSeca/index.js';
 import { emojiSol } from '../../../utils/emoji.js';
+import { detectorDePintat, emojisPintables } from '../../../utils/emojiPintable.js';
 
 const CAP = Object.freeze([]);
 /* Una cerca curta («a») casaria amb milers de noms: se'n pinten els primers. */
@@ -152,7 +162,7 @@ function textDelRecompte(trobats, total) {
   return total === 1 ? '1 emoji.' : `${total} emojis.`;
 }
 
-export function GraellaEmojis({ carregaCataleg, onTria, textNoReconegut = null }) {
+export function GraellaEmojis({ carregaCataleg, onTria, textNoReconegut = null, potPintar }) {
   const [cataleg, setCataleg] = useState({ estat: 'carregant', grups: CAP });
   const [intent, setIntent] = useState(0);
   const [terme, setTerme] = useState('');
@@ -173,12 +183,15 @@ export function GraellaEmojis({ carregaCataleg, onTria, textNoReconegut = null }
       .then(() => carregaCataleg())
       .then((modul) => {
         if (!viu) return;
-        const grups = Array.isArray(modul?.GRUPS_EMOJIS) ? modul.GRUPS_EMOJIS : null;
+        /* P1-06 · Només els que este navegador reconeix i sap pintar. */
+        const grups = Array.isArray(modul?.GRUPS_EMOJIS)
+          ? emojisPintables(modul.GRUPS_EMOJIS, { potPintar: potPintar === undefined ? detectorDePintat() : potPintar })
+          : null;
         setCataleg(grups ? { estat: 'llest', grups } : { estat: 'error', grups: CAP });
       })
       .catch(() => { if (viu) setCataleg({ estat: 'error', grups: CAP }); });
     return () => { viu = false; };
-  }, [carregaCataleg, intent]);
+  }, [carregaCataleg, intent, potPintar]);
 
   /* Ja pintada dins d'un diàleg obert: el focus, al primer emoji, si encara
      és on el va deixar el diàleg (o el diàleg mateix) o si s'ha perdut (el

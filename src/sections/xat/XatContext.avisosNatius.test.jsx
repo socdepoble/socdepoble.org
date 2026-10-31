@@ -6,7 +6,7 @@
    Sense permís, amagada no es mira res, com abans. Arnés de
    XatContext.nivellIaia.test.jsx. */
 import { act, cleanup, render, waitFor } from '@testing-library/react';
-import { afterEach, beforeEach, expect, test, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import '../../host.js';
 import { XatProvider, useXat } from './XatContext.jsx';
 import { ambXatsPerDefecte } from '../../data/xatsPerDefecte.js';
@@ -275,4 +275,68 @@ test('en tornar a l’App es torna a llegir el permís i es lleven els avisos de
   expect(adaptador.netejaAvisos).toHaveBeenCalledTimes(1);
   await waitFor(() => expect(adaptador.estatPermis).toHaveBeenCalledTimes(1));
   expect(adaptador.demanaPermis).not.toHaveBeenCalled();
+});
+
+/* Gauntlet 261030 (cicle 2, Codex C3) · L'avís natiu va lligat a la generació
+   de persona: el `vigent` que rep l'adaptador (i que es mira just abans del
+   schedule) torna fals si mentrestant la persona ha eixit o n'ha entrat una
+   altra, encara que l'App continue amagada. En eixir o canviar de persona,
+   els avisos que ja són a la barra se'n van. Una renovació del JWT no és cap
+   persona nova: ni invalida l'avís ni neteja la barra. */
+describe('C3 · la generació de persona dels avisos natius', () => {
+  const CONFIG = Object.freeze({ backendId: 'supabase', tenantId: '00000000-0000-0000-0000-00000000000a' });
+  const arbre = () => <XatProvider config={CONFIG}><Probe /></XatProvider>;
+  let vista = null;
+  /* Amagada, amb la llista ja carregada i un avís de Pepa encarregat: en torna el `vigent`. */
+  async function avisPendent() {
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    vista = render(arbre());
+    await waitFor(() => expect(value.status).toBe('ready'));
+    amaga();
+    mock.loadFils.mockResolvedValue(fils(3));
+    await avanca(26000);
+    await waitFor(() => expect(adaptador.avisa).toHaveBeenCalledTimes(1));
+    expect(adaptador.avisa).toHaveBeenCalledWith(AVIS_PEPA);
+    const { vigent } = adaptador.avisa.mock.calls[0][0];
+    expect(vigent()).toBe(true);
+    adaptador.netejaAvisos.mockClear();
+    return vigent;
+  }
+  const canviaSessio = (session, actorKey = mock.actorKey) => act(async () => {
+    mock.session = session;
+    mock.actorKey = actorKey;
+    vista.rerender(arbre());
+  });
+  afterEach(() => {
+    mock.session = { currentUser: { id: 'A' }, generacio: 1 };
+    mock.actorKey = 'persona::A';
+    vista = null;
+  });
+
+  test('entra una altra persona (A → B) amb l’App amagada: l’avís d’A ja no és vigent i la barra es neteja', async () => {
+    const vigent = await avisPendent();
+    await canviaSessio({ currentUser: { id: 'B' }, generacio: 2 }, 'persona::B');
+    expect(document.hidden).toBe(true);
+    expect(vigent()).toBe(false);
+    expect(adaptador.netejaAvisos).toHaveBeenCalledTimes(1);
+  });
+
+  test('A ix (i torna a entrar): l’avís d’abans de l’eixida ja no és vigent, tampoc amb A de nou', async () => {
+    const vigent = await avisPendent();
+    await canviaSessio({ currentUser: null, generacio: 2 });
+    expect(vigent()).toBe(false);
+    expect(adaptador.netejaAvisos).toHaveBeenCalledTimes(1);
+    await canviaSessio({ currentUser: { id: 'A' }, generacio: 3 }, 'persona::A');
+    expect(vigent()).toBe(false);
+  });
+
+  test('una renovació del JWT (la mateixa persona) no toca l’avís ni la barra', async () => {
+    const vigent = await avisPendent();
+    await canviaSessio({ currentUser: { id: 'A' }, generacio: 2 });
+    expect(vigent()).toBe(true);
+    expect(adaptador.netejaAvisos).not.toHaveBeenCalled();
+    /* I quan la persona torna a l'App, deixa de ser vigent per la vista, com sempre. */
+    mostra();
+    expect(vigent()).toBe(false);
+  });
 });

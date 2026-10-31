@@ -22,7 +22,7 @@
    la porta d'aprovació, sense cap acció. La Consola no es pinta mai.
    Derogat: «la portada com fins ara». */
 import React from 'react';
-import { act, cleanup, render, screen, waitFor, within } from '@testing-library/react';
+import { act, cleanup, render, screen, within } from '@testing-library/react';
 import { afterAll, afterEach, beforeEach, expect, test, vi } from 'vitest';
 
 const fixture = vi.hoisted(() => {
@@ -106,37 +106,49 @@ test('l’entorn de la prova és el de producció', () => {
   expect(import.meta.env.DEV).toBe(false);
 });
 
-test('un superadmin que obri en fred l’enllaç de la Consola hi arriba quan el rol es resol, i la URL no el perd', async () => {
+/* Ordre del Mestre (30-10-2026, prompt 2208, T2.2) · Proves actualitzades a
+   propòsit: la Consola incrustada és de tothom (maquinaria.js), i la Wiki ja
+   no espera el rol per a pintar-la. Qui obri l'enllaç en fred hi arriba de
+   seguida, amb la sessió en vol, sense sessió o amb una de veí, i quan el rol
+   es resol (o es renova el JWT) la Consola no es mou. Derogat: «mentre es
+   comprova la sessió, la Wiki espera», «la Consola no es pinta mai» per a qui
+   no és superadmin i «la carpeta sola espera el rol». */
+
+/* L'enllaç de la Consola, pintat i triat: el títol, la URL i la carpeta. */
+async function esLaConsola() {
+  const consola = await screen.findByText('Doble de la Consola');
+  expect(titol()).toBe(PAGE_COPY.consola.title);
+  expect(new URLSearchParams(url()).get('item')).toBe('consola_termodinamica');
+  const nav = screen.getByRole('navigation', { name: 'WIKI DE POBLE' });
+  expect(within(nav).getByRole('button', { name: 'Maquinària de la IAIA' }).getAttribute('aria-current')).toBe('page');
+  expect(screen.queryByText('Carregant…')).toBeNull();
+  return consola;
+}
+
+test('qui obri en fred l’enllaç de la Consola hi arriba de seguida, sense esperar el rol, i el rol no la mou', async () => {
   fixture.inicial = ENLLAC;
   fixture.sessio = COMPROVANT;
   const vista = render(arbre());
+  const consola = await esLaConsola();
   await deixaCorrer();
-  // Mentre es comprova la sessió, la Wiki espera: ni portada, ni Consola, ni URL reescrita.
   expect(url()).toBe(ENLLAC);
-  expect(screen.queryByText('Doble de la Consola')).toBeNull();
-  expect(titol()).toBeNull();
-  expect(screen.getAllByRole('status').map((estat) => estat.textContent)).toContain('Carregant…');
 
   fixture.sessio = SUPERADMIN;
   vista.rerender(arbre());
-  expect(await screen.findByText('Doble de la Consola')).toBeTruthy();
-  expect(titol()).toBe(PAGE_COPY.consola.title);
-  expect(new URLSearchParams(url()).get('item')).toBe('consola_termodinamica');
-  // L'arbre ja porta la carpeta, i és la triada.
-  const nav = screen.getByRole('navigation', { name: 'WIKI DE POBLE' });
-  expect(within(nav).getByRole('button', { name: 'Maquinària de la IAIA' }).getAttribute('aria-current')).toBe('page');
+  await deixaCorrer();
+  expect(screen.getByText('Doble de la Consola')).toBe(consola);
+  expect(url()).toBe(ENLLAC);
 });
 
-test('en fred, amb l’usuari ja conegut i el rol encara en vol, també espera', async () => {
+test('en fred, amb l’usuari ja conegut i el rol encara en vol, tampoc espera', async () => {
   fixture.inicial = ENLLAC;
   fixture.sessio = RENOVANT;
   const vista = render(arbre());
-  await deixaCorrer();
-  expect(url()).toBe(ENLLAC);
-  expect(screen.queryByText('Doble de la Consola')).toBeNull();
+  const consola = await esLaConsola();
   fixture.sessio = SUPERADMIN;
   vista.rerender(arbre());
-  expect(await screen.findByText('Doble de la Consola')).toBeTruthy();
+  await deixaCorrer();
+  expect(screen.getByText('Doble de la Consola')).toBe(consola);
   expect(new URLSearchParams(url()).get('item')).toBe('consola_termodinamica');
 });
 
@@ -158,46 +170,34 @@ test('la renovació del JWT d’un superadmin que és a la Consola: no desaparei
   expect(screen.getByText('Doble de la Consola')).toBe(consola);
 });
 
-test('el mateix enllaç amb ?item= sol (sense carpeta) també espera el rol', async () => {
+test('el mateix enllaç amb ?item= sol (sense carpeta) també hi arriba de seguida', async () => {
   fixture.inicial = '?item=consola_termodinamica';
   fixture.sessio = COMPROVANT;
   const vista = render(arbre());
+  expect(await screen.findByText('Doble de la Consola')).toBeTruthy();
+  expect(screen.queryByText('Carregant…')).toBeNull();
   await deixaCorrer();
-  expect(url()).toBe('?item=consola_termodinamica');
+  expect(new URLSearchParams(url()).get('item')).toBe('consola_termodinamica');
   fixture.sessio = SUPERADMIN;
   vista.rerender(arbre());
-  expect(await screen.findByText('Doble de la Consola')).toBeTruthy();
+  await deixaCorrer();
+  expect(screen.getByText('Doble de la Consola')).toBeTruthy();
   expect(new URLSearchParams(url()).get('item')).toBe('consola_termodinamica');
 });
-
-/* La carpeta de la Maquinària, triada a l'arbre, amb la documentació (cap
-   Consola) i la primera fitxa oberta: la porta d'aprovació, de lectura. */
-async function esLaDocumentacioDeLaPorta() {
-  await waitFor(() => expect(titol()).toBe('Aprovació de tractors'));
-  await deixaCorrer();
-  expect(screen.queryByText('Doble de la Consola')).toBeNull();
-  const consulta = new URLSearchParams(url());
-  expect([consulta.get('categoria'), consulta.get('item')]).toEqual(['maquinaria_cat', 'tractors_aprovacio']);
-  const nav = screen.getByRole('navigation', { name: 'WIKI DE POBLE' });
-  expect(within(nav).getByRole('button', { name: 'Maquinària de la IAIA' }).getAttribute('aria-current')).toBe('page');
-  expect(await screen.findByText('Ací només es llig')).toBeTruthy();
-  // Cap botó de la porta (la fitxa de la llista, «Aprovació de tractors», no n'és cap).
-  expect(screen.queryByRole('button', { name: /^(?:Aprova esta versió|Revoca|Oblida les aprovacions|Exporta el registre|Aprovar tots els pendents)/ })).toBeNull();
-}
 
 test.each([
   ['una sessió de veí', { estat: 'dins', rol: 'usuari', esSuperadmin: false }],
   ['sense sessió', { estat: 'fora', rol: null, esSuperadmin: false }]
-])('quan el rol es resol i és %s, la Consola no es pinta mai: la carpeta, amb la documentació de la porta', async (_, resolta) => {
+])('quan el rol es resol i és %s, la Consola es queda: la carpeta, amb la Consola triada', async (_, resolta) => {
   fixture.inicial = ENLLAC;
   fixture.sessio = COMPROVANT;
   const vista = render(arbre());
-  await deixaCorrer();
-  // Mentre es comprova la sessió, també espera: la carpeta ja hi és, però la Consola encara no ho sap.
-  expect(url()).toBe(ENLLAC);
+  const consola = await esLaConsola();
   fixture.sessio = resolta;
   vista.rerender(arbre());
-  await esLaDocumentacioDeLaPorta();
+  await deixaCorrer();
+  expect(screen.getByText('Doble de la Consola')).toBe(consola);
+  expect(url()).toBe(ENLLAC);
 });
 
 test('Llei del Píxel · mentre es comprova la sessió, una URL que no demana la Maquinària s’obri de seguida', async () => {
@@ -219,9 +219,10 @@ test('Llei del Píxel · mentre es comprova la sessió, una URL que no demana la
 /* Revisió adversarial del bloc B (Guarda Nocturna 261027) · Llei del Píxel:
    la URL d'una pàgina de documentació (la que escriu triar-la a l'arbre, amb
    la carpeta) no depén del rol i s'obri de seguida, també mentre es comprova
-   la sessió; quan el rol es resol, la fitxa i la URL es queden. La carpeta
-   sense cap fitxa continua esperant: per a qui és superadmin, la primera
-   fitxa seria la Consola. */
+   la sessió; quan el rol es resol, la fitxa i la URL es queden.
+   Ordre del Mestre (30-10-2026, prompt 2208, T2.2) · La carpeta sola ja no
+   espera el rol: es pinta de seguida, per a tothom, com qualsevol carpeta.
+   Derogat: «la carpeta sense cap fitxa continua esperant». */
 test.each([
   ['en fred, sense usuari', COMPROVANT],
   ['en fred, amb l’usuari conegut i el rol en vol', RENOVANT]
@@ -242,23 +243,23 @@ test.each([
   expect(url()).toBe(DOC);
   expect(screen.queryByText('Doble de la Consola')).toBeNull();
   cleanup();
-  // La carpeta sola, en canvi, espera el rol: ni fitxa triada ni URL reescrita.
+  // La carpeta sola tampoc espera el rol: es pinta com qualsevol carpeta, sense reescriure la URL.
   fixture.inicial = '?categoria=maquinaria_cat';
   fixture.sessio = comprovant;
   render(arbre());
   await deixaCorrer();
-  expect(titol()).toBeNull();
+  expect(titol()).toBe(PAGE_COPY.wikidepoble.title);
   expect(url()).toBe('?categoria=maquinaria_cat');
-  expect(screen.getAllByRole('status').map((estat) => estat.textContent)).toContain('Carregant…');
+  expect(screen.queryByText('Carregant…')).toBeNull();
 });
 
-test('sense proveïdor de sessió (una peça muntada sola), ningú no espera ningú i la Consola no es pinta: la documentació de la porta', async () => {
+test('sense proveïdor de sessió (una peça muntada sola), ningú no espera ningú i la Consola es pinta', async () => {
   fixture.inicial = ENLLAC;
   fixture.sessio = null;
   render(arbre());
+  await esLaConsola();
   await deixaCorrer();
-  // Pla 261027_0845 (Guarda Nocturna), §3 · La carpeta és de tothom: la seua primera fitxa, no la portada.
-  await esLaDocumentacioDeLaPorta();
+  expect(url()).toBe(ENLLAC);
 });
 
 /* Pla 261028_1526 (P1-61, Fase 2) · WikiDetail registra el seu <head> amb

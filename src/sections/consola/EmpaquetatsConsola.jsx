@@ -12,12 +12,14 @@ import { Package } from 'lucide-react';
 import { UniversalPage } from '../../components/universal/UniversalPage';
 import { Alerta, Carregant, EstatBuit, Insignia, MollaPa } from '../../components/PedraSeca';
 import { RUTA_CONSOLA, copyConsola } from './consolaPagines.js';
-import { Mono, Privat, PrivacitatConsola, TargetaConsola } from './peces.jsx';
+import { DestiVersions, Mono, Privat, PrivacitatConsola, TargetaConsola } from './peces.jsx';
 import {
   ENTRADETA_EMPAQUETATS, ETIQUETA_NAV_EMPAQUETATS, SEMAFOR, TITOL_EMPAQUETATS,
   canonicaDesfasada, cobertaEmpaquetats, paginaEmpaquetats, plataformesEmpaquetades
 } from './empaquetats.js';
 import { VERSIO_SISTEMA, versioCanonica } from '../../config/versio.js';
+import { Link } from '../../app/contexts/RouterContext';
+import { resolvePageSlugPath } from '../../config/navigation.js';
 
 /**
  * La secció del tauler: el seu H2, una línia que l'explica i una sola
@@ -85,16 +87,24 @@ function Plataforma({ p }) {
  * servidor local de desenvolupament) i no en pinta cap plataforma: la
  * Consola no inventa versions. Amb una lectura, les quatre plataformes. `peu`
  * és el panell de dades de totes les pàgines (ControlsConsola).
+ * Gauntlet 261030 (cicle 4, ALT-C1 de Codex) · Sense Traductor
+ * (traduccio={false}): les rutes, els artefactes i les ordres de la carpeta
+ * de builds són d'este ordinador i no s'envien a cap motor de traducció.
+ * Traduir avisa; el botó no canvia (Llei del Píxel).
  */
 export function PaginaEmpaquetats({ font, privat, peu }) {
   const copy = copyConsola();
   const pagina = paginaEmpaquetats();
   const plataformes = plataformesEmpaquetades(font.valor);
   return (
-    <UniversalPage title={pagina.title} subtitle={pagina.subtitle} lead={pagina.lead} chrome="system" nivellMaxIndex={6}>
+    <UniversalPage title={pagina.title} subtitle={pagina.subtitle} lead={pagina.lead} chrome="system" nivellMaxIndex={6}
+      traduccio={false} llenguaDelContingut="ca">
       <PrivacitatConsola.Provider value={privat}>
         <MollaPa className="sdp-molla--panell" passos={[{ etiqueta: copy.title, a: RUTA_CONSOLA }, { etiqueta: pagina.title }]} />
-        <p>Versió Canònica del Sistema: <Mono>{versioCanonica()}</Mono></p>
+        {/* IDEA-50 (pàgina de versions; pla 261029_1605, Bloc G) · La versió
+            porta a /versions amb un enllaç de prosa: cap modal, cap classe nova.
+            Gauntlet 261029 · El lector hi sent també on porta (DestiVersions). */}
+        <p>Versió Canònica del Sistema: <Link to={resolvePageSlugPath('versions')}><Mono>{versioCanonica()}</Mono><DestiVersions /></Link></p>
         {canonicaDesfasada(font.valor) && (
           <Alerta to="avis" titol="La versió de package.json ha canviat">
             El servidor llig la {font.valor.canonica} i esta pàgina porta la {VERSIO_SISTEMA}: recarrega-la.
@@ -109,9 +119,9 @@ export function PaginaEmpaquetats({ font, privat, peu }) {
         )}
         {!font.valor && font.estat === 'absent' && (
           <EstatBuit icona={Package} titol="Empaquetats no disponibles">
-            Esta pàgina viu de <Mono>GET /__iaia/empaquetats.json</Mono>, que només se servix al servidor
-            local de desenvolupament i només llig noms d’artefactes i versions declarades. Sense eixa
-            font no hi ha dades, i la Consola no en inventa.
+            Esta pàgina viu de <Mono>GET /__iaia/empaquetats.json</Mono>, que només llig noms d’artefactes i
+            versions declarades: en viu, al servidor local de desenvolupament, i a la web publicada, en la
+            instantània sanejada de cada publicació. Este paquet no la porta, i la Consola no en inventa.
           </EstatBuit>
         )}
         {font.valor && !font.valor.carpeta && (

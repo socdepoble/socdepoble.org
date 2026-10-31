@@ -171,11 +171,16 @@ export function MapaConsola({ locale, font }) {
     <>
       {estat === 'loading' && !mapa && <Carregant etiqueta="Llegint el mapa…" />}
       {estat === 'absent' && (
+        /* Ordre del Mestre (30-10-2026, prompt 2208, T2.2) · La Consola és
+           pública: el text diu la causa real (cap instal·lació pendent).
+           Decisió del Mestre (31-10-2026) · La web publicada porta la
+           instantània sanejada del Mapa: este estat només ix en un paquet que
+           no la porta. Derogat: «A la web publicada no hi és». */
         <EstatBuit icona={Network} titol="Mapa no disponible">
-          El Mapa només es publica al servidor local de desenvolupament
-          (<Mono>GET /__iaia/mapa.json</Mono>). Si ací tampoc apareix, el
-          compilador <Mono>tooling/brain/mapa-consola.mjs</Mono> encara no està
-          instal·lat al middleware de la Consola.
+          El Mapa el compila <Mono>tooling/brain/mapa-consola.mjs</Mono>. En viu només el servix el
+          servidor local de desenvolupament (<Mono>GET /__iaia/mapa.json</Mono>), i la web publicada en
+          porta la instantània sanejada de cada publicació. Este paquet no la porta, i la Consola no
+          n’inventa cap dada.
         </EstatBuit>
       )}
       {/* Correcció 261004 (verificador de la tercera passada, punt 5) · sense Mapa, també

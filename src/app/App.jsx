@@ -8,6 +8,7 @@ import { Navigate, NavLink, Route, Routes, useNavigate, useLocation, useParams, 
 import { MoonStar, Search, Settings, Sun, Globe } from '../icons.jsx';
 import { ChevronDown, LayoutGrid, PanelLeftClose } from 'lucide-react';
 import { IaiaIcon } from '../components/PedraSeca/atoms/icones';
+import { tradueix, useTraductorOpcional } from '../components/PedraSeca/hooks/useTraductorOpcional.js';
 import BrandMark from '../components/BrandMark';
 import { NotificationProvider } from '../components/universal/NotificationContext.jsx';
 import { Dialeg } from '../components/PedraSeca/organismes/Dialeg.jsx';
@@ -99,7 +100,6 @@ import { useEnLinia } from '../components/universal/connexio/useEnLinia.js';
 import { sanejaEtiqueta } from '../config/configAmfitrio.js';
 import { ancoraDelClic, hrefInternDeClic, preparaRecolocacio } from './enllacosInterns.js';
 import { RequireAuth } from './guards/RequireAuth';
-import { consolaDemanaSessio } from './guards/guardaConsola.js';
 /* Plataforma d'Apps Enxufables (261002) · relleu de la barra lateral: dins
    d'una app, la seua barra; a la resta de rutes, SidebarContent tal qual. */
 import { BarraLateral, useTitolBarraLateral } from '../apps/plataforma/BarraLateral.jsx';
@@ -138,11 +138,32 @@ const seccioDeLaBarraMobil = (id) => NAV_SECTIONS.find((section) => section.id =
 const MOBILE_NAV_LEADING = ['xat', 'mur'].map(seccioDeLaBarraMobil).filter(Boolean);
 const MOBILE_NAV_TRAILING = ['mercat', 'pobles'].map(seccioDeLaBarraMobil).filter(Boolean);
 
+/* Gauntlet 261029 (cicle 1, i18n-a11y; IDEA-57 L4a) · Els noms accessibles
+   de la closca, en parells [clau, reserva]: la reserva és el literal de
+   sempre (en valencià no canvia res) i un lector en es, en, eu o gl ja no els
+   llig en valencià. */
+const NOMS_CLOSCA = Object.freeze({
+  carregaRuta: Object.freeze(['nav.carregaRuta', "S'està carregant el contingut..."]),
+  obrirTancarMenu: Object.freeze(['nav.obrirTancarMenu', 'Obrir o tancar menú Sóc de Poble']),
+  panell: Object.freeze(['nav.panellAria', 'Panell de control']),
+  desplegaBarra: Object.freeze(['nav.desplegaBarra', 'Desplegar barra lateral']),
+  plegaBarra: Object.freeze(['nav.plegaBarra', 'Plegar barra lateral']),
+  tancaMenu: Object.freeze(['nav.tancaMenu', 'Tancar menú']),
+  seccions: Object.freeze(['nav.seccions', 'Seccions']),
+  sistema: Object.freeze(['nav.sistema', 'Sistema']),
+  saltaContingut: Object.freeze(['nav.saltaContingut', 'Salta al contingut principal']),
+  navegacioPrincipal: Object.freeze(['nav.navegacioPrincipal', 'Navegació principal']),
+  obrirMenu: Object.freeze(['nav.obrirMenu', 'Obrir menú']),
+  navegacioMobil: Object.freeze(['nav.navegacioMobil', 'Navegació mòbil'])
+});
+
 function RouteFallback() {
+  /* La Suspense pot pintar-lo abans que hi haja traductor: la reserva. */
+  const t = useTraductorOpcional();
   return (
     <div className="sdp-app-loading" role="status" aria-live="polite">
       <div className="sdp-spinner sdp-spinner--large" />
-      <span className="sr-only">S'està carregant el contingut...</span>
+      <span className="sr-only">{tradueix(t, NOMS_CLOSCA.carregaRuta)}</span>
     </div>
   );
 }
@@ -151,6 +172,8 @@ const SidebarContent = memo(({ isCompact, isDesktopSidebarClosed, toggleSidebar,
   /* T27 · el Panell de control també és una ubicació: a /control i /utilitats
      el botó CONTROL és l'element actiu de la barra. */
   const { pathname } = useLocation();
+  const t = useTraductorOpcional();
+  const nom = (parell) => tradueix(t, parell);
   const controlActiu = /^\/(control|utilitats)(\/|$)/.test(pathname);
   /* «Sistema» s'obri sol quan la ruta activa és dins: l'entrada encesa sempre es veu. */
   const sistemaActiu = SYSTEM_SECTIONS.some((section) => casaSeccio(pathname, section));
@@ -173,7 +196,7 @@ const SidebarContent = memo(({ isCompact, isDesktopSidebarClosed, toggleSidebar,
 
   return (
     <>
-        <button type="button" className="brand sdp-unstyled-btn" aria-label="Obrir o tancar menú Sóc de Poble" aria-expanded={isCompact ? true : !isDesktopSidebarClosed} aria-controls="app-sidebar" onClick={toggleSidebar}>
+        <button type="button" className="brand sdp-unstyled-btn" aria-label={nom(NOMS_CLOSCA.obrirTancarMenu)} aria-expanded={isCompact ? true : !isDesktopSidebarClosed} aria-controls="app-sidebar" onClick={toggleSidebar}>
           <BrandMark className="app-brand__mark" />
         </button>
 
@@ -183,7 +206,7 @@ const SidebarContent = memo(({ isCompact, isDesktopSidebarClosed, toggleSidebar,
         <button
           type="button"
           className="sidebar-control-btn"
-          aria-label="Panell de control"
+          aria-label={nom(NOMS_CLOSCA.panell)}
           aria-current={controlActiu ? 'page' : undefined}
           onClick={() => navigate('/control')}
         >
@@ -195,7 +218,7 @@ const SidebarContent = memo(({ isCompact, isDesktopSidebarClosed, toggleSidebar,
             que amaga (layout.css: .sidebar-closed .sidebar-control-btn):
             així es llig que eixe botó obri la barra de control. */}
         <button type="button" className="sidebar-rail-toggle"
-          aria-label={isDesktopSidebarClosed ? 'Desplegar barra lateral' : (isCompact ? 'Tancar menú' : 'Plegar barra lateral')}
+          aria-label={nom(isDesktopSidebarClosed ? NOMS_CLOSCA.desplegaBarra : (isCompact ? NOMS_CLOSCA.tancaMenu : NOMS_CLOSCA.plegaBarra))}
           aria-expanded={isCompact ? true : !isDesktopSidebarClosed} aria-controls="app-sidebar" onClick={toggleSidebar}>
           {!isCompact && isDesktopSidebarClosed
             ? <Settings className="icona-linia" strokeWidth={2.1} aria-hidden="true" focusable="false" />
@@ -206,15 +229,15 @@ const SidebarContent = memo(({ isCompact, isDesktopSidebarClosed, toggleSidebar,
         {/* Sense peu: la llista sencera fa scroll (layout.css § SIDEBAR · SCROLL).
             «Seccions» i «Sistema» són grups (role), no divs genèrics amb nom. */}
         <div className="app-sidebar-nav">
-          <div className="app-sidebar-nav__llista" role="group" aria-label="Seccions">
+          <div className="app-sidebar-nav__llista" role="group" aria-label={nom(NOMS_CLOSCA.seccions)}>
             {NAV_SECTIONS.map((section) => enllac(section))}
             <button type="button" className="nav-item nav-item--desplegable" aria-expanded={sistemaObert}
               aria-controls="app-sidebar-sistema" onClick={() => setSistemaObert((obert) => !obert)}>
               <LayoutGrid className="icona-linia" strokeWidth={2.1} size={24} aria-hidden="true" focusable="false" />
-              <span className="nav-item__text">Sistema</span>
+              <span className="nav-item__text">{nom(NOMS_CLOSCA.sistema)}</span>
               <ChevronDown className="nav-item__xebro" strokeWidth={2.1} size={20} aria-hidden="true" focusable="false" />
             </button>
-            <div id="app-sidebar-sistema" className="app-sidebar-sistema" role="group" aria-label="Sistema" hidden={!sistemaObert}>
+            <div id="app-sidebar-sistema" role="group" aria-label={nom(NOMS_CLOSCA.sistema)} hidden={!sistemaObert}>
               {SYSTEM_SECTIONS.map((section) => (
                 <React.Fragment key={section.id}>
                   {section.id === PRIMERA_DEL_PROJECTE && <hr className="app-sidebar-divider" />}
@@ -575,7 +598,7 @@ function AppShell({ children, mobileNav }) {
     <ProveidorModeImmersiu value={demanaImmersiu}>
     <div className={`sdp-root ${isCompact ? 'is-compact' : ''} ${isDesktopSidebarClosed ? 'sidebar-closed' : ''} `} ref={rootRef}
       data-sdp-immersiu={immersiu ? '' : undefined} onClick={interceptaEnllacos ? alClicarEnllac : undefined}>
-      <a href="#main-content" className="sr-only sr-only-focusable sdp-skip-link">Salta al contingut principal</a>
+      <a href="#main-content" className="sr-only sr-only-focusable sdp-skip-link">{tradueix(t, NOMS_CLOSCA.saltaContingut)}</a>
       
       {isCompact ? (
         <Dialeg 
@@ -586,7 +609,7 @@ function AppShell({ children, mobileNav }) {
           className="sdp-dialeg-sidebar"
           variant="sense-marc"
         >
-          <nav id="app-sidebar" className="app-sidebar" aria-label="Navegació principal">
+          <nav id="app-sidebar" className="app-sidebar" aria-label={tradueix(t, NOMS_CLOSCA.navegacioPrincipal)}>
             <BarraLateral isCompact={isCompact} isDesktopSidebarClosed={isDesktopSidebarClosed} toggleSidebar={toggleSidebar}>
              <SidebarContent
                 isCompact={isCompact}
@@ -599,7 +622,7 @@ function AppShell({ children, mobileNav }) {
           </nav>
         </Dialeg>
       ) : (
-        <nav id="app-sidebar" className={`app-sidebar ${isDesktopSidebarClosed ? 'app-sidebar--tancada' : 'app-sidebar--oberta'}`} aria-label="Navegació principal">
+        <nav id="app-sidebar" className={`app-sidebar ${isDesktopSidebarClosed ? 'app-sidebar--tancada' : 'app-sidebar--oberta'}`} aria-label={tradueix(t, NOMS_CLOSCA.navegacioPrincipal)}>
           <BarraLateral isCompact={isCompact} isDesktopSidebarClosed={isDesktopSidebarClosed} toggleSidebar={toggleSidebar}>
            <SidebarContent
               isCompact={isCompact}
@@ -710,7 +733,7 @@ const TopBar = memo(function TopBar({ onToggleSidebar, menuObert = false, nomPob
     <>
     <header className="bar-black">
       {nomPoble ? <TitolAmfitrio nomPoble={nomPoble} /> : null}
-      <button type="button" className="mobile-logo-wrapper sdp-unstyled-btn" aria-label="Obrir menú" aria-expanded={menuObert ? 'true' : 'false'} aria-controls="app-sidebar" onClick={() => onToggleSidebar?.()}>
+      <button type="button" className="mobile-logo-wrapper sdp-unstyled-btn" aria-label={tradueix(t, NOMS_CLOSCA.obrirMenu)} aria-expanded={menuObert ? 'true' : 'false'} aria-controls="app-sidebar" onClick={() => onToggleSidebar?.()}>
         <BrandMark variant="light" className="mobile-logo" />
       </button>
 
@@ -1010,13 +1033,6 @@ function RedireccioDEntrada({ mode }) {
   return <Navigate to={to} replace />;
 }
 
-/* La Consola no passa per Supabase: a `vite serve` s'obri sense sessió i en
-   qualsevol build conserva la barrera de superadmin (guards/guardaConsola.js). */
-function RutaConsola() {
-  if (!consolaDemanaSessio(import.meta.env.DEV)) return <ConsolaSection />;
-  return <RequireAuth rol="superadmin"><ConsolaSection /></RequireAuth>;
-}
-
 function AppRoutes() {
   const { agents = [] } = useCoreContent();
   return (
@@ -1027,8 +1043,14 @@ function AppRoutes() {
         {/* Rutes globals i administratives */}
         <Route path="/admin/*" element={<RequireAuth rol="superadmin"><AdminSection /></RequireAuth>} />
         {/* Tauler a /consola i una pàgina per ruta (/consola/calendari…). El
-            comodí manté muntat el mateix element: les dades es lligen una vegada. */}
-        <Route path="/consola/*" element={<RutaConsola />} />
+            comodí manté muntat el mateix element: les dades es lligen una vegada.
+            Ordre del Mestre (30-10-2026, prompt 2208, T2.2) · Lectura pública en
+            qualsevol entorn, sense compte ni rol: cap RequireAuth ni guarda. La
+            Consola no parla amb Supabase. Fora de DEV llig només la instantània
+            sanejada que publica el build web a /__iaia/*.json, i en un paquet sense
+            ella no demana res (fontsConsola.js; decisió del Mestre, 31-10-2026).
+            Derogats la barrera de superadmin i guardaConsola.js. */}
+        <Route path="/consola/*" element={<ConsolaSection />} />
         <Route path="/cerca" element={<SearchSection />} />
         <Route path="/login" element={<RedireccioDEntrada mode="entrar" />} />
         <Route path="/accedir" element={<RedireccioDEntrada mode="entrar" />} />
@@ -1127,6 +1149,12 @@ function ActorRoutes({ agents }) {
           a la ruta de la seua entrada de SYSTEM_PAGES, /page/descarregues
           (PageDetailSection), com /wiki porta a la Wiki. Cap component nou. */}
       <Route path="descarregues" element={<Navigate to="/page/descarregues" replace />} />
+      {/* Ordre del Mestre (30-10-2026; candidatura NLnet NGI Fediversity,
+          expedient 2026-08-1a6) · /fediversity, l'adreça curta de la
+          candidatura: una redirecció a la ruta de la seua entrada de
+          SYSTEM_PAGES, /page/fediversity (PageDetailSection), com
+          /descarregues. Cap component nou. */}
+      <Route path="fediversity" element={<Navigate to="/page/fediversity" replace />} />
 
       <Route path=":sectionId/:itemId" element={<ItemDetailSection />} />
       <Route path="*" element={<NotFoundPage />} />
@@ -1165,7 +1193,7 @@ const MobileNav = memo(function MobileNav() {
   };
 
   return (
-    <nav className="mobile-nav" aria-label="Navegació mòbil">
+    <nav className="mobile-nav" aria-label={tradueix(t, NOMS_CLOSCA.navegacioMobil)}>
       {MOBILE_NAV_LEADING.map((section) => enllacMobil(section))}
       <button type="button" className="mobile-nav__cta" onClick={vesAlPanell} aria-label={t('nav.panel', 'Panell de Control')}>
         <Settings strokeWidth={2.1} />

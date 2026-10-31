@@ -545,11 +545,15 @@ export default function OnboardingSection() {
         />
       );
     }
+    /* Gauntlet 261030 (cicle 2, traduir-correu-a-registre; decisió 7) · La
+       contrasenya nova mostra el correu del compte: Traduir no hi envia res
+       (la interfície ja ix en les cinc llengües). */
     return (
       <UniversalPage
         title={titolPagina}
         {...capcalera}
         chrome="system"
+        traduccio={false}
       >
         <div className="content-wrapper">{pas}</div>
       </UniversalPage>
@@ -570,11 +574,15 @@ export default function OnboardingSection() {
     </div>
   );
 
+  /* Gauntlet 261030 (cicle 2, traduir-correu-a-registre; decisió 7) · L'alta
+     mostra el correu de la persona («Hem enviat l'enllaç de confirmació a…»):
+     Traduir no hi envia res. */
   return (
     <UniversalPage
       title={titolPagina}
       {...capcalera}
       chrome="system"
+      traduccio={false}
     >
       <div className="content-wrapper">
         {activeStep === 0 && (

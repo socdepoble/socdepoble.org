@@ -244,6 +244,21 @@
     cursor: text;
     font-weight: inherit;
   }
+  /* P1-59 (a) (Llibre Mestre, Fita 23; guàrdia nocturna 261030) · El text
+     fantasma del cos buit de l'Editor Universal (placeholderCos.js): una
+     decoració de ProseMirror posa data-placeholder al primer paràgraf només
+     mentre el cos és buit i editable, també amb el focus (desapareix en
+     escriure). El paràgraf no és :empty (ProseMirror hi deixa un <br>), i el
+     text flota sense alçada perquè el cursor es quede a l'inici de la línia;
+     el llenç (.sdp-editor-full-canvas, 480px d'alt com a mínim) el conté. El
+     color, el dels placeholders dels camps. */
+  .sdp-editor-full-canvas p[data-placeholder]:first-child::before {
+    content: attr(data-placeholder);
+    color: var(--sdp-text-desactivat);
+    float: left;
+    height: 0;
+    pointer-events: none;
+  }
 
   .sdp-grup { margin: 0 0 var(--sdp-space-5); padding: var(--sdp-space-4); border: 1px solid var(--sdp-vora); border-radius: var(--sdp-radi-m); }
   .sdp-grup--error { border-color: var(--sdp-error); }
@@ -2175,7 +2190,12 @@ section.bar-orange > .sdp-emoticona-barra--boto:focus-visible { outline-color: v
     flex: none;
     margin-inline: var(--sdp-pad-contenidor);
   }
-  article.content-wrapper[hidden] { display: none; }
+  /* Gauntlet 261030 (Fase 3, TC3.3) · .sdp-traduccio-cos és l'article germà
+     amb la traducció (PageFrame), un article.content-wrapper amb la mateixa
+     pell: es declara ací, amb el traductor, i com l'original s'amaga amb
+     [hidden]. Cap píxel nou: hui mai no porta hidden i, si en portara, la
+     regla de l'original ja el cobriria. */
+  article.content-wrapper[hidden], article.sdp-traduccio-cos[hidden] { display: none; }
 }
 
 /* ── Ordre del Mestre (261007) · «COMENTARIS = XAT»: EL MENÚ DE COMENTAR ──
@@ -3047,9 +3067,9 @@ section.bar-orange > .sdp-emoticona-barra--boto:focus-visible { outline-color: v
        (0,1,0), que hi posa el coixí, la separació, el radi i l'alçada (BOTÓ
        i SETENA PASSADA, més amunt). Amb la mateixa especificitat guanya
        l'ordre de font: davant d'elles, el botó deixaria de ser redó. Els
-       fulls que carreguen després en la mateixa capa (modules.css,
-       PerfilShell.css, tpv.css…) no disputen cap propietat a les peces del
-       carrusel allà on viu (comprovat el 261007). Només ho faria
+       fulls que carreguen després en la mateixa capa (modules.css, que ara
+       porta també el bloc tpv, PerfilShell.css…) no disputen cap propietat
+       a les peces del carrusel allà on viu (comprovat el 261007). Només ho faria
        :where(.perfil-pagina) .sdp-boto (PerfilShell.css), dins del Perfil,
        on el carrusel no es munta.
    Prova: PedraSeca/qualitat.carrusel.test.js. */
@@ -3222,8 +3242,8 @@ section.bar-orange > .sdp-emoticona-barra--boto:focus-visible { outline-color: v
        focus), redons i de --sdp-touch, com els del carrusel; l'anell de
        focus, el del crom, que es veu sobre el fosc. Desplegat, el botó
        d'Informació porta la vora de l'acció.
-     · El zoom: transform amb tres propietats pròpies (--sdp-visor-escala,
-       --sdp-visor-x i --sdp-visor-y) que l'organisme escriu des d'una ref
+     · El zoom: transform amb tres propietats pròpies (--visor-escala,
+       --visor-x i --visor-y) que l'organisme escriu des d'una ref
        només amb la foto ampliada; sense, els valors de sèrie d'ací. Mentre
        s'arrossega, sense transició.
      · Llei de Scroll: només el panell desborda; l'escenari retalla.
@@ -3310,14 +3330,16 @@ section.bar-orange > .sdp-emoticona-barra--boto:focus-visible { outline-color: v
   .sdp-visor__escenari--ampliat { cursor: grab; }
   .sdp-visor__escenari--arrossega { cursor: grabbing; }
   .sdp-visor__imatge {
-    --sdp-visor-escala: 1;
-    --sdp-visor-x: 0px;
-    --sdp-visor-y: 0px;
+    /* Decisió del Mestre (30-10-2026) · Propietats locals del visor, fora de
+       l'espai --sdp-* del tema (com --cataleg-mostra-ample): les escriu VisorImatges.jsx. */
+    --visor-escala: 1;
+    --visor-x: 0px;
+    --visor-y: 0px;
     display: block;
     max-inline-size: 100%;
     max-block-size: 100%;
     object-fit: contain;
-    transform: translate(var(--sdp-visor-x), var(--sdp-visor-y)) scale(var(--sdp-visor-escala));
+    transform: translate(var(--visor-x), var(--visor-y)) scale(var(--visor-escala));
     transition: transform var(--sdp-durada-base) var(--sdp-corba-eixida);
     cursor: zoom-in;
   }
@@ -3550,12 +3572,12 @@ section.bar-orange > .sdp-emoticona-barra--boto:focus-visible { outline-color: v
   .sp-card-header .sdp-moderacio .sdp-menu-traduir__item:focus-visible,
   section.bar-orange .sdp-moderacio .sdp-menu-traduir__item:focus-visible { outline-color: var(--sdp-focus); }
 
+  /* Ordre del Mestre (31-10-2026) · Llei de llistes (tokens.css, base.css):
+     les normes són text en una <ol>; sense flex ni gap, entre ítems només el
+     marge del li (--sdp-li-gap). */
   .sdp-normes {
     margin: 0;
     padding-inline-start: var(--sdp-space-6);
-    display: flex;
-    flex-direction: column;
-    gap: var(--sdp-space-2);
     color: var(--sdp-text-cos);
   }
   .sdp-normes__zero { font-weight: var(--sdp-pes-negreta); }

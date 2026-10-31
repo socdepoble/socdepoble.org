@@ -145,6 +145,21 @@ describe('una portada pujada (sdp-media://), pel port', () => {
     expect(fetch).not.toHaveBeenCalled();
   });
 
+  /* Ordre del Mestre (30-10-2026, prompt 2208, T4.2; QA-T3-UX-01) · El lector
+     del MAS és fora de l'Arxiu: la portada pujada (sense enllaç públic) no porta
+     la fila «Enllaç de la imatge» ni «No té cap enllaç públic d’este lloc». */
+  test('fora de l’Arxiu: la portada pujada no porta cap fila d’enllaç ni el text de quan no n’hi ha cap', async () => {
+    mocks.mitjans = true;
+    permetOrigenMitjans(STORAGE);
+    const container = pinta(persona({ image_url: SDP_MEDIA }), 'mur');
+    await obri(await within(container).findByRole('button', { name: OBRI }));
+    act(() => within(visor()).getByRole('button', { name: 'Informació de la imatge' }).click());
+    const claus = [...visor().querySelectorAll('.sdp-visor__fila dt')].map((dt) => dt.textContent);
+    expect(claus).toContain('Càmera');
+    expect(claus).not.toContain('Enllaç de la imatge');
+    expect(visor().textContent).not.toContain('No té cap enllaç públic');
+  });
+
   test('sense la capacitat de mitjans: la portada buida de sempre, sense botó ni cap petició', () => {
     const container = pinta(persona({ image_url: SDP_MEDIA }), 'mur');
     const marc = portada(container);

@@ -282,8 +282,9 @@ export default function DevicesSection() {
     { label: 'Connexions actives', value: String(Object.values(connections).filter((entry) => entry.state === 'connected').length) }
   ];
 
+  /* Decisions 261030 §7 · Dispositius i missatges directes: Traduir no envia res fora. */
   return (
-    <UniversalPage chrome="system" showLogos={true}>
+    <UniversalPage traduccio={false} chrome="system" showLogos={true}>
       <div className="devices-shell">
         <div>
           <h2>Descobrix instàncies del portal</h2>

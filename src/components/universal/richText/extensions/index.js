@@ -14,6 +14,7 @@ import { netejaHtmlEnganxat } from './imatgesEnganxades.js';
 import SlashMenu from './slash.js';
 import SdpImageNodeView from './SdpImageNodeView.jsx';
 import { TargetesIncrustades } from './targetes/targetesIncrustades.js';
+import { PlaceholderCos } from './placeholderCos.js';
 
 /* RICH-EXIF (Onada 4, ADR multimèdia D4) · allowBase64 es queda (les notes
    sense servidor hi desen el data URL de compressImage), però cap data URL
@@ -378,12 +379,16 @@ export function creaOrdres({
  * l'esquema és el de sempre.
  * P1-64 (pla 261028_1526 §3.1.1) · `demanaExif` (opcional i estable) arriba a
  * l'ordre «/» Imatge (creaOrdres). Sense, la crida de sempre.
+ * P1-59 (a) (guàrdia nocturna 261030) · `placeholderCos` (un text no buit,
+ * estable) afig el text fantasma del cos buit (placeholderCos.js): una
+ * decoració, cap node. Sense, les extensions de sempre.
  */
 export function extensionsRiques({
-  onImageUpload = null, ambTargetes = false, onToast = null, obreEmojis = null, demanaExif = null,
+  onImageUpload = null, ambTargetes = false, onToast = null, obreEmojis = null, demanaExif = null, placeholderCos = null,
 } = {}) {
   const ambEmojis = typeof obreEmojis === 'function';
   const ambExif = typeof demanaExif === 'function';
+  const ambPlaceholder = typeof placeholderCos === 'string' && placeholderCos.trim() !== '';
   return [
     SdpImage.configure({
       inline: false,
@@ -395,7 +400,8 @@ export function extensionsRiques({
         onImageUpload, ambTargetes, onToast, ...(ambEmojis ? { ambEmojis, obreEmojis } : {}), ...(ambExif ? { demanaExif } : {}),
       })
     }),
-    ...(ambTargetes ? [TargetesIncrustades] : [])
+    ...(ambTargetes ? [TargetesIncrustades] : []),
+    ...(ambPlaceholder ? [PlaceholderCos.configure({ text: placeholderCos })] : [])
   ];
 }
 

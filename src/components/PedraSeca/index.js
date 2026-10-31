@@ -63,14 +63,20 @@ export * from './organismes/navegacio.jsx';
 export { DialegConfirmacio } from './organismes/Dialeg.jsx';
 export { GrupAvatars } from './atoms/Avatar.jsx';
 
-// ── PECES DE LES APPS (Fase 0 del Bar i de Salut; estils a pecesApps.css) ──
+// ── PECES DE LES APPS (Fase 0 del Bar i de Salut; estils a src/css/modules.css,
+//    bloc pecesApps) ──
 export { Rajola, inicialsDe } from './molecules/Rajola.jsx';
 export { TeclatNumeric, seguentValor } from './organismes/TeclatNumeric.jsx';
 export { LiniaDelTemps } from './organismes/LiniaDelTemps.jsx';
 export { Histograma, nivellHistograma } from './organismes/Histograma.jsx';
+/* Ordre del Mestre (31-10-2026, prompt 2208, T3.1) · el motlle de tauler
+   compacte (Telemetria, Consola, Gestoria i TPV o Botiga); estils a
+   src/css/taulers.css. */
+export { QuadreDeComandament, fraccioQuadre } from './organismes/QuadreDeComandament.jsx';
 
 // ── ESQUELET DE CATÀLEG I COL·LECCIÓ (ordre del Mestre, 261002: sinergies T4/T8;
-//    un sol esquelet per al TPV del bar i La Compra; estils a catalegColleccio.css) ──
+//    un sol esquelet per al TPV del bar i La Compra; estils a src/css/modules.css,
+//    bloc catalegColleccio) ──
 /* Ordre del Mestre, 261004 · GraellaArticles i LlistaArticles són obsoletes per a codi
    nou (UniversalCard + GraellaTargetes). Salut i el Bar encara les fan servir: no s'esborren. */
 export { GraellaArticles } from './organismes/GraellaArticles.jsx';
@@ -89,14 +95,14 @@ export {
 
 // ── TPV UNIVERSAL (ordre del Mestre, 261006: prompt 261006_1215 i skill
 //    sdp-clon-loiverse; l'estructura de Loyverse per al Bar i per a la Llista de
-//    la Compra o el Rebost; estils a tpv.css) ──
+//    la Compra o el Rebost; estils a src/css/modules.css, bloc tpv) ──
 export { UniversalTPV } from './organismes/UniversalTPV.jsx';
 /* Fase E (261020, tasca 2; pla 261020_2045) · la llista viva d'«El Comú», sis modes en una peça. */
 export { UniversalListCard } from './UniversalListCard/UniversalListCard.jsx';
 
 // ── ICONES D'AL·LÈRGENS (ordre del Mestre, 261006: «vital per a la Carta
 //    Digital i el TPV»; els dibuixos del Mestre viatgen dins del paquet, sense
-//    xarxa; estils a alergens.css) ──
+//    xarxa; estils a src/css/modules.css, bloc alergens) ──
 export { IconesAlergens } from './molecules/IconesAlergens.jsx';
 
 // ── CARRUSEL D'IMATGES (ordre del Mestre, 261007: «Implementa un carrusel a la

@@ -6,6 +6,8 @@ import useXifratXat from '../../sections/xat/useXifratXat.js';
 import { serveiXifratXat } from '../../data/xifratXat.js';
 import { E2EE_ACTIU_PER_DEFECTE } from '../../config/xifratXat.js';
 import { backendScope } from '../../config/backendConfig.js';
+import { delEfimer, getEfimer, setEfimer } from '../../config/storage.js';
+import { CLAU_OBLITS_PENDENTS } from '../../data/xifratXatEixida.js';
 
 const m = vi.hoisted(() => ({ session: {}, actorKey: '', backend: null, hostReady: null, loadFils: vi.fn(), loadMissatges: vi.fn(), enviaMissatge: vi.fn(), marcaLlegit: vi.fn(), creaFilDirecte: vi.fn(), carregaMembres: vi.fn(), subscribeToXat: vi.fn(), unsubscribeFromXat: vi.fn(), obriFilDePagina: vi.fn(), teCapacitat: vi.fn(), showToast: vi.fn(), getBackendImplementation: vi.fn(), clausDelContextXat: vi.fn() }));
 vi.mock('../../app/contexts/SessionContext', () => ({ useSession: () => m.session }));
@@ -43,6 +45,11 @@ test('XatProvider amb el flag real: ready, cap clau de context, cap servei, cap 
   expect(m.getBackendImplementation).not.toHaveBeenCalled();
   expect(serveiXifratXat(m.backend)).toBeNull();
   expect(Object.keys(value).filter((k) => /xifra|e2ee|clau/i.test(k))).toEqual([]);
+  // P1-12 pas 17 (D-09) · L'oblit en eixir: null, false i un reintent que no toca res
+  expect(value.oblitXat).toBeNull();
+  expect(value.oblitXatFallit).toBe(false);
+  await expect(value.reintentaOblitXat()).resolves.toBeNull();
+  expect(document.querySelector('dialog')).toBeNull();
   // Renovació de JWT, canvi d’actor i A→B→A: res de nou passa pel xifratge
   m.session = { ...m.session, generacio: 2 }; v.rerender(arbre());
   m.actorKey = `entitat::${B}`; v.rerender(arbre());
@@ -69,4 +76,29 @@ test('useXifratXat amb el flag real: callback estable, retorna null, no consulta
   expect(m.clausDelContextXat).not.toHaveBeenCalled();
   expect(m.getBackendImplementation).not.toHaveBeenCalled();
   expect(sorollE2EE()).toEqual([]);
+});
+
+/* P1-12 pas 17 (D-09) · Ni una marca d'OBLIT_FALLIT d'una altra sessió a la capa
+   efímera (recàrrega després d'eixir) fa res amb la bandera apagada: ni la
+   llig, ni l'esborra, ni pinta l'avís, ni toca el port. */
+test('XatProvider amb el flag real i una marca d’oblit pendent: cap avís, cap lectura, cap crida', async () => {
+  const marca = [{ ci: JSON.stringify(['supabase', CONFIG.supabaseUrl, A]), mantenSessio: false, pendents: ['indexeddb'], quanMs: 1 }];
+  setEfimer(CLAU_OBLITS_PENDENTS, marca);
+  try {
+    m.session = { currentUser: null, generacio: 2, estat: 'fora' };
+    const v = render(arbre());
+    await waitFor(() => expect(value.status).toBe('ready'));
+    expect(value.oblitXat).toBeNull();
+    expect(value.oblitXatFallit).toBe(false);
+    await expect(value.reintentaOblitXat()).resolves.toBeNull();
+    expect(document.querySelector('dialog')).toBeNull();
+    expect(v.container.innerHTML).toBe('');
+    v.unmount();
+    expect(getEfimer(CLAU_OBLITS_PENDENTS, null)).toEqual(marca);
+    expect(m.getBackendImplementation).not.toHaveBeenCalled();
+    expect(globalThis.indexedDB.open).not.toHaveBeenCalled();
+    expect(sorollE2EE()).toEqual([]);
+  } finally {
+    delEfimer(CLAU_OBLITS_PENDENTS);
+  }
 });

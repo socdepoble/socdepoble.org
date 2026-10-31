@@ -29,11 +29,12 @@ const MIDA_MAX_PUBLICA = 5242880;
    cap fetch propi (config.js): una pujada, una URL signada o un llistat que
    no tornaven deixaven la vista «carregant» indefinidament. El patró de CUR-02
    (ambSenyal, xat.js) i de la fitxa pública (perfils.js): la cursa allibera
-   qui espera encara que el transport no sàpia avortar, i on storage-js accepta
-   un senyal (download i list) el termini també talla la petició. Una pujada
-   creix amb la mida (tempsLimitPujada, la regla dels adjunts del xat); una
-   baixada no la sap abans i pren la del fitxer més gran que admet el bucket
-   privat. La resta són respostes curtes: 12 s, com request() (runtime.js).
+   qui espera encara que el transport no sàpia avortar, i el termini també
+   talla la petició: download i list reben el senyal per l'API de storage-js,
+   i upload, createSignedUrl i remove pel fetch de la seua instància (P1-27,
+   ambSenyalDelTermini). Una pujada creix amb la mida (tempsLimitPujada, la
+   regla dels adjunts del xat); una baixada no la sap abans i pren la del
+   fitxer més gran que admet el bucket privat. La resta són respostes curtes: 12 s, com request() (runtime.js).
    El temps esgotat porta el codi neutral de «no ha arribat al servidor»: és
    el que la persona pot fer (comprovar la connexió i tornar-ho a provar), i
    errorDeStorage el traduïx amb la frase de sempre. */
@@ -52,6 +53,28 @@ function ambTermini(ms, feina) {
      un resultat tardà queda consumit per la cursa. */
   return Promise.race([Promise.resolve().then(() => feina(controlador.signal)), tallada])
     .finally(() => clearTimeout(perTermini));
+}
+
+/* P1-27 (C2120-03, G2120-06) · storage-js 2.112.4 no accepta cap senyal a
+   upload, createSignedUrl ni remove: el termini alliberava qui esperava, però
+   la petició continuava viva per davall. Cada `storage.from(cubell)` és una
+   instància nova (StorageClient.from) que fa totes les seues peticions amb el
+   seu `fetch`; ací, només en eixa instància, el fetch porta el senyal del
+   termini. El client compartit i les altres crides no el veuen. Si l'SDK ja
+   hi posa un senyal (download, list), mana el seu. Si una versió futura no
+   exposa `fetch` a la instància, es queda com abans: la cursa continua
+   alliberant qui espera (storage.termini.test.js ho vigila amb l'SDK real).
+   Avortar una pujada o un esborrat que el servidor ja havia rebut no el desfà:
+   és igual que abans del canvi, i la reconciliació és decisió pendent. */
+function ambSenyalDelTermini(cubell, signal) {
+  const base = cubell?.fetch;
+  if (typeof base !== 'function') return cubell;
+  try {
+    cubell.fetch = (url, init) => base(url, init?.signal ? init : { ...init, signal });
+  } catch {
+    /* Una instància tancada (un doble congelat): com abans. */
+  }
+  return cubell;
 }
 
 /* Un UUID de poble o d'usuari (uploadToStorage i la biblioteca de fotos pròpies). */
@@ -239,7 +262,7 @@ function diagnosiDeStorage(error) {
 export const uploadFile = async (bucket, path, file, config = {}) => {
   try {
     const supabase = await getClient(config);
-    return await ambTermini(tempsLimitPujada(file?.size), () => supabase.storage.from(bucket).upload(path, file));
+    return await ambTermini(tempsLimitPujada(file?.size), (signal) => ambSenyalDelTermini(supabase.storage.from(bucket), signal).upload(path, file));
   } catch (error) {
     return handleError(error);
   }
@@ -272,7 +295,7 @@ export const deleteFile = async (bucket, pathOrPaths, config = {}) => {
   try {
     const supabase = await getClient(config);
     const paths = Array.isArray(pathOrPaths) ? pathOrPaths : [pathOrPaths];
-    return await ambTermini(TEMPS_STORAGE_MS, () => supabase.storage.from(bucket).remove(paths));
+    return await ambTermini(TEMPS_STORAGE_MS, (signal) => ambSenyalDelTermini(supabase.storage.from(bucket), signal).remove(paths));
   } catch (error) {
     return handleError(error);
   }
@@ -332,7 +355,7 @@ export const uploadToStorage = async (fitxer, { carpeta = 'general', tenantId } 
      traducció que un rebuig: la vista diu el motiu pel codi, mai un error cru. */
   let error;
   try {
-    ({ error } = await ambTermini(tempsLimitPujada(fitxer.size), () => client.storage.from(bucket).upload(ruta, fitxer, { upsert: false })));
+    ({ error } = await ambTermini(tempsLimitPujada(fitxer.size), (signal) => ambSenyalDelTermini(client.storage.from(bucket), signal).upload(ruta, fitxer, { upsert: false })));
   } catch (excepcio) {
     error = excepcio;
   }
@@ -391,7 +414,7 @@ export const resolveAsset = async (ref, config = {}) => {
     let data;
     let error;
     try {
-      ({ data, error } = await ambTermini(TEMPS_STORAGE_MS, () => supabase.storage.from(bucket).createSignedUrl(path, 3600)));
+      ({ data, error } = await ambTermini(TEMPS_STORAGE_MS, (signal) => ambSenyalDelTermini(supabase.storage.from(bucket), signal).createSignedUrl(path, 3600)));
     } catch (excepcio) {
       error = excepcio;
     }
@@ -642,7 +665,7 @@ export const esborraElMeuMitja = async (ref, config = {}) => {
   let error;
   try {
     const cubell = (await getClient(config)).storage.from(CUBELL_PUBLIC);
-    ({ data, error } = await ambTermini(TEMPS_STORAGE_MS, () => cubell.remove([ruta])));
+    ({ data, error } = await ambTermini(TEMPS_STORAGE_MS, (signal) => ambSenyalDelTermini(cubell, signal).remove([ruta])));
   } catch (excepcio) {
     error = excepcio;
   }

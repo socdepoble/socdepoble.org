@@ -13,7 +13,7 @@
    la seua regla cobrisca totes les rutes, que siga idèntica a la de
    vercel.json, que cap capçalera estrenga la meta i que el servidor de
    desenvolupament només hi pose frame-ancestors. */
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { describe, expect, test } from 'vitest';
 import ca from '../../../config/idiomes/ca.js';
@@ -50,8 +50,13 @@ describe('i18n dels adjunts', () => {
 });
 
 describe('Pedra Seca i Shadow DOM', () => {
-  const css = llig('src/sections/xat/components/AdjuntXat.css');
-  const canonics = [css, llig('src/css/modules.css'), llig('src/css/components.css')].join('\n');
+  /* tractor-vocabulari (ordre del Mestre, 261030) · El full dels adjunts és el
+     bloc AdjuntXat de src/css/modules.css, entre les seues marques. */
+  const moduls = llig('src/css/modules.css');
+  const inici = moduls.indexOf('/* ═══ BLOC AdjuntXat · ');
+  const fi = moduls.indexOf('/* ═══ FI DEL BLOC AdjuntXat ═══ */');
+  const css = inici >= 0 && fi > inici ? moduls.slice(inici, fi) : '';
+  const canonics = [css, moduls, llig('src/css/components.css')].join('\n');
   test('cada classe del JSX és declarada', () => {
     const classes = new Set(FONTS.flatMap((f) => [...llig(f).matchAll(/className="([^"]*)"/g)].flatMap((m) => m[1].split(/\s+/))).filter(Boolean));
     const orfes = [...classes].filter((c) => !new RegExp(`\\.${c.replace(/[-_]/g, '\\$&')}(?![\\w-])`).test(canonics));
@@ -62,8 +67,14 @@ describe('Pedra Seca i Shadow DOM', () => {
     for (const f of FONTS) expect(llig(f)).not.toMatch(/\sstyle=\{|import\s+[^;]*\.css['"]/);
   });
   test('el full viatja dins del CSS compartit que la SPA i l’encastat injecten', () => {
-    expect(llig('src/css/index.css')).toMatch(/@import url\('\.\.\/sections\/xat\/components\/AdjuntXat\.css'\);/);
-    expect(css.trimStart().startsWith('@layer components')).toBe(true);
+    /* Un sol bloc, dins de modules.css, que index.css importa sense layer(). */
+    expect(inici).toBeGreaterThan(-1);
+    expect(fi).toBeGreaterThan(inici);
+    expect(moduls.split('/* ═══ BLOC AdjuntXat · ')).toHaveLength(2);
+    expect(llig('src/css/index.css')).toMatch(/@import url\('\.\/modules\.css'\);/);
+    expect(llig('src/css/index.css')).not.toMatch(/AdjuntXat\.css/);
+    expect(existsSync(resolve(process.cwd(), 'src/sections/xat/components/AdjuntXat.css'))).toBe(false);
+    expect(css.replace(/\/\*[\s\S]*?\*\//g, '').trimStart().startsWith('@layer components')).toBe(true);
   });
 });
 

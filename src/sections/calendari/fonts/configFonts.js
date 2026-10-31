@@ -126,6 +126,18 @@ function fontDeLaConfiguracio(cru, index) {
   return { font: { id, nom, calendarId, compte, colorToken: cru.colorToken ?? null, activa: cru.activa !== false } };
 }
 
+/* Gauntlet c3 (vapid-detector-cec-al-build-real) · Només les dues claus que
+   es lligen, mai import.meta.env sencer: Vite incrustaria al bundle totes les
+   VITE_* de l'entorn, també una privada mal anomenada. Fora de Vite (node
+   --test) import.meta.env no existix i el try/catch ho tolera (versio.js). */
+function entornDeFonts() {
+  try {
+    return { VITE_GOOGLE_OAUTH_CLIENT_ID: import.meta.env.VITE_GOOGLE_OAUTH_CLIENT_ID, VITE_GCAL_FONTS: import.meta.env.VITE_GCAL_FONTS };
+  } catch {
+    return {};
+  }
+}
+
 /**
  * La configuració: { configurades, motiu, clientId, redirectUri, fonts, avisos }.
  * Cada font és { id, nom, calendarId, compte, colorToken, activa }; el color
@@ -135,7 +147,7 @@ function fontDeLaConfiguracio(cru, index) {
  * `incrustada` i `retorn` (l'adreça declarada per l'amfitrió) es lligen de
  * l'entorn si no es passen: adrecaDeRetornGoogle.
  */
-export function llegixConfigFonts(env = import.meta.env || {}, {
+export function llegixConfigFonts(env = entornDeFonts(), {
   origen = globalThis.location?.origin, incrustada = esIncrustada(), retorn = retornDeclaratPerLAmfitrio()
 } = {}) {
   const clientId = textONull(env.VITE_GOOGLE_OAUTH_CLIENT_ID);
@@ -177,7 +189,7 @@ export const fontsGoogleConfigurades = (env, opcions) => llegixConfigFonts(env, 
 /* La configuració de l'entorn, memoritzada pels valors crus: el mateix
    objecte mentre no canvien (els hooks en depenen sense tornar a llegir). */
 let memoria = null;
-export function configFontsDeLEntorn(env = import.meta.env || {}, {
+export function configFontsDeLEntorn(env = entornDeFonts(), {
   origen = globalThis.location?.origin, incrustada = esIncrustada(), retorn = retornDeclaratPerLAmfitrio()
 } = {}) {
   const clau = [env.VITE_GOOGLE_OAUTH_CLIENT_ID ?? '', env.VITE_GCAL_FONTS ?? '', origen ?? '', incrustada ? 'incrustada' : 'propia', String(retorn ?? '')].join('\n');

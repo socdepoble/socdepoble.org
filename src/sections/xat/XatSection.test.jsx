@@ -261,13 +261,22 @@ function ambComunitat() {
 
 /* P1-36 (decisió 3 del Mestre, 261028) · La cerca de la llista viu darrere
    de la lupa de la fila de títol: obrir-la torna el camp, ja enfocat. Els
-   filtres de la llista són píndoles (aria-pressed) d'un grup amb nom. */
+   filtres de la llista són píndoles (aria-pressed) d'un grup amb nom.
+   Ordre 0 (Mestre, 261030 03:49) · Les píndoles viuen dins del desplegament
+   de la lupa: amb la lupa plegada i «Tot», cap barra. */
 function obriCerca() {
   fireEvent.click(screen.getByRole('button', { name: 'Cerca converses' }));
   return screen.getByRole('searchbox', { name: 'Cerca converses' });
 }
 const pindoles = () => screen.getByRole('group', { name: 'Filtra les converses' });
+const capPindola = () => expect(screen.queryByRole('group', { name: 'Filtra les converses' })).toBeNull();
 const triaFiltre = (nom) => fireEvent.click(within(pindoles()).getByRole('button', { name: nom }));
+/* Plega la lupa amb el seu botó (si és oberta, la buida i la plega). */
+const plegaLupa = () => {
+  const lupa = screen.getByRole('button', { name: 'Cerca converses' });
+  if (lupa.getAttribute('aria-expanded') === 'true') fireEvent.click(lupa);
+  return lupa;
+};
 
 test('selecció en ordre i navegació després de confirmar', async () => {
   let resolve;
@@ -388,7 +397,10 @@ test('Decisió 1 · una renovació del JWT (scopeKey nou, mateix ambitEstable) n
 /* P1-36 (decisió 3 del Mestre, 261028; deroga el desplegable de T12,
    260927, i de 261026_2126): els quatre filtres són una fila horitzontal de
    píndoles, un grup amb nom i un botó amb aria-pressed per filtre. Filtren
-   igual que abans i la premuda és la triada; cap menú. */
+   igual que abans i la premuda és la triada; cap menú.
+   Ordre 0 (Mestre, 261030 03:49) · S'hi arriba obrint la lupa: triar-ne una
+   amb la llista de filtres de la cerca a la vista torna la llista de
+   converses, ja filtrada. */
 test('P1-36 · els filtres Tot · No llegits · Preferits · Grups són píndoles amb aria-pressed i filtren de veres', () => {
   mocks.threadId = null;
   render(<XatSection />);
@@ -396,6 +408,9 @@ test('P1-36 · els filtres Tot · No llegits · Preferits · Grups són píndole
   expect(screen.getByText('Adeu')).toBeTruthy();
   expect(screen.queryByRole('menu')).toBeNull();
   expect(screen.queryByRole('menuitemradio')).toBeNull();
+  capPindola();
+  obriCerca();
+  expect(screen.getByRole('list', { name: 'Filtres de cerca' })).toBeTruthy();
   const grup = pindoles();
   expect(grup.classList.contains('sdp-xat-pindoles')).toBe(true);
   const premudes = () => within(grup).getAllByRole('button').map((b) => [b.textContent, b.getAttribute('aria-pressed')]);
@@ -407,6 +422,7 @@ test('P1-36 · els filtres Tot · No llegits · Preferits · Grups són píndole
   }
 
   triaFiltre('No llegits');
+  expect(screen.queryByRole('list', { name: 'Filtres de cerca' })).toBeNull();
   expect(screen.getByText('Hola')).toBeTruthy();
   expect(screen.queryByText('Adeu')).toBeNull();
   expect(premudes()).toEqual([['Tot', 'false'], ['No llegits', 'true'], ['Preferits', 'false'], ['Grups', 'false']]);
@@ -424,49 +440,238 @@ test('P1-36 · els filtres Tot · No llegits · Preferits · Grups són píndole
   expect(screen.getByText('Hola')).toBeTruthy();
   expect(screen.getByText('Adeu')).toBeTruthy();
   expect(premudes()[0]).toEqual(['Tot', 'true']);
+  /* Ordre 0 · Amb «Tot» i la lupa plegada, la barra se'n va. */
+  plegaLupa();
+  capPindola();
+  expect(screen.getByText('Hola')).toBeTruthy();
 });
 
 /* P1-36 · Obrir i plegar la cerca no toca la píndola triada: en tornar, la
-   fila de control diu el filtre que continua aplicat a la llista. */
+   fila de control diu el filtre que continua aplicat a la llista.
+   Ordre 0 (Mestre, 261030 03:49) · Un filtre diferent de «Tot» manté les
+   píndoles a la vista amb la lupa plegada, perquè es veja i es puga
+   desactivar: cap estat perdut. */
 test('P1-36 · la píndola triada sobreviu a obrir i plegar la cerca', () => {
   mocks.threadId = null;
   render(<XatSection />);
-  triaFiltre('No llegits');
   const cerca = obriCerca();
-  expect(screen.queryByRole('group', { name: 'Filtra les converses' })).toBeNull();
+  triaFiltre('No llegits');
   fireEvent.keyDown(cerca, { key: 'Escape' });
+  expect(cerca.isConnected).toBe(false);
   expect(within(pindoles()).getByRole('button', { name: 'No llegits' }).getAttribute('aria-pressed')).toBe('true');
   expect(screen.queryByText('Adeu')).toBeNull();
+  /* Tornar a obrir la lupa no la canvia: les mateixes píndoles, davall del camp. */
+  obriCerca();
+  expect(within(pindoles()).getByRole('button', { name: 'No llegits' }).getAttribute('aria-pressed')).toBe('true');
+  plegaLupa();
+  expect(within(pindoles()).getByRole('button', { name: 'No llegits' }).getAttribute('aria-pressed')).toBe('true');
 });
 
-/* P1-36 (revisió adversarial) · Amb la lupa oberta, les píndoles no es
-   veuen: la llista que torna quan el camp perd el focus (el teclat del mòbil
-   plegat, un clic a la conversa) és sencera i no la retalla un filtre que no
-   és enlloc, ni diu «amb este filtre». En plegar la cerca, la píndola triada
-   torna a manar. */
-test('P1-36 · amb la lupa oberta, cap píndola amagada no retalla la llista ni l’estat buit', () => {
+/* P1-36 (revisió adversarial) · La llista que torna quan el camp perd el
+   focus (el teclat del mòbil plegat, un clic a la conversa) no la retalla un
+   filtre que no és enlloc. Ordre 0 (Mestre, 261030 03:49) · Amb la lupa
+   oberta, les píndoles són a la vista davall del camp: la triada mana sobre
+   la llista i sobre l'estat buit, com amb la lupa plegada. */
+test('Ordre 0 · amb la lupa oberta, la píndola triada és a la vista i retalla la llista i l’estat buit', () => {
   mocks.threadId = null;
   const view = render(<XatSection />);
+  obriCerca();
   triaFiltre('No llegits');
+  plegaLupa();
   expect(screen.queryByText('Adeu')).toBeNull();
   const cerca = obriCerca();
   fireEvent.blur(cerca);
   expect(cerca.isConnected).toBe(true);
+  expect(within(pindoles()).getByRole('button', { name: 'No llegits' }).getAttribute('aria-pressed')).toBe('true');
   expect(screen.getByText('Hola')).toBeTruthy();
-  expect(screen.getByText('Adeu')).toBeTruthy();
+  expect(screen.queryByText('Adeu')).toBeNull();
   fireEvent.keyDown(cerca, { key: 'Escape' });
   expect(within(pindoles()).getByRole('button', { name: 'No llegits' }).getAttribute('aria-pressed')).toBe('true');
   expect(screen.queryByText('Adeu')).toBeNull();
   view.unmount();
 
-  /* Sense cap no llegit: el filtre buida la llista, i la cerca oberta no
-     parla d'un filtre que no es veu. */
+  /* Sense cap no llegit: el filtre buida la llista, i la cerca oberta diu el
+     mateix, amb la píndola premuda a la vista. */
   mocks.threads = filsDeMostra().map((f) => ({ ...f, noLlegits: 0 }));
   render(<XatSection />);
+  obriCerca();
   triaFiltre('No llegits');
+  plegaLupa();
   expect(screen.getByText('Cap conversa amb este filtre.')).toBeTruthy();
   fireEvent.blur(obriCerca());
-  expect(screen.queryByText('Cap conversa amb este filtre.')).toBeNull();
+  expect(screen.getByText('Cap conversa amb este filtre.')).toBeTruthy();
+  expect(within(pindoles()).getByRole('button', { name: 'No llegits' }).getAttribute('aria-pressed')).toBe('true');
+});
+
+/* Cicle 4 (auditoria matinal 261030_1217, MITJÀ-01) · Amb un terme, la
+   píndola triada també mana (Ordre 0: és a la vista, davall del camp): les
+   converses i els missatges trobats són només dels fils que passen el filtre,
+   amb la regla de la llista (una comunitat és un grup), i el padró, que no
+   porta cap conversa, no hi dona persones. Amb «Tot», tot com abans. */
+test('MITJÀ-01 · la cerca respecta la píndola triada: converses, missatges i persones', async () => {
+  mocks.threadId = null;
+  ambComunitat();
+  mocks.members.mockResolvedValue([{ usuari_id: 'u-conxa', nom: 'Conxa' }]);
+  const nomsDelGrup = (titol) => {
+    const capcalera = screen.queryByRole('heading', { name: titol });
+    return capcalera ? [...capcalera.closest('section').querySelectorAll('.sdp-xat-fila__nom')].map((n) => n.textContent) : [];
+  };
+  render(<XatSection />);
+  const cerca = obriCerca();
+  fireEvent.change(cerca, { target: { value: 'con' } });
+  expect(await screen.findByText('Conxa')).toBeTruthy();
+  expect(nomsDelGrup('Converses')).toEqual(['Conversa']);
+  expect(nomsDelGrup('Persones')).toEqual(['Conxa']);
+
+  triaFiltre('Preferits');
+  expect(within(pindoles()).getByRole('button', { name: 'Preferits' }).getAttribute('aria-pressed')).toBe('true');
+  expect(nomsDelGrup('Converses')).toEqual([]);
+  expect(nomsDelGrup('Persones')).toEqual([]);
+  /* F4 (D.3) · Buida només per la píndola: ho diu (vegeu la prova F4 D.3).
+     Gauntlet F4 · El text és dos voltes al DOM: el visible i el de la zona
+     viva, que és la que es llig ací. */
+  expect(within(screen.getByRole('region', { name: 'Resultats de la cerca' })).getByRole('status').textContent)
+    .toBe('Cap resultat amb el filtre «Preferits». Hi ha 2 resultats a «Tot».');
+
+  triaFiltre('No llegits');
+  expect(nomsDelGrup('Converses')).toEqual(['Conversa']);
+  expect(nomsDelGrup('Persones')).toEqual([]);
+
+  /* «Grups»: la comunitat i els seus grups i canals, mai la conversa directa,
+     ni entre els missatges. */
+  triaFiltre('Grups');
+  fireEvent.change(cerca, { target: { value: 'o' } });
+  const converses = nomsDelGrup('Converses');
+  expect(converses).toContain('Sóc de Poble, Comunitat');
+  expect(converses.some((nom) => nom.startsWith('Conversa'))).toBe(false);
+  const missatges = nomsDelGrup('Missatges');
+  expect(missatges.length).toBeGreaterThan(0);
+  expect(missatges.some((nom) => nom.startsWith('Conversa'))).toBe(false);
+
+  triaFiltre('Tot');
+  expect(nomsDelGrup('Converses').some((nom) => nom.startsWith('Conversa'))).toBe(true);
+  expect(nomsDelGrup('Missatges').some((nom) => nom.startsWith('Conversa'))).toBe(true);
+});
+
+/* F4 (D.3, ordre del Mestre del 261030) · Amb una píndola que no és «Tot»,
+   un terme que només casa amb el que amaga la píndola no diu «Cap resultat
+   per a…»: diu el filtre i quants resultats hi ha a «Tot» (els mateixos fils
+   i el mateix padró), i porta un botó que hi torna; el botó es desmunta i el
+   focus va a la píndola «Tot», ara premuda. Un terme que no casa enlloc
+   continua amb l'estat buit de sempre, sense botó. */
+test('F4 D.3 · la cerca buida només per la píndola ho diu, compta «Tot» i hi torna', async () => {
+  mocks.threadId = null;
+  mocks.members.mockResolvedValue([{ usuari_id: 'u-conxa', nom: 'Conxa' }]);
+  render(<XatSection />);
+  const cerca = obriCerca();
+  const regio = () => screen.getByRole('region', { name: 'Resultats de la cerca' });
+  fireEvent.change(cerca, { target: { value: 'con' } });
+  expect(await screen.findByText('Conxa')).toBeTruthy();
+  const filesATot = regio().querySelectorAll('li').length;
+  expect(filesATot).toBe(2);
+
+  triaFiltre('Preferits');
+  expect(regio().querySelectorAll('li')).toHaveLength(0);
+  expect(within(regio()).getByRole('status').textContent).toBe(`Cap resultat amb el filtre «Preferits». Hi ha ${filesATot} resultats a «Tot».`);
+  expect(screen.queryByText('Cap resultat per a «con».')).toBeNull();
+  const torna = within(regio()).getByRole('button', { name: 'Torna a «Tot»' });
+  /* Gauntlet F4 · La zona viva és la mateixa abans i després de tornar. */
+  const zona = within(regio()).getByRole('status');
+  torna.focus();
+  fireEvent.click(torna);
+  const tot = within(pindoles()).getByRole('button', { name: 'Tot' });
+  expect(tot.getAttribute('aria-pressed')).toBe('true');
+  expect(document.activeElement).toBe(tot);
+  expect(regio().querySelectorAll('li')).toHaveLength(filesATot);
+  expect(screen.queryByRole('button', { name: 'Torna a «Tot»' })).toBeNull();
+  expect(within(regio()).getByRole('status')).toBe(zona);
+  expect(zona.textContent).toBe(`Hi ha ${filesATot} resultats a «Tot».`);
+  expect(cerca.isConnected).toBe(true);
+  expect(cerca.value).toBe('con');
+
+  /* Un sol resultat a «Tot»: el singular. */
+  triaFiltre('Grups');
+  fireEvent.change(cerca, { target: { value: 'conxa' } });
+  expect(within(regio()).getByRole('status').textContent).toBe('Cap resultat amb el filtre «Grups». Hi ha 1 resultat a «Tot».');
+
+  /* Res enlloc: l'estat buit de sempre i cap botó. */
+  fireEvent.change(cerca, { target: { value: 'zzz' } });
+  expect(within(regio()).getByRole('status').textContent).toBe('Cap resultat per a «zzz».');
+  expect(within(regio()).queryByRole('button')).toBeNull();
+});
+
+/* Tancament 10/10 (cicle 4, xat-cerca-pindola-fills-de-comunitat) · La
+   comunitat no té missatges propis: amb «Preferits», una comunitat preferida
+   porta a la cerca els missatges dels seus grups i canals, encara que cap no
+   siga preferit sol (la llista ja en mostra la fila). Un canal preferit no
+   fa preferits els germans, i amb «No llegits» un canal llegit d'una
+   comunitat preferida no hi entra. */
+test('MITJÀ-01 · amb «Preferits», la cerca entra als grups i canals d’una comunitat preferida', () => {
+  mocks.threadId = null;
+  const ambPreferits = (ids, llegits = []) => {
+    ambComunitat();
+    mocks.threads = mocks.threads.map((f) => ({ ...f, preferit: ids.includes(f.id), ...(llegits.includes(f.id) ? { noLlegits: 0 } : {}) }));
+    mocks.comunitats = agrupaComunitats(mocks.threads);
+  };
+  const filsAmbMissatges = () => {
+    const capcalera = screen.queryByRole('heading', { name: 'Missatges' });
+    const noms = capcalera ? [...capcalera.closest('section').querySelectorAll('.sdp-xat-fila__nom')].map((n) => n.textContent) : [];
+    return ['Conversa', 'Altra', 'Avisos', 'General'].filter((nom) => noms.some((n) => n.includes(nom)));
+  };
+  const cercaAmbPreferits = () => {
+    const cerca = obriCerca();
+    triaFiltre('Preferits');
+    fireEvent.change(cerca, { target: { value: 'segon' } });
+  };
+
+  ambPreferits(['b', 'c-1'], ['a-1']);
+  const view = render(<XatSection />);
+  cercaAmbPreferits();
+  expect(filsAmbMissatges()).toEqual(['Altra', 'Avisos', 'General']);
+  triaFiltre('No llegits');
+  expect(filsAmbMissatges()).toEqual(['Conversa', 'General']);
+  view.unmount();
+
+  ambPreferits(['b', 'g-1']);
+  render(<XatSection />);
+  cercaAmbPreferits();
+  expect(filsAmbMissatges()).toEqual(['Altra', 'General']);
+});
+
+/* Ordre 0 (Mestre, 261030 03:49) · Estalvi de la barra: plegada i amb «Tot»,
+   la llista comença davall de la fila de títol. Un altre filtre la manté fins
+   que es torna a «Tot»; llavors la barra es desmunta i el focus, que era a la
+   píndola, torna a la lupa (no cau a <body>). Amb la lupa oberta, els filtres
+   arriben amb el teclat després del camp i del ⊗. */
+test('Ordre 0 · sense lupa i amb «Tot», cap barra de píndoles; «Tot» amb la lupa plegada la lleva i el focus va a la lupa', () => {
+  mocks.threadId = null;
+  render(<XatSection />);
+  const columna = document.getElementById('app-grid-list').querySelector('.sdp-workspace-column');
+  const filesDeLaColumna = () => [...columna.children].map((n) => n.classList[0]);
+  expect(filesDeLaColumna()).toEqual(['app-grid-col-header', 'sdp-workspace-column__body', 'sdp-dialeg']);
+  capPindola();
+
+  const cerca = obriCerca();
+  expect(filesDeLaColumna()).toEqual(['app-grid-col-header', 'sdp-xat-cerca', 'sdp-xat-pindoles', 'sdp-workspace-column__body', 'sdp-dialeg']);
+  const tanca = screen.getByRole('button', { name: 'Tanca la cerca' });
+  const botons = within(pindoles()).getAllByRole('button');
+  const tabulables = [...columna.querySelectorAll('button, input')].filter((el) => !el.disabled && el.tabIndex >= 0);
+  const desDelCamp = tabulables.indexOf(cerca);
+  expect(tabulables.slice(desDelCamp, desDelCamp + 6)).toEqual([cerca, tanca, ...botons]);
+
+  triaFiltre('Preferits');
+  fireEvent.keyDown(cerca, { key: 'Escape' });
+  const lupa = screen.getByRole('button', { name: 'Cerca converses' });
+  expect(lupa.getAttribute('aria-expanded')).toBe('false');
+  expect(filesDeLaColumna()).toEqual(['app-grid-col-header', 'sdp-xat-pindoles', 'sdp-workspace-column__body', 'sdp-dialeg']);
+  expect(screen.queryByText('Hola')).toBeNull();
+
+  const tot = within(pindoles()).getByRole('button', { name: 'Tot' });
+  act(() => tot.focus());
+  fireEvent.click(tot);
+  capPindola();
+  expect(filesDeLaColumna()).toEqual(['app-grid-col-header', 'sdp-workspace-column__body', 'sdp-dialeg']);
+  expect(document.activeElement).toBe(lupa);
   expect(screen.getByText('Hola')).toBeTruthy();
   expect(screen.getByText('Adeu')).toBeTruthy();
 });
@@ -926,16 +1131,18 @@ test('el drag parteix de l’amplària visible quan la desada supera l’espai d
    inventat de l'esquerra (MenuLlista): la selecció de xats s'obri amb la
    pulsació llarga.
    P1-36 (decisió 3 del Mestre, 261028; deroga el desplegable de filtres de
-   T12 i de 261026_2126) · La fila de control són les píndoles Tot · No
-   llegits · Preferits · Grups; amb la lupa oberta, la cerca en píndola n'ocupa
-   el lloc: una sola fila, mai dues. */
-test('la llista seguix el patró de missatgeria: títol sense «…», lupa i «+» a la dreta, píndoles o cerca a la mateixa fila i llista', () => {
+   T12 i de 261026_2126) · Amb la lupa oberta, la cerca en píndola davall del
+   títol. Ordre 0 (Mestre, 261030 03:49; deroga «una sola fila, mai dues») ·
+   Les píndoles Tot · No llegits · Preferits · Grups viuen dins del
+   desplegament de la lupa, davall del camp; plegada i amb «Tot», cap fila de
+   control: la llista comença davall del títol. */
+test('la llista seguix el patró de missatgeria: títol sense «…», lupa i «+» a la dreta, cerca i píndoles dins de la lupa i llista', () => {
   mocks.threadId = null;
   render(<XatSection />);
   const columna = document.getElementById('app-grid-list').querySelector('.sdp-workspace-column');
   const filesDeLaColumna = () => [...columna.children].map((n) => n.classList[0]);
   expect(filesDeLaColumna()).toEqual([
-    'app-grid-col-header', 'sdp-xat-pindoles', 'sdp-workspace-column__body', 'sdp-dialeg'
+    'app-grid-col-header', 'sdp-workspace-column__body', 'sdp-dialeg'
   ]);
   expect(columna.querySelector('dialog.sdp-dialeg').hasAttribute('open')).toBe(false);
   const fila = columna.firstElementChild;
@@ -961,16 +1168,17 @@ test('la llista seguix el patró de missatgeria: títol sense «…», lupa i «
   /* El «⋯» de la conversa oberta és un altre menú: ací no n'hi ha. */
   expect(screen.queryByRole('button', { name: 'Opcions de la conversa' })).toBeNull();
 
-  /* Plegada, cap camp de cerca ni icona de filtre: les píndoles. */
+  /* Plegada, cap camp de cerca, cap icona de filtre ni cap píndola. */
   expect(columna.querySelector('input[type="search"]')).toBeNull();
   expect(columna.querySelector('.sdp-xat-filtre, svg.lucide-list-filter')).toBeNull();
-  expect(within(pindoles()).getAllByRole('button').map((b) => b.textContent)).toEqual(['Tot', 'No llegits', 'Preferits', 'Grups']);
+  expect(columna.querySelector('.sdp-xat-pindoles')).toBeNull();
 
-  /* Oberta, la cerca ocupa el lloc de les píndoles, a la mateixa fila. */
+  /* Oberta, la cerca davall del títol i, davall, les píndoles. */
   fireEvent.click(lupa);
   expect(filesDeLaColumna()).toEqual([
-    'app-grid-col-header', 'sdp-xat-cerca', 'sdp-workspace-column__body', 'sdp-dialeg'
+    'app-grid-col-header', 'sdp-xat-cerca', 'sdp-xat-pindoles', 'sdp-workspace-column__body', 'sdp-dialeg'
   ]);
+  expect(within(pindoles()).getAllByRole('button').map((b) => b.textContent)).toEqual(['Tot', 'No llegits', 'Preferits', 'Grups']);
   const cerca = columna.querySelector('.sdp-xat-cerca');
   expect([...cerca.children].map((n) => n.classList[0])).toEqual(['sdp-xat-cerca__camp']);
   expect(cerca.querySelector('.sdp-xat-cerca__camp input[type="search"]')).not.toBeNull();
@@ -994,13 +1202,18 @@ test('P1-36 · la lupa obri la cerca amb el focus al camp; Escape amb el camp bu
   expect(lupa.getAttribute('aria-expanded')).toBe('true');
   const cerca = screen.getByRole('searchbox', { name: 'Cerca converses' });
   expect(document.activeElement).toBe(cerca);
-  const controlat = document.getElementById(lupa.getAttribute('aria-controls'));
+  /* Gauntlet 261030 (cicle 3) · aria-controls anomena el camp i la fila de
+     píndoles: totes dues són del desplegament (Ordre 0). */
+  const [controlat, controlatPindoles] = lupa.getAttribute('aria-controls').split(' ').map((id) => document.getElementById(id));
   expect(controlat.classList.contains('sdp-xat-cerca')).toBe(true);
   expect(controlat.contains(cerca)).toBe(true);
+  expect(controlatPindoles).toBe(pindoles());
   /* Amb el focus i el camp buit, la llista vertical de filtres (T69); el ⊗
      hi és sempre amb la cerca oberta. */
   expect(screen.getByRole('list', { name: 'Filtres de cerca' })).toBeTruthy();
   expect(screen.getByRole('button', { name: 'Tanca la cerca' })).toBeTruthy();
+  /* Ordre 0 (Mestre, 261030 03:49) · I les píndoles, dins del desplegament. */
+  expect(pindoles()).toBeTruthy();
 
   fireEvent.blur(cerca);
   expect(cerca.isConnected).toBe(true);
@@ -1012,7 +1225,8 @@ test('P1-36 · la lupa obri la cerca amb el focus al camp; Escape amb el camp bu
   expect(lupa.getAttribute('aria-expanded')).toBe('false');
   expect(lupa.hasAttribute('aria-controls')).toBe(false);
   expect(document.activeElement).toBe(lupa);
-  expect(pindoles()).toBeTruthy();
+  /* Ordre 0 · Plegada i amb «Tot», la barra se'n va amb la cerca. */
+  capPindola();
   expect(screen.getByText('Hola')).toBeTruthy();
 });
 
@@ -1053,7 +1267,71 @@ test('P1-36 · el ⊗ amb text buida i es queda; amb el camp buit plega la cerca
   expect(screen.queryByRole('button', { name: 'Tanca la cerca' })).toBeNull();
   expect(lupa.getAttribute('aria-expanded')).toBe('false');
   expect(document.activeElement).toBe(lupa);
-  expect(pindoles()).toBeTruthy();
+  /* Ordre 0 (Mestre, 261030 03:49) · Amb «Tot», cap barra amb la lupa plegada. */
+  capPindola();
+});
+
+/* Gauntlet 261030 (cicle 3, ordre0-escape-des-de-les-pindoles) · Escape des
+   de la resta del desplegament de la lupa (les píndoles, el ⊗) fa el mateix
+   que el ⊗: amb text el buida i el focus torna al camp; buit, plega la cerca
+   (ni camp ni llista de filtres de la cerca) i el focus va a la lupa, també
+   amb una píndola que es queda a la vista. Plegada, Escape a una píndola no
+   fa res. */
+test('Gauntlet 261030 · Escape des d’una píndola o del ⊗ fa el mateix que el ⊗: amb text buida i torna al camp; buit, plega i el focus va a la lupa', () => {
+  mocks.threadId = null;
+  render(<XatSection />);
+  const lupa = screen.getByRole('button', { name: 'Cerca converses' });
+  const escape = (el) => fireEvent.keyDown(el, { key: 'Escape' });
+
+  /* Buit, des de «Tot»: la llista de filtres de la cerca se'n va i torna la de converses. */
+  obriCerca();
+  const tot = within(pindoles()).getByRole('button', { name: 'Tot' });
+  act(() => tot.focus());
+  expect(screen.getByRole('list', { name: 'Filtres de cerca' })).toBeTruthy();
+  escape(tot);
+  expect(screen.queryByRole('searchbox', { name: 'Cerca converses' })).toBeNull();
+  expect(screen.queryByRole('list', { name: 'Filtres de cerca' })).toBeNull();
+  expect(lupa.getAttribute('aria-expanded')).toBe('false');
+  expect(document.activeElement).toBe(lupa);
+  capPindola();
+  expect(screen.getByText('Hola')).toBeTruthy();
+
+  /* Amb text, des d'una píndola: buida i el focus torna al camp; la cerca continua oberta. */
+  const cerca = obriCerca();
+  fireEvent.change(cerca, { target: { value: 'adeu' } });
+  const grups = within(pindoles()).getByRole('button', { name: 'Grups' });
+  act(() => grups.focus());
+  escape(grups);
+  expect(cerca.isConnected).toBe(true);
+  expect(cerca.value).toBe('');
+  expect(document.activeElement).toBe(cerca);
+  expect(lupa.getAttribute('aria-expanded')).toBe('true');
+
+  /* Buit, des del ⊗: plega i el focus va a la lupa. */
+  const tanca = screen.getByRole('button', { name: 'Tanca la cerca' });
+  act(() => tanca.focus());
+  escape(tanca);
+  expect(cerca.isConnected).toBe(false);
+  expect(document.activeElement).toBe(lupa);
+
+  /* Amb un filtre diferent de «Tot», la píndola es queda a la vista en plegar: el focus va igualment a la lupa. */
+  obriCerca();
+  triaFiltre('Preferits');
+  const preferits = within(pindoles()).getByRole('button', { name: 'Preferits' });
+  act(() => preferits.focus());
+  escape(preferits);
+  expect(lupa.getAttribute('aria-expanded')).toBe('false');
+  expect(screen.queryByRole('searchbox', { name: 'Cerca converses' })).toBeNull();
+  expect(document.activeElement).toBe(lupa);
+  expect(within(pindoles()).getByRole('button', { name: 'Preferits' }).getAttribute('aria-pressed')).toBe('true');
+
+  /* Plegada, les píndoles no són cap desplegament: Escape no obri, no buida ni canvia el filtre. */
+  const plegada = within(pindoles()).getByRole('button', { name: 'Preferits' });
+  act(() => plegada.focus());
+  escape(plegada);
+  expect(lupa.getAttribute('aria-expanded')).toBe('false');
+  expect(document.activeElement).toBe(plegada);
+  expect(plegada.getAttribute('aria-pressed')).toBe('true');
 });
 
 /* P1-36 · Plegar la cerca no conserva el terme: cap resultat amagat darrere
@@ -1230,8 +1508,9 @@ test('T68 · «Seleccionar xats» per pulsació llarga: la fila naix triada, cas
   /* «Marcar com a llegides» s'ha desmuntat: el focus torna a la fila que
      ha obert la selecció (abans, al «…»). */
   expect(document.activeElement).toBe(botoDeFila('comunitat:c-1'));
-  /* P1-36 · Torna la fila de control: les píndoles, amb la lupa plegada. */
-  expect(pindoles()).toBeTruthy();
+  /* P1-36 · Torna la fila de títol amb la lupa plegada. Ordre 0 (Mestre,
+     261030 03:49) · Amb «Tot», cap barra de píndoles. */
+  capPindola();
   expect(screen.getByRole('button', { name: 'Cerca converses' }).getAttribute('aria-expanded')).toBe('false');
 
   /* Escape també ix, sense marcar res; la fila conserva el focus. */
@@ -1394,8 +1673,12 @@ test('T67 · la comunitat és una sola fila, amb els grups de dins i la suma de 
      Poble (el subjecte és l'entitat pilot) és el PRIMER actor: va la primera,
      per damunt de «Gent de la Torre». S'actualitza a posta. */
   const files = within(llista).getAllByRole('button').filter((b) => !b.closest('.sdp-xat-llista__peu'));
-  expect(files).toHaveLength(4);
-  expect(files[1].textContent).toContain('Gent de la Torre');
+  /* P1-70 (261029) · Javi Llinares i la IAIA, sempre: dues files més entre
+     els actors (actorsDelXat.js, files de reserva). */
+  expect(files).toHaveLength(6);
+  expect(files[1].textContent).toContain('Javi Llinares');
+  expect(files[2].textContent).toContain('Gent de la Torre');
+  expect(files[3].textContent).toContain('IAIA MarIA');
   const fila = files.find((b) => b.textContent.includes('Sóc de Poble'));
   expect(files.indexOf(fila)).toBe(0);
   expect(within(fila).getByText(', Comunitat')).toBeTruthy();
@@ -1415,7 +1698,9 @@ test('T67 · la comunitat és una sola fila, amb els grups de dins i la suma de 
   expect(mocks.navigate).toHaveBeenCalledWith('/xat?comunitat=c-1');
 
   /* «Grups» inclou les comunitats. Gauntlet 261016 (Bloc 3.6) · I la fila
-     virtual de «Gent de la Torre», que és un grup (pobleAmfitrio.js). */
+     virtual de «Gent de la Torre», que és un grup (pobleAmfitrio.js).
+     Ordre 0 (Mestre, 261030 03:49) · Les píndoles, dins de la lupa. */
+  obriCerca();
   triaFiltre('Grups');
   expect(within(screen.getByRole('list', { name: 'Converses' })).getAllByRole('button')
     .filter((b) => !b.closest('.sdp-xat-llista__peu'))
@@ -1960,15 +2245,21 @@ test('T69 · els filtres de la cerca es trien amb el teclat', () => {
 
   /* P1-36 (revisió adversarial) · Tab des del camp buit no es desvia: el
      navegador passa al ⊗ i d'allí a la primera fila, i la llista no es
-     tanca pel camí. Escape hi torna. */
+     tanca pel camí. Escape hi torna. Ordre 0 (Mestre, 261030 03:49) · Pel
+     camí hi ha les quatre píndoles, davall del camp: tampoc no la tanquen. */
   const tanca = screen.getByRole('button', { name: 'Tanca la cerca' });
+  const pindolesDeLaLupa = within(pindoles()).getAllByRole('button');
   expect(fireEvent.keyDown(cerca, { key: 'Tab' })).toBe(true);
   const tabulables = [...document.getElementById('app-grid-list').querySelectorAll('button, input')]
     .filter((el) => !el.disabled && el.tabIndex >= 0);
   const desDelCamp = tabulables.indexOf(cerca);
-  expect(tabulables.slice(desDelCamp, desDelCamp + 3)).toEqual([cerca, tanca, fila('Fotos')]);
+  expect(tabulables.slice(desDelCamp, desDelCamp + 7)).toEqual([cerca, tanca, ...pindolesDeLaLupa, fila('Fotos')]);
   act(() => tanca.focus());
   expect(screen.getByRole('list', { name: 'Filtres de cerca' })).toBe(llista);
+  for (const pindola of pindolesDeLaLupa) {
+    act(() => pindola.focus());
+    expect(screen.getByRole('list', { name: 'Filtres de cerca' })).toBe(llista);
+  }
   act(() => fila('Fotos').focus());
   expect(screen.getByRole('list', { name: 'Filtres de cerca' })).toBe(llista);
   fireEvent.keyDown(document.activeElement, { key: 'Escape' });
@@ -2626,15 +2917,20 @@ test('3B · entrar en una vista deixa la cerca; una vista desconeguda és la lli
      dona el camp buit. */
   expect(screen.queryByRole('searchbox', { name: 'Cerca converses' })).toBeNull();
   expect(screen.getByRole('button', { name: 'Cerca converses' }).getAttribute('aria-expanded')).toBe('false');
-  expect(pindoles()).toBeTruthy();
+  /* Ordre 0 (Mestre, 261030 03:49) · Plegada i amb «Tot», cap barra. */
+  capPindola();
   expect(screen.getByRole('list', { name: 'Converses' })).toBeTruthy();
   expect(within(document.getElementById('app-grid-sidebar')).getByRole('button', { name: 'Xats' }).getAttribute('aria-current')).toBe('page');
   expect(obriCerca().value).toBe('');
 });
 
 /* P1-36 · Una vista del rail plega la cerca oberta encara que no tinga cap
-   terme: en tornar a «Xats», la fila de control són les píndoles. */
-test('P1-36 · una vista del rail plega la cerca oberta i buida; en tornar, les píndoles', () => {
+   terme. Ordre 0 (Mestre, 261030 03:49) · En tornar a «Xats», amb «Tot» cap
+   barra. Cicle 4 (auditoria matinal 261030_1217, MITJÀ-01; ordre del Mestre
+   del 261030 12:30, «setFiltre('tot') en canviar de vista del rail») · La
+   vista també deixa la píndola: en tornar, «Tot», cap barra i la llista
+   sencera, com el terme de la cerca. */
+test('P1-36 · una vista del rail plega la cerca oberta i buida; MITJÀ-01 · en tornar, el filtre torna a «Tot»', () => {
   mocks.threadId = null;
   const view = render(<XatSection />);
   obriCerca();
@@ -2645,7 +2941,22 @@ test('P1-36 · una vista del rail plega la cerca oberta i buida; en tornar, les 
   view.rerender(<XatSection />);
   expect(screen.queryByRole('searchbox', { name: 'Cerca converses' })).toBeNull();
   expect(screen.getByRole('button', { name: 'Cerca converses' }).getAttribute('aria-expanded')).toBe('false');
-  expect(pindoles()).toBeTruthy();
+  capPindola();
+
+  obriCerca();
+  triaFiltre('No llegits');
+  mocks.params = new URLSearchParams({ vista: 'comunitats' });
+  view.rerender(<XatSection />);
+  capPindola();
+  mocks.params = new URLSearchParams();
+  view.rerender(<XatSection />);
+  expect(screen.getByRole('button', { name: 'Cerca converses' }).getAttribute('aria-expanded')).toBe('false');
+  capPindola();
+  expect(screen.getByText('Hola')).toBeTruthy();
+  expect(screen.getByText('Adeu')).toBeTruthy();
+  /* Tornar a obrir la lupa diu el mateix: «Tot» és la premuda. */
+  obriCerca();
+  expect(within(pindoles()).getByRole('button', { name: 'Tot' }).getAttribute('aria-pressed')).toBe('true');
 });
 
 /* P1-36 (revisió adversarial) · La fila de control (píndoles o cerca) no es
@@ -2872,23 +3183,27 @@ const textosDeLaLlista = () => within(screen.getByRole('list', { name: 'Converse
    TOT i en este ordre: la comunitat de Sóc de Poble, Javi, Gent de la Torre i
    la IAIA; la resta, darrere. Fora la fila directa sintètica de Sóc de Poble.
    En remot la comunitat té una fila que hi porta quan el backend ja ha donat
-   l'id de l'entitat pilot (actorsDelXat.js); sense, cap. S'actualitza a posta. */
-test('261007 · les files d’ajuda (Javi i la IAIA) van amb els actors, al capdamunt, amb «Cap missatge.» i sense marca de fixades', () => {
+   l'id de l'entitat pilot (actorsDelXat.js). S'actualitza a posta.
+   QA-R2-05 (Codex, Ronda 2) · Derogat «sense, cap»: sense l'id, la reserva
+   de Sóc de Poble hi és igualment, una sola, i només porta a /socdepoble. */
+test('261007 · les files d’ajuda (Javi i la IAIA) van amb els actors, al capdamunt, sense marca de fixades; Javi diu què és i la IAIA, «Cap missatge.»', () => {
   mocks.threadId = null;
   ambFilesPerDefecte();
   render(<XatSection />);
   const files = textosDeLaLlista();
-  expect(files).toHaveLength(5);
-  expect(files[0]).toContain('Javi Llinares');
-  expect(files[1]).toContain('Gent de la Torre');
-  expect(files[2]).toContain('IAIA MarIA');
-  expect(files[3]).toContain('Hola');
-  expect(files[4]).toContain('Adeu');
-  expect(files.some((text) => text.includes('Sóc de Poble'))).toBe(false);
-  for (const text of [files[0], files[2]]) {
-    expect(text).toContain('Cap missatge.');
-    expect(text).not.toContain('Fixada');
-  }
+  expect(files).toHaveLength(6);
+  expect(files[0]).toContain('Sóc de Poble');
+  expect(files[1]).toContain('Javi Llinares');
+  expect(files[2]).toContain('Gent de la Torre');
+  expect(files[3]).toContain('IAIA MarIA');
+  expect(files[4]).toContain('Hola');
+  expect(files[5]).toContain('Adeu');
+  expect(files.filter((text) => text.includes('Sóc de Poble'))).toHaveLength(1);
+  /* P1-70 (261029) · La fila de Javi diu què és: «Atenció personal i servei
+     tècnic» (section.xat.javi.subtitol); la de la IAIA, com sempre. */
+  expect(files[1]).toContain('Atenció personal i servei tècnic');
+  expect(files[3]).toContain('Cap missatge.');
+  for (const text of [files[1], files[3]]) expect(text).not.toContain('Fixada');
 });
 
 test('261016_1530 · amb l’id remot de l’entitat pilot, la fila que porta a la comunitat de Sóc de Poble va la primera i fa el camí del «Comentar», mai «En privat»', () => {

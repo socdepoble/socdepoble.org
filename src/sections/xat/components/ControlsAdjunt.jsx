@@ -354,7 +354,7 @@ export default function ControlsAdjunt({ fil, onEnvia, onTextOrfe = null, servei
      els selectors de fitxer hi són sempre. */
   const activa = Boolean(error || quota?.pendents?.length || preparat || ocupat || gravant || progres);
   const safata = (
-    <div className={`sdp-xat-adjunts${activa ? ' sdp-xat-adjunts--activa' : ''}`} role={activa ? 'group' : undefined}
+    <div className={activa ? 'sdp-xat-adjunts sdp-xat-adjunts--activa' : 'sdp-xat-adjunts'} role={activa ? 'group' : undefined}
       aria-label={activa ? t('section.xat.adjunts.grup', 'Adjunts del xat') : undefined} ref={contenidor}>
       {error ? <p role="alert">{textDErrorAdjunt(error, t, t('section.xat.adjunts.error.envia', 'No hem pogut enviar el fitxer.'))}</p> : null}
       {quota?.pendents?.length ? <div role="group" aria-label={t('section.xat.adjunts.pendents', 'Fitxers pendents d’enviar')}>

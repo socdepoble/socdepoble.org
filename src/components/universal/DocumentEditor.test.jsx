@@ -416,7 +416,8 @@ test('T50 · retirada · una clau vella (targetaViva, avisTargetaViva) no canvia
 test('T50 · retirada · davall del títol, el control de sempre: els drets, Vista A4 / PDF i Crear portada, i res més', () => {
   const { container } = editor({ updateLocal: vi.fn() });
   expect(botonsDelControl(container)).toEqual(["Elegir drets d'autor", 'Vista A4 / PDF', 'Crear portada']);
-  expect(container.querySelector('.sdp-boto-targeta-viva')).toBeNull();
+  /* Cicle 3 (261030, VD) · El xip ja no porta cap classe pròpia: es busca pel nom. */
+  expect(within(container).queryByRole('button', { name: 'Vista targeta' })).toBeNull();
 });
 
 /* Es comprova la regla escrita (com PageFrame.capes). */
@@ -448,7 +449,7 @@ test('T50 · retirada · CSS: cap regla de l’embolcall, de l’aside ni del xi
   const capa = blocQueConte(components, '@layer components {', '.sdp-targeta-viva-carta {');
   expect(capa).toContain('.sdp-targeta-viva-carta { min-width: 0; }');
   // El token es queda: el fa servir PerfilShell.css («Les vistes»).
-  expect(tokens).toMatch(/--sdp-targeta-viva-ample: [\d.]+rem;/);
+  expect(tokens).toMatch(/--sdp-targeta-viva-ample[:] [\d.]+rem;/);
 });
 
 test('T50 · retirada · a l’estat buit, una clau vella tampoc no hi fa res: la UniversalPage de sempre', () => {

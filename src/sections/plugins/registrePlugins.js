@@ -129,8 +129,10 @@ export const RUTA_PLUGINS = '/plugin';
    desenvolupament (com el camp `entorn` dels manifests d'app); null si no.
    Fora de dev, useDestiDelPlugin deixa el botó inert: cap enllaç que porte
    a «Entrar» o a una eina sense dades. Hui només el porta la Gestoria: la
-   Consola i el Cervell, que el portaven per /__iaia/* (només el servix `vite
-   serve`, tooling/vite/consola-iaia.mjs), ja no són del registre (Onada 8).
+   Consola i el Cervell, que el portaven per /__iaia/* (en viu, només el
+   servix `vite serve`, tooling/vite/consola-iaia.mjs; des del 31-10-2026 el
+   build web en publica la instantània sanejada), ja no són del registre
+   (Onada 8).
    espai · l'espai del Panell de Control on viu la targeta ('empresa' o
    'llar', ESPAIS_PLUGINS), o null si va a les graelles d'Utilitats o de
    Maquinària. Un sol valor per plugin: cap targeta pot viure en dos espais.

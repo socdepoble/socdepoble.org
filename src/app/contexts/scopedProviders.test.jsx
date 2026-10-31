@@ -2,7 +2,12 @@ import React from 'react';
 import { afterEach, expect, test, vi } from 'vitest';
 import { act, cleanup, renderHook, waitFor } from '@testing-library/react';
 const m = vi.hoisted(() => ({ actor: 'A', user: 'A', gen: 1, load: vi.fn(), estatGlobal: vi.fn() }));
-vi.mock('./IdentitatContext.jsx', () => ({ useIdentitat: () => ({ actorId: m.actor, actorKey: m.actor }) }));
+/* Pla 261029_1605 (Bloc G, P1-71) · Mur i Multimèdia lligen useIdentitat;
+   CoreContentProvider, useIdentitatOpcional. Tots dos, el mateix m.actor. */
+vi.mock('./IdentitatContext.jsx', () => ({
+  useIdentitat: () => ({ actorId: m.actor, actorKey: m.actor }),
+  useIdentitatOpcional: () => ({ actorId: m.actor, actorKey: m.actor })
+}));
 vi.mock('./SessionContext.jsx', () => ({ useSession: () => ({ generacio: m.gen, currentUser: { id: m.user } }) }));
 vi.mock('../../data/backendPort.js', () => ({ loadMur: m.load, loadMultimedia: m.load, loadCoreContent: m.load, appendSectionSubmissionNetworkOnly: vi.fn() }));
 vi.mock('../../host.js', () => ({ quanLlest: async () => undefined }));

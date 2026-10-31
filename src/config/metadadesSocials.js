@@ -81,6 +81,18 @@ export function metadadesDePagina(page, opcions) {
   };
 }
 
+/**
+ * Ordre del Mestre (30-10-2026, prompt 2208, T1.1) · Les metadades de la
+ * pàgina d'un plugin (/plugin/<id>, PluginPage.jsx), amb la regla de
+ * metadadesDePagina sobre els camps del registre (registrePlugins.js): el
+ * títol, l'entradeta i, sense, el subtítol, i la il·lustració que pinta la
+ * portada (imatge) amb el seu alt. La crida el client i el prerender del build.
+ */
+export function metadadesDePlugin(plugin, opcions) {
+  const p = plugin && typeof plugin === 'object' ? plugin : {};
+  return metadadesDePagina({ title: p.titol, lead: p.entradilla, subtitle: p.subtitol, image: p.imatge, imageAlt: p.imatgeAlt }, opcions);
+}
+
 /* El títol i l'entradeta que pinta el detall de cada secció amb llavor al
    repositori, els de detail/detailSectionMeta.jsx (getTitle) i
    elementDeSeccio.js (paginaDElement · lead): la descripció del <head>

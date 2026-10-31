@@ -14,9 +14,9 @@ export function descarregaFitxer({ nom, tipus, dades }) {
   enllac.href = url;
   enllac.download = nom;
   enllac.rel = 'noopener';
-  document.body.append(enllac);
+  /* Enllaç despenjat, com UniversalListCard.jsx (ofereixFitxer) i DetallPrivacitat.jsx:
+     el clic no necessita penjar-lo del document de fora (Llei 06). */
   enllac.click();
-  enllac.remove();
   setTimeout(() => URL.revokeObjectURL(url), 1000);
   return true;
 }

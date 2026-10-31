@@ -4,7 +4,8 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import {pathToFileURL} from 'node:url';
-import {buildSocialManifest,LLISTES,normalizedKey,plainText} from './build-social-manifest.mjs';
+import {BASE_IMAGE,buildSocialManifest,FONTS_CONSOLA,LLISTES,normalizedKey,PAGINES_INFORMATIVES,plainText} from './build-social-manifest.mjs';
+import {sniffImage} from './prerender-social.mjs';
 import {selectMetadata} from './social-edge.mjs';
 const policyRoot=process.env.SDP_PROJECT_ROOT || process.cwd();
 const origin='https://socdepoble.org';
@@ -22,10 +23,14 @@ function fixture(t) {
   const root=fs.mkdtempSync(path.join(os.tmpdir(),'social-fixture-'));t.after(()=>fs.rmSync(root,{recursive:true,force:true}));
   const put=(rel,text)=>{const f=path.join(root,rel);fs.mkdirSync(path.dirname(f),{recursive:true});fs.writeFileSync(f,text);};
   put('package.json','{"type":"module"}');
-  put('src/sections/text/pageContent.js',`export const PAGE_COPY={projecte:{title:'El Projecte',lead:'Una xarxa de pobles',subtitle:'Subtítol que no mana',image:'/assets/projecte.jpg',imageAlt:'Bancals'},descarregues:{title:'Descàrregues',lead:'Canals de distribució'},notes:{title:'NOTA PRIVADA',lead:'no exportar'},disseny:{title:'DISSENY PRIVAT',lead:'no exportar'},anima:{title:'L’Ànima',lead:'La IAIA explica'},fedivers:{title:'Nodes i Fedivers',subtitle:'Una xarxa de nodes'},wikidepoble:{title:'Wiki',lead:'NO_EXPORTAR_PORTADA'}};`);
+  /* Ordre del Mestre (30-10-2026, prompt 2208) · notes i wikidepoble són ara les
+     presentacions públiques /page/notes i /page/wikidepoble, i disseny, /disseny:
+     el seu copy ja no és cap secret de la fixture. notes_shared (fora de
+     l'inventari) continua sense eixir. */
+  put('src/sections/text/pageContent.js',`export const PAGE_COPY={projecte:{title:'El Projecte',lead:'Una xarxa de pobles',subtitle:'Subtítol que no mana',image:'/assets/projecte.jpg',imageAlt:'Bancals'},descarregues:{title:'Descàrregues',lead:'Canals de distribució'},notes:{title:'Bloc de notes',lead:'La fitxa pública del bloc'},notes_shared:{title:'NO_EXPORTAR_COMPARTIDES',lead:'no exportar',image:'/assets/marca.svg'},disseny:{title:'Disseny Pedra Seca',lead:'El catàleg viu'},anima:{title:'L’Ànima',lead:'La IAIA explica'},fedivers:{title:'Nodes i Fedivers',subtitle:'Una xarxa de nodes'},wikidepoble:{title:'Wiki',lead:'La base de coneixement',image:'/assets/wiki.png',imageAlt:'La portada de la Wiki'}};`);
   put('src/config/systemPages.js',`export const SYSTEM_PAGES=[{key:'projecte',href:'/projecte'},{key:'wikidepoble',href:'/wikidepoble'},{key:'descarregues',href:'/page/descarregues'},{key:'notes',href:'/notes'},{key:'disseny',href:'/disseny'}];`);
   put('src/config/sections.js',`import {FileText} from 'lucide-react';\nexport const SECTIONS=[{id:'mur',path:'/mur',icon:FileText,kind:'mur'},{id:'disseny',path:'/disseny',icon:FileText,kind:'text',pageKey:'disseny'},{id:'projecte',path:'/projecte',kind:'text',pageKey:'projecte'},{id:'ia',path:'/anima',icon:FileText,kind:'text',pageKey:'anima'},{id:'fedivers',path:'/fedivers',kind:'text',pageKey:'fedivers'}];`);
-  put('public/assets/system/ui/og-socdepoble-1200x630.png','fixture');put('public/assets/projecte.jpg','fixture');
+  put('public/assets/system/ui/og-socdepoble-1200x630.png','fixture');put('public/assets/projecte.jpg','fixture');put('public/assets/wiki.png','fixture');
   put('src/data/wikiManifest.js',wikiManifest([LLIBRE,...PRIVATS]));
   return {root,put};
 }
@@ -43,11 +48,33 @@ test('exporta H1 editorial, projecte amb imatge pròpia, pàgines de text i àli
   assert.equal(manifest.routes['/wikidepoble?item=llibre'].canonical,origin+'/wikidepoble?item=llibre');
   // La llista de la Wiki porta el head de la portada de seoWiki, no el copy de la pàgina.
   assert.equal(manifest.routes['/wikidepoble'].title,'Wiki de Poble');
-  assert.deepEqual(manifest.aliases,{'/descarregues':'/page/descarregues','/page/anima':'/anima','/page/fedivers':'/fedivers','/page/projecte':'/projecte'});
+  /* Ordre del Mestre (30-10-2026, prompt 2208) · Expectatives actualitzades a
+     posta: /disseny és pública (i /page/disseny n'és l'àlies, com /page/projecte);
+     la llista de la Wiki porta la imatge de la seua portada (QA-VES-02), i
+     /page/notes i /page/wikidepoble són presentacions públiques (QA-VES-01).
+     Abans: /disseny i /page/wikidepoble absents, i la llista sense imatge. */
+  assert.deepEqual(manifest.aliases,{'/descarregues':'/page/descarregues','/page/anima':'/anima','/page/disseny':'/disseny','/page/fedivers':'/fedivers','/page/projecte':'/projecte'});
+  assert.deepEqual([manifest.routes['/disseny'].title,manifest.routes['/disseny'].description],['Disseny Pedra Seca','El catàleg viu']);
+  assert.deepEqual(manifest.routes['/wikidepoble'].image,{url:origin+'/assets/wiki.png',alt:'La portada de la Wiki'});
+  assert.deepEqual(manifest.routes['/page/wikidepoble'].image,manifest.routes['/wikidepoble'].image);
+  assert.deepEqual([manifest.routes['/page/notes'].title,manifest.routes['/page/notes'].description],['Bloc de notes','La fitxa pública del bloc']);
   for(const [ruta] of LLISTES)assert.equal(manifest.routes[ruta].index,true,ruta);
   assert.match(evidence.hashSrc,/^[a-f0-9]{64}$/);
-  const serial=JSON.stringify(manifest);assert.ok(!/NO_EXPORTAR|Text sencer|NOTA PRIVADA|DISSENY PRIVAT|attributes|Subtítol que no mana/.test(serial));
-  for(const ruta of ['/notes','/disseny','/page/wikidepoble'])assert.equal(manifest.routes[ruta]??manifest.aliases[ruta],undefined,ruta);
+  const serial=JSON.stringify(manifest);assert.ok(!/NO_EXPORTAR|Text sencer|attributes|Subtítol que no mana|marca[.]svg/.test(serial));
+  // L'eina privada /notes i les claus fora de l'inventari (notes_shared) no ixen mai.
+  for(const ruta of ['/notes','/page/notes_shared'])assert.equal(manifest.routes[ruta]??manifest.aliases[ruta],undefined,ruta);
+});
+/* Ordre del Mestre (30-10-2026; candidatura NLnet NGI Fediversity) · /fediversity,
+   l'adreça curta (App.jsx, una redirecció), porta el head de /page/fediversity. */
+test('/fediversity és l’àlies de /page/fediversity, com /descarregues',async t=>{
+  const {root,put}=fixture(t);
+  put('src/sections/text/pageContent.js',`export const PAGE_COPY={projecte:{title:'El Projecte',lead:'Una xarxa de pobles'},fediversity:{title:'Candidatura NLnet',lead:'En avaluació'}};`);
+  put('src/config/systemPages.js',`export const SYSTEM_PAGES=[{key:'projecte',href:'/projecte'},{key:'fediversity',href:'/page/fediversity'}];`);
+  const {manifest}=await buildSocialManifest({root,origin,policyRoot});
+  assert.equal(manifest.routes['/page/fediversity'].title,'Candidatura NLnet');
+  assert.equal(manifest.routes['/page/fediversity'].description,'En avaluació');
+  assert.equal(manifest.aliases['/fediversity'],'/page/fediversity');
+  assert.equal(manifest.routes['/fediversity'],undefined);
 });
 test('només publica la projecció explícita; mai /notes, privats ni pendents',async t=>{
   const {root}=fixture(t);const publicSnapshot=[
@@ -186,4 +213,118 @@ test('imageOrigins: només el camí públic de Storage; ni signat, ni transforma
   const sense=await buildSocialManifest({root,origin,policyRoot,publicSnapshot});
   assert.equal(sense.manifest.routes['/mur/publica'].image.url,origin+'/assets/system/ui/og-socdepoble-1200x630.png');
   await assert.rejects(buildSocialManifest({root,origin,policyRoot,imageOrigins:['https://exemple.supabase.co/']}),/Origen d’imatge invàlid/);
+});
+
+/* Ordre del Mestre (30-10-2026, prompt 2208, T1.1) · Els plugins es lligen de
+   l'AST de registrePlugins.js, sense executar-lo: el seu import del router no
+   es resol mai. L'entradeta mana sobre el subtítol (metadadesDePlugin, la de
+   PluginPage) i la imatge és la de la fàbrica: <IMATGES_PLUGINS>/<id>_vinyeta.<ext>. */
+const REGISTRE=plugins=>`import {rutaDeApp} from '../../apps/plataforma/NO_EXISTIX.js';
+export const IMATGES_PLUGINS='/assets/ui/plugins';
+export const RUTA_PLUGINS='/plugin';
+const plugin=(p)=>Object.freeze(p);
+export const PLUGINS=Object.freeze([${plugins}]);
+`;
+test('els plugins: l’AST del registre, l’entradeta primer i la il·lustració de la fàbrica; un descriptor no estàtic és porta roja',async t=>{
+  const {root,put}=fixture(t);
+  put('public/assets/ui/plugins/prova_vinyeta.webp','fixture');put('public/assets/ui/plugins/altra_vinyeta.jpg','fixture');
+  put('src/sections/plugins/registrePlugins.js',REGISTRE(`plugin({id:'prova',titol:'Prova',subtitol:'El subtítol',entradilla:\`L’entradeta\`,imatgeAlt:'Una agulla',extensioImatge:'webp',obrir:rutaDeApp('x')}),
+    plugin({id:'altra',titol:'Altra',subtitol:'Només subtítol',imatgeAlt:'Un carter',data:DATA})`));
+  const {manifest,evidence}=await buildSocialManifest({root,origin,policyRoot,estricte:true});
+  assert.deepEqual(manifest.routes['/plugin/prova'],{title:'Prova',description:'L’entradeta',image:{url:origin+'/assets/ui/plugins/prova_vinyeta.webp',alt:'Una agulla'},
+    type:'website',canonical:origin+'/plugin/prova',index:true});
+  assert.equal(manifest.routes['/plugin/altra'].description,'Només subtítol');
+  assert.deepEqual(manifest.routes['/plugin/altra'].image,{url:origin+'/assets/ui/plugins/altra_vinyeta.jpg',alt:'Un carter'});
+  assert.ok(evidence.sources['src/sections/plugins/registrePlugins.js']);
+  put('src/sections/plugins/registrePlugins.js',REGISTRE(`plugin(DESCRIPTOR)`));
+  await assert.rejects(buildSocialManifest({root,origin,policyRoot}),/no estàtic/);
+  /* Ordre del Mestre (30-10-2026, prompt 2208; SEO-CRIT-03) · Un camp de text que
+     no és literal, i una propietat estesa o calculada (en pot portar qualsevol),
+     també són porta roja, sense estricte: abans es perdien en silenci i el build
+     publicava el subtítol (o la .jpg) mentre PluginPage pintava el valor de veres. */
+  const BASE=`id:'prova',titol:'Prova',subtitol:'Subtítol vell',extensioImatge:'webp'`;
+  for(const descriptor of [
+    `{${BASE},entradilla:'Eina en obres: '+'el text que veu el client'}`,
+    `{id:'prova',titol:\`Prova \${NOM}\`,subtitol:'S',extensioImatge:'webp'}`,
+    `{id:'altra',titol:'Altra',subtitol:'S',extensioImatge:EXTENSIO}`,
+    `{${BASE},imatgeAlt}`,
+    `{${BASE},entradilla(){return 'x';}}`,
+    `{...COMU,id:'prova',titol:'Prova',subtitol:'S'}`,
+    `{${BASE},['entradilla']:'x'}`
+  ]) {
+    put('src/sections/plugins/registrePlugins.js',REGISTRE(`plugin(${descriptor})`));
+    await assert.rejects(buildSocialManifest({root,origin,policyRoot}),/Descriptor de plugin no estàtic/,descriptor);
+  }
+  // Una il·lustració que no es pot servir és porta roja al prerender (estricte), com qualsevol imatge pròpia.
+  put('src/sections/plugins/registrePlugins.js',REGISTRE(`plugin({id:'absent',titol:'Absent',subtitol:'Sense fitxer'})`));
+  await assert.rejects(buildSocialManifest({root,origin,policyRoot,estricte:true}),/no servible a \/plugin\/absent/);
+});
+
+/* Ordre del Mestre (30-10-2026, prompt 2208, T1.2) · L'inventari de /page/<clau>
+   és tancat: amb el copy de la fixture, totes les de PAGINES_INFORMATIVES que hi
+   són i cap altra clau de PAGE_COPY (notes_shared, amb l'SVG, no hi entra ni fa
+   porta roja). */
+test('les presentacions /page/<clau>: l’inventari explícit, ni una clau més',async t=>{
+  const {root,put}=fixture(t);
+  put('public/assets/mur.jpg','fixture');
+  put('src/sections/text/pageContent.js',`export const PAGE_COPY={publicar_mur:{title:'Publicar al Mur',lead:'Al Mur del poble',image:'/assets/mur.jpg',imageAlt:'Veïns'},treball:{title:'Treball',subtitle:'Ofertes',visibility:'private'},notes_shared:{title:'Compartides',lead:'x',image:'/assets/marca.svg'},altra:{title:'Altra',lead:'Sense inventari'}};`);
+  const {manifest}=await buildSocialManifest({root,origin,policyRoot,estricte:true});
+  assert.deepEqual(manifest.routes['/page/publicar_mur'].image,{url:origin+'/assets/mur.jpg',alt:'Veïns'});
+  for(const ruta of ['/page/treball','/page/notes_shared','/page/altra'])assert.equal(manifest.routes[ruta],undefined,ruta);
+  assert.equal(PAGINES_INFORMATIVES.length,10);
+});
+
+/* Ordre del Mestre (30-10-2026, prompt 2208, T2.1) · La Consola entra amb el head
+   del client (seoConsola.js · rutesPubliquesDeLaConsola), amb cada font a
+   l'evidència; una primera imatge bloquejada és porta roja. */
+test('la Consola: les rutes de seoConsola.js, a l’evidència; una imatge bloquejada és porta roja',async t=>{
+  const {root,put}=fixture(t);
+  put('public/assets/balanc.jpg','fixture');
+  const consola=imatge=>`export function rutesPubliquesDeLaConsola(){return [{ruta:'/consola',title:'Consola',description:'El tauler',imatge:{estat:'absent'},image:null},`
+    +`{ruta:'/consola/govern/balanc',title:'Balanç · Consola',description:'Demanat i fet',imatge:${JSON.stringify(imatge)},image:{url:'${origin}/assets/balanc.jpg',alt:'Balança'}}];}`;
+  put(FONTS_CONSOLA[0],consola({estat:'triada'}));
+  for(const font of FONTS_CONSOLA.slice(1))put(font,'export const res=1;');
+  const {manifest,evidence}=await buildSocialManifest({root,origin,policyRoot,estricte:true});
+  assert.equal(manifest.routes['/consola'].image.url,origin+BASE_IMAGE);
+  assert.deepEqual(manifest.routes['/consola/govern/balanc'],{title:'Balanç · Consola',description:'Demanat i fet',image:{url:origin+'/assets/balanc.jpg',alt:'Balança'},
+    type:'website',canonical:origin+'/consola/govern/balanc',index:true});
+  for(const font of FONTS_CONSOLA)assert.ok(evidence.sources[font],font);
+  put(FONTS_CONSOLA[0],consola({estat:'bloquejada',motiu:'svg',ref:'/assets/x.svg'}));
+  await assert.rejects(buildSocialManifest({root,origin,policyRoot}),/bloquejada a \/consola\/govern\/balanc/);
+});
+
+/* Ordre del Mestre (30-10-2026, prompt 2208; QA-VES-01 de Codex) · La cobertura
+   sobre l'arbre de veres, inventari ↔ manifest: cada ruta de l'inventari explícit
+   (les deu /page/*, els huit plugins de l'ordre, /disseny, /wikidepoble, /consola,
+   les nou pàgines i les quatre del Govern) hi és amb una portada pròpia (cap
+   targeta genèrica) que WhatsApp pot pintar: un fitxer de public/, PNG o JPEG,
+   de 300 000 B com a molt. Les eines privades continuen fora. I a l'inrevés: cada
+   clau de PAGE_COPY que PageDetailSection servix a /page/<clau> és al manifest
+   (ruta o àlies) o a EXCLOSES_DE_PAGE amb el seu motiu. */
+const PLUGINS_DE_L_ORDRE=Object.freeze(['mapa','vehicle','animalets','gestoria','rebost','salut','rss','tpv']);
+const EXCLOSES_DE_PAGE=Object.freeze({notes_shared:'còpia antiga de la fitxa del Bloc de notes (/page/notes), amb el logotip SVG com a imatge: no és cap presentació pròpia'});
+test('cobertura de l’arbre de veres: les 18 presentacions, /disseny, /wikidepoble i la Consola, amb portada pròpia servible',async()=>{
+  const {manifest}=await buildSocialManifest({root:policyRoot,origin,policyRoot,estricte:true});
+  const importa=rel=>import(pathToFileURL(path.join(policyRoot,rel)).href);
+  const [{IDS_PAGINES},{IDS_GOVERN},{PAGE_COPY},{resolvePageSlugPath}]=await Promise.all(['src/sections/consola/consolaPagines.js',
+    'src/sections/consola/govern/governConsola.js','src/sections/text/pageContent.js','src/config/navigation.js'].map(importa));
+  const inventari=[...PAGINES_INFORMATIVES.map(clau=>`/page/${clau}`),...PLUGINS_DE_L_ORDRE.map(id=>`/plugin/${id}`),'/disseny','/wikidepoble','/consola',
+    ...IDS_PAGINES.map(id=>`/consola/${id}`),...IDS_GOVERN.map(id=>`/consola/govern/${id}`)];
+  assert.equal(inventari.length,10+8+3+9+4);
+  for(const ruta of inventari) {
+    const entrada=manifest.routes[ruta];
+    assert.ok(entrada,`${ruta}: absent del manifest`);
+    assert.equal(entrada.canonical,origin+ruta,ruta);
+    assert.ok(entrada.title&&entrada.description,ruta);
+    const u=new URL(entrada.image.url);
+    assert.equal(u.origin,origin,ruta);assert.notEqual(u.pathname,BASE_IMAGE,`${ruta}: la targeta genèrica`);
+    const bytes=fs.readFileSync(path.join(policyRoot,'public',decodeURIComponent(u.pathname)));
+    assert.ok(bytes.length<=300000,`${ruta}: ${u.pathname} fa ${bytes.length} B`);
+    assert.match(sniffImage(bytes)?.type??'',/^image\/(?:png|jpeg)$/,ruta);
+  }
+  assert.ok(Object.keys(manifest.routes).filter(ruta=>ruta.startsWith('/plugin/')).every(ruta=>inventari.includes(ruta)),'cap plugin fora de l’ordre');
+  for(const ruta of ['/notes','/xat','/el-meu-perfil','/control','/gestoria','/page/notes_shared'])assert.equal(manifest.routes[ruta]??manifest.aliases[ruta],undefined,ruta);
+  const senseCobertura=Object.keys(PAGE_COPY).filter(clau=>!resolvePageSlugPath(clau)&&!manifest.routes[`/page/${clau}`]&&!manifest.aliases[`/page/${clau}`]
+    &&!Object.hasOwn(EXCLOSES_DE_PAGE,clau));
+  assert.deepEqual(senseCobertura,[],'claus de /page/ sense head social ni motiu');
 });

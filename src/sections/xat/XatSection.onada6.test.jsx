@@ -137,10 +137,13 @@ describe('«Informa d’un error» (prompt 261009_0230, punt 4)', () => {
     const llista = screen.getByRole('list', { name: 'Converses' });
     expect(within(llista).queryByRole('button', { name: "Informa d'un error" })).toBeNull();
     /* Gauntlet 261016 (Bloc 3.6) · Sense amfitrió, la fila de «Gent de la
-       Torre» (POBLE_PER_DEFECTE) va al capdamunt: dues files, cap peu dins. */
+       Torre» (POBLE_PER_DEFECTE) va al capdamunt: dues files, cap peu dins.
+       P1-70 (261029) · Els actors permanents són sempre a la llista: Javi
+       Llinares, Gent de la Torre i la IAIA i, darrere, la conversa.
+       QA-R2-05 · Sense l'id remot de l'entitat pilot, la reserva pública de
+       Sóc de Poble (només porta a /socdepoble) va la primera. */
     const files = within(llista).getAllByRole('listitem');
-    expect(files).toHaveLength(2);
-    expect(files[0].getAttribute('data-clau')).toBe('poble:la-torre-de-les-macanes');
+    expect(files.map((li) => li.getAttribute('data-clau'))).toEqual(['entitat:socdepoble', 'sdp-per-defecte:javi', 'poble:la-torre-de-les-macanes', 'sdp-per-defecte:iaia', 'a']);
     const peu = boto();
     expect(peu.parentElement.classList.contains('sdp-xat-llista__peu')).toBe(true);
     expect(llista.nextElementSibling).toBe(peu.parentElement);

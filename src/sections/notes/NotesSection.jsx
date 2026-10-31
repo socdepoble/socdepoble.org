@@ -46,8 +46,10 @@ const CAP = Object.freeze([]);
 /* T7 (P9) · A la URL del Bloc l'element es diu «nota» (?carpeta=&nota=&seccio=).
    T7C · La clau viu a modeDesa.js: el Snippet Curador l'escriu en eixir. */
 const CLAUS_URL = CLAUS_BLOC;
-/* T7 (P3) · En «ample», la columna de carpetes arrenca plegada en rail. */
-const COLUMNES_INICIALS = Object.freeze({ left: true });
+/* Ordre del Mestre (30-10-2026) · CARPETES arrenca oberta, com a la resta
+   d'espais de treball: el Bloc no força cap columna plegada. En la franja
+   estreta de la finestra la plega l'UniversalWorkspace, per a tots
+   (layout/graella.js, navegacioPlegadaEnArrencar). */
 /* F4 (bloquejant de Codex, relleus 16, 17 i 21 de l'auditoria 261004_2240) ·
    Les fonts de les publicacions del MAS: el Mur porta Mur, Mercat i agenda
    (MurContext) i Multimèdia, els mitjans (MultimediaContext). Totes dues
@@ -722,7 +724,6 @@ export default function NotesSection() {
            tries escriuen ?nota= soles): llavors, el nivell on era
            (nivellMestreDetall.js). Al snippet no s'aplica. */
         mestreDetall={{ clau: 'notes', element: enUrl.item }}
-        columnesInicials={modeDesa ? undefined : COLUMNES_INICIALS}
         inclouDescendents={true}
         onCreate={modeDesa ? undefined : onCreate}
         onCreateError={informaError}
@@ -737,12 +738,10 @@ export default function NotesSection() {
         listClassName="sdp-bloc-list--notes"
         detailClassName={modeDesa ? '' : 'sdp-workspace-detail--editor'}
         accionsLlista={accionsLlista}
-        /* Ordre del Mestre (261026_2126, pla 261026_1615 §6) · Fora la
-           carpeta de l'esquerra de NOTES en «mitja»: duplicava la del rail
-           fix i trencava l'eix vertical (la icona de NOTES cau ara a plom
-           damunt de la lupa). L'espai la conserva on és l'única porta a
-           CARPETES (en «estret», la llista oberta tapa el rail). */
-        obridorALaLlista={false}
+        /* Corrector del Gauntlet f4 (30-10-2026) · Ja no hi ha
+           obridorALaLlista={false} (pla 261026_1615 §6): la decisió 4 del
+           Mestre la va retirar de l'espai, que no passa per «mitja», i la
+           capçalera de NOTES és la mateixa amb la prop o sense. */
       />
       </ProveidorSincronitzacioTargetes>
       {/* Selector d'emojis com a subvista / pàgina dedicada de columna (PaginaEmojis),

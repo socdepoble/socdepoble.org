@@ -216,15 +216,81 @@ describe('/consola/empaquetats', () => {
   });
 });
 
+/* Gauntlet 261029 (cicle 1; WCAG 2.4.9) · El nom de l'enllaç de la versió diu
+   també on porta: el número i, només per al lector (.sdp-nomes-lector), «,
+   historial de versions». Es veu el mateix que abans. */
+const DESTI_VERSIONS = ', historial de versions';
+const nomEnllacVersions = () => `${versioCanonica()}${DESTI_VERSIONS}`;
+function destiNomesPerAlLector(enllac) {
+  const amagats = [...enllac.querySelectorAll('.sdp-nomes-lector')];
+  expect(amagats.map((s) => s.textContent)).toEqual([DESTI_VERSIONS]);
+  expect(amagats[0].getAttribute('aria-hidden')).toBeNull();
+}
+
 /* P1-35 · El peu de dades de totes les pàgines diu la Versió Canònica del
    Sistema, sense una segona regió viva: la instantània continua sent l'única. */
 test.each(['/consola/explorador', '/consola/pols', RUTA_EMPAQUETATS])('%s: el peu diu la versió del sistema, sense role=status', async (ruta) => {
   await obri(ruta);
   const versio = [...peu().querySelectorAll('p')].find((p) => p.textContent.startsWith('Versió del sistema: '));
-  expect(versio.textContent).toBe(`Versió del sistema: ${versioCanonica()}`);
+  expect(versio.textContent).toBe(`Versió del sistema: ${nomEnllacVersions()}`);
   expect(versio.className).toBe('sdp-consola__instantania');
   expect(versio.hasAttribute('role')).toBe(false);
   expect(within(peu()).getAllByRole('status')).toHaveLength(1);
+  /* IDEA-50 (pàgina de versions; pla 261029_1605, Bloc G) · El número és un
+     enllaç de prosa (sense classe) cap a /versions; l'etiqueta queda fora. */
+  const enllac = within(versio).getByRole('link', { name: nomEnllacVersions() });
+  expect(enllac.getAttribute('href')).toBe('/versions');
+  expect(enllac.hasAttribute('class')).toBe(false);
+  expect(versio.querySelectorAll('a')).toHaveLength(1);
+  destiNomesPerAlLector(enllac);
+});
+
+/* IDEA-50 (pàgina de versions; pla 261029_1605, Bloc G; ordre del Mestre
+   19:20) · La versió canònica de la pàgina dels empaquetats també porta a
+   /versions: el mateix text, la mateixa tipografia (Mono) i un enllaç de prosa. */
+test('IDEA-50 · a /consola/empaquetats, la Versió Canònica del Sistema és un enllaç a /versions', async () => {
+  await obri(RUTA_EMPAQUETATS);
+  const versio = [...main().querySelectorAll('p')].find((p) => p.textContent.startsWith('Versió Canònica del Sistema: '));
+  expect(versio.textContent).toBe(`Versió Canònica del Sistema: ${nomEnllacVersions()}`);
+  const enllac = within(versio).getByRole('link', { name: nomEnllacVersions() });
+  expect(enllac.getAttribute('href')).toBe('/versions');
+  expect(enllac.hasAttribute('class')).toBe(false);
+  expect(enllac.querySelector('code.sdp-consola__mono').textContent).toBe(versioCanonica());
+  destiNomesPerAlLector(enllac);
+  expect(errors).not.toHaveBeenCalled();
+});
+
+test('IDEA-50 · amb el mode privacitat, l’enllaç continua i la versió de la pàgina s’amaga com tota dada en Mono', async () => {
+  localStorage.setItem(CLAU_PRIVACITAT, '1');
+  await obri(RUTA_EMPAQUETATS);
+  const versio = [...main().querySelectorAll('p')].find((p) => p.textContent.startsWith('Versió Canònica del Sistema: '));
+  const enllac = within(versio).getByRole('link');
+  expect(enllac.getAttribute('href')).toBe('/versions');
+  expect(versio.textContent).not.toContain(versioCanonica());
+  expect(versio.textContent).toContain('dada amagada pel mode privacitat');
+});
+
+/* IDEA-50 · Clicar la versió és una navegació dins de l'App cap a /versions:
+   cap diàleg, cap modal, cap error. */
+test.each([
+  ['del peu de /consola/pols', '/consola/pols', () => within(peu()).getByRole('link', { name: nomEnllacVersions() })],
+  ['del peu de /consola/empaquetats', RUTA_EMPAQUETATS, () => within(peu()).getByRole('link', { name: nomEnllacVersions() })],
+  ['de la pàgina de /consola/empaquetats', RUTA_EMPAQUETATS, () => [...main().querySelectorAll('p')]
+    .find((p) => p.textContent.startsWith('Versió Canònica del Sistema: ')).querySelector('a')]
+])('IDEA-50 · clicar la versió %s porta a /versions sense obrir cap diàleg', async (_lloc, ruta, enllac) => {
+  const avisos = vi.spyOn(console, 'warn').mockImplementation(() => {});
+  try {
+    await obri(ruta);
+    const a = enllac();
+    expect(a.getAttribute('href')).toBe('/versions');
+    await act(async () => { fireEvent.click(a); });
+    expect(window.location.pathname).toBe('/versions');
+    expect(document.querySelector('[role="dialog"], dialog[open]')).toBeNull();
+    expect(errors).not.toHaveBeenCalled();
+    expect(avisos).not.toHaveBeenCalled();
+  } finally {
+    avisos.mockRestore();
+  }
 });
 
 test.each(['/consola/pols', RUTA_EMPAQUETATS])('%s: amb el build segellat, el peu i la pàgina diuen la versió amb el seu build', async (ruta) => {
@@ -232,6 +298,6 @@ test.each(['/consola/pols', RUTA_EMPAQUETATS])('%s: amb el build segellat, el pe
   await obri(ruta);
   expect(versioCanonica()).toBe('v1.0.0 (build 261028)');
   const versio = [...peu().querySelectorAll('p')].find((p) => p.textContent.startsWith('Versió del sistema: '));
-  expect(versio.textContent).toBe('Versió del sistema: v1.0.0 (build 261028)');
+  expect(versio.textContent).toBe(`Versió del sistema: v1.0.0 (build 261028)${DESTI_VERSIONS}`);
   if (ruta === RUTA_EMPAQUETATS) expect(main().textContent).toContain('Versió Canònica del Sistema: v1.0.0 (build 261028)');
 });

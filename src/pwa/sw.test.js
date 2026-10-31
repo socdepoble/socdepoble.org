@@ -17,13 +17,14 @@ import path from 'node:path';
 import vm from 'node:vm';
 import { describe, expect, test, vi } from 'vitest';
 import { paletaDeTokens, valorDelToken } from './__fixtures__/tokens.js';
+import { ETIQUETA_AVIS_XAT } from './avisosPush.js';
 import { MISSATGE_ESCALFAMENT, RECURS_AMB_EMPREMTA } from './registre.js';
 
 const CODI = readFileSync(path.join(process.cwd(), 'public/sw.js'), 'utf8');
 const ORIGEN = 'https://socdepoble.org';
 /* La darrera expressió del script és el seu valor: així es lligen les funcions
    i les constants de dalt sense que el fitxer publicat exporte res. */
-const LECTURA = '\n;({ classificaPeticio, esRespostaGuardable, esCloscaGuardable, esCamiDApp, camiDeLaClosca, recursosDeLHtml, recursosDeLaClau, esCloscaConfirmada, esDelBuild, llistesDeLaClosca, capcaleresDeLaClosca, recursosPerArrencar, planDEscalfament, cachesAEsborrar, esOrdreLlegadaDeSaltarEspera, NOMS_LLEGATS, MISSATGE_LLEGAT_SALTA_ESPERA, clausSobrants, midaDeLaClau, paginaSenseConnexio, CLASSE, MEMORIA_RECURSOS, MEMORIA_CLOSCA, MEMORIES_VIVES, CAMI_DEL_PORTAL, MAXIM_CLOSQUES, MAXIM_RECURSOS, MAXIM_BYTES, CAPCALERA_MIDA, CAPCALERA_RECURSOS, CAPCALERA_RECURSOS_PAGINA, CSP_SENSE_CONNEXIO, MISSATGE_ESCALFAMENT, RECURS_AMB_EMPREMTA });';
+const LECTURA = '\n;({ classificaPeticio, esRespostaGuardable, esCloscaGuardable, esCamiDApp, camiDeLaClosca, recursosDeLHtml, recursosDeLaClau, esCloscaConfirmada, esDelBuild, llistesDeLaClosca, capcaleresDeLaClosca, recursosPerArrencar, planDEscalfament, cachesAEsborrar, esOrdreLlegadaDeSaltarEspera, NOMS_LLEGATS, MISSATGE_LLEGAT_SALTA_ESPERA, clausSobrants, midaDeLaClau, paginaSenseConnexio, CLASSE, MEMORIA_RECURSOS, MEMORIA_CLOSCA, MEMORIES_VIVES, CAMI_DEL_PORTAL, MAXIM_CLOSQUES, MAXIM_RECURSOS, MAXIM_BYTES, CAPCALERA_MIDA, CAPCALERA_RECURSOS, CAPCALERA_RECURSOS_PAGINA, CSP_SENSE_CONNEXIO, MISSATGE_ESCALFAMENT, RECURS_AMB_EMPREMTA, ETIQUETA_AVIS_XAT, CAMI_DEL_XAT, ICONA_AVIS, RUTA_DEL_XAT, TEXTOS_AVIS, llenguaDeLAvis, avisCec, esAvisDelXat, triaFinestra });';
 
 const urlDe = (x) => (typeof x === 'string' ? x : x.url);
 
@@ -51,13 +52,16 @@ function memoriesFalses(inicials = {}) {
   return { memories, caches };
 }
 
-/** Carrega public/sw.js com ho faria el navegador, amb els dobles que es passen. */
-function carregaWorker({ fetch: fetchFals = vi.fn(), caches = memoriesFalses().caches, registration = {} } = {}) {
+/** Carrega public/sw.js com ho faria el navegador, amb els dobles que es passen.
+ *  `clients` s'afig a self.clients (261030: matchAll i openWindow dels avisos push);
+ *  `navegador` és self.navigator (les llengües de l'avís). */
+function carregaWorker({ fetch: fetchFals = vi.fn(), caches = memoriesFalses().caches, registration = {}, clients = {}, navegador } = {}) {
   const escoltes = new Map();
   const self = {
     location: { origin: ORIGEN },
     registration,
-    clients: { claim: vi.fn(async () => {}) },
+    navigator: navegador,
+    clients: { claim: vi.fn(async () => {}), ...clients },
     skipWaiting: vi.fn(),
     addEventListener: (tipus, funcio) => escoltes.set(tipus, [...(escoltes.get(tipus) || []), funcio])
   };
@@ -522,9 +526,12 @@ describe('la closca de les apps (pures)', () => {
 });
 
 describe('el worker en marxa', () => {
-  test('només escolta activate, fetch i message (l\'escalfament): cap push ni sync, cap importScripts; skipWaiting, només per a l\'ordre de juny', () => {
+  /* Ordre nocturna 261030_0252 (Fase 3, WP) · push i notificationclick, els
+     avisos cecs del Xat; ni sync, ni periodicsync, ni pushsubscriptionchange. */
+  test('només escolta activate, fetch, message (l\'escalfament), push i notificationclick: cap sync ni pushsubscriptionchange, cap importScripts; skipWaiting, només per a l\'ordre de juny', () => {
     const worker = carregaWorker();
-    expect([...worker.escoltes.keys()].sort()).toEqual(['activate', 'fetch', 'message']);
+    expect([...worker.escoltes.keys()].sort()).toEqual(['activate', 'fetch', 'message', 'notificationclick', 'push']);
+    for (const tipus of ['push', 'notificationclick']) expect(worker.escoltes.get(tipus), tipus).toHaveLength(1);
     expect(worker.self.skipWaiting).not.toHaveBeenCalled();
     // 261023: una sola crida, la de l'ordre de juny (les proves de «l'ordre "Actualitzar ara"» la disparen).
     expect(CODI.match(/skipWaiting\s*\(/g)).toHaveLength(1);
@@ -1214,5 +1221,265 @@ describe('261023 · l\'ordre «Actualitzar ara» de la PWA de juny', () => {
     await activa(worker);
     expect([...memories.keys()].sort()).toEqual(['sdp-pwa-recursos-v1', 'sdp-salut', 'sdp-v2']);
     expect(worker.self.clients.claim).toHaveBeenCalledTimes(1);
+  });
+});
+
+/* Ordre nocturna 261030_0252 (Fase 3, WP) · Avisos push del Xat compatibles
+   amb l'E2EE, fase N1: un despertador cec. El worker no llig MAI el cos del
+   push, no va a la xarxa ni obri cap memòria, i sempre mostra el mateix avís
+   en la llengua del navegador; el toc porta al Xat. */
+describe('avisos push cecs (261030)', () => {
+  const plaDe = (valor) => JSON.parse(JSON.stringify(valor));
+
+  /** Un esdeveniment push amb un cos que no es pot llegir: el getter compta i llança. */
+  function esdevenimentPush({ cos = 'espia' } = {}) {
+    const pendents = [];
+    const lectures = { n: 0 };
+    const esdeveniment = { waitUntil: (p) => { pendents.push(p); } };
+    if (cos === 'espia') {
+      Object.defineProperty(esdeveniment, 'data', {
+        get() {
+          lectures.n += 1;
+          throw new Error('el cos del push no es llig mai');
+        }
+      });
+    } else esdeveniment.data = cos;
+    return { esdeveniment, pendents, lectures };
+  }
+
+  async function empeny(worker, opcions) {
+    const push = esdevenimentPush(opcions);
+    for (const escolta of worker.escoltes.get('push')) escolta(push.esdeveniment);
+    expect(push.pendents).toHaveLength(1);
+    await Promise.all(push.pendents);
+    return push;
+  }
+
+  /* Gauntlet c3 (sw-notificationclick-openwindow-despres-de-focus) · El
+     permís d'interacció com el de Chromium: cada notificationclick en dona UN
+     (WaitUntilObserver::WillDispatchEvent); focus() i openWindow() el gasten
+     o rebutgen sense ell (ConsumeWindowInteraction); navigate() no el toca,
+     però rebutja en una finestra que el worker no controla. */
+  const interaccio = { permisos: 0 };
+  function gastaElPermis(missatge) {
+    if (interaccio.permisos < 1) throw new Error(`InvalidAccessError: ${missatge}`);
+    interaccio.permisos -= 1;
+  }
+
+  function finestraFalsa(url, { focused = false, visibilityState = 'hidden', enfocaFalla = false, navegaFalla = false } = {}) {
+    const finestra = { url, focused, visibilityState };
+    finestra.focus = vi.fn(async () => {
+      gastaElPermis('Not allowed to focus a window.');
+      if (enfocaFalla) throw new Error('InvalidStateError: client no trobat');
+      return finestra;
+    });
+    finestra.navigate = vi.fn(async (desti) => {
+      if (navegaFalla) throw new TypeError('This service worker is not the client\'s active service worker.');
+      finestra.url = desti;
+      return finestra;
+    });
+    return finestra;
+  }
+
+  function workerAmbFinestres(finestres, { matchAll } = {}) {
+    const obertes = [];
+    const clients = {
+      matchAll: matchAll || vi.fn(async () => finestres),
+      openWindow: vi.fn(async (desti) => {
+        gastaElPermis('Not allowed to open a window.');
+        obertes.push(desti);
+        return null;
+      }),
+      obertes
+    };
+    return carregaWorker({ clients });
+  }
+
+  async function toca(worker, notificacio) {
+    interaccio.permisos = 1;
+    const pendents = [];
+    try {
+      for (const escolta of worker.escoltes.get('notificationclick')) escolta({ notification: notificacio, waitUntil: (p) => { pendents.push(p); } });
+      await Promise.all(pendents);
+    } finally {
+      interaccio.permisos = 0;
+    }
+    return pendents.length;
+  }
+
+  const avisDelXat = (tag = 'sdp-xat') => ({ tag, close: vi.fn() });
+  const XAT = `${ORIGEN}/xat`;
+
+  test('llenguaDeLAvis: la primera llengua del navegador que el Mas té, per l\'etiqueta primària; si cap, ca; mai llança', () => {
+    const { api } = carregaWorker();
+    expect(api.llenguaDeLAvis(['eu-ES'])).toBe('eu');
+    expect(api.llenguaDeLAvis(['fr', 'gl'])).toBe('gl');
+    expect(api.llenguaDeLAvis(['ca-ES-valencia', 'es'])).toBe('ca');
+    expect(api.llenguaDeLAvis(['EN-gb'])).toBe('en');
+    expect(api.llenguaDeLAvis(['es-419'])).toBe('es');
+    for (const valor of [[], null, undefined, ['fr'], 'ca', [42, null, {}, Symbol('x')], [Symbol('x'), 'eu']]) {
+      expect(() => api.llenguaDeLAvis(valor)).not.toThrow();
+    }
+    expect(api.llenguaDeLAvis([])).toBe('ca');
+    expect(api.llenguaDeLAvis(null)).toBe('ca');
+    expect(api.llenguaDeLAvis(['fr'])).toBe('ca');
+    expect(api.llenguaDeLAvis('eu')).toBe('ca');
+    expect(api.llenguaDeLAvis([Symbol('x'), 'eu'])).toBe('eu');
+  });
+
+  test('avisCec: per a les cinc llengües, «Sóc de Poble», el text fix sense cap interpolació, l\'etiqueta del Xat, la icona pròpia i el camí /xat', () => {
+    const { api } = carregaWorker();
+    expect(Object.keys(api.TEXTOS_AVIS).sort()).toEqual(['ca', 'en', 'es', 'eu', 'gl']);
+    expect(api.TEXTOS_AVIS.ca.cos).toBe('Tens missatges nous');
+    for (const llengua of ['ca', 'es', 'en', 'eu', 'gl']) {
+      const { titol, opcions } = plaDe(api.avisCec([llengua]));
+      expect(titol, llengua).toBe('Sóc de Poble');
+      expect(opcions, llengua).toEqual({ body: api.TEXTOS_AVIS[llengua].cos, tag: 'sdp-xat', lang: llengua, icon: '/icona-app-192.png', data: { cami: '/xat' } });
+      expect(opcions.body, llengua).not.toMatch(/[{}$%<]/);
+    }
+    expect(api.ICONA_AVIS).toBe('/icona-app-192.png');
+    expect(readFileSync(path.join(process.cwd(), 'public', api.ICONA_AVIS.slice(1))).length).toBeGreaterThan(0);
+  });
+
+  test('el cos del push no es llig MAI: amb un cos espia que llança, l\'avís cec surt una vegada i el getter no es toca', async () => {
+    const showNotification = vi.fn(async () => {});
+    const worker = carregaWorker({ registration: { showNotification }, navegador: { languages: ['eu-ES', 'ca'] } });
+    const { lectures } = await empeny(worker);
+    expect(lectures.n).toBe(0);
+    expect(showNotification).toHaveBeenCalledTimes(1);
+    const [titol, opcions] = showNotification.mock.calls[0];
+    expect(titol).toBe('Sóc de Poble');
+    expect(plaDe(opcions)).toEqual({ body: 'Mezu berriak dituzu', tag: 'sdp-xat', lang: 'eu', icon: '/icona-app-192.png', data: { cami: '/xat' } });
+  });
+
+  test('un push amb un cos de veres (o null) dona el mateix avís, sense res del cos', async () => {
+    for (const cos of [null, { text: () => 'Pep: quedem a les 8?', json: () => ({ nom: 'Pep' }) }]) {
+      const showNotification = vi.fn(async () => {});
+      const worker = carregaWorker({ registration: { showNotification } });
+      await empeny(worker, { cos });
+      expect(showNotification).toHaveBeenCalledTimes(1);
+      const [titol, opcions] = showNotification.mock.calls[0];
+      expect(`${titol} ${JSON.stringify(opcions)}`).not.toMatch(/Pep|quedem/);
+      expect(opcions.body).toBe('Tens missatges nous');
+    }
+  });
+
+  test('el push no va a la xarxa ni obri cap memòria', async () => {
+    const { caches } = memoriesFalses();
+    const fetchFals = vi.fn();
+    const worker = carregaWorker({ caches, fetch: fetchFals, registration: { showNotification: vi.fn(async () => {}) } });
+    await empeny(worker);
+    expect(fetchFals).not.toHaveBeenCalled();
+    expect(caches.open).not.toHaveBeenCalled();
+    expect(caches.delete).not.toHaveBeenCalled();
+  });
+
+  test('si l\'avís no es pot mostrar (rebuig o excepció), la promesa del push es resol igual: cap rebuig sense amo', async () => {
+    for (const showNotification of [vi.fn(async () => { throw new TypeError('sense permís'); }), vi.fn(() => { throw new Error('síncron'); })]) {
+      const worker = carregaWorker({ registration: { showNotification } });
+      const push = esdevenimentPush();
+      for (const escolta of worker.escoltes.get('push')) escolta(push.esdeveniment);
+      await expect(Promise.all(push.pendents)).resolves.toBeDefined();
+      expect(showNotification).toHaveBeenCalledTimes(1);
+    }
+  });
+
+  test('el toc d\'un avís d\'una altra etiqueta no és nostre: ni el tanca ni obri res', async () => {
+    const worker = workerAmbFinestres([finestraFalsa(`${ORIGEN}/mur`, { focused: true })]);
+    const avis = avisDelXat('una-altra');
+    expect(await toca(worker, avis)).toBe(0);
+    expect(avis.close).not.toHaveBeenCalled();
+    expect(worker.self.clients.matchAll).not.toHaveBeenCalled();
+    expect(worker.self.clients.openWindow).not.toHaveBeenCalled();
+    expect(await toca(worker, null)).toBe(0);
+  });
+
+  test('el toc amb una finestra pròpia enfocada que ja és al Xat: tanca l\'avís i l\'enfoca, sense navegar ni obrir-ne cap', async () => {
+    const finestra = finestraFalsa(`${ORIGEN}/xat/123`, { focused: true, visibilityState: 'visible' });
+    const worker = workerAmbFinestres([finestra]);
+    const avis = avisDelXat();
+    expect(await toca(worker, avis)).toBe(1);
+    expect(avis.close).toHaveBeenCalledTimes(1);
+    expect(plaDe(worker.self.clients.matchAll.mock.calls[0][0])).toEqual({ type: 'window', includeUncontrolled: true });
+    expect(finestra.focus).toHaveBeenCalledTimes(1);
+    expect(finestra.navigate).not.toHaveBeenCalled();
+    expect(worker.self.clients.openWindow).not.toHaveBeenCalled();
+  });
+
+  test('una finestra pròpia fora del Xat (també /xatxa): primer la porta a /xat i després l\'enfoca', async () => {
+    for (const cami of ['/mur', '/xatxa', '/']) {
+      const finestra = finestraFalsa(`${ORIGEN}${cami}`, { visibilityState: 'visible' });
+      const worker = workerAmbFinestres([finestra]);
+      await toca(worker, avisDelXat());
+      expect(finestra.navigate, cami).toHaveBeenCalledWith(XAT);
+      expect(finestra.focus, cami).toHaveBeenCalledTimes(1);
+      expect(finestra.navigate.mock.invocationCallOrder[0], cami).toBeLessThan(finestra.focus.mock.invocationCallOrder[0]);
+      expect(finestra.url, cami).toBe(XAT);
+      expect(worker.self.clients.openWindow, cami).not.toHaveBeenCalled();
+    }
+  });
+
+  /* Gauntlet c3 (sw-notificationclick-openwindow-despres-de-focus) · Amb el
+     permís d'interacció modelat, el pla B obri de veres la finestra. */
+  test('una finestra que no es deixa navegar (no controlada: recàrrega amb Maj): no s\'enfoca abans, i la finestra nova al Xat ix amb el permís intacte', async () => {
+    const finestra = finestraFalsa(`${ORIGEN}/mur`, { focused: true, navegaFalla: true });
+    const worker = workerAmbFinestres([finestra]);
+    await toca(worker, avisDelXat());
+    expect(finestra.navigate).toHaveBeenCalledWith(XAT);
+    expect(finestra.focus).not.toHaveBeenCalled();
+    expect(worker.self.clients.openWindow).toHaveBeenCalledWith(XAT);
+    expect(worker.self.clients.obertes).toEqual([XAT]);
+  });
+
+  test('si no es deixa enfocar: navegada al Xat, cap finestra de més; si ja hi era, s\'intenta obrir-ne una i el toc acaba sense rebuig', async () => {
+    const navegada = finestraFalsa(`${ORIGEN}/mur`, { focused: true, enfocaFalla: true });
+    const worker = workerAmbFinestres([navegada]);
+    await toca(worker, avisDelXat());
+    expect(navegada.url).toBe(XAT);
+    expect(worker.self.clients.openWindow).not.toHaveBeenCalled();
+    const alXat = finestraFalsa(`${ORIGEN}/xat`, { focused: true, enfocaFalla: true });
+    const altre = workerAmbFinestres([alXat]);
+    await expect(toca(altre, avisDelXat())).resolves.toBe(1);
+    expect(alXat.navigate).not.toHaveBeenCalled();
+    expect(altre.self.clients.openWindow).toHaveBeenCalledWith(XAT);
+  });
+
+  test('sense cap finestra pròpia (només d\'un altre origen), o si matchAll falla: se n\'obri una al Xat, i la d\'un altre origen no es toca', async () => {
+    const forastera = finestraFalsa('https://altre.org/xat', { focused: true, visibilityState: 'visible' });
+    const worker = workerAmbFinestres([forastera]);
+    await toca(worker, avisDelXat());
+    expect(forastera.focus).not.toHaveBeenCalled();
+    expect(worker.self.clients.obertes).toEqual([XAT]);
+    const senseLlista = workerAmbFinestres(null, { matchAll: vi.fn(async () => { throw new Error('no'); }) });
+    await toca(senseLlista, avisDelXat());
+    expect(senseLlista.self.clients.obertes).toEqual([XAT]);
+  });
+
+  test('triaFinestra (pura): la pròpia enfocada, si no la visible, si no la primera pròpia; una URL que no es llig no compta', () => {
+    const { api } = carregaWorker();
+    const f = (url, extra = {}) => ({ url, ...extra });
+    expect(api.triaFinestra([f(`${ORIGEN}/mur`, { visibilityState: 'visible' }), f(`${ORIGEN}/xat`, { focused: true })], ORIGEN)).toBe(1);
+    expect(api.triaFinestra([f('https://altre.org/', { focused: true }), f(`${ORIGEN}/a`), f(`${ORIGEN}/b`, { visibilityState: 'visible' })], ORIGEN)).toBe(2);
+    expect(api.triaFinestra([f('això no és cap URL', { focused: true }), f(`${ORIGEN}/c`)], ORIGEN)).toBe(1);
+    expect(api.triaFinestra([f('https://socdepoble.org.altre.org/', { focused: true }), f(`${ORIGEN}/d`)], ORIGEN)).toBe(1);
+    expect(api.triaFinestra([f(`${ORIGEN}/e`, { focused: 'true' }), f(`${ORIGEN}/f`)], ORIGEN)).toBe(0);
+    for (const valor of [[], null, undefined, [f('https://altre.org/')], [null]]) expect(api.triaFinestra(valor, ORIGEN)).toBe(-1);
+    expect(api.esAvisDelXat({ tag: 'sdp-xat' })).toBe(true);
+    for (const avis of [null, undefined, {}, { tag: 'sdp-xat-2' }]) expect(api.esAvisDelXat(avis)).toBe(false);
+    for (const cami of ['/xat', '/xat/', '/xat/123']) expect(api.RUTA_DEL_XAT.test(cami), cami).toBe(true);
+    for (const cami of ['/xatxa', '/mur/xat', '/', '/XAT']) expect(api.RUTA_DEL_XAT.test(cami), cami).toBe(false);
+  });
+
+  test('paritat: l\'etiqueta i el camí són els de la pàgina (src/pwa/avisosPush.js) i el camí és la ruta del Xat', () => {
+    const { api } = carregaWorker();
+    expect(api.ETIQUETA_AVIS_XAT).toBe(ETIQUETA_AVIS_XAT);
+    expect(api.CAMI_DEL_XAT).toBe('/xat');
+    expect(api.RUTA_DEL_XAT.test(api.CAMI_DEL_XAT)).toBe(true);
+  });
+
+  test('R1: cap versió de sw.js sense gestor de push (Safari revocaria totes les subscripcions); cap pushsubscriptionchange', () => {
+    expect(CODI).toContain("self.addEventListener('push'");
+    expect(CODI).toContain("self.addEventListener('notificationclick'");
+    expect(CODI).not.toMatch(/['"]pushsubscriptionchange['"]/);
   });
 });

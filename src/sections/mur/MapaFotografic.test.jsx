@@ -132,6 +132,8 @@ describe('fons i atribució', () => {
     expect(ocultar.getAttribute('aria-pressed')).toBe('true');
     expect(tesseles().length).toBeGreaterThan(0);
     expect(tesseles().every((img) => /^https:\/\/tile\.openstreetmap\.org\/\d+\/\d+\/\d+\.png$/.test(img.getAttribute('src')))).toBe(true);
+    // Decisió del Mestre (30-10-2026) · La capa de tessel·les no porta cap classe sense regla.
+    expect(tesseles()[0].closest('.leaflet-layer').className.trim()).toBe('leaflet-layer');
     expect(window.localStorage.getItem('sdp-mapa-fons')).toBe('1');
     expect(document.querySelector('.sdp-mapa__estat').textContent).toContain('Carregant el fons detallat…');
 
@@ -146,6 +148,27 @@ describe('fons i atribució', () => {
     await munta();
     await waitFor(() => expect(tesseles().length).toBeGreaterThan(0));
     expect(screen.getByRole('button', { name: 'Ocultar mapa' }).getAttribute('aria-pressed')).toBe('true');
+  });
+
+  /* CL-08 · Passa per config/storage.js amb les claus de sempre, sense prefix
+     (legalContent.js les nomena), i un navegador que veta l'emmagatzematge
+     (navegació privada, quota plena) no trenca el mapa: la tria dura la visita. */
+  test('CL-08 · sense emmagatzematge el mapa obri i la tria dura la visita; les claus no canvien', async () => {
+    const llig = vi.spyOn(Storage.prototype, 'getItem').mockImplementation(() => { throw new Error('SecurityError'); });
+    const escriu = vi.spyOn(Storage.prototype, 'setItem').mockImplementation(() => { throw new Error('QuotaExceededError'); });
+    try {
+      await munta();
+      expect(llig).toHaveBeenCalledWith('sdp-mapa-fons');
+      const vore = screen.getByRole('button', { name: 'Vore mapa' });
+      expect(vore.getAttribute('aria-pressed')).toBe('false');
+      await pinta(() => vore.click());
+      expect(escriu).toHaveBeenCalledWith('sdp-mapa-fons', '1');
+      expect(screen.getByRole('button', { name: 'Ocultar mapa' }).getAttribute('aria-pressed')).toBe('true');
+      expect(tesseles().length).toBeGreaterThan(0);
+    } finally {
+      llig.mockRestore();
+      escriu.mockRestore();
+    }
   });
 
   test('a l’app nativa no hi ha «Vore mapa» ni cap tessel·la, encara que el navegador la recorde', async () => {

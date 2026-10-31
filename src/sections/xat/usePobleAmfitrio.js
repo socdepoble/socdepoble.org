@@ -6,7 +6,7 @@
 import { useMemo } from 'react';
 import { useUIState } from '../../app/contexts/UIContext';
 import { useCoreContent } from '../../app/contexts/CoreContentContext';
-import { avatarDelPoble, pobleDeConfig } from './pobleAmfitrio.js';
+import { avatarDelPoble, pobleDeConfig, pobleDelXat } from './pobleAmfitrio.js';
 
 export default function usePobleAmfitrio() {
   const { externalConfig } = useUIState();
@@ -23,9 +23,13 @@ export default function usePobleAmfitrio() {
  * comunitat d'un poble, i sense això eixes superfícies hi pintaven les
  * inicials mentre la llista ja portava la cara. Sense poble o sense fitxa,
  * `cara` és null i res no canvia.
+ * P1-70 (ordre del Mestre, 261029 18:20) · El poble és el de la fila del xat
+ * (pobleDelXat): sense amfitrió, la Torre (POBLE_PER_DEFECTE), amb la seua
+ * foto de reserva. Així el rail i els Preferits vestixen la comunitat de la
+ * Torre com la llista, també a socdepoble.org.
  */
 export function useCaraDelPoble() {
-  const poble = usePobleAmfitrio();
+  const poble = pobleDelXat(usePobleAmfitrio());
   const { towns } = useCoreContent();
   const cara = useMemo(() => avatarDelPoble(poble, towns), [poble, towns]);
   return { poble, cara };

@@ -83,7 +83,11 @@ for (const [literal, exportacio] of Object.entries(CANONICS)) {
   }
 }
 
-/* ─── R1: cap literal orfe ─── */
+/* ─── R1: cap literal orfe ───
+   Ordre del Mestre (30-10-2026) · el literal compta només si no és la cua d'un nom més
+   llarg: la carpeta germana de l'arxiu fred («../_arxiu_» + el nom de la Wiki) no és la Wiki. */
+const RE_LITERAL = Object.fromEntries(Object.keys(CANONICS).map((literal) =>
+  [literal, new RegExp(`(?<![A-Za-z0-9_])${literal.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}`)]));
 for (const dir of ABAST) {
   for (const fitxer of camina(dir)) {
     if (EXEMPTS.has(fitxer) || /\.test\.(?:mjs|cjs|js)$/.test(fitxer)) continue;
@@ -96,7 +100,7 @@ for (const dir of ABAST) {
       const net = linies[i].replace(/\/\/.*$/, '');
       if (/^\s*\*/.test(linies[i])) continue; // comentari de bloc
       for (const [literal, exportacio] of Object.entries(CANONICS)) {
-        if (net.includes(literal)) {
+        if (RE_LITERAL[literal].test(net)) {
           registra('literal-orfe', fitxer, i + 1,
             `Literal «${literal}» sense importar la SSOT. Usa \`${exportacio}\` de ${SSOT}.`);
         }

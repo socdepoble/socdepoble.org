@@ -78,17 +78,6 @@
   overflow: hidden;
 }
 
-/* En «mitja», la columna dreta del Perfil té context d'apilament propi. Si no,
-   les barres sticky de la fitxa (blava 99090, taronja 99080, eines 99070)
-   competixen amb el panell lliscant (30) i el tapen on se solapen. Només al
-   Perfil. Al Bloc de Notes la blava i la taronja són static, però les eines
-   també s'ancoren (99070): si mai hi calguera aïllar la columna, es faria a
-   `.sdp-bloc`, no a la graella comuna (AppGridShell.capes.test.js). */
-.perfil-espai .app-grid-shell[data-layout="mitja"] .app-grid-column--right,
-.perfil-espai.app-grid-shell[data-layout="mitja"] .app-grid-column--right {
-  isolation: isolate;
-}
-
 /* ── «Veure fitxa pública» (AccesFitxaPublica, PerfilShell.jsx) ──
    Ordre del Mestre (19-10-2026, Fase C, punt 9) · La fila 1 de la tercera
    columna quan s'hi veu una identitat: el gris i l'alçada de la fila 1 de

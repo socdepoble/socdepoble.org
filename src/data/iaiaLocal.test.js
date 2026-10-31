@@ -280,12 +280,25 @@ describe('amb la Wiki de veres del paquet', () => {
      revisió: cada fila diu l'estat que n'espera i, si respon, la primera font;
      cap altra font fora de les que hi toquen. Cap instrucció per a la IA, cap
      plantilla, cap fitxa de l'equip. La Wiki pública encara no té cap manual
-     d'ús (Tasca 4 PARCIAL): les fonts que hi toquen són de projecte. */
+     d'ús (Tasca 4 PARCIAL): les fonts que hi toquen són de projecte.
+     IDEA-56 (pla 261029_1605, Bloc F.2) · Esta és la consulta del diàleg
+     «Pregunta a la IAIA», que continua sent la Wiki sola: el fil de la IAIA
+     ja respon «Com puc publicar al Mercat?» o «Com faig una nota?» amb l'Atles
+     (vegeu iaiaLocal.atles.test.js). «Sóc de Poble» és ara un sol terme, i
+     «Qui porta Sóc de Poble?» comença per la visió i els pilars en lloc del
+     full de ruta (actualitzat a posta; la llista permesa no canvia).
+     Ordre del Mestre (30-10-2026; f4 D.2, P1-49 «cercador guiat de la Wiki») ·
+     El nom d'una eina troba el document de la Wiki que el diu com a nom a mitja
+     frase: «la Gestoria», «el Rebost», «el Bar» (ADR-2026-10 i ADR-2026-12 en
+     parlen). Les tres files passen de sense_resultats a les seues fonts
+     (actualitzat a posta). Les paraules comunes («Quant costa?», «Com faig una
+     nota?», «Què és un node?») continuen sense cap font. */
   test.each([
     ['Com puc publicar al Mercat?', 'sense_resultats'],
-    ['Què és la Gestoria?', 'sense_resultats'],
+    ['Què és la Gestoria?', 'resposta', 'ADR-2026-12-MODULS-OPCIONALS',
+      ['ADR-2026-12-MODULS-OPCIONALS', 'ADR-2026-13-BYOP-XIFRAT-LOCAL', 'ADR-2026-10-APPS-DEL-DISPOSITIU']],
     ['Com pujo una foto al xat?', 'sense_resultats'],
-    ['Qui porta Sóc de Poble?', 'resposta', '00_full_de_ruta',
+    ['Qui porta Sóc de Poble?', 'resposta', '00_visio_i_pilars',
       ['00_full_de_ruta', '00_visio_i_pilars', 'identitat_visual', 'el_projecte', 'arquitectura_l_anima', '01_identitat', '00_index_identitat']],
     ['Com esborre el meu compte?', 'sense_resultats'],
     ['Què és un node?', 'sense_resultats'],
@@ -296,8 +309,9 @@ describe('amb la Wiki de veres del paquet', () => {
     ['Quant costa?', 'sense_resultats'],
     ['Com instal·le l’app al mòbil?', 'sense_resultats'],
     ['Com em registre?', 'sense_resultats'],
-    ['Què és el Rebost?', 'sense_resultats'],
-    ['Com funciona el Bar?', 'sense_resultats'],
+    ['Què és el Rebost?', 'resposta', 'ADR-2026-12-MODULS-OPCIONALS', ['ADR-2026-12-MODULS-OPCIONALS']],
+    ['Com funciona el Bar?', 'resposta', 'ADR-2026-12-MODULS-OPCIONALS',
+      ['ADR-2026-12-MODULS-OPCIONALS', 'ADR-2026-10-APPS-DEL-DISPOSITIU', 'ADR-2026-13-BYOP-XIFRAT-LOCAL']],
     ['Com passe les portes de qualitat?', 'sense_resultats']
   ])('«%s»: %s', async (pregunta, estat, primera, quehitoquen = []) => {
     const r = await consultaTecnicaIAIA(pregunta);

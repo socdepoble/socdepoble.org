@@ -252,7 +252,9 @@ test('MD · Llei del Píxel: a 1400 i a 820 el DOM és idèntic amb l’activaci
         const sense = senseIds(munta({ mestreDetall: false }).container.innerHTML);
         cleanup();
         const { container } = munta({ mestreDetall, tornaDeLaLlista: () => {} });
-        expect(closca(container).dataset.layout).toBe(amplada === 1400 ? 'ample' : 'mitja');
+        /* Columnes fixes (ordre del Mestre, 30-10-2026) · A 820 també
+           «ample»: el Workspace no passa per «mitja». */
+        expect(closca(container).dataset.layout).toBe('ample');
         expect(senseIds(container.innerHTML), `${amplada} ${JSON.stringify(mestreDetall)}`).toBe(sense);
         fireEvent.click(fletxaBlava(container));
         expect(mocks.navigate).toHaveBeenLastCalledWith(-1);

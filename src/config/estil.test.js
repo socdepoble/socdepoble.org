@@ -12,6 +12,14 @@ import {
 
 const BUIT = { v: 1, tokens: {}, crom: null };
 const NOMS = TOKENS_EDITABLES.map((t) => t.nom);
+/* Decisió del Mestre (30-10-2026) · Les línies de CSS esperades es componen amb
+   noms en constant: tractor-tokens (T3, T4) llig src sencer i les prendria per
+   declaracions o primitives d'este fitxer. El valor de cada cadena no canvia. */
+const tok = (nom) => ['--sdp', nom].join('-');
+const varDe = (nom) => ['var(', nom, ')'].join('');
+const FONS_APP = tok('fons-app');
+const RADI_S = tok('radi-s');
+const RADI_M = tok('radi-m');
 
 /* El tema clar de tokens.css: la PRIMERA definició de cada token (la capa 2
    clara va abans del fosc i del Bancal; els cànons de marca es definixen una
@@ -112,7 +120,7 @@ describe('valorValid i cromValid', () => {
   test('color: només #rrggbb; radi: només l’escala', () => {
     expect(valorValid('--sdp-fons-app', '#ff7300')).toBe(true);
     expect(valorValid('--sdp-fons-app', '#FF7300')).toBe(true);
-    for (const v of ['#fff', 'red', 'rgb(0,0,0)', 'var(--sdp-pedra-900)', '#ffffff ', '', null, 7]) expect(valorValid('--sdp-fons-app', v)).toBe(false);
+    for (const v of ['#fff', 'red', 'rgb(0,0,0)', varDe(tok('pedra-900')), '#ffffff ', '', null, 7]) expect(valorValid('--sdp-fons-app', v)).toBe(false);
     expect(valorValid('--sdp-radi-s', '12px')).toBe(true);
     for (const v of ['10px', '8 px', '8', '999', 'var(--sdp-radi-m)', '']) expect(valorValid('--sdp-radi-s', v)).toBe(false);
     expect(valorValid('--sdp-radi-s', '#ffffff')).toBe(false);
@@ -154,9 +162,9 @@ describe('validaEstil', () => {
   test('token fora de la llista, color invàlid, radi fora de l’escala', () => {
     expect(validaEstil({ ...BUIT, tokens: { '--sdp-pedra-900': '#ffffff' } })).toEqual(['Token fora de la llista: --sdp-pedra-900.']);
     expect(validaEstil({ ...BUIT, tokens: { '--sdp-crom-capcalera': '#ffffff' } })).toEqual(['Token fora de la llista: --sdp-crom-capcalera.']);
-    expect(validaEstil({ ...BUIT, tokens: { '--sdp-fons-app': 'red' } })).toEqual(['Valor invàlid per a --sdp-fons-app: cal un color #rrggbb.']);
+    expect(validaEstil({ ...BUIT, tokens: { '--sdp-fons-app': 'red' } })).toEqual([`Valor invàlid per a ${FONS_APP}: cal un color #rrggbb.`]);
     expect(validaEstil({ ...BUIT, tokens: { '--sdp-radi-s': '10px' } }))
-      .toEqual([`Valor invàlid per a --sdp-radi-s: cal un radi de l'escala (${ESCALA_RADIS.join(', ')}).`]);
+      .toEqual([`Valor invàlid per a ${RADI_S}: cal un radi de l'escala (${ESCALA_RADIS.join(', ')}).`]);
   });
 
   test('injecció: cap valor amb ;, }, url(, barra invertida, expression, < o > passa', () => {
@@ -190,16 +198,16 @@ describe('cssDePersonalitzacio', () => {
     expect(cssDePersonalitzacio({ v: 1, tokens: { '--sdp-fons-app': 'red', '--sdp-pedra-900': '#ffffff' } })).toBe('');
   });
 
-  test('només línies --sdp-x: valor; dins del bloc base i del bloc del tema fosc, en l’ordre de la llista', () => {
+  test(`només línies ${tok('x')}: valor; dins del bloc base i del bloc del tema fosc, en l’ordre de la llista`, () => {
     const css = cssDePersonalitzacio({ v: 1, tokens: { '--sdp-radi-s': '12px', '--sdp-fons-app': '#ffffff' }, crom: { to: 10 } });
     expect(css).toBe([
       ':root, :host, .sdp-root {',
-      '  --sdp-fons-app: #ffffff;',
-      '  --sdp-radi-s: 12px;',
+      `  ${FONS_APP}: #ffffff;`,
+      `  ${RADI_S}: 12px;`,
       '}',
       ':root[data-theme="dark"], :host([data-theme="dark"]), :root[data-theme="dark"] .sdp-root, :host([data-theme="dark"]) .sdp-root {',
-      '  --sdp-fons-app: #ffffff;',
-      '  --sdp-radi-s: 12px;',
+      `  ${FONS_APP}: #ffffff;`,
+      `  ${RADI_S}: 12px;`,
       '}',
       ''
     ].join('\n'));
@@ -208,7 +216,7 @@ describe('cssDePersonalitzacio', () => {
   test('un valor injectat no arriba al CSS; els altres sí', () => {
     const css = cssDePersonalitzacio({ v: 1, tokens: { '--sdp-fons-app': '#ffffff; } * { background: url(x) }', '--sdp-radi-m': '16px' } });
     expect(css).not.toMatch(/url\(|\*|background/);
-    expect(css).toContain('  --sdp-radi-m: 16px;');
+    expect(css).toContain(`  ${RADI_M}: 16px;`);
     expect(css).not.toContain('--sdp-fons-app');
     /* Cada línia del cos és exactament `--sdp-x: valor;`. */
     for (const linia of css.split('\n').filter((l) => l.startsWith('  '))) expect(linia).toMatch(/^ {2}--sdp-[a-z-]+: (#[0-9a-f]{6}|\d+px);$/i);

@@ -134,7 +134,9 @@ export function TriaTitular({ orgId, nomOrg }) {
       const valor = resposta?.titularPublic === true;
       confirmades.current.set(orgDeLaTria, (confirmades.current.get(orgDeLaTria) ?? 0) + 1);
       if (!visible()) return;
-      setEstat((previ) => (previ.orgId === orgDeLaTria ? { ...previ, valor, error: null } : previ));
+      /* P1-15 (P3, Codex 2230) · La confirmació mana sobre la lectura en vol
+         (A→B→A): la casella no ha d'esperar-la desactivada. */
+      setEstat((previ) => (previ.orgId === orgDeLaTria ? { ...previ, carregant: false, valor, error: null } : previ));
       setMissatge({
         tipus: 'exit',
         text: omple(valor
@@ -194,6 +196,13 @@ export function GestioMembres({ organitzacio, accions }) {
   const ocupatRef = useRef(false);
   const viu = useRef(true);
   useEffect(() => { viu.current = true; return () => { viu.current = false; }; }, []);
+  /* P1-15 (Claude 1705) · El component no es remunta en canviar d'entitat
+     (DetallAjust no li posa key). Cada operació porta el seu testimoni: una
+     resposta tardana d'A, quan ja es veu B, no escriu ni la llista ni l'avís
+     de B, ni el deixa «Treballant…». `orgDeLaConfirmacio` és l'entitat on es
+     va obrir la confirmació de «Llevar». */
+  const opActual = useRef(null);
+  const orgDeLaConfirmacio = useRef(null);
   const membresRef = useRef(estat.membres);
   membresRef.current = estat.membres;
 
@@ -239,6 +248,19 @@ export function GestioMembres({ organitzacio, accions }) {
     return () => control.abort();
   }, [orgId, llistaMembres]);
 
+  /* P1-15 · Una altra entitat: l'operació en vol de l'anterior deixa de ser
+     vigent (no escriurà res), el formulari queda lliure i la confirmació
+     oberta es tanca (si no, «Llevar» llevaria a B un membre d'A). Només amb
+     orgId: una llista rellegida de la mateixa entitat no talla l'operació. */
+  useEffect(() => {
+    opActual.current = null;
+    ocupatRef.current = false;
+    orgDeLaConfirmacio.current = null;
+    despresDeTancar.current = null;
+    setOcupat(null);
+    setALlevar(null);
+  }, [orgId]);
+
   /* ── La cerca de candidats, amb espera ── */
   const consulta = text.trim();
   useEffect(() => {
@@ -282,20 +304,29 @@ export function GestioMembres({ organitzacio, accions }) {
     ...candidats.map((c) => ({ valor: clauDeMembre(c), etiqueta: `${c.nom || 'Sense nom'} · ${ETIQUETES_TIPUS[c.tipus]}` })),
   ];
 
-  /* Una operació a la vegada: la guarda, el missatge i el «Treballant…». */
+  /* Una operació a la vegada: la guarda, el missatge i el «Treballant…».
+     `feina` rep `vigent()`: cert mentre el component viu i l'operació no ha
+     quedat enrere per un canvi d'entitat (P1-15). Només l'operació vigent
+     allibera la guarda: la d'A no allibera la que B haja començat després. */
   async function opera(clau, feina, textError) {
     if (ocupatRef.current) return;
+    const op = {};
+    opActual.current = op;
+    const vigent = () => viu.current && opActual.current === op;
     ocupatRef.current = true;
     setOcupat(clau);
     setMissatge(null);
     try {
-      const exit = await feina();
-      if (viu.current && exit) setMissatge({ tipus: 'exit', text: exit });
+      const exit = await feina(vigent);
+      if (vigent() && exit) setMissatge({ tipus: 'exit', text: exit });
     } catch (error) {
-      if (viu.current && !esCancel(error)) setMissatge({ tipus: 'error', text: textDError(error, textError) });
+      if (vigent() && !esCancel(error)) setMissatge({ tipus: 'error', text: textDError(error, textError) });
     } finally {
-      ocupatRef.current = false;
-      if (viu.current) setOcupat(null);
+      if (opActual.current === op) {
+        opActual.current = null;
+        ocupatRef.current = false;
+        if (viu.current) setOcupat(null);
+      }
     }
   }
 
@@ -308,9 +339,9 @@ export function GestioMembres({ organitzacio, accions }) {
     e?.preventDefault?.();
     if (!candidat) return undefined;
     const dades = { tipus: candidat.tipus, id: candidat.id, rol: potTriarRol ? rolNou : 'member' };
-    return opera('afegeix', async () => {
+    return opera('afegeix', async (vigent) => {
       const desat = await desaMembre(orgId, dades);
-      if (!viu.current) return null;
+      if (!vigent()) return null;
       posaMembre(desat);
       setTriat('');
       setText('');
@@ -320,9 +351,9 @@ export function GestioMembres({ organitzacio, accions }) {
   }
 
   function canviaRol(membre, rol) {
-    return opera(`rol:${clauDeMembre(membre)}`, async () => {
+    return opera(`rol:${clauDeMembre(membre)}`, async (vigent) => {
       const desat = await desaMembre(orgId, { tipus: membre.tipus, id: membre.id, rol });
-      if (!viu.current) return null;
+      if (!vigent()) return null;
       posaMembre(desat);
       return rol === 'admin' ? `${membre.nom} ja administra ${nomOrg}.` : `${membre.nom} ja no administra ${nomOrg}.`;
     }, 'No s’ha pogut canviar el rol.');
@@ -332,13 +363,25 @@ export function GestioMembres({ organitzacio, accions }) {
      «Eixir» a DetallAjust): el missatge es pinta fora del <dialog> modal, i
      amb ell obert l'error quedaria inert i amagat darrere. El missatge i el
      focus els posa l'efecte «després de tancar» (dalt), no opera(). */
+  function obriLleva(membre) {
+    orgDeLaConfirmacio.current = orgId;
+    setALlevar(membre);
+  }
+
   function confirmaLleva() {
     const membre = aLlevar;
     if (!membre) return undefined;
-    return opera('lleva', async () => {
+    /* P1-15 · La baixa és de l'entitat on es va obrir la confirmació: si ja
+       se'n veu una altra, no es lleva res (mai un membre d'A a B). */
+    const orgDeLaBaixa = orgDeLaConfirmacio.current;
+    if (orgDeLaBaixa !== orgId) {
+      setALlevar(null);
+      return undefined;
+    }
+    return opera('lleva', async (vigent) => {
       try {
-        await llevaMembre(orgId, { tipus: membre.tipus, id: membre.id });
-        if (!viu.current) return null;
+        await llevaMembre(orgDeLaBaixa, { tipus: membre.tipus, id: membre.id });
+        if (!vigent()) return null;
         setEstat((previ) => ({ ...previ, membres: previ.membres.filter((m) => clauDeMembre(m) !== clauDeMembre(membre)) }));
         despresDeTancar.current = {
           missatge: { tipus: 'exit', text: `${membre.nom} ja no és membre de ${nomOrg}.` },
@@ -346,9 +389,10 @@ export function GestioMembres({ organitzacio, accions }) {
         };
       } catch (error) {
         if (esCancel(error)) throw error;
-        despresDeTancar.current = { missatge: { tipus: 'error', text: textDError(error, 'No s’ha pogut llevar el membre.') } };
+        if (vigent()) despresDeTancar.current = { missatge: { tipus: 'error', text: textDError(error, 'No s’ha pogut llevar el membre.') } };
       } finally {
-        if (viu.current) setALlevar(null);
+        /* Una baixa d'A que torna tard no tanca la confirmació que B haja obert. */
+        if (vigent()) setALlevar(null);
       }
       return null;
     }, 'No s’ha pogut llevar el membre.');
@@ -407,7 +451,7 @@ export function GestioMembres({ organitzacio, accions }) {
                           </Boto>
                         ) : null}
                         {sobre.lleva ? (
-                          <Boto varietat="perill" onClick={() => setALlevar(membre)} disabled={Boolean(ocupat)}
+                          <Boto varietat="perill" onClick={() => obriLleva(membre)} disabled={Boolean(ocupat)}
                             aria-label={`Llevar: ${membre.nom}`}>
                             Llevar
                           </Boto>

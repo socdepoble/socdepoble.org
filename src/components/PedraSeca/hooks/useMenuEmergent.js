@@ -20,15 +20,25 @@
  * Torna { ref, tria, mouFocus }: `ref` va al node role=menu i `mouFocus`, al
  * seu onKeyDown. El marcatge, les classes i la pell són de cada menú: el
  * hook no pinta res (Llei del Píxel).
+ *  · Gauntlet 261030 (Fase 3, TC3.3; menu-traduir-tab-dins-del-menu) ·
+ *    `tancaAmbTab` (opt-in; hui només el menú de Traduir): el patró de menú
+ *    de l'APG de WAI-ARIA. Tab i Maj+Tab no es consumixen: el navegador mou
+ *    el focus a la parada següent (o anterior) de la pàgina i, just després,
+ *    el menú es tanca, sense tornar el focus al botó. Les files van amb
+ *    tabIndex -1 (les mou el teclat amb les fletxes): el menú és una sola
+ *    parada. Sense l'opció (Comentar, Moderació), com abans.
  */
 import { useEffect, useRef } from 'react';
 
 const PASSOS = Object.freeze({ ArrowDown: 1, ArrowUp: -1 });
 
-export function useMenuEmergent({ files, onTria, onTanca, botoRef = null, mostra = false }) {
+export function useMenuEmergent({ files, onTria, onTanca, botoRef = null, mostra = false, tancaAmbTab = false }) {
   const ref = useRef(null);
   const tancaRef = useRef(onTanca);
+  /* TC3.3 · El tancament que espera que el Tab haja mogut el focus. */
+  const tabRef = useRef(null);
   useEffect(() => { tancaRef.current = onTanca; }, [onTanca]);
+  useEffect(() => () => clearTimeout(tabRef.current), []);
 
   useEffect(() => {
     if (mostra) return undefined;
@@ -62,6 +72,12 @@ export function useMenuEmergent({ files, onTria, onTanca, botoRef = null, mostra
   };
 
   const mouFocus = (event) => {
+    if (tancaAmbTab && !mostra && event.key === 'Tab') {
+      /* El Tab fa el seu camí (cap preventDefault) i el menú es tanca darrere. */
+      clearTimeout(tabRef.current);
+      tabRef.current = setTimeout(() => tancaRef.current?.(), 0);
+      return;
+    }
     if (!(event.key in PASSOS) && event.key !== 'Home' && event.key !== 'End') return;
     const totes = Array.from(ref.current?.querySelectorAll(files) || []);
     if (!totes.length) return;

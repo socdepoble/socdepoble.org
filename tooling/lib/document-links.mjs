@@ -45,5 +45,24 @@ export function resolveDocumentLink(link, source, files, root) {
     return fs.existsSync(f) && fs.statSync(f).isFile();
   });
   if (found.length !== 1) throw new Error(`${found.length ? 'Enllaç ambigu' : 'Enllaç inexistent'}: ${target}`);
-  return found[0];
+  return nomsDelDisc(found[0], root);
+}
+/* 261031 (ordre del Mestre, Ronda 1) · APFS no distingix la normalització Unicode:
+   un enllaç NFC («Gestió», com el guarda Git) obri una carpeta que el Finder ha
+   escrit NFD, però les portes comparen el camí amb els noms del directori. Es torna
+   el camí amb cada segment tal com és al disc; els segments ASCII no es miren. */
+function nomsDelDisc(fitxer, root) {
+  const base = path.resolve(root);
+  const rel = path.relative(base, fitxer);
+  if (!/[^\x00-\x7f]/.test(rel)) return fitxer;
+  let actual = base;
+  for (const segment of rel.split(path.sep)) {
+    let nom = segment;
+    if (/[^\x00-\x7f]/.test(segment)) {
+      const entrades = fs.readdirSync(actual);
+      if (!entrades.includes(segment)) nom = entrades.find(e => e.normalize('NFC') === segment.normalize('NFC')) ?? segment;
+    }
+    actual = path.join(actual, nom);
+  }
+  return actual;
 }

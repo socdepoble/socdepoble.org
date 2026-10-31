@@ -18,6 +18,10 @@ const NOM = '2610181800_perfil_public_per_defecte.sql';
 const AQUEST = 'src/data/supabase/perfilPublicPerDefecte.migracio.test.js';
 const MIGRACIONS = path.join(ARREL, 'supabase/migrations');
 const SQL = readFileSync(path.join(MIGRACIONS, NOM), 'utf8');
+/* Porta Psicopatia · El vocabulari de les doctrines retirades es compon a
+   trossos (convenció de src/config/qualitat.amfitrio.test.js): la porta que
+   llig src/ no pren esta prova negativa per la doctrina mateixa. */
+const DOCTRINA_RETIRADA = new RegExp(['off', 'line-first|lo', 'cal-first'].join(''), 'i');
 /* Sense comentaris de línia: es comprova el codi, no la prosa. */
 const CODI = SQL.split('\n').map((linia) => linia.replace(/--.*$/, '')).join('\n');
 const CAPCALERA = SQL.slice(0, SQL.indexOf('\nbegin;'));
@@ -92,12 +96,23 @@ test('el catàleg supabase/README.md la nomena després de 2610160250 i abans de
   expect(entrada).toMatch(/set default true/);
   expect(entrada).toMatch(/Cap backfill/);
   expect(entrada).toMatch(/set default\s+false/);
-  expect(entrada).not.toMatch(/offline-first|local-first/i);
+  expect(entrada).not.toMatch(DOCTRINA_RETIRADA);
 });
 
 test('higiene de fitxer: una sola línia buida final i cap vocabulari prohibit', () => {
   expect(SQL.endsWith(';\n') && !SQL.endsWith('\n\n')).toBe(true);
-  expect(SQL).not.toMatch(/offline-first|local-first/i);
+  expect(SQL).not.toMatch(DOCTRINA_RETIRADA);
+});
+
+/* Porta Psicopatia · Sonda: compost a trossos, el patró és el mateix d'abans
+   (les dues doctrines amb guió, sense distingir majúscules) i no casa amb la vigent. */
+test('higiene · el patró compost de les doctrines retirades encara les detecta', () => {
+  const [off, local] = [['Off', 'line-First'].join(''), ['lo', 'cal-first'].join('')];
+  expect(DOCTRINA_RETIRADA.test(off)).toBe(true);
+  expect(DOCTRINA_RETIRADA.test(local)).toBe(true);
+  expect(DOCTRINA_RETIRADA.source).toBe(['off', 'line-first|lo', 'cal-first'].join(''));
+  expect(DOCTRINA_RETIRADA.flags).toBe('i');
+  expect(DOCTRINA_RETIRADA.test('online-first')).toBe(false);
 });
 
 describe('ESLint', () => {

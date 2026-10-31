@@ -204,3 +204,74 @@ export function registraServiceWorker({
     finestra.addEventListener('load', () => resol(registra()), { once: true });
   });
 }
+
+/* Ordre nocturna 261030_0252 (Fase 3, WP) · Avisos push del Xat, fase N1 i
+   inert: encara no la crida ningú. */
+/** Quant s'espera, com a molt, el registre del worker per als avisos push. */
+export const TOPALL_REGISTRE_ACTIU_MS = 3000;
+
+/**
+ * El registre del worker propi (RUTA_DEL_SW, abast ABAST_DEL_SW) quan té un
+ * worker actiu i cap versió en espera ni instal·lant-se, o null. És el que
+ * rep src/pwa/avisosPush.js, que no pot nomenar el worker (la frontera de
+ * registre.test.js): un worker vell actiu amb un de nou en espera (el de juny
+ * també es deia /sw.js) no es pot subscriure. Usa getRegistration, que torna
+ * de seguida, i no `ready`, que no es resol mai si no hi ha cap worker; i, per
+ * si de cas, un topall. Mai llança.
+ */
+export async function registreActiu({ navegador = globalThis.navigator, topallMs = TOPALL_REGISTRE_ACTIU_MS } = {}) {
+  const sw = navegador && navegador.serviceWorker;
+  if (!sw || typeof sw.getRegistration !== 'function') return null;
+  let rellotge = null;
+  try {
+    const topall = new Promise((resol) => {
+      rellotge = setTimeout(() => resol(null), topallMs);
+    });
+    const registre = await Promise.race([Promise.resolve().then(() => sw.getRegistration(ABAST_DEL_SW)), topall]);
+    if (!registre || !registre.active || registre.waiting || registre.installing) return null;
+    return new URL(registre.active.scriptURL).pathname === RUTA_DEL_SW ? registre : null;
+  } catch {
+    return null;
+  } finally {
+    clearTimeout(rellotge);
+  }
+}
+
+/* Si un worker (actiu, en espera o instal·lant-se) és el propi. Mai llança. */
+function esWorkerPropi(worker) {
+  try {
+    return Boolean(worker) && new URL(worker.scriptURL).pathname === RUTA_DEL_SW;
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Gauntlet c3 (push-desactiva-fals-exit-amb-worker-en-espera) · El registre
+ * del worker propi (abast ABAST_DEL_SW) si el seu worker actiu, en espera o
+ * instal·lant-se és RUTA_DEL_SW, o null; AMB versió en espera o sense. És el
+ * de la BAIXA dels avisos push: desactivaAvisosPush, l'interruptor
+ * (sincronitzaAvisosPush) i netejaAvisosPush. La subscripció penja del
+ * registre, no del worker actiu, i després de cada desplegament de
+ * public/sw.js hi ha una versió en espera fins que es tanquen les pestanyes
+ * (el worker no fa skipWaiting): amb registreActiu() la baixa no trobaria el
+ * registre i la subscripció continuaria viva. Per a SUBSCRIURE, registreActiu().
+ * Mateix getRegistration i mateix topall. Mai llança.
+ */
+export async function registreDelSw({ navegador = globalThis.navigator, topallMs = TOPALL_REGISTRE_ACTIU_MS } = {}) {
+  const sw = navegador && navegador.serviceWorker;
+  if (!sw || typeof sw.getRegistration !== 'function') return null;
+  let rellotge = null;
+  try {
+    const topall = new Promise((resol) => {
+      rellotge = setTimeout(() => resol(null), topallMs);
+    });
+    const registre = await Promise.race([Promise.resolve().then(() => sw.getRegistration(ABAST_DEL_SW)), topall]);
+    if (!registre) return null;
+    return [registre.active, registre.waiting, registre.installing].some(esWorkerPropi) ? registre : null;
+  } catch {
+    return null;
+  } finally {
+    clearTimeout(rellotge);
+  }
+}

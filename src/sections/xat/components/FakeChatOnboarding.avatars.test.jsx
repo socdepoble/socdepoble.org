@@ -90,11 +90,19 @@ test('incrustat en un amfitrió, les cares pengen de la carpeta del paquet', () 
   });
 });
 
-test('si el contingut del node no té la fitxa del poble, la comunitat es queda amb les inicials (cap cara inventada)', () => {
+/* P1-70 (261029) · «A Gent de la Torre li falta la imatge»: sense la fitxa al
+   node, la foto de la llavor (POBLE_PER_DEFECTE.avatar), mai «GD». Un altre
+   poble declarat sense fitxa continua amb les inicials: cap cara inventada. */
+test('si el contingut del node no té la fitxa de la Torre, la comunitat porta la seua foto de la llavor (mai GD); un altre poble, les inicials', () => {
   mocks.towns = [{ id: 'sella', avatar_url: '/assets/towns/sella/2.jpg' }];
   const { container } = munta();
-  expect(cares(container)).toEqual({ 'Gent de la Torre': null, 'IAIA MarIA': IAIA, 'Sóc de Poble': LOGO, 'Javi Llinares': JAVI });
-  expect(container.querySelector('[title="Gent de la Torre"]').textContent).toContain('GD');
+  expect(cares(container)).toEqual({ 'Gent de la Torre': TORRE.avatar_url, 'IAIA MarIA': IAIA, 'Sóc de Poble': LOGO, 'Javi Llinares': JAVI });
+  expect(container.querySelector('[title="Gent de la Torre"]').textContent).not.toContain('GD');
+  cleanup();
+  mocks.towns = [];
+  mocks.externalConfig = { poble: 'altea', nomPoble: "Gent d'Altea" };
+  const altre = munta();
+  expect(cares(altre.container)["Gent d'Altea"]).toBeNull();
 });
 
 test('sense poble declarat, les quatre files porten cara: també «Gent de la Torre», el poble de la llavor', () => {

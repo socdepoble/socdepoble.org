@@ -179,8 +179,9 @@ const FONTS = Object.freeze({
     llegint: 'Llegint el mapa…', error: 'No s’ha pogut llegir el mapa', absent: 'Mapa no disponible',
     explica: (
       <>
-        Esta dada viu del Mapa (<Mono>GET /__iaia/mapa.json</Mono>), que només se servix al servidor local de
-        desenvolupament. Sense Mapa no hi ha mesura, i la Consola no n’inventa cap.
+        Esta dada viu del Mapa (<Mono>GET /__iaia/mapa.json</Mono>): en viu, al servidor local de
+        desenvolupament, i a la web publicada, en la instantània sanejada de cada publicació. Sense Mapa no hi
+        ha mesura, i la Consola no n’inventa cap.
       </>
     )
   }),
@@ -188,8 +189,9 @@ const FONTS = Object.freeze({
     llegint: 'Llegint l’estat de l’eixam…', error: 'No s’ha pogut llegir consola.json', absent: 'Consola no disponible',
     explica: (
       <>
-        Esta dada viu de consola.json (<Mono>GET /__iaia/consola.json</Mono>), que només se servix al servidor
-        local de desenvolupament. En producció no n’hi ha, i la Consola no n’inventa cap.
+        Esta dada viu de consola.json (<Mono>GET /__iaia/consola.json</Mono>): en viu, al servidor local de
+        desenvolupament, i a la web publicada, en la instantània sanejada de cada publicació. Este paquet no la
+        porta, i la Consola no n’inventa cap.
       </>
     )
   })

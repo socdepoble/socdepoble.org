@@ -56,8 +56,10 @@ const CERCA = 'Cerca una nota, una pàgina o una carpeta';
    La Consola també ho és, però no es repetix: ja és al grup de la Wiki, com
    abans (Llei del Píxel).
    Ordre del Mestre (261026_2126; prompt 261026_2130, tasca 1) · Amb
-   «Descàrregues i Aplicacions», l'última de SYSTEM_PAGES. */
-const PAGINES = ['projecte', 'constitucio', 'roadmap', 'notes', 'cervell', 'versions', 'legal', 'xat', 'drets-autor', 'descarregues', 'anima', 'fedivers'];
+   «Descàrregues i Aplicacions», l'última de SYSTEM_PAGES.
+   Ordre del Mestre (30-10-2026; candidatura NLnet NGI Fediversity) · Amb
+   «Candidatura Europea NLnet · NGI Fediversity», ara l'última. */
+const PAGINES = ['projecte', 'constitucio', 'roadmap', 'notes', 'cervell', 'versions', 'legal', 'xat', 'drets-autor', 'descarregues', 'fediversity', 'anima', 'fedivers'];
 
 beforeEach(() => {
   setLocalNoteField.mockReset();
@@ -187,12 +189,18 @@ test('prémer una carpeta (de la Wiki o del Bloc) o una pàgina del sistema no e
    Prova actualitzada a propòsit. El grup de la Wiki és la Wiki que veu qui
    mira: en producció, la Maquinària de la IAIA (i la Consola) només per a qui
    és superadmin (wiki-de-poble/maquinaria.js), com a la Wiki i a /consola. */
-test('en producció la Wiki no porta eines locals: ni es demanen; sense superadmin, ni la Maquinària ni la Consola', async () => {
+/* Ordre del Mestre (30-10-2026, prompt 2208, T2.2) · Prova actualitzada a
+   propòsit: la Consola incrustada de la Wiki és de tothom (maquinaria.js), i
+   el grup de la Wiki, que és la Wiki que veu qui mira, també la porta sense
+   sessió; les eines locals, ni es demanen. Derogat: «sense superadmin, ni la
+   Maquinària ni la Consola». */
+test('en producció la Wiki no porta eines locals: ni es demanen; sense superadmin, la Maquinària només té la Consola', async () => {
   vi.stubEnv('DEV', false);
   try {
     await munta();
     expect(eines.crides).toEqual([]);
-    expect(files('Wiki de Poble')).toEqual([PAGE_COPY.wikidepoble.title, 'SER', 'Genoma', 'Crònica del mas']);
+    expect(files('Wiki de Poble')).toEqual([PAGE_COPY.wikidepoble.title, 'Maquinària de la IAIA', 'SER', PAGE_COPY.consola.title, 'Genoma', 'Crònica del mas']);
+    expect(fila('Wiki de Poble', 'Maquinària de la IAIA').querySelector('.sdp-xat-fila__previa').textContent).toBe('Carpeta · 1 document');
   } finally {
     vi.unstubAllEnvs();
   }

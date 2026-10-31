@@ -7,7 +7,7 @@ import { llegixExif, teExif } from './exif.js';
 import { segmentOrientacio } from './orientacio.js';
 import {
   APP0_JFIF, IMATGE, SOI, app1Exif, concatena, dataOriginal, gpsTorre, jpegAmbExif, orientacio, segment, tiff,
-} from './jpegProva.js';
+} from '../../../../tests/helpers/jpegProva.js';
 
 /* RICH-EXIF (Onada 4, ADR multimèdia D4) · Fitxers sintètics: cap foto real al
    repositori. Cada prova diu què ix i què NO ix. */

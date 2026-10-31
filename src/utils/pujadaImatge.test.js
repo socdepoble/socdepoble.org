@@ -12,7 +12,7 @@ import {
 } from './pujadaImatge.js';
 import {
   APP0_JFIF, IMATGE, SOI, TIPUS, concatena, dataOriginal, gpsTorre, jpegAmbExif, tiff,
-} from '../components/universal/enquadrament/jpegProva.js';
+} from '../../tests/helpers/jpegProva.js';
 import {
   ETIQUETA_CONSERVA_CAMERA, ETIQUETA_CONSERVA_EXIF, ambExifDeLoriginal, exifPublicable, extreuTiff, preparaTiff,
 } from '../components/universal/enquadrament/exifIncrustat.js';

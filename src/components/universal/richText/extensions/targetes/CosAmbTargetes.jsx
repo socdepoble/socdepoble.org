@@ -48,14 +48,18 @@ function TargetaDeLectura({ attrs }) {
    de qui pinta el cos, en lloc de «detail-content». TextSection hi passa la
    seua de sempre, «cms-preview»; «sdp-amb-targetes» hi va sempre, perquè
    conté la flotant de la targeta «sola». Sense la prop, l'article de
-   sempre, byte a byte. */
-export function CosAmbTargetes({ segments = [], className = null }) {
+   sempre, byte a byte.
+   Gauntlet 261030 (cicle 3, tc3-lang-ca-sobre-interficie-traduida) · `lang`
+   (opcional): la llengua del text de la pàgina, que porta cada tros de text
+   (.sdp-cos-tros). Les targetes no: hi ha botons de la interfície. Sense la
+   prop, cap atribut. */
+export function CosAmbTargetes({ segments = [], className = null, lang = undefined }) {
   const trossos = segments.map((segment, index) => (segment.tipus === 'targetes' ? (
     <div key={`g${index}`} className="sdp-targetes" data-forma={segment.forma} data-alineacio={segment.alineacio}>
       {segment.targetes.map((attrs, posicio) => <TargetaDeLectura key={`${attrs.clau}#${posicio}`} attrs={attrs} />)}
     </div>
   ) : (
-    <div key={`h${index}`} className="sdp-cos-tros" dangerouslySetInnerHTML={{ __html: sanitizeHtml(segment.html) }} />
+    <div key={`h${index}`} className="sdp-cos-tros" lang={lang} dangerouslySetInnerHTML={{ __html: sanitizeHtml(segment.html) }} />
   )));
   if (typeof className === 'string' && className.trim()) {
     return <article className={[className.trim(), 'sdp-amb-targetes'].join(' ')}>{trossos}</article>;

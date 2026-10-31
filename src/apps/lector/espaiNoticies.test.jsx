@@ -919,16 +919,30 @@ describe('les dreceres de teclat a la manera de Feedly (E1, 261016)', () => {
     }
   });
 
-  test('en mitjana, amb el panell de la navegació obert per damunt, les dreceres callen', async () => {
+  /* Columnes fixes (ordre del Mestre, 30-10-2026 ~12:45) · Abans, a 800 px
+     la closca era «mitja» i la navegació s'obria com a panell per damunt.
+     Ara és «ample»: cap panell, i les dreceres valen com a 1400. El panell
+     que tapa queda per a «estret», on callen. */
+  test('a 800 (columnes fixes) no hi ha panell per damunt: les dreceres valen, com a 1400', async () => {
     ambAmplada(800);
     munta('/app/lector/noticies/festes');
     await screen.findByRole('region', { name: 'Cultura i festes' });
-    await waitFor(() => expect(closca().dataset.layout).toBe('mitja'));
-    /* El panell tancat: valen. */
+    await waitFor(() => expect(closca().dataset.layout).toBe('ample'));
+    expect(closca().dataset.panell).toBe('');
+    /* Cap obridor de panell (data-obri-columna); els botons que pleguen la
+       navegació la declaren (aria-controls, corrector del Gauntlet). */
+    expect(document.querySelector('#app-grid-sidebar button[data-obri-columna][aria-controls="app-grid-sidebar"]')).toBeNull();
     fitxa(CORREFOC).focus();
     expect(prem(fitxa(CORREFOC), 'n')).toBe(false);
     expect(document.activeElement).toBe(fitxa(ASSAIG));
-    fireEvent.click(document.querySelector('#app-grid-sidebar button[aria-controls="app-grid-sidebar"]'));
+  });
+
+  test('en estret, amb el panell de la navegació obert per damunt, les dreceres callen', async () => {
+    ambAmplada(375);
+    munta('/app/lector/noticies/festes');
+    await waitFor(() => expect(closca().dataset.layout).toBe('estret'));
+    /* El mestre-detall arrenca amb la navegació oberta per damunt (cap
+       notícia a la URL): el panell que tapa. */
     await waitFor(() => expect(closca().dataset.panell).toBe('left'));
     const esports = filaDeLArbre('Esports');
     esports.focus();
@@ -968,13 +982,17 @@ describe('els estats del port', () => {
   });
 });
 
-describe('en mitjana (800 px): la navegació en rail i la llista al costat', () => {
+/* Columnes fixes (ordre del Mestre, 30-10-2026 ~12:45) · A 800 px la closca
+   ja no és «mitja»: és «ample», amb l'arbre a la graella; plegat, el rail
+   d'«ample» porta els mateixos recomptes i tria la carpeta sense panell. */
+describe('a 800 px (columnes fixes): l’arbre a la graella i, plegat, el seu rail', () => {
   beforeEach(() => { ambAmplada(800); });
 
-  test('el rail de l’arbre porta els recomptes al nom; desplegar-lo i triar una carpeta navega i el tanca', async () => {
+  test('el rail de l’arbre plegat porta els recomptes al nom; triar-hi una carpeta navega i el rail es queda', async () => {
     munta('/app/lector/noticies/hui');
     await screen.findByRole('region', { name: 'Hui' });
-    await waitFor(() => expect(closca().dataset.layout).toBe('mitja'));
+    await waitFor(() => expect(closca().dataset.layout).toBe('ample'));
+    fireEvent.click(esquerra().getByRole('button', { name: /^Replegar / }));
     const rail = within(document.getElementById('app-grid-sidebar').querySelector('nav.sdp-workspace-rail'));
     expect(rail.getByRole('button', { name: 'Hui 6 sense llegir' }).getAttribute('title')).toBe('Hui 6 sense llegir');
     fireEvent.click(rail.getByRole('button', { name: 'Esports 3 sense llegir' }));

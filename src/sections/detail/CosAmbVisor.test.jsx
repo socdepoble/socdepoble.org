@@ -241,6 +241,27 @@ describe('una publicació del Mur: les fotos del cos obrin el visor', () => {
   });
 });
 
+/* Ordre del Mestre (30-10-2026, prompt 2208, T4.2; QA-T3-UX-01) · Les fotos
+   del cos, fora de l'Arxiu: una pròpia sense enllaç públic (un camí del lloc
+   fora de /assets/) no porta la fila «Enllaç de la imatge» ni el text de quan
+   no n'hi ha cap; una de /assets/, la URL. */
+describe('les fotos del cos, fora de l’Arxiu: la fila de l’enllaç només amb un enllaç públic', () => {
+  test('una foto del cos sense enllaç públic, cap fila; una de /assets/, la URL', async () => {
+    const { container } = pinta(publicacio({ content: '<p><img src="/fotos/placa.jpg" alt="Plaça"></p><p><img src="/assets/mur/b.webp" alt="Font"></p>' }));
+    const [sense, amb] = fotosDelCos(container);
+    expect([sense.hasAttribute(MARCA_AMPLIABLE), amb.hasAttribute(MARCA_AMPLIABLE)]).toEqual([true, true]);
+    await clica(sense);
+    act(() => within(visor()).getByRole('button', { name: 'Informació de la imatge' }).click());
+    const claus = () => [...visor().querySelectorAll('.sdp-visor__fila dt')].map((dt) => dt.textContent);
+    expect(claus()).toContain('Publicat a');
+    expect(claus()).not.toContain('Enllaç de la imatge');
+    expect(visor().textContent).not.toContain('No té cap enllaç públic');
+    fireEvent.keyDown(tancar(), { key: 'ArrowRight' });
+    expect(fotoDelVisor().getAttribute('src')).toBe('/assets/mur/b.webp');
+    expect(fila('Enllaç de la imatge').querySelector('[translate="no"]').textContent).toBe(`${window.location.origin}/assets/mur/b.webp`);
+  });
+});
+
 describe('l’Aplec 2023, el Mercat i una nota', () => {
   test('l’Aplec 2023 (el cas de l’auditoria): les dues fotos de l’article obrin el visor', async () => {
     const { container } = pinta({ id: 'aplec-2023', title: 'Aplec 2023', created_at: CREAT }, 'events');
@@ -441,14 +462,14 @@ describe('esImatgeDelCos i imatgesDelCos', () => {
      de fora del contenidor no compta. */
   test('fora també la foto dins d’un pare amagat del contenidor (aria-hidden, hidden, inert); un pare amagat de fora no compta', () => {
     const arrel = document.createElement('div');
-    arrel.innerHTML = '<div id="columna" inert="" aria-hidden="true"><div id="contenidor"><article class="detail-content">'
+    arrel.replaceChildren(...new DOMParser().parseFromString('<div id="columna" inert="" aria-hidden="true"><div id="contenidor"><article class="detail-content">'
       + '<img id="visible" src="/assets/a.webp" alt="A">'
       + '<div aria-hidden="true"><p><img id="ariaHidden" src="/assets/b.webp" alt="B"></p></div>'
       + '<div hidden><img id="hidden" src="/assets/c.webp" alt="C"></div>'
       + '<section inert=""><figure><img id="inert" src="/assets/d.webp" alt="D"></figure></section>'
       + '<img id="ellaMateixa" aria-hidden="true" src="/assets/e.webp" alt="">'
       + '<div aria-hidden="false"><img id="ariaFalse" src="/assets/f.webp" alt="F"></div>'
-      + '</article></div></div>';
+      + '</article></div></div>', 'text/html').body.childNodes);
     document.body.append(arrel);
     try {
       const contenidor = arrel.querySelector('#contenidor');

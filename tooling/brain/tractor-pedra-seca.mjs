@@ -20,7 +20,7 @@
 import { readFileSync, writeFileSync, existsSync, readdirSync, statSync } from 'node:fs';
 import { join, dirname, resolve, relative, extname } from 'node:path';
 import { cromStyleOffsets } from '../lib/design-contracts.mjs';
-import { jsxClassValues } from '../lib/jsx-class-values.mjs';
+import { analitzaJsx, codiSenseComentaris, jsxClassValues, propietatsFixades, prosaIComparacions } from '../lib/jsx-class-values.mjs';
 
 /* ─────────────────────────── Configuració ─────────────────────────── */
 
@@ -39,10 +39,27 @@ const FULL_OMBRA = 'src/css/index.css';
  *  porten vite. La paritat la fixa tests/pedra-debt.test.mjs. */
 const ENTRADES = ['src/main.jsx', 'src/embed.jsx', 'src/natiu/entrada.jsx', 'tooling/brain/mapa-consola.mjs'];
 
+/** Pedra Seca, part C (proposta 261031) · Els configs de Vite també són arrels
+ *  del graf, però només per a la LLEI 8: el codi de src/ que importen s'executa
+ *  en construir (la política de mitjans del paquet, les guardes del cos d'un
+ *  mòdul), no és codi mort. Es lligen com a text, igual que la resta del graf:
+ *  no s'importen (porten vite). No són UI: no fixen tokens (L02) ni fan
+ *  auditable cap prova (L06). La paritat la fixa tests/pedra-debt.test.mjs. */
+const ENTRADES_DE_BUILD = ['vite.config.js', 'vite.modul.config.js', 'vite.natiu.config.js', 'vite.standalone.config.js'];
+
 /** Fitxers autoritzats a tocar el document amfitrió. */
 const PERMIS_DOCUMENT = ['src/PedraSecaEmbed.jsx', 'src/config/theme.js',
   // Propietari únic SEO: registerSeo exigix manageDocumentHead i rebutja embed/iframe.
-  'src/hooks/seoHead.js'];
+  'src/hooks/seoHead.js',
+  /* Decisió del Mestre (31-10-2026, part C) · Entrades amos del document
+     (manageDocumentHead: true): munten el full d'estils a <head>. */
+  'src/main.jsx', 'src/natiu/entrada.jsx',
+  /* Decisió del Mestre (31-10-2026, part C) · El visor d'imatges és un
+     createPortal al <body> de la SPA, com PageFrame.jsx. */
+  'src/sections/detail/VisorDePublicacio.jsx',
+  /* Decisió del Mestre (31-10-2026, part C) · Còpia d'impressió penjada del
+     <body> i classe a <html> mentre la vista és oberta (modules.css, @media print). */
+  'src/sections/gestoria/facturar/ImpressioFactura.jsx'];
 
 /** Selectors de control sotmesos a la Llei de Vida. */
 const CONTROLS = [
@@ -84,26 +101,66 @@ function liniaDe(text, index) {
   return text.slice(0, index).split('\n').length;
 }
 
+/** Decisió del Mestre (30-10-2026), deute CSS «la part segura ara» · Una sola
+ *  anàlisi per font de src: el text, el codi sense comentaris (L01 i L06: una
+ *  classe o un document.body nomenats en un comentari no són codi), les classes
+ *  de les expressions JSX i les propietats --x que la font fixa (L02). */
+const FONTS = new Map();
+function font(f) {
+  if (!FONTS.has(f)) {
+    const brut = llig(f);
+    if (brut === null) FONTS.set(f, null);
+    else {
+      const ast = analitzaJsx(brut);
+      const net = codiSenseComentaris(brut, ast);
+      FONTS.set(f, { brut, net, classes: jsxClassValues(brut, ast), propietats: propietatsFixades(brut, ast),
+        ...prosaIComparacions(brut, ast), estilsPropis: classesDelsEstilsPropis(net) });
+    }
+  }
+  return FONTS.get(f);
+}
+
+/** Pedra Seca, part C (proposta 261031) · Les classes que defineix el full
+ *  <style> d'un document autònom escrit dins de la mateixa font (el paper
+ *  A4 de DocumentPrintPreview.jsx, un iframe amb CSP pròpia on el full de
+ *  l'app no arriba). Hi tenen regla, però només per a eixa font. Les
+ *  interpolacions ${…} del full no són claus de CSS. */
+function classesDelsEstilsPropis(net) {
+  const classes = new Set();
+  for (const m of net.matchAll(/<style\b[^>]*>([\s\S]*?)<\/style>/g)) {
+    const full = m[1].replace(/\$\{[^}]*\}/g, '0');
+    for (const r of full.matchAll(/([^{}]+)\{[^{}]*\}/g))
+      r[1].match(/\.(-?[_a-zA-Z][\w-]*)/g)?.forEach((c) => classes.add(c.slice(1)));
+  }
+  return classes;
+}
+
 /* ──────────────── Extracció: classes escrites al JSX ──────────────── */
 
 function classesEscrites(fitxers) {
   const mapa = new Map(); // classe -> [ "fitxer:línia" ]
   for (const f of fitxers) {
-    const t = llig(f);
-    if (t === null) continue;
-    const afig = (c, idx) => {
+    const fo = font(f);
+    if (fo === null) continue;
+    const { brut: t, net, prosa } = fo;
+    const afig = (c, idx, htmlDelPaper = false) => {
       if (!c || c.includes('$') || c.includes('{')) return;
+      // Part C · El full <style> propi d'un document autònom d'esta font dona regla a
+      // l'HTML d'eixe document (class="…"), mai al className del JSX de la mateixa font.
+      if (htmlDelPaper && fo.estilsPropis.has(c)) return;
       if (!mapa.has(c)) mapa.set(c, []);
       mapa.get(c).push(`${f}:${liniaDe(t, idx)}`);
     };
+    // Part C · Una frase de la pantalla («la maqueta de <div class='tab'>») no és cap classe.
+    const esProsa = (idx) => prosa.some(([a, b]) => idx >= a && idx < b);
     // className="..."  |  class="..."  |  className: '...'
-    for (const m of t.matchAll(/(?:className|class)\s*[=:]\s*["']([^"']*)["']/g))
-      m[1].split(/\s+/).forEach((c) => afig(c, m.index));
+    for (const m of net.matchAll(/(className|class)\s*[=:]\s*["']([^"']*)["']/g))
+      if (!esProsa(m.index)) m[2].split(/\s+/).forEach((c) => afig(c, m.index, m[1] === 'class'));
     // className={`... ${x} ...`}
-    for (const m of t.matchAll(/(?:className|class)\s*=\s*\{\s*`([^`]*)`/g))
-      m[1].replace(/\$\{[^}]*\}/g, ' ').split(/\s+/).forEach((c) => afig(c, m.index));
+    for (const m of net.matchAll(/(?:className|class)\s*=\s*\{\s*`([^`]*)`/g))
+      if (!esProsa(m.index)) m[1].replace(/\$\{[^}]*\}/g, ' ').split(/\s+/).forEach((c) => afig(c, m.index));
     // Només valors de les expressions: una comparació amb 'intens' no és una classe.
-    for (const { value, index } of jsxClassValues(t))
+    for (const { value, index } of fo.classes)
       value.split(/\s+/).forEach(c => afig(c, index));
   }
   return mapa;
@@ -145,9 +202,9 @@ function resolMod(desDe, spec) {
   return null;
 }
 
-function grafAccessible() {
+function grafDesDe(entrades) {
   const vistos = new Set();
-  const cua = ENTRADES.filter((e) => existsSync(join(ARREL, e)));
+  const cua = entrades.filter((e) => existsSync(join(ARREL, e)));
   while (cua.length) {
     const f = cua.shift();
     if (vistos.has(f)) continue;
@@ -173,6 +230,7 @@ function grafAccessible() {
   }
   return vistos;
 }
+const grafAccessible = () => grafDesDe(ENTRADES);
 
 /* ──────────────────────────── Les vuit lleis ──────────────────────── */
 
@@ -190,9 +248,20 @@ const escrites = classesEscrites(JSX);
 const ombra = analitzaCss([FULL_OMBRA]);
 const totCss = analitzaCss(CSS_TOTS);
 
-/* LLEI 1 · CLASSE ÒRFENA — classe al JSX sense regla a cap full d'estils. */
+/* LLEI 1 · CLASSE ÒRFENA — classe al JSX sense regla a cap full d'estils.
+   Part C (proposta 261031) · Convencions de l'HTML que no són ganxos d'estil:
+   cada una porta la seua font. */
+const CONVENCIONS_DE_CLASSE = {
+  'language-': 'WHATWG HTML, element <code>: la llengua del codi es marca amb una classe «language-…» per als ressaltadors i els lectors de diagrames'
+};
+const esConvencio = (c) => Object.keys(CONVENCIONS_DE_CLASSE).some((prefix) => c.startsWith(prefix));
+/* Decisió del Mestre (31-10-2026, part C) · Classes d'estat que cap full no estila,
+   amb el seu motiu escrit: es retiren quan passen a atribut data-. */
+const EXCEPCIONS_CLASSE = {
+  'sdp-workspace--compacte': "ganxo d'estat del mode compacte de UniversalWorkspace (proves i documentació del component); passar-lo a data-compacte demana una prop nova d'AppGridShell i la fitxa contracte_graella.md és de la zona humana"
+};
 for (const [c, ocurrencies] of escrites)
-  if (!totCss.classes.has(c))
+  if (!totCss.classes.has(c) && !esConvencio(c) && !EXCEPCIONS_CLASSE[c])
     registra('LLEI_01_CLASSE_ORFENA', `.${c}  →  ${ocurrencies[0]}${ocurrencies.length > 1 ? ` (+${ocurrencies.length - 1})` : ''}`);
 
 /* LLEI 2 · TOKEN FANTASMA — var(--x) sense declaració enlloc. */
@@ -205,8 +274,13 @@ for (const f of JSX) {
     tokensJsx.get(m[1]).push(`${f}:${liniaDe(t, m.index)}`);
   }
 }
+/* Decisió del Mestre (30-10-2026) · Una propietat que el JSX fixa al node
+   (usePropietatsCss, setProperty, style) és declarada: el full la llig amb
+   var() i el número només el sap el JavaScript. Només el codi que penja d'una
+   entrada fixa res: un mòdul orfe o una fixture no declaren cap token. */
+const fixadesPelJsx = new Set(JSX.filter((f) => accessible.has(f)).flatMap((f) => font(f)?.propietats ?? []));
 for (const [tok, on] of [...totCss.tokensUsats, ...tokensJsx])
-  if (!totCss.tokensDefinits.has(tok) && !tok.match(/-$/))
+  if (!totCss.tokensDefinits.has(tok) && !fixadesPelJsx.has(tok) && !tok.match(/-$/))
     registra('LLEI_02_TOKEN_FANTASMA', `${tok}  →  ${on[0]}`);
 
 /* LLEI 3 · ESTIL EN LÍNIA — cap valor literal dins de style={{}}.
@@ -253,10 +327,12 @@ for (const f of JSX) {
 for (const f of JSX) {
   // Les proves manipulen el DOM del runner; no són UI de l'amfitrió.
   if (PERMIS_DOCUMENT.includes(f) || (/\.(?:test|spec)\.[jt]sx?$/.test(f) && !accessible.has(f))) continue;
-  const t = llig(f);
-  if (t === null) continue;
-  for (const m of t.matchAll(/document\.(documentElement|head|body)/g))
-    registra('LLEI_06_ENCAPSULAMENT', `${f}:${liniaDe(t, m.index)}  →  document.${m[1]}`);
+  const fo = font(f);
+  if (fo === null) continue;
+  const t = fo.brut;
+  for (const m of fo.net.matchAll(/document\.(documentElement|head|body)/g))
+    // Part C · «actiu === document.body» pregunta on és el focus: compara, no toca.
+    if (!fo.comparacions.has(m.index)) registra('LLEI_06_ENCAPSULAMENT', `${f}:${liniaDe(t, m.index)}  →  document.${m[1]}`);
 }
 
 /* LLEI 7 · PARITAT D'IDIOMES.
@@ -294,10 +370,54 @@ if (i18n) {
    raó escrita: si no en té, no és excepció, és codi mort. */
 const EXCEPCIONS_ORFE = {
   'src/shims/jsx-runtime.js': 'entra per alias de resolve a vite.config (jsxImportSource)',
-  'src/assets/fonts/noto-sans.css': 'es carrega en execució via atribut fonts-href'
+  'src/assets/fonts/noto-sans.css': 'es carrega en execució via atribut fonts-href',
+  /* Decisió del Mestre (31-10-2026, part C) · Obra no cablejada o pausada: cada
+     excepció diu per què i es retira quan el mòdul es connecte o s'esborre. */
+  'src/data/activitypub.js': 'el carrega tooling/seo/genera-federacio.mjs (FONTS.activitypub) amb un import() de camí calculat, al build web i al servidor de dev (tooling/vite/federacio-iaia.mjs) · decisió del Mestre 261031 (part C)',
+  'src/data/conformitat/kit.js': 'kit de conformitat del port (AGENTS §8): el fan servir només les proves dels adaptadors · decisió del Mestre 261031 (part C)',
+  'src/data/exportaMunicipiOpenData.js': 'paquet Open Data del poble (P1-23): pendent de connectar a la fitxa del poble (Ronda 2, F1) · decisió del Mestre 261031 (part C)',
+  'src/data/xifratXatParaules.js': 'llista de paraules de la frase de recuperació E2EE (P1-12, DM-2): REVISADA_PEL_MESTRE = false i cap mòdul no la importa; encendre E2EE_ACTIU_PER_DEFECTE no la cableja · decisió del Mestre 261031 (part C)',
+  'src/data/xifratXatRecuperacio.js': 'recuperació social E2EE del xat (P1-12, IDEA-48): cap mòdul no la importa; encendre E2EE_ACTIU_PER_DEFECTE no la cableja · decisió del Mestre 261031 (part C)',
+  'src/pwa/avisosPush.js': 'avisos push web (ordre 261030_0252, Fase 3): pendents de cablejar · decisió del Mestre 261031 (part C)',
+  'src/natiu/avisosPushNatius.js': 'avisos push natius (ordre 261030_0252, Fase 3): pendents de cablejar · decisió del Mestre 261031 (part C)',
+  'src/components/universal/BotoInstalaApp.jsx': 'pausat durant la beta (App.jsx; pla 261021_2345 §1): es conserva amb les seues proves · decisió del Mestre 261031 (part C)',
+  'src/hooks/useInstalacioApp.js': 'pausat durant la beta amb BotoInstalaApp.jsx (pla 261021_2345 §1): es conserva amb les seues proves · decisió del Mestre 261031 (part C)',
+  'src/data/adaptadors/sollutia/client.js': 'composició del Model B: activar recursos exigix una captura versionada per la Frontissa; pendent de Sollutia · decisió del Mestre 261031 (part C)',
+  'src/apps/bar/loyverseApi.js': 'adaptador d\'importació de Loyverse, encara sense pantalla · decisió del Mestre 261031 (part C)',
+  'src/apps/nevera/bring.js': 'importació de Bring! a la Nevera, encara sense pantalla · decisió del Mestre 261031 (part C)',
+  'src/apps/nevera/importador.js': 'importador de la Nevera, encara sense pantalla · decisió del Mestre 261031 (part C)',
+  'src/sections/gestoria/burocracia/nucli/avisos.js': 'nucli de la Gestoria (carril del 04-10), encara sense interfície · decisió del Mestre 261031 (part C)',
+  'src/sections/gestoria/burocracia/nucli/icsTerminis.js': 'nucli de la Gestoria (carril del 04-10), encara sense interfície · decisió del Mestre 261031 (part C)',
+  'src/sections/gestoria/burocracia/nucli/obligacions.js': 'nucli de la Gestoria (carril del 04-10), encara sense interfície · decisió del Mestre 261031 (part C)',
+  'src/sections/gestoria/burocracia/nucli/terminis.js': 'nucli de la Gestoria (carril del 04-10), encara sense interfície · decisió del Mestre 261031 (part C)',
+  'src/sections/gestoria/documents/plaNeteja.js': 'nucli de la Gestoria (carril del 04-10), encara sense interfície · decisió del Mestre 261031 (part C)',
+  'src/sections/gestoria/documents/rebutEsborrat.js': 'nucli de la Gestoria (carril del 04-10), encara sense interfície · decisió del Mestre 261031 (part C)',
+  'src/sections/gestoria/font/handleStore.js': 'nucli de la Gestoria (14-10), encara sense interfície · decisió del Mestre 261031 (part C)',
+  'src/sections/gestoria/identitat/nucli/document.js': 'nucli de la Gestoria (carril del 04-10), encara sense interfície · decisió del Mestre 261031 (part C)',
+  'src/sections/gestoria/identitat/nucli/guardes.js': 'nucli de la Gestoria (carril del 04-10), encara sense interfície · decisió del Mestre 261031 (part C)',
+  'src/sections/gestoria/identitat/nucli/titular.js': 'nucli de la Gestoria (carril del 04-10), encara sense interfície · decisió del Mestre 261031 (part C)',
+  'src/sections/gestoria/projectes/nucli/expedient.js': 'nucli de la Gestoria (carril del 04-10), encara sense interfície · decisió del Mestre 261031 (part C)',
+  'src/utils/ics.js': 'exportació iCalendar, encara sense consumidor · decisió del Mestre 261031 (part C)',
+  'src/sections/connectar/organitzacio/BlocAdministrarOrganitzacio.jsx': 'ja no es munta des del 25-10 (1c110f954): el Mestre decidix si s\'esborra o es torna a connectar · decisió del Mestre 261031 (part C)',
+  'src/sections/connectar/organitzacio/useAdministrarOrganitzacio.js': 'ja no es munta des del 25-10 amb BlocAdministrarOrganitzacio.jsx: el Mestre decidix si s\'esborra o es torna a connectar · decisió del Mestre 261031 (part C)',
+  'src/sections/notes/ConnexioDetall.jsx': 'cap importació des del 30-09: el Mestre decidix si s\'esborra o es torna a connectar · decisió del Mestre 261031 (part C)',
+  'src/sections/gestoria/facturar/__fixtures__/idbFals.js': 'fixture duplicada que ningú no importa (la còpia bona és tests/helpers/idbFals.js): proposta d\'esborrat per al Mestre · decisió del Mestre 261031 (part C)'
 };
+/* Decisió del Mestre (30-10-2026) · Una fixture (dins de __fixtures__/) que una
+   prova importa és part de la prova, amb el criteri de la línia de les proves.
+   La que cap prova no importa continua sent codi mort. */
+const PROVES = arbre('src', ['.js', '.jsx']).filter((f) => /\.test\.[jt]sx?$/.test(f));
+/* Part C (proposta 261031) · Una fixture de BUILD (un mòdul que la prova
+   compila amb Vite, com __fixtures__/modulDeProva) no s'importa: la prova
+   en nomena el camí ('src/…/__fixtures__/…'). Eixe camí, fitxer o carpeta, i
+   el que importen els seus fitxers, també són de la prova. */
+const nomenades = [...new Set(PROVES.flatMap((f) => [...(llig(f) ?? '').matchAll(/['"`](src\/[\w./-]*__fixtures__\/[\w./-]+?)\/?['"`]/g)].map((m) => m[1])))];
+const deLaCarpeta = (c) => [...JSX, ...CSS_TOTS].filter((f) => f === c || f.startsWith(c + '/'));
+const deLesProves = grafDesDe([...PROVES, ...nomenades.flatMap(deLaCarpeta)]);
+const esFixtureDeProva = (f) => /(?:^|\/)__fixtures__\//.test(f) && deLesProves.has(f);
+const delBuild = grafDesDe(ENTRADES_DE_BUILD);
 for (const f of [...JSX, ...CSS_TOTS])
-  if (!accessible.has(f) && f !== FULL_OMBRA && !EXCEPCIONS_ORFE[f] && !/\.test\.[jt]sx?$/.test(f)) // les proves són entrades de vitest
+  if (!accessible.has(f) && !delBuild.has(f) && f !== FULL_OMBRA && !EXCEPCIONS_ORFE[f] && !/\.test\.[jt]sx?$/.test(f) && !esFixtureDeProva(f)) // les proves són entrades de vitest
     registra('LLEI_08_SUBARBRE_ORFE', f);
 
 /* ─────────────────────── Criquet i veredicte ──────────────────────── */
@@ -340,8 +460,13 @@ for (const l of totes) {
   const dur = DURES.has(l);
   const registre = previ?.[l] ?? { max: n, coneguts: [] };
   const max = registre.max ?? 0;
-  const coneguts = new Set(registre.coneguts ?? []);
-  const nous = (identitats[l] ?? []).filter((i) => !coneguts.has(i));
+  /* Part C (proposta 261031) · A la LLEI 1 el deute és la CLASSE: el fitxer de
+     la primera ocurrència és on mirar, no qui és. Si eixa ocurrència se'n va
+     (un comentari que ja no compta, un fitxer esborrat), la mateixa classe
+     òrfena no és nova. */
+  const clau = l === 'LLEI_01_CLASSE_ORFENA' ? (i) => i.split(/\s+→\s+/)[0] : (i) => i;
+  const coneguts = new Set((registre.coneguts ?? []).map(clau));
+  const nous = (identitats[l] ?? []).filter((i) => !coneguts.has(clau(i)));
   const malament = dur ? n > 0 : (n > max || (previ && nous.length > 0));
   if (malament) fallada = true;
   const marca = malament ? '✗' : n < max ? '↓' : '·';

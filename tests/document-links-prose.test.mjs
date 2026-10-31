@@ -139,3 +139,24 @@ test('T11-40 resolveDocumentLink resol el nom de carpeta d un skill cap al seu S
     path.join(f.root, '.agents/skills/core-automillora/SKILL.md')
   );
 });
+
+/* 261031 (ordre del Mestre, Ronda 1) · APFS no distingix la normalització Unicode:
+   el Finder pot escriure «Gestió» en NFD i Git el guarda en NFC. El resolutor torna
+   el camí amb els noms del disc, perquè les portes el comparen amb el directori. */
+test('un enllaç NFC a una carpeta NFD torna el nom tal com és al disc', (t) => {
+  const root = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'sdp-nfd-test-')));
+  t.after(() => fs.rmSync(root, { recursive: true, force: true }));
+  const nfd = 'Banda - Gestió'.normalize('NFD'), nfc = 'Banda - Gestió'.normalize('NFC');
+  const carpeta = path.join(root, DESK, nfd);
+  fs.mkdirSync(carpeta, { recursive: true });
+  fs.writeFileSync(path.join(carpeta, 'fitxa.md'), '# Fitxa\n');
+  const source = path.join(root, INDEX);
+  fs.writeFileSync(source, '# Escriptori\n');
+  if (!fs.existsSync(path.join(root, DESK, nfc))) return t.skip('sistema de fitxers sensible a la normalització');
+  const [link] = extractDocumentLinks(`[Fitxa](${encodeURI(nfc)}/fitxa.md)`);
+  const trobat = resolveDocumentLink(link, source, [path.join(carpeta, 'fitxa.md')], root);
+  assert.equal(trobat, path.join(carpeta, 'fitxa.md'));
+  assert.equal(path.basename(path.dirname(trobat)), nfd);
+  const ascii = resolveDocumentLink(extractDocumentLinks('[Índex](00_index_escriptori.md)')[0], source, [source], root);
+  assert.equal(ascii, source);
+});

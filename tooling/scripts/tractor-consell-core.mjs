@@ -17,7 +17,7 @@
 
 import { readFileSync, existsSync, readdirSync, statSync } from 'node:fs';
 import path from 'node:path';
-import { findDistSecrets } from '../lib/dist-secrets.mjs';
+import { findDistSecretsWeb, findKnownSecretValues, secretsPrivatsDeLEntorn } from '../lib/dist-secrets.mjs';
 
 const ROOT = (() => {
   const i = process.argv.indexOf('--root');
@@ -239,10 +239,18 @@ function arbre(rel, filtre) {
           `'${codi}' li falten ${falten.length} claus respecte de 'ca' (p. ex. ${falten.slice(0, 3).join(', ')}).`);
       }
     }
+    /* Ordre del Mestre (30-10-2026, prompt 2208) · El criteri de src/config/i18n.usades.test.js
+       (P1-22): fora les proves (*.test.js[x]) i només les claus amb punt d'un espai de noms del
+       valencià (el primer segment d'alguna clau de ca). Així no hi entren els t() locals
+       (apps/salut/nucli/importacio.js, consola/indexConsola.js) ni els dobles de les proves. */
+    const espais = new Set([...base].map((k) => k.split('.')[0]));
     const usades = new Set();
     for (const f of arbre('src', /\.(js|jsx)$/)) {
       if (f.endsWith('i18n.js') || f.split(path.sep).join('/').includes('/src/config/idiomes/')) continue;
-      for (const m of readFileSync(f, 'utf8').matchAll(/\bt\(\s*['"]([\w.]+)['"]/g)) usades.add(m[1]);
+      if (/\.test\.jsx?$/.test(f)) continue;
+      for (const m of readFileSync(f, 'utf8').matchAll(/\bt\(\s*['"]([\w.]+)['"]/g)) {
+        if (m[1].includes('.') && espais.has(m[1].split('.')[0])) usades.add(m[1]);
+      }
     }
     const orfes = [...usades].filter((k) => !base.has(k));
     if (orfes.length) {
@@ -329,20 +337,34 @@ function arbre(rel, filtre) {
 
 /* ══════════════════════════════════════════════════════════════════
    LLEI 9 · CAP SECRET AL DIST
-   Cap URL de projecte ni clau dins d'un artefacte versionat.
+   Cap clau privada dins d'un artefacte versionat. Decisió del Mestre
+   (30-10-2026, «Sí, accepta l'anon»): la URL del projecte i el JWT anon hi
+   passen; qualsevol service_role, sb_secret_, JWT il·legible o VAPID privada hi cau.
    ══════════════════════════════════════════════════════════════════ */
 {
   const LLEI = 'L9 · Cap secret al dist';
   let net = true;
-  for (const f of [...arbre('wordpress-plugin/dist', /\.(js|json|css)$/), ...arbre('dist', /\.(js|json|css)$/)]) {
-    const src = readFileSync(f, 'utf8');
-    const rel = path.relative(ROOT, f);
-    for (const { label, count } of findDistSecrets(src)) {
-      net = false;
-      falla(LLEI, rel, 0,
-        `${label} incrustada a l'artefacte versionat (${count} apar.). Rotar-la exigix recompilar i es filtra a cada bundle d'auditoria.`);
+  /* Gauntlet c3 (vapid-detector-cec-al-build-real) · dist-natiu (l'APK i
+     l'IPA) també. I a tots tres, el valor exacte dels secrets que l'entorn
+     coneix (secretsPrivatsDeLEntorn), sense escriure'l mai. */
+  const coneguts = secretsPrivatsDeLEntorn({ arrel: ROOT });
+  const revisa = (fitxers, detector) => {
+    for (const f of fitxers) {
+      const src = readFileSync(f, 'utf8');
+      const rel = path.relative(ROOT, f);
+      for (const { label, count } of [...detector(src), ...findKnownSecretValues(src, coneguts)]) {
+        net = false;
+        falla(LLEI, rel, 0,
+          `${label} incrustada a l'artefacte versionat (${count} apar.). Rotar-la exigix recompilar i es filtra a cada bundle d'auditoria.`);
+      }
     }
-  }
+  };
+  /* Decisió del Mestre (30-10-2026, «Sí, accepta l'anon») · el web, el connector i el natiu
+     porten per contracte la URL del projecte i el JWT anon; hi cau tot JWT no anon, sb_secret_
+     i VAPID privada. El natiu, el que va a les botigues, amb el mateix detector (Gauntlet f6,
+     consell-l9-dist-natiu-sense-service-role): abans només hi mirava la VAPID. */
+  revisa([...arbre('wordpress-plugin/dist', /\.(js|json|css)$/), ...arbre('dist', /\.(js|json|css)$/)], findDistSecretsWeb);
+  revisa(arbre('dist-natiu', /\.(js|json|css|html)$/), findDistSecretsWeb);
   if (net) passa(LLEI);
 }
 

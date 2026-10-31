@@ -339,8 +339,14 @@ describe('el lloc a la cascada (ordre del Mestre, 261007: «Moure a components.c
   test('cap full que carrega després en la mateixa capa porta un .sdp-boto del mateix pes, llevat del Perfil, on el carrusel no es munta', () => {
     const imports = importsDe(senseComentaris(llig('src/css/index.css')));
     const posteriors = imports.slice(imports.findIndex((i) => i.fitxer === CANONIC) + 1);
-    /* Sonda: la llista és la de la cascada, de modules.css a utilities.css. */
-    expect(posteriors.length).toBeGreaterThan(8);
+    /* Sonda: la llista és la de la cascada, de modules.css a utilities.css
+       (des del 261030, tractor-vocabulari, els set fulls de les peces són blocs
+       de modules.css i la llista té sis imports: modules.css, AppGridShell.css,
+       PerfilShell.css, apps.css, tipografia-estreta.css i utilities.css; des
+       del 31-10-2026, ordre del Mestre, el set: taulers.css, el Quadre de
+       Comandament, darrere de modules.css). */
+    expect(posteriors.map((i) => i.fitxer)).toEqual(['src/css/modules.css', 'src/css/taulers.css', 'src/components/layout/AppGridShell.css',
+      'src/sections/profile/PerfilShell.css', 'src/apps/plataforma/apps.css', 'src/css/tipografia-estreta.css', 'src/css/utilities.css']);
     expect(posteriors[0]).toEqual({ fitxer: 'src/css/modules.css', capa: '' });
     expect(posteriors[posteriors.length - 1].fitxer).toBe('src/css/utilities.css');
     expect(posteriors.find((i) => i.fitxer === 'src/sections/profile/PerfilShell.css')?.capa).toBe('components');

@@ -33,6 +33,7 @@
  */
 
 import { senseComentaris } from '../lib/codi.mjs';
+import { analitzaJsx } from '../lib/jsx-class-values.mjs';
 import { readFileSync, existsSync, readdirSync, statSync } from 'node:fs';
 import path from 'node:path';
 
@@ -178,6 +179,53 @@ if (actiu('T2 · Fallback prohibit')) {
 /* ══════════════════════════════════════════════════════════════════
    T3 · UN SOL LLOC DE DEFINICIÓ
    ══════════════════════════════════════════════════════════════════ */
+/* Ronda 1 del 31-10-2026 (ordre del Mestre: tancar la Porta Tokens) · El
+   text que la interfície pinta no declara res: un JSXText, o una cadena dins
+   d'un fill o d'un atribut JSX (fora de style i de <style>), que diu «amb
+   --sdp-x: …» és prosa d'un espècimen, no un segon sistema de disseny. És el
+   criteri de propietatsFixades (jsx-class-values.mjs, Decisió del Mestre del
+   30-10-2026): «una cadena '--x' en un text no declara res». Una plantilla
+   (CSS de veres), una cadena fora de JSX o dins d'una funció continuen
+   comptant. Si la font no s'analitza, no es descompta res: mai s'audita a
+   mitges cap a la banda verda. */
+const JS_FAMILIA = /\.(js|jsx)$/;
+/* Atributs que porten codi o un document sencer (CSS, HTML), no text pintat:
+   s'hi declara de veres, i T3 hi continua comptant (revisió adversarial 261031). */
+const ATRIBUTS_DE_CODI = new Set(['style', 'srcDoc', 'dangerouslySetInnerHTML']);
+const TALLA_PINTAT = new Set(['ArrowFunctionExpression', 'FunctionExpression', 'FunctionDeclaration',
+  'CallExpression', 'NewExpression', 'AssignmentExpression', 'TaggedTemplateExpression']);
+function rangsDeTextPintat(text) {
+  let ast;
+  try { ast = analitzaJsx(text); } catch { return []; }
+  const rangs = [];
+  const visita = (node, pintat) => {
+    if (!node || typeof node !== 'object') return;
+    if (Array.isArray(node)) { for (const n of node) visita(n, pintat); return; }
+    if (node.type === 'JSXElement') {
+      if (node.openingElement?.name?.name === 'style') return;
+      visita(node.openingElement, false);
+      visita(node.children, true);
+      return;
+    }
+    if (node.type === 'JSXFragment') { visita(node.children, true); return; }
+    if (node.type === 'JSXAttribute') {
+      if (!ATRIBUTS_DE_CODI.has(node.name?.name)) visita(node.value, true);
+      return;
+    }
+    if (pintat && (node.type === 'JSXText' || node.type === 'StringLiteral')) {
+      rangs.push([node.start, node.end]);
+      return;
+    }
+    const segueix = pintat && !TALLA_PINTAT.has(node.type);
+    for (const [clau, fill] of Object.entries(node)) {
+      if (['loc', 'extra', 'comments', 'leadingComments', 'trailingComments', 'innerComments'].includes(clau)) continue;
+      if (fill && typeof fill === 'object') visita(fill, segueix);
+    }
+  };
+  visita(ast.program, false);
+  return rangs;
+}
+
 if (actiu('T3 · Font única')) {
   const LLEI = 'T3 · Font única';
   let net = true;
@@ -185,9 +233,19 @@ if (actiu('T3 · Font única')) {
     const norm3 = rel.replace(/\\/g, '/');
     if (norm3 === FONT_CANON) continue;   // capa 0 · generada, declaració legítima
     const esFont = norm3 === FONT_TOKENS;
-    senseComentaris(readFileSync(R(rel), 'utf8'), rel).split('\n').forEach((l, i) => {
+    const brut = readFileSync(R(rel), 'utf8');
+    let pintat = null;   // els rangs del text pintat, només si cal
+    let inici = 0;
+    senseComentaris(brut, rel).split('\n').forEach((l, i) => {
+      const iniciLinia = inici;
+      inici += l.length + 1;
       for (const m of l.matchAll(/(--sdp-[\w-]+)\s*:/g)) {
         if (esFont && liniesTema.has(i + 1)) continue;
+        if (JS_FAMILIA.test(norm3)) {
+          pintat ??= rangsDeTextPintat(brut);
+          const on = iniciLinia + m.index;
+          if (pintat.some(([a, b]) => on >= a && on < b)) continue;
+        }
         net = false;
         falla(LLEI, rel, i + 1,
           `\`${m[1]}\` es declara fora dels blocs de tema de ${FONT_TOKENS}. Dues definicions són dos sistemes de disseny.`);

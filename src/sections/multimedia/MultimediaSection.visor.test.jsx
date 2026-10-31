@@ -12,12 +12,19 @@
        (Gauntlet 261017, C05);
      · en tancar, el focus torna a la cel·la; amb el focus al marc (el clic a
        la foto), el teclat continua (Gauntlet 261017);
-     · l'apartat «IAIA» i el cens de public/assets (useCensImatges). */
-import { act, cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
+     · l'apartat «IAIA» i el cens de public/assets (useCensImatges).
+   Bloc E (IDEA-55 + P1-71, Onada 261029_1605) · /multimedia és un
+   UniversalWorkspace de tres columnes: la graella és la Fototeca de
+   ?categoria=galeria_tots, una cel·la obri la FITXA de la foto (columna del
+   detall) i el visor s'obri amb el seu botó «Veure la imatge a pantalla
+   completa» (el focus hi torna). Un enllaç directe a ?foto= obri el visor
+   damunt de la fitxa i, en tancar-lo, s'hi queda. IAIA i la Cronologia són
+   les seues categories. */
+import { act, cleanup, fireEvent, render, waitFor, within } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import { MemoryRouter, useLocation } from '../../app/contexts/RouterContext.jsx';
 import { COPYRIGHT_SDP, COPYRIGHT_VIQUIPEDIA } from '../../components/universal/editorial.js';
-import { gpsTorre, jpegAmbExif, orientacio, TIPUS } from '../../components/universal/enquadrament/jpegProva.js';
+import { gpsTorre, jpegAmbExif, orientacio, TIPUS } from '../../../tests/helpers/jpegProva.js';
 
 const mocks = vi.hoisted(() => ({ multimedia: null, cens: null, towns: [], locale: null }));
 vi.mock('../../components/universal/UniversalPage', () => ({ UniversalPage: ({ children }) => <main>{children}</main> }));
@@ -49,12 +56,20 @@ function Sonda() {
   return null;
 }
 
-function pinta(ruta = '/multimedia') {
+function pinta(ruta = '/multimedia?categoria=galeria_tots') {
   return render(<MemoryRouter rutaInicial={ruta}><MultimediaSection /><Sonda /></MemoryRouter>);
 }
 const foto = () => new URLSearchParams(ubicacio.search).get('foto');
 const visor = () => document.querySelector('dialog.sdp-visor');
 const obert = () => visor()?.hasAttribute('open') === true;
+/* La pàgina de la columna del detall (la Fototeca o la fitxa de la foto). */
+const pagina = () => within(document.querySelector('#app-grid-main'));
+const BOTO_VISOR = 'Veure la imatge a pantalla completa';
+/* La cel·la de la Fototeca obri la fitxa; el botó de la fitxa, el visor. */
+const obriAlVisor = (nom) => {
+  act(() => pagina().getByRole('button', { name: nom }).click());
+  act(() => pagina().getByRole('button', { name: BOTO_VISOR }).click());
+};
 
 beforeEach(() => {
   mocks.multimedia = { status: 'ready', mediaItems: MITJANS, mediaTimelineGroups: [] };
@@ -63,9 +78,12 @@ beforeEach(() => {
   mocks.locale = null;
   oblidaMetadades();
   vi.stubGlobal('fetch', vi.fn(async () => { throw new Error('sense xarxa'); }));
+  vi.spyOn(HTMLElement.prototype, 'clientWidth', 'get').mockReturnValue(1400);
+  vi.stubGlobal('ResizeObserver', class { observe() {} unobserve() {} disconnect() {} });
 });
 afterEach(() => {
   cleanup();
+  vi.restoreAllMocks();
   vi.unstubAllGlobals();
 });
 
@@ -75,11 +93,11 @@ afterEach(() => {
 const botons = (container) => [...container.querySelectorAll('.photo-grid > .photo-grid__boto')];
 
 describe('la graella', () => {
-  test('cada cel·la és un botó que obri un diàleg, sense cap enllaç; dins, la cel·la i la imatge de sempre', () => {
+  test('cada cel·la és un botó (la fitxa, sense cap diàleg), sense cap enllaç; dins, la cel·la i la imatge de sempre', () => {
     const { container } = pinta();
     const celles = botons(container);
     expect(celles).toHaveLength(MITJANS.length);
-    expect(celles.every((cella) => cella.tagName === 'BUTTON' && cella.type === 'button' && cella.getAttribute('aria-haspopup') === 'dialog')).toBe(true);
+    expect(celles.every((cella) => cella.tagName === 'BUTTON' && cella.type === 'button' && !cella.hasAttribute('aria-haspopup'))).toBe(true);
     expect(celles.every((cella) => cella.children.length === 1 && cella.firstElementChild.matches('span.photo-grid__item'))).toBe(true);
     expect(container.querySelectorAll('.photo-grid > :not(.photo-grid__boto)')).toHaveLength(0);
     expect(container.querySelector('.photo-grid a')).toBeNull();
@@ -90,9 +108,13 @@ describe('la graella', () => {
 });
 
 describe('obrir, passar i tancar', () => {
-  test('el clic obri el visor a ?foto=<id> amb una entrada nova; «Tancar» torna arrere i el tanca', () => {
+  test('la cel·la obri la fitxa; el seu botó obri el visor a ?foto=<id> amb una entrada nova; «Tancar» torna arrere i el tanca', () => {
     pinta();
-    act(() => screen.getByRole('button', { name: 'Mur' }).click());
+    act(() => pagina().getByRole('button', { name: 'Mur' }).click());
+    expect(new URLSearchParams(ubicacio.search).get('item')).toBe('nano-mur');
+    expect(foto()).toBeNull();
+    expect(obert()).toBe(false);
+    act(() => pagina().getByRole('button', { name: BOTO_VISOR }).click());
     expect(foto()).toBe('nano-mur');
     expect(ubicacio.pathname).toBe('/multimedia');
     expect(ubicacio.state).toEqual({ sdpVisor: true });
@@ -102,11 +124,12 @@ describe('obrir, passar i tancar', () => {
     expect(foto()).toBeNull();
     expect(ubicacio.state).toBeNull();
     expect(obert()).toBe(false);
+    expect(new URLSearchParams(ubicacio.search).get('item')).toBe('nano-mur');
   });
 
   test('següent i anterior substituïxen l’entrada: un sol pas arrere tanca', () => {
     pinta();
-    act(() => screen.getByRole('button', { name: 'Tibi' }).click());
+    obriAlVisor('Tibi');
     act(() => within(visor()).getByRole('button', { name: 'Imatge següent' }).click());
     expect(foto()).toBe('nano-mur');
     fireEvent.keyDown(within(visor()).getByRole('button', { name: 'Tancar el visor' }), { key: 'ArrowRight' });
@@ -119,14 +142,15 @@ describe('obrir, passar i tancar', () => {
     expect(obert()).toBe(false);
   });
 
-  test('un enllaç directe a ?foto= obri el visor; tancar-lo lleva la consulta (sense eixir de l’app)', () => {
+  test('un enllaç directe a ?foto= obri el visor; tancar-lo lleva la consulta i deixa la fitxa de la foto (sense eixir de l’app)', () => {
     pinta('/multimedia?foto=town-tibi&x=1');
     expect(obert()).toBe(true);
     expect(visor().querySelector('img.sdp-visor__imatge').getAttribute('src')).toBe('/assets/towns/tibi/1.jpg');
     act(() => within(visor()).getByRole('button', { name: 'Tancar el visor' }).click());
     expect(ubicacio.pathname).toBe('/multimedia');
-    expect(new URLSearchParams(ubicacio.search).toString()).toBe('x=1');
+    expect(new URLSearchParams(ubicacio.search).toString()).toBe('x=1&categoria=galeria_tots&item=town-tibi');
     expect(obert()).toBe(false);
+    expect(pagina().getByRole('button', { name: BOTO_VISOR })).toBeTruthy();
   });
 
   test('una ?foto= que no existix no obri res', () => {
@@ -134,27 +158,28 @@ describe('obrir, passar i tancar', () => {
     expect(obert()).toBe(false);
   });
 
-  /* Gauntlet 261017 · El focus torna a la cel·la que ha obert el visor, amb
-     «Tancar» i amb Escape, també després de passar fotos. jsdom no enfoca en
-     clicar: la cel·la s'enfoca a mà, com ho fa el navegador. */
-  test('en tancar (Tancar o Escape), el focus torna a la cel·la que l’ha obert', () => {
+  /* Gauntlet 261017 · El focus torna al control que ha obert el visor (Bloc
+     E: el botó de la fitxa), amb «Tancar» i amb Escape, també després de
+     passar fotos. jsdom no enfoca en clicar: el botó s'enfoca a mà, com ho
+     fa el navegador. */
+  test('en tancar (Tancar o Escape), el focus torna al botó de la fitxa que l’ha obert', () => {
     pinta();
-    const tibi = screen.getByRole('button', { name: 'Tibi' });
-    act(() => tibi.focus());
-    act(() => tibi.click());
+    act(() => pagina().getByRole('button', { name: 'Tibi' }).click());
+    const boto = pagina().getByRole('button', { name: BOTO_VISOR });
+    act(() => boto.focus());
+    act(() => boto.click());
     expect(obert()).toBe(true);
     expect(document.activeElement).toBe(within(visor()).getByRole('button', { name: 'Tancar el visor' }));
     act(() => within(visor()).getByRole('button', { name: 'Imatge següent' }).click());
     act(() => within(visor()).getByRole('button', { name: 'Tancar el visor' }).click());
     expect(obert()).toBe(false);
-    expect(document.activeElement).toBe(tibi);
-    const mur = screen.getByRole('button', { name: 'Mur' });
-    act(() => mur.focus());
-    act(() => mur.click());
+    expect(document.activeElement).toBe(boto);
+    act(() => boto.focus());
+    act(() => boto.click());
     expect(obert()).toBe(true);
     act(() => { visor().dispatchEvent(new Event('cancel', { cancelable: true })); });
     expect(obert()).toBe(false);
-    expect(document.activeElement).toBe(mur);
+    expect(document.activeElement).toBe(boto);
   });
 
   /* Gauntlet 261017 · Després de clicar la foto (el focus va al marc), les
@@ -179,6 +204,20 @@ describe('el panell', () => {
     expect(fila('Poble').querySelector('a').getAttribute('href')).toBe('/pobles/tibi');
     expect(fila('Publicat a').querySelector('a').getAttribute('href')).toBe('/pobles/tibi');
     expect(fila('Origen').textContent).toBe('Fotografia');
+    await waitFor(() => expect(fila('Càmera').textContent).toBe('Desconegut'));
+  });
+
+  /* Ordre del Mestre (30-10-2026, prompt 2208, T4.2) · A l'Arxiu, la fila de
+     l'enllaç continua sempre: la URL d'una foto pública i, d'una d'un altre
+     origen, «No té cap enllaç públic d’este lloc» (on ja era cert). */
+  test('l’enllaç de la imatge a l’Arxiu: la URL d’una pública; d’una de fora, el text de quan no n’hi ha cap', async () => {
+    pinta('/multimedia?foto=town-tibi');
+    act(() => within(visor()).getByRole('button', { name: 'Informació de la imatge' }).click());
+    expect(fila('Enllaç de la imatge').querySelector('[translate="no"]').textContent).toBe(`${window.location.origin}/assets/towns/tibi/1.jpg`);
+    cleanup();
+    pinta('/multimedia?foto=feed-fora');
+    act(() => within(visor()).getByRole('button', { name: 'Informació de la imatge' }).click());
+    expect(fila('Enllaç de la imatge').textContent).toBe('No té cap enllaç públic d’este lloc');
     await waitFor(() => expect(fila('Càmera').textContent).toBe('Desconegut'));
   });
 
@@ -286,22 +325,24 @@ describe('el panell', () => {
 
 describe('l’apartat IAIA i el cens', () => {
   test('«IAIA» deixa només les imatges d’IA, i el visor passa d’una a l’altra', () => {
-    const { container } = pinta();
-    act(() => screen.getByRole('button', { name: 'IAIA' }).click());
+    const { container } = pinta('/multimedia?categoria=galeria_iaia');
     const celles = botons(container);
     expect(celles.map((c) => c.querySelector('img').getAttribute('alt'))).toEqual(['Mur']);
     act(() => celles[0].click());
+    expect(new URLSearchParams(ubicacio.search).get('categoria')).toBe('galeria_iaia');
+    act(() => pagina().getByRole('button', { name: BOTO_VISOR }).click());
     expect(foto()).toBe('nano-mur');
     expect(within(visor()).queryByRole('button', { name: 'Imatge següent' })).toBeNull();
   });
 
-  test('el cens s’afig darrere del port, compta a «TOTS» i, sense data, va a «Sense data» de la Cronologia', () => {
+  test('el cens s’afig darrere del port, compta a la Fototeca i, sense data, va a «Sense data» de la Cronologia', () => {
     mocks.cens = { mitjans: MITJANS_DEL_CENS, cens: indexaCens(CENS) };
     const { container } = pinta();
     expect(botons(container)).toHaveLength(MITJANS.length + 1);
-    expect(container.querySelector('.univ-manager-facet-header').textContent).toMatch(/^TOTS \(5\) - /);
-    act(() => screen.getByRole('button', { name: 'Cronologia' }).click());
-    const titols = [...container.querySelectorAll('.stack-grid .section-title')].map((h) => h.textContent);
+    expect(container.querySelector('#app-grid-list .sdp-gestor-fitxa').textContent).toContain('5 imatges');
+    cleanup();
+    const cronologia = pinta('/multimedia?categoria=galeria_cronologia');
+    const titols = [...cronologia.container.querySelectorAll('.stack-grid h3')].map((h) => h.textContent);
     expect(titols.at(-1)).toBe('Sense data');
     expect(titols).toHaveLength(5);
   });
@@ -311,14 +352,12 @@ describe('l’apartat IAIA i el cens', () => {
   test('la Cronologia en la llengua activa, la del proveïdor i la calculada amb el cens', () => {
     mocks.locale = 'es-ES';
     mocks.multimedia = { status: 'ready', mediaItems: MITJANS, mediaTimelineGroups: [{ key: '2026-08', label: 'Agost de 2026', items: [MITJANS[0]] }] };
-    const titols = (container) => [...container.querySelectorAll('.stack-grid .section-title')].map((h) => h.textContent);
-    const primer = pinta();
-    act(() => screen.getByRole('button', { name: 'Cronologia' }).click());
+    const titols = (container) => [...container.querySelectorAll('.stack-grid h3')].map((h) => h.textContent);
+    const primer = pinta('/multimedia?categoria=galeria_cronologia');
     expect(titols(primer.container)).toEqual(['Agosto de 2026']);
     cleanup();
     mocks.cens = { mitjans: MITJANS_DEL_CENS, cens: indexaCens(CENS) };
-    const segon = pinta();
-    act(() => screen.getByRole('button', { name: 'Cronologia' }).click());
+    const segon = pinta('/multimedia?categoria=galeria_cronologia');
     expect(titols(segon.container)).toEqual(['Agosto de 2026', 'Julio de 2026', 'Enero de 2023', 'Enero de 2022', 'Sense data']);
   });
 

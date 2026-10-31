@@ -143,7 +143,13 @@ const HEAD_SERVIT = `
   <meta name="twitter:image:alt" content="Samarreta Sóc de Poble" ${ATRIBUT_SSR}>
   <script type="application/ld+json" data-sdp-seo="true" ${ATRIBUT_SSR}>{"@type":"Product","name":"Samarreta Sóc de Poble"}</script>
   <script type="application/ld+json">{"@type":"WebSite","name":"Sóc de Poble"}</script>`;
-const ambHeadServit = () => { document.head.innerHTML = HEAD_SERVIT; };
+/* Un head servit es llig com el llig el navegador en carregar la pàgina: un
+   document sencer (DOMParser, inert), i els nodes del seu <head> passen al
+   d'esta prova, en el mateix ordre i amb els mateixos espais. */
+const posaElHeadServit = (html) => {
+  document.head.replaceChildren(...new DOMParser().parseFromString(`<!doctype html><head>${html}</head>`, 'text/html').head.childNodes);
+};
+const ambHeadServit = () => { posaElHeadServit(HEAD_SERVIT); };
 const GENERICA = new URL(CAP_SOCIAL_BASE.image.url, ORIGEN_SOCIAL_PER_DEFECTE).href;
 /* El head genèric que ha de quedar: CAP_SOCIAL_BASE i res de la ruta servida. */
 const METES_GENERIQUES = {
@@ -280,14 +286,14 @@ test('Revisió 261027 · desmuntar-ho tot a la ruta servida deixa el head servit
    decisió 2 del Mestre) és el mateix document que ?item=<id>. */
 const LLIBRE = 'https://socdepoble.org/wikidepoble?item=03_llibre_d_or_memoria_episodica';
 const ambHeadDeDocument = (canonical = LLIBRE) => {
-  document.head.innerHTML = `
+  posaElHeadServit(`
     <title ${ATRIBUT_SSR}>El Llibre d'Or | Sóc de Poble</title>
     <meta property="og:site_name" content="Sóc de Poble">
     <meta name="description" content="Memòria contrastada" ${ATRIBUT_SSR}>
     <meta property="og:title" content="El Llibre d'Or | Sóc de Poble" ${ATRIBUT_SSR}>
     <meta property="og:type" content="article" ${ATRIBUT_SSR}>
     ${canonical ? `<link rel="canonical" href="${canonical}" ${ATRIBUT_SSR}>
-    <meta property="og:url" content="${canonical}" ${ATRIBUT_SSR}>` : ''}`;
+    <meta property="og:url" content="${canonical}" ${ATRIBUT_SSR}>` : ''}`);
 };
 test('Fase 2 · el head servit de ?item=A es queda a A (també amb altres paràmetres) i se’n va en obrir ?item=B', () => {
   ambHeadDeDocument();

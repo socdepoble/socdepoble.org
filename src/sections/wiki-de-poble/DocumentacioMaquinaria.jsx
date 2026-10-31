@@ -20,10 +20,15 @@ import { Alerta } from '../../components/PedraSeca/molecules/Alerta.jsx';
 import { sanitizeHtml } from '../../utils/sanitize.js';
 import { parseMarkdown } from './parseMarkdown.js';
 import { AVIS_NOMES_EN_LOCAL, ID_BIOS, documentacioDe, markdownDelBios } from './documentacioMaquinaria.js';
+import { useLlenguaDelContingut } from '../../components/universal/traduccio/llenguaDelContingut.js';
 
 import agentsMdRaw from '../../../AGENTS.md?raw';
 
 export default function DocumentacioMaquinaria({ id }) {
+  /* Gauntlet 261030 (cicle 4, lang-ca-nomes-a-textsection) · L'avís i la
+     documentació, en valencià: el lang que li dona la pàgina (només amb la
+     interfície en una altra llengua; si no, cap atribut). */
+  const lang = useLlenguaDelContingut();
   const bios = id === ID_BIOS;
   const markdown = bios ? markdownDelBios(agentsMdRaw) : documentacioDe(id);
   if (markdown === null) return null;
@@ -31,7 +36,7 @@ export default function DocumentacioMaquinaria({ id }) {
      entradilla és la d'AGENTS.md); la documentació no en té cap. */
   const html = bios ? parseMarkdown(markdown) : parseMarkdown(markdown, { entradilla: false });
   return (
-    <div className="sdp-tractors-panell">
+    <div className="sdp-tractors-panell" lang={lang}>
       {bios ? null : (
         <Alerta to="info" viva={false} titol={AVIS_NOMES_EN_LOCAL.titol}>{AVIS_NOMES_EN_LOCAL.text}</Alerta>
       )}

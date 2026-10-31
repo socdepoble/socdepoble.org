@@ -6,8 +6,8 @@ import { readdirSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 import { afterEach, describe, expect, test, vi } from 'vitest';
 import {
-  ABAST_DEL_SW, ESDEVENIMENT_APP_VISITADA, ESPERA_ESCALFAMENT_MS, MISSATGE_ESCALFAMENT, RUTA_DEL_SW, escoltaEscalfament, missatgeDEscalfament,
-  motiuPerNoRegistrar, registraServiceWorker
+  ABAST_DEL_SW, ESDEVENIMENT_APP_VISITADA, ESPERA_ESCALFAMENT_MS, MISSATGE_ESCALFAMENT, RUTA_DEL_SW, TOPALL_REGISTRE_ACTIU_MS, escoltaEscalfament,
+  missatgeDEscalfament, motiuPerNoRegistrar, registraServiceWorker, registreActiu, registreDelSw
 } from './registre.js';
 
 /** Un navigator i una finestra de mostra, en producció i en condicions de registrar. */
@@ -352,6 +352,82 @@ describe('escoltaEscalfament amb espera i observador de recursos (revisió F1)',
       expect(p.controlador.postMessage).toHaveBeenCalledTimes(1);
       vi.useRealTimers();
     }
+  });
+});
+
+/* Ordre nocturna 261030_0252 (Fase 3, WP) · El registre que reben els avisos
+   push (src/pwa/avisosPush.js): el del worker propi, actiu i sense cap versió
+   en espera ni instal·lant-se. */
+describe('registreActiu', () => {
+  const worker = (cami = RUTA_DEL_SW) => ({ scriptURL: `https://socdepoble.org${cami}` });
+  const navegadorAmb = (getRegistration) => ({ serviceWorker: { getRegistration } });
+
+  test('el registre de /sw.js amb un worker actiu i res en espera: el torna, i el demana per a l\'abast /', async () => {
+    const registre = { active: worker(), waiting: null, installing: null, pushManager: {} };
+    const getRegistration = vi.fn(async () => registre);
+    expect(await registreActiu({ navegador: navegadorAmb(getRegistration) })).toBe(registre);
+    expect(getRegistration).toHaveBeenCalledWith(ABAST_DEL_SW);
+  });
+
+  test('una versió en espera o instal·lant-se, cap worker actiu, un altre script o cap registre: null', async () => {
+    for (const registre of [
+      { active: worker(), waiting: worker() }, { active: worker(), installing: worker() }, { active: null }, {},
+      { active: worker('/service-worker.js') }, { active: { scriptURL: 'no és cap URL' } }, undefined, null
+    ]) {
+      expect(await registreActiu({ navegador: navegadorAmb(vi.fn(async () => registre)) }), JSON.stringify(registre)).toBeNull();
+    }
+  });
+
+  test('sense suport o amb un getRegistration que falla (síncron o asíncron): null, mai una excepció', async () => {
+    for (const navegador of [undefined, {}, { serviceWorker: {} }, navegadorAmb(() => { throw new Error('SecurityError'); }),
+      navegadorAmb(async () => { throw new Error('InvalidStateError'); })]) {
+      await expect(registreActiu({ navegador })).resolves.toBeNull();
+    }
+  });
+
+  test('si el navegador no contesta, el topall torna null; quan contesta, no deixa cap rellotge viu', async () => {
+    expect(TOPALL_REGISTRE_ACTIU_MS).toBe(3000);
+    await expect(registreActiu({ navegador: navegadorAmb(() => new Promise(() => {})), topallMs: 5 })).resolves.toBeNull();
+    vi.useFakeTimers();
+    try {
+      const registre = { active: worker() };
+      const resultat = await registreActiu({ navegador: navegadorAmb(async () => registre) });
+      expect(resultat).toBe(registre);
+      expect(vi.getTimerCount()).toBe(0);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+});
+
+/* Gauntlet c3 (push-desactiva-fals-exit-amb-worker-en-espera) · El registre
+   de la BAIXA dels avisos push: el propi, també amb una versió en espera o
+   instal·lant-se (la subscripció penja del registre, no del worker actiu). */
+describe('registreDelSw', () => {
+  const worker = (cami = RUTA_DEL_SW) => ({ scriptURL: `https://socdepoble.org${cami}` });
+  const navegadorAmb = (getRegistration) => ({ serviceWorker: { getRegistration } });
+
+  test('el registre propi amb una versió en espera o instal·lant-se (on registreActiu dona null): el torna, demanat per a l\'abast /', async () => {
+    for (const registre of [
+      { active: worker(), waiting: worker() }, { active: worker(), installing: worker() }, { active: null, installing: worker() },
+      { active: worker('/service-worker.js'), waiting: worker() }, { active: worker(), waiting: null, installing: null }
+    ]) {
+      const getRegistration = vi.fn(async () => registre);
+      expect(await registreDelSw({ navegador: navegadorAmb(getRegistration) }), JSON.stringify(registre)).toBe(registre);
+      expect(getRegistration).toHaveBeenCalledWith(ABAST_DEL_SW);
+    }
+    expect(await registreActiu({ navegador: navegadorAmb(async () => ({ active: worker(), waiting: worker() })) })).toBeNull();
+  });
+
+  test('cap worker propi, cap registre, sense suport, un getRegistration que falla o que no contesta: null, mai una excepció', async () => {
+    for (const registre of [{}, { active: null }, { active: worker('/service-worker.js') }, { waiting: { scriptURL: 'no és cap URL' } }, undefined, null]) {
+      expect(await registreDelSw({ navegador: navegadorAmb(vi.fn(async () => registre)) }), JSON.stringify(registre)).toBeNull();
+    }
+    for (const navegador of [undefined, {}, { serviceWorker: {} }, navegadorAmb(() => { throw new Error('SecurityError'); }),
+      navegadorAmb(async () => { throw new Error('InvalidStateError'); })]) {
+      await expect(registreDelSw({ navegador })).resolves.toBeNull();
+    }
+    await expect(registreDelSw({ navegador: navegadorAmb(() => new Promise(() => {})), topallMs: 5 })).resolves.toBeNull();
   });
 });
 

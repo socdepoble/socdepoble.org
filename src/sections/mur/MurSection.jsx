@@ -24,6 +24,7 @@ import { acteAEsdeveniment, acteOcorreElDia } from './agendaMur.js';
 import { EstatErrorDades } from './EstatErrorDades.jsx';
 import { lazyRoute } from '../../apps/plataforma/lazyRoute.js';
 import { esAppNativa } from '../../config/origenPublic.js';
+import { totsPublics } from '../../components/universal/traduccio/visibilitatTraduible.js';
 
 /* P1-64 (pla 261028_1526 §3.7.1; decisions 1 i 9 del Mestre, 261028) · El
    Mapa Fotogràfic es carrega en diferit, només quan s'obri la pestanya
@@ -249,7 +250,10 @@ export default function MurSection() {
 
   return (
     <ContentProvider initialConfig={config}>
-      <UniversalPage layout="contained" objecte={paginaMur}>
+      {/* Gauntlet 261030 (Fase 3, TC3.2) · Traduir només si TOTES les
+          publicacions del mur són públiques: una del veïnat (només per als
+          membres) l'apaga (traduccio/visibilitatTraduible.js). */}
+      <UniversalPage layout="contained" objecte={paginaMur} traduccio={totsPublics(allItems)}>
         <div className="content-wrapper">
           <PillToggle
             etiqueta="Filtres del mur"

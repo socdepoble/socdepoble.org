@@ -134,9 +134,12 @@ for (const f of wiki.fitxers) {
 /* ─────────────────────────── N2 · RUTA-MORTA ─────────────────────────── */
 /* Esta és la llei que faltava. Una ruta de wiki escrita dins d'un fitxer de
  * codi o d'una skill és una promesa verificable: o el directori hi és, o el
- * fitxer que la cita està mentint. */
+ * fitxer que la cita està mentint.
+ * Ordre del Mestre (30-10-2026) · frontera esquerra: l'arrel de la wiki només
+ * compta com a nom sencer, no com la cua d'un altre (l'arxiu fred germà,
+ * «../_arxiu_» + l'arrel, és fora de l'arbre i no és cap ruta morta). */
 
-const RE_RUTA = new RegExp(`(?:${C.arrels_wiki.map((a) => a.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|')})\\/[A-Za-z0-9_.\\-]+`, 'g');
+const RE_RUTA = new RegExp(`(?<![A-Za-z0-9_])(?:${C.arrels_wiki.map((a) => a.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|')})\\/[A-Za-z0-9_.\\-]+`, 'g');
 
 const codi = C.arrels_codi.reduce((a, d) => a.concat(recorre(d).fitxers), [])
   .concat(fs.readdirSync(ARREL, { withFileTypes: true })

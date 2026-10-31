@@ -125,31 +125,11 @@
   transform: translateX(0);
 }
 
-/* Barres (ordre del Mestre, 261004: «les dues barres de la Wiki han d'estar
-   sempre presents plegades, o com a mínim una d'elles visible que permeta
-   desplegar l'altra») · LA NAVEGACIÓ EN RAIL EN «MITJA»
-   Amb data-esquerra="rail" (AppGridShell railEsquerra, que només passa el
-   Workspace), la navegació no ix de pantalla: és un rail fix de
-   --app-grid-col-collapsed a l'esquerra. L'espai es reserva amb el coixí de
-   la graella, no amb una pista nova: els percentatges de les pistes es
-   resolen contra la caixa de contingut, i el calc i el minmax de dalt
-   continuen guardant el mínim del detall. La columna ja és absoluta dins del
-   contingut (relatiu): el rail viu en el coixí. Desplegada, és el panell de
-   sempre (data-panell="left"): l'amplària de la columna, per damunt del rail
-   i de la llista, amb l'ombra de token. Sense l'atribut res no canvia (el
-   Xat, les apps), i «ample» i «estret» no el porten mai. */
-.app-grid-shell[data-layout="mitja"][data-esquerra="rail"] .app-grid-content {
-  padding-inline-start: var(--app-grid-col-collapsed);
-}
-.app-grid-shell[data-layout="mitja"][data-esquerra="rail"] .app-grid-column--left {
-  width: var(--app-grid-col-collapsed);
-  transform: none;
-  box-shadow: none;
-}
-.app-grid-shell[data-layout="mitja"][data-esquerra="rail"][data-panell="left"] .app-grid-column--left {
-  width: max-content;
-  box-shadow: var(--sdp-ombra-3);
-}
+/* Decisió 4 del Mestre (30-10-2026 ~15:00) · La navegació en rail fix en
+   «mitja» (data-esquerra="rail", AppGridShell railEsquerra, barres 261004)
+   només la passava el Workspace, que amb les columnes fixes ja no passa per
+   «mitja»: les seues tres regles s'han retirat. «Mitja» (el Xat, les apps)
+   no canvia. */
 
 /* MÒBIL */
 .app-grid-shell[data-layout="estret"] .app-grid-content {
@@ -211,25 +191,20 @@
 }
 
 /* P6 (ordre del Mestre, 261003) · LLISTA EN RAIL EN PANTALLES XICOTETES
-   La closca porta data-llista="rail" quan hi ha un rail de llista fora
-   d'«ample» (AppGridShell railMitja i railEstret): el rail, de l'amplària
-   de la columna plegada de sempre, i el detall amb tota la resta. Sense
-   l'atribut (i sense #app-grid-rail, que només existix amb ell), cap
-   d'estes regles s'aplica i res no canvia.
-     · «mitja»: la columna de la llista, plegada amb el seu Replegar, és el
-       rail; el menú continua sent el panell lliscant de damunt.
-     · «estret»: el rail és #app-grid-rail, a l'esquerra del detall. La
-       llista i la navegació continuen sent els panells del mestre-detall:
-       de banda a banda, lliscant per damunt de rail i detall, i la graella
-       de davall no es mou (l'editor no reflueix). */
-.app-grid-shell[data-layout="mitja"][data-llista="rail"] .app-grid-content,
+   La closca porta data-llista="rail" quan hi ha un rail de llista en
+   «estret» (AppGridShell railEstret): el rail, de l'amplària de la columna
+   plegada de sempre, i el detall amb tota la resta. Sense l'atribut (i
+   sense #app-grid-rail, que només existix amb ell), cap d'estes regles
+   s'aplica i res no canvia. El rail és #app-grid-rail, a l'esquerra del
+   detall. La llista i la navegació continuen sent els panells del
+   mestre-detall: de banda a banda, lliscant per damunt de rail i detall, i
+   la graella de davall no es mou (l'editor no reflueix).
+   Decisió 4 del Mestre (30-10-2026 ~15:00) · La llista en rail en «mitja»
+   (railMitja) només la passava el Workspace, que amb les columnes fixes ja
+   no passa per «mitja»: les seues regles s'han retirat. */
 .app-grid-shell[data-layout="estret"][data-llista="rail"] .app-grid-content {
   grid-template-columns: var(--app-grid-col-collapsed) minmax(0, 1fr);
 }
-.app-grid-shell[data-layout="mitja"][data-llista="rail"] .app-grid-column--middle {
-  grid-column: 1;
-}
-.app-grid-shell[data-layout="mitja"][data-llista="rail"] .app-grid-column--right,
 .app-grid-shell[data-layout="estret"][data-llista="rail"] .app-grid-column--right {
   grid-column: 2;
 }
@@ -323,6 +298,29 @@
   background: var(--sdp-focus);
 }
 
+/* Decisió 2 del Mestre (30-10-2026 ~15:00: «el separador del mig ha de poder
+   agafar-se sempre sense quedar bloquejat; ... tinga el z-index necessari per
+   a redimensionar sense xocar amb les barres») · Al Workspace en «ample», la
+   meitat dreta de la franja del separador del mig cau damunt de la columna
+   dreta, i la barra taronja (--z-barra-taronja) i les eines de l'editor
+   (--z-eines-editor), més altes que el 50 de dalt, se la quedaven: a /notes,
+   /disseny, /wikidepoble i /multimedia, elementFromPoint hi tornava la barra
+   i arrossegar no movia res. Ara el separador passa per damunt d'eixes dues
+   barres, i queda per davall de la blava (--z-barra-blava): la fila de la
+   capçalera i els menús que en pengen (Traduir, Comentar) no canvien. Per la
+   dreta, la franja fa var(--sdp-space-2), el marge on comencen el primer botó
+   de les eines i els menús del detall (el de Comentar i el «Format del
+   text» de les eines, a 8 px del separador amb el detall de 322): el
+   separador no tapa cap control ni cap menú. Els diàlegs i l'Índex van a la
+   capa superior o al body. Només el Workspace (columnesFixes); el Xat i les
+   apps, i «mitja», el de sempre. */
+.app-grid-page.sdp-workspace--universal > .app-grid-shell[data-layout="ample"] .app-grid-resizer--middle {
+  z-index: calc(var(--z-barra-taronja) + 1);
+}
+.app-grid-page.sdp-workspace--universal > .app-grid-shell[data-layout="ample"] .app-grid-resizer--middle::before {
+  inset-inline-end: calc(-1 * var(--sdp-space-2));
+}
+
 
 .d-mobile-only { display: none; }
 .app-grid-shell[data-layout="estret"] .d-mobile-only { display: inline-flex; }
@@ -398,8 +396,8 @@
        fila 1, la roda i el rail de davall pujaven 5px en plegar (mesurat a
        /disseny, roda y=139→134, primera carpeta 194→189). Ara cauen a la
        mateixa y plegats i oberts. Excepció: amb dues accions (al Bloc,
-       «Configurar categories» i la roda; en «mitja» i «estret», l'obridor de
-       la navegació i la lupa), oberta comparteixen la fila 2 i plegada
+       «Configurar categories» i la roda; en «estret», l'obridor de la
+       navegació i la lupa), oberta comparteixen la fila 2 i plegada
        s'apilen en cel·les de var(--sdp-touch) des de la fila 1, com abans
        del torn: cap no pot caure a la mateixa y en els dos estats, i les
        carpetes cauen davall de dues cel·les de var(--sdp-touch) en lloc de
@@ -512,6 +510,69 @@
 
 .app-grid-col-header__plec--fix { cursor: default; }
 .app-grid-col-header__plec:focus-visible { outline: 2px solid var(--sdp-crom-focus); }
+
+/* Ordre d'usabilitat del Mestre (30-10-2026) · La icona de la columna
+   oberta és un botó germà del [|<] (AppGridColumn): fa el mateix, i plegada
+   el botó de dalt del rail porta la mateixa icona al mateix lloc. La cel·la
+   és la tàctil, var(--sdp-touch-min), centrada sobre el glif de 24 px; els
+   marges negatius la tornen al lloc del glif, de manera que la icona cau on
+   queia (a la vora de 16 px, l'eix de 28 del rail de 56) i el títol, a 56.
+   Transparent i taronja, com les altres icones de la capçalera (C4). */
+.app-grid-col-header__icona {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  width: var(--sdp-touch-min);
+  height: var(--sdp-touch-min);
+  margin-inline: calc((24px - var(--sdp-touch-min)) / 2);
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: var(--sdp-crom-actiu-fons);
+  font: inherit;
+  cursor: pointer;
+}
+.app-grid-col-header__icona:focus-visible {
+  outline: 2px solid var(--sdp-crom-focus);
+  outline-offset: -2px;
+}
+
+/* L'acordió vertical (plegable) només porta la paraula i el chevron, apegat
+   a la paraula amb var(--sdp-space-1): van junts dins d'este grup perquè el
+   gap del botó (modules.css, el de les files de la navegació) no els separe,
+   i el chevron perd el margin-left: auto (modules.css) que l'enviava a la
+   dreta.
+   Corrector del Gauntlet (30-10-2026) · El botó ja no ocupa la resta de la
+   fila: és la paraula i el chevron (flex: 0 1 auto i width: auto en lloc de
+   l'1 1 auto i el 100% de modules.css), i un clic a la franja buida que el
+   separa del [|<] ja no plega la llista. I porta un coixí de
+   var(--sdp-space-1) a l'inici, tornat amb un marge negatiu: el text no es
+   mou (a 56) i l'anell de focus (.sdp-workspace-nav-item, 2px per dins) cau
+   a 52-54, fora de la «C» i a tocar de la cel·la de la icona, que acaba a
+   52. Quatre classes: guanya la de l'espai de modules.css (tres, que hi
+   posa padding: 0) sense dependre de l'ordre dels @import. */
+.app-grid-col-header > .app-grid-col-header__plec > .sdp-workspace-nav-item.app-grid-col-header__plegable {
+  flex: 0 1 auto;
+  width: auto;
+  min-width: 0;
+  padding-inline-start: var(--sdp-space-1);
+  margin-inline-start: calc(-1 * var(--sdp-space-1));
+}
+.app-grid-col-header__acordio {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sdp-space-1);
+  flex: 0 1 auto;
+  min-width: 0;
+}
+.app-grid-col-header__plegable .sdp-workspace-nav-item__label { flex: 0 1 auto; }
+.app-grid-col-header__plegable .app-grid-col-header__chevron {
+  flex: none;
+  margin-inline-start: 0;
+}
 
 .app-grid-col-header__titol {
   display: flex;

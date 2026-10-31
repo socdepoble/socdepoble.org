@@ -8,8 +8,9 @@
  * persona: la intel·ligència de dades és un esbós de mostra.
  *
  * La peça ompli l'alçada del seu contenidor: ací el dona el marc
- * .sdp-tpv-marc (tpv.css). «Mòbil» l'estreny i la peça passa sola a una
- * columna amb pestanyes, perquè mesura la seua amplada, no la del viewport.
+ * .sdp-tpv-marc (src/css/modules.css, bloc tpv). «Mòbil» l'estreny i la peça
+ * passa sola a una columna amb pestanyes, perquè mesura la seua amplada, no la
+ * del viewport.
  *
  * «Sense connexió» (ordre del Mestre, 261006: capacitat offline prioritària)
  * és una demostració: l'app diu a l'avís que cada venda es desa en el

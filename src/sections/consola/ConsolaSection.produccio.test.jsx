@@ -46,6 +46,9 @@ afterEach(() => {
   localStorage.clear();
 });
 
+/* Decisió del Mestre (31-10-2026) · «Fora de DEV» és ací un paquet SENSE la
+   instantània publicada (sense la bandera SDP_CONSOLA_INSTANTANIA): el
+   connector de WordPress, l'app nativa o Sollutia. El build web, avall. */
 describe('fora de DEV, cap petició a /__iaia/*', () => {
   test('la Consola incrustada (Wiki pública) no fa cap petició i el tauler es pinta', async () => {
     vi.stubEnv('DEV', false);
@@ -100,4 +103,71 @@ test('a DEV la Consola incrustada llig les tres fonts del middleware, cada una u
   render(<ConsolaIncrustada />);
   await act(async () => { await Promise.resolve(); });
   expect(demanatsIaia(peticio).sort()).toEqual(['/__iaia/consola.json', '/__iaia/govern.json', '/__iaia/mapa.json']);
+});
+
+/* Decisió del Mestre (31-10-2026) · «Sí, vull que la web publicada mostre una
+   instantània sanejada amb totes les dades reals de la Consola a qualsevol
+   usuari». El build web (vite.config.js → consolaIaia() →
+   sdp:consola-instantania) emet /__iaia/*.json estàtics i segella
+   SDP_CONSOLA_INSTANTANIA = '1': fora de DEV, amb la bandera, la Consola els
+   llig amb un GET al mateix origen i sense credencials, i ho diu. Sense la
+   bandera (WordPress, l'app), el que proven les de dalt: cap petició. */
+describe('al build web, la instantània publicada', () => {
+  const aLaWebPublicada = () => { vi.stubEnv('DEV', false); vi.stubEnv('SDP_CONSOLA_INSTANTANIA', '1'); };
+  const json = (cos) => ({ status: 200, ok: true, statusText: 'OK', headers: { get: () => 'application/json' }, json: async () => cos });
+  const GENERAT = '2026-10-31T00:30:00.000Z';
+  const GOVERN = Object.freeze({
+    schema: 'sdp.govern.v1', generat: GENERAT, head: '7a1828ca779ef74284846c9e5a4122cd23945689', trasllat: null,
+    mcr: {
+      at: '2026-10-30T23:30:00.000Z', baseline_head: '7a1828ca779ef74284846c9e5a4122cd23945689', scope: 'llibre-mestre', pla: 'llibre-mestre',
+      requirements: [{ id: 'P0-01', source: '§0', requirement: 'Prova', status: '[FET I SEGELLAT]', evidence: 'commit abc1234', owner: null, priority: 'P0', acceptance: null }]
+    }
+  });
+  /* Un servidor estàtic: el Govern i la resta, 404. */
+  const estatic = (fonts = {}) => {
+    const peticio = vi.fn(async (url) => (fonts[String(url)] ? json(fonts[String(url)]) : { status: 404, ok: false, statusText: 'Not Found', headers: { get: () => '' } }));
+    vi.stubGlobal('fetch', peticio);
+    return peticio;
+  };
+
+  test('els quatre carregadors demanen la instantània al mateix origen, sense credencials ni lectura en viu', async () => {
+    aLaWebPublicada();
+    const peticio = estatic();
+    const { carregaEmpaquetats } = await import('./empaquetats.js');
+    const { carregaGovern } = await import('./govern/governContent.js');
+    await expect(carregaConsola('s')).resolves.toBeNull();
+    await expect(carregaMapa('s')).resolves.toBeNull();
+    await expect(carregaGovern('s')).resolves.toBeNull();
+    await expect(carregaEmpaquetats('s')).resolves.toBeNull();
+    expect(peticio.mock.calls).toEqual(['consola', 'mapa', 'govern', 'empaquetats']
+      .map((font) => [`/__iaia/${font}.json`, { signal: 's', cache: 'no-cache', credentials: 'omit' }]));
+  });
+
+  test('una font que el build no ha pogut produir (el sobre d’error) es pinta com a error, amb el seu text', async () => {
+    aLaWebPublicada();
+    estatic({ '/__iaia/mapa.json': { schema: 'sdp.instantania-error.v1', font: 'mapa', codi: 'intern', error: 'No s’ha pogut compilar el Mapa en fer la instantània.' } });
+    await expect(carregaMapa()).rejects.toThrow('No s’ha pogut compilar el Mapa en fer la instantània.');
+  });
+
+  test('la Consola incrustada llig les tres fonts una vegada, pinta les dades i diu que són la instantània publicada', async () => {
+    aLaWebPublicada();
+    const peticio = estatic({ '/__iaia/govern.json': GOVERN });
+    render(<ConsolaIncrustada />);
+    await act(async () => { await Promise.resolve(); });
+    expect(demanatsIaia(peticio).sort()).toEqual(['/__iaia/consola.json', '/__iaia/govern.json', '/__iaia/mapa.json']);
+    expect(peticio.mock.calls.every(([, opcions]) => opcions.credentials === 'omit')).toBe(true);
+    const avis = await screen.findByText('Instantània publicada');
+    expect(avis.closest('.sdp-alerta').textContent).toMatch(/Són les dades reals del sistema tal com eren el .+, quan es va publicar esta versió de la web\./);
+    expect(avis.closest('.sdp-alerta').textContent).toContain('sense camins de l’ordinador, sense secrets i sense dades personals');
+    // Les dades del Govern hi són: la targeta compta la fila feta i segellada.
+    expect(screen.getByRole('region', { name: 'Govern del Mestre' }).textContent).toContain('1 fet i segellat');
+  });
+
+  test('al servidor de desenvolupament, cap avís d’instantània publicada', async () => {
+    vi.stubEnv('DEV', true);
+    estatic({ '/__iaia/govern.json': GOVERN });
+    render(<ConsolaIncrustada />);
+    await act(async () => { await Promise.resolve(); });
+    expect(screen.queryByText('Instantània publicada')).toBeNull();
+  });
 });

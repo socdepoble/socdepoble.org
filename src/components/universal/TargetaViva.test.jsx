@@ -112,7 +112,8 @@ test('T50 · un avatar sdp-media:// també es resol', async () => {
 test('T50 · el xip «Vista targeta» obri un diàleg amb la targeta, que només es munta obert', () => {
   const { container } = render(<BotoTargetaViva document={DOC} autor={AUTOR} etiquetes={[]} />);
   const xip = screen.getByRole('button', { name: 'Vista targeta' });
-  expect(xip.className).toBe('sdp-classificacio-pindola sdp-boto-targeta-viva');
+  /* Cicle 3 (261030, VD) · Només la classe de la família: la de sempre sense estil ha eixit. */
+  expect(xip.className).toBe('sdp-classificacio-pindola');
   expect(xip.getAttribute('aria-haspopup')).toBe('dialog');
   expect(container.querySelector('.sp-card')).toBeNull();
   act(() => { fireEvent.click(xip); });

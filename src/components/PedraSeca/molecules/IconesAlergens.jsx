@@ -4,7 +4,8 @@
  * producte l'espai i el codi per a renderitzar aquestes xicotetes icones
  * d'al·lèrgens de forma visual. Això és vital per a la Carta Digital i el
  * TPV»). Els dibuixos són els del Mestre: recursos/alergens.js en diu la
- * procedència i com viatgen sense xarxa. Estils a alergens.css.
+ * procedència i com viatgen sense xarxa. Estils a src/css/modules.css, bloc
+ * alergens.
  *
  * CONTRACTE
  *   alergens  string[] · ids de la llista canònica (ALERGENS de

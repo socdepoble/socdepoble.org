@@ -16,7 +16,7 @@ import StarterKit from '@tiptap/starter-kit';
 import { creaOrdres, extensionsRiques } from './index.js';
 import SdpImageNodeView from './SdpImageNodeView.jsx';
 import { ERROR_EXIF_NO_CONSERVABLE } from '../../enquadrament/exifIncrustat.js';
-import { dataOriginal, gpsTorre, jpegAmbExif } from '../../enquadrament/jpegProva.js';
+import { dataOriginal, gpsTorre, jpegAmbExif } from '../../../../../tests/helpers/jpegProva.js';
 
 const CURT = 'data:image/webp;base64,AAAA';
 const PNG = `data:image/png;base64,${btoa(String.fromCharCode(0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 0, 0, 0, 13))}`;

@@ -47,7 +47,10 @@ export const RUTES = Object.freeze({
   genotip: join(ROOT, '_wiki_de_poble', '00_SER_Brain_Identitat', '02_GENOTIP.md'),
   perfil: join(ROOT, '.agents', 'identity', 'PROFILE.md'),
   persona: join(ROOT, 'bot', 'persona', 'IAIA_MARIA.md'), // nou fitxer de persona WhatsApp
-  indexRag: join(STATE, 'rag_index.json'),
+  // P1-24 (C1645-03) · L'índex que escriu el productor (npm run rag:build →
+  // tooling/wiki/core/build_rag_index.mjs): només la Wiki pública. Abans era
+  // <estat>/rag_index.json, que ningú no generava, i el bot no arrencava.
+  indexRag: join(ROOT, 'public', 'rag-index.json'),
   estat: STATE,
   auth: join(STATE, '.iaia_auth'),
   runtime: join(STATE, 'var', 'baileys-runtime'),

@@ -63,12 +63,28 @@
  *     de l'encastament, al web amfitrió) i en enviar. L'alçada del calaix no
  *     passa mai de l'espai que hi ha entre el compositor i la llista de
  *     missatges: la capçalera de la conversa no es tapa.
+ *   · Negreta (IDEA-53, pla 261029_1605, Bloc B; comportament literal del
+ *     pla): el botó [N], dins del camp a la dreta (la carona és a l'esquerra),
+ *     i Cmd+B o Ctrl+B al camp, com diu el seu títol. Amb text seleccionat
+ *     l'embolica amb `*…*` (o el desembolica si ja era negreta) i la selecció
+ *     i el focus es queden al camp, sobre el mateix text; sense selecció,
+ *     insereix `**` amb el cursor al mig (negreta.js, commutaNegreta). Cap
+ *     embolcall automàtic de paraula ni barra flotant.
+ *       - El botó no pren el focus al camp (onMouseDown, XU-01): el teclat
+ *         del mòbil no es tanca. Si el focus era fora (Tab fins al botó),
+ *         s'aplica a l'última selecció recordada i el focus torna al camp.
+ *       - Mentre un IME compon, la drecera no fa res (va darrere de delIME).
+ *         Mantindre la tecla premuda (e.repeat) es consumix però no commuta
+ *         una volta i una altra.
+ *       - El canvi el fa el codi, com les emoticones: es perd l'historial
+ *         de desfer natiu del camp.
  */
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { Building2, Keyboard, Megaphone, Plus, Send, Smile, UserRound, Users } from 'lucide-react';
 import { useAppGrid } from '../../../components/layout/AppGridShell.jsx';
 import { CONSULTA_TACTIL } from '../../../hooks/useBarresAmbScroll.js';
 import { inserixAlCursor } from '../emoticonesXat.js';
+import { commutaNegreta, esDreceraDeNegreta } from '../negreta.js';
 import SelectorEmoticones from './SelectorEmoticones.jsx';
 
 export const LIMIT_TEXT = 4096;
@@ -262,7 +278,8 @@ function Formulari({ valor, onCanvia, onEnvia, t, desactivat, onEscapa, campRef,
   /* L'últim valor que ha eixit d'ací (escriure o una emoticona): un altre
      (enviar, l'esborrany d'un altre fil) fa oblidar la selecció. */
   const valorPropi = useRef(valor);
-  /* El cursor que toca posar quan el valor amb l'emoticona torne del pare. */
+  /* La selecció ({ inici, fi }) que toca posar quan el valor amb l'emoticona
+     o amb la negreta torne del pare. */
   const pendent = useRef(null);
 
   const posaCamp = useCallback((node) => {
@@ -282,7 +299,7 @@ function Formulari({ valor, onCanvia, onEnvia, t, desactivat, onEscapa, campRef,
     const node = camp.current;
     if (!node) return;
     node.focus({ preventScroll: true });
-    node.setSelectionRange(cursor.posicio, cursor.posicio);
+    node.setSelectionRange(cursor.inici, cursor.fi);
   }, [valor]);
 
   /* Tornar al camp des de fora (el calaix, la carona, un altre lloc): el
@@ -466,7 +483,7 @@ function Formulari({ valor, onCanvia, onEnvia, t, desactivat, onEscapa, campRef,
     const enfoca = !enTactil && !dinsDelCalaix;
     seleccio.current = { inici: resultat.cursor, fi: resultat.cursor };
     valorPropi.current = resultat.valor;
-    pendent.current = { valor: resultat.valor, posicio: resultat.cursor, enfoca };
+    pendent.current = { valor: resultat.valor, inici: resultat.cursor, fi: resultat.cursor, enfoca };
     canvia(resultat.valor);
     if (!enfoca) {
       /* Un espai dur alterna: dues iguals seguides també s'anuncien. */
@@ -476,6 +493,27 @@ function Formulari({ valor, onCanvia, onEnvia, t, desactivat, onEscapa, campRef,
     return true;
   }, []);
   const tancaAmbEscape = useCallback(() => tanca(true), [tanca]);
+  /* IDEA-53 · [N] i Cmd/Ctrl+B: la selecció viva del camp (o la recordada,
+     si el focus és fora) passa per commutaNegreta. El text nou torna del
+     pare i l'efecte de dalt hi posa la selecció i el focus. Si no hi cap
+     (LIMIT_TEXT), no canvia res. */
+  const aplicaNegreta = useCallback(() => {
+    const { valor: text, onCanvia: canvia } = actual.current;
+    const node = camp.current;
+    if (!node || node.disabled) return;
+    const lloc = teElFocus(node) ? { inici: node.selectionStart, fi: node.selectionEnd } : seleccio.current;
+    const resultat = commutaNegreta(text, lloc?.inici, lloc?.fi, LIMIT_TEXT);
+    if (!resultat) return;
+    seleccio.current = { inici: resultat.inici, fi: resultat.fi };
+    if (resultat.valor === text) {
+      node.focus({ preventScroll: true });
+      node.setSelectionRange(resultat.inici, resultat.fi);
+      return;
+    }
+    valorPropi.current = resultat.valor;
+    pendent.current = { valor: resultat.valor, inici: resultat.inici, fi: resultat.fi, enfoca: true };
+    canvia(resultat.valor);
+  }, []);
   /* Tàctil: tocar el camp per a escriure tanca el calaix (hi torna el teclat).
      Tornar al camp amb el menú del + obert també el tanca (només el menú: la
      carona hi porta el focus en obrir el calaix). */
@@ -553,6 +591,11 @@ function Formulari({ valor, onCanvia, onEnvia, t, desactivat, onEscapa, campRef,
 
   const alTeclat = (e) => {
     if (delIME(e)) return;
+    if (esDreceraDeNegreta(e)) {
+      e.preventDefault();
+      if (!e.repeat) aplicaNegreta();
+      return;
+    }
     if (e.key === 'Escape' && (obert || menuObert)) {
       e.preventDefault();
       tanca(true);
@@ -648,8 +691,9 @@ function Formulari({ valor, onCanvia, onEnvia, t, desactivat, onEscapa, campRef,
           3.900: el text només canvia en passar un llindar, i així s'anuncia. */}
       <span className="sdp-nomes-lector" aria-live="polite">{avisComptador.text}</span>
       {/* P1-66 · La carona viu dins del camp, a l'esquerra (el modificador
-          --carona: ConsultaIAIA usa el mateix camp sense carona). */}
-      <div className="sdp-xat-compositor__camp sdp-xat-compositor__camp--carona" data-valor={valor}>
+          --carona: ConsultaIAIA usa el mateix camp sense carona). IDEA-53 ·
+          [N], a la dreta (el modificador --negreta). */}
+      <div className="sdp-xat-compositor__camp sdp-xat-compositor__camp--carona sdp-xat-compositor__camp--negreta" data-valor={valor}>
         <button
           type="button"
           className="sdp-xat-compositor__emojis"
@@ -693,6 +737,20 @@ function Formulari({ valor, onCanvia, onEnvia, t, desactivat, onEscapa, campRef,
           enterKeyHint={retornEnvia ? 'send' : 'enter'}
           disabled={desactivat}
         />
+        {/* IDEA-53 · [N]: mai no pren el focus al camp (XU-01) i el teclat
+            del mòbil no es tanca. La lletra és decorativa: el nom és «Negreta». */}
+        <button
+          type="button"
+          className="sdp-xat-compositor__negreta"
+          aria-label={t('section.xat.negreta.etiqueta', 'Negreta')}
+          title={t('section.xat.negreta.titol', 'Negreta (⌘B / Ctrl+B)')}
+          aria-keyshortcuts="Meta+B Control+B"
+          onMouseDown={(e) => e.preventDefault()}
+          onClick={aplicaNegreta}
+          disabled={desactivat}
+        >
+          <span className="sdp-xat-compositor__negreta-lletra" aria-hidden="true">{t('section.xat.negreta.lletra', 'N')}</span>
+        </button>
         {mostraComptador ? (
           <span
             id={ID_COMPTADOR}

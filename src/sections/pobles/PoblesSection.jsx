@@ -12,6 +12,7 @@ import { COPYRIGHT_VIQUIPEDIA, dataDElement, momentDElement } from '../../compon
 import { nomDeLaGent } from './nomsDelPoble.js';
 import { poblesAmbNaixement } from './clauDelPoble.js';
 import { objecteDelPobleXat } from './xatDelPoble.js';
+import { usePoblesHidratats } from './usePobleHidratat.js';
 
 export default function PoblesSection() {
   const { sortedTowns, status, error } = useCoreContent();
@@ -53,6 +54,13 @@ export default function PoblesSection() {
       return dateB - dateA;
     });
   }, [pobles]);
+  /* VQ · Fase 3a de l'eina de pobles nous (261030; disseny
+     nit/viquipedia_disseny.md §4.3, pas 3a-3) · Una targeta d'una fitxa
+     incompleta omple els buits amb el que la Viquipèdia ja va tornar en este
+     navegador (només llig la cau: cap petició, cap foto de Commons). L'ordre
+     no canvia. Amb totes les fitxes completes (la llavor), la mateixa llista:
+     ni import de la cau ni base IndexedDB (PoblesSection.lleiDelPixel.test.jsx). */
+  const poblesVisibles = usePoblesHidratats(sortedAndActiveTowns);
 
   useSEO({
     title: t('section.pobles.kicker', 'Pobles'),
@@ -99,12 +107,12 @@ export default function PoblesSection() {
             <pre>{error?.message || String(error)}</pre>
           </div>
         )}
-        {status === 'ready' && sortedAndActiveTowns.length === 0 && (
+        {status === 'ready' && poblesVisibles.length === 0 && (
           <div>
             {t('section.pobles.noResults', 'Cap poble trobat.')}
           </div>
         )}
-        {status === 'ready' && sortedAndActiveTowns.map((town) => {
+        {status === 'ready' && poblesVisibles.map((town) => {
           /* T63.2 · el descriptor del poble ('poble', id i ruta): Connectar se
              l'emporta, com sempre. */
           const poble = objecteDe(town, 'pobles');

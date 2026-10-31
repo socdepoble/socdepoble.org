@@ -9,6 +9,7 @@ import { Alerta } from '../../components/PedraSeca/molecules/Alerta.jsx';
 import { wikiManifest } from '../../data/wikiManifest.js';
 import { sanitizeHtml } from '../../utils/sanitize.js';
 import { resolRecursosDeHtml } from '../../config/assetResolver.js';
+import { useLlenguaDelContingut } from '../../components/universal/traduccio/llenguaDelContingut.js';
 import { Folder, FileText } from 'lucide-react';
 import { useNavigate, useLocation } from '../../app/contexts/RouterContext';
 import { useCoreContent } from '../../app/contexts/CoreContentContext';
@@ -270,6 +271,9 @@ function EinaLocal({ item, Eina }) {
       ]}
       copyright={COPYRIGHT_SDP}
       onTranslate={() => showToast(AVIS_EINA_LOCAL_SENSE_TRADUCCIO)}
+      /* Cicle 4 (lang-ca-nomes-a-textsection) · El títol i l'entradilla de
+         l'eina, en valencià; l'eina mateixa (dades d'este ordinador), no. */
+      llenguaDelContingut="ca"
     >
       <Suspense fallback={<Carregant etiqueta="Carregant l’eina…" />}>
         <Eina />
@@ -305,6 +309,9 @@ function DocumentacioLocal({ item }) {
         ...(item.tags || []).map(text => ({ text, className: 'sdp-badge-tag' }))
       ]}
       copyright={COPYRIGHT_SDP}
+      /* Cicle 4 (lang-ca-nomes-a-textsection) · La documentació, en valencià
+         (el cos el demana a DocumentacioMaquinaria). */
+      llenguaDelContingut="ca"
     >
       <BarreraDeLaConsola
         fallback={(
@@ -342,6 +349,26 @@ export function dataDeDocumentWiki(item) {
    Píxel). La crida a sanitizeHtml s'escriu a cada punt d'injecció, sense cap
    funció intermèdia: tractor-innerhtml.mjs només accepta un __html que
    comence literalment per sanitizeHtml(. */
+
+/* Gauntlet 261030 (cicle 4, lang-ca-nomes-a-textsection) · Decisió del Mestre
+   (261030): «lang="ca" al contingut original en valencià quan la interfície
+   està en una altra llengua». Els documents de la Wiki, la portada i la
+   documentació de la Maquinària són en valencià: cada pàgina ho declara
+   (llenguaDelContingut="ca"; PageFrame posa el lang a l'H1 i a la
+   .page-intro), i el cos el demana (useLlenguaDelContingut), com
+   CosDeLaPagina a TextSection. Amb la interfície en valencià, undefined:
+   cap atribut, el DOM de sempre.
+   La classe és una ternària de literals (porta Pedra Seca de
+   src/sections/gestoria/qualitat.test.js: cap classe passada en variable). */
+function ProsaDeLaWiki({ encoixinada = false, html }) {
+  const lang = useLlenguaDelContingut();
+  return <div className={encoixinada ? 'sdp-prose sdp-prose--encoixinada' : 'sdp-prose'} lang={lang} dangerouslySetInnerHTML={{ __html: sanitizeHtml(resolRecursosDeHtml(html)) }} />;
+}
+
+/* El Quadre ISO d'un document: etiquetes i valors en valencià, escrits ací. */
+function QuadreDelDocument({ children }) {
+  return <div className="sdp-article" lang={useLlenguaDelContingut()}>{children}</div>;
+}
 
 function WikiDetail({ item }) {
   const { pageCopy } = useCoreContent();
@@ -382,11 +409,9 @@ function WikiDetail({ item }) {
         copyright={COPYRIGHT_SDP}
         /* T43 (ordre del Mestre, 260928) · la portada també es connecta: sense
            onConnect, UniversalPage la connecta com a 'pagina' amb la seua ruta. */
+        llenguaDelContingut="ca"
       >
-        <div
-          className="sdp-prose sdp-prose--encoixinada"
-          dangerouslySetInnerHTML={{ __html: sanitizeHtml(resolRecursosDeHtml(page.html)) }}
-        />
+        <ProsaDeLaWiki encoixinada html={page.html} />
       </UniversalPage>
     );
   }
@@ -419,6 +444,15 @@ function WikiDetail({ item }) {
           ...(item.tags || []).map(text => ({ text, className: 'sdp-badge-tag' }))
         ]}
         copyright={COPYRIGHT_SDP}
+        /* Gauntlet 261030 (cicle 4, ALT-C1 de Codex; C4-CONSOLA-WIKI-TRADUIR) · Sense
+           Traductor, com la ruta /consola: el tauler incrustat pinta dades d'este
+           ordinador (consola.json, el Mapa i el govern en desenvolupament; fora, el
+           registre de certificacions d'este navegador) i res no s'envia a cap motor de
+           traducció. Traduir avisa (AVIS_PAGINA_SENSE_TRADUCCIO); el botó no canvia
+           (Llei del Píxel). */
+        traduccio={false}
+        /* Cicle 4 (lang-ca-nomes-a-textsection) · El copy de PAGE_COPY.consola, en valencià. */
+        llenguaDelContingut="ca"
       >
         {/* Onada 7 (261009) · La capçalera, el títol, les etiquetes i el
             copyright es pinten de seguida; només el tauler espera el seu tros
@@ -463,10 +497,12 @@ function WikiDetail({ item }) {
       heroImage={item.image}
       showLogos={true}
       copyright={COPYRIGHT_SDP}
+      /* Cicle 4 (lang-ca-nomes-a-textsection) · El document, en valencià. */
+      llenguaDelContingut="ca"
     >
       {item.id !== '00_index' && (
 
-        <div className="sdp-article">
+        <QuadreDelDocument>
         {/* Quadre ISO. Les classes d'utilitat que duia (sdp-bg-alt, sdp-p-m,
             sdp-text-mut, sdp-text-brand, sdp-border-soft, sdp-radius-m,
             sdp-mb-l, sdp-mb-s, sdp-weight-bold, sdp-font-mono, sdp-badge…)
@@ -474,44 +510,49 @@ function WikiDetail({ item }) {
             disseny les comptava com a Tailwind. Llevades sense tocar cap
             píxel. El quadre continua sense pell pròpia; vestir-lo amb Pedra
             Seca és una decisió de disseny, no de neteja. */}
+          {/* Gauntlet 261029 (cicle 1, a11y; IDEA-57 L5, P1-16) · La taula
+              porta el nom del seu títol i cada etiqueta és una capçalera de
+              fila (scope="row"). Cap selector en depén: 0 px. El nom va en
+              aria-label i no en un id de l'h4: l'Índex de la pàgina posa el
+              seu id als encapçalaments que no en tenen. */}
           <h4>Quadre de Comandament ISO</h4>
-          <table>
+          <table aria-label="Quadre de Comandament ISO">
             <tbody>
               <tr>
-                <th>Identificador</th>
+                <th scope="row">Identificador</th>
                 <td>{item.id}</td>
               </tr>
               <tr>
-                <th>Domini</th>
+                <th scope="row">Domini</th>
                 <td>_wiki_de_poble</td>
               </tr>
               {item.attributes?.version && (
                 <tr>
-                  <th>Versió</th>
+                  <th scope="row">Versió</th>
                   <td>{String(item.attributes.version)}</td>
                 </tr>
               )}
               {item.attributes?.author && (
                 <tr>
-                  <th>Autor / Propietari</th>
+                  <th scope="row">Autor / Propietari</th>
                   <td>{String(item.attributes.author)}</td>
                 </tr>
               )}
               {item.attributes?.date && (
                 <tr>
-                  <th>Data Creació</th>
+                  <th scope="row">Data Creació</th>
                   <td>{String(item.attributes.date)}</td>
                 </tr>
               )}
               {item.attributes?.type && (
                 <tr>
-                  <th>Tipus</th>
+                  <th scope="row">Tipus</th>
                   <td>{String(item.attributes.type)}</td>
                 </tr>
               )}
               {item.attributes?.status && (
                 <tr>
-                  <th>Estat</th>
+                  <th scope="row">Estat</th>
                   <td>
                     <span>{String(item.attributes.status)}</span>
                   </td>
@@ -519,22 +560,19 @@ function WikiDetail({ item }) {
               )}
               {item.attributes?.description && (
                 <tr>
-                  <th>Descripció</th>
+                  <th scope="row">Descripció</th>
                   <td>{String(item.attributes.description)}</td>
                 </tr>
               )}
               <tr>
-                <th>Classificació</th>
+                <th scope="row">Classificació</th>
                 <td>{item.tags?.length > 0 ? item.tags.join(', ') : 'Públic'}</td>
               </tr>
             </tbody>
           </table>
-        </div>
+        </QuadreDelDocument>
       )}
-      <div
-        className="sdp-prose"
-        dangerouslySetInnerHTML={{ __html: sanitizeHtml(resolRecursosDeHtml(parseMarkdown(editorial.cos, { entradilla: false }))) }}
-      />
+      <ProsaDeLaWiki html={parseMarkdown(editorial.cos, { entradilla: false })} />
     </UniversalPage>
   );
 }
@@ -717,7 +755,6 @@ export default function WikiDePobleSection() {
   return (
     <UniversalWorkspace
       collapsibleNavigation={false}
-      replegaTotaCapcalera
       /* MD (ordre del Mestre, 261003) · En mòbil, primer l'arbre; amb ?item=
          a l'entrada (el cru, no itemEfectiu, que val '__intro'), el document,
          tret que siga el que hi havia quan la persona va deixar la Wiki (triar

@@ -43,7 +43,9 @@ const FULLS_CANONICS = [
   'src/css/base.css',
   'src/css/sdp.css',
   'src/css/components.css',
-  'src/css/utilities.css', 'src/css/wiki.css'
+  'src/css/utilities.css', 'src/css/wiki.css',
+  /* Ordre del Mestre (31-10-2026, prompt 2208, T3.1) · el Quadre de Comandament. */
+  'src/css/taulers.css'
 ];
 
 /**

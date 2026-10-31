@@ -67,7 +67,6 @@ export function PaginaEmojis({
           </button>
           <Boto
             varietat="fantasma"
-            className="sdp-pagina-emojis__boto-tancar"
             onClick={onTornar}
           >
             Tancar
@@ -80,7 +79,7 @@ export function PaginaEmojis({
         </div>
 
         {accioSecundaria ? (
-          <div className="sdp-pagina-emojis__accions-extra">
+          <div>
             {accioSecundaria}
           </div>
         ) : null}

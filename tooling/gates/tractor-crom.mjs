@@ -22,9 +22,18 @@
  *   K3 · NOMÉS CROM — les propietats de color de la closca només admeten
  *        `var(--sdp-crom-*)` o paraules clau (transparent, inherit,
  *        currentColor, none…). Cap altre token, cap literal de color.
- *   K4 · EXTREMS CIRCULATS — els botons de la SideBar (.nav-item,
- *        .sidebar-control-btn) porten `border-radius: var(--sdp-radi-pastilla)`
- *        i mai `width: 100%` (el «fantasma» de punta a punta).
+ *   K4 · RECTANGLE PUR — els botons de la SideBar (`nav.app-sidebar .nav-item`
+ *        i `.sidebar-control-btn`) porten `border-radius: 0` (o `inherit`) i
+ *        mai `width: 100%` (el «fantasma» de punta a punta). Ordre del Mestre
+ *        (T15, 260930; regla definitiva del 260927 vespre i CONTROL de bloc
+ *        sencer del 260913): la barra principal és un llistat a sang, rectangle
+ *        pur de banda a banda (layout.css, T15). Abans K4 exigia la pastilla
+ *        (var(--sdp-radi-pastilla)), que contradiu eixa ordre. Ordre del Mestre
+ *        (T15, 260930; 30-10-2026, portes en verd): el radi es mira a tota
+ *        regla de la closca que acabe en `.nav-item` o `.sidebar-control-btn`
+ *        (`.nav-item.active`, `.sdp-root .nav-item:hover`…), perquè una de més
+ *        específica que la base arrodoniria la barra lateral. Només el selector
+ *        `.nav-item` nu i exacte, el de la barra mòbil, queda fora d'abast del radi.
  *   K5 · SENSE ORFES — tot `var(--sdp-crom-*)` citat està declarat.
  *   K6 · ESQUEMA FIX — `nav.app-sidebar` i `header.bar-black` declaren
  *        `color-scheme: dark`. Sense açò els controls natius (<button>,
@@ -48,6 +57,9 @@ const ARG_CSS = process.argv.filter((a) => a.startsWith('--css=')).map((a) => a.
 const CLOSCA = /(app-sidebar|bar-black|\.brand\b|sidebar-control-btn|app-sidebar-nav|\.nav-item|right-icons|sdp-top-bar-btn|mobile-logo|iaia-icon|app-avatar-img|sdp-avatar-placeholder|icona-linia|app-brand__mark)/;
 const FORA = /\.mobile-nav\b/;
 const BOTONS_SIDEBAR = /(\.nav-item|\.sidebar-control-btn)(?![\w-])/;
+/* K4 · el radi (també el d'una cantonada) i el rectangle pur: zero, amb unitat o sense, o inherit. */
+const RADI = /^border(-(top|bottom)-(left|right)|-(start|end)-(start|end))?-radius$/;
+const RADI_RECTE = /^(?:0(?:px|r?em|%)?|inherit)$/;
 const PROP_COLOR = /^(color|background(-color|-image)?|border(-(top|right|bottom|left|block|inline)(-(start|end))?)?(-color)?|outline(-color)?|box-shadow|text-shadow|fill|stroke|scrollbar-color|caret-color|text-decoration(-color)?|column-rule(-color)?|accent-color)$/;
 const PARAULES_CLAU = new Set(['transparent', 'inherit', 'initial', 'unset', 'revert', 'currentcolor', 'none', '0', 'solid', 'dashed', 'dotted', 'thin', 'auto']);
 const FOSC = /data-theme\s*=\s*["']?dark|prefers-color-scheme\s*:\s*dark/;
@@ -180,28 +192,32 @@ for (const abs of fulls) {
     if (botons.length) {
       for (const d of r.decls) {
         if (d.prop === 'width' && /^100%$/.test(d.valor)) {
-          registra('K4', fitxer, r.linia, `«${botons[0]}» { width: 100% }: fantasma de punta a punta. Els botons de la SideBar són píndoles amb marge.`);
+          registra('K4', fitxer, r.linia, `«${botons[0]}» { width: 100% }: fantasma de punta a punta. La caixa dels botons de la SideBar s'estira per la li, no per una amplària literal.`);
         }
-        if (/^border(-(top|bottom)-(left|right))?-radius$/.test(d.prop) && d.valor !== 'var(--sdp-radi-pastilla)' && d.valor !== 'inherit') {
-          registra('K4', fitxer, r.linia, `«${botons[0]}» { ${d.prop}: ${d.valor} }: els extrems han de ser circulats (var(--sdp-radi-pastilla)).`);
+        // Ordre del Mestre (T15, 260930) · rectangle pur a tot selector dels botons de la
+        // barra lateral; només el `.nav-item` nu i exacte (barra mòbil) en queda fora.
+        const barra = botons.find((s) => s !== '.nav-item');
+        if (barra && RADI.test(d.prop) && !RADI_RECTE.test(d.valor)) {
+          registra('K4', fitxer, r.linia, `«${barra}» { ${d.prop}: ${d.valor} }: la SideBar és un llistat a sang, rectangle pur (border-radius: 0).`);
         }
       }
     }
   }
 }
 
-// K4 positiva: les dues bases han d'existir i declarar el radi pastilla.
-for (const base of ['.nav-item', '.sidebar-control-btn']) {
+// K4 positiva: les dues bases de la barra lateral han d'existir i declarar el rectangle pur
+// (Ordre del Mestre, T15 260930). La `.nav-item` nua és la de la barra mòbil: fora d'abast.
+for (const base of ['nav.app-sidebar .nav-item', '.sidebar-control-btn']) {
   let trobada = false;
   for (const abs of fulls) {
     const regles = analitza(readFileSync(abs, 'utf8'));
     for (const r of regles) {
       if (FOSC.test(r.context)) continue;
       if (!r.selector.split(',').map((s) => s.trim()).includes(base)) continue;
-      if (r.decls.some((d) => d.prop === 'border-radius' && d.valor === 'var(--sdp-radi-pastilla)')) trobada = true;
+      if (r.decls.some((d) => d.prop === 'border-radius' && RADI_RECTE.test(d.valor) && d.valor !== 'inherit')) trobada = true;
     }
   }
-  if (!trobada) registra('K4', 'src/**/*.css', 0, `La regla base «${base}» no declara border-radius: var(--sdp-radi-pastilla).`);
+  if (!trobada) registra('K4', 'src/**/*.css', 0, `La regla base «${base}» no declara border-radius: 0 (rectangle pur, T15).`);
 }
 
 // K6: esquema de color fix a les dues arrels de la closca.

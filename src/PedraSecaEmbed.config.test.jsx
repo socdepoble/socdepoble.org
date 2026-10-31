@@ -778,6 +778,16 @@ describe('servei de traducció de l’amfitrió', () => {
     expect(first.config.traductorUrl).toBe(`${window.location.origin}/wp-json/socdepoble/v1/traduir`);
     expect(second.config).not.toHaveProperty('traductorUrl');
   });
+  /* Gauntlet 261030 (Fase 3, TC3.1) · Els destins del servei: només codis
+     exactes del catàleg, sense repetits i en l'ordre declarat; res vàlid, fora. */
+  test('TC3.1 · traductorLlengues: només codis del catàleg; l’atribut traductor-llengues arriba a la configuració', async () => {
+    expect(sanejaConfig({ traductorLlengues: 'ES GL ES xx EN-GB  FR es EU-ES' }).traductorLlengues).toEqual(['ES', 'GL', 'EN-GB', 'FR']);
+    expect(sanejaConfig({ traductorLlengues: ['DE', 'EU', 42, 'DE'] }).traductorLlengues).toEqual(['DE', 'EU']);
+    for (const valor of ['', '   ', 'xx yy', null, 7, {}, [], 'ES '.repeat(60)])
+      expect(sanejaConfig({ traductorLlengues: valor })).not.toHaveProperty('traductorLlengues');
+    const element = await munta({ 'traductor-url': '/wp-json/socdepoble/v1/traduir', 'traductor-llengues': 'ES GL EN-GB FR' });
+    expect(element.config.traductorLlengues).toEqual(['ES', 'GL', 'EN-GB', 'FR']);
+  });
 });
 
 /* ── T2b (261002) · Tenant invàlid en una capa (P0-b) ────────────────── */

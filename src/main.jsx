@@ -11,6 +11,7 @@ import { registraServiceWorker } from './pwa/registre.js';
 import { capturaInstalacio } from './pwa/instalacio.js';
 import { pintaAmbDiccionari } from './config/i18n.js';
 import { instalaFallbackDeBessones } from './config/fallbackBessones.js';
+import { fixaCarregadorLliure, fixaTraductorLliure } from './data/traductorDelLloc.js';
 
 const init = () => {
   const arrel = document.getElementById('root');
@@ -34,10 +35,34 @@ const init = () => {
       dataMode: import.meta.env.VITE_DATA_MODE,
       tenantId: import.meta.env.VITE_TENANT_ID
     });
+    /* IDEA-31 (QA-R2-13) · El Traductor Sobirà del lloc propi. VITE_TRADUCTOR_URL
+       declara un servei en qualsevol build; el servidor de desenvolupament
+       (http://localhost:3340) servix /__iaia/traduir i ho diu amb
+       SDP_TRADUCTOR_DEV (tooling/vite/traductor-iaia.mjs). Sense cap dels dos,
+       la clau no hi va (UIProvider continua amb ''). Ampliació del Mestre
+       (261030): socdepoble.org és estàtic i no té servidor de traducció, i
+       Traduir hi va des del navegador al servei públic d'Apertium
+       (data/traductorLliure.js). Via interna, com la capa del paquet: cap
+       amfitrió no la pot posar, i un servei del mateix origen sempre mana
+       (useTraduccioPagina.js). L'app nativa (natiu/entrada.jsx) no la fixa.
+       Gauntlet 261030 (cicle 2) · L'adaptador (Apertium i MyMemory) va en un
+       tros a part que només es baixa en triar una llengua: no és al tros
+       d'entrada ni als paquets de WordPress i natiu (traductorDelLloc.js). */
+    fixaCarregadorLliure(() => import('./data/traductorLliure.js'));
+    fixaTraductorLliure('apertium');
+    const traductorUrl = import.meta.env.VITE_TRADUCTOR_URL || import.meta.env.SDP_TRADUCTOR_DEV || '';
+    /* Gauntlet 261030 (Fase 3, TC3.1) · Els destins que servix el servidor de
+       desenvolupament (SDP_TRADUCTOR_DEV_LLENGUES, tooling/vite/traductor-iaia.mjs),
+       només quan el servei és ell: el client no hi demana cap altre destí
+       (cap 503 a la consola). Un VITE_TRADUCTOR_URL no en declara cap. */
+    const traductorLlengues = !import.meta.env.VITE_TRADUCTOR_URL && import.meta.env.SDP_TRADUCTOR_DEV
+      ? (import.meta.env.SDP_TRADUCTOR_DEV_LLENGUES || '') : '';
     const delLloc = {
       pluginUrl: '/',
       manageDocumentHead: true,
-      routerType: 'browser'
+      routerType: 'browser',
+      ...(traductorUrl ? { traductorUrl } : {}),
+      ...(traductorUrl && traductorLlengues ? { traductorLlengues } : {})
     };
 
     // Configuració de l'amfitrió síncrona abans d'arrencar React

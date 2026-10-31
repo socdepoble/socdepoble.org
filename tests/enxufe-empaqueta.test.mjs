@@ -785,14 +785,44 @@ test('el readme del directori declara el servidor de mitjans en lloc del canal p
   const sense = variantDirectoriReadme(readme);
   assert.doesNotMatch(sense, /media server/);
   const amb = variantDirectoriReadme(readme, { origen: 'https://socdepoble.org', externs: ['assets/uploads/', 'assets/towns/'] });
-  assert.match(amb, /^6\. Sóc de Poble media server: .*: uploads, towns\) are not bundled\. The visitor's browser loads each one from https:\/\/socdepoble\.org\/assets\/ when a page shows it; .*IP address, browser user agent and the address of the page\. Terms and privacy information: https:\/\/socdepoble\.org\/legal$/m);
+  /* Gauntlet 261030, cicle 3 (vq-wordpress-readme-sense-wikimedia) · el
+     servidor de mitjans és el següent de la llista: Wikimedia ja és el 6. */
+  assert.match(amb, /^7\. Sóc de Poble media server: .*: uploads, towns\) are not bundled\. The visitor's browser loads each one from https:\/\/socdepoble\.org\/assets\/ when a page shows it; .*IP address, browser user agent and the address of the page\. Terms and privacy information: https:\/\/socdepoble\.org\/legal$/m);
   assert.doesNotMatch(amb, /no visitor data is sent|to keep this package small/, 'cap afirmació falsa ni cap motiu de mida');
   assert.doesNotMatch(amb, /Update channel \(/);
-  assert.ok(amb.indexOf('6. Sóc de Poble media server') > amb.indexOf('== External services =='));
-  assert.ok(amb.indexOf('6. Sóc de Poble media server') < amb.indexOf('== Link previews per route =='));
+  assert.ok(amb.indexOf('7. Sóc de Poble media server') > amb.indexOf('== External services =='));
+  assert.ok(amb.indexOf('7. Sóc de Poble media server') < amb.indexOf('== Link previews per route =='));
   // Un «$» de l'origen no es llig com a patró de replace().
   assert.match(variantDirectoriReadme(readme, { origen: 'https://x.example/$1$&', externs: ['assets/uploads/'] }), /https:\/\/x\.example\/\$1\$&\/assets\//);
   assert.ok(Buffer.byteLength(amb) < 24576, 'el readme del directori continua dins del límit');
+});
+
+/* Gauntlet 261030, cicle 3 (vq-wordpress-readme-sense-wikimedia) · El panell
+   «Porta-ho de la Viquipèdia» (PanellDeViquipedia.jsx) va dins del paquet de
+   WordPress: el readme, i les dues variants del directori, declaren Wikimedia
+   com a servei extern (quan, què s'envia i a on, termes i privacitat), i la
+   llista continua numerada sense salts ni repeticions. */
+test('el readme declara Wikimedia (el panell de la Viquipèdia) com a servei extern, també al directori, i la llista no repetix números', () => {
+  const readme = fs.readFileSync(path.join(PLUGIN_REAL, 'readme.txt'), 'utf8');
+  const serveis = (text) => /^== External services ==\r?\n([^]*?)(?=^== )/m.exec(text)?.[1] ?? '';
+  const numeros = (text) => [...serveis(text).matchAll(/^(\d+)\. /gm)].map(([, numero]) => Number(numero));
+  const amb = variantDirectoriReadme(readme, { origen: 'https://socdepoble.org', externs: ['assets/uploads/'] });
+  for (const text of [readme, variantDirectoriReadme(readme), amb]) {
+    const wikimedia = serveis(text).split('\n').find((linia) => /^\d+\. Wikimedia \(/.test(linia)) ?? '';
+    for (const tros of ['ca.wikipedia.org', 'www.wikidata.org', 'commons.wikimedia.org', 'upload.wikimedia.org', 'thumb.wikimedia.org',
+      'when the visitor presses', 'IP address', 'without cookies or the page address',
+      'Terms: https://foundation.wikimedia.org/wiki/Policy:Terms_of_Use', 'privacy: https://foundation.wikimedia.org/wiki/Policy:Privacy_policy']) {
+      assert.ok(wikimedia.includes(tros), `Wikimedia: ${tros}`);
+    }
+    const llista = numeros(text);
+    assert.deepEqual(llista, llista.map((_, index) => index + 1), 'la llista va de l\'1 al final, sense repetir cap número');
+  }
+  assert.equal(numeros(amb).at(-1), numeros(readme).at(-1) + 1);
+  // Els orígens que diu el readme són els que fa servir el codi.
+  const client = fs.readFileSync(path.join(ARREL, 'src/data/adaptadors/viquipedia/client.js'), 'utf8');
+  for (const origen of ['https://ca.wikipedia.org', 'https://www.wikidata.org', 'https://commons.wikimedia.org']) assert.ok(client.includes(`'${origen}'`), origen);
+  assert.match(fs.readFileSync(path.join(ARREL, 'src/sections/pobles/cauDeViquipedia.js'), 'utf8'),
+    /ORIGENS_IMATGE = Object\.freeze\(\['upload\.wikimedia\.org', 'thumb\.wikimedia\.org'\]\)/);
 });
 
 test('empaqueta amb mitjans: el directori no porta els externs ni els originals substituïts; amb un autònom sense política (d’abans de D3), el canal propi i l’estàtic, tot', () => {
@@ -814,7 +844,7 @@ test('empaqueta amb mitjans: el directori no porta els externs ni els originals 
     assert.ok(directori.has(`${SLUG}/dist/assets/ui/v.webp`), 'la bessona sí');
     const manifest = JSON.parse(directori.get(`${SLUG}/dist/${FITXER_RELEASE}`).toString('utf8'));
     assert.deepEqual(manifest.mitjans, { origen: 'https://socdepoble.org', externs: ['assets/fotos/'], bessones: 1 });
-    assert.match(directori.get(`${SLUG}/readme.txt`).toString('utf8'), /6\. Sóc de Poble media server/);
+    assert.match(directori.get(`${SLUG}/readme.txt`).toString('utf8'), /^7\. Sóc de Poble media server/m);
     assert.doesNotMatch(propi.get(`${SLUG}/readme.txt`).toString('utf8'), /media server/);
     // La diferència entre el canal propi i el directori: l'actualitzador i el que la política declara.
     assert.deepEqual([...propi.keys()].filter((nom) => !directori.has(nom)).sort(),
@@ -1132,7 +1162,7 @@ test('Revisió de WordPress.org (261027): --directori admet un autònom lleuger 
     const r = empaquetaDirectori({ arrelPlugin: f.plugin });
     const entrades = new Map(llegixZip(r.zip).map((e) => [e.nom, e.dades]));
     assert.ok(entrades.has(`${SLUG}/dist/assets/ui/v.webp`) && !entrades.has(`${SLUG}/dist/assets/fotos/àrea.png`), 'el build del directori, tal qual');
-    assert.match(entrades.get(`${SLUG}/readme.txt`).toString('utf8'), /6\. Sóc de Poble media server/);
+    assert.match(entrades.get(`${SLUG}/readme.txt`).toString('utf8'), /^7\. Sóc de Poble media server/m);
     assert.deepEqual({ externs: r.mitjans.externs, origen: r.mitjans.origen, bessones: r.mitjans.bessones }, { externs: 0, origen: 'https://socdepoble.org', bessones: 1 });
     assert.equal(r.mitjans.contrastat, false);
     assert.deepEqual(r.mitjans.carpetes, ['assets/fotos/']);

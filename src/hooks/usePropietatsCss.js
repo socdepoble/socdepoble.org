@@ -8,7 +8,7 @@
  * i el full canònic els llig amb var() i calc(): el patró d'EspecimenDivisor
  * (--cataleg-mostra-ample) i d'AppGridShell (--app-grid-col-sidebar).
  *
- * usePropietatsCss(ref, { '--sdp-cal-inici': 600, … }) · Un valor null o
+ * usePropietatsCss(ref, { '--cal-inici': 600, … }) · Un valor null o
  * undefined no s'escriu. En canviar els valors, i en desmuntar, es lleven les
  * que s'havien escrit: cap propietat òrfena al node.
  */

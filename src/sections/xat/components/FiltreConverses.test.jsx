@@ -33,6 +33,18 @@ test('un grup amb nom i un botó amb aria-pressed per filtre; la triada és la p
   expect(onTria).toHaveBeenLastCalledWith('preferits');
 });
 
+/* Gauntlet 261030 (cicle 3) · La lupa anomena el grup a aria-controls, i
+   Escape des d'una píndola arriba a qui la munta (XatSection). */
+test('el grup porta l’id que li passen i el teclat de les píndoles arriba a onKeyDown', () => {
+  const onKeyDown = vi.fn();
+  render(<FiltreConverses opcions={OPCIONS} filtre="tot" onTria={() => {}} onKeyDown={onKeyDown} idGrup="pindoles-de-prova" t={t} />);
+  const grup = screen.getByRole('group', { name: 'Filtra les converses' });
+  expect(grup.id).toBe('pindoles-de-prova');
+  fireEvent.keyDown(within(grup).getByRole('button', { name: 'Grups' }), { key: 'Escape' });
+  expect(onKeyDown).toHaveBeenCalledTimes(1);
+  expect(onKeyDown.mock.calls[0][0].key).toBe('Escape');
+});
+
 test('el nom del grup i de cada píndola passen per t()', () => {
   const tradueix = (clau) => `«${clau}»`;
   render(<FiltreConverses opcions={OPCIONS} filtre="tot" onTria={() => {}} t={tradueix} />);

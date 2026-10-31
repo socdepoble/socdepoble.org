@@ -97,6 +97,43 @@ describe('el kit veu una falla', () => {
       .toMatchObject({ estat: 'ok', falles: [] });
   });
 
+  /* P1-27 · La capacitat 'cicleNotes' (mouNota, esborraNota) ja té casos:
+     surt del deute del kit, s'omet sense la capacitat i veu les falles. */
+  test('P1-27 · cicleNotes: fora del deute; conforme, s’omet sense la capacitat i veu una falla', async () => {
+    expect(metodesSenseCas()).not.toEqual(expect.arrayContaining(['mouNota']));
+    expect(metodesSenseCas()).not.toEqual(expect.arrayContaining(['esborraNota']));
+    const casos = CASOS.filter((c) => c.capacitat === 'cicleNotes');
+    expect(casos.map((c) => [c.metode, c.espera])).toEqual([
+      ['mouNota', 'resol'], ['mouNota', 'rebutja'], ['esborraNota', 'resol'], ['esborraNota', 'rebutja']
+    ]);
+    expect(casos.every((c) => c.escriu && c.requerix.includes('notaId'))).toBe(true);
+    const c = { ...ctx(), notaId: 'n1' };
+    const [mou, mouVella, esborra, esborraJa] = casos;
+    const crides = [];
+    const conforme = {
+      mouNota: async (...args) => { crides.push(['mouNota', ...args]); return { id: 'n1', estat: 'arxivada', revision: 2 }; },
+      esborraNota: async (...args) => { crides.push(['esborraNota', ...args]); return { id: 'n1' }; }
+    };
+    expect(await executaCas(mou, conforme, c)).toMatchObject({ estat: 'ok', falles: [] });
+    expect(await executaCas(esborra, conforme, c)).toMatchObject({ estat: 'ok', falles: [] });
+    expect(crides).toEqual([['mouNota', 'n1', 'arxivada', 1, { dataMode: 'seed' }], ['esborraNota', 'n1', 2, { dataMode: 'seed' }]]);
+    // Una revisió que no puja, un estat que no és el demanat o un altre id són falles.
+    expect(await executaCas(mou, { mouNota: async () => ({ id: 'n1', estat: 'activa', revision: 1 }) }, c)).toMatchObject({
+      estat: 'falla', falles: ["estat havia de ser 'arxivada' i és \"activa\"", 'revision havia de ser 2 i és 1']
+    });
+    expect((await executaCas(esborra, { esborraNota: async () => ({ id: 'n2' }) }, c)).estat).toBe('falla');
+    // La revisió vella i la nota ja esborrada han de rebutjar amb el seu status.
+    const amb = (status) => async () => { throw Object.assign(new Error('No'), { status }); };
+    expect(await executaCas(mouVella, { mouNota: amb(409) }, c)).toMatchObject({ estat: 'ok' });
+    expect((await executaCas(mouVella, { mouNota: amb(404) }, c)).estat).toBe('falla');
+    expect(await executaCas(esborraJa, { esborraNota: amb(404) }, c)).toMatchObject({ estat: 'ok' });
+    expect(await executaCas(esborraJa, { esborraNota: async () => ({ id: 'n1' }) }, c))
+      .toMatchObject({ estat: 'falla', falles: ['ha resolt i havia de rebutjar'] });
+    // Sense la capacitat, s'omet; sense nota (createNote no l'ha deixada), també.
+    expect(await executaCas(mou, {}, c)).toMatchObject({ estat: 'omés', motiu: 'capacitat cicleNotes absent' });
+    expect((await executaCas(mou, conforme, ctx())).estat).toBe('omés');
+  });
+
   test('un mètode del nucli absent falla; una capacitat absent s’omet', async () => {
     expect(await executaCas(cas('loadMur'), {}, { ...ctx(), ownerUserId: 'u' }))
       .toMatchObject({ estat: 'falla', falles: ['falta loadMur del nucli'] });
@@ -473,5 +510,50 @@ describe('IDEA-22 · els casos de la titular', () => {
     const absent = cas('marcaTitularPublic', 'no existix');
     expect(await executaCas(absent, { marcaTitularPublic: amb('SDP-TIT-001') }, ctx())).toMatchObject({ estat: 'ok' });
     expect(await executaCas(absent, { marcaTitularPublic: async () => ({ titularPublic: true }) }, ctx())).toMatchObject({ estat: 'falla' });
+  });
+});
+
+/* P1-27 (guàrdia nocturna 261030, Fase 3, P1Y) · Cinc mètodes que cap cas no
+   provava ja en tenen un: els membres (desa i lleva), el contacte d'una
+   organització (llig i desa) i la recuperació de contrasenya. Tots rebutgen
+   amb code abans d'escriure res; un adaptador que resol, o que rebutja sense
+   code, és una falla. El deute del kit baixa d'eixos cinc. */
+describe('P1-27 · els casos nous del kit', () => {
+  const ctx = () => contextDeConformitat({ config: { dataMode: 'seed' }, escriptures: true });
+  const NOUS = Object.freeze([
+    ['desaMembreOrganitzacio', 'membresOrganitzacio'],
+    ['llevaMembreOrganitzacio', 'membresOrganitzacio'],
+    ['llegeixContacteOrganitzacio', 'contacteOrganitzacio'],
+    ['desaContacteOrganitzacio', 'contacteOrganitzacio'],
+    ['demanaRecuperacioContrasenya', 'recuperacioContrasenya']
+  ]);
+  const ambCode = (code) => async () => { throw Object.assign(new Error('No.'), { code }); };
+
+  test('cada mètode té el seu cas, a la seua capacitat, i ja no és al deute', () => {
+    const sense = metodesSenseCas();
+    for (const [metode, capacitat] of NOUS) {
+      const c = cas(metode);
+      expect(c, metode).toBeTruthy();
+      expect([c.capacitat, c.espera, Boolean(c.escriu)], metode).toEqual([capacitat, 'rebutja', false]);
+      expect(sense, metode).not.toContain(metode);
+    }
+  });
+
+  test.each(NOUS)('%s: un rebuig amb code és conforme; resoldre o rebutjar sense code, una falla', async (metode) => {
+    const c = cas(metode);
+    expect(await executaCas(c, { [metode]: ambCode('SDP-PROVA') }, ctx())).toMatchObject({ estat: 'ok' });
+    expect(await executaCas(c, { [metode]: async () => ({ fet: true }) }, ctx()))
+      .toMatchObject({ estat: 'falla', falles: ['ha resolt i havia de rebutjar'] });
+    expect(await executaCas(c, { [metode]: async () => { throw new Error('sense code'); } }, ctx())).toMatchObject({ estat: 'falla' });
+    // Sense el mètode, la capacitat és absent: s'omet, no falla.
+    expect(await executaCas(c, {}, ctx())).toMatchObject({ estat: 'omés' });
+  });
+
+  test('els arguments: res que existisca ni cap correu vàlid', () => {
+    const c = ctx();
+    expect(cas('desaMembreOrganitzacio').arguments(c)).toEqual(['conformitat-sense-organitzacio', { tipus: 'persona', id: 'conformitat-sense-persona', rol: 'member' }, c.config]);
+    expect(cas('llevaMembreOrganitzacio').arguments(c)).toEqual(['conformitat-sense-organitzacio', { tipus: 'persona', id: 'conformitat-sense-persona' }, c.config]);
+    expect(cas('desaContacteOrganitzacio').arguments(c)[1]).toEqual({ correu: 'no és cap correu', public: true });
+    expect(cas('demanaRecuperacioContrasenya').arguments(c)).toEqual(['', c.config]);
   });
 });

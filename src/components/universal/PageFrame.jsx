@@ -15,13 +15,18 @@ import { BarraBlava } from './barres/BarraBlava.jsx';
 import { BarraTaronja } from './barres/BarraTaronja.jsx';
 import { BotoModeracio } from '../PedraSeca/organismes/Moderacio.jsx';
 import { AvisTraduccio, CosTraduit } from './traduccio/TraduccioPagina.jsx';
+import { LlenguaDelContingut } from './traduccio/llenguaDelContingut.js';
 import { useToast } from './NotificationContext.jsx';
+import { tradueix, useTraductorOpcional } from '../PedraSeca/hooks/useTraductorOpcional.js';
 
 /* Ordre del Mestre, 261004 (D-A) · El Traduir d'una pàgina que no es
    traduïx (traduccio={false}: la pàgina de les apps, PaginaApp): ho diu i no
    envia res al servei de traducció, com les eines locals de la Wiki
-   (AVIS_EINA_LOCAL_SENSE_TRADUCCIO de WikiDePobleSection). */
-export const AVIS_PAGINA_SENSE_TRADUCCIO = 'Esta pàgina no es traduïx: el que mostra no ix d’este dispositiu.';
+   (AVIS_EINA_LOCAL_SENSE_TRADUCCIO de WikiDePobleSection).
+   Gauntlet 261029 (cicle 1, i18n) · L'avís, en la llengua de la interfície
+   (parell [clau, reserva]); la reserva valenciana és la constant exportada. */
+const PARELL_SENSE_TRADUCCIO = Object.freeze(['pagina.senseTraduccio', 'Esta pàgina no es traduïx: el que mostra no ix d’este dispositiu.']);
+export const AVIS_PAGINA_SENSE_TRADUCCIO = PARELL_SENSE_TRADUCCIO[1];
 
 /* T2 (ordre del Mestre, 260930) · Fins a quin nivell d'encapçalament arriba
    l'Índex: h6 per defecte, perquè tot nivell d'encapçalament del contingut hi
@@ -240,6 +245,14 @@ export function titolDeLIndex(capcalera) {
 const SELECTOR_EDITABLE = '[contenteditable]:not([contenteditable="false"])';
 const esEditable = (element) => Boolean(element?.closest?.(SELECTOR_EDITABLE));
 
+/* Gauntlet 261030 (cicle 2) · El lang que declara la pàgina per a un
+   element: el de l'avantpassat més proper amb lang, si és dins del cos o de
+   la capçalera (mai el de l'<html> ni el de l'amfitrió); si no, undefined. */
+function langDeLaPagina(element, ...arrels) {
+  const ambLang = element?.closest?.('[lang]');
+  return ambLang && arrels.some((arrel) => arrel?.contains?.(ambLang)) ? ambLang.getAttribute('lang') || undefined : undefined;
+}
+
 export function TableOfContentsDrawer({
   isOpen, onClose, contentRef, idPrefix = 'toc', nivellMaxIndex = NIVELL_INDEX_PER_DEFECTE,
   /* T7 (P9) · Opcional: rep el slug de l'entrada clicada (PageFrame l'escriu a ?seccio=).
@@ -304,10 +317,24 @@ export function TableOfContentsDrawer({
       });
       // §5 (261026_2126) · L'H1 de la capçalera, primer: va abans de l'article.
       const titol = titolDeLIndex(capcalera);
-      const parsedHeadings = titol ? [titol, ...cos] : cos;
+      /* Gauntlet 261030 (cicle 2, traduccio-lang-index-i-blocs-de-reserva) ·
+         El calaix va en un portal i hereta el lang de l'arrel: cada entrada
+         porta el de l'encapçalament si el declara la pàgina (la traducció, el
+         seu H1, un bloc que torna en l'original). Sense, res (com abans). */
+      const parsedHeadings = (titol ? [titol, ...cos] : cos)
+        .map((entrada) => ({ ...entrada, lang: langDeLaPagina(entrada.element, container, capcalera) }));
 
       currentParsed = parsedHeadings;
       setHeadings(parsedHeadings);
+    };
+
+    /* G5-07 · El text d'un encapçalament pot viure dins d'un fill en línia
+       (<h2>Preu <strong>vell</strong></h2>, cas real de TipTap): el pare del
+       node de text és el <strong>, no l'<h2>. Compta l'encapçalament més pròxim
+       cap amunt, sempre que siga dins del cos observat. */
+    const dinsDUnEncapcalament = (node) => {
+      const encapcalament = node.parentElement?.closest?.(selector);
+      return Boolean(encapcalament && container.contains(encapcalament));
     };
 
     // Use MutationObserver for live updates as suggested by the Council
@@ -317,7 +344,7 @@ export function TableOfContentsDrawer({
          l'editor el títol s'escriu dins d'un span editable, fill de l'H1. */
       const shouldRebuild = mutations.some(m =>
         m.type === 'childList' ||
-        (m.type === 'characterData' && (m.target.parentElement?.matches?.(selector) || Boolean(capcalera?.contains(m.target))))
+        (m.type === 'characterData' && (dinsDUnEncapcalament(m.target) || Boolean(capcalera?.contains(m.target))))
       );
       if (shouldRebuild) {
         buildToc();
@@ -460,6 +487,7 @@ export function TableOfContentsDrawer({
               {headings.map((h, idx) => (
                 <li key={idx} className={`toc-item toc-level-${h.level}`}>
                   <button
+                    lang={h.lang}
                     onClick={() => {
                       desplacaASeccio(h.element, { behavior: 'smooth', block: 'start' });
                       onSeccio?.(h.slug);
@@ -593,9 +621,28 @@ export function PageFrame({
      Sobirà queda inert: cap text ix cap al servei. Sense la prop, el de
      sempre. */
   traduccio: ambTraduccio = true,
+  /* Gauntlet 261030 (Fase 3, TC3.3; lang-interficie-sobre-contingut-valencia)
+     · `llenguaDelContingut`: la llengua en què està escrit el contingut de
+     la pàgina (TextSection: 'ca', PAGE_COPY és sempre en valencià). Amb la
+     interfície en una altra llengua, l'H1 i l'article original porten eixe
+     lang (WCAG 3.1.2): un lector de pantalla no llig el valencià amb la veu
+     anglesa. Amb la mateixa llengua, o sense la prop, el DOM de sempre.
+     Gauntlet 261030 (cicle 3, tc3-lang-ca-sobre-interficie-traduida) · No
+     tot l'article: dins hi ha peces de la interfície (el botó del final,
+     «Instal·la l'App»…), traduïdes amb t(). El lang va només on hi ha text de
+     la pàgina: l'H1, la .page-intro, l'alt de la portada que ve de la pàgina
+     (heroAlt), cada etiqueta que el declara (`lang` a l'objecte de l'etiqueta)
+     i el cos que el demana (useLlenguaDelContingut: CosDeLaPagina). */
+  llenguaDelContingut = null,
   /* Ordre del Mestre, 261004 (D-A) · `refTitol`: un ref a l'H1 perquè qui
      obri la pàgina hi porte el focus. Només amb ell l'H1 porta tabIndex -1. */
   refTitol,
+  /* Gauntlet 261029 (cicle 1) · `seccioALaUrl={false}`: clicar una entrada de
+     l'Índex hi porta però no escriu ?seccio= (el slug es fa del text de
+     l'encapçalament: a les pàgines dels arxius locals de /multimedia, el nom
+     d'un volum o d'una carpeta, que no pot anar a l'historial ni a cap enllaç).
+     Sense la prop, el de sempre. */
+  seccioALaUrl = true,
   /* Ordre del Mestre, 261004 (D-A) · `telemetria`: com es compta el
      Connectar de la barra (useAccions). { comptar: false } no el compta (les
      apps no hi entren). L'origen sempre és 'pagina'. Sense, el de sempre. */
@@ -705,8 +752,27 @@ export function PageFrame({
      però no rep ni títol ni cos, i ningú no li demana res: inert. */
   const ambTraductor = ambTraduccio && !accionsInoperatives;
   const traduida = ambTraductor && traduccio.llengua ? traduccio : null;
+  /* TC3.3 · El lang d'un text de la pàgina, només si la interfície és en una
+     altra llengua (useTraduccioPagina · llenguaInterficie, la del text de
+     l'app). Cicle 3 · El mateix criteri per al contingut i per a cada
+     etiqueta que declara la seua llengua. */
+  const langSiDiferent = (llengua) => (typeof llengua === 'string' && llengua
+    && typeof traduccio.llenguaInterficie === 'string' && traduccio.llenguaInterficie
+    && traduccio.llenguaInterficie !== llengua ? llengua : undefined);
+  const langDelContingut = langSiDiferent(llenguaDelContingut);
+  /* Gauntlet 261030 (cicle 2, traduir-veure-original-focus-a-body) · «Veure
+     l'original» viu dins de l'avís, que desapareix en tornar a l'original:
+     el focus quedava a <body>. Abans de desmuntar-lo, el focus va al botó
+     Traduir de la barra blava, com fa el camí del menú (useMenuEmergent). */
+  const { original: tornaATraduccioOriginal } = traduccio;
+  const tornaAlOriginal = useCallback(() => {
+    const pagina = containerRef.current?.closest?.('.sdp-universal-page-container');
+    pagina?.querySelector('.bar-blue button[aria-label="Traduir"]')?.focus({ preventScroll: true });
+    tornaATraduccioOriginal?.();
+  }, [tornaATraduccioOriginal]);
   const { showToast } = useToast();
-  const senseTraduccio = useCallback(() => showToast(AVIS_PAGINA_SENSE_TRADUCCIO), [showToast]);
+  const tAvis = useTraductorOpcional();
+  const senseTraduccio = useCallback(() => showToast(tradueix(tAvis, PARELL_SENSE_TRADUCCIO)), [showToast, tAvis]);
 
   const {
     handleConnect,
@@ -990,7 +1056,10 @@ export function PageFrame({
         </div>
       ) : barHeroImage ? (
         <div className={heroVertical ? 'hero-image hero-image--vertical' : 'hero-image'}>
+          {/* Cicle 3 (tc3-lang-ca-sobre-interficie-traduida) · L'alt que ve de
+              la pàgina (heroAlt, no el de topBarData) és text de la pàgina. */}
           <ImatgeDePortada alt={barHeroAlt} src={barHeroImage} width={midaHero?.width} height={midaHero?.height} fetchpriority={prioritatHero}
+            lang={barHeroAlt && topBarData.heroAlt == null ? langDelContingut : undefined}
             onLoad={onCarregaPortada} />
         </div>
       ) : null}
@@ -1037,7 +1106,7 @@ export function PageFrame({
             <AvatarDeCapcalera {...avatarDeCapcalera} />
           ) : accionsSenseAvatar}
           {titol && (
-            <h1 lang={traduida?.titol ? traduida.lang : undefined} ref={refTitol} tabIndex={refTitol ? -1 : undefined}>
+            <h1 lang={traduida?.titol ? traduida.lang : langDelContingut} ref={refTitol} tabIndex={refTitol ? -1 : undefined}>
               {traduida?.titol ? llevaPuntFinal(traduida.titol) : titol}
               {price && <span className="sp-card-price sp-card-price--en-linia">{price}</span>}
             </h1>
@@ -1053,9 +1122,14 @@ export function PageFrame({
                 const safeHref = href && isSafeUrl(href) ? href : null;
                 /* D-C (ordre del Mestre, 261004) · `sp-card-label--amb-accio`
                    marca l'etiqueta que porta botó: la CSS hi deixa de
-                   preguntar amb :has() (fora de la Baseline 2022). */
+                   preguntar amb :has() (fora de la Baseline 2022).
+                   Cicle 3 (tc3-lang-ca-sobre-interficie-traduida) · Una
+                   etiqueta que declara la seua llengua (`lang`, les de
+                   PAGE_COPY a TextSection) la porta quan la interfície és en
+                   una altra; les traduïdes amb t() no en declaren cap. */
                 return (
-                  <li key={`${text}-${index}`} className={['sp-card-label', className, label.onClick && 'sp-card-label--amb-accio'].filter(Boolean).join(' ')}>
+                  <li key={`${text}-${index}`} lang={typeof label === 'string' ? undefined : langSiDiferent(label.lang)}
+                    className={['sp-card-label', className, label.onClick && 'sp-card-label--amb-accio'].filter(Boolean).join(' ')}>
                     {label.onClick ? (
                       <button type="button" className="sp-card-label__action" onClick={label.onClick}>
                         {text}
@@ -1109,24 +1183,34 @@ export function PageFrame({
           «Traduït automàticament del valencià · Veure l'original». Sense
           traducció no es pinta res (Llei del Píxel). */}
       {ambTraductor ? (
-        <AvisTraduccio llengua={traduccio.llengua} carregant={traduccio.carregant} onOriginal={traduccio.original} />
+        <AvisTraduccio llengua={traduccio.llengua} carregant={traduccio.carregant} onOriginal={tornaAlOriginal} />
       ) : null}
 
       {/* L'original no es desmunta mai: amb una traducció a la vista s'amaga
           (hidden) i conserva el seu estat; la traducció és un article germà
           amb el seu lang. Sense traducció, el DOM és el de sempre. */}
+      {/* Cicle 3 (tc3-lang-ca-sobre-interficie-traduida) · L'article no
+          porta lang: la .page-intro sí, i els fills que són text de la pàgina
+          el demanen (useLlenguaDelContingut). La resta de fills (la
+          interfície, traduïda) hereten el de la interfície. El proveïdor no
+          pinta cap node i sempre és ací: el cos que s'escriu no es remunta. */}
       <article className="content-wrapper" ref={containerRef} hidden={traduida ? true : undefined}>
         {(subtitol || lead) && (
-          <div className="page-intro">
+          <div className="page-intro" lang={langDelContingut}>
             {subtitol && <h2>{subtitol}</h2>}
             {lead && <p className="lead">{lead}</p>}
           </div>
         )}
-        {children}
+        <LlenguaDelContingut.Provider value={langDelContingut}>
+          {children}
+        </LlenguaDelContingut.Provider>
       </article>
       {traduida ? (
         <article className="content-wrapper sdp-traduccio-cos" ref={traduccioRef} lang={traduida.lang}>
-          <CosTraduit blocs={traduida.blocs} />
+          {/* Cicle 4 (traduccio-llista-niuada-hereta-lang-ca) · La llengua de
+              la traducció, per als elements traduïts que pengen d'un bloc que
+              ha tornat en l'original. */}
+          <CosTraduit blocs={traduida.blocs} llengua={traduida.lang} />
         </article>
       ) : null}
       {/* Esmena 2 (261007_1645) · El peu de la pàgina, l'últim fill i sempre en
@@ -1145,10 +1229,11 @@ export function PageFrame({
           troba, i canviar la consulta canvia la clau de useTraduccioPagina i
           tornaria la pàgina a l'original. La URL conserva la secció d'abans.
           Ordre del Mestre (261026_2126, §5) · I l'H1 de la capçalera, la
-          primera entrada (traduït, l'H1 ja porta el títol traduït). */}
+          primera entrada (traduït, l'H1 ja porta el títol traduït).
+          Gauntlet 261029 (cicle 1) · Amb seccioALaUrl={false}, tampoc. */}
       <TableOfContentsDrawer isOpen={isTocOpen} onClose={tancaIndex}
         contentRef={traduida ? traduccioRef : containerRef} capcaleraRef={capcaleraRef}
-        idPrefix={tocIdPrefix} nivellMaxIndex={nivellMaxIndex} onSeccio={traduida ? null : escriuSeccioUrl} />
+        idPrefix={tocIdPrefix} nivellMaxIndex={nivellMaxIndex} onSeccio={traduida || seccioALaUrl === false ? null : escriuSeccioUrl} />
     </>
   );
 }

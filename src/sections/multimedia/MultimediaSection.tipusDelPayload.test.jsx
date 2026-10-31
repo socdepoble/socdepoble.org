@@ -33,19 +33,28 @@ beforeEach(() => {
     mediaTimelineGroups: []
   };
   vi.stubGlobal('fetch', vi.fn(async () => { throw new Error('sense xarxa'); }));
+  /* Bloc E (IDEA-55 + P1-71) · L'espai de treball de tres columnes, en ample. */
+  vi.spyOn(HTMLElement.prototype, 'clientWidth', 'get').mockReturnValue(1400);
+  vi.stubGlobal('ResizeObserver', class { observe() {} unobserve() {} disconnect() {} });
 });
 afterEach(() => {
   cleanup();
+  vi.restoreAllMocks();
   vi.unstubAllGlobals();
 });
 
 test('la graella es pinta amb les dues aportacions', () => {
-  const { container } = render(<MemoryRouter rutaInicial="/multimedia"><MultimediaSection /></MemoryRouter>);
+  const { container } = render(<MemoryRouter rutaInicial="/multimedia?categoria=galeria_tots"><MultimediaSection /></MemoryRouter>);
   expect(container.querySelectorAll('.photo-grid__boto')).toHaveLength(2);
+  /* La Columna 2 també les llista, amb text (mai un objecte). */
+  const titols = [...container.querySelectorAll('#app-grid-list .sdp-gestor-fitxa__titol')].map((n) => n.textContent);
+  expect(titols.every((titol) => typeof titol === 'string' && !titol.includes('[object'))).toBe(true);
 });
 
 test('el visor obert per ?foto= es pinta', () => {
   render(<MemoryRouter rutaInicial="/multimedia?foto=amb-foto"><MultimediaSection /></MemoryRouter>);
   expect(document.querySelector('dialog.sdp-visor')).not.toBeNull();
-  expect(screen.getAllByRole('img').length).toBeGreaterThan(0);
+  /* Bloc E · El visor, damunt de la fitxa de la foto (la graella és a la Fototeca). */
+  expect(document.querySelectorAll('dialog.sdp-visor img').length).toBeGreaterThan(0);
+  expect(screen.getByRole('button', { name: 'Veure la imatge a pantalla completa' })).not.toBeNull();
 });

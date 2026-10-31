@@ -1,6 +1,10 @@
 // src/app/contexts/SessionContext.jsx
-import { createContext, useCallback, useContext, useEffect, useState, useMemo, useRef } from 'react';
-import { teCapacitat, logout, loginWithGoogle, loginWithPassword, registerWithPassword, listMyOrganizations, comprovaServidor, demanaRecuperacioContrasenya, definixContrasenyaNova, entraAmbTokenDeProveidor } from '../../data/backendPort.js';
+import { useCallback, useContext, useEffect, useState, useMemo, useRef } from 'react';
+/* P1-71 (Gauntlet 261029) · L'objecte de context viu a objectesDeContext.js,
+   que no importa res del projecte: una instància nova d'este mòdul (HMR) no
+   en crea cap de nou. */
+import { SessionContext } from './objectesDeContext.js';
+import { teCapacitat, logout, loginWithGoogle, loginWithPassword, registerWithPassword, listMyOrganizations, comprovaServidor, demanaRecuperacioContrasenya, definixContrasenyaNova, entraAmbTokenDeProveidor, getCurrentUser } from '../../data/backendPort.js';
 import { getSessionState, subscribeSession, setSessionConfig, renovaAra } from '../../data/sessionService.js';
 import {
   escoltaRecuperacioPendent, estatEnllacDeRecuperacio, oblidaEnllacDeRecuperacio, oblidaRecuperacioPendent, recuperacioPendentPer
@@ -8,17 +12,65 @@ import {
 import { eixDeLaSessio, preparaEixida as preparaEixidaNucli, reprenSessio } from '../../data/autodesament/sessio.js';
 import { enviaNotesDeLUsuari, oblidaNotesDeLUsuari, pendentsNotesDe } from '../../sections/notes/GlobalSaveManager.js';
 import { entraComAPilot } from '../../data/sessioPilot.js';
+import { E2EE_ACTIU_PER_DEFECTE } from '../../config/xifratXat.js';
+import { oblidaXatEnEixir } from '../../data/xifratXatEixida.js';
+import { configuraMarcaOblitCarpetesLocals, oblidaTotesLesCarpetesLocals } from '../../sections/multimedia/bibliotecaCarpetesLocals.js';
+import { registraEixidaDeVeres } from '../../data/expulsioAmfitrio.js';
+import { delVal, getVal, setVal } from '../../config/storage.js';
 
-const SessionContext = createContext(null);
 const EMPTY_CONFIG = Object.freeze({});
+
+/* Pla 261029_1605 (Sessió; IDEA-54/55) · Un ordinador compartit del poble: les
+   carpetes locals recordades del Gestor d'arxius (handles a la base del
+   navegador) són del perfil, no de la persona. Eixir de veres les oblida totes,
+   com els esborranys de Notes: després de tancar i només si ha anat bé. No
+   rep cap argument (sessio.js passa usuariId i la biblioteca el prendria per
+   opcions) i no llança mai. Ve del mòdul germà sense dependències que el motor
+   multimèdia reexporta: el motor sencer no entra al paquet principal. */
+const oblidaCarpetesLocalsEnEixir = () => oblidaTotesLesCarpetesLocals();
+
+/* QA-R2-04 (Codex, Ronda 2) · Si l'oblit no ha pogut buidar la base
+   ({ ok:false, codi:'OBLIT_CARPETES_PENDENT' }), la biblioteca el deixa
+   pendent: cap muntatge del Gestor obri sol (ni llista) una carpeta de qui ha
+   eixit fins que un reintent el confirma. La marca de memòria es perdria en
+   recarregar o en una pestanya nova; esta, a la capa de preferències de
+   src/config/storage.js (un booleà, cap dada de ningú), la conserva fins al
+   reintent bo, també després de tancar el navegador: amb un permís
+   persistent, la carpeta s'obriria sola en tornar. Es registra en carregar
+   el mòdul: l'eixida sempre passa per ací i el Gestor l'importa abans de
+   muntar-se. La biblioteca continua sense importar res. */
+const CLAU_OBLIT_CARPETES_PENDENT = 'arxius-locals-oblit-pendent';
+configuraMarcaOblitCarpetesLocals({
+  llig: () => getVal(CLAU_OBLIT_CARPETES_PENDENT, false) === true,
+  desa: () => setVal(CLAU_OBLIT_CARPETES_PENDENT, true),
+  esborra: () => delVal(CLAU_OBLIT_CARPETES_PENDENT)
+});
 
 /* T47 (correcció de la revisió C02, 260928) · Els gestors d'esborranys que no
    són la cua del nucli entren a l'eixida des d'ací (src/data no importa de
    src/sections). Notes ('SdpNotesQueue'): envia amb la sessió encara vàlida,
    oblida només si tancar ha anat bé i diu el que queda per a l'avís (C01). */
 const ABANS_DE_TANCAR = Object.freeze([enviaNotesDeLUsuari]);
-const DESPRES_DE_TANCAR = Object.freeze([oblidaNotesDeLUsuari]);
+const DESPRES_DE_TANCAR = Object.freeze([oblidaNotesDeLUsuari, oblidaCarpetesLocalsEnEixir]);
 const PENDENTS_DE = Object.freeze([pendentsNotesDe]);
+
+/* P1-12 pas 17 (disseny §8.5, D-09) · L'oblit del xat xifrat entra a l'eixida
+   com Notes: després de tancar i només si ha anat bé, en paral·lel amb
+   oblidaNotesDeLUsuari i darrere d'ella en la llista (bases distintes:
+   'SdpNotesQueue' i la del xat). Porta en una clausura la config de l'eixida,
+   perquè sessio.js només passa usuariId i la clauIdentitat de qui ix s'ha de
+   calcular amb ella: quan arriba ací, la interfície ja pot haver buidat
+   l'àmbit del xat. oblidaXatEnEixir no rebutja mai (una fallada és l'estat
+   OBLIT_FALLIT, que XatContext mostra). Bandera apagada: la mateixa llista de
+   sempre, sense cap crida nova. La bandera es llig en cridar (l'enllaç ESM és
+   viu: una prova la pot canviar amb un getter), i SENSE try: Rollup plega la
+   constant i, apagada, l'oblit del xat i el magatzem de claus no viatgen al tros
+   d'entrada (Gauntlet c1, SessionContext.e2eeApagat.produccio.test.js). Qui
+   simula config/xifratXat.js hi ha de posar la bandera (importOriginal). */
+const xatXifratActiu = () => E2EE_ACTIU_PER_DEFECTE === true;
+const despresDeTancarAmb = (config, opcionsXat = {}) => (xatXifratActiu()
+  ? Object.freeze([...DESPRES_DE_TANCAR, (usuariId) => oblidaXatEnEixir({ ...opcionsXat, config, usuariId })])
+  : DESPRES_DE_TANCAR);
 
 /* T2 i T4 (ordre del Mestre, 260930) · La capacitat opcional 'salut' del port,
    tal qual. Es resol en cridar-la, no en muntar: un port sense la capacitat
@@ -65,6 +117,33 @@ const iOblidaRecuperacio = (promesa) => Promise.resolve(promesa).then((resultat)
 const teCapacitatSegura = (nom) => {
   try { return teCapacitat(nom) === true; } catch { return false; }
 };
+
+/* QA-A01a (Gauntlet 261029_1858) · L'eixida de veres, una sola font: «Tancar
+   sessió», «Eixir del poble», la baixa (amb el seu `tanca`) i l'expulsió de
+   l'amfitrió (host.js expulsaSessio, per data/expulsioAmfitrio.js) passen per
+   ací. Primer l'intent final, després `tanca` i, només si ha anat bé,
+   DESPRES_DE_TANCAR (Notes, carpetes locals i, amb E2EE, el xat). */
+function eixidaDeVeres({ config, usuariId, tanca, opcionsXat }) {
+  return iOblidaRecuperacio(eixDeLaSessio({
+    config, usuariId, tanca,
+    abansDeTancar: ABANS_DE_TANCAR, despresDeTancar: despresDeTancarAmb(config, opcionsXat),
+  }));
+}
+
+/* QA-A01a · Sense cap proveïdor muntat (l'element tret de la pàgina de
+   l'amfitrió), l'expulsió fa la mateixa eixida amb la config del paquet (el
+   backend i el tenant són de la capa del paquet, Model B) i la persona que
+   tinga la sessió desada ara. Cada SessionProvider muntat la tapa amb la seua. */
+const usuariDeLaSessioDesada = () => {
+  try {
+    const usuari = getCurrentUser();
+    if (usuari?.id != null) return usuari.id;
+  } catch { /* port sense arrencar o simulat: l'estat del servei */ }
+  try { return getSessionState()?.usuari?.id ?? null; } catch { return null; }
+};
+registraEixidaDeVeres(() => eixidaDeVeres({
+  config: EMPTY_CONFIG, usuariId: usuariDeLaSessioDesada(), tanca: () => logout(EMPTY_CONFIG)
+}));
 
 /** 'comprovant' → encara no se sap. 'dins' / 'fora' → resolt. */
 export const ESTAT = Object.freeze({ COMPROVANT: 'comprovant', DINS: 'dins', FORA: 'fora' });
@@ -134,10 +213,11 @@ export function SessionProvider({ children, config = EMPTY_CONFIG }) {
      del poble). `eixAmb` és per a qui tanca la sessió d'una altra manera (la
      baixa la tanca dins de l'adaptador). */
   const eixAmb = useCallback(
-    (tanca, configCrida) => iOblidaRecuperacio(eixDeLaSessio({
-      config: configDeCrida(configCrida), usuariId, tanca,
-      abansDeTancar: ABANS_DE_TANCAR, despresDeTancar: DESPRES_DE_TANCAR,
-    })),
+    (tanca, configCrida) => {
+      const configEixida = configDeCrida(configCrida);
+      /* P1-12 pas 17 (D-09) · La baixa no conserva res del xat xifrat, tampoc a l'app. */
+      return eixidaDeVeres({ config: configEixida, usuariId, tanca, opcionsXat: { mantenSessio: false } });
+    },
     [configDeCrida, usuariId]
   );
 
@@ -147,13 +227,17 @@ export function SessionProvider({ children, config = EMPTY_CONFIG }) {
       /* Buidar només la pestanya ('pestanya': renovació fallida) no és eixir:
          els esborranys es conserven i es tornen a enviar en tornar. */
       if (opcions?.abast === 'pestanya') return logout(configEixida, opcions);
-      return iOblidaRecuperacio(eixDeLaSessio({
-        config: configEixida, usuariId, tanca: () => logout(configEixida, opcions),
-        abansDeTancar: ABANS_DE_TANCAR, despresDeTancar: DESPRES_DE_TANCAR,
-      }));
+      return eixidaDeVeres({ config: configEixida, usuariId, tanca: () => logout(configEixida, opcions) });
     },
     [configDeCrida, usuariId]
   );
+
+  /* QA-A01a (Gauntlet 261029_1858) · L'amfitrió que expulsa la sessió
+     (host.js expulsaSessio) passa per esta mateixa eixida de veres, amb la
+     config d'este proveïdor: abans cridava el logout de l'adaptador
+     directament i les carpetes locals, els esborranys de Notes i el xat xifrat
+     es quedaven en un ordinador compartit. */
+  useEffect(() => registraEixidaDeVeres(() => tancaSessio()), [tancaSessio]);
 
   /* T47 (correcció de la revisió C01, 260928) · Abans de «Confirmar eixida» o
      «Eixir del poble»: l'intent final i el que el servidor encara NO té. No

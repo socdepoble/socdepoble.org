@@ -74,7 +74,7 @@ export default function TargetaIncrustadaNodeView({ node, editor, getPos, select
   };
 
   return (
-    <NodeViewWrapper className="sdp-targeta-incrustada" data-drag-handle="" onClickCapture={paraEnllac}>
+    <NodeViewWrapper data-drag-handle="" onClickCapture={paraEnllac}>
       <UniversalCard {...props} imageUrl={imatge} />
       {selected && editable ? (
         <div className="sdp-targeta-incrustada__eines" role="group" aria-label={t('editor.targetes.eines', 'Eines de la targeta')}>

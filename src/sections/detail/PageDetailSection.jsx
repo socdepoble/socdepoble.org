@@ -11,6 +11,7 @@ import NotFoundPage from '../../pages/NotFoundPage';
 import { PublicarDeLaPagina } from '../control/PublicarDeLaPagina.jsx';
 import { destiDePagina } from '../control/destinsControl.js';
 import { InstalaLaPwa, useInstalacioDeLaPagina } from './InstalaLaPwa.jsx';
+import { PAGINA_DE_LA_PASTILLA, pastillaDeVersio } from './pastillaDeVersio.js';
 
 /* Ordre del Mestre (261007) · L'acció gran d'una pàgina del sistema
    (accioDeLaPagina de systemPages.js): «Anar al xat» a /page/xat, «Obrir la
@@ -120,8 +121,13 @@ export default function PageDetailSection() {
     let alFinal = <PublicarDeLaPagina clau={slug} />;
     if (accioAlFinal(slug)) alFinal = <AccioDeLaPagina clau={slug} lloc="baix" />;
     else if (instalacio) alFinal = <InstalaLaPwa instalacio={instalacio} lloc="baix" />;
+    /* P1-46 (Fita 10; guàrdia nocturna 261030) · La pastilla de versió de
+       Descàrregues, l'última de la fila d'etiquetes, cap a /versions. Es
+       passa com a funció del traductor: TextSection és qui té el `t`. A
+       qualsevol altra pàgina, cap prop: les etiquetes de sempre. */
+    const pastilla = slug === PAGINA_DE_LA_PASTILLA ? (t) => pastillaDeVersio(slug, t) : null;
     return (
-      <TextSection page={page} pageKey={slug} accioPrincipal={accioPrincipal}>
+      <TextSection page={page} pageKey={slug} accioPrincipal={accioPrincipal} {...(pastilla ? { etiquetaFinal: pastilla } : null)}>
         {alFinal}
       </TextSection>
     );

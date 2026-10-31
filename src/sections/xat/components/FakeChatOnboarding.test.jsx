@@ -17,7 +17,10 @@ function Espia() {
   xat = useContext(XatContext);
   return null;
 }
-const munta = () => render(<FakeChatOnboarding originalContext={{ senseSessio: true, comunitats: [] }}><Espia /></FakeChatOnboarding>);
+/* IDEA-56 (pla 261029_1605, Bloc F.2) · `props` passa al component (per
+   exemple, `respostaIAIA`, el cervell local de la IAIA, injectable). */
+const munta = (props = {}) => render(<FakeChatOnboarding originalContext={{ senseSessio: true, comunitats: [] }} {...props}><Espia /></FakeChatOnboarding>);
+const buidaMicrotasques = () => act(async () => { for (let i = 0; i < 5; i += 1) await Promise.resolve(); });
 
 beforeEach(() => {
   vi.useFakeTimers();
@@ -52,8 +55,10 @@ test('sense poble declarat, els quatre actors: la comunitat de Sóc de Poble, la
   });
   /* Cap fil de Sóc de Poble que no siga de la seua comunitat. */
   expect(xat.chatThreads.filter((f) => f.name === 'Sóc de Poble').map((f) => f.tipus)).toEqual(['comunitat']);
-  /* Els no llegits de la mostra no canvien: el de Sóc de Poble és ara als Avisos de la comunitat. */
-  expect(xat.totalNoLlegits).toBe(2);
+  /* Onada 261030 (cicle 2) · El total del títol és la suma dels fils que
+     pinta la llista: Avisos de Sóc de Poble, Avisos del poble i la IAIA. */
+  expect(xat.totalNoLlegits).toBe(xat.chatThreads.reduce((suma, f) => suma + (f.noLlegits || 0), 0));
+  expect(xat.totalNoLlegits).toBe(3);
 });
 
 /* Revisió adversarial (Bloc 3.6.1) · El canal de proves porta el literal de
@@ -133,8 +138,11 @@ test('amb poble, la comunitat del poble amb Avisos (només lectura, amb la benvi
   expect(xat.getThreadMessages('fake-poble-general')).toEqual([]);
 });
 
+/* IDEA-56 (pla 261029_1605, Bloc F.2) · La IAIA respon amb el seu cervell
+   local (injectat ací), en microtasques i sense temporitzador: es buiden
+   abans de mirar els seq (actualitzat a posta). */
 test('una resposta simulada conserva la cita, i els seq no es repetixen en dos enviaments seguits', async () => {
-  munta();
+  munta({ respostaIAIA: async () => 'R' });
   const fil = xat.chatThreads.find((f) => f.id === 'fake-iaia');
   await act(async () => {
     await xat.sendChatMessage(fil, 'Primer', { respostaA: 'm1' });
@@ -142,22 +150,26 @@ test('una resposta simulada conserva la cita, i els seq no es repetixen en dos e
   });
   const propis = xat.getThreadMessages('fake-iaia').filter((m) => m.sender === 'me');
   expect(propis.map((m) => [m.text, m.respostaA])).toEqual([['Primer', 'm1'], ['Segon', null]]);
+  await buidaMicrotasques();
   act(() => { vi.runAllTimers(); });
   const seqs = xat.getThreadMessages('fake-iaia').map((m) => m.seq);
+  expect(xat.getThreadMessages('fake-iaia').filter((m) => m.text === 'R')).toHaveLength(2);
   expect(new Set(seqs).size).toBe(seqs.length);
 });
 
 /* P1-52 (Fita 16 del Llibre Mestre, 261029) · La resposta simulada diu el
    literal del Mestre, pla i sense pompositat. El traductor d'esta prova torna
    la reserva: és la del component la que es fixa ací; la clau
-   section.xat.fake.reply, en les cinc llengües, la fixa i18n.claus.test.js. */
+   section.xat.fake.reply, en les cinc llengües, la fixa i18n.claus.test.js.
+   IDEA-56 (Bloc F.2) · Al fil de la IAIA ara respon el seu cervell local:
+   el literal es prova al General de la comunitat (actualitzat a posta). */
 test('la resposta simulada és el literal del Mestre (P1-52)', async () => {
   munta();
-  const fil = xat.chatThreads.find((f) => f.id === 'fake-iaia');
+  const fil = xat.chatThreads.find((f) => f.id === 'fake-sdp-general');
   await act(async () => { await xat.sendChatMessage(fil, 'Hola'); });
   act(() => { vi.runAllTimers(); });
-  const resposta = xat.getThreadMessages('fake-iaia').at(-1);
-  expect(resposta).toMatchObject({ sender: 'other', author: fil.name, is_ai: true });
+  const resposta = xat.getThreadMessages('fake-sdp-general').at(-1);
+  expect(resposta).toMatchObject({ sender: 'other', author: fil.name, is_ai: false });
   expect(resposta.text).toBe('Açò és una simulació. Si vols guardar la conversa, has de registrar-te, i ja està.');
 });
 
@@ -168,4 +180,66 @@ test('desmuntar cancel·la les respostes pendents', async () => {
   await act(async () => { await xat.sendChatMessage(fil, 'Hola'); });
   unmount();
   expect(vi.getTimerCount()).toBe(0);
+});
+
+/* Gauntlet 261030 (cicle 2, G2) · Llegir un fil de mostra (la conversa crida
+   marcaVist quan una bombolla entra en pantalla) en baixa els no llegits a 0,
+   i el títol (totalNoLlegits) baixa en el MATEIX valor del context que la
+   insígnia del fil i la de la seua comunitat. Només en este estat: muntar-lo
+   de nou torna a la mostra de sempre. */
+const noLlegitsDe = (valor, id) => valor.chatThreads.find((f) => f.id === id).noLlegits;
+const comunitatDe = (valor, id) => valor.comunitats.find((c) => c.fil.id === id).noLlegits;
+
+test('G2 · llegir el fil de la IAIA de mostra en posa el no llegit a 0 i el títol baixa alhora', () => {
+  munta();
+  expect(xat.totalNoLlegits).toBe(3);
+  expect(noLlegitsDe(xat, 'fake-iaia')).toBe(1);
+  /* Només la primera bombolla a la vista: encara en queda una per llegir. */
+  act(() => { xat.marcaVist('fake-iaia', 1); });
+  expect(noLlegitsDe(xat, 'fake-iaia')).toBe(1);
+  expect(xat.totalNoLlegits).toBe(3);
+  act(() => { xat.marcaVist('fake-iaia', 2); });
+  const despres = xat;
+  expect(noLlegitsDe(despres, 'fake-iaia')).toBe(0);
+  expect(despres.totalNoLlegits).toBe(2);
+  /* Una marca més vella no el torna a pujar. */
+  act(() => { xat.marcaVist('fake-iaia', 1); });
+  expect(noLlegitsDe(xat, 'fake-iaia')).toBe(0);
+  expect(xat.totalNoLlegits).toBe(2);
+});
+
+test('G2 · llegir els Avisos d’una comunitat de mostra baixa el fil, la insígnia de la comunitat i el títol alhora', () => {
+  munta();
+  act(() => { xat.marcaVist('fake-sdp-avisos', 2); });
+  const valor = xat;
+  expect(noLlegitsDe(valor, 'fake-sdp-avisos')).toBe(0);
+  expect(comunitatDe(valor, 'fake-sdp')).toBe(0);
+  expect(comunitatDe(valor, 'fake-poble')).toBe(1);
+  expect(valor.totalNoLlegits).toBe(2);
+  act(() => { xat.marcaVist('fake-poble-avisos', 1); });
+  expect(comunitatDe(xat, 'fake-poble')).toBe(0);
+  expect(xat.totalNoLlegits).toBe(1);
+});
+
+test('G2 · «Marcar com a llegides» de la selecció fa la mateixa marca local i diu quantes', () => {
+  munta();
+  let marcades = null;
+  act(() => { marcades = xat.marcaLlegides(['fake-sdp-avisos', 'fake-sdp-general', 'fake-iaia']); });
+  expect(marcades).toBe(2);
+  expect(noLlegitsDe(xat, 'fake-sdp-avisos')).toBe(0);
+  expect(noLlegitsDe(xat, 'fake-iaia')).toBe(0);
+  expect(xat.totalNoLlegits).toBe(1);
+  /* Ja llegides: cap més. */
+  act(() => { marcades = xat.marcaLlegides(['fake-sdp-avisos', 'fake-iaia']); });
+  expect(marcades).toBe(0);
+});
+
+test('G2 · la lectura de la mostra no es guarda: muntar-la de nou torna als tres no llegits', () => {
+  const { unmount } = munta();
+  act(() => { xat.marcaVist('fake-iaia', 2); });
+  expect(xat.totalNoLlegits).toBe(2);
+  unmount();
+  munta();
+  expect(xat.totalNoLlegits).toBe(3);
+  expect(noLlegitsDe(xat, 'fake-iaia')).toBe(1);
 });

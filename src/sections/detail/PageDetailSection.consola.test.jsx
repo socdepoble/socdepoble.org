@@ -8,7 +8,11 @@
  *    repetit després del cos (article.content-wrapper > div.sdp-pagina-accio,
  *    l'últim fill, darrere de .cms-preview). Els dos són la mateixa porta
  *    gran i blava de Pedra Seca, cap a /consola i /consola/explorador;
- *  · el cos són sis paràgrafs (PAGE_COPY, camp `html`);
+ *  · el cos és el de PAGE_COPY (camp `html`). Gauntlet 261030, cicle 2
+ *    (ordres del Mestre del 30-10-2026, decisions 261030) · DEROGA els «sis
+ *    paràgrafs, sense cap títol»: el cos seguix la llei T8 (lleiT8Prova.js),
+ *    entradilla → H3 → p, H4 i ul amb enllaços vius, i a la Consola porta la
+ *    caldera de coure dins del cos, que no és la portada;
  *  · la capçalera pinta Categoria i Etiqueta, les mateixes de la targeta del
  *    Mur (PAGE_COPY, camp `labels`).
  */
@@ -30,6 +34,7 @@ vi.mock('../../hooks/useSEO', () => ({ useSEO: () => {} }));
 import PageDetailSection from './PageDetailSection.jsx';
 import { PAGE_COPY } from '../text/pageContent.js';
 import { RUTA_CONSOLA } from '../consola/consolaPagines.js';
+import { infraccionsDelCosPintat, infraccionsT8 } from '../../../tests/helpers/lleiT8Prova.js';
 
 function Ubicacio() {
   const { pathname, search } = useLocation();
@@ -91,13 +96,23 @@ describe.each(PAGINES)('Onada 10 · /page/%s', (clau, verb, desti) => {
     expect(ubicacio()).toBe(desti);
   });
 
-  test('el cos són sis paràgrafs, sense cap títol ni cap altra peça', () => {
+  /* Gauntlet 261030, cicle 2 (ordres del Mestre del 30-10-2026; troballa
+     proves-roges-sis-paragrafs-consola-cervell) · Girada la prova de l'Onada
+     10 «el cos són sis paràgrafs, sense cap títol»: el cos que es pinta és el
+     de PAGE_COPY, peça a peça, i seguix la llei T8. */
+  test('el cos seguix la llei T8: entradilla → H3, el de PAGE_COPY peça a peça, i negretes a cada paràgraf', () => {
     visita(clau);
     const cos = article().querySelector(':scope > .cms-preview');
-    expect([...cos.children].map((fill) => fill.tagName)).toEqual(['P', 'P', 'P', 'P', 'P', 'P']);
-    for (const paragraf of cos.children) expect(paragraf.textContent.trim().length).toBeGreaterThan(80);
-    // Cada paràgraf porta negretes per a llegir-lo d'un colp d'ull.
-    for (const paragraf of cos.children) expect(paragraf.querySelector('strong')).not.toBeNull();
+    expect(infraccionsT8(PAGE_COPY[clau].html)).toEqual([]);
+    expect(infraccionsDelCosPintat(cos, PAGE_COPY[clau].html)).toEqual([]);
+    // Cap article buit: subapartats (H4), més d'un H3 i paràgrafs llargs.
+    expect(cos.querySelectorAll('h3').length).toBeGreaterThanOrEqual(3);
+    expect(cos.querySelectorAll('h4').length).toBeGreaterThanOrEqual(1);
+    for (const paragraf of cos.querySelectorAll('p')) expect(paragraf.textContent.trim().length).toBeGreaterThan(80);
+    // A la Consola, la caldera de coure és dins del cos, i la portada és una altra (lliçó 261010).
+    const caldera = cos.querySelector('img[src="/assets/uploads/consola-caldera.webp"]');
+    expect([clau, Boolean(caldera)]).toEqual([clau, clau === 'consola']);
+    expect(document.querySelector('.hero-image img').getAttribute('src')).not.toContain('consola-caldera');
   });
 
   test('la capçalera pinta Categoria i Etiqueta, les de la targeta del Mur, i la il·lustració de la pàgina', () => {

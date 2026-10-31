@@ -133,7 +133,7 @@ describe('Pedra Seca', () => {
       expect([selector, inici]).not.toEqual([selector, -1]);
       return bloc.slice(inici, bloc.indexOf('}', inici));
     };
-    expect(llig('src/css/tokens.css')).toMatch(/--sdp-menu-ample-max: 300px;/);
+    expect(llig('src/css/tokens.css')).toMatch(/--sdp-menu-ample-max[:] 300px;/);
     expect(regla('  .sdp-menu-comentar')).toMatch(/max-inline-size: min\(var\(--sdp-menu-ample-max\), calc\(100% - var\(--sdp-space-4\)\)\);/);
     // Cap altre sostre d'ample dins del bloc: el de 300px és l'únic.
     expect(bloc.match(/max-inline-size/g)).toHaveLength(1);

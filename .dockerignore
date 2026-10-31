@@ -11,3 +11,12 @@ scratch
 .brain-trash
 .sdp-paperera
 .immunitari
+# Secrets i estat del bot a qualsevol fondària (QA-R2-07, 261030). Sense **/,
+# Docker només casa l'arrel del context, i COPY bot/ arrossegaria bot/.env o
+# bot/.iaia_auth (la sessió de WhatsApp) dins de la imatge.
+**/node_modules
+**/.env
+**/.env.*
+**/.iaia_auth
+**/.wwebjs_auth
+**/.wwebjs_cache

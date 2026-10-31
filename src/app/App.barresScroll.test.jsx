@@ -165,7 +165,12 @@ test('Bloc 3.10 · tauleta tàctil amb dues columnes: cap columna amaga les barr
   await munta(1180, async ({ arrel, main, visor }) => {
     await ambLaPagina(visor);
     const columna = document.createElement('div');
-    columna.innerHTML = '<div class="sdp-universal-page-container"><header class="bar-blue"></header></div>';
+    const paginaDeLaColumna = document.createElement('div');
+    paginaDeLaColumna.className = 'sdp-universal-page-container';
+    const barraDeLaColumna = document.createElement('header');
+    barraDeLaColumna.className = 'bar-blue';
+    paginaDeLaColumna.append(barraDeLaColumna);
+    columna.append(paginaDeLaColumna);
     main.appendChild(columna);
     for (const [propietat, valor] of [['clientHeight', 748], ['scrollHeight', 6000]]) {
       Object.defineProperty(columna, propietat, { configurable: true, value: valor });

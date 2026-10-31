@@ -345,10 +345,18 @@ function minimWordPress(text) {
  * lloc va el servei extern que servix l'arxiu i el contingut: la guia del
  * directori demana declarar tot servei extern, i el readme de la font no té
  * marge (enxufe-plugin.test.mjs en limita la mida).
+ * Gauntlet 261030, cicle 3 (vq-wordpress-readme-sense-wikimedia) · El número
+ * és el següent de la llista «== External services ==» del readme, i no un 6
+ * fix: Wikimedia ja hi és el 6.
  */
+export function numeroDelServeiSeguent(textReadme) {
+  const serveis = /^== External services ==\r?\n([^]*?)(?=^== |(?![^]))/m.exec(textReadme)?.[1] ?? '';
+  return Math.max(0, ...[...serveis.matchAll(/^(\d+)\. /gm)].map(([, numero]) => Number(numero))) + 1;
+}
+
 export function variantDirectoriReadme(textReadme, mitjans = null) {
   const servei = mitjans?.origen
-    ? `6. Sóc de Poble media server: the service's content images (the village archive and community photos and illustrations: ${mitjans.externs.map((prefix) => prefix.replace(/^assets\//, '').replace(/\/$/, '')).join(', ')}) are not bundled. The visitor's browser loads each one from ${mitjans.origen}/assets/ when a page shows it; like any image request, this sends the visitor's IP address, browser user agent and the address of the page. Terms and privacy information: https://socdepoble.org/legal\n\n`
+    ? `${numeroDelServeiSeguent(textReadme)}. Sóc de Poble media server: the service's content images (the village archive and community photos and illustrations: ${mitjans.externs.map((prefix) => prefix.replace(/^assets\//, '').replace(/\/$/, '')).join(', ')}) are not bundled. The visitor's browser loads each one from ${mitjans.origen}/assets/ when a page shows it; like any image request, this sends the visitor's IP address, browser user agent and the address of the page. Terms and privacy information: https://socdepoble.org/legal\n\n`
     : '';
   // Una funció i no el text: cap «$» de l'origen no es llig com un patró de replace().
   const senseCanal = substituixUna(textReadme, /^(?:Update channel|Canal d'actualització) \(.*\r?\n\r?\n/m, () => servei, 'Paràgraf del canal del readme');

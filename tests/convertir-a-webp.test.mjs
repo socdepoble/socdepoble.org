@@ -4,7 +4,7 @@ import path from 'node:path';
 import { execFileSync } from 'node:child_process';
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { dataOriginal, gpsTorre, orientacio, tiff } from '../src/components/universal/enquadrament/jpegProva.js';
+import { dataOriginal, gpsTorre, orientacio, tiff } from './helpers/jpegProva.js';
 import {
   MIDA_AVATAR_UNIVERSAL,
   MIDA_QUADRAT_UNIVERSAL,

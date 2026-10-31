@@ -112,8 +112,10 @@ export default function EspecimenControlsBarra() {
         <BarraBlava {...BLAVA} />
       </div>
 
+      {/* Gauntlet 261030 (cicle 2, especimen-menu-traduir-text-fals) · El text nomena les sis
+          llengües del menú (LLENGUES_TRADUCCIO, amb el gallec i el basc) i diu la veritat de l'HTML. */}
       <h4>Traduir: el menú de llengües i l’avís (Traductor Sobirà)</h4>
-      <p>A la pàgina, Traduir obri este menú just davall de la barra, centrat com el trio. La llista és tancada: Castellà, Anglés, Francés i Alemany i, amb la pàgina ja traduïda, «Original (valencià)». Es tanca en triar, en clicar fora o amb Escape, i el focus torna a Traduir. Es traduïx text, mai HTML: el títol i els blocs de lectura es tornen a pintar com a elements, amb el seu lang. Ací, obert i quiet (la mostra no furta el focus), amb la pàgina en castellà.</p>
+      <p>A la pàgina, Traduir obri este menú just davall de la barra, centrat com el trio. La llista és tancada: Castellà, Gallec, Basc, Anglés, Francés i Alemany i, amb la pàgina ja traduïda, «Original (valencià)». Es tanca en triar, en clicar fora o amb Escape, i el focus torna a Traduir; «Veure l’original», a l’avís, també el torna a Traduir. Es traduïx el text: els enllaços, les negretes i les cursives van com a marques locals i tornen amb les de l’original; mai no entra HTML del proveïdor. El títol i els blocs de lectura es tornen a pintar com a elements, amb el seu lang (un bloc que torna sense traduir, amb el de l’original). Ací, obert i quiet (la mostra no furta el focus), amb la pàgina en castellà.</p>
       <div className="sdp-especimen__fila">
         <MenuTraduir opcions={LLENGUES_TRADUCCIO} actual="ES" onTria={res} onTanca={res} mostra />
       </div>

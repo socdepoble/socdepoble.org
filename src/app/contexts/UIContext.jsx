@@ -1,4 +1,7 @@
-import { createContext, useContext, useEffect, useRef, useState, useMemo, useCallback, useSyncExternalStore } from 'react';
+import { useContext, useEffect, useRef, useState, useMemo, useCallback, useSyncExternalStore } from 'react';
+/* P1-71 (Gauntlet 261029) · Els objectes de context viuen a
+   objectesDeContext.js, que no importa res del projecte. */
+import { UIActionsContext, UIContext } from './objectesDeContext.js';
 import {
   carregaDiccionari, createTranslator, desaIdiomaTriat, esLlenguaSuportada, llegeixIdiomaTriat, llenguaCarregada, resolIdioma,
   subscriuDiccionaris
@@ -10,8 +13,6 @@ import {
 } from '../../config/theme';
 import { resolveAsset } from '../../config/assetResolver';
 import { normalizeSearchText } from '../../config/contentHelpers';
-const UIContext = createContext(null);
-const UIActionsContext = createContext(null);
 
 const LANGUAGE_LOCALES = {
   ca: 'ca-ES',

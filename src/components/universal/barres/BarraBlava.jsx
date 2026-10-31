@@ -32,8 +32,10 @@
  *
  * Traductor Sobirà · Amb menuTraduir, Traduir diu que obri un menú
  * (aria-haspopup, aria-expanded) i, obert, el menú de llengües es pinta just
- * després del botó, dins del trio: l'ordre de tabulació passa per les
- * llengües abans de Comentar. Tancat, el trio té els tres botons de sempre
+ * després del botó, dins del trio: el focus hi entra en obrir-lo i, des de
+ * la Fase 3 del Gauntlet 261030 (TC3.3, patró de menú de WAI-ARIA), les
+ * llengües es recorren amb les fletxes i Tab ix del menú (cap a Comentar,
+ * o cap a Traduir amb Maj+Tab) i el tanca. Tancat, el trio té els tres botons de sempre
  * i cap píxel canvia fins que es prem Traduir (Llei del Píxel). El clic
  * continua anant a onTranslate: qui munta la barra decidix què fa.
  *

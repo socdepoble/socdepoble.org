@@ -912,6 +912,8 @@ export function DetallMultimedia({ identitat, config }) {
 
   return (
     <UniversalPage
+      /* Decisions 261030 §7 · Els mitjans de la persona: Traduir no envia res fora. */
+      traduccio={false}
       chrome="context"
       layout="contained"
       title="Multimèdia"

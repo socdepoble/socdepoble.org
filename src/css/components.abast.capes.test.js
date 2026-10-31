@@ -573,8 +573,27 @@ test('D-C · etiqueta amb acció: modificador de classe, sense retallar el botó
   expect(resol('var(--sdp-touch)')).toBe('48px');
 });
 
+/* Expectativa ampliada a propòsit (P1-59 (a), guàrdia nocturna 261030) · Al
+   costat de la de l'EditableField, la regla del text fantasma del cos de
+   l'Editor Universal (placeholderCos.js): també una sola forma, sense cap
+   pseudoclasse relacional (:has), lligada al llenç i al primer paràgraf, que
+   flota sense alçada (el cursor, a l'inici) amb el mateix color. Abans: només
+   la de l'EditableField. */
 test('D-C · el placeholder de l’EditableField: una sola forma, :empty, sense pseudoclasse relacional', () => {
   const placeholder = COMPONENTS.filter((r) => r.prelud.includes('[data-placeholder]'));
-  expect(placeholder.map((r) => r.prelud)).toEqual(['[data-placeholder]:not(:focus):empty::before']);
+  expect(placeholder.map((r) => r.prelud)).toEqual([
+    '[data-placeholder]:not(:focus):empty::before',
+    '.sdp-editor-full-canvas p[data-placeholder]:first-child::before'
+  ]);
   expect(declaracions(placeholder[0].cos)).toContainEqual(['content', 'attr(data-placeholder)']);
+  expect(placeholder.every((r) => !r.prelud.includes(':has('))).toBe(true);
+});
+
+test('P1-59 (a) · el text fantasma del cos: el contingut de l’atribut, el color dels placeholders, flotant i sense alçada', () => {
+  const [camp, cos] = COMPONENTS.filter((r) => r.prelud.includes('[data-placeholder]'));
+  const decl = declaracions(cos.cos);
+  expect(decl).toEqual(expect.arrayContaining([
+    ['content', 'attr(data-placeholder)'], ['float', 'left'], ['height', '0'], ['pointer-events', 'none']
+  ]));
+  expect(decl.find(([p]) => p === 'color')).toEqual(declaracions(camp.cos).find(([p]) => p === 'color'));
 });

@@ -2,8 +2,9 @@
    l'espai de treball de veres i el router en memòria de veres (com
    NotesSection.mestreDetall.test.jsx): les carpetes de sistema (Mur, Mercat,
    Pobles…, NOTE_FOLDERS_SEED) porten la seua icona de Lucide i no s'esborren
-   mai, però la roda dentada de la navegació les amaga o les mostra. En
-   «ample» la navegació del Bloc arrenca plegada en rail: la roda hi és, al
+   mai, però la roda dentada de la navegació les amaga o les mostra. En la
+   franja estreta de la finestra (721–1023, ordre del Mestre 30-10-2026) la
+   navegació del Bloc arrenca plegada en rail: la roda hi és, al
    costat de «Configurar categories». La preferència es desa a l'espai
    'notes' (la clau del seu mestre-detall). Dades sintètiques. */
 import React from 'react';
@@ -54,7 +55,11 @@ beforeEach(() => {
   sessionStorage.clear();
   delVal(CLAU_CARPETES_VISIBLES);
   _reiniciaCarpetesVisibles();
-  vi.spyOn(HTMLElement.prototype, 'clientWidth', 'get').mockReturnValue(1400);
+  /* Ordre del Mestre (30-10-2026) · El Bloc ja no força cap plegat: el rail
+     de CARPETES és el de la franja estreta de la finestra (721–1023). Ací,
+     una finestra i una closca de 900. */
+  vi.spyOn(HTMLElement.prototype, 'clientWidth', 'get').mockReturnValue(900);
+  vi.stubGlobal('innerWidth', 900);
   vi.stubGlobal('ResizeObserver', class { observe() {} unobserve() {} disconnect() {} });
 });
 afterEach(() => {

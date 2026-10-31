@@ -2,6 +2,8 @@ import { useMemo, useState } from 'react';
 import { Link, Navigate, useLocation, useNavigate, useParams } from '../../app/contexts/RouterContext';
 import { UniversalPage } from '../../components/universal/UniversalPage';
 import { useMur } from '../../sections/mur/MurContext';
+import { elementTraduible, totsPublics } from '../../components/universal/traduccio/visibilitatTraduible.js';
+import { publicacionsDelPoble } from '../pobles/publicacionsDelPoble.js';
 import { useCoreContent } from '../../app/contexts/CoreContentContext';
 import { useNotesData } from '../../sections/notes/NotesDataContext';
 import { useMultimedia } from '../../sections/multimedia/MultimediaContext';
@@ -15,6 +17,10 @@ import { useSEO } from '../../hooks/useSEO.js';
 import { objecteDe, rutaConnectarObjecte, tipusDeSeccio } from '../../config/navigation.js';
 import { paginaDElement, trobaElement, useElementDeSeccio, useLogoEntitatDElement } from './elementDeSeccio.js';
 import { ProveidorSincronitzacioTargetes } from './SincronitzacioTargetes.jsx';
+/* VQ · Fase 3a de l'eina de pobles nous (261030) · La fitxa incompleta d'un
+   poble, amb els buits omplits pel que la Viquipèdia ja va tornar en este
+   navegador. Només llig la cau; amb una fitxa completa, el mateix objecte. */
+import { usePobleHidratat } from '../pobles/usePobleHidratat.js';
 import { Carregant } from '../../components/PedraSeca/atoms/estats.jsx';
 import { Alerta } from '../../components/PedraSeca/molecules/Alerta.jsx';
 import { useModeracio } from '../../components/PedraSeca/hooks/moderacioDePoble.js';
@@ -100,6 +106,10 @@ function DetallDElement() {
   /* T54 · el mateix resolvedor que el diàleg Connectar i el lector del MAS. */
   const fallbackItem = trobaElement(section, itemId);
   const item = location.state?.preloadedItem || fallbackItem;
+  /* VQ · Fase 3a (261030) · Només per a Pobles. La capçalera i el cos llegixen
+     la fitxa hidratada; la moderació, el <head> social i el «No trobat», la de
+     sempre (les fotos de Commons no hi entren mai). */
+  const itemHidratat = usePobleHidratat(item, sectionId === 'pobles');
   /* Fase D (261020, tasca 2; crítica 261020, 5) · Bloquejar des d'esta
      mateixa pàgina lleva l'element de useMur (MurContext filtra el que has
      bloquejat), i el detall pintava «Element no trobat» amb la píndola
@@ -139,7 +149,7 @@ function DetallDElement() {
      Pura: es calcula abans del retorn anticipat perquè també la llig useSEO.
      Fase D (261020, tasca 2) · Del que has bloquejat, cap: ni la portada
      arriba al <head> (useSEO, més avall). */
-  const pagina = section && item && !bloquejat ? paginaDElement(section, item) : null;
+  const pagina = section && item && !bloquejat ? paginaDElement(section, itemHidratat) : null;
 
   /* Decisió 3 del Mestre (261007, confirmada) · «Imatges externes al Mur:
      PROHIBIDES (PRIVACITAT).» Relleu 261007 (peça «imatges-detall») · og:image
@@ -231,7 +241,7 @@ function DetallDElement() {
     );
   }
 
-  return <PaginaDelDetall section={section} sectionId={sectionId} item={item} pagina={pagina} chrome="full" />;
+  return <PaginaDelDetall section={section} sectionId={sectionId} item={itemHidratat} pagina={pagina} chrome="full" />;
 }
 
 /* Pla 261027_0845 (Guarda Nocturna), P1-55 · La pàgina d'un element ja
@@ -280,6 +290,19 @@ function PaginaDelDetall({ section, sectionId, item, pagina, chrome, senseXat = 
      visor (CosAmbVisor): el mateix div.content-wrapper de sempre, cap node
      nou. Fora del Mur i de les notes, null: el contenidor tal qual. */
   const visorDelCos = visorDelCosDElement(section, item, pagina, t);
+  /* Gauntlet 261030 (Fase 3, TC3.2; traduir-contingut-de-membres) · Traduir
+     només amb un element públic d'una secció pública (traduccio/
+     visibilitatTraduible.js): una publicació del veïnat (/mur/:id, només per
+     als membres) o una nota (/notes/:id) no ixen cap al motor. Un poble porta
+     a la pestanya «Gent de …» les publicacions del poble: totes públiques, o
+     res. Fallada tancada; el botó no canvia (PageFrame avisa). */
+  const mur = useMur();
+  const traduible = elementTraduible(sectionId, item) && (sectionId !== 'pobles' || totsPublics(
+    publicacionsDelPoble(
+      { feedPosts: mur?.feedPosts ?? [], marketItems: mur?.marketItems ?? [], events: mur?.events ?? [] },
+      { id: String(item?.id ?? ''), slug: String(item?.slug ?? ''), title: String(item?.title || item?.name || '') }
+    ).map((publicacio) => publicacio.item)
+  ));
 
   return (
     <UniversalPage
@@ -301,6 +324,10 @@ function PaginaDelDetall({ section, sectionId, item, pagina, chrome, senseXat = 
       /* Fase D (261020, tasca 2) · «Més opcions» a la barra taronja del
          contingut de la gent (SECCIONS_AMB_MODERACIO). */
       ambModeracio={SECCIONS_AMB_MODERACIO.has(sectionId)}
+      traduccio={traduible}
+      /* Gauntlet 261030 (cicle 4) · La secció declara la llengua del seu
+         contingut (Pobles: 'ca'); sense, cap lang (el DOM de sempre). */
+      llenguaDelContingut={section.llenguaDelContingut ?? null}
       chrome={chrome}
       /* Pla 261027_0845 (Guarda Nocturna), P1-55 (revisió adversarial) ·
          Amb `senseXat`, tampoc «Comentar» a la barra blava: el xat del poble
@@ -347,7 +374,9 @@ function PaginaDelDetall({ section, sectionId, item, pagina, chrome, senseXat = 
  * hidden, AppGridShell.css) quedava tallada davall de la portada.
  */
 export function VistaDelPoble({ pobleId, chrome = 'context', carregant = null, senseFitxa = null, contenidor = '' }) {
-  const { section, item, estat } = useElementDeSeccio('pobles', pobleId);
+  const { section, item: fitxa, estat } = useElementDeSeccio('pobles', pobleId);
+  /* VQ · Fase 3a (261030) · La mateixa hidratació que la pàgina de la ruta. */
+  const item = usePobleHidratat(fitxa);
   if (!section || !item) return estat === 'carregant' ? carregant : senseFitxa;
   const pagina = <PaginaDelDetall section={section} sectionId="pobles" item={item} pagina={paginaDElement(section, item)} chrome={chrome} senseXat />;
   return contenidor ? <div className={contenidor}>{pagina}</div> : pagina;

@@ -3,7 +3,7 @@ import { afterEach, describe, expect, test, vi } from 'vitest';
 import { AVIS_GPS_ELIMINAT_PERFIL, AVIS_REVISA_EXIF, DialegEnquadrament } from './DialegEnquadrament.jsx';
 import { exifPublicable } from './exifIncrustat.js';
 import { FORMES, configDeForma } from './useEnquadramentImatge.jsx';
-import { TIPUS, dataOriginal, gpsTorre, jpegAmbExif, orientacio } from './jpegProva.js';
+import { TIPUS, dataOriginal, gpsTorre, jpegAmbExif, orientacio } from '../../../../tests/helpers/jpegProva.js';
 
 /* P1-64 (pla 261028_1526 §3.1.1; Mestre 261028, decisió 7) · Les fotos
    d'IDENTITAT (l'avatar de totes les menes i la capçalera d'una persona)

@@ -1,5 +1,5 @@
 import '../../../../tests/helpers/diccionaris.js';
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { afterEach, expect, test, vi } from 'vitest';
 import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
@@ -10,6 +10,15 @@ import { SALUTACIO_TECNICA_IAIA } from '../../../data/iaiaTextos.js';
 import ConsultaIAIA from './ConsultaIAIA.jsx';
 const t = (_clau, reserva) => reserva;
 afterEach(cleanup);
+/* tractor-vocabulari (ordre del Mestre, 261030) · El full de la consulta és el
+   bloc ConsultaIAIA de src/css/modules.css, entre les seues marques. */
+const blocConsultaIAIA = () => {
+  const tot = readFileSync(resolve(process.cwd(), 'src/css/modules.css'), 'utf8');
+  const inici = tot.indexOf('/* ═══ BLOC ConsultaIAIA · ');
+  const fi = tot.indexOf('/* ═══ FI DEL BLOC ConsultaIAIA ═══ */');
+  if (inici < 0 || fi < inici) throw new Error('modules.css no té el bloc ConsultaIAIA');
+  return tot.slice(inici, fi);
+};
 const munta = (consulta, { prepara = vi.fn(), traductor = t } = {}) => render(<MemoryRouter><ConsultaIAIA t={traductor} consulta={consulta} prepara={prepara} /></MemoryRouter>);
 const pregunta = () => {
   fireEvent.click(screen.getByRole('button', { name: 'Pregunta a la IAIA' }));
@@ -105,16 +114,44 @@ test('el botó pendent s’apaga com un botó desactivat', () => {
     const bloc = css.slice(css.indexOf(selector)).match(/\{([^}]*)\}/)[1];
     return bloc.split(';').map((d) => d.trim()).filter(Boolean).sort();
   };
-  const propi = llig('src/sections/xat/components/ConsultaIAIA.css');
+  /* tractor-vocabulari (261030) · El full és el bloc ConsultaIAIA de modules.css,
+     que index.css importa sense layer(): arriba igual al Shadow DOM. */
+  const propi = blocConsultaIAIA();
   expect(declaracions(propi, '.sdp-iaia-consulta .sdp-boto[aria-disabled="true"]'))
     .toEqual(declaracions(llig('src/css/components.css'), '.sdp-boto:disabled'));
-  expect(propi.trim()).toMatch(/^@layer components \{/);
-  expect(llig('src/css/index.css')).toContain("@import url('../sections/xat/components/ConsultaIAIA.css');");
+  expect(propi.replace(/\/\*[\s\S]*?\*\//g, '').trim()).toMatch(/^@layer components \{/);
+  expect(llig('src/css/index.css')).toContain("@import url('./modules.css');");
+  expect(llig('src/css/index.css')).not.toContain('ConsultaIAIA.css');
+  expect(existsSync(resolve(process.cwd(), 'src/sections/xat/components/ConsultaIAIA.css'))).toBe(false);
 });
 
 test('sense una font que responga, ho diu i diu on preguntar', async () => {
   munta(vi.fn().mockResolvedValue({ estat: 'sense_resultats', fonts: [] })); pregunta();
   await waitFor(() => expect(screen.getByRole('status').textContent).toMatch(/^No ho trobe a la Wiki pública\..*grup General de la comunitat Sóc de Poble/));
+});
+
+/* Ordre del Mestre (30-10-2026; f4 D.2, P1-49) · L'estat buit diu la veritat:
+   el nom de l'eina ja el busca la consulta (iaiaLocal.js · cercaGuiada), i
+   aconsellar-lo després que no ha eixit era prometre el que no troba. En les
+   cinc llengües, i el text de reserva del component és el del valencià.
+   Gauntlet f4a (corrector iaia-consulta; iaia-consulta-asercio-negativa-feble)
+   · El text sencer de cada llengua, lletra per lletra: vetar una sola frase
+   deixava passar la mateixa promesa escrita d'una altra manera («Escribe solo
+   el nombre de la sección y lo encontrarás»). Qualsevol canvi del consell ha
+   de passar per ací, i cada text diu que potser la Wiki encara no en parla. */
+test('f4 D.2 · l’estat buit no promet que el nom de l’eina ho trobe, en cap llengua', async () => {
+  munta(vi.fn().mockResolvedValue({ estat: 'sense_resultats', fonts: [] })); pregunta();
+  await waitFor(() => expect(screen.getByRole('status').textContent).toBe(createTranslator('ca')('section.xat.iaia.consulta.buit')));
+  const veritat = {
+    ca: 'No ho trobe a la Wiki pública. Potser encara no en parla, o ho diu amb altres paraules. Pots preguntar-ho al grup General de la comunitat Sóc de Poble, on et pot contestar una persona.',
+    es: 'No lo encuentro en la Wiki pública. Quizá todavía no habla de ello, o lo dice con otras palabras. Puedes preguntarlo en el grupo General de la comunidad Sóc de Poble, donde te puede contestar una persona.',
+    en: 'I can\'t find it in the public Wiki. Maybe it doesn\'t cover it yet, or it says it in other words. You can ask in the General group of the Sóc de Poble community, where a person can answer you.',
+    eu: 'Ez dut Wiki publikoan aurkitzen. Agian oraindik ez du horri buruz ezer esaten, edo beste hitz batzuekin esaten du. Sóc de Poble komunitateko «General» taldean galde dezakezu, han pertsona batek erantzun diezazuke.',
+    gl: 'Non o atopo na Wiki pública. Quizais aínda non fala diso, ou dio con outras palabras. Podes preguntalo no grupo «General» da comunidade Sóc de Poble, onde che pode responder unha persoa.'
+  };
+  for (const [llengua, text] of Object.entries(veritat)) {
+    expect([llengua, createTranslator(llengua)('section.xat.iaia.consulta.buit')]).toEqual([llengua, text]);
+  }
 });
 
 /* IAIA-5 · La salutació, una sola vegada. */
@@ -163,7 +200,7 @@ test('P1-37 · la píndola de la IAIA respira: marges de la reixeta, amplària d
   munta(vi.fn());
   const boto = screen.getByRole('button', { name: 'Pregunta a la IAIA' });
   expect([...boto.classList]).toEqual(['sdp-xat-pindola', 'sdp-xat-pindola--iaia']);
-  const propi = readFileSync(resolve(process.cwd(), 'src/sections/xat/components/ConsultaIAIA.css'), 'utf8').replace(/\/\*[\s\S]*?\*\//g, '');
+  const propi = blocConsultaIAIA().replace(/\/\*[\s\S]*?\*\//g, '');
   const bloc = propi.slice(propi.indexOf('.sdp-xat-pindola.sdp-xat-pindola--iaia')).match(/\{([^}]*)\}/)[1];
   expect(bloc.split(';').map((d) => d.trim().replace(/\s+/g, ' ')).filter(Boolean).sort())
     .toEqual(['margin-block: var(--sdp-boto-marge-block)', 'margin-inline: var(--sdp-boto-marge-inline)', 'width: auto']);

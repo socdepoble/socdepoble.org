@@ -1,8 +1,9 @@
 {
   "css-de-seccio": {
-    "max": 2,
+    "max": 3,
     "identitats": [
       "css-de-seccio|src/components/layout/AppGridShell.css|src/components/layout/AppGridShell.css",
+      "css-de-seccio|src/sections/mur/MapaFotografic.css|src/sections/mur/MapaFotografic.css",
       "css-de-seccio|src/sections/profile/PerfilShell.css|src/sections/profile/PerfilShell.css"
     ]
   },

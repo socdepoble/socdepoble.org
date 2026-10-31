@@ -32,6 +32,7 @@ import { BENVINGUDA_IAIA } from '../../data/identitatsSeed.js';
 import { rutaDEntrada } from '../../config/rutaEntrada.js';
 import { AGENTS_MAP } from '../../data/agentsSeed.js';
 import { CARA_DE_LA_IAIA } from '../../data/xatsPerDefecte.js';
+import { IAIA_ID } from '../../data/identitatsSeed.js';
 
 const mocks = vi.hoisted(() => ({
   navigate: vi.fn(),
@@ -159,7 +160,8 @@ function ambSessio({ titolComunitat = POBLE.nom } = {}) {
     { id: 'c-torre', tipus: 'comunitat', titol: titolComunitat, subjecte, imatgeUrl: null },
     { id: 'a-torre', tipus: 'canal', titol: 'Avisos', comunitatId: 'c-torre', subjecte, rol: 'membre', ultimAl: ara },
     { id: 'g-torre', tipus: 'grup', titol: 'General', comunitatId: 'c-torre', subjecte, rol: 'membre', ultimAl: ara },
-    { id: 'f-iaia', tipus: 'directe', titol: 'IAIA MarIA', imatgeUrl: IAIA_PADRO, ultimAl: ara },
+    /* P1-70 (261029) · La IAIA es reconeix per id, mai pel nom: sense, la fila de reserva hi posaria la de veres. */
+    { id: 'f-iaia', tipus: 'directe', titol: 'IAIA MarIA', imatgeUrl: IAIA_PADRO, ultimAl: ara, altres: [{ id: IAIA_ID, tipus: 'ia', nom: 'IAIA MarIA' }] },
     { id: 'f-sdp', tipus: 'directe', titol: 'Sóc de Poble', imatgeUrl: LOGO, ultimAl: ara },
     { id: 'g-colla', tipus: 'grup', titol: 'Colla de la Font', imatgeUrl: COLLA, ultimAl: ara },
     { id: 'f-pepa', tipus: 'directe', titol: 'Pepa', imatgeUrl: GOOGLE, ultimAl: ara },
@@ -275,6 +277,8 @@ test('amb sessió a un amfitrió: cada font porta la seua cara; els recursos pro
   await waitFor(() => expect(caresDe(llista())['Maria Pujada']).toBe(PUJADA_RESOLTA));
   expect(caresDe(llista())).toEqual({
     [POBLE.nom]: `${PAQUET}${CARA}`,
+    /* P1-70 (261029) · Javi Llinares, sempre (la fila de reserva, amb la foto del padró). */
+    'Javi Llinares': `${PAQUET}${FOTO_JAVI}`,
     'IAIA MarIA': `${PAQUET}${IAIA}`,
     'Sóc de Poble': `${PAQUET}${LOGO}`,
     'Colla de la Font': `${PAQUET}${COLLA}`,
@@ -300,7 +304,7 @@ test('gentdelatorre.net sense sessió (nomPoble «La Torre»): la fila del poble
   capImatgeTrencada();
 });
 
-test('gentdelatorre.net amb sessió (títol del servidor): la comunitat porta la cara a la llista i al rail; sense fitxa del poble, «LT»', () => {
+test('gentdelatorre.net amb sessió (títol del servidor): la comunitat porta la cara a la llista i al rail; sense fitxa del poble, la foto de la llavor (mai «LT»)', () => {
   ambLaBaseDelPaquet();
   mocks.externalConfig = PRODUCCIO;
   munta(ambSessio({ titolComunitat: TITOL_DEL_SERVIDOR }));
@@ -308,13 +312,27 @@ test('gentdelatorre.net amb sessió (títol del servidor): la comunitat porta la
   expect(caresDe(rail())[TITOL_DEL_SERVIDOR]).toBe(`${PAQUET}${CARA}`);
   cleanup();
 
-  /* Si app_content 'towns' del node no porta la fitxa del poble amb imatge,
-     les inicials són la resposta correcta: cap cara inventada. */
+  /* P1-70 (261029) · Derogat «sense fitxa, les inicials» per a la Torre: si
+     app_content 'towns' del node no la porta, la foto de la llavor
+     (POBLE_PER_DEFECTE.avatar), amb la base del paquet; mai «LT». */
   mocks.towns = [];
   munta(ambSessio({ titolComunitat: TITOL_DEL_SERVIDOR }));
-  expect(caresDe(llista())[TITOL_DEL_SERVIDOR]).toBeNull();
-  expect(caresDe(rail())[TITOL_DEL_SERVIDOR]).toBeNull();
-  expect(rail().querySelector(`.sdp-avatar[title="${TITOL_DEL_SERVIDOR}"]`).textContent).toBe('LT');
+  expect(caresDe(llista())[TITOL_DEL_SERVIDOR]).toBe(`${PAQUET}${CARA}`);
+  expect(caresDe(rail())[TITOL_DEL_SERVIDOR]).toBe(`${PAQUET}${CARA}`);
+  expect(rail().querySelector(`.sdp-avatar[title="${TITOL_DEL_SERVIDOR}"]`).textContent).not.toBe('LT');
+});
+
+/* P1-70 (261029) · Sense amfitrió (socdepoble.org, localhost) el rail i els
+   Preferits també vestixen la comunitat de la Torre, com la llista:
+   useCaraDelPoble pren el poble del xat (pobleDelXat). Abans, «GD» al rail. */
+test('P1-70 · sense amfitrió i sense la fitxa del node, la comunitat de la Torre porta la foto de la llavor a la llista i al rail', () => {
+  ambLaBaseDelPaquet();
+  mocks.externalConfig = {};
+  mocks.towns = [];
+  munta(ambSessio());
+  expect(caresDe(llista())[POBLE.nom]).toBe(`${PAQUET}${CARA}`);
+  expect(caresDe(rail())[POBLE.nom]).toBe(`${PAQUET}${CARA}`);
+  expect(rail().querySelector(`.sdp-avatar[title="${POBLE.nom}"]`).textContent).not.toContain('GD');
 });
 
 test('amb sessió i sense base (dev): els recursos propis, com ara', async () => {
@@ -600,9 +618,16 @@ test.each(['multimedia', 'telefonades'])('sense sessió, la vista %s no porta l�
    diu el seu text, i la crida a entrar només ix una vegada: la del peu. */
 test('sense sessió, el filtre buit no repetix la crida a entrar', () => {
   munta(senseSessio());
-  /* P1-36 · Els filtres són píndoles (aria-pressed), no un desplegable. */
+  /* P1-36 · Els filtres són píndoles (aria-pressed), no un desplegable.
+     Ordre 0 (Mestre, 261030 03:49) · Viuen dins de la lupa: amb «Tot» i la
+     lupa plegada, cap barra; un altre filtre la manté amb la lupa plegada. */
+  expect(screen.queryByRole('group', { name: 'Filtra les converses' })).toBeNull();
+  const lupa = screen.getByRole('button', { name: 'Cerca converses' });
+  fireEvent.click(lupa);
+  fireEvent.click(within(screen.getByRole('group', { name: 'Filtra les converses' })).getByRole('button', { name: 'Preferits' }));
+  fireEvent.click(lupa);
+  expect(lupa.getAttribute('aria-expanded')).toBe('false');
   const pindoles = screen.getByRole('group', { name: 'Filtra les converses' });
-  fireEvent.click(within(pindoles).getByRole('button', { name: 'Preferits' }));
   expect(within(pindoles).getByRole('button', { name: 'Preferits' }).getAttribute('aria-pressed')).toBe('true');
   const cos = pindoles.closest('aside').querySelector(':scope > .sdp-workspace-column__body');
   expect(cos.querySelector('.sdp-workspace-state').textContent).toBe('Cap conversa amb este filtre.');

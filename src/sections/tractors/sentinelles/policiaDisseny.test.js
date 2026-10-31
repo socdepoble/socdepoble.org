@@ -10,6 +10,10 @@ const hex = (...trossos) => ['#', ...trossos].join('');
 const px = (n) => `${n}${'px'}`;
 const codis = (avisos) => avisos.map((a) => a.codi);
 const estil = ['sty', 'le='].join('');
+// Decisió del Mestre (30-10-2026) · Els noms de token i els var() dels exemples
+// també es componen: tractor-tokens no els ha de prendre per declaracions.
+const tok = (nom) => ['--sdp', nom].join('-');
+const v = (nom) => ['var(', tok(nom), ')'].join('');
 
 describe('JSX i JS', () => {
   test('estil en línia: roja amb la línia exacta', () => {
@@ -71,30 +75,30 @@ describe('JSX i JS', () => {
 
 describe('CSS', () => {
   test('tokens primitius en un component: roja; dins de :root, no', () => {
-    const primitiu = 'var(--sdp-pedra-400)';
+    const primitiu = v('pedra-400');
     expect(codis(revisaFitxer('src/apps/a.css', `.sdp-a { color: ${primitiu}; }`))).toEqual(['PS-PRIMITIU']);
-    expect(revisaFitxer('src/apps/b.css', `:root { --sdp-x: ${primitiu}; --sdp-y: ${hex('fff')}; }`)).toEqual([]);
-    expect(revisaFitxer('src/css/tokens.css', `.sdp-root { --sdp-z: ${hex('000')}; }`)).toEqual([]);
+    expect(revisaFitxer('src/apps/b.css', `:root { ${tok('x')}: ${primitiu}; ${tok('y')}: ${hex('fff')}; }`)).toEqual([]);
+    expect(revisaFitxer('src/css/tokens.css', `.sdp-root { ${tok('z')}: ${hex('000')}; }`)).toEqual([]);
   });
 
   test('color cru fora dels tokens, també dins d’una capa: roja', () => {
     expect(codis(revisaFitxer('src/apps/c.css', `@layer components { .sdp-a { color: ${hex('abc')}; } }`))).toEqual(['PS-COLOR-CRU']);
-    expect(revisaFitxer('src/apps/d.css', `@media (prefers-color-scheme: dark) { :root { --sdp-x: ${hex('111')}; } }`)).toEqual([]);
+    expect(revisaFitxer('src/apps/d.css', `@media (prefers-color-scheme: dark) { :root { ${tok('x')}: ${hex('111')}; } }`)).toEqual([]);
   });
 
   test('dins d’un @media de tema només s’eximixen els blocs dels tokens, no les regles de component', () => {
     expect(codis(revisaFitxer('src/apps/d1.css', `@media (prefers-color-scheme: dark) { .sdp-a { color: ${hex('abc')}; } }`))).toEqual(['PS-COLOR-CRU']);
     const tema = [
       '@media (prefers-color-scheme: dark) {',
-      `  :root:not([data-theme="light"]) { --sdp-x: ${hex('111')}; }`,
-      `  .sdp-b { background: var(--sdp-pedra-400); }`,
+      `  :root:not([data-theme="light"]) { ${tok('x')}: ${hex('111')}; }`,
+      `  .sdp-b { background: ${v('pedra-400')}; }`,
       '}'
     ].join('\n');
     expect(revisaFitxer('src/apps/d2.css', tema)).toEqual([expect.objectContaining({ codi: 'PS-PRIMITIU', font: 'src/apps/d2.css:3' })]);
   });
 
   test('un bloc és de tokens si el seu subjecte és :root, :host o .sdp-root; un component penjat d’ells, no', () => {
-    expect(revisaFitxer('src/apps/t1.css', `:root[data-theme="dark"] .sdp-root, :host([data-theme="dark"]) .sdp-root { --sdp-x: ${hex('222')}; }`)).toEqual([]);
+    expect(revisaFitxer('src/apps/t1.css', `:root[data-theme="dark"] .sdp-root, :host([data-theme="dark"]) .sdp-root { ${tok('x')}: ${hex('222')}; }`)).toEqual([]);
     expect(codis(revisaFitxer('src/apps/t2.css', `:host([data-theme="dark"]) .sdp-a { color: ${hex('abc')}; }`))).toEqual(['PS-COLOR-CRU']);
     expect(codis(revisaFitxer('src/apps/t3.css', `.sdp-root .sdp-a, .sdp-root { color: ${hex('abc')}; }`))).toEqual(['PS-COLOR-CRU']);
   });
@@ -106,7 +110,7 @@ describe('CSS', () => {
     expect(revisaFitxer('src/apps/f.css', `.sdp-a { padding: 0.75rem 1rem 0 var(--sdp-space-4); gap: ${px(8)}; margin-inline: auto; }`)).toEqual([]);
   });
 
-  test('un control per davall de --sdp-touch: roja; amb el token, no', () => {
+  test('un control per davall de --sdp-touch és roig; amb el token, no', () => {
     expect(codis(revisaFitxer('src/apps/g.css', `.sdp-a button { min-height: ${px(32)}; }`))).toEqual(['PS-TACTIL']);
     expect(codis(revisaFitxer('src/apps/h.css', 'a.sdp-enllac { height: 2rem; }'))).toEqual(['PS-TACTIL']);
     expect(revisaFitxer('src/apps/i.css', '.sdp-a button { min-height: var(--sdp-touch); }')).toEqual([]);

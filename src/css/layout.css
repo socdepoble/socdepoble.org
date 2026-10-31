@@ -440,7 +440,7 @@ header.bar-blue > * { min-width: 0; }
   z-index: 0;
   width: 100%;
   flex: none;
-  background: var(--sdp-blanc-pur, #ffffff);
+  background: var(--sdp-fons-portada);
 }
 .hero-image img {
   display: block;

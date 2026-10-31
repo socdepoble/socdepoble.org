@@ -52,6 +52,20 @@ test('el tancament que ordena el pare (obert=false) no torna a cridar onTanca', 
   expect(onTanca).toHaveBeenCalledTimes(1);
 });
 
+/* Gauntlet 261029 (cicle 1) · Un <dialog> obert sense activació de la
+   persona (Avant, F5): el primer `cancel` ja no és cancel·lable i el
+   navegador el tanca. Abans s'avisava dues vegades (el `cancel` i el
+   `close`); a /multimedia, cada avís era un navigate(-1). Ara, una. */
+test('un cancel no cancel·lable i el close del navegador avisen el pare UNA sola vegada', () => {
+  const onTanca = vi.fn();
+  render(<Arnes onTanca={onTanca} accepta={false} />);
+  const dialeg = screen.getByRole('dialog', { name: 'Prova' });
+  act(() => { dialeg.dispatchEvent(new Event('cancel', { cancelable: false })); });
+  tancaNatiu(dialeg);
+  expect(onTanca).toHaveBeenCalledTimes(1);
+  expect(onTanca).toHaveBeenCalledWith('esc', { forcat: true });
+});
+
 test('el primer Escape (cancel·lable) continua sent del pare: el <dialog> no es tanca a esquenes de React', () => {
   const onTanca = vi.fn();
   render(<Arnes onTanca={onTanca} accepta={false} />);

@@ -324,6 +324,8 @@ export function SnippetCurador({ carpetes = CAP, carpetaId }) {
 
   return (
     <UniversalPage
+      /* Decisions 261030 §7 · El que desares i on (el teu Bloc): Traduir no envia res fora. */
+      traduccio={false}
       chrome="system"
       title={textos.titol}
       subtitle={SUBTITOL}

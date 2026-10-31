@@ -4,7 +4,11 @@ import { MARCA_GRUP, segmentsAmbTargetes } from '../../components/universal/rich
 import { CosAmbTargetes } from '../../components/universal/richText/extensions/targetes/CosAmbTargetes.jsx';
 import { semblaHtml } from './detailHelpers.jsx';
 
-export function renderRichText(text) {
+/* Gauntlet 261030 (cicle 4, lang-ca-nomes-a-textsection) · `lang`: opcional,
+   la llengua del text quan la pàgina la declara i la interfície és en una
+   altra (useLlenguaDelContingut; la fitxa de la IAIA). Sense, cap atribut:
+   el DOM de sempre. */
+export function renderRichText(text, { lang = undefined } = {}) {
   const raw = String(text || '').trim();
   if (!raw) return null;
 
@@ -17,9 +21,9 @@ export function renderRichText(text) {
     // cap grup, el camí de sempre, byte a byte (Llei del Píxel).
     if (raw.includes(MARCA_GRUP)) {
       const segments = segmentsAmbTargetes(sanitizeHtml(resolRecursosDeHtml(raw)));
-      if (segments.some((segment) => segment.tipus === 'targetes')) return <CosAmbTargetes segments={segments} />;
+      if (segments.some((segment) => segment.tipus === 'targetes')) return <CosAmbTargetes segments={segments} lang={lang} />;
     }
-    return <article className="detail-content" dangerouslySetInnerHTML={{ __html: sanitizeHtml(resolRecursosDeHtml(raw)) }} />;
+    return <article className="detail-content" lang={lang} dangerouslySetInnerHTML={{ __html: sanitizeHtml(resolRecursosDeHtml(raw)) }} />;
   }
 
   const paragraphs = raw
@@ -28,7 +32,7 @@ export function renderRichText(text) {
     .filter(Boolean);
 
   return (
-    <article className="detail-content">
+    <article className="detail-content" lang={lang}>
       {paragraphs.map((paragraph, index) => {
         const lines = paragraph.split(/\n/g);
         return (

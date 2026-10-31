@@ -93,7 +93,7 @@ export default function EspecimenPanell() {
         </div>
         <div ref={mostraRef} className="sdp-especimen__mostra sdp-especimen__mostra--estreta">
           <UniversalCard
-            title="Masia El Roure"
+            title="Mas del Roure"
             subtitle="Provant l’arquitectura de Pedra Seca"
             imageUrl="/assets/ui/plugins/disseny_vinyeta.jpg"
             body="Observa l’ombra i el contrast d’esta targeta. Ací és on l’estètica es posa a prova."

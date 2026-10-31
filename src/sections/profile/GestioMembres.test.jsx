@@ -302,6 +302,108 @@ test.each([
   expect(screen.queryByRole('alert')).toBeNull();
 });
 
+/* P1-15 (Claude 1705: «el mateix patró a afegeix, canviaRol i confirmaLleva»)
+   · GestioMembres no es remunta en canviar d'entitat. Una escriptura d'O que
+   contesta quan ja es veu C no escriu ni la llista ni l'avís de C, no el deixa
+   «Treballant…», i C pot treballar de seguida. Marta és membre de totes dos. */
+const COLLA_ENTITAT = { id: 'C', mena: 'grup', nom: 'Colla', dades: { id: 'C', name: 'Colla', role: 'owner' } };
+function pintaAmbCanvi(extra = {}) {
+  const accions = {
+    usuariId: 'JO',
+    llistaMembres: vi.fn(async (orgId) => (orgId === 'O'
+      ? [persona('JO', 'Jo', 'owner'), persona('M', 'Marta')]
+      : [persona('JO', 'Jo', 'owner'), persona('M', 'Marta'), persona('B', 'Berta')])),
+    desaMembre: vi.fn(async (_orgId, dades) => ({ ...dades, nom: { Q: 'Quique', B: 'Berta', M: 'Marta' }[dades.id], avatar: '', desDe: null })),
+    llevaMembre: vi.fn(async () => ({ llevat: true })),
+    cercaCandidats: vi.fn(async () => [{ tipus: 'persona', id: 'Q', nom: 'Quique', avatar: '' }]),
+    ...extra,
+  };
+  const { rerender } = render(<GestioMembres organitzacio={FORN()} accions={accions} />);
+  const canviaAColla = async () => {
+    rerender(<GestioMembres organitzacio={COLLA_ENTITAT} accions={accions} />);
+    await screen.findByRole('region', { name: 'Membres de Colla' });
+  };
+  return { accions, canviaAColla };
+}
+const nomsDeColla = () => [...screen.getByRole('region', { name: 'Membres de Colla' }).querySelectorAll('tbody tr')]
+  .map((tr) => textLlegible(tr.querySelector('td')));
+
+test('P1-15 · l’alta d’O que contesta quan ja es veu C no escriu a C ni el deixa «Treballant…»', async () => {
+  const altaO = deferred();
+  const { accions, canviaAColla } = pintaAmbCanvi();
+  accions.desaMembre.mockReturnValueOnce(altaO.promise);
+  await taula();
+  cerca('qui');
+  await triaCandidat('Quique · Persona');
+  await act(async () => { fireEvent.click(screen.getByRole('button', { name: 'Afegir' })); });
+  expect(screen.getByRole('button', { name: 'Treballant…' })).toBeTruthy();
+  await canviaAColla();
+  expect(screen.queryByRole('button', { name: 'Treballant…' })).toBeNull();
+  expect(screen.getByRole('button', { name: 'Afegir' })).toBeTruthy();
+  await act(async () => { altaO.resolve({ tipus: 'persona', id: 'Q', nom: 'Quique', avatar: '', rol: 'member', desDe: null }); });
+  expect(nomsDeColla()).toEqual(['Jo (tu)', 'Berta', 'Marta']);
+  expect(screen.queryByText(/ja és membre de Forn/)).toBeNull();
+  expect(screen.queryByRole('status')).toBeNull();
+  expect(screen.queryByRole('button', { name: 'Treballant…' })).toBeNull();
+  // C fa la seua alta com sempre.
+  cerca('qui');
+  await triaCandidat('Quique · Persona');
+  await act(async () => { fireEvent.click(screen.getByRole('button', { name: 'Afegir' })); });
+  expect(accions.desaMembre).toHaveBeenLastCalledWith('C', { tipus: 'persona', id: 'Q', rol: 'member' });
+  expect(screen.getByRole('status').textContent).toBe('Quique ja és membre de Colla.');
+});
+
+test('P1-15 · el canvi de rol d’O en vol no bloqueja C, i la seua resposta tardana no hi escriu res', async () => {
+  const rolO = deferred();
+  const { accions, canviaAColla } = pintaAmbCanvi();
+  accions.desaMembre.mockReturnValueOnce(rolO.promise);
+  await taula();
+  await act(async () => { fireEvent.click(screen.getByRole('button', { name: 'Nomenar administradora: Marta' })); });
+  expect(accions.desaMembre).toHaveBeenCalledWith('O', { tipus: 'persona', id: 'M', rol: 'admin' });
+  await canviaAColla();
+  // La guarda de doble enviament ja no és la d'O: C treballa mentre O encara no ha contestat.
+  await act(async () => { fireEvent.click(screen.getByRole('button', { name: 'Nomenar administradora: Berta' })); });
+  expect(accions.desaMembre).toHaveBeenLastCalledWith('C', { tipus: 'persona', id: 'B', rol: 'admin' });
+  expect(screen.getByRole('status').textContent).toBe('Berta ja administra Colla.');
+  await act(async () => { rolO.resolve({ tipus: 'persona', id: 'M', nom: 'Marta', avatar: '', rol: 'admin', desDe: null }); });
+  expect(screen.getByRole('status').textContent).toBe('Berta ja administra Colla.');
+  expect(textLlegible(fila('Marta').querySelectorAll('td')[2])).toBe('Membre');
+  expect(screen.queryByRole('button', { name: 'Treballant…' })).toBeNull();
+  expect(screen.getByRole('button', { name: 'Nomenar administradora: Marta' }).disabled).toBe(false);
+});
+
+test('P1-15 · la baixa d’O que contesta quan ja es veu C no lleva la fila de C ni hi diu res', async () => {
+  const baixaO = deferred();
+  const { accions, canviaAColla } = pintaAmbCanvi({ llevaMembre: vi.fn(() => baixaO.promise) });
+  await taula();
+  fireEvent.click(screen.getByRole('button', { name: 'Llevar: Marta' }));
+  await act(async () => { fireEvent.click(within(screen.getByRole('dialog', { name: 'Llevar Marta de Forn?' })).getByRole('button', { name: 'Llevar' })); });
+  expect(accions.llevaMembre).toHaveBeenCalledWith('O', { tipus: 'persona', id: 'M' });
+  await canviaAColla();
+  expect(screen.queryByRole('dialog')).toBeNull();
+  await act(async () => { baixaO.resolve({ llevat: true }); });
+  expect(nomsDeColla()).toEqual(['Jo (tu)', 'Berta', 'Marta']);
+  expect(screen.queryByText(/ja no és membre de Forn/)).toBeNull();
+  expect(screen.queryByRole('status')).toBeNull();
+  expect(screen.queryByRole('dialog')).toBeNull();
+  expect(accions.llevaMembre).toHaveBeenCalledTimes(1);
+});
+
+test('P1-15 · la confirmació de «Llevar» oberta a O es tanca en canviar a C, i no lleva res', async () => {
+  const { accions, canviaAColla } = pintaAmbCanvi();
+  await taula();
+  fireEvent.click(screen.getByRole('button', { name: 'Llevar: Marta' }));
+  expect(screen.getByRole('dialog', { name: 'Llevar Marta de Forn?' })).toBeTruthy();
+  await canviaAColla();
+  expect(screen.queryByRole('dialog')).toBeNull();
+  expect(accions.llevaMembre).not.toHaveBeenCalled();
+  // A C, la confirmació s'obri i lleva de C.
+  fireEvent.click(screen.getByRole('button', { name: 'Llevar: Berta' }));
+  await act(async () => { fireEvent.click(within(screen.getByRole('dialog', { name: 'Llevar Berta de Colla?' })).getByRole('button', { name: 'Llevar' })); });
+  expect(accions.llevaMembre).toHaveBeenCalledWith('C', { tipus: 'persona', id: 'B' });
+  expect(nomsDeColla()).toEqual(['Jo (tu)', 'Marta']);
+});
+
 /* Qualitat · el vocabulari (cap classe que no existisca als fulls canònics)
    i ESLint amb la configuració del projecte, sense cap missatge, als fitxers
    de la interfície del grup C. */
@@ -565,4 +667,35 @@ test('C2120-01 · la lectura que falla després de confirmar l’alta d’A no d
   expect(casella().checked).toBe(true);
   expect(casella().disabled).toBe(false);
   expect(screen.queryByRole('alert')).toBeNull();
+});
+
+/* P1-15 (P3, Codex 2230) · Confirmada l'escriptura d'A amb la lectura d'A
+   encara en vol, la casella ja no espera desactivada que torne la lectura. */
+test('P1-15 · confirmada la tria d’A amb la lectura en vol, la casella no queda desactivada', async () => {
+  mp.capacitats = new Set(['consentimentTitular']);
+  const lecturaA = deferred();
+  mp.estat
+    .mockResolvedValueOnce({ titularPublic: false })
+    .mockResolvedValueOnce({ titularPublic: false })
+    .mockReturnValueOnce(lecturaA.promise);
+  const marcaA = deferred();
+  mp.marca.mockReturnValueOnce(marcaA.promise);
+  const casella = () => screen.queryByRole('checkbox');
+  const { rerender } = render(<TriaTitular orgId="A" nomOrg="Forn" />);
+  await waitFor(() => expect(casella()?.checked).toBe(false));
+  await act(async () => { fireEvent.click(casella()); });
+  rerender(<TriaTitular orgId="B" nomOrg="Bar" />);
+  await waitFor(() => expect(mp.estat).toHaveBeenCalledWith('B', expect.anything()));
+  rerender(<TriaTitular orgId="A" nomOrg="Forn" />);
+  await waitFor(() => expect(mp.estat).toHaveBeenCalledTimes(3));
+  // La lectura d'A encara no ha tornat: mentrestant, com sempre, desactivada.
+  expect(casella().disabled).toBe(true);
+  await act(async () => { marcaA.resolve({ titularPublic: true }); });
+  expect(casella().checked).toBe(true);
+  expect(casella().disabled).toBe(false);
+  expect(casella().closest('[aria-busy="true"]')).toBeNull();
+  // La lectura vella que arriba després no la desfà ni la torna a desactivar.
+  await act(async () => { lecturaA.resolve({ titularPublic: false }); });
+  expect(casella().checked).toBe(true);
+  expect(casella().disabled).toBe(false);
 });

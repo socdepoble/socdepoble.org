@@ -2,7 +2,57 @@ import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore
 import { Mic, Pause, Play } from 'lucide-react';
 import { teCapacitat, urlAdjuntXat } from '../../../data/backendPort.js';
 import { errorAdjuntXat } from '../../../data/xatMultimedia.js';
+import { E2EE_ACTIU_PER_DEFECTE } from '../../../config/xifratXat.js';
 import { textDErrorAdjunt } from '../adjuntLocal.js';
+
+/* QA-C01 (Gauntlet 261029_1858) · Retenció dels blob: desxifrats que es pinten
+   o sonen. Amb el xat xifrat, el registre LRU (data/xatMultimediaXifrat.js) no
+   revoca mai una URL retinguda: cada peça la reté des que la rep (el motor la
+   pren en el mateix tic que la servix) fins que se'n desmunta o en rep una
+   altra. Si el sostre de 100 MB no deixa crear-ne cap de nova, la peça mostra
+   l'error amb «Torna-ho a provar». Bandera apagada: la mateixa crida de sempre
+   ({ renova }) i cap retenció (les URL signades no es revoquen). La bandera es
+   llig en cridar: una prova que simula la configuració no tomba la peça. */
+const ambRetencio = () => {
+  try { return E2EE_ACTIU_PER_DEFECTE === true; } catch { return false; }
+};
+/* La retenció d'una sola petició: la posa el motor (reten); qui rep la URL la pren o la deixa anar. */
+function creaRetencio() {
+  let allibera = null;
+  return {
+    reten: (fn) => {
+      const abans = allibera;
+      allibera = typeof fn === 'function' ? fn : null;
+      if (abans) abans();
+    },
+    pren: () => {
+      const fn = allibera;
+      allibera = null;
+      return fn;
+    },
+    deixa: () => {
+      const fn = allibera;
+      allibera = null;
+      if (fn) fn();
+    }
+  };
+}
+/* La retenció de la URL que la peça té posada: una de nova allibera l'anterior,
+   i desmuntar-se, l'última. Un contenidor d'estat, no una ref: la neteja ha de
+   llegir el valor del moment, no el del muntatge. */
+function useRetencioDeLaFont() {
+  const [actual] = useState(() => ({ allibera: null }));
+  useEffect(() => () => {
+    const fn = actual.allibera;
+    actual.allibera = null;
+    if (fn) fn();
+  }, [actual]);
+  return useCallback((nova) => {
+    const vella = actual.allibera;
+    actual.allibera = typeof nova === 'function' ? nova : null;
+    if (vella && vella !== nova) vella();
+  }, [actual]);
+}
 
 const enValencia = (_clau, text) => text;
 /* Gauntlet 261022_0225 (crítica Claude, MEDIA-5) · El traductor de les peces
@@ -140,20 +190,27 @@ function ReproductorActiu({ obteUrl, duradaMs = null, memoria = null, locale = '
     const element = audio.current;
     if (element) { element.defaultPlaybackRate = velocitat; element.playbackRate = velocitat; }
   }, [velocitat]);
+  /* QA-C01 · Després de l'efecte que buida l'<audio>: en desmuntar-se, primer
+     es lleva la font i després s'allibera la URL. */
+  const fixaRetencio = useRetencioDeLaFont();
 
   const carrega = (renova) => {
     const element = audio.current;
     const meu = ++intent.current;
     const vigent = () => intent.current === meu && volSonar.current && viu.current;
+    const retencio = creaRetencio();
     recarregant.current = true;
     setCarregant(true);
     setError(null);
-    obteUrl({ renova }).then((url) => {
-      if (!vigent() || !element) return undefined;
+    obteUrl({ renova, reten: retencio.reten }).then((url) => {
+      if (!vigent() || !element) { retencio.deixa(); return undefined; }
       element.src = url;
+      /* La font nova ja és posada: ara es pot alliberar l'anterior. */
+      fixaRetencio(retencio.pren());
       setTeFont(true);
       return element.play();
     }).catch((e) => {
+      retencio.deixa();
       /* Gauntlet 261022_0225 (crítica Claude, ADV-MEDIA-2) · Una font que no
          carrega (CSP, token caducat, còdec) rebutja el play() amb
          NotSupportedError: la gestiona fallaCarrega (renova i, la segona,
@@ -299,7 +356,12 @@ function useFontVisible(obteUrl) {
   const reintentat = useRef(false);
   const [visible, setVisible] = useState(() => typeof IntersectionObserver !== 'function');
   const [intent, setIntent] = useState({ n: 0, renova: false });
-  const [estat, setEstat] = useState({ url: null, error: null });
+  /* QA-C01 · `allibera` viatja amb la URL: s'allibera després del pintat que ja
+     no la mostra (una altra URL o l'estat d'error). Totes les retencions que la
+     peça ha rebut viuen a `retingudes` fins llavors: si es desmunta abans que
+     arribe a pintar-se una resposta ja rebuda, també s'alliberen. */
+  const [estat, setEstat] = useState({ url: null, error: null, allibera: null });
+  const [retingudes] = useState(() => new Set());
   useEffect(() => {
     if (visible || !caixa.current) return undefined;
     const observador = new IntersectionObserver((entrades) => {
@@ -311,14 +373,37 @@ function useFontVisible(obteUrl) {
   useEffect(() => {
     if (!visible) return undefined;
     const controller = new AbortController();
+    const retencio = creaRetencio();
     setEstat((previ) => (previ.error ? { ...previ, error: null } : previ));
-    obteUrl({ signal: controller.signal, renova: intent.renova })
-      .then((url) => { if (!controller.signal.aborted) setEstat({ url, error: null }); })
-      .catch((e) => { if (!controller.signal.aborted && e?.name !== 'AbortError') setEstat({ url: null, error: e }); });
+    obteUrl({ signal: controller.signal, renova: intent.renova, reten: retencio.reten })
+      .then((url) => {
+        if (controller.signal.aborted) { retencio.deixa(); return; }
+        const nova = retencio.pren();
+        if (nova) retingudes.add(nova);
+        setEstat({ url, error: null, allibera: nova });
+      })
+      .catch((e) => {
+        retencio.deixa();
+        if (!controller.signal.aborted && e?.name !== 'AbortError') setEstat({ url: null, error: e, allibera: null });
+      });
     return () => controller.abort();
-  }, [visible, obteUrl, intent]);
+  }, [visible, obteUrl, intent, retingudes]);
+  const { allibera } = estat;
+  /* Després de cada pintat: fora les retencions que ja no corresponen a la font posada. */
+  useEffect(() => {
+    for (const fn of [...retingudes]) {
+      if (fn === allibera) continue;
+      retingudes.delete(fn);
+      fn();
+    }
+  }, [allibera, retingudes]);
+  useEffect(() => () => {
+    const totes = [...retingudes];
+    retingudes.clear();
+    for (const fn of totes) fn();
+  }, [retingudes]);
   const fallaCarrega = useCallback(() => {
-    if (reintentat.current) { setEstat({ url: null, error: errorAdjuntXat('obrir') }); return; }
+    if (reintentat.current) { setEstat({ url: null, error: errorAdjuntXat('obrir'), allibera: null }); return; }
     reintentat.current = true;
     setIntent((i) => ({ n: i.n + 1, renova: true }));
   }, []);
@@ -327,7 +412,7 @@ function useFontVisible(obteUrl) {
     setIntent((i) => ({ n: i.n + 1, renova: true }));
   }, []);
   const correcte = useCallback(() => { reintentat.current = false; }, []);
-  return { caixa, ...estat, fallaCarrega, reintenta, correcte };
+  return { caixa, url: estat.url, error: estat.error, fallaCarrega, reintenta, correcte };
 }
 
 function EstatAdjunt({ error, onReintenta, t }) {
@@ -400,8 +485,8 @@ export function PrevisualitzacioAdjunt({ tipus, url, onError, duradaMs = null, l
  *  el vídeo, muntats (el mateix node); la nota de veu, quieta (ADV-MEDIA-10). */
 export default function AdjuntXat({ adjunt, tipus, externalConfig, usuariId, locale, t: tProp, interactiu = true }) {
   const t = traductorAdjunt(tProp);
-  const obteUrl = useCallback(({ signal, renova = false } = {}) => (
-    urlAdjuntXat(adjunt.id, { ...externalConfig, signal }, { renova })
+  const obteUrl = useCallback(({ signal, renova = false, reten = null } = {}) => (
+    urlAdjuntXat(adjunt.id, { ...externalConfig, signal }, typeof reten === 'function' && ambRetencio() ? { renova, reten } : { renova })
   ), [adjunt.id, externalConfig]);
   if (!teCapacitat('xatMultimedia')) {
     return <div className="sdp-xat-adjunt"><p className="sdp-xat-adjunt__estat">{t('section.xat.adjunts.noCapacitat', 'Este node encara no pot obrir els adjunts del xat.')}</p></div>;

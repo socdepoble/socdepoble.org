@@ -1,4 +1,7 @@
-import { createContext, useContext, useState, useMemo, useCallback, useEffect, useRef } from 'react';
+import { useContext, useState, useMemo, useCallback, useEffect, useRef } from 'react';
+/* P1-71 (Gauntlet 261029) · L'objecte de context viu a objectesDeContext.js,
+   que no importa res del projecte. */
+import { IdentitatContext } from './objectesDeContext.js';
 import { useSession } from './SessionContext';
 import { getDefaultUserId, getProfile, listMyOrganizations } from '../../data/backendPort';
 import { getVal, setVal, delVal } from '../../config/storage';
@@ -26,8 +29,6 @@ import { llegixLlicenciaPerDefecte, sincronitzaLlicenciaPerDefecte } from '../..
  * d'abans d'una edició (firma, personaDeSessio.js). L'entrada persona
  * d'`identitats` (el calaix i la boina de les apps) porta el mateix.
  */
-
-const IdentitatContext = createContext(null);
 
 /** Rols que poden signar publicacions en nom de l'organització. */
 export const ROLS_QUE_SIGNEN = Object.freeze(['owner', 'admin']);

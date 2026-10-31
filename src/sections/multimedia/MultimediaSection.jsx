@@ -1,62 +1,90 @@
-import { useMemo, useState } from 'react';
-import { UniversalPage } from '../../components/universal/UniversalPage';
+/**
+ * MultimediaSection.jsx — /multimedia, l'Arxiu visual del Mas.
+ *
+ * IDEA-55 + P1-71 (Onada 261029_1605, Bloc E; ordre del Mestre, 18:35: «igual
+ * que la página de diseño o Wiki de Poble pero orientada al trabajo con
+ * archivos») · Un UniversalWorkspace de tres columnes, com Disseny i la Wiki:
+ *   1. MULTIMÈDIA: la portada («Arxiu Visual i Gestor d’Arxius»), les
+ *      galeries publicades (Tots, IAIA, la Cronologia amb un fill per mes) i
+ *      «Carpeta local · Volums muntats» amb les subcarpetes del volum actiu.
+ *   2. ARXIUS: la vista de la carpeta i els seus arxius (directes), amb la
+ *      lupa i l'ordenació del workspace.
+ *   3. La pàgina (PaginesEspaiMultimedia.jsx).
+ * La URL l'escriu esta secció (?categoria=&item=, i ?foto= per al visor): els
+ * valors per defecte no s'hi escriuen i les carpetes i els arxius locals hi
+ * van com a ids OPACS (arbreMultimedia.js). Una sola lectura del disc per a
+ * les tres columnes (useGestorArxiusLocals.js). Les props només servixen per
+ * a les proves: la ruta la munta sense cap.
+ */
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { Calendar, CalendarDays, Files, GalleryVerticalEnd, HardDrive, Images, LayoutGrid, Sparkles } from 'lucide-react';
 import { useLocation, useNavigate, useSearchParams } from '../../app/contexts/RouterContext';
 import { useMultimedia } from './MultimediaContext';
 import { useUIActions, useUIStateOpcional } from '../../app/contexts/UIContext';
-import { PillToggle } from '../../components/PedraSeca/index.js';
+import { DialegConfirmacio } from '../../components/PedraSeca/index.js';
+import { UniversalWorkspace } from '../../components/universal/workspace/UniversalWorkspace';
 import { useSEO } from '../../hooks/useSEO';
-import { resolRecursPropi } from '../../config/assetResolver.js';
 import { fusionaMitjans } from './mediaContent.js';
-import { SENSE_DATA, agrupaPerMes, etiquetaDelMes } from './cronologia.js';
+import { agrupaPerMes } from './cronologia.js';
 import { origenDe } from './origenImatges.js';
 import { useCensImatges } from './useCensImatges.js';
 import { VisorDeLArxiu } from './VisorDeLArxiu.jsx';
-import { GestorMultimediaLocal } from './GestorMultimediaLocal.jsx';
+import { DialegDescartaLocal, InputCarpetaLocal } from './GestorMultimediaLocal.jsx';
+import { ICONES_TIPUS_LOCAL, useMiniaturesLocals } from './miniaturesLocals.js';
+import { DetallEspaiMultimedia } from './PaginesEspaiMultimedia.jsx';
+import { carpetaDeRuta } from './motorMultimediaLocal.js';
+import {
+  CATEGORIA_PORTADA, GALERIA_CRONOLOGIA, GALERIA_IAIA, GALERIA_TOTS, MAX_MINIATURES_A_LA_LLISTA, PREFIX_MES, TOT,
+  construeixCategoriesMultimedia, construeixItemsMultimedia, demandaDeLaUrl, idArxiuLocal, idCarpetaLocal, indexaArbreLocal,
+  mateixaSeleccio, mitjansValids, paramsDeSeleccio, seleccioEfectiva
+} from './arbreMultimedia.js';
+import { TEXTOS_ESPAI as E, calendariDe } from './textosEspaiMultimedia.js';
+import { TEXTOS_LOCAL as T, tradueix } from './textosGestorLocal.js';
+import { useGestorArxiusLocals } from './useGestorArxiusLocals.js';
+import { useNotesData } from '../notes/NotesDataContext';
 
 /* Onada 0.3 (Gauntlet 261016, M04) · La marca de l'entrada de l'historial que
-   ha obert el visor des de la graella: tancar-lo és tornar arrere (el botó
+   ha obert el visor (des de la fitxa): tancar-lo és tornar arrere (el botó
    Arrere del navegador fa el mateix). Sense marca (un enllaç directe a
-   ?foto=, la redirecció de /multimedia/<id>), tancar lleva la consulta. */
+   ?foto=, la redirecció de /multimedia/<id>), tancar lleva la consulta i
+   deixa la persona a la fitxa d'eixa foto. */
 const MARCA_VISOR = 'sdpVisor';
+const CAP = Object.freeze([]);
+const MAPA_BUIT = new Map();
+const CANCELA = ['common.cancela', 'Cancel·lar'];
+const ICONES = Object.freeze({
+  portada: GalleryVerticalEnd,
+  tots: Images,
+  iaia: Sparkles,
+  cronologia: CalendarDays,
+  mes: Calendar,
+  local: HardDrive,
+  vista: LayoutGrid,
+  tipus: ICONES_TIPUS_LOCAL
+});
 
 const indexDe = (llista, id) => (id == null ? -1 : llista.findIndex((item) => String(item?.id) === id));
+const esImatgeLocal = (el) => el.vista === 'imatge' || el.vista === 'svg';
 
-/* La cel·la de la graella: un botó que obri el visor (abans, un enllaç a
-   /multimedia/<id>, una pàgina pròpia). Llei del Píxel (revisió adversarial
-   del 261016): el botó és un embolcall transparent i la cel·la de sempre
-   (.photo-grid__item, la caixa quadrada que creix fins a contindre la foto,
-   com l'<a> d'abans) va a dins. Un <button> amb la classe de la cel·la no
-   creixia (Chrome no aplica el mínim automàtic d'aspect-ratio a un botó) i
-   la foto, amb el marge de la prosa, sobreeixia damunt de la fila de davall
-   (modules.css, LES CEL·LES DE L'ARXIU VISUAL). */
-function Cella({ item, onObri }) {
-  return (
-    <button type="button" className="photo-grid__boto" aria-haspopup="dialog" onClick={() => onObri(item)}>
-      <span className="photo-grid__item">
-        {/* T5 · El src es resol en pintar-lo: incrustat, un '/assets/…' penja del paquet. Sense base, el de sempre. */}
-        {item.src ? (
-          <img src={resolRecursPropi(item.src)} alt={item.title || item.tag} loading="lazy" onError={(e) => { e.target.style.display = 'none'; }} />
-        ) : (
-          <div className="media-frame__buit">
-            <span className="sdp-sr-only">{item.title || 'Sense imatge'}</span>
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/></svg>
-          </div>
-        )}
-      </span>
-    </button>
-  );
-}
-
-export default function MultimediaSection() {
+export default function MultimediaSection({ magatzemCarpetes = null, entorn = globalThis, cripto = globalThis.crypto } = {}) {
   const { status, mediaItems, mediaTimelineGroups } = useMultimedia();
   const { t } = useUIActions();
   /* Revisió adversarial del 261016 · Els mesos de la Cronologia, en la
      llengua activa (abans, sempre en ca-ES). Sense UIProvider, el de sèrie. */
   const locale = useUIStateOpcional()?.locale || 'ca-ES';
-  const [viewMode, setViewMode] = useState('grid');
+  const [vistaWeb, setVistaWeb] = useState('graella');
   const [searchParams, setParams] = useSearchParams();
   const location = useLocation();
   const navigate = useNavigate();
+  /* IDEA-55 (Onada 261029_1605) · «Enviar al Bloc de Notes» des del Gestor
+     d'arxius locals, per la via del Xat: creaNota i després /notes?nota=…
+     Sense proveïdor (o sense sessió), canCreate és fals i el botó ho diu. */
+  const { creaNota, canCreate } = useNotesData();
+  const blocDeNotes = useMemo(() => ({
+    potCrear: Boolean(canCreate),
+    crea: creaNota,
+    obri: (id) => navigate(`/notes?nota=${encodeURIComponent(String(id))}`)
+  }), [canCreate, creaNota, navigate]);
 
   /* Onada 0.3 (Gauntlet 261016, M03) · El cens de public/assets
      (censImatges.js), carregat només ací: darrere dels mitjans del port i de
@@ -64,7 +92,7 @@ export default function MultimediaSection() {
      carrega, encara no: la graella no salta quan arriben. Amb els àlies del
      cens (revisió adversarial del 261016): una còpia que porta el port compta
      com el seu original, i el cens no hi torna a afegir la mateixa foto. */
-  const { mitjans: delCens, cens, alies } = useCensImatges();
+  const { mitjans: delCens, cens, alies, llest: censLlest = true } = useCensImatges();
   const totes = useMemo(
     () => (delCens.length && status !== 'loading' ? fusionaMitjans(mediaItems, delCens, { alies }) : mediaItems),
     [mediaItems, delCens, alies, status]
@@ -80,107 +108,284 @@ export default function MultimediaSection() {
      (origenImatges.js · origenDe). */
   const deLaIaia = useMemo(() => totes.filter((item) => origenDe(item, cens) === 'ia'), [totes, cens]);
 
-  /* El visor passa les fotos de la vista que es veu; una ?foto= que no hi és
-     (un enllaç directe, una altra vista) es busca a l'Arxiu sencer. */
-  const fotoId = searchParams.get('foto');
-  const llistaDeLaVista = viewMode === 'timeline' ? timelineGroups.flatMap((grup) => grup.items) : viewMode === 'iaia' ? deLaIaia : totes;
-  const enLaVista = indexDe(llistaDeLaVista, fotoId);
-  const llistaVisor = enLaVista >= 0 ? llistaDeLaVista : totes;
-  const indexVisor = enLaVista >= 0 ? enLaVista : indexDe(totes, fotoId);
-
-  /* ?foto=<id> amb una entrada nova a l'historial (setParams fa replace per
-     defecte): el botó Arrere tanca el visor. */
-  const obri = (item) => setParams({ foto: String(item.id) }, { replace: false, state: { [MARCA_VISOR]: true } });
-  const tanca = () => {
-    if (location.state?.[MARCA_VISOR]) navigate(-1);
-    else setParams({ foto: null }, { replace: true });
-  };
-  /* Anterior i següent substituïxen l'entrada: Arrere continua tancant. */
-  const canvia = (nou) => {
-    const item = llistaVisor[nou];
-    if (item) setParams({ foto: String(item.id) }, { replace: true, state: location.state ?? null });
-  };
-
   /* Onada 8 (261009) · Sense `image`: useSEO no passa cap SVG a les xarxes i
-     ja hi posava la imatge base. El <head> és el mateix. */
+     ja hi posava la imatge base. El <head> és el mateix. Bloc E · Constant:
+     cap nom de fitxer ni de carpeta local arriba mai a document.title. */
   useSEO({
     title: t('section.multimedia.title', 'Arxiu visual'),
     description: t('section.multimedia.subtitle', 'Galeria d’imatges i cronologia visual del projecte.')
   });
 
-  const graella = viewMode === 'iaia' ? deLaIaia : totes;
-  const etiquetaFiltre = viewMode === 'iaia'
-    ? `IAIA (${deLaIaia.length})`
-    : viewMode === 'timeline'
-      ? `${t('section.multimedia.timeline', 'CRONOLOGIA').toUpperCase()} (${totes.length})`
-      : viewMode === 'local'
-        ? 'CARPETA LOCAL (_MULTIMEDIA_DE_POBLE)'
-        : `${t('section.multimedia.all', 'TOTS')} (${totes.length})`;
-  const elementDestacat = viewMode === 'iaia' ? deLaIaia[0] : totes[0];
-  const mesDestacat = viewMode === 'local' ? '' : (elementDestacat?.created_at ? new Date(elementDestacat.created_at).toLocaleDateString('ca-ES', { month: 'long', year: 'numeric' }) : '');
+  /* ── El catàleg publicat (ids nets i únics: cap clau repetida a la llista) ── */
+  const cataleg = useMemo(
+    () => ({ totes: mitjansValids(totes), deLaIaia: mitjansValids(deLaIaia), grupsMes: timelineGroups }),
+    [totes, deLaIaia, timelineGroups]
+  );
+  const perId = useMemo(() => new Map(cataleg.totes.map((m) => [String(m.id), m])), [cataleg.totes]);
+  const catalegLlest = status !== 'loading' && censLlest;
+
+  /* ── Els textos del model, una vegada per llengua ── */
+  const tr = useCallback((parell, valors) => tradueix(t, parell, valors), [t]);
+  const textosModel = useMemo(() => ({
+    titol: t('section.multimedia.title', 'Arxiu visual'),
+    senseData: t('section.multimedia.senseData', 'Sense data'),
+    portada: tr(E.portada),
+    portadaSubtitol: tr(E.portadaSubtitol),
+    galeriaTots: tr(E.galeriaTots),
+    galeriaIaia: tr(E.galeriaIaia),
+    cronologia: tr(E.cronologia),
+    local: tr(E.local),
+    vistaCarpeta: tr(E.vistaCarpeta),
+    imatges: tr(E.imatges),
+    imatgesUn: tr(E.imatgesUn),
+    arxius: tr(E.arxius),
+    arxiusUn: tr(E.arxiusUn),
+    /* Gauntlet 261029 (i18n) · Els mesos de reserva si el navegador no porta la llengua (eu i gl a Chrome). */
+    calendari: calendariDe(tr),
+    document: tr(E.document),
+    senseTitol: tr(E.senseTitol),
+    llistaRetallada: tr(E.llistaRetallada),
+    insignies: {
+      publicada: tr(T['insignia.publicada']),
+      bessonaWebp: tr(T['insignia.bessona']),
+      inedita: tr(T['insignia.inedita']),
+      pesAlt: tr(T['insignia.pesAlt']),
+      duplicada: tr(T['insignia.duplicada']),
+      possibleDuplicat: tr(T['insignia.possible'])
+    }
+  }), [t, tr]);
+  /* Gauntlet 261029 (cicle 1, i18n; WCAG 3.1.2) · Totes les etiquetes de
+     l'espai de treball que es veuen o es llegixen a /multimedia, traduïdes:
+     abans només en passava cinc i la resta («Tot», la roda, el chevron de
+     les carpetes, el menú d'ordenar…) quedava en valencià en les altres
+     llengües. Sense «crear» ni «recompte»: ací no se'n pinta cap. */
+  const etiquetesEspai = useMemo(() => ({
+    categories: tr(E.categories),
+    items: tr(E.items),
+    select: tr(E.tria),
+    search: tr(E.cerca),
+    empty: tr(E.buit),
+    /* Gauntlet 261029 (cicle 1) · Amb una cerca que no troba res, no «Esta carpeta no té cap arxiu». */
+    noResults: tr(E.senseCoincidencies),
+    all: tr(E.tot),
+    settings: tr(E.ajustos),
+    back: tr(E.torna),
+    loading: tr(E.carregant),
+    error: tr(E.error),
+    retry: tr(E.reintenta),
+    close: tr(E.tanca),
+    clear: tr(E.neteja),
+    tags: tr(E.etiquetes),
+    expand: tr(E.desplega),
+    collapse: tr(E.plega),
+    sort: tr(E.ordena),
+    sortTitle: tr(E.ordenaTitol),
+    sortDate: tr(E.ordenaData),
+    sortName: tr(E.ordenaNom)
+  }), [tr]);
+
+  /* ── El Gestor d'arxius locals: una sola lectura del disc per a les tres columnes ── */
+  const seleccioRef = useRef(null);
+  /* El gestor diu on ha d'anar la selecció local (després d'una operació,
+     d'un volum tancat o d'una eixida de la sessió): una sola crida a
+     setParams, amb replace, i ids opacs. */
+  const seguixLocal = useCallback((canvi) => {
+    if (canvi?.portada) {
+      setParams({ categoria: null, item: null }, { replace: true });
+      return;
+    }
+    const actual = seleccioRef.current || { carpeta: '', ruta: null };
+    const ruta = canvi?.ruta !== undefined ? canvi.ruta : actual.ruta;
+    const carpeta = typeof ruta === 'string' ? carpetaDeRuta(ruta) : (canvi?.carpeta !== undefined ? canvi.carpeta : actual.carpeta);
+    const sal = canvi?.sal ?? null;
+    setParams({
+      categoria: idCarpetaLocal(sal, carpeta || ''),
+      item: typeof ruta === 'string' ? idArxiuLocal(sal, ruta) : null
+    }, { replace: true });
+  }, [setParams]);
+  const gestor = useGestorArxiusLocals({
+    cens, mitjansWeb: totes, t, magatzemCarpetes, entorn, cripto, seleccioRef, onSeleccio: seguixLocal
+  });
+  const index = useMemo(
+    () => (gestor.volumObert ? indexaArbreLocal({ sal: gestor.sal, carpetes: gestor.carpetes, elements: gestor.analisi.elements }) : null),
+    [gestor.volumObert, gestor.sal, gestor.carpetes, gestor.analisi.elements]
+  );
+
+  /* ── La selecció efectiva, de la URL ── */
+  const url = { categoria: searchParams.get('categoria'), item: searchParams.get('item'), foto: searchParams.get('foto') };
+  const efectiva = seleccioEfectiva(url, { index, idsCataleg: perId, catalegLlest });
+  seleccioRef.current = efectiva.local;
+  const demanda = demandaDeLaUrl(url);
+  /* El patró esperaElRol de la Wiki: 'loading' NOMÉS si la URL demana una cosa
+     que encara no hi pot ser (el catàleg o un id local abans d'obrir el
+     volum); així el workspace no la dona per absent ni reescriu la URL. */
+  const estatModel = (demanda.cataleg && !catalegLlest) || (demanda.localProfund && !gestor.arrencadaLlesta) ? 'loading' : 'ready';
+  const carpetaActiva = index && efectiva.local ? efectiva.local.carpeta : null;
+  const rutaSeleccionada = efectiva.local?.ruta ?? null;
+
+  /* ── Les miniatures de la Columna 2: les 48 imatges més recents de la carpeta ── */
+  const imatgesDeLaLlista = useMemo(() => {
+    if (!index || carpetaActiva === null) return CAP;
+    return (index.directes.get(carpetaActiva) || [])
+      .filter(esImatgeLocal)
+      .sort((a, b) => (Number(b.modificat) || 0) - (Number(a.modificat) || 0))
+      .slice(0, MAX_MINIATURES_A_LA_LLISTA);
+  }, [index, carpetaActiva]);
+  const miniaturesCrues = useMiniaturesLocals(gestor.font, imatgesDeLaLlista);
+  /* Un mapa de miniatures només val per a la llista (i la font) que l'ha fet:
+     quan canvien, el pintat d'eixe moment ja no en mostra cap, i el registre
+     vell es revoca DESPRÉS (cap <img> amb un blob: revocat). */
+  const clauMiniatures = imatgesDeLaLlista.map((el) => `${el.ruta}\u0000${el.mida}\u0000${el.modificat}`).join('\u0001');
+  const miniaturesRef = useRef({ mapa: null, clau: null, font: null });
+  if (miniaturesRef.current.mapa !== miniaturesCrues) {
+    miniaturesRef.current = { mapa: miniaturesCrues, clau: clauMiniatures, font: gestor.font };
+  }
+  const miniatures = miniaturesRef.current.clau === clauMiniatures && miniaturesRef.current.font === gestor.font
+    ? miniaturesCrues : MAPA_BUIT;
+
+  /* ── El model: dependències estretes (ni el progrés de l'SHA-256 ni els missatges) ── */
+  const categories = useMemo(
+    () => construeixCategoriesMultimedia({ grupsMes: timelineGroups, index, textos: textosModel, icones: ICONES, locale }),
+    [timelineGroups, index, textosModel, locale]
+  );
+  const items = useMemo(() => construeixItemsMultimedia({
+    cataleg, index, elements: gestor.analisi.elements, nomVolum: gestor.nomVolum, carpetaActiva, rutaSeleccionada,
+    miniatures, exactes: gestor.exactes, textos: textosModel, icones: ICONES, locale
+  }), [cataleg, index, gestor.analisi.elements, gestor.nomVolum, carpetaActiva, rutaSeleccionada, miniatures, gestor.exactes, textosModel, locale]);
+  const model = useMemo(
+    () => ({ status: estatModel, itemsComplete: true, workspaceKey: 'multimedia', categories, items }),
+    [estatModel, categories, items]
+  );
+  const seleccio = useMemo(
+    () => ({ categoryId: efectiva.categoryId, itemId: efectiva.itemId }),
+    [efectiva.categoryId, efectiva.itemId]
+  );
+  const [seleccioInicial] = useState(() => ({ categoryId: efectiva.categoryId, itemId: efectiva.itemId }));
+
+  /* La tria de la persona (push) o la reconciliació (replace). La que ja és
+     l'efectiva no escriu res: ?foto= i les vistes per defecte no embruten la URL. */
+  const handleSelectionChange = (sel, meta) => {
+    if (mateixaSeleccio(sel, seleccio)) return;
+    const push = meta?.reason === 'user' || meta?.reason === 'create';
+    setParams(paramsDeSeleccio(searchParams, sel), { replace: !push });
+  };
+  /* Navegar des de la columna del detall (una cel·la, una tessel·la, l'Accés ràpid): push.
+     Focus (Gauntlet 261029, cicle 1; WCAG 2.4.3) · La pàgina nova substituïx
+     la que tenia el botó, i el focus queia a <body> (el lector no anunciava
+     res). Quan l'H1 de la pàgina nova es munta (refTitol, un ref de
+     callback), si el focus s'ha perdut, hi va, sense desplaçar res. Una
+     navegació que no canvia de pàgina, o un focus que encara és viu, no es toca. */
+  const focusAlTitol = useRef(false);
+  const navega = (categoryId, itemId = null) => {
+    focusAlTitol.current = true;
+    setParams(paramsDeSeleccio(searchParams, { categoryId, itemId }), { replace: false });
+  };
+  const refTitol = useCallback((node) => {
+    if (!node || !focusAlTitol.current) return;
+    focusAlTitol.current = false;
+    const actiu = node.getRootNode?.()?.activeElement ?? null;
+    if (actiu && actiu !== node.ownerDocument?.body && actiu.isConnected) return;
+    node.focus({ preventScroll: true });
+  }, []);
+  useEffect(() => {
+    focusAlTitol.current = false;
+  }, [efectiva.categoryId, efectiva.itemId]);
+
+  /* ── Les galeries publicades ── */
+  const membresDe = (categoria) => {
+    if (categoria === GALERIA_TOTS || categoria === TOT) return cataleg.totes;
+    if (categoria === GALERIA_IAIA) return cataleg.deLaIaia;
+    if (categoria === GALERIA_CRONOLOGIA) return mitjansValids(timelineGroups.flatMap((grup) => grup.items));
+    if (typeof categoria === 'string' && categoria.startsWith(PREFIX_MES)) {
+      return mitjansValids(timelineGroups.find((grup) => `${PREFIX_MES}${grup.key}` === categoria)?.items || CAP);
+    }
+    return null;
+  };
+  const etiquetaDe = (categoria) => categories.find((c) => c.id === categoria)?.label ?? categoria;
+
+  /* ── El visor (?foto=): les fotos de la galeria activa o, si no hi és, de tot l'Arxiu ── */
+  const fotoId = searchParams.get('foto');
+  const llistaGaleria = membresDe(efectiva.categoryId);
+  const enLaVista = llistaGaleria ? indexDe(llistaGaleria, fotoId) : -1;
+  const llistaVisor = enLaVista >= 0 ? llistaGaleria : cataleg.totes;
+  const indexVisor = enLaVista >= 0 ? enLaVista : indexDe(cataleg.totes, fotoId);
+  /* ?foto=<id> amb una entrada nova a l'historial: el botó Arrere tanca el visor. */
+  const obriVisor = (item) => setParams({ foto: String(item.id) }, { replace: false, state: { [MARCA_VISOR]: true } });
+  /* Gauntlet 261029 (cicle 1) · Tancar és idempotent fins que la ubicació
+     canvia: un Escape que arriba amb el <dialog> obert sense activació (Avant,
+     F5) donava dos avisos i dos navigate(-1), i la persona eixia de l'Arxiu. */
+  const tancantVisor = useRef(false);
+  useEffect(() => {
+    tancantVisor.current = false;
+  }, [location]);
+  const tancaVisor = () => {
+    if (tancantVisor.current) return;
+    tancantVisor.current = true;
+    if (location.state?.[MARCA_VISOR]) navigate(-1);
+    else {
+      setParams({
+        foto: null,
+        categoria: efectiva.categoryId === CATEGORIA_PORTADA ? GALERIA_TOTS : efectiva.categoryId,
+        item: fotoId
+      }, { replace: true });
+    }
+  };
+  /* Anterior i següent substituïxen l'entrada: Arrere continua tancant. */
+  const canviaVisor = (nou) => {
+    const item = llistaVisor[nou];
+    if (item) setParams({ foto: String(item.id) }, { replace: true, state: location.state ?? null });
+  };
+
+  /* ── QA-A04 · Text sense desar en un arxiu que ja no és el triat: l'editor
+     es queda (DetallEspaiMultimedia) i es pregunta. Cancel·lar hi torna. ── */
+  const idCarpeta = (ruta) => index?.idDeCarpeta.get(ruta || '') ?? idCarpetaLocal(gestor.sal, ruta || '');
+  const idArxiu = (ruta) => index?.idDArxiu.get(ruta) ?? idArxiuLocal(gestor.sal, ruta);
+  const elBrut = gestor.rutaBruta ? gestor.elementDe(gestor.rutaBruta) : null;
+  const congelat = Boolean(elBrut) && rutaSeleccionada !== elBrut.ruta;
+  const tornaAlBrut = () => {
+    if (!elBrut) return;
+    setParams({ categoria: idCarpeta(elBrut.carpeta), item: idArxiu(elBrut.ruta), foto: null }, { replace: true });
+  };
+
+  const espai = {
+    t, locale, gestor, index, seleccio: efectiva, textosModel, cataleg, cens, blocDeNotes, vistaWeb, setVistaWeb,
+    navega, obriVisor, visorObert: indexVisor >= 0, membresDe: (c) => membresDe(c) || CAP, etiquetaDe,
+    mitjaDe: (id) => perId.get(String(id)) || null, idCarpeta, idArxiu, refTitol
+  };
 
   return (
-    <UniversalPage
-      title={t('section.multimedia.title', 'Arxiu visual')}
-      subtitle={t('section.multimedia.subtitle', 'Galeria d’imatges i cronologia visual del projecte.')}
-      chrome="system"
-      showLogos={true}
-    >
-      <header className="notes-list-header">
-        <strong className="univ-manager-facet-header">{etiquetaFiltre}{mesDestacat ? ` - ${mesDestacat}` : ''}</strong>
-        <div className="univ-manager-toolbar">
-          {/* T64 · Centrada amb el modificador canònic (el de l'Onboarding): com a
-              fill flex de la toolbar, margin-inline:auto la porta al mig. La
-              regla base .univ-manager-toolbar no es toca (l'Admin la compartix). */}
-          <PillToggle
-            className="sdp-pindola--centrada"
-            etiqueta={t('section.multimedia.viewMode', 'Mode de vista')}
-            valor={viewMode}
-            onCanvi={setViewMode}
-            opcions={[
-              { valor: 'grid', text: t('section.multimedia.gallery', 'Galeria') },
-              { valor: 'timeline', text: t('section.multimedia.timeline', 'Cronologia') },
-              { valor: 'iaia', text: t('section.multimedia.iaia', 'IAIA') },
-              { valor: 'local', text: 'Carpeta local' },
-            ]}
-          />
-        </div>
-      </header>
-
-
-
-      {viewMode === 'local' ? (
-        <GestorMultimediaLocal cens={cens} mitjansWeb={totes} />
-      ) : viewMode !== 'timeline' ? (
-        <div className="photo-grid">
-          {/* Ordre del Mestre (18-10-2026, relleu del Pla 2000; Gemini 2030, A3.2) ·
-              La clau és l'id de la foto (únic: fusionaMitjans no en repetix cap),
-              mai la posició: filtrar no torna a crear les cel·les que es queden. */}
-          {graella.map((item) => (
-            <Cella key={item.id} item={item} onObri={obri} />
-          ))}
-        </div>
-      ) : (
-        <div className="stack-grid">
-          {timelineGroups.map((group) => (
-            <section key={group.key} className="card card--soft">
-              <div className="card__body">
-                <div className="notes-list-header">
-                  <h2 className="section-title">{group.key === SENSE_DATA ? t('section.multimedia.senseData', 'Sense data') : (etiquetaDelMes(group.key, locale) || group.label)}</h2>
-                  <span className="pill">{group.items.length} {t('section.multimedia.elements', 'elements')}</span>
-                </div>
-                <div className="photo-grid">
-                  {group.items.map((item) => (
-                    <Cella key={item.id} item={item} onObri={obri} />
-                  ))}
-                </div>
-              </div>
-            </section>
-          ))}
-        </div>
-      )}
-
-      <VisorDeLArxiu llista={llistaVisor} index={indexVisor} cens={cens} onTanca={tanca} onCanvi={canvia} />
-    </UniversalPage>
+    <>
+      <UniversalWorkspace
+        collapsibleNavigation={false}
+        sortable
+        /* MD · En mòbil, primer MULTIMÈDIA; amb ?item= (o ?foto=) a l'entrada,
+           la pàgina, tret que siga el que hi havia quan la persona va deixar
+           l'Arxiu (nivellMestreDetall.js). Els ids locals són opacs. */
+        mestreDetall={{ clau: 'multimedia', element: searchParams.get('item') ?? searchParams.get('foto') }}
+        model={model}
+        initialSelection={seleccioInicial}
+        selection={seleccio}
+        onSelectionChange={handleSelectionChange}
+        labels={etiquetesEspai}
+        icons={{ categories: GalleryVerticalEnd, items: Files }}
+        renderDetail={() => <DetallEspaiMultimedia espai={espai} />}
+      />
+      <InputCarpetaLocal gestor={gestor} />
+      <DialegDescartaLocal gestor={gestor} t={t} />
+      {congelat ? (
+        <DialegConfirmacio
+          obert
+          destructiu
+          titol={tr(T['text.descartaTitol'])}
+          descripcio={tr(T['text.descartaText'])}
+          etiquetaConfirma={tr(T['text.descarta'])}
+          etiquetaCancela={tr(CANCELA)}
+          onTanca={tornaAlBrut}
+          onConfirma={gestor.descartaCanvis}
+        />
+      ) : null}
+      {/* Ordre del Mestre (30-10-2026, prompt 2208, T4.2) · Només l'Arxiu diu «No té cap enllaç públic d’este lloc». */}
+      <VisorDeLArxiu llista={llistaVisor} index={indexVisor} cens={cens} onTanca={tancaVisor} onCanvi={canviaVisor} avisSenseEnllac />
+    </>
   );
 }

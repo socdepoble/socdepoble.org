@@ -210,16 +210,25 @@ describe('premut · tot el que es pot prémer respon, amb la transició en repò
     expect(valor('modules.css', CAP, 'min-height'), 'sòl tàctil').toBe('var(--sdp-touch)');
   });
 
-  test('els títols enllaçats de l’Índex: premut de color (el del hover dels enllaços), mai translúcid, amb la transició en repòs', () => {
+  /* Ordre del Mestre, 30-10-2026 (/consola, punt 2.2: «H3 en blau marí
+     canònic, mai roig/taronja encara que continga un enllaç») · Derogat
+     (Onada 12, punt 5): el premut de color --sdp-accent-text-hover i la seua
+     transició. L'enllaç del títol pren el color del títol en tots els estats
+     (a components, que guanya l'`a` i l'`a:hover` de base.css, en legacy), i
+     el premut és el de la prosa de tot el sistema: l'Índex porta .sdp-prose. */
+  test('els títols enllaçats de l’Índex: el color del seu títol en repòs, en passar-hi i en prémer; el premut, el de la prosa', () => {
     const ENLLAC = '.sdp-consola__index :is(h3, h4) > a';
-    expect(valor('modules.css', ENLLAC, 'transition')).toBe('color var(--sdp-t)');
-    const premut = amb('modules.css', `${ENLLAC}:active`);
-    expect(premut).toHaveLength(1);
-    expect(premut[0].cos).toBe('color: var(--sdp-accent-text-hover);');
-    expect(premut[0].pares).toEqual(['@layer components']);
-    /* El mateix color del hover dels enllaços (base.css). */
+    const regla = amb('modules.css', ENLLAC);
+    expect(regla).toHaveLength(1);
+    expect(regla[0].cos).toBe('color: inherit;');
+    expect(regla[0].pares).toEqual(['@layer components']);
+    // Cap estat del full no li torna a posar un altre color (ni el taronja del hover dels enllaços).
+    expect(SUPERFICIE.filter((r) => r.prelud.startsWith('.sdp-consola__index') && /\ba\b/.test(r.prelud) && r.prelud !== ENLLAC).map(on)).toEqual([]);
     const base = regles(llig('src/css/base.css'));
     expect(de(base.find((r) => r.prelud === 'a:hover'), 'color')).toBe('var(--sdp-accent-text-hover)');
+    expect(base.find((r) => r.prelud === 'a').pares).toEqual(['@layer legacy']);
+    const prosa = base.find((r) => r.prelud.split(',').map((s) => s.trim()).includes('.sdp-prose a[href]:active'));
+    expect([de(prosa, 'transform'), de(prosa, 'opacity')]).toEqual(['none', '0.7']);
   });
 
   test('cap premut de la superfície baixa l’opacitat a modules.css (AAA: cap text translúcid)', () => {
@@ -344,21 +353,30 @@ describe('xifres tabulars on els nombres canvien o s’alineen', () => {
 });
 
 describe('cap salt de maquetació · la imatge reserva el seu lloc', () => {
-  test('el mitjà de la targeta i la miniatura de l’Índex porten aspect-ratio 1 / 1 abans que arribe la imatge', () => {
+  /* Ordre del Mestre, 30-10-2026 (/consola, punt 2.1) · Derogat: la
+     miniatura de l'Índex (aspect-ratio i 128px). Només en queda el mitjà de
+     la targeta. */
+  test('el mitjà de la targeta porta aspect-ratio 1 / 1 abans que arribe la imatge; l’Índex ja no té miniatura', () => {
     expect(valor('components.css', '.sp-card-media-container', 'aspect-ratio')).toBe('1 / 1');
     expect(valor('components.css', '.sp-card-media', 'aspect-ratio')).toBe('1 / 1');
-    const miniatura = TOTES.filter((r) => r.full === 'modules.css' && r.prelud.split(',').map((s) => s.trim()).includes('.sdp-consola__index-imatge'));
-    expect(miniatura.map((r) => de(r, 'aspect-ratio')).filter(Boolean)).toEqual(['1 / 1']);
-    expect(valor('modules.css', '.sdp-consola__index-imatge', 'inline-size')).toBe('calc(var(--sdp-space-16) * 2)');
+    expect(TOTES.filter((r) => r.prelud.includes('.sdp-consola__index-imatge')).map(on)).toEqual([]);
   });
 
-  test('la miniatura de l’H2 de l’Índex va centrada, com el seu títol i la seua entradeta; la regla només porta marge', () => {
-    const centrada = amb('modules.css', '.sdp-consola__index > .sdp-consola__index-imatge');
-    expect(centrada).toHaveLength(1);
-    expect(centrada[0].cos).toBe('margin-inline: auto;');
-    expect(centrada[0].pares).toEqual(['@layer components']);
+  /* Ordre del Mestre, 30-10-2026 (/consola, punt 2.2) · Derogat: «la
+     miniatura de l'H2 de l'Índex va centrada». Ara: l'H2 i la seua entradeta
+     (p.lead) centrats; els H3 en el blau marí canònic i els H4 en el
+     terracota canònic (base.css i tokens.css), també a la prosa (.sdp-prose). */
+  test('l’H2 i l’entradeta de l’Índex van centrats; els H3, blau marí, i els H4, terracota', () => {
     const base = regles(llig('src/css/base.css'));
     expect(de(base.find((r) => r.prelud === 'h2, .h2'), 'text-align')).toBe('center');
     expect(de(base.find((r) => r.prelud === '.lead'), 'text-align')).toBe('center');
+    expect(valor('modules.css', '.sdp-prose p.lead', 'text-align')).toBe('center');
+    expect(de(base.find((r) => r.prelud === 'h3, .h3'), 'color')).toBe('var(--sdp-accio-text)');
+    expect(de(base.find((r) => r.prelud === 'h4, .h4'), 'color')).toBe('var(--sdp-accent-titol)');
+    const tokens = llig('src/css/tokens.css');
+    expect(tokens).toMatch(/--sdp-accio-text[:]\s*var\(--sdp-secondary-700\);/);
+    expect(tokens).toMatch(/--sdp-accent-titol[:]\s*var\(--sdp-primary-700\);/);
+    // Cap regla de l'Índex no pinta els seus títols d'un altre color.
+    expect(SUPERFICIE.filter((r) => r.prelud.startsWith('.sdp-consola__index') && /\bh[234]\b/.test(r.prelud) && de(r, 'color') && de(r, 'color') !== 'inherit').map(on)).toEqual([]);
   });
 });

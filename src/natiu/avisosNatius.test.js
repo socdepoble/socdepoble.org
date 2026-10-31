@@ -190,6 +190,43 @@ describe('avisa amb vigent (la carrera del canal)', () => {
     expect(vigent).toHaveBeenCalled();
     expect(ln.schedule).not.toHaveBeenCalled();
   });
+
+  /* Gauntlet 261030 (cicle 2, Codex C3) · La guarda es mira en el MATEIX tic
+     que el schedule. Abans es mirava i després s'esperava el mòdul: en eixa
+     volta la persona podia eixir (o entrar-ne una altra) i l'avís d'A eixia
+     igual. Cada crida a vigent() obri un «tic» que es tanca a la microtasca
+     següent; el schedule ha de caure dins del tic de l'última crida. */
+  test('C3 · vigent() es mira just abans del schedule, sense cap espera entre mig', async () => {
+    const { ln, carregaConnector } = connectorFals();
+    const avisos = creaAvisosNatius({ plataforma: 'android', carregaConnector });
+    await avisos.avisa(AVIS); // el canal ja és fet: l'avís següent no l'espera
+    let ticObert = null;
+    const vigent = vi.fn(() => {
+      const tic = Symbol('tic');
+      ticObert = tic;
+      queueMicrotask(() => { if (ticObert === tic) ticObert = null; });
+      return true;
+    });
+    const dinsDelTic = [];
+    ln.schedule.mockImplementation(async () => { dinsDelTic.push(ticObert !== null); return { notifications: [] }; });
+    await avisos.avisa({ ...AVIS, id: 8, vigent });
+    expect(vigent).toHaveBeenCalled();
+    expect(dinsDelTic).toEqual([true]);
+  });
+
+  test('C3 · si la persona ix mentre s’espera el mòdul, l’avís ja no ix', async () => {
+    const { ln } = connectorFals();
+    let persona = 'A';
+    let lectures = 0;
+    /* El mòdul es llig una vegada per al canal i una altra per al schedule:
+       la segona lectura és l'espera on la persona ix. */
+    const modul = { get LocalNotifications() { lectures += 1; if (lectures === 2) persona = null; return ln; } };
+    const avisos = creaAvisosNatius({ plataforma: 'android', carregaConnector: async () => modul });
+    await avisos.avisa({ ...AVIS, vigent: () => persona === 'A' });
+    expect(lectures).toBe(2);
+    expect(ln.createChannel).toHaveBeenCalledTimes(1);
+    expect(ln.schedule).not.toHaveBeenCalled();
+  });
 });
 
 describe('els permisos', () => {

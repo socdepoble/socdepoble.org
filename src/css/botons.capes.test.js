@@ -102,7 +102,13 @@ describe('P1-37 · els tokens dels botons', () => {
   });
 
   test('els consumixen la píndola de la IAIA i el bloc d’accions, amb els mateixos píxels', () => {
-    const iaia = llig('src/sections/xat/components/ConsultaIAIA.css');
+    /* tractor-vocabulari (261030) · El full de la IAIA és el bloc ConsultaIAIA de modules.css. */
+    const moduls = llig('src/css/modules.css');
+    const inici = moduls.indexOf('/* ═══ BLOC ConsultaIAIA · ');
+    const fi = moduls.indexOf('/* ═══ FI DEL BLOC ConsultaIAIA ═══ */');
+    expect(inici).toBeGreaterThan(-1);
+    expect(fi).toBeGreaterThan(inici);
+    const iaia = moduls.slice(inici, fi);
     expect(valor(iaia, '.sdp-xat-pindola.sdp-xat-pindola--iaia', 'margin-inline')).toBe('var(--sdp-boto-marge-inline)');
     expect(valor(iaia, '.sdp-xat-pindola.sdp-xat-pindola--iaia', 'margin-block')).toBe('var(--sdp-boto-marge-block)');
     const components = llig('src/css/components.css');

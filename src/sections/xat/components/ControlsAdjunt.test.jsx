@@ -106,8 +106,8 @@ test('un node sense migració no pinta cap panell ni cap alerta', async () => {
   await act(async () => {});
   expect(vista.container.querySelector('.sdp-xat-adjunts')).toBeNull();
   expect(screen.queryByRole('alert')).toBeNull();
-  // P1-66 · El Compositor ix com sempre: ni + ni micròfon.
-  expect(screen.getAllByRole('button').map((b) => b.getAttribute('aria-label'))).toEqual(['Emoticones', 'Envia']);
+  // P1-66 · El Compositor ix com sempre: ni + ni micròfon (IDEA-53: i [N] Negreta).
+  expect(screen.getAllByRole('button').map((b) => b.getAttribute('aria-label'))).toEqual(['Emoticones', 'Negreta', 'Envia']);
 });
 test('sense la capacitat al port, ni tan sols es pregunta la quota', () => {
   const sense = { teCapacitat: () => false, quotaXat: vi.fn() };

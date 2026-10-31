@@ -22,7 +22,17 @@ import { describe, expect, test } from 'vitest';
 const ARREL = process.cwd();
 const llig = (ruta) => readFileSync(path.join(ARREL, ruta), 'utf8');
 const PS = 'src/components/PedraSeca';
-const FULL = `${PS}/catalegColleccio.css`;
+/* tractor-vocabulari (ordre del Mestre, 261030) · Els dos fulls de Pedra Seca
+   (pecesApps i catalegColleccio) són ara blocs de src/css/modules.css, entre les
+   seues marques: FULL és el fitxer que porta el bloc de la variant. */
+const FULL = 'src/css/modules.css';
+const blocDeModuls = (nom) => {
+  const tot = llig(FULL);
+  const inici = tot.indexOf(`/* ═══ BLOC ${nom} · `);
+  const fi = tot.indexOf(`/* ═══ FI DEL BLOC ${nom} ═══ */`);
+  if (inici < 0 || fi < inici) throw new Error(`${FULL} no té el bloc ${nom}`);
+  return tot.slice(inici, fi);
+};
 const PECA = `${PS}/organismes/agrupacio.jsx`;
 const LECTOR = 'src/apps/lector/';
 const ESPECIMEN = 'src/sections/disseny/cataleg/detalls/EspecimenImatgeApaisada.jsx';
@@ -60,6 +70,9 @@ describe('ús exclusiu: el Lector i el seu espècimen', () => {
   test('la classe .sdp-panoramica només la definix el full, només la posa la peça i només la nomena l’espècimen', () => {
     expect(PRODUCCIO.length).toBeGreaterThan(100);
     expect(quiUsa(usaClasse)).toEqual([FULL, PECA, ESPECIMEN].sort());
+    /* Dins de modules.css, només el bloc catalegColleccio la definix. */
+    expect(usaClasse(senseComentaris(llig(FULL).replace(blocDeModuls('catalegColleccio'), '')))).toBe(false);
+    expect(usaClasse(senseComentaris(blocDeModuls('catalegColleccio')))).toBe(true);
     /* L'espècimen la documenta en text; el className el posa la variant, mai a mà. */
     expect(/className=["'{][^>]*sdp-panoramica/.test(llig(ESPECIMEN))).toBe(false);
   });
@@ -82,9 +95,9 @@ const proporcio = (cos) => cos.match(/aspect-ratio:\s*([^;]+);/)?.[1].trim().rep
 const declaracions = (cos) => Object.fromEntries([...cos.matchAll(/([\w-]+)\s*:\s*([^;]+?)\s*(?:;|$)/g)]
   .map(([, propietat, valor]) => [propietat, valor.replace(/\s+/g, ' ')]));
 
-/* El que guanya per a un element dins de .sdp-panoramica: la seua regla base (pecesApps.css i
-   després el full, tots dos dins de @layer components) i, damunt, la de la variant, que hi té
-   més especificitat. */
+/* El que guanya per a un element dins de .sdp-panoramica: la seua regla base (el bloc pecesApps
+   i després el bloc catalegColleccio de src/css/modules.css, tots dos dins de
+   @layer components) i, damunt, la de la variant, que hi té més especificitat. */
 function guanyen(fulls, element) {
   const perSelector = new Map();
   for (const css of fulls) {
@@ -107,25 +120,25 @@ function formaPintada({ 'inline-size': ample = 'auto', 'block-size': alt = 'auto
 }
 
 describe('el full: el 16:9 penja només de .sdp-panoramica', () => {
-  const DOS_FULLS = [`${PS}/pecesApps.css`, FULL];
+  const DOS_FULLS = ['pecesApps', 'catalegColleccio'];
   /* Els marcs que fixen la forma; la imatge i el marcador hi van a 100% × 100%. */
   const MARCS = { Revista: 'sdp-llista-articles__quadrat', Targetes: 'sdp-rajola__media' };
   const FILLS = ['sdp-rajola__imatge', 'sdp-marca-article', 'sdp-marca-article__imatge'];
 
   test('als dos fulls de Pedra Seca, tota proporció que no és 1:1 és de la variant (16:9, o el reset de la rajola)', () => {
     for (const full of DOS_FULLS) {
-      for (const [selectors, cos] of regles(llig(full))) {
+      for (const [selectors, cos] of regles(blocDeModuls(full))) {
         const valor = proporcio(cos);
         if (valor === null || valor === '1 / 1') continue;
         expect(['16 / 9', 'auto'], `${full}: ${selectors.join(', ')}`).toContain(valor);
         for (const selector of selectors) expect(selector, `${full}: ${selector}`).toMatch(/\.sdp-panoramica\b/);
       }
     }
-    expect(regles(llig(`${PS}/pecesApps.css`)).flatMap(([selectors]) => selectors).filter((s) => s.includes('sdp-panoramica'))).toEqual([]);
+    expect(regles(blocDeModuls('pecesApps')).flatMap(([selectors]) => selectors).filter((s) => s.includes('sdp-panoramica'))).toEqual([]);
   });
 
   test('les declaracions: la imatge i el marcador, a la Revista i a les Targetes, declaren 16:9; la rajola deixa de ser quadrada', () => {
-    const perSelector = new Map(regles(llig(FULL)).flatMap(([selectors, cos]) => selectors.map((s) => [s, cos])));
+    const perSelector = new Map(regles(blocDeModuls('catalegColleccio')).flatMap(([selectors, cos]) => selectors.map((s) => [s, cos])));
     for (const selector of ['.sdp-panoramica .sdp-rajola__media', '.sdp-panoramica .sdp-rajola__imatge', '.sdp-panoramica .sdp-llista-articles__quadrat',
       '.sdp-panoramica .sdp-marca-article', '.sdp-panoramica .sdp-marca-article__imatge']) {
       expect(proporcio(perSelector.get(selector) ?? ''), selector).toBe('16 / 9');
@@ -144,7 +157,7 @@ describe('el full: el 16:9 penja només de .sdp-panoramica', () => {
     /* Sobre el full de veres, les mutacions que la comprovació de les declaracions deixa passar:
        la miniatura de la Revista a 2:1, el seu inline-size llevat (torna el --sdp-touch de la
        regla base: un quadrat) i el block-size: auto de les Targetes llevat (torna el 100%). */
-    const [base, full] = DOS_FULLS.map(llig);
+    const [base, full] = DOS_FULLS.map(blocDeModuls);
     const muta = (de, a) => {
       expect(full).toContain(de);
       return [base, full.replace(de, a)];
@@ -156,7 +169,7 @@ describe('el full: el 16:9 penja només de .sdp-panoramica', () => {
   });
 
   test('la forma pintada: el marc de la Revista i el de les Targetes fan 16:9, i la imatge i el marcador l’omplin', () => {
-    const fulls = DOS_FULLS.map(llig);
+    const fulls = DOS_FULLS.map(blocDeModuls);
     for (const [vista, marc] of Object.entries(MARCS)) expect(formaPintada(guanyen(fulls, marc)), vista).toBe('16 / 9');
     for (const fill of FILLS) expect(formaPintada(guanyen(fulls, fill)), fill).toBe('la del contenidor');
     /* La Revista fixa les dues mides (l'aspect-ratio hi és inert): l'alçada del quadrat de sempre i l'amplada que la fa 16:9. */
@@ -166,7 +179,7 @@ describe('el full: el 16:9 penja només de .sdp-panoramica', () => {
   });
 
   test('el full ho documenta com a excepció del Mestre, limitada al Lector', () => {
-    const full = llig(FULL);
+    const full = blocDeModuls('catalegColleccio');
     for (const text of ['EXCEPCIÓ a la regla 1:1 (Pedra Seca §8)', 'Autoritzada pel Mestre el 261003', 'src/apps/lector']) expect(full).toContain(text);
     expect(llig(PECA)).toContain('EXCEPCIÓ a la regla 1:1 de Pedra Seca');
   });

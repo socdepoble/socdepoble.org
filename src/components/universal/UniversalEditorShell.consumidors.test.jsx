@@ -425,10 +425,16 @@ describe('CSS · el contrast de la línia d’ajuda sobre el marc taronja', () =
     expect(fons).toBe(1);
   });
 
-  test('el token existix en clar i en fosc, i el fons de la capçalera és blanc', () => {
+  test('el token existix en clar i en fosc, i el fons de la capçalera és blanc en tots els temes', () => {
     const tokens = llig('src/css/tokens.css');
-    expect(tokens.match(/--sdp-sobre-accent: /g)?.length).toBeGreaterThanOrEqual(2);
-    expect(llig('src/css/layout.css')).toMatch(/\.hero-image \{[^}]*background: var\(--sdp-blanc-pur, #ffffff\);/);
+    expect(tokens.match(/--sdp-sobre-accent[:] /g)?.length).toBeGreaterThanOrEqual(2);
+    /* Decisió del Mestre (30-10-2026) · La capçalera cita un semàntic propi, sense
+       fallback ni primitiva (tractor-tokens T2 i T4), declarat una sola vegada:
+       cap tema el redefinix, i val el blanc pur. */
+    expect(llig('src/css/layout.css')).toMatch(/\.hero-image \{[^}]*background: var\(--sdp-fons-portada\);/);
+    expect(tokens.match(/--sdp-fons-portada[:]/g)).toHaveLength(1);
+    expect(tokens).toMatch(/--sdp-fons-portada[:] var\(--sdp-blanc-pur\);/);
+    expect(tokens).toMatch(/--sdp-blanc-pur[:] #ffffff;/);
   });
 
   test('el selector casa amb la línia de repòs i no amb la capçalera buida ni amb el panell obert', () => {

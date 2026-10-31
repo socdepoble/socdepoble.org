@@ -51,8 +51,8 @@
  * botó en clicar-lo i l'onFocus no salta.
  *
  * Posicionament sense `style` en JSX: cada barra escriu les línies de graella
- * (--sdp-cal-col-inici, --sdp-cal-col-fi, --sdp-cal-carril, 1-based) des d'una
- * ref (usePropietatsCss), i l'arrel, --sdp-cal-carrils (l'alçada de la fila).
+ * (--cal-col-inici, --cal-col-fi, --cal-carril, 1-based) des d'una
+ * ref (usePropietatsCss), i l'arrel, --cal-carrils (l'alçada de la fila).
  *
  * CONTRACTE
  *   esdeveniments · llista del model (creaEsdeveniment); les nul·les no compten.
@@ -162,7 +162,7 @@ export function EnllacDeLEsdeveniment({ ruta, LinkComponent = 'a', children, ...
    publicació (tabIndex -1: la capa és aria-hidden). */
 function PecaDelMes({ peca, compacte, ruta = null, LinkComponent }) {
   const ref = useRef(null);
-  usePropietatsCss(ref, { '--sdp-cal-col-inici': peca.colInici + 1, '--sdp-cal-col-fi': peca.colFi + 1, '--sdp-cal-carril': peca.carril + 1 });
+  usePropietatsCss(ref, { '--cal-col-inici': peca.colInici + 1, '--cal-col-fi': peca.colFi + 1, '--cal-carril': peca.carril + 1 });
   const { ocurrencia, tipus } = peca.segment;
   const enllac = compacte ? null : ruta;
   const classe = [
@@ -197,7 +197,7 @@ export function VistaMes({
   const tempsDilluns = dilluns ? dillunsDe(dilluns).getTime() : null;
   const ambSetmanes = tempsDilluns !== null;
   const carrils = maxCarrils ?? (ambSetmanes ? CARRILS_DES_DEL_DILLUNS : CARRILS_DEL_MES);
-  usePropietatsCss(arrel, { '--sdp-cal-carrils': carrils });
+  usePropietatsCss(arrel, { '--cal-carrils': carrils });
   const mida = useAmpladaContenidor(arrel);
   const { any, mes } = cursor ?? cursorDe(dilluns ?? avui);
   const nSetmanes = Number.isInteger(setmanes) && setmanes > 0 ? setmanes : null;

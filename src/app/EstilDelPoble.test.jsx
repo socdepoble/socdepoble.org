@@ -14,6 +14,8 @@ import { teEstilAplicat } from '../config/aplicaEstil.js';
 
 const ESTIL = { payload: { v: 1, tokens: { '--sdp-radi-s': '12px' }, crom: null }, versio: 3 };
 const fulls = (arrel = document) => arrel.querySelectorAll('style[data-sdp-estil]');
+// Decisió del Mestre (30-10-2026) · La línia esperada es compon: tractor-tokens (T3) la prendria per una declaració.
+const decl = (nom, valor) => [nom, valor].join(': ');
 
 afterEach(() => {
   cleanup();
@@ -43,12 +45,12 @@ test('amb estil desat: un full amb el CSS a l’arrel del document; se’n va am
   const { container, rerender, unmount } = render(<Arrel><EstilDelPoble /></Arrel>);
   expect(container.firstElementChild.outerHTML).toBe('<div class="sdp-root"></div>');
   expect(fulls()).toHaveLength(1);
-  expect(fulls()[0].textContent).toContain('  --sdp-radi-s: 12px;');
+  expect(fulls()[0].textContent).toContain(`  ${decl('--sdp-radi-s', '12px')};`);
 
   m.core = { personalitzacio: { taxonomia: null, estil: { payload: { v: 1, tokens: { '--sdp-radi-m': '16px' }, crom: null }, versio: 4 } } };
   rerender(<Arrel><EstilDelPoble /></Arrel>);
   expect(fulls()).toHaveLength(1);
-  expect(fulls()[0].textContent).toContain('--sdp-radi-m: 16px');
+  expect(fulls()[0].textContent).toContain(decl('--sdp-radi-m', '16px'));
   expect(fulls()[0].textContent).not.toContain('--sdp-radi-s');
 
   m.core = { personalitzacio: { taxonomia: null, estil: null } };

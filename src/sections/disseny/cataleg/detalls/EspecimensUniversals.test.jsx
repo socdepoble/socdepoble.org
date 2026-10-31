@@ -331,6 +331,22 @@ describe('EspecimenControlsBarra', () => {
     expect(text).toContain('el núvol (CloudUpload)');
     expect(text).not.toContain('la del document o la d’ara');
   });
+
+  /* Gauntlet 261030 (cicle 2, especimen-menu-traduir-text-fals) · El paràgraf
+     del menú Traduir nomena cada llengua que el menú pinta (LLENGUES_TRADUCCIO,
+     amb el gallec i el basc) i ja no diu «mai HTML»: les marques van com a
+     marques locals i mai no entra HTML del proveïdor. */
+  it('Traduir: el text nomena cada llengua del menú i diu la veritat de l’HTML', async () => {
+    const { LLENGUES_TRADUCCIO } = await import('../../../../data/traductor.js');
+    const arrel = pinta(EspecimenControlsBarra);
+    const titol = [...arrel.querySelectorAll('h4')].find((h4) => h4.textContent.startsWith('Traduir:'));
+    const paragraf = titol.nextElementSibling.textContent;
+    for (const { nom } of LLENGUES_TRADUCCIO) expect([nom, paragraf.includes(nom)]).toEqual([nom, true]);
+    expect(paragraf).not.toMatch(/mai HTML/);
+    expect(paragraf).toContain('mai no entra HTML del proveïdor');
+    const menu = arrel.querySelector('.sdp-especimen__fila > .sdp-menu-traduir');
+    expect(within(menu).getAllByRole('menuitemradio').slice(0, -1).map((item) => item.textContent)).toEqual(LLENGUES_TRADUCCIO.map(({ nom }) => nom));
+  });
 });
 
 describe('EspecimenEmoticonaBarra', () => {

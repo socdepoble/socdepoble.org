@@ -110,6 +110,8 @@ import {
 import { rangDeLaVista } from './estatCalendari.js';
 import { PanellFontsCalendari } from './fonts/PanellFontsCalendari.jsx';
 import { useFontsCalendari } from './fonts/useFontsCalendari.js';
+import { configFontsDeLEntorn } from './fonts/configFonts.js';
+import { totsPublics } from '../../components/universal/traduccio/visibilitatTraduible.js';
 import { useEstatCalendari } from './useEstatCalendari.js';
 
 const SENSE_AGENDA = Object.freeze({ fase: 'inactiu', entrades: Object.freeze([]) });
@@ -285,6 +287,13 @@ export default function CalendariSection() {
   /* El xat comú i el Connectar de la pàgina, els de la seua ruta canònica: ni
      el ?date= ni el ?mes= en fan cap altra. */
   const paginaCalendari = objecteDePagina({ titol: config.title, ruta: getSectionListPath('calendari') });
+  /* Gauntlet 261030 (Fase 3, TC3.2) · Traduir només si tot el que pinta el
+     calendari és públic: les targetes del Mur i del Mercat (una del veïnat,
+     només per als membres, l'apaga) i cap font de fora que la pàgina no pot
+     garantir (l'agenda de Sollutia o els calendaris de Google de la persona):
+     fallada tancada (traduccio/visibilitatTraduible.js). */
+  const traduible = totsPublics(sortedEvents, sortedFeedPosts, sortedMarketItems)
+    && !teCapacitat('agenda') && !configFontsDeLEntorn().configurades;
 
   if (status === 'loading') {
     return (
@@ -303,7 +312,7 @@ export default function CalendariSection() {
 
   return (
     <ContentProvider initialConfig={config}>
-      <UniversalPage layout="contained" objecte={paginaCalendari}>
+      <UniversalPage layout="contained" objecte={paginaCalendari} traduccio={traduible}>
         <div className="content-wrapper">
           {/* L'error del Mur es queda dins de la pàgina: el calendari continua
               amb el que tinga (l'agenda de Sollutia, si respon). Va dins del

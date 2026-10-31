@@ -98,25 +98,30 @@ describe('P3 · columnesInicials', () => {
   /* Derogació (ordre del Mestre, 261004: «les dues barres de la Wiki han
      d'estar sempre presents plegades, o com a mínim una d'elles visible que
      permeta desplegar l'altra») · Abans, en mitjà la navegació era tancada
-     (aria-hidden) i sense rail. Ara és un rail fix, obert i a l'abast; el
-     primer clic de la icona continua obrint el panell. */
-  test('amb { left: true }, en mitjà la navegació és el rail fix i el primer clic de la icona obri el panell', () => {
+     (aria-hidden) i sense rail; després (261004), un rail fix que obria un
+     panell. Columnes fixes (ordre del Mestre, 30-10-2026) · A 820 la closca
+     és «ample»: { left: true } és el rail d'«ample», a la graella, i el
+     primer clic de l'Expandir desplega l'arbre dins de la graella, amb el seu
+     separador, mai com a panell. */
+  test('amb { left: true }, a 820 la navegació és el rail de la graella i el primer clic de l’Expandir la desplega a la graella', () => {
     ambAmpladaIFotogrames(820, () => {
       const { container } = render(
         <UniversalWorkspace model={MODEL} labels={ETIQUETES} icons={{ categories: Folder }}
           columnesInicials={{ left: true }} renderDetail={() => null} />
       );
       const shell = container.querySelector('.app-grid-shell');
-      expect([shell.dataset.layout, shell.dataset.panell, shell.dataset.esquerra]).toEqual(['mitja', '', 'rail']);
+      expect([shell.dataset.layout, shell.dataset.panell]).toEqual(['ample', '']);
       const sidebar = container.querySelector('#app-grid-sidebar');
       expect(sidebar.getAttribute('aria-hidden')).toBeNull();
       expect(sidebar.hasAttribute('inert')).toBe(false);
       expect(sidebar.querySelector('.sdp-workspace-rail')).not.toBeNull();
-      expect(within(sidebar).getByRole('button', { name: 'Expandir CARPETES' })).toBeTruthy();
-      fireEvent.click(within(container.querySelector('#app-grid-list')).getByRole('button', { name: 'CARPETES' }));
-      expect(shell.dataset.panell).toBe('left');
-      expect(sidebar.getAttribute('aria-hidden')).toBeNull();
-      /* Desplegada, l'arbre del panell: ja no és el rail. */
+      /* La navegació és al costat: la llista no hi porta cap obridor. */
+      expect(within(container.querySelector('#app-grid-list')).queryByRole('button', { name: 'CARPETES' })).toBeNull();
+      fireEvent.click(within(sidebar).getByRole('button', { name: 'Expandir CARPETES' }));
+      expect(shell.dataset.panell).toBe('');
+      expect(container.querySelector('.has-left-collapsed')).toBeNull();
+      expect(container.querySelector('.app-grid-resizer--left')).not.toBeNull();
+      /* Desplegada, l'arbre: ja no és el rail. */
       expect(sidebar.querySelector('.sdp-workspace-rail')).toBeNull();
     });
   });
@@ -162,6 +167,71 @@ describe('P3 · columnesInicials', () => {
       expect(container.querySelector('.app-grid-shell')).not.toBe(closca);
       const graella = container.querySelector('.app-grid-content');
       expect([graella.classList.contains('has-left-collapsed'), graella.classList.contains('has-middle-collapsed')]).toEqual([true, true]);
+    });
+  });
+});
+
+/* Ordre del Mestre (30-10-2026, Bloc de Notes) · Sense columnesInicials ni
+   mode compacte, amb la finestra de 721 a 1023 px la navegació arrenca
+   plegada en rail; des de 1024, les tres columnes obertes. La closca fa la
+   mateixa amplària que la finestra, com a /notes, /disseny, /wikidepoble,
+   /multimedia i /lector al navegador. */
+describe('Ordre del Mestre · la franja estreta de la finestra', () => {
+  function ambFinestra(amplada, prova) {
+    const finestra = Object.getOwnPropertyDescriptor(window, 'innerWidth');
+    Object.defineProperty(window, 'innerWidth', { configurable: true, get: () => amplada });
+    try {
+      ambAmpladaIFotogrames(amplada, prova);
+    } finally {
+      if (finestra) Object.defineProperty(window, 'innerWidth', finestra);
+      else delete window.innerWidth;
+    }
+  }
+  const munta = (props = {}) => render(
+    <UniversalWorkspace model={MODEL} labels={ETIQUETES} initialSelection={{ categoryId: 'f-mur' }}
+      renderDetail={() => null} {...props} />
+  );
+  const graella = (container) => container.querySelector('.app-grid-content');
+
+  test.each([721, 900, 1023])('a %i px la navegació arrenca plegada en rail i la llista, oberta', (amplada) => {
+    ambFinestra(amplada, () => {
+      const { container } = munta();
+      expect(container.querySelector('.app-grid-shell').dataset.layout).toBe('ample');
+      expect([graella(container).classList.contains('has-left-collapsed'), graella(container).classList.contains('has-middle-collapsed')]).toEqual([true, false]);
+      expect(screen.getByRole('button', { name: 'Expandir CARPETES' })).toBeTruthy();
+      expect(screen.getByRole('button', { name: 'Replegar NOTES' })).toBeTruthy();
+    });
+  });
+
+  test.each([1024, 1440])('a %i px arrenquen les tres columnes obertes', (amplada) => {
+    ambFinestra(amplada, () => {
+      const { container } = munta();
+      expect(container.querySelector('.has-left-collapsed, .has-middle-collapsed')).toBeNull();
+      expect(screen.getByRole('button', { name: 'Replegar CARPETES' })).toBeTruthy();
+    });
+  });
+
+  test('només és l’estat de muntada: desplegada a mà, continua oberta', () => {
+    ambFinestra(900, (buidaFotogrames) => {
+      const { container, rerender } = munta();
+      fireEvent.click(screen.getByRole('button', { name: 'Expandir CARPETES' }));
+      buidaFotogrames();
+      expect(graella(container).classList.contains('has-left-collapsed')).toBe(false);
+      rerender(
+        <UniversalWorkspace model={MODEL} labels={ETIQUETES} initialSelection={{ categoryId: 'f-mur' }}
+          renderDetail={() => null} />
+      );
+      expect(graella(container).classList.contains('has-left-collapsed')).toBe(false);
+    });
+  });
+
+  test('un columnesInicials explícit i el mode compacte manen sobre la franja', () => {
+    ambFinestra(900, () => {
+      const { container, unmount } = munta({ columnesInicials: { middle: true } });
+      expect([graella(container).classList.contains('has-left-collapsed'), graella(container).classList.contains('has-middle-collapsed')]).toEqual([false, true]);
+      unmount();
+      const compacte = munta({ compacte: true });
+      expect([graella(compacte.container).classList.contains('has-left-collapsed'), graella(compacte.container).classList.contains('has-middle-collapsed')]).toEqual([true, true]);
     });
   });
 });

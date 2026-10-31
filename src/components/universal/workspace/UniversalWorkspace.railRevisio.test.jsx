@@ -122,47 +122,39 @@ test('P6 (revisió) F1 · a 820, la lupa del rail de la llista plegada la desple
   entorn(820, () => {
     const { container } = munta({ mestreDetall: false });
     fireEvent.click(enLlista(container, 'Replegar NOTES'));
-    expect(closca(container).dataset.llista).toBe('rail');
+    /* Columnes fixes (30-10-2026) · A 820, el rail d'«ample». */
+    expect(container.querySelector('.has-middle-collapsed')).not.toBeNull();
     fireEvent.click(enLlista(container, 'Cercar elements'));
-    expect(closca(container).hasAttribute('data-llista')).toBe(false);
+    expect(container.querySelector('.has-middle-collapsed')).toBeNull();
     expect(focus()).toBe('search@app-grid-list');
   });
 });
 
-test('P6 (revisió) F2 · a 820, l’obridor de la navegació (aria-expanded) torna a tancar el panell, des de la capçalera i des del rail', () => {
+/* Columnes fixes (ordre del Mestre, 30-10-2026) · Abans, a 820 l'obridor de
+   la navegació (la carpeta) de la capçalera i del rail de la llista obria i
+   tancava un panell. Ara la navegació és la columna del costat: no hi ha cap
+   panell a obrir ni cap carpeta duplicada, oberta o plegada la llista. */
+test('P6 (revisió) F2 · a 820 (columnes fixes) la llista no porta cap obridor de la navegació, ni a la capçalera ni al rail: la navegació és al costat', () => {
   entorn(820, () => {
     const { container } = munta({ mestreDetall: false, initialSelection: undefined, selection: undefined });
-    const menu = enLlista(container, 'CARPETES');
-    menu.focus();
-    fireEvent.click(menu);
-    expect(panell(container)).toBe('left');
-    expect(menu.getAttribute('aria-expanded')).toBe('true');
-    /* En mitjà la llista no es tanca: l'obridor continua a l'abast. */
-    menu.focus();
-    fireEvent.click(menu);
+    expect(llista(container).querySelector('[aria-controls="app-grid-sidebar"]')).toBeNull();
     expect(panell(container)).toBe('');
-    expect(menu.getAttribute('aria-expanded')).toBe('false');
-    expect(focus()).toBe('CARPETES@app-grid-list');
-
-    /* El mateix amb la llista plegada en rail. */
     fireEvent.click(enLlista(container, 'Replegar NOTES'));
-    const menuRail = enLlista(container, 'CARPETES');
-    fireEvent.click(menuRail);
-    expect(panell(container)).toBe('left');
-    expect(menuRail.getAttribute('aria-expanded')).toBe('true');
-    fireEvent.click(menuRail);
-    expect(panell(container)).toBe('');
-    expect(menuRail.getAttribute('aria-expanded')).toBe('false');
+    expect(llista(container).querySelector('[aria-controls="app-grid-sidebar"]')).toBeNull();
+    const navegacio = container.querySelector('#app-grid-sidebar');
+    expect([navegacio.hasAttribute('inert'), navegacio.getAttribute('aria-hidden')]).toEqual([false, null]);
+    expect(within(navegacio).getByRole('button', { name: 'Replegar CARPETES' })).toBeTruthy();
   });
 });
 
-test('P6 (revisió) F3 · d’estret a mitjà amb el focus al rail, el focus va a la fitxa actual de la llista, no a <body>', () => {
+test('P6 (revisió) F3 · d’estret a 820 amb el focus al rail, el focus va a la fitxa actual de la llista, no a <body>', () => {
   entorn(375, ({ redimensiona, buida }) => {
     const { container } = munta();
     enRail(container, 'Expandir NOTES').focus();
     expect(focus()).toBe('Expandir NOTES@app-grid-rail');
     redimensiona(820);
-    expect(closca(container).dataset.layout).toBe('mitja');
+    /* Columnes fixes (30-10-2026) · D'estret a «ample», sense «mitja». */
+    expect(closca(container).dataset.layout).toBe('ample');
     expect(rail(container)).toBeNull();
     expect(focus(), 'mateix commit').toBe('button@app-grid-list');
     expect(document.activeElement.getAttribute('aria-current')).toBe('true');
@@ -172,13 +164,13 @@ test('P6 (revisió) F3 · d’estret a mitjà amb el focus al rail, el focus va 
   });
 });
 
-test('P6 (revisió) F3 · d’estret a mitjà amb el focus al detall, la guarda no el mou', () => {
+test('P6 (revisió) F3 · d’estret a 820 amb el focus al detall, la guarda no el mou', () => {
   entorn(375, ({ redimensiona }) => {
     const { container } = munta();
     const detallNode = container.querySelector('.sdp-workspace-detail');
     detallNode.focus();
     redimensiona(820);
-    expect(closca(container).dataset.layout).toBe('mitja');
+    expect(closca(container).dataset.layout).toBe('ample');
     expect(document.activeElement).toBe(detallNode);
   });
 });

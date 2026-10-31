@@ -43,7 +43,9 @@ test('sense la prop (o amb una llista buida), el DOM de sempre', () => {
   onTestFinished(() => vi.useRealTimers());
   const sense = espai();
   const html = senseIds(sense.container.innerHTML);
-  expect(within(capcalera(sense.container)).getAllByRole('button').map((b) => b.getAttribute('aria-label'))).toEqual(['Replegar NOTES']);
+  /* Ordre d'usabilitat (30-10-2026) · La icona de l'esquerra és el botó
+     germà del [|<]. */
+  expect(within(capcalera(sense.container)).getAllByRole('button').map((b) => b.getAttribute('aria-label'))).toEqual(['Plegar la columna NOTES', 'Replegar NOTES']);
   sense.unmount();
   const buida = espai({ accionsLlista: [] });
   expect(senseIds(buida.container.innerHTML)).toBe(html);

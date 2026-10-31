@@ -53,10 +53,14 @@ const MARC = ['border', 'border-top', 'border-right', 'border-bottom', 'border-l
   'padding', 'padding-block', 'padding-inline', 'outline', 'box-shadow', 'background', 'background-color'];
 
 describe('Llei Visual del quadrat · tota imatge de la Consola', () => {
-  const QUADRADES = ['.sdp-consola__targeta .sp-card-media-container', '.sdp-consola__targeta .sp-card-media', '.sdp-consola__index-imatge'];
-  const IMATGES = ['.sdp-consola__targeta .sp-card-media', '.sdp-consola__index-imatge'];
+  /* Ordre del Mestre, 30-10-2026 (/consola, punt 2.1: «Fora la miniatura
+     repetida») · L'Índex ja no pinta cap miniatura: la llei només cobrix el
+     mitjà de les targetes. Derogat: .sdp-consola__index-imatge a les dues
+     llistes. */
+  const QUADRADES = ['.sdp-consola__targeta .sp-card-media-container', '.sdp-consola__targeta .sp-card-media'];
+  const IMATGES = ['.sdp-consola__targeta .sp-card-media'];
 
-  test('quadrada: aspect-ratio 1 / 1 per al mitjà de la targeta (amb el contenidor) i per a la miniatura de l’Índex', () => {
+  test('quadrada: aspect-ratio 1 / 1 per al mitjà de la targeta, amb el seu contenidor', () => {
     for (const s of QUADRADES) expect(valor(MODULS, s, 'aspect-ratio'), s).toBe('1 / 1');
   });
 
@@ -98,18 +102,12 @@ describe('Llei Visual del quadrat · tota imatge de la Consola', () => {
 });
 
 describe('a sang · cap marc darrere ni al voltant de la imatge', () => {
-  test('la miniatura de l’Índex no porta vora, farcit, contorn, ombra ni fons; només mida, marge i radi de tokens', () => {
-    const totes = deSelector(MODULS, '.sdp-consola__index-imatge').map(declaracions);
-    for (const d of totes) for (const p of MARC) expect(d[p], p).toBeUndefined();
-    const propia = totes.find((d) => d['inline-size']);
-    expect(propia).toEqual({
-      display: 'block',
-      'inline-size': 'calc(var(--sdp-space-16) * 2)',
-      'max-inline-size': '100%',
-      'block-size': 'auto',
-      'margin-block': 'var(--sdp-space-4)',
-      'border-radius': 'var(--sdp-radi-s)'
-    });
+  /* Ordre del Mestre, 30-10-2026 (/consola, punt 2.1) · Derogat: «la
+     miniatura de l'Índex no porta vora…; només mida, marge i radi». La
+     miniatura ja no existix, i cap regla del full la torna a dibuixar. */
+  test('l’Índex no té cap miniatura: cap regla de cap full nomena .sdp-consola__index-imatge', () => {
+    expect(deSelector(MODULS, '.sdp-consola__index-imatge')).toEqual([]);
+    expect([...MODULS, ...COMPONENTS].filter((r) => r.prelud.includes('__index-imatge')).map((r) => r.prelud)).toEqual([]);
   });
 
   test('l’avatar de la targeta i de la barra taronja no porta cap fons darrere de la imatge', () => {

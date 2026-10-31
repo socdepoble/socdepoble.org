@@ -163,13 +163,16 @@ test('F4 · editar una nota no refà les publicacions: els objectes són els mat
    del sistema (SYSTEM_PAGES). Abans, deu.
    Ordre del Mestre (261026_2126; prompt 261026_2130, tasca 1) · Tretze:
    «Descàrregues i Aplicacions» hi entra com a pàgina del sistema. Abans,
-   dotze. */
+   dotze.
+   Ordre del Mestre (30-10-2026; candidatura NLnet NGI Fediversity) ·
+   Catorze: «Candidatura Europea NLnet · NGI Fediversity» hi entra com a
+   pàgina del sistema. Abans, tretze. */
 const NUCLI = Object.freeze({ status: 'ready', pageCopy: PAGE_COPY, refresh: () => {} });
 const SISTEMA = SYSTEM_PAGES.map((pagina) => `publicacio:mur:${pagina.key}`);
-const PAGINES_DEL_SISTEMA = 13;
+const PAGINES_DEL_SISTEMA = 14;
 const delMur = (items) => publicacions(items).filter((item) => item.categoryIds.includes('f-mur'));
 
-test('Grup E · amb el contingut core, l’entitat Sóc de Poble veu les tretze pàgines del sistema a «Mur», darrere de les seues publicacions', () => {
+test('Grup E · amb el contingut core, l’entitat Sóc de Poble veu les catorze pàgines del sistema a «Mur», darrere de les seues publicacions', () => {
   const items = pinta({
     actor: { tipus: 'entitat', id: ENTITAT_PILOT_ID, slug: ENTITAT_PILOT_SLUG, rol: 'owner' },
     config: { dataMode: 'seed' },

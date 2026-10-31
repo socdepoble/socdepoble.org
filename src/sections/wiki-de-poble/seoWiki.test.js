@@ -3,8 +3,9 @@
    obrin amb <!-- SDP:EIXIDA … -->), si no un títol propi, si no l'id
    humanitzat. Abans, 13 rutes /wikidepoble?item=<id> portaven l'id cru. */
 import { describe, expect, it } from 'vitest';
-import { metadadesDeDocumentPublic, metadadesDeDocumentWiki, titolHumaDeId } from './seoWiki.js';
-import { LIMIT_TITOL } from '../../config/metadadesSocials.js';
+import { DESCRIPCIO_WIKI, TITOL_WIKI, metadadesDeDocumentPublic, metadadesDeDocumentWiki, portadaSocialDeLaWiki, titolHumaDeId } from './seoWiki.js';
+import { LIMIT_TITOL, textPla } from '../../config/metadadesSocials.js';
+import { PAGE_COPY } from '../text/pageContent.js';
 
 /* Les 13 plantilles del manifest del 261029 (pla.md es retira: una que ja no
    hi siga no compta, però almenys una hi ha de ser). */
@@ -87,5 +88,27 @@ describe('els documents reals de la Wiki (src/data/wikiManifest.js)', () => {
     const titols = Object.fromEntries(presents.map((id) => [id, metadadesDeDocumentWiki({ id }, `?item=${id}`, wikiManifest.items).title]));
     if (titols.auditoria_canonica) expect(titols.auditoria_canonica).toBe('Auditoria canònica de la Wiki');
     if (titols.prompt_local) expect(titols.prompt_local).toBe('Prompt d\'Execució i Auditoria Local');
+  });
+});
+
+/* Ordre del Mestre (30-10-2026, prompt 2208, T1.3; QA-VES-02 de Codex) · La
+   portada de la Wiki (/wikidepoble sense ?item=) porta al head la imatge que
+   pinta (PAGE_COPY.wikidepoble), per la seua variant social de 1200x630, la
+   mateixa que prerenderitza el build. Els documents i els desconeguts, com abans. */
+describe('la portada de la Wiki porta la seua imatge al head', () => {
+  it('sense ?item=: la portada per la variant social, amb el seu alt; sense portada o amb una que no es pot servir, la genèrica', () => {
+    const portada = PAGE_COPY.wikidepoble;
+    expect(metadadesDeDocumentWiki(null, '', [])).toEqual({
+      title: TITOL_WIKI, description: DESCRIPCIO_WIKI, index: true,
+      image: {
+        url: 'https://socdepoble.org/assets/uploads/empresa/soc-de-poble/posts/genotip/portada_genotip-social-1200x630.jpg',
+        alt: textPla(portada.imageAlt || portada.title, LIMIT_TITOL)
+      }
+    });
+    expect(metadadesDeDocumentWiki(null, '', [], { portada: null })).toEqual({ title: TITOL_WIKI, description: DESCRIPCIO_WIKI, index: true });
+    const svg = { title: 'Wiki', image: '/assets/marca.svg' };
+    expect(portadaSocialDeLaWiki(svg).imatge).toMatchObject({ estat: 'bloquejada', motiu: 'svg' });
+    expect(metadadesDeDocumentWiki(null, '', [], { portada: svg })).toEqual({ title: TITOL_WIKI, description: DESCRIPCIO_WIKI, index: true });
+    expect(metadadesDeDocumentWiki({ id: 'cap' }, '?item=cap', [])).toEqual({ title: TITOL_WIKI, description: DESCRIPCIO_WIKI, index: false });
   });
 });

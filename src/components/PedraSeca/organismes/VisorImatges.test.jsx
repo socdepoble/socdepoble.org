@@ -48,7 +48,7 @@ function pinta(props = {}) {
 }
 
 const imatge = (dialeg) => dialeg.querySelector('img.sdp-visor__imatge');
-const escala = (dialeg) => imatge(dialeg).style.getPropertyValue('--sdp-visor-escala');
+const escala = (dialeg) => imatge(dialeg).style.getPropertyValue('--visor-escala');
 
 describe('obrir i tancar', () => {
   test('tancat: el <dialog> és buit, no es demana cap imatge', () => {
@@ -361,7 +361,7 @@ describe('zoom', () => {
     const reduir = within(dialeg).getByRole('button', { name: 'Reduir' });
     act(() => ampliar.click());
     expect(escala(dialeg)).toBe('1.5');
-    expect(imatge(dialeg).style.getPropertyValue('--sdp-visor-x')).toBe('0px');
+    expect(imatge(dialeg).style.getPropertyValue('--visor-x')).toBe('0px');
     for (let i = 0; i < 6; i += 1) act(() => ampliar.click());
     expect(escala(dialeg)).toBe(String(ESCALA_MAXIMA));
     expect(dialeg.querySelector('.sdp-visor__escenari').classList.contains('sdp-visor__escenari--ampliat')).toBe(true);
@@ -478,7 +478,7 @@ describe('zoom', () => {
     Object.defineProperty(imatge(dialeg), 'offsetHeight', { configurable: true, value: fh });
     return esc;
   };
-  const desplacament = (dialeg) => ['--sdp-visor-x', '--sdp-visor-y'].map((propietat) => parseFloat(imatge(dialeg).style.getPropertyValue(propietat)));
+  const desplacament = (dialeg) => ['--visor-x', '--visor-y'].map((propietat) => parseFloat(imatge(dialeg).style.getPropertyValue(propietat)));
   const arrossega = (escenari, dx, dy) => {
     fireEvent.pointerDown(escenari, { pointerId: 7, pointerType: 'mouse', button: 0, clientX: 500, clientY: 350 });
     fireEvent.pointerMove(escenari, { pointerId: 7, pointerType: 'mouse', clientX: 500 + dx, clientY: 350 + dy });

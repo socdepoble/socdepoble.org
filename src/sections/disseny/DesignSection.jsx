@@ -14,7 +14,13 @@ import { CATALOG_CATEGORIES, CATALOG_ITEMS } from './cataleg/manifest';
 import { VERSIO_CATALEG } from './cataleg/versio.js';
 import { PAGE_COPY } from '../text/pageContent';
 import { sanitizeHtml } from '../../utils/sanitize.js';
-import { resolRecursosDeHtml } from '../../config/assetResolver.js';
+import { resolRecursosDeHtml, resolveAsset } from '../../config/assetResolver.js';
+import { CAP_SOCIAL_BASE } from '../../config/imatgeSocial.js';
+import { LIMIT_DESCRIPCIO, LIMIT_TITOL, metadadesDePagina, textPla } from '../../config/metadadesSocials.js';
+import { useSEO } from '../../hooks/useSEO';
+/* Ordre del Mestre (30-10-2026, prompt 2208; SEO-CRIT-02) · Del mòdul pur de
+   config/, no de TextSection.jsx: /disseny no carrega cap component de Text. */
+import { opcionsDeLaImatgeSocial } from '../../config/opcionsImatgeSocial.js';
 
 /* Família del catàleg on viu l'espècimen (la primera, si en té més d'una). */
 const etiquetaCategoria = (item) => (
@@ -58,8 +64,26 @@ const copyDeLaPortada = (pageCopy) => {
     : page;
 };
 
+/* Ordre del Mestre (30-10-2026, prompt 2208, T2.1; OG-GAP-01) · /disseny és
+   pública i indexable. El head de la portada és el que prerenderitza el build
+   (metadadesDePagina sobre el copy de la portada, la imatge pel selector social:
+   la WebP va al <head> per la variant JPEG de 1200x630); el d'un espècimen, el
+   seu títol i l'entradeta que pinta. La pàgina no canvia (Llei del Píxel). */
+function seoDelDetall(item, pageCopy) {
+  if (!item || item.id === '__intro') {
+    const metadades = metadadesDePagina(copyDeLaPortada(pageCopy), opcionsDeLaImatgeSocial());
+    return { title: metadades.title, description: metadades.description, image: metadades.image || resolveAsset(CAP_SOCIAL_BASE.image.url) };
+  }
+  return {
+    title: textPla(item.title, LIMIT_TITOL),
+    description: textPla(item.lead || entradillaEnCurs(etiquetaCategoria(item)), LIMIT_DESCRIPCIO)
+  };
+}
+
 function CatalogDetail({ item }) {
   const { pageCopy } = useCoreContent();
+  const seo = useMemo(() => seoDelDetall(item, pageCopy), [item, pageCopy]);
+  useSEO(seo);
   if (!item || item.id === '__intro') {
     const page = copyDeLaPortada(pageCopy);
     // T51 · la data real de la portada: la del seu copy (copyDeLaPortada).
@@ -167,7 +191,6 @@ export default function DesignSection() {
   return (
     <UniversalWorkspace
       collapsibleNavigation={false}
-      replegaTotaCapcalera
       sortable
       /* MD (ordre del Mestre, 261003) · En mòbil, primer DISSENY; amb
          ?item= a l'entrada, l'espècimen, tret que siga el que hi havia quan

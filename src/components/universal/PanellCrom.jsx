@@ -145,9 +145,9 @@ export function BotoCrom() {
 
   // Només el superadmin veu la roda, també en desenvolupament (ordre del
   // Mestre, 260924): en local cal una sessió superadmin. Neteja 261007 (prompt
-  // 261007_1628, peça D) · /consola ja no és el model: a `vite serve` s'obri
-  // sense sessió (consolaDemanaSessio, src/app/guards/guardaConsola.js), i
-  // només els builds la tanquen darrere del rol superadmin.
+  // 261007_1628, peça D) · /consola ja no és el model: des de l'ordre del
+  // Mestre del 30-10-2026 (T2.2) s'obri sense sessió en qualsevol entorn
+  // (App.jsx, ruta /consola/* sense guarda), i la roda continua de superadmin.
   if (rol !== 'superadmin') return null;
 
   return (

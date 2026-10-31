@@ -16,7 +16,10 @@
  *     calaix, i es queda en memòria. «Del poble» no l'espera. Les emoticones
  *     que este navegador no reconeix (utils/emoji · emojiSol: Safari 16 porta
  *     les dades d'Unicode 14) no es pinten: es veurien trencades, i la
- *     interfície no promet el que no fa.
+ *     interfície no promet el que no fa. P1-06 · Tampoc les que el tipus de
+ *     lletra no sap pintar (utils/emojiPintable.js). Cicle 4 (auditoria
+ *     matinal 261030_1224, MITJÀ-C9) · El mateix filtre per a «Del poble» i
+ *     les recents, i una secció que es queda buida no es pinta.
  *   · Cada llista és la de GraellaEmojis (LlistaEmojis): un sol botó al
  *     tabulador i les fletxes s'hi mouen. Triar crida onTria(glif, nom); qui
  *     munta el calaix decidix on va el text i el focus, i torna false si no
@@ -32,11 +35,11 @@
  *   id · t · onTria (glif, nom) => false si no l'ha posada · onTanca () · enfocaEnObrir · retenFocus · estret
  *   carregaCataleg () => Promise<{ GRUPS_EMOJIS }> (estable; per defecte, el del Bloc)
  */
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Apple, Car, Flag, Heart, Lightbulb, PawPrint, Smile, Tractor, Users, Volleyball } from 'lucide-react';
 import { Boto } from '../../../components/PedraSeca/index.js';
 import { LlistaEmojis } from '../../../components/universal/classificacio/GraellaEmojis.jsx';
-import { emojiSol } from '../../../utils/emoji.js';
+import { detectorDePintat, emojisPintables } from '../../../utils/emojiPintable.js';
 import { carregaCatalegEmojis } from '../../notes/canalEmojis.js';
 import { EMOTICONES_DEL_POBLE, llegixRecents, recordaRecent } from '../emoticonesXat.js';
 
@@ -79,9 +82,9 @@ function catalegDe(carrega) {
       .then(() => carrega())
       .then((modul) => {
         if (!Array.isArray(modul?.GRUPS_EMOJIS)) throw new Error('Catàleg sense GRUPS_EMOJIS');
-        return Object.freeze(modul.GRUPS_EMOJIS
-          .map((grup) => Object.freeze({ ...grup, emojis: (grup.emojis ?? CAP).filter(([, glif]) => emojiSol(glif)) }))
-          .filter((grup) => grup.emojis.length));
+        /* P1-06 · També fora el que el tipus de lletra no sap pintar (el
+           tofu, una seqüència partida): utils/emojiPintable.js. */
+        return Object.freeze(emojisPintables(modul.GRUPS_EMOJIS, { potPintar: detectorDePintat() }).map((grup) => Object.freeze(grup)));
       });
     promesa.catch(() => CATALEGS.delete(carrega));
     CATALEGS.set(carrega, promesa);
@@ -115,6 +118,15 @@ export default function SelectorEmoticones({
   const [cataleg, setCataleg] = useState({ estat: 'carregant', grups: null });
   const [intent, setIntent] = useState(0);
   const [recents] = useState(llegixRecents);
+  /* MITJÀ-C9 · «Del poble» i les recents, pel filtre del catàleg (P1-06):
+     sense les que este navegador no reconeix o no sap pintar, i sense les
+     seccions que es queden buides. Una vegada per obertura, com les recents:
+     les llistes no es tornen a pintar en canviar de pestanya. */
+  const seccionsDelPoble = useMemo(() => emojisPintables(EMOTICONES_DEL_POBLE, { potPintar: detectorDePintat() }), []);
+  const recentsPintables = useMemo(
+    () => emojisPintables([{ id: 'recents', emojis: recents }], { potPintar: detectorDePintat() })[0]?.emojis ?? CAP,
+    [recents]
+  );
   const barra = useRef(null);
   const panell = useRef(null);
 
@@ -178,8 +190,8 @@ export default function SelectorEmoticones({
   if (activa === POBLE) {
     contingut = (
       <>
-        {recents.length ? <Seccio titol={t('section.xat.emoticones.recents', 'Recents')} emojis={recents} onTria={triaEmoji} /> : null}
-        {EMOTICONES_DEL_POBLE.map((seccio) => (
+        {recentsPintables.length ? <Seccio titol={t('section.xat.emoticones.recents', 'Recents')} emojis={recentsPintables} onTria={triaEmoji} /> : null}
+        {seccionsDelPoble.map((seccio) => (
           <Seccio key={seccio.id} titol={t(SECCIONS[seccio.id], seccio.nom)} emojis={seccio.emojis} onTria={triaEmoji} />
         ))}
       </>

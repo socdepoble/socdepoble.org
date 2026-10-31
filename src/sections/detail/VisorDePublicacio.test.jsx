@@ -24,7 +24,7 @@ import React from 'react';
 import { act, cleanup, fireEvent, render, waitFor, within } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import '../../../tests/helpers/diccionaris.js';
-import { gpsTorre, jpegAmbExif, orientacio } from '../../components/universal/enquadrament/jpegProva.js';
+import { gpsTorre, jpegAmbExif, orientacio } from '../../../tests/helpers/jpegProva.js';
 
 const mocks = vi.hoisted(() => ({
   sectionId: 'mercat', itemId: null, navigate: vi.fn(), t: (_, alternativa) => alternativa,
@@ -323,6 +323,31 @@ describe('fora del visor, com abans', () => {
     expect(fila('Càmera').textContent).toBe('Desconegut');
     await act(async () => { await new Promise((resol) => { setTimeout(resol, 20); }); });
     expect(fetch).not.toHaveBeenCalled();
+  });
+
+  /* Ordre del Mestre (30-10-2026, prompt 2208, T4.2; QA-T3-UX-01) · Fora de
+     l'Arxiu, una foto sense enllaç públic (una pujada, sdp-media://) no porta
+     la fila «Enllaç de la imatge» ni «No té cap enllaç públic d’este lloc»;
+     una pública de /assets/, la URL i el botó, com sempre. */
+  test('fora de l’Arxiu: la portada pujada no porta cap fila d’enllaç; una pública de /assets/, la URL', async () => {
+    mocks.mitjans = true;
+    permetOrigenMitjans('https://lector-1.supabase.test');
+    const coca = { id: 'coca', title: 'Recepta de coca', image_url: 'sdp-media://mitjans/poble/u/general/f.webp', author: 'Pepa', created_at: '2026-09-01T10:00:00.000Z' };
+    const pujada = pinta(coca, 'mur');
+    await clica(await within(portada(pujada)).findByRole('button', { name: OBRI }));
+    act(() => within(visor()).getByRole('button', { name: 'Informació de la imatge' }).click());
+    const claus = () => [...panell().querySelectorAll('.sdp-visor__fila dt')].map((dt) => dt.textContent);
+    expect(claus()).toContain('Resolució');
+    expect(claus()).not.toContain('Enllaç de la imatge');
+    expect(panell().textContent).not.toContain('No té cap enllaç públic');
+    expect(within(panell()).queryByRole('button', { name: 'Copiar l’enllaç de la imatge' })).toBeNull();
+    cleanup();
+    mocks.mitjans = false;
+    const publica = pinta({ ...coca, image_url: '/assets/coca.png' }, 'mur');
+    await clica(within(portada(publica)).getByRole('button', { name: OBRI }));
+    act(() => within(visor()).getByRole('button', { name: 'Informació de la imatge' }).click());
+    expect(fila('Enllaç de la imatge').querySelector('[translate="no"]').textContent).toBe(`${window.location.origin}/assets/coca.png`);
+    expect(within(panell()).getByRole('button', { name: 'Copiar l’enllaç de la imatge' })).toBeTruthy();
   });
 
   test('un producte sense cap foto: cap portada ni cap botó', () => {

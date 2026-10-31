@@ -56,8 +56,17 @@ const CAMP_DE_DATA = Object.freeze({ pages: 'date', feedPosts: 'created_at', mar
  * seua data real (i aleshores les setmanes següents cauria davall de les
  * importants), n'hi ha prou a llevar esta fila i tornar el sostre de la prova
  * a nou.
+ *
+ * Ordre del Mestre (30-10-2026; candidatura NLnet NGI Fediversity) ·
+ * «Candidatura Europea NLnet · NGI Fediversity» es troba en el mateix cas: la
+ * seua data real (PAGE_COPY.fediversity, 30-10-2026) la posava damunt o enmig
+ * de les importants segons el dia. Entra com Descàrregues, la primera: és la
+ * publicació més recent. Amb ella en són onze. Pendent del Mestre, com la de
+ * Descàrregues: si l'ha de deixar amb la seua data real, n'hi ha prou a llevar
+ * esta fila i tornar el sostre de la prova a deu.
  */
 export const IMPORTANTS_DEL_MUR = Object.freeze([
+  ['pages', 'fediversity'],
   ['pages', 'descarregues'],
   ['pages', 'xat'],
   ['pages', 'projecte'],

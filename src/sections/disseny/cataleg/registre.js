@@ -196,6 +196,9 @@ REGISTRE.push({ nom: 'Rajola', fitxer: 'PedraSeca/molecules/Rajola.jsx', pagina:
 REGISTRE.push({ nom: 'TeclatNumeric', fitxer: 'PedraSeca/organismes/TeclatNumeric.jsx', pagina: 'formularis', estat: 'viu' });
 REGISTRE.push({ nom: 'LiniaDelTemps', fitxer: 'PedraSeca/organismes/LiniaDelTemps.jsx', pagina: 'fonaments', estat: 'viu' });
 REGISTRE.push({ nom: 'Histograma', fitxer: 'PedraSeca/organismes/Histograma.jsx', pagina: 'fonaments', estat: 'viu' });
+/* Ordre del Mestre (31-10-2026, 00:20, prompt 2208, T3.1) · el motlle de tauler compacte
+   (Telemetria, Consola, Gestoria i TPV o Botiga). Espècimen: EspecimenQuadreDeComandament. */
+REGISTRE.push({ nom: 'QuadreDeComandament', fitxer: 'PedraSeca/organismes/QuadreDeComandament.jsx', pagina: 'fonaments', estat: 'viu' });
 /* Ordre del Mestre (261002, sinergies T4/T8) · l'ESQUELET COMÚ de catàleg i col·lecció: un sol
    esquelet visual per al TPV del bar («La Parròquia») i La Compra («La Nevera de Casa»).
    Espècimens: EspecimenArticles, EspecimenSeccionsCategoria, EspecimenColleccio,

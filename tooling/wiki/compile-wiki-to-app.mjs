@@ -51,6 +51,12 @@ function resolIdentitat(targetOrPath) {
   return baseNoExt;
 }
 
+/* Decisió del Mestre (31-10-2026) · El manifest és públic i no porta cap camí
+   de l'ordinador on es treballa (/Users/<usuari> passa a ~): ho fa
+   readPublicWikiFile (publication-policy.mjs · emmascaraCamins), la porta de
+   lectura que compartix amb el RAG i els slugs. Cos, títol, subtítol,
+   etiquetes i atributs ixen d'eixe text ja emmascarat. */
+
 // Convert [[Target]] or [[Target|Alias]] to [Alias o Target](#Target)
 // Però per a UniversalWorkspace preferim [Alias](?item=Target)
 function processWikiLinks(text) {

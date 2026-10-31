@@ -17,15 +17,26 @@ const llig = (ruta) => readFileSync(resolve(process.cwd(), ruta), 'utf8');
 const senseComentaris = (css) => css.replace(/\/\*[\s\S]*?\*\//g, '');
 const net = (text) => text.replace(/\s+/g, ' ').trim();
 
+/* tractor-vocabulari (261030) · El full de catàleg és ara el bloc
+   catalegColleccio de modules.css, entre les seues marques: es llig el bloc,
+   no el full sencer, i les guardes miren les mateixes regles que abans. */
+const BLOC_CATALEG = 'src/css/modules.css · bloc catalegColleccio';
+const lligBloc = (nom) => {
+  const tot = llig('src/css/modules.css');
+  const inici = tot.indexOf(`/* ═══ BLOC ${nom} · `);
+  const fi = tot.indexOf(`/* ═══ FI DEL BLOC ${nom} ═══ */`);
+  if (inici < 0 || fi < inici) throw new Error(`modules.css no té el bloc ${nom}`);
+  return tot.slice(inici, fi);
+};
 const RUTES = [
   'src/css/layout.css',
   'src/components/layout/AppGridShell.css',
   'src/css/sdp.css',
   'src/css/utilities.css',
   'src/sections/profile/PerfilShell.css',
-  'src/components/PedraSeca/catalegColleccio.css'
+  BLOC_CATALEG
 ];
-const CSS = Object.fromEntries(RUTES.map((ruta) => [ruta, senseComentaris(llig(ruta))]));
+const CSS = Object.fromEntries(RUTES.map((ruta) => [ruta, senseComentaris(ruta === BLOC_CATALEG ? lligBloc('catalegColleccio') : llig(ruta))]));
 const LAYOUT = CSS['src/css/layout.css'];
 const GRAELLA = CSS['src/components/layout/AppGridShell.css'];
 /* base.css (mateixa capa `legacy`, abans que layout.css) porta l'anell de
@@ -214,9 +225,12 @@ const usats = (css) => [...senseComentaris(css).matchAll(/var\(\s*(--sdp-[\w-]+)
 const fantasmes = (css) => [...new Set(usats(css).filter((n) => !CONTRACTE.includes(n) && !DECLARATS.has(n)))];
 
 /* ── Còpies literals de regles d'abans del torn (els defectes que es corregixen) ── */
+// Decisió del Mestre (30-10-2026) · Els fantasmes es componen: tractor-tokens (T1) llig src sencer.
+const FONS_INVERS_FANTASMA = ['var(', '--sdp-fons-invers', ')'].join('');
+const CROM_BUIT_FANTASMA = ['var(', '--sdp-crom-buit', ')'].join('');
 const BARRA_ABANS = `
   .mobile-nav :focus-visible { outline-color: var(--sdp-accent-text); }
-  :where(.sdp-root.is-compact) nav.mobile-nav { background: var(--sdp-fons-invers); -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px); border-top: 1px solid var(--sdp-crom-buit); }
+  :where(.sdp-root.is-compact) nav.mobile-nav { background: ${FONS_INVERS_FANTASMA}; -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px); border-top: 1px solid ${CROM_BUIT_FANTASMA}; }
   :where(.sdp-root.is-compact) .mobile-nav .nav-item { background: none; color: var(--sdp-text-invers); opacity: 0.78; }
   :where(.sdp-root.is-compact) .mobile-nav .nav-item:hover { opacity: 1; color: var(--sdp-accent); background: var(--sdp-crom-hover); }
   :where(.sdp-root.is-compact) .mobile-nav .nav-item.active { opacity: 1; color: var(--sdp-accent); background: var(--sdp-accent-vel); }

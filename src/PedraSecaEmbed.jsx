@@ -120,6 +120,7 @@ import { ORIGENS_BACKEND } from './config/origensSollutia.js';
 import { CONTRACTE_AMFITRIO_V1, tapaRuta } from './config/contracteAmfitrio.js';
 import { CAPA_DE_COMPILACIO, avisaClausDescartades, capaDelPaquet, nomesDeLAmfitrio, separaClausDelPaquet } from './config/capaDelPaquet.js';
 import { llistaApps, subscriu as subscriuApps } from './apps/plataforma/registreApps.js';
+import { sanejaDestinsDeclarats } from './data/traductor.js';
 
 /* ─────────────── Clàusula dels slugs: la ruta a la URL de l'amfitrió ─────────────── */
 
@@ -493,6 +494,9 @@ export const ATRIBUTS = Object.freeze({
   'poble': 'poble',
   'ruta-inicial': 'rutaInicial',
   'traductor-url': 'traductorUrl',
+  /* TC3.1 (Gauntlet 261030, Fase 3) · Opt-in: els destins que servix el
+     traductor-url (la instància pròpia de WordPress, marcatge.php). */
+  'traductor-llengues': 'traductorLlengues',
   'ruta-a-url': 'rutaAUrl'
 });
 
@@ -500,7 +504,7 @@ export const CLAUS_PERMESES = Object.freeze(new Set([
   'basePath','supabaseUrl','supabaseAnonKey','dataMode','botApiUrl',
   'fontsHref','pluginUrl','routerType','basename','tenantId','language','themeMode',
   'manageDocumentHead', 'version', 'oauthRelayUrl', 'sollutiaIssuer', 'backendId',
-  'nomPoble', 'poble', 'rutaInicial', 'traductorUrl', 'apps', 'rutaAUrl', 'snippetChromeUrl'
+  'nomPoble', 'poble', 'rutaInicial', 'traductorUrl', 'traductorLlengues', 'apps', 'rutaAUrl', 'snippetChromeUrl'
 ]));
 
 /* Els serveis propis de Sóc de Poble que no són del Model B: oauthRelayUrl,
@@ -559,6 +563,9 @@ const SANEJADORS_TIPATS = Object.freeze({
       return url.href;
     } catch { return undefined; }
   },
+  /* TC3.1 · Només codis exactes del catàleg del traductor (data/traductor.js);
+     sense cap de vàlid, fora, i el client es comporta com abans. */
+  traductorLlengues: sanejaDestinsDeclarats,
   nomPoble: sanejaEtiqueta,
   poble: sanejaIdentificador,
   rutaInicial: sanejaRuta,

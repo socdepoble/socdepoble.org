@@ -24,10 +24,10 @@
  * un valor ja resolt (AvatarResolt, RealitatSection) passa intacte.
  *
  * Onada 6 (tasca 12) · `enquadrament`, variant ADDITIVA: un dels noms de
- * ENQUADRAMENTS_AVATAR. Amb imatge, el cercle talla i la imatge s'amplia i es
- * desplaça fins al tros que diu el nom (modules.css, .sdp-avatar--enquadrat-*):
- * la cara d'una il·lustració sense cap fitxer nou. Sense la prop, o amb un nom
- * que no és de la llista, l'Avatar de sempre.
+ * ENQUADRAMENTS_AVATAR (enquadramentsAvatar.js). Amb imatge, el cercle talla i
+ * la imatge s'amplia i es desplaça fins al tros que diu el nom (modules.css,
+ * .sdp-avatar--enquadrat-*): la cara d'una il·lustració sense cap fitxer nou.
+ * Sense la prop, o amb un nom que no és de la llista, l'Avatar de sempre.
  *
  * XAT-02 (ordre del Mestre, 261014, pla 261014_0210) · Una referència opaca
  * del port de mitjans ('sdp-media://…', esMitjaOpac) és una font absent: el
@@ -39,11 +39,10 @@
 import { esFontImatgeSegura } from '../../../utils/sanitize.js';
 import { esMitjaOpac } from '../../../utils/mitjaOpac.js';
 import { resolRecursPropi } from '../../../config/assetResolver.js';
+import { ENQUADRAMENTS_AVATAR } from './enquadramentsAvatar.js';
 
 const MIDES = ['xs', 'sm', 'md', 'lg', 'xl'];
 const TONS = 6;
-/** Els enquadraments que té el full d'estils: 'iaia', la cara de la IAIA a «Festa del Poble». */
-export const ENQUADRAMENTS_AVATAR = Object.freeze(['iaia']);
 
 /** Enter d'1 a 6 derivat de la llavor; sense llavor, cap to (classe base). */
 export function toDeLlavor(llavor) {

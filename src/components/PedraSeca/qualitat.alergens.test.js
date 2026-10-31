@@ -41,7 +41,17 @@ const llig = (ruta) => readFileSync(path.join(ARREL, ruta), 'utf8');
 const t = (...trossos) => trossos.join('');
 const PS = 'src/components/PedraSeca';
 const CAT = 'src/sections/disseny/cataleg';
-const CSS = `${PS}/alergens.css`;
+/* tractor-vocabulari (ordre del Mestre, 261030) · El full ja no viu al costat de
+   la peça: és el bloc alergens de src/css/modules.css, entre les seues marques. */
+const MODULS = 'src/css/modules.css';
+const CSS_ANTIC = `${PS}/alergens.css`;
+const blocDeModuls = (nom) => {
+  const tot = llig(MODULS);
+  const inici = tot.indexOf(`/* ═══ BLOC ${nom} · `);
+  const fi = tot.indexOf(`/* ═══ FI DEL BLOC ${nom} ═══ */`);
+  if (inici < 0 || fi < inici) throw new Error(`${MODULS} no té el bloc ${nom}`);
+  return tot.slice(inici, fi);
+};
 
 const NOM = 'IconesAlergens';
 const COMPONENT = `${PS}/molecules/IconesAlergens.jsx`;
@@ -75,8 +85,9 @@ const FORA_DE_L_ENCARREC = ['1-0-PORCION', '1-2-PORCION', 'CASTELLANO', 'INGLES'
 const senseComentaris = (css) => css.replace(/\/\*[\s\S]*?\*\//g, '');
 const classesDelCss = (css) => new Set([...senseComentaris(css).matchAll(/\.(-?[_a-zA-Z][\w-]*)/g)].map((m) => m[1]));
 const CSS_SRC = readdirSync(path.join(ARREL, 'src/css')).filter((f) => f.endsWith('.css')).map((f) => llig(`src/css/${f}`)).join('\n');
-const CSS_CANONIC = [CSS_SRC, llig(`${PS}/pecesApps.css`), llig(`${PS}/catalegColleccio.css`)].join('\n');
-const FULL = llig(CSS);
+/* Els fulls canònics: src/css, que ja porta els blocs germans de modules.css. */
+const CSS_CANONIC = CSS_SRC;
+const FULL = blocDeModuls('alergens');
 const FULL_NET = senseComentaris(FULL);
 const TOKENS_DEFINITS = new Set([...CSS_SRC.matchAll(/(--sdp-[\w-]+)\s*:/g)].map((m) => m[1]));
 
@@ -338,12 +349,21 @@ describe('Pedra Seca · alergens.css', () => {
     expect(valorDe(cosDe('.sdp-alergens--mitjana .sdp-alergens__resta'), 'block-size')).toBe('2rem');
   });
 
-  test('la capçalera prescriu l’@import SENSE layer() i index.css l’importa una sola vegada, davant de tpv.css', () => {
-    expect(FULL).toContain("@import url('../components/PedraSeca/alergens.css');");
-    const index = senseComentaris(llig('src/css/index.css'));
-    expect([...index.matchAll(/@import[^;]*alergens\.css[^;]*;/g)].map((m) => m[0])).toEqual(["@import url('../components/PedraSeca/alergens.css');"]);
-    expect(index.indexOf('alergens.css')).toBeGreaterThan(index.indexOf('catalegColleccio.css'));
-    expect(index.indexOf('alergens.css')).toBeLessThan(index.indexOf('tpv.css'));
+  /* tractor-vocabulari (261030) · El bloc viu una sola vegada a modules.css, en
+     l'ordre que tenia l'@import: darrere de catalegColleccio i davant de tpv,
+     que hi posa la cantonada de la rajola. */
+  test('viu a modules.css: un sol bloc, darrere de catalegColleccio i davant de tpv, i ni fitxer ni @import del full antic', () => {
+    const moduls = llig(MODULS);
+    const posicio = (marca) => {
+      const i = moduls.indexOf(marca);
+      expect(i, marca).toBeGreaterThan(-1);
+      return i;
+    };
+    expect(moduls.split('/* ═══ BLOC alergens · ')).toHaveLength(2);
+    expect(posicio('/* ═══ BLOC alergens · ')).toBeGreaterThan(posicio('/* ═══ FI DEL BLOC catalegColleccio ═══ */'));
+    expect(posicio('/* ═══ FI DEL BLOC alergens ═══ */')).toBeLessThan(posicio('/* ═══ BLOC tpv · '));
+    expect(existsSync(path.join(ARREL, CSS_ANTIC))).toBe(false);
+    expect(senseComentaris(llig('src/css/index.css'))).not.toMatch(/alergens\.css/);
   });
 });
 
@@ -506,8 +526,8 @@ describe('dades sintètiques', () => {
       [/\bES\d{2}[\s]?\d{4}/, 'IBAN'],
       [new RegExp(['ht', 'tps?:', '\\/\\/'].join('')), 'URL']
     ];
-    const fitxers = [...JSX, REGISTRE_ICONES, ...PROVES, CSS];
-    const trobats = fitxers.flatMap((f) => vetats.filter(([patro]) => patro.test(llig(f))).map(([, que]) => `${f}: ${que}`));
+    const textos = [...[...JSX, REGISTRE_ICONES, ...PROVES].map((f) => [f, llig(f)]), [`${MODULS} · bloc alergens`, FULL]];
+    const trobats = textos.flatMap(([f, text]) => vetats.filter(([patro]) => patro.test(text)).map(([, que]) => `${f}: ${que}`));
     expect(trobats).toEqual([]);
   });
 
@@ -517,7 +537,9 @@ describe('dades sintètiques', () => {
     const car = (cp) => String.fromCodePoint(cp);
     const re = new RegExp(`[${rangs.map(([a, b]) => (a === b ? car(a) : `${car(a)}-${car(b)}`)).join('')}]`, 'u');
     const copies = IDS_ALERGENS.map((id) => `${COPIES}/${id}.svg`);
-    for (const fitxer of [...TOTS, CSS, ...copies]) expect(re.test(llig(fitxer)), fitxer).toBe(false);
+    for (const [fitxer, text] of [...[...TOTS, ...copies].map((f) => [f, llig(f)]), [`${MODULS} · bloc alergens`, FULL]]) {
+      expect(re.test(text), fitxer).toBe(false);
+    }
   });
 });
 

@@ -248,12 +248,18 @@ test('P6 · a 375 sense el mestre-detall, estret és com abans: cap rail, la lli
    cap mida xicoteta, i en estret el Snippet es quedava sense cap barra. Ara
    en estret porta el rail de la closca; en mitjà, com abans (la llista es
    veu i la seua capçalera obri la navegació). */
-test('P6 · el mode compacte (Snippet Curador) no porta desplegador nou en mitjà; en estret, el rail de la closca (Barres)', () => {
+test('P6 · el mode compacte (Snippet Curador) a 820 és «ample» (columnes fixes, 30-10-2026), sense desplegador nou; en estret, el rail de la closca (Barres)', () => {
   entorn(820, () => {
     const { container } = munta({ compacte: true, mestreDetall: false });
+    expect(closca(container).dataset.layout).toBe('ample');
     expect(closca(container).hasAttribute('data-llista')).toBe(false);
     expect(rail(container)).toBeNull();
-    expect(container.querySelector('[aria-controls="app-grid-list"]')).toBeNull();
+    /* Corrector del Gauntlet (30-10-2026) · El [|<] declara la columna que
+       plega (aria-controls, a totes les pàgines), però cap botó no n'és
+       l'obridor de panell (data-obri-columna). */
+    expect(container.querySelector('[data-obri-columna][aria-controls="app-grid-list"]')).toBeNull();
+    /* En compacte la llista arrenca plegada: el seu Expandir. */
+    expect(enLlista(container, 'Expandir NOTES').getAttribute('aria-controls')).toBe('app-grid-list');
     cleanup();
   });
   entorn(480, () => {
@@ -287,61 +293,60 @@ test('Barres · a 480 en mode compacte, l’obridor de la capçalera de la llist
   });
 });
 
-/* ═══ Mitjà (820): tauleta, mòbil apaïsat, encastat estret, 1024 ═══════ */
+/* ═══ 820: tauleta, mòbil apaïsat, encastat estret, 1024 ════════════════
+   Columnes fixes (ordre del Mestre, 30-10-2026 ~12:45) · Abans, «mitja»:
+   la llista plegada era un rail de «mitja» amb el menú (la carpeta) i la
+   navegació, un panell per damunt. Ara la closca del Workspace és «ample»
+   per damunt d'«estret»: les tres columnes a la graella i el plegat de
+   sempre. */
 
-test('P6 · a 820 en repòs la llista és la d’abans, i el Replegar (abans mort) la plega en rail i torna, amb el focus', () => {
+test('P6 · a 820 (columnes fixes) el Replegar de la llista la plega en el rail d’«ample» i torna, amb el focus; cap carpeta duplicada al rail', () => {
   entorn(820, ({ buida }) => {
     const { container } = munta();
-    expect([closca(container).dataset.layout, panell(container)]).toEqual(['mitja', '']);
+    expect([closca(container).dataset.layout, panell(container)]).toEqual(['ample', '']);
     expect(closca(container).hasAttribute('data-llista')).toBe(false);
     expect(llista(container).querySelector('.sdp-gestor-fitxa')).not.toBeNull();
     expect(container.querySelector('.app-grid-resizer--middle')).not.toBeNull();
 
     const replegar = enLlista(container, 'Replegar NOTES');
-    expect(replegar.getAttribute('aria-expanded')).toBe('true');
-    expect(replegar.getAttribute('aria-controls')).toBe('app-grid-list');
+    /* El Replegar d'«ample»: no és l'obridor d'un panell (data-obri-columna),
+       però declara la columna que plega (corrector del Gauntlet, 30-10-2026). */
+    expect([replegar.getAttribute('aria-expanded'), replegar.getAttribute('aria-controls'), replegar.hasAttribute('data-obri-columna')])
+      .toEqual(['true', 'app-grid-list', false]);
     replegar.focus();
     fireEvent.click(replegar);
-    expect([closca(container).dataset.layout, closca(container).dataset.llista]).toEqual(['mitja', 'rail']);
+    expect([closca(container).dataset.layout, closca(container).hasAttribute('data-llista')]).toEqual(['ample', false]);
+    expect(container.querySelector('.has-middle-collapsed')).not.toBeNull();
     expect(container.querySelector('.app-grid-resizer--middle')).toBeNull();
-    /* En mitjà la columna mateixa és el rail: cap #app-grid-rail. */
     expect(rail(container)).toBeNull();
     expect(tancada(llista(container))).toEqual([false, null]);
     expect(tancada(detallCol(container))).toEqual([false, null]);
     buida();
     const expandir = enLlista(container, 'Expandir NOTES');
     expect(document.activeElement).toBe(expandir);
-    expect(expandir.getAttribute('aria-expanded')).toBe('false');
-    expect(expandir.getAttribute('aria-controls')).toBe('app-grid-list');
-    /* El menú també és al rail: la primera columna estreta. */
-    expect(enLlista(container, 'CARPETES').getAttribute('aria-controls')).toBe('app-grid-sidebar');
+    /* La navegació és al costat: el rail no hi porta cap carpeta. */
+    expect(potsEnLlista(container, 'CARPETES')).toBeNull();
     expect(llista(container).querySelector('.sdp-gestor-fitxa')).toBeNull();
 
     fireEvent.click(expandir);
-    expect(closca(container).hasAttribute('data-llista')).toBe(false);
+    expect(container.querySelector('.has-middle-collapsed')).toBeNull();
+    expect(container.querySelector('.app-grid-resizer--middle')).not.toBeNull();
     buida();
-    expect(document.activeElement).toBe(enLlista(container, 'Replegar NOTES'));
+    /* Ordre d'usabilitat (30-10-2026) · El focus torna a la icona de
+       l'esquerra, l'equivalent de l'Expandir del rail. */
+    expect(document.activeElement).toBe(enLlista(container, 'Plegar la columna NOTES'));
   });
 });
 
-test('P6 · a 820 el menú obri la navegació al primer toc, cada vegada, i no toca el rail d’«ample»', () => {
+test('P6 · a 820 (columnes fixes) la navegació és la columna del costat: cap menú a la llista ni panell, i triar una carpeta la deixa a la graella', () => {
   entorn(820, ({ redimensiona }) => {
     const { container } = munta({ mestreDetall: false });
-    for (let volta = 0; volta < 3; volta += 1) {
-      const menu = enLlista(container, 'CARPETES');
-      expect(menu.hasAttribute('data-obri-columna')).toBe(true);
-      expect(menu.getAttribute('aria-controls')).toBe('app-grid-sidebar');
-      expect(menu.getAttribute('aria-expanded')).toBe('false');
-      menu.focus();
-      fireEvent.click(menu);
-      expect(panell(container), `toc ${volta + 1}`).toBe('left');
-      /* La primera vegada no hi ha carpeta activa («Tot»): el primer control
-         del panell, el títol de la columna, i mai el del Dialeg tancat de la
-         roda. Després, la carpeta triada. */
-      expect(document.activeElement).toBe(carpeta(container, volta === 0 ? 'CARPETES' : 'Mercat'));
-      expect(document.activeElement.closest('dialog')).toBeNull();
-      fireEvent.click(carpeta(container, 'Mercat'));
-      expect(panell(container)).toBe('');
+    expect(potsEnLlista(container, 'CARPETES')).toBeNull();
+    for (const nom of ['Mercat', 'Mur']) {
+      fireEvent.click(carpeta(container, nom));
+      expect([nom, panell(container), closca(container).dataset.layout]).toEqual([nom, '', 'ample']);
+      expect(tancada(navegacio(container))).toEqual([false, null]);
+      expect(carpeta(container, nom).getAttribute('aria-current')).toBe('page');
     }
     redimensiona(1400);
     expect(closca(container).dataset.layout).toBe('ample');
@@ -349,33 +354,39 @@ test('P6 · a 820 el menú obri la navegació al primer toc, cada vegada, i no t
   });
 });
 
-test('P6 · la llista plegada en mitjà és la mateixa decisió que el rail d’«ample»: tornar a ample la troba plegada, i a l’inrevés', () => {
+test('P6 · la llista plegada a 820 és el rail d’«ample»: a 1400 la troba plegada, i de tornada també', () => {
   entorn(820, ({ redimensiona }) => {
     const { container } = munta();
     fireEvent.click(enLlista(container, 'Replegar NOTES'));
-    expect(closca(container).dataset.llista).toBe('rail');
+    expect(container.querySelector('.has-middle-collapsed')).not.toBeNull();
     redimensiona(1400);
     expect(closca(container).dataset.layout).toBe('ample');
     expect(container.querySelector('.has-middle-collapsed')).not.toBeNull();
-    /* En «ample», el desplegador és el de sempre: sense atributs nous. */
-    expect(enLlista(container, 'Expandir NOTES').hasAttribute('aria-controls')).toBe(false);
+    /* En «ample», el desplegador és el de sempre: no obri cap panell
+       (data-obri-columna), i declara la columna (corrector del Gauntlet). */
+    const expandir = enLlista(container, 'Expandir NOTES');
+    expect([expandir.getAttribute('aria-expanded'), expandir.getAttribute('aria-controls'), expandir.hasAttribute('data-obri-columna')])
+      .toEqual(['false', 'app-grid-list', false]);
     expect(potsEnLlista(container, 'CARPETES')).toBeNull();
     redimensiona(820);
-    expect(closca(container).dataset.llista).toBe('rail');
+    expect([closca(container).dataset.layout, closca(container).hasAttribute('data-llista')]).toEqual(['ample', false]);
+    expect(container.querySelector('.has-middle-collapsed')).not.toBeNull();
   });
 });
 
 /* ═══ Ample (1400): res no canvia ════════════════════════════════════ */
 
-test('P6 · a 1400 el Replegar és el d’abans (cap atribut nou, la classe de sempre) i no hi ha data-llista', () => {
+test('P6 · a 1400 el Replegar és el d’«ample» (declara la columna, cap obridor de panell, la classe de sempre) i no hi ha data-llista', () => {
   entorn(1400, () => {
     const { container } = munta();
     expect(closca(container).dataset.layout).toBe('ample');
     expect(closca(container).hasAttribute('data-llista')).toBe(false);
     expect(rail(container)).toBeNull();
     const replegar = enLlista(container, 'Replegar NOTES');
-    expect(replegar.hasAttribute('aria-expanded')).toBe(false);
-    expect(replegar.hasAttribute('aria-controls')).toBe(false);
+    /* Corrector del Gauntlet (30-10-2026) · Declara la columna que plega, com
+       a /disseny: abans /notes no en deia l'estat. Cap obridor de panell. */
+    expect([replegar.getAttribute('aria-expanded'), replegar.getAttribute('aria-controls'), replegar.hasAttribute('data-obri-columna')])
+      .toEqual(['true', 'app-grid-list', false]);
     expect(replegar.classList.contains('d-desktop-only')).toBe(true);
     /* Ni obridor del menú a la llista: la navegació és una columna. */
     expect(potsEnLlista(container, 'CARPETES')).toBeNull();

@@ -23,7 +23,7 @@
   .sdp-wiki-workspace .sdp-diagrama-card {
     margin: 20px 0;
     border: 1px solid var(--sdp-vora);
-    border-radius: var(--sdp-radi-m, 12px);
+    border-radius: var(--sdp-radi-m);
     background: var(--sdp-fons-targeta);
     overflow: hidden;
   }
@@ -54,7 +54,7 @@
     background: transparent;
     padding: 0;
     font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-    color: var(--sdp-accio-text, var(--sdp-text-cos));
+    color: var(--sdp-accio-text);
     white-space: pre;
   }
 

@@ -69,7 +69,8 @@ test('T42 · l’iframe pren la resta, sense alçada fixa en vh ni token inventa
   expect(iframe).toContain('min-height: 10rem;');
   expect(iframe).toContain('background: var(--sdp-fons-app);');
   expect(iframe).not.toMatch(/height: \d+vh/);
-  expect(iframe).not.toContain('var(--sdp-fons)');
+  // Decisió del Mestre (30-10-2026) · El fantasma es compon: tractor-tokens (T1) llig src sencer.
+  expect(iframe).not.toContain(['var(', '--sdp-fons', ')'].join(''));
 });
 
 test('T42 · les regles velles ja no hi són i cap altre full toca la vista prèvia', () => {

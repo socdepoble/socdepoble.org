@@ -358,6 +358,26 @@ describe('cercaXat', () => {
     expect(marcat(parts)).toEqual(['Tomaca']);
   });
 
+  /* IDEA-53 (pla 261029_1605, Bloc B) · L'extracte es mostra sense les
+     marques de la negreta; la coincidència continua sobre el text cru. */
+  test('la negreta: es troba igual i l’extracte no porta les marques', () => {
+    const fils = [fil('f-festa', { name: 'Festes', ultimText: '**Festa** major', ultimAl: '2026-09-28T09:00:00.000Z' })];
+    const missatges = { 'f-festa': [msg('n1', { text: '*Festa* major, i 2 * 3 = 6' })] };
+    const resultat = cercaXat({ terme: 'festa', fils, missatgesPerFil: missatges });
+    expect(resultat.missatges[0].parts).toEqual([{ text: 'Festa', marca: true }, { text: ' major, i 2 * 3 = 6', marca: false }]);
+    expect(resultat.converses[0].partsUltim).toEqual([{ text: 'Festa', marca: true }, { text: ' major', marca: false }]);
+  });
+
+  /* Gauntlet del Bloc B (QA-B03) · L'extracte conserva sencera una adreça
+     amb asteriscs: només es lleven les marques de fora. */
+  test('QA-B03 · l’extracte conserva sencera l’adreça amb asteriscs', () => {
+    const fils = [fil('f-festa', { name: 'Festes', ultimText: '**Festa** a https://example.test/?q=*x*', ultimAl: '2026-09-28T09:00:00.000Z' })];
+    const missatges = { 'f-festa': [msg('n1', { text: 'Festa: https://example.test/?q=*x*' })] };
+    const resultat = cercaXat({ terme: 'festa', fils, missatgesPerFil: missatges });
+    expect(resultat.missatges[0].parts).toEqual([{ text: 'Festa', marca: true }, { text: ': https://example.test/?q=*x*', marca: false }]);
+    expect(resultat.converses[0].partsUltim).toEqual([{ text: 'Festa', marca: true }, { text: ' a https://example.test/?q=*x*', marca: false }]);
+  });
+
   test('no muta les entrades', () => {
     const fils = [fil('z', { name: 'Zeta', ultimAl: '2026-09-01T00:00:00Z' }), fil('y', { name: 'Zeta', ultimAl: '2026-09-02T00:00:00Z' })];
     const copia = JSON.parse(JSON.stringify(fils));

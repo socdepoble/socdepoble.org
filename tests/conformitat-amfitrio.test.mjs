@@ -165,9 +165,14 @@ function wp_enqueue_style( ...$a ) {} function wp_enqueue_script( ...$a ) {}
 function wp_register_style( ...$a ) {} function wp_add_inline_style( ...$a ) {}
 function wp_register_script( ...$a ) { $GLOBALS['script'] = $a; }
 function wp_add_inline_script( $h, $codi, $posicio = 'after' ) { $GLOBALS['inline'][] = array( 'codi' => $codi, 'posicio' => $posicio ); }
-function socdepoble_enxufe_deepl_clau() { return $GLOBALS['cas']['deepl'] ?? ''; }
+/* TC3.1 (261030) · traduccio.php de veritat: marcatge.php hi demana els destins
+   (traductor-llengues). La clau de DeepL i la URL lliure entren com a WordPress. */
+function wp_parse_url( $v ) { return parse_url( $v ); }
+putenv( 'DEEPL_API_KEY=' . ( $cas['deepl'] ?? '' ) );
+foreach ( $cas['constants'] ?? array() as $k => $v ) { define( $k, $v ); }
 require $argv[1] . '/wordpress-plugin/includes/manifest.php';
 require $argv[1] . '/wordpress-plugin/includes/marcatge.php';
+require $argv[1] . '/wordpress-plugin/includes/traduccio.php';
 if ( isset( $cas['rutes'] ) ) {
 	echo json_encode( array_map( 'socdepoble_enxufe_ruta', $cas['rutes'] ), JSON_THROW_ON_ERROR );
 	exit;
@@ -353,6 +358,26 @@ describe('WordPress (marcatge.php real, PHP local)', () => {
     assert.deepEqual(decl.global, { nomPoble: 'Gent de la Torre', poble: 'la-torre-de-les-macanes' });
     // Onada 5: la instància pròpia porta les URL copiables (#sdp=/ruta).
     assert.equal(decl.elements[0].atributs['ruta-a-url'], 'fragment');
+    /* IDEA-31 (QA-R2-13): sense clau de DeepL també hi ha servei de
+       traducció (Apertium), i la instància pròpia en porta l'URL. */
+    assert.equal(decl.elements[0].atributs['traductor-url'], 'https://amfitrio.test/wp-json/socdepoble/v1/traduir');
+    // La referència per a copiar en un altre amfitrió continua sense el servei local.
+    assert.equal(declaracioDe(eixida.referencia).elements[0].atributs['traductor-url'], undefined);
+    /* TC3.1 (261030) · Sense DeepL ni SDP_TRADUCCIO_URL, el servei declara els
+       destins d'Apertium: el client no hi demana EU ni DE (cap 503). */
+    assert.equal(decl.elements[0].atributs['traductor-llengues'], 'ES GL EN-GB FR');
+    assert.equal(declaracioDe(eixida.referencia).elements[0].atributs['traductor-llengues'], undefined);
+  });
+
+  test('TC3.1 · traductor-llengues segons el servidor: DeepL els sis, SDP_TRADUCCIO_URL afig EU i DE; conforme', ambPhp, (t) => {
+    const destinsDe = (cas) => {
+      const decl = declaracioDe(paginaDeWordpress(wordpress(cas, t)));
+      bateria(decl, 'WordPress', { optIn: C.atributsOptIn });
+      return decl.elements[0].atributs['traductor-llengues'];
+    };
+    assert.equal(destinsDe({ deepl: 'clau-sintetica-de-prova' }), 'ES GL EU EN-GB FR DE');
+    assert.equal(destinsDe({ constants: { SDP_TRADUCCIO_URL: 'https://lliure.example/translate' } }), 'ES GL EU EN-GB FR DE');
+    assert.equal(destinsDe({ constants: { SDP_TRADUCCIO_URL: 'http://lliure.example/translate' } }), 'ES GL EN-GB FR');
   });
 
   test('ajustos i instància (nom, poble i ruta) i el servei de traducció: conforme', ambPhp, (t) => {
@@ -367,6 +392,7 @@ describe('WordPress (marcatge.php real, PHP local)', () => {
       'fonts-href': 'https://amfitrio.test/wp-content/plugins/socdepoble-enxufe/dist/fonts/noto-sans.css',
       'plugin-url': 'https://amfitrio.test/wp-content/plugins/socdepoble-enxufe/dist/',
       'traductor-url': 'https://amfitrio.test/wp-json/socdepoble/v1/traduir',
+      'traductor-llengues': 'ES GL EU EN-GB FR DE',
       'nom-poble': 'Penàguila',
       poble: 'penaguila',
       'ruta-inicial': '/pobles/penaguila?vista=mapa',

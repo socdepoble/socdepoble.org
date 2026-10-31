@@ -15,7 +15,7 @@ import { act, cleanup, renderHook, waitFor } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import { MAX_BYTES_EXIF, llegixExif } from '../../components/universal/enquadrament/exif.js';
 import { extreuTiff, incrustaEnWebp } from '../../components/universal/enquadrament/exifIncrustat.js';
-import { TIPUS, concatena, jpegAmbExif, tiff } from '../../components/universal/enquadrament/jpegProva.js';
+import { TIPUS, concatena, jpegAmbExif, tiff } from '../../../tests/helpers/jpegProva.js';
 import { MAX_PETICIONS_WEBP, llegixExifRemot, oblidaMetadades, useMetadadesFoto } from './useMetadadesFoto.js';
 
 const ascii = (s) => Uint8Array.from(s, (c) => c.charCodeAt(0));

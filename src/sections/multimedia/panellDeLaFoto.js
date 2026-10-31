@@ -28,6 +28,20 @@
  *   · Origen · il·lustració d'IA, fotografia o recurs del sistema.
  *   · Publicat a · l'article on s'usa la foto, amb el seu enllaç; sense, que
  *     és de l'arxiu.
+ *   · Enllaç de la imatge · Ordre del Mestre (30-10-2026, B3) · la URL
+ *     completa del fitxer (el src resolt), que el visor pinta amb el botó
+ *     «Copiar l’enllaç de la imatge» (VisorDeLArxiu.jsx). La fila porta
+ *     `enllac` (la URL) només quan n'hi ha una de pública: vegeu
+ *     enllacPublicDe. Sense, diu «No té cap enllaç públic d’este lloc» i no
+ *     hi ha res a copiar. Gauntlet 261030 (f4b, B3-FITXA-FALS) · La fila és
+ *     NOMÉS de qui passa l'origen de la pàgina (`origenPagina`: el visor).
+ *     Sense origen no se sap si n'hi ha cap, i la fila no hi és: la fitxa
+ *     ?item= de /multimedia (FitxaWeb), que B3 no tocava, deia «No té cap
+ *     enllaç públic d’este lloc» de fotos públiques.
+ *     Ordre del Mestre (30-10-2026, prompt 2208, T4.2; QA-T3-UX-01) · El text
+ *     de quan no n'hi ha cap és NOMÉS de l'Arxiu (`avisSenseEnllac`, que hi
+ *     posa el visor de /multimedia). Fora de l'Arxiu (les publicacions, el
+ *     Perfil), sense enllaç públic la fila no hi és; amb un, sí.
  *   · Comentar i Connectar · el xat comú de la foto (multimedia:<id>) i
  *     Connectar-la, els dos enllaços interns que portava la pàgina
  *     /multimedia/<id> abans del visor (revisió adversarial del 261016: sense
@@ -36,6 +50,7 @@
  * Mentre l'EXIF es llig, els camps que en depenen diuen «Llegint…».
  */
 import { getSectionItemPath, objecteDe, rutaConnectarObjecte, rutaXatDePagina } from '../../config/navigation.js';
+import { esMitjaOpac } from '../../utils/mitjaOpac.js';
 import { dretsDe, origenDe } from './origenImatges.js';
 
 const ISO = /^(\d{4})-(\d{2})-(\d{2})(?:[T ](\d{2}):(\d{2})(?::(\d{2}))?)?/;
@@ -90,6 +105,77 @@ export function formataResolucio(mides) {
   return `${amplada} × ${alcada} px`;
 }
 
+/* Ordre del Mestre (30-10-2026, B3) · Què pot eixir com a «enllaç» d'una foto.
+   Només una URL pública i absoluta del lloc: el recurs públic de l'Arxiu
+   ('/assets/…', resolt amb `resol`, el resolRecursPropi del visor: dins d'un
+   amfitrió, la URL del paquet; a l'app nativa, l'origen públic) o una URL
+   http(s) del MATEIX origen que també és dins de /assets/. Gauntlet 261030
+   (f4b, B3-AMFITRIO-FALS-NEGATIU) · I la forma JA RESOLTA d'un recurs propi,
+   tal qual: una URL on algun '/assets/…' del camí, resolt amb `resol`, torna
+   EXACTAMENT ella (la base de l'amfitrió, absoluta o un camí, o l'origen
+   extern de la política de mitjans). L'enllaç de la resolta és el de la
+   crua, i res més. Dins d'un amfitrió, les fotos dels pobles i del Mercat
+   (townsContent.js i marketContent.js les resolen en importar-se) i les del
+   cos d'una publicació (resolRecursosDeHtml) ja arriben així. Mai:
+     · cap arxiu local (el Gestor d'arxius locals, IDEA-55): ni blob:, ni
+       data:, ni file:, ni cap camí del disc ('/Users/…', 'C:\…'), ni cap
+       element amb un id de l'espai ('__lf_…', '__lc_…': els ids opacs dels
+       locals, arbreMultimedia.js · esIdSintetic);
+     · cap referència opaca del port (sdp-media://) ni la URL que en torna
+       (srcDelPort): la del bucket privat és una URL signada, amb el testimoni
+       dins, i la del públic és d'un altre origen;
+     · cap URL d'un altre origen (Viquipèdia, Storage) que no siga la forma
+       resolta exacta d'un recurs propi, cap esquema que no siga http(s) ni
+       cap URL amb credencials;
+     · cap camí que, normalitzat ('/assets/../', '%2e%2e'), isca de /assets/.
+   El que no passa, null: la fila ho diu i no hi ha res a copiar. */
+const CARACTER_DE_FORA = /[\u0000-\u001F\u007F\\]/;
+const esHttp = (url) => (url.protocol === 'https:' || url.protocol === 'http:') && !url.username && !url.password;
+const dinsDAssets = (url) => url.pathname.startsWith('/assets/');
+
+/* Un recurs cru '/assets/…' resolt amb `resol` (sense, tal qual): la URL
+   http(s) absoluta, o null. */
+function resolCru(cru, pagina, resol) {
+  const resolt = typeof resol === 'function' ? resol(cru) : cru;
+  if (typeof resolt !== 'string' || !resolt.trim() || CARACTER_DE_FORA.test(resolt)) return null;
+  const url = new URL(resolt.trim(), pagina);
+  return esHttp(url) ? url.href : null;
+}
+
+/* B3-AMFITRIO-FALS-NEGATIU · Cert si algun '/assets/…' del camí de la URL,
+   resolt, torna exactament la URL: és un recurs propi ja resolt. Sense
+   resolutor, mai. */
+function esFormaResolta(url, pagina, resol) {
+  if (typeof resol !== 'function') return false;
+  const { pathname } = url;
+  for (let pos = pathname.indexOf('/assets/'); pos !== -1; pos = pathname.indexOf('/assets/', pos + 1)) {
+    if (resolCru(`${pathname.slice(pos)}${url.search}${url.hash}`, pagina, resol) === url.href) return true;
+  }
+  return false;
+}
+
+/** La URL pública i absoluta de la foto (string) o null. `origen` és l'origen
+ *  de la pàgina (origenDeLaPagina) i `resol`, el resolutor dels recursos propis. */
+export function enllacPublicDe(item, { origen = null, resol = null } = {}) {
+  if (!item || typeof origen !== 'string' || !origen) return null;
+  if (item.id != null && String(item.id).startsWith('__')) return null;
+  const src = typeof item.src === 'string' ? item.src.trim() : '';
+  if (!src || esMitjaOpac(src) || CARACTER_DE_FORA.test(src)) return null;
+  try {
+    const pagina = new URL(origen);
+    if (!esHttp(pagina) || src.startsWith('//')) return null;
+    const relatiu = src.startsWith('/');
+    if (!relatiu && !/^https?:\/\//i.test(src)) return null;
+    const url = new URL(src, pagina);
+    if (!esHttp(url)) return null;
+    /* El recurs de l'Arxiu: el cru ('/assets/…') es resol com el pinta el visor; l'absolut del lloc, tal qual. */
+    if (url.origin === pagina.origin && dinsDAssets(url)) return relatiu ? resolCru(src, pagina, resol) : url.href;
+    return esFormaResolta(url, pagina, resol) ? url.href : null;
+  } catch {
+    return null;
+  }
+}
+
 const SECCIONS = Object.freeze({
   mur: ['nav.mur', 'Mur'],
   mercat: ['nav.mercat', 'Mercat'],
@@ -115,10 +201,14 @@ export function pobleDe(item) {
  * ({ dataCaptura, gps, camera, autor, copyright } o null) i `estatExif`
  * 'llegint' | 'llest' | 'sense'. `mides` són les mides reals de la foto
  * pintada ({ amplada, alcada } o null) i `estatMides`, com `estatExif`.
- * `nomDelPoble(slug)` torna el nom del poble.
+ * `nomDelPoble(slug)` torna el nom del poble. `origenPagina` i `resol` són
+ * l'`origen` i el `resol` d'enllacPublicDe (B3): sense origen, la fila de
+ * l'enllaç no hi és. `avisSenseEnllac` (T4.2): només a l'Arxiu, la fila diu
+ * que no n'hi ha cap; sense, una foto sense enllaç públic no porta la fila.
  */
 export function filesDelPanell(item, {
-  exif = null, estatExif = 'sense', mides = null, estatMides = 'sense', persona = false, cens = null, nomDelPoble = null, t = null
+  exif = null, estatExif = 'sense', mides = null, estatMides = 'sense', persona = false, cens = null, nomDelPoble = null, t = null,
+  origenPagina = null, resol = null, avisSenseEnllac = false
 } = {}) {
   if (!item) return [];
   const tr = (clau, reserva) => (typeof t === 'function' ? t(clau, reserva) : reserva);
@@ -148,6 +238,20 @@ export function filesDelPanell(item, {
       { clau: 'connectar', etiqueta: tr('section.multimedia.visor.connectar', 'Connectar'), valor: tr('section.multimedia.visor.connectarFoto', 'Connectar la foto'), ruta: rutaConnectarObjecte(objecte) }
     ]
     : [];
+  /* B3 · La URL pública de la foto, o el text que diu que no n'hi ha. Només
+     amb l'origen de la pàgina (el visor): sense, cap fila (B3-FITXA-FALS).
+     Ordre del Mestre (30-10-2026, prompt 2208, T4.2) · El text, només a
+     l'Arxiu (avisSenseEnllac); fora, sense enllaç públic, cap fila. */
+  const ambEnllac = typeof origenPagina === 'string' && origenPagina !== '';
+  const enllac = ambEnllac ? enllacPublicDe(item, { origen: origenPagina, resol }) : null;
+  const filesEnllac = ambEnllac && (enllac || avisSenseEnllac === true)
+    ? [{
+      clau: 'enllac',
+      etiqueta: tr('section.multimedia.visor.enllac', 'Enllaç de la imatge'),
+      valor: enllac || tr('section.multimedia.visor.senseEnllac', 'No té cap enllaç públic d’este lloc'),
+      ...(enllac ? { enllac } : {})
+    }]
+    : [];
 
   return [
     { clau: 'data', etiqueta: tr('section.multimedia.visor.data', 'Data i hora de captura'), valor: delExif(data) },
@@ -175,6 +279,7 @@ export function filesDelPanell(item, {
         ruta: getSectionItemPath(article.sectionId, article.id)
       }
       : { clau: 'publicat', etiqueta: tr('section.multimedia.visor.publicatA', 'Publicat a'), valor: tr('section.multimedia.visor.senseArticle', 'Cap article: és de l’arxiu') },
+    ...filesEnllac,
     ...accions
   ];
 }

@@ -36,7 +36,7 @@ import { RouterProvider, Route, Routes } from '../../app/contexts/RouterContext'
 import ConsolaSection, { ConsolaIncrustada } from './ConsolaSection.jsx';
 import { TITOL_INDEX, TITOL_MAS } from './indexConsola.js';
 import { CLAU_PRIVACITAT, IDS_PAGINES, paginesConsola } from './consolaPagines.js';
-import { IMATGES_CONSOLA } from './imatgesConsola.js';
+import { IMATGES_CONSOLA, miniaturaDe } from './imatgesConsola.js';
 import { ETIQUETA_ACCES, MASCARA, TITOL_DIAGNOSI, diagnosiTextual } from './diagnosiConsola.js';
 
 /* Un Mapa amb un avís de vigilància (ruta i evidència) i un lloc sense lector (ruta). */
@@ -119,7 +119,9 @@ test.each([['amb', true], ['sense', false]])('/consola %s fonts: cada targeta de
   for (const [i, id] of IDS_PAGINES.entries()) {
     const t = targetes[i];
     const img = t.querySelector('.sp-card-media-container > img.sp-card-media');
-    expect([img.getAttribute('src'), img.getAttribute('alt')], id).toEqual([IMATGES_CONSOLA[id].imatge, IMATGES_CONSOLA[id].imatgeAlt]);
+    /* Gauntlet 261030 (P1Y, vinyetes-1024-jpg-a-miniatures) · La ruta que es
+       pinta és la de la miniatura (la bessona .webp de les vinyetes de 1024 px). */
+    expect([img.getAttribute('src'), img.getAttribute('alt')], id).toEqual([miniaturaDe(IMATGES_CONSOLA[id].imatge), IMATGES_CONSOLA[id].imatgeAlt]);
     expect(img.getAttribute('loading'), id).toBe('lazy');
     expect(img.hasAttribute('style'), id).toBe(false);
     // La imatge o la icona: amb il·lustració, cap insígnia lateral.
@@ -208,20 +210,25 @@ test('la Consola incrustada de la Wiki no pinta ni les il·lustracions ni el Dia
   expect(errors).not.toHaveBeenCalled();
 });
 
-test('la imatge de la targeta d’una pàgina és la imatge SEO de la seua pàgina; el tauler i els panells, sense', async () => {
+/* Ordre del Mestre (30-10-2026, prompt 2208, T2.1) · Expectatives actualitzades a
+   posta: la imatge SEO va al head per la variant social de 1200x630 de la portada
+   de la targeta (selector compartit, seoConsola.js), i el tauler /consola porta la
+   de PAGE_COPY.consola, la de /page/consola. Abans: l'original cru i el tauler sense. */
+const variantSocial = (ruta) => `https://socdepoble.org${ruta.replace(/\.[^./]+$/, '-social-1200x630.jpg')}`;
+test('la imatge de la targeta d’una pàgina és la imatge SEO de la seua pàgina; el tauler, la de la Consola, i els panells, sense', async () => {
   ambFonts();
   await obri('/consola/explorador');
-  expect(seo.crides.at(-1).image).toBe(IMATGES_CONSOLA.explorador.imatge);
+  expect(seo.crides.at(-1).image.url).toBe(variantSocial(IMATGES_CONSOLA.explorador.imatge));
   // La portada (hero) no es pinta: cap img de la il·lustració a la pàgina.
   expect(document.querySelector(`img[src="${IMATGES_CONSOLA.explorador.imatge}"]`)).toBeNull();
   cleanup();
   seo.crides = [];
   await obri('/consola/salut');
-  expect(seo.crides.at(-1).image).toBe(IMATGES_CONSOLA.salut.imatge);
+  expect(seo.crides.at(-1).image.url).toBe(variantSocial(IMATGES_CONSOLA.salut.imatge));
   cleanup();
   seo.crides = [];
   await obri('/consola');
-  expect(seo.crides.at(-1).image).toBeUndefined();
+  expect(seo.crides.at(-1).image.url).toBe(variantSocial(IMATGES_CONSOLA.index.imatge));
   cleanup();
   seo.crides = [];
   await obri('/consola/pols/rebuts');

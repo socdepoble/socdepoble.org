@@ -1,9 +1,12 @@
 /* P6 (ordre del Mestre, 261003) · La llista plegada en rail en pantalles
-   xicotetes (AppGridShell railMitja i railEstret). Sense les propietats, la
-   closca és la d'abans; en «ample» no canvia res. jsdom no fa layout: la
-   geometria es comprova en la regla CSS (al final) i al navegador
-   (APPGRID_MOBIL.txt). Amb el mock de 340/420: 1400 és ample, 820 mitjà,
-   375 estret. */
+   xicotetes (AppGridShell railEstret). Sense la propietat, la closca és la
+   d'abans; en «ample» no canvia res. jsdom no fa layout: la geometria es
+   comprova en la regla CSS (al final) i al navegador (APPGRID_MOBIL.txt).
+   Amb el mock de 340/420: 1400 és ample, 820 mitjà, 375 estret.
+   Decisió 4 del Mestre (30-10-2026 ~15:00) · railMitja (la llista en rail en
+   «mitja») i railEsquerra (la navegació en rail fix en «mitja», barres
+   261004) només els passava l'UniversalWorkspace, que amb columnesFixes ja
+   no passa per «mitja»: s'han retirat, i les seues proves amb elles. */
 import React from 'react';
 import { createPortal } from 'react-dom';
 import { readFileSync } from 'node:fs';
@@ -38,12 +41,14 @@ const ambAmplada = (amplada) => vi.spyOn(HTMLElement.prototype, 'clientWidth', '
 const senseObservador = () => vi.stubGlobal('ResizeObserver', class { observe() {} disconnect() {} });
 
 /* Pinta el que la closca diu al context; amb nodeRail, hi pinta un rail de
-   mostra amb un portal (com UniversalWorkspace). */
+   mostra amb un portal (com UniversalWorkspace). Corrector del Gauntlet f4
+   (30-10-2026) · Sense llistaEnRail, retirat del context: si el rail és obert
+   o tancat ho diuen els seus atributs (data-obert, inert, aria-hidden). */
 function Sonda() {
-  const { llistaPlegable, llistaEnRail, nodeRail } = useAppGrid();
+  const { llistaPlegable, nodeRail } = useAppGrid();
   return (
     <>
-      <output data-plegable={String(llistaPlegable)} data-rail={String(llistaEnRail)} data-node={String(Boolean(nodeRail))} />
+      <output data-plegable={String(llistaPlegable)} data-node={String(Boolean(nodeRail))} />
       {nodeRail ? createPortal(<Panell nom="Menú del rail" valor="left" controls="app-grid-sidebar" />, nodeRail) : null}
     </>
   );
@@ -80,7 +85,7 @@ const tancada = (el) => [el.hasAttribute('inert'), el.getAttribute('aria-hidden'
 const sonda = (c) => c.querySelector('output').dataset;
 const boto = (c, nom) => [...c.querySelectorAll('button')].find((b) => b.textContent === nom);
 
-test('P6 · sense railMitja ni railEstret, cap data-llista ni cap rail a cap mida: la closca d’abans', () => {
+test('P6 · sense railEstret, cap data-llista ni cap rail a cap mida: la closca d’abans', () => {
   senseObservador();
   for (const [amplada, mida] of [[1400, 'ample'], [820, 'mitja'], [375, 'estret']]) {
     ambAmplada(amplada);
@@ -88,54 +93,60 @@ test('P6 · sense railMitja ni railEstret, cap data-llista ni cap rail a cap mid
     expect(shell(container).dataset.layout).toBe(mida);
     expect(shell(container).hasAttribute('data-llista'), `${amplada}`).toBe(false);
     expect(rail(container), `${amplada}`).toBeNull();
-    expect(sonda(container)).toMatchObject({ plegable: 'false', rail: 'false', node: 'false' });
+    expect(sonda(container)).toMatchObject({ plegable: 'false', node: 'false' });
     cleanup();
   }
 });
 
-test('P6 · en ample, railMitja i railEstret no hi fan res: el plegat de sempre (has-middle-collapsed)', () => {
+test('P6 · en ample, railEstret no hi fa res: el plegat de sempre (has-middle-collapsed)', () => {
   senseObservador();
   ambAmplada(1400);
-  const { container } = render(closca({ railMitja: true, railEstret: true, middleCollapsed: true }));
+  const { container } = render(closca({ railEstret: true, middleCollapsed: true }));
   expect(shell(container).dataset.layout).toBe('ample');
   expect(shell(container).hasAttribute('data-llista')).toBe(false);
   expect(rail(container)).toBeNull();
   expect(container.querySelector('.app-grid-content.has-middle-collapsed')).not.toBeNull();
-  expect(sonda(container)).toMatchObject({ plegable: 'false', rail: 'false', node: 'false' });
+  expect(sonda(container)).toMatchObject({ plegable: 'false', node: 'false' });
 });
 
-test('P6 · en mitjà amb railMitja: desplegada és la d’abans; plegada, la columna és el rail, sense separador i oberta', () => {
+/* Decisió 4 del Mestre (30-10-2026 ~15:00) · En «mitja» (el Xat, les apps),
+   la closca no té cap rail de llista ni de navegació: qui encara passara
+   railMitja o railEsquerra obtindria el mateix DOM que sense (cap
+   data-llista, cap data-esquerra, el separador del mig, la navegació
+   tancada fins que s'obri el seu panell) i el context ja no oferix
+   ambRailNavegacio ni navegacioEnRail. És l'única prova que encara les
+   passa: la regressió explícita de «s'ignoren».
+   Corrector del Gauntlet f4 (30-10-2026) · Tampoc llistaEnRail, que només
+   llegia la llista en rail de «mitja» (railMitja). Cap atribut data-esquerra
+   no existix ja enlloc: l'igualtat del DOM ho cobrix, i la CSS ho vigila la
+   prova «cap regla de data-esquerra» de davall. */
+function SondaContext() {
+  return <i data-testid="claus" data-claus={Object.keys(useAppGrid()).sort().join(' ')} />;
+}
+test('Decisió 4 · en mitjà, railMitja i railEsquerra ja no existixen: el DOM i el context són els de sense', () => {
   senseObservador();
   ambAmplada(820);
-  const { container, rerender } = render(closca({ railMitja: true, railEstret: true }));
+  const sense = render(closca({ middleCollapsed: true, rightColumn: <SondaContext /> })).container.innerHTML;
+  cleanup();
+  const { container } = render(closca({ railMitja: true, railEsquerra: true, middleCollapsed: true, rightColumn: <SondaContext /> }));
+  expect(container.innerHTML).toBe(sense);
   expect(shell(container).dataset.layout).toBe('mitja');
   expect(shell(container).hasAttribute('data-llista')).toBe(false);
   expect(container.querySelector('.app-grid-resizer--middle')).not.toBeNull();
-  /* El rail a part és només d'estret. */
-  expect(rail(container)).toBeNull();
-  expect(sonda(container)).toMatchObject({ plegable: 'true', rail: 'false', node: 'false' });
-
-  rerender(closca({ railMitja: true, railEstret: true, middleCollapsed: true }));
-  expect(shell(container).dataset.layout).toBe('mitja');
-  expect(shell(container).dataset.llista).toBe('rail');
-  expect(container.querySelector('.app-grid-resizer--middle')).toBeNull();
-  expect(tancada(llista(container))).toEqual([false, null]);
-  expect(tancada(detall(container))).toEqual([false, null]);
-  /* La classe d'«ample» no s'hi posa: la graella de mitjà és la del rail. */
-  expect(container.querySelector('.has-middle-collapsed')).toBeNull();
-  expect(sonda(container)).toMatchObject({ plegable: 'true', rail: 'true', node: 'false' });
-
-  rerender(closca({ railMitja: true, railEstret: true }));
-  expect(shell(container).hasAttribute('data-llista')).toBe(false);
-  expect(container.querySelector('.app-grid-resizer--middle')).not.toBeNull();
+  expect(tancada(navegacio(container))).toEqual([true, 'true']);
+  expect(sonda(container)).toMatchObject({ plegable: 'false', node: 'false' });
+  const claus = container.querySelector('[data-testid="claus"]').dataset.claus.split(' ');
+  expect(claus).not.toContain('ambRailNavegacio');
+  expect(claus).not.toContain('navegacioEnRail');
+  expect(claus).not.toContain('llistaEnRail');
 });
 
 test('P6 · plegar la llista en mitjà lleva espai a la mínima d’ample: si hi cap, la closca passa a ample (la regla de sempre)', () => {
   senseObservador();
   ambAmplada(950);
-  const { container, rerender } = render(closca({ railMitja: true }));
+  const { container, rerender } = render(closca());
   expect(shell(container).dataset.layout).toBe('mitja');
-  rerender(closca({ railMitja: true, middleCollapsed: true }));
+  rerender(closca({ middleCollapsed: true }));
   expect(shell(container).dataset.layout).toBe('ample');
   expect(shell(container).hasAttribute('data-llista')).toBe(false);
   expect(container.querySelector('.has-middle-collapsed')).not.toBeNull();
@@ -157,7 +168,7 @@ test('P6 · en estret amb railEstret: el rail és a part, obert amb el detall; l
   /* L'ordre del DOM és el visual: el rail, abans del detall. */
   expect(rail(container).nextElementSibling).toBe(detall(container));
   /* El consumidor hi pinta amb un portal. */
-  expect(sonda(container)).toMatchObject({ plegable: 'true', rail: 'true', node: 'true' });
+  expect(sonda(container)).toMatchObject({ plegable: 'true', node: 'true' });
   expect(within(rail(container)).getByRole('button', { name: 'Menú del rail' })).toBeTruthy();
 
   /* El panell de la llista tapa rail i detall: el rail es queda muntat (la
@@ -168,7 +179,7 @@ test('P6 · en estret amb railEstret: el rail és a part, obert amb el detall; l
   expect(rail(container).dataset.obert).toBe('false');
   expect(tancada(llista(container))).toEqual([false, null]);
   expect(tancada(detall(container))).toEqual([true, 'true']);
-  expect(sonda(container)).toMatchObject({ rail: 'false', node: 'true' });
+  expect(sonda(container)).toMatchObject({ node: 'true' });
 
   /* I el de la navegació, igual. */
   fireEvent.click(within(llista(container)).getByRole('button', { name: 'Fitxa' }));
@@ -230,120 +241,28 @@ test('P6 · d’ample a estret amb la closca muntada el detall es queda, amb el 
   expect(sonda(container)).toMatchObject({ node: 'false' });
 });
 
-/* ═══ Barres (ordre del Mestre, 261004) · railEsquerra ════════════════════
-   «Les dues barres de la Wiki han d'estar sempre presents plegades, o com a
-   mínim una d'elles visible que permeta desplegar l'altra.» En «mitja», amb
-   railEsquerra, la navegació és un rail fix: oberta, a l'abast i marcada
-   amb data-esquerra; desplegar-la és el panell de sempre. Sense la
-   propietat (el Xat, les apps), la closca d'abans. */
-function SondaEsquerra() {
-  const { ambRailNavegacio, navegacioEnRail } = useAppGrid();
-  return <span data-testid="esquerra" data-amb={String(ambRailNavegacio)} data-en={String(navegacioEnRail)} />;
-}
-const closcaEsquerra = (props = {}) => (
-  <AppGridShell
-    leftColumn={<Panell nom="Tanca el menú" valor={null} />}
-    middleColumn={(
-      <>
-        <SondaEsquerra />
-        <Panell nom="Menú" valor="left" controls="app-grid-sidebar" />
-      </>
-    )}
-    rightColumn={<p>Detall</p>}
-    {...props}
-  />
-);
-const esquerra = (c) => c.querySelector('[data-testid="esquerra"]').dataset;
-
-test('Barres · a 820 amb railEsquerra la navegació és un rail fix (data-esquerra), oberta i a l’abast; el panell la desplega i la torna al rail', () => {
-  senseObservador();
-  ambAmplada(820);
-  const { container } = render(closcaEsquerra({ railEsquerra: true }));
-  const s = shell(container);
-  expect([s.dataset.layout, s.dataset.panell, s.dataset.esquerra]).toEqual(['mitja', '', 'rail']);
-  expect(tancada(navegacio(container))).toEqual([false, null]);
-  expect(navegacio(container).dataset.obert).toBe('true');
-  expect(esquerra(container)).toMatchObject({ amb: 'true', en: 'true' });
-
-  fireEvent.click(boto(container, 'Menú'));
-  expect([s.dataset.panell, s.dataset.esquerra]).toEqual(['left', 'rail']);
-  expect(tancada(navegacio(container))).toEqual([false, null]);
-  /* Desplegada, el panell: ja no es pinta en rail. */
-  expect(esquerra(container)).toMatchObject({ amb: 'true', en: 'false' });
-
-  fireEvent.click(boto(container, 'Tanca el menú'));
-  expect(s.dataset.panell).toBe('');
-  expect(tancada(navegacio(container))).toEqual([false, null]);
-  expect(esquerra(container)).toMatchObject({ amb: 'true', en: 'true' });
-});
-
-test('Barres · a 375 i a 1400 railEsquerra no hi fa res: cap data-esquerra i el contracte de sempre', () => {
-  senseObservador();
-  for (const [amplada, mida, tancadaNav] of [[375, 'estret', [true, 'true']], [1400, 'ample', [false, null]]]) {
-    ambAmplada(amplada);
-    const { container } = render(closcaEsquerra({ railEsquerra: true }));
-    expect(shell(container).dataset.layout).toBe(mida);
-    expect(shell(container).hasAttribute('data-esquerra'), `${amplada}`).toBe(false);
-    expect(tancada(navegacio(container)), `${amplada}`).toEqual(tancadaNav);
-    expect(esquerra(container)).toMatchObject({ amb: 'false', en: 'false' });
-    cleanup();
-  }
-});
-
-test('Barres · sense railEsquerra, el DOM de 820 és el d’abans: la navegació amagada i inert, sense data-esquerra', () => {
-  senseObservador();
-  ambAmplada(820);
-  const sense = render(closcaEsquerra()).container.innerHTML;
-  cleanup();
-  const { container } = render(closcaEsquerra({ railEsquerra: false }));
-  expect(container.innerHTML).toBe(sense);
-  expect(shell(container).hasAttribute('data-esquerra')).toBe(false);
-  expect(tancada(navegacio(container))).toEqual([true, 'true']);
-  expect(esquerra(container)).toMatchObject({ amb: 'false', en: 'false' });
-});
-
-test('Barres · la guarda del focus usa la mateixa regla: tancar el panell amb el focus al rail no el mou a l’obridor', () => {
-  senseObservador();
-  ambAmplada(820);
-  const { container } = render(closcaEsquerra({ railEsquerra: true, initialPane: 'left' }));
-  expect(shell(container).dataset.panell).toBe('left');
-  const tanca = within(navegacio(container)).getByRole('button', { name: 'Tanca el menú' });
-  tanca.focus();
-  fireEvent.click(tanca);
-  expect(shell(container).dataset.panell).toBe('');
-  /* El rail no és cap columna tancada: el focus es queda on era. Sense
-     l'opció a la guarda, se n'anava a l'obridor «Menú» de la llista. */
-  expect(document.activeElement).toBe(tanca);
-});
-
-test('Barres · el separador i el redimensionament compten el rail fix en mitjà', () => {
+/* Decisió 4 del Mestre (30-10-2026 ~15:00) · Sense el rail fix de la
+   navegació (railEsquerra, retirat), en «mitja» el separador del mig parteix
+   de la llista visible, min(desada, closca − detall), i la tecla Fi la porta
+   fins on deixa el detall: el càlcul d'abans per al Xat i les apps. */
+test('Decisió 4 · en mitjà, el separador del mig compta només el detall', () => {
   senseObservador();
   const separador = (c) => c.querySelector('.app-grid-resizer--middle');
-  /* 760: sense rail, la llista visible és min(420, 760 - 320) = 420; amb el
-     rail, min(420, 760 - 320 - 56) = 384. */
-  ambAmplada(760);
-  const sense = render(closcaEsquerra());
-  expect(separador(sense.container).getAttribute('aria-valuenow')).toBe('420');
-  cleanup();
-  const amb = render(closcaEsquerra({ railEsquerra: true }));
-  expect(separador(amb.container).getAttribute('aria-valuenow')).toBe(String(760 - PUNTS_DE_TALL.detall - PUNTS_DE_TALL.plegada));
-  cleanup();
-  /* 820, tecla Fi: el màxim de la llista deixa el detall i el rail.
-     Correcció dels verificadors (261004) · aria-valuenow és
-     middleVisibleWidth, que ja resta el rail: valdria 444 encara que
-     resizeColumn desara 500. Es comprova també l'amplària DESADA (la
-     variable de la pàgina), que és la que després mou el tall d'«ample». */
   const desada = (c) => c.querySelector('.app-grid-page').style.getPropertyValue('--app-grid-col-list');
-  ambAmplada(820);
-  const ambFi = render(closcaEsquerra({ railEsquerra: true }));
-  fireEvent.keyDown(separador(ambFi.container), { key: 'End' });
-  expect(separador(ambFi.container).getAttribute('aria-valuenow')).toBe(String(820 - PUNTS_DE_TALL.detall - PUNTS_DE_TALL.plegada));
-  expect(desada(ambFi.container)).toBe(`${820 - PUNTS_DE_TALL.detall - PUNTS_DE_TALL.plegada}px`);
+  /* 760: min(420, 760 − 320) = 420 (amb el rail retirat, 760 − 320 − 56 = 384). */
+  ambAmplada(760);
+  const a760 = render(closca());
+  expect(separador(a760.container).getAttribute('aria-valuenow')).toBe('420');
+  /* Corrector del Gauntlet f4 (30-10-2026) · El màxim declarat és el mateix
+     on porta Fi: 760 − 320 = 440, no els 520 de sempre. */
+  expect(separador(a760.container).getAttribute('aria-valuemax')).toBe(String(760 - PUNTS_DE_TALL.detall));
   cleanup();
-  const senseFi = render(closcaEsquerra());
-  fireEvent.keyDown(separador(senseFi.container), { key: 'End' });
-  expect(separador(senseFi.container).getAttribute('aria-valuenow')).toBe(String(820 - PUNTS_DE_TALL.detall));
-  expect(desada(senseFi.container)).toBe(`${820 - PUNTS_DE_TALL.detall}px`);
+  ambAmplada(820);
+  const ambFi = render(closca());
+  fireEvent.keyDown(separador(ambFi.container), { key: 'End' });
+  expect(separador(ambFi.container).getAttribute('aria-valuenow')).toBe(String(820 - PUNTS_DE_TALL.detall));
+  expect(separador(ambFi.container).getAttribute('aria-valuemax')).toBe(String(820 - PUNTS_DE_TALL.detall));
+  expect(desada(ambFi.container)).toBe(`${820 - PUNTS_DE_TALL.detall}px`);
 });
 
 /* ═══ La regla CSS (jsdom no pinta: es llig el full) ═══════════════════ */
@@ -351,12 +270,11 @@ const css = readFileSync(resolve(process.cwd(), 'src/components/layout/AppGridSh
   .replace(/\/\*[\s\S]*?\*\//g, '').replace(/\s+/g, ' ');
 
 test('P6 · CSS: el rail és --app-grid-col-collapsed i el detall, la resta; tot penja de data-llista="rail"', () => {
-  for (const mida of ['mitja', 'estret']) {
-    const graella = new RegExp(`\\.app-grid-shell\\[data-layout="${mida}"\\]\\[data-llista="rail"\\] \\.app-grid-content[^{]*\\{ grid-template-columns: var\\(--app-grid-col-collapsed\\) minmax\\(0, 1fr\\); \\}`);
-    expect(css, mida).toMatch(graella);
-  }
-  expect(css).toMatch(/\.app-grid-shell\[data-layout="mitja"\]\[data-llista="rail"\] \.app-grid-column--middle \{ grid-column: 1; \}/);
-  expect(css).toMatch(/\[data-layout="estret"\]\[data-llista="rail"\] \.app-grid-column--right \{ grid-column: 2; \}/);
+  expect(css).toMatch(/\.app-grid-shell\[data-layout="estret"\]\[data-llista="rail"\] \.app-grid-content \{ grid-template-columns: var\(--app-grid-col-collapsed\) minmax\(0, 1fr\); \}/);
+  /* Decisió 4 del Mestre (30-10-2026 ~15:00) · Cap regla de la llista en
+     rail en «mitja» (railMitja, retirat). */
+  expect(css).not.toContain('[data-layout="mitja"][data-llista="rail"]');
+  expect(css).toMatch(/\.app-grid-shell\[data-layout="estret"\]\[data-llista="rail"\] \.app-grid-column--right \{ grid-column: 2; \}/);
   /* En estret, navegació i llista continuen sent panells de banda a banda. */
   expect(css).toMatch(/\[data-layout="estret"\]\[data-llista="rail"\] \.app-grid-column--left, \.app-grid-shell\[data-layout="estret"\]\[data-llista="rail"\] \.app-grid-column--middle \{ grid-column: 1 \/ -1; \}/);
   expect(css).toMatch(/\[data-layout="estret"\]\[data-llista="rail"\] \.app-grid-rail \{ grid-column: 1; grid-row: 1 \/ 2;/);
@@ -364,7 +282,7 @@ test('P6 · CSS: el rail és --app-grid-col-collapsed i el detall, la resta; tot
   /* Cap regla nova sense l'atribut: cada selector amb rail el porta. */
   const regles = [...css.matchAll(/([^{}]+)\{[^}]*\}/g)].map(([, selector]) => selector.trim());
   const ambRail = regles.filter((selector) => selector.includes('data-llista') || selector.includes('app-grid-rail'));
-  expect(ambRail.length).toBe(6);
+  expect(ambRail.length).toBe(5);
   for (const selector of ambRail) {
     for (const part of selector.split(',')) expect(part, part).toContain('[data-llista="rail"]');
   }
@@ -372,30 +290,19 @@ test('P6 · CSS: el rail és --app-grid-col-collapsed i el detall, la resta; tot
   expect(css.split(`${PUNTS_DE_TALL.plegada}px`).length - 1).toBe(1);
 });
 
-/* Barres (ordre del Mestre, 261004) · Les tres regles del rail fix de la
-   navegació en «mitja»: el coixí de la graella (no una pista nova), la
-   columna en rail i el panell desplegat amb l'ombra de token. Només
-   variables: cap xifra nova, i el mínim del detall continua sent el calc i
-   el minmax de sempre, que el coixí no toca. */
-test('Barres · CSS: el rail de la navegació viu en el coixí de «mitja», amb només variables, i tot penja de data-esquerra="rail"', () => {
-  const sel = '\\.app-grid-shell\\[data-layout="mitja"\\]\\[data-esquerra="rail"\\]';
-  expect(css).toMatch(new RegExp(`${sel} \\.app-grid-content \\{ padding-inline-start: var\\(--app-grid-col-collapsed\\); \\}`));
-  expect(css).toMatch(new RegExp(`${sel} \\.app-grid-column--left \\{ width: var\\(--app-grid-col-collapsed\\); transform: none; box-shadow: none; \\}`));
-  expect(css).toMatch(new RegExp(`${sel}\\[data-panell="left"\\] \\.app-grid-column--left \\{ width: max-content; box-shadow: var\\(--sdp-ombra-3\\); \\}`));
+/* Decisió 4 del Mestre (30-10-2026 ~15:00) · Les tres regles del rail fix de
+   la navegació en «mitja» (data-esquerra="rail", railEsquerra) s'han
+   retirat: cap regla nomena data-esquerra. «Mitja» (el Xat, les apps)
+   conserva el panell de la navegació i el mínim del detall de sempre. */
+test('Decisió 4 · CSS: cap regla de data-esquerra; «mitja» conserva el panell de la navegació i el mínim del detall', () => {
+  expect(css).not.toContain('data-esquerra');
+  expect(css).toMatch(/\.app-grid-shell\[data-layout="mitja"\] \.app-grid-column--left \{ position: absolute; left: 0; top: 0; bottom: 0; width: max-content;/);
   /* Pla2045: menú segons contingut, topall300px i espai tàctil fora. */
   expect(css).toContain('max-width: min(var(--sdp-menu-ample-max), calc(100% - var(--sdp-touch-min)));');
   /* El detall de «mitja» conserva el seu mínim: les pistes de sempre. */
   expect(css).toContain(`min(var(--app-grid-col-list-live, var(--app-grid-col-list)), calc(100% - ${PUNTS_DE_TALL.detall}px))`);
   expect(css).toContain(`minmax(${PUNTS_DE_TALL.detall}px, 1fr)`);
-  /* Cap regla amb data-esquerra fora de «mitja», i cap pista nova. */
   const regles = [...css.matchAll(/([^{}]+)\{([^}]*)\}/g)].map(([, selector, cos]) => [selector.trim(), cos]);
-  const ambEsquerra = regles.filter(([selector]) => selector.includes('data-esquerra'));
-  expect(ambEsquerra.length).toBe(3);
-  for (const [selector, cos] of ambEsquerra) {
-    expect(selector).toContain('[data-layout="mitja"][data-esquerra="rail"]');
-    expect(cos).not.toContain('grid-template-columns');
-    expect(cos).not.toMatch(/\d+px/);
-  }
   /* Els recomptes de graella.capes.test.js: 56px una vegada i 320px dues. */
   expect(css.split(`${PUNTS_DE_TALL.plegada}px`).length - 1).toBe(1);
   expect(css.split(`${PUNTS_DE_TALL.detall}px`).length - 1).toBe(2);

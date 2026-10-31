@@ -258,9 +258,10 @@ const perActivitat = (a, b) => instantDe(b) - instantDe(a);
 
 /**
  * Les comunitats amb els seus fills: «Avisos» (el canal) primer i després els
- * grups per activitat. Els no llegits són la suma dels fills i `ultimAl` el
- * més recent d'ells. La comunitat no té missatges propis: el que compta és
- * dels fills. Un fill sense la seua comunitat a la llista no hi apareix (es
+ * grups per activitat. Els no llegits són la suma dels fills ni silenciats ni
+ * arxivats (sumaNoLlegits) i `ultimAl` el més recent d'ells. La comunitat no
+ * té missatges propis: el que compta és dels fills. Un fill sense la seua
+ * comunitat a la llista no hi apareix (es
  * queda a la llista de converses). Les comunitats, per activitat.
  */
 export function agrupaComunitats(fils) {
@@ -279,7 +280,9 @@ export function agrupaComunitats(fils) {
         if ((a.tipus === 'canal') !== (b.tipus === 'canal')) return a.tipus === 'canal' ? -1 : 1;
         return perActivitat(a, b);
       });
-      const noLlegits = fills.reduce((total, f) => total + Math.max(0, numero(f.noLlegits)), 0);
+      /* Gauntlet 261030 (cicle 2, G7) · La insígnia de la comunitat compta com
+         el títol (sumaNoLlegits): un canal o un grup silenciat o arxivat no hi suma. */
+      const noLlegits = sumaNoLlegits(fills);
       const recent = fills.reduce((millor, f) => (instantDe(f) > instantDe(millor) ? f : millor), null);
       return { fil, fills, noLlegits, ultimAl: recent ? recent.ultimAl || recent.actualitzatAl || null : null };
     })

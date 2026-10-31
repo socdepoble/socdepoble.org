@@ -38,13 +38,47 @@
  * src i el visor ho diu, fins que el port la resol. Correcció F2 de la
  * revisió · Tampoc un srcDelPort que encara és opac (el port que no la sap
  * resoldre la torna tal qual, storage.js): la garantia és per a tots.
+ *
+ * Ordre del Mestre (30-10-2026, B3) · «Enllaç de la imatge»: la URL completa
+ * del fitxer i, davall, el botó d'un sol clic «Copiar l’enllaç de la imatge»
+ * (navigator.clipboard.writeText). La confirmació, «Enllaç copiat», en una
+ * regió role="status" que hi és sempre (buida fins al clic), al costat del
+ * botó; si el navegador no deixa copiar (cap porta-retalls fora d'un context
+ * segur, o el permís negat), el missatge ho diu i demana copiar-la a mà: la
+ * URL és text seleccionable just damunt. Cap execCommand. La URL ix
+ * d'enllacPublicDe (panellDeLaFoto.js) amb l'origen de la pàgina
+ * (origenDeLaPagina: a l'app nativa, l'origen públic) i resolRecursPropi
+ * (dins d'un amfitrió, el paquet; una foto que ja arriba resolta porta el
+ * mateix enllaç que la crua), i no és cap enllaç navegable (cap salt fora
+ * de l'app). Privacitat: d'un arxiu local, d'una referència opaca
+ * del port (ni la seua URL signada) o d'un altre origen, cap URL ni cap botó;
+ * la fila diu «No té cap enllaç públic d’este lloc». Canviar de foto buida
+ * l'avís.
+ * Ordre del Mestre (30-10-2026, prompt 2208, T4.2; QA-T3-UX-01) · Eixe text és
+ * NOMÉS de l'Arxiu: la prop OPCIONAL `avisSenseEnllac`, que hi posa
+ * MultimediaSection. Sense (les publicacions del Mur i els detalls, el Perfil
+ * i qualsevol altre qui el munta), una foto sense enllaç públic no porta la
+ * fila; amb un enllaç públic, la fila i el botó, com sempre.
+ * Gauntlet 261030 (f4b) · B3-FOCUS-FLETXA · El bloc de l'enllaç no porta
+ * `key`: el mateix botó passa de foto en foto i, amb el focus a «Copiar
+ * l’enllaç», les fletxes continuen passant fotos (on abans el botó es
+ * remuntava i el focus queia al <body>). L'avís va amb la URL que s'ha
+ * copiat: canviar de foto el buida, i el d'una còpia que acaba tard d'una
+ * altra foto no es pinta mai. B3-RESERVA-SENSE-TECLAT · Si no es pot copiar,
+ * la URL queda seleccionada i el focus, al botó: Ctrl+C (⌘C) la copia des
+ * del teclat, sense haver d'arribar a un text que no rep el focus. Canviar
+ * de foto se'n porta la selecció, com l'avís.
  */
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { Copy } from 'lucide-react';
 import { Link, useLocation } from '../../app/contexts/RouterContext';
 import { useUIActions } from '../../app/contexts/UIContext';
 import { useCoreContent } from '../../app/contexts/CoreContentContext';
+import { Boto } from '../../components/PedraSeca/atoms/Boto.jsx';
+import { Fila, Pila } from '../../components/PedraSeca/composicio/index.jsx';
 import { VisorImatges } from '../../components/PedraSeca/organismes/VisorImatges.jsx';
 import { resolRecursPropi } from '../../config/assetResolver.js';
+import { origenDeLaPagina } from '../../config/origenPublic.js';
 import { esMitjaOpac } from '../../utils/mitjaOpac.js';
 import { esFotoDePersona } from './origenImatges.js';
 import { filesDelPanell, pobleDe } from './panellDeLaFoto.js';
@@ -54,8 +88,82 @@ const CAP = Object.freeze([]);
 
 const nomNet = (valor) => (typeof valor === 'string' ? valor.trim().toLowerCase() : '');
 
+/* L'origen de la pàgina, o null si no se sap (cap finestra): sense origen, cap enllaç. */
+function origenSegur() {
+  try {
+    return origenDeLaPagina();
+  } catch {
+    return null;
+  }
+}
+
+/* B3-RESERVA-SENSE-TECLAT · Selecciona el text del node (la URL), sense moure
+   el focus. Si el navegador no ho deixa, el missatge ho diu igual. */
+function seleccionaElText(node) {
+  try {
+    const seleccio = node?.ownerDocument?.defaultView?.getSelection?.();
+    if (!seleccio) return;
+    const rang = node.ownerDocument.createRange();
+    rang.selectNodeContents(node);
+    seleccio.removeAllRanges();
+    seleccio.addRange(rang);
+  } catch { /* sense selecció */ }
+}
+
+/* La selecció que encara és dins del node, fora (canviar de foto o tancar el visor). */
+function desseleccionaElText(node) {
+  try {
+    const seleccio = node?.ownerDocument?.defaultView?.getSelection?.();
+    if (seleccio?.rangeCount && node.contains(seleccio.anchorNode)) seleccio.removeAllRanges();
+  } catch { /* res a desfer */ }
+}
+
+const AVIS_BUIT = Object.freeze({ text: '', fallada: false });
+
+/* B3 · La URL (text seleccionable, sense traduir), el botó i l'avís. Sense
+   `key` (B3-FOCUS-FLETXA): l'avís porta la URL que s'ha copiat i, si no és
+   la de la foto que es veu, es buida en el mateix pintat (l'estat d'un pintat
+   anterior, el patró de React): en canviar de foto i quan una còpia d'una
+   altra foto acaba tard. */
+function EnllacCopiable({ url, textos }) {
+  const [avis, setAvis] = useState(() => ({ url, ...AVIS_BUIT }));
+  const refUrl = useRef(null);
+  if (avis.url !== url) setAvis({ url, ...AVIS_BUIT });
+  useEffect(() => {
+    if (avis.fallada) seleccionaElText(refUrl.current);
+  }, [avis]);
+  /* Com l'avís, la selecció de la reserva és de la foto que es veia: se'n va en canviar-ne. */
+  useEffect(() => {
+    const node = refUrl.current;
+    return () => desseleccionaElText(node);
+  }, [url]);
+  const copia = async () => {
+    const copiada = url;
+    setAvis({ url: copiada, ...AVIS_BUIT });
+    let copiat = false;
+    try {
+      const porta = typeof navigator === 'undefined' ? null : navigator.clipboard;
+      if (typeof porta?.writeText !== 'function') throw new Error('sense porta-retalls');
+      await porta.writeText(copiada);
+      copiat = true;
+    } catch { /* ho diu l'avís */ }
+    /* Si la foto ja és una altra, el pintat següent el buida (avis.url !== url). */
+    setAvis({ url: copiada, text: copiat ? textos.copiat : textos.noCopiat, fallada: !copiat });
+  };
+  return (
+    <Pila gap={2}>
+      <span ref={refUrl} translate="no">{url}</span>
+      <Fila gap={2}>
+        <Boto varietat="secundari" icona={Copy} onClick={copia}>{textos.copia}</Boto>
+        <span role="status">{avis.url === url ? avis.text : ''}</span>
+      </Fila>
+    </Pila>
+  );
+}
+
 export function VisorDeLArxiu({
-  llista = CAP, index = -1, cens = null, onTanca, onCanvi, filesInicials = CAP, ometFiles = CAP, infoInicial = false
+  llista = CAP, index = -1, cens = null, onTanca, onCanvi, filesInicials = CAP, ometFiles = CAP, infoInicial = false,
+  avisSenseEnllac = false
 }) {
   const { t } = useUIActions();
   const { towns = CAP } = useCoreContent();
@@ -100,15 +208,24 @@ export function VisorDeLArxiu({
     error: t('section.multimedia.visor.error', 'No s’ha pogut carregar la imatge.'),
     senseImatge: t('section.multimedia.visor.senseImatge', 'Esta entrada no porta cap imatge.')
   }), [t]);
+  const textosEnllac = useMemo(() => ({
+    copia: t('section.multimedia.visor.copiaEnllac', 'Copiar l’enllaç de la imatge'),
+    copiat: t('section.multimedia.visor.enllacCopiat', 'Enllaç copiat'),
+    noCopiat: t('section.multimedia.visor.enllacNoCopiat', 'No s’ha pogut copiar: selecciona l’enllaç i copia’l a mà.')
+  }), [t]);
 
   const nomDelPoble = (slug) => towns.find((town) => String(town?.id) === slug)?.title || null;
   const omeses = Array.isArray(ometFiles) ? ometFiles : CAP;
+  const pintaFila = (fila) => {
+    if (fila.enllac) return { ...fila, valor: <EnllacCopiable url={fila.enllac} textos={textosEnllac} /> };
+    return fila.ruta && fila.ruta !== pathname ? { ...fila, valor: <Link to={fila.ruta}>{fila.valor}</Link> } : fila;
+  };
   const metadades = [
     ...(item && Array.isArray(filesInicials) ? filesInicials : CAP),
     ...filesDelPanell(item, {
-      exif, estatExif: estat, mides: midesObert?.valor || null, estatMides, persona, cens, nomDelPoble, t
-    }).filter((fila) => !omeses.includes(fila.clau))
-      .map((fila) => (fila.ruta && fila.ruta !== pathname ? { ...fila, valor: <Link to={fila.ruta}>{fila.valor}</Link> } : fila))
+      exif, estatExif: estat, mides: midesObert?.valor || null, estatMides, persona, cens, nomDelPoble, t,
+      origenPagina: item ? origenSegur() : null, resol: resolRecursPropi, avisSenseEnllac: avisSenseEnllac === true
+    }).filter((fila) => !omeses.includes(fila.clau)).map(pintaFila)
   ];
 
   return (

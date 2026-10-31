@@ -96,6 +96,10 @@ export const MISSATGE_AUTOMATIC_DE_JAVI = '«Este missatge és automàtic: per a
  * pilot. Servix perquè Javi no veja una fila per a parlar amb ell mateix
  * (crea_fil_directe ho rebutja amb SDP-XAT-002) i perquè qui no s'ha
  * registrat arribe al seu xat de només lectura (filDeMostraDeJavi).
+ * P1-70 (ordre del Mestre, 261029 18:20: «No me veo a mí como Javi Llinares
+ * […] esto es una regresión») · Derogat «Javi no veja una fila»: la veu, i la
+ * seua fila obri la conversa d'atenció personal i servei tècnic de només
+ * lectura (XatContext · filServeiTecnic), mai cap directe amb ell mateix.
  * Auditoria adversarial 261016 (P2, suplantació) · Mai pel nom: en remot el
  * nom de la sessió és el full_name que tria i edita cada usuari, i un homònim
  * perdia la fila de Javi. En remot el servidor no declara quin compte és el
@@ -122,8 +126,12 @@ export const ID_FIL_DE_MOSTRA_DE_JAVI = 'fake-javi';
  * remot sense sessió (FakeChatOnboarding, amb `ultimAl` de la mostra) i per al
  * convidat de la llavor i del local (XatContext, amb `ultimAl` null perquè es
  * quede a la cua, al lloc de la fila sintètica). Pura.
+ * P1-70 (261029) · Amb `ambMissatge: false`, la conversa d'atenció personal i
+ * servei tècnic quan no se'n pot obrir cap directe (qui mira és Javi, o el
+ * remot sense el compte de Javi declarat): cap bombolla ni últim text en nom
+ * seu (cap resposta seua s'inventa), només l'avís al lloc del compositor.
  */
-export function filDeMostraDeJavi({ ultimAl = null, avis = null } = {}) {
+export function filDeMostraDeJavi({ ultimAl = null, avis = null, ambMissatge = true } = {}) {
   return {
     id: ID_FIL_DE_MOSTRA_DE_JAVI,
     name: CONTACTE_HUMA.nom,
@@ -133,9 +141,9 @@ export function filDeMostraDeJavi({ ultimAl = null, avis = null } = {}) {
     participants: [{ id: `contacte:${CONTACTE_HUMA.tipus}`, nom: CONTACTE_HUMA.nom, tipus: CONTACTE_HUMA.tipus }],
     ultimAl,
     noLlegits: 0,
-    ultimSeq: 1,
-    llegitFinsSeq: 1,
-    ultimText: MISSATGE_AUTOMATIC_DE_JAVI,
+    ultimSeq: ambMissatge ? 1 : 0,
+    llegitFinsSeq: ambMissatge ? 1 : 0,
+    ultimText: ambMissatge ? MISSATGE_AUTOMATIC_DE_JAVI : null,
     potEscriure: false,
     avisNomesLectura: avis
   };
@@ -271,6 +279,13 @@ function conversaPerDefecte({ clau, nom, avatar }) {
     subjecte: null,
     perDefecte: clau
   };
+}
+
+/** P1-70 (261029) · La Conversa sintètica de l'actor permanent `clau` ('javi' | 'iaia'), o null: la de les files de
+    reserva de la llista (sections/xat/actorsDelXat.js). Pura: una còpia nova a cada crida. */
+export function conversaPerDefecteDe(clau) {
+  const contacte = ACTORS_PERMANENTS.find((c) => c.clau === clau);
+  return contacte ? conversaPerDefecte(contacte) : null;
 }
 
 /**

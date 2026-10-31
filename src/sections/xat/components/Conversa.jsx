@@ -40,8 +40,9 @@
  *     nous d'altres que entren pel final (#11). La cita porta el focus a
  *     l'original (#12).
  */
-import { BENVINGUDA_IAIA, IAIA_ID, agentIASeed } from '../../../data/identitatsSeed.js';
-import { forwardRef, useCallback, useContext, useEffect, useImperativeHandle, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { BENVINGUDA_IAIA, IAIA_ID, RESPOSTA_IAIA, agentIASeed } from '../../../data/identitatsSeed.js';
+import { respostaDeLaIAIA } from '../../../data/iaiaLocal.js';
+import { Fragment, forwardRef, useCallback, useContext, useEffect, useImperativeHandle, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { AlertTriangle, FileText } from 'lucide-react';
 import { AppGridContext } from '../../../components/layout/AppGridShell.jsx';
 import CapcaleraConversa from './CapcaleraConversa.jsx';
@@ -54,7 +55,7 @@ import Compositor, { esNomesLectura } from './Compositor.jsx';
 import ControlsAdjunt from './ControlsAdjunt.jsx';
 import ConsultaIAIA from './ConsultaIAIA.jsx';
 import {
-  MAX_PAGINES_NO_LLEGITS, MS_ESPERA_OBERTURA, MS_RESSALT, anunciDeNous, clauDe, classificaCanvi,
+  MAX_PAGINES_NO_LLEGITS, MS_ESPERA_OBERTURA, MS_RESSALT, anotaGrups, anunciDeNous, clauDe, classificaCanvi,
   comportamentDesplacament, construeixFiles, estaAlFons, estatObertura, extremsSeq, noLlegitsEnObrir,
   nousAnunciables, scrollPerCentrar, scrollPerDeixarDalt
 } from '../conversa.js';
@@ -63,6 +64,51 @@ import { desaEsborrany, llegixEsborrany } from '../esborranys.js';
 /* Gauntlet 261025_0545 (IA-07) · El nom de la IAIA a la seua benvinguda, el
    del padró (identitatsSeed.js), com a la capçalera i a les bombolles. */
 const NOM_IAIA = agentIASeed(IAIA_ID)?.name || 'IAIA MarIA';
+
+/* IDEA-56 (pla 261029_1605, Bloc F.2) · Les respostes locals de la IAIA que
+   es queden a la vista (les últimes). */
+const MAXIM_RESPOSTES_LOCALS = 20;
+
+/* Gauntlet 261029 (cicle 1, iaia-local-respostes-desordenades) · Cada
+   resposta local va just darrere de la SEUA pregunta, no darrere de tota la
+   llista: amb dues preguntes l'ordre era Q1, Q2, A1, A2, i al grup públic de
+   /iaia la resposta semblava la de l'últim que algú havia escrit (la raó
+   d'IA-07 per a la benvinguda). `respostes`: { missatge, pregunta: { id,
+   text, previs } }. L'àncora és l'id del missatge propi que torna
+   onSendMessage (el pendent i l'eco del servidor el comparteixen: el servidor
+   és idempotent per id). Si no en torna cap, el primer missatge propi amb el
+   mateix text que no hi era en preguntar (`previs`) ni ancora una altra
+   resposta. Mai per creatAl: el rellotge del servidor i el del dispositiu no
+   casen. Sense àncora a la llista (l'eco encara no ha arribat, o ja no hi
+   és), al final, com abans. Una fila 'iaia-local' talla el grup
+   (anotaGrups): la pregunta següent torna a portar la cua. Funció pura. */
+function intercalaRespostesLocals(files, respostes) {
+  if (!respostes.length) return files;
+  const propies = files.filter((fila) => fila.tipus === 'missatge' && fila.msg?.sender === 'me');
+  const perClau = new Set(propies.map((fila) => fila.clau));
+  const preses = new Set();
+  const darrere = new Map();
+  const soltes = [];
+  for (const { missatge, pregunta } of respostes) {
+    const ancora = pregunta.id != null
+      ? (perClau.has(pregunta.id) ? pregunta.id : null)
+      : propies.find((fila) => !preses.has(fila.clau) && !pregunta.previs.has(fila.clau)
+        && String(fila.msg.text ?? '').trim() === pregunta.text)?.clau ?? null;
+    const fila = { tipus: 'iaia-local', clau: missatge.id, msg: missatge };
+    if (ancora == null) {
+      soltes.push(fila);
+      continue;
+    }
+    preses.add(ancora);
+    darrere.set(ancora, [...(darrere.get(ancora) || []), fila]);
+  }
+  const intercalades = [];
+  for (const fila of files) {
+    intercalades.push(fila);
+    if (fila.tipus === 'missatge' && darrere.has(fila.clau)) intercalades.push(...darrere.get(fila.clau));
+  }
+  return anotaGrups([...intercalades, ...soltes]);
+}
 
 /* Gauntlet 261025_0545 (XU-05) · Els missatges que creixen després de muntar
    (la foto o el vídeo que carreguen, la llista viva d'«El Comú»): només
@@ -217,11 +263,20 @@ function estabilitza(rebuts, previ) {
    fallat ('lectura' o 'marca') i tria el text de l'avís; `llegintFil`, si
    una lectura del fil vola: «Torna-ho a provar» ho diu i no torna a demanar.
    Un context d'abans no els porta: 'lectura' i false, el de sempre. */
+/* IDEA-56 (pla 261029_1605, Bloc F.2) · `respostaLocalIAIA` (per defecte,
+   respostaDeLaIAIA, el cervell local de data/iaiaLocal.js), només amb
+   `cortesiaIAIA` (remot amb sessió, al grup públic de /iaia, on ningú no
+   contesta): després d'enviar la pregunta, la IAIA respon ací mateix, amb una
+   bombolla seua i l'avís «Resposta local de la IAIA: només la veus tu…».
+   La resposta viu a l'estat d'esta conversa: mai no va al port ni al
+   servidor, no porta `seq` (no marca res com a llegit) i es perd en canviar
+   de fil o recarregar. Si l'enviament falla o la persona no accepta les
+   normes, no hi ha resposta. */
 export default function Conversa({
   initialText = '', clauEsborrany = null, fil, messages: missatgesRebuts, onSendMessage, onSendMedia = null, configAdjunts, usuariAdjunts, onBack, onEnviaAlBloc, onCopia,
   hiHaMes, carregantMes, onCarregaMes, esperaAntics = null, onReintenta, onDescarta, onMarcaVist, locale, t,
   entitatActiva = null, moderacio = null, actorLlista = null, onMutaLlista = null, onTornaAOrigen = null, peu = null, cortesiaIAIA = false, consultaIAIA = false,
-  carregat = true, avisFil = null, onReintentaFil = null, tipusAvisFil = 'lectura', llegintFil = false
+  carregat = true, avisFil = null, onReintentaFil = null, tipusAvisFil = 'lectura', llegintFil = false, respostaLocalIAIA = respostaDeLaIAIA
 }) {
   /* REV-ESTRES-2 · La llista amb els objectes d'abans (estabilitza); la ref
      guarda la de l'últim render confirmat. */
@@ -300,6 +355,20 @@ export default function Conversa({
      enviament posterior, ni recrear l'esborrany després de desmuntar. */
   const revisioCompositorRef = useRef(0);
   useEffect(() => () => { revisioCompositorRef.current += 1; }, []);
+  /* IDEA-56 (Bloc F.2) · Les respostes locals de la IAIA (vegeu
+     `respostaLocalIAIA`), en una cua perquè arriben en l'ordre de les
+     preguntes, i si la conversa encara és muntada (en l'efecte: resistent a
+     StrictMode). Cap setState després de desmuntar.
+     Gauntlet 261029 (cicle 1) · Cada una porta la seua pregunta, per a anar
+     darrere d'ella (intercalaRespostesLocals): { missatge, pregunta }. */
+  const [respostesLocals, setRespostesLocals] = useState([]);
+  const muntadaRef = useRef(false);
+  const comptadorLocalRef = useRef(0);
+  const cuaLocalRef = useRef(Promise.resolve());
+  useEffect(() => {
+    muntadaRef.current = true;
+    return () => { muntadaRef.current = false; };
+  }, []);
   const geometria = useRef({ claus: [], alcada: 0 });
   /* Als grups i als Avisos cada bombolla diu qui l'ha escrita. */
   const esGrup = fil?.tipus === 'grup' || fil?.tipus === 'canal';
@@ -432,13 +501,14 @@ export default function Conversa({
 
   /* La barra de resposta ocupa lloc davall de la llista: si eres a baix, s'hi
      continua (com a les apps de missatgeria, l'últim missatge no queda tapat).
-     Gauntlet 261025_0545 (XC-14) · L'avís del fil també hi ocupa lloc. */
+     Gauntlet 261025_0545 (XC-14) · L'avís del fil també hi ocupa lloc.
+     IDEA-56 (Bloc F.2) · I la resposta local de la IAIA, que arriba pel final. */
   useLayoutEffect(() => {
     const ol = llistaRef.current;
     if (!ol || !aBaixRef.current) return;
     ol.scrollTop = ol.scrollHeight;
     apuntaVist(vistRef.current, ol);
-  }, [resposta, avisFil]);
+  }, [resposta, avisFil, respostesLocals]);
 
   /* Gauntlet 261025_0545 (XU-05) · Enganxada al fons també quan canvia una
      mida i no la llista: la foto que acaba de carregar, el compositor que
@@ -700,9 +770,20 @@ export default function Conversa({
     setText('');
     setResposta(null);
     if (propi) desaEsborrany(clauEsborrany, '');
+    /* Gauntlet 261029 (cicle 1) · Els missatges propis amb este mateix text
+       que ja hi eren abans de preguntar: la resposta local no s'hi ancora
+       (intercalaRespostesLocals). Només amb la cortesia. */
+    const previs = cortesiaIAIA
+      ? new Set((establesRef.current?.llista || [])
+        .filter((m) => m?.sender === 'me' && m.id != null && String(m.text ?? '').trim() === value).map((m) => String(m.id)))
+      : null;
+    let enviat = false;
+    let idPropi = null;
     try {
-      if (citat?.id != null) await onSendMessage(fil, value, { respostaA: citat.id });
-      else await onSendMessage(fil, value);
+      const enviats = citat?.id != null ? await onSendMessage(fil, value, { respostaA: citat.id }) : await onSendMessage(fil, value);
+      /* XatContext torna [definitiu]: el mateix id que el pendent. */
+      idPropi = Array.isArray(enviats) && enviats[0]?.id != null ? String(enviats[0].id) : null;
+      enviat = true;
     } catch {
       /* Si el compositor continua igual, es recuperen el text i la cita.
          Si la persona ja ha continuat, mana el que ha fet després. */
@@ -711,7 +792,26 @@ export default function Conversa({
       if (propi) desaEsborrany(clauEsborrany, value);
       if (citat) setResposta(citat);
     }
-  }, [text, resposta, fil, onSendMessage, clauEsborrany]);
+    /* IDEA-56 (Bloc F.2) · La pregunta ja ha anat al grup públic: la IAIA
+       respon ací, només per a qui pregunta. Si no troba res, la seua frase
+       de sempre (RESPOSTA_IAIA). */
+    if (!enviat || !cortesiaIAIA || typeof respostaLocalIAIA !== 'function') return;
+    cuaLocalRef.current = cuaLocalRef.current
+      .then(() => respostaLocalIAIA(value))
+      .catch(() => null)
+      .then((trobada) => {
+        if (!muntadaRef.current) return;
+        comptadorLocalRef.current += 1;
+        const missatge = {
+          id: `iaia-local:${comptadorLocalRef.current}`, sender: 'other', author: NOM_IAIA, usuariId: IAIA_ID, is_ai: true,
+          text: typeof trobada === 'string' && trobada.trim() ? trobada : RESPOSTA_IAIA, creatAl: new Date().toISOString()
+        };
+        const pregunta = { id: idPropi, text: value, previs };
+        setRespostesLocals((previes) => [...previes, { missatge, pregunta }].slice(-MAXIM_RESPOSTES_LOCALS));
+        anunciRef.current?.([missatge]);
+      })
+      .catch(() => {});
+  }, [text, resposta, fil, onSendMessage, clauEsborrany, cortesiaIAIA, respostaLocalIAIA]);
 
   /* En triar «Respon» el focus va al camp, com a les apps de missatgeria.
      Directament i no amb un efecte sobre `resposta`: respondre al missatge que ja és la
@@ -791,7 +891,13 @@ export default function Conversa({
 
   /* Files de la llista (conversa.js): separadors de dia, el de no llegits i
      les bombolles amb la marca de primera del grup. */
-  const files = useMemo(() => construeixFiles(messages, { noLlegits }), [messages, noLlegits]);
+  const filesDelFil = useMemo(() => construeixFiles(messages, { noLlegits }), [messages, noLlegits]);
+  /* Gauntlet 261029 (cicle 1) · Amb la cortesia, les respostes locals de la
+     IAIA hi entren darrere de la seua pregunta (intercalaRespostesLocals). */
+  const files = useMemo(
+    () => (cortesiaIAIA ? intercalaRespostesLocals(filesDelFil, respostesLocals) : filesDelFil),
+    [filesDelFil, cortesiaIAIA, respostesLocals]
+  );
 
   /* Els missatges per id, per a trobar el que cita cada resposta. */
   const perId = useMemo(() => {
@@ -843,6 +949,20 @@ export default function Conversa({
   const bombolles = useMemo(() => files.map((fila) => {
     if (fila.tipus === 'dia') return <SeparadorDia key={fila.clau} iso={fila.iso} locale={locale} t={t} />;
     if (fila.tipus === 'no-llegits') return <SeparadorNoLlegits key={fila.clau} quants={fila.quants} t={t} />;
+    /* IDEA-56 (Bloc F.2) · Una resposta local de la IAIA, amb el seu avís
+       (la classe de la cortesia): només la veu qui ha preguntat. Sense seq
+       (cap data-vist), sense «Respon» ni denúncia. Gauntlet 261029 (cicle
+       1) · Darrere de la seua pregunta (intercalaRespostesLocals). */
+    if (fila.tipus === 'iaia-local') {
+      return (
+        <Fragment key={fila.clau}>
+          <Bombolla missatge={fila.msg} locale={locale} t={t} onCopia={onCopia} />
+          <li className="sdp-xat-conversa-buida">
+            <small>{t('section.xat.iaia.local.avis', 'Resposta local de la IAIA: només la veus tu i no s’ha guardat al xat compartit.')}</small>
+          </li>
+        </Fragment>
+      );
+    }
     const msg = fila.msg;
     /* Fase D (261020, tasca 2) · Què es pot denunciar o bloquejar d'esta bombolla. */
     const objectiu = moderacio && !msg.bloquejat ? moderacio.objectiuDeMissatge?.(msg, fil) ?? null : null;
@@ -949,6 +1069,8 @@ export default function Conversa({
         ) : carregantFil ? null : messages.length === 0 && !cortesiaIAIA ? (
           <li className="sdp-xat-conversa-buida">{t('section.xat.conversaBuida', 'Cap missatge encara. Inicia la conversa!')}</li>
         ) : null}
+        {/* Les bombolles i, amb la cortesia, les respostes locals de la IAIA
+            darrere de la seua pregunta (Gauntlet 261029, cicle 1). */}
         {bombolles}
       </ol>
 

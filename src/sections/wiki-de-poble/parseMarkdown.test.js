@@ -1,3 +1,5 @@
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { parseMarkdown, parseMarkdownEnLinia, extreuEditorial } from './parseMarkdown.js';
 import { marcaDeTaula, sanitizeHtml } from '../../utils/sanitize.js';
@@ -172,6 +174,19 @@ describe('parseMarkdown · llistes (agrupació i autonumeració)', () => {
     expect(arrel.querySelectorAll(':scope > p')).toHaveLength(1);
     expect(arrel.querySelector(':scope > p').textContent).toBe('Paràgraf entremig.');
   });
+
+  /* Decisió del Mestre (30-10-2026) · La marca provisional del tipus de llista
+     és un atribut data- que no ix mai a l'HTML, i la font no escriu cap classe
+     sense regla (tractor-pedra-seca, LLEI_01). */
+  it('les llistes ixen netes: cap marca provisional ni classe als <li>, i la font no marca amb classes', () => {
+    const html = parseMarkdown('- Alfa\n- Beta\n\n1. Un\n2. Dos');
+    expect(html).toContain('<ul><li>Alfa</li><li>Beta</li></ul>');
+    expect(html).toContain('<ol><li>Un</li><li>Dos</li></ol>');
+    expect(html).not.toMatch(/data-llista|<li class=/);
+    const font = readFileSync(resolve(process.cwd(), 'src/sections/wiki-de-poble/parseMarkdown.js'), 'utf8');
+    expect(font).not.toMatch(/<li class=/);
+    expect(font).toMatch(/<li data-llista="ul">/);
+  });
 });
 
 describe('parseMarkdown · diagrames mermaid', () => {
@@ -182,6 +197,13 @@ describe('parseMarkdown · diagrames mermaid', () => {
     expect(targeta).not.toBeNull();
     expect(targeta.querySelector('.sdp-diagrama-capcalera').textContent).toContain('Diagrama d’arquitectura');
     expect(targeta.querySelector('pre.sdp-diagrama-cos > code.language-mermaid').textContent).toContain('flowchart LR');
+  });
+
+  it('la icona de la capçalera no porta cap classe sense regla (Decisió del Mestre, 30-10-2026)', () => {
+    const arrel = pinta('```mermaid\nflowchart LR\n  A --> B\n```');
+    const icona = arrel.querySelector('.sdp-diagrama-capcalera > span');
+    expect(icona.textContent).toBe('📐');
+    expect(icona.hasAttribute('class')).toBe(false);
   });
 });
 

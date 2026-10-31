@@ -4,7 +4,7 @@
 import React from 'react';
 import { act, cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 import { afterEach, beforeEach, expect, test, vi } from 'vitest';
-const m = vi.hoisted(() => ({ desa: vi.fn(), historial: vi.fn(), refresh: vi.fn(), capacitats: new Set(['personalitzacio']), core: null }));
+const m = vi.hoisted(() => ({ desa: vi.fn(), historial: vi.fn(), refresh: vi.fn(), capacitats: new Set(['personalitzacio']), core: null, traduccio: [] }));
 vi.mock('../../data/backendPort.js', () => ({
   teCapacitat: (cap) => m.capacitats.has(cap),
   adminDesaPersonalitzacio: (...args) => m.desa(...args),
@@ -12,9 +12,11 @@ vi.mock('../../data/backendPort.js', () => ({
 }));
 vi.mock('../../app/contexts/CoreContentContext.jsx', () => ({ useCoreContent: () => m.core }));
 vi.mock('../../components/universal/UniversalPage', () => ({
-  UniversalPage: ({ title, lead, children }) => (
-    <main><header className="page-title"><h1>{title}</h1></header><p>{lead}</p>{children}</main>
-  )
+  UniversalPage: ({ title, lead, children, traduccio }) => {
+    // Gauntlet 261030 (cicle 4) · Cada pintada diu si la pàgina es pot traduir.
+    m.traduccio.push(traduccio);
+    return <main><header className="page-title"><h1>{title}</h1></header><p>{lead}</p>{children}</main>;
+  }
 }));
 import { FACETA_TAXONOMIA, FacetaTaxonomia, nomFitxerExportacio, payloadDe } from './FacetaTaxonomia.jsx';
 import { SYSTEM_PAGES } from '../../config/systemPages.js';
@@ -30,7 +32,7 @@ const consola = () => seccio(`Pàgina «${PAGE_COPY.consola.title}»`);
 const desar = () => act(async () => { fireEvent.click(screen.getByRole('button', { name: 'Desar' })); });
 
 beforeEach(() => {
-  m.desa.mockReset(); m.historial.mockReset(); m.refresh.mockReset();
+  m.desa.mockReset(); m.historial.mockReset(); m.refresh.mockReset(); m.traduccio = [];
   m.capacitats = new Set(['personalitzacio']);
   m.core = core();
 });
@@ -40,6 +42,23 @@ test('FACETA_TAXONOMIA: id, títol i icona, congelada', () => {
   expect(FACETA_TAXONOMIA).toMatchObject({ id: 'taxonomia', titol: 'Etiquetes i categories' });
   expect(typeof FACETA_TAXONOMIA.icona).toBe('object');
   expect(Object.isFrozen(FACETA_TAXONOMIA)).toBe(true);
+});
+
+/* Gauntlet 261030 (cicle 4, traduir-tauler-taxonomia-uuid-autors) · Com la
+   resta del Tauler: l'Historial porta l'uuid de qui va desar cada versió i
+   l'esborrany encara no és públic. Cap pintada amb Traduir actiu. */
+test('sense Traductor: les dues pàgines de la faceta (amb la capacitat i sense) porten traduccio={false}', async () => {
+  m.historial.mockResolvedValueOnce([
+    { versio: 1, payload: { v: 1, pagines: {}, categories: [], etiquetes: [] }, creat: '2026-10-09T10:00:00+00:00', autor: '9b2f6c1e-5d1a-4c7e-9a33-0d7e2f1b8c44' },
+  ]);
+  render(<FacetaTaxonomia />);
+  await act(async () => { fireEvent.click(screen.getByRole('button', { name: 'Historial' })); });
+  expect(screen.getByRole('region', { name: 'Versions desades de la taxonomia' }).textContent).toContain('9b2f6c1e');
+  cleanup();
+  m.capacitats = new Set(['admin']);
+  render(<FacetaTaxonomia />);
+  expect(m.traduccio.length).toBeGreaterThan(1);
+  expect(new Set(m.traduccio)).toEqual(new Set([false]));
 });
 
 test('sense la capacitat personalitzacio: l’estat buit «Este node no admet personalització», la tornada, i cap crida al port', () => {

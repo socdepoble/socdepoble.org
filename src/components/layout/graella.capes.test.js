@@ -7,7 +7,7 @@
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { describe, expect, test } from 'vitest';
-import { PUNTS_DE_TALL } from './graella.js';
+import { PUNTS_DE_TALL, midaDeGraella } from './graella.js';
 
 const senseComentaris = (codi) => codi
   .replace(/\/\*[\s\S]*?\*\//g, '')
@@ -77,6 +77,22 @@ describe('App.jsx (només lectura: el T7 no el toca)', () => {
 
   test('data-sdp-estret talla a PUNTS_DE_TALL.estret', () => {
     expect(app).toContain(`ample <= ${estret}`);
+  });
+});
+
+/* Decisió 1 del Mestre (30-10-2026 ~15:00: «> 720 px per a 3 columnes fixes
+   i <= 720 px per a vista mòbil») · La CSS (max-width, que inclou el 720) i
+   App.jsx (<=) tallen inclusiu; la mida de la closca, el mateix, amb i sense
+   columnesFixes (el Workspace; el Xat i les apps). Abans, 720 justos eren
+   «ample» o «mitja» amb la CSS ja en mòbil. */
+describe('la frontera d’«estret» és la mateixa al JS i a la CSS', () => {
+  test('a PUNTS_DE_TALL.estret és «estret» per a tots els consumidors; un píxel més, ja no', () => {
+    expect(llig('src/css/layout.css')).toContain(`@media (max-width: ${estret}px)`);
+    expect(llig('src/app/App.jsx')).toContain(`ample <= ${estret}`);
+    for (const opcions of [{}, { columnesFixes: true }]) {
+      expect([opcions, midaDeGraella(estret, {}, {}, opcions)]).toEqual([opcions, 'estret']);
+      expect([opcions, midaDeGraella(estret + 1, {}, {}, opcions)]).not.toEqual([opcions, 'estret']);
+    }
   });
 });
 

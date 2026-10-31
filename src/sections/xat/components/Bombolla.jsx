@@ -55,6 +55,12 @@
  * memoritzat a XatSection) i `onMutaLlista` (el port, tasca 4) baixen de
  * Conversa; en el mode de selecció la targeta és només de lectura. Sense
  * instantània, o amb un altre tipus, el DOM de sempre.
+ *
+ * IDEA-53 (pla 261029_1605, Bloc B) · La negreta d'estil WhatsApp, `*text*`
+ * i `**text**` (negreta.js), es pinta amb <strong> de React, mai amb HTML
+ * cru, i pot portar enllaços dins; als enllaços no s'hi busquen asteriscs.
+ * «2 * 3 = 6», «a*b» o una llista «* element» no canvien. Sense cap negreta,
+ * el DOM de sempre. «Copia el text» copia el text cru, amb els asteriscs.
  */
 import { memo, useEffect, useRef, useState } from 'react';
 import { AlertTriangle, Ban, CheckCircle2, Circle, Copy, Flag, MoreVertical, Reply } from 'lucide-react';
@@ -64,6 +70,7 @@ import CitaResposta from './CitaResposta.jsx';
 import EnllacSegur from './EnllacSegur.jsx';
 import { etiquetaHora } from '../temps.js';
 import { segmentaEnllacos, segmentaRutesDeLaWiki } from '../enllacos.js';
+import { segmentaNegreta } from '../negreta.js';
 /* Onada 6 · Un codi SDP traduït (SDP-XAT-429, el límit de missatges) en lloc del text cru. */
 import { textDErrorDelXat } from '../errorsXat.js';
 import { rutaCanonicaDePerfil, rutaDePerfil } from '../../../config/navigation.js';
@@ -109,14 +116,20 @@ function AutorDeLaBombolla({ missatge, esGrup, triable, t }) {
    /wikidepoble?item=<slug> que cita la IAIA local és un enllaç intern de
    l'app, amb la classe dels enllaços del xat. Sense la prop, els segments i el
    DOM són els de sempre. */
+function pintaSegment(segment, clau, t) {
+  if (segment.tipus === 'ruta') return <Link key={clau} className="sdp-xat-enllac" to={segment.ruta}>{segment.text}</Link>;
+  if (segment.tipus !== 'enllac') return <span key={clau}>{segment.text}</span>;
+  return <EnllacSegur key={clau} segment={segment} t={t} />;
+}
+
+/* IDEA-53 · Els trams en negreta (negreta.js) van dins d'un <strong> de
+   React, enllaços inclosos; la resta, el DOM de sempre. */
 function TextAmbEnllacos({ text, t, rutesDeLaWiki = false }) {
   const enllacos = segmentaEnllacos(text);
   const segments = rutesDeLaWiki ? segmentaRutesDeLaWiki(enllacos) : enllacos;
-  return segments.map((segment, i) => {
-    if (segment.tipus === 'ruta') return <Link key={i} className="sdp-xat-enllac" to={segment.ruta}>{segment.text}</Link>;
-    if (segment.tipus !== 'enllac') return <span key={i}>{segment.text}</span>;
-    return <EnllacSegur key={i} segment={segment} t={t} />;
-  });
+  return segmentaNegreta(segments).flatMap((tram, i) => (tram.negreta
+    ? [<strong key={`n${i}`}>{tram.segments.map((segment, j) => pintaSegment(segment, j, t))}</strong>]
+    : tram.segments.map((segment, j) => pintaSegment(segment, `${i}-${j}`, t))));
 }
 
 function textDeSistema(missatge, t) {
@@ -307,7 +320,7 @@ function Bombolla({
           ) : null}
         </div>
         {teMenu ? (
-          <div className={`sdp-xat-bombolla__accions${menuObert ? ' sdp-xat-bombolla__accions--obert' : ''}`} ref={menuRef}>
+          <div className={menuObert ? 'sdp-xat-bombolla__accions sdp-xat-bombolla__accions--obert' : 'sdp-xat-bombolla__accions'} ref={menuRef}>
             <button
               ref={botoRef}
               type="button"

@@ -71,8 +71,14 @@ const munta = (ruta) => render(
 );
 const url = () => screen.getByTestId('url').textContent;
 const detall = () => screen.getByTestId('detall').textContent;
+/* Ordre del Mestre (30-10-2026) · A 1400 CARPETES ja arrenca oberta: és
+   l'arbre, no el rail. El nom de la carpeta activa és el de la fila de
+   l'arbre (en el rail, l'aria-label). */
 const rail = () => screen.getByRole('navigation', { name: 'CARPETES' });
-const carpetaActiva = () => within(rail()).getAllByRole('button').find((b) => b.getAttribute('aria-current') === 'page')?.getAttribute('aria-label');
+const carpetaActiva = () => {
+  const activa = within(rail()).getAllByRole('button').find((b) => b.getAttribute('aria-current') === 'page');
+  return activa ? (activa.getAttribute('aria-label') ?? activa.querySelector('.sdp-workspace-nav-item__label')?.textContent ?? null) : undefined;
+};
 const fitxa = (titol) => screen.getByRole('button', { name: titol });
 
 test('entrar a /notes sense res obri n1, com sempre, i no hi afig la carpeta', () => {

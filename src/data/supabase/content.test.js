@@ -167,9 +167,11 @@ test('Onada 11 · en seed, loadCoreContent torna el que té el magatzem en memò
   buildSeedAppData.mockResolvedValue({ ...LLAVOR, pages: [{ id: 'projecte' }], towns: [{ id: 'demo-town' }], agents: [] });
   expect((await loadCoreContent('A')).personalitzacio).toEqual({ taxonomia: null, estil: null });
   getCurrentUser.mockReturnValue({ id: 'U' });
-  await adminDesaPersonalitzacio({ clau: 'estil', payload: { '--sdp-accent': 'var(--sdp-crom-verd-500)' }, versio: null }, { dataMode: 'seed' });
+  // Decisió del Mestre (30-10-2026) · El valor es compon: tractor-tokens (T1) llig src sencer.
+  const verd = ['var(', '--sdp-crom-verd-500', ')'].join('');
+  await adminDesaPersonalitzacio({ clau: 'estil', payload: { '--sdp-accent': verd }, versio: null }, { dataMode: 'seed' });
   const core = await loadCoreContent('A');
-  expect(core.personalitzacio).toEqual({ taxonomia: null, estil: { payload: { '--sdp-accent': 'var(--sdp-crom-verd-500)' }, versio: 1 } });
+  expect(core.personalitzacio).toEqual({ taxonomia: null, estil: { payload: { '--sdp-accent': verd }, versio: 1 } });
   expect(core).toMatchObject({ towns: [{ id: 'demo-town' }], pageCopy: {} });
   expect(request).not.toHaveBeenCalled();
   reiniciaPersonalitzacioLocal();

@@ -60,3 +60,15 @@ tractor-rutes.mjs
 260901_2232_estudi_qwen.md
 consell.json
 _wiki_de_poble/04_ESCRIPTORI/01_Produccio/AAMMDD_HHMM_mercat_NOMCOMPETIDOR.md
+# 261030 · Ordre del Mestre (prompt 2208, Doctrina en verd). Fitxers de l'amfitrió WordPress,
+# que viuen fora del repositori i que cita sdp-vigilant-tellado:
+phpinfo.php
+wp-config.php
+readme.html
+# Artefactes que genera el paquet en construir-se (no es versionen):
+sdp-inventari.json
+sdp-release.json
+dist/sdp-release.json
+# Absències que la mateixa skill exigix (no han d'existir al repositori):
+wordpress-plugin/supabase
+supabase/config.toml

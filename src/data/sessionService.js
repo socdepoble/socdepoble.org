@@ -62,7 +62,9 @@ const CAMPS_FORA_IDENTITAT = new Set([
   'language', 'themeMode', 'manageDocumentHead', 'version',
   'backend_url', 'supabaseUrl', 'tenant_id',
   'nomPoble', 'poble', 'rutaInicial',
-  'rutaAUrl', 'apps', 'traductorUrl'
+  'rutaAUrl', 'apps', 'traductorUrl',
+  // TC3.1 (261030) · Els destins del traductor-url: servei, no identitat.
+  'traductorLlengues'
 ]);
 
 function clauConfiguracio(config) {

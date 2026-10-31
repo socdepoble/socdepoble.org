@@ -168,7 +168,7 @@ test('Onada 6 · amb ruta, el títol de la fila és l’enllaç a la publicació
 /* ── Contrast WCAG 2.x, en clar i en fosc ─────────────────────────────────
    Els tokens es resolen des de tokens.css (i els cànons de design-tokens.css):
    el tema clar, les declaracions abans del bloc fosc; el fosc, les mateixes
-   amb el bloc fosc damunt. Els àlies --sdp-cal-* i els colors de cada font
+   amb el bloc fosc damunt. Els àlies --cal-* i els colors de cada font
    es lligen del bloc SDP:calendari-vistes de modules.css, i cada parella, de
    la regla que de veres la pinta: si algú canvia un token de la regla, la
    prova ho mesura. Text: 4,5:1. Objectes i estats (punts, línia, vores,
@@ -192,8 +192,8 @@ function valor(selector, propietat) {
   expect(regla, `${selector} { ${propietat} }`).toBeTruthy();
   return propietats(regla.text)[propietat];
 }
-/* Els àlies de les vistes noves i els de cada font (--sdp-cal-bloc-*). */
-const ALIES = REGLES.find((r) => r.selectors.includes('.sdp-cal-agenda') && r.cos['--sdp-cal-hui-fons']).cos;
+/* Els àlies de les vistes noves i els de cada font (--cal-bloc-*). */
+const ALIES = REGLES.find((r) => r.selectors.includes('.sdp-cal-agenda') && r.cos['--cal-hui-fons']).cos;
 const deLaFont = (font) => REGLES.find((r) => r.selectors.includes(`.sdp-cal-font--${font}`)).cos;
 function hex(text, mapa, vist = new Set()) {
   const net = text.replace(/var\((--[\w-]+)\)/g, (_, nom) => {

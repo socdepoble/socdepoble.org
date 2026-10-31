@@ -24,7 +24,7 @@
  * sempre.
  *
  * ZOOM. Fluid, d'1× a 4×, amb transform: scale() i translate() sobre la imatge
- * (tres propietats CSS, --sdp-visor-escala, --sdp-visor-x i --sdp-visor-y,
+ * (tres propietats CSS locals, --visor-escala, --visor-x i --visor-y,
  * escrites des d'una ref amb usePropietatsCss: cap atribut style). La roda
  * (un listener propi, no passiu, que es lleva en tancar), el doble clic (1× ↔
  * 2×, a la foto i al fons fosc: vegeu TANCAR AMB UN CLIC AL FONS), els botons
@@ -279,7 +279,7 @@ function ContingutVisor({ marcRef, llista, actual, onCanvi, onTanca, text, metad
 
   /* Les tres propietats només s'escriuen amb la foto ampliada o moguda: sense
      zoom, el node no porta cap estil. */
-  usePropietatsCss(imatgeRef, ampliada ? { '--sdp-visor-escala': v.escala, '--sdp-visor-x': `${v.x}px`, '--sdp-visor-y': `${v.y}px` } : {});
+  usePropietatsCss(imatgeRef, ampliada ? { '--visor-escala': v.escala, '--visor-x': `${v.x}px`, '--visor-y': `${v.y}px` } : {});
 
   /* El desplaçament no deixa la foto fora del visor (dinsDelsLimits). */
   const limita = (proposta) => dinsDelsLimits(proposta, escenariRef.current, imatgeRef.current);

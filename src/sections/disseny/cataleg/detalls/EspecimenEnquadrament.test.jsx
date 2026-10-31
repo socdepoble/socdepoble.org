@@ -13,7 +13,7 @@ vi.mock('../../../../components/universal/enquadrament/imatgeCanvas.js', () => (
 }));
 import { MemoryRouter } from '../../../../app/contexts/RouterContext.jsx';
 import EspecimenEnquadrament from './EspecimenEnquadrament.jsx';
-import { dataOriginal, gpsTorre, jpegAmbExif, orientacio } from '../../../../components/universal/enquadrament/jpegProva.js';
+import { dataOriginal, gpsTorre, jpegAmbExif, orientacio } from '../../../../../tests/helpers/jpegProva.js';
 
 const IAIA = '/assets/fotos/iaia-maria.png';
 let errors;

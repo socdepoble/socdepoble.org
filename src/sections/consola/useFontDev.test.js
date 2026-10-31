@@ -131,13 +131,37 @@ describe('useFontDev a DEV', () => {
   });
 });
 
+/* Decisió del Mestre (31-10-2026) · Fora de DEV i sense la instantània
+   publicada (un paquet sense la bandera SDP_CONSOLA_INSTANTANIA: WordPress,
+   l'app), cap lectura; al build web, amb la bandera, es llig la instantània. */
 describe('useFontDev fora de DEV', () => {
-  test('\'absent\' des del principi, i ni muntar ni Refrescar demanen res', () => {
+  test('sense instantània: \'absent\' des del principi, i ni muntar ni Refrescar demanen res', () => {
     vi.stubEnv('DEV', false);
     const { carregador } = carregadorManual();
     const { result } = renderHook(() => useFontDev(carregador));
     expect(result.current).toMatchObject({ estat: 'absent', valor: null, error: null });
     act(() => { result.current.carrega(); });
+    expect(result.current.estat).toBe('absent');
+    expect(carregador).not.toHaveBeenCalled();
+  });
+
+  test('amb la instantània del build web: llig en muntar i amb Refrescar, com a DEV', async () => {
+    vi.stubEnv('DEV', false);
+    vi.stubEnv('SDP_CONSOLA_INSTANTANIA', '1');
+    const { carregador, lectures } = carregadorManual();
+    const { result } = renderHook(() => useFontDev(carregador));
+    expect(result.current.estat).toBe('loading');
+    await resol(lectures[0], { generat: 'g' });
+    expect(result.current).toMatchObject({ estat: 'ready', valor: { generat: 'g' }, error: null });
+    act(() => { result.current.carrega(); });
+    expect(carregador).toHaveBeenCalledTimes(2);
+  });
+
+  test('una bandera que no és exactament \'1\' no obri res', () => {
+    vi.stubEnv('DEV', false);
+    vi.stubEnv('SDP_CONSOLA_INSTANTANIA', 'true');
+    const { carregador } = carregadorManual();
+    const { result } = renderHook(() => useFontDev(carregador));
     expect(result.current.estat).toBe('absent');
     expect(carregador).not.toHaveBeenCalled();
   });

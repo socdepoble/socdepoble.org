@@ -19,6 +19,9 @@
    · RequireAuth només embolica /admin/* (App.jsx:789), /el-meu-perfil (:838)
      i /consola/* fora de vite serve (:776-778, guardaConsola.js). /control
      no porta cap guarda (:800): sense sessió es pinta el Panell.
+     Ordre del Mestre (30-10-2026, prompt 2208, T2.2) · Derogat per a
+     /consola/*: és de lectura pública en qualsevol entorn, sense RequireAuth
+     ni guarda (guardaConsola.js, retirada el 31-10-2026).
    La reproducció ho confirma: sense sessió, /app/gestoria ja es muntava a
    vite serve, sense portar a /registre. Estes proves ho fixen perquè cap
    canvi de guarda ho trenque, i fixen que les rutes amb guarda continuen
@@ -78,13 +81,6 @@ vi.mock('../config/dataMode.js', async (importOriginal) => {
   return { ...real, enterRemoteMode: (...args) => dades.enterRemoteMode(...args) };
 });
 
-/* Un build (DEV false) per a la Consola, com App.test.jsx:28-32. */
-const guarda = vi.hoisted(() => ({ produccio: false }));
-vi.mock('./guards/guardaConsola.js', async (importOriginal) => {
-  const real = await importOriginal();
-  return { ...real, consolaDemanaSessio: (dev) => guarda.produccio || real.consolaDemanaSessio(dev) };
-});
-
 /* D2 · Els tres modes de dades (dataMode.js:25). 'remote' és el que pren el
    paquet sense VITE_DATA_MODE (backendConfig.js:19); 'seed' i 'local' són els
    modes locals (dataMode.js:4), el «Mode Local» de la Fase 4: la closca s'obri
@@ -127,7 +123,6 @@ const USUARI = Object.freeze({ id: 'u-t3', user_metadata: Object.freeze({ full_n
 
 afterEach(() => {
   cleanup();
-  guarda.produccio = false;
   window.history.replaceState(null, '', '/');
   vi.unstubAllGlobals();
   vi.restoreAllMocks();
@@ -175,8 +170,10 @@ async function munta(ruta, cos, { usuari = null, backend = {}, capacitats = {}, 
     crides.push(nom);
     return propis[nom] ? propis[nom](...args) : Promise.resolve(null);
   }])));
-  /* L'estat de sessionService és de mòdul: amb compte, se sincronitza abans de muntar (App.test.jsx:424-426). */
-  if (usuari) sincronitza();
+  /* L'estat de sessionService és de mòdul: amb compte, se sincronitza abans de muntar (App.test.jsx:424-426).
+     P1-26 · I sense compte també: la prova d'abans amb USUARI deixava 'dins' i la
+     següent sense sessió cridava getProfile i listMyOrganizations de més. */
+  sincronitza();
   window.history.replaceState(null, '', ruta);
   try {
     render(<PedraSecaEmbed config={{ ...DEL_LLOC, dataMode }} />);
@@ -191,7 +188,9 @@ async function munta(ruta, cos, { usuari = null, backend = {}, capacitats = {}, 
 const contenidor = (id) => document.querySelector(`.sdp-app-contenidor[data-sdp-app="${id}"]`);
 /* L'app ja pintada: el seu H1, dins del contenidor (el component és lazy()). */
 const h1DeLApp = (id) => waitFor(() => {
-  const h1 = contenidor(id)?.querySelector('h1');
+  /* P1-26 · Sense el contenidor (tros lazy encara fred), undefined passava
+     not.toBeNull i waitFor tornava undefined a la primera. */
+  const h1 = contenidor(id)?.querySelector('h1') ?? null;
   expect(h1).not.toBeNull();
   return h1;
 }, { timeout: 8000 });
@@ -449,13 +448,24 @@ test.each(['/admin', '/el-meu-perfil'])('sense sessió, %s continua portant a /r
   });
 });
 
-test('sense sessió i en un build (DEV false), /consola continua portant a /registre', async () => {
-  guarda.produccio = true;
-  await munta('/consola', async () => {
-    await waitFor(() => expect(window.location.pathname).toBe(RUTA_ENTRADA));
-    expect(tornar()).toBe('/consola');
-  });
-});
+/* Ordre del Mestre (30-10-2026, prompt 2208, T2.2) · Prova actualitzada a
+   propòsit: /consola és de lectura pública també en un build, sense sessió.
+   El DEV de veres es restablix a mà: este fitxer no fa vi.unstubAllEnvs
+   (els VITE_* buits de dalt han de durar). Derogat: «sense sessió i en un
+   build (DEV false), /consola continua portant a /registre». */
+test('sense sessió i en un build (DEV false), /consola es pinta i no porta a /registre', async () => {
+  const dev = import.meta.env.DEV;
+  vi.stubEnv('DEV', false);
+  try {
+    await munta('/consola', async () => {
+      expect(await screen.findByRole('navigation', { name: 'Pàgines de la Consola' }, { timeout: 8000 })).toBeTruthy();
+      expect(window.location.pathname).toBe('/consola');
+      expect(screen.queryByText('Accés restringit')).toBeNull();
+    });
+  } finally {
+    vi.stubEnv('DEV', dev);
+  }
+}, 10000);
 
 /* D5 · No n'hi ha prou amb l'aria-current de la barra (controlActiu, a
    App.jsx): es pinta per la ruta, encara que ControlSection no s'haja muntat. S'espera el

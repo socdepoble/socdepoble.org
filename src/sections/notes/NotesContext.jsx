@@ -1,4 +1,7 @@
-import { createContext, useContext, useState, useMemo, useCallback, useRef, useLayoutEffect } from 'react';
+import { useContext, useState, useMemo, useCallback, useRef, useLayoutEffect } from 'react';
+/* P1-71 (Gauntlet 261029) · L'objecte de context viu a objectesDeContext.js,
+   que no importa res del projecte. */
+import { NotesContext } from './objectesDeContext.js';
 import { bgSaveManager } from './GlobalSaveManager.js';
 import { useToast } from '@/components/universal/NotificationContext.jsx';
 import { emojiSol } from '../../utils/emoji.js';
@@ -50,8 +53,6 @@ export function etiquetesDeNota(note, _noteFolders, accions = {}) {
 }
 
 const EMPTY_OVERRIDE = {};
-
-const NotesContext = createContext(null);
 
 export function NotesProvider({ children }) {
   const { showToast } = useToast();

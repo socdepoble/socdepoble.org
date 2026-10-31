@@ -27,6 +27,10 @@ vi.mock('./workspace/UniversalWorkspace.jsx', async () => {
 vi.mock('../../sections/disseny/cataleg/detailRegistry', () => ({
   CATALOG_DETAIL_LOADERS: { 'fonaments/contracte': () => null, 'estructura/shell': () => null }
 }));
+/* Ordre del Mestre (30-10-2026, prompt 2208, T2.1) · Disseny registra ara el seu
+   head (useSEO), que necessita la ubicació del router i UIContext; esta suite mira
+   la capçalera editorial: el head el prova DesignSection.seo.test.jsx. */
+vi.mock('../../hooks/useSEO', () => ({ useSEO: () => {} }));
 
 import {
   COPYRIGHT_SDP, MARGE_INSERCIO_MS, dataDElement, dataDeDocument, dataDeFila, dataDelNom, dataHoraDeBarra, diaAmbHora,

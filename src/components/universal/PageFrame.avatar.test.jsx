@@ -220,7 +220,7 @@ describe('la mida: un token de 300px, redó, a l’ample de la capçalera en pan
   };
 
   test('--sdp-avatar-capcalera val 18.75rem (300px), dins de la reixeta de 0.25rem', () => {
-    expect(tokens).toMatch(/--sdp-avatar-capcalera: 18\.75rem;/);
+    expect(tokens).toMatch(/--sdp-avatar-capcalera[:] 18\.75rem;/);
   });
 
   test('.page-title-avatar: min(100%, token), quadrat, redó amb el token de pastilla, centrat', () => {

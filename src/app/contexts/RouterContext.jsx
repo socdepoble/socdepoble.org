@@ -1,8 +1,8 @@
-import React, { createContext, useContext, useState, useEffect, useLayoutEffect, useMemo, useCallback, useRef } from 'react';
+import React, { useContext, useState, useEffect, useLayoutEffect, useMemo, useCallback, useRef } from 'react';
+/* P1-71 (Gauntlet 261029) · Els objectes de context (també RouteParamsContext)
+   viuen a objectesDeContext.js, que no importa res del projecte. */
+import { RouteParamsContext, RouterContext, RouterPrefixContext } from './objectesDeContext.js';
 import { normalitzaBase, resolRuta, treuBase } from './politicaRouter.js';
-
-const RouterContext = createContext();
-const RouterPrefixContext = createContext('');
 
 /* `currentPath` és la ruta de l'app, o `null` FORA DE BASE: el router de
    navegador té una base declarada i la URL del document no hi cau (és una
@@ -163,8 +163,6 @@ export function useSearchParams() {
   
   return [searchParams, setParams];
 }
-
-const RouteParamsContext = createContext({});
 
 export function useParams() {
   return useContext(RouteParamsContext);

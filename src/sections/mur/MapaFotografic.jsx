@@ -41,6 +41,7 @@ import estilDelMapa from './MapaFotografic.css?inline';
 import { Boto, VisorImatges } from '../../components/PedraSeca/index.js';
 import { tradueix, useTraductorOpcional } from '../../components/PedraSeca/hooks/useTraductorOpcional.js';
 import { esAppNativa } from '../../config/origenPublic.js';
+import { getPreferenciaLlegat, setPreferenciaLlegat } from '../../config/storage.js';
 import { resolveAsset as resolDelPort } from '../../data/backendPort.js';
 import { isSafeAsset } from '../../components/universal/UniversalUtils.js';
 import { esMitjaOpac } from '../../utils/mitjaOpac.js';
@@ -96,28 +97,25 @@ const PRECISIONS_DE_LA_TARGETA = Object.freeze({
 });
 const FLETXES = Object.freeze({ ArrowLeft: [-1, 0], ArrowRight: [1, 0], ArrowUp: [0, -1], ArrowDown: [0, 1] });
 
-/* ═══ L'EMMAGATZEMATGE D'ESTE NAVEGADOR (sempre dins d'un try) ═════ */
+/* ═══ L'EMMAGATZEMATGE D'ESTE NAVEGADOR (sempre dins d'un try) ═════
+   CL-08 · Passa per la capa única de config/storage.js (porta Persistència
+   L2). Les claus són les de sempre, sense prefix: la política de privacitat
+   les nomena (legalContent.js) i canviar-les faria perdre la tria desada. */
 
 function llegixFons() {
-  try {
-    return window.localStorage.getItem(CLAU_DEL_FONS) === '1';
-  } catch {
-    return false;
-  }
+  return getPreferenciaLlegat(CLAU_DEL_FONS) === '1';
 }
 
 function desaFons(actiu) {
-  try {
-    if (actiu) window.localStorage.setItem(CLAU_DEL_FONS, '1');
-    else window.localStorage.removeItem(CLAU_DEL_FONS);
-  } catch { /* sense emmagatzematge, la tria dura la visita */ }
+  /* Sense emmagatzematge, setPreferenciaLlegat torna false i la tria dura la visita. */
+  setPreferenciaLlegat(CLAU_DEL_FONS, actiu ? '1' : null);
 }
 
 const esDesplacament = (valor) => Array.isArray(valor) && valor.length === 2 && valor.every(Number.isFinite);
 
 function llegixPosicions(conjunt) {
   try {
-    const desat = JSON.parse(window.localStorage.getItem(CLAU_DE_POSICIONS) || 'null');
+    const desat = JSON.parse(getPreferenciaLlegat(CLAU_DE_POSICIONS) || 'null');
     if (!desat || desat.conjunt !== conjunt || !desat.posicions || typeof desat.posicions !== 'object') return {};
     return Object.fromEntries(Object.entries(desat.posicions).filter(([, valor]) => esDesplacament(valor)).slice(-MAX_POSICIONS));
   } catch {
@@ -128,8 +126,7 @@ function llegixPosicions(conjunt) {
 function desaPosicions(conjunt, posicions) {
   try {
     const entrades = Object.entries(posicions).slice(-MAX_POSICIONS);
-    if (!entrades.length) window.localStorage.removeItem(CLAU_DE_POSICIONS);
-    else window.localStorage.setItem(CLAU_DE_POSICIONS, JSON.stringify({ conjunt, posicions: Object.fromEntries(entrades) }));
+    setPreferenciaLlegat(CLAU_DE_POSICIONS, entrades.length ? JSON.stringify({ conjunt, posicions: Object.fromEntries(entrades) }) : null);
   } catch { /* sense emmagatzematge, les posicions duren la visita */ }
 }
 
@@ -678,7 +675,7 @@ function creaMotor({ L, element, tr: traductor, enVista, enAvisDelFons, enObriFo
       }
       if (!tesseles) {
         // Sense cap càrrega anticipada: Leaflet només demana les tessel·les de la vista.
-        tesseles = L.tileLayer(TESSELES.url, { maxZoom: TESSELES.maxZoom, attribution: TESSELES.atribucio, className: 'sdp-mapa-tesseles' });
+        tesseles = L.tileLayer(TESSELES.url, { maxZoom: TESSELES.maxZoom, attribution: TESSELES.atribucio });
         tesseles.on('tileload', () => {
           tesselesCarregades += 1;
           if (mapa.hasLayer(tesseles)) enAvisDelFons(errorsDeTesseles ? 'error' : 'connectat');

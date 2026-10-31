@@ -35,10 +35,10 @@
  * seguix els llindars de la densitat (formaDelBloc).
  *
  * Posicionament sense `style` en JSX: cada bloc escriu les seues propietats
- * (--sdp-cal-inici, --sdp-cal-fi, --sdp-cal-col, --sdp-cal-cols,
- * --sdp-cal-amplada; a la franja, les línies de graella --sdp-cal-col-inici,
- * --sdp-cal-col-fi i --sdp-cal-carril; a la graella, --sdp-cal-hora-inicial i
- * --sdp-cal-hores) des d'una ref (usePropietatsCss), i el bloc
+ * (--cal-inici, --cal-fi, --cal-col, --cal-cols,
+ * --cal-amplada; a la franja, les línies de graella --cal-col-inici,
+ * --cal-col-fi i --cal-carril; a la graella, --cal-hora-inicial i
+ * --cal-hores) des d'una ref (usePropietatsCss), i el bloc
  * SDP:calendari-vistes de modules.css les llig amb calc().
  *
  * CONTRACTE
@@ -104,8 +104,8 @@ function BlocSetmana({ disposat, densitat, ruta = null, LinkComponent }) {
   const ref = useRef(null);
   const { segment, columna, columnes, amplada, iniciVisualMin, fiVisualMin } = disposat;
   usePropietatsCss(ref, {
-    '--sdp-cal-inici': iniciVisualMin, '--sdp-cal-fi': fiVisualMin,
-    '--sdp-cal-col': columna, '--sdp-cal-cols': columnes, '--sdp-cal-amplada': amplada
+    '--cal-inici': iniciVisualMin, '--cal-fi': fiVisualMin,
+    '--cal-col': columna, '--cal-cols': columnes, '--cal-amplada': amplada
   });
   const { ocurrencia } = segment;
   const forma = formaDelBloc(fiVisualMin - iniciVisualMin, { densitat });
@@ -131,7 +131,7 @@ function BlocSetmana({ disposat, densitat, ruta = null, LinkComponent }) {
    triaDesDeLaGraella). */
 function BarraDeLaFranja({ peca, ruta = null, LinkComponent, onClick }) {
   const ref = useRef(null);
-  usePropietatsCss(ref, { '--sdp-cal-col-inici': peca.colInici + 1, '--sdp-cal-col-fi': peca.colFi + 1, '--sdp-cal-carril': peca.carril + 1 });
+  usePropietatsCss(ref, { '--cal-col-inici': peca.colInici + 1, '--cal-col-fi': peca.colFi + 1, '--cal-carril': peca.carril + 1 });
   const { esd } = peca.segment.ocurrencia;
   const classe = [
     'sdp-cal-barra', classeDeFont(esd), peca.continuaAbans && 'sdp-cal-barra--abans', peca.continuaDespres && 'sdp-cal-barra--despres',
@@ -146,7 +146,7 @@ function BarraDeLaFranja({ peca, ruta = null, LinkComponent, onClick }) {
 
 function LiniaAra({ minut }) {
   const ref = useRef(null);
-  usePropietatsCss(ref, { '--sdp-cal-minut': minut });
+  usePropietatsCss(ref, { '--cal-minut': minut });
   return <div ref={ref} className="sdp-cal-setmana__ara" aria-hidden="true" />;
 }
 
@@ -188,7 +188,7 @@ export function VistaSetmana({
     () => rangHorari(perDia, { minuts: minutAra == null ? [] : [minutAra] }),
     [perDia, minutAra]
   );
-  usePropietatsCss(graella, { '--sdp-cal-hora-inicial': horaInicial, '--sdp-cal-hores': horaFinal - horaInicial });
+  usePropietatsCss(graella, { '--cal-hora-inicial': horaInicial, '--cal-hores': horaFinal - horaInicial });
   const hores = Array.from({ length: horaFinal - horaInicial }, (_, i) => horaInicial + i);
 
   /* La tira pinta un sol dia; la seua franja es disposa a part (una columna,

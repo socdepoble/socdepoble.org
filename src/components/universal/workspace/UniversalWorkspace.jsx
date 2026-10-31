@@ -1,16 +1,20 @@
 import React, { useCallback, useId, useLayoutEffect, useMemo, useRef, useState, useEffect, useSyncExternalStore, memo } from 'react';
 import { createPortal } from 'react-dom';
-import { Search, Settings, SlidersHorizontal, Inbox, Bookmark, Hash, ChevronDown, ArrowDownAZ, Folder, ArrowLeft } from 'lucide-react';
+import { Search, Settings, SlidersHorizontal, Inbox, Bookmark, Hash, ChevronDown, ArrowDownAZ, Folder, FileText, ArrowLeft } from 'lucide-react';
 import AppGridShell, { useAppGrid } from '../../layout/AppGridShell.jsx';
-import AppGridColumn from '../../layout/AppGridColumn.jsx';
+import AppGridColumn, { TextosDeLaColumna } from '../../layout/AppGridColumn.jsx';
 import { SlotErrorBoundary } from './SlotErrorBoundary.jsx';
 import { WorkspaceProvider, useWorkspace } from './WorkspaceContext.jsx';
 import { entradaMestreDetall, recordaNivell } from './nivellMestreDetall.js';
 import { buildWorkspaceFolderForest } from './workspaceFolderForest.js';
 import { carpetesAmagadesDe, desaCarpetaAmagada, espaiDe, subscriuCarpetesVisibles } from './carpetesVisibles.js';
 import { ALL_CATEGORY_ID } from './workspaceState.js';
+import { navegacioPlegadaDeLaFinestra } from '../../layout/graella.js';
 import { ItemMedia } from './ItemMedia.jsx';
 import { NavGlyph, GlifCategoriaContext, GLIF_DOCUMENT, emojiInicial, primerGlif } from './NavGlyph.jsx';
+/* IDEA-58 (ordre del Mestre, 29-10-2026 23:22 CET) · Les fletxes del teclat a
+   les tres columnes, com al Finder: navegacioTeclat.js. */
+import { enfoca, fitxaPrincipal, gestionaEscapeDelDetall, gestionaTeclaArbre, gestionaTeclaLlista, gestionaTeclaRail } from './navegacioTeclat.js';
 import { Dialeg, Boto, Insignia } from '../../PedraSeca/index.js';
 import { Interruptor } from '../../PedraSeca/organismes/formulari.jsx';
 /* El traductor de la interfície, o null fora de l'app (o amb una prova que
@@ -60,7 +64,10 @@ import { TEXTOS_LLAVOR } from '../textosLlavor.js';
  *                       el de sempre.
  *   - `listClassName` / `detailClassName` → ganxos CSS per a la pell de la secció
  *   - `columnesInicials` → (opcional, T7 P3) { left, middle }: columnes que
- *                       arrenquen plegades en rail en «ample». Sense, cap.
+ *                       arrenquen plegades en rail en «ample». Sense, cap
+ *                       amb la finestra ampla, i la navegació en la franja
+ *                       estreta (ordre del Mestre 30-10-2026,
+ *                       navegacioPlegadaEnArrencar de layout/graella.js).
  *   - `inclouDescendents` → (opcional, T7 P5) triar una carpeta també mostra
  *                       els elements de les seues subcarpetes.
  *   - `compacte`     → (opcional, T7C P1) el mode compacte: el detall és la
@@ -127,17 +134,14 @@ import { TEXTOS_LLAVOR } from '../textosLlavor.js';
  *                       les accions d'AppGridColumn (botó d'icona de 24 px,
  *                       amb nom i title). Només a la columna oberta: el rail
  *                       plegat no canvia. Sense, cap (el DOM de sempre).
- *   - `obridorALaLlista` → (opcional, ordre del Mestre 261026_2126, pla
- *                       261026_1615 §6) false lleva l'obridor de la
- *                       navegació (la carpeta, `icons.categories`) de
- *                       l'esquerra del títol de la llista oberta en «mitja»,
- *                       on la navegació continua a l'abast pel seu rail fix
- *                       de l'esquerra. En «estret» la carpeta es queda: la
- *                       llista oberta tapa el rail i és l'única porta a la
- *                       vista. Tampoc es lleva on és l'única porta en
- *                       «mitja» (el mode compacte, sense rail). Només el
- *                       passa el Bloc de Notes. Sense, true: el de sempre
- *                       (Wiki, Disseny, Perfil…).
+ *   - `obridorALaLlista` → retirada (decisió 4 del Mestre, 30-10-2026
+ *                       ~15:00). Llevava la carpeta de l'esquerra del títol
+ *                       de la llista només en «mitja», on el rail fix de la
+ *                       navegació (railEsquerra) era una altra porta. Amb
+ *                       les columnes fixes el Workspace no passa per
+ *                       «mitja» i eixe rail ja no existix: no li quedava
+ *                       cap efecte. Ningú no la passa (el Bloc de Notes
+ *                       la va deixar al corrector del Gauntlet f4).
  *
  * La roda dentada (⚙️) de la capçalera de la navegació és el lloc estàndard
  * de la personalització de l'espai de treball (Llei de la Roda Dentada): hi
@@ -150,6 +154,18 @@ import { TEXTOS_LLAVOR } from '../textosLlavor.js';
  * seua URL no canvien. En mode compacte, i sense cap categoria triada per
  * la secció, ho vigila la columna de navegació (CategoryColumn).
  *
+ * Columnes fixes (ordre del Mestre, 30-10-2026 ~12:45) · Fora de mòbil, la
+ * closca del Workspace és sempre «ample» (AppGridShell columnesFixes): les
+ * tres columnes a la graella, amb els dos separadors, i plegar és el rail.
+ * Les mencions de «mitja» d'esta capçalera i del codi (panell de la
+ * navegació) ja no s'activen al Workspace; els panells i el vel queden per
+ * a «estret» (fins a PUNTS_DE_TALL.estret inclòs, decisió 1 del Mestre,
+ * 30-10-2026 ~15:00).
+ * El rail fix de la navegació i la llista en rail de «mitja» (railEsquerra
+ * i railMitja de la closca) s'han retirat (decisió 4). Els rails plegats
+ * porten la icona de la navegació (la carpeta) i la de la llista (el
+ * document), mai la [|<].
+ *
  * Si demà cal una «Gestoria», només canvia el que s'injecta; el JSX estructural no.
  */
 
@@ -157,6 +173,9 @@ const CAP = Object.freeze([]);
 const SENSE_ICONES = Object.freeze({});
 /* T7C · En mode compacte, navegació i llista arrenquen plegades en rail. */
 const COLUMNES_COMPACTE = Object.freeze({ left: true, middle: true });
+/* Ordre del Mestre (30-10-2026) · En la franja estreta de la finestra
+   (navegacioPlegadaEnArrencar), la navegació arrenca plegada en rail. */
+const NAVEGACIO_PLEGADA = Object.freeze({ left: true });
 
 const DEFAULT_LABELS = {
   categories: 'CATEGORIES',
@@ -179,7 +198,19 @@ const DEFAULT_LABELS = {
   /* El recompte d'una opció de la navegació (`count`), per al lector de
      pantalla: {n} és el número sencer. */
   count: '{n} sense llegir',
-  untitled: TEXTOS_LLAVOR.titol
+  untitled: TEXTOS_LLAVOR.titol,
+  /* Gauntlet 261029 (cicle 1, i18n) · Els textos que abans eren literals
+     dins del JSX: el chevron d'una carpeta amb fills ({nom}, la carpeta), el
+     «Reintentar» dels estats d'error i el menú de `sortable` (el botó, el
+     títol i les dues opcions). La reserva és el text de sempre: qui no els
+     passa no canvia cap píxel; /multimedia els passa traduïts. */
+  expand: 'Desplegar {nom}',
+  collapse: 'Plegar {nom}',
+  retry: 'Reintentar',
+  sort: 'Ordenar per data o nom',
+  sortTitle: 'Ordenar notes per',
+  sortDate: 'Data d\'actualització',
+  sortName: 'Nom (A-Z)'
 };
 
 /* Amplàries predefinides de les columnes (AppGridShell.PRESETS), amb la seua
@@ -191,6 +222,28 @@ const PRESETS_AMPLARIA = Object.freeze([
   ['defecte', Object.freeze(['section.xat.control.espai.defecte', 'Per defecte'])],
   ['ampla', Object.freeze(['section.xat.control.espai.ampla', 'Ampla'])]
 ]);
+
+/* Ordre d'usabilitat del Mestre (30-10-2026) · El nom de la icona de
+   l'esquerra de les capçaleres, germana del [|<] («Plegar la columna
+   CARPETES»): l'espai el tradueix i el dona a AppGridColumn pel context
+   TextosDeLaColumna (AppGridColumn no pot portar el traductor). {nom} és el
+   títol de la columna.
+   Corrector del Gauntlet (30-10-2026) · També el del [|<], el del botó de
+   dalt del rail i el títol de l'acordió: traduir només la icona deixava la
+   capçalera en dos llengües. La reserva és el text de sempre.
+   Corrector del Gauntlet f4 (30-10-2026, separadors-nom-sense-traduir) · I
+   el dels dos separadors de les mateixes columnes («Redimensionar {nom}»),
+   que la closca llig del mateix context. */
+const TEXTOS_DE_LA_COLUMNA = Object.freeze({
+  plegaColumna: Object.freeze(['nav.plegaColumna', 'Plegar la columna {nom}']),
+  replegaColumna: Object.freeze(['nav.replegaColumna', 'Replegar {nom}']),
+  expandeixColumna: Object.freeze(['nav.expandeixColumna', 'Expandir {nom}']),
+  acordioColumna: Object.freeze(['nav.acordioColumna', 'Plegar o desplegar {nom}']),
+  redimensionaColumna: Object.freeze(['nav.redimensionaColumna', 'Redimensionar {nom}'])
+});
+/* Corrector del Gauntlet f4 (30-10-2026) · El nom de l'article de la closca
+   del Workspace, traduït com els botons de les seues columnes. */
+const TEXT_ESPAI_DE_TREBALL = Object.freeze(['nav.espaiDeTreball', 'Espai de treball de tres columnes']);
 
 /* Llei de la Roda Dentada (ordre del Mestre, 261007) · Els textos de la
    roda, en parells [clau i18n, reserva en valencià]: la reserva és el valor
@@ -375,7 +428,7 @@ function WorkspaceSettingsDialog({ obert, onTanca, labels, grupsDeCarpetes = CAP
             {grupsDeCarpetes.map(({ grup, arrels }) => {
               const nomDelGrup = grup.label || labels.categories;
               return (
-                <div key={grup.id} className="sdp-workspace-settings__grup">
+                <div key={grup.id}>
                   {ambSubtitols ? <h4 className="sdp-workspace-settings__subtitol">{nomDelGrup}</h4> : null}
                   <ul className="sdp-workspace-settings__carpetes" aria-label={nomDelGrup}>
                     {arrels.map((node) => {
@@ -468,7 +521,12 @@ export function UniversalWorkspace({
   icons = SENSE_ICONES,
   tagFilter = true,
   collapsibleNavigation = true,
-  replegaTotaCapcalera = false,
+  /* Corrector del Gauntlet (30-10-2026) · replegaTotaCapcalera ja no hi
+     és: l'ordre d'usabilitat del Mestre deixa el títol fix i els dos botons
+     de plegar declaren sempre la seua columna, així que no li quedava cap
+     efecte. Disseny, Wiki i Multimèdia ja no la passen (corrector del
+     Gauntlet f4, 30-10-2026): el seu títol és fix per collapsibleNavigation
+     false, que no deixa cap acordió a la capçalera. */
   sortable = false,
   listClassName = '',
   detailClassName = '',
@@ -479,8 +537,13 @@ export function UniversalWorkspace({
   mestreDetall = false,
   tornaDeLaLlista = null,
   idEspai,
-  accionsLlista = CAP,
-  obridorALaLlista = true
+  accionsLlista = CAP
+  /* Decisió 4 del Mestre (30-10-2026 ~15:00) · obridorALaLlista ja no hi és:
+     només llevava la carpeta de la capçalera de la llista en «mitja», on el
+     rail fix de la navegació (railEsquerra) era una altra porta. Amb les
+     columnes fixes el Workspace no passa per «mitja» i eixe rail s'ha retirat:
+     no li quedava cap efecte. El Bloc tampoc no la passa ja (corrector del
+     Gauntlet f4, 30-10-2026). */
 }) {
   const copy = { ...DEFAULT_LABELS, ...labels };
   /* Llei de la Roda Dentada · Qui és l'espai per a les seues preferències:
@@ -533,13 +596,6 @@ export function UniversalWorkspace({
   const teNavegacio = grups.length
     ? grups.some((grup) => grup.options?.length)
     : Boolean(model.categories?.length);
-  /* Correcció dels verificadors (261004) · Si la secció declara una
-     navegació: grups (encara que siguen buits mentre carreguen) o
-     categories. Admin passa navigationGroups: [] i cap categoria, i el rail
-     de «mitja» li donava un Expandir cap a un panell buit. Es llig de
-     l'estructura i no de les opcions (teNavegacio): així el rail no apareix
-     de colp, i el detall no es mou 56 px, quan arriben les carpetes. */
-  const declaraNavegacio = grups.length > 0 || Boolean(model.categories?.length);
   const panellEstret = useCallback(
     () => (nivell.current === 'left' && !teNavegacio ? 'middle' : nivell.current),
     [teNavegacio]
@@ -557,9 +613,26 @@ export function UniversalWorkspace({
      la remuntada l'hereta. La primera muntada no canvia: la ref naix buida i
      mana columnesInicials, com sempre. */
   const columnesRef = useRef(null);
-  const columnesDeMuntada = columnesRef.current ?? columnesInicials ?? (compacte ? COLUMNES_COMPACTE : undefined);
+  /* Ordre del Mestre (30-10-2026, Bloc de Notes) · Sense columnesInicials ni
+     mode compacte, la navegació arrenca plegada en rail en la franja estreta
+     de la finestra i oberta per damunt (els talls, a layout/graella.js). Es
+     decidix una vegada, en muntar; després mana la persona. */
+  const [plegadaPerLaFinestra] = useState(navegacioPlegadaDeLaFinestra);
+  const columnesDeMuntada = columnesRef.current ?? columnesInicials
+    ?? (compacte ? COLUMNES_COMPACTE : (plegadaPerLaFinestra ? NAVEGACIO_PLEGADA : undefined));
+  /* Ordre d'usabilitat (30-10-2026) · Els noms traduïts dels botons que
+     pleguen i despleguen cada columna (AppGridColumn, TextosDeLaColumna). */
+  const traductor = useTraductorOpcional();
+  const textosDeLaColumna = useMemo(
+    () => Object.freeze(Object.fromEntries(
+      Object.entries(TEXTOS_DE_LA_COLUMNA).map(([nom, parell]) => [nom, tradueix(traductor, parell)])
+    )),
+    [traductor]
+  );
+  const etiquetaEspai = tradueix(traductor, TEXT_ESPAI_DE_TREBALL);
 
   return (
+    <TextosDeLaColumna.Provider value={textosDeLaColumna}>
     <WorkspaceProvider
       key={model.workspaceKey}
       itemsComplete={model.itemsComplete}
@@ -583,7 +656,6 @@ export function UniversalWorkspace({
         grups={grupsNavegacio}
         amagades={amagades}
         vigilaAmagada={vigilaAmagada}
-        declaraNavegacio={declaraNavegacio}
         mestreDetall={ambMestreDetall}
         panellEstret={panellEstret}
         onPanell={recordaPanell}
@@ -598,7 +670,6 @@ export function UniversalWorkspace({
         icons={icons}
         tagFilter={tagFilter}
         collapsibleNavigation={collapsibleNavigation}
-        replegaTotaCapcalera={replegaTotaCapcalera}
         sortable={sortable}
         canCreate={model.canCreate !== false}
         onRetry={model.refresh}
@@ -606,16 +677,17 @@ export function UniversalWorkspace({
         detailClassName={detailClassName}
         className={className}
         accionsLlista={accionsLlista}
-        obridorALaLlista={obridorALaLlista !== false}
+        etiquetaEspai={etiquetaEspai}
       />
     </WorkspaceProvider>
+    </TextosDeLaColumna.Provider>
   );
 }
 
 function WorkspaceFrame({
-  columnesRef, compacte, espai, grups, amagades, vigilaAmagada, declaraNavegacio, mestreDetall, panellEstret, onPanell, tornaDeLaLlista, error, onCreate, onCreateError, onManageCategories, renderItem, renderDetail,
-  labels, icons, tagFilter, collapsibleNavigation, replegaTotaCapcalera, sortable, canCreate, onRetry, listClassName, detailClassName, className,
-  accionsLlista, obridorALaLlista
+  columnesRef, compacte, espai, grups, amagades, vigilaAmagada, mestreDetall, panellEstret, onPanell, tornaDeLaLlista, error, onCreate, onCreateError, onManageCategories, renderItem, renderDetail,
+  labels, icons, tagFilter, collapsibleNavigation, sortable, canCreate, onRetry, listClassName, detailClassName, className,
+  accionsLlista, etiquetaEspai = TEXT_ESPAI_DE_TREBALL[1]
 }) {
   const workspace = useWorkspace();
   const focusAfterLayout = useFocusAfterLayout();
@@ -643,10 +715,12 @@ function WorkspaceFrame({
   const expandLeftRef = useRef(null);
   const collapseMiddleRef = useRef(null);
   const expandMiddleRef = useRef(null);
+  /* IDEA-58 · L'<aside> de la navegació: on porta ← des de la llista. */
+  const navegacioRef = useRef(null);
 
   return (
     <AppGridShell
-      aria-label="Espai de treball de tres columnes"
+      aria-label={etiquetaEspai}
       /* Barres (ordre del Mestre, 261004) · sdp-workspace--universal és
          l'abast positiu de la reserva de la barra mòbil als scrollers del
          Workspace (modules.css): el Xat també porta sdp-workspace i ja la
@@ -663,24 +737,28 @@ function WorkspaceFrame({
       tornaEstret={mestreDetall ? 'middle' : null}
       onPanell={mestreDetall ? onPanell : null}
       /* P6 (ordre del Mestre, 261003) · La llista té desplegador en
-         pantalles xicotetes: en «mitja», fora del mode compacte (el Snippet
-         arrenca amb la llista plegada i en mitja s'ha de vore); en «estret»,
-         només amb el mestre-detall (sense, estret és com abans). */
-      railMitja={!compacte}
-      /* Barres (ordre del Mestre, 261004: «com a mínim una d'elles visible
+         pantalles xicotetes: en «estret», amb el mestre-detall (sense, estret
+         és com abans) o en mode compacte (vegeu davall).
+         Barres (ordre del Mestre, 261004: «com a mínim una d'elles visible
          que permeta desplegar l'altra») · També en mode compacte: el Snippet
          en «estret» no tenia cap barra ni cap obridor (límit T7C-R4). El
          rail de la closca no és cap obridor al detall (el que T7C-R4 deixa
          al Mestre): és la columna plegada, a l'esquerra del detall, que
          continua sent la vista d'eixida. El mestre-detall no s'hi aplica. */
       railEstret={mestreDetall || compacte}
-      /* Barres (ordre del Mestre, 261004: «la columna de la Wiki ha d'estar
-         fixa i visible, almenys plegada, en tots els formats») · En «mitja»
-         la navegació és un rail fix i desplegar-la obri el panell. Fora del
-         mode compacte, com railMitja: el Snippet té el seu límit (T7C-R4).
-         Correcció dels verificadors · I només si la secció declara una
-         navegació: Admin (FILTRES sense cap filtre) es queda com era. */
-      railEsquerra={!compacte && declaraNavegacio}
+      /* Ordre del Mestre (30-10-2026 ~12:45) · «Fora de mòbil,
+         l'UniversalWorkspace ha de mantindre sempre les 3 columnes fixes en
+         la graella, mai superposades com a calaix flotant amb fons fosc»:
+         per damunt d'«estret» (graella.js) la closca és «ample», també en el
+         mode compacte; navegació i llista es despleguen dins de la graella
+         amb els seus dos separadors, i si l'espai no hi arriba les pistes
+         s'ajusten (graella.js, pistesAjustades). El mestre-detall d'«estret»
+         no canvia.
+         Decisió 4 del Mestre (30-10-2026 ~15:00) · railMitja (la llista en
+         rail en «mitja», 261003) i railEsquerra (la navegació en rail fix en
+         «mitja», barres 261004) ja no s'activaven al Workspace i ningú més
+         no els passava: s'han retirat de la closca. */
+      columnesFixes
       leftColumn={
         <CategoryColumn
           compacte={compacte}
@@ -693,11 +771,12 @@ function WorkspaceFrame({
           focusAfterLayout={focusAfterLayout}
           onManageCategories={onManageCategories}
           collapsibleNavigation={collapsibleNavigation}
-          replegaTotaCapcalera={replegaTotaCapcalera}
           labels={labels}
           icon={icons.categories}
           collapseBtnRef={collapseLeftRef}
           expandBtnRef={expandLeftRef}
+          rootRef={navegacioRef}
+          llistaRef={listFocusRef}
         />
       }
       middleColumn={
@@ -716,14 +795,14 @@ function WorkspaceFrame({
             categoryIcon={icons.categories}
             tagFilter={tagFilter}
             sortable={sortable}
-            replegaTotaCapcalera={replegaTotaCapcalera}
             canCreate={canCreate}
             onRetry={onRetry}
             listClassName={listClassName}
             collapseBtnRef={collapseMiddleRef}
             expandBtnRef={expandMiddleRef}
             accionsLlista={accionsLlista}
-            obridorALaLlista={obridorALaLlista}
+            navegacioRef={navegacioRef}
+            expandirNavegacioRef={expandLeftRef}
           />
         </SlotErrorBoundary>
       }
@@ -744,6 +823,7 @@ function WorkspaceFrame({
             onRetryLoad={compacte ? onRetry : null}
             visibleItemIds={visibleItemIds}
             filtered={filtrat}
+            llistaRef={listFocusRef}
           />
         </SlotErrorBoundary>
       }
@@ -754,11 +834,11 @@ function WorkspaceFrame({
 /* ── Columna esquerra: navegació per grups (carpetes, categories, etiquetes…) ── */
 
 function CategoryColumn({
-  compacte, espai, grups: groupsToRender, amagades, vigilaAmagada = false, mestreDetall = false, collapsibleNavigation, replegaTotaCapcalera, focusTarget,
-  onManageCategories, labels, icon, collapseBtnRef, expandBtnRef, focusAfterLayout
+  compacte, espai, grups: groupsToRender, amagades, vigilaAmagada = false, mestreDetall = false, collapsibleNavigation, focusTarget,
+  onManageCategories, labels, icon, collapseBtnRef, expandBtnRef, focusAfterLayout, rootRef = null, llistaRef = null
 }) {
   const { state, status, selectCategory, toggleColumn } = useWorkspace();
-  const { mida, setPanellObert, tancaPanells, obriPanell, ambRailNavegacio, navegacioEnRail } = useAppGrid();
+  const { mida, setPanellObert, tancaPanells } = useAppGrid();
   const [collapsedGroups, setCollapsedGroups] = useState({});
   const [expandedFolders, setExpandedFolders] = useState(new Set());
 
@@ -845,12 +925,29 @@ function CategoryColumn({
   }, [vigilaAmagada, status, activaAmagada, destiALaVista, passada, selectCategory]);
 
   const folderKey = (groupId, id) => JSON.stringify([groupId, id]);
+  /* Gauntlet 261029 (cicle 1, IDEA-57) · Una categoria amb `expandOnSelect`
+     (opt-in del model: /multimedia ho posa a «Carpeta local · Volums
+     muntats») es desplega quan és l'activa, també quan els fills li arriben
+     després (el volum s'obri més tard que el clic). Una sola vegada per
+     activació i per arribada de fills: si la persona la plega amb el
+     chevron, un model nou no la torna a obrir. Sense el camp (Disseny, la
+     Wiki…), res no canvia. */
+  const autoDesplegada = useRef(null);
   useEffect(() => {
     const ancestors = [];
     const activeGroups = [];
     for (const group of groupsToRender) {
       let node = group.tree.nodes.get(state.activeCategoryId);
       if (node) activeGroups.push(group.id);
+      if (node?.expandOnSelect === true && node.children.length > 0) {
+        const clau = folderKey(group.id, node.id);
+        if (autoDesplegada.current !== clau) {
+          autoDesplegada.current = clau;
+          ancestors.push(clau);
+        }
+      } else if (node) {
+        autoDesplegada.current = null;
+      }
       while (node?.parentId != null) {
         ancestors.push(folderKey(group.id, node.parentId));
         node = group.tree.nodes.get(node.parentId);
@@ -873,6 +970,42 @@ function CategoryColumn({
   const openFolder = (key) => setExpandedFolders(previous => (
     previous.has(key) ? previous : new Set(previous).add(key)
   ));
+  /* IDEA-58 · Les fletxes de l'arbre (navegacioTeclat.js, gestionaTeclaArbre):
+     → desplega i ← plega la fila (una carpeta, per la seua clau; una
+     capçalera de grup, pel data-group del grup). Plegar o desplegar no tria
+     res: el focus es queda a la fila. La clau de cada carpeta es registra
+     amb el ref del seu botó de nom (CategoryBranch), sense cap atribut: el
+     DOM de l'arbre és node a node el de sempre (Llei del Píxel, la captura
+     d'UniversalWorkspace.recompte.test.jsx). */
+  const clausDeFila = useRef(null);
+  if (clausDeFila.current === null) clausDeFila.current = new WeakMap();
+  const registraFila = useCallback((node, clau) => {
+    if (node) clausDeFila.current.set(node, clau);
+  }, []);
+  const plegaOdesplega = (fila, obri) => {
+    const clau = clausDeFila.current.get(fila);
+    if (clau != null) {
+      setExpandedFolders(previous => {
+        if (previous.has(clau) === obri) return previous;
+        const next = new Set(previous);
+        if (obri) next.add(clau);
+        else next.delete(clau);
+        return next;
+      });
+      return;
+    }
+    const grup = fila.closest('.sdp-workspace-group')?.getAttribute('data-group');
+    if (grup != null) setCollapsedGroups(prev => ({ ...prev, [grup]: !obri }));
+  };
+  const onTeclaArbre = (event) => gestionaTeclaArbre(event, {
+    llista: llistaRef?.current ?? null,
+    onDesplega: (fila) => plegaOdesplega(fila, true),
+    onPlega: (fila) => plegaOdesplega(fila, false)
+  });
+  /* Corrector del Gauntlet f4 (30-10-2026) · Les fletxes del rail de la
+     navegació plegada (gestionaTeclaRail): ↑ ↓ Inici Fi entre els seus
+     botons, i → torna a la fitxa activa de la llista. */
+  const onTeclaRail = (event) => gestionaTeclaRail(event, { llista: llistaRef?.current ?? null });
 
   // El primer grup sense etiqueta es plega des de la mateixa capçalera de la columna;
   // la resta tenen la seua pròpia capçalera acordió.
@@ -882,11 +1015,11 @@ function CategoryColumn({
   const headerGroup = grupsVisibles.find((group) => !group.label) || null;
   const isGroupOpen = (id) => !collapsedGroups[id];
 
-  /* Barres (ordre del Mestre, 261004) · En «mitja», amb el rail de la
-     closca (navegacioEnRail: cap panell obert), la navegació es pinta
-     plegada: Expandir, roda i rail de carpetes. El plegat d'«ample»
-     (collapsed.left) no es toca: és la decisió de la persona en ample. */
-  const collapsed = (state.collapsed.left && mida === 'ample') || navegacioEnRail;
+  /* El plegat d'«ample» (collapsed.left), la decisió de la persona.
+     Decisió 4 del Mestre (30-10-2026 ~15:00) · El rail fix de «mitja»
+     (railEsquerra, barres 261004), que també la pintava plegada, s'ha
+     retirat: amb les columnes fixes el Workspace no passa per «mitja». */
+  const collapsed = state.collapsed.left && mida === 'ample';
   // La roda dentada no depén de cap secció: sense configuració injectada,
   // obri la de l'espai de treball (amplada de les columnes i, Llei de la Roda
   // Dentada, carpetes a la vista).
@@ -927,12 +1060,15 @@ function CategoryColumn({
       if (mida !== 'ample') focusAfterLayout(focusTarget);
       return;
     }
+    /* Corrector del Gauntlet f4 (30-10-2026) · Amb les columnes fixes la
+       closca del Workspace només és «estret» o «ample» (midaDeGraella): la
+       branca de «mitja», que també duia el focus a la llista, no s'executava
+       mai i s'ha retirat. */
     if (mida === 'estret') {
       setPanellObert('middle');
       focusAfterLayout(focusTarget);
     } else {
       tancaPanells();
-      if (mida === 'mitja') focusAfterLayout(focusTarget);
     }
   };
 
@@ -974,24 +1110,27 @@ function CategoryColumn({
 
   if (collapsed) {
     return (
-      <aside className="sdp-workspace-column" aria-label={labels.categories}>
+      <aside ref={rootRef} className="sdp-workspace-column" aria-label={labels.categories}>
         <AppGridColumn
           variant="collapsed"
           esDark={true}
           titol={labels.categories}
+          /* Ordre del Mestre (30-10-2026) · El botó de dalt del rail plegat
+             porta la icona de la navegació (la carpeta, o la de categories
+             de la secció), no la [|<] genèrica de PanelLeftOpen (prompt
+             261014_0400, que continua per a qui no passa icona). */
+          icona={icon || Folder}
           endActions={settingsActions}
           expandBtnRef={expandBtnRef}
-          /* Barres · En el rail de «mitja», l'Expandir obri el panell de la
-             navegació (amb el focus a la carpeta activa, obriPanell) i es
-             declara obridor de la closca (aria-controls i data-obri-columna)
-             per a la guarda del focus. En «ample», el plegat de sempre. */
-          controls={replegaTotaCapcalera || navegacioEnRail ? 'app-grid-sidebar' : undefined}
-          expandObridor={navegacioEnRail}
+          /* En «ample», el plegat de sempre.
+             Corrector del Gauntlet (30-10-2026) · Declara sempre la columna
+             que desplega (aria-controls i aria-expanded), a totes les pàgines:
+             abans només amb replegaTotaCapcalera, i /notes, /lector i /perfil
+             no en deien l'estat. Cap data-obri-columna (expandObridor): el
+             rail de «mitja» que obria el panell (railEsquerra) s'ha retirat
+             (decisió 4 del Mestre, 30-10-2026 ~15:00). */
+          controls="app-grid-sidebar"
           onReplega={() => {
-            if (navegacioEnRail) {
-              obriPanell('left');
-              return;
-            }
             toggleColumn('left');
             focusAfterLayout(collapseBtnRef);
           }}
@@ -1002,6 +1141,7 @@ function CategoryColumn({
             onChoose={chooseFromRail}
             label={labels.categories}
             textRecompte={labels.count}
+            onKeyDown={onTeclaRail}
           />
         </AppGridColumn>
         {settingsDialog}
@@ -1010,7 +1150,7 @@ function CategoryColumn({
   }
 
   return (
-    <aside className="sdp-workspace-column" aria-label={labels.categories}>
+    <aside ref={rootRef} className="sdp-workspace-column" aria-label={labels.categories}>
       {settingsDialog}
       <AppGridColumn
         esDark={true}
@@ -1020,22 +1160,24 @@ function CategoryColumn({
         obert={headerGroup ? isGroupOpen(headerGroup.id) : true}
         onPlega={headerGroup ? () => toggleGroup(headerGroup.id) : null}
         collapseBtnRef={collapseBtnRef}
-        replegaTotaCapcalera={replegaTotaCapcalera && mida === 'ample'}
-        controls={replegaTotaCapcalera ? 'app-grid-sidebar' : undefined}
+        /* Ordre d'usabilitat del Mestre (30-10-2026) · Ja no hi ha fila
+           sencera que plegue (replegaTotaCapcalera d'AppGridColumn): plega la
+           icona de l'esquerra, germana del [|<], i el títol és text fix.
+           Corrector del Gauntlet (30-10-2026) · Tots dos botons declaren
+           sempre la columna que pleguen (controls), a totes les pàgines, i no
+           només amb replegaTotaCapcalera: a l'espai, eixa prop ja no canvia
+           res. */
+        controls="app-grid-sidebar"
         onReplega={() => {
           /* Barres (261004) · Fora d'«ample», la navegació desplegada és un
              panell: Replegar el tanca. Abans commutava el plegat d'«ample»:
              per davall del mínim d'ample no feia res visible i deixava
-             l'estat latent.
-               · Amb el rail de «mitja», torna al rail, amb el focus a
-                 l'Expandir.
-               · Sense rail (el mode compacte en «mitja»; correcció dels
-                 verificadors), el panell es tanca igual i la guarda del
-                 focus de la closca porta el focus a l'obridor de la
-                 capçalera de la llista (data-obri-columna). */
+             l'estat latent. La guarda del focus de la closca porta el focus
+             a l'obridor de la capçalera de la llista (data-obri-columna).
+             Decisió 4 del Mestre (30-10-2026 ~15:00) · El rail fix de
+             «mitja» on tornava, amb el focus a l'Expandir, s'ha retirat. */
           if (mida !== 'ample') {
             tancaPanells();
-            if (ambRailNavegacio) focusAfterLayout(expandBtnRef);
             return;
           }
           toggleColumn('left');
@@ -1057,7 +1199,8 @@ function CategoryColumn({
         endActions={settingsActions}
       />
       <nav className="sdp-workspace-column__body" aria-label={labels.categories}>
-        <div className="sdp-workspace-groups">
+        {/* IDEA-58 · Les fletxes de l'arbre, delegades (gestionaTeclaArbre). */}
+        <div className="sdp-workspace-groups" onKeyDown={onTeclaArbre}>
           {grupsVisibles.map(group => (
             <div
               key={group.id}
@@ -1091,6 +1234,9 @@ function CategoryColumn({
                   chooseFolder={chooseFolder}
                   label={group.label || labels.categories}
                   textRecompte={labels.count}
+                  textDesplega={labels.expand}
+                  textPlega={labels.collapse}
+                  registraFila={registraFila}
                 />
               )}
             </div>
@@ -1120,11 +1266,11 @@ function glifDeclarat(category, group) {
    El recompte (`count`) d'una arrel va al nom accessible i al title, com a
    l'arbre: el botó del rail només té lloc per al glif i cap peça de Pedra
    Seca no en pinta cap damunt. Sense recompte, el nom és el de sempre. */
-function CategoryRail({ groups, activeId, onChoose, label, textRecompte }) {
+function CategoryRail({ groups, activeId, onChoose, label, textRecompte, onKeyDown = null }) {
   const grups = groups.filter(group => group.tree.roots.length > 0);
   if (!grups.length) return null;
   return (
-    <nav className="sdp-workspace-rail" aria-label={label}>
+    <nav className="sdp-workspace-rail" aria-label={label} onKeyDown={onKeyDown ?? undefined}>
       {grups.map(group => {
         let arrelActiva = group.tree.nodes.get(activeId) || null;
         while (arrelActiva?.parentId != null) arrelActiva = group.tree.nodes.get(arrelActiva.parentId) || null;
@@ -1164,7 +1310,10 @@ function CategoryRail({ groups, activeId, onChoose, label, textRecompte }) {
    llegir»). L'espai del davant separa el nom del text quan es compon el
    nom accessible; entre els fills d'un flex (el botó ho és) un text només
    d'espais no es pinta. Sense recompte, cap node de més. */
-function CategoryBranch({ nodes, group, activeId, expandedFolders, toggleFolder, chooseCategory, chooseFolder, label, textRecompte }) {
+function CategoryBranch({
+  nodes, group, activeId, expandedFolders, toggleFolder, chooseCategory, chooseFolder, label, textRecompte,
+  textDesplega = DEFAULT_LABELS.expand, textPlega = DEFAULT_LABELS.collapse, registraFila = null
+}) {
   return (
     <ul className="sdp-workspace-categories" aria-label={label}>
       {nodes.map(category => {
@@ -1175,8 +1324,11 @@ function CategoryBranch({ nodes, group, activeId, expandedFolders, toggleFolder,
         return (
           <li key={category.id}>
             <div className="sdp-workspace-folder-row">
-              {/* Amb fills, el nom també desplega: declara l'expansió igual que el chevron. */}
+              {/* Amb fills, el nom també desplega: declara l'expansió igual que el chevron.
+                  IDEA-58 · El ref registra la clau que despleguen i pleguen
+                  les fletxes → i ← (gestionaTeclaArbre), sense cap atribut. */}
               <button
+                ref={hasChildren && registraFila ? (node) => registraFila(node, key) : undefined}
                 type="button"
                 aria-current={activeId === category.id ? 'page' : undefined}
                 aria-expanded={hasChildren ? expanded : undefined}
@@ -1202,7 +1354,7 @@ function CategoryBranch({ nodes, group, activeId, expandedFolders, toggleFolder,
                 <button
                   type="button"
                   className="sdp-workspace-nav-item sdp-workspace-folder-toggle"
-                  aria-label={`${expanded ? 'Plegar' : 'Desplegar'} ${category.label}`}
+                  aria-label={omple(String((expanded ? textPlega : textDesplega) ?? ''), { nom: category.label })}
                   aria-expanded={expanded}
                   onClick={() => toggleFolder(key)}
                 >
@@ -1217,7 +1369,8 @@ function CategoryBranch({ nodes, group, activeId, expandedFolders, toggleFolder,
                 nodes={category.children} group={group} activeId={activeId}
                 expandedFolders={expandedFolders} toggleFolder={toggleFolder}
                 chooseCategory={chooseCategory} chooseFolder={chooseFolder} label={category.label}
-                textRecompte={textRecompte}
+                textRecompte={textRecompte} textDesplega={textDesplega} textPlega={textPlega}
+                registraFila={registraFila}
               />
             )}
           </li>
@@ -1231,14 +1384,14 @@ function CategoryBranch({ nodes, group, activeId, expandedFolders, toggleFolder,
 
 function ItemListColumn({
   mestreDetall = false, tornaDeLaLlista = null, rootRef, detailFocusRef, onCreate, onCreateError, renderItem, labels, icon, categoryIcon,
-  tagFilter, sortable, replegaTotaCapcalera, canCreate, onRetry, listClassName, collapseBtnRef, expandBtnRef, focusAfterLayout,
-  accionsLlista = CAP, obridorALaLlista = true
+  tagFilter, sortable, canCreate, onRetry, listClassName, collapseBtnRef, expandBtnRef, focusAfterLayout,
+  accionsLlista = CAP, navegacioRef = null, expandirNavegacioRef = null
 }) {
   const {
     items, categories, navigationGroups, state, status, filteredItems, selectItem, requestItem,
     toggleColumn, setQuery, clearFilters, openSearch, closeSearch, toggleTag
   } = useWorkspace();
-  const { mida, panellObert, setPanellObert, tancaPanells, obriPanell, llistaPlegable, llistaEnRail, nodeRail, ambRailNavegacio } = useAppGrid();
+  const { mida, panellObert, setPanellObert, tancaPanells, obriPanell, llistaPlegable, nodeRail } = useAppGrid();
   /* MD · En estret, amb el mestre-detall, l'obridor de la navegació l'obri
      al primer toc (toggleColumn commuta el rail d'«ample» i només obria en
      un toc de cada dos), du el focus a la carpeta activa i es declara obridor
@@ -1251,11 +1404,11 @@ function ItemListColumn({
      la fletxa ←. En mitja i en ample, res. */
   const tornadaEstret = mestreDetall && mida === 'estret' && !obridorEstret && typeof tornaDeLaLlista === 'function';
   /* P6 (ordre del Mestre, 261003) · Amb el desplegador de la llista
-     (llistaPlegable de la closca), l'obridor de la navegació de «mitja» és
-     el d'estret: obri al primer toc (abans commutava el rail d'«ample» i
-     obria un toc de cada dos), sense tocar eixe rail, i es declara obridor
-     de la closca. El rail de la llista plegada en porta un d'igual: la
-     primera columna estreta dona el menú sense desplegar la llista. */
+     (llistaPlegable de la closca, ara només en «estret»), l'obridor de la
+     navegació obri al primer toc (abans commutava el rail d'«ample» i obria
+     un toc de cada dos), sense tocar eixe rail, i es declara obridor de la
+     closca. El rail de la llista plegada en porta un d'igual: la primera
+     columna estreta dona el menú sense desplegar la llista. */
   /* Barres (261004) · En «estret» amb el rail i sense el mestre-detall (el
      mode compacte), la capçalera de la llista oberta porta el mateix
      obridor: abans era el toggleColumn d'«ample», que obria un toc de cada
@@ -1268,17 +1421,13 @@ function ItemListColumn({
      obridor de la closca. El toggleColumn que hi havia ha quedat sense cap
      cas i s'ha retirat. */
   const obridorDelRail = llistaPlegable && (Boolean(categoryIcon) || categories.length > 0);
-  /* Ordre del Mestre (261026_2126, pla 261026_1615 §6) · Amb
-     obridorALaLlista={false} (el Bloc de Notes), la carpeta de l'esquerra del
-     títol es lleva només on la navegació té una altra porta a la vista: en
-     «mitja», el seu rail fix (ambRailNavegacio). En «estret» es queda: la
-     llista oberta tapa el rail de la llista, i la carpeta de la capçalera és
-     l'única porta a la vista (i obri CARPETES d'un toc). Tampoc es lleva on
-     era l'única porta en «mitja» (el Snippet, sense cap rail): cap funció es
-     perd. */
-  const altraPortaANavegacio = mida === 'mitja' && ambRailNavegacio;
-  const obridorNavegacio = (obridorEstret || (mida !== 'ample' && Boolean(categoryIcon)))
-    && (obridorALaLlista !== false || !altraPortaANavegacio);
+  /* Decisió 4 del Mestre (30-10-2026 ~15:00) · obridorALaLlista={false} (el
+     Bloc de Notes, pla 261026_1615 §6) llevava esta carpeta només en «mitja»,
+     on el rail fix de la navegació (railEsquerra) era una altra porta. Eixe
+     rail s'ha retirat i el Workspace ja no passa per «mitja»: en «estret» la
+     carpeta sempre es quedava (la llista oberta tapa el rail i n'és l'única
+     porta), i en «ample» no n'hi ha cap. */
+  const obridorNavegacio = obridorEstret || (mida !== 'ample' && Boolean(categoryIcon));
   /* P6 (revisió) · L'obridor declara aria-expanded: amb el panell obert, el
      torna a tancar. En «mitja» el panell de la navegació no tapa la llista i
      l'obridor continua a l'abast del teclat; abans no feia res i el panell
@@ -1303,10 +1452,11 @@ function ItemListColumn({
     sortBy === 'name' ? (a.title || '').localeCompare(b.title || '', 'ca')
       : (Date.parse(b.updatedAt) || 0) - (Date.parse(a.updatedAt) || 0)
   ), [filteredItems, sortable, sortBy]);
-  /* P6 · En mitja, la closca diu si la columna de la llista es pinta en rail
-     (llistaEnRail). En estret la columna continua sent el panell del
-     mestre-detall i el rail viu a part (#app-grid-rail, railAPart). */
-  const collapsed = (state.collapsed.middle && mida === 'ample') || (llistaEnRail && mida === 'mitja');
+  /* P6 · En estret la columna continua sent el panell del mestre-detall i el
+     rail viu a part (#app-grid-rail, railAPart). En «ample», el plegat de
+     sempre. Decisió 4 del Mestre (30-10-2026 ~15:00) · La columna de la
+     llista pintada en rail en «mitja» (railMitja) s'ha retirat. */
+  const collapsed = state.collapsed.middle && mida === 'ample';
 
   // Glif de categoria de cada document (per a la fitxa sense imatge i el rail):
   // primer el de la categoria activa, si el document hi pertany; després, el
@@ -1342,6 +1492,60 @@ function ItemListColumn({
     return () => { mountedRef.current = false; };
   }, []);
 
+  /* IDEA-58 · Les fletxes de la llista (gestionaTeclaLlista): ↑ ↓ Inici Fi
+     trien l'element com el clic en «ample» (selectItem, amb la raó del
+     recorregut, davall) i el focus va a la fitxa nova. Sense tancar cap
+     panell ni dur el focus al detall en «mitja» o «estret»: la persona
+     continua baixant (el clic i l'Enter fan el chooseItem de sempre). Una
+     secció pot pintar la fitxa activa amb un altre element (la TargetaViva
+     del Bloc i del Perfil): si el pintat de la tria se l'endú, el focus
+     torna a la fitxa principal de la fila nova abans que es pinte. */
+  const llistaRef = useRef(null);
+  const focusPendent = useRef(null);
+  useLayoutEffect(() => {
+    const id = focusPendent.current;
+    if (id == null) return;
+    focusPendent.current = null;
+    const index = sortedItems.findIndex((item) => String(item.id) === id);
+    const fila = index < 0 ? null : llistaRef.current?.children[index];
+    const fitxa = fila ? fitxaPrincipal(fila) : null;
+    if (!fitxa) return;
+    const actiu = fitxa.getRootNode().activeElement;
+    if (!actiu || actiu === fitxa.ownerDocument.body || !actiu.isConnected) enfoca(fitxa);
+  });
+
+  /* Gauntlet 261030 (cicle 2) · Un recorregut de fletxes és una sola
+     entrada de l'historial, com al Finder: la primera fletxa tria amb la raó
+     del clic ('user': les seccions fan push) i les següents amb 'teclat'
+     (replace), mentre la tria activa siga la de l'última fletxa. Qualsevol
+     altra tria (un clic, l'Enter, una carpeta, l'Arrere o l'Avant del
+     navegador) tanca el recorregut, i la fletxa següent n'obri un altre:
+     l'Arrere torna on era la persona abans de recórrer la llista. Si eixa
+     tria de fora arriba amb el focus en la fitxa d'una altra fila, el focus
+     va a la fitxa activa: la fletxa següent continua des de la tria. */
+  const triaDeTeclat = useRef(null);
+  const recorregutObert = useRef(false);
+  const triaVista = useRef(null);
+  useLayoutEffect(() => {
+    const clau = `${state.activeCategoryId}\u0000${state.activeItemId}`;
+    if (triaVista.current === clau) return;
+    const primera = triaVista.current === null;
+    triaVista.current = clau;
+    const deTeclat = triaDeTeclat.current !== null && triaDeTeclat.current === state.activeItemId;
+    triaDeTeclat.current = null;
+    recorregutObert.current = deTeclat;
+    if (primera || deTeclat || state.activeItemId == null) return;
+    const llista = llistaRef.current;
+    const actiu = llista?.getRootNode().activeElement;
+    if (!actiu || !llista.contains(actiu)) return;
+    const files = [...llista.children];
+    const ambFocus = files.findIndex((fila) => fila.contains(actiu));
+    if (ambFocus < 0 || fitxaPrincipal(files[ambFocus]) !== actiu) return;
+    const index = sortedItems.findIndex((item) => String(item.id) === state.activeItemId);
+    const fitxa = index < 0 || index === ambFocus ? null : fitxaPrincipal(files[index] ?? null);
+    if (fitxa) enfoca(fitxa);
+  });
+
   const createAndSelect = async () => {
     if (!onCreate || creating) return;
     setCreating(true);
@@ -1369,10 +1573,37 @@ function ItemListColumn({
   };
 
   const chooseItem = (itemId) => {
+    /* El clic i l'Enter tanquen el recorregut de fletxes, també sobre la fitxa que ja és activa. */
+    recorregutObert.current = false;
     selectItem(itemId);
     tancaPanells();
     if (mida === 'estret') focusAfterLayout(detailFocusRef);
   };
+
+  const onTeclaLlista = (event) => gestionaTeclaLlista(event, {
+    navegacio: navegacioRef?.current ?? null,
+    expandir: expandirNavegacioRef?.current ?? null,
+    detall: detailFocusRef?.current ?? null,
+    onTria: (index) => {
+      const item = sortedItems[index];
+      if (!item) return;
+      const id = String(item.id);
+      if (status === 'ready') {
+        focusPendent.current = id;
+        if (id !== state.activeItemId) triaDeTeclat.current = id;
+      }
+      selectItem(item.id, recorregutObert.current ? { reason: 'teclat' } : undefined);
+    }
+  });
+  /* Corrector del Gauntlet f4 (30-10-2026) · Les fletxes del rail de
+     documents de la llista plegada (gestionaTeclaRail): ↑ ↓ Inici Fi entre
+     els seus botons sense triar res, ← a l'opció activa de la navegació i →
+     a l'entrada del detall, com des de la fitxa. */
+  const onTeclaRail = (event) => gestionaTeclaRail(event, {
+    navegacio: navegacioRef?.current ?? null,
+    expandir: expandirNavegacioRef?.current ?? null,
+    detall: detailFocusRef?.current ?? null
+  });
 
   /* P6 · En estret, el rail és a part i desplegar-lo és obrir el panell de
      la llista (el de la fletxa ←), no el rail d'«ample». En mitja i en
@@ -1398,12 +1629,20 @@ function ItemListColumn({
      accions i els glifs dels documents. P6 · Fora d'«ample», el rail és la
      primera columna estreta: porta també l'obridor de la navegació, i en
      estret l'Expandir es declara obridor de la llista (la guarda del focus
-     hi torna quan el panell es tanca). */
+     hi torna quan el panell es tanca).
+     Ordre del Mestre (30-10-2026) · L'Expandir porta la icona de la llista
+     (la de la secció; al Bloc, NotebookPen), no la [|<] de PanelLeftOpen.
+     I la carpeta de davall (obridorDelRail) només hi és on la navegació no
+     és visible al costat: amb les columnes fixes (columnesFixes), fora
+     d'«estret» la navegació és a la graella, desplegada o en el seu rail, i
+     llistaPlegable és false; en «estret» la navegació és un panell tancat i
+     esta carpeta n'és la porta. */
   const pintaRail = () => (
     <AppGridColumn
       variant="collapsed"
       esDark="intens"
       titol={labels.items}
+      icona={icon || FileText}
       startActions={obridorDelRail ? [{
         id: 'obri-navegacio',
         etiqueta: labels.categories,
@@ -1416,7 +1655,8 @@ function ItemListColumn({
       endActions={accionsDeCerca(true)}
       expandBtnRef={expandBtnRef}
       expandObridor={enEstret}
-      controls={replegaTotaCapcalera || llistaPlegable ? 'app-grid-list' : undefined}
+      /* Corrector del Gauntlet (30-10-2026) · Sempre: com a la navegació. */
+      controls="app-grid-list"
       onReplega={() => {
         if (enEstret) {
           obriPanell('middle');
@@ -1434,6 +1674,7 @@ function ItemListColumn({
           onChoose={chooseItem}
           label={labels.items}
           untitled={labels.untitled}
+          onKeyDown={onTeclaRail}
         />
       ) : null}
     </AppGridColumn>
@@ -1496,9 +1737,12 @@ function ItemListColumn({
            davant del Replegar). Sense, la llista buida de sempre. */
         endActions={Array.isArray(accionsLlista) ? accionsLlista : CAP}
         collapseBtnRef={collapseBtnRef}
-        replegaTotaCapcalera={replegaTotaCapcalera && mida === 'ample'}
+        /* Ordre d'usabilitat del Mestre (30-10-2026) · Com a la navegació:
+           plega la icona de l'esquerra (germana del [|<]) i el títol és fix;
+           replegaTotaCapcalera ja no fa de tota la fila un botó. */
         replegaCompacte={llistaPlegable}
-        controls={replegaTotaCapcalera || llistaPlegable ? 'app-grid-list' : undefined}
+        /* Corrector del Gauntlet (30-10-2026) · Sempre: com a la navegació. */
+        controls="app-grid-list"
         onReplega={() => {
           /* P6 · En estret, plegar és tancar el panell: el detall torna amb
              el rail, i el focus, a l'Expandir del rail. */
@@ -1516,7 +1760,7 @@ function ItemListColumn({
              les dues files (el valor per defecte d'AppGridColumn). */
           ...(sortable ? [{
             id: 'sort',
-            etiqueta: 'Ordenar per data o nom',
+            etiqueta: labels.sort,
             icona: ArrowDownAZ,
             pressed: sortOpen,
             className: 'sdp-workspace-sort-action',
@@ -1535,14 +1779,17 @@ function ItemListColumn({
         ]}
       />
 
+      {/* Corrector del Gauntlet f4 (30-10-2026) · L'opció triada també la
+          diu aria-pressed, no només la classe .active: el lector de pantalla
+          sap quina ordenació hi ha (WCAG 4.1.2). Cap regla CSS en penja. */}
       {sortable && sortOpen && (
         <div className="sdp-workspace-sort-menu">
-          <div className="sdp-workspace-sort-menu__title">Ordenar notes per</div>
-          <button type="button" className={`sdp-workspace-sort-menu__option ${sortBy === 'date' ? 'active' : ''}`} onClick={() => { setSortBy('date'); setSortOpen(false); }}>
-            Data d'actualització
+          <div className="sdp-workspace-sort-menu__title">{labels.sortTitle}</div>
+          <button type="button" className={`sdp-workspace-sort-menu__option ${sortBy === 'date' ? 'active' : ''}`} aria-pressed={sortBy === 'date'} onClick={() => { setSortBy('date'); setSortOpen(false); }}>
+            {labels.sortDate}
           </button>
-          <button type="button" className={`sdp-workspace-sort-menu__option ${sortBy === 'name' ? 'active' : ''}`} onClick={() => { setSortBy('name'); setSortOpen(false); }}>
-            Nom (A-Z)
+          <button type="button" className={`sdp-workspace-sort-menu__option ${sortBy === 'name' ? 'active' : ''}`} aria-pressed={sortBy === 'name'} onClick={() => { setSortBy('name'); setSortOpen(false); }}>
+            {labels.sortName}
           </button>
         </div>
       )}
@@ -1595,12 +1842,12 @@ function ItemListColumn({
         {status === 'loading' || (status === 'revalidating' && !filteredItems.length) ? (
           <p className="sdp-workspace-state" role="status" aria-live="polite">{labels.loading}</p>
         ) : status === 'error' ? (
-          <div className="sdp-workspace-state" role="alert">{labels.error}{onRetry && <button type="button" onClick={onRetry}>Reintentar</button>}</div>
+          <div className="sdp-workspace-state" role="alert">{labels.error}{onRetry && <button type="button" onClick={onRetry}>{labels.retry}</button>}</div>
         ) : filteredItems.length ? (
           // Les fitxes sense imatge (també les injectades amb renderItem) hi
           // troben el glif de la seua categoria via ItemMedia.
           <GlifCategoriaContext.Provider value={glifDeCategoria}>
-            <ul className={`sdp-gestor-llista ${listClassName}`.trim()}>
+            <ul ref={llistaRef} className={`sdp-gestor-llista ${listClassName}`.trim()} onKeyDown={onTeclaLlista}>
               {sortedItems.map((item) => {
                 const active = state.activeItemId === String(item.id);
                 const onSelect = () => chooseItem(item.id);
@@ -1615,7 +1862,10 @@ function ItemListColumn({
             </ul>
           </GlifCategoriaContext.Provider>
         ) : (
-          <p className="sdp-workspace-state">{labels.empty}</p>
+          /* Gauntlet 261029 (cicle 1) · `labels.noResults` (opcional): la llista
+             buida per culpa de la cerca o de les etiquetes no és una carpeta
+             buida. Sense l'etiqueta (Disseny, la Wiki…), `empty` com sempre. */
+          <p className="sdp-workspace-state">{hasFilters && labels.noResults ? labels.noResults : labels.empty}</p>
         )}
       </div>
     </aside>
@@ -1649,10 +1899,10 @@ export function DefaultItemCard({ item, active, onSelect, untitled = DEFAULT_LAB
 /* Rail de la columna de documents plegada: el glif de cada document visible
    (el propi, l'emoji del títol, el de la categoria o el document per defecte;
    mai una lletra). Clicar-lo obri el document, com la fitxa. */
-function DocumentRail({ items, activeItemId, glifDeCategoria, onChoose, label, untitled }) {
+function DocumentRail({ items, activeItemId, glifDeCategoria, onChoose, label, untitled, onKeyDown = null }) {
   if (!items.length) return null;
   return (
-    <nav className="sdp-workspace-rail sdp-workspace-rail--documents" aria-label={label}>
+    <nav className="sdp-workspace-rail sdp-workspace-rail--documents" aria-label={label} onKeyDown={onKeyDown ?? undefined}>
       <ul className="sdp-workspace-rail__grup">
         {items.map((item) => {
           const titol = item.title || untitled;
@@ -1711,7 +1961,7 @@ function TornadaDelDetall() {
 
 const DetailColumn = memo(function DetailColumn({
   rootRef, error, renderDetail, labels, className, activeItem, status, activeCategoryId, activeItemId, resolution, onRetry,
-  onRetryLoad = null, visibleItemIds = CAP, filtered = false
+  onRetryLoad = null, visibleItemIds = CAP, filtered = false, llistaRef = null
 }) {
   let content;
   /* Si el contingut és un estat propi (sense la fletxa d'una Pàgina Universal). */
@@ -1722,12 +1972,12 @@ const DetailColumn = memo(function DetailColumn({
     /* T7C · En mode compacte la llista (que porta «Reintentar») és plegada:
        el detall el porta. Sense, el de sempre. */
     content = onRetryLoad
-      ? <div role="alert">{labels.error} <Boto varietat="secundari" onClick={onRetryLoad}>Reintentar</Boto></div>
+      ? <div role="alert">{labels.error} <Boto varietat="secundari" onClick={onRetryLoad}>{labels.retry}</Boto></div>
       : <p role="alert">{labels.error}</p>;
   } else if (resolution?.status === 'loading') {
     content = <p role="status">{labels.loading}</p>;
   } else if (resolution?.status === 'error') {
-    content = <div role="alert">No s’ha pogut obrir l’element. <button type="button" onClick={onRetry}>Reintentar</button></div>;
+    content = <div role="alert">No s’ha pogut obrir l’element. <button type="button" onClick={onRetry}>{labels.retry}</button></div>;
   } else if (resolution?.status === 'not-found') {
     content = <p role="status">L’element no és accessible o ja no existix.</p>;
   } else {
@@ -1746,12 +1996,16 @@ const DetailColumn = memo(function DetailColumn({
     content = injectat ?? (activeItem ? null : <p>{labels.select}</p>);
   }
 
+  /* IDEA-58 · Escape dins del detall torna el focus a la fitxa activa de la
+     llista (gestionaEscapeDelDetall): no des d'un camp ni des d'un diàleg o
+     un menú, que tenen el seu propi Escape. */
   return (
     <div
       ref={rootRef}
       tabIndex={-1}
       className={`sdp-workspace-detail ${className}`.trim()}
       data-error={error ? 'true' : 'false'}
+      onKeyDown={(event) => gestionaEscapeDelDetall(event, llistaRef?.current ?? null)}
     >
       {estatPropi ? <TornadaDelDetall /> : null}
       {content}

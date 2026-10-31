@@ -261,9 +261,16 @@ function socdepoble_enxufe_element( $instancia = array(), $amb_serveis = true ) 
 		esc_url( plugins_url( 'dist/', SOCDEPOBLE_ENXUFE_FITXER ) )
 	);
 
-	// Servei públic opcional. rest_url conserva subdirectoris i permalinks simples.
-	if ( $amb_serveis && '' !== socdepoble_enxufe_deepl_clau() ) {
+	/* Servei públic de traducció (IDEA-31, QA-R2-13): sempre en la instància
+	   pròpia, perquè sense clau de DeepL hi ha el proveïdor lliure (Apertium).
+	   rest_url conserva subdirectoris i permalinks simples. */
+	if ( $amb_serveis ) {
 		$atributs .= ' traductor-url="' . esc_url( rest_url( 'socdepoble/v1/traduir' ) ) . '"';
+		/* Gauntlet 261030 (Fase 3, TC3.1) · Els destins que este servidor
+		   servix (traduccio.php, socdepoble_enxufe_traduccio_destins: la regla
+		   dels proveïdors). L'opt-in traductor-llengues de sdp.amfitrio.v1: el
+		   client no demana cap altre destí, i no ix cap 503 a la consola. */
+		$atributs .= ' traductor-llengues="' . esc_attr( implode( ' ', socdepoble_enxufe_traduccio_destins() ) ) . '"';
 	}
 
 	$nom_poble = socdepoble_enxufe_etiqueta( $instancia['nomPoble'] ?? '' );
@@ -381,6 +388,7 @@ function socdepoble_enxufe_html_permes() {
 			'ruta-inicial' => true,
 			'ruta-a-url'   => true,
 			'traductor-url' => true,
+			'traductor-llengues' => true,
 			'config'       => true,
 		),
 	);

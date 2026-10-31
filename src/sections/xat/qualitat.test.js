@@ -74,7 +74,26 @@ const FITXERS = Object.freeze([
   'src/sections/xat/components/Bombolla.autor.test.jsx',
   /* Gauntlet 261016_1530 (Bloc 3.6.6; relleu F25) · Les rutes de la Wiki que
      cita la IAIA local són enllaços interns a la seua bombolla. */
-  'src/sections/xat/components/Bombolla.wiki.test.jsx'
+  'src/sections/xat/components/Bombolla.wiki.test.jsx',
+  /* IDEA-53 (pla 261029_1605, Bloc B) · La negreta del xat: el mòdul pur
+     (sense lookbehind, Baseline Safari 16.0) i les seues proves. */
+  'src/sections/xat/negreta.js',
+  'src/sections/xat/negreta.test.js',
+  'src/sections/xat/components/Bombolla.negreta.test.jsx',
+  'src/sections/xat/components/Compositor.negreta.test.jsx',
+  /* P1-12 pas 17 (pla 261029_1605, C.1; D-09) · L'avís d'OBLIT_FALLIT que
+     XatContext pinta en eixir i la seua prova. */
+  'src/sections/xat/components/AvisOblitXat.jsx',
+  'src/sections/xat/components/AvisOblitXat.test.jsx',
+  /* Gauntlet del Bloc B (QA-B01..B03, onada 261029_1605) · La tokenització
+     única d'adreces i marques de negreta (tokenitzaText): sense lookbehind
+     ni res fora del Baseline, i les seues proves. */
+  'src/sections/xat/enllacos.js',
+  'src/sections/xat/enllacos.test.js',
+  /* IDEA-56 (pla 261029_1605, Bloc F.2) · El cervell local de la IAIA al xat
+     de mostra i la seua resposta local, etiquetada, al grup públic de /iaia. */
+  'src/sections/xat/components/FakeChatOnboarding.iaiaLocal.test.jsx',
+  'src/sections/xat/components/Conversa.iaiaLocal.test.jsx'
 ]);
 
 const llig = (ruta) => readFileSync(path.join(ARREL, ruta), 'utf8');

@@ -10,7 +10,17 @@
  *   · detalls de llavor (/mercat, /events i /pobles): metadadesDeDetall;
  *   · documents de la Wiki: src/data/wikiManifest.js, el mateix que pinta el
  *     client, amb la regla de src/sections/wiki-de-poble/seoWiki.js;
- *   · /wikidepoble, la llista: el head de la portada de seoWiki.
+ *   · /wikidepoble, la llista: el head de la portada de seoWiki, amb la imatge
+ *     de la portada (ordre del Mestre, 30-10-2026, prompt 2208; QA-VES-02);
+ *   · Ordre del Mestre (30-10-2026, prompt 2208; QA-VES-01 de Codex), amb un
+ *     INVENTARI EXPLÍCIT, no totes les claus de PAGE_COPY:
+ *       - les presentacions /page/<clau> de PAGINES_INFORMATIVES, amb la regla
+ *         de PageDetailSection (cap clau amb ruta pròpia a navigation.js);
+ *       - les huit /plugin/<id> de registrePlugins.js (PLUGINS), llegides de
+ *         l'AST, amb metadadesDePlugin (la de PluginPage.jsx);
+ *       - /consola, les seues nou pàgines i les quatre del Govern del Mestre,
+ *         amb src/sections/consola/seoConsola.js (la de ConsolaSection.jsx);
+ *       - /disseny, ja pública: entra per SYSTEM_PAGES com /projecte.
  * Una primera imatge 'bloquejada' (SVG, bucket privat, URL signada…) és porta
  * roja sempre. Amb `estricte` (el prerender), també una imatge pròpia que no
  * passa el filtre del lloc (mateix origen, asset a public/, sense signatura);
@@ -65,6 +75,22 @@ export const LLISTES = Object.freeze([
   ['/poblacio', 'src/sections/poblacio/PoblacioSection.jsx', ['section.poblacio.title', 'Cens de Població'], ['section.poblacio.subtitle', 'Demografia i nombre d\'habitants dels pobles connectats.']]
 ].map(entrada => Object.freeze(entrada)));
 
+/* Ordre del Mestre (30-10-2026, prompt 2208, T1.2; QA-VES-01 de Codex) · Les
+   presentacions públiques de /page/<clau> que no tenen cap altra porta al
+   manifest (ni SYSTEM_PAGES amb un href /page/, ni ruta pròpia a
+   navigation.js): PageDetailSection les servix a tothom amb el copy de
+   PAGE_COPY. Llista tancada i comprovada (la cobertura és a les proves), no
+   totes les claus: notes_shared, amb el logotip SVG, no és cap presentació, i
+   /page/notes és la fitxa pública, no l'eina privada /notes. */
+export const PAGINES_INFORMATIVES = Object.freeze(['publicar_mur', 'publicar_mercat', 'publicar_calendari', 'publicar_mapa',
+  'vehicle_compartit', 'animalets', 'treball', 'habitatge', 'notes', 'wikidepoble']);
+
+/* Ordre del Mestre (30-10-2026, prompt 2208, T1.1 i T2.1) · Les fonts JS de les
+   rutes de la Consola: la regla (seoConsola.js) i les dades que llig. Totes
+   entren a l'evidència; una font canviada a mig build és porta roja. */
+export const FONTS_CONSOLA = Object.freeze(['src/sections/consola/seoConsola.js', 'src/sections/consola/consolaPagines.js',
+  'src/sections/consola/govern/governConsola.js', 'src/sections/consola/imatgesConsola.js']);
+
 /* Les llavors del repositori amb detall públic (decisió per defecte del
    261028, D3): [secció, font, exportació]. Una font absent no hi entra. */
 export const LLAVORS = Object.freeze([
@@ -110,8 +136,8 @@ export async function buildSocialManifest({root,origin,policyRoot=root,publicSna
     'src/config/rutaSocial.js','src/config/navigation.js','src/sections/wiki-de-poble/seoWiki.js','src/sections/wiki-de-poble/parseMarkdown.js',
     'src/components/universal/editorial.js','src/sections/pobles/nomsDelPoble.js','src/utils/iniciEditorial.js'];
   const moduleAt = async rel => import(pathToFileURL(path.join(policyRoot,rel)).href);
-  const [{publicMetadata,publicSeoRoute,confinedFile},{CAP_SOCIAL_BASE},{metadadesDePagina,metadadesDeDetall},{idDeDocumentWiki},{resolvePageSlugPath},
-    {atributsPublics,metadadesDeDocumentPublic,metadadesDeDocumentWiki}]=await Promise.all(POLITIQUES.slice(0,6).map(moduleAt));
+  const [{publicMetadata,publicSeoRoute,confinedFile},{CAP_SOCIAL_BASE},{metadadesDePagina,metadadesDeDetall,metadadesDePlugin},{idDeDocumentWiki},{resolvePageSlugPath},
+    {atributsPublics,metadadesDeDocumentPublic,metadadesDeDocumentWiki,portadaSocialDeLaWiki}]=await Promise.all(POLITIQUES.slice(0,6).map(moduleAt));
   const sources=new Map();
   const sourcePaths=new Map();
   function record(file,bytes,base=root) {
@@ -214,6 +240,45 @@ export async function buildSocialManifest({root,origin,policyRoot=root,publicSna
       }
     }
   }
+  /* Ordre del Mestre (30-10-2026, prompt 2208, T1.1) · Els plugins de
+     registrePlugins.js, sense executar-lo: RUTA_PLUGINS, IMATGES_PLUGINS i, de
+     cada plugin({…}) de PLUGINS (dins d'Object.freeze), els camps de text
+     literals que llig metadadesDePagina; la resta (obrir, data, etiquetes) no
+     compta. Sense el fitxer, cap. */
+  function pluginsDelRegistre() {
+    const rel='src/sections/plugins/registrePlugins.js';
+    if(!hiEs(rel))return [];
+    const program=parse(fs.readFileSync(sourceFile(rel),'utf8'),{sourceType:'module'}).program;
+    const text=n=>(n?.type==='StringLiteral'?n.value:n?.type==='TemplateLiteral'&&!n.expressions.length?n.quasis.map(q=>q.value.cooked).join(''):undefined);
+    const declarades=new Map();
+    for(const n of program.body)if(n.type==='ExportNamedDeclaration'&&n.declaration?.type==='VariableDeclaration')
+      for(const d of n.declaration.declarations)if(d.id.type==='Identifier')declarades.set(d.id.name,d.init);
+    const [ruta,carpeta]=['RUTA_PLUGINS','IMATGES_PLUGINS'].map(nom=>text(declarades.get(nom)));
+    let llista=declarades.get('PLUGINS');
+    while(llista?.type==='CallExpression'&&llista.callee.type==='MemberExpression'&&llista.callee.object.name==='Object'
+      &&llista.callee.property.name==='freeze'&&llista.arguments.length===1)llista=llista.arguments[0];
+    if(!/^\/[a-z]+$/.test(ruta||'')||!/^\/assets\/[a-z0-9/_-]+$/.test(carpeta||'')||llista?.type!=='ArrayExpression')throw new Error('PLUGINS no és una llista estàtica.');
+    const CAMPS=['id','titol','subtitol','entradilla','imatgeAlt','extensioImatge'];
+    return llista.elements.map(n=>{
+      if(n?.type!=='CallExpression'||n.callee.type!=='Identifier'||n.callee.name!=='plugin'||n.arguments.length!==1||n.arguments[0].type!=='ObjectExpression')throw new Error('Descriptor de plugin no estàtic.');
+      /* Ordre del Mestre (30-10-2026, prompt 2208; SEO-CRIT-03) · Fail-closed com
+         literal(): un camp de CAMPS que no és text literal (concatenació, constant,
+         template amb expressions, mètode) i una propietat estesa o calculada (pot
+         portar-ne qualsevol) són porta roja. Abans, el camp es perdia en silenci i
+         el build publicava un head diferent del de PluginPage. */
+      const camps={};
+      for(const p of n.arguments[0].properties) {
+        if(p.type==='SpreadElement'||p.computed)throw new Error('Descriptor de plugin no estàtic: propietat estesa o calculada.');
+        const nom=p.key.type==='Identifier'?p.key.name:p.key.value;
+        if(!CAMPS.includes(nom))continue;
+        const valor=p.type==='ObjectProperty'?text(p.value):undefined;
+        if(valor===undefined)throw new Error(`Descriptor de plugin no estàtic: ${nom}.`);
+        camps[nom]=valor;
+      }
+      if(!/^[a-z0-9][a-z0-9-]{0,63}$/.test(camps.id||'')||!/^(?:jpe?g|png|webp)$/.test(camps.extensioImatge||'jpg'))throw new Error('Plugin amb id o extensió invàlids.');
+      return {...camps,ruta,imatge:`${carpeta}/${camps.id}_vinyeta.${camps.extensioImatge||'jpg'}`};
+    });
+  }
   const dictionary=Object.create(null);
   if(hiEs('src/config/idiomes/ca.js')) {
     // Només les entrades de text literal; la resta del diccionari no compta.
@@ -277,7 +342,8 @@ export async function buildSocialManifest({root,origin,policyRoot=root,publicSna
     if(key==='wikidepoble'||seen.has(href))continue;seen.add(href);
     const page=Object.hasOwn(PAGE_COPY,key)?PAGE_COPY[key]:null;
     if(!page||!publicMetadata(page)||!publicSeoRoute(href,attrs))continue;
-    // /page/* són fitxes públiques del sistema; les eines /notes, /xat, /consola no entren.
+    /* /page/* són fitxes públiques del sistema; les eines /notes i /xat no entren.
+       /consola entra més avall per seoConsola.js (ordre del Mestre, 30-10-2026, prompt 2208, T2.1; SEO-CRIT-06). */
     const meta=metadadesDePagina(page,imageOptions);blocked(href,meta.imatge);
     add(href,{title:meta.title,description:meta.description,image:meta.image,own:true});
     // /page/<clau> porta a la ruta pròpia (navigation.js · resolvePageSlugPath): el mateix head.
@@ -285,12 +351,57 @@ export async function buildSocialManifest({root,origin,policyRoot=root,publicSna
     if(pageRoute!==href&&resolvePageSlugPath(key)===href)alias(pageRoute,href);
   }
   if(routes['/page/descarregues'])alias('/descarregues','/page/descarregues');
+  // Ordre del Mestre (30-10-2026) · /fediversity, l'adreça curta de la candidatura NLnet (App.jsx, una redirecció).
+  if(routes['/page/fediversity'])alias('/fediversity','/page/fediversity');
+  /* Ordre del Mestre (30-10-2026, prompt 2208, T1.2) · L'inventari de /page/<clau>
+     (PAGINES_INFORMATIVES), amb la regla de PageDetailSection: una clau amb ruta
+     pròpia (resolvePageSlugPath) hi redirigix i no és cap /page/ (inventari
+     trencat: porta roja); esPaginaVisible és cert sempre a la web. */
+  for(const key of PAGINES_INFORMATIVES) {
+    const route=`/page/${key}`,canonica=resolvePageSlugPath(key);
+    if(canonica)throw new Error(`Inventari social: ${route} redirigix a ${canonica}.`);
+    const page=Object.hasOwn(PAGE_COPY,key)?PAGE_COPY[key]:null;
+    if(!page||Object.hasOwn(routes,route)||!publicMetadata(page)||!publicSeoRoute(route))continue;
+    const meta=metadadesDePagina(page,imageOptions);blocked(route,meta.imatge);
+    add(route,{title:meta.title,description:meta.description,image:meta.image,own:true});
+  }
+  /* Ordre del Mestre (30-10-2026, prompt 2208, T1.1) · Les huit /plugin/<id>.
+     registrePlugins.js importa el router (registreApps.js): es llig l'AST i
+     només els literals de cada plugin({…}); la imatge és la regla de la fàbrica
+     plugin(): `${IMATGES_PLUGINS}/${id}_vinyeta.${extensioImatge}`, 'jpg' per
+     defecte. La paritat amb el registre de veres la fixa una prova del client
+     (src/config/coberturaSocial.test.js). */
+  for(const plugin of pluginsDelRegistre()) {
+    const route=`${plugin.ruta}/${plugin.id}`;
+    if(!publicSeoRoute(route))continue;
+    const meta=metadadesDePlugin(plugin,imageOptions);blocked(route,meta.imatge);
+    add(route,{title:meta.title,description:meta.description,image:meta.image,own:true});
+  }
+  /* Ordre del Mestre (30-10-2026, prompt 2208, T2.1) · /consola, les nou pàgines
+     de la sala de màquines i les quatre del Govern del Mestre: el head del
+     client (seoConsola.js · rutesPubliquesDeLaConsola, el que crida
+     ConsolaSection). Dades JS del repositori, com les llavors. */
+  if(hiEs(FONTS_CONSOLA[0])) {
+    const [file]=FONTS_CONSOLA.filter(hiEs).map(sourceFile);
+    const {rutesPubliquesDeLaConsola}=await import(`${pathToFileURL(file).href}?sha=${sha(fs.readFileSync(file))}`);
+    if(typeof rutesPubliquesDeLaConsola!=='function')throw new Error('seoConsola.js no exporta rutesPubliquesDeLaConsola.');
+    for(const {ruta,title,description,imatge,image} of rutesPubliquesDeLaConsola(imageOptions)) {
+      if(!publicSeoRoute(ruta))continue;
+      blocked(ruta,imatge);
+      add(ruta,{title,description,image,own:true});
+    }
+  }
   const wiki=hiEs('src/data/wikiManifest.js')?staticModule('src/data/wikiManifest.js').get('wikiManifest'):null;
   const wikiItems=Array.isArray(wiki?.items)?wiki.items:[];
   if(wiki&&!Array.isArray(wiki.items))throw new Error('Manifest de la Wiki sense items.');
   if(publicSeoRoute('/wikidepoble')) {
-    const portada=metadadesDeDocumentWiki(null,'',wikiItems);
-    add('/wikidepoble',{title:portada.title,description:portada.description,image:null});
+    /* Ordre del Mestre (30-10-2026, prompt 2208, T1.3; QA-VES-02) · La portada que
+       pinta la Wiki (PAGE_COPY[COVER_PAGE_KEYS.wiki]) pel selector compartit. */
+    const clau=system.node('COVER_PAGE_KEYS')?system.get('COVER_PAGE_KEYS').wiki:'wikidepoble';
+    const copyPortada=Object.hasOwn(PAGE_COPY,clau)?PAGE_COPY[clau]:null;
+    blocked('/wikidepoble',portadaSocialDeLaWiki(copyPortada,imageOptions).imatge);
+    const portada=metadadesDeDocumentWiki(null,'',wikiItems,{portada:copyPortada,...imageOptions});
+    add('/wikidepoble',{title:portada.title,description:portada.description,image:portada.image??null,own:true});
   }
   for(const [route,,titleKey,descriptionKey] of LLISTES) {
     if(publicSeoRoute(route))add(route,{title:tradueix(titleKey),description:tradueix(descriptionKey),image:null});

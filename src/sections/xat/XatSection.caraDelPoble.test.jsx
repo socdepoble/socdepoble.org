@@ -154,11 +154,13 @@ test('si el servidor ja dona imatge a la comunitat, mana la seua', () => {
   expect(caraDe(llista().querySelector('li[data-clau="comunitat:c-torre"]'))).toBe('/assets/uploads/comunitat-propia.jpg');
 });
 
-test('sense fitxa del poble al node, la comunitat es queda amb les inicials (cap cara inventada)', () => {
+/* P1-70 (261029) · Derogat «sense fitxa, les inicials» per a la Torre: el Mestre
+   vol la seua foto sempre (POBLE_PER_DEFECTE.avatar, la de la llavor). */
+test('sense fitxa del poble al node, la comunitat de la Torre porta la foto de la llavor (mai les inicials)', () => {
   mocks.towns = [{ id: 'sella', avatar_url: '/assets/towns/sella/2.jpg' }];
   ambComunitatDelPoble();
   render(<XatSection />);
-  expect(caraDe(llista().querySelector('li[data-clau="comunitat:c-torre"]'))).toBeNull();
+  expect(caraDe(llista().querySelector('li[data-clau="comunitat:c-torre"]'))).toBe(CARA);
 });
 
 /* Gauntlet 261016 (Bloc 3.6) · Derogat «sense poble declarat, res no canvia»:
@@ -189,7 +191,10 @@ test('sense poble declarat, la fila virtual de «Gent de la Torre» és al capda
   render(<XatSection />);
   const fila = llista().querySelector('li[data-clau="poble:la-torre-de-les-macanes"]');
   expect(fila).not.toBeNull();
-  expect(llista().querySelector('li')).toBe(fila);
+  /* P1-70 (261029) · El tercer actor, darrere de Javi Llinares (actorsDelXat.js), amb la IAIA darrere.
+     QA-R2-05 · En remot sense l'UUID de l'entitat, la reserva pública de Sóc de Poble va la primera. */
+  expect([...llista().querySelectorAll(':scope > li')].map((li) => li.getAttribute('data-clau')).slice(0, 4))
+    .toEqual(['entitat:socdepoble', 'sdp-per-defecte:javi', 'poble:la-torre-de-les-macanes', 'sdp-per-defecte:iaia']);
   expect(fila.querySelector('.sdp-xat-fila__nom').textContent).toContain('Gent de la Torre');
   expect(caraDe(fila)).toBe(CARA);
   fireEvent.click(fila.querySelector('button'));

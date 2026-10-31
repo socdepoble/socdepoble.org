@@ -6,7 +6,7 @@
    el de Codex: el WebP sencer porta «Canon EOS 5D» i el prefix de 256 KB, no. */
 import { describe, expect, test } from 'vitest';
 import { MAX_BYTES_EXIF, llegixExif } from '../../components/universal/enquadrament/exif.js';
-import { TIPUS, concatena, jpegAmbExif, tiff } from '../../components/universal/enquadrament/jpegProva.js';
+import { TIPUS, concatena, jpegAmbExif, tiff } from '../../../tests/helpers/jpegProva.js';
 import { cercaExifWebp, rangDeContentRange, webpAmbExifFora, webpMinim } from './lecturaExifWebp.js';
 
 const ascii = (s) => Uint8Array.from(s, (c) => c.charCodeAt(0));

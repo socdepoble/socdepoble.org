@@ -6,10 +6,14 @@
  *     tinga l'estructura que la gent ja coneix de les apps natives; Gauntlet
  *     261017, Bloc 3.1: un patró conegut, sense cap marca aliena): una sola
  *     fila de títol amb la lupa i el «+» rodó blau a la dreta
- *     (Nova conversa, un diàleg), una fila de control amb les píndoles Tot ·
- *     No llegits · Preferits · Grups (XAT-A17) o, amb la lupa oberta, la
- *     cerca en píndola al seu lloc (P1-36, decisió 3 del Mestre del 261028,
- *     que deroga el desplegable de T12/261026_2126) i la llista; i la
+ *     (Nova conversa, un diàleg), la cerca en píndola amb la lupa oberta
+ *     (P1-36, decisió 3 del Mestre del 261028, que deroga el desplegable de
+ *     T12/261026_2126), les píndoles Tot · No llegits · Preferits · Grups
+ *     (XAT-A17) i la llista. Ordre 0 del Mestre (261030 03:49) · Les
+ *     píndoles viuen dins del desplegament de la lupa: plegada i amb «Tot»,
+ *     cap barra (la llista comença davall de la fila de títol); amb la lupa
+ *     oberta, davall del camp; i amb un altre filtre actiu, també plegada,
+ *     perquè es veja i es puga desactivar. I la
  *     conversa a la dreta amb capçalera honesta, separadors de dia,
  *     «Carrega'n més», bombolles i el compositor.
  *   · Onada 3 (T63.2, T67, T68, T69):
@@ -125,10 +129,11 @@ import usePobleAmfitrio from './usePobleAmfitrio.js';
 import useObriXatPerDefecte, { ID_FIL_DE_MOSTRA_DE_LA_IAIA } from './useObriXatPerDefecte.js';
 /* Ordre del Mestre (261021, pla 261021_0015 §8.5) · La fletxa de la conversa torna a la pàgina d'origen. */
 import { useOrigenDelXat } from './origenDelXat.js';
-import { PREFIX_PER_DEFECTE, clauPerDefecteDe, esIdPerDefecte, esLaPersonaDeContacte, esXatDeLaIAIA } from '../../data/xatsPerDefecte.js';
+import { ID_FIL_DE_MOSTRA_DE_JAVI, PREFIX_PER_DEFECTE, clauPerDefecteDe, esIdPerDefecte, esXatDeLaIAIA } from '../../data/xatsPerDefecte.js';
 /* Gauntlet 261016_1530 (Bloc 3.6) · Els quatre actors al capdamunt, en
-   l'ordre del Mestre, i la fila que porta a la comunitat de Sóc de Poble. */
-import { RUTA_SOBRE_DE_SOC_DE_POBLE, anteposaActors, potPortarLaComunitat } from './actorsDelXat.js';
+   l'ordre del Mestre, i la fila que porta a la comunitat de Sóc de Poble.
+   P1-70 (261029) · I les files de reserva de Javi i de la IAIA. */
+import { FILA_DE_RESERVA_DE_JAVI, FILA_DE_RESERVA_DE_LA_IAIA, RUTA_SOBRE_DE_SOC_DE_POBLE, anteposaActors, comunitatDeReserva } from './actorsDelXat.js';
 import { useEntitatDelProjecte } from '../../hooks/useEntitatDelProjecte.js';
 /* Onada 6 · La IAIA apagada (nivell d'IA 0), els errors SDP traduïts i
    «Informa d'un error» per als beta testers. */
@@ -413,7 +418,11 @@ function XatWorkspace({ origen = null }) {
     esFilAmagat = mai,
     /* Gauntlet 261016 (Bloc 3.6.2) · On porten les files de la IAIA i de
        Javi depén del mode de dades (useObriXatPerDefecte). */
-    modeDades = 'remote'
+    modeDades = 'remote',
+    /* P1-70 (261029) · La conversa d'atenció personal i servei tècnic amb
+       Javi, quan no se'n pot obrir cap directe (XatContext). Un context
+       d'abans no la porta: null, i la fila fa el de sempre. */
+    filServeiTecnic = null
   } = useXat();
   /* Fase D (261020, tasca 2; pla 261020_1300) · Denunciar i bloquejar des de
      la conversa: només amb la capacitat i una sessió (el xat de mostra, mai).
@@ -434,9 +443,11 @@ function XatWorkspace({ origen = null }) {
   /* Gauntlet 261016_1530 (Bloc 3.6) · En remot, la comunitat de Sóc de Poble
      es reconeix per l'id que el backend dona a l'entitat pilot: el Xat torna
      a pintar quan arriba (useEntitatDelProjecte, la mateixa resolució única
-     d'AppDataLoader), i fins aleshores no hi porta cap fila (actorsDelXat.js). */
+     d'AppDataLoader). QA-R2-05 · Fins aleshores, la fila de reserva hi és
+     igualment, però només porta a la pàgina pública /socdepoble
+     (comunitatDeReserva, actorsDelXat.js). */
   useEntitatDelProjecte();
-  const comunitatPortable = potPortarLaComunitat(modeDades);
+  const comunitatDeLaReserva = comunitatDeReserva(modeDades);
 
   const titolSeccio = t('section.xat.rail.titol', 'Xat');
   /* Onada 8 (261009) · Sense `image`: useSEO no passa cap SVG a les xarxes i
@@ -462,11 +473,13 @@ function XatWorkspace({ origen = null }) {
   const campRef = useRef(null);
   const filtresRef = useRef(null);
   /* P1-36 (decisió 3 del Mestre, 261028) · La lupa de la fila de títol obri
-     la cerca, que ocupa el lloc de les píndoles a la mateixa fila; el camp
-     només es munta mentre és oberta. */
+     la cerca; el camp només es munta mentre és oberta. Ordre 0 (Mestre,
+     261030 03:49) · Les píndoles hi van davall, dins del seu desplegament. */
   const [cercaOberta, setCercaOberta] = useState(false);
   const lupaRef = useRef(null);
+  const pindolesRef = useRef(null);
   const idCerca = useId();
+  const idPindoles = useId();
 
   const [modeSeleccio, setModeSeleccio] = useState(false);
   const [triades, setTriades] = useState(() => new Set());
@@ -521,8 +534,13 @@ function XatWorkspace({ origen = null }) {
      no: el fil ha desaparegut de veres, i es decidix com qualsevol altre,
      sense deixar a la vista una conversa congelada amb el compositor actiu.
      La memòria s'escriu després de pintar i s'oblida en canviar de ruta
-     (/xat/X → /xat → /xat/X no la recupera). */
-  const trobatViu = threadId ? threads.find((c) => String(c.id) === threadId) || null : null;
+     (/xat/X → /xat → /xat/X no la recupera).
+     P1-70 (261029) · /xat/fake-javi també es troba quan la llista no el porta
+     (el remot amb sessió hi té la fila sintètica): és la conversa de servei
+     tècnic del context (filServeiTecnic), mai un 404. No es llig mai al port. */
+  const trobatViu = threadId
+    ? threads.find((c) => String(c.id) === threadId) || (threadId === ID_FIL_DE_MOSTRA_DE_JAVI ? filServeiTecnic : null) || null
+    : null;
   const darrerTrobat = useRef(null);
   useLayoutEffect(() => {
     if (trobatViu) darrerTrobat.current = trobatViu;
@@ -547,10 +565,13 @@ function XatWorkspace({ origen = null }) {
      de dinsDeLaIAIA (cap segona navegació), i Javi no s'obri cap xat amb ell
      mateix (SDP-XAT-002): torna a la llista. Una clau que ja no té fila
      ('socdepoble', des del 261016_1530) és un 404, com qualsevol id que no
-     existix. */
+     existix.
+     P1-70 (ordre del Mestre, 261029 18:20) · Derogat «Javi torna a la
+     llista»: la seua fila li obri la conversa d'atenció personal i servei
+     tècnic (useObriXatPerDefecte amb `serveiTecnic`), tampoc cap directe amb
+     ell mateix. */
   const clauDeLaRuta = trobat ? null : clauPerDefecteDe(threadId);
-  const javiDavantDeJavi = clauDeLaRuta === 'javi' && esLaPersonaDeContacte({ id: joId });
-  const clauEncaminada = clauDeLaRuta && !(clauDeLaRuta === 'iaia' && iaiaApagada) && !javiDavantDeJavi ? clauDeLaRuta : null;
+  const clauEncaminada = clauDeLaRuta && !(clauDeLaRuta === 'iaia' && iaiaApagada) ? clauDeLaRuta : null;
   const trobatPerDefecte = trobat?.perDefecte || clauEncaminada;
   const idPerDefecte = Boolean(trobatPerDefecte) || esIdPerDefecte(threadId);
   /* Onada 6 (tasca 12) · Amb el nivell d'IA a 0 la IAIA no apareix: qui és
@@ -609,14 +630,19 @@ function XatWorkspace({ origen = null }) {
      via «En privat» d'ací): les claus són 'javi' i 'iaia', i també
      s'encaminen sense la fila a la llista (`clauEncaminada`, dalt). */
   const obriPerDefecte = useObriXatPerDefecte();
+  const ambServeiTecnic = Boolean(filServeiTecnic);
   const perDefecteTractat = useRef(null);
   useEffect(() => {
     if (!trobatPerDefecte) { perDefecteTractat.current = null; return; }
+    /* P1-70 (261029) · Mentre la sessió es comprova (remot: joId null i encara
+       no senseSessio), la ruta de pas espera, com ?sobre=: sense, la fila de
+       Javi aniria a una conversa que el context encara no sap resoldre. */
+    if (!joId && !senseSessio) return;
     const previ = perDefecteTractat.current;
     if (previ && previ.threadId === threadId && previ.params === params) return;
     perDefecteTractat.current = { threadId, params };
-    obriPerDefecte(trobatPerDefecte, { modeDades, senseSessio });
-  }, [trobatPerDefecte, threadId, params, obriPerDefecte, modeDades, senseSessio]);
+    obriPerDefecte(trobatPerDefecte, { modeDades, senseSessio, serveiTecnic: ambServeiTecnic });
+  }, [trobatPerDefecte, threadId, params, obriPerDefecte, modeDades, senseSessio, ambServeiTecnic, joId]);
 
   /* Onada 6 (tasca 12) · La IAIA s'ha apagat (o ja ho estava) amb la persona
      dins d'un xat seu: a la llista, amb replace i l'avís de per què. */
@@ -629,17 +655,6 @@ function XatWorkspace({ origen = null }) {
     showToast(t('section.xat.iaia.apagada', "La IAIA està apagada (nivell d'IA 0). La pots tornar a encendre a «Realitat»."), 'info');
     navigate('/xat', { replace: true });
   }, [dinsDeLaIAIA, threadId, navigate, showToast, t]);
-
-  /* Gauntlet 261016_1530 (Bloc 3.6) · Javi a la ruta de la seua pròpia fila
-     (/xat/sdp-per-defecte:javi): a la llista, amb replace i una sola vegada
-     per ruta. La seua llista no porta eixa fila (XatContext). */
-  const sortidaDeJavi = useRef(null);
-  useEffect(() => {
-    if (!javiDavantDeJavi) { sortidaDeJavi.current = null; return; }
-    if (sortidaDeJavi.current === threadId) return;
-    sortidaDeJavi.current = threadId;
-    navigate('/xat', { replace: true });
-  }, [javiDavantDeJavi, threadId, navigate]);
 
   /* Onada 6 (beta testers) · «Informa d'un error», al peu de la llista (també
      davall de l'avís d'una llista que no s'ha pogut carregar): obri el xat de
@@ -874,9 +889,50 @@ function XatWorkspace({ origen = null }) {
   const cercant = terme !== '' || filtreCerca != null;
   /* Onada 6 (tasca 12) · Amb la IAIA apagada, la cerca tampoc no la troba al padró. */
   const membresVisibles = useMemo(() => (iaiaApagada ? senseContacteDeLaIAIA(membresCerca) : membresCerca), [iaiaApagada, membresCerca]);
+  /* Cicle 4 (auditoria matinal 261030_1217, MITJÀ-01) · La píndola triada
+     també mana sobre la cerca (Ordre 0: és a la vista, davall del camp): les
+     converses i els missatges, només dels fils que la passen, amb la regla de
+     la llista (passaFiltre). Un fil que és una comunitat es jutja com la seua
+     fila, amb els seus grups i canals. El padró no porta cap conversa (com
+     la fila virtual del poble, mai «No llegits» ni «Preferits», i una
+     persona no és cap grup): amb un filtre diferent de «Tot», cap persona.
+     Tancament 10/10 (cicle 4, xat-cerca-pindola-fills-de-comunitat) · La
+     comunitat no té missatges propis: són dels seus grups i canals. Marcar
+     la comunitat com a preferida la porta sencera a «Preferits», i la cerca
+     hi entra: un grup o un canal hi passa per si mateix o perquè la seua
+     comunitat és preferida. Res més no s'hereta: un canal preferit no fa
+     preferits els germans, i «No llegits» es jutja canal a canal. */
+  const filsDeLaCerca = useMemo(() => {
+    if (filtre === 'tot') return threads;
+    const perId = new Map();
+    const comunitatDelFill = new Map();
+    for (const c of comunitats) {
+      perId.set(String(c.fil.id), c);
+      for (const f of c.fills || CAP) comunitatDelFill.set(String(f.id), c);
+    }
+    return threads.filter((fil) => {
+      if (esComunitat(fil)) {
+        return passaFiltre({ tipus: 'comunitat', comunitat: perId.get(String(fil.id)) || { fil, fills: CAP, noLlegits: fil.noLlegits } }, filtre);
+      }
+      if (passaFiltre({ tipus: 'fil', fil }, filtre)) return true;
+      return filtre === 'preferits' && Boolean(comunitatDelFill.get(String(fil.id))?.fil?.preferit);
+    });
+  }, [filtre, threads, comunitats]);
+  const membresDeLaCerca = filtre === 'tot' ? membresVisibles : CAP;
   const resultat = useMemo(() => (cercant
-    ? cercaXat({ terme, filtre: filtreCerca, fils: threads, membres: membresVisibles, missatgesPerFil: getThreadMessages, joId })
-    : null), [cercant, terme, filtreCerca, threads, membresVisibles, getThreadMessages, joId]);
+    ? cercaXat({ terme, filtre: filtreCerca, fils: filsDeLaCerca, membres: membresDeLaCerca, missatgesPerFil: getThreadMessages, joId })
+    : null), [cercant, terme, filtreCerca, filsDeLaCerca, membresDeLaCerca, getThreadMessages, joId]);
+  /* F4 (D.3, ordre del Mestre del 261030) · Amb una píndola que no és «Tot»
+     i cap resultat, quants n'hi ha a «Tot» (els mateixos fils i el mateix
+     padró que hi busca la cerca sense píndola): l'estat buit ho diu i oferix
+     tornar-hi. Només es calcula en eixe cas; 0 vol dir l'estat buit de sempre. */
+  const resultatsATot = useMemo(() => {
+    if (!resultat?.buit || filtre === 'tot') return 0;
+    const aTot = cercaXat({ terme, filtre: filtreCerca, fils: threads, membres: membresVisibles, missatgesPerFil: getThreadMessages, joId });
+    return aTot.converses.length + aTot.persones.length + aTot.missatges.length;
+  }, [resultat, filtre, terme, filtreCerca, threads, membresVisibles, getThreadMessages, joId]);
+  const pindolaTriada = filtre === 'tot' ? null : FILTRES.find(([id]) => id === filtre) || null;
+  const nomPindola = pindolaTriada ? t(pindolaTriada[1], pindolaTriada[2]) : null;
 
   /* Les files de la llista (T67): cada comunitat és una sola fila i els seus
      fills no es pinten sols. Per activitat, les fixades primer. */
@@ -908,23 +964,34 @@ function XatWorkspace({ origen = null }) {
        de Sóc de Poble, Javi Llinares, Gent de la Torre i la IAIA
        (anteposaActors). La fila que porta a la comunitat quan encara no hi
        és segueix la regla de la del poble (mai mentre carrega ni sense
-       sessió) i, en remot, només quan el backend ja ha donat l'id de
-       l'entitat (potPortarLaComunitat). */
+       sessió) i, en remot, porta a la comunitat només quan el backend ja ha
+       donat l'id de l'entitat; abans, a /socdepoble (QA-R2-05,
+       comunitatDeReserva).
+       P1-70 (ordre del Mestre, 261029 18:20) · Amb la fila virtual del poble,
+       també Javi Llinares i la IAIA (si no està apagada) encara que la llista
+       no els porte: una llista encara buida (la sessió en comprovació), un
+       node sense poble, un adaptador que no les sintetitza o un fil seu
+       arxivat. Les files de reserva són les mateixes del port, i la de Javi
+       diu què és quan no porta cap últim missatge. */
     const virtual = !senseSessio && status === 'ready';
     const ambElPoble = anteposaPoble(llista, { poble: pobleDeLaLlista, comunitats, virtual });
-    return anteposaActors(ambElPoble, { comunitat: virtual && comunitatPortable });
-  }, [comunitats, threads, pobleDeLaLlista, senseSessio, status, comunitatPortable]);
+    return anteposaActors(ambElPoble, {
+      comunitat: virtual ? comunitatDeLaReserva : false,
+      reservaJavi: virtual ? FILA_DE_RESERVA_DE_JAVI : null,
+      reservaIAIA: virtual && !iaiaApagada ? FILA_DE_RESERVA_DE_LA_IAIA : null,
+      subtitolDeJavi: t('section.xat.javi.subtitol', 'Atenció personal i servei tècnic')
+    });
+  }, [comunitats, threads, pobleDeLaLlista, senseSessio, status, iaiaApagada, comunitatDeLaReserva, t]);
   /* La fila virtual del poble no es pot triar: fora mentre se seleccionen xats.
      Ordre del Mestre (261007) · Les files d'ajuda per defecte tampoc: no són
      converses i no tenen res a marcar. Gauntlet 261016_1530 · Ni la que porta
      a la comunitat de Sóc de Poble ('entitat'). Ordre del Mestre (261026_2126,
      P1-36) · La regla viu a LlistaConverses (esFilaTriable): la mateixa que
      decidix quines files obrin la selecció amb la pulsació llarga.
-     P1-36 · Amb la lupa oberta, les píndoles no es veuen: la llista que torna
-     quan el camp perd el focus (el teclat del mòbil plegat) és sencera, com
-     els resultats, i no la retalla un filtre que no és enlloc. La píndola
-     triada es conserva i torna a manar en plegar la cerca. */
-  const filtreDeLaLlista = cercaOberta ? 'tot' : filtre;
+     Ordre 0 (Mestre, 261030 03:49) · La píndola triada mana sempre: amb la
+     lupa oberta les píndoles són a la vista, davall del camp, i plegada
+     només s'amaguen amb «Tot», que no retalla res. Cap filtre amagat. */
+  const filtreDeLaLlista = filtre;
   const filesVisibles = files.filter((fila) => passaFiltre(fila, filtreDeLaLlista) && (!modeSeleccio || esFilaTriable(fila)));
   /* La comunitat de la fila del poble (el focus la seguix quan naix). La
      fitxa automàtica només la rep amb un poble declarat (EntradaDelPoble). */
@@ -1025,7 +1092,10 @@ function XatWorkspace({ origen = null }) {
 
   /* Onada 3B · Entrar en una vista del rail deixa la cerca i la selecció de
      xats: la vista les tapa i, en tornar a «Xats», no han de reaparéixer a
-     mitges (un terme vell o una barra de selecció sense motiu). */
+     mitges (un terme vell o una barra de selecció sense motiu).
+     Cicle 4 (auditoria matinal 261030_1217, MITJÀ-01; ordre del Mestre del
+     261030 12:30) · Tampoc una píndola vella: el filtre torna a «Tot» i, en
+     tornar, la llista és sencera i sense barra (Ordre 0). */
   const vistaPrevia = useRef(vista);
   useEffect(() => {
     if (vistaPrevia.current === vista) return;
@@ -1033,6 +1103,7 @@ function XatWorkspace({ origen = null }) {
     if (!vista) return;
     setSearchTerm('');
     setFiltreCerca(null);
+    setFiltre('tot');
     setCercaActiva(false);
     setCercaOberta(false);
     setModeSeleccio(false);
@@ -1051,6 +1122,15 @@ function XatWorkspace({ origen = null }) {
     if (cercaOberta) { cercaRef.current?.focus(); return; }
     if (focusPerdut(columnaRef.current)) lupaRef.current?.focus();
   }, [cercaOberta]);
+  /* Ordre 0 (Mestre, 261030 03:49) · Amb la lupa plegada, triar «Tot»
+     desmunta les píndoles: si el focus era en una (ara a <body>), torna a la
+     lupa, que les torna a obrir. */
+  const filtrePrevi = useRef(filtre);
+  useLayoutEffect(() => {
+    if (filtrePrevi.current === filtre) return;
+    filtrePrevi.current = filtre;
+    if (filtre === 'tot' && !cercaOberta && focusPerdut(columnaRef.current)) lupaRef.current?.focus();
+  }, [filtre, cercaOberta]);
 
   /* Auditoria 261008 (B04 i B05) · El 404 només es decidix amb una llista al
      dia (`llistaFresca`: amb l'última càrrega fallida, la conversa no es
@@ -1136,8 +1216,10 @@ function XatWorkspace({ origen = null }) {
 
   /* Gauntlet 261016_1530 (Bloc 3.6) · La fila que porta a la comunitat de
      Sóc de Poble fa el camí del «Comentar» de /socdepoble: l'efecte ?sobre=
-     l'obri (o la crea, al servidor, perquè la persona ho ha demanat). */
-  const obriEntitat = () => navigate(RUTA_SOBRE_DE_SOC_DE_POBLE);
+     l'obri (o la crea, al servidor, perquè la persona ho ha demanat).
+     QA-R2-05 · La reserva pública (en remot, sense l'UUID de l'entitat)
+     només porta a la seua pàgina: cap acció pel slug. */
+  const obriEntitat = (entitat) => navigate(entitat?.publica === true && entitat.ruta ? entitat.ruta : RUTA_SOBRE_DE_SOC_DE_POBLE);
 
   /* Onada 3B · «Veure-ho tot ›» de la vista de comunitats obri la fitxa i
      conserva la vista d'origen (/xat?comunitat=<id>&vista=comunitats): la
@@ -1243,9 +1325,12 @@ function XatWorkspace({ origen = null }) {
   /* ── La cerca global (T69) ── */
   const filtreActiu = FILTRES_CERCA_XAT.find((f) => f.id === filtreCerca) || null;
   const nomFiltre = filtreActiu ? t(filtreActiu.clauI18n, filtreActiu.etiqueta) : '';
+  /* Ordre 0 (Mestre, 261030 03:49) · Les píndoles queden entre el camp i la
+     llista de filtres: Tab hi passa sense tancar-la (camp → ⊗ → píndoles →
+     primera fila). */
   const alPerdreFocus = (e) => {
     const desti = e.relatedTarget;
-    if (desti && (campRef.current?.contains(desti) || filtresRef.current?.contains(desti))) return;
+    if (desti && (campRef.current?.contains(desti) || pindolesRef.current?.contains(desti) || filtresRef.current?.contains(desti))) return;
     setCercaActiva(false);
   };
   /* Teclat del cercador (T69). Escape amb text o filtre els buida i la cerca
@@ -1293,10 +1378,40 @@ function XatWorkspace({ origen = null }) {
     setFiltreCerca(null);
     cercaRef.current?.focus();
   };
+  /* Gauntlet 261030 (cicle 3, ordre0-escape-des-de-les-pindoles) · Escape
+     des de la resta del desplegament de la lupa (la fitxa del filtre, el ⊗ i
+     les píndoles) fa el mateix que el ⊗: amb text o filtre de cerca, els
+     buida i el focus torna al camp; buit i sense filtre, plega la cerca i el
+     focus va a la lupa, també si la píndola es queda a la vista (un filtre
+     diferent de «Tot»). El camp ja té el seu (alTeclatCerca). Amb la lupa
+     plegada, les píndoles no són cap desplegament: Escape no hi fa res. */
+  const alEscapeDelDesplegament = (e) => {
+    if (e.key !== 'Escape' || e.defaultPrevented || !cercaOberta || e.target === cercaRef.current) return;
+    e.preventDefault();
+    e.stopPropagation();
+    const plega = !searchTerm && !filtreCerca;
+    buidaCerca();
+    if (plega) lupaRef.current?.focus();
+  };
   /* La lupa obri la cerca a la fila 2 i, si ja és oberta, la plega buida. */
   const alternaCerca = () => {
     if (cercaOberta) netejaCerca();
     else setCercaOberta(true);
+  };
+  /* Ordre 0 · Una píndola triada amb la llista de filtres de la cerca a la
+     vista la tanca: torna la llista de converses, ja filtrada. */
+  const triaFiltre = (id) => {
+    setFiltre(id);
+    setCercaActiva(false);
+  };
+  /* F4 (D.3) · El botó de l'estat buit de la cerca fa el mateix que prémer
+     «Tot». Es desmunta amb els resultats que arriben: el focus va a la
+     píndola «Tot», ara premuda (no cau a <body>); sense píndoles, al camp. */
+  const tornaATot = () => {
+    triaFiltre('tot');
+    const pindolaTot = pindolesRef.current?.querySelector('button');
+    if (pindolaTot) pindolaTot.focus();
+    else cercaRef.current?.focus();
   };
 
   const titolLlista = t('section.xat.llista.titol', 'Converses');
@@ -1363,6 +1478,9 @@ function XatWorkspace({ origen = null }) {
         resultat={resultat}
         terme={terme}
         filtre={filtreCerca}
+        pindola={nomPindola}
+        resultatsATot={resultatsATot}
+        onTornaATot={tornaATot}
         onObriFil={obriResultat}
         onObriPersona={obriConversaAmb}
         obrintAmb={obrintAmb}
@@ -1442,6 +1560,7 @@ function XatWorkspace({ origen = null }) {
         etiquetaCerca={etiquetaCerca}
         cercaOberta={cercaOberta}
         idCerca={idCerca}
+        idPindoles={idPindoles}
         onLupa={alternaCerca}
         refLupa={lupaRef}
       />
@@ -1511,15 +1630,18 @@ function XatWorkspace({ origen = null }) {
     <aside className="sdp-workspace-column" aria-label={titolVista || titolLlista} ref={columnaRef}>
       {vistaNode || capcalera}
       {/* P1-36 (decisió 3 del Mestre, 261028; deroga el desplegable de
-          T12/261026_2126) · Una sola fila de control davall del títol: les
-          píndoles Tot · No llegits · Preferits · Grups o, amb la lupa oberta,
-          la cerca en píndola al seu lloc. Cap de les dues a la fitxa d'una
-          comunitat, mentre se seleccionen xats ni a les vistes del rail (que
-          porten la seua). El filtre de cerca triat (T69) és una fitxa dins
-          del camp; el ⊗ buida terme i filtre i, amb el camp buit, plega. */}
-      {!vistaNode && !comunitatId && !modeSeleccio ? (cercaOberta ? (
+          T12/261026_2126) · Amb la lupa oberta, la cerca en píndola davall del
+          títol. Ordre 0 (Mestre, 261030 03:49) · Les píndoles Tot · No
+          llegits · Preferits · Grups viuen dins del desplegament de la lupa,
+          davall del camp; plegada, només hi són amb un filtre diferent de
+          «Tot», perquè es veja i es puga desactivar (amb «Tot», cap barra).
+          Cap de les dues a la fitxa d'una comunitat, mentre se seleccionen
+          xats ni a les vistes del rail (que porten la seua). El filtre de
+          cerca triat (T69) és una fitxa dins del camp; el ⊗ buida terme i
+          filtre i, amb el camp buit, plega. */}
+      {!vistaNode && !comunitatId && !modeSeleccio && cercaOberta ? (
         <div className="sdp-xat-cerca" id={idCerca}>
-          <div className={`sdp-xat-cerca__camp${cercaActiva ? ' sdp-xat-cerca__camp--actiu' : ''}`} ref={campRef} onBlur={alPerdreFocus}>
+          <div className={cercaActiva ? 'sdp-xat-cerca__camp sdp-xat-cerca__camp--actiu' : 'sdp-xat-cerca__camp'} ref={campRef} onBlur={alPerdreFocus} onKeyDown={alEscapeDelDesplegament}>
             {filtreActiu ? (
               <button
                 type="button"
@@ -1561,9 +1683,10 @@ function XatWorkspace({ origen = null }) {
             </button>
           </div>
         </div>
-      ) : (
-        <FiltreConverses opcions={FILTRES} filtre={filtre} onTria={setFiltre} t={t} />
-      )) : null}
+      ) : null}
+      {!vistaNode && !comunitatId && !modeSeleccio && (cercaOberta || filtre !== 'tot') ? (
+        <FiltreConverses opcions={FILTRES} filtre={filtre} onTria={triaFiltre} onBlur={alPerdreFocus} onKeyDown={alEscapeDelDesplegament} refGrup={pindolesRef} idGrup={idPindoles} t={t} />
+      ) : null}
       {/* P1-54 · Les vistes del rail (Comunitats, Multimèdia, «En
           construcció») ja no porten l'accés: no són l'aterratge. */}
       {vistaNode ? null : <div className={peuDAcces ? 'sdp-workspace-column__body sdp-xat-cos--amb-peu' : 'sdp-workspace-column__body'}>{cos}{peuDAcces}</div>}
@@ -1717,10 +1840,12 @@ function XatWorkspace({ origen = null }) {
    de --sdp-touch que obri i plega la cerca de la fila 2 (aria-expanded; el
    camp que controla només existix obert, i aria-controls només hi apunta
    llavors). No obri cap menú: cap aria-haspopup a la fila 1. `refLupa` deixa
-   que el focus hi torne quan la cerca es plega. */
+   que el focus hi torne quan la cerca es plega.
+   Gauntlet 261030 (cicle 3) · Oberta, aria-controls anomena també la fila de
+   píndoles (`idPindoles`), que l'Ordre 0 posa dins del desplegament. */
 function CapcaleraLlista({
   titol, titolRail, etiquetaNova, onNova, refNova = null,
-  etiquetaCerca, cercaOberta = false, idCerca, onLupa, refLupa = null
+  etiquetaCerca, cercaOberta = false, idCerca, idPindoles, onLupa, refLupa = null
 }) {
   return (
     <AppGridColumn
@@ -1736,7 +1861,7 @@ function CapcaleraLlista({
         aria-label={etiquetaCerca}
         title={etiquetaCerca}
         aria-expanded={cercaOberta}
-        aria-controls={cercaOberta ? idCerca : undefined}
+        aria-controls={cercaOberta ? [idCerca, idPindoles].filter(Boolean).join(' ') : undefined}
         onClick={onLupa}
       >
         <Search size={24} aria-hidden="true" focusable="false" />
@@ -1878,7 +2003,14 @@ function ConversaAPantallaCompleta() {
 /* Fase D (261020, L4) · El document destacat, en diferit amb la seua còpia local
    (el precedent de TextRouteAmbCopiaLocal, App.jsx). En estret no es munta mai,
    tampoc al primer commit sense mesura (AppGridShell comença en 'ample'): /xat
-   en mòbil no baixa TextSection ni PAGE_COPY. */
+   en mòbil s'estalvia TextSection (i paginaDeText.js).
+   Gauntlet Loop 261029 (cicle 1) · PAGE_COPY, en canvi, ja ha arribat en
+   arrencar: l'adaptador (host.js → supabase/index.js) la importa per la
+   llavor (appSeed.js → sectionContent.js), i loadCoreContent servix les
+   pàgines de sistema en tots els modes, també en remot. El seu import() d'ací
+   la troba feta, sense cap byte de més; es queda perquè el document continue
+   en diferit si un dia PAGE_COPY ix de l'arrencada (decisió del Mestre).
+   XatSection.pes.test.js en mesura el graf real. */
 const DocumentDestacatDiferit = lazyRoute(() => Promise.all([
   import('../text/pageContent.js'),
   import('../text/TextSection')

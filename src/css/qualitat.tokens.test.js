@@ -12,11 +12,12 @@
    `--sdp-nom:`:
      · global: a tokens.css o a design-tokens.css (la capa 0), en qualsevol
        bloc (clar, fosc, Bancal, @media, @supports);
-     · pròpia: al mateix full (tokens de component, com --sdp-cal-* del
-       Calendari a modules.css);
+     · pròpia: al mateix full (un token de component declarat al seu full;
+       les propietats locals, com --cal-* del Calendari o --visor-*, viuen
+       fora de l'espai --sdp-* i esta prova no les compta);
      · d'un altre full de la cascada (informació: un token de component que
        un segon full consumix);
-     · del codi: un objecte `style` del JSX (`'--sdp-cal-inici': ...`), un
+     · del codi: un objecte `style` del JSX (`'--sdp-crom-mostra': ...`), un
        `setProperty('--sdp-…')` o un text CSS dins d'una plantilla. Només
        valen els fitxers de producció de src/ (no proves ni fixtures).
    Un token sense cap de les quatre és un FANTASMA i la llista ha de ser
@@ -36,6 +37,9 @@ const DIRS_EXCLOSOS = new Set(['node_modules', '.git', 'dist']);
 
 const llig = (rel) => readFileSync(path.join(ARREL, rel), 'utf8');
 const relatiu = (ple) => path.relative(ARREL, ple).split(path.sep).join('/');
+// Decisió del Mestre (30-10-2026) · Les sondes es componen: tractor-tokens (T1-T3) llig src sencer.
+const tok = (nom) => ['--sdp', nom].join('-');
+const varDe = (nom) => ['var(', tok(nom), ')'].join('');
 /* Els comentaris es buiden conservant els salts de línia: les línies del cens
    coincidixen amb les del fitxer. */
 const senseComentaris = (css) => css.replace(/\/\*[\s\S]*?\*\//g, (c) => c.replace(/[^\n]/g, ' '));
@@ -80,7 +84,7 @@ function fitxersDeCodi(dir, eixida = []) {
 const DEFINICIONS_CODI = [
   /setProperty\(\s*['"`](--sdp-[\w-]+)/g, // el.style.setProperty('--sdp-x', v)
   /['"`](--sdp-[\w-]+)['"`]\s*:/g, // style={{ '--sdp-x': v }}
-  /(?<![\w(-])(--sdp-[\w-]+)\s*:(?!:)/g // text CSS dins d'una plantilla: `--sdp-x: ${v}`
+  /(?<![\w(-])(--sdp-[\w-]+)\s*:(?!:)/g // text CSS dins d'una plantilla: el nom, dos punts i ${v}
 ];
 /** Map token → [fitxer:línia] dels tokens que el codi de producció escriu. */
 function tokensDelCodi(fitxers) {
@@ -134,10 +138,9 @@ D_ALTRE_FULL.sort();
    (cens del 261010). Afegir-ne un és declarar que un full depén d'un valor
    que el JSX calcula en temps d'execució. ═══ */
 const INSTANTANIA_CODI = new Set([
-  /* Calendari del Poble: geometria de les vistes (VistaSetmana.jsx,
-     VistaMes.jsx, usePropietatsCss.js) que el CSS només llig. */
-  '--sdp-cal-amplada', '--sdp-cal-carril', '--sdp-cal-col', '--sdp-cal-col-fi', '--sdp-cal-col-inici',
-  '--sdp-cal-cols', '--sdp-cal-fi', '--sdp-cal-hora-inicial', '--sdp-cal-hores', '--sdp-cal-inici', '--sdp-cal-minut',
+  /* La geometria del Calendari del Poble (VistaSetmana.jsx, VistaMes.jsx) ja
+     no hi és: són propietats locals --cal-*, fora de l'espai --sdp-*
+     (ordre del Mestre del 31-10-2026; el criteri del visor del 30-10). */
   /* Desplegable (Dropdown.jsx): amplada mesurada del disparador. */
   '--sdp-desplegable-ample',
   /* Panell del crom (PanellCrom.jsx): la mostra del color triat. */
@@ -148,7 +151,7 @@ const INSTANTANIA_CODI = new Set([
 
 describe('cens de tokens --sdp-* dels fulls de la cascada contra les seues definicions', () => {
   test('les sondes veuen el que han de vore', () => {
-    const { usos, declarats } = censa('/* var(--sdp-dins-comentari) */\n.a { color: var(--sdp-text-cos); --sdp-propi: 1px; }\n.b {\n  margin: var( --sdp-space-2, var(--sdp-space-1) );\n  width: var(--sdp-propi);\n}\n');
+    const { usos, declarats } = censa(['/* ', varDe('dins-comentari'), ' */\n.a { color: var(--sdp-text-cos); ', tok('propi'), ': 1px; }\n.b {\n  margin: var( ', tok('space-2'), ', var(--sdp-space-1) );\n  width: ', varDe('propi'), ';\n}\n'].join(''));
     expect([...usos.entries()]).toEqual([
       ['--sdp-text-cos', [2]],
       ['--sdp-space-2', [4]],
@@ -165,7 +168,7 @@ describe('cens de tokens --sdp-* dels fulls de la cascada contra les seues defin
     /* Les definicions del codi: les tres formes, i cap var() ni cap prova. */
     const codi = tokensDelCodi([]);
     expect(codi.size).toBe(0);
-    const formes = 'el.style.setProperty(\'--sdp-a\', v); const s = { "--sdp-b": x }; const css = `.x { --sdp-c: ${v}; color: var(--sdp-d); }`;';
+    const formes = ['el.style.setProperty(\'--sdp-a\', v); const s = { "--sdp-b": x }; const css = `.x { ', tok('c'), ': ${v}; color: ', varDe('d'), '; }`;'].join('');
     const trobats = new Set();
     for (const patro of DEFINICIONS_CODI) for (const m of formes.matchAll(patro)) trobats.add(m[1]);
     expect([...trobats].sort()).toEqual(['--sdp-a', '--sdp-b', '--sdp-c']);

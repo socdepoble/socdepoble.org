@@ -1,0 +1,316 @@
+/* ═══════════════════════════════════════════════════════════════════
+   TAULERS · QUADRE DE COMANDAMENT COMPACTE (31-10-2026)
+
+   Ordre del Mestre (31-10-2026, 00:20, prompt 2208, T3.1): un full propi
+   per al panell compacte, perquè no embrute el CSS del sistema, i una sola
+   peça (PedraSeca/organismes/QuadreDeComandament.jsx) que servix de motlle
+   a la Telemetria (Umami), la Consola, la Gestoria (Holded, FacturaDirecta)
+   i el TPV o la Botiga (Loyverse).
+     · Targetes KPI baixes: etiqueta i xifra, res més. L'explicació de cada
+       xifra va fora, a tota amplada, amb el cos de paràgraf de la pàgina.
+     · Gràfica de dues sèries (la primera, estreta i fosca, davant de la
+       segona) amb llegenda i el detall del punt triat, en text.
+     · Rànquing d'una línia per fila: nom i codi, comptador a la dreta i
+       barra suau de proporció.
+   Només tokens semàntics; cap ombra (Pedra Seca §5) ni style=: les alçades
+   i les proporcions exactes són atributs (y, height, width) dels <rect>
+   d'un <svg> aria-hidden; ací només el color i la caixa. index.css
+   l'importa darrere de modules.css, dins de @layer components.
+   ═══════════════════════════════════════════════════════════════════ */
+@layer components {
+  /* El cos de lectura de la pàgina (base.css, p): cap text del quadre en
+     baixa, llevat de l'etiqueta de la xifra i les marques de l'eix. */
+  .sdp-quadre {
+    display: grid;
+    gap: var(--sdp-space-4);
+    min-inline-size: 0;
+    color: var(--sdp-text-cos);
+    font-size: var(--sdp-fluid-cos);
+    line-height: var(--sdp-leading-cos);
+  }
+  /* L'espai el dona el gap: cap marge heretat de base.css. */
+  .sdp-quadre :where(p, ul, ol, dl, dd, figure, h2, h3, h4, h5, h6) { margin: 0; }
+  .sdp-quadre__avis,
+  .sdp-quadre__periode { color: var(--sdp-text-cos); }
+  .sdp-quadre__explicacio,
+  .sdp-quadre__bloc,
+  .sdp-quadre__nota,
+  .sdp-quadre__peu {
+    display: grid;
+    gap: var(--sdp-space-2);
+    min-inline-size: 0;
+  }
+
+  /* ── Capçalera d'estat: píndola amb punt i període ── */
+  .sdp-quadre__capcalera {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--sdp-space-2) var(--sdp-space-4);
+  }
+  .sdp-quadre__estat {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--sdp-space-2);
+    padding: var(--sdp-space-1) var(--sdp-space-3);
+    border-radius: var(--sdp-radi-pastilla);
+    background: var(--sdp-fons-subtil);
+    color: var(--sdp-text-cos);
+    font-variant-numeric: tabular-nums;
+  }
+  .sdp-quadre__estat--viu { background: var(--sdp-exit-fons); color: var(--sdp-exit-text); }
+  .sdp-quadre__punt {
+    flex: none;
+    inline-size: 0.625rem;
+    block-size: 0.625rem;
+    border-radius: var(--sdp-radi-pastilla);
+    background: var(--sdp-vora-forta);
+  }
+  .sdp-quadre__estat--viu .sdp-quadre__punt { background: var(--sdp-exit); }
+
+  /* ── Targetes KPI: etiqueta i xifra ──
+     Ordre del Mestre (23:34): cap targeta baixa d'11rem i cap queda òrfena
+     amb un forat al costat. Ordre del Mestre (00:20): baixes i fines, sense
+     cap explicació dins. Flex i no graella: amb cinc xifres en dues o tres
+     columnes, la graella deixava un forat a l'última fila; ací l'última
+     fila creix fins a omplir l'amplada, a qualsevol amplada. */
+  .sdp-quadre__xifres {
+    container-type: inline-size;
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--sdp-space-2);
+  }
+  .sdp-quadre__xifra {
+    flex: 1 1 11rem;
+    display: grid;
+    align-content: start;
+    gap: var(--sdp-space-1);
+    min-inline-size: 0;
+    padding: var(--sdp-space-2) var(--sdp-space-3);
+    border: 1px solid var(--sdp-vora);
+    border-radius: var(--sdp-radi-s);
+    background: var(--sdp-fons-targeta);
+  }
+  .sdp-quadre__xifra > dt {
+    color: var(--sdp-text-cos);
+    font-size: var(--sdp-text-small);
+    font-weight: 700;
+    line-height: var(--sdp-leading-titol);
+  }
+  .sdp-quadre__valor {
+    color: var(--sdp-text-titol);
+    font-size: var(--sdp-text-h3);
+    font-weight: 800;
+    line-height: var(--sdp-leading-titol);
+    font-variant-numeric: tabular-nums;
+  }
+  /* Una targeta per fila (no en caben dues d'11rem amb el seu gap, 22,5rem):
+     etiqueta a l'esquerra i xifra a la dreta, en una línia. Si la xifra no
+     deixa 6rem a l'etiqueta («4 min 12 s» en una columna molt estreta), la
+     xifra baixa davall, a l'esquerra. Sense @container (Baseline 2022),
+     l'etiqueta damunt de la xifra. */
+  @container (max-width: 22.4rem) {
+    .sdp-quadre__xifra {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: baseline;
+      justify-content: space-between;
+      column-gap: var(--sdp-space-3);
+    }
+    .sdp-quadre__xifra > dt { flex: 1 1 6rem; }
+  }
+
+  /* ── Gràfica de dues sèries ── */
+  .sdp-quadre__grafica {
+    display: grid;
+    gap: var(--sdp-space-2);
+    min-inline-size: 0;
+    padding: var(--sdp-space-3);
+    border: 1px solid var(--sdp-vora);
+    border-radius: var(--sdp-radi-s);
+    background: var(--sdp-fons-targeta);
+  }
+  .sdp-quadre__titol {
+    color: var(--sdp-text-titol);
+    font-size: inherit;
+    font-weight: 700;
+    line-height: var(--sdp-leading-titol);
+    text-transform: none;
+    letter-spacing: normal;
+  }
+  .sdp-quadre__llegenda {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--sdp-space-1) var(--sdp-space-4);
+    padding: 0;
+    list-style: none;
+  }
+  /* padding: 0 · el li global de base.css (capa legacy) hi posa 4px a
+     l'esquerra (Gauntlet f8, QDC-02). */
+  .sdp-quadre__llegenda > li {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--sdp-space-2);
+    margin: 0;
+    padding: 0;
+  }
+  /* La mostra calca la barra: la de davant, estreta i fosca. */
+  .sdp-quadre__mostra { flex: none; inline-size: 0.75rem; block-size: 0.75rem; }
+  .sdp-quadre__mostra--davant { inline-size: 0.5rem; background: var(--sdp-accio-forta); }
+  .sdp-quadre__mostra--darrere { background: var(--sdp-accio); }
+  /* El dit recorre la gràfica en horitzontal; en vertical, la pàgina fa
+     scroll com sempre. */
+  .sdp-quadre__barres {
+    display: grid;
+    grid-auto-flow: column;
+    grid-auto-columns: minmax(0, 1fr);
+    padding: 0;
+    list-style: none;
+    touch-action: pan-y;
+  }
+  /* padding: 0 · sense el li global de legacy (4px a l'esquerra), que
+     deixava una franja morta per al ratolí i trencava l'eix (QDC-02). */
+  .sdp-quadre__columna { display: grid; min-inline-size: 0; margin: 0; padding: 0; }
+  /* La columna sencera és el botó, sense forats entre columnes: el ratolí
+     sempre en troba una. La marca de l'hora («06») no eixampla la columna:
+     es centra damunt i desborda igual pels dos costats. */
+  .sdp-quadre__boto {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: 8rem auto;
+    gap: var(--sdp-space-1);
+    min-inline-size: 0;
+    inline-size: 100%;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    color: inherit;
+    font: inherit;
+    cursor: pointer;
+  }
+  .sdp-quadre__columna--triada .sdp-quadre__boto { background: var(--sdp-fons-subtil); }
+  .sdp-quadre__boto:focus-visible {
+    outline: var(--sdp-focus-gruix) solid var(--sdp-focus);
+    outline-offset: calc(-1 * var(--sdp-focus-gruix));
+  }
+  .sdp-quadre__pista {
+    display: grid;
+    grid-template: minmax(0, 1fr) / minmax(0, 1fr);
+    align-items: end;
+    justify-items: center;
+    border-block-end: 2px solid var(--sdp-vora-forta);
+  }
+  /* El dibuix: un <svg> per columna, de tota l'alçada de la pista i com a
+     molt 1,875rem d'ample (la barra de darrere, el 80 %, fa com a molt
+     1,5rem; la de davant, el 40 %, 0,75rem). Les regions de dalt (positius)
+     i de baix (negatius) retallen la base de cada barra. */
+  .sdp-quadre__dibuix,
+  .sdp-quadre__eix {
+    grid-area: 1 / 1;
+    display: block;
+    block-size: 100%;
+    overflow: hidden;
+  }
+  .sdp-quadre__dibuix { inline-size: min(100%, 1.875rem); }
+  .sdp-quadre__eix { inline-size: 100%; }
+  .sdp-quadre__regio { overflow: hidden; }
+  /* Punta de 4px (la meitat de --sdp-radi-s): amb 8px, una barra de 3px
+     d'alt quedava en una cúpula i, amb l'anell, semblava una «o». */
+  .sdp-quadre__barra { rx: calc(var(--sdp-radi-s) / 2); }
+  .sdp-quadre__barra--darrere { fill: var(--sdp-accio); }
+  /* L'anell de 2px del color de la targeta separa les dues sèries, que
+     entre elles no arriben a 3:1 (2,38:1 en clar, 2,23:1 en fosc; WCAG
+     1.4.11, Gauntlet f8, F8-CRIT-04): cada parella veïna, ≥3:1. El traç
+     va darrere del farcit (paint-order), així que la barra no s'aprima. */
+  .sdp-quadre__barra--davant {
+    fill: var(--sdp-accio-forta);
+    stroke: var(--sdp-fons-targeta);
+    stroke-width: 4px;
+    paint-order: stroke;
+  }
+  /* Amb negatius, la línia del zero fa d'eix i la vora de baix calla. */
+  .sdp-quadre__barres--negatius .sdp-quadre__pista { border-block-end: 2px solid transparent; }
+  .sdp-quadre__zero { stroke: var(--sdp-vora-forta); stroke-width: 2px; }
+  .sdp-quadre__marca {
+    justify-self: center;
+    min-block-size: var(--sdp-space-5);
+    color: var(--sdp-text-suau);
+    font-size: var(--sdp-text-meta);
+    line-height: var(--sdp-leading-titol);
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+  }
+  .sdp-quadre__columna--destacada .sdp-quadre__marca { color: var(--sdp-text-cos); font-weight: 800; }
+  /* El detall del punt triat: text real, en cos de paràgraf. */
+  .sdp-quadre__detall {
+    min-block-size: calc(var(--sdp-leading-cos) * 1em);
+    color: var(--sdp-text-titol);
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* ── Rànquing compacte ── */
+  .sdp-quadre__ranquing {
+    display: grid;
+    padding: 0;
+    list-style: none;
+    border: 1px solid var(--sdp-vora);
+    border-radius: var(--sdp-radi-s);
+    background: var(--sdp-fons-targeta);
+  }
+  .sdp-quadre__fila {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: baseline;
+    gap: var(--sdp-space-1) var(--sdp-space-3);
+    margin: 0;
+    padding: var(--sdp-space-2) var(--sdp-space-3);
+    border-block-end: 1px solid var(--sdp-vora);
+  }
+  .sdp-quadre__fila:last-child { border-block-end: 0; }
+  .sdp-quadre__etiqueta { min-inline-size: 0; overflow-wrap: anywhere; }
+  .sdp-quadre__nom { color: var(--sdp-text-titol); font-weight: 700; }
+  .sdp-quadre__codi { font-family: var(--sdp-font-mono); overflow-wrap: anywhere; }
+  .sdp-quadre__compte {
+    color: var(--sdp-text-titol);
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+    text-align: end;
+  }
+  /* La pista és un <svg>; l'amplada exacta de la barra, l'atribut width del
+     seu <rect> (ry="50%": puntes de pastilla). */
+  .sdp-quadre__proporcio {
+    grid-column: 1 / -1;
+    display: block;
+    inline-size: 100%;
+    block-size: var(--sdp-space-1);
+    overflow: hidden;
+    border-radius: var(--sdp-radi-pastilla);
+    background: var(--sdp-fons-subtil);
+  }
+  .sdp-quadre__proporcio-barra { fill: var(--sdp-accio); }
+
+  /* Colors forçats (Gauntlet f8, QDC-03): colors del sistema, no els de
+     l'autor. La sèrie de davant amb el color del text i l'anell del llenç;
+     la de darrere i la proporció, amb el de selecció; la columna triada
+     sense focus, amb una vora de traços (el seu fons, el llenç, no es veu). */
+  @media (forced-colors: active) {
+    .sdp-quadre__barra,
+    .sdp-quadre__zero,
+    .sdp-quadre__mostra,
+    .sdp-quadre__proporcio-barra { forced-color-adjust: none; }
+    .sdp-quadre__barra--darrere,
+    .sdp-quadre__proporcio-barra { fill: Highlight; }
+    .sdp-quadre__barra--davant { fill: CanvasText; stroke: Canvas; }
+    .sdp-quadre__zero { stroke: CanvasText; }
+    .sdp-quadre__mostra--darrere { background: Highlight; }
+    .sdp-quadre__mostra--davant { background: CanvasText; }
+    .sdp-quadre__columna--triada .sdp-quadre__boto:not(:focus-visible) {
+      outline: 1px dashed CanvasText;
+      outline-offset: -1px;
+    }
+  }
+}

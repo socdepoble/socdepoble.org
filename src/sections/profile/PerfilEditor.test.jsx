@@ -565,6 +565,30 @@ test('un membre sense rol de gestió veu la fitxa en lectura, en text pla', () =
   expect(m.adapter.emptyDocument.labels).toEqual([{ text: 'Membre' }]);
 });
 
+/* Gauntlet 261030 (cicle 3, traduir-perfil-lectura-fitxa-no-publica; TC3.2) ·
+   La fitxa en lectura només deixa Traduir actiu si és pública (la regla de
+   /perfil/:id): una entitat 'members' o 'private' que la persona llig com a
+   membre, la pròpia fitxa privada amb una baixa en curs i la fila de reserva
+   (que no sap la visibilitat de veres) no ixen cap al motor. El comportament
+   del botó (avís, cap petició) el fixa DocumentEditor.traduccio.test.jsx. */
+test('TC3.2 · la fitxa en lectura només es pot traduir si és pública', () => {
+  const casos = [
+    [org('member'), true],
+    [org('member', 'members'), false],
+    [org('member', 'private'), false],
+    [{ ...jo, dades: { ...jo.dades, is_public: true, baixa_demanada_at: '2026-09-26T10:00:00Z' } }, true],
+    [{ ...jo, dades: { ...jo.dades, is_public: false, baixa_demanada_at: '2026-09-26T10:00:00Z' } }, false],
+    [{ ...jo, dades: { reserva: true, id: 'jo', full_name: 'Pep', avatar_url: '', town_name: 'La Torre', is_public: true } }, false],
+  ];
+  for (const [identitat, traduible] of casos) {
+    render(<PerfilEditor identitat={identitat} />);
+    expect(m.adapter.document, identitat.dades.visibility || JSON.stringify(identitat.dades)).toBeNull();
+    expect([identitat.dades.visibility, identitat.dades.is_public, m.adapter.emptyDocument.traduccio])
+      .toEqual([identitat.dades.visibility, identitat.dades.is_public, traduible]);
+    cleanup();
+  }
+});
+
 test('D12 · amb una baixa en curs, la persona veu la fitxa en lectura: el servidor la té congelada', () => {
   const enBaixa = { ...jo, dades: { ...jo.dades, full_name: 'Veïna que se n’ha anat', baixa_demanada_at: '2026-09-26T10:00:00Z' } };
   render(<PerfilEditor identitat={enBaixa} />);

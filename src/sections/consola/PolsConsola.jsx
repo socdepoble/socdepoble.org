@@ -209,8 +209,11 @@ export function PaginaPols({ consola, locale = 'ca-ES' }) {
   return (
     <>
       {estat === 'loading' && !dades && <Carregant etiqueta="Llegint l’estat de l’eixam…" />}
+      {/* Decisió del Mestre (31-10-2026) · La web publicada en porta la instantània sanejada:
+          este estat només ix en un paquet que no la porta. */}
       {estat === 'absent' && <Alerta to="info" titol="Consola no disponible">
-        Esta font només es publica al servidor local de desenvolupament.
+        En viu, esta font només la servix el servidor local de desenvolupament, i la web publicada en porta la
+        instantània sanejada de cada publicació. Este paquet no la porta.
       </Alerta>}
       {estat === 'error' && <Alerta to="error" titol="No s’ha pogut refrescar">
         {dades ? 'Es conserva l’última instantània bona. ' : ''}
@@ -264,8 +267,9 @@ function SenseConsola({ id, consola, locale }) {
       </Alerta>
     ) : (
       <EstatBuit icona={ICONES_PANELLS[panellPols(id).icona]} titol="Consola no disponible">
-        Esta dada viu de consola.json (<Mono>GET /__iaia/consola.json</Mono>), que només se servix al servidor
-        local de desenvolupament. En producció no n’hi ha, i la Consola no n’inventa cap.
+        Esta dada viu de consola.json (<Mono>GET /__iaia/consola.json</Mono>): en viu, al servidor local de
+        desenvolupament, i a la web publicada, en la instantània sanejada de cada publicació. Este paquet no la
+        porta, i la Consola no n’inventa cap.
       </EstatBuit>
     );
   return (

@@ -71,7 +71,7 @@ describe('entitats', () => {
       ine: '03132',
       poblacio: 749,
       p18: 'El riu251.jpg',
-      p94: 'Escut de la Torre de les Maçanes.svg',
+      insignies: ['Escut de la Torre de les Maçanes.svg'],
       p131: ['Q54936', 'Q2046431'],
       lat: 38.606666666667,
       lng: -0.41916666666667
@@ -104,6 +104,36 @@ describe('entitats', () => {
     const obsoleta = entitat.claims.P31.map((d) => ({ ...d, rank: 'deprecated' }));
     const [noMunicipi] = RECURSOS.entitats.traductor({ entities: { Q1641908: { ...entitat, claims: { ...entitat.claims, P31: obsoleta } } } });
     expect(noMunicipi.esMunicipi).toBe(false);
+  });
+
+  /* Gauntlet 261030, tancament (escut-p94-nomes-primera-declaracio) · Regla
+     del Mestre: mai l'escut per als pobles ni per a «Gent de…». Només es
+     llegia la primera declaració vigent de P94: la segona versió de l'escut
+     (la PNG, l'històric) arribava a la tria de fotos. */
+  test('insignies: tots els escuts (P94), banderes (P41), segells (P158) i logotips (P154), també els obsolets, sense repetir', () => {
+    const { body } = captura('entitats-la-torre-de-les-macanes');
+    const entitat = body.entities.Q1641908;
+    const [model] = entitat.claims.P94;
+    const declaracio = (propietat, valor, rank = 'normal') => ({
+      ...model, rank, mainsnak: { ...model.mainsnak, property: propietat, datavalue: { ...model.mainsnak.datavalue, value: valor } }
+    });
+    const claims = {
+      ...entitat.claims,
+      P94: [declaracio('P94', 'Poble heraldica.svg'), declaracio('P94', 'Poble heraldica.png', 'preferred'),
+        declaracio('P94', 'Escut_antic de Poble.jpg', 'deprecated'), declaracio('P94', 'Poble heraldica.svg'),
+        { ...model, mainsnak: { snaktype: 'novalue', property: 'P94' } }, declaracio('P94', '   ')],
+      P41: [declaracio('P41', 'Poble senyera.png')],
+      P158: [declaracio('P158', 'Poble segell.jpg')],
+      P154: [declaracio('P154', 'Ajuntament de Poble.png')]
+    };
+    const [poble] = RECURSOS.entitats.traductor({ entities: { Q1641908: { ...entitat, claims } } });
+    expect(poble.insignies).toEqual([
+      'Poble heraldica.svg', 'Poble heraldica.png', 'Escut antic de Poble.jpg', 'Poble senyera.png', 'Poble segell.jpg', 'Ajuntament de Poble.png'
+    ]);
+    expect(Object.isFrozen(poble.insignies)).toBe(true);
+    expect(poble.p18).toBe('El riu251.jpg');
+    const [sense] = RECURSOS.entitats.traductor({ entities: { Q1641908: { ...entitat, claims: { P31: entitat.claims.P31 } } } });
+    expect(sense.insignies).toEqual([]);
   });
 });
 

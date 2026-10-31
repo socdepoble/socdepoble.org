@@ -430,7 +430,7 @@ const FITXERS = [
   'src/components/universal/enquadrament/geolocalitzacio.js',
   'src/components/universal/enquadrament/geolocalitzacio.test.js',
   'src/components/universal/enquadrament/imatgeCanvas.test.js',
-  'src/components/universal/enquadrament/jpegProva.js',
+  'tests/helpers/jpegProva.js',
   'src/components/universal/enquadrament/limits.js',
   'src/components/universal/enquadrament/limits.test.js',
   'src/components/universal/enquadrament/netejaMetadades.js',

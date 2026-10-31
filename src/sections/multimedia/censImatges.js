@@ -85,7 +85,7 @@ export const CENS_IMATGES = Object.freeze([
   e('/assets/fotos/sultan.png', 'Sultan', 'ia', 'ia'),
 
   e('/assets/img/nano_porta_del_mas.png', 'La porta del Mas', 'contingut', 'ia'),
-  e('/assets/img/nano_porta_masia_roure_1774195469079.png', 'La porta de la masia del Roure', 'contingut', 'ia'),
+  e('/assets/img/nano_porta_masia_roure_1774195469079.png', 'La porta del Mas del Roure', 'contingut', 'ia'),
   e('/assets/img/pi-pla-verd.jpg', 'El pi del Pla Verd', 'contingut', 'foto'),
   e('/assets/img/que-es-socdepoble-1.jpg', 'Què és Sóc de Poble? (1)', 'contingut', 'foto'),
   e('/assets/img/que-es-socdepoble-2.jpg', 'Què és Sóc de Poble? (2)', 'contingut', 'foto'),
@@ -97,6 +97,11 @@ export const CENS_IMATGES = Object.freeze([
   e('/assets/nano_cards/cervell_nano_card.jpg', 'Cervell', 'contingut', 'ia'),
   e('/assets/nano_cards/drets_autor_comic.jpg', 'Drets d’autor', 'contingut', 'ia'),
   e('/assets/nano_cards/gestoria_nano_card.jpg', 'Gestoria', 'contingut', 'ia'),
+  /* Ordre del Mestre del 30-10-2026 (B1) · Les portades del Govern del Mestre a /consola (imatgesConsola.js). */
+  e('/assets/nano_cards/govern_balanc_nano_card.jpg', 'Govern del Mestre: balanç', 'contingut', 'ia'),
+  e('/assets/nano_cards/govern_certificacio_nano_card.jpg', 'Govern del Mestre: certificació', 'contingut', 'ia'),
+  e('/assets/nano_cards/govern_comunicacio_nano_card.jpg', 'Govern del Mestre: comunicació', 'contingut', 'ia'),
+  e('/assets/nano_cards/govern_requeriments_nano_card.jpg', 'Govern del Mestre: requeriments', 'contingut', 'ia'),
   e('/assets/nano_cards/lector_rss_nano_card.jpg', 'Lector RSS', 'contingut', 'ia'),
   e('/assets/nano_cards/mercat_nano_card.webp', 'Mercat', 'contingut', 'ia'),
   e('/assets/nano_cards/metriques_nano_card.jpg', 'Mètriques', 'contingut', 'ia'),
@@ -168,6 +173,18 @@ export const CENS_IMATGES = Object.freeze([
   e('/assets/uploads/brain/nano_versions_ibanez_v1_1_10.webp', 'El tauler de versions del poble', 'contingut', 'ia'),
   e('/assets/uploads/brain/thermodynamics_ai_hardware_1775882083812.png', 'Termodinàmica i maquinari d’IA', 'contingut', 'ia'),
   e('/assets/uploads/brain/xat_portada.webp', 'Portada del Xat', 'contingut', 'ia'),
+
+  /* Ordre del Mestre (30-10-2026; candidatura NLnet NGI Fediversity) · La
+     portada i la panoràmica del cos de /page/fediversity (PAGE_COPY.fediversity).
+     Es nomena l'original .png de paleta: la .webp que pinta la pàgina n'és la
+     bessona, com a Descàrregues. */
+  e('/assets/uploads/fediversity-hero.png', 'Portada de la candidatura NLnet', 'contingut', 'ia'),
+  e('/assets/uploads/fediversity-maquinaria.png', 'La maquinària de la candidatura NLnet', 'contingut', 'ia'),
+  /* Ordres del Mestre del 30-10-2026 (Gauntlet, cicle 2) · La caldera de coure,
+     segona il·lustració dins del cos de /page/consola (PAGE_COPY.consola). Es
+     nomena l'original .png de paleta: la .webp que pinta la pàgina n'és la
+     bessona, com a /page/fediversity. */
+  e('/assets/uploads/consola-caldera.png', 'La caldera de la Consola', 'contingut', 'ia'),
 
   e('/assets/uploads/companies/mercat/aitana.png', 'Oli verge', 'entitat', 'ia'),
   e('/assets/uploads/companies/mercat/camiseta_portada.png', 'Samarreta', 'entitat', 'ia'),

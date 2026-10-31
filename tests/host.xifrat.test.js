@@ -18,3 +18,18 @@ test('l’adaptador per defecte passa pel mateix decorador abans de segellar',as
  const host=await import('../src/host.js');await host.arrenca();const {getBackendImplementation}=await import('../src/data/backendPort.js'),{serveiXifratXat}=await import('../src/data/xifratXat.js');
  expect(Object.isFrozen(getBackendImplementation())).toBe(true);expect(serveiXifratXat(getBackendImplementation())).not.toBeNull();
 });
+/* P1-12 pas 17 (disseny §4.7) · host.js passa el pressupost LRU dels blob: desxifrats per classe d'aparell. */
+test('pressupost dels blob: per defecte, 100 MB a l’escriptori (sense punter gruixut ni app nativa)',async()=>{
+ const host=await import('../src/host.js');await host.arrenca();const {getBackendImplementation}=await import('../src/data/backendPort.js'),{serveiXifratXat}=await import('../src/data/xifratXat.js');
+ expect(serveiXifratXat(getBackendImplementation()).estatAmbit()).toMatchObject({pressupostBlobs:100_000_000,bytesBlobs:0});
+});
+test('amb punter gruixut (mòbil o tauleta) el pressupost és de 48 MB',async()=>{
+ vi.stubGlobal('matchMedia',(q)=>({matches:q==='(pointer: coarse)'}));
+ const host=await import('../src/host.js');await host.arrenca();const {getBackendImplementation}=await import('../src/data/backendPort.js'),{serveiXifratXat}=await import('../src/data/xifratXat.js');
+ expect(serveiXifratXat(getBackendImplementation()).estatAmbit().pressupostBlobs).toBe(48_000_000);
+});
+test('un matchMedia que llança no trenca l’arrencada: cau a l’escriptori',async()=>{
+ vi.stubGlobal('matchMedia',()=>{throw new Error('sense media queries');});
+ const host=await import('../src/host.js');await host.arrenca();const {getBackendImplementation}=await import('../src/data/backendPort.js'),{serveiXifratXat}=await import('../src/data/xifratXat.js');
+ expect(serveiXifratXat(getBackendImplementation()).estatAmbit().pressupostBlobs).toBe(100_000_000);
+});

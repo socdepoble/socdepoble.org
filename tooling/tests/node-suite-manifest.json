@@ -84,6 +84,11 @@
       "reason": "Regressió portable del producte o d’una eina permanent; s’executa a la cadena primària, també quan està roja."
     },
     {
+      "path": "tests/bot-arrencada.test.mjs",
+      "suite": "primary",
+      "reason": "P1-24 (C1645-03/04): arrencada del cervell del bot amb corpus mínim a mkdtemp, sense xarxa ni credencials (@google/genai fals); contracte productor→public/rag-index.json→hydrateRagIndex→search→prompt, frontera de la Wiki pública (publication-policy) per a cada entrada de l’índex, historial fitat a 8 i immunite.mjs linkat."
+    },
+    {
       "path": "tests/botigues.test.mjs",
       "suite": "primary",
       "reason": "Regressió portable dels scripts de pujada a les botigues (scripts/botigues/): peces pures, fitxers temporals fora del repositori i git de només lectura; cap compilació, signatura ni pujada, i cap crida a xcodebuild, altool, gradle, keytool ni fastlane (el preflight rep consultes fingides)."
@@ -192,6 +197,11 @@
       "path": "tests/draft-attachment-anchoring.test.mjs",
       "suite": "primary",
       "reason": "Regressió portable T11: coherència, catàlegs, ancoratge compartit i consulta documental sense efectes laterals."
+    },
+    {
+      "path": "tests/empaquetat-bot.test.mjs",
+      "suite": "primary",
+      "reason": "QA-R2-07 i P-16 (residus 261030) · bot empaquetable: el Dockerfile, el .dockerignore i el compose llegits com a text; graf de mòduls de bot/ (../tooling inclòs) resolt dins de la imatge, paquets declarats, secrets i estat fora a qualsevol fondària, Node exacte dins dels engines (també a la CI), usuari sense privilegis, i arrencada del cervell en la imatge reconstruïda a mkdtemp amb @google/genai fals; cap Docker ni xarxa."
     },
     {
       "path": "tests/enllacos-sessio.test.mjs",
@@ -449,6 +459,11 @@
       "reason": "Regressió portable del producte o d’una eina permanent; s’executa a la cadena primària, també quan està roja."
     },
     {
+      "path": "tests/pedra-seca-afinada.test.mjs",
+      "suite": "primary",
+      "reason": "Decisió del Mestre 30-10-2026 (deute CSS, la part segura) · tractor-pedra-seca afinat sense afluixar: L01 i L06 lligen el codi sense comentaris amb els límits de l'analitzador (un text JSX amb apòstrofs i «/x/*» no amaga codi), L02 compta les propietats --x que el JSX fixa (usePropietatsCss, setProperty, style) i cap altra cadena, només en fitxers que pengen d'una entrada (mai un mòdul orfe ni una fixture), L08 eximix només la fixture de __fixtures__/ que una prova importa, i el codi sense comentaris conserva llargària i línies (l'informe --detall dona la línia de veres); arbres sintètics a mkdtemp, cap xarxa."
+    },
+    {
       "path": "tests/petorreta-generador.test.mjs",
       "suite": "laboratory",
       "reason": "CANDIDATS prioritza el generador del laboratori 260927; el seu parser de secció 0 no reconeix la plantilla vigent. No s’ha portat la prova al generador instal·lat."
@@ -604,6 +619,11 @@
       "reason": "CANDIDATS prioritza el prototip de laboratori 260924 abans de qualsevol instal·lació permanent; corredor de prototip, no del producte actual."
     },
     {
+      "path": "tests/tractor-crom.test.mjs",
+      "suite": "primary",
+      "reason": "Ordre del Mestre (T15, 260930; 30-10-2026) · Porta Crom K4 rectangle pur: nav.app-sidebar .nav-item i .sidebar-control-btn amb border-radius 0 i mai width: 100%; el mutant de la pastilla, una cantonada arrodonida, una .nav-item més específica sense app-sidebar (.sdp-root .nav-item.active) i la base absent cauen; només la .nav-item nua i exacta (barra mòbil) fora d'abast; fulls CSS temporals."
+    },
+    {
       "path": "tests/tractor-enxufe.test.mjs",
       "suite": "primary",
       "reason": "Regressió portable del producte o d’una eina permanent; s’executa a la cadena primària, també quan està roja."
@@ -624,6 +644,16 @@
       "reason": "Regressió portable del producte o d’una eina permanent; s’executa a la cadena primària, també quan està roja."
     },
     {
+      "path": "tests/tractor-llavor.test.mjs",
+      "suite": "primary",
+      "reason": "Decisió del Mestre (30-10-2026, «Identitat de fundador») · Porta Llavor: accepta només la identitat fundacional declarada (PERSONA_PILOT) i l'avís legal; un nom vigilat sense declaració, un correu, un telèfon i un NIF/NIE de tercers cauen sense cap valor al diagnòstic, també en les formes habituals (NIF amb punts, minúscula o prefix ES, NIE amb guions, 34 sense +, prefix entre parèntesis, «mòbil/…», wa.me i número estranger); el NIF de l'avís legal en una altra forma, URL, camins, coordenades i segons no compten; sense declaració, falla tancada; dades sintètiques a fixtures temporals."
+    },
+    {
+      "path": "tests/tractor-nomenclatura.test.mjs",
+      "suite": "primary",
+      "reason": "Ordre del Mestre (30-10-2026) · Porta Nomenclatura N2 amb frontera esquerra: l'arxiu fred germà no és cap ruta morta i les rutes mortes reals de la wiki (també darrere de «../») encara cauen; fixture temporal amb la seua nomenclatura.json."
+    },
+    {
       "path": "tests/tractor-orfes-brain.test.mjs",
       "suite": "primary",
       "reason": "Regressió portable del producte o d’una eina permanent; s’executa a la cadena primària, també quan està roja."
@@ -639,9 +669,19 @@
       "reason": "Regressió portable del producte o d’una eina permanent; s’executa a la cadena primària, també quan està roja."
     },
     {
+      "path": "tests/tractor-rutes.test.mjs",
+      "suite": "primary",
+      "reason": "Ordre del Mestre (30-10-2026) · Porta Rutes R1 amb frontera esquerra: l'arxiu fred germà no és un literal de la Wiki i un literal real (també darrere de «../» o de «/») encara cau; fixtures temporals sense línia base."
+    },
+    {
       "path": "tests/tractor-sinapsis.test.mjs",
       "suite": "laboratory",
       "reason": "CANDIDATS prioritza el prototip de laboratori 260924 abans de qualsevol instal·lació permanent; corredor de prototip, no del producte actual."
+    },
+    {
+      "path": "tests/tractor-tokens-prosa.test.mjs",
+      "suite": "primary",
+      "reason": "Revisió adversarial de la Ronda 1 (31-10-2026) · Porta Tokens, T3: la prosa que la interfície pinta no declara cap token, i un srcDoc, un dangerouslySetInnerHTML, un cssText o una plantilla hi continuen comptant; arbres sintètics a mkdtemp, cap xarxa."
     },
     {
       "path": "tests/verificador-scc.test.mjs",
@@ -662,6 +702,11 @@
       "path": "tests/xat_f0_migracio.test.mjs",
       "suite": "primary",
       "reason": "Regressió portable del producte o d’una eina permanent; s’executa a la cadena primària, també quan està roja."
+    },
+    {
+      "path": "tooling/brain/fonts-govern.test.mjs",
+      "suite": "primary",
+      "reason": "Ordre del Mestre 261030 (B2) · compilador de /__iaia/govern.json (sdp.govern.v1): taules «Matriu P0/P1/P2» del Llibre Mestre, estats traduïts amb FET I SEGELLAT només per a commits de la història del HEAD, errors controlats sense camins, empremtes estables i només lectura (Llibre i git per execFile); repositori git de prova a mkdtemp, cap xarxa."
     },
     {
       "path": "tooling/broker/broker.test.mjs",
@@ -699,6 +744,16 @@
       "reason": "P1-61 Fase 2 · productor del manifest social (pàgines, llistes, llavors i Wiki de src/data/wikiManifest.js) amb fixtures temporals i les polítiques del repositori."
     },
     {
+      "path": "tooling/seo/comprova-reproductibilitat.test.mjs",
+      "suite": "primary",
+      "reason": "P1-23 · comprovador de reproductibilitat sense Nix i coherència de flake.nix: font i recepta contra package.json, la línia de federació executada contra el testScript del mòdul NixOS, regles d'nginx contra activitypub.js, gixy (cap return amb CR/LF), capçaleres de firebase.json, llicència AGPL i, de cap a cap, dues construccions en repositoris git de mkdtemp; cap xarxa."
+    },
+    {
+      "path": "tooling/seo/genera-federacio.test.mjs",
+      "suite": "primary",
+      "reason": "P1-23 · generador estàtic de la federació ActivityPub (fase 1, lectura): fonts públiques del repositori amb la frontera de publication-policy, seed de mostra sense dades, origen del build, determinisme, escriptura sense restes ni enllaços i CLI sobre un mkdtemp; cap xarxa."
+    },
+    {
       "path": "tooling/seo/prerender-social.test.mjs",
       "suite": "primary",
       "reason": "P1-61 Fase 2 · prerender estàtic de dist/<ruta>/index.html: fixture de dist amb hashos i dades de veres sobre un dist temporal; cap xarxa."
@@ -722,6 +777,31 @@
       "path": "tooling/seo/social-http.test.mjs",
       "suite": "primary",
       "reason": "P1-61 Fase 2 · prova HTTP local del Llibre d’Or amb User-Agent de WhatsApp; genera els artefactes del repositori en una carpeta temporal."
+    },
+    {
+      "path": "tooling/vite/consola-iaia.test.mjs",
+      "suite": "primary",
+      "reason": "Ordre del Mestre 261030 (B2) · ruta GET /__iaia/govern.json del connector de la Consola: només GET des del mateix ordinador, JSON sense memòria cau que normalitzaGovern accepta, errors controlats en JSON (mai l'HTML de l'SPA) i, dins d'un servidor de Vite propi en mode middleware en un port efímer, la diferència amb l'SPA; cap xarxa real."
+    },
+    {
+      "path": "tooling/vite/federacio-iaia.test.mjs",
+      "suite": "primary",
+      "reason": "P1-23 · connector de federació: WebFinger (RFC 7033, CORS, 400/404, rel), /ap/** amb application/activity+json, inbox 405, NodeInfo i host; emissió del build (origen canònic, SSR, determinisme) i registre a vite.config.js; servidor HTTP local en un port efímer, cap xarxa real."
+    },
+    {
+      "path": "tooling/vite/instantania-consola.test.mjs",
+      "suite": "primary",
+      "reason": "Decisió del Mestre 31-10-2026 · instantània sanejada de la Consola al build web (dist/__iaia/): la real d'este arbre, amb els mateixos productors del middleware, ix neta segons un escàner independent o atura el build sense mostrar el valor (una font aturada per l'usuari del sistema s'escaneja igualment sense eixa guarda, i la porta de publicabilitat ho diu com a diagnòstic); fixtures de camins, correus (només les adreces de WebFinger del domini propi), telèfons, NIF/NIE/DNI, IBAN, CCC, targetes Luhn i IP privades (emmascarats) i JWT, sb_, Bearer, PEM, VAPID, URL amb credencials, tokens o signatures, tokens de proveïdors (GitHub, sk-, Google, AWS, Slack, Stripe, Matrix, GitLab), assignacions i camps amb nom de secret, valors de tots els .env* i nom d'usuari (fail-closed); el camí de l'error amb la clau emmascarada; el ganxo generateBundle del connector, la bandera SDP_CONSOLA_INSTANTANIA, SOURCE_DATE_EPOCH (amb la matriu fixada al rellotge) i el sobre d'error. Cap xarxa; els valors de l'entorn no s'imprimixen."
+    },
+    {
+      "path": "tooling/vite/traductor-contracte.test.mjs",
+      "suite": "primary",
+      "reason": "IDEA-31 (cicle 2 del Gauntlet, 261030) · contracte del Traductor Sobirà: MOTORS_TRADUCCIO del navegador contra el servidor de dev i el connector WordPress (llegit com a text i executat amb la fixture de PHP): mateixos parells i extrems en ordre, GL només a la beta, llista tancada del menú i target del proveïdor lliure; cap xarxa real."
+    },
+    {
+      "path": "tooling/vite/traductor-iaia.test.mjs",
+      "suite": "primary",
+      "reason": "IDEA-31 (QA-R2-13; cicle 2) · Traductor Sobirà de desenvolupament (/__iaia/traduir): contracte, validacions i límits del PHP, Apertium beta→principal (GL només la beta), format txt/html explícit, DE i EU configurables amb target del destí, 12 s per crida i 30 s per petició, pausa només per 403/429; fetch i rellotge injectats, cap xarxa real."
     },
     {
       "path": "tooling/wiki/tests/contract_consistency.test.mjs",

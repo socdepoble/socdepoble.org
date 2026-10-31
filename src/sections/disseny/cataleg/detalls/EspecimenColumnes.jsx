@@ -18,7 +18,7 @@ const RODA = Object.freeze([
 
 function Marc({ modificador, etiqueta, children }) {
   return (
-    <div className={`sdp-especimen__mostra sdp-especimen__mostra--${modificador}`}>
+    <div className={modificador === 'carril' ? 'sdp-especimen__mostra sdp-especimen__mostra--carril' : 'sdp-especimen__mostra sdp-especimen__mostra--columna'}>
       <aside className="sdp-workspace-column" aria-label={etiqueta}>{children}</aside>
     </div>
   );
@@ -40,7 +40,7 @@ export default function EspecimenColumnes() {
           ['startActions / endActions', '{ id, etiqueta, label?, icona, variant?, onAcciona, desactivat?, pressed? }[]', '[]', "variant 'text' pinta icona i text; 'primary', el botó ple (Crear); sense variant, un botó d’icona de 44px. Sense onAcciona, desactivat, llevat de la variant 'text', que es queda activa (només desactivat la desactiva)."],
           ['accions', 'igual que endActions', '[]', 'Àlies antic d’endActions (només si endActions és buit).'],
           ['onReplega / etiquetaReplega', '() => void / string', 'null', 'Afig el botó de replegar (només en escriptori) o, plegada, el d’expandir.'],
-          ['replegaTotaCapcalera', 'boolean', 'false', 'Si només hi ha l’acció de replegar, tota la fila és el botó (Disseny, en ample).'],
+          ['replegaTotaCapcalera', 'boolean', 'false', 'Si només hi ha l’acció de replegar, tota la fila és el botó. Només l’usa el Xat: als espais de treball pleguen la icona de l’esquerra i el [|<], el títol és fix i l’acordió porta la paraula i el chevron apegat (ordre d’usabilitat del Mestre, 30-10-2026).'],
           ['plegable / obert / onPlega', 'boolean / boolean / () => void', 'false / true / null', 'El títol és un botó que plega el grup de navegació (aria-expanded i fletxa).'],
           ['variant', "'collapsed' | 'accordion' | null", 'null', "'collapsed': el carril. 'accordion' només afig una classe i ara no la fa servir cap secció."],
           ['esDark', "true | 'intens' | false", 'false', "Fora d’un .sdp-workspace, el to de la capçalera: 'intens' és el més fosc (--sdp-crom-subcapcalera-fosca). Dins, mana la posició: la primera capçalera pren --sdp-workspace-fila1-fons i la següent, --sdp-workspace-fila2-fons, siga quin siga esDark."],
@@ -63,7 +63,7 @@ export default function EspecimenColumnes() {
         </Marc>
         <h4>Replegable sencera (una sola acció)</h4>
         <Marc modificador="columna" etiqueta="Columna replegable de mostra">
-          <AppGridColumn esDark titol="COMPONENTS" icona={Folder} replegaTotaCapcalera onReplega={avisa('Tota la fila replega la columna.')} />
+          <AppGridColumn esDark titol="COMPONENTS" icona={Folder} replegaTotaCapcalera onReplega={avisa('Tota la fila replega la columna: així només ho fa el Xat.')} />
         </Marc>
         <h4>Plegable: el títol plega el grup</h4>
         <Marc modificador="columna" etiqueta="Columna amb grup plegable de mostra">

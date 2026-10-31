@@ -13,7 +13,8 @@ Esta carpeta és la lectura de Wikimedia. L'algoritme viu a `src/sections/pobles
 
 - **Fase 1, feta.** `nomDeLaGent(nom)` i `slugDelPoble(nom)`, purs i provats. Ja és la regla de la targeta, l'H1 i la barra taronja (F3, 261009): `PoblesSection.jsx`, `detailSectionMeta.jsx` i `elementDeSeccio.js` prenen `author` de la fitxa i, si no en porta, `nomDeLaGent`. La targeta també fa servir `wikipedia_title` per a l'enllaç a l'article i el `copyright` de la fitxa, si en porta.
 - **Fase 2, feta.** El client de Wikimedia, els traductors, l'algoritme i les proves, amb captures reals del 261009. Res d'això escriu enlloc ni s'executa sol: és una funció que algú ha de cridar.
-- **Fase 3, pendent.** Persistir la proposta, el disparador de l'onboarding i l'aprovació del tractor. Vegeu [Què queda](#què-queda-fase-3).
+- **Fase 3a, feta (261030, ordre nocturna `261030_0252`).** La pàgina d'un poble que ja tenim amb la fitxa incompleta (li falta `content`, `image_url`, `provincia` o `comarca`) oferix «Porta-ho de la Viquipèdia». És l'únic lloc que crida `pobleDeViquipedia`, en un tros diferit i només després d'un clic. La proposta es guarda només al navegador (IndexedDB `sdp-viquipedia`, 30 dies) i omple els buits de la capçalera, de la pàgina viva del Xat i de la targeta, mai un camp que la fitxa ja porta. Les fotos de Commons només es pinten a «D'on ve esta fitxa», amb els seus crèdits, sense galetes ni referent i amb el sí de la persona. Vegeu [La fase 3a](#la-fase-3a).
+- **Fase 3b i 3c, pendents.** La previsualització d'un slug desconegut, persistir la proposta, el disparador de l'onboarding i l'aprovació del tractor. Vegeu [Què queda](#què-queda-fase-3).
 
 ## L'algoritme, pas a pas
 
@@ -25,7 +26,7 @@ Esta carpeta és la lectura de Wikimedia. L'algoritme viu a `src/sections/pobles
 4. **Si la cerca no troba res**, prova el títol de la Viquipèdia, però només el dona per bo si l'article existix, no és una desambiguació i el seu element de Wikidata passa el pas 3. Cobrix un índex de cerca que va tard; mai es refia d'un títol pelat («Sella» és una desambiguació).
 5. **Llig l'article** enllaçat (`sitelinks.cawiki`): l'extracte de la introducció en text pla, la imatge de la pàgina, la llista de fitxers i les coordenades. Si l'article no apunta al mateix element, no se'n pren res.
 6. **Llig les etiquetes de P131** per a la comarca i la província. La província ix primer del codi INE (03 Alacant, 12 Castelló, 46 València) i, si no, de l'etiqueta «província de…».
-7. **Pregunta a Commons** per les fotos candidates (com a molt 8): la de Wikidata (P18), la de la pàgina i les de l'article, totes en una petició (o més, si els títols no caben en 512 caràcters). Abans es descarten pel nom i per l'extensió els escuts, les banderes, els mapes, els logotips, les icones i tot el que no és JPEG, PNG o WebP. L'escut (P94) no es demana mai.
+7. **Pregunta a Commons** per les fotos candidates (com a molt 8): la de Wikidata (P18), la de la pàgina i les de l'article, totes en una petició (o més, si els títols no caben en 512 caràcters). Abans es descarten pel nom i per l'extensió els escuts, les banderes, els mapes, els logotips, les icones i tot el que no és JPEG, PNG o WebP. El nom es mira en valencià, castellà, anglés i les altres llengües de Commons (blasó, Wappen, CoA, stemma, brasão, herb, heràldica, armoiries), amb espais en lloc de «_». Regla del Mestre (261030): mai l'escut per als pobles ni per a «Gent de…»; l'escut és sempre exclusiu de la institució Ajuntament. Per això no es demana mai cap de les `insignies` de l'element: tots els escuts (P94), banderes (P41), segells (P158) i logotips (P154) que declara Wikidata, no sols el primer, i també els obsolets, encara que el nom no ho diga.
 8. **Tria les tres fotos** (`triaImatges`). Només valen les fotos ràster, de 1000 px d'amplada o més, amb llicència lliure (CC0, domini públic, CC BY, CC BY-SA; mai NC ni ND) i sense `Restrictions`.
    - **Panoràmica**: apaïsada (proporció d'1,3 a 3). Té preferència la de Wikidata, després la de la pàgina, i a igualtat la de més resolució.
    - **Avatar**: la foto més quadrada (0,8 a 1,25) que no siga la panoràmica. Si no n'hi ha cap, la mateixa panoràmica. Mai l'escut: l'avatar de «Gent de…» no ha de semblar l'Ajuntament.
@@ -96,7 +97,7 @@ Molts pobles menuts no tindran tres fotos lliures a l'article. La categoria de C
 ## On pot córrer
 
 - **Web** (`socdepoble.org` i el servidor de desenvolupament): sí. La CSP permet `connect-src https:` i `img-src https:` (`index.html`).
-- **App nativa**: no. `connect-src` només admet el backend (`vite.natiu.config.js`). Hi donaria `no-disponible`.
+- **App nativa**: no. `connect-src` només admet el backend (`vite.natiu.config.js`). Hi donaria `no-disponible`, i per això el panell de la fase 3a no s'hi munta.
 - **WordPress**: depén de la CSP de l'amfitrió, que no coneixem.
 
 Els mòduls no depenen del DOM: el mateix codi podria córrer en una Edge Function si el Mestre ho decidix.
@@ -117,6 +118,19 @@ npx vitest run src/sections/pobles/nomsDelPoble.test.js src/sections/pobles/pobl
 
 Per a refer una captura: el mateix GET des del navegador, el cos sencer al fitxer i la nova empremta a `EMPREMTES` de `recursos.test.js`. Si canvia la forma, el traductor primer.
 
+## La fase 3a
+
+- **Mòduls** (a `src/sections/pobles/`):
+  - `fitxaDelPoble.js`: purs i al tros principal. `fitxaCompleta`, `clauDeViquipedia`, `fusionaAmbViquipedia`, `pobleHidratable` i `miniaturaDeCommons` (de 1920 a 960 px, una mida estàndard: 700.626 → 188.601 bytes per a la Torre Gran).
+  - `cauDeViquipedia.js`: la cau local, sobre `creaMagatzemIdb`, amb llista blanca, 30 dies per a `complet` i `parcial`, 7 per a `sense-article`, cap `no-disponible`, i fitada a 200 entrades. Si el navegador sap llistar les bases i la nostra no hi és, llegir no la crea.
+  - `consentimentViquipedia.js`: el sí de la visita i el de «Recorda-ho en este navegador» (`sdp_embed_viquipedia`).
+  - `usePobleHidratat.js`: només llig la cau. Amb una fitxa completa torna el mateix objecte i no importa res.
+  - `PanellDeViquipedia.jsx` i `CreditsDeViquipedia.jsx`: el panell diferit i els crèdits.
+- **Client:** `referrerPolicy: 'no-referrer'` al transport. Les URL no canvien, i les captures i les `EMPREMTES` valen.
+- **On es munta:** `detailSectionMeta.jsx` (`renderBody` amb `detall`, només si `pobleHidratable`), `ItemDetailSection.jsx` (la pàgina i `VistaDelPoble`) i `PoblesSection.jsx`.
+- **Legal i drets:** l'apartat 21 de la política de privacitat explica què veu Wikimedia, i l'apartat 20 nomena la base i la clau. `/page/drets-autor` diu el que fa i el que no. Totes dues empremtes de la frontissa les ha d'aprovar el Mestre.
+- **Fora:** l'escut (P94) no s'activa (D-5), les fotos no van a la capçalera ni a la targeta (D-3: caldria `crossOrigin` i `referrerPolicy` a `PageFrame.jsx` i a `UniversalCard`), i res no s'escriu al servidor.
+
 ## Què queda: fase 3
 
 Res d'això s'ha de fer sense les decisions de baix.
@@ -127,14 +141,19 @@ Res d'això s'ha de fer sense les decisions de baix.
    - una **ADR** (AGENTS §8): és un canvi de contracte del backend.
 2. **El disparador.** Quan existisca el selector de poble a l'onboarding: si el slug no casa amb cap poble, cridar `pobleDeViquipedia`, ensenyar la previsualització amb la targeta de sempre i deixar que l'habitant corregisca «Gent de…», la província i la comarca abans de proposar res.
 3. **L'aprovació del tractor.** La lliçó 261002 demana un document del flux i l'aprovació explícita del Mestre a la Wiki abans que cap tractor automàtic siga efectiu. El document l'ha de fer MarIA.
-4. **L'H3 de crèdits de les fotos.** La Pàgina del poble ha de pintar l'autor, la llicència i l'enllaç a la font de cada imatge. La integració dels noms, l'enllaç amb `wikipedia_title` i el `copyright` propi ja són fets (F3, 261009).
+4. **L'H3 de crèdits de les fotos.** Fet a la fase 3a: «D'on ve esta fitxa» (`CreditsDeViquipedia.jsx`) pinta l'autor, la llicència i l'enllaç a la font de cada imatge que es mostra.
+
+### Decisions preses del Mestre
+
+- **L'escut (261030)**: «mai l'escut per als pobles ni per a Gent de la Torre (l'escut és sempre exclusiu de la institució Ajuntament)». Ni la panoràmica, ni l'avatar de «Gent de…», ni la reserva poden ser l'escut. El codi ho complix al pas 7: cap de les `insignies` que declara Wikidata (P94, P41, P158 i P154) no es demana a Commons, i el nom es descarta en les llengües de Commons. Ho fixen `recursos.test.js` (`insignies`) i les proves «regla del Mestre» de `src/sections/pobles/pobleDeViquipedia.test.js`.
+  - **Límit conegut**: no s'exclou per sha1. Per a tindre el sha1 de l'escut caldria demanar-lo a Commons, i l'escut (P94) no es demana mai. Una còpia de l'escut pujada a Commons amb un nom neutre, que Wikidata no declara com a insígnia i sense `Restrictions`, continuaria passant.
 
 ### Decisions obertes del Mestre
 
 - **On s'executa**: al navegador de qui registra el poble (només web), en una Edge Function o com a acció d'administració a la Consola.
 - **Moderació**: es publica directament o queda `pendent` fins que un superadmin l'aprova.
 - **Les fotos**: copiar-les al nostre Storage (privacitat dels visitants i independència de Commons, però avui la targeta no pinta `sdp-media://`) o enllaçar-les a Wikimedia (cada visitant demana la imatge a un tercer, contra l'esperit de la Decisió 3).
-- **L'avatar**: confirmar que no pot ser l'escut municipal, i si val la mateixa panoràmica quan no n'hi ha cap de quadrada (avui el DTO queda `parcial`).
+- **L'avatar**: si val la mateixa panoràmica quan no n'hi ha cap de quadrada (avui el DTO queda `parcial`). Que mai no pot ser l'escut ja està decidit (vegeu «Decisions preses del Mestre»).
 - **La reserva**: només un recanvi quan falla la panoràmica (sense cap canvi visual) o la segona diapositiva d'un carrusel al detall.
 - **L'amplada mínima per rol**: avui els 1000 px de la panoràmica valen també per a l'avatar i la reserva. Un llindar més baix (per exemple, 600 px per a la reserva) donaria la reserva a la Torre (`El riu251.jpg`, 600×450, domini públic), però depén de la decisió anterior: com a recanvi de la capçalera, una foto de 600 px s'hi veuria borrosa.
 - **L'H1 dels pobles nous**: el nom sencer («Gent de la Torre de les Maçanes») o un de curt que tria l'habitant («Gent de la Torre»).

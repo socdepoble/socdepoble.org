@@ -109,6 +109,19 @@ test('l’Índex dona ids fets del text i, en clicar, escriu ?seccio= amb replac
   expect(url()).toBe('/inici');
 });
 
+/* Gauntlet 261029 (cicle 1) · Les pàgines dels arxius locals de /multimedia:
+   el slug d'un encapçalament seu porta el nom d'una carpeta del disc, que no
+   pot anar a l'historial ni a Compartir. L'Índex hi porta igual. */
+test('amb seccioALaUrl={false}, l’Índex hi porta però no escriu ?seccio=', () => {
+  const cos = <><h2>Diagnòstic de «Fotos_privades_Maria»</h2><p>Text.</p></>;
+  render(<MemoryRouter rutaInicial="/inici">{pagina(cos, { seccioALaUrl: false })}<Sonda /></MemoryRouter>);
+  fireEvent.click(screen.getByRole('button', { name: 'Obri el document' }));
+  obriIndex();
+  fireEvent.click(entrada('Diagnòstic de «Fotos_privades_Maria»'));
+  expect(url()).toBe('/wiki?item=doc');
+  expect(saltats).toHaveLength(1);
+});
+
 test('escriure la secció conserva l’estat de l’entrada (el preloadedItem del detall)', () => {
   render(<MemoryRouter rutaInicial="/inici">{pagina()}<Sonda /></MemoryRouter>);
   fireEvent.click(screen.getByRole('button', { name: 'Obri el document' }));

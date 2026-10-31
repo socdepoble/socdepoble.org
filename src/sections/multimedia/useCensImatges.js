@@ -12,11 +12,17 @@
  * original (ALIES_DEL_CENS, per a la fusió: revisió adversarial del 261016),
  * buits mentre carrega o si la càrrega falla (l'Arxiu es pinta igual, amb el
  * que porta el port).
+ *
+ * IDEA-55 + P1-71 (Onada 261029_1605, Bloc E) · També `llest`: cert quan la
+ * càrrega ha acabat, bé o malament. L'espai de treball de /multimedia espera
+ * fins llavors abans de donar per absent un ?item=cens-… d'un enllaç. Qui no
+ * el llig no canvia.
  */
 import { useEffect, useState } from 'react';
 import { indexaCens } from './origenImatges.js';
 
-const BUIT = Object.freeze({ mitjans: Object.freeze([]), cens: new Map(), alies: new Map() });
+const BUIT = Object.freeze({ mitjans: Object.freeze([]), cens: new Map(), alies: new Map(), llest: false });
+const FALLIT = Object.freeze({ ...BUIT, llest: true });
 let carregat = null;
 
 export function useCensImatges() {
@@ -32,11 +38,14 @@ export function useCensImatges() {
         carregat = {
           mitjans: modul.mitjansDelCens(modul.CENS_IMATGES),
           cens: indexaCens(modul.CENS_IMATGES),
-          alies: new Map(Object.entries(modul.ALIES_DEL_CENS || {}))
+          alies: new Map(Object.entries(modul.ALIES_DEL_CENS || {})),
+          llest: true
         };
         if (viu) setEstat(carregat);
       })
-      .catch(() => {});
+      .catch(() => {
+        if (viu) setEstat(FALLIT);
+      });
     return () => { viu = false; };
   }, []);
   return estat;

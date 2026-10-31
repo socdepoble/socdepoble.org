@@ -1,7 +1,9 @@
 /* Pla 261016_1530, Onada 0.5 · Les dues vies d'entrada de la matriu: (a)
-   govern.json del servidor de desenvolupament, que hui no existix (404 o HTML
-   és absència, mai un error ni una matriu inventada), i (b) un fitxer que el
-   Mestre obri, llegit en este navegador. I les quatre pàgines del grup. */
+   govern.json del servidor de desenvolupament (un 404 o l'HTML d'un servidor
+   sense el connector és absència, mai un error ni una matriu inventada; un
+   error del connector es pinta amb el seu text), i (b) un fitxer que el
+   Mestre obri, llegit en este navegador. I les quatre pàgines del grup.
+   Gauntlet f4b (govern) · Derogat: «que hui no existix» (B2 la servix). */
 import { afterEach, describe, expect, test, vi } from 'vitest';
 import {
   FONT_GOVERN, MIDA_MAXIMA_FITXER, carregaGovern, llegixFitxerDeGovern, normalitzaGovern, normalitzaTrasllat, tipusDeFitxer
@@ -76,7 +78,7 @@ describe('carregaGovern', () => {
     expect(await carregaGovern()).toBeNull();
     expect(fetch).not.toHaveBeenCalled();
   });
-  test('hui la ruta no existix: un 404 o l’HTML de l’aplicació és absència', async () => {
+  test('sense el connector: un 404 o l’HTML de l’aplicació és absència', async () => {
     vi.stubGlobal('fetch', vi.fn(async () => resposta(404, null)));
     expect(await carregaGovern()).toBeNull();
     vi.stubGlobal('fetch', vi.fn(async () => resposta(200, null, 'text/html')));
@@ -90,9 +92,31 @@ describe('carregaGovern', () => {
     expect(FONT_GOVERN).toBe('/__iaia/govern.json');
     expect(g.matriu.files).toHaveLength(1);
   });
-  test('un error del servidor és un error, no un buit', async () => {
-    vi.stubGlobal('fetch', vi.fn(async () => resposta(500, { error: 'x' })));
-    await expect(carregaGovern()).rejects.toThrow('Govern 500');
+  /* Gauntlet f4b (govern, «error-json-ignorat») · Expectativa actualitzada a
+     propòsit: l'error és el text fix que el connector envia en JSON (el que
+     diu què cal arreglar al Llibre), amb el seu codi; si no n'envia cap, un
+     text fix en valencià amb el codi HTTP. Abans: «Govern 500 <text HTTP>». */
+  test('un error del servidor és un error, no un buit, i diu el text del compilador', async () => {
+    const TEXT = 'La taula de la «Matriu P1» del Llibre Mestre no té les columnes «ID» i «Estat».';
+    vi.stubGlobal('fetch', vi.fn(async () => resposta(500, { schema: 'sdp.govern.v1', codi: 'taula-mal-formada', error: TEXT })));
+    const error = await carregaGovern().catch((e) => e);
+    expect(error).toBeInstanceOf(Error);
+    expect(error.message).toBe(TEXT);
+    expect(error.codi).toBe('taula-mal-formada');
+    expect(error.status).toBe(500);
+    // Sense el JSON del connector (un altre esquema, un text massa llarg, HTML o JSON trencat): el text fix.
+    const FIX = 'El servidor de desenvolupament no ha pogut servir la matriu (codi 500).';
+    for (const r of [
+      resposta(500, { error: 'x' }), resposta(500, { schema: 'sdp.govern.v1', error: 'x'.repeat(401) }),
+      resposta(500, null, 'text/html'), { ...resposta(500, null), json: async () => { throw new SyntaxError('JSON'); } }
+    ]) {
+      vi.stubGlobal('fetch', vi.fn(async () => r));
+      const e = await carregaGovern().catch((x) => x);
+      expect(e.message).toBe(FIX);
+      expect(e.codi).toBeNull();
+    }
+    vi.stubGlobal('fetch', vi.fn(async () => resposta(403, null, 'text/plain')));
+    await expect(carregaGovern()).rejects.toThrow('El servidor de desenvolupament no ha pogut servir la matriu (codi 403).');
   });
 });
 

@@ -300,7 +300,8 @@ function comentariAbans(text, marca) {
 }
 const filaDe = (text, etiqueta) => text.split('\n').find((l) => l.includes('<tr>') && l.includes(`<td>${etiqueta}</td>`)) ?? '';
 
-const BLOC_SELECCIO = comentariAbans(tokens, '--sdp-crom-seleccio-fons:');
+// Decisió del Mestre (30-10-2026) · La marca es compon: tractor-tokens (T3) la prendria per una declaració.
+const BLOC_SELECCIO = comentariAbans(tokens, ['--sdp-crom-seleccio-fons', ':'].join(''));
 const BLOC_A1 = comentariAbans(modules, '\n.sdp-gestor-fitxa[aria-current="true"] {');
 const BLOC_C1 = comentariAbans(modules, '\n.sdp-workspace-nav-item[aria-current="page"] {');
 const BLOC_MARCADOR = comentariAbans(modules, '\n.sdp-workspace-nav-item[aria-current="page"]::before {');

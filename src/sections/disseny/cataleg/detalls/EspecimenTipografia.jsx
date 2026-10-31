@@ -41,8 +41,12 @@ export const RITME = [
   ['h5', '--sdp-mt-h5', '24px', '--sdp-mb-h5', '8px'],
   ['h6', '--sdp-mt-h6', '20px', '--sdp-mb-h6', '8px'],
   ['p', null, '0', '--sdp-mb-p', '20px'],
-  ['ul · ol', null, '0', '--sdp-mb-ul', '20px']
+  ['ul · ol', null, '0', '--sdp-mb-ul', '20px'],
+  /* Llei de llistes · Ordre del Mestre (31-10-2026): els ítems d'una ul o
+     d'una ol, sempre més junts que els paràgrafs. */
+  ['li', null, '0', '--sdp-li-gap', '4px']
 ];
+const [, , , , LI_GAP] = RITME.find(([el]) => el === 'li');
 
 /** [token, valor, classe del mostrari, nom de l'amplada] */
 export const AMPLADES = [
@@ -55,7 +59,7 @@ export default function EspecimenTipografia() {
   return (
     <Especimen id="tipografia" nom="Estudi tipogràfic (contracte canònic)" fitxer="src/css/tokens.css · src/css/base.css"
       descripcio="Arquitectura tipogràfica universal de l'ecosistema, dissenyada per a lectura AAA sota llum solar intensa i per a gent gran. Una sola família: Noto Sans, allotjada a casa. La prosa creix amb la pantalla i amb el zoom; al mòbil es fa més menuda perquè el títol càpia sencer, mai per davall de 16px al cos. Tota la tipografia passa per custom properties: un tauler d'administració la podrà reescriure en calent."
-      fes={['Prosa amb els tokens fluids (--sdp-fluid-*): rem més vw, creix amb el zoom (WCAG 1.4.4).', 'Flux lliure: la prosa de l’article ocupa tota l’amplària del contenidor; només el coixí de .content-wrapper la separa de la vora (ordre del Mestre, 261004).', 'Interlineat 1.2 als títols (--sdp-leading-titol) i 1.6 al cos (--sdp-leading-cos).', 'L’entradeta (lead) sempre i només davall del subtítol h2.']}
+      fes={['Prosa amb els tokens fluids (--sdp-fluid-*): rem més vw, creix amb el zoom (WCAG 1.4.4).', 'Flux lliure: la prosa de l’article ocupa tota l’amplària del contenidor; només el coixí de .content-wrapper la separa de la vora (ordre del Mestre, 261004).', 'Interlineat 1.2 als títols (--sdp-leading-titol) i 1.6 al cos (--sdp-leading-cos).', 'L’entradeta (lead) sempre i només davall del subtítol h2.', `Els ítems d’una ul o d’una ol, sempre més junts que els paràgrafs: només el marge del li (${LI_GAP}, --sdp-li-gap), mai un gap afegit (ordre del Mestre, 31-10-2026).`]}
       noFacis={['Introduir serif «perquè sona a còdex»: prohibit al·lucinar tipografies.', 'Punt final als subtítols h2: són titulars, no paràgrafs.', 'Cap lletra per davall de 14px (--sdp-text-meta).', 'Mides fluides als components: vw és el viewport de l’amfitrió, no la columna. Els components usen --sdp-text-* fixos.']}>
 
       <Alerta to="avis" titol="Contracte tipogràfic (prohibit al·lucinar)">

@@ -86,6 +86,8 @@ function apply_filters( $nom, $valor, ...$arguments ) {
 function plugin_dir_path( $fitxer ) { return dirname( $fitxer ) . '/'; }
 function plugin_basename( $fitxer ) { return basename( dirname( $fitxer ) ) . '/' . basename( $fitxer ); }
 function plugins_url( $cami, $fitxer ) { return 'https://host.example/plugins/' . basename( dirname( $fitxer ) ) . '/' . $cami; }
+// IDEA-31 (261030) · marcatge.php posa sempre traductor-url (proveïdor lliure sense clau): cal el doble de rest_url().
+function rest_url( $cami = '' ) { return 'https://host.example/wp-json/' . $cami; }
 function register_activation_hook( $fitxer, $callback ) {
 	$GLOBALS['activacions'][] = plugin_basename( $fitxer );
 	add_action( 'activate_' . plugin_basename( $fitxer ), $callback );

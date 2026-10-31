@@ -292,6 +292,15 @@ test('S5 · routeAllowsIndex tanca gestoria i tractors també amb consulta o fra
   expect(routeAllowsIndex('/mercat/producte')).toBe(true);
   expect(routeAllowsIndex('/gestoriana')).toBe(true);
 });
+/* Ordre del Mestre (30-10-2026, prompt 2208, T2.1) · /disseny i /consola són
+   públiques i indexables («dejar público lo máximo posible»); les eines
+   personals continuen fora. */
+test('/disseny i /consola són indexables; /notes, /xat i el Panell, no', () => {
+  for (const ruta of ['/disseny', '/disseny?item=inventari-global', '/consola', '/consola/govern/balanc', '/consola/pols', '/plugin/mapa', '/page/notes', '/page/wikidepoble', '/wikidepoble']) {
+    expect(routeAllowsIndex(ruta), ruta).toBe(true);
+  }
+  for (const ruta of ['/notes', '/xat', '/control', '/el-meu-perfil', '/gestoria']) expect(routeAllowsIndex(ruta), ruta).toBe(false);
+});
 
 /* Bloc 3.5.5 (Gauntlet 261016) · La targeta d'un enllaç compartit en una app de
    missatgeria. Les apps de missatgeria i les xarxes no executen JavaScript:

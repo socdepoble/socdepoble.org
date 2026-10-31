@@ -3,7 +3,7 @@
  * veres, amb la precedència de les rutes (TextRoute, PageDetailSection), i
  * les props que la pinten igual a TextSection i al lector de connexions.
  */
-import { readdirSync, readFileSync } from 'node:fs';
+import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { describe, expect, test } from 'vitest';
 import { PAGE_COPY } from './pageContent.js';
@@ -11,12 +11,23 @@ import { RUTES_SENSE_PAGINA_DE_TEXT, pageKeyDeRuta, paginaDeRuta, propsDePaginaD
 import { COPYRIGHT_SDP, COPYRIGHT_VIQUIPEDIA, dataHoraDeBarra } from '../../components/universal/editorial.js';
 import { MAXIM_LEMA } from '../../data/limitsText.js';
 import { DRETS_IMATGES, DRETS_TEXT, esFotoValida, esLlicenciaLliure, triaImatges } from '../pobles/pobleDeViquipedia.js';
+/* VQ · Fase 3a (261030) · El panell, la cau i la regla de fitxa completa que la pàgina descriu. */
+import { TEXTOS_VIQUIPEDIA } from '../pobles/CreditsDeViquipedia.jsx';
+import { VIDA_MS } from '../pobles/cauDeViquipedia.js';
+import { CAMPS_DE_FITXA } from '../pobles/fitxaDelPoble.js';
 import { LLICENCIA_PER_DEFECTE, LLICENCIES, OPCIO_ACTUAL } from '../../components/universal/drets/llicencies.js';
-import { consolaDemanaSessio } from '../../app/guards/guardaConsola.js';
 import { accioDeLaPagina } from '../../config/systemPages.js';
 import { ETIQUETES, IDS_PAGINES, LLINDAR_REBUTS_RANCIS_DIES, paginaConsola, paginesConsola } from '../consola/consolaPagines.js';
 import { CONFIANCES, TIPUS_NODE } from '../consola/mapa/contracteMapa.js';
 import { toDeColor } from '../consola/semafor.js';
+
+/* ── La llei T8 (Gauntlet 261030, cicle 2) ────────────────────────────────
+   Ordres del Mestre del 30-10-2026 (decisions 261030): entradilla → H3, i
+   només etiquetes de prosa, enllaços vius i imatges locals. La llei i les
+   seues eines viuen a lleiT8Prova.js (només per a les proves): la mateixa
+   que passen els qui pinten el cos (PageDetailSection.consola.test.jsx i
+   PublicacioDetall.sistema.test.jsx), sense cap còpia. */
+import { cosDe, infraccionsT8, midesWebp } from '../../../tests/helpers/lleiT8Prova.js';
 
 /* Gauntlet 261016_1530 (Bloc 3.6.3; F64) · Ampliada a posta: el manifest és a
    /anima, i /iaia (la seua ruta d'abans, ara la fitxa de la IAIA) i /ia es
@@ -62,12 +73,16 @@ test('/fedivers es resol per la ruta i per /page/fedivers, i el cos comença en 
   expect(paginaDeRuta('/fedivers')).toEqual({ pageKey: 'fedivers', page: PAGE_COPY.fedivers });
   const { title, subtitle, html } = PAGE_COPY.fedivers;
   expect([title, subtitle]).toEqual(['Nodes i Fedivers', 'Com es connecten els pobles?']);
-  // Escrit com a classe [12]: design_guard llig els literals de capçalera de qualsevol .js.
-  expect(html).not.toMatch(/<h[12]\b/i);
-  expect(html).toMatch(/<h3>/);
-  // Només h3, p, ul, li i strong: cap enllaç extern ni cap atribut.
-  expect([...html.matchAll(/<([a-z0-9]+)[\s>]/gi)].map((m) => m[1].toLowerCase()).filter((e) => !['h3', 'p', 'ul', 'li', 'strong'].includes(e))).toEqual([]);
-  for (const titol of [title, ...[...html.matchAll(/<h3>([^<]*)<\/h3>/g)].map((m) => m[1])]) expect(titol.trim().endsWith('.')).toBe(false);
+  // La llei T8 (cicle 2, 261030): entradilla → H3, i només etiquetes de prosa, enllaços vius i imatges locals.
+  expect(infraccionsT8(html)).toEqual([]);
+  expect(title.trim().endsWith('.')).toBe(false);
+  // Els dos nodes actius, clicables (ordre del Mestre); la negreta es queda.
+  const enllacos = [...cosDe(html).querySelectorAll('a')].map((a) => [a.getAttribute('href'), a.textContent]);
+  expect(enllacos).toEqual([
+    ['https://socdepoble.org', 'socdepoble.org'], ['https://gentdelatorre.net', 'gentdelatorre.net'],
+    ['/perfil', 'perfil'], ['/mur', 'Mur'], ['/roadmap', 'full de ruta']
+  ]);
+  expect(html).toContain('<strong>socdepoble.org</strong></a>');
   // El Fedivers és horitzó, no funció: la pàgina ho diu.
   expect(html).toContain('Hui encara no està fet');
   // La franja només ix amb poc espai (isCompact a App.jsx); amb més, la barra negra només diu el nom.
@@ -233,17 +248,34 @@ describe('261007 · /page/drets-autor és «Drets d’autor»', () => {
 
   /* Onada 8 · «Hui encara no està fet del tot»: cap mòdul de l'app crida
      l'eina (només ella mateixa i les proves). El dia que algú l'endolle al
-     registre, esta prova cau i la pàgina s'ha de posar al dia. */
-  test('Onada 8 · la pàgina diu que l’eina de pobles nous encara no s’activa sola, i és veritat', () => {
+     registre, esta prova cau i la pàgina s'ha de posar al dia.
+     VQ · Fase 3a (ordre nocturna 261030_0252; 261030) · Ja l'han endollada:
+     la crida UN sol mòdul, el panell diferit de la pàgina d'un poble amb la
+     fitxa incompleta, i la pàgina diu el que fa (el botó, la cau de 30 dies,
+     els crèdits, les fotos només en eixe apartat) i el que encara no (l'alta
+     i el servidor, Fase 3c). Si algú la crida des d'un altre lloc, o el codi
+     deixa de dir el que diu la pàgina, esta prova cau. */
+  test('VQ · la pàgina diu que l’eina de pobles nous només treballa des del botó de la fitxa incompleta, i és veritat', () => {
     const viqui = textDe(html.slice(html.indexOf('<h3>La Viquipèdia'), html.indexOf('<h3>Per què triar')));
-    expect(viqui).toContain('Hui encara no està fet del tot:');
-    expect(viqui).toContain("encara no s'activa sola quan algú s'apunta des d'un poble nou, no guarda la targeta al servidor");
+    const recte = (text) => text.replace(/’/g, "'");
+    expect(viqui).not.toContain('Hui encara no està fet del tot');
+    expect(viqui).toContain('Què fa hui i què encara no:');
+    expect(viqui).toContain(`el botó «${recte(TEXTOS_VIQUIPEDIA.porta[1])}»`);
+    expect(viqui).toContain(`«${recte(TEXTOS_VIQUIPEDIA.creditsTitol[1])}»`);
+    expect(viqui).toContain('passats 30 dies, t\'oferix tornar-les a portar');
+    expect(VIDA_MS.complet).toBe(30 * 24 * 60 * 60 * 1000);
+    expect(viqui).toContain('sense canviar res del que la fitxa ja porta');
+    expect(viqui).toContain('Les fotos de Commons només es mostren en eixe apartat, no a la capçalera ni a la targeta.');
+    expect(viqui).toContain("Encara no s'activa sola quan algú s'apunta des d'un poble nou, no crea pobles nous i no guarda res al servidor");
+    // Les dades que falten: les mateixes que fan incompleta una fitxa.
+    expect(viqui).toContain("li falta l'entradilla, la foto, la província o la comarca");
+    expect(CAMPS_DE_FITXA).toEqual(['content', 'image_url', 'provincia', 'comarca']);
     const arrel = resolve(process.cwd(), 'src');
     const fonts = readdirSync(arrel, { recursive: true }).map(String)
       .filter((fitxer) => /\.(?:js|jsx)$/.test(fitxer) && !/\.test\.(?:js|jsx)$/.test(fitxer));
     const quiLaCrida = fonts.filter((fitxer) => !fitxer.endsWith('pobleDeViquipedia.js')
       && readFileSync(resolve(arrel, fitxer), 'utf8').includes('pobleDeViquipedia('));
-    expect(quiLaCrida).toEqual([]);
+    expect(quiLaCrida.map((fitxer) => fitxer.split('\\').join('/'))).toEqual(['sections/pobles/PanellDeViquipedia.jsx']);
   });
 
   test('les eixides privades: «Copyright (C)», tots els drets reservats, i el domini públic CC0', () => {
@@ -285,36 +317,96 @@ describe('261007 · /page/drets-autor és «Drets d’autor»', () => {
 
 /* Onada 10 (261010; pla 261010_1121; decisió del Mestre del 261010) · «La
    Consola Termodinàmica» i «El Cervell» (/page/consola i /page/cervell,
-   PageDetailSection) guanyen cos: sis paràgrafs seguits, sense cap títol,
-   només etiquetes de prosa i negretes per a escanejar. El text diu NOMÉS el
-   que fa el codi, i estes proves l'hi ancoren: si canvia el nombre de pàgines
-   de la Consola, un títol, el semàfor, les classes de peça del graf o
-   l'accés, la prova cau i la pàgina s'ha de tornar a escriure. */
-describe('Onada 10 · /page/consola i /page/cervell: sis paràgrafs ancorats al codi', () => {
+   PageDetailSection) guanyen cos, només amb etiquetes de prosa i negretes per
+   a escanejar. El text diu NOMÉS el que fa el codi, i estes proves l'hi
+   ancoren: si canvia el nombre de pàgines de la Consola, un títol, el
+   semàfor, les classes de peça del graf o l'accés, la prova cau i la pàgina
+   s'ha de tornar a escriure.
+   Cicle 2 del Gauntlet (ordres del Mestre del 30-10-2026) · DEROGA els «sis
+   paràgrafs seguits, sense cap títol»: el cos seguix la llei T8 (entradilla →
+   H3 → p, H4 i ul, amb hipervincles vius a cada vista que nomena), la portada
+   és la il·lustració nova de 1024×1024, amb les seues mides i prioritat alta,
+   i la Consola porta dins del cos la caldera de coure, que no és la portada. */
+describe('Onada 10 i cicle 2 · /page/consola i /page/cervell: anatomia editorial ancorada al codi', () => {
   const textDe = (tros) => tros.replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim();
   const llig = (ruta) => readFileSync(resolve(process.cwd(), ruta), 'utf8');
   const paragrafs = (html) => [...html.matchAll(/<p>([\s\S]*?)<\/p>/g)].map(([, cos]) => cos);
 
-  test.each(['consola', 'cervell'])('%s: es resol pel slug, i el cos són sis paràgrafs amb negretes i res més', (clau) => {
+  test.each(['consola', 'cervell'])('%s: es resol pel slug, i el cos seguix la llei T8: entradilla → H3, H4, enllaços vius i res més', (clau) => {
     expect(pageKeyDeRuta(`/page/${clau}`)).toBe(clau);
     expect(paginaDeRuta(`/page/${clau}?x=1#y`)).toEqual({ pageKey: clau, page: PAGE_COPY[clau] });
     const { html } = PAGE_COPY[clau];
-    // Cap títol. Escrit com a classe [1-6]: design_guard llig els literals de capçalera de qualsevol .js.
-    expect(html).not.toMatch(/<h[1-6]\b/i);
-    // Només etiquetes de prosa: paràgrafs i negretes.
-    const etiquetes = [...html.matchAll(/<([a-z0-9]+)[\s>]/gi)].map((m) => m[1].toLowerCase());
-    expect([...new Set(etiquetes)].sort()).toEqual(['p', 'strong']);
-    expect(etiquetes.filter((etiqueta) => etiqueta === 'p')).toHaveLength(6);
-    // Cap atribut: ni classe, ni estil, ni data-sdp-targetes; cap imatge ni cap enllaç.
-    expect(html).not.toMatch(/<[a-z0-9]+\s/i);
-    // El format del fitxer: salt de línia i sis espais davant de cada paràgraf, i res fora d'ells.
+    expect(infraccionsT8(html)).toEqual([]);
+    // El format del fitxer: salt de línia i sis espais davant del primer H3, i el tancament de sempre.
+    expect(html.startsWith('\n      <h3>')).toBe(true);
+    expect(html.endsWith('</p>\n    ')).toBe(true);
+    const cos = cosDe(html);
+    expect(cos.querySelectorAll('h3').length).toBeGreaterThanOrEqual(3);
+    expect(cos.querySelectorAll('h4').length).toBeGreaterThanOrEqual(1);
+    // Cada vista nomenada porta el seu enllaç: com a mínim, la Consola o el seu Explorador.
+    expect([...cos.querySelectorAll('a')].map((a) => a.getAttribute('href'))).toEqual(expect.arrayContaining([clau === 'consola' ? '/consola' : '/consola/explorador']));
+    // Els paràgrafs de sempre (a la Consola, dos d'ells són ara la llista de les nou pàgines).
     const cossos = paragrafs(html);
-    expect(cossos).toHaveLength(6);
-    expect(html).toBe(`\n      ${cossos.map((cos) => `<p>${cos}</p>`).join('\n      ')}\n    `);
-    for (const cos of cossos) {
-      expect(cos).toContain('<strong>');
-      expect(textDe(cos).length).toBeGreaterThan(80);
+    expect(cossos.length).toBeGreaterThanOrEqual(clau === 'consola' ? 4 : 6);
+    for (const tros of cossos) {
+      expect(tros).toContain('<strong>');
+      expect(textDe(tros).length).toBeGreaterThan(80);
     }
+  });
+
+  /* Ordres del Mestre (decisions 261030) · La portada és la il·lustració nova
+     de 1024×1024 al mateix camí, amb imageWidth/imageHeight i prioritat alta,
+     i no es repetix dins del cos (lliçó 261010). */
+  test.each(['consola', 'cervell'])('%s: la portada nova, de 1024×1024, amb mides i prioritat alta, i no es repetix al cos', (clau) => {
+    const pagina = PAGE_COPY[clau];
+    expect(pagina).toMatchObject({ image: `/assets/ui/plugins/${clau}_vinyeta.jpg`, imageWidth: 1024, imageHeight: 1024, imageFetchPriority: 'high' });
+    expect(midesWebp(pagina.image.replace(/\.jpg$/, '.webp'))).toEqual([1024, 1024]);
+    expect(propsDePaginaDeText(pagina, clau)).toMatchObject({ heroImage: pagina.image, heroWidth: 1024, heroHeight: 1024, heroFetchPriority: 'high', heroAlt: pagina.imageAlt });
+    expect(pagina.html).not.toContain(`${clau}_vinyeta`);
+  });
+
+  /* L'alt descriu el dibuix nou, sense interpretar-lo (versió «satisfacció
+     naïf» de la Consola, ~01:55): cap «inventora boja» ni «somriure murri», i
+     res de les vinyetes velles (la màquina de vapor, la bóta). */
+  test('els alts descriuen les il·lustracions noves', () => {
+    const { consola, cervell } = PAGE_COPY;
+    for (const tros of ['IAIA MarIA', 'mocador groc', 'ulleres fosques de soldador', 'somriure tranquil', '«FUM-O-MÀTIC»', 'clau anglesa gegant', 'un gos amb un os a la boca']) expect([tros, consola.imageAlt.includes(tros)]).toEqual([tros, true]);
+    expect(consola.imageAlt).not.toMatch(/inventora boja|somriure murri|màquina de vapor|un veí l’apreta/i);
+    for (const tros of ['cervell mecànic gegant', 'erugues', 'plataforma de fusta', 'veïns sorpresos', 'una cabra i una gallina']) expect([tros, cervell.imageAlt.includes(tros)]).toEqual([tros, true]);
+    expect(cervell.imageAlt).not.toMatch(/bóta|màquina d’escriure/);
+    for (const alt of [consola.imageAlt, cervell.imageAlt]) expect(alt).not.toMatch(/\.$/);
+  });
+
+  test('consola: la caldera de coure, dins del cos, entre el segon i el tercer H3, i no és la portada', () => {
+    const cos = cosDe(PAGE_COPY.consola.html);
+    const imgs = [...cos.querySelectorAll('img')];
+    expect(imgs.map((img) => img.getAttribute('src'))).toEqual(['/assets/uploads/consola-caldera.webp']);
+    const [caldera] = imgs;
+    expect([caldera.getAttribute('width'), caldera.getAttribute('height'), caldera.getAttribute('loading')]).toEqual(['1024', '1024', 'lazy']);
+    expect(midesWebp('/assets/uploads/consola-caldera.webp')).toEqual([1024, 1024]);
+    expect(existsSync(resolve(process.cwd(), 'public/assets/uploads/consola-caldera.png'))).toBe(true);
+    for (const tros of ['caldera de coure', 'mocador groc', 'davantal taronja', 'boina i faixa roja', 'gat espantat']) expect([tros, caldera.getAttribute('alt').includes(tros)]).toEqual([tros, true]);
+    expect(caldera.getAttribute('alt')).not.toBe(PAGE_COPY.consola.imageAlt);
+    const ordre = [...cos.querySelectorAll('h3, img')].map((node) => node.tagName);
+    expect(ordre).toEqual(['H3', 'H3', 'IMG', 'H3', 'H3']);
+  });
+
+  test('consola: les nou pàgines del tauler, enllaçades en l’ordre del tauler i amb el seu títol', () => {
+    const cos = cosDe(PAGE_COPY.consola.html);
+    const h4 = [...cos.querySelectorAll('h4')].find((h) => h.textContent === 'Les nou pàgines del tauler');
+    expect(h4?.nextElementSibling?.tagName).toBe('UL');
+    // El primer enllaç de cada element de la llista, el de la seua pàgina.
+    const enllacos = [...h4.nextElementSibling.children].map((li) => li.querySelector('a')).map((a) => [a.getAttribute('href'), a.textContent]);
+    expect(enllacos).toEqual(paginesConsola().map((pagina) => [pagina.ruta, `«${pagina.title}»`]));
+    expect(h4.nextElementSibling.children).toHaveLength(IDS_PAGINES.length);
+  });
+
+  test('cervell: la Consola, l’Explorador, l’Inventari i el Calendari, enllaçats', () => {
+    const hrefs = [...cosDe(PAGE_COPY.cervell.html).querySelectorAll('a')].map((a) => [a.getAttribute('href'), a.textContent]);
+    expect(hrefs).toEqual([
+      ['/page/consola', 'Consola Termodinàmica'], [paginaConsola('explorador').ruta, `«${paginaConsola('explorador').title}»`],
+      [paginaConsola('inventari').ruta, '«skills»'], [paginaConsola('calendari').ruta, 'tasques que corren soles']
+    ]);
   });
 
   test('consola: «nou targetes» són les nou pàgines de la Consola, i cada títol és el que pinta el tauler', () => {
@@ -368,18 +460,50 @@ describe('Onada 10 · /page/consola i /page/cervell: sis paràgrafs ancorats al 
     expect(text).toContain('dins del projecte, l’estat de git i les tasques programades del Mas a l’ordinador on es treballa');
   });
 
-  /* El paràgraf 6 de cada pàgina: qui hi entra i què hi veu. La decisió P7-A
-     (el botó «Obrir…» no mira l'entorn) continua pendent (systemPages.js): si
-     el Mestre obri la Consola a tothom o fa inert el botó, esta prova cau. */
-  test.each(['consola', 'cervell'])('%s: l’accés que diu la pàgina és el de la ruta (superadmin fora de desenvolupament)', (clau) => {
-    const text = textDe(PAGE_COPY[clau].html);
-    // En qualsevol build la ruta passa per la barrera; només el servidor de desenvolupament l'obri.
-    expect([consolaDemanaSessio(false), consolaDemanaSessio(true)]).toEqual([true, false]);
-    expect(llig('src/app/App.jsx')).toContain('<RequireAuth rol="superadmin"><ConsolaSection /></RequireAuth>');
-    expect(text).toContain('el rol «superadmin»');
-    expect(llig('src/app/guards/RequireAuth.jsx')).toContain('>Accés restringit<');
-    expect(text).toContain('veuràs l’avís «Accés restringit»');
-    expect(text).toMatch(/Hui (la Consola només funciona|el Cervell només es veu) a l’ordinador de qui manté el Mas\./);
+  /* El paràgraf 6 de cada pàgina: qui hi entra i què hi veu.
+     Ordre del Mestre (30-10-2026, prompt 2208, T2.2) · Prova actualitzada a
+     propòsit: /consola és de lectura pública en qualsevol entorn, i el botó
+     «Obrir…» hi porta sense compte ni rol. Derogat: «superadmin fora de
+     desenvolupament» i l'avís «Accés restringit». Si el text torna a
+     prometre lectures en viu a la web publicada, esta prova cau. Que la ruta
+     es munta sense sessió, també amb DEV fals, ho prova el comportament
+     (App.test.jsx, App.appsLocals.test.jsx i pageContent.fediversity.test.js),
+     no un literal de la font. */
+  test.each([
+    ['consola', 'On funciona hui', 'La Consola és oberta a tothom: el botó'],
+    ['cervell', 'On es veu hui', 'El Cervell és obert a tothom: el botó']
+  ])('%s: l’accés que diu la pàgina és el de la ruta (oberta a tothom, sense compte ni rol)', (clau, h3, obertura) => {
+    const html = PAGE_COPY[clau].html;
+    const text = textDe(html);
+    // L'últim H3 és el de l'accés, i el seu paràgraf diu que és obert, sense compte ni rol.
+    const cos = cosDe(html);
+    const darrer = [...cos.querySelectorAll('h3')].at(-1);
+    expect(darrer.textContent).toBe(h3);
+    // textContent i no el marcatge intern: lint_logica_usuari no admet eixa API fora de sanitizeHtml.
+    const paragraf = darrer.nextElementSibling.textContent.replace(/\s+/g, ' ').trim();
+    expect(paragraf.startsWith(obertura)).toBe(true);
+    expect(paragraf).toContain('sense demanar-te cap compte ni cap rol');
+    expect(text).not.toMatch(/superadmin|Accés restringit|entres amb el teu compte/);
+    // Les lectures en viu només les servix el servidor de desenvolupament; la web publicada llig
+    // la instantània sanejada del build (decisió del Mestre, 31-10-2026; fontsConsola.js).
+    const fonts = llig('src/sections/consola/fontsConsola.js');
+    expect(fonts).toContain("if (import.meta.env.DEV === true) return ORIGEN_VIU;");
+    expect(fonts).toContain("if (import.meta.env.SDP_CONSOLA_INSTANTANIA === '1') return ORIGEN_INSTANTANIA;");
+    expect(paragraf).toContain('servidor de desenvolupament');
+    expect(paragraf).toContain('instantània sanejada');
+  });
+
+  /* El que diu la Consola que hi ha a la web publicada és el que pinta el
+     tauler de /consola fora de DEV: el Govern del Mestre, les nou targetes,
+     l'Índex i el Diagnòstic (ConsolaSection.jsx · TaulerAmbGovern). */
+  test('consola: l’estructura que mostra la web publicada és la del tauler', () => {
+    const font = llig('src/sections/consola/ConsolaSection.jsx');
+    for (const peca of ['<SeccioGovern govern={govern}', '<ConsolaTauler consola={consola}', '<IndexConsola fonts=', '<DiagnosiConsola fonts=']) {
+      expect([peca, font.includes(peca)]).toEqual([peca, true]);
+    }
+    const text = textDe(PAGE_COPY.consola.html);
+    expect(text).toContain('el Govern del Mestre, les nou targetes amb les seues pàgines, l’Índex i el Diagnòstic');
+    expect(text).toContain('no s’inventa cap xifra per a omplir el buit');
   });
 
   test('sense dades: el que diuen les targetes de la Consola i la pàgina del Mapa', () => {

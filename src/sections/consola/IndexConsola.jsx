@@ -38,23 +38,36 @@
  * Ordre del Mestre, 13-10-2026 (pla 261013_1405, front F) · L'Índex ja no és
  * l'últim bloc del tauler: darrere ve el «Diagnòstic del Mas»
  * (DiagnosiConsola.jsx), amb l'accés ràpid i el text pla.
+ *
+ * Ordre del Mestre, 30-10-2026 (xat, ~14:15, punts 2.1, 2.2 i 2.3) ·
+ *  · Fora la miniatura repetida: cap imatge a l'Índex (la vinyeta de la
+ *    Consola ja és la portada de /page/consola i de la seua targeta).
+ *  · Estil de publicació de Sóc de Poble: l'article porta la classe de la
+ *    prosa (sdp-prose) i la columna de lectura canònica, centrada (sdp-centre:
+ *    --sdp-measure, el contenidor Centre de composicio), en lloc d'estirar
+ *    les línies de punta a punta del monitor. L'H2 i la seua entradeta
+ *    (p.lead) van centrats; els H3, en el blau marí dels H3 i els H4, en el
+ *    terracota dels H4, també quan porten enllaç (modules.css § CONSOLA).
+ *  · Redacció didàctica: cada H3 i cada H4 pinta els tres moviments de la
+ *    dada (indexConsola.js): què és (`text` i, als H3, `explica`), què diuen
+ *    ara les dades (`diu`) i què està en ordre i què queda (`queda`), amb
+ *    negretes per a llegir a salts de vista i enllaços vius a les pàgines.
+ *    Les rutes i els fitxers van en <Mono>, que el mode privacitat amaga.
+ *  · Les fonts són les mateixes del tauler (consola.json, el Mapa, la matriu
+ *    del govern i els empaquetats) i el mateix rellotge (`ara`).
+ * Derogat EN PART: l'Onada 12 (la miniatura de l'H2) i el «text pur» de
+ * l'Onada 11 (ara també hi ha enllaços dins dels paràgrafs, sempre cap a
+ * pàgines que ja són títols de l'índex).
+ * Gauntlet 261030 (cicle 4, corrector de la Consola) · Les peces d'una
+ * família ja no són un H4 cada una: van davall de la xifra que les compta
+ * (o del seu H4 de família), i les que marquen alguna cosa, en una llista
+ * <ul> amb l'enllaç a la seua pàgina (Membres). Derogat EN PART: «cap
+ * llista» dins de l'Índex.
  */
 import { Fragment, useContext, useId } from 'react';
 import { Link } from '../../app/contexts/RouterContext';
-import { resolveAsset } from '../../config/assetResolver';
-import { PrivacitatConsola } from './peces.jsx';
-import { Entradeta } from './XifresMas.jsx';
-import { indexConsola } from './indexConsola.js';
-
-/* La il·lustració d'un node, si en porta. La ruta és del paquet (public/):
-   resolveAsset la du a la base de l'amfitrió, com la portada de la pàgina. */
-function Miniatura({ node }) {
-  if (!node.imatge) return null;
-  return (
-    <img className="sdp-consola__index-imatge" src={resolveAsset(node.imatge)} alt={node.imatgeAlt}
-      loading="lazy" decoding="async" />
-  );
-}
+import { Mono, PrivacitatConsola } from './peces.jsx';
+import { indexConsola, trossosMarcats } from './indexConsola.js';
 
 /* El títol d'un node: enllaçat a la seua ruta si en té; amb el mode
    privacitat, la versió sense ruta si la peça en porta. */
@@ -63,18 +76,67 @@ function Titol({ node, privat }) {
   return node.ruta ? <Link to={node.ruta}>{text}</Link> : text;
 }
 
-/* Una pàgina de l'índex (H3) amb les seues targetes (H4). */
+/* Un tros de paràgraf (indexConsola.js): text, negreta, fitxer o enllaç. */
+function Tros({ tros, privat }) {
+  if ('mono' in tros) return <Mono>{tros.mono}</Mono>;
+  const text = privat && tros.privat ? tros.privat : (tros.fort ?? tros.enllac ?? tros.text);
+  if ('fort' in tros) return <strong>{text}</strong>;
+  if ('enllac' in tros) return <Link to={tros.ruta}>{text}</Link>;
+  return text;
+}
+
+/* Un paràgraf de trossos; sense cap tros, res. */
+function Paragraf({ trossos, privat }) {
+  if (!trossos?.length) return null;
+  return <p>{trossos.map((tros, i) => <Tros key={i} tros={tros} privat={privat} />)}</p>;
+}
+
+/* Els tres moviments d'un node: què és (i, als H3, en paraules planes), què diuen ara les dades i què queda. */
+function Moviments({ node, privat }) {
+  return (
+    <>
+      <Paragraf trossos={trossosMarcats(node.text)} privat={privat} />
+      {(node.explica ?? []).map((trossos, i) => <Paragraf key={i} trossos={trossos} privat={privat} />)}
+      <Paragraf trossos={node.diu} privat={privat} />
+      <Paragraf trossos={node.queda} privat={privat} />
+    </>
+  );
+}
+
+/* Gauntlet 261030 (cicle 4, corrector de la Consola) · Les peces d'una
+   família (indexConsola.js · membresDe): la definició de la família i el
+   recompte, en paràgrafs, i les peces que marquen alguna cosa en una llista
+   de cos normal (lliçó 261030 de sdp-universal-page: cap taula de prosa),
+   cada una amb el seu enllaç. Sense membres, res. */
+function Membres({ membres, privat }) {
+  if (!membres) return null;
+  return (
+    <>
+      <Paragraf trossos={membres.definicio} privat={privat} />
+      <Paragraf trossos={membres.resum} privat={privat} />
+      {membres.llista.length > 0 && (
+        <ul>
+          {membres.llista.map((peca) => (
+            <li key={peca.id}>{peca.trossos.map((tros, i) => <Tros key={i} tros={tros} privat={privat} />)}</li>
+          ))}
+        </ul>
+      )}
+    </>
+  );
+}
+
+/* Un bloc de l'índex (H3) amb les seues targetes (H4). */
 function Pagina({ node, privat }) {
   return (
     <section className="sdp-consola__index-pagina">
       <h3><Titol node={node} privat={privat} /></h3>
       {node.subtitol && <p className="sdp-consola__index-peraque">{node.subtitol}</p>}
-      {node.text && <p><Entradeta marcada={node.text} /></p>}
-      <Miniatura node={node} />
+      <Moviments node={node} privat={privat} />
       {node.fills.map((peca) => (
         <Fragment key={peca.id}>
           <h4><Titol node={peca} privat={privat} /></h4>
-          {peca.text && <p><Entradeta marcada={peca.text} /></p>}
+          <Moviments node={peca} privat={privat} />
+          <Membres membres={peca.membres} privat={privat} />
         </Fragment>
       ))}
     </section>
@@ -82,18 +144,21 @@ function Pagina({ node, privat }) {
 }
 
 /**
- * L'índex amb les fonts d'ara: el Mapa (`mapa`) i consola.json (`dades`),
- * cap de les dues obligatòria. Sense fonts, el nom de cada xifra fixa.
+ * L'índex amb les fonts del tauler: `fonts` ({ dades, estatDades, mapa,
+ * estatMapa }, com ConsolaSection · fontsDe), `govern` (useGovern),
+ * `empaquetats` (useFontDev) i el rellotge de la pintada (`ara`). Cap
+ * obligatòria: sense fonts, el nom de cada xifra i per què no hi ha dades.
  */
-export function IndexConsola({ mapa = null, dades = null, locale = 'ca-ES' }) {
+export function IndexConsola({ fonts = {}, govern = null, empaquetats = null, locale = 'ca-ES', ara = Date.now() }) {
   const id = useId();
   const privat = useContext(PrivacitatConsola);
-  const [arrel] = indexConsola(mapa, dades, locale);
+  const [arrel] = indexConsola(fonts.mapa ?? null, fonts.dades ?? null, locale, {
+    estatMapa: fonts.estatMapa, estatDades: fonts.estatDades, govern, empaquetats, ara
+  });
   return (
-    <section className="sdp-consola__index" aria-labelledby={id}>
+    <section className="sdp-consola__index sdp-prose sdp-centre" aria-labelledby={id}>
       <h2 id={id}>{arrel.titol}</h2>
       <p className="lead">{arrel.text}</p>
-      <Miniatura node={arrel} />
       {arrel.fills.map((pagina) => <Pagina key={pagina.id} node={pagina} privat={privat} />)}
     </section>
   );

@@ -215,6 +215,16 @@ describe('contracte compartit · moviment, focus, tàctil i tipografia al primer
     expect([P['--sdp-mb-h5'], P['--sdp-mb-h6']]).toEqual(['8px', '8px']);
   });
 
+  /* Llei de llistes · Ordre del Mestre (31-10-2026): els ítems d'una <ul> o
+     d'una <ol> van sempre més junts que els paràgrafs. --sdp-li-gap passa de
+     8 a 4px (abans, 8px de marge + 8px de gap = 16px, com entre paràgrafs). */
+  test('Llei de llistes · --sdp-li-gap és 4px, per davall de --sdp-mb-p, i és el marge del li de base.css', () => {
+    expect(P['--sdp-li-gap']).toBe('4px');
+    const px = (nom) => Number(/^(\d+)px$/.exec(P[nom])?.[1]);
+    expect(px('--sdp-li-gap')).toBeLessThan(px('--sdp-mb-p'));
+    expect(senseComentaris(BASE)).toMatch(/\nli \{\s*margin-bottom: var\(--sdp-li-gap\);/);
+  });
+
   test('D-C · cap radi fora de l’escala: els àlies apunten a un graó s–xl o a la pastilla', () => {
     const escala = new Set(['--sdp-radi-s', '--sdp-radi-m', '--sdp-radi-g', '--sdp-radi-xl', '--sdp-radi-pastilla']);
     for (const [nom, valor] of Object.entries(P).filter(([n]) => n.startsWith('--sdp-radi-') && !escala.has(n))) {

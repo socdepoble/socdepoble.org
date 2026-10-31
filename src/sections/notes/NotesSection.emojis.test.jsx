@@ -191,16 +191,18 @@ test('un editor que no es pot escriure (el detall tapat o en lectura) també cop
 });
 
 /* Correcció de la revisió adversarial (261016; encàrrec A1) · L'avís per als
-   glifs que este navegador no pinta (emojiSol), també en mode cos. */
-test('un emoji que este navegador no reconeix ni s’escriu ni es copia: el diàleg es queda obert i ho diu', async () => {
+   glifs que este navegador no pinta (emojiSol), també en mode cos.
+   P1-06 (261030) · La graella ja no pinta el que este navegador no reconeix
+   (utils/emojiPintable.js): no hi ha res a triar ni a refusar. */
+test('un emoji que este navegador no reconeix ni es pinta, ni s’escriu ni es copia', async () => {
   const writeText = vi.fn(() => Promise.resolve());
   portaretalls(writeText);
   munta();
   fireEvent.click(screen.getByRole('button', { name: 'Emojis' }));
   const dialeg = dialegEmojis();
-  fireEvent.click(await within(dialeg).findByRole('button', { name: 'copyright' }));
-  expect(dialegEmojis()).toBe(dialeg);
-  expect(within(dialeg).getByText('Este navegador encara no reconeix © com a emoji: tria’n un altre.')).toBeTruthy();
+  await within(dialeg).findByRole('button', { name: 'tomato' });
+  expect(within(dialeg).queryByRole('button', { name: 'copyright' })).toBeNull();
+  expect(within(dialeg).queryByText(/encara no reconeix/)).toBeNull();
   expect(escriu.inserix).not.toHaveBeenCalled();
   expect(writeText).not.toHaveBeenCalled();
   expect(dades.toast).not.toHaveBeenCalled();

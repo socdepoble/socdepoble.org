@@ -7,10 +7,12 @@ import path from 'node:path';
 import {createHash,randomUUID} from 'node:crypto';
 import {isDeepStrictEqual} from 'node:util';
 import {parseFrontmatter} from './frontmatter.mjs';
+import {CAMINS} from '../../lib/arrel.mjs';
 export const GENOMA='.agents/GENOMA.md';
 export const GENOMA_SOURCES='.agents/GENOMA.sources.json';
 const PRODUCER='tooling/wiki/compile-wiki-to-system-prompt.mjs';
-const CONTEXT_DIRS=['.agents/skills','_wiki_de_poble/01_ser','_wiki_de_poble/02_saber','_wiki_de_poble/03_actuar'];
+/* Ordre del Mestre (30-10-2026) · la Wiki ve de la SSOT de rutes (Porta Rutes, R1); mateixes cadenes. */
+const CONTEXT_DIRS=['.agents/skills',...['01_ser','02_saber','03_actuar'].map(d=>`${CAMINS.wiki}/${d}`)];
 const CONTEXT_FILES=['AGENTS.md','.agents/AGENTS.md','.agents/PROTOCOL_PETORRETA.md'];
 const DEPENDENCIES=['tooling/wiki/lib/frontmatter.mjs','tooling/wiki/lib/retrieval-sources.mjs'];
 const HEADER='# CONTEXT MESTRE GLOBAL (SÓC DE POBLE)\n\nAquest document és generat automàticament. No l\'editis directament. Conté les fonts seleccionades pel productor i traçades al sidecar de procedència.\n\n';

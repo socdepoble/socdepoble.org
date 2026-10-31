@@ -126,6 +126,18 @@ describe('el cens de l’Arxiu visual', () => {
     expect(CENS_IMATGES.filter((entrada) => entrada.src.startsWith('/assets/towns/')).every((entrada) => entrada.origen === 'foto' && entrada.ambit === 'poble')).toBe(true);
   });
 
+  /* Regla del Mestre (261025): la plataforma és «el Mas», i el mot vetat no ix
+     mai en text visible. El títol de cada entrada es pinta a l'Arxiu visual
+     (title, alt i l'enllaç al Xat); Gauntlet 261030 (cicle 4) el va trobar en
+     la porta del Roure. El nom del fitxer no és cap títol: no es toca. */
+  test('cap títol del cens porta el mot vetat (en singular o plural, amb accent o sense)', () => {
+    const MOT_VETAT = /\bmas[ií](?:a|es)\b/i;
+    expect(CENS_IMATGES.filter((entrada) => MOT_VETAT.test(entrada.titol)).map((entrada) => entrada.src)).toEqual([]);
+    expect(mitjansDelCens().filter((mitja) => MOT_VETAT.test(mitja.title)).map((mitja) => mitja.id)).toEqual([]);
+    expect(CENS_IMATGES.filter((entrada) => /^\/assets\/img\/nano_porta_\w+_roure_\d+\.png$/.test(entrada.src)).map((entrada) => entrada.titol))
+      .toEqual(['La porta del Mas del Roure']);
+  });
+
   /* Revisió adversarial del 261016 · El port de producció porta la foto de
      perfil de Javi amb el camí de la còpia; el cens, amb el de l'original: la
      fusió de l'Arxiu les iguala amb estos àlies (mediaContent.js · fusionaMitjans). */

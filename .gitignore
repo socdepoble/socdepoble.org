@@ -41,7 +41,11 @@ var/
 # Ordre del Mestre (261021, prompt 261021_0015, tasca 2) · L'APK de prova dels
 # beta testers (01_produccio/socdepoble-beta.apk, 51 MB) es lliura, no es versiona.
 *.apk
-.claude/
+# Ordre del Mestre (261031, Ronda 1) · .claude/settings.json porta els ganxos del
+# projecte i és un fitxer crític del Reflex (CRITICAL_SEED_PATHS): es versiona.
+# La resta de .claude/ (settings.local.json, launch.json, enllaços de skills) és local.
+**/.claude/*
+!/.claude/settings.json
 
 # Ordre del Mestre (261002) · Fora del repositori: els guions de prova de
 # l'arrel, l'estat local de la CLI de Supabase (porta secrets de l'edge runtime

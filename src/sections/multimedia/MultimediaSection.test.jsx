@@ -1,8 +1,13 @@
-/** T64 · La botonera Galeria / Cronologia de /multimedia, centrada. */
+/** T64 · La botonera Galeria / Cronologia de /multimedia, centrada (fins al
+ *  Bloc E). IDEA-55 + P1-71 (Onada 261029_1605, Bloc E) · /multimedia és ara
+ *  un UniversalWorkspace de tres columnes: sense pastilles de mode; la vista
+ *  «Carpeta local» munta la Barra de volums. La regla CSS del modificador de
+ *  centrat es conserva (la fan servir SearchSection i OnboardingSteps). */
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
-import { render, screen, cleanup, fireEvent } from '@testing-library/react';
-import { afterEach, expect, test, vi } from 'vitest';
+import { render, screen, cleanup, within } from '@testing-library/react';
+import { afterEach, beforeEach, expect, test, vi } from 'vitest';
+import { MemoryRouter } from '../../app/contexts/RouterContext.jsx';
 
 const mocks = vi.hoisted(() => ({
   multimedia: {
@@ -14,52 +19,47 @@ const mocks = vi.hoisted(() => ({
   }
 }));
 
-// La UniversalPage no entra en joc: es prova la capçalera de la secció.
+// La UniversalPage només pinta el títol i el cos: es prova l'estructura de la secció.
 vi.mock('../../components/universal/UniversalPage', () => ({
-  UniversalPage: ({ children }) => <main>{children}</main>
+  UniversalPage: ({ title, children }) => <article><header className="page-title"><h1>{title}</h1></header>{children}</article>
 }));
-/* Onada 0.3 (Gauntlet 261016) · La secció llig ?foto= (el visor): el doble del
-   router porta també la consulta, la ubicació i navigate. El cens de
-   public/assets (useCensImatges) no entra en estes proves de la capçalera. */
-vi.mock('../../app/contexts/RouterContext', () => ({
-  Link: ({ to, children, className }) => <a href={to} className={className}>{children}</a>,
-  useSearchParams: () => [new URLSearchParams(''), () => {}],
-  useLocation: () => ({ pathname: '/multimedia', search: '', state: null }),
-  useNavigate: () => () => {}
-}));
-vi.mock('../../config/navigation', () => ({ getSectionItemPath: (seccio, id) => `/${seccio}/${id}` }));
+/* Bloc E · El router en memòria de veres: l'espai de treball llig i escriu ?categoria=&item=. */
 vi.mock('./MultimediaContext', () => ({ useMultimedia: () => mocks.multimedia }));
 vi.mock('./useCensImatges.js', () => ({ useCensImatges: () => ({ mitjans: [], cens: new Map() }) }));
 vi.mock('../../app/contexts/CoreContentContext', () => ({ useCoreContent: () => ({ towns: [] }) }));
 vi.mock('../../app/contexts/UIContext', () => ({ useUIActions: () => ({ t: (_clau, text) => text }), useUIStateOpcional: () => null }));
 vi.mock('../../hooks/useSEO', () => ({ useSEO: () => {} }));
+/* IDEA-55 (Onada 261029_1605) · El Bloc de Notes del Gestor d'arxius locals. */
+vi.mock('../notes/NotesDataContext', () => ({ useNotesData: () => ({ canCreate: true, creaNota: async () => ({ id: 'n-1' }) }) }));
 import MultimediaSection from './MultimediaSection.jsx';
 
-afterEach(cleanup);
-
-test('T64 · la píndola Galeria / Cronologia porta el modificador de centrat; el rètol de damunt no canvia', () => {
-  render(<MultimediaSection />);
-  const grup = screen.getByRole('group', { name: 'Mode de vista' });
-  // El modificador va a la mateixa caixa .sdp-pindola, fill directe de la toolbar.
-  expect(grup.className).toBe('sdp-pindola sdp-pindola--centrada');
-  expect(grup.parentElement.className).toBe('univ-manager-toolbar');
-  // El rètol «TOTS (n) – …» continua fora de la toolbar i sense centrat.
-  const capcalera = grup.closest('header');
-  expect(capcalera.className).toBe('notes-list-header');
-  const retol = capcalera.firstElementChild;
-  expect(retol.tagName).toBe('STRONG');
-  expect(retol.className).toBe('univ-manager-facet-header');
-  expect(retol.textContent).toMatch(/^TOTS \(2\) - /);
-  expect(capcalera.querySelectorAll('.sdp-pindola--centrada')).toHaveLength(1);
+beforeEach(() => {
+  vi.spyOn(HTMLElement.prototype, 'clientWidth', 'get').mockReturnValue(1400);
+  vi.stubGlobal('ResizeObserver', class { observe() {} unobserve() {} disconnect() {} });
+});
+afterEach(() => {
+  cleanup();
+  vi.restoreAllMocks();
+  vi.unstubAllGlobals();
 });
 
-test('T64 · centrada, la píndola continua canviant de vista', () => {
-  const { container } = render(<MultimediaSection />);
-  expect(screen.getByRole('button', { name: 'Galeria' }).getAttribute('aria-pressed')).toBe('true');
-  expect(container.querySelector('.stack-grid')).toBeNull();
-  fireEvent.click(screen.getByRole('button', { name: 'Cronologia' }));
-  expect(screen.getByRole('button', { name: 'Cronologia' }).getAttribute('aria-pressed')).toBe('true');
-  expect(container.querySelector('.stack-grid')).not.toBeNull();
+const munta = (ruta = '/multimedia') => render(<MemoryRouter rutaInicial={ruta}><MultimediaSection /></MemoryRouter>);
+
+test('Bloc E · la secció és un UniversalWorkspace de tres columnes, sense cap pastilla de mode', () => {
+  const { container } = munta();
+  for (const id of ['app-grid-sidebar', 'app-grid-list', 'app-grid-main']) expect(container.querySelector(`#${id}`)).not.toBeNull();
+  expect(screen.queryByRole('group', { name: 'Mode de vista' })).toBeNull();
+  expect(container.querySelector('.sdp-pindola--centrada')).toBeNull();
+  expect(within(container.querySelector('#app-grid-main')).getByRole('heading', { level: 1, name: 'Arxiu visual' })).not.toBeNull();
+});
+
+/* Gauntlet 261029 (cicle 1, IDEA-57) · La capçalera de facetes de l'Arxiu visual
+   d'abans del Bloc E no la pinta ningú: la regla ja no és a modules.css (la
+   de les opcions, .univ-manager-facet-item, sí: la fa servir el Tauler). */
+test('IDEA-57 · cap regla morta .univ-manager-facet-header', () => {
+  const css = readFileSync(resolve(process.cwd(), 'src/css/modules.css'), 'utf8');
+  expect(css).not.toMatch(/\.univ-manager-facet-header\b/);
+  expect(css).toMatch(/\.univ-manager-facet-item\s*\{/);
 });
 
 /* El centrat el fa el modificador canònic, no cap CSS nou de Multimèdia: com a
@@ -74,4 +74,14 @@ test('T64 · .sdp-pindola--centrada centra la caixa (width fit-content, margin-i
   expect(regla[1]).toMatch(/width:\s*fit-content/);
   expect(css.indexOf('.sdp-pindola {')).toBeGreaterThan(-1);
   expect(css.indexOf('.sdp-pindola {')).toBeLessThan(regla.index);
+});
+
+/* IDEA-54/55 (Onada 261029_1605) · «Carpeta local · Volums muntats» munta la
+   Barra de volums del Gestor d'arxius locals, amb «Vincular carpeta local». */
+test('la vista local_root munta la Barra de volums amb «Vincular carpeta local»', async () => {
+  const { container } = munta('/multimedia?categoria=local_root');
+  const detall = within(container.querySelector('#app-grid-main'));
+  expect(detall.getByRole('heading', { level: 1, name: 'Carpeta local · Volums muntats' })).not.toBeNull();
+  expect(await detall.findByRole('heading', { level: 3, name: 'Volums i carpetes locals' })).not.toBeNull();
+  expect(detall.getByRole('button', { name: 'Vincular carpeta local' })).not.toBeNull();
 });

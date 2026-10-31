@@ -1,15 +1,16 @@
 import { backendScope } from '../../config/backendConfig.js';
 import { useScopedResource } from './useScopedResource.js';
-import { createContext, useContext, useEffect, useMemo } from 'react';
+import { useContext, useEffect, useMemo } from 'react';
+/* P1-71 (Gauntlet 261029) · L'objecte de context viu a objectesDeContext.js,
+   que no importa res del projecte. */
+import { CoreContentContext } from './objectesDeContext.js';
 import { loadCoreContent } from '../../data/backendPort.js';
 import { aplicaPersonalitzacio } from '../../data/personalitzacio.js';
 import { byId } from '../../config/contentHelpers';
-import { useIdentitat } from './IdentitatContext.jsx';
+import { useIdentitatOpcional } from './IdentitatContext.jsx';
 import { useRecarregaExterna } from './useRecarregaExterna.jsx';
 import { useUIActions } from './UIContext.jsx';
 import { useSession } from './SessionContext.jsx';
-
-const CoreContentContext = createContext(null);
 
 /* PN-02 (auditoria Port Neutral 261025) · Defensa en profunditat: este
    proveïdor viu per damunt de la barrera de ruta (App.jsx), i una llista mal
@@ -22,8 +23,23 @@ const nomesFitxes = (valor) => {
   return valor.every(esFitxa) ? valor : valor.filter(esFitxa);
 };
 
+/* Pla 261029_1605 (Bloc G, P1-71) · Blindatge HMR. En desenvolupament, una
+   recàrrega en calent pot deixar este proveïdor lligat a un IdentitatContext
+   vell (fronteres.test.js, useIdentitatDeLaBarra.js) i useIdentitat() tombava
+   el Mas sencer a l'ErrorBoundary. Sense proveïdor, la reserva és la d'un
+   visitant anònim, mai la d'una altra persona: el contingut core és del poble
+   (pobles, agents i personalització) i no depén de l'actor, i la clau d'àmbit
+   'anon' no coincidix amb cap «tipus::id». En producció IdentitatProvider
+   sempre embolcalla l'App (PedraSecaEmbed.jsx). És una guarda defensiva.
+   Gauntlet 261029 (cicle 1) · La causa del context duplicat s'ha tancat a
+   l'arrel: els createContext de l'arrel viuen a objectesDeContext.js, que no
+   importa res del projecte, i una instància nova d'este mòdul o de
+   SessionContext.jsx ja no en porta cap de nou (objectesDeContext.test.jsx).
+   Per això useSession(), davall, continua exigint el seu proveïdor. */
+const IDENTITAT_DE_RESERVA = Object.freeze({ actorId: null, actorKey: 'anon' });
+
 export function CoreContentProvider({ children, config }) {
-  const { actorId, actorKey } = useIdentitat();
+  const { actorId, actorKey } = useIdentitatOpcional() || IDENTITAT_DE_RESERVA;
   const { currentUser } = useSession();
   const { setGlobalStatus } = useUIActions();
   /* Decisió 2 del Mestre (261007) · Renovació silenciosa. La clau d'àmbit és

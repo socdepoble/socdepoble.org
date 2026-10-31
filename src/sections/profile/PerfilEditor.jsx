@@ -13,7 +13,7 @@ import { DialegEmoticona } from '../../components/universal/classificacio/Dialeg
 import { carregaCatalegEmojis } from '../notes/canalEmojis.js';
 import { bloqueigDeFitxa, textosDeFitxa } from './visibilitatFitxa.js';
 import {
-  CAMPS_FITXA, LIMITS_TEXT, copyrightDeFitxa, documentDeFitxa, fitxaDeLectura, llargariaDeCamp, menaDeFitxa, retallaCamp, textDeCamp,
+  CAMPS_FITXA, LIMITS_TEXT, copyrightDeFitxa, documentDeFitxa, fitxaDeLectura, fitxaPublicada, llargariaDeCamp, menaDeFitxa, retallaCamp, textDeCamp,
   valorPerDesar,
 } from './perfilCamps.js';
 import { ENTITATS_FITXA } from './perfilEscriptor.js';
@@ -136,7 +136,9 @@ export const resumEdicioAvancadaDe = (mena) => {
   if (mena === 'organitzacio') return 'Canvia el logotip, afig la foto de capçalera i gestiona els drets i les dades';
   return 'Canvia l’avatar, afig la foto de capçalera i gestiona els drets i les dades';
 };
-const DESTI_FOCUS_RANURA = '.sdp-editor-document .sdp-edicio-avancada__logotip button:not(:disabled), .sdp-editor-document .page-title-logo-personalitzat button:not(:disabled)';
+/* Cicle 3 del Gauntlet (261030, VD) · La ranura del desplegable es diu amb
+   data-sdp-ranura (UniversalEditorShell): era una classe sense estil. */
+const DESTI_FOCUS_RANURA = '.sdp-editor-document [data-sdp-ranura="logotip"] button:not(:disabled), .sdp-editor-document .page-title-logo-personalitzat button:not(:disabled)';
 
 /* L'arrel on buscar-los: la del control que ha obert el diàleg, mentre és al
    DOM (dins del Web Component, el seu shadow root, que és tancat i cap
@@ -200,6 +202,12 @@ export const ETIQUETA_GUARDA_ENQUADRE = 'Guardar enquadre';
 /* Lògica d'Usuari (T4): la fitxa d'un agent IA es diu clarament el que és
    (ETIQUETA_IA ve de fitxaDePerfil.js, la mateixa de la seua píndola). */
 export const AVIS_FITXA_IA = 'Esta fitxa és d’una intel·ligència artificial de Sóc de Poble. La mantenen les persones que administren l’entitat; el que hi escrigues és el que veurà tot el poble.';
+
+/* P1-59 (a) (Llibre Mestre, Fita 23, «Didàctica Activa»; doctrina anti-efecte
+   Facebook del Mestre, 27-10-2026) · El text fantasma del cos buit de la fitxa
+   personal: desapareix en escriure i torna quan el cos queda buit. El botó i
+   el seu lloc són els de DetallEspai («dalt de la llista d’apartats»). */
+export const PLACEHOLDER_COS_PERSONA = 'Este és el teu perfil personal. Si tens una empresa, un comerç, un taller o una associació, crea-la amb el botó NOVA ORG, dalt de la llista d’apartats, per a tindre logotip, lema i presència pública als pobles.';
 
 /**
  * La fitxa de la persona, de l'organització o d'un agent IA, amb l'Editor
@@ -934,6 +942,15 @@ export function PerfilEditor({ identitat }) {
         labels: etiquetes,
         ...(logoDeLectura ? { logoEntitat: logoDeLectura } : null),
         ...(avatarDeCapcalera ? { avatarAutor: avatarDeCapcalera } : null),
+        /* Gauntlet 261030 (cicle 3, traduir-perfil-lectura-fitxa-no-publica;
+           TC3.2) · Traduir només envia al motor una fitxa pública
+           (fitxaPublicada: is_public de la persona, visibility 'public' de
+           l'organització), la mateixa regla que /perfil/:id
+           (PerfilPublicSection · fitxaTraduible). La d'una entitat només per
+           als membres, o la pròpia fitxa privada amb una baixa en curs, no.
+           La fila de reserva no sap la visibilitat de veres (la lectura ha
+           fallat): tampoc (fallada tancada). El botó no canvia: avisa. */
+        traduccio: fitxaPublicada(identitat) && identitat?.dades?.reserva !== true,
       },
       updateLocal,
       saveRemote,
@@ -949,6 +966,12 @@ export function PerfilEditor({ identitat }) {
          (la del Bloc la passa el Bloc). El null explícit es queda. */
       posicioEines: 'davall-entradilla',
       seedContent: null,
+      /* P1-59 (a) (Llibre Mestre, Fita 23: «Didàctica Activa»; guàrdia
+         nocturna 261030) · Al cos buit de la fitxa d'una PERSONA que la pot
+         editar, el text fantasma que l'adreça a NOVA ORG si té una empresa.
+         No és cap llavor: no s'escriu ni es desa (placeholderCos.js). Les
+         organitzacions i els agents, cap clau nova. */
+      ...(mena === 'persona' && potEditar ? { placeholderCos: PLACEHOLDER_COS_PERSONA } : null),
       /* Onada 4 (retallador senzill, ordre del Mestre 261008) · Derogat el
          botó únic de T35 («Editar capçalera i avatar» i el seu diàleg): la
          capçalera té el seu botó, «Capçalera», que diu ABANS de triar què

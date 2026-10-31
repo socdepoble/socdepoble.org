@@ -222,7 +222,12 @@ export default function NotesEditor({ activeNote, onToast = null }) {
     heroAlt: 'Una llibreta oberta amb algú escrivint',
     content: NOTA_BENVINGUDA.content,
     labels: etiquetesDeNota(NOTA_BENVINGUDA, noteFolders, SENSE_PARAMS),
-    copyright: '© Sóc de Poble'
+    copyright: '© Sóc de Poble',
+    /* Gauntlet 261030 (cicle 3, traduir-perfil-lectura-fitxa-no-publica) ·
+       La nota de benvinguda és text del sistema, públic: Traduir hi continua
+       actiu (DocumentEditor · EmptyDocumentPage només el deixa actiu amb la
+       marca). Cap text de les notes de la persona no passa per ací. */
+    traduccio: true
   }), [noteFolders, t]);
 
   /* ── Sandbox del Foraster ────────────────────────────────────────────────

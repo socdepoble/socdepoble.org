@@ -11,11 +11,28 @@
  * quadrat apilat, el xebró i els noms dels seus grups (de `comunitats`, les
  * de useXat()), mai «Cap missatge.»; un grup, la icona de persones; un canal,
  * el megàfon; i totes, el tipus en text per a lectors de pantalla.
+ *
+ * F4 (D.3, ordre del Mestre del 261030) · La píndola de la llista (Tot · No
+ * llegits · Preferits · Grups) també mana sobre la cerca (MITJÀ-01). Sense
+ * cap resultat amb una píndola que no és «Tot» (`pindola`, el seu nom) però
+ * amb resultats a «Tot» (`resultatsATot`, que compta XatSection), l'estat buit
+ * no diu «Cap resultat per a…», que és fals: diu que és la píndola, quants n'hi
+ * ha a «Tot» i porta un botó que hi torna (`onTornaATot`).
+ *
+ * Gauntlet F4 (xat-estat-buit-zona-viva-reemplacada) · Una sola zona viva,
+ * sempre muntada mentre hi ha cerca i sempre el primer fill: un lector (NVDA,
+ * JAWS, sovint VoiceOver) no anuncia una regió role="status" que naix amb el
+ * text ja posat (la mateixa regla que la llista de XatSection, Revisió 261008).
+ * L'estat buit de sempre és eixe node, visible i amb la classe de sempre; amb
+ * resultats, o amb l'estat buit per la píndola (que pinta el seu text i el
+ * botó a banda, sense role), el node és només per al lector. Després de
+ * «Torna a «Tot»», diu quants resultats hi ha a «Tot» fins que la cerca canvia.
  */
-import { useId, useMemo } from 'react';
+import { useId, useMemo, useState } from 'react';
 import { ChevronRight } from 'lucide-react';
 import { etiquetaLlista } from '../temps.js';
 import { FILTRES_CERCA_XAT } from '../cercaXat.js';
+import { senseMarquesDeNegreta } from '../negreta.js';
 import FilaPersona from './FilaPersona.jsx';
 import { AvatarComunitat, AvatarFil, esComunitat, etiquetaDeTipus, nomsDelsGrups } from './FilaConversa.jsx';
 
@@ -54,7 +71,8 @@ function NomDeFila({ fil, parts, t }) {
 }
 
 export default function ResultatsCercaXat({
-  resultat, terme = '', filtre = null, onObriFil, onObriPersona, obrintAmb = null, locale, t, comunitats = CAP
+  resultat, terme = '', filtre = null, onObriFil, onObriPersona, obrintAmb = null, locale, t, comunitats = CAP,
+  pindola = null, resultatsATot = 0, onTornaATot = null
 }) {
   const { converses = [], persones = [], missatges = [] } = resultat || {};
   const filtreActiu = FILTRES_CERCA_XAT.find((f) => f.id === filtre) || null;
@@ -71,21 +89,64 @@ export default function ResultatsCercaXat({
        amb «$'» o «$&» es repetix tal qual (moderacio.js, omple). */
     buit = t('section.xat.cerca.capResultat', 'Cap resultat per a «{terme}».').replace('{terme}', () => netTerme);
   }
+  /* F4 (D.3) · Buit només per la píndola: la veritat i el camí de tornada. */
+  const nATot = Number(resultatsATot) || 0;
+  let amagatsPerLaPindola = null;
+  if (buit && pindola && nATot > 0 && typeof onTornaATot === 'function') {
+    const tot = t('section.xat.filtres.tot', 'Tot');
+    const aTot = nATot === 1
+      ? t('section.xat.cerca.pindola.aTot.un', 'Hi ha {n} resultat a «{tot}».')
+      : t('section.xat.cerca.pindola.aTot', 'Hi ha {n} resultats a «{tot}».');
+    const quantsATot = aTot.replace('{n}', () => String(nATot)).replace('{tot}', () => tot);
+    amagatsPerLaPindola = {
+      text: `${t('section.xat.cerca.pindola.buit', 'Cap resultat amb el filtre «{filtre}».').replace('{filtre}', () => pindola)} ${quantsATot}`,
+      quantsATot,
+      boto: t('section.xat.cerca.pindola.tornaATot', 'Torna a «{tot}»').replace('{tot}', () => tot)
+    };
+  }
+
+  /* Gauntlet F4 · «Torna a «Tot»» deixa a la zona viva quants resultats hi
+     ha a «Tot» (el text que ja es llegia), mentre el terme i el filtre de la
+     cerca siguen els mateixos i ja sense píndola. Quan deixa de valdre,
+     s'oblida (estat derivat del render anterior): tornar després a «Tot» amb
+     la píndola no el repetix. */
+  const [tornada, setTornada] = useState(null);
+  const tornadaVigent = Boolean(tornada) && !buit && !pindola
+    && tornada.terme === netTerme && tornada.filtre === filtre;
+  if (tornada && !tornadaVigent) setTornada(null);
+  const tornaATot = () => {
+    setTornada({ text: amagatsPerLaPindola.quantsATot, terme: netTerme, filtre });
+    onTornaATot();
+  };
+
+  let anunci = '';
+  if (amagatsPerLaPindola) anunci = amagatsPerLaPindola.text;
+  else if (buit) anunci = buit;
+  else if (tornadaVigent) anunci = tornada.text;
+  /* Només l'estat buit de sempre es veu en la zona viva mateixa. */
+  const zonaVisible = Boolean(buit) && !amagatsPerLaPindola;
 
   return (
     <div className="sdp-xat-resultats" role="region" aria-label={t('section.xat.cerca.resultats', 'Resultats de la cerca')}>
-      {buit ? <p className="sdp-workspace-state" role="status">{buit}</p> : null}
+      <p className={zonaVisible ? 'sdp-workspace-state' : 'sdp-nomes-lector'} role="status">{anunci}</p>
+      {amagatsPerLaPindola ? (
+        <div className="sdp-workspace-state">
+          <p>{amagatsPerLaPindola.text}</p>
+          <button type="button" className="sdp-xat-pindola" onClick={tornaATot}>{amagatsPerLaPindola.boto}</button>
+        </div>
+      ) : null}
 
       {converses.length ? (
         <Grup titol={t('section.xat.cerca.grup.converses', 'Converses')}>
           {converses.map(({ fil, parts, partsUltim }) => {
             const comunitat = esComunitat(fil);
-            let previa = fil.ultimText || t('section.xat.capMissatge', 'Cap missatge.');
+            /* IDEA-53 · Les previes, sense les marques de la negreta. */
+            let previa = senseMarquesDeNegreta(fil.ultimText) || t('section.xat.capMissatge', 'Cap missatge.');
             if (comunitat) previa = grupsPerComunitat.get(String(fil.id)) || '';
             else if (partsUltim?.length) previa = <Ressaltat parts={partsUltim} />;
             return (
               <li key={`c-${fil.id}`}>
-                <button type="button" className={`sdp-xat-fila${comunitat ? ' sdp-xat-fila--comunitat' : ''}`} onClick={() => onObriFil(fil)}>
+                <button type="button" className={comunitat ? 'sdp-xat-fila sdp-xat-fila--comunitat' : 'sdp-xat-fila'} onClick={() => onObriFil(fil)}>
                   {comunitat ? <AvatarComunitat fil={fil} nom={nomDe(fil, t)} /> : <AvatarFil fil={fil} nom={nomDe(fil, t)} />}
                   <span className="sdp-xat-fila__cos">
                     <span className="sdp-xat-fila__cap">
@@ -134,7 +195,7 @@ export default function ResultatsCercaXat({
                   <span className="sdp-xat-fila__peu">
                     <span className="sdp-xat-fila__previa">
                       {missatge.sender !== 'me' && missatge.author ? `${missatge.author}: ` : null}
-                      {parts?.length ? <Ressaltat parts={parts} /> : missatge.text}
+                      {parts?.length ? <Ressaltat parts={parts} /> : senseMarquesDeNegreta(missatge.text)}
                     </span>
                   </span>
                 </span>

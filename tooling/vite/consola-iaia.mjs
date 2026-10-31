@@ -1,9 +1,6 @@
 /**
  * consola-iaia.mjs — Middleware només-dev que agrega l'estat de l'eixam.
  *
- * DESTÍ: tooling/vite/consola-iaia.mjs (substitució sencera; l'única
- * diferència amb l'original és la ruta RUTA_MAPA i el seu import).
- *
  * Serveix:
  *   GET /__iaia/consola.json  rebuts Matrix, consums de tòkens, inventari de
  *                             skills (manifest vs disc), segell i diari immunitari.
@@ -13,12 +10,30 @@
  *                             que declara cada plataforma i els NOMS dels
  *                             artefactes de ../_builds_de_poble
  *                             (sdp.empaquetats.v1; src/sections/consola/empaquetats.js).
+ *   GET /__iaia/govern.json   ordre del Mestre del 30-10-2026 (B2) · la matriu
+ *                             viva del Govern del Mestre (sdp.govern.v1),
+ *                             compilada en cada petició per
+ *                             tooling/brain/fonts-govern.mjs des del Llibre
+ *                             Mestre i el HEAD; un error, 500 amb JSON
+ *                             { schema, codi, error } (servixGovern).
+ *
+ * Gauntlet f4b (govern, «text-falta-un-pas-de-maria-ara-fals») · Derogat:
+ * «DESTÍ: … (substitució sencera; l'única diferència amb l'original és la
+ * ruta RUTA_MAPA i el seu import)», d'abans de les rutes dels empaquetats i
+ * del Govern.
  *
  * `apply: 'serve'` → el build de producció no coneix estes rutes.
  * No s'escriu res a disc. No es fa cap crida de xarxa.
+ *
+ * Decisió del Mestre (31-10-2026) · consolaIaia() torna dos connectors: el
+ * de desenvolupament d'ací dalt (consolaIaiaDev, les quatre rutes vives) i
+ * sdp:consola-instantania (apply 'build', instantaniaConsola, al final del
+ * fitxer), que emet a dist/__iaia/ la instantània SANEJADA de les quatre
+ * fonts amb els mateixos productors (tooling/vite/instantania-consola.mjs).
  */
 import fs from 'node:fs';
 import path from 'node:path';
+import { loadEnv } from 'vite';
 import { PROJECT_DIR, AGENTS_DIR, SKILLS_DIR } from '../wiki/lib/project_paths.mjs';
 import { parseFrontmatter } from '../wiki/lib/frontmatter.mjs';
 import { recullMapa } from '../brain/mapa-consola.mjs';
@@ -226,7 +241,62 @@ function servix(res, estat, cos) {
   res.end(JSON.stringify(cos));
 }
 
-export default function consolaIaia() {
+/* ── GET /__iaia/govern.json · ordre del Mestre del 30-10-2026 (B2) ───────
+   La matriu viva del Govern del Mestre (sdp.govern.v1, la forma que espera
+   normalitzaGovern de src/sections/consola/govern/governContent.js),
+   compilada en cada petició per tooling/brain/fonts-govern.mjs a partir del
+   Llibre Mestre i del HEAD: només lectura del Llibre i de git, cap
+   escriptura. Camí de govern escrit per ordre explícita del Mestre.
+   El compilador es carrega pel seu camí amb ?v=<mtime> (el patró de
+   generadorDe, federacio-iaia.mjs): no és cap dependència de la
+   configuració, i un canvi seu es veu sense reiniciar el servidor.
+   Gauntlet f4b (govern, «vocabulari-en-cache») · El vocabulari de la
+   Consola (estatDeStatus de src/sections/consola/govern/matriuGovern.js)
+   també: el compilador l'importa sense marca, i Node el guardava per a tota
+   la vida del servidor mentre el client el rep nou. La guarda contra el verd
+   sense commit (estatDelLlibre) rep el d'ara (vocabulariGovern).
+   Un error controlat (Llibre absent, git absent, taula mal formada) es diu
+   amb 500 i un JSON { schema, codi, error } amb el text fix del compilador,
+   sense camins; qualsevol altre, amb un text fix. Mai l'HTML de l'SPA: la
+   Consola el pinta com a error, amb el text del compilador (carregaGovern),
+   no com a absència. */
+export const RUTA_GOVERN = '/__iaia/govern.json';
+export const ESQUEMA_GOVERN = 'sdp.govern.v1';
+const COMPILADOR_GOVERN = new URL('../brain/fonts-govern.mjs', import.meta.url);
+const VOCABULARI_GOVERN = new URL('../../src/sections/consola/govern/matriuGovern.js', import.meta.url);
+export const ERROR_GOVERN_INTERN = 'No s’ha pogut compilar la matriu del Govern.';
+
+/** Un mòdul pel seu camí, amb la marca del seu mtime: un canvi seu es carrega de nou sense reiniciar el servidor. */
+export const carregaAmbMarca = (url) => import(`${url.href}?v=${Math.trunc(fs.statSync(url).mtimeMs)}`);
+/** El compilador del Govern, tornat a carregar quan el fitxer canvia. */
+export const compiladorGovern = () => carregaAmbMarca(COMPILADOR_GOVERN);
+/** El vocabulari de la Consola (matriuGovern.js), tornat a carregar quan el fitxer canvia. */
+export const vocabulariGovern = () => carregaAmbMarca(VOCABULARI_GOVERN);
+
+/** La matriu del Govern compilada ara (o a l'instant `ara`, per a la instantània): el compilador i el vocabulari d'ara. */
+export async function compilaGovern({ arrel = PROJECT_DIR, compilador = compiladorGovern, vocabulari = vocabulariGovern, ara } = {}) {
+  const [{ recullGovern }, { estatDeStatus }] = await Promise.all([compilador(), vocabulari()]);
+  return recullGovern(arrel, ara === undefined ? { estatDeStatus } : { ara: new Date(ara), estatDeStatus });
+}
+
+/** Respon /__iaia/govern.json: 200 amb la matriu, o 500 amb l'error en JSON. */
+export async function servixGovern(res, { arrel = PROJECT_DIR, compilador = compiladorGovern, vocabulari = vocabulariGovern } = {}) {
+  try {
+    servix(res, 200, await compilaGovern({ arrel, compilador, vocabulari }));
+  } catch (e) {
+    // Pel nom i no per instanceof: cada versió del compilador porta la seua classe.
+    const controlat = e?.name === 'ErrorGovern' && typeof e.codi === 'string' && typeof e.message === 'string';
+    servix(res, 500, { schema: ESQUEMA_GOVERN, codi: controlat ? e.codi : 'intern', error: controlat ? e.message : ERROR_GOVERN_INTERN });
+  }
+}
+
+/* `arrelGovern`, `compiladorGovern` i `vocabulariGovern` són per a les proves;
+   sense opcions, el connector de sempre més la ruta del Govern.
+   Decisió del Mestre (31-10-2026) · El connector de desenvolupament es diu
+   consolaIaiaDev; consolaIaia() (vite.config.js) el torna amb el del build. */
+export function consolaIaiaDev({
+  arrelGovern = PROJECT_DIR, compiladorGovern: compilador = compiladorGovern, vocabulariGovern: vocabulari = vocabulariGovern
+} = {}) {
   return {
     name: 'sdp:consola-iaia',
     apply: 'serve',
@@ -260,6 +330,103 @@ export default function consolaIaia() {
         try { servix(res, 200, recullEmpaquetats(PROJECT_DIR)); }
         catch { servix(res, 500, { error: 'No s’han pogut llegir els empaquetats.' }); }
       });
+      // Ordre del Mestre del 30-10-2026 (B2) · La matriu viva del Govern del Mestre (servixGovern).
+      server.middlewares.use(RUTA_GOVERN, (req, res) => {
+        if (!local(req)) {
+          res.statusCode = 403;
+          res.end('Forbidden');
+          return;
+        }
+        servixGovern(res, { arrel: arrelGovern, compilador, vocabulari });
+      });
     }
   };
+}
+
+/* ── Decisió del Mestre (31-10-2026) · La instantània sanejada del build ──
+   «Sí, vull que la web publicada mostre una instantània sanejada amb totes les
+   dades reals de la Consola a qualsevol usuari» (prompt 261030_2208, T2.2).
+   El build web emet a dist/__iaia/ les quatre fonts que servix el middleware,
+   amb ELS MATEIXOS productors (recullConsola, recullMapa, compilaGovern i
+   recullEmpaquetats), passades pel sanejador de
+   tooling/vite/instantania-consola.mjs: fail-closed, un secret o una dada que
+   no sap emmascarar atura el build sense mostrar el valor. El sanejador es
+   carrega pel seu camí dins del ganxo (carregaAmbMarca): no és cap dependència
+   de la configuració, i un canvi seu no reinicia el servidor de desenvolupament.
+   El connector segella al bundle import.meta.env.SDP_CONSOLA_INSTANTANIA ('1'):
+   la Consola publicada només demana /__iaia/*.json si el build l'ha emesa
+   (src/sections/consola/fontsConsola.js). Ni vite.standalone.config.js
+   (WordPress) ni vite.natiu.config.js registren consolaIaia(): no porten
+   instantània i no la demanen. Un build SSR no n'emet. */
+const MODUL_INSTANTANIA = new URL('./instantania-consola.mjs', import.meta.url);
+/** La bandera que el build web segella al bundle quan emet la instantània. */
+export const BANDERA_INSTANTANIA = 'import.meta.env.SDP_CONSOLA_INSTANTANIA';
+
+/* consola.json data la lectura amb el rellotge d'ara (generat i fonts.*.h);
+   a la instantània, amb el de la instantània (SOURCE_DATE_EPOCH en un build
+   reproduïble): dos builds de la mateixa font donen els mateixos bytes. */
+const ambRellotge = (consola, ara) => ({
+  ...consola,
+  generat: new Date(ara).toISOString(),
+  fonts: Object.fromEntries(Object.entries(consola?.fonts ?? {})
+    .map(([clau, font]) => [clau, font && typeof font === 'object' && 'h' in font ? { ...font, h: ara } : font]))
+});
+
+/* Gauntlet f9 (F7-source-date-epoch-pinta-tota-la-matriu-obsoleta) · Cap temps
+   de paret de la instantània passa del seu rellotge: es fixa a l'instant de la
+   instantània (la regla de reproducible-builds per als mtime). La matriu data
+   `at` amb el mtime del Llibre; en un build amb SOURCE_DATE_EPOCH sobre una
+   còpia neta el Llibre és posterior al commit, i la Consola publicada (que
+   jutja la matriu amb el rellotge de la instantània) ho pintaria tot obsolet
+   per «data futura». Sense SOURCE_DATE_EPOCH el rellotge és el d'ara i no
+   canvia res. */
+const fixaAlRellotge = (iso, ara) => (typeof iso === 'string' && Date.parse(iso) > ara ? new Date(ara).toISOString() : iso);
+const ambAt = (part, ara) => (part && typeof part === 'object' && !Array.isArray(part) && 'at' in part ? { ...part, at: fixaAlRellotge(part.at, ara) } : part);
+/** La matriu del Govern amb `mcr.at` i `trasllat.at` fixats a l'instant `ara` si el passen. */
+export const governAlRellotge = (govern, ara) => (govern && typeof govern === 'object' && !Array.isArray(govern)
+  ? { ...govern, mcr: ambAt(govern.mcr, ara), trasllat: ambAt(govern.trasllat, ara) }
+  : govern);
+
+/** Els productors de la instantània: els del middleware, amb el rellotge `ara` (ms). */
+export function productorsDeLaInstantania({ arrel = PROJECT_DIR, ara = Date.now(), compilador = compiladorGovern, vocabulari = vocabulariGovern } = {}) {
+  return {
+    consola: () => ambRellotge(recullConsola(), ara),
+    mapa: () => recullMapa(arrel, { ara }),
+    govern: async () => governAlRellotge(await compilaGovern({ arrel, compilador, vocabulari, ara }), ara),
+    empaquetats: () => recullEmpaquetats(arrel, { ara: new Date(ara) })
+  };
+}
+
+/** El connector del build web: emet __iaia/<font>.json sanejats i segella la bandera. `arrel` i `productors` són per a les proves. */
+export function instantaniaConsola({ arrel = null, productors = productorsDeLaInstantania } = {}) {
+  let configuracio = null;
+  return {
+    name: 'sdp:consola-instantania',
+    apply: 'build',
+    config(config) {
+      if (config?.build?.ssr) return undefined;
+      return { define: { [BANDERA_INSTANTANIA]: JSON.stringify('1') } };
+    },
+    configResolved(config) { configuracio = config; },
+    async generateBundle() {
+      if (!configuracio || configuracio.build?.ssr) return;
+      const arrelDelProjecte = arrel ?? configuracio.root;
+      const modul = await carregaAmbMarca(MODUL_INSTANTANIA);
+      const carpetaEntorn = typeof configuracio.envDir === 'string' ? configuracio.envDir : arrelDelProjecte;
+      const ara = modul.instantDeLaInstantania(process.env);
+      const { fitxers, recompte, errors } = await modul.construeixInstantania({
+        productors: productors({ arrel: arrelDelProjecte, ara }),
+        agulles: modul.agullesDeLEntorn({ entorn: loadEnv(configuracio.mode, carpetaEntorn, ''), arrel: arrelDelProjecte })
+      });
+      for (const [fileName, source] of fitxers) this.emitFile({ type: 'asset', fileName, source });
+      const emmascarats = Object.entries(recompte).map(([classe, n]) => `${n} ${classe}`).join(', ') || 'res';
+      configuracio.logger.info(`[sdp:consola-instantania] ${fitxers.size} fonts a ${modul.CARPETA_INSTANTANIA}/ · emmascarat: ${emmascarats}`);
+      for (const { font, codi } of errors) configuracio.logger.warn(`[sdp:consola-instantania] ${font}.json ix com a error (${codi}): la Consola publicada ho dirà.`);
+    }
+  };
+}
+
+/** vite.config.js: el connector de desenvolupament i el de la instantània del build. */
+export default function consolaIaia(opcions = {}) {
+  return [consolaIaiaDev(opcions), instantaniaConsola()];
 }

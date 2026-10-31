@@ -35,8 +35,8 @@ function regla(selector) {
 }
 
 const FONTS = ['esdeveniment', 'publicacio', 'producte', 'pagina', 'agenda'];
-const cosAlies = /\{([^{}]*--sdp-cal-hui-fons\s*:[^{}]*)\}/.exec(modules)?.[1];
-assert(cosAlies, 'modules.css no declara els àlies --sdp-cal-*');
+const cosAlies = /\{([^{}]*--cal-hui-fons\s*:[^{}]*)\}/.exec(modules)?.[1];
+assert(cosAlies, 'modules.css no declara els àlies --cal-*');
 const ALIES = declaracions(cosAlies);
 const deFont = (font) => regla(`.sdp-cal-font--${font}`);
 
@@ -65,7 +65,7 @@ for (const [tema, mapaTema] of Object.entries(TEMES)) {
 
   test(`${tema}: el text de cada bloc i de cada barra sobre el seu fons passa de 4,5:1`, (t) => {
     for (const font of FONTS) {
-      const r = contrast('var(--sdp-cal-bloc-text)', 'var(--sdp-cal-bloc-fons)', { ...mapa, ...deFont(font) });
+      const r = contrast('var(--cal-bloc-text)', 'var(--cal-bloc-fons)', { ...mapa, ...deFont(font) });
       t.diagnostic(`${tema} · bloc ${font}: ${r.toFixed(2)}:1`);
       assert(r >= 4.5, `${font}: ${r.toFixed(2)}:1`);
     }
@@ -73,7 +73,7 @@ for (const [tema, mapaTema] of Object.entries(TEMES)) {
 
   test(`${tema}: la vora d'inici de cada bloc es distingix de la targeta (≥ 3:1)`, (t) => {
     for (const font of FONTS) {
-      const r = contrast('var(--sdp-cal-bloc-vora)', 'var(--sdp-fons-targeta)', { ...mapa, ...deFont(font) });
+      const r = contrast('var(--cal-bloc-vora)', 'var(--sdp-fons-targeta)', { ...mapa, ...deFont(font) });
       t.diagnostic(`${tema} · vora ${font}: ${r.toFixed(2)}:1`);
       assert(r >= 3, `${font}: ${r.toFixed(2)}:1`);
     }
@@ -90,8 +90,8 @@ for (const [tema, mapaTema] of Object.entries(TEMES)) {
   });
 
   test(`${tema}: el cercle de hui (número ≥ 4,5:1) es distingix de la targeta i del triat (≥ 3:1)`, (t) => {
-    const numero = contrast('var(--sdp-cal-hui-text)', 'var(--sdp-cal-hui-fons)', mapa);
-    const [targeta, triat] = ['var(--sdp-fons-targeta)', 'var(--sdp-accio-subtil)'].map((fons) => contrast('var(--sdp-cal-hui-fons)', fons, mapa));
+    const numero = contrast('var(--cal-hui-text)', 'var(--cal-hui-fons)', mapa);
+    const [targeta, triat] = ['var(--sdp-fons-targeta)', 'var(--sdp-accio-subtil)'].map((fons) => contrast('var(--cal-hui-fons)', fons, mapa));
     t.diagnostic(`${tema} · hui: número ${numero.toFixed(2)}:1, cercle sobre la targeta ${targeta.toFixed(2)}:1, sobre el triat ${triat.toFixed(2)}:1`);
     assert(numero >= 4.5 && targeta >= 3 && triat >= 3);
   });
@@ -104,11 +104,11 @@ for (const [tema, mapaTema] of Object.entries(TEMES)) {
   });
 
   test(`${tema}: la línia i el punt d'«ara» es distingixen de la targeta i del fons de cada bloc (≥ 3:1)`, (t) => {
-    const targeta = contrast('var(--sdp-cal-ara)', 'var(--sdp-fons-targeta)', mapa);
+    const targeta = contrast('var(--cal-ara)', 'var(--sdp-fons-targeta)', mapa);
     t.diagnostic(`${tema} · ara sobre la targeta: ${targeta.toFixed(2)}:1`);
     assert(targeta >= 3);
     for (const font of FONTS) {
-      const r = contrast('var(--sdp-cal-ara)', 'var(--sdp-cal-bloc-fons)', { ...mapa, ...deFont(font) });
+      const r = contrast('var(--cal-ara)', 'var(--cal-bloc-fons)', { ...mapa, ...deFont(font) });
       t.diagnostic(`${tema} · ara sobre el bloc ${font}: ${r.toFixed(2)}:1`);
       assert(r >= 3, `${font}: ${r.toFixed(2)}:1`);
     }
@@ -127,22 +127,22 @@ for (const [tema, mapaTema] of Object.entries(TEMES)) {
 test('les regles de la setmana pinten amb eixes parelles', () => {
   assert.equal(regla('.sdp-cal-setmana').background, 'var(--sdp-fons-targeta)');
   const bloc = regla('.sdp-cal-setmana__bloc');
-  assert.deepEqual([bloc.background, bloc.color], ['var(--sdp-cal-bloc-fons)', 'var(--sdp-cal-bloc-text)']);
-  assert.equal(bloc['border-inline-start'], 'var(--sdp-space-1) solid var(--sdp-cal-bloc-vora)');
-  assert.deepEqual([regla('.sdp-cal-barra').background, regla('.sdp-cal-barra').color], ['var(--sdp-cal-bloc-fons)', 'var(--sdp-cal-bloc-text)']);
+  assert.deepEqual([bloc.background, bloc.color], ['var(--cal-bloc-fons)', 'var(--cal-bloc-text)']);
+  assert.equal(bloc['border-inline-start'], 'var(--sdp-space-1) solid var(--cal-bloc-vora)');
+  assert.deepEqual([regla('.sdp-cal-barra').background, regla('.sdp-cal-barra').color], ['var(--cal-bloc-fons)', 'var(--cal-bloc-text)']);
   const hui = regla('.sdp-cal-setmana .sdp-cal-dia[aria-current="date"] .sdp-cal-dia__numero');
-  assert.deepEqual([hui.background, hui.color], ['var(--sdp-cal-hui-fons)', 'var(--sdp-cal-hui-text)']);
+  assert.deepEqual([hui.background, hui.color], ['var(--cal-hui-fons)', 'var(--cal-hui-text)']);
   assert.equal(regla('.sdp-cal-setmana .sdp-cal-dia__numero').color, 'var(--sdp-text-titol)');
   assert.equal(regla('.sdp-cal-dia[aria-pressed="true"]').background, 'var(--sdp-accio-subtil)');
   assert.equal(regla('.sdp-cal-setmana__rotul').color, 'var(--sdp-text-suau)');
-  assert.equal(regla('.sdp-cal-setmana__ara').background, 'var(--sdp-cal-ara)');
-  assert.equal(regla('.sdp-cal-setmana__ara::before').background, 'var(--sdp-cal-ara)');
+  assert.equal(regla('.sdp-cal-setmana__ara').background, 'var(--cal-ara)');
+  assert.equal(regla('.sdp-cal-setmana__ara::before').background, 'var(--cal-ara)');
 });
 
 test('la capçalera és enganxosa i quadrada; la superfície retalla els cantons amb overflow: clip, que no fa contenidor de scroll', () => {
   const capcal = regla('.sdp-cal-setmana__capcal');
   assert.equal(capcal.position, 'sticky');
-  assert.equal(capcal['inset-block-start'], 'var(--sdp-cal-sostre)');
+  assert.equal(capcal['inset-block-start'], 'var(--cal-sostre)');
   assert.equal(capcal.background, 'var(--sdp-fons-targeta)');
   // Enganxada, uns cantons arredonits deixarien veure el que passa per davall.
   assert.equal(Object.keys(capcal).some((p) => p.includes('radius')), false, 'la capçalera no porta radi');
@@ -171,8 +171,8 @@ test('la tira: cap pista de la capçalera baixa de --sdp-touch (per davall de 7 
 /* D2 (ordre del Mestre, 261004), modules.css: la barra taronja universal es
    conserva a tots els amples; T38 s'ha revertit a components.css. */
 test('el sostre del sticky conserva les dues barres a tots els amples; en pantalla completa és zero', () => {
-  assert.equal(regla('.sdp-cal-setmana')['--sdp-cal-sostre'], 'calc(var(--sdp-alt-accio) * 2)');
-  assert.equal(regla('.sdp-pantalla-completa .sdp-cal-setmana.sdp-cal-setmana')['--sdp-cal-sostre'], '0px');
+  assert.equal(regla('.sdp-cal-setmana')['--cal-sostre'], 'calc(var(--sdp-alt-accio) * 2)');
+  assert.equal(regla('.sdp-pantalla-completa .sdp-cal-setmana.sdp-cal-setmana')['--cal-sostre'], '0px');
   assert.doesNotMatch(modules, /\.sdp-especimen \.sdp-cal-setmana\s*\{/);
   const components = llig('src/css/components.css').replace(/\/\*[\s\S]*?\*\//g, '');
   assert.doesNotMatch(components, /\.sdp-universal-page-container\s*>\s*section\.bar-orange\s*\{[^}]*display:\s*none/);

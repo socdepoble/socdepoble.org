@@ -402,9 +402,12 @@ test('P4 · al Snippet Curador no hi ha nota preparada', () => {
 });
 
 /* ── T7 · Closca i navegació (el recorregut sencer per la URL, a NotesSection.url.test.jsx) ── */
-test('T7 (P3) · el Bloc arrenca amb la columna de carpetes plegada en rail; (P5) el filtre inclou les subcarpetes', () => {
+/* Ordre del Mestre (30-10-2026) · CARPETES arrenca oberta com a la resta
+   d'espais: el Bloc no passa cap columnesInicials. La franja de 721 a 1023 px
+   la plega l'UniversalWorkspace per a tots (UniversalWorkspace.columnes.test.jsx). */
+test('Ordre del Mestre · el Bloc no força cap columna plegada (CARPETES oberta, com a la resta); (P5) el filtre inclou les subcarpetes', () => {
   render(<NotesSection />);
-  expect(mocks.props.columnesInicials).toEqual({ left: true });
+  expect(mocks.props.columnesInicials).toBeUndefined();
   expect(mocks.props.inclouDescendents).toBe(true);
 });
 

@@ -198,7 +198,8 @@ export function RegistrationStep({ isBusy, bloquejat = false, error, codiError =
         body={
           <>
             <p className="sdp-camp" role="status">
-              {abansCorreu}<strong>{confirmationEmail}</strong>{despresCorreu}
+              {/* Gauntlet 261030 (cicle 2) · translate="no": el correu no va mai a cap traductor (blocsTraduibles, el del navegador). */}
+              {abansCorreu}<strong translate="no">{confirmationEmail}</strong>{despresCorreu}
             </p>
             <div className="onboarding-card__action--ple">
               <button type="button" className="sdp-boto sdp-boto--secundari sdp-boto--ple" onClick={jaConfirmat}>

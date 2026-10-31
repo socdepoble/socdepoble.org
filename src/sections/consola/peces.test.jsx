@@ -12,7 +12,7 @@ vi.mock('../../app/contexts/RouterContext', () => ({
 }));
 vi.mock('@/components/universal/NotificationContext.jsx', () => ({ useToast: () => ({ showToast: vi.fn() }) }));
 import {
-  Desplegable, Mono, Privat, PrivacitatConsola, TargetaConsola, TargetaResum, Xifra, tornaAlCim
+  Desplegable, Mono, Privat, PrivacitatConsola, TargetaConsola, TargetaResum, Xifra, nomCurt, resumDeProblemes, tornaAlCim
 } from './peces.jsx';
 import { dataHoraDeBarra } from '../../components/universal/editorial.js';
 /* Onada 8 (261009) · La boina de Sóc de Poble porta al seu perfil
@@ -426,41 +426,77 @@ test('tornaAlCim torna a dalt el primer contenidor desplaçat i res més', () =>
 });
 
 /* Onada 6 (requisit 9: informació en superfície) · La targeta diu quins
-   problemes té, sense entrar: com a molt cinc i «i N més»; la ruta en <Mono>,
-   que el mode privacitat amaga; i continua portant a la seua pàgina. */
-const PROBLEMES = Array.from({ length: 7 }, (_, i) => (i % 2
+   problemes té, sense entrar: com a molt cinc línies i «i N més»; i continua
+   portant a la seua pàgina.
+   Ordre del Mestre, 30-10-2026 (/consola, punt 1.3: «Resum net a la portada
+   de la targeta») · La coberta ja no aboca rutes senceres: els problemes
+   iguals (la mateixa marca i el mateix text) fan una línia amb quants casos
+   són, i el que només és una ruta es diu pel nom curt, en <Mono>. «i N més»
+   compta casos. La llista detallada, amb cada ruta, és a la pàgina.
+   Derogat EN PART: la ruta sencera en <Mono> a cada línia de la coberta. */
+const PROBLEMES = Array.from({ length: 9 }, (_, i) => (i % 2
   ? { clau: `p${i}`, text: `skill-${i} · orfe` }
   : { clau: `p${i}`, text: 'fitxer-absent', ruta: `_wiki_de_poble/${i}.md` }));
 
-test('Onada 6 · TargetaConsola: els problemes a la vista, com a molt cinc, i «i N més»', () => {
+test('Ordre del Mestre 30-10-2026 · TargetaConsola: un resum net a la coberta, sense rutes senceres, com a molt cinc línies i «i N més»', () => {
   render(<TargetaConsola icona={Puzzle} titol="Avisos i salut" subtitol="Per a saber què està trencat"
-    entradilla="Els avisos del Mapa." metriques={['7 avisos']} estats={[{ clau: 'alta', text: '7 avisos alts', to: 'error' }]}
+    entradilla="Els avisos del Mapa." metriques={['9 avisos']} estats={[{ clau: 'alta', text: '9 avisos alts', to: 'error' }]}
     problemes={PROBLEMES} a="/consola/salut" />);
   const llista = document.querySelector('ul.sdp-consola__problemes');
   expect(llista.className).toBe('sdp-consola__evidencies sdp-consola__problemes');
   expect(llista.getAttribute('aria-label')).toBe('Quins problemes hi ha');
+  // Els cinc «fitxer-absent» fan una línia; les quatre skills, una cada una.
   expect([...llista.children].map((li) => li.textContent)).toEqual([
-    'fitxer-absent · _wiki_de_poble/0.md', 'skill-1 · orfe', 'fitxer-absent · _wiki_de_poble/2.md', 'skill-3 · orfe',
-    'fitxer-absent · _wiki_de_poble/4.md', 'i 2 més'
+    'fitxer-absent (5 casos)', 'skill-1 · orfe', 'skill-3 · orfe', 'skill-5 · orfe', 'skill-7 · orfe'
   ]);
-  // La ruta, en tipografia de màquina; el text, tal qual.
-  expect([...llista.querySelectorAll('code.sdp-consola__mono')].map((c) => c.textContent))
-    .toEqual(['_wiki_de_poble/0.md', '_wiki_de_poble/2.md', '_wiki_de_poble/4.md']);
+  // Cap ruta a la coberta: la llista detallada és a la pàgina.
+  expect(llista.textContent).not.toContain('_wiki_de_poble/');
+  expect(llista.querySelector('code')).toBeNull();
   // Darrere dels estats, dins del cos; la targeta continua portant a la seua pàgina.
   expect(llista.previousElementSibling.className).toBe('sdp-consola__estats');
   expect(llista.closest('.sp-card-text')).not.toBeNull();
   expect(screen.getByRole('article').querySelector('a.sp-card-link-overlay').getAttribute('href')).toBe('/consola/salut');
 });
 
-test('Onada 6 · TargetaConsola: amb el mode privacitat, les rutes dels problemes s’amaguen i els noms es lligen', () => {
+test('Ordre del Mestre 30-10-2026 · resumDeProblemes: agrupa els iguals, conserva l’ordre, talla a cinc línies i «resta» compta casos', () => {
+  const llarg = [
+    ...Array.from({ length: 4 }, (_, i) => ({ clau: `a${i}`, text: 'porta-documents-roja', ruta: `_wiki_de_poble/04_escriptori/${i}.md`, marca: 'alta', to: 'error' })),
+    { clau: 'b', text: 'ledger-invalid', ruta: '.agents/LEDGER.md', marca: 'alta', to: 'error' },
+    { clau: 'c', text: 'porta-documents-roja', ruta: 'x.md', marca: 'mitjana', to: 'avis' },
+    { clau: 'd', text: '', ruta: '_wiki_de_poble/10_actes/', marca: 'sense lector', to: 'avis' },
+    { clau: 'e', text: '', ruta: '_wiki_de_poble/10_metriques/consum_ia.csv', marca: 'sense lector', to: 'avis' },
+    { clau: 'f', text: '', ruta: '.agents/runtime/turns/torn_1.json' },
+    { clau: 'g', text: '', ruta: 'torn_6d0101fb · iaia-maria · context_loaded · caducat el 2026-10-26T03:27:07.614Z' },
+    null
+  ];
+  // Una evidència del Mapa (no una ruta) es resumix pel seu primer tros.
+  expect(resumDeProblemes(llarg, 9).visibles.map((l) => l.curt).slice(-2)).toEqual(['torn_1.json', 'torn_6d0101fb']);
+  const { visibles, resta } = resumDeProblemes(llarg);
+  expect(visibles.map((l) => [l.marca, l.text, l.curt, l.n])).toEqual([
+    ['alta', 'porta-documents-roja', null, 4],
+    ['alta', 'ledger-invalid', null, 1],
+    ['mitjana', 'porta-documents-roja', null, 1],
+    ['sense lector', '', '10_actes/', 1],
+    ['sense lector', '', 'consum_ia.csv', 1]
+  ]);
+  expect(resta).toBe(2);
+  expect(new Set(visibles.map((l) => l.clau)).size).toBe(visibles.length);
+  expect(resumDeProblemes(null)).toEqual({ visibles: [], resta: 0 });
+  expect(resumDeProblemes(llarg, 2).resta).toBe(5);
+  expect([nomCurt('_wiki_de_poble/10_actes/'), nomCurt('a/b/c.md'), nomCurt('LEDGER.md'), nomCurt('/')]).toEqual(['10_actes/', 'c.md', 'LEDGER.md', '/']);
+});
+
+test('Onada 6 · TargetaConsola: amb el mode privacitat, el nom curt d’una ruta s’amaga i els noms es lligen', () => {
   render(
     <PrivacitatConsola.Provider value>
       <TargetaConsola icona={Puzzle} titol="Avisos i salut" subtitol="Per a saber què està trencat"
-        entradilla="Els avisos del Mapa." problemes={PROBLEMES.slice(0, 2)} a="/consola/salut" />
+        entradilla="Els avisos del Mapa." problemes={[...PROBLEMES.slice(0, 2), { clau: 'r', text: '', ruta: '_wiki_de_poble/04_escriptori/secret.md' }]}
+        a="/consola/salut" />
     </PrivacitatConsola.Provider>
   );
   const llista = document.querySelector('.sdp-consola__problemes');
   expect(llista.textContent).not.toContain('_wiki_de_poble/');
+  expect(llista.textContent).not.toContain('secret.md');
   expect(llista.textContent).toContain('skill-1 · orfe');
   expect(llista.querySelector('code').textContent).toBe('••••••dada amagada pel mode privacitat');
 });
@@ -479,15 +515,16 @@ test('Correcció Onada 6 · TargetaConsola: cada problema amb marca porta la seu
   render(<TargetaConsola icona={Puzzle} titol="Avisos i salut" subtitol="Per a saber què està trencat"
     entradilla="Els avisos del Mapa." problemes={problemes} a="/consola/salut" />);
   const files = [...document.querySelectorAll('.sdp-consola__problemes li')];
+  // Ordre del Mestre, 30-10-2026 (punt 1.3) · sense la ruta sencera: el text, o el nom curt de la ruta.
   expect(files.map((li) => li.textContent)).toEqual([
-    'alta tasca-morta · tooling/x.mjs', 'mitjana skill-1 · orfe', 'sense lector _wiki_de_poble/04_escriptori', 'sense marca'
+    'alta tasca-morta', 'mitjana skill-1 · orfe', 'sense lector 04_escriptori', 'sense marca'
   ]);
   expect(files.map((li) => li.querySelector('.sdp-insignia')?.className ?? null)).toEqual([
     'sdp-insignia sdp-insignia--error', 'sdp-insignia sdp-insignia--avis', 'sdp-insignia sdp-insignia--avis', null
   ]);
-  // La marca és la primera peça de la fila; la ruta continua en <Mono>.
+  // La marca és la primera peça de la fila; el nom curt de la ruta va en <Mono>.
   expect(files[0].firstElementChild.className).toBe('sdp-insignia sdp-insignia--error');
-  expect(files[2].querySelector('code.sdp-consola__mono').textContent).toBe('_wiki_de_poble/04_escriptori');
+  expect(files[2].querySelector('code.sdp-consola__mono').textContent).toBe('04_escriptori');
 });
 
 test('Onada 6 · TargetaConsola: sense problemes (null o cap), el cos és el de sempre', () => {

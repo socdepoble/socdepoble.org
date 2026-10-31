@@ -216,7 +216,7 @@ describe('en context (el document destacat de /xat), el <head> és de qui la inc
   test('canviar la foto del document sense canviar-ne el títol no li dona el <head> (useSEO i seoHead de veres)', async () => {
     ({ useSEO: useSEODeVeres } = await vi.importActual('../../hooks/useSEO'));
     mocks.headReal = true;
-    document.head.innerHTML = '<title>Sóc de Poble</title>';
+    document.head.replaceChildren(Object.assign(document.createElement('title'), { textContent: 'Sóc de Poble' }));
     const A = { title: 'El Xat', subtitle: 'Sub', image: '/assets/uploads/brain/xat_portada.png', html: '<p>Hola</p>' };
     const vista = render(document_(A));
     const estat = () => [document.title, document.head.querySelector('meta[property="og:image"]')?.content ?? null,

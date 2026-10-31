@@ -31,7 +31,7 @@ import { COPYRIGHT_SDP, COPYRIGHT_VIQUIPEDIA } from '../../components/universal/
 
 export const ORIGENS = Object.freeze(['ia', 'foto', 'sistema']);
 
-const PATRONS_IA = Object.freeze([
+export const PATRONS_IA = Object.freeze([
   /\/nano_cards\//,
   /\/ui\/plugins\/[^/]*_vinyeta\.[a-z]+$/i,
   /\/uploads\/ia\//,

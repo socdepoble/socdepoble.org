@@ -13,6 +13,9 @@ import { CLAUS_FUNDACIONALS } from './identitatsSeed.js';
  * Contracte:
  *   - Sense `VITE_UMAMI_WEBSITE_ID` i `VITE_UMAMI_HOST` vàlids no s'envia res
  *     (servidor de desenvolupament i nodes sense comptador).
+ *   - Des d'un servidor local (localhost, 127.0.0.1 o [::1]) tampoc, encara
+ *     que porte el comptador configurat: motiu `servidor-local`. Només les
+ *     proves que passen `cfg` explícit hi envien (ordre del Mestre, T3.3).
  *   - La persona el pot apagar: Do Not Track, Global Privacy Control o
  *     `localStorage['umami.disabled']` (la mateixa clau que respecta el script
  *     oficial). `estableixTelemetriaApagada()` l'escriu.
@@ -56,8 +59,24 @@ function origenSegur(valor) {
   return url.href.replace(/\/+$/, '');
 }
 
+/* Gauntlet c3 (vapid-detector-cec-al-build-real) · Només les tres claus que
+   es lligen, mai import.meta.env sencer: Vite incrustaria al bundle totes les
+   VITE_* de l'entorn, també una privada mal anomenada. Fora de Vite (node
+   --test) import.meta.env no existix i el try/catch ho tolera (versio.js). */
+function entornDeTelemetria() {
+  try {
+    return {
+      VITE_UMAMI_WEBSITE_ID: import.meta.env.VITE_UMAMI_WEBSITE_ID,
+      VITE_UMAMI_HOST: import.meta.env.VITE_UMAMI_HOST,
+      VITE_UMAMI_SHARE_URL: import.meta.env.VITE_UMAMI_SHARE_URL
+    };
+  } catch {
+    return {};
+  }
+}
+
 /** Llig la configuració pública de compilació. Congelada: ningú la muta. */
-export function configTelemetria(env = import.meta.env || {}) {
+export function configTelemetria(env = entornDeTelemetria()) {
   const websiteId = String(env.VITE_UMAMI_WEBSITE_ID || '').trim();
   const host = origenSegur(env.VITE_UMAMI_HOST);
   const shareUrl = origenSegur(env.VITE_UMAMI_SHARE_URL);
@@ -107,6 +126,17 @@ export function declaraEncastada(valor) {
 function encastada() {
   if (encastadaDeclarada || window.__SDP_EMBEDDED__) return true;
   try { return window.self !== window.top; } catch { return true; }
+}
+
+/* Ordre del Mestre (30-10-2026, prompt 2208, T3.3). Les mateixes tres adreces
+   que origenSegur. L'app nativa (https://localhost a Android,
+   capacitor://localhost a iOS) no porta comptador (vite.natiu.config.js, D10):
+   hi diu «sense-configurar» abans d'arribar ací. */
+const HOSTS_LOCALS = ['localhost', '127.0.0.1', '[::1]'];
+
+/** Cert si la pàgina la servix un servidor local (localhost, 127.0.0.1 o [::1]). */
+export function esServidorLocal() {
+  try { return HOSTS_LOCALS.includes(window.location.hostname); } catch { return false; }
 }
 
 /** Ruta sense query ni hash: la clau per a no comptar dues vegades la mateixa. */
@@ -169,6 +199,10 @@ function envia(tipus, { nom, dades, ruta, cfg }) {
 
   const config = cfg || configTelemetria();
   if (!config.actiu) return publica({ ...base, enviat: false, motiu: 'sense-configurar' });
+  /* Ordre del Mestre (30-10-2026, prompt 2208, T3.3): un servidor local amb el
+     comptador configurat (.env.local) no suma res a les xifres públiques.
+     Només una prova que passa `cfg` explícit hi pot enviar. */
+  if (!cfg && esServidorLocal()) return publica({ ...base, enviat: false, motiu: 'servidor-local' });
   if (typeof window.fetch !== 'function') return publica({ ...base, enviat: false, motiu: 'sense-fetch' });
 
   const payload = {

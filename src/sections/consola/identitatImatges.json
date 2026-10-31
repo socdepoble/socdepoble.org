@@ -1,0 +1,19 @@
+{
+ "schema": "sdp.identitat-imatges.v1",
+ "metode": "dHash de 16×16 en grisos: Pillow, convert('L') i resize((17, 16), BOX); 256 bits en hexadecimal",
+ "llindar": 8,
+ "imatges": {
+  "/assets/nano_cards/govern_balanc_nano_card.jpg": {"sha256": "21f4839183ab14449944af68283fa0f65ba69e8e36e8fcda0b6e3943eebdd6ad", "bytes": 376159, "mida": [1024, 1024], "dhash": "782966ad66d2c4d4dcd4d3b5f319f398a5a5b54b7751b3cbc9ecdd0933993f41"},
+  "/assets/nano_cards/govern_balanc_nano_card.webp": {"sha256": "0983e7d4315efa05df446098980037fc79d94aae0673c87ed4418fd9f8872625", "bytes": 302366, "mida": [1024, 1024], "dhash": "782966ad66d2c4d4dcd4d3b5f319f398a5a5b54b7751b3cbc9ecdd0933993f41"},
+  "/assets/nano_cards/govern_certificacio_nano_card.jpg": {"sha256": "0f204b21d10e60b9e0ce21f7403fe90898272e7b013972d1b4e2ce65c792693a", "bytes": 426262, "mida": [1024, 1024], "dhash": "b0ccfaccb1f0130cbb0c9f089f0dbb2561a03d8457d134bd142508e59b16f184"},
+  "/assets/nano_cards/govern_certificacio_nano_card.webp": {"sha256": "710dccf56e380738088693819cd792520e15f142896b48c832f3e9f890098973", "bytes": 345110, "mida": [1024, 1024], "dhash": "b0ccfaccb1f0130cbb0c9f0c9f0dbb2561a03d8457d134bd142508e59b16f184"},
+  "/assets/nano_cards/govern_comunicacio_nano_card.jpg": {"sha256": "446552f45c068a59d860716726ed35fb4c67a3b30b3ad05eef0457ad5c9545d2", "bytes": 349917, "mida": [1024, 1024], "dhash": "80c8ee08ecdbedd6e650672683261325233c3339618b31175587160fdae8cfc8"},
+  "/assets/nano_cards/govern_comunicacio_nano_card.webp": {"sha256": "db31db5dc6232b74a40c8494ecc6b02cce4f1ad5517deb15873a34f32e7cc937", "bytes": 264412, "mida": [1024, 1024], "dhash": "80c4ee08ecdbedd6e650672683261325233c3339618b31175587160fdae8cfc8"},
+  "/assets/nano_cards/govern_requeriments_nano_card.jpg": {"sha256": "8342b07f0b0ad79acfaebb0195242cd1621a14882863a8e37693db1539f2f159", "bytes": 414419, "mida": [1024, 1024], "dhash": "fe18de54cfda71276b36683661ce60e660f0623372f53e441d2c192c7987be23"},
+  "/assets/nano_cards/govern_requeriments_nano_card.webp": {"sha256": "3376fbe1a49a40c263edf553f3b714e0fe61b03d106a061203e51be902250149", "bytes": 334030, "mida": [1024, 1024], "dhash": "fe18de54cfda71276336603661ce60e660f0623372f53e441d2c192c7987be23"},
+  "/assets/ui/plugins/cervell_vinyeta.jpg": {"sha256": "a5fa890fe6f4e6d96da97e7e7408a4c21ad06078b924ce10c5de495a5d925982", "bytes": 410473, "mida": [1024, 1024], "dhash": "61c168e0b374a5aa839a859ae2da83f670c27162437acddaacf96658b6daf75a"},
+  "/assets/ui/plugins/cervell_vinyeta.webp": {"sha256": "488ce69719a06e42f3920e6e27f3aee6b43e1f078c89cbd51c67530c1108a7ea", "bytes": 336184, "mida": [1024, 1024], "dhash": "60c168e0b374a5aa839a859ae2da83f670c27162417acddaacf96658b6daf75a"},
+  "/assets/ui/plugins/consola_vinyeta.jpg": {"sha256": "a7dc9b1243aa2f606bb540f1a2dbaa8541e038048e65852dfe73819579aaac68", "bytes": 399825, "mida": [1024, 1024], "dhash": "b5991ce6b6e4c152e156e564c8ccd2f22a5834fe747664f21ddb7bd51ea78ff3"},
+  "/assets/ui/plugins/consola_vinyeta.webp": {"sha256": "333c6839b7aa28f12702774130efbc8ac83cf3af487c17311aaba930f3688c8d", "bytes": 318588, "mida": [1024, 1024], "dhash": "b5991ce6b6e4c152e156e564c8ccd2f22ad834fe747664fa1ddb7bd51ea78ff3"}
+ }
+}

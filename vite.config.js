@@ -1,7 +1,10 @@
 import { defineConfig, loadEnv } from 'vite';
 import react from '@vitejs/plugin-react';
 import consolaIaia from './tooling/vite/consola-iaia.mjs';
+import traductorIaia from './tooling/vite/traductor-iaia.mjs';
 import wikiWatcher from './tooling/vite/wiki-watcher.mjs';
+import hmrBfcache from './tooling/vite/hmr-bfcache.mjs';
+import federacioIaia from './tooling/vite/federacio-iaia.mjs';
 import { createHash } from 'node:crypto';
 import fs from 'node:fs';
 import os from 'node:os';
@@ -92,7 +95,17 @@ export default defineConfig(({ command, mode, isPreview }) => {
     plugins: [
       react(),
       consolaIaia(),
+      /* IDEA-31 (QA-R2-13) · Només-dev: POST /__iaia/traduir, el Traductor Sobirà amb
+         Apertium a http://localhost:3340 (tooling/vite/traductor-iaia.mjs). */
+      traductorIaia(),
       wikiWatcher({ arrel: __dirname }),
+      /* Gauntlet 261029 (c1) · Només-dev: Arrere/Avant entre documents sense l'error de consola
+         del socket HMR tallat per la bfcache (tooling/vite/hmr-bfcache.mjs). */
+      hmrBfcache(),
+      /* P1-23 (ordre del Mestre, 30-10-2026) · Federació ActivityPub, fase 1 (lectura): en
+         dev, WebFinger, /ap/** i NodeInfo; al build web, els JSON-LD estàtics de /ap/ amb
+         l'origen canònic (tooling/vite/federacio-iaia.mjs). Ni el natiu ni el connector WP. */
+      federacioIaia({ arrel: __dirname }),
       {
         name: 'sdp-port-canonic',
         configResolved(config) {
@@ -156,10 +169,12 @@ export default defineConfig(({ command, mode, isPreview }) => {
        provar. Ara l'optimitzador de Vitest pre-empaqueta una vegada (dins de
        cacheDir) l'entrada que resol Node, la CJS del `main`, amb React extern; el
        build continua amb l'ESM, i totes dues ixen del mateix codi de lucide.
-       Es manté en 2 workers: amb 4 i altres IA provant alhora, tres proves amb
-       esperes de Testing Library d'1 s (PublicacioDetall.sistema,
-       NotesSection.lector:294 i lector261024:193) cauen per contenció. Pujar-ne
-       el nombre, com el pre-commit, vol primer endurir eixes esperes. */
+       Es manté en 2 workers: amb 4 i altres IA provant alhora, dues proves amb
+       esperes de Testing Library d'1 s (PublicacioDetall.sistema i
+       lector261024:193) cauen per contenció. Pujar-ne el nombre, com el
+       pre-commit, vol primer endurir eixes esperes. NotesSection.lector ja
+       espera l'arbre del Lector (30-10-2026: era una cursa amb «Obrint el
+       lector…», fixada per la seua prova de disc lent). */
     maxWorkers: 2,
     /* Una prova pesada pot passar dels 5 s de Vitest per contenció (261025:
        PublicacioDetall.sistema, 5,3 s amb la màquina a càrrega 39). 15 s, com el

@@ -51,10 +51,19 @@
  * Sóc de Poble, Javi, Gent de la Torre i la IAIA): els posa la llista
  * (actorsDelXat.js), com al xat de veres. «Nova conversa» amb Sóc de Poble
  * porta a la fitxa d'eixa comunitat (XatSection: /xat/<comunitat>).
+ *
+ * IDEA-56 (pla 261029_1605, Bloc F.2) · Al fil de la IAIA, la IAIA respon
+ * amb el seu cervell local (data/iaiaLocal.js · respostaDeLaIAIA: l'Atles
+ * sense xarxa i, si no ho sap, la Wiki i les pàgines), sense temporitzador i
+ * en l'ordre de les preguntes; si no troba res, la seua frase de sempre
+ * (RESPOSTA_IAIA), mai la de simulació. La resposta porta l'id de la IAIA, i
+ * la bombolla en fa enllaços interns. La resta de fils de mostra, com abans
+ * (P1-52), i el de Javi continua de només lectura: ni ell ni la IAIA hi
+ * responen mai. `respostaIAIA` és injectable per a les proves.
  */
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { XatContext } from '../XatContext.jsx';
-import { agrupaComunitats } from '../missatges.js';
+import { agrupaComunitats, aplicaMarcaLocal, sumaNoLlegits } from '../missatges.js';
 import { useUIActions } from '../../../app/contexts/UIContext.jsx';
 import { useCoreContent } from '../../../app/contexts/CoreContentContext';
 import {
@@ -62,7 +71,8 @@ import {
 } from '../../../data/xatsPerDefecte.js';
 import usePobleAmfitrio from '../usePobleAmfitrio.js';
 import { avatarDelPoble, nomDelPoble, objecteDelPoble, pobleDelXat } from '../pobleAmfitrio.js';
-import { BENVINGUDA_IAIA, ENTITAT_PILOT_ID } from '../../../data/identitatsSeed.js';
+import { BENVINGUDA_IAIA, ENTITAT_PILOT_ID, IAIA_ID, RESPOSTA_IAIA } from '../../../data/identitatsSeed.js';
+import { respostaDeLaIAIA } from '../../../data/iaiaLocal.js';
 import { RUTA_DE_SOC_DE_POBLE } from '../actorsDelXat.js';
 
 const IAIA = AJUDA_PER_CLAU.iaia;
@@ -110,7 +120,7 @@ function filsDelPoble(poble, t, ara, avatar, nom) {
   ];
 }
 
-export default function FakeChatOnboarding({ originalContext, children }) {
+export default function FakeChatOnboarding({ originalContext, children, respostaIAIA = respostaDeLaIAIA }) {
   const { t } = useUIActions();
   const poble = pobleDelXat(usePobleAmfitrio());
   const { towns } = useCoreContent();
@@ -132,18 +142,28 @@ export default function FakeChatOnboarding({ originalContext, children }) {
        és el text que el Mestre ha fixat. Cap altre missatge en nom seu. */
     [ID_FIL_DE_MOSTRA_DE_JAVI]: missatgesDeMostraDeJavi(ara)
   }));
-  /* Les respostes pendents es cancel·len en desmuntar (abans quedaven vives). */
+  /* Les respostes pendents es cancel·len en desmuntar (abans quedaven vives).
+     IDEA-56 (Bloc F.2) · La de la IAIA no té temporitzador: `muntatRef` diu
+     si encara es pot pintar (en l'efecte, resistent a StrictMode), i la cua
+     manté l'ordre de les respostes com el de les preguntes. */
   const temporitzadors = useRef(new Set());
-  useEffect(() => () => {
-    temporitzadors.current.forEach(clearTimeout);
-    temporitzadors.current.clear();
+  const muntatRef = useRef(false);
+  const cuaIAIA = useRef(Promise.resolve());
+  useEffect(() => {
+    muntatRef.current = true;
+    const pendents = temporitzadors.current;
+    return () => {
+      muntatRef.current = false;
+      pendents.forEach(clearTimeout);
+      pendents.clear();
+    };
   }, []);
 
   const nomPoble = useMemo(() => (poble ? nomDelPoble(poble, towns) : ''), [poble, towns]);
   const deLPoble = useMemo(() => filsDelPoble(poble, t, ara, avatarPoble, nomPoble), [poble, t, ara, avatarPoble, nomPoble]);
   const iaiaApagada = Boolean(originalContext?.iaiaApagada);
 
-  const fakeThreads = useMemo(() => [
+  const filsDeMostra = useMemo(() => [
     /* Gauntlet 261016_1530 (Bloc 3.6.1) · La comunitat de Sóc de Poble, al lloc del directe derogat. */
     ...filsDeSocDePoble(t, ara),
     ...deLPoble,
@@ -165,6 +185,31 @@ export default function FakeChatOnboarding({ originalContext, children }) {
        del compositor és la invitació de sempre de la mostra. */
     filDeMostraDeJavi({ ultimAl: ara, avis: t('section.xat.fake.iaia2', "Si t'agrada el que veus, registra't per a entrar al xat de veritat!") })
   ], [t, ara, deLPoble, iaiaApagada]);
+
+  /* Gauntlet 261030 (cicle 2, G2) · Llegir un fil de mostra el marca llegit,
+     com marcaVist del xat de veres (la conversa la crida quan una bombolla
+     entra en pantalla amb la pestanya visible), però només en este estat: cap
+     servidor ni cap persistència. Els no llegits del fil baixen (aplicaMarcaLocal)
+     i, com que la insígnia, la de la comunitat (agrupaComunitats) i el títol
+     (totalNoLlegits) ixen dels mateixos fils, baixen en el mateix render.
+     «Marcar com a llegides» (marcaLlegides) fa la mateixa marca per a la
+     selecció i torna quantes, com el de veres. */
+  const [llegitsMostra, setLlegitsMostra] = useState(() => ({}));
+  const fakeThreads = useMemo(
+    () => filsDeMostra.map((f) => (llegitsMostra[f.id] ? aplicaMarcaLocal(f, llegitsMostra[f.id]) : f)),
+    [filsDeMostra, llegitsMostra]
+  );
+  const marcaVist = useCallback((filId, seq) => {
+    const s = Number(seq) || 0;
+    if (filId == null || filId === '' || s <= 0) return;
+    setLlegitsMostra((previs) => (s <= (previs[filId] || 0) ? previs : { ...previs, [filId]: s }));
+  }, []);
+  const marcaLlegides = useCallback((filIds) => {
+    const ids = new Set((Array.isArray(filIds) ? filIds : [filIds]).filter((id) => id != null && id !== '').map(String));
+    const perMarcar = fakeThreads.filter((f) => ids.has(String(f.id)) && (Number(f.ultimSeq) || 0) > (Number(f.llegitFinsSeq) || 0));
+    for (const f of perMarcar) marcaVist(f.id, Number(f.ultimSeq));
+    return perMarcar.length;
+  }, [fakeThreads, marcaVist]);
 
   const comunitats = useMemo(() => agrupaComunitats(fakeThreads), [fakeThreads]);
 
@@ -192,11 +237,42 @@ export default function FakeChatOnboarding({ originalContext, children }) {
     /* Gauntlet 261016 (Bloc 3.6.1) · Com el de veres (XatContext): a un fil de
        només lectura no s'envia res. El de Javi, a més, no respon mai sol. */
     if (fil?.potEscriure === false) return [];
+    /* IDEA-56 (Bloc F.2) · Amb la IAIA apagada (nivell d'IA 0) el seu fil
+       no hi és: si algú hi arriba, ni s'envia ni respon ningú. */
+    if (iaiaApagada && fil?.id === 'fake-iaia') return [];
     const filId = fil.id;
     const respostaA = opcions?.respostaA ? String(opcions.respostaA) : null;
     const myMsg = { id: `m-${Date.now()}-${seguentSeq(filId)}`, text, respostaA, sender: 'me', author: 'Jo', creatAl: new Date().toISOString() };
     myMsg.seq = seqs.current[filId];
     setMessages((prev) => ({ ...prev, [filId]: [...(prev[filId] || []), myMsg] }));
+
+    /* IDEA-56 (Bloc F.2) · La IAIA respon amb el seu cervell local, sense
+       temporitzador (el segon de «pensar» ja no hi és) i en ordre. Si no
+       troba res, la seua frase de sempre. Desmuntada, no es pinta res. */
+    if (filId === 'fake-iaia') {
+      cuaIAIA.current = cuaIAIA.current.then(async () => {
+        let trobada = null;
+        try {
+          trobada = await respostaIAIA(text);
+        } catch {
+          trobada = null;
+        }
+        if (!muntatRef.current) return;
+        const seq = seguentSeq(filId);
+        const resposta = {
+          id: `r-${Date.now()}-${seq}`,
+          seq,
+          text: typeof trobada === 'string' && trobada.trim() ? trobada : RESPOSTA_IAIA,
+          sender: 'other',
+          author: fil.name,
+          usuariId: IAIA_ID,
+          is_ai: true,
+          creatAl: new Date().toISOString()
+        };
+        setMessages((prev) => ({ ...prev, [filId]: [...(prev[filId] || []), resposta] }));
+      }).catch(() => {});
+      return [myMsg];
+    }
 
     const temporitzador = setTimeout(() => {
       temporitzadors.current.delete(temporitzador);
@@ -216,7 +292,7 @@ export default function FakeChatOnboarding({ originalContext, children }) {
     temporitzadors.current.add(temporitzador);
 
     return [myMsg];
-  }, [t, seguentSeq]);
+  }, [t, seguentSeq, respostaIAIA, iaiaApagada]);
 
   const fakeContext = useMemo(() => ({
     ...originalContext,
@@ -225,9 +301,13 @@ export default function FakeChatOnboarding({ originalContext, children }) {
     comunitats,
     getThreadMessages,
     sendChatMessage,
-    /* Els no llegits de les dues entrades d'ajuda: un cadascuna (des del
-       261016_1530, el de Sóc de Poble és als Avisos de la seua comunitat). */
-    totalNoLlegits: iaiaApagada ? 1 : 2,
+    /* Gauntlet 261030 (cicle 2, G2) · La lectura de la mostra, en local. */
+    marcaVist,
+    marcaLlegides,
+    /* Onada 261030 (cicle 2) · El títol de la pestanya suma els no llegits
+       dels mateixos fils que pinta la llista, com XatContext (sumaNoLlegits):
+       els Avisos de Sóc de Poble, els del poble i la IAIA si està encesa. */
+    totalNoLlegits: sumaNoLlegits(fakeThreads),
     cercaMembres: async () => AJUDA.filter(({ clau }) => !(iaiaApagada && clau === 'iaia')).map(({ nom, tipus, avatar }) => ({
       nom, tipus, usuari_id: `ajuda:${tipus}`, avatar_url: avatar || null, noDisponible: false
     })),
@@ -240,7 +320,7 @@ export default function FakeChatOnboarding({ originalContext, children }) {
       return ID_COMUNITAT_SDP;
     },
     esFilAmagat: (filId) => iaiaApagada && filId === 'fake-iaia'
-  }), [originalContext, fakeThreads, comunitats, getThreadMessages, sendChatMessage, iaiaApagada]);
+  }), [originalContext, fakeThreads, comunitats, getThreadMessages, sendChatMessage, marcaVist, marcaLlegides, iaiaApagada]);
 
   return <XatContext.Provider value={fakeContext}>{children}</XatContext.Provider>;
 }

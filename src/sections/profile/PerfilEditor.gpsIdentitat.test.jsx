@@ -62,7 +62,7 @@ vi.mock('../../utils/imageUtils.js', () => ({ compressImage: dobles.compressImag
 import { PerfilEditor } from './PerfilEditor.jsx';
 import { AVIS_GPS_ELIMINAT_PERFIL } from '../../components/universal/enquadrament/DialegEnquadrament.jsx';
 import { ETIQUETA_CONSERVA_EXIF } from '../../components/universal/enquadrament/exifIncrustat.js';
-import { dataOriginal, gpsTorre, jpegAmbExif, orientacio } from '../../components/universal/enquadrament/jpegProva.js';
+import { dataOriginal, gpsTorre, jpegAmbExif, orientacio } from '../../../tests/helpers/jpegProva.js';
 import { oblidaEntitatDelProjecte } from '../../config/navigation.js';
 import { cuaDesament } from '../../data/autodesament/cua.js';
 import { ambitDe } from '../../data/autodesament/ambit.js';

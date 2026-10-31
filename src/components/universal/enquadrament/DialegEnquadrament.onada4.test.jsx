@@ -3,7 +3,7 @@ import { afterEach, describe, expect, test, vi } from 'vitest';
 import { DialegEnquadrament, ERROR_CARREGA_FITXER } from './DialegEnquadrament.jsx';
 import { senseDades } from './exif.js';
 import { ERROR_UBICACIO } from './geolocalitzacio.js';
-import { gpsTorre, jpegAmbExif, orientacio } from './jpegProva.js';
+import { gpsTorre, jpegAmbExif, orientacio } from '../../../../tests/helpers/jpegProva.js';
 import { ERROR_HEIC, ERROR_PES, ERROR_PIXELS, ErrorImatge, PES_MAXIM_ENTRADA } from './limits.js';
 
 /* Onada 4, T3a · Ampliacions del DialegEnquadrament: geolocalització

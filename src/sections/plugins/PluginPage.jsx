@@ -106,7 +106,7 @@
  * L'arquitectura de plugins sencera (injecció, cicle de vida, aïllament) és
  * de la pròxima onada (directriu 261003_2320): ací només hi ha la pàgina.
  */
-import { useEffect, useRef, useState, useSyncExternalStore } from 'react';
+import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
 import { useParams } from '../../app/contexts/RouterContext';
 import { Boto, Pila } from '../../components/PedraSeca/index.js';
 import { useApagaApp, usePreferenciesApps } from '../../apps/plataforma/PlataformaContext.jsx';
@@ -117,6 +117,9 @@ import { PortaDePagina } from '../../components/PedraSeca/organismes/PortesTarge
 import { COPYRIGHT_SDP, dataHoraDeBarra } from '../../components/universal/editorial.js';
 import { UniversalPage } from '../../components/universal/UniversalPage';
 import { resolveAsset } from '../../config/assetResolver';
+import { CAP_SOCIAL_BASE } from '../../config/imatgeSocial.js';
+import { metadadesDePlugin } from '../../config/metadadesSocials.js';
+import { opcionsDeLaImatgeSocial } from '../../config/opcionsImatgeSocial.js';
 import { useSEO } from '../../hooks/useSEO';
 import NotFoundPage from '../../pages/NotFoundPage';
 import { CosDeLaPagina } from '../text/TextSection.jsx';
@@ -215,11 +218,16 @@ function PaginaDelPlugin({ plugin }) {
     reactivada.current = false;
     if (obert) accio.current?.querySelector('a[href]')?.focus();
   }, [obert, desti.motiu]);
-  useSEO({
-    title: plugin.titol,
-    description: plugin.subtitol,
-    image: { url: resolveAsset(plugin.imatge), alt: plugin.imatgeAlt }
-  });
+  /* Ordre del Mestre (30-10-2026, prompt 2208, T1.1) · El head de la pàgina
+     és el que prerenderitza el build (metadadesDePlugin, compartida amb
+     tooling/seo/build-social-manifest.mjs): el títol, l'entradeta i, sense, el
+     subtítol, i la il·lustració pel selector social (la WebP va al <head> per la
+     seua variant JPEG de 1200x630). La portada que es pinta no canvia. */
+  const seo = useMemo(() => {
+    const metadades = metadadesDePlugin(plugin, opcionsDeLaImatgeSocial());
+    return { title: metadades.title, description: metadades.description, image: metadades.image || resolveAsset(CAP_SOCIAL_BASE.image.url) };
+  }, [plugin]);
+  useSEO(seo);
   const { avis, porta } = portaDelPlugin(plugin, desti, t);
   const presentacio = presentacioDelPlugin(plugin.id);
   /* Gauntlet 261022_0225 (F2) · Amb la dada, no amb una llista d'ids: tota

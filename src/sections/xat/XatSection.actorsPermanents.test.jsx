@@ -30,12 +30,12 @@
    la fila no siga a la llista: la prova [DEFECTE] d'abans s'ha girat. Les
    proves munten la llista REAL que torna l'adaptador (llavor i local), amb
    les comunitats agrupades com al context. */
-import { cleanup, fireEvent, render, renderHook, screen } from '@testing-library/react';
+import { act, cleanup, fireEvent, render, renderHook, screen } from '@testing-library/react';
 import { afterEach, beforeAll, beforeEach, describe, expect, test, vi } from 'vitest';
 import XatSection from './XatSection';
 import { agrupaComunitats, mapejaFil } from './missatges.js';
 import { buidaEsborranys } from './esborranys.js';
-import useObriXatPerDefecte, { AVIS_JAVI_NO_DISPONIBLE, RUTA_XAT_DE_LA_IAIA, rutaDelXatDeJavi } from './useObriXatPerDefecte.js';
+import useObriXatPerDefecte, { RUTA_XAT_DE_LA_IAIA, RUTA_XAT_DE_SERVEI_TECNIC_DE_JAVI, rutaDelXatDeJavi } from './useObriXatPerDefecte.js';
 import { POBLE_PER_DEFECTE, pobleDelXat } from './pobleAmfitrio.js';
 import { CLAU_FILA_DE_SOC_DE_POBLE, RUTA_SOBRE_DE_SOC_DE_POBLE } from './actorsDelXat.js';
 import Compositor from './components/Compositor.jsx';
@@ -63,6 +63,10 @@ const mocks = vi.hoisted(() => ({
   joId: 'jo',
   iaiaApagada: false,
   senseSessio: false,
+  filServeiTecnic: null,
+  /* P1-70 (261029) · Amb cert, la secció llig el context de veres que hi haja
+     (el del xat de mostra, FakeChatOnboarding) i només sense, el doble. */
+  ambContextDeVeres: false,
   openThread: vi.fn()
 }));
 
@@ -92,39 +96,48 @@ vi.mock('../../app/contexts/UIContext', () => ({
   useUIState: () => ({ language: 'ca', locale: 'ca-ES', externalConfig: mocks.externalConfig })
 }));
 vi.mock('../notes/NotesDataContext', () => ({ useNotesData: () => ({ creaNota: vi.fn() }) }));
-vi.mock('./XatContext', async (importOriginal) => ({
-  ...(await importOriginal()),
-  useXat: () => ({
-    scopeKey: 'A',
-    ambitEstable: 'P',
-    status: 'ready',
-    avis: null,
-    chatThreads: mocks.threads,
-    getThreadMessages: (filId) => mocks.missatges[filId] || [],
-    sendChatMessage: vi.fn(async () => []),
-    obriFil: mocks.openThread,
-    creaFil: vi.fn(),
-    cercaMembres: vi.fn(async () => []),
-    totalNoLlegits: 0,
-    hiHaMesAntics: () => false,
-    carregantAntics: () => false,
-    carregaMesAntics: () => {},
-    reintenta: () => {},
-    descartaFallit: () => {},
-    marcaVist: () => {},
-    comunitats: mocks.comunitats,
-    contactesFrequents: [],
-    marcaLlegides: () => 0,
-    obriFilDePagina: vi.fn(async () => null),
-    joId: mocks.joId,
-    joNom: 'Pepa',
-    senseSessio: mocks.senseSessio,
-    iaiaApagada: mocks.iaiaApagada,
-    esFilAmagat: () => false,
-    modeDades: mocks.modeDades,
-    consumixEntrada: undefined
-  })
-}));
+vi.mock('./XatContext', async (importOriginal) => {
+  const original = await importOriginal();
+  const { useContext } = await import('react');
+  return {
+    ...original,
+    useXat: () => {
+      const deVeres = useContext(original.XatContext);
+      if (mocks.ambContextDeVeres && deVeres) return deVeres;
+      return {
+        scopeKey: 'A',
+        ambitEstable: 'P',
+        status: 'ready',
+        avis: null,
+        chatThreads: mocks.threads,
+        getThreadMessages: (filId) => mocks.missatges[filId] || [],
+        sendChatMessage: vi.fn(async () => []),
+        obriFil: mocks.openThread,
+        creaFil: vi.fn(),
+        cercaMembres: vi.fn(async () => []),
+        totalNoLlegits: 0,
+        hiHaMesAntics: () => false,
+        carregantAntics: () => false,
+        carregaMesAntics: () => {},
+        reintenta: () => {},
+        descartaFallit: () => {},
+        marcaVist: () => {},
+        comunitats: mocks.comunitats,
+        contactesFrequents: [],
+        marcaLlegides: () => 0,
+        obriFilDePagina: vi.fn(async () => null),
+        joId: mocks.joId,
+        joNom: 'Pepa',
+        senseSessio: mocks.senseSessio,
+        iaiaApagada: mocks.iaiaApagada,
+        esFilAmagat: () => false,
+        modeDades: mocks.modeDades,
+        filServeiTecnic: mocks.filServeiTecnic,
+        consumixEntrada: undefined
+      };
+    }
+  };
+});
 vi.mock('../../components/universal/NotificationContext.jsx', () => ({
   useToast: () => ({ showToast: mocks.showToast })
 }));
@@ -208,6 +221,8 @@ beforeEach(() => {
   mocks.joId = 'jo';
   mocks.iaiaApagada = false;
   mocks.senseSessio = false;
+  mocks.filServeiTecnic = null;
+  mocks.ambContextDeVeres = false;
   oblidaEntitatDelProjecte();
   reiniciaLocalXat();
   ambLesFilesDelPort();
@@ -231,12 +246,56 @@ describe('les quatre converses de l’ordre', () => {
     expect(llista().querySelector('li[data-clau="sdp-per-defecte:socdepoble"]')).toBeNull();
   });
 
-  /* Sense l'id remot de l'entitat la comunitat de veres no es podria
-     reconéixer: cap fila que hi porte, per no pintar dos «Sóc de Poble». */
-  test('en remot, sense l’id de l’entitat pilot, cap fila de Sóc de Poble: ni directa ni la que porta a la comunitat', () => {
+  /* QA-R2-05 (Codex, Ronda 2) · Derogat «sense l'id remot de l'entitat, cap
+     fila de Sóc de Poble»: el primer actor de l'ordre del Mestre no
+     desapareix mentre el backend encara no ha donat l'UUID. La reserva hi és
+     amb la mateixa clau, però només és l'enllaç públic a /socdepoble (cap
+     acció pel slug: ni ?sobre= ni cap fil). Quan arriba l'UUID, la mateixa
+     fila porta a la comunitat, i la comunitat de veres, reconeguda per
+     l'UUID, la substituïx: mai dos «Sóc de Poble» de Sóc de Poble. */
+  test('en remot, sense l’id de l’entitat pilot (remot buit, sense registre): la reserva hi és, una sola, i només porta a /socdepoble', () => {
     render(<XatSection />);
-    expect(clausDeLaLlista()).toEqual(['sdp-per-defecte:javi', 'poble:la-torre-de-les-macanes', 'sdp-per-defecte:iaia']);
-    expect(llista().textContent).not.toContain('Sóc de Poble');
+    expect(clausDeLaLlista()).toEqual([CLAU_FILA_DE_SOC_DE_POBLE, 'sdp-per-defecte:javi', 'poble:la-torre-de-les-macanes', 'sdp-per-defecte:iaia']);
+    const files = [...llista().querySelectorAll(':scope > li')];
+    expect(files.filter((li) => li.textContent.includes('Sóc de Poble'))).toEqual([files[0]]);
+    expect(llista().querySelector('li[data-clau="sdp-per-defecte:socdepoble"]')).toBeNull();
+    fireEvent.click(llista().querySelector(`li[data-clau="${CLAU_FILA_DE_SOC_DE_POBLE}"] button`));
+    expect(mocks.navigate).toHaveBeenLastCalledWith('/socdepoble');
+    expect(navegacions().flat().some((ruta) => String(ruta).includes('sobre='))).toBe(false);
+  });
+
+  test('en remot, l’UUID arriba després: la mateixa fila (clau estable) porta a la comunitat, i la comunitat de veres la substituïx sense duplicar', () => {
+    const vista = render(<XatSection />);
+    expect(clausDeLaLlista()[0]).toBe(CLAU_FILA_DE_SOC_DE_POBLE);
+    act(() => { registraEntitatDelProjecte({ tipus: 'entitat', id: UUID_SDP, slug: 'socdepoble' }); });
+    expect(clausDeLaLlista()).toEqual([CLAU_FILA_DE_SOC_DE_POBLE, 'sdp-per-defecte:javi', 'poble:la-torre-de-les-macanes', 'sdp-per-defecte:iaia']);
+    fireEvent.click(llista().querySelector(`li[data-clau="${CLAU_FILA_DE_SOC_DE_POBLE}"] button`));
+    expect(mocks.navigate).toHaveBeenLastCalledWith(RUTA_SOBRE_DE_SOC_DE_POBLE);
+    /* La comunitat de veres arriba a la llista amb el seu UUID. */
+    const deVeres = mapejaFil({ id: 'c-sdp-remota', tipus: 'comunitat', titol: 'Sóc de Poble', subjecte: { tipus: 'entitat', id: UUID_SDP, ruta: `/empresa/${UUID_SDP}`, titol: 'Sóc de Poble' } });
+    mocks.threads = [...mocks.threads, deVeres];
+    mocks.comunitats = agrupaComunitats(mocks.threads);
+    vista.rerender(<XatSection />);
+    const claus = clausDeLaLlista();
+    expect(claus.slice(0, 4)).toEqual(['comunitat:c-sdp-remota', 'sdp-per-defecte:javi', 'poble:la-torre-de-les-macanes', 'sdp-per-defecte:iaia']);
+    expect(claus).not.toContain(CLAU_FILA_DE_SOC_DE_POBLE);
+    const files = [...llista().querySelectorAll(':scope > li')];
+    expect(files.filter((li) => li.textContent.includes('Sóc de Poble'))).toEqual([files[0]]);
+  });
+
+  test('en remot, un homònim alié (una altra entitat que es diu «Sóc de Poble») no ocupa el lloc de la reserva: mai pel nom', () => {
+    const UUID_ALIE = '7d1e5c2a-0000-4000-8000-0000000000bb';
+    const alie = mapejaFil({ id: 'c-alie', tipus: 'comunitat', titol: 'Sóc de Poble', subjecte: { tipus: 'entitat', id: UUID_ALIE, ruta: `/empresa/${UUID_ALIE}`, titol: 'Sóc de Poble' } });
+    mocks.threads = [...mocks.threads, alie];
+    mocks.comunitats = agrupaComunitats(mocks.threads);
+    const vista = render(<XatSection />);
+    expect(clausDeLaLlista().slice(0, 4)).toEqual([CLAU_FILA_DE_SOC_DE_POBLE, 'sdp-per-defecte:javi', 'poble:la-torre-de-les-macanes', 'sdp-per-defecte:iaia']);
+    expect(clausDeLaLlista()).toContain('comunitat:c-alie');
+    /* Amb l'UUID de Sóc de Poble registrat, l'alié continua sense ser-ho. */
+    act(() => { registraEntitatDelProjecte({ tipus: 'entitat', id: UUID_SDP, slug: 'socdepoble' }); });
+    vista.rerender(<XatSection />);
+    expect(clausDeLaLlista()[0]).toBe(CLAU_FILA_DE_SOC_DE_POBLE);
+    expect(clausDeLaLlista().indexOf('comunitat:c-alie')).toBeGreaterThan(3);
   });
 
   /* L'encàrrec: una prova que munta la llista REAL de la llavor, no una
@@ -299,7 +358,7 @@ describe('les quatre converses de l’ordre', () => {
   });
 
   test('pobleDelXat: el declarat mana; sense, el poble de la llavor amb el nom de l’ordre', () => {
-    expect(POBLE_PER_DEFECTE).toEqual({ id: 'la-torre-de-les-macanes', nom: 'Gent de la Torre' });
+    expect(POBLE_PER_DEFECTE).toEqual({ id: 'la-torre-de-les-macanes', nom: 'Gent de la Torre', avatar: '/assets/towns/la-torre-de-les-macanes/2.jpg' });
     expect(Object.isFrozen(POBLE_PER_DEFECTE)).toBe(true);
     expect(pobleDelXat(null)).toBe(POBLE_PER_DEFECTE);
     const sella = { id: 'sella', nom: '' };
@@ -394,13 +453,17 @@ describe('la IAIA a localhost (Bloc 3.6.2)', () => {
     expect(screen.queryByTestId('pagina-no-trobada')).toBeNull();
   });
 
-  test('Javi a /xat/sdp-per-defecte:javi (la seua pròpia fila) torna a la llista, sense directe amb ell mateix ni avís', () => {
+  /* P1-70 (261029) · Derogat «Javi torna a la llista»: la seua fila obri la
+     conversa d'atenció personal i servei tècnic (fake-javi), mai cap directe
+     amb ell mateix (SDP-XAT-002). */
+  test('Javi a /xat/sdp-per-defecte:javi (la seua pròpia fila) obri la conversa de servei tècnic, sense directe amb ell mateix ni avís', () => {
     mocks.modeDades = 'seed';
     mocks.joId = '0001';
-    mocks.threads = ambXatsPerDefecte([]).map((f) => mapejaFil(f)).filter((f) => f.perDefecte !== 'javi');
+    mocks.threads = ambXatsPerDefecte([]).map((f) => mapejaFil(f));
+    mocks.filServeiTecnic = filDeMostraDeJavi({ avis: 'tu mateix', ambMissatge: false });
     mocks.threadId = 'sdp-per-defecte:javi';
     render(<XatSection />);
-    expect(navegacions()).toEqual([['/xat', { replace: true }]]);
+    expect(navegacions()).toEqual([['/xat/fake-javi', { replace: true }]]);
     expect(mocks.showToast).not.toHaveBeenCalled();
     expect(screen.queryByTestId('pagina-no-trobada')).toBeNull();
   });
@@ -422,6 +485,22 @@ describe('la fila de Javi Llinares (Bloc 3.6.1)', () => {
     expect(rutaDelXatDeJavi(undefined)).toBeNull();
   });
 
+  /* P1-70 (261029; decisió de l'orquestrador, a ratificar pel Mestre) · En
+     remot, el directe de veres NOMÉS amb l'UUID del compte de Javi declarat a
+     IDS_REMOTS_FUNDACIONALS: mai pel slug ni per un àlies de la llavor. Hui
+     no n'hi ha cap de declarat (és decisió del Mestre) i la ruta és null. */
+  test('P1-70 · rutaDelXatDeJavi en remot: el directe amb l’UUID declarat de Javi; sense, cap; mai pel slug', () => {
+    const UUID = '5a5a5a5a-0000-4000-8000-0000000000bb';
+    expect(rutaDelXatDeJavi('remote', { idsRemots: { javillinares: [UUID] } })).toBe(`/xat?amb=${UUID}`);
+    expect(rutaDelXatDeJavi('remote', { idsRemots: { javillinares: [] } })).toBeNull();
+    expect(rutaDelXatDeJavi('remote', { idsRemots: { javillinares: ['  '] } })).toBeNull();
+    expect(rutaDelXatDeJavi('remote', { idsRemots: { socdepoble: [UUID] } })).toBeNull();
+    expect(rutaDelXatDeJavi('remote', { idsRemots: {} })).toBeNull();
+    /* La llavor no canvia: el seu id del padró, encara que n'hi haja un de remot. */
+    expect(rutaDelXatDeJavi('seed', { idsRemots: { javillinares: [UUID] } })).toBe('/xat?amb=0001');
+    expect(RUTA_XAT_DE_SERVEI_TECNIC_DE_JAVI).toBe('/xat/fake-javi');
+  });
+
   /* Amb sessió en llavor (el context d'esta prova porta joId i nom): la fila
      sintètica de sempre. Sense sessió, el context la canvia pel xat de només
      lectura (XatContext.test.jsx, i la prova de baix). */
@@ -440,14 +519,25 @@ describe('la fila de Javi Llinares (Bloc 3.6.1)', () => {
      és la causa. L'avís és ara el del contacte que encara no està connectat
      al xat del poble, que ja és a les cinc llengües (FilaPersona). Com es
      declara el compte remot de Javi és decisió del Mestre: no s'obri res. */
-  test('en remot amb sessió, cap xat amb qualsevol que es diga igual: l’avís honest (mai el del consentiment) i la llista, amb replace', () => {
+  /* P1-70 (261029) · Derogat el toast «Este contacte encara no està connectat
+     al xat del poble»: la fila obri SEMPRE la conversa d'atenció personal i
+     servei tècnic. Cap xat amb qualsevol que es diga igual (mai pel nom): el
+     compte remot de Javi no està declarat i la conversa ho diu, de només lectura. */
+  test('en remot amb sessió, la fila de Javi obri sempre la conversa de servei tècnic: cap avís que bloqueja, cap directe amb qualsevol que es diga igual', () => {
+    const avis = 'El compte de Javi Llinares encara no està connectat al xat d’este poble. Mentrestant, per a atenció personal i servei tècnic, escriu al grup General de la comunitat Sóc de Poble.';
+    mocks.filServeiTecnic = filDeMostraDeJavi({ avis, ambMissatge: false });
     mocks.threadId = 'sdp-per-defecte:javi';
-    render(<XatSection />);
-    expect(AVIS_JAVI_NO_DISPONIBLE).toEqual(['section.xat.padro.ajudaPendent', 'Este contacte encara no està connectat al xat del poble.']);
-    expect(mocks.showToast).toHaveBeenCalledWith('Este contacte encara no està connectat al xat del poble.', 'info');
-    expect(mocks.showToast).not.toHaveBeenCalledWith('Esta persona no està disponible al xat.', expect.anything());
-    expect(navegacions()).toContainEqual(['/xat', { replace: true }]);
+    const vista = render(<XatSection />);
+    expect(navegacions()).toEqual([['/xat/fake-javi', { replace: true }]]);
+    expect(mocks.showToast).not.toHaveBeenCalled();
+    mocks.threadId = 'fake-javi';
+    vista.rerender(<XatSection />);
+    expect(screen.queryByTestId('pagina-no-trobada')).toBeNull();
+    expect(screen.getAllByRole('status').some((node) => node.textContent === avis)).toBe(true);
+    expect(screen.queryByRole('textbox', { name: /Escriu un missatge/ })).toBeNull();
     expect(navegacions().some(([ruta]) => String(ruta).startsWith('/xat?amb='))).toBe(false);
+    /* fake-javi no es llig mai al port. */
+    expect(mocks.openThread.mock.calls.every(([filId]) => filId === null || filId === 'fake-javi')).toBe(true);
   });
 
   /* Auditoria adversarial 261016 (P3) · Qui no té sessió en llavor o en local
@@ -564,5 +654,124 @@ describe('el compositor d’un fil de només lectura que no és uns Avisos', () 
     expect(screen.queryByRole('link')).toBeNull();
     expect(screen.queryByRole('button')).toBeNull();
     expect(container.querySelector('a[href^="/registre"]')).toBeNull();
+  });
+});
+
+/* P1-70 (ordre del Mestre, 261029 18:20, amb captura de /xat: «No me veo a
+   mí como Javi Llinares […] falta la IAIA MarIA […] a Gent de la Torre le
+   falta la imagen») · Els quatre actors permanents en TOTS els modes: sense
+   sessió (el xat de mostra de veres, FakeChatOnboarding), amb sessió local,
+   amb sessió remota encara que chatThreads siga [] i quan qui mira és Javi.
+   La fila de Javi obri SEMPRE una conversa, sense cap avís que la bloquege. */
+describe('P1-70 · els quatre actors permanents en tots els modes', () => {
+  const AVIS_TU = 'Esta és la teua fila d’atenció personal i servei tècnic, tal com la veu la gent del poble. Les converses que t’escriguen arribaran a la llista com a directes.';
+  const AVIS_SENSE = 'El compte de Javi Llinares encara no està connectat al xat d’este poble. Mentrestant, per a atenció personal i servei tècnic, escriu al grup General de la comunitat Sóc de Poble.';
+  const ACTORS = ['sdp-per-defecte:javi', 'poble:la-torre-de-les-macanes', 'sdp-per-defecte:iaia'];
+  const filaDe = (clau) => llista().querySelector(`li[data-clau="${clau}"]`);
+  const caraDe = (fila) => fila?.querySelector('img.sdp-avatar__imatge')?.getAttribute('src') ?? null;
+  const nomsDeDalt = (n) => [...llista().querySelectorAll(':scope > li .sdp-xat-fila__nom')].slice(0, n).map((nom) => nom.firstChild.textContent);
+
+  test('sense sessió (remot, el xat de mostra de veres): els quatre, tots amb la seua imatge (cap «GD») i Javi obri el seu xat sense cap avís', () => {
+    mocks.senseSessio = true;
+    mocks.joId = null;
+    mocks.ambContextDeVeres = true;
+    render(<XatSection />);
+    expect(nomsDeDalt(4)).toEqual(['Sóc de Poble', 'Javi Llinares', 'Gent de la Torre', 'IAIA MarIA']);
+    const files = [...llista().querySelectorAll(':scope > li')].slice(0, 4);
+    expect(files.map(caraDe).every(Boolean)).toBe(true);
+    expect(caraDe(files[2])).toBe(POBLE_PER_DEFECTE.avatar);
+    expect(files[2].querySelector('.sdp-avatar').textContent).not.toContain('GD');
+    fireEvent.click(files[1].querySelector('button'));
+    expect(mocks.navigate).toHaveBeenLastCalledWith('/xat/fake-javi');
+    expect(mocks.showToast).not.toHaveBeenCalled();
+  });
+
+  test('sessió local, amb la llista real de l’adaptador: els quatre, la Torre amb la seua foto (towns buit) i Javi amb el seu subtítol', async () => {
+    mocks.modeDades = 'local';
+    await ambLaLlistaDe('local');
+    render(<XatSection />);
+    expect(clausDeLaLlista()).toEqual([CLAU_FILA_DE_SOC_DE_POBLE, ...ACTORS]);
+    expect(caraDe(filaDe('poble:la-torre-de-les-macanes'))).toBe(POBLE_PER_DEFECTE.avatar);
+    expect(filaDe('sdp-per-defecte:javi').textContent).toContain('Atenció personal i servei tècnic');
+  });
+
+  test('sessió remota amb chatThreads [] (node sense poble, llista encara buida o un adaptador que no les sintetitza): els quatre', () => {
+    mocks.threads = [];
+    registraEntitatDelProjecte({ tipus: 'entitat', id: UUID_SDP, slug: 'socdepoble' });
+    render(<XatSection />);
+    expect(clausDeLaLlista()).toEqual([CLAU_FILA_DE_SOC_DE_POBLE, ...ACTORS]);
+    expect(nomsDeDalt(4)).toEqual(['Sóc de Poble', 'Javi Llinares', 'Gent de la Torre', 'IAIA MarIA']);
+    expect(caraDe(filaDe('poble:la-torre-de-les-macanes'))).toBe(POBLE_PER_DEFECTE.avatar);
+    expect(screen.queryByText('Encara no tens cap conversa')).toBeNull();
+  });
+
+  /* QA-R2-05 · Sense l'UUID remot de l'entitat, la reserva pública de Sóc de Poble també hi és. */
+  test('sessió remota amb chatThreads [] i la IAIA apagada (nivell d’IA 0): la reserva no la torna', () => {
+    mocks.threads = [];
+    mocks.iaiaApagada = true;
+    render(<XatSection />);
+    expect(clausDeLaLlista()).toEqual([CLAU_FILA_DE_SOC_DE_POBLE, 'sdp-per-defecte:javi', 'poble:la-torre-de-les-macanes']);
+  });
+
+  test('mentre la sessió es comprova (remot, joId null): els quatre hi són i prémer Javi espera la sessió (cap 404) i després obri el servei tècnic', () => {
+    mocks.threads = [];
+    mocks.joId = null;
+    const vista = render(<XatSection />);
+    expect(clausDeLaLlista()).toEqual([CLAU_FILA_DE_SOC_DE_POBLE, ...ACTORS]);
+    mocks.threadId = 'sdp-per-defecte:javi';
+    vista.rerender(<XatSection />);
+    expect(navegacions()).toEqual([]);
+    expect(screen.queryByTestId('pagina-no-trobada')).toBeNull();
+    mocks.joId = 'jo';
+    mocks.filServeiTecnic = filDeMostraDeJavi({ avis: AVIS_SENSE, ambMissatge: false });
+    vista.rerender(<XatSection />);
+    expect(navegacions()).toEqual([['/xat/fake-javi', { replace: true }]]);
+    expect(mocks.showToast).not.toHaveBeenCalled();
+  });
+
+  test('qui mira és Javi (0001, llavor): la seua fila hi és i obri la conversa de servei tècnic, sense directe amb ell mateix', () => {
+    mocks.modeDades = 'seed';
+    mocks.joId = '0001';
+    mocks.threads = ambXatsPerDefecte([]).map((f) => mapejaFil(f));
+    mocks.filServeiTecnic = filDeMostraDeJavi({ avis: AVIS_TU, ambMissatge: false });
+    const vista = render(<XatSection />);
+    expect(clausDeLaLlista()).toEqual([CLAU_FILA_DE_SOC_DE_POBLE, ...ACTORS]);
+    fireEvent.click(filaDe('sdp-per-defecte:javi').querySelector('button'));
+    expect(mocks.navigate).toHaveBeenLastCalledWith('/xat/sdp-per-defecte%3Ajavi');
+    mocks.threadId = 'sdp-per-defecte:javi';
+    vista.rerender(<XatSection />);
+    expect(mocks.navigate).toHaveBeenLastCalledWith('/xat/fake-javi', { replace: true });
+    expect(navegacions().some(([ruta]) => String(ruta).startsWith('/xat?amb='))).toBe(false);
+    mocks.threadId = 'fake-javi';
+    vista.rerender(<XatSection />);
+    expect(screen.queryByTestId('pagina-no-trobada')).toBeNull();
+    expect(screen.getAllByRole('status').some((node) => node.textContent === AVIS_TU)).toBe(true);
+    expect(screen.queryByRole('textbox', { name: /Escriu un missatge/ })).toBeNull();
+    expect(mocks.showToast).not.toHaveBeenCalled();
+  });
+
+  test('qui mira és Javi en remot amb chatThreads []: la fila de reserva hi és i obri la seua conversa de servei tècnic', () => {
+    mocks.threads = [];
+    mocks.joId = '5a5a5a5a-0000-4000-8000-0000000000aa';
+    mocks.filServeiTecnic = filDeMostraDeJavi({ avis: AVIS_TU, ambMissatge: false });
+    const vista = render(<XatSection />);
+    expect(clausDeLaLlista()).toEqual([CLAU_FILA_DE_SOC_DE_POBLE, ...ACTORS]);
+    mocks.threadId = 'sdp-per-defecte:javi';
+    vista.rerender(<XatSection />);
+    expect(navegacions()).toEqual([['/xat/fake-javi', { replace: true }]]);
+    expect(mocks.showToast).not.toHaveBeenCalled();
+  });
+
+  test('useObriXatPerDefecte · Javi mai no mostra cap avís: el directe on es pot; si no, la conversa de servei tècnic', () => {
+    const { result } = renderHook(() => useObriXatPerDefecte());
+    result.current('javi', { modeDades: 'seed' });
+    result.current('javi', { modeDades: 'seed', serveiTecnic: true });
+    result.current('javi', { modeDades: 'remote' });
+    result.current('javi', { modeDades: 'remote', senseSessio: true });
+    expect(navegacions()).toEqual([
+      ['/xat?amb=0001', { replace: true }], ['/xat/fake-javi', { replace: true }],
+      ['/xat/fake-javi', { replace: true }], ['/xat/fake-javi', { replace: true }]
+    ]);
+    expect(mocks.showToast).not.toHaveBeenCalled();
   });
 });

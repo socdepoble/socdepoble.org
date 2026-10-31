@@ -4,7 +4,7 @@ import {
   MAX_BYTES_EXIF, llegixExif, llegixMetadadesImatge, llegixOrientacioImatge, senseDades, teExif,
 } from './exif.js';
 import { carregaImatge, exportaRetall } from './imatgeCanvas.js';
-import { APP0_JFIF, IMATGE, SOI, app1Exif, concatena, dataOriginal, gpsTorre, orientacio, tiff } from './jpegProva.js';
+import { APP0_JFIF, IMATGE, SOI, app1Exif, concatena, dataOriginal, gpsTorre, orientacio, tiff } from '../../../../tests/helpers/jpegProva.js';
 import { dibuixaDreta, orientacioPendent, transformacioOrientacio } from './orientacio.js';
 
 /* Gauntlet 261016 · P2 de Codex (02:04:33, relleus 02:22 i 02:25) · Una foto

@@ -74,5 +74,12 @@ export default [
     rules: {
       'no-unused-vars': ['warn', { 'argsIgnorePattern': '^_', 'varsIgnorePattern': '^_' }]
     }
+  },
+  {
+    // El bot és Node, no React: useMultiFileAuthState (Baileys) no és cap hook (QA-R2-02).
+    files: ['bot/**/*.mjs'],
+    rules: {
+      'react-hooks/rules-of-hooks': 'off'
+    }
   }
 ];

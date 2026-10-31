@@ -65,8 +65,9 @@ import {
 
 const FILTRE_TEMPORADA = 'temporada';
 const PARAMETRES = Object.freeze({ mes: esParametreMes, filtre: (valor) => valor === FILTRE_TEMPORADA });
-/* Textos curts: a les eines les píndoles no es partixen (catalegColleccio.css) i
-   el filtre ha de cabre en la columna del mig de 280 px sense CSS nou. */
+/* Textos curts: a les eines les píndoles no es partixen (src/css/modules.css,
+   bloc catalegColleccio) i el filtre ha de cabre en la columna del mig de
+   280 px sense CSS nou. */
 const FILTRES = Object.freeze([
   Object.freeze({ valor: 'tot', text: 'Tot' }),
   Object.freeze({ valor: FILTRE_TEMPORADA, text: 'De temporada' })

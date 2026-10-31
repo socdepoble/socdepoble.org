@@ -120,6 +120,24 @@ describe('potTriarCarpeta i demanaCarpeta', () => {
     expect(potTriarCarpeta({ showDirectoryPicker() {} })).toBe(true);
   });
 
+  test('Gauntlet 261029 c1 · en un marc d’un altre origen, no (Chrome hi rebutja el selector amb SecurityError)', async () => {
+    const bloquejat = () => { throw new DOMException('Blocked a frame from accessing a cross-origin frame.', 'SecurityError'); };
+    let crides = 0;
+    const showDirectoryPicker = () => {
+      crides += 1;
+      return Promise.resolve(new Carpeta('mai'));
+    };
+    const alie = { showDirectoryPicker, top: { get location() { return bloquejat(); } } };
+    expect(potTriarCarpeta(alie)).toBe(false);
+    expect(potTriarCarpeta({ showDirectoryPicker, get top() { return bloquejat(); } })).toBe(false);
+    expect(await errorDe(demanaCarpeta({ entorn: alie }))).toMatchObject({ codi: 'SELECTOR_NO_DISPONIBLE' });
+    expect(crides).toBe(0);
+    const dalt = { showDirectoryPicker };
+    dalt.top = dalt;
+    expect(potTriarCarpeta(dalt)).toBe(true);
+    expect(potTriarCarpeta({ showDirectoryPicker, top: { location: { href: 'https://socdepoble.org/' } } })).toBe(true);
+  });
+
   test('demana la carpeta amb el mode i des de l\'entorn (this)', async () => {
     const handle = new Carpeta('Facturacio');
     const rebudes = [];

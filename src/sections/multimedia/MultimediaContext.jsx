@@ -1,7 +1,10 @@
 import { backendScope } from '../../config/backendConfig.js';
 import { useSession } from '../../app/contexts/SessionContext.jsx';
 import { useScopedResource } from '../../app/contexts/useScopedResource.js';
-import { createContext, useContext, useMemo } from 'react';
+import { useContext, useMemo } from 'react';
+/* P1-71 (Gauntlet 261029) · L'objecte de context viu a objectesDeContext.js,
+   que no importa res del projecte. */
+import { MultimediaContext } from './objectesDeContext.js';
 import { loadMultimedia } from '../../data/backendPort.js';
 import { useIdentitat } from '../../app/contexts/IdentitatContext.jsx';
 import { useMur } from '../mur/MurContext.jsx';
@@ -13,7 +16,6 @@ import { agrupaPerMes } from './cronologia.js';
 
 import { useRecarregaExterna } from '../../app/contexts/useRecarregaExterna.jsx';
 
-const MultimediaContext = createContext(null);
 const CAP = Object.freeze([]);
 
 /* Onada 0.3 (Gauntlet 261016, M03) · Una foto viva entra a l'Arxiu si el

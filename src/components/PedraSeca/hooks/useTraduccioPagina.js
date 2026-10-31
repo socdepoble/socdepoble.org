@@ -6,14 +6,21 @@
  *  · Descobriment: l'URL del servei ve de useUIState().externalConfig
  *    .traductorUrl (el plugin la hi fa arribar; ronda D1 de Codex, sense cap
  *    nonce). Sense URL, o fora d'un UIProvider, el servei no està disponible
- *    i el clic a Traduir ho diu: AVIS_SENSE_TRADUCTOR.
+ *    i el clic a Traduir ho diu: AVIS_SENSE_TRADUCTOR. IDEA-31 (261030):
+ *    llevat que l'entrada pròpia (main.jsx, socdepoble.org estàtic) haja fixat
+ *    el transport lliure d'Apertium (data/traductorLliure.js), que va des del
+ *    navegador. Un servei del mateix origen sempre mana.
  *  · En triar una llengua es recullen el títol i els blocs de text de
- *    l'article ORIGINAL (blocsTraduibles), es traduïxen en lots de text
+ *    l'article ORIGINAL (blocsTraduibles), es traduïxen en lots
  *    (data/traductor.js) i la pàgina canvia EN LOCAL: estat de React, cap
  *    recàrrega ni navegació. L'original no es desmunta mai: PageFrame
  *    l'amaga mentres es veu la traducció, i «Veure l'original» el torna.
+ *    C4 (Codex 261030) · Un bloc amb enllaços o negretes va com a HTML
+ *    local si el motor en sap (`admetHtml`) o partit pels enllaços si no
+ *    (preparaTraduccio); torna amb les marques de l'original.
  *  · Memòria cau en memòria per servei + llengua + textos: la mateixa pàgina
- *    en la mateixa llengua no es torna a demanar (ni gasta pressupost).
+ *    en la mateixa llengua no es torna a demanar (ni gasta pressupost),
+ *    llevat que algun text haja tornat en l'original (ALT-02, Gemini 261030).
  *  · Errors: el missatge el tria la vista pel codi, mai pel text del
  *    servidor ni del proveïdor. L'original no es perd mai; una traducció ja
  *    pintada es conserva si la següent falla.
@@ -25,9 +32,11 @@ import { useUIState } from '../../../app/contexts/UIContext';
 import { useRouter } from '../../../app/contexts/RouterContext';
 import { useToast } from '@/components/universal/NotificationContext.jsx';
 import {
-  CODI_TRADUCCIO, LLENGUES_TRADUCCIO, creaTraductor, llenguaDeTraduccio, tradueixTot
+  CODI_TRADUCCIO, LIMITS_TRADUCCIO, LLENGUES_TRADUCCIO, caractersDe, creaTraductor, llenguaDeTraduccio, sanejaDestinsDeclarats, tradueixTot
 } from '../../../data/traductor.js';
-import { blocsTraduibles } from '../../universal/traduccio/blocsTraduibles.js';
+import { carregaTraductorLliure, traductorLliureDelLloc } from '../../../data/traductorDelLloc.js';
+import { blocsTraduibles, preparaTraduccio } from '../../universal/traduccio/blocsTraduibles.js';
+import { tradueix, useTraductorOpcional } from './useTraductorOpcional.js';
 
 export const AVIS_SENSE_TRADUCTOR = 'La traducció automàtica no està disponible en este servidor.';
 export const AVIS_ERROR_TRADUCCIO = 'No s’ha pogut traduir la pàgina. Torna-ho a provar més tard.';
@@ -35,23 +44,48 @@ export const AVIS_MASSA_LLARGA = 'Esta pàgina és massa llarga per a traduir-la
 export const AVIS_SENSE_CONNEXIO = 'No s’ha pogut connectar amb el servei de traducció.';
 export const AVIS_SENSE_TEXT = 'Esta pàgina no té text per traduir.';
 
-/* Codis de WP REST acordats amb Codex (ronda D1). La resta, el genèric. */
-const AVISOS_DEL_SERVIDOR = Object.freeze({
-  sdp_traduccio_sense_clau: AVIS_SENSE_TRADUCTOR,
-  sdp_traduccio_mida: AVIS_MASSA_LLARGA,
-  sdp_traduccio_limit: 'S’ha arribat al límit de traduccions automàtiques. Torna-ho a provar més tard.',
-  sdp_traduccio_ocupada: 'El servei de traducció està ocupat. Torna-ho a provar d’ací a un moment.',
+/* Gauntlet 261030 (cicle 2, menu-traduir-noms-sense-i18n) · Cada avís és un
+   parell [clau i18n, reserva en valencià]: ix en la llengua de la
+   interfície (src/config/idiomes) i, sense traductor, en valencià. */
+export const PARELLS_AVIS_TRADUCCIO = Object.freeze({
+  senseTraductor: Object.freeze(['section.traduir.avis.senseTraductor', AVIS_SENSE_TRADUCTOR]),
+  error: Object.freeze(['section.traduir.avis.error', AVIS_ERROR_TRADUCCIO]),
+  massaLlarga: Object.freeze(['section.traduir.avis.massaLlarga', AVIS_MASSA_LLARGA]),
+  senseConnexio: Object.freeze(['section.traduir.avis.senseConnexio', AVIS_SENSE_CONNEXIO]),
+  senseText: Object.freeze(['section.traduir.avis.senseText', AVIS_SENSE_TEXT]),
+  limit: Object.freeze(['section.traduir.avis.limit', 'S’ha arribat al límit de traduccions automàtiques. Torna-ho a provar més tard.']),
+  ocupat: Object.freeze(['section.traduir.avis.ocupat', 'El servei de traducció està ocupat. Torna-ho a provar d’ací a un moment.']),
 });
 
-export function avisDError(error) {
+/* Codis de WP REST acordats amb Codex (ronda D1). La resta, el genèric. */
+const AVISOS_DEL_SERVIDOR = Object.freeze({
+  sdp_traduccio_sense_clau: PARELLS_AVIS_TRADUCCIO.senseTraductor,
+  sdp_traduccio_mida: PARELLS_AVIS_TRADUCCIO.massaLlarga,
+  sdp_traduccio_limit: PARELLS_AVIS_TRADUCCIO.limit,
+  sdp_traduccio_ocupada: PARELLS_AVIS_TRADUCCIO.ocupat,
+});
+
+/** El parell [clau, reserva] de l'avís d'un error; la vista el traduïx. */
+export function parellDError(error) {
   switch (error?.codi) {
-    case CODI_TRADUCCIO.NO_DISPONIBLE: return AVIS_SENSE_TRADUCTOR;
-    case CODI_TRADUCCIO.MASSA_LLARGA: return AVIS_MASSA_LLARGA;
-    case CODI_TRADUCCIO.INABASTABLE: return AVIS_SENSE_CONNEXIO;
-    case CODI_TRADUCCIO.SERVIDOR: return AVISOS_DEL_SERVIDOR[error.codiServidor] || AVIS_ERROR_TRADUCCIO;
-    default: return AVIS_ERROR_TRADUCCIO;
+    case CODI_TRADUCCIO.NO_DISPONIBLE: return PARELLS_AVIS_TRADUCCIO.senseTraductor;
+    case CODI_TRADUCCIO.MASSA_LLARGA: return PARELLS_AVIS_TRADUCCIO.massaLlarga;
+    case CODI_TRADUCCIO.INABASTABLE: return PARELLS_AVIS_TRADUCCIO.senseConnexio;
+    case CODI_TRADUCCIO.SERVIDOR: return AVISOS_DEL_SERVIDOR[error.codiServidor] || PARELLS_AVIS_TRADUCCIO.error;
+    default: return PARELLS_AVIS_TRADUCCIO.error;
   }
 }
+
+/** L'avís d'un error en valencià (la reserva). */
+export const avisDError = (error) => parellDError(error)[1];
+
+/* El transport lliure, si l'entrada pròpia l'ha fixat i hi ha fetch. */
+const viaLliureDisponible = () => traductorLliureDelLloc() === 'apertium' && typeof globalThis.fetch === 'function';
+
+/** Gauntlet 261030 (cicle 2, traduccions-actiu-a-app-nativa) · Si Traduir
+ *  hi traduïx de veritat, amb el mateix criteri que el hook: un servei del
+ *  mateix origen o el transport lliure del lloc propi. A l'app nativa, no. */
+export const traduccioDePaginesDisponible = (traductorUrl) => creaTraductor({ url: traductorUrl }).disponible || viaLliureDisponible();
 
 /* Memòria cau del mòdul: sobreviu al canvi de pàgina i de llengua. */
 const MAX_CAU = 16;
@@ -85,8 +119,29 @@ function useRouterLlegible() {
 export function useTraduccioPagina({ titol = null, cosRef = null } = {}) {
   const ui = useEstatUI();
   const url = typeof ui?.externalConfig?.traductorUrl === 'string' ? ui.externalConfig.traductorUrl : '';
-  const traductor = useMemo(() => creaTraductor({ url }), [url]);
+  /* IDEA-31 · Primer el servei del mateix origen (el connector, el servidor de
+     desenvolupament o VITE_TRADUCTOR_URL); si no n'hi ha i l'entrada pròpia
+     l'ha fixat, el transport lliure d'Apertium. Cap amfitrió no el pot posar.
+     Gauntlet 261030 (cicle 2) · El transport lliure es carrega en triar una
+     llengua (traductorDelLloc.js): el botó només en sap si hi és. */
+  const servidor = useMemo(() => creaTraductor({ url }), [url]);
+  /* Gauntlet 261030 (Fase 3, TC3.1; traduir-eu-de-servidor-503) · Els destins
+     que l'amfitrió declara per al seu servei (`traductorLlengues`: WordPress,
+     marcatge.php; el servidor de desenvolupament, main.jsx). Un destí que no
+     hi és dona el mateix avís «no disponible» que donava el 503, però sense
+     cap petició (cap error a la consola) i sense tocar el menú (Llei del
+     Píxel). Sense la declaració (amfitrions vells), com abans. */
+  const destinsCrus = ui?.externalConfig?.traductorLlengues;
+  const clauDestins = Array.isArray(destinsCrus) ? destinsCrus.join(' ') : (typeof destinsCrus === 'string' ? destinsCrus : '');
+  const destinsDelServei = useMemo(
+    () => (servidor.disponible ? sanejaDestinsDeclarats(clauDestins) ?? null : null),
+    [servidor, clauDestins]
+  );
+  const viaLliure = !servidor.disponible && viaLliureDisponible();
+  const disponible = servidor.disponible || viaLliure;
   const { showToast } = useToast();
+  const t = useTraductorOpcional();
+  const avisa = useCallback((parell) => showToast(tradueix(t, parell)), [showToast, t]);
   const router = useRouterLlegible();
   const textTitol = typeof titol === 'string' ? titol.trim() : '';
   const clauPagina = JSON.stringify([
@@ -115,6 +170,12 @@ export function useTraduccioPagina({ titol = null, cosRef = null } = {}) {
   const tria = useCallback(async (codi) => {
     setMenuObert(false);
     if (codi && codi === vigent.llengua && !vigent.carregant) return;
+    /* TC3.1 · Abans de tocar res (la traducció a la vista o la que arriba es
+       queden): el destí que el servei no declara no s'envia. */
+    if (codi != null && destinsDelServei && llenguaDeTraduccio(codi) && !destinsDelServei.includes(codi)) {
+      avisa(PARELLS_AVIS_TRADUCCIO.senseTraductor);
+      return;
+    }
     const vida = vidaRef.current;
     vida.peticio += 1;
     vida.control?.abort();
@@ -124,23 +185,48 @@ export function useTraduccioPagina({ titol = null, cosRef = null } = {}) {
       return;
     }
     if (!llenguaDeTraduccio(codi)) return;
-    if (!traductor.disponible) {
-      showToast(AVIS_SENSE_TRADUCTOR);
+    if (!disponible) {
+      avisa(PARELLS_AVIS_TRADUCCIO.senseTraductor);
       return;
     }
+    let traductor = servidor;
+    if (!servidor.disponible) {
+      const torn = vida.peticio;
+      try {
+        traductor = (await carregaTraductorLliure())?.creaTraductorApertium?.() ?? null;
+      } catch {
+        traductor = null;
+      }
+      // Mentre es carregava, la pàgina o la llengua han canviat.
+      if (torn !== vida.peticio) return;
+      if (!traductor?.disponible) {
+        avisa(PARELLS_AVIS_TRADUCCIO.senseConnexio);
+        return;
+      }
+    }
     const blocs = blocsTraduibles(cosRef?.current);
-    const textos = [...(textTitol ? [textTitol] : []), ...blocs.map((bloc) => bloc.text)];
+    const preparada = preparaTraduccio(blocs, {
+      html: typeof traductor.admetHtml === 'function' ? traductor.admetHtml(codi) : false,
+      maxim: LIMITS_TRADUCCIO.caractersPagina - caractersDe(textTitol),
+    });
+    const textos = [...(textTitol ? [textTitol] : []), ...preparada.textos];
     if (!textos.length) {
-      showToast(AVIS_SENSE_TEXT);
+      avisa(PARELLS_AVIS_TRADUCCIO.senseText);
       return;
     }
     const desplacament = textTitol ? 1 : 0;
-    const aplica = (traduccions) => setEstat({
+    /* Gauntlet 261030 (cicle 2) · `originals`: els índexs de `textos` que han
+       tornat en l'original (tradueixTot · enOriginal). Un títol que torna en
+       l'original no porta el lang de la traducció; un bloc, el de l'original. */
+    const aplica = ({ traduccions, originals }) => setEstat({
       clau: clauPagina,
       llengua: codi,
       carregant: null,
-      titol: textTitol ? (traduccions[0] || textTitol) : null,
-      blocs: blocs.map((bloc, i) => ({ ...bloc, text: traduccions[i + desplacament] || bloc.text })),
+      titol: textTitol && traduccions[0] && !originals.has(0) ? traduccions[0] : null,
+      blocs: preparada.munta(
+        traduccions.slice(desplacament),
+        new Set([...originals].filter((index) => index >= desplacament).map((index) => index - desplacament))
+      ),
     });
     const clauCau = JSON.stringify([url, codi, textos]);
     if (cau.has(clauCau)) {
@@ -155,35 +241,50 @@ export function useTraduccioPagina({ titol = null, cosRef = null } = {}) {
     vida.control = control;
     setEstat((abans) => ({ ...(abans.clau === clauPagina ? abans : ORIGINAL), clau: clauPagina, carregant: codi }));
     try {
-      const traduccions = await tradueixTot(traductor, textos, codi, { signal: control?.signal });
+      const originals = new Set();
+      const traduccions = await tradueixTot(traductor, textos, codi, {
+        signal: control?.signal, enOriginal: (index) => originals.add(index)
+      });
       if (id !== vida.peticio) return;
       vida.control = null;
-      cau.set(clauCau, traduccions);
-      while (cau.size > MAX_CAU) cau.delete(cau.keys().next().value);
-      aplica(traduccions);
+      const desada = { traduccions, originals };
+      /* ALT-02 (Gemini 261030) · Una pàgina amb algun text que ha tornat en
+         l'original (el motor no l'ha traduït) no es desa: triar-la de nou
+         torna a demanar eixos textos (el transport lliure servix la resta
+         de la seua memòria cau) en lloc de quedar-se així tota la sessió. */
+      if (!originals.size) {
+        cau.set(clauCau, desada);
+        while (cau.size > MAX_CAU) cau.delete(cau.keys().next().value);
+      }
+      aplica(desada);
     } catch (error) {
       if (id !== vida.peticio || error?.codi === CODI_TRADUCCIO.CANCELLADA) return;
       vida.control = null;
       setEstat((abans) => (abans.clau === clauPagina ? { ...abans, carregant: null } : abans));
-      showToast(avisDError(error));
+      avisa(parellDError(error));
     }
-  }, [clauPagina, cosRef, showToast, textTitol, traductor, url, vigent.carregant, vigent.llengua]);
+  }, [avisa, clauPagina, cosRef, destinsDelServei, disponible, servidor, textTitol, url, vigent.carregant, vigent.llengua]);
 
   const commutaMenu = useCallback(() => {
-    if (!traductor.disponible) {
-      showToast(AVIS_SENSE_TRADUCTOR);
+    if (!disponible) {
+      avisa(PARELLS_AVIS_TRADUCCIO.senseTraductor);
       return;
     }
     setMenuObert((obert) => !obert);
-  }, [showToast, traductor]);
+  }, [avisa, disponible]);
 
   const tancaMenu = useCallback(() => setMenuObert(false), []);
   const original = useCallback(() => tria(null), [tria]);
+  /* Gauntlet 261030 (Fase 3, TC3.3) · La llengua del text de la interfície
+     (UIContext · llenguaDelText), o null fora d'un UIProvider: PageFrame hi
+     compara la del contingut per a posar-li el lang (WCAG 3.1.2). */
+  const llenguaInterficie = typeof ui?.llenguaDelText === 'string' && ui.llenguaDelText ? ui.llenguaDelText : null;
 
   return useMemo(() => {
-    const obert = menuObert && traductor.disponible;
+    const obert = menuObert && disponible;
     return {
-      disponible: traductor.disponible,
+      disponible,
+      llenguaInterficie,
       llengua: vigent.llengua,
       lang: llenguaDeTraduccio(vigent.llengua)?.lang ?? null,
       carregant: vigent.carregant,
@@ -197,5 +298,5 @@ export function useTraduccioPagina({ titol = null, cosRef = null } = {}) {
       tria,
       original,
     };
-  }, [commutaMenu, menuObert, original, tancaMenu, traductor, tria, vigent]);
+  }, [commutaMenu, disponible, llenguaInterficie, menuObert, original, tancaMenu, tria, vigent]);
 }

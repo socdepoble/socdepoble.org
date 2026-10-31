@@ -141,6 +141,23 @@ describe('agrupaComunitats (T67)', () => {
     expect(comunitats[1]).toMatchObject({ fills: [], noLlegits: 0, ultimAl: null });
     expect(agrupaComunitats(null)).toEqual([]);
   });
+
+  /* Gauntlet 261030 (cicle 2, G7) · La insígnia de la comunitat comptava els
+     fills silenciats i arxivats, que el títol (sumaNoLlegits) ja no suma. */
+  it('G7 · els fills silenciats o arxivats no sumen a la insígnia de la comunitat, com al títol', () => {
+    const fils = [
+      f('coop', 'comunitat'),
+      f('avisos', 'canal', { comunitatId: 'coop', noLlegits: 1 }),
+      f('festes', 'grup', { comunitatId: 'coop', noLlegits: 3, silenciatFinsAl: '2099-01-01T00:00:00Z' }),
+      f('vell', 'grup', { comunitatId: 'coop', noLlegits: 5, arxivatAl: '2026-10-01T00:00:00Z' })
+    ];
+    expect(fils.find((x) => x.id === 'festes').silenciat).toBe(true);
+    expect(fils.find((x) => x.id === 'vell').arxivat).toBe(true);
+    const [coop] = agrupaComunitats(fils);
+    expect(coop.fills.map((x) => x.id)).toEqual(['avisos', 'festes', 'vell']);
+    expect(coop.noLlegits).toBe(1);
+    expect(coop.noLlegits).toBe(sumaNoLlegits(coop.fills));
+  });
 });
 
 describe('contactesFrequents (T68)', () => {

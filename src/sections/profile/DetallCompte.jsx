@@ -130,6 +130,8 @@ export function DetallCompte({ identitat, guardarAjust, pujaMitja, contacte = nu
 
   return (
     <UniversalPage
+      /* Decisions 261030 §7 · Correu, sessió i dades d'accés: Traduir no envia res fora. */
+      traduccio={false}
       chrome="context"
       layout="contained"
       title={TITOLS[llocDelDetall]}

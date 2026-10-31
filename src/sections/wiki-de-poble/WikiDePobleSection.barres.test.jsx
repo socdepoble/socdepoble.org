@@ -59,36 +59,43 @@ const munta = (amplada, ruta = '/wikidepoble') => {
 const closca = (c) => c.querySelector('.app-grid-shell');
 const navegacio = (c) => c.querySelector('#app-grid-sidebar');
 
-test.each([720, 820, 943])('Barres · a %i la nav «WIKI DE POBLE» és al rail fix i Expandir obri el panell amb el focus a la carpeta activa', (amplada) => {
+/* Columnes fixes (ordre del Mestre, 30-10-2026 ~12:45) · Abans, de 720 a
+   943 la Wiki era «mitja»: la nav, un rail fix, i Expandir obria un panell
+   per damunt amb vel. Ara és «ample»: la nav és la primera columna de la
+   graella, desplegada, amb els dos separadors; plegada, el rail porta la
+   carpeta, i Expandir la torna a la graella, mai com a panell.
+   Decisió 1 del Mestre (30-10-2026 ~15:00) · Des de 721: 720 justos ja són
+   el mòbil (vegeu la prova de davall). */
+test.each([721, 820, 943])('Columnes fixes · a %i la nav «WIKI DE POBLE» és la primera columna de la graella; plegada, el rail porta la carpeta i Expandir la torna a la graella', (amplada) => {
   const { container } = munta(amplada);
-  expect([closca(container).dataset.layout, closca(container).dataset.panell, closca(container).dataset.esquerra]).toEqual(['mitja', '', 'rail']);
+  expect([closca(container).dataset.layout, closca(container).dataset.panell]).toEqual(['ample', '']);
   const nav = navegacio(container);
   expect(nav.hasAttribute('inert')).toBe(false);
   expect(nav.getAttribute('aria-hidden')).toBeNull();
   expect(nav.dataset.obert).toBe('true');
+  expect(container.querySelector('.app-grid-resizer--left')).not.toBeNull();
+  expect(container.querySelector('.app-grid-resizer--middle')).not.toBeNull();
+
+  fireEvent.click(within(nav).getByRole('button', { name: 'Replegar WIKI DE POBLE' }));
   const rail = within(nav).getByRole('navigation', { name: 'WIKI DE POBLE' });
   expect(rail.classList.contains('sdp-workspace-rail')).toBe(true);
   expect(within(rail).getByRole('button', { name: 'Wiki de Poble' }).getAttribute('aria-current')).toBe('page');
-
   const expandir = within(nav).getByRole('button', { name: 'Expandir WIKI DE POBLE' });
-  expect(expandir.getAttribute('aria-controls')).toBe('app-grid-sidebar');
-  expandir.focus();
+  expect(expandir.querySelector('svg').classList.contains('lucide-folder')).toBe(true);
+  expect(container.querySelector('svg.lucide-panel-left-open')).toBeNull();
   fireEvent.click(expandir);
-  expect(closca(container).dataset.panell).toBe('left');
-  expect(document.activeElement.closest('#app-grid-sidebar')).toBe(nav);
-  expect(document.activeElement.getAttribute('aria-current')).toBe('page');
-  expect(document.activeElement.textContent).toContain('Wiki de Poble');
+  expect(closca(container).dataset.panell).toBe('');
+  expect(container.querySelector('.has-left-collapsed')).toBeNull();
+  expect(container.querySelector('.app-grid-resizer--left')).not.toBeNull();
 });
 
-test('Barres · a 719 (estret) i a 944 (ample) no hi ha el rail de mitjà; a 944, les dues columnes desplegades', () => {
-  const estret = munta(719);
+test('Barres · a 720 (estret, decisió 1 del Mestre: «<= 720 px per a vista mòbil») i a 944 (ample) no hi ha el rail de mitjà; a 944, les dues columnes desplegades', () => {
+  const estret = munta(720);
   expect(closca(estret.container).dataset.layout).toBe('estret');
-  expect(closca(estret.container).hasAttribute('data-esquerra')).toBe(false);
   cleanup();
   vi.restoreAllMocks();
   const { container } = munta(944);
   expect(closca(container).dataset.layout).toBe('ample');
-  expect(closca(container).hasAttribute('data-esquerra')).toBe(false);
   expect(within(navegacio(container)).getByRole('button', { name: 'Replegar WIKI DE POBLE' })).toBeTruthy();
   expect(navegacio(container).querySelector('.sdp-workspace-rail')).toBeNull();
 });

@@ -6,8 +6,9 @@
    cua F7 encua amb les claus bloquejades i drena en ordre en desbloquejar-les;
    els adjunts viatgen xifrats i es servixen desxifrats; l'oblit (D-09) és
    explícit. Bandera real apagada: ací el decorador s'activa per paràmetre. */
-import { beforeAll, describe, expect, test, vi } from 'vitest';
+import { beforeAll, beforeEach, describe, expect, test, vi } from 'vitest';
 import { ambXifratXat, serveiXifratXat } from './xifratXat.js';
+import { creaMotorXifrat } from './xifratXatPipeline.js';
 import { CAPACITATS, CONTRACTE_NUCLI } from './contracte.js';
 import { creaIdentitat } from './xifratXatProtocol.js';
 import { creaMagatzemXat } from './xifratXatMagatzem.js';
@@ -28,6 +29,9 @@ const ADJ = '10000000-0000-4000-8000-000000000003';
 const ALTRE = '10000000-0000-4000-8000-000000000004';
 const Q1 = '20000000-0000-4000-8000-000000000001';
 const Q2 = '20000000-0000-4000-8000-000000000002';
+const P1 = '30000000-0000-4000-8000-000000000001';
+const P2 = '30000000-0000-4000-8000-000000000002';
+const P3 = '30000000-0000-4000-8000-000000000003';
 const ORIGEN = 'https://socdepoble.org';
 const T0 = Date.UTC(2026, 9, 29, 12);
 const ci = (u) => JSON.stringify(['supabase', 'https://backend.example.test', u]);
@@ -87,7 +91,7 @@ function creaServidor() {
   return { claus, epoques, missatges, adjunts, publica, adaptadorDe };
 }
 
-async function creaPart(servidor, jo, { ambIdentitat = true } = {}) {
+async function creaPart(servidor, jo, { ambIdentitat = true, pressupostBlobs = undefined, revocaUrl = undefined } = {}) {
   const fals = creaIdbFalsEstructurat();
   const magatzem = creaMagatzemXat({ idb: fals, rangs: fals.IDBKeyRange, cripto, ClasseClau: globalThis.CryptoKey, ara: () => T0 });
   const identitat = await creaIdentitat(cripto, { usuari: jo, creatMs: T0 });
@@ -100,7 +104,9 @@ async function creaPart(servidor, jo, { ambIdentitat = true } = {}) {
   const d = ambXifratXat(impl, {
     actiu: true, isSecureContext: true, origen: ORIGEN, cripto, indexedDB: fals, magatzem, ara: () => T0,
     creaBlob: (parts, opcions) => new Blob(parts, opcions),
-    creaUrl: (blob) => { blobs.push(blob); return `blob:sintetic/${blobs.length}`; }
+    creaUrl: (blob) => { blobs.push(blob); return `blob:sintetic/${blobs.length}`; },
+    ...(pressupostBlobs === undefined ? {} : { pressupostBlobs }),
+    ...(revocaUrl === undefined ? {} : { revocaUrl })
   });
   const servei = serveiXifratXat(d);
   servei.fixaAmbit(ambit(jo), ci(jo));
@@ -251,5 +257,197 @@ describe('pipeline extrem a extrem (dos parts, doble de servidor en memòria)', 
     expect(impl.enviaXifratXat).not.toHaveBeenCalled();
     const estat = await serveiXifratXat(d).oblidaTotXat();
     expect(estat).toMatchObject({ estat: 'oblidat', nomesRam: true });
+  });
+});
+
+/* P1-12 pas 17 (disseny §4.7 i D-09) · El pressupost LRU dels blob: desxifrats al
+   decorador real, l'exigix abans de crear cap blob: i l'oblit amb la CI explícita
+   de qui ix (la carrera amb useXifratXat, que buida l'àmbit abans de l'eixida). */
+describe('pas 17 · LRU dels adjunts desxifrats i oblit amb CI explícita', () => {
+  let servidor;
+  let a;
+  let identitatB;
+  let b;
+  let revocades;
+  const foto = () => new Blob([cripto.getRandomValues(new Uint8Array(3000))], { type: 'image/jpeg' });
+  /* Gauntlet 261029 (c1, ordre-pas17) · Una part B nova per cas: decorador, magatzem, servei i
+     LRU propis (bytesBlobs 0), amb la identitat publicada de B i els tres adjunts ja rebuts.
+     Cap cas hereta els blob: ni l'àmbit d'un altre, en qualsevol ordre (--sequence.shuffle). */
+  const partB = async (opcions = {}) => {
+    const p = await creaPart(servidor, B, { ...opcions, ambIdentitat: false });
+    await p.magatzem.desaIdentitat(ci(B), identitatB);
+    await p.d.loadMissatges(FIL);
+    return { ...p, identitat: identitatB };
+  };
+  beforeAll(async () => {
+    servidor = creaServidor();
+    a = await creaPart(servidor, A);
+    identitatB = (await creaPart(servidor, B)).identitat;
+    for (const id of [P1, P2, P3]) await a.d.publicaAdjuntXat(FIL, { id, fitxer: foto(), tipus: 'foto' });
+  });
+  beforeEach(async () => {
+    revocades = [];
+    b = await partB({ pressupostBlobs: 7000, revocaUrl: (url) => revocades.push(url) });
+  });
+
+  test('el pressupost revoca la menys recent (el toc compta), renova revoca la vella i el canvi d’actor buida una sola vegada', async () => {
+    expect(b.servei.estatAmbit()).toMatchObject({ pressupostBlobs: 7000, bytesBlobs: 0 });
+    const u1 = await b.d.urlAdjuntXat(P1);
+    const u2 = await b.d.urlAdjuntXat(P2);
+    expect(revocades).toEqual([]);
+    expect(b.servei.estatAmbit()).toMatchObject({ bytesBlobs: 6000, midaBlobs: 2 });
+    expect(await b.d.urlAdjuntXat(P1)).toBe(u1);
+    const u3 = await b.d.urlAdjuntXat(P3);
+    expect(revocades).toEqual([u2]);
+    expect(b.servei.estatAmbit()).toMatchObject({ bytesBlobs: 6000, midaBlobs: 2 });
+    expect(b.impl.bytesAdjuntXat).toHaveBeenCalledTimes(3);
+
+    const u2b = await b.d.urlAdjuntXat(P2);
+    expect(u2b).not.toBe(u2);
+    expect(b.impl.bytesAdjuntXat).toHaveBeenCalledTimes(4);
+    expect(revocades).toEqual([u2, u1]);
+
+    const u3b = await b.d.urlAdjuntXat(P3, {}, { renova: true });
+    expect(u3b).not.toBe(u3);
+    expect(revocades).toEqual([u2, u1, u3]);
+    expect(b.servei.estatAmbit()).toMatchObject({ bytesBlobs: 6000, midaBlobs: 2 });
+
+    b.servei.fixaAmbit(JSON.stringify(['backend-sintetic', B, `entitat::${ORG}`]), ci(B));
+    expect(revocades.slice(3).sort()).toEqual([u2b, u3b].sort());
+    expect(new Set(revocades).size).toBe(revocades.length);
+    expect(b.servei.estatAmbit()).toMatchObject({ bytesBlobs: 0, midaBlobs: 0, pressupostBlobs: 7000 });
+    b.servei.fixaAmbit(ambit(B), ci(B));
+  });
+
+  test('si l’àmbit canvia just abans de servir-lo, no es crea cap blob: i el clar queda a zero', async () => {
+    await b.d.loadMissatges(FIL);
+    const servei = b.servei;
+    const creaUrl = vi.fn(() => 'blob:no-hauria');
+    const parts = [];
+    const creaBlob = vi.fn((p, opcions) => { parts.push(p[0]); return new Blob(p, opcions); });
+    const linia = [];
+    const motor = creaMotorXifrat({
+      cripto, impl: b.impl, servei, magatzem: b.magatzem, ara: () => T0,
+      creaBlob: (p, opcions) => { linia.push('creaBlob'); return creaBlob(p, opcions); },
+      creaUrl: (blob) => { linia.push('creaUrl'); return creaUrl(blob); }
+    });
+    /* La línia de temps: després de l'últim decrypt hi ha la guarda del protocol i la nova, i només aleshores el blob:. */
+    const decryptOriginal = cripto.subtle.decrypt.bind(cripto.subtle);
+    const espia = vi.spyOn(cripto.subtle, 'decrypt').mockImplementation(async (...args) => {
+      const resultat = await decryptOriginal(...args);
+      linia.push('decrypt');
+      return resultat;
+    });
+    let crides = 0;
+    try {
+      await motor.urlAdjunt({ id: P1, config: {}, exigix: () => { crides += 1; linia.push('exigix'); }, renova: true });
+    } finally {
+      espia.mockRestore();
+    }
+    expect(linia.slice(linia.lastIndexOf('decrypt'))).toEqual(['decrypt', 'exigix', 'exigix', 'creaBlob', 'creaUrl']);
+    expect(creaUrl).toHaveBeenCalledTimes(1);
+    const darrera = crides;
+    creaUrl.mockClear();
+    creaBlob.mockClear();
+    let n = 0;
+    const exigix = () => {
+      n += 1;
+      if (n === darrera) throw Object.assign(new Error('L’operació ja no correspon a l’àmbit vigent.'), { codi: 'ambit-canviat', name: 'AbortError' });
+    };
+    await expect(motor.urlAdjunt({ id: P1, config: {}, exigix, renova: true })).rejects.toMatchObject({ name: 'AbortError' });
+    expect(creaBlob).not.toHaveBeenCalled();
+    expect(creaUrl).not.toHaveBeenCalled();
+
+    const trencada = creaMotorXifrat({ cripto, impl: b.impl, servei, magatzem: b.magatzem, ara: () => T0, creaBlob, creaUrl: () => { throw new Error('sense URL'); } });
+    const abans = servei.estatAmbit().bytesBlobs;
+    await expect(trencada.urlAdjunt({ id: P1, config: {}, exigix: () => {}, renova: true })).rejects.toThrow('sense URL');
+    expect(parts.at(-1).every((x) => x === 0)).toBe(true);
+    expect(servei.estatAmbit().bytesBlobs).toBe(abans);
+  });
+
+  test('oblit amb la CI explícita després que la interfície haja buidat l’àmbit: esborra IndexedDB i diu oblidat', async () => {
+    const c = await creaPart(servidor, C);
+    expect(await c.magatzem.identitat(ci(C))).toBeTruthy();
+    c.servei.oblidaClausXat();
+    const sessio = creaMagatzemWeb({ sdp_xat_x: '1', altra: 'queda' });
+    const estat = await c.servei.oblidaTotXat({ clauIdentitat: ci(C), sessio, preferencies: creaMagatzemWeb() });
+    expect(estat).toMatchObject({ estat: 'oblidat', pendents: [] });
+    expect(await c.magatzem.identitat(ci(C))).toBeFalsy();
+    expect(sessio.getItem('sdp_xat_x')).toBeNull();
+    expect(sessio.getItem('altra')).toBe('queda');
+
+    /* La regressió que tapa la CI explícita: sense ella i sense àmbit, IndexedDB queda intacte. */
+    const d = await creaPart(servidor, C);
+    d.servei.oblidaClausXat();
+    await d.servei.oblidaTotXat({});
+    expect(await d.magatzem.identitat(ci(C))).toBeTruthy();
+  });
+
+  test('mantenSessio: true conserva la identitat i buida igualment la safata', async () => {
+    const c = await creaPart(servidor, C, { ambIdentitat: false });
+    await c.d.enviaMissatge(FIL2, { id: Q1, text: 'a la safata' });
+    expect((await c.magatzem.safata(ci(C), actor(C))).map((f) => f.id)).toEqual([Q1]);
+    await c.magatzem.desaIdentitat(ci(C), c.identitat);
+    c.servei.oblidaClausXat();
+    const estat = await c.servei.oblidaTotXat({ clauIdentitat: ci(C), mantenSessio: true });
+    expect(estat).toMatchObject({ estat: 'oblidat', pendents: [] });
+    expect(await c.magatzem.identitat(ci(C))).toBeTruthy();
+    expect(await c.magatzem.safata(ci(C), actor(C))).toEqual([]);
+  });
+
+  /* QA-C01 (Gauntlet 261029_1858) · El LRU no revoca mai una URL que una peça muntada
+     té retinguda: la retenció arriba amb la URL (opcions.reten) i s'allibera en desmuntar-se. */
+  test('QA-C01: dues fotos i pressupost per a una: la retinguda no es revoca; en alliberar-la, sí; l’adaptador no veu mai la retenció', async () => {
+    const revocadesC01 = [];
+    const p = await partB({ pressupostBlobs: 3000, revocaUrl: (url) => revocadesC01.push(url) });
+    const alliberes = [];
+    const reten = (allibera) => { alliberes.push(allibera); };
+
+    const u1 = await p.d.urlAdjuntXat(P1, {}, { reten });
+    expect(alliberes).toHaveLength(1);
+    const u2 = await p.d.urlAdjuntXat(P2, {}, { reten });
+    expect(revocadesC01).toEqual([]);
+    expect(p.servei.estatAmbit()).toMatchObject({ bytesBlobs: 6000, midaBlobs: 2, pressupostBlobs: 3000 });
+    alliberes[0]();
+    expect(revocadesC01).toEqual([u1]);
+    expect(p.servei.estatAmbit()).toMatchObject({ bytesBlobs: 3000, midaBlobs: 1 });
+
+    // La URL de la memòria cau també es reté; dues peces, dues referències.
+    expect(await p.d.urlAdjuntXat(P2, {}, { reten })).toBe(u2);
+    expect(alliberes).toHaveLength(3);
+    alliberes[1]();
+    await p.d.urlAdjuntXat(P3);
+    expect(revocadesC01).toEqual([u1]);
+    alliberes[2]();
+    expect(revocadesC01).toEqual([u1, u2]);
+    expect(p.servei.estatAmbit()).toMatchObject({ bytesBlobs: 3000, midaBlobs: 1 });
+
+    // Un id que no és un adjunt xifrat rebut va a l'adaptador sense la retenció interna.
+    const ALIE = 'f0000000-0000-4000-8000-00000000000f';
+    await p.d.urlAdjuntXat(ALIE, { dataMode: 'remote' }, { renova: true, reten });
+    expect(p.impl.urlAdjuntXat).toHaveBeenLastCalledWith(ALIE, { dataMode: 'remote' }, { renova: true });
+    expect(alliberes).toHaveLength(3);
+
+    // Canviar d'actor ho revoca tot, també el retingut; els alliberaments tardans no fan res.
+    const u3 = await p.d.urlAdjuntXat(P3, {}, { reten });
+    p.servei.fixaAmbit(JSON.stringify(['backend-sintetic', B, `entitat::${ORG}`]), ci(B));
+    expect(revocadesC01.at(-1)).toBe(u3);
+    const total = revocadesC01.length;
+    alliberes.at(-1)();
+    expect(revocadesC01).toHaveLength(total);
+  });
+
+  test('QA-C01: sense lloc dins del sostre de 100 MB, cap descàrrega ni cap blob: nou, i l’error demana reintentar', async () => {
+    const p = await partB();
+    const creaUrl = vi.fn(() => 'blob:no-hauria');
+    const servei = Object.freeze({ ...p.servei, hiCapUrlAdjunt: () => false });
+    const motor = creaMotorXifrat({ cripto, impl: p.impl, servei, magatzem: p.magatzem, ara: () => T0, creaBlob: (parts, opcions) => new Blob(parts, opcions), creaUrl });
+    const descarregues = p.impl.bytesAdjuntXat.mock.calls.length;
+    const reten = vi.fn();
+    await expect(motor.urlAdjunt({ id: P1, config: {}, exigix: () => {}, renova: true, reten }))
+      .rejects.toMatchObject({ code: 'obrir', codi: 'adjunt-pressupost', reintentable: true });
+    expect(p.impl.bytesAdjuntXat.mock.calls.length).toBe(descarregues);
+    expect(creaUrl).not.toHaveBeenCalled();
+    expect(reten).not.toHaveBeenCalled();
   });
 });

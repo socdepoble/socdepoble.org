@@ -153,13 +153,16 @@ export function TargetaViva({ document, autor = null, etiquetes, className, onMa
  * Gauntlet, 261016) i hui només el munta el catàleg (EspecimenTargetaViva):
  * muntar-lo en una pantalla és decisió del Mestre.
  * La targeta només es munta amb el diàleg obert. `avis`, com a TargetaViva.
+ * Cicle 3 del Gauntlet (261030, VD) · Sense la classe sdp-boto-targeta-viva:
+ * no tenia cap regla (la va retirar el Bloc 3.4) ni cap ganxo de JS, i el
+ * vocabulari no la declarava. El xip es troba pel seu nom accessible.
  */
 export function BotoTargetaViva({ document, autor = null, etiquetes, avis = AVIS_PREVISUALITZACIO }) {
   const [obert, setObert] = useState(false);
   const tanca = useCallback(() => setObert(false), []);
   return (
     <>
-      <button type="button" className="sdp-classificacio-pindola sdp-boto-targeta-viva" aria-haspopup="dialog" onClick={() => setObert(true)}>
+      <button type="button" className="sdp-classificacio-pindola" aria-haspopup="dialog" onClick={() => setObert(true)}>
         <span className="sp-card-label sdp-badge-buit"><IdCard size={14} aria-hidden="true" /><span className="sdp-classificacio-pindola__text">Vista targeta</span></span>
       </button>
       <Dialeg

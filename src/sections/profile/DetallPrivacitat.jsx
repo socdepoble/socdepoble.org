@@ -666,6 +666,8 @@ export function DetallPrivacitat({
 
   return (
     <UniversalPage
+      /* Decisions 261030 §7 · Dades privades de la persona: Traduir no envia res fora. */
+      traduccio={false}
       chrome="context"
       layout="contained"
       title={tradueix(t, TEXTOS_PAGINA.titol)}

@@ -1,5 +1,5 @@
 <?php
-/** PHP real, SQL SQLite i dobles de les fronteres WordPress/DeepL. Cap xarxa. */
+/** PHP real, SQL SQLite i dobles de les fronteres WordPress/DeepL/Apertium/LibreTranslate. Cap xarxa. */
 error_reporting( E_ALL );
 set_error_handler( static function ( $nivell, $missatge, $fitxer, $linia ) { throw new ErrorException( $missatge, 0, $nivell, $fitxer, $linia ); } );
 define( 'ABSPATH', __DIR__ . '/' );
@@ -63,21 +63,37 @@ function get_transient( $k ) {
 function set_transient( $k, $v, $ttl ) { if ( ! empty( $GLOBALS['ara']['failTransient'] ) ) return false; $GLOBALS['transients'][ $k ] = array( 'value' => $v, 'ttl' => $ttl ); return true; }
 function wp_remote_retrieve_response_code( $r ) { return $r['status']; }
 function wp_remote_retrieve_body( $r ) { return $r['body']; }
+/* Dobles dels tres proveïdors: DeepL (JSON, clau a la capçalera), Apertium
+   (formulari, una crida per text, «spa:text») i l'extrem compatible amb
+   LibreTranslate (JSON, clau opcional al cos, «de:text»). Cap traça porta
+   cap clau. `fail` falla un extrem concret ('transport' o un estat HTTP) i
+   `cost` gasta segons simulats del termini de la petició en cada crida. */
 function wp_remote_post( $url, $args ) {
-	$body = json_decode( $args['body'], true );
+	$body = is_array( $args['body'] ) ? $args['body'] : json_decode( $args['body'], true );
 	$trace = $args;
-	$trace['headers']['Authorization'] = explode( ' ', $args['headers']['Authorization'], 2 )[0] . ' <redactada>';
+	if ( isset( $args['headers']['Authorization'] ) ) {
+		$trace['headers']['Authorization'] = explode( ' ', $args['headers']['Authorization'], 2 )[0] . ' <redactada>';
+	}
 	$trace['url'] = $url;
 	$trace['body'] = $body;
+	if ( isset( $body['api_key'] ) ) $trace['body']['api_key'] = '<redactada>';
 	$GLOBALS['traces'][] = $trace;
 	$pas = $GLOBALS['ara'];
+	$_SERVER['REQUEST_TIME'] -= $pas['cost'] ?? 0;
 	if ( ! empty( $pas['reentry'] ) ) {
 		$GLOBALS['ara']['reentry'] = false;
 		$GLOBALS['nested'] = socdepoble_enxufe_traduir( new SDP_Request( is_array( $pas['reentry'] ) ? $pas['reentry'] : array() ) );
 	}
-	if ( ! empty( $pas['transport'] ) ) return new WP_Error( 'transport', 'secret diagnostic fixture-secret:fx' );
-	$translations = array_map( fn( $t ) => array( 'text' => $body['target_lang'] . ':' . $t, 'detected_source_language' => 'CA' ), $body['text'] );
-	return array( 'status' => $pas['status'] ?? 200, 'body' => $pas['upstreamRaw'] ?? json_encode( $pas['upstream'] ?? array( 'translations' => $translations ) ) );
+	$falla = $pas['fail'][ $url ] ?? null;
+	if ( ! empty( $pas['transport'] ) || 'transport' === $falla ) return new WP_Error( 'transport', 'secret diagnostic fixture-secret:fx' );
+	if ( isset( $body['langpair'] ) ) {
+		$bona = array( 'responseData' => array( 'translatedText' => explode( '|', $body['langpair'] )[1] . ':' . $body['q'] ), 'responseDetails' => null, 'responseStatus' => 200 );
+	} elseif ( isset( $body['target'] ) ) {
+		$bona = array( 'translatedText' => array_map( fn( $t ) => $body['target'] . ':' . $t, $body['q'] ) );
+	} else {
+		$bona = array( 'translations' => array_map( fn( $t ) => array( 'text' => $body['target_lang'] . ':' . $t, 'detected_source_language' => 'CA' ), $body['text'] ) );
+	}
+	return array( 'status' => is_int( $falla ) ? $falla : ( $pas['status'] ?? 200 ), 'body' => $pas['upstreamRaw'] ?? json_encode( $pas['upstream'] ?? $bona ) );
 }
 require $argv[1];
 foreach ( $cas['steps'] ?? array( array() ) as $ara ) {
@@ -87,6 +103,8 @@ foreach ( $cas['steps'] ?? array( array() ) as $ara ) {
 		$_SERVER['REMOTE_ADDR'] = $ara['remote_addr'] ?? '192.0.2.1';
 	}
 	if ( isset( $ara['key'] ) ) putenv( 'DEEPL_API_KEY=' . $ara['key'] );
+	// Cada pas és una petició HTTP nova; `elapsed` simula el temps ja gastat.
+	$_SERVER['REQUEST_TIME'] = time() - ( $ara['elapsed'] ?? 0 );
 	if ( ! empty( $ara['evict'] ) ) $transients = array();
 	if ( isset( $ara['budget'] ) ) {
 		$wpdb->query( 'DELETE FROM options WHERE option_name = \'sdp_traduccio_pressupost\'' );
@@ -97,4 +115,6 @@ foreach ( $cas['steps'] ?? array( array() ) as $ara ) {
 }
 $budget = $wpdb->get_var( "SELECT option_value FROM options WHERE option_name = 'sdp_traduccio_pressupost'" );
 $lock = $wpdb->get_var( "SELECT option_value FROM options WHERE option_name = 'sdp_traduccio_lock'" );
-echo json_encode( array( 'responses' => $respostes, 'calls' => $traces, 'cache' => $transients, 'routes' => $routes, 'budget' => json_decode( $budget ?? 'null', true ), 'lock' => $lock, 'nested' => $GLOBALS['nested'] ?? null ), JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR );
+// TC3.1 (261030) · Els destins que el servidor declara (traductor-llengues de marcatge.php), amb la configuració final.
+$destins = function_exists( 'socdepoble_enxufe_traduccio_destins' ) ? socdepoble_enxufe_traduccio_destins() : null;
+echo json_encode( array( 'responses' => $respostes, 'calls' => $traces, 'cache' => $transients, 'routes' => $routes, 'budget' => json_decode( $budget ?? 'null', true ), 'lock' => $lock, 'nested' => $GLOBALS['nested'] ?? null, 'destins' => $destins ), JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR );

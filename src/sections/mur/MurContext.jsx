@@ -1,6 +1,9 @@
 import { backendScope } from '../../config/backendConfig.js';
 import { useScopedResource } from '../../app/contexts/useScopedResource.js';
-import { createContext, useCallback, useContext, useMemo, useLayoutEffect, useRef, useState } from 'react';
+import { useCallback, useContext, useMemo, useLayoutEffect, useRef, useState } from 'react';
+/* P1-71 (Gauntlet 261029) · L'objecte de context viu a objectesDeContext.js,
+   que no importa res del projecte. */
+import { MurContext } from './objectesDeContext.js';
 import { loadMur, loadSeccioPage, appendSectionSubmissionNetworkOnly, teCapacitat } from '../../data/backendPort.js';
 import { SECCIONS_PAGINABLES } from '../../data/contracte.js';
 import { sortPinnedContent } from '../../config/contentHelpers';
@@ -10,8 +13,6 @@ import { useModeracio } from '../../components/PedraSeca/hooks/moderacioDePoble.
 import { filtraElementsBloquejats } from '../../config/moderacio.js';
 
 import { useSession } from '../../app/contexts/SessionContext.jsx';
-
-const MurContext = createContext(null);
 
 /* ── Decisió 4 del Mestre (261007) · «Tall de 50 publicacions: CARREGA
    PROGRESSIVA (LOAD MORE). Un límit inicial de 50 és sa, però s'ha

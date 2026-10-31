@@ -176,6 +176,11 @@ ul, ol {
 }
 ul { list-style: disc; }
 ol { list-style: decimal; }
+/* Llei de llistes · Ordre del Mestre (31-10-2026): els ítems (<li>) d'una
+   <ul> o d'una <ol> van sempre més junts entre ells que els paràgrafs (<p>):
+   --sdp-li-gap (4px) davant de --sdp-mb-p (20px). Una llista no hi suma mai
+   un gap (display: grid/flex amb gap): gap + marge del li tornaria a posar
+   els ítems a la distància dels paràgrafs. */
 li {
   margin-bottom: var(--sdp-li-gap);
   padding-left: 4px;

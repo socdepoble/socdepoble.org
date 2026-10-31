@@ -129,6 +129,9 @@
   --sdp-fons-superficie: var(--sdp-blanc-pur);
 
   /* Estructura de marca: no canvia amb el tema */
+  /* Decisió del Mestre (30-10-2026) · Fons de la capçalera d'imatge (.hero-image,
+     layout.css): blanc en tots els temes, com ho era la primitiva que citava. */
+  --sdp-fons-portada:    var(--sdp-blanc-pur);
   --sdp-fons-roca:       var(--sdp-pedra-900);
   --sdp-sobre-roca:      var(--sdp-pedra-50);
   --sdp-fons-subtil:     var(--sdp-pedra-200);
@@ -420,7 +423,12 @@
   --sdp-mb-lead: 24px;
   --sdp-mb-p: 20px;
   --sdp-mb-ul: 20px;
-  --sdp-li-gap: 8px;
+  /* Llei de llistes · Ordre del Mestre (31-10-2026): els ítems (<li>) d'una
+     <ul> o d'una <ol> van sempre més junts entre ells que els paràgrafs (<p>).
+     De 8 a 4px, a la reixeta de 4px i ben per davall dels 20px de --sdp-mb-p.
+     Cap llista hi suma un gap: l'espai entre ítems el dona només este marge
+     (base.css, li). */
+  --sdp-li-gap: 4px;
   --sdp-bq-indent: 24px;
 
   /* ═══ CAPA 2b · CROM · LA CLOSCA IMMUTABLE (260911) ═══════════════

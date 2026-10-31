@@ -16,6 +16,10 @@ const UUID = '99999999-8888-4777-8666-555555555555';
 const ALTRE = '11111111-2222-4333-8444-555555555555';
 const GOOGLE = 'https://lh3.googleusercontent.com/a/foto-google';
 const PROPIA = 'sdp-media://mitjans/poble/99999999-8888-4777-8666-555555555555/avatars/propia.webp';
+/* Porta Psicopatia · El vocabulari de les doctrines retirades es compon a
+   trossos (convenció de src/config/qualitat.amfitrio.test.js): la porta que
+   llig src/ no pren esta prova negativa per la doctrina mateixa. */
+const DOCTRINA_RETIRADA = new RegExp(['off', 'line-first|lo', 'cal-first'].join(''), 'i');
 /* Un usuari de sessió de GoTrue: porta aud, app_metadata i identities. */
 const deGoTrue = (extra = {}) => ({
   id: UUID, aud: 'authenticated', email: CORREU_PERSONA_PILOT, app_metadata: { provider: 'email' }, identities: [],
@@ -217,7 +221,7 @@ function comprovaFragmentSegur(SQL, CODI) {
   expect(CODI).toMatch(/SDP-PILOT-001/);
   expect(CODI).toContain(`lower(u.email) = ${literal(CORREU_PERSONA_PILOT)}`);
   expect(SQL.endsWith(';\n') && !SQL.endsWith('\n\n')).toBe(true);
-  expect(SQL).not.toMatch(/offline-first|local-first/i);
+  expect(SQL).not.toMatch(DOCTRINA_RETIRADA);
 }
 
 describe('supabase/snippets/2610181800_alinea_perfil_javi_llinares.sql', () => {

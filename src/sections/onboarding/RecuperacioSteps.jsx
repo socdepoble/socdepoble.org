@@ -262,7 +262,8 @@ export function ContrasenyaNovaStep({ correu = '', onDesa, onEix = null, onTorna
       body={
         <>
           <p className="onboarding-card__intro">
-            {correu ? <>{abansCompte}<strong>{correu}</strong>{despresCompte} </> : null}
+            {/* Gauntlet 261030 (cicle 2) · translate="no": el correu no va mai a cap traductor. */}
+            {correu ? <>{abansCompte}<strong translate="no">{correu}</strong>{despresCompte} </> : null}
             {t('section.login.recuperacio.novaIntro', 'Tria la contrasenya amb què entraràs d’ara endavant.')}
           </p>
 

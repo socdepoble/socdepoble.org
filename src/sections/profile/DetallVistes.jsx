@@ -82,6 +82,8 @@ export function DetallVistes({ identitat }) {
 
   return (
     <UniversalPage
+      /* Decisions 261030 §7 · La fitxa de la persona, des del seu espai: Traduir no envia res fora. */
+      traduccio={false}
       chrome="context"
       layout="contained"
       title="Les vistes"
