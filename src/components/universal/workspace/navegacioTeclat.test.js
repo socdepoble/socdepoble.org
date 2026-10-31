@@ -533,3 +533,11 @@ describe('gestionaEscapeDelDetall (G5, Gemini 261030)', () => {
     expect(document.activeElement).toBe(per('fitxa'));
   });
 });
+
+test('Ronda 2 · les graelles de targetes salten els avisos, els ocults i els desactivats', () => {
+  pinta('<div id="g"><p>Carregant</p><div><button id="a">A</button></div><div hidden><button>Ocult</button></div><div><button disabled>Desactivat</button></div><div><button id="b">B</button></div></div>');
+  const g = document.getElementById('g'); g.addEventListener('keydown', e => gestionaTeclaGraella({ key:e.key,target:e.target,currentTarget:g,preventDefault:()=>e.preventDefault() }));
+  const a=document.getElementById('a'), b=document.getElementById('b');
+  a.focus(); fireEvent.keyDown(a,{key:'ArrowDown'});expect(document.activeElement).toBe(b);
+  fireEvent.keyDown(b,{key:'Home'});expect(document.activeElement).toBe(a);
+});

@@ -498,7 +498,7 @@ describe('JSON-LD (schema.org), Data Package v2 i manifest SHA-256', () => {
     expect(municipi).not.toHaveProperty('sameAs');
     expect(fitxerDe(publicat, 'memoria.md')).toContain(`\`${urls.outbox}\``);
     expect(fitxerDe(publicat, 'memoria.md')).toContain(`\`@${TORRE.slug}@socdepoble.org\``);
-    expect(fitxerDe(publicat, 'memoria.md')).toContain('El compte @ només es resol on hi ha WebFinger');
+    expect(fitxerDe(publicat, 'memoria.md')).toContain('es troba amb host-meta i un JRD estàtic');
     /* L'entitat de Wikidata sí que és la mateixa identitat (un QID de prova, no el del poble). */
     const ambWikidata = preparaDadesObertesMunicipi({ municipi: { ...TORRE, wikidata: 'Q123456789' }, ara: ARA, origen: ORIGEN, actorsPublicats: [TORRE.slug] });
     expect(JSON.parse(fitxerDe(ambWikidata, 'municipi.jsonld')).sameAs).toEqual(['https://www.wikidata.org/entity/Q123456789']);
@@ -535,6 +535,11 @@ describe('JSON-LD (schema.org), Data Package v2 i manifest SHA-256', () => {
     expect(text).not.toContain(TRAMPES.usuari);
     const dolenta = prepara({ personalitzacio: { taxonomia: { payload: { v: 2 } }, estil: { payload: { v: 1, tokens: { '--sdp-text-cos': 'red;}body{x' } } } } });
     expect(dolenta.omissions.configuracio).toEqual({ taxonomiaInvalida: 1, estilInvalida: 1 });
+    /* V2-02 · La cel·la de memoria.md: el que s'exporta, «sense personalització» si s'ha llegit buida, i «no s'exporta» si està pendent. */
+    const cella = (p) => fitxerDe(p, 'memoria.md').split('\n').find((l) => l.startsWith('| `configuracio.json` |'));
+    expect(cella(prepara({ personalitzacio: { taxonomia: { payload: taxonomia, versio: 3 }, estil: { payload: estil, versio: 1 } } }))).toBe('| `configuracio.json` | taxonomia, estil |');
+    expect(cella(prepara())).toBe('| `configuracio.json` | sense personalització |');
+    expect(cella(prepara({ pendents: [{ coleccio: 'configuracio', motiu: 'motiu de prova' }] }))).toBe("| `configuracio.json` | no s'exporta |");
   });
 });
 
@@ -972,6 +977,17 @@ describe('recullDadesPubliquesDelMunicipi: només el que el port servix com a p�
     expect(r.entitats).toBeNull();
     expect(r.pendents.map((p) => p.coleccio)).toEqual(['directori', 'noticies', 'agenda', 'memoria', 'configuracio']);
     expect(port.listPublicOrganizations).not.toHaveBeenCalled();
+    /* V1-02 · Els motius ixen a memoria.md: valencià planer, sense noms de codi, decisions internes, anglés ni dos punts. */
+    expect(Object.fromEntries(r.pendents.map(({ coleccio, motiu }) => [coleccio, motiu]))).toEqual({
+      directori: "este servidor de dades no oferix el directori d'entitats",
+      noticies: "encara no hi ha cap lectura pública garantida d'estes dades",
+      agenda: "encara no hi ha cap lectura pública garantida d'estes dades",
+      memoria: 'el Mas no té cap mòdul de memòria cultural',
+      configuracio: "la personalització és de tot el node, no d'un poble, i la fitxa del poble no la inclou"
+    });
+    for (const { motiu } of r.pendents) {
+      expect(motiu, motiu).not.toMatch(/[:()]|[a-z][A-Z]|\bD-[A-Z]\d|\b(?:tenant|backend|port|capacitat|dadesObertes|directoriEntitats)\b/);
+    }
   });
 
   test('amb ella: una sola crida pel NOM del poble, refiltrada; mai loadMur ni loadCoreContent', async () => {

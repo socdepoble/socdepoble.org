@@ -711,6 +711,7 @@ export default function NotesSection() {
     <NotaPreparadaContext.Provider value={contextPreparada}>
       <CanalEmojisContext.Provider value={modeDesa ? null : emojis.canal}>
       <ProveidorSincronitzacioTargetes>
+      {/* IDEA-58: el Bloc hereta ↑ ↓ Home End i els rails del manejador comú. */}
       <UniversalWorkspace
         key={modeDesa ? 'desa' : 'bloc'}
         model={model}

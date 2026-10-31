@@ -208,7 +208,7 @@ export default function federacioIaia({ arrel } = {}) {
         const arrelDelProjecte = arrel ?? configuracio.root;
         const generador = await generadorDe(arrelDelProjecte);
         const origen = await generador.origenDeLaPublicacio({ env: configuracio.env ?? {}, arrel: arrelDelProjecte });
-        const preparat = await generador.preparaFederacio({ arrel: arrelDelProjecte, origen });
+        const preparat = await generador.preparaFederacioDelBuild({ arrel: arrelDelProjecte, origen, env: configuracio.env ?? {} });
         // ap/** i el WebFinger estàtic (host-meta, un text XRD, i el JRD dels actors principals).
         for (const [fileName, document] of [...preparat.fitxers, ...generador.fitxersWebFingerEstatic(preparat)]) {
           this.emitFile({ type: 'asset', fileName, source: generador.bytesDe(preparat.ap, document) });

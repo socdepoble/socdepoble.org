@@ -180,7 +180,7 @@ export function projectaElement(seccio, item, opcions) {
 
 /* Una clau d'app_content del poble, amb el termini, el sostre i un reintent
    per a la xarxa, un 429 o un 5xx. */
-async function llegixClau({supabaseUrl, anonKey, tenantId}, clau, {fetchImpl, termini, maxResposta, pausa}) {
+export async function llegixClau({supabaseUrl, anonKey, tenantId}, clau, {fetchImpl, termini, maxResposta, pausa}) {
   const url = new URL('/rest/v1/app_content', supabaseUrl);
   url.search = new URLSearchParams({select: 'key,payload', tenant_id: `eq.${tenantId}`, key: `eq.${clau}`, limit: '1'}).toString();
   let darrer = null;

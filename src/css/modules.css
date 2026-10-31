@@ -4012,10 +4012,10 @@ details[open] summary.accordion-header svg:last-child {
   .sdp-root[data-sdp-estret] .sdp-xat-item--altre .sdp-xat-menu { right: 0; left: auto; transform-origin: top right; }
   .sdp-root[data-sdp-estret] .sdp-xat-item--meu .sdp-xat-menu { right: auto; left: 0; transform-origin: top left; }
 
-  /* Grups (torn 260930, T1): entre dos files la llista posa el gap (8px)
-     més el marge editorial de cada li (--sdp-li-gap, base.css); dins d'una
+  /* Grups (torn 260930, T1; Ronda 2, D1): entre dos files la llista posa
+     només el gap (8px), perquè D1 lleva el marge editorial del li; dins d'una
      tirada del mateix autor les bombolles queden a 4px. */
-  .sdp-xat-missatges > .sdp-xat-item--segueix { margin-top: calc((var(--sdp-li-gap) + var(--sdp-space-1)) * -1); }
+  .sdp-xat-missatges > .sdp-xat-item--segueix { margin-top: calc(var(--sdp-space-1) * -1); }
   /* El missatge on porta una cita s'il·lumina un moment (MS_RESSALT de
      conversa.js, 1,6 s) amb la tinta de l'anell d'acció, a tota l'amplada
      de la fila com a les apps de missatgeria. Amb menys moviment, sense
@@ -13504,3 +13504,39 @@ details[open] summary.accordion-header svg:last-child {
   }
 }
 /* ═══ FI DEL BLOC ConsultaIAIA ═══ */
+
+/* DT-LLISTES-D1 · Cada llista de components gestiona el seu espai amb gap.
+   El marge de la prosa no s’afig als seus fills (cens Ronda 2). */
+@layer components {
+  :is(
+    .perfil-multimedia__graella,
+    .perfil-pobles-multi__llista,
+    .sdp-app-portal__llista,
+    .sdp-arxiu-local__graella,
+    .sdp-arxiu-local__nivell,
+    .sdp-bloquejos,
+    .sdp-cal-mes__barres,
+    .sdp-cal-setmana__barres,
+    .sdp-calaix-identitats,
+    .sdp-classificacio-dialeg__llista,
+    .sdp-comu__lletres,
+    .sdp-comu__rajoles,
+    .sdp-comu__resum,
+    .sdp-connectar__pindoles,
+    .sdp-connexio-resum__llista,
+    .sdp-crom-mostres,
+    .sdp-detall-article__opcions,
+    .sdp-emojis-xl__graella,
+    .sdp-estil__historial,
+    .sdp-estil__parells,
+    .sdp-gestoria-panell__passos,
+    .sdp-histograma__barres,
+    .sdp-llista-nodes,
+    .sdp-rajoles,
+    .sdp-superadmin-llista,
+    .sdp-targetes-colleccions__llista,
+    .sdp-telemetria__llista,
+    .sdp-tpv__graella,
+    .sdp-xat-missatges
+  ) > li { margin-block: 0; }
+}

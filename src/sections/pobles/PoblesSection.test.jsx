@@ -396,3 +396,14 @@ test('Onada 5 · la targeta es classifica per província (categoria) i comarca (
     ['Publicat a la Viquipèdia', 'sdp-badge-neutral']
   ]);
 });
+
+test('IDEA-58 · les fletxes recorren les fitxes del directori', () => {
+  const { container } = render(<PoblesSection />);
+  const graella = container.querySelector('.sdp-card-grid');
+  const botons = [...graella.children].map(c => c.querySelector('a,button')).filter(Boolean);
+  expect(botons.length).toBeGreaterThan(1);
+  botons[0].focus(); fireEvent.keyDown(botons[0], { key: 'End' }); expect(document.activeElement).toBe(botons.at(-1));
+  fireEvent.keyDown(botons.at(-1), { key: 'Home' }); expect(document.activeElement).toBe(botons[0]);
+  fireEvent.keyDown(botons[0], { key: 'ArrowDown' }); expect(document.activeElement).toBe(botons[1]);
+  fireEvent.keyDown(botons[1], { key: 'ArrowUp' }); expect(document.activeElement).toBe(botons[0]);
+});

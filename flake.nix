@@ -135,7 +135,9 @@
             HUSKY = "0";
             # El sandbox de Nix no té xarxa: el prerender social ix sense
             # publicacions remotes (tooling/seo/projeccio-publica.mjs, l'única
-            # eixida explícita). La targeta de /mur/<id> serà la genèrica.
+            # eixida explícita). La targeta de /mur/<id> serà la genèrica, i
+            # l'outbox federat també ix sense publicacions remotes
+            # (tooling/seo/publicacions-federades.mjs).
             SDP_SOCIAL_SENSE_REMOT = "1";
             SDP_ORIGEN = origen;
             VITE_SUPABASE_URL = supabaseUrl;

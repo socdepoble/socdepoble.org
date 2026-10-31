@@ -53,6 +53,7 @@ import { execFileSync } from 'node:child_process';
 import { arrelSegura, esMain } from '../lib/arrel.mjs';
 import { candidats, neteja } from './neteja_brossa_arrel.mjs';
 import * as olivera from '../gates/porta-olivera.mjs';
+import { analitzaVigilant } from '../gates/tractor-vigilant.mjs';
 
 export const INFORMES = '.immunitari/higiene';
 export const RUNTIME = '.agents/runtime';
@@ -315,6 +316,10 @@ export function diagnosi(arrel, { vers = null } = {}) {
       repetides: r.repetides.length,
       repetidesNoVersionades: r.repetides.filter((x) => x.versionada === false).length,
     },
+    // Una carpeta o un fitxer il·legible no tomba la diagnosi (ni l'informe ni la neteja L1): el Vigilant queda no-mesurat.
+    vigilant: (() => {
+      try { return analitzaVigilant(arrel); } catch (error) { return { esquema: 'sdp.vigilant.v1', estat: 'no-mesurat', error: error?.code || 'il·legible' }; }
+    })(),
     olivera: {
       valid: taula.valid,
       errors: taula.errors,

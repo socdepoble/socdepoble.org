@@ -36,8 +36,10 @@ test('WebFinger estàtic: host-meta amb la plantilla LRDD, el JRD de cada actor 
   const preparat = await preparaFederacio({ arrel: ARREL, origen: ORIGEN });
   const { ap } = preparat;
   const estatics = fitxersWebFingerEstatic(preparat);
-  assert.deepEqual([...estatics.keys()], ['.well-known/host-meta', `.well-known/webfinger/${TORRE}.json`, '.well-known/webfinger/socdepoble.json']);
+  // Decisió del Mestre del 31-10-2026 (Ronda 2): només el projecte i La Torre; cap poble de mostra.
+  assert.deepEqual([...estatics.keys()], ['.well-known/host-meta', '.well-known/nodeinfo', `.well-known/webfinger/${TORRE}.json`, '.well-known/webfinger/socdepoble.json', 'nodeinfo/2.1.json']);
   assert.deepEqual(ACTORS_WEBFINGER_ESTATIC, ['socdepoble', TORRE]);
+  assert.deepEqual(preparat.actors.map((a) => a.slug), ['socdepoble', TORRE]);
   // L'espai de noms XRD per defecte a l'arrel: Mastodon hi busca //xmlns:Link[@rel="lrdd"] (Nokogiri pren xmlns de l'arrel).
   assert.equal(estatics.get('.well-known/host-meta'), '<?xml version="1.0" encoding="UTF-8"?>\n'
     + `<XRD xmlns="${NS_XRD}">\n  <Link rel="lrdd" type="application/jrd+json" template="https://socdepoble.org/.well-known/webfinger/{uri}"/>\n</XRD>\n`);
@@ -68,7 +70,10 @@ test('firebase.json: les reescriptures i capçaleres de WebFinger són exactamen
   const regles = reglesFirebaseWebFinger(await preparaFederacio({ arrel: ARREL, origen: ORIGEN }));
   assert.deepEqual(hosting.rewrites.slice(0, -1), regles.rewrites);
   assert.equal(hosting.rewrites.at(-1).destination, '/index.html');
-  assert.deepEqual(hosting.headers.filter((r) => (r.source ?? r.regex).includes('well-known')), regles.headers);
+  // Totes les regles de .well-known: les del generador i, a més, només la de NodeInfo (cap regla de capçaleres de més, ni de CORS).
+  const wellKnown = hosting.headers.filter((r) => (r.source ?? r.regex).includes('well-known'));
+  assert.deepEqual(wellKnown.filter((r) => r.source !== '/.well-known/nodeinfo'), regles.headers);
+  assert.equal(wellKnown.length, regles.headers.length + 1);
   const posicio = (regla) => hosting.headers.findIndex((r) => JSON.stringify(r) === JSON.stringify(regla));
   for (const regla of regles.headers) assert.ok(posicio(regla) >= 0, JSON.stringify(regla));
   assert.ok(regles.headers.every((regla) => posicio(regla) < hosting.headers.findIndex((r) => r.source === '/ap/**')));

@@ -1,3 +1,4 @@
+import { gestionaTeclaGraella } from '../../components/universal/workspace/navegacioTeclat.js';
 import React from 'react';
 import { UniversalPage } from '../../components/universal/UniversalPage';
 import { UniversalCard } from '../../components/universal/../PedraSeca';
@@ -95,7 +96,7 @@ export default function PoblesSection() {
       chrome="system"
       showLogos={true}
     >
-      <div className="sdp-card-grid">
+      <div className="sdp-card-grid" onKeyDown={gestionaTeclaGraella}>
         {status === 'loading' && (
           <div>
             <p>{t('section.pobles.loading', 'Carregant els pobles...')}</p>

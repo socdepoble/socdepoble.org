@@ -308,10 +308,11 @@ test('portes 261026: porta-documents i run-portes --diagnostic mesuren conformit
   const fonts = recullFonts(arrel, { home, plataforma: 'linux', ara: ARA });
   assert.deepEqual(fonts.portaDocuments, { valid: false, checked: 4, errors: ['_wiki_de_poble/04_escriptori/x.md: falta el rebut'] });
   assert.equal(fonts.cadenaPortes.failures, 2);
-  assert.equal(fonts.cadenaPortes.total, 5, 'els passos readOnly de run-portes.mjs');
+  // Ronda 2 (IDEA-13) · el Tractor Vigilant és el sisé pas readOnly de run-portes.mjs.
+  assert.equal(fonts.cadenaPortes.total, 6, 'els passos readOnly de run-portes.mjs');
   const mapa = recullMapa(arrel, { home, plataforma: 'linux', ara: ARA });
   assert.deepEqual([metrica(mapa, 'conformitat-documental').numerador, metrica(mapa, 'conformitat-documental').denominador], [3, 4]);
-  assert.deepEqual([metrica(mapa, 'cadena-portes').numerador, metrica(mapa, 'cadena-portes').denominador], [3, 5]);
+  assert.deepEqual([metrica(mapa, 'cadena-portes').numerador, metrica(mapa, 'cadena-portes').denominador], [4, 6]);
   assert.doesNotThrow(() => normalitzaMapa(mapa));
 
   // Una porta que peta sense JSON (o que no és el diagnòstic) no és cap mesura.
@@ -340,7 +341,8 @@ test('portes: timeout amb stdout verd, senyal i exit incoherent mai acrediten un
 test('portes: recomptes i DTO incoherents queden N/A', () => {
   const arrel = mas(), home = fs.mkdtempSync(path.join(os.tmpdir(), 'home-'));
   escriu(arrel, 'tooling/gates/porta-documents.mjs', "console.log(JSON.stringify({valid:true,checked:-1,errors:[]}));");
-  escriu(arrel, 'tooling/gates/run-portes.mjs', "console.log(JSON.stringify({diagnostic:true,failures:6,valid:false})); process.exitCode=1;");
+  // Més fallades que passos readOnly (6 des de la Ronda 2): incoherent.
+  escriu(arrel, 'tooling/gates/run-portes.mjs', "console.log(JSON.stringify({diagnostic:true,failures:7,valid:false})); process.exitCode=1;");
   const fonts = recullFonts(arrel, { home, plataforma: 'linux', ara: ARA });
   assert.deepEqual([fonts.portaDocuments, fonts.cadenaPortes], [null, null]);
 });

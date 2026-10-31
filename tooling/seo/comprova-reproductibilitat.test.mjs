@@ -163,7 +163,13 @@ test('la línia de federació del flake, executada: els fitxers que la prova del
   assert.equal(r.status, 0, r.stderr);
   const existix = (rel) => fs.existsSync(path.join(desti, rel));
   for (const rel of ['.well-known/nodeinfo', 'nodeinfo/2.1.json', 'ap/actors/socdepoble.json', 'ap/outbox/socdepoble.json']) assert.ok(existix(rel), rel);
-  for (const poble of MOCK_TOWNS) assert.ok(existix(`.well-known/webfinger/${poble.id}.json`) && existix(`ap/actors/${poble.id}.json`), poble.id);
+  /* Decisió del Mestre del 31-10-2026 (Ronda 2): només La Torre es federa; els pobles de mostra no tenen actor ni WebFinger. */
+  for (const poble of MOCK_TOWNS) {
+    const federat = ap.esPobleFederat(poble.id);
+    assert.equal(existix(`.well-known/webfinger/${poble.id}.json`), federat, `webfinger ${poble.id}`);
+    assert.equal(existix(`ap/actors/${poble.id}.json`), federat, `actor ${poble.id}`);
+  }
+  assert.ok(existix('.well-known/webfinger/la-torre-de-les-macanes.json') && existix('ap/actors/la-torre-de-les-macanes.json'));
   // Cada «assert codi(…)» del testScript del flake, contra els fitxers reals.
   const assercions = [...FLAKE.matchAll(/assert codi\("([^"]+)"(?:, "([^"]*)")?\) == "(\d{3})"/g)].map(([, ruta, extra, codi]) => ({ ruta, extra, codi }));
   assert.ok(assercions.length >= 15, `${assercions.length} assercions`);

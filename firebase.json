@@ -116,6 +116,32 @@
         ]
       },
       {
+        "source": "/.well-known/nodeinfo",
+        "headers": [
+          {
+            "key": "Content-Type",
+            "value": "application/json; charset=utf-8"
+          },
+          {
+            "key": "Access-Control-Allow-Origin",
+            "value": "*"
+          }
+        ]
+      },
+      {
+        "source": "/nodeinfo/2.1.json",
+        "headers": [
+          {
+            "key": "Content-Type",
+            "value": "application/json; profile=\"http://nodeinfo.diaspora.software/ns/schema/2.1#\""
+          },
+          {
+            "key": "Access-Control-Allow-Origin",
+            "value": "*"
+          }
+        ]
+      },
+      {
         "source": "/ap/**",
         "headers": [
           {

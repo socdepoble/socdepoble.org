@@ -314,3 +314,10 @@
     }
   }
 }
+
+/* DT-LLISTES-D6 · Mateixa base per a totes les barres, inclosa l’última.
+   L’Histograma ho rep a modules.css (bloc DT-LLISTES-D1): este full és el del
+   Quadre reutilitzable i no nomena cap peça de la telemetria. */
+@layer components {
+  .sdp-quadre__barres > li { margin-block: 0; }
+}

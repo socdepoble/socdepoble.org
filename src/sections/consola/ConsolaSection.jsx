@@ -1,3 +1,4 @@
+import { gestionaTeclaGraella } from '../../components/universal/workspace/navegacioTeclat.js';
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import {
   Activity, ArrowLeftRight, Bot, CalendarClock, HeartPulse, Network, Puzzle, RefreshCw, Users, Workflow
@@ -242,7 +243,7 @@ export function ConsolaTauler({ consola, mapa, cimRef, ambImatges = false, alert
   return (
     <>
       {alertaFora ? null : <AlertaVigilancia mapa={mapa.mapa} />}
-      <nav className="sdp-card-grid sdp-consola__graella" aria-label="Pàgines de la Consola" ref={cimRef}>
+      <nav className="sdp-card-grid sdp-consola__graella" onKeyDown={gestionaTeclaGraella} aria-label="Pàgines de la Consola" ref={cimRef}>
         {paginesConsola().map((p) => {
           const delMapa = p.id !== 'pols';
           return (

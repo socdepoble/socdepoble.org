@@ -46,6 +46,7 @@ export const passos = [
   { nom: 'Porta Promesa', cmd: 'node', args: ['tooling/gates/tractor-promesa.mjs'], script: 'porta:promesa' },
   { nom: 'Porta TDZ', cmd: 'node', args: ['tooling/gates/tractor-tdz.mjs'], script: 'porta:tdz' },
   { nom: 'Porta Arrel', cmd: 'node', args: ['tooling/gates/tractor-arrel.mjs'], script: 'porta:arrel' },
+  { nom: 'Tractor Vigilant', cmd: 'node', args: ['tooling/gates/tractor-vigilant.mjs'], script: 'porta:vigilant', readOnly: true },
   { nom: 'Porta Enxufe', cmd: 'node', args: ['tooling/gates/tractor-enxufe.mjs'], script: 'porta:enxufe' },
   { nom: 'Porta Maquinari', cmd: 'node', args: ['tooling/gates/tractor-doctrina-maquinari.mjs'], script: 'porta:maquinari' },
   { nom: 'Porta Graella', cmd: 'node', args: ['tooling/gates/tractor-graella.mjs'], script: 'porta:graella' },

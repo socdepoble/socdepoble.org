@@ -1,3 +1,4 @@
+import { gestionaTeclaGraella } from '../../components/universal/workspace/navegacioTeclat.js';
 /**
  * XifresMas.jsx — les targetes amb pàgina pròpia de la Consola: «El Mas en
  * xifres» del tauler, les xifres de dins de cada pàgina, les peces del Mapa
@@ -104,7 +105,7 @@ export function TargetaXifra({ xifra, generat = null, creat = copyConsola().date
 export function GraellaXifres({ xifres, generat = null }) {
   if (!xifres.length) return null;
   return (
-    <div className="sdp-card-grid sdp-consola__graella">
+    <div className="sdp-card-grid sdp-consola__graella" onKeyDown={gestionaTeclaGraella}>
       {xifres.map((x) => <TargetaXifra key={x.slug} xifra={x} generat={generat} />)}
     </div>
   );

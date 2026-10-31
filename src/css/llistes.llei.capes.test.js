@@ -173,3 +173,10 @@ test('Llei de llistes · una regla de ul/ol pelada amb gap o grid/flex lleva els
     .map((r) => `${r.full}: ${r.prelud}`);
   expect(infractores).toEqual([]);
 });
+
+test('DT-LLISTES-D1/D6 · les llistes de components amb gap neutralitzen el marge de prosa', () => {
+  const classes = ["perfil-multimedia__graella", "perfil-pobles-multi__llista", "sdp-app-portal__llista", "sdp-arxiu-local__graella", "sdp-arxiu-local__nivell", "sdp-bloquejos", "sdp-cal-mes__barres", "sdp-cal-setmana__barres", "sdp-calaix-identitats", "sdp-classificacio-dialeg__llista", "sdp-comu__lletres", "sdp-comu__rajoles", "sdp-comu__resum", "sdp-connectar__pindoles", "sdp-connexio-resum__llista", "sdp-crom-mostres", "sdp-detall-article__opcions", "sdp-emojis-xl__graella", "sdp-estil__historial", "sdp-estil__parells", "sdp-gestoria-panell__passos", "sdp-llista-nodes", "sdp-rajoles", "sdp-superadmin-llista", "sdp-targetes-colleccions__llista", "sdp-telemetria__llista", "sdp-tpv__graella", "sdp-xat-missatges", "sdp-histograma__barres"];
+  for (const classe of classes) {
+    expect(REGLES.some(r => /margin-block:\s*0(?:;|$)/.test(r.cos) && r.prelud.includes(`.${classe}`) && /> li/.test(r.prelud)), classe).toBe(true);
+  }
+});

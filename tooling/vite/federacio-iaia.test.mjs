@@ -8,7 +8,9 @@
  */
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
+import fs from 'node:fs';
 import http from 'node:http';
+import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import federacioIaia, {
@@ -180,16 +182,24 @@ test('build: apply, emissió de ap/** amb https://socdepoble.org, VITE_CANONICAL
   const totsEmesos = await emissions({});
   // P1-23 (ordre del Mestre del 30-10-2026) · El WebFinger estàtic de Firebase: host-meta (XRD) i el JRD dels actors principals.
   const wellKnown = totsEmesos.filter((f) => f.fileName.startsWith('.well-known/'));
+  // Decisió del Mestre del 31-10-2026 (Ronda 2): només el projecte i La Torre; cap poble de mostra.
+  const actors = (await preparaFederacio({ origen: 'https://socdepoble.org' })).actors;
+  assert.deepEqual(actors.map((a) => a.slug), ['socdepoble', TORRE]);
   assert.deepEqual(wellKnown.map((f) => [f.type, f.fileName]), [
-    ['asset', '.well-known/host-meta'], ['asset', `.well-known/webfinger/${TORRE}.json`], ['asset', '.well-known/webfinger/socdepoble.json']
+    ['asset', '.well-known/host-meta'], ['asset', '.well-known/nodeinfo'], ['asset', `.well-known/webfinger/${TORRE}.json`], ['asset', '.well-known/webfinger/socdepoble.json']
   ]);
+  for (const mostra of ['penaguila', 'sella', 'tibi']) {
+    assert.equal(totsEmesos.some((f) => f.fileName.includes(`/${mostra}`)), false, mostra);
+  }
+  assert.equal(JSON.parse(totsEmesos.find(f => f.fileName === 'nodeinfo/2.1.json').source).version, '2.1');
   assert.match(wellKnown[0].source, /^<\?xml version="1\.0" encoding="UTF-8"\?>\n<XRD xmlns="http:\/\/docs\.oasis-open\.org\/ns\/xri\/xrd-1\.0">\n {2}<Link rel="lrdd" type="application\/jrd\+json" template="https:\/\/socdepoble\.org\/\.well-known\/webfinger\/\{uri\}"\/>\n<\/XRD>\n$/);
-  for (const fitxer of wellKnown.slice(1)) {
+  for (const fitxer of wellKnown.filter(f => f.fileName.startsWith('.well-known/webfinger/'))) {
     const slug = fitxer.fileName.slice('.well-known/webfinger/'.length, -'.json'.length);
     assert.equal(JSON.parse(fitxer.source).subject, `acct:${slug}@socdepoble.org`);
     assert.ok(fitxer.source.endsWith('\n'));
   }
-  const emesos = totsEmesos.filter((f) => !f.fileName.startsWith('.well-known/'));
+  // F4: fora del .well-known/ i del document NodeInfo, tot el que s'emet ha de ser ap/**.
+  const emesos = totsEmesos.filter((f) => !f.fileName.startsWith('.well-known/') && f.fileName !== 'nodeinfo/2.1.json');
   const noms = emesos.map((f) => f.fileName);
   assert.ok(noms.length > 0 && noms.every((nom) => /^ap\/(?:actors|outbox|followers|inbox|objectes)\//.test(nom)), noms.join(', '));
   assert.ok(noms.includes(`ap/actors/${TORRE}.json`) && noms.includes('ap/actors/socdepoble.json') && noms.includes(`ap/outbox/${TORRE}.json`));
@@ -270,6 +280,38 @@ test('dins d’un servidor de Vite de veres: el CORS de Vite passa de llarg a /a
   assert.match(local.headers['access-control-allow-methods'], /POST/);
   const alie = await pide('/index.html', { method: 'OPTIONS', headers: extern });
   assert.equal(alie.headers['access-control-allow-origin'], undefined);
+});
+
+/* F1 (revisió de la Ronda 2): el servidor dev no llig app_content. Amb un .env
+   remot (envDir temporal, port tancat 127.0.0.1:9) i un fetch que compta, l'actor
+   i l'outbox de La Torre responen 200 i cap petició ix del procés. */
+test('servidor dev sense xarxa: un .env remot no fa cap petició a app_content', async (t) => {
+  const { createServer } = await import('vite');
+  const envDir = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'sdp-federacio-env-')));
+  t.after(() => fs.rmSync(envDir, { recursive: true, force: true }));
+  fs.writeFileSync(path.join(envDir, '.env.local'), [
+    'VITE_DATA_MODE=remote', 'VITE_SUPABASE_URL=http://127.0.0.1:9/', 'VITE_SUPABASE_ANON_KEY=sb_publishable_provafalsa',
+    'VITE_TENANT_ID=11111111-1111-4111-8111-111111111111', ''
+  ].join('\n'));
+  let crides = 0;
+  const fetchOriginal = globalThis.fetch;
+  globalThis.fetch = async () => { crides++; throw new Error('cap xarxa en dev'); };
+  t.after(() => { globalThis.fetch = fetchOriginal; });
+  const vite = await createServer({
+    root: ARREL, envDir, configFile: false, logLevel: 'silent', appType: 'custom', optimizeDeps: { noDiscovery: true, include: [] },
+    server: { middlewareMode: true, hmr: false, ws: false, watch: null }, plugins: [federacioIaia({ arrel: ARREL })]
+  });
+  t.after(() => vite.close());
+  assert.equal(vite.config.env.VITE_DATA_MODE, 'remote');
+  const srv = http.createServer(vite.middlewares);
+  await new Promise((resol) => srv.listen(0, '127.0.0.1', resol));
+  t.after(() => new Promise((resol) => srv.close(resol)));
+  const pide = demanaA(srv.address().port);
+  assert.equal((await pide(`/ap/actors/${TORRE}.json`)).status, 200);
+  const outbox = await pide(`/ap/outbox/${TORRE}.json`);
+  assert.equal(outbox.status, 200);
+  assert.equal(JSON.parse(outbox.text).totalItems, 0);
+  assert.equal(crides, 0);
 });
 
 test('corsAmbFederacio: false continua false; a les rutes federades, origin false; a la resta, el CORS anterior', () => {

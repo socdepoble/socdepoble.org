@@ -5,7 +5,7 @@
  * la publicació no en porta (la llavor i les publicacions d'abans).
  */
 import React from 'react';
-import { cleanup, render, screen } from '@testing-library/react';
+import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, beforeEach, expect, test, vi } from 'vitest';
 
 const mocks = vi.hoisted(() => ({ navigate: vi.fn(), t: (_, alternativa) => alternativa, core: {}, mur: {} }));
@@ -108,4 +108,13 @@ test('T51 · l’ordre és el de la data que pinta la targeta; un element sense 
   const titols = [...document.querySelectorAll('.sdp-card-grid .sp-card-title')].map((titol) => titol.textContent);
   expect(titols).toEqual(['Recepta de coca', 'Crònica editada', 'El projecte', 'Crònica vella', 'Crònica sense editar', 'Sense cap data']);
   expect(elementDe('Sense cap data').querySelector('.btn-date-time')).toBeNull();
+});
+
+test('IDEA-58 · Mur: ↑ ↓ Home End mouen el focus entre publicacions', () => {
+  const { container } = render(<MurSection />);
+  const g = container.querySelector('.sdp-card-grid'); const a = [...g.children].map(c=>c.querySelector('a,button')).filter(Boolean);
+  expect(a.length).toBeGreaterThan(1); a[0].focus(); fireEvent.keyDown(a[0],{key:'ArrowDown'}); expect(document.activeElement).toBe(a[1]);
+  fireEvent.keyDown(a[1],{key:'ArrowUp'}); expect(document.activeElement).toBe(a[0]);
+  fireEvent.keyDown(a[0],{key:'End'}); expect(document.activeElement).toBe(a.at(-1));
+  fireEvent.keyDown(a.at(-1),{key:'Home'}); expect(document.activeElement).toBe(a[0]);
 });

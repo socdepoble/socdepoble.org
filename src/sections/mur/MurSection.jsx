@@ -1,3 +1,4 @@
+import { gestionaTeclaGraella } from '../../components/universal/workspace/navegacioTeclat.js';
 import { Component, Suspense, useMemo, useState } from 'react';
 import { useSearchParams } from '../../app/contexts/RouterContext';
 import { UniversalPage } from '../../components/universal/UniversalPage';
@@ -302,7 +303,7 @@ export default function MurSection() {
               (el dia triat o el període que es veu, amb TargetaDelMur i
               .sdp-card-grid): en esta pestanya, la graella general no es pinta. */}
           {filterType === 'events' ? <CalendariDelMur actes={actesDelCalendari} /> : (
-            <div className="sdp-card-grid">
+            <div className="sdp-card-grid" onKeyDown={gestionaTeclaGraella}>
               {/* Ordre del Mestre, 261001 · la targeta de cada element és
                   TargetaDelMur, la mateixa de la pàgina /calendari. T5 · un acte
                   porta el seu model (el mateix del Calendari i del filtre ?date=).

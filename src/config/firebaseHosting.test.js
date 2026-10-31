@@ -51,6 +51,8 @@ test('dist, sense barra final i sense URL netes', () => {
    WebFinger, més avall). */
 test('la reescriptura de l’SPA, l’última i sense assets, fonts, /ap/ ni /.well-known/; davant, les de WebFinger', () => {
   expect(hosting.rewrites.at(-1)).toEqual({ source: '!/@(assets|fonts|ap|.well-known)/**', destination: '/index.html' });
+  /* Decisió del Mestre del 31-10-2026 (Ronda 2): només el projecte i La Torre
+     (amb el seu àlies) es troben per WebFinger; cap poble de mostra. */
   expect(hosting.rewrites.slice(0, -1).map((r) => [Object.keys(r).sort(), r.destination])).toEqual([
     [['destination', 'regex'], '/.well-known/webfinger/socdepoble.json'],
     [['destination', 'regex'], '/.well-known/webfinger/la-torre-de-les-macanes.json'],
@@ -183,9 +185,9 @@ test('P1-23 · /ap/**: application/activity+json, CORS i Cache-Control curt, l�
     ]
   });
   expect(hosting.headers.filter((r) => r.source === '/ap/**')).toHaveLength(1);
-  // Cap altra regla posa Content-Type fora de la federació: /ap/**, el host-meta i els JRD de WebFinger.
+  // Cap altra regla posa Content-Type fora de la federació: /ap/**, el host-meta, els JRD de WebFinger i NodeInfo.
   expect(hosting.headers.filter((r) => r.headers.some((h) => h.key === 'Content-Type')).map((r) => r.source ?? 'regex:webfinger'))
-    .toEqual(['/.well-known/host-meta', 'regex:webfinger', '/ap/**']);
+    .toEqual(['/.well-known/host-meta', 'regex:webfinger', '/.well-known/nodeinfo', '/nodeinfo/2.1.json', '/ap/**']);
   // Cap redirecció, i cap camí de /ap/ no cau a cap reescriptura:
   // ni els que el build publica ni els que no hi són (Firebase hi torna el seu 404).
   expect(hosting.redirects).toBeUndefined();
@@ -273,14 +275,15 @@ test('P1-23 · WebFinger: /.well-known/webfinger torna 404 amb CORS, host-meta i
   }
   // Els 404 de WebFinger (la consulta per paràmetre, un compte que no hi és, un poble de mostra): CORS * (RFC 7033 §5) i cap tipus JRD.
   const nos = ['/.well-known/webfinger', '/.well-known/webfinger/', '/.well-known/webfinger/acct:ningu@socdepoble.org',
-    '/.well-known/webfinger/acct%3Aningu%40socdepoble.org', '/.well-known/webfinger/acct:penaguila@socdepoble.org', '/.well-known/webfinger/penaguila.json'];
+    '/.well-known/webfinger/acct%3Aningu%40socdepoble.org', '/.well-known/webfinger/acct:penaguila@socdepoble.org', '/.well-known/webfinger/penaguila.json',
+    '/.well-known/webfinger/acct:sella@socdepoble.org', '/.well-known/webfinger/poble-desconegut.json'];
   for (const cami of nos) {
     expect(capcaleres(cami)['Content-Type'], cami).toBeUndefined();
     expect(capcaleres(cami)['Access-Control-Allow-Origin'], cami).toBe('*');
   }
   // Una sola regla posa el CORS a cada camí de WebFinger (cap clau repetida); fora de WebFinger i del host-meta, cap CORS a /.well-known/.
   for (const cami of [...jrds, ...nos]) expect(reglesAmbCors(cami), cami).toHaveLength(1);
-  for (const cami of ['/.well-known/change-password', '/.well-known/nodeinfo', '/.well-known/webfingerx', '/.well-known/webfinger.json']) {
+  for (const cami of ['/.well-known/change-password', '/.well-known/webfingerx', '/.well-known/webfinger.json']) {
     expect(capcaleres(cami), cami).not.toHaveProperty('Content-Type');
     expect(capcaleres(cami), cami).not.toHaveProperty('Access-Control-Allow-Origin');
   }
@@ -321,4 +324,13 @@ test('P1-23 · ignore: .well-known/ es desplega amb les dues lectures (glob de f
   };
   for (const fitxer of publicats) expect([fitxer, ignoratGlob(fitxer), ignoratGit(fitxer)]).toEqual([fitxer, false, false]);
   for (const fitxer of amagats) expect([fitxer, ignoratGlob(fitxer), ignoratGit(fitxer)]).toEqual([fitxer, true, true]);
+});
+
+test('NodeInfo 2.1 es publica amb JSON i CORS sense confondre’l amb l’SPA', () => {
+  for (const cami of ['/.well-known/nodeinfo', '/nodeinfo/2.1.json']) {
+    const regles = hosting.headers.filter(r => casaRegla(r, cami));
+    const caps = Object.fromEntries(regles.flatMap(r => r.headers.map(h=>[h.key,h.value])));
+    expect(caps['Content-Type']).toMatch(/^application\/json/);
+    expect(caps['Access-Control-Allow-Origin']).toBe('*');
+  }
 });

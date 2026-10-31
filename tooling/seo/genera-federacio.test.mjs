@@ -38,10 +38,17 @@ function temporal(t) {
   return dir;
 }
 
-test('fonts reals: el projecte amb les pàgines públiques; els pobles del seed, només amb el nom i l’outbox buit', async () => {
+test('fonts reals: el projecte amb les pàgines públiques; només La Torre, amb el nom i l’outbox buit; cap poble de mostra', async () => {
   const actors = await recullActorsPublics({ arrel: ARREL, origen: ORIGEN });
   assert.equal(actors[0].slug, ACTOR_PROJECTE.slug);
-  assert.deepEqual(actors.slice(1).map((a) => a.slug), MOCK_TOWNS.map((p) => p.id));
+  /* Decisió del Mestre del 31-10-2026 (Ronda 2): la federació és només per a La Torre.
+     Els 8 pobles de mostra de townsSeed.js no tenen actor, outbox ni WebFinger. */
+  assert.deepEqual(actors.slice(1).map((a) => a.slug), [TORRE]);
+  assert.deepEqual(ap.POBLES_FEDERATS, [TORRE]);
+  for (const poble of MOCK_TOWNS.filter((p) => p.id !== TORRE)) {
+    assert.equal(actors.some((a) => a.slug === poble.id), false, poble.id);
+    assert.equal(ap.esPobleFederat(poble.id), false, poble.id);
+  }
   const pagines = actors[0].elements.map((e) => e.id);
   for (const publica of ['pagina-projecte', 'pagina-legal', 'pagina-versions']) assert.ok(pagines.includes(publica), publica);
   // Les eines i la Wiki no són pàgines publicables (PRIVATE_ROUTES de publication-policy, com el manifest social).
@@ -119,13 +126,14 @@ test('frontera: visibility no pública, arxivat, rutes privades i pobles amb id 
     oculta: { title: 'Oculta', lead: 'x' },
     'sense-data': { title: 'Sense data', subtitle: 'Subtítol' }
   };
-  const pobles = [{ id: 'benifallim', title: 'Benifallim' }, { id: 'privat', title: 'Privat', visibility: 'private' }];
+  const pobles = [{ id: 'benifallim', title: 'Benifallim' }, { id: TORRE, title: 'La Torre' }, { id: 'privat', title: 'Privat', visibility: 'private' }];
   const carrega = fontsFalses({ pagines, copy, pobles });
   const actors = await recullActorsPublics({ arrel: ARREL, origen: ORIGEN, carrega });
   assert.deepEqual(actors[0].elements.map((e) => [e.id, e.nom, e.resum, e.publicat]), [
     ['pagina-projecte', 'El projecte', 'Entradeta', '2026-08-20T00:00:00.000Z'], ['pagina-sense-data', 'Sense data', 'Subtítol', null]
   ]);
-  assert.deepEqual(actors.slice(1).map((a) => a.slug), ['benifallim']);
+  // Un poble públic però no federat (benifallim) no té actor: només POBLES_FEDERATS.
+  assert.deepEqual(actors.slice(1).map((a) => a.slug), [TORRE]);
   // Una pàgina sense data no en rep cap d'inventada (defecte 9): ni l'objecte ni el Create porten published.
   const { fitxers } = await preparaFederacio({ arrel: ARREL, origen: ORIGEN, carrega });
   const senseData = fitxers.get('ap/outbox/socdepoble.json').orderedItems.find((a) => a.object.id.endsWith('/pagina-sense-data.json'));
@@ -271,7 +279,7 @@ test('CLI: --desti i --servidor escriuen ap/**, els JRD i NodeInfo; sense --dest
   const web = temporal(t);
   const nomes = spawnSync(process.execPath, [GENERADOR, '--desti', web, '--arrel', ARREL], { encoding: 'utf8', env: { ...process.env, VITE_CANONICAL_URL: '' } });
   assert.equal(nomes.status, 0, nomes.stderr);
-  assert.deepEqual(fs.readdirSync(path.join(web, '.well-known'), { recursive: true }).sort(), ['host-meta', 'webfinger', `webfinger/${TORRE}.json`, 'webfinger/socdepoble.json']);
+  assert.deepEqual(fs.readdirSync(path.join(web, '.well-known'), { recursive: true }).sort(), ['host-meta', 'nodeinfo', 'webfinger', ...resum.actors.map(slug => `webfinger/${slug}.json`)].sort());
   assert.match(fs.readFileSync(path.join(web, '.well-known/host-meta'), 'utf8'), /template="https:\/\/socdepoble\.org\/\.well-known\/webfinger\/\{uri\}"/);
   assert.equal(fs.readFileSync(path.join(web, '.well-known/host-meta'), 'utf8'), fs.readFileSync(path.join(desti, '.well-known/host-meta'), 'utf8'));
   const sense = spawnSync(process.execPath, [GENERADOR], { encoding: 'utf8' });
@@ -286,6 +294,26 @@ test('CLI: --desti i --servidor escriuen ap/**, els JRD i NodeInfo; sense --dest
   assert.equal(repetida.status, 1);
   assert.match(repetida.stderr, /Ús:/);
   assert.deepEqual(dos.map((dir) => fs.readdirSync(dir)), [[], []]);
+});
+
+/* F1 (revisió de la Ronda 2): la CLI no llig app_content. Amb un .env de producció
+   remot que apunta a un port tancat (127.0.0.1:9), la CLI acaba bé i l'outbox de
+   La Torre ix buit: cap prova de la cadena primària depén de la xarxa. */
+test('CLI sense xarxa: un .env remot de l’arrel no fa cap petició a app_content', (t) => {
+  const arrel = temporal(t);
+  fs.copyFileSync(path.join(ARREL, 'package.json'), path.join(arrel, 'package.json'));
+  fs.symlinkSync(path.join(ARREL, 'src'), path.join(arrel, 'src'));
+  fs.writeFileSync(path.join(arrel, '.env.production.local'), [
+    'VITE_DATA_MODE=remote', 'VITE_SUPABASE_URL=http://127.0.0.1:9/', 'VITE_SUPABASE_ANON_KEY=sb_publishable_provafalsa',
+    'VITE_TENANT_ID=11111111-1111-4111-8111-111111111111', ''
+  ].join('\n'));
+  const entorn = { ...process.env };
+  for (const clau of Object.keys(entorn)) if (clau.startsWith('VITE_') || clau === 'SDP_SOCIAL_SENSE_REMOT') delete entorn[clau];
+  const desti = temporal(t);
+  const cli = spawnSync(process.execPath, [GENERADOR, '--arrel', arrel, '--desti', desti, '--origen', ORIGEN], { encoding: 'utf8', env: entorn });
+  assert.equal(cli.status, 0, cli.stderr);
+  assert.deepEqual(JSON.parse(cli.stdout).actors, ['socdepoble', TORRE]);
+  assert.equal(JSON.parse(fs.readFileSync(path.join(desti, `ap/outbox/${TORRE}.json`), 'utf8')).totalItems, 0);
 });
 
 test('CLI sense --origen: l’origen dels .env de l’arrel, com «vite build»; i no reescriu en silenci el ap/ d’un altre origen', (t) => {

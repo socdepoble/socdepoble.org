@@ -128,3 +128,16 @@ test('§6 · a 375 («estret»): la llista oberta tapa el rail; la carpeta de NO
   fireEvent.click(carpeta);
   expect(closca(container).dataset.panell).toBe('left');
 });
+
+// IDEA-58: regressió al Bloc muntat amb el workspace real, sense tocar el cursor de l’editor.
+test('IDEA-58 · ArrowDown/Up/Home/End recorren les notes visibles', () => {
+  const buida = ambAmplada(1400);
+  dades.notes = [NOTA, { ...NOTA, id: 'a2', title: 'Segona', updatedAt: '2026-01-02T09:00:00Z' }, { ...NOTA, id: 'a3', title: 'Tercera', updatedAt: '2026-01-01T09:00:00Z' }];
+  const { container } = munta('/notes'); buida();
+  const botons = [...container.querySelectorAll('.sdp-gestor-llista > li')].map(li => li.querySelector('button')).filter(Boolean);
+  expect(botons.length).toBeGreaterThanOrEqual(3);
+  botons[0].focus(); fireEvent.keyDown(botons[0], { key: 'ArrowDown' }); expect(document.activeElement).toBe(botons[1]);
+  fireEvent.keyDown(botons[1], { key: 'End' }); expect(document.activeElement).toBe(botons.at(-1));
+  fireEvent.keyDown(botons.at(-1), { key: 'ArrowUp' }); expect(document.activeElement).toBe(botons.at(-2));
+  fireEvent.keyDown(botons.at(-2), { key: 'Home' }); expect(document.activeElement).toBe(botons[0]);
+});

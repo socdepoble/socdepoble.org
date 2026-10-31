@@ -1012,3 +1012,13 @@ test('una subruta desconeguda torna al tauler', () => {
   render(<ConsolaSection />);
   expect(screen.getByTestId('redirigix').textContent).toBe('/consola');
 });
+
+test('IDEA-58 · Consola: ↑ ↓ Home End recorren les pàgines sense activar-les', async () => {
+  const { container } = render(<ConsolaSection />);
+  const g = await screen.findByRole('navigation',{name:'Pàgines de la Consola'}); const a=[...g.children].map(c=>c.matches('a,button')?c:c.querySelector('a,button')).filter(Boolean);
+  expect(a.length).toBeGreaterThan(1);a[0].focus();fireEvent.keyDown(a[0],{key:'ArrowDown'});expect(document.activeElement).toBe(a[1]);
+  fireEvent.keyDown(a[1],{key:'End'});expect(document.activeElement).toBe(a.at(-1));
+  fireEvent.keyDown(a.at(-1),{key:'ArrowUp'});expect(document.activeElement).toBe(a.at(-2));
+  fireEvent.keyDown(a.at(-2),{key:'Home'});expect(document.activeElement).toBe(a[0]);
+  expect(container.querySelector('[data-testid="redirigix"]')).toBeNull();
+});

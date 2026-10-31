@@ -336,8 +336,8 @@ describe('honestedat: cada afirmació ancorada al codi', () => {
     const opendata = readFileSync(path.join(ARREL, 'src/data/exportaMunicipiOpenData.js'), 'utf8');
     for (const peca of ['export async function exportaMunicipiOpenData(', 'export async function verificaPaquetOpenData(', 'data/llicencies.md']) expect([peca, opendata.includes(peca)]).toEqual([peca, true]);
     expect(existix('src/data/exportaMunicipiOpenData.test.js')).toBe(true);
-    expect(tercera).toContain('El generador del paquet i el seu verificador ja són al repositori, amb proves, però encara no es pot descarregar des de l\'aplicació');
-    // «Encara no es pot descarregar»: cap mòdul de l'app (fora de les proves) no importa el generador.
+    expect(tercera).toContain('El generador del paquet i el seu verificador ja són al repositori, amb proves, i amb esta versió es descarrega des de la fitxa pública de cada poble');
+    // Ronda 2 · Ja es descarrega: la fitxa del poble (DetallPoble.jsx) és el mòdul de l'app que importa el generador.
     /* Gauntlet 261030, cicle 3 (inercia-per-text-cru-falsos-rojos) · Es miren
        els especificadors d'import (AST), no el text cru: un comentari que nomena
        el generador ja no posa esta prova en roig; un import de veres, sí. */
@@ -348,7 +348,10 @@ describe('honestedat: cada afirmació ancorada al codi', () => {
     const quiLImporta = readdirSync(src, { recursive: true }).map(String)
       .filter((fitxer) => /\.(?:js|jsx)$/.test(fitxer) && !/\.test\.(?:js|jsx)$/.test(fitxer) && !fitxer.endsWith('exportaMunicipiOpenData.js'))
       .filter((fitxer) => importaElGenerador(readFileSync(path.join(src, fitxer), 'utf8'), fitxer));
-    expect(quiLImporta).toEqual([]);
+    expect(quiLImporta).toContain('sections/pobles/DetallPoble.jsx');
+    /* Revisió de la Ronda 2 (R-01, R2-COR-03) · El paquet diu què porta de veres: el directori d'entitats i la memòria en Markdown; notícies, agenda i memòria cultural encara no. */
+    expect(tercera).toContain("Hui porta el directori públic d'entitats en JSON-LD i una memòria en Markdown; les notícies, l'agenda i la memòria cultural encara no s'hi exporten.");
+    expect(tercera).not.toContain('memòria de les fonts pendents');
     // ActivityPub: la fase 1 (lectura) i les seues proves, al repositori.
     for (const fitxer of ['src/data/activitypub.js', 'src/data/activitypub.test.js', 'tooling/seo/genera-federacio.mjs', 'tooling/seo/genera-federacio.test.mjs']) expect([fitxer, existix(fitxer)]).toEqual([fitxer, true]);
     expect(tercera).toContain('La primera fase, només de lectura, ja és al repositori, amb proves');
@@ -360,7 +363,7 @@ describe('honestedat: cada afirmació ancorada al codi', () => {
        este build, no el desplegament. WebFinger al lloc estàtic, vegeu el bloc
        de sota; les seues regles per a un servidor propi són a flake.nix. */
     const publicaAp = /\bfederacioIaia\(/.test(senseComentaris(llegix('vite.config.js'))) && llegix('firebase.json').includes('"source": "/ap/**"');
-    expect(concorda(publicaAp, /no està publicada|no es publica/.test(tercera), tercera.includes("el lloc web publica a /ap/ els documents d'ActivityPub de Sóc de Poble i dels pobles de mostra"))).toBe(true);
+    expect(concorda(publicaAp, /no està publicada|no es publica/.test(tercera), tercera.includes("el lloc web publica a /ap/ els documents d'ActivityPub de Sóc de Poble i de La Torre de les Maçanes, l'únic poble federat"))).toBe(true);
     /* Tancament 261030 (P1-23, ordre del Mestre: WebFinger compatible amb
        Firebase Hosting) · DEROGA «encara no les respon socdepoble.org»: el
        build web emet host-meta i el JRD dels actors principals
@@ -375,7 +378,27 @@ describe('honestedat: cada afirmació ancorada al codi', () => {
       && reescrituraDe('latorredelesmacanes', 'la-torre-de-les-macanes');
     expect(concorda(webfingerEstatic, /encara no les respon socdepoble\.org/.test(tercera), tercera.includes('socdepoble.org publica la via alternativa que consulta Mastodon, el document host-meta, '
       + 'perquè es puguen trobar @socdepoble@socdepoble.org i @la-torre-de-les-macanes@socdepoble.org, que també es troba com a @latorredelesmacanes@socdepoble.org'))).toBe(true);
-    expect(tercera).toContain('Els pobles de mostra no es poden trobar així');
+    /* Decisió del Mestre del 31-10-2026 (Ronda 2): la federació és només per a La Torre.
+       La pàgina no pot prometre WebFinger, actor ni outbox als pobles de mostra. */
+    expect(tercera).toContain('Els pobles de mostra no es poden trobar així, i no tenen actor ni outbox');
+    expect(tercera).not.toContain('tots els pobles del directori');
+    expect(tercera).not.toContain('dels pobles de mostra');
+    expect(tercera).toContain("de La Torre de les Maçanes, l'únic poble federat");
+    expect(llegix('src/data/activitypub.js')).toMatch(/export const POBLES_FEDERATS = Object\.freeze\(\['la-torre-de-les-macanes'\]\)/);
+    expect(tercera).toContain('/nodeinfo/2.1.json');
+    /* Revisió de la Ronda 2 (R-07) · Cap paraula anglesa a la prosa: els noms tècnics van en <code>. */
+    expect(copy.html).toContain('Ni els xats ni les aportacions de persones (<code>section_submissions</code>) no es publiquen.');
+    expect(copy.html).toContain('avisos <code>Note</code>, notícies <code>Article</code> i actes <code>Event</code> com a <code>Create</code>');
+    expect(copy.html).toContain("valida l'identificador del poble configurat (<code>tenant</code>) i l'origen i pot executar <code>npm ci</code>");
+    expect(copy.html).toContain('<code>package-lock.json</code>');
+    expect(text).not.toMatch(/les submissions|valida el tenant/);
+    /* V1-04 · «outbox» és un nom tècnic anglés: la primera vegada, «la bústia de sortida (<code>outbox</code>)», i mai fora de <code>. */
+    expect(copy.html).toContain("també porta la bústia de sortida (<code>outbox</code>) d'ActivityStreams 2.0.");
+    expect(copy.html).toContain('i no tenen actor ni <code>outbox</code>.');
+    const senseCodi = new DOMParser().parseFromString(copy.html, 'text/html');
+    senseCodi.querySelectorAll('code').forEach((codi) => codi.remove());
+    expect(senseCodi.body.textContent).not.toMatch(/outbox/i);
+    expect(text).toMatch(/outbox/);
     expect(tercera).toContain("Encara no s'ha provat amb un servidor de Mastodon de veres");
     expect(tercera.includes("les regles per a un servidor propi (flake.nix) encara no s'han verificat amb Nix")).toBe(/\/\.well-known\/webfinger/.test(llegix('flake.nix')));
   });
@@ -425,7 +448,11 @@ describe('honestedat: cada afirmació ancorada al codi', () => {
       && ['src/sections/disseny/DesignSection.jsx', 'src/sections/wiki-de-poble/WikiDePobleSection.jsx'].every((rel) => /<UniversalWorkspace\b/.test(llegix(rel)));
     const textFletxes = fletxes.textContent.replace(/\s+/g, ' ');
     expect(concorda(fletxesViues, /no existix|en construcció|encara no/.test(textFletxes), textFletxes.includes('les fletxes ja mouen el focus per les columnes de Disseny i de la Wiki de Poble'))).toBe(true);
-    if (fletxesViues) expect([...fletxes.querySelectorAll('a')].map((a) => a.getAttribute('href'))).toEqual(['/disseny', '/wikidepoble']);
+    if (fletxesViues) expect([...fletxes.querySelectorAll('a')].map((a) => a.getAttribute('href'))).toEqual(['/disseny', '/wikidepoble', '/notes', '/pobles', '/mur', '/consola']);
+    for (const rel of ['pobles/PoblesSection.jsx', 'mur/MurSection.jsx', 'consola/ConsolaSection.jsx']) {
+      expect(senseComentaris(llegix(`src/sections/${rel}`))).toMatch(/onKeyDown=\{gestionaTeclaGraella\}/);
+    }
+    expect(llegix('src/sections/notes/NotesSection.jsx')).toMatch(/<UniversalWorkspace\b/);
     // IDEA-31: l'entrada del lloc (main.jsx, fora dels comentaris) fixa el traductor lliure del navegador.
     const traductorDelLloc = /\bfixaTraductorLliure\(\s*'apertium'\s*\)/.test(senseComentaris(llegix('src/main.jsx')));
     const textTraductor = traductor.textContent.replace(/\s+/g, ' ');

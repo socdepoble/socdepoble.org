@@ -114,7 +114,8 @@
     "test:node:inventory": "node tooling/tests/run-node-tests.mjs --list",
     "test:node:laboratory": "node tooling/tests/run-node-tests.mjs --suite laboratory",
     "test:node:session": "node tooling/tests/run-node-tests.mjs --suite session",
-    "test:node:all": "node tooling/tests/run-node-tests.mjs --suite all"
+    "test:node:all": "node tooling/tests/run-node-tests.mjs --suite all",
+    "porta:vigilant": "node tooling/gates/tractor-vigilant.mjs"
   },
   "dependencies": {
     "@capacitor/android": "8.5.3",

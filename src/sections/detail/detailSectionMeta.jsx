@@ -1,4 +1,5 @@
 import React, { useMemo, useState } from 'react';
+import DetallPoble from '../pobles/DetallPoble.jsx';
 import { CalendarDays, MapPin, UserRound, MessageCircle } from 'lucide-react';
 import { renderRichText, renderPostContent } from './detailRichText.jsx';
 import { getFirstImage, semblaHtml } from './detailHelpers.jsx';
@@ -698,6 +699,7 @@ export function buildPoblesDetailSectionMeta({ towns = [], t, publicacions = nul
           </BarreraDelPanellDelPoble>
         ) : null}
         {detall ? <PestanyesDelPoble key={String(item?.id ?? '')} poble={item} gent={getTitle(item)} t={t} /> : null}
+        {detall ? <DetallPoble key={`open-data-${String(item?.id ?? '')}`} poble={item} t={t} /> : null}
       </>
     )
   };

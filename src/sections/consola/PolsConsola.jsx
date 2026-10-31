@@ -1,3 +1,4 @@
+import { gestionaTeclaGraella } from '../../components/universal/workspace/navegacioTeclat.js';
 /**
  * PolsConsola.jsx — «El pols del cervell» (/consola/pols) i la pàgina pròpia
  * de cada un dels seus tres panells (/consola/pols/<id>).
@@ -220,7 +221,7 @@ export function PaginaPols({ consola, locale = 'ca-ES' }) {
         {error?.message || 'Torna a provar-ho amb Refrescar.'}
       </Alerta>}
       <AvisSaturacio dades={dades} locale={locale} />
-      <div className="sdp-card-grid sdp-consola__graella">
+      <div className="sdp-card-grid sdp-consola__graella" onKeyDown={gestionaTeclaGraella}>
         {panellsPols().map((p) => (
           <TargetaConsola key={p.id} icona={ICONES_PANELLS[p.icona]} titol={p.titol} subtitol={p.subtitol}
             entradilla={<Entradeta marcada={p.entradilla} />}

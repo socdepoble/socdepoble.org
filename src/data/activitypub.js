@@ -62,6 +62,13 @@ export const TIPUS_OBJECTE = Object.freeze(['Note', 'Article', 'Event']);
    (USERNAME_RE) i un camí net. entrada: tall abans de cap expressió regular.
    recurs: el sostre del paràmetre resource de WebFinger. */
 export const LIMITS = Object.freeze({ slug: 64, id: 128, entrada: 256, recurs: 512 });
+/* Decisió del Mestre del 31-10-2026 (Ronda 2): la federació d'un poble (actor,
+   outbox, WebFinger i reescriptures de Firebase) és només per a La Torre de les
+   Maçanes. Els pobles de mostra de townsSeed.js no es publiquen al Fedivers ni es
+   troben per WebFinger: estar al directori no fa federat cap poble. Un poble nou
+   hi entra només per decisió del Mestre. */
+export const POBLES_FEDERATS = Object.freeze(['la-torre-de-les-macanes']);
+export const esPobleFederat = (slug) => POBLES_FEDERATS.includes(slug);
 
 /* Cada repetició comença per un guionet: cap ambigüitat, temps lineal. */
 const SLUG = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;

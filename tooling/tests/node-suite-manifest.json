@@ -684,6 +684,11 @@
       "reason": "Revisió adversarial de la Ronda 1 (31-10-2026) · Porta Tokens, T3: la prosa que la interfície pinta no declara cap token, i un srcDoc, un dangerouslySetInnerHTML, un cssText o una plantilla hi continuen comptant; arbres sintètics a mkdtemp, cap xarxa."
     },
     {
+      "path": "tests/tractor-vigilant.test.mjs",
+      "suite": "primary",
+      "reason": "Ronda 2: regressió determinista del codi instal·lat amb fixtures temporals."
+    },
+    {
       "path": "tests/verificador-scc.test.mjs",
       "suite": "primary",
       "reason": "Regressió portable del producte o d’una eina permanent; s’executa a la cadena primària, també quan està roja."
@@ -724,6 +729,11 @@
       "reason": "Regressió portable del producte o d’una eina permanent; s’executa a la cadena primària, també quan està roja."
     },
     {
+      "path": "tooling/instalador/inicia-node-germa.test.mjs",
+      "suite": "primary",
+      "reason": "Ronda 2: regressió determinista del codi instal·lat amb fixtures temporals."
+    },
+    {
       "path": "tooling/media/cens_imatges.test.mjs",
       "suite": "primary",
       "reason": "Cens de mitjans permanent amb fixtures portables: traçabilitat, variants, duplicats i lectura confinada; cap mutació d’assets."
@@ -762,6 +772,11 @@
       "path": "tooling/seo/projeccio-publica.test.mjs",
       "suite": "primary",
       "reason": "QA-H04 · projecció pública sanejada de les publicacions remotes (app_content amb la clau anon) cap al --snapshot del prerender: fetch simulat, cap xarxa ni credencial real; política de fallada, sostre de mida i retirada en el build següent."
+    },
+    {
+      "path": "tooling/seo/publicacions-federades.test.mjs",
+      "suite": "primary",
+      "reason": "Ronda 2: regressió determinista del codi instal·lat amb fixtures temporals."
     },
     {
       "path": "tooling/seo/site-policy.test.mjs",

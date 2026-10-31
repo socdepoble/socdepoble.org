@@ -1,3 +1,4 @@
+import { gestionaTeclaGraella } from '../../components/universal/workspace/navegacioTeclat.js';
 /* P1-35 (pla 261028_1526 §3.5.2) · Empaquetats i llançament: la targeta del
    tauler de /consola i la seua pàgina, /consola/empaquetats. Les dades i les
    regles viuen a empaquetats.js (sense React); la lectura és la de useFontDev,
@@ -34,7 +35,7 @@ export function SeccioEmpaquetats({ font }) {
     <section aria-labelledby={id}>
       <h2 id={id}>{TITOL_EMPAQUETATS}</h2>
       <p>{ENTRADETA_EMPAQUETATS}</p>
-      <nav className="sdp-card-grid sdp-consola__graella" aria-label={ETIQUETA_NAV_EMPAQUETATS}>
+      <nav className="sdp-card-grid sdp-consola__graella" onKeyDown={gestionaTeclaGraella} aria-label={ETIQUETA_NAV_EMPAQUETATS}>
         <TargetaConsola icona={Package} titol={pagina.title} subtitol={pagina.subtitle} entradilla={pagina.lead}
           dada={coberta.dada} etiquetes={coberta.etiquetes} a={pagina.ruta}
           creat={copyConsola().date} generat={font.valor?.generat ?? null} />

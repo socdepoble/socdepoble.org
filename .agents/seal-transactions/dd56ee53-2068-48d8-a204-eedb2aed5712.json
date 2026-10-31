@@ -1,0 +1,97 @@
+{
+  "id": "dd56ee53-2068-48d8-a204-eedb2aed5712",
+  "session": "cbf81eab-2253-4170-ab5f-1972d3f09330",
+  "operationId": "torn_2c6f4a62-governanca_lot_a_ronda_dos_fediversity_llistes_vigilant_federacio_la_torre-cbf81eab",
+  "claim": "cbf81eab-2253-4170-ab5f-1972d3f09330:governance-write",
+  "planHash": "dcbd02ece0b8164add0121b980db1589618fe628d25c6ea97b1b1fa0f432e710",
+  "beforeSeal": "ed753efa85595d2b8a14c8948554807006be3633a35b5f32d1840ed6291fe9ee",
+  "files": [
+    {
+      "path": ".agents/contingut_estructural.json",
+      "before": "3c1496df52b6867cc5741c994681a71cafa520506e6953b30e7047d65009f7ca",
+      "after": "bb9c5758d11c4fb330812b716eee7fe2714ecea73e9ad9ed0b1719d9614a2957"
+    },
+    {
+      "path": "package.json",
+      "before": "767f0f2e1491d4a557978a9cdcd5ce519c20dd3bc6bc63adf4769dbf89d0c2e9",
+      "after": "2346385d61effee878547bebd7edbf4bfb545593eb4b512a1e10791000ed53ab"
+    },
+    {
+      "path": "tooling/gates/run-portes.mjs",
+      "before": "6a442c2cfd0dd14b3572b13a60acdfe80ce4091e638b5558936566266258d303",
+      "after": "ae344c9c867d073967a0a11322ab901ce237d6730549be127c6d5759582905f8"
+    },
+    {
+      "path": "tooling/gates/tractor-vigilant.mjs",
+      "before": null,
+      "after": "ecfdbb6d92600906f7f306ae878e9d828c66de8cc56c0e1446e509e83f4f71a0"
+    },
+    {
+      "path": "tooling/higiene/cron_higiene.mjs",
+      "before": "824c2844567cef9c10b37531b5d73e61e54689843f13858473044f13a61b4891",
+      "after": "02037ae1e48e78c5f88833264625b43c1bcc53fff2b147591c6bb3c09236056a"
+    },
+    {
+      "path": "tooling/instalador/flake.nix",
+      "before": null,
+      "after": "5dceef315729923de66b73a26fbe565d1e1df6000df19b4a960ee826743dc4c0"
+    },
+    {
+      "path": "tooling/instalador/inicia-node-germa.mjs",
+      "before": null,
+      "after": "d203ae1f92541a1b05040d1f6139755f0b13fba44f05378e927211817349e606"
+    },
+    {
+      "path": "tooling/instalador/inicia-node-germa.test.mjs",
+      "before": null,
+      "after": "cd983bccd312f5b46fd8e49eb114940e5c66d480665de31f7e97f71f77100c37"
+    },
+    {
+      "path": "tooling/seo/comprova-reproductibilitat.test.mjs",
+      "before": "ee7a890516bfccab1b38caa008a5c052560d37fa3206f129508676a149328a5b",
+      "after": "3609d6071c42c943ecff1a4691ea04b2109152f3f8309318f8a9fb5e178b454e"
+    },
+    {
+      "path": "tooling/seo/genera-federacio.mjs",
+      "before": "ce141be640b76335cd99096699d3881859798fd976ce6d27ef59307ae02d05d1",
+      "after": "8251a829014936896eb50ea3e95740147fb15ab182824782de5fde99a06b7e29"
+    },
+    {
+      "path": "tooling/seo/genera-federacio.test.mjs",
+      "before": "8c2669dcf5de79c6aed63a5e47fbdf9877c7980bf8c4c9ac7aaf8a9a115017ea",
+      "after": "aaccb62ff7e2fe659434305e95a9ae61a7f103ad56f0909185d5220042da4beb"
+    },
+    {
+      "path": "tooling/seo/projeccio-publica.mjs",
+      "before": "cd705ff4351c84ef8b219d410ac2a6c7de914b29a6baa0d63925ab364d24046e",
+      "after": "14f848c2327ee92d56f98130173014e96812b7a0476d6ec81f9d857578b43541"
+    },
+    {
+      "path": "tooling/seo/publicacions-federades.mjs",
+      "before": null,
+      "after": "9eb91b5dc5efe68e1a2d7c35504ec544de6b45c3cf17bca9852166ffa76b6480"
+    },
+    {
+      "path": "tooling/seo/publicacions-federades.test.mjs",
+      "before": null,
+      "after": "0005ee68ac3d6b5c5feaa420b125eaea597dbd7828ae5c2574e6d3c62d89dd59"
+    },
+    {
+      "path": "tooling/tests/node-suite-manifest.json",
+      "before": "fe3078bb4a5142362d0655ad07cfe44ace18e520c197ffbf30a2514bb2812c28",
+      "after": "8af9d9015dc8973512f67347421bfaaa5fe8cb40480bd575399cf3280182f962"
+    },
+    {
+      "path": "tooling/vite/federacio-iaia.mjs",
+      "before": "7cd902dbb9441eab054ff17c069aa909e1d520c096311f248ea0a43cd25f3eac",
+      "after": "1c3b359182ad121f656627b71d5f080b0aef2736fd5dd47786fa88036b5aebe0"
+    },
+    {
+      "path": "tooling/vite/federacio-iaia.test.mjs",
+      "before": "235ca75969608ca7c17dec991ae8524e738ddccce3363653c6d42430eddcf9f7",
+      "after": "c19d184bf10489329376c358af576ff21df3e57ad2d7894b18d5db1b57c18f1d"
+    }
+  ],
+  "state": "accepted",
+  "afterSeal": "3f6b506b7981f75b392a54d0d53631f3da2b7379006d695845166918563941ef"
+}

@@ -21,13 +21,17 @@
  *     content (el cos de la pàgina no es federa), la seua URL i la data que la pàgina ja mostra
  *     (PAGE_COPY.date: algunes són dates triades pel Mestre, no evidència de
  *     publicació; pageContent.js ho documenta una per una);
- *   · un actor per poble de src/sections/pobles/townsSeed.js amb pàgina pública
- *     (/pobles/<id>, la que el prerender ja publica), amb l'outbox BUIT: el
- *     repositori no té cap publicació real d'eixos pobles. Del seed només ix el
- *     nom: és MOCK_TOWNS (el disseny NLnet A §2 ho diu: demostració, no
- *     inquilins; la població no quadra ni amb el seu propi text i el
- *     created_at és inventat), i per això cap resum, població, comarca,
- *     coordenada ni imatge del seed es federa com si fora una dada real.
+ *   · un actor per poble FEDERAT de src/sections/pobles/townsSeed.js amb pàgina
+ *     pública (/pobles/<id>, la que el prerender ja publica). Decisió del Mestre
+ *     del 31-10-2026: només La Torre de les Maçanes (POBLES_FEDERATS de
+ *     src/data/activitypub.js). Els pobles de mostra no tenen actor, outbox,
+ *     WebFinger ni reescriptura de Firebase: el disseny NLnet A §2 diu que són
+ *     demostració, no inquilins. Del seed només ix el nom: cap resum, població,
+ *     comarca, coordenada ni imatge es federa com si fora una dada real. Les
+ *     publicacions reals arriben de la projecció anònima d'app_content
+ *     (publicacions-federades.mjs) quan el build té configuració remota. Només
+ *     contingut públic publicat d'entitats; cap submissió de persona ni xat.
+ *     Sense configuració remota, outbox buit.
  *
  * API:
  *   recullActorsPublics({ arrel, origen, carrega }) → [{ slug, nom, resum, perfil, tipus, icona, elements }]
@@ -37,7 +41,8 @@
  *   fitxersDelServidor({ ap, origen, actors, versio }) → els JRD de WebFinger per slug, les regles
  *                                                    d'nginx que els trien i NodeInfo, per a un
  *                                                    servidor amb nginx (mai per a Firebase)
- *   fitxersWebFingerEstatic({ ap, origen, actors }) → host-meta i el JRD dels actors principals,
+ *   fitxersWebFingerEstatic({ ap, origen, actors, versio }) → host-meta, NodeInfo i el JRD dels
+ *                                                    actors principals,
  *                                                    per al lloc estàtic (Firebase; vegeu més avall)
  *   reglesFirebaseWebFinger({ ap, origen, actors }) → les reescriptures i capçaleres que
  *                                                    firebase.json ha de portar per a eixos fitxers
@@ -64,7 +69,7 @@
  *
  * CLI (no l'enganxa cap build; el build web ja emet ap/ i el WebFinger estàtic pel connector):
  *   node tooling/seo/genera-federacio.mjs --desti DIR [--origen https://socdepoble.org] [--arrel .] [--servidor] [--reescriu]
- *   Escriu DIR/ap/**, DIR/.well-known/host-meta i el JRD dels actors principals
+ *   Escriu DIR/ap/**, DIR/.well-known/host-meta, NodeInfo i el JRD dels actors principals
  *   (el mateix que el build web) i, amb --servidor, també DIR/.well-known/webfinger/<slug>.json
  *   de tots els actors, DIR/.well-known/webfinger.nginx (les regles que trien el JRD per
  *   $arg_resource; el mòdul NixOS les inclou), DIR/.well-known/nodeinfo i
@@ -98,7 +103,8 @@ export const AVIS_FASE_1 = 'Federació en fase 1, només de lectura: este perfil
    troba La Torre (activitypub.js, aliesWebFinger). */
 export const ALIES_WEBFINGER = Object.freeze({ 'la-torre-de-les-macanes': Object.freeze(['latorredelesmacanes']) });
 /* Els actors principals que el lloc estàtic (Firebase) respon per WebFinger
-   amb host-meta i la plantilla LRDD (vegeu la capçalera). */
+   amb host-meta i la plantilla LRDD (vegeu la capçalera): el projecte i els
+   pobles federats (decisió del Mestre del 31-10-2026: només La Torre). */
 export const ACTORS_WEBFINGER_ESTATIC = Object.freeze([ACTOR_PROJECTE.slug, 'la-torre-de-les-macanes']);
 export const NS_XRD = 'http://docs.oasis-open.org/ns/xri/xrd-1.0';
 export const TIPUS_WEBFINGER_ESTATIC = Object.freeze({
@@ -122,7 +128,7 @@ function versioDelPaquet(arrel) {
  * Els actors públics del repositori (vegeu la capçalera), en ordre estable:
  * primer el projecte, després els pobles en l'ordre de townsSeed.js.
  */
-export async function recullActorsPublics({ arrel = ARREL_PER_DEFECTE, origen, carrega = carregaDe(arrel) } = {}) {
+export async function recullActorsPublics({ arrel = ARREL_PER_DEFECTE, origen, carrega = carregaDe(arrel), publicacions = [] } = {}) {
   const [ap, { SYSTEM_PAGES }, { PAGE_COPY }, { MOCK_TOWNS }, { textPla }] = await Promise.all([
     carrega(FONTS.activitypub), carrega(FONTS.pagines), carrega(FONTS.copy), carrega(FONTS.pobles), carrega(FONTS.text)
   ]);
@@ -155,7 +161,7 @@ export async function recullActorsPublics({ arrel = ARREL_PER_DEFECTE, origen, c
     icona,
     elements: pagines
   };
-  const pobles = MOCK_TOWNS.filter((poble) => poble && typeof poble === 'object' && publicMetadata(poble)).map((poble) => {
+  const candidats = MOCK_TOWNS.filter((poble) => poble && typeof poble === 'object' && publicMetadata(poble)).map((poble) => {
     if (!ap.esSlugFederat(poble.id) || ap.normalitzaSlugMunicipi(poble.id) !== poble.id) {
       throw new Error(`Identificador de poble no federable a townsSeed.js: ${String(poble.id).slice(0, 80)}`);
     }
@@ -167,10 +173,14 @@ export async function recullActorsPublics({ arrel = ARREL_PER_DEFECTE, origen, c
       nom: `${nom} · Sóc de Poble`,
       resum: [`Pàgina pública de ${nom} a Sóc de Poble. No és el compte oficial de l’Ajuntament.`, AVIS_FASE_1],
       perfil: `/pobles/${poble.id}`,
-      elements: [],
+      elements: publicacions.filter(p => p.slug === poble.id).map(p => p.element),
       ...(Object.hasOwn(ALIES_WEBFINGER, poble.id) ? { alies: [...ALIES_WEBFINGER[poble.id]] } : {})
     };
   });
+  // Un àlies que xoca amb un poble del directori atura encara que el poble no siga federat (mai el JRD d'un compte per a un altre).
+  ap.aliesWebFinger([projecte, ...candidats]);
+  // POBLES_FEDERATS (decisió del Mestre del 31-10-2026): els pobles de mostra no tenen actor ni outbox.
+  const pobles = candidats.filter((actor) => ap.esPobleFederat(actor.slug));
   const actors = [projecte, ...pobles];
   // Un àlies que és el slug d'un altre actor (o que dos reclamen) atura: mai el JRD d'un compte per a un altre.
   ap.aliesWebFinger(actors);
@@ -178,10 +188,10 @@ export async function recullActorsPublics({ arrel = ARREL_PER_DEFECTE, origen, c
 }
 
 /** Els actors i els seus fitxers ap/** per a un origen. */
-export async function preparaFederacio({ arrel = ARREL_PER_DEFECTE, origen, carrega = carregaDe(arrel) } = {}) {
+export async function preparaFederacio({ arrel = ARREL_PER_DEFECTE, origen, carrega = carregaDe(arrel), publicacions = [] } = {}) {
   const ap = await carrega(FONTS.activitypub);
   const base = ap.normalitzaOrigen(origen);
-  const actors = await recullActorsPublics({ arrel, origen: base, carrega });
+  const actors = await recullActorsPublics({ arrel, origen: base, carrega, publicacions });
   return { ap, origen: base, actors, fitxers: ap.construeixFitxersFederats({ origen: base, actors }), versio: versioDelPaquet(arrel) };
 }
 
@@ -299,11 +309,16 @@ function comptesEstatics({ ap, actors }) {
  * (text XRD) i el JRD de cada actor principal a
  * .well-known/webfinger/<slug>.json, el mateix JRD que construeixWebFinger dona
  * en dev i que el servidor NixOS servix. Un actor principal absent atura el
- * build (firebase.json hi reescriuria cap a un fitxer que no hi és).
+ * build (firebase.json hi reescriuria cap a un fitxer que no hi és). Amb
+ * versio, també NodeInfo 2.1 del node (cap entrada per poble ni cap recompte).
  */
-export function fitxersWebFingerEstatic({ ap, origen, actors }) {
+export function fitxersWebFingerEstatic({ ap, origen, actors, versio }) {
   const base = ap.normalitzaOrigen(origen);
   const fitxers = new Map([['.well-known/host-meta', construeixHostMeta({ ap, origen: base })]]);
+  if (versio) {
+    fitxers.set('.well-known/nodeinfo', ap.construeixEnllacosNodeInfo({ origen: base }));
+    fitxers.set('nodeinfo/2.1.json', ap.construeixNodeInfo({ origen: base, versio }));
+  }
   // Un JRD per actor principal: els seus àlies hi reescriuen (reglesFirebaseWebFinger).
   for (const slug of new Set(comptesEstatics({ ap, actors }).map(([, desti]) => desti))) {
     const actor = actors.find((a) => a.slug === slug);
@@ -487,6 +502,7 @@ async function main(argv) {
   const arrel = path.resolve(opcions.arrel ?? ARREL_PER_DEFECTE);
   const carrega = carregaDe(arrel);
   const origen = opcions.origen ?? await origenDeLaPublicacio({ env: await entornDelBuild({ arrel }), arrel, carrega });
+  // Sense xarxa: la CLI (i les proves de la cadena primària) no llig app_content; la projecció remota és només del build (federacio-iaia.mjs).
   const preparat = await preparaFederacio({ arrel, origen, carrega });
   // El mateix que el build web (ap/** i el WebFinger estàtic) i, amb --servidor, el del servidor (els JRD dels principals, iguals).
   const fitxers = new Map([
@@ -504,4 +520,15 @@ const esLaCli = () => {
 
 if (esLaCli()) {
   main(process.argv.slice(2)).catch((error) => { console.error(error.message); process.exitCode = 1; });
+}
+
+/** La projecció anònima d'app_content, només per al build web (generateBundle de federacio-iaia.mjs): ni la CLI ni el servidor dev hi van. */
+export async function preparaFederacioDelBuild({ arrel = ARREL_PER_DEFECTE, origen, carrega = carregaDe(arrel), env = {}, fetchImpl } = {}) {
+  const inicial = await preparaFederacio({ arrel, origen, carrega });
+  const { publicacionsDelBuild } = await import('./publicacions-federades.mjs');
+  const { MOCK_TOWNS } = await carrega(FONTS.pobles);
+  const noms = new Map(MOCK_TOWNS.map(p => [p.id, p.title]));
+  const pobles = inicial.actors.filter(a => a.slug !== ACTOR_PROJECTE.slug).map(a => ({ slug: a.slug, nom: noms.get(a.slug) }));
+  const publicacions = await publicacionsDelBuild({ env, origen, pobles, fetchImpl });
+  return preparaFederacio({ arrel, origen, carrega, publicacions });
 }

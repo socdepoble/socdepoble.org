@@ -485,7 +485,8 @@ export function gestionaEscapeDelDetall(event, llista) {
 /* ── Graelles 2D ── */
 
 /** Les cel·les d'una graella: els seus fills directes. */
-export const cellesDeGraella = (contenidor) => [...(contenidor?.children ?? [])];
+export const cellesDeGraella = (contenidor) => [...(contenidor?.children ?? [])]
+  .filter(cella => disponible(cella) && visible(cella) && objectiuDeCella(cella));
 
 /** On va el focus dins d'una cel·la: la cel·la, si l'admet, o el seu primer element enfocable. */
 export function objectiuDeCella(cella) {

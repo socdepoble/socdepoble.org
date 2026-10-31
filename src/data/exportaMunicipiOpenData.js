@@ -141,7 +141,11 @@ const CAMPS = Object.freeze({
   directori: new Set(['id', 'slug', 'name', 'kind', 'parent_organization_id', 'lema', 'description', 'logo_url', 'hero_url',
     'copyright', 'town_name', 'visibility'])
 });
-const CLAUS_ENTRADA = Object.freeze(['municipi', 'ara', 'origen', 'actorsPublicats', 'noticies', 'agenda', 'entitats', 'memoria', 'personalitzacio']);
+const CLAUS_ENTRADA = Object.freeze(['municipi', 'ara', 'origen', 'actorsPublicats', 'noticies', 'agenda', 'entitats', 'memoria', 'personalitzacio', 'activityStreams', 'pendents']);
+/* Les col·leccions que «pendents» pot declarar no exportades (recullDadesPubliquesDelMunicipi), amb el seu nom a memoria.md. */
+const NOMS_DE_PENDENT = Object.freeze({
+  noticies: 'Notícies i avisos', agenda: 'Agenda', directori: "Directori d'entitats i comerços", memoria: 'Memòria cultural', configuracio: 'Configuració del poble'
+});
 const CLAUS_MUNICIPI = Object.freeze(['slug', 'nom', 'id', 'descripcio', 'wikidata', 'lat', 'lng']);
 
 /* ── Text ───────────────────────────────────────────────────────────────── */
@@ -737,11 +741,12 @@ function liniaDElement(element, data, coincidencia) {
   return segona ? `${linia}\n  ${segona}` : linia;
 }
 
-function memoriaMd({ municipi, ara, enllacos, seccions, omissions, configuracio }) {
+function memoriaMd({ municipi, ara, enllacos, seccions, omissions, configuracio, federades = null, pendents }) {
+  const pendent = new Map((pendents ?? []).map(({ coleccio, motiu }) => [coleccio, motiu]));
   const linies = [
     `# Dades obertes de ${escapaMarkdown(municipi.nom)}`,
     '',
-    `Paquet \`${FORMAT_DADES_OBERTES}\` (versió ${VERSIO_FORMAT}) generat per el Mas (Sóc de Poble) el ${ara}.`,
+    `Paquet \`${FORMAT_DADES_OBERTES}\` (versió ${VERSIO_FORMAT}) generat pel Mas (Sóc de Poble) el ${ara}.`,
     'Conté només contingut públic del municipi i de les seues entitats. No conté cap dada de persones: ni perfils, ni publicacions del veïnat, ni xats, ni el Mercat.',
     '',
     `_English:_ open data package of ${escapaMarkdown(municipi.nom)} (schema.org JSON-LD, Frictionless Data Package v2, BagIt with a SHA-256 manifest). It holds public municipal and organisation content only, never personal data.`,
@@ -751,12 +756,15 @@ function memoriaMd({ municipi, ara, enllacos, seccions, omissions, configuracio 
     '| Fitxer | Elements |',
     '| --- | --- |',
     ...seccions.map(({ fitxer, elements }) => `| \`${fitxer}\` | ${elements.length} |`),
-    `| \`configuracio.json\` | ${['taxonomia', 'estil'].filter((clau) => configuracio[clau]).join(', ') || 'sense personalització'} |`,
+    ...(federades === null ? [] : [`| \`activitystreams.json\` | ${federades} |`]),
+    /* V2-02 · Una configuració pendent no s'ha llegit: «sense personalització» diria que el poble no en té. */
+    `| \`configuracio.json\` | ${['taxonomia', 'estil'].filter((clau) => configuracio[clau]).join(', ') || (pendent.has('configuracio') ? "no s'exporta" : 'sense personalització')} |`,
     ''
   ];
-  for (const { titol, elements, data, coincidencies } of seccions) {
+  for (const { coleccio, titol, elements, data, coincidencies } of seccions) {
     linies.push(`## ${titol} (${elements.length})`, '');
-    if (!elements.length) linies.push('Sense elements en esta exportació.', '');
+    if (!elements.length && pendent.has(coleccio)) linies.push(`No s'exporta en esta versió: ${escapaMarkdown(pendent.get(coleccio))}.`, '');
+    else if (!elements.length) linies.push('Sense elements en esta exportació.', '');
     else linies.push(...elements.map((element, i) => liniaDElement(element, data(element), coincidencies[i])), '');
   }
   if (enllacos) {
@@ -768,14 +776,21 @@ function memoriaMd({ municipi, ara, enllacos, seccions, omissions, configuracio 
       `- Outbox: \`${enllacos.outbox}\``,
       '',
       "L'actor i l'outbox es poden consultar per URL. Seguir el poble des del Fedivers necessita la fase 2 (inbox i signatures HTTP), que encara no existix.",
-      'El compte @ només es resol on hi ha WebFinger (un servidor propi, com el mòdul NixOS): una web estàtica no en pot respondre cap.',
+      "En un allotjament estàtic com socdepoble.org, el compte @ es troba amb host-meta i un JRD estàtic; la consulta WebFinger per paràmetre (`?resource=`) necessita un servidor propi, com el mòdul NixOS.",
       ''
     );
   }
   linies.push('## Què queda fora', '', 'Només recomptes, mai valors.', '');
   const files = Object.entries(omissions).flatMap(([coleccio, motius]) => Object.entries(motius)
     .map(([motiu, n]) => `- ${coleccio}: ${n} ${NOMS_DE_MOTIU[motiu] ?? motiu}`));
-  linies.push(...(files.length ? files : ['- Res.']), '');
+  /* V1-02 · Amb fonts pendents, un «Res.» sol diria que no falta res: només parla de les col·leccions exportades. */
+  const resFora = pendents?.length ? "- Res entre les col·leccions exportades. El que encara no s'exporta és a «Fonts pendents»." : '- Res.';
+  linies.push(...(files.length ? files : [resFora]), '');
+  /* Les col·leccions que el paquet no ha llegit, i per què: mai un «sense elements» que semble un poble sense notícies. */
+  if (pendents !== undefined) {
+    linies.push('## Fonts pendents', '', "El que este paquet encara no exporta, i per què. No vol dir que el poble no en tinga.", '');
+    linies.push(...(pendents.length ? pendents.map(({ coleccio, motiu }) => `- ${NOMS_DE_PENDENT[coleccio]}: ${escapaMarkdown(motiu)}.`) : ['- Cap.']), '');
+  }
   linies.push(
     '## Verificació',
     '',
@@ -786,7 +801,7 @@ function memoriaMd({ municipi, ara, enllacos, seccions, omissions, configuracio 
   return linies.join('\n');
 }
 
-function llicenciesMd(seccions) {
+function llicenciesMd(seccions, federades = null) {
   const files = seccions.flatMap(({ coleccio, elements }) => elements.map((element) => {
     /* La de l'element (CreativeWork) o la de la seua fitxa (Event, Organization). */
     const llicencia = llicenciaDe(element.copyrightNotice ?? element.subjectOf?.copyrightNotice);
@@ -801,7 +816,8 @@ function llicenciesMd(seccions) {
     '| Col·lecció | Element | Llicència declarada | Oberta |',
     '| --- | --- | --- | --- |',
     ...(files.length ? files : ['| — | — | — | — |']),
-    ''
+    '',
+    ...(federades === null ? [] : [`Publicacions federades (\`activitystreams.json\`): ${federades} ${federades === 1 ? 'element' : 'elements'} sense llicència declarada; no s'atorga cap dret de reutilització.`, ''])
   ].join('\n');
 }
 
@@ -842,6 +858,11 @@ export function preparaDadesObertesMunicipi(entrada) {
     throw new TypeError('«actorsPublicats» ha de ser la llista dels slugs dels actors publicats.');
   }
   const enllacos = base && actors.includes(municipi.slug) ? urlsDeMunicipi(municipi.slug, { origen: base }) : null;
+  const pendents = entrada.pendents;
+  if (pendents !== undefined && (!Array.isArray(pendents) || pendents.some((p) => !esObjecte(p) || !Object.hasOwn(NOMS_DE_PENDENT, p.coleccio)
+      || !textLinia(p.motiu)) || new Set(pendents.map((p) => p.coleccio)).size !== pendents.length)) {
+    throw new TypeError('«pendents» ha de ser [{ coleccio, motiu }], una vegada per col·lecció.');
+  }
 
   const omissions = { noticies: nouRecompte(), agenda: nouRecompte(), directori: nouRecompte(), memoria: nouRecompte(), configuracio: nouRecompte() };
   /* Primer el directori: l'autoria de cada element s'hi enllaça (autorSchema). */
@@ -868,6 +889,12 @@ export function preparaDadesObertesMunicipi(entrada) {
   const netes = Object.fromEntries(Object.entries(omissions).map(([clau, motius]) => [clau,
     Object.fromEntries(Object.keys(motius).sort(compara).map((motiu) => [motiu, motius[motiu]]))]));
 
+  const outbox = entrada.activityStreams;
+  if (outbox !== undefined) {
+    const urls = base && urlsDeMunicipi(municipi.slug, { origen: base });
+    if (!urls || outbox?.id !== urls.outbox || outbox.type !== 'OrderedCollection' || !Array.isArray(outbox.orderedItems)) throw new TypeError('Outbox municipal invàlid.');
+  }
+  const federades = outbox === undefined ? null : outbox.orderedItems.length;
   const fitxers = [
     { nom: 'agenda.jsonld', text: jsonCanonic(grafs.agenda), mediatype: 'application/ld+json', format: 'jsonld', titol: 'Agenda (schema.org Event)' },
     {
@@ -876,16 +903,19 @@ export function preparaDadesObertesMunicipi(entrada) {
       mediatype: 'application/json', format: 'json', titol: 'Configuració del poble (taxonomia i estil)'
     },
     { nom: 'directori.jsonld', text: jsonCanonic(grafs.directori), mediatype: 'application/ld+json', format: 'jsonld', titol: "Directori d'entitats i comerços (schema.org)" },
-    { nom: 'llicencies.md', text: llicenciesMd(seccions), mediatype: 'text/markdown', format: 'md', titol: 'Llicència de cada element' },
+    { nom: 'llicencies.md', text: llicenciesMd(seccions, federades), mediatype: 'text/markdown', format: 'md', titol: 'Llicència de cada element' },
     { nom: 'memoria-cultural.jsonld', text: jsonCanonic(grafs.memoria), mediatype: 'application/ld+json', format: 'jsonld', titol: 'Memòria cultural (schema.org CreativeWork)' },
     {
       nom: 'memoria.md',
-      text: memoriaMd({ municipi, ara, enllacos, seccions, omissions: netes, configuracio }),
+      text: memoriaMd({ municipi, ara, enllacos, seccions, omissions: netes, configuracio, federades, pendents }),
       mediatype: 'text/markdown', format: 'md', titol: 'Memòria del paquet (Markdown)'
     },
     { nom: 'municipi.jsonld', text: jsonCanonic(municipiSchema(municipi, enllacos)), mediatype: 'application/ld+json', format: 'jsonld', titol: 'El municipi (schema.org AdministrativeArea)' },
     { nom: 'noticies.jsonld', text: jsonCanonic(grafs.noticies), mediatype: 'application/ld+json', format: 'jsonld', titol: 'Notícies i avisos (schema.org NewsArticle)' }
   ];
+  if (outbox !== undefined) {
+    fitxers.push({ nom: 'activitystreams.json', text: jsonCanonic(outbox), mediatype: 'application/activity+json', format: 'json', titol: 'Publicacions municipals (ActivityStreams 2.0)' });
+  }
   return {
     slug: municipi.slug,
     nom: municipi.nom,
@@ -932,7 +962,12 @@ const manifest = (entrades) => entrades.map(({ cami, sha256 }) => `${sha256}  ${
  * @returns {Promise<{ slug, arrel, nomFitxer, fitxers: Array<{ cami, bytes, sha256 }>,
  *   datapackage: object, zip: Uint8Array, sha256: string, omissions, comptes }>}
  */
-export async function exportaMunicipiOpenData(entrada, { subtle = globalThis.crypto?.subtle } = {}) {
+export async function exportaMunicipiOpenData(entrada, opcions = {}) {
+  const { subtle = globalThis.crypto?.subtle } = opcions;
+  if (typeof entrada === 'string') {
+    const { entradaOpenDataDelPoble } = await import('./entradaOpenDataDelPoble.js');
+    entrada = await entradaOpenDataDelPoble(entrada, opcions);
+  }
   const digest = subtleDe(subtle);
   const preparat = preparaDadesObertesMunicipi(entrada);
   const codificador = new TextEncoder();
@@ -944,7 +979,7 @@ export async function exportaMunicipiOpenData(entrada, { subtle = globalThis.cry
     $schema: ESQUEMA_DATAPACKAGE,
     name: preparat.arrel,
     title: `Dades obertes de ${preparat.nom}`,
-    description: 'Contingut públic del municipi i de les seues entitats exportat per el Mas (Sóc de Poble). '
+    description: 'Contingut públic del municipi i de les seues entitats exportat pel Mas (Sóc de Poble). '
       + "Sense dades de persones. La llicència de cada element és a llicencies.md: el conjunt no n'atorga cap de nova.",
     created: preparat.ara,
     licenses: [{ path: 'llicencies.md', title: 'Cada element porta la seua llicència; sense llicència declarada no hi ha cap dret de reutilització' }],
@@ -1124,14 +1159,18 @@ export async function verificaPaquetOpenData(zip, { subtle = globalThis.crypto?.
 export async function recullDadesPubliquesDelMunicipi(port, municipi, { config = {}, signal } = {}) {
   if (!port || typeof port.teCapacitat !== 'function') throw new TypeError('Cal el port de dades (backendPort).');
   const { slug, nom } = municipiDe({ ...(municipi?.slug === undefined ? {} : { slug: municipi.slug }), nom: municipi?.nom });
+  /* V1-02 · Els motius ixen tal qual a memoria.md, per a qualsevol veí: en
+     valencià planer, sense noms de codi, sense decisions internes i sense
+     cap dos punts (la línia ja en porta un darrere del nom de la font). */
+  const senseLecturaPublica = "encara no hi ha cap lectura pública garantida d'estes dades";
   const pendents = [
-    { coleccio: 'noticies', motiu: 'sense lectura anònima garantida al port (cal la capacitat dadesObertes, D-B7)' },
-    { coleccio: 'agenda', motiu: 'sense lectura anònima garantida al port (cal la capacitat dadesObertes, D-B7)' },
+    { coleccio: 'noticies', motiu: senseLecturaPublica },
+    { coleccio: 'agenda', motiu: senseLecturaPublica },
     { coleccio: 'memoria', motiu: 'el Mas no té cap mòdul de memòria cultural' },
-    { coleccio: 'configuracio', motiu: "la personalització és del tenant: la passa qui exporta" }
+    { coleccio: 'configuracio', motiu: "la personalització és de tot el node, no d'un poble, i la fitxa del poble no la inclou" }
   ];
   if (!port.teCapacitat('directoriEntitats')) {
-    return { municipi: { slug, nom }, entitats: null, pendents: [{ coleccio: 'directori', motiu: 'el backend no té la capacitat directoriEntitats' }, ...pendents] };
+    return { municipi: { slug, nom }, entitats: null, pendents: [{ coleccio: 'directori', motiu: "este servidor de dades no oferix el directori d'entitats" }, ...pendents] };
   }
   const files = await port.listPublicOrganizations({ poble: nom, limit: LIMIT_DIRECTORI_ENTITATS, signal }, config);
   if (!Array.isArray(files)) throw new TypeError('listPublicOrganizations no ha tornat cap llista.');
