@@ -35,8 +35,10 @@ const nomesFitxes = (valor) => {
    l'arrel: els createContext de l'arrel viuen a objectesDeContext.js, que no
    importa res del projecte, i una instància nova d'este mòdul o de
    SessionContext.jsx ja no en porta cap de nou (objectesDeContext.test.jsx).
-   Per això useSession(), davall, continua exigint el seu proveïdor. */
-const IDENTITAT_DE_RESERVA = Object.freeze({ actorId: null, actorKey: 'anon' });
+   Per això useSession(), davall, continua exigint el seu proveïdor.
+   Gauntlet 2 261101 (G2-10) · Una sola font: MultimediaProvider
+   (sections/multimedia/MultimediaContext.jsx) importa esta mateixa reserva. */
+export const IDENTITAT_DE_RESERVA = Object.freeze({ actorId: null, actorKey: 'anon' });
 
 export function CoreContentProvider({ children, config }) {
   const { actorId, actorKey } = useIdentitatOpcional() || IDENTITAT_DE_RESERVA;

@@ -170,30 +170,41 @@ const muntaApp = (ruta) => render(
 );
 const app = (nom) => within(screen.getByRole('navigation', { name: 'App' })).getByRole('button', { name: nom });
 
-test('MD · /notes amb n1: les CARPETES; eixir i tornar amb l’Arrere a /notes?nota=n1 torna a les CARPETES, no a l’editor', () => {
+/* IDEA-59 / P1-72 (ordre del Mestre, 261101, punt 0) · L'entrada nua de
+   /notes ja no escriu ?nota=n1 a la URL (la selecció de «Tot» amb la Card
+   tutorial es deriva): en estret continua començant per les CARPETES, i
+   l'Arrere hi torna amb la URL nua. */
+test('MD · /notes amb n1: les CARPETES; eixir i tornar amb l’Arrere a /notes torna a les CARPETES, no a l’editor', () => {
   dades.notes = [BLOC, NOTA];
   ambAmplada(375);
   const { container } = muntaApp('/notes');
-  expect(url()).toBe('/notes?nota=n1');
+  expect(url()).toBe('/notes');
   expect(panell(container)).toBe('left');
 
   fireEvent.click(app('Ves al Mur'));
   expect(url()).toBe('/mur');
   expect(container.querySelector('.app-grid-shell')).toBeNull();
   fireEvent.click(app('Arrere'));
-  expect(url()).toBe('/notes?nota=n1');
+  expect(url()).toBe('/notes');
   expect(panell(container)).toBe('left');
   expect(obertes(container)).toEqual(['#app-grid-sidebar']);
 });
 
-test('MD · recarregar /notes?nota=n1 que el Bloc havia escrit sol torna a les CARPETES', () => {
+/* IDEA-59 · Abans el Bloc escrivia ?nota=n1 sol i calia que recarregar-la
+   tornara a les CARPETES. Ara la URL de l'entrada es queda nua: recarregar
+   és tornar a l'entrada (les CARPETES), i un enllaç explícit a la n1 ja no
+   és cap rastre del Bloc sinó un enllaç com un altre (el seu editor). */
+test('MD · recarregar l’entrada nua torna a les CARPETES; un enllaç explícit a la n1 obri el seu editor', () => {
   dades.notes = [BLOC, NOTA];
   ambAmplada(375);
   muntaApp('/notes');
-  expect(url()).toBe('/notes?nota=n1');
+  expect(url()).toBe('/notes');
   cleanup();
-  const { container } = muntaApp('/notes?nota=n1');
-  expect(panell(container)).toBe('left');
+  const tornada = muntaApp('/notes');
+  expect(panell(tornada.container)).toBe('left');
+  cleanup();
+  const enllac = muntaApp('/notes?nota=n1');
+  expect(panell(enllac.container)).toBe('');
 });
 
 test('MD · si la persona era a l’editor quan va eixir, l’Arrere hi torna; i un enllaç a una altra nota obri el seu editor', () => {

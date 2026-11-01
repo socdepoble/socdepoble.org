@@ -157,6 +157,21 @@ describe('Pedra Seca', () => {
     expect(senseComentaris(llig('src/components/PedraSeca/hooks/useMenuEmergent.js'))).toMatch(/getRootNode[\s\S]*stopPropagation[\s\S]*querySelectorAll/);
   });
 
+  /* Gauntlet 261101 · X-C-notes (C-01) · El desplegable d'encapçalaments de
+     la barra d'eines (UniversalToolbar.jsx) també fa servir useMenuEmergent:
+     ni la llista ni el botó porten escoltes pròpies. La resta del fitxer (les
+     opcions compactes de «⋯» i la mesura de la fila) no són cap menú. */
+  test('C9 · el desplegable d’encapçalaments (LlistaNivells i MenuEncapcalaments) fa servir useMenuEmergent i cap escolta pròpia', () => {
+    const codi = senseComentaris(llig('src/components/universal/UniversalToolbar.jsx'));
+    const inici = codi.indexOf('function LlistaNivells(');
+    const fi = codi.indexOf('export default function UniversalToolbar(');
+    expect([inici > 0, fi > inici]).toEqual([true, true]);
+    const desplegable = codi.slice(inici, fi);
+    expect(desplegable).toMatch(/useMenuEmergent\(\{\s*files: /);
+    expect(desplegable).toMatch(/function MenuEncapcalaments\(/);
+    expect(desplegable).not.toMatch(/addEventListener|getRootNode|stopPropagation|querySelectorAll|useTancaFora/);
+  });
+
   test('C9 · UniversalCard i BarraBlava importen BotoComentar de la peça de Pedra Seca; la barra ja no el definix', () => {
     const targeta = llig('src/components/PedraSeca/organismes/UniversalCard.jsx');
     expect(targeta).toMatch(/import \{ BotoComentar \} from '\.\/Comentar\.jsx';/);

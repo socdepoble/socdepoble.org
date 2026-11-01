@@ -17,13 +17,15 @@ import { afterEach, describe, expect, test, vi } from 'vitest';
 import { normalitzaSlugMunicipi, urlsDeMunicipi } from './activitypub.js';
 import { LIMIT_DIRECTORI_ENTITATS } from './contracte.js';
 import {
-  FORMAT_DADES_OBERTES, empaquetaZip, escapaMarkdown, exportaMunicipiOpenData, imatgeDe, jsonCanonic, llicenciaDe,
+  FORMAT_DADES_OBERTES, VERSIO_FORMAT, empaquetaZip, escapaMarkdown, exportaMunicipiOpenData, imatgeDe, jsonCanonic, llicenciaDe,
   preparaDadesObertesMunicipi, recullDadesPubliquesDelMunicipi, textDeCos, verificaPaquetOpenData
 } from './exportaMunicipiOpenData.js';
 import { elementDeFilaPublicada } from './mapejadorSeccions.js';
 import { CALENDAR_EVENTS } from '../sections/mur/eventsSeed.js';
 import { MOCK_TOWNS } from '../sections/pobles/townsSeed.js';
+import { creaEsdeveniment } from '../utils/esdeveniment.js';
 import { creaZip, llegeixZip } from '../utils/fulls/zip.js';
+import { aIcs } from '../utils/ics.js';
 
 const TORRE = Object.freeze({ slug: 'la-torre-de-les-macanes', nom: 'La Torre de les Maçanes' });
 const ARA = '2026-10-30T00:00:00Z';
@@ -462,7 +464,7 @@ describe('JSON-LD (schema.org), Data Package v2 i manifest SHA-256', () => {
     });
     expect(paquet.name).toMatch(/^[a-z0-9._-]+$/);
     expect(paquet.resources.map((x) => x.path)).toEqual([
-      'agenda.jsonld', 'configuracio.json', 'directori.jsonld', 'llicencies.md', 'memoria-cultural.jsonld', 'memoria.md', 'municipi.jsonld', 'noticies.jsonld'
+      'agenda.ics', 'agenda.jsonld', 'configuracio.json', 'directori.jsonld', 'llicencies.md', 'memoria-cultural.jsonld', 'memoria.md', 'municipi.jsonld', 'noticies.jsonld'
     ]);
     for (const recurs of paquet.resources) {
       const dades = fitxers.get(`data/${recurs.path}`);
@@ -752,7 +754,7 @@ describe('ZIP: STORE, CRC-32, data DOS fixa, ordre estable i anada i tornada', (
   test('cada entrada: CRC-32 independent, sense compressió, 1980-01-01 00:00 i noms en ordre de bytes sota una arrel', async () => {
     const r = await exporta(COMPLET());
     const entrades = capcaleresLocals(r.zip);
-    expect(entrades).toHaveLength(13);
+    expect(entrades).toHaveLength(14);
     for (const e of entrades) {
       expect(e.crc, e.nom).toBe(crcBitABit(e.dades));
       expect([e.metode, e.hora, e.data, e.comprimida], e.nom).toEqual([0, 0, 0x0021, e.mida]);
@@ -767,7 +769,7 @@ describe('ZIP: STORE, CRC-32, data DOS fixa, ordre estable i anada i tornada', (
     const r = await exporta(COMPLET());
     const llegits = llegeixZip(r.zip);
     expect(llegits.map(({ nom, dades }) => ({ cami: nom.slice(ARREL.length + 1), bytes: dades.length, sha256: sha(dades) }))).toEqual(r.fitxers);
-    await expect(verificaPaquetOpenData(r.zip)).resolves.toEqual({ slug: TORRE.slug, arrel: ARREL, fitxers: 13, recursos: 8 });
+    await expect(verificaPaquetOpenData(r.zip)).resolves.toEqual({ slug: TORRE.slug, arrel: ARREL, fitxers: 14, recursos: 9 });
     expect(Buffer.compare(Buffer.from(empaquetaZip([{ nom: 'b.txt', dades: 'b' }, { nom: 'a.txt', dades: 'a' }])), Buffer.from(empaquetaZip([{ nom: 'a.txt', dades: 'a' }, { nom: 'b.txt', dades: 'b' }])))).toBe(0);
     expect(Buffer.compare(Buffer.from(empaquetaZip([{ nom: 'b.txt', dades: 'b' }, { nom: 'a.txt', dades: 'a' }])), Buffer.from(creaZip([{ nom: 'a.txt', dades: 'a' }, { nom: 'b.txt', dades: 'b' }])))).toBe(0);
   });
@@ -822,7 +824,7 @@ describe('verificació: qualsevol diferència falla tancat', () => {
     const manifest = fitxers.get('manifest-sha256.txt').replace(/^[0-9a-f]{64}(?= {2}data\/datapackage\.json$)/m, sha(nouPaquet));
     const tag = `${sha(fitxers.get('bag-info.txt'))}  bag-info.txt\n${sha(fitxers.get('bagit.txt'))}  bagit.txt\n${sha(manifest)}  manifest-sha256.txt\n`;
     const coherent = refa(r.zip, (es) => torna(torna(torna(es, 'data/datapackage.json', nouPaquet), 'manifest-sha256.txt', manifest), 'tagmanifest-sha256.txt', tag));
-    await expect(verificaPaquetOpenData(coherent)).rejects.toThrow(/datapackage\.json no quadra amb data\/agenda\.jsonld/);
+    await expect(verificaPaquetOpenData(coherent)).rejects.toThrow(/datapackage\.json no quadra amb data\/agenda\.ics/);
   });
 
   /* La bossa refeta de manera COHERENT amb una sola cosa canviada: `dades`
@@ -857,7 +859,7 @@ describe('verificació: qualsevol diferència falla tancat', () => {
 
   test('la bossa refeta sense canvis passa: cada prova de davall canvia UNA cosa', async () => {
     const r = await exporta(COMPLET());
-    await expect(verificaPaquetOpenData(bossa(r))).resolves.toEqual({ slug: TORRE.slug, arrel: ARREL, fitxers: 13, recursos: 8 });
+    await expect(verificaPaquetOpenData(bossa(r))).resolves.toEqual({ slug: TORRE.slug, arrel: ARREL, fitxers: 14, recursos: 9 });
   });
 
   test('un datapackage.json que ha perdut un recurs (amb el manifest, l’Oxum i el tagmanifest refets)', async () => {
@@ -919,7 +921,7 @@ describe('verificació: qualsevol diferència falla tancat', () => {
   test('el sostre de lectura (maxEixida) arriba a llegeixZip', async () => {
     const r = await exporta(COMPLET());
     await expect(verificaPaquetOpenData(r.zip, { maxEixida: 1024 })).rejects.toThrow(/passaria de 1024 bytes/);
-    await expect(verificaPaquetOpenData(r.zip, { maxEixida: r.zip.length })).resolves.toMatchObject({ fitxers: 13 });
+    await expect(verificaPaquetOpenData(r.zip, { maxEixida: r.zip.length })).resolves.toMatchObject({ fitxers: 14 });
   });
 });
 
@@ -1015,5 +1017,413 @@ describe('recullDadesPubliquesDelMunicipi: només el que el port servix com a p�
     await expect(recullDadesPubliquesDelMunicipi(portDe(plenes), TORRE)).rejects.toThrow(RangeError);
     await expect(recullDadesPubliquesDelMunicipi(portDe(null), TORRE)).rejects.toThrow(/cap llista/);
     await expect(recullDadesPubliquesDelMunicipi(null, TORRE)).rejects.toThrow(/port/);
+  });
+});
+
+/* T3.1 (marató del 261101) · L'esquema 1.1.0 i l'agenda en iCalendar. El
+   lector de davall és independent del generador: llig els BYTES (CRLF, 75
+   octets per línia física, cap caràcter partit), desplega les línies
+   (§3.1), comprova que els components s'obrin i es tanquen i desescapa el
+   TEXT (§3.3.11) fallant amb un «,» o un «;» sense escapar. */
+const ENC_ICS = new TextEncoder();
+const DEC_ICS = new TextDecoder('utf-8', { fatal: true });
+const LINIA_ICS = /^([A-Z][A-Z0-9-]*)((?:;[A-Z][A-Z0-9-]*=[^;:]*)*):(.*)$/;
+function desescapaTextIcs(valor) {
+  let text = '';
+  for (let i = 0; i < valor.length; i += 1) {
+    const c = valor[i];
+    if (c === ',' || c === ';') throw new Error(`«${c}» sense escapar: ${valor}`);
+    if (c !== '\\') { text += c; continue; }
+    const seguent = valor[i + 1];
+    if (seguent === 'n' || seguent === 'N') text += '\n';
+    else if (seguent === ',' || seguent === ';' || seguent === '\\') text += seguent;
+    else throw new Error(`escapada invàlida: ${valor}`);
+    i += 1;
+  }
+  return text;
+}
+function llegeixIcs(text) {
+  const bytes = ENC_ICS.encode(text);
+  expect([bytes.at(-2), bytes.at(-1)]).toEqual([0x0d, 0x0a]);
+  const fisiques = [];
+  let inici = 0;
+  for (let i = 0; i < bytes.length; i += 1) {
+    if (bytes[i] === 0x0a) {
+      expect(bytes[i - 1], `LF sense CR a l'octet ${i}`).toBe(0x0d);
+      fisiques.push(bytes.subarray(inici, i - 1));
+      inici = i + 1;
+    } else if (bytes[i] === 0x0d) expect(bytes[i + 1], `CR sense LF a l'octet ${i}`).toBe(0x0a);
+  }
+  for (const linia of fisiques) {
+    expect(linia.length, DEC_ICS.decode(linia)).toBeLessThanOrEqual(75);
+    // Cap línia física no comença ni acaba a mitges d'un caràcter UTF-8.
+    expect(() => DEC_ICS.decode(linia)).not.toThrow();
+  }
+  const logiques = text.slice(0, -2).replace(/\r\n[ \t]/g, '').split('\r\n');
+  const pila = [];
+  const components = [];
+  for (const linia of logiques) {
+    const m = LINIA_ICS.exec(linia);
+    expect(m, linia).not.toBeNull();
+    const [, nom, params, valor] = m;
+    if (nom === 'BEGIN') { const component = { nom: valor, props: [] }; pila.push(component); components.push(component); continue; }
+    if (nom === 'END') { expect(pila.pop()?.nom, linia).toBe(valor); continue; }
+    expect(pila.length, linia).toBeGreaterThan(0);
+    pila.at(-1).props.push({ nom, params, valor });
+  }
+  expect(pila).toEqual([]);
+  expect(components[0].nom).toBe('VCALENDAR');
+  const prop = (component, nom) => {
+    const totes = component.props.filter((p) => p.nom === nom);
+    expect(totes.length, `${component.nom} ${nom}`).toBeLessThanOrEqual(1);
+    return totes[0] ?? null;
+  };
+  const calendari = components[0];
+  expect(prop(calendari, 'VERSION').valor).toBe('2.0');
+  expect(prop(calendari, 'PRODID').valor).toMatch(/^-\/\/.+\/\/.+\/\/[A-Z]{2}$/);
+  const esdeveniments = components.filter((c) => c.nom === 'VEVENT');
+  expect(components.length).toBe(esdeveniments.length + 1);
+  expect(esdeveniments.length).toBeGreaterThan(0);
+  const text_ = (component, nom) => { const p = prop(component, nom); return p ? desescapaTextIcs(p.valor) : null; };
+  return {
+    calendari: { nom: text_(calendari, 'NAME'), wr: text_(calendari, 'X-WR-CALNAME'), escala: prop(calendari, 'CALSCALE')?.valor },
+    fisiques: fisiques.length,
+    logiques: logiques.length,
+    esdeveniments: esdeveniments.map((vevent) => {
+      for (const obligatori of ['UID', 'DTSTAMP', 'DTSTART']) expect(prop(vevent, obligatori), obligatori).not.toBeNull();
+      const dtstart = prop(vevent, 'DTSTART');
+      const dtend = prop(vevent, 'DTEND');
+      const dia = dtstart.params === ';VALUE=DATE';
+      expect(dtstart.valor).toMatch(dia ? /^\d{8}$/ : /^\d{8}T\d{6}Z$/);
+      if (!dia) expect(dtstart.params).toBe('');
+      if (dtend) {
+        expect(dtend.params, 'DTEND del mateix tipus que DTSTART').toBe(dtstart.params);
+        expect(dtend.valor > dtstart.valor, 'DTEND posterior').toBe(true);
+      }
+      for (const nom of ['DTSTAMP', 'CREATED', 'LAST-MODIFIED']) if (prop(vevent, nom)) expect(prop(vevent, nom).valor, nom).toMatch(/^\d{8}T\d{6}Z$/);
+      return {
+        uid: text_(vevent, 'UID'), dtstamp: prop(vevent, 'DTSTAMP').valor, dtstart: `${dtstart.params}:${dtstart.valor}`,
+        dtend: dtend ? `${dtend.params}:${dtend.valor}` : null, resum: text_(vevent, 'SUMMARY'), descripcio: text_(vevent, 'DESCRIPTION'),
+        lloc: text_(vevent, 'LOCATION'), classe: prop(vevent, 'CLASS')?.valor, creat: prop(vevent, 'CREATED')?.valor ?? null,
+        editat: prop(vevent, 'LAST-MODIFIED')?.valor ?? null, claus: vevent.props.map((p) => p.nom)
+      };
+    })
+  };
+}
+const icsDe = (preparat) => preparat.fitxers.find((f) => f.nom === 'agenda.ics')?.text ?? null;
+const acteDeLaTorre = (extra) => ({ title: 'Acte', poble_id: TORRE.slug, author_org_id: RENTONAR, ...extra });
+
+describe('T3.1 · esquema 1.1.0 i agenda.ics (iCalendar, RFC 5545)', () => {
+  test('schemaVersion 1.1.0 a datapackage.json, memoria.md, bag-info.txt i el PRODID, i agenda.ics dins del sumari SHA-256', async () => {
+    expect(VERSIO_FORMAT).toBe('1.1.0');
+    const r = await exporta(COMPLET());
+    const fitxers = new Map(llegeixZip(r.zip).map(({ nom, dades }) => [nom.slice(ARREL.length + 1), dades]));
+    expect(r.datapackage.socdepoble).toMatchObject({ format: FORMAT_DADES_OBERTES, schemaVersion: '1.1.0', versio: '1.1.0' });
+    expect(descodifica(fitxers.get('data/memoria.md'))).toContain(`Paquet \`${FORMAT_DADES_OBERTES}\` (versió 1.1.0)`);
+    expect(descodifica(fitxers.get('bag-info.txt'))).toContain('Bag-Software-Agent: Sóc de Poble · exportaMunicipiOpenData 1.1.0\n');
+    const ics = fitxers.get('data/agenda.ics');
+    expect(descodifica(ics)).toContain('\r\nPRODID:-//Soc de Poble//exportaMunicipiOpenData 1.1.0//CA\r\n');
+    // El seu hash al Data Package i al manifest, i el hash del manifest al tagmanifest.
+    expect(r.datapackage.resources.find((x) => x.path === 'agenda.ics')).toEqual({
+      name: 'agenda-ics', path: 'agenda.ics', title: 'Agenda (iCalendar, RFC 5545)', format: 'ics', mediatype: 'text/calendar',
+      encoding: 'utf-8', bytes: ics.length, hash: `sha256:${sha(ics)}`
+    });
+    expect(descodifica(fitxers.get('manifest-sha256.txt'))).toContain(`${sha(ics)}  data/agenda.ics\n`);
+    expect(descodifica(fitxers.get('tagmanifest-sha256.txt'))).toContain(`${sha(fitxers.get('manifest-sha256.txt'))}  manifest-sha256.txt\n`);
+    expect(r.fitxers.find((f) => f.cami === 'data/agenda.ics')).toEqual({ cami: 'data/agenda.ics', bytes: ics.length, sha256: sha(ics) });
+    await expect(verificaPaquetOpenData(r.zip)).resolves.toMatchObject({ fitxers: 14, recursos: 9 });
+    // Un byte de l'.ics canviat: el verificador ho veu.
+    const tocat = creaZip(llegeixZip(r.zip).map((e) => (e.nom.endsWith('/data/agenda.ics') ? { ...e, dades: Uint8Array.from(e.dades, (b, i) => (i === 20 ? b ^ 1 : b)) } : e)));
+    await expect(verificaPaquetOpenData(tocat)).rejects.toThrow(/SHA-256 que no quadra: data\/agenda\.ics/);
+  });
+
+  test('l’acte de La Torre: un VEVENT amb UID estable, DTSTAMP de l’última edició, l’hora en UTC i CLASS:PUBLIC', () => {
+    const p = prepara(COMPLET());
+    const { calendari, esdeveniments } = llegeixIcs(icsDe(p));
+    /* G2-06 · El nom del calendari contrau l'article del poble: «la Torre», en minúscula. */
+    expect(calendari).toEqual({ nom: 'Agenda de la Torre de les Maçanes', wr: 'Agenda de la Torre de les Maçanes', escala: 'GREGORIAN' });
+    /* L'Aplec de la llavor no és de La Torre (sensePoble): tampoc al calendari. */
+    expect(esdeveniments).toEqual([{
+      uid: `agenda-festa-de-prova.${TORRE.slug}@socdepoble.org`,
+      dtstamp: '20260802T100000Z',
+      dtstart: ':20260815T200000Z',
+      dtend: null,
+      resum: 'Festa de prova',
+      descripcio: null,
+      lloc: 'Plaça de prova',
+      classe: 'PUBLIC',
+      creat: '20260801T100000Z',
+      editat: '20260802T100000Z',
+      claus: ['UID', 'DTSTAMP', 'DTSTART', 'SUMMARY', 'LOCATION', 'CLASS', 'CREATED', 'LAST-MODIFIED']
+    }]);
+    const md = fitxerDe(p, 'memoria.md');
+    expect(md).toContain('| `agenda.ics` | 1 |');
+    expect(md).toContain("L'acte amb data d'inici també és a `agenda.ics` (iCalendar, RFC 5545), per a importar-lo a qualsevol calendari.");
+    expect(md).toContain('(schema.org JSON-LD, iCalendar RFC 5545, Frictionless Data Package v2');
+  });
+
+  /* Gauntlet 261101 (B1-02) · L'escapat i el plegat són els d'utils/ics.js (escapa i plega,
+     amb les seues proves unitàries a ics.test.js): ací, l'anada i tornada dins del paquet. */
+  test('caràcters especials i línies llargues: «,», «;», «\\» i salts escapats, plegat a 75 octets sense partir cap caràcter, i anada i tornada exacta', () => {
+    const titol = 'Ball, sopar; i \\ barra: la festa de la Maçana 🍎 a la plaça, amb música en directe, focs i coca';
+    const entradilla = `Primer paràgraf: «quan arriba la tardor», la Torre de les Maçanes es vestix de festa; hi haurà 中文, ελληνικά i ☃️.\n\nSegon paràgraf amb ${'paraules valencianes llargues '.repeat(8)}i punt final.`;
+    const lloc = 'Plaça Major, 1; davant de l’Ajuntament \\ porxada';
+    const p = prepara({ agenda: [acteDeLaTorre({ id: 'ball,de;festa\\1', title: titol, subtitle: 'Festes; tardor, 2026', entradilla, location: `${TORRE.nom} · ${lloc}`, date: '2026-10-31', time: '21:30' })] });
+    const ics = icsDe(p);
+    const lectura = llegeixIcs(ics);
+    expect(lectura.fisiques).toBeGreaterThan(lectura.logiques);
+    const [acte] = grafDe(p, 'agenda.jsonld');
+    const [vevent] = lectura.esdeveniments;
+    expect(vevent.resum).toBe(acte.name);
+    expect(vevent.resum).toBe(titol);
+    expect(vevent.descripcio).toBe(`${acte.disambiguatingDescription}\n\n${acte.description}`);
+    expect(vevent.descripcio).toContain('\n\nSegon paràgraf');
+    expect(vevent.lloc).toBe(acte.location.name);
+    // L'id amb «,», «;» i «\» ix codificat a l'UID (agenda-ball%2Cde%3Bfesta%5C1…): el mateix cada volta, sense res a escapar.
+    expect(vevent.uid).toBe(`agenda-ball%2Cde%3Bfesta%5C1.${TORRE.slug}@socdepoble.org`);
+    expect(ics).toContain(`\r\nUID:agenda-ball%2Cde%3Bfesta%5C1.${TORRE.slug}@socdepoble.org\r\n`);
+    expect(vevent.dtstart).toBe(':20261031T203000Z');
+    expect(ics).toContain('SUMMARY:Ball\\, sopar\\; i \\\\ barra');
+    // 100.000 caràcters per camp: temps lineal i, igualment, cap línia de més de 75 octets ni cap escapada perduda.
+    const enorme = { id: 'enorme', title: 'ç,'.repeat(50000), entradilla: '🎉;\n'.repeat(30000), location: `${TORRE.nom} · ${'\\'.repeat(100000)}`, date: '2026-10-31' };
+    let gran = null;
+    expect(tempsDe(() => { gran = prepara({ agenda: [acteDeLaTorre(enorme)] }); })).toBeLessThan(2000);
+    const [lleig] = llegeixIcs(icsDe(gran)).esdeveniments;
+    const [acteLleig] = grafDe(gran, 'agenda.jsonld');
+    expect([lleig.resum, lleig.descripcio, lleig.lloc]).toEqual([acteLleig.name, acteLleig.description, acteLleig.location.name]);
+  });
+
+  /* Gauntlet 261101 (B1-01) · La fi de l'acte és EXCLUSIVA (la del model d'esdeveniment): la
+     fira del 15 que acaba { data: '…-16' } és d'un sol dia. endDate n'és l'últim dia (el 15) i
+     DTEND, el dia següent a l'últim (el 16), el mateix que aIcs. */
+  test('dies sencers, finals i hores d’hivern: DTEND exclusiu, del mateix tipus i posterior; sense inici, fora del calendari però dit', async () => {
+    const p = prepara({ agenda: [
+      acteDeLaTorre({ id: 'fira', date: '2026-07-15', fi: { data: '2026-07-16' } }),
+      acteDeLaTorre({ id: 'tres-dies', inici: { data: '2026-07-15' }, fi: '2026-07-18' }),
+      acteDeLaTorre({ id: 'fi-igual', date: '2026-07-19', fi: { data: '2026-07-19' } }),
+      acteDeLaTorre({ id: 'un-dia', date: '2026-07-20' }),
+      acteDeLaTorre({ id: 'tipus-barrejats', date: '2026-07-21', fi: '2026-07-21T23:00' }),
+      acteDeLaTorre({ id: 'barrejats-al-reves', inici: '2026-07-21T20:00', fi: { data: '2026-07-22' } }),
+      acteDeLaTorre({ id: 'fi-abans', inici: '2026-07-22T20:00', fi: '2026-07-22T19:00' }),
+      acteDeLaTorre({ id: 'amb-fi', date: '2026-07-23', time: '19:30', fi: '2026-07-23T23:00' }),
+      acteDeLaTorre({ id: 'nit-de-nadal', date: '2026-12-24', time: '22:00' }),
+      acteDeLaTorre({ id: 'cap-d-any', date: '9999-12-30', fi: { data: '9999-12-31' } }),
+      acteDeLaTorre({ id: 'sense-inici' })
+    ] });
+    const actes = Object.fromEntries(grafDe(p, 'agenda.jsonld').map((acte) => [acte.identifier, [acte.startDate ?? null, acte.endDate ?? null]]));
+    expect(actes).toEqual({
+      fira: ['2026-07-15', '2026-07-15'],
+      'tres-dies': ['2026-07-15', '2026-07-17'],
+      // Una fi exclusiva igual a l'inici no deixa cap dia: el model no admet l'acte, i no hi ha endDate.
+      'fi-igual': ['2026-07-19', null],
+      'un-dia': ['2026-07-20', null],
+      'tipus-barrejats': ['2026-07-21', '2026-07-21T23:00:00+02:00'],
+      'barrejats-al-reves': ['2026-07-21T20:00:00+02:00', '2026-07-21'],
+      'fi-abans': ['2026-07-22T20:00:00+02:00', '2026-07-22T19:00:00+02:00'],
+      'amb-fi': ['2026-07-23T19:30:00+02:00', '2026-07-23T23:00:00+02:00'],
+      'nit-de-nadal': ['2026-12-24T22:00:00+01:00', null],
+      'cap-d-any': ['9999-12-30', '9999-12-30'],
+      'sense-inici': [null, null]
+    });
+    const dates = Object.fromEntries(llegeixIcs(icsDe(p)).esdeveniments.map((e) => [e.uid.split('.')[0], [e.dtstart, e.dtend, e.dtstamp]]));
+    /* Sense data d'edició ni de publicació, DTSTAMP és `ara` (mai cap rellotge). */
+    expect(dates).toEqual({
+      'agenda-fira': [';VALUE=DATE:20260715', ';VALUE=DATE:20260716', '20261030T000000Z'],
+      'agenda-tres-dies': [';VALUE=DATE:20260715', ';VALUE=DATE:20260718', '20261030T000000Z'],
+      'agenda-fi-igual': [';VALUE=DATE:20260719', null, '20261030T000000Z'],
+      'agenda-un-dia': [';VALUE=DATE:20260720', null, '20261030T000000Z'],
+      'agenda-tipus-barrejats': [';VALUE=DATE:20260721', null, '20261030T000000Z'],
+      'agenda-barrejats-al-reves': [':20260721T180000Z', null, '20261030T000000Z'],
+      'agenda-fi-abans': [':20260722T180000Z', null, '20261030T000000Z'],
+      'agenda-amb-fi': [':20260723T173000Z', ':20260723T210000Z', '20261030T000000Z'],
+      'agenda-nit-de-nadal': [':20261224T210000Z', null, '20261030T000000Z'],
+      'agenda-cap-d-any': [';VALUE=DATE:99991230', ';VALUE=DATE:99991231', '20261030T000000Z']
+    });
+    /* B1-07 · L'acte sense inici SÍ que és al paquet (agenda.jsonld): no és cap omissió. Ho diu
+       la secció de l'agenda, i datapackage.json en porta el recompte a socdepoble.calendari. */
+    expect(p.omissions.agenda).toEqual({});
+    expect(p.calendari).toEqual({ actes: 10, senseInici: 1, foraDAbast: 0 });
+    const md = fitxerDe(p, 'memoria.md');
+    expect(md).toContain('| `agenda.ics` | 10 |');
+    expect(md).toContain("Els 10 actes amb data d'inici també són a `agenda.ics` (iCalendar, RFC 5545), per a importar-los a qualsevol calendari.\n\nL'acte sense data d'inici només és a `agenda.jsonld`: cap calendari no el pot situar.\n");
+    expect(md.slice(md.indexOf('## Què queda fora'))).not.toMatch(/data d'inici|calendari/);
+    const r = await exporta({ agenda: [acteDeLaTorre({ id: 'un', date: '2026-07-20' }), acteDeLaTorre({ id: 'dos' }), acteDeLaTorre({ id: 'tres' })] });
+    expect(r.datapackage.socdepoble.calendari).toEqual({ actes: 1, senseInici: 2, foraDAbast: 0 });
+    const { actes: ambIcs, senseInici: sense, foraDAbast: fora } = r.datapackage.socdepoble.calendari;
+    expect(ambIcs + sense + fora).toBe(r.datapackage.socdepoble.comptes.agenda);
+    expect(r.datapackage.socdepoble.omissions.agenda).toEqual({});
+  });
+
+  /* B1-01 · La prova creuada: la mateixa fira, al paquet i a aIcs (el serialitzador de l'App,
+     des del model d'esdeveniment), dona el mateix DTSTART i el mateix DTEND. */
+  test('un acte de 1 i de 3 dies: el mateix DTSTART i DTEND que aIcs del model d’esdeveniment', () => {
+    const momentsDe = (ics) => ics.replace(/\r\n /g, '').split('\r\n').filter((linia) => /^DT(?:START|END)[;:]/.test(linia));
+    for (const [inici, fi] of [['2026-08-15', '2026-08-16'], ['2026-08-15', '2026-08-18'], ['2026-12-31', '2027-01-01']]) {
+      const delPaquet = icsDe(prepara({ agenda: [acteDeLaTorre({ id: 'fira', inici: { data: inici }, fi: { data: fi } })] }));
+      const delModel = aIcs([creaEsdeveniment({ id: 'fira', titol: 'Acte', inici: { data: inici }, fi: { data: fi } })], { ara: new Date(ARA) });
+      expect(momentsDe(delPaquet), `${inici}..${fi}`).toEqual(momentsDe(delModel));
+      expect(momentsDe(delPaquet)).toEqual([`DTSTART;VALUE=DATE:${inici.replace(/-/g, '')}`, `DTEND;VALUE=DATE:${fi.replace(/-/g, '')}`]);
+    }
+  });
+
+  test('sense cap acte amb data d’inici no hi ha agenda.ics (un VCALENDAR buit no és vàlid), ni fila ni menció, i el paquet es verifica', async () => {
+    for (const agenda of [undefined, [], [acteDeLaTorre({ id: 'sense-inici' })]]) {
+      const p = prepara({ agenda });
+      expect(icsDe(p)).toBeNull();
+      expect(p.fitxers.map((f) => f.nom)).not.toContain('agenda.ics');
+      expect(fitxerDe(p, 'memoria.md')).not.toMatch(/agenda\.ics`|iCalendar/);
+      const r = await exporta({ agenda });
+      expect(r.datapackage.resources.map((x) => x.path)).not.toContain('agenda.ics');
+      await expect(verificaPaquetOpenData(r.zip)).resolves.toMatchObject({ fitxers: 13, recursos: 8 });
+    }
+    /* B1-07 · Un acte sense data d'inici és a agenda.jsonld i la memòria diu per què no hi ha calendari;
+       sense cap acte, datapackage.json no porta cap recompte del calendari. */
+    expect(fitxerDe(prepara({ agenda: [acteDeLaTorre({ id: 'sense-inici' })] }), 'memoria.md'))
+      .toContain("L'acte no té data d'inici: cap calendari no el pot situar, i el paquet no porta cap calendari .ics.\n");
+    expect((await exporta({ agenda: [acteDeLaTorre({ id: 'sense-inici' })] })).datapackage.socdepoble.calendari).toEqual({ actes: 0, senseInici: 1, foraDAbast: 0 });
+    expect((await exporta({ agenda: [] })).datapackage.socdepoble).not.toHaveProperty('calendari');
+  });
+
+  test('només el que és públic: cap acte privat, de persones, del veïnat ni d’un altre poble, i cap correu, telèfon, persona ni GPS', () => {
+    const p = prepara({
+      agenda: [
+        acteEntitat(),
+        acteDeLaTorre({ id: 'privat', date: '2026-08-16', visibility: 'private', title: TRAMPES.persona }),
+        acteDeLaTorre({ id: 'de-persona', date: '2026-08-17', author_org_id: undefined, author_id: TRAMPES.membre, title: TRAMPES.persona }),
+        acteDeLaTorre({ id: 'del-veinat', date: '2026-08-18', owner_user_id: TRAMPES.usuari, title: TRAMPES.persona }),
+        acteDeLaTorre({ id: 'de-penaguila', date: '2026-08-19', poble_id: 'penaguila', title: 'De Penàguila' }),
+        acteDeLaTorre({ id: 'amb-trampes', date: '2026-08-20', title: 'Amb trampes', telefon: TRAMPES.telefon, email: TRAMPES.correu, geolocalitzacio: { lat: 38.59191, lng: -0.41842 }, ip: TRAMPES.ip })
+      ],
+      entitats: ENTITATS
+    });
+    const ics = icsDe(p);
+    expect(llegeixIcs(ics).esdeveniments.map((e) => e.uid.split('.')[0])).toEqual(['agenda-festa-de-prova', 'agenda-amb-trampes']);
+    for (const valor of [...Object.values(TRAMPES), 'De Penàguila', '38.59191', '-0.41842']) expect(ics, valor).not.toContain(valor);
+    expect(ics).not.toMatch(/^(?:ORGANIZER|ATTENDEE|CONTACT|GEO|URL)[;:]/m);
+    expect(ics).not.toMatch(/mailto:|tel:/i);
+    expect(ics.match(/^X-[A-Z-]+/gm)).toEqual(['X-WR-CALNAME']);
+  });
+
+  test('determinisme: el mateix .ics i els mateixos hashos per a les mateixes dades, en qualsevol ordre i amb qualsevol rellotge', async () => {
+    const a = await exporta(COMPLET());
+    const hashIcs = (r) => r.fitxers.find((f) => f.cami === 'data/agenda.ics').sha256;
+    const girat = (llista) => [...llista].reverse().map((x) => Object.fromEntries(Object.entries(x).reverse()));
+    const b = await exportaMunicipiOpenData({ municipi: TORRE, ara: ARA, origen: ORIGEN, ...COMPLET(), agenda: girat(COMPLET().agenda), entitats: girat(ENTITATS) });
+    expect([hashIcs(b), b.sha256]).toEqual([hashIcs(a), a.sha256]);
+    vi.useFakeTimers({ now: new Date('2031-03-03T03:03:03Z'), toFake: ['Date'] });
+    const c = await exporta(COMPLET());
+    vi.useRealTimers();
+    expect([hashIcs(c), c.sha256]).toEqual([hashIcs(a), a.sha256]);
+    /* Un altre `ara` canvia memoria.md i bag-info.txt (i el ZIP), però no l'.ics d'un acte amb dates: el seu DTSTAMP és la seua última edició. */
+    const d = await exporta({ ...COMPLET(), ara: '2026-11-01T00:00:00Z' });
+    expect(hashIcs(d)).toBe(hashIcs(a));
+    expect(d.sha256).not.toBe(a.sha256);
+    /* Sense cap data a l'acte, DTSTAMP és l'`ara` explícit de l'entrada. */
+    const senseDates = (ara) => icsDe(preparaDadesObertesMunicipi({ municipi: TORRE, ara, agenda: [acteDeLaTorre({ id: 'sense-dates', date: '2026-08-15' })] }));
+    expect(senseDates('2026-11-01T00:00:00Z')).toContain('\r\nDTSTAMP:20261101T000000Z\r\n');
+    expect(senseDates('2026-11-01T00:00:00Z')).toBe(senseDates('2026-11-01T00:00:00Z'));
+  });
+
+  /* Gauntlet 261101 (B1-05) · Abans, amb un acte sense dates, el DTSTAMP de `ara` llegia `.valor` de null (TypeError cru). */
+  test('un `ara` que passa de l’any 9999 en UTC s’atura amb un missatge clar, amb agenda o sense', () => {
+    const acte = acteDeLaTorre({ id: 'sense-dates', date: '2026-08-15' });
+    for (const agenda of [undefined, [acte]]) {
+      expect(() => prepara({ ara: '9999-12-31T23:30:00-01:00', agenda })).toThrow(/^L'instant de l'exportació \(`ara`\) ha de caure dins de l'any 9999 en UTC\.$/);
+    }
+    // El mateix dia amb un desfasament positiu encara és de l'any 9999 en UTC: DTSTAMP amb quatre xifres.
+    expect(icsDe(prepara({ ara: '9999-12-31T23:30:00+01:00', agenda: [acte] }))).toContain('\r\nDTSTAMP:99991231T223000Z\r\n');
+  });
+
+  /* Gauntlet 2 261101 (G2-07) · Un acte AMB data d'inici vàlida a agenda.jsonld que, en UTC, passa
+     de l'any 9999 (9999-12-31T23:30:00-01:00 és el +010000-01-01T00:30:00Z): iCalendar no la pot
+     escriure i no va a agenda.ics, però TÉ data d'inici. Abans es comptava a senseInici i memoria.md
+     deia, en fals, «L'acte no té data d'inici». Ara va a foraDAbast, amb una frase pròpia. */
+  test('un inici vàlid que iCalendar no pot escriure no es compta com a «sense data d’inici»: foraDAbast i una frase certa', async () => {
+    const fora = acteDeLaTorre({ id: 'fora', inici: '9999-12-31T23:30:00-01:00' });
+    const sol = prepara({ agenda: [fora] });
+    expect(grafDe(sol, 'agenda.jsonld').map((a) => a.startDate)).toEqual(['9999-12-31T23:30:00-01:00']);
+    expect(icsDe(sol)).toBeNull();
+    expect(sol.calendari).toEqual({ actes: 0, senseInici: 0, foraDAbast: 1 });
+    const mdSol = fitxerDe(sol, 'memoria.md');
+    expect(mdSol).not.toMatch(/no té data d'inici|sense data d'inici/);
+    expect(mdSol).toContain("L'acte amb una data d'inici que, en UTC, cau fora dels anys 0000 a 9999 només és a `agenda.jsonld`: iCalendar (RFC 5545) no pot escriure eixa data, i el paquet no porta cap calendari .ics.\n");
+    /* Amb un acte al calendari i un sense inici: cada recompte, la seua frase. */
+    const mixt = prepara({ agenda: [fora, acteDeLaTorre({ id: 'fora-2', inici: '9999-12-31T22:00:00-02:00' }), acteDeLaTorre({ id: 'un', date: '2026-07-20' }), acteDeLaTorre({ id: 'sense' })] });
+    expect(mixt.calendari).toEqual({ actes: 1, senseInici: 1, foraDAbast: 2 });
+    expect(fitxerDe(mixt, 'memoria.md')).toContain([
+      "L'acte amb data d'inici també és a `agenda.ics` (iCalendar, RFC 5545), per a importar-lo a qualsevol calendari.",
+      "L'acte sense data d'inici només és a `agenda.jsonld`: cap calendari no el pot situar.",
+      "Els 2 actes amb una data d'inici que, en UTC, cau fora dels anys 0000 a 9999 només són a `agenda.jsonld`: iCalendar (RFC 5545) no pot escriure eixa data.",
+      ''
+    ].join('\n\n'));
+    /* Sense cap acte al calendari, un sense inici i un fora d'abast: cap «Cap dels N actes». */
+    const senseIcs = fitxerDe(prepara({ agenda: [fora, acteDeLaTorre({ id: 'sense' })] }), 'memoria.md');
+    expect(senseIcs).toContain("L'acte sense data d'inici només és a `agenda.jsonld`: cap calendari no el pot situar.\n");
+    expect(senseIcs).not.toMatch(/Cap dels \d+ actes/);
+    /* datapackage.json: el recompte complet, que suma tota l'agenda; i el paquet es verifica. */
+    const r = await exporta({ agenda: [fora, acteDeLaTorre({ id: 'un', date: '2026-07-20' })] });
+    expect(r.datapackage.socdepoble.calendari).toEqual({ actes: 1, senseInici: 0, foraDAbast: 1 });
+    expect(r.datapackage.socdepoble.comptes.agenda).toBe(2);
+    await expect(verificaPaquetOpenData(r.zip)).resolves.toMatchObject({ fitxers: 14 });
+  });
+
+  /* Gauntlet 2 261101 (G2-06) · El nom del calendari (NAME i X-WR-CALNAME, el que mostren Google,
+     Apple i Thunderbird) i els títols del paquet contrauen l'article i apostrofen, com mana l'AVL:
+     «Agenda d'Alcoi», «del Campello», «dels Poblets». La regla és la de nomDeLaGent
+     (sections/pobles/nomsDelPoble.js), una sola font: la i i la u semivocals no s'apostrofen. */
+  test('G2-06 · «Agenda d’Alcoi», «del Campello», «dels Poblets»: el nom del calendari i els títols del paquet amb la contracció i l’apòstrof', async () => {
+    const CASOS = [
+      ['Alcoi', "d'Alcoi"], ['El Campello', 'del Campello'], ['Els Poblets', 'dels Poblets'], ["L'Alfàs del Pi", "de l'Alfàs del Pi"],
+      ['La Torre de les Maçanes', 'de la Torre de les Maçanes'], ['Les Coves de Vinromà', 'de les Coves de Vinromà'],
+      ['Benillup', 'de Benillup'], ['Iecla', 'de Iecla'], ['Orxeta', "d'Orxeta"]
+    ];
+    for (const [nom, de] of CASOS) {
+      const slug = normalitzaSlugMunicipi(nom);
+      const entrada = { municipi: { nom }, ara: ARA, agenda: [{ id: 'fira', title: 'Fira', poble_id: slug, author_org_id: RENTONAR, date: '2026-07-20' }] };
+      const p = preparaDadesObertesMunicipi(entrada);
+      expect(llegeixIcs(icsDe(p)).calendari, nom).toEqual({ nom: `Agenda ${de}`, wr: `Agenda ${de}`, escala: 'GREGORIAN' });
+      expect(fitxerDe(p, 'memoria.md').split('\n')[0], nom).toBe(`# Dades obertes ${de}`);
+      const r = await exportaMunicipiOpenData(entrada);
+      expect(r.datapackage.title, nom).toBe(`Dades obertes ${de}`);
+      const bag = descodifica(llegeixZip(r.zip).find((e) => e.nom.endsWith('/bag-info.txt')).dades);
+      expect(bag, nom).toContain(`\nExternal-Description: Dades obertes públiques ${de} (${FORMAT_DADES_OBERTES})\n`);
+    }
+    /* Cap «de El», «de Els», «de L'» ni «de» davant de vocal en cap fitxer de text del paquet. */
+    const r = await exportaMunicipiOpenData({ municipi: { nom: 'El Campello' }, ara: ARA, origen: ORIGEN, actorsPublicats: ['el-campello'] });
+    expect(totElText(r)).not.toMatch(/\bde (?:El|Els|La|Les|L'|[AEIOUÀÈÉÍÒÓÚaeiouàèéíòóú])/);
+    expect(JSON.parse(descodifica(llegeixZip(r.zip).find((e) => e.nom.endsWith('/data/municipi.jsonld')).dades)).subjectOf.name)
+      .toBe('Actor ActivityPub del Campello a Sóc de Poble (fase 1, només lectura)');
+  });
+
+  /* Gauntlet 261101 (B1-04) · El que diu el comentari de VERSIO_FORMAT: el verificador 1.0.0 només
+     admetia data/*.jsonld|json|md (el seu NOM_DE_DADES, ací copiat), i agenda.ics és l'únic nom
+     nou; sense cap acte amb data d'inici, el paquet 1.1.0 no en porta cap. I el verificador 1.1.0
+     accepta un paquet 1.0.0 (sense schemaVersion, sense calendari i sense agenda.ics). */
+  test('compatibilitat amb la 1.0.0: només data/agenda.ics cau fora de la llista tancada, i el verificador 1.1.0 llig un paquet 1.0.0', async () => {
+    const NOM_DE_DADES_1_0_0 = /^[a-z0-9]+(?:-[a-z0-9]+)*\.(?:jsonld|json|md)$/;
+    const fora = (r) => r.fitxers.map((f) => f.cami).filter((cami) => cami.startsWith('data/') && !NOM_DE_DADES_1_0_0.test(cami.slice('data/'.length)));
+    expect(fora(await exporta(COMPLET()))).toEqual(['data/agenda.ics']);
+    const sense = await exporta({ ...COMPLET(), agenda: [acteDeLaTorre({ id: 'sense-inici' })] });
+    expect(fora(sense)).toEqual([]);
+
+    // Un paquet amb la forma de la 1.0.0, amb la bossa refeta de manera coherent.
+    const ENC = new TextEncoder();
+    const fitxers = new Map(llegeixZip(sense.zip).map(({ nom, dades }) => [nom.slice(ARREL.length + 1), descodifica(dades)]));
+    for (const cami of ['data/memoria.md', 'bag-info.txt']) fitxers.set(cami, fitxers.get(cami).replaceAll('1.1.0', '1.0.0'));
+    const paquet = JSON.parse(fitxers.get('data/datapackage.json'));
+    delete paquet.socdepoble.schemaVersion;
+    delete paquet.socdepoble.calendari;
+    paquet.socdepoble.versio = '1.0.0';
+    const memoria = paquet.resources.find((recurs) => recurs.path === 'memoria.md');
+    Object.assign(memoria, { bytes: ENC.encode(fitxers.get('data/memoria.md')).length, hash: `sha256:${sha(fitxers.get('data/memoria.md'))}` });
+    fitxers.set('data/datapackage.json', jsonCanonic(paquet));
+    const carrega = [...fitxers.keys()].filter((cami) => cami.startsWith('data/')).sort();
+    fitxers.set('manifest-sha256.txt', carrega.map((cami) => `${sha(fitxers.get(cami))}  ${cami}\n`).join(''));
+    const octets = carrega.reduce((total, cami) => total + ENC.encode(fitxers.get(cami)).length, 0);
+    fitxers.set('bag-info.txt', fitxers.get('bag-info.txt').replace(/Payload-Oxum: .*\n/, `Payload-Oxum: ${octets}.${carrega.length}\n`));
+    fitxers.set('tagmanifest-sha256.txt', ['bag-info.txt', 'bagit.txt', 'manifest-sha256.txt'].map((cami) => `${sha(fitxers.get(cami))}  ${cami}\n`).join(''));
+    const paquet100 = creaZip([...fitxers].sort(([a], [b]) => (a < b ? -1 : 1)).map(([cami, text]) => ({ nom: `${ARREL}/${cami}`, dades: ENC.encode(text) })));
+    expect(descodifica(llegeixZip(paquet100).find((e) => e.nom.endsWith('/bag-info.txt')).dades)).toContain('exportaMunicipiOpenData 1.0.0\n');
+    await expect(verificaPaquetOpenData(paquet100)).resolves.toEqual({ slug: TORRE.slug, arrel: ARREL, fitxers: 13, recursos: 8 });
   });
 });

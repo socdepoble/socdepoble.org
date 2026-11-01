@@ -2,6 +2,8 @@ import { useEffect, useLayoutEffect, useMemo, useRef, useCallback } from 'react'
 import { useEditor } from '@tiptap/react';
 import { createDocument } from '@tiptap/core';
 import StarterKit from '@tiptap/starter-kit';
+import { SenseSubratllat } from './extensions/senseSubratllat.js';
+import { CLAU_GUIA_COS, cosEscrit, teText } from './extensions/guiaCos.js';
 
 /* Gauntlet 261016 (Bloc 3.9; ordre del Mestre: la plantilla «s'esvaeix al
    primer clic o pulsació de tecla») · La llavor del cos (`seedContent`) és
@@ -166,8 +168,11 @@ export function useUniversalRichText({
   /* Si l'array arriba nou a cada render, useEditor reconstruïx l'editor
      i perds el cursor a cada tecla. El host ha de memoritzar-lo; ací es
      memoritza la composició per si de cas. */
+  /* IDEA-59 / P1-72 (Mestre 261101, punt 3) · Sense subratllat: StarterKit
+     ja no porta la marca (un <u> enganxat entra com a text normal) i
+     SenseSubratllat consumix Cmd/Ctrl+U i l'ordre del menú del sistema. */
   const totesLesExtensions = useMemo(
-    () => [StarterKit.configure({ heading: { levels: [2, 3, 4, 5, 6] } }), ...extensions],
+    () => [StarterKit.configure({ heading: { levels: [2, 3, 4, 5, 6] }, underline: false }), SenseSubratllat, ...extensions],
     [extensions]
   );
 
@@ -286,6 +291,15 @@ export function useUniversalRichText({
         editor.chain().setMeta('addToHistory', false).setMeta('preventUpdate', true).run();
       }
       if ((sincronitza || carrega) && !estat.consumida) estat.verge = esLlavorVerge(editor, llavors);
+      /* IDEA-59 / P1-72 (punt 1) · La guia reversible del cos (guiaCos.js), si
+         l'editor la porta: el document que hi ha i si ja s'hi ha escrit (en
+         esta pàgina, o perquè el cos carregat ja porta text que no és la
+         llavor verge). Una meta, sense historial ni desat. */
+      if ((sincronitza || carrega) && CLAU_GUIA_COS.getState(editor.state)) {
+        const escrit = cosEscrit(id) || (teText(editor.state.doc) && !estat.verge);
+        editor.chain().setMeta(CLAU_GUIA_COS, { id: id ?? null, escrit })
+          .setMeta('addToHistory', false).setMeta('preventUpdate', true).run();
+      }
     } catch (err) {
       console.warn('[Editor] No s’ha pogut sincronitzar el cos:', err);
     }

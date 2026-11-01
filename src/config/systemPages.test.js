@@ -18,7 +18,7 @@
  * (accioAlFinal). Les tres targetes de la maquinària porten etiquetes a
  * PAGE_COPY: Categoria i Etiqueta.
  */
-import { existsSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 import { describe, expect, test } from 'vitest';
 import '../../tests/helpers/diccionaris.js';
@@ -28,6 +28,7 @@ import { RUTA_DRETS_AUTOR, SYSTEM_PAGES, accioAlFinal, accioDeLaPagina, accioDeL
 import { PAGE_COPY } from '../sections/text/pageContent.js';
 import { IDS_PLUGINS, RUTA_PLUGINS } from '../sections/plugins/registrePlugins.js';
 import { createTranslator } from './i18n.js';
+import { CANALS_DE_BOTIGA, canalsOberts } from './canalsDeBotiga.js';
 import { resolvePageSlugPath } from './navigation.js';
 
 describe('SYSTEM_PAGES', () => {
@@ -241,14 +242,27 @@ describe('261026_2126 · Descàrregues i Aplicacions', () => {
     ]);
   });
 
-  /* Cap botiga ni cap APK no és oberta a tothom (actes 261024_0345 i
-     261026_1630): la pàgina no porta cap enllaç extern, ni el de proves
-     internes de Google Play. Quan el Mestre done les adreces públiques,
-     esta prova canvia amb elles. */
-  test('honestedat: cap enllaç a una botiga ni a un APK que encara no són públics', () => {
+  /* Cap botiga mòbil ni cap APK no és oberta a tothom (actes 261024_0345 i
+     261026_1630): la pàgina no hi porta cap enllaç, ni el de proves internes
+     de Google Play. 01-11-2026 (ordre del Mestre 261101_0311, T1) · L'única
+     adreça de fora que porta el cos és la d'un canal obert de
+     canalsDeBotiga.js (hui, només la fitxa de WordPress.org), i la promesa
+     «no enllaça botigues que encara no estan obertes» continua certa. Quan
+     el Mestre òbriga un altre canal, esta prova canvia amb ell. */
+  test('honestedat: l’única adreça de fora és la d’una botiga oberta (WordPress.org); cap botiga tancada ni cap APK', () => {
     const { html } = PAGE_COPY.descarregues;
-    expect(html).not.toMatch(/https?:\/\//i);
-    expect(html).not.toMatch(/play\.google\.com|apps\.apple\.com|testflight\.apple\.com|internaltest/i);
+    const doc = new DOMParser().parseFromString(html, 'text/html');
+    const oberts = canalsOberts().map((canal) => canal.url);
+    expect(oberts).toEqual(['https://wordpress.org/plugins/socdepoble/']);
+    expect([...new Set([...html.matchAll(/https?:\/\/[^"'\s<]+/gi)].map((m) => m[0]))]).toEqual(oberts);
+    expect([...doc.querySelectorAll('a')].map((a) => [a.getAttribute('href'), a.getAttribute('target'), a.getAttribute('rel')]))
+      .toEqual(oberts.map((url) => [url, '_blank', 'noopener noreferrer']));
+    expect(html).not.toMatch(/play\.google\.com|apps\.apple\.com|testflight\.apple\.com|internaltest|\.apk\b/i);
+    // Cap canal tancat no porta adreça ni enllaç al cos.
+    for (const canal of CANALS_DE_BOTIGA.filter((c) => c.url === null)) {
+      expect([canal.id, [...doc.querySelectorAll('a')].some((a) => a.textContent.includes(canal.nom))]).toEqual([canal.id, false]);
+    }
+    expect(doc.body.textContent).toContain('Una promesa: esta pàgina no enllaça botigues que encara no estan obertes.');
     for (const cami of ['Google Play', 'APK', 'TestFlight', 'App Store', 'Windows, Mac i Linux', 'WordPress.org', 'CRDT', 'ADR-2026-08']) {
       expect([cami, html.includes(cami)]).toEqual([cami, true]);
     }
@@ -270,18 +284,34 @@ describe('261026_2126 · Descàrregues i Aplicacions', () => {
     expect(html).not.toContain('no instal·les');
   });
 
-  /* 31-10-2026 (ordre del Mestre, Ronda 1) · WordPress.org ha aprovat el
-     connector (slug socdepoble), però la fitxa no és pública fins al primer
-     commit SVN: el cos diu l'aprovació, sense cap adreça ni enllaç, i no diu
-     que ja es puga instal·lar des del directori. L'enllaç, quan la fitxa siga
-     pública, el pinta la ranura wordpress-org (canalsDeBotiga.js). */
-  test('honestedat: de WordPress.org, l’aprovació i res més', () => {
+  /* 01-11-2026 (ordre del Mestre 261101_0311, T1) · DEROGA «de WordPress.org,
+     l'aprovació i res més» (31-10-2026, Ronda 1: la fitxa encara no era
+     pública). El connector socdepoble 1.1.10 és públic al directori
+     (verificat en viu el 01-11-2026: la fitxa i api.wordpress.org, 200;
+     Stable tag 1.1.10). El cos ho diu amb l'enllaç a la fitxa, i el codi curt
+     i la plantilla que nomena són els del connector d'este repositori: si el
+     connector els canvia, esta prova cau i el text s'ha de tornar a escriure. */
+  test('honestedat: de WordPress.org, la fitxa pública i com s’activa, ancorats al connector', () => {
     const { html } = PAGE_COPY.descarregues;
-    const text = new DOMParser().parseFromString(html, 'text/html').body.textContent.replace(/\s+/g, ' ');
-    expect(text).toContain('ha aprovat el connector de Sóc de Poble, amb el nom «socdepoble»');
-    expect(text).toContain("La seua fitxa pública s'obri amb la primera versió que hi publiquem");
-    expect(html).not.toMatch(/wordpress\.org\/plugins|<a\s/i);
-    expect(text).not.toMatch(/ja (?:es pot|el pots|el podeu) (?:descarregar|instal·lar)/i);
+    const doc = new DOMParser().parseFromString(html, 'text/html');
+    const text = doc.body.textContent.replace(/\s+/g, ' ');
+    expect(text).toContain('El connector oficial de Sóc de Poble, amb el nom «socdepoble», ja és públic al directori oficial de WordPress.org, en la versió 1.1.10: wordpress.org/plugins/socdepoble.');
+    expect(text).toContain('el pot buscar, instal·lar i activar des del tauler del seu WordPress');
+    const fitxa = doc.querySelector('a[href="https://wordpress.org/plugins/socdepoble/"]');
+    expect(fitxa?.textContent).toBe('wordpress.org/plugins/socdepoble');
+    // L'enllaç és el del canal obert de canalsDeBotiga.js, no una adreça escrita a banda.
+    expect(canalsOberts().find((canal) => canal.id === 'wordpress-org')?.url).toBe(fitxa.getAttribute('href'));
+    // El codi curt, l'atribut i la plantilla, els del connector (wordpress-plugin/includes/marcatge.php).
+    const marcatge = readFileSync(path.join(process.cwd(), 'wordpress-plugin/includes/marcatge.php'), 'utf8');
+    expect(marcatge).toMatch(/add_shortcode\(\s*'socdepoble_app'/);
+    expect(marcatge).toMatch(/'poble'\s*=>\s*''/);
+    expect(marcatge).toContain("__( 'Sóc de Poble · full screen', 'socdepoble' )");
+    expect([...doc.querySelectorAll('code')].map((codi) => codi.textContent)).toEqual(['[socdepoble_app poble="la-torre-de-les-macanes"]']);
+    expect(text).toContain('i amb la plantilla «Sóc de Poble · full screen», que es tria al quadre Plantilla de la pàgina. És el que ja fa gentdelatorre.net, la web de Gent de la Torre.');
+    // La versió és una de les publicades pel connector (el registre de canvis del readme la porta).
+    expect(readFileSync(path.join(process.cwd(), 'wordpress-plugin/readme.txt'), 'utf8')).toMatch(/^= 1\.1\.10 =$/m);
+    // Res de les fases anteriors: ni «aprovat» a soles, ni la fitxa que «s'obri» més avant.
+    expect(text).not.toMatch(/s'obri amb la primera versió|ha aprovat el connector/);
   });
 });
 

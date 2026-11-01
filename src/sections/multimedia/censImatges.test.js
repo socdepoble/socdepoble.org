@@ -207,6 +207,10 @@ describe('el cens de l’Arxiu visual', () => {
     }
     /* Una variant de resolució o un logotip no són còpies de res. */
     expect(ALIES_DEL_CENS).not.toHaveProperty(['/assets/uploads/gent/javi-llinares/avatars/javi-llinares-perfil-1600px.webp']);
+    /* P1-70 (261101) · Tampoc la miniatura de 256 px de les cares del xat: és fora del cens i no és cap còpia. */
+    expect(EXCLOSES['/assets/fotos/javi-llinares-256x256.jpg']).toMatch(/miniatura de 256 px/);
+    expect(ALIES_DEL_CENS).not.toHaveProperty(['/assets/fotos/javi-llinares-256x256.jpg']);
+    expect(esBessona('/assets/fotos/javi-llinares-256x256.webp')).toBe(true);
     expect(ALIES_DEL_CENS).not.toHaveProperty(['/assets/uploads/grup/el-rentonar/avatars/logo-rentonar-socdepoble-1600-c.jpg']);
     expect(Object.isFrozen(ALIES_DEL_CENS)).toBe(true);
   });

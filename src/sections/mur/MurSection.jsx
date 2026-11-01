@@ -26,6 +26,12 @@ import { EstatErrorDades } from './EstatErrorDades.jsx';
 import { lazyRoute } from '../../apps/plataforma/lazyRoute.js';
 import { esAppNativa } from '../../config/origenPublic.js';
 import { totsPublics } from '../../components/universal/traduccio/visibilitatTraduible.js';
+/* T3.3 (marató nocturna 261101, carril B3) · Les alertes d'emergència i els
+   bàndols urgents d'un ajuntament: qui ho és (alertesMunicipals.js), qui ho
+   comprova (useAjuntamentsDelMur) i com es pinta (AlertaMunicipal.jsx). */
+import { alertaMunicipalDe, candidatsAAlerta, esVigent, vigentsDalt } from './alertesMunicipals.js';
+import { useAjuntamentsDelMur } from './useAjuntamentsDelMur.js';
+import { RegioAlertesVigents } from './AlertaMunicipal.jsx';
 
 /* P1-64 (pla 261028_1526 §3.7.1; decisions 1 i 9 del Mestre, 261028) · El
    Mapa Fotogràfic es carrega en diferit, només quan s'obri la pestanya
@@ -149,7 +155,17 @@ export default function MurSection() {
       .map((item) => [item, acteAEsdeveniment(item)])
   ), [sortedEvents, sortedFeedPosts, sortedMarketItems]);
 
-  const allItems = useMemo(() => {
+  /* T3.3 · Les publicacions del Mur (mai els actes ni el Mercat) amb etiqueta
+     d'alerta o de bàndol urgent que signa una entitat: només per a elles es
+     pregunta al directori si l'entitat és un ajuntament. Sense cap, cap
+     petició i el DOM de sempre. */
+  const candidatsAlerta = useMemo(() => candidatsAAlerta(sortedFeedPosts), [sortedFeedPosts]);
+  const { esAjuntament } = useAjuntamentsDelMur(candidatsAlerta);
+  const alertes = useMemo(() => new Map((sortedFeedPosts || [])
+    .map((item) => [item, alertaMunicipalDe(item, esAjuntament)])
+    .filter(([, tipus]) => tipus)), [sortedFeedPosts, esAjuntament]);
+
+  const { allItems, alertesVigents } = useMemo(() => {
     const combined = [
       ...(sortedEvents || []),
       ...(sortedFeedPosts || []),
@@ -160,12 +176,20 @@ export default function MurSection() {
     /* T51 · De més nova a més vella per la MATEIXA data que pinta la targeta
        (momentDeLaTargeta). Cap data inventada: un element sense cap data real
        va al final, en l'ordre en què ha arribat (perMomentDescendent, el
-       mateix ordre de la pàgina /calendari). */
-    return combined
+       mateix ordre de la pàgina /calendari).
+       T3.3 · Les alertes municipals VIGENTS (alertesMunicipals.js · esVigent,
+       per la mateixa data) pugen al capdamunt, en el seu ordre; la resta, el
+       de sempre. La vigència es calcula quan canvien les dades del Mur. */
+    const ara = Date.now();
+    const esAlertaVigent = ({ item, moment }) => alertes.has(item) && esVigent(moment, ara);
+    const entrades = vigentsDalt(combined
       .map((item) => ({ item, moment: momentDeLaTargeta(item, item.type === 'event' ? modelDe(models, item) : null) }))
-      .sort(perMomentDescendent)
-      .map(({ item }) => item);
-  }, [sortedEvents, sortedFeedPosts, sortedMarketItems, systemPages, models]);
+      .sort(perMomentDescendent), esAlertaVigent);
+    return {
+      allItems: entrades.map(({ item }) => item),
+      alertesVigents: entrades.filter(esAlertaVigent).map(({ item }) => ({ item, tipus: alertes.get(item) }))
+    };
+  }, [sortedEvents, sortedFeedPosts, sortedMarketItems, systemPages, models, alertes]);
 
   const displayedItems = useMemo(() => {
     let items = allItems;
@@ -256,6 +280,10 @@ export default function MurSection() {
           membres) l'apaga (traduccio/visibilitatTraduible.js). */}
       <UniversalPage layout="contained" objecte={paginaMur} traduccio={totsPublics(allItems)}>
         <div className="content-wrapper">
+          {/* T3.3 · L'única regió viva de les alertes municipals vigents,
+              damunt dels filtres: s'hi munta buida quan hi ha candidates i
+              s'omple quan el directori confirma l'ajuntament. */}
+          <RegioAlertesVigents activa={candidatsAlerta.length > 0} alertes={alertesVigents} />
           <PillToggle
             etiqueta="Filtres del mur"
             valor={isMapOpen ? 'mapa' : filterType}
@@ -311,7 +339,8 @@ export default function MurSection() {
                   totes les targetes: cap gestor de llista. */}
               {displayedItems.map((item) => (
                 <TargetaDelMur key={`${item.type}-${item.id}`} item={item}
-                  esdeveniment={item.type === 'event' ? modelDe(models, item) : null} />
+                  esdeveniment={item.type === 'event' ? modelDe(models, item) : null}
+                  alertaMunicipal={alertes.get(item) ?? null} />
               ))}
             </div>
           )}

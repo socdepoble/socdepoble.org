@@ -9,6 +9,7 @@
     ],
     "cleanUrls": false,
     "trailingSlash": false,
+    "appAssociation": "NONE",
     "rewrites": [
       {
         "regex": "^/\\.well-known/webfinger/(?i:acct(?::|%3a)socdepoble(?:@|%40)socdepoble\\.org)$",

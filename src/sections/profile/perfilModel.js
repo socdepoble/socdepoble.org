@@ -126,6 +126,15 @@ export function navegacioDePerfil(identitats, aplicacions = []) {
   return grups;
 }
 
+/* T7 · P1-22 (261101) · El títol i el subtítol de «Privacitat i dades», en
+   parells [clau i18n, reserva en valencià]: el model és pur i hi posa la
+   reserva; qui pinta la llista (PerfilShell.jsx) els passa pel traductor de
+   la interfície. El títol és el de la seua pàgina (DetallPrivacitat.jsx). */
+export const TEXTOS_PRIVACITAT_LLISTA = Object.freeze({
+  titol: Object.freeze(['section.perfil.privacitat.pagina.titol', 'Privacitat i dades']),
+  subtitol: Object.freeze(['section.perfil.privacitat.llista.subtitol', 'Les teues dades, el consentiment i la baixa'])
+});
+
 /**
  * Segona columna, identitats. Persona: «La fitxa», «Les vistes», «El
  * compte», si el backend declara algun dels drets «Privacitat i dades»,
@@ -244,8 +253,8 @@ export function itemsDePerfil(identitats, { ambPrivacitat = false } = {}) {
       fills.push({
         id: `${identitat.id}-privacitat`,
         categoryIds,
-        title: 'Privacitat i dades',
-        subtitle: 'Les teues dades, el consentiment i la baixa',
+        title: TEXTOS_PRIVACITAT_LLISTA.titol[1],
+        subtitle: TEXTOS_PRIVACITAT_LLISTA.subtitol[1],
         icon: ICONES_APARTATS.privacitat,
         searchText: `privacitat dades consentiment baixa ${nom}`,
         data: { vista: 'privacitat', identitatId: identitat.id },

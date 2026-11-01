@@ -20,8 +20,8 @@
  *    guia (dos passos a l'iPhone i a l'iPad, el menú Arxiu al Safari del Mac,
  *    el menú del navegador a Chromium i Android);
  *  · null · Firefox d'escriptori i la resta: cap botó que no puga complir.
- * Darrere, les ranures de botiga (config/canalsDeBotiga.js), que hui no
- * pinten res.
+ * Darrere, les ranures de botiga (config/canalsDeBotiga.js): hui només la de
+ * WordPress.org és oberta (01-11-2026), i les tancades no pinten res.
  *
  * Es decidix amb la dada (useInstalacioDeLaPagina, que crida
  * PageDetailSection), mai amb l'element: un element que pinta null faria un
@@ -39,7 +39,10 @@
  * costat del botó premut, i el d'«instal·lada» és viu només dalt (un sol
  * anunci); després d'«accepted» el focus va a l'avís que substituïx el
  * botó; una guia oberta no es plega sola si l'oferta arriba després; les
- * botigues van només dalt (un enllaç per botiga a la pàgina).
+ * botigues van només dalt (un enllaç per botiga a les zones d'acció; des
+ * del 01-11-2026 el cos de PAGE_COPY.descarregues, a banda, enllaça la fitxa
+ * de WordPress.org dins del seu text, que també es llig al paquet autònom,
+ * on estes ranures no es pinten).
  */
 import { useCallback, useEffect, useId, useState, useSyncExternalStore } from 'react';
 import { useUIActions } from '../../app/contexts/UIContext';

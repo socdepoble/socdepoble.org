@@ -77,7 +77,10 @@ describe('R2 · UniversalToolbar amb Proposa Card als telèfons', () => {
       const boto = within(barra).getByRole('button', { name: 'Proposa Card' });
       expect(opcions.contains(boto)).toBe(true);
       expect(opcions.lastElementChild).toBe(boto);
-      expect(boto.previousElementSibling.getAttribute('aria-label')).toBe('Llista numerada');
+      /* IDEA-59 / P1-72 (punt 4) · «⋯» ocupa el lloc i el nom de l'«Aa» («Format
+         del text»), i les opcions porten també les eines secundàries: la cel·la
+         continua sent l'última, ara darrere del divisor. */
+      expect(boto.previousElementSibling.getAttribute('aria-label')).toBe('Divisor');
       expect(boto.className).toBe('sdp-bloc-icon');
       /* La fila no canvia en obrir el menú: el menú és absolut (CSS, baix). */
       expect(controlsDeLaFila(barra)).toEqual(['Tornar a la llista', 'Format del text', 'Borrar', 'Publicar']);

@@ -163,12 +163,14 @@ import { isSafeAsset, isSafeUrl, rutaDAutorSegura } from '../../universal/Univer
 import { llevaPuntFinal } from '../../universal/editorial.js';
 import { EmoticonaBarra } from '../../universal/EmoticonaBarra.jsx';
 import { usePastillaCalendari } from '../../universal/barres/pastillaCalendari.js';
+import { TEXTOS_PEU_TARGETA } from '../../universal/barres/textosBarres.js';
 import { BotoComentar } from './Comentar.jsx';
 import { BotoModeracio } from './Moderacio.jsx';
 import { emoticonaDeBarra } from '../../../utils/emoji.js';
 import { ActionControl, IconButton, DateTimeControl } from '../atoms/controls.jsx';
 import { PinIcon, TranslateIcon, ShareIcon } from '../atoms/icones.jsx';
 import { useAccions, useUbicacioApp } from '../hooks/useAccions.js';
+import { tradueix, useTraductorOpcional } from '../hooks/useTraductorOpcional.js';
 import { PortesTargeta, normalitzaPortes } from './PortesTargeta.jsx';
 import { fontSegura } from './marca.jsx';
 import { usePulsacioLlarga } from './pulsacioLlarga.js';
@@ -315,8 +317,11 @@ function Etiqueta({ label }) {
 }
 
 function LlistaEtiquetes({ etiquetes }) {
+  /* T7 · P1-22 (261101) · El nom de la llista, en la llengua de la interfície;
+     fora de l'app o en valencià, «Categories» com sempre. */
+  const t = useTraductorOpcional();
   return (
-    <ul className="sp-card-labels" aria-label="Categories">
+    <ul className="sp-card-labels" aria-label={tradueix(t, ['common.categories', 'Categories'])}>
       {etiquetes.map((label, index) => (
         <Etiqueta key={`${typeof label === 'string' ? label : label.text}-${index}`} label={label} />
       ))}
@@ -516,7 +521,16 @@ export function UniversalCard({
   const esPersona = objecte?.tipus === 'persona';
   const etiquetes = !esPersona && Array.isArray(labels) ? labels.filter(Boolean) : [];
   const drets = esPersona ? undefined : copyright;
-  const ambTitol = (verb) => (title ? `${verb} ${title}` : verb);
+  /* Gauntlet 2 · 261101 (G2-T7-02; resta de P1-22) · Els botons del peu
+     («Traduir <títol>», «Comentar <títol>», «Compartir <títol>», «Ancorar
+     <títol>») es diuen en la llengua de la interfície, amb una frase sencera
+     (TEXTOS_PEU_TARGETA); sense títol, el verb sol. Fora de l'app o en
+     valencià, el nom de sempre. */
+  const t = useTraductorOpcional();
+  const ambTitol = (accio) => {
+    const { sol, ambTitol: frase } = TEXTOS_PEU_TARGETA[accio];
+    return title ? tradueix(t, frase).replace('{titol}', () => String(title)) : tradueix(t, sol);
+  };
 
   const alCalendari = usePastillaCalendari({ time, date, dateTime });
 
@@ -587,7 +601,7 @@ export function UniversalCard({
   );
 
   const pin = pinVisible && (
-    <ActionControl className="btn-icon-orange" label={ambTitol('Ancorar')} onClick={onPin}>
+    <ActionControl className="btn-icon-orange" label={ambTitol('ancorar')} onClick={onPin}>
       <PinIcon className="icon" />
     </ActionControl>
   );
@@ -602,17 +616,17 @@ export function UniversalCard({
 
   const accions = [
     traduirVisible && (
-      <IconButton key="traduir" label={ambTitol('Traduir')} onClick={handleTranslate}>
+      <IconButton key="traduir" label={ambTitol('traduir')} onClick={handleTranslate}>
         <TranslateIcon className="icon" />
       </IconButton>
     ),
     /* Ordre del Mestre (261007) · el menú de les dues vies, el de la barra.
        Onada 8 (261009) · «En privat» diu amb qui (l'autor, comentarPrivatAmb). */
     comentarVisible && (
-      <BotoComentar key="comentar" label={ambTitol('Comentar')} comentarXat={comentarXat} privatAmb={comentarPrivatAmb} onComment={handleComment} />
+      <BotoComentar key="comentar" label={ambTitol('comentar')} comentarXat={comentarXat} privatAmb={comentarPrivatAmb} onComment={handleComment} />
     ),
     compartirVisible && (
-      <IconButton key="compartir" label={ambTitol('Compartir')} onClick={handleShare}>
+      <IconButton key="compartir" label={ambTitol('compartir')} onClick={handleShare}>
         <ShareIcon className="icon" />
       </IconButton>
     )

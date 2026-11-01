@@ -12,6 +12,7 @@
  *
  *   dades-obertes-<slug>/bag-info.txt            Bagging-Date = el dia de `ara`
  *   dades-obertes-<slug>/bagit.txt
+ *   dades-obertes-<slug>/data/agenda.ics          iCalendar (RFC 5545), només si hi ha cap acte amb data d'inici
  *   dades-obertes-<slug>/data/agenda.jsonld       schema.org Event
  *   dades-obertes-<slug>/data/configuracio.json   taxonomia i estil validats
  *   dades-obertes-<slug>/data/datapackage.json    Data Package v2 (hash sha256:…)
@@ -27,7 +28,8 @@
  * Fonts: Data Package v2 (datapackage.org/standard/data-package i
  * data-resource: `hash` amb el prefix de l'algorisme), BagIt (RFC 8493),
  * schema.org (AdministrativeArea, NewsArticle, Event, Organization,
- * LocalBusiness, CreativeWork), APPNOTE de PKWARE per al ZIP. Disseny NLnet B
+ * LocalBusiness, CreativeWork), iCalendar (RFC 5545, amb NAME de RFC 7986),
+ * APPNOTE de PKWARE per al ZIP. Disseny NLnet B
  * (scratchpad nlnet/disseny_opendata.md) i decisions 2, 5, 9 i 10 de
  * l'orquestrador.
  *
@@ -98,9 +100,28 @@ import { LLICENCIES, MARCA_CC0 } from '../components/universal/drets/llicencies.
 import { declaracionsDe, validaEstil } from '../config/estil.js';
 import { instantEnLaZona, ZONA_PER_DEFECTE } from '../utils/esdeveniment.js';
 import { creaZip, llegeixZip } from '../utils/fulls/zip.js';
+import { escapa as escapaTextIcs, plega as plegaLiniaIcs } from '../utils/ics.js';
+import { nomDeLaGent } from '../sections/pobles/nomsDelPoble.js';
 
 export const FORMAT_DADES_OBERTES = 'socdepoble.dadesobertes.v1';
-export const VERSIO_FORMAT = '1.0.0';
+/* La versió de l'esquema del paquet (schemaVersion a datapackage.json), en
+   SemVer. 1.1.0 (T3.1 de la marató del 261101) hi afig data/agenda.ics, el
+   camp schemaVersion i el recompte socdepoble.calendari.
+   I hi canvia un valor (Gauntlet 2 261101, G2-08): l'endDate d'un acte de
+   dies sencers a agenda.jsonld és l'ÚLTIM dia de l'acte, inclusiu, com
+   schema.org (fiInclusiva, B1-01), i no la fi exclusiva del model
+   d'esdeveniment, que la 1.0.0 copiava tal qual (un dia més). Un lector de
+   la 1.0.0 llig, per al mateix acte, un endDate un dia abans. Cap descàrrega
+   no n'ha portat cap encara: l'agenda de la fitxa del poble està pendent.
+   Compatibilitat (Gauntlet 261101, B1-04): el verificador 1.0.0 (el
+   verificaPaquetOpenData d'abans, amb la llista tancada .jsonld|.json|.md)
+   REBUTJA un paquet 1.1.0 que porte data/agenda.ics, i accepta el que no en
+   porta (cap acte amb data d'inici). El llegixen sha256sum -c, els validadors
+   BagIt genèrics (RFC 8493 no limita els noms de la càrrega) i el verificador
+   1.1.0, que també accepta els paquets 1.0.0. Per a un validador estricte, el
+   salt menor no és retrocompatible; anunciar-ho amb una 2.0.0 és decisió del
+   Mestre. */
+export const VERSIO_FORMAT = '1.1.0';
 export const ESQUEMA_DATAPACKAGE = 'https://datapackage.org/profiles/2.0/datapackage.json';
 /* Les llicències que permeten reutilitzar sense demanar permís ni limitar
    l'ús comercial (disseny B §4.4). NC, ND i © no ho són. */
@@ -180,7 +201,7 @@ const REF_OPACA = 'sdp-media://';
    no en resol cap amb «%»). */
 const SEGMENT_SEGUR = /^[A-Za-z0-9_.~-]+$/;
 const WIKIDATA = /^Q[1-9]\d{0,11}$/;
-const NOM_DE_DADES = /^[a-z0-9]+(?:-[a-z0-9]+)*\.(?:jsonld|json|md)$/;
+const NOM_DE_DADES = /^[a-z0-9]+(?:-[a-z0-9]+)*\.(?:jsonld|json|md|ics)$/;
 
 const compara = (a, b) => (a < b ? -1 : a > b ? 1 : 0);
 const textNet = (valor) => (typeof valor === 'string' ? valor.replace(/\r\n?/g, '\n').replace(CONTROL, '') : '');
@@ -542,6 +563,24 @@ function noticiaSchema({ item, id, entitat }, { base, recompte, signants }) {
   };
 }
 
+/* Gauntlet 261101 (B1-01) · La `fi` de l'acte és la del model d'esdeveniment,
+   EXCLUSIVA (utils/esdeveniment.js: un acte de tot el dia del 29 acaba
+   { data: '…-30' }, com a l'RFC 5545 i a Google; així la lligen agendaMur.js
+   i l'ActeDTO de Sollutia), i l'endDate de schema.org d'un dia sencer és
+   l'ÚLTIM dia de l'acte: un dia abans. Cap endDate si eixe últim dia cauria
+   abans del dia d'inici (la fi no seria posterior: el model no admet l'acte)
+   o abans de l'any 1000. Amb un inici amb hora (tipus barrejats, que el model
+   tampoc no admet), el dia d'inici és el de la seua data, la de paret del
+   seu desfasament. Una fi amb hora és un instant, el mateix en les dues
+   convencions, i ix tal qual. */
+function fiInclusiva(fi, inici) {
+  if (typeof fi !== 'string' || !DIA.test(fi)) return fi;
+  const [any, mes, dia] = fi.split('-').map(Number);
+  const abans = new Date(Date.UTC(any, mes - 1, dia - 1));
+  const ultim = diaValid(`${String(abans.getUTCFullYear()).padStart(4, '0')}-${dosXifres(abans.getUTCMonth() + 1)}-${dosXifres(abans.getUTCDate())}`);
+  return ultim && !(inici && ultim < inici.slice(0, 10)) ? ultim : null;
+}
+
 function acteSchema({ item, id, entitat }, { base, recompte, signants }) {
   const zona = textLinia(item.zona) || ZONA_PER_DEFECTE;
   const dia = typeof item.date === 'string' ? diaValid(item.date.trim()) : null;
@@ -557,7 +596,7 @@ function acteSchema({ item, id, entitat }, { base, recompte, signants }) {
     disambiguatingDescription: textLinia(item.subtitle),
     description: textDeCos(item.entradilla || item.summary || item.description),
     startDate: inici,
-    endDate: momentSchema(item.fi, zona),
+    endDate: fiInclusiva(momentSchema(item.fi, zona), inici),
     location: lloc ? { '@type': 'Place', name: lloc } : null,
     image: imatgeDeLElement(item, base, recompte),
     organizer: autorSchema(entitat, signants),
@@ -680,6 +719,18 @@ function municipiDe(municipi) {
    poble a la plataforma, i ell mateix diu que no és el compte de
    l'Ajuntament). L'actor va com un document sobre el municipi (subjectOf) i
    la pàgina com a url, i només si el build publica eixe actor. */
+/* Gauntlet 2 261101 (G2-06) · «de» davant del nom del poble, amb l'article
+   contret i l'apòstrof, com mana l'AVL: «d'Alcoi», «del Campello», «dels
+   Poblets», «de l'Alfàs del Pi», «de la Torre de les Maçanes», «de Benillup».
+   La regla és una sola, la de nomDeLaGent (sections/pobles/nomsDelPoble.js:
+   l'article en minúscula, la i i la u semivocals que no s'apostrofen), que
+   hi posa «Gent » davant: ací se li lleva. Pur: cap xarxa ni rellotge. */
+const GENT = 'Gent ';
+function deNomDelPoble(nom) {
+  const ambGent = nomDeLaGent(nom);
+  return ambGent.startsWith(GENT) ? ambGent.slice(GENT.length) : `de ${nom}`;
+}
+
 function municipiSchema(municipi, enllacos) {
   return {
     '@context': 'https://schema.org',
@@ -692,12 +743,134 @@ function municipiSchema(municipi, enllacos) {
     sameAs: municipi.wikidata ? [`https://www.wikidata.org/entity/${municipi.wikidata}`] : null,
     subjectOf: enllacos ? {
       '@type': 'CreativeWork',
-      name: `Actor ActivityPub de ${municipi.nom} a Sóc de Poble (fase 1, només lectura)`,
+      name: `Actor ActivityPub ${deNomDelPoble(municipi.nom)} a Sóc de Poble (fase 1, només lectura)`,
       url: enllacos.actor,
       encodingFormat: 'application/activity+json'
     } : null,
     geo: municipi.geo ? { '@type': 'GeoCoordinates', latitude: municipi.geo.lat, longitude: municipi.geo.lng } : null
   };
+}
+
+/* ── iCalendar (RFC 5545) ───────────────────────────────────────────────── */
+
+/* La segona forma dels mateixos actes d'agenda.jsonld (cap altra font, cap
+   camp nou): els que tenen data d'inici, per a importar-los a qualsevol
+   calendari. Sense cap acte amb data no hi ha fitxer, perquè un VCALENDAR
+   sense cap component no és vàlid (§3.6, «1*(eventc / …)»).
+   Gauntlet 261101 (B1-02) · El TEXT s'escapa i les línies es pleguen amb
+   escapa i plega d'utils/ics.js, les del serialitzador de l'App (aIcs): «\»,
+   «;», «,» i els salts escapats i cap caràcter de control (§3.3.11), i trossos
+   de 75 octets d'UTF-8 amb CRLF i un espai, mai dins d'un caràcter (§3.1).
+   El VEVENT, en canvi, es fa ací i no amb aIcs: parteix d'un Event de
+   schema.org ja filtrat per la llista blanca (no d'un esdeveniment del
+   model) i és el contracte del paquet. Les diferències amb aIcs, a propòsit:
+   · UID opac i estable: l'id de l'acte i el poble, sense l'origen ni cap
+     instant, perquè dos exportacions del mateix acte (també després de
+     traure-ho tot a un altre servidor) no el dupliquen al calendari. aIcs
+     escriu l'uid del model («mur:<id>@socdepoble.org» per a un acte del Mur,
+     o el de la font), i un calendari que importe les dos fonts duplica
+     l'acte. Quin UID promet el paquet va amb la decisió B1-06 del Mestre (si
+     l'uid i la recurrència de la font entren a la llista blanca); mentre
+     l'agenda de la fitxa del poble continue pendent, cap descàrrega no n'ha
+     portat cap i canviar-lo no duplica res.
+   · DTSTAMP, sense METHOD, és l'última revisió de l'acte al magatzem
+     (§3.8.7.2): la data d'edició, la de publicació o, sense cap de les dues,
+     `ara`. Mai cap rellotge, i un altre `ara` no canvia l'.ics d'un acte
+     amb dates. aIcs hi posa el seu `ara` a tots.
+   · Les hores, en UTC (forma 2 de §3.3.5): cap TZID que demane un VTIMEZONE.
+     aIcs escriu l'hora de paret amb TZID i el VTIMEZONE, que una regla de
+     repetició necessita; el paquet no porta cap recurrència.
+   · Sense fi, cap DTEND: un dia sencer dura el seu dia i un acte amb hora
+     acaba on comença (§3.6.1). aIcs n'escriu una (fiEfectiva: el dia o una
+     hora, perquè Google exigix la fi); el paquet no hi afig cap durada que
+     la font no porte.
+   · Un dia sencer és VALUE=DATE, i el seu DTEND és el dia SEGÜENT a l'endDate
+     (l'últim dia, fiInclusiva): exclusiu (§3.6.1), el mateix DTEND que aIcs.
+     Un DTEND d'un altre tipus que DTSTART o que no siga posterior no ix.
+   · El PRODID és el del paquet, amb la versió del format.
+   · Cada VEVENT porta UID, DTSTAMP i DTSTART, els obligatoris quan el
+     calendari no porta METHOD (§3.6.1).
+   · Mai ORGANIZER ni ATTENDEE (demanen una adreça, normalment mailto:) ni
+     CONTACT: el paquet no porta cap correu ni telèfon. Tot és CLASS:PUBLIC
+     perquè només hi entra el que és públic. */
+const CRLF = '\r\n';
+const DATA_HORA_UTC = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})(?:\.\d+)?Z$/;
+
+/* Una data de schema.org com a valor d'iCalendar: { dia: true, valor:
+   'AAAAMMDD' } o { dia: false, valor: 'AAAAMMDDTHHMMSSZ' } (en UTC; la fracció
+   de segon no hi cap, §3.3.12, i es talla), o null. */
+function momentIcs(data) {
+  if (typeof data !== 'string' || !data) return null;
+  if (DIA.test(data)) return diaValid(data) ? { dia: true, valor: data.replace(/-/g, '') } : null;
+  const p = DATA_HORA_UTC.exec(dataIso(data) ?? '');
+  return p ? { dia: false, valor: `${p[1]}${p[2]}${p[3]}T${p[4]}${p[5]}${p[6]}Z` } : null;
+}
+
+/* El dia després d'AAAAMMDD. L'endDate de dia és l'últim dia de l'acte
+   (fiInclusiva), com a molt el 9999-12-30: el següent no passa mai de l'any
+   9999. */
+function diaSeguent(valor) {
+  const d = new Date(Date.UTC(Number(valor.slice(0, 4)), Number(valor.slice(4, 6)) - 1, Number(valor.slice(6, 8)) + 1));
+  return `${d.getUTCFullYear()}${dosXifres(d.getUTCMonth() + 1)}${dosXifres(d.getUTCDate())}`;
+}
+
+const uidIcs = (id, slug) => `agenda-${encodeURIComponent(id)}.${slug}@socdepoble.org`;
+
+/* Les línies (sense plegar) del VEVENT d'un Event d'agenda.jsonld, o null si
+   no té data d'inici. */
+function veventIcs(acte, slug, ara) {
+  const inici = momentIcs(acte.startDate);
+  if (!inici) return null;
+  const fitxa = acte.subjectOf ?? {};
+  const publicat = momentIcs(fitxa.datePublished);
+  const editat = momentIcs(fitxa.dateModified);
+  const fi = momentIcs(acte.endDate);
+  let dtend = null;
+  if (fi && fi.dia === inici.dia) {
+    if (fi.dia && fi.valor >= inici.valor) dtend = `DTEND;VALUE=DATE:${diaSeguent(fi.valor)}`;
+    else if (!fi.dia && fi.valor > inici.valor) dtend = `DTEND:${fi.valor}`;
+  }
+  const descripcio = [acte.disambiguatingDescription, acte.description].filter(Boolean).join('\n\n');
+  return [
+    'BEGIN:VEVENT',
+    `UID:${uidIcs(acte.identifier, slug)}`,
+    `DTSTAMP:${(editat ?? publicat ?? momentIcs(ara)).valor}`,
+    inici.dia ? `DTSTART;VALUE=DATE:${inici.valor}` : `DTSTART:${inici.valor}`,
+    dtend,
+    acte.name ? `SUMMARY:${escapaTextIcs(acte.name)}` : null,
+    descripcio ? `DESCRIPTION:${escapaTextIcs(descripcio)}` : null,
+    acte.location?.name ? `LOCATION:${escapaTextIcs(acte.location.name)}` : null,
+    'CLASS:PUBLIC',
+    publicat ? `CREATED:${publicat.valor}` : null,
+    editat ? `LAST-MODIFIED:${editat.valor}` : null,
+    'END:VEVENT'
+  ].filter(Boolean);
+}
+
+/* agenda.ics: { text, actes, senseInici, foraDAbast }, amb text null si cap acte no hi cap.
+   Gauntlet 2 261101 (G2-07) · senseInici compta només els actes sense startDate. Un acte AMB
+   startDate que iCalendar no pot escriure (en UTC cau fora dels anys 0000-9999: el
+   9999-12-31T23:30:00-01:00 és el +010000-01-01T00:30:00Z, que momentIcs no admet) té data
+   d'inici, a agenda.jsonld, i es compta a part, a foraDAbast: memoria.md no pot dir que no en té. */
+function calendariIcs(actes, municipi, ara) {
+  const vevents = actes.map((acte) => veventIcs(acte, municipi.slug, ara));
+  const amb = vevents.filter(Boolean);
+  const senseInici = actes.filter((acte) => !acte.startDate).length;
+  const foraDAbast = vevents.length - amb.length - senseInici;
+  if (!amb.length) return { text: null, actes: 0, senseInici, foraDAbast };
+  const nom = escapaTextIcs(`Agenda ${deNomDelPoble(municipi.nom)}`);
+  const linies = [
+    'BEGIN:VCALENDAR',
+    'VERSION:2.0',
+    `PRODID:-//Soc de Poble//exportaMunicipiOpenData ${VERSIO_FORMAT}//CA`,
+    'CALSCALE:GREGORIAN',
+    /* NAME és de RFC 7986; X-WR-CALNAME, el nom que hi busquen els calendaris que encara no la llegixen. */
+    `NAME:${nom}`,
+    `X-WR-CALNAME:${nom}`,
+    ...amb.flat(),
+    'END:VCALENDAR'
+  ];
+  return { text: `${linies.map(plegaLiniaIcs).join(CRLF)}${CRLF}`, actes: amb.length, senseInici, foraDAbast };
 }
 
 /* ── Markdown ───────────────────────────────────────────────────────────── */
@@ -741,21 +914,36 @@ function liniaDElement(element, data, coincidencia) {
   return segona ? `${linia}\n  ${segona}` : linia;
 }
 
-function memoriaMd({ municipi, ara, enllacos, seccions, omissions, configuracio, federades = null, pendents }) {
+/* Gauntlet 261101 (B1-07) · Els actes sense data d'inici SÍ que són al paquet (agenda.jsonld):
+   es diuen a la secció de l'agenda, mai a «Què queda fora», que compta el que no s'exporta.
+   Gauntlet 2 261101 (G2-07) · Els que tenen una data d'inici que iCalendar no pot escriure
+   (foraDAbast), amb una frase pròpia: la tenen, i memoria.md no diu el contrari. Sense cap
+   d'estos, les frases de sempre, byte a byte. */
+function frasesDelCalendari({ actes, senseInici, foraDAbast = 0 }) {
+  const frases = [];
+  if (actes) frases.push(`${actes === 1 ? "L'acte amb data d'inici també és" : `Els ${actes} actes amb data d'inici també són`} a \`agenda.ics\` (iCalendar, RFC 5545), per a importar-${actes === 1 ? 'lo' : 'los'} a qualsevol calendari.`);
+  if (senseInici && (actes || foraDAbast)) frases.push(`${senseInici === 1 ? "L'acte sense data d'inici només és" : `Els ${senseInici} actes sense data d'inici només són`} a \`agenda.jsonld\`: cap calendari no ${senseInici === 1 ? 'el' : 'els'} pot situar.`);
+  else if (senseInici) frases.push(`${senseInici === 1 ? "L'acte no té data d'inici" : `Cap dels ${senseInici} actes no té data d'inici`}: cap calendari no ${senseInici === 1 ? 'el' : 'els'} pot situar, i el paquet no porta cap calendari .ics.`);
+  if (foraDAbast) frases.push(`${foraDAbast === 1 ? "L'acte amb una data d'inici que, en UTC, cau fora dels anys 0000 a 9999 només és" : `Els ${foraDAbast} actes amb una data d'inici que, en UTC, cau fora dels anys 0000 a 9999 només són`} a \`agenda.jsonld\`: iCalendar (RFC 5545) no pot escriure eixa data${actes ? '' : ', i el paquet no porta cap calendari .ics'}.`);
+  return frases.flatMap((frase) => [frase, '']);
+}
+
+function memoriaMd({ municipi, ara, enllacos, seccions, omissions, configuracio, federades = null, pendents, calendari = { actes: 0, senseInici: 0, foraDAbast: 0 } }) {
   const pendent = new Map((pendents ?? []).map(({ coleccio, motiu }) => [coleccio, motiu]));
   const linies = [
-    `# Dades obertes de ${escapaMarkdown(municipi.nom)}`,
+    `# Dades obertes ${escapaMarkdown(deNomDelPoble(municipi.nom))}`,
     '',
     `Paquet \`${FORMAT_DADES_OBERTES}\` (versió ${VERSIO_FORMAT}) generat pel Mas (Sóc de Poble) el ${ara}.`,
     'Conté només contingut públic del municipi i de les seues entitats. No conté cap dada de persones: ni perfils, ni publicacions del veïnat, ni xats, ni el Mercat.',
     '',
-    `_English:_ open data package of ${escapaMarkdown(municipi.nom)} (schema.org JSON-LD, Frictionless Data Package v2, BagIt with a SHA-256 manifest). It holds public municipal and organisation content only, never personal data.`,
+    `_English:_ open data package of ${escapaMarkdown(municipi.nom)} (schema.org JSON-LD${calendari.actes ? ', iCalendar RFC 5545' : ''}, Frictionless Data Package v2, BagIt with a SHA-256 manifest). It holds public municipal and organisation content only, never personal data.`,
     '',
     '## Contingut',
     '',
     '| Fitxer | Elements |',
     '| --- | --- |',
     ...seccions.map(({ fitxer, elements }) => `| \`${fitxer}\` | ${elements.length} |`),
+    ...(calendari.actes ? [`| \`agenda.ics\` | ${calendari.actes} |`] : []),
     ...(federades === null ? [] : [`| \`activitystreams.json\` | ${federades} |`]),
     /* V2-02 · Una configuració pendent no s'ha llegit: «sense personalització» diria que el poble no en té. */
     `| \`configuracio.json\` | ${['taxonomia', 'estil'].filter((clau) => configuracio[clau]).join(', ') || (pendent.has('configuracio') ? "no s'exporta" : 'sense personalització')} |`,
@@ -766,6 +954,7 @@ function memoriaMd({ municipi, ara, enllacos, seccions, omissions, configuracio,
     if (!elements.length && pendent.has(coleccio)) linies.push(`No s'exporta en esta versió: ${escapaMarkdown(pendent.get(coleccio))}.`, '');
     else if (!elements.length) linies.push('Sense elements en esta exportació.', '');
     else linies.push(...elements.map((element, i) => liniaDElement(element, data(element), coincidencies[i])), '');
+    if (coleccio === 'agenda') linies.push(...frasesDelCalendari(calendari));
   }
   if (enllacos) {
     linies.push(
@@ -840,7 +1029,11 @@ const perData = (camp, descendent) => (a, b) => {
  *   entitats?: object[], memoria?: object[], personalitzacio?: { taxonomia?, estil? } }} entrada
  *   `actorsPublicats`: els slugs dels actors que el build publica a `origen`
  *   (recullActorsPublics(...).map((a) => a.slug)); sense, cap enllaç federat.
- * @returns {{ slug, nom, ara, arrel, fitxers: Array<{ nom, text, mediatype, format, titol }>, omissions, comptes }}
+ * @returns {{ slug, nom, ara, arrel, fitxers: Array<{ nom, text, mediatype, format, titol, recurs? }>, omissions, comptes,
+ *   calendari: { actes: number, senseInici: number, foraDAbast: number } }}
+ *   `recurs`: el name del recurs al Data Package quan no és el nom sense extensió (agenda.ics → agenda-ics).
+ *   `calendari`: els actes d'agenda.jsonld que són a agenda.ics, els que no hi són perquè no tenen data d'inici
+ *   i els que no hi són perquè la seua data d'inici, en UTC, cau fora dels anys 0000-9999 (G2-07).
  */
 export function preparaDadesObertesMunicipi(entrada) {
   if (!esObjecte(entrada)) throw new TypeError("Cal l'entrada de l'exportació.");
@@ -851,6 +1044,10 @@ export function preparaDadesObertesMunicipi(entrada) {
   if (desconeguda) throw new TypeError(`Camp d'entrada no admés: ${desconeguda.slice(0, 40)}`);
   const ara = dataIso(entrada.ara);
   if (!ara) throw new TypeError("Cal l'instant de l'exportació (`ara`, ISO 8601 amb zona): el paquet no llig cap rellotge.");
+  /* Gauntlet 261101 (B1-05) · Un `ara` vàlid amb desfasament pot passar de l'any 9999 en UTC
+     (9999-12-31T23:30:00-01:00 és +010000-01-01T00:30:00Z): ni el DTSTAMP de l'.ics ni la
+     Bagging-Date de BagIt no tenen forma per a eixe any, i s'atura amb un missatge clar. */
+  if (!/^\d{4}-/.test(ara)) throw new TypeError("L'instant de l'exportació (`ara`) ha de caure dins de l'any 9999 en UTC.");
   const municipi = municipiDe(entrada.municipi);
   const base = entrada.origen === undefined || entrada.origen === null ? null : normalitzaOrigen(entrada.origen);
   const actors = entrada.actorsPublicats ?? [];
@@ -885,6 +1082,10 @@ export function preparaDadesObertesMunicipi(entrada) {
     { coleccio: 'memoria', fitxer: 'memoria-cultural.jsonld', titol: 'Memòria cultural', llista: memoria, data: () => null }
   ].map((s) => ({ ...s, elements: s.llista.map(({ element }) => element), coincidencies: s.llista.map(({ coincidencia }) => coincidencia) }));
   const grafs = Object.fromEntries(seccions.map(({ coleccio, elements }) => [coleccio, { '@context': 'https://schema.org', '@graph': elements }]));
+  /* El calendari: els mateixos actes d'agenda.jsonld, en el mateix ordre. Els que no hi caben
+     (sense data d'inici, o amb una que iCalendar no pot escriure) no són omissions: són a
+     agenda.jsonld (B1-07, G2-07). */
+  const calendari = calendariIcs(agenda.map(({ element }) => element), municipi, ara);
   /* Els motius en ordre fix: l'ordre de l'entrada no ha de canviar cap byte de memoria.md. */
   const netes = Object.fromEntries(Object.entries(omissions).map(([clau, motius]) => [clau,
     Object.fromEntries(Object.keys(motius).sort(compara).map((motiu) => [motiu, motius[motiu]]))]));
@@ -896,6 +1097,10 @@ export function preparaDadesObertesMunicipi(entrada) {
   }
   const federades = outbox === undefined ? null : outbox.orderedItems.length;
   const fitxers = [
+    ...(calendari.text === null ? [] : [{
+      /* `recurs`: el name del recurs al Data Package, que ha de ser únic (agenda ja és el d'agenda.jsonld). */
+      nom: 'agenda.ics', recurs: 'agenda-ics', text: calendari.text, mediatype: 'text/calendar', format: 'ics', titol: 'Agenda (iCalendar, RFC 5545)'
+    }]),
     { nom: 'agenda.jsonld', text: jsonCanonic(grafs.agenda), mediatype: 'application/ld+json', format: 'jsonld', titol: 'Agenda (schema.org Event)' },
     {
       nom: 'configuracio.json',
@@ -907,7 +1112,7 @@ export function preparaDadesObertesMunicipi(entrada) {
     { nom: 'memoria-cultural.jsonld', text: jsonCanonic(grafs.memoria), mediatype: 'application/ld+json', format: 'jsonld', titol: 'Memòria cultural (schema.org CreativeWork)' },
     {
       nom: 'memoria.md',
-      text: memoriaMd({ municipi, ara, enllacos, seccions, omissions: netes, configuracio, federades, pendents }),
+      text: memoriaMd({ municipi, ara, enllacos, seccions, omissions: netes, configuracio, federades, pendents, calendari }),
       mediatype: 'text/markdown', format: 'md', titol: 'Memòria del paquet (Markdown)'
     },
     { nom: 'municipi.jsonld', text: jsonCanonic(municipiSchema(municipi, enllacos)), mediatype: 'application/ld+json', format: 'jsonld', titol: 'El municipi (schema.org AdministrativeArea)' },
@@ -924,7 +1129,8 @@ export function preparaDadesObertesMunicipi(entrada) {
     arrel: `dades-obertes-${municipi.slug}`,
     fitxers,
     omissions: netes,
-    comptes: Object.fromEntries(seccions.map(({ coleccio, elements }) => [coleccio, elements.length]))
+    comptes: Object.fromEntries(seccions.map(({ coleccio, elements }) => [coleccio, elements.length])),
+    calendari: { actes: calendari.actes, senseInici: calendari.senseInici, foraDAbast: calendari.foraDAbast }
   };
 }
 
@@ -978,7 +1184,7 @@ export async function exportaMunicipiOpenData(entrada, opcions = {}) {
   const datapackage = {
     $schema: ESQUEMA_DATAPACKAGE,
     name: preparat.arrel,
-    title: `Dades obertes de ${preparat.nom}`,
+    title: `Dades obertes ${deNomDelPoble(preparat.nom)}`,
     description: 'Contingut públic del municipi i de les seues entitats exportat pel Mas (Sóc de Poble). '
       + "Sense dades de persones. La llicència de cada element és a llicencies.md: el conjunt no n'atorga cap de nova.",
     created: preparat.ara,
@@ -986,7 +1192,7 @@ export async function exportaMunicipiOpenData(entrada, opcions = {}) {
     sources: [{ title: 'Sóc de Poble (el Mas)', path: preparat.origen }],
     keywords: ['dades obertes', 'municipi', preparat.slug],
     resources: dades.map((fitxer) => ({
-      name: fitxer.nom.replace(/\.[a-z]+$/, ''),
+      name: fitxer.recurs ?? fitxer.nom.replace(/\.[a-z]+$/, ''),
       path: fitxer.nom,
       title: fitxer.titol,
       format: fitxer.format,
@@ -997,9 +1203,15 @@ export async function exportaMunicipiOpenData(entrada, opcions = {}) {
     })),
     socdepoble: {
       format: FORMAT_DADES_OBERTES,
+      /* schemaVersion: la versió de l'esquema del paquet (T3.1); versio, el mateix valor, per als lectors de la 1.0.0. */
+      schemaVersion: VERSIO_FORMAT,
       versio: VERSIO_FORMAT,
       municipi: preparat.slug,
       comptes: preparat.comptes,
+      /* B1-07 · Els actes d'agenda.jsonld que són (actes) i que no són a agenda.ics, perquè no
+         tenen data d'inici (senseInici) o perquè iCalendar no la pot escriure (foraDAbast, G2-07):
+         comptes.agenda = actes + senseInici + foraDAbast. Sense cap acte a l'agenda, res. */
+      calendari: preparat.comptes.agenda ? preparat.calendari : null,
       omissions: preparat.omissions
     }
   };
@@ -1014,7 +1226,7 @@ export async function exportaMunicipiOpenData(entrada, opcions = {}) {
     ['bag-info.txt', [
       `Bag-Software-Agent: Sóc de Poble · exportaMunicipiOpenData ${VERSIO_FORMAT}`,
       `Bagging-Date: ${preparat.ara.slice(0, 10)}`,
-      `External-Description: Dades obertes públiques de ${preparat.nom} (${FORMAT_DADES_OBERTES})`,
+      `External-Description: Dades obertes públiques ${deNomDelPoble(preparat.nom)} (${FORMAT_DADES_OBERTES})`,
       `External-Identifier: ${preparat.arrel}`,
       `Payload-Oxum: ${octets}.${carrega.length}`
     ].join('\n').concat('\n')],
@@ -1175,7 +1387,7 @@ export async function recullDadesPubliquesDelMunicipi(port, municipi, { config =
   const files = await port.listPublicOrganizations({ poble: nom, limit: LIMIT_DIRECTORI_ENTITATS, signal }, config);
   if (!Array.isArray(files)) throw new TypeError('listPublicOrganizations no ha tornat cap llista.');
   if (files.length >= LIMIT_DIRECTORI_ENTITATS) {
-    throw new RangeError(`El directori de ${nom} arriba al sostre de ${LIMIT_DIRECTORI_ENTITATS} entitats: no se sap si en falten i no es talla en silenci.`);
+    throw new RangeError(`El directori ${deNomDelPoble(nom)} arriba al sostre de ${LIMIT_DIRECTORI_ENTITATS} entitats: no se sap si en falten i no es talla en silenci.`);
   }
   const entitats = files.filter((fila) => esObjecte(fila) && textLinia(fila.town_name) === nom
     && (!presentDe(fila.visibility) || fila.visibility === 'public'));

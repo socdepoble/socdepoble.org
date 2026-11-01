@@ -63,36 +63,45 @@ export const NOTES_SEED = [
     authorAvatar: '/assets/system/ui/logo-socdepoble-cuadrat-verd-256x256.png',
     location: 'La Torre de les Maçanes',
     logoImage: '/assets/system/ui/logo-socdepoble-rect-negre-985x256.png',
-    labels: ['Sistema', 'Productivitat', 'Tutorial', 'Sóc de Poble'],
+    /* IDEA-59 / P1-72 (Mestre 261101, punt 0) · Les etiquetes de la Card que
+       es restituïx (captura 01_produccio/261101_0256_card_bloc_de_notes_ploma.jpg). */
+    labels: ['General', 'Mur', 'Productivitat', 'Tutorial'],
     copyright: '© Sóc de Poble / Fet per la IAIA i Nano Banana',
     lead: 'Benvingut al teu nou espai editorial. Aquest és un espai on pots escriure, esborrar i organitzar-te com vulgues sense que ningú ho veja. A continuació t\'expliquem com funciona la màquina d\'escriure de Sóc de Poble.',
     folderId: 'f-mur',
     categoryId: 'c-sistema',
     type: 'rich-text',
+    /* Gauntlet 261101 · X-C-notes (C-07) · L'última frase val amb sessió i
+       sense: sense sessió (dades remotes) no hi ha «CREAR NOTA» i la Card li
+       diu que primer ha d'entrar.
+       Gauntlet 2 · 261101 · Y-Notes (G2-N-06) · A l'editor de Notes, entre
+       l'entradilla i la barra d'eines hi ha l'«Edició avançada» plegada
+       (NotesEditor · edicioAvancada, UniversalEditorShell): el text diu on és
+       de veritat la barra. */
     content: `
       <h3>1. La Identitat Visual: Com escrius, com es llig</h3>
       <p>L'editor està dissenyat perquè allò que veus a la pantalla siga exactament allò que llegiran les usuàries quan ho publiques. Sense sorpreses. La imatge de capçalera s'estén d'extrem a extrem, just per damunt de la teua targeta d'autoria. L'estructura de l'article sempre comença amb un gran Títol (H1), un subtítol (H2) que acompanya la lectura, i una entradilla o resum que convida a entrar en matèria.</p>
       
-      <h3>2. Les Eines de Text (La Barra Superior)</h3>
-      <p>A la part superior tens la barra de ferramentes d'escriptura. Està pensada per a ser ràpida i intuïtiva:</p>
+      <h3>2. Les Eines de Text (la barra d'eines)</h3>
+      <p>Davall de l'entradilla, just després del desplegable «Edició avançada», tens la barra d'eines d'escriptura. Està pensada per a ser ràpida i intuïtiva:</p>
       <ul>
-        <li><strong>Estructura:</strong> Pots inserir encapçalaments (Títols i Subtítols d'apartat) per dividir el text en seccions lògiques i donar ritme a la lectura.</li>
-        <li><strong>Llistes:</strong> Utilitza les llistes de punts o llistes numerades per enumerar fets, receptes, materials o arguments.</li>
-        <li><strong>Estil:</strong> Tens a la teua disposició la negreta per donar èmfasi, la cursiva per a citacions o localismes, i el text ratllat.</li>
-        <li><strong>Enllaços i Multimèdia:</strong> Pots incrustar enllaços a altres pàgines web i inserir vídeos directament dins del text.</li>
+        <li><strong>Estructura:</strong> El desplegable d'encapçalaments (H3, H4, H5, H6 i H2) divideix el text en seccions i dona ritme a la lectura.</li>
+        <li><strong>Llistes:</strong> Utilitza les llistes de punts o les numerades per a enumerar fets, receptes, materials o arguments.</li>
+        <li><strong>Estil:</strong> Tens la negreta per a donar èmfasi i la cursiva per a citacions o localismes. Al botó «⋯» hi ha més eines: el text ratllat, la citació i el divisor.</li>
+        <li><strong>Enllaços i imatges:</strong> Un enllaç enganxat al text es queda com a enllaç, i escrivint «/» pots inserir una imatge, una targeta o un emoji.</li>
       </ul>
       
-      <h3>3. Organització al Bancal (La Barra Lateral)</h3>
+      <h3>3. Organització al Bancal (la columna de l'esquerra)</h3>
       <p>A l'esquerra tens el teu arxivador privat. Està dividit en diverses seccions perquè no et perdes mai:</p>
       <ul>
-        <li><strong>Carpetes:</strong> Pots crear tantes carpetes com necessites per agrupar articles. Per exemple: "Històries del Poble", "Receptes" o "Captures de recerca".</li>
+        <li><strong>Carpetes:</strong> Cada nota viu en una de les carpetes del Bloc. La tries a l'«Edició avançada» de la nota.</li>
         <li><strong>Categories i Etiquetes:</strong> Abans de publicar, assegura't de classificar bé la teua nota. Aquestes etiquetes apareixeran tant ací a l'editor com en la publicació final al Mur.</li>
       </ul>
 
       <h3>4. El Procés de Publicació</h3>
-      <p>Tot allò que escrius ací es guarda automàticament i és estrictament <strong>privat</strong>. Ningú ho pot veure fins que tu ho decidisques. Quan tingues un article polit, revisat i llest per vore la llum, simplement hauràs de fer servir el botó de publicar (la bola del món superior) per enviar-lo directament al Mur del teu poble o al teu grup de treball.</p>
+      <p>Tot allò que escrius ací es guarda automàticament i és estrictament <strong>privat</strong>. Ningú ho pot veure fins que tu ho decidisques. Quan tingues un article polit, revisat i llest per vore la llum, simplement hauràs de fer servir el botó «Publicar» de la barra d'eines per a enviar-lo al Mur del teu poble o al teu grup de treball.</p>
       
-      <p>Ara, torna a la barra lateral esquerra i clica sobre la "Nota Buida" per començar a escriure la teua pròpia història. El llenç és teu!</p>
+      <p>Ara, prem «CREAR NOTA», dalt de la columna de les notes, per a començar a escriure la teua pròpia història (si no hi veus el botó, primer entra amb el teu compte). El llenç és teu!</p>
     `,
     category: 'Productivitat',
     tags: ['Tutorial'],

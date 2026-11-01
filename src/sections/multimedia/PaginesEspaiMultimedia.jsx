@@ -4,17 +4,23 @@
  * <UniversalPage chrome="context">, amb la barra blava i la taronja:
  *
  *   · PortadaMultimedia (`__intro`): «Arxiu visual», l'Accés ràpid a les
- *     galeries, la Barra de volums, les Accions de l'arrel, el commutador
- *     Graella/Taula i la graella (la de l'arrel local si hi ha un volum obert;
- *     si no, la Fototeca publicada).
+ *     galeries, les Accions de l'arrel, el commutador Graella/Taula i la
+ *     graella (la de l'arrel local si hi ha un volum obert; si no, la
+ *     Fototeca publicada).
  *   · VistaGaleria (la vista d'una galeria publicada o d'un mes): commutador i
  *     graella `.photo-grid` (Cella) o taula; la Cronologia, per mesos.
  *   · FitxaWeb (una imatge publicada): la imatge, «Veure la imatge a pantalla
  *     completa» (el visor) i les seues dades.
  *   · VistaCarpetaLocal (la vista d'una carpeta local): el panell del Gestor
- *     (Barra, diagnòstic i SHA-256, filtres, Accions i Fototeca o taula).
+ *     (diagnòstic i SHA-256, filtres, Accions i Fototeca o taula). Sense cap
+ *     volum obert, una línia d'ajuda que porta al peu de la Columna 1.
  *   · FitxaLocal (un arxiu local): el detall polimòrfic incrustat, el
  *     comparador amb la web i les accions de carpeta.
+ *
+ * P1-71 (marató nocturna 261101, T5.1; contracte d'IDEA-55) · La Barra de
+ * volums («Volums i carpetes locals», amb l'estat i el botó de desconnectar)
+ * ja no és en cap pàgina d'esta columna: és a la Columna 1, davall de les
+ * vistes (MultimediaSection · peuNavegacio).
  *
  * Privadesa: a les pàgines LOCALS (i a la portada, que en pinta noms) cap text
  * ix del navegador: sense Traduir (traduccio={false}) i, a les locals, sense
@@ -41,7 +47,7 @@ import { esMitjaOpac } from '../../utils/mitjaOpac.js';
 import { esElementPublic, totsPublics } from '../../components/universal/traduccio/visibilitatTraduible.js';
 import { MOCK_TOWNS } from '../pobles/townsSeed.js';
 import {
-  ARREL_LOCAL, GALERIA_CRONOLOGIA, GALERIA_IAIA, GALERIA_TOTS, ITEM_PORTADA, PREFIX_ARXIU_LOCAL, categoriaDeVista, esIdLocal,
+  GALERIA_CRONOLOGIA, GALERIA_IAIA, GALERIA_TOTS, ITEM_PORTADA, PREFIX_ARXIU_LOCAL, categoriaDeVista, esIdLocal,
   subtitolLocal
 } from './arbreMultimedia.js';
 import { SENSE_DATA, dataDelMitja, etiquetaDelMes } from './cronologia.js';
@@ -174,14 +180,15 @@ function GaleriaWeb({ espai, categoria, membres }) {
   );
 }
 
-/* El panell del Gestor en mode espai: triar un fitxer porta a la seua fitxa. */
-function PanellLocal({ espai, carpeta, barra = null }) {
+/* El panell del Gestor en mode espai: triar un fitxer porta a la seua fitxa.
+   Sense la Barra de volums, que és a la Columna 1 (P1-71). */
+function PanellLocal({ espai, carpeta }) {
   const { gestor, navega, idCarpeta, idArxiu, blocDeNotes } = espai;
   return (
     <PanellGestorLocal
       gestor={gestor}
       carpeta={carpeta}
-      barra={barra}
+      ambBarra={false}
       blocDeNotes={blocDeNotes}
       pobles={MOCK_TOWNS}
       onTriaArxiu={(el) => navega(idCarpeta(el.carpeta || ''), idArxiu(el.ruta))}
@@ -193,24 +200,6 @@ export function PortadaMultimedia({ espai }) {
   const { t, gestor, cataleg, navega } = espai;
   const tr = (parell, valors) => tradueix(t, parell, valors);
   const id = useId();
-  const { propsBarra } = gestor;
-  /* Vincular, triar un volum o reconnectar porten primer a «Carpeta local»
-     (síncron) i després fan l'acció: el permís continua sent la primera
-     espera del clic. */
-  const barra = {
-    onVincula: () => {
-      navega(ARREL_LOCAL);
-      propsBarra.onVincula();
-    },
-    onTria: (volum) => {
-      navega(ARREL_LOCAL);
-      propsBarra.onTria(volum);
-    },
-    onReconnecta: (volum) => {
-      navega(ARREL_LOCAL);
-      propsBarra.onReconnecta(volum);
-    }
-  };
   return (
     <UniversalPage
       chrome="context"
@@ -240,7 +229,7 @@ export function PortadaMultimedia({ espai }) {
             </Boto>
           </div>
         </section>
-        <PanellLocal espai={espai} carpeta="" barra={barra} />
+        <PanellLocal espai={espai} carpeta="" />
         {gestor.volumObert ? null : <GaleriaWeb espai={espai} categoria={GALERIA_TOTS} membres={cataleg.totes} />}
       </div>
     </UniversalPage>
@@ -359,9 +348,15 @@ export function VistaCarpetaLocal({ espai, categoria }) {
       {...dataHoraDeBarra({ modificat: isoDeMs(ms) })}
     >
       <div className="sdp-espai-multimedia__cos">
-        {/* H1 → H2 → h3 (Gauntlet 261029, cicle 1): sense volum obert no hi ha subtítol; el
-            títol del Gestor, només per al lector (fora de l'Índex: sr-only), en fa les voltes. */}
-        {gestor.volumObert ? null : <h2 className="sr-only">{tr(T.titol)}</h2>}
+        {/* Gauntlet 261101 (G-D3) · Sense volum obert (ni cap lectura en curs), la pàgina
+            diu on és la Barra de volums: al peu de la Columna 1 (P1-71). Sense volum, el
+            panell no porta cap encapçalament: l'h2 només per al lector que feia de pont fins
+            a l'h3 de la Barra (Gauntlet 261029, cicle 1) ja no tenia res davall. */}
+        {gestor.volumObert || gestor.ocupat ? null : (
+          <p className="sdp-arxiu-local__ajuda">
+            {tr(T.senseVolum, { volums: tr(T.volums), columna: tr(E.categories) })}
+          </p>
+        )}
         <PanellLocal espai={espai} carpeta={ruta} />
       </div>
     </UniversalPage>

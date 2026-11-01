@@ -29,11 +29,17 @@
  * del mocador roig de «Festa del Poble», retallada per l'enquadrament 'iaia'
  * d'Avatar. Ho veuen igual la llista, la capçalera de la conversa, «Nova
  * conversa», la cerca i el xat de mostra: totes les cares passen per ací.
+ *
+ * P1-70 (marató nocturna 261101, T5.2) · I per això ací, i només ací, la
+ * foto de perfil de Javi Llinares es pinta amb la miniatura de 256 px
+ * (caresLleugeres.js): la mateixa foto, sense arrossegar la de 1200 px a
+ * cada fila. La fitxa i el perfil continuen amb la gran.
  */
 import { Avatar } from '../../../components/PedraSeca/index.js';
 import { useResolvedAsset } from '../../../hooks/useResolvedAsset.js';
 import { caraDeLaIAIA } from '../../../data/xatsPerDefecte.js';
 import { esMitjaOpac } from '../../../utils/mitjaOpac.js';
+import { caraLleugera } from '../caresLleugeres.js';
 
 /* XAT-02 (ordre del Mestre, 261014) · Una referència opaca del port de
    mitjans ('sdp-media://…'). El predicat viu a utils/mitjaOpac.js perquè
@@ -54,6 +60,7 @@ export default function CaraXat({ nom, src = null, mida = 'md', llavor = null, a
   if (iaia) {
     return <Avatar nom={nom} src={iaia.src} mida={mida} llavor={llavor} alt={alt} className={className} enquadrament={iaia.enquadrament} />;
   }
-  const Cara = esMitjaOpac(src) ? CaraPujada : Avatar;
-  return <Cara nom={nom} src={src} mida={mida} llavor={llavor} alt={alt} className={className} />;
+  const font = caraLleugera(src);
+  const Cara = esMitjaOpac(font) ? CaraPujada : Avatar;
+  return <Cara nom={nom} src={font} mida={mida} llavor={llavor} alt={alt} className={className} />;
 }

@@ -30,6 +30,7 @@
 import { useCallback, useRef, useState } from 'react';
 import { Maximize, Minimize } from 'lucide-react';
 import { Boto } from '../atoms/Boto.jsx';
+import { tradueix, useTraductorOpcional } from '../hooks/useTraductorOpcional.js';
 import { Dialeg } from './Dialeg.jsx';
 
 export function PantallaCompleta({ oberta, onTanca, titol, etiquetaEixir = 'Eixir', children }) {
@@ -70,10 +71,13 @@ function PantallaCompletaOberta({ onTanca, titol, etiquetaEixir, children }) {
   );
 }
 
+/* T7 · P1-22 (261101) · El nom del botó (aria-label i title), en la llengua
+   de la interfície; fora de l'app o en valencià, «Pantalla completa». */
 export function BotoPantallaCompleta({ id, onClick, varietat = 'fantasma', className }) {
+  const nom = tradueix(useTraductorOpcional(), ['common.pantallaCompleta', 'Pantalla completa']);
   return (
     <Boto id={id} varietat={varietat} icona={Maximize} onClick={onClick}
       className={['sdp-pantalla-completa__entra', className].filter(Boolean).join(' ')}
-      aria-label="Pantalla completa" title="Pantalla completa" aria-haspopup="dialog" />
+      aria-label={nom} title={nom} aria-haspopup="dialog" />
   );
 }

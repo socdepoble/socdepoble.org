@@ -266,18 +266,40 @@ test('readme: «Mostra els detalls» servix les seccions reals, escapades, i els
   for (const clau of ['description', 'installation', 'faq', 'changelog']) assert.ok(seccions[clau]?.length > 0, clau);
   assert.deepEqual(Object.keys(info.sections), ['description', 'installation', 'faq', 'changelog']);
   const { description, installation, faq, changelog } = info.sections;
-  assert.ok(changelog.includes('<h4>1.0.0</h4><ul><li>First stable release.</li>'));
+  /* T5.3 (261101) · El readme és el valencià publicat a WordPress.org (1.1.10): el registre
+     comença per la 1.1.10 (la 1.0.0 ja no hi és), la instal·lació porta un títol davant de la
+     llista i les preguntes són les publicades. */
+  assert.ok(changelog.startsWith('<h4>1.1.10</h4><ul><li>'), 'cada versió, un títol i la seua llista');
   assert.ok(!changelog.includes('No release notes published.'), 'el readme ja porta les notes');
   assert.ok(description.includes('<h4>External services</h4>'), 'les seccions desconegudes van a la descripció, com a WordPress.org');
   assert.ok(description.includes('<code>&lt;soc-de-poble&gt;</code>'));
   assert.ok(description.includes('<a href="https://socdepoble.org">https://socdepoble.org</a>.'), 'la puntuació final queda fora de l’enllaç');
-  assert.ok(installation.startsWith('<ol><li>'));
-  assert.ok(faq.includes('<h4>The plugin is installed twice. What should I do?</h4>'));
+  assert.ok(installation.startsWith('<h4>Com posar Sóc de Poble a la teua web en 3 passos molt fàcils</h4><ol><li>'));
+  assert.ok(faq.includes('<h4>Quin codi he de posar exactament a la meua pàgina: un o dos?</h4>'));
   const tot = Object.values(info.sections).join('');
-  assert.ok(!tot.includes('a clear refusal instead'), 'Upgrade Notice no és cap secció');
+  assert.ok(!tot.includes('galeria de 10 captures'), 'Upgrade Notice no és cap secció');
+  assert.ok(!tot.includes('Vista real del sistema'), 'Screenshots tampoc: les captures només les mostra WordPress.org');
   for (const etiqueta of tot.match(/<[^>]*>/g)) {
-    assert.match(etiqueta, /^<(?:\/?(?:p|h4|ul|ol|li|code|a)|a href="https:\/\/[^"<>\s]+")>$/, `etiqueta inesperada: ${etiqueta}`);
+    assert.match(etiqueta, /^<(?:\/?(?:p|h4|ul|ol|li|code|a|strong|em)|a href="https:\/\/[^"<>\s]+")>$/, `etiqueta inesperada: ${etiqueta}`);
   }
+  /* P2-wp-petits (261101) · La 1.1.10 publicada mostrava literals els ** i * del readme, i cada
+     pas numerat tornava a començar per «1.» (wp_kses de plugin-install.php no deixa passar start). */
+  for (const [clau, html] of Object.entries(info.sections)) {
+    assert.doesNotMatch(html, /\*\*|(?<![*\w])\*[^*\s]/, `${clau}: cap marca de negreta o cursiva crua`);
+    const obertes = [];
+    for (const [, tanca, nom] of html.matchAll(/<(\/?)([a-z0-9]+)[^>]*>/g)) {
+      if (!tanca) obertes.push(nom);
+      else assert.equal(obertes.pop(), nom, `${clau}: </${nom}> tanca una altra etiqueta`);
+    }
+    assert.deepEqual(obertes, [], `${clau}: cap etiqueta sense tancar`);
+  }
+  assert.ok(description.includes('<strong>') && description.includes('<em>'));
+  assert.equal(installation.match(/<ol>/g).length, 1, 'els tres passos són una sola llista numerada');
+  assert.ok(installation.includes('<ol><li><strong>Pas 1 · Instal·la el connector i configura el teu poble:</strong><ul><li>Instal·la i activa <strong>Sóc de Poble. Portal de Pobles Connectats</strong> des de <strong>Complements ➔ Afegir complement</strong>.</li>'), 'les etiquetes de WordPress són les del locale ca_valencia (E-03)');
+  assert.match(installation, /<\/ul><\/li><li><strong>Pas 2 · [^<]+<\/strong><ul><li><strong>Manera A [^<]+<\/strong> Ves a /, 'la subllista dins del pas, i la línia sagnada continua la seua vinyeta');
+  assert.match(installation, /<\/ul><\/li><li><strong>Pas 3 · [^<]+<\/strong><ul><li>/);
+  assert.ok(installation.includes('<li>Per obrir directament al <strong>Xat del poble</strong> (entrada per defecte): <code>[socdepoble_app poble=&quot;la-torre-de-les-macanes&quot; ruta_inicial=&quot;/xat&quot;]</code></li><li>Per obrir'), 'el codi va a la mateixa línia del seu text: una sola llista, i WordPress.org no el convertix en un bloc pla (E-02)');
+  assert.ok(installation.includes('i pega <strong>un sol</strong> codi com este: <code>[socdepoble_app poble=&quot;la-torre-de-les-macanes&quot;]</code> <em>(Nota:'), 'el codi de la Manera A, dins de la seua línia');
 
   const capcalera = (fitxer, nom) => fs.readFileSync(path.join(PLUGIN, fitxer), 'utf8').match(new RegExp(`^[ \\t/*#@]*${nom}:[ \\t]*(.+?)[ \\t]*$`, 'mi'))[1];
   assert.equal(info.requires, capcalera('socdepoble-enxufe.php', 'Requires at least'));
@@ -287,9 +309,53 @@ test('readme: «Mostra els detalls» servix les seccions reals, escapades, i els
   assert.equal(info.download_link, '', 'sense canal verificat no hi ha res descarregable');
 });
 
-test('readme: l’analitzador escapa abans de transformar i només enllaça https', OPCIONS, t => {
-  const { html } = executa(t, {
-    mode: 'readme',
+/* P2-wp-petits (261101) · L'analitzador del readme de «Mostra els detalls» es carrega sol, amb els
+   dobles mínims dels ganxos i un esc_html com el de WordPress, i sense JIT de PCRE, perquè un patró
+   que reculara de manera quadràtica es notara.
+   Gauntlet 2 · 261101 · Y-WordPress (G2-P03) · N'hi ha un de sol: el d'ajustos.php, que el fitxer
+   principal carrega sempre i abans d'actualitzador.php. El canal propi (seccions_readme) el
+   reutilitza, i l'arnés carrega els dos fitxers per a comprovar-ho de punta a punta. */
+const ARNES_README = String.raw`
+define( 'ABSPATH', '/' );
+define( 'SOCDEPOBLE_ENXUFE_FITXER', $argv[1] . '/socdepoble-enxufe.php' );
+function add_filter() {}
+function add_action() {}
+function register_activation_hook() {}
+function plugin_basename( $fitxer ) { return basename( dirname( $fitxer ) ) . '/' . basename( $fitxer ); }
+function plugin_dir_path( $fitxer ) { return dirname( $fitxer ) . '/'; }
+function esc_html( $text ) { return htmlspecialchars( (string) $text, ENT_QUOTES, 'UTF-8', false ); }
+require $argv[1] . '/includes/ajustos.php';
+require $argv[1] . '/includes/actualitzador.php';
+$cas    = json_decode( stream_get_contents( STDIN ), true, 512, JSON_THROW_ON_ERROR );
+$readme = socdepoble_enxufe_llig_readme();
+$mesura = static function ( $text ) {
+	$inici = hrtime( true );
+	$html  = socdepoble_enxufe_linia_detalls( $text );
+	$ms    = ( hrtime( true ) - $inici ) / 1e6;
+	return array( 'ms' => $ms, 'error' => preg_last_error(), 'bytes' => strlen( $html ), 'intacta' => $html === $text );
+};
+echo json_encode(
+	array(
+		'detalls' => array_map( 'socdepoble_enxufe_html_detalls', $readme['seccions'] ),
+		'canal'   => socdepoble_enxufe_seccions_readme(),
+		'linies'  => socdepoble_enxufe_html_detalls( $cas['linies'] ?? array() ),
+		'llargs'  => array_map( $mesura, $cas['llargs'] ?? array() ),
+	),
+	JSON_THROW_ON_ERROR
+);
+`;
+
+function arnesReadme(cas) {
+  const resultat = spawnSync(PHP, ['-d', 'pcre.jit=0', '-r', ARNES_README, '--', PLUGIN], {
+    encoding: 'utf8', input: JSON.stringify(cas), timeout: 30000
+  });
+  assert.equal(resultat.status, 0, resultat.error?.message || resultat.stderr || resultat.stdout);
+  assert.equal(resultat.stderr, '');
+  return JSON.parse(resultat.stdout);
+}
+
+test('readme: l’analitzador escapa abans de transformar i només enllaça https', OPCIONS, () => {
+  const { linies: html } = arnesReadme({
     linies: [
       '= <b>Títol</b> =',
       '<script>alert(1)</script>',
@@ -306,6 +372,96 @@ test('readme: l’analitzador escapa abans de transformar i només enllaça http
   assert.ok(html.includes('&quot;<a href="https://x.example/">https://x.example/</a>&quot;'), 'l’enllaç acaba abans de la cometa escapada');
   assert.ok(html.includes('<a href="https://ok.example/a?b=1&amp;c=2">https://ok.example/a?b=1&amp;c=2</a>.'));
   assert.equal(html.match(/<a /g).length, 2, 'ni javascript: ni http:// esdevenen enllaços');
+});
+
+test('readme: negreta i cursiva escapades, passos numerats en una llista, i el canal propi dona el mateix que el directori', OPCIONS, () => {
+  const llargs = [
+    '*'.repeat(20000),
+    '*a '.repeat(20000),
+    '**a '.repeat(20000),
+    ' *ab*c'.repeat(20000),
+    ' **a**b'.repeat(20000),
+    `*${'a '.repeat(20000)}`,
+    // G2-P02 · Les marques dels trams de codi no poden fer créixer cap retrocés.
+    '`a` '.repeat(15000),
+    `*${'`a*` '.repeat(12000)}`
+  ];
+  const { detalls, canal, linies: html, llargs: mesures } = arnesReadme({
+    linies: [
+      '1. **Pas 1 · <b>Instal·la</b>:**',
+      '   * Activa **Sóc de Poble** des de *Complements > Afegir complement*.',
+      '   * **<img src=x onerror=alert(1)>** i *"cometes" & \'apòstrofs\'*',
+      '',
+      '2. **Pas 2:**',
+      '   * **Manera A:**',
+      '     Pega `[socdepoble_app]`',
+      '     *(Nota: o `[socdepoble_app poble="x"]`).*',
+      '',
+      '3. **Pas 3** sense subllista',
+      '',
+      '* Per obrir el **Xat**:',
+      '  `[socdepoble_app ruta_inicial="/xat"]`',
+      '* 2*3*4, snake_*cas*, cosa*s* i `codi` dins de **https://ok.example/a**',
+      '',
+      '1. Una llista nova després d\'una vinyeta'
+    ],
+    llargs
+  });
+
+  assert.deepEqual(canal, detalls, 'el readme real: les dos finestres de detalls, idèntiques');
+  assert.equal(html, [
+    '<ol>',
+    '<li><strong>Pas 1 · &lt;b&gt;Instal·la&lt;/b&gt;:</strong><ul>',
+    '<li>Activa <strong>Sóc de Poble</strong> des de <em>Complements &gt; Afegir complement</em>.</li>',
+    '<li><strong>&lt;img src=x onerror=alert(1)&gt;</strong> i <em>&quot;cometes&quot; &amp; &#039;apòstrofs&#039;</em></li>',
+    '</ul></li>',
+    '<li><strong>Pas 2:</strong><ul>',
+    '<li><strong>Manera A:</strong> Pega <code>[socdepoble_app]</code> <em>(Nota: o <code>[socdepoble_app poble=&quot;x&quot;]</code>).</em></li>',
+    '</ul></li>',
+    '<li><strong>Pas 3</strong> sense subllista</li>',
+    '</ol>',
+    '<ul>',
+    '<li>Per obrir el <strong>Xat</strong>: <code>[socdepoble_app ruta_inicial=&quot;/xat&quot;]</code></li>',
+    '<li>2*3*4, snake_*cas*, cosa*s* i <code>codi</code> dins de <strong><a href="https://ok.example/a">https://ok.example/a</a></strong></li>',
+    '</ul>',
+    '<ol><li>Una llista nova després d&#039;una vinyeta</li></ol>'
+  ].join(''), 'cursiva i negreta sense trepitjar-se, un asterisc enganxat a una lletra és literal i tot ix escapat');
+  assert.ok(!/<(?:img|b|script)\b/i.test(html));
+
+  // Cap retrocés quadràtic: sense JIT, un patró que recula sobre tota la línia tarda segons en 60 KB.
+  for (const [i, { ms, error, bytes }] of mesures.entries()) {
+    assert.equal(error, 0, `llarg ${i}: cap error de PCRE`);
+    assert.ok(bytes >= Buffer.byteLength(llargs[i]), `llarg ${i}: la línia no es perd`);
+    assert.ok(ms < 250, `llarg ${i}: ${ms.toFixed(1)} ms`);
+  }
+  assert.equal(mesures[0].intacta, true, '20.000 asteriscos passen intactes');
+});
+
+/* Gauntlet 2 · 261101 · Y-WordPress (G2-P02) · El codi és literal, com a WordPress.org (que pinta
+   `sdp_og3_*` amb l'asterisc i no enllaça cap URL d'un <code>): dins d'un tram de codi, cap asterisc
+   obri cursiva ni negreta i cap URL es fa enllaç; un enllaç no s'empassa el codi del costat; una
+   cursiva sí que pot embolcallar un codi sencer, i una marca de tram escrita al readme és text. */
+test('readme: el codi és literal, sense cursiva, negreta ni enllaços dins', OPCIONS, () => {
+  const { linies: html } = arnesReadme({
+    linies: [
+      'Dos codis `*a` i `b*` aquí',
+      '',
+      'El codi `**x**` literal i **negreta** fora',
+      '',
+      'Codi `https://x.example/` i https://ok.example/`codi` i *cursiva amb `codi*` dins*',
+      '',
+      '*(Nota: `[socdepoble_app]` dins de la cursiva).*',
+      '',
+      'Marca falsa <0> i `x`'
+    ]
+  });
+  assert.equal(html, [
+    '<p>Dos codis <code>*a</code> i <code>b*</code> aquí</p>',
+    '<p>El codi <code>**x**</code> literal i <strong>negreta</strong> fora</p>',
+    '<p>Codi <code>https://x.example/</code> i <a href="https://ok.example/">https://ok.example/</a><code>codi</code> i <em>cursiva amb <code>codi*</code> dins</em></p>',
+    '<p><em>(Nota: <code>[socdepoble_app]</code> dins de la cursiva).</em></p>',
+    '<p>Marca falsa &lt;0&gt; i <code>x</code></p>'
+  ].join(''));
 });
 
 /* WP-09 (auditoria 261025) · el fitxer que WordPress carrega per al text domain

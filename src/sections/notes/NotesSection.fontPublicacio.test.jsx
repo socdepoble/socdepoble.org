@@ -271,15 +271,33 @@ test('una nota de la carpeta d’entrada no espera la font: va davant de les pub
   expect(screen.queryByRole('alert')).toBeNull();
 });
 
-/* Revisió de F4 (ronda 1, A1; relleu 22 de Codex) · L'entrada nua de /notes
-   pinta activa la primera carpeta (Mur), com /notes?carpeta=f-mur, i ha
-   d'esperar igual la seua font: el resultat no pot dependre de l'ordre
-   d'arribada. Sense n1, perquè l'efecte de n1 no tape l'espera. */
+/* Revisió de F4 (ronda 1, A1; relleu 22 de Codex) · Un enllaç a la carpeta
+   del Mur (/notes?carpeta=f-mur) ha d'esperar la seua font: el resultat no
+   pot dependre de l'ordre d'arribada. Sense n1.
+   IDEA-59 / P1-72 (ordre del Mestre, 261101, punt 0) · L'entrada NUA de
+   /notes ja no és el Mur: és «Tot» amb la Card tutorial (la prova de baix).
+   Estes tres proves fixaven l'espera del Mur des de l'entrada nua; ara la
+   fixen des de l'enllaç explícit a la carpeta, que continua igual. */
 const SENSE_N1 = [{ id: 'uuid-a', title: 'Llista de la compra', folderId: 'f-notes', updatedAt: '2026-01-03T09:00:00Z' }];
 
-test('l’entrada nua de /notes espera el Mur com /notes?carpeta=f-mur: cap nota preparada fixada, i en arribar s’obri la publicació', () => {
+test('IDEA-59 · l’entrada nua de /notes no espera el Mur: «Tot» amb la Card tutorial, la URL nua i cap nota preparada fixada', () => {
   Object.assign(dades, { notes: SENSE_N1, murStatus: 'loading' });
   const repinta = munta('/notes');
+  expect(nota()).toBeNull();
+  // La Card tutorial de lectura obri l'estat buit de l'editor (NotesDetail sense nota).
+  expect(detall()).toBe('cap');
+  expect(screen.queryByText('Carregant…')).toBeNull();
+  expect(screen.getByRole('button', { name: 'Bloc de notes' }).getAttribute('aria-current')).toBe('true');
+  Object.assign(dades, { murStatus: 'ready', feed: [POST] });
+  repinta();
+  expect(nota()).toBeNull();
+  expect(detall()).toBe('cap');
+  expect(dades.resolveNote).not.toHaveBeenCalled();
+});
+
+test('l’enllaç a la carpeta del Mur espera el Mur: cap nota preparada fixada, i en arribar s’obri la publicació', () => {
+  Object.assign(dades, { notes: SENSE_N1, murStatus: 'loading' });
+  const repinta = munta('/notes?carpeta=f-mur');
   expect(nota()).toBeNull();
   expect(detall()).toBeNull();
   expect(screen.getByText('Carregant…')).toBeTruthy();
@@ -291,9 +309,9 @@ test('l’entrada nua de /notes espera el Mur com /notes?carpeta=f-mur: cap nota
   expect(dades.resolveNote).not.toHaveBeenCalled();
 });
 
-test('l’entrada nua de /notes amb el Mur en error: l’avís amb Reintentar recarrega el Mur, no Multimèdia', () => {
+test('l’enllaç a la carpeta del Mur amb el Mur en error: l’avís amb Reintentar recarrega el Mur, no Multimèdia', () => {
   Object.assign(dades, { notes: SENSE_N1, murStatus: 'error' });
-  munta('/notes');
+  munta('/notes?carpeta=f-mur');
   expect(nota()).toBeNull();
   const avis = screen.getByRole('alert');
   expect(avis.textContent).toContain('No s’han pogut carregar les dades.');
@@ -302,18 +320,20 @@ test('l’entrada nua de /notes amb el Mur en error: l’avís amb Reintentar re
   expect(dades.mediaRefresh).not.toHaveBeenCalled();
 });
 
-test('l’entrada nua de /notes no espera Multimèdia, que no és la carpeta d’entrada: amb el Mur llest s’obri la nota preparada', () => {
+test('l’enllaç a la carpeta del Mur no espera Multimèdia: amb el Mur llest s’obri la nota preparada', () => {
   // mediaStatus continua 'loading' (inicial).
   Object.assign(dades, { notes: SENSE_N1 });
-  munta('/notes');
+  munta('/notes?carpeta=f-mur');
   expect(nota()).toMatch(/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/);
   expect(detall()).toBe(nota());
   expect(screen.queryByText('Carregant…')).toBeNull();
 });
 
-test('l’entrada nua de /notes amb n1 l’obri com sempre encara que el Mur carregue', () => {
+/* IDEA-59 / P1-72 · Amb la n1 de veres a la llista (el mode 'seed'), l'entrada
+   nua l'obri a «Tot» i la URL es queda nua (abans s'hi escrivia ?nota=n1). */
+test('l’entrada nua de /notes amb n1 l’obri encara que el Mur carregue', () => {
   Object.assign(dades, { murStatus: 'loading' });
   munta('/notes');
-  expect(nota()).toBe('n1');
+  expect(nota()).toBeNull();
   expect(detall()).toBe('n1');
 });

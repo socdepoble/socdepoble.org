@@ -109,6 +109,16 @@
       "reason": "Corredor de cerca ad hoc: PATRONS i DIRS es canvien segons el torn; no és una prova de regressió de producte."
     },
     {
+      "path": "tests/codex-k1-exporta-open-data.test.mjs",
+      "suite": "primary",
+      "reason": "Kit Codex K1 (261101), auditat per Claude: regressió portable de verificaPaquetOpenData (finestra Uint8Array amb byteOffset, corrupció de cada membre amb CRC refet, truncaments i fallada de digest) amb fixtures sintètiques; cap xarxa."
+    },
+    {
+      "path": "tests/codex-k1-inicia-node-germa.test.mjs",
+      "suite": "primary",
+      "reason": "Kit Codex K1 (261101), auditat per Claude: fronteres de l'instal·lador amb fixtures temporals (fitxer arrel simbòlic, parent simbòlic, claus extra); mata el mutant del parent simbòlic que tooling/instalador/inicia-node-germa.test.mjs no detecta. La prova de la release sencera s'ha retirat: la cobrix tests/inicia-node-germa.test.mjs."
+    },
+    {
       "path": "tests/cognitive-document-handoff.test.mjs",
       "suite": "primary",
       "reason": "Porta permanent de lliurament documental (payload/correlació/roles) adoptada a T5; fixtures sintètiques."
@@ -322,6 +332,11 @@
       "path": "tests/hooks-local.test.mjs",
       "suite": "primary",
       "reason": "Regressió portable del producte o d’una eina permanent; s’executa a la cadena primària, també quan està roja."
+    },
+    {
+      "path": "tests/inicia-node-germa.test.mjs",
+      "suite": "primary",
+      "reason": "B4 261101 (T3.4): l’instal·lador de nodes germans amb una font immutable (git archive de HEAD), per a Xixona en os.tmpdir(), i la federació que el node publicaria; el repositori viu no es toca."
     },
     {
       "path": "tests/inventari-directoris.test.mjs",
@@ -792,6 +807,11 @@
       "path": "tooling/seo/social-http.test.mjs",
       "suite": "primary",
       "reason": "P1-61 Fase 2 · prova HTTP local del Llibre d’Or amb User-Agent de WhatsApp; genera els artefactes del repositori en una carpeta temporal."
+    },
+    {
+      "path": "tooling/vite/associacio-apps.test.mjs",
+      "suite": "primary",
+      "reason": "T6 (carril F-botigues, marató 261101) · Android App Links: forma exacta d'assetlinks.json, cap empremta mal formada o de farciment, cap publicació sense empremtes ni per a un altre domini, appAssociation NONE a firebase.json i connector del build (SSR, origen canònic); directoris temporals, cap xarxa."
     },
     {
       "path": "tooling/vite/consola-iaia.test.mjs",

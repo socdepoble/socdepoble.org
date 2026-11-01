@@ -134,6 +134,19 @@ import { TEXTOS_LLAVOR } from '../textosLlavor.js';
  *                       les accions d'AppGridColumn (botó d'icona de 24 px,
  *                       amb nom i title). Només a la columna oberta: el rail
  *                       plegat no canvia. Sense, cap (el DOM de sempre).
+ *   - `peuNavegacio` → (opcional, P1-71, marató nocturna 261101) un node de
+ *                       la secció que va a la columna de navegació desplegada,
+ *                       davall de les vistes (darrere de l'arbre, dins de la
+ *                       mateixa zona de desplaçament), en un
+ *                       <div class="sdp-workspace-column__peu">: /multimedia
+ *                       hi posa els volums i carpetes locals muntats. Va FORA
+ *                       del <nav> (Gauntlet 2 261101, G2-09): són accions, no
+ *                       navegació. Amb peu, la zona de desplaçament és un
+ *                       <div class="sdp-workspace-column__body"> amb el <nav>
+ *                       de l'arbre i el peu dins. Les fletxes de l'arbre no
+ *                       hi entren (navegacioTeclat.js només mou entre files).
+ *                       El rail plegat no el porta. Sense, cap node de més
+ *                       (el DOM de sempre: el <nav> és la zona de desplaçament).
  *   - `obridorALaLlista` → retirada (decisió 4 del Mestre, 30-10-2026
  *                       ~15:00). Llevava la carpeta de l'esquerra del títol
  *                       de la llista només en «mitja», on el rail fix de la
@@ -537,7 +550,8 @@ export function UniversalWorkspace({
   mestreDetall = false,
   tornaDeLaLlista = null,
   idEspai,
-  accionsLlista = CAP
+  accionsLlista = CAP,
+  peuNavegacio = null
   /* Decisió 4 del Mestre (30-10-2026 ~15:00) · obridorALaLlista ja no hi és:
      només llevava la carpeta de la capçalera de la llista en «mitja», on el
      rail fix de la navegació (railEsquerra) era una altra porta. Amb les
@@ -677,6 +691,7 @@ export function UniversalWorkspace({
         detailClassName={detailClassName}
         className={className}
         accionsLlista={accionsLlista}
+        peuNavegacio={peuNavegacio}
         etiquetaEspai={etiquetaEspai}
       />
     </WorkspaceProvider>
@@ -687,7 +702,7 @@ export function UniversalWorkspace({
 function WorkspaceFrame({
   columnesRef, compacte, espai, grups, amagades, vigilaAmagada, mestreDetall, panellEstret, onPanell, tornaDeLaLlista, error, onCreate, onCreateError, onManageCategories, renderItem, renderDetail,
   labels, icons, tagFilter, collapsibleNavigation, sortable, canCreate, onRetry, listClassName, detailClassName, className,
-  accionsLlista, etiquetaEspai = TEXT_ESPAI_DE_TREBALL[1]
+  accionsLlista, etiquetaEspai = TEXT_ESPAI_DE_TREBALL[1], peuNavegacio = null
 }) {
   const workspace = useWorkspace();
   const focusAfterLayout = useFocusAfterLayout();
@@ -777,6 +792,7 @@ function WorkspaceFrame({
           expandBtnRef={expandLeftRef}
           rootRef={navegacioRef}
           llistaRef={listFocusRef}
+          peuNavegacio={peuNavegacio}
         />
       }
       middleColumn={
@@ -835,7 +851,8 @@ function WorkspaceFrame({
 
 function CategoryColumn({
   compacte, espai, grups: groupsToRender, amagades, vigilaAmagada = false, mestreDetall = false, collapsibleNavigation, focusTarget,
-  onManageCategories, labels, icon, collapseBtnRef, expandBtnRef, focusAfterLayout, rootRef = null, llistaRef = null
+  onManageCategories, labels, icon, collapseBtnRef, expandBtnRef, focusAfterLayout, rootRef = null, llistaRef = null,
+  peuNavegacio = null
 }) {
   const { state, status, selectCategory, toggleColumn } = useWorkspace();
   const { mida, setPanellObert, tancaPanells } = useAppGrid();
@@ -1149,6 +1166,52 @@ function CategoryColumn({
     );
   }
 
+  /* IDEA-58 · Les fletxes de l'arbre, delegades (gestionaTeclaArbre). */
+  const arbre = (
+    <div className="sdp-workspace-groups" onKeyDown={onTeclaArbre}>
+      {grupsVisibles.map(group => (
+        <div
+          key={group.id}
+          className="sdp-workspace-group"
+          data-group={group.id}
+          data-obert={isGroupOpen(group.id) ? 'true' : 'false'}
+        >
+          {group.label && (
+            <div className="sdp-workspace-group-heading">
+              <button
+                type="button"
+                className="sdp-workspace-nav-item"
+                onClick={() => toggleGroup(group.id)}
+                aria-expanded={isGroupOpen(group.id)}
+              >
+                <span className="sdp-workspace-nav-item__label">{group.label}</span>
+                <span className="sdp-workspace-group-chevron">
+                  <ChevronDown size={18} aria-hidden="true" focusable="false" />
+                </span>
+              </button>
+            </div>
+          )}
+          {isGroupOpen(group.id) && (
+            <CategoryBranch
+              nodes={group.tree.roots}
+              group={group}
+              activeId={state.activeCategoryId}
+              expandedFolders={expandedFolders}
+              toggleFolder={toggleFolder}
+              chooseCategory={chooseCategory}
+              chooseFolder={chooseFolder}
+              label={group.label || labels.categories}
+              textRecompte={labels.count}
+              textDesplega={labels.expand}
+              textPlega={labels.collapse}
+              registraFila={registraFila}
+            />
+          )}
+        </div>
+      ))}
+    </div>
+  );
+
   return (
     <aside ref={rootRef} className="sdp-workspace-column" aria-label={labels.categories}>
       {settingsDialog}
@@ -1198,51 +1261,19 @@ function CategoryColumn({
         }]}
         endActions={settingsActions}
       />
-      <nav className="sdp-workspace-column__body" aria-label={labels.categories}>
-        {/* IDEA-58 · Les fletxes de l'arbre, delegades (gestionaTeclaArbre). */}
-        <div className="sdp-workspace-groups" onKeyDown={onTeclaArbre}>
-          {grupsVisibles.map(group => (
-            <div
-              key={group.id}
-              className="sdp-workspace-group"
-              data-group={group.id}
-              data-obert={isGroupOpen(group.id) ? 'true' : 'false'}
-            >
-              {group.label && (
-                <div className="sdp-workspace-group-heading">
-                  <button
-                    type="button"
-                    className="sdp-workspace-nav-item"
-                    onClick={() => toggleGroup(group.id)}
-                    aria-expanded={isGroupOpen(group.id)}
-                  >
-                    <span className="sdp-workspace-nav-item__label">{group.label}</span>
-                    <span className="sdp-workspace-group-chevron">
-                      <ChevronDown size={18} aria-hidden="true" focusable="false" />
-                    </span>
-                  </button>
-                </div>
-              )}
-              {isGroupOpen(group.id) && (
-                <CategoryBranch
-                  nodes={group.tree.roots}
-                  group={group}
-                  activeId={state.activeCategoryId}
-                  expandedFolders={expandedFolders}
-                  toggleFolder={toggleFolder}
-                  chooseCategory={chooseCategory}
-                  chooseFolder={chooseFolder}
-                  label={group.label || labels.categories}
-                  textRecompte={labels.count}
-                  textDesplega={labels.expand}
-                  textPlega={labels.collapse}
-                  registraFila={registraFila}
-                />
-              )}
-            </div>
-          ))}
+      {peuNavegacio ? (
+        /* P1-71 · Gauntlet 2 261101 (G2-09) · Amb peu, la zona de desplaçament
+           de la columna és este div: dins, el <nav> només porta l'arbre, i el
+           peu de la secció (accions com Vincular o Desconnectar, amb el seu
+           h2) va darrere, fora del landmark de navegació. Sense peu, el DOM
+           de sempre: el <nav> és la zona de desplaçament. */
+        <div className="sdp-workspace-column__body">
+          <nav aria-label={labels.categories}>{arbre}</nav>
+          <div className="sdp-workspace-column__peu">{peuNavegacio}</div>
         </div>
-      </nav>
+      ) : (
+        <nav className="sdp-workspace-column__body" aria-label={labels.categories}>{arbre}</nav>
+      )}
     </aside>
   );
 }

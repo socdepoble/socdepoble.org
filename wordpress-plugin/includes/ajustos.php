@@ -225,7 +225,8 @@ add_filter( 'plugin_row_meta', 'socdepoble_enxufe_fila_detalls', 10, 3 );
  * El readme.txt instal·lat, llegit del disc i sense xarxa: el nom («=== Nom
  * ===»), les capçaleres d'abans de la primera secció (Contributors, Tested up
  * to…) i les seccions en text. És la font de «Mostra els detalls» per a l'slug
- * del directori mentre WordPress.org no respon per ell. Format mínim de
+ * del directori mentre WordPress.org no respon per ell, i també la del canal
+ * propi (socdepoble_enxufe_seccions_readme, a actualitzador.php). Format mínim de
  * WordPress.org: «== Secció ==», «= Subtítol =», llistes «* » i «1. », `codi` i
  * enllaços https. Com fa WordPress.org, les seccions desconegudes van a la
  * descripció; Upgrade Notice i Screenshots, no.
@@ -294,15 +295,35 @@ function socdepoble_enxufe_llig_readme() {
  * socdepoble_enxufe_linia_detalls(), que l'escapa abans de transformar-lo: cap
  * etiqueta del readme no arriba crua.
  *
+ * Com el Markdown de WordPress.org, una línia sagnada just davall d'un element
+ * de llista és d'eixe element: una vinyeta li fa una subllista i qualsevol
+ * altra línia continua el seu text (o el de la seua última vinyeta). Els
+ * passos numerats separats per línies buides són una sola llista: wp_kses()
+ * de plugin-install.php no deixa passar l'atribut start, i cada <ol> nova
+ * tornaria a començar per 1.
+ *
  * @param string[] $linies Línies de la secció.
  * @return string
  */
 function socdepoble_enxufe_html_detalls( $linies ) {
 	$grups = array();
 	foreach ( $linies as $linia ) {
-		$linia = trim( (string) $linia );
+		$sagnada = 1 === preg_match( '/^\s/', (string) $linia );
+		$linia   = trim( (string) $linia );
 		if ( '' === $linia ) {
-			$grups[] = array( '', array() );
+			$grups[] = array( '', array(), array() );
+			continue;
+		}
+		$ultim = count( $grups ) - 1;
+		if ( $sagnada && $ultim >= 0 && in_array( $grups[ $ultim ][0], array( 'ul', 'ol' ), true ) ) {
+			$element = count( $grups[ $ultim ][1] ) - 1;
+			if ( preg_match( '/^[*-]\s+(.+)$/', $linia, $m ) ) {
+				$grups[ $ultim ][2][ $element ][] = $m[1];
+			} elseif ( empty( $grups[ $ultim ][2][ $element ] ) ) {
+				$grups[ $ultim ][1][ $element ] .= ' ' . $linia;
+			} else {
+				$grups[ $ultim ][2][ $element ][ count( $grups[ $ultim ][2][ $element ] ) - 1 ] .= ' ' . $linia;
+			}
 			continue;
 		}
 		if ( preg_match( '/^=\s*(.+?)\s*=$/', $linia, $m ) ) {
@@ -311,27 +332,42 @@ function socdepoble_enxufe_html_detalls( $linies ) {
 			$tipus = 'ul';
 		} elseif ( preg_match( '/^\d+\.\s+(.+)$/', $linia, $m ) ) {
 			$tipus = 'ol';
+			$previ = $ultim;
+			while ( $previ >= 0 && '' === $grups[ $previ ][0] ) {
+				--$previ;
+			}
+			if ( $previ >= 0 && 'ol' === $grups[ $previ ][0] ) {
+				$grups = array_slice( $grups, 0, $previ + 1 );
+				$ultim = $previ;
+			}
 		} else {
 			$tipus = 'p';
 			$m     = array( $linia, $linia );
 		}
-		$ultim = count( $grups ) - 1;
 		if ( 'h4' !== $tipus && $ultim >= 0 && $tipus === $grups[ $ultim ][0] ) {
 			$grups[ $ultim ][1][] = $m[1];
 		} else {
-			$grups[] = array( $tipus, array( $m[1] ) );
+			$grups[] = array( $tipus, array( $m[1] ), array() );
 		}
 	}
 	$html = '';
-	foreach ( $grups as list( $tipus, $textos ) ) {
+	foreach ( $grups as list( $tipus, $textos, $fills ) ) {
 		if ( 'p' === $tipus ) {
 			$html .= '<p>' . socdepoble_enxufe_linia_detalls( implode( ' ', $textos ) ) . '</p>';
 		} elseif ( 'h4' === $tipus ) {
 			$html .= '<h4>' . socdepoble_enxufe_linia_detalls( $textos[0] ) . '</h4>';
 		} elseif ( '' !== $tipus ) {
 			$html .= '<' . $tipus . '>';
-			foreach ( $textos as $text ) {
-				$html .= '<li>' . socdepoble_enxufe_linia_detalls( $text ) . '</li>';
+			foreach ( $textos as $i => $text ) {
+				$html .= '<li>' . socdepoble_enxufe_linia_detalls( $text );
+				if ( ! empty( $fills[ $i ] ) ) {
+					$html .= '<ul>';
+					foreach ( $fills[ $i ] as $fill ) {
+						$html .= '<li>' . socdepoble_enxufe_linia_detalls( $fill ) . '</li>';
+					}
+					$html .= '</ul>';
+				}
+				$html .= '</li>';
 			}
 			$html .= '</' . $tipus . '>';
 		}
@@ -341,15 +377,38 @@ function socdepoble_enxufe_html_detalls( $linies ) {
 
 /**
  * Una línia de readme en HTML: PRIMER s'escapa i després es transformen
- * `codi` i els enllaços. Només https; un enllaç acaba abans d'una entitat que
- * no siga &amp; (cometes, < i > escapats) i no s'endú la puntuació final.
+ * `codi`, *cursiva*, **negreta** i els enllaços. La cursiva va abans: els
+ * seus límits refusen un asterisc veí o una lletra, i així no es menja la
+ * meitat d'una **negreta**. Cap patró no pot recular de manera quadràtica:
+ * cap repetició no travessa un asterisc. Només https; un enllaç acaba abans
+ * d'una entitat que no siga &amp; (cometes, < i > escapats) i no s'endú la
+ * puntuació final.
+ *
+ * Gauntlet 2 (261101, G2-P02) · El codi és literal, com a WordPress.org: cada
+ * tram `codi` es guarda a part i en el seu lloc queda una marca «<N>», que
+ * cap text escapat no pot contindre (esc_html no deixa cap «<»). Així els
+ * asteriscos d'un codi no obrin cap cursiva ni negreta, cap URL d'un codi no
+ * es fa enllaç i cap enllaç no s'empassa el codi del costat, però una cursiva
+ * pot embolcallar un codi sencer. Les marques tornen al final amb strtr().
  *
  * @param string $text Text pla.
  * @return string
  */
 function socdepoble_enxufe_linia_detalls( $text ) {
-	$html = (string) preg_replace( '/`([^`]+)`/', '<code>$1</code>', esc_html( $text ) );
-	return (string) preg_replace( '#https://(?:[^\s<>&]|&amp;)*[^\s<>&.,;:)]#', '<a href="$0">$0</a>', $html );
+	$codis = array();
+	$html  = (string) preg_replace_callback(
+		'/`([^`]+)`/',
+		static function ( $m ) use ( &$codis ) {
+			$marca           = '<' . count( $codis ) . '>';
+			$codis[ $marca ] = '<code>' . $m[1] . '</code>';
+			return $marca;
+		},
+		esc_html( $text )
+	);
+	$html  = (string) preg_replace( '/(?<![*\w])\*([^*\s](?:[^*]*[^*\s])?)\*(?![*\w])/u', '<em>$1</em>', $html );
+	$html  = (string) preg_replace( '/\*\*([^*]+)\*\*/', '<strong>$1</strong>', $html );
+	$html  = (string) preg_replace( '#https://(?:[^\s<>&]|&amp;)*[^\s<>&.,;:)]#', '<a href="$0">$0</a>', $html );
+	return strtr( $html, $codis );
 }
 
 /**

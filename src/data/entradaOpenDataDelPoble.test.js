@@ -79,6 +79,22 @@ test('sense la capacitat directoriEntitats: paquet verificable i el directori co
   expect(memoria).toContain("- Directori d'entitats i comerços: este servidor de dades no oferix el directori d'entitats.");
   expect(memoria).not.toMatch(/backend|directoriEntitats/);
 });
+/* T3.1 · La descàrrega de la fitxa del poble és de l'esquema 1.1.0, i amb l'agenda pendent no porta cap agenda.ics ni el promet. */
+test('API de slug: esquema 1.1.0; amb l’agenda pendent, cap agenda.ics ni cap menció del calendari', async () => {
+  for (const op of [{ ...opcions(), municipi: { slug: 'sella', nom: 'Sella' } }, opcions()]) {
+    const paquet = await exportaMunicipiOpenData(op.municipi.slug, op);
+    expect(paquet.datapackage.socdepoble).toMatchObject({ schemaVersion: '1.1.0', versio: '1.1.0' });
+    /* Gauntlet 261101 (B1-07) · Cap recompte del calendari d'una agenda que no s'ha llegit, ni cap omissió que en parle. */
+    expect(paquet.datapackage.socdepoble).not.toHaveProperty('calendari');
+    expect(paquet.datapackage.socdepoble.omissions.agenda).toEqual({});
+    expect(paquet.datapackage.resources.map((r) => r.path)).not.toContain('agenda.ics');
+    expect(paquet.fitxers.map((f) => f.cami)).not.toContain('data/agenda.ics');
+    const memoria = preparaDadesObertesMunicipi(await entradaOpenDataDelPoble(op.municipi.slug, op)).fitxers.find((f) => f.nom === 'memoria.md').text;
+    expect(memoria).toContain('(versió 1.1.0)');
+    expect(memoria).not.toMatch(/agenda\.ics|iCalendar/);
+    await expect(verificaPaquetOpenData(paquet.zip, { subtle: webcrypto.subtle })).resolves.toBeTruthy();
+  }
+});
 test('«pendents» invàlid atura l’exportació', () => {
   const base = { municipi: { slug: 'sella', nom: 'Sella' }, ara: '2026-10-31T12:00:00Z' };
   for (const pendents of ['noticies', [null], [{ coleccio: 'mercat', motiu: 'x' }], [{ coleccio: 'agenda', motiu: '' }], [{ coleccio: 'agenda', motiu: 'a' }, { coleccio: 'agenda', motiu: 'b' }]]) {

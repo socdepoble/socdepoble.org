@@ -524,113 +524,20 @@ add_filter( 'update_plugins_socdepoble.org', 'socdepoble_enxufe_update_plugins',
  * plugins_api() només pregunta als filtres o a api.wordpress.org. Només viatja
  * amb el canal propi; al directori, WordPress.org pinta el readme ell mateix.
  *
- * Format mínim de WordPress.org: «== Secció ==», «= Subtítol =», llistes «* »
- * i «1. », `codi` i enllaços https. Com fa WordPress.org, les seccions
- * desconegudes s'afigen a la descripció, i Upgrade Notice i Screenshots no hi
- * van.
+ * Gauntlet 2 (261101, G2-P03) · Un sol lector i un sol analitzador: els
+ * d'ajustos.php (socdepoble_enxufe_llig_readme i socdepoble_enxufe_html_detalls),
+ * que el fitxer principal carrega sempre, sense condició i abans que este. Com
+ * fa WordPress.org, les seccions desconegudes s'afigen a la descripció, i
+ * Upgrade Notice i Screenshots no hi van.
  *
  * @return string[] HTML per clau: description, installation, faq i changelog.
  */
 function socdepoble_enxufe_seccions_readme() {
-	$fitxer = plugin_dir_path( SOCDEPOBLE_ENXUFE_FITXER ) . 'readme.txt';
-	$text   = is_readable( $fitxer ) ? file_get_contents( $fitxer ) : false; // phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents -- fitxer local del mateix plugin.
-	if ( ! is_string( $text ) || '' === $text ) {
+	$readme = socdepoble_enxufe_llig_readme();
+	if ( null === $readme ) {
 		return array();
 	}
-	$alies    = array(
-		'description'                => 'description',
-		'installation'               => 'installation',
-		'frequently asked questions' => 'faq',
-		'faq'                        => 'faq',
-		'changelog'                  => 'changelog',
-	);
-	$seccions = array();
-	$clau     = '';
-	foreach ( preg_split( '/\r\n|\r|\n/', $text ) as $linia ) {
-		// «=== Nom ===» no casa: després de «==» ve un altre «=».
-		if ( preg_match( '/^==\s*([^=].*?)\s*==\s*$/', $linia, $m ) ) {
-			$titol = strtolower( $m[1] );
-			if ( isset( $alies[ $titol ] ) ) {
-				$clau = $alies[ $titol ];
-			} elseif ( in_array( $titol, array( 'upgrade notice', 'screenshots' ), true ) ) {
-				$clau = '';
-			} else {
-				$clau                = 'description';
-				$seccions[ $clau ][] = '';
-				$seccions[ $clau ][] = '= ' . $m[1] . ' =';
-				$seccions[ $clau ][] = '';
-			}
-			continue;
-		}
-		if ( '' !== $clau ) {
-			$seccions[ $clau ][] = $linia;
-		}
-	}
-	return array_filter( array_map( 'socdepoble_enxufe_html_readme', $seccions ) );
-}
-
-/**
- * HTML d'una secció del readme. Les línies seguides del mateix tipus fan un
- * paràgraf o una llista; una línia buida els tanca. Cada text passa per
- * socdepoble_enxufe_linia_readme(), que l'escapa abans de transformar-lo: cap
- * etiqueta del readme no arriba crua.
- *
- * @param string[] $linies Línies de la secció.
- * @return string
- */
-function socdepoble_enxufe_html_readme( $linies ) {
-	$grups = array();
-	foreach ( $linies as $linia ) {
-		$linia = trim( (string) $linia );
-		if ( '' === $linia ) {
-			$grups[] = array( '', array() );
-			continue;
-		}
-		if ( preg_match( '/^=\s*(.+?)\s*=$/', $linia, $m ) ) {
-			$tipus = 'h4';
-		} elseif ( preg_match( '/^[*-]\s+(.+)$/', $linia, $m ) ) {
-			$tipus = 'ul';
-		} elseif ( preg_match( '/^\d+\.\s+(.+)$/', $linia, $m ) ) {
-			$tipus = 'ol';
-		} else {
-			$tipus = 'p';
-			$m     = array( $linia, $linia );
-		}
-		$ultim = count( $grups ) - 1;
-		if ( 'h4' !== $tipus && $ultim >= 0 && $tipus === $grups[ $ultim ][0] ) {
-			$grups[ $ultim ][1][] = $m[1];
-		} else {
-			$grups[] = array( $tipus, array( $m[1] ) );
-		}
-	}
-	$html = '';
-	foreach ( $grups as list( $tipus, $textos ) ) {
-		if ( 'p' === $tipus ) {
-			$html .= '<p>' . socdepoble_enxufe_linia_readme( implode( ' ', $textos ) ) . '</p>';
-		} elseif ( 'h4' === $tipus ) {
-			$html .= '<h4>' . socdepoble_enxufe_linia_readme( $textos[0] ) . '</h4>';
-		} elseif ( '' !== $tipus ) {
-			$html .= '<' . $tipus . '>';
-			foreach ( $textos as $text ) {
-				$html .= '<li>' . socdepoble_enxufe_linia_readme( $text ) . '</li>';
-			}
-			$html .= '</' . $tipus . '>';
-		}
-	}
-	return $html;
-}
-
-/**
- * Una línia de readme en HTML: PRIMER s'escapa i després es transformen
- * `codi` i els enllaços. Només https; un enllaç acaba abans d'una entitat que
- * no siga &amp; (cometes, < i > escapats) i no s'endú la puntuació final.
- *
- * @param string $text Text pla.
- * @return string
- */
-function socdepoble_enxufe_linia_readme( $text ) {
-	$html = (string) preg_replace( '/`([^`]+)`/', '<code>$1</code>', esc_html( $text ) );
-	return (string) preg_replace( '#https://(?:[^\s<>&]|&amp;)*[^\s<>&.,;:)]#', '<a href="$0">$0</a>', $html );
+	return array_filter( array_map( 'socdepoble_enxufe_html_detalls', $readme['seccions'] ) );
 }
 
 /**

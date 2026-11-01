@@ -12,7 +12,12 @@ const m = vi.hoisted(() => ({
   mur: { feedPosts: [], marketItems: [], events: [] },
   core: { towns: [] }
 }));
-vi.mock('../../app/contexts/IdentitatContext.jsx', () => ({ useIdentitat: () => ({ actorId: 'A', actorKey: 'A' }) }));
+/* P1-71 (261101) · El proveïdor llig la identitat amb useIdentitatOpcional
+   (MultimediaContext.senseIdentitat.test.jsx en prova la reserva). */
+vi.mock('../../app/contexts/IdentitatContext.jsx', () => ({
+  useIdentitat: () => ({ actorId: 'A', actorKey: 'A' }),
+  useIdentitatOpcional: () => ({ actorId: 'A', actorKey: 'A' })
+}));
 vi.mock('../../app/contexts/SessionContext.jsx', () => ({ useSession: () => ({ currentUser: { id: 'u' } }) }));
 vi.mock('../../app/contexts/useScopedResource.js', () => ({ useScopedResource: () => m.recurs }));
 vi.mock('../../app/contexts/useRecarregaExterna.jsx', () => ({ useRecarregaExterna: () => {} }));

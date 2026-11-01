@@ -380,9 +380,12 @@ test('R6a · /notes amb el Mur carregant: CREAR NOTA obri la nota preparada i s�
   expect(nota()).toBe(preparada);
 });
 
-test('R6b · /notes amb el Mur en error: triar Multimèdia al rail obri la foto', () => {
+/* IDEA-59 / P1-72 (ordre del Mestre, 261101, punt 0) · L'entrada nua de
+   /notes ja no és el Mur (és «Tot» amb la Card tutorial): el Mur en error es
+   prova des del seu enllaç. */
+test('R6b · /notes?carpeta=f-mur amb el Mur en error: triar Multimèdia al rail obri la foto', () => {
   Object.assign(dades, { murStatus: 'error', media: [FOTO] });
-  munta('/notes');
+  munta('/notes?carpeta=f-mur');
   expect(screen.getByRole('alert').textContent).toContain('No s’han pogut carregar les dades.');
   fireEvent.click(within(rail()).getByRole('button', { name: 'Multimèdia' }));
   expect(nota()).toBe(FOTO_ID);

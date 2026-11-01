@@ -7,7 +7,7 @@ import React from 'react';
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { afterEach, expect, test, vi } from 'vitest';
-import { cleanup, render, within } from '@testing-library/react';
+import { cleanup, fireEvent, render, within } from '@testing-library/react';
 import UniversalToolbar from './UniversalToolbar.jsx';
 
 afterEach(() => { cleanup(); vi.unstubAllGlobals(); });
@@ -17,20 +17,42 @@ const amplada = (px) => vi.stubGlobal('ResizeObserver', class {
   observe() { this.callback([{ contentRect: { width: px } }]); }
   disconnect() {}
 });
-const FORMATS = ['Alternar subtítol (H3)', 'Alternar títol (H2)', 'Negreta', 'Cursiva', 'Ratllat', 'Llista', 'Llista numerada'];
+/* IDEA-59 / P1-72 (ordre del Mestre, 261101, punts 2 i 4) · Els botons solts
+   «Alternar subtítol (H3)» i «Alternar títol (H2)» ja no hi són: el
+   desplegable d'encapçalaments (un botó de menú que diu el nivell) els
+   substituïx. La fila principal porta l'encapçalament, la negreta, la
+   cursiva i les dues llistes; el ratllat, la citació i el divisor van a la
+   segona fila del botó «⋯» («Més eines»). En compacte, «⋯» ocupa el lloc
+   de l'«Aa» (el mateix nom, «Format del text») i obri totes les eines. */
+const PRINCIPALS = ['Negreta', 'Cursiva', 'Llista', 'Llista numerada'];
+const SECUNDARIES = ['Ratllat', 'Citació', 'Divisor'];
 const ACCIONS = {
-  toggleSubheading: () => {}, toggleHeading: () => {}, toggleBold: () => {}, toggleItalic: () => {},
-  toggleStrike: () => {}, toggleList: () => {}, toggleOrderedList: () => {}
+  toggleSubheading: () => {}, toggleH4: () => {}, toggleH5: () => {}, toggleH6: () => {}, toggleHeading: () => {},
+  toggleBold: () => {}, toggleItalic: () => {}, toggleStrike: () => {}, toggleList: () => {}, toggleOrderedList: () => {},
+  toggleCitacio: () => {}, insertDivisor: () => {}
 };
+const midaDelGlif = (boto) => [boto.querySelector('svg').getAttribute('width'), boto.querySelector('svg').getAttribute('height')];
 
-test('§6 · cada glif de la barra fa 24px i viu en un botó .sdp-bloc-icon; els set formats hi són', () => {
+test('§6 · cada glif de la barra fa 24px i viu en un botó .sdp-bloc-icon; les eines de format hi són, a la fila principal o darrere de «⋯»', () => {
   amplada(900);
   const { container } = render(<UniversalToolbar formatActions={ACCIONS} onPublish={() => {}} onDelete={() => {}} />);
   const barra = within(container).getByRole('group', { name: 'Eines de l\'editor' });
-  for (const nom of FORMATS) {
+  const encapcalament = within(barra).getByRole('button', { name: 'Encapçalament (H): Paràgraf' });
+  expect(encapcalament.classList.contains('sdp-bloc-icon')).toBe(true);
+  expect(midaDelGlif(encapcalament)).toEqual(['24', '24']);
+  for (const nom of PRINCIPALS) {
     const boto = within(barra).getByRole('button', { name: nom });
     expect(boto.className).toBe('sdp-bloc-icon');
-    expect([boto.querySelector('svg').getAttribute('width'), boto.querySelector('svg').getAttribute('height')], nom).toEqual(['24', '24']);
+    expect(midaDelGlif(boto), nom).toEqual(['24', '24']);
+  }
+  for (const nom of SECUNDARIES) expect(within(barra).queryByRole('button', { name: nom }), nom).toBeNull();
+  const mes = within(barra).getByRole('button', { name: 'Més eines' });
+  expect(mes.classList.contains('sdp-bloc-icon')).toBe(true);
+  fireEvent.click(mes);
+  for (const nom of SECUNDARIES) {
+    const boto = within(barra).getByRole('button', { name: nom });
+    expect(boto.className).toBe('sdp-bloc-icon');
+    expect(midaDelGlif(boto), nom).toEqual(['24', '24']);
   }
   expect(new Set([...barra.querySelectorAll('svg')].map((svg) => svg.getAttribute('width')))).toEqual(new Set(['24']));
   expect(within(barra).getByRole('button', { name: 'Tornar a la llista' }).querySelector('svg').getAttribute('width')).toBe('24');
@@ -38,13 +60,14 @@ test('§6 · cada glif de la barra fa 24px i viu en un botó .sdp-bloc-icon; els
   expect(within(barra).getByRole('button', { name: 'Publicar' })).toBeTruthy();
 });
 
-test('§6 · compacta, el «Aa» també és una cel·la .sdp-bloc-icon i els formats continuen dins', () => {
+test('§6 · compacta, «⋯» («Format del text») també és una cel·la .sdp-bloc-icon i totes les eines de format continuen dins', () => {
   amplada(320);
   const { container } = render(<UniversalToolbar formatActions={ACCIONS} />);
-  const aa = within(container).getByRole('button', { name: 'Format del text' });
-  expect(aa.className).toBe('sdp-bloc-icon');
-  const opcions = [...container.querySelectorAll('[id]')].find((el) => el.id === aa.getAttribute('aria-controls'));
-  expect(opcions.querySelectorAll('button.sdp-bloc-icon')).toHaveLength(FORMATS.length);
+  const mes = within(container).getByRole('button', { name: 'Format del text' });
+  expect(mes.classList.contains('sdp-bloc-icon')).toBe(true);
+  const opcions = [...container.querySelectorAll('[id]')].find((el) => el.id === mes.getAttribute('aria-controls'));
+  // L'encapçalament i les set eines de format (cap botó solt d'H3 ni d'H2).
+  expect(opcions.querySelectorAll('button.sdp-bloc-icon')).toHaveLength(1 + PRINCIPALS.length + SECUNDARIES.length);
 });
 
 /* Guarda de regressió: la cel·la i els tokens ja eren així abans de l'ordre

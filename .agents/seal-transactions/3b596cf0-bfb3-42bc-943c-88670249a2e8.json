@@ -1,0 +1,22 @@
+{
+  "id": "3b596cf0-bfb3-42bc-943c-88670249a2e8",
+  "session": "864ee57d-9ca0-4e38-ab13-fcb2fa34ba51",
+  "operationId": "torn_e16bf731-relleu_de_claude_a_estat_i_ledger_de_la_marato_nocturna_fediversity-864ee57d",
+  "claim": "864ee57d-9ca0-4e38-ab13-fcb2fa34ba51:governance-write",
+  "planHash": "fcc2d3afb1a934d3dcddde8e888966da5212d417dc17262f7ec13ff9a9b84d96",
+  "beforeSeal": "74f13e9215ec56b32a9291060331bae5407c24a515bd656d5d5b4bfaa48a2813",
+  "files": [
+    {
+      "path": ".agents/ESTAT.md",
+      "before": "2eef2e76a54a5250bd376a4c44c9d6436bcc6e9a7f930321118a651e116bc741",
+      "after": "30cb5725c99363325399d075a9bb0fceafff89161cd4ac394badc83798b8d72b"
+    },
+    {
+      "path": ".agents/LEDGER.md",
+      "before": "dc82053f7acfab07f4657d16d6672dfe73d9941cd7c1d9c75b0ebc65219395f5",
+      "after": "c7159cc6382860cb049ff32e677a066f57b4fd79efb0bf32833f81355eb86694"
+    }
+  ],
+  "state": "accepted",
+  "afterSeal": "d863c155441b09590117b6eb2a6e30dacfebf30e6a62f0b502590644b8434d0f"
+}

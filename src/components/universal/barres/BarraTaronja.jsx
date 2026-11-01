@@ -54,15 +54,21 @@
  * PaginaApp i UniversalCard): useResolvedAsset només reconeix 'sdp-media://'
  * escrit així, i un 'SDP-MEDIA://…' tornava '/SDP-MEDIA://…' del resolutor de
  * camins i es pintava.
+ *
+ * T7 · P1-22 (261101) · Sense `etiqueta`, el nom de la regió és «Autoria i
+ * data» en la llengua de la interfície (TEXTOS_BARRA.autoria); fora de l'app,
+ * o en valencià, el de sempre. Una `etiqueta` explícita mana, com abans.
  */
 import { UserRound } from 'lucide-react';
 import { resolveAsset } from '../../../config/assetResolver';
 import { useResolvedAsset } from '../../../hooks/useResolvedAsset.js';
 import { esMitjaOpac } from '../../../utils/mitjaOpac.js';
 import { DateTimeControl } from '../../PedraSeca/atoms/controls.jsx';
+import { tradueix, useTraductorOpcional } from '../../PedraSeca/hooks/useTraductorOpcional.js';
 import { isSafeAsset, rutaDAutorSegura } from '../UniversalUtils';
 import { EmoticonaBarra } from '../EmoticonaBarra.jsx';
 import { emoticonaDeBarra } from '../../../utils/emoji.js';
+import { TEXTOS_BARRA } from './textosBarres.js';
 
 /* Ordre del Mestre, 14-10-2026 (prompt 261014_2015, punt 4) · El que es
    demana al port: només una referència opaca, sense espais i amb l'esquema
@@ -75,7 +81,7 @@ export function BarraTaronja({
   emoticona = '', onObriEmoticona = null,
   barActions = null,
   time, date, dateTime, onDateTime, etiquetaData,
-  etiqueta = 'Autoria i data',
+  etiqueta,
   /* Fase D (261020, tasca 2) · El ⋮ «Més opcions» (Moderacio.jsx), dins de
      .bar-actions i darrere del que ja hi havia. Null, el DOM de sempre. */
   accioModeracio = null,
@@ -96,9 +102,12 @@ export function BarraTaronja({
      edició, la graella de T51 de sempre. */
   const { mostra } = emoticonaDeBarra({ mode: typeof onObriEmoticona === 'function' ? 'edicio' : 'lectura', icon: emoticona });
   const centreBuit = mostra !== 'boto' && mostra !== 'glif';
+  /* T7 · P1-22 · El nom de la regió: l'explícit, o el de la interfície. */
+  const t = useTraductorOpcional();
+  const nomRegio = etiqueta === undefined ? tradueix(t, TEXTOS_BARRA.autoria) : etiqueta;
 
   return (
-    <section className="bar-orange" aria-label={etiqueta} data-centre={centreBuit ? 'buit' : undefined}>
+    <section className="bar-orange" aria-label={nomRegio} data-centre={centreBuit ? 'buit' : undefined}>
       <Autor className={href ? 'sp-card-author sp-card-author-link' : 'sp-card-author'} {...propsAutor}>
         {avatar ? (
           <img

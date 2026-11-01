@@ -292,9 +292,17 @@ test('capçaleres coherents: plugin, readme, constant de versió, block.json i f
   const descripcioCurta = readme.split(/\r?\n\r?\n/)[1];
   assert.ok(descripcioCurta && !descripcioCurta.startsWith('==') && descripcioCurta.length <= 150, 'descripció curta de 150 caràcters com a màxim');
   /* Sostre local, no de WordPress.org: el seu analitzador limita paraules per
-     secció (2500; FAQ i Changelog, 5000), no bytes. Ací només evita un readme
-     desbocat; la Description extensa i el bloc DeepL en fan uns 13 KB. */
-  assert.ok(Buffer.byteLength(readme) < 24576, 'readme de menys de 24 KB');
+     secció (2500; FAQ i Changelog, 5000), no bytes, i això ho mesura la prova
+     «límit de paraules» de més avall. Ací només evita un readme desbocat.
+     T5.3 (261101): el text valencià publicat a WordPress.org (1.1.10) i les
+     seccions angleses de compliment que el codi confirma en fan uns 27 KB;
+     el sostre passa de 24 a 28 KB.
+     Gauntlet 261101 · X-E-readme (E-11): la PMF recupera els atributs, els filtres i les
+     dos còpies que el codi manté (uns 29 KB); el sostre passa de 28 a 32 KB, i el
+     límit real continua sent el de paraules. */
+  assert.ok(Buffer.byteLength(readme) < 32768, 'readme de menys de 32 KB');
+  // E-10: WordPress.org pinta «Donate link» com un botó de donació, i cap pàgina de socdepoble.org no permet donar.
+  assert.equal(capcalera(readme, 'Donate link'), null, 'sense Donate link fins que hi haja una pàgina de donacions real');
   const etiquetes = capcalera(readme, 'Tags').split(',').map((e) => e.trim()).filter(Boolean);
   assert.ok(etiquetes.length >= 1 && etiquetes.length <= 5, 'WordPress.org només usa 5 etiquetes');
   const avis = readme.split(/^== Upgrade Notice ==$/m)[1] ?? '';
@@ -470,13 +478,13 @@ const TAULA_WP = [
 
 // El que crida el plugin i és de PHP, no de WordPress (comprovat amb get_defined_functions de PHP 8.4).
 const PHP_INTERN = new Set([
-  'array_diff', 'array_filter', 'array_key_exists', 'array_keys', 'array_map', 'array_merge', 'array_unique', 'array_unshift',
+  'array_diff', 'array_filter', 'array_key_exists', 'array_keys', 'array_map', 'array_merge', 'array_slice', 'array_unique', 'array_unshift',
   'array_values', 'basename', 'class_exists', 'clearstatcache', 'constant', 'count', 'define', 'defined', 'dirname', 'explode',
   'file_exists', 'file_get_contents', 'filemtime', 'filesize', 'filter_var', 'function_exists', 'get_class', 'getenv', 'gmdate',
   'hash_equals', 'hash_file', 'hash_hmac', 'hex2bin', 'html_entity_decode', 'implode', 'in_array', 'is_array', 'is_int',
   'is_link', 'is_object', 'is_readable', 'is_scalar', 'is_string', 'json_decode', 'ksort', 'ltrim', 'max', 'ob_get_clean',
-  'ob_start', 'preg_match', 'preg_match_all', 'preg_replace', 'preg_split', 'printf', 'range', 'rawurlencode',
-  'sodium_crypto_sign_verify_detached', 'sprintf', 'str_replace', 'strlen', 'strpos', 'strtolower', 'substr', 'time', 'trim',
+  'ob_start', 'preg_match', 'preg_match_all', 'preg_replace', 'preg_replace_callback', 'preg_split', 'printf', 'range', 'rawurlencode',
+  'sodium_crypto_sign_verify_detached', 'sprintf', 'str_replace', 'strlen', 'strpos', 'strtolower', 'strtr', 'substr', 'time', 'trim',
   'urldecode', 'version_compare'
 ]);
 const CLASSES_PHP = new Set(['ZipArchive', 'stdClass']);
@@ -729,6 +737,214 @@ test('readme: el paràgraf del canal explica el commutador en una sola línia, i
   assert.deepEqual(patronsActualitzadorEn([{ nom: 'readme.txt', dades: Buffer.from(variantDirectoriReadme(readme)) }]), [], 'fora del paràgraf del canal, cap línia del readme pot casar un patró d\'actualitzador');
 });
 
+/* T5.3 (261101) · El retall de WordPress.org, tal com el fa class-parser.php del directori
+   (meta.trac, plugin-directory/readme): les seccions desconegudes («External services»,
+   «Translation service»…) van a other_notes amb el títol en <h3> i s'afigen a la descripció;
+   després cada secció es retalla quan preg_split('/(\s+)/u') en dona 2 × límit peces o més
+   (2500 paraules; FAQ i Changelog, 5000), i l'Upgrade Notice ja n'ha eixit. Un retall
+   amagaria al directori el final de la divulgació de serveis i de la tipografia. */
+const LIMITS_WPORG = Object.freeze({ faq: 5000, changelog: 5000 });
+const ESPERADES_WPORG = ['description', 'installation', 'faq', 'screenshots', 'changelog', 'upgrade_notice', 'other_notes'];
+const ALIES_WPORG = Object.freeze({ frequently_asked_questions: 'faq', change_log: 'changelog', screenshot: 'screenshots' });
+
+function paraulesWordPressOrg(text) {
+  const linies = text.split(/\r\n|\r|\n/);
+  const seccions = Object.fromEntries(ESPERADES_WPORG.map((nom) => [nom, '']));
+  let actual = '';
+  let nom = '';
+  for (const linia of linies.slice(linies.findIndex((l) => /^==\s*[^=\s]/.test(l.trim())))) {
+    const net = linia.trim();
+    if (!net) { actual += '\n'; continue; }
+    if (net.startsWith('==')) {
+      if (nom) seccions[nom] += actual.trim();
+      actual = '';
+      const titol = net.replace(/^[#=\s]+|[#=\s]+$/g, '');
+      nom = titol.toLowerCase().replace(/ /g, '_');
+      nom = ALIES_WPORG[nom] ?? nom;
+      if (!ESPERADES_WPORG.includes(nom)) { actual += `<h3>${titol}</h3>`; nom = 'other_notes'; }
+      continue;
+    }
+    actual += `${linia}\n`;
+  }
+  if (nom) seccions[nom] += actual.trim();
+  if (seccions.other_notes) seccions.description += `\n${seccions.other_notes}`;
+  delete seccions.other_notes;
+  delete seccions.upgrade_notice;
+  return Object.fromEntries(Object.entries(seccions).filter(([, cos]) => cos).map(([seccio, cos]) => {
+    const maxim = LIMITS_WPORG[seccio] ?? 2500;
+    const peces = cos.split(/(\s+)/u).length;
+    return [seccio, { paraules: Math.ceil(peces / 2), maxim, retallada: peces >= maxim * 2 }];
+  }));
+}
+
+test('readme: cap secció de la variant del directori passa del límit de paraules de WordPress.org', () => {
+  // L'emulació: 2500 paraules passen, 2501 es retallen, i les seccions desconegudes sumen a la descripció.
+  const sintetic = (n, extra = '') => `=== X ===\nStable tag: 1.0.0\n\nCurta.\n\n== Description ==\n${Array(n).fill('mot').join(' ')}\n${extra}`;
+  assert.equal(paraulesWordPressOrg(sintetic(2500)).description.retallada, false);
+  assert.equal(paraulesWordPressOrg(sintetic(2501)).description.retallada, true);
+  assert.equal(paraulesWordPressOrg(sintetic(2490, '\n== Altra ==\nu dos tres quatre cinc sis set huit nou deu once\n')).description.retallada, true, 'la secció desconeguda compta dins de la descripció');
+  assert.equal(paraulesWordPressOrg(sintetic(10, '\n== Changelog ==\n= 1 =\n* a\n')).description.paraules, 10, 'la capçalera i la descripció curta no compten');
+
+  const readme = llig('readme.txt');
+  const mitjans = { origen: 'https://socdepoble.org', externs: ['assets/uploads/', 'assets/towns/'] };
+  for (const [que, text] of [['sense mitjans', variantDirectoriReadme(readme)], ['amb el servidor de mitjans', variantDirectoriReadme(readme, mitjans)]]) {
+    for (const [seccio, { paraules, maxim, retallada }] of Object.entries(paraulesWordPressOrg(text))) {
+      assert.equal(retallada, false, `${que}: ${seccio} fa ${paraules} paraules i WordPress.org en mostra ${maxim}`);
+    }
+  }
+});
+
+test('readme 1.1.10: el text valencià publicat a WordPress.org, sense cap afirmació que el codi desmentisca', () => {
+  const readme = llig('readme.txt');
+  const parts = readme.split(/^== (.+) ==$/m);
+  const seccio = (nom) => parts[parts.indexOf(nom) + 1] ?? '';
+  const php = PHP.map((rel) => llig(rel)).join('\n');
+
+  // L'estructura i els textos publicats (trunk i tags/1.1.10 de plugins.svn.wordpress.org).
+  assert.deepEqual(parts.filter((_, i) => i % 2), ['Description', 'External services', 'Link previews per route', 'Translation service', 'Privacy', 'Source code and build', 'Installation', 'Frequently Asked Questions', 'Screenshots', 'Changelog', 'Upgrade Notice']);
+  assert.equal(readme.split(/\r?\n\r?\n/)[1], 'Portal comunitari rural 100% en Valencià/Català + 5 idiomes (CA, ES, EN, EU, GL) i Traductor Apertium integrat: Xat, Mur, Mercat i Agenda en 3 passos.');
+  assert.match(seccio('Description'), /^\n+= 🌍 100% en Valencià \/ Català Natiu \+ 5 Idiomes \+ Traductor Automàtic Integrat =\n/);
+  // Deu captures publicades (assets/screenshot-1.png … screenshot-10.png), una línia per captura i en ordre.
+  assert.deepEqual([...seccio('Screenshots').matchAll(/^(\d+)\. /gm)].map((m) => Number(m[1])), [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
+  assert.match(seccio('Upgrade Notice'), /galeria de 10 captures/);
+
+  // Apertium només tradueix als destins de socdepoble_enxufe_traduccio_apertium_motors(); el basc i l'alemany necessiten SDP_TRADUCCIO_URL.
+  const motors = [...cosDe('includes/traduccio.php', 'socdepoble_enxufe_traduccio_apertium_motors').matchAll(/'([A-Z-]+)' => array\( 'cat\|/g)].map((m) => m[1]);
+  const codis = { Castellà: 'ES', Anglés: 'EN-GB', Francés: 'FR', Gallec: 'GL', Basc: 'EU', Alemany: 'DE' };
+  const llista = readme.match(/^\* \*\*Traductor Sobirà[^\n]*?\(\*\*([^*]+)\*\*\) utilitzant programari lliure \(Apertium/m)?.[1];
+  assert.ok(llista, 'la vinyeta del traductor nomena els idiomes d\'Apertium');
+  for (const idioma of llista.split(/, | i /)) assert.ok(motors.includes(codis[idioma]), `${idioma}: Apertium no té eixe parell`);
+  // Els codis d'idioma de l'aplicació són els del selector, i cap locale de WordPress sense la seua traducció a languages/.
+  for (const [, codi] of readme.matchAll(/`([a-z]{2})`/g)) assert.ok(SUPPORTED_LANGUAGES.some((l) => l.code === codi), codi);
+  for (const [, locale] of readme.matchAll(/`([a-z]{2}_[A-Z]{2})`/g)) assert.ok(fs.existsSync(path.join(PLUGIN, `languages/socdepoble-${locale}.l10n.php`)), `${locale} sense traducció`);
+
+  /* Gauntlet 261101 · X-E-readme (E-08) · E2EE: apagat per defecte (E2EE_ACTIU_PER_DEFECTE) i,
+     encara que s'encenga, només als orígens de ORIGENS_PRODUCCIO (web, Android i iOS), i cap
+     WordPress no ho és. L'enxufe no és cap iframe: <soc-de-poble> es pinta dins de la pàgina, i
+     enMarc (window.top !== window.self) no hi té res a veure. Si els dos motius cauen alhora, la
+     prova falla en lloc de deixar de comprovar: cal decidir què pot dir el readme. */
+  const xifrat = fs.readFileSync(path.join(ARREL, 'src/config/xifratXat.js'), 'utf8');
+  const e2eeApagat = /^export const E2EE_ACTIU_PER_DEFECTE = false;$/m.test(xifrat);
+  const origensE2ee = xifrat.match(/const ORIGENS_PRODUCCIO = new Set\(\[([^\]]*)\]\)/)?.[1].match(/ORIGEN_CONFIANCA\.\w+/g) ?? [];
+  const nomesAppsPropies = origensE2ee.length > 0 && origensE2ee.every((o) => ['ORIGEN_CONFIANCA.web', 'ORIGEN_CONFIANCA.android', 'ORIGEN_CONFIANCA.ios'].includes(o));
+  assert.ok(e2eeApagat || nomesAppsPropies, 'l\'E2EE ja pot funcionar dins d\'un WordPress: revisa què en diu el readme i esta guarda');
+  assert.doesNotMatch(readme, /xifratge d'extrem a extrem|end-to-end|WebCrypto/i);
+  // E-09 · iCalendar: el readme no en parla mentre l'exportador de dades obertes no escriga agenda.ics.
+  const exportador = fs.readFileSync(path.join(ARREL, 'src/data/exportaMunicipiOpenData.js'), 'utf8');
+  if (!/agenda\.ics/.test(exportador)) assert.doesNotMatch(readme, /iCal|\.ics\b/, 'cap exportació .ics al paquet de dades obertes');
+  /* E-05 · El paquet de dades obertes és JSON-LD, Data Package i BagIt, sense cap CSV, i
+     el Mercat no hi entra (hi ha persones venedores). La federació la servix socdepoble.org:
+     instal·lar el connector no fa del WordPress cap node del Fedivers. */
+  if (!/csv/i.test(exportador)) assert.doesNotMatch(readme, /\bCSV\b/, 'cap exportació CSV al paquet de dades obertes');
+  if (/El Mercat no entra/.test(exportador)) assert.doesNotMatch(readme, /mercat[^\n]*\b(?:JSON|CSV)\b/i, 'el paquet de dades obertes no exporta el Mercat');
+  assert.doesNotMatch(readme, /passarel·la/i, 'el connector no porta cap passarel·la del Fedivers');
+  assert.match(seccio('Description'), /installing this plugin does not make the WordPress site a Fediverse node\./);
+  assert.doesNotMatch(php, /well-known|webfinger|nodeinfo/i, 'cap PHP del connector servix la federació');
+  // E-02 · WordPress.org (class-parser.php, code_trick) convertix en bloc pla una línia que comença per `: perd el <code> i les cometes es tornen tipogràfiques.
+  assert.doesNotMatch(readme, /^[ \t]*`/m, 'cap línia del readme comença per un acent greu');
+  // E-12 · Text visible en valencià AVL: este/esta, traduïx, patixen, convertix, assumix.
+  assert.doesNotMatch(readme, /\baquest(?:a|s|es)?\b|\btradueix\b|\bpateixen\b|\bconverteix\b|\bassumeix\b/i);
+  // Previsualitzacions per ruta: mentre el paquet no porte la taula, la descripció no les promet (WP-06).
+  if (/not available yet/.test(seccio('Link previews per route'))) assert.doesNotMatch(seccio('Description'), /Open Graph|previsualitzacions/);
+  // «Mostra els detalls» del directori (ajustos.php) no servix la secció Screenshots.
+  if (cosDe('includes/ajustos.php', 'socdepoble_enxufe_llig_readme').includes("'screenshots'")) assert.doesNotMatch(readme, /Mostra els detalls[^\n]*captures/);
+
+  // Cada identificador snake_case o constant SDP_TRADUCCIO_* del readme existix al PHP del connector.
+  for (const [, id] of readme.matchAll(/`([a-z][a-z0-9]*(?:_[a-z0-9]+)+)\*?`/g)) assert.ok(php.includes(id), `${id} no existix al plugin`);
+  for (const [id] of readme.matchAll(/\bSDP_TRADUCCIO_[A-Z_]+\b/g)) assert.ok(php.includes(id), `${id} no existix al plugin`);
+  /* Gauntlet 261101 · X-E-readme (E-11) · La documentació per a desenvolupadors que el codi manté:
+     cada atribut del codi curt i cada filtre socdepoble_enxufe_* del PHP té el seu nom al readme,
+     i la PMF de desinstal·lació no promet una neteja que uninstall.php no fa amb dos còpies. */
+  const atributsCodiCurt = [...cosDe('includes/marcatge.php', 'socdepoble_enxufe_shortcode').matchAll(/'([a-z_]+)'\s*=>\s*''/g)].map((m) => m[1]);
+  assert.deepEqual(atributsCodiCurt, ['nom_poble', 'poble', 'ruta_inicial']);
+  for (const atribut of atributsCodiCurt) assert.ok(seccio('Frequently Asked Questions').includes(`\`${atribut}\``), `atribut ${atribut} a la PMF`);
+  const filtres = [...new Set([...php.matchAll(/apply_filters\(\s*'(socdepoble_enxufe_[a-z_]+)'/g)].map((m) => m[1]))];
+  assert.ok(filtres.length >= 5, filtres.join(', '));
+  for (const filtre of filtres) assert.ok(readme.includes(`\`${filtre}\``), `filtre ${filtre} al readme`);
+  if (/socdepoble_enxufe_altres_copies_actives\( WP_UNINSTALL_PLUGIN \)/.test(llig('uninstall.php'))) {
+    const desinstal = seccio('Frequently Asked Questions').split('= Què passa si desinstal·le el connector? =')[1]?.split(/^= /m)[0] ?? '';
+    assert.match(desinstal, /Si una altra còpia del connector continua activa, la desinstal·lació no esborra res/);
+    assert.doesNotMatch(readme, /sense deixar rastre/);
+  }
+  // Cada «npm run» és un script de package.json, i cada versió nomenada és la del plugin.
+  const scripts = JSON.parse(fs.readFileSync(path.join(ARREL, 'package.json'), 'utf8')).scripts;
+  for (const [, script] of readme.matchAll(/npm run ([\w:.-]*[\w])/g)) assert.ok(scripts[script], `npm run ${script} no existix`);
+  for (const [, versio] of readme.matchAll(/\bv(\d+\.\d+\.\d+)\b/g)) assert.equal(versio, capcalera(llig('socdepoble-enxufe.php'), 'Version'));
+  /* El codi font és este repositori: socdepoble/socdepoble no s'actualitza des del 19-07-2026 i no porta l'adaptador.
+     Gauntlet 261101 · X-E-readme (E-07): la branca per defecte (main) no porta wordpress-plugin/ ni
+     vite.standalone.config.js; el readme enllaça la branca que sí que els porta. */
+  const enllacosGitHub = [...readme.matchAll(/https:\/\/github\.com\/[^\s`)]+/g)].map(([url]) => url.replace(/[.:]$/, ''));
+  assert.ok(enllacosGitHub.length > 0, 'el readme enllaça el codi llegible');
+  for (const url of enllacosGitHub) assert.match(url, /^https:\/\/github\.com\/socdepoble\/socdepoble\.org(\/tree\/[\w.-]+)?$/);
+  // Cada pàgina de socdepoble.org és una secció de l'aplicació; cada fitxer, el que nomena el PHP.
+  const seccionsApp = fs.readFileSync(path.join(ARREL, 'src/config/sections.js'), 'utf8');
+  for (const [url, cami] of readme.matchAll(/https:\/\/socdepoble\.org\/([^\s`)]*[^\s`).,;:])/g)) {
+    if (/\.\w+$/.test(cami)) assert.ok(php.includes(url), `${url} no el nomena el plugin`);
+    else assert.ok(seccionsApp.includes(`path: '/${cami.split('/')[0]}'`), `${url} no és cap secció de l'aplicació`);
+  }
+  // Les rutes de l'English Summary són seccions de l'aplicació (SECTION_ORDER).
+  const ordre = [...seccionsApp.match(/export const SECTION_ORDER = \[([^\]]+)\]/)[1].matchAll(/'([a-z]+)'/g)].map((m) => m[1]);
+  const resum = seccio('Description').split('= English Summary')[1] ?? '';
+  for (const [, ruta] of resum.matchAll(/\(`([a-z]+)`\)/g)) assert.ok(ordre.includes(ruta), `${ruta} no és cap secció`);
+
+  // El que el readme publicat de la 1.1.10 deia i el codi desmentix (qüestions obertes del carril E, T5.3).
+  for (const [patro, perque] of [
+    [/api\.socdepoble\.org/, 'el node de dades és el de dist/sdp-release.json (Supabase), no cap api.socdepoble.org'],
+    [/og_remots|og-data|sdp_og3_|traduccio_proxy|socdepoble_opcions/, 'cap d\'estos ajustos, rutes ni transients existix al plugin'],
+    [/dist\/style\.css/, 'el paquet no porta cap dist/style.css'],
+    [/Poblepedia/, 'cap secció de l\'aplicació es diu així'],
+    [/no realitza cap connexió externa fins que l'administrador/, 'la traducció no té cap interruptor: el servidor crida Apertium quan un visitant prem «Traduir»']
+  ]) assert.doesNotMatch(readme, patro, perque);
+
+  /* Gauntlet 2 · 261101 · Y-WordPress · El que el readme diu dels serveis de fora, de la federació,
+     de les traduccions i de la candidatura, contra el codi i la configuració de producció. */
+  // G2-R01 · La PMF de Google no pot dir «No.» mentre «External services» nomene serveis de Google.
+  const serveisDeFora = seccio('External services');
+  const especimen = path.join(ARREL, 'src/sections/disseny/cataleg/detalls/EspecimenMediaExterna.jsx');
+  if (fs.existsSync(especimen) && /youtube-nocookie\.com\/embed\//.test(fs.readFileSync(especimen, 'utf8'))) {
+    assert.match(serveisDeFora, /youtube-nocookie\.com/, 'el catàleg de disseny incrusta un vídeo de YouTube');
+  }
+  const pmfGoogle = seccio('Frequently Asked Questions').split('= Carrega tipografies o scripts de Google o d\'altres multinacionals? =')[1]?.split(/^= /m)[0] ?? '';
+  assert.ok(pmfGoogle.trim(), 'la PMF de Google hi és');
+  assert.doesNotMatch(pmfGoogle, /^\s*No\b/, 'el portal sí que es connecta a serveis de Google');
+  assert.doesNotMatch(readme, /RGPD|GDPR/, 'cap promesa de compliment que ningú no ha certificat');
+  for (const [servei, aLaPmf] of [[/youtube/i, /YouTube/], [/Google Sign-In/, /inici de sessió amb Google/], [/googleusercontent/, /fotos de perfil/], [/Supabase/, /Supabase/]]) {
+    if (servei.test(serveisDeFora)) assert.match(pmfGoogle, aLaPmf, `la PMF de Google nomena ${aLaPmf.source}`);
+  }
+  assert.match(pmfGoogle, /«External services»/, 'i envia a la llista completa');
+
+  /* G2-R02 · Firebase Hosting no encamina per consulta: sense cap reescriptura per a
+     /.well-known/webfinger sense sufix, la WebFinger estàndard (?resource=) respon 404 a
+     socdepoble.org. El readme diu el que funciona: la ruta /.well-known/webfinger/acct:… que
+     anuncia host-meta (tooling/seo/genera-federacio.mjs), que és la que segueix Mastodon. */
+  const reescriptures = JSON.parse(fs.readFileSync(path.join(ARREL, 'firebase.json'), 'utf8')).hosting?.rewrites ?? [];
+  const webfingerPerConsulta = reescriptures.some((r) => /^\^?\/\\?\.well-known\/webfinger\/?\$?$/.test(r.source ?? r.regex ?? ''));
+  if (!webfingerPerConsulta && /webfinger/i.test(readme)) {
+    assert.match(readme, /`\/\.well-known\/webfinger\/acct:…`/, 'la ruta que sí que respon');
+    assert.match(readme, /`\/\.well-known\/host-meta`/, 'el document que l\'anuncia');
+    assert.match(readme, /`\?resource=` encara no respon/, 'i la consulta estàndard, dita sense embuts');
+    assert.match(fs.readFileSync(path.join(ARREL, 'tooling/seo/genera-federacio.mjs'), 'utf8'), /\/\.well-known\/webfinger\/\{uri\}`/, 'host-meta anuncia la ruta, no la consulta');
+  }
+  // G2-R03 · El connector no fa del WordPress cap node federat: la federació la servix socdepoble.org.
+  assert.doesNotMatch(seccio('Description').split('= English Summary')[0], /\bfederad[ae]s?\b/i, 'cap plaça ni WordPress federat');
+  /* G2-R05 · Un lloc en valencià (ca_valencia) baixa el paquet de ca-val: idioma.php només en recorre
+     al de 'ca' si eixe fitxer ja hi és, i un lloc ca_valencia no el té. */
+  assert.match(cosDe('includes/idioma.php', 'socdepoble_enxufe_fitxer_ca'), /is_readable\( \$fitxer \)/);
+  assert.match(seccio('Description'), /per als llocs en valencià, la valenciana \(ca-val\)/, 'aprovar el català no basta als llocs en valencià');
+  // G2-R06 · El readme parla de tu (ves, prem, mira), i el connector es diu connector, com a Complements.
+  assert.doesNotMatch(readme, /\bvegeu\b/i);
+  assert.doesNotMatch(readme, /\bextensió/i);
+  // Crític G2 · La candidatura a NGI Fediversity està en avaluació: cap frase no suggerix diners rebuts.
+  assert.doesNotMatch(readme, /cistell de fons|fons per a la sobirania|finançat per|subvencionat|beca concedida/i);
+  if (/NLnet|NGI Fediversity/.test(readme)) assert.match(seccio('Screenshots'), /La candidatura està en avaluació: Sóc de Poble no rep cap finançament d'NGI Fediversity\./);
+  /* El paquet de dades obertes encara no porta notícies, agenda ni memòria cultural
+     (recullDadesPubliquesDelMunicipi les deixa pendents): el readme no les promet. */
+  if (/coleccio: 'noticies', motiu:/.test(exportador)) {
+    assert.doesNotMatch(readme, /dades obertes per municipi \([^)]*notícies/, 'les notícies encara no s\'exporten');
+    assert.match(seccio('Description'), /les notícies, l'agenda i la memòria cultural encara no\./);
+  }
+});
+
 test('doble còpia: el fitxer principal no declara cap funció ni classe, i la guarda va abans de cap constant', () => {
   const principal = llig('socdepoble-enxufe.php');
   const codi = codiDe['socdepoble-enxufe.php'];
@@ -778,7 +994,16 @@ test('readme a «Mostra els detalls», plantilla de blocs i getenv protegit', ()
   assert.match(api, /array_map\(\s*'wp_kses_post',\s*\$seccions\s*\)/);
   assert.doesNotMatch(api, /'6\.5'|'7\.4'/, 'els requisits ixen de les capçaleres, no de literals');
   assert.match(api, /get_file_data\(/);
-  assert.match(cosDe('includes/actualitzador.php', 'socdepoble_enxufe_linia_readme'), /esc_html\(\s*\$text\s*\)/, 'escapa abans de transformar');
+  /* Gauntlet 2 · 261101 · Y-WordPress (G2-P03) · Un sol lector i un sol analitzador del readme: els
+     d'ajustos.php, que el fitxer principal carrega sempre i abans d'actualitzador.php. El canal propi
+     no en porta cap còpia (la prova amb PHP real és a enxufe-pantalla.test.mjs). */
+  const seccionsCanal = cosDe('includes/actualitzador.php', 'socdepoble_enxufe_seccions_readme');
+  assert.match(seccionsCanal, /socdepoble_enxufe_llig_readme\(\)/, 'el mateix lector que el directori');
+  assert.match(seccionsCanal, /array_map\(\s*'socdepoble_enxufe_html_detalls',/, 'el mateix analitzador que el directori');
+  assert.doesNotMatch(llig('includes/actualitzador.php'), /\bfunction socdepoble_enxufe_(?:html|linia)_\w+\(|preg_replace\(\s*'\/`/, 'cap còpia de l\'analitzador al canal propi');
+  const principalCanal = llig('socdepoble-enxufe.php');
+  const requireAjustos = principalCanal.indexOf("\nrequire_once __DIR__ . '/includes/ajustos.php';\n");
+  assert.ok(requireAjustos > 0 && requireAjustos < principalCanal.indexOf("'/includes/actualitzador.php'"), 'ajustos.php, sense condició i abans de l\'actualitzador');
 
   const registre = cosDe('includes/marcatge.php', 'socdepoble_enxufe_registra_plantilla_blocs');
   assert.match(registre, /if \( ! function_exists\( 'register_block_template' \) \) \{\n\t\treturn;/, 'WordPress 6.5 i 6.6 no el tenen');
@@ -789,6 +1014,25 @@ test('readme a «Mostra els detalls», plantilla de blocs i getenv protegit', ()
   assert.match(tria, /'template-canvas\.php' === basename\(/);
   assert.match(llig('templates/pantalla-completa.php'), /^socdepoble_enxufe_estils_pantalla\(\);$/m, 'un sol CSS per a les dues plantilles');
   assert.equal(capcalera(llig('socdepoble-enxufe.php'), 'Requires at least'), '6.5', 'en 6.5 i 6.6 la plantilla es tria a l\'Edició ràpida (readme)');
+  /* Gauntlet 261101 · X-E-readme (E-04) · Mentre el registre de la plantilla de blocs depenga de
+     register_block_template (6.7+) i el mínim siga 6.5 (6.6 al directori), el readme ho diu al Pas 3
+     i a la PMF de pantalla completa: abans de la 6.7 la plantilla es tria a l'Edició ràpida.
+     Gauntlet 2 · 261101 · Y-WordPress (G2-R06) · «en versions anteriors», i no «a la 6.5 i la 6.6»:
+     la variant del directori exigix la 6.6 i no pot parlar de la 6.5. */
+  const readmePantalla = llig('readme.txt');
+  const avisEdicioRapida = "Amb un tema de blocs, la plantilla apareix en eixe apartat a WordPress 6.7 o posterior; en versions anteriors, tria-la amb l'**Edició ràpida** de la llista de **Pàgines**.";
+  assert.equal(readmePantalla.split(avisEdicioRapida).length - 1, 2, 'el Pas 3 i la PMF de pantalla completa');
+  for (const [nom, seccio] of [['Installation', 'Pas 3'], ['Frequently Asked Questions', 'PMF']]) {
+    assert.ok(readmePantalla.split(new RegExp(`^== ${nom} ==$`, 'm'))[1].split(/^== /m)[0].includes(avisEdicioRapida), seccio);
+  }
+  // Cap versió de WordPress nomenada al readme del directori queda per davall del seu Requires at least.
+  const readmeDirectori = variantDirectoriReadme(readmePantalla);
+  const solDirectori = capcalera(readmeDirectori, 'Requires at least').split('.').map(Number);
+  const versionsNomenades = [...readmeDirectori.matchAll(/(?:WordPress|a la|i la) (\d+)\.(\d+)\b/g)].map(([, major, minor]) => [Number(major), Number(minor)]);
+  assert.ok(versionsNomenades.length > 0);
+  for (const [major, minor] of versionsNomenades) {
+    assert.ok(major > solDirectori[0] || (major === solDirectori[0] && minor >= solDirectori[1]), `el directori exigix la ${solDirectori.join('.')} i el readme parla de la ${major}.${minor}`);
+  }
 
   assert.match(cosDe('includes/traduccio.php', 'socdepoble_enxufe_deepl_clau'), /function_exists\( 'getenv' \) \? getenv\( 'DEEPL_API_KEY' \)/, 'getenv pot estar a disable_functions');
 });
@@ -852,14 +1096,63 @@ test('T5.1 · Plugin URI navegable, «Mostra els detalls» local per a l’slug 
   assert.doesNotMatch(pagina, /echo\s+sprintf\(/, 'cap sprintf sense escapar: tot passa per wp_kses_post');
   assert.equal((pagina.match(/echo wp_kses_post\(\n\s*sprintf\(/g) ?? []).length, 5, 'l\'arrel i els quatre textos de la guia amb marcatge');
 
-  // readme: instal·lació en tres passos i el crèdit de la tipografia.
+  /* readme: instal·lació en tres passos i el crèdit de la tipografia.
+     T5.3 (261101) · El Mestre va publicar a WordPress.org (1.1.10) la guia en valencià, amb un
+     títol davant de la llista i una subsecció d'opcions avançades: el text anglés d'abans
+     («Install the plugin…», «Quick Edit») ja no és el del readme. Els tres passos i els
+     textos de la interfície continuen sent el contracte.
+     Gauntlet 261101 · X-E-readme (E-03) · Els textos de la interfície són els d'un sol locale,
+     ca_valencia, i el contracte és la taula de sota. */
   const readme = llig('readme.txt');
   const instal = readme.split(/^== Installation ==$/m)[1].split(/^== /m)[0];
-  assert.match(instal, /^\n+1\. Install the plugin and set up your village/, 'la secció comença per la llista: enxufe-pantalla.test.mjs exigix <ol> al davant');
-  assert.match(instal, /^2\. Put Sóc de Poble on a page/m);
-  assert.match(instal, /^3\. Make it fill the whole screen/m);
+  const pmf = readme.split(/^== Frequently Asked Questions ==$/m)[1].split(/^== /m)[0];
+  assert.match(instal, /^\n+= Com posar Sóc de Poble a la teua web en 3 passos molt fàcils =\n\n1\. \*\*Pas 1 · Instal·la el connector i configura el teu poble:\*\*$/m, 'el títol publicat i, just davall, el primer pas');
+  assert.match(instal, /^2\. \*\*Pas 2 · Posa Sóc de Poble en una pàgina/m);
+  assert.match(instal, /^3\. \*\*Pas 3 · Fes que ocupe tota la pantalla i siga la pàgina d'inici:\*\*$/m);
   assert.equal((instal.match(/^\d+\. /gm) ?? []).length, 3, 'tres passos, ni un més');
-  for (const text of ['`[socdepoble_app]`', 'Save Changes', 'Add New Page', 'Publish', 'Add block', 'Settings → Reading', 'A static page', 'Homepage', 'Quick Edit']) assert.ok(instal.includes(text), text);
+  for (const text of ['`[socdepoble_app]`', '`[socdepoble_app poble="la-torre-de-les-macanes"]`', '«Sóc de Poble · full screen»', '`ruta_inicial`']) assert.ok(instal.includes(text), text);
+  /* msgid → msgstr del locale ca_valencia de WordPress, comprovats el 261101 a translate.wordpress.org
+     (projectes wp/6.9.x i wp/6.9.x/admin, conjunt ca-val/default): és el paquet de llengua
+     ca_valencia 6.9.11 que l'API de traduccions servix també a WordPress 7.1.2, i el de
+     wp/dev (7.1.x) dona els mateixos textos. El locale ca diria Extensions, Afegeix una
+     extensió, Desa els canvis, Afegeix una pàgina, Afegeix un bloc, Desa i Eines. */
+  const WP_CA_VALENCIA = Object.freeze({
+    Plugins: 'Complements',
+    'Add Plugin': 'Afegir complement',
+    Settings: 'Ajustos',
+    'Save Changes': 'Guardar els canvis',
+    Pages: 'Pàgines',
+    'Add Page': 'Afegir una pàgina',
+    Shortcode: 'Codi de substitució',
+    'Add block': 'Afegir un bloc',
+    Page: 'Pàgina',
+    Template: 'Plantilla',
+    Save: 'Guardar',
+    Reading: 'Lectura',
+    'A static page': 'Una pàgina estàtica',
+    'Homepage: %s': 'Pàgina d\'inici: %s',
+    'Quick Edit': 'Edició ràpida',
+    Tools: 'Ferramentes',
+    'Site Health': 'Salut del lloc'
+  });
+  const t = (msgid) => WP_CA_VALENCIA[msgid];
+  for (const text of [
+    `**${t('Plugins')} ➔ ${t('Add Plugin')}**`,
+    `**${t('Settings')} ➔ Sóc de Poble**`,
+    `**«${t('Save Changes')}»**`,
+    `**${t('Pages')} ➔ ${t('Add Page')}**`,
+    `**${t('Shortcode')}**`,
+    `(*${t('Add block')}*)`,
+    `(pestanya **${t('Page')}**)`,
+    `**«${t('Template')}»**`,
+    `**${t('Settings')} ➔ ${t('Reading')}**`,
+    `*«${t('A static page')}»*`,
+    `**${t('Homepage: %s').replace(': %s', '')}**`,
+    `l'**${t('Quick Edit')}** de la llista de **${t('Pages')}**`
+  ]) assert.ok(instal.includes(text), text);
+  for (const text of [`**${t('Save')}**`, `**${t('Settings')} ➔ Sóc de Poble**`, `**${t('Plugins')}**`]) assert.ok(pmf.includes(text), text);
+  assert.ok(readme.includes(`*${t('Tools')} ➔ ${t('Site Health')}*`), 'Ferramentes ➔ Salut del lloc');
+  assert.doesNotMatch(readme, /Connectors >|Afegeix nou|\bExtensions\b|Afegeix una (?:extensió|pàgina)|Afegeix un bloc|Desa els canvis|\*\*Desa\*\*|\bEines\b|Paràmetres/, 'cap etiqueta d\'un altre locale');
   assert.match(readme, /Noto Sans[^\n]*SIL Open Font License 1\.1[^\n]*dist\/fonts\/OFL\.txt/, 'el crèdit de la tipografia, en una línia');
 });
 
@@ -928,9 +1221,12 @@ test('A1 · cap PHP emet ni mostra un tenant, cap empeny la cua, i l’opció he
   assert.doesNotMatch(cosDe('includes/ajustos.php', 'socdepoble_enxufe_diagnosi'), /tenant|scope/i);
   // Els dos camps que queden no els segella el paquet: el text de la secció ja no ho promet.
   assert.doesNotMatch(cosDe('includes/ajustos.php', 'socdepoble_enxufe_seccio_amfitrio'), /sealed|package/i);
-  // La neteja va en admin_init (qualsevol pàgina de wp-admin, també admin-ajax.php): el readme no la lliga a cap administrador.
-  assert.doesNotMatch(llig('readme.txt'), /administrator opens the dashboard/);
-  assert.equal([...llig('readme.txt').matchAll(/the next time the WordPress admin area loads/g)].length, 2, 'Changelog i Upgrade Notice');
+  /* La neteja va en admin_init (qualsevol pàgina de wp-admin, també admin-ajax.php): el readme no la lliga a cap administrador.
+     T5.3 (261101) · El readme publicat de la 1.1.10 ja no porta les notes de la 1.0.2 (Changelog i
+     Upgrade Notice), que eren les dues que ho explicaven: si el Tenant ID hi torna, ha de dir quan s'esborra. */
+  const readmeTenant = llig('readme.txt');
+  assert.doesNotMatch(readmeTenant, /administrator opens the dashboard/);
+  if (/Tenant ID/.test(readmeTenant)) assert.match(readmeTenant, /the next time the WordPress admin area loads/, 'el readme diu quan s\'esborra el Tenant ID heretat');
   assert.doesNotMatch(cosDe('includes/manifest.php', 'socdepoble_enxufe_valida_manifest'), /tenant/i);
   assert.doesNotMatch(cosDe('includes/marcatge.php', 'socdepoble_enxufe_declara_amfitrio'), /get_option|configura|Cua/,
     'només el global, a partir de socdepoble_enxufe_config()');

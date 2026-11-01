@@ -1,6 +1,6 @@
 /* T8 (ordre del Mestre, 260930) · L'exportació .ics segons l'RFC 5545. */
 import { describe, expect, test } from 'vitest';
-import { PRODID_SDP, aIcs } from './ics.js';
+import { PRODID_SDP, aIcs, escapa, plega } from './ics.js';
 import { creaEsdeveniment, deGoogleCalendar } from './esdeveniment.js';
 
 const ARA = new Date(Date.UTC(2026, 8, 30, 10, 0, 0));
@@ -120,6 +120,22 @@ describe('aIcs', () => {
     const linies = logiques(aIcs([brut], { ara: ARA }));
     expect(linies).toContain('SUMMARY:Ballde nit');
     expect(linies).toContain('DESCRIPTION:Música\tviva');
+  });
+
+  /* Gauntlet 261101 (B1-02) · escapa i plega, exportades: també les fa servir l'agenda.ics del
+     paquet de dades obertes (data/exportaMunicipiOpenData.js), sense cap còpia. */
+  test('escapa i plega, soles: TEXT de §3.3.11 i línies de 75 octets de §3.1 sense partir cap caràcter', () => {
+    expect(escapa('a,b;c\\d\ne')).toBe('a\\,b\\;c\\\\d\\ne');
+    expect(escapa('\\n')).toBe('\\\\n');
+    // CR sol i CRLF també són salts; BEL i els altres controls (llevat de la tabulació) fora.
+    expect(escapa('a\rb\r\nc\u0007d\te')).toBe('a\\nb\\ncd\te');
+    const octets = (linia) => linia.split('\r\n').map((tros) => new TextEncoder().encode(tros).length);
+    expect(octets(plega('x'.repeat(200)))).toEqual([75, 75, 52]);
+    expect(plega('x'.repeat(75))).toBe('x'.repeat(75));
+    // Un caràcter de 2 o de 4 octets que no cap sencer passa a la línia següent.
+    expect(plega(`${'a'.repeat(74)}ç`)).toBe(`${'a'.repeat(74)}\r\n ç`);
+    expect(plega(`${'a'.repeat(73)}🎉b`)).toBe(`${'a'.repeat(73)}\r\n 🎉b`);
+    expect(plega('')).toBe('');
   });
 
   test('una llista buida o amb nul·les dona un calendari buit i vàlid', () => {

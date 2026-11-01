@@ -31,13 +31,13 @@ export default function EspecimenIndicador() {
       </div>
 
       <h4>Targeta d’estadística (maqueta)</h4>
-      <div className="stat-card">
+      <article className="stat-card">
         <div className="stat-icon"><Users size={16} aria-hidden="true" /></div>
         <div className="stat-info">
           <div className="stat-value">5.847</div>
           <div className="stat-label">Habitants</div>
         </div>
-      </div>
+      </article>
       <h4>Graella d’estadístiques (maqueta)</h4>
       <div className="stat-grid">
         {ESTADISTIQUES.map(([Icona, valor, etiqueta]) => (

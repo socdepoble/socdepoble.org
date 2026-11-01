@@ -5,6 +5,7 @@ import traductorIaia from './tooling/vite/traductor-iaia.mjs';
 import wikiWatcher from './tooling/vite/wiki-watcher.mjs';
 import hmrBfcache from './tooling/vite/hmr-bfcache.mjs';
 import federacioIaia from './tooling/vite/federacio-iaia.mjs';
+import associacioApps from './tooling/vite/associacio-apps.mjs';
 import { createHash } from 'node:crypto';
 import fs from 'node:fs';
 import os from 'node:os';
@@ -106,6 +107,10 @@ export default defineConfig(({ command, mode, isPreview }) => {
          dev, WebFinger, /ap/** i NodeInfo; al build web, els JSON-LD estàtics de /ap/ amb
          l'origen canònic (tooling/vite/federacio-iaia.mjs). Ni el natiu ni el connector WP. */
       federacioIaia({ arrel: __dirname }),
+      /* T6 (carril F-botigues, 261101) · Android App Links: dist/.well-known/assetlinks.json només amb
+         empremtes reals de Play a scripts/botigues/associacio-apps.json (tooling/vite/associacio-apps.mjs).
+         Ni el natiu ni el connector WP. */
+      associacioApps({ arrel: __dirname }),
       {
         name: 'sdp-port-canonic',
         configResolved(config) {

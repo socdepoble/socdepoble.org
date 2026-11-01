@@ -13,6 +13,7 @@ import { useTraduccioPagina } from '../PedraSeca/hooks/useTraduccioPagina.js';
 import { llevaPuntFinal } from './editorial.js';
 import { BarraBlava } from './barres/BarraBlava.jsx';
 import { BarraTaronja } from './barres/BarraTaronja.jsx';
+import { TEXTOS_BARRA, TEXTOS_INDEX } from './barres/textosBarres.js';
 import { BotoModeracio } from '../PedraSeca/organismes/Moderacio.jsx';
 import { AvisTraduccio, CosTraduit } from './traduccio/TraduccioPagina.jsx';
 import { LlenguaDelContingut } from './traduccio/llenguaDelContingut.js';
@@ -263,6 +264,9 @@ export function TableOfContentsDrawer({
      títol: l'Índex del cos de sempre. */
   capcaleraRef = null
 }) {
+  /* T7 · P1-22 (261101) · El títol, l'aspa i l'avís de buit, en la llengua
+     de la interfície (TEXTOS_INDEX); fora de l'app o en valencià, els de sempre. */
+  const t = useTraductorOpcional();
   const [headings, setHeadings] = useState([]);
   /* Ordre del Mestre, 261004 (integració final) · On es pinta l'Índex: es
      decidix per node en obrir, abans de pintar (com Dialeg.jsx). */
@@ -471,8 +475,8 @@ export function TableOfContentsDrawer({
         aria-labelledby="toc-title"
       >
         <div className="toc-header">
-          <h2 id="toc-title">Taula de continguts</h2>
-          <button className="toc-close-btn" onClick={onClose} aria-label="Tancar taula">
+          <h2 id="toc-title">{tradueix(t, TEXTOS_INDEX.titol)}</h2>
+          <button className="toc-close-btn" onClick={onClose} aria-label={tradueix(t, TEXTOS_INDEX.tanca)}>
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <line x1="18" y1="6" x2="6" y2="18"></line>
               <line x1="6" y1="6" x2="18" y2="18"></line>
@@ -481,7 +485,7 @@ export function TableOfContentsDrawer({
         </div>
         <nav className="toc-nav">
           {headings.length === 0 ? (
-            <p className="toc-empty">No s'han trobat seccions.</p>
+            <p className="toc-empty">{tradueix(t, TEXTOS_INDEX.buit)}</p>
           ) : (
             <ul>
               {headings.map((h, idx) => (
@@ -765,13 +769,18 @@ export function PageFrame({
      el focus quedava a <body>. Abans de desmuntar-lo, el focus va al botó
      Traduir de la barra blava, com fa el camí del menú (useMenuEmergent). */
   const { original: tornaATraduccioOriginal } = traduccio;
-  const tornaAlOriginal = useCallback(() => {
-    const pagina = containerRef.current?.closest?.('.sdp-universal-page-container');
-    pagina?.querySelector('.bar-blue button[aria-label="Traduir"]')?.focus({ preventScroll: true });
-    tornaATraduccioOriginal?.();
-  }, [tornaATraduccioOriginal]);
   const { showToast } = useToast();
   const tAvis = useTraductorOpcional();
+  /* T7 · P1-22 (261101) · Traduir es diu en la llengua de la interfície
+     (BarraBlava · TEXTOS_BARRA): el botó es busca pel nom traduït, comparat
+     com a text (cap selector amb el nom dins de cometes). */
+  const tornaAlOriginal = useCallback(() => {
+    const pagina = containerRef.current?.closest?.('.sdp-universal-page-container');
+    const nomTraduir = tradueix(tAvis, TEXTOS_BARRA.traduir);
+    [...(pagina?.querySelectorAll('.bar-blue button[aria-label]') ?? [])]
+      .find((boto) => boto.getAttribute('aria-label') === nomTraduir)?.focus({ preventScroll: true });
+    tornaATraduccioOriginal?.();
+  }, [tAvis, tornaATraduccioOriginal]);
   const senseTraduccio = useCallback(() => showToast(tradueix(tAvis, PARELL_SENSE_TRADUCCIO)), [showToast, tAvis]);
 
   const {
@@ -1114,7 +1123,7 @@ export function PageFrame({
           {classificacio ? (
             <div className="page-title-classificacio">{classificacio}</div>
           ) : pageLabels.length > 0 && (
-            <ul className="sp-card-labels page-title-labels" aria-label="Categories">
+            <ul className="sp-card-labels page-title-labels" aria-label={tradueix(tAvis, ['common.categories', 'Categories'])}>
               {pageLabels.map((label, index) => {
                 const text = typeof label === 'string' ? label : label.text;
                 const className = typeof label === 'string' ? 'sdp-badge-tag' : label.className || 'sdp-badge-tag';

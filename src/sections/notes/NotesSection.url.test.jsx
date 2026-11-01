@@ -80,22 +80,31 @@ const carpetaActiva = () => {
   return activa ? (activa.getAttribute('aria-label') ?? activa.querySelector('.sdp-workspace-nav-item__label')?.textContent ?? null) : undefined;
 };
 const fitxa = (titol) => screen.getByRole('button', { name: titol });
+/* IDEA-59 / P1-72 · «Tot» és l'acció de la capçalera de CARPETES (premuda quan és la vista). */
+const totPremut = () => screen.getByRole('button', { name: 'Tot' }).getAttribute('aria-pressed') === 'true';
 
-test('entrar a /notes sense res obri n1, com sempre, i no hi afig la carpeta', () => {
+/* IDEA-59 / P1-72 (ordre del Mestre, 261101, punt 0) · L'entrada nua obri
+   «Tot» amb la Card tutorial n1 triada (abans, la carpeta Mur i ?nota=n1
+   escrit a la URL, i només si la n1 era a la llista). La selecció es deriva:
+   la URL es queda nua i no es reescriu. */
+test('IDEA-59 · entrar a /notes sense res obri «Tot» amb n1 triada i no reescriu la URL', () => {
   munta('/notes');
-  expect(url()).toBe('/notes?nota=n1');
+  expect(url()).toBe('/notes');
   expect(detall()).toBe('n1');
-  expect(carpetaActiva()).toBe('Mur');
+  expect(totPremut()).toBe(true);
+  expect(carpetaActiva()).toBeUndefined();
+  expect(fitxa('Primera').getAttribute('aria-current')).toBe('true');
 });
 
 test('triar carpeta i nota les escriu a la URL (push): Arrere torna a la nota d’abans', () => {
   munta('/notes');
   fireEvent.click(within(rail()).getByRole('button', { name: 'Mercat' }));
-  expect(url()).toBe('/notes?nota=m1&carpeta=f-mercat');
+  // IDEA-59 · Des de l'entrada nua, la URL naix amb la carpeta davant (abans ja hi havia ?nota=n1).
+  expect(url()).toBe('/notes?carpeta=f-mercat&nota=m1');
   expect(detall()).toBe('m1');
   fireEvent.click(within(rail()).getByRole('button', { name: 'Mur' }));
   fireEvent.click(fitxa('Segona'));
-  expect(url()).toBe('/notes?nota=n2&carpeta=f-mur');
+  expect(url()).toBe('/notes?carpeta=f-mur&nota=n2');
   expect(detall()).toBe('n2');
   act(() => { fireEvent.click(screen.getByRole('button', { name: 'Arrere de prova' })); });
   expect(detall()).toBe('n1');
@@ -104,17 +113,19 @@ test('triar carpeta i nota les escriu a la URL (push): Arrere torna a la nota d�
 
 /* Correcció T1 · Tornar Arrere a l'entrada de /notes (que no porta carpeta)
    no ha de reescriure-la: el MemoryRouter talla l'historial per davant en
-   cada replace, i l'Avant es perdria. La nota ja diu la carpeta. */
+   cada replace, i l'Avant es perdria.
+   IDEA-59 / P1-72 · L'entrada nua ja no porta ?nota=n1: l'Arrere hi torna nua,
+   a «Tot» amb la Card tutorial, i tampoc no es reescriu. */
 test('Arrere a l’entrada sense carpeta no esborra l’Avant (router en memòria)', () => {
   munta('/notes');
   fireEvent.click(within(rail()).getByRole('button', { name: 'Mercat' }));
-  expect(url()).toBe('/notes?nota=m1&carpeta=f-mercat');
+  expect(url()).toBe('/notes?carpeta=f-mercat&nota=m1');
   act(() => { fireEvent.click(screen.getByRole('button', { name: 'Arrere de prova' })); });
-  expect(url()).toBe('/notes?nota=n1');
+  expect(url()).toBe('/notes');
   expect(detall()).toBe('n1');
-  expect(carpetaActiva()).toBe('Mur');
+  expect(totPremut()).toBe(true);
   act(() => { fireEvent.click(screen.getByRole('button', { name: 'Avant de prova' })); });
-  expect(url()).toBe('/notes?nota=m1&carpeta=f-mercat');
+  expect(url()).toBe('/notes?carpeta=f-mercat&nota=m1');
   expect(detall()).toBe('m1');
   expect(carpetaActiva()).toBe('Mercat');
 });
@@ -159,7 +170,7 @@ test('triar una carpeta sense notes la deixa oberta, no rebota a n1 i hi obri la
   expect(carpetaActiva()).toBe('Pobles');
   const preparada = detall();
   expect(preparada).toMatch(/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/);
-  expect(url()).toBe(`/notes?nota=${preparada}&carpeta=f-pobles`);
+  expect(url()).toBe(`/notes?carpeta=f-pobles&nota=${preparada}`);
   expect(fitxa('Nota sense títol').getAttribute('aria-current')).toBe('true');
 });
 

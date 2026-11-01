@@ -4,6 +4,10 @@ import { pathToFileURL } from 'node:url';
 import path from 'node:path';
 const root = path.resolve(process.argv[2] || process.cwd());
 const { PAGE_COPY } = await import(pathToFileURL(path.join(root, 'src/sections/text/pageContent.js')));
+/* 01-11-2026 (ordre del Mestre 261101_0311, T1) · Descàrregues només pot enllaçar
+   la fitxa d'una botiga oberta (canalsDeBotiga.js); hui, la de WordPress.org. */
+const { canalsOberts } = await import(pathToFileURL(path.join(root, 'src/config/canalsDeBotiga.js')));
+const botiguesObertes = new Set(canalsOberts().map(canal => canal.url));
 const segmenter = new Intl.Segmenter('ca', { granularity: 'word' });
 const count = text => [...segmenter.segment(text)].filter(part => part.isWordLike).length;
 const scope = new Set(['descarregues', 'projecte', 'disseny', 'anima']);
@@ -21,7 +25,11 @@ for (const [key, page] of Object.entries(PAGE_COPY)) {
   if (scope.has(key)) {
     if (!page.subtitle || !page.lead || /[<>]/.test(page.subtitle + page.lead)) errors.push(`${key}: H2/entradeta no són text pla vàlid`);
     for (const failure of failures) errors.push(`${key}: p${failure.paragraph} té ${failure.boldWords} paraules en negreta`);
-    if (key === 'descarregues' && dom.window.document.querySelector('a')) errors.push('Descàrregues conté un enllaç no previst');
+    if (key === 'descarregues') {
+      for (const a of dom.window.document.querySelectorAll('a')) {
+        if (!botiguesObertes.has(a.getAttribute('href'))) errors.push(`Descàrregues conté un enllaç no previst: ${a.getAttribute('href') ?? '(sense href)'}`);
+      }
+    }
     if (key === 'projecte' && !dom.window.document.querySelector('a[href="/wikidepoble?item=el_projecte"]')) errors.push('Falta l’accés a la Wiki');
   }
   dom.window.close();

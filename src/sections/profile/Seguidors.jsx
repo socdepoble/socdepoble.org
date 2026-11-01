@@ -1,7 +1,10 @@
 import { useEffect, useId, useRef, useState } from 'react';
 import { Taula } from '../../components/PedraSeca';
-import { backendScope } from '../../config/backendConfig.js';
 import { quiEmSegueix, teCapacitat } from '../../data/backendPort.js';
+/* L'abast del backend (endpoint, poble i mode): una configuració nova amb el
+   mateix abast no torna a llegir la llista. Gauntlet 2 · 261101 (G2-B3-04,
+   Pedra Seca) · Una sola còpia, la de useEntitatsDelPoble.js. */
+import { abastDe } from '../pobles/useEntitatsDelPoble.js';
 
 /* ═══════════════════════════════════════════════════════════════════
    T6b (IDEA-14; decisió del Mestre, 261024) · EL VEÏNAT CONNECTAT
@@ -36,11 +39,6 @@ import { quiEmSegueix, teCapacitat } from '../../data/backendPort.js';
 /* teCapacitat sense llançar, com useAdministrarOrganitzacio.js. */
 const teSeguiments = () => {
   try { return teCapacitat('seguiments') === true; } catch { return false; }
-};
-/* L'abast del backend (endpoint, poble i mode): una configuració nova amb el
-   mateix abast no torna a llegir la llista. */
-const abastDe = (config) => {
-  try { return backendScope(config || {}); } catch { return 'sense-abast'; }
 };
 const esCancel = (error) => error?.name === 'AbortError';
 const clauDeFila = (seguidor) => `${seguidor.tipus === 'entitat' ? 'entitat' : 'persona'}:${seguidor.id}`;

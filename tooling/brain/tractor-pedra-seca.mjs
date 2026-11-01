@@ -397,7 +397,6 @@ const EXCEPCIONS_ORFE = {
   'src/sections/gestoria/identitat/nucli/guardes.js': 'nucli de la Gestoria (carril del 04-10), encara sense interfície · decisió del Mestre 261031 (part C)',
   'src/sections/gestoria/identitat/nucli/titular.js': 'nucli de la Gestoria (carril del 04-10), encara sense interfície · decisió del Mestre 261031 (part C)',
   'src/sections/gestoria/projectes/nucli/expedient.js': 'nucli de la Gestoria (carril del 04-10), encara sense interfície · decisió del Mestre 261031 (part C)',
-  'src/utils/ics.js': 'exportació iCalendar, encara sense consumidor · decisió del Mestre 261031 (part C)',
   'src/sections/connectar/organitzacio/BlocAdministrarOrganitzacio.jsx': 'ja no es munta des del 25-10 (1c110f954): el Mestre decidix si s\'esborra o es torna a connectar · decisió del Mestre 261031 (part C)',
   'src/sections/connectar/organitzacio/useAdministrarOrganitzacio.js': 'ja no es munta des del 25-10 amb BlocAdministrarOrganitzacio.jsx: el Mestre decidix si s\'esborra o es torna a connectar · decisió del Mestre 261031 (part C)',
   'src/sections/notes/ConnexioDetall.jsx': 'cap importació des del 30-09: el Mestre decidix si s\'esborra o es torna a connectar · decisió del Mestre 261031 (part C)',

@@ -54,7 +54,12 @@ const TEXTOS_CA = Object.freeze({
 const ESQUEMA_GOOGLE = /^com\.googleusercontent\.apps\.(?:pendent|[0-9]+-[a-z0-9]+)$/;
 /* P1-08 · El SDK de Facebook per a iOS amb els seus noms d'SPM i de CocoaPods. */
 const SDK_FACEBOOK = /facebook-ios-sdk|FBSDK[A-Za-z]*|\bFacebook(?:Core|Login|AEM|Share|Gaming|Basics)|\bFBAEMKit\b/i;
-const TIPUS_DE_DADES = ['EmailAddress', 'Name', 'UserID', 'PhotosorVideos', 'AudioData', 'OtherUserContent', 'EmailsOrTextMessages']
+/* Carril F-botigues (marató 261101, T6) · + PreciseLocation i CoarseLocation (la
+   geolocalització voluntària de les fotos: geolocalitzacio.js, PRECISIONS exacta,
+   100m i poble) i Contacts (el graf de seguiments: Apple hi posa el «social graph»).
+   La correspondència amb el Data Safety és a la guia de publicació a les botigues. */
+const TIPUS_DE_DADES = ['EmailAddress', 'Name', 'UserID', 'PhotosorVideos', 'AudioData', 'OtherUserContent', 'EmailsOrTextMessages',
+  'PreciseLocation', 'CoarseLocation', 'Contacts']
   .map((tipus) => `NSPrivacyCollectedDataType${tipus}`);
 
 /** Un plist XML com a objecte de JS: dict, array, key, string, integer, true i false. */
@@ -712,7 +717,7 @@ describe.skipIf(!HI_HA_PROJECTE)('el projecte d’iOS (ios/)', () => {
     expect(senseComentarisSwift(llig(APP, 'ControladorSdp.swift'))).toMatch(/\bclass ControladorSdp: CAPBridgeViewController\b/);
   });
 
-  test('PrivacyInfo.xcprivacy: cap rastreig, set tipus de dades lligats i per al servei, i UserDefaults amb CA92.1', () => {
+  test('PrivacyInfo.xcprivacy: cap rastreig, deu tipus de dades lligats i per al servei, i UserDefaults amb CA92.1', () => {
     const manifest = llegixPlist(llig(APP, 'PrivacyInfo.xcprivacy'));
     expect(manifest.NSPrivacyTracking).toBe(false);
     expect(manifest.NSPrivacyTrackingDomains).toEqual([]);

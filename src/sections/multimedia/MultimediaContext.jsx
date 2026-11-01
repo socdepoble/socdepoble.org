@@ -6,9 +6,9 @@ import { useContext, useMemo } from 'react';
    que no importa res del projecte. */
 import { MultimediaContext } from './objectesDeContext.js';
 import { loadMultimedia } from '../../data/backendPort.js';
-import { useIdentitat } from '../../app/contexts/IdentitatContext.jsx';
+import { useIdentitatOpcional } from '../../app/contexts/IdentitatContext.jsx';
 import { useMur } from '../mur/MurContext.jsx';
-import { useCoreContent } from '../../app/contexts/CoreContentContext.jsx';
+import { IDENTITAT_DE_RESERVA, useCoreContent } from '../../app/contexts/CoreContentContext.jsx';
 import { esFontImatgePropia } from '../../utils/sanitize.js';
 import { esMitjaOpac } from '../../utils/mitjaOpac.js';
 import { fotosDeLAgenda, fotosDelMercat, fotosDelMur, fotosDelsPobles, fusionaMitjans } from './mediaContent.js';
@@ -24,8 +24,26 @@ const CAP = Object.freeze([]);
    la resol el port, no un <img>). */
 const esFotoVivaPintable = (foto) => esFontImatgePropia(foto.src) && !esMitjaOpac(foto.src);
 
+/* P1-71 (marató nocturna 261101, T5.1) · Defensa en profunditat: el
+   blindatge de CoreContentProvider (Bloc G del pla 261029_1605), també ací.
+   La causa arrel del pet «useIdentitat ha de ser usat dins de
+   IdentitatProvider» en una recàrrega en calent (dos createContext per a un
+   mateix context) la va tancar objectesDeContext.js el 261029. Este canvi tot
+   sol no salva /multimedia de l'ErrorBoundary (Gauntlet 261101, G-D2): a
+   App.jsx, MurProvider, NotesDataProvider, NotesProvider i XatProvider
+   embolcallen este proveïdor i criden useIdentitat(), i sense IdentitatProvider
+   el pet ix d'ells abans d'arribar ací. Tampoc no toca «Comprovant la
+   sessió…», que és de RequireAuth i del botó d'identitat de la barra
+   (BotoIdentitatActiva, useIdentitatDeLaBarra). Blindar els altres quatre és
+   una decisió del Mestre: el Xat i les Notes funcionarien com a anònims.
+   Sense proveïdor, la reserva és la d'un visitant anònim, mai la d'una altra
+   persona: la clau d'àmbit 'anon' no coincidix amb cap «tipus::id», i l'Arxiu
+   es carrega com el veu qui no ha entrat. Dins del proveïdor, res no canvia.
+   useSession(), davall, continua exigint el seu proveïdor, com a
+   CoreContentProvider. Gauntlet 2 261101 (G2-10) · La reserva és la de
+   CoreContentProvider (IDENTITAT_DE_RESERVA, importada): una sola font. */
 export function MultimediaProvider({ children, config }) {
-  const { actorId, actorKey } = useIdentitat();
+  const { actorId, actorKey } = useIdentitatOpcional() || IDENTITAT_DE_RESERVA;
   const { currentUser } = useSession();
   /* Decisió 2 del Mestre (261007) · Renovació silenciosa. La clau d'àmbit és
      la d'AÏLLAMENT (backend, persona, actor), sense `generacio`: renovar el

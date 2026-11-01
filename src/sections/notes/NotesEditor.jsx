@@ -9,7 +9,7 @@ import { useNotes, etiquetesDeNota } from './NotesContext';
 import { useEstatDesamentNota, estatPerAlEditor } from './useEstatDesamentNota.js';
 import { DocumentEditor } from '../../components/universal/DocumentEditor';
 import { uploadToStorage, teCapacitat } from '../../data/backendPort.js';
-import { NOTES_SEED, NOTE_FOLDERS_SEED } from '../../data/appSeed.js';
+import { NOTE_FOLDERS_SEED } from '../../data/appSeed.js';
 import { useToast } from '@/components/universal/NotificationContext.jsx';
 import { BotoneraClassificacio } from '../../components/universal/classificacio/BotoneraClassificacio.jsx';
 import { DialegCarpeta } from '../../components/universal/classificacio/DialegCarpeta.jsx';
@@ -28,8 +28,10 @@ import { Alerta, Insignia } from '../../components/PedraSeca';
 import { llicenciaDeLActor } from '../../components/universal/drets/herencia.js';
 import { ID_COPIA_PROVA, ID_NOTA_BENVINGUDA, autoriaDeLActor, modeDeDadesResolt, signaturaDeNota } from './autoriaNota.js';
 import { TITOL_NOTA_PREPARADA, useNotaPreparadaDelBloc } from './notaPreparada.js';
-import { LLAVORS_NOTA } from './llavorNota.js';
+import { GUIA_NOTA, LLAVORS_NOTA } from './llavorNota.js';
+import { NOTA_TUTORIAL } from './notaTutorial.js';
 import { proposaCard } from './proposaCard.js';
+import { memoriaOralDelBloc } from './memoriaOralDelBloc.js';
 import { categoriesBase, etiquetesBase } from '../../data/personalitzacio.js';
 import { useMur } from '../mur/MurContext';
 import { esAppNativa } from '../../config/origenPublic.js';
@@ -49,8 +51,9 @@ const CAP = Object.freeze([]);
    TEXT_CARREGANT), mentre la sessió recordada es restaura. */
 const TEXT_CARREGANT = 'Carregant…';
 
-/* La nota de benvinguda (n1) és la font del text de l'estat buit. */
-const NOTA_BENVINGUDA = NOTES_SEED.find((n) => n.id === ID_NOTA_BENVINGUDA) || {};
+/* La nota de benvinguda (n1) és la font del text de l'estat buit.
+   IDEA-59 / P1-72 · La mateixa de la Card tutorial de NOTES (notaTutorial.js). */
+const NOTA_BENVINGUDA = NOTA_TUTORIAL;
 
 /* Categories i etiquetes que sempre existixen al Bloc (les mateixes que la
    columna de navegació de NotesSection). Com que sempre hi tornen, a la modal
@@ -212,6 +215,13 @@ export default function NotesEditor({ activeNote, onToast = null }) {
   /* Poliment T41/T43 · el mateix nom que publishNote posa al Mur (autoriaNota):
      el selector i la barra no poden dir una cosa i el Mur una altra. */
   const autoria = useMemo(() => autoriaDeLActor(actor, currentUser), [actor, currentUser]);
+  /* T3.2 (marató 261101) · La fitxa de memòria oral de «🎴 Proposa Card»
+     (memoriaOralDelBloc.js): només amb sessió es pot signar la revisió, i el
+     fitxer no porta l'identificador del compte (G2-MO-08); coneix els pobles
+     de l'aplicació. Només es refà si
+     canvien. */
+  const idDeLaSessio = currentUser?.id ?? null;
+  const memoriaOral = useMemo(() => memoriaOralDelBloc({ persona: idDeLaSessio, pobles: towns }), [idDeLaSessio, towns]);
 
   /* Estat buit: la mateixa anatomia que la nota de benvinguda, en mode lectura. */
   const emptyDocument = useMemo(() => ({
@@ -502,9 +512,18 @@ export default function NotesEditor({ activeNote, onToast = null }) {
          «Font: …»), que pujat als camps perdria l'enllaç i eixiria al Mur per
          l'entradilla, sense el filtre dels paràgrafs privats (connexions.js). */
       proposaCard: citaOrigen ? null : proposaCard,
+      /* T3.2 (marató 261101) · I, en el mateix clic, la «Fitxa de memòria
+         oral (OKF v0.2)» de la nota, local i sense xarxa (DocumentEditor ·
+         memoriaOral). Les mateixes notes que porten el botó. */
+      memoriaOral: citaOrigen ? null : memoriaOral,
       /* Bloc 3.9 · La plantilla de format d'ara i la d'abans: totes dues
-         s'esvaeixen al primer focus del cos (llavorNota.js). */
+         s'esvaeixen al primer focus del cos (llavorNota.js). IDEA-59 / P1-72 ·
+         Ja no naix cap nota amb elles: només les porten notes velles. */
       seedContent: LLAVORS_NOTA,
+      /* IDEA-59 / P1-72 (Mestre 261101, punt 1) · El cartell guia reversible
+         del cos buit: s'amaga en punxar, torna si s'ix sense escriure i no
+         torna en una nota on s'ha escrit. No es desa ni es publica. */
+      guiaCos: GUIA_NOTA,
       classificacio: classificacio ? (
         <BotoneraClassificacio
           carpeta={carpetes.find((c) => c.id === carpetaId)?.nom}
@@ -571,7 +590,7 @@ export default function NotesEditor({ activeNote, onToast = null }) {
          l'ordre «/» Emoji. Totes dues funcions són estables (canalEmojis.js). */
       ...(canalEmojis ? { registraInsercio: canalEmojis.registra, obreEmojis: canalEmojis.obri } : {})
     };
-  }, [notaEnEdicio, documentPerAlEditor, esSandbox, esPreparada, creacioPreparada, escriuPreparada, desaPreparada, senseSessio, actor, actorId, autoria, memberships, actualitzaSandbox, setLocalNoteField, saveNoteField, publishNote, compartirNota, connexio, dretsReservats, dretsDeLOriginal, extern, citaOrigen, pucBorrar, obriBorrar, noteFolders, t, signatura, emptyDocument, config, classificacio, carpetes, carpetaId, estatDesament, dataNomesAlDispositiu, targetes, canalEmojis, asseguraNormes]);
+  }, [notaEnEdicio, documentPerAlEditor, esSandbox, esPreparada, creacioPreparada, escriuPreparada, desaPreparada, senseSessio, actor, actorId, autoria, memberships, actualitzaSandbox, setLocalNoteField, saveNoteField, publishNote, compartirNota, connexio, dretsReservats, dretsDeLOriginal, extern, citaOrigen, pucBorrar, obriBorrar, noteFolders, t, signatura, emptyDocument, config, classificacio, carpetes, carpetaId, estatDesament, dataNomesAlDispositiu, targetes, canalEmojis, asseguraNormes, memoriaOral]);
 
   // Reanomenar i esborrar necessiten veure totes les notes: amb el llistat a
   // mitges, una nota no carregada es quedaria amb el nom vell.

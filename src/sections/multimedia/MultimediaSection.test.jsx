@@ -76,12 +76,59 @@ test('T64 · .sdp-pindola--centrada centra la caixa (width fit-content, margin-i
   expect(css.indexOf('.sdp-pindola {')).toBeLessThan(regla.index);
 });
 
-/* IDEA-54/55 (Onada 261029_1605) · «Carpeta local · Volums muntats» munta la
-   Barra de volums del Gestor d'arxius locals, amb «Vincular carpeta local». */
-test('la vista local_root munta la Barra de volums amb «Vincular carpeta local»', async () => {
+/* IDEA-54/55 (Onada 261029_1605) · «Carpeta local · Volums muntats» i la
+   Barra de volums del Gestor d'arxius locals, amb «Vincular carpeta local».
+   P1-71 (marató nocturna 261101) · La Barra viu a la Columna 1, davall de les
+   vistes (contracte d'IDEA-55): una sola, i cap a la columna del detall.
+   Gauntlet 261101 (G-D5) · El seu títol és un h2, abans de l'H1 de la pàgina.
+   Gauntlet 2 261101 (G2-09) · I fora del landmark de navegació: són accions. */
+test('la vista local_root i la Barra de volums amb «Vincular carpeta local», a la Columna 1', async () => {
   const { container } = munta('/multimedia?categoria=local_root');
   const detall = within(container.querySelector('#app-grid-main'));
+  const navegacio = within(container.querySelector('#app-grid-sidebar'));
   expect(detall.getByRole('heading', { level: 1, name: 'Carpeta local · Volums muntats' })).not.toBeNull();
-  expect(await detall.findByRole('heading', { level: 3, name: 'Volums i carpetes locals' })).not.toBeNull();
-  expect(detall.getByRole('button', { name: 'Vincular carpeta local' })).not.toBeNull();
+  expect(await navegacio.findByRole('heading', { level: 2, name: 'Volums i carpetes locals' })).not.toBeNull();
+  expect(navegacio.getByRole('button', { name: 'Vincular carpeta local' })).not.toBeNull();
+  expect(detall.queryByRole('heading', { name: 'Volums i carpetes locals' })).toBeNull();
+  expect(container.querySelectorAll('[data-accio="vincula"]')).toHaveLength(1);
+  expect(container.querySelector('[data-accio="vincula"]').closest('nav')).toBeNull();
+});
+
+/* Gauntlet 261101 (G-D1 i G-D5) · jsdom no pinta: es llig el bloc P1-71 de
+   modules.css sense comentaris. A la Columna 1 (de 200 a 260 px), la targeta
+   de la Barra parteix les paraules que no caben (noms de volum sense espais),
+   cap píndola no passa de l'ample, l'avís posa la icona damunt del text, i el
+   títol h2 porta la cara del h3 del Gestor (mida, pes, alineació, espaiat i
+   filet). Ho ha mesurat Chrome a :3340 (1440, 1280 i 1024 px).
+   Gauntlet 2 261101 · G2-05: `anywhere` només als textos amb el nom d'un
+   volum (el nom de la píndola i l'avís), mai a l'etiqueta d'un botó, que
+   ocupa la fila sencera i parteix pels espais; G2-01: la icona d'un botó o
+   d'una píndola no s'encongix (flex: none); G2-04: el h2 porta també el color
+   del h3, el blau d'acció. Mesurat amb Chrome a :3340 (1440, 1280, 1024, 820
+   i 390 px): icones de 20×20 i 18×18, cap etiqueta partida a mitja paraula. */
+test('G-D1, G-D5, G2-01, G2-04 i G2-05 · el peu de la Columna 1 no desborda, no parteix etiquetes ni encongix icones, i el seu h2 té la cara del h3', () => {
+  const css = readFileSync(resolve(process.cwd(), 'src/css/modules.css'), 'utf8')
+    .replace(/\/\*[\s\S]*?\*\//g, '').replace(/\s+/g, ' ');
+  const cos = (selector) => {
+    const escapat = selector.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    return css.match(new RegExp(`(?:^|[};]) ?${escapat} ?\\{([^}]*)\\}`))?.[1] ?? null;
+  };
+  const PEU = '.sdp-workspace .sdp-workspace-column__peu';
+  expect(cos(`${PEU} .sdp-arxiu-local__panell`)).toMatch(/padding: var\(--sdp-space-3\)/);
+  /* G2-05 · Cap `anywhere` heretable per la targeta sencera (ni als botons). */
+  expect(cos(`${PEU} .sdp-arxiu-local__panell`)).not.toMatch(/overflow-wrap/);
+  expect(cos(`${PEU} :is(.pill > span, .sdp-alerta__titol, .sdp-alerta__text)`)).toMatch(/overflow-wrap: anywhere/);
+  expect(css).not.toMatch(/sdp-workspace-column__peu[^{}]*\.sdp-boto[^{}]*\{[^}]*overflow-wrap/);
+  const boto = cos(`${PEU} .sdp-boto`);
+  for (const decl of ['inline-size: 100%', 'gap: var(--sdp-space-1)', 'padding-inline: var(--sdp-space-2)']) expect(boto).toContain(decl);
+  /* G2-01 · Les icones dels botons i de les píndoles, sense encongir-se. */
+  expect(cos(`${PEU} :is(.sdp-boto, .pill) > svg`)).toMatch(/flex: none/);
+  expect(cos(`${PEU} .pill`)).toMatch(/max-inline-size: 100%/);
+  expect(cos(`${PEU} .sdp-alerta`)).toMatch(/flex-direction: column/);
+  expect(cos(`${PEU} .sdp-alerta__cos`)).toMatch(/inline-size: 100%/);
+  const titol = cos(`${PEU} .sdp-arxiu-local__panell > h2`);
+  for (const decl of [
+    'font-size: var(--sdp-text-h5)', 'font-weight: var(--sdp-pes-negreta)', 'letter-spacing: inherit', 'text-align: start',
+    'color: var(--sdp-accio-text)', 'padding-block-end: var(--sdp-space-3)', 'border-block-end: 1px solid var(--sdp-vora)'
+  ]) expect(titol).toContain(decl);
 });

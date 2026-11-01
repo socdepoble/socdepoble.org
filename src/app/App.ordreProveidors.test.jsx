@@ -9,7 +9,7 @@
      ProveidorModeracio > Mur, Notes, Xat i Multimedia (PedraSecaEmbed.jsx i
      App.jsx). SessionProvider embolcalla els dos proveïdors que criden
      useSession(), i cadascun es munta en UN sol lloc.
-   · MultimediaContext (useIdentitat) i la Consola viuen davall de tots.
+   · MultimediaContext (useIdentitatOpcional) i la Consola viuen davall de tots.
    Esta prova munta l'arbre real a les dues rutes amb sessió (els dos
    proveïdors llancen només quan useSession no troba el context) i fixa:
    · cap error de proveïdor a la consola ni cap barrera (RouteErrorBoundary ni
@@ -18,7 +18,7 @@
      organitzacions i el perfil de la persona (IdentitatContext.jsx), i
      ProveidorModeracio demana els bloquejos quan el port té la capacitat
      'moderacio' (ModeracioContext.jsx · carregaBloquejos); MultimediaProvider
-     (useIdentitat) demana l'arxiu;
+     (useIdentitatOpcional) demana l'arxiu;
    · per text: un sol <SessionProvider>, un sol <IdentitatProvider> i un sol
      <ProveidorModeracio> a tota la producció, i el de sessió per fora.
    L'error no es reproduïx amb l'arbre d'esta còpia: dos contextos de sessió

@@ -19,7 +19,8 @@ const amplada = (px) => vi.stubGlobal('ResizeObserver', class {
 });
 const grupPublicacio = (container) => container.querySelector('.sdp-editor-tools__group--publicacio');
 const grupFormat = (container) => container.querySelector('.sdp-editor-tools__format-options');
-/* En compacte, les opcions de format viuen darrere d'«Aa»: s'obrin abans de buscar el botó. */
+/* En compacte, les opcions de format viuen darrere de «⋯» (el lloc i el nom
+   de l'«Aa» d'abans, «Format del text»): s'obrin abans de buscar el botó. */
 const obriFormat = (container, mode) => {
   if (mode === 'compacta') fireEvent.click(within(container).getByRole('button', { name: 'Format del text' }));
 };
@@ -51,7 +52,10 @@ test('ampla: una cel·la .sdp-bloc-icon de 48px davant de Borrar i Publicar, amb
   comprovaCella(boto, proposa);
 });
 
-test('compacta (R2): la cel·la va dins d\'«Aa», darrere de la llista numerada, i el grup de publicació torna a ser Borrar i Publicar', () => {
+/* IDEA-59 / P1-72 (punt 4) · En compacte les opcions porten també les eines
+   secundàries (ratllat, citació i divisor, darrere de les llistes): la cel·la
+   continua sent l'última, ara darrere del divisor. */
+test('compacta (R2): la cel·la va dins de «⋯», l’última, darrere del divisor, i el grup de publicació torna a ser Borrar i Publicar', () => {
   amplada(320);
   const proposa = vi.fn();
   const { container } = render(<UniversalToolbar onPublish={() => {}} onDelete={() => {}} onProposaCard={proposa} />);
@@ -62,7 +66,7 @@ test('compacta (R2): la cel·la va dins d\'«Aa», darrere de la llista numerada
   const botons = [...grupFormat(container).querySelectorAll('button')];
   const boto = within(container).getByRole('button', { name: 'Proposa Card' });
   expect(boto).toBe(botons.at(-1));
-  expect(botons.at(-2).getAttribute('aria-label')).toBe('Llista numerada');
+  expect(botons.at(-2).getAttribute('aria-label')).toBe('Divisor');
   expect(grupPublicacio(container).contains(boto)).toBe(false);
   comprovaCella(boto, proposa);
 });

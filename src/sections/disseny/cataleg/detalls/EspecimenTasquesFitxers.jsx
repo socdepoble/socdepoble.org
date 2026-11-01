@@ -54,14 +54,14 @@ export default function EspecimenTasquesFitxers() {
       <Progres etiqueta="Pujada d’imatges" valor={45} />
 
       <h4>Enllaç de descàrrega</h4>
-      <div className="download-card">
+      <article className="download-card">
         <div className="download-card-icon"><FileText size={16} aria-hidden="true" /></div>
         <div className="download-card-info">
           <div className="download-card-title">Carta Pobla de Benigànim (1248)</div>
           <div className="download-card-meta">PDF • 3,2 MB • Transcripció paleogràfica</div>
         </div>
         <a className="download-card-btn" href="#descarrega" onClick={(e) => e.preventDefault()} aria-label="Descarregar la Carta Pobla de Benigànim"><ArrowDown size={16} aria-hidden="true" /></a>
-      </div>
+      </article>
       <p><CheckCircle2 size={16} aria-hidden="true" /> Les icones són de lucide-react, com a la resta del sistema.</p>
     </Especimen>
   );

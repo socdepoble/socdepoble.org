@@ -794,7 +794,12 @@ test('el readme del directori declara el servidor de mitjans en lloc del canal p
   assert.ok(amb.indexOf('7. Sóc de Poble media server') < amb.indexOf('== Link previews per route =='));
   // Un «$» de l'origen no es llig com a patró de replace().
   assert.match(variantDirectoriReadme(readme, { origen: 'https://x.example/$1$&', externs: ['assets/uploads/'] }), /https:\/\/x\.example\/\$1\$&\/assets\//);
-  assert.ok(Buffer.byteLength(amb) < 24576, 'el readme del directori continua dins del límit');
+  /* T5.3 (261101) · Sostre local de bytes, de 24 a 28 KB amb el text valencià publicat a
+     WordPress.org (1.1.10); el límit real del directori és de paraules i el mesura
+     enxufe-plugin.test.mjs («límit de paraules de WordPress.org»).
+     Gauntlet 261101 · X-E-readme (E-11): de 28 a 32 KB amb la documentació per a
+     desenvolupadors recuperada a la PMF. */
+  assert.ok(Buffer.byteLength(amb) < 32768, 'el readme del directori continua dins del límit');
 });
 
 /* Gauntlet 261030, cicle 3 (vq-wordpress-readme-sense-wikimedia) · El panell
@@ -948,7 +953,10 @@ test('Revisió de WordPress.org (261027): el readme i el marcatge del directori 
   assert.equal(readme.split('\n').filter((l) => l === linia).length, 1, 'la font en porta una');
   const directori = variantDirectoriReadme(readme);
   assert.ok(!directori.includes(linia) && directori.includes('come from translate.wordpress.org.'));
-  assert.ok(directori.includes('* Valencian (Catalan) translations for the plugin and block editor.'), 'el Changelog és història i es queda');
+  /* El Changelog és història i es queda. T5.3 (261101) · el readme publicat de la 1.1.10 ja no
+     porta la nota de la 1.0.0 que ho provava; la prova l'afig ella mateixa al registre. */
+  const ambHistoria = readme.replace(/^== Changelog ==\n/m, '== Changelog ==\n\n= 1.0.0 =\n* Valencian (Catalan) translations for the plugin and block editor.\n');
+  assert.ok(variantDirectoriReadme(ambHistoria).includes('* Valencian (Catalan) translations for the plugin and block editor.'), 'el Changelog és història i es queda');
   assert.throws(() => variantDirectoriReadme(readme.replace(`${linia}\n`, '')), /Línia de les traduccions del readme: esperava una sola coincidència i n'hi ha 0/);
   assert.throws(() => variantDirectoriReadme(readme.replace(`${linia}\n`, `${linia}\n${linia}\n`)), /Línia de les traduccions del readme: esperava una sola coincidència i n'hi ha 2/);
 

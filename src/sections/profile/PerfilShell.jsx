@@ -25,8 +25,9 @@ import { DialegNovaOrganitzacio } from './DialegNovaOrganitzacio.jsx';
 import { APLICACIONS, aplicacionsValides } from './aplicacions.js';
 import { nodesDelPerfil } from './nodes.js';
 import {
-  PARAM_FITXA_ORGANITZACIO, itemsDAplicacions, itemsDePerfil, navegacioDePerfil, seleccioInicialDePerfil,
+  PARAM_FITXA_ORGANITZACIO, TEXTOS_PRIVACITAT_LLISTA, itemsDAplicacions, itemsDePerfil, navegacioDePerfil, seleccioInicialDePerfil,
 } from './perfilModel.js';
+import { tradueix, useTraductorOpcional } from '../../components/PedraSeca/hooks/useTraductorOpcional.js';
 import { useAutodesament } from '../../data/autodesament/useAutodesament.js';
 import { documentDeFitxa, fitxaPublicada, menaDeFitxa } from './perfilCamps.js';
 import { ENTITATS_FITXA } from './perfilEscriptor.js';
@@ -96,6 +97,17 @@ function FitxaDePerfil({ item, active, onSelect }) {
 }
 
 const renderFitxa = ({ item, active, onSelect }) => <FitxaDePerfil item={item} active={active} onSelect={onSelect} />;
+
+/* Gauntlet 2 · 261101 (G2-T7-01) · Una fila amb el títol i el subtítol que es
+   pinten. La cerca de la columna (workspaceState · filterWorkspaceItems) només
+   llig searchText: si el text pintat no és el de sempre (una altra llengua),
+   s'hi afig, i buscar el que es veu («privacy») la troba. El de sempre continua
+   (buscar «privacitat» també). En valencià, o sense traductor, la fila no canvia. */
+function ambTextosTraduits(item, title, subtitle) {
+  if (title === item.title && subtitle === item.subtitle) return item;
+  const searchText = [item.searchText, title, subtitle].filter(Boolean).join(' ');
+  return { ...item, title, subtitle, searchText };
+}
 
 /* Ordre del Mestre (19-10-2026, Fase C, punt 9: «Botó d'accés al perfil
    públic des de l'editor (/el-meu-perfil) […] que permeta a l'usuari anar
@@ -237,14 +249,25 @@ function PerfilManagerInner({ config, aplicacions, preferides, recuperacio = nul
      (desar la fitxa, una organització nova) no la canvia. */
   const workspaceKey = JSON.stringify(['perfil', initialSelection.categoryId, recuperacio]);
 
+  /* T7 · P1-22 (261101) · «Privacitat i dades» es pinta en la llengua de la
+     interfície (TEXTOS_PRIVACITAT_LLISTA); fora de l'app o en valencià, el
+     text de sempre. La resta de la fila no canvia; la cerca, vegeu
+     ambTextosTraduits (G2-T7-01). */
+  const t = useTraductorOpcional();
+
   /* Tots els hooks ABANS de cap return condicional (regla de hooks). */
   const model = useMemo(() => ({
     status: 'ready',
     itemsComplete: true,
     workspaceKey,
     navigationGroups: navegacioDePerfil(identitats, aplicacions),
-    items: [...itemsDePerfil(identitats, { ambPrivacitat }), ...itemsDAplicacions(aplicacions)],
-  }), [identitats, aplicacions, ambPrivacitat, workspaceKey]);
+    items: [
+      ...itemsDePerfil(identitats, { ambPrivacitat }).map((item) => (item.data?.vista === 'privacitat'
+        ? ambTextosTraduits(item, tradueix(t, TEXTOS_PRIVACITAT_LLISTA.titol), tradueix(t, TEXTOS_PRIVACITAT_LLISTA.subtitol))
+        : item)),
+      ...itemsDAplicacions(aplicacions),
+    ],
+  }), [identitats, aplicacions, ambPrivacitat, workspaceKey, t]);
 
   /* Slot estable: depèn només de coses que ja són estables gràcies al
      context endurit. */

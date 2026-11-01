@@ -156,9 +156,11 @@ describe('les tres columnes', () => {
     ]);
     expect(detall().getByRole('heading', { level: 1, name: 'Arxiu visual' })).toBeTruthy();
     expect(screen.queryByRole('group', { name: 'Mode de vista' })).toBeNull();
-    /* La portada porta l'Accés ràpid, la Barra de volums i la Fototeca publicada (sense volum obert). */
+    /* La portada porta l'Accés ràpid i la Fototeca publicada (sense volum obert).
+       P1-71 (261101) · La Barra de volums és a la Columna 1, davall de les vistes, i no a la portada. */
     expect(detall().getByRole('heading', { name: 'Accés ràpid' })).toBeTruthy();
-    expect(detall().getByRole('button', { name: 'Vincular carpeta local' })).toBeTruthy();
+    expect(detall().queryByRole('button', { name: 'Vincular carpeta local' })).toBeNull();
+    expect(arbre().getByRole('button', { name: 'Vincular carpeta local' })).toBeTruthy();
     expect(columna('app-grid-main').querySelectorAll('.photo-grid > .photo-grid__boto')).toHaveLength(MITJANS.length);
     expect(mocks.pagines.at(-1).traduccio).toBe(false);
     expect(ubicacio.search).toBe('');
@@ -435,12 +437,55 @@ describe('miniatures de la Columna 2', () => {
     await waitFor(() => expect(columna('app-grid-main').querySelectorAll('.sdp-arxiu-local__miniatura')).toHaveLength(2));
     const abans = fitxa('esbos_festa_tibi.png').querySelector('img').getAttribute('src');
     nodeFals(dir, '00_inbox/nano_vinyeta.png').modificaDesDeFora(bytesPngFals(96, 4));
-    fireEvent.click(detall().getByRole('button', { name: 'Tornar a llegir' }));
+    fireEvent.click(arbre().getByRole('button', { name: 'Tornar a llegir' }));
     await waitFor(() => expect(revocades).toContain(abans));
     await waitFor(() => expect(fitxa('esbos_festa_tibi.png').querySelector('img')?.getAttribute('src')).toMatch(/^blob:/));
     expect(fitxa('esbos_festa_tibi.png').querySelector('img').getAttribute('src')).not.toBe(abans);
     expect(revocadesPintades).toEqual([]);
     expect(errors).not.toHaveBeenCalled();
+  });
+});
+
+/* P1-71 (marató nocturna 261101, T5.1; contracte d'IDEA-55) · La Barra de
+   volums viu a la Columna 1, davall de les vistes: una sola instància, cap a
+   la columna del detall. Des d'una vista que no és local, Vincular porta
+   primer a «Carpeta local» i després obri el selector (el permís, la primera
+   espera del clic); des d'una vista local, l'enllaç es queda on és. */
+describe('P1-71 · la Barra de volums a la Columna 1', () => {
+  test('davall de les vistes: darrere de l’arbre, una sola Barra i cap a la columna del detall', async () => {
+    const { bib } = ambVolum();
+    munta('/multimedia', { magatzemCarpetes: bib, entorn: entorn() });
+    const peu = await waitFor(() => {
+      const node = columna('app-grid-sidebar').querySelector('.sdp-workspace-column__peu');
+      expect(node).not.toBeNull();
+      return node;
+    });
+    /* Gauntlet 2 261101 (G2-09) · Darrere del <nav> de l'arbre i fora d'ell (són accions), dins de la
+       mateixa zona de desplaçament de la columna. */
+    expect(peu.previousElementSibling.tagName).toBe('NAV');
+    expect(peu.previousElementSibling.querySelector('.sdp-workspace-group')).not.toBeNull();
+    expect(peu.closest('nav')).toBeNull();
+    expect(peu.parentElement.classList.contains('sdp-workspace-column__body')).toBe(true);
+    /* Gauntlet 261101 (G-D5) · Un h2: cap h3 sense h2 abans de l'H1 de la pàgina. */
+    expect(within(peu).getByRole('heading', { level: 2, name: 'Volums i carpetes locals' })).toBeTruthy();
+    expect(peu.parentElement.querySelectorAll('h3')).toHaveLength(0);
+    expect(await within(peu).findByRole('button', { name: '_multimedia_de_poble' })).toBeTruthy();
+    expect(document.querySelectorAll('[data-accio="vincula"]')).toHaveLength(1);
+    expect(detall().queryByRole('heading', { name: 'Volums i carpetes locals' })).toBeNull();
+    await aInbox();
+    expect(detall().queryByRole('button', { name: 'Vincular carpeta local' })).toBeNull();
+    expect(within(peu).getByRole('button', { name: 'Desconnectar' })).toBeTruthy();
+  });
+
+  test('des d’una galeria, Vincular porta a «Carpeta local» i obri el selector en el mateix clic', async () => {
+    const finestra = entorn();
+    finestra.showDirectoryPicker.mockRejectedValue(Object.assign(new Error('cancel·lat'), { name: 'AbortError' }));
+    munta('/multimedia?categoria=galeria_tots', { magatzemCarpetes: creaBibliotecaFalsa([]), entorn: finestra });
+    const vincula = await arbre().findByRole('button', { name: 'Vincular carpeta local' });
+    await act(async () => { vincula.click(); });
+    expect(finestra.showDirectoryPicker).toHaveBeenCalledTimes(1);
+    await waitFor(() => expect(params().get('categoria')).toBe('local_root'));
+    expect(detall().getByRole('heading', { level: 1, name: 'Carpeta local · Volums muntats' })).toBeTruthy();
   });
 });
 
@@ -455,7 +500,7 @@ describe('volums i navegadors', () => {
     cleanup();
     const dir = arbreMultimedia({ permisos: { read: 'prompt', readwrite: 'prompt' } });
     munta(enllac, { magatzemCarpetes: creaBibliotecaFalsa([{ id: 'v1', handle: dir }]), entorn: entorn() });
-    const reconnecta = await detall().findByRole('button', { name: 'Reconnectar amb 1 clic' });
+    const reconnecta = await arbre().findByRole('button', { name: 'Reconnectar amb 1 clic' });
     expect(`/multimedia?${ubicacio.search}`).toBe(enllac);
     fireEvent.click(reconnecta);
     await waitFor(() => expect(detall().getByRole('heading', { level: 1, name: 'nota.md' })).toBeTruthy());
@@ -465,7 +510,7 @@ describe('volums i navegadors', () => {
   test('sense IndexedDB (la biblioteca per defecte): cap error i un sol input de carpeta', async () => {
     vi.stubGlobal('indexedDB', undefined);
     munta('/multimedia?categoria=local_root');
-    expect(await detall().findByRole('button', { name: 'Vincular carpeta local' })).toBeTruthy();
+    expect(await arbre().findByRole('button', { name: 'Vincular carpeta local' })).toBeTruthy();
     await act(async () => { await new Promise((resol) => setTimeout(resol, 20)); });
     expect(screen.getAllByTestId('input-carpeta-multimedia-local')).toHaveLength(1);
     expect(errors).not.toHaveBeenCalled();
@@ -484,7 +529,7 @@ describe('volums i navegadors', () => {
     for (let vegada = 0; vegada < 2; vegada += 1) {
       munta('/multimedia?categoria=local_root', { magatzemCarpetes: creaBibliotecaFalsa([]), entorn: {} });
       fireEvent.change(screen.getByTestId('input-carpeta-multimedia-local'), { target: { files: fitxers() } });
-      expect(await detall().findByText('Només lectura')).toBeTruthy();
+      expect(await arbre().findByText('Només lectura')).toBeTruthy();
       /* Gauntlet 261029 (cicle 1, IDEA-57) · local_root ja és l'activa: en obrir-se
          el volum, es desplega sola (expandOnSelect), sense prémer el chevron. */
       await waitFor(() => expect(arbre().getByRole('button', { name: 'Carpeta local · Volums muntats' }).getAttribute('aria-expanded')).toBe('true'));
@@ -847,11 +892,24 @@ describe('accessibilitat del panell local i de la Columna 2', () => {
     expect(llista().queryByText('Esta carpeta no té cap arxiu.')).toBeNull();
   });
 
-  test('«Carpeta local» sense volum: H1 → h2 (només per al lector) → h3', () => {
+  /* Gauntlet 261101 (G-D3) · Sense volum, la Barra és a la Columna 1: la pàgina
+     diu on és, i no queda cap h2 només per al lector sense res davall. */
+  test('«Carpeta local» sense volum: una línia d’ajuda porta al peu de la Columna 1, i cap encapçalament orfe', async () => {
     munta('/multimedia?categoria=local_root', { magatzemCarpetes: creaBibliotecaFalsa([]), entorn: entorn() });
+    const ajuda = 'Encara no hi ha cap carpeta oberta. Per a obrir-ne una, fes servir «Volums i carpetes locals», al peu de la columna MULTIMÈDIA.';
+    expect(await detall().findByText(ajuda)).toBeTruthy();
+    expect(columna('app-grid-main').querySelector('h2.sr-only')).toBeNull();
     const nivells = [...columna('app-grid-main').querySelectorAll('h1, h2, h3, h4')].map((h) => Number(h.tagName[1]));
     for (let i = 1; i < nivells.length; i += 1) expect(nivells[i] - nivells[i - 1]).toBeLessThanOrEqual(1);
-    expect(columna('app-grid-main').querySelector('h2.sr-only')?.textContent).toBe('Gestor d’arxius locals');
+    expect(within(columna('app-grid-sidebar').querySelector('.sdp-workspace-column__peu'))
+      .getByRole('heading', { level: 2, name: 'Volums i carpetes locals' })).toBeTruthy();
+  });
+
+  test('«Carpeta local» amb el volum obert: la línia d’ajuda ja no hi és', async () => {
+    const { bib } = ambVolum();
+    munta('/multimedia?categoria=local_root', { magatzemCarpetes: bib, entorn: entorn() });
+    expect(await detall().findByRole('heading', { level: 3, name: /^Diagnòstic de / })).toBeTruthy();
+    expect(detall().queryByText(/Encara no hi ha cap carpeta oberta/)).toBeNull();
   });
 });
 

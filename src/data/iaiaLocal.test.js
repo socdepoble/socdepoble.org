@@ -306,7 +306,13 @@ describe('amb la Wiki de veres del paquet', () => {
        la IAIA local pot respondre «Què és un node?» amb el document verificat
        api_port_neutral_i_allotjament_model_b, que descriu el «Node municipal»
        (fila actualitzada a posta). */
-    ['Què és un node?', 'resposta', 'api_port_neutral_i_allotjament_model_b', ['api_port_neutral_i_allotjament_model_b']],
+    /* Marató 261101 (T3.4, Claude) · El document nou del perfil mínim
+       d'allotjament definix el node municipal a la primera frase i remet al
+       del Model B: ara respon primer, i el del Model B continua entre les
+       fonts permeses. Per tornar a la fila del 261031, n'hi ha prou amb
+       restaurar-la i llevar eixa primera frase del document. */
+    ['Què és un node?', 'resposta', 'perfil_minim_allotjament_node_municipal',
+      ['perfil_minim_allotjament_node_municipal', 'api_port_neutral_i_allotjament_model_b']],
     ['Com puc connectar amb un autor?', 'sense_resultats'],
     ['Les meues dades són privades?', 'resposta', 'ADR-2026-08-ONLINE-FIRST',
       ['ADR-2026-08-ONLINE-FIRST', 'seguretat_execucio', 'ADR-2026-13-BYOP-XIFRAT-LOCAL', 'llei_05_privacitat']],

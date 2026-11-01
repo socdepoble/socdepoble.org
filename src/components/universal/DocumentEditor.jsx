@@ -26,10 +26,14 @@ import { attrsDeEntrada } from './richText/extensions/targetes/formaDelGrup.js';
 /* Correcció de la revisió (261016) · També pel seu camí: la plantilla verge
    s'esvaeix abans de qualsevol ordre que arriba de fora del cos. */
 import { buidaLlavorVerge } from './richText/useUniversalRichText.js';
+/* Gauntlet 261101 · X-C-notes (C-09) · La guia del cos, pel traductor. */
+import { traduixGuia } from './richText/extensions/guiaCos.js';
 import { useUIActions } from '../../app/contexts/UIContext';
 /* P1-64 · La casella de l'EXIF d'una foto de publicació (la del hero) i la precisió de sèrie. */
 import { CasellaExif } from './enquadrament/DialegEnquadrament.jsx';
 import { PRECISIO_PER_DEFECTE_PUBLICACIO } from './enquadrament/geolocalitzacio.js';
+/* T3.2 (marató 261101) · La fitxa de memòria oral de «Proposa Card». */
+import { FitxaMemoriaOral } from './FitxaMemoriaOral.jsx';
 
 /* Bloc 3.8 (261016) · On un cos d'editor no es veu ni rep el focus: la
    mateixa regla que la guarda del focus de la closca (AppGridShell). */
@@ -39,6 +43,10 @@ const FORA_DE_LA_VISTA = '[inert], [aria-hidden="true"], [hidden]';
    text a l'inici que no complix cap regla. */
 const MOTIU_PROPOSTA = 'proposta';
 const MOTIU_RES = 'res';
+/* T3.2 · Cert si un HTML porta algun caràcter de text fora de les etiquetes
+   (la disponibilitat de la fitxa de memòria oral): una sola passada, sense
+   parser; un cos de només imatges no en porta. */
+const TE_TEXT = /(?:^|>)\s*[^\s<]/;
 /* El text d'un camp per a comparar-lo: sense etiquetes, entitats ni espais de més. */
 const textDelCamp = (html) => String(html ?? '')
   .replace(/<[^>]*>/g, ' ')
@@ -225,6 +233,24 @@ function campsQueTornen(actual, de, a) {
  *                            // «🎴 Proposa Card», apagat si no hi ha res a
  *                            // proposar. Sense la clau, la barra i el DOM de
  *                            // sempre (Perfil i catàleg). No passa per ...rest.
+ *   memoriaOral: { estructura, revisa } // Opcional (T3.2, marató 261101;
+ *                            // només amb proposaCard). L'estructurador local
+ *                            // de memòria oral del consumidor (el Bloc:
+ *                            // sections/notes/memoriaOralDelBloc.js):
+ *                            // estructura({ title, subtitle, lead, content })
+ *                            // torna la fitxa (memoriaOral.js) i revisa(fitxa, { etiquetes, municipi }),
+ *                            // la fitxa signada per la persona (null: ningú no
+ *                            // pot signar, la casella va apagada). Amb ella,
+ *                            // «🎴 Proposa Card» també s'encén quan la nota porta
+ *                            // text a l'entradilla o al cos, i cada clic que no
+ *                            // desfà obri la «Fitxa de memòria oral (OKF v0.2)»
+ *                            // (FitxaMemoriaOral) de la nota tal com l'ha
+ *                            // escrita la persona, llegida abans d'aplicar
+ *                            // la proposta (Gauntlet 2, G2-MO-01): el
+ *                            // resultat de la Card va a la descripció del
+ *                            // diàleg, no a cap avís (quedaria davall del vel).
+ *                            // Sense la clau, la barra, el clic i el DOM de
+ *                            // sempre. No passa per ...rest.
  *   placeholderTitol: String|null // Opcional (Bloc 3.9 del Gauntlet, 261016).
  *                            // El placeholder de l'H1 de la closca i el títol de
  *                            // reserva de la Vista A4 / PDF. El Bloc de Notes hi
@@ -369,8 +395,14 @@ export function DocumentEditor({ adapter, onToast }) {
     fotosDePublicacio = false,
     /* IDEA-41 (261028) · el motor de «🎴 Proposa Card» (null: cap botó). */
     proposaCard = null,
+    /* T3.2 (261101) · la fitxa de memòria oral del mateix clic (null: cap). */
+    memoriaOral = null,
     /* P1-59 (a) (261030) · el text fantasma del cos buit (null: cap, com sempre). */
     placeholderCos = null,
+    /* IDEA-59 / P1-72 (261101, punt 1) · la guia reversible del cos buit
+       ({ blocs, etiqueta, resum }, constant; null: cap, com sempre). Una
+       decoració: no es desa, no es publica ni arriba a la targeta. */
+    guiaCos = null,
     ...rest
   } = adapter;
 
@@ -420,14 +452,22 @@ export function DocumentEditor({ adapter, onToast }) {
   /* P1-59 (a) · El text fantasma del cos, només amb un text no buit (sense,
      cap clau nova a la crida). Un text, no un objecte: el memo no es refà. */
   const textFantasma = typeof placeholderCos === 'string' && placeholderCos.trim() ? placeholderCos : null;
+  /* Gauntlet 261101 · X-C-notes (C-09) · La guia, el seu resum i el nom del
+     cos passen pel traductor de la interfície (parells [clau, reserva];
+     traduixGuia). Les extensions es fixen en crear l'editor: la memòria va
+     per la firma del text ja traduït, que només canvia amb l'idioma (no amb
+     un `t` nou a cada pintat, que reconstruiria TipTap a cada tecla). */
+  const firmaGuia = guiaCos ? JSON.stringify(traduixGuia(guiaCos, t)) : null;
+  const guiaDelCos = useMemo(() => (firmaGuia ? JSON.parse(firmaGuia) : null), [firmaGuia]);
   const extensions = useMemo(
     () => extensionsRiques({
       onImageUpload: uploadMedia, ambTargetes, onToast: avisaDelCos,
       ...(ambEmojis ? { obreEmojis: obreEmojisDelCos } : {}),
       ...(ambExifDelCos ? { demanaExif: demanaExifDelCos } : {}),
       ...(textFantasma ? { placeholderCos: textFantasma } : {}),
+      ...(guiaDelCos ? { guiaCos: guiaDelCos } : {}),
     }),
-    [uploadMedia, ambTargetes, avisaDelCos, ambEmojis, obreEmojisDelCos, ambExifDelCos, demanaExifDelCos, textFantasma],
+    [uploadMedia, ambTargetes, avisaDelCos, ambEmojis, obreEmojisDelCos, ambExifDelCos, demanaExifDelCos, textFantasma, guiaDelCos],
   );
 
   const desaLocal = useCallback(
@@ -654,6 +694,33 @@ export function DocumentEditor({ adapter, onToast }) {
   const ambProposta = typeof proposaCard === 'function' && Boolean(updateLocal);
   const proposaCardRef = useRef(proposaCard);
   proposaCardRef.current = proposaCard;
+  /* T3.2 (marató 261101) · La fitxa de memòria oral, dins del mateix clic: el
+     motor és del consumidor (adapter.memoriaOral) i es llig per una ref en el
+     clic. L'estat recorda l'última fitxa oberta (vegada, document, fitxa, si
+     la Card s'ha proposat, la revisió i si és oberta): tancar només l'amaga,
+     perquè el diàleg torne el focus on era; cada obertura nova és una vegada
+     nova i la revisió comença de zero. */
+  const ambMemoria = ambProposta && typeof memoriaOral?.estructura === 'function';
+  const memoriaOralRef = useRef(null);
+  memoriaOralRef.current = ambMemoria ? memoriaOral : null;
+  const [fitxaMemoria, setFitxaMemoria] = useState(null);
+  /* Un altre document: la fitxa d'abans no s'hi queda. */
+  if (fitxaMemoria != null && fitxaMemoria.id !== document?.id) setFitxaMemoria(null);
+  const tancaFitxaMemoria = useCallback(() => setFitxaMemoria((f) => (f ? { ...f, obert: false } : f)), []);
+  const obreFitxaMemoria = useCallback((id, contingut, card) => {
+    const memoria = memoriaOralRef.current;
+    if (!memoria) return false;
+    let fitxa = null;
+    try {
+      fitxa = memoria.estructura(contingut);
+    } catch {
+      fitxa = null;
+    }
+    if (!fitxa || typeof fitxa !== 'object') return false;
+    const revisa = typeof memoria.revisa === 'function' ? memoria.revisa : null;
+    setFitxaMemoria((abans) => ({ vegada: (abans?.vegada ?? 0) + 1, id, fitxa, card, revisa, obert: true }));
+    return true;
+  }, []);
   const documentViu = useRef(document);
   documentViu.current = document;
   const propostesFetes = useRef([]);
@@ -692,6 +759,13 @@ export function DocumentEditor({ adapter, onToast }) {
       return false;
     }
   }, [ambProposta, proposaCard, teDocument, titolDelDocument, subtitolDelDocument, entradillaDelDocument, cosDelDocument, cosNormalitzat]);
+  /* T3.2 · Amb la fitxa de memòria oral, el botó també va encés si no hi ha
+     res a pujar però l'entradilla o el cos porten text: el clic n'obri la
+     fitxa. Només una cerca lineal del primer caràcter de text, cap parser. */
+  const hiHaRelat = useMemo(() => {
+    if (!ambMemoria || !teDocument || hiHaProposta) return false;
+    return TE_TEXT.test(String(entradillaDelDocument ?? '')) || TE_TEXT.test(String(cosDelDocument ?? ''));
+  }, [ambMemoria, teDocument, hiHaProposta, entradillaDelDocument, cosDelDocument]);
   const escriuCamps = useCallback((id, valors) => {
     for (const [camp, valor] of Object.entries(valors)) {
       desaLocal(camp, valor, id);
@@ -743,13 +817,20 @@ export function DocumentEditor({ adapter, onToast }) {
       editor.chain().command(({ tr }) => { closeHistory(tr); return true; }).run();
       return;
     }
+    /* Gauntlet 2 (261101, G2-MO-01) · El cos es llig una sola volta, abans de
+       cap proposta: la Card i la fitxa de memòria oral parteixen de la nota
+       tal com l'ha escrita la persona. */
+    const notaEscrita = { title: actual.title, subtitle: actual.subtitle, lead: actual.lead, content: editor.getHTML() };
     let proposta = null;
     try {
-      proposta = motor({ title: actual.title, subtitle: actual.subtitle, lead: actual.lead, content: editor.getHTML() });
+      proposta = motor({ ...notaEscrita });
     } catch {
       proposta = null;
     }
     if (proposta?.motiu !== MOTIU_PROPOSTA || typeof proposta.cos !== 'string') {
+      /* T3.2 · Sense res a pujar, la fitxa de la nota tal com és; el diàleg
+         diu que la Card no ha canviat (cap avís davall del vel). */
+      if (obreFitxaMemoria(actual.id, { ...notaEscrita }, false)) return;
       onToastRef.current?.(t('editor.proposaCard.res', 'No hi ha res a proposar: els camps de la targeta ja són plens o el cos no comença amb text.'));
       return;
     }
@@ -766,9 +847,14 @@ export function DocumentEditor({ adapter, onToast }) {
       { id: actual.id, docAbans, docDespres: editor.state.doc, camps, abans, desfeta: false }
     ];
     escriuCamps(actual.id, camps);
-    onToastRef.current?.(t('editor.proposaCard.feta', 'Card proposada. Per a tornar-la arrere: «Desfés la proposta» o Cmd/Ctrl+Z.'));
+    /* T3.2 · La fitxa, de la nota tal com l'ha escrita la persona, abans de
+       la proposta (G2-MO-01): els paràgrafs que la Card puja als camps no
+       desapareixen del relat, i cap no es compta dues voltes. El diàleg porta
+       el text de l'avís. */
+    const ambFitxa = obreFitxaMemoria(actual.id, { ...notaEscrita }, true);
+    if (!ambFitxa) onToastRef.current?.(t('editor.proposaCard.feta', 'Card proposada. Per a tornar-la arrere: «Desfés la proposta» o Cmd/Ctrl+Z.'));
     repintaProposta();
-  }, [editor, escriuCamps, t]);
+  }, [editor, escriuCamps, obreFitxaMemoria, t]);
 
   if (!document) {
     return (
@@ -811,7 +897,7 @@ export function DocumentEditor({ adapter, onToast }) {
       /* IDEA-41 · Sense motor, cap clau nova: la barra de sempre. */
       {...(ambProposta ? {
         onProposaCard: proposaOdesfes,
-        proposaCardDisabled: !propostaDesfeible && !hiHaProposta,
+        proposaCardDisabled: !propostaDesfeible && !hiHaProposta && !hiHaRelat,
         proposaCardDesfer: propostaDesfeible
       } : null)}
       t={t}
@@ -944,6 +1030,22 @@ export function DocumentEditor({ adapter, onToast }) {
         bloqueig={bloqueigVisibilitat}
         comNom={visibilitat?.comNom || null}
       />
+      {/* T3.2 (marató 261101) · La fitxa de memòria oral de «Proposa Card»,
+          germana de la closca i només des del primer clic: sense la clau, o
+          abans de cap clic, el DOM de sempre. */}
+      {ambMemoria && fitxaMemoria ? (
+        <FitxaMemoriaOral
+          key={fitxaMemoria.vegada}
+          obert={fitxaMemoria.obert}
+          onTanca={tancaFitxaMemoria}
+          fitxa={fitxaMemoria.fitxa}
+          revisa={fitxaMemoria.revisa}
+          descripcio={fitxaMemoria.card
+            ? t('editor.proposaCard.feta', 'Card proposada. Per a tornar-la arrere: «Desfés la proposta» o Cmd/Ctrl+Z.')
+            : t('editor.proposaCard.res', 'No hi ha res a proposar: els camps de la targeta ja són plens o el cos no comença amb text.')}
+          t={t}
+        />
+      ) : null}
       {/* T7 · El selector de targetes i l'avís de previsualització, germans de
           la closca i només amb targetes: sense la clau, el DOM de sempre. */}
       {ambTargetes ? (

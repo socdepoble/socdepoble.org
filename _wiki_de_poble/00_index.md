@@ -37,6 +37,7 @@ D'ací pengen la identitat, el saber, les eines, les actes i l'Escriptori de Só
 - [[00_index_maquina]]
 - [[02_saber/architecture/ADR-2026-09-SOLLUTIA-MODEL-B.md]]
 - [[02_saber/architecture/260913_0635_arquitectura_perfil_universal.md]]
+- [[02_saber/architecture/perfil_minim_allotjament_node_municipal.md]]
 - [[10_actes/260914_2257_acta_marmota_relleu_auditories.md]]
 - [[10_actes/260914_2359_acta_marmota_tancament.md]]
 

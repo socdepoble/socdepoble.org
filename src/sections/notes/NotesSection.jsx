@@ -18,7 +18,8 @@ import { EMOTICONA_PER_DEFECTE, emojiInicial } from '../../utils/emoji.js';
 import { aliesDeLActor } from '../../data/identitatsSeed.js';
 import { modeDeDadesResolt } from './autoriaNota.js';
 import { iconaDeCarpeta, opcionsDeCarpetes } from './carpetes.js';
-import { LLAVOR_NOTA, LLAVORS_NOTA, esLlavorDeNota } from './llavorNota.js';
+import { LLAVORS_NOTA, esLlavorDeNota } from './llavorNota.js';
+import { ID_NOTA_BENVINGUDA, KIND_TUTORIAL, NOTA_TUTORIAL, itemTutorial, portaLaNotaTutorial } from './notaTutorial.js';
 import { escriuSeleccio, llegixSeleccio } from '../../components/universal/workspace/seleccioUrl.js';
 import { ALL_CATEGORY_ID } from '../../components/universal/workspace/workspaceState.js';
 import { CARPETA_ALTRES, CARPETA_PER_SECCIO, esIdDePublicacio, itemsPublicatsDe, seccioDeCarpeta, seccioDePublicacio } from './masDeLUsuari.js';
@@ -135,22 +136,68 @@ const toWorkspaceNote = (note, noteFolders) => {
   };
 };
 
-/* Una nota s'edita; una publicació pròpia (T1) i una connexió (T71) es llegixen. */
-const renderNota = ({ item, active, onSelect }) => {
+/* Gauntlet 261101 · X-C-notes (C-02) · El cos de la columna de la llista,
+   l'únic que es desplaça: mai la finestra ni la pàgina amfitriona (al
+   WordPress, el Bloc pot viure davall de la línia de flotació). */
+const COS_DE_COLUMNA = '.sdp-workspace-column__body';
+
+/* Desplaça la columna que conté `fila` fins que la fila s'hi veu (el seu
+   capdamunt al capdamunt de la columna, si no s'hi veia sencera). Cap focus
+   no es mou. Sense maquetació (o amb la columna amagada, en mòbil), res. */
+function mostraALaColumna(fila) {
+  const columna = fila?.closest?.(COS_DE_COLUMNA);
+  if (!columna || columna.scrollHeight <= columna.clientHeight) return;
+  const caixa = fila.getBoundingClientRect();
+  const dalt = caixa.top - columna.getBoundingClientRect().top;
+  if (dalt >= 0 && dalt + caixa.height <= columna.clientHeight) return;
+  columna.scrollTop += dalt;
+}
+
+/* Gauntlet 261101 · X-C-notes (C-02) · La Card «Bloc de notes» (la n1: la
+   tutorial de lectura o, en mode 'seed', la nota de veres) a la llista. A
+   l'entrada nua de /notes és la fitxa triada, però «Tot» s'ordena per data
+   i la seua (la de la llavor) la deixa l'última: quan hi és triada, la seua
+   fila es desplaça a la vista dins de la columna, sense moure el focus.
+   L'espai de treball no dona cap ref de la fila: un marcador amagat, només
+   mentre cal, n'és el germà dins de l'element de la llista. Si la Card ha
+   d'anar fixada dalt de «Tot», ho decidix el Mestre (UniversalWorkspace). */
+function CardDeLEntrada({ mostra, children }) {
+  const marcador = useRef(null);
+  useEffect(() => {
+    if (mostra) mostraALaColumna(marcador.current?.parentElement ?? null);
+  }, [mostra]);
+  return (
+    <>
+      {children}
+      {mostra ? <span ref={marcador} hidden /> : null}
+    </>
+  );
+}
+
+/* Una nota s'edita; una publicació pròpia (T1) i una connexió (T71) es llegixen.
+   IDEA-59 / P1-72 · La Card tutorial de lectura (notaTutorial.js) es pinta
+   amb la fitxa de nota de sempre. */
+const renderNota = ({ item, active, onSelect, entradaNua = false }) => {
   if (item?.kind === 'publicacio') return <PublicacioFitxa item={item} active={active} onSelect={onSelect} />;
   if (item?.kind === 'connexio') return <ConnexioFitxa item={item} active={active} onSelect={onSelect} />;
-  return <NotaFitxa item={item} active={active} onSelect={onSelect} />;
+  const fitxa = <NotaFitxa item={item} active={active} onSelect={onSelect} />;
+  if (String(item?.id) !== ID_NOTA_BENVINGUDA) return fitxa;
+  return <CardDeLEntrada mostra={entradaNua && active}>{fitxa}</CardDeLEntrada>;
 };
 /* Gauntlet 261016 (Bloc 3.9; ordre del Mestre: «Eliminar el bloc inferior
    "Ja publicat al Mur" de la vista d'edició») · El detall ja no rep la secció
    de la carpeta: l'editor no pinta cap peu (deroga a l'editor l'Esmena 2 del
    pla 261007_1645). Una publicació oberta (PublicacioDetall, lectura) en
    conserva el seu. */
-const renderDetall = ({ item }) => (
-  item?.kind === 'publicacio'
-    ? <PublicacioDetall item={item} />
-    : <NotesDetail activeNote={item?.data} />
-);
+/* IDEA-59 / P1-72 (punt 0) · La Card tutorial de lectura obri l'estat buit
+   de l'editor (NotesEditor sense nota): la mateixa Card «Bloc de notes» amb la
+   mà i la ploma, en lectura; sense sessió, la còpia de prova de sempre. Mai
+   l'editor d'una nota que no existix al servidor. */
+const renderDetall = ({ item }) => {
+  if (item?.kind === 'publicacio') return <PublicacioDetall item={item} />;
+  if (item?.kind === KIND_TUTORIAL) return <NotesDetail activeNote={null} />;
+  return <NotesDetail activeNote={item?.data} />;
+};
 
 /* Llavor del cos d'una nota nova: la plantilla de format de Sóc de Poble.
    Gauntlet 261016 (Bloc 3.9) · Viu a llavorNota.js (H3, H4, paràgrafs i dues
@@ -166,12 +213,16 @@ const renderDetall = ({ item }) => (
    el folderId. Gauntlet 261016 (Bloc 3.9; ordre del Mestre: «Injectar en
    notes buides un template d'exemple canònic») · La llavor del cos va a TOTA
    nota nova: abans només a la de «Tot», i una nota creada des d'una
-   carpeta, una categoria o una etiqueta naixia sense plantilla. */
+   carpeta, una categoria o una etiqueta naixia sense plantilla.
+   IDEA-59 / P1-72 (ordre del Mestre, 261101, punt 1) · La plantilla ja no és
+   contingut: TOTA nota nova naix amb el cos buit i l'editor hi pinta el
+   cartell guia reversible (llavorNota.js · GUIA_NOTA), que no es desa ni es
+   publica. Cap cos que buidar ni que confondre amb el text de la persona. */
 function entradaDeNotaNova(categoriaId, categoria) {
-  if (categoria?.groupId === 'categories') return { categories: [categoria.label], content: LLAVOR_NOTA };
-  if (categoria?.groupId === 'tags') return { tags: [categoria.label], content: LLAVOR_NOTA };
-  if (categoriaId != null && categoriaId !== ALL_CATEGORY_ID) return { folderId: categoriaId, content: LLAVOR_NOTA };
-  return { content: LLAVOR_NOTA };
+  if (categoria?.groupId === 'categories') return { categories: [categoria.label] };
+  if (categoria?.groupId === 'tags') return { tags: [categoria.label] };
+  if (categoriaId != null && categoriaId !== ALL_CATEGORY_ID) return { folderId: categoriaId };
+  return {};
 }
 
 /* El grup d'una entrada de la navegació: categoria, etiqueta o (null) carpeta. */
@@ -321,8 +372,18 @@ export default function NotesSection() {
 
   /* T7 (P9) · La URL porta la carpeta i la nota (seleccioUrl.js): un enllaç
      copiat obri la mateixa carpeta amb la mateixa nota. La secció (?seccio=)
-     l'escriu l'Índex de la pàgina; canviar de nota l'oblida. */
-  const enUrl = llegixSeleccio(params, CLAUS_URL);
+     l'escriu l'Índex de la pàgina; canviar de nota l'oblida.
+     IDEA-59 / P1-72 (ordre del Mestre, 261101, punt 0) · L'entrada nua de
+     /notes (sense ?nota= ni ?carpeta=) és «Tot» amb la Card tutorial «Bloc
+     de notes» triada, també amb sessió: la selecció es deriva ací, des de la
+     primera pintada (cap efecte que reescriga la URL ni cap carrera amb la
+     reconciliació de l'espai de treball, que abans hi fixava «Mur» i la nota
+     preparada). La URL es queda nua fins que la persona tria res; un Arrere
+     fins a l'entrada hi torna. Un enllaç amb nota o carpeta mana, com
+     sempre. Al Snippet Curador no s'aplica. */
+  const urlCrua = llegixSeleccio(params, CLAUS_URL);
+  const entradaNua = !modeDesa && urlCrua.carpeta == null && urlCrua.item == null;
+  const enUrl = entradaNua ? { ...urlCrua, carpeta: ALL_CATEGORY_ID, item: ID_NOTA_BENVINGUDA } : urlCrua;
 
   /* ── F4 (bloquejant de Codex, relleus 16, 17 i 21 de l'auditoria 261004_2240)
      · Una publicació triada és de la seua font, no del port de notes ────────
@@ -502,6 +563,19 @@ export default function NotesSection() {
     [preparada.escriu, preparada.desa, preparada.creacio, preparada.reintenta]
   );
 
+  /* ── IDEA-59 / P1-72 (punt 0) · La Card tutorial «Bloc de notes» ─────────
+     Sempre a NOTES (Tot): quan la llista ja és llesta i no porta la n1 (amb
+     sessió les notes són les del servidor; o la llavor local s'ha esborrat),
+     el Bloc hi posa la Card de lectura (notaTutorial.js). Mentre carrega no:
+     en mode 'seed' la n1 de veres arriba amb la llista i no ha de canviar de
+     peça davall de la persona. Una revalidació (la renovació de la sessió)
+     conserva les dades i també la Card: no parpelleja. Al Snippet Curador, cap. */
+  const ambTutorial = !modeDesa && (status === 'ready' || status === 'revalidating') && !portaLaNotaTutorial(notes);
+  const itemDeTutorial = useMemo(
+    () => (ambTutorial ? itemTutorial(toWorkspaceNote(NOTA_TUTORIAL, noteFolders)) : null),
+    [ambTutorial, noteFolders]
+  );
+
   /* F1/F2 · El Workspace pregunta per la carpeta destí abans que la URL
      canviï. Només ajornem la preparada de reserva o una carpeta sense cap
      candidat mentre la seua font és pendent. Les notes/publicacions existents
@@ -556,10 +630,11 @@ export default function NotesSection() {
           String(note.id) === preparada.id ? { ...note, ...preparada.camps } : note, noteFolders)),
         ...publicacions,
         ...(conservada ? [conservada] : []),
+        ...(itemDeTutorial ? [itemDeTutorial] : []),
         ...(itemPreparada ? [itemPreparada] : [])
       ]
     };
-  }, [status, error, notesComplete, esperaCarpeta, triaPublicacio, resolveNote, resolPublicacio, workspaceKey, canAutoSelect, refresh, calEntrar, noteFolders, notes, carpetes, allCategories, allTags, publicacions, conservada, modeDesa, preparada.id, preparada.camps, itemPreparada]);
+  }, [status, error, notesComplete, esperaCarpeta, triaPublicacio, resolveNote, resolPublicacio, workspaceKey, canAutoSelect, refresh, calEntrar, noteFolders, notes, carpetes, allCategories, allTags, publicacions, conservada, modeDesa, preparada.id, preparada.camps, itemDeTutorial, itemPreparada]);
 
   /* T7C · La carpeta on arriba l'enllaç (la de la URL si és del Bloc; si
      no, la Safata d’Entrada) és la categoria activa del Workspace, i el
@@ -586,6 +661,9 @@ export default function NotesSection() {
       </div>
     );
   }, [esperaCarpeta, estatEntrada, refrescaEntrada]);
+  /* Gauntlet 261101 · X-C-notes (C-02) · La fitxa de cada element; la Card
+     «Bloc de notes» sap si és l'entrada nua (CardDeLEntrada). */
+  const renderFitxaBloc = useCallback((props) => renderNota({ ...props, entradaNua }), [entradaNua]);
 
   const handleSelectionChange = useCallback(({ categoryId, itemId }, meta) => {
     // push si és acció de l'usuari directa (per poder tirar enrere)
@@ -623,16 +701,13 @@ export default function NotesSection() {
     setParams(next, { replace: !isPush });
   }, [params, setParams, modeDesa]);
 
-  // Si l'usuari entra a /notes sense nota, i existeix el bloc de notes per defecte (n1), obre'l.
-  // T7 (P9) · Un enllaç amb carpeta i sense nota obri la primera nota d'eixa carpeta: no salta a n1.
-  // T7C · Al snippet no s'obri cap nota.
-  useEffect(() => {
-    if (modeDesa) return;
-    const { carpeta, item } = llegixSeleccio(params, CLAUS_URL);
-    if (!item && !carpeta && notes.some(n => n.id === 'n1')) {
-      setParams(escriuSeleccio(params, { item: 'n1' }, CLAUS_URL), { replace: true });
-    }
-  }, [params, notes, setParams, modeDesa]);
+  /* IDEA-59 / P1-72 (punt 0) · Ací hi havia l'efecte que, en entrar a /notes
+     sense res, escrivia ?nota=n1 a la URL només si la n1 era a la llista (el
+     mode 'seed'): amb sessió no hi és mai i l'entrada queia a «Mur» amb la
+     nota preparada. Ara l'entrada nua es deriva a «Tot» amb la Card tutorial
+     (enUrl, més amunt) en tots els modes. T7 (P9) · Un enllaç amb carpeta i
+     sense nota continua obrint la primera nota d'eixa carpeta; T7C · al
+     snippet no s'obri cap nota. */
 
   /* P4 (ordre del Mestre, 261003) · CREAR NOTA ja no crea res al servidor:
      obri la nota preparada («Nota sense títol») on és la persona. Es crea
@@ -715,16 +790,22 @@ export default function NotesSection() {
       <UniversalWorkspace
         key={modeDesa ? 'desa' : 'bloc'}
         model={model}
-        initialSelection={modeDesa ? seleccioDesa : { categoryId: enUrl.carpeta ?? model.primeraCarpeta }}
+        initialSelection={modeDesa ? seleccioDesa : {
+          categoryId: enUrl.carpeta ?? model.primeraCarpeta,
+          /* IDEA-59 / P1-72 · L'entrada nua ja naix amb la Card triada: cap
+             pintada intermèdia sense element. */
+          ...(entradaNua ? { itemId: enUrl.item } : {})
+        }}
         selection={modeDesa ? seleccioDesa : { categoryId: enUrl.carpeta ?? undefined, itemId: enUrl.item ?? undefined }}
         onSelectionChange={handleSelectionChange}
         compacte={modeDesa}
         /* MD (ordre del Mestre, 261003) · En mòbil, primer les carpetes; amb
            una nota a la URL d'entrada, l'editor, tret que siga la que hi
-           havia quan la persona va deixar el Bloc (l'efecte de n1 i les
-           tries escriuen ?nota= soles): llavors, el nivell on era
-           (nivellMestreDetall.js). Al snippet no s'aplica. */
-        mestreDetall={{ clau: 'notes', element: enUrl.item }}
+           havia quan la persona va deixar el Bloc (les tries escriuen ?nota=
+           soles): llavors, el nivell on era (nivellMestreDetall.js). Al
+           snippet no s'aplica. IDEA-59 / P1-72 · La URL crua: l'entrada nua
+           (la Card a «Tot», derivada) comença per les CARPETES. */
+        mestreDetall={{ clau: 'notes', element: urlCrua.item }}
         inclouDescendents={true}
         onCreate={modeDesa ? undefined : onCreate}
         onCreateError={informaError}
@@ -733,7 +814,7 @@ export default function NotesSection() {
         labels={{ ...ETIQUETES, empty: calEntrar ? TEXT_CAL_ENTRAR : ETIQUETES.empty }}
         icons={ICONES}
         tagFilter={false}
-        renderItem={renderNota}
+        renderItem={renderFitxaBloc}
         renderDetail={modeDesa ? renderDesa : renderDetallBloc}
         className="sdp-bloc"
         listClassName="sdp-bloc-list--notes"

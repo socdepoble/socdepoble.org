@@ -9,8 +9,10 @@
  *
  * Només la versió de veres, cap promesa: la decisió més nova del Mestre
  * sobre les botigues (canalsDeBotiga.js) diu que no es pinta cap
- * «pròximament», i la pastilla no en porta. El cos de la pàgina (PAGE_COPY)
- * no canvia ni un byte: l'empremta de la frontissa continua valent.
+ * «pròximament», i la pastilla no en porta. La pastilla no és de PAGE_COPY:
+ * PageDetailSection la passa a TextSection (`etiquetaFinal`) en pintar la
+ * pàgina, i per això no entra a l'empremta de la frontissa de contingut, que
+ * és la del valor de PAGE_COPY.descarregues.
  *
  * El text diu què és («Versió 1.0.0») i no només la xifra: és també el nom
  * de l'enllaç (WCAG 2.4.4), i «v1.0.0» sol no deia on porta. Amb el build

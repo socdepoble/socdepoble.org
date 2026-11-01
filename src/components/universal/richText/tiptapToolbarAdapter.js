@@ -9,6 +9,11 @@ import { buidaLlavorVerge } from './useUniversalRichText.js';
  */
 const TRADUCCIO = Object.freeze({
   subtitol:       { actiu: (e) => e.isActive('heading', { level: 3 }), ordena: (c) => c.toggleHeading({ level: 3 }) },
+  /* IDEA-59 / P1-72 (punt 2) · Els nivells del desplegable d'encapçalaments
+     (StarterKit ja els admet: useUniversalRichText, levels [2..6]). */
+  h4:             { actiu: (e) => e.isActive('heading', { level: 4 }), ordena: (c) => c.toggleHeading({ level: 4 }) },
+  h5:             { actiu: (e) => e.isActive('heading', { level: 5 }), ordena: (c) => c.toggleHeading({ level: 5 }) },
+  h6:             { actiu: (e) => e.isActive('heading', { level: 6 }), ordena: (c) => c.toggleHeading({ level: 6 }) },
   titol:          { actiu: (e) => e.isActive('heading', { level: 2 }), ordena: (c) => c.toggleHeading({ level: 2 }) },
   llista:         { actiu: (e) => e.isActive('bulletList'),            ordena: (c) => c.toggleBulletList() },
   llistaNumerada: { actiu: (e) => e.isActive('orderedList'),           ordena: (c) => c.toggleOrderedList() },

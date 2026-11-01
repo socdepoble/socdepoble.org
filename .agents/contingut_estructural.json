@@ -26,10 +26,10 @@
       "data": "2026-10-20"
     },
     "descarregues": {
-      "sha256": "0e924eb8569790bb68cc48e16ab184705d07f610e0fed897471a765e8a1b0097",
-      "html": 6432,
-      "aprovat_per": "Mestre Javi Llinares (ordre al xat 261031, executada per Claude)",
-      "data": "2026-10-31"
+      "sha256": "afdaa66eab3370c5508017f3c8dc4f18cb5802465d2520f675cca75c537ac85f",
+      "html": 6913,
+      "aprovat_per": "Mestre Javi Llinares (ordre al xat 261101, T1, executada per Claude)",
+      "data": "2026-11-01"
     },
     "disseny": {
       "sha256": "885021d3b6457430e7e24565b3f39b10516cb4bbd08243e922208a5960c1022f",
@@ -50,10 +50,10 @@
       "data": "2026-10-30"
     },
     "fediversity": {
-      "sha256": "51cc6dded16321ef5754c5cf1a8d4666998700db3bbae95d19e608a4346aa0fc",
-      "html": 15400,
-      "aprovat_per": "Mestre Javi Llinares (ordre al xat 261031, executada per Claude)",
-      "data": "2026-10-31"
+      "sha256": "635a3d0c0129bcc3fc367f296cc495bfa08e23a444711282b003d7841afbc254",
+      "html": 21688,
+      "aprovat_per": "Mestre Javi Llinares (ordre al xat 261101, T2, executada per Claude)",
+      "data": "2026-11-01"
     },
     "legal": {
       "sha256": "751ae5e6127d4d2c3071e89a8ff2132cdcd6e0f9b1faf4b4552a21b06e96c8ab",
@@ -80,10 +80,10 @@
       "data": "2026-10-17"
     },
     "versions": {
-      "sha256": "8a9c1bf8f17d0458f95369772b729d36409771bf96222f210b8f6fca7957f53b",
-      "html": 10490,
-      "aprovat_per": "Mestre Javi Llinares (ordre al xat 261030, executada per Claude)",
-      "data": "2026-10-30"
+      "sha256": "dd0c6b9fa3801d33e28da971c51e5941ecbc862e08eba74511556a8d44693c3d",
+      "html": 15407,
+      "aprovat_per": "Mestre Javi Llinares (§0.2 del Llibre Mestre, millora proactiva T7 del 261101, executada per Claude)",
+      "data": "2026-11-01"
     },
     "wikidepoble": {
       "sha256": "1c98790cc18d7d2d679ae2f0da114d90b38020d26500ad526cea88d261afb469",

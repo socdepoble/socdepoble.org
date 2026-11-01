@@ -269,6 +269,9 @@ export const EXCLOSES = Object.freeze({
   ...Object.fromEntries(COPIES_IA.map(([calaix, nom]) => [`/assets/uploads/ia/${calaix}/avatars/${nom}`, 'còpia de l’avatar de /assets/uploads/avatars/'])),
   '/assets/uploads/gent/javi-llinares/avatars/javi-llinares-perfil-1200px.jpg': 'còpia de /assets/fotos/javi-llinares-perfil-1200px.jpg',
   '/assets/uploads/gent/javi-llinares/avatars/javi-llinares-perfil-1600px.webp': 'la mateixa foto de perfil a més resolució',
+  /* P1-70 (marató nocturna 261101, T5.2) · La miniatura de les cares del xat
+     (AGENTS_MAP.JAVI.avatar_miniatura); la seua .webp germana en seguix l'estat. */
+  '/assets/fotos/javi-llinares-256x256.jpg': 'la mateixa foto de perfil en miniatura de 256 px per a les cares del xat',
   '/assets/uploads/brain/avatar_ratoli_comic_1778960942888.webp': 'còpia de /assets/uploads/avatars/avatar-ratoli-comic.png',
   '/assets/uploads/brain/cuc-de-pi-poster.png': 'còpia de /assets/uploads/brain/thermodynamics_ai_hardware_1775882083812.png',
   '/assets/uploads/brain/nano_astronauta_esmorzar_1773441997380.webp': 'còpia de /assets/uploads/brain/hero_panoramic_rural_view_1774720664221.png',

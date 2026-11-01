@@ -33,16 +33,16 @@ const SENSE_POBLE = Object.freeze({ estat: 'sense-poble', entitats: CAP, error: 
 const CARREGANT = Object.freeze({ estat: 'loading', entitats: CAP, error: null });
 
 /* teCapacitat sense llançar, com Seguidors.jsx. */
-const teDirectori = () => {
+export const teDirectori = () => {
   try { return teCapacitat('directoriEntitats') === true; } catch { return false; }
 };
-const abastDe = (config) => {
+export const abastDe = (config) => {
   try { return backendScope(config || {}); } catch { return 'sense-abast'; }
 };
 const esCancel = (error) => error?.name === 'AbortError';
 
 /* La configuració de l'App, o cap fora d'ella (una prova, el catàleg). */
-function useConfigDeLApp() {
+export function useConfigDeLApp() {
   try {
     return useUIState()?.externalConfig || null;
   } catch {

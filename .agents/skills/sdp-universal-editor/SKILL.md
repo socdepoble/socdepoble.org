@@ -43,30 +43,35 @@ Abans d'entrar al cos lliure del document, i acompanyant l'encapçalament i la B
 L'experiència d'edició de text ha de ser tan pura com la d'un processador de text editorial (`src/components/universal/UniversalToolbar.jsx` i `src/components/universal/UniversalEditorShell.jsx`), respectant la jerarquia SEO de la pàgina:
 
 - **Ubicació Estratègica i Sticky:** La barra d'edició negra **NO està a la capçalera blava de l'aplicació**. Viu a l'interior de la finestra d'edició, col·locada exactament **a sota de l'Entradilla**, marcant la frontera entre la capçalera i el cos del document, i queda fixada (`sticky`) en fer scroll.
-- **Jerarquia de Capçaleres i Llistes (`H3 -> H2`, `List` i `ListOrdered`):**
-  - El títol del document és l'`H1` i el subtítol és l'`H2`. Per tant, al cos de l'editor l'encapçalament natural de secció és **`H3` (`Heading3`)**, que se situa en primer lloc abans d'`H2` (`Heading2`).
-  - Els controls de llista ofereixen de manera explícita tant la **llista de pics (`List` / `toggleBulletList`)** com la **llista numerada (`ListOrdered` / `toggleOrderedList`)**.
+- **Desplegable d'Encapçalaments (`H3 → H4 → H5 → H6 → H2`), Llistes i Format (IDEA-59 / P1-72, Mestre 261101):**
+  - El títol del document és l'`H1` i el subtítol és l'`H2`. Per tant, al cos de l'editor l'encapçalament natural de secció és **`H3`**. Cap botó solt d'encapçalament: un sol **desplegable** (botó de menú amb `aria-haspopup="menu"`) que diu el nivell actiu («H3»; «Paràgraf» si no n'hi ha cap) i oferix, en este ordre exacte, **`H3`**, `H4`, `H5`, `H6` i, al final del tot, `H2`. Teclat complet: Enter, Espai o les fletxes l'obrin; dins, fletxes, Inici, Fi, Enter i Escape. Triar el nivell actiu el torna a paràgraf. Mai `H1` al cos.
+  - Format: **Negreta** i **Cursiva**. **Sense subratllat** (ni botó, ni marca a l'esquema, ni Cmd/Ctrl+U, ni el del menú del sistema; un `<u>` enganxat entra com a text normal). El **ratllat** («S» travessada) es conserva: no és el subratllat.
+  - Els controls de llista ofereixen de manera explícita tant la **llista de pics** com la **llista numerada**.
+- **Barra Compacta amb Segona Fila (`⋯`):** La primera fila porta l'encapçalament, la negreta, la cursiva i les llistes; un botó discret **«⋯» («Més eines»)**, amb `aria-expanded` i `aria-controls`, mostra o plega la **segona fila just a sota**, amb les eines secundàries (ratllat, citació i divisor) i les principals que no caben a la primera fila (la barra mesura l'amplària). Per davall del tall de la graella (`PUNTS_DE_TALL.eines`), «⋯» ocupa el lloc de l'antic «Aa» («Format del text») i obri totes les eines.
+- **Iconografia:** els glifs de format són propis (`src/components/universal/richText/iconesBarra.jsx`): graella de 24 × 24, traç de `currentColor`, el mateix contracte que lucide, dins de la cel·la tàctil de 48 px (`--sdp-bloc-control`), en clar i en fosc amb els tokens del crom.
 - **Llenç Complet Interactiu (`.sdp-editor-full-canvas`):** El contenidor d'escriptura ocupa tota l'alçada útil disponible (`min-height: 480px`, `padding-bottom: 25vh`, `cursor: text`) i qualsevol clic a la zona buida inferior enfoca automàticament el cursor al final del document (`editor.commands.focus('end')`).
 - **Tipografia:** El text de l'editor es nodreix exclusivament de la família local **Noto Sans** i de les escales de Pedra Seca per assegurar una lectura orgànica.
 
-## 4. La Plantilla Interactiva (Contingut Inicial "One-Click")
+## 4. La Plantilla Interactiva (Cartell Guia Reversible)
 
-Quan es crea un document nou (per exemple, una Nota Buida), l'editor mai mostra un full en blanc total. En canvi, ofereix una plantilla d'exemple didàctica que demostra totes les capacitats jeràrquiques de l'eina.
+Quan el cos d'un document té 0 caràcters (per exemple, una nota nova), l'editor mai mostra un full en blanc total: pinta un **cartell guia** (`src/components/universal/richText/extensions/guiaCos.js`; el del Bloc, `GUIA_NOTA` de `src/sections/notes/llavorNota.js`) que demostra la jerarquia de l'eina. **No és contingut**: és una decoració que no es desa, no es publica ni arriba a la targeta; per al lector de pantalla és muda i el cos porta el seu `aria-placeholder`.
 
 ### Estructura de la mostra inicial
 
 1. **Títol (H1):** Fictici, dissenyat per ocupar fins a 2 línies si és llarg per demostrar l'ajustament.
 2. **Subtítol (H2):** 1 línia explicativa o inspiracional.
 3. **Entradilla (Lead):** 2 línies de text de presentació.
-4. **Catàleg de Paràgrafs (Cos del text):**
-   - Text d'encapçalament **H3** seguit d'un paràgraf de prova.
-   - Text d'encapçalament **H4** seguit d'un paràgraf de prova.
-   - Text d'encapçalament **H5** seguit d'un paràgraf de prova.
-   - Text d'encapçalament **H6** seguit d'un paràgraf de prova.
+4. **Cartell guia del cos (`GUIA_NOTA`):**
+   - Títol de secció **H3** seguit del paràgraf que explica la plantilla (s'amaga en punxar, torna si s'ix sense escriure, no es desa ni es publica).
+   - Subtítol de secció **H4** seguit d'un paràgraf de prova.
+   - Una **llista amb pics** i una **llista numerada**.
 
-### Interacció d'esborrat automàtic
+### Interacció reversible (Mestre 261101)
 
-En el moment exacte en què l'usuari clica sobre qualsevol part del cos d'aquesta plantilla d'exemple, **tot el contingut formatiu d'exemple desapareix immediatament**, donant pas al full en blanc preparat per redactar sense obligar l'usuari a seleccionar i esborrar text manualment.
+- En punxar al cos (o entrar-hi amb el teclat), **el cartell desapareix** i queda el full en blanc per a escriure.
+- Si la persona **ix del cos sense haver escrit res**, el cartell **torna**.
+- Si en eixe document s'ha escrit **almenys un caràcter**, el cartell **ja no torna**, encara que s'esborre tot.
+- Les notes velles que encara porten la plantilla antiga desada com a contingut (la llavor) la buiden al primer focus; després s'hi aplica el cartell.
 
 ## Vincles
 

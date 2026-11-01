@@ -7,6 +7,9 @@
  *   1. MULTIMÈDIA: la portada («Arxiu Visual i Gestor d’Arxius»), les
  *      galeries publicades (Tots, IAIA, la Cronologia amb un fill per mes) i
  *      «Carpeta local · Volums muntats» amb les subcarpetes del volum actiu.
+ *      Davall de les vistes (P1-71, marató nocturna 261101), la Barra de
+ *      volums: les carpetes muntades amb el seu estat i els botons de
+ *      vincular, reconnectar, tornar a llegir, desconnectar i oblidar.
  *   2. ARXIUS: la vista de la carpeta i els seus arxius (directes), amb la
  *      lupa i l'ordenació del workspace.
  *   3. La pàgina (PaginesEspaiMultimedia.jsx).
@@ -30,11 +33,12 @@ import { origenDe } from './origenImatges.js';
 import { useCensImatges } from './useCensImatges.js';
 import { VisorDeLArxiu } from './VisorDeLArxiu.jsx';
 import { DialegDescartaLocal, InputCarpetaLocal } from './GestorMultimediaLocal.jsx';
+import { BarraVolumsLocals } from './BarraVolumsLocals.jsx';
 import { ICONES_TIPUS_LOCAL, useMiniaturesLocals } from './miniaturesLocals.js';
 import { DetallEspaiMultimedia } from './PaginesEspaiMultimedia.jsx';
 import { carpetaDeRuta } from './motorMultimediaLocal.js';
 import {
-  CATEGORIA_PORTADA, GALERIA_CRONOLOGIA, GALERIA_IAIA, GALERIA_TOTS, MAX_MINIATURES_A_LA_LLISTA, PREFIX_MES, TOT,
+  ARREL_LOCAL, CATEGORIA_PORTADA, GALERIA_CRONOLOGIA, GALERIA_IAIA, GALERIA_TOTS, MAX_MINIATURES_A_LA_LLISTA, PREFIX_MES, TOT,
   construeixCategoriesMultimedia, construeixItemsMultimedia, demandaDeLaUrl, idArxiuLocal, idCarpetaLocal, indexaArbreLocal,
   mateixaSeleccio, mitjansValids, paramsDeSeleccio, seleccioEfectiva
 } from './arbreMultimedia.js';
@@ -291,6 +295,34 @@ export default function MultimediaSection({ magatzemCarpetes = null, entorn = gl
     focusAlTitol.current = false;
   }, [efectiva.categoryId, efectiva.itemId]);
 
+  /* ── P1-71 (marató nocturna 261101, T5.1; contracte d'IDEA-55) · La Barra
+     de volums a la Columna 1, davall de les vistes (UniversalWorkspace ·
+     peuNavegacio), dins de la seua pell (.sdp-arxiu-local). Des d'una vista
+     que no és local (la portada, una galeria, una foto), Vincular, triar un
+     volum o Reconnectar porten primer a «Carpeta local» (síncron) i després
+     fan l'acció, com feia la portada: el permís continua sent la primera
+     espera del clic. Des d'una vista local, l'acció i prou: un enllaç local
+     es queda on és. Gauntlet 261101 (G-D5) · El títol és un h2: cap salt de
+     nivell abans de l'H1 de la pàgina. Gauntlet 2 261101 (G2-09) · El peu va
+     fora del <nav> de l'arbre: són accions, no navegació. ── */
+  const { propsBarra } = gestor;
+  const ambLocal = (accio) => (...args) => {
+    if (!efectiva.local) navega(ARREL_LOCAL);
+    accio(...args);
+  };
+  const peuNavegacio = (
+    <div className="sdp-arxiu-local">
+      <BarraVolumsLocals
+        {...propsBarra}
+        t={t}
+        nivell={2}
+        onVincula={ambLocal(propsBarra.onVincula)}
+        onTria={ambLocal(propsBarra.onTria)}
+        onReconnecta={ambLocal(propsBarra.onReconnecta)}
+      />
+    </div>
+  );
+
   /* ── Les galeries publicades ── */
   const membresDe = (categoria) => {
     if (categoria === GALERIA_TOTS || categoria === TOT) return cataleg.totes;
@@ -368,6 +400,7 @@ export default function MultimediaSection({ magatzemCarpetes = null, entorn = gl
         onSelectionChange={handleSelectionChange}
         labels={etiquetesEspai}
         icons={{ categories: GalleryVerticalEnd, items: Files }}
+        peuNavegacio={peuNavegacio}
         renderDetail={() => <DetallEspaiMultimedia espai={espai} />}
       />
       <InputCarpetaLocal gestor={gestor} />

@@ -72,8 +72,11 @@ afterEach(() => {
 /* Gauntlet 261016 (Bloc 3.6) · Quatre files des d'ara: Javi Llinares hi és
    amb la seua foto del padró pilot (mai el logo de l'entitat), i sense poble
    declarat la mostra porta igualment «Gent de la Torre». S'actualitzen a
-   posta les proves de tres files i la de «sense poble, cap comunitat». */
-const JAVI = '/assets/fotos/javi-llinares-perfil-1200px.jpg';
+   posta les proves de tres files i la de «sense poble, cap comunitat».
+   P1-70 (marató nocturna 261101, T5.2) · La fila la pinta amb la miniatura
+   de 256 px de la mateixa foto (CaraXat · caresLleugeres.js), no amb la de
+   1200 px: les dades de la fila continuen nomenant la gran. */
+const JAVI = '/assets/fotos/javi-llinares-256x256.jpg';
 
 test('sense amfitrió, cada fila de la mostra porta la seua cara: el poble, la IAIA, Sóc de Poble i Javi', () => {
   const { container } = munta();

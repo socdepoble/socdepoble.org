@@ -37,8 +37,20 @@
  *
  * Pur: sense React, sense disc i sense xarxa. El document de DOMParser és
  * inert: no s'hi executa ni s'hi carrega res (com llavorNota.js).
+ *
+ * T3.2 (marató 261101) · La fitxa de memòria oral (títol estructurat, resum,
+ * etiquetes del vocabulari rural tancat, municipi de la llavor i el document
+ * Open Knowledge Format v0.2, sense cap model de llenguatge) viu al mòdul
+ * germà memoriaOral.js i es reexporta ací perquè el motor de «🎴 Proposa
+ * Card» tinga una sola porta d'entrada (IDEA-29). proposaCard() no canvia:
+ * torna els mateixos { motiu, camps, mogudes, cos } que abans.
  */
 import { esLlavorDeNota } from './llavorNota.js';
+
+export {
+  ACTOR_ESTRUCTURADOR, MOTIUS_MEMORIA, NIVELLS_CONFIANCA, OKF_VERSIO, TIPUS_OKF, VOCABULARI_RURAL,
+  entradaLog, estructuraMemoriaOral, indexOkf, marcaRevisioHumana, nivellDeConfianca, validaFitxaOkf
+} from './memoriaOral.js';
 
 export const MAX_TITOL = 120;
 export const MAX_SUBTITOL = 160;

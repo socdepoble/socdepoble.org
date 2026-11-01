@@ -423,6 +423,43 @@ test('cicle 3 · la nota de benvinguda de l’estat buit es continua podent trad
   expect(mocks.adapter.emptyDocument.traduccio).toBe(true);
 });
 
+/* IDEA-59 / P1-72 (ordre del Mestre, 261101, punt 0) · La columna 3 de la
+   Card tutorial: amb sessió i sense nota (la Card de lectura del Bloc),
+   l'estat buit és la Card «Bloc de notes» de la mà amb la ploma, la mateixa
+   nota de la llavor (notaTutorial.js). */
+test('IDEA-59 · l’estat buit amb sessió és la Card «Bloc de notes» de la mà amb la ploma', async () => {
+  const { NOTA_TUTORIAL } = await import('./notaTutorial.js');
+  mocks.session = { currentUser: { id: 'U' } };
+  render(<NotesEditor activeNote={null} />);
+  expect(mocks.adapter.document).toBeNull();
+  expect(mocks.adapter.emptyDocument).toMatchObject({
+    title: 'Bloc de notes',
+    subtitle: 'El teu estudi d\'escriptura privat i lliure de distraccions',
+    lead: NOTA_TUTORIAL.lead,
+    heroImage: '/assets/notes/bloc_notes_vintage.jpg',
+    content: NOTA_TUTORIAL.content
+  });
+  // La Card signa Sóc de Poble, a La Torre de les Maçanes (la capçalera taronja).
+  expect([mocks.adapter.barAuthorName, mocks.adapter.barAuthorLocation]).toEqual(['Sóc de Poble', 'La Torre de les Maçanes']);
+});
+
+/* IDEA-59 / P1-72 (punt 1) · El cartell guia reversible del cos (llavorNota.js ·
+   GUIA_NOTA) va a l'editor de cada nota; les llavors velles es continuen
+   reconeixent (seedContent) per a les notes que encara les porten desades. */
+test('IDEA-59 · l’adaptador porta la guia reversible del cos (GUIA_NOTA) a més de les llavors velles', async () => {
+  const { GUIA_NOTA, LLAVORS_NOTA } = await import('./llavorNota.js');
+  mocks.session = { currentUser: { id: 'u' } };
+  render(<NotesEditor activeNote={{ id: 'p', folderId: 'f-mur', categories: ['Sistema'], tags: [], content: '' }} />);
+  expect(mocks.adapter.guiaCos).toBe(GUIA_NOTA);
+  expect(mocks.adapter.seedContent).toBe(LLAVORS_NOTA);
+  expect(GUIA_NOTA.blocs.map((bloc) => bloc.tipus)).toEqual(['h3', 'p', 'h4', 'p', 'ul', 'ol']);
+  /* Gauntlet 261101 · X-C-notes (C-09) · Cada text és el parell [clau,
+     reserva]: l'Editor Universal el passa pel traductor. */
+  expect(GUIA_NOTA.blocs[0].text).toEqual(['section.notes.cos.guia.titol', 'Títol de secció (H3)']);
+  expect(GUIA_NOTA.blocs[2].text).toEqual(['section.notes.cos.guia.subtitol', 'Subtítol de secció (H4)']);
+  expect(GUIA_NOTA.etiqueta).toEqual(['section.notes.cos.etiqueta', 'Cos de la nota']);
+});
+
 /* ── P4 · La «Nota sense títol» (notaPreparada.js) ────────────────────── */
 const PREPARADA = Object.freeze({
   id: '0f0e0d0c-0b0a-4000-8000-000000000001', folderId: 'f-mur', copyright: 'CC BY-NC-SA 4.0',

@@ -50,7 +50,8 @@ export const PUNTS_DE_TALL = Object.freeze({
    *  de la CSS fa 0px (--app-grid-resizer): este píxel és només de mesura. */
   separador: 1,
   /** Amplària pròpia per davall de la qual la barra d'eines de l'editor
-   *  agrupa els formats darrere d'«Aa» (UniversalToolbar). */
+   *  (UniversalToolbar) passa totes les eines de format darrere de «⋯»
+   *  («Format del text»). */
   eines: 500,
   /** Finestra fins on la barra lateral de l'app és calaix (App.jsx,
    *  AMPLE_MAXIM_COMPACTE; layout.css, «BREAKPOINT MESTRE · ≤1023px»). */

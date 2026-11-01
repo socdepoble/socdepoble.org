@@ -1,0 +1,9 @@
+{
+  "$comentari": "Android App Links (tooling/vite/associacio-apps.mjs). Les empremtes les copia el Mestre de Google Play Console › Integritat de l'app › Signatura de l'app (SHA-256, majúscules i dos punts). Buida = el build no publica cap assetlinks.json. Mai una empremta inventada ni de mostra.",
+  "esquema": "sdp.associacio-apps.v1",
+  "android": {
+    "package_name": "org.socdepoble.app",
+    "origens": ["https://socdepoble.org"],
+    "sha256_cert_fingerprints": []
+  }
+}

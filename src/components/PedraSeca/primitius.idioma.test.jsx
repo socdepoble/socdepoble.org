@@ -55,7 +55,8 @@ describe('en anglés', () => {
   test('PageFrame amb traduccio={false}: Traduir avisa en anglés', () => {
     enAngles();
     const { container } = render(<PageFrame chrome="full" title="Notícia" traduccio={false}><p>Text.</p></PageFrame>);
-    fireEvent.click(container.querySelector('header.bar-blue button[aria-label="Traduir"]'));
+    /* T7 · P1-22 (261101) · El botó també es diu en anglés. */
+    fireEvent.click(container.querySelector('header.bar-blue button[aria-label="Translate"]'));
     expect(mocks.toast).toHaveBeenCalledWith('This page is not translated: what it shows never leaves this device.');
   });
 });

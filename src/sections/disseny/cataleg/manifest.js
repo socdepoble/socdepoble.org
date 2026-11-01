@@ -198,7 +198,7 @@ const ESTRUCTURA = [
     'Els contenidors de maquetació de Pedra Seca: apilar, posar en fila, graella fluida, barra lateral amb contingut, amplada de lectura i superfície. Els espais són sempre de l’escala --sdp-space-N.',
     'stack row grid sidebar center surface'),
   especimen('estructura', 'barra-eines', 'Barra d’eines de l’editor', 'UniversalToolbar · no és la barra blava', ['organisme', 'editor'],
-    'La barra d’eines de l’editor: format del text, Borrar i Publicar. És muda: només rep l’estat i les accions. Per davall de 500px d’ample, el format es plega darrere de «Aa».',
+    'La barra d’eines de l’editor: encapçalaments (H3, H4, H5, H6 i H2), Negreta, Cursiva i les dues llistes; a «⋯» (Més eines), Ratllat, Citació i Divisor; Borrar i Publicar. És muda: només rep l’estat i les accions. Per davall de 500px d’ample, «⋯» obri totes les eines.',
     'toolbar format negreta cursiva titol publicar borrar')
 ];
 

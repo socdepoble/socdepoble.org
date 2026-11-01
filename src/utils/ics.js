@@ -44,16 +44,22 @@ const VTIMEZONE = Object.freeze({
 /**
  * TEXT de l'RFC 5545 (§3.3.11): barra, punt i coma, coma i salts de línia.
  * Els altres caràcters de control, que TEXT no admet (llevat de la
- * tabulació), s'eliminen.
+ * tabulació), s'eliminen. Exportada amb `plega` (Gauntlet 261101, B1-02):
+ * l'agenda.ics del paquet de dades obertes (data/exportaMunicipiOpenData.js)
+ * escapa i plega amb estes dos, no amb una còpia.
  */
-const escapa = (text) => String(text)
+export const escapa = (text) => String(text)
   .replace(/\\/g, '\\\\').replace(/;/g, '\\;').replace(/,/g, '\\,').replace(/\r\n|\r|\n/g, '\\n')
   .replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F]/g, '');
 
 const octets = (codi) => (codi < 0x80 ? 1 : codi < 0x800 ? 2 : codi < 0x10000 ? 3 : 4);
 
-/** Plega una línia a 75 octets (§3.1): la continuació comença amb un espai. */
-function plega(linia) {
+/**
+ * Plega una línia lògica a 75 octets d'UTF-8 sense el CRLF (§3.1), mai dins
+ * d'un caràcter: cada continuació porta CRLF i un espai davant, que compta
+ * dins dels seus 75 octets.
+ */
+export function plega(linia) {
   const trossos = [];
   let tros = '';
   let mida = 0;

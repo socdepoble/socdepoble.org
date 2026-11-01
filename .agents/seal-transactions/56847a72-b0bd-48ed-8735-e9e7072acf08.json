@@ -1,0 +1,52 @@
+{
+  "id": "56847a72-b0bd-48ed-8735-e9e7072acf08",
+  "session": "5353c955-d0c5-4259-b695-002e86580bc2",
+  "operationId": "torn_e16bf731-governanca_de_la_marato_nocturna_fediversity_notes_botigues_i_frontissa-5353c955",
+  "claim": "5353c955-d0c5-4259-b695-002e86580bc2:governance-write",
+  "planHash": "b9f72b80ec8e6cf7ed4b1af005d3902b21758386d16c5fc2ff0c2a76b21db263",
+  "beforeSeal": "bd4bca4b5da7d86bffdfb57fbcb1264549f4cee1dec741712a13c31740803161",
+  "files": [
+    {
+      "path": ".agents/contingut_estructural.json",
+      "before": "aa3d40523b8a0afe50ec8854f4c73adc72f0e831eb93670d91009021e2cd3165",
+      "after": "25b1881885dd3e64c0e8dc18a69d1f52fb697e4e97be298a0d67114026c7f2f6"
+    },
+    {
+      "path": ".agents/skills/sdp-universal-editor/SKILL.md",
+      "before": "e211d3e2da683506916b386628e3f866ece20c5bdd5d3aca5e6992db83ad3ccb",
+      "after": "b715cad07b81f366122748d35a1e4bf8f91cba8c9d11859c5ce2e7a3b3d3ab44"
+    },
+    {
+      "path": "scripts/botigues/associacio-apps.json",
+      "before": null,
+      "after": "042e15c0f25413c3ce9fc8d6e7bc1053660bc9b672ed32ba34ad804842a15de2"
+    },
+    {
+      "path": "tooling/brain/tractor-pedra-seca.mjs",
+      "before": "e7c871f1fdebe777fdcce2c883f11aad5f1cc3abd66c5f25349a14d5db328df5",
+      "after": "28e039caad645cb91b7683f7eac6d8f005bb8fbce3a631adc06ae950545a018b"
+    },
+    {
+      "path": "tooling/seo/check-editorial-copy.mjs",
+      "before": "f6633d68145989ad04d8f0b6bd596fd7b21468d499726a5f16b6a8022ab2389c",
+      "after": "4e265e7c84e7c8bf71cb7f89f1b3dbf8912d56e57a2ac90f4e6d6a5242b3bd2c"
+    },
+    {
+      "path": "tooling/tests/node-suite-manifest.json",
+      "before": "8af9d9015dc8973512f67347421bfaaa5fe8cb40480bd575399cf3280182f962",
+      "after": "abca37113c9cd461e8fc9fcb1f3780a29d2115af75cd56d3308c3e220bb7f699"
+    },
+    {
+      "path": "tooling/vite/associacio-apps.mjs",
+      "before": null,
+      "after": "51b924d489384b4f6501ab2aae2f250280def49cc6f0a0a2d27863b67573bbf2"
+    },
+    {
+      "path": "tooling/vite/associacio-apps.test.mjs",
+      "before": null,
+      "after": "bceac942ac6d4e74ef61a0d63d273612087a4d137abe08b6b472f164d45ab57d"
+    }
+  ],
+  "state": "accepted",
+  "afterSeal": "d863c155441b09590117b6eb2a6e30dacfebf30e6a62f0b502590644b8434d0f"
+}

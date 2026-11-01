@@ -156,9 +156,18 @@ test('T71 · una connexió és kind «connexio», sense ploma ni glif propi, i l
 });
 
 test('T71 · les notes pròpies continuen amb NotaFitxa i les publicacions amb PublicacioFitxa', () => {
-  ambNota({}, (item) => {
+  ambNota({ id: 'uuid-propia' }, (item) => {
     expect(item.kind).toBe('note');
     expect(mocks.props.renderItem({ item, active: true, onSelect: () => {} }).type).toBe(NotaFitxa);
+  });
+  /* Gauntlet 261101 · X-C-notes (C-02) · La n1 (la Card «Bloc de notes») va
+     dins de l'embolcall que la desplaça a la vista a l'entrada nua de /notes:
+     la fitxa continua sent NotaFitxa. Amb ?nota=n1 no és l'entrada nua. */
+  ambNota({}, (item) => {
+    expect(item.kind).toBe('note');
+    const fila = mocks.props.renderItem({ item, active: true, onSelect: () => {} });
+    expect(fila.props.mostra).toBe(false);
+    expect(fila.props.children.type).toBe(NotaFitxa);
   });
   render(<NotesSection />);
   const publicacio = mocks.model.items.find((i) => i.kind === 'publicacio');
@@ -260,18 +269,22 @@ const entradaDeCrearDes = async (activeCategoryId) => {
    P4 · La nota naix en escriure-hi, no en prémer CREAR NOTA: l'entrada és la mateixa.
    Gauntlet 261016 (Bloc 3.9; ordre del Mestre: la plantilla en TOTA nota
    nova) · Des d'una carpeta, una categoria o una etiqueta, la nota també porta
-   la llavor del cos (abans només des de «Tot»: esta prova ho fixava). */
+   la llavor del cos (abans només des de «Tot»: esta prova ho fixava).
+   IDEA-59 / P1-72 (ordre del Mestre, 261101, punt 1) · La plantilla ja no és
+   contingut: és la guia reversible de l'editor (llavorNota.js · GUIA_NOTA),
+   que no es desa. La nota nova naix amb el cos que s'hi escriu, sense cap
+   `content` de llavor a l'entrada (abans: content: LLAVOR_NOTA). */
 test('D15 · sense cap llicència de sèrie, la nota nova naix amb la Creative Commons per defecte', async () => {
   expect(LLICENCIA_PER_DEFECTE).toBe('CC BY-NC-SA 4.0');
   await ambActor({ tipus: 'persona', id: 'uuid-sense', rol: 'persona' }, [], async () => {
-    expect(await entradaDeCrearDes('__all__')).toEqual({ content: LLAVOR_NOTA, copyright: LLICENCIA_PER_DEFECTE });
-    expect(await entradaDeCrearDes('f-mur')).toEqual({ folderId: 'f-mur', content: LLAVOR_NOTA, copyright: LLICENCIA_PER_DEFECTE });
+    expect(await entradaDeCrearDes('__all__')).toEqual({ copyright: LLICENCIA_PER_DEFECTE });
+    expect(await entradaDeCrearDes('f-mur')).toEqual({ folderId: 'f-mur', copyright: LLICENCIA_PER_DEFECTE });
     // També des d'una categoria (la que porta l'espai de treball: cat_…).
-    expect(await entradaDeCrearDes('cat_Sistema')).toEqual({ categories: ['Sistema'], content: LLAVOR_NOTA, copyright: LLICENCIA_PER_DEFECTE });
+    expect(await entradaDeCrearDes('cat_Sistema')).toEqual({ categories: ['Sistema'], copyright: LLICENCIA_PER_DEFECTE });
   });
   // Una entitat sense copyright a la pertinença ni preferència: també la de sèrie.
   await ambActor(ACTOR_ENTITAT, [{ id: 'socdepoble', role: 'owner', copyright: '' }], async () => {
-    expect(await entradaDeCrearDes('__all__')).toEqual({ content: LLAVOR_NOTA, copyright: LLICENCIA_PER_DEFECTE });
+    expect(await entradaDeCrearDes('__all__')).toEqual({ copyright: LLICENCIA_PER_DEFECTE });
   });
 });
 
@@ -279,7 +292,7 @@ test('D15 · amb herència, la nota nova porta la heretada i no la de sèrie', a
   desaLlicenciaPerDefecte('uuid-pep', 'CC BY 4.0');
   await ambActor({ tipus: 'persona', id: 'uuid-pep', rol: 'persona' }, [], async () => {
     const entrada = await entradaDeCrearDes('__all__');
-    expect(entrada).toEqual({ content: LLAVOR_NOTA, copyright: 'CC BY 4.0' });
+    expect(entrada).toEqual({ copyright: 'CC BY 4.0' });
     expect(entrada.copyright).not.toBe(LLICENCIA_PER_DEFECTE);
   });
 });
@@ -297,20 +310,20 @@ test('D15 · no és retroactiu: una nota vella sense drets no en rep cap en pint
 test('T39 · amb els drets triats al Perfil en este dispositiu, la nota nova els porta (també des d’una etiqueta)', async () => {
   desaLlicenciaPerDefecte('uuid-pep', 'CC BY-SA 4.0');
   await ambActor({ tipus: 'persona', id: 'uuid-pep', rol: 'persona' }, [], async () => {
-    expect(await entradaDeCrearDes('__all__')).toEqual({ content: LLAVOR_NOTA, copyright: 'CC BY-SA 4.0' });
-    // Es compon DESPRÉS de l'entrada per carpeta, categoria o etiqueta (Bloc 3.9: també amb la llavor).
-    expect(await entradaDeCrearDes('tag_Tutorial')).toEqual({ tags: ['Tutorial'], content: LLAVOR_NOTA, copyright: 'CC BY-SA 4.0' });
+    expect(await entradaDeCrearDes('__all__')).toEqual({ copyright: 'CC BY-SA 4.0' });
+    // Es compon DESPRÉS de l'entrada per carpeta, categoria o etiqueta.
+    expect(await entradaDeCrearDes('tag_Tutorial')).toEqual({ tags: ['Tutorial'], copyright: 'CC BY-SA 4.0' });
   });
 });
 
 test('T39 · com a entitat, el copyright de la seua fitxa (pertinença) guanya a la preferència del dispositiu', async () => {
   desaLlicenciaPerDefecte('socdepoble', 'CC BY 4.0');
   await ambActor(ACTOR_ENTITAT, [{ id: 'socdepoble', role: 'owner', copyright: 'CC BY-NC 4.0' }], async () => {
-    expect(await entradaDeCrearDes('__all__')).toEqual({ content: LLAVOR_NOTA, copyright: 'CC BY-NC 4.0' });
+    expect(await entradaDeCrearDes('__all__')).toEqual({ copyright: 'CC BY-NC 4.0' });
   });
   desaLlicenciaPerDefecte('socdepoble', 'CC BY 4.0');
   await ambActor(ACTOR_ENTITAT, [{ id: 'socdepoble', role: 'owner', copyright: '' }], async () => {
-    expect(await entradaDeCrearDes('__all__')).toEqual({ content: LLAVOR_NOTA, copyright: 'CC BY 4.0' });
+    expect(await entradaDeCrearDes('__all__')).toEqual({ copyright: 'CC BY 4.0' });
   });
 });
 
@@ -387,6 +400,56 @@ test('P4 · CREAR NOTA torna la nota preparada, i obrir-la o triar-ne la carpeta
   expect(mocks.creaNota.mock.lastCall[0]).toEqual({
     id: triada.id, folderId: 'f-notes', icon: '🍅', content: '<p>Comprar planter</p>', copyright: LLICENCIA_PER_DEFECTE
   });
+});
+
+/* IDEA-59 / P1-72 (ordre del Mestre, 261101, punt 0) · La Card tutorial de
+   lectura: només quan la llista llesta no porta la n1 (ací la porta: cap
+   duplicat), només a «Tot» (cap carpeta, categoria ni etiqueta de la
+   navegació), davant de la nota preparada; i cap al Snippet Curador. */
+test('IDEA-59 · la Card tutorial: sense la n1 a la llista, un element de lectura només a «Tot»; amb la n1, cap duplicat', () => {
+  render(<NotesSection />);
+  expect(mocks.model.items.filter((item) => item.kind === 'tutorial')).toEqual([]);
+  cleanup();
+  const original = mocks.note;
+  mocks.note = { ...original, id: 'uuid-propia' };
+  try {
+    render(<NotesSection />);
+    const card = mocks.model.items.find((item) => item.kind === 'tutorial');
+    expect(card).toMatchObject({ id: 'n1', title: 'Bloc de notes', categoryIds: [], image: '/assets/notes/bloc_notes_vintage.jpg' });
+    expect(card.labels.map((label) => label.text)).toEqual(['General', 'Mur', 'Productivitat', 'Tutorial']);
+    expect(mocks.model.items.at(-2)).toBe(card);
+    expect(mocks.model.items.at(-1).data?.preparada).toBe(true);
+  } finally {
+    mocks.note = original;
+  }
+});
+
+test('IDEA-59 · al Snippet Curador no hi ha Card tutorial', () => {
+  const original = mocks.params;
+  const nota = mocks.note;
+  mocks.params = new URLSearchParams('mode=desa&url=https%3A%2F%2Fexemple.org%2F');
+  mocks.note = { ...nota, id: 'uuid-propia' };
+  try {
+    render(<NotesSection />);
+    expect(mocks.model.items.filter((item) => item.kind === 'tutorial')).toEqual([]);
+  } finally {
+    mocks.params = original;
+    mocks.note = nota;
+  }
+});
+
+/* IDEA-59 / P1-72 · L'entrada nua: «Tot» i la n1 a la selecció (també la inicial). */
+test('IDEA-59 · l’entrada nua de /notes selecciona «Tot» amb la n1; amb nota o carpeta a la URL, mana la URL', () => {
+  const original = mocks.params;
+  mocks.params = new URLSearchParams('');
+  try {
+    render(<NotesSection />);
+    expect(mocks.props.selection).toEqual({ categoryId: '__all__', itemId: 'n1' });
+    expect(mocks.props.initialSelection).toEqual({ categoryId: '__all__', itemId: 'n1' });
+    expect(mocks.props.mestreDetall).toEqual({ clau: 'notes', element: null });
+  } finally {
+    mocks.params = original;
+  }
 });
 
 test('P4 · al Snippet Curador no hi ha nota preparada', () => {

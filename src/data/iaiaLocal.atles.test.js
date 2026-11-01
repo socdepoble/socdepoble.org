@@ -18,6 +18,7 @@ import { legalContent } from '../sections/text/legalContent.js';
 import { SECTIONS } from '../config/sections.js';
 import { RUTES_CANONIQUES } from '../config/navigation.js';
 import { SYSTEM_PAGES } from '../config/systemPages.js';
+import { canalsOberts } from '../config/canalsDeBotiga.js';
 import CA from '../config/idiomes/ca.js';
 
 afterEach(() => { oblidaIndexDeLaWiki(); });
@@ -344,10 +345,14 @@ describe('la candidatura NLnet a l’Atles (30-10-2026)', () => {
   test('la visió «Gent de…», sense cap node inventat ni cap descàrrega que no és pública', () => {
     const nodes = ATLES_OPERATIU.find((entrada) => entrada.id === 'atles:gentdelatorre').paragrafs.join(' ');
     expect(nodes).toContain("Hui encara no n'hi ha cap més");
-    // 31-10-2026 · WordPress.org ha aprovat el connector (slug socdepoble), però la fitxa no és pública
-    // fins al primer commit SVN: l'Atles diu l'aprovació i res més.
-    expect(nodes).toContain('El directori de connectors de WordPress.org ja ha aprovat el connector, amb el nom socdepoble.');
+    /* 01-11-2026 (ordre del Mestre 261101_0311, T1) · DEROGA «l'Atles diu
+       l'aprovació i res més» (31-10-2026): el connector socdepoble 1.1.10 és
+       públic al directori, i el canal wordpress-org de canalsDeBotiga.js és
+       obert. L'Atles ho diu, sense cap descàrrega de les botigues mòbils. */
+    expect(nodes).toContain('El connector ja és públic al directori de connectors de WordPress.org, amb el nom socdepoble.');
+    expect(canalsOberts().map((canal) => canal.url)).toContain('https://wordpress.org/plugins/socdepoble/');
     expect(nodes).not.toContain('encara no és al directori');
+    expect(nodes).not.toMatch(/ha aprovat el connector|Google Play|App Store|APK/);
     expect(nodes).not.toMatch(/gentde(?!latorre)[a-z]+\./i);
   });
 

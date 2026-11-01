@@ -825,10 +825,11 @@ export const ATLES_OPERATIU = Object.freeze([
     claus: ['gentdelatorre', 'gent de la torre', 'obrir', 'germà'],
     paragrafs: [
       "Gent de la Torre és el node viu de Sóc de Poble a gentdelatorre.net: una web de WordPress que porta la mateixa App amb el connector de Sóc de Poble. L'altre node actiu és socdepoble.org, el portal matriu. Tots dos són portes al mateix servei, amb les mateixes dades.",
-      "La intenció és que la gent d'altres pobles puga obrir el node del seu poble, un node germà «Gent de…», com Gent de Xixona o Gent de Relleu. Hui encara no n'hi ha cap més. El directori de connectors de WordPress.org ja ha aprovat el connector, amb el nom socdepoble."
+      "La intenció és que la gent d'altres pobles puga obrir el node del seu poble, un node germà «Gent de…», com Gent de Xixona o Gent de Relleu. Hui encara no n'hi ha cap més. El connector ja és públic al directori de connectors de WordPress.org, amb el nom socdepoble."
     ]
     /* [PAGE_COPY.fediversity i PAGE_COPY.fedivers (pageContent.js); gentdelatorre.net i socdepoble.org responen 200 (30-10-2026);
-       WordPress.org ha aprovat l'slug socdepoble; el repositori SVN existix però encara és buit (31-10-2026)] */
+       el connector socdepoble 1.1.10 és públic a wordpress.org/plugins/socdepoble (fitxa i api.wordpress.org, 200, 01-11-2026);
+       canalsDeBotiga.js (canal wordpress-org obert)] */
   },
   {
     id: 'atles:oliva_oli', titol: "Collita de l'oliva i l'oli", ruta: '/pobles',

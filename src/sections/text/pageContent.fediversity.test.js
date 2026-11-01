@@ -10,6 +10,17 @@
  * si la peça canvia (un fitxer que naix, una bandera que s'encén, una llengua
  * nova), la prova cau i el text s'ha de tornar a escriure, com fa
  * paginaDeText.test.js amb la Consola. No se'n deriva cap text.
+ *
+ * 01-11-2026 (ordre del Mestre 261101_0311, T2) · Passen a «Fet hui
+ * (verificable)»: el connector de WordPress.org (1.1.10), les fletxes
+ * (IDEA-58), el traductor (IDEA-31), les comprovacions automàtiques
+ * d'accessibilitat, l'exportació Open Data i la primera fase de la
+ * federació, i la prova d'integració de l'instal·lador.
+ * Cada «Fet» continua ancorat al codi d'este mateix build; el que encara no
+ * existix es queda a «Pendent» i es diu que no existix.
+ * Gauntlet 2 261101 (carril Y; correcció del crític) · No tot això era al
+ * lloc publicat (el build de l'01-11-2026 a les 01:39 CET): el comentari de
+ * PAGE_COPY.fediversity ho separa, i la darrera prova d'este fitxer el vigila.
  */
 import { existsSync, readFileSync, readdirSync } from 'node:fs';
 import path from 'node:path';
@@ -27,6 +38,8 @@ import { SECTIONS } from '../../config/sections.js';
 import { VARIANTS_SOCIALS } from '../../config/imatgeSocial.js';
 import * as lliure from '../../data/traductorLliure.js';
 import { importaElModul } from '../../../tests/helpers/especificadorsImport.js';
+import { canalsOberts } from '../../config/canalsDeBotiga.js';
+import { POBLES_FEDERATS, urlsDeMunicipi } from '../../data/activitypub.js';
 
 /* Com a App.fediversity.test.jsx: l'amfitrió ja és llest i Notes no té esborranys. */
 vi.mock('../../host.js', () => ({ quanLlest: async () => undefined }));
@@ -125,6 +138,21 @@ const concorda = (hiEs, nega, afirma) => (hiEs ? afirma && !nega : nega && !afir
 const llegix = (rel) => readFileSync(path.join(ARREL, rel), 'utf8');
 const senseComentaris = (codi) => codi.replace(/\/\*[\s\S]*?\*\//g, '').replace(/(^|[^:])\/\/.*$/gm, '$1');
 const elementAmb = (marca) => [...doc.querySelectorAll('li')].find((li) => li.textContent.includes(marca));
+const ORIGEN = 'https://socdepoble.org';
+const WORDPRESS = 'https://wordpress.org/plugins/socdepoble/';
+/* 01-11-2026 · Les adreces de federació de l'apartat de verificació en viu,
+   derivades del codi que les publica (activitypub.js i federacio-iaia.mjs):
+   totes responien 200 el 01-11-2026 a les 04:05 CET (curl). La del pla,
+   /ap/actors/la-torre-de-les-macanes/outbox.json, donava 404: no és cap
+   ruta del codi i la pàgina no l'enllaça. */
+const ENDPOINTS_FEDERACIO = () => {
+  const actors = ['socdepoble', ...POBLES_FEDERATS].map((slug) => urlsDeMunicipi(slug, { origen: ORIGEN }));
+  return [
+    `${ORIGEN}/.well-known/nodeinfo`, `${ORIGEN}/nodeinfo/2.1.json`,
+    ...actors.map((urls) => urls.actor), ...actors.map((urls) => urls.outbox),
+    `${ORIGEN}/.well-known/host-meta`
+  ];
+};
 
 describe('anatomia (skill sdp-universal-page)', () => {
   test('H1, H2 i data: els literals de l’ordre del Mestre', () => {
@@ -235,14 +263,15 @@ describe('les partides: les del formulari enviat', () => {
 });
 
 describe('honestedat: cada afirmació ancorada al codi', () => {
-  test('en avaluació: cap diner rebut, cap emblema de la UE, i només els quatre enllaços de fora autoritzats', () => {
+  test('en avaluació: cap diner rebut, cap emblema de la UE, i només els enllaços de fora autoritzats', () => {
     expect(copy.lead).toContain("està en avaluació: encara no s'ha concedit cap diner");
     expect(text).toContain('candidatura està en avaluació');
     expect(text).toContain("Candidatura en fase d'avaluació (Expedient 2026-08-1a6)");
     expect(`${copy.lead} ${text}`).not.toMatch(/subvenció concedida|hem rebut|ens han concedit|finançat per la Unió|amb el finançament de/i);
     // Ordres del Mestre de les ~00:50 (els nodes) i de les ~01:00 (la convocatòria i la fundació).
     // 31-10-2026 · i la fitxa del connector al directori de WordPress.org (ordre del Mestre, Ronda 1).
-    const autoritzats = new Set(['https://nlnet.nl/fediversity/', 'https://nlnet.nl/', 'https://socdepoble.org', 'https://gentdelatorre.net', 'https://wordpress.org/plugins/socdepoble/']);
+    // 01-11-2026 (T2) · i les adreces de federació de l'apartat de verificació en viu, absolutes.
+    const autoritzats = new Set(['https://nlnet.nl/fediversity/', 'https://nlnet.nl/', 'https://socdepoble.org', 'https://gentdelatorre.net', WORDPRESS, ...ENDPOINTS_FEDERACIO()]);
     const externs = [...copy.html.matchAll(/https?:\/\/[^"'\s<]+/gi)].map((m) => m[0]);
     expect(new Set(externs)).toEqual(autoritzats);
     for (const a of doc.querySelectorAll('a[href^="http"]')) {
@@ -268,7 +297,9 @@ describe('honestedat: cada afirmació ancorada al codi', () => {
     // Dins del primer H3: cap H4 salta de nivell.
     const capcaleres = [...doc.querySelectorAll('h3, h4')].map((h) => h.tagName);
     expect(capcaleres.slice(0, 3)).toEqual(['H3', 'H4', 'H4']);
-    const nodes = [...doc.querySelectorAll('a[href="https://socdepoble.org"], a[href="https://gentdelatorre.net"]')];
+    // Dins del seu H4 (gentdelatorre.net també ix a la partida 1 i a la verificació en viu).
+    const h4Nodes = h4.find((h) => h.textContent === 'Els nodes actius del Fedivers de Sóc de Poble');
+    const nodes = seccio(h4Nodes).flatMap((node) => [...node.querySelectorAll('a')]);
     expect(nodes.map((a) => [a.getAttribute('href'), a.textContent, a.getAttribute('target'), a.getAttribute('rel')])).toEqual([
       ['https://socdepoble.org', 'socdepoble.org', '_blank', 'noopener noreferrer'],
       ['https://gentdelatorre.net', 'gentdelatorre.net', '_blank', 'noopener noreferrer']
@@ -282,15 +313,22 @@ describe('honestedat: cada afirmació ancorada al codi', () => {
     expect(text).toContain('Gent de la Torre ja és actiu');
     expect(text).toContain('Hui encara no tenen node propi');
     expect(copy.html).not.toMatch(/gentde(?!latorre)[a-z]+\.|\.(?:cat|es|eu|com)\b/i);
-    /* 31-10-2026 · WordPress.org ha aprovat l'slug socdepoble (el repositori
-       https://plugins.svn.wordpress.org/socdepoble/ existix), però fins al primer
-       commit SVN api.wordpress.org diu «Plugin not found»: la pàgina diu
-       l'aprovació, enllaça la fitxa i no diu que ja s'hi puga instal·lar. */
-    expect(text).toContain('el directori oficial de connectors de WordPress.org ja ha aprovat el connector de Sóc de Poble, amb el nom socdepoble');
-    expect(text).toContain("s'obri a tothom amb la primera versió que hi publiquem");
-    expect(text).not.toContain('encara no és al directori');
-    expect(text).not.toMatch(/ja es pot (?:descarregar|instal·lar)[^.]*WordPress\.org/i);
-    const fitxa = doc.querySelector('a[href="https://wordpress.org/plugins/socdepoble/"]');
+    /* 01-11-2026 (T2) · DEROGA l'«aprovat, s'obri amb la primera versió» del
+       31-10-2026: el connector socdepoble 1.1.10 és públic al directori
+       (fitxa i api.wordpress.org, 200; Stable tag 1.1.10; el readme publicat
+       porta 10 captures, i l'API en llista 10). La xifra de captures és la del
+       readme del connector d'este repositori, el que es publica. */
+    const visio = textDe(seccio([...doc.querySelectorAll('h4')].find((h) => h.textContent === 'La visió: nodes germans «Gent de…»')));
+    expect(visio).toContain('el connector oficial de Sóc de Poble ja està publicat i actiu al directori de WordPress.org, amb el nom socdepoble i la versió 1.1.10');
+    expect(visio).toContain("la seua fitxa, wordpress.org/plugins/socdepoble, porta la guia d'instal·lació i 10 captures de pantalla");
+    const readme = llegix('wordpress-plugin/readme.txt');
+    const captures = (readme.split(/^== Screenshots ==$/m)[1] ?? '').split(/^== /m)[0].match(/^\d+\. /gm) ?? [];
+    expect(captures).toHaveLength(10);
+    expect(readme).toMatch(/^= 1\.1\.10 =$/m);
+    expect(readme).toMatch(/^== Installation ==$/m);
+    expect(text).not.toMatch(/s'obri a tothom amb la primera versió|ha aprovat el connector|encara no és al directori/);
+    expect(canalsOberts().map((canal) => canal.url)).toContain(WORDPRESS);
+    const fitxa = doc.querySelector(`a[href="${WORDPRESS}"]`);
     expect([fitxa?.textContent, fitxa?.getAttribute('target'), fitxa?.getAttribute('rel')]).toEqual(['wordpress.org/plugins/socdepoble', '_blank', 'noopener noreferrer']);
   });
 
@@ -309,14 +347,25 @@ describe('honestedat: cada afirmació ancorada al codi', () => {
   /* P1-23 el construïx un altre constructor (30-10-2026): «no existix» només
      mentre el fitxer no és a l'arbre; quan hi és, «en curs», fins que
      l'orquestradora reescriga l'apartat en aterrar i desplegar-se. */
+  /* 01-11-2026 (T2) · L'Open Data i la primera fase d'ActivityPub, desplegades
+     i verificades en viu, passen a «Fet hui»: «fet» només mentre el codi hi
+     és, i «no existix» només mentre no hi és. La segona fase d'ActivityPub
+     (seguir, rebre i lliurar) no existix al codi: es queda a «Pendent». */
   test('P1-23: Open Data, ActivityPub, flake.nix i l’instal·lador. «No existix» només mentre no existixen', () => {
     const tercera = apartat(2, 'Pendent');
+    const fet3 = apartat(2, 'Fet hui (verificable)');
     const quarta = apartat(3, 'Pendent');
     const casa = (existeix, noExistix, enCurs) => (existeix ? enCurs && !noExistix : noExistix);
-    expect(casa(existix('src/data/exportaMunicipiOpenData.js'),
-      /Exportació Open Data per municipi[^:]*: no existix/.test(tercera), /Exportació Open Data per municipi[^:]*: en curs/.test(tercera))).toBe(true);
-    expect(casa(existix('src/data/activitypub.js'),
-      /Federació ActivityPub i WebFinger[^:]*: no existix/.test(tercera), /Federació ActivityPub i WebFinger[^:]*: en curs/.test(tercera))).toBe(true);
+    expect(concorda(existix('src/data/exportaMunicipiOpenData.js'),
+      /Exportació Open Data per municipi[^:]*: no existix/.test(partida(2)), fet3.includes('Exportació Open Data per municipi: des de la fitxa pública de cada poble es descarrega'))).toBe(true);
+    expect(concorda(existix('src/data/activitypub.js'),
+      /Federació ActivityPub i WebFinger[^:]*: no existix/.test(partida(2)), fet3.includes('Federació ActivityPub i WebFinger, primera fase, només de lectura'))).toBe(true);
+    // La segona fase: cap Follow, Accept ni lliurament al codi de la federació.
+    const fase2 = ['src/data/activitypub.js', 'tooling/vite/federacio-iaia.mjs', 'tooling/seo/genera-federacio.mjs']
+      .some((rel) => /['"](?:Follow|Accept)['"]|\bsignatura HTTP\b|\bSignature:/.test(senseComentaris(llegix(rel))));
+    expect(concorda(fase2, tercera.includes("Federació ActivityPub, segona fase, perquè un avís publicat al node d'un poble es puga llegir des del node d'un poble veí: encara no existix. Hui no es pot seguir cap poble des de Mastodon, ni rebre res a la bústia d'entrada (inbox), ni lliurar les publicacions amb signatures HTTP."),
+      /Federació ActivityPub, segona fase[^.]*: (?:fet|ja)/.test(tercera))).toBe(true);
+    expect(fet3).not.toMatch(/Mastodon[^.]*(?:ja es pot seguir|segueix)|bústia d'entrada/);
     expect(casa(existix('flake.nix'), quarta.includes('flake.nix: no existix'), quarta.includes('flake.nix: en curs'))).toBe(true);
     expect(casa(existix('tooling/instalador'), quarta.includes("L'instal·lador: no existix"), quarta.includes("L'instal·lador: en curs"))).toBe(true);
     // Seguir des de Mastodon és fase 2: la pàgina no diu que es puga seguir cap poble.
@@ -329,14 +378,19 @@ describe('honestedat: cada afirmació ancorada al codi', () => {
      repositori» i «encara no» de P1-23 ancorat al codi: si algú endolla el
      paquet a l'aplicació o esborra les proves, esta prova cau i la frase
      s'ha de tornar a escriure. */
-  test('P1-23: el que diu de l’Open Data i d’ActivityPub és el que hi ha al repositori', () => {
-    const tercera = apartat(2, 'Pendent');
+  test('P1-23: el que diu de l’Open Data i d’ActivityPub és el que hi ha al repositori', async () => {
+    const tercera = apartat(2, 'Fet hui (verificable)');
+    const pendent3 = apartat(2, 'Pendent');
     expect(tercera).toContain('les dades públiques del poble, amb les seues llicències');
-    expect(tercera).not.toMatch(/totes les dades/);
+    expect(partida(2)).not.toMatch(/totes les dades/);
     const opendata = readFileSync(path.join(ARREL, 'src/data/exportaMunicipiOpenData.js'), 'utf8');
     for (const peca of ['export async function exportaMunicipiOpenData(', 'export async function verificaPaquetOpenData(', 'data/llicencies.md']) expect([peca, opendata.includes(peca)]).toEqual([peca, true]);
     expect(existix('src/data/exportaMunicipiOpenData.test.js')).toBe(true);
-    expect(tercera).toContain('El generador del paquet i el seu verificador ja són al repositori, amb proves, i amb esta versió es descarrega des de la fitxa pública de cada poble');
+    expect(tercera).toContain('des de la fitxa pública de cada poble es descarrega un paquet estàndard amb les dades públiques del poble');
+    expect(tercera).toContain('El generador del paquet, en la versió 1.1.0 del format, i el seu verificador tenen proves.');
+    // El format que diu: JSON-LD, Data Package v2 i el manifest SHA-256 (BagIt).
+    for (const peca of ['datapackage.json', 'manifest-sha256.txt', 'application/ld+json']) expect([peca, opendata.includes(peca)]).toEqual([peca, true]);
+    expect(tercera).toContain('en JSON-LD de schema.org i amb un Data Package v2 de Frictionless i un manifest SHA-256 per a comprovar cada fitxer');
     // Ronda 2 · Ja es descarrega: la fitxa del poble (DetallPoble.jsx) és el mòdul de l'app que importa el generador.
     /* Gauntlet 261030, cicle 3 (inercia-per-text-cru-falsos-rojos) · Es miren
        els especificadors d'import (AST), no el text cru: un comentari que nomena
@@ -349,13 +403,21 @@ describe('honestedat: cada afirmació ancorada al codi', () => {
       .filter((fitxer) => /\.(?:js|jsx)$/.test(fitxer) && !/\.test\.(?:js|jsx)$/.test(fitxer) && !fitxer.endsWith('exportaMunicipiOpenData.js'))
       .filter((fitxer) => importaElGenerador(readFileSync(path.join(src, fitxer), 'utf8'), fitxer));
     expect(quiLImporta).toContain('sections/pobles/DetallPoble.jsx');
-    /* Revisió de la Ronda 2 (R-01, R2-COR-03) · El paquet diu què porta de veres: el directori d'entitats i la memòria en Markdown; notícies, agenda i memòria cultural encara no. */
-    expect(tercera).toContain("Hui porta el directori públic d'entitats en JSON-LD i una memòria en Markdown; les notícies, l'agenda i la memòria cultural encara no s'hi exporten.");
+    /* Revisió de la Ronda 2 (R-01, R2-COR-03) · El paquet diu què porta de veres: el directori d'entitats i la memòria en Markdown; notícies, agenda i memòria cultural encara no.
+       01-11-2026 · Ancorat al comportament: el que recullDadesPubliquesDelMunicipi encara deixa a «pendents» no s'exporta. */
+    const { recullDadesPubliquesDelMunicipi } = await import('../../data/exportaMunicipiOpenData.js');
+    const port = new Proxy({}, { get: (_, metode) => (metode === 'teCapacitat' ? () => true : metode === 'then' ? undefined : async () => []) });
+    const recollides = await recullDadesPubliquesDelMunicipi(port, { slug: 'la-torre-de-les-macanes', nom: 'La Torre de les Maçanes' });
+    const pendentsDelPaquet = (recollides.pendents ?? []).map((pendent) => pendent.coleccio);
+    // Exportades = cap de les tres no és a «pendents»: aleshores la pàgina ho ha d'afirmar i no negar-ho.
+    expect(concorda(!['noticies', 'agenda', 'memoria'].some((coleccio) => pendentsDelPaquet.includes(coleccio)),
+      tercera.includes("Hui porta el directori públic d'entitats en JSON-LD i una memòria en Markdown; les notícies, l'agenda i la memòria cultural encara no s'hi exporten."),
+      /porta (?:també )?les notícies/.test(tercera))).toBe(true);
     expect(tercera).not.toContain('memòria de les fonts pendents');
     // ActivityPub: la fase 1 (lectura) i les seues proves, al repositori.
     for (const fitxer of ['src/data/activitypub.js', 'src/data/activitypub.test.js', 'tooling/seo/genera-federacio.mjs', 'tooling/seo/genera-federacio.test.mjs']) expect([fitxer, existix(fitxer)]).toEqual([fitxer, true]);
-    expect(tercera).toContain('La primera fase, només de lectura, ja és al repositori, amb proves');
-    expect(tercera).not.toMatch(/S'està escrivint/);
+    expect(tercera).toContain('Federació ActivityPub i WebFinger, primera fase, només de lectura');
+    expect(partida(2)).not.toMatch(/S'està escrivint/);
     /* Cicle 2 (fediversity-estats-falsos-en-el-mateix-build) · DEROGA «però
        encara no està publicada»: el build web que porta esta pàgina publica
        /ap/ (vite.config.js registra federacioIaia, que emet ap/** al
@@ -363,7 +425,7 @@ describe('honestedat: cada afirmació ancorada al codi', () => {
        este build, no el desplegament. WebFinger al lloc estàtic, vegeu el bloc
        de sota; les seues regles per a un servidor propi són a flake.nix. */
     const publicaAp = /\bfederacioIaia\(/.test(senseComentaris(llegix('vite.config.js'))) && llegix('firebase.json').includes('"source": "/ap/**"');
-    expect(concorda(publicaAp, /no està publicada|no es publica/.test(tercera), tercera.includes("el lloc web publica a /ap/ els documents d'ActivityPub de Sóc de Poble i de La Torre de les Maçanes, l'únic poble federat"))).toBe(true);
+    expect(concorda(publicaAp, /no està publicada|no es publica a/.test(partida(2)), tercera.includes("el lloc web publica a /ap/ els documents d'ActivityPub de Sóc de Poble i de La Torre de les Maçanes, l'únic poble federat"))).toBe(true);
     /* Tancament 261030 (P1-23, ordre del Mestre: WebFinger compatible amb
        Firebase Hosting) · DEROGA «encara no les respon socdepoble.org»: el
        build web emet host-meta i el JRD dels actors principals
@@ -376,13 +438,13 @@ describe('honestedat: cada afirmació ancorada al codi', () => {
     const webfingerEstatic = /\bfitxersWebFingerEstatic\(/.test(senseComentaris(llegix('tooling/vite/federacio-iaia.mjs')))
       && reescrituraDe('socdepoble', 'socdepoble') && reescrituraDe('la-torre-de-les-macanes', 'la-torre-de-les-macanes')
       && reescrituraDe('latorredelesmacanes', 'la-torre-de-les-macanes');
-    expect(concorda(webfingerEstatic, /encara no les respon socdepoble\.org/.test(tercera), tercera.includes('socdepoble.org publica la via alternativa que consulta Mastodon, el document host-meta, '
+    expect(concorda(webfingerEstatic, /encara no les respon socdepoble\.org/.test(partida(2)), tercera.includes('socdepoble.org publica la via alternativa que consulta Mastodon, el document host-meta, '
       + 'perquè es puguen trobar @socdepoble@socdepoble.org i @la-torre-de-les-macanes@socdepoble.org, que també es troba com a @latorredelesmacanes@socdepoble.org'))).toBe(true);
     /* Decisió del Mestre del 31-10-2026 (Ronda 2): la federació és només per a La Torre.
        La pàgina no pot prometre WebFinger, actor ni outbox als pobles de mostra. */
     expect(tercera).toContain('Els pobles de mostra no es poden trobar així, i no tenen actor ni outbox');
-    expect(tercera).not.toContain('tots els pobles del directori');
-    expect(tercera).not.toContain('dels pobles de mostra');
+    expect(partida(2)).not.toContain('tots els pobles del directori');
+    expect(partida(2)).not.toContain('dels pobles de mostra');
     expect(tercera).toContain("de La Torre de les Maçanes, l'únic poble federat");
     expect(llegix('src/data/activitypub.js')).toMatch(/export const POBLES_FEDERATS = Object\.freeze\(\['la-torre-de-les-macanes'\]\)/);
     expect(tercera).toContain('/nodeinfo/2.1.json');
@@ -397,10 +459,15 @@ describe('honestedat: cada afirmació ancorada al codi', () => {
     expect(copy.html).toContain('i no tenen actor ni <code>outbox</code>.');
     const senseCodi = new DOMParser().parseFromString(copy.html, 'text/html');
     senseCodi.querySelectorAll('code').forEach((codi) => codi.remove());
+    /* Gauntlet 261101 (A-05) · Un enllaç que té per text la seua pròpia adreça
+       (/ap/outbox/…) és una adreça, no prosa: com el <code>, no compta. */
+    senseCodi.querySelectorAll('a[href^="https://"]').forEach((a) => {
+      if (a.textContent === a.getAttribute('href').replace(ORIGEN, '')) a.remove();
+    });
     expect(senseCodi.body.textContent).not.toMatch(/outbox/i);
     expect(text).toMatch(/outbox/);
-    expect(tercera).toContain("Encara no s'ha provat amb un servidor de Mastodon de veres");
-    expect(tercera.includes("les regles per a un servidor propi (flake.nix) encara no s'han verificat amb Nix")).toBe(/\/\.well-known\/webfinger/.test(llegix('flake.nix')));
+    expect(pendent3).toContain("Encara no s'ha provat amb un servidor de Mastodon de veres");
+    expect(pendent3.includes("les regles per a un servidor propi (flake.nix) encara no s'han verificat amb Nix")).toBe(/\/\.well-known\/webfinger/.test(llegix('flake.nix')));
   });
 
   test('la IAIA local és BM25 sense models, i el Mètode Karpathy no existix', () => {
@@ -413,6 +480,12 @@ describe('honestedat: cada afirmació ancorada al codi', () => {
 
   test('el xifratge del Xat: la pàgina diu «bandera apagada» mentre la bandera és apagada', () => {
     expect([E2EE_ACTIU_PER_DEFECTE, text.includes("està preparat darrere d'una bandera apagada: hui no està actiu")]).toEqual([false, true]);
+    /* 01-11-2026 (T2) · Les primitives que nomena són les del motor (xifratXatCripto.js), i
+       el xifratge no ix mai a «Fet hui»: és codi i proves, apagat. */
+    const cripto = senseComentaris(llegix('src/data/xifratXatCripto.js'));
+    for (const peca of ["name: 'ECDH', namedCurve: 'P-256'", "name: 'ECDSA', namedCurve: 'P-256'", 'AEAD_AES_256_GCM', 'subtle']) expect([peca, cripto.includes(peca)]).toEqual([peca, true]);
+    expect(apartat(3, 'Pendent')).toContain("el motor criptogràfic, amb WebCrypto (claus P-256 per a ECDH i ECDSA i xifratge AES-GCM de 256 bits), i les seues proves són al repositori");
+    for (const i of [0, 1, 2, 3]) expect([i, /xifratge d'extrem a extrem|E2EE/.test(apartat(i, 'Fet hui (verificable)'))]).toEqual([i, false]);
   });
 
   test('la llicència: el fitxer LICENSE és GNU AGPL, versió 3 o posterior', () => {
@@ -437,8 +510,15 @@ describe('honestedat: cada afirmació ancorada al codi', () => {
      la Wiki de Poble penja les fletxes (navegacioTeclat.js), ho diu, amb els
      seus enllaços. Les dues continuen «en curs», a «Pendent» (B3: mai «fet»
      per a res sense desplegar). */
-  test('el traductor i les fletxes: la partida 2 diu el que fa este mateix build, i cap «Fet hui» les promet', () => {
+  /* 01-11-2026 (ordre del Mestre 261101_0311, T2) · DEROGA «en curs» i «cap
+     Fet hui les promet» (B3: mai «fet» sense desplegar): les fletxes i el
+     traductor ja són desplegats. Verificat en viu el 01-11-2026 al paquet de
+     socdepoble.org: el tros navegacioTeclat i el de traductorLliure, amb
+     l'extrem d'Apertium. Passen a «Fet hui», i cada frase continua ancorada al
+     codi d'este mateix build: si la peça se'n va, la prova cau. */
+  test('el traductor i les fletxes: la partida 2 diu el que fa este mateix build, a «Fet hui»', () => {
     const segona = apartat(1, 'Pendent');
+    const fet2 = apartat(1, 'Fet hui (verificable)');
     const fletxes = elementAmb('(IDEA-58)');
     const traductor = elementAmb('(IDEA-31)');
     expect([Boolean(fletxes), Boolean(traductor)]).toEqual([true, true]);
@@ -447,7 +527,9 @@ describe('honestedat: cada afirmació ancorada al codi', () => {
     const fletxesViues = /from '\.\/navegacioTeclat\.js'/.test(espai) && /gestionaTeclaLlista\(/.test(espai) && /gestionaTeclaArbre\(/.test(espai)
       && ['src/sections/disseny/DesignSection.jsx', 'src/sections/wiki-de-poble/WikiDePobleSection.jsx'].every((rel) => /<UniversalWorkspace\b/.test(llegix(rel)));
     const textFletxes = fletxes.textContent.replace(/\s+/g, ' ');
-    expect(concorda(fletxesViues, /no existix|en construcció|encara no/.test(textFletxes), textFletxes.includes('les fletxes ja mouen el focus per les columnes de Disseny i de la Wiki de Poble'))).toBe(true);
+    expect(concorda(fletxesViues, /no existix|en construcció|encara no|en curs/.test(textFletxes), textFletxes.includes('↑ ↓ ← →, Inici i Fi mouen el focus per les columnes de Disseny i de la Wiki de Poble'))).toBe(true);
+    // Inici i Fi també són de navegacioTeclat.js.
+    expect(senseComentaris(llegix('src/components/universal/workspace/navegacioTeclat.js'))).toMatch(/'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'Home', 'End'/);
     if (fletxesViues) expect([...fletxes.querySelectorAll('a')].map((a) => a.getAttribute('href'))).toEqual(['/disseny', '/wikidepoble', '/notes', '/pobles', '/mur', '/consola']);
     for (const rel of ['pobles/PoblesSection.jsx', 'mur/MurSection.jsx', 'consola/ConsolaSection.jsx']) {
       expect(senseComentaris(llegix(`src/sections/${rel}`))).toMatch(/onKeyDown=\{gestionaTeclaGraella\}/);
@@ -456,15 +538,14 @@ describe('honestedat: cada afirmació ancorada al codi', () => {
     // IDEA-31: l'entrada del lloc (main.jsx, fora dels comentaris) fixa el traductor lliure del navegador.
     const traductorDelLloc = /\bfixaTraductorLliure\(\s*'apertium'\s*\)/.test(senseComentaris(llegix('src/main.jsx')));
     const textTraductor = traductor.textContent.replace(/\s+/g, ' ');
-    expect(concorda(traductorDelLloc, /no traduïx|no es traduïx|en construcció/.test(textTraductor), textTraductor.includes('a socdepoble.org, el botó Traduir de la barra blava la demana des del navegador'))).toBe(true);
+    expect(concorda(traductorDelLloc, /no traduïx|no es traduïx|en construcció|en curs/.test(textTraductor), textTraductor.includes('a socdepoble.org, el botó Traduir de la barra blava la demana des del navegador'))).toBe(true);
     expect([...traductor.querySelectorAll('a')].map((a) => a.getAttribute('href'))).toEqual(['/traduccions']);
-    // Les dues, «en curs» a «Pendent»; cap frase sobre el desplegament; cap «Fet hui» les promet (B3).
-    expect(segona).toMatch(/\(IDEA-58\): en curs/);
-    expect(segona).toMatch(/\(IDEA-31\): en curs/);
+    // Les dues, a «Fet hui» i no a «Pendent».
+    expect([fet2.includes('(IDEA-58)'), fet2.includes('(IDEA-31)'), segona.includes('(IDEA-58)'), segona.includes('(IDEA-31)')]).toEqual([fletxesViues, traductorDelLloc, false, false]);
     expect(text).not.toMatch(/encara no traduïx|no està publicada/);
     expect(segona).toContain("L'objectiu és WCAG 2.2 AAA, i hui no tenim cap certificació d'accessibilitat");
-    // Cap apartat «Fet hui» no promet ni el traductor ni les fletxes.
-    expect(apartat(1, 'Fet hui (verificable)')).not.toMatch(/IDEA-58|IDEA-31|Apertium|fletxes/);
+    // Cap certificació promesa: el Pendent ho diu, i cap «Fet hui» parla d'AAA certificat.
+    expect(fet2).not.toMatch(/certifica|AAA/);
     // El criteri 2.1.1 Teclat és de nivell A; el d'AAA és el 2.1.3.
     expect(text).toContain('2.1.1 Teclat de les WCAG, que és de nivell A');
     expect(text).toContain('El criteri de nivell AAA és el 2.1.3 Teclat sense excepció');
@@ -478,7 +559,7 @@ describe('honestedat: cada afirmació ancorada al codi', () => {
     expect(lliure.MOTORS_TRADUCCIO).toBeTruthy();
     const perMotor = (motor) => Object.entries(lliure.MOTORS_TRADUCCIO).filter(([, m]) => m.motor === motor).map(([desti]) => desti).sort();
     expect([perMotor('apertium'), perMotor('mymemory')]).toEqual([['EN-GB', 'ES', 'FR', 'GL'], ['DE', 'EU']]);
-    expect(apartat(1, 'Pendent')).toContain("amb Apertium, un traductor de programari lliure, al castellà, l'anglés, el francés i el gallec, i amb MyMemory, un servei de l'empresa Translated, al basc i a l'alemany");
+    expect(apartat(1, 'Fet hui (verificable)')).toContain("amb Apertium, un traductor de programari lliure, al castellà, l'anglés, el francés i el gallec, i amb MyMemory, un servei de l'empresa Translated, al basc i a l'alemany");
   });
 
   /* Ordre del Mestre (30-10-2026, prompt 2208, T2) i decisió del Mestre del
@@ -495,7 +576,11 @@ describe('honestedat: cada afirmació ancorada al codi', () => {
     const rutesDeSeccio = new Set(SECTIONS.map((seccio) => seccio.path));
     const altres = new Set(['/page/consola', '/consola', '/traduccions', '/wikidepoble']);
     const hrefs = [...doc.querySelectorAll('a')].map((a) => a.getAttribute('href')).filter((href) => !href.startsWith('https://'));
-    expect(hrefs.filter((href) => !rutesDeSeccio.has(href) && !altres.has(href))).toEqual([]);
+    /* 01-11-2026 (T2) · Un document de la Wiki de Poble, per l'id que porta el paquet de la Wiki (wikiManifest.js). */
+    const manifest = llegix('src/data/wikiManifest.js');
+    const delaWiki = (href) => /^\/wikidepoble\?item=[a-z0-9_]+$/.test(href) && manifest.includes(`"id": "${href.split('=')[1]}"`);
+    expect(hrefs.filter((href) => !rutesDeSeccio.has(href) && !altres.has(href) && !delaWiki(href))).toEqual([]);
+    expect(hrefs).toContain('/wikidepoble?item=perfil_minim_allotjament_node_municipal');
     for (const ruta of ['/pobles', '/notes', '/multimedia', '/xat', '/disseny', '/consola', '/versions']) expect([ruta, hrefs.includes(ruta)]).toEqual([ruta, true]);
     // Decisió del Mestre (31-10-2026) · La web publicada mostra les dades reals, amb la instantània sanejada del build.
     expect(text).toContain("És oberta a tothom, sense compte ni rol: a la web publicada en mostra les dades reals del sistema, amb la instantània sanejada que es genera en cada publicació, i les lectures en viu i les escriptures només es fan a l'ordinador on es treballa.");
@@ -543,9 +628,18 @@ describe('honestedat: cada afirmació ancorada al codi', () => {
       `L'inventari de l'API del port neutral (${CONTRACTE_NUCLI.length} mètodes del nucli i ${Object.keys(CAPACITATS).length} capacitats atòmiques a src/data/contracte.js) i dels requisits d'allotjament verificables del Model B, en esborrany a la Wiki de Poble.`
     );
     /* Decisió del Mestre (xat 261031, revisió R3 H-04): l'inventari és un
-       esborrany i els recursos mínims encara no s'han mesurat. */
+       esborrany i els recursos mínims encara no s'han mesurat.
+       01-11-2026 (T2; carril B4) · El perfil mínim d'allotjament mesura la web
+       estàtica i cita els preus oficials, en esborrany; la mida de la base de
+       dades i la càrrega d'un servidor encara no. «Fet» diu el perfil en
+       esborrany i «Pendent», el que el mateix document diu que no s'ha mesurat. */
     expect(primeraFet).not.toMatch(/documentats a la Wiki/);
-    expect(primeraPendent).toContain("Mesurar i fixar els recursos mínims d'allotjament.");
+    const perfil = readFileSync(path.join(ARREL, '_wiki_de_poble/02_saber/architecture/perfil_minim_allotjament_node_municipal.md'), 'utf8');
+    expect(perfil).toMatch(/^status: esborrany$/m);
+    expect(perfil).toContain('## 8. Tres escenaris de cost mensual');
+    expect(perfil).toContain("La mida de la base de dades i la càrrega real d'un servidor no s'han mesurat.");
+    expect(primeraFet).toContain("El perfil mínim d'allotjament d'un node municipal, en esborrany a la Wiki de Poble: la mida mesurada de la web estàtica, el que necessita la base de dades i tres escenaris de cost mensual per a un ajuntament menut, amb els preus oficials.");
+    expect(primeraPendent).toContain("Mesurar la mida de la base de dades de producció i la càrrega real d'un servidor, i fixar amb eixes xifres els recursos mínims d'allotjament.");
     expect(primeraPendent).not.toContain("Documentar l'API i els requisits d'allotjament");
     const docModelB = readFileSync(
       path.join(ARREL, '_wiki_de_poble/02_saber/architecture/api_port_neutral_i_allotjament_model_b.md'),
@@ -565,4 +659,188 @@ test('Lot5 · el document enumera exactament els noms reals del nucli i les capa
  expect([...nucli.matchAll(/^- `([^`]+)`$/gm)].map(m=>m[1])).toEqual(CONTRACTE_NUCLI);
  const files=[...doc.matchAll(/^\| `([^`]+)` \| (.+) \|$/gm)].map(m=>[m[1],[...m[2].matchAll(/`([^`]+)`/g)].map(m=>m[1])]);expect(Object.fromEntries(files)).toEqual(CAPACITATS);
  for(const ruta of [...doc.matchAll(/`((?:src|tooling|wordpress-plugin)\/[a-zA-Z0-9_./-]+\.(?:js|jsx|mjs|nix|php))`/g)].map(m=>m[1]))expect(existix(ruta),ruta).toBe(true);
+});
+
+/* 01-11-2026 (ordre del Mestre 261101_0311, T2) · Les fites noves de «Fet hui
+   (verificable)» i els enllaços de verificació en viu, en un clic. Cada una,
+   ancorada al codi d'este build o a una prova que la reproduïx. */
+describe('01-11-2026 · fet hui, verificable, i enllaçat en un clic', () => {
+  test('partida 1: el connector de WordPress.org i el node viu que el fa servir', () => {
+    const fet1 = apartat(0, 'Fet hui (verificable)');
+    expect(fet1).toContain('El connector oficial per a WordPress, publicat i actiu al directori de WordPress.org en la versió 1.1.10 (wordpress.org/plugins/socdepoble), i un node viu que el fa servir, gentdelatorre.net, el de Gent de la Torre: la mateixa aplicació en una web de WordPress, amb el mateix servidor de dades (Model B).');
+    const li = elementAmb('El connector oficial per a WordPress');
+    expect([...li.querySelectorAll('a')].map((a) => [a.getAttribute('href'), a.getAttribute('target'), a.getAttribute('rel')]))
+      .toEqual([[WORDPRESS, '_blank', 'noopener noreferrer'], ['https://gentdelatorre.net', '_blank', 'noopener noreferrer']]);
+    expect(canalsOberts().map((canal) => canal.url)).toContain(WORDPRESS);
+    // El que no està fet es queda a «Pendent»: cap instal·lació administra més d'un poble.
+    expect(apartat(0, 'Pendent')).toContain("Administrar més d'un poble des de la mateixa instal·lació: hui cada instal·lació es configura per a un sol poble.");
+  });
+
+  test('partida 2: les comprovacions automàtiques d’accessibilitat són les que hi ha al repositori', () => {
+    const li = elementAmb("Comprovacions automàtiques d'accessibilitat");
+    const frase = li.textContent.replace(/\s+/g, ' ');
+    expect(apartat(1, 'Fet hui (verificable)')).toContain(frase);
+    // Les proves de contrast: 7:1 per al títol, el cos i el text suau, sobre els quatre fons.
+    const tokens = llegix('src/css/tokens.contracte.test.js');
+    expect(tokens).toContain("const SUPERFICIES = ['--sdp-fons-targeta', '--sdp-fons-app', '--sdp-fons-subtil', '--sdp-fons-lectura'];");
+    expect(tokens).toContain("for (const text of ['--sdp-text-titol', '--sdp-text-cos', '--sdp-text-suau'])");
+    expect(tokens).toMatch(/toBeGreaterThanOrEqual\(7\)/);
+    expect(frase).toContain("contrast d'almenys 7:1 als tres colors de text del sistema (títol, cos i text suau) sobre els seus quatre fons principals (src/css/tokens.contracte.test.js)");
+    // La porta de disseny: colors, lletra, botons de menys de 44 px i focus amagat.
+    const guarda = senseComentaris(llegix('tooling/gates/design_guard.mjs'));
+    for (const regla of ['RAW_HEX', 'FONT_SMALL', 'TOUCH_SIZE', 'FOCUS_NONE', 'px < 44']) expect([regla, guarda.includes(regla)]).toEqual([regla, true]);
+    expect(frase).toContain('la porta de disseny tooling/gates/design_guard.mjs busca al codi colors fora del sistema, lletra massa menuda, botons de menys de 44 píxels i el focus amagat');
+    // Cap eina que no existix: wcag_contrast_audit.mjs només es pot nomenar si hi és.
+    const auditoria = readdirSync(path.join(ARREL, 'tooling'), { recursive: true }).map(String).some((fitxer) => /wcag_contrast_audit/.test(fitxer));
+    if (!auditoria) expect(copy.html).not.toContain('wcag_contrast_audit');
+  });
+
+  test('partida 4: la prova d’integració de l’instal·lador diu el que fa, i el defecte conegut es queda a «Pendent»', () => {
+    const fet4 = apartat(3, 'Fet hui (verificable)');
+    const pendent4 = apartat(3, 'Pendent');
+    const prova = llegix('tests/inicia-node-germa.test.mjs');
+    /* La prova executa la CLI de veres per a Xixona, en un mkdtemp, amb la release de HEAD extreta
+       amb git archive (Gauntlet 261101, B4-G05), i genera la federació del node. */
+    for (const peca of ["slug: 'xixona'", 'mkdtempSync(path.join(os.tmpdir()', 'tooling/instalador/inicia-node-germa.mjs', 'genera-federacio.mjs', "stdio: ['ignore', 'pipe', 'pipe']", 'SECRET', "'archive'", "'HEAD'"]) {
+      expect([peca, prova.includes(peca)]).toEqual([peca, true]);
+    }
+    expect(fet4).toContain("Una prova d'integració de l'instal·lador de nodes germans (tests/inicia-node-germa.test.mjs): executa tooling/instalador/inicia-node-germa.mjs sense cap pregunta, amb l'última versió confirmada d'este repositori (HEAD, extreta amb git archive), per a un segon poble de prova, Xixona, en una carpeta temporal.");
+    expect(fet4).toContain("Comprova que cada fitxer d'eixa versió arriba al node nou amb la seua empremta SHA-256, que cap clau secreta no viatja al node nou i que la federació que publicaria el node (NodeInfo 2.1, host-meta i WebFinger) porta l'origen del poble nou.");
+    // Gauntlet 261101 (B4-G04) · Ni «punta a punta» ni «el repositori queda intacte»: la prova no compila ni servix cap web.
+    expect(fet4).not.toMatch(/punta a punta|repositori queda intacte/);
+    // La guia curta que deixa l'instal·lador al node nou, i que la prova no executa.
+    expect(llegix('tooling/instalador/inicia-node-germa.mjs')).toMatch(/writeFileSync\(path\.join\(target,'INICIA_NODE\.md'\)/);
+    expect(fet4).toContain("L'instal·lador hi deixa una guia curta, INICIA_NODE.md, amb els passos per a compilar-lo i publicar-lo; la prova no els executa.");
+    // El defecte que la prova fixa (el node encara hereta La Torre) es diu a «Pendent» mentre la prova el fixe.
+    const defecte = /test\('\[DEFECTE\] el node de Xixona encara hereta La Torre/.test(prova);
+    expect(concorda(defecte, /publica el seu propi poble al Fedivers(?!: encara no)/.test(fet4),
+      pendent4.includes("el node nou encara hereta de la versió l'actor federat de La Torre de les Maçanes i les regles de WebFinger de socdepoble.org: encara no publica el seu propi poble al Fedivers"))).toBe(true);
+    // Ni la compilació d'una còpia real ni Nix ni cap node independent: la prova no executa npm ni Nix.
+    expect(prova).not.toMatch(/spawnSync\([^)]*['"](?:npm|nix)['"]/);
+    expect(pendent4).toContain("Encara no s'ha provat la compilació d'una còpia real, ni s'ha verificat amb Nix ni s'ha desplegat cap node independent.");
+  });
+
+  /* Carrils B1, B2 i B3 de la marató (01-11-2026) · Cada frase, ancorada al seu codi. */
+  test('partida 3: el format 1.1.0 de les dades obertes, i el que encara no s’exporta', async () => {
+    const { VERSIO_FORMAT } = await import('../../data/exportaMunicipiOpenData.js');
+    expect(VERSIO_FORMAT).toBe('1.1.0');
+    const opendata = llegix('src/data/exportaMunicipiOpenData.js');
+    for (const peca of ["'@type': 'NewsArticle'", "'@type': 'Event'", "'@type': 'CreativeWork'", "'BEGIN:VCALENDAR'", "mediatype: 'text/calendar'"]) expect([peca, opendata.includes(peca)]).toEqual([peca, true]);
+    expect(apartat(2, 'Pendent')).toContain("Exportar també les notícies, l'agenda i la memòria cultural de cada poble: el format del paquet ja les sap escriure (notícies NewsArticle, actes Event, també en iCalendar, i memòria CreativeWork), però l'aplicació encara no en té cap lectura pública garantida, i el Mas no té cap mòdul de memòria cultural.");
+    // Els motius, els mateixos que el paquet escriu a la seua memòria.
+    expect(opendata).toContain("encara no hi ha cap lectura pública garantida d'estes dades");
+    expect(opendata).toContain('el Mas no té cap mòdul de memòria cultural');
+  });
+
+  test('partida 3: l’estructurador local de memòria oral, sense model, amb el botó del Bloc de Notes si el Bloc el porta; el Mètode Karpathy amb models no existix', async () => {
+    const fet3 = apartat(2, 'Fet hui (verificable)');
+    const memoria = await import('../notes/memoriaOral.js');
+    expect([memoria.OKF_VERSIO, typeof memoria.estructuraMemoriaOral, typeof memoria.marcaRevisioHumana]).toEqual(['0.2', 'function', 'function']);
+    // Determinista i sense xarxa ni models: cap import de fora, cap fetch.
+    const codi = senseComentaris(llegix('src/sections/notes/memoriaOral.js'));
+    expect([...codi.matchAll(/from '([^']+)'/g)].map((m) => m[1]).every((font) => font.startsWith('./') || font.startsWith('../'))).toBe(true);
+    expect(codi).not.toMatch(/\bfetch\(|XMLHttpRequest|WebSocket|openai|anthropic|gemini/i);
+    // La fitxa naix en esborrany i sense «verified»; només marcaRevisioHumana la promou.
+    const relat = 'La iaia contava que a la Torre de les Maçanes, quan arribava la collita de les olives, tot el poble anava a l’almàssera i les xiquetes portaven el berenar als bancals de dalt.';
+    const fitxa = memoria.estructuraMemoriaOral(relat);
+    expect(JSON.stringify(fitxa)).toMatch(/"status":"draft"/);
+    expect(JSON.stringify(fitxa)).not.toMatch(/"verified"/);
+    expect(fet3).toContain("i una fitxa en Open Knowledge Format (OKF v0.2) en esborrany, que només una persona pot donar per revisada. Pren l'esquema del Mètode Karpathy sense cap model de llenguatge: és determinista i no fa servir ni xarxa ni tòkens.");
+    // «Cap botó propi» mentre cap peça de l'aplicació no la crida.
+    const src = path.join(ARREL, 'src');
+    const quiLaCrida = readdirSync(src, { recursive: true }).map(String)
+      .filter((fitxer) => /\.(?:js|jsx)$/.test(fitxer) && !/\.test\.(?:js|jsx)$/.test(fitxer) && !/notes\/(?:memoriaOral|proposaCard)\.js$/.test(fitxer))
+      .filter((fitxer) => /\bestructuraMemoriaOral\(/.test(senseComentaris(readFileSync(path.join(src, fitxer), 'utf8'))));
+    /* T3.2-UI (261101) · El botó és «Proposa Card» del Bloc de Notes: el Bloc
+       passa l'adaptador (memoriaOralDelBloc.js, que la crida) i l'editor obri
+       la fitxa (FitxaMemoriaOral), amb la revisió i la descàrrega. */
+    const ambBoto = quiLaCrida.some((fitxer) => /notes\/memoriaOralDelBloc\.js$/.test(fitxer))
+      && /\bmemoriaOral: citaOrigen \? null : memoriaOral\b/.test(senseComentaris(llegix('src/sections/notes/NotesEditor.jsx')))
+      && /<FitxaMemoriaOral\b/.test(llegix('src/components/universal/DocumentEditor.jsx'))
+      && ['marcaRevisioHumana(', 'estructuraMemoriaOral('].every((crida) => senseComentaris(llegix('src/sections/notes/memoriaOralDelBloc.js')).includes(crida))
+      && ['createObjectURL(', '.download = ', '<AreaText'].every((peca) => llegix('src/components/universal/FitxaMemoriaOral.jsx').includes(peca));
+    const FRASE_BOTO = "Al Bloc de Notes, el botó «Proposa Card» n'obri la fitxa de la nota oberta: hi mostra el títol, el poble detectat, les etiquetes i els avisos; qui ha entrat amb el seu compte la pot donar per revisada, i es descarrega com a fitxer Markdown (dins de l'app per a mòbil, se'n copia el text).";
+    expect(concorda(ambBoto, fet3.includes('Encara no té cap botó propi a l\'aplicació.'), fet3.includes(FRASE_BOTO))).toBe(true);
+    // El Mètode Karpathy de la candidatura, amb models de llenguatge: no existix.
+    expect(apartat(2, 'Pendent')).toContain('Mètode Karpathy amb models de llenguatge, per a processar, ordenar i etiquetar la memòria oral de la gent gran: no existix. Ni l\'estructurador local ni la IAIA local no en fan servir cap.');
+  });
+
+  test('partida 3: les alertes municipals del Mur són les que pinta el Mur, i només d’un ajuntament', async () => {
+    const fet3 = apartat(2, 'Fet hui (verificable)');
+    const alertes = await import('../mur/alertesMunicipals.js');
+    expect(Object.values(alertes.TIPUS_ALERTA).map((tipus) => tipus.text)).toEqual(['Alerta municipal', 'Bàndol urgent']);
+    expect(alertes.VIGENCIA_ALERTA_MS).toBe(72 * 60 * 60 * 1000);
+    expect(['Alerta', 'Emergència', 'Bàndol urgent'].map((etiqueta) => alertes.normalitzaEtiqueta(etiqueta))).toEqual(['alerta', 'emergencia', 'bandol_urgent']);
+    // Signada per un ajuntament, alerta; per una altra entitat o per un veí amb la mateixa etiqueta, res.
+    const publicacio = (camps) => ({ id: 'p', type: 'feed', title: 'Avís', ...camps });
+    const esAjuntament = (id) => id === 'ajuntament';
+    expect([
+      alertes.alertaMunicipalDe(publicacio({ labels: ['Emergència'], author_org_id: 'ajuntament' }), esAjuntament),
+      alertes.alertaMunicipalDe(publicacio({ labels: ['Bàndol urgent'], author_org_id: 'ajuntament' }), esAjuntament),
+      alertes.alertaMunicipalDe(publicacio({ labels: ['Alerta'], author_org_id: 'forn' }), esAjuntament),
+      alertes.alertaMunicipalDe(publicacio({ labels: ['Alerta'], ownerUserId: 'u-vei' }), () => true)
+    ]).toEqual(['alerta', 'bandol_urgent', null, null]);
+    const mur = senseComentaris(llegix('src/sections/mur/MurSection.jsx'));
+    for (const peca of ['alertaMunicipalDe(', 'vigentsDalt(', '<RegioAlertesVigents', 'useAjuntamentsDelMur(']) expect([peca, mur.includes(peca)]).toEqual([peca, true]);
+    expect(senseComentaris(llegix('src/sections/mur/TargetaDelMur.jsx'))).toMatch(/<DistintiuAlertaMunicipal\b/);
+    /* Gauntlet 261101 (A-03) · «fins a 72 hores després de la seua data» val també per a una
+       data futura, que esVigent dona per vigent: si el codi posa un límit a les futures, cau. */
+    const ara = Date.UTC(2026, 10, 1, 12);
+    const hores = (n) => n * 60 * 60 * 1000;
+    expect([hores(71), hores(73), -hores(365 * 24)].map((fa) => alertes.esVigent(ara - fa, ara))).toEqual([true, false, true]);
+    expect(fet3).toContain("quan un ajuntament signa una publicació amb l'etiqueta «Alerta», «Emergència» o «Bàndol urgent», la seua targeta porta el distintiu «Alerta municipal» o «Bàndol urgent» i, fins a 72 hores després de la seua data, puja al capdamunt del Mur amb un avís que la nomena. La mateixa etiqueta posada per un veí no fa cap alerta.");
+    expect(fet3).not.toContain('durant 72 hores');
+    expect(apartat(2, 'Pendent')).not.toMatch(/alertes d'emergència/);
+  });
+
+  test('verificació en viu: el connector, el node germà i cada adreça de federació, en un clic i amb l’adreça absoluta', () => {
+    const [, , verificacio] = doc.querySelectorAll('h3');
+    const enllacos = [];
+    for (let node = verificacio.nextElementSibling; node; node = node.nextElementSibling) enllacos.push(...node.querySelectorAll('a[href^="https://"]'));
+    expect(enllacos.map((a) => a.getAttribute('href'))).toEqual([WORDPRESS, 'https://gentdelatorre.net', ...ENDPOINTS_FEDERACIO()]);
+    for (const a of enllacos) expect([a.getAttribute('href'), a.getAttribute('target'), a.getAttribute('rel')]).toEqual([a.getAttribute('href'), '_blank', 'noopener noreferrer']);
+    /* Cada adreça de federació porta el seu camí com a text de l'enllaç, sense <code> (Gauntlet
+       261101, A-05): la píndola del codi imposava el seu color dins de l'enllaç. */
+    for (const a of enllacos.slice(2)) expect([a.textContent, a.querySelector('code')]).toEqual([a.getAttribute('href').replace(ORIGEN, ''), null]);
+    // Mai la ruta del pla que dona 404, ni cap consulta ?resource= (Firebase no l'encamina).
+    expect(copy.html).not.toContain('/ap/actors/la-torre-de-les-macanes/outbox.json');
+    expect(copy.html).not.toContain('webfinger?resource=');
+    // Les rutes, les que publica el build: NodeInfo (federacio-iaia.mjs) i host-meta (genera-federacio.mjs).
+    const iaia = llegix('tooling/vite/federacio-iaia.mjs');
+    expect(iaia).toContain("export const RUTA_NODEINFO = '/.well-known/nodeinfo';");
+    expect(iaia).toContain("export const RUTA_NODEINFO_21 = '/nodeinfo/2.1.json';");
+    expect(llegix('tooling/seo/genera-federacio.mjs')).toMatch(/host-meta/);
+    // La bústia de La Torre pot estar buida, i la pàgina ho diu.
+    expect(textDe([...doc.querySelectorAll('li')].filter((li) => li.textContent.includes('/ap/outbox/la-torre-de-les-macanes.json'))))
+      .toContain("La de La Torre només porta les publicacions públiques d'entitats del poble, i pot estar buida.");
+    // I la descàrrega de les dades obertes, des de Pobles.
+    expect(elementAmb('Des de la fitxa de cada poble es descarrega').querySelector('a').getAttribute('href')).toBe('/pobles');
+  });
+});
+
+/* Gauntlet 2 261101 (carril Y; correcció del crític) · El comentari de PAGE_COPY.fediversity deia que
+   «tot això ja és desplegat i verificat en viu (01-11-2026, 04:05 CET)», i el lloc publicat servia
+   un build anterior a la marató (01:39 CET): les alertes, la fitxa OKF, l'Open Data 1.1.0 i esta
+   versió de la pàgina hi arriben amb el pròxim desplegament. I la pàgina diu que «el registre de
+   canvis és a Versions»: /versions ha de portar l'entrega de l'1 de novembre. */
+describe('Gauntlet 2 · el comentari del desplegament i el registre de canvis', () => {
+  test('el comentari separa el que és al lloc publicat del que arriba amb el pròxim desplegament', () => {
+    const font = llegix('src/sections/text/pageContent.js');
+    const clau = font.indexOf('  "fediversity": {');
+    const comentari = font.slice(font.lastIndexOf('/*', clau), clau).replace(/\s+/g, ' ');
+    /* La frase vella només hi pot quedar citada, dins de la correcció que la desmentix. */
+    expect(comentari).toContain('Este comentari deia que «tot això ja és desplegat i verificat en viu (01-11-2026, 04:05 CET)», i només n\'és una part.');
+    expect(comentari.replace(/Este comentari deia que «[^»]*»/, '')).not.toContain('tot això ja és desplegat i verificat en viu');
+    expect(comentari).toContain('El lloc publicat servix el build de l\'01-11-2026 a les 01:39 CET');
+    expect(comentari).toMatch(/NO hi són encara, i arriben amb el pròxim desplegament d'este arbre/);
+    for (const peca of ['les alertes municipals del Mur', 'la fitxa de memòria oral OKF', "el format 1.1.0 de l'Open Data (agenda.ics)"]) {
+      expect(comentari).toContain(peca);
+    }
+    expect(comentari).toContain('el correu a NLnet ha d\'anar després');
+  });
+
+  test('«El registre de canvis és a Versions»: /versions porta l’entrega de l’1 de novembre, pendent de desplegar', () => {
+    expect(textDe([doc.body])).toContain('El registre de canvis és a Versions');
+    expect(PAGE_COPY.versions.html).toContain('<h3>1 de novembre de 2026 · v1.0.0 (build pendent de desplegar) · Connector WordPress v1.1.10</h3>');
+  });
 });

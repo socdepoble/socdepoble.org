@@ -2,7 +2,7 @@ import React from 'react';
 import { afterEach, expect, test, vi } from 'vitest';
 import { act, cleanup, renderHook, waitFor } from '@testing-library/react';
 const m = vi.hoisted(() => ({ actor: 'A', user: 'A', gen: 1, load: vi.fn(), estatGlobal: vi.fn() }));
-/* Pla 261029_1605 (Bloc G, P1-71) · Mur i Multimèdia lligen useIdentitat;
+/* Pla 261029_1605 (Bloc G, P1-71) · Mur llig useIdentitat i Multimèdia, useIdentitatOpcional (marató 261101);
    CoreContentProvider, useIdentitatOpcional. Tots dos, el mateix m.actor. */
 vi.mock('./IdentitatContext.jsx', () => ({
   useIdentitat: () => ({ actorId: m.actor, actorKey: m.actor }),

@@ -18,7 +18,8 @@
  *  · ja instal·lada: l'avís d'èxit i cap botó;
  *  · Firefox d'escriptori, fora de l'entrada pròpia (paquet autònom) o en un
  *    iframe: res, ni cap div buit;
- *  · les ranures de botiga, tancades: cap enllaç.
+ *  · les ranures de botiga: només la de WordPress.org és oberta (01-11-2026),
+ *    un sol enllaç dalt; les tancades, cap.
  * L'entrada pròpia (src/main.jsx) crida la captura amb la finestra de veres;
  * ací, amb una de mostra (jsdom no té l'esdeveniment, com Safari i Firefox).
  * Revisió adversarial (261028) · senseBotigues() a cada escenari (amb la
@@ -51,6 +52,7 @@ vi.mock('../../hooks/useSEO', () => ({ useSEO: () => {} }));
 import PageDetailSection from './PageDetailSection.jsx';
 import { TITOL_INSTRUCCIONS } from './InstalaLaPwa.jsx';
 import { PAGE_COPY } from '../text/pageContent.js';
+import { canalsOberts } from '../../config/canalsDeBotiga.js';
 import { INSTALACIO } from '../../pwa/instalacio.js';
 import { VERSIO_SISTEMA } from '../../config/versio.js';
 
@@ -71,16 +73,40 @@ const INSTALAR = "Instal·lar l'App (PWA)";
 const INSTALADA = 'Aplicació ja instal·lada en aquest dispositiu';
 const CLASSE = 'sdp-boto sdp-boto--primari sdp-boto--gran sdp-boto--ple';
 const PLAY = 'https://play.google.com/store/apps/details?id=org.socdepoble.app';
+const WORDPRESS = 'https://wordpress.org/plugins/socdepoble/';
 
 /* Decisió d'honestedat: a les zones d'acció, cap enllaç ni res que anuncie
-   una botiga tancada (ni «pròximament»), en cap escenari. */
+   una botiga tancada (ni «pròximament»), en cap escenari.
+   01-11-2026 (ordre del Mestre 261101_0311, T1) · L'única botiga oberta és
+   WordPress.org: dalt, un sol enllaç per canal obert (el de veres,
+   canalsOberts), i baix, cap. Fora dels enllaços, cap nom de botiga. */
 function senseBotigues() {
+  const oberts = canalsOberts(botigues.llista);
+  expect(oberts.map((canal) => canal.url)).toEqual([WORDPRESS]);
   const zones = [dalt(), baix()].filter(Boolean);
   for (const zona of zones) {
-    expect(zona.querySelectorAll('a')).toHaveLength(0);
-    expect(zona.textContent).not.toMatch(/Google Play|App Store|WordPress|TestFlight|APK|prompte|aviat|pròximament|https?:/i);
+    const esperats = zona === dalt() ? oberts.map((canal) => [canal.url, canal.nom]) : [];
+    expect([...zona.querySelectorAll('a')].map((a) => [a.getAttribute('href'), a.textContent])).toEqual(esperats);
+    const senseEnllacos = zona.cloneNode(true);
+    senseEnllacos.querySelectorAll('a').forEach((a) => a.remove());
+    expect(senseEnllacos.textContent).not.toMatch(/Google Play|App Store|WordPress|TestFlight|APK|prompte|aviat|pròximament|https?:/i);
   }
   return zones.length;
+}
+/* El text de l'acció d'una zona, sense els enllaços de les botigues obertes
+   (que senseBotigues comprova a banda). */
+function accio(zona) {
+  const copia = zona.cloneNode(true);
+  copia.querySelectorAll('.sdp-accions').forEach((botigues) => botigues.remove());
+  return copia.textContent;
+}
+/* Cap acció d'instal·lar: dalt, només la botiga oberta; baix, res (cap div buit). */
+function nomesLaBotigaOberta() {
+  expect(screen.queryAllByRole('button', { name: INSTALAR })).toHaveLength(0);
+  expect(dalt().querySelectorAll('button')).toHaveLength(0);
+  expect([...dalt().querySelectorAll('a')].map((a) => [a.getAttribute('href'), a.textContent])).toEqual([[WORDPRESS, 'WordPress.org']]);
+  expect(dalt().textContent).toBe('WordPress.org');
+  expect(baix()).toBeNull();
 }
 /* Obri la guia (si el botó en té) i comprova les zones. */
 function ambLaGuiaOberta() {
@@ -166,7 +192,7 @@ test('/page/descarregues: l’H1 del Mestre, la il·lustració i «📲 Instal·
   for (const boto of botons) {
     expect([boto.className, boto.hasAttribute('aria-expanded'), boto.textContent]).toEqual([CLASSE, false, `📲 ${INSTALAR}`]);
   }
-  // Les ranures de botiga, tancades: cap enllaç ni dalt ni baix.
+  // Les ranures de botiga: dalt, només WordPress.org; baix, cap enllaç.
   expect(senseBotigues()).toBe(2);
 });
 
@@ -183,8 +209,11 @@ test('/page/descarregues: un apartat per a cada camí i un per a la visió, amb 
   ]);
   expect(text('h4')).toEqual(expect.arrayContaining(['Google Play', 'APK directe', 'Apple TestFlight', 'App Store', TITOL_INSTRUCCIONS, 'WordPress.org']));
   expect(text('h5')).toEqual(["A l'ordinador", 'Al mòbil i a la tauleta']);
-  // Cap enllaç: ni botigues ni APK encara no són públics per a tothom.
-  expect(cos().querySelectorAll('a')).toHaveLength(0);
+  /* 01-11-2026 (T1) · Un sol enllaç al cos: la fitxa pública del connector a
+     WordPress.org, en una pestanya nova i amb el rel del sanejador. Cap
+     botiga mòbil ni cap APK, que encara no són públics per a tothom. */
+  expect([...cos().querySelectorAll('a')].map((a) => [a.getAttribute('href'), a.getAttribute('target'), a.getAttribute('rel'), a.textContent]))
+    .toEqual([[WORDPRESS, '_blank', 'noopener noreferrer nofollow', 'wordpress.org/plugins/socdepoble']]);
   // La guia troba les instruccions pel text de l'H4: si el copy el canvia, esta prova ho diu.
   expect(PAGE_COPY.descarregues.html).toContain(`<h4>${TITOL_INSTRUCCIONS}</h4>`);
 });
@@ -226,7 +255,7 @@ describe('P1-69 · Chromium amb l’oferta', () => {
     await pagina.instalada();
     visita('/page/descarregues');
     expect(screen.queryAllByRole('button', { name: INSTALAR })).toHaveLength(0);
-    expect([dalt().textContent, baix().textContent]).toEqual([INSTALADA, INSTALADA]);
+    expect([accio(dalt()), accio(baix())]).toEqual([INSTALADA, INSTALADA]);
     expect(senseBotigues()).toBe(2);
   });
 
@@ -235,7 +264,7 @@ describe('P1-69 · Chromium amb l’oferta', () => {
     const pagina = entradaPropia();
     await pagina.instalada();
     visita('/page/descarregues');
-    expect([dalt().textContent, baix().textContent]).toEqual([INSTALADA, INSTALADA]);
+    expect([accio(dalt()), accio(baix())]).toEqual([INSTALADA, INSTALADA]);
   });
 
   test('instal·lada amb la pàgina oberta (appinstalled): el botó deixa pas a l’avís', async () => {
@@ -246,7 +275,7 @@ describe('P1-69 · Chromium amb l’oferta', () => {
     expect(screen.getAllByRole('button', { name: INSTALAR })).toHaveLength(2);
     await pagina.instalada();
     expect(screen.queryAllByRole('button', { name: INSTALAR })).toHaveLength(0);
-    expect([dalt().textContent, baix().textContent]).toEqual([INSTALADA, INSTALADA]);
+    expect([accio(dalt()), accio(baix())]).toEqual([INSTALADA, INSTALADA]);
   });
 
   /* Chrome envia l'oferta quan passa la seua prova d'interés (un clic i uns
@@ -341,7 +370,7 @@ describe('P1-69 · Safari: la guia, sense cap prompt()', () => {
     cleanup();
     ambAgent(AGENTS.safariMac16);
     visita('/page/descarregues');
-    expect([dalt(), baix()]).toEqual([null, null]);
+    nomesLaBotigaOberta();
   });
 });
 
@@ -352,22 +381,24 @@ describe('P1-69 · res que no es puga complir, i cap div buit', () => {
     entradaPropia();
     visita('/page/descarregues');
     expect(screen.queryAllByRole('button', { name: INSTALAR })).toHaveLength(0);
-    expect([dalt().textContent, baix().textContent]).toEqual([INSTALADA, INSTALADA]);
+    expect([accio(dalt()), accio(baix())]).toEqual([INSTALADA, INSTALADA]);
     expect(ambLaGuiaOberta()).toBe(2);
   });
 
-  test('Firefox d’escriptori (sense manera d’instal·lar-la): ni el botó ni la ranura', () => {
+  /* 01-11-2026 (T1) · Abans, ni el botó ni la ranura (tot tancat). Ara la
+     ranura de WordPress.org és oberta: dalt, només el seu enllaç; cap botó. */
+  test('Firefox d’escriptori (sense manera d’instal·lar-la): cap botó; dalt, només la botiga oberta', () => {
     ambAgent(AGENTS.firefoxWindows);
     entradaPropia({ suport: false });
     visita('/page/descarregues');
-    expect([dalt(), baix()]).toEqual([null, null]);
+    nomesLaBotigaOberta();
   });
 
-  test('el navegador integrat d’una app d’Android (Instagram, «; wv)»): el seu menú no instal·la, i no es diu res', () => {
+  test('el navegador integrat d’una app d’Android (Instagram, «; wv)»): el seu menú no instal·la, i no es diu res d’instal·lar', () => {
     ambAgent(AGENTS.instagramAndroid, { tactil: 5 });
     entradaPropia({ suport: false });
     visita('/page/descarregues');
-    expect([dalt(), baix()]).toEqual([null, null]);
+    nomesLaBotigaOberta();
   });
 
   test('fora de l’entrada pròpia (el paquet autònom no captura) o dins d’un iframe, també amb Safari: res', () => {
@@ -403,6 +434,8 @@ describe('P1-69 · res que no es puga complir, i cap div buit', () => {
       const enllacos = document.querySelectorAll(`a[href="${PLAY}"]`);
       expect(enllacos).toHaveLength(1);
       expect([dalt().contains(enllacos[0]), baix().querySelectorAll('a').length]).toEqual([true, 0]);
+      // Dalt, una per canal obert, en l'ordre de la llista: Google Play i WordPress.org.
+      expect([...dalt().querySelectorAll('a')].map((a) => a.textContent)).toEqual(['Google Play', 'WordPress.org']);
       expect(screen.getAllByRole('button', { name: INSTALAR })).toHaveLength(2);
       // L'oferta, gastada (una captura nova no la buida: en una càrrega de veres només n'hi ha una).
       await pagina.instalada();

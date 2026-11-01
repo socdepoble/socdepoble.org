@@ -127,9 +127,9 @@ export function DialegDescartaLocal({ gestor, t = gestor.t }) {
  * El panell del Gestor sobre la carpeta `carpeta` (recursiu: també els
  * fitxers de les subcarpetes). `autonom`: el mode de sempre, amb capçalera,
  * arbre i detall en línia. Sense: el mode espai de /multimedia (la columna
- * del detall), on triar un fitxer és `onTriaArxiu(el)`. `barra`: props de
- * BarraVolumsLocals que substituïxen les del gestor (la portada hi navega
- * abans de l'acció).
+ * del detall), on triar un fitxer és `onTriaArxiu(el)`. `ambBarra`: fals en
+ * l'espai de /multimedia, on la Barra de volums és a la Columna 1 (P1-71,
+ * marató nocturna 261101): el panell no en pinta cap segona.
  */
 export function PanellGestorLocal({
   gestor,
@@ -145,7 +145,7 @@ export function PanellGestorLocal({
   blocDeNotes = null,
   registraTessela,
   titolFitxersRef,
-  barra = null
+  ambBarra = true
 }) {
   const tr = (parell, valors) => tradueix(t, parell, valors);
   const locale = useLocaleOpcional();
@@ -195,7 +195,7 @@ export function PanellGestorLocal({
 
   const cos = (
     <>
-      <BarraVolumsLocals {...gestor.propsBarra} t={t} {...barra} />
+      {ambBarra ? <BarraVolumsLocals {...gestor.propsBarra} t={t} /> : null}
       {autonom ? <InputCarpetaLocal gestor={gestor} /> : null}
 
       <MissatgeLocal gestor={gestor} t={t} />

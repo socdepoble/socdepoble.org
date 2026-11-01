@@ -56,6 +56,9 @@ import { useEntitatDelProjecte } from '../../hooks/useEntitatDelProjecte.js';
 import { fontImatgePropia } from '../../utils/sanitize.js';
 import { esMitjaOpac, fotoDelBucketPublic } from '../../utils/mitjaOpac.js';
 import { signaturaDeQuiSigna } from '../../data/identitatsSeed.js';
+import { TIPUS_ALERTA } from './alertesMunicipals.js';
+import { tradueix } from '../../components/PedraSeca/hooks/useTraductorOpcional.js';
+import { CLASSE_DE_LA_TARGETA, DistintiuAlertaMunicipal } from './AlertaMunicipal.jsx';
 
 /**
  * T6 (ordre del Mestre, 261004, prompt 261004_0515 §5) · On porta la boina
@@ -73,7 +76,13 @@ export function rutaDeLaBoinaDelMur(item) {
   return item?.isSystem || !ambNomPropi ? RUTA_PERFIL_PROJECTE : undefined;
 }
 
-export function TargetaDelMur({ item, esdeveniment = null }) {
+/* T3.3 (marató nocturna 261101, carril B3) · `alertaMunicipal`: el tipus
+   d'alerta ('alerta' | 'bandol_urgent') que qui pinta la llista JA ha
+   comprovat (etiqueta i ajuntament que signa: alertesMunicipals.js ·
+   alertaMunicipalDe, amb useAjuntamentsDelMur). La targeta no ho decidix: el
+   MurSection és qui pregunta al directori. Sense la prop (el Calendari,
+   l'històric de l'actor, el peu «Ja publicat»), el DOM de sempre. */
+export function TargetaDelMur({ item, esdeveniment = null, alertaMunicipal = null }) {
   const { t } = useUIActions();
   const navigate = useNavigate();
   /* T6 en remot · l'id de servidor de l'entitat pilot: quan arriba, la boina
@@ -162,15 +171,34 @@ export function TargetaDelMur({ item, esdeveniment = null }) {
     nom: item.author_name || item.seller || "Sóc de Poble",
     avatar: item.author_avatar || item.avatar_url || (signaPersona ? null : DEFAULT_AUTHOR.avatarUrl)
   });
+  const cos = item.lead || <p className="sp-card-text">{item.description}</p>;
+  /* T3.3 · Una alerta municipal porta el distintiu (text visible i icona
+     redundant, sense regió viva) al capdamunt del cos, davall del títol i
+     del subtítol (qui salta per encapçalaments el troba en arribar), la
+     vora del seu to i el text del distintiu com a descripció
+     accessible de l'enllaç de la targeta. Mai una pàgina del sistema ni un
+     producte; un tipus desconegut, res.
+     Gauntlet 2 · 261101 (G2-B3-01; T7 · P1-22, WCAG 3.1.2) · La descripció
+     diu el MATEIX text que el distintiu visible, en la llengua de la
+     interfície (el parell de TIPUS_ALERTA); en valencià, el de sempre. */
+  const alerta = !item.isSystem && seccio !== 'mercat' && Object.hasOwn(TIPUS_ALERTA, alertaMunicipal)
+    ? TIPUS_ALERTA[alertaMunicipal] : null;
 
   return (
     <UniversalCard
+      className={alerta ? CLASSE_DE_LA_TARGETA[alerta.to] : undefined}
+      descripcioAccessible={alerta ? tradueix(t, alerta.etiqueta) : undefined}
       title={item.title || item.name}
       /* T51 · l'emoticona que la nota porta al payload (icon); la
          targeta només la pinta si és un sol emoji. */
       emoticona={item.icon}
       subtitle={item.subtitle}
-      body={item.lead || <p className="sp-card-text">{item.description}</p>}
+      body={alerta ? (
+        <>
+          <DistintiuAlertaMunicipal tipus={alerta.clau} />
+          {typeof cos === 'string' ? <p className="sp-card-text">{cos}</p> : cos}
+        </>
+      ) : cos}
       /* Decisió 3 (261007) · Només una imatge pròpia, resolta (la que es
          demanaria); una de fora, null: cap petició i cap portada. */
       imageUrl={fontImatgePropia(resolveAsset(seccio === 'mercat' ? fotoDeLaTargeta(item, imatge) : imatge))}

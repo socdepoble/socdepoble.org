@@ -113,12 +113,15 @@ const nota = () => new URL(screen.getByTestId('url').textContent, 'http://localh
 const detall = () => screen.queryByTestId('detall')?.textContent ?? null;
 const rail = () => screen.getByRole('navigation', { name: 'CARPETES' });
 
-/* ── A · L'entrada nua de /notes amb el Mur llest primer ─────────────────
+/* ── A · L'enllaç a la carpeta del Mur amb el Mur llest primer ───────────
    Control de la parella del fitxer base (allà, el Mur carregant no hi fixa
-   la nota preparada): ací el Mur arriba abans i s'obri la seua publicació. */
-test('A0 (control) · /notes amb el Mur llest primer obri la publicació del Mur', () => {
+   la nota preparada): ací el Mur arriba abans i s'obri la seua publicació.
+   IDEA-59 / P1-72 (ordre del Mestre, 261101, punt 0) · Abans es provava des
+   de l'entrada nua de /notes, que era el Mur; ara l'entrada nua és «Tot» amb
+   la Card tutorial, i el Mur s'obri amb el seu enllaç (?carpeta=f-mur). */
+test('A0 (control) · /notes?carpeta=f-mur amb el Mur llest primer obri la publicació del Mur', () => {
   Object.assign(dades, { feed: [POST] });
-  munta('/notes');
+  munta('/notes?carpeta=f-mur');
   expect(nota()).toBe('publicacio:mur:p2');
   expect(detall()).toBe('publicacio:mur:p2');
 });

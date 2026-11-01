@@ -41,12 +41,12 @@ export default function EspecimenUtilitats() {
       <h4>Classes utilitàries</h4>
       <div className="utils-grid">
         {UTILITATS.map(([grup, classes]) => (
-          <div className="utils-box" key={grup}>
+          <section className="utils-box" key={grup}>
             <h5>{grup}</h5>
             <ul className="utils-list">
               {classes.map(([c, q]) => <li key={c}><strong>{c}</strong> · {q}</li>)}
             </ul>
-          </div>
+          </section>
         ))}
       </div>
 

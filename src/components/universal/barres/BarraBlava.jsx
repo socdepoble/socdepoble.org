@@ -59,6 +59,11 @@
  * el botó diu que obri un menú.
  * Correcció C9 · MenuComentar i TEXTOS_COMENTAR es reexporten ací per a les
  * proves que ja els importaven d'esta barra.
+ *
+ * T7 · P1-22 (261101) · Els noms accessibles dels sis botons (aria-label i
+ * title) passen pel traductor de la interfície amb els parells de
+ * TEXTOS_BARRA (textosBarres.js): fora de l'app, o en valencià, el text de
+ * sempre. PageFrame torna el focus a Traduir buscant l'etiqueta traduïda.
  */
 import { useLayoutEffect, useRef } from 'react';
 import {
@@ -66,7 +71,9 @@ import {
 } from '../../PedraSeca/atoms/icones.jsx';
 import { ActionControl, IconButton } from '../../PedraSeca/atoms/controls.jsx';
 import { BotoComentar } from '../../PedraSeca/organismes/Comentar.jsx';
+import { tradueix, useTraductorOpcional } from '../../PedraSeca/hooks/useTraductorOpcional.js';
 import { MenuTraduir } from '../traduccio/MenuTraduir.jsx';
+import { TEXTOS_BARRA } from './textosBarres.js';
 
 export { MenuComentar } from '../../PedraSeca/organismes/Comentar.jsx';
 export { TEXTOS_COMENTAR } from '../../PedraSeca/organismes/textosComentar.js';
@@ -111,33 +118,36 @@ export function BarraBlava({
     return onClickInoperatiu ? () => onClickInoperatiu(accio) : null;
   };
   const traduirApagat = Boolean(accionsInoperatives && traduirInoperatiu);
+  /* T7 · P1-22 · El nom de cada botó, en la llengua de la interfície. */
+  const t = useTraductorOpcional();
+  const nom = (clau) => tradueix(t, TEXTOS_BARRA[clau]);
   return (
     <header className="bar-blue">
       <div className="bar-blue-left">
         {onBack && (
-          <IconButton label="Tornar arrere" onClick={onBack} className="bar-blue-left__arrere" presentation>
+          <IconButton label={nom('arrere')} onClick={onBack} className="bar-blue-left__arrere" presentation>
             <BackIcon className="icon" />
           </IconButton>
         )}
         {/* Ordre del Mestre (260924): el Llibre (índex) entre les dues fletxes.
             L'ordre de tabulació seguix el visual. */}
-        <IconButton label="Índex de secció" onClick={onIndex} presentation refBoto={botoIndex}>
+        <IconButton label={nom('index')} onClick={onIndex} presentation refBoto={botoIndex}>
           <IndexIcon className="icon" />
         </IconButton>
         {onForward && (
-          <IconButton label="Tornar endavant" onClick={onForward} className="bar-blue-left__endavant" presentation>
+          <IconButton label={nom('endavant')} onClick={onForward} className="bar-blue-left__endavant" presentation>
             <ForwardIcon className="icon" />
           </IconButton>
         )}
       </div>
       <div className="sp-card-actions">
         {traduirVisible && (traduirApagat ? (
-          <IconButton label="Traduir" onClick={clicDe('traduir', onTranslate)} className={inoperativa} presentation
+          <IconButton label={nom('traduir')} onClick={clicDe('traduir', onTranslate)} className={inoperativa} presentation
             refBoto={botoTraduir} ariaDisabled={ariaInoperatiu}>
             <TranslateIcon className="icon" />
           </IconButton>
         ) : (
-          <IconButton label="Traduir" onClick={onTranslate} presentation refBoto={botoTraduir}
+          <IconButton label={nom('traduir')} onClick={onTranslate} presentation refBoto={botoTraduir}
             ariaHaspopup={menuTraduir ? 'menu' : undefined}
             ariaExpanded={menuTraduir ? Boolean(menuTraduir.obert) : undefined}>
             <TranslateIcon className="icon" />
@@ -150,11 +160,11 @@ export function BarraBlava({
         {/* Ordre del Mestre (261007) · Inoperatiu (l'editor, T36), Comentar no
             obri cap menú: el clic diu quin botó és. */}
         {comentarVisible && (
-          <BotoComentar comentarXat={accionsInoperatives ? null : comentarXat} privatAmb={comentarPrivatAmb} onComment={clicDe('comentar', onComment)}
+          <BotoComentar label={nom('comentar')} comentarXat={accionsInoperatives ? null : comentarXat} privatAmb={comentarPrivatAmb} onComment={clicDe('comentar', onComment)}
             className={inoperativa} presentation ariaDisabled={ariaInoperatiu} />
         )}
         {compartirVisible && (
-          <IconButton label="Compartir" onClick={clicDe('compartir', onShare)} className={inoperativa} presentation ariaDisabled={ariaInoperatiu}>
+          <IconButton label={nom('compartir')} onClick={clicDe('compartir', onShare)} className={inoperativa} presentation ariaDisabled={ariaInoperatiu}>
             <ShareIcon className="icon" />
           </IconButton>
         )}

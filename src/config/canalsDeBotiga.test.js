@@ -1,12 +1,14 @@
 // @vitest-environment node
 /* P1-69 (ordre del Mestre, 261028 20:13; decisions de l'onada 2 del Bloc H) ·
    Les ranures de les botigues de /page/descarregues: configuració que no
-   pinta res sense adreça. Hui totes tancades; urlDeCanal només admet
-   l'adreça pública de la botiga de cada canal. */
+   pinta res sense adreça. Des del 01-11-2026 (ordre del Mestre 261101_0311,
+   T1), WordPress.org és obert; Google Play i App Store, tancats. urlDeCanal
+   només admet l'adreça pública de la fitxa de Sóc de Poble a cada botiga. */
 import { describe, expect, test } from 'vitest';
 import { CANALS_DE_BOTIGA, canalsOberts, urlDeCanal } from './canalsDeBotiga.js';
 
 const PLAY = 'https://play.google.com/store/apps/details?id=org.socdepoble.app';
+const WORDPRESS = 'https://wordpress.org/plugins/socdepoble/';
 
 describe('CANALS_DE_BOTIGA', () => {
   test('tres ranures congelades: Google Play, App Store i WordPress.org', () => {
@@ -19,11 +21,17 @@ describe('CANALS_DE_BOTIGA', () => {
     ]);
   });
 
-  /* Cap botiga no és oberta a tothom (actes 261024_0345 i 261026_1630).
-     Quan el Mestre done les adreces públiques, esta prova canvia amb elles. */
-  test('tot tancat: cap adreça, i cap canal obert', () => {
-    expect(CANALS_DE_BOTIGA.every((canal) => canal.url === null)).toBe(true);
-    expect(canalsOberts()).toEqual([]);
+  /* 01-11-2026 · El connector socdepoble 1.1.10 és públic al directori de
+     WordPress.org (api.wordpress.org i la fitxa, 200). Les botigues mòbils no
+     són obertes a tothom (actes 261024_0345 i 261026_1630): quan el Mestre
+     en done les adreces públiques, esta prova canvia amb elles. */
+  test('només WordPress.org és obert, amb la fitxa del connector socdepoble; Google Play i App Store, tancats', () => {
+    expect(CANALS_DE_BOTIGA.map((canal) => [canal.id, canal.url])).toEqual([
+      ['google-play', null],
+      ['app-store', null],
+      ['wordpress-org', WORDPRESS]
+    ]);
+    expect(canalsOberts()).toEqual([{ id: 'wordpress-org', nom: 'WordPress.org', url: WORDPRESS }]);
   });
 });
 
@@ -34,8 +42,8 @@ describe('urlDeCanal', () => {
     expect(urlDeCanal({ id: 'app-store', url: 'https://apps.apple.com/app/id1234567890' })).toBe('https://apps.apple.com/app/id1234567890');
     expect(urlDeCanal({ id: 'app-store', url: 'https://apps.apple.com/es/app/soc-de-poble/id1234567890' }))
       .toBe('https://apps.apple.com/es/app/soc-de-poble/id1234567890');
-    expect(urlDeCanal({ id: 'wordpress-org', url: 'https://wordpress.org/plugins/socdepoble-enxufe/' }))
-      .toBe('https://wordpress.org/plugins/socdepoble-enxufe/');
+    expect(urlDeCanal({ id: 'wordpress-org', url: WORDPRESS })).toBe(WORDPRESS);
+    expect(urlDeCanal({ id: 'wordpress-org', url: 'https://wordpress.org/plugins/socdepoble' })).toBe('https://wordpress.org/plugins/socdepoble');
     expect(urlDeCanal({ id: 'google-play', url: 'HTTPS://PLAY.GOOGLE.COM/store/apps/details?id=org.socdepoble.app' })).toBe(PLAY);
   });
 
@@ -61,8 +69,14 @@ describe('urlDeCanal', () => {
       ['app-store', 'https://apps.apple.com/'],
       ['app-store', PLAY],
       ['wordpress-org', 'https://wordpress.org/'],
-      ['wordpress-org', 'https://downloads.wordpress.org/plugin/socdepoble-enxufe.zip'],
-      ['wordpress-org', 'https://es.wordpress.org/plugins/socdepoble-enxufe/'],
+      ['wordpress-org', 'https://downloads.wordpress.org/plugin/socdepoble.zip'],
+      ['wordpress-org', 'https://es.wordpress.org/plugins/socdepoble/'],
+      ['wordpress-org', WORDPRESS.replace('https:', 'http:')],
+      // La fitxa d'un altre connector no és la de Sóc de Poble (ni l'slug que no s'ha publicat mai).
+      ['wordpress-org', 'https://wordpress.org/plugins/socdepoble-enxufe/'],
+      ['wordpress-org', 'https://wordpress.org/plugins/soc-de-poble-mur/'],
+      ['wordpress-org', 'https://wordpress.org/plugins/socdepoble/socdepoble/'],
+      ['wordpress-org', 'https://wordpress.org/plugins/socdepoblex/'],
       ['apk', 'https://socdepoble.org/app.apk'],
       ['constructor', PLAY]
     ];
@@ -77,7 +91,7 @@ describe('canalsOberts', () => {
     const canals = [
       { id: 'google-play', nom: 'Google Play', url: PLAY },
       { id: 'app-store', nom: 'App Store', url: 'https://testflight.apple.com/join/ABCDEF12' },
-      { id: 'wordpress-org', nom: '  ', url: 'https://wordpress.org/plugins/socdepoble-enxufe/' },
+      { id: 'wordpress-org', nom: '  ', url: WORDPRESS },
       null
     ];
     expect(canalsOberts(canals)).toEqual([{ id: 'google-play', nom: 'Google Play', url: PLAY }]);

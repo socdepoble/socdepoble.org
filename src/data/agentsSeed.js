@@ -64,6 +64,12 @@ export const AGENTS_MAP = {
        Onada 12 (261011; ordres 261011_0130, punt 3, D-09) · Ratificat: la foto
        es queda, i la fila de Javi al padró del xat (xatSeed.js) també la porta. */
     avatar_url: '/assets/fotos/javi-llinares-perfil-1200px.jpg',
+    /* P1-70 (marató nocturna 261101, T5.2) · La mateixa foto, sencera, a
+       256 × 256 (17 KB en JPEG i 14 KB en la bessona .webp, davant dels
+       252 KB de la de 1200 px): la pinten les cares del xat (CaraXat ·
+       caresLleugeres.js), que són de 24 a 80 px. La fitxa, el perfil i la
+       resta de pantalles continuen amb `avatar_url`. */
+    avatar_miniatura: '/assets/fotos/javi-llinares-256x256.jpg',
     last_message_content: 'Ei! Com va això?',
     tag: 'ADMIN',
     type: 'PERSON',

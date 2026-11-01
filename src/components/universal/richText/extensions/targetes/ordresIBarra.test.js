@@ -83,10 +83,14 @@ describe('extensionsRiques', () => {
 });
 
 describe('la barra: fila «targeta» de nivell avançat', () => {
-  test('és al contracte sense ranura: la barra d’ara pinta els mateixos botons', () => {
+  /* IDEA-59 / P1-72 (ordre del Mestre, 261101, punts 2 i 4) · La barra pinta
+     ara els nivells del desplegable d'encapçalaments (H3, H4, H5, H6 i H2, en
+     eixe ordre) i, a la segona fila, el ratllat, la citació i el divisor. La
+     targeta continua sense ranura. */
+  test('és al contracte sense ranura: la barra pinta els encapçalaments, el format i la segona fila, mai la targeta', () => {
     const fila = TOOLBAR_SCHEMA.find((boto) => boto.id === FORMATS.TARGETA);
     expect(fila).toEqual({ id: 'targeta', clauI18n: 'editor.inserir.targeta', etiqueta: 'Targeta', commutable: false, slot: null, nivell: 'avancat' });
-    expect(SCHEMA_VISIBLE.map((boto) => boto.id)).toEqual(['subtitol', 'titol', 'negreta', 'cursiva', 'ratllat', 'llista', 'llistaNumerada']);
+    expect(SCHEMA_VISIBLE.map((boto) => boto.id)).toEqual(['subtitol', 'h4', 'h5', 'h6', 'titol', 'negreta', 'cursiva', 'llista', 'llistaNumerada', 'ratllat', 'citacio', 'divisor']);
   });
 
   test('sense l’extensió, la fila ix apagada i no peta', () => {

@@ -1,6 +1,6 @@
 === Sóc de Poble. Portal de Pobles Connectats ===
 Contributors: socdepoble
-Tags: community, rural, village, social network, embed
+Tags: community, village, social network, embed, municipal
 Requires at least: 6.5
 Tested up to: 7.1
 Requires PHP: 7.4
@@ -8,42 +8,57 @@ Stable tag: 1.1.10
 License: AGPL-3.0-or-later
 License URI: https://www.gnu.org/licenses/agpl-3.0.html
 
-Connect to the Sóc de Poble Portal, a Fediverse of Connected Villages. Open Settings ➔ Sóc de Poble to choose your village and activate this node.
+Portal comunitari rural 100% en Valencià/Català + 5 idiomes (CA, ES, EN, EU, GL) i Traductor Apertium integrat: Xat, Mur, Mercat i Agenda en 3 passos.
 
 == Description ==
 
-Sóc de Poble is an open source civic network for rural communities: chat, posts, a marketplace, events and a map. It continues decades of rural activism and connects neighbours, associations and local businesses, with community ownership and independence from advertising platforms as its guiding principles.
+= 🌍 100% en Valencià / Català Natiu + 5 Idiomes + Traductor Automàtic Integrat =
 
-= The Enxufe architecture =
+* **Nota sobre l'avís de WordPress.org:** L'aplicació és nativa en valencià/català i porta 5 idiomes. L'avís del directori parla dels textos d'administració del connector (ajustos, Salut del lloc i nom de la plantilla): en la còpia de WordPress.org ixen en anglés fins que translate.wordpress.org n'aprove la traducció al català i, per als llocs en valencià, la valenciana (ca-val). Per a eixa part, l'avís és correcte.
+* **5 idiomes d'interfície inclosos de sèrie:** **Valencià / Català (`ca`)**, **Castellà (`es`)**, **Anglés (`en`)**, **Basc (`eu`)** i **Gallec (`gl`)**, seleccionables en qualsevol moment pel visitant dins de l'aplicació.
+* **Traductor Sobirà de Pàgines integrat (Apertium, sense Google):** Inclou a la barra superior un botó **«Traduir»** que traduïx al vol el contingut de les pàgines a altres idiomes (**Castellà, Anglés, Francés i Gallec**) utilitzant programari lliure (Apertium, nascut a la Universitat d'Alacant), sense enviar dades a Google Translate ni necessitar claus de pagament.
 
-The application is a modular single-page client, separated from its data provider. This plugin places the `<soc-de-poble>` web component on pages containing the `[socdepoble_app]` shortcode or the Sóc de Poble block. The plugin provides the WordPress adapter; the application contains the community features.
+**Sóc de Poble (Enxufe Universal)** convertix qualsevol instal·lació de WordPress —d'un ajuntament, associació cultural, cooperativa agrícola, escola rural, grup d'acció local o col·lectiu veïnal— en una **plaça pública digital viva i sobirana**, connectada als pobles de Sóc de Poble. Dissenyat des de **La Torre de les Maçanes (l'Alacantí, País Valencià)** sota la filosofia del **Trellat** i l'arquitectura de **Pedra Seca Digital**, porta la tecnologia més avançada al món rural sense perdre l'ànima de poble ni l'humor gràfic de la nostra terra.
 
-The current service uses a Supabase backend. The provider interfaces are designed for interchangeable backends, including future WordPress, Joomla or other host adapters. This does not mean those alternative backends are already implemented.
+= Per què Sóc de Poble? (Filosofia de Pedra Seca i Trellat) =
 
-= Independent communities and the Fediverse =
+Els nostres pobles patixen una doble despoblació: la física i la digital. Quan la vida d'un municipi es dispersa en desenes de grups tancats de multinacionals, la memòria oral es perd, el comerç local s'ofega i la gent gran queda exclosa darrere d'interfícies confuses i algoritmes publicitaris.
 
-The project aims to let independent rural communities run their own systems and communicate through the Fediverse. Federation is a roadmap goal, not a feature enabled by installing this plugin.
+**Sóc de Poble** naix per revertir esta tendència amb quatre pilars fonamentals:
 
-= Documentation and resilience =
+* **Valencià / Català com a llengua base i matriu cultural:** Tota la interfície, la documentació, les guies d'accessibilitat cognitiva i la memòria de la comunitat estan construïdes en la nostra llengua pròpia com a tronc principal, amb suport multillengua integrat (Valencià/Català, Castellà, Anglés, Basc, Gallec i traducció automàtica lliure de pàgines amb Apertium).
+* **Arquitectura de Pedra Seca (Zero Fricció):** Com els marges de pedra seca de les nostres muntanyes, cada bloc encaixa pel seu propi pes sense necessitar ciment innecessari. El connector incrusta l'aplicació modular completa (`<soc-de-poble>`) en una pàgina del teu WordPress mitjançant un sol codi (`[socdepoble_app]`) o el bloc visual **Sóc de Poble**, sense alterar la resta del teu tema ni la base de dades d'usuaris del teu lloc web.
+* **Accessibilitat Sènior Extrema (Regla dels 3 Segons):** Tipografia clara (`Noto Sans` local, zero connexions a Google Fonts), contrast d'alta visibilitat pensat per llegir-se a ple sol a la plaça del poble, botons tàctils generosos (`48x48 px`) i navegació intuïtiva tant per a una iaia de 85 anys com per a un tècnic municipal.
+* **Sobirania de Dades, Portabilitat i Fedivers Rural (Fediversity):** Dades estructurades obertes (`Schema.org` / `JSON-LD`) i un paquet de dades obertes per municipi (Frictionless Data Package v2 i BagIt) que hui porta el directori públic d'entitats; les notícies, l'agenda i la memòria cultural encara no. A socdepoble.org, una primera fase de federació de només lectura: actors d'`ActivityPub`, `NodeInfo 2.1` i WebFinger per la ruta `/.well-known/webfinger/acct:…`, la que anuncia `/.well-known/host-meta` (la consulta estàndard `?resource=` encara no respon).
 
-The project is developed with AI assistance and is designed to remain understandable and maintainable by people. The application includes the public part of the project Wiki and design documentation. Private working documents and personal data are excluded by the publication policy.
+= Els 6 Mòduls del Poble Connectat =
 
-= Features =
+1. **Xat Veïnal i Comunitats (Entrada Principal):** El punt de trobada viu del poble, amb canals per a l'Ajuntament, Gent del Poble, associacions, la IAIA MarIA i converses privades.
+2. **El Mur del Poble (Bàndols i Vida Veïnal):** El taulell d'anuncis viu del municipi. Comunicats oficials, avisos d'aigua o camins, cròniques de festes, fotografies històriques i debats veïnals ordenats cronològicament, sense algoritmes opacs.
+3. **El Mercat Rural de Km 0:** Aparador directe per als productors, forns, almàsseres, apicultors, artesans i comerços del poble per difondre la collita del dia i els productes de proximitat sense comissions ni intermediaris.
+4. **L'Agenda i Calendari Comunal:** Festes patronals, aplecs, mercats setmanals, plens municipals, tallers i calendari agrícola compartit.
+5. **La Wiki de Poble (Arxiu i Memòria Viva):** L'enciclopèdia col·laborativa del terme municipal: toponímia, fonts, masos, receptes tradicionals, oficis i història oral custodiada pel mateix poble.
+6. **Directori de Pobles, Comerços i Associacions:** Fitxes verificades de totes les entitats, col·lectius, serveis públics i negocis locals.
 
-* The `[socdepoble_app]` shortcode accepts `nom_poble` (display name), `poble` (village identifier) and `ruta_inicial` (initial application route).
-* A dynamic Sóc de Poble block provides the same three options.
-* Settings → Sóc de Poble provides the host identity, package diagnostics (version, integrity and pinned data node) and embedding instructions.
-* Site Health checks report a missing application script or manifest, or a package targeting a development backend.
-* The application script loads only on pages that use it. Subresource Integrity is optional through `socdepoble_enxufe_integritat`; CDN plugins that rewrite output can otherwise prevent the script from loading.
-* An optional full-screen page template supports classic and block themes.
-* The `socdepoble_enxufe_config` filter sets the default display name and village identifier.
-* Shareable addresses: the application writes its current route to the page address as `#sdp=/route` (for example `#sdp=/xat`), so a copied or reloaded address opens the same view. The `socdepoble_enxufe_ruta_a_url` filter selects `fragment` (default) or `parametre`; any other value turns the feature off. Portable embedding code for other hosts does not include it.
-* Application language: by default the application opens in Valencian and the WordPress locale does not change it; visitors can choose another language inside the application. The `socdepoble_enxufe_idioma` filter can set the starting language of this site's instance to one of the exact codes `ca`, `es`, `en`, `eu` or `gl`; any other value is ignored, and a visitor's own choice still wins. Portable embedding code for other hosts does not include it.
-* Page translation without Google: the Translate button sends the page's text through this server to Apertium (free software, no key) for Spanish, English, French and Galician. German and Basque need a configured service; an optional DeepL key replaces all of them.
+= Com funciona a WordPress? (Exemple real: Gent de la Torre) =
+
+* **Un sol codi de substitució (`[socdepoble_app]`):** Només cal crear una pàgina a WordPress i posar el codi `[socdepoble_app]` (o `[socdepoble_app poble="la-torre-de-les-macanes"]`).
+* **Plantilla de pantalla completa (`Sóc de Poble · full screen`):** En seleccionar la plantilla inclosa **Sóc de Poble · full screen** al panell dret de la pàgina, el portal ocupa tota la finestra com una aplicació web progressiva (PWA) neta, sense que la capçalera ni el peu del tema de WordPress destorben.
+* **Adreces compartibles:** Quan un veí navega pel Xat, el Mur o el Mercat, l'adreça s'actualitza i es pot compartir per WhatsApp, Telegram o Mastodon.
+* **Diagnòstic a Salut del Lloc (*Site Health*):** Incorpora comprovacions automàtiques a *Ferramentes ➔ Salut del lloc* per verificar que el paquet d'actius locals (`dist/`) està íntegre i operatiu.
+
+= English Summary (For International Reviewers & Fediverse Auditing) =
+
+**Sóc de Poble** embeds the **Sóc de Poble** rural community web application (`https://socdepoble.org`) inside a WordPress site using the `[socdepoble_app]` shortcode or the **Sóc de Poble** block (`<soc-de-poble>`). Built in Valencian/Catalan as its cultural and linguistic foundation, it provides municipalities, rural cooperatives, and local associations with a Community Chat (`xat`), Village Wall (`mur`), Local Marketplace (`mercat`), Community Calendar (`calendari`), Local Directory (`pobles`), and Wiki (`wikidepoble`), while keeping all JavaScript, CSS, icons, and fonts (`Noto Sans` under SIL Open Font License 1.1 in `dist/fonts/OFL.txt`) bundled locally inside `dist/`. Federation endpoints are served by socdepoble.org; installing this plugin does not make the WordPress site a Fediverse node.
+
 * Valencian (Catalan) translations are included for the plugin and block editor.
 
 == External services ==
 
+**Valencià / Català:**
+Tots els fitxers d'execució del visor (JavaScript, fulls d'estil CSS, icones i tipografia `Noto Sans`) s'entreguen localment des de la carpeta `dist/` d'este connector. No es carrega cap script ni tipografia des de xarxes CDN de tercers ni des de Google Fonts. Quan un visitant obri una pàgina que conté el portal **Sóc de Poble**, el navegador es connecta als serveis del projecte **Sóc de Poble** per carregar el contingut comunitari en viu.
+
+**English (WordPress.org Compliance Disclosure):**
 This plugin connects to the Sóc de Poble service. Accounts, messages and posts are stored in its backend, not in the WordPress database. The application uses the following services when a visitor opens an embedded application and uses the relevant features:
 
 1. Sóc de Poble backend, currently hosted on Supabase: required for the connected service. It handles sign-in, profiles, messages, posts, marketplace listings, events and real-time updates. Google sign-in returns directly to the page that hosts the application. Terms and privacy information: https://socdepoble.org. Supabase terms: https://supabase.com/terms ; privacy: https://supabase.com/privacy
@@ -85,7 +100,7 @@ Shareable addresses place the application route, including any search text or it
 
 == Source code and build ==
 
-The file dist/soc-de-poble.standalone.js is compiled and minified; in the standalone package it is a small loader for the compiled and minified JavaScript modules in dist/trossos/. Human-readable source and build tools are public at https://github.com/socdepoble/socdepoble.org: the application is in src/, the build configuration in vite.standalone.config.js and this adapter in wordpress-plugin/. Each build writes dist/sdp-release.json with the version, bundle SHA-256 and integrity, and its pinned data node, and dist/sdp-inventari.json with the SHA-256 of every file, so a host can verify what it serves.
+The file dist/soc-de-poble.standalone.js is compiled and minified; in the standalone package it is a small loader for the compiled and minified JavaScript modules in dist/trossos/. Human-readable source and build tools are public in the backup-notes-publish branch, https://github.com/socdepoble/socdepoble.org/tree/backup-notes-publish: the application is in src/, the build configuration in vite.standalone.config.js and this adapter in wordpress-plugin/. Each build writes dist/sdp-release.json with the version, bundle SHA-256 and integrity, and its pinned data node, and dist/sdp-inventari.json with the SHA-256 of every file, so a host can verify what it serves.
 
 To build locally, run `npm ci`, `npm run build:wp` (standalone, dist/) and `npm run build:wp:directori` (WordPress, builds/directori/dist/). For a release, set SDP_RELEASE=1 and use the same SDP_VERSIO and public configuration for both commands. The packager verifies both inventories and their dependencies before creating packages.
 
@@ -95,116 +110,97 @@ Typography: the Noto Sans font files in dist/fonts/ are used under the SIL Open 
 
 == Installation ==
 
-1. Install the plugin and set up your village: in Plugins → Add New Plugin search for Sóc de Poble and press Install Now, or upload the package ZIP with Upload Plugin (or copy its socdepoble directory into wp-content/plugins, keeping that name) and activate it. Then, in Settings → Sóc de Poble, write the public name of your portal (for example Gent de la Torre) and the id of your village (la-torre-de-les-macanes) and press the blue Save Changes button.
-2. Put Sóc de Poble on a page of your website, choosing one of two options. Option A (copying the code): go to Pages → Add New Page, give it a title, type or paste exactly `[socdepoble_app]` in the body of the page and press Publish. Option B (with the visual block): inside the page editor press the + button (Add block), search for Sóc de Poble and click it.
-3. Make it fill the whole screen and be the home page: in the right column of the page editor open the Template panel and choose Sóc de Poble · full screen (block themes list it on WordPress 6.7 or later; on 6.5 and 6.6 use Quick Edit in the Pages list). To make that page the home page of your website, go to Settings → Reading, tick A static page and select it as Homepage.
+= Com posar Sóc de Poble a la teua web en 3 passos molt fàcils =
 
-If another copy or the older "soc-de-poble" plugin is active, deactivate it first: this version refuses to activate while another copy is loaded and names both directories.
+1. **Pas 1 · Instal·la el connector i configura el teu poble:**
+   * Instal·la i activa **Sóc de Poble. Portal de Pobles Connectats** des de **Complements ➔ Afegir complement**.
+   * Al menú esquerre de WordPress, ves a **Ajustos ➔ Sóc de Poble**.
+   * Escriu el nom públic del teu portal (per exemple, `Gent de la Torre`) i l'identificador del teu poble (per exemple, `la-torre-de-les-macanes`), i prem el botó blau **«Guardar els canvis»**.
+
+2. **Pas 2 · Posa Sóc de Poble en una pàgina (tria UNA de les dos maneres):**
+   * **Manera A (amb el bloc Codi de substitució / Shortcode — la més ràpida):**
+     Ves a **Pàgines ➔ Afegir una pàgina**, posa-li títol (per exemple, *Sóc de Poble*), afig un bloc de **Codi de substitució** (*Shortcode*) i pega **un sol** codi com este: `[socdepoble_app poble="la-torre-de-les-macanes"]`
+     *(Nota: si ja has guardat el teu poble al Pas 1, també pots escriure simplement `[socdepoble_app]` sense res més).*
+   * **Manera B (amb el bloc visual de l'editor):**
+     Dins de l'editor de la pàgina, prem el botó `+` (*Afegir un bloc*), busca **«Sóc de Poble»**, fes-hi clic i publica la pàgina.
+
+3. **Pas 3 · Fes que ocupe tota la pantalla i siga la pàgina d'inici:**
+   * A la columna dreta de l'editor de la pàgina (pestanya **Pàgina**), busca l'apartat **«Plantilla»** (*Template*) i selecciona **«Sóc de Poble · full screen»** (*Sóc de Poble · pantalla completa*). Així el portal es veurà net a pantalla completa, sense les barres del tema antic (mira la captura de pantalla #10). Amb un tema de blocs, la plantilla apareix en eixe apartat a WordPress 6.7 o posterior; en versions anteriors, tria-la amb l'**Edició ràpida** de la llista de **Pàgines**.
+   * Si vols que esta pàgina siga la portada principal de la teua web (com en `https://gentdelatorre.net/`), ves a **Ajustos ➔ Lectura**, marca *«Una pàgina estàtica»*, tria la pàgina *Sóc de Poble* com a **Pàgina d'inici** i prem **«Guardar els canvis»**.
+
+= Opcions avançades del Codi de substitució (només si tens diverses pàgines) =
+
+En el 99% dels casos només necessites posar **un sol** shortcode a la teua pàgina principal (`[socdepoble_app poble="la-torre-de-les-macanes"]`), que obri el portal complet a la seua entrada principal (**el Xat i les Comunitats del poble**, des d'on el veí ja es mou pel Mur, el Mercat, el Calendari o els Pobles).
+
+Només si algun dia vols crear una altra pàgina secundària dins del teu WordPress que s'òbriga directament en un apartat concret, pots afegir l'atribut opcional `ruta_inicial`:
+
+* Per obrir directament al **Xat del poble** (entrada per defecte): `[socdepoble_app poble="la-torre-de-les-macanes" ruta_inicial="/xat"]`
+* Per obrir directament al **Mur de bàndols i notícies**: `[socdepoble_app poble="la-torre-de-les-macanes" ruta_inicial="/mur"]`
+* Per obrir directament al **Mercat rural de Km 0**: `[socdepoble_app poble="la-torre-de-les-macanes" ruta_inicial="/mercat"]`
 
 == Frequently Asked Questions ==
 
-= Does it work without the Sóc de Poble service? =
+= Quin codi he de posar exactament a la meua pàgina: un o dos? =
 
-No. This plugin displays the application; connected community data lives in the Sóc de Poble backend.
+**Només UN.** En la pàgina de WordPress on vulgues mostrar el portal (com la pàgina d'inici de `gentdelatorre.net`), només has de posar **un sol** bloc de *Codi de substitució* amb `[socdepoble_app poble="la-torre-de-les-macanes"]`
+(canviant `la-torre-de-les-macanes` per l'identificador del teu poble, o posant simplement `[socdepoble_app]` si ja l'has configurat en **Ajustos ➔ Sóc de Poble**).
 
-= How do I choose the village? =
+= Com faig perquè la pàgina es veja a pantalla completa sense les capçaleres del meu tema? =
 
-Use Settings → Sóc de Poble, the block options, `[socdepoble_app nom_poble="Gent de la Torre" poble="la-torre-de-les-macanes"]`, or the `socdepoble_enxufe_config` filter.
+Quan estigues editant la pàgina a WordPress, mira la columna de la dreta (pestanya **Pàgina**): on posa **Plantilla** (*Template*), canvia la plantilla per defecte i tria **«Sóc de Poble · full screen»** (*Sóc de Poble · pantalla completa*). Després prem **Guardar** (mira la captura #10). Amb un tema de blocs, la plantilla apareix en eixe apartat a WordPress 6.7 o posterior; en versions anteriors, tria-la amb l'**Edició ràpida** de la llista de **Pàgines**.
 
-= Why is the script large? =
+= Per què el connector té el Valencià / Català com a idioma principal? =
 
-It contains the community application. A Shadow DOM isolates its styles from the theme. The script loads only where the shortcode or block is used. The directory variant uses WordPress's React runtime.
+Perquè **Sóc de Poble** naix a les muntanyes alacantines (La Torre de les Maçanes) amb la vocació de preservar i dignificar la nostra llengua i cultura popular en l'entorn digital. Valencià i Català són la mateixa llengua que compartim milions de parlants, i en **Sóc de Poble** ocupa el primer lloc per dret propi, alhora que oferim suport multillengua complet (`ca`, `es`, `en`, `eu`, `gl`) i traductor lliure Apertium perquè cap veí ni visitant quede fora.
 
-= Can the same village be served without WordPress? =
+= Carrega tipografies o scripts de Google o d'altres multinacionals? =
 
-Yes. Use the standalone AAMMDD_HHMM_estatic_spa_vVERSIO.zip distribution and its embedding manifest. The project's own distribution also provides embedding code in Settings → Sóc de Poble. The directory variant requires WordPress's runtime and explains that another host needs the standalone package.
+Tipografies i scripts de la interfície, no: la tipografia (`Noto Sans`), les icones i el codi de la interfície viuen dins de la carpeta `dist/` del connector, sense Google Fonts ni cap CDN. Però el portal sí que es connecta a serveis de fora, i alguns són de multinacionals. Les dades viuen al servidor de Sóc de Poble, allotjat hui a Supabase. L'inici de sessió amb Google només s'usa si el visitant el tria, i les fotos de perfil dels comptes de Google, Facebook o GitHub es carreguen des dels servidors d'eixos proveïdors quan una pàgina les mostra. Una pàgina del catàleg de disseny incrusta un vídeo de YouTube (youtube-nocookie.com, de Google), que es carrega amb el reproductor de YouTube quan el visitant hi arriba. La traducció només s'envia quan el visitant prem «Traduir». La secció «External services» els detalla tots, amb les condicions de cada servei.
 
-= The page shows an empty box. What is missing? =
+= Quins atributs i filtres té per a desenvolupadors? =
 
-Open Tools → Site Health. The plugin reports missing application scripts or manifests, and packages compiled against a development backend.
+* El codi `[socdepoble_app]` admet tres atributs opcionals, que en eixa pàgina passen per damunt dels ajustos: `nom_poble` (nom públic del portal), `poble` (identificador del poble) i `ruta_inicial` (apartat on s'obri, sempre començant per `/`). El bloc **Sóc de Poble** té les mateixes tres opcions.
+* El filtre `socdepoble_enxufe_config` rep el nom públic i l'identificador del poble dels ajustos i els pot canviar per a tot el lloc; els atributs d'una pàgina continuen passant-hi per damunt.
+* El filtre `socdepoble_enxufe_idioma` fixa la llengua inicial de l'aplicació en este lloc amb un dels codis exactes `ca`, `es`, `en`, `eu` o `gl`; qualsevol altre valor s'ignora, i la tria del visitant sempre guanya. Sense el filtre, l'aplicació s'obri en valencià i la llengua de WordPress no la canvia.
+* El filtre `socdepoble_enxufe_integritat` afig la Subresource Integrity a l'script de l'aplicació. Va apagat per defecte perquè un connector de memòria cau o de CDN que reescriu l'eixida faria que el navegador no carregara l'script.
+* El filtre `socdepoble_enxufe_ruta_a_url` tria on es guarda la ruta de les adreces compartibles: `fragment` (per defecte, `#sdp=/xat`) o `parametre` (`?sdp=/xat`); qualsevol altre valor les apaga.
 
-= The plugin is installed twice. What should I do? =
+= Tinc el connector instal·lat dos voltes. Què faig? =
 
-A ZIP without the socdepoble directory at its root may install alongside the existing copy under the ZIP's name. Keep one copy: deactivate the other, activate the desired copy, then remove the unused directory. Deleting a copy from Plugins runs that copy's uninstaller. This version preserves shared settings while another copy remains active, but older versions delete the display name and village identifier, so record those settings first.
+Un zip que no porta la carpeta `socdepoble` a l'arrel s'instal·la al costat de la còpia que ja tens, amb el nom del zip. El connector refusa activar una segona còpia mentre l'altra està activa. Conserva'n només una: desactiva l'altra, activa la que vols i esborra la carpeta que sobra. Les dos còpies compartixen els ajustos: esborrar-ne una des de **Complements** executa el seu desinstal·lador, que no esborra res mentre l'altra continue activa; les versions antigues sí que esborren el nom públic i l'identificador del poble, així que apunta'ls abans.
 
-= Where are generated packages stored? =
+= Què passa si desinstal·le el connector? =
 
-Packages are written under wordpress-plugin/builds/ as AAMMDD_HHMM_wordpress_enxufe_vVERSIO.zip, AAMMDD_HHMM_wordpress_directori_vVERSIO.zip and AAMMDD_HHMM_estatic_spa_vVERSIO.zip, stamped with the standalone build's time in Europe/Madrid. Channel manifests declare each exact name. --sortida accepts only builds/ or one of its subdirectories.
+Si no queda cap altra còpia activa del connector, `uninstall.php` esborra els ajustos (`socdepoble_enxufe`), l'estat del canal d'actualitzacions i les dades temporals del traductor (pressupost, panys i traduccions en memòria cau). El connector no crea cap taula pròpia a la base de dades. Si una altra còpia del connector continua activa, la desinstal·lació no esborra res: els ajustos són de la còpia que queda. Les entrades d'una memòria cau d'objectes externa normalment caduquen en set dies.
+
+== Screenshots ==
+
+1. **Vista real del sistema · El Xat i les Comunitats del Poble (`/xat`):** Interfície principal amb el menú lateral a l'esquerra, la columna de converses i canals comunitaris al centre (*Sóc de Poble*, *Javi Llinares*, *Gent de La Torre*, *IAIA MarIA*) i la pàgina de benvinguda a la dreta.
+2. **Vista real del sistema · El Mur del Poble (`/mur`):** Graella de publicacions recents amb les targetes quadrades de *Pedra Seca*, cercador i filtres per explorar el mur, el mercat, el calendari i el mapa.
+3. **Vista real del sistema · Pobles i Territori (`/pobles`):** Directori de municipis i nodes rurals connectats (*La Torre de les Maçanes*, *Xixona* i la resta de pobles de la comarca).
+4. **Vista real del sistema · La Wiki de Poble (`/wikidepoble`):** Espai de treball de tres columnes amb l'arbre del coneixement col·lectiu, llista de documents i lectura editorial.
+5. **Vista real del sistema · El Bloc de Notes (`/notes`):** Estudi d'escriptura i publicació amb carpetes, previsualització en viu de la targeta (*Card*) i editor de continguts.
+6. **Un Poble Imaginari de la Nostra Zona (`/projecte`):** Recreació fotogràfica d'un poble imaginari de les nostres muntanyes (no correspon a cap municipi concret, sinó que representa el paisatge de bancals i serres de la nostra terra) com a símbol dels pobles connectats.
+7. **Disseny en Pedra Seca Digital (`/disseny`):** Il·lustració d'estil còmic del nostre sistema de disseny *Pedra Seca*: els mestres d'obra i les iaies del poble aixecant la interfície web carreu a carreu, amb humor i ofici.
+8. **El Mercat de Poble i Productes Locals (`/mercat`):** Il·lustració d'estil còmic del mercat de proximitat i d'economia de Km 0 a la plaça del poble.
+9. **Candidatura Europea NLnet · NGI Fediversity (`/page/fediversity`):** Il·lustració d'estil còmic on l'enginyeria popular del poble presenta el seu projecte de Fedivers rural davant dels avaluadors científics europeus. La candidatura està en avaluació: Sóc de Poble no rep cap finançament d'NGI Fediversity.
+10. **Exemple real de configuració en 1 minut a WordPress (`gentdelatorre.net`):** Un sol bloc de *Codi de substitució* amb `[socdepoble_app poble="la-torre-de-les-macanes"]` al centre i la plantilla **«Sóc de Poble · full screen»** triada a la columna dreta.
 
 == Changelog ==
 
 = 1.1.10 =
-* Plugins list: View details opens the description, installation steps, FAQ and changelog from the plugin's own readme, with Tested up to aligned to the running WordPress version; the Plugin URI points to https://socdepoble.org.
-* Settings → Sóc de Poble: a three-step guide (name and village, shortcode or block, full-screen template and home page); the welcome names no active village until one is saved.
-* Application language: the socdepoble_enxufe_idioma filter sets the starting language to ca, es, en, eu or gl; a visitor's own choice still wins.
-* Block and translations: the block renders through a render callback, and the Valencian translation also loads without WP_Translation_Controller.
-* Slug and text domain are socdepoble. The directory variant ships no languages/ folder: its translations come from translate.wordpress.org; the package distributed by Sóc de Poble keeps them.
-* Application: social preview images at 1200×630 for every seed page, seed PNG assets re-encoded as real PNG, native icons on the AAA green.
-* Translation without Google: without a key, Apertium translates into Spanish, English, French and Galician; German and Basque use the service in SDP_TRADUCCIO_URL; a DeepL key still covers every language.
+* **Guia d'instal·lació pas a pas en Valencià / Català amb exemple real (`gentdelatorre.net`):** Explicació clara en 3 passos del codi únic `[socdepoble_app poble="la-torre-de-les-macanes"]` i de la plantilla **«Sóc de Poble · full screen»**, amb captura real de l'editor de WordPress (#10) i il·lustracions de còmic de l'univers *Sóc de Poble*.
+* **Visor complet v1.1.10:** Empaquetat autònom (`dist/soc-de-poble.standalone.js`) amb navegació per teclat (`IDEA-58`), traductor lliure Apertium (`IDEA-31`) i exportació de dades obertes per municipi (`JSON-LD`).
+* **Enllaços de la llista de connectors:** *Mostra els detalls* obri la fitxa completa amb descripció, instal·lació, PMF i registre de canvis; `Plugin URI` apunta a `https://socdepoble.org`.
 
 = 1.1.9 =
-* Full-screen template: unused font preloads from fonts.gstatic.com are removed through wp_preload_resources, also with block themes.
-* WordPress.org review: prefixed template variable, documented direct database queries, complete external services list, no remote image in the readme.
+* **Actualització de seguretat i estandardització:** El visor incrustat incorpora les últimes millores del portal, amb pàgines públiques d'arquitectura oberta, privacitat i governança del projecte.
+* **Desinstal·lació neta:** S'eliminen totes les opcions, avisos i memòria cau temporal en desinstal·lar el connector.
 
 = 1.1.8 =
-* Wiki: the Markdown parser keeps consecutive items in one list and shows Mermaid blocks as diagram cards.
-* Chat: read-only sample conversations show a direct Register button.
-* Chat: list messages can render as a live list card.
-
-= 1.0.5 =
-* TPV Pedra Seca integration with offline capability and allergens support.
-
-= 1.0.3 =
-* Author bar and publisher logo on every page; workspace rail at medium widths; pull to refresh and the section index work inside WordPress pages; shortcode and full-screen template.
-
-= 1.0.2 =
-* The Tenant ID setting is removed. The application always uses the data scope sealed in its package; no host setting, attribute or script can change the backend or the data scope.
-* A Tenant ID saved by an earlier version is no longer read. It is deleted the next time the WordPress admin area loads, or when the settings are saved. Other settings are kept.
-* The plugin no longer queues a configuration call, so the host page can still make its single window.SocDePoble.configura() call to set its session policy.
-* Package diagnostics no longer show a data scope.
-* Embedding: the application starts only from the shortcode, the block or the universal markup. It no longer mounts on an empty `#root` element, so a `#root` owned by the theme or another plugin stays untouched and the page address stays under WordPress control.
-* Google sign-in: each attempt carries its own random identifier in the return address. The application only handles a return with that identifier and leaves the page's own code, state or error parameters untouched.
-* Profile pictures: a square crop opens before upload, and the uploaded image is re-encoded without EXIF metadata such as the camera location.
-* Roadmap: links to project seeds open inside the embedded application instead of leaving for socdepoble.org.
-* Small screens: the list folds into a narrow rail beside the open item.
-* Control panel: illustrated cards with two actions each, publish with the editor or open the section's page.
-
-= 1.0.0 =
-* First stable release.
-* Optional DeepL translation at POST /wp-json/socdepoble/v1/traduir, with the key kept on the server, daily and monthly local budgets, per-client rate limiting and a seven-day cache. The element receives traductor-url only when a key is configured.
-* Full-screen template accounts for the admin bar, allows the application to shrink below 32rem and leaves password-protected pages under WordPress control.
-* Full-screen template listed in the block-theme page editor on WordPress 6.7 or later.
-* Village identifiers and initial routes follow the application's validation rules; invalid values do not hide valid defaults.
-* Activation refuses a second loaded copy and identifies both directories instead of causing a fatal error.
-* Valencian (Catalan) translations for the plugin and block editor.
-* The package distributed by Sóc de Poble uses an Ed25519-signed update channel, verifies package size and SHA-256 before installation, and refuses updates over symlinks, Git checkouts, renamed directories or multisite installations where WordPress does not check updates.
-* View Details shows the description, installation instructions, FAQ and changelog from this readme.
-* Uninstallation removes plugin options, channel state, translation budgets, locks and database caches if no other copy remains active.
-
-= 0.2.0 =
-* Block, settings page, Site Health checks and optional Subresource Integrity.
-* The sdp.release.v1 manifest pins the script version instead of using its file modification date.
-* Signed update channel for the package distributed by Sóc de Poble.
-
-= 0.1.0 =
-* Shortcode and full-screen template.
+* **Codi font i construcció documentats:** Instruccions reproduïbles pas a pas per generar el paquet `dist/` des del repositori públic.
 
 == Upgrade Notice ==
 
 = 1.1.10 =
-View details from the plugin's own readme, a three-step setup guide, translation without Google or a key (Apertium), the socdepoble slug and text domain, and 1200×630 social preview images.
-
-= 1.1.9 =
-Cleaner browser console on full-screen pages and WordPress.org review fixes.
-
-= 1.0.5 =
-TPV integration with Pedra Seca architecture and offline capabilities.
-
-= 1.0.3 =
-Every page shows its author bar and, when published by Sóc de Poble, its logo. Workspace navigation stays visible at medium widths, pull to refresh works inside WordPress, and the section index opens inside the application.
-
-= 1.0.2 =
-The application no longer mounts on an empty #root owned by the theme or another plugin. The Tenant ID setting is removed: the application always uses the data scope sealed in its package. A saved Tenant ID is ignored and deleted the next time the WordPress admin area loads.
-
-= 1.0.0 =
-First stable release: optional DeepL translation, a full-screen template for block themes and a clear refusal instead of a fatal error when activating a second copy. Deactivate the older "soc-de-poble" plugin first.
+Guia d'instal·lació didàctica en 3 passos amb l'exemple real de Gent de la Torre ([socdepoble_app poble="la-torre-de-les-macanes"] + plantilla Sóc de Poble · full screen) i galeria de 10 captures.

@@ -85,9 +85,11 @@ const entorn = () => ({ showDirectoryPicker: vi.fn(), addEventListener: window.a
 const arbre = () => within(document.querySelector('#app-grid-sidebar'));
 const detall = () => within(document.querySelector('#app-grid-main'));
 const llista = () => within(document.querySelector('#app-grid-list'));
-/* Els botons de volum de la Barra «Volums i carpetes locals» (no els de les píndoles de filtres). */
+/* Els botons de volum de la Barra «Volums i carpetes locals» (no els de les píndoles de filtres).
+   P1-71 (261101) · La Barra viu a la Columna 1, davall de les vistes; el seu
+   títol hi és un h2 (Gauntlet 261101, G-D5). */
 const volumsALaBarra = () => {
-  const titol = [...document.querySelectorAll('#app-grid-main h3')].find((h) => h.textContent === 'Volums i carpetes locals');
+  const titol = [...document.querySelectorAll('#app-grid-sidebar h2')].find((h) => h.textContent === 'Volums i carpetes locals');
   return titol ? [...titol.closest('section').querySelectorAll('[role=group] button')].map((boto) => boto.textContent) : [];
 };
 const blobsVius = () => [...document.querySelectorAll('img')].map((img) => img.getAttribute('src')).filter((src) => src?.startsWith('blob:'));
@@ -163,7 +165,7 @@ describe('QA-A01b · l’eixida de veres, en l’ordre real', () => {
     await waitFor(() => expect(volumsALaBarra()).toEqual(['_multimedia_de_poble']));
     /* L'altra pestanya buida la mateixa base (sense BroadcastChannel ací: cap avís). */
     await bib.oblidaTotes();
-    const pindola = detall().getByRole('button', { name: '_multimedia_de_poble' });
+    const pindola = arbre().getByRole('button', { name: '_multimedia_de_poble' });
     await act(async () => { pindola.click(); });
     await espera(40);
     expect(volumsALaBarra()).toEqual([]);

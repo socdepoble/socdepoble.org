@@ -141,6 +141,27 @@ test('l’avatar del padró de la IAIA es pinta amb la seua cara de «Festa del 
   expect(altra.container.querySelector('.sdp-avatar--enquadrat')).toBeNull();
 });
 
+/* P1-70 (marató nocturna 261101, T5.2) · La foto de perfil de Javi (i les seues
+   còpies) es pinta amb la miniatura de 256 px: el mateix Avatar, sense
+   enquadrament, amb la base del paquet com qualsevol recurs propi. */
+test('la foto de perfil de Javi es pinta amb la miniatura de 256 px, també al padró i amb la base', () => {
+  const MINIATURA = AGENTS_MAP.JAVI.avatar_miniatura;
+  const COPIA = '/assets/uploads/gent/javi-llinares/avatars/javi-llinares-perfil-1200px.jpg';
+  for (const src of [AGENTS_MAP.JAVI.avatar_url, COPIA]) {
+    const props = { nom: 'Javi Llinares', mida: 'md', llavor: 'fake-javi', alt: '' };
+    const { container } = render(<><Avatar {...props} src={MINIATURA} /><CaraXat {...props} src={src} /></>);
+    const [esperat, pintat] = container.children;
+    expect(pintat.isEqualNode(esperat), src).toBe(true);
+    expect(srcDe(container)).toBe(MINIATURA);
+    cleanup();
+  }
+  fixaBaseRecursos(PAQUET);
+  permetOrigenMitjans(PAQUET);
+  const fila = render(<FilaPersona membre={{ usuari_id: AGENTS_MAP.JAVI.id, nom: 'Javi Llinares', tipus: 'persona', avatar_url: AGENTS_MAP.JAVI.avatar_url }} onSelect={() => {}} t={t} />);
+  expect(srcDe(fila.container)).toBe(`${PAQUET}${MINIATURA}`);
+  expect(mocks.resol).not.toHaveBeenCalled();
+});
+
 test('el padró (FilaPersona) pinta la foto pujada resolta, i la de la IAIA amb la base', async () => {
   fixaBaseRecursos(PAQUET);
   permetOrigenMitjans(PAQUET);

@@ -7,6 +7,8 @@ import {
   MAX_ENTRADILLA, MAX_SUBTITOL, MAX_TITOL, MIDA_PREVISIO, MOTIUS, campBuit, hiHaPropostaDeCard, proposaCard
 } from './proposaCard.js';
 import { LLAVOR_NOTA, LLAVOR_NOTA_ANTIGA } from './llavorNota.js';
+import * as motor from './proposaCard.js';
+import * as germa from './memoriaOral.js';
 
 const nota = (content, camps = {}) => ({ title: '', subtitle: '', lead: '', content, ...camps });
 const resum = (r) => ({ motiu: r.motiu, camps: { ...r.camps }, cos: r.cos });
@@ -254,5 +256,29 @@ describe('proposaCard · revisió adversarial 261028', () => {
     parse.mockClear();
     expect(proposaCard(contingut).camps.title).toBe('Títol');
     expect(parse.mock.calls.some(([html]) => html === contingut.content)).toBe(true);
+  });
+});
+
+/* T3.2 (marató 261101) · La fitxa de memòria oral viu a memoriaOral.js (amb
+   les seues proves, memoriaOral.test.js) i ix també per esta porta. La crida
+   de sempre no canvia: DocumentEditor i NotesEditor reben la mateixa forma. */
+describe('proposaCard · porta única del motor (T3.2, memòria oral)', () => {
+  test('el reexport és el mateix mòdul germà, no una còpia', () => {
+    for (const nom of ['estructuraMemoriaOral', 'marcaRevisioHumana', 'validaFitxaOkf', 'indexOkf', 'entradaLog', 'nivellDeConfianca', 'VOCABULARI_RURAL', 'MOTIUS_MEMORIA']) {
+      expect(motor[nom], nom).toBe(germa[nom]);
+    }
+  });
+
+  test('un relat oral passa per proposaCard amb la mateixa forma de sempre i la fitxa OKF no hi entra', () => {
+    const relat = nota('<p>Mon pare era llaurador a Tibi.</p><p>A l’estiu segàvem el blat amb la falç.</p><p>La iaia contava rondalles.</p>');
+    const r = proposaCard(relat);
+    expect(Object.keys(r).sort()).toEqual(['camps', 'cos', 'mogudes', 'motiu']);
+    expect(resum(r)).toEqual({
+      motiu: MOTIUS.proposta,
+      camps: { title: 'Mon pare era llaurador a Tibi', subtitle: 'A l’estiu segàvem el blat amb la falç', lead: 'La iaia contava rondalles.' },
+      cos: ''
+    });
+    const fitxa = motor.estructuraMemoriaOral(relat);
+    expect([fitxa.municipi?.id, fitxa.okf.frontmatter.type]).toEqual(['tibi', 'Memòria oral']);
   });
 });

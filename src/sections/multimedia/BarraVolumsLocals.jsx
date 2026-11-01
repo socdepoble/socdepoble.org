@@ -7,6 +7,12 @@
  * Presentacional: els gestors (permís, selector, biblioteca) són de
  * GestorMultimediaLocal, que fa del permís la PRIMERA espera de cada clic.
  * Els noms dels volums, amb nomVisibleLocal (Gauntlet 261029, cicle 1).
+ *
+ * Gauntlet 261101 (G-D5) · `nivell`: el del títol, 3 per defecte (davall de
+ * l'h2 del Gestor autònom). La Columna 1 de /multimedia hi passa 2: a la
+ * columna no el precedix cap h2, i va abans de l'H1 de la pàgina. La cara no
+ * canvia (modules.css, bloc P1-71). Gauntlet 2 261101 (G2-09) · El peu de la
+ * columna va fora del <nav> de l'arbre (UniversalWorkspace · peuNavegacio).
  */
 import { useId } from 'react';
 import { FolderOpen, FolderPlus, RefreshCw, Unplug, X } from 'lucide-react';
@@ -29,17 +35,19 @@ export function BarraVolumsLocals({
   onReconnecta,
   onOblida,
   onDesconnecta,
-  onRelleig
+  onRelleig,
+  nivell = 3
 }) {
   const tr = (parell, valors) => tradueix(t, parell, valors);
   const id = useId();
   const idTitol = `${id}-titol`;
   const actiu = volums.find((v) => v.id === volumActiu) || null;
   const obert = estatVolum === 'obert' && Boolean(actiu);
+  const Titol = nivell === 2 ? 'h2' : 'h3';
 
   return (
     <section ref={contenidorRef} className="sdp-arxiu-local__panell" aria-labelledby={idTitol}>
-      <h3 id={idTitol}>{tr(T.volums)}</h3>
+      <Titol id={idTitol}>{tr(T.volums)}</Titol>
       {volums.length > 0 ? (
         <div role="group" aria-labelledby={idTitol} className="sdp-arxiu-local__fila">
           {volums.map((v) => (

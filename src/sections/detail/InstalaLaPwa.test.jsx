@@ -17,9 +17,12 @@ import { InstalaLaPwa, PAGINA_D_INSTALACIO, esEntradaPropia, guiaDInstalacio, mo
 import { creaInstalacio } from '../../pwa/instalacio.js';
 
 const PLAY = 'https://play.google.com/store/apps/details?id=org.socdepoble.app';
+const WORDPRESS = 'https://wordpress.org/plugins/socdepoble/';
 const nav = (userAgent, maxTouchPoints = 0) => ({ userAgent, maxTouchPoints });
 /* Res que anuncie una botiga encara tancada, ni cap adreça (decisió del Mestre: cap «pròximament»). */
 const BOTIGUES = /Google Play|App Store|WordPress|TestFlight|APK|prompte|aviat|pròximament|https?:/i;
+/* Les botigues que encara no són obertes (01-11-2026: totes menys WordPress.org). */
+const TANCADES = /Google Play|App Store|TestFlight|APK|prompte|aviat|pròximament|https?:/i;
 
 afterEach(cleanup);
 
@@ -97,8 +100,27 @@ function Ranures({ canals, capturat = true }) {
 const ranura = () => document.querySelector('[data-testid="ranura"]');
 
 describe('les ranures de botiga', () => {
-  test('hui, tot tancat: no pinta res, ni un enllaç ni cap «pròximament»', () => {
+  /* 01-11-2026 (ordre del Mestre 261101_0311, T1) · Amb les ranures de veres
+     (CANALS_DE_BOTIGA), només WordPress.org és obert: un sol enllaç, a la
+     fitxa del connector, i res de les botigues mòbils, que continuen tancades. */
+  test('hui, només WordPress.org: un enllaç a la fitxa del connector i cap botiga tancada ni «pròximament»', () => {
     render(<Ranures />);
+    const enllacos = [...ranura().querySelectorAll('a')];
+    expect(enllacos.map((a) => [a.getAttribute('href'), a.className, a.textContent]))
+      .toEqual([[WORDPRESS, 'sdp-boto sdp-boto--secundari sdp-boto--gran', 'WordPress.org']]);
+    expect(enllacos[0].parentElement.className).toBe('sdp-accions');
+    // Sense manera d'instal·lar-la (Firefox d'escriptori): cap botó, només la botiga oberta.
+    expect(ranura().querySelectorAll('button')).toHaveLength(0);
+    expect(ranura().textContent).toBe('WordPress.org');
+    expect(TANCADES.test(ranura().textContent)).toBe(false);
+  });
+
+  test('amb totes les ranures tancades, no pinta res, ni un enllaç ni cap «pròximament»', () => {
+    render(<Ranures canals={[
+      { id: 'google-play', nom: 'Google Play', url: null },
+      { id: 'app-store', nom: 'App Store', url: null },
+      { id: 'wordpress-org', nom: 'WordPress.org', url: null }
+    ]} />);
     expect(ranura().childNodes).toHaveLength(0);
   });
 
@@ -122,6 +144,10 @@ describe('les ranures de botiga', () => {
 
   test('fora de l’entrada pròpia (cap captura), ni les botigues obertes', () => {
     render(<Ranures capturat={false} canals={[{ id: 'google-play', nom: 'Google Play', url: PLAY }]} />);
+    expect(ranura().childNodes).toHaveLength(0);
+    cleanup();
+    // Tampoc la de WordPress.org, la de veres: el paquet autònom (WordPress, Sollutia) no captura.
+    render(<Ranures capturat={false} />);
     expect(ranura().childNodes).toHaveLength(0);
   });
 

@@ -46,6 +46,42 @@ export const LLAVOR_NOTA_ANTIGA = `
 /** Les llavors que el Bloc reconeix, la d'ara primer. */
 export const LLAVORS_NOTA = Object.freeze([LLAVOR_NOTA, LLAVOR_NOTA_ANTIGA]);
 
+/**
+ * IDEA-59 / P1-72 (ordre del Mestre, 261101 02:03 i 02:55, punt 1) · El
+ * cartell guia reversible del cos: la mateixa plantilla de format (títol de
+ * secció H3, el paràgraf que l'explica, subtítol H4, el seu paràgraf, una
+ * llista amb pics i una de numerada), però ja no és contingut de la nota.
+ * L'editor la pinta com una decoració (richText/extensions/guiaCos.js)
+ * mentre el cos té 0 caràcters: desapareix en punxar al cos, torna si s'ix
+ * sense escriure res, i no torna mai més en una nota on s'ha escrit almenys
+ * una lletra. No es desa, no es publica ni arriba a la targeta. Una nota
+ * nova naix amb el cos buit (NotesSection · entradaDeNotaNova); les velles
+ * que encara porten la LLAVOR_NOTA desada la buiden al primer focus, com
+ * sempre, i després també hi apareix esta guia.
+ *   · blocs: el que es veu (només text, mai HTML);
+ *   · etiqueta: el nom accessible del cos;
+ *   · resum: el que el lector de pantalla llig mentre es veu la guia
+ *     (aria-placeholder), perquè la guia és muda (aria-hidden).
+ * Gauntlet 261101 · X-C-notes (C-09) · Cada text és el parell [clau i18n,
+ * reserva en valencià] (section.notes.cos.*, la reserva idèntica a ca.js):
+ * l'Editor Universal els passa pel traductor de la interfície
+ * (DocumentEditor · guiaCos.js · traduixGuia) i, sense traductor, la guia
+ * ix en valencià.
+ */
+const PARELL = (nom, reserva) => Object.freeze([`section.notes.cos.${nom}`, reserva]);
+export const GUIA_NOTA = Object.freeze({
+  etiqueta: PARELL('etiqueta', 'Cos de la nota'),
+  resum: PARELL('guiaResum', 'Escriu ací la teua nota. La plantilla de format que es veu és només una guia: no es desa ni es publica.'),
+  blocs: Object.freeze([
+    Object.freeze({ tipus: 'h3', text: PARELL('guia.titol', 'Títol de secció (H3)') }),
+    Object.freeze({ tipus: 'p', text: PARELL('guia.explicacio', 'Esta és la plantilla de format de Sóc de Poble: punxa en qualsevol lloc del text i s’amagarà, perquè hi escrigues la teua nota. Si ixes sense escriure res, tornarà. No es desa ni es publica.') }),
+    Object.freeze({ tipus: 'h4', text: PARELL('guia.subtitol', 'Subtítol de secció (H4)') }),
+    Object.freeze({ tipus: 'p', text: PARELL('guia.paragraf', 'Un paràgraf de prova davall d’un subtítol H4.') }),
+    Object.freeze({ tipus: 'ul', items: Object.freeze([PARELL('guia.pic1', 'Una llista amb pics'), PARELL('guia.pic2', 'Un altre punt de la llista')]) }),
+    Object.freeze({ tipus: 'ol', items: Object.freeze([PARELL('guia.pas1', 'Una llista numerada'), PARELL('guia.pas2', 'El segon pas de la llista')]) })
+  ])
+});
+
 /* La forma normalitzada d'un HTML: sense els espais i salts entre etiquetes,
    que TipTap no conserva en serialitzar (getHTML), ni els paràgrafs buits del
    final, que l'editor hi afig després d'una llista (TrailingNode). */

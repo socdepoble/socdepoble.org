@@ -92,16 +92,52 @@ describe('EspecimenBarraEines', () => {
     expect(within(barres[0]).queryByRole('button', { name: 'Format del text' })).toBeNull();
   });
 
-  it('per davall de 500px el format es plega darrere de «Aa»', () => {
+  it('per davall de 500px, «⋯» («Format del text») obri totes les eines de format', () => {
     ampleDeBarra(448);
     const arrel = pinta(EspecimenBarraEines);
     const barra = arrel.querySelectorAll('.sdp-editor-tools')[1];
     expect(barra.getAttribute('data-compact')).toBe('true');
-    const aa = within(barra).getByRole('button', { name: 'Format del text' });
-    expect(aa.getAttribute('aria-expanded')).toBe('false');
-    fireEvent.click(aa);
-    expect(aa.getAttribute('aria-expanded')).toBe('true');
+    const mes = within(barra).getByRole('button', { name: 'Format del text' });
+    expect(mes.getAttribute('aria-expanded')).toBe('false');
+    fireEvent.click(mes);
+    expect(mes.getAttribute('aria-expanded')).toBe('true');
     expect(within(barra).getByRole('button', { name: 'Negreta' }).getAttribute('aria-pressed')).toBe('true');
+    const eines = within(barra).getByRole('group', { name: 'Opcions de format del text' });
+    for (const nom of ['Encapçalament (H): Paràgraf', 'Negreta', 'Cursiva', 'Llista', 'Llista numerada', 'Ratllat', 'Citació', 'Divisor']) {
+      expect(within(eines).getByRole('button', { name: nom }).disabled, nom).toBe(false);
+    }
+  });
+
+  /* P2-wp-petits (261101) · L'espècimen descriu i alimenta la barra d'IDEA-59 / P1-72:
+     cap eina hi ix desactivada per falta d'acció de mostra. */
+  it('ampla: el desplegable H3, H4, H5, H6 i H2, i «⋯» (Més eines) amb Ratllat, Citació i Divisor, tot actiu', () => {
+    ampleDeBarra(900);
+    const arrel = pinta(EspecimenBarraEines);
+    expect(arrel.textContent).not.toContain('«Aa»');
+    expect(arrel.textContent).toContain('H3, H4, H5, H6 i, al final, H2');
+    const barra = arrel.querySelectorAll('.sdp-editor-tools')[0];
+    for (const boto of barra.querySelectorAll('.sdp-editor-tools__format-options button, .sdp-editor-tools__segona-fila button')) {
+      expect(boto.disabled, boto.getAttribute('aria-label')).toBe(false);
+    }
+    const mes = within(barra).getByRole('button', { name: 'Més eines' });
+    fireEvent.click(mes);
+    expect(mes.getAttribute('aria-expanded')).toBe('true');
+    const segona = within(barra).getByRole('group', { name: 'Més eines' });
+    expect(within(segona).getAllByRole('button').map((boto) => boto.getAttribute('aria-label'))).toEqual(['Ratllat', 'Citació', 'Divisor']);
+    expect(within(segona).getByRole('button', { name: 'Divisor' }).hasAttribute('aria-pressed')).toBe(false);
+    fireEvent.click(within(segona).getByRole('button', { name: 'Divisor' }));
+    expect(screen.getByRole('status').textContent).toContain('Divisor');
+
+    // Un sol nivell cada vegada, com al motor; triar el que ja és actiu torna a paràgraf.
+    fireEvent.click(within(barra).getByRole('button', { name: 'Encapçalament (H): Paràgraf' }));
+    expect(within(barra).getAllByRole('menuitemradio').map((opcio) => opcio.textContent.slice(0, 2))).toEqual(['H3', 'H4', 'H5', 'H6', 'H2']);
+    fireEvent.click(within(barra).getByRole('menuitemradio', { name: /^H4/ }));
+    fireEvent.click(within(barra).getByRole('button', { name: 'Encapçalament: H4' }));
+    fireEvent.click(within(barra).getByRole('menuitemradio', { name: /^H2/ }));
+    fireEvent.click(within(barra).getByRole('button', { name: 'Encapçalament: H2' }));
+    expect(within(barra).getByRole('menuitemradio', { name: /^H4/ }).getAttribute('aria-checked')).toBe('false');
+    fireEvent.click(within(barra).getByRole('menuitemradio', { name: /^H2/ }));
+    expect(within(barra).getByRole('button', { name: 'Encapçalament (H): Paràgraf' })).toBeTruthy();
   });
 });
 

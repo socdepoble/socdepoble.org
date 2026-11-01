@@ -186,7 +186,7 @@ describe('seo.php · esborrany inert de l’OpenGraph de la ruta', () => {
     const fila = senseComentaris(cosDe('socdepoble_enxufe_seo_fila'));
     expect(fila).toMatch(/\$fila\['ruta'\] = '\/' \. \$fila\['clau'\];/);
     expect(fila).not.toMatch(/\$fila\['ruta'\] = \$ruta/);
-    // El readme del plugin (en anglés, com tot ell) diu com s'encén i què ha de fer la cau.
+    // El readme del plugin (esta secció, en anglés com les altres de compliment del directori) diu com s'encén i què ha de fer la cau.
     const readme = llig('wordpress-plugin/readme.txt');
     expect(readme).toMatch(/`socdepoble_enxufe_seo`/);
     expect(readme).toMatch(/dist\/seo-routes\.json/);

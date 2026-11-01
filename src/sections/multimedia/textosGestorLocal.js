@@ -24,6 +24,8 @@ export const TEXTOS_LOCAL = congela({
   'titol': ['section.multimedia.local.titol', 'Gestor d’arxius locals'],
   'entradeta': ['section.multimedia.local.entradeta', 'Obri les carpetes del teu ordinador sense pujar cap fitxer a Internet: imatges, textos, àudio, vídeo i PDF.'],
   'volums': ['section.multimedia.local.volums', 'Volums i carpetes locals'],
+  /* Gauntlet 261101 (G-D3) · «Carpeta local» sense cap volum obert: la Barra és al peu de la Columna 1 (P1-71). */
+  'senseVolum': ['section.multimedia.local.senseVolum', 'Encara no hi ha cap carpeta oberta. Per a obrir-ne una, fes servir «{volums}», al peu de la columna {columna}.'],
   'vincula': ['section.multimedia.local.vincula', 'Vincular carpeta local'],
   'recordada': ['section.multimedia.local.recordada', 'Carpeta recordada: «{nom}»'],
   'reconnectaAjuda': ['section.multimedia.local.reconnectaAjuda', 'El navegador torna a demanar permís quan tornes: un clic i continues on ho havies deixat.'],

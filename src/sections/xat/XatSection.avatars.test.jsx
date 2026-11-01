@@ -219,7 +219,10 @@ afterEach(() => {
 
 /* Gauntlet 261016 (Bloc 3.6) · Quatre files des d'ara: Javi Llinares, amb la
    seua foto del padró pilot (mai el logo de l'entitat), també a la mostra. */
-const FOTO_JAVI = AGENTS_MAP.JAVI.avatar_url;
+/* P1-70 (marató nocturna 261101, T5.2) · Pintada amb la miniatura de 256 px
+   de la mateixa foto (CaraXat · caresLleugeres.js): la fila no arrossega la de
+   1200 px. La foto gran continua sent la del padró (avatar_url). */
+const FOTO_JAVI = AGENTS_MAP.JAVI.avatar_miniatura;
 
 test('sense sessió a un amfitrió (el cas del Mestre): les quatre files porten la seua cara i pengen del paquet', () => {
   ambLaBaseDelPaquet();

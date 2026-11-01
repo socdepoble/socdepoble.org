@@ -2622,6 +2622,32 @@ details[open] summary.accordion-header svg:last-child {
 
 } /* fi @layer legacy (obert a la línia ~637) */
 
+/* ═══ T3.3 · ALERTES MUNICIPALS DEL MUR (carril B3, marató nocturna 261101) ═══
+   src/sections/mur/AlertaMunicipal.jsx: el distintiu d'una publicació
+   d'alerta o de bàndol urgent signada per un ajuntament i l'avís de les
+   vigents al capdamunt del Mur. Les peces són les de sempre: la insígnia
+   d'estat (.sdp-insignia--error per a l'alerta i --avis per al bàndol,
+   components.css) i l'alerta en línia (.sdp-alerta--avis). Ací només hi ha
+   l'espai i la mida del distintiu, la vora de la targeta del seu to i els
+   enllaços de l'avís. Només tokens: --sdp-error-text sobre --sdp-error-fons,
+   --sdp-avis-text sobre --sdp-avis-fons i --sdp-accio-text sobre
+   --sdp-avis-fons passen de 7:1 en clar i en fosc, i les vores de 3:1 sobre
+   la targeta (AlertaMunicipal.test.jsx ho calcula amb tokens.css). Sense
+   alerta, cap d'estes classes és al DOM. Dins de `components`: a `legacy`,
+   la mida de la insígnia perdria contra components.css. */
+@layer components {
+  .sp-card-body .sdp-mur-alerta { margin: 0 0 var(--sdp-space-3); }
+  .sp-card-body .sdp-mur-alerta .sdp-insignia { font-size: var(--sdp-text-base); }
+  .sp-card.sdp-mur-alerta-targeta--perill { border: 2px solid var(--sdp-error-text); }
+  .sp-card.sdp-mur-alerta-targeta--avis { border: 2px solid var(--sdp-avis-text); }
+  /* L'enllaç de l'avís: el blau d'acció, subratllat (no només pel color) i
+     amb la diana tàctil de sempre. */
+  .sdp-mur-alertes__enllac {
+    display: inline-flex; align-items: center; min-block-size: var(--sdp-touch);
+    color: var(--sdp-accio-text); text-decoration: underline; font-weight: 700;
+  }
+}
+
 /* ÍNDEX DE SECCIÓ · el calaix enfocat per programa (correcció final, ordre
    del Mestre, 261004). En obrir-se, PageFrame li dona el focus (tabIndex -1),
    a la SPA i a l'encastat, perquè el diàleg aria-modal siga on és el
@@ -2698,6 +2724,52 @@ details[open] summary.accordion-header svg:last-child {
     color-scheme: dark;
   }
   .sdp-workspace .sdp-workspace-groups { background: var(--sdp-workspace-nav-fons); }
+  /* P1-71 (marató nocturna 261101) · El peu de la navegació
+     (UniversalWorkspace · peuNavegacio), davall de les vistes: /multimedia hi
+     posa els volums locals. La targeta porta el seu text (cos i títols) i no
+     l'hereta del crom fosc de la columna. */
+  .sdp-workspace .sdp-workspace-column__peu { padding: var(--sdp-space-3); }
+  /* Gauntlet 261101 (G-D1) · Zero desbordaments en una columna de 200 a
+     260 px. La targeta i l'avís passen al coixí de 12 px, i l'avís posa la
+     icona damunt del text, que ocupa tot l'ample.
+     Gauntlet 2 261101 (G2-05) · `anywhere` només als textos que porten el
+     nom d'un volum (sense espais: _multimedia_de_poble): el nom de la
+     píndola i el títol i el text de l'avís. Només talla una paraula que no
+     cap sola en la línia. Les etiquetes dels botons no es parteixen mai a
+     mitja paraula («Desconne / ctar»): cada botó ocupa la fila sencera i
+     parteix només pels espais, amb el coixí de 8 px i 4 px entre la icona i
+     l'etiqueta. Mesurat amb Chrome a 1024 px (columna de 201 px, botó de
+     151): la paraula més llarga de les cinc llengües, «Deskonektatu» (113 px),
+     queda dins del botó sense tocar la vora; amb el coixí de 12 i el buit de
+     8, la tocava. */
+  .sdp-workspace .sdp-workspace-column__peu .sdp-arxiu-local__panell {
+    padding: var(--sdp-space-3);
+    color: var(--sdp-text-cos);
+  }
+  .sdp-workspace .sdp-workspace-column__peu :is(.pill > span, .sdp-alerta__titol, .sdp-alerta__text) { overflow-wrap: anywhere; }
+  .sdp-workspace .sdp-workspace-column__peu .sdp-boto { inline-size: 100%; gap: var(--sdp-space-1); padding-inline: var(--sdp-space-2); }
+  /* Gauntlet 2 261101 (G2-01) · La icona d'un botó o d'una píndola no
+     s'encongix quan l'etiqueta fa salt de línia (.sdp-boto i .pill són
+     inline-flex): sempre de 20 px (Boto) o 18 px (píndola), sencera. */
+  .sdp-workspace .sdp-workspace-column__peu :is(.sdp-boto, .pill) > svg { flex: none; }
+  .sdp-workspace .sdp-workspace-column__peu .pill { max-inline-size: 100%; }
+  .sdp-workspace .sdp-workspace-column__peu .sdp-alerta { flex-direction: column; padding: var(--sdp-space-3); }
+  .sdp-workspace .sdp-workspace-column__peu .sdp-alerta__cos { inline-size: 100%; }
+  /* Gauntlet 261101 (G-D5) · El títol de la Barra és un h2 (BarraVolumsLocals
+     · nivell 2): cap salt de nivell abans de l'H1 de la pàgina. Porta la cara
+     del h3 del Gestor (base.css i .sdp-arxiu-local h3): la mida, el pes,
+     l'alineació, l'espaiat de lletra i el filet de davall.
+     Gauntlet 2 261101 (G2-04) · I el color: el blau d'acció del h3
+     (--sdp-accio-text, base.css), en clar i en fosc. */
+  .sdp-workspace .sdp-workspace-column__peu .sdp-arxiu-local__panell > h2 {
+    font-size: var(--sdp-text-h5);
+    font-weight: var(--sdp-pes-negreta);
+    letter-spacing: inherit;
+    text-align: start;
+    color: var(--sdp-accio-text);
+    padding-block-end: var(--sdp-space-3);
+    border-block-end: 1px solid var(--sdp-vora);
+  }
   .sdp-workspace .app-grid-col-header .app-grid-col-header__plegable {
     padding: 0;
     gap: var(--sdp-space-2);
@@ -6954,6 +7026,64 @@ details[open] summary.accordion-header svg:last-child {
     padding: 8px; border: 1px solid var(--sdp-crom-vora); background: var(--sdp-crom-fons);
     box-shadow: var(--sdp-ombra-flotant);
   }
+  /* IDEA-59 / P1-72 (ordre del Mestre, 261101, punts 2 i 4) · La barra d'eines
+     de l'Editor Universal (UniversalToolbar.jsx).
+     · La segona fila del botó «⋯» (en ample): just a sota de la primera, dins
+       de la barra, amb el mateix fons, el mateix coixí i la mateixa vora. Hi
+       van les eines secundàries i les principals que no caben a la primera.
+     · «⋯» obert es pinta com un commutador premut.
+     · El desplegable d'encapçalaments: el botó diu el nivell actiu («H3») amb
+       el galló, i el menú flota davall del botó, com el menú del Workspace
+       (vora, radi i --sdp-ombra-flotant). Cada opció, una diana de 48px.
+     Només tokens: els colors del crom de la barra, en clar i en fosc.
+     Gauntlet 2 · 261101 · Y-Notes (G2-N-07) · També els pesos: la negreta
+     és --sdp-pes-negreta i el pes normal, la paraula clau `normal` (400;
+     tokens.css no en té cap token). Les amplàries mínimes (1,5 rem del codi
+     del botó, 2 rem del codi de cada opció i 14 rem del menú) van en rem a
+     propòsit: acompanyen la lletra, que també és en rem (--sdp-text-base).
+     L'escala d'espais és en px i les deslligaria quan la persona augmenta la
+     lletra o quan l'amfitrió de l'encastat té una altra mida arrel. L'opacitat
+     de l'opció desactivada (.5) no té token: és la de la resta del full. */
+  .sdp-editor-tools__segona-fila {
+    display: flex; flex-wrap: wrap; align-items: center; gap: var(--sdp-space-1);
+    padding: var(--sdp-space-1) var(--sdp-space-2);
+    border-bottom: 1px solid var(--sdp-crom-vora);
+  }
+  .sdp-editor-tools__segona-fila[hidden] { display: none; }
+  .sdp-editor-tools__amplia[aria-expanded="true"],
+  .sdp-editor-tools__nivell[data-actiu="true"] {
+    background: var(--sdp-crom-actiu-fons);
+    color: var(--sdp-crom-actiu-text);
+  }
+  .sdp-editor-tools__nivells { position: relative; display: inline-flex; flex: none; }
+  .sdp-bloc-icon.sdp-editor-tools__nivell { width: auto; gap: 0; padding-inline: var(--sdp-space-2) var(--sdp-space-1); }
+  .sdp-editor-tools__nivell-actiu { min-width: 1.5rem; font-size: var(--sdp-text-base); font-weight: var(--sdp-pes-negreta); line-height: 1; text-align: center; }
+  .sdp-editor-tools__menu {
+    position: absolute; inset-block-start: 100%; inset-inline-start: 0; z-index: var(--z-barra-negra);
+    display: flex; flex-direction: column; min-width: 14rem; padding: var(--sdp-space-1);
+    border: 1px solid var(--sdp-crom-vora); border-radius: var(--sdp-radi-s);
+    background: var(--sdp-crom-fons); color: var(--sdp-crom-text);
+    box-shadow: var(--sdp-ombra-flotant);
+  }
+  .sdp-editor-tools__menu[hidden] { display: none; }
+  .sdp-editor-tools__opcio {
+    display: flex; align-items: center; gap: var(--sdp-space-3);
+    min-height: var(--sdp-bloc-control); padding-inline: var(--sdp-space-3);
+    border: 0; border-radius: var(--sdp-radi-s); background: transparent; color: inherit;
+    font: inherit; text-align: start; white-space: nowrap; cursor: pointer;
+  }
+  .sdp-editor-tools__opcio[aria-checked="true"] { background: var(--sdp-crom-actiu-fons); color: var(--sdp-crom-actiu-text); }
+  .sdp-editor-tools__opcio:disabled { opacity: .5; cursor: default; }
+  .sdp-editor-tools__opcio:focus-visible { outline: 2px solid var(--sdp-crom-focus); outline-offset: -2px; }
+  @media (hover: hover) and (pointer: fine) {
+    .sdp-editor-tools__opcio:hover:not(:disabled):not([aria-checked="true"]) { background: var(--sdp-crom-hover); }
+  }
+  .sdp-editor-tools__opcio-codi { min-width: 2rem; font-weight: var(--sdp-pes-negreta); }
+  .sdp-editor-tools__opcio-nom { font-weight: normal; }
+  /* IDEA-59 / P1-72 (punt 1) · La guia reversible del cos buit (guiaCos.js):
+     la prosa de l'editor la vist com el text de sempre; ací només el cursor
+     de text i que no es puga seleccionar (no és contingut). */
+  .sdp-guia-cos { cursor: text; -webkit-user-select: none; user-select: none; }
 }
 
 @layer components {

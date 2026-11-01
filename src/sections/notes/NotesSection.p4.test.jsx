@@ -85,10 +85,17 @@ const munta = (ruta = '/notes') => {
 };
 const columnaNotes = () => screen.getByRole('complementary', { name: 'NOTES' });
 const detall = () => screen.getByTestId('detall');
+/* IDEA-59 / P1-72 (ordre del Mestre, 261101, punt 0) · L'entrada nua de /notes
+   obri «Tot» amb la Card tutorial «Bloc de notes» triada (una fitxa de lectura:
+   el detall és l'estat buit de l'editor, sense nota). Abans s'obria la primera
+   nota de «Mur» o, sense cap, la nota preparada. */
+const cardTutorial = () => within(columnaNotes()).getByRole('button', { name: 'Bloc de notes' });
 
 test('amb sessió, «CREAR NOTA» és a la columna NOTES i obri la «Nota sense títol» sense crear-la al servidor', async () => {
   munta();
-  expect(detall().textContent).toBe('a1');
+  // IDEA-59 · L'entrada és la Card tutorial; CREAR NOTA, un sol clic.
+  expect(detall().textContent).toBe('cap');
+  expect(cardTutorial().getAttribute('aria-current')).toBe('true');
   const crear = within(columnaNotes()).getByRole('button', { name: 'CREAR NOTA' });
   expect(crear.disabled).toBe(false);
   await act(async () => { fireEvent.click(crear); });
@@ -101,16 +108,25 @@ test('amb sessió, «CREAR NOTA» és a la columna NOTES i obri la «Nota sense 
   // La primera cosa que s'hi escriu la crea, una vegada i amb el mateix id.
   await act(async () => { dades.preparada.escriu(id, 'content', '<p>Comprar planter</p>'); });
   expect(dades.creaNota).toHaveBeenCalledTimes(1);
-  expect(dades.creaNota.mock.lastCall[0]).toMatchObject({ id, folderId: 'f-mur', content: '<p>Comprar planter</p>' });
+  /* IDEA-59 · Creada des de «Tot» (l'entrada nua): sense carpeta, com des del
+     botó «Tot» (abans l'entrada era «Mur» i la nota naixia a la carpeta Mur). */
+  expect(dades.creaNota.mock.lastCall[0]).toMatchObject({ id, content: '<p>Comprar planter</p>' });
+  expect(dades.creaNota.mock.lastCall[0]).not.toHaveProperty('folderId');
 });
 
-test('amb sessió i cap nota, cap «Connecta…»: la nota preparada ja és oberta i llesta per a escriure', () => {
+/* IDEA-59 · Amb sessió i cap nota: la Card tutorial a «Tot» (abans de P1-72 hi
+   havia la nota preparada oberta); la «Nota sense títol» és a la llista i a un
+   clic, sense crear-se. */
+test('amb sessió i cap nota, cap «Connecta…»: la Card tutorial és oberta i la nota preparada, a un clic', async () => {
   dades.notes = [];
   munta();
   expect(screen.queryByText(CONNECTA)).toBeNull();
+  expect(detall().textContent).toBe('cap');
+  expect(cardTutorial().getAttribute('aria-current')).toBe('true');
+  const preparada = within(columnaNotes()).getByRole('button', { name: 'Nota sense títol' });
+  await act(async () => { fireEvent.click(preparada); });
   expect(detall().textContent).toMatch(UUID_V4);
   expect(detall().dataset.preparada).toBe('si');
-  expect(within(columnaNotes()).getByRole('button', { name: 'Nota sense títol' }).getAttribute('aria-current')).toBe('true');
   expect(dades.creaNota).not.toHaveBeenCalled();
 });
 
@@ -121,10 +137,15 @@ test('amb sessió però les dades encara carregant: «CREAR NOTA» es pinta desa
   expect(screen.queryByText(CONNECTA)).toBeNull();
 });
 
-test('sense sessió amb dades remotes: «Connecta per veure les teues notes.», sense CREAR NOTA ni nota preparada', () => {
+/* IDEA-59 / P1-72 · «La Card sempre dins de NOTES (Tot)»: també sense sessió.
+   La llista ja no és buida (hi ha la Card), i el text «Connecta…» de la
+   llista buida no es veu; la Card i la barra porten «CONNECTAR». Continua
+   sense CREAR NOTA ni nota preparada, i el detall és la còpia de prova. */
+test('sense sessió amb dades remotes: la Card tutorial a «Tot», sense CREAR NOTA ni nota preparada', () => {
   Object.assign(dades, { notes: [], teSessio: false, canCreate: false });
   munta();
-  expect(within(columnaNotes()).getByText(CONNECTA)).toBeTruthy();
+  expect(cardTutorial().getAttribute('aria-current')).toBe('true');
+  expect(within(columnaNotes()).queryByText(CONNECTA)).toBeNull();
   expect(screen.queryByRole('button', { name: 'CREAR NOTA' })).toBeNull();
   expect(screen.queryByRole('button', { name: 'Nota sense títol' })).toBeNull();
   expect(detall().textContent).toBe('cap');
@@ -158,7 +179,8 @@ test('revisió · amb la llista a mitges, un enllaç a una carpeta espera la seu
 test('revisió · amb la llista a mitges, CREAR NOTA obri igualment la «Nota sense títol»', async () => {
   Object.assign(dades, { notesComplete: false });
   munta();
-  expect(detall().textContent).toBe('a1');
+  // IDEA-59 · L'entrada nua és la Card tutorial, també amb la llista a mitges.
+  expect(detall().textContent).toBe('cap');
   await act(async () => { fireEvent.click(within(columnaNotes()).getByRole('button', { name: 'CREAR NOTA' })); });
   const id = detall().textContent;
   expect(id).toMatch(UUID_V4);

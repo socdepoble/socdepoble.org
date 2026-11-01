@@ -2,8 +2,8 @@
    «estret», i la memòria del nivell de cada mòdul.
 
    Per què una memòria: l'enllaç profund no es pot deduir de la URL crua,
-   perquè les seccions hi escriuen soles l'element (Notes, l'efecte que obri
-   n1; la Wiki i Disseny, la reconciliació i la primera fitxa d'una carpeta).
+   perquè les seccions hi escriuen soles l'element (Notes, la Wiki i Disseny:
+   la reconciliació, que obri la primera nota o fitxa d'una carpeta).
    Tornar al mòdul amb l'Arrere o recarregar-lo dona eixa mateixa URL, i no és
    cap enllaç: la persona no havia obert eixe element.
 

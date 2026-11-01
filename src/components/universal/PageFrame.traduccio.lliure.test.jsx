@@ -374,19 +374,42 @@ test('«Veure l’original» porta el focus al botó Traduir (no es perd a <body
   expect(document.activeElement).toBe(traduir(container));
 });
 
+/* T7 · P1-22 (261101) · Amb la interfície en anglés, Traduir es diu
+   «Translate»: el focus el troba pel nom traduït, no pel valencià. */
+test('en anglés, «See the original» porta el focus al botó «Translate»', async () => {
+  mocks.accions = { t: createTranslator('en') };
+  fixaTraductorLliure('apertium');
+  vi.stubGlobal('fetch', fetchFals());
+  const { container } = render(<Pagina />);
+  const traduirEn = () => container.querySelector('header.bar-blue button[aria-label="Translate"]');
+  expect(traduir(container)).toBeNull();
+  fireEvent.click(traduirEn());
+  await act(async () => {
+    fireEvent.click(within(screen.getByRole('menu')).getByRole('menuitemradio', { name: 'Castellà' }));
+  });
+  await act(async () => { await new Promise((resolve) => setTimeout(resolve, 0)); });
+  const veure = within(avis(container)).getByRole('button', { name: 'See the original' });
+  veure.focus();
+  await act(async () => { fireEvent.click(veure); });
+  expect(avis(container)).toBeNull();
+  expect(document.activeElement).toBe(traduirEn());
+});
+
 /* menu-traduir-noms-sense-i18n · L'avís, el nom del menú, «Original» i els
    errors ixen en la llengua de la interfície (els noms de les llengües, com
    els va fixar el Mestre). Sense traductor, en valencià (les proves d'abans). */
 test('en la llengua de la interfície (euskara): l’error, el nom del menú, «Original» i l’avís de traducció', async () => {
   mocks.accions = { t: createTranslator('eu') };
+  /* T7 · P1-22 (261101) · El botó Traduir també es diu en basc. */
+  const traduirEu = (arrel) => arrel.querySelector('header.bar-blue button[aria-label="Itzulpena"]');
   const { container, unmount } = render(<Pagina />);
-  fireEvent.click(traduir(container));
+  fireEvent.click(traduirEu(container));
   expect(mocks.toast).toHaveBeenCalledWith('Itzulpen automatikoa ez dago erabilgarri zerbitzari honetan.');
   unmount();
   fixaTraductorLliure('apertium');
   vi.stubGlobal('fetch', fetchFals());
   const pagina = render(<Pagina />).container;
-  fireEvent.click(traduir(pagina));
+  fireEvent.click(traduirEu(pagina));
   expect(screen.getByRole('menu', { name: 'Orria itzuli' })).toBeTruthy();
   await act(async () => {
     fireEvent.click(within(screen.getByRole('menu')).getByRole('menuitemradio', { name: 'Castellà' }));
@@ -394,7 +417,7 @@ test('en la llengua de la interfície (euskara): l’error, el nom del menú, «
   await act(async () => { await new Promise((resolve) => setTimeout(resolve, 0)); });
   expect(avis(pagina).textContent).toContain('Valentzieratik automatikoki itzulia');
   expect(within(avis(pagina)).getByRole('button', { name: 'Ikusi jatorrizkoa' })).toBeTruthy();
-  fireEvent.click(traduir(pagina));
+  fireEvent.click(traduirEu(pagina));
   expect(within(screen.getByRole('menu')).getByRole('menuitemradio', { name: 'Jatorrizkoa (valentziera)' })).toBeTruthy();
 });
 

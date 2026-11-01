@@ -274,7 +274,7 @@ if ( 'readme' === $mode ) {
 			// Gauntlet 261025_0545 (MISSED P3) · la fitxa respon per l'slug del canal propi, no pel del directori.
 			'info'     => socdepoble_enxufe_plugins_api( false, 'plugin_information', (object) array( 'slug' => SOCDEPOBLE_ENXUFE_SLUG_CANAL ) ),
 			'aliena'   => socdepoble_enxufe_plugins_api( false, 'plugin_information', (object) array( 'slug' => 'akismet' ) ),
-			'html'     => isset( $cas['linies'] ) ? socdepoble_enxufe_html_readme( $cas['linies'] ) : '',
+			'html'     => isset( $cas['linies'] ) ? socdepoble_enxufe_html_detalls( $cas['linies'] ) : '',
 		),
 		JSON_THROW_ON_ERROR
 	);
