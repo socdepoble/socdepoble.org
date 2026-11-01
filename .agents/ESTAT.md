@@ -7,6 +7,14 @@ description: ESTAT DE LA SESSIÓ
 
 <!-- SDP:ESTAT_ACTUAL -->
 
+## ESTAT_ACTUAL · 2026-11-01T20:55:00+01:00 · Claude · Commits de l'assalt 10/10 (155d84bd8) i de l'Onada 2; torn tancat
+
+- **Torn i ordre:** `torn_3f5652a2-ce26-464c-b29b-9649b7323c98` (code); ordre del Mestre al xat de l'1-11 (vespre): dos commits locals consecutius, sense push, i tancament del torn per l'esgotament del compte. Informe: [261101_1355_auditoria_claude](../_wiki_de_poble/04_escriptori/261101_1355_auditoria_claude.md).
+- **Commit 1 (`155d84bd8`):** tot l'assalt T1-T10 amb el paquet `pendent-de-commit` (e2e del node germà girat: 7/7 contra el nou HEAD). Arbre assajat en una còpia: Vitest sencer 28.246 passades i 0 fallades, `test:precommit` en verd.
+- **Commit 2 (Onada 2):** P1-07 (`senseNiatsLineal.js`), P2-09 (contracte v1 i migració 2611011800, NO aplicada, fila 67), P1-24 (rebost rural de la IAIA, 16 càpsules), IDEA-25/45 (`exportaVCard.js`, sense botó encara), PS-02 (placeholders ≥ 7:1) i P1-22 (eu i gl reconciliats amb D-9). Per ordre del Mestre, només proves dirigides (1.096) i `test:precommit` (6.147 + 274), sense suite sencera.
+- **Per al Mestre:** migracions 2611011500, 2611011510 i 2611011800; desplegament; SVN de la 1.1.11; build 2 de l'app; tornar a segellar les skills (`skills-per-segellar/`); peticions de la vCard (botó a `PerfilPublicSection.jsx`, `vcardOrganitzacio.js`) i dues decisions de basc i gallec, a `_investigacio_ia_de_poble/261101_1355_assalt_claude/`; captures de `01_produccio` fora dels commits.
+- **Fronteres:** cap push, desplegament, `npm install`, SQL remot ni lectura de fitxers d'entorn. Hook de pre-commit no executable (portes heretades roges a HEAD): commits amb `commit-tree` i actualització CAS, com en els torns anteriors.
+
 ## ESTAT_ACTUAL · 2026-11-01T19:42:00+01:00 · Claude · Assalt al 10/10 en les 15 dimensions (pla 261101_1246): T1-T10 en mode Gauntlet
 
 - **Torn i ordre:** `torn_3f5652a2-ce26-464c-b29b-9649b7323c98` (code); ordre del Mestre al xat de l'1-11 (T1-T10 del [prompt 261101_1246](../_wiki_de_poble/04_escriptori/261101_1246_prompt_assalt_excel_lencia_10_10_les_15_dimensions_i_deute_llibre_mestre.md), pla aprovat a les 12:42). Informe: [261101_1355_auditoria_claude](../_wiki_de_poble/04_escriptori/261101_1355_auditoria_claude.md).

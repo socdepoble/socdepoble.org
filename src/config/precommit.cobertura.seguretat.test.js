@@ -139,6 +139,8 @@ const FRONTERES = Object.freeze([
   'src/sections/text/legal.viquipedia.test.js',
   // c3 (261030): la vCard d'una organització no pot injectar cap propietat.
   'src/sections/profile/vcardOrganitzacio.test.js',
+  // Onada 2 (261101), IDEA-25: la vCard d'una persona no porta cap dada privada ni injecta cap propietat.
+  'src/utils/exportaVCard.test.js',
   // c4 (261030), ALT-C1: cap dada d'este ordinador ix de /consola cap a un motor de traducció.
   'src/sections/consola/ConsolaSection.traduccio.test.jsx',
   // c4 (261030): ni la guarda estàtica de les pàgines privades (Consola inclosa) ni la fitxa

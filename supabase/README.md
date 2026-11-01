@@ -1170,6 +1170,52 @@ description: "Documentació canònica de Sóc de Poble."
   (els dos objectes, amb `versio_minima` 2, i `null`). Idempotent i en una
   sola transacció; **NO aplicada: l'aplica el Mestre, mai un agent**.
 
+- `migrations/2611011800_contracte_exportacio_federacio_v1.sql`
+  P2-09 (kit Onada 2 de Codex, integrat a l'assalt 261101): contracte
+  explícit v1 de l'exportació RGPD de les taules de federació, escrit a
+  `supabase/contracts/exportacio_federacio.v1.json`. Crea
+  `private.exporta_federacio_v1(p_uid uuid)` (STABLE, SECURITY INVOKER,
+  `search_path` buit i cap EXECUTE: revoke a `public`, `anon`,
+  `authenticated` i `service_role`; només accepta l'uid de la sessió) i torna
+  a crear `public.exporta_les_meues_dades()` amb el cos sencer de 2610311900:
+  només el bloc `federacio_no_versionada` passa a ser la crida a la funció
+  privada, protegida: si la crida mateixa falla (la propietària de l'RPC no
+  pot executar la privada, o la privada s'ha esborrat abans de tornar a
+  aplicar la 2610311900), els quatre recursos donen el SQLSTATE (`42501` o
+  `42883`) i la resta de l'exportació continua. L'RPC continua SECURITY
+  DEFINER, amb el `search_path` buit, `auth.uid()` i EXECUTE només per a
+  `authenticated`. Cada recurs té UNA
+  columna de propietat (`realms.owner_user_id`, `user_realms.user_id`,
+  `connections.user_id`, `posts.author_id`), sense precedència ni
+  alternatives, i només s'exporta si és una taula (no una vista), si `id` i
+  la columna de propietat són `uuid`, si cap columna del contracte té un
+  tipus fora de la seua llista i si la columna de propietat té una FK d'una
+  sola columna, validada, cap a `auth.users(id)` o `public.profiles(id)`.
+  Si no, eixe recurs dona `SDP-FED-ESQUEMA-NO-ADMES` (exportació incompleta)
+  i la resta continua; una lectura que falla dona el seu SQLSTATE. Ixen les
+  files on eixa columna és la persona de la sessió i només les columnes del
+  contracte. La clau `_contracte` en diu la versió; el client (`compte.js` i
+  `contracteExportacioFederacio.js`) no canvia: torna a filtrar, deixa passar
+  sencer el que projecta el servidor i descarta `_contracte`. Abans
+  (lectura): les tres consultes de la capçalera, les columnes i les FK reals
+  de les quatre taules (una columna de propietat sense FK validada cap a un
+  compte donarà `SDP-FED-ESQUEMA-NO-ADMES`: cal decidir-ho abans d'aplicar) i
+  si qui aplica és la propietària de l'RPC actual (ha de donar cert; si no,
+  la federació eixirà amb `42501` a cada recurs).
+  Verificació posterior (lectura):
+  `select to_regprocedure('private.exporta_federacio_v1(uuid)') is not null as te_contracte_2611011800, position('private.exporta_federacio_v1' in pg_get_functiondef(to_regprocedure('public.exporta_les_meues_dades()'))) > 0 as l_rpc_la_crida, has_function_privilege('authenticated', 'private.exporta_federacio_v1(uuid)', 'execute') as authenticated_la_crida, (select p.proowner from pg_catalog.pg_proc p where p.oid = to_regprocedure('public.exporta_les_meues_dades()')) = (select p.proowner from pg_catalog.pg_proc p where p.oid = to_regprocedure('private.exporta_federacio_v1(uuid)')) as mateixa_propietaria;`
+  (cert, cert, fals i cert). Després d'esta, la sonda `te_filtre_rgpd_2610311900`
+  dona fals: el filtre ja és a la funció privada, i no cal tornar a aplicar
+  la 2610311900. Va després de 2610311900; si mai es torna a aplicar la
+  2610311900, cal tornar a aplicar esta. La inversa és a la capçalera:
+  primer la 2610311900 i només després el `drop` de la privada. L'execució
+  (dues persones, nou mutacions d'esquema, permisos per rol, una propietària
+  distinta i la inversa desordenada, les consultes de la capçalera, la sonda,
+  la reaplicació i la inversa: 65 comprovacions) la va fer el torn torn_3f5652a2 a PGlite
+  0.3.16, fora del repositori: és evidència no versionada. La prova estàtica
+  és `src/data/supabase/exportacioFederacio.contracte.test.js`. Idempotent i
+  en una sola transacció; **NO aplicada: l'aplica el Mestre, mai un agent**.
+
 - `seed.sql`
   Contingut inicial del portal.
 
@@ -1217,9 +1263,12 @@ SELECT
   to_regclass('public.xat_claus_usuari') IS NOT NULL AS te_e2ee_1a_2610290400,
   to_regprocedure('public.transfereix_propietat_organitzacio(uuid,uuid)') IS NOT NULL AS te_transferencia_2610311500,
   to_regclass('public.xat_epoques') IS NOT NULL AS te_e2ee_1bc_2610311800,
+  -- Fals després de 2611011800, i és correcte: el filtre ja és a private.exporta_federacio_v1
+  -- (mireu te_contracte_federacio_2611011800). No torneu a aplicar 2610311900 per això.
   coalesce(position('SDP-FED-ESQUEMA-NO-ADMES' in pg_get_functiondef(to_regprocedure('public.exporta_les_meues_dades()'))) > 0, false) AS te_filtre_rgpd_2610311900,
   coalesce((SELECT p.prosecdef FROM pg_proc p WHERE p.oid = to_regprocedure('private.xat_lot3_b64(text,integer)')), false) AS te_esmena_2610312000,
-  to_regprocedure('public.pot_signar_com_organitzacio(uuid,uuid)') IS NOT NULL AS te_autoria_poble_2611011500;
+  to_regprocedure('public.pot_signar_com_organitzacio(uuid,uuid)') IS NOT NULL AS te_autoria_poble_2611011500,
+  coalesce(position('private.exporta_federacio_v1' in pg_get_functiondef(to_regprocedure('public.exporta_les_meues_dades()'))) > 0, false) AS te_contracte_federacio_2611011800;
 ```
 
 ### Nota d'auditoria `DF-06` (`P0-05`) i seqüència obligatòria de desplegament (`P0-21`)
@@ -1236,8 +1285,9 @@ SELECT
   8. `2610250100` → `2610250300` → `2610281730` → `2610282100` → `2610290400` → `2610311500` → `2610311800` → `2610312000` → `2610311900` (2610312000 just després de 2610311800 i de nou si mai es reaplica 2610311800; 2610311900 abans de publicar el client).
   9. Funcions de vora (`supabase/functions/`): `compte-apple` i `purga-fitxers` (secret compartit `SDP_CRON_SECRET`, crons horaris) i `noticies` (fonts personals desactivades fins a `SDP_NOTICIES_PERSONALS=1`).
   10. `2611011500` (només després de llegir les dues consultes «Abans» de la seua vinyeta) i `2611011510` (en qualsevol moment, sempre abans de cap migració que apuge el mínim per damunt de 2).
+  11. `2610311900` → `2611011800` (P2-09: només després de llegir les tres consultes «Abans» de la seua capçalera, i aplicada per la propietària de l'RPC; si mai es reaplica 2610311900, cal tornar a aplicar 2611011800).
 
-### Taula canònica ordenada: 60 fitxers de R1 + candidates 1500, 1800, 1900 i 2000 + assalt 2611011500 i 2611011510 + `seed.sql` + 2 snippets (`P0-05` / `DF-06`)
+### Taula canònica ordenada: 60 fitxers de R1 + candidates 1500, 1800, 1900 i 2000 + assalt 2611011500, 2611011510 i 2611011800 + `seed.sql` + 2 snippets (`P0-05` / `DF-06`)
 
 | Ordre | Versió | Fitxer a `supabase/migrations/` | Estat declarat | Objectiu resumit |
 | :---: | :--- | :--- | :--- | :--- |
@@ -1307,6 +1357,7 @@ SELECT
 | 64 | `2610312000` | `2610312000_e2ee_lot3_validadors_service_role.sql` | **NO aplicada: l'aplica el Mestre** | validadors E2EE per a service_role |
 | 65 | `2611011500` | `2611011500_autoria_ajuntament_mateix_poble.sql` | **NO aplicada: l'aplica el Mestre** | autoria d'ajuntament al seu poble (D-6) |
 | 66 | `2611011510` | `2611011510_versio_minima_client.sql` | **NO aplicada: l'aplica el Mestre** | versió mínima de l'app nativa (P0-23) |
+| 67 | `2611011800` | `2611011800_contracte_exportacio_federacio_v1.sql` | **NO aplicada: l'aplica el Mestre** | contracte v1 de l'exportació de federació (P2-09) |
 
 | Artefacte complementari | Ruta dins de `supabase/` | Rol operatiu |
 | :--- | :--- | :--- |
@@ -1316,7 +1367,7 @@ SELECT
 
 ### Contracte explícit d'exportació RGPD per a les taules de federació (`P2-09` · `D06/D07`)
 
-Per a neutralitzar el risc `P2-09` (inferència per qualsevol columna `uuid` al bloc `federacio_no_versionada` d'`exporta_les_meues_dades()`), el mòdul `src/data/supabase/contracteExportacioFederacio.js` i l'adaptador `src/data/supabase/compte.js` imposen este contracte explícit de propietat i projecció de columnes en el navegador, abans que la resposta isca de l'adaptador i es mostre o es descarregue. El filtre del servidor és la 2610311900 (**NO aplicada: l'aplica el Mestre**); fins aleshores, les files arriben al navegador abans del filtre:
+Per a neutralitzar el risc `P2-09` (inferència per qualsevol columna `uuid` al bloc `federacio_no_versionada` d'`exporta_les_meues_dades()`), el mòdul `src/data/supabase/contracteExportacioFederacio.js` i l'adaptador `src/data/supabase/compte.js` imposen este contracte explícit de propietat i projecció de columnes en el navegador, abans que la resposta isca de l'adaptador i es mostre o es descarregue. El filtre del servidor és la 2610311900 i, damunt d'ella, el contracte v1 de la 2611011800 (`supabase/contracts/exportacio_federacio.v1.json`: una sola columna de propietat amb FK validada cap a un compte, i tipus per columna), totes dues **NO aplicades: les aplica el Mestre**; fins aleshores, les files arriben al navegador abans del filtre. La taula següent és el contracte del client, més ample que el v1 del servidor (admet alternatives de propietat i més columnes): el que projecta el servidor v1 hi passa sencer, i la prova `src/data/supabase/exportacioFederacio.contracte.test.js` ho comprova:
 
 | Recurs (`federacio_no_versionada`) | Columna canònica de propietat (`=== auth.uid()`) | Precedència admesa | Columnes UUID excloses d'inferència | Columnes exportades permeses |
 | :--- | :--- | :--- | :--- | :--- |
@@ -1339,8 +1390,8 @@ ORDER BY table_name, ordinal_position;
 ### Candidates posteriors i números reservats (Lot 6)
 
 La taula anterior agrupa 60 fitxers de R1, les quatre candidates 1500, 1800,
-1900 i 2000, i les dues de l'assalt 261101 (2611011500, D-6, i 2611011510,
-P0-23), NO aplicades. És una fotografia d’inventari, **no un recompte fix del
+1900 i 2000, i les tres de l'assalt 261101 (2611011500, D-6; 2611011510,
+P0-23; i 2611011800, P2-09), NO aplicades. És una fotografia d’inventari, **no un recompte fix del
  directori ni una acreditació d’aplicació remota**. Les migracions posteriors
 han de documentar-se ací amb el nom complet abans d’integrar-les. La prova de
 catàleg exigix cobertura de tots els fitxers presents i rebutja els desconeguts;
@@ -1362,7 +1413,10 @@ no exigix que les candidates encara no integrades existisquen en R1.
  explícites, no l’esquema remot acreditat. Executeu l’inventari SQL de columnes,
 contrasteu propietat, tipus i dades pròpies legítimes abans d’aplicar el candidat.
 Un camp de propietat absent o no UUID produïx `SDP-FED-ESQUEMA-NO-ADMES`;
-una exportació amb este marcador està **incompleta**. El filtre JS és una
+amb la 2611011800, també una columna de propietat sense una FK d'una sola
+columna, validada, cap a `auth.users(id)` o `public.profiles(id)`, un `id`
+que no siga `uuid`, una vista o una columna del contracte d'un altre tipus.
+Una exportació amb este marcador està **incompleta**. El filtre JS és una
  defensa addicional: no substituïx el filtre SQL abans de travessar la xarxa.
 La projecció de columnes no és una promesa de sanejament arbitrari de JSONB.
 

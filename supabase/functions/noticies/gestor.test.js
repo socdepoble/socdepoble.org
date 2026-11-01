@@ -361,6 +361,15 @@ describe('el codi', () => {
     expect(index).toContain("imatgesExternes: variable('SDP_NOTICIES_IMATGES_EXTERNES') === '1'");
     expect(index).not.toContain("!== '0'");
   });
+
+  /* P1-07 (Onada 2, 261101) · senseNiats viu a part: és l'única importació del gestor, i el seu mòdul
+     tampoc no importa res ni llig cap entorn (la funció es desplega amb Deno i es prova amb Node). */
+  test('l’única importació del gestor és senseNiatsLineal.js, pur també', () => {
+    const modul = readFileSync(path.join(ARREL, CARPETA, 'senseNiatsLineal.js'), 'utf8');
+    expect(codi.match(/^import .*$/gm)).toEqual(["import { senseNiatsLineal as senseNiats } from './senseNiatsLineal.js';"]);
+    expect(codi).not.toMatch(/\bimport\(|\brequire\(/);
+    expect(modul).not.toMatch(/^import |\bimport\(|\brequire\(|console\.|Deno\.|process\.|globalThis|fetch\(/m);
+  });
 });
 
 /* T5b (ordre del Mestre, 261024) · Les fonts personals: el servei llig també una adreça que la

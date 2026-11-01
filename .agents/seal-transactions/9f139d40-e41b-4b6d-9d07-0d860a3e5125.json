@@ -1,0 +1,32 @@
+{
+  "id": "9f139d40-e41b-4b6d-9d07-0d860a3e5125",
+  "session": "a72560e6-ccb7-40fe-b39d-791c957fbe94",
+  "operationId": "torn_3f5652a2-assalt_onada_dos_governanca_commit_dos_frontissa_estat_ledger_vcard-a72560e6",
+  "claim": "a72560e6-ccb7-40fe-b39d-791c957fbe94:governance-write",
+  "planHash": "b754560a1c2a06d5a3bf58a0edd2b82807806fa5ade7cc68a88b5de86bac73b5",
+  "beforeSeal": "a0644d63b8c3deba48f104f3a67b7966871cd50fa7482f7ac1e7ca7f83d7ce87",
+  "files": [
+    {
+      "path": ".agents/contingut_estructural.json",
+      "before": "5fba7edec332a80af680ab7abae2c9813aa30ed2f7927051d50e0a5ecaaa34a0",
+      "after": "44cd395d758bdcd745ac3c86366b6970c889e75f3590094a47ec88e67b06a799"
+    },
+    {
+      "path": ".agents/ESTAT.md",
+      "before": "c17c4dac793959484a541d7e9ea91b06df0e347db252d9857e9c8cfdfc55e342",
+      "after": "226f3d45c7b5365ae9548efe7d2c1518e28a92fd01fb853e9609fcfa619397c9"
+    },
+    {
+      "path": ".agents/LEDGER.md",
+      "before": "c897d5e96575a1aa300624dc8dc615ab908fe9a4b122e5ae26a24de9bc414994",
+      "after": "b6fb666e62de10289c45db23813e340c661a88b0a7fd36f1f335a4f2ec2dd8b4"
+    },
+    {
+      "path": "tooling/brain/tractor-pedra-seca.mjs",
+      "before": "d9ccf8fc6da8402e3d63955a7c9c4fbfee97afeb618ec9da3546cfd05ece3812",
+      "after": "2b669ffa7deeaab3352eb73108e834a6fd5107e32f446f6f80c2c2b0db40ebf1"
+    }
+  ],
+  "state": "accepted",
+  "afterSeal": "d863c155441b09590117b6eb2a6e30dacfebf30e6a62f0b502590644b8434d0f"
+}

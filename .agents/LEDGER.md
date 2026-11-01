@@ -1186,4 +1186,8 @@ Ordre del Mestre al xat de l'1-11. T1-T8 executats a l'arbre viu en 9 carrils, d
 
 Ordre del Mestre al xat de l'1-11. T1-T8 executats a l'arbre viu en 14 carrils Gauntlet, un Gauntlet transversal de 6 lents (49 troballes, cap P1) i una ronda de residus; kits de Codex i Gemini auditats com a dades (cap pegat en cru; 8 proves integrades) i correccions de la inspecció de Codex de les 18:27 integrades. Governança per l'executor: Reflex e933d4ce (17 fitxers) i la transacció final 80b0b829 (frontissa, ESTAT, LEDGER i 3 fitxers); hora d'esta entrada corregida (deia 21:00, posterior a l'hora real). Vitest 28.252 passades i 0 fallades, test:node 1.823 i 0, build exit 0 (entrada 224.451 B gzip). Sense commit ni desplegament. Informe 261101_1355_auditoria_claude.
 
-<!-- HASH: c2051230999e6cb3457187c66b03d7a87a96405d43be91948afb0f33a9262f30 -->
+## 2026-11-01T20:55:00+01:00 · Claude · Commits de l'assalt 10/10 i de l'Onada 2, tancament · torn_3f5652a2-ce26-464c-b29b-9649b7323c98
+
+Ordre del Mestre al xat de l'1-11 (vespre). Commit 1 155d84bd8: assalt T1-T10 i pendent-de-commit (e2e del node germà 7/7 contra HEAD; arbre assajat, Vitest 28.246 i 0 fallades). Commit 2: sis pegats de l'Onada 2 de Codex i Gemini auditats, corregits i integrats (P1-07, P2-09, P1-24, IDEA-25/45, PS-02, P1-22), amb proves dirigides i test:precommit en verd. Governança per l'executor (frontissa de versions, excepció LLEI_08 de la vCard, ESTAT i LEDGER). Sense push ni desplegament.
+
+<!-- HASH: 51a7b1de021ed94085cc1efdd9a15f83a87889957d391271826dd826ec8e701e -->

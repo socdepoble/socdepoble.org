@@ -1,0 +1,234 @@
+{
+  "esquema": "sdp.exportacio.federacio.v1",
+  "recursos": {
+    "realms": {
+      "propietari": "owner_user_id",
+      "obligatories": [
+        "id",
+        "owner_user_id"
+      ],
+      "referencia_propietari": [
+        "auth.users.id",
+        "public.profiles.id"
+      ],
+      "columnes": {
+        "id": [
+          "uuid"
+        ],
+        "tenant_id": [
+          "uuid"
+        ],
+        "slug": [
+          "text",
+          "character varying"
+        ],
+        "name": [
+          "text",
+          "character varying"
+        ],
+        "title": [
+          "text",
+          "character varying"
+        ],
+        "description": [
+          "text",
+          "character varying"
+        ],
+        "domain": [
+          "text",
+          "character varying"
+        ],
+        "protocol": [
+          "text",
+          "character varying"
+        ],
+        "visibility": [
+          "text",
+          "character varying"
+        ],
+        "status": [
+          "text",
+          "character varying"
+        ],
+        "owner_user_id": [
+          "uuid"
+        ],
+        "created_at": [
+          "timestamp with time zone",
+          "timestamp without time zone"
+        ],
+        "updated_at": [
+          "timestamp with time zone",
+          "timestamp without time zone"
+        ]
+      }
+    },
+    "user_realms": {
+      "propietari": "user_id",
+      "obligatories": [
+        "id",
+        "user_id"
+      ],
+      "referencia_propietari": [
+        "auth.users.id",
+        "public.profiles.id"
+      ],
+      "columnes": {
+        "id": [
+          "uuid"
+        ],
+        "tenant_id": [
+          "uuid"
+        ],
+        "user_id": [
+          "uuid"
+        ],
+        "realm_id": [
+          "uuid"
+        ],
+        "role": [
+          "text",
+          "character varying"
+        ],
+        "status": [
+          "text",
+          "character varying"
+        ],
+        "handle": [
+          "text",
+          "character varying"
+        ],
+        "actor_uri": [
+          "text",
+          "character varying"
+        ],
+        "created_at": [
+          "timestamp with time zone",
+          "timestamp without time zone"
+        ],
+        "updated_at": [
+          "timestamp with time zone",
+          "timestamp without time zone"
+        ]
+      }
+    },
+    "connections": {
+      "propietari": "user_id",
+      "obligatories": [
+        "id",
+        "user_id"
+      ],
+      "referencia_propietari": [
+        "auth.users.id",
+        "public.profiles.id"
+      ],
+      "columnes": {
+        "id": [
+          "uuid"
+        ],
+        "tenant_id": [
+          "uuid"
+        ],
+        "user_id": [
+          "uuid"
+        ],
+        "realm_id": [
+          "uuid"
+        ],
+        "provider": [
+          "text",
+          "character varying"
+        ],
+        "remote_actor_uri": [
+          "text",
+          "character varying"
+        ],
+        "remote_handle": [
+          "text",
+          "character varying"
+        ],
+        "direction": [
+          "text",
+          "character varying"
+        ],
+        "status": [
+          "text",
+          "character varying"
+        ],
+        "created_at": [
+          "timestamp with time zone",
+          "timestamp without time zone"
+        ],
+        "updated_at": [
+          "timestamp with time zone",
+          "timestamp without time zone"
+        ]
+      }
+    },
+    "posts": {
+      "propietari": "author_id",
+      "obligatories": [
+        "id",
+        "author_id"
+      ],
+      "referencia_propietari": [
+        "auth.users.id",
+        "public.profiles.id"
+      ],
+      "columnes": {
+        "id": [
+          "uuid"
+        ],
+        "tenant_id": [
+          "uuid"
+        ],
+        "author_id": [
+          "uuid"
+        ],
+        "realm_id": [
+          "uuid"
+        ],
+        "title": [
+          "text",
+          "character varying"
+        ],
+        "content": [
+          "text",
+          "character varying"
+        ],
+        "summary": [
+          "text",
+          "character varying"
+        ],
+        "visibility": [
+          "text",
+          "character varying"
+        ],
+        "status": [
+          "text",
+          "character varying"
+        ],
+        "uri": [
+          "text",
+          "character varying"
+        ],
+        "url": [
+          "text",
+          "character varying"
+        ],
+        "published_at": [
+          "timestamp with time zone",
+          "timestamp without time zone"
+        ],
+        "created_at": [
+          "timestamp with time zone",
+          "timestamp without time zone"
+        ],
+        "updated_at": [
+          "timestamp with time zone",
+          "timestamp without time zone"
+        ]
+      }
+    }
+  }
+}

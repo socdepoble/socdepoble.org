@@ -98,6 +98,8 @@ export const PRECOMMIT_INCLUDE = Object.freeze([
   'src/sections/detail/ItemDetailSection.pobleIncomplet.test.jsx',
   'src/sections/text/legal.viquipedia.test.js',
   'src/sections/profile/vcardOrganitzacio.test.js',
+  /* Onada 2 (261101), IDEA-25: la vCard d'una persona no porta cap dada privada ni injecta cap propietat. */
+  'src/utils/exportaVCard.test.js',
   /* Gauntlet 261030 (cicle 4, altc1-consola-fora-del-precommit) · ALT-C1: cap dada d'este
      ordinador (consola.json, el Mapa, la matriu de requeriments, els empaquetats) ix de
      /consola cap a un motor de traducció, pels dos transports del Traductor Sobirà. La ruta

@@ -132,6 +132,10 @@
  *   imatge_sense_dns 503 · imatge_de_fora 403 · intern 500
  */
 
+/* P1-07 (deute G-03, Onada 2, 261101) · senseNiats viu a part, pur i amb el contracte provat a
+   senseNiatsLineal.test.js: és l'única importació del gestor (Deno i Node la resolen igual). */
+import { senseNiatsLineal as senseNiats } from './senseNiatsLineal.js';
+
 export const AGENT_USUARI = 'SocDePoble/1.0 (+https://socdepoble.org/projecte)';
 export const ACCEPTA = 'application/rss+xml, application/atom+xml, application/xml;q=0.9, text/xml;q=0.8';
 export const ACCEPTA_IMATGE = 'image/avif, image/webp, image/png, image/jpeg, image/gif;q=0.9';
@@ -693,8 +697,9 @@ const MAXIM_NOMS_SENSE_TANCAR = 32;
    CPU, ja fora del temporitzador de la baixada. Estes peces diuen el mateix que aquelles
    expressions, però cap no torna enrere: el «>» de després d'una posició es memoritza (els «<»
    d'abans d'eixe «>» el compartixen), un terminador que no hi és no es torna a buscar i els
-   tancaments d'un tros es llisten una sola vegada. L'única fita nova és MAXIM_NOMS_SENSE_TANCAR.
-   gestor.test.js ho prova amb les entrades que abans eren quadràtiques. */
+   tancaments d'un tros es llisten una sola vegada (senseNiats, des de P1-07 a senseNiatsLineal.js).
+   L'única fita nova és MAXIM_NOMS_SENSE_TANCAR. gestor.test.js ho prova amb les entrades que abans
+   eren quadràtiques. */
 
 const ESPAI = /\s/;
 
@@ -768,22 +773,6 @@ function senseEtiquetesXml(text) {
     des = fi + 1;
   }
   return eixida + text.slice(des);
-}
-
-/* Els tancaments `</nom\s*>` d'un text, llistats una vegada: tancament(nom, des) torna el primer
-   que comença des de `des`, [inici, final], o null. Per a cada nom, `des` ha de créixer. */
-function creaTancaments(text) {
-  const perNom = new Map();
-  for (const trobat of text.matchAll(/<\/([\w.:-]+)\s*>/g)) {
-    if (!perNom.has(trobat[1])) perNom.set(trobat[1], { llista: [], punter: 0 });
-    perNom.get(trobat[1]).llista.push([trobat.index, trobat.index + trobat[0].length]);
-  }
-  return (nom, des) => {
-    const del = perNom.get(nom);
-    if (!del) return null;
-    while (del.punter < del.llista.length && del.llista[del.punter][0] < des) del.punter += 1;
-    return del.llista[del.punter] ?? null;
-  };
 }
 
 /* L'HTML d'un contingut sense el que el nucli no hi llig (els comentaris i els elements de
@@ -958,29 +947,9 @@ function arrelDe(xml) {
   return /^\s*<(?:[A-Za-z_][\w.-]*:)?(rss|feed|RDF)[\s/>]/.exec(despresDelProleg(xml))?.[1] || null;
 }
 
-/* Un tros sense els elements de dins que porten enllaços que no són del canal o de l'element (la
-   imatge i el quadre de text del canal; la font; els continguts, amb el seu HTML). */
-function senseNiats(tros, noms) {
-  /* Cada obertura fins al seu primer tancament `</nom\s*>`; una que no es tanca, es queda, i la
-     cerca seguix pel «<» de després (com l'expressió d'abans amb el cos [\s\S]*?). */
-  const lector = creaLector(tros);
-  const nom = nomDElement(noms);
-  const valida = noSAutotanca(tros);
-  const tancament = creaTancaments(tros);
-  let eixida = '';
-  let copiat = 0;
-  for (let trobat = etiquetaDe(tros, lector, 0, nom, valida); trobat;) {
-    const tancat = tancament(trobat.nom, trobat.fi + 1);
-    if (!tancat) {
-      trobat = etiquetaDe(tros, lector, trobat.inici + 1, nom, valida);
-      continue;
-    }
-    eixida += tros.slice(copiat, trobat.inici);
-    copiat = tancat[1];
-    trobat = etiquetaDe(tros, lector, tancat[1], nom, valida);
-  }
-  return eixida + tros.slice(copiat);
-}
+/* senseNiats(tros, noms), importada de senseNiatsLineal.js: un tros sense els elements de dins que
+   porten enllaços que no són del canal o de l'element (la imatge i el quadre de text del canal; la
+   font; els continguts, amb el seu HTML). */
 
 /**
  * Les adreces de les imatges d'un feed (com a molt MAXIM_IMATGES_PER_FEED, sense repetir): les

@@ -155,10 +155,15 @@ test('conserva els antecedents i admet la correctora explícita de federació', 
   const ordre = readdirSync(MIGRACIONS).filter((f) => f.endsWith('.sql')).sort();
   const amb = ordre.filter((f) => /create\s+or\s+replace\s+function\s+public\.exporta_les_meues_dades\b/i.test(senseComentaris(llig(f))));
   const correctora = '2610311900_exporta_dades_filtre_servidor_rgpd.sql';
-  expect(amb).toEqual([F1, NOM, correctora]);
+  /* Actualitzada a posta (assalt 261101, P2-09): la 2611011800 posa el contracte v1 a una funció privada. */
+  const contracte = '2611011800_contracte_exportacio_federacio_v1.sql';
+  expect(amb).toEqual([F1, NOM, correctora, contracte]);
   const nou = llig(correctora);
   expect(nou).toContain('SDP-FED-ESQUEMA-NO-ADMES');
   expect(nou).not.toContain("c.column_name not in ('id', 'tenant_id')");
+  const v1 = llig(contracte);
+  expect(v1).toContain('v_federacio := private.exporta_federacio_v1(v_uid);');
+  expect(v1).toContain('SDP-FED-ESQUEMA-NO-ADMES');
 });
 
 test('A/B · cada lectura nova filtra per la persona (v_uid), i les de moderació són les de qui actua', () => {

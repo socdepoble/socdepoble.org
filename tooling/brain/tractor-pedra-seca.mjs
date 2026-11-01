@@ -386,6 +386,8 @@ const EXCEPCIONS_ORFE = {
   'src/data/local/dadesObertesLocal.js': 'dades obertes i restauració de l’adaptador local (D04/D10, T2): penja de src/data/local/adaptadorLocal.js, fora del paquet de producció a posta · pla 261101_1246',
   'src/data/local/mitjansLocal.js': 'mòdul de l’adaptador local (D01, T1): penja de src/data/local/adaptadorLocal.js, fora del paquet de producció a posta · pla 261101_1246',
   'src/data/local/notesLocal.js': 'mòdul de l’adaptador local (D01, T1): penja de src/data/local/adaptadorLocal.js, fora del paquet de producció a posta · pla 261101_1246',
+  /* Onada 2 del Llibre Mestre (261101), ordre del Mestre al xat: audita i integra els kits. */
+  'src/utils/exportaVCard.js': 'vCard d’una persona (IDEA-25) i porta vcardDePerfilPublic, sobre la gramàtica i la targeta d’organització de src/sections/profile/vcardOrganitzacio.js (una sola font): sense consumidor fins que el botó d’organització de la fitxa passe per la porta (petició V-03, la mateixa targeta byte a byte) o el Mestre decidisca el botó a la fitxa d’una persona (Llei del Píxel); es retira llavors · Onada 2, 261101',
   'src/data/xifratXatParaules.js': 'llista de paraules de la frase de recuperació E2EE (P1-12, DM-2): REVISADA_PEL_MESTRE = false i cap mòdul no la importa; encendre E2EE_ACTIU_PER_DEFECTE no la cableja · decisió del Mestre 261031 (part C)',
   'src/data/xifratXatRecuperacio.js': 'recuperació social E2EE del xat (P1-12, IDEA-48): cap mòdul no la importa; encendre E2EE_ACTIU_PER_DEFECTE no la cableja · decisió del Mestre 261031 (part C)',
   'src/pwa/avisosPush.js': 'avisos push web (ordre 261030_0252, Fase 3): pendents de cablejar · decisió del Mestre 261031 (part C)',

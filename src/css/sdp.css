@@ -104,6 +104,19 @@
     min-block-size: 6rem;
     resize: vertical;
   }
+  /* P1-28 · PS-02 (ordre del Mestre, 261101) · El text d'exemple dels camps.
+     Sense regla el pintava el navegador: el gris de Chrome fa 3,91:1 sobre el
+     fons subtil i 2,94:1 sobre el subtil fosc, i Firefox posa el color del
+     camp al 54 %. Amb el text suau a opacitat plena, 7:1 o més sobre tots els
+     fons de camp en clar, fosc i Bancal (el pitjor, 7,71:1 sobre el subtil
+     clar). Especificitat mínima (0,0,1): el :where() no hi suma res. El color
+     de .sdp-control i del crom (AppGridShell.css, CSS sense consumidor) mana
+     perquè la capa components va darrere de sdp (index.css); l'opacitat
+     plena els arriba perquè no la declaren. */
+  :where(input, textarea)::placeholder {
+    color: var(--sdp-text-suau);
+    opacity: 1;
+  }
   :where(input:disabled, select:disabled, textarea:disabled) {
     background: var(--sdp-fons-subtil);
     color: var(--sdp-text-desactivat);

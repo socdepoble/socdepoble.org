@@ -61,9 +61,15 @@
  *   la mateixa llista tancada que la bombolla converteix en enllaç,
  *   sections/xat/enllacos.js). La consulta del diàleg (consultaTecnicaIAIA)
  *   continua sent la Wiki sola.
+ *
+ * P1-24 (Onada 2, 261101) · Entre les dues capes, el rebost rural
+ * (iaiaRebostRural.js): càpsules curades de cultura i d'ús quotidià, també
+ * sense xarxa, en un índex curat a part (cercaAlRebostRural). Només hi entra
+ * la pregunta que l'Atles no sap, i el rànquing de l'Atles no canvia.
  */
 
 import { iniciDelContingut } from '../utils/iniciEditorial.js';
+import { CAPSULES_RURALS } from './iaiaRebostRural.js';
 import { MOCK_TOWNS } from '../sections/pobles/townsSeed.js';
 import { SALUTACIO_TECNICA_IAIA } from './iaiaTextos.js';
 export { SALUTACIO_TECNICA_IAIA } from './iaiaTextos.js';
@@ -166,7 +172,12 @@ export const EQUIVALENCIES = Object.freeze({
   fuente: 'font', fuentes: 'fonts', sendero: 'senda', senderos: 'sendes', ruta: 'ruta', rutas: 'rutes',
   comercio: 'comerc', tienda: 'botiga', empresa: 'empresa', cooperativa: 'cooperativa',
   exportar: 'exportar', idioma: 'llengua', idiomas: 'llengues', traducir: 'traduir',
-  buscador: 'cercador', filtrar: 'filtrar', filtro: 'filtre', encontrar: 'localitzar'
+  buscador: 'cercador', filtrar: 'filtrar', filtro: 'filtre', encontrar: 'localitzar',
+  /* P1-24 (Onada 2) · El rebost rural (iaiaRebostRural.js) en castellà. */
+  piedra: 'pedra', receta: 'recepta', recetas: 'receptes', recetario: 'receptari', refran: 'refrany', refranes: 'refranys',
+  oficio: 'ofici', oficios: 'oficis', herramientas: 'eines', lavadero: 'llavador', lavaderos: 'llavadors', cancion: 'canco',
+  canciones: 'cancons', cancionero: 'canconer', cartel: 'cartell', carteles: 'cartells', reunion: 'reunio', reuniones: 'reunions',
+  objeto: 'objecte', perdido: 'perdut', quedada: 'trobada', toponimos: 'toponims'
 });
 
 /* IDEA-56 (Bloc F.2) · «Sóc de Poble» (o «soy de pueblo») és un sol terme:
@@ -940,6 +951,56 @@ export function indexDeLaCapaLocal() {
   return indexLocal;
 }
 
+/* P1-24 · L'índex curat del rebost rural, a part del de l'Atles: BM25 hi
+   compta les freqüències i la llargària mitjana de cada índex, i barrejar-los
+   canviaria el rànquing de l'Atles. Es construïx a la primera pregunta que
+   l'Atles no sap, una sola vegada per pestanya, amb les claus plegades de
+   cada càpsula. */
+let rebostRural = null;
+function rebostConstruit() {
+  if (!rebostRural) {
+    rebostRural = {
+      index: construeixIndex(CAPSULES_RURALS.map(documentDeLAtles), { curat: true }),
+      perId: new Map(CAPSULES_RURALS.map((capsula) => [capsula.id, {
+        minim: capsula.minimTermes ?? 1, claus: new Set(tokenitza(capsula.claus.join(' '))), exclou: new Set(arrels((capsula.exclou || []).join(' ')))
+      }]))
+    };
+  }
+  return rebostRural;
+}
+
+/** P1-24 · L'índex curat del rebost rural (iaiaRebostRural.js). */
+export function indexDelRebostRural() {
+  return rebostConstruit().index;
+}
+
+/**
+ * P1-24 · Les càpsules del rebost rural que responen la pregunta, de més a
+ * menys puntuació: les que passen el llindar de la capa curada i, a més,
+ *   · amb una sola arrel, una de les paraules és tal qual una de les seues
+ *     claus («trobe» fa l'arrel de «trobada»; «eines» o «partides» diuen
+ *     massa; «trobe trobes» continua sent una sola paraula);
+ *   · en tenen com a mínim `minimTermes` arrels distintes («pedra» sola, o
+ *     «pedra pedres», no és la pedra seca);
+ *   · cap no és d'`exclou` («el mètode Pedra Seca» és de la Wiki);
+ *   · amb tres o més, la càpsula en mostra més de la meitat: el títol d'un
+ *     document de la Wiki («Lleis de pas: integració de Pedra Seca…») no
+ *     cau en una càpsula per dues paraules.
+ * Funció pura sobre l'índex memoritzat.
+ */
+export function cercaAlRebostRural(pregunta, limit = DOCUMENTS_PER_RESPOSTA) {
+  const { index, perId } = rebostConstruit();
+  const formes = termesDeLaPregunta(pregunta);
+  const termes = arrelsDeLaPregunta(pregunta);
+  return puntua(index, termes, formes).filter((resultat) => {
+    const capsula = perId.get(resultat.id);
+    if (!capsula || !passaElLlindar(resultat, termes, index) || termes.length < capsula.minim) return false;
+    if (termes.length === 1 && !formes.some((forma) => capsula.claus.has(forma))) return false;
+    if (termes.some((terme) => capsula.exclou.has(terme))) return false;
+    return termes.length < 3 || resultat.vistos * 2 > termes.length;
+  }).slice(0, Math.max(0, limit)).map(sensePuntsInterns);
+}
+
 /* IDEA-56 (Bloc F.2) · Les pàgines de PAGE_COPY que la IAIA pot citar. Fora:
    `legal` (porta el NIF i el domicili del titular), `consola`, `cervell` i
    `disseny` (maquinària de l'equip, el criteri de CARPETES_DE_L_EQUIP),
@@ -1094,6 +1155,9 @@ export async function respostaDeLaIAIA(pregunta, { carrega = carregaPaquetDeLaIA
     try {
       const locals = cercaRellevant(indexDeLaCapaLocal(), pregunta);
       if (locals.length) return componResposta(locals);
+      /* P1-24 · El que l'Atles no sap, el rebost rural, abans de baixar la Wiki. */
+      const rurals = cercaAlRebostRural(pregunta);
+      if (rurals.length) return componResposta(rurals);
     } catch {
       /* La capa local no pot fer callar la IAIA: es prova la segona. */
     }
@@ -1138,8 +1202,9 @@ export async function consultaTecnicaIAIA(pregunta, {
 }
 
 /** Per a les proves: oblida els índexs del paquet (la Wiki sola i la Wiki
-    amb les pàgines) i el de la capa local. */
+    amb les pàgines), el de la capa local i el del rebost rural. */
 export function oblidaIndexDeLaWiki() {
   indexosDelPaquet.clear();
   indexLocal = null;
+  rebostRural = null;
 }
