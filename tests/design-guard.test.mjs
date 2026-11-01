@@ -5,7 +5,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { parse } from '@babel/parser';
-import { run, ESTRUCTURA_NATIVA, EMBOLCALLS_SEMANTICS } from '../tooling/gates/design_guard.mjs';
+import { run, ESTRUCTURA_NATIVA, EMBOLCALLS_SEMANTICS, LLINDAR_RATIO_DIV_SOUP, esSopaDeDivs } from '../tooling/gates/design_guard.mjs';
 
 /* D-2 (assalt 10/10, 261101) · La regla div-soup del Design Guard mesura
    l'estructura de la interfície, no el text: els <div> de l'HTML de prosa
@@ -16,7 +16,8 @@ import { run, ESTRUCTURA_NATIVA, EMBOLCALLS_SEMANTICS } from '../tooling/gates/d
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const onze = (fill = '<span />') => Array.from({ length: 11 }, () => `<div>${fill}</div>`).join('');
 
-async function avisos(fitxers, t) {
+/** Les troballes div-soup d'un arbre temporal amb estos `fitxers`. */
+async function sopes(fitxers, t) {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), 'sdp-design-guard-'));
   t.after(() => fs.rmSync(root, { recursive: true, force: true }));
   for (const [rel, text] of Object.entries(fitxers)) {
@@ -24,7 +25,10 @@ async function avisos(fitxers, t) {
     fs.writeFileSync(path.join(root, 'src', rel), text);
   }
   const { data } = await run({ root: path.join(root, 'src'), vocab: new Set() });
-  return data.findings.filter((f) => f.rule === 'div-soup').map((f) => f.file).sort();
+  return data.findings.filter((f) => f.rule === 'div-soup');
+}
+async function avisos(fitxers, t) {
+  return (await sopes(fitxers, t)).map((f) => f.file).sort();
 }
 
 /* ── Lectura de l'AST per al registre d'embolcalls ── */
@@ -180,4 +184,53 @@ test('fora de JS (.html), el recompte de text sense comentaris', async (t) => {
     'd.html': `${onze()}<!-- <main>`,
     'e.html': `<!-- ${onze()} --><p>prosa</p>`
   }, t), ['a.html', 'b.html', 'd.html']);
+});
+
+/* T11-01 (Gemini, Tall 11; marató 261101_2143, ordre del Mestre) · La ràtio:
+   un sol embolcall no salva una vista de setze <div> o més; dos embolcalls en
+   salven fins a trenta. El llindar absolut (> 10) i la severitat (avís) no
+   canvien, i l'arbre real es queda en 0 avisos. */
+const divs = (n) => Array.from({ length: n }, () => '<div />').join('');
+
+test('T11-01 · la ràtio: més de 15 <div> per element d’estructura avisa, també dins d’un embolcall canònic', async (t) => {
+  assert.equal(LLINDAR_RATIO_DIV_SOUP, 15);
+  assert.deepEqual(await avisos({
+    'r/Setze.jsx': `export const C = () => <UniversalPage>${divs(16)}</UniversalPage>;`,
+    'r/Quaranta.jsx': `export const C = () => <section>${divs(40)}</section>;`,
+    'r/TrentaU.jsx': `export const C = () => <><section>${divs(16)}</section><form>${divs(15)}</form></>;`,
+    'r/Quinze.jsx': `export const C = () => <UniversalPage>${divs(15)}</UniversalPage>;`,
+    'r/Trenta.jsx': `export const C = () => <><section>${divs(15)}</section><form>${divs(15)}</form></>;`,
+    /* Fora de JS, el recompte de text: cada etiqueta d'estructura compta una
+       vegada (abans, el grup capturat de split() la comptava doble). */
+    'r/Html.html': `<main>${divs(16).replaceAll('<div />', '<div></div>')}</main>`,
+    'r/HtmlDos.html': `<main><section>${divs(30).replaceAll('<div />', '<div></div>')}</section></main>`
+  }, t), ['r/Html.html', 'r/Quaranta.jsx', 'r/Setze.jsx', 'r/TrentaU.jsx']);
+});
+
+test('T11-01 · esSopaDeDivs: el llindar absolut no canvia i la ràtio és estricta', () => {
+  assert.equal(esSopaDeDivs({ divs: 10, estructura: 0 }), false);
+  assert.equal(esSopaDeDivs({ divs: 11, estructura: 0 }), true);
+  assert.equal(esSopaDeDivs({ divs: 11, estructura: 1 }), false);
+  assert.equal(esSopaDeDivs({ divs: 15, estructura: 1 }), false);
+  assert.equal(esSopaDeDivs({ divs: 16, estructura: 1 }), true);
+  assert.equal(esSopaDeDivs({ divs: 30, estructura: 2 }), false);
+  assert.equal(esSopaDeDivs({ divs: 31, estructura: 2 }), true);
+  assert.equal(esSopaDeDivs({ divs: 40, estructura: 3 }), false);
+});
+
+test('T11-01 · l’avís continua sent un avís, i el missatge diu quina de les dues regles ha fallat', async (t) => {
+  const troballes = await sopes({
+    'm/Sense.jsx': `export const C = () => <>${onze()}</>;`,
+    'm/Ratio.jsx': `export const C = () => <section>${divs(16)}</section>;`
+  }, t);
+  const perFitxer = Object.fromEntries(troballes.map((f) => [f.file, f]));
+  assert.deepEqual(Object.keys(perFitxer).sort(), ['m/Ratio.jsx', 'm/Sense.jsx']);
+  for (const f of troballes) assert.equal(f.severity, 'warning');
+  assert.match(perFitxer['m/Sense.jsx'].message, /^Massa divs \(11\) sense estructura semàntica \(/);
+  assert.equal(perFitxer['m/Ratio.jsx'].message, 'Massa divs (16) per a tan poca estructura semàntica (1): més de 15 per element. Aplica Pedra Seca.');
+});
+
+test('T11-01 · l’arbre real continua en 0 avisos de div-soup amb la ràtio', async () => {
+  const { data } = await run({ root: path.join(ROOT, 'src') });
+  assert.deepEqual(data.findings.filter((f) => f.rule === 'div-soup').map((f) => `${f.file}: ${f.message}`), []);
 });

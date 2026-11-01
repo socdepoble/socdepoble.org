@@ -54,7 +54,34 @@ import path from 'node:path';
 import crypto from 'node:crypto';
 import { execSync } from 'node:child_process';
 import { parseFrontmatter } from './lib/frontmatter.mjs';
-import { liveMarkdown, extractLinks, buildResolver, resolveLink } from './core/parse.mjs';
+import { liveMarkdown, extractLinks, buildResolver, resolveLink, safeDecode } from './core/parse.mjs';
+import { CAMINS } from '../lib/arrel.mjs';
+
+/* Vincle històric (B1 · 261101): l'arxivat de la porta Olivera reescriu `[[x]]` com
+   `[[../90_arxiu_historic/x|x]]`. L'arxiu queda fora del resolutor (AGENTS §5), així que
+   eixe vincle tornava «unresolved». Ara és vàlid si porta, des de la carpeta del document,
+   a una nota de l'arxiu que existix amb la caixa exacta, de primer nivell o dins d'una
+   carpeta de sessió (`--sessio aammdd_Nom` de la porta Olivera, un sol segment). Només es
+   llisten noms (com document-corpus.mjs): no se n'obri cap. No compta com a nota viva. */
+const ARXIU_HISTORIC = `${CAMINS.arxiuHistoric}/`;
+const SESSIO_ARXIU = /^\d{6}_[A-Za-z0-9]+(?:_[A-Za-z0-9]+)*$/;
+const nomsArxivats = new Map();
+function esNotaArxivada(target, relPath) {
+  const t = safeDecode(target).trim();
+  if (!/(^|\/)90_arxiu_historic\//.test(t)) return false;
+  const cami = path.posix.normalize(path.posix.join(path.posix.dirname(relPath), `${t.replace(/\.md$/i, '')}.md`));
+  if (!cami.startsWith(ARXIU_HISTORIC)) return false;
+  const parts = cami.slice(ARXIU_HISTORIC.length).split('/');
+  if (parts.length > 2 || (parts.length === 2 && !SESSIO_ARXIU.test(parts[0]))) return false;
+  const carpeta = parts.length === 2 ? `${ARXIU_HISTORIC}${parts[0]}/` : ARXIU_HISTORIC;
+  if (!nomsArxivats.has(carpeta)) {
+    try {
+      nomsArxivats.set(carpeta, new Set(fs.readdirSync(path.join(ARREL, carpeta), { withFileTypes: true })
+        .filter((e) => e.isFile()).map((e) => e.name)));
+    } catch { nomsArxivats.set(carpeta, new Set()); }
+  }
+  return nomsArxivats.get(carpeta).has(parts[parts.length - 1]);
+}
 
 function validaVincles(doc, resolver) {
   const p = parseFrontmatter(doc.content);
@@ -90,6 +117,8 @@ function validaVincles(doc, resolver) {
     const r = resolveLink(links[0], doc, resolver);
     if (r.status === 'resolved' && r.doc.relPath !== doc.relPath) {
       valids++;
+    } else if (r.status === 'unresolved' && esNotaArxivada(links[0].target, doc.relPath)) {
+      // Vincle històric a una nota arxivada existent: no és error ni compta com a nota viva.
     } else {
       errors.push(`${links[0].target}: ${r.status === 'resolved' ? 'autoreferència' : r.status}`);
     }
@@ -538,5 +567,6 @@ if (pujat.length) {
   console.error('   Arregla-ho: node tooling/wiki/codemod_frontmatter.mjs --escriu');
   process.exit(1);
 }
-console.log(`\n✅ [FRONTMATTER] Esquema respectat. Deute no ha pujat.${ESTRICTE ? ' (estricte)' : ''}`);
+// Amb --json, stdout és només el JSON (el llegixen proves i eines): el veredicte verd va a stderr, com els rojos.
+(JSON_OUT ? console.error : console.log)(`\n✅ [FRONTMATTER] Esquema respectat. Deute no ha pujat.${ESTRICTE ? ' (estricte)' : ''}`);
 process.exit(0);

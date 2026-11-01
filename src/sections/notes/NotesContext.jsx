@@ -20,7 +20,7 @@ import { pertanyALActor } from './masDeLUsuari.js';
 import { useIdentitatOReserva } from '../../app/contexts/useIdentitatOReserva.js';
 import { ErrorIdentitatDeLectura } from '../../app/contexts/identitatDeReserva.js';
 import { useSession } from '../../app/contexts/SessionContext.jsx';
-import { actorAmbPobleDeLEntitat, autoriaDeLActor, modeDeDadesResolt } from './autoriaNota.js';
+import { ID_NOTA_BENVINGUDA, actorAmbPobleDeLEntitat, autoriaDeLActor, modeDeDadesResolt } from './autoriaNota.js';
 import { poblePrincipal, slugDelPoble } from '../pobles/nomsDelPoble.js';
 import { pobleDeConfig } from '../xat/pobleAmfitrio.js';
 import { esConnexio, esExtern, netejaDrets } from '../../data/origenNota.js';
@@ -31,6 +31,18 @@ import { CODI_ENTRADA, esRebuigDeNormes } from '../../data/errorsBackend.js';
    preparada (notaPreparada.js) en crear-se hi passa pel mateix. */
 import { netejaCamp } from './netejaCamp.js';
 import { esLlavorDeNota } from './llavorNota.js';
+import { setVal } from '../../config/storage.js';
+
+/* T11-03 (marató 261101_2143, D-M1) · En mode 'seed', la n1 retirada amb èxit
+   (arxiu, paperera o esborrat) es recorda per àmbit de la cua, amb la clau que
+   llig notaTutorial.js (tutorialRetirada). No s'importa d'allà: porta la llavor
+   (appSeed → pageContent.js) i el NotesProvider és del paquet d'arrencada
+   (paquetDArrencada.test.js). Que les dues claus casen ho fixa la prova del
+   NotesProvider de NotesSection.tutorial.test.jsx. */
+function recordaRetiradaDeLaN1(note, config, scopeKey) {
+  if (String(note?.id) !== ID_NOTA_BENVINGUDA || modeDeDadesResolt(config) !== 'seed') return false;
+  return typeof scopeKey === 'string' && scopeKey !== '' && setVal(`notes.tutorialRetirada.${scopeKey}`, true);
+}
 
 export function etiquetesDeNota(note, _noteFolders, accions = {}) {
   // La carpeta organitza el bloc; no és una categoria editorial. Els labels
@@ -553,6 +565,10 @@ export function NotesProvider({ children }) {
         throw error;
       }
     }).then(async () => {
+      /* T11-03 (D-M1) · La n1 retirada en mode 'seed' es recorda per àmbit
+         (recordaRetiradaDeLaN1, dalt): abans de cap espera, perquè el Bloc ja
+         la trobe en pintar la llista sense la n1. */
+      recordaRetiradaDeLaN1(note, config, scopeKey);
       /* T47b (ordre del Mestre, 260928) · retira i no oblida: el que el servidor
          no ha pogut guardar (l'emoticona en quarantena) es queda al dispositiu. */
       await bgSaveManager.retira(scopeKey, note.id).catch(() => {});
@@ -563,7 +579,7 @@ export function NotesProvider({ children }) {
       if (operationRef.current === operation) showToast('No s’ha pogut moure la nota. Continua on estava.', 'error');
       return false;
     });
-  }, [operation, scopeKey, mouNotaContext, oblidaOverlay, showToast, nomesLectura]);
+  }, [operation, scopeKey, mouNotaContext, oblidaOverlay, showToast, nomesLectura, config]);
 
   /* Esborrat definitiu: no es desa res. La cua pendent es cancel·la abans
      (oblida); si hi havia un desat en curs, el serial l'espera i la revisió es
@@ -581,11 +597,13 @@ export function NotesProvider({ children }) {
       if (operationRef.current === operation) showToast('No s’ha pogut borrar la nota. Continua on estava.', 'error');
       return false;
     }
+    // T11-03 (D-M1) · Com a mouNota: abans de cap espera.
+    recordaRetiradaDeLaN1(note, config, scopeKey);
     await bgSaveManager.oblida(scopeKey, note.id).catch(() => {});
     oblidaOverlay(note.id);
     showToast('Nota borrada definitivament.', 'success');
     return true;
-  }, [operation, scopeKey, esborraNotaContext, oblidaOverlay, showToast, nomesLectura]);
+  }, [operation, scopeKey, esborraNotaContext, oblidaOverlay, showToast, nomesLectura, config]);
 
   const ctxValue = useMemo(() => ({
     notes,

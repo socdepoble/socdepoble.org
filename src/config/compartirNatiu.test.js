@@ -823,7 +823,8 @@ describe('P1-31 · l’entrada nativa connecta el receptor al registre', () => {
     resol({ ok: true, status: 200, blob: async () => new Blob([new Uint8Array([1, 2, 3])], { type: 'image/png' }) });
     await buida();
     expect(r.compartitPendent()).toBeNull();
-    expect(pont.nativePromise.mock.calls).toEqual([
+    /* L'entrada també informa el connector de l'Arrere (B3, P0-24): ací només compten les crides de la compartició. */
+    expect(pont.nativePromise.mock.calls.filter(([connector]) => connector === 'CompartirNatiu')).toEqual([
       ['CompartirNatiu', 'tallaSessio', {}],
       ['CompartirNatiu', 'allibera', { rutes: ['/data/a.png'] }]
     ]);

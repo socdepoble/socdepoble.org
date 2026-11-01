@@ -47,7 +47,8 @@ const JS_PURS = ['basesComu.js', 'extractorEspecificacio.js', 'nucliComu.js', 'u
   .map((f) => `${DIR}/${f}`);
 const PRODUCCIO = [COMPONENT, ...JS_PURS];
 const PROVES = [`${DIR}/UniversalListCard.test.jsx`, `${DIR}/useLlistaComu.test.jsx`, `${DIR}/nucliComu.test.js`,
-  `${DIR}/extractorEspecificacio.test.js`, `${PS}/qualitat.universalListCard.test.js`, 'src/config/i18n.comu.test.js'];
+  `${DIR}/extractorEspecificacio.test.js`, `${DIR}/modes/rebost.desplacament.test.js`, `${PS}/qualitat.universalListCard.test.js`,
+  'src/config/i18n.comu.test.js'];
 const TOCATS = [`${PS}/index.js`, `${CAT}/registre.js`, `${CAT}/manifest.js`, `${CAT}/detailRegistry.jsx`];
 const TOTS = [...JSX, ...JS_PURS, ...PROVES, ...TOCATS];
 

@@ -27,10 +27,20 @@
  * vista de NotesSection (toWorkspaceNote) hi posa `fixatATot: true`, que
  * itemTutorial conserva en espargir-lo, i l'UniversalWorkspace el respecta
  * només a «Tot». «Mentre no estiga arxivada» només val per a la n1 de veres:
- * arxivada, ix de la llista. La de lectura no s'arxiva mai; en mode 'seed'
- * torna en lloc de la n1 arxivada (P1-72: sempre a «Tot»), també fixada.
+ * arxivada, ix de la llista. La de lectura no s'arxiva mai.
+ *
+ * T11-03 (marató 261101_2143, ordre del Mestre; D-M1, el defecte) · En mode
+ * 'seed', arxivar, enviar a la paperera o esborrar la n1 de veres persistix:
+ * NotesContext, en l'èxit de l'acció explícita amb la n1 i el mode de dades
+ * resolt 'seed' (el de NotesSection), posa una marca per àmbit de
+ * la cua (scopeKey) a les preferències del dispositiu (storage.js), i el Bloc
+ * ja no hi torna a posar la Card de lectura. Abans hi tornava, fixada: la
+ * llista local només porta notes actives i el Bloc no distingia una n1
+ * arxivada d'una llavor esborrada. La marca mai amaga la n1 si hi és, i en
+ * remot no compta. Es desfà a NotesSection (ambTutorial), en una línia.
  */
 import { NOTES_SEED } from '../../data/appSeed.js';
+import { getVal, setVal } from '../../config/storage.js';
 import { ID_NOTA_BENVINGUDA } from './autoriaNota.js';
 
 /** La nota tutorial de la llavor (n1), congelada. */
@@ -52,6 +62,24 @@ export function portaLaNotaTutorial(notes) {
 export function itemTutorial(itemDeNota) {
   if (!itemDeNota) return null;
   return { ...itemDeNota, kind: KIND_TUTORIAL, categoryIds: [] };
+}
+
+/* T11-03 · La marca de la n1 retirada, una per àmbit de la cua (actor,
+   tenant i backend: una altra identitat del dispositiu no l'hereta). Sense
+   àmbit no es llig ni s'escriu res. Síncrones i mai llancen (storage.js).
+   NotesContext (recordaRetiradaDeLaN1) escriu la mateixa clau sense importar
+   este fitxer, que porta la llavor fora del paquet d'arrencada. */
+const clauDeRetirada = (scopeKey) => `notes.tutorialRetirada.${scopeKey}`;
+const ambitValid = (scopeKey) => typeof scopeKey === 'string' && scopeKey !== '';
+
+/** Cert si en este àmbit la persona ja ha retirat la n1 (només un true desat). */
+export function tutorialRetirada(scopeKey) {
+  return ambitValid(scopeKey) && getVal(clauDeRetirada(scopeKey), false) === true;
+}
+
+/** Desa la marca de l'àmbit; torna si ha quedat escrita. */
+export function marcaTutorialRetirada(scopeKey) {
+  return ambitValid(scopeKey) && setVal(clauDeRetirada(scopeKey), true);
 }
 
 export { ID_NOTA_BENVINGUDA };

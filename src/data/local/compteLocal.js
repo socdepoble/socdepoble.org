@@ -163,21 +163,38 @@ export function creaCompteLocal(e) {
     },
 
     /* La portabilitat (art. 20): només les dades de la persona de la sessió,
-       les notes en tots els estats (també la paperera i l'arxiu). */
+       les notes en tots els estats (també la paperera i l'arxiu).
+       PC155-01 · L'abast (persona, entrada i tancament) es captura abans
+       d'esperar i es torna a mirar en tornar: un canvi de persona, una entrada
+       nova o un destroy() en vol no lliuren res. Tot el que no espera es llig
+       en el mateix tram que exigixSessio, i els seguiments amb el context de
+       la persona capturada, mai el de la sessió viva. El format no canvia.
+       La guarda de l'adaptador ja ha mirat l'abast de la crida abans d'entrar
+       ací (AMB_ABAST_EN_CRIDAR, PC155-01-A1). */
     async exportaLesMeuesDades(config = {}) {
       const usuari = exigixSessio();
       const persona = String(usuari.id);
-      const lectura = await e.notes.load(persona, e.ci(config));
+      const vigent = e.abast();
       const normes = e.moderacio.normes.get(persona) ?? null;
-      return e.copia({
-        format: FORMAT_EXPORTACIO, node: 'local', generatAl: e.ara().toISOString(),
+      const propies = e.copia({
         perfil: e.perfils.getProfile(usuari),
-        notes: lectura.notes || [],
-        seguiments: e.seguiments.elsMeusSeguiments(e.contextSeguiments()),
+        seguiments: e.seguiments.elsMeusSeguiments(e.contextSeguiments(usuari)),
         bloquejos: e.bloquejosDe(persona),
         normes: normes ? { versio: normes.versio, acceptadaAl: normes.acceptadaAl } : null,
         consentiments: consentiments.get(persona) ?? [],
         baixa: estatDeBaixa(persona)
+      });
+      const lectura = await e.notes.load(persona, e.ci(config));
+      vigent();
+      return e.copia({
+        format: FORMAT_EXPORTACIO, node: 'local', generatAl: e.ara().toISOString(),
+        perfil: propies.perfil,
+        notes: lectura.notes || [],
+        seguiments: propies.seguiments,
+        bloquejos: propies.bloquejos,
+        normes: propies.normes,
+        consentiments: propies.consentiments,
+        baixa: propies.baixa
       });
     },
 

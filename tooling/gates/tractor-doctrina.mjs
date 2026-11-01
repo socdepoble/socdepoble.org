@@ -15,8 +15,15 @@
  * Classificació:
  *   TROBAT   el camí existix (fitxer o directori)
  *   ABSENT   el camí no existix dins del repositori          → error
- *   EXTERN   el camí ix del repositori (`../…`) o està a la
- *            llista d'ignorats                                → informatiu
+ *   EXTERN   el camí ix del repositori (`../…`), està a la
+ *            llista d'ignorats o és local (Git l'ignora)      → informatiu
+ *
+ * Local (B1 · 261101): un camí absent que Git ignora (`git check-ignore`) mai
+ * viatja amb un commit, així que tampoc existix a l'arbre preparat del hook.
+ * Només es pregunta per als absents i només valen els `.gitignore` versionats
+ * d'una arrel que siga el nivell superior del seu repositori (ni exclusions
+ * personals, ni `.git/info/exclude`, ni un repositori pare). Sense Git, amb
+ * error o amb qualsevol altra font, continua ABSENT.
  *
  * Pedra Seca: zero dependències, ESM, fail-closed.
  *
@@ -28,10 +35,12 @@
  *   node tooling/gates/tractor-doctrina.mjs --tots      # inclou blocs de codi
  *
  * Llista d'exempcions: `.agents/doctrina-ignora.txt`, un prefix per línia,
- * `#` per a comentaris. Serveix per a rutes que viuen fora del repo auditat.
+ * `#` per a comentaris. Serveix per a rutes que viuen fora del repo auditat i
+ * per a locals generats que Git no pot classificar en un arbre net (`.husky/_`).
  */
 
 import fs from 'node:fs';
+import { spawnSync } from 'node:child_process';
 import {isExecutionEvidence} from '../lib/corpus-scope.mjs';
 import { operationalDocumentText } from '../lib/document-corpus.mjs';
 import { arrelSegura as arrelDelProjecte } from '../lib/arrel.mjs';
@@ -221,6 +230,64 @@ function candidatsDeLinia(linia, dinsCodi) {
 
 const existeix = (abs) => { try { fs.statSync(abs); return true; } catch { return false; } };
 
+/* Entorn sense GIT_*: dins d'un hook, GIT_DIR o GIT_INDEX_FILE apuntarien a un altre
+   repositori i classificarien camins d'ARREL amb regles alienes (com git-staged.mjs). */
+const ENTORN_GIT = Object.fromEntries(Object.entries(process.env).filter(([k]) => !k.startsWith('GIT_')));
+
+const git = (args, input) => spawnSync('git', args, { cwd: ARREL, env: ENTORN_GIT, encoding: 'utf8', timeout: 10_000, input });
+
+/* Només compten les regles versionades d'ARREL: el veredicte no pot dependre de la màquina.
+   · ARREL ha de ser el nivell superior del seu repositori (dins d'un repositori pare, les regles són alienes);
+   · `core.excludesFile=/dev/null` lleva les exclusions personals (~/.config/git/ignore, core.excludesFile);
+   · `.git/info/exclude` no es pot desactivar: es descarta per la font que dona `check-ignore -v`,
+     igual que un `.gitignore` no versionat (cap dels dos viatja amb el commit). */
+let arrelGitPropia = null;
+const esArrelGit = () => {
+  if (arrelGitPropia === null) {
+    const r = git(['rev-parse', '--show-toplevel']);
+    try { arrelGitPropia = r.status === 0 && fs.realpathSync(r.stdout.replace(/\n$/, '')) === fs.realpathSync(ARREL); }
+    catch { arrelGitPropia = false; }
+  }
+  return arrelGitPropia;
+};
+
+// --literal-pathspecs: cap glob del camí s'expandix. Torna null si Git falla.
+const esVersionat = (cami) => {
+  const r = git(['--literal-pathspecs', 'ls-files', '-z', '--', cami]);
+  return r.status === 0 ? r.stdout !== '' : null;
+};
+
+/* Font acceptada: un `.gitignore` versionat d'ARREL. `.git/info/exclude` mai és versionable i un camí
+   de fora del repositori fa fallar ls-files (null): tots dos queden fora sense més guardes. */
+const fontsAcceptades = new Map();
+const esFontVersionada = (font) => {
+  if (!fontsAcceptades.has(font)) {
+    const gitignore = font === '.gitignore' || font.endsWith('/.gitignore');
+    fontsAcceptades.set(font, gitignore && esVersionat(font) === true);
+  }
+  return fontsAcceptades.get(font);
+};
+
+/** Git l'ignora (com a fitxer o com a directori) per una regla versionada i no el versiona: no viatja amb el commit. */
+const esLocal = (cami) => {
+  let net = cami;
+  while (net.endsWith('/')) net = net.slice(0, -1);
+  if (!net || net.includes('\0') || !esArrelGit()) return false;
+  // Versionat (fitxer o directori amb fitxers) i absent és un esborrat, no un local.
+  if (esVersionat(net) !== false) return false;
+  // Una sola crida per a les dues formes (fitxer i directori, per a regles «carpeta/»); -n dona un registre
+  // per camí: font, línia, patró i camí. Exit 1 = cap regla; 128 = error (fail-closed).
+  const r = git(['-c', 'core.excludesFile=/dev/null', 'check-ignore', '--stdin', '-z', '-v', '-n'], `${net}\0${net}/\0`);
+  if (r.status !== 0) return false;
+  const camps = r.stdout.split('\0');
+  for (let i = 0; i + 3 < camps.length; i += 4) {
+    const [font, , patro] = camps.slice(i, i + 3);
+    // Amb -v, una negació («!x») també casa, però vol dir que NO s'ignora.
+    if (patro && !patro.startsWith('!') && esFontVersionada(font)) return true;
+  }
+  return false;
+};
+
 function resol(cami, dirDoc) {
   if (cami.startsWith('../') || cami.startsWith('~/') || path.isAbsolute(cami)) return { estat: 'EXTERN' };
   if (esIgnorat(cami)) return { estat: 'EXTERN', motiu: 'exempció declarada' };
@@ -247,6 +314,8 @@ function resol(cami, dirDoc) {
     .filter((x, i) => x.comuns > 1 || i === 0)
     .slice(0, 3)
     .map((x) => x.cand);
+  /* Local: Git l'ignora, així que mai viatja amb un commit ni existix a l'arbre preparat del hook. */
+  if (esLocal(cami)) return { estat: 'EXTERN', motiu: 'local: ignorat per Git' };
   return { estat: 'ABSENT', suggerits };
 }
 

@@ -380,3 +380,33 @@ describe('TE-05 · la llengua del dispositiu', () => {
     expect(pintats[0].props.config.language).toBe('eu');
   });
 });
+
+/* P0-24 (G2120-07, marató 261101_2143) · A Android, l'entrada connecta l'Arrere
+   natiu abans del primer pintat: la funció que el natiu avalua i l'estat inicial.
+   A iOS (sense Arrere), res. */
+describe('l’Arrere natiu (P0-24)', () => {
+  afterEach(() => {
+    delete window.__sdpEnrere;
+    vi.unstubAllGlobals();
+  });
+
+  test('a Android connecta l’Arrere natiu: window.__sdpEnrere i l’estat inicial (0 capes) cap al connector', async () => {
+    const nativePromise = vi.fn(() => Promise.resolve());
+    vi.stubGlobal('Capacitor', { getPlatform: () => 'android', nativePromise });
+    await avalua();
+    await new Promise((r) => setTimeout(r, 0));
+    expect(typeof window.__sdpEnrere).toBe('function');
+    expect(window.__sdpEnrere()).toBe(false);
+    expect(nativePromise).toHaveBeenCalledWith('EnrereNatiu', 'estat', { capes: 0 });
+    expect(pintats).toHaveLength(1);
+  });
+
+  test('a iOS no hi ha cap funció de l’Arrere ni cap crida al connector', async () => {
+    const nativePromise = vi.fn(() => Promise.resolve());
+    vi.stubGlobal('Capacitor', { getPlatform: () => 'ios', nativePromise });
+    await avalua();
+    await new Promise((r) => setTimeout(r, 0));
+    expect('__sdpEnrere' in window).toBe(false);
+    expect(nativePromise).not.toHaveBeenCalledWith('EnrereNatiu', expect.anything(), expect.anything());
+  });
+});

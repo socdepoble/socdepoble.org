@@ -15,6 +15,7 @@ import { esMain } from '../lib/arrel.mjs';
  */
 
 import fs from 'node:fs/promises';
+import fsSync from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import {
@@ -1412,6 +1413,33 @@ async function initReflex() {
   return { ok: true, hooksPath: '.husky/_', state: REFLEX_STATE_RELATIVE };
 }
 
+/**
+ * P0-22 (B1.3, 261101) · Arbre preparat del pre-commit: SDP_PRE_COMMIT=1 i arrel privada «sdp-index-*»
+ * filla directa del temporal del sistema (la crea git-staged.mjs). L'entorn sol no basta: algú el
+ * podria exportar a mà a l'arbre viu.
+ */
+export function esArbrePreparat(arrel = PROJECT_DIR, env = process.env) {
+  if (env.SDP_PRE_COMMIT !== '1') return false;
+  try {
+    const real = fsSync.realpathSync(arrel);
+    const stat = fsSync.statSync(real);
+    return path.dirname(real) === fsSync.realpathSync(os.tmpdir())
+      && path.basename(real).startsWith('sdp-index-')
+      && stat.isDirectory() && (stat.mode & 0o077) === 0;
+  } catch {
+    return false;
+  }
+}
+
+/** Canvis durables fora del que es certifica: contra l'índex a l'arbre preparat (el que es comitarà),
+ *  contra HEAD a fora (CI, `npm run gate`, ús a mà), estricte com sempre. */
+export async function canvisDurables(paths, { preparat = false } = {}) {
+  if (!paths.length) return '';
+  if (!preparat) return git(['status', '--porcelain=v1', '-z', '--', ...paths]);
+  return (await git(['diff', '--name-only', '-z', '--', ...paths]))
+    + (await git(['ls-files', '--others', '--exclude-standard', '-z', '--', ...paths]));
+}
+
 async function doctor({ ci = false } = {}) {
   const findings = [];
   const durablePaths = new Set();
@@ -1472,8 +1500,12 @@ async function doctor({ ci = false } = {}) {
     findings.push(`Baseline de Wiki no verificable: ${error.message}`);
   }
   if (durablePaths.size) {
-    const status = await git(['status', '--porcelain=v1', '-z', '--', ...durablePaths]);
-    if (status) findings.push('Hi ha canvis durables pendents en regles, codi de control o corpus; `doctor` no certifica bytes fora de HEAD.');
+    const preparat = esArbrePreparat();
+    if (await canvisDurables([...durablePaths], { preparat })) {
+      findings.push(preparat
+        ? 'Hi ha canvis durables fora de l’índex en regles, codi de control o corpus; a l’arbre preparat `doctor` només certifica els bytes preparats.'
+        : 'Hi ha canvis durables pendents en regles, codi de control o corpus; `doctor` no certifica bytes fora de HEAD.');
+    }
   }
   return { ok: findings.length === 0, findings };
 }

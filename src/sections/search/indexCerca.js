@@ -254,6 +254,12 @@ const primeraImatge = (...valors) => {
  * PÚBLIC (fotoDelBucketPublic: un logo o una foto pujats): qui pinta la
  * demana al port (useResolvedAsset) en lloc de les inicials. La resta de
  * referències opaques (mitjans_privats, un camí brut) no en porten mai.
+ * IDEA-46 (B6-B1, marató 261101_2143) · Un camp additiu `poble`: el poble
+ * llegible de la fitxa (text pla, com a molt 120 caràcters; '' si no en té o
+ * si el tros porta una arrova: un correu, sencer o tallat, no és mai cap
+ * poble), per a la faceta Pobles de l'espai de cerca
+ * (facetesCerca.js). No es pinta enlloc més ni compta al rànquing, i
+ * `poblePlegat` és el de sempre.
  */
 function entrada({ tipus, id, titol, meta = [], extracte = '', detall = '', cos = [], etiquetes = [], poble = '',
   imatge = null, avatar = null, href = null, accio = null, data = null, privada = false, propia = false, fotoDe = null,
@@ -263,6 +269,11 @@ function entrada({ tipus, id, titol, meta = [], extracte = '', detall = '', cos 
   const textTitol = textPla(titol).slice(0, 200) || textExtracte.slice(0, 80);
   if (!textTitol) return null;
   const textDetall = textPla(detall);
+  const textPoble = textPla(poble);
+  /* 120 punts de codi (mai mig parell suplent; caben en 240 unitats UTF-16),
+     tallats ABANS de mirar-los: el poble pot portar milers de caràcters i
+     esCorreu, sobre una paraula llarga sense espais, és quadràtica. */
+  const pobleCurt = Array.from(textPoble.slice(0, 240)).slice(0, 120).join('');
   const src = primeraImatge(imatge?.src);
   return {
     clau: `${tipus}:${id}`,
@@ -284,7 +295,8 @@ function entrada({ tipus, id, titol, meta = [], extracte = '', detall = '', cos 
     canonica,
     titolPlegat: plega(textTitol),
     etiquetesPlegades: plega(etiquetes.map((valor) => textPla(valor)).join(' ')),
-    poblePlegat: plega(textPla(poble)),
+    poblePlegat: plega(textPoble),
+    poble: pobleCurt.includes('@') ? '' : pobleCurt,
     text: plega([textTitol, textExtracte, textDetall, ...cos.map((valor) => textPla(valor))].join(' '))
   };
 }
@@ -805,6 +817,8 @@ function fusiona(primera, altra) {
     accio: primera.accio || altra.accio || null,
     data: primera.data || altra.data || 0,
     etiquetesPlegades: [primera.etiquetesPlegades, altra.etiquetesPlegades].filter((valor) => typeof valor === 'string' && valor).join(' '),
+    /* El poble llegible, de la mateixa font que poblePlegat (IDEA-46, B6-B1). */
+    poble: primera.poblePlegat ? primera.poble || '' : altra.poble || '',
     poblePlegat: primera.poblePlegat || altra.poblePlegat || '',
     text: [primera.text, altra.text].filter((valor) => typeof valor === 'string' && valor).join(' ')
   };

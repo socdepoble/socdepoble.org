@@ -1,0 +1,26 @@
+{
+  "esquema": "sdp.ordre-desplegament.v1",
+  "nota": "Restriccions que l'ordre alfabètic no expressa. Font: supabase/README.md («Nota d'auditoria DF-06 … P0-21»). scripts/supabase/verifica-migracions.mjs comprova que este fitxer i el README diuen el mateix.",
+  "restriccions": [
+    { "abans": "2610311800", "despres": "2610312000", "just": true, "motiu": "Les CHECK de la 2610311800 trenquen el DML de service_role fins que s'aplica la 2610312000.", "font": "README P0-21 §8; capçalera de 2610312000" },
+    { "abans": "2610312000", "despres": "2610311900", "motiu": "2610312000 va just després de 2610311800, abans de la 2610311900.", "font": "README P0-21 §8" }
+  ],
+  "portes": [
+    { "id": "client-normes-2026-10-24", "tipus": "client", "descripcio": "Publicar el client amb VERSIO_NORMES_CONVIVENCIA = '2026-10-24'.", "despres": ["2610201500"], "abans": ["2610241400"], "comprovacio": { "fitxer": "src/data/contracte.js", "constant": "VERSIO_NORMES_CONVIVENCIA", "valor": "2026-10-24" }, "font": "README P0-21 §2; capçalera de 2610241400" },
+    { "id": "funcio-compte-apple", "tipus": "funcio", "descripcio": "Desplegar supabase/functions/compte-apple (secret SDP_CRON_SECRET, cron horari).", "despres": ["2610241420"], "abans": [], "font": "README «Funció compte-apple»" },
+    { "id": "funcio-purga-fitxers", "tipus": "funcio", "descripcio": "Desplegar supabase/functions/purga-fitxers (secret SDP_CRON_SECRET, cron horari).", "despres": ["2610241440"], "abans": [], "font": "README «Funció purga-fitxers»" },
+    { "id": "funcio-noticies", "tipus": "funcio", "descripcio": "Desplegar supabase/functions/noticies amb les fonts personals apagades (SDP_NOTICIES_PERSONALS sense valor).", "despres": [], "abans": [], "font": "README P0-21 §9" },
+    { "id": "client-filtre-rgpd", "tipus": "client", "descripcio": "Publicar el client que espera el filtre RGPD del servidor.", "despres": ["2610311900"], "abans": [], "font": "README, vinyeta de 2610311900" },
+    { "id": "web-legal-politica-2-3", "tipus": "client", "descripcio": "Desplegar el web amb el text final de /legal (política de privacitat 2.3).", "despres": [], "abans": ["2611012257"], "font": "README P0-21 §12; capçalera de 2611012257" }
+  ],
+  "fantasmes": [
+    { "versio": "2610201400", "motiu": "DF-06: cap fitxer ni història; la baixa viu a 2609261500 i 2610241440." },
+    { "versio": "2610311600", "motiu": "Lot 6: bloc diagnòstic del Kit 1 de Gemini, no és una migració." },
+    { "versio": "2610251930", "motiu": "Nom antic del pegat de P0-23, rebasat a 2611011510." }
+  ],
+  "reaplicacio": [
+    { "si": "2610311800", "llavors": ["2610312000"], "font": "README, vinyeta de 2610312000" },
+    { "si": "2610311900", "llavors": ["2611011800"], "font": "README, vinyeta de 2611011800" },
+    { "si": "2610241430", "llavors": ["2610250100"], "font": "README, vinyeta de 2610250100" }
+  ]
+}

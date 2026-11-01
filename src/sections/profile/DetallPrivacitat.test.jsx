@@ -153,12 +153,16 @@ test('P2-08 · «Les meues dades» diu el que porta el fitxer i que no diu qui t
   expect(screen.getByRole('button', { name: 'Descarregar les meues dades' })).toBeTruthy();
 });
 
-test('si l’exportació falla, ho diu amb el missatge del servidor', async () => {
+/* T11-02 (Gemini, Tall 11; marató 261101_2143) · Abans es pintava el `message`
+   del JSON de PostgREST: ara, el genèric traduït de l'acció. */
+test('si l’exportació falla, ho diu amb el genèric traduït, mai amb el text del servidor', async () => {
   m.caps = new Set(['compte']);
   m.exporta.mockRejectedValue(new Error('Supabase 401: {"message":"SDP-EXPORT-000: cal la sessió iniciada."}'));
   pinta();
   await act(async () => { fireEvent.click(screen.getByRole('button', { name: 'Descarregar les meues dades' })); });
-  expect(within(seccio('Les meues dades')).getByRole('alert').textContent).toContain('SDP-EXPORT-000: cal la sessió iniciada.');
+  const alerta = within(seccio('Les meues dades')).getByRole('alert');
+  expect(alerta.textContent).toBe('No s’han pogut preparar les teues dades. Torna-ho a provar.');
+  expect(document.body.textContent).not.toMatch(/SDP-EXPORT|Supabase|sessió iniciada/);
 });
 
 test('demanar la baixa: confirmació, motiu opcional i sessió tancada', async () => {
@@ -248,7 +252,7 @@ test('si la baixa no es pot demanar, la sessió continua i l’error es veu DINS
   expect(props.onSessioTancada).not.toHaveBeenCalled();
   /* showModal() deixa inert tot el que és fora del diàleg: una alerta fora no arriba. */
   const dialeg = screen.getByRole('dialog', { name: 'Donar-te de baixa' });
-  expect(within(dialeg).getByRole('alert').textContent).toBe('Sense xarxa');
+  expect(within(dialeg).getByRole('alert').textContent).toBe('No s’ha pogut demanar la baixa.');
   expect(screen.getAllByRole('alert')).toHaveLength(1);
 });
 
@@ -259,7 +263,7 @@ test('si retirar el consentiment falla, l’error es veu dins del diàleg', asyn
   fireEvent.click(await within(seccio('Consentiment')).findByRole('button', { name: 'Retirar el consentiment' }));
   await act(async () => { fireEvent.click(screen.getByRole('button', { name: 'Retirar-lo' })); });
   const dialeg = screen.getByRole('dialog', { name: 'Retirar el consentiment' });
-  expect(within(dialeg).getByRole('alert').textContent).toBe('Sense xarxa');
+  expect(within(dialeg).getByRole('alert').textContent).toBe('No s’ha pogut retirar el consentiment.');
   expect(screen.getAllByRole('alert')).toHaveLength(1);
 });
 
@@ -417,5 +421,47 @@ describe('TE-01 · en castellà', () => {
     expect(within(dialeg).getByRole('button', { name: 'Retirarlo' })).toBeTruthy();
     expect(within(dialeg).getByRole('button', { name: 'Cancelar' })).toBeTruthy();
     expect(dialeg.textContent).not.toContain('Cancel·lar');
+  });
+
+  /* T11-02 (Gemini, Tall 11; marató 261101_2143) · Cada error es diu amb el
+     genèric de la seua acció en castellà: mai el text valencià (o cru) del port. */
+  const TEXT_DEL_PORT = 'Supabase 500: {"message":"SDP-RGPD-000: cal la sessió iniciada."}';
+  const PENDENT = { demanada: true, demanadaAl: '2026-09-20T10:00:00Z', purgaPrevistaAl: '2026-10-20T10:00:00Z' };
+  test.each([
+    ['les dades', ['compte'], () => m.exporta.mockRejectedValue(new Error(TEXT_DEL_PORT)), async () => {
+      await act(async () => { fireEvent.click(screen.getByRole('button', { name: 'Descargar mis datos' })); });
+    }, 'No se han podido preparar tus datos. Vuelve a intentarlo.'],
+    ['la lectura del consentiment', ['consentiment'], () => m.estatConsentiment.mockRejectedValue(new Error(TEXT_DEL_PORT)), async () => {}, 'No se ha podido leer el estado del consentimiento.'],
+    ['acceptar la política', ['consentiment'], () => {
+      m.estatConsentiment.mockResolvedValue({ ...ACCEPTAT, versioVigent: 'v2', calReconsentir: true });
+      m.registra.mockRejectedValue(new Error(TEXT_DEL_PORT));
+    }, async () => {
+      const accepta = await screen.findByRole('button', { name: 'Aceptar la versión v2' });
+      await act(async () => { fireEvent.click(accepta); });
+    }, 'No se ha podido registrar el consentimiento.'],
+    ['retirar el consentiment', ['consentiment'], () => m.revoca.mockRejectedValue(new Error('No s’ha pogut retirar: el servidor no respon.')), async () => {
+      fireEvent.click(await screen.findByRole('button', { name: 'Retirar el consentimiento' }));
+      await act(async () => { fireEvent.click(screen.getByRole('button', { name: 'Retirarlo' })); });
+    }, 'No se ha podido retirar el consentimiento.'],
+    ['la lectura de la baixa', ['compte'], () => m.estatBaixa.mockRejectedValue(new Error(TEXT_DEL_PORT)), async () => {}, 'No se ha podido comprobar si tienes una baja pendiente.'],
+    ['demanar la baixa', ['compte'], () => m.demana.mockRejectedValue(new Error(TEXT_DEL_PORT)), async () => {
+      fireEvent.click(await screen.findByRole('button', { name: 'Darme de baja' }));
+      await act(async () => { fireEvent.click(screen.getByRole('button', { name: 'Sí, darme de baja' })); });
+    }, 'No se ha podido solicitar la baja.'],
+    ['cancel·lar la baixa', ['compte'], () => {
+      m.estatBaixa.mockResolvedValue(PENDENT);
+      m.cancela.mockRejectedValue(new Error(TEXT_DEL_PORT));
+    }, async () => {
+      const cancela = await screen.findByRole('button', { name: 'Cancelar la baja' });
+      await act(async () => { fireEvent.click(cancela); });
+    }, 'No se ha podido cancelar la baja.'],
+  ])('T11-02 · si falla %s, el genèric en castellà i cap text del port', async (_, caps, prepara, actua, esperat) => {
+    m.caps = new Set(caps);
+    prepara();
+    pintaEnCastella();
+    await actua();
+    const alertes = await screen.findAllByRole('alert');
+    expect(alertes.map((a) => a.textContent)).toEqual([esperat]);
+    expect(document.body.textContent).not.toMatch(/SDP-|Supabase|sessió iniciada|el servidor no respon/);
   });
 });

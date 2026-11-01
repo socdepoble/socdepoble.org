@@ -65,12 +65,21 @@
  *  tornen els avisos i `document.mjs` els escriu per stderr), `checkOlivera` (els hooks)
  *  i `--tancament [--torn ID]` (tancament.mjs, environmentChecks).
  *
+ *  Enllaços dels vius (B1 · 261101). Des de la línia d'ordres, `--arxiva` reapunta en la
+ *  mateixa passada cada enllaç dels documents vius que resolia al document mogut (el
+ *  resolutor i el conjunt de l'SCC, més ESTAT), esmena només el torn tancat del rebut propi
+ *  amb preimatge, actualitza plan.hash i relocated dels torns oberts i deixa el rastre
+ *  `archive-links`. El pla viu a `../documental/arxiu-enllacos.mjs` i es carrega amb
+ *  `import()`: esta porta no en té cap import estàtic. La primitiva `arxiva()` sense pla
+ *  conserva el camí de sempre byte a byte.
+ *
  *  Ús:
  *    porta-olivera.mjs [--informe]          # auditoria de l'Escriptori (eixida 1 si brut); mai llig stdin
  *    porta-olivera.mjs --hook               # hook: llig el payload per stdin
  *    porta-olivera.mjs --arxiva [--sec]     # mou els consumits de jornades anteriors
- *    porta-olivera.mjs --arxiva --nom F [--nom G] [--sessio aammdd_Nom] [--reapunta] [--sec]
- *                                           # mou artefactes de torn concrets (qualsevol extensió), també d'avui
+ *    porta-olivera.mjs --arxiva --nom F [--nom G] [--sessio aammdd_Nom] [--reapunta] [--torn ID] [--sec]
+ *                                           # mou artefactes de torn concrets (qualsevol extensió), també d'avui;
+ *                                           # --sec mostra també el pla d'enllaços i de torns, i ix amb 1 si s'aturaria
  *    porta-olivera.mjs --repara [--sec]     # reapunta les àncores fantasma amb destí únic
  *    porta-olivera.mjs --renomena VELL --a NOU [--sec]
  *                                           # reanomena un document solt i reescriu les seues àncores
@@ -1115,8 +1124,136 @@ function despenja(text, moguts, presentsAbans, { reapunta, carpeta }) {
   return nou;
 }
 
-/** Trasllat a l'arxiu. Amb `sec` només respon què faria: cap fitxer mogut ni índex tocat. */
-export function arxiva(arrel = arrelPerDefecte(), { noms = [], sec = false, dia = avui(), sessio = null, reapunta = false } = {}) {
+/* ── Arxivat amb enllaços (B1 · 261101) ───────────────────────────────────── */
+
+/** Temporal ocult i rename amb CAS d'inode i contingut, com escriuIndex. Fals si la CAS es perd. */
+function substitueix(fitxer, abans, esperat, nou) {
+  const temporal = path.join(path.dirname(fitxer), `.${path.basename(fitxer)}.${process.pid}.${Date.now()}.${Math.random().toString(16).slice(2)}.tmp`);
+  const fd = fs.openSync(temporal, 'wx', abans.mode & 0o777);
+  try {
+    try { fs.writeFileSync(fd, nou, 'utf8'); fs.fsyncSync(fd); }
+    finally { fs.closeSync(fd); }
+    const ara = fs.lstatSync(fitxer);
+    if (ara.dev === abans.dev && ara.ino === abans.ino && fs.readFileSync(fitxer, 'utf8') === esperat) {
+      fs.renameSync(temporal, fitxer);
+      return true;
+    }
+    return false;
+  } finally {
+    if (existeix(temporal)) fs.unlinkSync(temporal);
+  }
+}
+
+function statPropi(fitxer, rel) {
+  const stat = fs.lstatSync(fitxer);
+  if (stat.isSymbolicLink() || !stat.isFile() || stat.nlink !== 1) throw new Error(`Document no regular: ${rel}; no es reescriu.`);
+  return stat;
+}
+
+/**
+ * Reescriu un document viu del pla. Amb esmena de torn (hash segellat o plan.hash) la CAS és
+ * estricta: si el document ha canviat des del pla, llança i tot es desfà. Sense esmena, es
+ * recalcula sobre el text nou fins a tres vegades, com escriuIndex.
+ */
+function escriuDocument(arrel, r, estricte, recalcula) {
+  const fitxer = path.join(arrel, r.rel);
+  for (let intent = 0; intent < 3; intent++) {
+    const abans = statPropi(fitxer, r.rel);
+    const actual = fs.readFileSync(fitxer, 'utf8');
+    let nou = r.despres, enllacos = r.substitucions.length;
+    if (actual !== r.abans) {
+      if (estricte) throw new Error(`${r.rel} ha canviat des del pla i el seu hash s'esmena en un torn: no es reescriu a cegues i es desfà tot.`);
+      const re = recalcula(actual);
+      nou = re.text;
+      enllacos = re.substitucions.length;
+      if (nou === actual) return null;
+    }
+    if (substitueix(fitxer, abans, actual, nou)) return { rel: r.rel, abans: actual, despres: nou, enllacos };
+    if (estricte) throw new Error(`${r.rel} ha canviat mentre s'escrivia i el seu hash s'esmena en un torn: es desfà tot.`);
+  }
+  throw new Error(`${r.rel} ha canviat tres vegades mentre s'escrivia: no es reescriu a cegues.`);
+}
+
+/** Torna un document al text d'abans si encara conté el que s'hi va escriure. */
+function restauraDocument(arrel, rel, escrit, original) {
+  const fitxer = path.join(arrel, rel);
+  const abans = statPropi(fitxer, rel);
+  if (fs.readFileSync(fitxer, 'utf8') !== escrit || !substitueix(fitxer, abans, escrit, original)) throw new Error(`${rel} ha canviat després de l'escriptura: restaura'l a mà`);
+}
+
+/**
+ * Camí transaccional de --arxiva (B1): documents vius, índex i trasllat dins del lock de
+ * l'índex i dels locks de torn (`ambTorns`). Els documents i l'índex s'escriuen ABANS de
+ * moure: el resolutor encara veu cada document al seu lloc si cal recalcular. Qualsevol
+ * fallada ho desfà en ordre invers. No és durable davant d'un SIGKILL.
+ */
+function arxivaAmbEnllacos(arrel, bruts, carpeta, { reapunta, enllacos }) {
+  const { pla, ambTorns, reescriu, hash } = enllacos;
+  if (pla.carpeta !== carpeta) throw new Error(`[Porta Olivera] El pla és per a ${pla.carpeta}, no per a ${carpeta}: no s'ha mogut res.`);
+  return ambLock(arrel, () => {
+    const presentsAbans = nomsSolts(arrel);
+    const lliures = bruts.filter(d => !existeix(path.join(arrel, carpeta, d.nom)));
+    if (lliures.map(d => d.rel).sort().join('\n') !== pla.moviments.map(m => m.rel).sort().join('\n')) {
+      throw new Error("[Porta Olivera] La taula o l'arxiu han canviat des del pla: no s'ha mogut res. Torna a executar --arxiva, primer amb --sec.");
+    }
+    const moguts = bruts.map((d) => {
+      const m = pla.moviments.find(x => x.rel === d.rel);
+      if (!m) return { ...d, desti: `${carpeta}/${d.nom}`, nota: 'ja existia a l’arxiu; no es sobreescriu' };
+      const r = relleu(arrel, reflexDe(path.join(arrel, d.rel)), d.rel);
+      return { ...d, desti: m.desti, nota: 'mogut', ...(r && { torn: r.torn, relleu: r.possible, motiu: r.motiu }) };
+    });
+    const fets = moguts.filter(m => m.nota === 'mogut');
+    if (!fets.length) return { moguts, index: false, sec: false, reescrits: [] };
+    const escrits = [], traslladats = [];
+    let index = null, creada = false;
+    const plans = new Set(pla.torns.plans.map(p => p.rel));
+    const aplica = () => {
+      for (const r of pla.reescriptures) {
+        const estricte = r.rebut?.accio === 'esmena' || plans.has(r.rel);
+        const e = escriuDocument(arrel, r, estricte, text => reescriu(arrel, r.rel, text, pla.moviments, pla.fitxers));
+        if (e) escrits.push(e);
+      }
+      // L'índex: la política vigent de despenjat (wikilinks) i, després, els enllaços Markdown.
+      let captura = null;
+      const ok = escriuIndex(arrel, (text) => {
+        const nou = reescriu(arrel, INDEX, despenja(text, fets, presentsAbans, { reapunta, carpeta }), pla.moviments, pla.fitxers, { nomesMarkdown: true }).text;
+        captura = { original: text, nou };
+        return nou;
+      });
+      if (ok) index = captura;
+      creada = !existeix(path.join(arrel, carpeta));
+      fs.mkdirSync(path.join(arrel, carpeta), { recursive: true });
+      for (const m of pla.moviments) {
+        const origen = path.join(arrel, m.rel);
+        if (hash(fs.readFileSync(origen)) !== m.hash) throw new Error(`${m.rel} ha canviat des del pla: no es mou res.`);
+        // Un destí que apareix ara llança EEXIST i es desfà tot.
+        mouSenseTrepitjar(origen, path.join(arrel, m.desti));
+        traslladats.push(m);
+      }
+      return { moguts, index: Boolean(index), sec: false, reescrits: escrits.map(e => e.rel), escrits };
+    };
+    const desfes = () => {
+      const fallades = [];
+      for (const m of [...traslladats].reverse()) {
+        try {
+          const desti = path.join(arrel, m.desti);
+          if (hash(fs.readFileSync(desti)) !== m.hash) throw new Error(`${m.desti} ha canviat a l'arxiu`);
+          mouSenseTrepitjar(desti, path.join(arrel, m.rel));
+        } catch (error) { fallades.push(`${m.rel}: ${error.message}`); }
+      }
+      if (creada) { try { fs.rmdirSync(path.join(arrel, carpeta)); } catch { /* no és buida o ja no hi és */ } }
+      if (index) { try { restauraDocument(arrel, INDEX, index.nou, index.original); } catch (error) { fallades.push(error.message); } }
+      for (const e of [...escrits].reverse()) { try { restauraDocument(arrel, e.rel, e.despres, e.abans); } catch (error) { fallades.push(error.message); } }
+      if (fallades.length) throw new Error(fallades.join('; '));
+    };
+    return ambTorns(arrel, pla, aplica, desfes);
+  });
+}
+
+/** Trasllat a l'arxiu. Amb `sec` només respon què faria: cap fitxer mogut ni índex tocat.
+ *  Sense `enllacos`, el camí de sempre; amb `enllacos = { pla, ambTorns, reescriu, hash }`
+ *  (la línia d'ordres), el camí transaccional que reapunta els enllaços dels vius. */
+export function arxiva(arrel = arrelPerDefecte(), { noms = [], sec = false, dia = avui(), sessio = null, reapunta = false, enllacos = null } = {}) {
   if (sessio !== null && !SESSIO.test(String(sessio))) throw new Error(`--sessio ${sessio}: ha de ser aammdd_Nom, un sol segment dins de ${ARXIU}/`);
   const bruts = arxivables(arrel, { noms, dia });
   if (!bruts.length) return { moguts: [], index: false, sec };
@@ -1130,6 +1267,7 @@ export function arxiva(arrel = arrelPerDefecte(), { noms = [], sec = false, dia 
   }
 
   comprovaIndex(arrel);
+  if (enllacos) return arxivaAmbEnllacos(arrel, bruts, carpeta, { reapunta, enllacos });
   return ambLock(arrel, () => {
     // El cens del despenjat es pren dins del lock, just abans del primer trasllat.
     const presentsAbans = nomsSolts(arrel);
@@ -1276,7 +1414,7 @@ export function renomena(arrel = arrelPerDefecte(), { vell, nou, sec = false } =
 
 /* ── CLI ──────────────────────────────────────────────────────────────────── */
 
-const US = 'Ús: porta-olivera.mjs [--informe] | --hook | --arxiva [--nom FITXER]... [--sessio aammdd_Nom] [--reapunta] [--sec] | --repara [--sec] | --renomena VELL --a NOU [--sec] | --tancament [--torn ID]';
+const US = 'Ús: porta-olivera.mjs [--informe] | --hook | --arxiva [--nom FITXER]... [--sessio aammdd_Nom] [--reapunta] [--torn ID] [--sec] | --repara [--sec] | --renomena VELL --a NOU [--sec] | --tancament [--torn ID]';
 
 /** Banderes de la línia d'ordres. Una bandera desconeguda no es llig com a informe: falla. */
 function opcions(argv) {
@@ -1306,7 +1444,7 @@ function opcions(argv) {
     else throw new Error(`Argument desconegut: ${a}. ${US}`);
   }
   if ([o.informe, o.hook, o.arxiva, o.repara, o.renomena !== null, o.tancament].filter(Boolean).length > 1) throw new Error(`Tria un sol mode. ${US}`);
-  if (o.torn !== null && !o.tancament) throw new Error(`--torn només val amb --tancament. ${US}`);
+  if (o.torn !== null && !o.tancament && !o.arxiva) throw new Error(`--torn només val amb --tancament o --arxiva. ${US}`);
   const mal = 'només valen amb --arxiva; --sec també amb --repara i --renomena';
   if ((o.noms.length || o.sessio !== null || o.reapunta) && !o.arxiva) throw new Error(`--nom, --sessio, --reapunta i --sec ${mal}. ${US}`);
   if (o.sec && !o.arxiva && !o.repara && o.renomena === null) throw new Error(`--nom, --sessio, --reapunta i --sec ${mal}. ${US}`);
@@ -1355,14 +1493,33 @@ function informe(arrel, dia = avui()) {
   return checkTaula(arrel, { dia }).valid && conv.valid ? 0 : 1;
 }
 
-function main(argv = process.argv.slice(2)) {
+async function main(argv = process.argv.slice(2)) {
   const o = opcions(argv);
   const arrel = arrelPerDefecte();
 
   if (o.arxiva) {
-    const r = arxiva(arrel, { noms: o.noms, sec: o.sec, sessio: o.sessio, reapunta: o.reapunta });
-    if (o.sec) console.log('[Porta Olivera] Simulació (--sec): no es mou cap fitxer ni es toca l’índex.');
-    if (!r.moguts.length) console.log('[Porta Olivera] Res a arxivar.');
+    // Les validacions de sempre (sessió, estructura, noms) abans de carregar el planificador.
+    const sim = arxiva(arrel, { noms: o.noms, sec: true, sessio: o.sessio, reapunta: o.reapunta });
+    if (!sim.moguts.length) {
+      if (o.sec) console.log('[Porta Olivera] Simulació (--sec): no es mou cap fitxer ni es toca l’índex.');
+      console.log('[Porta Olivera] Res a arxivar.');
+      process.exitCode = 0;
+      return;
+    }
+    // B1 · 261101: el pla d'enllaços i de torns, sobre el disc d'abans i amb el resolutor de l'SCC.
+    const { planificaArxiu, textPla, plaAmbEfectes, liniaVersiona, reescriuEnllacos, hashBytes } = await import('../documental/arxiu-enllacos.mjs');
+    const carpeta = o.sessio ? `${ARXIU}/${o.sessio}` : ARXIU;
+    const pla = await planificaArxiu(arrel, { bruts: arxivables(arrel, { noms: o.noms }), carpeta, reapunta: o.reapunta, torn: o.torn });
+    if (o.sec) {
+      console.log('[Porta Olivera] Simulació (--sec): no es mou cap fitxer ni es toca l’índex.');
+      for (const m of sim.moguts) console.log(`   · ${m.nom} → ${path.posix.dirname(m.desti)}/ (${m.nota})`);
+      for (const linia of textPla(pla, { sec: true })) console.log(linia);
+      process.exitCode = pla.aturades.length ? 1 : 0;
+      return;
+    }
+    if (pla.aturades.length) throw new Error(`[Porta Olivera] No s'ha mogut res: l'arxivat s'atura abans de tocar cap fitxer.\n${textPla(pla).join('\n')}`);
+    const { ambTornsArxiu } = await import('../documental/turns.mjs');
+    const r = arxiva(arrel, { noms: o.noms, sessio: o.sessio, reapunta: o.reapunta, enllacos: { pla, ambTorns: ambTornsArxiu, reescriu: reescriuEnllacos, hash: hashBytes } });
     for (const m of r.moguts) console.log(`   · ${m.nom} → ${path.posix.dirname(m.desti)}/ (${m.nota})`);
     if (r.index) console.log(`   · ${INDEX} actualitzat.`);
     for (const m of r.moguts.filter(x => x.nota === 'mogut' && x.nom.endsWith('.md'))) {
@@ -1370,7 +1527,10 @@ function main(argv = process.argv.slice(2)) {
       else if (m.torn) console.log(`   Rebut del torn ${m.torn} sense relleu possible (${m.motiu}): no hi ha cap handoff a fer.`);
       else console.log(`   Si porta rebut de torn: node tooling/wiki/document.mjs handoff --turn-id ID --file ${m.rel} --to ${m.desti}`);
     }
-    process.exitCode = !o.sec && r.moguts.some(m=>m.nota !== 'mogut') ? 1 : 0;
+    if (plaAmbEfectes(pla)) for (const linia of textPla(pla)) console.log(linia);
+    const versiona = plaAmbEfectes(pla) ? liniaVersiona(pla, r) : null;
+    if (versiona) console.log(versiona);
+    process.exitCode = r.moguts.some(m => m.nota !== 'mogut') ? 1 : 0;
     return;
   }
 
@@ -1438,5 +1598,5 @@ function main(argv = process.argv.slice(2)) {
 // silenci i la porta ix 0 sense comprovar res. Resoldre el symlink és el que
 // fa que la guarda parle sempre.
 if (esMain(import.meta.url)) {
-  try { main(); } catch (e) { console.error(e.message); process.exitCode = 2; }
+  main().catch((e) => { console.error(e.message); process.exitCode = 2; });
 }

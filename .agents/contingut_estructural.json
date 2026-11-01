@@ -56,10 +56,10 @@
       "data": "2026-11-01"
     },
     "legal": {
-      "sha256": "16546472fcf076771da109ed72902d0ae4976e9b02ff64dcf0e56416fe61b8fa",
-      "html": 50226,
-      "aprovat_per": "Mestre Javi Llinares (pla 261101_1246 aprovat el 2026-11-01, executada per Claude al torn torn_3f5652a2)",
-      "data": "2026-11-01"
+      "sha256": "6396c9d93418dc2da8a45323b17f0c7072578215cca79f3d10cab55cfddf3b23",
+      "html": 51925,
+      "aprovat_per": "Mestre Javi Llinares (ordre d'executar B0 del prompt 261101_2059, T11-05; executada per Claude al torn torn_3d9af83b)",
+      "data": "2026-11-02"
     },
     "notes": {
       "sha256": "39cf0339b0694fc1ed39bdcac47064fadb725d844e6410753a9af90e1fc4e94c",

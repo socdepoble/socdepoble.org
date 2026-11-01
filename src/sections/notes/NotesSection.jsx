@@ -20,7 +20,7 @@ import { aliesDeLActor } from '../../data/identitatsSeed.js';
 import { modeDeDadesResolt } from './autoriaNota.js';
 import { iconaDeCarpeta, opcionsDeCarpetes } from './carpetes.js';
 import { LLAVORS_NOTA, esLlavorDeNota } from './llavorNota.js';
-import { ID_NOTA_BENVINGUDA, KIND_TUTORIAL, NOTA_TUTORIAL, itemTutorial, portaLaNotaTutorial } from './notaTutorial.js';
+import { ID_NOTA_BENVINGUDA, KIND_TUTORIAL, NOTA_TUTORIAL, itemTutorial, portaLaNotaTutorial, tutorialRetirada } from './notaTutorial.js';
 import { escriuSeleccio, llegixSeleccio } from '../../components/universal/workspace/seleccioUrl.js';
 import { ALL_CATEGORY_ID } from '../../components/universal/workspace/workspaceState.js';
 import { CARPETA_ALTRES, CARPETA_PER_SECCIO, esIdDePublicacio, itemsPublicatsDe, seccioDeCarpeta, seccioDePublicacio } from './masDeLUsuari.js';
@@ -137,12 +137,14 @@ const toWorkspaceNote = (note, noteFolders) => {
     /* D-4 (decisió del Mestre, pla 261101_1246) · La Card «Bloc de notes»
        (la n1: la de veres en mode 'seed' i la de lectura de notaTutorial.js,
        que espargix este element) és sempre la primera fila de «Tot», amb
-       qualsevol ordenació (UniversalWorkspace · fixatATot). «Mentre no estiga
-       arxivada»: la n1 de veres arxivada ix de la llista i el seu fixat amb
-       ella. Però, en mode 'seed', P1-72 hi torna a posar llavors la Card de
-       lectura (ambTutorial, davall), que també va fixada: la de lectura no
-       s'arxiva mai, i el Bloc no distingix una n1 arxivada d'una llavor
-       esborrada (cap camp que ho diga). */
+       qualsevol ordenació (UniversalWorkspace · fixatATot), i la tria
+       automàtica de «Tot» l'obri (T11-03, primerElementTriable). «Mentre no
+       estiga arxivada»: la n1 de veres arxivada (o a la paperera, o
+       esborrada) ix de la llista i el seu fixat amb ella. T11-03 (marató
+       261101_2143, D-M1) · I en mode 'seed' l'arxivament persistix: la Card de
+       lectura ja no hi torna (ambTutorial, davall; la marca per àmbit de
+       notaTutorial.js). Sense marca (una llavor esborrada sense cap acció),
+       la Card hi torna, fixada, com sempre. */
     ...(String(note.id) === ID_NOTA_BENVINGUDA ? { fixatATot: true } : {})
   };
 };
@@ -321,7 +323,7 @@ export default function NotesSection() {
   const {
     status, error, notes, noteFolders, creaNota, setLocalNoteField, updateNote,
     informaError, obriConfiguracioNotes, refresh, canCreate, teSessio = false,
-    notesComplete, resolveNote, workspaceKey
+    notesComplete, resolveNote, workspaceKey, scopeKey
   } = notesContextValue || {
     status: 'error', error: new Error('NotesContext no disponible'), notes: [], noteFolders: []
   };
@@ -591,8 +593,14 @@ export default function NotesSection() {
      el Bloc hi posa la Card de lectura (notaTutorial.js). Mentre carrega no:
      en mode 'seed' la n1 de veres arriba amb la llista i no ha de canviar de
      peça davall de la persona. Una revalidació (la renovació de la sessió)
-     conserva les dades i també la Card: no parpelleja. Al Snippet Curador, cap. */
-  const ambTutorial = !modeDesa && (status === 'ready' || status === 'revalidating') && !portaLaNotaTutorial(notes);
+     conserva les dades i també la Card: no parpelleja. Al Snippet Curador, cap.
+     T11-03 (D-M1) · En mode 'seed', si la persona ha retirat la n1 (arxiu,
+     paperera o esborrat; la marca de l'àmbit), tampoc. Es llig a cada pintada,
+     i només en 'seed' sense la n1: la marca naix just abans que la llista
+     perda la n1. Per a tornar a posar-hi la Card, es lleva `&& !n1Retirada`. */
+  const senseN1 = !portaLaNotaTutorial(notes);
+  const n1Retirada = senseN1 && modeResolt === 'seed' && tutorialRetirada(scopeKey);
+  const ambTutorial = !modeDesa && (status === 'ready' || status === 'revalidating') && senseN1 && !n1Retirada;
   const itemDeTutorial = useMemo(
     () => (ambTutorial ? itemTutorial(toWorkspaceNote(NOTA_TUTORIAL, noteFolders)) : null),
     [ambTutorial, noteFolders]

@@ -5,7 +5,7 @@ import {
 } from 'react';
 import {
   ALL_CATEGORY_ID, createWorkspaceState,
-  filterWorkspaceItems, workspaceReducer
+  filterWorkspaceItems, primerElementTriable, workspaceReducer
 } from './workspaceState.js';
 import { buildWorkspaceFolderForest, descendentsDeCarpeta } from './workspaceFolderForest.js';
 
@@ -161,10 +161,11 @@ export function WorkspaceProvider({
       const eligible = typeof canAutoSelectRef.current === 'function'
         ? candidates.filter(item => canAutoSelectRef.current({ categoryId: id, item }) !== false)
         : candidates;
+      // T11-03 · L'element recordat mana; de reserva, primerElementTriable (a «Tot», el fixat).
       const remembered = currentState.lastItemByCategory[id];
       itemId = eligible.some((item) => String(item.id) === remembered)
         ? remembered
-        : eligible[0]?.id ?? null;
+        : primerElementTriable(eligible, id)?.id ?? null;
       deferred = itemId === null && typeof canAutoSelectRef.current === 'function'
         && canAutoSelectRef.current({ categoryId: id, item: null }) === false;
     }
@@ -379,9 +380,10 @@ export function WorkspaceProvider({
     // una selecció existent. Sense política es conserva el comportament habitual.
     const permits = item => typeof canAutoSelect !== 'function'
       || canAutoSelect({ categoryId, item }) !== false;
-    const firstItemId = () => (categoriaSenseElement ? null : normalizedItems.find((item) =>
+    // T11-03 · La reserva, entre els permesos: primerElementTriable (a «Tot», el fixat).
+    const firstItemId = () => (categoriaSenseElement ? null : primerElementTriable(normalizedItems.filter((item) =>
       pertanyA(item, categoryId) && permits(item)
-    )?.id ?? null);
+    ), categoryId)?.id ?? null);
     const deferred = itemId => itemId === null && !categoriaSenseElement && !permits(null);
 
     if (itemId !== null && !itemById.has(itemId)) {

@@ -60,6 +60,7 @@ const LLEIS_DURES = new Set(['tailwind-visual', 'font-too-small']);
  * són les etiquetes semàntiques natives i els embolcalls documentats de davall;
  * i les proves (*.test.*, __tests__/) no són interfície. Fora de JS (.html), el
  * recompte de text de sempre, sense comentaris. El llindar (> 10) no canvia.
+ * T11-01 (marató 261101_2143) hi afig la ràtio: vegeu LLINDAR_RATIO_DIV_SOUP.
  */
 export const ESTRUCTURA_NATIVA = Object.freeze([
   'section', 'article', 'main', 'aside', 'nav', 'header', 'footer',
@@ -85,6 +86,21 @@ export const EMBOLCALLS_SEMANTICS = Object.freeze({
 });
 const NATIVA = new Set(ESTRUCTURA_NATIVA);
 const LLINDAR_DIV_SOUP = 10;
+/* T11-01 (Gemini, Tall 11; marató 261101_2143, ordre del Mestre) · Un sol
+ * embolcall no salva una vista de quaranta <div>: també és sopa quan hi ha més
+ * de LLINDAR_RATIO_DIV_SOUP <div> per element d'estructura. La ràtio és per
+ * fitxer. Amb l'arbre del 261101 el màxim és 13 per 1 (EspecimenControlsBarra
+ * .jsx), i els 12 per 1 de XatSection.jsx són estats buits i Suspense escampats
+ * en components xicotets, no cap sopa: 15 deixa la porta en 0 avisos amb marge
+ * i atrapa 16 <div> o més dins d'un sol embolcall (31 dins de dos). */
+export const LLINDAR_RATIO_DIV_SOUP = 15;
+/** Cert si `{ divs, estructura }` és sopa de <div>: més de LLINDAR_DIV_SOUP i,
+ *  a més, cap estructura o més de LLINDAR_RATIO_DIV_SOUP per element (enters,
+ *  sense dividir). Pura. */
+export function esSopaDeDivs({ divs, estructura }) {
+  if (divs <= LLINDAR_DIV_SOUP) return false;
+  return estructura === 0 || divs > LLINDAR_RATIO_DIV_SOUP * estructura;
+}
 const ES_PROVA = /(^|[\\/])__tests__[\\/]|\.(test|spec)\.[cm]?[jt]sx?$/;
 
 function nomJsx(nom) {
@@ -122,11 +138,16 @@ function senseComentarisHtml(text) {
   }
 }
 
+/* T11-01 · El grup no captura: split() posa cada grup capturat dins del
+ * resultat, i amb `(…)` cada etiqueta d'estructura comptava doble. Amb la sola
+ * condició de `estructura === 0` no es notava; amb la ràtio, sí. */
+const ETIQUETA_ESTRUCTURA = new RegExp(`<(?:${ESTRUCTURA_NATIVA.join('|')})\\b`, 'i');
+
 function sopaText(text) {
   const net = senseComentarisHtml(text);
   return {
     divs: net.split(/<div\b/i).length - 1,
-    estructura: net.split(new RegExp(`<(${ESTRUCTURA_NATIVA.join('|')})\\b`, 'i')).length - 1
+    estructura: net.split(ETIQUETA_ESTRUCTURA).length - 1
   };
 }
 
@@ -288,10 +309,12 @@ function scanDesign(text, file, vocab = null) {
   // REGLA DIV-SOUP (calibratge D-2): vegeu ESTRUCTURA_NATIVA i EMBOLCALLS_SEMANTICS.
   if (!ES_PROVA.test(file)) {
     const sopa = ast ? sopaJsx(ast) : sopaText(text);
-    if (sopa.divs > LLINDAR_DIV_SOUP && sopa.estructura === 0) {
+    if (esSopaDeDivs(sopa)) {
       findings.push({
         severity: 'warning', rule: 'div-soup', file, line: 1, token: 'div-soup',
-        message: `Massa divs (${sopa.divs}) sense estructura semàntica (${ESTRUCTURA_NATIVA.join(', ')} o un embolcall canònic). Aplica Pedra Seca.`
+        message: sopa.estructura === 0
+          ? `Massa divs (${sopa.divs}) sense estructura semàntica (${ESTRUCTURA_NATIVA.join(', ')} o un embolcall canònic). Aplica Pedra Seca.`
+          : `Massa divs (${sopa.divs}) per a tan poca estructura semàntica (${sopa.estructura}): més de ${LLINDAR_RATIO_DIV_SOUP} per element. Aplica Pedra Seca.`
       });
     }
   }

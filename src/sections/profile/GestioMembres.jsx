@@ -77,8 +77,31 @@ export const TEXTOS_MEMBRES = Object.freeze({
   cancela: Object.freeze(['common.cancela', 'Cancel·lar']),
 });
 
-/* Un error del port ja ve en valencià i amb `code`; sense text, el genèric. */
-const textDError = (error, generic) => (typeof error?.message === 'string' && error.message.trim() ? error.message : generic);
+/* T11-02 (Gemini, Tall 11; marató 261101_2143) · Els errors del port, pel seu
+   `code` i en la llengua de la interfície. Cada reserva és la frase valenciana
+   de MISSATGES_MEMBRES_ORGANITZACIO (contracte.js), lletra per lletra, i la de
+   NO-DISPONIBLE, la de l'adaptador i PerfilContext. Un error sense codi conegut
+   (la xarxa, el text cru d'un proveïdor) diu el genèric de l'acció: mai el seu
+   `message` (doctrina d'errorsBackend.js: la vista decidix pel codi). */
+const textErrorMembre = (codi, reserva) => Object.freeze([`section.perfil.membres.error.${codi}`, reserva]);
+export const ERRORS_MEMBRES = Object.freeze({
+  'SDP-ORGMEM-000': textErrorMembre('orgmem000', 'Cal iniciar sessió.'),
+  'SDP-ORGMEM-001': textErrorMembre('orgmem001', 'El tipus de membre o el rol no és vàlid.'),
+  'SDP-ORGMEM-002': textErrorMembre('orgmem002', 'Només qui administra l’organització en veu i en gestiona els membres.'),
+  'SDP-ORGMEM-003': textErrorMembre('orgmem003', 'Esta persona no és del poble de l’organització o ha demanat la baixa.'),
+  'SDP-ORGMEM-004': textErrorMembre('orgmem004', 'No pots canviar el teu propi rol.'),
+  'SDP-ORGMEM-005': textErrorMembre('orgmem005', 'La propietària no es canvia ni es lleva.'),
+  'SDP-ORGMEM-006': textErrorMembre('orgmem006', 'Només la propietària nomena, degrada o lleva administradores.'),
+  'SDP-ORGMEM-007': textErrorMembre('orgmem007', 'Una organització no pot ser membre d’ella mateixa ni d’una d’un altre poble.'),
+  'SDP-ORGMEM-008': textErrorMembre('orgmem008', 'Per a afegir una organització com a membre, cal que també l’administres.'),
+  'NO-DISPONIBLE': textErrorMembre('noDisponible', 'El servidor d’este poble encara no gestiona els membres de les organitzacions.'),
+});
+
+/* L'error del port, traduït pel seu codi; sense cap codi propi, el genèric. */
+const textDError = (error, generic, t) => {
+  const codi = typeof error?.code === 'string' ? error.code : '';
+  return Object.hasOwn(ERRORS_MEMBRES, codi) ? tradueix(t, ERRORS_MEMBRES[codi]) : generic;
+};
 const esCancel = (error) => error?.name === 'AbortError';
 
 /* ═══════════════════════════════════════════════════════════════════
@@ -296,7 +319,7 @@ export function GestioMembres({ organitzacio, accions }) {
       })
       .catch((error) => {
         if (control.signal.aborted || esCancel(error)) return;
-        setEstat({ carregant: false, membres: [], error: textDError(error, tradueix(tRef.current, TEXTOS_MEMBRES.errorLlista)) });
+        setEstat({ carregant: false, membres: [], error: textDError(error, tradueix(tRef.current, TEXTOS_MEMBRES.errorLlista), tRef.current) });
       });
     return () => control.abort();
   }, [orgId, llistaMembres]);
@@ -333,7 +356,7 @@ export function GestioMembres({ organitzacio, accions }) {
           if (control.signal.aborted || esCancel(error)) return;
           // Sense recompte: l'error ja s'anuncia (role=alert).
           setCerca({ cercant: false, candidats: [], per: null });
-          setMissatge({ tipus: 'error', text: textDError(error, tradueix(tRef.current, TEXTOS_MEMBRES.errorCerca)) });
+          setMissatge({ tipus: 'error', text: textDError(error, tradueix(tRef.current, TEXTOS_MEMBRES.errorCerca), tRef.current) });
         });
     }, ESPERA_CERCA);
     return () => { clearTimeout(rellotge); control.abort(); };
@@ -392,7 +415,7 @@ export function GestioMembres({ organitzacio, accions }) {
       const exit = await feina(vigent);
       if (vigent() && exit) setMissatge({ tipus: 'exit', text: exit });
     } catch (error) {
-      if (vigent() && !esCancel(error)) setMissatge({ tipus: 'error', text: textDError(error, textError) });
+      if (vigent() && !esCancel(error)) setMissatge({ tipus: 'error', text: textDError(error, textError, tRef.current) });
     } finally {
       if (opActual.current === op) {
         opActual.current = null;
@@ -461,7 +484,7 @@ export function GestioMembres({ organitzacio, accions }) {
         };
       } catch (error) {
         if (esCancel(error)) throw error;
-        if (vigent()) despresDeTancar.current = { missatge: { tipus: 'error', text: textDError(error, tradueix(t, TEXTOS_MEMBRES.errorLleva)) } };
+        if (vigent()) despresDeTancar.current = { missatge: { tipus: 'error', text: textDError(error, tradueix(tRef.current, TEXTOS_MEMBRES.errorLleva), tRef.current) } };
       } finally {
         /* Una baixa d'A que torna tard no tanca la confirmació que B haja obert. */
         if (vigent()) setALlevar(null);

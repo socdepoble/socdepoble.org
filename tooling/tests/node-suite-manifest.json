@@ -139,6 +139,11 @@
       "reason": "Regressió portable del producte o d’una eina permanent; s’executa a la cadena primària, també quan està roja."
     },
     {
+      "path": "tests/consell-l8-precommit.test.mjs",
+      "suite": "primary",
+      "reason": "B1 (261101, D5): Consell L8 i la taula de rutes SEO; a l'arbre preparat del hook prova el productor en sec, fora l'absència és infracció. Fixtures portables i processos reals."
+    },
+    {
       "path": "tests/contrast_calendari_mes.test.mjs",
       "suite": "primary",
       "reason": "Regressió portable del producte o d’una eina permanent; s’executa a la cadena primària, també quan està roja."
@@ -279,6 +284,11 @@
       "reason": "Audita documents modificats a HEAD/índex local; el checkout net de CI produïx una comprovació buida. La porta de documents real continua al workflow."
     },
     {
+      "path": "tests/frontmatter-vincles-arxiu.test.mjs",
+      "suite": "primary",
+      "reason": "B1 (261101, D4): F9 accepta el vincle relatiu a una nota arxivada existent (caixa exacta, primer nivell, sense escapar) i continua exigint una nota viva; stdout de --json pur."
+    },
+    {
       "path": "tests/gestoria-3t-real.test.mjs",
       "suite": "session",
       "reason": "Usa factures i extracte reals del Mestre fora del repositori; inclou TODO de justificants humans pendents. Les regressions de Gestoria amb dades sintètiques viuen a Vitest."
@@ -292,6 +302,11 @@
       "path": "tests/git-hooks.test.mjs",
       "suite": "primary",
       "reason": "Regressió portable del producte o d’una eina permanent; s’executa a la cadena primària, també quan està roja."
+    },
+    {
+      "path": "tests/git-staged-dependencies.test.mjs",
+      "suite": "primary",
+      "reason": "Regressió portable del pre-commit (P0-22, B1.3 261101): node_modules per paquet a l'arbre preparat, sense seguir enllaços en esborrar-lo, temps per pas que només pugen i el cablejat de verifyPreparedTree cap a executaValidadors."
     },
     {
       "path": "tests/governanca-260930-lease.test.mjs",
@@ -449,6 +464,11 @@
       "reason": "Regressió portable del producte o d’una eina permanent; s’executa a la cadena primària, també quan està roja."
     },
     {
+      "path": "tests/migracio-verificador.test.mjs",
+      "suite": "primary",
+      "reason": "P0-05/P0-21: verificador estàtic de migracions (scripts/supabase/verifica-migracions.mjs) amb carpetes temporals fora del repositori i l'arbre real en lectura; cap xarxa, cap procés fill del verificador, cap escriptura."
+    },
+    {
       "path": "tests/migracio-xat-consentiment-i-metadades.test.mjs",
       "suite": "primary",
       "reason": "Regressió portable del producte o d’una eina permanent; s’executa a la cadena primària, també quan està roja."
@@ -472,6 +492,11 @@
       "path": "tests/olivera-arxiva-261002.test.mjs",
       "suite": "laboratory",
       "reason": "Assaig del paquet de laboratori 261002 sobre hashes de la base històrica; no és una prova estable de la instal·lació actual."
+    },
+    {
+      "path": "tests/olivera-arxiva-enllacos.test.mjs",
+      "suite": "primary",
+      "reason": "Regressió B1 261101: --arxiva reapunta els enllaços dels documents vius amb el resolutor de l'SCC, esmena només el torn tancat del rebut propi amb preimatge i substitucions reversibles, plan.hash i relocated dels torns oberts de qualsevol abast, frontmatter sense àlies i aturada si en trenca l'esquema, aturades sense moure res i --sec pur; fixtures a mkdtemp."
     },
     {
       "path": "tests/pedra-debt.test.mjs",
@@ -539,6 +564,11 @@
       "reason": "Regressió portable del producte o d’una eina permanent; s’executa a la cadena primària, també quan està roja."
     },
     {
+      "path": "tests/reflex-doctor-index.test.mjs",
+      "suite": "primary",
+      "reason": "Regressió portable de la Porta Reflex al pre-commit (P0-22, B1.3 261101): a l'arbre preparat el doctor certifica l'índex i fora continua estricte contra HEAD."
+    },
+    {
       "path": "tests/run-portes-cens.test.mjs",
       "suite": "primary",
       "reason": "CL-08 · Regressió portable del mode --cens de tooling/gates/run-portes.mjs: seleccionaPassos com a funció pura, un cens sobre portes fingides en una arrel temporal (dos roges, una que esgota el temps, una omesa i una que escriu) i els errors d’ús del CLI, que paren abans d’executar cap porta real."
@@ -562,6 +592,11 @@
       "path": "tests/security-chain.test.mjs",
       "suite": "primary",
       "reason": "Regressió portable del producte o d’una eina permanent; s’executa a la cadena primària, també quan està roja."
+    },
+    {
+      "path": "tests/self-describe-coherencia.test.mjs",
+      "suite": "primary",
+      "reason": "B1.3-c 261101 (D6): src/data/SELF-DESCRIBE.md sense camins absents (Doctrina) ni deute de frontmatter, i tres afirmacions lligades al codi en els dos sentits (mode per defecte, entrades sense injectaBackendDelPaquet, cua de les Notes). Les portes s'executen en mode de només lectura."
     },
     {
       "path": "tests/sistema_nervios.test.mjs",
@@ -642,6 +677,11 @@
       "path": "tests/tractor-crom.test.mjs",
       "suite": "primary",
       "reason": "Ordre del Mestre (T15, 260930; 30-10-2026) · Porta Crom K4 rectangle pur: nav.app-sidebar .nav-item i .sidebar-control-btn amb border-radius 0 i mai width: 100%; el mutant de la pastilla, una cantonada arrodonida, una .nav-item més específica sense app-sidebar (.sdp-root .nav-item.active) i la base absent cauen; només la .nav-item nua i exacta (barra mòbil) fora d'abast; fulls CSS temporals."
+    },
+    {
+      "path": "tests/tractor-doctrina-locals.test.mjs",
+      "suite": "primary",
+      "reason": "B1 (261101, D3): Doctrina classifica com a local un camí absent i no versionat que ignora un .gitignore versionat de l'arrel; sense Git, versionat, amb GIT_DIR heretat, exclusions personals, .git/info/exclude, negacions o repositori pare continua ABSENT."
     },
     {
       "path": "tests/tractor-enxufe.test.mjs",

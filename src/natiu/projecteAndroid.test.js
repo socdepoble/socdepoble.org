@@ -234,14 +234,17 @@ describe.skipIf(!HI_HA_PROJECTE)('el projecte d’Android (android/)', () => {
     expect(permisos.some((p) => p['android:name'] === 'android.permission.POST_NOTIFICATIONS' && p['tools:node'] === 'remove')).toBe(false);
   });
 
-  test('MainActivity: registra CompartirNatiuPlugin abans de super.onCreate', () => {
+  /* P0-24 (G2120-07, marató 261101_2143) · El segon connector propi, el de l'Arrere. */
+  test('MainActivity: registra CompartirNatiuPlugin i EnrereNatiuPlugin abans de super.onCreate', () => {
     const codi = senseComentarisJava(llig(JAVA, 'MainActivity.java'));
     const onCreate = cosDelMetode(codi, 'protected void onCreate(Bundle savedInstanceState)');
-    const registre = onCreate.indexOf('registerPlugin(CompartirNatiuPlugin.class);');
     const pont = onCreate.indexOf('super.onCreate(savedInstanceState);');
-    expect(registre).toBeGreaterThanOrEqual(0);
-    expect(pont).toBeGreaterThan(registre);
-    expect(codi.match(/registerPlugin\(/g)).toHaveLength(1);
+    for (const connector of ['CompartirNatiuPlugin', 'EnrereNatiuPlugin']) {
+      const registre = onCreate.indexOf(`registerPlugin(${connector}.class);`);
+      expect(registre, connector).toBeGreaterThanOrEqual(0);
+      expect(pont, connector).toBeGreaterThan(registre);
+    }
+    expect(codi.match(/registerPlugin\(/g)).toHaveLength(2);
   });
 
   /* 261026 (prompt 261026_1615, revisió) · Si Android mata el procés, la tasca

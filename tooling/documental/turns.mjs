@@ -382,3 +382,104 @@ export function acknowledgeHumanZoneChanges(root, id, note = 'Reconeixement expl
     turn.history.push({ action: 'acknowledge-human-zone-changes', files: changedFiles, at: turn.humanBaseline.at, note });
   });
 }
+
+/** Rastre de torns de l'arxivat amb enllaços (B1 · 261101, porta-olivera.mjs --arxiva).
+ * L'única esmena admesa a la història tancada: verification.files[rel] del torn del rebut
+ * propi d'un document reescrit, amb la preimatge comprovada; verification.at i checks no es
+ * toquen i no es fabrica cap verificació. Als torns oberts: plan.hash i relocated. Pren els
+ * locks de torn, revalida el pla, crida aplica() i escriu els registres; si res falla,
+ * restaura els registres ja escrits (CAS) i crida desfes(). Sense imports nous.
+ */
+export function ambTornsArxiu(root, pla, aplica, desfes) {
+  const { tancats = [], plans = [], relocated = [], autor = null } = pla.torns || {};
+  const ambEfectes = (pla.reescriptures || []).length > 0 || tancats.length > 0 || plans.length > 0 || relocated.length > 0;
+  const ids = [...new Set([...tancats.map(x => x.id), ...plans.map(x => x.id), ...relocated.map(x => x.id), ...(autor && ambEfectes ? [autor] : [])])].sort();
+  const desti = Object.fromEntries((pla.moviments || []).map(m => [m.rel, m.desti]));
+  const locks = [], escrits = [];
+  const restaura = (file, raw) => {
+    const tmp = `${file}.${randomUUID()}.tmp`;
+    try { fs.writeFileSync(tmp, raw, { flag: 'wx', mode: 0o600 }); fs.renameSync(tmp, file); }
+    finally { if (fs.existsSync(tmp)) fs.unlinkSync(tmp); }
+  };
+  try {
+    for (const id of ids) {
+      const file = recordPath(root, id);
+      try { locks.push({ lock: `${file}.lock`, fd: fs.openSync(`${file}.lock`, 'wx', 0o600) }); }
+      catch (error) { if (error.code === 'EEXIST') throw new Error(`Torn ocupat: ${id} (${STORE}/${id}.json.lock). No s'ha mogut res.`); throw error; }
+    }
+    const ara = Date.now();
+    const registres = ids.map(id => {
+      const file = recordPath(root, id), raw = fs.readFileSync(file, 'utf8');
+      const turn = readTurn(root, id, { closed: true, expired: true });
+      if (JSON.stringify(JSON.parse(raw)) !== JSON.stringify(turn)) throw new Error(`Torn ${id} canviat durant la lectura. No s'ha mogut res.`);
+      return { id, file, raw, turn, obert: turn.state !== 'closed', vigent: turn.state !== 'closed' && Date.parse(turn.expiresAt) > ara };
+    });
+    const canviat = (id, que) => new Error(`El torn ${id} ha canviat des del pla (${que}). No s'ha mogut res: torna a executar --arxiva, primer amb --sec.`);
+    // Revalidació de cada precondició del pla, amb els locks presos i abans de moure res.
+    for (const r of registres) {
+      const { id, turn } = r;
+      for (const x of tancats.filter(t => t.id === id)) {
+        const checks = turn.verification?.checks;
+        const genuina = Array.isArray(checks) && checks.length > 0 && !checks.every(c => c === 'expire-close');
+        const rebut = Object.values(turn.receipts).some(rec => rec.file === x.rel && isActiveReceipt(rec));
+        if (r.obert || !genuina || !rebut || turn.verification?.files?.[x.rel] !== x.de) throw canviat(id, x.rel);
+      }
+      for (const x of plans.filter(p => p.id === id)) if (!r.vigent || turn.plan?.file !== x.rel || turn.plan.hash !== x.de) throw canviat(id, `pla ${x.rel}`);
+      if ((relocated.some(x => x.id === id) || id === autor) && !r.vigent) throw canviat(id, 'ja no és obert i vigent');
+    }
+    let resultat;
+    try { resultat = aplica(); }
+    catch (error) {
+      try { desfes(); } catch (e) { error.message += `\nDesfer incomplet: ${e.message}`; }
+      throw error;
+    }
+    const at = new Date().toISOString();
+    const moves = (pla.moviments || []).map(m => ({ from: m.rel, to: m.desti }));
+    const escritsDoc = resultat?.escrits || [];
+    for (const r of registres) {
+      const { id, turn } = r;
+      for (const x of tancats.filter(t => t.id === id)) {
+        turn.verification.files[x.rel] = x.a;
+        turn.history.push({ action: 'archive-links', at, by: autor, file: x.rel, fromHash: x.de, toHash: x.a, moves, replacements: x.substitucions });
+      }
+      const pl = plans.find(p => p.id === id);
+      const rels = relocated.find(x => x.id === id)?.rels || [];
+      if (pl) turn.plan.hash = pl.a;
+      if (rels.length) turn.relocated = [...new Set([...(turn.relocated || []), ...rels])];
+      if (pl || rels.length) {
+        const ev = { action: 'archive-links', at, by: autor };
+        if (pl) ev.plan = { file: pl.rel, fromHash: pl.de, toHash: pl.a };
+        if (rels.length) ev.relocated = rels.map(rel => ({ from: rel, to: desti[rel] }));
+        if (turn.state === 'verified') { turn.state = 'planned'; ev.state = 'planned'; }
+        turn.history.push(ev);
+      }
+      if (id === autor && ambEfectes) {
+        turn.history.push({ action: 'archive-links', role: 'autor', at,
+          moves: (pla.moviments || []).map(m => ({ from: m.rel, to: m.desti, hash: m.hash })),
+          rewrites: escritsDoc.map(e => ({ file: e.rel, fromHash: sha(e.abans), toHash: sha(e.despres), links: e.enllacos })),
+          amended: tancats.map(x => ({ turn: x.id, file: x.rel })), relocatedIn: relocated.map(x => x.id) });
+        if (turn.state === 'verified') turn.state = 'planned';
+      }
+      if (r.obert) turn.verification = null;
+      turn.revision += 1;
+      turn.updatedAt = at;
+    }
+    try {
+      for (const r of registres) { atomic(r.file, r.turn); escrits.push(r); }
+    } catch (error) {
+      const fallades = [];
+      for (const r of [...escrits].reverse()) {
+        try {
+          if (fs.readFileSync(r.file, 'utf8') !== `${JSON.stringify(r.turn, null, 2)}\n`) throw new Error(`registre canviat: ${r.id}`);
+          restaura(r.file, r.raw);
+        } catch (e) { fallades.push(e.message); }
+      }
+      try { desfes(); } catch (e) { fallades.push(e.message); }
+      if (fallades.length) error.message += `\nDesfer incomplet: ${fallades.join('; ')}`;
+      throw error;
+    }
+    return { ...resultat, torns: registres.map(r => ({ id: r.id, estat: r.turn.state })) };
+  } finally {
+    for (const { lock, fd } of locks.reverse()) { fs.closeSync(fd); try { fs.unlinkSync(lock); } catch { /* ja no hi és */ } }
+  }
+}

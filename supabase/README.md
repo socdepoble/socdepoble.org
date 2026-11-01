@@ -1216,6 +1216,39 @@ description: "Documentació canònica de Sóc de Poble."
   és `src/data/supabase/exportacioFederacio.contracte.test.js`. Idempotent i
   en una sola transacció; **NO aplicada: l'aplica el Mestre, mai un agent**.
 
+- `migrations/2611012257_politica_privacitat_2_3.sql`
+  T11-05 (Gemini, Tall 11; marató 261101_2143): segella per primera vegada
+  una versió 2.x de la política de privacitat. Fins ara
+  `public.politiques_privacitat` només tenia la `'v1'` de 2609261500, sense
+  empremta; la 2.0, la 2.2 i la 2.3 del web no tenien cap fila, i
+  `registra_consentiment` guardava els consentiments a la `'v1'`. Una sola
+  fila `'2.3'`: `text_complet` és l'HTML exacte de `legalContent.html`
+  (`src/sections/text/legalContent.js`, 51.925 caràcters), `text_sha256` el
+  seu SHA-256 en UTF-8 (el CHECK `politiques_text_i_empremta` el torna a
+  calcular), `vigent_des_de` la data del rètol (1-11-2026, 00:00 CET) i
+  `on conflict (versio) do nothing`. Des que s'aplica, `estat_consentiment()`
+  diu `cal_reconsentir` a qui va acceptar una versió anterior. Abans
+  (lectura), ha de donar només la `'v1'` sense segellar:
+  `select versio, vigent_des_de, text_sha256 is not null as segellada from public.politiques_privacitat order by vigent_des_de;`
+  Verificació posterior (lectura):
+  `select text_sha256 = '886e80fdf36718d205da887510f1f7f67b40ee22efc72751e47fd5c9277d4d8f' as segellada_2_3 from public.politiques_privacitat where versio = '2.3';`
+  (cert). Sense inversa: una versió segellada no s'esborra ni es canvia
+  (`SDP-RGPD-020` i `021`). Va després del desplegament web amb este mateix
+  text de `/legal` (pas 12 de l'ordre obligatori); si el text canvia abans
+  d'aplicar-la, es corregix el fitxer, i després, una versió nova. El 1-11 a
+  les 22:47 CET i el 2-11 a les 00:09 CET, `https://socdepoble.org` encara
+  servia la 2.2 (el paquet `pageContent` de producció): la 2.3 no era pública
+  i no calia dir-ne 2.4.
+  L'execució (la `'v1'` d'abans, l'empremta, el text idèntic, la
+  idempotència, `SDP-RGPD-020` i `021` i la mutació d'un caràcter: 10
+  comprovacions) la va fer el torn torn_3d9af83b a PGlite 0.3.16, fora del
+  repositori: és evidència no versionada. La prova estàtica és
+  `src/data/supabase/politicaPrivacitat23.migracio.test.js`: comprova la
+  migració per dins (una 2.4 en una migració nova no la fa caure) i exigix
+  que l'última versió segellada porte el text que `/legal` servix hui (§18).
+  Idempotent i en una sola transacció;
+  **NO aplicada: l'aplica el Mestre, mai un agent**.
+
 - `seed.sql`
   Contingut inicial del portal.
 
@@ -1223,7 +1256,7 @@ description: "Documentació canònica de Sóc de Poble."
 
 1. Crear el projecte en Supabase.
 2. Obrir el SQL Editor.
-3. Executar els fitxers SQL del directori `migrations/` en ordre alfabètic.
+3. Executar els fitxers SQL del directori `migrations/` en ordre alfabètic. En un node ja en marxa, l'ordre és el del pla del verificador: l'alfabètic tret de les inversions declarades a `ordre_desplegament.json` (ara, 2610312000 just després de 2610311800).
 4. Crear el poble corresponent a `VITE_TENANT_ID` i configurar el node. `seed.sql` és opcional per a demostracions; l’entrada real no requerix dades seed.
 5. Configurar el `.env` local amb `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY` i `VITE_TENANT_ID`. No usar mai `service_role` en el client.
 
@@ -1271,6 +1304,30 @@ SELECT
   coalesce(position('private.exporta_federacio_v1' in pg_get_functiondef(to_regprocedure('public.exporta_les_meues_dades()'))) > 0, false) AS te_contracte_federacio_2611011800;
 ```
 
+### Verificador estàtic i pla de només lectura (`P0-05` · `P0-21`)
+
+`node scripts/supabase/verifica-migracions.mjs` llig els fitxers de
+`migrations/`, este README i `ordre_desplegament.json` i no es connecta a cap
+base. Comprova noms, versions, dependències declarades i inferides,
+transaccions, idempotència i que cada consulta marcada «(lectura)» siga de
+veres de només lectura: creua cada crida amb la volatilitat que les migracions
+declaren per a la funció, i les receptes de dues sessions per a una base de
+prova no entren mai al pla. Amb `--pla` imprimix per al Mestre el Pas 0
+(registre, sonda d'objectes i empremtes) i, quan rep `--aplicades <csv>` o
+`--empremtes <csv>`, els passos d'aplicació en l'ordre que demana esta secció,
+amb les portes de client i de funcions i els forats que obligarien a reaplicar
+migracions posteriors. Sense evidència de l'estat remot només proposa, com a
+declarades, les «NO aplicada» del final de l'ordre, i cal confirmar-les amb el
+Pas 0. Si el registre contradiu les empremtes o la sonda, o és buit mentre este
+README declara migracions aplicades, no proposa cap pas: dona error i demana
+tornar a generar el pla només amb `--empremtes`. Les restriccions que l'ordre
+alfabètic no expressa viuen a
+`ordre_desplegament.json`, i el verificador comprova que diuen el mateix que la
+seqüència següent. Una migració nova, posterior a totes, en una transacció,
+amb formes idempotents, amb `-- Depén de:` i amb consultes «Abans (lectura)» i
+«Verificació posterior (lectura)» en minúscula a la capçalera passa el
+verificador sense avisos.
+
 ### Nota d'auditoria `DF-06` (`P0-05`) i seqüència obligatòria de desplegament (`P0-21`)
 
 - **Aclariment `DF-06` (inexistència de `2610201400` i `elements_comu`):** Les referències històriques a una migració `2610201400` (esborrat de compte) o a una taula `elements_comu` no corresponen a cap fitxer real de `supabase/migrations/` ni de l'historial Git. La baixa amb quarantena i purga viu a `2609261500_identitat_perfil_f1.sql` i s'amplia a `2610241440_baixa_completa_ugc_i_fitxers.sql`.
@@ -1286,6 +1343,7 @@ SELECT
   9. Funcions de vora (`supabase/functions/`): `compte-apple` i `purga-fitxers` (secret compartit `SDP_CRON_SECRET`, crons horaris) i `noticies` (fonts personals desactivades fins a `SDP_NOTICIES_PERSONALS=1`).
   10. `2611011500` (només després de llegir les dues consultes «Abans» de la seua vinyeta) i `2611011510` (en qualsevol moment, sempre abans de cap migració que apuge el mínim per damunt de 2).
   11. `2610311900` → `2611011800` (P2-09: només després de llegir les tres consultes «Abans» de la seua capçalera, i aplicada per la propietària de l'RPC; si mai es reaplica 2610311900, cal tornar a aplicar 2611011800).
+  12. Primer el desplegament web amb el text final de `/legal`; després `2611012257` (T11-05: si s'aplica abans, el servidor demana acceptar la 2.3 mentre `/legal` encara mostra la 2.2; i només després de llegir la consulta «Abans» de la seua vinyeta). Abans de desplegar, cal tornar a construir el web i el connector (els `dist/` de l'1-11 a les 19:28 porten una altra «Versió 2.3», sense la ubicació de les fotos) i comprovar que el `/legal` desplegat té l'empremta de la migració.
 
 ### Taula canònica ordenada: 60 fitxers de R1 + candidates 1500, 1800, 1900 i 2000 + assalt 2611011500, 2611011510 i 2611011800 + `seed.sql` + 2 snippets (`P0-05` / `DF-06`)
 
@@ -1358,6 +1416,7 @@ SELECT
 | 65 | `2611011500` | `2611011500_autoria_ajuntament_mateix_poble.sql` | **NO aplicada: l'aplica el Mestre** | autoria d'ajuntament al seu poble (D-6) |
 | 66 | `2611011510` | `2611011510_versio_minima_client.sql` | **NO aplicada: l'aplica el Mestre** | versió mínima de l'app nativa (P0-23) |
 | 67 | `2611011800` | `2611011800_contracte_exportacio_federacio_v1.sql` | **NO aplicada: l'aplica el Mestre** | contracte v1 de l'exportació de federació (P2-09) |
+| 68 | `2611012257` | `2611012257_politica_privacitat_2_3.sql` | **NO aplicada: l'aplica el Mestre** | política de privacitat 2.3 segellada (T11-05) |
 
 | Artefacte complementari | Ruta dins de `supabase/` | Rol operatiu |
 | :--- | :--- | :--- |

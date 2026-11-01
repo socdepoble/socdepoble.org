@@ -12,10 +12,12 @@
  *   estat.js        llegits, per a després i fonts seguides
  *   personals.js    les fonts que afig la persona (pendents del connector)
  *   noticies.js     carpetes, filtres i comptadors
+ *   germanes.js     les notícies germanes d'un article (IDEA-30): altres fonts, el mateix fet
  */
 export { analitzaFeed, MAX_ARTICLES } from './analitzador.js';
 export { dataCurta, dataDeBoina, dataLlarga, horaRelativa, isoDeMs, llegixData, msDeData } from './dates.js';
 export { descodifica, netejaText, plega, talla } from './entitats.js';
+export { LIMITS_GERMANES, germanesDe, indexGermanes } from './germanes.js';
 export {
   ESQUEMA, LIMITS_ESTAT, commutaDespres, commutaSeguiment, esDesat, esLlegit, estatInicial, marcaLlegit, marcaLlegits,
   marcaNoLlegit, normalitzaEstat, seguix

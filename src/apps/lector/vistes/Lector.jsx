@@ -46,17 +46,18 @@
  * l'original. Amb el servei, la portada és la imatge que dona el servei (mai
  * l'origen de la font); sense, la de sempre, amb el filtre de l'amfitrió.
  */
-import { useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { Bookmark, BookmarkCheck, CirclePlay, ExternalLink, MailOpen, Play, X } from 'lucide-react';
 import AppGridColumn from '../../../components/layout/AppGridColumn.jsx';
+import { Link } from '../../../app/contexts/RouterContext';
 import { Alerta, Boto, Carregant, EstatBuit, MarcColumna, PaginaApp } from '../../../components/PedraSeca/index.js';
 import { useClosaAplicacio } from '../../plataforma/index.js';
-import { HUI, dataDeBoina, senseFinal } from '../nucli/index.js';
+import { HUI, dataCurta, dataDeBoina, germanesDe, indexGermanes, senseFinal, seguix } from '../nucli/index.js';
 import { useArticle } from '../useNoticies.js';
 import { AvisLector } from './comunes.jsx';
 import { Contingut } from './Contingut.jsx';
 import { useVistaLector } from './context.js';
-import { NOTICIES } from './navegacio.js';
+import { NOTICIES, rutaDeSeleccio } from './navegacio.js';
 
 /* L'element enfocat, llegit a l'arrel del node (dins del Shadow DOM de l'encastat, document.activeElement és l'amfitrió). */
 export function focusActiu(node) {
@@ -201,6 +202,45 @@ function VideoDeLArticle({ video, titol }) {
   );
 }
 
+/* IDEA-30 (B6-C, marató 261101_2143) · Les notícies germanes, al final de la lectura: d'altres fonts
+   que se seguixen, dins de 30 dies i amb ≥ 2 termes comuns al títol (nucli/germanes.js). Sense cap
+   germana, cap node: la lectura és la de sempre. Cap imatge (el Lector no en demana cap a l'origen),
+   i cada una obri la notícia a «Totes», on viuen totes les fonts que se seguixen.
+   Marcatge pla, amb la tipografia editorial de l'article (h4, p) i cap classe: ResultatCerca no és
+   al nucli 1.3.0 (contracteNucli.js) i el mòdul del Lector no compilaria. El Link és de la porta
+   'router' del nucli. */
+function NoticiesGermanes({ article, desfas }) {
+  const { noticies, lector, ruta, ara } = useVistaLector();
+  const index = useMemo(() => indexGermanes(noticies.articles), [noticies.articles]);
+  const seguides = useMemo(
+    () => new Set(noticies.fonts.filter((font) => seguix(lector.estat, font.id)).map((font) => font.id)),
+    [noticies.fonts, lector.estat]
+  );
+  const germanes = useMemo(() => germanesDe(article, index, { fonts: seguides }), [article, index, seguides]);
+  if (germanes.length === 0) return null;
+  const noms = new Map(noticies.fonts.map((font) => [font.id, font.nom]));
+  return (
+    <>
+      <h3>Notícies germanes</h3>
+      <p>Altres fonts que pareixen parlar del mateix fet, triades pel títol i la data.</p>
+      {germanes.map(({ resum }) => {
+        const meta = [noms.get(resum.fontId), dataCurta(resum.data, ara, desfas)].filter(Boolean).join(' · ');
+        return (
+          <article key={resum.id}>
+            <h4>
+              <Link to={rutaDeSeleccio({ categoryId: null, itemId: resum.id }, { fonts: noticies.fonts, ruta })}>
+                {senseFinal(resum.titol)}
+              </Link>
+            </h4>
+            {meta ? <p>{meta}</p> : null}
+            {resum.resum ? <p>{resum.resum}</p> : null}
+          </article>
+        );
+      })}
+    </>
+  );
+}
+
 function Cos({ article, portada, font, desfas, titolRef, nomesResum, onTanca }) {
   const { ruta, mitjans } = useVistaLector();
   const boina = dataDeBoina(article.data, desfas);
@@ -239,6 +279,7 @@ function Cos({ article, portada, font, desfas, titolRef, nomesResum, onTanca }) 
           </a>
         </p>
       ) : null}
+      <NoticiesGermanes article={article} desfas={desfas} />
     </PaginaApp>
   );
 }

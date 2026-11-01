@@ -2,8 +2,6 @@ package org.socdepoble.app;
 
 import android.content.Intent;
 import android.os.Bundle;
-import android.webkit.WebView;
-import androidx.activity.OnBackPressedCallback;
 import com.getcapacitor.BridgeActivity;
 
 public class MainActivity extends BridgeActivity {
@@ -36,6 +34,10 @@ public class MainActivity extends BridgeActivity {
         // l'arrencada (onNewIntent(getIntent()) al final del seu onCreate) i
         // cada onNewIntent de l'app ja oberta (launchMode singleTask).
         registerPlugin(CompartirNatiuPlugin.class);
+        // P0-24 (G2120-07) · El botó Arrere: tanca la capa de dalt de la pàgina
+        // abans de tornar arrere, i deixa el gest predictiu al sistema quan no
+        // hi ha res a fer (EnrereNatiuPlugin.java n'és l'únic amo).
+        registerPlugin(EnrereNatiuPlugin.class);
         // Gauntlet 261026_1615 (Codex C1615-05) · Abans que cap connector llija els extres.
         setIntent(senseExtresIllegibles(getIntent()));
         // Revisió 261026 · Restaurada després que Android matara el procés, la
@@ -46,35 +48,5 @@ public class MainActivity extends BridgeActivity {
             getIntent().removeExtra("LocalNotificationId");
         }
         super.onCreate(savedInstanceState);
-
-        // Botó Arrere (BOT-A9). Capacitor no el gestiona sense @capacitor/app,
-        // i amb targetSdk 36 Android 16 ja no crida onBackPressed(): cal passar
-        // pel dispatcher d'AndroidX, que també servix el gest predictiu.
-        // Si el WebView té historial, tornem a la pantalla d'abans (el router
-        // escriu amb pushState i escolta popstate). Si no, deixem fer el
-        // sistema: a l'activitat arrel, des d'Android 12 envia l'app al fons,
-        // i abans (minSdk 24) l'acaba.
-        // El callback sempre està actiu: a l'arrel no hi ha la vista prèvia del
-        // gest predictiu de «tornar a l'inici», però l'Arrere fa el mateix.
-        // Si un dia s'instal·la @capacitor/app, cal llevar este callback: com
-        // que es registra després dels connectors, passaria per davant del seu
-        // backButton.
-        getOnBackPressedDispatcher()
-            .addCallback(
-                this,
-                new OnBackPressedCallback(true) {
-                    @Override
-                    public void handleOnBackPressed() {
-                        WebView webView = bridge != null ? bridge.getWebView() : null;
-                        if (webView != null && webView.canGoBack()) {
-                            webView.goBack();
-                            return;
-                        }
-                        setEnabled(false);
-                        getOnBackPressedDispatcher().onBackPressed();
-                        setEnabled(true);
-                    }
-                }
-            );
     }
 }

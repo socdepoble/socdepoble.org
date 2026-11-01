@@ -18,6 +18,7 @@
 import { readFileSync, existsSync, readdirSync, statSync } from 'node:fs';
 import path from 'node:path';
 import { findDistSecretsWeb, findKnownSecretValues, secretsPrivatsDeLEntorn } from '../lib/dist-secrets.mjs';
+import { comprovaTaulaRutes, TAULA_RUTES } from '../lib/taula-rutes-seo.mjs';
 
 const ROOT = (() => {
   const i = process.argv.indexOf('--root');
@@ -59,9 +60,11 @@ function arbre(rel, filtre) {
    ══════════════════════════════════════════════════════════════════ */
 {
   const LLEI = 'L1 · Interruptor mort';
-  const backend = llig('src/data/supabaseBackend.js');
+  // B1.3-c (261101): supabaseBackend.js ja no existix; el mode es resol a runtime.js.
+  const FITXER = 'src/data/supabase/runtime.js';
+  const backend = llig(FITXER);
   if (!backend) {
-    avisa(LLEI, 'src/data/supabaseBackend.js', 'Fitxer absent: no es pot verificar.');
+    avisa(LLEI, FITXER, 'Fitxer absent: no es pot verificar.');
   } else {
     let trobat = false;
     linies(backend).forEach((l, i) => {
@@ -69,13 +72,13 @@ function arbre(rel, filtre) {
       const m = l.match(/^\s*const\s+([A-Z_][A-Z0-9_]*)\s*=\s*(true|false)\s*;/);
       if (m && new RegExp(`${m[1]}\\s*\\?`).test(backend)) {
         trobat = true;
-        falla(LLEI, 'src/data/supabaseBackend.js', i + 1,
+        falla(LLEI, FITXER, i + 1,
           `\`${m[1]} = ${m[2]}\` plega el mode en temps de build. Tot el camí remot queda mort.`);
       }
     });
     if (/TODO|FIXME|HACK/.test(backend)) {
       const n = linies(backend).findIndex((l) => /TODO|FIXME|HACK/.test(l));
-      falla(LLEI, 'src/data/supabaseBackend.js', n + 1,
+      falla(LLEI, FITXER, n + 1,
         'TODO/FIXME dins la capa de dades: deute tècnic sense data de caducitat.');
     }
     if (!trobat) passa(LLEI);
@@ -88,13 +91,20 @@ function arbre(rel, filtre) {
    ══════════════════════════════════════════════════════════════════ */
 {
   const LLEI = 'L2 · dataMode validat';
-  const backend = llig('src/data/supabaseBackend.js');
-  if (backend) {
-    const teNormalitzador =
-      /normalizeDataMode|DATA_MODES\s*=\s*(new Set|\[)/.test(backend);
-    if (!teNormalitzador) {
-      falla(LLEI, 'src/data/supabaseBackend.js', 0,
+  const FITXER = 'src/data/supabase/runtime.js';
+  const backend = llig(FITXER);
+  if (!backend) {
+    avisa(LLEI, FITXER, 'Fitxer absent: no es pot verificar.');
+  } else {
+    // B1.3-c (261101): es mira on cau un mode desconegut, no només si el nom existix.
+    const ls = linies(backend);
+    const n = ls.findIndex((l) => l.includes('normalizeDataMode =') || l.includes('function normalizeDataMode'));
+    if (n < 0) {
+      falla(LLEI, FITXER, 0,
         'No hi ha `normalizeDataMode()` ni llista blanca de modes. Un `dataMode` desconegut cau al camí remot per defecte.');
+    } else if (ls[n].includes(": 'remote'")) {
+      avisa(LLEI, `${FITXER}:${n + 1}`,
+        "Hi ha llista blanca, però un mode desconegut cau a 'remote', el contrari del que diu la llei. Decisió del Mestre: reescriure la llei o canviar el codi.");
     } else passa(LLEI);
   }
 }
@@ -326,10 +336,13 @@ function arbre(rel, filtre) {
       falla(LLEI, rel, Number(ln),
         `\`${nom}()\` invocada sense guarda i sense definició dins del plugin → fatal si l'ordre de càrrega canvia.`);
     }
-    if (!existsSync(R('wordpress-plugin/dist/seo-routes.json'))) {
+    /* B1 · 261101: la taula de rutes és artefacte de build (dist/ a .gitignore) i des de WP-06 no
+       viatja als paquets. Dins del pre-commit es prova el productor en sec (tooling/lib/taula-rutes-seo.mjs). */
+    const taula = comprovaTaulaRutes({ arrel: ROOT });
+    if (taula.estat === 'avis') avisa(LLEI, TAULA_RUTES, taula.missatge);
+    else if (taula.estat === 'falla') {
       net = false;
-      falla(LLEI, 'wordpress-plugin/dist/seo-routes.json', 0,
-        'Manifest de rutes absent: sdp_resolve_request() retornarà 404 en TOTES les rutes React.');
+      falla(LLEI, TAULA_RUTES, 0, taula.missatge);
     }
     if (net) passa(LLEI);
   }

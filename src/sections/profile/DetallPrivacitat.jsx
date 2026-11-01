@@ -8,7 +8,6 @@ import {
   teCapacitat, exportaLesMeuesDades, estatBaixa, demanaBaixa, cancelaBaixa,
   estatConsentiment, registraConsentiment, revocaConsentiment,
 } from '../../data/backendPort.js';
-import { readableBackendError } from '../onboarding/onboardingModel.js';
 import { BlocPerfil as Bloc } from './BlocPerfil.jsx';
 import { rutaDePerfil } from '../../config/navigation.js';
 import { pobleDeFitxa } from './fitxaDePerfil.js';
@@ -251,10 +250,11 @@ export function rescataFocus(desti) {
   return true;
 }
 
-const missatgeDe = (error, perDefecte) => {
-  const text = readableBackendError(error);
-  return text && text !== 'S’ha produït un error inesperat.' ? text : perDefecte;
-};
+/* T11-02 (Gemini, Tall 11; marató 261101_2143) · Un error del compte o del
+   consentiment es diu amb el genèric traduït de cada acció, mai amb el text del
+   servidor: el `message` de PostgREST o de GoTrue ve en valencià (o en anglés,
+   «Failed to fetch») i és vocabulari del proveïdor (doctrina d'errorsBackend.js).
+   Abans, missatgeDe() el pintava tal qual i comparava amb un literal fix. */
 
 /** El `config` canvia d'identitat a cada render del pare: el llegim d'un ref. */
 function useConfigActual(config) {
@@ -373,7 +373,7 @@ function BlocDades({ config }) {
         setEstat({ fase: 'repos' });
         return;
       }
-      setEstat({ fase: 'error', text: missatgeDe(e, tradueix(t, TEXTOS_DADES.error)) });
+      setEstat({ fase: 'error', text: tradueix(t, TEXTOS_DADES.error) });
     } finally {
       deslliga();
       if (vida.peticio === peticio) {
@@ -438,8 +438,8 @@ function BlocConsentiment({ config }) {
       const resposta = await estatConsentiment(configRef.current);
       setEstat(resposta || null);
       setError('');
-    } catch (e) {
-      setError(missatgeDe(e, tradueix(tRef.current, TEXTOS_CONSENTIMENT.errorLectura)));
+    } catch {
+      setError(tradueix(tRef.current, TEXTOS_CONSENTIMENT.errorLectura));
     } finally {
       setCarregant(false);
     }
@@ -456,8 +456,8 @@ function BlocConsentiment({ config }) {
       setConfirmaRetirada(false);
       await llig();
       fet = true;
-    } catch (e) {
-      setError(missatgeDe(e, perDefecte));
+    } catch {
+      setError(perDefecte);
     } finally {
       setTreballant(false);
       /* P1-15 · El botó, desactivat mentre treballava (o ja fora del DOM), pot
@@ -572,7 +572,7 @@ function BlocBaixa({ config, onSessioTancada, onPerfilCanviat }) {
     Promise.resolve()
       .then(() => estatBaixa(configRef.current))
       .then((resposta) => { if (viu) setBaixa(resposta || { demanada: false }); })
-      .catch((e) => { if (viu) setError(missatgeDe(e, tradueix(tRef.current, TEXTOS_BAIXA.errorLectura))); })
+      .catch(() => { if (viu) setError(tradueix(tRef.current, TEXTOS_BAIXA.errorLectura)); })
       .finally(() => { if (viu) setCarregant(false); });
     return () => { viu = false; };
   }, [configRef, tRef]);
@@ -594,8 +594,8 @@ function BlocBaixa({ config, onSessioTancada, onPerfilCanviat }) {
          sessions: res d'esta pantalla continua sent vàlid. */
       setDialeg(false);
       onSessioTancada?.();
-    } catch (e) {
-      setError(missatgeDe(e, tradueix(t, TEXTOS_BAIXA.errorDemanda)));
+    } catch {
+      setError(tradueix(t, TEXTOS_BAIXA.errorDemanda));
       setRescat({ fet: false });
     } finally {
       setTreballant(false);
@@ -611,8 +611,8 @@ function BlocBaixa({ config, onSessioTancada, onPerfilCanviat }) {
       setAvis(tradueix(t, TEXTOS_BAIXA.cancelada));
       onPerfilCanviat?.();
       setRescat({ fet: true });
-    } catch (e) {
-      setError(missatgeDe(e, tradueix(t, TEXTOS_BAIXA.errorCancela)));
+    } catch {
+      setError(tradueix(t, TEXTOS_BAIXA.errorCancela));
       setRescat({ fet: false });
     } finally {
       setTreballant(false);

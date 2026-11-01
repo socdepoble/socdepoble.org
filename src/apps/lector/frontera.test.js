@@ -62,10 +62,11 @@ function resol(fitxer, especificador) {
 describe('el que pot importar', () => {
   test('el cens de producció no és buit (la porta mira de veres)', () => {
     expect(PRODUCCIO.length).toBeGreaterThan(20);
-    /* SN (261003) · personals.js: les fonts que afig la persona, pendents del connector. */
+    /* SN (261003) · personals.js: les fonts que afig la persona, pendents del connector.
+       Actualitzada a posta (B6, IDEA-30; marató 261101_2143) · germanes.js: les notícies germanes. */
     expect(NUCLI.map((f) => f.replace(`${APP}/nucli/`, ''))).toEqual([
-      'analitzador.js', 'dates.js', 'entitats.js', 'estat.js', 'html.js', 'ids.js', 'index.js', 'model.js', 'noticies.js',
-      'personals.js', 'urls.js', 'xml.js'
+      'analitzador.js', 'dates.js', 'entitats.js', 'estat.js', 'germanes.js', 'html.js', 'ids.js', 'index.js', 'model.js',
+      'noticies.js', 'personals.js', 'urls.js', 'xml.js'
     ]);
     expect(LLAVOR_XML).toHaveLength(5);
   });

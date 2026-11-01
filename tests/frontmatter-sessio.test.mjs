@@ -39,7 +39,7 @@ const EIXIDA = tractor();
 const OBJECTIUS = new Set(modificats());
 
 function trobades() {
-  const dades = JSON.parse(EIXIDA.stdout.slice(EIXIDA.stdout.indexOf('{')));
+  const dades = JSON.parse(EIXIDA.stdout.slice(EIXIDA.stdout.indexOf('{'), EIXIDA.stdout.lastIndexOf('}') + 1));
   const llista = [];
   for (const [llei, items] of Object.entries(dades.fallades)) {
     for (const item of items) {
@@ -58,7 +58,7 @@ test('el cens de modificats és el mateix que vigila la zero tolerància del tra
 });
 
 test('frontmatter dels documents de la Wiki modificats (lectura)', () => {
-  const { compte, max } = JSON.parse(EIXIDA.stdout.slice(EIXIDA.stdout.indexOf('{')));
+  const { compte, max } = JSON.parse(EIXIDA.stdout.slice(EIXIDA.stdout.indexOf('{'), EIXIDA.stdout.lastIndexOf('}') + 1));
   // Sense accés directe al tractor, esta línia és l'única manera de vore si el deute global puja.
   const recompte = Object.keys(compte).map((llei) => `${llei} ${compte[llei]}/${max[llei] ?? 0}`).join(' · ');
   const llista = trobades().map((t) => t.text);

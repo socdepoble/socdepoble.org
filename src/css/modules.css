@@ -3633,6 +3633,20 @@ details[open] summary.accordion-header svg:last-child {
      tria (.sdp-xat-fila__tria, fill directe de la fila) també queda a 16 de
      l'avatar (abans 12). Es desfà esborrant esta regla. */
   .sdp-xat-fila:not(.sdp-xat-fila--senzilla) { gap: var(--sdp-space-4); }
+  /* T11-01 (Gemini, Tall 11; marató 261101_2143, ordre del Mestre) · En una
+     arrel estreta (≤400px: el mòbil de 360 i de 375) el buit entre l'avatar i
+     el text torna a 12 (--sdp-space-3): el títol i l'avanç recuperen 4px, i 8
+     en mode de selecció. Per damunt de 400px, el 16 de P1-67. El tall
+     (inclusiu) és el de layout.css (mobile-nav, @container sdp-arrel); sense
+     @container, @media. Es desfà esborrant estes dues regles. */
+  @container sdp-arrel (max-width: 400px) {
+    .sdp-xat-fila:not(.sdp-xat-fila--senzilla) { gap: var(--sdp-space-3); }
+  }
+  @supports not (container-type: inline-size) {
+    @media (max-width: 400px) {
+      .sdp-xat-fila:not(.sdp-xat-fila--senzilla) { gap: var(--sdp-space-3); }
+    }
+  }
   /* P1-36 · L'avatar gran de la fila: la cara, també la quadrada d'una
      comunitat dins de les targetes apilades (que la seguixen), i la icona
      d'un grup o d'un canal, amb el dibuix en proporció (24 de 48, 40 de 76).

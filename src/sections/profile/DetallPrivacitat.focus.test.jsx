@@ -53,6 +53,14 @@ const ACCEPTAT_V2 = { ...CAL_V2, calReconsentir: false,
   consentiments: [{ tipus: 'rgpd_acepta', accio: 'atorga', versio: 'v2', al: '2026-10-01T10:00:00Z' }] };
 const deferred = () => { let resolve; const promise = new Promise((s) => { resolve = s; }); return { promise, resolve }; };
 const seccio = (titol) => screen.getByRole('heading', { level: 2, name: titol }).closest('section');
+/* T11-02 (Gemini, Tall 11; marató 261101_2143) · L'error es diu amb el genèric de cada acció, mai amb el
+   text del port: el doble rebutja amb «Sense xarxa», i la vista no l'ha de pintar. */
+const GENERIC = Object.freeze({
+  registre: 'No s’ha pogut registrar el consentiment.',
+  retirada: 'No s’ha pogut retirar el consentiment.',
+  cancela: 'No s’ha pogut cancel·lar la baixa.',
+  demanda: 'No s’ha pogut demanar la baixa.',
+});
 
 beforeEach(() => {
   m.caps = new Set();
@@ -121,7 +129,7 @@ describe('BlocConsentiment', () => {
     const accepta = await screen.findByRole('button', { name: 'Acceptar la versió v2' });
     accepta.focus();
     await act(async () => { fireEvent.click(accepta); });
-    expect(screen.getByRole('alert').textContent).toBe('Sense xarxa');
+    expect(screen.getByRole('alert').textContent).toBe(GENERIC.registre);
     expect(accepta.isConnected).toBe(true);
     expect(document.activeElement).toBe(accepta);
   });
@@ -141,11 +149,11 @@ describe('BlocConsentiment', () => {
     perdElFocus();
     await act(async () => { falla(new Error('Sense xarxa')); });
     const alerta = screen.getByRole('alert');
-    expect(alerta.textContent).toBe('Sense xarxa');
+    expect(alerta.textContent).toBe(GENERIC.registre);
     expect(document.activeElement).not.toBe(linia);
     expect(document.activeElement.closest('dialog')).toBe(null);
     expect(alerta.contains(document.activeElement)).toBe(true);
-    expect(document.activeElement.textContent).toBe('Sense xarxa');
+    expect(document.activeElement.textContent).toBe(GENERIC.registre);
     expect(document.activeElement.tabIndex).toBe(-1);
   });
 
@@ -160,7 +168,7 @@ describe('BlocConsentiment', () => {
     const confirma = within(dialeg).getByRole('button', { name: 'Retirar-lo' });
     confirma.focus();
     await act(async () => { fireEvent.click(confirma); });
-    expect(within(dialeg).getByRole('alert').textContent).toBe('Sense xarxa');
+    expect(within(dialeg).getByRole('alert').textContent).toBe(GENERIC.retirada);
     expect(dialeg.contains(document.activeElement)).toBe(true);
   });
 
@@ -180,11 +188,11 @@ describe('BlocConsentiment', () => {
     await act(async () => { falla(new Error('Sense xarxa')); });
     expect(dialeg.hasAttribute('open')).toBe(true);
     const alerta = within(dialeg).getByRole('alert');
-    expect(alerta.textContent).toBe('Sense xarxa');
+    expect(alerta.textContent).toBe(GENERIC.retirada);
     expect(document.activeElement).not.toBe(linia);
     expect(document.activeElement).not.toBe(document.body);
     expect(alerta.contains(document.activeElement)).toBe(true);
-    expect(document.activeElement.textContent).toBe('Sense xarxa');
+    expect(document.activeElement.textContent).toBe(GENERIC.retirada);
   });
 
   test('Escape al diàleg de retirada: es tanca i el focus torna a «Retirar el consentiment»', async () => {
@@ -227,7 +235,7 @@ describe('BlocBaixa', () => {
     const boto = await screen.findByRole('button', { name: 'Cancel·lar la baixa' });
     boto.focus();
     await act(async () => { fireEvent.click(boto); });
-    expect(screen.getByRole('alert').textContent).toBe('Sense xarxa');
+    expect(screen.getByRole('alert').textContent).toBe(GENERIC.cancela);
     expect(document.activeElement).toBe(boto);
   });
 
@@ -244,10 +252,10 @@ describe('BlocBaixa', () => {
     perdElFocus();
     await act(async () => { falla(new Error('Sense xarxa')); });
     const alerta = screen.getByRole('alert');
-    expect(alerta.textContent).toBe('Sense xarxa');
+    expect(alerta.textContent).toBe(GENERIC.cancela);
     expect(alerta.contains(document.activeElement)).toBe(true);
     expect(document.activeElement.closest('dialog')).toBe(null);
-    expect(document.activeElement.textContent).toBe('Sense xarxa');
+    expect(document.activeElement.textContent).toBe(GENERIC.cancela);
     // La baixa continua pendent: el botó hi és, i la persona hi pot tornar.
     expect(boto.isConnected).toBe(true);
     expect(boto.disabled).toBe(false);
@@ -268,9 +276,9 @@ describe('BlocBaixa', () => {
     await act(async () => { falla(new Error('Sense xarxa')); });
     expect(dialeg.hasAttribute('open')).toBe(true);
     const alerta = within(dialeg).getByRole('alert');
-    expect(alerta.textContent).toBe('Sense xarxa');
+    expect(alerta.textContent).toBe(GENERIC.demanda);
     expect(alerta.contains(document.activeElement)).toBe(true);
-    expect(document.activeElement.textContent).toBe('Sense xarxa');
+    expect(document.activeElement.textContent).toBe(GENERIC.demanda);
     expect(m.navigate).not.toHaveBeenCalled();
   });
 });

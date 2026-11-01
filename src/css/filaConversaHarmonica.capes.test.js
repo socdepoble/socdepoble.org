@@ -9,6 +9,12 @@
    reben cap gap propi; l'alçada (96) i l'avatar (76) no canvien. En mode de
    selecció, el cercle de tria també queda a 16 de l'avatar (abans 12): és un
    fill directe de la fila, sense marge propi (Gauntlet UI-01).
+   T11-01 (Gemini, Tall 11; marató 261101_2143, ordre del Mestre) · En una
+   arrel estreta (≤400px) el buit torna a 12: una regla dins de
+   @container sdp-arrel (max-width: 400px) i, per als navegadors sense
+   @container (Chrome i Firefox 100), la mateixa dins de @supports not +
+   @media (max-width: 400px), el patró de layout.css (mobile-nav). El tall és
+   inclusiu (a 400px, 12); per damunt de 400px, el 16 de P1-67.
    jsdom no resol la cascada: es comproven les regles escrites, amb la capa
    que les embolcalla, l'ordre i l'especificitat (el parser és el de
    menusXatTipografia.capes.test.js). La guarda es prova també contra el full
@@ -58,8 +64,14 @@ const TOKENS = senseComentaris(llig('src/css/tokens.css'));
 const token = (nom) => TOKENS.match(new RegExp(`${nom}\\s*:\\s*([^;]+);`))?.[1].trim();
 
 const TARGETA = '.sdp-xat-fila:not(.sdp-xat-fila--senzilla)';
+const CAPA = JSON.stringify(['@layer components']);
+/* T11-01 · Els dos contextos exactes de la regla de 12 en una arrel estreta (ordenats). */
+const ESTRETES = [
+  ['@layer components', '@container sdp-arrel (max-width: 400px)'],
+  ['@layer components', '@supports not (container-type: inline-size)', '@media (max-width: 400px)']
+].map((context) => JSON.stringify(context)).sort();
 
-/** Els problemes de P1-67 d'un full; [] vol dir que és la decisió exacta. */
+/** Els problemes de P1-67 i T11-01 d'un full; [] vol dir que és la decisió exacta. */
 function problemesP167(css) {
   const totes = regles(css);
   const problemes = [];
@@ -69,7 +81,9 @@ function problemesP167(css) {
   if (compartida && (valorDe(compartida, 'gap') !== 'var(--sdp-space-3)' || valorDe(compartida, 'padding') !== 'var(--sdp-space-2) var(--sdp-space-4)')) {
     problemes.push(`la compartida ha canviat: ${compartida.cos}`);
   }
-  const propies = totes.filter((r) => r.selectors.includes(TARGETA) && valorDe(r, 'gap'));
+  const ambGap = totes.filter((r) => r.selectors.includes(TARGETA) && valorDe(r, 'gap'));
+  // La de 16 és l'única de la targeta que només té la capa al voltant.
+  const propies = ambGap.filter((r) => JSON.stringify(r.context) === CAPA);
   if (propies.length !== 1) problemes.push(`regles de gap de la targeta: ${propies.length}`);
   const [propia] = propies;
   if (propia) {
@@ -78,6 +92,16 @@ function problemesP167(css) {
     if (declaracions(propia.cos).length !== 1) problemes.push(`la regla de la targeta fa més coses: ${propia.cos}`);
     if (JSON.stringify(propia.context) !== '["@layer components"]') problemes.push(`capa: ${JSON.stringify(propia.context)}`);
     if (compartida && (propia.ordre < compartida.ordre || pes(TARGETA) <= pes('.sdp-xat-fila'))) problemes.push('no guanya la compartida');
+  }
+  // T11-01 · En una arrel estreta (≤400px), 12: amb @container i, sense, amb @media.
+  // Cada una, un sol selector i una sola declaració, i després de la de 16
+  // (mateixa especificitat i mateixa capa: guanya per ordre).
+  const estretes = ambGap.filter((r) => JSON.stringify(r.context) !== CAPA);
+  const contextos = estretes.map((r) => JSON.stringify(r.context)).sort();
+  if (JSON.stringify(contextos) !== JSON.stringify(ESTRETES)) problemes.push(`contextos estrets: ${contextos.join(' | ') || 'cap'}`);
+  for (const r of estretes) {
+    if (r.selectors.length !== 1 || valorDe(r, 'gap') !== 'var(--sdp-space-3)' || declaracions(r.cos).length !== 1) problemes.push(`regla estreta: ${r.selectors.join(', ')} { ${r.cos} }`);
+    if (propia && r.ordre < propia.ordre) problemes.push(`la regla estreta va abans de la de 16: ${JSON.stringify(r.context)}`);
   }
   // Ni l'opció dels Ajustos ni la fila senzilla reben cap gap propi.
   const alienes = totes.filter((r) => valorDe(r, 'gap') && r.selectors.some((s) => /^\.sdp-xat-opcio(?![\w-])|^\.sdp-xat-fila--senzilla$|^\.sdp-xat-fila\.sdp-xat-fila--senzilla$/.test(s)) && !r.selectors.includes('.sdp-xat-fila'));
@@ -108,7 +132,7 @@ describe('P1-67 · el ritme 16 | 76 | 16 | text | 16 de la targeta de conversa',
     expect(2 * vertical + avatar).toBeLessThanOrEqual(fila);
   });
 
-  test('en mode de selecció, el cercle de tria també queda a 16 de l’avatar (abans 12): fill directe i sense marge propi', () => {
+  test('en mode de selecció, el cercle de tria queda al gap de la targeta (16; 12 en una arrel ≤400px): fill directe i sense marge propi', () => {
     // Fill directe de la fila, just davant de l'avatar, a les dues files que es poden triar.
     const fila = llig('src/sections/xat/components/FilaConversa.jsx');
     expect(fila.match(/\{seleccio \? <MarcaTria triada=\{seleccio\.triada\} \/> : null\}\s*<Avatar(?:Fil|Comunitat) /g)).toHaveLength(2);
@@ -130,8 +154,17 @@ describe('P1-67 · el ritme 16 | 76 | 16 | text | 16 de la targeta de conversa',
 
 describe('la guarda mossega (mutacions)', () => {
   const REGLA = '.sdp-xat-fila:not(.sdp-xat-fila--senzilla) { gap: var(--sdp-space-4); }';
+  const ESTRETA = '.sdp-xat-fila:not(.sdp-xat-fila--senzilla) { gap: var(--sdp-space-3); }';
+  const BLOC_CONTAINER = `@container sdp-arrel (max-width: 400px) {\n    ${ESTRETA}\n  }\n`;
+  const BLOC_SUPORTS = `@supports not (container-type: inline-size) {\n    @media (max-width: 400px) {\n      ${ESTRETA}\n    }\n  }\n`;
   test('el full ha de contindre la regla, una sola vegada', () => {
     expect(MODULES.split(REGLA)).toHaveLength(2);
+  });
+  test('T11-01 · el full conté els dos blocs estrets, una sola vegada cadascun i just després de la regla de 16', () => {
+    expect(MODULES.split(BLOC_CONTAINER)).toHaveLength(2);
+    expect(MODULES.split(BLOC_SUPORTS)).toHaveLength(2);
+    expect(MODULES.indexOf(REGLA)).toBeLessThan(MODULES.indexOf(BLOC_CONTAINER));
+    expect(MODULES.indexOf(BLOC_CONTAINER)).toBeLessThan(MODULES.indexOf(BLOC_SUPORTS));
   });
   test.each([
     ['el full d’abans (sense la regla)', () => MODULES.replace(REGLA, '')],
@@ -141,7 +174,20 @@ describe('la guarda mossega (mutacions)', () => {
     ['la regla compartida canviada a 16', () => MODULES.replace(/(\.sdp-xat-fila,\s*\.sdp-xat-opcio \{[^}]*?gap: )var\(--sdp-space-3\)/, '$1var(--sdp-space-4)')],
     ['un gap propi a l’opció dels Ajustos', () => MODULES.replace(REGLA, `${REGLA}\n  .sdp-xat-opcio { gap: var(--sdp-space-4); }`)],
     ['un gap propi a la fila senzilla', () => MODULES.replace(REGLA, `${REGLA}\n  .sdp-xat-fila--senzilla { gap: var(--sdp-space-4); }`)],
-    ['la regla fa també el coixí', () => MODULES.replace(REGLA, REGLA.replace('gap: var(--sdp-space-4);', 'gap: var(--sdp-space-4); padding: 0;'))]
+    ['la regla fa també el coixí', () => MODULES.replace(REGLA, REGLA.replace('gap: var(--sdp-space-4);', 'gap: var(--sdp-space-4); padding: 0;'))],
+    // T11-01 · la regla de l'arrel estreta
+    ['sense la regla estreta (@container)', () => MODULES.replace(BLOC_CONTAINER, '')],
+    ['sense la reserva @media (navegadors sense @container)', () => MODULES.replace(BLOC_SUPORTS, '')],
+    ['la regla estreta a 16', () => MODULES.replace(BLOC_CONTAINER, BLOC_CONTAINER.replace('--sdp-space-3', '--sdp-space-4'))],
+    ['la reserva @media a 16', () => MODULES.replace(BLOC_SUPORTS, BLOC_SUPORTS.replace('--sdp-space-3', '--sdp-space-4'))],
+    ['la regla estreta en px (no és un token)', () => MODULES.replace(BLOC_CONTAINER, BLOC_CONTAINER.replace('var(--sdp-space-3)', '12px'))],
+    ['el tall a 480px', () => MODULES.replace(BLOC_CONTAINER, BLOC_CONTAINER.replace('400px', '480px'))],
+    ['la reserva amb un altre tall (480px)', () => MODULES.replace(BLOC_SUPORTS, BLOC_SUPORTS.replace('400px', '480px'))],
+    ['la regla estreta sobre la finestra (@media en lloc de @container)', () => MODULES.replace(BLOC_CONTAINER, BLOC_CONTAINER.replace('@container sdp-arrel', '@media'))],
+    ['la regla estreta abans de la de 16', () => MODULES.replace(BLOC_CONTAINER, '').replace(REGLA, `${BLOC_CONTAINER}  ${REGLA}`)],
+    ['la regla estreta fora de @layer components', () => `${MODULES.replace(BLOC_CONTAINER, '')}\n${BLOC_CONTAINER}`],
+    ['la regla estreta comparteix selector', () => MODULES.replace(BLOC_CONTAINER, BLOC_CONTAINER.replace(ESTRETA, ESTRETA.replace(' {', ', .sdp-xat-opcio {')))],
+    ['la regla estreta fa també el coixí', () => MODULES.replace(BLOC_CONTAINER, BLOC_CONTAINER.replace('gap: var(--sdp-space-3);', 'gap: var(--sdp-space-3); padding: 0;'))]
   ])('%s → la guarda ho veu', (_nom, mutacio) => {
     const mutat = mutacio();
     expect(mutat).not.toBe(MODULES);

@@ -3,11 +3,18 @@
  * d'API (RUNBOOK_BOTIGUES_IA.txt, A6-A8). 261003.
  *
  * Instal·lat el 261019 (Fase C) des de nous/botigues/puja-ios.mjs.txt del laboratori
- * 261003_1330_empaquetat_mobil_claude. Proves: tests/botigues.test.mjs.
+ * 261003_1330_empaquetat_mobil_claude. Proves: tests/botigues.test.mjs i, per a l'IPA que es puja
+ * (PC155-03, marató 261101_2143), tests/botigues.ipa.test.js.
  *
  *   node scripts/botigues/puja-ios.mjs --versio 1.0.0 --build 7                    en sec: comprova i mostra el pla
  *   node scripts/botigues/puja-ios.mjs --versio 1.0.0 --build 7 --compila          arxiva, exporta i verifica; NO puja
  *   node scripts/botigues/puja-ios.mjs --versio 1.0.0 --build 7 --confirma=1.0.0+7 valida i PUJA l'IPA ja exportat
+ *
+ * PC155-03 · El que es verifica és el que es puja. A export/ hi ha d'haver un sol IPA; es copia
+ * en una carpeta privada nova (verifica-ipa-*, dins de la carpeta del build) i el seu sha256 es
+ * fixa. La còpia s'obri amb ditto i dins d'ella es miren el segell, la signatura (codesign
+ * --verify, i -dv per a l'equip) i l'Info.plist. altool valida i puja eixa mateixa còpia, i el
+ * sha256 es torna a mirar després de verificar, de validar i de pujar. El rebut diu eixe sha256.
  *
  * Per defecte no fa res: comprova (preflight), verifica que les eines tenen les opcions que farà
  * servir i mostra el pla amb cada valor del fitxer d'entorn canviat per <NOM>. --compila fa A6 i
@@ -80,14 +87,60 @@ export function planIos({ arrel, valors, versio, build, projecte }) {
   };
 }
 
-/** El primer .ipa de la carpeta d'exportació, o null. */
-function ipaDe(exportacio) {
-  if (!fs.existsSync(exportacio)) return null;
-  const ipa = fs.readdirSync(exportacio).find((nom) => nom.endsWith('.ipa'));
-  return ipa ? path.join(exportacio, ipa) : null;
+/**
+ * PC155-03 · L'únic IPA de la carpeta d'exportació: { ipa, problema }. Sense carpeta o sense cap
+ * IPA → { ipa: null, problema: null }. Dos o més (un de vell i un de nou) o un que no és un fitxer
+ * regular són un problema, i no es tria cap. L'extensió es mira sense caixa (APFS no la distingix).
+ */
+export function ipaUnicDe(exportacio) {
+  let noms;
+  try { noms = fs.readdirSync(exportacio); } catch { return { ipa: null, problema: null }; }
+  const ipas = noms.filter((nom) => nom.toLowerCase().endsWith('.ipa')).sort();
+  if (ipas.length === 0) return { ipa: null, problema: null };
+  if (ipas.length > 1) {
+    return { ipa: null, problema: `hi ha ${ipas.length} IPA a la carpeta d'exportació (${ipas.join(', ')}): n'hi ha d'haver un, el d'este arxiu` };
+  }
+  const ipa = path.join(exportacio, ipas[0]);
+  let regular = false;
+  try { regular = fs.lstatSync(ipa).isFile(); } catch { /* ha desaparegut */ }
+  return regular ? { ipa, problema: null } : { ipa: null, problema: `${ipas[0]} no és un fitxer regular` };
 }
 
-/** Un valor de l'Info.plist de l'app arxivada (plutil, de macOS). */
+/**
+ * PC155-03 · Obri l'IPA amb ditto (de macOS) a `desti` i torna { app, problema }: l'única
+ * Payload/*.app, que ha de ser una carpeta de veres (no un enllaç) de dins de `desti`.
+ * Symbols/ i SwiftSupport/ de l'IPA no compten. ditto deixa dins de `desti` les entrades amb «..»
+ * [VERIFICAT 261101 en este Mac], però conserva els enllaços: per això es miren ací i a fitxerDeLApp.
+ */
+export async function obriIpa(ipa, desti, { valors, arrel }) {
+  if ((await executa('ditto', ['-x', '-k', ipa, desti], { valors, arrel, mostra: false })).codi !== 0) {
+    return { app: null, problema: 'ditto no ha pogut obrir l\'IPA' };
+  }
+  let apps = [];
+  try { apps = fs.readdirSync(path.join(desti, 'Payload')).filter((nom) => nom.endsWith('.app')); } catch { /* sense Payload/ */ }
+  if (apps.length !== 1) return { app: null, problema: `l'IPA porta ${apps.length} apps a Payload/: n'ha de portar una` };
+  const app = path.join(desti, 'Payload', apps[0]);
+  let carpeta = false;
+  try { carpeta = fs.lstatSync(app).isDirectory() && fs.realpathSync(app).startsWith(fs.realpathSync(desti) + path.sep); } catch { /* no hi és */ }
+  return carpeta ? { app, problema: null } : { app: null, problema: `Payload/${apps[0]} no és una carpeta de l'IPA` };
+}
+
+/**
+ * PC155-03 · Un fitxer de dins de l'app de l'IPA: { cami, problema }. Si no hi és, tots dos null.
+ * Un enllaç (o una carpeta enllaçada) que isca de l'app és un problema: un segell.json enllaçat al
+ * dist-natiu/ del repositori faria passar per bo un IPA que no el porta.
+ */
+export function fitxerDeLApp(app, ...peces) {
+  const cami = path.join(app, ...peces);
+  let fitxa;
+  try { fitxa = fs.lstatSync(cami); } catch { return { cami: null, problema: null }; }
+  let dins = false;
+  try { dins = fs.realpathSync(cami).startsWith(fs.realpathSync(app) + path.sep); } catch { /* enllaç trencat */ }
+  if (!fitxa.isFile() || !dins) return { cami: null, problema: `${peces.join('/')} de l'app de l'IPA no és un fitxer regular de dins de l'app` };
+  return { cami, problema: null };
+}
+
+/** Un valor de l'Info.plist d'una app (plutil, de macOS). */
 function delInfoPlist(app, clau, { valors, arrel }) {
   return executa('plutil', ['-extract', clau, 'raw', '-o', '-', path.join(app, 'Info.plist')], { valors, arrel, mostra: false })
     .then(({ codi, crua }) => (codi === 0 ? crua.trim() : null));
@@ -96,8 +149,8 @@ function delInfoPlist(app, clau, { valors, arrel }) {
 /* BOT-A4 (261025) · public/ és una carpeta de recursos de l'app (ios/App/App.xcodeproj/project.pbxproj,
    «public in Resources», lastKnownFileType = folder): el segell que copia cap sync hi és a
    App.app/public/segell.json [VERIFICAT 261025 en l'arxiu de 261024: App.app/public/index.html].
-   Si no és el de dist-natiu/, l'arxiu és d'un build d'abans i no es puja. L'IPA s'exporta d'este
-   arxiu, com l'equip i la versió que es comproven ací. */
+   Si no és el de dist-natiu/, l'arxiu és d'un build d'abans i no es puja. PC155-03: el mateix
+   segell, l'equip i la versió es comproven també dins de l'app de l'IPA que es puja. */
 export const SEGELL_DE_L_APP = Object.freeze(['public', 'segell.json']);
 
 /** Per què l'app arxivada no ix del dist-natiu/ que ha contrastat el preflight, o null si en ix. */
@@ -108,11 +161,15 @@ export function problemaDeLApp(arrel, app) {
 }
 
 /* BOT-A4 (261025) · El commit és el del segell de dist-natiu/ (el que el preflight ha contrastat
-   amb HEAD), no el HEAD d'ara; main només imprimix el rebut quan l'app arxivada porta eixe segell. */
-export function rebut({ segell, versio, build, ipa, pujat }) {
+   amb HEAD), no el HEAD d'ara; main només imprimix el rebut quan l'app arxivada i la de l'IPA
+   porten eixe segell. */
+export function rebut({ segell, versio, build, ipa, sha256 = null, pujat }) {
+  /* PC155-03 · main passa el sha256 fixat abans de verificar: recalcular-lo ací acreditaria uns
+     octets que potser no són els verificats ni els pujats. Sense, es calcula com abans. */
+  const empremta = sha256 ?? (ipa ? sha256DeFitxer(ipa) : null);
   return ['', `REBUT (per a ${REBUTS}/AAMMDD_HHMM_pujada_ios.txt; cap secret, cap Key ID, cap adreça):`,
     `  commit: ${segell?.commit ?? 'desconegut'} (el de ${SEGELL.join('/')}, que porta l'app arxivada)`, `  versio: ${versio}  build: ${build}`,
-    `  sha256 de l'IPA: ${ipa ? sha256DeFitxer(ipa) : 'sense IPA'}`, `  hora: ${new Date().toISOString()}`,
+    `  IPA: ${ipa ? path.basename(ipa) : 'sense IPA'}`, `  sha256 de l'IPA: ${empremta ?? 'sense IPA'}`, `  hora: ${new Date().toISOString()}`,
     `  pujat a App Store Connect: ${pujat ? 'sí' : 'no'}`, '  qui ha dit «sí»: (ho escriu qui executa)', ''].join('\n');
 }
 
@@ -149,12 +206,13 @@ export async function main(argv) {
   }
 
   const pla = planIos({ arrel, valors, versio, build, projecte: projecteIos(arrel) });
-  const ipaPrevist = path.join(pla.exportacio, 'App.ipa');
+  /* PC155-03 · altool rep la còpia privada de l'IPA verificat, no el fitxer d'export/. */
+  const ipaPrevist = path.join(pla.carpeta, 'verifica-ipa-XXXXXX', 'App.ipa');
   process.stdout.write(['', 'PLA (cada valor del fitxer d\'entorn es mostra com a <NOM>):',
     `  A6 ${mostraOrdre(...pla.arxiva, valors, arrel)}`,
     `  A7 ExportOptions.plist (destination export, mai upload) a ${mostraOrdre(pla.plist, [], valors, arrel)}`,
     `  A7 ${mostraOrdre(...pla.exporta, valors, arrel)}`,
-    `  V  codesign -dv: TeamIdentifier = <SDP_APPLE_TEAM_ID>; Info.plist: ${versio} (${build})`,
+    `  V  l'únic IPA d'export/, copiat a una carpeta privada (verifica-ipa-*) amb el sha256 fixat i obert amb ditto: segell, codesign --verify --deep --strict, codesign -dv (TeamIdentifier = <SDP_APPLE_TEAM_ID>) i Info.plist ${versio} (${build})`,
     `  A8 ${mostraOrdre(...pla.valida(ipaPrevist), valors, arrel)}`,
     `  A8 ${mostraOrdre(...pla.puja(ipaPrevist), valors, arrel)}`, ''].join('\n'));
 
@@ -174,36 +232,76 @@ export async function main(argv) {
   }
 
   // Verificació local, abans de qualsevol pujada.
-  const ipa = ipaDe(pla.exportacio);
+  const { ipa, problema: deLExportacio } = ipaUnicDe(pla.exportacio);
+  if (deLExportacio) return plega(EIXIDA.ARBRE, `${deLExportacio}: no se'n tria cap ni s'esborra res; el Mestre decidix què fer amb l'anterior`);
   if (!fs.existsSync(pla.app) || !ipa) return plega(EIXIDA.ARBRE, `no hi ha arxiu ni IPA per a ${versio} (${build}): primer --compila`);
   const deLApp = problemaDeLApp(arrel, pla.app);
   if (deLApp) return plega(EIXIDA.ARBRE, `${deLApp}: un build nou va amb el --build següent i --compila`);
   process.stdout.write(`✓ l'app arxivada porta el ${SEGELL.join('/')} del preflight\n`);
-  const signatura = await executa('codesign', ['-dv', '--verbose=4', pla.app], { valors, arrel, mostra: false });
-  const equip = equipDeCodesign(signatura.crua);
-  if (signatura.codi !== 0 || !equip) return plega(EIXIDA.EXTERNA, 'codesign -dv no ha dit l\'equip de la signatura');
-  if (equip !== valors.SDP_APPLE_TEAM_ID.trim()) return plega(EIXIDA.VERIFICACIO, 'l\'app està signada per un altre equip que SDP_APPLE_TEAM_ID');
-  const [versioArxivada, buildArxivat] = await Promise.all([delInfoPlist(pla.app, 'CFBundleShortVersionString', { valors, arrel }), delInfoPlist(pla.app, 'CFBundleVersion', { valors, arrel })]);
-  if (versioArxivada !== versio || buildArxivat !== build) {
-    return plega(EIXIDA.VERIFICACIO, `l'app arxivada diu ${versioArxivada} (${buildArxivat}), no ${versio} (${build}): revisa que l'Info.plist llija MARKETING_VERSION i CURRENT_PROJECT_VERSION`);
-  }
-  process.stdout.write(`✓ signada per l'equip de SDP_APPLE_TEAM_ID; Info.plist ${versio} (${build})\n`);
 
-  if (opcions.confirma === undefined) {
-    process.stdout.write(rebut({ segell: pre.segell, versio, build, ipa, pujat: false }));
+  /* PC155-03 · La carpeta privada (mkdtemp: 0700) és dins de la carpeta del build, fora del
+     repositori. La còpia de l'IPA hi és clonada (APFS) i de només lectura; s'esborra en acabar. */
+  let privada;
+  try { privada = fs.mkdtempSync(path.join(pla.carpeta, 'verifica-ipa-')); } catch {
+    return plega(EIXIDA.ARBRE, 'no es pot crear la carpeta privada de verificació dins de la carpeta del build');
+  }
+  try {
+    const copia = path.join(privada, path.basename(ipa));
+    const delOriginal = sha256DeFitxer(ipa);
+    try {
+      fs.copyFileSync(ipa, copia, fs.constants.COPYFILE_EXCL | fs.constants.COPYFILE_FICLONE);
+      fs.chmodSync(copia, 0o400);
+    } catch { return plega(EIXIDA.ARBRE, 'no s\'ha pogut copiar l\'IPA a la carpeta privada de verificació'); }
+    const empremta = sha256DeFitxer(copia);
+    if (empremta !== delOriginal) return plega(EIXIDA.VERIFICACIO, 'l\'IPA ha canviat mentre es copiava: no es puja res');
+    const intacta = () => sha256DeFitxer(copia) === empremta;
+
+    const { app, problema: deLIpa } = await obriIpa(copia, path.join(privada, 'obert'), { valors, arrel });
+    if (deLIpa) return plega(EIXIDA.VERIFICACIO, deLIpa);
+    const segellDeLIpa = fitxerDeLApp(app, ...SEGELL_DE_L_APP);
+    if (segellDeLIpa.problema) return plega(EIXIDA.VERIFICACIO, segellDeLIpa.problema);
+    const delSegell = problemaDelPaquet(arrel, segellDeLIpa.cami ? fs.readFileSync(segellDeLIpa.cami) : null, 'l\'app de l\'IPA');
+    if (delSegell) return plega(EIXIDA.ARBRE, `${delSegell}: un build nou va amb el --build següent i --compila`);
+    // PC155-03c · -dv només llig la signatura; --verify en comprova la integritat [VERIFICAT 261101: -dv dona 0 amb un recurs canviat].
+    const integritat = await executa('codesign', ['--verify', '--deep', '--strict', '--verbose=2', app], { valors, arrel, mostra: false });
+    if (integritat.codi !== 0) return plega(EIXIDA.VERIFICACIO, 'codesign --verify rebutja la signatura de l\'app de l\'IPA: no es puja res');
+    const signatura = await executa('codesign', ['-dv', '--verbose=4', app], { valors, arrel, mostra: false });
+    const equip = equipDeCodesign(signatura.crua);
+    if (signatura.codi !== 0 || !equip) return plega(EIXIDA.EXTERNA, 'codesign -dv no ha dit l\'equip de la signatura');
+    if (equip !== valors.SDP_APPLE_TEAM_ID.trim()) return plega(EIXIDA.VERIFICACIO, 'l\'app de l\'IPA està signada per un altre equip que SDP_APPLE_TEAM_ID');
+    const plist = fitxerDeLApp(app, 'Info.plist');
+    if (!plist.cami) return plega(EIXIDA.VERIFICACIO, plist.problema ?? 'l\'app de l\'IPA no porta Info.plist');
+    const [versioIpa, buildIpa] = await Promise.all([delInfoPlist(app, 'CFBundleShortVersionString', { valors, arrel }), delInfoPlist(app, 'CFBundleVersion', { valors, arrel })]);
+    if (versioIpa !== versio || buildIpa !== build) {
+      return plega(EIXIDA.VERIFICACIO, `l'app de l'IPA diu ${versioIpa} (${buildIpa}), no ${versio} (${build}): revisa que l'Info.plist llija MARKETING_VERSION i CURRENT_PROJECT_VERSION`);
+    }
+    if (!intacta()) return plega(EIXIDA.VERIFICACIO, 'la còpia de l\'IPA ha canviat mentre es verificava: no es puja res');
+    process.stdout.write(`✓ IPA ${path.basename(ipa)}: segell, signatura íntegra de l'equip de SDP_APPLE_TEAM_ID i Info.plist ${versio} (${build}); sha256 ${empremta}\n`);
+
+    if (opcions.confirma === undefined) {
+      process.stdout.write(rebut({ segell: pre.segell, versio, build, ipa, sha256: empremta, pujat: false }));
+      return EIXIDA.BE;
+    }
+
+    // altool corre des de la carpeta del build (fora del repositori): el seu ./private_keys no és el del repositori.
+    if ((await executa(...pla.valida(copia), { cwd: pla.carpeta, valors, arrel })).codi !== 0) {
+      return plega(EIXIDA.EXTERNA, 'altool --validate-app ha fallat: no es puja res');
+    }
+    if (!intacta()) return plega(EIXIDA.VERIFICACIO, 'la còpia de l\'IPA ha canviat després de validar-la: no es puja res');
+    if ((await executa(...pla.puja(copia), { cwd: pla.carpeta, valors, arrel })).codi !== 0) {
+      return plega(EIXIDA.EXTERNA, 'altool --upload-app ha fallat');
+    }
+    if (!intacta()) {
+      return plega(EIXIDA.VERIFICACIO, 'la còpia de l\'IPA ha canviat durant la pujada: cap rebut; el Mestre mira a App Store Connect quin build ha arribat');
+    }
+    process.stdout.write('✓ pujat. App Store Connect el processa uns minuts; la prova i l\'enviament a revisió són del Mestre (RUNBOOK P9).\n');
+    process.stdout.write(rebut({ segell: pre.segell, versio, build, ipa, sha256: empremta, pujat: true }));
     return EIXIDA.BE;
+  } finally {
+    try { fs.rmSync(privada, { recursive: true, force: true }); } catch {
+      process.stderr.write('avís: no s\'ha pogut esborrar la carpeta privada verifica-ipa-* de la carpeta del build\n');
+    }
   }
-
-  // altool corre des de la carpeta del build (fora del repositori): el seu ./private_keys no és el del repositori.
-  if ((await executa(...pla.valida(ipa), { cwd: pla.carpeta, valors, arrel })).codi !== 0) {
-    return plega(EIXIDA.EXTERNA, 'altool --validate-app ha fallat: no es puja res');
-  }
-  if ((await executa(...pla.puja(ipa), { cwd: pla.carpeta, valors, arrel })).codi !== 0) {
-    return plega(EIXIDA.EXTERNA, 'altool --upload-app ha fallat');
-  }
-  process.stdout.write('✓ pujat. App Store Connect el processa uns minuts; la prova i l\'enviament a revisió són del Mestre (RUNBOOK P9).\n');
-  process.stdout.write(rebut({ segell: pre.segell, versio, build, ipa, pujat: true }));
-  return EIXIDA.BE;
 }
 
 const principal = (() => {

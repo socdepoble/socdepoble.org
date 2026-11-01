@@ -40,6 +40,33 @@ export const ESTAT_NUMERO = Object.freeze({
 });
 
 const INACTIU = Object.freeze({ estat: ESTAT_NUMERO.inactiu, numero: null, kid: null, verificat: false, avis: null, ocupat: false });
+const CALCULANT = Object.freeze({ ...INACTIU, estat: ESTAT_NUMERO.calculant });
+
+/* PC155-02 · Un número és d'un abast: el fil, la instància del servei (la del
+   backend instal·lat), el backend i el tenant de la config i, si el consumidor
+   el passa, l'àmbit de dades del xat (persona i actor: ambitEstable de
+   XatContext). Cap validació ací (mai llança, cap regex): només una clau
+   estable per a comparar. */
+const IDS_DE_SERVEI = new WeakMap();
+let seguentIdDeServei = 0;
+const idDeServei = (servei) => {
+  if (!servei || (typeof servei !== 'object' && typeof servei !== 'function')) return 0;
+  if (!IDS_DE_SERVEI.has(servei)) IDS_DE_SERVEI.set(servei, ++seguentIdDeServei);
+  return IDS_DE_SERVEI.get(servei);
+};
+/* Sense retallar: dos textos diferents són dos abasts diferents. */
+const textDe = (valor) => (typeof valor === 'string' ? valor : '');
+
+/** La clau d'abast d'un número de seguretat (pura; el servei compta per identitat).
+    Mateixa precedència d'àlies que normalizeBackendConfig; el tenant, sense caixa. */
+export function clauDAbastDelNumero({ filId = '', servei = null, config = null, ambit = null } = {}) {
+  const c = config !== null && typeof config === 'object' ? config : {};
+  return JSON.stringify([
+    textDe(filId), idDeServei(servei), textDe(c.backendId),
+    textDe(c.backend_url ?? c.backendUrl ?? c.supabaseUrl), textDe(c.tenant_id ?? c.tenantId).toLowerCase(),
+    textDe(c.dataMode), textDe(ambit)
+  ]);
+}
 
 /* Un canvi d'àmbit (la persona o l'actor han canviat): el resultat ja no és de ningú. */
 const esCanviDAmbit = (error) => error?.code === 'AMBIT_CANVIAT' || error?.codi === 'ambit-canviat';
@@ -60,43 +87,59 @@ function estatDeLError(error) {
  * llest. Un resultat tardà (panell tancat, conversa canviada, components
  * desmuntats o un àmbit nou) no pinta res: crypto.subtle no s'avorta, i per això
  * es descarta per generació.
+ *
+ * PC155-02 · `ambit` (opcional): l'àmbit de dades del xat (ambitEstable). El
+ * número porta la clau d'abast amb què s'ha calculat; amb el mateix fil.id i un
+ * abast nou (tenant, backend, servei, persona o actor), el número i la marca
+ * d'abans no es veuen ni un sol render, la promesa en vol es descarta i es
+ * torna a calcular amb la config i el servei nous.
  */
-export function useNumeroSeguretat({ fil, config = null, obert = false, potVerificar = false } = {}) {
-  const [estat, setEstat] = useState(INACTIU);
+export function useNumeroSeguretat({ fil, config = null, obert = false, potVerificar = false, ambit = null } = {}) {
+  const filId = typeof fil?.id === 'string' ? fil.id : '';
+  const actiu = E2EE_ACTIU_PER_DEFECTE === true && obert === true && potVerificar === true && Boolean(filId);
+  /* PC155-02 · El servei només es llig si el panell calcula; la clau en diu l'abast. */
+  const servei = actiu ? serveiActual() : null;
+  const clau = actiu ? clauDAbastDelNumero({ filId, servei, config, ambit }) : '';
+  const [estat, setEstat] = useState(() => ({ ...INACTIU, clau: '' }));
   const generacio = useRef(0);
   const configRef = useRef(config);
   configRef.current = config;
-  const filId = typeof fil?.id === 'string' ? fil.id : '';
-  const actiu = E2EE_ACTIU_PER_DEFECTE === true && obert === true && potVerificar === true && Boolean(filId);
+  const serveiRef = useRef(servei);
+  serveiRef.current = servei;
+  /* La clau del render vigent: una marca d'un render anterior no la satisfà (PC155-02b). */
+  const clauRef = useRef(clau);
+  clauRef.current = clau;
 
   /* `kidMostrat`: el kid del número que hi havia quan la marca ha tornat kid-canviat.
      Si el número nou és de la mateixa clau, la clau no ha canviat (és la fixació
      d'este aparell la que no quadra): cap «ha canviat», sinó que no s'ha desat. */
   const calcula = useCallback(async ({ avis = null, kidMostrat = null } = {}) => {
-    const servei = serveiActual();
+    const servei = serveiRef.current;
     const meua = ++generacio.current;
     if (!servei) {
-      setEstat(INACTIU);
+      setEstat({ ...INACTIU, clau });
       return;
     }
-    setEstat({ ...INACTIU, estat: ESTAT_NUMERO.calculant });
+    setEstat({ ...CALCULANT, clau });
     try {
       const resultat = await servei.numeroSeguretat(filId, configRef.current ?? {});
       if (meua !== generacio.current) return;
       const avisFinal = avis === 'canviat' && kidMostrat !== null && resultat.kid === kidMostrat ? 'errorMarca' : avis;
-      setEstat({ estat: ESTAT_NUMERO.llest, numero: resultat.numero, kid: resultat.kid, verificat: resultat.verificat === true, avis: avisFinal, ocupat: false });
+      setEstat({ estat: ESTAT_NUMERO.llest, numero: resultat.numero, kid: resultat.kid, verificat: resultat.verificat === true, avis: avisFinal, ocupat: false, clau });
     } catch (error) {
       if (meua !== generacio.current) return;
       /* Un àmbit nou: en silenci, sense número ni roda (el resultat ja no és de ningú).
          Sense número, cap avís: l'estat ja diu què passa. */
-      setEstat(esCanviDAmbit(error) ? INACTIU : { ...INACTIU, estat: estatDeLError(error) });
+      setEstat(esCanviDAmbit(error) ? { ...INACTIU, clau } : { ...INACTIU, estat: estatDeLError(error), clau });
     }
-  }, [filId]);
+  }, [filId, clau]);
 
+  /* Un abast nou recrea `calcula`: la neteja apuja la generació (la promesa en vol
+     es descarta) i es torna a calcular. */
   useEffect(() => {
     if (!actiu) {
       generacio.current += 1;
-      setEstat(INACTIU);
+      setEstat({ ...INACTIU, clau: '' });
       return undefined;
     }
     calcula();
@@ -104,18 +147,20 @@ export function useNumeroSeguretat({ fil, config = null, obert = false, potVerif
   }, [actiu, calcula]);
 
   const marca = useCallback(async (verificat) => {
-    const servei = serveiActual();
-    if (!servei || estat.estat !== ESTAT_NUMERO.llest || estat.ocupat) return;
+    const servei = serveiRef.current;
+    /* PC155-02b · Només el número de l'abast vigent es pot marcar: una marca
+       capturada abans del canvi no envia el kid d'A amb la config de B. */
+    if (!servei || estat.clau !== clauRef.current || estat.estat !== ESTAT_NUMERO.llest || estat.ocupat) return;
     const meua = ++generacio.current;
     setEstat((previ) => ({ ...previ, ocupat: true, avis: null }));
     try {
       const resultat = await servei.marcaVerificat(filId, { kid: estat.kid, verificat: verificat === true }, configRef.current ?? {});
       if (meua !== generacio.current) return;
-      setEstat({ estat: ESTAT_NUMERO.llest, numero: resultat.numero, kid: resultat.kid, verificat: resultat.verificat === true, avis: null, ocupat: false });
+      setEstat({ estat: ESTAT_NUMERO.llest, numero: resultat.numero, kid: resultat.kid, verificat: resultat.verificat === true, avis: null, ocupat: false, clau: estat.clau });
     } catch (error) {
       if (meua !== generacio.current) return;
       if (esCanviDAmbit(error)) {
-        setEstat(INACTIU);
+        setEstat({ ...INACTIU, clau: estat.clau });
         return;
       }
       if (error?.codi === 'kid-canviat') {
@@ -129,12 +174,16 @@ export function useNumeroSeguretat({ fil, config = null, obert = false, potVerif
            sense continuïtat (kid-no-fixat), no en té cap o les pròpies s'han
            bloquejat: el número que es mostrava ja no és de cap clau vàlida. Fora el
            número i el botó, i l'estat honest. */
-        setEstat({ ...INACTIU, estat: estatNou });
+        setEstat({ ...INACTIU, estat: estatNou, clau: estat.clau });
         return;
       }
       setEstat((previ) => ({ ...previ, ocupat: false, avis: 'errorMarca' }));
     }
   }, [estat, filId, calcula]);
 
-  return { ...estat, marca };
+  /* PC155-02 · Derivat en pintar: un número d'un altre abast no es veu ni un sol
+     render, encara que l'efecte no haja corregut. La clau no ix del ganxo. */
+  const { clau: clauDelNumero, ...vigent } = estat;
+  if (clauDelNumero !== clau) return { ...(actiu ? CALCULANT : INACTIU), marca };
+  return { ...vigent, marca };
 }

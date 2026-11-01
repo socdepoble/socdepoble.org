@@ -44,7 +44,7 @@ import { PERSONES_SEED, createLocalPerfilsAdapter } from '../localPerfils.js';
 import { createLocalSeguimentsAdapter } from '../localSeguiments.js';
 import { ENTITATS_SEED } from '../identitatsSeed.js';
 import { APP_SEED } from '../appSeed.js';
-import { getDefaultUserId, usuariDeSessio } from '../identitat.js';
+import { capturaSessio, getDefaultUserId, usuariDeSessio } from '../identitat.js';
 import { llavorAmbDatesDeProva } from '../../sections/mur/datesDeProvaMur.js';
 import { creaContingutLocal } from './contingutLocal.js';
 import { creaNotesLocal } from './notesLocal.js';
@@ -188,14 +188,37 @@ export function creaAdaptadorLocal({
     await Promise.all(baixes.map((baixa) => Promise.resolve().then(baixa).catch(() => {})));
   };
 
+  /* PC155-01 · El tancament es declara abans de compondre els mòduls: e.abast el llig. */
+  let tancat = false;
+  const errorTancat = () => new Error('[adaptadorLocal] Adaptador tancat.');
+  /* PC155-01 · L'abast de qui crida (persona i entrada de la sessió), capturat
+     abans d'esperar. El comprovador que torna llança si l'adaptador s'ha
+     tancat, si l'entrada ha canviat (eixida, reentrada o un altre actor: el
+     mateix AbortError de capturaSessio) o si la persona viva ja no és la
+     capturada (també una sessió caducada). Una renovació no el mou. */
+  const abast = () => {
+    const persona = usuari()?.id ?? null;
+    const entrada = capturaSessio();
+    return () => {
+      if (tancat) throw errorTancat();
+      entrada();
+      if ((usuari()?.id ?? null) !== persona) throw new DOMException('La sessió ha canviat.', 'AbortError');
+    };
+  };
+
   const e = Object.freeze({
     mode, configuracio, ci, ara, nouId, coleccio, copia, notes, perfils, seguiments, subscripcions, moderacio, dadesObertes,
-    usuari, qui, bloquejosDe, tancaCanals,
+    usuari, qui, bloquejosDe, tancaCanals, abast,
     opcions: Object.freeze({
       personalitzacioOberta: personalitzacioOberta === true, restauracioOberta: restauracioOberta === true,
       politica: politica ? Object.freeze({ ...politica }) : null
     }),
-    contextSeguiments: () => ({ usuari: usuari(), qui: qui(), bloquejos: bloquejosDe(qui()) }),
+    /* Sense argument, el context de la sessió viva; amb un usuari capturat, el
+       d'eixe usuari (PC155-01: l'exportació no torna a llegir la sessió). */
+    contextSeguiments: (u = usuari()) => {
+      const q = u?.id || getDefaultUserId();
+      return { usuari: u, qui: q, bloquejos: bloquejosDe(q) };
+    },
     alTancar: (fn) => { netejes.push(fn); }
   });
 
@@ -209,29 +232,38 @@ export function creaAdaptadorLocal({
     }
   }
 
-  let tancat = false;
-  const errorTancat = () => new Error('[adaptadorLocal] Adaptador tancat.');
   /* Les altes que deixarien un recurs viu si la crida es rebutja després de
      fer-les: es desfan abans de rebutjar (amb el mètode cru, no el guardat). */
   const DESFES_SI_ES_REBUTJA = Object.freeze({
     subscribeToXat: (alta) => metodes.unsubscribeFromXat(alta?.subscription)
   });
+  /* PC155-01-A1 · Els mètodes que capturen l'abast EN CRIDAR, abans de la
+     microtasca de la guarda, com l'adaptador Supabase (capturaSessio síncron a
+     sessioDelCompte): un canvi de sessió en el mateix tic de la crida ja no
+     entra al mètode. La resta de mètodes és l'opció C (seguiment de P2-08). */
+  const AMB_ABAST_EN_CRIDAR = new Set(['exportaLesMeuesDades']);
   /* La guarda transversal: un adaptador tancat no respon, i una crida
      síncrona que llança es torna un rebuig. El senyal i el tancament es miren
      en cridar i, de nou, just abans d'entrar al magatzem (la microtasca
      següent): un avortament en el mateix tic no escriu res. Si el senyal
-     s'avorta mentre treballa, el resultat no ix; l'efecte ja pot estar fet,
-     com en un servidor, però una alta de canal es desfà. */
+     s'avorta o l'adaptador es tanca mentre treballa, el resultat no ix (tampoc
+     el d'una lectura); l'efecte ja pot estar fet, com en un servidor, però una
+     alta de canal es desfà. El canvi de persona el mira el mètode que espera,
+     amb e.abast() (PC155-01: l'exportació); els d'AMB_ABAST_EN_CRIDAR, a més,
+     des de la crida i abans d'entrar (PC155-01-A1). */
   const guardat = (nom, fn) => (...args) => {
+    const abastCrida = AMB_ABAST_EN_CRIDAR.has(nom) ? abast() : null;
     const comprova = () => {
       if (tancat) throw errorTancat();
       if (args.some(senyalAvortat)) throw cancelacio();
+      abastCrida?.();
     };
     try { comprova(); } catch (error) { return Promise.reject(error); }
     const desfes = Object.hasOwn(DESFES_SI_ES_REBUTJA, nom) ? DESFES_SI_ES_REBUTJA[nom] : null;
     return Promise.resolve().then(() => { comprova(); return fn(...args); }).then(async (valor) => {
       const avortat = args.some(senyalAvortat);
-      if (!avortat && !(tancat && desfes)) return valor;
+      /* PC155-01 · Tancat, cap resultat ix, tampoc el d'una lectura sense desfes. */
+      if (!avortat && !tancat) return valor;
       if (desfes) await Promise.resolve().then(() => desfes(valor)).catch(() => {});
       throw avortat ? cancelacio() : errorTancat();
     });
@@ -239,9 +271,10 @@ export function creaAdaptadorLocal({
   const publics = {};
   for (const [nom, fn] of Object.entries(metodes)) publics[nom] = SINCRONS.has(nom) ? fn : guardat(nom, fn);
 
-  /** Tanca l'adaptador: cap crida asíncrona més, cap canal obert d'esta
-      instància i els magatzems propis buits. El Xat no es buida: és global
-      (localXat), i una instància nova amb el mateix tenantId el retroba. */
+  /** Tanca l'adaptador: cap crida asíncrona més ni cap resultat de les que
+      eren en vol, cap canal obert d'esta instància i els magatzems propis
+      buits. El Xat no es buida: és global (localXat), i una instància nova
+      amb el mateix tenantId el retroba. */
   async function destroy() {
     if (tancat) return;
     tancat = true;

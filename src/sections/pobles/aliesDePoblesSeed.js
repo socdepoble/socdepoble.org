@@ -25,6 +25,24 @@
  * revisa la fitxa els pot triar. La comarca i la província no ixen al markdown
  * de la fitxa (només el nom), però viatgen a `fitxa.municipi`: cal
  * contrastar-les amb el Nomenclàtor abans que cap exportació les publique.
+ *
+ * T11-04 (Gemini, Tall 11; marató 261101_2143) · Darrere dels set de
+ * sempre, la resta dels municipis de les quatre comarques on hi ha pobles de
+ * l'aplicació (l'Alacantí, l'Alcoià, el Comtat i la Marina Baixa: la Muntanya
+ * d'Alacant), contrastats amb les llistes comarcals de la Viquipèdia en
+ * català, no amb el Nomenclàtor. «Alcosser» és el nom oficial des del Decret
+ * 115/2021 (BOE-A-2022-2683), només en valencià: «Alcocer de Planes» i
+ * «Alcosser de Planes» en són àlies. «Muro d'Alcoi» és la forma valenciana,
+ * però el nom oficial continua sent «Muro de Alcoy» (àlies). La resta s'ha de
+ * contrastar amb el Nomenclàtor abans de cap exportació. Els àlies són les
+ * formes castellanes i curtes d'ús comú; les que només canvien un accent
+ * (Tárbena, Beniardá, La Nucía) no en necessiten, i «Campello» tampoc: és el
+ * nom oficial sense l'article. «Sant Joan» i «Sant Vicent» no ho són: hi ha
+ * altres pobles que es diuen així.
+ * La comarca de València és «València», i és correcta: a la divisió comarcal
+ * oficial (les demarcacions territorials homologades), la ciutat és una
+ * comarca pròpia; «l'Horta» és la comarca històrica, no l'oficial. Gemini
+ * proposava «L'Horta» (T11-04): no es canvia.
  */
 
 const alies = (forma, { ambMajuscula = false, majusculaEn = 0 } = {}) => Object.freeze({ forma, ambMajuscula, majusculaEn });
@@ -36,7 +54,29 @@ export const ALIES_DE_POBLES_SEED = Object.freeze({
   orxeta: Object.freeze([alies('Orcheta')]),
   alcoleja: Object.freeze([alies('Alcolecha')]),
   alcoi: Object.freeze([alies('Alcoy')]),
-  alacant: Object.freeze([alies('Alicante')])
+  alacant: Object.freeze([alies('Alicante')]),
+  /* T11-04 · Els municipis de referència nous de l'Alacantí. */
+  aigues: Object.freeze([alies('Aguas de Busot')]),
+  mutxamel: Object.freeze([alies('Muchamiel')]),
+  'sant-joan-d-alacant': Object.freeze([alies('San Juan de Alicante')]),
+  'sant-vicent-del-raspeig': Object.freeze([alies('San Vicente del Raspeig')]),
+  /* T11-04 · L'Alcoià. */
+  'banyeres-de-mariola': Object.freeze([alies('Bañeres'), alies('Bañeres de Mariola'), alies('Banyeres')]),
+  /* T11-04 · El Comtat. */
+  alcosser: Object.freeze([alies('Alcocer de Planes'), alies('Alcosser de Planes')]),
+  'l-alqueria-d-asnar': Object.freeze([alies('Alquería de Aznar')]),
+  benimassot: Object.freeze([alies('Benimasot')]),
+  fageca: Object.freeze([alies('Facheca')]),
+  gaianes: Object.freeze([alies('Gayanes')]),
+  /* «Muro», només amb majúscula als relats: en castellà també és una paraula corrent. */
+  'muro-d-alcoi': Object.freeze([alies('Muro de Alcoy'), alies('Muro', { ambMajuscula: true })]),
+  'l-orxa': Object.freeze([alies('Lorcha')]),
+  quatretondeta: Object.freeze([alies('Cuatretondeta')]),
+  /* T11-04 · La Marina Baixa. */
+  'callosa-d-en-sarria': Object.freeze([alies('Callosa de Ensarriá')]),
+  'el-castell-de-guadalest': Object.freeze([alies('Guadalest')]),
+  'l-alfas-del-pi': Object.freeze([alies('Alfaz del Pi')]),
+  'la-vila-joiosa': Object.freeze([alies('Villajoyosa')])
 });
 
 const municipi = (id, title, comarca, provincia) => Object.freeze({ id, title, comarca, provincia });
@@ -49,5 +89,55 @@ export const MUNICIPIS_DE_REFERENCIA = Object.freeze([
   municipi('biar', 'Biar', "L'Alt Vinalopó", 'Alacant'),
   municipi('alcoi', 'Alcoi', "L'Alcoià", 'Alacant'),
   municipi('alacant', 'Alacant', "L'Alacantí", 'Alacant'),
-  municipi('valencia', 'València', 'València', 'València')
+  municipi('valencia', 'València', 'València', 'València'),
+  /* T11-04 · L'Alacantí (la llavor ja porta Xixona i la Torre de les Maçanes). */
+  municipi('agost', 'Agost', "L'Alacantí", 'Alacant'),
+  municipi('aigues', 'Aigües', "L'Alacantí", 'Alacant'),
+  municipi('busot', 'Busot', "L'Alacantí", 'Alacant'),
+  municipi('el-campello', 'El Campello', "L'Alacantí", 'Alacant'),
+  municipi('mutxamel', 'Mutxamel', "L'Alacantí", 'Alacant'),
+  municipi('sant-joan-d-alacant', "Sant Joan d'Alacant", "L'Alacantí", 'Alacant'),
+  municipi('sant-vicent-del-raspeig', 'Sant Vicent del Raspeig', "L'Alacantí", 'Alacant'),
+  /* T11-04 · L'Alcoià (la llavor ja porta Penàguila, Benifallim i Tibi). */
+  municipi('banyeres-de-mariola', 'Banyeres de Mariola', "L'Alcoià", 'Alacant'),
+  /* T11-04 · El Comtat (la llavor ja porta Alcoleja). */
+  municipi('agres', 'Agres', 'El Comtat', 'Alacant'),
+  municipi('alcosser', 'Alcosser', 'El Comtat', 'Alacant'),
+  municipi('alfafara', 'Alfafara', 'El Comtat', 'Alacant'),
+  municipi('almudaina', 'Almudaina', 'El Comtat', 'Alacant'),
+  municipi('l-alqueria-d-asnar', "L'Alqueria d'Asnar", 'El Comtat', 'Alacant'),
+  municipi('balones', 'Balones', 'El Comtat', 'Alacant'),
+  municipi('benasau', 'Benasau', 'El Comtat', 'Alacant'),
+  municipi('beniarres', 'Beniarrés', 'El Comtat', 'Alacant'),
+  municipi('benilloba', 'Benilloba', 'El Comtat', 'Alacant'),
+  municipi('benillup', 'Benillup', 'El Comtat', 'Alacant'),
+  municipi('benimarfull', 'Benimarfull', 'El Comtat', 'Alacant'),
+  municipi('benimassot', 'Benimassot', 'El Comtat', 'Alacant'),
+  municipi('cocentaina', 'Cocentaina', 'El Comtat', 'Alacant'),
+  municipi('fageca', 'Fageca', 'El Comtat', 'Alacant'),
+  municipi('famorca', 'Famorca', 'El Comtat', 'Alacant'),
+  municipi('gaianes', 'Gaianes', 'El Comtat', 'Alacant'),
+  municipi('gorga', 'Gorga', 'El Comtat', 'Alacant'),
+  municipi('millena', 'Millena', 'El Comtat', 'Alacant'),
+  municipi('muro-d-alcoi', "Muro d'Alcoi", 'El Comtat', 'Alacant'),
+  municipi('l-orxa', "L'Orxa", 'El Comtat', 'Alacant'),
+  municipi('planes', 'Planes', 'El Comtat', 'Alacant'),
+  municipi('quatretondeta', 'Quatretondeta', 'El Comtat', 'Alacant'),
+  municipi('tollos', 'Tollos', 'El Comtat', 'Alacant'),
+  /* T11-04 · La Marina Baixa (la llavor ja porta Sella, Orxeta i Relleu). */
+  municipi('altea', 'Altea', 'La Marina Baixa', 'Alacant'),
+  municipi('beniarda', 'Beniardà', 'La Marina Baixa', 'Alacant'),
+  municipi('benidorm', 'Benidorm', 'La Marina Baixa', 'Alacant'),
+  municipi('benifato', 'Benifato', 'La Marina Baixa', 'Alacant'),
+  municipi('benimantell', 'Benimantell', 'La Marina Baixa', 'Alacant'),
+  municipi('bolulla', 'Bolulla', 'La Marina Baixa', 'Alacant'),
+  municipi('callosa-d-en-sarria', "Callosa d'en Sarrià", 'La Marina Baixa', 'Alacant'),
+  municipi('confrides', 'Confrides', 'La Marina Baixa', 'Alacant'),
+  municipi('finestrat', 'Finestrat', 'La Marina Baixa', 'Alacant'),
+  municipi('polop', 'Polop', 'La Marina Baixa', 'Alacant'),
+  municipi('tarbena', 'Tàrbena', 'La Marina Baixa', 'Alacant'),
+  municipi('el-castell-de-guadalest', 'El Castell de Guadalest', 'La Marina Baixa', 'Alacant'),
+  municipi('l-alfas-del-pi', "L'Alfàs del Pi", 'La Marina Baixa', 'Alacant'),
+  municipi('la-nucia', 'La Nucia', 'La Marina Baixa', 'Alacant'),
+  municipi('la-vila-joiosa', 'La Vila Joiosa', 'La Marina Baixa', 'Alacant')
 ]);

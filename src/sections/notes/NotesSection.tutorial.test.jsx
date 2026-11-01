@@ -12,13 +12,16 @@
      · La Card només és a «Tot», mai duplicada, ni al Snippet Curador.
    Dades sintètiques. */
 import React from 'react';
-import { act, cleanup, fireEvent, render, screen, within } from '@testing-library/react';
-import { afterEach, beforeAll, beforeEach, expect, test, vi } from 'vitest';
+import { act, cleanup, fireEvent, render, renderHook, screen, within } from '@testing-library/react';
+import { afterEach, beforeAll, beforeEach, describe, expect, test, vi } from 'vitest';
 import { MemoryRouter, useLocation, useNavigate } from '../../app/contexts/RouterContext';
 
 const dades = vi.hoisted(() => ({
   notes: [], status: 'ready', teSessio: true, canCreate: true, config: { dataMode: 'remote' }, buit: [],
-  detalls: [], nomesLectura: undefined
+  detalls: [], nomesLectura: undefined,
+  /* T11-03 · L'àmbit de la cua (scopeKey) i, per a les proves del NotesProvider
+     de veres, la resta de dades del Bloc (buides per a la resta de proves). */
+  scopeKey: undefined, dadesDelBloc: {}
 }));
 const NOTA_A = Object.freeze({ id: '0f0e0d0c-0b0a-4000-8000-0000000000a1', title: 'Llista de la compra', folderId: 'f-notes', updatedAt: '2026-10-30T09:00:00Z' });
 const NOTA_B = Object.freeze({ id: '0f0e0d0c-0b0a-4000-8000-0000000000b2', title: 'Festes de la Torre', folderId: 'f-pobles', updatedAt: '2026-10-29T09:00:00Z' });
@@ -29,10 +32,10 @@ vi.mock('./NotesContext', async (importOriginal) => ({
     notes: dades.notes, noteFolders: dades.buit, status: dades.status, canCreate: dades.canCreate, teSessio: dades.teSessio,
     notesComplete: true, config: dades.config, obriConfiguracioNotes: () => {}, informaError: () => {},
     creaNota: vi.fn(async (entrada) => ({ ...entrada, revision: 1 })), setLocalNoteField: vi.fn(),
-    resolveNote: vi.fn(async () => ({ status: 'not-found' }))
+    resolveNote: vi.fn(async () => ({ status: 'not-found' })), scopeKey: dades.scopeKey
   })
 }));
-vi.mock('./NotesDataContext.jsx', () => ({ useNotesData: () => ({ activate: () => () => {}, config: dades.config, nomesLectura: dades.nomesLectura }) }));
+vi.mock('./NotesDataContext.jsx', () => ({ useNotesData: () => ({ activate: () => () => {}, config: dades.config, nomesLectura: dades.nomesLectura, ...dades.dadesDelBloc }) }));
 vi.mock('../../app/contexts/IdentitatContext.jsx', () => ({ useIdentitat: () => ({ actor: { tipus: 'persona', id: 'uuid-prova', rol: 'persona' }, memberships: [] }) }));
 vi.mock('../mur/MurContext', () => ({ useMur: () => ({ status: 'ready', sortedFeedPosts: dades.buit, sortedEvents: dades.buit, sortedMarketItems: dades.buit }) }));
 /* El detall diu quina nota rep l'editor: «cap» és l'estat buit, la Card. */
@@ -54,7 +57,11 @@ vi.mock('../../hooks/useResolvedAsset.js', () => ({
 }));
 
 import NotesSection from './NotesSection.jsx';
-import { KIND_TUTORIAL, NOTA_TUTORIAL } from './notaTutorial.js';
+import { KIND_TUTORIAL, NOTA_TUTORIAL, marcaTutorialRetirada, tutorialRetirada } from './notaTutorial.js';
+import { NotesProvider } from './NotesContext';
+import { NotesContext } from './objectesDeContext.js';
+import { SessionContext, UIActionsContext, UIContext } from '../../app/contexts/objectesDeContext.js';
+import { delVal, getVal, setVal } from '../../config/storage.js';
 
 beforeAll(() => {
   if (typeof globalThis.ResizeObserver === 'undefined') {
@@ -62,8 +69,15 @@ beforeAll(() => {
   }
   Object.defineProperty(HTMLElement.prototype, 'clientWidth', { configurable: true, get: () => 1400 });
 });
+/* T11-03 · Dos àmbits sintètics de la cua (scopeKey) per a la marca de la n1 retirada. */
+const AMBIT = 'seed_persona::uuid-prova_tenant-prova';
+const ALTRE_AMBIT = 'seed_persona::uuid-altra_tenant-prova';
 beforeEach(() => {
-  Object.assign(dades, { notes: [NOTA_A, NOTA_B], status: 'ready', teSessio: true, canCreate: true, config: { dataMode: 'remote' }, detalls: [], nomesLectura: undefined });
+  Object.assign(dades, {
+    notes: [NOTA_A, NOTA_B], status: 'ready', teSessio: true, canCreate: true, config: { dataMode: 'remote' }, detalls: [], nomesLectura: undefined,
+    scopeKey: AMBIT, dadesDelBloc: {}
+  });
+  for (const ambit of [AMBIT, ALTRE_AMBIT]) delVal(`notes.tutorialRetirada.${ambit}`);
 });
 afterEach(() => cleanup());
 
@@ -314,3 +328,177 @@ test('D-7 · amb el Bloc de només lectura i sessió: cap CREAR NOTA ni nota pre
 });
 
 /* Al Snippet Curador (?mode=desa) no hi ha Card: NotesSection.test.jsx (model). */
+
+/* T11-03 (Gemini, Tall 11; marató 261101_2143, ordre del Mestre) · D-M1, el
+   defecte: en mode 'seed', arxivar, enviar a la paperera o esborrar la n1 de
+   veres es recorda per àmbit (una preferència del dispositiu, storage.js), i
+   la Card de lectura ja no torna a «Tot». Abans hi tornava fixada: el Bloc no
+   distingia la n1 arxivada d'una llavor esborrada. La marca només val en
+   'seed' i mai amaga la n1 si hi és. */
+describe('T11-03 · la n1 retirada en mode «seed» no torna com a Card', () => {
+  test('mode «seed» sense la n1 i amb la marca: cap Card a «Tot», i l’entrada nua obri una altra fila', () => {
+    Object.assign(dades, { config: { dataMode: 'seed' }, notes: [NOTA_A, NOTA_B] });
+    expect(marcaTutorialRetirada(AMBIT)).toBe(true);
+    munta();
+    expect(totPremut()).toBe(true);
+    expect(card()).toHaveLength(0);
+    expect(within(columnaNotes()).queryAllByRole('button').filter((boto) => boto.dataset.kind === KIND_TUTORIAL)).toHaveLength(0);
+    expect(detall()).not.toBe('card');
+    expect(within(columnaNotes()).getAllByRole('button').filter((boto) => boto.getAttribute('aria-current') === 'true')).toHaveLength(1);
+  });
+
+  test('mode «seed» sense la n1 i sense marca (una llavor esborrada sense cap acció): la Card hi és', () => {
+    Object.assign(dades, { config: { dataMode: 'seed' }, notes: [NOTA_A, NOTA_B] });
+    munta();
+    expect(card()).toHaveLength(1);
+    expect(card()[0].dataset.kind).toBe(KIND_TUTORIAL);
+    expect(titolsDeLaLlista()[0]).toBe('Bloc de notes');
+  });
+
+  test('en remot, una marca del mateix àmbit no amaga la Card: només val en «seed»', () => {
+    expect(marcaTutorialRetirada(AMBIT)).toBe(true);
+    munta();
+    expect(card()).toHaveLength(1);
+    expect(card()[0].dataset.kind).toBe(KIND_TUTORIAL);
+    expect(detall()).toBe('card');
+  });
+
+  test('la marca d’un altre àmbit (una altra identitat del dispositiu) no amaga la Card', () => {
+    Object.assign(dades, { config: { dataMode: 'seed' }, notes: [NOTA_A, NOTA_B] });
+    expect(marcaTutorialRetirada(ALTRE_AMBIT)).toBe(true);
+    munta();
+    expect(card()).toHaveLength(1);
+  });
+
+  test('mode «seed» amb la n1 a la llista i la marca: s’obri la n1 editable (la marca no l’amaga)', () => {
+    Object.assign(dades, { config: { dataMode: 'seed' }, notes: [{ ...NOTA_TUTORIAL, folderId: 'f-mur' }, NOTA_A] });
+    expect(marcaTutorialRetirada(AMBIT)).toBe(true);
+    munta();
+    expect(card()).toHaveLength(1);
+    expect(card()[0].dataset.kind).toBe('note');
+    expect(detall()).toBe('n1');
+  });
+
+  test('si la n1 ix de la llista amb el Bloc obert (arxivada), la Card no hi entra', () => {
+    Object.assign(dades, { config: { dataMode: 'seed' }, notes: [{ ...NOTA_TUTORIAL, folderId: 'f-mur' }, NOTA_A] });
+    const { torna } = munta();
+    expect(card()[0].dataset.kind).toBe('note');
+    // L'ordre del NotesProvider: la marca, i la llista sense la n1.
+    expect(marcaTutorialRetirada(AMBIT)).toBe(true);
+    Object.assign(dades, { notes: [NOTA_A] });
+    act(() => { torna(); });
+    expect(card()).toHaveLength(0);
+  });
+});
+
+describe('T11-03 · la marca de la n1 retirada (notaTutorial.js)', () => {
+  test('és per àmbit: la clau el porta i dos àmbits no es barregen', () => {
+    expect(tutorialRetirada(AMBIT)).toBe(false);
+    expect(marcaTutorialRetirada(AMBIT)).toBe(true);
+    expect(tutorialRetirada(AMBIT)).toBe(true);
+    expect(tutorialRetirada(ALTRE_AMBIT)).toBe(false);
+    expect(getVal(`notes.tutorialRetirada.${AMBIT}`)).toBe(true);
+    expect(getVal(`notes.tutorialRetirada.${ALTRE_AMBIT}`)).toBeNull();
+  });
+
+  test('sense àmbit (buit o no textual) no es llig ni s’escriu res', () => {
+    for (const ambit of [undefined, null, '', 0, {}]) {
+      expect(marcaTutorialRetirada(ambit)).toBe(false);
+      expect(tutorialRetirada(ambit)).toBe(false);
+    }
+    expect(getVal('notes.tutorialRetirada.undefined')).toBeNull();
+    expect(getVal('notes.tutorialRetirada.')).toBeNull();
+  });
+
+  test('només un true desat compta com a retirada', () => {
+    expect(marcaTutorialRetirada(AMBIT)).toBe(true);
+    delVal(`notes.tutorialRetirada.${AMBIT}`);
+    expect(tutorialRetirada(AMBIT)).toBe(false);
+    /* ARB-T11C-03 · Un valor cert que no és el booleà (la cadena 'true', un 1,
+       un text o un objecte desats per una altra mà) no retira la n1. */
+    for (const valor of ['true', 1, 'sí', {}]) {
+      expect(setVal(`notes.tutorialRetirada.${AMBIT}`, valor)).toBe(true);
+      expect(tutorialRetirada(AMBIT)).toBe(false);
+    }
+  });
+});
+
+/* T11-03 · El NotesProvider de veres (dades del Bloc simulades): l'acció
+   explícita amb èxit sobre la n1 en 'seed' posa la marca de l'àmbit; una
+   altra nota, un altre mode o una acció fallida, no. NotesContext escriu la
+   clau sense importar notaTutorial.js (paquet d'arrencada): estes proves la
+   lligen amb tutorialRetirada, i fixen que les dues casen. Els contextos de
+   la interfície i de la sessió, amb els seus objectes (objectesDeContext.js). */
+describe('T11-03 · NotesProvider: la marca naix de l’acció explícita sobre la n1', () => {
+  const mou = vi.fn();
+  const esborra = vi.fn();
+  let avisos;
+  const embolcall = ({ children }) => (
+    <UIContext.Provider value={{ locale: 'ca', externalConfig: {} }}>
+      <UIActionsContext.Provider value={{ normalizeSearchText: (text) => text, t: (_clau, reserva) => reserva }}>
+        <SessionContext.Provider value={{ currentUser: null }}>
+          <NotesProvider>{children}</NotesProvider>
+        </SessionContext.Provider>
+      </UIActionsContext.Provider>
+    </UIContext.Provider>
+  );
+  const bloc = (config) => {
+    dades.config = config;
+    dades.dadesDelBloc = {
+      notes: [{ ...NOTA_TUTORIAL, revision: 1 }, { ...NOTA_A, revision: 1 }], noteFolders: [], status: 'ready',
+      scopeKey: AMBIT, workspaceKey: 'sessio-de-prova', notesComplete: true, mouNota: mou, esborraNota: esborra, updateNote: vi.fn()
+    };
+    return renderHook(() => React.useContext(NotesContext), { wrapper: embolcall }).result;
+  };
+  beforeEach(() => {
+    mou.mockReset().mockImplementation(async (id, estat, revision) => ({ id, estat, revision: revision + 1 }));
+    esborra.mockReset().mockImplementation(async (id) => ({ id }));
+    avisos = vi.spyOn(console, 'warn').mockImplementation(() => {});
+  });
+  afterEach(() => avisos.mockRestore());
+
+  test.each(['arxivada', 'paperera'])('mode «seed»: moure la n1 a «%s» la marca a l’àmbit de la cua', async (estat) => {
+    const ctx = bloc({ dataMode: 'seed' });
+    await act(async () => { expect(await ctx.current.mouNota({ id: 'n1', revision: 1 }, estat)).toBe(true); });
+    expect(mou).toHaveBeenCalledWith('n1', estat, 1);
+    expect(tutorialRetirada(AMBIT)).toBe(true);
+    expect(tutorialRetirada(ALTRE_AMBIT)).toBe(false);
+  });
+
+  test('mode «seed»: esborrar la n1 definitivament també la marca', async () => {
+    const ctx = bloc({ dataMode: 'seed' });
+    await act(async () => { expect(await ctx.current.esborraNota({ id: 'n1', revision: 1 })).toBe(true); });
+    expect(esborra).toHaveBeenCalledWith('n1', 1);
+    expect(tutorialRetirada(AMBIT)).toBe(true);
+  });
+
+  test('mode «seed»: arxivar o esborrar una altra nota no marca res', async () => {
+    const ctx = bloc({ dataMode: 'seed' });
+    await act(async () => { expect(await ctx.current.mouNota({ id: NOTA_A.id, revision: 1 }, 'arxivada')).toBe(true); });
+    await act(async () => { expect(await ctx.current.esborraNota({ id: NOTA_B.id, revision: 1 })).toBe(true); });
+    expect(tutorialRetirada(AMBIT)).toBe(false);
+  });
+
+  test.each(['remote', 'local'])('en mode «%s», arxivar o esborrar una nota amb l’id n1 no marca res', async (dataMode) => {
+    const ctx = bloc({ dataMode });
+    await act(async () => { expect(await ctx.current.mouNota({ id: 'n1', revision: 1 }, 'arxivada')).toBe(true); });
+    await act(async () => { expect(await ctx.current.esborraNota({ id: 'n1', revision: 1 })).toBe(true); });
+    expect(tutorialRetirada(AMBIT)).toBe(false);
+  });
+
+  test('si moure o esborrar la n1 falla, la n1 continua i no hi ha marca', async () => {
+    mou.mockRejectedValue(new Error('disc ple'));
+    esborra.mockRejectedValue(new Error('disc ple'));
+    const ctx = bloc({ dataMode: 'seed' });
+    await act(async () => { expect(await ctx.current.mouNota({ id: 'n1', revision: 1 }, 'arxivada')).toBe(false); });
+    await act(async () => { expect(await ctx.current.esborraNota({ id: 'n1', revision: 1 })).toBe(false); });
+    expect(tutorialRetirada(AMBIT)).toBe(false);
+  });
+
+  test('recuperar-la («activa») es refusa sense tocar la marca', async () => {
+    const ctx = bloc({ dataMode: 'seed' });
+    await act(async () => { expect(await ctx.current.mouNota({ id: 'n1', revision: 1 }, 'activa')).toBe(false); });
+    expect(mou).not.toHaveBeenCalled();
+    expect(tutorialRetirada(AMBIT)).toBe(false);
+  });
+});

@@ -2,7 +2,8 @@
  * vitest.precommit.config.js · T4 (261024_1800, P1-10) · La suite ràpida del
  * pre-commit (`npm run test:precommit`): les proves unitàries i de seguretat
  * essencials, en menys de 30 s (uns 21-23 s en el Mac del Mestre amb 4 workers,
- * 261024), perquè el hook (tooling/gates/git-staged.mjs, 120 s per pas) puga
+ * 261024), perquè el hook (tooling/gates/git-staged.mjs, 300 s per a esta
+ * suite: TEMPS_PAS_MS.proves) puga
  * passar sense --no-verify. NO substituïx la suite sencera (`npm test`, uns
  * 9 min): eixa continua sent la del tancament d'una Onada i la de qualsevol
  * canvi gran. `npm run test:precommit` hi afig després les proves de node de

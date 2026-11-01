@@ -92,7 +92,10 @@ describe('el cens', () => {
       'fontRemota.js', 'fontRemota.test.js', 'vistes/FontsSenseResposta.jsx',
       /* 261024 (Lector) · Ordre del Mestre de les 15:05: la fila del Bloc, les fonts a l'arbre, els
          mitjans del servei (miniatura i vídeo) i les seues proves. */
-      'vistes/FilaNoticia.jsx', 'vistes/fontsDelLector.js', 'mitjans.js', 'lector261024.test.jsx'
+      'vistes/FilaNoticia.jsx', 'vistes/fontsDelLector.js', 'mitjans.js', 'lector261024.test.jsx',
+      /* Actualitzada a posta (B6, IDEA-30; marató 261101_2143) · Les notícies germanes: el nucli pur,
+         la seua prova i la del bloc al final de la lectura (vistes/Lector.jsx). */
+      'nucli/germanes.js', 'nucli/germanes.test.js', 'germanes.vista.test.jsx'
     ]) expect(existsSync(path.join(ARREL, APP, fitxer)), fitxer).toBe(true);
   });
 

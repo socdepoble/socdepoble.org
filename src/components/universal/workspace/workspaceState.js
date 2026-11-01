@@ -166,6 +166,25 @@ export function workspaceReducer(state, action) {
 const normalitza = (value) =>
   String(value ?? '').normalize('NFD').replace(/\p{Diacritic}/gu, '').toLocaleLowerCase('ca');
 
+/**
+ * T11-03 (Gemini, Tall 11; marató 261101_2143) · El primer element que la
+ * tria automàtica pot obrir: a «Tot», el primer amb `fixatATot: true` (el
+ * booleà), que UniversalWorkspace pinta a la primera fila (D-4); fora de
+ * «Tot», o sense cap fixat, el primer de la llista. Pura. Torna l'element o
+ * null. Mana l'ordre de l'ENTRADA, no el de `sortBy` (viu a UniversalWorkspace):
+ * amb un sol fixat, és la primera fila pintada; amb dos o més, la llista els
+ * ordena per data o per nom i ací guanya el primer de l'entrada. Igualar-ho
+ * vol pujar `sortBy` al context (deute nou de T11-03, dipòsit de la Wiki).
+ */
+export function primerElementTriable(items, categoryId) {
+  if (!Array.isArray(items) || !items.length) return null;
+  if (categoryId === ALL_CATEGORY_ID) {
+    const fixat = items.find((item) => item?.fixatATot === true);
+    if (fixat) return fixat;
+  }
+  return items[0] ?? null;
+}
+
 /* T7 (P5) · `ambit`, opcional: el Set d'ids que compten com la categoria
    activa (ella i les seues subcarpetes, WorkspaceProvider amb
    inclouDescendents). Sense, només la categoria activa, com sempre. */

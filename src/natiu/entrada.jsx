@@ -35,6 +35,7 @@ import { lliuraCompartit, registraAlliberadorCompartit, registraTalladorComparti
 import { registraAvisosNatius } from '../config/avisosNatius.js';
 import { creaReceptorCompartit } from './compartirNatiu.js';
 import { creaAvisosNatius } from './avisosNatius.js';
+import { connectaEnrereNatiu } from './enrereNatiu.js';
 import { bloqueigDeVersio } from './versioMinima.js';
 import CalActualitzar from './CalActualitzar.jsx';
 
@@ -100,6 +101,11 @@ const init = () => {
     };
     try { registraAvisosNatius(creaAvisosNatius({ plataforma: plataformaDelDispositiu(), canal: canalDelXat })); }
     catch (e) { console.error('[natiu] Avisos natius no registrats:', e); }
+    /* P0-24 (G2120-07, marató 261101_2143) · L'Arrere d'Android tanca primer la
+       capa de dalt (un Dialeg, un calaix, la pantalla completa) i només després
+       torna arrere. Abans del primer pintat; mai tomba l'arrencada. */
+    try { connectaEnrereNatiu({ plataforma: plataformaDelDispositiu() }); }
+    catch (e) { console.error('[natiu] Arrere natiu no connectat:', e); }
     /* Un canvi de sessió caduca el lot que encara es llig, i el natiu (el
        tallador) en talla la còpia i les restes (pla 261028_1526, P1-31). */
     const receptor = creaReceptorCompartit({ sessio: sessioCompartit, registraTallador: registraTalladorCompartit });

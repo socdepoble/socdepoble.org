@@ -72,3 +72,7 @@ dist/sdp-release.json
 # Absències que la mateixa skill exigix (no han d'existir al repositori):
 wordpress-plugin/supabase
 supabase/config.toml
+# Locals generats (261101, B1): Husky crea .husky/_ en instal·lar i el seu .gitignore viu dins;
+# builds/directori és eixida del paquet sense regla pròpia. En un arbre net Git no els pot classificar.
+.husky/_
+wordpress-plugin/builds/directori

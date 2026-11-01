@@ -87,6 +87,8 @@
     "prepare": "husky",
     "preview": "vite preview --host 0.0.0.0",
     "db:seed:generate": "sh scripts/generate-supabase-seed.sh",
+    "migracions:verifica": "node scripts/supabase/verifica-migracions.mjs",
+    "migracions:pla": "node scripts/supabase/verifica-migracions.mjs --pla",
     "pdf:render": "sh tooling/pdf/render_pdf.sh",
     "test": "vitest",
     "test:node": "node tooling/tests/run-node-tests.mjs",

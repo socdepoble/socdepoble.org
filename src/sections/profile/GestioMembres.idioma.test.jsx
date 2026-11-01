@@ -1,4 +1,6 @@
 import React from 'react';
+import { readFileSync } from 'node:fs';
+import path from 'node:path';
 import { act, cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 /* El port, parcial com a GestioMembres.test.jsx: cap capacitat (ni la casella
@@ -7,7 +9,8 @@ vi.mock('../../data/backendPort.js', async (importOriginal) => ({
   ...(await importOriginal()),
   teCapacitat: () => false,
 }));
-import { GestioMembres, TEXTOS_MEMBRES } from './GestioMembres.jsx';
+import { ERRORS_MEMBRES, GestioMembres, TEXTOS_MEMBRES } from './GestioMembres.jsx';
+import { MISSATGES_MEMBRES_ORGANITZACIO } from '../../data/contracte.js';
 import { PARELLS_ROL } from '../../components/universal/identitat/rols.js';
 import { PARELLS_TIPUS } from './membresModel.js';
 import { UIProvider } from '../../app/contexts/UIContext.jsx';
@@ -258,7 +261,8 @@ describe('P1-15 · el recompte de la cerca, per al lector de pantalla', () => {
     pinta({ cercaCandidats: vi.fn(async () => { throw new Error('Sense xarxa'); }) });
     await screen.findByRole('region', { name: 'Membres de Forn' });
     escriu('Cerca', 'Qu');
-    expect((await screen.findByRole('alert', {}, { timeout: 2000 })).textContent).toBe('Sense xarxa');
+    // T11-02 · Sense codi, el genèric de la cerca: mai el text de l'error.
+    expect((await screen.findByRole('alert', {}, { timeout: 2000 })).textContent).toBe('No s’ha pogut cercar a la gent del poble.');
     expect(anunci().textContent).toBe('');
   });
 
@@ -285,5 +289,113 @@ describe('P1-15 · el recompte de la cerca, per al lector de pantalla', () => {
     expect(screen.queryByRole('dialog', { name: 'Llevar Colla de Forn?' })).toBeNull();
     expect(accions.llevaMembre).not.toHaveBeenCalled();
     expect(document.activeElement).toBe(boto);
+  });
+});
+
+/* ═══════════════════════════════════════════════════════════════════
+   T11-02 (Gemini, Tall 11; marató 261101_2143) · ELS ERRORS DEL PORT, PEL
+   SEU CODI I EN LA LLENGUA DE LA INTERFÍCIE
+
+   Abans, textDError pintava el `message` de l'error: en valencià en totes
+   les llengües, i el text cru del proveïdor quan l'adaptador no el traduïa.
+   Ara la vista tria la frase pel `code` (ERRORS_MEMBRES) i, sense cap codi
+   propi, diu el genèric de l'acció. Cada lloc on la vista pinta un error
+   (llista, cerca, alta, rol i baixa) es prova fora del valencià.
+   ═══════════════════════════════════════════════════════════════════ */
+const errorAmb = (code, missatge = 'Text de l’adaptador que la vista no ha de pintar.') => Object.assign(new Error(missatge), { code });
+
+describe('T11-02 · els errors del port, pel codi', () => {
+  const DICCIONARIS = { ca: CA, es: ES, en: EN, eu: EU, gl: GL };
+
+  test('ERRORS_MEMBRES té els codis del contracte i NO-DISPONIBLE, ni un més, amb la frase valenciana lletra per lletra', () => {
+    expect(Object.keys(ERRORS_MEMBRES).sort()).toEqual([...Object.keys(MISSATGES_MEMBRES_ORGANITZACIO), 'NO-DISPONIBLE'].sort());
+    for (const [codi, missatge] of Object.entries(MISSATGES_MEMBRES_ORGANITZACIO)) expect(ERRORS_MEMBRES[codi][1], codi).toBe(missatge);
+    // NO-DISPONIBLE: la frase de l'adaptador remot i del context del Perfil (cap dels dos l'exporta: es llig la font).
+    const reserva = ERRORS_MEMBRES['NO-DISPONIBLE'][1];
+    for (const font of ['src/data/supabase/organizations.js', 'src/sections/profile/PerfilContext.jsx']) {
+      expect(readFileSync(path.join(process.cwd(), font), 'utf8'), font).toContain(`'${reserva}'`);
+    }
+  });
+
+  test('cada clau és a les cinc llengües: el valencià és la reserva i les altres quatre, frases pròpies sense buits', () => {
+    const parells = Object.values(ERRORS_MEMBRES);
+    expect(new Set(parells.map(([clau]) => clau)).size).toBe(parells.length);
+    for (const [clau, reserva] of parells) {
+      expect(clau).toMatch(/^section\.perfil\.membres\.error\.\w+$/);
+      expect(CA[clau], clau).toBe(reserva);
+      for (const [codi, dic] of Object.entries(DICCIONARIS)) {
+        expect(typeof dic[clau] === 'string' && dic[clau].trim() !== '', `${codi}: ${clau}`).toBe(true);
+        expect(dic[clau], `${codi}: ${clau}`).not.toMatch(/\{\w+\}/);
+        if (codi !== 'ca') expect(dic[clau], `${codi}: ${clau}`).not.toBe(reserva);
+      }
+    }
+  });
+
+  test.each(['es', 'en', 'eu', 'gl'])('%s: la llista rebutjada (SDP-ORGMEM-002) diu la frase del diccionari, no la valenciana', async (llengua) => {
+    const clau = ERRORS_MEMBRES['SDP-ORGMEM-002'][0];
+    pinta({ llengua, llistaMembres: vi.fn(async () => { throw errorAmb('SDP-ORGMEM-002', CA[clau]); }) });
+    const alerta = await screen.findByRole('alert');
+    expect(alerta.textContent).toBe(DICCIONARIS[llengua][clau]);
+    expect(alerta.textContent).not.toBe(CA[clau]);
+  });
+
+  test('en castellà, la llista d’un servidor sense els membres (NO-DISPONIBLE) ho diu en castellà', async () => {
+    pinta({ llengua: 'es', llistaMembres: vi.fn(async () => { throw errorAmb('NO-DISPONIBLE', ERRORS_MEMBRES['NO-DISPONIBLE'][1]); }) });
+    expect((await screen.findByRole('alert')).textContent).toBe('El servidor de este pueblo todavía no gestiona los miembros de las organizaciones.');
+  });
+
+  test('en castellà, la cerca rebutjada (SDP-ORGMEM-002) ho diu en castellà', async () => {
+    pinta({ llengua: 'es', cercaCandidats: vi.fn(async () => { throw errorAmb('SDP-ORGMEM-002'); }) });
+    await screen.findByRole('region', { name: 'Miembros de Forn' });
+    escriu('Buscar', 'Qu');
+    expect((await screen.findByRole('alert', {}, { timeout: 2000 })).textContent)
+      .toBe('Solo quien administra la organización puede ver y gestionar sus miembros.');
+  });
+
+  test('en castellà, l’alta rebutjada diu la frase del codi (SDP-ORGMEM-003) i, sense codi, el genèric; mai el text valencià de l’error', async () => {
+    const desaMembre = vi.fn()
+      .mockRejectedValueOnce(errorAmb('SDP-ORGMEM-003', 'Esta persona no és del poble de l’organització o ha demanat la baixa.'))
+      .mockRejectedValueOnce(new Error('El servidor no ha confirmat el membre. Torna a carregar la llista.'));
+    pinta({ llengua: 'es', desaMembre });
+    await screen.findByRole('region', { name: 'Miembros de Forn' });
+    escriu('Buscar', 'Qu');
+    await triaCandidat('A quién quieres añadir', 'Quique · Persona');
+    await act(async () => { fireEvent.click(screen.getByRole('button', { name: 'Añadir' })); });
+    expect(screen.getByRole('alert').textContent).toBe('Esta persona no es del pueblo de la organización o ha pedido la baja.');
+    await act(async () => { fireEvent.click(screen.getByRole('button', { name: 'Añadir' })); });
+    expect(desaMembre).toHaveBeenCalledTimes(2);
+    expect(screen.getByRole('alert').textContent).toBe('No se ha podido añadir al miembro.');
+    expect(document.body.textContent).not.toMatch(/no ha confirmat|no és del poble/);
+  });
+
+  test('en castellà, el canvi de rol rebutjat (SDP-ORGMEM-006) ho diu en castellà', async () => {
+    pinta({ llengua: 'es', desaMembre: vi.fn(async () => { throw errorAmb('SDP-ORGMEM-006'); }) });
+    await screen.findByRole('region', { name: 'Miembros de Forn' });
+    await act(async () => { fireEvent.click(screen.getByRole('button', { name: 'Nombrar administradora: Marta' })); });
+    expect(screen.getByRole('alert').textContent).toBe('Solo la persona propietaria nombra, degrada o quita administradoras.');
+  });
+
+  test('en castellà, la baixa rebutjada (SDP-ORGMEM-005) ho diu en castellà, amb la confirmació ja tancada', async () => {
+    pinta({ llengua: 'es', llevaMembre: vi.fn(async () => { throw errorAmb('SDP-ORGMEM-005'); }) });
+    await screen.findByRole('region', { name: 'Miembros de Forn' });
+    fireEvent.click(screen.getByRole('button', { name: 'Quitar: Colla' }));
+    const dialeg = screen.getByRole('dialog', { name: '¿Quitar a Colla de Forn?' });
+    await act(async () => { fireEvent.click(within(dialeg).getByRole('button', { name: 'Quitar' })); });
+    expect(screen.queryByRole('dialog')).toBeNull();
+    expect(screen.getByRole('alert').textContent).toBe('La persona propietaria no se puede cambiar ni quitar.');
+  });
+
+  test('el text cru del proveïdor no arriba mai a la vista: el genèric de l’acció', async () => {
+    pinta({ llistaMembres: vi.fn(async () => { throw new Error('Supabase 500: {"message":"permission denied for function membres_organitzacio"}'); }) });
+    expect((await screen.findByRole('alert')).textContent).toBe('No s’ha pogut llegir la llista de membres.');
+    expect(document.body.textContent).not.toMatch(/permission|Supabase/);
+  });
+
+  test('un codi que no és de la taula (un nom del prototip, un codi d’un altre domini) diu el genèric', async () => {
+    for (const code of ['toString', '__proto__', 'constructor', 'hasOwnProperty', 'SDP-TIT-001', 'DESCONEGUT']) {
+      pinta({ llistaMembres: vi.fn(async () => { throw errorAmb(code); }) });
+      expect((await screen.findByRole('alert')).textContent, code).toBe('No s’ha pogut llegir la llista de membres.');
+      cleanup();
+    }
   });
 });

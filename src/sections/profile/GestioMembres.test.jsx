@@ -103,7 +103,7 @@ test('una administradora no toca cap administradora ni la propietària, ni nomen
   expect(screen.queryByLabelText('Rol')).toBeNull();
 });
 
-test('si la llista no es pot llegir, ho diu (el missatge del port, en valencià) i no oferix cap alta', async () => {
+test('si la llista no es pot llegir, ho diu (el missatge del codi, en valencià) i no oferix cap alta', async () => {
   pinta({ llistaMembres: vi.fn(async () => { throw Object.assign(new Error('El servidor d’este poble encara no gestiona els membres de les organitzacions.'), { code: 'NO-DISPONIBLE' }); }) });
   expect((await screen.findByRole('alert')).textContent).toBe('El servidor d’este poble encara no gestiona els membres de les organitzacions.');
   expect(screen.queryByRole('region', { name: 'Membres de Forn' })).toBeNull();
@@ -174,7 +174,7 @@ test('un doble enviament només dona una alta, i el botó espera la resposta', a
   expect(textDeFiles()).toContainEqual(['Quique', 'Persona', 'Membre']);
 });
 
-test('si el servidor rebutja l’alta, el missatge del port es diu en línia i la llista no canvia', async () => {
+test('si el servidor rebutja l’alta, el missatge del codi es diu en línia i la llista no canvia', async () => {
   pinta({ desaMembre: vi.fn(async () => { throw Object.assign(new Error('Esta persona no és del poble de l’organització o ha demanat la baixa.'), { code: 'SDP-ORGMEM-003' }); }) });
   await taula();
   cerca('qui');
@@ -213,7 +213,8 @@ test('llevar demana confirmació; «Cancel·lar» no lleva res i «Llevar» la t
 /* Correcció 261008 · Si «Llevar» falla, la confirmació es tanca (com «Eixir»
    a DetallAjust): l'error es pinta fora del <dialog> modal, i amb ell obert
    quedaria inert i amagat darrere. */
-test('si «Llevar» falla, la confirmació es tanca, l’error es veu i el focus torna al botó de la fila', async () => {
+test('si «Llevar» falla, la confirmació es tanca, es veu el missatge del codi (no el text de l’error) i el focus torna al botó de la fila', async () => {
+  /* T11-02 · El `message` no és el canònic: la vista diu el del codi (SDP-ORGMEM-002). */
   pinta({ llevaMembre: vi.fn(async () => { throw Object.assign(new Error('Només qui administra aquesta organització pot gestionar-ne els membres.'), { code: 'SDP-ORGMEM-002' }); }) });
   await taula();
   const boto = screen.getByRole('button', { name: 'Llevar: Colla' });
@@ -222,7 +223,7 @@ test('si «Llevar» falla, la confirmació es tanca, l’error es veu i el focus
   const dialeg = screen.getByRole('dialog', { name: 'Llevar Colla de Forn?' });
   await act(async () => { fireEvent.click(within(dialeg).getByRole('button', { name: 'Llevar' })); });
   expect(screen.queryByRole('dialog')).toBeNull();
-  expect(screen.getByRole('alert').textContent).toBe('Només qui administra aquesta organització pot gestionar-ne els membres.');
+  expect(screen.getByRole('alert').textContent).toBe('Només qui administra l’organització en veu i en gestiona els membres.');
   expect(textDeFiles().map(([nom]) => nom)).toEqual(['Jo (tu)', 'Andreu', 'Marta', 'Colla']);
   expect(document.activeElement).toBe(screen.getByRole('button', { name: 'Llevar: Colla' }));
 });
@@ -267,7 +268,8 @@ test.each([
   anota(observador.takeRecords());
   observador.disconnect();
   expect(ordre).toEqual(['tancat', 'avis']);
-  expect(screen.getByRole(rol).textContent).toBe(rol === 'status' ? 'Colla ja no és membre de Forn.' : 'Sense xarxa');
+  // T11-02 · Un error sense codi diu el genèric de l'acció, mai el seu text.
+  expect(screen.getByRole(rol).textContent).toBe(rol === 'status' ? 'Colla ja no és membre de Forn.' : 'No s’ha pogut llevar el membre.');
 });
 
 test('desmuntar avorta la lectura de la llista', async () => {

@@ -25,16 +25,15 @@
  * però que quede escrit: NO afegiu `npm run gate` a cap ordre que esta
  * porta puga executar.
  *
- * ARTEFACTE SEO RETIRAT (260918)
- * ──────────────────────────────
- * `wordpress-plugin/dist/seo-routes.json` figurava ací amb l'ordre
- * `npm run build:seo`, però eixe script i el seu generador
- * (tooling/gates/build-seo-manifest.mjs) ja no existixen (commit 3f5a8b38).
- * Un artefacte que cap ordre pot generar només pot estar «absent», i esta
- * porta el construiria en bucle sense aconseguir-lo mai. Es retira d'ací.
- * ATENCIÓ: tooling/scripts/tractor-consell-core.mjs (L8) encara l'exigix;
- * és una decisió pendent del Consell (vegeu l'informe
- * 260918_0300_informe_auditoria_extrema_postmigracio_claude, C-3).
+ * TAULA DE RUTES SEO FORA D'ACÍ (260918, corregit 261101)
+ * ────────────────────────────────────────────────────────
+ * `wordpress-plugin/dist/seo-routes.json` no és a ARTEFACTES i esta porta no
+ * el construïx. El genera `npm run build:seo` (tooling/gates/build-seo-manifest.mjs
+ * --escriu), que forma part de `npm run build`: el productor es va esborrar el
+ * 260918 (5b45bbe77) i es va restaurar l'endemà (2cb3daebd). El vigila el
+ * Consell L8 (tooling/lib/taula-rutes-seo.mjs): fora del pre-commit l'exigix, i
+ * dins de l'arbre preparat del hook, on dist/ no viatja mai, prova el productor
+ * en sec, sense escriure res.
  */
 
 import fs from 'node:fs';

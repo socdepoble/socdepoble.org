@@ -167,10 +167,34 @@ describe('GF(2⁸): els vectors publicats de FIPS-197 (bloquejants, esmenes §9.
     }
   });
 
-  test.skip('V-INV sencera: els 255 inversos contra la caixa S transcrita de FIPS-197 fig. 7 (pendent: les esmenes només porten S({53}); cal transcriure-la amb la font a mà)', () => {});
+  test('V-INV sencera: afí(a⁻¹) = S[a] en els 256 valors contra la caixa S llegida de cryptography 48.0.0 i de Node v24.13.0 (oracle independent, SHA-256 congelat)', async () => {
+    const V = VECTORS.gf_fips197['V-INV'];
+    const caixa = deHex(V.caixaS);
+    expect(caixa).toHaveLength(256);
+    // Congelat ací i al JSON: canviar un byte de la caixa obliga a tocar els dos llocs.
+    expect(aHex(await sha256(caixa))).toBe('c2d8e5eed6cbebd8625fc18f81486a7733c04f9b0129ffbe974c68b90308b4f2');
+    expect(V.caixaSSha256).toBe('c2d8e5eed6cbebd8625fc18f81486a7733c04f9b0129ffbe974c68b90308b4f2');
+    expect(new Set(caixa).size).toBe(256);
+    expect(caixa[0x53]).toBe(0xed);
+    const diferents = [];
+    for (let a = 0; a < 256; a += 1) if (afi(R.gfInv(a)) !== caixa[a]) diferents.push(a);
+    expect(diferents).toEqual([]);
+  });
 
-  test('la caixa S sencera queda marcada pendent al JSON, amb el motiu', () => {
-    expect(VECTORS.gf_fips197['V-INV'].pendent.caixaSSencera).toMatch(/FIPS-197 fig\. 7/);
+  test('la caixa S sencera porta la procedència (paquet i versió, binari i SHA-256, desplaçaments, data i eina) i ja no queda pendent', () => {
+    const V = VECTORS.gf_fips197['V-INV'];
+    expect(V.pendent).toBeUndefined();
+    expect(V.procedencia.data).toBe('2026-11-01');
+    expect(V.procedencia.eina).toMatch(/evidencia\/B2c-SHAMIR\/caixa_s_oracle\.py$/);
+    expect(V.procedencia.eina_sha256).toMatch(/^[0-9a-f]{64}$/);
+    expect(V.procedencia.oracles.map(({ paquet, versio }) => `${paquet} ${versio}`)).toEqual(['cryptography 48.0.0', 'Node.js v24.13.0']);
+    for (const oracle of V.procedencia.oracles) {
+      expect(oracle.sha256).toMatch(/^[0-9a-f]{64}$/);
+      expect(oracle.biblioteca).toMatch(/^OpenSSL \d+\.\d+\.\d+/);
+      expect(oracle.desplacaments).toHaveLength(4);
+      // Quatre còpies seguides de 256 B: la taula de la biblioteca, no una coincidència.
+      expect(oracle.desplacaments.slice(1).map((d, i) => d - oracle.desplacaments[i])).toEqual([256, 256, 256]);
+    }
   });
 
   test('0 no té invers: 0⁻¹ dona 0 sense llançar res i cap producte amb 0 val 1; els altres 255 tenen invers únic', () => {
@@ -267,7 +291,7 @@ describe('Shamir: propietats de reparteixRk, recomponRk i comprovaConsistencia (
     }
   });
 
-  test('els coeficients són nous a cada repartiment i es posen a zero en acabar; dos fragments no diuen res de la RK', () => {
+  test('els coeficients són nous a cada repartiment i es posen a zero en acabar; barrejar fragments de dos repartiments no dona la RK (la prova exacta de dos fragments és a xifratXatRecuperacio.propietats.seguretat.test.js)', () => {
     const rk = aleatoris(32);
     const captura = [];
     const un = R.reparteixRk(criptoAmbGenerador(captura), rk, 3);

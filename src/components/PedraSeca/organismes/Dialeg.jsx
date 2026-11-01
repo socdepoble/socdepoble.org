@@ -39,6 +39,7 @@ import { X } from 'lucide-react';
 import { Boto } from '../atoms/Boto.jsx';
 import { obriModalLocal } from './modalLocal.js';
 import { tradueix, useTraductorOpcional } from '../hooks/useTraductorOpcional.js';
+import { useCapaEnrere } from '../hooks/useCapaEnrere.js';
 
 /* Gauntlet 261029 (cicle 1, i18n-a11y) · El nom de la X, en la llengua de
    la interfície; fora de l'app, la reserva de sempre. */
@@ -181,6 +182,11 @@ function ContingutDialeg({
       d.removeEventListener('close', onClose);
     };
   }, [local]);
+
+  /* P0-24 (G2120-07, marató 261101_2143) · L'Arrere d'Android tanca el diàleg
+     de dalt pel mateix camí que l'Escape (config/pilaEnrere.js). Fora de l'App
+     ningú no pregunta la pila. */
+  useCapaEnrere(obert, () => tancaRef.current?.('esc'));
 
   const onClickVel = (e) => {
     if (tancaEnVel && e.target === ref.current) onTanca?.('vel');

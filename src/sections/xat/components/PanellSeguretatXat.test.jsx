@@ -8,10 +8,11 @@ import { afterEach, expect, test, vi } from 'vitest';
 import { createTranslator } from '../../../config/i18n.js';
 import { estatXifratgeDelFil } from '../estatXifratgeFil.js';
 
-const m = vi.hoisted(() => ({ crides: [] }));
+const m = vi.hoisted(() => ({ crides: [], ambits: [] }));
 vi.mock('../useSeguretatDelFil.js', () => ({
   useNumeroSeguretat: (opcions) => {
     m.crides.push({ obert: opcions.obert, potVerificar: opcions.potVerificar, fil: opcions.fil?.id });
+    m.ambits.push(opcions.ambit);
     return opcions.obert && opcions.potVerificar
       ? { estat: 'llest', numero: '04126 39587 61203 88451 27904 53316 70258 19643 95072 31480 66817 42935', kid: 'k', verificat: false, avis: null, ocupat: false, marca: m.marca }
       : { estat: 'inactiu', marca: m.marca };
@@ -24,8 +25,9 @@ vi.mock('../../../app/contexts/RouterContext', async () => {
 
 const { default: PanellSeguretatXat } = await import('./PanellSeguretatXat.jsx');
 const { default: CapcaleraConversa } = await import('./CapcaleraConversa.jsx');
+const { XatContext } = await import('../XatContext.jsx');
 
-afterEach(() => { cleanup(); m.crides = []; });
+afterEach(() => { cleanup(); m.crides = []; m.ambits = []; });
 
 const ca = createTranslator('ca');
 const FIL = { id: 'd-pepa', tipus: 'directe', name: 'Pepa', altres: [{ id: 'P', tipus: 'persona' }], altresNoms: ['Pepa'] };
@@ -73,4 +75,25 @@ test('en un grup: el diàleg no demana cap número (potVerificar fals)', () => {
   expect(m.crides.at(-1)).toEqual({ obert: true, potVerificar: false, fil: 'd-pepa' });
   expect(screen.getByText('En un grup, el número de seguretat es compara amb cada persona des del vostre xat privat.')).toBeTruthy();
   expect(screen.queryByRole('group', { name: 'Número de seguretat' })).toBeNull();
+});
+
+/* PC155-02 · L'àmbit de dades del xat (ambitEstable: backend, persona i actor)
+   arriba al hook com a `ambit`, i canvia quan canvia la persona; fora del
+   proveïdor, null (useXat torna l'àmbit buit i no llança). */
+test('PC155-02 · el panell passa l’àmbit del xat al hook del número', () => {
+  m.marca = vi.fn();
+  const AMBIT_ANNA = '["backend:x","anna","persona:anna"]';
+  const AMBIT_BERTA = '["backend:x","berta","persona:berta"]';
+  const panell = (ambit) => (
+    <XatContext.Provider value={{ ambitEstable: ambit }}>
+      <PanellSeguretatXat obert onTanca={() => {}} fil={FIL} estat={DIRECTE} nom="Pepa" t={ca} />
+    </XatContext.Provider>
+  );
+  const { rerender, unmount } = render(panell(AMBIT_ANNA));
+  expect(m.ambits.at(-1)).toBe(AMBIT_ANNA);
+  rerender(panell(AMBIT_BERTA));
+  expect(m.ambits.at(-1)).toBe(AMBIT_BERTA);
+  unmount();
+  render(<PanellSeguretatXat obert onTanca={() => {}} fil={FIL} estat={DIRECTE} nom="Pepa" t={ca} />);
+  expect(m.ambits.at(-1)).toBeNull();
 });

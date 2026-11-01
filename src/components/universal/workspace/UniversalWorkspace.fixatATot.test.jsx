@@ -124,3 +124,95 @@ describe('el rail i el teclat seguixen el mateix ordre', () => {
     expect(onSelectionChange).toHaveBeenLastCalledWith({ categoryId: '__all__', itemId: 'nova' }, expect.anything());
   });
 });
+
+/* T11-03 (Gemini, Tall 11; marató 261101_2143, ordre del Mestre) · La tria
+   automàtica de «Tot» (en entrar-hi des d'una carpeta, la selecció inicial
+   sense element i la reserva d'un element que ja no hi és) obri la primera
+   fila de la llista: el fixat. Abans obria el primer element de l'entrada
+   (`mitjana`), que per data és la segona fila. L'element recordat de «Tot»
+   i la política de la secció (canAutoSelect) continuen manant; dins d'una
+   carpeta, i amb una cadena 'true', res no canvia. La paritat amb la
+   primera fila pintada val amb un sol fixat (el cas del Bloc): amb dos,
+   mana l'entrada i no `sortBy` (ARB-T11C-01, deute nou de T11-03). */
+describe('T11-03 · la tria automàtica segueix la primera fila', () => {
+  const ultimaTria = (espia) => espia.mock.calls.at(-1)?.[0];
+  const fitxa = (titol) => within(columna('app-grid-list')).getByRole('button', { name: titol });
+
+  test('des d’una carpeta, tornar a «Tot» tria el fixat', () => {
+    const onSelectionChange = vi.fn();
+    munta([MITJANA, CARD, NOVA], { seleccio: { categoryId: 'f-poble', itemId: 'nova' }, onSelectionChange });
+    fireEvent.click(screen.getByRole('button', { name: 'Tot' }));
+    expect(ultimaTria(onSelectionChange)).toEqual({ categoryId: '__all__', itemId: 'card' });
+    expect(fitxa('Zona del pou vell').getAttribute('aria-current')).toBe('true');
+  });
+
+  test('la selecció inicial a «Tot» sense element tria el fixat', () => {
+    const onSelectionChange = vi.fn();
+    munta([MITJANA, CARD, NOVA], { seleccio: { categoryId: '__all__' }, onSelectionChange });
+    expect(ultimaTria(onSelectionChange)).toEqual({ categoryId: '__all__', itemId: 'card' });
+  });
+
+  test('l’element recordat de «Tot» guanya al fixat', () => {
+    const onSelectionChange = vi.fn();
+    munta([MITJANA, CARD, NOVA], { seleccio: { categoryId: '__all__' }, onSelectionChange });
+    fireEvent.click(fitxa('Bancal del pou'));
+    fireEvent.click(screen.getByRole('button', { name: 'Poble' }));
+    expect(ultimaTria(onSelectionChange).categoryId).toBe('f-poble');
+    fireEvent.click(screen.getByRole('button', { name: 'Tot' }));
+    expect(ultimaTria(onSelectionChange)).toEqual({ categoryId: '__all__', itemId: 'nova' });
+  });
+
+  test('si canAutoSelect refusa el fixat, es tria el següent elegible', () => {
+    const onSelectionChange = vi.fn();
+    const canAutoSelect = ({ item }) => item?.id !== 'card';
+    render(<UniversalWorkspace sortable model={{ ...model([CARD, NOVA, MITJANA]), canAutoSelect }}
+      initialSelection={{ categoryId: 'f-poble', itemId: 'mitjana' }} onSelectionChange={onSelectionChange} />);
+    fireEvent.click(screen.getByRole('button', { name: 'Tot' }));
+    expect(ultimaTria(onSelectionChange)).toEqual({ categoryId: '__all__', itemId: 'nova' });
+  });
+
+  /* ARB-T11C-02 · La reserva de firstItemId (la selecció inicial i la d'un
+     element que ja no hi és) filtra per canAutoSelect ABANS de buscar el
+     fixat: si el refusa, obri el següent elegible, mai cap element ni el
+     fixat refusat. `nova` és també la primera fila elegible per data. */
+  test.each([
+    ['la selecció inicial a «Tot» sense element', { categoryId: '__all__' }],
+    ['la reserva d’un element que ja no hi és', { categoryId: '__all__', itemId: 'esborrada' }]
+  ])('%s: si canAutoSelect refusa el fixat, es tria el següent elegible', (_cas, seleccio) => {
+    const onSelectionChange = vi.fn();
+    const canAutoSelect = ({ item }) => item?.id !== 'card';
+    render(<UniversalWorkspace sortable model={{ ...model([NOVA, CARD, MITJANA]), canAutoSelect }}
+      initialSelection={seleccio} onSelectionChange={onSelectionChange} />);
+    expect(ultimaTria(onSelectionChange)).toEqual({ categoryId: '__all__', itemId: 'nova' });
+    expect(fitxa('Bancal del pou').getAttribute('aria-current')).toBe('true');
+  });
+
+  test('dins d’una carpeta el fixat no passa davant', () => {
+    const onSelectionChange = vi.fn();
+    munta([NOVA, CARD, MITJANA], { seleccio: { categoryId: '__all__', itemId: 'mitjana' }, onSelectionChange });
+    fireEvent.click(screen.getByRole('button', { name: 'Poble' }));
+    expect(ultimaTria(onSelectionChange)).toEqual({ categoryId: 'f-poble', itemId: 'nova' });
+  });
+
+  test('fixatATot: \'true\' (una cadena) no fa passar l’element davant', () => {
+    const onSelectionChange = vi.fn();
+    munta([NOVA, { ...CARD, fixatATot: 'true' }, MITJANA], { seleccio: { categoryId: '__all__' }, onSelectionChange });
+    expect(ultimaTria(onSelectionChange)).toEqual({ categoryId: '__all__', itemId: 'nova' });
+  });
+
+  test('la reserva d’un element que ja no hi és (llista completa) tria el fixat', () => {
+    const onSelectionChange = vi.fn();
+    munta([MITJANA, CARD, NOVA], { seleccio: { categoryId: '__all__', itemId: 'esborrada' }, onSelectionChange });
+    expect(ultimaTria(onSelectionChange)).toEqual({ categoryId: '__all__', itemId: 'card' });
+  });
+
+  test('paritat (un sol fixat): a «Tot», l’element triat sol és la primera fila pintada', () => {
+    const onSelectionChange = vi.fn();
+    munta([MITJANA, NOVA, CARD], { seleccio: { categoryId: '__all__' }, onSelectionChange });
+    const files = [...columna('app-grid-list').querySelectorAll('.sdp-gestor-fitxa')];
+    expect(files[0].querySelector('.sdp-gestor-fitxa__titol').textContent).toBe('Zona del pou vell');
+    expect(files[0].getAttribute('aria-current')).toBe('true');
+    expect(files.filter((fila) => fila.getAttribute('aria-current') === 'true')).toHaveLength(1);
+    expect(ultimaTria(onSelectionChange).itemId).toBe('card');
+  });
+});

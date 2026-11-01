@@ -1,0 +1,102 @@
+{
+  "id": "6b52e32a-b357-428a-aefa-3afc736e1567",
+  "session": "bf4dcc4c-d880-4bad-bb1d-a5e8855291a0",
+  "operationId": "torn_3d9af83b-onada_u_governanca_marato_extirpacio_b0_b1_b3-bf4dcc4c",
+  "claim": "bf4dcc4c-d880-4bad-bb1d-a5e8855291a0:governance-write",
+  "planHash": "ca634279e2569c50f3a5b0c551c9c1c56751ef76c6bb1d63d2c822b6d2e95148",
+  "beforeSeal": "71beb7ab9376aaa87ee52252b73b80901ded05bcd95c3e66e645551bcd9f4979",
+  "files": [
+    {
+      "path": ".agents/contingut_estructural.json",
+      "before": "44cd395d758bdcd745ac3c86366b6970c889e75f3590094a47ec88e67b06a799",
+      "after": "af93c2aabfef4e73365a86079bfa12cde9acc3aedd8d47154ac9d91a864dbe9b"
+    },
+    {
+      "path": ".agents/doctrina-ignora.txt",
+      "before": "e6c05c6f883f5e4694ce684c37a03ece5dbf22d504de39f9019187c0f86e07ef",
+      "after": "27ee79586f01f5bcf3e5613414ea032e1e19faf2c8a1e0812c208e263027a015"
+    },
+    {
+      "path": ".agents/ESTAT.md",
+      "before": "e22353d7113f87c9c55b953206dabdec8f5797100afe53cbc41e0868d1c81e49",
+      "after": "2a0ba76be315d497d07c8e951d8c40aa76ae6ac1766811d260fd5da7754a565b"
+    },
+    {
+      "path": "package.json",
+      "before": "a6c76f9fbcb47955f62c7eb3db1f0a5c6a34a3fa41e7543837ed5c756783d897",
+      "after": "e32fad38623ab0042e2e94285c898f717f7b1e23c9a8acb9976457dd2433c673"
+    },
+    {
+      "path": "scripts/botigues/puja-ios.mjs",
+      "before": "ff4334f7652fe0c6b37b04b538e58eb8f37c67bc9306633d413698602c0b33c6",
+      "after": "9ea15d6dc6cdc4e9d89b2aa31b66db90e9ec0ad8f1c3f97ae5b79c4d50830813"
+    },
+    {
+      "path": "scripts/supabase/verifica-migracions.mjs",
+      "before": null,
+      "after": "44ea30347f34e422761445ca27a535c97b01ad8f6ef6b9a6acd53aabeeb4b636"
+    },
+    {
+      "path": "tooling/documental/arxiu-enllacos.mjs",
+      "before": null,
+      "after": "0ee6bd050d2a1206a14ddc8fbc9449ba86ba6428698a956c38be58a1750af909"
+    },
+    {
+      "path": "tooling/documental/turns.mjs",
+      "before": "51abcd00ace41f19a8dd4dc9ccde11010919a0eb72095766054afc4fbd86a902",
+      "after": "c8584061fdec3354bf11637d6aec2235b867120c82984c4af95b60e619eda597"
+    },
+    {
+      "path": "tooling/gates/design_guard.mjs",
+      "before": "5f94f66def8622c33c337584f978ed0a7a58d6e43371dd08b064fc137885d864",
+      "after": "3f4c1add849b40653db06709297918515c0eaafb32082da89f0238a15cccf405"
+    },
+    {
+      "path": "tooling/gates/git-staged.mjs",
+      "before": "cbcf8b851be85e79d5d3765943e5307a243e8389c659cc6d74793a64f39e5f6c",
+      "after": "fce1f05af7581e17a55338bf5e3641174f1fc420cbc93831e9c27c70a1d5fdd8"
+    },
+    {
+      "path": "tooling/gates/porta-olivera.mjs",
+      "before": "90b77490ba62586d882e53e772125cfb37dc233aac01cb637029617abac28ed2",
+      "after": "2ae94fb3f2c2f67d455c172ef0dee116888dde5da62c88c6074ebf490fc5e6f3"
+    },
+    {
+      "path": "tooling/gates/tractor-build-previ.mjs",
+      "before": "0b4cd0f35ad904fe3e5cc669c7730f556d497fce184ef8d4662995f0abfd0d3d",
+      "after": "c5ebb9375d8890b7a5b0a6426422de2b73ae1dccf25517744873932c1a94a932"
+    },
+    {
+      "path": "tooling/gates/tractor-doctrina.mjs",
+      "before": "09fa0c3897bac2e0609798bd0ac9e4a19d033ce8b3d0735a81943f1522aab795",
+      "after": "55208dfbddefd42b5dd5d39673d61e999058569bc77875c05db3821c43bf0b2e"
+    },
+    {
+      "path": "tooling/lib/taula-rutes-seo.mjs",
+      "before": null,
+      "after": "119b57f7ca7b3848bf2bd0b3a97d636272df73bd01018b79736443ebebcaa673"
+    },
+    {
+      "path": "tooling/scripts/tractor-consell-core.mjs",
+      "before": "91a9499ac1dd0fa8757e60d55a58eb66b818fdaccbcbca3f125942de4481755c",
+      "after": "b78eaa9603a04cca0e98f3ea60acc3ebd9cee902b2e99a5a9d8eafd43b757a87"
+    },
+    {
+      "path": "tooling/tests/node-suite-manifest.json",
+      "before": "e5ba0e294a111c38385564a609d6496817d5f901fc6508294b2ae2dfc0665174",
+      "after": "d5ecfdd6f88e6831f94030588fa2d589fbccfb12657c241d696815c889c0130c"
+    },
+    {
+      "path": "tooling/wiki/reflex_petorreta.mjs",
+      "before": "450ab3ab5c46046a1c5c6066efa586dddc9e75582f6ff194567beef027a80cba",
+      "after": "6f93bd098ec385f8fbb00bb40530c30f111cd2844dbddd25cffc6dacb454d219"
+    },
+    {
+      "path": "tooling/wiki/tractor-frontmatter.mjs",
+      "before": "b8dccf54602fd7b92bd29d92b9e2a117ab170906eb231e6b9086c8453c8986dd",
+      "after": "eeabdd894c33bfeef49c5859877c44ff87b9c573757953e997993e790bedb7eb"
+    }
+  ],
+  "state": "accepted",
+  "afterSeal": "d863c155441b09590117b6eb2a6e30dacfebf30e6a62f0b502590644b8434d0f"
+}
