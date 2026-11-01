@@ -5,6 +5,14 @@ description: Llibre d'Obra (LEDGER) de Sóc de Poble
 ---
 # Llibre d'Obra (LEDGER) de Sóc de Poble
 
+### 2026-11-01T03:08:56+00:00 · QA nocturna Fediversity, passada 1/3 · Codex (torn_ac4e3ecd-3ab5-4e21-b33a-3b5990893846)
+- **Ordre:** lectura íntegra de pla/prompt 261101_0311 i Llibre Mestre, inspecció quirúrgica cada 2 hores, màxim nocturn i tancament automàtic.
+- **Entrega:** `_wiki_de_poble/04_escriptori/261101_0403_auditoria_codex_marato_nocturna.md`; anotació delimitada al Llibre Mestre i ESTAT, sense codi de producte editat.
+- **Proves:** 554+25 Vitest i 43+53 Node passades; autoritat/Olivera/frontissa/Design Guard verds (12 avisos); build de QA sense certificar per entorn incomplet, Fusible després de dos intents. Fonts de codi inspeccionades sense canvis durant la passada.
+- **Seguiment:** `marat-fediversity-inspecci-cada-2-hores`, 06:04 i 08:04 CET del 2026-11-01, màxim 3 passades totals i tall 08:15; cap sondeig intermedi. Esborrany de Gemini 0407 llegit íntegre, encara sense conclusions.
+- **Límits:** sense desplegaments, SQL remot, enviaments, publicació a botigues ni moviments de fitxers aliens. Deutes globals de frontmatter/enllaços exposats al dictamen, sense maquillar-los.
+
+
 Aquest és el registre immutable de tots els canvis estructurals i tècnics del projecte.
 Qualsevol IA (o humà) que modifique codi està obligada a afegir-hi una entrada abans de finalitzar la seua tasca, complint amb la **Skill Trellat**.
 
@@ -1170,4 +1178,8 @@ Pla 261031_0136 i ordres del Mestre al xat del 31-10. Portes Reflex, Nomenclatur
 
 Ordres del Mestre al xat del 31-10 i de l'1-11. Kits de Codex i Gemini auditats en sec i reconciliats sobre l'arbre viu, integrats en còpia amb revisió adversarial i correccions: Ronda 2 en dos commits (`f66de7865`, `c3a2c6bba`) i Ronda 3 en este, amb les migracions 1500, 1800, 2000 i 1900 com a fitxers no aplicats i les decisions RGPD del Mestre. Transaccions de l'executor: governança del lot A (cbf81eab) i esta, amb l'empremta de fediversity, el lock del corpus, el relleu d'ESTAT i esta entrada. Commits amb `--no-verify` per decisió del Mestre. Informe a [[261031_1402_auditoria_claude]].
 
-<!-- HASH: cc0095ad93db2a0d7d4d301ea1e910aef50e1a43b872586553937f911cfd5414 -->
+## 2026-11-01T07:50:00+01:00 · Claude · Marató nocturna 261101_0311 (T1-T8, Gauntlet) · torn_e16bf731-8a9a-4245-aa3f-d81416b0ae05
+
+Ordre del Mestre al xat de l'1-11. T1-T8 executats a l'arbre viu en 9 carrils, dos Gauntlets adversarials (137 troballes, totes les P1 corregides) i 12 carrils de correcció; kits de Gemini i Codex auditats (3 pegats i 2 proves integrats). Governança per l'executor (8 fitxers, sessió 5353c955). Vitest 27.243/0, test:node 1.789/0, build i portes en verd. Sense commit ni desplegament; decisions D-1 a D-14 a l'informe 261101_0409_auditoria_claude.
+
+<!-- HASH: 7720383454a95a8798c03d8ccdd9382a9063e0f010e39d0da0d7563d11ab0481 -->

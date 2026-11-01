@@ -14,20 +14,11 @@ Documents actius de la sessió. Cada àncora correspon a un fitxer físic; la me
 
 ## Activitat en curs
 
-- [[261031_1402_auditoria_claude]]
-- [[261031_0136_pla_implementacio_assalt_fediversity_deploy_i_botigues]]
-- [[261031_0136_prompt_dissabte_fediversity_deploy_i_botigues]]
-- [[261031_0040_auditoria_claude]]
--  — Auditoria QA Adversarial de Tancament Vespertí de Gemini 4 Argon (High): Cicle 4, Workspace 3 Columnes (`> 720 px`), Consola Didàctica, Govern (`B1`+`B2`), Visor (`B3`+`B4`), SEO `og:image` (`OG-GAP-01..04`), Matriu DAFO i 15 Dimensions (`9,89/10` -> `10,0/10`) · per a  i el Mestre
--  — Auditoria QA Ronda 2 (Gauntlet Loop de 4 Cicles) + Estratègia i Enginyeria NGI Fediversity (`50.000 € · 2026-08-1a6` + `P1-23`) de Gemini 4 Argon (High): 10/10 llavors tancades, Blocs A–G, Matriu `D01..D15` i disseny d'`ActivityPub`, Open Data Municipal i `flake.nix` · per a Claude Opus 5.5 i el Mestre
--  — Prompt operatiu `261029_1852` de Revisió de Qualitat i Conformitat (QA) per a Gemini CLI i GPT Codex sobre els Blocs A, B, C, D i contractes E, F, G · per a Gemini i Codex
--  — Prompt operatiu `261029_1605` per a Claude Opus 5.5 Ultracode (Àlbum Multimèdia Local `IDEA-54`, negreta al Xat `IDEA-53` i deute E2EE/PWA) · per a 
--  — Pla d'Implementació `261029_1605` per a l'Àlbum Multimèdia Local estil Gestoria, negreta al Xat i liquidació E2EE/PWA · per a 
--  — Auditoria Gemini 4 Argon (High) dels carrils `G2` i `G3` de l'Onada `261029_1305`: `design_guard` a `0` crítics, estils inline a `0`, fitxa gestor a `0`, cens `C2=0`/`C4=0` i `tractor-frontmatter` `F9` · per a 
--  — Informe de Claude Code (Fable 5.1) dels carrils `E1` i `M1` de l'Onada `261029_1305` (E2EE Fase 4, `OG-02`, `R-02`, `D-C2`, WP `1.1.10`) · per a 
--  — Auditoria de GPT Codex del carril `G1` de l'Onada `261029_1305` (`0838` `T11`, `100/100` tests) · per a  i 
--  — Prompt operatiu per a l'Onada `261029_1305` (Claude Code, Gemini CLI i GPT Codex): liquidació del deute tècnic de portes (`design_guard`, `tractor-cens`, `tractor-frontmatter`, `0838` `T11`), actius (`OG-02`, `R-02`, `D-C2`) i Fase 4 d'E2EE fins al `10,0/10` unànime · per a 
--  — Pla d'Implementació rector de l'onada `261029_1305` amb matriu d'exclusivitat de carrils (`E1`, `M1`, `G1`, `G2`, `G3`) · per a 
+- [[261101_0409_auditoria_claude]]
+- [[261101_0407_auditoria_gemini_marato_nocturna]]
+- [[261101_0403_auditoria_codex_marato_nocturna]]
+- [[261101_0311_prompt_marato_nocturna_fediversity_notes_i_llibre_mestre]]
+- [[261101_0311_pla_implementacio_marato_nocturna_fediversity_notes_i_llibre_mestre]]
 - [[03_llibre_mestre_tasques_i_idees]] · Mestre 261021: Llibre Mestre permanent
 
 ## Producció humana
@@ -68,6 +59,8 @@ Inventari d’àncores dels originals presents; els continguts es conserven sota
 - [uploaded_media_1791194438522.webm](01_produccio/patrimoni_oral_mestre/uploaded_media_1791194438522.webm) · [uploaded_media_1791194698074.webm](01_produccio/patrimoni_oral_mestre/uploaded_media_1791194698074.webm) · [uploaded_media_1791194913610.webm](01_produccio/patrimoni_oral_mestre/uploaded_media_1791194913610.webm) · [uploaded_media_1791195347049.webm](01_produccio/patrimoni_oral_mestre/uploaded_media_1791195347049.webm) · [uploaded_media_1791195358919.webm](01_produccio/patrimoni_oral_mestre/uploaded_media_1791195358919.webm) · [uploaded_media_1791196473096.webm](01_produccio/patrimoni_oral_mestre/uploaded_media_1791196473096.webm) · [uploaded_media_1791197144650.webm](01_produccio/patrimoni_oral_mestre/uploaded_media_1791197144650.webm) · [uploaded_media_1791197420729.webm](01_produccio/patrimoni_oral_mestre/uploaded_media_1791197420729.webm)
 - [uploaded_media_1791198047673.webm](01_produccio/patrimoni_oral_mestre/uploaded_media_1791198047673.webm) · [uploaded_media_1791198097591.webm](01_produccio/patrimoni_oral_mestre/uploaded_media_1791198097591.webm) · [uploaded_media_1791198382937.webm](01_produccio/patrimoni_oral_mestre/uploaded_media_1791198382937.webm) · [uploaded_media_1791241882027.webm](01_produccio/patrimoni_oral_mestre/uploaded_media_1791241882027.webm) · [uploaded_media_1791242304340.webm](01_produccio/patrimoni_oral_mestre/uploaded_media_1791242304340.webm) · [uploaded_media_1791242506112.webm](01_produccio/patrimoni_oral_mestre/uploaded_media_1791242506112.webm) · [uploaded_media_1791242624625.webm](01_produccio/patrimoni_oral_mestre/uploaded_media_1791242624625.webm) · [uploaded_media_1791242863346.webm](01_produccio/patrimoni_oral_mestre/uploaded_media_1791242863346.webm)
 - [uploaded_media_1791242969840.webm](01_produccio/patrimoni_oral_mestre/uploaded_media_1791242969840.webm) · [uploaded_media_1791243072579.webm](01_produccio/patrimoni_oral_mestre/uploaded_media_1791243072579.webm) · [uploaded_media_1791243266002.webm](01_produccio/patrimoni_oral_mestre/uploaded_media_1791243266002.webm) · [xat_portada.jpg](01_produccio/xat_portada.jpg)
+- [261101_0203_notes_editor_plantilla_i_barra.png](01_produccio/261101_0203_notes_editor_plantilla_i_barra.png) · [261101_0221_wp_gentdelatorre_config_shortcode.png](01_produccio/261101_0221_wp_gentdelatorre_config_shortcode.png) · [261101_0221_wp_org_installation_tab.png](01_produccio/261101_0221_wp_org_installation_tab.png) · [261101_0221_wp_org_reviews_tab.png](01_produccio/261101_0221_wp_org_reviews_tab.png) · [261101_0223_wp_translate_2fa_notice.png](01_produccio/261101_0223_wp_translate_2fa_notice.png) · [261101_0235_wp_org_development_tab.png](01_produccio/261101_0235_wp_org_development_tab.png) · [261101_0235_wp_org_installation_fixed_icon.png](01_produccio/261101_0235_wp_org_installation_fixed_icon.png) · [261101_0235_wp_org_reviews_empty.png](01_produccio/261101_0235_wp_org_reviews_empty.png)
+- [261101_0240_wp_svn_password_screen.png](01_produccio/261101_0240_wp_svn_password_screen.png) · [261101_0243_wp_security_all_checked.png](01_produccio/261101_0243_wp_security_all_checked.png) · [261101_0252_captura_sistema_mur.png](01_produccio/261101_0252_captura_sistema_mur.png) · [261101_0252_captura_sistema_xat.jpg](01_produccio/261101_0252_captura_sistema_xat.jpg) · [261101_0252_vista_wp_org_screenshots_grid.jpg](01_produccio/261101_0252_vista_wp_org_screenshots_grid.jpg) · [261101_0255_captura_sistema_notes.png](01_produccio/261101_0255_captura_sistema_notes.png) · [261101_0255_captura_sistema_pobles.png](01_produccio/261101_0255_captura_sistema_pobles.png) · [261101_0255_captura_sistema_wikidepoble.png](01_produccio/261101_0255_captura_sistema_wikidepoble.png) · [261101_0256_card_bloc_de_notes_ploma.jpg](01_produccio/261101_0256_card_bloc_de_notes_ploma.jpg) · [261101_0411_captura_trio_nocturn_claude_gemini_codex.jpg](01_produccio/261101_0411_captura_trio_nocturn_claude_gemini_codex.jpg) · [261101_0422_limit_70_caracters_titol_xat_antigravity.png](01_produccio/261101_0422_limit_70_caracters_titol_xat_antigravity.png) · [261101_0429_captura_gemini_timer_6min_i_claude_9_carrils.jpg](01_produccio/261101_0429_captura_gemini_timer_6min_i_claude_9_carrils.jpg) · [261101_0453_captura_permisos_heredoc_i_xcodebuild.jpg](01_produccio/261101_0453_captura_permisos_heredoc_i_xcodebuild.jpg) · [261101_0917_captura_claude_marato_completada_27243_tests.png](01_produccio/261101_0917_captura_claude_marato_completada_27243_tests.png)
 
 ## Investigació IA
 
@@ -193,3 +186,4 @@ Laboratori evacuat per ordre expressa a `../_investigacio_ia_de_poble/`: 10 elem
 - [[../10_actes/261029_0838_acta_marmota_qa_codex_10_cicles]]
 - [[../10_actes/261029_1325_acta_marmota_marato_nocturna_i_preparacio_onada_1305]]
 - [[../10_actes/261031_0142_acta_tancament_seo_consola_telemetria_i_full_de_ruta_fediversity]]
+- [[../10_actes/261101_0334_acta_marmota_trilogia_produccio_wordpress_org_i_marato_nocturna]]

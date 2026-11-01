@@ -7,6 +7,32 @@ description: ESTAT DE LA SESSIÓ
 
 <!-- SDP:ESTAT_ACTUAL -->
 
+## ESTAT_ACTUAL · 2026-11-01T07:50:00+01:00 · Claude · Marató nocturna 261101_0311: T1-T8 en mode Gauntlet
+
+- **Torn i ordre:** `torn_e16bf731-8a9a-4245-aa3f-d81416b0ae05` (code); ordre del Mestre al xat de l'1-11 (T1-T8 del [prompt 261101_0311](../_wiki_de_poble/04_escriptori/261101_0311_prompt_marato_nocturna_fediversity_notes_i_llibre_mestre.md), amb l'esmena de MarIA de les 04:16). Informe: [261101_0409_auditoria_claude](../_wiki_de_poble/04_escriptori/261101_0409_auditoria_claude.md).
+- **Fet (sense commit ni desplegament):** T1 canal WordPress.org obert (`socdepoble` 1.1.10) a `canalsDeBotiga.js` i `/page/descarregues`; T2 `/page/fediversity` amb «Fet hui» verificable i enllaços d'1 clic; T3 Open Data 1.1.0 amb `agenda.ics`, fitxa de memòria oral OKF v0.2 a Proposa Card, alertes municipals al Mur, prova de punta a punta de l'instal·lador i perfil mínim d'allotjament; T4 IDEA-59 / P1-72 al Bloc de Notes; T5 P1-71 (en part), P1-70 i readme del connector; T6 PrivacyInfo, `appAssociation: NONE`, generador d'App Links i protocol privat de botigues; T7 P1-22 en noms accessibles, mini-Markdown del connector, kits de Gemini (3 pegats) i Codex (2 proves).
+- **Verificació:** Vitest 27.243 passades i 0 fallades; `test:node` 1.789 i 0; `npm run build` exit 0; portes d'autoritat, Olivera, design_guard (9 avisos, abans 12), cromàtic, frontissa 16/16, vocabulari, promesa, Pedra Seca, Wiki i LEDGER en verd; ESLint net.
+- **Governança:** dues transaccions Reflex amb l'executor (8 fitxers, sessió `5353c955`; i este relleu).
+- **Per al Mestre, abans del correu a NLnet:** desplegar el web; a /versions, posar el segell real; pujar a SVN el readme corregit (`_builds_de_poble/wordpress/261101_0615_*`); decidir la 1.1.11 del connector. Seguretat: la branca `main` de GitHub publica un `.env`. Decisions D-1 a D-14 a l'informe.
+- **Fronteres:** cap commit, push, desplegament, `npm install`, SQL remot ni lectura de fitxers d'entorn. El torn no es tanca amb `--close`; `obrir_torn.mjs --help` va obrir el torn sobrant `torn_cff80b84`.
+
+## ESTAT_ACTUAL · 2026-11-01T03:07:48+00:00 · Codex · Marató nocturna, passada QA 1/3
+
+Tres fonts requerides llegides íntegres. Informe viu [261101_0403_auditoria_codex_marato_nocturna](../_wiki_de_poble/04_escriptori/261101_0403_auditoria_codex_marato_nocturna.md), torn `torn_ac4e3ecd-3ab5-4e21-b33a-3b5990893846`, scope documents. Al tall HEAD `a6e4b0d81` encara sense entrega nova Claude/Gemini: 554+25 Vitest i 43+53 Node verds; autoritat, Olivera, frontissa 16/16 i Design Guard (12 avisos) passen. Build aïllat no certificat per configuració de QA incompleta; Fusible després de dos intents. QN-01 rutes del pla, QN-02 IDs T6 divergents; cap FET nou ni codi de producte editat. Automatització `marat-fediversity-inspecci-cada-2-hores`: pròximes 06:04/08:04 CET del 2026-11-01, màxim 3 passades inclosa esta; pausa en acabar o límit 08:15. Cap vigilància intermèdia ni publicació remota. Informe valid:true; tancament --close exit1/planned pels tres camps de frontmatter del Llibre i dos enllaços antics trencats. LEDGER del torn afegit i signat. Esborrany Gemini 0407 llegit íntegre, encara sense conclusions. Detall al dictamen.
+
+
+## ESTAT_ACTUAL · 2026-11-01T03:36:00+01:00 · MarIA · Tancament de les 15h (Trilogia en Producció: Supabase 64 migracions, Plugin Oficial a WordPress.org v1.1.10, Firebase Hosting) + Llibre Mestre Depurat (405KB → 108KB) + Preparació Marató Nocturna Fediversity i Botigues
+
+- **Torn i ordre:** `torn_558abd5e-2f62-41ec-9892-b40065c7739f` (documents). Acta Marmota de tancament: [261101_0334_acta_marmota_trilogia_produccio_wordpress_org_i_marato_nocturna](../_wiki_de_poble/10_actes/261101_0334_acta_marmota_trilogia_produccio_wordpress_org_i_marato_nocturna.md).
+- **Fet en Producció i Sistema:**
+  - **Supabase Producció (`100% En Viu`):** Aplicades les 64 migracions SQL (`2610241400` → `2610312000`) i verificades amb `11/11 true`.
+  - **WordPress.org Plugin Directory (`100% En Viu`):** Publicat oficialment el connector `socdepoble` (`v1.1.10`, SVN `r3777487`) a `https://wordpress.org/plugins/socdepoble/` amb 10 captures oficials i fitxa en valencià/català natiu (5 idiomes + traductor automàtic integrat).
+  - **Firebase Hosting (`100% En Viu`):** Desplegats `1.021` fitxers al canal `live` de `https://socdepoble.org`.
+  - **Llibre Mestre Depurat (`405 KB → 108 KB`):** Arxivada la còpia històrica íntegra d'octubre a `_arxiu_wiki_de_poble/historics_llibre_mestre/261101_0318_llibre_mestre_historic_integral_octubre_2026.md` (SHA-256 `8a3abe1d58922d98df62440f9bd234b0745528148940f3480785c376f27418a2`) i destil·lat `03_llibre_mestre_tasques_i_idees.md` amb la nova regla `§0.2` d'**Iniciativa Proactiva i Reversibilitat («Millora amb Trellat»)** i `0` avisos a `recullGovern`.
+- **Preparat per a la Marató Nocturna després de Reiniciar el Mac:**
+  - Pla: [261101_0311_pla_implementacio_marato_nocturna_fediversity_notes_i_llibre_mestre](../_wiki_de_poble/04_escriptori/261101_0311_pla_implementacio_marato_nocturna_fediversity_notes_i_llibre_mestre.md).
+  - Prompt: [261101_0311_prompt_marato_nocturna_fediversity_notes_i_llibre_mestre](../_wiki_de_poble/04_escriptori/261101_0311_prompt_marato_nocturna_fediversity_notes_i_llibre_mestre.md) (`T1`..`T8`: enllaç oficial `wordpress.org/plugins/socdepoble/` a `/page/descarregues` i `/page/fediversity`, tancament 100% Partides 1–4 NLnet Fediversity, `IDEA-59` / `P1-72` a `/notes`, `P1-71` `/multimedia`, `P1-70` `/xat`, i **BLOC S1 `T6` de preparació completa per a Google Play Store i Apple App Store**).
+
 ## ESTAT_ACTUAL · 2026-11-01T00:51:00+01:00 · Claude · Rondes 2 i 3 del pla 261031_0136: kits de Codex i Gemini auditats i integrats, migracions RGPD i E2EE com a fitxers
 
 - **Torn i ordre:** `torn_2c6f4a62-406b-4eec-aaf6-e5ad90d3a405` (code). Ordres del Mestre al xat del 31-10 i de l'1-11 (Rondes 2 i 3 i les decisions que hi va prendre). Informe: [261031_1402_auditoria_claude](../_wiki_de_poble/04_escriptori/261031_1402_auditoria_claude.md).

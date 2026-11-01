@@ -123,5 +123,3 @@ Plantilla entregada: _wiki_de_poble/03_actuar/plantilles/acta.md; SHA-256 4d4b9d
 
 - [[00_index]]
 - [[00_index_escriptori]]
-- [[261031_0136_pla_implementacio_assalt_fediversity_deploy_i_botigues]]
-- [[261031_0136_prompt_dissabte_fediversity_deploy_i_botigues]]
