@@ -174,9 +174,12 @@ describe('Fase D · el pas 0: l’entrada nativa', () => {
     vi.stubEnv('VITE_NATIU_GOOGLE_WEB_CLIENT_ID', web);
     vi.stubEnv('VITE_NATIU_GOOGLE_IOS_CLIENT_ID', ios);
   };
+  /* D-10 (pla 261101_1246) · Apple només amb VITE_APPLE_OAUTH_ACTIU exactament 'true'. */
+  const ambApple = (valor) => vi.stubEnv('VITE_APPLE_OAUTH_ACTIU', valor);
   afterEach(() => {
     vi.unstubAllGlobals();
     ambClients('', '');
+    ambApple('');
     natiu.carregat = false;
     natiu.fallada = null;
   });
@@ -194,13 +197,15 @@ describe('Fase D · el pas 0: l’entrada nativa', () => {
     expect(natiu.carregat).toBe(false);
   });
 
-  test('a iOS amb els dos clients: Apple i Google, registrats abans de la capa i sense carregar el connector', async () => {
+  /* Actualitzada a posta (D-10): amb Apple encés (VITE_APPLE_OAUTH_ACTIU=true), fora de `clients`. */
+  test('a iOS amb els dos clients i Apple encés: Apple i Google, registrats abans de la capa i sense carregar el connector', async () => {
     vi.stubGlobal('Capacitor', { getPlatform: () => 'ios' });
     ambClients(CLIENT_WEB, CLIENT_IOS);
+    ambApple('true');
     const { capa, host } = await avalua();
     const { creaEntradaSocial } = await import('./entradaSocial.js');
     const registre = await import('../config/entradaNativa.js');
-    expect(creaEntradaSocial).toHaveBeenCalledWith({ plataforma: 'ios', clients: { googleWeb: CLIENT_WEB, googleIos: CLIENT_IOS } });
+    expect(creaEntradaSocial).toHaveBeenCalledWith({ plataforma: 'ios', clients: { googleWeb: CLIENT_WEB, googleIos: CLIENT_IOS }, appleActiu: true });
     expect(registre.plataformaNativa()).toBe('ios');
     expect(registre.botonsNatius()).toEqual(['apple', 'google']);
     expect(creaEntradaSocial.mock.invocationCallOrder[0]).toBeLessThan(capa.fixaCapaDelPaquet.mock.invocationCallOrder[0]);
@@ -214,6 +219,7 @@ describe('Fase D · el pas 0: l’entrada nativa', () => {
      registrada sense cap botó: només el correu, i mai el Google web dins de l'app. */
   test('a iOS sense clients de Google: només Apple; a Android sense client web: la plataforma, cap botó', async () => {
     vi.stubGlobal('Capacitor', { getPlatform: () => 'ios' });
+    ambApple('true');
     await avalua();
     expect((await import('../config/entradaNativa.js')).botonsNatius()).toEqual(['apple']);
     vi.stubGlobal('Capacitor', { getPlatform: () => 'android' });
@@ -221,6 +227,36 @@ describe('Fase D · el pas 0: l’entrada nativa', () => {
     const registre = await import('../config/entradaNativa.js');
     expect(registre.plataformaNativa()).toBe('android');
     expect(registre.botonsNatius()).toEqual([]);
+    expect(natiu.carregat).toBe(false);
+  });
+
+  /* D-10 (pla 261101_1246, BOT-A3) · Sense Apple encés a Supabase, el flag no
+     hi és o no és exactament 'true': a iOS cap botó social (App Store 4.8, ni
+     Google amb els dos clients) i el connector no es carrega; queda el correu. */
+  test('D-10 · a iOS sense VITE_APPLE_OAUTH_ACTIU=true: cap botó, ni Google, i el connector no es carrega', async () => {
+    vi.stubGlobal('Capacitor', { getPlatform: () => 'ios' });
+    ambClients(CLIENT_WEB, CLIENT_IOS);
+    for (const valor of [undefined, '', 'false', 'TRUE', ' true', '1', 'yes']) {
+      ambApple(valor);
+      await avalua();
+      const { creaEntradaSocial } = await import('./entradaSocial.js');
+      const registre = await import('../config/entradaNativa.js');
+      expect(creaEntradaSocial.mock.calls.at(-1)[0].appleActiu, String(valor)).toBe(false);
+      expect(registre.plataformaNativa()).toBe('ios');
+      expect(registre.botonsNatius(), String(valor)).toEqual([]);
+      await expect(registre.demanaCredencialNativa('apple')).rejects.toMatchObject({ code: registre.CODI_ENTRADA_NATIVA.NO_DISPONIBLE });
+    }
+    expect(natiu.carregat).toBe(false);
+  });
+
+  test('D-10 · a Android el flag no canvia res: Google amb el client web, i mai Apple', async () => {
+    vi.stubGlobal('Capacitor', { getPlatform: () => 'android' });
+    ambClients(CLIENT_WEB, '');
+    for (const valor of ['true', '']) {
+      ambApple(valor);
+      await avalua();
+      expect((await import('../config/entradaNativa.js')).botonsNatius(), valor).toEqual(['google']);
+    }
     expect(natiu.carregat).toBe(false);
   });
 

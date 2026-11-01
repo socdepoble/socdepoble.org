@@ -1,6 +1,5 @@
 import { useRef, useEffect, useState, useMemo, useId } from 'react';
 import useForceLayout from './useForceLayout';
-import { wikiManifest } from '../../../data/wikiManifest';
 import { Play, Pause, ZoomIn, ZoomOut, Maximize, X } from 'lucide-react';
 
 const NODE_RADIUS = {
@@ -23,8 +22,11 @@ const COLORS = {
 };
 
 /* El graf és un component universal: la Wiki hi pinta el seu manifest i la
-   Consola hi pinta el Mapa dels agents. Sense `graf`, `estil` ni `textos`,
-   es comporta i es pinta exactament com abans (graf de la Wiki). */
+   Consola hi pinta el Mapa dels agents. Sense `estil` ni `textos`, es pinta
+   com el de la Wiki. P1-20 · D15 (Assalt 10/10, T4a-C, 261101) · `graf` ja no
+   té el de la Wiki per defecte: este mòdul no importa la Wiki compilada
+   (wikiManifest.js, uns 206 kB gzip), que viatjava al tros de la Consola.
+   Qui el vol, el fa amb grafDeLaWiki(manifest). Sense `graf`, cap node. */
 const ESTIL_WIKI = Object.freeze({
   radis: NODE_RADIUS,
   colors: { document: COLORS.document, category: COLORS.category, tag: COLORS.tag },
@@ -162,8 +164,8 @@ function creaVista() {
   return vista;
 }
 
-/** Graf de la Wiki: categories, etiquetes i documents del manifest compilat. */
-export function grafDeLaWiki(manifest = wikiManifest) {
+/** Graf de la Wiki: categories, etiquetes i documents del manifest compilat (obligatori). */
+export function grafDeLaWiki(manifest) {
   const rawNodes = [];
   const rawLinks = [];
   const nodeMap = new Set();
@@ -231,8 +233,9 @@ export function grafDeLaWiki(manifest = wikiManifest) {
 }
 
 /**
- * Props opcionals (totes amb el valor de la Wiki per defecte):
- *   graf          { nodes: [{id, label, type}], links: [{source, target, discontinu?}] }
+ * Props opcionals (totes amb el valor de la Wiki per defecte, menys `graf`):
+ *   graf          { nodes: [{id, label, type}], links: [{source, target, discontinu?}] };
+ *                 sense, el graf buit (grafDeLaWiki(manifest) fa el de la Wiki)
  *   estil         { radis, colors (tokens), noms, etiquetaAmbZoom } per tipus de node
  *   forces        { repulsio, llargaria, molla, gravetat } (useForceLayout)
  *   fletxes       pinta el sentit de cada vincle
@@ -248,6 +251,8 @@ export function grafDeLaWiki(manifest = wikiManifest) {
  *                 hi ha `renderDetall`: el seu únic usuari era l'Explorador.
  * `graf`, `estil`, `forces` i `textos` han de ser estables (constants o memo).
  */
+const GRAF_BUIT = Object.freeze({ nodes: [], links: [] });
+
 export default function BrainGraph({
   onNodeClick, className = '', graf, estil = ESTIL_WIKI, forces, fletxes = false, textos = TEXTOS_WIKI,
   enquadra = false, seleccio, onSeleccio, inspector = true
@@ -271,7 +276,7 @@ export default function BrainGraph({
   const [vista] = useState(creaVista);
 
   // 1. Extract Data
-  const { nodes, links } = useMemo(() => graf ?? grafDeLaWiki(), [graf]);
+  const { nodes, links } = useMemo(() => graf ?? GRAF_BUIT, [graf]);
   const paleta = useMemo(() => ({ ...estil.colors, link: COLORS.link, text: COLORS.text, bg: COLORS.bg }), [estil]);
   const radiDe = (type) => estil.radis[type] || 5;
 

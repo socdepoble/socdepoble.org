@@ -30,10 +30,12 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { pathToFileURL } from 'node:url';
 import {
-  BUILD, EIXIDA, REBUTS, VERSIO, analitzaArguments, commitCurt, confirmacioEsperada, equipDeCodesign,
-  executa, exportOptionsPlist, llegixAjuda, mostraOrdre, opcionsQueFalten, plega, rutaDe, sha256DeFitxer
+  BUILD, EIXIDA, REBUTS, SEGELL, VERSIO, analitzaArguments, confirmacioEsperada, equipDeCodesign,
+  executa, exportOptionsPlist, llegixAjuda, mostraOrdre, opcionsQueFalten, plega, problemaDelPaquet, rutaDe, sha256DeFitxer
 } from './entorn.mjs';
 import { arrelComprovada, preflight, projecteIos } from './preflight.mjs';
+
+import { problemaDeVersioClient } from './versio-client.mjs';
 
 const ADMESOS = Object.freeze({ versio: true, build: true, compila: false, confirma: true, ajuda: false });
 
@@ -91,9 +93,25 @@ function delInfoPlist(app, clau, { valors, arrel }) {
     .then(({ codi, crua }) => (codi === 0 ? crua.trim() : null));
 }
 
-function rebut({ arrel, versio, build, ipa, pujat }) {
+/* BOT-A4 (261025) · public/ és una carpeta de recursos de l'app (ios/App/App.xcodeproj/project.pbxproj,
+   «public in Resources», lastKnownFileType = folder): el segell que copia cap sync hi és a
+   App.app/public/segell.json [VERIFICAT 261025 en l'arxiu de 261024: App.app/public/index.html].
+   Si no és el de dist-natiu/, l'arxiu és d'un build d'abans i no es puja. L'IPA s'exporta d'este
+   arxiu, com l'equip i la versió que es comproven ací. */
+export const SEGELL_DE_L_APP = Object.freeze(['public', 'segell.json']);
+
+/** Per què l'app arxivada no ix del dist-natiu/ que ha contrastat el preflight, o null si en ix. */
+export function problemaDeLApp(arrel, app) {
+  let dins = null;
+  try { dins = fs.readFileSync(path.join(app, ...SEGELL_DE_L_APP)); } catch { /* no en porta */ }
+  return problemaDelPaquet(arrel, dins, 'l\'app arxivada');
+}
+
+/* BOT-A4 (261025) · El commit és el del segell de dist-natiu/ (el que el preflight ha contrastat
+   amb HEAD), no el HEAD d'ara; main només imprimix el rebut quan l'app arxivada porta eixe segell. */
+export function rebut({ segell, versio, build, ipa, pujat }) {
   return ['', `REBUT (per a ${REBUTS}/AAMMDD_HHMM_pujada_ios.txt; cap secret, cap Key ID, cap adreça):`,
-    `  commit: ${commitCurt(arrel) ?? 'desconegut'}`, `  versio: ${versio}  build: ${build}`,
+    `  commit: ${segell?.commit ?? 'desconegut'} (el de ${SEGELL.join('/')}, que porta l'app arxivada)`, `  versio: ${versio}  build: ${build}`,
     `  sha256 de l'IPA: ${ipa ? sha256DeFitxer(ipa) : 'sense IPA'}`, `  hora: ${new Date().toISOString()}`,
     `  pujat a App Store Connect: ${pujat ? 'sí' : 'no'}`, '  qui ha dit «sí»: (ho escriu qui executa)', ''].join('\n');
 }
@@ -111,6 +129,9 @@ export async function main(argv) {
   if (opcions.confirma !== undefined && opcions.confirma !== confirmacioEsperada(versio, build)) {
     return plega(EIXIDA.CONFIRMACIO, `--confirma ha de ser exactament ${confirmacioEsperada(versio, build)}: un «sí» val per a una sola pujada`);
   }
+  // P0-23 · El build porta la versió del client que l'app dirà al node (versio-client.mjs).
+  const deLaVersio = problemaDeVersioClient(build);
+  if (deLaVersio) return plega(EIXIDA.ARBRE, deLaVersio);
   if (process.platform !== 'darwin') return plega(EIXIDA.EINA, 'l\'arxiu d\'iOS només es pot fer en macOS amb Xcode');
   const arrel = arrelComprovada();
   if (!arrel) return plega(EIXIDA.EINA, 'git no reconeix l\'arrel del repositori on viu este script');
@@ -155,6 +176,9 @@ export async function main(argv) {
   // Verificació local, abans de qualsevol pujada.
   const ipa = ipaDe(pla.exportacio);
   if (!fs.existsSync(pla.app) || !ipa) return plega(EIXIDA.ARBRE, `no hi ha arxiu ni IPA per a ${versio} (${build}): primer --compila`);
+  const deLApp = problemaDeLApp(arrel, pla.app);
+  if (deLApp) return plega(EIXIDA.ARBRE, `${deLApp}: un build nou va amb el --build següent i --compila`);
+  process.stdout.write(`✓ l'app arxivada porta el ${SEGELL.join('/')} del preflight\n`);
   const signatura = await executa('codesign', ['-dv', '--verbose=4', pla.app], { valors, arrel, mostra: false });
   const equip = equipDeCodesign(signatura.crua);
   if (signatura.codi !== 0 || !equip) return plega(EIXIDA.EXTERNA, 'codesign -dv no ha dit l\'equip de la signatura');
@@ -166,7 +190,7 @@ export async function main(argv) {
   process.stdout.write(`✓ signada per l'equip de SDP_APPLE_TEAM_ID; Info.plist ${versio} (${build})\n`);
 
   if (opcions.confirma === undefined) {
-    process.stdout.write(rebut({ arrel, versio, build, ipa, pujat: false }));
+    process.stdout.write(rebut({ segell: pre.segell, versio, build, ipa, pujat: false }));
     return EIXIDA.BE;
   }
 
@@ -178,7 +202,7 @@ export async function main(argv) {
     return plega(EIXIDA.EXTERNA, 'altool --upload-app ha fallat');
   }
   process.stdout.write('✓ pujat. App Store Connect el processa uns minuts; la prova i l\'enviament a revisió són del Mestre (RUNBOOK P9).\n');
-  process.stdout.write(rebut({ arrel, versio, build, ipa, pujat: true }));
+  process.stdout.write(rebut({ segell: pre.segell, versio, build, ipa, pujat: true }));
   return EIXIDA.BE;
 }
 

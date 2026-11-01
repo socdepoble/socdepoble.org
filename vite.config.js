@@ -60,6 +60,35 @@ export function segellDeBuild(env = process.env) {
   return `${parts.year}${parts.month}${parts.day}`;
 }
 
+/* P1-20 · D15 (Assalt 10/10, T4a, 261101) · Els trossos de l'arrencada. El
+   tros d'entrada portava 1,47 MB (408 kB gzip): l'estil sencer com a text
+   (src/css/index.css?inline, 458 kB), el diccionari valencià (155 kB), React
+   i DOMPurify. Tots quatre es carreguen igual a l'arrencada, ara en trossos a
+   part que el navegador demana en paral·lel (modulepreload a l'index.html,
+   que el service worker ja desa com a recursos de la closca); React i
+   DOMPurify no canvien de nom quan només canvia l'app. Cap mòdul canvia de
+   contingut: cap píxel. L'ordre d'avaluació sí: els quatre trossos
+   s'avaluen abans que la resta de l'entrada. No canvia res perquè són
+   fulles sense efectes (no importen res del projecte); si un dia en
+   importaren, Rollup ho ficaria al tros i ho avançaria. Ho guarda
+   paquetDArrencada.test.js.
+   lucide-react no hi va: un tros comú arrossegaria a l'arrencada les icones
+   de totes les vistes diferides. react-dom/server i test-utils tampoc: si
+   una vista diferida els importara, no han de baixar a l'arrencada. La
+   resta, com decidix Rollup.
+   wikiManifest.js ja era un tros diferit (cap importació estàtica des de
+   l'entrada). Pur: el prova src/config/paquetDArrencada.test.js. */
+export function trossDArrencada(id) {
+  const cami = String(id).replace(/\\/g, '/');
+  if (/\/node_modules\/react-dom\/(?:server|test-utils|cjs\/react-dom-(?:server|test-utils))/.test(cami)) return undefined;
+  if (/\/node_modules\/(react|react-dom|scheduler)\//.test(cami)) return 'react';
+  if (/\/node_modules\/dompurify\//.test(cami)) return 'dompurify';
+  if (cami.includes('/node_modules/')) return undefined;
+  if (cami.endsWith('/src/css/index.css?inline')) return 'estils';
+  if (cami.endsWith('/src/config/idiomes/ca.js')) return 'ca';
+  return undefined;
+}
+
 /* calendari-7 (T5, 260930) · Les proves corren amb la zona del poble. Sense,
    la CI (UTC) no passa mai per un dia de 23 o 25 hores i les proves del canvi
    d'hora queden verdes sense provar-lo. Es fixa ací, al procés principal i
@@ -200,6 +229,7 @@ export default defineConfig(({ command, mode, isPreview }) => {
   build: {
     target: 'es2022',
     outDir: 'dist',
+    rollupOptions: { output: { manualChunks: trossDArrencada } }
   }
   };
 });

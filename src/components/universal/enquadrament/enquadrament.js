@@ -50,6 +50,35 @@ export const FORMATS = Object.freeze([
   Object.freeze({ valor: '9:16', etiqueta: 'Vertical llarg (9:16)', ratio: 9 / 16 }),
 ]);
 
+/* P1-22 (assalt 261101) · El nom de cada forma de sèrie en parells [clau,
+   reserva]; la reserva és l'etiqueta de FORMATS, lletra per lletra (ho
+   comprova enquadrament.idioma.test.js). Les ajudes de FORMATS no hi són:
+   les del retallador de les Notes les porta qui el crida. */
+export const PARELLS_FORMA = Object.freeze({
+  '1:1': Object.freeze(['editor.enquadrament.forma.quadrat', 'Quadrat (1:1)']),
+  original: Object.freeze(['editor.enquadrament.forma.original', 'Original']),
+  '4:3': Object.freeze(['editor.enquadrament.forma.apaisat43', 'Apaisat (4:3)']),
+  '3:2': Object.freeze(['editor.enquadrament.forma.apaisat32', 'Apaisat (3:2)']),
+  '16:9': Object.freeze(['editor.enquadrament.forma.panoramic', 'Panoràmic (16:9)']),
+  '21:9': Object.freeze(['editor.enquadrament.forma.superpanoramic', 'Superpanoràmic (21:9)']),
+  '4:5': Object.freeze(['editor.enquadrament.forma.vertical45', 'Vertical (4:5)']),
+  '3:4': Object.freeze(['editor.enquadrament.forma.foli', 'Foli (3:4)']),
+  '9:16': Object.freeze(['editor.enquadrament.forma.verticalLlarg', 'Vertical llarg (9:16)']),
+});
+
+/**
+ * El nom d'una forma en la llengua de `t` (opcional; sense, el valencià).
+ * Només es tradueix l'etiqueta de sèrie: si qui crida n'ha posat una de
+ * pròpia, es respecta tal qual.
+ */
+export function etiquetaDeForma(forma, t) {
+  const valor = forma?.valor;
+  if (typeof valor !== 'string' || !Object.hasOwn(PARELLS_FORMA, valor)) return forma?.etiqueta;
+  const [clau, reserva] = PARELLS_FORMA[valor];
+  if (forma.etiqueta !== reserva) return forma.etiqueta;
+  return typeof t === 'function' ? t(clau, reserva) : reserva;
+}
+
 const EPSILON = 1e-6;
 const entre = (valor, minim, maxim) => Math.min(maxim, Math.max(minim, valor));
 const finit = (valor, perDefecte) => (Number.isFinite(valor) ? valor : perDefecte);
@@ -300,7 +329,13 @@ export function tipusDeSortida(tipus) {
   return /^image\/(png|gif|webp|avif|svg\+xml)$/i.test(String(tipus || '')) ? 'image/png' : 'image/jpeg';
 }
 
-/** Text per al lector de pantalla del lliscador d'ampliació. */
-export function textAmpliacio(zoom) {
-  return `${Math.round(finit(zoom, 1) * 100)} %`;
+/* P1-22 (correcció T5c-G4) · El percentatge, en la tipografia de la llengua:
+   «120 %» en valencià i «120%» en anglés. */
+export const PARELL_PERCENTATGE = Object.freeze(['editor.enquadrament.percentatge', '{n} %']);
+
+/** Text per al lector de pantalla del lliscador d'ampliació (`t` opcional; sense, el valencià). */
+export function textAmpliacio(zoom, t) {
+  const [clau, reserva] = PARELL_PERCENTATGE;
+  const plantilla = typeof t === 'function' ? t(clau, reserva) : reserva;
+  return String(plantilla).split('{n}').join(String(Math.round(finit(zoom, 1) * 100)));
 }

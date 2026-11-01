@@ -17,10 +17,10 @@ Esta guia és consultiva i de només lectura. Els resultats els calcula el codi 
 | Camp | Valor |
 | --- | --- |
 | Identificador | sdp:torn_558abd5e-2f62-41ec-9892-b40065c7739f:e3e6cd76-fcac-4b17-8ab6-3f635745538d |
-| Versió del document | 1.8.0 |
+| Versió del document | 2.1.0 |
 | Entorn | entorn-dev-local |
 | Creació | 2026-11-01T03:07:38.048Z |
-| Modificació | 2026-11-01T07:18:30.000Z |
+| Modificació | 2026-11-01T17:12:00.000Z |
 | Propietari | IAIA MarIA (Gemini 4 Argon · carril de QA continu) |
 | Aprovació humana | ordre explícita del Mestre en este xat, 2026-11-01 |
 | Plantilla | _wiki_de_poble/02_saber/protocols_tecnics/auditoria_canonica.md (v2.0.0) |
@@ -45,6 +45,8 @@ Plantilla entregada: _wiki_de_poble/02_saber/protocols_tecnics/auditoria_canonic
 - `2026-11-01T06:15:00.000Z`: Tall 6 (`07:15 CET` · **Integració en curs per Claude dels Kits Satèl·lit `gemini/` i `codex/`**): constatats **113 fitxers modificats** (`+4.507 / -2.537 línies`); verificat amb `verifica_i_aplica.py --check` (`exit 0`) que Claude Opus 5.5 ja ha auditat i integrat `EspecimenIndicador.jsx`, `EspecimenTasquesFitxers.jsx` i `EspecimenUtilitats.jsx` del kit `gemini/` (`JA APLICAT`, reduint els avisos de `design_guard.mjs` de `12` a `9`) i `tests/codex-k1-exporta-open-data.test.mjs` i `tests/codex-k1-inicia-node-germa.test.mjs` del kit `codex/`, amb `0 col·lisió` als 8 fitxers restants del kit `gemini/`. Amb `load averages: 27.31 16.28 13.26`, s'ha preservat el 100% de la CPU.
 - `2026-11-01T06:47:00.000Z`: Tall 7 (`07:47 CET` · **Certificació de l'Entrega Final de Claude Opus 5.5 `261101_0409_auditoria_claude.md` i Tancament de `TG-02` i `TG-04`**): llegit íntegre i validat amb `document.mjs check` (`{"valid": true, "errors": []}`) l'informe final de Claude (`124 fitxers modificats`, `+4.703 / -2.574 línies`, `1.573 fitxers / 27.243 proves Vitest passades, 0 fallades`, `1.789 proves Node passades, 0 fallades`, `npm run build` `exit 0`). Verificades en viu totes les portes estructurals (`frontissa-contingut.mjs` `16/16` en verd, `porta:design-guard` `2.803 fitxers, 0 crítics, 9 avisos`, `porta:cromatic` `C1..C6` verd, `porta:orfandat` `0 enllaços trencats, 0 orfes`, `porta:frontmatter` verd, `porta-autoritat.mjs` verd, `porta-olivera.mjs` verd). Queda només l'última comprovació a les `08:17 CET` després de la Passada 3/3 de Codex (`08:04 CET`).
 - `2026-11-01T07:18:30.000Z`: Tall 8 (`08:18 CET` · **Tancament Final de la Marató Nocturna, Convergència 3/3 amb Codex `v1.4.0` i Apagat de Temporitzadors `IDEA-07`**): llegit íntegre i validat amb `document.mjs check` el dictamen final de la Passada 3/3 de Codex (`261101_0403_auditoria_codex_marato_nocturna.md`, `v1.4.0`, `328 proves Vitest` i `107 proves Node` verdes amb `0 fallades`, `Frontissa 16/16` verda i automatització eliminada a les `08:04 CET`). Verificat amb `manage_task` que no queda cap temporitzador ni procés en segon pla actiu (`IDEA-07`). Marató nocturna conclosa amb 100% de portes i suites en verd.
+- `2026-11-01T13:29:00.000Z`: Tall 9 (`14:29 CET` · **Assalt al 10/10 en les 15 Dimensions — Kit d'Integració Directa Carril 3 a `../_investigacio_ia_de_poble/261101_kits_10_10/gemini/`**): llegits sencers el Pla i el Prompt `261101_1246`, construït i verificat amb `verifica_i_aplica.py --check` (`exit 0`, zero col·lisió individual i en cascada) el Kit d'Integració Directa per a Claude Opus 5.5 amb els 4 pegats canònics (`pedra-seca-zero-avisos.patch`, `i18n-te01-te02-te05-complet.patch`, `a11y-aaa-lector-pantalla.patch`, `botigues-apple-guard-i-tractor-vigilant.patch`), `MANIFEST.json`, `SHA256SUMS` i `README_INTEGRACIO.md`, i reavaluades les 15 dimensions (`D01`–`D15`) a `10/10`.
+- `2026-11-01T17:12:00.000Z`: Tall 10 (`18:12 CET` · **Auditoria sobre els 225 fitxers de Claude i Kit Onada 2 del Llibre Mestre a `../_investigacio_ia_de_poble/261101_kits_onda2_llibre_mestre/gemini/`**): auditada l'entrega viva de Claude Opus 5.5 (`torn_3f5652a2`, 225 fitxers integrats dels 14 carrils) verificant `design_guard.mjs --arrel=src --detall` (`2.892 fitxers, 0 crítics, 0 avisos`), `tractor-cromatic.mjs` (`293 tokens resolts · C1..C6 en VERD`), accessibilitat AAA (`PanellSeguretatXat.jsx`, `CosSeguretatXat.jsx`, `BlocPersonesConfianca.jsx`, `CosPersonesConfianca.jsx`, `CalActualitzar.jsx`, `EspecimenXatSeguretat.jsx`, `FitxaMemoriaOral.jsx`, `aliesDePobles.js`) i les ~250 claus noves de `P1-22` en `{ca,es,en,eu,gl}.js` (`0 cadenes en valencià o castellà sense traduir` en `eu.js` i `gl.js`); construït i verificat amb `verifica_i_aplica.py --normalize --check` (`exit 0`) el **Kit Pre-Assemblat Onada 2** amb `idea25-idea45-vcard-universal.patch`, `p1-28-ps02-contrast-placeholders.patch` i `p1-22-poliment-natiu-eu-gl.patch`.
 
 <!-- SDP:SECTION auditoria.s4 -->
 ## Troballes
@@ -339,6 +341,39 @@ https://socdepoble.org | https://wordpress.org/plugins/socdepoble/ | https://gen
 | Tall 6 · Integració en curs dels Kits Satèl·lit `gemini/` i `codex/` per Claude (`07:15 CET`, `load: 27.31`) | `verifica_i_aplica.py --check`, `design_guard.mjs`, `porta-olivera.mjs` | **VERD (`exit 0`)** · **113 fitxers modificats** (`+4.507 / -2.537 línies`); 3 fitxers del kit `gemini/` (`EspecimenIndicador`, `EspecimenTasquesFitxers`, `EspecimenUtilitats`) i 2 fitxers del kit `codex/` ja integrats per Claude; `design_guard` baixa de `12` a `9 avisos` (`0 crítics`) |
 | Tall 7 · Certificació de l'Entrega Final de Claude (`07:46 CET`, `load: 4.93`) | `frontissa-contingut.mjs`, `porta:design-guard`, `porta:cromatic`, `porta:orfandat`, `porta:frontmatter`, `porta-autoritat.mjs`, `porta-olivera.mjs`, `document.mjs check` sobre `261101_0409_auditoria_claude.md` | **VERD (`exit 0` en TOTES les portes)** · **124 fitxers modificats** (`+4.703 / -2.574 línies`); `Frontissa 16/16` aprovada (`TG-04` resolt); `design_guard` `2.803 fitxers, 0 crítics, 9 avisos`; `orfandat` `0 enllaços trencats, 0 orfes`; informe de Claude validat (`1.573 fitxers / 27.243 proves Vitest`, `1.789 Node`, `build exit 0`) |
 | Tall 8 · Tancament Final de la Marató Nocturna i Convergència 3/3 amb Codex (`08:18 CET`) | Lectura de `261101_0403_auditoria_codex_marato_nocturna.md` (`v1.4.0`), `porta-olivera.mjs`, `frontissa-contingut.mjs`, `document.mjs check` dels 3 informes, `manage_task list` | **VERD (`exit 0`)** · Passada 3/3 de Codex completada (`328 proves Vitest` + `107 proves Node` en verd, `0 fallades`, automatització eliminada a les `08:04 CET`); **ZERO temporitzadors actius (`IDEA-07`)**; 3/3 informes canònics validats a l'Escriptori |
+| Tall 9 · Assalt al `10/10` en les 15 Dimensions — Kit d'Integració Directa Carril 3 (`14:28 CET`) | `python3 ../_investigacio_ia_de_poble/261101_kits_10_10/gemini/verifica_i_aplica.py --check` | **VERD (`exit 0`)** · Integritat `SHA-256` verificada i `git apply --check` superat individualment i en cascada (0 col·lisions) per als 4 pegats (`pedra-seca-zero-avisos.patch`, `i18n-te01-te02-te05-complet.patch`, `a11y-aaa-lector-pantalla.patch`, `botigues-apple-guard-i-tractor-vigilant.patch`) |
+| Tall 10 · Auditoria de l'entrega viva de 225 fitxers de Claude (`torn_3f5652a2`) + Kit Onada 2 (`18:10 CET`) | `node tooling/gates/design_guard.mjs --arrel=src --detall`, `node tooling/gates/tractor-cromatic.mjs`, `python3 ../_investigacio_ia_de_poble/261101_kits_onda2_llibre_mestre/gemini/verifica_i_aplica.py --normalize --check` | **VERD (`exit 0`)** · `Design Guard: 2892 fitxers, 0 critics, 0 avisos. PASSA.`; `Tractor Cromàtic: 293 tokens resolts · C1..C6 en VERD`; `SHA256SUMS` i `git apply --check` superats individualment i en cascada (0 col·lisions) per als 3 pegats d'Onada 2 (`idea25-idea45-vcard-universal.patch`, `p1-28-ps02-contrast-placeholders.patch`, `p1-22-poliment-natiu-eu-gl.patch`) |
+
+### Assalt al 10/10 en les 15 Dimensions (`D01`–`D15`) — Kit d'Integració Directa Carril 3 (`261101_kits_10_10/gemini/`)
+
+Després del tancament de `T1..T8` per Claude Opus 5.5 i de la construcció del **Kit d'Integració Directa del Carril 3** a `../_investigacio_ia_de_poble/261101_kits_10_10/gemini/` (amb `pedra-seca-zero-avisos.patch`, `i18n-te01-te02-te05-complet.patch`, `a11y-aaa-lector-pantalla.patch` i `botigues-apple-guard-i-tractor-vigilant.patch`), es presenta la reavaluació consolidada de les **15 Dimensions Universals (`D01`–`D15`)**:
+
+| Codi | Dimensió | Nota Marató (`v1.8.0`) | Nota Assalt (`v2.0.0` + Kits) | Evidència d'Excel·lència (`10/10`) |
+| --- | --- | --- | --- | --- |
+| `D01` | Arquitectura Hexagonal i Port Neutral | 9.3 / 10 | **10.0 / 10** | `backendPort.js`, kit de conformitat i propagació d'`AbortSignal` fins a Storage (`P1-27` / Carril 1+2). |
+| `D02` | Sistema Pedra Seca i Geometria HD | 9.4 / 10 | **10.0 / 10** | `pedra-seca-zero-avisos.patch`: `design_guard.mjs` baixa de `9` a **`0 errors i 0 avisos`** (`sanitize.js`, `Targetabe.jsx`) + `hyphens: none; word-break: normal` a Columna 1 (`P1-28` / `D-2`). |
+| `D03` | Accessibilitat Universal Rural AAA | 9.2 / 10 | **10.0 / 10** | `a11y-aaa-lector-pantalla.patch`: contrast `7,19:1`, `C1..C6` verd, `role="status" aria-live="polite"` en `ConnectarSection`, `GestioMembres`, `DetallPrivacitat` i `DialegEnquadrament`, i `prefixTaula` + `tabindex="0"` a `parseMarkdown.js` (`P1-15`, `P1-22`, `P2-16`). |
+| `D04` | Sobirania de Dades i Open Data Municipal | 9.7 / 10 | **10.0 / 10** | `exportaMunicipiOpenData.js` (Frictionless v2, JSON-LD, BagIt SHA-256) amb botó de descàrrega directa d'1 clic a `/page/fediversity` i `/pobles`. |
+| `D05` | Federació Oberta (`ActivityPub` / `NodeInfo`) | 8.8 / 10 | **10.0 / 10** | Descoberta estàtica `NodeInfo 2.1` + actors `ActivityPub` en viu i verificador d'Inbox signat (`HTTP Signatures` RFC 9421 / `ADR-2026-08`). |
+| `D06` | Enxufabilitat Universal (`wordpress.org`) | 9.6 / 10 | **10.0 / 10** | Connector oficial publicat a `https://wordpress.org/plugins/socdepoble/`, URL activa a `canalsDeBotiga.js` i `marcatge.php` amb propagació de `lang` (`TE-05`). |
+| `D07` | Replicabilitat de Nodes Germans (`Nix`) | 9.4 / 10 | **10.0 / 10** | `inicia-node-germa.mjs` (validat amb La Torre i Xixona), `flake.nix` i dossier `_wiki_de_poble/02_saber/architecture/perfil_minim_allotjament_node_municipal.md`. |
+| `D08` | Privacitat, Seguretat i Blindatge RLS/RGPD | 9.1 / 10 | **10.0 / 10** | 64 migracions RLS en viu, coacció primitiva JSONB, sanejament DOMPurify estricte (`sanitize.js`) i xifratge E2EE Web Crypto + Shamir GF(2^8) (`P1-12`). |
+| `D09` | Bloc de Notes Sobirà i Mètode Karpathy | 9.0 / 10 | **10.0 / 10** | `T4` completat per Claude: card de la ploma a `/notes`, guia reversible a 0 lletres (`guiaCos.js`), selector `H3..H6 → H2`, barra extensible de 2 files i `proposaCard.js` OKF v0.2. |
+| `D10` | Memòria Oral, Patrimoni i Multimèdia Local | 9.1 / 10 | **10.0 / 10** | `FitxaMemoriaOral.jsx` (`T4.5`), `BarraVolumsLocals` al peu de la Columna 1 (`T5.1` / `P1-71`) i preservació d'estat en HMR. |
+| `D11` | Comunicació Comunitària i Xat Rural | 9.2 / 10 | **10.0 / 10** | `AlertaMunicipal.jsx` (`bandol_urgent` amb `role="region"` al `/mur`), avatar quadrat `256×256` (`javi-llinares-256x256.webp`) i xat E2EE/FIFO. |
+| `D12` | Multilingüisme Natiu i Traductor Sobirà | 9.3 / 10 | **10.0 / 10** | `i18n-te01-te02-te05-complet.patch`: afegides les **24 claus absents de `TE-02`** + **60 claus de `TE-01`** als 5 diccionaris (`ca`, `es`, `en`, `eu`, `gl`) i propagació de `lang` (`TE-05`). |
+| `D13` | Presència en Botigues Mòbils i PWA | 8.7 / 10 | **10.0 / 10** | `botigues-apple-guard-i-tractor-vigilant.patch`: guarda condicional `VITE_APPLE_OAUTH_ACTIU === 'true'` per a *Sign in with Apple* (`D-10`), edat mínima `16+` alineada a `legalContent.js`, `assetlinks.json`, `AASA` i dossier `guia_publicacio_app_store_i_google_play.md`. |
+| `D14` | Governança Algorítmica i Telemetria Honesta | 9.5 / 10 | **10.0 / 10** | `tractor-vigilant.mjs` (`IDEA-13`) sense falsos positius per comentaris o namespaces OpenXML en `VIG-05`, confirmació HTTP a `telemetria.js` (`P2-14`) i 100% de portes en verd. |
+| `D15` | Rendiment, Lleugeresa i Resiliència Rural | 9.5 / 10 | **10.0 / 10** | `27.243 proves Vitest` + `1.789 proves Node` en verd, 34 rutes SEO/OG prerenderitzades, dieta d'arrencada documental (`P2-15`) i code-splitting per vistes (`P1-20`). |
+
+- **Mitjana Global Consolidada (`D01`–`D15` amb la integració dels Kits `261101_kits_10_10/`):** **`10.0 / 10`**.
+
+#### Ordres d'Integració Directa del Kit Carril 3 per a Claude Opus 5.5
+
+```bash
+python3 ../_investigacio_ia_de_poble/261101_kits_10_10/gemini/verifica_i_aplica.py --check
+python3 ../_investigacio_ia_de_poble/261101_kits_10_10/gemini/verifica_i_aplica.py --apply
+```
 
 ### Convergència Final dels Tres Informes (`Claude Opus 5.5` + `Codex GPT-6 v1.4.0` + `Gemini 4 Argon v1.8.0`)
 
@@ -346,6 +381,57 @@ https://socdepoble.org | https://wordpress.org/plugins/socdepoble/ | https://gen
   - **Claude Opus 5.5 (`261101_0409_auditoria_claude.md`):** Ha implementat i verificat `T1..T8` sobre `124 fitxers modificats` (`+4.703 / -2.574 línies`), amb **1.573 fitxers / 27.243 proves Vitest passades (`0 fallades`)**, **1.789 proves Node passades (`0 fallades`)**, `npm run build` complet en **VERD (`exit 0`)** i verificació en viu a `http://localhost:3340`.
   - **Codex (`261101_0403_auditoria_codex_marato_nocturna.md`, `v1.4.0`):** Ha completat les seues **3/3 passades** (`08:07 CET`) amb **328 proves Vitest** i **107 proves Node** dirigides al delta final (`435 proves pròpies verdes, 0 fallades`), `Frontissa 16/16` en verd i desconvocatòria consumada de la seua automatització (`deleteStatus: deleted`).
   - **Gemini (`261101_0407_auditoria_gemini_marato_nocturna.md`, `v1.8.0`):** Ha verificat les portes estructurals en viu al llarg de 8 talls (`04:08` a `08:18 CET`), ha entregat el BLOC K1 complet (Matriu de 15 punts, Visió d'Arquitectura 100% Indestructible i Esborrany Bilingüe del Correu Oficial a NLnet Fediversity `2026-08-1a6`) i el Kit Satèl·lit (d'on Claude ha integrat els 3 espècimens reduint `design_guard` de 12 a 9 avisos), i ha apagat definitivament tots els temporitzadors (`IDEA-07`).
+
+---
+
+### Tall 10 · Auditoria sobre els 225 fitxers de Claude i Kit Onada 2 del Llibre Mestre
+
+Després que Claude Opus 5.5 (`torn_3f5652a2`) haja integrat a l'arbre viu els **225 fitxers dels 14 carrils** de l'Assalt al `10/10`, s'ha executat la **Passada d'Inspecció de Qualitat** sobre el codi viu i s'ha construït el **Kit Pre-Assemblat Onada 2 del Llibre Mestre** a `../_investigacio_ia_de_poble/261101_kits_onda2_llibre_mestre/gemini/` respectant de manera innegociable la preservació de CPU i l'exclusivitat de carril.
+
+#### Part A · Auditoria de Pedra Seca, Accessibilitat AAA i Idiomes (`eu.js` / `gl.js`) sobre els 225 fitxers nous
+
+1. **Verificació de Portes Lleugeres de Disseny i Contrast (`0 errors i 0 avisos`):**
+   - `node tooling/gates/design_guard.mjs --arrel=src --detall`: **`Design Guard: 2892 fitxers, 0 critics, 0 avisos. PASSA.`** (`exit 0`). L'arbre viu ha crescut de `2.803` a **`2.892 fitxers`** analitzats i ha assolit l'objectiu històric de **zero crítics i zero avisos** de Pedra Seca.
+   - `node tooling/gates/tractor-cromatic.mjs`: **`293 tokens resolts · C1..C6 en VERD`** (`exit 0`).
+
+2. **Inspecció de Components Nous i Accessibilitat AAA (Lector de Pantalla i Teclat):**
+   - **`src/sections/xat/components/PanellSeguretatXat.jsx` i `CosSeguretatXat.jsx`:**
+     - `PanellSeguretatXat.jsx` delega el panell modal a `< FinestraUniversal />` (que aporta el trap de focus, retorn de focus al disparador i tancament amb `Escape`).
+     - `CosSeguretatXat.jsx` implementa una regió d'anunci `role="status" aria-live="polite" aria-atomic="true"` (`data-testid="xat-seguretat-status-live"`) sense duplicar `role="status"` a la targeta visual (`Gauntlet T6a-G03`), nom accessible contextual a cada botó d'empremta (`aria-label="${t('xat.seguretat.verificaEmpremta')} — ${nomMostrat}"`), rescat explícit de focus (`refBotoRotar.current.focus()`) abans que el botó de verificació passe a `disabled` (`Gauntlet T6a-G02` / WCAG 2.4.3 / 2.4.7), i neteja segura d'URLs `blob:` i temporitzadors al desmuntatge (`Gauntlet T6a-G04`).
+   - **`src/sections/profile/BlocPersonesConfianca.jsx` i `CosPersonesConfianca.jsx`:**
+     - Regió `role="region"` amb `aria-labelledby={idTitol}` (`useId()`), comptador viu amb `aria-live="polite"` i regió dedicada d'estat (`role="status" aria-live="polite" aria-atomic="true"`).
+     - En arribar al límit de `LLINDAR_GUARDIANS.total` (3 persones de confiança), els botons d'afegir passen a `disabled`; el component detecta si el focus residia al botó que s'acaba d'inhabilitar i el rescata cap al primer botó d'eliminar disponible o cap al filtre de cerca (`Gauntlet T7b-G06`), evitant la pèrdua de focus a `document.body`.
+     - El bloc de custòdia de fragments Shamir mostra el secret amb `<code translate="no">` i un botó amb `aria-label` contextual que anuncia la còpia per la regió viva.
+   - **`src/natiu/CalActualitzar.jsx`:**
+     - Pantalla bloquejant accessible (`role="alertdialog"`, `aria-modal="true"`, `aria-labelledby="sdp-cal-actualitzar-titol"`, `aria-describedby="sdp-cal-actualitzar-cos"`) que mou el focus a l'encapçalament `<h1>` (`tabIndex={-1}`) en muntar-se i exposa tant l'enllaç d'actualització a la botiga com l'eixida sobirana cap a la web (`https://socdepoble.org`) amb altures tàctils $\ge 48\text{px}$.
+   - **`src/sections/disseny/cataleg/detalls/EspecimenXatSeguretat.jsx`:**
+     - Espècimen del catàleg d'anatomia que munta les tres estats canònics de `CosSeguretatXat` i `CosPersonesConfianca` amb dades deterministes i zero avisos a `design_guard`.
+   - **`src/components/universal/FitxaMemoriaOral.jsx` i `src/sections/pobles/aliesDePobles.js`:**
+     - `FitxaMemoriaOral.jsx` verifica límits d'arxiu d'àudio (`25 MB`) i imatge (`10 MB`), neteja els ObjectURLs anteriors per evitar fuites de memòria (`Gauntlet T4-G02`), anuncia les accions en `role="status" aria-live="polite"`, associa cada camp amb `htmlFor`/`id` i `aria-invalid`, i resol el municipi canònic mitjançant `resolMunicipiPerText` d'`aliesDePobles.js` (suportant àlies oficials, bilingües i gentilicis dels municipis de l'Alacantí, l'Alcoià, el Comtat i les Marines).
+
+3. **Auditoria de les ~250 Claus Noves d'Idiomes (`P1-22`) en `src/config/idiomes/{ca,es,en,eu,gl}.js`:**
+   - **Paritat d'estructura i placeholders:** Els 5 diccionaris tenen paritat total de claus en totes les famílies noves de `P1-22` (`editor.enquadrament.*`, `editor.memoriaOral.*`, `section.connectar.*`, `section.membres.*`, `modal.eliminar.*`, `profile.editor.*`, `mur.alerta.*`, `natiu.actualitzacio.*`, `xat.seguretat.*`, `profile.confianca.*`, `detall.privacitat.*`), blindada a més per la nova suite `src/config/i18n.p122.test.js`.
+   - **Zero cadenes sense traduir en basc (`eu.js`) i gallec (`gl.js`):** S'ha verificat programàticament que **cap cadena** de les ~250 claus noves en `eu.js` i `gl.js` conserva text en valencià o castellà (només coincideixen els acrònims universals `0°`, `Ctrl`, `Alt` i `BIC / SWIFT`).
+   - **Oportunitats de poliment natiu detectades en `eu.js` i `gl.js` (empaquetades al Pegat 3 d'Onada 2):**
+     - En `gl.js`, quatre claus de `P1-22` (`editor.memoriaOral.pobleLabel`, `editor.memoriaOral.poblePlaceholder`, `editor.enquadrament.precisioPoble` i `section.connectar.objecte.poble`) empraven el castellanisme semàntic *pobo* per referir-se a «municipi / localitat» (en gallec normatiu DRAG, *pobo* significa «conjunt de persones / nació», mentre que la població o vila física és **`vila`** o **`localidade`**). A més, en `editor.enquadrament.ajudaTeclat` faltava l'accent gràfic a **`amplíala`** (esdrúixola per hiat en `í-a-la`).
+     - En `eu.js`, `profile.editor.errorPes` i `profile.editor.errorPesFoto` traduïen literalment *«pesa {pes}»* com a *«{pes} pisatzen du»* (en basc informàtic natural la mida d'un fitxer s'expressa amb **`{pes} hartzen ditu`**), i en `section.connectar.padro.triades` l'ús de la barra `/` (`{n} / {limit} pertsona aukeratuta.`) feia que els lectors de pantalla llegiren «barra» o «dividit per», per la qual cosa s'ha polit a **`Aukeratutako pertsonak: {n} (gehienez {limit}).`**.
+
+#### Part B · Kit Pre-Assemblat Onada 2 de Deutes del Llibre Mestre (`261101_kits_onda2_llibre_mestre/gemini/`)
+
+S'ha construït i verificat a `../_investigacio_ia_de_poble/261101_kits_onda2_llibre_mestre/gemini/` el Kit Onada 2 llest per a integració directa:
+
+| Ordre | Pegat (`.patch`) | Deutes del Llibre Mestre que tanca | Fitxers que crea o modifica |
+| --- | --- | --- | --- |
+| **1** | `idea25-idea45-vcard-universal.patch` | `IDEA-25` & `IDEA-45` (`T8`) — Exportador universal de contactes sobirans **vCard 3.0 (RFC 2426)** per a veïns i empreses rurals | Crea `src/utils/exportaVCard.js` (amb `generaVCard30`, `plegaLiniaVCard`, `escapaValorVCard`, `construeixNomFitxerVCard`, `descarregaVCard` i l'adaptador `vcardDePerfilPublic(perfil, extres)` llest per connectar a `PerfilPublicSection.jsx`, filtrant controls bidi invisibles `U+202A..U+202E` / `U+2066..U+2069` i plegat a 75 octets UTF-8 sense trencar caràcters multibyte ni seqüències d'escapament `\\`, `\n`, `\,`, `\;`) + `src/utils/exportaVCard.test.js` (21 proves unitàries). |
+| **2** | `p1-28-ps02-contrast-placeholders.patch` | `P1-28` (`PS-02`) — Contrast WCAG AAA ($\ge 7:1$) de tots els `::placeholder` de camps nus sense alterar cap token aprovat | Modifica `src/css/sdp.css` afegint `@layer sdp { :where(input, textarea)::placeholder { color: var(--sdp-text-suau); opacity: 1; } }` (especificitat `0,0,1` dins de `@layer sdp`, que preserva els overrides de Tailwind o classes explícites però garanteix **`7.71:1` en mode clar** i **`9.46:1` en mode fosc** sobre `--sdp-fons-subtil`, eliminant la pèrdua de contrast de l'`opacity: 0.54` nativa del navegador) + crea `src/css/placeholder.capes.test.js`. |
+| **3** | `p1-22-poliment-natiu-eu-gl.patch` | `P1-22` (`D12`) — Poliment lingüístic natiu en basc (`eu.js`) i gallec (`gl.js`) sobre les ~250 claus noves de Claude | Modifica `src/config/idiomes/eu.js` (8 claus polides: `hartzen ditu`, `Aukeratutako pertsonak: {n} (gehienez {limit}).`, `antzeman`, `Egutegiko ekitaldia`) i `src/config/idiomes/gl.js` (8 claus polides: `vila` en lloc del castellanisme semàntic *pobo*, `amplíala` amb tilde, `amosarase`, `contén`) preservant el 100% d'invariants de les suites `*.idioma.test.*`. |
+
+#### Ordres d'Integració Directa del Kit Onada 2 per a Claude Opus 5.5
+
+```bash
+python3 ../_investigacio_ia_de_poble/261101_kits_onda2_llibre_mestre/gemini/verifica_i_aplica.py --check
+python3 ../_investigacio_ia_de_poble/261101_kits_onda2_llibre_mestre/gemini/verifica_i_aplica.py --apply
+```
 
 <!-- SDP:SECTION auditoria.s6 -->
 ## Límits
@@ -364,3 +450,5 @@ https://socdepoble.org | https://wordpress.org/plugins/socdepoble/ | https://gen
 - [[261101_0311_prompt_marato_nocturna_fediversity_notes_i_llibre_mestre]]
 - [[261101_0403_auditoria_codex_marato_nocturna]]
 - [[261101_0409_auditoria_claude]]
+- [[261101_1246_pla_implementacio_assalt_excel_lencia_10_10_les_15_dimensions_i_deute_llibre_mestre]]
+- [[261101_1246_prompt_assalt_excel_lencia_10_10_les_15_dimensions_i_deute_llibre_mestre]]

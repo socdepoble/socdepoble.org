@@ -37,8 +37,13 @@
  *     contingut, una sola per a /connectar i el Snippet Curador.
  *
  * Pur: sense React ni xarxa (Model B).
+ *
+ * P1-22 (assalt 261101, T5b) · Els motius que es veuen passen per un `t`
+ * opcional (parells [clau, reserva], la reserva lletra per lletra). La cita
+ * «Font:» no es traduïx: va al cos desat de la nota.
  */
 import { normalizeBackendConfig } from '../../config/backendConfig.js';
+import { omple } from '../../config/moderacio.js';
 import { MAXIM_LEMA } from '../../data/limitsText.js';
 import { MAXIM_CAMP_ORIGEN, MAXIM_URL, netejaCampOrigen, urlExterna, validaUrlExterna } from '../../data/origenNota.js';
 import { CARPETA_CONNECTATS } from '../notes/carpetes.js';
@@ -52,19 +57,26 @@ export const LIMITS_EXTERN = Object.freeze({
   entradilla: MAXIM_LEMA
 });
 
+/* P1-22 · Parells [clau, reserva]; {n} és el límit. */
 const MOTIUS_URL = Object.freeze({
-  buida: 'Falta l’adreça de la pàgina.',
-  llarga: `L’adreça passa de ${MAXIM_URL} caràcters. No es talla: una adreça tallada porta a una altra pàgina.`,
-  malformada: 'L’adreça no és vàlida.',
-  esquema: 'Només es poden connectar adreces web (http o https).',
-  credencials: 'L’adreça porta un usuari o una contrasenya, i no es connecta.'
+  buida: Object.freeze(['section.connectar.extern.motiu.buida', 'Falta l’adreça de la pàgina.']),
+  llarga: Object.freeze(['section.connectar.extern.motiu.llarga', 'L’adreça passa de {n} caràcters. No es talla: una adreça tallada porta a una altra pàgina.']),
+  malformada: Object.freeze(['section.connectar.extern.motiu.malformada', 'L’adreça no és vàlida.']),
+  esquema: Object.freeze(['section.connectar.extern.motiu.esquema', 'Només es poden connectar adreces web (http o https).']),
+  credencials: Object.freeze(['section.connectar.extern.motiu.credencials', 'L’adreça porta un usuari o una contrasenya, i no es connecta.'])
 });
 
+/* P1-22 · La frase sencera de cada camp (no «El títol» + «passa de…»): cada
+   llengua concorda el subjecte com li cal. */
 const CAMPS_DE_TEXT = Object.freeze([
-  ['titol', 'El títol'],
-  ['subtitol', 'El subtítol'],
-  ['entradilla', 'L’entradilla']
+  ['titol', Object.freeze(['section.connectar.extern.motiu.titol', 'El títol passa de {n} caràcters.'])],
+  ['subtitol', Object.freeze(['section.connectar.extern.motiu.subtitol', 'El subtítol passa de {n} caràcters.'])],
+  ['entradilla', Object.freeze(['section.connectar.extern.motiu.entradilla', 'L’entradilla passa de {n} caràcters.'])]
 ]);
+
+/* Sense traductor, la reserva valenciana; un `t` que no és funció, també. */
+const senseTraductor = (_clau, reserva) => reserva;
+const text = (t, [clau, reserva]) => (typeof t === 'function' ? t(clau, reserva) : reserva);
 
 const caracters = (text) => Array.from(text).length;
 /* Una línia de text net: sense caràcters de control, surrogates orfes, espais
@@ -75,15 +87,17 @@ const netejaLinia = (valor) => netejaCampOrigen(valor, Infinity).replace(/\s+/g,
  * { ok: true, valor: { url, lloc, titol, subtitol, entradilla } } o
  * { ok: false, errors: { url?, titol?, subtitol?, entradilla? } } amb el motiu
  * de cada camp. Sense títol, el lloc (el domini de la url): és d'on ve.
+ * P1-22 · `t` opcional per als motius; sense, el valencià de sempre.
  */
-export function validaContingutExtern(entrada) {
+export function validaContingutExtern(entrada, t = senseTraductor) {
   const errors = {};
   const { url, motiu } = validaUrlExterna(entrada?.url);
-  if (motiu) errors.url = MOTIUS_URL[motiu];
+  /* Només les claus pròpies de la taula; un motiu que no hi és, «no és vàlida». */
+  if (motiu) errors.url = omple(text(t, MOTIUS_URL[Object.hasOwn(MOTIUS_URL, motiu) ? motiu : 'malformada']), { n: MAXIM_URL });
   const textos = {};
-  for (const [camp, nom] of CAMPS_DE_TEXT) {
+  for (const [camp, parell] of CAMPS_DE_TEXT) {
     const valor = netejaLinia(entrada?.[camp]);
-    if (caracters(valor) > LIMITS_EXTERN[camp]) errors[camp] = `${nom} passa de ${LIMITS_EXTERN[camp]} caràcters.`;
+    if (caracters(valor) > LIMITS_EXTERN[camp]) errors[camp] = omple(text(t, parell), { n: LIMITS_EXTERN[camp] });
     textos[camp] = valor;
   }
   if (Object.keys(errors).length) return { ok: false, errors };
@@ -164,8 +178,9 @@ function entradetaDeText(resta) {
  * a entradilla si no n'arriba cap (entradetaDeText: sense les adreces
  * rebutjades i tallada al límit); sense adreça vàlida al text, null (o, amb
  * una `url` buida, el motiu de la buida).
+ * P1-22 · `t` opcional, el de validaContingutExtern.
  */
-export function contingutExternDeParams(params) {
+export function contingutExternDeParams(params, t = senseTraductor) {
   if (!params || typeof params.has !== 'function') return null;
   const textos = {
     titol: params.get('titol') ?? params.get('title'),
@@ -175,9 +190,9 @@ export function contingutExternDeParams(params) {
   const url = params.get('url');
   if (!url || !url.trim()) {
     const deText = adrecaDeText(params.get('text'));
-    if (deText) return validaContingutExtern({ ...textos, url: deText.url, entradilla: textos.entradilla ?? entradetaDeText(deText.resta) });
+    if (deText) return validaContingutExtern({ ...textos, url: deText.url, entradilla: textos.entradilla ?? entradetaDeText(deText.resta) }, t);
   }
-  return params.has('url') ? validaContingutExtern({ ...textos, url }) : null;
+  return params.has('url') ? validaContingutExtern({ ...textos, url }, t) : null;
 }
 
 /** «Font: <a href=url>lloc</a>», escapat; '' sense url vàlida. */

@@ -29,9 +29,13 @@
      · el motiu del rebuig d'una segona execució: el destí ja existix;
      · la federació del node: NodeInfo 2.1, host-meta i WebFinger amb l'origen de Xixona i cap
        rastre de l'origen del Mas electrònic (socdepoble.org);
+     · D-13 (pla 261101_1246): la federació és la del poble del node, llegida de node-germa.json:
+       un sol actor, Xixona, amb el seu WebFinger, la seua outbox (la pàgina pública del poble) i
+       el seu NodeInfo 2.1, i cap actor del projecte ni de La Torre de les Maçanes;
      · el repositori viu: quatre fitxers sentinella amb el mateix SHA-256, cap eixida coneguda a
        l'arrel i un directori de treball aïllat que queda buit;
-     · [DEFECTE] el residu de La Torre que el node encara hereta de la release (vegeu la prova).
+     · [DEFECTE] el residu que el node encara hereta de la release: les reescriptures de WebFinger
+       de firebase.json i la llavor de mostra (vegeu la prova).
    No prova els passos 1 i 2 d'INICIA_NODE.md (npm ci i npm run build:web) ni servix cap web.
    Necessita git i tar; cap xarxa ni npm. Els temporals s'esborren amb after(), també si una prova
    falla. */
@@ -251,24 +255,39 @@ test('la federació que publicaria el node és de l’origen de Xixona: NodeInfo
   for (const rel of publicats) assert.ok(!a(rel).includes('socdepoble.org'), `${rel} porta l'origen del Mas`);
 });
 
-test('[DEFECTE] el node de Xixona encara hereta La Torre de la release: actor federat, reescriptures de firebase.json i llavor', () => {
-  /* Deute confirmat i declarat (B4, 261101; qüestió oberta al Mestre). Esta prova passa perquè
-     reproduïx el residu. POBLES_FEDERATS (src/data/activitypub.js, decisió del Mestre del
-     31-10-2026) i ACTORS_WEBFINGER_ESTATIC i ALIES_WEBFINGER (tooling/seo/genera-federacio.mjs) són
-     constants de la release, i l'instal·lador no les parametritza: el node de Xixona publicaria
-     @la-torre-de-les-macanes@gentdexixona.example i cap actor de Xixona. El firebase.json copiat
-     porta les reescriptures de WebFinger lligades a socdepoble.org. Quan la federació llija la
-     identitat del node, esta prova s'ha d'invertir: actor xixona, cap actor de La Torre. */
+/* D-13 (pla 261101_1246, carril T3) · Gir del [DEFECTE] «el node de Xixona encara hereta La Torre»:
+   tooling/seo/genera-federacio.mjs llig node-germa.json (el que escriu l'instal·lador) i el node
+   publica el seu poble. Esta prova executa el generador de la release de HEAD: passa quan el canvi
+   està confirmat. Abans del commit, el bloc «D-13» de tooling/seo/genera-federacio.test.mjs ho
+   prova amb el codi viu i una arrel fixture. */
+test('D-13 · la federació del node és la de Xixona: un sol actor, amb el seu WebFinger, la seua outbox i el seu NodeInfo 2.1', () => {
   assert.equal(estat.federacio?.status, 0, estat.federacio?.stderr);
-  assert.deepEqual(JSON.parse(estat.federacio.stdout).actors, ['socdepoble', 'la-torre-de-les-macanes']);
+  assert.deepEqual(JSON.parse(estat.federacio.stdout).actors, ['xixona']);
   const a = (rel) => path.join(estat.publicacio, rel);
-  assert.equal(fs.existsSync(a('ap/actors/xixona.json')), false);
-  assert.equal(fs.existsSync(a('.well-known/webfinger/xixona.json')), false);
-  assert.match(llig(a('ap/actors/la-torre-de-les-macanes.json')), RESIDU_TORRE);
-  assert.equal(JSON.parse(llig(a('.well-known/webfinger/la-torre-de-les-macanes.json'))).subject,
-    'acct:la-torre-de-les-macanes@gentdexixona.example');
-  assert.match(llig(a('.well-known/webfinger.nginx')), RESIDU_TORRE);
+  const actor = JSON.parse(llig(a('ap/actors/xixona.json')));
+  assert.deepEqual([actor.id, actor.preferredUsername, actor.name, actor.url], [`${ORIGEN}/ap/actors/xixona.json`, 'xixona', 'Xixona · Sóc de Poble', `${ORIGEN}/`]);
+  assert.match(actor.summary, /No és el compte oficial de l’Ajuntament/);
+  assert.equal(JSON.parse(llig(a('.well-known/webfinger/xixona.json'))).subject, 'acct:xixona@gentdexixona.example');
+  const outbox = JSON.parse(llig(a('ap/outbox/xixona.json')));
+  assert.ok(outbox.totalItems >= 1, `l'outbox del node no és buida: ${outbox.totalItems}`);
+  assert.deepEqual([outbox.orderedItems.at(-1).object.name, outbox.orderedItems.at(-1).object.url], ['Xixona a Sóc de Poble', `${ORIGEN}/`]);
+  assert.equal(JSON.parse(llig(a('nodeinfo/2.1.json'))).metadata.nodeName, 'Xixona · Sóc de Poble');
+  for (const absent of ['ap/actors/socdepoble.json', 'ap/actors/la-torre-de-les-macanes.json', '.well-known/webfinger/socdepoble.json',
+    '.well-known/webfinger/la-torre-de-les-macanes.json', 'ap/outbox/la-torre-de-les-macanes.json']) {
+    assert.equal(fs.existsSync(a(absent)), false, absent);
+  }
+  // Cap fitxer publicat pel node porta La Torre, en cap de les seues formes.
+  for (const rel of fitxersDe(estat.publicacio)) assert.doesNotMatch(llig(a(rel)), RESIDU_TORRE, rel);
+  // I la guia del node diu amb quin compte es troba.
+  assert.ok(llig(path.join(estat.desti, 'INICIA_NODE.md')).includes('@xixona@gentdexixona.example'));
+});
 
+test('[DEFECTE] el firebase.json i la llavor de mostra de la release encara porten el Mas i La Torre', () => {
+  /* Deute residual declarat (D-T3-4, pla 261101_1246). Esta prova passa perquè reproduïx el residu.
+     El firebase.json copiat al node porta les reescriptures de WebFinger lligades a socdepoble.org
+     (la ruta suportada per a un node germà és el mòdul NixOS; regenerar-les per a l'origen del node
+     és d'una onada posterior). La llavor de demostració (mode seed) viatja sencera. Quan
+     l'instal·lador o la CLI regeneren firebase.json per al node, la primera meitat s'ha d'invertir. */
   const firebase = llig(path.join(estat.desti, 'firebase.json'));
   assert.match(firebase, RESIDU_TORRE);
   assert.ok(firebase.includes('socdepoble\\\\.org'), 'les reescriptures de WebFinger són per a l’origen del Mas');

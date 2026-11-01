@@ -1,4 +1,5 @@
-import { useCallback, useRef, useState } from 'react';
+import { useCallback, useMemo, useRef, useState } from 'react';
+import { tradueix, useTraductorOpcional } from '../../PedraSeca/hooks/useTraductorOpcional.js';
 import { DialegEnquadrament } from './DialegEnquadrament.jsx';
 import { FORMATS, FORMAT_DE_LA_FONT, tipusDeSortida } from './enquadrament.js';
 import { MIDA_AVATAR, MIDA_CAPCALERA, MIDA_LOGOTIP } from '../../../utils/pujadaImatge.js';
@@ -137,6 +138,28 @@ export const FORMES = Object.freeze({
   }),
 });
 
+/* P1-22 (assalt 261101) · Els textos de sèrie que el hook lliura (títol,
+   ajuda, ajudes de les formes, avisos de la foto triada): text valencià →
+   parell [clau, reserva], amb el mateix text de reserva. configDeForma
+   continua pur i en valencià (UniversalEditorShell l'importa); el hook els
+   tradueix en lliurar-los (textDeSerie). Un text que no és de sèrie (el d'una
+   `config` pròpia o d'un `extres`) es lliura tal qual. */
+export const PARELLS_DE_SERIE = new Map([
+  [FORMES.avatar.titol, Object.freeze(['editor.enquadrament.titolFoto', FORMES.avatar.titol])],
+  [FORMES.logotip.titol, Object.freeze(['editor.enquadrament.titolLogotip', FORMES.logotip.titol])],
+  [FORMES.capcalera.titol, Object.freeze(['editor.enquadrament.titolCapcalera', FORMES.capcalera.titol])],
+  [AJUDA_RETALL, Object.freeze(['editor.enquadrament.ajudaRetall', AJUDA_RETALL])],
+  [AJUDA_FOTO, Object.freeze(['editor.enquadrament.ajudaFoto', AJUDA_FOTO])],
+  [ERROR_SENSE_FOTO, Object.freeze(['editor.enquadrament.errorSenseFoto', ERROR_SENSE_FOTO])],
+  [ERROR_TIPUS_FOTO, Object.freeze(['editor.enquadrament.errorTipusFoto', ERROR_TIPUS_FOTO])],
+  [ERROR_PES_FOTO, Object.freeze(['editor.enquadrament.errorPesFoto', ERROR_PES_FOTO])],
+  [AJUDA_CAPCALERA_QUADRADA, Object.freeze(['editor.enquadrament.ajudaCapcaleraQuadrada', AJUDA_CAPCALERA_QUADRADA])],
+  [AJUDA_CAPCALERA_LLIURE, Object.freeze(['editor.enquadrament.ajudaCapcaleraLliure', AJUDA_CAPCALERA_LLIURE])],
+]);
+
+/** Un text de sèrie en la llengua de `t` (o null: el valencià); qualsevol altre, tal qual. */
+export const textDeSerie = (text, t) => (typeof text === 'string' && PARELLS_DE_SERIE.has(text) ? tradueix(t, PARELLS_DE_SERIE.get(text)) : text);
+
 /** Una forma coneguda; una de desconeguda cau a l'avatar. */
 export const formaDe = (forma) => FORMES[forma] || FORMES.avatar;
 
@@ -198,6 +221,14 @@ export function useEnquadramentImatge({
   const cfg = config || configDeForma(forma, { identitat });
   const cfgRef = useRef(cfg);
   cfgRef.current = cfg;
+  /* P1-22 · El traductor (o null) i el darrer, per als callbacks estables. */
+  const t = useTraductorOpcional();
+  const tRef = useRef(t);
+  tRef.current = t;
+  /* Les ajudes de sèrie de les formes, traduïdes (sense traductor, la mateixa llista). */
+  const formatsVistos = useMemo(() => (typeof t === 'function'
+    ? cfg.formats.map((f) => (PARELLS_DE_SERIE.has(f.ajuda) ? { ...f, ajuda: textDeSerie(f.ajuda, t) } : f))
+    : cfg.formats), [cfg.formats, t]);
   /* Cada obertura és una sessió pròpia (objecte nou): un desat que acaba
      tard tanca només la seua, mai una de més nova. */
   const [sessio, setSessio] = useState(null);
@@ -209,7 +240,7 @@ export function useEnquadramentImatge({
   const obri = useCallback((font, { formatDeLaFont = false } = {}) => {
     const avis = typeof font === 'string' && font ? null : cfgRef.current.valida(font);
     if (avis) {
-      errorRef.current?.(avis);
+      errorRef.current?.(textDeSerie(avis, tRef.current));
       return false;
     }
     setSessio(formatDeLaFont && typeof font === 'string' ? { font, formatDeLaFont: true } : { font });
@@ -226,7 +257,7 @@ export function useEnquadramentImatge({
   const canvia = useCallback((font) => {
     if (!obertaRef.current) return null;
     const avis = typeof font === 'string' && font ? null : cfgRef.current.valida(font);
-    if (avis) return avis;
+    if (avis) return textDeSerie(avis, tRef.current);
     setSessio((actual) => (actual ? { font } : actual));
     return null;
   }, []);
@@ -234,19 +265,20 @@ export function useEnquadramentImatge({
   const dialeg = sessio ? (
     <DialegEnquadrament
       {...extres}
+      {...(extres && Object.hasOwn(extres, 'ajudaFoto') ? { ajudaFoto: textDeSerie(extres.ajudaFoto, t) } : null)}
       font={sessio.font}
       /* IDEA-20 (revisió adversarial 261024) · La imatge que ja hi ha
          (formatDeLaFont) es re-enquadra des de la seua forma («Original») si la
          forma n'oferix més d'una (la capçalera): mai el quadrat de sèrie, que la
          tornaria a tallar. L'avatar i el logotip, només quadrats, com sempre. */
       formatInicial={sessio.formatDeLaFont && cfg.formats.some((f) => f.valor === 'original') ? 'original' : cfg.formatInicial}
-      formats={cfg.formats}
+      formats={formatsVistos}
       sortida={sessio.formatDeLaFont ? { ...cfg.sortida(sessio.font), format: FORMAT_DE_LA_FONT } : cfg.sortida(sessio.font)}
       permetGeolocalitzacio={false}
       senzill={cfg.senzill}
       mascara={cfg.mascara}
-      titol={cfg.titol}
-      descripcio={cfg.descripcio}
+      titol={textDeSerie(cfg.titol, t)}
+      descripcio={textDeSerie(cfg.descripcio, t)}
       ofereixConservarExif={cfg.avisGpsEliminat !== true && cfg.conservaExif !== false}
       {...(cfg.avisGpsEliminat === true ? { avisaGpsEliminat: true } : null)}
       onTanca={tanca}

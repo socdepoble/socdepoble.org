@@ -3,7 +3,8 @@ import useHeroImageHandler from '../../hooks/useHeroImageHandler.js';
 import {
   ACCEPT_FOTO, PES_MAXIM_FOTO, costatDeSortida, useEnquadramentImatge,
 } from '../../components/universal/enquadrament/useEnquadramentImatge.jsx';
-import { AVIS_GPS_ELIMINAT_PERFIL } from '../../components/universal/enquadrament/DialegEnquadrament.jsx';
+import { TEXTOS_ENQUADRAMENT } from '../../components/universal/enquadrament/DialegEnquadrament.jsx';
+import { tradueix, useTraductorOpcional } from '../../components/PedraSeca/hooks/useTraductorOpcional.js';
 import { AJUDA_IMATGE_PUJANT as AVIS_IMATGE_PUJANT } from '../../components/universal/UniversalEditorShell.jsx';
 
 /* Un pas que falla sense missatge propi (no hauria de passar: el hook l'avisa). */
@@ -96,6 +97,9 @@ export function useImatgeDeFitxa({
   desaCampRef.current = onDesaCamp;
   const errorRef = useRef(onError);
   errorRef.current = onError;
+  /* P1-22 · L'avís del GPS es diu amb la finestra ja tancada: en la llengua de la interfície. */
+  const tRef = useRef(null);
+  tRef.current = useTraductorOpcional();
   const desatRef = useRef(onDesat);
   desatRef.current = onDesat;
   /* La guarda de pujada: el ref mana (el gest pot arribar abans del render);
@@ -161,7 +165,7 @@ export function useImatgeDeFitxa({
         control?.acaba?.();
         desatRef.current?.(camp);
         // P1-64 · Només si la foto portava GPS de veres (DialegEnquadrament, avisaGpsEliminat).
-        if (info?.gpsEliminat === true) errorRef.current?.(AVIS_GPS_ELIMINAT_PERFIL, 'info');
+        if (info?.gpsEliminat === true) errorRef.current?.(tradueix(tRef.current, TEXTOS_ENQUADRAMENT.gpsEliminat), 'info');
       } catch (err) {
         // Escape a mitja pujada: la finestra ja no hi és per a dir-ho.
         if (!obertRef.current) errorRef.current?.(err?.message || ERROR_DESAT_IMATGE);

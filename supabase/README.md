@@ -1103,6 +1103,73 @@ description: "Documentació canònica de Sóc de Poble."
   Idempotent i en una sola transacció; **NO aplicada: l'aplica el Mestre, mai
   un agent**.
 
+- `migrations/2611011500_autoria_ajuntament_mateix_poble.sql`
+  D-6 (informe 261101_0409; assalt 261101_1246, T7): un ajuntament només
+  signa publicacions del seu poble. Torna a crear
+  `public.pot_signar_com_organitzacio(p_org_id uuid, p_tenant_id uuid)` amb el
+  cos de 2609261500 (propietària o administradora; LANGUAGE sql, STABLE,
+  SECURITY DEFINER, `search_path` buit) i una condició més: si l'entitat és
+  `city_hall`, el seu `tenant_id` ha de ser el de la publicació (el «town_id»
+  del pla és `tenant_id`). Les empreses, els grups i les entitats no canvien.
+  EXECUTE només per a `authenticated`. Torna a crear la CHECK
+  `section_submissions_autoria_org_valida` amb `(author_org_id, tenant_id)`,
+  NOT VALID (les files d'abans es conserven; una d'un ajuntament signada en
+  un altre poble ja no es pot desar signada, però sí passar a la persona), i
+  esborra la signatura vella `(uuid)`. Cap política, taula ni codi nou: el
+  rebuig és el 23514 de sempre. Abans (lectura), les publicacions signades
+  per una entitat d'un altre poble:
+  `select o.kind, count(*) from public.section_submissions s join public.organizations o on o.id = s.author_org_id where s.tenant_id <> o.tenant_id group by 1;`
+  (al node remot les entitats viuen al poble llavor: cal mirar-ho abans).
+  I cada ajuntament, encara que no haja signat res, amb els pobles de les
+  seues propietàries i administradores i els pobles on han publicat:
+  `select o.id, o.name, o.tenant_id, (select array_agg(distinct tm.town_id) from public.organization_memberships m join public.town_memberships tm on tm.user_id = m.user_id where m.organization_id = o.id and m.role in ('owner', 'admin')) as pobles_administradores, (select array_agg(distinct s.tenant_id) from public.organization_memberships m join public.section_submissions s on s.owner_user_id = m.user_id where m.organization_id = o.id and m.role in ('owner', 'admin')) as pobles_on_publiquen from public.organizations o where o.kind = 'city_hall';`
+  (un poble d'eixes llistes que no siga el `tenant_id` de l'ajuntament és un
+  poble on ja no podrà signar: cal decidir-ho abans d'aplicar).
+  Verificació posterior (lectura):
+  `select to_regprocedure('public.pot_signar_com_organitzacio(uuid,uuid)') IS NOT NULL AS te_autoria_poble_2611011500, to_regprocedure('public.pot_signar_com_organitzacio(uuid)') IS NULL AS sense_signatura_vella;`
+  (cert i cert). La inversa és a la capçalera. L'execució (les dues
+  consultes d'abans, dues aplicacions, els casos, els permisos i la inversa:
+  23 comprovacions) la va fer el torn torn_3f5652a2 a PGlite 0.3.16, fora
+  del repositori: és evidència no versionada. La prova estàtica és
+  `src/data/supabase/autoriaAjuntamentPoble.migracio.test.js`.
+  Idempotent i en una sola transacció; **NO aplicada: l'aplica el Mestre, mai un agent**.
+
+- `migrations/2611011510_versio_minima_client.sql`
+  P0-23 (BOT-A2; Gauntlet Claude 261025_1705): la porta de versió mínima de
+  l'app nativa, rebasada a l'assalt 261101 (al pegat es deia 2610251930, que
+  aniria per davant de migracions que el node remot ja pot tindre aplicades). Crea
+  `public.versio_minima_client(p_plataforma)` → `jsonb`: per a `'ios'` i
+  `'android'`, `{ versio_minima, enllac }` (un enter i una adreça https de la
+  botiga o `null`); per a qualsevol altra plataforma, `null`. LANGUAGE sql,
+  STABLE, SECURITY INVOKER i el `search_path` buit: no llig cap taula ni cap
+  dada de sessió, de persona ni de poble. L'app la crida en arrencar, abans
+  de tindre sessió:
+  `grant execute on function public.versio_minima_client(text) to anon, authenticated;`
+  (després del revoke a tots els rols). L'app nativa (`src/natiu/entrada.jsx`)
+  la pregunta pel port amb la capacitat `versioClient` (contracte.js) i, si
+  el seu `VERSIO_CLIENT_NATIU` és més vell que el mínim, pinta la pantalla
+  «Cal actualitzar l'app» amb l'enllaç de la botiga i el de la web. Si no
+  arriba a saber-ho (sense xarxa, sense la migració, un error), entra igual;
+  la web i el connector de WordPress no la pregunten mai. El mínim és 2 a
+  les dues plataformes; l'enllaç d'Android és el de Google Play
+  (`org.socdepoble.app`) i el d'iOS, `null` fins que se sàpiga l'adreça de
+  l'App Store. No protegix el build 1 (TestFlight 1.0.0 (1) i l'AAB 1.0.0+1):
+  no porta la porta; per a ell només hi ha fer-lo caducar a TestFlight i
+  retirar l'APK beta. Ordre: independent de 2610241400. Amb el mínim a 2 no
+  deixa fora ningú (el build 1 no pregunta i el build 2 entra): va en l'ordre
+  alfabètic, en qualsevol moment, i abans de la primera migració que apuge el
+  mínim. Pujar el mínim vol dir tornar a crear la funció en una migració
+  nova, quan el build nou ja és a les botigues, i mai per damunt del
+  `VERSIO_CLIENT_NATIU` publicat (l'app nova es bloquejaria ella mateixa):
+  `scripts/botigues/puja-ios.mjs` i `puja-android.mjs` només admeten un
+  `--build` igual a `VERSIO_CLIENT_NATIU`. Cap taula, política ni codi
+  d'error. La prova estàtica és
+  `src/data/supabase/versioMinimaClient.migracio.test.js`.
+  Verificació posterior (lectura):
+  `select public.versio_minima_client('ios'), public.versio_minima_client('android'), public.versio_minima_client('web');`
+  (els dos objectes, amb `versio_minima` 2, i `null`). Idempotent i en una
+  sola transacció; **NO aplicada: l'aplica el Mestre, mai un agent**.
+
 - `seed.sql`
   Contingut inicial del portal.
 
@@ -1151,7 +1218,8 @@ SELECT
   to_regprocedure('public.transfereix_propietat_organitzacio(uuid,uuid)') IS NOT NULL AS te_transferencia_2610311500,
   to_regclass('public.xat_epoques') IS NOT NULL AS te_e2ee_1bc_2610311800,
   coalesce(position('SDP-FED-ESQUEMA-NO-ADMES' in pg_get_functiondef(to_regprocedure('public.exporta_les_meues_dades()'))) > 0, false) AS te_filtre_rgpd_2610311900,
-  coalesce((SELECT p.prosecdef FROM pg_proc p WHERE p.oid = to_regprocedure('private.xat_lot3_b64(text,integer)')), false) AS te_esmena_2610312000;
+  coalesce((SELECT p.prosecdef FROM pg_proc p WHERE p.oid = to_regprocedure('private.xat_lot3_b64(text,integer)')), false) AS te_esmena_2610312000,
+  to_regprocedure('public.pot_signar_com_organitzacio(uuid,uuid)') IS NOT NULL AS te_autoria_poble_2611011500;
 ```
 
 ### Nota d'auditoria `DF-06` (`P0-05`) i seqüència obligatòria de desplegament (`P0-21`)
@@ -1167,8 +1235,9 @@ SELECT
   7. `2610241440_baixa_completa_ugc_i_fitxers.sql` (purga completa i porta d'Apple).
   8. `2610250100` → `2610250300` → `2610281730` → `2610282100` → `2610290400` → `2610311500` → `2610311800` → `2610312000` → `2610311900` (2610312000 just després de 2610311800 i de nou si mai es reaplica 2610311800; 2610311900 abans de publicar el client).
   9. Funcions de vora (`supabase/functions/`): `compte-apple` i `purga-fitxers` (secret compartit `SDP_CRON_SECRET`, crons horaris) i `noticies` (fonts personals desactivades fins a `SDP_NOTICIES_PERSONALS=1`).
+  10. `2611011500` (només després de llegir les dues consultes «Abans» de la seua vinyeta) i `2611011510` (en qualsevol moment, sempre abans de cap migració que apuge el mínim per damunt de 2).
 
-### Taula canònica ordenada: 60 fitxers de R1 + candidates 1500, 1800, 1900 i 2000 + `seed.sql` + 2 snippets (`P0-05` / `DF-06`)
+### Taula canònica ordenada: 60 fitxers de R1 + candidates 1500, 1800, 1900 i 2000 + assalt 2611011500 i 2611011510 + `seed.sql` + 2 snippets (`P0-05` / `DF-06`)
 
 | Ordre | Versió | Fitxer a `supabase/migrations/` | Estat declarat | Objectiu resumit |
 | :---: | :--- | :--- | :--- | :--- |
@@ -1236,6 +1305,8 @@ SELECT
 | 62 | `2610311800` | `2610311800_e2ee_fases_1b_1c_rpcs_i_adjunts.sql` | **NO aplicada: l'aplica el Mestre** | e2ee fases 1b 1c rpcs i adjunts |
 | 63 | `2610311900` | `2610311900_exporta_dades_filtre_servidor_rgpd.sql` | **NO aplicada: l'aplica el Mestre** | filtre RGPD al servidor |
 | 64 | `2610312000` | `2610312000_e2ee_lot3_validadors_service_role.sql` | **NO aplicada: l'aplica el Mestre** | validadors E2EE per a service_role |
+| 65 | `2611011500` | `2611011500_autoria_ajuntament_mateix_poble.sql` | **NO aplicada: l'aplica el Mestre** | autoria d'ajuntament al seu poble (D-6) |
+| 66 | `2611011510` | `2611011510_versio_minima_client.sql` | **NO aplicada: l'aplica el Mestre** | versió mínima de l'app nativa (P0-23) |
 
 | Artefacte complementari | Ruta dins de `supabase/` | Rol operatiu |
 | :--- | :--- | :--- |
@@ -1267,8 +1338,9 @@ ORDER BY table_name, ordinal_position;
 
 ### Candidates posteriors i números reservats (Lot 6)
 
-La taula anterior agrupa 60 fitxers de R1 i les quatre candidates 1500, 1800,
-1900 i 2000. És una fotografia d’inventari, **no un recompte fix del
+La taula anterior agrupa 60 fitxers de R1, les quatre candidates 1500, 1800,
+1900 i 2000, i les dues de l'assalt 261101 (2611011500, D-6, i 2611011510,
+P0-23), NO aplicades. És una fotografia d’inventari, **no un recompte fix del
  directori ni una acreditació d’aplicació remota**. Les migracions posteriors
 han de documentar-se ací amb el nom complet abans d’integrar-les. La prova de
 catàleg exigix cobertura de tots els fitxers presents i rebutja els desconeguts;

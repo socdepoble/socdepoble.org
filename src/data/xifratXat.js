@@ -62,6 +62,11 @@ function errorAmbitCanviat() {
   );
 }
 
+/* Pas 17 (pla 261101_1246, T7 · S5) · El rebuig explícit d'un servei sense motor: mai un número inventat. */
+function errorSenseMotor() {
+  return errorXifrat('sense-motor-xifrat', 'Este entorn no té el motor del pipeline xifrat.', { reintentable: false });
+}
+
 function errorSenseAmbit() {
   return errorXifrat(
     'sense-ambit',
@@ -366,7 +371,22 @@ export function creaServeiAmbitXat({ revocaUrl = () => {}, motorRef = {}, pressu
       return Promise.resolve(estatOblit);
     },
     estatOblit: () => estatOblit,
-    desaEstatOblit: (estat) => { estatOblit = estat; }
+    desaEstatOblit: (estat) => { estatOblit = estat; },
+    /* Pas 17 (pla 261101_1246, T7 · S5 i S6) · Per a la interfície: l'abast d'un fil amb el
+       registre propi (marca apegalosa inclosa), si este entorn pot xifrar, el número de
+       seguretat d'un directe, «Marca com a verificat» i quants contactes hi ha verificats
+       (IDEA-48). Sense motor: null, false o el rebuig explícit, com drenaSafata. */
+    abastDelFil: (fil) => (typeof motorRef.abast === 'function' ? motorRef.abast(fil) : null),
+    entornSegur: () => (typeof motorRef.entornSegur === 'function' ? motorRef.entornSegur() === true : false),
+    numeroSeguretat: (filId, config = {}) => (typeof motorRef.numero === 'function'
+      ? motorRef.numero(filId, config)
+      : Promise.reject(errorSenseMotor())),
+    marcaVerificat: (filId, opcions = {}, config = {}) => (typeof motorRef.verifica === 'function'
+      ? motorRef.verifica(filId, opcions, config)
+      : Promise.reject(errorSenseMotor())),
+    contactesVerificats: () => (typeof motorRef.verificats === 'function'
+      ? motorRef.verificats()
+      : Promise.reject(errorSenseMotor()))
   });
 }
 
@@ -466,12 +486,45 @@ export function ambXifratXat(impl, entorn = {}) {
     };
 
     const classificaFil = (fil) => ambitDelFil(fil, { modeDades, marcatApegalos: servei.esFilApegalos(fil?.id ?? '') });
+    /* Pas 17 (pla 261101_1246, T7 · S5) · L'estat honest de cada conversa: l'abast del registre
+       propi (si el decorador ja el coneix) i si este entorn té de veres el que cal per a xifrar
+       (context segur, origen de confiança, WebCrypto, IndexedDB i el motor). */
+    motorRef.abast = (fil) => (fil && typeof fil === 'object'
+      ? classificaFil(servei.obtindreFilRegistrat(fil.id) ?? fil)
+      : null);
+    motorRef.entornSegur = () => {
+      if (!motor) return false;
+      try { comprovaEntornSegur(entorn); return true; } catch { return false; }
+    };
     if (motor) {
       motorRef.drena = (config = {}) => servei.guardaAmbit(async (exigix) => motor.drena({
         config, exigix, classifica: classificaFil,
         carregaFil: (filId) => carregaFilAlRegistre(filId, config, exigix),
         envia: (filId, paquet) => Reflect.apply(impl.enviaXifratXat, impl, [filId, paquet, config])
       }));
+      /* Pas 17 (T7 · S5) · El número i la marca, dins de la guarda d'àmbit, en un entorn segur
+         i sobre el fil del registre propi: un fil bloquejat o en clar no en té cap. */
+      const filXifratDelRegistre = async (filId, config, exigix) => {
+        comprovaEntornSegur(entorn);
+        const id = typeof filId === 'string' ? filId.trim() : '';
+        const fil = await carregaFilAlRegistre(id, config, exigix);
+        exigix();
+        if (!fil) throw errorXifrat('fil-desconegut', 'Este xat no és a la llista de converses.', { reintentable: false });
+        const classificacio = classificaFil(fil);
+        if (classificacio.bloquejat || !classificacio.xifrat) {
+          throw errorXifrat(classificacio.motiu || 'fil-bloquejat', 'Este xat no té número de seguretat.', { reintentable: false });
+        }
+        return { fil, tipusFil: classificacio.tipusFil };
+      };
+      motorRef.numero = (filId, config = {}) => servei.guardaAmbit(async (exigix) => {
+        const { fil, tipusFil } = await filXifratDelRegistre(filId, config, exigix);
+        return motor.numeroDelFil({ fil, tipusFil, config, exigix });
+      });
+      motorRef.verifica = (filId, { kid, verificat } = {}, config = {}) => servei.guardaAmbit(async (exigix) => {
+        const { fil, tipusFil } = await filXifratDelRegistre(filId, config, exigix);
+        return motor.marcaVerificatDelFil({ fil, tipusFil, config, exigix, kid, verificat });
+      });
+      motorRef.verificats = () => servei.guardaIdentitat((exigix) => motor.recompteVerificats({ exigix }));
     }
 
     if (typeof impl.loadFils === 'function') {

@@ -155,32 +155,45 @@
  *     a eixa precisió, i metadades.dataCaptura, la de la foto. Desmarcada,
  *     tot com abans. La casella amb les píndoles és CasellaExif, que també fa
  *     servir l'ordre «/» Imatge del text enriquit (DocumentEditor).
+ *
+ * P1-22 (assalt 261101) · Tots els textos passen pel traductor de la
+ * interfície (TEXTOS_ENQUADRAMENT, TEXTOS_UBICACIO i els parells dels mòduls
+ * purs, amb `t` opcional). Fora de l'app (sense UIProvider), el valencià de
+ * sempre, lletra per lletra. titol, descripcio, etiquetaCanviaFoto,
+ * etiquetaLleva i etiquetaDesa: si el pare els passa, es respecten tal qual;
+ * si no, els de sèrie en la llengua de la interfície.
  */
-import { useCallback, useEffect, useId, useLayoutEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useId, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { Camera, Minus, Plus, Trash2 } from 'lucide-react';
 import { Alerta, Boto, Camp, CampText, Carregant, Casella, Dialeg, GrupOpcions } from '../../PedraSeca/index.js';
+import { tradueix, useTraductorOpcional } from '../../PedraSeca/hooks/useTraductorOpcional.js';
+import { omple } from '../../../config/moderacio.js';
 import {
-  FORMATS, FORMAT_PER_DEFECTE, ambLliscador, ambRoda, ambTecla, arrossega, esSencera, estatInicial, limita, lliscador,
-  marges, midaVisor, opcionsSortida, pessic, proporcio, rectDeRetall, textAmpliacio, zoomMaxim,
+  FORMATS, FORMAT_PER_DEFECTE, ambLliscador, ambRoda, ambTecla, arrossega, esSencera, estatInicial, etiquetaDeForma, limita,
+  lliscador, marges, midaVisor, opcionsSortida, pessic, proporcio, rectDeRetall, textAmpliacio, zoomMaxim,
 } from './enquadrament.js';
 import { llegixMetadadesImatge, senseDades } from './exif.js';
 import {
   errorExifNoConservable, esNoConservable, etiquetaConservaExif, exifPublicable, teData, teExifPerConservar, teUbicacio,
 } from './exifIncrustat.js';
 import {
-  ERROR_UBICACIO, PRECISIONS, PRECISIO_PER_DEFECTE, PRECISIO_PER_DEFECTE_PUBLICACIO, geolocalitzacio, llegixCoordenada, textUbicacio,
+  PRECISIO_PER_DEFECTE, PRECISIO_PER_DEFECTE_PUBLICACIO, errorUbicacio, geolocalitzacio, llegixCoordenada, precisionsTraduides,
+  textUbicacio,
 } from './geolocalitzacio.js';
 import { carregaImatge, dibuixaVisor, exportaRetall } from './imatgeCanvas.js';
-import { ERROR_HEIC, ERROR_PIXELS, comprovaDimensions, comprovaPes, esHeic, missatgeLimit } from './limits.js';
-import { UbicacioImatge } from './UbicacioImatge.jsx';
+import { comprovaDimensions, comprovaPes, esHeic, missatgeLimit } from './limits.js';
+import { TEXTOS_UBICACIO, UbicacioImatge } from './UbicacioImatge.jsx';
+
+/* P1-22 (assalt 261101) · La forma original, curta, a la seua píndola. */
+const PARELL_ORIGINAL_CURTA = Object.freeze(['editor.enquadrament.formaOriginalCurta', 'Orig.']);
 
 /* T3 (pla 261025_0045) · L'etiqueta curta d'una forma a la seua píndola: la
    proporció («16:9») o «Original». El nom accessible és l'etiqueta sencera. */
 /* «Orig.» (prompt 261025_0045, T3): les nou píndoles caben en una fila a la mida m; el nom sencer el diu
-   l'aria-label del ràdio i la didàctica. */
-export const etiquetaCurtaDeForma = (forma) => (forma?.valor === 'original' ? 'Orig.' : String(forma?.valor ?? ''));
+   l'aria-label del ràdio i la didàctica. P1-22 · `t` (opcional): el traductor; sense, el valencià. */
+export const etiquetaCurtaDeForma = (forma, t) => (forma?.valor === 'original' ? tradueix(t, PARELL_ORIGINAL_CURTA) : String(forma?.valor ?? ''));
 /** T3 · La línia de didàctica de la forma triada: «Panoràmic (16:9) · <ajuda>», o només el nom. */
-export const didacticaDeForma = (forma) => (forma ? [forma.etiqueta, forma.ajuda].filter(Boolean).join(' · ') : '');
+export const didacticaDeForma = (forma, t) => (forma ? [etiquetaDeForma(forma, t), forma.ajuda].filter(Boolean).join(' · ') : '');
 
 export const ERROR_CARREGA_FITXER = 'No s’ha pogut obrir esta foto. Prova amb una imatge JPEG, PNG o WebP.';
 export const ERROR_CARREGA_URL = 'No s’ha pogut obrir esta imatge per a enquadrar-la. Torna-la a pujar des del dispositiu.';
@@ -200,23 +213,30 @@ export const LLEGENDA_PRECISIO = 'Precisió de la ubicació';
 /* Gauntlet 261016 (Bloc B, P2) · Les dades que identifiquen la càmera o una
    persona que es publicarien (contingut, exifIncrustat.js), en l'ordre que es
    diuen: «la marca, el model i el número de sèrie», o '' si no n'hi ha cap. */
-const PARTS_CAMERA = Object.freeze([['marca', 'la marca'], ['model', 'el model'], ['serie', 'el número de sèrie'], ['nom', 'un nom de persona']]);
-function dadesDeLaCamera(dades) {
-  const parts = PARTS_CAMERA.filter(([clau]) => dades.contingut?.[clau]).map(([, text]) => text);
-  return parts.length > 1 ? `${parts.slice(0, -1).join(', ')} i ${parts.at(-1)}` : (parts[0] || '');
+const PARTS_CAMERA = Object.freeze([
+  ['marca', Object.freeze(['editor.enquadrament.cameraMarca', 'la marca'])],
+  ['model', Object.freeze(['editor.enquadrament.cameraModel', 'el model'])],
+  ['serie', Object.freeze(['editor.enquadrament.cameraSerie', 'el número de sèrie'])],
+  ['nom', Object.freeze(['editor.enquadrament.cameraNom', 'un nom de persona'])],
+]);
+function dadesDeLaCamera(dades, t) {
+  const parts = PARTS_CAMERA.filter(([clau]) => dades.contingut?.[clau]).map(([, parell]) => tradueix(t, parell));
+  return parts.length > 1 ? `${parts.slice(0, -1).join(', ')} ${tradueix(t, TEXTOS_ENQUADRAMENT.llistaI)} ${parts.at(-1)}` : (parts[0] || '');
 }
 
 /* L'avís de la casella per al que porta la foto; si no es pot conservar, com
    eixir-ne. Bloc B · Decidit pel bloc que es publica (teUbicacio, teData), i
    amb les dades que identifiquen la càmera quan n'hi ha. */
-function ajudaConservaExif(dades) {
-  if (esNoConservable(dades)) return errorExifNoConservable(dades);
-  const camera = dadesDeLaCamera(dades);
+function ajudaConservaExif(dades, t) {
+  if (esNoConservable(dades)) return errorExifNoConservable(dades, t);
+  const camera = dadesDeLaCamera(dades, t);
   if (teUbicacio(dades) || teData(dades)) {
-    const base = teUbicacio(dades) ? AJUDA_CONSERVA_UBICACIO : AJUDA_CONSERVA_DATA;
-    return camera ? `${base} També es publicaran les dades de la càmera: ${camera}.` : base;
+    const base = tradueix(t, teUbicacio(dades) ? TEXTOS_ENQUADRAMENT.exifAjudaUbicacio : TEXTOS_ENQUADRAMENT.exifAjudaData);
+    return camera ? `${base} ${omple(tradueix(t, TEXTOS_ENQUADRAMENT.exifTambeCamera), { camera })}` : base;
   }
-  return camera ? `Si la deixes marcada, les dades de la càmera es publicaran amb la foto: ${camera}.` : AJUDA_CONSERVA_CAMERA;
+  return camera
+    ? omple(tradueix(t, TEXTOS_ENQUADRAMENT.exifNomesCamera), { camera })
+    : tradueix(t, TEXTOS_ENQUADRAMENT.exifAjudaCamera);
 }
 
 /**
@@ -231,20 +251,22 @@ function ajudaConservaExif(dades) {
  */
 export function CasellaExif({ dades, conserva, onConserva, precisio = PRECISIO_PER_DEFECTE_PUBLICACIO, onPrecisio = null, desactivat = false }) {
   const id = useId();
+  const t = useTraductorOpcional();
+  const precisions = useMemo(() => precisionsTraduides(t), [t]);
   const ambPrecisio = typeof onPrecisio === 'function' && conserva && teUbicacio(dades);
-  const triada = PRECISIONS.find((p) => p.valor === precisio) || PRECISIONS[0];
+  const triada = precisions.find((p) => p.valor === precisio) || precisions[0];
   const punt = ambPrecisio && dades.gps ? geolocalitzacio({ lat: dades.gps.lat, lng: dades.gps.lng, precisio: triada.valor, origen: 'exif' }) : null;
   const idLinia = `${id}-desara`;
   return (
     <>
-      <Casella etiqueta={etiquetaConservaExif(dades)} ajuda={ajudaConservaExif(dades)}
+      <Casella etiqueta={etiquetaConservaExif(dades, t)} ajuda={ajudaConservaExif(dades, t)}
         checked={conserva} disabled={desactivat} onChange={(ev) => onConserva?.(ev.target.checked)} />
       {ambPrecisio ? (
         <fieldset className="sdp-enquadrament__formats" role="radiogroup" aria-labelledby={`${id}-llegenda`}
           aria-describedby={idLinia} disabled={desactivat}>
-          <legend id={`${id}-llegenda`} className="sdp-nomes-lector">{LLEGENDA_PRECISIO}</legend>
+          <legend id={`${id}-llegenda`} className="sdp-nomes-lector">{tradueix(t, TEXTOS_ENQUADRAMENT.precisioLlegenda)}</legend>
           <div className="sdp-enquadrament__formats-pindoles">
-            {PRECISIONS.map((p) => {
+            {precisions.map((p) => {
               const idOpcio = `${id}-precisio-${p.valor}`;
               return (
                 <div key={p.valor} className="sdp-enquadrament__format">
@@ -260,7 +282,9 @@ export function CasellaExif({ dades, conserva, onConserva, precisio = PRECISIO_P
       ) : null}
       {ambPrecisio ? (
         <p id={idLinia} className="sdp-camp__ajuda" aria-live="polite">
-          {punt ? `Es desarà: ${textUbicacio(punt, triada.valor)}. ${triada.ajuda}` : triada.ajuda}
+          {punt
+            ? `${omple(tradueix(t, TEXTOS_UBICACIO.desara), { ubicacio: textUbicacio(punt, triada.valor, t) })} ${triada.ajuda}`
+            : triada.ajuda}
         </p>
       ) : null}
     </>
@@ -281,9 +305,59 @@ export const ETIQUETA_LLEVA_FOTO = 'Llevar la foto';
    puja: el <dialog> el prendria per un Escape i es tancaria. Es para a l'input. */
 const paraCancel = (e) => e.stopPropagation();
 
+/* P1-22 (assalt 261101) · Els textos del diàleg en parells [clau, reserva]:
+   la reserva és el valencià de sempre, lletra per lletra (les constants
+   exportades d'amunt ho continuen sent: les importen les proves i qui puja).
+   Dins, `t` és el traductor de la interfície o null (fora de l'app: un
+   espècimen del catàleg muntat sol), i aleshores es pinta la reserva. Un
+   titol, una descripcio o una etiqueta que passa el pare es respecten. */
+export const TEXTOS_ENQUADRAMENT = Object.freeze({
+  titol: Object.freeze(['editor.enquadrament.titol', 'Enquadrar la imatge']),
+  descripcio: Object.freeze(['editor.enquadrament.descripcio',
+    'Tria la forma i mou la foto fins que el que importa quede dins del marc. Només es guarda el que hi ha dins.']),
+  restablir: Object.freeze(['editor.enquadrament.restablir', 'Restablir']),
+  cancela: Object.freeze(['common.cancela', 'Cancel·lar']),
+  guardar: Object.freeze(['editor.enquadrament.guardar', 'Guardar']),
+  centrar: Object.freeze(['editor.enquadrament.centrar', 'Centrar']),
+  desa: Object.freeze(['editor.enquadrament.desa', 'Desar l’enquadrament']),
+  obrint: Object.freeze(['editor.enquadrament.obrint', 'Obrint la imatge…']),
+  visorRetall: Object.freeze(['editor.enquadrament.visorRetall', 'Previsualització del retall']),
+  visorEnquadrament: Object.freeze(['editor.enquadrament.visorEnquadrament', 'Previsualització de l’enquadrament']),
+  allunya: Object.freeze(['editor.enquadrament.allunya', 'Allunyar']),
+  apropa: Object.freeze(['editor.enquadrament.apropa', 'Apropar']),
+  ampliacio: Object.freeze(['editor.enquadrament.ampliacio', 'Ampliació']),
+  forma: Object.freeze(['editor.enquadrament.forma', 'Forma']),
+  ajudaTeclat: Object.freeze(['editor.enquadrament.ajudaTeclat',
+    'Arrossega la foto amb el dit o el ratolí per a moure-la; amb dos dits, l’amplies. També la pots moure i ampliar amb els lliscadors o, amb la foto seleccionada, amb les fletxes i les tecles + i −. Retorn la desa.']),
+  massaXicoteta: Object.freeze(['editor.enquadrament.massaXicoteta', 'Esta foto és massa xicoteta per a ampliar-la més.']),
+  posicioHoritzontal: Object.freeze(['editor.enquadrament.posicioHoritzontal', 'Posició horitzontal']),
+  posicioVertical: Object.freeze(['editor.enquadrament.posicioVertical', 'Posició vertical']),
+  senseMarge: Object.freeze(['editor.enquadrament.senseMarge', 'En esta direcció la foto ja omple tot el marc.']),
+  valorEsquerra: Object.freeze(['editor.enquadrament.valorEsquerra', '{n} % des de l’esquerra']),
+  valorDalt: Object.freeze(['editor.enquadrament.valorDalt', '{n} % des de dalt']),
+  anunciPosicio: Object.freeze(['editor.enquadrament.anunciPosicio', 'Posició {x} % des de l’esquerra i {y} % des de dalt']),
+  anunciAmpliacio: Object.freeze(['editor.enquadrament.anunciAmpliacio', 'Ampliació {valor}']),
+  canviaFoto: Object.freeze(['editor.enquadrament.canviaFoto', ETIQUETA_CANVIA_FOTO]),
+  llevaFoto: Object.freeze(['editor.enquadrament.llevaFoto', ETIQUETA_LLEVA_FOTO]),
+  errorFitxer: Object.freeze(['editor.enquadrament.errorFitxer', ERROR_CARREGA_FITXER]),
+  errorUrl: Object.freeze(['editor.enquadrament.errorUrl', ERROR_CARREGA_URL]),
+  errorExporta: Object.freeze(['editor.enquadrament.errorExporta', ERROR_EXPORTA]),
+  exifAjudaUbicacio: Object.freeze(['editor.enquadrament.exifAjudaUbicacio', AJUDA_CONSERVA_UBICACIO]),
+  exifAjudaData: Object.freeze(['editor.enquadrament.exifAjudaData', AJUDA_CONSERVA_DATA]),
+  exifAjudaCamera: Object.freeze(['editor.enquadrament.exifAjudaCamera', AJUDA_CONSERVA_CAMERA]),
+  exifTambeCamera: Object.freeze(['editor.enquadrament.exifTambeCamera', 'També es publicaran les dades de la càmera: {camera}.']),
+  exifNomesCamera: Object.freeze(['editor.enquadrament.exifNomesCamera',
+    'Si la deixes marcada, les dades de la càmera es publicaran amb la foto: {camera}.']),
+  exifRevisa: Object.freeze(['editor.enquadrament.exifRevisa', AVIS_REVISA_EXIF]),
+  gpsEliminat: Object.freeze(['editor.enquadrament.gpsEliminat', AVIS_GPS_ELIMINAT_PERFIL]),
+  llistaI: Object.freeze(['editor.enquadrament.llistaI', 'i']),
+  precisioLlegenda: Object.freeze(['editor.enquadrament.precisioLlegenda', LLEGENDA_PRECISIO]),
+});
+
 /* Onada 4, T3a · Un límit o un HEIC tenen el seu avís; la resta, el de sempre. */
-const missatgeCarrega = (err, font) => missatgeLimit(err?.codi)
-  || (esHeic(font) ? ERROR_HEIC : (esFitxer(font) ? ERROR_CARREGA_FITXER : ERROR_CARREGA_URL));
+const missatgeCarrega = (err, font, t) => missatgeLimit(err?.codi, t)
+  || (esHeic(font) ? missatgeLimit('heic', t)
+    : tradueix(t, esFitxer(font) ? TEXTOS_ENQUADRAMENT.errorFitxer : TEXTOS_ENQUADRAMENT.errorUrl));
 
 /* Onada 4, T3a · L'estat de «Vull geolocalitzar aquesta imatge». lat i lng
    són el text dels camps (la persona pot escriure «38,59»). */
@@ -297,8 +371,8 @@ export function DialegEnquadrament({
   font,
   formatInicial = FORMAT_PER_DEFECTE,
   formats = FORMATS,
-  titol = 'Enquadrar la imatge',
-  descripcio = 'Tria la forma i mou la foto fins que el que importa quede dins del marc. Només es guarda el que hi ha dins.',
+  titol,
+  descripcio,
   onTanca,
   onDesa,
   sortida = null,
@@ -308,11 +382,11 @@ export function DialegEnquadrament({
   ofereixConservarExif = false,
   avisaGpsEliminat = false,
   onCanviaFoto = null,
-  etiquetaCanviaFoto = ETIQUETA_CANVIA_FOTO,
+  etiquetaCanviaFoto,
   acceptFoto = 'image/*',
   ajudaFoto = null,
   onLleva = null,
-  etiquetaLleva = ETIQUETA_LLEVA_FOTO,
+  etiquetaLleva,
   etiquetaDesa = null,
   carregador = carregaImatge,
   exportador = exportaRetall,
@@ -321,6 +395,18 @@ export function DialegEnquadrament({
   lectorExif = exifPublicable,
 }) {
   const id = useId();
+  /* P1-22 · El traductor (o null) i, per als efectes asíncrons, el darrer. */
+  const t = useTraductorOpcional();
+  const tRef = useRef(t);
+  tRef.current = t;
+  const text = (parell) => tradueix(t, parell);
+  /* Les formes amb el nom en la llengua de la interfície (una etiqueta pròpia del pare es respecta). */
+  const formatsVistos = useMemo(
+    () => (typeof t === 'function' ? formats.map((f) => ({ ...f, etiqueta: etiquetaDeForma(f, t) })) : formats),
+    [formats, t],
+  );
+  const titolVist = titol ?? text(TEXTOS_ENQUADRAMENT.titol);
+  const descripcioVista = descripcio ?? text(TEXTOS_ENQUADRAMENT.descripcio);
   const arrelRef = useRef(null);
   const canvasRef = useRef(null);
   const retornRef = useRef(null);
@@ -424,7 +510,7 @@ export function DialegEnquadrament({
     fontObertaRef.current = font;
     // Onada 4, T3a · Una foto massa pesada no es descodifica: l'avís arriba abans.
     if (esFitxer(font) && comprovaPes(font)) {
-      setErrorCarrega(missatgeLimit(comprovaPes(font)));
+      setErrorCarrega(missatgeLimit(comprovaPes(font), tRef.current));
       return () => { viu = false; };
     }
     (async () => {
@@ -434,7 +520,7 @@ export function DialegEnquadrament({
         // Siga quin siga el carregador, una foto de massa píxels no s'enquadra.
         if (comprovaDimensions(img.amplada, img.alcada)) {
           img.allibera?.();
-          setErrorCarrega(ERROR_PIXELS);
+          setErrorCarrega(missatgeLimit('pixels', tRef.current));
           return;
         }
         carregada = img;
@@ -443,7 +529,7 @@ export function DialegEnquadrament({
         setBlobCarregat(esFitxer(font) ? null : { font, blob: img.blob ?? null });
         setImatge(img);
       } catch (err) {
-        if (viu && err?.name !== 'AbortError') setErrorCarrega(missatgeCarrega(err, font));
+        if (viu && err?.name !== 'AbortError') setErrorCarrega(missatgeCarrega(err, font, tRef.current));
       }
     })();
     return () => {
@@ -595,8 +681,8 @@ export function DialegEnquadrament({
     ev.preventDefault();
     actualitza(nou);
     setAnunci(/^Arrow/.test(ev.key)
-      ? `Posició ${lliscador(nou, 'x', W, H, formats)} % des de l’esquerra i ${lliscador(nou, 'y', W, H, formats)} % des de dalt`
-      : `Ampliació ${textAmpliacio(nou.zoom)}`);
+      ? omple(text(TEXTOS_ENQUADRAMENT.anunciPosicio), { x: lliscador(nou, 'x', W, H, formats), y: lliscador(nou, 'y', W, H, formats) })
+      : omple(text(TEXTOS_ENQUADRAMENT.anunciAmpliacio), { valor: textAmpliacio(nou.zoom, t) }));
   };
 
   /* Onada 4 (retallador senzill) · La roda i els botons − i + fan el pas de
@@ -644,9 +730,13 @@ export function DialegEnquadrament({
       <div className="sdp-enquadrament__foto-accions">
         {ambCanviaFoto ? (
           <Boto varietat="secundari" icona={Camera} onClick={() => entradaFotoRef.current?.click()} disabled={desant}
-            aria-describedby={ajudaFoto ? idAjudaFoto : undefined}>{etiquetaCanviaFoto}</Boto>
+            aria-describedby={ajudaFoto ? idAjudaFoto : undefined}>{etiquetaCanviaFoto ?? text(TEXTOS_ENQUADRAMENT.canviaFoto)}</Boto>
         ) : null}
-        {ambLleva ? <Boto varietat="secundari" icona={Trash2} onClick={onLleva} disabled={desant}>{etiquetaLleva}</Boto> : null}
+        {ambLleva ? (
+          <Boto varietat="secundari" icona={Trash2} onClick={onLleva} disabled={desant}>
+            {etiquetaLleva ?? text(TEXTOS_ENQUADRAMENT.llevaFoto)}
+          </Boto>
+        ) : null}
       </div>
       {ajudaFoto ? <p id={idAjudaFoto} className="sdp-camp__ajuda">{ajudaFoto}</p> : null}
     </div>
@@ -660,7 +750,7 @@ export function DialegEnquadrament({
   const casellaExif = exifOriginal && imatge ? (
     <CasellaExif dades={exifOriginal} conserva={conservaExif} onConserva={setConservaExif}
       precisio={precisioExif} onPrecisio={setPrecisioExif} desactivat={desant} />
-  ) : (gpsEliminat && imatge ? <Alerta to="info">{AVIS_GPS_ELIMINAT_PERFIL}</Alerta> : null);
+  ) : (gpsEliminat && imatge ? <Alerta to="info">{text(TEXTOS_ENQUADRAMENT.gpsEliminat)}</Alerta> : null);
 
   /* Onada 4, T3a · La ubicació que es desaria ara mateix (ja arrodonida), o null. */
   const ubicacio = geo.actiu
@@ -728,7 +818,7 @@ export function DialegEnquadrament({
       }
     }
     if (geo.actiu && !ubicacio) {
-      fallaDesat(ERROR_UBICACIO);
+      fallaDesat(errorUbicacio(t));
       return;
     }
     const metadades = { geolocalitzacio: ubicacio, dataCaptura: geo.actiu ? geo.dataCaptura : null };
@@ -753,11 +843,11 @@ export function DialegEnquadrament({
       } else if (teExifPerConservar(llegit)) {
         if (!casellaVista) {
           if (muntatRef.current && fontRef.current === font) setExifOriginal(llegit);
-          fallaDesat(AVIS_REVISA_EXIF);
+          fallaDesat(text(TEXTOS_ENQUADRAMENT.exifRevisa));
           return;
         }
         if (conservaExif && esNoConservable(llegit)) {
-          fallaDesat(errorExifNoConservable(llegit));
+          fallaDesat(errorExifNoConservable(llegit, t));
           return;
         }
         /* P1-64 · Marcada i amb una ubicació: la precisió triada va a la pujada
@@ -779,13 +869,13 @@ export function DialegEnquadrament({
         try {
           fitxer = await exportador(imatge.element, rect, opcionsSortida(rect, imatge.tipus, sortida));
         } catch {
-          fallaDesat(ERROR_EXPORTA);
+          fallaDesat(text(TEXTOS_ENQUADRAMENT.errorExporta));
           return;
         }
       }
       await onDesa?.(fitxer, { format: e.format, rect, sencera }, metadades);
     } catch (err) {
-      fallaDesat(err?.message || ERROR_EXPORTA);
+      fallaDesat(err?.message || text(TEXTOS_ENQUADRAMENT.errorExporta));
     } finally {
       if (muntatRef.current) setDesant(false);
     }
@@ -799,14 +889,14 @@ export function DialegEnquadrament({
       .filter(Boolean).join(' ');
     /* T3 (pla 261025_0045) · Amb més d'una forma (la capçalera): les píndoles i la didàctica. */
     const ambFormes = formats.length > 1;
-    const triada = formats.find((f) => f.valor === estat.format) || null;
+    const triada = formatsVistos.find((f) => f.valor === estat.format) || null;
     const idDidactica = `${id}-didactica`;
     return (
       <Dialeg
         obert={obert}
         onTanca={tanca}
-        titol={titol}
-        descripcio={descripcio}
+        titol={titolVist}
+        descripcio={descripcioVista}
         mida={ambFormes ? 'm' : 's'}
         className="sdp-enquadrament__dialeg sdp-enquadrament__dialeg--senzill"
         tancaEnVel={false}
@@ -814,9 +904,13 @@ export function DialegEnquadrament({
         accions={(
           <>
             {/* Fantasma (botó de text) amb la seua pell al peu: bloc T46 de modules.css. */}
-            <Boto varietat="fantasma" className="sdp-enquadrament__restablir" onClick={centra} disabled={quiet}>Restablir</Boto>
-            <Boto varietat="secundari" onClick={() => tanca('boto')} disabled={desant}>Cancel·lar</Boto>
-            <Boto varietat="primari" onClick={desa} carregant={desant} disabled={!imatge}>{etiquetaDesa || 'Guardar'}</Boto>
+            <Boto varietat="fantasma" className="sdp-enquadrament__restablir" onClick={centra} disabled={quiet}>
+              {text(TEXTOS_ENQUADRAMENT.restablir)}
+            </Boto>
+            <Boto varietat="secundari" onClick={() => tanca('boto')} disabled={desant}>{text(TEXTOS_ENQUADRAMENT.cancela)}</Boto>
+            <Boto varietat="primari" onClick={desa} carregant={desant} disabled={!imatge}>
+              {etiquetaDesa || text(TEXTOS_ENQUADRAMENT.guardar)}
+            </Boto>
           </>
         )}
       >
@@ -826,7 +920,7 @@ export function DialegEnquadrament({
         <div ref={arrelRef} className={ambFormes ? 'sdp-enquadrament sdp-enquadrament--formes' : 'sdp-enquadrament'}>
           {errorCarrega ? <Alerta to="error">{errorCarrega}</Alerta> : null}
           {errorDesat ? <Alerta key={errorDesat.intent} to="error">{errorDesat.text}</Alerta> : null}
-          {!errorCarrega && !imatge ? <Carregant etiqueta="Obrint la imatge…" /> : null}
+          {!errorCarrega && !imatge ? <Carregant etiqueta={text(TEXTOS_ENQUADRAMENT.obrint)} /> : null}
           {imatge ? (
             <>
               <div className={caixa}>
@@ -836,7 +930,7 @@ export function DialegEnquadrament({
                   width={visor.amplada}
                   height={visor.alcada}
                   role="img"
-                  aria-label="Previsualització del retall"
+                  aria-label={text(TEXTOS_ENQUADRAMENT.visorRetall)}
                   tabIndex={0}
                   aria-keyshortcuts="ArrowLeft ArrowRight ArrowUp ArrowDown Plus - Enter"
                   onKeyDown={onTeclaVisor}
@@ -849,16 +943,16 @@ export function DialegEnquadrament({
               </div>
               <p className="sdp-nomes-lector" aria-live="polite">{anunci}</p>
               <div className="sdp-enquadrament__zoom">
-                <button type="button" className="sdp-enquadrament__pas" aria-label="Allunyar" title="Allunyar"
-                  disabled={!potAllunyar} onClick={() => pasZoom('-')}>
+                <button type="button" className="sdp-enquadrament__pas" aria-label={text(TEXTOS_ENQUADRAMENT.allunya)}
+                  title={text(TEXTOS_ENQUADRAMENT.allunya)} disabled={!potAllunyar} onClick={() => pasZoom('-')}>
                   <Minus size={20} aria-hidden="true" focusable="false" />
                 </button>
-                <input type="range" className="sdp-control sdp-enquadrament__lliscador" aria-label="Ampliació"
-                  min={1} max={zMax} step={0.01} value={estat.zoom} aria-valuetext={textAmpliacio(estat.zoom)}
+                <input type="range" className="sdp-control sdp-enquadrament__lliscador" aria-label={text(TEXTOS_ENQUADRAMENT.ampliacio)}
+                  min={1} max={zMax} step={0.01} value={estat.zoom} aria-valuetext={textAmpliacio(estat.zoom, t)}
                   disabled={quiet || zMax <= 1}
                   onChange={(ev) => actualitza(limita({ ...estatRef.current, zoom: Number(ev.target.value) }, W, H, formats))} />
-                <button type="button" className="sdp-enquadrament__pas" aria-label="Apropar" title="Apropar"
-                  disabled={!potApropar} onClick={() => pasZoom('+')}>
+                <button type="button" className="sdp-enquadrament__pas" aria-label={text(TEXTOS_ENQUADRAMENT.apropa)}
+                  title={text(TEXTOS_ENQUADRAMENT.apropa)} disabled={!potApropar} onClick={() => pasZoom('+')}>
                   <Plus size={20} aria-hidden="true" focusable="false" />
                 </button>
               </div>
@@ -867,16 +961,16 @@ export function DialegEnquadrament({
               {ambFormes ? (
                 <fieldset className="sdp-enquadrament__formats" role="radiogroup" aria-labelledby={`${id}-forma-llegenda`}
                   aria-describedby={idDidactica} disabled={desant}>
-                  <legend id={`${id}-forma-llegenda`} className="sdp-nomes-lector">Forma</legend>
+                  <legend id={`${id}-forma-llegenda`} className="sdp-nomes-lector">{text(TEXTOS_ENQUADRAMENT.forma)}</legend>
                   <div className="sdp-enquadrament__formats-pindoles">
-                    {formats.map((f) => {
+                    {formatsVistos.map((f) => {
                       const idForma = `${id}-forma-${f.valor}`;
                       return (
                         <div key={f.valor} className="sdp-enquadrament__format">
                           <input type="radio" id={idForma} name={`${id}-forma`} value={f.valor}
                             className="sdp-enquadrament__format-control sdp-nomes-lector" aria-label={f.etiqueta}
                             checked={estat.format === f.valor} onChange={() => canviaForma(f.valor)} />
-                          <label htmlFor={idForma} className="sdp-enquadrament__format-pindola">{etiquetaCurtaDeForma(f)}</label>
+                          <label htmlFor={idForma} className="sdp-enquadrament__format-pindola">{etiquetaCurtaDeForma(f, t)}</label>
                         </div>
                       );
                     })}
@@ -884,7 +978,7 @@ export function DialegEnquadrament({
                 </fieldset>
               ) : null}
               {ambFormes ? (
-                <p id={idDidactica} className="sdp-enquadrament__didactica" aria-live="polite">{didacticaDeForma(triada)}</p>
+                <p id={idDidactica} className="sdp-enquadrament__didactica" aria-live="polite">{didacticaDeForma(triada, t)}</p>
               ) : null}
               {casellaExif}
             </>
@@ -899,18 +993,20 @@ export function DialegEnquadrament({
     <Dialeg
       obert={obert}
       onTanca={tanca}
-      titol={titol}
-      descripcio={descripcio}
+      titol={titolVist}
+      descripcio={descripcioVista}
       mida="g"
       className="sdp-enquadrament__dialeg"
       tancaEnVel={false}
       accions={(
         <>
-          <Boto varietat="secundari" onClick={() => tanca('boto')} disabled={desant}>Cancel·lar</Boto>
+          <Boto varietat="secundari" onClick={() => tanca('boto')} disabled={desant}>{text(TEXTOS_ENQUADRAMENT.cancela)}</Boto>
           {/* Secundari i no fantasma: al peu del diàleg només es restituïxen
               secundari i perill (components.css, trampa de PerfilShell.css). */}
-          <Boto varietat="secundari" onClick={centra} disabled={quiet}>Centrar</Boto>
-          <Boto varietat="primari" onClick={desa} carregant={desant} disabled={!imatge || (geo.actiu && geo.llegint)}>{etiquetaDesa || 'Desar l’enquadrament'}</Boto>
+          <Boto varietat="secundari" onClick={centra} disabled={quiet}>{text(TEXTOS_ENQUADRAMENT.centrar)}</Boto>
+          <Boto varietat="primari" onClick={desa} carregant={desant} disabled={!imatge || (geo.actiu && geo.llegint)}>
+            {etiquetaDesa || text(TEXTOS_ENQUADRAMENT.desa)}
+          </Boto>
         </>
       )}
     >
@@ -918,7 +1014,7 @@ export function DialegEnquadrament({
         {errorCarrega ? <Alerta to="error">{errorCarrega}</Alerta> : null}
         {/* Dalt de tot i no al final: el cos fa scroll i «Desar» és al peu fix. */}
         {errorDesat ? <Alerta key={errorDesat.intent} to="error">{errorDesat.text}</Alerta> : null}
-        {!errorCarrega && !imatge ? <Carregant etiqueta="Obrint la imatge…" /> : null}
+        {!errorCarrega && !imatge ? <Carregant etiqueta={text(TEXTOS_ENQUADRAMENT.obrint)} /> : null}
         {/* Correcció C19 (260928) · La foto i els lliscadors han de cabre alhora:
             a ≥721px, la vista a una banda i els controls a l'altra (bloc T46 de
             modules.css); en mòbil, en columna. Els lliscadors van abans que la
@@ -933,7 +1029,7 @@ export function DialegEnquadrament({
                   width={visor.amplada}
                   height={visor.alcada}
                   role="img"
-                  aria-label="Previsualització de l’enquadrament"
+                  aria-label={text(TEXTOS_ENQUADRAMENT.visorEnquadrament)}
                   aria-describedby={`${id}-ajuda`}
                   tabIndex={0}
                   /* WAI-ARIA 1.2: el «+» separa modificadors; la tecla més és «Plus». */
@@ -946,30 +1042,29 @@ export function DialegEnquadrament({
                   onLostPointerCapture={deixaPunter}
                 />
               </div>
-              <p id={`${id}-ajuda`} className="sdp-camp__ajuda">
-                Arrossega la foto amb el dit o el ratolí per a moure-la; amb dos dits, l’amplies. També la pots moure i ampliar amb els lliscadors o, amb la foto seleccionada, amb les fletxes i les tecles + i −. Retorn la desa.
-              </p>
+              <p id={`${id}-ajuda`} className="sdp-camp__ajuda">{text(TEXTOS_ENQUADRAMENT.ajudaTeclat)}</p>
               <p className="sdp-nomes-lector" aria-live="polite">{anunci}</p>
             </div>
             <div className="sdp-enquadrament__controls">
               <div className="sdp-enquadrament__lliscadors">
-                <Camp etiqueta="Ampliació" ajuda={zMax <= 1 ? 'Esta foto és massa xicoteta per a ampliar-la més.' : undefined}>
+                <Camp etiqueta={text(TEXTOS_ENQUADRAMENT.ampliacio)} ajuda={zMax <= 1 ? text(TEXTOS_ENQUADRAMENT.massaXicoteta) : undefined}>
                   <CampText tipus="range" className="sdp-enquadrament__lliscador" min={1} max={zMax} step={0.01}
-                    value={estat.zoom} aria-valuetext={textAmpliacio(estat.zoom)} disabled={quiet || zMax <= 1}
+                    value={estat.zoom} aria-valuetext={textAmpliacio(estat.zoom, t)} disabled={quiet || zMax <= 1}
                     onChange={(ev) => actualitza(limita({ ...estatRef.current, zoom: Number(ev.target.value) }, W, H, formats))} />
                 </Camp>
-                <Camp etiqueta="Posició horitzontal" ajuda={hiHaMarge.x ? undefined : 'En esta direcció la foto ja omple tot el marc.'}>
+                <Camp etiqueta={text(TEXTOS_ENQUADRAMENT.posicioHoritzontal)} ajuda={hiHaMarge.x ? undefined : text(TEXTOS_ENQUADRAMENT.senseMarge)}>
                   <CampText tipus="range" className="sdp-enquadrament__lliscador" min={0} max={100} step={1}
-                    value={posX} aria-valuetext={`${posX} % des de l’esquerra`} disabled={quiet || !hiHaMarge.x}
+                    value={posX} aria-valuetext={omple(text(TEXTOS_ENQUADRAMENT.valorEsquerra), { n: posX })} disabled={quiet || !hiHaMarge.x}
                     onChange={(ev) => actualitza(ambLliscador(estatRef.current, 'x', ev.target.value, W, H, formats))} />
                 </Camp>
-                <Camp etiqueta="Posició vertical" ajuda={hiHaMarge.y ? undefined : 'En esta direcció la foto ja omple tot el marc.'}>
+                <Camp etiqueta={text(TEXTOS_ENQUADRAMENT.posicioVertical)} ajuda={hiHaMarge.y ? undefined : text(TEXTOS_ENQUADRAMENT.senseMarge)}>
                   <CampText tipus="range" className="sdp-enquadrament__lliscador" min={0} max={100} step={1}
-                    value={posY} aria-valuetext={`${posY} % des de dalt`} disabled={quiet || !hiHaMarge.y}
+                    value={posY} aria-valuetext={omple(text(TEXTOS_ENQUADRAMENT.valorDalt), { n: posY })} disabled={quiet || !hiHaMarge.y}
                     onChange={(ev) => actualitza(ambLliscador(estatRef.current, 'y', ev.target.value, W, H, formats))} />
                 </Camp>
               </div>
-              <GrupOpcions llegenda="Forma" opcions={formats} valor={estat.format} onCanvi={canviaForma} disabled={desant} />
+              <GrupOpcions llegenda={text(TEXTOS_ENQUADRAMENT.forma)} opcions={formatsVistos} valor={estat.format} onCanvi={canviaForma}
+                disabled={desant} />
               {casellaExif}
               {permetGeolocalitzacio ? (
                 <UbicacioImatge geo={geo} resultat={ubicacio} desactivat={desant} onActiva={activaGeo} onCanvi={canviaGeo} />

@@ -787,3 +787,21 @@ describe('memoriaOral · Gauntlet 2 (G2-MO)', () => {
     expect(estructuraMemoriaOral('Les festes de Tibi eren les millors de la comarca.').descripcio).toMatch(/\(poble esmentat: Tibi\)\.$/);
   });
 });
+
+/* T2 · D04/D10 (assalt 261101) · markdownOkf: el paquet Open Data escriu cada
+   fitxa a data/okf/ amb el mateix serialitzador que la fitxa, i el restaurador
+   en comprova els bytes. Import dinàmic a posta: el carril T6a toca la llista
+   d'imports de dalt alhora. */
+describe('T2 · markdownOkf', () => {
+  test('dona els mateixos bytes que fitxa.okf.markdown, en esborrany i revisada', async () => {
+    const { markdownOkf } = await import('./memoriaOral.js');
+    const esborrany = estructuraMemoriaOral(RELAT, { ara: ARA, autor: 'sense-identificador' });
+    const revisada = marcaRevisioHumana(esborrany, { persona: 'sense-identificador', ara: '2026-11-01T04:00:00Z' });
+    for (const fitxa of [esborrany, revisada]) {
+      expect(markdownOkf(fitxa.okf.frontmatter, fitxa.okf.cos)).toBe(fitxa.okf.markdown);
+    }
+    expect(revisada.okf.frontmatter.status).toBe('stable');
+    // Un estat que no és d'OKF no arriba al YAML.
+    expect(() => markdownOkf({ ...revisada.okf.frontmatter, status: 'publicada' }, revisada.okf.cos)).toThrow(TypeError);
+  });
+});

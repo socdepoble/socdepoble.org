@@ -48,6 +48,88 @@ const ALLOWED_HEX = new Set([
  */
 const LLEIS_DURES = new Set(['tailwind-visual', 'font-too-small']);
 
+/* ═══ DIV-SOUP · CALIBRATGE D-2 (assalt 10/10, 261101) ═══════════════
+ * L'heurística comptava `<div` com a TEXT: també dins de cadenes (l'HTML de
+ * prosa de pageContent.js, que passa per sanitizeHtml, on section, article,
+ * main i aside NO són a ALLOWED_TAGS: src/utils/sanitize.js) i dins de les
+ * fixtures de les proves (sanitize.test.js, targetesIncrustades.test.js). I
+ * només acceptava section|article|main|aside com a estructura: un <form>, un
+ * <fieldset>, un <dl> o un embolcall canònic de Pedra Seca no hi comptaven.
+ * El 261101 els nou avisos eren falsos positius d'esta mesura, cap defecte.
+ * Ara, en .js/.jsx: només compten els elements JSX <div> de l'AST; l'estructura
+ * són les etiquetes semàntiques natives i els embolcalls documentats de davall;
+ * i les proves (*.test.*, __tests__/) no són interfície. Fora de JS (.html), el
+ * recompte de text de sempre, sense comentaris. El llindar (> 10) no canvia.
+ */
+export const ESTRUCTURA_NATIVA = Object.freeze([
+  'section', 'article', 'main', 'aside', 'nav', 'header', 'footer',
+  'form', 'fieldset', 'dialog', 'details', 'figure', 'dl', 'table'
+]);
+/** Embolcalls canònics documentats: el component pinta la seua `marca`, un
+ *  element semàntic o un altre embolcall del registre. La porta la cerca en
+ *  el JSX d'ell o d'un component local del mateix `fitxer` que ell pinta, fora
+ *  de callbacks i de branques condicionals (`? :`, `&&`). També compta el JSX
+ *  desat en una variable, encara que la variable només es pinte en una branca
+ *  o no es pinte, i el d'un `if (…) return`: és una guarda de registre, no
+ *  d'anàlisi de flux. No cal que siga l'arrel del DOM (PageFrame pinta
+ *  l'<article> dins d'un <div> contenidor). Ho vigila l'AST a
+ *  tests/design-guard.test.mjs. */
+export const EMBOLCALLS_SEMANTICS = Object.freeze({
+  UniversalPage: { fitxer: 'components/universal/UniversalPage.jsx', marca: '<PageFrame' },
+  PageFrame: { fitxer: 'components/universal/PageFrame.jsx', marca: '<article' },
+  UniversalCard: { fitxer: 'components/PedraSeca/organismes/UniversalCard.jsx', marca: '<article' },
+  Dialeg: { fitxer: 'components/PedraSeca/organismes/Dialeg.jsx', marca: '<dialog' },
+  DialegConfirmacio: { fitxer: 'components/PedraSeca/organismes/Dialeg.jsx', marca: '<Dialeg ' },
+  GrupCamps: { fitxer: 'components/PedraSeca/organismes/formulari.jsx', marca: '<fieldset' },
+  Especimen: { fitxer: 'sections/disseny/cataleg/Especimen.jsx', marca: '<section' }
+});
+const NATIVA = new Set(ESTRUCTURA_NATIVA);
+const LLINDAR_DIV_SOUP = 10;
+const ES_PROVA = /(^|[\\/])__tests__[\\/]|\.(test|spec)\.[cm]?[jt]sx?$/;
+
+function nomJsx(nom) {
+  if (!nom) return '';
+  if (nom.type === 'JSXIdentifier') return nom.name;
+  if (nom.type === 'JSXMemberExpression') return nomJsx(nom.property);
+  return '';
+}
+
+/** { divs, estructura } dels elements JSX d'un AST. */
+function sopaJsx(ast) {
+  let divs = 0;
+  let estructura = 0;
+  walkAst(ast, (node) => {
+    if (node.type !== 'JSXOpeningElement') return;
+    const nom = nomJsx(node.name);
+    if (nom === 'div') divs += 1;
+    else if (NATIVA.has(nom) || Object.hasOwn(EMBOLCALLS_SEMANTICS, nom)) estructura += 1;
+  });
+  return { divs, estructura };
+}
+
+/** El text sense comentaris HTML, en una passada (indexOf, cap regex que
+ *  torne arrere): un `<!--` sense tancar s'emporta la resta, com al navegador. */
+function senseComentarisHtml(text) {
+  let net = '';
+  let des = 0;
+  for (;;) {
+    const obri = text.indexOf('<!--', des);
+    if (obri === -1) return net + text.slice(des);
+    net += text.slice(des, obri);
+    const tanca = text.indexOf('-->', obri + 4);
+    if (tanca === -1) return net;
+    des = tanca + 3;
+  }
+}
+
+function sopaText(text) {
+  const net = senseComentarisHtml(text);
+  return {
+    divs: net.split(/<div\b/i).length - 1,
+    estructura: net.split(new RegExp(`<(${ESTRUCTURA_NATIVA.join('|')})\\b`, 'i')).length - 1
+  };
+}
+
 async function walk(dir, out = []) {
   for (const ent of await readdir(dir, { withFileTypes: true }).catch(() => [])) {
     if (SKIP.has(ent.name) || ent.name.startsWith('.')) continue;
@@ -197,19 +279,27 @@ function scanDesign(text, file, vocab = null) {
     }
   }
 
-  const divCount = text.split(/<div\b/i).length - 1;
-  const semanticCount = text.split(/<(section|article|main|aside)\b/i).length - 1;
-  if (divCount > 10 && semanticCount === 0) {
-    findings.push({
-      severity: 'warning', rule: 'div-soup', file, line: 1, token: 'div-soup',
-      message: `Massa divs (${divCount}) sense etiquetes semàntiques. Aplica Pedra Seca.`
-    });
+  const esJs = file.endsWith('.jsx') || file.endsWith('.js');
+  let ast = null;
+  if (esJs) {
+    try { ast = parse(text, { sourceType: 'module', plugins: ['jsx'] }); } catch { ast = null; }
+  }
+
+  // REGLA DIV-SOUP (calibratge D-2): vegeu ESTRUCTURA_NATIVA i EMBOLCALLS_SEMANTICS.
+  if (!ES_PROVA.test(file)) {
+    const sopa = ast ? sopaJsx(ast) : sopaText(text);
+    if (sopa.divs > LLINDAR_DIV_SOUP && sopa.estructura === 0) {
+      findings.push({
+        severity: 'warning', rule: 'div-soup', file, line: 1, token: 'div-soup',
+        message: `Massa divs (${sopa.divs}) sense estructura semàntica (${ESTRUCTURA_NATIVA.join(', ')} o un embolcall canònic). Aplica Pedra Seca.`
+      });
+    }
   }
 
   // REGLA: AST per bloquejar style={{...}}
-  if (file.endsWith('.jsx') || file.endsWith('.js')) {
+  if (esJs) {
     try {
-      const ast = parse(text, { sourceType: 'module', plugins: ['jsx'] });
+      if (!ast) throw new Error('sense AST');
       walkAst(ast, (node) => {
         if (node.type === 'JSXAttribute' && node.name && node.name.name === 'style' && !isSafeCromStyle(node, file)) {
           findings.push({

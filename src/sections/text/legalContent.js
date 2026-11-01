@@ -10,7 +10,7 @@ export const legalContent = {
     { "text": "RGPD i LSSI-CE", "className": "sdp-badge-category" }
   ],
   "html": `
-    <p><em>Versió 2.2 · En vigor des del 24 d'octubre de 2026. Substitueix qualsevol versió anterior d'aquest text.</em></p>
+    <p><em>Versió 2.3 · En vigor des de l'1 de novembre de 2026. Substitueix qualsevol versió anterior d'aquest text.</em></p>
 
     <h3>0. Com llegir aquest document</h3>
     <p>Ací dins hi ha quatre coses, en aquest ordre. Primer, <strong>l'avís legal</strong>: qui hi ha darrere d'aquesta web i de què respon. Segon, la <strong>política de privacitat</strong>: què fem amb les teues dades i quins drets tens. Tercer, l'<strong>emmagatzematge al teu dispositiu</strong>: què deixem al teu navegador i per què. I quart, els <strong>reconeixements</strong>: les fonts, comunitats i divulgadors dels quals ens nodrim i aprenem.</p>
@@ -48,7 +48,7 @@ export const legalContent = {
     <h4>3. Condicions d'ús</h4>
     <p>Entrar i utilitzar Sóc de Poble et dona la condició d'Usuari i implica que acceptes aquest text sencer. Si no l'acceptes, no utilitzes l'aplicació.</p>
     <p>La finalitat de la plataforma és servir d'espai de comunicació, intercanvi d'informació, preservació etnogràfica i cohesió per a les comunitats rurals. Et compromets a fer-la servir per a això i a no publicar continguts il·lícits, ofensius, ni dades personals d'altres persones sense el seu permís.</p>
-    <p><strong>Edat mínima: 14 anys</strong>, d'acord amb l'article 7 de la Llei Orgànica 3/2018 (LOPDGDD). Si tens menys de 14 anys, necessites que et done d'alta la persona que exercisca la teua pàtria potestat o tutela. Si detectem un compte d'una persona menor de 14 anys sense aquest consentiment, el donarem de baixa.</p>
+    <p><strong>Edat mínima: 16 anys.</strong> Per a obrir un compte i fer servir Sóc de Poble has de tindre 16 anys o més. És la mateixa edat a la web i a l'aplicació per al mòbil, i no hi ha cap excepció amb el permís de la família. Si detectem un compte d'una persona menor de 16 anys, el donarem de baixa.</p>
     <p>Si incompleixes aquestes condicions, retirarem sempre el contingut que les incompleix. Amb el teu compte, la mesura dependrà de la gravetat i de si es repeteix: un avís, una suspensió temporal o la baixa definitiva; si publiques contingut il·legal greu, et donarem de baixa a la primera. T'ho direm com a molt tard quan apliquem la mesura, com expliquem tot seguit a «Normes de convivència i moderació».</p>
     <h5>Normes de convivència i moderació</h5>
     <p>Abans de publicar per primera vegada, et demanem que acceptes les <strong>normes de convivència del poble</strong>:</p>

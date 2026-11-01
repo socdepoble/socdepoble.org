@@ -37,6 +37,7 @@ vi.mock('../../data/backendPort.js', async (importOriginal) => ({
   listPublicOrganizations: (...args) => mocks.directori(...args)
 }));
 import MurSection from './MurSection.jsx';
+import { VIGENCIA_ALERTA_MS, dataDeCaducitat } from './alertesMunicipals.js';
 
 const AJUNTAMENT = '7d2c1a40-0000-4000-8000-00000000a1a1';
 const FORN = '7d2c1a40-0000-4000-8000-00000000f0f0';
@@ -183,7 +184,11 @@ describe('semàntica accessible', () => {
     await waitFor(() => expect(viva.textContent).toContain('Hi ha 2 avisos municipals urgents'));
     // El mateix node (la regió ja existia): el lector anuncia el canvi.
     expect(regio(container)).toBe(viva);
-    expect(within(viva).getAllByRole('listitem').map((li) => li.textContent)).toEqual(['Alerta municipal: Pluges', 'Bàndol urgent: Tall d’aigua']);
+    /* T7 · S2 (assalt 261101) · Cada avís diu fins quan és vigent: data
+       absoluta (la de la targeta + 72 h) dins d'un <time>, mai un compte enrere. */
+    const data = (titol) => dataDeCaducitat(Date.parse(mocks.mur.sortedFeedPosts.find((p) => p.title === titol).created_at) + VIGENCIA_ALERTA_MS, 'ca-ES');
+    expect(within(viva).getAllByRole('listitem').map((li) => li.textContent)).toEqual([`Alerta municipal: Pluges · vigent fins a ${data('Pluges')}`, `Bàndol urgent: Tall d’aigua · vigent fins a ${data('Tall d’aigua')}`]);
+    expect([...viva.querySelectorAll('li time')].map((temps) => temps.textContent)).toEqual([data('Pluges'), data('Tall d’aigua')]);
     expect(within(viva).getByRole('link', { name: 'Tall d’aigua' }).getAttribute('href')).toBe('/mur/aigua');
     // Dins de la regió no hi ha cap altra regió viva ni cap role="alert".
     expect(viva.querySelector('[role], [aria-live]')).toBeNull();

@@ -17,7 +17,8 @@ import { ErrorPublicacio, MOTIU_LOCAL, MOTIU_LOCAL_CONNEXIO, motiuDesatPendent, 
 import { autorDe } from '../../config/navigation.js';
 import { aliesDeLActor } from '../../data/identitatsSeed.js';
 import { pertanyALActor } from './masDeLUsuari.js';
-import { useIdentitat } from '../../app/contexts/IdentitatContext.jsx';
+import { useIdentitatOReserva } from '../../app/contexts/useIdentitatOReserva.js';
+import { ErrorIdentitatDeLectura } from '../../app/contexts/identitatDeReserva.js';
 import { useSession } from '../../app/contexts/SessionContext.jsx';
 import { actorAmbPobleDeLEntitat, autoriaDeLActor, modeDeDadesResolt } from './autoriaNota.js';
 import { poblePrincipal, slugDelPoble } from '../pobles/nomsDelPoble.js';
@@ -30,7 +31,6 @@ import { CODI_ENTRADA, esRebuigDeNormes } from '../../data/errorsBackend.js';
    preparada (notaPreparada.js) en crear-se hi passa pel mateix. */
 import { netejaCamp } from './netejaCamp.js';
 import { esLlavorDeNota } from './llavorNota.js';
-import { fotosGeoDelCos, geoDelHero } from './geoDeLesFotos.js';
 
 export function etiquetesDeNota(note, _noteFolders, accions = {}) {
   // La carpeta organitza el bloc; no és una categoria editorial. Els labels
@@ -58,11 +58,11 @@ export function NotesProvider({ children }) {
   const { showToast } = useToast();
   const { locale, externalConfig } = useUIState();
   const { normalizeSearchText, t } = useUIActions();
-  const { noteFolders, notes: rawNotes, creaNota, updateNote: updateNoteContext, mouNota: mouNotaContext, esborraNota: esborraNotaContext, status, error, scopeKey, workspaceKey, notesComplete, resolveNote, refresh, config, canCreate } = useNotesData();
+  const { noteFolders, notes: rawNotes, creaNota, updateNote: updateNoteContext, mouNota: mouNotaContext, esborraNota: esborraNotaContext, status, error, scopeKey, workspaceKey, notesComplete, resolveNote, refresh, config, canCreate, nomesLectura = false } = useNotesData();
   const { sendSectionSubmission, feedPosts } = useMur();
   /* Poliment T41/T43 · Qui signa la publicació: l'actor que MurContext envia
      com a author_org_id, també al nom, la foto i el poble del payload. */
-  const { actor, memberships } = useIdentitat();
+  const { actor, memberships } = useIdentitatOReserva();
   const { currentUser } = useSession();
   /* Onada 6 (revisió adversarial) · Una entitat signa des del poble de la
      seua organització (el town_name de la seua fila de pertinença): sense,
@@ -164,6 +164,9 @@ export function NotesProvider({ children }) {
   }, [locale, normalizeSearchText, rawNotes, localNoteOverrides]);
 
   const saveNoteField = useCallback((noteId, field, value) => {
+    /* D-7 (pla 261101_1246) · Amb la reserva de només lectura, res a la cua
+       ni a IndexedDB: el desat no comença. */
+    if (nomesLectura) return Promise.resolve(false);
     if (noteId && delMateixActor()) return vigentRef.current.saveNoteField(noteId, field, value);
     if (!noteId || operationRef.current !== operation) return Promise.resolve(false);
     if (esborrades.current.has(noteId)) return Promise.resolve(false);
@@ -178,9 +181,10 @@ export function NotesProvider({ children }) {
       clearLocalNoteFields,
       (msg, type) => showToast(msg, type)
     );
-  }, [scopeKey, rawNotes, clearLocalNoteFields, updateNoteContext, operation, showToast, delMateixActor]);
+  }, [scopeKey, rawNotes, clearLocalNoteFields, updateNoteContext, operation, showToast, delMateixActor, nomesLectura]);
 
   const setLocalNoteField = useCallback((id, field, value) => {
+    if (nomesLectura) return; // D-7 · cap capa local que semble desada
     if (id && delMateixActor()) {
       vigentRef.current.setLocalNoteField(id, field, value);
       return;
@@ -197,7 +201,7 @@ export function NotesProvider({ children }) {
 
       return next;
     });
-  }, [operation, saveNoteField, delMateixActor]);
+  }, [operation, saveNoteField, delMateixActor, nomesLectura]);
 
   useLayoutEffect(() => {
     vigentRef.current = { saveNoteField, setLocalNoteField };
@@ -214,6 +218,8 @@ export function NotesProvider({ children }) {
      T71b · Una nota amb origen (connexió o contingut de fora) mai es publica
      com a pròpia: es compartix encara que la crida no ho demane. */
   const publishNote = useCallback((activeNote, { mode = 'publicar' } = {}) => {
+    // D-7 · Ni publicar ni pujar cap imatge pública amb la reserva de només lectura.
+    if (nomesLectura) return Promise.reject(new ErrorIdentitatDeLectura());
     const compartir = mode === 'compartir' || esConnexio(activeNote) || esExtern(activeNote);
     if (!activeNote || operationRef.current !== operation) return Promise.resolve(false);
     if (config?.dataMode === 'seed' || config?.dataMode === 'local') {
@@ -341,11 +347,29 @@ export function NotesProvider({ children }) {
          i la data del hero (el seu EXIF, ja arrodonit a la precisió triada).
          Només d'una publicació pròpia (una connexió o un contingut de fora és
          d'altri), només si la persona ha posat la capçalera (mai la reserva)
-         i, si la lectura falla o tarda més de 4 s, cap clau: publicar no
-         s'atura mai per això. */
-      const fotosGeo = compartir ? [] : fotosGeoDelCos(finalContent);
-      const geoHero = !compartir && netejaCamp('heroImage', activeNote.coverImage)
-        ? await geoDelHero(finalHeroImage).catch(() => ({}))
+         i, si la lectura de l'EXIF del hero falla o tarda més de 4 s
+         (TEMPS_HERO_MS), cap clau: publicar no s'atura mai per això. */
+      /* P1-20 · D15 (Assalt 10/10, T4a, 261101) · La geo de les fotos i l'EXIF
+         que arrossega (uns 19 kB gzip) ja no viatgen al tros d'entrada: es
+         demanen ací, només en publicar una nota pròpia. La regla de dalt hi
+         val igual: si el tros no baixa (un 404 amb una pestanya d'abans d'un
+         desplegament) o no arriba en 4 s (TEMPS_TROS_GEO_MS, una xarxa
+         encallada), o si la lectura de l'EXIF del hero tarda més de 4 s
+         (TEMPS_HERO_MS, a geoDeLesFotos.js), cap clau i la publicació
+         continua. Són dos terminis seguits: publicar pot esperar per la geo
+         fins a uns 8 s, mai més. Republicar així una nota amb fotos situades les
+         lleva del Mapa fins a la publicació següent: l'índex es deriva del cos,
+         que no es toca. */
+      const TEMPS_TROS_GEO_MS = 4000;
+      let terminiGeo;
+      const geo = compartir ? null : await Promise.race([
+        import('./geoDeLesFotos.js'),
+        new Promise((resolve) => { terminiGeo = setTimeout(resolve, TEMPS_TROS_GEO_MS, null); })
+      ]).catch(() => null);
+      clearTimeout(terminiGeo);
+      const fotosGeo = geo ? geo.fotosGeoDelCos(finalContent) : [];
+      const geoHero = geo && netejaCamp('heroImage', activeNote.coverImage)
+        ? await geo.geoDelHero(finalHeroImage).catch(() => ({}))
         : {};
       assertCurrent();
 
@@ -457,7 +481,7 @@ export function NotesProvider({ children }) {
     }).finally(() => publishing.current.delete(key));
     publishing.current.set(key, result);
     return result;
-  }, [noteFolders, sendSectionSubmission, saveNoteField, externalConfig, autoria, actor, config, workspaceKey, scopeKey, operation, updateNoteContext, clearLocalNoteFields, showToast]);
+  }, [noteFolders, sendSectionSubmission, saveNoteField, externalConfig, autoria, actor, config, workspaceKey, scopeKey, operation, updateNoteContext, clearLocalNoteFields, showToast, nomesLectura]);
 
   const compartirNota = useCallback((note) => publishNote(note, { mode: 'compartir' }), [publishNote]);
 
@@ -474,7 +498,7 @@ export function NotesProvider({ children }) {
   //   · 'remot': es descarta l'esborrany i es torna a llegir la nota del servidor.
   //   · 'meu': la base passa a la revisió remota i els camps es desen damunt.
   const resolConflicteEsborrany = useCallback(async (note, decisio) => {
-    if (!note?.draftConflict || operationRef.current !== operation) return false;
+    if (nomesLectura || !note?.draftConflict || operationRef.current !== operation) return false;
     if (decisio === 'remot') {
       await bgSaveManager.clearDraft(scopeKey, note.id);
       setLocalNoteOverrides(prev => {
@@ -495,7 +519,7 @@ export function NotesProvider({ children }) {
     const camps = await bgSaveManager.rebaseDraft(scopeKey, note.id, note.draftConflict.remoteRevision);
     const desats = await Promise.all(Object.entries(camps).map(([field, value]) => saveNoteField(note.id, field, value)));
     return desats.every(Boolean);
-  }, [operation, scopeKey, resolveNote, refresh, saveNoteField]);
+  }, [operation, scopeKey, resolveNote, refresh, saveNoteField, nomesLectura]);
 
   // Capacitat opcional del backend: sense ella l'editor no pinta «Borrar».
   const potEsborrar = teCapacitat('cicleNotes');
@@ -517,7 +541,7 @@ export function NotesProvider({ children }) {
      ('activa') necessita desfer tot açò i és de la fase de la vista de
      recuperació; ací es refusa sense tocar res. */
   const mouNota = useCallback((note, estat) => {
-    if (!note?.id || operationRef.current !== operation) return Promise.resolve(false);
+    if (nomesLectura || !note?.id || operationRef.current !== operation) return Promise.resolve(false);
     if (estat !== 'paperera' && estat !== 'arxivada') return Promise.resolve(false);
     return bgSaveManager.runExclusive(scopeKey, note.id, async () => {
       if (operationRef.current !== operation) throw new DOMException('Sessió canviada.', 'AbortError');
@@ -539,14 +563,14 @@ export function NotesProvider({ children }) {
       if (operationRef.current === operation) showToast('No s’ha pogut moure la nota. Continua on estava.', 'error');
       return false;
     });
-  }, [operation, scopeKey, mouNotaContext, oblidaOverlay, showToast]);
+  }, [operation, scopeKey, mouNotaContext, oblidaOverlay, showToast, nomesLectura]);
 
   /* Esborrat definitiu: no es desa res. La cua pendent es cancel·la abans
      (oblida); si hi havia un desat en curs, el serial l'espera i la revisió es
      llig després. El segon oblida neteja el registre que eixe desat en curs
      haja pogut tornar a escriure en IndexedDB. */
   const esborraNota = useCallback(async (note) => {
-    if (!note?.id || operationRef.current !== operation) return false;
+    if (nomesLectura || !note?.id || operationRef.current !== operation) return false;
     esborrades.current.add(note.id);
     try {
       await bgSaveManager.oblida(scopeKey, note.id);
@@ -561,7 +585,7 @@ export function NotesProvider({ children }) {
     oblidaOverlay(note.id);
     showToast('Nota borrada definitivament.', 'success');
     return true;
-  }, [operation, scopeKey, esborraNotaContext, oblidaOverlay, showToast]);
+  }, [operation, scopeKey, esborraNotaContext, oblidaOverlay, showToast, nomesLectura]);
 
   const ctxValue = useMemo(() => ({
     notes,
@@ -581,6 +605,8 @@ export function NotesProvider({ children }) {
        canCreate (useSession). canCreate també depén de la càrrega; esta no:
        el Bloc diu «Connecta…» només quan de veres no n'hi ha (reglaDEntrada). */
     teSessio: Boolean(currentUser?.id),
+    /* D-7 · Cert amb la reserva de només lectura (sense IdentitatProvider). */
+    nomesLectura,
     informaError,
     obriConfiguracioNotes,
     resolConflicteEsborrany,
@@ -591,7 +617,7 @@ export function NotesProvider({ children }) {
   }), [
     notes, noteFolders, saveNoteField, setLocalNoteField,
     publishNote, compartirNota, creaNota, updateNoteContext, status, error, scopeKey, workspaceKey, notesComplete, resolveNote, refresh, config, canCreate, currentUser, informaError, obriConfiguracioNotes, resolConflicteEsborrany,
-    mouNota, esborraNota, potEsborrar, t
+    mouNota, esborraNota, potEsborrar, t, nomesLectura
   ]);
 
   return (

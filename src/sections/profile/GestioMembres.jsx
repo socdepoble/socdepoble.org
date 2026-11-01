@@ -1,12 +1,13 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Boto, Camp, CampText, Casella, DialegConfirmacio, GrupCamps, Selector, Taula } from '../../components/PedraSeca';
 import { AvatarResolt } from '../../components/universal/identitat/AvatarResolt.jsx';
-import { etiquetaDeRol } from '../../components/universal/identitat/rols.js';
+import { PARELLS_ROL, parellDeRol } from '../../components/universal/identitat/rols.js';
+import { tradueix } from '../../components/PedraSeca/hooks/useTraductorOpcional.js';
 import { useUIActionsOpcional } from '../../app/contexts/UIContext';
 import { omple } from '../../config/moderacio.js';
 /* IDEA-22, punt 2 (pla 261025_0200) · La tria de la propietària (capacitat 'consentimentTitular'). */
 import { estatTitularPublic, marcaTitularPublic, teCapacitat } from '../../data/backendPort.js';
-import { ETIQUETES_TIPUS, MINIM_CERCA, accionsSobre, clauDeMembre, ordenaMembres } from './membresModel.js';
+import { MINIM_CERCA, accionsSobre, clauDeMembre, ordenaMembres, parellDeTipus } from './membresModel.js';
 import { QuiSegueixOrganitzacio } from './Seguidors.jsx';
 
 /* ═══════════════════════════════════════════════════════════════════
@@ -25,10 +26,56 @@ import { QuiSegueixOrganitzacio } from './Seguidors.jsx';
 /* La cerca de candidats espera que la persona pare d'escriure. */
 export const ESPERA_CERCA = 300;
 
-const ROLS_D_ALTA = Object.freeze([
-  { valor: 'member', etiqueta: 'Membre' },
-  { valor: 'admin', etiqueta: 'Administra' },
-]);
+/* Els rols que es poden triar en l'alta; l'etiqueta es traduïx en pintar (PARELLS_ROL). */
+const ROLS_D_ALTA = Object.freeze(['member', 'admin']);
+
+/* T5a · P1-22 (assalt 261101) · Els textos de la gestió, en parells [clau
+   i18n, reserva] com TEXTOS_PRIVACITAT: cada reserva és el text de sempre,
+   lletra per lletra, i el valor valencià del diccionari. Frases senceres amb
+   buits d'omple() ({nom}, {org}, {n}, {consulta}), mai trossos cosits. */
+const textMembres = (nom, reserva) => Object.freeze([`section.perfil.membres.${nom}`, reserva]);
+export const TEXTOS_MEMBRES = Object.freeze({
+  errorLlista: textMembres('errorLlista', 'No s’ha pogut llegir la llista de membres.'),
+  errorCerca: textMembres('errorCerca', 'No s’ha pogut cercar a la gent del poble.'),
+  opcioEscriu: textMembres('opcio.escriu', 'Primer escriu un nom…'),
+  opcioCercant: textMembres('opcio.cercant', 'Cercant…'),
+  opcioTria: textMembres('opcio.tria', 'Tria un resultat…'),
+  opcioCap: textMembres('opcio.cap', 'Cap resultat'),
+  senseNom: textMembres('senseNom', 'Sense nom'),
+  afegit: textMembres('afegit', '{nom} ja és membre de {org}.'),
+  errorAfegeix: textMembres('errorAfegeix', 'No s’ha pogut afegir el membre.'),
+  ascendit: textMembres('ascendit', '{nom} ja administra {org}.'),
+  descendit: textMembres('descendit', '{nom} ja no administra {org}.'),
+  errorRol: textMembres('errorRol', 'No s’ha pogut canviar el rol.'),
+  llevat: textMembres('llevat', '{nom} ja no és membre de {org}.'),
+  errorLleva: textMembres('errorLleva', 'No s’ha pogut llevar el membre.'),
+  carregant: textMembres('carregant', 'Carregant els membres…'),
+  taula: textMembres('taula', 'Membres de {org}'),
+  colMembre: textMembres('col.membre', 'Membre'),
+  colTipus: textMembres('col.tipus', 'Tipus'),
+  colRol: textMembres('col.rol', 'Rol'),
+  colAccions: textMembres('col.accions', 'Accions'),
+  tu: textMembres('tu', '(tu)'),
+  nomenaAdmin: textMembres('nomenaAdmin', 'Nomenar administradora'),
+  tornaMembre: textMembres('tornaMembre', 'Tornar a membre'),
+  lleva: textMembres('lleva', 'Llevar'),
+  buit: textMembres('buit', 'Encara no hi ha cap membre.'),
+  afegirLlegenda: textMembres('afegirLlegenda', 'Afegir un membre'),
+  cercaAjuda: textMembres('cercaAjuda', 'Persones del poble o organitzacions que també administres. Escriu almenys {n} lletres.'),
+  quiAfegir: textMembres('quiAfegir', 'Qui vols afegir'),
+  afegir: textMembres('afegir', 'Afegir'),
+  dialegTitol: textMembres('dialegTitol', 'Llevar {nom} de {org}?'),
+  dialegTitolSenseNom: textMembres('dialegTitolSenseNom', 'Llevar este membre de {org}?'),
+  dialegTitolBuit: textMembres('dialegTitolBuit', 'Llevar un membre'),
+  dialegDescripcio: textMembres('dialegDescripcio', 'Deixarà de ser-ne membre. Es pot tornar a afegir quan calga.'),
+  /* P1-15 · El recompte de la cerca, per al lector de pantalla (el selector canvia en silenci). */
+  anunciResultats: textMembres('anunciResultats', '{n} resultats per a «{consulta}».'),
+  anunciUnResultat: textMembres('anunciUnResultat', 'Un resultat per a «{consulta}».'),
+  anunciCapResultat: textMembres('anunciCapResultat', 'Cap resultat per a «{consulta}».'),
+  /* Claus comunes: el camp de cerca i el botó de tornar de la confirmació (abans, «Cancel·lar» en totes les llengües). */
+  cerca: Object.freeze(['common.search', 'Cerca']),
+  cancela: Object.freeze(['common.cancela', 'Cancel·lar']),
+});
 
 /* Un error del port ja ve en valencià i amb `code`; sense text, el genèric. */
 const textDError = (error, generic) => (typeof error?.message === 'string' && error.message.trim() ? error.message : generic);
@@ -176,6 +223,11 @@ export function TriaTitular({ orgId, nomOrg }) {
 }
 
 export function GestioMembres({ organitzacio, accions }) {
+  const t = useUIActionsOpcional()?.t || traduccioDeReserva;
+  /* Els efectes de lectura i de cerca no es tornen a llançar si canvia la
+     llengua: el traductor, d'un ref (com membresRef, baix). */
+  const tRef = useRef(t);
+  tRef.current = t;
   const orgId = organitzacio?.id;
   const nomOrg = organitzacio?.nom || '';
   const rolMeu = organitzacio?.dades?.role;
@@ -186,7 +238,8 @@ export function GestioMembres({ organitzacio, accions }) {
   const [missatge, setMissatge] = useState(null);
   const [ocupat, setOcupat] = useState(null);
   const [text, setText] = useState('');
-  const [cerca, setCerca] = useState({ cercant: false, candidats: [] });
+  /* `per`: la consulta a la qual responen els candidats (P1-15: l'anunci no diu el recompte d'una consulta vella). */
+  const [cerca, setCerca] = useState({ cercant: false, candidats: [], per: null });
   const [triat, setTriat] = useState('');
   const [rolNou, setRolNou] = useState('member');
   const [aLlevar, setALlevar] = useState(null);
@@ -243,7 +296,7 @@ export function GestioMembres({ organitzacio, accions }) {
       })
       .catch((error) => {
         if (control.signal.aborted || esCancel(error)) return;
-        setEstat({ carregant: false, membres: [], error: textDError(error, 'No s’ha pogut llegir la llista de membres.') });
+        setEstat({ carregant: false, membres: [], error: textDError(error, tradueix(tRef.current, TEXTOS_MEMBRES.errorLlista)) });
       });
     return () => control.abort();
   }, [orgId, llistaMembres]);
@@ -265,7 +318,7 @@ export function GestioMembres({ organitzacio, accions }) {
   const consulta = text.trim();
   useEffect(() => {
     if (consulta.length < MINIM_CERCA) {
-      setCerca({ cercant: false, candidats: [] });
+      setCerca({ cercant: false, candidats: [], per: null });
       return undefined;
     }
     const control = new AbortController();
@@ -274,12 +327,13 @@ export function GestioMembres({ organitzacio, accions }) {
       Promise.resolve()
         .then(() => cercaCandidats(orgId, consulta, { signal: control.signal, membres: membresRef.current }))
         .then((candidats) => {
-          if (!control.signal.aborted) setCerca({ cercant: false, candidats: Array.isArray(candidats) ? candidats : [] });
+          if (!control.signal.aborted) setCerca({ cercant: false, candidats: Array.isArray(candidats) ? candidats : [], per: consulta });
         })
         .catch((error) => {
           if (control.signal.aborted || esCancel(error)) return;
-          setCerca({ cercant: false, candidats: [] });
-          setMissatge({ tipus: 'error', text: textDError(error, 'No s’ha pogut cercar a la gent del poble.') });
+          // Sense recompte: l'error ja s'anuncia (role=alert).
+          setCerca({ cercant: false, candidats: [], per: null });
+          setMissatge({ tipus: 'error', text: textDError(error, tradueix(tRef.current, TEXTOS_MEMBRES.errorCerca)) });
         });
     }, ESPERA_CERCA);
     return () => { clearTimeout(rellotge); control.abort(); };
@@ -294,15 +348,33 @@ export function GestioMembres({ organitzacio, accions }) {
   /* Només la propietària nomena administradores, i una organització sempre és membre. */
   const potTriarRol = propietaria && candidat?.tipus !== 'organitzacio';
 
+  /* L'etiqueta traduïda d'un tipus i d'un rol (un rol desconegut es pinta com a membre, com abans). */
+  const etiquetaTipus = (tipus) => {
+    const parell = parellDeTipus(tipus);
+    return parell ? tradueix(t, parell) : '';
+  };
+  const etiquetaRol = (rol) => tradueix(t, parellDeRol(rol) ?? PARELLS_ROL.member);
+  const senseNom = tradueix(t, TEXTOS_MEMBRES.senseNom);
+
   const opcionsCandidat = [
     {
       valor: '',
-      etiqueta: consulta.length < MINIM_CERCA ? 'Primer escriu un nom…'
-        : cerca.cercant ? 'Cercant…'
-          : candidats.length ? 'Tria un resultat…' : 'Cap resultat',
+      etiqueta: tradueix(t, consulta.length < MINIM_CERCA ? TEXTOS_MEMBRES.opcioEscriu
+        : cerca.cercant ? TEXTOS_MEMBRES.opcioCercant
+          : candidats.length ? TEXTOS_MEMBRES.opcioTria : TEXTOS_MEMBRES.opcioCap),
     },
-    ...candidats.map((c) => ({ valor: clauDeMembre(c), etiqueta: `${c.nom || 'Sense nom'} · ${ETIQUETES_TIPUS[c.tipus]}` })),
+    ...candidats.map((c) => ({ valor: clauDeMembre(c), etiqueta: `${c.nom || senseNom} · ${etiquetaTipus(c.tipus)}` })),
   ];
+  const opcionsRol = ROLS_D_ALTA.map((valor) => ({ valor, etiqueta: etiquetaRol(valor) }));
+
+  /* P1-15 (assalt 261101) · El selector de candidats canvia en silenci: el
+     recompte s'anuncia en una regió viva sense rol (role=status ja és l'avís
+     d'èxit, i n'hi ha d'haver un de sol). Res mentre es cerca ni per a una
+     consulta que ja no és la del camp. */
+  const anunciCerca = cerca.cercant || cerca.per === null || cerca.per !== consulta ? ''
+    : omple(tradueix(t, candidats.length === 0 ? TEXTOS_MEMBRES.anunciCapResultat
+      : candidats.length === 1 ? TEXTOS_MEMBRES.anunciUnResultat : TEXTOS_MEMBRES.anunciResultats),
+    { n: candidats.length, consulta });
 
   /* Una operació a la vegada: la guarda, el missatge i el «Treballant…».
      `feina` rep `vigent()`: cert mentre el component viu i l'operació no ha
@@ -346,8 +418,8 @@ export function GestioMembres({ organitzacio, accions }) {
       setTriat('');
       setText('');
       setRolNou('member');
-      return `${desat?.nom || candidat.nom} ja és membre de ${nomOrg}.`;
-    }, 'No s’ha pogut afegir el membre.');
+      return omple(tradueix(t, TEXTOS_MEMBRES.afegit), { nom: desat?.nom || candidat.nom, org: nomOrg });
+    }, tradueix(t, TEXTOS_MEMBRES.errorAfegeix));
   }
 
   function canviaRol(membre, rol) {
@@ -355,8 +427,8 @@ export function GestioMembres({ organitzacio, accions }) {
       const desat = await desaMembre(orgId, { tipus: membre.tipus, id: membre.id, rol });
       if (!vigent()) return null;
       posaMembre(desat);
-      return rol === 'admin' ? `${membre.nom} ja administra ${nomOrg}.` : `${membre.nom} ja no administra ${nomOrg}.`;
-    }, 'No s’ha pogut canviar el rol.');
+      return omple(tradueix(t, rol === 'admin' ? TEXTOS_MEMBRES.ascendit : TEXTOS_MEMBRES.descendit), { nom: membre.nom, org: nomOrg });
+    }, tradueix(t, TEXTOS_MEMBRES.errorRol));
   }
 
   /* Correcció 261008 · La confirmació es tanca sempre, també si falla (com
@@ -384,18 +456,18 @@ export function GestioMembres({ organitzacio, accions }) {
         if (!vigent()) return null;
         setEstat((previ) => ({ ...previ, membres: previ.membres.filter((m) => clauDeMembre(m) !== clauDeMembre(membre)) }));
         despresDeTancar.current = {
-          missatge: { tipus: 'exit', text: `${membre.nom} ja no és membre de ${nomOrg}.` },
+          missatge: { tipus: 'exit', text: omple(tradueix(t, TEXTOS_MEMBRES.llevat), { nom: membre.nom, org: nomOrg }) },
           focusALaLlista: true,
         };
       } catch (error) {
         if (esCancel(error)) throw error;
-        if (vigent()) despresDeTancar.current = { missatge: { tipus: 'error', text: textDError(error, 'No s’ha pogut llevar el membre.') } };
+        if (vigent()) despresDeTancar.current = { missatge: { tipus: 'error', text: textDError(error, tradueix(t, TEXTOS_MEMBRES.errorLleva)) } };
       } finally {
         /* Una baixa d'A que torna tard no tanca la confirmació que B haja obert. */
         if (vigent()) setALlevar(null);
       }
       return null;
-    }, 'No s’ha pogut llevar el membre.');
+    }, tradueix(t, TEXTOS_MEMBRES.errorLleva));
   }
 
   const tancaLleva = () => { if (!ocupatRef.current) setALlevar(null); };
@@ -414,17 +486,17 @@ export function GestioMembres({ organitzacio, accions }) {
       ) : null}
 
       {estat.carregant ? (
-        <p className="sdp-buit" role="status">Carregant els membres…</p>
+        <p className="sdp-buit" role="status">{tradueix(t, TEXTOS_MEMBRES.carregant)}</p>
       ) : estat.error ? (
         <p className="sdp-camp__error" role="alert">{estat.error}</p>
       ) : estat.membres.length ? (
-        <Taula titol={`Membres de ${nomOrg}`}>
+        <Taula titol={omple(tradueix(t, TEXTOS_MEMBRES.taula), { org: nomOrg })}>
           <thead>
             <tr>
-              <th scope="col">Membre</th>
-              <th scope="col">Tipus</th>
-              <th scope="col">Rol</th>
-              <th scope="col">Accions</th>
+              <th scope="col">{tradueix(t, TEXTOS_MEMBRES.colMembre)}</th>
+              <th scope="col">{tradueix(t, TEXTOS_MEMBRES.colTipus)}</th>
+              <th scope="col">{tradueix(t, TEXTOS_MEMBRES.colRol)}</th>
+              <th scope="col">{tradueix(t, TEXTOS_MEMBRES.colAccions)}</th>
             </tr>
           </thead>
           <tbody>
@@ -436,24 +508,24 @@ export function GestioMembres({ organitzacio, accions }) {
                 <tr key={clau}>
                   <td>
                     <AvatarResolt nom={membre.nom} src={membre.avatar || null} mida="sm" llavor={membre.id} alt="" titol="" />
-                    {' '}{membre.nom || 'Sense nom'}{esJo ? ' (tu)' : ''}
+                    {' '}{membre.nom || senseNom}{esJo ? ` ${tradueix(t, TEXTOS_MEMBRES.tu)}` : ''}
                   </td>
-                  <td>{ETIQUETES_TIPUS[membre.tipus] || ''}</td>
-                  <td>{etiquetaDeRol(membre.rol) || 'Membre'}</td>
+                  <td>{etiquetaTipus(membre.tipus)}</td>
+                  <td>{etiquetaRol(membre.rol)}</td>
                   <td>
                     {sobre.rol || sobre.lleva ? (
                       <div className="sdp-alerta__accions">
                         {sobre.rol ? (
                           <Boto varietat="secundari" onClick={() => canviaRol(membre, sobre.rol)}
                             disabled={Boolean(ocupat)} carregant={ocupat === `rol:${clau}`}
-                            aria-label={`${sobre.rol === 'admin' ? 'Nomenar administradora' : 'Tornar a membre'}: ${membre.nom}`}>
-                            {sobre.rol === 'admin' ? 'Nomenar administradora' : 'Tornar a membre'}
+                            aria-label={`${tradueix(t, sobre.rol === 'admin' ? TEXTOS_MEMBRES.nomenaAdmin : TEXTOS_MEMBRES.tornaMembre)}: ${membre.nom}`}>
+                            {tradueix(t, sobre.rol === 'admin' ? TEXTOS_MEMBRES.nomenaAdmin : TEXTOS_MEMBRES.tornaMembre)}
                           </Boto>
                         ) : null}
                         {sobre.lleva ? (
                           <Boto varietat="perill" onClick={() => obriLleva(membre)} disabled={Boolean(ocupat)}
-                            aria-label={`Llevar: ${membre.nom}`}>
-                            Llevar
+                            aria-label={`${tradueix(t, TEXTOS_MEMBRES.lleva)}: ${membre.nom}`}>
+                            {tradueix(t, TEXTOS_MEMBRES.lleva)}
                           </Boto>
                         ) : null}
                       </div>
@@ -465,29 +537,31 @@ export function GestioMembres({ organitzacio, accions }) {
           </tbody>
         </Taula>
       ) : (
-        <p className="sdp-buit">Encara no hi ha cap membre.</p>
+        <p className="sdp-buit">{tradueix(t, TEXTOS_MEMBRES.buit)}</p>
       )}
 
       {llistaLlegida ? (
         <form onSubmit={afegeix} noValidate>
-          <GrupCamps llegenda="Afegir un membre">
-            <Camp etiqueta="Cerca"
-              ajuda={`Persones del poble o organitzacions que també administres. Escriu almenys ${MINIM_CERCA} lletres.`}>
+          <GrupCamps llegenda={tradueix(t, TEXTOS_MEMBRES.afegirLlegenda)}>
+            <Camp etiqueta={tradueix(t, TEXTOS_MEMBRES.cerca)}
+              ajuda={omple(tradueix(t, TEXTOS_MEMBRES.cercaAjuda), { n: MINIM_CERCA })}>
               <CampText tipus="search" value={text} onChange={(e) => { setText(e.target.value); setTriat(''); }}
                 autoComplete="off" maxLength={80} />
             </Camp>
-            <Camp etiqueta="Qui vols afegir">
+            <Camp etiqueta={tradueix(t, TEXTOS_MEMBRES.quiAfegir)}>
               <Selector value={triat} onChange={(e) => setTriat(e.target.value)} opcions={opcionsCandidat}
                 disabled={!candidats.length} />
             </Camp>
+            {/* P1-15 · El recompte dels candidats (fora de la vista: .sdp-nomes-lector és absolut i no suma gap). */}
+            <p className="sdp-nomes-lector" aria-live="polite">{anunciCerca}</p>
             {potTriarRol ? (
-              <Camp etiqueta="Rol">
-                <Selector value={rolNou} onChange={(e) => setRolNou(e.target.value)} opcions={ROLS_D_ALTA} />
+              <Camp etiqueta={tradueix(t, TEXTOS_MEMBRES.colRol)}>
+                <Selector value={rolNou} onChange={(e) => setRolNou(e.target.value)} opcions={opcionsRol} />
               </Camp>
             ) : null}
             <div className="sdp-alerta__accions">
               <Boto varietat="primari" tipus="submit" disabled={!candidat || Boolean(ocupat)} carregant={ocupat === 'afegeix'}>
-                Afegir
+                {tradueix(t, TEXTOS_MEMBRES.afegir)}
               </Boto>
             </div>
           </GrupCamps>
@@ -506,9 +580,12 @@ export function GestioMembres({ organitzacio, accions }) {
         obert={Boolean(aLlevar)}
         onTanca={tancaLleva}
         onConfirma={confirmaLleva}
-        titol={aLlevar ? `Llevar ${aLlevar.nom || 'este membre'} de ${nomOrg}?` : 'Llevar un membre'}
-        descripcio="Deixarà de ser-ne membre. Es pot tornar a afegir quan calga."
-        etiquetaConfirma="Llevar"
+        titol={aLlevar
+          ? omple(tradueix(t, aLlevar.nom ? TEXTOS_MEMBRES.dialegTitol : TEXTOS_MEMBRES.dialegTitolSenseNom), { nom: aLlevar.nom, org: nomOrg })
+          : tradueix(t, TEXTOS_MEMBRES.dialegTitolBuit)}
+        descripcio={tradueix(t, TEXTOS_MEMBRES.dialegDescripcio)}
+        etiquetaConfirma={tradueix(t, TEXTOS_MEMBRES.lleva)}
+        etiquetaCancela={tradueix(t, TEXTOS_MEMBRES.cancela)}
         destructiu
         carregant={ocupat === 'lleva'}
       />

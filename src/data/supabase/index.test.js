@@ -25,6 +25,15 @@ test('l’adaptador Supabase sencer valida i ofereix compte i consentiment', () 
   expect(presents).toEqual(expect.arrayContaining(['salut']));
   expect(teCapacitat('salut')).toBe(true);
   expect(typeof supabase.comprovaServidor).toBe('function');
+  /* T8b · P0-23 (BOT-A2; assalt 261101) · la versió mínima de l'app nativa (migració 2611011510). */
+  expect(presents).toEqual(expect.arrayContaining(['versioClient']));
+  expect(teCapacitat('versioClient')).toBe(true);
+  expect(typeof supabase.versioMinimaClient).toBe('function');
+  /* T2 · D04/D10 (assalt 261101; D-3) · llig les dades obertes en anònim, però no les restaura. */
+  expect(teCapacitat('dadesObertes')).toBe(true);
+  expect(typeof supabase.llegixDadesObertes).toBe('function');
+  expect(teCapacitat('restauracioDadesObertes')).toBe(false);
+  expect(supabase).not.toHaveProperty('restauraDadesObertes');
   /* R (Onada 3, 261003) · recuperar la contrasenya perduda. */
   expect(presents).toEqual(expect.arrayContaining(['recuperacioContrasenya']));
   expect(teCapacitat('recuperacioContrasenya')).toBe(true);

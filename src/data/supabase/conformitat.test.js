@@ -73,7 +73,9 @@ describe('conformitat del port · Supabase en mode seed', () => {
     const omesos = CASOS.map((c, index) => [c, resultats.get(index)])
       .filter(([, resultat]) => resultat?.estat === 'omés')
       .map(([c, resultat]) => `${c.metode}: ${resultat.motiu}`);
-    expect(omesos).toEqual([]);
+    /* T2 · D04/D10 (D-3) · Supabase llig les dades obertes però no les restaura: els dos casos del kit
+       (el lot invàlid i, Gauntlet D-01, el conflicte d'identificador) s'ometen per la capacitat. */
+    expect(omesos).toEqual(Array(2).fill('restauraDadesObertes: capacitat restauracioDadesObertes absent'));
     expect(resultats.size).toBe(CASOS.length);
   });
 
@@ -124,6 +126,7 @@ function estatDelServidor() {
   return {
     rutesDesconegudes: [],
     autoritzacions: new Set(),
+    anonimes: [],
     notes: new Map(),
     missatges: [missatgeDelServidor(1, VEINA, 'Bon dia!'), missatgeDelServidor(2, PERSONA, 'Hola, veïna')],
     marca: { rebut: 2, llegit: 1 },
@@ -316,7 +319,10 @@ function fetchDelServidor(entrada, opcions = {}) {
   const cos = typeof opcions.body === 'string' ? JSON.parse(opcions.body) : undefined;
   if (url.origin !== ORIGEN) throw new TypeError('Failed to fetch');
   if (url.pathname === '/auth/v1/health') return Promise.resolve(resposta({}));
-  estat.autoritzacions.add(opcions.headers?.Authorization ?? null);
+  /* T2 · D04/D10 · Una petició amb la clau pública (anonim:true) es registra a part, amb la ruta. */
+  if (opcions.headers?.Authorization === `Bearer ${CONFIG_REMOT.supabaseAnonKey}`) {
+    estat.anonimes.push(`${metode} ${url.pathname}?key=${url.searchParams.get('key')}&tenant_id=${url.searchParams.get('tenant_id')}`);
+  } else estat.autoritzacions.add(opcions.headers?.Authorization ?? null);
   const p = url.searchParams;
   /* Onada 11 (261010; prompt 261010_1730, tasca 2) · L'API MFA de GoTrue, com
      la documenta Supabase: un factor que no existix és 404 mfa_factor_not_found
@@ -351,6 +357,11 @@ function fetchDelServidor(entrada, opcions = {}) {
        conformitat no ha bloquejat ningú ni ha acceptat encara les normes. */
     '/rest/v1/bloquejos': () => resposta([]),
     '/rest/v1/rpc/estat_normes_convivencia': () => resposta({ versio: cos?.p_versio ?? null, acceptada_al: null }),
+    /* T8b · P0-23 (BOT-A2; assalt 261101) · La versió mínima de l'app nativa
+       (2611011510): el build 2 a les dues plataformes, i null per a qualsevol altra. */
+    '/rest/v1/rpc/versio_minima_client': () => resposta(['ios', 'android'].includes(cos?.p_plataforma)
+      ? { versio_minima: 2, enllac: cos.p_plataforma === 'android' ? 'https://play.google.com/store/apps/details?id=org.socdepoble.app' : null }
+      : null),
     /* T6b (IDEA-14) · Els seguiments (2610241430): la persona de conformitat
        no seguix ningú i no la seguix ningú. Com Postgres, un p_id que no és
        cap UUID és un 22P02. */
@@ -407,7 +418,8 @@ describe('conformitat del port · Supabase en mode remote (Auditoria 261007 B)',
     const omesos = CASOS.map((c, index) => [c, resultatsRemots.get(index)])
       .filter(([, resultat]) => resultat?.estat === 'omés')
       .map(([c, resultat]) => `${c.metode}: ${resultat.motiu}`);
-    expect(omesos).toEqual([]);
+    /* T2 · D04/D10 (D-3) · L'única que no té: la restauració de les dades obertes (els seus dos casos, Gauntlet D-01). */
+    expect(omesos).toEqual(Array(2).fill('restauraDadesObertes: capacitat restauracioDadesObertes absent'));
     expect(resultatsRemots.size).toBe(CASOS.length);
     expect(ctxRemot.filId).toBe(FIL);
     expect(ctxRemot.filEscrivible).toBe(FIL);
@@ -416,6 +428,8 @@ describe('conformitat del port · Supabase en mode remote (Auditoria 261007 B)',
   test('el doble ha vist el que esperava: rutes conegudes, la sessió i el canal tancat', () => {
     expect(estat.rutesDesconegudes).toEqual([]);
     expect([...estat.autoritzacions]).toEqual([`Bearer ${JWT}`]);
+    /* T2 · D04/D10 · Només la lectura de les dades obertes va amb la clau pública, encara que hi haja sessió. */
+    expect(estat.anonimes).toEqual([`GET /rest/v1/app_content?key=in.(feedPosts,events)&tenant_id=eq.${POBLE}`]);
     expect(estat.canalsTancats).toEqual([`xat:f:${FIL}`]);
     // L'enviament idempotent: un sol missatge nou, amb l'id de la persona.
     expect(estat.missatges.filter((m) => m.id === ctxRemot.idMissatge)).toHaveLength(1);

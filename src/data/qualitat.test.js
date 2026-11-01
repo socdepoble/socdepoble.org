@@ -123,10 +123,46 @@ const CENS = Object.freeze([
      els de src/data/adaptadors/noticies/ (T5) queden per a qui els edita ara. */
   'src/data/localSeguiments.js',
   'src/data/supabase/seguiments.js',
+  /* T8b · P0-23 (BOT-A2; Gauntlet Claude 261025_1705; assalt 261101) · La
+     capacitat 'versioClient': l'adaptador nou, la seua prova, la prova
+     estàtica de 2611011510, el punt d'entrada de l'adaptador, que l'exporta, i
+     el kit de conformitat (els seus casos nous, la seua prova i el doble remot
+     de Supabase que els servix). */
+  'src/data/supabase/versioClient.js',
+  'src/data/supabase/versioClient.test.js',
+  'src/data/supabase/versioMinimaClient.migracio.test.js',
+  'src/data/supabase/index.js',
+  'src/data/conformitat/kit.js',
+  'src/data/conformitat/kit.test.js',
+  'src/data/supabase/conformitat.test.js',
+  /* T3 · D05/D07 (assalt 261101) · La recepció ActivityPub de la fase 2 (biblioteca
+     pura, sense servei desplegat) i les seues proves. */
+  'src/data/federacio/inboxActivityPub.js',
+  'src/data/federacio/inboxActivityPub.test.js',
+  /* T2 · D04/D10 (assalt 261101) · Les dades obertes: la lectura anònima de
+     Supabase i l'opció anonim del runtime, el lot de restauració, el
+     restaurador i les seues proves, l'exportador 1.2.0 i l'entrada del poble. */
+  'src/data/supabase/dadesObertes.js',
+  'src/data/supabase/dadesObertes.test.js',
+  'src/data/supabase/runtime.js',
+  'src/data/supabase/runtime.test.js',
+  'src/data/dadesObertesLot.js',
+  'src/data/dadesObertesLot.test.js',
+  'src/data/importaMunicipiOpenData.js',
+  'src/data/importaMunicipiOpenData.test.js',
+  'src/data/importaMunicipiOpenData.adaptadorLocal.test.js',
+  'src/data/importaMunicipiOpenData.v100.test.js',
+  'src/data/exportaMunicipiOpenData.js',
+  'src/data/exportaMunicipiOpenData.test.js',
+  'src/data/entradaOpenDataDelPoble.js',
+  'src/data/entradaOpenDataDelPoble.test.js',
   /* Gauntlet 261025_0545 (DF-03) · La porta Enxufe torna a verd: les proves
      de l'adaptador ixen de sessioPilot.test.js cap a la carpeta de supabase. */
   'src/data/sessioPilot.test.js',
-  'src/data/supabase/auth.sessioPilot.test.js'
+  'src/data/supabase/auth.sessioPilot.test.js',
+  /* T8 · P2-14 (pla 261101_1246): el mapatge de verificacio i la prova amb servidor HTTP propi. */
+  'src/data/telemetria.js',
+  'src/data/telemetria.recepcio.test.js'
 ]);
 
 describe('el cens', () => {

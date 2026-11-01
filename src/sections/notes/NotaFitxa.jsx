@@ -1,5 +1,5 @@
 import { ItemMedia } from '../../components/universal/workspace/ItemMedia.jsx';
-import { useIdentitat } from "../../app/contexts/IdentitatContext.jsx";
+import { useIdentitatOReserva } from "../../app/contexts/useIdentitatOReserva.js";
 import { useCoreContent } from "../../app/contexts/CoreContentContext.jsx";
 import { useSession } from "../../app/contexts/SessionContext.jsx";
 import { useMemo } from 'react';
@@ -31,7 +31,8 @@ const CAP = Object.freeze([]);
  * de reserva és el de l'H1, «Nota sense títol» (TITOL_NOTA_PREPARADA).
  */
 export function NotaFitxa({ item, active, onSelect }) {
-  const identitatCtx = useIdentitat();
+  // D-7 · Fora d'IdentitatProvider, la reserva anònima de només lectura (useIdentitatOReserva.js).
+  const identitatCtx = useIdentitatOReserva();
   const actorId = identitatCtx ? identitatCtx.actorId : null;
   const actor = identitatCtx ? identitatCtx.actor : null;
 

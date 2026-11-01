@@ -288,6 +288,14 @@ test('capçaleres coherents: plugin, readme, constant de versió, block.json i f
   assert.equal(capcalera(principal, 'License'), capcalera(readme, 'License'));
   assert.equal(readme.match(/^=== (.+) ===$/m)?.[1], capcalera(principal, 'Plugin Name'), 'el nom del readme és el del plugin');
   requisitsDe(principal, readme);
+  /* T8 · D-11 (pla 261101_1246) · Pujar la versió obliga a escriure'n les notes: la primera
+     entrada del Changelog i de l'Upgrade Notice és la Version de la capçalera, i cap versió s'hi repetix. */
+  for (const seccio of ['Changelog', 'Upgrade Notice']) {
+    const cos = (readme.split(new RegExp(`^== ${seccio} ==$`, 'm'))[1] ?? '').split(/^== /m)[0];
+    const entrades = [...cos.matchAll(/^= (.+) =$/gm)].map((m) => m[1]);
+    assert.equal(entrades[0], versio, `${seccio}: la primera entrada ha de ser la ${versio} de la capçalera`);
+    assert.equal(new Set(entrades).size, entrades.length, `${seccio}: cap versió repetida`);
+  }
 
   const descripcioCurta = readme.split(/\r?\n\r?\n/)[1];
   assert.ok(descripcioCurta && !descripcioCurta.startsWith('==') && descripcioCurta.length <= 150, 'descripció curta de 150 caràcters com a màxim');
@@ -832,6 +840,20 @@ test('readme 1.1.10: el text valencià publicat a WordPress.org, sense cap afirm
   // E-09 · iCalendar: el readme no en parla mentre l'exportador de dades obertes no escriga agenda.ics.
   const exportador = fs.readFileSync(path.join(ARREL, 'src/data/exportaMunicipiOpenData.js'), 'utf8');
   if (!/agenda\.ics/.test(exportador)) assert.doesNotMatch(readme, /iCal|\.ics\b/, 'cap exportació .ics al paquet de dades obertes');
+  /* T2 · D04/D10 (assalt 261101) · Amb la lectura anònima (capacitat 'dadesObertes', que l'adaptador Supabase
+     exporta i la recollida del paquet crida), el paquet porta les notícies i l'agenda: el readme no ho pot negar.
+     Mentre Supabase torne null per a la memòria cultural i la memòria oral, el readme diu que encara no hi són. */
+  const fraseDadesObertes = seccio('Description').match(/un paquet de dades obertes per municipi[^\n]*/)?.[0] ?? '';
+  assert.ok(fraseDadesObertes, 'la vinyeta de les dades obertes');
+  const supabaseIndex = fs.readFileSync(path.join(ARREL, 'src/data/supabase/index.js'), 'utf8');
+  const supabaseDadesObertes = fs.readFileSync(path.join(ARREL, 'src/data/supabase/dadesObertes.js'), 'utf8');
+  if (/export \{ llegixDadesObertes \} from '\.\/dadesObertes\.js'/.test(supabaseIndex) && /llegixDadesObertes\(\{ poble/.test(exportador)) {
+    assert.match(fraseDadesObertes, /porta les notícies i l'agenda/, 'el paquet ja porta notícies i agenda');
+    assert.doesNotMatch(fraseDadesObertes, /les notícies, l'agenda[^.]*encara no/, 'cap «encara no» per a notícies i agenda');
+  }
+  if (/memoria: null,\n\s*memoriaOral: null/.test(supabaseDadesObertes)) {
+    assert.match(fraseDadesObertes, /la memòria cultural i la memòria oral encara no/, 'la memòria cultural i la memòria oral encara no s\'exporten');
+  }
   /* E-05 · El paquet de dades obertes és JSON-LD, Data Package i BagIt, sense cap CSV, i
      el Mercat no hi entra (hi ha persones venedores). La federació la servix socdepoble.org:
      instal·lar el connector no fa del WordPress cap node del Fedivers. */

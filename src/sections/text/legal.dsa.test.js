@@ -186,14 +186,17 @@ describe('/legal · DSA', () => {
      substància (moderació, Apple, baixa, seguiments): el rètol puja a la 2.2,
      en vigor des del 24 d'octubre de 2026, amb la mateixa forma de frase.
      legalContent.date és la data de la pàgina (capçalera de pageContent.js,
-     la mitjanit UTC sense hora d'editorial.test.js) i no el rètol: no es toca. */
-  test('guardes: ni el «Si no has iniciat sessió» (G-05) ni l’exempció de l’art. 19, i el rètol és el de la versió 2.2', () => {
+     la mitjanit UTC sense hora d'editorial.test.js) i no el rètol: no es toca.
+     T8 · D13 (pla 261101_1246) · L'edat mínima passa a 16 anys sense excepció
+     (legal.edat.test.js): el rètol puja a la 2.3, en vigor des de l'1 de
+     novembre de 2026; el comptador admet «des del» i «des de l'». */
+  test('guardes: ni el «Si no has iniciat sessió» (G-05) ni l’exempció de l’art. 19, i el rètol és el de la versió 2.3', () => {
     expect(TEXT).not.toMatch(/Si no has iniciat sessió/);
     expect(TEXT).toMatch(/Bloquejar: amb la sessió oberta/);
     expect(TEXT).not.toMatch(/microempresa|article 19 del Reglament \(UE\) 2022\/2065/);
-    expect(HTML).toContain("<p><em>Versió 2.2 · En vigor des del 24 d'octubre de 2026. Substitueix qualsevol versió anterior d'aquest text.</em></p>");
-    expect(HTML).not.toMatch(/Versió 2\.1/);
-    expect([...HTML.matchAll(/Versió \d+\.\d+ · En vigor des del/g)]).toHaveLength(1);
+    expect(HTML).toContain("<p><em>Versió 2.3 · En vigor des de l'1 de novembre de 2026. Substitueix qualsevol versió anterior d'aquest text.</em></p>");
+    expect(HTML).not.toMatch(/Versió 2\.[12]\b/);
+    expect([...HTML.matchAll(/Versió \d+\.\d+ · En vigor des de(?:l| l')/g)]).toHaveLength(1);
     expect(legalContent.date).toBe('2026-09-09T00:00:00.000Z');
   });
 });

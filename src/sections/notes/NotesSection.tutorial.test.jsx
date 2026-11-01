@@ -18,7 +18,7 @@ import { MemoryRouter, useLocation, useNavigate } from '../../app/contexts/Route
 
 const dades = vi.hoisted(() => ({
   notes: [], status: 'ready', teSessio: true, canCreate: true, config: { dataMode: 'remote' }, buit: [],
-  detalls: []
+  detalls: [], nomesLectura: undefined
 }));
 const NOTA_A = Object.freeze({ id: '0f0e0d0c-0b0a-4000-8000-0000000000a1', title: 'Llista de la compra', folderId: 'f-notes', updatedAt: '2026-10-30T09:00:00Z' });
 const NOTA_B = Object.freeze({ id: '0f0e0d0c-0b0a-4000-8000-0000000000b2', title: 'Festes de la Torre', folderId: 'f-pobles', updatedAt: '2026-10-29T09:00:00Z' });
@@ -32,7 +32,7 @@ vi.mock('./NotesContext', async (importOriginal) => ({
     resolveNote: vi.fn(async () => ({ status: 'not-found' }))
   })
 }));
-vi.mock('./NotesDataContext.jsx', () => ({ useNotesData: () => ({ activate: () => () => {}, config: dades.config }) }));
+vi.mock('./NotesDataContext.jsx', () => ({ useNotesData: () => ({ activate: () => () => {}, config: dades.config, nomesLectura: dades.nomesLectura }) }));
 vi.mock('../../app/contexts/IdentitatContext.jsx', () => ({ useIdentitat: () => ({ actor: { tipus: 'persona', id: 'uuid-prova', rol: 'persona' }, memberships: [] }) }));
 vi.mock('../mur/MurContext', () => ({ useMur: () => ({ status: 'ready', sortedFeedPosts: dades.buit, sortedEvents: dades.buit, sortedMarketItems: dades.buit }) }));
 /* El detall diu quina nota rep l'editor: «cap» és l'estat buit, la Card. */
@@ -63,7 +63,7 @@ beforeAll(() => {
   Object.defineProperty(HTMLElement.prototype, 'clientWidth', { configurable: true, get: () => 1400 });
 });
 beforeEach(() => {
-  Object.assign(dades, { notes: [NOTA_A, NOTA_B], status: 'ready', teSessio: true, canCreate: true, config: { dataMode: 'remote' }, detalls: [] });
+  Object.assign(dades, { notes: [NOTA_A, NOTA_B], status: 'ready', teSessio: true, canCreate: true, config: { dataMode: 'remote' }, detalls: [], nomesLectura: undefined });
 });
 afterEach(() => cleanup());
 
@@ -252,6 +252,65 @@ test('entrada nua: la fila de la Card es desplaça a la vista dins de la columna
   } finally {
     restaura();
   }
+});
+
+/* D-4 (decisió del Mestre, pla 261101_1246) · La Card «Bloc de notes» és
+   sempre la primera fila de «Tot», amb qualsevol ordenació. Les dates de
+   les notes sintètiques són més noves que la de la llavor (25-04-2026): sense
+   la fixació, per data la Card era l'última. «Ametlers del barranc» va
+   davant de «Bloc de notes» per nom: sense la fixació, per nom també perdia
+   la primera fila. */
+const NOTA_C = Object.freeze({ id: '0f0e0d0c-0b0a-4000-8000-0000000000c3', title: 'Ametlers del barranc', folderId: 'f-mur', updatedAt: '2026-10-31T09:00:00Z' });
+const titolsDeLaLlista = () => within(columnaNotes()).getAllByRole('listitem')
+  .map((fila) => fila.querySelector('.fitxa-de-prova')?.textContent ?? null)
+  .filter(Boolean);
+
+test('D-4 · per data, la Card és la primera fila de «Tot», davant de les notes més noves i de la «Nota sense títol»', () => {
+  munta();
+  const titols = titolsDeLaLlista();
+  expect(titols[0]).toBe('Bloc de notes');
+  expect(titols.indexOf('Bloc de notes')).toBeLessThan(titols.indexOf(NOTA_A.title));
+  expect(titols.indexOf('Bloc de notes')).toBeLessThan(titols.indexOf('Nota sense títol'));
+  // La resta, en l'ordre de sempre (per data): la més nova primer.
+  expect(titols.indexOf(NOTA_A.title)).toBeLessThan(titols.indexOf(NOTA_B.title));
+  // El rail de la llista (columna plegada) i les fletxes en seguixen el mateix ordre: UniversalWorkspace.fixatATot.test.jsx.
+});
+
+test('D-4 · per nom (A-Z), la Card també és la primera fila de «Tot»', () => {
+  Object.assign(dades, { notes: [NOTA_A, NOTA_B, NOTA_C] });
+  munta();
+  fireEvent.click(within(columnaNotes()).getByRole('button', { name: 'Ordenar per data o nom' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Nom (A-Z)' }));
+  const titols = titolsDeLaLlista();
+  expect(titols[0]).toBe('Bloc de notes');
+  expect(titols[1]).toBe(NOTA_C.title);
+  expect(titols.indexOf(NOTA_B.title)).toBeLessThan(titols.indexOf(NOTA_A.title));
+});
+
+test('D-4 · en mode «seed», la n1 de veres (editable) és la primera fila de «Tot»; dins de la seua carpeta, l’ordre de sempre', () => {
+  Object.assign(dades, { config: { dataMode: 'seed' }, notes: [{ ...NOTA_TUTORIAL, folderId: 'f-mur' }, NOTA_A, NOTA_C] });
+  munta();
+  expect(card()[0].dataset.kind).toBe('note');
+  expect(titolsDeLaLlista()[0]).toBe('Bloc de notes');
+  // A la carpeta «Mur» la n1 no va fixada: per data, la nota més nova davant.
+  fireEvent.click(within(rail()).getByRole('button', { name: 'Mur' }));
+  const titols = titolsDeLaLlista();
+  expect(titols).toContain('Bloc de notes');
+  expect(titols.indexOf(NOTA_C.title)).toBeLessThan(titols.indexOf('Bloc de notes'));
+});
+
+/* D-7 (pla 261101_1246; P1-71) · Si el proveïdor de dades del Bloc és de
+   només lectura (sense IdentitatProvider), el Bloc es llig com un visitant:
+   ni CREAR NOTA ni nota preparada, encara que hi haja sessió. La Card hi és i
+   és la primera fila. La reserva per la identitat: NotesSection.senseIdentitat.test.jsx. */
+test('D-7 · amb el Bloc de només lectura i sessió: cap CREAR NOTA ni nota preparada, i la Card dalt de «Tot»', () => {
+  Object.assign(dades, { notes: [], nomesLectura: true });
+  munta();
+  expect(screen.queryByRole('button', { name: 'CREAR NOTA' })).toBeNull();
+  expect(within(columnaNotes()).queryByRole('button', { name: 'Nota sense títol' })).toBeNull();
+  expect(card()).toHaveLength(1);
+  expect(titolsDeLaLlista()).toEqual(['Bloc de notes']);
+  expect(detall()).toBe('card');
 });
 
 /* Al Snippet Curador (?mode=desa) no hi ha Card: NotesSection.test.jsx (model). */

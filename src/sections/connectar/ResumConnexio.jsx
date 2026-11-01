@@ -8,16 +8,28 @@
  * color ni per la icona, que és decorativa.
  *
  * resultats: [{ clau, nom, estat: 'fet' | 'error' | 'pendent', detall? }]
+ *
+ * P1-22 (assalt 261101, T5b) · L'estat i el títol passen pel traductor
+ * opcional (useTraductorOpcional): fora de l'app, el valencià de sempre. El
+ * nom i el detall de cada fila arriben ja traduïts de qui els fa.
  */
 import { Check, Clock, X } from 'lucide-react';
 import { Alerta } from '../../components/PedraSeca/index.js';
+import { tradueix, useTraductorOpcional } from '../../components/PedraSeca/hooks/useTraductorOpcional.js';
 
 // La classe va sencera, no interpolada: les portes (Vocabulari i Pedra Seca)
 // han de poder llegir-la tal com és al CSS.
 const ESTATS = Object.freeze({
-  fet: { text: 'Fet', Icona: Check, classe: 'sdp-connexio-resum__fila--fet' },
-  error: { text: 'No enviat', Icona: X, classe: 'sdp-connexio-resum__fila--error' },
-  pendent: { text: 'Pendent', Icona: Clock, classe: 'sdp-connexio-resum__fila--pendent' }
+  fet: { parell: Object.freeze(['section.connectar.resum.estat.fet', 'Fet']), Icona: Check, classe: 'sdp-connexio-resum__fila--fet' },
+  error: { parell: Object.freeze(['section.connectar.resum.estat.error', 'No enviat']), Icona: X, classe: 'sdp-connexio-resum__fila--error' },
+  pendent: { parell: Object.freeze(['section.connectar.resum.estat.pendent', 'Pendent']), Icona: Clock, classe: 'sdp-connexio-resum__fila--pendent' }
+});
+
+/* P1-22 · Els tres títols, en parells. */
+const TITOLS = Object.freeze({
+  parcial: Object.freeze(['section.connectar.resum.titol.parcial', 'Connectat, però no tot s’ha enviat']),
+  pendent: Object.freeze(['section.connectar.resum.titol.pendent', 'Connectat: et falta un pas']),
+  fet: Object.freeze(['section.connectar.resum.titol.fet', 'Connectat'])
 });
 
 /** Només les claus pròpies d'ESTATS: «toString» o «constructor» no són estats. */
@@ -25,15 +37,16 @@ function estatDeFila(estat) {
   return Object.hasOwn(ESTATS, estat) ? ESTATS[estat] : ESTATS.pendent;
 }
 
-/** El to i el títol de l'Alerta segons el pitjor resultat. */
-export function veredicteDelResum(resultats = []) {
-  if (resultats.some((r) => r.estat === 'error')) return { to: 'avis', titol: 'Connectat, però no tot s’ha enviat' };
-  if (resultats.some((r) => r.estat === 'pendent')) return { to: 'info', titol: 'Connectat: et falta un pas' };
-  return { to: 'exit', titol: 'Connectat' };
+/** El to i el títol de l'Alerta segons el pitjor resultat. P1-22 · `t` opcional. */
+export function veredicteDelResum(resultats = [], t = null) {
+  if (resultats.some((r) => r.estat === 'error')) return { to: 'avis', titol: tradueix(t, TITOLS.parcial) };
+  if (resultats.some((r) => r.estat === 'pendent')) return { to: 'info', titol: tradueix(t, TITOLS.pendent) };
+  return { to: 'exit', titol: tradueix(t, TITOLS.fet) };
 }
 
 export function ResumConnexio({ resultats = [], titol, accions = null, className }) {
-  const veredicte = veredicteDelResum(resultats);
+  const t = useTraductorOpcional();
+  const veredicte = veredicteDelResum(resultats, t);
   return (
     <Alerta to={veredicte.to} titol={titol || veredicte.titol} accions={accions}
       className={['sdp-connexio-resum', className].filter(Boolean).join(' ')}>
@@ -46,7 +59,7 @@ export function ResumConnexio({ resultats = [], titol, accions = null, className
               <Icona className="sdp-connexio-resum__icona" size={20} aria-hidden="true" focusable="false" />
               <span className="sdp-connexio-resum__text">
                 <span className="sdp-connexio-resum__nom">{fila.nom}</span>
-                <span className="sdp-connexio-resum__estat">{estat.text}</span>
+                <span className="sdp-connexio-resum__estat">{tradueix(t, estat.parell)}</span>
                 {fila.detall ? <span className="sdp-connexio-resum__detall">{fila.detall}</span> : null}
               </span>
             </li>

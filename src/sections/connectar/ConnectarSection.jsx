@@ -72,6 +72,14 @@
  *     261025_0200) · Amb una entitat, la seua persona titular, al mateix grup
  *     «Connexió directa», només si ella ho ha triat i té el perfil públic
  *     (useTitularDeConnexio, 2610250300). Mai qui ha publicat un element.
+ *   · P1-22 (assalt 261101, T5b) · Tot el text visible passa per t() amb la
+ *     reserva valenciana lletra per lletra (també els mòduls purs, amb `t`
+ *     opcional). Les etiquetes suggerides i el missatge del xat ixen en la
+ *     llengua de qui connecta. El nom de la carpeta (Notes) i el cos desat de
+ *     la nota (DES_DE, «Font:») no es traduïxen ací.
+ *   · P1-15 (assalt 261101, T5b) · Els resultats del padró s'anuncien en una
+ *     regió viva (sense rol: l'únic status és el del resum) i les carpetes
+ *     són un grup amb el nom de «On arriba».
  */
 import { useEffect, useId, useMemo, useRef, useState } from 'react';
 import { useNavigate, useSearchParams } from '../../app/contexts/RouterContext';
@@ -98,7 +106,7 @@ import { useCoreContent } from '../../app/contexts/CoreContentContext.jsx';
 import { categoriesBase } from '../../data/personalitzacio.js';
 import { contingutExternDeParams, notaDeContingutExtern } from './contingutExtern.js';
 import {
-  ETIQUETA_OBJECTE, LIMIT_GRUPS, LIMIT_PERSONES, estatDelXat, grupsDeXat, missatgeDeConnexio,
+  LIMIT_GRUPS, LIMIT_PERSONES, estatDelXat, etiquetaObjecte, grupsDeXat, missatgeDeConnexio,
   missatgeDeLError, modeAplicable, opcionsDAbast
 } from './abastConnexio.js';
 /* El cos que es desa a la nota: mòdul pur de connexions, el mateix que llig el lector del MAS. */
@@ -120,7 +128,14 @@ import { useFitxaDeConnexio } from './useFitxaDeConnexio.js';
 import { useTitularDeConnexio } from './useTitularDeConnexio.js';
 import { teSeguiments } from './useSeguiment.js';
 
-const SUGGESTED_TAGS = ['Història local', 'Interessant', 'Patrimoni', 'Gent del Poble', 'Debat'];
+/* P1-22 · Parells [clau, reserva]: l'etiqueta es desa en la llengua de qui connecta. */
+const SUGGESTED_TAGS = Object.freeze([
+  Object.freeze(['section.connectar.suggerida.historia', 'Història local']),
+  Object.freeze(['section.connectar.suggerida.interessant', 'Interessant']),
+  Object.freeze(['section.connectar.suggerida.patrimoni', 'Patrimoni']),
+  Object.freeze(['section.connectar.suggerida.gent', 'Gent del Poble']),
+  Object.freeze(['section.connectar.suggerida.debat', 'Debat'])
+]);
 /* Les mateixes categories de sèrie que el Bloc (NotesSection): Onada 11
    (261010; prompt 261010_1730, tasca 2) · la còpia local s'ha unificat amb
    classificacioBloc.js i, dins del component, passa per categoriesBase amb la
@@ -542,10 +557,10 @@ function ConnectarElementIntern() {
   /* C0200-02 · El nom de la persona: el xat («Escriu-li») és seu, encara que es connecte com a entitat. */
   const nomPersona = actorsConnectar.find((opcio) => opcio.valor === COM_PERSONA)?.nom || '';
 
-  const grups = useMemo(() => grupsDeXat(chatThreads), [chatThreads]);
+  const grups = useMemo(() => grupsDeXat(chatThreads, t), [chatThreads, t]);
   /* Una llista buida mentre el xat carrega (o si ha fallat) no vol dir «cap grup». */
   const xat = estatDelXat({ status: statusXat, avis: avisXat, fils: chatThreads });
-  const opcions = useMemo(() => opcionsDAbast({ dataMode, teSessio, grups, xat }), [dataMode, teSessio, grups, xat]);
+  const opcions = useMemo(() => opcionsDAbast({ dataMode, teSessio, grups, xat, t }), [dataMode, teSessio, grups, xat, t]);
   const [modeTriat, setModeTriat] = useState('privada');
   const mode = modeAplicable(modeTriat, opcions);
 
@@ -584,7 +599,8 @@ function ConnectarElementIntern() {
       Promise.resolve()
         .then(() => cercaMembres(cerca.trim() || null))
         .then((llista) => { if (viu) setPadro({ estat: 'llest', membres: Array.isArray(llista) ? llista : [], error: null }); })
-        .catch((e) => { if (viu) setPadro({ estat: 'error', membres: [], error: e?.message || 'No s’ha pogut obrir el padró del poble.' }); });
+        /* P1-22 · Sense missatge, el text de reserva es tria en pintar (t): l'efecte no depén de la llengua. */
+        .catch((e) => { if (viu) setPadro({ estat: 'error', membres: [], error: e?.message || '' }); });
     }, cerca ? 250 : 0);
     return () => { viu = false; clearTimeout(espera); };
   }, [mode, cerca, cercaMembres]);
@@ -647,7 +663,8 @@ function ConnectarElementIntern() {
     setFocusDesti({ llista: 'etiquetes', index: customTags.indexOf(tag) });
     setCustomTags((actuals) => actuals.filter((x) => x !== tag));
   };
-  const suggerides = SUGGESTED_TAGS.filter((tag) => !customTags.includes(tag));
+  const etiquetesSuggerides = useMemo(() => SUGGESTED_TAGS.map(([clau, reserva]) => t(clau, reserva)), [t]);
+  const suggerides = etiquetesSuggerides.filter((tag) => !customTags.includes(tag));
   /* La suggerida ix de la seua llista: el focus va a la següent o, si era
      l'última, a la píndola nova (va al final de les triades). */
   const triaSuggerida = (tag) => {
@@ -695,26 +712,35 @@ function ConnectarElementIntern() {
         navigate(rutaNota, { replace: true });
         return;
       }
-      const missatge = missatgeDeConnexio(origen, origen.ruta ? urlPerCompartir(origen.ruta, router) : '');
+      /* P1-22 · El missatge ix en la llengua de qui connecta. */
+      const missatge = missatgeDeConnexio(origen, origen.ruta ? urlPerCompartir(origen.ruta, router) : '', t);
       const { resultats } = await aplica({ nota, origen: origenDesat, abast: tria, missatge });
       setResum({
         ruta: rutaNota,
         /* 261024 correccions (directiva del Mestre 15:05, Gemini G2-02) · cap «MAS» a la interfície. */
-        resultats: [{ clau: 'mas', nom: 'Les teues notes', estat: 'fet', detall: `Connectada a «${nomCarpeta}».` }, ...resultats]
+        resultats: [{
+          clau: 'mas', nom: t('section.connectar.resum.notes', 'Les teues notes'), estat: 'fet',
+          detall: omple(t('section.connectar.resum.connectada', 'Connectada a «{carpeta}».'), { carpeta: nomCarpeta })
+        }, ...resultats]
       });
     } catch (err) {
-      setError(missatgeDeLError(err));
+      setError(missatgeDeLError(err, t));
     } finally {
       setIsSaving(false);
     }
   };
 
+  /* P1-22 · Parells explícits per al singular i el plural (cap clau dinàmica). */
   const n = mode === 'persones' ? persones.length : grupsDeLaTria.length;
-  const etiquetaConnectar = calEntrar ? 'Entra per a connectar'
-    : blocCarregant ? 'Obrint el teu Bloc…'
-      : esperantOriginal ? 'Carregant l’original…'
-        : mode === 'persones' ? `Connectar i enviar a ${n} ${n === 1 ? 'persona' : 'persones'}`
-          : mode === 'grups' ? `Connectar i enviar a ${n} ${n === 1 ? 'grup' : 'grups'}`
+  const etiquetaConnectar = calEntrar ? t('section.connectar.boto.entra', 'Entra per a connectar')
+    : blocCarregant ? t('section.connectar.boto.obrintBloc', 'Obrint el teu Bloc…')
+      : esperantOriginal ? t('section.connectar.boto.carregantOriginal', 'Carregant l’original…')
+        : mode === 'persones' ? omple(n === 1
+          ? t('section.connectar.boto.enviaPersona', 'Connectar i enviar a {n} persona')
+          : t('section.connectar.boto.enviaPersones', 'Connectar i enviar a {n} persones'), { n })
+          : mode === 'grups' ? omple(n === 1
+            ? t('section.connectar.boto.enviaGrup', 'Connectar i enviar a {n} grup')
+            : t('section.connectar.boto.enviaGrups', 'Connectar i enviar a {n} grups'), { n })
             : `${t('section.connectar.connect', 'Connectar a')} «${nomCarpeta}»`;
   /* D1 · Sense sessió en remot, a entrar; en tornar, esta mateixa consulta. */
   const entra = () => navigate(rutaPerAEntrar(params));
@@ -724,7 +750,7 @@ function ConnectarElementIntern() {
       /* Decisions 261030 §7 · Les carpetes i les notes del teu Bloc: Traduir no envia res fora. */
       traduccio={false}
       chrome="system"
-      title="Connectar"
+      title={t('section.connectar.kicker', 'Connectar')}
       subtitle={t('section.connectar.where', 'On vols connectar-ho?')}
       lead={/* IDEA-14 · Amb més d'un camí, l'entradeta diu que són accions distintes.
              261024 correccions (R3-05) · i diu el mateix que «Qui ho pot vore?»: en
@@ -739,15 +765,15 @@ function ConnectarElementIntern() {
         {/* D1 · sense promeses: en seed i local no hi ha cap traspàs al compte en
             entrar, i les carpetes no es poden crear. */}
         {isGuest && (
-          <Alerta to="avis" titol="Mode Foraster actiu">
+          <Alerta to="avis" titol={t('section.connectar.foraster.titol', 'Mode Foraster actiu')}>
             {calEntrar
-              ? 'Per a connectar cal entrar al teu compte.'
-              : 'Sense sessió, el que connectes es queda només en este dispositiu.'}
+              ? t('section.connectar.foraster.calEntrar', 'Per a connectar cal entrar al teu compte.')
+              : t('section.connectar.foraster.local', 'Sense sessió, el que connectes es queda només en este dispositiu.')}
           </Alerta>
         )}
 
         <section className="sdp-connectar__objecte" aria-labelledby={`${id}-objecte`}>
-          <p className="sdp-connectar__tipus">{ETIQUETA_OBJECTE[origen.objecte] || 'Element'}</p>
+          <p className="sdp-connectar__tipus">{etiquetaObjecte(origen.objecte, t)}</p>
           {/* T54 · mini-card de lectura: foto i títol, sense peu ni data
               clicable. Sense foto (perfil, pàgina o element que no és ací), la
               icona de capes ocupa el lloc de la icona del títol perquè la
@@ -763,8 +789,8 @@ function ConnectarElementIntern() {
               showDateTime={false}
             />
           </div>
-          {autorVisible ? <p className="sdp-connectar__autor">{`De ${autorVisible}`}</p> : null}
-          {persona ? <p className="sdp-connectar__identitat">{`Es connecta a ${persona}.`}</p> : null}
+          {autorVisible ? <p className="sdp-connectar__autor">{omple(t('section.connectar.de', 'De {nom}'), { nom: autorVisible })}</p> : null}
+          {persona ? <p className="sdp-connectar__identitat">{omple(t('section.connectar.esConnectaA', 'Es connecta a {nom}.'), { nom: persona })}</p> : null}
           {/* D4 (ordre del Mestre, 260930) · els drets de l'original resolt,
               amb les mateixes claus que l'avís de l'editor (NotesEditor). */}
           {dretsReservats ? (
@@ -834,12 +860,12 @@ function ConnectarElementIntern() {
         ) : null}
 
         <section className="sdp-connectar__seccio" aria-labelledby={`${id}-privacitat`}>
-          <h3 id={`${id}-privacitat`} className="sdp-connectar__titol-seccio">Privacitat de la connexió</h3>
+          <h3 id={`${id}-privacitat`} className="sdp-connectar__titol-seccio">{t('section.connectar.privacy', 'Privacitat de la connexió')}</h3>
           <GrupOpcions
-            llegenda="Qui ho pot vore?"
+            llegenda={t('section.connectar.abast.llegenda', 'Qui ho pot vore?')}
             nom={`${id}-abast`}
             aspecte="targetes"
-            textTriada="Triada"
+            textTriada={t('section.connectar.triada', 'Triada')}
             opcions={opcions}
             valor={mode}
             onCanvi={setModeTriat}
@@ -848,16 +874,24 @@ function ConnectarElementIntern() {
 
           {mode === 'persones' ? (
             <div ref={panellPersonesRef} className="sdp-connectar__panell">
-              <Camp etiqueta="Cerca al padró del poble" ajuda={`Tria fins a ${LIMIT_PERSONES} persones. Només reben l’enllaç: la connexió continua sent teua.`}>
+              <Camp etiqueta={t('section.connectar.padro.cerca', 'Cerca al padró del poble')}
+                ajuda={omple(t('section.connectar.padro.ajuda', 'Tria fins a {n} persones. Només reben l’enllaç: la connexió continua sent teua.'), { n: LIMIT_PERSONES })}>
                 <CampText value={cerca} onChange={(e) => setCerca(e.target.value)} autoComplete="off" />
               </Camp>
-              {padro.estat === 'carregant' ? <Carregant etiqueta="Buscant al padró…" /> : null}
-              {padro.error ? <Alerta to="error">{padro.error}</Alerta> : null}
+              {padro.estat === 'carregant' ? <Carregant etiqueta={t('section.connectar.padro.buscant', 'Buscant al padró…')} /> : null}
+              {/* P1-15 (assalt 261101, T5b) · El resultat de cada cerca s'anuncia: la regió
+                  hi és des que s'obri el panell i es buida mentre busca, i així es torna
+                  a dir encara que el nombre no canvie. Sense rol (l'únic status és el del
+                  resum) i amb un text distint del visible. */}
+              <p className="sdp-nomes-lector" aria-live="polite">
+                {padro.estat === 'llest' ? omple(t('section.connectar.padro.resultats', 'Resultats al padró: {n}.'), { n: padro.membres.length }) : ''}
+              </p>
+              {padro.estat === 'error' ? <Alerta to="error">{padro.error || t('section.connectar.padro.error', 'No s’ha pogut obrir el padró del poble.')}</Alerta> : null}
               {padro.estat === 'llest' && padro.membres.length === 0 ? (
-                <p className="sdp-connectar__ajuda">Ningú del padró coincidix amb la cerca.</p>
+                <p className="sdp-connectar__ajuda">{t('section.connectar.padro.cap', 'Ningú del padró coincidix amb la cerca.')}</p>
               ) : null}
               {padro.membres.length > 0 ? (
-                <ul className="sdp-connectar__pindoles" aria-label="Gent del padró">
+                <ul className="sdp-connectar__pindoles" aria-label={t('section.connectar.padro.gent', 'Gent del padró')}>
                   {padro.membres.map((membre) => {
                     const clau = String(membre.usuari_id);
                     const triada = persones.some((p) => p.id === clau);
@@ -866,20 +900,22 @@ function ConnectarElementIntern() {
                         <button type="button" className="sdp-connectar__pindola" aria-pressed={triada}
                           disabled={!triada && persones.length >= LIMIT_PERSONES}
                           onClick={() => commutaPersona(membre)}>
-                          {membre.tipus === 'entitat' ? `${membre.nom} · entitat` : membre.nom}
+                          {membre.tipus === 'entitat' ? omple(t('section.connectar.padro.entitat', '{nom} · entitat'), { nom: membre.nom }) : membre.nom}
                         </button>
                       </li>
                     );
                   })}
                 </ul>
               ) : null}
-              <p className="sdp-connectar__ajuda" aria-live="polite">{`${persones.length} de ${LIMIT_PERSONES} persones triades.`}</p>
+              <p className="sdp-connectar__ajuda" aria-live="polite">
+                {omple(t('section.connectar.padro.triades', '{n} de {limit} persones triades.'), { n: persones.length, limit: LIMIT_PERSONES })}
+              </p>
               {persones.length > 0 ? (
-                <ul ref={personesTriadesRef} className="sdp-connectar__pindoles" aria-label="Persones triades">
+                <ul ref={personesTriadesRef} className="sdp-connectar__pindoles" aria-label={t('section.connectar.padro.triadesLlista', 'Persones triades')}>
                   {persones.map((p) => (
                     <li key={p.id}>
                       <button type="button" className="sdp-connectar__pindola sdp-connectar__pindola--triada"
-                        aria-label={`Lleva ${p.nom} de la llista`} onClick={() => llevaPersona(p.id)}>
+                        aria-label={omple(t('section.connectar.padro.lleva', 'Lleva {nom} de la llista'), { nom: p.nom })} onClick={() => llevaPersona(p.id)}>
                         {p.nom}<X size={16} aria-hidden="true" focusable="false" />
                       </button>
                     </li>
@@ -891,7 +927,7 @@ function ConnectarElementIntern() {
 
           {mode === 'grups' ? (
             <div className="sdp-connectar__panell">
-              <GrupCamps llegenda={`Grups de xat on ja eres (fins a ${LIMIT_GRUPS})`}>
+              <GrupCamps llegenda={omple(t('section.connectar.grups.llegenda', 'Grups de xat on ja eres (fins a {n})'), { n: LIMIT_GRUPS })}>
                 {grups.map((grup) => {
                   const triat = grupsTriats.includes(grup.id);
                   return (
@@ -907,18 +943,19 @@ function ConnectarElementIntern() {
           {/* Des del MAS es compartix al Mur. Connectar no la publica: es diu
               quin és el pas. */}
           {mode === 'poble' ? (
-            <Alerta to="info" titol="Compartir al Mur, un pas més">
-              La tria queda amb la connexió, però el Mur no la rep sola: obri-la a les teues notes i prem «Compartir al Mur». El Mur el llig la gent registrada del poble, no Internet.
+            <Alerta to="info" titol={t('section.connectar.poble.titol', 'Compartir al Mur, un pas més')}>
+              {t('section.connectar.poble.text', 'La tria queda amb la connexió, però el Mur no la rep sola: obri-la a les teues notes i prem «Compartir al Mur». El Mur el llig la gent registrada del poble, no Internet.')}
             </Alerta>
           ) : null}
         </section>
 
         <section className="sdp-connectar__seccio" aria-labelledby={`${id}-caixa`}>
-          <h3 id={`${id}-caixa`} className="sdp-connectar__titol-seccio">On arriba</h3>
+          <h3 id={`${id}-caixa`} className="sdp-connectar__titol-seccio">{t('section.connectar.carpeta.titol', 'On arriba')}</h3>
           <p className="sdp-connectar__ajuda">
-            {`Per defecte, tota connexió arriba a «${NOM_CARPETA_CONNECTATS}»; des d’allí la podràs moure a qualsevol carpeta del teu Bloc.`}
+            {omple(t('section.connectar.carpeta.ajuda', 'Per defecte, tota connexió arriba a «{carpeta}»; des d’allí la podràs moure a qualsevol carpeta del teu Bloc.'), { carpeta: NOM_CARPETA_CONNECTATS })}
           </p>
-          <div className="sdp-connectar__carpetes">
+          {/* P1-15 (assalt 261101, T5b) · Les carpetes són una sola tria: un grup amb nom. */}
+          <div className="sdp-connectar__carpetes" role="group" aria-labelledby={`${id}-caixa`}>
             {displayFolders.map((folder) => {
               const Icon = iconaDeCarpeta(folder.id);
               const isSelected = selectedFolder === folder.id;
@@ -937,7 +974,7 @@ function ConnectarElementIntern() {
                       no moga la graella, i només es veu en la triada (CSS, des
                       d'aria-pressed, que ja diu l'estat: aria-hidden). */}
                   <span className="sdp-insignia sdp-insignia--exit sdp-connectar__carpeta-insignia" aria-hidden="true">
-                    <Check size={16} aria-hidden="true" focusable="false" />Triada
+                    <Check size={16} aria-hidden="true" focusable="false" />{t('section.connectar.triada', 'Triada')}
                   </span>
                 </button>
               );
@@ -946,9 +983,9 @@ function ConnectarElementIntern() {
         </section>
 
         <section className="sdp-connectar__seccio" aria-labelledby={`${id}-categories`}>
-          <h3 id={`${id}-categories`} className="sdp-connectar__titol-seccio">Categories</h3>
-          <p className="sdp-connectar__ajuda">Opcional: la connexió també apareixerà en estes categories del teu Bloc.</p>
-          <ul className="sdp-connectar__pindoles" aria-label="Categories del teu Bloc">
+          <h3 id={`${id}-categories`} className="sdp-connectar__titol-seccio">{t('common.categories', 'Categories')}</h3>
+          <p className="sdp-connectar__ajuda">{t('section.connectar.categories.ajuda', 'Opcional: la connexió també apareixerà en estes categories del teu Bloc.')}</p>
+          <ul className="sdp-connectar__pindoles" aria-label={t('section.connectar.categories.llista', 'Categories del teu Bloc')}>
             {[...new Set([...categoriesDisponibles, ...categories])].map((categoria) => (
               <li key={categoria}>
                 <button type="button" className="sdp-connectar__pindola" aria-pressed={categories.includes(categoria)}
@@ -959,20 +996,20 @@ function ConnectarElementIntern() {
             ))}
           </ul>
           <div className="sdp-connectar__entrada">
-            <Camp etiqueta="Categoria nova">
+            <Camp etiqueta={t('section.connectar.categories.nova', 'Categoria nova')}>
               <CampText value={categoriaInput} onChange={(e) => setCategoriaInput(e.target.value)}
                 onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); addCategoria(categoriaInput); } }} />
             </Camp>
-            <Boto onClick={() => addCategoria(categoriaInput)} disabled={!categoriaInput.trim()}>Afegir categoria</Boto>
+            <Boto onClick={() => addCategoria(categoriaInput)} disabled={!categoriaInput.trim()}>{t('section.connectar.categories.afegir', 'Afegir categoria')}</Boto>
           </div>
         </section>
 
         <section className="sdp-connectar__seccio" aria-labelledby={`${id}-context`}>
-          <h3 id={`${id}-context`} className="sdp-connectar__titol-seccio">Assistent de context</h3>
+          <h3 id={`${id}-context`} className="sdp-connectar__titol-seccio">{t('section.connectar.etiquetes.titol', 'Assistent de context')}</h3>
           <p className="sdp-connectar__ajuda">
-            La IAIA et suggereix estes etiquetes en base al sistema de Poble. Afig tu les que vullgues per trobar-ho ràpid.
+            {t('section.connectar.etiquetes.ajuda', 'La IAIA et suggereix estes etiquetes en base al sistema de Poble. Afig tu les que vullgues per trobar-ho ràpid.')}
           </p>
-          <ul ref={etiquetesRef} className="sdp-connectar__pindoles" aria-label="Etiquetes">
+          <ul ref={etiquetesRef} className="sdp-connectar__pindoles" aria-label={t('section.connectar.etiquetes.llista', 'Etiquetes')}>
             {suggerides.map((tag) => (
               <li key={tag}>
                 <button type="button" onClick={() => triaSuggerida(tag)} className="sdp-connectar__pindola">{tag}</button>
@@ -981,31 +1018,31 @@ function ConnectarElementIntern() {
             {customTags.map((tag) => (
               <li key={tag}>
                 <button type="button" onClick={() => removeTag(tag)} className="sdp-connectar__pindola sdp-connectar__pindola--triada"
-                  aria-label={`Lleva l’etiqueta ${tag}`}>
+                  aria-label={omple(t('section.connectar.etiquetes.lleva', 'Lleva l’etiqueta {nom}'), { nom: tag })}>
                   {tag}<X size={16} aria-hidden="true" focusable="false" />
                 </button>
               </li>
             ))}
           </ul>
           <div ref={etiquetaLliureRef} className="sdp-connectar__entrada">
-            <Camp etiqueta="Etiqueta lliure">
+            <Camp etiqueta={t('section.connectar.etiquetes.lliure', 'Etiqueta lliure')}>
               <CampText value={tagInput} onChange={(e) => setTagInput(e.target.value)}
                 onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); addTag(tagInput); } }} />
             </Camp>
-            <Boto onClick={() => addTag(tagInput)} disabled={!tagInput.trim()}>Afegir</Boto>
+            <Boto onClick={() => addTag(tagInput)} disabled={!tagInput.trim()}>{t('section.connectar.add', 'Afegir')}</Boto>
           </div>
         </section>
 
         <div className="sdp-connectar__peu">
           {blocFallat && !resum ? avisDelBlocFallat({ error: errorBloc, onReintenta: recarregaBloc, t }) : null}
-          {error ? <Alerta to="error" titol="No s’ha pogut connectar">{error}</Alerta> : null}
+          {error ? <Alerta to="error" titol={t('section.connectar.error.titol', 'No s’ha pogut connectar')}>{error}</Alerta> : null}
           {resum ? (
             <div ref={resumRef} tabIndex={-1} className="sdp-connectar__resum">
               <ResumConnexio
                 resultats={resum.resultats}
                 accions={(
                   <Boto varietat="primari" onClick={() => navigate(resum.ruta, { replace: true })}>
-                    Obrir la connexió a les teues notes
+                    {t('section.connectar.resum.obri', 'Obrir la connexió a les teues notes')}
                   </Boto>
                 )}
               />
@@ -1019,9 +1056,11 @@ function ConnectarElementIntern() {
               <p className="sdp-connectar__nota">
                 {mode === 'persones' || mode === 'grups'
                   ? (faltenDestins
-                    ? (mode === 'persones' ? 'Tria almenys una persona del padró.' : 'Tria almenys un grup.')
-                    : 'L’enviament per xat no es pot desfer.')
-                  : 'A les teues notes la llegiràs i la podràs editar com una nota teua.'}
+                    ? (mode === 'persones'
+                      ? t('section.connectar.nota.faltaPersona', 'Tria almenys una persona del padró.')
+                      : t('section.connectar.nota.faltaGrup', 'Tria almenys un grup.'))
+                    : t('section.connectar.nota.irreversible', 'L’enviament per xat no es pot desfer.'))
+                  : t('section.connectar.nota.privada', 'A les teues notes la llegiràs i la podràs editar com una nota teua.')}
               </p>
             </>
           )}
@@ -1046,7 +1085,8 @@ function ConnectarContingutExtern({ params }) {
   const { currentUser } = useSession();
   const { creaNota, canCreate, config, status: estatBloc, error: errorBloc, refresh: recarregaBloc } = useNotesData();
   const id = useId();
-  const contingut = useMemo(() => contingutExternDeParams(params), [params]);
+  /* P1-22 · Els motius, en la llengua de qui mira. */
+  const contingut = useMemo(() => contingutExternDeParams(params, t), [params, t]);
   const valor = contingut?.ok ? contingut.valor : null;
   const motius = contingut && !contingut.ok ? Object.values(contingut.errors) : [];
   const [isSaving, setIsSaving] = useState(false);
@@ -1072,39 +1112,39 @@ function ConnectarContingutExtern({ params }) {
     setIsSaving(true);
     try {
       const nota = await creaNota(entrada);
-      showToast(`Connectat a «${NOM_CARPETA_CONNECTATS}». És una nota teua: la pots editar.`, 'success');
+      showToast(omple(t('section.connectar.extern.connectat', 'Connectat a «{carpeta}». És una nota teua: la pots editar.'), { carpeta: NOM_CARPETA_CONNECTATS }), 'success');
       navigate(nota?.id ? `/notes?nota=${encodeURIComponent(nota.id)}` : '/notes', { replace: true });
     } catch (err) {
-      setError(missatgeDeLError(err));
+      setError(missatgeDeLError(err, t));
     } finally {
       setIsSaving(false);
     }
   };
 
-  const etiquetaConnectar = calEntrar ? 'Entra per a connectar'
-    : blocCarregant ? 'Obrint el teu Bloc…'
+  const etiquetaConnectar = calEntrar ? t('section.connectar.boto.entra', 'Entra per a connectar')
+    : blocCarregant ? t('section.connectar.boto.obrintBloc', 'Obrint el teu Bloc…')
       : `${t('section.connectar.connect', 'Connectar a')} «${NOM_CARPETA_CONNECTATS}»`;
 
   return (
     <UniversalPage
       traduccio={false}
       chrome="system"
-      title="Connectar"
+      title={t('section.connectar.kicker', 'Connectar')}
       subtitle={t('section.connectar.where', 'On vols connectar-ho?')}
-      lead="Un enllaç de fora de Sóc de Poble arriba com una nota teua, que podràs editar."
+      lead={t('section.connectar.extern.lead', 'Un enllaç de fora de Sóc de Poble arriba com una nota teua, que podràs editar.')}
       onConnect={false}
     >
       <div className="sdp-connectar">
         {!currentUser ? (
-          <Alerta to="avis" titol="Mode Foraster actiu">
+          <Alerta to="avis" titol={t('section.connectar.foraster.titol', 'Mode Foraster actiu')}>
             {calEntrar
-              ? 'Per a connectar cal entrar al teu compte.'
-              : 'Sense sessió, l’enllaç es queda només en este dispositiu.'}
+              ? t('section.connectar.foraster.calEntrar', 'Per a connectar cal entrar al teu compte.')
+              : t('section.connectar.foraster.localEnllac', 'Sense sessió, l’enllaç es queda només en este dispositiu.')}
           </Alerta>
         ) : null}
 
         <section className="sdp-connectar__objecte" aria-labelledby={`${id}-objecte`}>
-          <p className="sdp-connectar__tipus">Enllaç de fora de Sóc de Poble</p>
+          <p className="sdp-connectar__tipus">{t('section.connectar.extern.tipus', 'Enllaç de fora de Sóc de Poble')}</p>
           {valor ? (
             <>
               <div id={`${id}-objecte`} className="sdp-connectar__previsualitzacio">
@@ -1118,28 +1158,29 @@ function ConnectarContingutExtern({ params }) {
                   showDateTime={false}
                 />
               </div>
-              <p className="sdp-connectar__autor">{`De ${valor.lloc}`}</p>
+              {/* P1-22 · Una web no és cap autora: «De» vol dir d'on ve (clau pròpia). */}
+              <p className="sdp-connectar__autor">{omple(t('section.connectar.extern.de', 'De {lloc}'), { lloc: valor.lloc })}</p>
               <p className="sdp-connectar__identitat">{valor.url}</p>
             </>
           ) : (
-            <p id={`${id}-objecte`} className="sdp-connectar__autor">Este enllaç no es pot connectar.</p>
+            <p id={`${id}-objecte`} className="sdp-connectar__autor">{t('section.connectar.extern.noEsPot', 'Este enllaç no es pot connectar.')}</p>
           )}
         </section>
 
         {motius.length ? (
-          <Alerta to="error" titol="Este enllaç no es pot connectar">{motius.join(' ')}</Alerta>
+          <Alerta to="error" titol={t('section.connectar.extern.noEsPotTitol', 'Este enllaç no es pot connectar')}>{motius.join(' ')}</Alerta>
         ) : null}
 
         <div className="sdp-connectar__peu">
           {blocFallat && valor ? avisDelBlocFallat({ error: errorBloc, onReintenta: recarregaBloc, t }) : null}
-          {error ? <Alerta to="error" titol="L’enllaç no s’ha connectat">{error}</Alerta> : null}
+          {error ? <Alerta to="error" titol={t('section.connectar.extern.errorTitol', 'L’enllaç no s’ha connectat')}>{error}</Alerta> : null}
           {valor ? (
             <>
               <Boto varietat="primari" mida="gran" ple onClick={connecta} carregant={isSaving} disabled={!calEntrar && !potConnectar}>
                 {etiquetaConnectar}
               </Boto>
               <p className="sdp-connectar__nota">
-                {`Arriba com una nota nova a «${NOM_CARPETA_CONNECTATS}», que podràs editar. La imatge de l’altra web no es copia.`}
+                {omple(t('section.connectar.extern.arriba', 'Arriba com una nota nova a «{carpeta}», que podràs editar. La imatge de l’altra web no es copia.'), { carpeta: NOM_CARPETA_CONNECTATS })}
               </p>
             </>
           ) : null}

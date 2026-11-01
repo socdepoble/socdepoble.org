@@ -1,7 +1,7 @@
 ---
 type: informe
 status: canonic
-description: Inspecció espaiada T1–T9 amb evidència de contractes, regressió, entregues de Claude i Gemini i tancament nocturn limitat.
+description: Dictamen de la marató i del kit extern Carril 2 per a l'Assalt D01-D15, amb proves, preimatges, reserves i relleu verificables.
 tags:
   - auditoria
 visibility: private
@@ -17,11 +17,11 @@ Esta guia és consultiva i de només lectura. Els resultats els calcula el codi 
 | Camp | Valor |
 | --- | --- |
 | Identificador | sdp:torn_ac4e3ecd-3ab5-4e21-b33a-3b5990893846:506842c4-5ba9-421f-b60c-dcbd5cbb8ee3 |
-| Versió del document | 1.4.0 |
+| Versió del document | 1.6.0 |
 | Entorn | entorn-dev-local |
 | Creació | 2026-11-01T03:04:27.277Z |
-| Modificació | 2026-11-01T07:06:40+00:00 |
-| Propietari | Codex · carril de QA |
+| Modificació | 2026-11-01T17:27:05+00:00 |
+| Propietari | Codex · Carril 2 de dades, federació i conformitat |
 | Aprovació humana | ordre explícita del Mestre en este xat, 2026-11-01 |
 | Plantilla | _wiki_de_poble/02_saber/protocols_tecnics/auditoria_canonica.md (v2.0.0) |
 | Model IA | Codex · família GPT-6; identificador de variant no exposat per la sessió |
@@ -47,8 +47,139 @@ Plantilla entregada: _wiki_de_poble/02_saber/protocols_tecnics/auditoria_canonic
 
 2026-11-01T07:06:40+00:00: passada 3/3 final; 328 proves Vitest i 107 Node verdes; Frontissa 16/16; automatització eliminada i relleu registrat, sense commit ni desplegament propis.
 
+2026-11-01T14:23:51+01:00: encàrrec Assalt 261101_1246, Carril 2 exclusiu; kit extern amb 4 pegats i 29 fitxers, tres iteracions consumides, reserves explícites i zero automatitzacions actives.
+
+2026-11-01T17:27:05+00:00: inspecció viva de Claude i Kit Onada 2; quatre defectes reproduïts, 17 fitxers candidats, verificació dirigida verda i cap escriptura de codi al viu.
+
 <!-- SDP:SECTION auditoria.s4 -->
 ## Troballes
+
+<!-- SDP:INSPECCIO_CLAUDE_ONADA2_CODEX -->
+### Passada d'Inspecció sobre els 225 fitxers de Claude i Kit Onada 2
+
+**Dictamen actual: entrega viva substancialment ampliada; quatre defectes reproduïts i corregits només en el kit extern. Cap 10/10 global acreditat.** Este bloc substituïx les valoracions vigents anteriors; la resta de l'informe es conserva com a historial. L'abast és la inspecció aprofundida de les superfícies demanades pel Mestre, no una revisió exhaustiva dels 225 fitxers. S'han contrastat **34 fitxers** d'eixes superfícies amb els hashes de la còpia inicial: **zero canvis concurrents** al tall d'`evidence/estabilitat-viu.json`.
+
+S'ha llegit el codi real de l'adaptador local i l'equivalència, el restaurador/lot/lectura pública, la inbox i el generador/instal·lador, els estats/hooks E2EE, persones de confiança i les dues migracions `2611011500` i `2611011510`. El nou informe `261101_1355_auditoria_claude.md` continua en esborrany al tall consultat: declara 28.177 proves després dels carrils, cinc fallades resoltes després i Gauntlet transversal en curs des de les 17:58 CET. És evidència declarada per Claude, no execució pròpia. La frase «cap P1 obert» d'eixe tall queda matisada pels reproductors següents.
+
+#### Defectes demostrats de la inspecció
+
+| ID / prioritat | Codi viu i reproducció | Efecte i correcció empaquetada |
+| --- | --- | --- |
+| O2-F01 · P1 | `src/data/federacio/inboxActivityPub.js`, càlcul de `caduca` a `verificaSignaturaHttpActivityPub`. RSA signada fa dues hores: es rebutja; afegint `expires` fora de les capçaleres signades: s'accepta. | Un tercer que conserve una petició pot ampliar-ne la finestra d'acceptació dins del màxim de 12 h. Només s'atén `expires` si `(expires)` forma part de la cadena signada; la resta conserva la caducitat curta. No s'ha provat una evasió del digest ni de la clau d'actor. |
+| O2-F02 · P1 | `src/data/local/mitjansLocal.js`, `resolveAsset`/`urlDe`. Pujada privada d'Anna; es retarda `blob.arrayBuffer()`, es canvia a Berta i es completa: retorna el `data:` privat. | La comprovació d'autoria anterior a l'`await` no protegix l'eixida tardana. El pegat revalida persona i visibilitat després de llegir el blob i evita repoblar la memòria cau després de `destroy`. La prova cobrix també el tancament. |
+| O2-F03 · P2 | `src/data/federacio/inboxActivityPub.js`, `alertaDe`. `endTime` vençut sense `published`, o amb `endTime <= published`: l'alerta es desa amb vigència nova. | Caducitat declarada ignorada i avís vençut reviscolat. Es respecta qualsevol `endTime` vàlid, inclòs el passat, abans de desar. Dos casos reproductors. |
+| O2-F04 · P2 | `src/data/localXat.js` i `src/data/local/conversesLocal.js`. Dos tenants seed amb el mateix `filId`: una escriptura al primer notifica també el segon. | Filtració de metadades d'activitat (`filId`/`seq`), sense text de missatges reproduït. Canals vinculats al magatzem de poble/persona; el wrapper transmet l'abast; baixa/reinici anul·len callbacks pendents. Dues subscripcions antigues de prova s'actualitzen perquè passen `SEED` explícitament. |
+
+Les quatre correccions i les proves són a `correccions-inspeccio-claude.patch`. Els logs rojos conserven quatre casos inicials de signatures/alertes/adjunt i un cas separat de canals; els mateixos reproductors passen en la còpia corregida. `requires_human_decision: false`: la intenció dels contractes és explícita; **la integració queda al carril de Claude**, sense cap aplicació de Codex al viu.
+
+#### Entrega Onada 2 i deutes contrastats
+
+Kit: `../_investigacio_ia_de_poble/261101_kits_onda2_llibre_mestre/codex/`. Porta `README_INTEGRACIO.md`, `MANIFEST.json`, `SHA256SUMS`, `verifica_i_aplica.py` amb `--check`/`--apply`/`--rollback`, quatre `.patch`, preimatges, 17 fitxers candidats complets i evidència reproduïble.
+
+- **P1-07 / G-03:** la ruta real és `supabase/functions/noticies/gestor.js`, no les dues carpetes suggerides al prompt. La preimatge de Claude ja usa lectors i cursors monòtons: no s'ha demostrat quadratura residual ni un guany de velocitat contra ella. `p1-07-senseniats-lineal.patch` extraïx un escàner explícit O(n + k), evita concatenacions repetides, passa 3.000 equivalències contra l'oracle anterior i una fita de 5 s per entrada hostil d'aproximadament 1 MiB. Es conserva la semàntica històrica, inclosa la dels fragments malformats; no es canvia a un parser XML nou.
+- **P2-09:** la migració `2610311900` ja tenia projeccions parcials tancades i precedència d'autoria; l'estat antic del Llibre no descriu exactament el viu. El nou pegat fixa un contracte JSON v1 de columnes/tipus i un propietari canònic per recurs: `owner_user_id`, `user_id`, `user_id`, `author_id`, respectivament. Exigix UUID i FK simple validada cap al compte, projecta només columnes pactades i retorna error visible per recurs si l'esquema no encaixa. **No s'ha capturat l'esquema remot ni executat PostgreSQL**: codi candidat i prova estàtica preparats, tancament operatiu encara pendent.
+- **P1-24:** Claude ja havia afegit huit entrades rurals/d'ús a l'Atles; no es presenta l'antic «0/8» com a estat actual. El pegat amplia modularment amb **16 càpsules** (8 cultura/documentació rural i 8 ús quotidià), en un índex de reserva que no altera el rànquing de l'Atles. S'han verificat les fonts factuals de [pedra seca, UNESCO](https://ich.unesco.org/en/RL/art-of-dry-stone-construction-knowledge-and-techniques-02106) i [pilota valenciana, Ministeri de Cultura](https://www.portalinmaterial.cultura.gob.es/pci-ccaa/comunidad-valenciana/pilota.html); la resta són propostes editorials. No inventa horaris, tràmits, accions fetes ni dades municipals.
+
+#### Reavaluació D01–D15 sobre l'arbre viu
+
+Notes d'enginyeria ordinals i justificades per l'evidència disponible, sense mitjana ni certificació externa. Els pegats externs **no puntuen com a integrats**. En dimensions fora de la inspecció dirigida es conserva prudentment la valoració anterior; les declaracions de Claude s'identifiquen com a tals.
+
+| Dimensió | Nota viva /10 | Evidència actual i bretxa material |
+| --- | --- | --- |
+| D01 · Port neutral i Model B | 8,0 | Segon adaptador modular viu, nucli/capacitats i conformitat verda en seed amb/sense sessió i local; equivalència de lectures amb Supabase seed. No és equivalència amb un servidor remot independent. O2-F02/F04 encara vius fins a integrar; serveis externs rebutjats honestament. |
+| D02 · Pedra Seca i geometria | 7,5 | Claude declara zero crítics/avisos i porta verda. Sense repetir-la ni comprovació visual pròpia sobre tots els dispositius, es conserva la nota. |
+| D03 · Accessibilitat rural AAA | 6,5 | Ampliació integrada declarada per Claude; esta passada no acredita lectors reals ni tots els criteris AAA. Nota conservada. |
+| D04 · Sobirania i Open Data | 7,5 | Restaurador viu: SHA-256/BagIt, CRC, rutes, esquemes i representacions canòniques abans de restauració local atòmica; round-trip dirigit verd. GET anònim de notícies/agenda, però Supabase torna `memoria: null` i `memoriaOral: null`: col·leccions públiques incompletes. Configuració i binaris queden fora. |
+| D05 · Federació oberta | 6,5 | WebFinger dinàmic i nucli RSA/Ed25519, processador idempotent de referència i outbox no buit al viu; proves dirigides verdes. O2-F01/F03 oberts al viu; falta endpoint desplegat, persistència, cua/entrega i interoperabilitat externa. |
+| D06 · Enxufabilitat universal | 8,0 | Connector fora del scope directe d'esta passada. No s'ha instal·lat en un amfitrió net ni comprovat la publicació; nota conservada. |
+| D07 · Nodes germans | 7,5 | D-13 corregit al viu: manifest d'identitat, actor/JRD/NodeInfo i outbox del node propi. Generador i instal·lador passen proves individuals sobre la còpia actual. Falta provisionament/servei real independent, backend, Nix i temps mesurat. |
+| D08 · Privacitat, RLS/RGPD i E2EE | 7,0 | Estats honestos i barrera compilada; proves dirigides verdes. Bandera E2EE apagada i recuperació social explicitament inactiva; Shamir no equival a flux desplegat. P2-09 i migracions encara candidats sense DB real; O2-F02 al viu. |
+| D09 · Notes i Karpathy local | 8,0 | Motor/OKF ja existents i round-trip local verificat; rebost ampliat extern amb 390 proves de família IAIA verdes. No s'ha integrat l'Onada 2 ni revalidat tota la UI de Notes; nota conservada. |
+| D10 · Memòria oral i multimèdia | 7,5 | Importació viva de fitxes/col·leccions textuals i verificació canònica; prova de compatibilitat v1.0 també verda. Lectura pública remota de memòria absent; àudio, configuració, drets/procedència i restauració de binaris encara no acreditats. |
+| D11 · Comunicació comunitària | 7,5 | SQL viu exigix el mateix tenant per a signar com ajuntament; empreses/entitats conserven la política pròpia. Caducitat local/UI i seguretat del fil tenen proves. SQL no aplicat; alertes remotes O2-F03 i canals O2-F04 pendents d'integració; falta entrega real amb reconnexió. |
+| D12 · Multilingüisme | 7,0 | TE-01/02/05 ja existien segons el contrast de Claude; no s'han repetit revisió nativa eu/gl ni proves de tot el client natiu/encastat. Nota conservada. |
+| D13 · Botigues i PWA | 6,5 | RPC mínim de client viu, ACL i enllaç Android comprovats estàticament; proves verdes amb configuració Capacitor real copiada. No hi ha aplicació SQL ni publicació acreditada, i el build 1 no es pot protegir retroactivament. |
+| D14 · Governança i telemetria | 7,0 | Preimatges, rebut extern i hashes; transacció de governança integrada declarada per Claude. Sense modificar `.agents`, Llibre o índexs; falta tancament transversal de Claude i recepció HTTP/desplegament acreditats. |
+| D15 · Rendiment i resiliència | 6,0 | Escàner lineal amb prova temporal i bateria individual aïllada. Cap build propi ni bytes gzip mesurats; no es certifica el llindar de 250 KB ni el comportament de xarxa rural. |
+
+#### Verificació, preservació i tancament
+
+**Últim resultat per fitxer: 1.041 proves Vitest (40 fitxers), 23 Node (2 fitxers) i 8 Python, totes verdes, zero omissions.** La família IAIA aporta **390 proves en 20 fitxers**, 372 de regressió i 18 noves. `evidence/resultat-consolidat.json` enumera ordres/logs; no s'hi sumen repeticions com a cobertura addicional. Cada invocació Vitest conté un sol fitxer, `--maxWorkers=1 --no-file-parallelism` i memòria cau externa. Node usa `--test-concurrency=1`. **Cap suite global ni `npm run build`.**
+
+Tres passades organitzades: reproducció; deutes/equivalència; integració final amb comprovacions dirigides de les fallades. Es conserven els logs de dos casos IAIA que fallaven per l'ambigüitat de «pedra» (corregida sense tocar les expectatives antigues), la subscripció antiga sense abast (actualitzada) i els errors de preparació de la còpia (alias, arrel, ESLint, icona i Capacitor). Els últims resultats corresponents són verds. No queda una quarta passada ni cap feina programada.
+
+Packaging: quatre pegats junts passen `git apply --check`; l'aplicador aplica en arrel efímera i passa la comprovació inversa; les huit autoproves cobrixen conflicte, idempotència, rollback, alteració i travessia de rutes. **`--check` sobre el viu és verd; no s'hi ha fet `--apply`.** El circuit documental (`context`, pla aprovat, `own`, plantilla) s'ha executat en la còpia externa, amb torn `torn_e3396d66-4ce8-4fcf-8406-76187dcb2740` i rebut `a9262454-e2ec-4ad1-9438-7ca95f76cc18`; el `reflex` original d'este informe es preserva. El rebut extern no acredita una transacció de governança al viu.
+
+En acabar, sis automatitzacions locals examinades: totes `PAUSED`, **zero actives**, cap creada per esta passada. Al viu, l'única escriptura pròpia és este informe; es preserven codi, proves, `.agents`, índexs i Llibre de Claude. Per la restricció expressa del Mestre no es crea Acta Marmota ni s'executen escriptures de tancament al seu carril; este bloc deixa el relleu i les reserves.
+
+<!-- /SDP:INSPECCIO_CLAUDE_ONADA2_CODEX -->
+
+
+<!-- SDP:ASSALT_1010_CODEX_CARRIL2 -->
+### Dictamen vigent · Assalt 261101_1246 · Carril 2 exclusiu
+
+**Kit materialitzat, pendent d'integració de Claude; cap 10/10 nou acreditat al viu.** S'han llegit íntegres els quatre documents exigits pel Mestre, l'Acta Marmota `261101_1304`, el BIOS i el procediment/plantilla vigents. El nou informe de Claude `261101_1355_auditoria_claude.md` s'ha llegit íntegre al tall de les 14:07 CET: és encara un esborrany de línia base, amb 27.243 proves declarades i sense conclusions d'integració. No es transforma eixa declaració en una prova pròpia. El comptador d'este encàrrec és independent de la marató nocturna anterior: **tres iteracions consumides i cap quarta programada**.
+
+**Lliurament:** `../_investigacio_ia_de_poble/261101_kits_10_10/codex/`, amb `README_INTEGRACIO.md`, `verifica_i_aplica.py` (`--check`, `--apply`, `--rollback`), `MANIFEST.json`, preimatges, fitxers complets, quatre pegats i bateries llestes. **29 fitxers de producte/proves candidats**, sense aplicar-los al viu:
+
+| Pegat | Evidència del kit i frontera |
+| --- | --- |
+| `adaptador-local-conformitat.patch` | Adaptador en memòria independent; corredor neutral sobre **82 casos canònics**, tots executats sense omissions en el cas local. Notes amb revisió i xat idempotent. Storage amb instància per operació: senyal real sense mutar el cubell original, inclosos originals congelats. Conserva sostres de 4 en vol/32 en cua i reconciliació tardana. OAuth, correu, TOTP i transports privats de servidor rebutgen explícitament: no és un segon servei de producció complet. |
+| `open-data-restaurador-roundtrip.patch` | GET anònim d'app_content per notícies, agenda, memòria i OKF; cap JWT/cookie ni section_submissions. BagIt verificat criptogràficament abans de restaurar una instantània pública atòmica/idempotent al local. Round-trip verd de col·leccions textuals i bytes OKF. Falta recuperar configuració, mitjans originals i comptes; el kit no certifica la recuperació de tota la base de dades. |
+| `activitypub-fase2-i-node-germa.patch` | RSA/Ed25519 reals, host/query/data/digest vinculats, clau de l'actor, Follow→Accept i deduplicació transaccional, Create/Delete i Announce autoritzat amb caducitat. Xixona amb actor/JRD/NodeInfo propis i outbox no buit. La pàgina municipal real pobla l'outbox; no s'inventen notícies. Falta ruta HTTP desplegada, persistència, cua d'entrega i interoperabilitat externa. |
+| `e2ee-shamir-i-alerta-tenant.patch` | CHECK de la fila amb organització i tenant_id, membresia estricta de town_id i baixa; migració candidata no aplicada. Caducitat del Mur per temporitzador únic i visibilitychange. Shamir k=3 amb cercle de 40 amics i regressió E2EE existent. C11-03/C11-05 ja tenen migració 2610281730: es prova el codi existent, sense duplicar-lo ni certificar concurrència PostgreSQL. |
+
+**Resultats executats:** Vitest dirigit: **414 passades, 1 fallada d'expectativa antiga i 2 omissions / 417**; Node: **26/26**; autoproves de l'aplicador: **8/8**. La fallada és `storage.termini.test.js:246`: esperava que un cubell congelat NO rebera senyal; el resultat real és un `AbortSignal`, com demana P1-27. S'ha actualitzat l'expectativa al pegat i **no s'ha reexecutat** per respectar el màxim de tres iteracions. No s'inventa una suite final verda. Les dues omissions són vectors antics de recuperació (caixa S completa i implementació Shamir independent).
+
+Les dues primeres invocacions consten com a preparació/verificació fallida: la primera no va trobar un setup de QA inexistent (0 casos executats); la segona va donar 11/14, amb codi de rebuig local incorrecte i dues assercions equivocades, corregits abans de la tercera. Les proves criptogràfiques i de nodes inicials van passar 8/8; no se sumen als 26 finals com a cobertura única. S'ha usat un worker i una configuració amb memòria cau pròpia. L'enllaç sencer inicial de node_modules s'ha substituït per un directori propi amb enllaços als paquets, excloent les memòries cau; cap build global.
+
+**Packaging final:** els quatre pegats junts passen `git apply --check`, l'aplicador passa `--check` i `--apply` en una arrel efímera, i `git apply --check --reverse` confirma les postimatges. S'ha corregit el format inicial dels fitxers nous amb `new file mode 100644`; el resultat final de packaging és exit 0. Les 8 autoproves són anteriors a eixe ajust del parser i a la guarda final de directoris de rollback; no se'n declara una repetició. `--check` contra el viu passa al tall registrat; no s'hi ha executat `--apply`. Si Claude canvia una preimatge, el check ha de refusar-la i la integració requerix reconciliació en el seu carril.
+
+#### Reavaluació actual de D01–D15
+
+Les notes següents corresponen **al producte viu inspeccionat**, no a la presència de propostes externes. Substituïxen la taula K1 com a valoració vigent; les taules anteriors queden com a historial. Escala ordinal d'enginyeria, sense mitjana ni certificació externa.
+
+| Dimensió | Nota viva /10 | Aportació d'este kit o contrast actual | Bretxa material per al 10/10 |
+| --- | --- | --- | --- |
+| D01 · Port neutral i Model B | 7,5 | Segon adaptador amb 82 casos i aïllament/cancel·lació provats en còpia; P1-27 real sobre l'SDK. | Integrar i reexecutar l'asserció actualitzada; serveis externs d'un segon backend real, canvi de sessió i restauració integral. |
+| D02 · Pedra Seca i geometria | 7,5 | Cap canvi propi de UI al viu; referència prèvia de 9 avisos. | Zero avisos i matriu visual 1024 px/dispositius; entrega de Claude/Gemini encara sense certificar ací. |
+| D03 · Accessibilitat rural AAA | 6,5 | Regió viva existent del Mur conservada; rellotge sense una regió per targeta. | Lectors reals, focus/zoom/teclat i tots els criteris AAA aplicables; cap certificació global inferida. |
+| D04 · Sobirania i Open Data | 7,0 | Lectura anònima real i restauració textual/OKF amb SHA-256 en el kit. | Integració, dades municipals reals revisades, mitjans/configuració i restauració en un segon servei independent. |
+| D05 · Federació oberta | 4,5 | Nucli de fase 2 amb signatures reals i idempotència local. | Endpoint servidor connectat, persistència, entrega/reintents/moderació i interoperabilitat externa. |
+| D06 · Enxufabilitat universal | 8,0 | Connector oficial preexistent; fora del carril d'edició de Codex. | 1.1.11 integrat/publicat i comprovació sobre amfitrions nets amb sessió, idioma, CSP i baixa. |
+| D07 · Nodes germans | 6,0 | Defecte D-13 resolt en còpia per a Xixona; actor, descoberta i outbox propis. | Integració, build i servei d'un host independent, backend, Nix i temps de provisionament mesurats. |
+| D08 · Privacitat, RLS/RGPD i E2EE | 6,5 | Regressió E2EE i Shamir real; C11-03/C11-05 ja implementats al SQL actual. | UI opt-in i recuperació social, rols/baixa reals, prova concurrent PostgreSQL i auditoria independent del protocol. |
+| D09 · Notes i Karpathy local | 8,0 | Es corregeix la nota històrica K1 de 6: el motor OKF i revisió sí existixen des de la marató. El kit conserva les fitxes públiques. | Tags/àlies, fixació del tutorial i contrast de la UI final de Claude. |
+| D10 · Memòria oral i multimèdia | 7,0 | Round-trip de fitxa OKF revisada i col·lecció textual. | Àudio original/transcripció, procedència/drets, binaris i restauració de preservació; HMR real. |
+| D11 · Comunicació comunitària | 6,5 | Migració per poble de la fila i rellotge de caducitat preparats. | Aplicació/validació SQL, client real amb talls/reconnexió, UI E2EE, adjunts i comprovació d'entrega. |
+| D12 · Multilingüisme | 7,0 | El kit conserva el traductor existent del Mur; cap diccionari propi reescrit. | TE-01/02/05, revisió nativa eu/gl i llengua efectiva en natiu/encastat. |
+| D13 · Botigues i PWA | 5,5 | Cap signatura ni publicació nova feta per Codex. | OAuth/guard Apple, pins reals, proves natives, fitxes i revisió efectiva de botigues. |
+| D14 · Governança i telemetria | 7,0 | Rebut extern, hashes i aplicador conservador; tractor-vigilant ja existix segons codi/contrast de Claude. | Cadena del tall integrat i recepció HTTP real, tancament mecànic i desplegament acreditats. |
+| D15 · Rendiment i resiliència | 6,0 | Bateria dirigida aïllada i un worker; cap recompte de bytes inventat. | Build final <250 KB gzip, Wiki diferida, mètriques en xarxa rural i recuperació mesurada. |
+
+#### Troballes per al relleu de Claude
+
+**C10-01 · P2 · Contracte citat i rutes inexistents.** No hi havia una funció `executaKitConformitat` en `conformitat/kit.js`: hi ha CASOS/contextDeConformitat/executaCas. El kit afig un corredor separat, sense falsejar la suite canònica. `AlertaMunicipal.jsx` és a `src/sections/mur/`, i no hi ha `xat/e2ee/sessioXat.js`; s'han provat els mòduls xifratXat reals. C11-03/C11-05 i tractor-vigilant no s'han de tractar com a absents. `requires_human_decision: false`.
+
+**C10-02 · P2 · Límit de la restauració.** El round-trip acreditat és públic, textual i OKF; no cobrix mitjans/configuració ni infraestructura. Fer-lo equivalent a «municipi complet restaurat» seria una afirmació superior a l'evidència. El README concreta eixa frontera i la integració pendent del flux que publique les fitxes revisades a app_content. `requires_human_decision: false` per a integrar i completar dins del pla aprovat.
+
+**C10-03 · P2 · Fase 2 no servida per Firebase estàtic.** Les funcions i proves no creen una ruta HTTP. Cal el host de servidor, persistència de transaccions/outbox i un resolutor de claus amb protecció contra SSRF. El nucli no fa fetch arbitrari. Perfil Cavage, no RFC 9421. Referències primàries: [W3C ActivityPub](https://www.w3.org/TR/activitypub/), [draft Cavage](https://datatracker.ietf.org/doc/html/draft-cavage-http-signatures-12), [BagIt RFC 8493](https://www.rfc-editor.org/rfc/rfc8493). `requires_human_decision: false` per al nucli autoritzat; no hi ha desplegament implícit.
+
+#### Circuit documental, desconvocatòria i Proposta d'Automillora
+
+Per evitar col·lisions, el circuit obrir_torn → context auditoria → pla → own s'ha executat en la **còpia física externa**, torn `torn_cfbd3d07-f7dd-448f-8577-10f4ea979d11`, rebut `sdp:torn_cfbd3d07-f7dd-448f-8577-10f4ea979d11:919ade98-4c78-4cbb-b2e8-b8c37ec9be41`. Plantilla llegida sencera, SHA-256 `f537f054c68a648cc755a61c2b3037b375ec37304d98ff1631e290212d2bcd6c`. S'actualitza este dictamen existent mantenint-ne el rebut viu original: no cal create d'un segon informe. ESTAT/LEDGER compartits i índexs no s'han modificat; el relleu s'ha deixat al kit i a este bloc per a MarIA. El tancament mecànic s'informa separadament del resultat de les proves.
+
+**Automatitzacions:** inventari final a `evidence/automacions.json`, **zero ACTIVE**, sis tasques anteriors PAUSED i cap de pròpia creada. No hi ha cap cron nou a cancel·lar; la vigilància nocturna anterior ja constava eliminada. No queden proves, servidors ni agents propis residents. No s'ha enviat correu, aplicat SQL, publicat cap paquet ni desplegat cap servei.
+
+**Millores Proactives Reversibles Aplicades:** quatre pegats amb hashes/preimatges i rollback conservador; prova de concurrència d'inbox i notes; revisió del resultat real amb expectatives antigues visibles; separació explícita entre integritat BagIt i autenticitat del productor. El viu només rep esta ampliació del dictamen; la resta és externa.
+
+**Proposta d'Automillora:** «Si m'hagueres demanat això d'aquesta altra forma, hauria sigut més eficient»: fixar un manifest inicial de rutes reals i separar «kit verificat», «integrat» i «operatiu», amb el límit de tres iteracions aplicat a bateries identificades. Evitaria demanar un 10/10 global quan hi ha proves de servidor/dispositiu fora del carril. El flux útil ací és una còpia física, cacheDir propi i aplicació per preimatges; no s'atribuïx cap capacitat de model nova que l'entorn no haja exposat.
+
+**Tancament mecànic de la còpia externa:** `tancament.mjs --check --turn-id torn_cfbd3d07-f7dd-448f-8577-10f4ea979d11` retorna **exit 1 / planned**. Olivera, plantilles, LEDGER, segell i skills passen. La còpia parcial exclou l'arxiu històric: autoritat/Wiki/SCC detecten eixes absències; també hi ha canvis de codi de laboratori fora del scope documental i el relleu no complix els patrons d'ESTAT/LEDGER d'eixe torn. No és un resultat de les portes sobre el viu, ni es força el tancament. Logs i rebut es conserven al kit. El dictamen existent sí passa `document.mjs check` en còpia abans de publicar-lo.
+
+**Segell material de l'entrega:** MANIFEST.json SHA-256 `f68e8e0cd538f679e0da3dc5b41ee523cb77b8728d5ca9b5db991ad592ecb2bd`; SHA256SUMS SHA-256 `7865dad3adbdb77c1edd44cca6cc61ee5d2e1d3b486fc6331cae671368473318`. 57 fitxers inclosos en les sumes (guia, eines, pegats, preimatges, payloads i evidència seleccionada). `executa_proves.py --repo .` permet a Claude repetir la bateria en el seu checkout amb memòria cau pròpia; el corredor empaquetat tampoc s'ha reexecutat després del límit.
+
+<!-- /SDP:ASSALT_1010_CODEX_CARRIL2 -->
 
 ### Dictamen de la passada 1/3
 

@@ -21,6 +21,14 @@
  * detall, l'estat buit de l'editor (la Card en lectura; el Foraster, la seua
  * còpia de prova). No es desa enlloc ni crea cap nota. En mode 'seed' la n1
  * de veres continua sent una nota editable del dispositiu.
+ *
+ * D-4 (decisió del Mestre, pla 261101_1246) · Les dues, la de veres i la de
+ * lectura, són la primera fila de «Tot» amb qualsevol ordenació: el model de
+ * vista de NotesSection (toWorkspaceNote) hi posa `fixatATot: true`, que
+ * itemTutorial conserva en espargir-lo, i l'UniversalWorkspace el respecta
+ * només a «Tot». «Mentre no estiga arxivada» només val per a la n1 de veres:
+ * arxivada, ix de la llista. La de lectura no s'arxiva mai; en mode 'seed'
+ * torna en lloc de la n1 arxivada (P1-72: sempre a «Tot»), també fixada.
  */
 import { NOTES_SEED } from '../../data/appSeed.js';
 import { ID_NOTA_BENVINGUDA } from './autoriaNota.js';

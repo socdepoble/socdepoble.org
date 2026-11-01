@@ -24,7 +24,9 @@
  *                                     només esta, a builds/directori/socdepoble.zip);
  *   · stable.json (o --canal) i X.json  el canal (el manifest universal més els
  *                                     paquets), amb la signatura Ed25519 al
- *                                     costat (.sig, hexadecimal).
+ *                                     costat (.sig, hexadecimal). Amb --prova,
+ *                                     prova.json (o --canal) i X.json, sense
+ *                                     cap .sig.
  * El canal propi i Sollutia compartixen els bytes; la variant del directori
  * té empremta pròpia i dependències explícites, sense canviar el contracte.
  *
@@ -687,11 +689,13 @@ function validaUrlBase(urlBase, { prova }) {
  * @param {string} [opcions.clauPem]      Clau privada Ed25519 en PEM.
  * @param {string} [opcions.notes]        URL https de les notes de la versió.
  * @param {boolean} [opcions.prova]       Node de desenvolupament, sense signatura i http local.
- * @param {string} [opcions.canal]        Nom del canal (stable per defecte; p. ex. rc per a provar a Studio).
+ * @param {string} [opcions.canal]        Nom del canal (stable per defecte, prova amb --prova; p. ex. rc per a provar a Studio).
  */
-export function empaqueta({ arrelPlugin = ARREL_PLUGIN, sortida, urlBase, clauPem, notes, prova = false, canal: nomCanal = 'stable' }) {
+export function empaqueta({ arrelPlugin = ARREL_PLUGIN, sortida, urlBase, clauPem, notes, prova = false, canal: nomCanal = prova ? 'prova' : 'stable' }) {
   if (prova && clauPem) throw new Error('--prova no signa mai: una signatura només cobrix builds que passen les portes de release.');
   if (!/^[a-z0-9][a-z0-9-]{0,31}$/.test(nomCanal) || SEMVER.test(nomCanal)) throw new Error(`Nom de canal no vàlid: ${nomCanal}`);
+  /* L5-WP-01 (261101) · El stable.json versionat i signat no el trepitja mai un canal de proves. */
+  if (prova && nomCanal === 'stable') throw new Error('--prova no escriu mai el canal estable: usa --canal prova o rc.');
   const builds = llegixBuilds(arrelPlugin, { prova });
   const { dist, textRelease, release, versio, camins, restes, releaseDirectori, inventariDirectori } = builds;
 
@@ -773,6 +777,10 @@ export function empaqueta({ arrelPlugin = ARREL_PLUGIN, sortida, urlBase, clauPe
   comprovaDestinacio(arrelPlugin, desti, [
     ...Object.values(caminsPaquet), ...canals, ...(signatura ? canals.map(nom => `${nom}.sig`) : [])
   ]);
+  /* Un canal sense signatura tampoc trepitja X.json d'una release signada: la .sig vella
+     quedaria al costat d'uns bytes que no cobrix. */
+  const ambSignatura = signatura ? null : canals.find((nom) => fs.existsSync(path.join(desti, `${nom}.sig`)));
+  if (ambSignatura) throw new Error(`--prova no sobreescriu ${ambSignatura}: al costat hi ha la seua .sig. Usa --sortida o un altre --canal.`);
   fs.mkdirSync(desti, { recursive: true });
   const escrits = [];
   const escriu = (nom, dades) => {
@@ -990,7 +998,7 @@ export const AJUDA = `Empaquetador de l'enxufe (sdp.release.v1)
   node wordpress-plugin/eines/empaqueta.mjs --directori
   node wordpress-plugin/eines/empaqueta.mjs --url-base URL --clau FITXER.pem [--notes URL] [--sortida DIR]
   node wordpress-plugin/eines/empaqueta.mjs --genera-clau FITXER.pem
-  node wordpress-plugin/eines/empaqueta.mjs --prova --url-base http://localhost:8881/enxufe/
+  node wordpress-plugin/eines/empaqueta.mjs --prova --url-base http://localhost:8881/enxufe/   (escriu prova.json)
 
 Una release, en ordre:
   1. SDP_RELEASE=1 SDP_VERSIO=0.2.0 npm run build:wp   (VITE_* de producció a .env.production.local)
@@ -1018,11 +1026,14 @@ Opcions:
   --clau FITXER       Clau privada Ed25519 (PEM). Ha de correspondre a SOCDEPOBLE_ENXUFE_CLAU_PUBLICA.
   --notes URL         Notes de la versió (https).
   --sortida DIR       Carpeta dins de wordpress-plugin/builds/ (per defecte, builds/).
-  --canal NOM         Nom del fitxer de canal (stable per defecte). Per a provar a WordPress Studio:
+  --canal NOM         Nom del fitxer de canal (stable per defecte; prova amb --prova, que mai
+                      escriu stable). Per a provar a WordPress Studio:
                       --canal rc, i al wp-config.php de Studio
                       define( 'SOCDEPOBLE_ENXUFE_CANAL', 'https://socdepoble.org/enxufe/rc.json' );
   --genera-clau F     Crea una clau nova fora del repositori i diu la clau pública que cal posar al plugin.
-  --prova             Canal de proves: node de desenvolupament, sense signatura, http cap a localhost.
+  --prova             Canal de proves: escriu prova.json i X.json (mai stable.json ni un canal
+                      que ja tinga .sig), amb node de desenvolupament, sense signatura i http
+                      cap a localhost.
   --ajuda             Esta ajuda.`;
 
 function llegixArguments(argv) {
@@ -1043,7 +1054,8 @@ function llegixArguments(argv) {
   return opcions;
 }
 
-export function executa(argv, registre = console) {
+/* `arrelPlugin` només el passen les proves (tests/enxufe-empaqueta.test.mjs), amb una fixture. */
+export function executa(argv, registre = console, { arrelPlugin } = {}) {
   const opcions = llegixArguments(argv);
   if (opcions.ajuda) { registre.log(AJUDA); return 0; }
 
@@ -1087,6 +1099,7 @@ export function executa(argv, registre = console) {
   }
 
   const resultat = empaqueta({
+    ...(arrelPlugin ? { arrelPlugin } : {}),
     urlBase: opcions['url-base'],
     clauPem: opcions.clau ? fs.readFileSync(path.resolve(opcions.clau), 'utf8') : null,
     notes: opcions.notes,
@@ -1103,8 +1116,20 @@ export function executa(argv, registre = console) {
   if (resultat.mitjans.bessonesAutonom) registre.log(`Autònom: ${resultat.mitjans.bessonesAutonom} originals substituïts per la seua bessona .webp, sense cap origen extern.`);
   if (resultat.restesDirectori.length) registre.log(`${resultat.restesDirectori.length} fitxer(s) de builds/directori/dist fora de l'inventari (restes velles): no s'han empaquetat.`);
   for (const avis of resultat.avisos) registre.log(`AVÍS: ${avis}`);
-  registre.log('Publica primer els zips i després el canal (stable.json i la .sig).');
+  registre.log(missatgeDePublicacio(resultat.escrits));
   return 0;
+}
+
+/**
+ * Gauntlet transversal 261101 (D-V-04) · L'últim consell de executa(), amb els fitxers del canal
+ * que empaqueta() ha escrit de veres (`escrits`): stable.json, rc.json o prova.json, el X.json de
+ * la versió i les seues .sig només quan n'hi ha. Amb --prova no n'hi ha cap, i el consell ho diu.
+ */
+export function missatgeDePublicacio(escrits) {
+  const delCanal = escrits.filter((nom) => nom.endsWith('.json') || nom.endsWith('.json.sig'));
+  const llista = delCanal.length > 1 ? `${delCanal.slice(0, -1).join(', ')} i ${delCanal.at(-1)}` : delCanal.join('');
+  const signatura = delCanal.some((nom) => nom.endsWith('.sig')) ? '' : ', sense cap .sig';
+  return `Publica primer els zips i després el canal (${llista}${signatura}).`;
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(fs.realpathSync(process.argv[1])).href) {

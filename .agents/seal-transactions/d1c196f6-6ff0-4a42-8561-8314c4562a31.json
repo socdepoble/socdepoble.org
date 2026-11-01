@@ -1,0 +1,97 @@
+{
+  "id": "d1c196f6-6ff0-4a42-8561-8314c4562a31",
+  "session": "e933d4ce-8f84-4d3f-90dd-aa23d5a7a613",
+  "operationId": "torn_3f5652a2-assalt_deu_deu_governanca_codi_carrils_t2_t3_t4a_t4b_t8b-e933d4ce",
+  "claim": "e933d4ce-8f84-4d3f-90dd-aa23d5a7a613:governance-write",
+  "planHash": "7cddcb8ebd5c03ceadd61f0c0a0e0411201699031fbfba28c14c4f98da1f2893",
+  "beforeSeal": "c64ffced2064f628787239f79904a31f4ee0a710f3d97af8f28d79b8698fb1f6",
+  "files": [
+    {
+      "path": "package.json",
+      "before": "2346385d61effee878547bebd7edbf4bfb545593eb4b512a1e10791000ed53ab",
+      "after": "a6c76f9fbcb47955f62c7eb3db1f0a5c6a34a3fa41e7543837ed5c756783d897"
+    },
+    {
+      "path": "scripts/botigues/entorn.mjs",
+      "before": "f6a6391ad0d72d7d774e7f8fa1aaa4cef3970ce20eaf3f1ddf9c42790cc7a3c3",
+      "after": "cd2f19d2fdb5a4da6ec3b6f4aa8e247ceef7c23f22cf9135442e2695c2d1607e"
+    },
+    {
+      "path": "scripts/botigues/preflight.mjs",
+      "before": "17f8dc8ce9f7ccea664c89e726810288673c70d0f1f731d5d46885021591b258",
+      "after": "fc4aea89a9dd3f37b11dac9942b2d73cc4bfa3dee8332a1b2f951bb41bff2a4a"
+    },
+    {
+      "path": "scripts/botigues/puja-android.mjs",
+      "before": "882587a7c5633b5af5ddff398be5adc6cb74ba89f1b7a9250f70943716506627",
+      "after": "1e8764e30ad95db598d15910b05a51d148f442c14dc3e7a5fb93d13cc2c6daa8"
+    },
+    {
+      "path": "scripts/botigues/puja-ios.mjs",
+      "before": "20dee218bb47c53037eae6296baa84781bd9aa6f7e2581e4bc8256aa36b80e42",
+      "after": "ff4334f7652fe0c6b37b04b538e58eb8f37c67bc9306633d413698602c0b33c6"
+    },
+    {
+      "path": "scripts/botigues/versio-client.mjs",
+      "before": null,
+      "after": "ff34a806ea31cc68fe619d222a028b2d6264a6ea4f25221d4266c01ef6b7fdfb"
+    },
+    {
+      "path": "tooling/brain/tractor-pedra-seca.mjs",
+      "before": "28e039caad645cb91b7683f7eac6d8f005bb8fbce3a631adc06ae950545a018b",
+      "after": "3c18bf5290ac0bd839cf19845f60a8258e33cc965c3421b2ede5e8834c808340"
+    },
+    {
+      "path": "tooling/gates/design_guard.mjs",
+      "before": "2aaa73daecf892dcde953b24919059065ace3f3acade4423bf081c7ca3d869ca",
+      "after": "ff1176fea0a08047a722d1f09f9e4d0a67bcc1fb6540d07ac96c3634db8f1d3b"
+    },
+    {
+      "path": "tooling/gates/pressupost-paquet.mjs",
+      "before": null,
+      "after": "9b589635319155020cc1fbbd1827b635bf9f1b5e353ba2975349aa84274cc0a8"
+    },
+    {
+      "path": "tooling/gates/pressupost-paquet.test.mjs",
+      "before": null,
+      "after": "2109a02e05e6cd068cc751096e44f5dabcd608e5c65d2bd9859fac554b35c946"
+    },
+    {
+      "path": "tooling/instalador/inicia-node-germa.mjs",
+      "before": "d203ae1f92541a1b05040d1f6139755f0b13fba44f05378e927211817349e606",
+      "after": "0b6ba28e2cf588039a45d0e699f51cef0ca65479f676a056cea8c1cdb02d12ce"
+    },
+    {
+      "path": "tooling/seo/comprova-reproductibilitat.test.mjs",
+      "before": "3609d6071c42c943ecff1a4691ea04b2109152f3f8309318f8a9fb5e178b454e",
+      "after": "e87030ae87e238b8b2e7864f1c76b6b9cfb87be03107fd9d37887f52d8083eb5"
+    },
+    {
+      "path": "tooling/seo/genera-federacio.mjs",
+      "before": "8251a829014936896eb50ea3e95740147fb15ab182824782de5fde99a06b7e29",
+      "after": "32ecd58350c068500ece183651cbbbf0c8f11b426fb0781060b7be510cf4c5c3"
+    },
+    {
+      "path": "tooling/seo/genera-federacio.test.mjs",
+      "before": "aaccb62ff7e2fe659434305e95a9ae61a7f103ad56f0909185d5220042da4beb",
+      "after": "0a090f8e47a2b43003f46267696ef007e47d336a31cc9d0ea22d8fc1098a73f4"
+    },
+    {
+      "path": "tooling/seo/publicacions-federades.test.mjs",
+      "before": "0005ee68ac3d6b5c5feaa420b125eaea597dbd7828ae5c2574e6d3c62d89dd59",
+      "after": "3dc07c426430c4d6980ca77000178c2e029eec89ca940b3aa060a2787b8ffe0b"
+    },
+    {
+      "path": "tooling/tests/node-suite-manifest.json",
+      "before": "abca37113c9cd461e8fc9fcb1f3780a29d2115af75cd56d3308c3e220bb7f699",
+      "after": "e5ba0e294a111c38385564a609d6496817d5f901fc6508294b2ae2dfc0665174"
+    },
+    {
+      "path": "tooling/vite/federacio-iaia.test.mjs",
+      "before": "c19d184bf10489329376c358af576ff21df3e57ad2d7894b18d5db1b57c18f1d",
+      "after": "ed7d25840ba496b0ac00f504265265676dc184f9e07417e4b1b9d77fd9b4d6e0"
+    }
+  ],
+  "state": "accepted",
+  "afterSeal": "d863c155441b09590117b6eb2a6e30dacfebf30e6a62f0b502590644b8434d0f"
+}

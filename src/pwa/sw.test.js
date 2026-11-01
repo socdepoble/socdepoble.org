@@ -46,6 +46,7 @@ function memoriesFalses(inicials = {}) {
   };
   const caches = {
     open: vi.fn(async (nom) => memoria(nom)),
+    has: vi.fn(async (nom) => memories.has(nom)),
     keys: async () => [...memories.keys()],
     delete: vi.fn(async (nom) => memories.delete(nom))
   };
@@ -337,6 +338,21 @@ describe('memòries: neteja i poda (pures)', () => {
     expect(sobrants(entrades(1, 1, 1), 0, 100)).toEqual(['a', 'b']);
   });
 
+  test('L5-SW-01: una clau protegida no ix encara que siga la més vella; compta per als sostres i ix la següent', () => {
+    const clau = (nom) => ({ url: `${ORIGEN}/assets/${nom}.js` });
+    const llista = [clau('react-x'), clau('vell-a'), clau('vell-b'), clau('nou')].map((c) => ({ clau: c, mida: 10 }));
+    const fora = (protegides, maxim = 2, maximBytes = 100) =>
+      Array.from(api.clausSobrants(llista, maxim, maximBytes, protegides)).map((c) => c.url);
+    // Sense protegides, la FIFO de sempre: fora react i la següent.
+    expect(fora(undefined)).toEqual([clau('react-x').url, clau('vell-a').url]);
+    // Amb react protegida, es queda i n'ixen dos dels altres: les entrades tornen al sostre.
+    expect(fora(new Set([clau('react-x').url]))).toEqual([clau('vell-a').url, clau('vell-b').url]);
+    // Per bytes igual: la protegida compta per al total i ix la següent més vella.
+    expect(fora(new Set([clau('react-x').url]), 10, 30)).toEqual([clau('vell-a').url]);
+    // La més nova tampoc ix mai, encara que la resta siguen protegides.
+    expect(fora(new Set([clau('react-x').url, clau('vell-a').url, clau('vell-b').url]), 1, 100)).toEqual([]);
+  });
+
   test('la mida es llig de la clau; sense mida, compta zero', () => {
     const clau = (valor) => ({ headers: new Headers(valor === undefined ? {} : { [api.CAPCALERA_MIDA]: valor }) });
     expect(api.midaDeLaClau(clau('1056190'))).toBe(1056190);
@@ -348,8 +364,11 @@ describe('memòries: neteja i poda (pures)', () => {
   });
 
   test('els sostres: més entrades que chunks té un build i més del doble del seu JS', () => {
-    expect(api.MAXIM_RECURSOS).toBe(300);
-    expect(api.MAXIM_BYTES).toBe(8 * 1024 * 1024);
+    // 261101: 354 chunks amb empremta i 7,1 MB de JS per build.
+    expect(api.MAXIM_RECURSOS).toBe(600);
+    expect(api.MAXIM_BYTES).toBe(16 * 1024 * 1024);
+    expect(api.MAXIM_RECURSOS).toBeGreaterThan(354);
+    expect(api.MAXIM_BYTES).toBeGreaterThan(2 * 7131819);
     expect(api.CAPCALERA_MIDA).toBe('x-sdp-mida');
   });
 });
@@ -480,7 +499,7 @@ describe('la closca de les apps (pures)', () => {
     expect(api.recursosPerArrencar(clauDeCloscaDesada([], { pagina: [CHUNK_APP] }))).toBeNull();
     expect(api.recursosPerArrencar(null)).toBeNull();
     // La llista no creix sense límit: com a molt una més de les que caben, i llavors no es dona.
-    const molts = Array.from({ length: 400 }, (_, i) => `/assets/vista${i}-AbCdEf12.js`);
+    const molts = Array.from({ length: api.MAXIM_RECURSOS + 100 }, (_, i) => `/assets/vista${i}-AbCdEf12.js`);
     const llistes = api.llistesDeLaClosca([JS], null, molts);
     expect(llistes.html.length + llistes.pagina.length).toBe(api.MAXIM_RECURSOS + 1);
     expect(api.recursosPerArrencar(new Request(`${ORIGEN}/app/bar/`, { headers: api.capcaleresDeLaClosca(llistes) }))).toBeNull();
@@ -510,7 +529,7 @@ describe('la closca de les apps (pures)', () => {
   });
 
   test('el missatge: com a molt MAXIM_RECURSOS recursos, i res si no és d\'escalfament o no porta res vàlid', () => {
-    const molts = Array.from({ length: 400 }, (_, i) => `/assets/chunk${i}-AbCdEf12.js`);
+    const molts = Array.from({ length: api.MAXIM_RECURSOS + 100 }, (_, i) => `/assets/chunk${i}-AbCdEf12.js`);
     expect(api.planDEscalfament({ tipus: 'sdp-escalfa', recursos: molts }, ORIGEN).recursos).toHaveLength(api.MAXIM_RECURSOS);
     for (const dades of [null, undefined, 'sdp-escalfa', 42, {}, { tipus: 'altre', recursos: [JS] }, { type: 'CACHE_URLS', recursos: [JS] },
       { tipus: 'sdp-escalfa' }, { tipus: 'sdp-escalfa', recursos: ['/rag-index.json'], closca: '/mur' }]) {
@@ -670,13 +689,13 @@ describe('el worker en marxa', () => {
     const MB = 1024 * 1024;
     const nou = 'a'.repeat(MB);
     const worker = carregaWorker({ caches, fetch: vi.fn(async () => resposta({ headers: { 'content-type': 'text/javascript' }, cos: nou })) });
-    // Set desplegaments vells d'1 MB cadascun i un chunk menut viu: 7 MB + 1 kB.
-    const velles = Array.from({ length: 7 }, (_, i) => `${ORIGEN}/assets/index-VELL000${i}.js`);
+    // Desplegaments vells d'1 MB cadascun fins a 1 MB del sostre, i un chunk menut viu.
+    const velles = Array.from({ length: worker.api.MAXIM_BYTES / MB - 1 }, (_, i) => `${ORIGEN}/assets/index-VELL${String(i).padStart(4, '0')}.js`);
     memories.set(worker.api.MEMORIA_RECURSOS, new Map([
       ...velles.map((url) => [url, { clau: clauDesada(url, MB), resposta: resposta() }]),
       [`${ORIGEN}/assets/Pista-BYY5kVd1.js`, { clau: clauDesada('/assets/Pista-BYY5kVd1.js', 1024), resposta: resposta() }]
     ]));
-    await demana(worker, peticio(JS)); // un chunk d'entrada nou d'1 MB: 8 MB + 1 kB > 8 MB
+    await demana(worker, peticio(JS)); // un chunk d'entrada nou d'1 MB: el sostre + 1 kB
     const claus = [...memories.get(worker.api.MEMORIA_RECURSOS).keys()];
     expect(claus).not.toContain(velles[0]);
     expect(claus).toContain(velles[1]);
@@ -684,6 +703,92 @@ describe('el worker en marxa', () => {
     expect(claus.at(-1)).toBe(`${ORIGEN}${JS}`);
     const total = [...memories.get(worker.api.MEMORIA_RECURSOS).values()].reduce((suma, { clau }) => suma + worker.api.midaDeLaClau(clau), 0);
     expect(total).toBeLessThanOrEqual(worker.api.MAXIM_BYTES);
+  });
+
+  /* L5-SW-01 (261101) · React i DOMPurify (trossDArrencada de vite.config.js)
+     conserven el nom entre desplegaments i un encert no els torna a inserir:
+     són els més vells de la memòria. Deixa la memòria plena amb el de React
+     el primer, la closca de /app/bar/ (confirmada, demana React) i, amb
+     `mesNova`, una closca més nova encara sense confirmar. */
+  const REACT = '/assets/react-ya5lcH60.js';
+  const MUR = '/assets/Mur-NouNou12.js';
+  function memoriaPlenaAmbReactVell({ ambCloscaConfirmada = true, mesNova = false } = {}) {
+    const { caches, memories } = memoriesFalses();
+    const estat = { xarxa: true };
+    const worker = carregaWorker({ caches, fetch: vi.fn(async () => { if (!estat.xarxa) throw new TypeError('Failed to fetch'); return jsDeLaXarxa(); }) });
+    const vells = Array.from({ length: worker.api.MAXIM_RECURSOS - 3 }, (_, i) => `/assets/vell${i}-AAAAAAAA.js`);
+    memories.set(worker.api.MEMORIA_RECURSOS, new Map([REACT, ...vells, JS, CHUNK_APP].map((cami) =>
+      [`${ORIGEN}${cami}`, { clau: clauDesada(cami, 1000), resposta: jsDeLaXarxa() }])));
+    const closca = htmlDeLaClosca();
+    if (ambCloscaConfirmada) {
+      const closques = new Map([[`${ORIGEN}/app/bar/`, { clau: clauDeCloscaDesada([JS, REACT]), resposta: closca }]]);
+      if (mesNova) closques.set(`${ORIGEN}/app/foo/`, { clau: clauDeCloscaDesada(['/assets/index-NouBuild.js'], { cami: '/app/foo/', pagina: null }), resposta: htmlDeLaClosca() });
+      memories.set(worker.api.MEMORIA_CLOSCA, closques);
+    }
+    return { caches, memories, worker, estat, closca, vells };
+  }
+
+  test('L5-SW-01: la poda no s\'endú els recursos de la closca confirmada, encara que siguen els més vells; sense xarxa, continua arrencant', async () => {
+    const { memories, worker, estat, closca, vells } = memoriaPlenaAmbReactVell();
+    // Fora de /app/*, la persona obri el Mur: un chunk nou passa del sostre d'entrades.
+    await demana(worker, peticio(MUR));
+    const claus = [...memories.get(worker.api.MEMORIA_RECURSOS).keys()];
+    expect(claus).toHaveLength(worker.api.MAXIM_RECURSOS);
+    expect(claus).toContain(`${ORIGEN}${REACT}`);
+    expect(claus).not.toContain(`${ORIGEN}${vells[0]}`);
+    expect(claus.at(-1)).toBe(`${ORIGEN}${MUR}`);
+    estat.xarxa = false;
+    const { resposta: r } = await demana(worker, peticio('/app/bar/tpv', { mode: 'navigate' }));
+    expect(r).toBe(closca);
+  });
+
+  test('L5-SW-01: si la closca més nova encara no està confirmada, protegix la confirmada anterior', async () => {
+    const { memories, worker, estat, closca } = memoriaPlenaAmbReactVell({ mesNova: true });
+    await demana(worker, peticio(MUR));
+    expect([...memories.get(worker.api.MEMORIA_RECURSOS).keys()]).toContain(`${ORIGEN}${REACT}`);
+    estat.xarxa = false;
+    expect((await demana(worker, peticio('/app/bar/tpv', { mode: 'navigate' }))).resposta).toBe(closca);
+  });
+
+  test('L5-SW-01: sense cap closca, la FIFO de sempre i cap memòria de closca nova', async () => {
+    const { caches, memories, worker } = memoriaPlenaAmbReactVell({ ambCloscaConfirmada: false });
+    await demana(worker, peticio(MUR));
+    expect([...memories.get(worker.api.MEMORIA_RECURSOS).keys()]).not.toContain(`${ORIGEN}${REACT}`);
+    expect(memories.has(worker.api.MEMORIA_CLOSCA)).toBe(false);
+    expect(caches.open.mock.calls.map(([nom]) => nom)).not.toContain(worker.api.MEMORIA_CLOSCA);
+  });
+
+  /* Gauntlet transversal 261101 (D-V-02) · Amb DUES closques confirmades de builds diferents, la poda
+     protegix la MÉS NOVA (la darrera de la memòria de closques), com diuen sw.js i l'ADR: ixen els
+     recursos exclusius de la vella i es queden els de la nova. Les proves d'abans només tenien una
+     closca confirmada, i passaven protegint la més vella o totes. */
+  test('D-V-02: amb dues closques confirmades, la poda protegix la més nova; la vella perd els seus recursos exclusius', async () => {
+    const { caches, memories } = memoriesFalses();
+    const estat = { xarxa: true };
+    const worker = carregaWorker({ caches, fetch: vi.fn(async () => { if (!estat.xarxa) throw new TypeError('Failed to fetch'); return jsDeLaXarxa(); }) });
+    const VELL = { entrada: '/assets/index-VellVell.js', exclusiu: '/assets/AppBar-VellBld1.js' };
+    const NOU = { entrada: '/assets/index-NouNou12.js', exclusiu: '/assets/AppFoo-NouBld12.js' };
+    // Els exclusius de cada build són els més vells de la memòria (primer el de la vella), i el sostre és ple.
+    const vells = Array.from({ length: worker.api.MAXIM_RECURSOS - 4 }, (_, i) => `/assets/vell${i}-AAAAAAAA.js`);
+    memories.set(worker.api.MEMORIA_RECURSOS, new Map([VELL.exclusiu, NOU.exclusiu, ...vells, VELL.entrada, NOU.entrada].map((cami) =>
+      [`${ORIGEN}${cami}`, { clau: clauDesada(cami, 1000), resposta: jsDeLaXarxa() }])));
+    const closcaVella = htmlDeLaClosca();
+    const closcaNova = htmlDeLaClosca();
+    // La memòria de closques guarda en ordre d'arribada: /app/bar/ (build vell) abans que /app/foo/ (build nou).
+    memories.set(worker.api.MEMORIA_CLOSCA, new Map([
+      [`${ORIGEN}/app/bar/`, { clau: clauDeCloscaDesada([VELL.entrada], { cami: '/app/bar/', pagina: [VELL.exclusiu] }), resposta: closcaVella }],
+      [`${ORIGEN}/app/foo/`, { clau: clauDeCloscaDesada([NOU.entrada], { cami: '/app/foo/', pagina: [NOU.exclusiu] }), resposta: closcaNova }]
+    ]));
+    await demana(worker, peticio(MUR));
+    const claus = [...memories.get(worker.api.MEMORIA_RECURSOS).keys()];
+    expect(claus).toHaveLength(worker.api.MAXIM_RECURSOS);
+    expect(claus).not.toContain(`${ORIGEN}${VELL.exclusiu}`);
+    expect(claus).toContain(`${ORIGEN}${NOU.exclusiu}`);
+    expect(claus).toContain(`${ORIGEN}${vells[0]}`);
+    // Sense xarxa, la closca nova arrenca; la vella, sense el seu recurs exclusiu, dona la pàgina honesta.
+    estat.xarxa = false;
+    expect((await demana(worker, peticio('/app/foo/tpv', { mode: 'navigate' }))).resposta).toBe(closcaNova);
+    expect((await demana(worker, peticio('/app/bar/tpv', { mode: 'navigate' }))).resposta.status).toBe(503);
   });
 
   test('activate esborra només les memòries velles pròpies i les de Workbox, i reclama els clients', async () => {
@@ -994,11 +1099,15 @@ describe('l\'escalfament que demana la pàgina d\'una app', () => {
     const { caches, memories } = memoriesFalses();
     const MB = 1024 * 1024;
     const worker = carregaWorker({ caches, fetch: vi.fn(async () => jsDeLaXarxa('a'.repeat(MB))) });
-    await missatge(worker, { tipus: 'sdp-escalfa', recursos: Array.from({ length: 12 }, (_, i) => `/assets/gran${i}-CCCCCCCC.js`) });
+    // Quatre MB més dels que hi caben: la poda ha de treballar.
+    const quants = worker.api.MAXIM_BYTES / MB + 4;
+    await missatge(worker, { tipus: 'sdp-escalfa', recursos: Array.from({ length: quants }, (_, i) => `/assets/gran${i}-CCCCCCCC.js`) });
     const desades = [...memories.get(worker.api.MEMORIA_RECURSOS).values()];
     const total = desades.reduce((suma, { clau }) => suma + worker.api.midaDeLaClau(clau), 0);
     expect(total).toBeLessThanOrEqual(worker.api.MAXIM_BYTES);
-    expect(desades.at(-1).clau.url).toBe(`${ORIGEN}/assets/gran11-CCCCCCCC.js`);
+    expect(desades.length).toBeLessThan(quants);
+    expect(desades.map(({ clau }) => clau.url)).not.toContain(`${ORIGEN}/assets/gran0-CCCCCCCC.js`);
+    expect(desades.at(-1).clau.url).toBe(`${ORIGEN}/assets/gran${quants - 1}-CCCCCCCC.js`);
   });
 
   test('sense xarxa para al primer error: no insistix, no desa res i no llança', async () => {

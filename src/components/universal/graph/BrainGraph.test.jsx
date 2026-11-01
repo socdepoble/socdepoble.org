@@ -1,12 +1,13 @@
 import React from 'react';
 import { act, render, screen, fireEvent, cleanup, within } from '@testing-library/react';
 import { afterEach, beforeEach, expect, test, vi } from 'vitest';
-import BrainGraph from './BrainGraph';
+import BrainGraph, { grafDeLaWiki } from './BrainGraph';
 import useForceLayout from './useForceLayout';
-vi.mock('../../../data/wikiManifest', () => ({ wikiManifest: {
+const MANIFEST = {
   categories: [{ id: 'cat', label: 'Saber' }],
   items: [{ id: 'doc', title: 'Olivera', categoryId: 'cat', tags: ['poble'] }]
-} }));
+};
+const GRAF = grafDeLaWiki(MANIFEST);
 vi.mock('./useForceLayout', () => ({ default: vi.fn(({ nodes }) => ({ current: nodes.map((node, i) => ({ ...node, x: 350 + i * 70, y: 300 })) })) }));
 
 /* Fotogrames a mà: `buida` els executa amb un rellotge que avança 16 ms per
@@ -65,7 +66,7 @@ beforeEach(() => {
 afterEach(() => { cleanup(); vi.restoreAllMocks(); vi.unstubAllGlobals(); });
 
 test('explora metadades dels tres tipus amb teclat', () => {
-  render(<BrainGraph />);
+  render(<BrainGraph graf={GRAF} />);
   const select = screen.getByRole('combobox');
   for (const [id, type] of [['doc', 'Document'], ['cat', 'Categoria'], ['tag_poble', 'Etiqueta']]) {
     fireEvent.change(select, { target: { value: id } });
@@ -74,7 +75,7 @@ test('explora metadades dels tres tipus amb teclat', () => {
 });
 
 test('la rodeta sense tecla fa zoom centrat en el punter, i no desplaça la pàgina', () => {
-  const { container } = render(<BrainGraph />);
+  const { container } = render(<BrainGraph graf={GRAF} />);
   const canvas = container.querySelector('canvas');
   expect(vista()).toEqual({ x: 0, y: 0, k: 1 });
 
@@ -93,7 +94,7 @@ test('la rodeta sense tecla fa zoom centrat en el punter, i no desplaça la pàg
 });
 
 test('els esdeveniments d’un fotograma fan un sol pintat i cap re-render', () => {
-  const { container } = render(<BrainGraph />);
+  const { container } = render(<BrainGraph graf={GRAF} />);
   const canvas = container.querySelector('canvas');
   const renders = useForceLayout.mock.calls.length;
   const abans = pintats.length;
@@ -114,7 +115,7 @@ test('els esdeveniments d’un fotograma fan un sol pintat i cap re-render', () 
 });
 
 test('la pinça del trackpad (ctrl) seguix els dits i el zoom respecta els límits', () => {
-  const { container } = render(<BrainGraph />);
+  const { container } = render(<BrainGraph graf={GRAF} />);
   const canvas = container.querySelector('canvas');
   expect(rodeta(canvas, { deltaY: -10, ctrlKey: true }).defaultPrevented).toBe(true);
   buida();
@@ -134,7 +135,7 @@ test('la pinça del trackpad (ctrl) seguix els dits i el zoom respecta els lími
 });
 
 test('la rodeta en línies (Firefox) es passa a píxels', () => {
-  const { container } = render(<BrainGraph />);
+  const { container } = render(<BrainGraph graf={GRAF} />);
   rodeta(container.querySelector('canvas'), { deltaY: 3, deltaMode: 1 });
   buida();
   expect(vista().k).toBeCloseTo(Math.exp(-3 * 16 * 0.002));
@@ -142,7 +143,7 @@ test('la rodeta en línies (Firefox) es passa a píxels', () => {
 
 test('pinça amb dos dits: escala amb la distància i es mou amb el punt mitjà', () => {
   const onNodeClick = vi.fn();
-  const { container } = render(<BrainGraph onNodeClick={onNodeClick} />);
+  const { container } = render(<BrainGraph graf={GRAF} onNodeClick={onNodeClick} />);
   const canvas = container.querySelector('canvas');
   punter(canvas, 'pointerdown', 1, 100, 100);
   punter(canvas, 'pointerdown', 2, 200, 100);
@@ -158,7 +159,7 @@ test('pinça amb dos dits: escala amb la distància i es mou amb el punt mitjà'
 });
 
 test('els botons de zoom no desfan la pausa de la simulació', () => {
-  const { container } = render(<BrainGraph />);
+  const { container } = render(<BrainGraph graf={GRAF} />);
   fireEvent.click(screen.getByTitle('Pausar simulació'));
   rodeta(container.querySelector('canvas'), { deltaY: 100 });
   fireEvent.click(screen.getByTitle('Apropar'));
@@ -170,7 +171,7 @@ test('els botons de zoom no desfan la pausa de la simulació', () => {
 
 test('clic selecciona; arrossegar no selecciona', () => {
   const onNodeClick = vi.fn();
-  const { container } = render(<BrainGraph onNodeClick={onNodeClick} />);
+  const { container } = render(<BrainGraph graf={GRAF} onNodeClick={onNodeClick} />);
   const canvas = container.querySelector('canvas');
   fireEvent.pointerDown(canvas, { button: 0, clientX: 490, clientY: 300 });
   fireEvent.pointerUp(canvas, { clientX: 490, clientY: 300 });
@@ -183,7 +184,7 @@ test('clic selecciona; arrossegar no selecciona', () => {
 });
 
 test('amb `enquadra`, el graf quiet s’enquadra sol fins que l’usuari el mou', () => {
-  const { container } = render(<BrainGraph enquadra />);
+  const { container } = render(<BrainGraph graf={GRAF} enquadra />);
   // Tres nodes en fila (x 350–490, y 300) en un canvas de 800 × 600: escala màxima 3.
   useForceLayout.mock.lastCall[0].onAssentat();
   buida();
@@ -204,7 +205,7 @@ test('canviar el tema repinta, també incrustat en un shadow root', async () => 
     amfitrio.dataset.theme = 'light';
     const container = document.createElement('div');
     (incrustat ? amfitrio.attachShadow({ mode: 'closed' }) : amfitrio).appendChild(container);
-    const { unmount } = render(<BrainGraph />, { container });
+    const { unmount } = render(<BrainGraph graf={GRAF} />, { container });
     const abans = pintats.length;
     await act(async () => { amfitrio.dataset.theme = 'dark'; });
     expect(pintats.length).toBeGreaterThan(abans);
@@ -217,7 +218,7 @@ test('canviar el tema repinta, també incrustat en un shadow root', async () => 
    (l'Explorador de la Consola). Sense estos props, la Wiki no canvia. */
 test('mode controlat: la selecció és de qui munta el graf, i el graf només l’avisa', () => {
   const onSeleccio = vi.fn();
-  const { rerender } = render(<BrainGraph seleccio="cat" onSeleccio={onSeleccio} />);
+  const { rerender } = render(<BrainGraph graf={GRAF} seleccio="cat" onSeleccio={onSeleccio} />);
   const select = screen.getByRole('combobox');
   expect(select.value).toBe('cat');
   expect(screen.getByText('Categoria', { selector: 'dd' })).toBeTruthy();
@@ -225,7 +226,7 @@ test('mode controlat: la selecció és de qui munta el graf, i el graf només l�
   fireEvent.change(select, { target: { value: 'doc' } });
   expect(onSeleccio).toHaveBeenCalledWith('doc');
   expect(screen.getByRole('combobox').value).toBe('cat');
-  rerender(<BrainGraph seleccio="doc" onSeleccio={onSeleccio} />);
+  rerender(<BrainGraph graf={GRAF} seleccio="doc" onSeleccio={onSeleccio} />);
   expect(screen.getByRole('combobox').value).toBe('doc');
   expect(screen.getByText('Document', { selector: 'dd' })).toBeTruthy();
 });
@@ -233,7 +234,7 @@ test('mode controlat: la selecció és de qui munta el graf, i el graf només l�
 test('amb inspector={false} no hi ha panell, i el clic al canvas tria pel pare', () => {
   const onSeleccio = vi.fn();
   const onNodeClick = vi.fn();
-  const { container } = render(<BrainGraph seleccio="" onSeleccio={onSeleccio} onNodeClick={onNodeClick} inspector={false} />);
+  const { container } = render(<BrainGraph graf={GRAF} seleccio="" onSeleccio={onSeleccio} onNodeClick={onNodeClick} inspector={false} />);
   expect(container.querySelector('.sdp-brain-graph-inspector')).toBeNull();
   expect(screen.queryByRole('combobox')).toBeNull();
   const canvas = container.querySelector('canvas');
@@ -251,14 +252,14 @@ test('amb inspector={false} no hi ha panell, i el clic al canvas tria pel pare',
 
 test('sense `seleccio`, el graf guarda la tria ell i també l’avisa', () => {
   const onSeleccio = vi.fn();
-  render(<BrainGraph onSeleccio={onSeleccio} />);
+  render(<BrainGraph graf={GRAF} onSeleccio={onSeleccio} />);
   fireEvent.change(screen.getByRole('combobox'), { target: { value: 'doc' } });
   expect(onSeleccio).toHaveBeenCalledWith('doc');
   expect(screen.getByRole('combobox').value).toBe('doc');
 });
 
 test('sense `enquadra` (la Wiki), la simulació quieta no mou la vista', () => {
-  render(<BrainGraph />);
+  render(<BrainGraph graf={GRAF} />);
   useForceLayout.mock.lastCall[0].onAssentat();
   buida();
   expect(vista()).toEqual({ x: 0, y: 0, k: 1 });

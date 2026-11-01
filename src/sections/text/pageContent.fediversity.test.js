@@ -387,7 +387,31 @@ describe('honestedat: cada afirmació ancorada al codi', () => {
     for (const peca of ['export async function exportaMunicipiOpenData(', 'export async function verificaPaquetOpenData(', 'data/llicencies.md']) expect([peca, opendata.includes(peca)]).toEqual([peca, true]);
     expect(existix('src/data/exportaMunicipiOpenData.test.js')).toBe(true);
     expect(tercera).toContain('des de la fitxa pública de cada poble es descarrega un paquet estàndard amb les dades públiques del poble');
-    expect(tercera).toContain('El generador del paquet, en la versió 1.1.0 del format, i el seu verificador tenen proves.');
+    /* T2 · D04/D10 (assalt 261101) · La 1.2.0, el verificador i el restaurador, cada un amb les seues proves. */
+    expect(tercera).toContain("El generador del paquet, en la versió 1.2.0 del format, el seu verificador i un restaurador que comprova cada SHA-256 abans de tornar a carregar el poble en un altre servidor de dades tenen proves. Hui el restaurador només s'executa a les proves, sobre l'adaptador local, sense cap pantalla.");
+    /* Gauntlet transversal 261101 (VE-02) · Qui porta les notícies és el paquet, no el restaurador
+       de la frase d'abans: la frase nomena el seu subjecte. */
+    expect(tercera).toContain("sense cap pantalla. Hui el paquet porta les notícies i els actes de l'agenda");
+    expect(tercera).not.toMatch(/pantalla\. Hui porta /);
+    /* Gauntlet transversal 261101 (H4-06) · L'adaptador local no és cap «altre servidor de dades» en
+       servei: la partida 1 diu que n'hi ha un de sol. */
+    expect(tercera).not.toContain("(hui, l'adaptador local)");
+    for (const fitxer of ['src/data/importaMunicipiOpenData.js', 'src/data/importaMunicipiOpenData.test.js', 'src/data/importaMunicipiOpenData.adaptadorLocal.test.js']) {
+      expect([fitxer, existix(fitxer)]).toEqual([fitxer, true]);
+    }
+    /* «Només s'executa a les proves … sense cap pantalla»: cap mòdul de l'aplicació (src/ sense les proves)
+       importa el restaurador, llegit de l'AST com a la prova del generador. Si un Tauler l'importa, la
+       prova cau i les dues frases de la partida 3 s'han de tornar a escriure. */
+    const importaElRestaurador = (codi, fitxer) => importaElModul(codi, 'importaMunicipiOpenData', fitxer);
+    expect(importaElRestaurador("import { importaMunicipiOpenData } from '../../data/importaMunicipiOpenData.js';\n", 'peca.jsx')).toBe(true);
+    expect(importaElRestaurador('/* el restaurador (importaMunicipiOpenData.js) */\nexport const x = 1;\n', 'peca.js')).toBe(false);
+    const srcRestaurador = path.join(ARREL, 'src');
+    const quiRestaura = readdirSync(srcRestaurador, { recursive: true }).map(String)
+      .filter((fitxer) => /\.(?:js|jsx)$/.test(fitxer) && !/\.test\.(?:js|jsx)$/.test(fitxer) && !fitxer.endsWith('importaMunicipiOpenData.js'))
+      .filter((fitxer) => importaElRestaurador(readFileSync(path.join(srcRestaurador, fitxer), 'utf8'), fitxer));
+    expect(quiRestaura).toEqual([]);
+    expect(llegix('src/data/importaMunicipiOpenData.js')).toContain('export async function importaMunicipiOpenData(');
+    expect(llegix('src/data/local/dadesObertesLocal.js')).toContain('async restauraDadesObertes(');
     // El format que diu: JSON-LD, Data Package v2 i el manifest SHA-256 (BagIt).
     for (const peca of ['datapackage.json', 'manifest-sha256.txt', 'application/ld+json']) expect([peca, opendata.includes(peca)]).toEqual([peca, true]);
     expect(tercera).toContain('en JSON-LD de schema.org i amb un Data Package v2 de Frictionless i un manifest SHA-256 per a comprovar cada fitxer');
@@ -405,14 +429,24 @@ describe('honestedat: cada afirmació ancorada al codi', () => {
     expect(quiLImporta).toContain('sections/pobles/DetallPoble.jsx');
     /* Revisió de la Ronda 2 (R-01, R2-COR-03) · El paquet diu què porta de veres: el directori d'entitats i la memòria en Markdown; notícies, agenda i memòria cultural encara no.
        01-11-2026 · Ancorat al comportament: el que recullDadesPubliquesDelMunicipi encara deixa a «pendents» no s'exporta. */
+    /* T2 · D04/D10 (assalt 261101) · El port de producció (Supabase) servix les notícies i l'agenda en anònim, i
+       memòria cultural i memòria oral a null (src/data/supabase/dadesObertes.js): el doble de davall en té la forma, i
+       la pàgina ho ha de dir col·lecció a col·lecció. */
     const { recullDadesPubliquesDelMunicipi } = await import('../../data/exportaMunicipiOpenData.js');
-    const port = new Proxy({}, { get: (_, metode) => (metode === 'teCapacitat' ? () => true : metode === 'then' ? undefined : async () => []) });
+    const supabaseDadesObertes = senseComentaris(llegix('src/data/supabase/dadesObertes.js'));
+    expect(supabaseDadesObertes).toMatch(/noticies: llistaFitada\(perClau\.get\('feedPosts'\)[^\n]*\n\s*agenda: llistaFitada\(perClau\.get\('events'\)[^\n]*\n\s*memoria: null,\n\s*memoriaOral: null/);
+    const formaDeSupabase = { noticies: [], agenda: [], memoria: null, memoriaOral: null };
+    const port = new Proxy({}, { get: (_, metode) => (metode === 'teCapacitat' ? () => true : metode === 'then' ? undefined
+      : metode === 'llegixDadesObertes' ? async () => formaDeSupabase : async () => []) });
     const recollides = await recullDadesPubliquesDelMunicipi(port, { slug: 'la-torre-de-les-macanes', nom: 'La Torre de les Maçanes' });
     const pendentsDelPaquet = (recollides.pendents ?? []).map((pendent) => pendent.coleccio);
-    // Exportades = cap de les tres no és a «pendents»: aleshores la pàgina ho ha d'afirmar i no negar-ho.
-    expect(concorda(!['noticies', 'agenda', 'memoria'].some((coleccio) => pendentsDelPaquet.includes(coleccio)),
-      tercera.includes("Hui porta el directori públic d'entitats en JSON-LD i una memòria en Markdown; les notícies, l'agenda i la memòria cultural encara no s'hi exporten."),
-      /porta (?:també )?les notícies/.test(tercera))).toBe(true);
+    // Exportada = no és a «pendents»: aleshores la pàgina ho ha d'afirmar i no negar-ho; pendent, al revés.
+    const exportada = (coleccio) => !pendentsDelPaquet.includes(coleccio);
+    expect(concorda(exportada('noticies'), /les notícies[^.;]*encara no s'hi exporten/.test(tercera), /porta les notícies/.test(tercera))).toBe(true);
+    expect(concorda(exportada('agenda'), /l'agenda[^.;]*encara no s'hi exporten/.test(tercera), /els actes de l'agenda/.test(tercera))).toBe(true);
+    expect(concorda(exportada('memoria'), /la memòria cultural[^.;]*encara no s'hi exporten/.test(tercera), /porta[^.;]*la memòria cultural/.test(tercera))).toBe(true);
+    expect(concorda(exportada('memoriaOral'), /les fitxes de memòria oral encara no s'hi exporten/.test(tercera), /porta[^.;]*les fitxes de memòria oral/.test(tercera))).toBe(true);
+    expect(pendentsDelPaquet).toEqual(['memoria', 'memoriaOral', 'configuracio']);
     expect(tercera).not.toContain('memòria de les fonts pendents');
     // ActivityPub: la fase 1 (lectura) i les seues proves, al repositori.
     for (const fitxer of ['src/data/activitypub.js', 'src/data/activitypub.test.js', 'tooling/seo/genera-federacio.mjs', 'tooling/seo/genera-federacio.test.mjs']) expect([fitxer, existix(fitxer)]).toEqual([fitxer, true]);
@@ -618,12 +652,14 @@ describe('honestedat: cada afirmació ancorada al codi', () => {
     expect(tot).not.toMatch(/(?:^|[^\p{L}])(?:aquest|aquesta|aquests|aquestes|avui|anglès)(?=$|[^\p{L}])/iu);
   });
 
-  test('F4 · la partida 1 i el document del Model B diuen les xifres exactes del contracte (32 nucli, 31 capacitats i 111 totals) sense dades inventades', () => {
+  /* T2 · D04/D10 (assalt 261101) · Refet amb el contracte final: 'versioClient' (T8b) i 'dadesObertes' i
+     'restauracioDadesObertes' (T2) hi afigen tres capacitats. */
+  test('F4 · la partida 1 i el document del Model B diuen les xifres exactes del contracte (32 nucli, 34 capacitats i 114 totals) sense dades inventades', () => {
     const primeraFet = apartat(0, 'Fet hui (verificable)');
     const primeraPendent = apartat(0, 'Pendent');
     expect(CONTRACTE_NUCLI).toHaveLength(32);
-    expect(Object.keys(CAPACITATS)).toHaveLength(31);
-    expect(CONTRACTE_BACKEND).toHaveLength(111);
+    expect(Object.keys(CAPACITATS)).toHaveLength(34);
+    expect(CONTRACTE_BACKEND).toHaveLength(114);
     expect(primeraFet).toContain(
       `L'inventari de l'API del port neutral (${CONTRACTE_NUCLI.length} mètodes del nucli i ${Object.keys(CAPACITATS).length} capacitats atòmiques a src/data/contracte.js) i dels requisits d'allotjament verificables del Model B, en esborrany a la Wiki de Poble.`
     );
@@ -646,16 +682,19 @@ describe('honestedat: cada afirmació ancorada al codi', () => {
       'utf8'
     );
     expect(docModelB).toContain('32 operacions obligatòries del Nucli (`CONTRACTE_NUCLI`)');
-    expect(docModelB).toContain('31 capacitats atòmiques opcionals (`CAPACITATS`)');
-    expect(docModelB).toContain('79 mètodes addicionals');
-    expect(docModelB).toContain('111 mètodes');
+    expect(docModelB).toContain('34 capacitats atòmiques opcionals (`CAPACITATS`)');
+    expect(docModelB).toContain('82 mètodes addicionals');
+    expect(docModelB).toContain('114 mètodes');
+    /* Gauntlet transversal 261101 (H4-02) · Cap recompte vell (els 111 de la Ronda 2, o qualsevol de 100 a 113)
+       d'operacions o de mètodes: el document diu els 114 de CONTRACTE_BACKEND a tot arreu. */
+    expect(docModelB).not.toMatch(/\b1(0\d|1[0-3]) (operacions|mètodes)/);
     expect(docModelB).not.toMatch(/12\s*€|2\s*vCPU|40\s*GB|CouchDB|PocketBase/i);
   });
 });
 
 test('Lot5 · el document enumera exactament els noms reals del nucli i les capacitats',()=>{
  const doc=readFileSync(path.join(ARREL,'_wiki_de_poble/02_saber/architecture/api_port_neutral_i_allotjament_model_b.md'),'utf8');
- const nucli=doc.slice(doc.indexOf('## 32 operacions'),doc.indexOf('## 31 capacitats'));
+ const nucli=doc.slice(doc.indexOf('## 32 operacions'),doc.indexOf('## 34 capacitats'));
  expect([...nucli.matchAll(/^- `([^`]+)`$/gm)].map(m=>m[1])).toEqual(CONTRACTE_NUCLI);
  const files=[...doc.matchAll(/^\| `([^`]+)` \| (.+) \|$/gm)].map(m=>[m[1],[...m[2].matchAll(/`([^`]+)`/g)].map(m=>m[1])]);expect(Object.fromEntries(files)).toEqual(CAPACITATS);
  for(const ruta of [...doc.matchAll(/`((?:src|tooling|wordpress-plugin)\/[a-zA-Z0-9_./-]+\.(?:js|jsx|mjs|nix|php))`/g)].map(m=>m[1]))expect(existix(ruta),ruta).toBe(true);
@@ -721,15 +760,20 @@ describe('01-11-2026 · fet hui, verificable, i enllaçat en un clic', () => {
   });
 
   /* Carrils B1, B2 i B3 de la marató (01-11-2026) · Cada frase, ancorada al seu codi. */
-  test('partida 3: el format 1.1.0 de les dades obertes, i el que encara no s’exporta', async () => {
+  /* T2 · D04/D10 (assalt 261101) · La 1.2.0 (memòria oral) i el Pendent nou. */
+  test('partida 3: el format 1.2.0 de les dades obertes, i el que encara no s’exporta', async () => {
     const { VERSIO_FORMAT } = await import('../../data/exportaMunicipiOpenData.js');
-    expect(VERSIO_FORMAT).toBe('1.1.0');
+    expect(VERSIO_FORMAT).toBe('1.2.0');
     const opendata = llegix('src/data/exportaMunicipiOpenData.js');
     for (const peca of ["'@type': 'NewsArticle'", "'@type': 'Event'", "'@type': 'CreativeWork'", "'BEGIN:VCALENDAR'", "mediatype: 'text/calendar'"]) expect([peca, opendata.includes(peca)]).toEqual([peca, true]);
-    expect(apartat(2, 'Pendent')).toContain("Exportar també les notícies, l'agenda i la memòria cultural de cada poble: el format del paquet ja les sap escriure (notícies NewsArticle, actes Event, també en iCalendar, i memòria CreativeWork), però l'aplicació encara no en té cap lectura pública garantida, i el Mas no té cap mòdul de memòria cultural.");
+    expect(apartat(2, 'Pendent')).toContain("Exportar també la memòria cultural i les fitxes de memòria oral revisades de cada poble: el format del paquet ja les sap escriure (memòria CreativeWork i fitxes en Open Knowledge Format v0.2), però el Mas no té cap mòdul de memòria cultural i el servidor de dades encara no desa cap fitxa de memòria oral revisada. Tornar a carregar un paquet en el servidor de dades de producció també és pendent: hui només el restaura, a les proves, l'adaptador local.");
+    for (const peca of ["nom: 'memoria-oral.jsonld'", 'markdownOkf(', "nom: 'okf/index.md'"]) expect([peca, opendata.includes(peca)]).toEqual([peca, true]);
     // Els motius, els mateixos que el paquet escriu a la seua memòria.
     expect(opendata).toContain("encara no hi ha cap lectura pública garantida d'estes dades");
     expect(opendata).toContain('el Mas no té cap mòdul de memòria cultural');
+    expect(opendata).toContain('el servidor de dades encara no desa cap fitxa de memòria oral revisada');
+    // «Hui només el restaura, a les proves, l'adaptador local»: Supabase no exporta restauraDadesObertes; l'adaptador local, sí (H4-06: cap pantalla l'importa, prova P1-23).
+    expect(senseComentaris(llegix('src/data/supabase/index.js'))).not.toContain('restauraDadesObertes');
   });
 
   test('partida 3: l’estructurador local de memòria oral, sense model, amb el botó del Bloc de Notes si el Bloc el porta; el Mètode Karpathy amb models no existix', async () => {
@@ -810,9 +854,11 @@ describe('01-11-2026 · fet hui, verificable, i enllaçat en un clic', () => {
     expect(iaia).toContain("export const RUTA_NODEINFO = '/.well-known/nodeinfo';");
     expect(iaia).toContain("export const RUTA_NODEINFO_21 = '/nodeinfo/2.1.json';");
     expect(llegix('tooling/seo/genera-federacio.mjs')).toMatch(/host-meta/);
-    // La bústia de La Torre pot estar buida, i la pàgina ho diu.
-    expect(textDe([...doc.querySelectorAll('li')].filter((li) => li.textContent.includes('/ap/outbox/la-torre-de-les-macanes.json'))))
-      .toContain("La de La Torre només porta les publicacions públiques d'entitats del poble, i pot estar buida.");
+    /* D05 (pla 261101_1246, carril T3) · La bústia de La Torre porta sempre la pàgina pública del poble
+       (paginaDelPoble de genera-federacio.mjs; la seua prova lliga esta frase al generador) i ja no pot estar buida. */
+    const bustiaTorre = textDe([...doc.querySelectorAll('li')].filter((li) => li.textContent.includes('/ap/outbox/la-torre-de-les-macanes.json')));
+    expect(bustiaTorre).toContain("La de La Torre porta la pàgina pública del poble i, quan n'hi ha, les publicacions públiques d'entitats del poble.");
+    expect(bustiaTorre).not.toContain('pot estar buida');
     // I la descàrrega de les dades obertes, des de Pobles.
     expect(elementAmb('Des de la fitxa de cada poble es descarrega').querySelector('a').getAttribute('href')).toBe('/pobles');
   });

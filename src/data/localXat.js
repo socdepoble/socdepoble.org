@@ -61,6 +61,8 @@ const TEXT_MAXIM = 4096;
 const magatzems = new Map();
 /* Canals subscrits per fil: el mateix paper que `realtime.send` al servidor. */
 const subscriptors = new Map();
+// La subscripció pública no exposa el magatzem (ni les dades de la persona).
+const estatDelCanal = new WeakMap();
 
 /* Mateix format que el servidor: «SDP-XAT-NNN: text», amb `code` i `retriable`. */
 const errorXat = (codi, missatge) => Object.assign(new Error(`${codi}: ${missatge}`), { code: codi, retriable: false });
@@ -338,11 +340,11 @@ function conversaDe(estat, fil, meu, jo) {
 /* ─────────────────────────── Canals ─────────────────────────── */
 
 /** Avisa els canals del fil, després de tornar: com `realtime.send` del servidor. */
-function avisa(filId, seq) {
-  const canals = subscriptors.get(filId);
+function avisa(estat, filId, seq) {
+  const canals = subscriptors.get(estat)?.get(filId);
   if (!canals || !canals.size) return;
   for (const cb of [...canals]) {
-    queueMicrotask(() => { try { cb(null, { tipus: 'nous', filId, seq }); } catch { /* un canal trencat no atura els altres */ } });
+    queueMicrotask(() => { if (!canals.has(cb)) return; try { cb(null, { tipus: 'nous', filId, seq }); } catch { /* un canal trencat no atura els altres */ } });
   }
 }
 
@@ -395,7 +397,7 @@ function encarregaRespostaIAIA(estat, fil, pregunta) {
     try {
       if (meua !== generacio) return;
       const resposta = respostaIAIA(estat, fil, typeof text === 'string' && text.trim() ? text : RESPOSTA_IAIA);
-      avisa(fil.id, resposta.seq);
+      avisa(estat, fil.id, resposta.seq);
     } catch {
       /* Cap resposta: el sondeig de la interfície no hi trobarà res nou. */
     } finally {
@@ -490,7 +492,7 @@ export function createLocalXatAdapter() {
       /* F25 · Al fil de la IAIA l'avís el fa la resposta, quan arriba (un sol
          avís per pregunta, amb el seq de la resposta, com abans). */
       if (fil.tipus === 'iaia') encarregaRespostaIAIA(estat, fil, nou.text);
-      else avisa(filId, nou.seq);
+      else avisa(estat, filId, nou.seq);
       return copia(nou);
     },
 
@@ -601,18 +603,27 @@ export function createLocalXatAdapter() {
 
     /* Canal local: avisa quan entra un missatge al fil (la IAIA inclosa).
        El sondeig del context continua com a xarxa de seguretat. */
-    async subscribeToXat(filId, callback) {
+    async subscribeToXat(filId, callback, config = {}) {
       if (!filId || typeof callback !== 'function') return { subscription: null, error: null };
-      if (!subscriptors.has(filId)) subscriptors.set(filId, new Set());
-      subscriptors.get(filId).add(callback);
-      return { subscription: { filId, callback }, error: null };
+      const { estat } = magatzem(config);
+      if (!subscriptors.has(estat)) subscriptors.set(estat, new Map());
+      const fils = subscriptors.get(estat);
+      if (!fils.has(filId)) fils.set(filId, new Set());
+      fils.get(filId).add(callback);
+      const subscription = { filId, callback };
+      estatDelCanal.set(subscription, estat);
+      return { subscription, error: null };
     },
 
     async unsubscribeFromXat(subscription) {
-      const canals = subscription ? subscriptors.get(subscription.filId) : null;
+      const estat = subscription && estatDelCanal.get(subscription);
+      const fils = subscriptors.get(estat);
+      const canals = fils?.get(subscription?.filId);
       if (!canals) return;
       canals.delete(subscription.callback);
-      if (!canals.size) subscriptors.delete(subscription.filId);
+      estatDelCanal.delete(subscription);
+      if (!canals.size) fils.delete(subscription.filId);
+      if (!fils.size) subscriptors.delete(estat);
     }
   };
 }
@@ -620,6 +631,7 @@ export function createLocalXatAdapter() {
 /** Per a les proves: oblida tots els magatzems i els canals, i les respostes de la IAIA en curs. */
 export function reiniciaLocalXat() {
   magatzems.clear();
+  for (const fils of subscriptors.values()) for (const canals of fils.values()) canals.clear();
   subscriptors.clear();
   generacio += 1;
   respostesEnCurs.clear();

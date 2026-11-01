@@ -501,6 +501,20 @@
   }
   .sdp-buit__titol { margin: 0; font-size: var(--sdp-text-base); font-weight: 800; color: var(--sdp-text-titol); }
   .sdp-buit__text { max-width: 40ch; }
+  /* T8b · P0-23 (BOT-A2; assalt 261101) · La pantalla de l'app nativa massa
+     vella (natiu/CalActualitzar.jsx): un .sdp-buit que ocupa tota l'arrel
+     (#root és flex), sense passar per davall de la barra d'estat ni de la
+     Dynamic Island. Es centra amb marges automàtics al primer i a l'últim
+     fill, com les Pestanyes centrades: quan no hi cap (Android en apaïsat,
+     text del sistema gran) valen 0, el contingut comença dalt i es desplaça
+     sense tallar el títol. justify-content: safe center no és del Baseline
+     2022 (Safari 16, i l'app d'iOS arrenca des de la 16.0). */
+  .sdp-buit.sdp-cal-actualitzar {
+    flex: 1; overflow-y: auto;
+    padding-block: calc(var(--sdp-space-10) + env(safe-area-inset-top, 0px)) calc(var(--sdp-space-10) + env(safe-area-inset-bottom, 0px));
+  }
+  .sdp-buit.sdp-cal-actualitzar > :first-child { margin-block-start: auto; }
+  .sdp-buit.sdp-cal-actualitzar > :last-child { margin-block-end: auto; }
   .sdp-carregant { display: inline-flex; align-items: center; gap: var(--sdp-space-3); color: var(--sdp-text-suau); font-weight: 700; }
   .sdp-esquelet__forma { display: grid; gap: var(--sdp-space-3); }
   .sdp-esquelet__linia, .sdp-esquelet__media {

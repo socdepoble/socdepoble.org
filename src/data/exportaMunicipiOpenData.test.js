@@ -15,7 +15,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { afterEach, describe, expect, test, vi } from 'vitest';
 import { normalitzaSlugMunicipi, urlsDeMunicipi } from './activitypub.js';
-import { LIMIT_DIRECTORI_ENTITATS } from './contracte.js';
+import { LIMIT_DADES_OBERTES, LIMIT_DIRECTORI_ENTITATS } from './contracte.js';
 import {
   FORMAT_DADES_OBERTES, VERSIO_FORMAT, empaquetaZip, escapaMarkdown, exportaMunicipiOpenData, imatgeDe, jsonCanonic, llicenciaDe,
   preparaDadesObertesMunicipi, recullDadesPubliquesDelMunicipi, textDeCos, verificaPaquetOpenData
@@ -977,7 +977,7 @@ describe('recullDadesPubliquesDelMunicipi: només el que el port servix com a p�
     const port = portDe([]);
     const r = await recullDadesPubliquesDelMunicipi({ ...port, teCapacitat: () => false }, TORRE);
     expect(r.entitats).toBeNull();
-    expect(r.pendents.map((p) => p.coleccio)).toEqual(['directori', 'noticies', 'agenda', 'memoria', 'configuracio']);
+    expect(r.pendents.map((p) => p.coleccio)).toEqual(['directori', 'noticies', 'agenda', 'memoria', 'memoriaOral', 'configuracio']);
     expect(port.listPublicOrganizations).not.toHaveBeenCalled();
     /* V1-02 · Els motius ixen a memoria.md: valencià planer, sense noms de codi, decisions internes, anglés ni dos punts. */
     expect(Object.fromEntries(r.pendents.map(({ coleccio, motiu }) => [coleccio, motiu]))).toEqual({
@@ -985,6 +985,8 @@ describe('recullDadesPubliquesDelMunicipi: només el que el port servix com a p�
       noticies: "encara no hi ha cap lectura pública garantida d'estes dades",
       agenda: "encara no hi ha cap lectura pública garantida d'estes dades",
       memoria: 'el Mas no té cap mòdul de memòria cultural',
+      /* T2 · D04/D10 (1.2.0) · La memòria oral, sense la lectura pública, com les notícies. */
+      memoriaOral: "encara no hi ha cap lectura pública garantida d'estes dades",
       configuracio: "la personalització és de tot el node, no d'un poble, i la fitxa del poble no la inclou"
     });
     for (const { motiu } of r.pendents) {
@@ -1113,16 +1115,17 @@ function llegeixIcs(text) {
 const icsDe = (preparat) => preparat.fitxers.find((f) => f.nom === 'agenda.ics')?.text ?? null;
 const acteDeLaTorre = (extra) => ({ title: 'Acte', poble_id: TORRE.slug, author_org_id: RENTONAR, ...extra });
 
+/* T2 · D04/D10 (assalt 261101) · El format és la 1.2.0 (la memòria oral); l'agenda.ics és la de la 1.1.0, amb la versió del format. */
 describe('T3.1 · esquema 1.1.0 i agenda.ics (iCalendar, RFC 5545)', () => {
-  test('schemaVersion 1.1.0 a datapackage.json, memoria.md, bag-info.txt i el PRODID, i agenda.ics dins del sumari SHA-256', async () => {
-    expect(VERSIO_FORMAT).toBe('1.1.0');
+  test('schemaVersion a datapackage.json, memoria.md, bag-info.txt i el PRODID, i agenda.ics dins del sumari SHA-256', async () => {
+    expect(VERSIO_FORMAT).toBe('1.2.0');
     const r = await exporta(COMPLET());
     const fitxers = new Map(llegeixZip(r.zip).map(({ nom, dades }) => [nom.slice(ARREL.length + 1), dades]));
-    expect(r.datapackage.socdepoble).toMatchObject({ format: FORMAT_DADES_OBERTES, schemaVersion: '1.1.0', versio: '1.1.0' });
-    expect(descodifica(fitxers.get('data/memoria.md'))).toContain(`Paquet \`${FORMAT_DADES_OBERTES}\` (versió 1.1.0)`);
-    expect(descodifica(fitxers.get('bag-info.txt'))).toContain('Bag-Software-Agent: Sóc de Poble · exportaMunicipiOpenData 1.1.0\n');
+    expect(r.datapackage.socdepoble).toMatchObject({ format: FORMAT_DADES_OBERTES, schemaVersion: '1.2.0', versio: '1.2.0' });
+    expect(descodifica(fitxers.get('data/memoria.md'))).toContain(`Paquet \`${FORMAT_DADES_OBERTES}\` (versió 1.2.0)`);
+    expect(descodifica(fitxers.get('bag-info.txt'))).toContain('Bag-Software-Agent: Sóc de Poble · exportaMunicipiOpenData 1.2.0\n');
     const ics = fitxers.get('data/agenda.ics');
-    expect(descodifica(ics)).toContain('\r\nPRODID:-//Soc de Poble//exportaMunicipiOpenData 1.1.0//CA\r\n');
+    expect(descodifica(ics)).toContain('\r\nPRODID:-//Soc de Poble//exportaMunicipiOpenData 1.2.0//CA\r\n');
     // El seu hash al Data Package i al manifest, i el hash del manifest al tagmanifest.
     expect(r.datapackage.resources.find((x) => x.path === 'agenda.ics')).toEqual({
       name: 'agenda-ics', path: 'agenda.ics', title: 'Agenda (iCalendar, RFC 5545)', format: 'ics', mediatype: 'text/calendar',
@@ -1409,7 +1412,7 @@ describe('T3.1 · esquema 1.1.0 i agenda.ics (iCalendar, RFC 5545)', () => {
     // Un paquet amb la forma de la 1.0.0, amb la bossa refeta de manera coherent.
     const ENC = new TextEncoder();
     const fitxers = new Map(llegeixZip(sense.zip).map(({ nom, dades }) => [nom.slice(ARREL.length + 1), descodifica(dades)]));
-    for (const cami of ['data/memoria.md', 'bag-info.txt']) fitxers.set(cami, fitxers.get(cami).replaceAll('1.1.0', '1.0.0'));
+    for (const cami of ['data/memoria.md', 'bag-info.txt']) fitxers.set(cami, fitxers.get(cami).replaceAll(VERSIO_FORMAT, '1.0.0'));
     const paquet = JSON.parse(fitxers.get('data/datapackage.json'));
     delete paquet.socdepoble.schemaVersion;
     delete paquet.socdepoble.calendari;
@@ -1425,5 +1428,192 @@ describe('T3.1 · esquema 1.1.0 i agenda.ics (iCalendar, RFC 5545)', () => {
     const paquet100 = creaZip([...fitxers].sort(([a], [b]) => (a < b ? -1 : 1)).map(([cami, text]) => ({ nom: `${ARREL}/${cami}`, dades: ENC.encode(text) })));
     expect(descodifica(llegeixZip(paquet100).find((e) => e.nom.endsWith('/bag-info.txt')).dades)).toContain('exportaMunicipiOpenData 1.0.0\n');
     await expect(verificaPaquetOpenData(paquet100)).resolves.toEqual({ slug: TORRE.slug, arrel: ARREL, fitxers: 13, recursos: 8 });
+  });
+});
+
+/* T2 · D04/D10 (assalt 261101; pla 261101_1246, D-3) · La memòria oral al
+   paquet 1.2.0 i la recollida amb la capacitat 'dadesObertes'. */
+describe('T2 · memòria oral (OKF v0.2) al paquet 1.2.0', async () => {
+  const memoria = await import('../sections/notes/memoriaOral.js');
+  const { ACTOR_HUMA_PUBLICABLE } = await import('./exportaMunicipiOpenData.js');
+  const { PERSONA_SENSE_IDENTIFICADOR } = await import('../sections/notes/memoriaOralDelBloc.js');
+  const RELAT_ORAL = "A la Torre de les Maçanes, quan arribava la collita de les olives, tot el poble anava a l'almàssera i les xiquetes portaven el berenar als bancals de dalt.";
+  const revisada = (persona = 'sense-identificador') => memoria.marcaRevisioHumana(
+    memoria.estructuraMemoriaOral(RELAT_ORAL, { ara: '2026-10-30T09:00:00Z', autor: 'sense-identificador' }), { persona, ara: '2026-10-31T09:00:00Z' });
+  const fitxa = (extra = {}, f = revisada()) => ({ id: 'relat-olives', okf: { cami: f.okf.cami, frontmatter: structuredClone(f.okf.frontmatter), cos: f.okf.cos },
+    author_org_id: RENTONAR, copyright: 'CC BY 4.0', created_at: '2026-10-31T09:00:00Z', visibility: 'public', ...extra });
+
+  test('l’actor humà publicable és el del Bloc, sense identificador', () => {
+    expect(ACTOR_HUMA_PUBLICABLE).toBe(`human:${PERSONA_SENSE_IDENTIFICADOR}`);
+  });
+
+  test('una fitxa revisada i signada: memoria-oral.jsonld, okf/<camí> = markdownOkf, index.md i log.md deterministes', async () => {
+    const f = revisada();
+    const r = prepara({ entitats: ENTITATS, memoriaOral: [fitxa()] });
+    const noms = r.fitxers.map((x) => x.nom);
+    expect(noms).toEqual(expect.arrayContaining(['memoria-oral.jsonld', `okf/${f.okf.cami}`, 'okf/index.md', 'okf/log.md']));
+    expect(fitxerDe(r, `okf/${f.okf.cami}`)).toBe(f.okf.markdown);
+    expect(fitxerDe(r, `okf/${f.okf.cami}`)).toBe(memoria.markdownOkf(f.okf.frontmatter, f.okf.cos));
+    const [node] = grafDe(r, 'memoria-oral.jsonld');
+    expect(node).toMatchObject({ '@type': 'CreativeWork', identifier: 'relat-olives', genre: memoria.TIPUS_OKF, creativeWorkStatus: 'stable',
+      url: `okf/${f.okf.cami}`, encodingFormat: 'text/markdown', contentLocation: { '@id': `municipi.jsonld#${TORRE.slug}` },
+      author: { '@id': `directori.jsonld#${RENTONAR}`, name: 'Rentonar' }, license: 'https://creativecommons.org/licenses/by/4.0/' });
+    expect(Object.keys(node).filter((k) => !['@type', '@id', 'identifier', 'name', 'abstract', 'genre', 'keywords', 'creativeWorkStatus', 'contentLocation', 'url',
+      'encodingFormat', 'datePublished', 'dateModified', 'author', 'license', 'copyrightNotice'].includes(k))).toEqual([]);
+    expect(fitxerDe(r, 'okf/index.md')).toBe(memoria.indexOkf([{ okf: { cami: f.okf.cami, frontmatter: f.okf.frontmatter }, municipi: { nom: TORRE.nom } }], { titol: 'Memòria oral' }));
+    expect(fitxerDe(r, 'okf/log.md')).toBe(`---\nokf_version: "0.2"\n---\n\n# Registre de la memòria oral\n\n${memoria.entradaLog({ okf: f.okf }, { ara: '2026-10-31T09:00:00Z' })}`);
+    expect(r.comptes.memoriaOral).toBe(1);
+    expect(fitxerDe(r, 'memoria.md')).toContain('## Memòria oral (fitxes OKF) (1)');
+    expect(fitxerDe(r, 'llicencies.md')).toContain('| memoria-oral | `relat-olives` | CC BY 4.0 | sí |');
+    for (const nom of noms) expect([nom, MARCATGE.test(fitxerDe(r, nom).replace(/<script/gi, ''))]).toEqual([nom, false]);
+    // El paquet sencer es verifica, i els recursos okf- porten el seu nom.
+    const paquet = await exporta({ entitats: ENTITATS, memoriaOral: [fitxa()] });
+    await expect(verificaPaquetOpenData(paquet.zip)).resolves.toMatchObject({ slug: TORRE.slug });
+    expect(paquet.datapackage.resources.map((x) => x.name)).toEqual(expect.arrayContaining(['memoria-oral', 'okf-index', 'okf-log', expect.stringMatching(/^okf-la-torre-de-les-macanes--/)]));
+  });
+
+  test('només ix la fitxa estable, revisada per una persona, signada, del poble i sense identificador de compte', () => {
+    const esborrany = memoria.estructuraMemoriaOral(RELAT_ORAL, { ara: '2026-10-30T09:00:00Z' });
+    const ambCompte = revisada('0b0e0000-0000-4000-8000-00000000dead');
+    const altreCami = (f, sufix) => ({ ...f, okf: { ...f.okf, cami: f.okf.cami.replace('.md', `-${sufix}.md`) } });
+    const r = prepara({ entitats: ENTITATS, memoriaOral: [
+      fitxa(),
+      altreCami(fitxa({ id: 'esborrany' }, esborrany), 'a'),
+      altreCami(fitxa({ id: 'amb-compte' }, ambCompte), 'b'),
+      fitxa({ id: 'veina', owner_user_id: TRAMPES.usuari }),
+      fitxa({ id: 'sense-entitat', author_org_id: undefined }),
+      fitxa({ id: 'privada', visibility: 'members' }),
+      altreCami(fitxa({ id: 'sella', okf: { ...fitxa().okf, frontmatter: { ...fitxa().okf.frontmatter, municipi: 'sella' } } }), 'c'),
+      fitxa({ id: 'cami-hostil', okf: { ...fitxa().okf, cami: 'memoria-oral/la-torre-de-les-macanes/../../x.md' } }),
+      fitxa({ id: 'sense-poble', okf: { cami: 'x.md', frontmatter: {}, cos: '' } })
+    ] });
+    expect(grafDe(r, 'memoria-oral.jsonld').map((n) => n.identifier)).toEqual(['relat-olives']);
+    expect(r.omissions.memoriaOral).toEqual({ actorsAmbIdentificador: 1, altresPobles: 1, nomesMembres: 1, noPubliques: 1, noRevisades: 1, okfInvalides: 1,
+      senseEntitat: 1, sensePoble: 1 });
+    expect(fitxerDe(r, 'memoria.md')).toContain("- memoriaOral: 1 fitxes amb l'identificador d'una persona");
+    expect(JSON.stringify(r.fitxers)).not.toContain('0b0e0000-0000-4000-8000-00000000dead');
+  });
+
+  test('un camí repetit atura; una font amb consulta o de Storage no ix', () => {
+    const f = fitxa();
+    expect(() => prepara({ memoriaOral: [f, { ...f, id: 'copia' }] })).toThrow(/Camí OKF repetit/);
+    const ambConsulta = fitxa();
+    ambConsulta.okf.frontmatter.sources[0].resource = 'https://socdepoble.org/notes/1?token=secret';
+    const deStorage = fitxa();
+    deStorage.okf.frontmatter.sources[0].resource = 'https://x.supabase.co/storage/v1/object/sign/mitjans/a.mp3';
+    for (const dolenta of [ambConsulta, deStorage]) expect(prepara({ memoriaOral: [dolenta] }).omissions.memoriaOral).toEqual({ okfInvalides: 1 });
+  });
+
+  test('el text de la persona ix sense marcatge: el títol en una línia i el cos sense cap «<» que obriga res', () => {
+    const f = fitxa();
+    f.okf.frontmatter.title = 'Relat\n<img src=x onerror=alert(1)>';
+    f.okf.cos = `${f.okf.cos}\n<script>alert(1)</script>\n`;
+    const r = prepara({ memoriaOral: [f] });
+    const md = fitxerDe(r, `okf/${f.okf.cami}`);
+    expect(md).not.toMatch(MARCATGE);
+    expect(md).toContain('title: "Relat ‹img src=x onerror=alert(1)>"');
+    expect(grafDe(r, 'memoria-oral.jsonld')[0].name).toBe('Relat ‹img src=x onerror=alert(1)>');
+  });
+
+  test('sense memoriaOral a l’entrada: cap fitxer okf ni memoria-oral.jsonld, cap compte ni omissió (el paquet de la 1.1.0)', () => {
+    const r = prepara(COMPLET());
+    expect(r.fitxers.map((f) => f.nom).filter((n) => n.startsWith('okf/') || n === 'memoria-oral.jsonld')).toEqual([]);
+    expect(r.comptes).not.toHaveProperty('memoriaOral');
+    expect(r.omissions).not.toHaveProperty('memoriaOral');
+    expect(fitxerDe(r, 'memoria.md')).not.toContain('Memòria oral');
+    // Amb memoriaOral pendent: la secció ho diu, però cap fitxer.
+    const pendent = prepara({ ...COMPLET(), pendents: [{ coleccio: 'memoriaOral', motiu: 'el servidor de dades encara no desa cap fitxa de memòria oral revisada' }] });
+    expect(fitxerDe(pendent, 'memoria.md')).toContain("## Memòria oral (fitxes OKF) (0)\n\nNo s'exporta en esta versió: el servidor de dades encara no desa cap fitxa de memòria oral revisada.");
+    expect(fitxerDe(pendent, 'memoria.md')).not.toContain('memoria-oral.jsonld');
+    expect(pendent.pendents).toEqual(['memoriaOral']);
+  });
+
+  test('Gauntlet D-06 · la descripció del Data Package diu la veritat: amb fitxes orals, que poden nomenar persones; sense, la de sempre', async () => {
+    const SEMPRE = 'Contingut públic del municipi i de les seues entitats exportat pel Mas (Sóc de Poble). '
+      + "Sense dades de persones. La llicència de cada element és a llicencies.md: el conjunt no n'atorga cap de nova.";
+    const ambOral = await exporta({ ...COMPLET(), memoriaOral: [fitxa()] });
+    expect(ambOral.datapackage.description).toBe('Contingut públic del municipi i de les seues entitats exportat pel Mas (Sóc de Poble). '
+      + 'Sense dades de cap compte de persona. Les fitxes de memòria oral són relats revisats per una persona i signats per una entitat, i poden nomenar persones del poble. '
+      + "La llicència de cada element és a llicencies.md: el conjunt no n'atorga cap de nova.");
+    expect(ambOral.datapackage.description).not.toContain('Sense dades de persones');
+    await expect(verificaPaquetOpenData(ambOral.zip)).resolves.toMatchObject({ slug: TORRE.slug });
+    // Sense memòria oral, o amb la col·lecció pendent i cap fitxa, la frase de sempre.
+    expect((await exporta(COMPLET())).datapackage.description).toBe(SEMPRE);
+    const pendent = await exporta({ ...COMPLET(), pendents: [{ coleccio: 'memoriaOral', motiu: 'el servidor de dades encara no desa cap fitxa de memòria oral revisada' }] });
+    expect(pendent.datapackage.description).toBe(SEMPRE);
+  });
+
+  test('el verificador 1.2.0 admet okf/; una llista tancada de la 1.1.0 només rebutja okf/ i memoria-oral.jsonld no', async () => {
+    const NOM_DE_DADES_1_1_0 = /^[a-z0-9]+(?:-[a-z0-9]+)*\.(?:jsonld|json|md|ics)$/;
+    const paquet = await exporta({ ...COMPLET(), memoriaOral: [fitxa()] });
+    const fora = paquet.fitxers.map((f) => f.cami).filter((c) => c.startsWith('data/') && !NOM_DE_DADES_1_1_0.test(c.slice(5)));
+    expect(fora.every((c) => c.startsWith('data/okf/'))).toBe(true);
+    expect(fora).toHaveLength(3);
+    await expect(verificaPaquetOpenData(paquet.zip)).resolves.toMatchObject({ slug: TORRE.slug });
+  });
+});
+
+describe('T2 · recullDadesPubliquesDelMunicipi amb la capacitat dadesObertes', () => {
+  const portAmb = (obertes, { capacitats = ['directoriEntitats', 'dadesObertes'] } = {}) => ({
+    teCapacitat: vi.fn((cap) => capacitats.includes(cap)),
+    listPublicOrganizations: vi.fn(async () => ENTITATS),
+    llegixDadesObertes: vi.fn(async () => obertes),
+    loadMur: vi.fn(() => { throw new Error('loadMur barreja contingut de membres'); }),
+    loadCoreContent: vi.fn(() => { throw new Error('no s’ha de cridar'); })
+  });
+
+  test('una sola crida anònima pel poble { slug, nom } i el senyal; mai loadMur ni loadCoreContent; null → pendent amb motiu', async () => {
+    const port = portAmb({ noticies: [noticiaEntitat()], agenda: [], memoria: null, memoriaOral: null });
+    const control = new AbortController();
+    const config = { tenantId: '11111111-2222-3333-4444-555555555555' };
+    const r = await recullDadesPubliquesDelMunicipi(port, TORRE, { config, signal: control.signal });
+    expect(port.llegixDadesObertes).toHaveBeenCalledTimes(1);
+    expect(port.llegixDadesObertes).toHaveBeenCalledWith({ poble: { slug: TORRE.slug, nom: TORRE.nom }, signal: control.signal }, config);
+    expect(port.loadMur).not.toHaveBeenCalled();
+    expect(port.loadCoreContent).not.toHaveBeenCalled();
+    expect(r.noticies.map((n) => n.id)).toEqual(['ban-aigua']);
+    expect(r.agenda).toEqual([]);
+    expect(r).not.toHaveProperty('memoria');
+    expect(r).not.toHaveProperty('memoriaOral');
+    expect(Object.fromEntries(r.pendents.map(({ coleccio, motiu }) => [coleccio, motiu]))).toEqual({
+      memoria: 'el Mas no té cap mòdul de memòria cultural',
+      memoriaOral: 'el servidor de dades encara no desa cap fitxa de memòria oral revisada',
+      configuracio: "la personalització és de tot el node, no d'un poble, i la fitxa del poble no la inclou"
+    });
+    for (const { motiu } of r.pendents) {
+      expect(motiu, motiu).not.toMatch(/[:()]|[a-z][A-Z]|\bD-[A-Z]\d|\b(?:tenant|backend|port|capacitat|dadesObertes|directoriEntitats)\b/);
+    }
+    // El paquet porta la notícia i diu de les altres que són pendents.
+    const paquet = prepara({ ...r, municipi: TORRE, entitats: r.entitats });
+    expect(grafDe(paquet, 'noticies.jsonld').map((n) => n.identifier)).toEqual(['ban-aigua']);
+    expect(paquet.pendents).toEqual(['memoria', 'memoriaOral', 'configuracio']);
+    expect(paquet.comptes).toEqual({ noticies: 1, agenda: 0, directori: 2, memoria: 0, memoriaOral: 0 });
+  });
+
+  test('sense font de notícies ni d’agenda (null): pendents amb el seu motiu, en l’ordre del contracte', async () => {
+    const r = await recullDadesPubliquesDelMunicipi(portAmb({ noticies: null, agenda: null, memoria: [], memoriaOral: [] }), TORRE);
+    expect(r.pendents.map((p) => p.coleccio)).toEqual(['noticies', 'agenda', 'configuracio']);
+    expect(r.pendents[0].motiu).toBe('este servidor de dades no en té cap font pública');
+    expect([r.memoria, r.memoriaOral]).toEqual([[], []]);
+  });
+
+  test('sense el directori però amb dades obertes: el directori pendent primer', async () => {
+    const r = await recullDadesPubliquesDelMunicipi(portAmb({ noticies: [], agenda: [], memoria: null, memoriaOral: null }, { capacitats: ['dadesObertes'] }), TORRE);
+    expect(r.entitats).toBeNull();
+    expect(r.pendents.map((p) => p.coleccio)).toEqual(['directori', 'memoria', 'memoriaOral', 'configuracio']);
+  });
+
+  test('una forma dolenta és un TypeError; per damunt del sostre, un RangeError (mai es talla)', async () => {
+    for (const dolenta of [[], null, { noticies: [] }, { noticies: 'x', agenda: [], memoria: null, memoriaOral: null }, { noticies: [], agenda: [], memoria: null, memoriaOral: null, xat: [] }]) {
+      await expect(recullDadesPubliquesDelMunicipi(portAmb(dolenta), TORRE), JSON.stringify(dolenta)).rejects.toThrow(/llegixDadesObertes no ha tornat/);
+    }
+    const plena = Array.from({ length: LIMIT_DADES_OBERTES + 1 }, (_, i) => ({ id: `n-${i}` }));
+    await expect(recullDadesPubliquesDelMunicipi(portAmb({ noticies: plena, agenda: [], memoria: null, memoriaOral: null }), TORRE)).rejects.toThrow(RangeError);
+  });
+
+  test('un port de prova antic (teCapacitat sempre cert i sense el mètode) va pel camí d’abans', async () => {
+    const port = { teCapacitat: () => true, listPublicOrganizations: async () => [] };
+    const r = await recullDadesPubliquesDelMunicipi(port, TORRE);
+    expect(r.pendents.map((p) => p.coleccio)).toEqual(['noticies', 'agenda', 'memoria', 'memoriaOral', 'configuracio']);
   });
 });

@@ -1,0 +1,42 @@
+{
+  "id": "aae737b4-ac1c-45c4-9459-8c8b74827e8f",
+  "session": "80b0b829-9684-40ac-9cab-42598ad02912",
+  "operationId": "torn_3f5652a2-assalt_deu_deu_tancament_frontissa_estat_ledger_i_gauntlet-80b0b829",
+  "claim": "80b0b829-9684-40ac-9cab-42598ad02912:governance-write",
+  "planHash": "45efdb10ba6be94235189d5209258899a7df36b42e5485fe6c17911addca4ced",
+  "beforeSeal": "e4460c54b9a5d2b05705337195e02a42217773e3047c6acd23fd36de046983d4",
+  "files": [
+    {
+      "path": ".agents/contingut_estructural.json",
+      "before": "25b1881885dd3e64c0e8dc18a69d1f52fb697e4e97be298a0d67114026c7f2f6",
+      "after": "b43d4858e5302196efef419494020b5057d1ced709a72775ab1301b5fc4f1d1a"
+    },
+    {
+      "path": ".agents/ESTAT.md",
+      "before": "3dbd66894443dc2ff44fdfe9b5de5f9e9b00995205ed5029195fb30c938bceaa",
+      "after": "dd13da9d476abadec1cad35f846a6a91ada6326e2a7c54f1364d5b3223827381"
+    },
+    {
+      "path": ".agents/LEDGER.md",
+      "before": "c7159cc6382860cb049ff32e677a066f57b4fd79efb0bf32833f81355eb86694",
+      "after": "481034e6ca18579efe85704b259c368afad338dc89fe7615dbf6057c7bb6c5cb"
+    },
+    {
+      "path": "scripts/botigues/entorn.mjs",
+      "before": "cd2f19d2fdb5a4da6ec3b6f4aa8e247ceef7c23f22cf9135442e2695c2d1607e",
+      "after": "2bee05b1d76bc33eafbf57a1bdc56d6e4f12586364df05d749bd48825fab19a8"
+    },
+    {
+      "path": "tooling/brain/tractor-pedra-seca.mjs",
+      "before": "3c18bf5290ac0bd839cf19845f60a8258e33cc965c3421b2ede5e8834c808340",
+      "after": "d9ccf8fc6da8402e3d63955a7c9c4fbfee97afeb618ec9da3546cfd05ece3812"
+    },
+    {
+      "path": "tooling/gates/design_guard.mjs",
+      "before": "ff1176fea0a08047a722d1f09f9e4d0a67bcc1fb6540d07ac96c3634db8f1d3b",
+      "after": "5f94f66def8622c33c337584f978ed0a7a58d6e43371dd08b064fc137885d864"
+    }
+  ],
+  "state": "accepted",
+  "afterSeal": "d863c155441b09590117b6eb2a6e30dacfebf30e6a62f0b502590644b8434d0f"
+}

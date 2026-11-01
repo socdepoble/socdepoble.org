@@ -1,9 +1,9 @@
-import { useContext, useEffect, useMemo, useRef } from 'react';
+import { useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { BookOpen, ClipboardCopy, Copy, FileCode, Network, RotateCcw } from 'lucide-react';
 import { Alerta, Boto, Camp, Insignia, Selector } from '../../../components/PedraSeca';
 import { useNavigate } from '../../../app/contexts/RouterContext';
 import { useToast } from '@/components/universal/NotificationContext.jsx';
-import { wikiManifest } from '../../../data/wikiManifest';
+import { carregaWikiManifest, wikiManifestCarregat } from '../../../data/carregaWikiManifest.js';
 import { Mono, PrivacitatConsola } from '../peces.jsx';
 import {
   NOMS_TIPUS, TEXTOS_AVIS, TO_CONFIANCA, TO_SEVERITAT,
@@ -23,6 +23,21 @@ import { codisReparats, ordreReparacio } from './inventariMapa.js';
 
 /* A partir d'ací, les relacions es pleguen: la resta ix amb «Mostra'n N més». */
 const MAX_FILES = 8;
+
+/* P1-20 · D15 (Assalt 10/10, T4a-C, 261101) · La Wiki compilada, demanada en
+   muntar el detall (amb l'Explorador) i no al tros de la Consola: mentre no
+   arriba, o si no arriba, cap peça no porta «Obrir a la Wiki». Si ja havia
+   arribat (tornar a l'Explorador), es pinta des del primer fotograma. */
+function useWikiDiferida() {
+  const [manifest, setManifest] = useState(wikiManifestCarregat);
+  useEffect(() => {
+    if (manifest) return undefined;
+    let viu = true;
+    carregaWikiManifest().then((m) => { if (viu) setManifest(m); }, () => {});
+    return () => { viu = false; };
+  }, [manifest]);
+  return manifest;
+}
 
 function FilaRelacio({ fila, onVore }) {
   const nom = etiquetaNode({ id: fila.id });
@@ -187,6 +202,7 @@ export function DetallPeca({ mapa, graf, seleccio, onSeleccio, onRestablir, enfo
   const panell = useRef(null);
   const titol = useRef(null);
   const enfocaTitol = useRef(enfoca);
+  const wiki = useWikiDiferida();
   const node = useMemo(() => mapa.nodes.find((n) => n.id === seleccio) ?? null, [mapa, seleccio]);
   const visible = Boolean(node) && graf.nodes.some((n) => n.id === node.id);
   const opcions = useMemo(
@@ -229,7 +245,7 @@ export function DetallPeca({ mapa, graf, seleccio, onSeleccio, onRestablir, enfo
   const { ruta, rol } = fitxerDelNode(node);
   const avisos = mapa.avisos.filter((a) => a.node === node.id);
   const { ixen, entren } = relacionsPerVerb(mapa, node.id);
-  const doc = rol === 'fitxer' ? documentWiki(ruta, wikiManifest) : null;
+  const doc = rol === 'fitxer' && wiki ? documentWiki(ruta, wiki) : null;
   /* L'absència només val per al fitxer propi de la peça: una ordre npm no
      declarada porta 'script-absent', però el seu package.json sí que hi és. */
   const avisosDelFitxer = rol === 'fitxer' ? avisos : [];

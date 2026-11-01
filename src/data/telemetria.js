@@ -36,6 +36,19 @@ import { CLAUS_FUNDACIONALS } from './identitatsSeed.js';
  *     P2-14 · C0545-S3). `enviat: true` acredita que s'ha iniciat fetch
  *     (`verificacio: 'intent'`, que passa a `'acceptat'` o `'fallat'` quan
  *     resol la promesa) o s'ha delegat a l'amfitrió (`'no_comprovat'`).
+ *   - P2-14 (pla 261101_1246) · L'«estatRecepcio» del pla és `verificacio`, i
+ *     no hi ha cap camp duplicat: 'intent' = pendent; 'acceptat' = el
+ *     comptador ha respost amb un 2xx (`ok === true`; el registre final no
+ *     es verifica); 'fallat' = fallit: resposta amb `ok === false` (no 2xx,
+ *     també una resposta opaca, d'estat 0), error de xarxa, fetch que llança
+ *     (`error-xarxa`) o error de l'amfitrió en `window.umami.track`
+ *     (`error-amfitrio`); 'no_comprovat' quan no hi ha cap resposta pròpia
+ *     que mirar: delegada a l'amfitrió, apagada, encastada, sense
+ *     configurar, servidor local, sense fetch, sense navegador o un fetch
+ *     substituït que resol un valor sense camp `ok`. Les crides que no fan
+ *     cap entrada (`repetida`, `sense-nom` i el `sense-navegador` de
+ *     registraVisita) no porten `verificacio`. Ho prova contra un servidor
+ *     HTTP real telemetria.recepcio.test.js.
  */
 
 export const CLAU_APAGADA = 'umami.disabled';

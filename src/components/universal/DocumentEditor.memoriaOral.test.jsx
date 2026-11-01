@@ -277,3 +277,37 @@ test('G2-MO-01 · un relat de quatre paràgrafs: cap paraula no es perd del «Re
     expect(feta.okf.cos).toContain(`\n${paragraf}\n`);
   }
 });
+
+/* D-5 (pla 261101_1246) · Amb cercaPoble i etiquetaNova a l'adaptador, la
+   fitxa porta «Un altre poble» i «Etiqueta nova», i el que s'hi afig arriba
+   a la revisió de l'adaptador; sense les claus (o sense sessió), cap camp. */
+test('D-5 · l’adaptador amb cercaPoble i etiquetaNova fa aparéixer els camps; la revisió en porta el que s’hi afig', () => {
+  const revisa = vi.fn(MEMORIA.revisa);
+  munta({ inicial: PLENS, memoriaOral: { ...MEMORIA, revisa } });
+  proposa();
+  const dialeg = fitxa();
+  fireEvent.change(within(dialeg).getByRole('textbox', { name: 'Un altre poble' }), { target: { value: 'Alcoy' } });
+  fireEvent.click(within(dialeg).getByRole('button', { name: 'Tria este poble' }));
+  expect(pobleTriat(dialeg)).toBe('Alcoi');
+  fireEvent.change(within(dialeg).getByRole('textbox', { name: 'Etiqueta nova' }), { target: { value: 'Pansa' } });
+  fireEvent.click(within(dialeg).getByRole('button', { name: 'Afig' }));
+  expect(within(grupEtiquetes(dialeg)).getByRole('checkbox', { name: 'pansa (afegida en la revisió)' }).checked).toBe(true);
+  fireEvent.click(within(dialeg).getByRole('checkbox', { name: /L’he revisada/ }));
+  const [, correccio] = revisa.mock.calls[0];
+  expect(correccio).toEqual(expect.objectContaining({ municipi: 'alcoi', etiquetesLliures: ['pansa'] }));
+  const segellada = revisa.mock.results[0].value;
+  expect(segellada.okf.frontmatter).toEqual(expect.objectContaining({ municipi: 'alcoi', tags: [...correccio.etiquetes, 'pansa'] }));
+  expect(segellada.okf.frontmatter.verified).toEqual([{ by: 'human:sense-identificador', at: ARA.toISOString() }]);
+  cleanup();
+  // Sense les claus noves, el diàleg de sempre.
+  munta({ inicial: PLENS, memoriaOral: { estructura: MEMORIA.estructura, revisa: MEMORIA.revisa } });
+  proposa();
+  expect(within(fitxa()).queryByRole('textbox', { name: 'Un altre poble' })).toBeNull();
+  expect(within(fitxa()).queryByRole('textbox', { name: 'Etiqueta nova' })).toBeNull();
+  cleanup();
+  // Sense sessió (l'adaptador les porta a null), tampoc.
+  munta({ inicial: PLENS, memoriaOral: memoriaOralDelBloc({ rellotge: () => ARA }) });
+  proposa();
+  expect(within(fitxa()).queryByRole('textbox', { name: 'Un altre poble' })).toBeNull();
+  expect(within(fitxa()).queryByRole('button', { name: 'Afig' })).toBeNull();
+});

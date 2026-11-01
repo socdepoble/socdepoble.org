@@ -88,9 +88,21 @@ import { FORMAT_JPEG, FORMAT_PNG, FORMAT_WEBP, formatImatge } from './netejaMeta
 export const ETIQUETA_CONSERVA_EXIF = 'Conserva la ubicació i la data de la foto';
 /** Gauntlet 261016 (Codex, 02:26) · La mateixa casella quan només hi ha la càmera (marca, model, MakerNote…). */
 export const ETIQUETA_CONSERVA_CAMERA = 'Conserva les dades de la càmera de la foto';
+/* P1-22 (assalt 261101) · L'etiqueta i l'avís en parells [clau, reserva]
+   (la reserva, el valencià de sempre); {casella} és l'etiqueta que es veu. */
+const PARELLS_EXIF = Object.freeze({
+  etiqueta: Object.freeze(['editor.enquadrament.exifEtiqueta', ETIQUETA_CONSERVA_EXIF]),
+  etiquetaCamera: Object.freeze(['editor.enquadrament.exifEtiquetaCamera', ETIQUETA_CONSERVA_CAMERA]),
+  noConservable: Object.freeze(['editor.enquadrament.exifNoConservable',
+    'No es pot conservar la ubicació i la data d’esta foto; desmarca «{casella}» per a pujar-la sense.']),
+  noConservableCamera: Object.freeze(['editor.enquadrament.exifNoConservableCamera',
+    'No es poden conservar les dades de la càmera d’esta foto; desmarca «{casella}» per a pujar-la sense.']),
+});
+const tr = (t, [clau, reserva]) => (typeof t === 'function' ? t(clau, reserva) : reserva);
+const ambCasella = (plantilla, casella) => String(plantilla).split('{casella}').join(casella);
 /** L'avís quan la persona ha triat conservar-lo i no es pot: no es puja res, i es diu com eixir-ne. */
-export const ERROR_EXIF_NO_CONSERVABLE = `No es pot conservar la ubicació i la data d’esta foto; desmarca «${ETIQUETA_CONSERVA_EXIF}» per a pujar-la sense.`;
-export const ERROR_EXIF_NO_CONSERVABLE_CAMERA = `No es poden conservar les dades de la càmera d’esta foto; desmarca «${ETIQUETA_CONSERVA_CAMERA}» per a pujar-la sense.`;
+export const ERROR_EXIF_NO_CONSERVABLE = ambCasella(PARELLS_EXIF.noConservable[1], ETIQUETA_CONSERVA_EXIF);
+export const ERROR_EXIF_NO_CONSERVABLE_CAMERA = ambCasella(PARELLS_EXIF.noConservableCamera[1], ETIQUETA_CONSERVA_CAMERA);
 
 /**
  * Els estats d'un EXIF que hi és (sense EXIF, exifPublicable torna null): es
@@ -1034,10 +1046,16 @@ export const esNoConservable = (dades) => dades?.estat === ESTAT_EXIF.NO_CONSERV
  * dataCaptura } també val.
  */
 export const teExifPerConservar = (dades) => Boolean(dades && (dades.estat || dades.tiff || teUbicacioOData(dades)));
-/** L'etiqueta de la casella per al que porta la foto: la ubicació o la data, o només la càmera. */
-export const etiquetaConservaExif = (dades) => (teUbicacioOData(dades) ? ETIQUETA_CONSERVA_EXIF : ETIQUETA_CONSERVA_CAMERA);
-/** L'avís quan no es pot conservar, amb l'etiqueta que es veu. */
-export const errorExifNoConservable = (dades) => (teUbicacioOData(dades) ? ERROR_EXIF_NO_CONSERVABLE : ERROR_EXIF_NO_CONSERVABLE_CAMERA);
+/**
+ * L'etiqueta de la casella per al que porta la foto: la ubicació o la data, o
+ * només la càmera. P1-22 · `t` (opcional): el traductor; sense, el valencià.
+ */
+export const etiquetaConservaExif = (dades, t) => tr(t, teUbicacioOData(dades) ? PARELLS_EXIF.etiqueta : PARELLS_EXIF.etiquetaCamera);
+/** L'avís quan no es pot conservar, amb l'etiqueta que es veu (en la mateixa llengua). */
+export const errorExifNoConservable = (dades, t) => ambCasella(
+  tr(t, teUbicacioOData(dades) ? PARELLS_EXIF.noConservable : PARELLS_EXIF.noConservableCamera),
+  etiquetaConservaExif(dades, t),
+);
 
 /**
  * El data URL del canvas amb l'EXIF publicable de l'original; si no n'hi ha

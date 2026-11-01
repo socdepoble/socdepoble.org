@@ -251,6 +251,12 @@ function campsQueTornen(actual, de, a) {
  *                            // diàleg, no a cap avís (quedaria davall del vel).
  *                            // Sense la clau, la barra, el clic i el DOM de
  *                            // sempre. No passa per ...rest.
+ *                            // D-5 (pla 261101_1246): l'adaptador pot portar
+ *                            // també cercaPoble(text) i etiquetaNova(text, ids)
+ *                            // (null sense sessió); amb elles, la fitxa porta
+ *                            // els camps «Un altre poble» i «Etiqueta nova», i
+ *                            // revisa rep també etiquetesLliures. Sense, la
+ *                            // fitxa de sempre.
  *   placeholderTitol: String|null // Opcional (Bloc 3.9 del Gauntlet, 261016).
  *                            // El placeholder de l'H1 de la closca i el títol de
  *                            // reserva de la Vista A4 / PDF. El Bloc de Notes hi
@@ -718,7 +724,10 @@ export function DocumentEditor({ adapter, onToast }) {
     }
     if (!fitxa || typeof fitxa !== 'object') return false;
     const revisa = typeof memoria.revisa === 'function' ? memoria.revisa : null;
-    setFitxaMemoria((abans) => ({ vegada: (abans?.vegada ?? 0) + 1, id, fitxa, card, revisa, obert: true }));
+    /* D-5 · El selector de poble i les etiquetes noves, si l'adaptador els porta. */
+    const cercaPoble = typeof memoria.cercaPoble === 'function' ? memoria.cercaPoble : null;
+    const etiquetaNova = typeof memoria.etiquetaNova === 'function' ? memoria.etiquetaNova : null;
+    setFitxaMemoria((abans) => ({ vegada: (abans?.vegada ?? 0) + 1, id, fitxa, card, revisa, cercaPoble, etiquetaNova, obert: true }));
     return true;
   }, []);
   const documentViu = useRef(document);
@@ -1040,6 +1049,8 @@ export function DocumentEditor({ adapter, onToast }) {
           onTanca={tancaFitxaMemoria}
           fitxa={fitxaMemoria.fitxa}
           revisa={fitxaMemoria.revisa}
+          cercaPoble={fitxaMemoria.cercaPoble}
+          etiquetaNova={fitxaMemoria.etiquetaNova}
           descripcio={fitxaMemoria.card
             ? t('editor.proposaCard.feta', 'Card proposada. Per a tornar-la arrere: «Desfés la proposta» o Cmd/Ctrl+Z.')
             : t('editor.proposaCard.res', 'No hi ha res a proposar: els camps de la targeta ja són plens o el cos no comença amb text.')}

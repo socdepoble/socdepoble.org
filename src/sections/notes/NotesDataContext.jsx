@@ -23,7 +23,8 @@ import {
 } from '../../data/backendPort.js';
 
 import { backendScope } from '../../config/backendConfig.js';
-import { useIdentitat } from '../../app/contexts/IdentitatContext.jsx';
+import { useIdentitatOReserva } from '../../app/contexts/useIdentitatOReserva.js';
+import { ErrorIdentitatDeLectura, esIdentitatDeLectura } from '../../app/contexts/identitatDeReserva.js';
 import { useSession } from '../../app/contexts/SessionContext.jsx';
 
 let _hostPromise = null;
@@ -149,12 +150,22 @@ function mergeNotes(current, incoming, complete = false) {
 }
 
 export function NotesDataProvider({ children, config }) {
-  const { actorKey } = useIdentitat();
+  /* D-7 (pla 261101_1246; P1-71) · Blindatge HMR. Fora d'IdentitatProvider,
+     la reserva anònima de només lectura (identitatDeReserva.js) en lloc del
+     pet que tombava el Mas sencer. Com un visitant: el Bloc és llest i buit
+     (cap nota ni esborrany de ningú), no es pot crear res i cada escriptura
+     es refusa amb ErrorIdentitatDeLectura abans del port. Els esborranys
+     tenen un àmbit propi ('nomes-lectura'), que no és el de cap persona.
+     Dins del proveïdor, res no canvia. */
+  const identitatDelBloc = useIdentitatOReserva();
+  const { actorKey } = identitatDelBloc;
+  const nomesLectura = esIdentitatDeLectura(identitatDelBloc);
   const { estat, currentUser } = useSession();
 
   // Preserve personal draft keys; shared entity actors also need the auth user.
-  const draftActor = actorKey === `persona::${currentUser?.id}`
-    ? actorKey : `${currentUser?.id || 'anonymous'}_${actorKey}`;
+  const draftActor = nomesLectura ? 'nomes-lectura'
+    : actorKey === `persona::${currentUser?.id}`
+      ? actorKey : `${currentUser?.id || 'anonymous'}_${actorKey}`;
   const scopeKey =
     `${backendScope(config)}_${draftActor}_`
     + `${config?.tenantId || 'global'}`;
@@ -335,8 +346,9 @@ export function NotesDataProvider({ children, config }) {
 
         // El cami `seed` serveix contingut d'exemple sense mirar la sessio.
         // El guarda d'aci baix nomes te sentit quan les dades son remotes.
-        ownerId = getCurrentUser()?.id
-          || (getRuntimeDataMode(config) !== 'remote' ? getDefaultUserId() : null);
+        // D-7 · Amb la reserva de només lectura, cap propietari: llest i buit.
+        ownerId = nomesLectura ? null : (getCurrentUser()?.id
+          || (getRuntimeDataMode(config) !== 'remote' ? getDefaultUserId() : null));
         if (!ownerId) {
           setData((previous) => {
             if (!isCurrent() || previous.token !== token) return previous;
@@ -360,7 +372,7 @@ export function NotesDataProvider({ children, config }) {
 
     void load();
     return () => controller.abort();
-  }, [token, tick, activacions, config, scopeKey, sessioResolta]);
+  }, [token, tick, activacions, config, scopeKey, sessioResolta, nomesLectura]);
 
   const refresh = useCallback(() => {
     if (operationRef.current?.token !== token) return;
@@ -398,7 +410,9 @@ export function NotesDataProvider({ children, config }) {
 
     assertCurrent();
 
-    const userId = getCurrentUser()?.id || (getRuntimeDataMode(config) !== 'remote' ? getDefaultUserId() : null);
+    // D-7 · Amb la reserva de només lectura, cap nota de ningú.
+    const userId = nomesLectura ? null
+      : (getCurrentUser()?.id || (getRuntimeDataMode(config) !== 'remote' ? getDefaultUserId() : null));
     if (!userId) {
       return { status: 'not-found' };
     }
@@ -479,9 +493,11 @@ export function NotesDataProvider({ children, config }) {
     // El Workspace espera que l'adaptador transforme aquesta nota
     // i la incorpore a `items`; no selecciona el primer element mentrestant.
     return { status: 'found' };
-  }, [config, scopeKey, token]);
+  }, [config, scopeKey, token, nomesLectura]);
 
   const updateNote = useCallback(async (id, updates, revision) => {
+    // D-7 · Cap escriptura amb la reserva de només lectura: ni el port ni la xarxa.
+    if (nomesLectura) throw new ErrorIdentitatDeLectura();
     const operation = operationRef.current;
 
     if (!operation || operation.token !== token) {
@@ -532,13 +548,14 @@ export function NotesDataProvider({ children, config }) {
 
       throw error;
     }
-  }, [config, token, refresh]);
+  }, [config, token, refresh, nomesLectura]);
 
   useLayoutEffect(() => {
     updateNoteRef.current = updateNote;
   }, [updateNote]);
 
   const creaNota = useCallback(async (input = {}) => {
+    if (nomesLectura) throw new ErrorIdentitatDeLectura();
     const operation = operationRef.current;
 
     if (!operation || operation.token !== token) {
@@ -573,12 +590,14 @@ export function NotesDataProvider({ children, config }) {
 
     if (operationRef.current !== operation) throw abortError();
     return created;
-  }, [config, token]);
+  }, [config, token, nomesLectura]);
 
   /* Paperera, arxiu i esborrat definitiu (capacitat 'cicleNotes'). En els tres
      casos la nota ix del Bloc, que només mostra les actives. Un 409 vol dir
-     que la llista és vella: es torna a carregar, com fa updateNote. */
+     que la llista és vella: es torna a carregar, com fa updateNote.
+     D-7 · Amb la reserva de només lectura, ni es crida el port. */
   const retiraNota = useCallback(async (id, crida) => {
+    if (nomesLectura) throw new ErrorIdentitatDeLectura();
     const operation = operationRef.current;
 
     if (!operation || operation.token !== token) {
@@ -625,7 +644,7 @@ export function NotesDataProvider({ children, config }) {
 
       throw error;
     }
-  }, [token, refresh]);
+  }, [token, refresh, nomesLectura]);
 
   const mouNota = useCallback(
     (id, estat, revision) => retiraNota(id, () => apiMouNota(id, estat, revision, config)),
@@ -649,7 +668,9 @@ export function NotesDataProvider({ children, config }) {
       scopeKey,
       workspaceKey,
       config,
-      canCreate: (Boolean(currentUser?.id) || config?.dataMode === 'seed' || config?.dataMode === 'local') && current && data.status === 'ready',
+      canCreate: !nomesLectura && (Boolean(currentUser?.id) || config?.dataMode === 'seed' || config?.dataMode === 'local') && current && data.status === 'ready',
+      /* D-7 · Cert amb la reserva de només lectura (sense IdentitatProvider). */
+      nomesLectura,
       notes: payload?.notes || [],
       noteFolders: payload?.noteFolders || [],
       notesComplete:
@@ -665,7 +686,7 @@ export function NotesDataProvider({ children, config }) {
       refresh
     };
   }, [
-    data, token, scopeKey, workspaceKey, config, currentUser,
+    data, token, scopeKey, workspaceKey, config, currentUser, nomesLectura,
     resolveNote, updateNote, creaNota, mouNota, esborraNota, refresh, activate
   ]);
 

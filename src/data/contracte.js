@@ -280,6 +280,25 @@ export const CAPACITATS = Object.freeze({
   salut: Object.freeze([
     'comprovaServidor'
   ]),
+  /* T8b · P0-23 (BOT-A2; Gauntlet Claude 261025_1705; assalt 261101) · La
+     versió mínima de l'app nativa que el node encara servix. Opcional a
+     posta: un node sense ella continua sent vàlid i l'app entra com sempre.
+     Només la pregunta l'entrada nativa (src/natiu/entrada.jsx, amb
+     teCapacitat('versioClient')); la web i el connector de WordPress no la
+     pregunten mai. Forma (config sempre l'últim):
+       versioMinimaClient(plataforma, config) → Promise<{ versioMinima, enllac } | null>
+         plataforma 'ios' | 'android'. versioMinima és un enter ≥ 1, el que
+         l'app compara amb VERSIO_CLIENT_NATIU (davall); enllac, l'adreça
+         https on es baixa la versió nova (la botiga o la prova tancada), o
+         null. Cap clau més. null quan no hi ha mínim: una altra plataforma,
+         sense servidor (seed o local) o un servidor sense la migració.
+     Els errors només són els de no arribar (l'estat HTTP, un tall, una
+     cancel·lació): l'app no es bloqueja mai per un error (fail-open). Ho
+     servix 2611011510_versio_minima_client.sql (NO aplicada: l'aplica el
+     Mestre). */
+  versioClient: Object.freeze([
+    'versioMinimaClient'
+  ]),
   /* R (Onada 3, 261003) · Recuperar la contrasenya perduda. Opcional a posta:
      un backend sense ella continua sent vàlid i /registre no pinta
      «Has oblidat la contrasenya?». La interfície ho pregunta amb
@@ -538,6 +557,48 @@ export const CAPACITATS = Object.freeze({
   consentimentTitular: Object.freeze([
     'estatTitularPublic',
     'marcaTitularPublic'
+  ]),
+  /* T2 · D04/D10 (assalt 261101; pla 261101_1246, D-3) · Les dades obertes
+     d'un poble que el servidor ja servix a qualsevol visitant. Opcional: sense
+     ella, el paquet Open Data de la fitxa del poble deixa notícies, agenda,
+     memòria cultural i memòria oral a «Fonts pendents». Capacitat a banda de
+     la restauració (davall) a posta: un servidor que només llig no ha de
+     tombar la validació del port (capacitat parcial, backendPort.js).
+     Forma (config sempre l'últim):
+       llegixDadesObertes({ poble: { slug, nom }, signal? }, config) → Promise<DadesObertes>
+         DadesObertes = { noticies, agenda, memoria, memoriaOral }, les quatre
+         claus SEMPRE presents (COLECCIONS_DADES_OBERTES, davall). Cada una és
+         una llista o null: null vol dir «este servidor no té eixa font», []
+         que la té i és buida. Sempre anònima: el mateix resultat amb sessió i
+         sense, i mai cap secret. Només el que el servidor ja servix a tothom:
+         mai publicacions del veïnat (section_submissions), notes, xat, Mercat
+         ni perfils. Pot tornar elements d'altres pobles (qui exporta torna a
+         filtrar i falla tancat). Cap llista passa de LIMIT_DADES_OBERTES.
+         Fila de noticies i agenda: la forma de loadMur().feedPosts i .events.
+         Fila de memoriaOral: { id, okf: { cami, frontmatter, cos },
+         author_org_id, copyright?, created_at?, updated_at?, visibility? }.
+         Un poble que no és { slug, nom } de text no buit: TypeError.
+     Els errors porten l'estat HTTP (`status`) quan n'hi ha; un tall o una
+     cancel·lació, el seu nom (AbortError, TimeoutError). */
+  dadesObertes: Object.freeze([
+    'llegixDadesObertes'
+  ]),
+  /* T2 · D04/D10 (assalt 261101; pla 261101_1246, D-3) · Tornar a carregar en
+     este servidor un poble que ve d'un paquet Open Data ja verificat
+     (src/data/importaMunicipiOpenData.js). Opcional: hui només la servix
+     l'adaptador local. Forma (config sempre l'últim):
+       restauraDadesObertes(lot, config) → Promise<{ creats, actualitzats, iguals }>
+         lot: la forma de validaLotDadesObertes (src/data/dadesObertesLot.js).
+         Cadascun dels tres és { entitats, noticies, agenda, memoria,
+         memoriaOral } d'enters ≥ 0. Atòmica (o tot o res) i idempotent
+         (upsert per col·lecció i id: el mateix lot dues voltes dona creats 0
+         i actualitzats 0). Mai esborra res ni escriu cap persona. Un lot
+         invàlid rebutja amb TypeError; un id o un slug que ja és d'un altre
+         poble, amb `code` 'conflicte-identificador' i sense escriure res; en
+         un servidor amb comptes, qui no administra el node, amb `code`
+         'sense-permis'. */
+  restauracioDadesObertes: Object.freeze([
+    'restauraDadesObertes'
   ])
 });
 
@@ -545,6 +606,24 @@ export const CAPACITATS = Object.freeze({
    als adaptadors i per a qui busca (si torna el sostre, pregunta al servidor
    per la consulta, com el padró amb LIMIT_PADRO). */
 export const LIMIT_DIRECTORI_ENTITATS = 500;
+
+/* T2 · D04/D10 (assalt 261101) · Les col·leccions de llegixDadesObertes, en
+   l'ordre del contracte, i el sostre de cada llista: una llista més llarga
+   atura l'exportació (mai es talla en silenci). */
+export const COLECCIONS_DADES_OBERTES = Object.freeze(['noticies', 'agenda', 'memoria', 'memoriaOral']);
+export const LIMIT_DADES_OBERTES = 5000;
+
+/* T8b · P0-23 (BOT-A2; Gauntlet Claude 261025_1705; assalt 261101) · La
+   versió de l'app nativa d'este codi, la que es compara amb
+   versioMinimaClient (capacitat 'versioClient'). Un enter que PUJA A CADA
+   BUILD DE BOTIGA i que val el mateix que el --build de scripts/botigues (el
+   versionCode d'android/app/build.gradle i el CURRENT_PROJECT_VERSION del
+   pbxproj d'iOS, 2 tots dos des de 8bd00f0ab): puja-ios.mjs i
+   puja-android.mjs paren si no casen (versio-client.mjs). El build 1
+   (TestFlight 1.0.0 (1) i l'AAB 1.0.0+1) no porta la porta: el 2 és el primer
+   que la porta. Mai per davall del mínim del servidor (2611011510 i les que la
+   tornen a crear): l'app nova es bloquejaria ella mateixa. */
+export const VERSIO_CLIENT_NATIU = 2;
 
 export const CONTRACTE_BACKEND = Object.freeze([
   ...CONTRACTE_NUCLI,

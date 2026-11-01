@@ -375,7 +375,17 @@ const EXCEPCIONS_ORFE = {
      excepció diu per què i es retira quan el mòdul es connecte o s'esborre. */
   'src/data/activitypub.js': 'el carrega tooling/seo/genera-federacio.mjs (FONTS.activitypub) amb un import() de camí calculat, al build web i al servidor de dev (tooling/vite/federacio-iaia.mjs) · decisió del Mestre 261031 (part C)',
   'src/data/conformitat/kit.js': 'kit de conformitat del port (AGENTS §8): el fan servir només les proves dels adaptadors · decisió del Mestre 261031 (part C)',
-  'src/data/exportaMunicipiOpenData.js': 'paquet Open Data del poble (P1-23): pendent de connectar a la fitxa del poble (Ronda 2, F1) · decisió del Mestre 261031 (part C)',
+  /* Pla 261101_1246 (assalt 10/10), aprovat pel Mestre el 261101. */
+  'src/data/federacio/inboxActivityPub.js': 'recepció ActivityPub de la fase 2 (D05/D07): biblioteca pura i provada, sense servei; cap mòdul de src/ no l’importa a posta (no entra al paquet del navegador) i es connectarà quan hi haja runtime (D-T3-5) · pla 261101_1246 aprovat pel Mestre el 261101 (carril T3)',
+  'src/data/importaMunicipiOpenData.js': 'restaurador municipal Open Data (D04/D10, T2): el criden les proves i un futur Tauler; sense UI de restauració · especificació T2 del pla 261101_1246 (D-3 només n’autoritza la lectura pública)',
+  'src/data/local/adaptadorLocal.js': 'segon adaptador complet del port (D01, T1): cap entrada de producció l’importa a posta (frontera provada a adaptadorLocal.test.js); hi entra per host.injectaBackendDelPaquet o per les proves · pla 261101_1246 (carrils T1 i T2)',
+  'src/data/local/compteLocal.js': 'mòdul de l’adaptador local (D01, T1): penja de src/data/local/adaptadorLocal.js, fora del paquet de producció a posta · pla 261101_1246',
+  'src/data/local/comunitatLocal.js': 'mòdul de l’adaptador local (D01, T1): penja de src/data/local/adaptadorLocal.js, fora del paquet de producció a posta · pla 261101_1246',
+  'src/data/local/contingutLocal.js': 'mòdul de l’adaptador local (D01, T1): penja de src/data/local/adaptadorLocal.js, fora del paquet de producció a posta · pla 261101_1246',
+  'src/data/local/conversesLocal.js': 'mòdul de l’adaptador local (D01, T1): penja de src/data/local/adaptadorLocal.js, fora del paquet de producció a posta · pla 261101_1246',
+  'src/data/local/dadesObertesLocal.js': 'dades obertes i restauració de l’adaptador local (D04/D10, T2): penja de src/data/local/adaptadorLocal.js, fora del paquet de producció a posta · pla 261101_1246',
+  'src/data/local/mitjansLocal.js': 'mòdul de l’adaptador local (D01, T1): penja de src/data/local/adaptadorLocal.js, fora del paquet de producció a posta · pla 261101_1246',
+  'src/data/local/notesLocal.js': 'mòdul de l’adaptador local (D01, T1): penja de src/data/local/adaptadorLocal.js, fora del paquet de producció a posta · pla 261101_1246',
   'src/data/xifratXatParaules.js': 'llista de paraules de la frase de recuperació E2EE (P1-12, DM-2): REVISADA_PEL_MESTRE = false i cap mòdul no la importa; encendre E2EE_ACTIU_PER_DEFECTE no la cableja · decisió del Mestre 261031 (part C)',
   'src/data/xifratXatRecuperacio.js': 'recuperació social E2EE del xat (P1-12, IDEA-48): cap mòdul no la importa; encendre E2EE_ACTIU_PER_DEFECTE no la cableja · decisió del Mestre 261031 (part C)',
   'src/pwa/avisosPush.js': 'avisos push web (ordre 261030_0252, Fase 3): pendents de cablejar · decisió del Mestre 261031 (part C)',

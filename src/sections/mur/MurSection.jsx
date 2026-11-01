@@ -29,8 +29,9 @@ import { totsPublics } from '../../components/universal/traduccio/visibilitatTra
 /* T3.3 (marató nocturna 261101, carril B3) · Les alertes d'emergència i els
    bàndols urgents d'un ajuntament: qui ho és (alertesMunicipals.js), qui ho
    comprova (useAjuntamentsDelMur) i com es pinta (AlertaMunicipal.jsx). */
-import { alertaMunicipalDe, candidatsAAlerta, esVigent, vigentsDalt } from './alertesMunicipals.js';
+import { alertaMunicipalDe, caducaAl, candidatsAAlerta, esVigent, properaCaducitat, vigentsDalt } from './alertesMunicipals.js';
 import { useAjuntamentsDelMur } from './useAjuntamentsDelMur.js';
+import { useRellotgeAlertes } from './useRellotgeAlertes.js';
 import { RegioAlertesVigents } from './AlertaMunicipal.jsx';
 
 /* P1-64 (pla 261028_1526 §3.7.1; decisions 1 i 9 del Mestre, 261028) · El
@@ -164,8 +165,12 @@ export default function MurSection() {
   const alertes = useMemo(() => new Map((sortedFeedPosts || [])
     .map((item) => [item, alertaMunicipalDe(item, esAjuntament)])
     .filter(([, tipus]) => tipus)), [sortedFeedPosts, esAjuntament]);
+  /* T7 · S2 (assalt 261101) · L'instant de l'últim toc del rellotge de les
+     alertes (useRellotgeAlertes): 0 fins al primer. Només dispara el
+     recàlcul de més avall; la vigència es mira amb el rellotge de paret. */
+  const [instantRellotge, setInstantRellotge] = useState(0);
 
-  const { allItems, alertesVigents } = useMemo(() => {
+  const { allItems, alertesVigents, propera } = useMemo(() => {
     const combined = [
       ...(sortedEvents || []),
       ...(sortedFeedPosts || []),
@@ -179,17 +184,24 @@ export default function MurSection() {
        mateix ordre de la pàgina /calendari).
        T3.3 · Les alertes municipals VIGENTS (alertesMunicipals.js · esVigent,
        per la mateixa data) pugen al capdamunt, en el seu ordre; la resta, el
-       de sempre. La vigència es calcula quan canvien les dades del Mur. */
+       de sempre. La vigència es calcula quan canvien les dades del Mur.
+       T7 · S2 · I quan toca el rellotge (la caducitat més pròxima, `propera`;
+       `instantRellotge` a les dependències). Sempre amb el rellotge de paret
+       d'ara: un toc vell no amaga cap alerta si després es corregix l'hora.
+       Cada avís porta la seua caducitat (`caducaAl`). */
     const ara = Date.now();
     const esAlertaVigent = ({ item, moment }) => alertes.has(item) && esVigent(moment, ara);
     const entrades = vigentsDalt(combined
       .map((item) => ({ item, moment: momentDeLaTargeta(item, item.type === 'event' ? modelDe(models, item) : null) }))
       .sort(perMomentDescendent), esAlertaVigent);
+    const vigents = entrades.filter(esAlertaVigent).map(({ item, moment }) => ({ item, tipus: alertes.get(item), caducaAl: caducaAl(moment) }));
     return {
       allItems: entrades.map(({ item }) => item),
-      alertesVigents: entrades.filter(esAlertaVigent).map(({ item }) => ({ item, tipus: alertes.get(item) }))
+      alertesVigents: vigents,
+      propera: properaCaducitat(vigents, ara)
     };
-  }, [sortedEvents, sortedFeedPosts, sortedMarketItems, systemPages, models, alertes]);
+  }, [sortedEvents, sortedFeedPosts, sortedMarketItems, systemPages, models, alertes, instantRellotge]); // eslint-disable-line react-hooks/exhaustive-deps -- instantRellotge només dispara el recàlcul (T7 · S2)
+  useRellotgeAlertes(propera, setInstantRellotge);
 
   const displayedItems = useMemo(() => {
     let items = allItems;

@@ -12,8 +12,16 @@
  *  · revisa(fitxa, correccio): «L'he revisada» (marcaRevisioHumana), que
  *    només es pot fer amb sessió; null sense sessió, perquè ningú no signa
  *    per ningú. `correccio` (opcional, Gauntlet 261101, B2-04) porta el que
- *    la persona ha corregit al diàleg abans de signar: { etiquetes, municipi }.
- *    Només passen eixes dues claus: qui signa i quan, els posa l'adaptador.
+ *    la persona ha corregit al diàleg abans de signar: { etiquetes, municipi,
+ *    etiquetesLliures }. Només passen eixes claus: qui signa i quan, els posa
+ *    l'adaptador, i els pobles que es poden triar (poblesConeguts) són el
+ *    catàleg de l'adaptador, no els del diàleg;
+ *  · cercaPoble(text) (D-5, pla 261101_1246): el poble que vol dir el text
+ *    del selector, amb els àlies («Jijona», «la Torre», «Alcoy»), d'entre els
+ *    pobles de l'aplicació i els municipis de referència (catalegDePobles;
+ *    resolPobleDeText); null sense sessió, com revisa;
+ *  · etiquetaNova(text, ids) (D-5): si una etiqueta (del vocabulari o
+ *    lliure) es pot afegir a les marcades; null sense sessió.
  * L'hora es llig quan es crida, no quan es crea l'adaptador: el motor és pur
  * i no llig mai el rellotge.
  *
@@ -31,7 +39,8 @@
  * No hi va `recurs`: una nota del Bloc no té cap URL pública pròpia, i la
  * font queda descrita com a nota sense URL (FONT_SENSE_URL de memoriaOral.js).
  */
-import { estructuraMemoriaOral, marcaRevisioHumana } from './proposaCard.js';
+import { estructuraMemoriaOral, etiquetaNova, marcaRevisioHumana, resolPobleDeText } from './proposaCard.js';
+import { catalegDePobles } from '../pobles/aliesDePobles.js';
 
 /** L'actor humà del fitxer: `human:sense-identificador`, mai l'id del compte. */
 export const PERSONA_SENSE_IDENTIFICADOR = 'sense-identificador';
@@ -58,11 +67,14 @@ function hiHaSessio(id) {
  *  · pobles: la llista de pobles de l'aplicació (useCoreContent().towns);
  *    buida o absent, la llavor del codi (townsSeed.js), la de memoriaOral.js;
  *  · rellotge: () => Date, per a les proves.
- * Torna, immutable: { estructura(contingut), revisa: ((fitxa, correccio) => fitxa) | null }.
+ * Torna, immutable: { estructura(contingut), revisa: ((fitxa, correccio) => fitxa) | null,
+ * cercaPoble: (text => resultat) | null, etiquetaNova: ((text, ids) => resultat) | null }.
  */
 export function memoriaOralDelBloc({ persona = null, pobles, rellotge = rellotgeDelSistema } = {}) {
   const ambSessio = hiHaSessio(persona);
   const llista = Array.isArray(pobles) && pobles.length ? pobles : undefined;
+  /* El selector tria entre els pobles de l'aplicació (o la llavor) i els municipis de referència. */
+  const cataleg = catalegDePobles(llista);
   return Object.freeze({
     estructura: (contingut) => estructuraMemoriaOral(contingut, {
       ara: rellotge(),
@@ -73,9 +85,13 @@ export function memoriaOralDelBloc({ persona = null, pobles, rellotge = rellotge
       ? (fitxa, correccio) => marcaRevisioHumana(fitxa, {
         etiquetes: correccio?.etiquetes,
         municipi: correccio?.municipi,
+        etiquetesLliures: correccio?.etiquetesLliures,
+        poblesConeguts: cataleg,
         persona: PERSONA_SENSE_IDENTIFICADOR,
         ara: rellotge()
       })
-      : null
+      : null,
+    cercaPoble: ambSessio ? (text) => resolPobleDeText(text, { pobles: cataleg }) : null,
+    etiquetaNova: ambSessio ? (text, ids) => etiquetaNova(text, ids) : null
   });
 }

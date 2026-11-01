@@ -42,7 +42,7 @@
  */
 import { BENVINGUDA_IAIA, IAIA_ID, RESPOSTA_IAIA, agentIASeed } from '../../../data/identitatsSeed.js';
 import { respostaDeLaIAIA } from '../../../data/iaiaLocal.js';
-import { Fragment, forwardRef, useCallback, useContext, useEffect, useImperativeHandle, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { Fragment, Suspense, forwardRef, lazy, useCallback, useContext, useEffect, useImperativeHandle, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { AlertTriangle, FileText } from 'lucide-react';
 import { AppGridContext } from '../../../components/layout/AppGridShell.jsx';
 import CapcaleraConversa from './CapcaleraConversa.jsx';
@@ -60,6 +60,17 @@ import {
   nousAnunciables, scrollPerCentrar, scrollPerDeixarDalt
 } from '../conversa.js';
 import { desaEsborrany, llegixEsborrany } from '../esborranys.js';
+import { E2EE_ACTIU_PER_DEFECTE } from '../../../config/xifratXat.js';
+import { useEstatXifratgeDelFil } from '../useSeguretatDelFil.js';
+import { TEXTOS_XIFRATGE } from '../estatXifratgeFil.js';
+
+/* P1-12 pas 17 (pla 261101_1246, T7 · S5) · L'estat del xifratge d'esta conversa i el
+   diàleg del número de seguretat, darrere de la bandera compilada. Apagada, Rollup
+   plega les tres constants: ni el diàleg, ni el hook, ni cap text del xifratge entren
+   al paquet (Conversa.e2eeApagat.produccio.test.js), i el menú «⋯» és el de sempre. */
+const PanellSeguretatXat = E2EE_ACTIU_PER_DEFECTE ? lazy(() => import('./PanellSeguretatXat.jsx')) : null;
+const SENSE_XIFRATGE = Object.freeze({ visible: false });
+const useXifratgeDelFil = E2EE_ACTIU_PER_DEFECTE ? useEstatXifratgeDelFil : () => SENSE_XIFRATGE;
 
 /* Gauntlet 261025_0545 (IA-07) · El nom de la IAIA a la seua benvinguda, el
    del padró (identitatsSeed.js), com a la capçalera i a les bombolles. */
@@ -292,6 +303,10 @@ export default function Conversa({
   const [aBaix, setABaix] = useState(true);
   const [nousAvall, setNousAvall] = useState(0);
   const [ressalt, setRessalt] = useState(null);
+  /* P1-12 pas 17 (T7 · S5) · L'estat del xifratge (invisible amb la bandera apagada) i el
+     diàleg del número: null mentre no s'ha obert mai (no es carrega), true obert, false tancat. */
+  const xifratge = useXifratgeDelFil(fil);
+  const [panellXifratge, setPanellXifratge] = useState(null);
   /* Els nous d'altres que ha d'anunciar la regió en viu (#11): AnunciDeNous. */
   const anunciRef = useRef(null);
   /* En estret (mòbil), enfocar el camp obriria el teclat (#6). */
@@ -1010,6 +1025,11 @@ export default function Conversa({
     nomContrapart: contrapart.autor?.nom || ''
   } : null;
 
+  /* P1-12 pas 17 (T7 · S5) · Només amb la bandera encesa: l'entrada del menú i el diàleg. */
+  const accioXifratge = E2EE_ACTIU_PER_DEFECTE && xifratge.visible
+    ? { etiqueta: t(TEXTOS_XIFRATGE.menu[0], TEXTOS_XIFRATGE.menu[1]), onTria: () => setPanellXifratge(true) }
+    : null;
+
   return (
     <div className="sdp-xat-conversa" ref={arrelRef}>
       <CapcaleraConversa
@@ -1020,7 +1040,21 @@ export default function Conversa({
         seleccio={modeSeleccio ? { quants: triats.size, onEixir: surtDeSeleccio } : null}
         t={t}
         {...accionsDeLaContrapart}
+        accioXifratge={accioXifratge}
       />
+      {E2EE_ACTIU_PER_DEFECTE && PanellSeguretatXat && panellXifratge !== null ? (
+        <Suspense fallback={null}>
+          <PanellSeguretatXat
+            obert={panellXifratge === true}
+            onTanca={() => setPanellXifratge(false)}
+            fil={fil}
+            estat={xifratge}
+            nom={accionsDeLaContrapart?.nomContrapart || fil?.name || fil?.title || ''}
+            config={configAdjunts}
+            t={t}
+          />
+        </Suspense>
+      ) : null}
 
       {/* La llista no és una regió en viu: s'hi inserixen la càrrega d'obrir,
           els lots d'antics i els menús de les bombolles (#11). tabIndex -1:

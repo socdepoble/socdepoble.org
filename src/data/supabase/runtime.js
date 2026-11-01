@@ -48,9 +48,13 @@ export const getBackendConfigurat = (config = {}) => getResolvedConfig(config).h
 export const getRuntimeDataMode = (config = {}) => getResolvedConfig(config).runtimeDataMode;
 export const getCurrentUser = () => usuariDeSessio();
 
-const buildHeaders = (config, anonKey, extra = {}) => {
-  const jwt = jwtPerBackend(config);
-  return { apikey: anonKey, Authorization: `Bearer ${jwt || anonKey}`, 'Content-Type': 'application/json', ...extra };
+/* T2 · D04/D10 (assalt 261101) · `anonim`: la petició va SEMPRE com a
+   visitant, amb la clau pública, encara que hi haja una sessió desada. La
+   clau va darrere de `extra`: cap capçalera de qui crida no la pot tornar a
+   canviar pel JWT. */
+const buildHeaders = (config, anonKey, extra = {}, { anonim = false } = {}) => {
+  const capcaleres = { apikey: anonKey, Authorization: `Bearer ${jwtPerBackend(config) || anonKey}`, 'Content-Type': 'application/json', ...extra };
+  return anonim ? { ...capcaleres, apikey: anonKey, Authorization: `Bearer ${anonKey}` } : capcaleres;
 };
 
 /* L'actor es llig del blob desat i no d'usuariDeSessio(): amb el jwt caducat (el
@@ -61,7 +65,7 @@ const sessioCanviada = () => new DOMException('La sessió ha canviat durant la r
 export async function request(path, config = {}, options = {}) {
   const epoch = versioSessio;
   const actor = actorDesat();
-  const { method = 'GET', headers = {}, body, signal, timeoutMs = 12000, _isRetry = false } = options;
+  const { method = 'GET', headers = {}, body, signal, timeoutMs = 12000, _isRetry = false, anonim = false } = options;
   const { supabaseUrl, supabaseAnonKey, hasSupabaseConfig } = getResolvedConfig(config);
   if (!hasSupabaseConfig) throw new Error('Falten VITE_SUPABASE_URL i/o VITE_SUPABASE_ANON_KEY.');
   const controller = new AbortController();
@@ -78,10 +82,12 @@ export async function request(path, config = {}, options = {}) {
       err.name = 'AbortError';
       throw err;
     }
-    const response = await fetch(`${supabaseUrl}${path}`, { method, redirect: 'error', headers: buildHeaders(config, supabaseAnonKey, headers),
-      signal: controller.signal, body: body === undefined ? undefined : JSON.stringify(body) });
+    /* Anònima: tampoc cap galeta, encara que el servidor de dades compartira l'origen (idea del kit de Codex, 261101). */
+    const response = await fetch(`${supabaseUrl}${path}`, { method, redirect: 'error', headers: buildHeaders(config, supabaseAnonKey, headers, { anonim }),
+      ...(anonim ? { credentials: 'omit' } : {}), signal: controller.signal, body: body === undefined ? undefined : JSON.stringify(body) });
     if (!response.ok) {
-      if (response.status === 401 && epoch === versioSessio && !_isRetry && !path.startsWith('/auth/') && await refresca(config)) {
+      /* Una lectura anònima (T2) no renova mai la sessió: no l'ha feta servir. */
+      if (response.status === 401 && !anonim && epoch === versioSessio && !_isRetry && !path.startsWith('/auth/') && await refresca(config)) {
         /* C14: el reintent només val per a la sessió que ha produït ESTA renovació.
            desaSessio() de la renovació incrementa la versió exactament una vegada i
            conserva l'actor; qualsevol altre salt (logout, canvi d'usuari, nova entrada

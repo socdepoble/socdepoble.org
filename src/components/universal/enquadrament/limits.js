@@ -16,6 +16,14 @@ export const ERROR_PIXELS = 'Esta foto és massa gran per a enquadrar-la al nave
 export const ERROR_HEIC = 'Este navegador no pot obrir fotos HEIC. Desa-la o comparteix-la com a JPEG i torna-ho a provar.';
 
 const MISSATGES = { pes: ERROR_PES, pixels: ERROR_PIXELS, heic: ERROR_HEIC };
+/* P1-22 (assalt 261101) · Els mateixos avisos en parells [clau, reserva]: la
+   reserva és el valencià de sempre. ErrorImatge.message continua en valencià
+   (intern); el que es veu passa per missatgeLimit(codi, t). */
+const PARELLS_LIMIT = Object.freeze({
+  pes: Object.freeze(['editor.enquadrament.errorPes', ERROR_PES]),
+  pixels: Object.freeze(['editor.enquadrament.errorPixels', ERROR_PIXELS]),
+  heic: Object.freeze(['editor.enquadrament.errorHeic', ERROR_HEIC]),
+});
 
 /** Un error amb codi ('pes' | 'pixels' | 'heic'): el diàleg en mostra el missatge tal qual. */
 export class ErrorImatge extends Error {
@@ -45,6 +53,12 @@ export function esHeic(fitxer) {
   return /\.hei[cf]$/i.test(String(fitxer.name || ''));
 }
 
-export function missatgeLimit(codi) {
-  return MISSATGES[codi] || null;
+/**
+ * El que es diu d'un límit, o null si el codi no n'és cap. `t` (opcional) és
+ * el traductor de la interfície; sense, el valencià de sempre.
+ */
+export function missatgeLimit(codi, t) {
+  if (typeof codi !== 'string' || !Object.hasOwn(PARELLS_LIMIT, codi)) return null;
+  const [clau, reserva] = PARELLS_LIMIT[codi];
+  return typeof t === 'function' ? t(clau, reserva) : reserva;
 }

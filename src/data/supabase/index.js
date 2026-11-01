@@ -36,6 +36,9 @@ export { getCurrentUser } from './runtime.js';
 /* T2 i T4 · Capacitat 'salut'. Explícita a posta: dos `export *` amb el mateix
    nom s'anul·len en silenci i la capacitat desapareixeria sense avís. */
 export { comprovaServidor } from './auth.js';
+/* T8b · P0-23 (BOT-A2; assalt 261101) · Capacitat 'versioClient', la versió
+   mínima de l'app nativa (2611011510). Explícita pel mateix motiu. */
+export { versioMinimaClient } from './versioClient.js';
 /* Fase D (261020, tasca 1) · Capacitat 'entradaAmbToken' (Apple i Google des
    del full natiu). Explícita pel mateix motiu. */
 export { entraAmbTokenDeProveidor } from './auth.js';
@@ -58,6 +61,10 @@ export {
 /* Pla 261022_1955 (Cercador Universal, T1) · Capacitat 'directoriEntitats', el
    directori públic de /cerca. Explícita pel mateix motiu. */
 export { listPublicOrganizations } from './organizations.js';
+/* T2 · D04/D10 (assalt 261101) · Capacitat 'dadesObertes', la lectura
+   anònima de les dades obertes del poble. Explícita pel mateix motiu. Este
+   adaptador no restaura (sense 'restauracioDadesObertes', decisió D-3). */
+export { llegixDadesObertes } from './dadesObertes.js';
 /* T6b (IDEA-14; decisió del Mestre, 261024) · Capacitat 'seguiments',
    «Connectar / Seguir». Explícita pel mateix motiu. */
 export {

@@ -19,11 +19,23 @@
  * origenPublic (data/origenNota.js) abans d'escriure la fila.
  *
  * Funcions pures, sense React ni xarxa. L'execució viu a useAplicaAbast.js.
+ *
+ * P1-22 (assalt 261101, T5b) · Els textos que es veuen ixen per un `t`
+ * opcional (el traductor de la interfície): parells [clau, reserva] amb la
+ * reserva valenciana lletra per lletra, i sense `t` el text de sempre. El
+ * missatge de xat ix en la llengua de qui connecta (com section.connectar.
+ * seguir.missatge). DES_DE no es traduïx: va al cos persistent de la nota.
  */
 import { MODES_ABAST } from '../../data/origenNota.js';
 import { CODI_ESQUEMA_ABSENT } from '../../data/errorsBackend.js';
+import { omple } from '../../config/moderacio.js';
 
 export { MODES_ABAST };
+
+/* Sense traductor (proves pures, catàleg), la reserva valenciana. */
+const senseTraductor = (_clau, reserva) => reserva;
+/* Un parell traduït; un `t` que no és funció (null) dona la reserva. */
+const text = (t, [clau, reserva]) => (typeof t === 'function' ? t(clau, reserva) : reserva);
 
 /* Els enviaments són irreversibles i el xat té límit de freqüència: pocs i en sèrie. */
 export const LIMIT_PERSONES = 20;
@@ -55,6 +67,31 @@ export const ETIQUETA_OBJECTE = Object.freeze({
   etiqueta: 'Etiqueta'
 });
 
+/* P1-22 · Les mateixes etiquetes, en parells per al traductor. ETIQUETA_OBJECTE
+   es queda: el llig Notes (ConnexioDetall, ConnexioFitxa). */
+const PARELLS_OBJECTE = Object.freeze({
+  publicacio: Object.freeze(['section.connectar.objecte.publicacio', ETIQUETA_OBJECTE.publicacio]),
+  producte: Object.freeze(['section.connectar.objecte.producte', ETIQUETA_OBJECTE.producte]),
+  esdeveniment: Object.freeze(['section.connectar.objecte.esdeveniment', ETIQUETA_OBJECTE.esdeveniment]),
+  multimedia: Object.freeze(['section.connectar.objecte.multimedia', ETIQUETA_OBJECTE.multimedia]),
+  poble: Object.freeze(['section.connectar.objecte.poble', ETIQUETA_OBJECTE.poble]),
+  persona: Object.freeze(['section.connectar.objecte.persona', ETIQUETA_OBJECTE.persona]),
+  entitat: Object.freeze(['section.connectar.objecte.entitat', ETIQUETA_OBJECTE.entitat]),
+  grup: Object.freeze(['section.connectar.objecte.grup', ETIQUETA_OBJECTE.grup]),
+  ia: Object.freeze(['section.connectar.objecte.ia', ETIQUETA_OBJECTE.ia]),
+  pagina: Object.freeze(['section.connectar.objecte.pagina', ETIQUETA_OBJECTE.pagina]),
+  nota: Object.freeze(['section.connectar.objecte.nota', ETIQUETA_OBJECTE.nota]),
+  carpeta: Object.freeze(['section.connectar.objecte.carpeta', ETIQUETA_OBJECTE.carpeta]),
+  categoria: Object.freeze(['section.connectar.objecte.categoria', ETIQUETA_OBJECTE.categoria]),
+  etiqueta: Object.freeze(['section.connectar.objecte.etiqueta', ETIQUETA_OBJECTE.etiqueta])
+});
+const PARELL_ELEMENT = Object.freeze(['section.connectar.objecte.element', 'Element']);
+
+/** Com es diu l'objecte a la interfície; un objecte desconegut (o «toString»), «Element». */
+export function etiquetaObjecte(objecte, t = senseTraductor) {
+  return text(t, Object.hasOwn(PARELLS_OBJECTE, objecte) ? PARELLS_OBJECTE[objecte] : PARELL_ELEMENT);
+}
+
 /** «des del Mur», «des de l'agenda»… Una secció desconeguda: «des de Sóc de Poble». */
 const DES_DE = Object.freeze({
   mur: 'des del Mur',
@@ -68,11 +105,11 @@ const DES_DE = Object.freeze({
 export const desDe = (seccio) => DES_DE[seccio] || 'des de Sóc de Poble';
 
 /** Els grups de xat on la persona ja és: fils de tipus 'grup', no arxivats. */
-export function grupsDeXat(fils) {
+export function grupsDeXat(fils, t = senseTraductor) {
   if (!Array.isArray(fils)) return [];
   return fils
     .filter((fil) => fil && fil.id != null && TIPUS_GRUP_XAT.has(fil.tipus) && !fil.arxivat)
-    .map((fil) => ({ id: String(fil.id), nom: String(fil.name || fil.title || 'Grup sense nom') }));
+    .map((fil) => ({ id: String(fil.id), nom: String(fil.name || fil.title || text(t, ['section.connectar.grups.senseNom', 'Grup sense nom'])) }));
 }
 
 /**
@@ -91,49 +128,52 @@ export function estatDelXat({ status, avis, fils } = {}) {
  * i, si no es pot triar, el motiu (`detall`). Forma de GrupOpcions.
  * `xat` (estatDelXat): una llista buida només vol dir «cap grup» quan el xat
  * ha carregat bé; mentre carrega o si ha fallat, es diu això.
+ * P1-22 · `t` opcional: sense, els textos valencians de sempre.
  */
-export function opcionsDAbast({ dataMode = 'remote', teSessio = false, grups = [], xat = 'llest' } = {}) {
+export function opcionsDAbast({ dataMode = 'remote', teSessio = false, grups = [], xat = 'llest', t = senseTraductor } = {}) {
   const remot = dataMode === 'remote';
-  const senseComptes = 'Entra amb el teu compte per a enviar-ho per xat.';
-  const nomesAci = 'Sense servidor, el missatge es queda en este dispositiu: ningú més el rep.';
+  const tr = (parell) => text(t, parell);
+  const senseComptes = tr(['section.connectar.abast.senseCompte', 'Entra amb el teu compte per a enviar-ho per xat.']);
+  const nomesAci = tr(['section.connectar.abast.nomesAci', 'Sense servidor, el missatge es queda en este dispositiu: ningú més el rep.']);
   const senseGrups = Array.isArray(grups) ? grups.length === 0 : true;
-  const motiuSenseGrups = xat === 'carregant' ? 'Carregant els teus grups de xat…'
-    : xat === 'error' ? 'El xat no està disponible ara mateix.'
-      : 'Encara no eres en cap grup de xat.';
+  const motiuSenseGrups = xat === 'carregant' ? tr(['section.connectar.abast.grupsCarregant', 'Carregant els teus grups de xat…'])
+    : xat === 'error' ? tr(['section.connectar.abast.xatNoDisponible', 'El xat no està disponible ara mateix.'])
+      : tr(['section.connectar.abast.capGrup', 'Encara no eres en cap grup de xat.']);
   return [
     {
       valor: 'privada',
-      etiqueta: 'Privada',
+      etiqueta: tr(['section.connectar.private', 'Privada']),
       /* D1 (ordre del Mestre, 260930) · el verb és connectar, no guardar.
          261024 correccions (directiva del Mestre 15:05, Gemini G2-02) · res de
          «MAS» a la interfície: «a les teues notes». */
-      ajuda: 'Queda a les teues notes. Ningú més la veu.',
-      detall: remot ? undefined : 'Sense servidor, queda només en este dispositiu.'
+      ajuda: tr(['section.connectar.abast.privadaAjuda', 'Queda a les teues notes. Ningú més la veu.']),
+      detall: remot ? undefined : tr(['section.connectar.abast.privadaLocal', 'Sense servidor, queda només en este dispositiu.'])
     },
     {
       valor: 'persones',
-      etiqueta: 'Persones concretes',
-      ajuda: 'Tria gent del padró i li enviarem l’enllaç per xat. És un missatge, no un permís: no es pot desfer.',
+      etiqueta: tr(['section.connectar.abast.persones', 'Persones concretes']),
+      ajuda: tr(['section.connectar.abast.personesAjuda', 'Tria gent del padró i li enviarem l’enllaç per xat. És un missatge, no un permís: no es pot desfer.']),
       desactivada: !teSessio,
-      detall: !teSessio ? senseComptes : (remot ? `Fins a ${LIMIT_PERSONES} persones.` : nomesAci)
+      detall: !teSessio ? senseComptes
+        : (remot ? omple(tr(['section.connectar.abast.personesLimit', 'Fins a {n} persones.']), { n: LIMIT_PERSONES }) : nomesAci)
     },
     {
       valor: 'grups',
       /* IDEA-14 (261024) · «de xat»: no són les entitats de tipus grup (el camí «Formar part»). */
-      etiqueta: 'Grups de xat',
-      ajuda: 'Enviarem l’enllaç als grups de xat on ja eres. És un missatge, no un permís: no es pot desfer.',
+      etiqueta: tr(['section.connectar.abast.grups', 'Grups de xat']),
+      ajuda: tr(['section.connectar.abast.grupsAjuda', 'Enviarem l’enllaç als grups de xat on ja eres. És un missatge, no un permís: no es pot desfer.']),
       desactivada: !teSessio || senseGrups,
       detall: !teSessio ? senseComptes
         : senseGrups ? motiuSenseGrups
-          : (remot ? `Fins a ${LIMIT_GRUPS} grups.` : nomesAci)
+          : (remot ? omple(tr(['section.connectar.abast.grupsLimit', 'Fins a {n} grups.']), { n: LIMIT_GRUPS }) : nomesAci)
     },
     {
       valor: 'poble',
-      etiqueta: 'Tot el poble',
-      ajuda: 'No ix sola: obri la connexió a les teues notes i prem «Compartir al Mur». La veurà la gent registrada del poble, no Internet.',
+      etiqueta: tr(['section.connectar.abast.poble', 'Tot el poble']),
+      ajuda: tr(['section.connectar.abast.pobleAjuda', 'No ix sola: obri la connexió a les teues notes i prem «Compartir al Mur». La veurà la gent registrada del poble, no Internet.']),
       desactivada: !remot || !teSessio,
-      detall: !remot ? 'Sense servidor no es pot compartir al Mur.'
-        : (!teSessio ? 'Entra amb el teu compte per a compartir-la al Mur.' : undefined)
+      detall: !remot ? tr(['section.connectar.abast.pobleLocal', 'Sense servidor no es pot compartir al Mur.'])
+        : (!teSessio ? tr(['section.connectar.abast.pobleSenseCompte', 'Entra amb el teu compte per a compartir-la al Mur.']) : undefined)
     }
   ];
 }
@@ -165,8 +205,9 @@ function unics(llista, limit) {
  *   'xat-grup'    → enviar l'enllaç al grup.
  *   'mur'         → no s'executa sol: la persona l'ha de compartir des del
  *                   lector del MAS («Compartir al Mur», T54).
+ * P1-22 · El nom del pas del Mur es veu al resum: passa per `t`.
  */
-export function passosDAplicacio(abast) {
+export function passosDAplicacio(abast, t = senseTraductor) {
   if (!abast || typeof abast !== 'object') return [];
   if (abast.mode === 'persones') {
     return unics(abast.persones, LIMIT_PERSONES).map((desti) => ({ tipus: 'xat-persona', desti }));
@@ -174,17 +215,28 @@ export function passosDAplicacio(abast) {
   if (abast.mode === 'grups') {
     return unics(abast.grups, LIMIT_GRUPS).map((desti) => ({ tipus: 'xat-grup', desti }));
   }
-  if (abast.mode === 'poble') return [{ tipus: 'mur', desti: { id: 'mur', nom: 'El teu mur' } }];
+  if (abast.mode === 'poble') return [{ tipus: 'mur', desti: { id: 'mur', nom: text(t, ['section.connectar.resum.mur', 'El teu mur']) } }];
   return [];
 }
 
-/** El missatge de xat: què s'ha connectat, de qui és i on es veu. Mai més de 4096 caràcters. */
-export function missatgeDeConnexio({ titol = '', autorNom = '' } = {}, url = '') {
-  const nom = String(titol || 'un element').trim().slice(0, MAXIM_TITOL);
-  const de = autorNom ? ` (de ${String(autorNom).trim().slice(0, MAXIM_TITOL)})` : '';
-  const on = url ? ` Ho pots vore ací: ${url}` : '';
-  /* 261024 correccions (G2-02) · qui el rep no sap què és el «MAS»: les meues notes. */
-  return `T’envie «${nom}»${de}, que he guardat a les meues notes.${on}`.slice(0, MAXIM_MISSATGE);
+/* P1-22 · Quatre frases senceres (amb autor o sense, amb enllaç o sense): cap
+   tros enganxat, i cada llengua ordena la frase com li cal. */
+const PLANTILLES_DEL_MISSATGE = Object.freeze({
+  base: Object.freeze(['section.connectar.missatge.base', 'T’envie «{titol}», que he guardat a les meues notes.']),
+  autor: Object.freeze(['section.connectar.missatge.autor', 'T’envie «{titol}» (de {autor}), que he guardat a les meues notes.']),
+  enllac: Object.freeze(['section.connectar.missatge.enllac', 'T’envie «{titol}», que he guardat a les meues notes. Ho pots vore ací: {url}']),
+  autorEnllac: Object.freeze(['section.connectar.missatge.autorEnllac', 'T’envie «{titol}» (de {autor}), que he guardat a les meues notes. Ho pots vore ací: {url}'])
+});
+
+/** El missatge de xat: què s'ha connectat, de qui és i on es veu. Mai més de 4096 caràcters.
+ * P1-22 · Ix en la llengua de qui connecta (`t`); sense `t`, el valencià. */
+export function missatgeDeConnexio({ titol = '', autorNom = '' } = {}, url = '', t = senseTraductor) {
+  const nom = String(titol || text(t, ['section.connectar.missatge.senseTitol', 'un element'])).trim().slice(0, MAXIM_TITOL);
+  const autor = autorNom ? String(autorNom).trim().slice(0, MAXIM_TITOL) : '';
+  const clau = autorNom ? (url ? 'autorEnllac' : 'autor') : (url ? 'enllac' : 'base');
+  /* 261024 correccions (G2-02) · qui el rep no sap què és el «MAS»: les meues notes.
+     omple() fa una sola passada: un títol amb «{url}» no s'hi torna a omplir. */
+  return omple(text(t, PLANTILLES_DEL_MISSATGE[clau]), { titol: nom, autor, url }).slice(0, MAXIM_MISSATGE);
 }
 
 /**
@@ -193,15 +245,17 @@ export function missatgeDeConnexio({ titol = '', autorNom = '' } = {}, url = '')
  * missatge cru. La resta d'errors passen tal qual.
  * ENX-16 (261006) · Primer el codi neutral (error.codi 'esquema-absent'),
  * que pot portar qualsevol adaptador; la regex de PostgREST queda de reserva.
+ * P1-22 · Els dos textos propis passen per `t`; un missatge cru que no és
+ * d'esquema passa tal qual, com abans.
  */
-export function missatgeDeLError(error) {
-  const text = String(error?.message || '');
+export function missatgeDeLError(error, t = senseTraductor) {
+  const missatge = String(error?.message || '');
   const columnaOrigen = error?.codi === CODI_ESQUEMA_ABSENT
-    || (/origen/i.test(text) && /PGRST204|42703|column|columna/i.test(text));
+    || (/origen/i.test(missatge) && /PGRST204|42703|column|columna/i.test(missatge));
   if (columnaOrigen) {
-    return 'El servidor d’este poble encara no admet connexions: falta aplicar-hi la migració de l’origen de les notes. La connexió no s’ha fet.';
+    return text(t, ['section.connectar.error.esquema', 'El servidor d’este poble encara no admet connexions: falta aplicar-hi la migració de l’origen de les notes. La connexió no s’ha fet.']);
   }
-  return text || 'No s’ha pogut connectar. Torna-ho a provar.';
+  return missatge || text(t, ['section.connectar.error.generic', 'No s’ha pogut connectar. Torna-ho a provar.']);
 }
 
 /** El registre del que s'ha fet de veres, per a origen.abast.aplicat. */

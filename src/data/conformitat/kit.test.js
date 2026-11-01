@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { describe, expect, test } from 'vitest';
-import { CAPACITATS, CONTRACTE_NUCLI } from '../contracte.js';
+import { CAPACITATS, CONTRACTE_NUCLI, LIMIT_DADES_OBERTES } from '../contracte.js';
 import { CASOS, contextDeConformitat, executaCas, metodesSenseCas } from './kit.js';
 import { ambXatsPerDefecte } from '../xatsPerDefecte.js';
 
@@ -139,6 +139,34 @@ describe('el kit veu una falla', () => {
       .toMatchObject({ estat: 'falla', falles: ['falta loadMur del nucli'] });
     expect(await executaCas(cas('comprovaServidor'), {}, ctx()))
       .toMatchObject({ estat: 'omés', motiu: 'capacitat salut absent' });
+  });
+
+  /* T8b · P0-23 (BOT-A2; assalt 261101) · La versió mínima de l'app nativa (capacitat 'versioClient'). */
+  test('P0-23 · versioMinimaClient: null o { versioMinima, enllac }; un mínim que no és enter, un enllaç que no és https o un camp de més és una falla', async () => {
+    const web = cas('versioMinimaClient', "'web'");
+    const android = cas('versioMinimaClient', "'android'");
+    expect(web).toMatchObject({ capacitat: 'versioClient', espera: 'resol', escriu: false });
+    expect(android).toMatchObject({ capacitat: 'versioClient', espera: 'resol', escriu: false });
+    const crides = [];
+    const amb = (valor) => ({ versioMinimaClient: async (...args) => { crides.push(args); return valor; } });
+    expect(await executaCas(web, amb(null), ctx())).toMatchObject({ estat: 'ok', falles: [] });
+    expect((await executaCas(web, amb({ versioMinima: 2, enllac: null }), ctx())).estat).toBe('falla');
+    for (const valor of [null, { versioMinima: 2, enllac: null }, { versioMinima: 3, enllac: 'https://play.google.com/store/apps/details?id=org.socdepoble.app' }]) {
+      expect(await executaCas(android, amb(valor), ctx()), JSON.stringify(valor)).toMatchObject({ estat: 'ok', falles: [] });
+    }
+    expect(crides[0]).toEqual(['web', { dataMode: 'seed' }]);
+    expect(crides[2]).toEqual(['android', { dataMode: 'seed' }]);
+    expect(await executaCas(android, amb({ versioMinima: '2', enllac: null }), ctx()))
+      .toMatchObject({ estat: 'falla', falles: ['versioMinima havia de ser un enter ≥ 1: "2"'] });
+    expect(await executaCas(android, amb({ versioMinima: 0, enllac: 'javascript:alert(1)' }), ctx()))
+      .toMatchObject({ estat: 'falla', falles: ['versioMinima havia de ser un enter ≥ 1: 0', 'enllac havia de ser null o una adreça https: "javascript:alert(1)"'] });
+    expect(await executaCas(android, amb({ versioMinima: 2, enllac: null, plataforma: 'android' }), ctx()))
+      .toMatchObject({ estat: 'falla', falles: ['la versió mínima porta un camp de més: plataforma'] });
+    expect(await executaCas(android, amb(2), ctx())).toMatchObject({ estat: 'falla', falles: ['havia de ser null o un objecte i és number'] });
+    expect(await executaCas(android, {}, ctx())).toMatchObject({ estat: 'omés', motiu: 'capacitat versioClient absent' });
+    expect(CAPACITATS.versioClient).toEqual(['versioMinimaClient']);
+    expect(CONTRACTE_NUCLI).not.toContain('versioMinimaClient');
+    expect(metodesSenseCas()).not.toContain('versioMinimaClient');
   });
 
   test('sense escriptures demanades, els casos que escriuen no criden res', async () => {
@@ -555,5 +583,89 @@ describe('P1-27 · els casos nous del kit', () => {
     expect(cas('llevaMembreOrganitzacio').arguments(c)).toEqual(['conformitat-sense-organitzacio', { tipus: 'persona', id: 'conformitat-sense-persona' }, c.config]);
     expect(cas('desaContacteOrganitzacio').arguments(c)[1]).toEqual({ correu: 'no és cap correu', public: true });
     expect(cas('demanaRecuperacioContrasenya').arguments(c)).toEqual(['', c.config]);
+  });
+});
+
+/* T2 · D04/D10 (assalt 261101) · Les dades obertes i la seua restauració. */
+describe('T2 · els casos de les dades obertes', () => {
+  const ctx = () => contextDeConformitat({ config: { dataMode: 'seed' } });
+  const llegix = () => cas('llegixDadesObertes');
+  const restaura = () => cas('restauraDadesObertes');
+  const amb = (valor) => ({ llegixDadesObertes: async () => valor });
+
+  test('cobrixen les dues capacitats (la lectura i el lot invàlid, sense escriure) i ja no són al deute', () => {
+    expect(llegix()).toMatchObject({ capacitat: 'dadesObertes', espera: 'resol', escriu: false });
+    expect(restaura()).toMatchObject({ capacitat: 'restauracioDadesObertes', espera: 'rebutja', escriu: false });
+    expect(CAPACITATS.dadesObertes).toEqual(['llegixDadesObertes']);
+    expect(CAPACITATS.restauracioDadesObertes).toEqual(['restauraDadesObertes']);
+    expect(metodesSenseCas()).not.toContain('llegixDadesObertes');
+    expect(metodesSenseCas()).not.toContain('restauraDadesObertes');
+  });
+
+  test('llegixDadesObertes: null (sense font) i [] (buida) són conformes, amb el poble de conformitat', async () => {
+    const crides = [];
+    const adaptador = { llegixDadesObertes: async (...args) => { crides.push(args); return { noticies: [], agenda: [{ id: 'a' }], memoria: null, memoriaOral: null }; } };
+    expect(await executaCas(llegix(), adaptador, ctx())).toMatchObject({ estat: 'ok', falles: [] });
+    expect(crides[0]).toEqual([{ poble: { slug: 'poble-de-conformitat-que-no-existix', nom: 'Poble de conformitat que no existix' } }, { dataMode: 'seed' }]);
+    expect(await executaCas(llegix(), amb({ noticies: null, agenda: null, memoria: null, memoriaOral: null }), ctx())).toMatchObject({ estat: 'ok' });
+  });
+
+  test('llegixDadesObertes: una clau absent, una llista sense id, una persona propietària o un correu són una falla', async () => {
+    expect(await executaCas(llegix(), amb({ noticies: [], agenda: [], memoria: null }), ctx()))
+      .toMatchObject({ estat: 'falla', falles: ['falta la col·lecció memoriaOral'] });
+    expect(await executaCas(llegix(), amb({ noticies: [{ title: 'sense id' }], agenda: [], memoria: null, memoriaOral: null }), ctx()))
+      .toMatchObject({ estat: 'falla', falles: ['noticies té elements sense id'] });
+    expect(await executaCas(llegix(), amb({ noticies: [{ id: 'v', owner_user_id: null }], agenda: [], memoria: null, memoriaOral: null }), ctx()))
+      .toMatchObject({ estat: 'falla', falles: ['noticies: la fila v és d’una persona propietària'] });
+    expect(await executaCas(llegix(), amb({ noticies: [], agenda: [{ id: 'f', correu_public: 'x@poble.invalid' }], memoria: null, memoriaOral: null }), ctx()))
+      .toMatchObject({ estat: 'falla', falles: ['agenda: la fila f porta un correu'] });
+    expect(await executaCas(llegix(), amb({ noticies: 'res', agenda: [], memoria: null, memoriaOral: null }), ctx()))
+      .toMatchObject({ estat: 'falla', falles: ['noticies havia de ser una llista i és string'] });
+    expect(await executaCas(llegix(), amb([]), ctx())).toMatchObject({ estat: 'falla', falles: ['havia de ser un objecte i és array'] });
+    expect(await executaCas(llegix(), {}, ctx())).toMatchObject({ estat: 'omés', motiu: 'capacitat dadesObertes absent' });
+  });
+
+  test('restauraDadesObertes: un TypeError és conforme; resoldre o un altre error, una falla; el lot no porta municipi', async () => {
+    const c = ctx();
+    const [lot] = restaura().arguments(c);
+    expect(Object.hasOwn(lot, 'municipi')).toBe(false);
+    expect(await executaCas(restaura(), { restauraDadesObertes: async () => { throw new TypeError('sense municipi'); } }, c)).toMatchObject({ estat: 'ok' });
+    expect(await executaCas(restaura(), { restauraDadesObertes: async () => ({ creats: {}, actualitzats: {}, iguals: {} }) }, c))
+      .toMatchObject({ estat: 'falla', falles: ['ha resolt i havia de rebutjar'] });
+    expect(await executaCas(restaura(), { restauraDadesObertes: async () => { throw new Error('genèric'); } }, c))
+      .toMatchObject({ estat: 'falla', falles: ['havia de rebutjar amb un TypeError: Error'] });
+    expect(await executaCas(restaura(), {}, c)).toMatchObject({ estat: 'omés', motiu: 'capacitat restauracioDadesObertes absent' });
+  });
+
+  test('Gauntlet D-04 · llegixDadesObertes: una llista per damunt de LIMIT_DADES_OBERTES és una falla; el sostre just, no', async () => {
+    const files = (n) => Array.from({ length: n }, (_, i) => ({ id: `n-${i}` }));
+    expect(await executaCas(llegix(), amb({ noticies: files(LIMIT_DADES_OBERTES + 1), agenda: [], memoria: null, memoriaOral: null }), ctx()))
+      .toMatchObject({ estat: 'falla', falles: [`noticies passa de ${LIMIT_DADES_OBERTES} elements`] });
+    expect(await executaCas(llegix(), amb({ noticies: [], agenda: files(LIMIT_DADES_OBERTES), memoria: null, memoriaOral: null }), ctx()))
+      .toMatchObject({ estat: 'ok', falles: [] });
+  });
+
+  test('Gauntlet D-01 · el conflicte: escriu, demana l’entitat del directori i només val el codi conflicte-identificador', async () => {
+    const conflicte = cas('restauraDadesObertes', 'conflicte-identificador');
+    expect(conflicte).toMatchObject({ capacitat: 'restauracioDadesObertes', espera: 'rebutja', escriu: true, requerix: ['orgPublica'] });
+    // Sense escriptures, o sense l'entitat que ha deixat el directori, no corre.
+    const rebutja = async () => { throw Object.assign(new Error('ja és d’un altre poble'), { code: 'conflicte-identificador' }); };
+    expect(await executaCas(conflicte, { restauraDadesObertes: rebutja }, ctx())).toMatchObject({ estat: 'omés', motiu: 'escriptura no demanada' });
+    const c = contextDeConformitat({ config: { dataMode: 'seed' }, escriptures: true });
+    expect(await executaCas(conflicte, { restauraDadesObertes: rebutja }, c)).toMatchObject({ estat: 'omés', motiu: "sense orgPublica (un cas anterior no l'ha deixat)" });
+    c.orgPublica = 'org-del-directori';
+    // El lot és del poble de conformitat i porta l'id de l'entitat del directori.
+    const [lot] = conflicte.arguments(c);
+    expect(lot).toMatchObject({ municipi: { slug: 'poble-de-conformitat-que-no-existix', nom: 'Poble de conformitat que no existix' },
+      entitats: [{ id: 'org-del-directori', town_name: 'Poble de conformitat que no existix', visibility: 'public' }] });
+    expect(await executaCas(conflicte, { restauraDadesObertes: rebutja }, c)).toMatchObject({ estat: 'ok', falles: [] });
+    // Un adaptador que se la queda (resol), o que rebutja per un altre motiu, falla.
+    expect(await executaCas(conflicte, { restauraDadesObertes: async () => ({ creats: {}, actualitzats: {}, iguals: {} }) }, c))
+      .toMatchObject({ estat: 'falla', falles: ['ha resolt i havia de rebutjar'] });
+    const senseCodi = async () => { throw Object.assign(new Error('no administres el node'), { code: 'sense-permis' }); };
+    expect(await executaCas(conflicte, { restauraDadesObertes: senseCodi }, c))
+      .toMatchObject({ estat: 'falla', falles: ['havia de rebutjar amb el codi conflicte-identificador: sense-permis'] });
+    expect(await executaCas(conflicte, { restauraDadesObertes: async () => { throw new TypeError('lot'); } }, c))
+      .toMatchObject({ estat: 'falla', falles: ['havia de rebutjar amb el codi conflicte-identificador: TypeError'] });
   });
 });

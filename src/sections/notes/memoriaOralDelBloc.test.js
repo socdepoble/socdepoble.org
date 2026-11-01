@@ -99,6 +99,61 @@ describe('memoriaOralDelBloc', () => {
   test('l’adaptador és immutable', () => {
     const adaptador = memoriaOralDelBloc();
     expect(Object.isFrozen(adaptador)).toBe(true);
-    expect(Object.keys(adaptador).sort()).toEqual(['estructura', 'revisa']);
+    expect(Object.keys(adaptador).sort()).toEqual(['cercaPoble', 'estructura', 'etiquetaNova', 'revisa']);
+  });
+});
+
+/* D-5 (pla 261101_1246) · El selector de poble amb àlies i les etiquetes
+   lliures: el catàleg de l'adaptador (els pobles de l'aplicació i els
+   municipis de referència) és el que pot triar la revisió; el diàleg no en
+   pot colar cap altre. */
+describe('memoriaOralDelBloc · D-5, àlies i etiquetes lliures', () => {
+  const RELAT = { ...NOTA, content: '<p>Mon pare treballava a Alcoi i a Ibi, en una fàbrica de joguets, i a l’estiu collíem les olives al camp.</p>' };
+
+  test('cercaPoble: els àlies contra els pobles de l’aplicació i els municipis de referència', () => {
+    const { cercaPoble } = memoriaOralDelBloc({ persona: 'u-1', rellotge: () => ARA });
+    expect(cercaPoble('Jijona')).toEqual({ estat: 'trobat', poble: expect.objectContaining({ id: 'xixona', nom: 'Xixona' }) });
+    expect(cercaPoble('la Torre').poble.id).toBe('la-torre-de-les-macanes');
+    expect(cercaPoble('Alcoy').poble).toEqual({ id: 'alcoi', nom: 'Alcoi', comarca: "L'Alcoià", provincia: 'Alacant' });
+    expect(cercaPoble('Madrid')).toEqual({ estat: 'cap' });
+    expect(cercaPoble('  ')).toEqual({ estat: 'buit' });
+    // Amb els pobles de l'aplicació: un poble seu i, darrere, les referències.
+    const pobles = [{ id: 'benimantell', title: 'Benimantell', comarca: 'la Marina Baixa', provincia: 'Alacant' }];
+    const propi = memoriaOralDelBloc({ persona: 'u-1', pobles, rellotge: () => ARA });
+    expect(propi.cercaPoble('benimantell').poble.id).toBe('benimantell');
+    expect(propi.cercaPoble('Alicante').poble.id).toBe('alacant');
+    // La llavor ja no hi és: els pobles de l'aplicació la substituïxen.
+    expect(propi.cercaPoble('Jijona')).toEqual({ estat: 'cap' });
+  });
+
+  test('revisa: un poble que no és candidat (Alcoi) i etiquetes lliures; cap identificador del compte', () => {
+    const adaptador = memoriaOralDelBloc({ persona: 'u-1', rellotge: () => DESPRES });
+    const fitxa = adaptador.estructura(RELAT);
+    expect([fitxa.municipi, fitxa.candidats]).toEqual([null, []]);
+    const revisada = adaptador.revisa(fitxa, {
+      etiquetes: fitxa.etiquetes.map((e) => e.id), municipi: 'alcoi', etiquetesLliures: ['pansa'], poblesConeguts: [], persona: 'intrus'
+    });
+    expect(revisada.okf.frontmatter.municipi).toBe('alcoi');
+    expect(revisada.okf.frontmatter.tags).toEqual([...fitxa.etiquetes.map((e) => e.id), 'pansa']);
+    expect(revisada.okf.cami).toMatch(/^memoria-oral\/alcoi\//);
+    expect(revisada.okf.cos).toContain('Poble triat en la revisió: Alcoi.');
+    expect(revisada.okf.frontmatter.verified).toEqual([{ by: HUMA, at: DESPRES.toISOString() }]);
+    expect(JSON.stringify(revisada)).not.toContain('u-1');
+    // Un poble fora del catàleg no passa, encara que el diàleg en porte la llista.
+    expect(() => adaptador.revisa(fitxa, { municipi: 'madrid', poblesConeguts: [{ id: 'madrid', title: 'Madrid' }] })).toThrow(TypeError);
+  });
+
+  test('etiquetaNova: la del motor, amb sessió', () => {
+    const { etiquetaNova } = memoriaOralDelBloc({ persona: 'u-1', rellotge: () => ARA });
+    expect(etiquetaNova('Festes', [])).toEqual({ estat: 'ok', etiqueta: { id: 'festes', nom: 'Festes i tradicions', lliure: false, clau: 'festes' } });
+    expect(etiquetaNova('#Pansa', ['pansa']).estat).toBe('repetida');
+    expect(etiquetaNova('!', []).estat).toBe('invalida');
+  });
+
+  test('sense sessió, cercaPoble i etiquetaNova són null, com revisa', () => {
+    for (const persona of [null, undefined, '', 'amb espais']) {
+      const adaptador = memoriaOralDelBloc({ persona, rellotge: () => ARA });
+      expect([adaptador.revisa, adaptador.cercaPoble, adaptador.etiquetaNova], String(persona)).toEqual([null, null, null]);
+    }
   });
 });

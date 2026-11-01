@@ -206,7 +206,8 @@ import { esComptePersonaPilot } from '../../data/identitatsSeed.js';
 import { rutaDelXatDeJavi } from './useObriXatPerDefecte.js';
 import useNivellIaia from '../realitat/useNivellIaia.js';
 import { useSession } from '../../app/contexts/SessionContext';
-import { useIdentitat } from '../../app/contexts/IdentitatContext.jsx';
+import { useIdentitatOReserva } from '../../app/contexts/useIdentitatOReserva.js';
+import { esIdentitatDeLectura } from '../../app/contexts/identitatDeReserva.js';
 import { useCoreContent } from '../../app/contexts/CoreContentContext';
 import { filsAmbLaGentDelPoble } from '../pobles/xatDelPoble.js';
 import { normalizeBackendConfig, backendScope } from '../../config/backendConfig.js';
@@ -559,7 +560,12 @@ function AvisadorXat({ registra, ambSessio }) {
 
 export function XatProvider({ children, config }) {
   const { currentUser: usuari, generacio, estat: estatSessio } = useSession();
-  const { actorKey, identitats, actor } = useIdentitat();
+  /* D-7 (pla 261101_1246; P1-71) · Fora d'IdentitatProvider (una recàrrega en
+     calent), la reserva anònima de només lectura en lloc del pet que tombava
+     el Mas: sense joId (davall), com un visitant. Dins, res no canvia. */
+  const identitatDelXat = useIdentitatOReserva();
+  const { actorKey, identitats, actor } = identitatDelXat;
+  const nomesLectura = esIdentitatDeLectura(identitatDelXat);
   /* Onada 3 · El nom de la persona (no el de l'entitat amb què actua): el xat
      és sempre de `joId`, i «Nova conversa» el pinta amb «(Tu)». */
   const persona = Array.isArray(identitats) ? identitats.find((i) => i?.tipus === 'persona' && i.id === usuari?.id) : null;
@@ -601,7 +607,8 @@ export function XatProvider({ children, config }) {
      com a convidat amb el mateix identificador); en remot cal la sessió. Es llig
      de la configuració i no del port, que encara no està segellat al primer render. */
   const modeDades = normalizeBackendConfig(config || {}).dataMode;
-  const joId = usuari?.id || (modeDades !== 'remote' ? getDefaultUserId() : null);
+  // D-7 · Amb la reserva de només lectura, cap «jo»: totes les càrregues i escriptures ja es guarden amb !joId.
+  const joId = nomesLectura ? null : (usuari?.id || (modeDades !== 'remote' ? getDefaultUserId() : null));
   /* Auditoria adversarial 261016 (P3) · Ordre del Mestre (prompt 261016_0015,
      Bloc 3.6): «Si un usuari no registrat fa clic per parlar-hi, es mostra el
      missatge automàtic». En llavor i en local ningú no té sessió (l'entrada

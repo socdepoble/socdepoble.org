@@ -342,6 +342,49 @@ test('les portes de l\'empaquetador: node de desenvolupament, fitxers canviats, 
   } finally { neteja(buida); }
 });
 
+/* L5-WP-01 (261101) · --prova escrivia per defecte stable.json: trepitjava el canal versionat
+   i signat amb un 1.0.0-dev sense signar i hi deixava al costat la .sig vella. */
+test('L5-WP-01: --prova escriu prova.json, mai stable.json ni un canal que ja tinga .sig', () => {
+  const { pem, publicaHex } = generaClau();
+  const local = fixture({ node: NODE_LOCAL, versio: '1.0.0-dev', clauPublica: publicaHex });
+  const urlLocal = 'http://localhost:8881/enxufe/';
+  try {
+    // Al costat, el canal estable d'una release anterior, versionat i signat.
+    fs.mkdirSync(local.sortida, { recursive: true });
+    const estable = Buffer.from('{"canal":"stable","versio":"0.1.0"}\n');
+    fs.writeFileSync(path.join(local.sortida, 'stable.json'), estable);
+    fs.writeFileSync(path.join(local.sortida, 'stable.json.sig'), `${signa(estable, pem)}\n`);
+
+    const r = empaqueta({ arrelPlugin: local.plugin, sortida: local.sortida, urlBase: urlLocal, prova: true });
+    assert.ok(r.escrits.includes('prova.json') && r.escrits.includes('1.0.0-dev.json'), r.escrits.join(' '));
+    assert.ok(!r.escrits.some((nom) => nom.startsWith('stable.json')));
+    assert.equal(r.canal.canal, 'prova');
+    assert.equal(JSON.parse(fs.readFileSync(path.join(local.sortida, 'prova.json'), 'utf8')).canal, 'prova');
+    assert.deepEqual(fs.readFileSync(path.join(local.sortida, 'stable.json')), estable, 'stable.json intacte');
+    assert.equal(verifica(estable, fs.readFileSync(path.join(local.sortida, 'stable.json.sig'), 'utf8').trim(), publicaHex), true);
+
+    // Demanar el canal estable amb --prova és un error, no un sobreescrit silenciós.
+    assert.throws(() => empaqueta({ arrelPlugin: local.plugin, sortida: local.sortida, urlBase: urlLocal, prova: true, canal: 'stable' }),
+      /--prova no escriu mai el canal estable: usa --canal prova o rc\./);
+    assert.deepEqual(fs.readFileSync(path.join(local.sortida, 'stable.json')), estable);
+
+    // Tampoc un X.json que ja té la seua .sig: el canal de proves no el trepitja.
+    const desat = Buffer.from('{"marca":"anterior"}\n');
+    fs.writeFileSync(path.join(local.sortida, 'prova.json'), desat);
+    fs.writeFileSync(path.join(local.sortida, '1.0.0-dev.json.sig'), 'signatura vella\n');
+    assert.throws(() => empaqueta({ arrelPlugin: local.plugin, sortida: local.sortida, urlBase: urlLocal, prova: true }),
+      /--prova no sobreescriu 1\.0\.0-dev\.json: al costat hi ha la seua \.sig/);
+    assert.deepEqual(fs.readFileSync(path.join(local.sortida, 'prova.json')), desat, 'res escrit abans de llançar');
+  } finally { neteja(local); }
+
+  // Una release signada continua escrivint stable.json per defecte.
+  const f = fixture({ clauPublica: publicaHex });
+  try {
+    const r = empaqueta({ arrelPlugin: f.plugin, sortida: f.sortida, urlBase: URL_BASE, clauPem: pem });
+    assert.ok(r.escrits.includes('stable.json') && r.escrits.includes('stable.json.sig') && !r.escrits.includes('prova.json'));
+  } finally { neteja(f); }
+});
+
 test('un canal amb nom (rc) per a provar a Studio sense tocar stable.json', () => {
   const { pem, publicaHex } = generaClau();
   const f = fixture({ clauPublica: publicaHex, versio: '0.2.0-rc.1' });
@@ -352,6 +395,63 @@ test('un canal amb nom (rc) per a provar a Studio sense tocar stable.json', () =
     for (const canal of ['../stable', 'Stable', '1.0.0', '', 'a'.repeat(40)]) {
       assert.throws(() => empaqueta({ arrelPlugin: f.plugin, sortida: f.sortida, urlBase: URL_BASE, clauPem: pem, canal }), /canal no vàlid/, JSON.stringify(canal));
     }
+  } finally { neteja(f); }
+});
+
+/* Gauntlet transversal 261101 (D-V-03) · La guarda de les .sig mira els DOS fitxers del canal, també
+   el del nom: `--prova --canal rc` no trepitja un rc.json signat (fins ara només es provava X.json). */
+test('D-V-03: --prova --canal rc no sobreescriu un rc.json que ja té la seua .sig', () => {
+  const { pem, publicaHex } = generaClau();
+  const local = fixture({ node: NODE_LOCAL, versio: '1.0.0-dev', clauPublica: publicaHex });
+  const urlLocal = 'http://localhost:8881/enxufe/';
+  try {
+    fs.mkdirSync(local.sortida, { recursive: true });
+    const rc = Buffer.from('{"canal":"rc","versio":"0.2.0-rc.1"}\n');
+    const sig = `${signa(rc, pem)}\n`;
+    fs.writeFileSync(path.join(local.sortida, 'rc.json'), rc);
+    fs.writeFileSync(path.join(local.sortida, 'rc.json.sig'), sig);
+    assert.throws(() => empaqueta({ arrelPlugin: local.plugin, sortida: local.sortida, urlBase: urlLocal, prova: true, canal: 'rc' }),
+      /--prova no sobreescriu rc\.json: al costat hi ha la seua \.sig/);
+    assert.deepEqual(fs.readFileSync(path.join(local.sortida, 'rc.json')), rc, 'rc.json intacte');
+    assert.equal(fs.readFileSync(path.join(local.sortida, 'rc.json.sig'), 'utf8'), sig, 'la seua .sig, intacta');
+    assert.deepEqual(fs.readdirSync(local.sortida).sort(), ['rc.json', 'rc.json.sig'], 'ni zips ni 1.0.0-dev.json: res escrit abans de llançar');
+
+    // En una carpeta sense cap .sig, el mateix --prova --canal rc escriu rc.json i X.json, sense signar.
+    const neta = path.join(local.plugin, 'builds/rc-net');
+    const r = empaqueta({ arrelPlugin: local.plugin, sortida: neta, urlBase: urlLocal, prova: true, canal: 'rc' });
+    assert.ok(r.escrits.includes('rc.json') && r.escrits.includes('1.0.0-dev.json'), r.escrits.join(' '));
+    assert.ok(!r.escrits.some((nom) => nom.endsWith('.sig')), r.escrits.join(' '));
+    assert.equal(JSON.parse(fs.readFileSync(path.join(neta, 'rc.json'), 'utf8')).canal, 'rc');
+  } finally { neteja(local); }
+});
+
+/* Gauntlet transversal 261101 (D-V-04) · executa() acabava sempre amb «Publica primer els zips i després
+   el canal (stable.json i la .sig).», també amb --prova, que escriu prova.json sense .sig. L'últim consell
+   nomena ara els fitxers del canal que s'han escrit, i la .sig només quan n'hi ha. */
+test('D-V-04: el consell final de executa() diu els fitxers del canal que hi ha de veres', () => {
+  const { pem, publicaHex } = generaClau();
+  const registre = () => ({ linies: [], log(missatge) { this.linies.push(missatge); } });
+
+  const local = fixture({ node: NODE_LOCAL, versio: '1.0.0-dev', clauPublica: publicaHex });
+  try {
+    const prova = registre();
+    assert.equal(executa(['--prova', '--url-base', 'http://localhost:8881/enxufe/', '--sortida', local.sortida], prova, { arrelPlugin: local.plugin }), 0);
+    assert.equal(prova.linies.at(-1), 'Publica primer els zips i després el canal (prova.json i 1.0.0-dev.json, sense cap .sig).');
+    assert.ok(!prova.linies.some((linia) => linia.includes('stable.json')), prova.linies.join('\n'));
+    assert.deepEqual(fs.readdirSync(local.sortida).filter((nom) => nom.endsWith('.json') || nom.endsWith('.sig')).sort(), ['1.0.0-dev.json', 'prova.json']);
+  } finally { neteja(local); }
+
+  const f = fixture({ clauPublica: publicaHex });
+  try {
+    const clau = path.join(f.arrel, 'clau.pem');
+    fs.writeFileSync(clau, pem, { mode: 0o600 });
+    const estable = registre();
+    assert.equal(executa(['--url-base', URL_BASE, '--clau', clau, '--sortida', f.sortida], estable, { arrelPlugin: f.plugin }), 0);
+    assert.equal(estable.linies.at(-1), 'Publica primer els zips i després el canal (stable.json, stable.json.sig, 0.2.0.json i 0.2.0.json.sig).');
+    const rc = registre();
+    const sortidaRc = path.join(f.plugin, 'builds/rc');
+    assert.equal(executa(['--url-base', URL_BASE, '--clau', clau, '--sortida', sortidaRc, '--canal', 'rc'], rc, { arrelPlugin: f.plugin }), 0);
+    assert.equal(rc.linies.at(-1), 'Publica primer els zips i després el canal (rc.json, rc.json.sig, 0.2.0.json i 0.2.0.json.sig).');
   } finally { neteja(f); }
 });
 
@@ -704,7 +804,8 @@ test('destinació: rebutja eixides i enllaços abans d’escriure cap paquet', (
       if (cas === 'carpeta') fs.symlinkSync(exterior, sortida, 'dir');
       if (cas === 'fitxer') {
         fs.mkdirSync(sortida);
-        fs.symlinkSync(sentinel, path.join(sortida, 'stable.json'));
+        // --prova escriu prova.json (L5-WP-01): l'enllaç és al fitxer que escriuria.
+        fs.symlinkSync(sentinel, path.join(sortida, 'prova.json'));
       }
       assert.throws(() => empaqueta({ arrelPlugin: f.plugin, sortida, urlBase: 'http://localhost/enxufe/', prova: true }),
         /dins de wordpress-plugin\/builds|enllaços simbòlics/);

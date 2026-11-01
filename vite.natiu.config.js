@@ -10,6 +10,7 @@ const __dirname = path.dirname(__filename);
 import { esquemaInvertitDeGoogleIos, validatePublicCredentials } from './src/config/publicCredentials.js';
 import { VARIANTS_SOCIALS } from './src/config/imatgeSocial.js';
 import { esHostLocal, politicaDeMitjans, recursosPublicsDelPlugin, segellDeBuild } from './vite.standalone.config.js';
+import { SEGELL, segellDelArbre } from './scripts/botigues/entorn.mjs';
 
 /**
  * Build de l'app nativa (Fases 1 i 2 de l'empaquetat mòbil, 261003).
@@ -242,6 +243,7 @@ function declaradesPelNatiu(arrel) {
  *   ha de ser un UUID (si no, la capa el descartaria en silenci).
  * · VITE_NATIU_GOOGLE_WEB_CLIENT_ID i VITE_NATIU_GOOGLE_IOS_CLIENT_ID: opcionals,
  *   amb la forma d'un client de Google, l'iOS amb el web i diferents (Fase D).
+ * · VITE_APPLE_OAUTH_ACTIU: opcional; si hi és, exactament 'true' o 'false' (D-10).
  * @param {Record<string, string|undefined>} env
  * @returns {string[]}
  */
@@ -272,6 +274,13 @@ export function errorsEntornNatiu(env = {}) {
   }
   if (googleIos && !googleWeb) errors.push('VITE_NATIU_GOOGLE_IOS_CLIENT_ID sense VITE_NATIU_GOOGLE_WEB_CLIENT_ID: el testimoni naix amb l’audiència del client web i Supabase el rebutjaria.');
   if (googleWeb && googleWeb === googleIos) errors.push('El client web i el client iOS de Google han de ser dos clients diferents.');
+  /* D-10 (pla 261101_1246, BOT-A3) · src/natiu/entrada.jsx només encén «Continua amb
+     Apple» amb el text exacte 'true'. Un altre valor ('1', 'yes', 'TRUE', ' true')
+     l'amagaria sense avís: el build el rebutja. Buit o absent, apagat. */
+  const apple = env.VITE_APPLE_OAUTH_ACTIU;
+  if (apple !== undefined && apple !== '' && apple !== 'true' && apple !== 'false') {
+    errors.push('VITE_APPLE_OAUTH_ACTIU només admet true o false: amb qualsevol altre valor el botó d’Apple quedaria amagat sense avís.');
+  }
   const tenant = textNet(env.VITE_TENANT_ID);
   if (tenant && !UUID.test(tenant)) {
     errors.push('VITE_TENANT_ID és opcional, però si hi és ha de ser l’UUID d’un poble (public.towns).');
@@ -379,6 +388,36 @@ export function indexNatiuPlugin({ origenBackend } = {}) {
   };
 }
 
+/* BOT-A4 (261025) · dist-natiu/ i les còpies de cap sync són fora de git: sense segell, el
+   preflight de les botigues donava per bo un paquet compilat abans de l'últim commit. El segell
+   (SEGELL i segellDelArbre, a scripts/botigues/entorn.mjs) diu de quin commit ix el build i si
+   l'arbre era net; el preflight el contrasta amb HEAD i el rebut de la pujada en diu el commit. */
+
+/**
+ * Connector de Vite: deixa a dist-natiu/segell.json el segell {commit, arbreNet, data} de
+ * l'arbre d'on ix el build. `segella` és per a les proves.
+ * @param {{ arrel?: string, segella?: (arrel: string) => object }} opcions
+ */
+export function segellNatiuPlugin({ arrel = process.cwd(), segella = segellDelArbre } = {}) {
+  let segell = null;
+  return {
+    name: 'sdp-segell-natiu',
+    apply: 'build',
+    /* En començar, abans de llegir cap font: el segell és de l'arbre que es compila. */
+    buildStart() {
+      segell = segella(arrel);
+    },
+    /* I en acabar, una altra volta: en este arbre compartit altres mans editen mentre es compila.
+       Si entretant hi ha hagut un commit o un canvi sense cometre, el paquet pot portar codi que
+       el segell no diu, i ix amb arbreNet: false (el preflight no el deixa pujar). */
+    generateBundle() {
+      const ara = segella(arrel);
+      const net = segell.arbreNet === true && ara.arbreNet === true && ara.commit === segell.commit;
+      this.emitFile({ type: 'asset', fileName: SEGELL.at(-1), source: `${JSON.stringify({ ...segell, arbreNet: net }, null, 2)}\n` });
+    }
+  };
+}
+
 export default defineConfig(({ mode, command, isPreview }) => {
   /* Compilar, o previsualitzar dist-natiu/ en un navegador d'escriptori. */
   if (command !== 'build' && !isPreview) {
@@ -422,7 +461,8 @@ export default defineConfig(({ mode, command, isPreview }) => {
          política, sense els originals que tenen bessona (Fase C, tasca 2), i
          sense els índexs de la Wiki que l'app no llig (Fase D, L10). */
       recursosPublicsDelPlugin({ politica: mitjans, exclosos: [...RECURSOS_QUE_L_APP_NO_LLIG, ...RECURSOS_NOMES_DEL_HEAD] }),
-      indexNatiuPlugin({ origenBackend })
+      indexNatiuPlugin({ origenBackend }),
+      segellNatiuPlugin({ arrel })
     ],
     /* Fase C (tasca 2) · La política, segellada com a l'autònom
        (vite.standalone.config.js): assetResolver.js la llig en avaluar-se,

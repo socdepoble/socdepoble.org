@@ -178,6 +178,11 @@ REGISTRE.push({ nom: 'EnllacSegur', fitxer: 'sections/xat/components/EnllacSegur
 /* Torn 260930 (T1) · el full «Ajustos» del Xat; viu a sections/xat/components/, fora de
    PedraSeca. Espècimen: EspecimenXatAjustos. */
 REGISTRE.push({ nom: 'FullAjustos', fitxer: 'sections/xat/components/FullAjustos.jsx', pagina: 'superposicions', estat: 'viu', fora: true });
+/* Pla 261101_1246 (T7 · S7; P1-12 pas 17 i IDEA-48) · el cos del diàleg «Xifratge i número de
+   seguretat» i el del bloc «Persones de confiança»; maqueta darrere de la bandera E2EE apagada,
+   fora de PedraSeca. Espècimen: EspecimenXatSeguretat (superposicions/xat-seguretat). */
+REGISTRE.push({ nom: 'CosSeguretatXat', fitxer: 'sections/xat/components/CosSeguretatXat.jsx', pagina: 'superposicions', estat: 'maqueta', fora: true });
+REGISTRE.push({ nom: 'CosPersonesConfianca', fitxer: 'sections/profile/CosPersonesConfianca.jsx', pagina: 'superposicions', estat: 'maqueta', fora: true });
 /* T7-T9 (ordre del Mestre, 261001) · la marca de l'amfitrió (franja amb pilot, enllaç a
    /fedivers i X) i les peces de connexió; viuen a universal/, fora de PedraSeca.
    Espècimens: EspecimenShell (estructura/shell, #amfitrio) i EspecimenConnexio. */

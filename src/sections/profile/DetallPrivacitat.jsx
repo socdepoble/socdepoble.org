@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { Suspense, lazy, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { UniversalPage } from '../../components/universal/UniversalPage';
 import { dataDeFila, diaIso } from '../../components/universal/editorial.js';
 import { Alerta, AreaText, Boto, Camp, DialegConfirmacio } from '../../components/PedraSeca';
@@ -22,6 +22,9 @@ import { LlistaBloquejos } from '../../components/universal/LlistaBloquejos.jsx'
 import { esAppNativa } from '../../config/origenPublic.js';
 import { capturaSessio } from '../../data/identitat.js';
 import { omple } from '../../config/moderacio.js';
+/* T7 · IDEA-48 (pla 261101_1246) · «Persones de confiança», darrere de la bandera E2EE: apagada, Rollup plega la constant i el bloc no entra al paquet. */
+import { E2EE_ACTIU_PER_DEFECTE } from '../../config/xifratXat.js';
+const BlocPersonesConfianca = E2EE_ACTIU_PER_DEFECTE ? lazy(() => import('./BlocPersonesConfianca.jsx')) : null;
 
 /* ═══════════════════════════════════════════════════════════════════
    PRIVACITAT I DADES · els drets de la persona sobre el que guardem
@@ -225,6 +228,29 @@ function useLocaleDeLesDates() {
   }
 }
 
+/* T5a · P1-15 (assalt 261101) · RESCAT DEL FOCUS. Després d'acceptar o
+   retirar el consentiment, o de cancel·lar la baixa, el botó que tenia el
+   focus se'n va amb l'estat (o el <dialog>, ja tancat, el torna a un botó
+   que ja no hi és) i el focus cau al <body>: el lector perd el fil. Llavors
+   va a la línia d'estat del bloc, que diu el resultat. Només si s'ha perdut:
+   un focus viu no es mou. Amb getRootNode(): dins del shadow root de
+   WordPress, activeElement és null si el focus no és a dins, i si la persona
+   ja és en una altra part de la pàgina amfitriona, no se li pren. Un destí
+   dins d'un <dialog> tancat no es veu: no es fa servir (torna false). */
+export function rescataFocus(desti) {
+  if (!desti?.isConnected || desti.closest?.('dialog:not([open])')) return false;
+  const arrel = desti.getRootNode();
+  const actiu = arrel.activeElement;
+  // Un element dins d'un <dialog> tancat ja no es veu: també és focus perdut.
+  const perdut = !actiu || !actiu.isConnected || actiu === arrel.body || Boolean(actiu.closest?.('dialog:not([open])'));
+  if (!perdut) return false;
+  const doc = desti.ownerDocument;
+  const foraDeLArrel = !actiu && arrel !== doc ? doc?.activeElement : null;
+  if (foraDeLArrel && foraDeLArrel !== doc.body && foraDeLArrel !== arrel.host) return false;
+  desti.focus();
+  return true;
+}
+
 const missatgeDe = (error, perDefecte) => {
   const text = readableBackendError(error);
   return text && text !== 'S’ha produït un error inesperat.' ? text : perDefecte;
@@ -395,6 +421,17 @@ function BlocConsentiment({ config }) {
   const [error, setError] = useState('');
   const [treballant, setTreballant] = useState(false);
   const [confirmaRetirada, setConfirmaRetirada] = useState(false);
+  /* P1-15 · El focus perdut va al text que diu el resultat (rescataFocus): la
+     línia «L'has acceptada…» / «La vas retirar…» si s'ha fet; l'error si ha
+     fallat, dins del diàleg si és obert (el de fora no es pinta) o al bloc. */
+  const estatRef = useRef(null);
+  const errorRef = useRef(null);
+  const errorDialegRef = useRef(null);
+  const [rescat, setRescat] = useState(null);
+  useEffect(() => {
+    if (!rescat) return;
+    (rescat.fet ? [estatRef] : [errorDialegRef, errorRef]).some((desti) => rescataFocus(desti.current));
+  }, [rescat]);
 
   const llig = useCallback(async () => {
     try {
@@ -413,14 +450,19 @@ function BlocConsentiment({ config }) {
   const actua = async (accio, perDefecte) => {
     setTreballant(true);
     setError('');
+    let fet = false;
     try {
       await accio();
       setConfirmaRetirada(false);
       await llig();
+      fet = true;
     } catch (e) {
       setError(missatgeDe(e, perDefecte));
     } finally {
       setTreballant(false);
+      /* P1-15 · El botó, desactivat mentre treballava (o ja fora del DOM), pot
+         haver perdut el focus: si s'ha perdut, al resultat, també si ha fallat. */
+      setRescat({ fet });
     }
   };
 
@@ -445,7 +487,7 @@ function BlocConsentiment({ config }) {
     <Bloc titol={tradueix(t, TEXTOS_CONSENTIMENT.titol)}>
       {carregant ? <p className="perfil-compte__text" role="status">{tradueix(t, TEXTOS_CONSENTIMENT.comprovant)}</p> : null}
       {/* Amb el diàleg obert, el fons és inert: l'error es pinta dins del diàleg. */}
-      {error && !confirmaRetirada ? <Alerta to="error">{error}</Alerta> : null}
+      {error && !confirmaRetirada ? <Alerta to="error"><span ref={errorRef} tabIndex={-1}>{error}</span></Alerta> : null}
       {!carregant && estat ? (
         <>
           <p className="perfil-compte__text">
@@ -454,7 +496,7 @@ function BlocConsentiment({ config }) {
               : `${tradueix(t, TEXTOS_CONSENTIMENT.senseVigent)} `}
             <EnllacPolitica url={estat.url} t={t} />
           </p>
-          <p className="perfil-compte__text">{darrera}</p>
+          <p ref={estatRef} tabIndex={-1} className="perfil-compte__text">{darrera}</p>
           {estat.calReconsentir && versioVigent ? (
             <Alerta
               to="avis"
@@ -488,7 +530,7 @@ function BlocConsentiment({ config }) {
         destructiu
         carregant={treballant}
       >
-        {error ? <Alerta to="error">{error}</Alerta> : null}
+        {error ? <Alerta to="error"><span ref={errorDialegRef} tabIndex={-1}>{error}</span></Alerta> : null}
         <p className="perfil-compte__text">{tradueix(t, TEXTOS_CONSENTIMENT.retiraText)}</p>
       </DialegConfirmacio>
     </Bloc>
@@ -512,6 +554,18 @@ function BlocBaixa({ config, onSessioTancada, onPerfilCanviat }) {
   const [motiu, setMotiu] = useState('');
   const [treballant, setTreballant] = useState(false);
   const sessio = useSessioOpcional();
+  /* P1-15 · Cancel·lada la baixa, l'Alerta «Tens una baixa pendent» (i el seu
+     botó) se'n va: el focus perdut va a l'avís que diu el resultat. Si cancel·lar
+     o demanar la baixa falla, el botó (desactivat mentre treballava) també el
+     pot haver perdut: va a l'error, dins del diàleg si és obert o al bloc. */
+  const avisRef = useRef(null);
+  const errorRef = useRef(null);
+  const errorDialegRef = useRef(null);
+  const [rescat, setRescat] = useState(null);
+  useEffect(() => {
+    if (!rescat) return;
+    (rescat.fet ? [avisRef] : [errorDialegRef, errorRef]).some((desti) => rescataFocus(desti.current));
+  }, [rescat]);
 
   useEffect(() => {
     let viu = true;
@@ -542,6 +596,7 @@ function BlocBaixa({ config, onSessioTancada, onPerfilCanviat }) {
       onSessioTancada?.();
     } catch (e) {
       setError(missatgeDe(e, tradueix(t, TEXTOS_BAIXA.errorDemanda)));
+      setRescat({ fet: false });
     } finally {
       setTreballant(false);
     }
@@ -555,8 +610,10 @@ function BlocBaixa({ config, onSessioTancada, onPerfilCanviat }) {
       setBaixa(resposta || { demanada: false, demanadaAl: null, purgaPrevistaAl: null });
       setAvis(tradueix(t, TEXTOS_BAIXA.cancelada));
       onPerfilCanviat?.();
+      setRescat({ fet: true });
     } catch (e) {
       setError(missatgeDe(e, tradueix(t, TEXTOS_BAIXA.errorCancela)));
+      setRescat({ fet: false });
     } finally {
       setTreballant(false);
     }
@@ -566,8 +623,8 @@ function BlocBaixa({ config, onSessioTancada, onPerfilCanviat }) {
     <Bloc titol={tradueix(t, TEXTOS_BAIXA.titol)}>
       {carregant ? <p className="perfil-compte__text" role="status">{tradueix(t, TEXTOS_BAIXA.comprovant)}</p> : null}
       {/* Amb el diàleg obert, el fons és inert: l'error es pinta dins del diàleg. */}
-      {error && !dialeg ? <Alerta to="error">{error}</Alerta> : null}
-      {avis ? <Alerta to="exit">{avis}</Alerta> : null}
+      {error && !dialeg ? <Alerta to="error"><span ref={errorRef} tabIndex={-1}>{error}</span></Alerta> : null}
+      {avis ? <Alerta to="exit"><span ref={avisRef} tabIndex={-1}>{avis}</span></Alerta> : null}
       {!carregant && baixa?.demanada ? (
         <Alerta
           to="avis"
@@ -605,7 +662,7 @@ function BlocBaixa({ config, onSessioTancada, onPerfilCanviat }) {
         destructiu
         carregant={treballant}
       >
-        {error ? <Alerta to="error">{error}</Alerta> : null}
+        {error ? <Alerta to="error"><span ref={errorDialegRef} tabIndex={-1}>{error}</span></Alerta> : null}
         <ul className="perfil-compte__llista">
           {/* Correccions 261024 (revisió R3-03; Codex C-06) · S'amaga, no queda anònim: cancela_baixa ho torna tot. */}
           <li>{tradueix(t, TEXTOS_BAIXA.puntAmaga)}</li>
@@ -694,6 +751,7 @@ export function DetallPrivacitat({
         {ambCompte ? (
           <BlocBaixa config={config} onSessioTancada={tancaSessio} onPerfilCanviat={onPerfilCanviat} />
         ) : null}
+        {BlocPersonesConfianca ? <Suspense fallback={null}><BlocPersonesConfianca /></Suspense> : null}
         {!ambCompte && !ambConsentiment && !ambBloquejos ? (
           <p className="perfil-compte__text">{tradueix(t, TEXTOS_PAGINA.buit)}</p>
         ) : null}

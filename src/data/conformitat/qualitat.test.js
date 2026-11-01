@@ -15,6 +15,22 @@ const CENS = Object.freeze([
   'src/data/conformitat/kit.js',
   'src/data/conformitat/kit.test.js',
   'src/data/supabase/conformitat.test.js',
+  /* T1 · D01 (assalt 261101) · el segon adaptador complet, les seues proves,
+     l'equivalència amb Supabase en seed i el senyal de Storage (P1-27). */
+  'src/data/local/adaptadorLocal.js',
+  'src/data/local/contingutLocal.js',
+  'src/data/local/notesLocal.js',
+  'src/data/local/conversesLocal.js',
+  'src/data/local/comunitatLocal.js',
+  'src/data/local/compteLocal.js',
+  'src/data/local/mitjansLocal.js',
+  'src/data/local/adaptadorLocal.conformitat.test.js',
+  'src/data/local/adaptadorLocal.test.js',
+  'src/data/local/adaptadorLocal.host.test.js',
+  /* T2 · D04/D10 (assalt 261101) · les dades obertes de l'adaptador local i la seua restauració. */
+  'src/data/local/dadesObertesLocal.js',
+  'src/data/supabase/conformitat.equivalencia.test.js',
+  'src/data/supabase/storage.senyal.storagejs.test.js',
   /* ENX-13 · el DTO estricte del perfil de Sollutia. */
   'src/data/adaptadors/sollutia/recursos.js',
   'src/data/adaptadors/sollutia/recursos.test.js',

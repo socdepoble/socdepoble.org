@@ -1,7 +1,7 @@
 import React from 'react';
 import { afterEach, expect, test, vi } from 'vitest';
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
-import DetallPoble from './DetallPoble.jsx';
+import DetallPoble, { resumDelPaquet } from './DetallPoble.jsx';
 import fontDetailMeta from '../detail/detailSectionMeta.jsx?raw';
 afterEach(() => { cleanup(); vi.unstubAllGlobals(); });
 const poble = { id: 'sella', title: 'Sella' };
@@ -49,14 +49,35 @@ test('una resposta del poble anterior no descarrega res després de canviar de f
   resol({ zip: new Uint8Array() }); await Promise.resolve();
   expect(descarrega).not.toHaveBeenCalled();
 });
-/* R-01: el missatge d'èxit diu el que porta el paquet de veres. */
+/* R-01: el missatge d'èxit diu el que porta el paquet de veres.
+   T2 · D04/D10 (assalt 261101) · Amb els recomptes i els pendents del paquet mateix (paquet.comptes i paquet.pendents). */
 test('després de descarregar, el missatge diu què porta el paquet i què encara no s’exporta', async () => {
+  const paquet = { zip: new Uint8Array([1]), nomFitxer: 'sella.zip', comptes: { noticies: 2, agenda: 1, directori: 5, memoria: 0, memoriaOral: 0 },
+    pendents: ['memoria', 'memoriaOral', 'configuracio'] };
+  const exporta = vi.fn().mockResolvedValue(paquet), descarrega = vi.fn();
+  render(<DetallPoble poble={poble} exporta={exporta} descarrega={descarrega} />);
+  fireEvent.click(screen.getByRole('button', { name: /Descarregar paquet/ }));
+  expect(await screen.findByRole('status')).toHaveProperty('textContent',
+    'Paquet descarregat. Notícies: 2 · Agenda: 1 · Entitats: 5 · Memòria cultural: encara no s’exporta · Memòria oral: encara no s’exporta.');
+  expect(screen.queryByText(/indica les dades disponibles i les pendents/)).toBeNull();
+});
+test('T2 · sense recomptes, la reserva diu on mirar-ho; un paquet d’abans de la memòria oral no la nomena', async () => {
   const exporta = vi.fn().mockResolvedValue({ zip: new Uint8Array([1]), nomFitxer: 'sella.zip' }), descarrega = vi.fn();
   render(<DetallPoble poble={poble} exporta={exporta} descarrega={descarrega} />);
   fireEvent.click(screen.getByRole('button', { name: /Descarregar paquet/ }));
   expect(await screen.findByRole('status')).toHaveProperty('textContent',
-    'Paquet descarregat. Hui porta el directori públic d’entitats; les notícies, l’agenda i la memòria cultural encara no s’hi exporten.');
-  expect(screen.queryByText(/indica les dades disponibles i les pendents/)).toBeNull();
+    'Paquet descarregat. La seua memòria (memoria.md) diu què porta i què encara no s’hi exporta.');
+  expect(resumDelPaquet({ comptes: { noticies: 0, agenda: 0, directori: 3, memoria: 0 }, pendents: ['noticies', 'agenda', 'memoria', 'configuracio'] }))
+    .toBe('Notícies: encara no s’exporta · Agenda: encara no s’exporta · Entitats: 3 · Memòria cultural: encara no s’exporta');
+  expect(resumDelPaquet({ comptes: null })).toBeNull();
+});
+test('T2 · el resum passa per t() amb les claus section.detail.pobles.opendata.*', async () => {
+  const t = vi.fn((clau, reserva) => (clau === 'section.detail.pobles.opendata.descarregatResum' ? 'Package downloaded. {resum}.' : `«${clau.split('.').pop()}»`) || reserva);
+  const paquet = { zip: new Uint8Array([1]), nomFitxer: 'sella.zip', comptes: { noticies: 1, agenda: 0, directori: 0, memoria: 0, memoriaOral: 0 }, pendents: ['memoria'] };
+  render(<DetallPoble poble={poble} t={t} exporta={vi.fn().mockResolvedValue(paquet)} descarrega={vi.fn()} />);
+  fireEvent.click(screen.getByRole('button', { name: '«descarrega»' }));
+  expect(await screen.findByRole('status')).toHaveProperty('textContent',
+    'Package downloaded. «noticies»: 1 · «agenda»: 0 · «directori»: 0 · «memoria»: «pendent» · «memoriaOral»: 0.');
 });
 /* R-09 / R2-COR-05: dins de l'app nativa, cap botó de descàrrega (el blob no es desa i la CSP no deixa llegir l'outbox). */
 test('dins de l’app nativa no hi ha botó de descàrrega: es diu on descarregar-lo', () => {

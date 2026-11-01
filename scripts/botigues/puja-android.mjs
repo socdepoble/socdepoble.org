@@ -29,11 +29,13 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { pathToFileURL } from 'node:url';
 import {
-  BUILD, EIXIDA, VERSIO, analitzaArguments, commitCurt, confirmacioEsperada, empremtaDeKeytool,
-  REBUTS, executa, llegixAjuda, mostraCami, mostraOrdre, normalitzaEmpremta, opcionsQueFalten, plega,
-  rutaDe, sha256DeFitxer, versioDeGradle
+  BUILD, EIXIDA, SEGELL, VERSIO, analitzaArguments, confirmacioEsperada, empremtaDeKeytool,
+  REBUTS, executa, llegixAjuda, llegixDelZip, mostraCami, mostraOrdre, normalitzaEmpremta, opcionsQueFalten, plega,
+  problemaDelPaquet, rutaDe, sha256DeFitxer, versioDeGradle
 } from './entorn.mjs';
 import { arrelComprovada, preflight } from './preflight.mjs';
+
+import { problemaDeVersioClient } from './versio-client.mjs';
 
 const ADMESOS = Object.freeze({ versio: true, build: true, compila: false, confirma: true, ajuda: false });
 export const AAB = Object.freeze(['android', 'app', 'build', 'outputs', 'bundle', 'release', 'app-release.aab']);
@@ -75,9 +77,22 @@ export const PASSOS_A_MA = Object.freeze([
   'Si és el PRIMER AAB d\'esta app, l\'API no el pot crear: este pas a mà és obligatori (RUNBOOK H-G5).'
 ]);
 
-function rebut({ arrel, versio, build, aab, pujat }) {
+/* BOT-A4 (261025) · L'AAB és un zip i porta els recursos del mòdul base a base/assets/: la còpia de
+   dist-natiu/ que fa cap sync hi és a base/assets/public/ [VERIFICAT 261025 en l'AAB de 261023:
+   base/assets/public/index.html, amb deflate]. Si el segell de dins no és el de dist-natiu/, l'AAB
+   s'ha signat abans de l'últim build o de l'últim cap sync, i no es puja. */
+export const SEGELL_DE_L_AAB = 'base/assets/public/segell.json';
+
+/** Per què l'AAB no ix del dist-natiu/ que ha contrastat el preflight, o null si en ix. */
+export function problemaDeLAab(arrel, aab) {
+  return problemaDelPaquet(arrel, llegixDelZip(aab, SEGELL_DE_L_AAB), 'app-release.aab');
+}
+
+/* BOT-A4 (261025) · El commit és el del segell de dist-natiu/ (el que el preflight ha contrastat
+   amb HEAD), no el HEAD d'ara; main només imprimix el rebut quan l'AAB porta eixe segell. */
+export function rebut({ segell, versio, build, aab, pujat }) {
   return ['', `REBUT (per a ${REBUTS}/AAMMDD_HHMM_pujada_android.txt; cap secret, cap adreça):`,
-    `  commit: ${commitCurt(arrel) ?? 'desconegut'}`, `  versio: ${versio}  build (versionCode): ${build}`,
+    `  commit: ${segell?.commit ?? 'desconegut'} (el de ${SEGELL.join('/')}, que porta l'AAB)`, `  versio: ${versio}  build (versionCode): ${build}`,
     `  sha256 de l'AAB: ${fs.existsSync(aab) ? sha256DeFitxer(aab) : 'sense AAB'}`, `  hora: ${new Date().toISOString()}`,
     `  pujat a Google Play (esborrany, pista interna): ${pujat ? 'sí' : 'no'}`, '  qui ha dit «sí»: (ho escriu qui executa)', ''].join('\n');
 }
@@ -95,6 +110,9 @@ export async function main(argv) {
   if (opcions.confirma !== undefined && opcions.confirma !== confirmacioEsperada(versio, build)) {
     return plega(EIXIDA.CONFIRMACIO, `--confirma ha de ser exactament ${confirmacioEsperada(versio, build)}: un «sí» val per a una sola pujada`);
   }
+  // P0-23 · El build porta la versió del client que l'app dirà al node (versio-client.mjs).
+  const deLaVersio = problemaDeVersioClient(build);
+  if (deLaVersio) return plega(EIXIDA.ARBRE, deLaVersio);
   const arrel = arrelComprovada();
   if (!arrel) return plega(EIXIDA.EINA, 'git no reconeix l\'arrel del repositori on viu este script');
 
@@ -129,8 +147,11 @@ export async function main(argv) {
     if (resultat.codi !== 0) return plega(EIXIDA.EXTERNA, 'gradlew bundleRelease ha fallat');
   }
 
-  // Verificació local: l'AAB existix i el signa la clau de pujada que coneix Play.
+  // Verificació local: l'AAB existix, ix del dist-natiu/ del preflight i el signa la clau de pujada que coneix Play.
   if (!fs.existsSync(pla.aab)) return plega(EIXIDA.ARBRE, 'no hi ha app-release.aab: signa\'l tu (Android Studio) o fes --compila');
+  const deLAab = problemaDeLAab(arrel, pla.aab);
+  if (deLAab) return plega(EIXIDA.ARBRE, `${deLAab}: torna a signar-lo després de l'últim cap sync (Android Studio) o fes --compila`);
+  process.stdout.write(`✓ l'AAB porta el ${SEGELL.join('/')} del preflight\n`);
   const certificat = await executa(...pla.certificat, { valors, arrel, mostra: false });
   const empremta = empremtaDeKeytool(certificat.crua);
   if (certificat.codi !== 0 || !empremta) return plega(EIXIDA.EXTERNA, 'keytool -printcert no ha donat cap empremta SHA-256 (l\'AAB no està signat?)');
@@ -140,13 +161,13 @@ export async function main(argv) {
   process.stdout.write('✓ signat amb la clau de pujada de SDP_ANDROID_UPLOAD_CERT_SHA256\n');
 
   if (opcions.confirma === undefined) {
-    process.stdout.write(rebut({ arrel, versio, build, aab: pla.aab, pujat: false }));
+    process.stdout.write(rebut({ segell: pre.segell, versio, build, aab: pla.aab, pujat: false }));
     return EIXIDA.BE;
   }
 
   if (!pre.fastlane) {
     process.stdout.write(`\nNo hi ha fastlane: la pujada la fa el Mestre a mà.\n${PASSOS_A_MA.map((p, i) => `  ${i + 1}. ${p}`).join('\n').replace(/VERSIO/g, versio).replace(/BUILD/g, build)}\n`);
-    process.stdout.write(rebut({ arrel, versio, build, aab: pla.aab, pujat: false }));
+    process.stdout.write(rebut({ segell: pre.segell, versio, build, aab: pla.aab, pujat: false }));
     return EIXIDA.EINA;
   }
   const falten = opcionsQueFalten(llegixAjuda('fastlane', ['supply', '--help']), OPCIONS_SUPPLY);
@@ -160,7 +181,7 @@ export async function main(argv) {
     return plega(EIXIDA.EXTERNA, 'fastlane supply ha fallat');
   }
   process.stdout.write('✓ pujat com a ESBORRANY a la prova interna. Revisar-lo i desplegar-lo és del Mestre (RUNBOOK P9).\n');
-  process.stdout.write(rebut({ arrel, versio, build, aab: pla.aab, pujat: true }));
+  process.stdout.write(rebut({ segell: pre.segell, versio, build, aab: pla.aab, pujat: true }));
   return EIXIDA.BE;
 }
 

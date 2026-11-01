@@ -7,6 +7,24 @@ description: ESTAT DE LA SESSIÓ
 
 <!-- SDP:ESTAT_ACTUAL -->
 
+## ESTAT_ACTUAL · 2026-11-01T19:42:00+01:00 · Claude · Assalt al 10/10 en les 15 dimensions (pla 261101_1246): T1-T10 en mode Gauntlet
+
+- **Torn i ordre:** `torn_3f5652a2-ce26-464c-b29b-9649b7323c98` (code); ordre del Mestre al xat de l'1-11 (T1-T10 del [prompt 261101_1246](../_wiki_de_poble/04_escriptori/261101_1246_prompt_assalt_excel_lencia_10_10_les_15_dimensions_i_deute_llibre_mestre.md), pla aprovat a les 12:42). Informe: [261101_1355_auditoria_claude](../_wiki_de_poble/04_escriptori/261101_1355_auditoria_claude.md).
+- **Fet (sense commit ni desplegament):** segon adaptador complet `src/data/local/` (D01); lectura pública d'Open Data, format 1.2.0 i restaurador `importaMunicipiOpenData.js` amb SHA-256 i anada i tornada (D04/D10); `src/data/federacio/inboxActivityPub.js` provada i D-13 al generador, outbox de La Torre amb 1 element (D05/D07); entrada de 224.451 B gzip amb porta al build i `design_guard` 0/0 (D15/D02); P1-22 (≈255 claus) i P1-15 (D03/D12); D-4, D-5 i D-7 (D09/D10); D-6 (migració 2611011500), rellotge d'alertes, captures a 2048 px, verificació E2EE darrere de la bandera (D08/D11); connector 1.1.11, D-10, edat 16+, P0-23 (migració 2611011510), recepció de telemetria i /versions (D06/D13/D14). Correccions de la inspecció de Codex de les 18:27 (O2-F01..F04) integrades.
+- **Verificació:** Vitest 28.252 passades i 0 fallades; `test:node` 1.823 i 0; ESLint 0; `npm run build` exit 0; design_guard, Pedra Seca, Vigilant, Olivera, SCC, autoritat, Wiki i LEDGER en verd; frontissa 16/16 després de l'aprovació d'esta transacció.
+- **Per al Mestre:** commit (amb `_investigacio_ia_de_poble/261101_1355_assalt_claude/pendent-de-commit/`), migracions 2611011500 i 2611011510, desplegament, SVN de la 1.1.11, build 2 de l'app, tornar a segellar les skills amb els pegats de `skills-per-segellar/`, decisions de l'informe (federació, OKF al servidor, PS-11, edat 2.3) i el correu a NLnet després de tot això.
+- **Fronteres:** cap commit, push, desplegament, `npm install`, SQL remot ni lectura de fitxers d'entorn. Governança per l'executor (Reflex `e933d4ce` i la transacció final `80b0b829`).
+
+## ESTAT_ACTUAL · 2026-11-01T13:05:00+01:00 · MarIA · Tancament de la Marató Nocturna (`37f93e55a`, `a213947c5`, `1bb292cb2` · 27.243 tests) i Preparació de l'Assalt al 10/10 en les 15 Dimensions (`261101_1246`) abans de Reiniciar el Mac
+
+- **Torn i ordre:** `torn_558abd5e-2f62-41ec-9892-b40065c7739f` (documents). Acta Marmota de tancament: [261101_1304_acta_marmota_tancament_marato_nocturna_i_preparacio_assalt_10_10](../_wiki_de_poble/10_actes/261101_1304_acta_marmota_tancament_marato_nocturna_i_preparacio_assalt_10_10.md).
+- **Fet i Segellat en Git (Marató Nocturna `261101_0311`):**
+  - Claude Opus 5.5 ha comés els tres lots aprovats pel Mestre a `backup-notes-publish` (sense push): `37f93e55a` (`feat`: 163 fitxers de codi i lliurables, `27.243` tests Vitest + `1.789` tests Node amb `0 fallades`), `a213947c5` (`docs(produccio)`: 21 captures) i `1bb292cb2` (`docs(torn)`: els 3 dictàmens nocturns de Claude, Codex i Gemini).
+- **Preparat a l'Escriptori per al Nou Xat després de Reiniciar el Mac (`261101_1246` · Assalt al `10/10` en `D01`–`D15`):**
+  - Pla d'Implementació actiu: [261101_1246_pla_implementacio_assalt_excel_lencia_10_10_les_15_dimensions_i_deute_llibre_mestre](../_wiki_de_poble/04_escriptori/261101_1246_pla_implementacio_assalt_excel_lencia_10_10_les_15_dimensions_i_deute_llibre_mestre.md).
+  - Prompt Local actiu: [261101_1246_prompt_assalt_excel_lencia_10_10_les_15_dimensions_i_deute_llibre_mestre](../_wiki_de_poble/04_escriptori/261101_1246_prompt_assalt_excel_lencia_10_10_les_15_dimensions_i_deute_llibre_mestre.md).
+  - Llibre Mestre actualitzat (`§0.3 Prioritat 1 Activa`): [03_llibre_mestre_tasques_i_idees](../_wiki_de_poble/04_escriptori/03_llibre_mestre_tasques_i_idees.md).
+
 ## ESTAT_ACTUAL · 2026-11-01T07:50:00+01:00 · Claude · Marató nocturna 261101_0311: T1-T8 en mode Gauntlet
 
 - **Torn i ordre:** `torn_e16bf731-8a9a-4245-aa3f-d81416b0ae05` (code); ordre del Mestre al xat de l'1-11 (T1-T8 del [prompt 261101_0311](../_wiki_de_poble/04_escriptori/261101_0311_prompt_marato_nocturna_fediversity_notes_i_llibre_mestre.md), amb l'esmena de MarIA de les 04:16). Informe: [261101_0409_auditoria_claude](../_wiki_de_poble/04_escriptori/261101_0409_auditoria_claude.md).

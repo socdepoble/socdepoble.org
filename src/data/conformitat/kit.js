@@ -14,7 +14,9 @@
    amb un fetch de mentida que servisca les seues captures reals.
    Els casos d'ESCRIPTURA (escriu: true) només corren amb
    contextDeConformitat({ escriptures: true }): creen dades. */
-import { CAPACITATS, CODI_MODERACIO, CONTRACTE_NUCLI, SECCIONS_PAGINABLES, TIPUS_BLOQUEJAT, TIPUS_SEGUIT } from '../contracte.js';
+import {
+  CAPACITATS, CODI_MODERACIO, COLECCIONS_DADES_OBERTES, CONTRACTE_NUCLI, LIMIT_DADES_OBERTES, SECCIONS_PAGINABLES, TIPUS_BLOQUEJAT, TIPUS_SEGUIT
+} from '../contracte.js';
 
 /* ── Ajudants de forma: cada un torna la llista de falles (buida = conforme). ── */
 
@@ -116,6 +118,20 @@ const fallesDePaginaDeSeccio = (pagina) => [
   ...(pagina?.complete === (pagina?.nextCursor === null) ? [] : ['complete i nextCursor null han d’anar junts']),
   ...(pagina?.nextCursor === null || esTextNoBuit(pagina?.nextCursor) ? [] : ['nextCursor havia de ser null o text no buit'])
 ];
+
+/* T8b · P0-23 (BOT-A2; assalt 261101) · La versió mínima de l'app nativa
+   (capacitat 'versioClient'): null, o { versioMinima: enter ≥ 1, enllac:
+   text https | null } i res més. */
+const CAMPS_DE_VERSIO_MINIMA = Object.freeze(['versioMinima', 'enllac']);
+const fallesDeVersioMinima = (valor) => {
+  if (valor === null) return [];
+  if (!esObjecte(valor)) return [`havia de ser null o un objecte i és ${tipusDe(valor)}`];
+  return [
+    ...(Number.isSafeInteger(valor.versioMinima) && valor.versioMinima >= 1 ? [] : [`versioMinima havia de ser un enter ≥ 1: ${JSON.stringify(valor.versioMinima)}`]),
+    ...(valor.enllac === null || (typeof valor.enllac === 'string' && /^https:\/\/\S+$/.test(valor.enllac)) ? [] : [`enllac havia de ser null o una adreça https: ${JSON.stringify(valor.enllac)?.slice(0, 120)}`]),
+    ...Object.keys(valor).filter((camp) => !CAMPS_DE_VERSIO_MINIMA.includes(camp)).map((camp) => `la versió mínima porta un camp de més: ${camp}`)
+  ];
+};
 
 /* T6b (IDEA-14) · Un seguiment o un seguidor: id de text, nom de text o
    null, creatAl ISO o null. L'id del seguit de conformitat té forma d'UUID
@@ -434,6 +450,22 @@ export const CASOS = Object.freeze([
     arguments: (ctx) => [ctx.config],
     comprova: (valor) => (typeof valor?.ok === 'boolean' ? [] : [`havia de ser { ok: boolean }: ${JSON.stringify(valor)}`])
   }),
+  /* T8b · P0-23 (BOT-A2; assalt 261101) · La versió mínima de l'app nativa:
+     una plataforma que no és nativa no en té cap, i la d'Android és null
+     (sense servidor o sense la migració) o un enter amb el seu enllaç. Cap
+     cas no escriu. */
+  cas({
+    metode: 'versioMinimaClient', capacitat: 'versioClient',
+    titol: "versioMinimaClient('web', config) → null: la web no té cap versió mínima",
+    arguments: (ctx) => ['web', ctx.config],
+    comprova: (valor) => (valor === null ? [] : [`havia de ser null: ${JSON.stringify(valor)?.slice(0, 120)}`])
+  }),
+  cas({
+    metode: 'versioMinimaClient', capacitat: 'versioClient',
+    titol: "versioMinimaClient('android', config) → null | { versioMinima: enter ≥ 1, enllac: https | null }",
+    arguments: (ctx) => ['android', ctx.config],
+    comprova: fallesDeVersioMinima
+  }),
   /* Fase D (261020, tasca 1) · Un proveïdor desconegut es rebutja amb un code
      abans de cap petició i sense tocar la sessió: el kit no té cap testimoni de veres. */
   cas({
@@ -493,6 +525,56 @@ export const CASOS = Object.freeze([
       }
       return falles;
     }
+  }),
+  /* T2 · D04/D10 (assalt 261101) · Les dades obertes (contracte.js): les
+     quatre claus sempre presents, cada una null (sense font) o una llista amb
+     id, i cap fila d'una persona propietària ni cap correu. Un poble que no
+     existix només llig: segur contra qualsevol servidor. */
+  cas({
+    metode: 'llegixDadesObertes', capacitat: 'dadesObertes',
+    titol: 'llegixDadesObertes({ poble }, config) → { noticies, agenda, memoria, memoriaOral }: null o llistes amb id, sense persones ni correus',
+    arguments: (ctx) => [{ poble: { slug: 'poble-de-conformitat-que-no-existix', nom: 'Poble de conformitat que no existix' } }, ctx.config],
+    comprova: (valor) => {
+      if (!esObjecte(valor)) return [`havia de ser un objecte i és ${tipusDe(valor)}`];
+      const falles = [];
+      for (const coleccio of COLECCIONS_DADES_OBERTES) {
+        if (!Object.hasOwn(valor, coleccio)) { falles.push(`falta la col·lecció ${coleccio}`); continue; }
+        if (valor[coleccio] === null) continue;
+        const delaLlista = exigixLlistaAmbId(valor[coleccio], coleccio);
+        if (delaLlista.length) { falles.push(...delaLlista); continue; }
+        /* Gauntlet D-04 · Cap llista passa del sostre del contracte. */
+        if (valor[coleccio].length > LIMIT_DADES_OBERTES) falles.push(`${coleccio} passa de ${LIMIT_DADES_OBERTES} elements`);
+        for (const fila of valor[coleccio]) {
+          if (['owner_user_id', 'ownerUserId'].some((camp) => Object.hasOwn(fila, camp))) falles.push(`${coleccio}: la fila ${fila.id} és d’una persona propietària`);
+          if (['email', 'correu', 'contact_email', 'public_email', 'correu_public'].some((camp) => Object.hasOwn(fila, camp))) falles.push(`${coleccio}: la fila ${fila.id} porta un correu`);
+        }
+      }
+      return falles;
+    }
+  }),
+  /* T2 · D04/D10 · La restauració valida abans d'escriure: un lot sense
+     municipi és un TypeError i no toca res (segur contra qualsevol servidor). */
+  cas({
+    metode: 'restauraDadesObertes', capacitat: 'restauracioDadesObertes', espera: 'rebutja',
+    titol: 'restauraDadesObertes rebutja un lot sense municipi i no escriu res',
+    arguments: (ctx) => [{ format: 'socdepoble.dadesobertes.v1', versio: '1.2.0', entitats: [], noticies: [], agenda: [], memoria: [], memoriaOral: [] }, ctx.config],
+    comprova: (e) => (e instanceof TypeError ? [] : [`havia de rebutjar amb un TypeError: ${e?.name ?? tipusDe(e)}`])
+  }),
+  /* Gauntlet D-01 (assalt 261101) · Un id que ja és d'un altre poble: l'entitat
+     pública que ha deixat el directori (orgPublica) no és del poble de
+     conformitat, i el lot d'eixe poble no se la pot quedar. Rebutja amb `code`
+     'conflicte-identificador' (contracte.js) i sense escriure res. Només amb
+     escriptures: un adaptador que no ho comprova escriuria el lot. */
+  cas({
+    metode: 'restauraDadesObertes', capacitat: 'restauracioDadesObertes', escriu: true, espera: 'rebutja', requerix: ['orgPublica'],
+    titol: "restauraDadesObertes rebutja amb 'conflicte-identificador' un id que ja és d'un altre poble (l'entitat del directori)",
+    arguments: (ctx) => [{
+      format: 'socdepoble.dadesobertes.v1', versio: '1.2.0',
+      municipi: { slug: 'poble-de-conformitat-que-no-existix', nom: 'Poble de conformitat que no existix' },
+      entitats: [{ id: String(ctx.orgPublica), name: 'Entitat de conformitat', town_name: 'Poble de conformitat que no existix', visibility: 'public' }],
+      noticies: [], agenda: [], memoria: [], memoriaOral: []
+    }, ctx.config],
+    comprova: (e) => (e?.code === 'conflicte-identificador' ? [] : [`havia de rebutjar amb el codi conflicte-identificador: ${motiuDe(e?.code ?? e?.name ?? tipusDe(e))}`])
   }),
   cas({
     metode: 'listMyAgents', capacitat: 'agents', titol: 'listMyAgents(config) → Agent[]',

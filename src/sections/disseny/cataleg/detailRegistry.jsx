@@ -25,6 +25,8 @@ export const CATALOG_DETAIL_LOADERS = {
   'superposicions/xat-nova-conversa': lazyRoute(() => import('./detalls/EspecimenXatNovaConversa.jsx')),
   /* Torn 260930 (T1) · el full «Ajustos» del Xat. */
   'superposicions/xat-ajustos': lazyRoute(() => import('./detalls/EspecimenXatAjustos.jsx')),
+  /* Pla 261101_1246 (T7 · S7) · el xifratge per conversa i «Persones de confiança» (maqueta). */
+  'superposicions/xat-seguretat': lazyRoute(() => import('./detalls/EspecimenXatSeguretat.jsx')),
   'navegacio/xat-rail': lazyRoute(() => import('./detalls/EspecimenXatRail.jsx')),
   'fonaments/cerca-filtres': lazyRoute(() => import('./detalls/EspecimenCercaFiltres.jsx')),
   'fonaments/tasques-fitxers': lazyRoute(() => import('./detalls/EspecimenTasquesFitxers.jsx')),

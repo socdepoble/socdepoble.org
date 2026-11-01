@@ -1,0 +1,17 @@
+{
+  "id": "0f8f6372-6ff7-4e43-8151-ce27af9fdc5c",
+  "session": "6ea8c0fc-ba09-442d-af47-4251f9530bb8",
+  "operationId": "torn_3f5652a2-assalt_deu_deu_punt_entrada_porta_pressupost_paquet_arrel_a4-6ea8c0fc",
+  "claim": "6ea8c0fc-ba09-442d-af47-4251f9530bb8:governance-write",
+  "planHash": "baecfdefbcb0846037766d6cc4fc8ae652f39a4f51afcd4b4b4ca8f99593d2c1",
+  "beforeSeal": "4cc7d7de9a28b33b53b9ba3ad48694f971f2f676a6b242c2c0a1a65908f18e6c",
+  "files": [
+    {
+      "path": "tooling/gates/pressupost-paquet.mjs",
+      "before": "9b589635319155020cc1fbbd1827b635bf9f1b5e353ba2975349aa84274cc0a8",
+      "after": "7bc6e61352141b6ee84ee79626dd47613c63749071aba0129d9b1a03853f6cb2"
+    }
+  ],
+  "state": "accepted",
+  "afterSeal": "d863c155441b09590117b6eb2a6e30dacfebf30e6a62f0b502590644b8434d0f"
+}

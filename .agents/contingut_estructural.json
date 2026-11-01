@@ -50,16 +50,16 @@
       "data": "2026-10-30"
     },
     "fediversity": {
-      "sha256": "635a3d0c0129bcc3fc367f296cc495bfa08e23a444711282b003d7841afbc254",
-      "html": 21688,
-      "aprovat_per": "Mestre Javi Llinares (ordre al xat 261101, T2, executada per Claude)",
+      "sha256": "21a27ec962e665d68e7f6fd8e2a55d481405ad6372ef0767b218ebba06c1f11d",
+      "html": 22459,
+      "aprovat_per": "Mestre Javi Llinares (ordre al xat 261101 de fer els commits de l'assalt, amb pendent-de-commit; executada per Claude al torn torn_3f5652a2)",
       "data": "2026-11-01"
     },
     "legal": {
-      "sha256": "751ae5e6127d4d2c3071e89a8ff2132cdcd6e0f9b1faf4b4552a21b06e96c8ab",
-      "html": 50239,
-      "aprovat_per": "Mestre Javi Llinares (ordre al xat 261030, executada per Claude)",
-      "data": "2026-10-30"
+      "sha256": "16546472fcf076771da109ed72902d0ae4976e9b02ff64dcf0e56416fe61b8fa",
+      "html": 50226,
+      "aprovat_per": "Mestre Javi Llinares (pla 261101_1246 aprovat el 2026-11-01, executada per Claude al torn torn_3f5652a2)",
+      "data": "2026-11-01"
     },
     "notes": {
       "sha256": "39cf0339b0694fc1ed39bdcac47064fadb725d844e6410753a9af90e1fc4e94c",
@@ -80,9 +80,9 @@
       "data": "2026-10-17"
     },
     "versions": {
-      "sha256": "dd0c6b9fa3801d33e28da971c51e5941ecbc862e08eba74511556a8d44693c3d",
-      "html": 15407,
-      "aprovat_per": "Mestre Javi Llinares (§0.2 del Llibre Mestre, millora proactiva T7 del 261101, executada per Claude)",
+      "sha256": "414856786c1392f8963c6e42a6169db88c060d541e92739c3303920eb3bdb1aa",
+      "html": 24399,
+      "aprovat_per": "Mestre Javi Llinares (pla 261101_1246 aprovat el 2026-11-01, executada per Claude al torn torn_3f5652a2)",
       "data": "2026-11-01"
     },
     "wikidepoble": {

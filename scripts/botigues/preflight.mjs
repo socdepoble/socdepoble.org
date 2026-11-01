@@ -10,14 +10,15 @@
  * l'estat de l'arbre (amb iOS, també que cap fitxer porte el SDK de Facebook: P1-08, 261028).
  * No compila, no signa i no puja res. Ix amb el codi de la primera família
  * que falla, en este ordre: fitxer (3), variable prohibida (4), variable o fitxer que falta (5),
- * eina (6), arbre (7). Els codis són a entorn.mjs (EIXIDA).
+ * eina (6), arbre (7). Els codis són a entorn.mjs (EIXIDA). L'arbre inclou el segell de dist-natiu/
+ * (BOT-A4, 261025): el paquet ha d'eixir del commit de HEAD, amb l'arbre net.
  */
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import {
-  EIXIDA, JDK_MAXIM, JDK_MINIM, analitzaArguments, arbreNet, arrelDelRepositori, carregaEntorn, comprovaVariables,
-  jdkPerAGradle, llegixAjuda, mateixContingut, mostraCami, plega
+  EIXIDA, JDK_MAXIM, JDK_MINIM, SEGELL, analitzaArguments, arbreNet, arrelDelRepositori, carregaEntorn, commitDeHead,
+  comprovaVariables, jdkPerAGradle, llegixAjuda, llegixSegell, mateixContingut, mostraCami, plega, problemesDelSegell
 } from './entorn.mjs';
 
 /** L'arrel on viu el script instal·lat: scripts/botigues/ → dos nivells amunt. */
@@ -103,7 +104,9 @@ const CONSULTES = Object.freeze({ llegixAjuda, jdkPerAGradle });
 /**
  * Totes les comprovacions d'una o dues plataformes. No llança i no imprimix valors.
  * @param {{ arrel: string, plataformes: ('ios'|'android')[], signa?: boolean, env?: object, consultes?: object }} opcions
- * @returns {{ codi:number, linies:string[], valors:Record<string,string>, fastlane:boolean, jdk:{home:string, major:number}|null }}
+ * @returns {{ codi:number, linies:string[], valors:Record<string,string>, fastlane:boolean, jdk:{home:string, major:number}|null,
+ *   segell:{commit:string, arbreNet:boolean, data:string}|null }} `segell`, el de dist-natiu/ tal com es llig
+ *   (val per al rebut només si `codi` és EIXIDA.BE)
  */
 export function preflight({ arrel, plataformes, signa = false, env = process.env, consultes = {} }) {
   const { llegixAjuda: ajuda, jdkPerAGradle: jdkDe } = { ...CONSULTES, ...consultes };
@@ -155,14 +158,25 @@ export function preflight({ arrel, plataformes, signa = false, env = process.env
   if (arbreNet(arrel)) be('git status --porcelain no diu res');
   else mal(EIXIDA.ARBRE, 'hi ha canvis sense cometre (o eixides sense ignorar: FASE_PRELEASE_FETA.txt §6): es puja des d\'un commit');
   const index = path.join(arrel, 'dist-natiu', 'index.html');
+  /* BOT-A4 (261025) · L'arbre net no diu res de dist-natiu/ ni de les còpies, que git ignora: el
+     segell diu de quin commit ixen (entorn.mjs, SEGELL). */
+  const segell = llegixSegell(arrel);
+  const delSegell = path.join(arrel, ...SEGELL);
   if (!fs.existsSync(index)) {
     mal(EIXIDA.ARBRE, 'no hi ha dist-natiu/index.html: npm run build:natiu');
   } else {
     be('dist-natiu/index.html');
+    const problemes = problemesDelSegell(segell, commitDeHead(arrel));
+    if (problemes.length) for (const problema of problemes) mal(EIXIDA.ARBRE, problema);
+    else be(`${SEGELL.join('/')}: compilat des de HEAD (${segell.commit.slice(0, 12)}) amb l'arbre net, ${segell.data}`);
     for (const plataforma of plataformes) {
       const copia = path.join(arrel, ...COPIA_NATIVA[plataforma]);
-      if (mateixContingut(index, copia)) be(`${plataforma}: la còpia de dist-natiu/ és la mateixa`);
-      else mal(EIXIDA.ARBRE, `${plataforma}: ${COPIA_NATIVA[plataforma].join('/')} no és la de dist-natiu/: npx cap sync ${plataforma}`);
+      // cap sync copia el segell amb la resta: si el de la còpia és un altre, la còpia és d'un altre build.
+      const copiaDelSegell = path.join(path.dirname(copia), SEGELL.at(-1));
+      const mateixSegell = !fs.existsSync(delSegell) || mateixContingut(delSegell, copiaDelSegell);
+      if (!mateixContingut(index, copia)) mal(EIXIDA.ARBRE, `${plataforma}: ${COPIA_NATIVA[plataforma].join('/')} no és la de dist-natiu/: npx cap sync ${plataforma}`);
+      else if (!mateixSegell) mal(EIXIDA.ARBRE, `${plataforma}: ${[...COPIA_NATIVA[plataforma].slice(0, -1), SEGELL.at(-1)].join('/')} no és el de dist-natiu/ (l'index.html és igual, però la còpia és d'un altre build): npx cap sync ${plataforma}`);
+      else be(`${plataforma}: la còpia de dist-natiu/ és la mateixa`);
     }
   }
   if (plataformes.includes('ios') && !projecteIos(arrel)) mal(EIXIDA.ARBRE, 'no hi ha ios/App/App.xcworkspace ni ios/App/App.xcodeproj: npx cap add ios');
@@ -175,7 +189,7 @@ export function preflight({ arrel, plataformes, signa = false, env = process.env
 
   const ordre = [EIXIDA.FITXER, EIXIDA.PROHIBIDA, EIXIDA.FALTA, EIXIDA.EINA, EIXIDA.ARBRE];
   const codi = ordre.find((c) => familia[c]) ?? EIXIDA.BE;
-  return { codi, linies, valors: entorn.codi === EIXIDA.BE ? entorn.valors : {}, fastlane, jdk };
+  return { codi, linies, valors: entorn.codi === EIXIDA.BE ? entorn.valors : {}, fastlane, jdk, segell };
 }
 
 /** L'arrel del repositori, si és la del script. */

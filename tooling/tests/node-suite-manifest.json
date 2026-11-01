@@ -91,7 +91,7 @@
     {
       "path": "tests/botigues.test.mjs",
       "suite": "primary",
-      "reason": "Regressió portable dels scripts de pujada a les botigues (scripts/botigues/): peces pures, fitxers temporals fora del repositori i git de només lectura; cap compilació, signatura ni pujada, i cap crida a xcodebuild, altool, gradle, keytool ni fastlane (el preflight rep consultes fingides)."
+      "reason": "Regressió portable dels scripts de pujada a les botigues (scripts/botigues/): peces pures, fitxers temporals fora del repositori i git de només lectura (més un repositori de mostra en una carpeta temporal per al paquet caducat, BOT-A4); cap compilació, signatura ni pujada, i cap crida a xcodebuild, altool, gradle, keytool ni fastlane (el preflight rep consultes fingides)."
     },
     {
       "path": "tests/canonada-generats.test.mjs",
@@ -162,6 +162,11 @@
       "path": "tests/design-contracts.test.mjs",
       "suite": "primary",
       "reason": "Regressió portable del producte o d’una eina permanent; s’executa a la cadena primària, també quan està roja."
+    },
+    {
+      "path": "tests/design-guard.test.mjs",
+      "suite": "primary",
+      "reason": "D-2 (assalt 10/10, 261101): regressió de la regla div-soup del Design Guard amb fixtures temporals i el registre d’embolcalls canònics llegit amb l’AST del src real."
     },
     {
       "path": "tests/destins-canonics.test.mjs",
@@ -737,6 +742,11 @@
       "path": "tooling/gates/guarda-nocturna.test.mjs",
       "suite": "primary",
       "reason": "Guàrdia amb desconvocatòria explícita acotada a l’onada i TTL, amb fixtures temporals i compatibilitat legacy."
+    },
+    {
+      "path": "tooling/gates/pressupost-paquet.test.mjs",
+      "suite": "primary",
+      "reason": "P1-20 · D15 (T4a, 261101) · Regressió portable de la porta del pressupost del tros d'entrada (tooling/gates/pressupost-paquet.mjs), sobre dist/ fingits en un mkdtemp: l'entrada i els modulepreload que pren de l'HTML, el gzip -9 de zlib que mesura, el sostre de 250.000 B, el sostre opcional de l'arrencada i els codis 0/1/2 (un error de lectura és 2, mai 1), també executada com a ordre; cap build ni xarxa."
     },
     {
       "path": "tooling/gates/tractor-psicopatia.test.mjs",

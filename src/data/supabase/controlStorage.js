@@ -1,10 +1,19 @@
 /** P1-27: cua fitada. Una cancel·lació no allibera un transport que encara vola. */
 import { CODI_BACKEND_INABASTABLE } from '../errorsBackend.js';
+import { registraIncident } from '../../utils/autocuracio.js';
 export const MAX_STORAGE_EN_VOL = 4;
 export const MAX_STORAGE_EN_CUA = 32;
 const observadors = new Set();
+/* Els tipus d'operacioStorage (storage.js) que poden deixar un efecte al servidor. */
+const MUTACIONS_STORAGE = Object.freeze(['pujada', 'esborrat']);
 export function observaReconciliacioStorage(fn) { observadors.add(fn); return () => observadors.delete(fn); }
 export function informaReconciliacioStorage(detall) {
+  /* T1 · F6 (assalt 261101) · Una reconciliació que no s'ha pogut assentar
+     (un efecte tardà que pot haver quedat al servidor) deixa rastre al
+     registre local d'autoreparacions: només l'etiqueta, mai la ruta ni l'uid.
+     Només les mutacions: una lectura o una signatura que acaba després d'un
+     canvi de sessió no deixa res al servidor (storage.js · avisaCanvi). */
+  if (detall?.estat === 'pendent' && MUTACIONS_STORAGE.includes(detall.tipus)) registraIncident('dades', 'storage', 'reconciliacio-pendent');
   for (const fn of observadors) { try { fn(Object.freeze({ ...detall })); } catch { /* un observador no bloqueja la cua */ } }
   if (typeof globalThis.window?.dispatchEvent === 'function' && typeof CustomEvent === 'function') {
     globalThis.window.dispatchEvent(new CustomEvent('sdp:storage-reconciliat', { detail: detall }));

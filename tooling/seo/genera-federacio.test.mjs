@@ -20,8 +20,9 @@ import path from 'node:path';
 import { spawnSync } from 'node:child_process';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import {
-  ACTOR_PROJECTE, ALIES_WEBFINGER, AVIS_FASE_1, FONTS, escriuFederacio, fitxersDelServidor, origenDeLaPublicacio, preparaFederacio,
-  recullActorsPublics, reglesNginxWebFinger
+  ACTOR_PROJECTE, ACTORS_WEBFINGER_ESTATIC, ALIES_WEBFINGER, AVIS_FASE_1, FITXER_NODE, FONTS, ID_PAGINA_DEL_POBLE, escriuFederacio,
+  fitxersDelServidor, fitxersWebFingerEstatic, identitatDelNode, origenDeLaPublicacio, paginaDelPoble, preparaFederacio,
+  preparaFederacioDelBuild, recullActorsPublics, reglesFirebaseWebFinger, reglesNginxWebFinger, validaIdentitatNode
 } from './genera-federacio.mjs';
 
 const ARREL = process.env.SDP_PROJECT_ROOT || path.resolve(fileURLToPath(new URL('../..', import.meta.url)));
@@ -38,7 +39,7 @@ function temporal(t) {
   return dir;
 }
 
-test('fonts reals: el projecte amb les pàgines públiques; només La Torre, amb el nom i l’outbox buit; cap poble de mostra', async () => {
+test('fonts reals: el projecte amb les pàgines públiques; només La Torre, amb el nom i la pàgina pública a l’outbox; cap poble de mostra', async () => {
   const actors = await recullActorsPublics({ arrel: ARREL, origen: ORIGEN });
   assert.equal(actors[0].slug, ACTOR_PROJECTE.slug);
   /* Decisió del Mestre del 31-10-2026 (Ronda 2): la federació és només per a La Torre.
@@ -66,8 +67,11 @@ test('fonts reals: el projecte amb les pàgines públiques; només La Torre, amb
     // L'entradeta va de resum (summary): el cos de la pàgina no es federa.
     assert.equal(element.text, undefined, element.id);
   }
+  /* D05 (pla 261101_1246) · Expectativa actualitzada a posta (totalItems > 0 sense xarxa): l'outbox de cada
+     poble porta la seua pàgina pública, i res més sense configuració remota. Abans, elements []. */
+  const noms = new Map(MOCK_TOWNS.map((p) => [p.id, p.title]));
   for (const poble of actors.slice(1)) {
-    assert.deepEqual(poble.elements, [], poble.slug);
+    assert.deepEqual(poble.elements, [paginaDelPoble({ nom: noms.get(poble.slug), url: `${ORIGEN}/pobles/${poble.slug}` })], poble.slug);
     assert.equal(poble.perfil, `/pobles/${poble.slug}`);
   }
 });
@@ -88,7 +92,18 @@ test('el seed és de mostra: cap resum, població, comarca, coordenada, imatge n
   assert.match(torre.summary, /No és el compte oficial de l’Ajuntament/);
   assert.ok(torre.summary.includes(ap.escapaHtml(AVIS_FASE_1)));
   assert.equal(torre.icon, undefined);
-  assert.deepEqual(fitxers.get(`ap/outbox/${TORRE}.json`).orderedItems, []);
+  /* D05 · Expectativa actualitzada a posta: un sol Create, el de la pàgina pública de La Torre, sense
+     published (cap data inventada) i amb l'avís de sempre; cap camp del seed (el bucle de dalt ho mira). */
+  const outbox = fitxers.get(`ap/outbox/${TORRE}.json`);
+  assert.equal(outbox.totalItems, 1);
+  const [delPoble] = outbox.orderedItems;
+  assert.equal(delPoble.type, 'Create');
+  assert.equal(delPoble.published, undefined);
+  assert.deepEqual(fitxers.get(`ap/objectes/${TORRE}/${ID_PAGINA_DEL_POBLE}.json`), { '@context': ap.CONTEXT_AS, ...delPoble.object });
+  assert.deepEqual([delPoble.object.type, delPoble.object.name, delPoble.object.url, delPoble.object.published], [
+    'Article', 'La Torre de les Maçanes a Sóc de Poble', `${ORIGEN}/pobles/${TORRE}`, undefined
+  ]);
+  assert.match(delPoble.object.summary, /No és el compte oficial de l’Ajuntament/);
   const projecte = fitxers.get('ap/actors/socdepoble.json');
   assert.deepEqual(projecte.icon, { type: 'Image', mediaType: 'image/png', url: `${ORIGEN}/icona-app-512.png` });
   // Cada pàgina és un Article amb l'entradeta a summary (Mastodon mostra name + summary + url, i no el content).
@@ -313,7 +328,8 @@ test('CLI sense xarxa: un .env remot de l’arrel no fa cap petició a app_conte
   const cli = spawnSync(process.execPath, [GENERADOR, '--arrel', arrel, '--desti', desti, '--origen', ORIGEN], { encoding: 'utf8', env: entorn });
   assert.equal(cli.status, 0, cli.stderr);
   assert.deepEqual(JSON.parse(cli.stdout).actors, ['socdepoble', TORRE]);
-  assert.equal(JSON.parse(fs.readFileSync(path.join(desti, `ap/outbox/${TORRE}.json`), 'utf8')).totalItems, 0);
+  // D05 · Expectativa actualitzada a posta: sense xarxa, la pàgina pública del poble i res més.
+  assert.equal(JSON.parse(fs.readFileSync(path.join(desti, `ap/outbox/${TORRE}.json`), 'utf8')).totalItems, 1);
 });
 
 test('CLI sense --origen: l’origen dels .env de l’arrel, com «vite build»; i no reescriu en silenci el ap/ d’un altre origen', (t) => {
@@ -341,4 +357,176 @@ test('CLI sense --origen: l’origen dels .env de l’arrel, com «vite build»;
   // L'entorn del procés mana sobre el .env, com en Vite.
   const ambEntorn = spawnSync(process.execPath, [GENERADOR, '--arrel', arrel, '--desti', temporal(t)], { encoding: 'utf8', env: { ...entorn, VITE_CANONICAL_URL: 'https://proves.socdepoble.org' } });
   assert.equal(JSON.parse(ambEntorn.stdout).origen, 'https://proves.socdepoble.org');
+});
+
+/* ── D-13 (pla 261101_1246, carril T3) · El node germà publica el seu poble ──────────────────────────
+   tests/inicia-node-germa.test.mjs ho prova de punta a punta amb la release de HEAD (git archive): passa
+   quan el canvi està confirmat. Ací es prova el codi viu abans del commit, amb una arrel fixture: el
+   package.json real, src/ enllaçat (com les proves de la CLI de dalt) i un node-germa.json real, el
+   manifest que escriu l'instal·lador. Cap xarxa. */
+const XIXONA = Object.freeze({ slug: 'xixona', nom: 'Xixona', origen: 'https://gentdexixona.example', mode: 'seed' });
+/* Cap rastre del Mas ni de La Torre en el que publica un node germà. */
+const RESIDU_DEL_MAS = /socdepoble\.org|la[\s_-]*torre|ma[çc]anes|latorredelesmacanes/i;
+const entornSenseVite = () => Object.fromEntries(Object.entries(process.env).filter(([clau]) => !clau.startsWith('VITE_') && clau !== 'SDP_SOCIAL_SENSE_REMOT'));
+const manifestDelNode = (config) => `${JSON.stringify({ esquema: 'sdp.node-germa.v1', config, node: process.versions.node, release: '0.0.0', fitxers: [] }, null, 2)}\n`;
+
+function arrelDeNode(t, config = XIXONA) {
+  const arrel = temporal(t);
+  fs.copyFileSync(path.join(ARREL, 'package.json'), path.join(arrel, 'package.json'));
+  fs.symlinkSync(path.join(ARREL, 'src'), path.join(arrel, 'src'));
+  if (config) fs.writeFileSync(path.join(arrel, FITXER_NODE), manifestDelNode(config));
+  return arrel;
+}
+const cliDe = (arrel, ...args) => spawnSync(process.execPath, [GENERADOR, '--arrel', arrel, ...args], { encoding: 'utf8', env: entornSenseVite() });
+
+test('D-13 · un node germà publica només el seu poble: actor, WebFinger, outbox i NodeInfo 2.1 propis, sense rastre del Mas', (t) => {
+  const arrel = arrelDeNode(t);
+  const desti = temporal(t);
+  const cli = cliDe(arrel, '--desti', desti, '--origen', XIXONA.origen, '--servidor');
+  assert.equal(cli.status, 0, cli.stderr);
+  const publicats = fs.readdirSync(desti, { recursive: true }).map(String).filter((rel) => fs.statSync(path.join(desti, rel)).isFile()).sort();
+  assert.deepEqual(JSON.parse(cli.stdout), { origen: XIXONA.origen, actors: ['xixona'], fitxers: publicats.length });
+  assert.deepEqual(publicats, [
+    '.well-known/host-meta', '.well-known/nodeinfo', '.well-known/webfinger.nginx', '.well-known/webfinger/xixona.json',
+    'ap/actors/xixona.json', 'ap/followers/xixona.json', 'ap/inbox/xixona', `ap/objectes/xixona/${ID_PAGINA_DEL_POBLE}.json`, 'ap/outbox/xixona.json',
+    'nodeinfo/2.1.json'
+  ]);
+  const llig = (rel) => fs.readFileSync(path.join(desti, rel), 'utf8');
+  for (const rel of publicats) assert.doesNotMatch(llig(rel), RESIDU_DEL_MAS, rel);
+  const actor = JSON.parse(llig('ap/actors/xixona.json'));
+  assert.deepEqual([actor.id, actor.preferredUsername, actor.name, actor.url, actor.outbox], [
+    `${XIXONA.origen}/ap/actors/xixona.json`, 'xixona', 'Xixona · Sóc de Poble', `${XIXONA.origen}/`, `${XIXONA.origen}/ap/outbox/xixona.json`
+  ]);
+  assert.match(actor.summary, /No és el compte oficial de l’Ajuntament/);
+  assert.ok(actor.summary.includes(ap.escapaHtml(AVIS_FASE_1)));
+  const outbox = JSON.parse(llig('ap/outbox/xixona.json'));
+  assert.equal(outbox.totalItems, 1);
+  assert.deepEqual([outbox.orderedItems[0].object.name, outbox.orderedItems[0].object.url, outbox.orderedItems[0].published], ['Xixona a Sóc de Poble', `${XIXONA.origen}/`, undefined]);
+  const jrd = JSON.parse(llig('.well-known/webfinger/xixona.json'));
+  assert.equal(jrd.subject, 'acct:xixona@gentdexixona.example');
+  assert.equal(jrd.links.find((l) => l.rel === 'self').href, actor.id);
+  assert.match(llig('.well-known/webfinger.nginx'), /acct\(\?::\|%3a\)xixona\(\?:@\|%40\)gentdexixona\\\.example\$/);
+  assert.match(llig('.well-known/host-meta'), /template="https:\/\/gentdexixona\.example\/\.well-known\/webfinger\/\{uri\}"/);
+  const nodeinfo = JSON.parse(llig('nodeinfo/2.1.json'));
+  assert.deepEqual([nodeinfo.version, nodeinfo.metadata.nodeName, nodeinfo.software.homepage], ['2.1', 'Xixona · Sóc de Poble', `${XIXONA.origen}/`]);
+  assert.deepEqual(nodeinfo.usage, { users: {} });
+});
+
+test('D-13 · --config: el municipi.json de l’instal·lador o el manifest; l’origen ha de ser el del node, o no s’escriu res', (t) => {
+  // Sense node-germa.json a l'arrel, amb --config (el municipi.json cru de l'instal·lador): un altre poble.
+  const arrel = arrelDeNode(t, null);
+  const config = path.join(temporal(t), 'municipi.json');
+  fs.writeFileSync(config, JSON.stringify({ slug: 'sella', nom: 'Sella', origen: 'https://sella.example', mode: 'seed' }));
+  const desti = temporal(t);
+  const sella = cliDe(arrel, '--desti', desti, '--origen', 'https://sella.example', '--config', config);
+  assert.equal(sella.status, 0, sella.stderr);
+  assert.deepEqual(JSON.parse(sella.stdout).actors, ['sella']);
+  assert.equal(JSON.parse(fs.readFileSync(path.join(desti, 'ap/actors/sella.json'), 'utf8')).name, 'Sella · Sóc de Poble');
+  // Un altre origen (el del Mas, que és el que dona l'entorn sense VITE_CANONICAL_URL): s'atura i el destí queda buit.
+  const nodeX = arrelDeNode(t);
+  for (const args of [['--origen', ORIGEN], ['--origen', 'https://sella.example'], []]) {
+    const buit = temporal(t);
+    const mal = cliDe(nodeX, '--desti', buit, ...args);
+    assert.equal(mal.status, 1, args.join(' '));
+    assert.match(mal.stderr, /no és el del node germà \(https:\/\/gentdexixona\.example\)/);
+    assert.deepEqual(fs.readdirSync(buit), [], args.join(' '));
+  }
+  // L'origen dels .env del node (el .env.local que escriu l'instal·lador) és el bo.
+  fs.writeFileSync(path.join(nodeX, '.env.local'), `VITE_CANONICAL_URL=${JSON.stringify(XIXONA.origen)}\n`);
+  const ambEnv = cliDe(nodeX, '--desti', temporal(t));
+  assert.equal(ambEnv.status, 0, ambEnv.stderr);
+  assert.deepEqual(JSON.parse(ambEnv.stdout).actors, ['xixona']);
+  const absent = cliDe(arrel, '--desti', temporal(t), '--origen', ORIGEN, '--config', path.join(temporal(t), 'no-hi-es.json'));
+  assert.equal(absent.status, 1);
+  assert.match(absent.stderr, /No hi ha la configuració del node/);
+});
+
+test('D-13 · la identitat: un enllaç simbòlic o un directori aturen; les invàlides es rebutgen com a l’instal·lador', async (t) => {
+  const enllacat = arrelDeNode(t, null);
+  const fora = path.join(temporal(t), 'node-germa.json');
+  fs.writeFileSync(fora, manifestDelNode(XIXONA));
+  fs.symlinkSync(fora, path.join(enllacat, FITXER_NODE));
+  await assert.rejects(identitatDelNode({ arrel: enllacat }), /no regular/);
+  const buit = temporal(t);
+  const cli = cliDe(enllacat, '--desti', buit, '--origen', XIXONA.origen);
+  assert.equal(cli.status, 1);
+  assert.deepEqual(fs.readdirSync(buit), []);
+  const directori = arrelDeNode(t, null);
+  fs.mkdirSync(path.join(directori, FITXER_NODE));
+  await assert.rejects(identitatDelNode({ arrel: directori }), /no regular/);
+  assert.deepEqual(await identitatDelNode({ arrel: arrelDeNode(t) }), { slug: 'xixona', nom: 'Xixona', origen: XIXONA.origen });
+  assert.ok(Object.isFrozen(await identitatDelNode({ arrel: arrelDeNode(t) })));
+  for (const dolenta of [
+    { ...XIXONA, slug: 'socdepoble' }, { ...XIXONA, slug: '../x' }, { ...XIXONA, slug: 'Xixona' }, { ...XIXONA, nom: 'Xixona\nfals' },
+    { ...XIXONA, nom: ' ' }, { ...XIXONA, nom: 'x'.repeat(121) }, { ...XIXONA, origen: 'http://gentdexixona.example' },
+    { ...XIXONA, origen: 'https://gentdexixona.example/' }, { ...XIXONA, origen: 'https://gentdexixona.example/app' }, { slug: 'xixona' }, null, []
+  ]) {
+    assert.throws(() => validaIdentitatNode({ esquema: 'sdp.node-germa.v1', config: dolenta }, ap), TypeError, JSON.stringify(dolenta));
+  }
+  // El municipi.json cru (sense manifest) també val; els camps de més (mode, claus) no ixen de la identitat.
+  assert.deepEqual(validaIdentitatNode({ ...XIXONA, anonKey: 'x', mode: 'remote' }, ap), { slug: 'xixona', nom: 'Xixona', origen: XIXONA.origen });
+});
+
+test('D-13 · WebFinger estàtic i regles de Firebase d’un node: només el seu actor; al Mas, les mateixes regles de sempre', async (t) => {
+  const node = await preparaFederacio({ arrel: arrelDeNode(t), origen: XIXONA.origen });
+  assert.deepEqual([node.actors.map((a) => a.slug), node.principals, node.nomDelNode], [['xixona'], ['xixona'], 'Xixona · Sóc de Poble']);
+  assert.deepEqual(node.identitat, { slug: 'xixona', nom: 'Xixona', origen: XIXONA.origen });
+  const estatic = fitxersWebFingerEstatic(node);
+  assert.deepEqual([...estatic.keys()], ['.well-known/host-meta', '.well-known/nodeinfo', '.well-known/webfinger/xixona.json', 'nodeinfo/2.1.json']);
+  assert.equal(estatic.get('nodeinfo/2.1.json').metadata.nodeName, 'Xixona · Sóc de Poble');
+  const regles = reglesFirebaseWebFinger(node);
+  assert.deepEqual(regles.rewrites, [{ regex: '^/\\.well-known/webfinger/(?i:acct(?::|%3a)xixona(?:@|%40)gentdexixona\\.example)$', destination: '/.well-known/webfinger/xixona.json' }]);
+  assert.doesNotMatch(JSON.stringify(regles), RESIDU_DEL_MAS);
+  // Al Mas (l'arrel viva no porta node-germa.json), res no canvia: el projecte i La Torre, i les regles que ja porta firebase.json.
+  assert.equal(fs.existsSync(path.join(ARREL, FITXER_NODE)), false);
+  assert.equal(await identitatDelNode({ arrel: ARREL }), null);
+  const mas = await preparaFederacio({ arrel: ARREL, origen: ORIGEN });
+  assert.deepEqual([mas.actors.map((a) => a.slug), mas.principals, mas.nomDelNode, mas.identitat], [[ACTOR_PROJECTE.slug, TORRE], ACTORS_WEBFINGER_ESTATIC, null, null]);
+  assert.equal(fitxersWebFingerEstatic(mas).get('nodeinfo/2.1.json').metadata.nodeName, 'Sóc de Poble');
+  const reglesMas = reglesFirebaseWebFinger(mas);
+  assert.deepEqual(reglesMas, reglesFirebaseWebFinger({ ap: mas.ap, origen: mas.origen, actors: mas.actors }));
+  const hosting = JSON.parse(fs.readFileSync(path.join(ARREL, 'firebase.json'), 'utf8')).hosting;
+  for (const regla of reglesMas.rewrites) assert.ok(hosting.rewrites.some((r) => r.regex === regla.regex && r.destination === regla.destination), regla.regex);
+  // Un node germà de La Torre (p. ex. gentdelatorre.net) conserva l'àlies del poble (ordre del Mestre del 30-10-2026).
+  const torre = await preparaFederacio({ arrel: arrelDeNode(t, { slug: TORRE, nom: 'La Torre de les Maçanes', origen: 'https://gentdelatorre.example' }), origen: 'https://gentdelatorre.example' });
+  assert.deepEqual(torre.actors[0].alies, ['latorredelesmacanes']);
+  assert.deepEqual(reglesFirebaseWebFinger(torre).rewrites.map((r) => r.destination), [`/.well-known/webfinger/${TORRE}.json`, `/.well-known/webfinger/${TORRE}.json`]);
+  assert.equal(ap.construeixWebFinger('acct:latorredelesmacanes@gentdelatorre.example', { origen: torre.origen, municipis: torre.actors }).subject, `acct:${TORRE}@gentdelatorre.example`);
+  // identitat: null força el Mas encara que l'arrel siga d'un node (el servidor de dev hi pot passar la seua).
+  const forcat = await preparaFederacio({ arrel: arrelDeNode(t), origen: ORIGEN, identitat: null });
+  assert.deepEqual(forcat.actors.map((a) => a.slug), [ACTOR_PROJECTE.slug, TORRE]);
+});
+
+test('D-13 · el build web d’un node: el nom del node a la projecció remota, i un altre origen atura abans de cap petició', async (t) => {
+  const arrel = arrelDeNode(t);
+  const env = { VITE_DATA_MODE: 'remote', VITE_SUPABASE_URL: 'https://example.supabase.co', VITE_SUPABASE_ANON_KEY: 'sb_publishable_abcdefghijklmnopqrstuvwxyz1234567890', VITE_TENANT_ID: '11111111-1111-4111-8111-111111111111' };
+  const avis = { id: 'avis-1', title: 'Obres a la plaça', content: '<p>Demà.</p>', town_name: 'Xixona', author_entity_id: 'ajuntament', visibility: 'public', status: 'published', created_at: '2026-10-31T10:00:00Z' };
+  let crides = 0;
+  const fetchImpl = async (url) => {
+    crides += 1;
+    const clau = new URL(url).searchParams.get('key').slice(3);
+    return new Response(JSON.stringify([{ key: clau, payload: clau === 'feedPosts' ? [avis] : [] }]), { headers: { 'content-type': 'application/json' } });
+  };
+  const abans = process.env.SDP_SOCIAL_SENSE_REMOT;
+  delete process.env.SDP_SOCIAL_SENSE_REMOT;
+  t.after(() => { if (abans !== undefined) process.env.SDP_SOCIAL_SENSE_REMOT = abans; });
+  await assert.rejects(preparaFederacioDelBuild({ arrel, origen: ORIGEN, env, fetchImpl }), /no és el del node germà/);
+  assert.equal(crides, 0);
+  const build = await preparaFederacioDelBuild({ arrel, origen: XIXONA.origen, env, fetchImpl });
+  assert.deepEqual(build.actors.map((a) => a.slug), ['xixona']);
+  const outbox = build.fitxers.get('ap/outbox/xixona.json');
+  assert.equal(outbox.totalItems, 2);
+  // L'avís casa pel nom del node (town_name), que el build passa a la projecció; una Note porta el títol al content.
+  assert.deepEqual(outbox.orderedItems.map((a) => a.object.type), ['Note', 'Article']);
+  assert.match(outbox.orderedItems[0].object.content, /Obres a la plaça/);
+  assert.equal(outbox.orderedItems[1].object.name, 'Xixona a Sóc de Poble');
+});
+
+/* D05 · La frase de /page/fediversity sobre l'outbox de La Torre és la del codi: porta la pàgina pública. */
+test('D05 · PAGE_COPY.fediversity diu el que publica el generador: l’outbox de La Torre porta la pàgina pública del poble', async () => {
+  const { PAGE_COPY } = await importa(FONTS.copy);
+  const { fitxers } = await preparaFederacio({ arrel: ARREL, origen: ORIGEN });
+  assert.ok(fitxers.get(`ap/outbox/${TORRE}.json`).orderedItems.some((a) => a.object.id.endsWith(`/${ID_PAGINA_DEL_POBLE}.json`)));
+  assert.ok(PAGE_COPY.fediversity.html.includes("La de La Torre porta la pàgina pública del poble i, quan n'hi ha, les publicacions públiques d'entitats del poble."));
+  assert.ok(!PAGE_COPY.fediversity.html.includes('pot estar buida'));
 });

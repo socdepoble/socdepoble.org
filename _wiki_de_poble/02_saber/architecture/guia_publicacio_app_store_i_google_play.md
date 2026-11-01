@@ -306,11 +306,11 @@ Les definicions són les de Google: «recollir» és transmetre dades fora del d
 | Pregunta | Resposta | Evidència |
 | --- | --- | --- |
 | L'App recull o compartix dades dels tipus exigits? | Sí | Taula de la secció 6.2 |
-| Totes les dades es xifren en trànsit? | Sí | `vite.natiu.config.js:248` (el binari para sense un Supabase `https`); `capacitor.config.json` (`androidScheme: https`, `allowMixedContent: false`) |
+| Totes les dades es xifren en trànsit? | Sí | `vite.natiu.config.js:250` (el binari para sense un Supabase `https`); `capacitor.config.json` (`androidScheme: https`, `allowMixedContent: false`) |
 | Hi ha manera de demanar l'eliminació de les dades? | Sí | Dins de l'App (secció 8) i per correu (`legalContent.js:180`) |
 | URL per a esborrar el compte | `https://socdepoble.org/legal#esborra-compte` | Explica els dos camins, què s'esborra, què es conserva i els terminis |
 | Es poden esborrar dades sense esborrar el compte? | Sí, en part | Notes (`src/data/supabase/notes.js:261`); la resta de continguts, No verificat |
-| Comptes que es poden crear | Correu i contrasenya; Apple a iOS i Google, quan estiguen actius (secció 9) | `src/data/supabase/auth.js:522`, `:639`; `src/natiu/entradaSocial.js:35` |
+| Comptes que es poden crear | Correu i contrasenya; Apple a iOS i Google, quan estiguen actius (secció 9) | `src/data/supabase/auth.js:522`, `:639`; `src/natiu/entradaSocial.js:41` |
 
 ### 6.2 Tipus de dades recollides
 
@@ -334,10 +334,10 @@ Cap tipus es compartix: Supabase i els proveïdors de la IAIA MarIA són encarre
 
 ### 6.3 Dades que l'App no recull
 
-- **Interaccions i analítica:** No. El build natiu para si porta Umami (`vite.natiu.config.js:259-260`) i la telemetria no envia res des de `localhost`, l'origen de l'App (`src/data/telemetria.js:132-140`, `:210`).
+- **Interaccions i analítica:** No. El build natiu para si porta Umami (`vite.natiu.config.js:261-262`) i la telemetria no envia res des de `localhost`, l'origen de l'App (`src/data/telemetria.js:132-140`, `:210`).
 - **Registres d'errors i diagnòstics:** No. Cap SDK d'errors a `package.json`.
 - **Identificadors del dispositiu:** No. Els avisos push no estan connectats (`src/natiu/avisosPushNatius.js:1-6`) i no hi ha identificador de publicitat.
-- **Calendari:** No. Google Calendar no funciona dins de l'App (`vite.natiu.config.js:262-264`).
+- **Calendari:** No. Google Calendar no funciona dins de l'App (`vite.natiu.config.js:264-266`).
 - **Fitxers i documents:** No. El xat només admet imatge, vídeo i veu (`xatMultimedia.js:18-22`).
 - **Traduccions:** No ix cap text: el botó «Traduir» encara no traduïx dins de l'App nativa (`legalContent.js:241`).
 - **Dades del SDK d'inici de sessió de Google:** No verificat. Cal contrastar la fitxa de Google Sign-In al Google Play SDK Index abans d'enviar el formulari.
@@ -384,20 +384,20 @@ La regla 5.1.1(v) d'Apple i Google Play demanen que el compte es puga esborrar d
 
 - **Lectura sense compte:** el Mur, els Pobles, el Calendari i les pàgines es poden llegir sense entrar. Només dues rutes porten guarda de sessió, el Perfil i l'administració (`src/app/App.jsx:1044`, `:1106`); el Xat demana entrar per a conversar. No verificat en un dispositiu en este torn.
 - **Correu i contrasenya:** `src/data/supabase/auth.js:522` (registre) i `:639` (entrada).
-- **Sign in with Apple:** el dret `com.apple.developer.applesignin` és a `ios/App/App/App.entitlements`, i a iOS el botó d'Apple ix sempre (`src/natiu/entradaSocial.js:35-40`).
+- **Sign in with Apple:** el dret `com.apple.developer.applesignin` és a `ios/App/App/App.entitlements`. Des de D-10 (pla 261101_1246), el botó d'Apple només ix a iOS si el build porta `VITE_APPLE_OAUTH_ACTIU=true` (`src/natiu/entrada.jsx:71`; `proveidorsDe`, `src/natiu/entradaSocial.js:41-46`). Sense el flag, o amb `false`, el botó no ix. El flag va a `.env.natiu.local` o al procés del build, mai a `.env.local`, que el build natiu no hereta. Un valor que no siga exactament `true` o `false` para el build (`errorsEntornNatiu`, `vite.natiu.config.js:280-282`).
 - **Apple al servidor:** segons P0-03, P0-04 i P0-23 del Llibre Mestre, el proveïdor d'Apple de Supabase, la clau `.p8`, els secrets i la funció `compte-apple` estan pendents del Mestre. No verificat en viu en este torn.
 - **Google a iOS:** apagat fins que hi haja els dos clients; `Info.plist:38` porta encara l'esquema de reserva `com.googleusercontent.apps.pendent` (P0-03).
-- **Google a Android:** només si el build porta el client web (`entradaSocial.js:38`). Apple no s'oferix a Android (decisió D7).
-- **Regla 4.8 d'Apple:** amb el correu propi i Apple, es complix. Si s'encén Google a iOS, Apple ha de continuar oferint-se.
-- **Bloquejant de revisió:** un botó d'Apple visible que falla al servidor és motiu de rebuig (regla 2.1). Cal encendre Apple a Supabase abans d'enviar, o decidir amagar-lo.
+- **Google a Android:** només si el build porta el client web (`entradaSocial.js:47`). Apple no s'oferix a Android (decisió D7), tampoc amb `VITE_APPLE_OAUTH_ACTIU=true`.
+- **Regla 4.8 d'Apple:** amb el correu propi i Apple, es complix. Sense Apple, a iOS tampoc ix Google, encara que el build porte els dos clients: només queda el correu, i també es complix (`src/natiu/entradaSocial.js:44` i `src/config/entradaNativa.js:73`).
+- **Bloquejant de revisió (resolt per D-10 a partir del build 2):** un botó d'Apple visible que falla al servidor és motiu de rebuig (regla 2.1). El build 1, ja pujat (P0-23), encara el mostra; des del build 2, el botó està amagat si no s'encén explícitament. Cal posar `VITE_APPLE_OAUTH_ACTIU=true` a `.env.natiu.local` només quan el proveïdor d'Apple estiga encés a Supabase (P0-03 i P0-04), i compilar un build nou. Sense el flag, la revisió veu el correu i prou.
 
 ## 10. Classificació d'edat i categories
 
-- **Edat mínima de les condicions:** 14 anys (`legalContent.js:51`).
+- **Edat mínima de les condicions:** 16 anys, sense cap excepció amb el permís de la família, a la web i a les apps (`legalContent.js:51`, condicions 2.3, en vigor des de l'1 de novembre de 2026; dimensió D13 del pla 261101_1246, carril T8). Abans eren 14 anys. La guarda és `src/sections/text/legal.edat.test.js`.
 - **Qüestionari d'Apple:** contingut generat per les persones usuàries, sí; missatgeria i xat, sí; publicitat, no; controls parentals i verificació d'edat, no.
-- **Apple, sobreescriptura:** Apple diu que, si les condicions fixen una edat mínima superior a la calculada, «you must override to a rating that adheres to the requirements». Amb 14 anys, una edat calculada de 13+ obligaria a triar 16+; la tria és del Mestre.
+- **Apple, sobreescriptura:** Apple diu que, si les condicions fixen una edat mínima superior a la calculada, «you must override to a rating that adheres to the requirements». Amb 16 anys a les condicions, la classificació de l'App Store és 16+: si el qüestionari en calcula una de menor (13+), cal sobreescriure-la a 16+.
 - **Google (IARC):** declarar que les persones interactuen, que es compartix contingut generat i que es pot compartir la ubicació d'una foto.
-- **Google, públic objectiu:** cap franja infantil; la tria de franges és del Mestre, coherent amb els 14 anys.
+- **Google, públic objectiu:** les franges de 16 i 17 anys i de 18 anys o més, sense cap franja infantil, coherent amb els 16 anys de les condicions.
 
 ## 11. Notes per als revisors
 
@@ -541,7 +541,7 @@ Per a encendre App Links calen, junts, estos passos:
 
 ### 14.2 App Store
 
-1. Resoldre Sign in with Apple al servidor: proveïdor d'Apple a Supabase, clau `.p8`, secrets i funció `compte-apple` (P0-03 i P0-04), o decidir amagar el botó.
+1. Sign in with Apple: des del build 2, el botó està amagat per defecte (D-10). Si es vol oferir, cal encendre'l primer al servidor: proveïdor d'Apple a Supabase, clau `.p8`, secrets i funció `compte-apple` (P0-03 i P0-04). Després cal posar `VITE_APPLE_OAUTH_ACTIU=true` a `.env.natiu.local` abans del build.
 2. Compilar un build nou amb un `CURRENT_PROJECT_VERSION` que no s'haja pujat mai (el build 1 ja està gastat, P0-23) i el paquet web del mateix commit.
 3. Pujar-lo amb `scripts/botigues/puja-ios.mjs` després del `preflight.mjs`.
 4. Omplir la fitxa amb les seccions 2, 3 i 5, l'etiqueta de la secció 7.1 i el qüestionari d'edat de la secció 10. Abans de publicar els textos de la secció 3 amb les frases de la 3.4, comprovar en un dispositiu que el Mur i els Pobles es lligen sense compte.

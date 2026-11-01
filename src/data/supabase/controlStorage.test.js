@@ -1,7 +1,39 @@
 // @vitest-environment node
 import { afterEach, expect, test, vi } from 'vitest';
-import { creaControlStorage } from './controlStorage.js';
+import { creaControlStorage, informaReconciliacioStorage, observaReconciliacioStorage } from './controlStorage.js';
+import { _reiniciaAutocuracio, incidents } from '../../utils/autocuracio.js';
 afterEach(() => vi.useRealTimers());
+/* T1 · F6 (assalt 261101) · Una reconciliació 'pendent' queda al registre
+   d'autoreparacions (una etiqueta, sense ruta ni uid); les assentades, no. */
+test('una reconciliació pendent s’anota a incidents(); compensat, comprovat i invalida, no', () => {
+  _reiniciaAutocuracio();
+  const vistos = [];
+  const deixa = observaReconciliacioStorage((detall) => vistos.push(detall));
+  try {
+    for (const estat of ['compensat', 'comprovat', 'invalida']) informaReconciliacioStorage({ tipus: 'pujada', estat });
+    expect(incidents()).toEqual([]);
+    informaReconciliacioStorage({ tipus: 'esborrat', estat: 'pendent' });
+    informaReconciliacioStorage({ tipus: 'pujada', estat: 'pendent', motiu: 'sessio-canviada' });
+    expect(incidents().map(({ tipus, on, accio, vegades }) => ({ tipus, on, accio, vegades }))).toEqual([
+      { tipus: 'dades', on: 'storage', accio: 'reconciliacio-pendent', vegades: 2 },
+      { tipus: 'dades', on: 'storage', accio: 'reconciliacio-pendent', vegades: 1 }
+    ]);
+    expect(JSON.stringify(incidents())).not.toMatch(/esborrat|pujada|sessio/);
+    expect(vistos.map((detall) => detall.estat)).toEqual(['compensat', 'comprovat', 'invalida', 'pendent', 'pendent']);
+  } finally { deixa(); _reiniciaAutocuracio(); }
+});
+/* Una signatura o una lectura que acaba després d'un canvi de sessió no deixa
+   res al servidor: els observadors ho saben, però no és cap incident. */
+test('una lectura o una signatura pendent per canvi de sessió no s’anota a incidents()', () => {
+  _reiniciaAutocuracio();
+  const vistos = [];
+  const deixa = observaReconciliacioStorage((detall) => vistos.push(detall.tipus));
+  try {
+    for (const tipus of ['signatura', 'lectura', undefined]) informaReconciliacioStorage({ tipus, estat: 'pendent', motiu: 'sessio-canviada' });
+    expect(incidents()).toEqual([]);
+    expect(vistos).toEqual(['signatura', 'lectura', undefined]);
+  } finally { deixa(); _reiniciaAutocuracio(); }
+});
 test('els transports que ignoren AbortSignal continuen ocupant plaça; la cua cancel·lada no s’executa', async () => {
   vi.useFakeTimers(); const control = creaControlStorage({ maxim: 2, cuaMaxima: 2 });
   const resoldre = [], feina = vi.fn(() => new Promise(r => resoldre.push(r)));

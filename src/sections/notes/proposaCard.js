@@ -49,7 +49,7 @@ import { esLlavorDeNota } from './llavorNota.js';
 
 export {
   ACTOR_ESTRUCTURADOR, MOTIUS_MEMORIA, NIVELLS_CONFIANCA, OKF_VERSIO, TIPUS_OKF, VOCABULARI_RURAL,
-  entradaLog, estructuraMemoriaOral, indexOkf, marcaRevisioHumana, nivellDeConfianca, validaFitxaOkf
+  entradaLog, estructuraMemoriaOral, etiquetaNova, indexOkf, marcaRevisioHumana, nivellDeConfianca, resolPobleDeText, validaFitxaOkf
 } from './memoriaOral.js';
 
 export const MAX_TITOL = 120;

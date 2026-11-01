@@ -9,8 +9,9 @@
    i hi ha una prova nova per al JDK de Gradle.
    Cap prova compila, signa ni puja res, ni crida xcodebuild, altool, gradle, keytool ni fastlane
    (el preflight rep consultes fingides): només peces pures, fitxers temporals fora del
-   repositori, git de només lectura, processos fills de Node, JDK fingits (scripts /bin/sh) i, en
-   macOS, «/usr/libexec/java_home -v 21».
+   repositori, git de només lectura (i un repositori de mostra en una carpeta temporal, per al
+   paquet caducat de BOT-A4), zips fets per la prova, processos fills de Node, JDK fingits
+   (scripts /bin/sh) i, en macOS, «/usr/libexec/java_home -v 21».
    Només les proves que miren «l'arbre real» (git, capacitor.config.json) se
    salten en una còpia sense .git, amb el motiu a la vista. La plantilla és
    versionada i obligatòria: es comprova igualment sense laboratori germà.
@@ -20,12 +21,15 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
+import zlib from 'node:zlib';
+import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 
 import * as e from '../scripts/botigues/entorn.mjs';
 import * as p from '../scripts/botigues/preflight.mjs';
 import * as ios from '../scripts/botigues/puja-ios.mjs';
 import * as android from '../scripts/botigues/puja-android.mjs';
+import * as versioClient from '../scripts/botigues/versio-client.mjs';
 
 const ARREL = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const SENSE_REPOSITORI = !fs.existsSync(path.join(ARREL, '.git')) && 'còpia sense .git: esta prova mira l\'arbre real del repositori';
@@ -307,6 +311,250 @@ test('botigues: sense JDK per a Gradle, --signa para amb l\'eixida 6 i sense --s
   }
 });
 
+/* Un zip mínim (APPNOTE.TXT de PKWARE, §4.3), com els AAB: cada entrada [nom, octets, mètode],
+   guardada (0) o amb deflate (8). Sense CRC: llegixDelZip no el mira, i el segell es compara
+   sencer amb el de dist-natiu/. */
+function zipDe(entrades, comentari = '') {
+  const locals = [];
+  const centrals = [];
+  let desplacament = 0;
+  for (const [nom, contingut, metode = 8] of entrades) {
+    const dades = metode === 8 ? zlib.deflateRawSync(contingut) : Buffer.from(contingut);
+    const delNom = Buffer.from(nom);
+    const local = Buffer.alloc(30);
+    local.writeUInt32LE(0x04034b50, 0);
+    local.writeUInt16LE(metode, 8);
+    local.writeUInt32LE(dades.length, 18);
+    local.writeUInt32LE(contingut.length, 22);
+    local.writeUInt16LE(delNom.length, 26);
+    const central = Buffer.alloc(46);
+    central.writeUInt32LE(0x02014b50, 0);
+    central.writeUInt16LE(metode, 10);
+    central.writeUInt32LE(dades.length, 20);
+    central.writeUInt32LE(contingut.length, 24);
+    central.writeUInt16LE(delNom.length, 28);
+    central.writeUInt32LE(desplacament, 42);
+    locals.push(local, delNom, dades);
+    centrals.push(central, delNom);
+    desplacament += local.length + delNom.length + dades.length;
+  }
+  const directori = Buffer.concat(centrals);
+  const final = Buffer.alloc(22);
+  final.writeUInt32LE(0x06054b50, 0);
+  final.writeUInt16LE(entrades.length, 8);
+  final.writeUInt16LE(entrades.length, 10);
+  final.writeUInt32LE(directori.length, 12);
+  final.writeUInt32LE(desplacament, 16);
+  final.writeUInt16LE(Buffer.byteLength(comentari), 20);
+  return Buffer.concat([...locals, directori, final, Buffer.from(comentari)]);
+}
+
+/* BOT-A4 (261025) · El paquet caducat, com el va reproduir l'auditoria: un repositori de mostra
+   amb dist-natiu/ i la còpia d'Android fora de git, un build al commit A, cap sync, i un commit B
+   que canvia src/. Abans del segell, el preflight ho donava tot per bo (arbre net, còpia igual) i
+   el rebut deia el HEAD, B. El segell d'esta prova l'escriu la prova amb git, no segellDelArbre:
+   així el preflight es prova contra la forma, no contra el seu propi productor. A la revisió, el
+   binari: un AAB o una app arxivada al commit A no es pugen encara que dist-natiu/ ja siga de B. */
+test('botigues: el preflight no accepta un dist-natiu/ d\'un altre commit, compilat amb l\'arbre brut o sense segell', () => {
+  /* Dins d'un hook de git, GIT_DIR i GIT_INDEX_FILE apuntarien al repositori de debò. */
+  const deGit = Object.fromEntries(Object.entries(process.env).filter(([nom]) => nom.startsWith('GIT_')));
+  for (const nom of Object.keys(deGit)) delete process.env[nom];
+  const carpeta = fs.mkdtempSync(path.join(os.tmpdir(), 'sdp-botigues-segell-'));
+  /* Si TMPDIR és dins d'un repositori, git pujaria fins a ell des de la carpeta temporal. */
+  process.env.GIT_CEILING_DIRECTORIES = fs.realpathSync(path.dirname(carpeta));
+  try {
+    const arrel = path.join(carpeta, 'arrel');
+    const git = (...args) => {
+      const r = spawnSync('git', ['-c', 'core.hooksPath=/dev/null', '-c', 'commit.gpgsign=false', '-c', 'user.name=prova', '-c', 'user.email=prova@example.invalid', ...args], { cwd: arrel, encoding: 'utf8' });
+      assert.equal(r.status, 0, r.stderr);
+      return r.stdout.trim();
+    };
+    const escriu = (rel, text) => {
+      fs.mkdirSync(path.dirname(path.join(arrel, rel)), { recursive: true });
+      fs.writeFileSync(path.join(arrel, rel), text);
+    };
+    const DIST = 'dist-natiu';
+    const COPIA = 'android/app/src/main/assets/public';
+    fs.mkdirSync(arrel);
+    git('init', '-q');
+    escriu('.gitignore', `/${DIST}/\n/${COPIA}/\n`);
+    escriu('android/gradlew', '#!/bin/sh\n');
+    escriu('src/app.js', 'export const versio = "A";\n');
+    git('add', '-A');
+    git('commit', '-q', '--no-verify', '-m', 'A');
+    const commitA = git('rev-parse', 'HEAD');
+    // El mateix index.html a tots els builds: és el cas en què la còpia semblava la mateixa.
+    let builds = 0;
+    const compila = () => {
+      builds += 1;
+      escriu(`${DIST}/index.html`, '<html>app</html>\n');
+      const segell = { commit: git('rev-parse', 'HEAD'), arbreNet: git('status', '--porcelain') === '', data: `2026-10-25T10:0${builds}:00.000Z` };
+      escriu(`${DIST}/segell.json`, `${JSON.stringify(segell, null, 2)}\n`);
+    };
+    const sincronitza = () => {
+      fs.rmSync(path.join(arrel, COPIA), { recursive: true, force: true });
+      fs.cpSync(path.join(arrel, DIST), path.join(arrel, COPIA), { recursive: true });
+    };
+    // Un fitxer d'entorn bo per a Android, fora del repositori de mostra.
+    const json = path.join(carpeta, 'play.json');
+    fs.writeFileSync(json, 'fals', { mode: 0o600 });
+    const fitxer = path.join(carpeta, 'botigues.env');
+    fs.writeFileSync(fitxer, `SDP_APP_ID=org.socdepoble.app\nSDP_PLAY_JSON_KEY_PATH=${json}\nSDP_ANDROID_UPLOAD_CERT_SHA256=${'AB'.repeat(32)}\n`, { mode: 0o600 });
+    fs.chmodSync(fitxer, 0o600);
+    const pre = () => p.preflight({ arrel, plataformes: ['android'], env: { SDP_BOTIGUES_ENV: fitxer }, consultes: fingides({ home: '/jdk/fals', major: 21 }) });
+    /* Els binaris que farien Gradle i Xcode amb la còpia d'ara: l'AAB porta public/ a
+       base/assets/, i l'app arxivada, a App.app/public. */
+    const signaAab = (nom) => {
+      const aab = path.join(carpeta, `${nom}.aab`);
+      const dePublic = fs.readdirSync(path.join(arrel, COPIA)).map((f) => [`base/assets/public/${f}`, fs.readFileSync(path.join(arrel, COPIA, f))]);
+      fs.writeFileSync(aab, zipDe([['BundleConfig.pb', Buffer.from('config'), 0], ...dePublic]));
+      return aab;
+    };
+    const arxivaApp = (nom) => {
+      const app = path.join(carpeta, nom, 'App.app');
+      fs.cpSync(path.join(arrel, COPIA), path.join(app, 'public'), { recursive: true });
+      return app;
+    };
+
+    compila();
+    sincronitza();
+    const alDia = pre();
+    assert.equal(alDia.codi, e.EIXIDA.BE, alDia.linies.join('\n'));
+    assert.match(alDia.linies.join('\n'), new RegExp(`✓ dist-natiu/segell\\.json: compilat des de HEAD \\(${commitA.slice(0, 12)}\\)`));
+    assert.equal(alDia.segell.commit, commitA);
+    const aabA = signaAab('A');
+    const appA = arxivaApp('A');
+    assert.equal(android.problemaDeLAab(arrel, aabA), null, 'l\'AAB porta el segell de dist-natiu/');
+    assert.equal(ios.problemaDeLApp(arrel, appA), null, 'l\'app arxivada porta el segell de dist-natiu/');
+
+    // El commit B canvia src/: l'arbre torna a estar net, però dist-natiu/ i la còpia són d'A.
+    escriu('src/app.js', 'export const versio = "B";\n');
+    git('commit', '-q', '--no-verify', '-am', 'B');
+    const commitB = git('rev-parse', 'HEAD');
+    const caducat = pre();
+    const text = caducat.linies.join('\n');
+    assert.equal(caducat.codi, e.EIXIDA.ARBRE, text);
+    assert.match(text, /✓ git status --porcelain no diu res/, 'git no veu dist-natiu/ ni la còpia');
+    assert.match(text, /✓ android: la còpia de dist-natiu\/ és la mateixa/, 'la còpia és la del build, però el build és vell');
+    assert.match(text, new RegExp(`✗ dist-natiu/ és del commit ${commitA.slice(0, 12)}, no del HEAD ${commitB.slice(0, 12)}`));
+
+    // Compilat de nou a B, sense cap sync: el mateix index.html, però la còpia porta el segell d'A.
+    compila();
+    const senseSync = pre();
+    assert.equal(senseSync.codi, e.EIXIDA.ARBRE, senseSync.linies.join('\n'));
+    assert.match(senseSync.linies.join('\n'), /✗ android: android\/app\/src\/main\/assets\/public\/segell\.json no és el de dist-natiu\/ \(l'index\.html és igual, però la còpia és d'un altre build\): npx cap sync android/);
+    assert.doesNotMatch(senseSync.linies.join('\n'), /index\.html no és la de dist-natiu/, 'no nomena el fitxer que sí que casa');
+    sincronitza();
+    const nou = pre();
+    assert.equal(nou.codi, e.EIXIDA.BE, nou.linies.join('\n'));
+    /* El cas de la revisió: el preflight ja passa amb B, però l'AAB i l'arxiu que hi ha són d'A
+       (signat a mà abans, o --confirma sense --compila). No es pugen. */
+    const deA = new RegExp(`porta el segell d'un altre build de dist-natiu/ \\(commit ${commitA.slice(0, 12)}\\)`);
+    assert.match(android.problemaDeLAab(arrel, aabA), deA);
+    assert.match(android.problemaDeLAab(arrel, aabA), /^app-release\.aab /);
+    assert.match(ios.problemaDeLApp(arrel, appA), deA);
+    assert.equal(android.problemaDeLAab(arrel, signaAab('B')), null);
+    assert.equal(ios.problemaDeLApp(arrel, arxivaApp('B')), null);
+    // Un binari d'abans del segell, o una ruta sense res.
+    fs.writeFileSync(path.join(carpeta, 'vell.aab'), zipDe([['base/assets/public/index.html', Buffer.from('<html>app</html>\n')]]));
+    assert.match(android.problemaDeLAab(arrel, path.join(carpeta, 'vell.aab')), /no porta cap segell\.json/);
+    assert.match(android.problemaDeLAab(arrel, path.join(carpeta, 'no-hi-es.aab')), /no porta cap segell\.json/);
+    assert.match(ios.problemaDeLApp(arrel, path.join(carpeta, 'cap', 'App.app')), /^l'app arxivada no porta cap segell\.json/);
+    // El rebut diu el commit del paquet (el del segell), sencer.
+    const rebutAndroid = android.rebut({ segell: nou.segell, versio: '1.0.0', build: '7', aab: path.join(carpeta, 'no-hi-es.aab'), pujat: false });
+    assert.match(rebutAndroid, new RegExp(`^  commit: ${commitB} \\(el de dist-natiu/segell\\.json, que porta l'AAB\\)$`, 'm'));
+    assert.match(ios.rebut({ segell: alDia.segell, versio: '1.0.0', build: '7', ipa: null, pujat: false }), new RegExp(`^  commit: ${commitA} \\(el de dist-natiu/segell\\.json, que porta l'app arxivada\\)$`, 'm'));
+    assert.match(android.rebut({ segell: null, versio: '1.0.0', build: '7', aab: path.join(carpeta, 'no-hi-es.aab'), pujat: false }), /^ {2}commit: desconegut /m);
+
+    // Compilat amb un canvi sense cometre: encara que després es desfaça, el paquet no val.
+    escriu('src/app.js', 'export const versio = "C sense cometre";\n');
+    compila();
+    git('checkout', '--', 'src/app.js');
+    sincronitza();
+    const brut = pre();
+    assert.equal(brut.codi, e.EIXIDA.ARBRE, brut.linies.join('\n'));
+    assert.match(brut.linies.join('\n'), /✓ git status --porcelain no diu res/);
+    assert.match(brut.linies.join('\n'), /✗ dist-natiu\/ es va compilar amb canvis sense cometre/);
+
+    // Un dist-natiu/ d'abans del segell.
+    fs.rmSync(path.join(arrel, DIST, 'segell.json'));
+    const senseSegell = pre();
+    assert.equal(senseSegell.codi, e.EIXIDA.ARBRE, senseSegell.linies.join('\n'));
+    assert.match(senseSegell.linies.join('\n'), /✗ dist-natiu\/segell\.json no hi és/);
+
+    // El productor del build (vite.natiu.config.js, segellNatiuPlugin) fa servir segellDelArbre.
+    assert.deepEqual(e.segellDelArbre(arrel, new Date('2026-10-25T10:00:00Z')), { commit: commitB, arbreNet: true, data: '2026-10-25T10:00:00.000Z' });
+    escriu('src/app.js', 'brut');
+    assert.equal(e.segellDelArbre(arrel).arbreNet, false);
+    assert.equal(e.commitDeHead(carpeta), null, 'fora de cap repositori');
+  } finally {
+    fs.rmSync(carpeta, { recursive: true, force: true });
+    delete process.env.GIT_CEILING_DIRECTORIES;
+    Object.assign(process.env, deGit);
+  }
+});
+
+/* BOT-A4 (revisió, 261025) · Com es trau el segell d'un AAB (un zip) sense cap eina, i com es
+   contrasta el d'un binari amb el de dist-natiu/. [VERIFICAT 261025 a mà, no ací: llegixDelZip
+   dona els mateixos octets que «unzip -p» per a base/assets/public/index.html i tres fitxers més
+   de l'AAB de 261023, i per als zips de «zip -0», «zip -9 -z» i «zip -fd» (descriptor de dades).] */
+test('botigues: llegixDelZip trau un fitxer d\'un zip, i problemaDelPaquet el contrasta amb dist-natiu/segell.json', () => {
+  const carpeta = fs.mkdtempSync(path.join(os.tmpdir(), 'sdp-botigues-zip-'));
+  try {
+    const segell = Buffer.from('{"commit":"x"}\n');
+    const gran = Buffer.from('0123456789'.repeat(5000));
+    const aab = path.join(carpeta, 'app.aab');
+    fs.writeFileSync(aab, zipDe([['BundleConfig.pb', gran, 0], ['base/assets/public/segell.json', segell], ['base/assets/public/gran.txt', gran]], 'un comentari al final'));
+    assert.deepEqual(e.llegixDelZip(aab, 'base/assets/public/segell.json'), segell);
+    assert.deepEqual(e.llegixDelZip(aab, 'base/assets/public/gran.txt'), gran, 'amb deflate');
+    assert.deepEqual(e.llegixDelZip(aab, 'BundleConfig.pb'), gran, 'guardat');
+    assert.equal(e.llegixDelZip(aab, 'base/assets/public/index.html'), null, 'no hi és');
+    assert.equal(e.llegixDelZip(aab, 'base/assets/public/segell'), null, 'el nom sencer');
+    assert.equal(e.llegixDelZip(path.join(carpeta, 'no-hi-es.aab'), 'x'), null);
+    fs.writeFileSync(path.join(carpeta, 'text.aab'), 'no és cap zip, ni té registre final');
+    assert.equal(e.llegixDelZip(path.join(carpeta, 'text.aab'), 'x'), null);
+    fs.writeFileSync(path.join(carpeta, 'bzip2.aab'), zipDe([['a', segell, 12]]));
+    assert.equal(e.llegixDelZip(path.join(carpeta, 'bzip2.aab'), 'a'), null, 'un mètode que no és 0 ni 8');
+    fs.writeFileSync(path.join(carpeta, 'tallat.aab'), zipDe([['a', segell]]).subarray(0, 40));
+    assert.equal(e.llegixDelZip(path.join(carpeta, 'tallat.aab'), 'a'), null, 'un zip tallat');
+
+    const arrel = path.join(carpeta, 'arrel');
+    assert.equal(e.problemaDelPaquet(arrel, segell, 'el paquet'), 'no hi ha dist-natiu/segell.json: npm run build:natiu');
+    const delDist = `${JSON.stringify({ commit: 'a'.repeat(40), arbreNet: true, data: '2026-10-25T10:00:00.000Z' }, null, 2)}\n`;
+    fs.mkdirSync(path.join(arrel, e.SEGELL[0]), { recursive: true });
+    fs.writeFileSync(path.join(arrel, ...e.SEGELL), delDist);
+    assert.equal(e.problemaDelPaquet(arrel, Buffer.from(delDist), 'el paquet'), null);
+    assert.equal(e.problemaDelPaquet(arrel, new TextEncoder().encode(delDist), 'el paquet'), null, 'qualsevol Uint8Array');
+    assert.equal(e.problemaDelPaquet(arrel, null, 'el paquet'), 'el paquet no porta cap segell.json: és d\'un build d\'abans del segell');
+    assert.equal(e.problemaDelPaquet(arrel, Buffer.from(delDist.replace('10:00:00', '10:01:00')), 'el paquet'),
+      'el paquet porta el segell d\'un altre build de dist-natiu/ (commit aaaaaaaaaaaa), no el de dist-natiu/segell.json', 'el mateix commit, un altre build');
+    assert.notEqual(e.problemaDelPaquet(arrel, Buffer.from(delDist.trimEnd()), 'el paquet'), null, 'octet per octet');
+    assert.match(e.problemaDelPaquet(arrel, Buffer.from('{'), 'el paquet'), /\(il·legible\)/);
+  } finally {
+    fs.rmSync(carpeta, { recursive: true, force: true });
+  }
+});
+
+test('botigues: problemesDelSegell, pura: forma, arbre brut, HEAD desconegut o un altre commit', () => {
+  const head = 'b'.repeat(40);
+  const bo = { commit: head, arbreNet: true, data: '2026-10-25T10:00:00.000Z' };
+  assert.deepEqual(e.problemesDelSegell(bo, head), []);
+  assert.deepEqual(e.problemesDelSegell({ ...bo, commit: 'c'.repeat(64) }, 'c'.repeat(64)), [], 'un repositori SHA-256');
+  for (const dolent of [null, 'text', {}, { ...bo, commit: 'abc1234' }, { ...bo, commit: head.toUpperCase() }, { ...bo, commit: undefined }, { ...bo, arbreNet: 'true' },
+    { ...bo, data: undefined }, { ...bo, data: 'ahir' }, { ...bo, data: 1761386400000 }]) {
+    const problemes = e.problemesDelSegell(dolent, head);
+    assert.equal(problemes.length, 1, JSON.stringify(dolent));
+    assert.match(problemes[0], /no hi és o no té la forma/);
+  }
+  assert.match(e.problemesDelSegell({ ...bo, arbreNet: false }, head).join(' '), /sense cometre \(2026-10-25T10:00:00\.000Z\)/);
+  assert.deepEqual(e.problemesDelSegell(bo, null), ['git no diu quin és el commit de HEAD']);
+  assert.match(e.problemesDelSegell(bo, 'a'.repeat(40)).join(' '), /és del commit bbbbbbbbbbbb, no del HEAD aaaaaaaaaaaa/);
+  assert.equal(e.problemesDelSegell({ ...bo, arbreNet: false }, 'a'.repeat(40)).length, 2, 'els dos motius alhora');
+  // Un build sense git: segellDelArbre escriu commit null (i arbreNet false); el motiu és este, no la forma.
+  assert.deepEqual(e.problemesDelSegell({ ...bo, commit: null, arbreNet: false }, head),
+    ['dist-natiu/ es va compilar sense saber de quin commit (git no hi era o no responia, 2026-10-25T10:00:00.000Z): npm run build:natiu dins del repositori']);
+});
+
 test('botigues: ús i confirmació paren abans de tocar res', async () => {
   const errada = process.stderr.write;
   process.stderr.write = () => true;
@@ -380,4 +628,36 @@ test('botigues: l\'arbre real no porta el SDK de Facebook a ios/ ni al connector
   assert.deepEqual(p.sdkFacebookIos(ARREL), []);
   assert.equal(p.SDK_FACEBOOK.test('.product(name: "FacebookLogin", package: "facebook-ios-sdk")'), true);
   assert.equal(p.SDK_FACEBOOK.test('.product(name: "GoogleSignIn", package: "GoogleSignIn-iOS")'), false);
+});
+
+/* P0-23 (BOT-A2; revisió 261025) · L'app diu al node VERSIO_CLIENT_NATIU de src/data/contracte.js,
+   no el número de la botiga: un build que ixquera amb la constant d'un build d'abans es
+   bloquejaria ell mateix quan el mínim del node pujara al seu número. A iOS el --build només viu a
+   la línia d'ordres; per això les dues pujades el comparen amb la constant i paren abans del
+   preflight, sense escriure res a l'eixida estàndard. Només en sec (sense --compila ni
+   --confirma): si la guarda es perdera, la prova no ha de poder arxivar ni pujar res. */
+test('botigues: el --build ha de ser VERSIO_CLIENT_NATIU, i si no ho és cap pujada passa del primer pas', async () => {
+  const { VERSIO_CLIENT_NATIU, problemaDeVersioClient } = versioClient;
+  assert.ok(Number.isSafeInteger(VERSIO_CLIENT_NATIU) && VERSIO_CLIENT_NATIU >= 2);
+  assert.equal(problemaDeVersioClient(String(VERSIO_CLIENT_NATIU)), null);
+  assert.equal(problemaDeVersioClient('7', 7), null);
+  for (const [build, versio] of [['3', 2], ['1', 2], ['12', 1]]) {
+    assert.match(problemaDeVersioClient(build, versio), new RegExp(`^el --build ${build} no és VERSIO_CLIENT_NATIU \\(${versio}, src/data/contracte\\.js\\)`));
+  }
+  const [errada, eixida] = [process.stderr.write, process.stdout.write];
+  let dit = '';
+  let escrit = '';
+  process.stderr.write = (text) => { dit += text; return true; };
+  process.stdout.write = (text) => { escrit += text; return true; };
+  try {
+    const altre = String(VERSIO_CLIENT_NATIU + 1);
+    for (const modul of [ios, android]) {
+      assert.equal(await modul.main(['--versio', '1.0.0', '--build', altre]), e.EIXIDA.ARBRE);
+    }
+  } finally {
+    process.stderr.write = errada;
+    process.stdout.write = eixida;
+  }
+  assert.equal(escrit, '', 'cap preflight ni cap pla');
+  assert.equal(dit.match(/✗ el --build \d+ no és VERSIO_CLIENT_NATIU/g)?.length, 2);
 });

@@ -165,3 +165,30 @@ test('un segon 401 després de renovar no torna a reintentar', async () => {
   expect(fetch).toHaveBeenCalledTimes(2);
   expect(renova).toHaveBeenCalledTimes(1);
 });
+
+/* T2 · D04/D10 (assalt 261101) · La lectura anònima de les dades obertes: amb
+   una sessió desada, la petició va amb la clau pública (també si qui crida
+   intenta posar-hi una altra Authorization), sense galetes, i un 401 no
+   renova la sessió ni reintenta. */
+test('T2 · anonim: clau pública amb una sessió desada, cap galeta, i un 401 no crida la renovació', async () => {
+  desa('synthetic-JWT-de-la-sessio', 'A');
+  const renova = vi.fn(async () => { desa('synthetic-A-renewed', 'A'); return true; });
+  configuraRefrescSessio(renova);
+  const fetch = vi.fn().mockResolvedValueOnce(resposta(200, [])).mockResolvedValue(resposta(401));
+  vi.stubGlobal('fetch', fetch);
+  await expect(request('/rest/v1/app_content?select=key,payload', CONFIG, { anonim: true, headers: { Authorization: 'Bearer colat' } })).resolves.toEqual([]);
+  const [, opcions] = fetch.mock.calls[0];
+  expect(opcions.headers).toMatchObject({ apikey: CONFIG.supabaseAnonKey, Authorization: `Bearer ${CONFIG.supabaseAnonKey}` });
+  expect(opcions.credentials).toBe('omit');
+  expect(JSON.stringify(opcions)).not.toContain('synthetic-JWT-de-la-sessio');
+  const error = await request('/rest/v1/app_content?select=key,payload', CONFIG, { anonim: true }).catch((e) => e);
+  expect(error).toBeInstanceOf(ErrorSupabase);
+  expect(error.status).toBe(401);
+  expect(renova).not.toHaveBeenCalled();
+  expect(fetch).toHaveBeenCalledTimes(2);
+  // Sense `anonim`, la mateixa sessió envia el seu JWT (la guarda no ha canviat res més).
+  fetch.mockResolvedValueOnce(resposta(200, []));
+  await request('/rest/v1/app_content', CONFIG);
+  expect(tokens(fetch).at(-1)).toBe('Bearer synthetic-JWT-de-la-sessio');
+  expect(fetch.mock.calls.at(-1)[1]).not.toHaveProperty('credentials');
+});

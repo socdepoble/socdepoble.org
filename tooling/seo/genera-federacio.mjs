@@ -31,11 +31,28 @@
  *     publicacions reals arriben de la projecció anònima d'app_content
  *     (publicacions-federades.mjs) quan el build té configuració remota. Només
  *     contingut públic publicat d'entitats; cap submissió de persona ni xat.
- *     Sense configuració remota, outbox buit.
+ *     D05 (pla 261101_1246) · L'outbox de cada poble porta sempre la seua
+ *     pàgina pública (paginaDelPoble: el nom, l'avís de sempre i l'URL; sense
+ *     data ni cap camp del seed). Com que no porta data, en l'ordre
+ *     cronològic invers va darrere de les publicacions. Sense configuració remota,
+ *     l'outbox porta només eixe objecte (totalItems 1), mai cap notícia inventada.
+ *
+ * Node germà (D-13, pla 261101_1246): si l'arrel porta node-germa.json (el
+ * que escriu tooling/instalador/inicia-node-germa.mjs) o la CLI rep --config,
+ * es publica NOMÉS el poble del node: un actor, amb el seu WebFinger, outbox i
+ * NodeInfo 2.1 (nodeName propi), i el perfil a la portada '/'. Ni l'actor del
+ * projecte ni La Torre (són de socdepoble.org). Sense identitat, el Mas, com
+ * sempre. La CLI i el build web s'aturen si l'origen no és el del node.
  *
  * API:
- *   recullActorsPublics({ arrel, origen, carrega }) → [{ slug, nom, resum, perfil, tipus, icona, elements }]
- *   preparaFederacio({ arrel, origen, carrega })   → { ap, origen, actors, fitxers, versio }
+ *   recullActorsPublics({ arrel, origen, carrega, identitat }) → [{ slug, nom, resum, perfil, tipus, icona, elements }]
+ *   preparaFederacio({ arrel, origen, carrega, identitat }) → { ap, origen, actors, fitxers, versio,
+ *                                                    identitat, principals, nomDelNode }
+ *     `identitat`: undefined → node-germa.json de l'arrel si n'hi ha; null → el Mas; {slug, nom, origen} → el node
+ *   identitatDelNode({ arrel, config, carrega })   → {slug, nom, origen} (congelat) o null al Mas
+ *   validaIdentitatNode(document, ap)              → la mateixa validació que validaConfig de l'instal·lador
+ *   paginaDelPoble({ nom, url })                   → l'Article de la pàgina pública del poble
+ *   nodeInfoDelNode({ ap, origen, versio, nomDelNode }) → NodeInfo 2.1 amb el nom del node germà
  *   origenDeLaPublicacio({ env, carrega })         → VITE_CANONICAL_URL o https://socdepoble.org (https sempre)
  *   entornDelBuild({ arrel, mode })                → les VITE_* que veu «vite build» (loadEnv de Vite)
  *   fitxersDelServidor({ ap, origen, actors, versio }) → els JRD de WebFinger per slug, les regles
@@ -68,7 +85,10 @@
  * 404, mai el JRD d'un altre.
  *
  * CLI (no l'enganxa cap build; el build web ja emet ap/ i el WebFinger estàtic pel connector):
- *   node tooling/seo/genera-federacio.mjs --desti DIR [--origen https://socdepoble.org] [--arrel .] [--servidor] [--reescriu]
+ *   node tooling/seo/genera-federacio.mjs --desti DIR [--origen https://socdepoble.org] [--arrel .] [--config node-germa.json] [--servidor] [--reescriu]
+ *   --config: la identitat d'un node germà (node-germa.json o el municipi.json de
+ *   l'instal·lador); sense, la de <arrel>/node-germa.json si n'hi ha. Un --origen
+ *   que no és el del node atura abans d'escriure res.
  *   Escriu DIR/ap/**, DIR/.well-known/host-meta, NodeInfo i el JRD dels actors principals
  *   (el mateix que el build web) i, amb --servidor, també DIR/.well-known/webfinger/<slug>.json
  *   de tots els actors, DIR/.well-known/webfinger.nginx (les regles que trien el JRD per
@@ -111,6 +131,62 @@ export const TIPUS_WEBFINGER_ESTATIC = Object.freeze({
   xrd: 'application/xrd+xml; charset=utf-8',
   jrd: 'application/jrd+json; charset=utf-8'
 });
+/* D-13 (pla 261101_1246) · La identitat d'un node germà: el node-germa.json que
+   escriu tooling/instalador/inicia-node-germa.mjs a l'arrel de la còpia, o el
+   fitxer de --config (el mateix manifest o el municipi.json de l'instal·lador).
+   Sense identitat, el Mas: el projecte i La Torre, com sempre. */
+export const FITXER_NODE = 'node-germa.json';
+export const ESQUEMA_NODE = 'sdp.node-germa.v1';
+const MAXIM_FITXER_NODE = 8 * 1024 * 1024;
+/* La pàgina pública del poble és a l'outbox sempre (D05: totalItems > 0 sense
+   xarxa): el títol del poble, l'avís de sempre i l'URL de la seua pàgina. No
+   porta data i, en l'ordre invers, va darrere de les publicacions (l'últim
+   element). Cap camp del seed (decisió del Mestre del 31-10-2026). */
+export const ID_PAGINA_DEL_POBLE = 'pagina-del-poble';
+export const paginaDelPoble = ({ nom, url }) => ({
+  id: ID_PAGINA_DEL_POBLE, tipus: 'Article', nom: `${nom} a Sóc de Poble`,
+  resum: `Pàgina pública de ${nom} a Sóc de Poble. No és el compte oficial de l’Ajuntament.`, url, llengua: 'ca'
+});
+
+/** La identitat {slug, nom, origen} d'un node germà, validada com validaConfig de l'instal·lador, o TypeError. */
+export function validaIdentitatNode(document, ap) {
+  const c = document?.esquema === ESQUEMA_NODE ? document.config : document;
+  if (!c || typeof c !== 'object' || !ap.esSlugFederat(c.slug) || c.slug === ACTOR_PROJECTE.slug
+    || typeof c.nom !== 'string' || !c.nom.trim() || c.nom.length > 120 || /[\r\n\x00-\x1f]/.test(c.nom)) {
+    throw new TypeError('Identitat de node germà invàlida (slug, nom).');
+  }
+  const origen = ap.normalitzaOrigen(c.origen);
+  if (!origen.startsWith('https:') || origen !== c.origen) throw new TypeError('Identitat de node germà invàlida: cal un origen HTTPS sense barra final.');
+  return Object.freeze({ slug: c.slug, nom: c.nom.trim(), origen });
+}
+
+/** El JSON del node: null si no hi és (ENOENT); un enllaç, un directori o un fitxer massa gran aturen. */
+function llegixFitxerNode(cami) {
+  let estat = null;
+  try { estat = fs.lstatSync(cami); } catch (fallada) { if (fallada?.code === 'ENOENT') return null; throw fallada; }
+  if (estat.isSymbolicLink() || !estat.isFile() || estat.size > MAXIM_FITXER_NODE) throw new TypeError(`Identitat de node no regular o massa gran: ${cami}`);
+  return JSON.parse(fs.readFileSync(cami, 'utf8'));
+}
+
+/** La identitat del node germà (--config, o <arrel>/node-germa.json), o null al Mas. */
+export async function identitatDelNode({ arrel = ARREL_PER_DEFECTE, config, carrega = carregaDe(arrel) } = {}) {
+  const document = llegixFitxerNode(config ? path.resolve(config) : path.join(path.resolve(arrel), FITXER_NODE));
+  if (document === null) {
+    if (config) throw new TypeError(`No hi ha la configuració del node: ${config}`);
+    return null;
+  }
+  return validaIdentitatNode(document, await carrega(FONTS.activitypub));
+}
+
+/* Els id d'un node germà són del seu origen: un altre origen (un --origen o un
+   VITE_CANONICAL_URL equivocats) atura abans d'escriure o d'emetre res. El
+   servidor de desenvolupament no ho mira: hi treballa en localhost. */
+function comprovaOrigenDelNode(ap, identitat, origen) {
+  if (identitat && ap.normalitzaOrigen(origen) !== identitat.origen) {
+    throw new TypeError(`L'origen ${origen} no és el del node germà (${identitat.origen}).`);
+  }
+}
+
 /* Els directoris que la CLI escriu i on vigila restes d'una generació anterior. */
 const VIGILATS = Object.freeze(['ap', '.well-known/webfinger']);
 
@@ -128,11 +204,26 @@ function versioDelPaquet(arrel) {
  * Els actors públics del repositori (vegeu la capçalera), en ordre estable:
  * primer el projecte, després els pobles en l'ordre de townsSeed.js.
  */
-export async function recullActorsPublics({ arrel = ARREL_PER_DEFECTE, origen, carrega = carregaDe(arrel), publicacions = [] } = {}) {
+export async function recullActorsPublics({ arrel = ARREL_PER_DEFECTE, origen, carrega = carregaDe(arrel), publicacions = [], identitat } = {}) {
+  const node = identitat === undefined ? await identitatDelNode({ arrel, carrega }) : identitat;
   const [ap, { SYSTEM_PAGES }, { PAGE_COPY }, { MOCK_TOWNS }, { textPla }] = await Promise.all([
     carrega(FONTS.activitypub), carrega(FONTS.pagines), carrega(FONTS.copy), carrega(FONTS.pobles), carrega(FONTS.text)
   ]);
   const base = ap.normalitzaOrigen(origen);
+  if (node) {
+    /* D-13 · Un node germà publica NOMÉS el seu poble: cap actor del projecte (és
+       de socdepoble.org) ni de La Torre. El perfil és la portada del node (la
+       casa digital del poble existix sempre, en seed o en remot). */
+    const nom = textPla(node.nom, Number.POSITIVE_INFINITY);
+    return [{
+      slug: node.slug, tipus: 'Organization', nom: `${nom} · Sóc de Poble`,
+      resum: [`Pàgina pública de ${nom} a Sóc de Poble. No és el compte oficial de l’Ajuntament.`, AVIS_FASE_1],
+      perfil: '/',
+      elements: [paginaDelPoble({ nom, url: `${base}/` }), ...publicacions.filter((p) => p.slug === node.slug).map((p) => p.element)],
+      // L'àlies és del poble, no del servidor: un node germà de La Torre també es troba com a @latorredelesmacanes.
+      ...(Object.hasOwn(ALIES_WEBFINGER, node.slug) ? { alies: [...ALIES_WEBFINGER[node.slug]] } : {})
+    }];
+  }
   if (!Array.isArray(SYSTEM_PAGES) || !PAGE_COPY || typeof PAGE_COPY !== 'object' || !Array.isArray(MOCK_TOWNS)) {
     throw new Error('Fonts federades invàlides: SYSTEM_PAGES, PAGE_COPY o MOCK_TOWNS.');
   }
@@ -173,7 +264,7 @@ export async function recullActorsPublics({ arrel = ARREL_PER_DEFECTE, origen, c
       nom: `${nom} · Sóc de Poble`,
       resum: [`Pàgina pública de ${nom} a Sóc de Poble. No és el compte oficial de l’Ajuntament.`, AVIS_FASE_1],
       perfil: `/pobles/${poble.id}`,
-      elements: publicacions.filter(p => p.slug === poble.id).map(p => p.element),
+      elements: [paginaDelPoble({ nom, url: `${base}/pobles/${poble.id}` }), ...publicacions.filter(p => p.slug === poble.id).map(p => p.element)],
       ...(Object.hasOwn(ALIES_WEBFINGER, poble.id) ? { alies: [...ALIES_WEBFINGER[poble.id]] } : {})
     };
   });
@@ -188,11 +279,22 @@ export async function recullActorsPublics({ arrel = ARREL_PER_DEFECTE, origen, c
 }
 
 /** Els actors i els seus fitxers ap/** per a un origen. */
-export async function preparaFederacio({ arrel = ARREL_PER_DEFECTE, origen, carrega = carregaDe(arrel), publicacions = [] } = {}) {
+export async function preparaFederacio({ arrel = ARREL_PER_DEFECTE, origen, carrega = carregaDe(arrel), publicacions = [], identitat } = {}) {
   const ap = await carrega(FONTS.activitypub);
   const base = ap.normalitzaOrigen(origen);
-  const actors = await recullActorsPublics({ arrel, origen: base, carrega, publicacions });
-  return { ap, origen: base, actors, fitxers: ap.construeixFitxersFederats({ origen: base, actors }), versio: versioDelPaquet(arrel) };
+  const node = identitat === undefined ? await identitatDelNode({ arrel, carrega }) : identitat;
+  const actors = await recullActorsPublics({ arrel, origen: base, carrega, publicacions, identitat: node });
+  return {
+    ap, origen: base, actors, fitxers: ap.construeixFitxersFederats({ origen: base, actors }), versio: versioDelPaquet(arrel),
+    identitat: node, principals: node ? Object.freeze([node.slug]) : ACTORS_WEBFINGER_ESTATIC,
+    nomDelNode: node ? actors[0].nom : null
+  };
+}
+
+/* NodeInfo 2.1 del node: el de activitypub.js i, en un node germà, el seu nom (sense tocar el mòdul de la release). */
+export function nodeInfoDelNode({ ap, origen, versio, nomDelNode = null }) {
+  const info = ap.construeixNodeInfo({ origen, versio });
+  return nomDelNode ? { ...info, metadata: { ...info.metadata, nodeName: nomDelNode } } : info;
 }
 
 /**
@@ -296,9 +398,9 @@ export function construeixHostMeta({ ap, origen }) {
 }
 
 /* Els comptes que el lloc estàtic respon: cada actor principal i els seus àlies, en ordre estable. */
-function comptesEstatics({ ap, actors }) {
+function comptesEstatics({ ap, actors, principals = ACTORS_WEBFINGER_ESTATIC }) {
   const alies = ap.aliesWebFinger(actors);
-  return ACTORS_WEBFINGER_ESTATIC.flatMap((slug) => {
+  return principals.flatMap((slug) => {
     if (!actors.some((actor) => actor?.slug === slug)) throw new Error(`L'actor principal ${slug} no és entre els actors publicats: WebFinger estàtic sense JRD.`);
     return [[slug, slug], ...[...alies].filter(([, desti]) => desti === slug)];
   });
@@ -312,15 +414,15 @@ function comptesEstatics({ ap, actors }) {
  * build (firebase.json hi reescriuria cap a un fitxer que no hi és). Amb
  * versio, també NodeInfo 2.1 del node (cap entrada per poble ni cap recompte).
  */
-export function fitxersWebFingerEstatic({ ap, origen, actors, versio }) {
+export function fitxersWebFingerEstatic({ ap, origen, actors, versio, principals = ACTORS_WEBFINGER_ESTATIC, nomDelNode = null }) {
   const base = ap.normalitzaOrigen(origen);
   const fitxers = new Map([['.well-known/host-meta', construeixHostMeta({ ap, origen: base })]]);
   if (versio) {
     fitxers.set('.well-known/nodeinfo', ap.construeixEnllacosNodeInfo({ origen: base }));
-    fitxers.set('nodeinfo/2.1.json', ap.construeixNodeInfo({ origen: base, versio }));
+    fitxers.set('nodeinfo/2.1.json', nodeInfoDelNode({ ap, origen: base, versio, nomDelNode }));
   }
   // Un JRD per actor principal: els seus àlies hi reescriuen (reglesFirebaseWebFinger).
-  for (const slug of new Set(comptesEstatics({ ap, actors }).map(([, desti]) => desti))) {
+  for (const slug of new Set(comptesEstatics({ ap, actors, principals }).map(([, desti]) => desti))) {
     const actor = actors.find((a) => a.slug === slug);
     const jrd = ap.construeixWebFinger(ap.urlsDeMunicipi(slug, { origen: base, perfil: actor.perfil }).acct, { origen: base, municipis: actors });
     if (!jrd) throw new Error(`Sense JRD per a ${slug}.`);
@@ -347,9 +449,9 @@ export function fitxersWebFingerEstatic({ ap, origen, actors, versio }) {
  *     Va després de la regla dels actius immutables (flake.nix pren la primera
  *     regla amb «regex» com la seua).
  */
-export function reglesFirebaseWebFinger({ ap, origen, actors }) {
+export function reglesFirebaseWebFinger({ ap, origen, actors, principals = ACTORS_WEBFINGER_ESTATIC }) {
   const host = escapaRegex(new URL(ap.normalitzaOrigen(origen)).host);
-  const comptes = comptesEstatics({ ap, actors });
+  const comptes = comptesEstatics({ ap, actors, principals });
   const acct = (usuari) => `(?i:acct(?::|%3a)${usuari}(?:@|%40)${host})`;
   const cors = { key: 'Access-Control-Allow-Origin', value: '*' };
   return {
@@ -361,7 +463,7 @@ export function reglesFirebaseWebFinger({ ap, origen, actors }) {
       { source: '/.well-known/host-meta', headers: [{ key: 'Content-Type', value: TIPUS_WEBFINGER_ESTATIC.xrd }, cors] },
       { regex: '^/\\.well-known/webfinger(?:/.*)?$', headers: [cors] },
       {
-        regex: `^/\\.well-known/webfinger/(?:(?:${ACTORS_WEBFINGER_ESTATIC.join('|')})\\.json|${acct(`(?:${comptes.map(([usuari]) => usuari).join('|')})`)})$`,
+        regex: `^/\\.well-known/webfinger/(?:(?:${principals.join('|')})\\.json|${acct(`(?:${comptes.map(([usuari]) => usuari).join('|')})`)})$`,
         headers: [{ key: 'Content-Type', value: TIPUS_WEBFINGER_ESTATIC.jrd }]
       }
     ]
@@ -376,7 +478,7 @@ export function reglesFirebaseWebFinger({ ap, origen, actors }) {
  * /.well-known/webfinger diria el mateix per a tothom (el lloc estàtic té
  * fitxersWebFingerEstatic).
  */
-export function fitxersDelServidor({ ap, origen, actors, versio }) {
+export function fitxersDelServidor({ ap, origen, actors, versio, nomDelNode = null }) {
   const base = ap.normalitzaOrigen(origen);
   const fitxers = new Map();
   for (const actor of actors) {
@@ -386,7 +488,7 @@ export function fitxersDelServidor({ ap, origen, actors, versio }) {
   }
   fitxers.set('.well-known/webfinger.nginx', reglesNginxWebFinger({ ap, origen: base, actors }));
   fitxers.set('.well-known/nodeinfo', ap.construeixEnllacosNodeInfo({ origen: base }));
-  fitxers.set('nodeinfo/2.1.json', ap.construeixNodeInfo({ origen: base, versio }));
+  fitxers.set('nodeinfo/2.1.json', nodeInfoDelNode({ ap, origen: base, versio, nomDelNode }));
   return new Map([...fitxers].sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0)));
 }
 
@@ -487,8 +589,8 @@ function arguments_(argv) {
     if (clau === '--servidor') { opcions.servidor = true; continue; }
     if (clau === '--reescriu') { opcions.reescriu = true; continue; }
     // Una opció repetida (--desti a --desti b) és un error, no «l'última guanya».
-    if (!['--desti', '--origen', '--arrel'].includes(clau) || !argv[i + 1] || opcions[clau.slice(2)]) {
-      throw new Error('Ús: node tooling/seo/genera-federacio.mjs --desti DIR [--origen https://socdepoble.org] [--arrel .] [--servidor] [--reescriu]');
+    if (!['--desti', '--origen', '--arrel', '--config'].includes(clau) || !argv[i + 1] || opcions[clau.slice(2)]) {
+      throw new Error('Ús: node tooling/seo/genera-federacio.mjs --desti DIR [--origen https://socdepoble.org] [--arrel .] [--config node-germa.json] [--servidor] [--reescriu]');
     }
     opcions[clau.slice(2)] = argv[i + 1];
     i += 1;
@@ -501,9 +603,12 @@ async function main(argv) {
   const opcions = arguments_(argv);
   const arrel = path.resolve(opcions.arrel ?? ARREL_PER_DEFECTE);
   const carrega = carregaDe(arrel);
+  const identitat = await identitatDelNode({ arrel, config: opcions.config, carrega });
   const origen = opcions.origen ?? await origenDeLaPublicacio({ env: await entornDelBuild({ arrel }), arrel, carrega });
+  // D-13 · Els id d'un node germà són del seu origen: un altre origen atura abans d'escriure res.
+  comprovaOrigenDelNode(await carrega(FONTS.activitypub), identitat, origen);
   // Sense xarxa: la CLI (i les proves de la cadena primària) no llig app_content; la projecció remota és només del build (federacio-iaia.mjs).
-  const preparat = await preparaFederacio({ arrel, origen, carrega });
+  const preparat = await preparaFederacio({ arrel, origen, carrega, identitat });
   // El mateix que el build web (ap/** i el WebFinger estàtic) i, amb --servidor, el del servidor (els JRD dels principals, iguals).
   const fitxers = new Map([
     ...preparat.fitxers, ...fitxersWebFingerEstatic(preparat), ...(opcions.servidor ? fitxersDelServidor(preparat) : [])
@@ -525,10 +630,13 @@ if (esLaCli()) {
 /** La projecció anònima d'app_content, només per al build web (generateBundle de federacio-iaia.mjs): ni la CLI ni el servidor dev hi van. */
 export async function preparaFederacioDelBuild({ arrel = ARREL_PER_DEFECTE, origen, carrega = carregaDe(arrel), env = {}, fetchImpl } = {}) {
   const inicial = await preparaFederacio({ arrel, origen, carrega });
+  // D-13 · Com la CLI: el build d'un node germà no emet ids d'un altre origen (abans de cap petició).
+  comprovaOrigenDelNode(inicial.ap, inicial.identitat, origen);
   const { publicacionsDelBuild } = await import('./publicacions-federades.mjs');
   const { MOCK_TOWNS } = await carrega(FONTS.pobles);
   const noms = new Map(MOCK_TOWNS.map(p => [p.id, p.title]));
-  const pobles = inicial.actors.filter(a => a.slug !== ACTOR_PROJECTE.slug).map(a => ({ slug: a.slug, nom: noms.get(a.slug) }));
+  const pobles = inicial.actors.filter(a => a.slug !== ACTOR_PROJECTE.slug)
+    .map(a => ({ slug: a.slug, nom: inicial.identitat?.slug === a.slug ? inicial.identitat.nom : noms.get(a.slug) }));
   const publicacions = await publicacionsDelBuild({ env, origen, pobles, fetchImpl });
-  return preparaFederacio({ arrel, origen, carrega, publicacions });
+  return preparaFederacio({ arrel, origen, carrega, publicacions, identitat: inicial.identitat });
 }

@@ -47,16 +47,59 @@ describe('la plataforma i els proveïdors', () => {
     expect(plataformaDelDispositiu()).toBe('web');
   });
 
+  /* Actualitzada a posta (D-10, pla 261101_1246): Apple a iOS només amb appleActiu: true. */
   test('Apple només a iOS; Google a iOS amb els dos clients ben formats; Android, Google amb el client web', () => {
-    expect(proveidorsDe('ios', CLIENTS)).toEqual(['apple', 'google']);
-    expect(proveidorsDe('ios', { googleWeb: WEB })).toEqual(['apple']);
-    expect(proveidorsDe('ios', { googleIos: IOS })).toEqual(['apple']);
-    expect(proveidorsDe('ios', { googleWeb: WEB, googleIos: 'no-es-un-client' })).toEqual(['apple']);
-    expect(proveidorsDe('ios')).toEqual(['apple']);
+    const APPLE = Object.freeze({ appleActiu: true });
+    expect(proveidorsDe('ios', CLIENTS, APPLE)).toEqual(['apple', 'google']);
+    expect(proveidorsDe('ios', { googleWeb: WEB }, APPLE)).toEqual(['apple']);
+    expect(proveidorsDe('ios', { googleIos: IOS }, APPLE)).toEqual(['apple']);
+    expect(proveidorsDe('ios', { googleWeb: WEB, googleIos: 'no-es-un-client' }, APPLE)).toEqual(['apple']);
+    expect(proveidorsDe('ios', undefined, APPLE)).toEqual(['apple']);
     expect(proveidorsDe('android', CLIENTS)).toEqual(['google']);
     expect(proveidorsDe('android', { googleWeb: `  ${WEB}  ` })).toEqual(['google']);
     expect(proveidorsDe('android', { googleIos: IOS })).toEqual([]);
     expect(proveidorsDe('web', CLIENTS)).toEqual([]);
+  });
+
+  /* D-10 (pla 261101_1246, BOT-A3) · Apple apagat per defecte (fail-closed): només el
+     booleà true l'encén. Sense Apple, a iOS cap proveïdor (App Store 4.8): ni Google. */
+  test('D-10 · sense appleActiu: true, a iOS cap proveïdor; el flag no canvia Android ni la web', () => {
+    for (const opcions of [undefined, {}, { appleActiu: false }, { appleActiu: 'true' }, { appleActiu: 1 }, { appleActiu: null }]) {
+      expect(proveidorsDe('ios', CLIENTS, opcions), JSON.stringify(opcions)).toEqual([]);
+    }
+    expect(proveidorsDe('ios', CLIENTS)).toEqual([]);
+    expect(proveidorsDe('ios', CLIENTS, { appleActiu: true })).toEqual(['apple', 'google']);
+    expect(proveidorsDe('ios', { googleWeb: WEB }, { appleActiu: true })).toEqual(['apple']);
+    for (const appleActiu of [true, false]) {
+      expect(proveidorsDe('android', CLIENTS, { appleActiu })).toEqual(['google']);
+      expect(proveidorsDe('android', {}, { appleActiu })).toEqual([]);
+      expect(proveidorsDe('web', CLIENTS, { appleActiu })).toEqual([]);
+    }
+  });
+
+  test('D-10 · creaEntradaSocial a iOS sense el flag: proveidors [], el connector no es carrega mai i Apple dona NO_DISPONIBLE', async () => {
+    const { social, carregaConnector } = connectorFals();
+    const sense = creaEntradaSocial({ plataforma: 'ios', clients: CLIENTS, carregaConnector });
+    expect(sense).toMatchObject({ plataforma: 'ios', proveidors: [] });
+    await expect(sense.demana('apple')).rejects.toMatchObject({ code: CODI_ENTRADA_NATIVA.NO_DISPONIBLE });
+    await expect(sense.demana('google')).rejects.toMatchObject({ code: CODI_ENTRADA_NATIVA.NO_DISPONIBLE });
+    await expect(sense.oblida('apple')).resolves.toBeUndefined();
+    expect(carregaConnector).not.toHaveBeenCalled();
+    expect(social.initialize).not.toHaveBeenCalled();
+    // Amb el flag com a text ('true'), igual: el booleà el decidix natiu/entrada.jsx.
+    expect(creaEntradaSocial({ plataforma: 'ios', clients: CLIENTS, appleActiu: 'true', carregaConnector }).proveidors).toEqual([]);
+    expect(opcionsDInici('ios', CLIENTS, [])).toEqual({});
+  });
+
+  test('D-10 · un proveïdor que l’adaptador no oferix no obri cap full, tampoc amb Apple encés (Apple a Android)', async () => {
+    const { social, carregaConnector } = connectorFals();
+    const android = creaEntradaSocial({ plataforma: 'android', clients: CLIENTS, appleActiu: true, carregaConnector });
+    expect(android.proveidors).toEqual(['google']);
+    await expect(android.demana('apple')).rejects.toMatchObject({ code: CODI_ENTRADA_NATIVA.NO_DISPONIBLE });
+    expect(carregaConnector).not.toHaveBeenCalled();
+    await expect(android.demana('google')).resolves.toMatchObject({ testimoni: JWT });
+    expect(social.login).toHaveBeenCalledTimes(1);
+    expect(social.login.mock.calls[0][0].provider).toBe('google');
   });
 
   /* Fase D (261020, revisió) · Un dispositiu natiu sense cap proveïdor registra
@@ -84,7 +127,7 @@ describe('la plataforma i els proveïdors', () => {
 describe('initialize', () => {
   test('mai en crear-lo: al primer toc, una sola vegada, amb les opcions exactes d’iOS', async () => {
     const { social, carregaConnector } = connectorFals();
-    const adaptador = creaEntradaSocial({ plataforma: 'ios', clients: CLIENTS, carregaConnector });
+    const adaptador = creaEntradaSocial({ plataforma: 'ios', clients: CLIENTS, appleActiu: true, carregaConnector });
     expect(adaptador.plataforma).toBe('ios');
     expect(adaptador.proveidors).toEqual(['apple', 'google']);
     expect(Object.isFrozen(adaptador) && Object.isFrozen(adaptador.proveidors)).toBe(true);
@@ -115,7 +158,7 @@ describe('initialize', () => {
   test('un connector que respon a «then» com el Proxy de Capacitor no penja l’entrada', async () => {
     const { social } = connectorFals();
     const trampa = new Proxy(social, { get: (objectiu, nom) => (nom === 'then' ? () => {} : objectiu[nom]) });
-    const adaptador = creaEntradaSocial({ plataforma: 'ios', clients: CLIENTS, carregaConnector: async () => ({ SocialLogin: trampa }) });
+    const adaptador = creaEntradaSocial({ plataforma: 'ios', clients: CLIENTS, appleActiu: true, carregaConnector: async () => ({ SocialLogin: trampa }) });
     const penjada = Symbol('penjada');
     const espera = new Promise((resol) => { setTimeout(() => resol(penjada), 1000); });
     await expect(Promise.race([adaptador.demana('apple'), espera])).resolves.toMatchObject({ testimoni: JWT });
@@ -143,7 +186,7 @@ describe('initialize', () => {
       vi.resetModules();
       vi.doMock(PAQUET_SOCIAL, () => ({ SocialLogin: trampa }));
       const { creaEntradaSocial: creaFresc } = await import('./entradaSocial.js');
-      const adaptador = creaFresc({ plataforma: 'ios', clients: CLIENTS });
+      const adaptador = creaFresc({ plataforma: 'ios', clients: CLIENTS, appleActiu: true });
       const penjada = Symbol('penjada');
       let temporitzador = null;
       const espera = new Promise((resol) => { temporitzador = setTimeout(() => resol(penjada), 1000); });
@@ -167,7 +210,7 @@ describe('initialize', () => {
   test('un initialize fallit es torna a provar al toc següent', async () => {
     const { social, carregaConnector } = connectorFals();
     social.initialize.mockRejectedValueOnce(new Error('sense configuració'));
-    const adaptador = creaEntradaSocial({ plataforma: 'ios', clients: CLIENTS, carregaConnector });
+    const adaptador = creaEntradaSocial({ plataforma: 'ios', clients: CLIENTS, appleActiu: true, carregaConnector });
     await expect(adaptador.demana('apple')).rejects.toMatchObject({ code: CODI_ENTRADA_NATIVA.FALLIDA });
     await expect(adaptador.demana('apple')).resolves.toMatchObject({ testimoni: JWT });
     expect(carregaConnector).toHaveBeenCalledTimes(2);
@@ -178,7 +221,7 @@ describe('initialize', () => {
     /* Sense subtle, el resum és el pur (només microtasques): els temporitzadors falsos manen. */
     vi.stubGlobal('crypto', { getRandomValues: (bytes) => webcrypto.getRandomValues(bytes) });
     vi.useFakeTimers();
-    const adaptador = creaEntradaSocial({ plataforma: 'ios', clients: CLIENTS, carregaConnector: () => new Promise(() => {}) });
+    const adaptador = creaEntradaSocial({ plataforma: 'ios', clients: CLIENTS, appleActiu: true, carregaConnector: () => new Promise(() => {}) });
     const demanada = adaptador.demana('apple');
     const resultat = expect(demanada).rejects.toMatchObject({ code: CODI_ENTRADA_NATIVA.FALLIDA, message: 'El connector natiu no ha respost.' });
     await vi.advanceTimersByTimeAsync(20000);
@@ -190,7 +233,7 @@ describe('initialize', () => {
 describe('login', () => {
   test('Apple rep el SHA-256 del nonce cru i cap scope; l’accés d’Apple es descarta i el nom ve del perfil', async () => {
     const { social, carregaConnector } = connectorFals();
-    const adaptador = creaEntradaSocial({ plataforma: 'ios', clients: CLIENTS, carregaConnector });
+    const adaptador = creaEntradaSocial({ plataforma: 'ios', clients: CLIENTS, appleActiu: true, carregaConnector });
     const credencial = await adaptador.demana('apple');
     const [[{ provider, options }]] = social.login.mock.calls;
     expect(provider).toBe('apple');
@@ -210,7 +253,7 @@ describe('login', () => {
 
   test('Google a iOS porta forcePrompt; a Android només el nonce; l’accés de Google es conserva i el nom no', async () => {
     const ios = connectorFals();
-    const credencial = await creaEntradaSocial({ plataforma: 'ios', clients: CLIENTS, carregaConnector: ios.carregaConnector }).demana('google');
+    const credencial = await creaEntradaSocial({ plataforma: 'ios', clients: CLIENTS, appleActiu: true, carregaConnector: ios.carregaConnector }).demana('google');
     expect(ios.social.login.mock.calls[0][0].options).toEqual({ nonce: sha256HexPur(credencial.nonce), forcePrompt: true });
     expect(credencial).toMatchObject({ testimoni: JWT, testimoniAcces: 'acces-google', nom: null, codiAutoritzacio: null });
     const android = connectorFals();
@@ -221,7 +264,7 @@ describe('login', () => {
 
   test('cada toc porta un nonce nou', async () => {
     const { social, carregaConnector } = connectorFals();
-    const adaptador = creaEntradaSocial({ plataforma: 'ios', clients: CLIENTS, carregaConnector });
+    const adaptador = creaEntradaSocial({ plataforma: 'ios', clients: CLIENTS, appleActiu: true, carregaConnector });
     const a = await adaptador.demana('apple');
     const b = await adaptador.demana('apple');
     expect(a.nonce).not.toBe(b.nonce);
@@ -230,7 +273,7 @@ describe('login', () => {
 
   test('USER_CANCELLED i «AuthorizationError error 1001» són CANCELADA; un temps esgotat «cancelled» i sense idToken, FALLIDA', async () => {
     const { social, carregaConnector } = connectorFals();
-    const adaptador = creaEntradaSocial({ plataforma: 'ios', clients: CLIENTS, carregaConnector });
+    const adaptador = creaEntradaSocial({ plataforma: 'ios', clients: CLIENTS, appleActiu: true, carregaConnector });
     social.login.mockRejectedValueOnce(Object.assign(new Error('The user canceled the sign-in flow.'), { code: 'USER_CANCELLED' }));
     await expect(adaptador.demana('google')).rejects.toMatchObject({ code: CODI_ENTRADA_NATIVA.CANCELADA });
     social.login.mockRejectedValueOnce(new Error('The operation couldn’t be completed. (com.apple.AuthenticationServices.AuthorizationError error 1001.)'));
@@ -249,7 +292,7 @@ describe('login', () => {
   test('viu() fals després de carregar el connector: CANCELADA tal qual i el full no s’obri; viu() cert, sí', async () => {
     const carrega = promesaOberta();
     const { social } = connectorFals();
-    const adaptador = creaEntradaSocial({ plataforma: 'ios', clients: CLIENTS, carregaConnector: () => carrega.promesa });
+    const adaptador = creaEntradaSocial({ plataforma: 'ios', clients: CLIENTS, appleActiu: true, carregaConnector: () => carrega.promesa });
     let viu = true;
     const demanada = adaptador.demana('apple', { viu: () => viu });
     viu = false;
@@ -267,7 +310,7 @@ describe('login', () => {
 describe('oblida', () => {
   test('abans de carregar res no fa res (eixir no carrega el connector)', async () => {
     const { carregaConnector } = connectorFals();
-    const adaptador = creaEntradaSocial({ plataforma: 'ios', clients: CLIENTS, carregaConnector });
+    const adaptador = creaEntradaSocial({ plataforma: 'ios', clients: CLIENTS, appleActiu: true, carregaConnector });
     await expect(adaptador.oblida('apple')).resolves.toBeUndefined();
     expect(carregaConnector).not.toHaveBeenCalled();
   });

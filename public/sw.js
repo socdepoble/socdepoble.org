@@ -59,14 +59,20 @@ const VERSIO_CLOSCA = 'v1';
 const MEMORIA_CLOSCA = `${PREFIX_PROPI}closca-${VERSIO_CLOSCA}`;
 const MEMORIES_VIVES = Object.freeze([MEMORIA_RECURSOS, MEMORIA_CLOSCA]);
 /* Els chunks amb empremta s'acumulen entre desplegaments (este fitxer no
-   canvia a cada build) i el chunk d'entrada (~1 MB) canvia de nom a cada
+   canvia a cada build) i el chunk d'entrada canvia de nom a cada
    desplegament: poda FIFO per damunt d'estes entrades O d'estos bytes, el que
-   arribe primer. Les entrades queden per damunt dels chunks d'un build (~190 el
-   261003) perquè un ús intens no expulse i torne a desar el build viu a cada
-   càrrega; els bytes, per damunt del doble del JS d'un build (~3 MB el 261003).
-   Si el build creix fins a la meitat de MAXIM_BYTES, cal pujar-lo. */
-const MAXIM_RECURSOS = 300;
-const MAXIM_BYTES = 8 * 1024 * 1024;
+   arribe primer. El 261101 (Assalt 10/10) l'entrada fa ~640 kB, més 4 trossos
+   d'arrencada (react, estils, dompurify i ca), i el build té 354 chunks amb
+   empremta i 7,1 MB de JS. Les entrades queden per damunt dels chunks d'un
+   build perquè un ús intens no expulse i torne a desar el build viu a cada
+   càrrega; els bytes, per damunt del doble del JS d'un build. Si el build
+   passa de la meitat de MAXIM_BYTES, o els chunks s'acosten a MAXIM_RECURSOS,
+   cal pujar-los. React i DOMPurify no canvien de nom entre desplegaments i un
+   encert no els torna a inserir: serien sempre els més vells. Per això la poda
+   no trau mai els recursos de la closca confirmada més nova
+   (protegitsDeLaPoda). */
+const MAXIM_RECURSOS = 600;
+const MAXIM_BYTES = 16 * 1024 * 1024;
 /* La mida desada viatja a la clau (una capçalera de la petició guardada):
    keys() la torna d'una tirada i la resposta es guarda intacta. */
 const CAPCALERA_MIDA = 'x-sdp-mida';
@@ -396,14 +402,16 @@ function triaFinestra(finestres, origenPropi) {
 /**
  * Les claus més velles que sobren per damunt de `maxim` entrades o de
  * `maximBytes` en total. `entrades`: [{ clau, mida }] en l'ordre de keys(), que
- * és el d'inserció. La més nova no s'esborra mai.
+ * és el d'inserció. La més nova no s'esborra mai, ni cap clau amb la URL a
+ * `protegides`: compten per als sostres, però ix la següent més vella.
  */
-function clausSobrants(entrades, maxim, maximBytes) {
+function clausSobrants(entrades, maxim, maximBytes, protegides = new Set()) {
   let queden = entrades.length;
   let bytes = entrades.reduce((suma, entrada) => suma + entrada.mida, 0);
   const sobrants = [];
   for (const entrada of entrades.slice(0, -1)) {
     if (queden <= maxim && bytes <= maximBytes) break;
+    if (protegides.has(entrada.clau && entrada.clau.url)) continue;
     sobrants.push(entrada.clau);
     queden -= 1;
     bytes -= entrada.mida;
@@ -624,10 +632,28 @@ async function navega(event) {
   return resposta;
 }
 
+/* Les URL dels recursos de la closca confirmada més nova (la del build viu,
+   si la pàgina ja l'ha confirmada): la poda no els trau, i la closca continua
+   arrencant sense xarxa (L5-SW-01, 261101). Amb caches.has: fora de /app/*
+   no es crea cap memòria de closca. Si falla, res protegit. */
+async function protegitsDeLaPoda() {
+  try {
+    if (!(await caches.has(MEMORIA_CLOSCA))) return new Set();
+    const claus = await (await caches.open(MEMORIA_CLOSCA)).keys();
+    for (let index = claus.length - 1; index >= 0; index -= 1) {
+      const recursos = recursosPerArrencar(claus[index]);
+      if (recursos) return new Set(recursos.map((cami) => new URL(cami, self.location.origin).href));
+    }
+  } catch {
+    /* sense memòria de closques: la poda de sempre */
+  }
+  return new Set();
+}
+
 function poda(memoria) {
-  return memoria.keys().then((claus) => {
+  return Promise.all([memoria.keys(), protegitsDeLaPoda()]).then(([claus, protegits]) => {
     const entrades = claus.map((clau) => ({ clau, mida: midaDeLaClau(clau) }));
-    return Promise.all(clausSobrants(entrades, MAXIM_RECURSOS, MAXIM_BYTES).map((clau) => memoria.delete(clau)));
+    return Promise.all(clausSobrants(entrades, MAXIM_RECURSOS, MAXIM_BYTES, protegits).map((clau) => memoria.delete(clau)));
   });
 }
 

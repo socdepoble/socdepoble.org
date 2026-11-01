@@ -7,7 +7,8 @@ import { useToast } from '@/components/universal/NotificationContext.jsx';
 import { Alerta, DialegConfirmacio } from '../../components/PedraSeca/index.js';
 import { usePerfil } from './PerfilContext.jsx';
 import { AVIS_IMATGE_PUJANT, ERROR_DESAT_IMATGE, useImatgeDeFitxa } from './useImatgeDeFitxa.jsx';
-import { AJUDA_FOTO } from '../../components/universal/enquadrament/useEnquadramentImatge.jsx';
+import { AJUDA_FOTO, textDeSerie } from '../../components/universal/enquadrament/useEnquadramentImatge.jsx';
+import { useTraductorOpcional } from '../../components/PedraSeca/hooks/useTraductorOpcional.js';
 import { AvatarDeCapcalera } from '../../components/universal/PageFrame.jsx';
 import { DialegEmoticona } from '../../components/universal/classificacio/DialegEmoticona.jsx';
 import { carregaCatalegEmojis } from '../notes/canalEmojis.js';
@@ -217,6 +218,10 @@ export const PLACEHOLDER_COS_PERSONA = 'Este és el teu perfil personal. Si tens
 export function PerfilEditor({ identitat }) {
   const { guardarCampPerfil, pujaMitja, recarrega, identitats, autodesament } = usePerfil();
   const { showToast } = useToast();
+  /* P1-22 (T5c, correcció G1) · Els formats admesos (AJUDA_FOTO) de la ranura
+     del logotip i de la capçalera, en la llengua de la interfície; fora de
+     l'App, el valencià de sempre. */
+  const ajudaFotoTraduida = textDeSerie(AJUDA_FOTO, useTraductorOpcional());
   const mena = menaDeFitxa(identitat);
   const dades = identitat?.dades || {};
   const esAgent = mena === 'agent';
@@ -994,10 +999,10 @@ export function PerfilEditor({ identitat }) {
          diu AJUDA_IMATGE_PUJANT i, quan acaba, torna el focus al seu botó si
          s'havia perdut (Escape a mitja pujada, amb el botó desactivat). */
       heroEditLabel: ETIQUETA_CAPCALERA,
-      heroEditHelp: AJUDA_FOTO,
+      heroEditHelp: ajudaFotoTraduida,
       onHeroEdit: obriCapcalera,
       heroPujant: capcaleraPujant,
-      ajudaAmbImatge: AJUDA_FOTO,
+      ajudaAmbImatge: ajudaFotoTraduida,
       /* Ordre del Mestre (18-10-2026, relleu del Pla 2000, punt 2: «lleva la
          línia dels 10 MB de davall del cercle, amb una prop opcional a
          UniversalEditorShell que conserve l'avís de pujada») · Amb el cercle
@@ -1011,7 +1016,7 @@ export function PerfilEditor({ identitat }) {
       ...(ambAvatarRedo ? { ajudaNomesEnPujada: true } : null),
       showLogoUpload: ranuraDelLogo,
       ...(ranuraDelLogo ? {
-        onLogoEdit: obriImatgePropia, logoEditLabel: etiquetaImatgePropia, logoEditHelp: AJUDA_FOTO, logoPujant: imatgePropiaPujant,
+        onLogoEdit: obriImatgePropia, logoEditLabel: etiquetaImatgePropia, logoEditHelp: ajudaFotoTraduida, logoPujant: imatgePropiaPujant,
       } : null),
       /* Encàrrec d'harmonització (261018, ordre del Mestre: «fora l'avatar gegant
          del mig; la gestió d'imatges, dins d'Edició avançada») · En edició, la
@@ -1076,7 +1081,7 @@ export function PerfilEditor({ identitat }) {
     };
   }, [mena, esAgent, ambAvatarRedo, esPilot, potEditar, fitxa, identitat, etiquetes, autorTargeta, rutaFitxa, updateLocal, saveRemote, visibilitat, uploadMedia,
     obriCapcalera, capcaleraPujant, obriImatgePropia, imatgePropiaPujant, etiquetaImatgePropia, ranuraDelLogo, avatarDeCapcalera, avatarDeLEdicio,
-    logoDeLectura, estatDesament, avisosCamps, dretsTriats, ambEmoticona, obriEmoticona, identitatAlPoble]);
+    logoDeLectura, estatDesament, avisosCamps, dretsTriats, ambEmoticona, obriEmoticona, identitatAlPoble, ajudaFotoTraduida]);
 
   /* Només qui pot editar la fitxa té els selectors i les finestres de retall.
      Germans del DocumentEditor i no fills de cap altre diàleg. La confirmació

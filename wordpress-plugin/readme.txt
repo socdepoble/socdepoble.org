@@ -4,7 +4,7 @@ Tags: community, village, social network, embed, municipal
 Requires at least: 6.5
 Tested up to: 7.1
 Requires PHP: 7.4
-Stable tag: 1.1.10
+Stable tag: 1.1.11
 License: AGPL-3.0-or-later
 License URI: https://www.gnu.org/licenses/agpl-3.0.html
 
@@ -29,7 +29,7 @@ Els nostres pobles patixen una doble despoblació: la física i la digital. Quan
 * **Valencià / Català com a llengua base i matriu cultural:** Tota la interfície, la documentació, les guies d'accessibilitat cognitiva i la memòria de la comunitat estan construïdes en la nostra llengua pròpia com a tronc principal, amb suport multillengua integrat (Valencià/Català, Castellà, Anglés, Basc, Gallec i traducció automàtica lliure de pàgines amb Apertium).
 * **Arquitectura de Pedra Seca (Zero Fricció):** Com els marges de pedra seca de les nostres muntanyes, cada bloc encaixa pel seu propi pes sense necessitar ciment innecessari. El connector incrusta l'aplicació modular completa (`<soc-de-poble>`) en una pàgina del teu WordPress mitjançant un sol codi (`[socdepoble_app]`) o el bloc visual **Sóc de Poble**, sense alterar la resta del teu tema ni la base de dades d'usuaris del teu lloc web.
 * **Accessibilitat Sènior Extrema (Regla dels 3 Segons):** Tipografia clara (`Noto Sans` local, zero connexions a Google Fonts), contrast d'alta visibilitat pensat per llegir-se a ple sol a la plaça del poble, botons tàctils generosos (`48x48 px`) i navegació intuïtiva tant per a una iaia de 85 anys com per a un tècnic municipal.
-* **Sobirania de Dades, Portabilitat i Fedivers Rural (Fediversity):** Dades estructurades obertes (`Schema.org` / `JSON-LD`) i un paquet de dades obertes per municipi (Frictionless Data Package v2 i BagIt) que hui porta el directori públic d'entitats; les notícies, l'agenda i la memòria cultural encara no. A socdepoble.org, una primera fase de federació de només lectura: actors d'`ActivityPub`, `NodeInfo 2.1` i WebFinger per la ruta `/.well-known/webfinger/acct:…`, la que anuncia `/.well-known/host-meta` (la consulta estàndard `?resource=` encara no respon).
+* **Sobirania de Dades, Portabilitat i Fedivers Rural (Fediversity):** Dades estructurades obertes (`Schema.org` / `JSON-LD`) i un paquet de dades obertes per municipi (Frictionless Data Package v2 i BagIt) que hui porta les notícies i l'agenda que el servidor de dades publica per a tothom i signa una entitat, i el directori públic d'entitats; la memòria cultural i la memòria oral encara no. A socdepoble.org, una primera fase de federació de només lectura: actors d'`ActivityPub`, `NodeInfo 2.1` i WebFinger per la ruta `/.well-known/webfinger/acct:…`, la que anuncia `/.well-known/host-meta` (la consulta estàndard `?resource=` encara no respon).
 
 = Els 6 Mòduls del Poble Connectat =
 
@@ -188,9 +188,14 @@ Si no queda cap altra còpia activa del connector, `uninstall.php` esborra els a
 
 == Changelog ==
 
+= 1.1.11 =
+* **«Mostra els detalls» com a WordPress.org:** la finestra de detalls del connector mostra la negreta i la cursiva del readme en lloc dels asteriscos, el codi literal, sense cursives ni enllaços a dins, i els tres passos de la instal·lació com una sola llista numerada, amb les seues subllistes.
+* **Textos al dia:** el visor diu que el connector oficial és públic al directori de WordPress.org, i el readme descriu els serveis de fora, les traduccions, les dades obertes i la federació tal com funcionen hui.
+* **Visor:** les condicions d'ús de la pàgina legal passen a la versió 2.3, amb una edat mínima de 16 anys sense cap excepció; cada alerta municipal del Mur diu fins quan és vigent i, quan caduca, ix de l'avís de dalt i deixa de pujar al capdamunt del Mur, sense recarregar la pàgina, però la targeta conserva el distintiu; la fitxa de memòria oral del Bloc de Notes permet triar el poble, també pel seu nom popular, i afegir etiquetes lliures; el paquet de dades obertes de cada poble (format 1.2.0) porta les notícies i l'agenda públiques; i Connectar, la gestió de membres i l'enquadrament de les imatges ja es mostren en les cinc llengües.
+
 = 1.1.10 =
 * **Guia d'instal·lació pas a pas en Valencià / Català amb exemple real (`gentdelatorre.net`):** Explicació clara en 3 passos del codi únic `[socdepoble_app poble="la-torre-de-les-macanes"]` i de la plantilla **«Sóc de Poble · full screen»**, amb captura real de l'editor de WordPress (#10) i il·lustracions de còmic de l'univers *Sóc de Poble*.
-* **Visor complet v1.1.10:** Empaquetat autònom (`dist/soc-de-poble.standalone.js`) amb navegació per teclat (`IDEA-58`), traductor lliure Apertium (`IDEA-31`) i exportació de dades obertes per municipi (`JSON-LD`).
+* **Visor complet:** Empaquetat autònom (`dist/soc-de-poble.standalone.js`) amb navegació per teclat (`IDEA-58`), traductor lliure Apertium (`IDEA-31`) i exportació de dades obertes per municipi (`JSON-LD`).
 * **Enllaços de la llista de connectors:** *Mostra els detalls* obri la fitxa completa amb descripció, instal·lació, PMF i registre de canvis; `Plugin URI` apunta a `https://socdepoble.org`.
 
 = 1.1.9 =
@@ -201,6 +206,9 @@ Si no queda cap altra còpia activa del connector, `uninstall.php` esborra els a
 * **Codi font i construcció documentats:** Instruccions reproduïbles pas a pas per generar el paquet `dist/` des del repositori públic.
 
 == Upgrade Notice ==
+
+= 1.1.11 =
+«Mostra els detalls» com a WordPress.org, i el visor al dia: condicions 2.3 amb 16 anys, alertes municipals que caduquen, memòria oral amb poble i etiquetes, dades obertes 1.2.0 amb notícies i agenda, i Connectar, membres i enquadrament en cinc llengües.
 
 = 1.1.10 =
 Guia d'instal·lació didàctica en 3 passos amb l'exemple real de Gent de la Torre ([socdepoble_app poble="la-torre-de-les-macanes"] + plantilla Sóc de Poble · full screen) i galeria de 10 captures.

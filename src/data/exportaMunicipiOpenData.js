@@ -19,9 +19,12 @@
  *   dades-obertes-<slug>/data/directori.jsonld    schema.org Organization / LocalBusiness
  *   dades-obertes-<slug>/data/llicencies.md       la llicència de cada element
  *   dades-obertes-<slug>/data/memoria-cultural.jsonld   schema.org CreativeWork
+ *   dades-obertes-<slug>/data/memoria-oral.jsonld schema.org CreativeWork, només amb fitxes (1.2.0)
  *   dades-obertes-<slug>/data/memoria.md          el paquet explicat (Markdown)
  *   dades-obertes-<slug>/data/municipi.jsonld     schema.org AdministrativeArea
  *   dades-obertes-<slug>/data/noticies.jsonld     schema.org NewsArticle
+ *   dades-obertes-<slug>/data/okf/index.md, log.md i memoria-oral/<poble>/<fitxa>.md
+ *                                                 fitxes de memòria oral en OKF v0.2 (1.2.0)
  *   dades-obertes-<slug>/manifest-sha256.txt      «<sha256>  data/…» (sha256sum -c)
  *   dades-obertes-<slug>/tagmanifest-sha256.txt
  *
@@ -94,7 +97,11 @@
  * eixe actor publicat, cap enllaç ni cap compte @ a memoria.md.
  */
 import { comparaInstants, dataIso, normalitzaOrigen, normalitzaSlugMunicipi, urlsDeMunicipi } from './activitypub.js';
-import { LIMIT_DIRECTORI_ENTITATS } from './contracte.js';
+import { COLECCIONS_DADES_OBERTES, LIMIT_DADES_OBERTES, LIMIT_DIRECTORI_ENTITATS } from './contracte.js';
+import { fallesDeDadesObertes } from './dadesObertesLot.js';
+import {
+  FONT_SENSE_URL, NIVELLS_CONFIANCA, OKF_VERSIO, TIPUS_OKF, entradaLog, indexOkf, markdownOkf, nivellDeConfianca, validaFitxaOkf
+} from '../sections/notes/memoriaOral.js';
 import { validaTaxonomia } from './personalitzacio.js';
 import { LLICENCIES, MARCA_CC0 } from '../components/universal/drets/llicencies.js';
 import { declaracionsDe, validaEstil } from '../config/estil.js';
@@ -120,8 +127,16 @@ export const FORMAT_DADES_OBERTES = 'socdepoble.dadesobertes.v1';
    BagIt genèrics (RFC 8493 no limita els noms de la càrrega) i el verificador
    1.1.0, que també accepta els paquets 1.0.0. Per a un validador estricte, el
    salt menor no és retrocompatible; anunciar-ho amb una 2.0.0 és decisió del
-   Mestre. */
-export const VERSIO_FORMAT = '1.1.0';
+   Mestre.
+   1.2.0 (T2 · D04/D10, assalt 261101; pla 261101_1246, D-3) hi afig la
+   memòria oral: data/memoria-oral.jsonld (schema.org CreativeWork) i el
+   catàleg OKF v0.2 a data/okf/ (index.md, log.md i una fitxa .md per relat),
+   NOMÉS si hi ha almenys una fitxa revisada per una persona i signada per una
+   entitat. Sense cap, el paquet és el de la 1.1.0 llevat de la cadena de
+   versió. El verificador 1.1.0 (NOM_DE_DADES sense okf/) rebutja un paquet
+   amb okf/ i accepta els que no en porten; el 1.2.0 llig els tres formats, i
+   el restaurador (importaMunicipiOpenData.js) també. */
+export const VERSIO_FORMAT = '1.2.0';
 export const ESQUEMA_DATAPACKAGE = 'https://datapackage.org/profiles/2.0/datapackage.json';
 /* Les llicències que permeten reutilitzar sense demanar permís ni limitar
    l'ús comercial (disseny B §4.4). NC, ND i © no ho són. */
@@ -160,12 +175,16 @@ const CAMPS = Object.freeze({
   agenda: new Set([...BASE, 'title', 'name', 'subtitle', 'entradilla', 'summary', 'description', 'date', 'time', 'inici', 'fi', 'zona']),
   memoria: new Set([...BASE, 'title', 'titol', 'name', 'entradilla', 'description', 'text', 'body', 'content']),
   directori: new Set(['id', 'slug', 'name', 'kind', 'parent_organization_id', 'lema', 'description', 'logo_url', 'hero_url',
-    'copyright', 'town_name', 'visibility'])
+    'copyright', 'town_name', 'visibility']),
+  /* T2 · 1.2.0 · Una fitxa de memòria oral: la fitxa OKF sencera (okf) i qui la signa. */
+  memoriaOral: new Set(['id', 'visibility', 'copyright', 'created_at', 'updated_at', ...AUTORIA, ...PERSONA, 'okf'])
 });
-const CLAUS_ENTRADA = Object.freeze(['municipi', 'ara', 'origen', 'actorsPublicats', 'noticies', 'agenda', 'entitats', 'memoria', 'personalitzacio', 'activityStreams', 'pendents']);
+const CLAUS_ENTRADA = Object.freeze(['municipi', 'ara', 'origen', 'actorsPublicats', 'noticies', 'agenda', 'entitats', 'memoria', 'memoriaOral',
+  'personalitzacio', 'activityStreams', 'pendents']);
 /* Les col·leccions que «pendents» pot declarar no exportades (recullDadesPubliquesDelMunicipi), amb el seu nom a memoria.md. */
-const NOMS_DE_PENDENT = Object.freeze({
-  noticies: 'Notícies i avisos', agenda: 'Agenda', directori: "Directori d'entitats i comerços", memoria: 'Memòria cultural', configuracio: 'Configuració del poble'
+export const NOMS_DE_PENDENT = Object.freeze({
+  noticies: 'Notícies i avisos', agenda: 'Agenda', directori: "Directori d'entitats i comerços", memoria: 'Memòria cultural',
+  memoriaOral: 'Memòria oral (fitxes OKF)', configuracio: 'Configuració del poble'
 });
 const CLAUS_MUNICIPI = Object.freeze(['slug', 'nom', 'id', 'descripcio', 'wikidata', 'lat', 'lng']);
 
@@ -201,7 +220,8 @@ const REF_OPACA = 'sdp-media://';
    no en resol cap amb «%»). */
 const SEGMENT_SEGUR = /^[A-Za-z0-9_.~-]+$/;
 const WIKIDATA = /^Q[1-9]\d{0,11}$/;
-const NOM_DE_DADES = /^[a-z0-9]+(?:-[a-z0-9]+)*\.(?:jsonld|json|md|ics)$/;
+/* T2 · 1.2.0 · També el catàleg OKF: okf/index.md, okf/log.md i okf/memoria-oral/<poble>/<fitxa>.md. Cap «..», cap barra invertida ni cap camí absolut hi casa. */
+const NOM_DE_DADES = /^(?:[a-z0-9]+(?:-[a-z0-9]+)*\.(?:jsonld|json|md|ics)|okf\/(?:index|log)\.md|okf\/memoria-oral\/[a-z0-9]+(?:-[a-z0-9]+)*\/[a-z0-9]+(?:-[a-z0-9]+)*\.md)$/;
 
 const compara = (a, b) => (a < b ? -1 : a > b ? 1 : 0);
 const textNet = (valor) => (typeof valor === 'string' ? valor.replace(/\r\n?/g, '\n').replace(CONTROL, '') : '');
@@ -581,6 +601,13 @@ function fiInclusiva(fi, inici) {
   return ultim && !(inici && ultim < inici.slice(0, 10)) ? ultim : null;
 }
 
+/* T2-G02 · L'endDate que escrivia la 1.0.0 per a la `fi` d'un acte sense
+   zona pròpia (com les files restaurades): el moment del model tal qual, la
+   fi EXCLUSIVA, sense fiInclusiva. El restaurador
+   (importaMunicipiOpenData.js) el fa servir per a regenerar l'agenda d'un
+   paquet 1.0.0 i comparar-la byte a byte. null si no és cap moment. */
+export const endDateDeLaVersio100 = (fi) => momentSchema(fi, ZONA_PER_DEFECTE);
+
 function acteSchema({ item, id, entitat }, { base, recompte, signants }) {
   const zona = textLinia(item.zona) || ZONA_PER_DEFECTE;
   const dia = typeof item.date === 'string' ? diaValid(item.date.trim()) : null;
@@ -617,6 +644,157 @@ function memoriaSchema({ item, id, entitat }, { base, recompte, signants }) {
     author: autorSchema(entitat, signants),
     ...llicenciaSchema(llicenciaDe(item.copyright))
   };
+}
+
+/* ── Memòria oral: fitxes OKF v0.2 (T2 · 1.2.0) ─────────────────────────── */
+
+/* L'únic actor humà que una fitxa pública pot portar: la persona sense
+   identificador del Bloc (memoriaOralDelBloc.js · PERSONA_SENSE_IDENTIFICADOR).
+   Mai l'id d'un compte. */
+export const ACTOR_HUMA_PUBLICABLE = 'human:sense-identificador';
+/* El motor que proposa la fitxa (memoriaOral.js · ACTOR_ESTRUCTURADOR), de qualsevol versió. */
+const ACTOR_MOTOR = /^socdepoble-memoria-oral\/\d{1,4}\.\d{1,4}\.\d{1,4}$/;
+/* memoria-oral/<poble>/<fitxa>.md, el camí d'estructuraMemoriaOral, amb segments de slug. */
+const CAMI_OKF = /^memoria-oral\/([a-z0-9]+(?:-[a-z0-9]+)*)\/([a-z0-9]+(?:-[a-z0-9]+)*)\.md$/;
+const MAXIM_CAMI_OKF = 200;
+const MAXIM_COS_OKF = 256 * 1024;
+
+/* El poble d'una fitxa: el que DECLARA el seu frontmatter (`municipi`, el
+   slug), i cap altre. Sense, no és de cap poble. */
+function pobleDeLaFitxa(item, municipi) {
+  const fm = esObjecte(item.okf) && esObjecte(item.okf.frontmatter) ? item.okf.frontmatter : null;
+  const poble = typeof fm?.municipi === 'string' ? fm.municipi.trim() : '';
+  if (!poble) return null;
+  return poble === municipi.slug ? 'declarada' : 'altre';
+}
+
+/* Una referència publicable d'una font o d'un recurs: el text del Bloc sense
+   URL o una URL https sense credencials, consulta, fragment ni camí de
+   Storage, escrita ja en la seua forma normal (mai es reescriu: el relat
+   revisat és el que és). */
+function recursPublicable(valor) {
+  if (valor === FONT_SENSE_URL) return true;
+  if (typeof valor !== 'string' || valor.length > 2048) return false;
+  let url = null;
+  try { url = new URL(valor); } catch { return false; }
+  return url.protocol === 'https:' && !url.username && !url.password && !url.search && !url.hash
+    && !url.pathname.startsWith(PREFIX_STORAGE) && url.href === valor;
+}
+
+/* Els instants d'una fitxa que arriba com a JSON: text, mai un Date. */
+const instantsDeText = (fm, verificacions) => [fm.generated?.at, fm.stale_after, ...verificacions.map((v) => v?.at)]
+  .every((valor) => valor === undefined || typeof valor === 'string');
+
+/* El frontmatter publicable, refet camp a camp en l'ordre del serialitzador
+   (memoriaOral.js · serialitzaFrontmatter): cap clau d'extensió, els textos
+   en una línia i sense marcatge. */
+function frontmatterPublicable(fm, verificacions) {
+  const fonts = Array.isArray(fm.sources) ? fm.sources : null;
+  return {
+    type: TIPUS_OKF,
+    title: textLinia(fm.title),
+    description: textLinia(fm.description),
+    ...(fm.resource !== undefined ? { resource: fm.resource } : {}),
+    ...(Array.isArray(fm.tags) ? { tags: fm.tags.map(textLinia) } : {}),
+    status: 'stable',
+    generated: { by: fm.generated.by, ...(fm.generated.at !== undefined ? { at: fm.generated.at } : {}) },
+    verified: verificacions.map((v) => ({ by: v.by, at: v.at })),
+    ...(fm.stale_after !== undefined ? { stale_after: fm.stale_after } : {}),
+    ...(fonts ? { sources: fonts.map((font) => ({
+      ...(font.id !== undefined ? { id: textLinia(String(font.id)) } : {}),
+      resource: font.resource,
+      ...(font.title !== undefined ? { title: textLinia(font.title) } : {}),
+      ...(font.author !== undefined ? { author: font.author } : {})
+    })) } : {}),
+    municipi: fm.municipi
+  };
+}
+
+/* La fitxa publicable d'un element ja triat (públic, signat per una entitat i
+   del poble), o el motiu de l'omissió. Només ix una fitxa OKF v0.2 vàlida, de
+   tipus «Memòria oral», estable i revisada per una persona (§5.3,
+   human-reviewed), proposada pel motor del Mas, amb cap actor humà que no
+   siga la persona sense identificador i amb fonts publicables. */
+function fitxaPublicable(item) {
+  const okf = item.okf;
+  if (!esObjecte(okf) || typeof okf.cami !== 'string' || !esObjecte(okf.frontmatter) || typeof okf.cos !== 'string') return { motiu: 'okfInvalides' };
+  const fm = okf.frontmatter;
+  const cami = okf.cami.length <= MAXIM_CAMI_OKF ? CAMI_OKF.exec(okf.cami) : null;
+  if (!cami || cami[1] !== fm.municipi || fm.type !== TIPUS_OKF || !validaFitxaOkf(fm).valida) return { motiu: 'okfInvalides' };
+  if (fm.status !== 'stable' || nivellDeConfianca(fm) !== NIVELLS_CONFIANCA.huma) return { motiu: 'noRevisades' };
+  const verificacions = [].concat(fm.verified ?? []);
+  const fonts = Array.isArray(fm.sources) ? fm.sources : [];
+  if (!esObjecte(fm.generated) || !ACTOR_MOTOR.test(fm.generated.by) || verificacions.some((v) => v.by !== ACTOR_HUMA_PUBLICABLE)
+    || fonts.some((font) => font.author !== undefined && font.author !== ACTOR_HUMA_PUBLICABLE)) return { motiu: 'actorsAmbIdentificador' };
+  if (typeof fm.title !== 'string' || typeof fm.description !== 'string' || !instantsDeText(fm, verificacions)
+    || (fm.resource !== undefined && !recursPublicable(fm.resource)) || fonts.some((font) => !recursPublicable(font.resource))) return { motiu: 'okfInvalides' };
+  const cos = senseMarcatge(textNet(okf.cos));
+  if (new TextEncoder().encode(cos).length > MAXIM_COS_OKF) return { motiu: 'okfInvalides' };
+  const frontmatter = frontmatterPublicable(fm, verificacions);
+  if (!validaFitxaOkf(frontmatter).valida) return { motiu: 'okfInvalides' };
+  let markdown = '';
+  try { markdown = markdownOkf(frontmatter, cos); } catch { return { motiu: 'okfInvalides' }; }
+  return { okf: { cami: okf.cami, frontmatter, cos, markdown } };
+}
+
+function fitxaOralSchema({ item, id, entitat, okf }, { signants, municipi }) {
+  const fm = okf.frontmatter;
+  return {
+    '@type': 'CreativeWork',
+    '@id': referencia('memoria-oral.jsonld', id),
+    identifier: id,
+    name: fm.title,
+    abstract: fm.description,
+    genre: fm.type,
+    keywords: fm.tags ?? null,
+    creativeWorkStatus: fm.status,
+    contentLocation: { '@id': referencia('municipi.jsonld', municipi.slug) },
+    /* El text sencer és al seu fitxer Markdown, al costat. */
+    url: `okf/${okf.cami}`,
+    encodingFormat: 'text/markdown',
+    ...datesDePublicacio(item),
+    author: autorSchema(entitat, signants),
+    ...llicenciaSchema(llicenciaDe(item.copyright))
+  };
+}
+
+/* okf/log.md (OKF v0.2 §9): una línia per fitxa (entradaLog, amb el dia de la
+   seua última revisió), agrupades per dia i, dins del dia, per camí. */
+function logOkf(fitxes) {
+  const entrades = fitxes.map((fitxa) => {
+    const darrera = [].concat(fitxa.okf.frontmatter.verified).at(-1).at;
+    const [capcalera, linia] = entradaLog({ okf: fitxa.okf }, { ara: darrera }).split('\n');
+    return { capcalera, linia, cami: fitxa.okf.cami };
+  }).sort((a, b) => compara(a.capcalera, b.capcalera) || compara(a.cami, b.cami));
+  const linies = ['---', `okf_version: ${JSON.stringify(OKF_VERSIO)}`, '---', '', '# Registre de la memòria oral', ''];
+  let dia = null;
+  for (const { capcalera, linia } of entrades) {
+    if (capcalera !== dia) {
+      if (dia !== null) linies.push('');
+      linies.push(capcalera);
+      dia = capcalera;
+    }
+    linies.push(linia);
+  }
+  linies.push('');
+  return linies.join('\n');
+}
+
+/* Els fitxers del catàleg OKF (ordenats per camí): una fitxa per relat, l'índex i el registre. Cap fitxa, cap fitxer. */
+function fitxersOkf(fitxes, municipi) {
+  if (!fitxes.length) return [];
+  const perCami = [...fitxes].sort((a, b) => compara(a.okf.cami, b.okf.cami));
+  return [
+    ...perCami.map(({ okf }) => {
+      const [, poble, fitxa] = CAMI_OKF.exec(okf.cami);
+      return { nom: `okf/${okf.cami}`, recurs: `okf-${poble}--${fitxa}`, text: okf.markdown, mediatype: 'text/markdown', format: 'md', titol: 'Fitxa de memòria oral (Open Knowledge Format v0.2)' };
+    }),
+    {
+      nom: 'okf/index.md', recurs: 'okf-index', mediatype: 'text/markdown', format: 'md', titol: 'Índex de la memòria oral (Open Knowledge Format v0.2)',
+      text: indexOkf(perCami.map(({ okf }) => ({ okf: { cami: okf.cami, frontmatter: okf.frontmatter }, municipi: { nom: municipi.nom } })), { titol: 'Memòria oral' })
+    },
+    { nom: 'okf/log.md', recurs: 'okf-log', text: logOkf(perCami), mediatype: 'text/markdown', format: 'md', titol: 'Registre de revisions de la memòria oral (Open Knowledge Format v0.2)' }
+  ];
 }
 
 /* El directori: les files de organization_directory (contracte.js,
@@ -898,7 +1076,11 @@ const NOMS_DE_MOTIU = Object.freeze({
   campsDescartats: 'camps fora de la llista blanca',
   imatgesDescartades: 'imatges amb una adreça no publicable',
   taxonomiaInvalida: 'taxonomia amb una forma no vàlida',
-  estilInvalida: 'estil amb una forma no vàlida'
+  estilInvalida: 'estil amb una forma no vàlida',
+  /* T2 · 1.2.0 · La memòria oral. */
+  noRevisades: 'fitxes de memòria oral sense revisió humana',
+  okfInvalides: 'fitxes que no són OKF v0.2 vàlides',
+  actorsAmbIdentificador: "fitxes amb l'identificador d'una persona"
 });
 
 function liniaDElement(element, data, coincidencia) {
@@ -942,7 +1124,9 @@ function memoriaMd({ municipi, ara, enllacos, seccions, omissions, configuracio,
     '',
     '| Fitxer | Elements |',
     '| --- | --- |',
-    ...seccions.map(({ fitxer, elements }) => `| \`${fitxer}\` | ${elements.length} |`),
+    /* memoria-oral.jsonld només existix amb alguna fitxa. */
+    ...seccions.filter(({ coleccio, elements }) => coleccio !== 'memoriaOral' || elements.length)
+      .map(({ fitxer, elements }) => `| \`${fitxer}\` | ${elements.length} |`),
     ...(calendari.actes ? [`| \`agenda.ics\` | ${calendari.actes} |`] : []),
     ...(federades === null ? [] : [`| \`activitystreams.json\` | ${federades} |`]),
     /* V2-02 · Una configuració pendent no s'ha llegit: «sense personalització» diria que el poble no en té. */
@@ -955,6 +1139,9 @@ function memoriaMd({ municipi, ara, enllacos, seccions, omissions, configuracio,
     else if (!elements.length) linies.push('Sense elements en esta exportació.', '');
     else linies.push(...elements.map((element, i) => liniaDElement(element, data(element), coincidencies[i])), '');
     if (coleccio === 'agenda') linies.push(...frasesDelCalendari(calendari));
+    if (coleccio === 'memoriaOral' && elements.length) {
+      linies.push(`${elements.length === 1 ? 'La fitxa també és' : 'Cada fitxa també és'} a \`okf/\` en Open Knowledge Format v0.2, amb un índex (\`okf/index.md\`) i el registre de les revisions (\`okf/log.md\`). Només hi entren les fitxes revisades per una persona, signades per una entitat i sense l'identificador de cap persona.`, '');
+    }
   }
   if (enllacos) {
     linies.push(
@@ -991,10 +1178,10 @@ function memoriaMd({ municipi, ara, enllacos, seccions, omissions, configuracio,
 }
 
 function llicenciesMd(seccions, federades = null) {
-  const files = seccions.flatMap(({ coleccio, elements }) => elements.map((element) => {
+  const files = seccions.flatMap(({ coleccio, etiqueta = coleccio, elements }) => elements.map((element) => {
     /* La de l'element (CreativeWork) o la de la seua fitxa (Event, Organization). */
     const llicencia = llicenciaDe(element.copyrightNotice ?? element.subjectOf?.copyrightNotice);
-    return `| ${coleccio} | \`${encodeURIComponent(element.identifier)}\` | ${llicencia.valor ? escapaMarkdown(llicencia.valor) : '(no declarada)'} | ${llicencia.oberta ? 'sí' : 'no'} |`;
+    return `| ${etiqueta} | \`${encodeURIComponent(element.identifier)}\` | ${llicencia.valor ? escapaMarkdown(llicencia.valor) : '(no declarada)'} | ${llicencia.oberta ? 'sí' : 'no'} |`;
   }));
   return [
     '# Llicències dels elements',
@@ -1061,7 +1248,11 @@ export function preparaDadesObertesMunicipi(entrada) {
     throw new TypeError('«pendents» ha de ser [{ coleccio, motiu }], una vegada per col·lecció.');
   }
 
-  const omissions = { noticies: nouRecompte(), agenda: nouRecompte(), directori: nouRecompte(), memoria: nouRecompte(), configuracio: nouRecompte() };
+  /* T2 · 1.2.0 · La memòria oral entra al paquet (memoria.md, comptes, omissions) si l'entrada la porta o si és pendent;
+     els seus fitxers, només amb almenys una fitxa. Sense, el paquet és el de la 1.1.0 llevat de la versió. */
+  const ambMemoriaOral = entrada.memoriaOral !== undefined || (pendents ?? []).some((p) => p.coleccio === 'memoriaOral');
+  const omissions = { noticies: nouRecompte(), agenda: nouRecompte(), directori: nouRecompte(), memoria: nouRecompte(),
+    ...(ambMemoriaOral ? { memoriaOral: nouRecompte() } : {}), configuracio: nouRecompte() };
   /* Primer el directori: l'autoria de cada element s'hi enllaça (autorSchema). */
   const triades = triaElements(entrada.entitats, municipi, 'directori', omissions.directori, { ambAutoria: false, pobleDe: pobleDeLEntitat });
   const signants = signantsDelDirectori(entrada.entitats, new Set(triades.map(({ id }) => id)));
@@ -1073,13 +1264,27 @@ export function preparaDadesObertesMunicipi(entrada) {
   const noticies = vista('noticies', entrada.noticies, noticiaSchema).sort(perData('datePublished', true));
   const agenda = vista('agenda', entrada.agenda, acteSchema).sort(perData('startDate', false));
   const memoria = vista('memoria', entrada.memoria, memoriaSchema).sort((a, b) => compara(a.element.identifier, b.element.identifier));
+  const fitxesOrals = [];
+  if (ambMemoriaOral) {
+    const camins = new Set();
+    for (const triat of triaElements(entrada.memoriaOral, municipi, 'memoriaOral', omissions.memoriaOral, { pobleDe: pobleDeLaFitxa })) {
+      const publicable = fitxaPublicable(triat.item);
+      if (publicable.motiu) { suma(omissions.memoriaOral, publicable.motiu); continue; }
+      if (camins.has(publicable.okf.cami)) throw new TypeError(`Camí OKF repetit a «memoriaOral»: ${publicable.okf.cami.slice(0, 120)}`);
+      camins.add(publicable.okf.cami);
+      fitxesOrals.push({ ...triat, okf: publicable.okf });
+    }
+  }
+  const memoriaOral = fitxesOrals.map((fitxa) => ({ element: fitxaOralSchema(fitxa, { signants, municipi }), coincidencia: fitxa.coincidencia }))
+    .sort((a, b) => compara(a.element.identifier, b.element.identifier));
   const configuracio = configuracioDe(entrada.personalitzacio, omissions.configuracio);
 
   const seccions = [
     { coleccio: 'noticies', fitxer: 'noticies.jsonld', titol: 'Notícies i avisos', llista: noticies, data: (e) => e.datePublished },
     { coleccio: 'agenda', fitxer: 'agenda.jsonld', titol: 'Agenda', llista: agenda, data: (e) => e.startDate },
     { coleccio: 'directori', fitxer: 'directori.jsonld', titol: "Directori d'entitats i comerços", llista: directori, data: () => null },
-    { coleccio: 'memoria', fitxer: 'memoria-cultural.jsonld', titol: 'Memòria cultural', llista: memoria, data: () => null }
+    { coleccio: 'memoria', fitxer: 'memoria-cultural.jsonld', titol: 'Memòria cultural', llista: memoria, data: () => null },
+    ...(ambMemoriaOral ? [{ coleccio: 'memoriaOral', etiqueta: 'memoria-oral', fitxer: 'memoria-oral.jsonld', titol: 'Memòria oral (fitxes OKF)', llista: memoriaOral, data: () => null }] : [])
   ].map((s) => ({ ...s, elements: s.llista.map(({ element }) => element), coincidencies: s.llista.map(({ coincidencia }) => coincidencia) }));
   const grafs = Object.fromEntries(seccions.map(({ coleccio, elements }) => [coleccio, { '@context': 'https://schema.org', '@graph': elements }]));
   /* El calendari: els mateixos actes d'agenda.jsonld, en el mateix ordre. Els que no hi caben
@@ -1110,13 +1315,15 @@ export function preparaDadesObertesMunicipi(entrada) {
     { nom: 'directori.jsonld', text: jsonCanonic(grafs.directori), mediatype: 'application/ld+json', format: 'jsonld', titol: "Directori d'entitats i comerços (schema.org)" },
     { nom: 'llicencies.md', text: llicenciesMd(seccions, federades), mediatype: 'text/markdown', format: 'md', titol: 'Llicència de cada element' },
     { nom: 'memoria-cultural.jsonld', text: jsonCanonic(grafs.memoria), mediatype: 'application/ld+json', format: 'jsonld', titol: 'Memòria cultural (schema.org CreativeWork)' },
+    ...(memoriaOral.length ? [{ nom: 'memoria-oral.jsonld', text: jsonCanonic(grafs.memoriaOral), mediatype: 'application/ld+json', format: 'jsonld', titol: 'Memòria oral (schema.org CreativeWork; el text de cada fitxa és a okf/)' }] : []),
     {
       nom: 'memoria.md',
       text: memoriaMd({ municipi, ara, enllacos, seccions, omissions: netes, configuracio, federades, pendents, calendari }),
       mediatype: 'text/markdown', format: 'md', titol: 'Memòria del paquet (Markdown)'
     },
     { nom: 'municipi.jsonld', text: jsonCanonic(municipiSchema(municipi, enllacos)), mediatype: 'application/ld+json', format: 'jsonld', titol: 'El municipi (schema.org AdministrativeArea)' },
-    { nom: 'noticies.jsonld', text: jsonCanonic(grafs.noticies), mediatype: 'application/ld+json', format: 'jsonld', titol: 'Notícies i avisos (schema.org NewsArticle)' }
+    { nom: 'noticies.jsonld', text: jsonCanonic(grafs.noticies), mediatype: 'application/ld+json', format: 'jsonld', titol: 'Notícies i avisos (schema.org NewsArticle)' },
+    ...fitxersOkf(fitxesOrals, municipi)
   ];
   if (outbox !== undefined) {
     fitxers.push({ nom: 'activitystreams.json', text: jsonCanonic(outbox), mediatype: 'application/activity+json', format: 'json', titol: 'Publicacions municipals (ActivityStreams 2.0)' });
@@ -1130,7 +1337,9 @@ export function preparaDadesObertesMunicipi(entrada) {
     fitxers,
     omissions: netes,
     comptes: Object.fromEntries(seccions.map(({ coleccio, elements }) => [coleccio, elements.length])),
-    calendari: { actes: calendari.actes, senseInici: calendari.senseInici, foraDAbast: calendari.foraDAbast }
+    calendari: { actes: calendari.actes, senseInici: calendari.senseInici, foraDAbast: calendari.foraDAbast },
+    /* T2 · Les col·leccions que el paquet no ha llegit (les de «Fonts pendents»). */
+    pendents: (pendents ?? []).map((p) => p.coleccio)
   };
 }
 
@@ -1185,8 +1394,12 @@ export async function exportaMunicipiOpenData(entrada, opcions = {}) {
     $schema: ESQUEMA_DATAPACKAGE,
     name: preparat.arrel,
     title: `Dades obertes ${deNomDelPoble(preparat.nom)}`,
+    /* Gauntlet D-06 · Amb memòria oral, «sense dades de persones» seria fals: un relat pot nomenar veïns. */
     description: 'Contingut públic del municipi i de les seues entitats exportat pel Mas (Sóc de Poble). '
-      + "Sense dades de persones. La llicència de cada element és a llicencies.md: el conjunt no n'atorga cap de nova.",
+      + (preparat.comptes.memoriaOral > 0
+        ? 'Sense dades de cap compte de persona. Les fitxes de memòria oral són relats revisats per una persona i signats per una entitat, i poden nomenar persones del poble. '
+        : 'Sense dades de persones. ')
+      + "La llicència de cada element és a llicencies.md: el conjunt no n'atorga cap de nova.",
     created: preparat.ara,
     licenses: [{ path: 'llicencies.md', title: 'Cada element porta la seua llicència; sense llicència declarada no hi ha cap dret de reutilització' }],
     sources: [{ title: 'Sóc de Poble (el Mas)', path: preparat.origen }],
@@ -1249,15 +1462,17 @@ export async function exportaMunicipiOpenData(entrada, opcions = {}) {
     zip,
     sha256: await sha256Hex(zip, digest),
     omissions: preparat.omissions,
-    comptes: preparat.comptes
+    comptes: preparat.comptes,
+    pendents: preparat.pendents
   };
 }
 
 /* ── Verificació (falla tancat) ─────────────────────────────────────────── */
 
-const LINIA_MANIFEST = /^([0-9a-f]{64}) {2}([A-Za-z0-9/._-]{1,128})$/;
+/* T2 · 1.2.0 · Fins a 255 caràcters: els camins i els noms dels recursos d'okf/ passen dels 128. */
+const LINIA_MANIFEST = /^([0-9a-f]{64}) {2}([A-Za-z0-9/._-]{1,255})$/;
 /* El name d'un recurs (Data Package v2: minúscules, xifres, «.», «-» i «_»). */
-const NOM_DE_RECURS = /^[a-z0-9._-]{1,128}$/;
+const NOM_DE_RECURS = /^[a-z0-9._-]{1,255}$/;
 const ETIQUETES = Object.freeze(['bag-info.txt', 'bagit.txt', 'manifest-sha256.txt', 'tagmanifest-sha256.txt']);
 
 function llegeixManifest(text, nom) {
@@ -1344,45 +1559,73 @@ export async function verificaPaquetOpenData(zip, { subtle = globalThis.crypto?.
 
 /* ── Recollida des del port neutral ─────────────────────────────────────── */
 
+/* V1-02 · Els motius ixen tal qual a memoria.md, per a qualsevol veí: en
+   valencià planer, sense noms de codi, sense decisions internes i sense cap
+   dos punts (la línia ja en porta un darrere del nom de la font). */
+const SENSE_LECTURA_PUBLICA = "encara no hi ha cap lectura pública garantida d'estes dades";
+const SENSE_MODUL_DE_MEMORIA = 'el Mas no té cap mòdul de memòria cultural';
+/* Sense la lectura pública (capacitat 'dadesObertes'). */
+const MOTIUS_SENSE_LECTURA = Object.freeze({
+  noticies: SENSE_LECTURA_PUBLICA, agenda: SENSE_LECTURA_PUBLICA, memoria: SENSE_MODUL_DE_MEMORIA, memoriaOral: SENSE_LECTURA_PUBLICA
+});
+/* Amb la lectura pública, quan el servidor diu que no té eixa font (null). */
+const MOTIUS_SENSE_FONT = Object.freeze({
+  noticies: 'este servidor de dades no en té cap font pública',
+  agenda: 'este servidor de dades no en té cap font pública',
+  memoria: SENSE_MODUL_DE_MEMORIA,
+  memoriaOral: 'el servidor de dades encara no desa cap fitxa de memòria oral revisada'
+});
+const MOTIU_DE_LA_CONFIGURACIO = "la personalització és de tot el node, no d'un poble, i la fitxa del poble no la inclou";
+
 /**
  * El que el port (src/data/backendPort.js) ja servix com a PÚBLIC per a un
- * municipi. Hui només el directori d'entitats: listPublicOrganizations
- * (capacitat 'directoriEntitats'; visibility 'public' i mai cap correu,
- * contracte.js) filtrat pel NOM del poble al servidor i, ací, una altra
- * volta (town_name igual, visibility pública si ve).
- *
- * Què NO es recull i per què (decisió 5: només amb mètodes públics adequats):
- *   · notícies, agenda i memòria: loadMur barreja el contingut de
- *     l'administració (app_content, públic) amb les publicacions del veïnat
- *     (section_submissions, només per a membres) i envia el JWT de la sessió
- *     si n'hi ha (runtime.js): amb una sessió d'administració, el paquet
- *     arreplegaria contingut que el convidat no veu. loadActesAgenda no el
- *     té cap adaptador. Cal una capacitat de lectura anònima garantida
- *     (disseny NLnet B §4.1: `dadesObertes: ['llegixDadesObertes']`), que
- *     toca contracte.js (SDP-LOCK: aprovació del Mestre, D-B7).
- *   · configuració: loadCoreContent porta `personalitzacio` del tenant, no
- *     d'un poble; qui exporta la passa a mà si el tenant és d'un sol poble.
- * El directori no es pagina: amb LIMIT_DIRECTORI_ENTITATS files no se sap si
- * en falten, i s'atura (RangeError) en lloc de tallar en silenci.
- * @param {{ teCapacitat: Function, listPublicOrganizations?: Function }} port
+ * municipi, amb dos mètodes públics adequats (decisió 5):
+ *   · el directori d'entitats: listPublicOrganizations (capacitat
+ *     'directoriEntitats'; visibility 'public' i mai cap correu, contracte.js)
+ *     filtrat pel NOM del poble al servidor i, ací, una altra volta (town_name
+ *     igual, visibility pública si ve);
+ *   · notícies, agenda, memòria cultural i memòria oral: llegixDadesObertes
+ *     (T2 · capacitat 'dadesObertes', sempre anònima: el paquet d'una
+ *     administradora és el d'un visitant). Una sola crida. Cada llista va a
+ *     l'entrada de l'exportador, que torna a filtrar amb la seua llista blanca
+ *     (públic, signat per una entitat, del poble) i falla tancat; un null
+ *     (el servidor no té eixa font) va a «pendents» amb el seu motiu.
+ * Mai loadMur: barreja el contingut de l'administració amb les publicacions
+ * del veïnat (section_submissions, només per a membres) i envia el JWT de la
+ * sessió (runtime.js). Sense la capacitat, el que no es pot llegir va a
+ * «pendents», com abans. La configuració, sempre pendent: loadCoreContent
+ * porta `personalitzacio` del tenant, no d'un poble.
+ * Cap llista es pagina ni es talla: amb LIMIT_DIRECTORI_ENTITATS files, o amb
+ * més de LIMIT_DADES_OBERTES elements, s'atura (RangeError).
+ * @param {{ teCapacitat: Function, listPublicOrganizations?: Function, llegixDadesObertes?: Function }} port
  * @param {{ slug?: string, nom: string }} municipi
- * @returns {Promise<{ municipi, entitats: object[]|null, pendents: Array<{ coleccio, motiu }> }>}
+ * @returns {Promise<{ municipi, entitats: object[]|null, noticies?, agenda?, memoria?, memoriaOral?,
+ *   pendents: Array<{ coleccio, motiu }> }>}
  */
 export async function recullDadesPubliquesDelMunicipi(port, municipi, { config = {}, signal } = {}) {
   if (!port || typeof port.teCapacitat !== 'function') throw new TypeError('Cal el port de dades (backendPort).');
   const { slug, nom } = municipiDe({ ...(municipi?.slug === undefined ? {} : { slug: municipi.slug }), nom: municipi?.nom });
-  /* V1-02 · Els motius ixen tal qual a memoria.md, per a qualsevol veí: en
-     valencià planer, sense noms de codi, sense decisions internes i sense
-     cap dos punts (la línia ja en porta un darrere del nom de la font). */
-  const senseLecturaPublica = "encara no hi ha cap lectura pública garantida d'estes dades";
-  const pendents = [
-    { coleccio: 'noticies', motiu: senseLecturaPublica },
-    { coleccio: 'agenda', motiu: senseLecturaPublica },
-    { coleccio: 'memoria', motiu: 'el Mas no té cap mòdul de memòria cultural' },
-    { coleccio: 'configuracio', motiu: "la personalització és de tot el node, no d'un poble, i la fitxa del poble no la inclou" }
-  ];
+  /* El typeof manté els ports de prova d'abans (teCapacitat: () => true i sense el mètode). */
+  const ambLectura = port.teCapacitat('dadesObertes') && typeof port.llegixDadesObertes === 'function';
+  let obertes = null;
+  if (ambLectura) {
+    obertes = await port.llegixDadesObertes({ poble: { slug, nom }, signal }, config);
+    if (fallesDeDadesObertes(obertes).length) throw new TypeError('llegixDadesObertes no ha tornat { noticies, agenda, memoria, memoriaOral }.');
+    const massaLlarga = COLECCIONS_DADES_OBERTES.find((coleccio) => (obertes[coleccio]?.length ?? 0) > LIMIT_DADES_OBERTES);
+    if (massaLlarga) {
+      throw new RangeError(`«${massaLlarga}» ${deNomDelPoble(nom)} passa de ${LIMIT_DADES_OBERTES} elements: no se sap si en falten i no es talla en silenci.`);
+    }
+  }
+  const llegides = {};
+  const pendents = [];
+  for (const coleccio of COLECCIONS_DADES_OBERTES) {
+    if (Array.isArray(obertes?.[coleccio])) llegides[coleccio] = obertes[coleccio];
+    else pendents.push({ coleccio, motiu: (ambLectura ? MOTIUS_SENSE_FONT : MOTIUS_SENSE_LECTURA)[coleccio] });
+  }
+  pendents.push({ coleccio: 'configuracio', motiu: MOTIU_DE_LA_CONFIGURACIO });
   if (!port.teCapacitat('directoriEntitats')) {
-    return { municipi: { slug, nom }, entitats: null, pendents: [{ coleccio: 'directori', motiu: "este servidor de dades no oferix el directori d'entitats" }, ...pendents] };
+    return { municipi: { slug, nom }, entitats: null, ...llegides,
+      pendents: [{ coleccio: 'directori', motiu: "este servidor de dades no oferix el directori d'entitats" }, ...pendents] };
   }
   const files = await port.listPublicOrganizations({ poble: nom, limit: LIMIT_DIRECTORI_ENTITATS, signal }, config);
   if (!Array.isArray(files)) throw new TypeError('listPublicOrganizations no ha tornat cap llista.');
@@ -1391,5 +1634,5 @@ export async function recullDadesPubliquesDelMunicipi(port, municipi, { config =
   }
   const entitats = files.filter((fila) => esObjecte(fila) && textLinia(fila.town_name) === nom
     && (!presentDe(fila.visibility) || fila.visibility === 'public'));
-  return { municipi: { slug, nom }, entitats, pendents };
+  return { municipi: { slug, nom }, entitats, ...llegides, pendents };
 }

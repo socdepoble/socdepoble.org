@@ -1,0 +1,77 @@
+/* P1-12 pas 17 i IDEA-48 (pla 261101_1246, T7 · S7; Pedra Seca §9) · L'espècimen
+   del xifratge per conversa i de «Persones de confiança»: el catàleg el coneix
+   (registre en maqueta, ítem del manifest amb icona pròpia i carregador),
+   es munta sol (sense UIProvider ni servei), diu que és una maqueta no activa,
+   no importa cap mòdul del xifratge de src/data, i la marca de la mostra canvia. */
+import { readFileSync } from 'node:fs';
+import path from 'node:path';
+import { cleanup, fireEvent, render, screen, within } from '@testing-library/react';
+import { afterEach, beforeEach, expect, test, vi } from 'vitest';
+import { CATALOG_ITEMS } from '../manifest.js';
+import { CATALOG_DETAIL_LOADERS } from '../detailRegistry.jsx';
+import { REGISTRE } from '../registre.js';
+import EspecimenXatSeguretat from './EspecimenXatSeguretat.jsx';
+
+let errors;
+beforeEach(() => { errors = vi.spyOn(console, 'error').mockImplementation(() => {}); });
+afterEach(() => {
+  const crides = errors.mock.calls.map((c) => String(c[0]).slice(0, 200));
+  errors.mockRestore();
+  cleanup();
+  expect(crides).toEqual([]);
+});
+
+test('el catàleg el coneix: les dues peces en maqueta, l’ítem del manifest amb 🔐 i el carregador', () => {
+  expect(REGISTRE.find((e) => e.nom === 'CosSeguretatXat')).toMatchObject({ fitxer: 'sections/xat/components/CosSeguretatXat.jsx', estat: 'maqueta', fora: true });
+  expect(REGISTRE.find((e) => e.nom === 'CosPersonesConfianca')).toMatchObject({ fitxer: 'sections/profile/CosPersonesConfianca.jsx', estat: 'maqueta', fora: true });
+  expect(CATALOG_ITEMS.find((i) => i.id === 'superposicions-xat-seguretat')).toMatchObject({ detailKey: 'superposicions/xat-seguretat', icon: '🔐' });
+  expect(CATALOG_DETAIL_LOADERS['superposicions/xat-seguretat']).toBeTruthy();
+});
+
+test('es munta sol, diu que és una maqueta no activa i pinta el número en 12 grups, sense h1 ni style=', () => {
+  const { container } = render(<EspecimenXatSeguretat />);
+  expect(container.querySelector('h1')).toBeNull();
+  expect(container.querySelector('[style]')).toBeNull();
+  expect([...container.querySelectorAll('.sdp-especimen__nom')].map((n) => n.textContent)).toEqual(['CosSeguretatXat', 'CosPersonesConfianca']);
+  const descripcions = [...container.querySelectorAll('.sdp-especimen > p')].map((p) => p.textContent);
+  expect(descripcions.every((text) => text.startsWith('Maqueta, encara no activa'))).toBe(true);
+  expect(descripcions[0]).toMatch(/avui, el xat no és xifrat/);
+  /* Cada mostra es diu maqueta: cap captura fora de context sembla un xat xifrat. */
+  const titols = [...container.querySelectorAll('.sdp-especimen__viu > h4')].map((h) => h.textContent);
+  expect(titols.length).toBe(15);
+  expect(titols.every((titol) => titol.startsWith('Maqueta · '))).toBe(true);
+  const numeros = screen.getAllByRole('group', { name: 'Número de seguretat' });
+  expect(numeros.length).toBeGreaterThanOrEqual(3);
+  for (const numero of numeros) {
+    expect(numero.querySelectorAll('span')).toHaveLength(12);
+    for (const grup of numero.querySelectorAll('span')) expect(grup.textContent).toMatch(/^\d{5}$/);
+  }
+  /* Els estats sense número: cap grup de xifres. */
+  expect(screen.getByText('Calculant el número de seguretat…').getAttribute('role')).toBe('status');
+  expect(screen.getByText(/^Pepa encara no ha activat els xats privats xifrats/)).toBeTruthy();
+  expect(screen.getByText('Xat amb la IAIA: no està xifrat d’extrem a extrem.')).toBeTruthy();
+});
+
+test('la mostra que es pot tocar alterna «Marca com a verificat» i «Lleva la marca de verificat»', () => {
+  const { container } = render(<EspecimenXatSeguretat />);
+  const primera = container.querySelectorAll('.sdp-especimen__mostra')[0];
+  fireEvent.click(within(primera).getByRole('button', { name: 'Marca com a verificat' }));
+  expect(within(primera).getByText('Verificat: has comparat este número amb Pepa.')).toBeTruthy();
+  fireEvent.click(within(primera).getByRole('button', { name: 'Lleva la marca de verificat' }));
+  expect(within(primera).queryByText(/^Verificat:/)).toBeNull();
+});
+
+test('cap mòdul del xifratge de src/data: ni l’espècimen ni les peces que munta', () => {
+  const arrel = process.cwd();
+  for (const fitxer of [
+    'src/sections/disseny/cataleg/detalls/EspecimenXatSeguretat.jsx',
+    'src/sections/xat/components/CosSeguretatXat.jsx',
+    'src/sections/xat/estatXifratgeFil.js',
+    'src/sections/profile/CosPersonesConfianca.jsx',
+    'src/sections/profile/personesConfianca.js'
+  ]) {
+    const font = readFileSync(path.join(arrel, fitxer), 'utf8');
+    expect(font, fitxer).not.toMatch(/from\s+['"][^'"]*data\/xifratXat/);
+    expect(font, fitxer).not.toMatch(/from\s+['"][^'"]*backendPort/);
+  }
+});

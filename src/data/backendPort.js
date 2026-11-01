@@ -241,6 +241,12 @@ export const loadPerfilPublic = asseguraMetode('loadPerfilPublic');
    'directoriEntitats'). No és nucli: /cerca pregunta abans amb teCapacitat i,
    sense ella, no el demana. */
 export const listPublicOrganizations = asseguraMetode('listPublicOrganizations');
+/* T2 · D04/D10 (assalt 261101) · Les dades obertes del poble (capacitat
+   'dadesObertes') i la seua restauració ('restauracioDadesObertes'). No són
+   nucli ni van a FORMES_LECTURA: null hi és una resposta vàlida (com
+   listPublicOrganizations, la forma la valida qui crida). */
+export const llegixDadesObertes = asseguraMetode('llegixDadesObertes');
+export const restauraDadesObertes = asseguraMetode('restauraDadesObertes');
 export const listMyAgents = asseguraMetode('listMyAgents');
 export const updateAgent = asseguraMetode('updateAgent');
 
@@ -260,6 +266,11 @@ export const obriFilDePagina = asseguraMetode('obriFilDePagina');
 /* T2 i T4 · Salut del node (capacitat 'salut'). No és nucli: /registre
    pregunta abans amb teCapacitat i, sense ella, canvia de mode com abans. */
 export const comprovaServidor = asseguraMetode('comprovaServidor');
+
+/* T8b · P0-23 (BOT-A2; assalt 261101) · La versió mínima de l'app nativa
+   (capacitat 'versioClient'). No és nucli: l'entrada nativa pregunta abans
+   amb teCapacitat i, sense ella, l'app entra com sempre. */
+export const versioMinimaClient = asseguraMetode('versioMinimaClient');
 
 /* R (Onada 3, 261003) · Recuperar la contrasenya (capacitat
    'recuperacioContrasenya'). No és nucli: /registre pregunta abans amb

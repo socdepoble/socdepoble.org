@@ -2646,6 +2646,11 @@ details[open] summary.accordion-header svg:last-child {
     display: inline-flex; align-items: center; min-block-size: var(--sdp-touch);
     color: var(--sdp-accio-text); text-decoration: underline; font-weight: 700;
   }
+  /* Gauntlet transversal 261101 (VC-01) · L'hora de «vigent fins a …» amb
+     les paraules que la presenten («a les 17:44»): baixa de línia sencera,
+     mai «a les / 17:44». Només el salt de línia: ni color, ni mida, ni espai.
+     La data sí que es pot partir, perquè a 375 px no hi cap en una línia. */
+  .sdp-mur-alertes__hora { white-space: nowrap; }
 }
 
 /* ÍNDEX DE SECCIÓ · el calaix enfocat per programa (correcció final, ordre
@@ -2769,6 +2774,61 @@ details[open] summary.accordion-header svg:last-child {
     color: var(--sdp-accio-text);
     padding-block-end: var(--sdp-space-3);
     border-block-end: 1px solid var(--sdp-vora);
+  }
+  /* P1-28 (assalt 10/10, 261101, T4b) · Cap paraula tallada a la Columna 1
+     de l'UniversalWorkspace quan l'arbre es queda estret. A 1024 px la
+     closca deixa la navegació en 201 px (graella.js, pistesAjustades:
+     260 + 280 + 320 + 2 no hi caben amb la barra de l'app), i la fila de
+     l'arbre reservava 120 px de crom (16 + 24 + 16 fins al text, 16 al final
+     i l'espaiador de 48): quedaven 81 px de rètol (66 amb barra de
+     desplaçament), i «Esdeveniments», «Productivitat» o «Arxiu Visual i
+     Gestor d’Arxius» eixien amb el·lipsi. Mesurat amb Chrome a 1024 × 768 a
+     /notes, /multimedia, /wikidepoble i /disseny.
+     Quan l'arbre fa menys de 240 px (el rètol d'una fila sense fills es
+     quedaria per davall de 120 px):
+       · la fila sense fills no reserva l'espaiador del desplegador: el nom
+         arriba a la vora (la cel·la activa ja hi arribava, T26.1);
+       · el nom amb fills perd el coixí final: el desplegador de 48 px ja
+         separa el text del xebró;
+       · el nom fa salt de línia per l'espai, mai a mitja paraula (base.css:
+         hyphens: none; ací cap overflow-wrap ni word-break). Una paraula
+         sola més llarga que la línia conserva l'el·lipsi de sempre;
+       · la Insígnia de recompte (el Lector) no es mou: rep de marge final
+         el que la fila deixa de reservar (els 48 de l'espaiador a la fulla,
+         els 16 del coixí al nom amb fills) i continua a 64 px de la vora.
+     El text continua a 56 px de la vora i la icona a l'eix de 28 (T28): la
+     capçalera i el rail plegat no es mouen. Amb l'amplària per defecte
+     (260 px) res no canvia.
+     El contenidor és l'arrel de l'arbre (.sdp-workspace-groups), que només
+     pinta l'UniversalWorkspace, i només en «ample», on la columna és una
+     pista de la graella amb amplària pròpia. En «estret» i «mitja» la
+     navegació és un panell de width: max-content (AppGridShell.css): la
+     contenció d'amplària anul·la l'aportació de l'arbre i el panell
+     s'encongia (237 → 225 px a /notes a 360 px). Ni l'<aside> (la capçalera
+     quedaria dins de la contenció) ni la zona de desplaçament (la del Xat
+     porta la mateixa classe). Mesura l'amplària útil, sense la barra.
+     Sense @container (Chrome 100 a 104, Firefox 100 a 109), la xarxa @media
+     cobrix la franja de 1024 a 1121 px, on la closca per defecte (barra de
+     l'app de 260 + 260 + 280 + 320 + 2 = 1122) ja estreny la navegació. */
+  .app-grid-shell[data-layout="ample"] > .app-grid-content > .app-grid-column--left .sdp-workspace-groups {
+    container-name: sdp-navegacio;
+    container-type: inline-size;
+  }
+  @container sdp-navegacio (max-width: 239.98px) {
+    .sdp-workspace-folder-row > .sdp-workspace-folder-toggle-spacer { display: none; }
+    .sdp-workspace-folder-row > .sdp-workspace-nav-item[aria-expanded]:not(.sdp-workspace-folder-toggle) { padding-inline-end: 0; }
+    .sdp-workspace-folder-row > .sdp-workspace-nav-item:not([aria-expanded]) > .sdp-insignia { margin-inline-end: var(--sdp-touch-min); }
+    .sdp-workspace-folder-row > .sdp-workspace-nav-item[aria-expanded]:not(.sdp-workspace-folder-toggle) > .sdp-insignia { margin-inline-end: var(--sdp-space-4); }
+    .sdp-workspace-folder-row .sdp-workspace-nav-item__label { white-space: normal; }
+  }
+  @supports not (container-type: inline-size) {
+    @media (min-width: 1024px) and (max-width: 1121.98px) {
+      .app-grid-shell[data-layout="ample"] > .app-grid-content > .app-grid-column--left .sdp-workspace-groups .sdp-workspace-folder-row > .sdp-workspace-folder-toggle-spacer { display: none; }
+      .app-grid-shell[data-layout="ample"] > .app-grid-content > .app-grid-column--left .sdp-workspace-groups .sdp-workspace-folder-row > .sdp-workspace-nav-item[aria-expanded]:not(.sdp-workspace-folder-toggle) { padding-inline-end: 0; }
+      .app-grid-shell[data-layout="ample"] > .app-grid-content > .app-grid-column--left .sdp-workspace-groups .sdp-workspace-folder-row > .sdp-workspace-nav-item:not([aria-expanded]) > .sdp-insignia { margin-inline-end: var(--sdp-touch-min); }
+      .app-grid-shell[data-layout="ample"] > .app-grid-content > .app-grid-column--left .sdp-workspace-groups .sdp-workspace-folder-row > .sdp-workspace-nav-item[aria-expanded]:not(.sdp-workspace-folder-toggle) > .sdp-insignia { margin-inline-end: var(--sdp-space-4); }
+      .app-grid-shell[data-layout="ample"] > .app-grid-content > .app-grid-column--left .sdp-workspace-groups .sdp-workspace-folder-row .sdp-workspace-nav-item__label { white-space: normal; }
+    }
   }
   .sdp-workspace .app-grid-col-header .app-grid-col-header__plegable {
     padding: 0;
@@ -3560,6 +3620,19 @@ details[open] summary.accordion-header svg:last-child {
     -webkit-user-select: none;
     user-select: none;
   }
+  /* P1-67 (Llibre Mestre: «espaiat interior net i harmònic»; assalt 261101,
+     T7 · S4, Millora Proactiva Reversible) · A la targeta de conversa de 96px,
+     el buit entre l'avatar de 76 i el text passa de 12 a 16 (--sdp-space-4),
+     el mateix que el coixí lateral: 16 | 76 | 16 | text | 16. El coixí
+     vertical (8) i l'alçada (96) no canvien; l'opció dels Ajustos i la fila
+     senzilla de 72 es queden a 12. Totes les targetes de P1-36 el prenen: la
+     llista de converses i de comunitats (FilaConversa, FilaPoble), la cerca
+     (ResultatsCercaXat, FilaPersona), el diàleg de conversa nova
+     (DialegNovaConversa) i els espècimens del catàleg de Disseny
+     (EspecimenXat, EspecimenXatLlista). En mode de selecció, el cercle de
+     tria (.sdp-xat-fila__tria, fill directe de la fila) també queda a 16 de
+     l'avatar (abans 12). Es desfà esborrant esta regla. */
+  .sdp-xat-fila:not(.sdp-xat-fila--senzilla) { gap: var(--sdp-space-4); }
   /* P1-36 · L'avatar gran de la fila: la cara, també la quadrada d'una
      comunitat dins de les targetes apilades (que la seguixen), i la icona
      d'un grup o d'un canal, amb el dibuix en proporció (24 de 48, 40 de 76).
@@ -5046,6 +5119,21 @@ details[open] summary.accordion-header svg:last-child {
   .sdp-xat-dialeg__panell > p { margin: 0; max-width: var(--sdp-measure); }
   .sdp-xat-dialeg__panell:focus-visible { outline: 2px solid var(--sdp-focus); outline-offset: 2px; }
   .sdp-xat-dialeg__accions { display: grid; gap: var(--sdp-space-2); }
+  /* T7 · P1-12 pas 17 (pla 261101_1246) · El número de seguretat (CosSeguretatXat): 12 grups de
+     5 xifres de lectura tabular, com a molt 4 per fila (3 files) i menys si no hi caben (a 320 px,
+     3 per fila), centrats dins del panell del diàleg. Només darrere de la bandera E2EE. */
+  .sdp-xat-numero {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: var(--sdp-space-2) var(--sdp-space-4);
+    max-inline-size: calc(20ch + 3 * var(--sdp-space-4));
+    margin: 0 auto;
+    color: var(--sdp-text-titol);
+    font-size: var(--sdp-text-lead);
+    font-variant-numeric: tabular-nums;
+  }
+  .sdp-xat-numero > span { min-inline-size: 5ch; text-align: center; }
   .sdp-xat-avis {
     margin: 0;
     padding: var(--sdp-space-2) var(--sdp-space-4);

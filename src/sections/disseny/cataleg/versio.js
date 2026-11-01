@@ -15,7 +15,19 @@
  * src/sections/disseny/cataleg/detalls`, sense comptar les proves ni este
  * fitxer). Una versió que no és la darrera és una data falsa a la pastilla.
  *
- * Darrera posada al dia: EspecimenTipografia.jsx, 2026-10-31T02:53:15+01:00, Gauntlet 261031 (f10, corrector,
+ * Darrera posada al dia: EspecimenXatSeguretat.jsx, 2026-11-01T16:21:27+01:00, pla 261101_1246 (T7b, corrector del
+ * Gauntlet, T7b-G02/G08): el contracte de CosPersonesConfianca afig la fila teRecuperacio (si la recuperació ja
+ * està activa en este node; avui sempre fals) i el «Fes» diu que el bloc avisa que encara no ho està. Només text:
+ * cap espècimen ni entrada de manifest nous.
+ * Versió anterior: EspecimenXatSeguretat.jsx, 2026-11-01T15:42:07+01:00, pla 261101_1246 (T7 · S7; P1-12
+ * pas 17 i IDEA-48): l'espècimen nou EspecimenXatSeguretat, maqueta darrere de la bandera E2EE apagada (el xat,
+ * avui, no és xifrat), amb les peces CosSeguretatXat (l'estat del xifratge per conversa i el número de seguretat
+ * amb «Marca com a verificat») i CosPersonesConfianca (el bloc previ a F7 de Privacitat i dades), muntades amb
+ * dades inventades i cada mostra titulada «Maqueta · …»; registrades a registre.js (estat maqueta), amb l'ítem
+ * superposicions/xat-seguretat i l'emoji 🔐 a manifest.js i el seu carregador a detailRegistry.jsx
+ * (15:32:42). Arreplega EspecimenBarraEines.jsx (2026-11-01T07:02:49, marató nocturna del 01-11, IDEA-59 /
+ * P1-72: les ranures noves de la barra de l'editor), tocat sense posar-la al dia.
+ * Versió anterior: EspecimenTipografia.jsx, 2026-10-31T02:53:15+01:00, Gauntlet 261031 (f10, corrector,
  * F10-C4; Llei de llistes, ordre del Mestre del 31-10-2026): la taula de ritme vertical afig la fila li (marge
  * inferior --sdp-li-gap, 4px) i el «Fes» diu que els ítems d'una ul o d'una ol van sempre més junts que els
  * paràgrafs, només amb el marge del li i mai amb un gap afegit. Només text: cap espècimen ni entrada de manifest
@@ -291,4 +303,4 @@
  * Quan el manifest porte `creat` i `modificat` per espècimen, manaran eixos
  * camps i esta constant només farà de versió del conjunt.
  */
-export const VERSIO_CATALEG = '2026-10-31T02:53:15+01:00';
+export const VERSIO_CATALEG = '2026-11-01T16:21:27+01:00';

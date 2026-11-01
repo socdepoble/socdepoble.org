@@ -8,6 +8,7 @@ import { loadCoreContent } from '../../data/backendPort.js';
 import { aplicaPersonalitzacio } from '../../data/personalitzacio.js';
 import { byId } from '../../config/contentHelpers';
 import { useIdentitatOpcional } from './IdentitatContext.jsx';
+import { IDENTITAT_DE_RESERVA } from './identitatDeReserva.js';
 import { useRecarregaExterna } from './useRecarregaExterna.jsx';
 import { useUIActions } from './UIContext.jsx';
 import { useSession } from './SessionContext.jsx';
@@ -37,8 +38,12 @@ const nomesFitxes = (valor) => {
    SessionContext.jsx ja no en porta cap de nou (objectesDeContext.test.jsx).
    Per això useSession(), davall, continua exigint el seu proveïdor.
    Gauntlet 2 261101 (G2-10) · Una sola font: MultimediaProvider
-   (sections/multimedia/MultimediaContext.jsx) importa esta mateixa reserva. */
-export const IDENTITAT_DE_RESERVA = Object.freeze({ actorId: null, actorKey: 'anon' });
+   (sections/multimedia/MultimediaContext.jsx) importa esta mateixa reserva.
+   D-7 (pla 261101_1246) · La reserva viu a identitatDeReserva.js, la font
+   única que també prenen Mur, Notes i Xat (useIdentitatOReserva.js): la
+   forma sencera d'IdentitatProvider, de només lectura. Es reexporta ací
+   perquè els consumidors d'abans (MultimediaContext.jsx) no canvien. */
+export { IDENTITAT_DE_RESERVA };
 
 export function CoreContentProvider({ children, config }) {
   const { actorId, actorKey } = useIdentitatOpcional() || IDENTITAT_DE_RESERVA;

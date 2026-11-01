@@ -1,0 +1,17 @@
+{
+  "id": "63673b9f-5d43-47ce-afe4-e3893103d0b2",
+  "session": "4f7f8952-12a3-4361-ae0e-e107e398f8a3",
+  "operationId": "torn_3f5652a2-assalt_deu_deu_frontissa_fediversity_per_al_commit_de_l_assalt-4f7f8952",
+  "claim": "4f7f8952-12a3-4361-ae0e-e107e398f8a3:governance-write",
+  "planHash": "9aa34cc676358c51decd2bdfdf6035f190ac1b16404ab80111bc9730d942d2e7",
+  "beforeSeal": "01740bfbbafd88b42b3fa43ef1dc450410dedd14bf23a98ace25ce504af8fd4c",
+  "files": [
+    {
+      "path": ".agents/contingut_estructural.json",
+      "before": "b43d4858e5302196efef419494020b5057d1ced709a72775ab1301b5fc4f1d1a",
+      "after": "5fba7edec332a80af680ab7abae2c9813aa30ed2f7927051d50e0a5ecaaa34a0"
+    }
+  ],
+  "state": "accepted",
+  "afterSeal": "d863c155441b09590117b6eb2a6e30dacfebf30e6a62f0b502590644b8434d0f"
+}

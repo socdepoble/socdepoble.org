@@ -45,7 +45,7 @@ import { ExternalLink, Folder, Globe, Trash2 } from 'lucide-react';
 import { useNavigate } from '../../app/contexts/RouterContext';
 import { useToast } from '@/components/universal/NotificationContext.jsx';
 import { useSession } from '../../app/contexts/SessionContext.jsx';
-import { useIdentitat } from '../../app/contexts/IdentitatContext.jsx';
+import { useIdentitatOReserva } from '../../app/contexts/useIdentitatOReserva.js';
 import { useUIActions } from '../../app/contexts/UIContext';
 import { UniversalPage } from '../../components/universal/UniversalPage';
 import { dataHoraDeBarra } from '../../components/universal/editorial.js';
@@ -80,7 +80,8 @@ export function ConnexioDetall({ nota }) {
   const router = useUbicacioApp();
   const { showToast } = useToast();
   const { currentUser } = useSession();
-  const { actor } = useIdentitat();
+  // D-7 · Fora d'IdentitatProvider, la reserva anònima de només lectura (useIdentitatOReserva.js).
+  const { actor } = useIdentitatOReserva();
   const { t } = useUIActions();
   const {
     noteFolders, setLocalNoteField, mouNota, esborraNota, compartirNota, potEsborrar = false, config
@@ -146,7 +147,9 @@ export function ConnexioDetall({ nota }) {
   const bloqueigMur = bloqueigDeNota({ foraster: !currentUser, modeLocal, publicada: compartida, connexio: true });
   const pucCompartirAlMur = Boolean(currentUser && compartirNota && nota?.id && bloqueigMur?.opcio !== 'publica');
   const autoria = autoriaDeLActor(actor, currentUser);
-  const accioMur = compartida ? TEXTOS_MUR.publica.accioIgual : TEXTOS_MUR.publica.accio;
+  const accioMur = compartida
+    ? t('section.notes.connexio.mur.actualitza', TEXTOS_MUR.publica.accioIgual)
+    : t('section.notes.connexio.mur.comparteix', TEXTOS_MUR.publica.accio);
   /* Integració 261024 (Codex C-02) · Si el servidor rebutja la publicació per
      les normes (SDP-MOD-428), la porta de ModeracioContext es torna a obrir i,
      si les accepta, es compartix una sola vegada més. Sense proveïdor, el

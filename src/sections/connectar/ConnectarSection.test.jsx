@@ -1,6 +1,6 @@
 import React from 'react';
-import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
-import { afterEach, beforeEach, expect, test, vi } from 'vitest';
+import { act, cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
+import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 
 /* T5 · Connectar crea una nota amb origen a la safata de les connexions.
    T43 (ordre del Mestre, 260928) · objecte tipat, visibilitat honesta amb
@@ -29,7 +29,9 @@ vi.mock('../../app/contexts/RouterContext', () => ({
   Link: ({ to, children, ...rest }) => React.createElement('a', { href: to, ...rest }, children)
 }));
 vi.mock('@/components/universal/NotificationContext.jsx', () => ({ useToast: () => ({ showToast: mocks.toast }) }));
-vi.mock('../../app/contexts/UIContext', () => ({ useUIActions: () => ({ t: mocks.t }) }));
+/* P1-22 (assalt 261101, T5b) · També l'accés opcional (useTraductorOpcional): el resum i
+   useAplicaAbast parlen la mateixa llengua que la vista. Amb el `t` de reserva, el valencià de sempre. */
+vi.mock('../../app/contexts/UIContext', () => ({ useUIActions: () => ({ t: mocks.t }), useUIActionsOpcional: () => ({ t: mocks.t }) }));
 vi.mock('../../app/contexts/SessionContext', () => ({ useSession: () => ({ currentUser: mocks.user }) }));
 vi.mock('../../app/contexts/IdentitatContext.jsx', () => ({ useIdentitat: () => mocks.identitat }));
 vi.mock('../xat/XatContext.jsx', () => ({ useXat: () => mocks.xat }));
@@ -1052,4 +1054,189 @@ test('PS-11 · l’etiqueta passa pel traductor; amb títol a l’URL, la target
   mocks.params = new URLSearchParams('title=element-desconegut');
   render(<ConnectarSection />);
   expect(screen.getByRole('heading', { name: 'element-desconegut' })).toBeTruthy();
+});
+
+/* P1-22 (assalt 261101, T5b) · /connectar sencer en les cinc llengües: amb el
+   traductor de veres (createTranslator i els cinc diccionaris), cap text de la
+   vista es queda en valencià, llevat del nom de la carpeta, que és de Notes. */
+const VALENCIA_DE_LA_VISTA = [
+  'Privacitat de la connexió', 'Qui ho pot vore?', 'Persones concretes', 'Tot el poble', 'On arriba',
+  'Per defecte, tota connexió', 'Opcional: la connexió', 'Categoria nova', 'Afegir categoria',
+  'Assistent de context', 'La IAIA et suggereix', 'Etiqueta lliure', 'Història local', 'Gent del Poble',
+  'A les teues notes la llegiràs', 'Es connecta a', 'Producte del Mercat', 'Triada'
+];
+
+describe('P1-22 · Connectar en cinc llengües', () => {
+  test.each(['es', 'en', 'eu', 'gl'])('%s · el títol, la privacitat, les carpetes, les etiquetes i el peu ixen del diccionari', (code) => {
+    const t = createTranslator(code);
+    mocks.t = t;
+    const { container } = render(<ConnectarSection />);
+    expect(screen.getByRole('heading', { level: 1 }).textContent).toBe(t('section.connectar.kicker', ''));
+    expect(screen.getByRole('group', { name: t('section.connectar.abast.llegenda', '') })).toBeTruthy();
+    expect(screen.getByRole('radio', { name: t('section.connectar.abast.persones', '') })).toBeTruthy();
+    expect(screen.getByRole('heading', { name: t('section.connectar.privacy', '') })).toBeTruthy();
+    expect(screen.getByRole('list', { name: t('section.connectar.etiquetes.llista', '') })).toBeTruthy();
+    expect(screen.getByRole('button', { name: t('section.connectar.suggerida.patrimoni', '') })).toBeTruthy();
+    expect(screen.getByRole('textbox', { name: t('section.connectar.etiquetes.lliure', '') })).toBeTruthy();
+    expect(screen.getByText(t('section.connectar.objecte.producte', ''))).toBeTruthy();
+    for (const text of VALENCIA_DE_LA_VISTA) expect(container.textContent, `${code}: ${text}`).not.toContain(text);
+    /* El nom de la carpeta és de Notes (residual de P1-22): es queda com està. */
+    expect(screen.getByRole('button', { name: `${t('section.connectar.connect', '')} «${SAFATA}»` })).toBeTruthy();
+    expect(container.textContent).not.toMatch(/\bMAS/);
+  });
+
+  test('es · el botó principal, el camp del padró, el límit i el peu dels enviaments, en castellà', async () => {
+    mocks.t = createTranslator('es');
+    mocks.xat.cercaMembres.mockResolvedValue([{ usuari_id: 'u1', nom: 'Toni Ferrer', tipus: 'persona', fil_id: null }, { usuari_id: 'e1', nom: 'Colla', tipus: 'entitat' }]);
+    render(<ConnectarSection />);
+    expect(screen.getByRole('button', { name: `Conectar a «${SAFATA}»` })).toBeTruthy();
+    expect(screen.getByText('En tus notas la leerás y podrás editarla como una nota tuya.')).toBeTruthy();
+    fireEvent.click(screen.getByRole('radio', { name: 'Personas concretas' }));
+    expect(screen.getByRole('textbox', { name: 'Busca en el padrón del pueblo' })).toBeTruthy();
+    expect(screen.getByText(/^Elige hasta 20 personas\./)).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Conectar y enviar a 0 personas' }).disabled).toBe(true);
+    expect(screen.getByText('Elige al menos una persona del padrón.')).toBeTruthy();
+    fireEvent.click(await screen.findByRole('button', { name: 'Toni Ferrer' }));
+    expect(screen.getByRole('button', { name: 'Colla · entidad' })).toBeTruthy();
+    expect(screen.getByText('1 de 20 personas elegidas.')).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Quita a Toni Ferrer de la lista' })).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Conectar y enviar a 1 persona' })).toBeTruthy();
+    expect(screen.getByText('El envío por chat no se puede deshacer.')).toBeTruthy();
+  });
+
+  test('es · grups de xat: el missatge del xat i el resum ixen en la llengua de qui connecta', async () => {
+    mocks.t = createTranslator('es');
+    mocks.xat.chatThreads = [{ id: 'g1', tipus: 'grup', name: 'Comissió de Festes' }, { id: 'g2', tipus: 'grup' }];
+    render(<ConnectarSection />);
+    fireEvent.click(screen.getByRole('radio', { name: 'Grupos de chat' }));
+    expect(screen.getByRole('group', { name: 'Grupos de chat en los que ya estás (hasta 10)' })).toBeTruthy();
+    expect(screen.getByRole('checkbox', { name: 'Grupo sin nombre' })).toBeTruthy();
+    fireEvent.click(screen.getByRole('checkbox', { name: 'Comissió de Festes' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Conectar y enviar a 1 grupo' }));
+    await screen.findByText('Enviado por chat.');
+    const [, text] = mocks.xat.sendChatMessage.mock.calls[0];
+    expect(text).toMatch(/^Te envío «Samarreta» \(de Sóc de Poble\), que he guardado en mis notas\. Puedes verlo aquí: \S+\/mercat\/samarreta-socdepoble$/);
+    const resum = screen.getByRole('status');
+    expect(resum.textContent).toContain('Tus notas');
+    expect(resum.textContent).toContain(`Conectada a «${SAFATA}».`);
+    expect(resum.textContent).toContain('Hecho');
+    expect(resum.textContent).not.toMatch(/Les teues notes|Connectada|Fet\b/);
+    expect(screen.getByRole('button', { name: 'Abrir la conexión en tus notas' })).toBeTruthy();
+  });
+
+  test('en · l’error del servidor sense la columna de l’origen, traduït i sense el missatge cru', async () => {
+    mocks.t = createTranslator('en');
+    mocks.crea.mockRejectedValue(Object.assign(new Error('PGRST204 origen'), { codi: 'esquema-absent' }));
+    render(<ConnectarSection />);
+    await act(async () => { fireEvent.click(screen.getByRole('button', { name: `Connect to «${SAFATA}»` })); });
+    const avis = await screen.findByRole('alert');
+    expect(avis.textContent).toContain('Could not connect');
+    expect(avis.textContent).toContain('This town’s server does not accept connections yet');
+    expect(avis.textContent).not.toContain('PGRST204');
+  });
+
+  test('gl · sense sessió en remot: el Mode Foraster i el botó d’entrar, del diccionari', () => {
+    mocks.t = createTranslator('gl');
+    mocks.user = null;
+    mocks.canCreate = false;
+    render(<ConnectarSection />);
+    expect(screen.getByText('Modo Forasteiro activo', { selector: '.sdp-alerta__titol' })).toBeTruthy();
+    expect(screen.getByText('Para conectar tes que entrar na túa conta.')).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Entra para conectar' })).toBeTruthy();
+  });
+
+  test('eu · un contingut de fora: el tipus, d’on ve, el motiu i el peu, sense cap sufix enganxat', () => {
+    mocks.t = createTranslator('eu');
+    mocks.params = new URLSearchParams({ url: 'https://exemple.org/recepta?id=7', title: 'Coca de llanda' });
+    const vista = render(<ConnectarSection />);
+    expect(screen.getByText('Sóc de Pobletik kanpoko esteka')).toBeTruthy();
+    expect(screen.getByText('Iturria: exemple.org')).toBeTruthy();
+    expect(screen.getByText(/^Ohar berri gisa iristen da hona: «Safata d’Entrada»\./)).toBeTruthy();
+    expect(screen.getByRole('heading', { level: 1 }).textContent).toBe('Konektatu');
+    vista.unmount();
+    mocks.params = new URLSearchParams({ url: 'ftp://exemple.org/a', title: 'Trampa' });
+    render(<ConnectarSection />);
+    expect(screen.getByText('Esteka hau ezin da konektatu', { selector: '.sdp-alerta__titol' })).toBeTruthy();
+    expect(screen.getByText('Web helbideak bakarrik konekta daitezke (http edo https).')).toBeTruthy();
+  });
+
+  /* Gauntlet T5b-G01 · La ruta de fora també tradueix el toast d'èxit i l'error del
+     servidor: sense estes dues asercions, tornar-hi el literal valencià passava en verd. */
+  test('eu · un contingut de fora: el toast d’èxit i l’error del servidor sense la columna de l’origen, del diccionari', async () => {
+    mocks.t = createTranslator('eu');
+    mocks.params = new URLSearchParams({ url: 'https://exemple.org/recepta?id=7', title: 'Coca de llanda' });
+    const vista = render(<ConnectarSection />);
+    await act(async () => { fireEvent.click(screen.getByRole('button', { name: `Konektatu «${SAFATA}»` })); });
+    await waitFor(() => expect(mocks.crea).toHaveBeenCalledTimes(1));
+    expect(mocks.toast).toHaveBeenCalledWith(`Hemen konektatuta: «${SAFATA}». Zure oharra da: edita dezakezu.`, 'success');
+    vista.unmount();
+    mocks.toast.mockClear();
+    mocks.crea.mockRejectedValue(Object.assign(new Error('PGRST204 origen'), { codi: 'esquema-absent' }));
+    render(<ConnectarSection />);
+    await act(async () => { fireEvent.click(screen.getByRole('button', { name: `Konektatu «${SAFATA}»` })); });
+    const avis = await screen.findByRole('alert');
+    expect(avis.textContent).toContain('Esteka ez da konektatu');
+    expect(avis.textContent).toContain('Herri honetako zerbitzariak ez ditu oraindik konexioak onartzen');
+    expect(avis.textContent).not.toMatch(/PGRST204|El servidor d’este poble/);
+    expect(mocks.toast).not.toHaveBeenCalled();
+  });
+
+  test('les claus noves amb {nom} o {lloc} el porten una sola vegada i, en basc, sense cap sufix enganxat', () => {
+    const AMB_NOM = ['section.connectar.de', 'section.connectar.esConnectaA', 'section.connectar.padro.entitat',
+      'section.connectar.padro.lleva', 'section.connectar.etiquetes.lleva'];
+    for (const { code } of SUPPORTED_LANGUAGES) {
+      const t = createTranslator(code);
+      for (const clau of AMB_NOM) {
+        expect(FONTS_PER_IDIOMA[code], `${code} ${clau}`).toContain(`'${clau}':`);
+        expect(t(clau, '').split('{nom}'), `${code} ${clau}`).toHaveLength(2);
+        expect(t(clau, ''), `${code} ${clau}`).not.toMatch(/\{nom\}-/);
+      }
+      expect(t('section.connectar.extern.de', '').split('{lloc}'), code).toHaveLength(2);
+    }
+  });
+});
+
+/* P1-15 (assalt 261101, T5b) · Els resultats del padró s'anuncien (una regió
+   viva sense rol, sempre muntada al panell) i les carpetes són un grup amb nom. */
+describe('P1-15 · regions vives i grups amb nom', () => {
+  test('les carpetes són un grup que es diu «On arriba» i conté els botons de cada carpeta', () => {
+    render(<ConnectarSection />);
+    const grup = screen.getByRole('group', { name: 'On arriba' });
+    expect(grup.classList.contains('sdp-connectar__carpetes')).toBe(true);
+    expect(within(grup).getByRole('button', { name: SAFATA }).getAttribute('aria-pressed')).toBe('true');
+    expect(within(grup).getByRole('button', { name: 'Mur' })).toBeTruthy();
+  });
+
+  test('cap resultat: la regió diu «Resultats al padró: 0.», el text visible no es duplica i no hi ha cap status de més', async () => {
+    render(<ConnectarSection />);
+    fireEvent.click(screen.getByRole('radio', { name: 'Persones concretes' }));
+    const regio = await screen.findByText('Resultats al padró: 0.');
+    expect(regio.getAttribute('aria-live')).toBe('polite');
+    expect(regio.getAttribute('role')).toBeNull();
+    expect(regio.classList.contains('sdp-nomes-lector')).toBe(true);
+    expect(screen.getAllByText('Ningú del padró coincidix amb la cerca.')).toHaveLength(1);
+    expect(screen.queryAllByRole('status')).toHaveLength(0);
+  });
+
+  test('la regió és la mateixa de principi a fi: buida mentre busca i amb el nombre quan arriba', async () => {
+    let respon;
+    mocks.xat.cercaMembres.mockImplementation(() => new Promise((resol) => { respon = resol; }));
+    const { container } = render(<ConnectarSection />);
+    fireEvent.click(screen.getByRole('radio', { name: 'Persones concretes' }));
+    const regio = container.querySelector('.sdp-connectar__panell .sdp-nomes-lector[aria-live="polite"]');
+    expect(regio).toBeTruthy();
+    await screen.findByText('Buscant al padró…');
+    expect(regio.textContent).toBe('');
+    await act(async () => { respon([{ usuari_id: 'u1', nom: 'Toni Ferrer', tipus: 'persona' }, { usuari_id: 'u2', nom: 'Rosa Pla', tipus: 'persona' }]); });
+    expect(regio.textContent).toBe('Resultats al padró: 2.');
+    expect(container.querySelector('.sdp-connectar__panell .sdp-nomes-lector[aria-live="polite"]')).toBe(regio);
+  });
+
+  test('un padró que falla sense missatge diu el motiu de reserva, en la llengua de qui mira', async () => {
+    mocks.t = createTranslator('es');
+    mocks.xat.cercaMembres.mockRejectedValue(new Error(''));
+    render(<ConnectarSection />);
+    fireEvent.click(screen.getByRole('radio', { name: 'Personas concretas' }));
+    expect((await screen.findByRole('alert')).textContent).toContain('No se ha podido abrir el padrón del pueblo.');
+  });
 });

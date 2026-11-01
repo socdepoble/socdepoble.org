@@ -14,6 +14,8 @@ import {
 } from './contracte.js';
 /* T6b (IDEA-14) · Els seguiments: import a banda, pel mateix motiu. */
 import { MISSATGES_SEGUIMENTS, TIPUS_SEGUIT, comDelContracte, errorDeSeguiment, seguitDelContracte } from './contracte.js';
+/* T8b · P0-23 (BOT-A2) · La versió de l'app nativa: import a banda, pel mateix motiu. */
+import { VERSIO_CLIENT_NATIU } from './contracte.js';
 /* L'adaptador Supabase sencer es valida a supabase/index.test.js: E1 de
    tractor-enxufe no deixa importar-lo des d'ací, tampoc en una prova. */
 
@@ -99,6 +101,43 @@ test('T63.2 · xatDePagina és una capacitat opcional d’un mètode, fora del n
   expect(CONTRACTE_NUCLI).not.toContain('obriFilDePagina');
   expect(CONTRACTE_NUCLI).toHaveLength(32);
   expect(CONTRACTE_BACKEND).toContain('obriFilDePagina');
+});
+
+/* T8b · P0-23 (BOT-A2; assalt 261101) · la versió mínima de l'app nativa:
+   opcional, d'un mètode i fora del nucli; la versió del client és un enter,
+   el 2 o més (el build 1 no porta la porta). */
+test('P0-23 · versioClient és una capacitat opcional d’un mètode, fora del nucli, i un backend sense ella continua sent vàlid', () => {
+  expect(CAPACITATS.versioClient).toEqual(['versioMinimaClient']);
+  expect(Object.isFrozen(CAPACITATS.versioClient)).toBe(true);
+  expect(CONTRACTE_NUCLI).not.toContain('versioMinimaClient');
+  expect(CONTRACTE_BACKEND).toContain('versioMinimaClient');
+  expect(Number.isSafeInteger(VERSIO_CLIENT_NATIU) && VERSIO_CLIENT_NATIU >= 2).toBe(true);
+  port.setBackendImplementation(nucli());
+  expect(port.teCapacitat('versioClient')).toBe(false);
+  expect(() => port.versioMinimaClient('ios', {})).toThrow('no està implementat');
+  port.setBackendImplementation({ ...nucli(), ...capacitat('versioClient') });
+  expect(port.teCapacitat('versioClient')).toBe(true);
+  expect(port.versioMinimaClient('ios', {})).toBe('versioMinimaClient');
+});
+
+/* T2 · D04/D10 (assalt 261101; pla 261101_1246, D-3) · les dades obertes i
+   la seua restauració: dues capacitats d'un mètode, fora del nucli, separades
+   a posta (un servidor que només llig continua sent vàlid). */
+test('T2 · dadesObertes i restauracioDadesObertes són capacitats separades d’un mètode, i el port en delega els dos', async () => {
+  const { COLECCIONS_DADES_OBERTES, LIMIT_DADES_OBERTES } = await import('./contracte.js');
+  expect(CAPACITATS.dadesObertes).toEqual(['llegixDadesObertes']);
+  expect(CAPACITATS.restauracioDadesObertes).toEqual(['restauraDadesObertes']);
+  expect(Object.isFrozen(CAPACITATS.dadesObertes) && Object.isFrozen(CAPACITATS.restauracioDadesObertes)).toBe(true);
+  expect(CONTRACTE_NUCLI).not.toContain('llegixDadesObertes');
+  expect(CONTRACTE_NUCLI).not.toContain('restauraDadesObertes');
+  expect(COLECCIONS_DADES_OBERTES).toEqual(['noticies', 'agenda', 'memoria', 'memoriaOral']);
+  expect(Number.isSafeInteger(LIMIT_DADES_OBERTES) && LIMIT_DADES_OBERTES > 0).toBe(true);
+  port.setBackendImplementation({ ...nucli(), ...capacitat('dadesObertes') });
+  expect([port.teCapacitat('dadesObertes'), port.teCapacitat('restauracioDadesObertes')]).toEqual([true, false]);
+  expect(port.llegixDadesObertes({ poble: { slug: 'sella', nom: 'Sella' } }, {})).toBe('llegixDadesObertes');
+  expect(() => port.restauraDadesObertes({}, {})).toThrow('no està implementat');
+  port.setBackendImplementation({ ...nucli(), ...capacitat('dadesObertes'), ...capacitat('restauracioDadesObertes') });
+  expect(port.restauraDadesObertes({}, {})).toBe('restauraDadesObertes');
 });
 
 test('T63.2 · un backend sense xatDePagina continua sent vàlid i no el pot cridar', () => {

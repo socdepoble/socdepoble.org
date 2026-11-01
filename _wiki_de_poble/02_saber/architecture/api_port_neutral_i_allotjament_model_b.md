@@ -5,8 +5,8 @@ description: Inventari verificable del port i requisits d'allotjament Model B
 ---
 # API del port neutral i allotjament Model B
 
-Contrast: Ronda 2 `c3a2c6bba` (`src/data/contracte.js` idèntic al de la Ronda 1
-`dea840764`), 31-10-2026. Esborrany. Inventari de codi; no acredita
+Contrast: arbre de l'assalt 261101_1246 (torn_3f5652a2; el hash del commit es posa
+en fer-lo), 01-11-2026. Esborrany. Inventari de codi; no acredita
 cap nou desplegament ni l'aprovació d'una ADR. Les signatures i DTO són a
 `src/data/contracte.js` i a les implementacions; la llista següent enumera noms.
 
@@ -47,9 +47,9 @@ Font: `src/data/contracte.js`. Una implementació vàlida les oferix totes:
 - `subscribeToXat`
 - `unsubscribeFromXat`
 
-## 31 capacitats atòmiques opcionals (`CAPACITATS`)
+## 34 capacitats atòmiques opcionals (`CAPACITATS`)
 
-79 mètodes addicionals; 111 mètodes en `CONTRACTE_BACKEND`. Una capacitat
+82 mètodes addicionals; 114 mètodes en `CONTRACTE_BACKEND`. Una capacitat
 està disponible només si el port disposa de tots els seus mètodes. No hi ha
 un camp `capacitats` obligatori a l'adaptador ni `capacitatsDisponibles()`.
 
@@ -76,6 +76,7 @@ un camp `capacitats` obligatori a l'adaptador ni `capacitatsDisponibles()`.
 | `contacteOrganitzacio` | `llegeixContacteOrganitzacio`, `desaContacteOrganitzacio` |
 | `xatDePagina` | `obriFilDePagina` |
 | `salut` | `comprovaServidor` |
+| `versioClient` | `versioMinimaClient` |
 | `recuperacioContrasenya` | `demanaRecuperacioContrasenya`, `definixContrasenyaNova` |
 | `entradaAmbToken` | `entraAmbTokenDeProveidor` |
 | `membresOrganitzacio` | `llistaMembresOrganitzacio`, `desaMembreOrganitzacio`, `llevaMembreOrganitzacio` |
@@ -86,6 +87,8 @@ un camp `capacitats` obligatori a l'adaptador ni `capacitatsDisponibles()`.
 | `seguiments` | `segueix`, `deixaDeSeguir`, `estatSeguiment`, `elsMeusSeguiments`, `quiEmSegueix` |
 | `titularPublic` | `loadTitularPublic` |
 | `consentimentTitular` | `estatTitularPublic`, `marcaTitularPublic` |
+| `dadesObertes` | `llegixDadesObertes` |
+| `restauracioDadesObertes` | `restauraDadesObertes` |
 
 ## Validació i conformitat
 
@@ -97,7 +100,7 @@ getters i capacitats parcials. No és una prova funcional d'un servidor remot.
 `src/data/conformitat/kit.js` exporta `CASOS`, `contextDeConformitat`,
 `executaCas` i `metodesSenseCas`. Els casos tornen `ok`, `falla` o `omés`.
 Les omissions i `metodesSenseCas()` fan visible la cobertura pendent; no es
-pot dir que les 111 operacions tinguen comportament certificat. Les proves
+pot dir que les 114 operacions tinguen comportament certificat. Les proves
 són `src/data/conformitat/kit.test.js` i `qualitat.test.js` en eixa carpeta.
 No hi ha les API `verificaContracteBackend` o `executaKitDeConformitat`.
 

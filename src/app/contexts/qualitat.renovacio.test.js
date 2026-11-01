@@ -33,7 +33,14 @@ const FITXERS = Object.freeze([
      que cap porta qualitat no vigilava: la neteja d'App.jsx i la
      sincronització del tema entre instàncies (UIContext). */
   'src/app/App.neteja.test.jsx',
-  'src/app/contexts/UIContext.tema.test.jsx'
+  'src/app/contexts/UIContext.tema.test.jsx',
+  /* D-7 (pla 261101_1246; P1-71) · La reserva anònima de només lectura, el
+     ganxo que la servix i les proves dels proveïdors sense IdentitatProvider. */
+  'src/app/contexts/identitatDeReserva.js',
+  'src/app/contexts/useIdentitatOReserva.js',
+  'src/app/contexts/useIdentitatOReserva.test.jsx',
+  'src/app/contexts/proveidorsDeLArrel.senseIdentitat.test.jsx',
+  'src/sections/mur/MurContext.senseIdentitat.test.jsx'
 ]);
 
 describe('el cens', () => {

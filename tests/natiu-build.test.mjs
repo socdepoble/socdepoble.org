@@ -23,11 +23,13 @@ import configNatiu, {
   indexNatiuPlugin,
   nomsDeclarats,
   politicaDeMitjansNativa,
+  segellNatiuPlugin,
   transformaIndexNatiu
 } from '../vite.natiu.config.js';
 import { PROPIS_DEL_LLOC, esHostLocal, politicaDeMitjans, recursosDelPlugin } from '../vite.standalone.config.js';
 import { bessonaDe } from '../src/config/politicaDeMitjans.js';
 import { esquemaInvertitDeGoogleIos } from '../src/config/publicCredentials.js';
+import { SEGELL } from '../scripts/botigues/entorn.mjs';
 
 /* El build de l'app nativa (ARQUITECTURA.txt §4.4 i §5, 261003) es prova amb
    FIXTURES, com tests/standalone-build.test.mjs: les peces pures sobre
@@ -297,6 +299,30 @@ test('errorsEntornNatiu: els clients natius de Google, si hi són, amb la forma 
   assert.match(mateix[0], /dos clients diferents/);
 });
 
+/* D-10 (pla 261101_1246, BOT-A3) · src/natiu/entrada.jsx només encén «Continua amb Apple»
+   amb VITE_APPLE_OAUTH_ACTIU exactament 'true'. Un valor ambigu l'amagaria sense avís:
+   el build el rebutja abans de compilar. Absent, buit o 'false': apagat i sense error. */
+test('errorsEntornNatiu: VITE_APPLE_OAUTH_ACTIU, si hi és, només true o false', () => {
+  const net = { VITE_SUPABASE_URL: ORIGEN, VITE_SUPABASE_ANON_KEY: CLAU };
+  for (const valor of [undefined, '', 'true', 'false']) {
+    assert.deepEqual(errorsEntornNatiu({ ...net, VITE_APPLE_OAUTH_ACTIU: valor }), [], String(valor));
+  }
+  for (const valor of ['1', 'yes', 'TRUE', 'True', ' true', 'true ', 'sí', '0']) {
+    const errors = errorsEntornNatiu({ ...net, VITE_APPLE_OAUTH_ACTIU: valor });
+    assert.deepEqual(errors, ['VITE_APPLE_OAUTH_ACTIU només admet true o false: amb qualsevol altre valor el botó d’Apple quedaria amagat sense avís.'], JSON.stringify(valor));
+  }
+  ambEntornNatiu({ ...net, VITE_APPLE_OAUTH_ACTIU: 'TRUE' }, () => {
+    assert.throws(() => configNatiu({ mode: MODE_NATIU, command: 'build' }), /VITE_APPLE_OAUTH_ACTIU només admet true o false/);
+  });
+  ambEntornNatiu({ ...net, VITE_APPLE_OAUTH_ACTIU: 'true' }, () => {
+    assert.equal(configNatiu({ mode: MODE_NATIU, command: 'build' }).build.outDir, DIRECTORI_NATIU);
+  });
+  // El flag tampoc s'hereta d'un .env.local de desenvolupament: o el declara .env.natiu*, o el procés.
+  ambEntornNatiu({ VITE_APPLE_OAUTH_ACTIU: undefined }, () => {
+    assert.throws(() => configNatiu({ mode: MODE_NATIU, command: 'build' }), /de \.env o \.env\.local: VITE_APPLE_OAUTH_ACTIU\./);
+  }, { '.env.local': 'VITE_APPLE_OAUTH_ACTIU=true\n', '.env.natiu.local': `VITE_SUPABASE_URL=${ORIGEN}\nVITE_SUPABASE_ANON_KEY=${CLAU}\n` });
+});
+
 test('esquemaInvertitDeGoogleIos: l\'esquema d\'un client d\'iOS ben format, o null', () => {
   assert.equal(esquemaInvertitDeGoogleIos(GOOGLE_IOS), 'com.googleusercontent.apps.123-iosabc');
   assert.equal(esquemaInvertitDeGoogleIos(`  ${GOOGLE_IOS}\n`), 'com.googleusercontent.apps.123-iosabc', 'sense espais');
@@ -342,8 +368,10 @@ test('nomsDeclarats i heretadesDelLloc: només noms, i només les VITE_* amb val
 
 /* ─────────────────────────── La config sencera ─────────────────────────── */
 
+/* D-10 · VITE_APPLE_OAUTH_ACTIU també: el flag pot anar al procés del build, i un valor
+   exportat al shell que llança les proves no ha de fer caure les de la config. */
 const CLAUS_VIGILADES = ['VITE_SUPABASE_URL', 'VITE_SUPABASE_ANON_KEY', 'VITE_TENANT_ID', 'VITE_GOOGLE_OAUTH_CLIENT_ID',
-  'VITE_NATIU_GOOGLE_WEB_CLIENT_ID', 'VITE_NATIU_GOOGLE_IOS_CLIENT_ID'];
+  'VITE_NATIU_GOOGLE_WEB_CLIENT_ID', 'VITE_NATIU_GOOGLE_IOS_CLIENT_ID', 'VITE_APPLE_OAUTH_ACTIU'];
 
 /**
  * Avalua `funcio` amb un entorn controlat: process.env només porta les claus
@@ -397,6 +425,9 @@ test('la config: dist-natiu buidat, es2022, mode natiu, base /, sense copyPublic
     assert.equal(index.length, 1);
     assert.equal(index[0].apply, 'build');
     assert.equal(index[0].transformIndexHtml.order, 'pre', 'abans que Vite busque l\'entrada a l\'HTML');
+    const segell = plugins.filter((p) => p.name === 'sdp-segell-natiu');
+    assert.equal(segell.length, 1, 'BOT-A4: el build segella dist-natiu/');
+    assert.equal(segell[0].apply, 'build');
     const html = index[0].transformIndexHtml.handler(INDEX);
     assert.deepEqual(directives(cspDe(html))['connect-src'], ["'self'", 'data:', ORIGEN, WSS], 'el backend de VITE_SUPABASE_URL');
     // La previsualització de dist-natiu/ també val.
@@ -688,7 +719,36 @@ test('vite.natiu.config.js no importa res de Capacitor ni de src/natiu/: es pot 
   assert.ok(!codi.includes(CAP), 'cap Capacitor');
   const especificadors = [...codi.matchAll(/\bfrom\s*['"]([^'"]+)['"]/g)].map((m) => m[1]).sort();
   // Revisió final 261029 (OG-03) · imatgeSocial.js és una fulla sense imports (com publicCredentials.js): el mapa de variants socials exclou del paquet les imatges que només van al <head>.
-  assert.deepEqual(especificadors, ['./src/config/imatgeSocial.js', './src/config/publicCredentials.js', './vite.standalone.config.js', '@vitejs/plugin-react', 'fs', 'path', 'url', 'vite']);
+  // BOT-A4 (261025, rebasat a l'assalt 261101) · entorn.mjs dona el segell de dist-natiu/ (SEGELL i segellDelArbre): només mòduls de Node.
+  assert.deepEqual(especificadors, ['./scripts/botigues/entorn.mjs', './src/config/imatgeSocial.js', './src/config/publicCredentials.js', './vite.standalone.config.js', '@vitejs/plugin-react', 'fs', 'path', 'url', 'vite']);
+});
+
+/* BOT-A4 (261025) · El segell es pren en començar el build, de l'arrel de la config, i ix a
+   dist-natiu/ amb el nom que llig el preflight de les botigues. En acabar es torna a mirar
+   l'arbre: un commit o un canvi entremig el deixen brut. El contrast amb HEAD i el paquet
+   caducat es proven a tests/botigues.test.mjs. */
+test('segellNatiuPlugin: pren el segell en començar, el torna a mirar en acabar i l\'emet a dist-natiu/segell.json', () => {
+  assert.deepEqual([...SEGELL], [DIRECTORI_NATIU, 'segell.json'], 'el preflight el busca on el deixa el build');
+  const inici = { commit: 'a'.repeat(40), arbreNet: true, data: '2026-10-25T10:00:00.000Z' };
+  const emet = (final) => {
+    const arrels = [];
+    const vistos = [inici, final];
+    const connector = segellNatiuPlugin({ arrel: '/arrel/de/prova', segella: (arrel) => { arrels.push(arrel); return vistos.shift(); } });
+    assert.equal(connector.name, 'sdp-segell-natiu');
+    assert.equal(connector.apply, 'build');
+    const emesos = [];
+    connector.buildStart();
+    assert.deepEqual(arrels, ['/arrel/de/prova'], 'en començar');
+    connector.generateBundle.call({ emitFile: (fitxer) => emesos.push(fitxer) });
+    assert.deepEqual(arrels, ['/arrel/de/prova', '/arrel/de/prova'], 'i en acabar');
+    return emesos;
+  };
+  const asset = (segell) => [{ type: 'asset', fileName: 'segell.json', source: `${JSON.stringify(segell, null, 2)}\n` }];
+  // La data és la de l'inici; el final diu si l'arbre ha continuat net i al mateix commit.
+  assert.deepEqual(emet({ ...inici, data: '2026-10-25T10:05:00.000Z' }), asset(inici));
+  assert.deepEqual(emet({ ...inici, arbreNet: false }), asset({ ...inici, arbreNet: false }), 'un canvi sense cometre mentre es compilava');
+  assert.deepEqual(emet({ ...inici, commit: 'b'.repeat(40) }), asset({ ...inici, arbreNet: false }), 'un commit mentre es compilava');
+  assert.deepEqual(emet({ ...inici, arbreNet: 'true' }), asset({ ...inici, arbreNet: false }), 'només un true de debò');
 });
 
 /* Fase D (261020, revisió) · La frescor de les eixides, sobre un arbre de mostra

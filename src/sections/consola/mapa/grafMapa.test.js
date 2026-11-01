@@ -9,6 +9,7 @@ import {
 } from './grafMapa.js';
 import { ExploradorMapa } from './ExploradorMapa.jsx';
 import { PrivacitatConsola } from '../peces.jsx';
+import { carregaWikiManifest } from '../../../data/carregaWikiManifest.js';
 
 /* El canvas té les seues proves (BrainGraph.test.jsx). Ací només importa què
    rep el graf i on queda respecte de la cerca, dels filtres i del detall. */
@@ -414,14 +415,23 @@ describe('Explorador: el detall de la peça (T4)', () => {
     expect(screen.getByRole('combobox', { name: 'Tria una peça' }).value).toBe(PLANTILLA);
   });
 
-  test('«Obrir a la Wiki» només per a un document publicat, i navega dins de l’app', () => {
+  test('«Obrir a la Wiki» només per a un document publicat, i navega dins de l’app', async () => {
     const { container } = pinta();
     tria(PLANTILLA);
-    fireEvent.click(within(detall(container)).getByRole('button', { name: 'Obrir a la Wiki' }));
+    // T4a-C (261101) · La Wiki compilada arriba amb import(): el botó hi és quan arriba.
+    fireEvent.click(await within(detall(container)).findByRole('button', { name: 'Obrir a la Wiki' }));
     expect(navega).toHaveBeenCalledWith('/wikidepoble?item=prompt_local');
     // Una skill no es publica a la Wiki: cap botó que no porte enlloc.
     tria('skill:wiki-documentacio-i-reflex');
     expect(within(detall(container)).queryByRole('button', { name: 'Obrir a la Wiki' })).toBeNull();
+  });
+
+  test('tornar a l’Explorador amb la Wiki ja arribada pinta «Obrir a la Wiki» de colp, sense cap fotograma sense', async () => {
+    await carregaWikiManifest();
+    const { container } = pinta();
+    tria(PLANTILLA);
+    // getBy, no findBy: entre el pintat i la pregunta no corre cap microtasca.
+    expect(within(detall(container)).getByRole('button', { name: 'Obrir a la Wiki' })).toBeTruthy();
   });
 
   test('«Obrir a l’editor» demana a Vite que l’obriga i el toast no diu «obert»', async () => {

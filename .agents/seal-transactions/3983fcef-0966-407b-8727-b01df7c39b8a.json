@@ -1,0 +1,22 @@
+{
+  "id": "3983fcef-0966-407b-8727-b01df7c39b8a",
+  "session": "448f9587-4a6a-40f6-b370-b77d3588ff8f",
+  "operationId": "torn_3f5652a2-assalt_deu_deu_correccio_hora_entrada_estat_i_ledger_torn-448f9587",
+  "claim": "448f9587-4a6a-40f6-b370-b77d3588ff8f:governance-write",
+  "planHash": "4e234edfb4412b3add9d7f5b8045bf40a713f27f173c285bcedd1800e6c0edfd",
+  "beforeSeal": "15a497e17871c2ec41768dac6921c6ae179dcde09917f4abd32ed59d41927def",
+  "files": [
+    {
+      "path": ".agents/ESTAT.md",
+      "before": "dd13da9d476abadec1cad35f846a6a91ada6326e2a7c54f1364d5b3223827381",
+      "after": "c17c4dac793959484a541d7e9ea91b06df0e347db252d9857e9c8cfdfc55e342"
+    },
+    {
+      "path": ".agents/LEDGER.md",
+      "before": "481034e6ca18579efe85704b259c368afad338dc89fe7615dbf6057c7bb6c5cb",
+      "after": "c897d5e96575a1aa300624dc8dc615ab908fe9a4b122e5ae26a24de9bc414994"
+    }
+  ],
+  "state": "accepted",
+  "afterSeal": "d863c155441b09590117b6eb2a6e30dacfebf30e6a62f0b502590644b8434d0f"
+}

@@ -21,6 +21,16 @@ export const ETIQUETES_TIPUS = Object.freeze({
   organitzacio: 'Organització',
 });
 
+/* T5a · P1-22 (assalt 261101) · Els tipus en parells [clau i18n, reserva]
+   per al traductor; la reserva és l'etiqueta de dalt, lletra per lletra. */
+export const PARELLS_TIPUS = Object.freeze({
+  persona: Object.freeze(['section.perfil.membres.tipus.persona', ETIQUETES_TIPUS.persona]),
+  organitzacio: Object.freeze(['section.perfil.membres.tipus.organitzacio', ETIQUETES_TIPUS.organitzacio]),
+});
+
+/** El parell d'un tipus de membre, o null si no és cap dels coneguts. */
+export const parellDeTipus = (tipus) => (Object.hasOwn(PARELLS_TIPUS, tipus) ? PARELLS_TIPUS[tipus] : null);
+
 const ORDRE_ROL = Object.freeze({ owner: 0, admin: 1, member: 2 });
 const ORDRE_TIPUS = Object.freeze({ persona: 0, organitzacio: 1 });
 

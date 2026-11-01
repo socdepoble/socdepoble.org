@@ -1,9 +1,9 @@
-import { useIdentitat } from "../../app/contexts/IdentitatContext.jsx";
+import { useIdentitatOReserva } from "../../app/contexts/useIdentitatOReserva.js";
 import { imatgeLocalComDataUrl } from '../../utils/imageUtils.js';
 import { garantixWebp } from '../../utils/pujadaImatge.js';
 import { useCoreContent } from "../../app/contexts/CoreContentContext.jsx";
 import { useSession } from "../../app/contexts/SessionContext.jsx";
-import { useCallback, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useLocalSandbox } from './useLocalSandbox.js';
 import { useNotes, etiquetesDeNota } from './NotesContext';
 import { useEstatDesamentNota, estatPerAlEditor } from './useEstatDesamentNota.js';
@@ -170,9 +170,13 @@ export default function NotesEditor({ activeNote, onToast = null }) {
     saveNoteField, setLocalNoteField, publishNote, compartirNota, noteFolders, t, config, workspaceKey,
     notes = CAP, notesComplete, mouNota, esborraNota, potEsborrar = false, scopeKey
   } = useNotes();
-  const { actorId, actor, memberships } = useIdentitat();
+  // D-7 · Fora d'IdentitatProvider, la reserva anònima de només lectura (useIdentitatOReserva.js).
+  const { actorId, actor, memberships } = useIdentitatOReserva();
   const { agents, towns, pages, personalitzacio } = useCoreContent();
   const { currentUser, estat: estatSessio, esSuperadmin = false } = useSession();
+  /* P1-20 · D15 (T4a) · El tros de la geo de publishNote (NotesContext) es demana en obrir
+     l'editor: en publicar ja hi és i no depén d'una baixada nova. És un import(), no estàtic. */
+  useEffect(() => { import('./geoDeLesFotos.js').catch(() => {}); }, []);
   /* Onada 11 · Les llistes de sèrie, ampliades per la taxonomia del poble si n'hi ha. */
   const taxonomia = personalitzacio?.taxonomia?.payload;
   const CATEGORIES_BASE = categoriesBase(taxonomia);

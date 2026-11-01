@@ -3,10 +3,10 @@
   "turn_id": "torn_558abd5e-2f62-41ec-9892-b40065c7739f",
   "actor": "MarIA",
   "scope": "documents",
-  "state": "context_loaded",
-  "revision": 14,
+  "state": "planned",
+  "revision": 24,
   "createdAt": "2026-11-01T02:11:26.459Z",
-  "updatedAt": "2026-11-01T03:07:38.076Z",
+  "updatedAt": "2026-11-01T12:04:49.993Z",
   "expiresAt": "2026-11-02T02:11:26.459Z",
   "contractHash": "1839756fa153a68d945b48956d870a4a082ab80adcf874a04dd10fc1327d8c45",
   "humanInventoryVersion": 1,
@@ -4316,9 +4316,90 @@
         "committedAt": "2026-11-01T03:07:38.076Z",
         "documentHash": "91101d73dec0ab46f49a636c40b178792b8538119aad862c526bdef0cb3178df"
       }
+    },
+    "a09350fd-325c-46ee-938a-8fff8def2539": {
+      "id": "a09350fd-325c-46ee-938a-8fff8def2539",
+      "route": "pla.implementacio",
+      "routeVersion": "2.0.0",
+      "file": "_wiki_de_poble/04_escriptori/261101_1246_pla_implementacio_assalt_excel_lencia_10_10_les_15_dimensions_i_deute_llibre_mestre.md",
+      "contractSnapshot": "848e98bbe1f9a4e171e5539af680cf2443fc70eab34319ea4be4e45b480eb6d2",
+      "template": "_wiki_de_poble/03_actuar/plantilles/pla_implementacio.md",
+      "templateHash": "d05074ef89d1ec60596509565d7ac7a1e02b0e2bed1b304311b7fa651b0d23d0",
+      "issuedAt": "2026-11-01T11:46:25.156Z"
+    },
+    "ab2d5904-cafc-4082-853c-a4f4b9b9d481": {
+      "id": "ab2d5904-cafc-4082-853c-a4f4b9b9d481",
+      "route": "pla.implementacio",
+      "routeVersion": "2.0.0",
+      "file": "_wiki_de_poble/04_escriptori/261101_1246_pla_implementacio_assalt_excel_lencia_10_10_les_15_dimensions_i_deute_llibre_mestre.md",
+      "contractSnapshot": "848e98bbe1f9a4e171e5539af680cf2443fc70eab34319ea4be4e45b480eb6d2",
+      "template": "_wiki_de_poble/03_actuar/plantilles/pla_implementacio.md",
+      "templateHash": "d05074ef89d1ec60596509565d7ac7a1e02b0e2bed1b304311b7fa651b0d23d0",
+      "issuedAt": "2026-11-01T11:46:25.199Z",
+      "creation": {
+        "state": "committed",
+        "preparedAt": "2026-11-01T11:46:25.199Z",
+        "committedAt": "2026-11-01T11:46:25.223Z",
+        "documentHash": "d0e01bd57d89027cf254a9c70a2c0398a45047801af37e2e0671de645566d360"
+      }
+    },
+    "c8400528-b2c4-4082-afac-05f851345c6e": {
+      "id": "c8400528-b2c4-4082-afac-05f851345c6e",
+      "route": "prompt.local",
+      "routeVersion": "3.11.0",
+      "file": "_wiki_de_poble/04_escriptori/261101_1246_prompt_assalt_excel_lencia_10_10_les_15_dimensions_i_deute_llibre_mestre.md",
+      "contractSnapshot": "dd50e00a8184dcda1a212a8e24073399b29036006c3d29e8e26fff71aa7bd631",
+      "template": "_wiki_de_poble/03_actuar/plantilles/prompt_local.md",
+      "templateHash": "edf7daf4d81ab3640d195369807d5ab047bbc60027abd2663f86de3b076d992a",
+      "issuedAt": "2026-11-01T11:48:46.835Z"
+    },
+    "1b094716-686a-4db8-9ca4-0b022defa1ed": {
+      "id": "1b094716-686a-4db8-9ca4-0b022defa1ed",
+      "route": "prompt.local",
+      "routeVersion": "3.11.0",
+      "file": "_wiki_de_poble/04_escriptori/261101_1246_prompt_assalt_excel_lencia_10_10_les_15_dimensions_i_deute_llibre_mestre.md",
+      "contractSnapshot": "dd50e00a8184dcda1a212a8e24073399b29036006c3d29e8e26fff71aa7bd631",
+      "template": "_wiki_de_poble/03_actuar/plantilles/prompt_local.md",
+      "templateHash": "edf7daf4d81ab3640d195369807d5ab047bbc60027abd2663f86de3b076d992a",
+      "issuedAt": "2026-11-01T11:48:46.897Z",
+      "creation": {
+        "state": "committed",
+        "preparedAt": "2026-11-01T11:48:46.897Z",
+        "committedAt": "2026-11-01T11:48:46.936Z",
+        "documentHash": "188cda83968049dd952b666746de6dea12da35598eac82e38bc73a86dd44d270"
+      }
+    },
+    "55729856-d23c-4aa4-b540-9877ca95d5b6": {
+      "id": "55729856-d23c-4aa4-b540-9877ca95d5b6",
+      "route": "acta",
+      "routeVersion": "2.1.0",
+      "file": "_wiki_de_poble/10_actes/261101_1304_acta_marmota_tancament_marato_nocturna_i_preparacio_assalt_10_10.md",
+      "contractSnapshot": "34e52174a10b4e08da353a88e2462929409786600a6ad05a3e286d3af435c284",
+      "template": "_wiki_de_poble/03_actuar/plantilles/acta.md",
+      "templateHash": "4d4b9d269e40c3084dead7c3f14cf63dd58fd4a7e7f4d075d2d09ef90f8a6d48",
+      "issuedAt": "2026-11-01T12:04:49.932Z"
+    },
+    "6f5d1992-fbe6-4d66-9939-84cab93081e2": {
+      "id": "6f5d1992-fbe6-4d66-9939-84cab93081e2",
+      "route": "acta",
+      "routeVersion": "2.1.0",
+      "file": "_wiki_de_poble/10_actes/261101_1304_acta_marmota_tancament_marato_nocturna_i_preparacio_assalt_10_10.md",
+      "contractSnapshot": "34e52174a10b4e08da353a88e2462929409786600a6ad05a3e286d3af435c284",
+      "template": "_wiki_de_poble/03_actuar/plantilles/acta.md",
+      "templateHash": "4d4b9d269e40c3084dead7c3f14cf63dd58fd4a7e7f4d075d2d09ef90f8a6d48",
+      "issuedAt": "2026-11-01T12:04:49.970Z",
+      "creation": {
+        "state": "committed",
+        "preparedAt": "2026-11-01T12:04:49.970Z",
+        "committedAt": "2026-11-01T12:04:49.993Z",
+        "documentHash": "06e03c5e084c2e790805b4683136cf762c1944be0a8168cb3e0b1597d9298c73"
+      }
     }
   },
-  "plan": null,
+  "plan": {
+    "file": "_wiki_de_poble/04_escriptori/261101_1246_pla_implementacio_assalt_excel_lencia_10_10_les_15_dimensions_i_deute_llibre_mestre.md",
+    "hash": "1e021cbfe6440cf9950cd00938c114f9f13313175e63402f07047fb6c3903677"
+  },
   "verification": null,
   "history": [
     {
@@ -4405,6 +4486,62 @@
       "file": "_wiki_de_poble/04_escriptori/261101_0407_auditoria_gemini_marato_nocturna.md",
       "at": "2026-11-01T03:07:38.076Z",
       "hash": "91101d73dec0ab46f49a636c40b178792b8538119aad862c526bdef0cb3178df"
+    },
+    {
+      "state": "context_loaded",
+      "action": "context",
+      "at": "2026-11-01T11:46:25.156Z"
+    },
+    {
+      "state": "context_loaded",
+      "action": "context",
+      "at": "2026-11-01T11:46:25.199Z"
+    },
+    {
+      "action": "create-committed",
+      "receiptId": "ab2d5904-cafc-4082-853c-a4f4b9b9d481",
+      "file": "_wiki_de_poble/04_escriptori/261101_1246_pla_implementacio_assalt_excel_lencia_10_10_les_15_dimensions_i_deute_llibre_mestre.md",
+      "at": "2026-11-01T11:46:25.223Z",
+      "hash": "d0e01bd57d89027cf254a9c70a2c0398a45047801af37e2e0671de645566d360"
+    },
+    {
+      "state": "planned",
+      "action": "bind-plan",
+      "at": "2026-11-01T11:48:46.774Z"
+    },
+    {
+      "state": "planned",
+      "action": "context",
+      "at": "2026-11-01T11:48:46.835Z"
+    },
+    {
+      "state": "planned",
+      "action": "context",
+      "at": "2026-11-01T11:48:46.898Z"
+    },
+    {
+      "action": "create-committed",
+      "receiptId": "1b094716-686a-4db8-9ca4-0b022defa1ed",
+      "file": "_wiki_de_poble/04_escriptori/261101_1246_prompt_assalt_excel_lencia_10_10_les_15_dimensions_i_deute_llibre_mestre.md",
+      "at": "2026-11-01T11:48:46.936Z",
+      "hash": "188cda83968049dd952b666746de6dea12da35598eac82e38bc73a86dd44d270"
+    },
+    {
+      "state": "planned",
+      "action": "context",
+      "at": "2026-11-01T12:04:49.932Z"
+    },
+    {
+      "state": "planned",
+      "action": "context",
+      "at": "2026-11-01T12:04:49.970Z"
+    },
+    {
+      "action": "create-committed",
+      "receiptId": "6f5d1992-fbe6-4d66-9939-84cab93081e2",
+      "file": "_wiki_de_poble/10_actes/261101_1304_acta_marmota_tancament_marato_nocturna_i_preparacio_assalt_10_10.md",
+      "at": "2026-11-01T12:04:49.993Z",
+      "hash": "06e03c5e084c2e790805b4683136cf762c1944be0a8168cb3e0b1597d9298c73"
     }
   ]
 }

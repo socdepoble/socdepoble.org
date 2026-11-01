@@ -13,7 +13,9 @@ test('Note, Article i Event reals del payload generen Create i objectes recupera
   assert.ok(publicacions.every(Boolean));
   const preparat = await preparaFederacio({ origen, publicacions });
   const out = preparat.fitxers.get(`ap/outbox/${TORRE}.json`);
-  assert.equal(out.totalItems, 3); assert.deepEqual(new Set(out.orderedItems.map(a => a.object.type)), new Set(['Note','Article','Event']));
+  /* D05 (pla 261101_1246) · Expectativa actualitzada a posta: les 3 publicacions i la pàgina pública del poble (abans, 3). */
+  assert.equal(out.totalItems, 4); assert.deepEqual(new Set(out.orderedItems.map(a => a.object.type)), new Set(['Note','Article','Event']));
+  assert.equal(out.orderedItems.at(-1).object.url, `${origen}/pobles/${TORRE}`);
   for (const activitat of out.orderedItems) {
     assert.equal(activitat.type, 'Create');
     assert.deepEqual(preparat.fitxers.get(new URL(activitat.object.id).pathname.slice(1)), { '@context': ap.CONTEXT_AS, ...activitat.object });
@@ -47,7 +49,8 @@ test('SDP_SOCIAL_SENSE_REMOT=1: cap petició, [] i un avís, encara que la confi
   assert.equal(avisos.mock.callCount(), 1);
   assert.match(String(avisos.mock.calls[0].arguments[0]), /SDP_SOCIAL_SENSE_REMOT=1/);
   const preparat = await preparaFederacioDelBuild({ origen, env, fetchImpl });
-  assert.equal(preparat.fitxers.get(`ap/outbox/${TORRE}.json`).totalItems, 0);
+  // D05 · Expectativa actualitzada a posta: sense xarxa, només la pàgina pública del poble (abans, 0).
+  assert.equal(preparat.fitxers.get(`ap/outbox/${TORRE}.json`).totalItems, 1);
   assert.equal(crides, 0);
 });
 test('només el projecte i La Torre tenen actor, JRD estàtic i reescriptura; NodeInfo 2.1 sense entrades per poble', async () => {
@@ -70,6 +73,7 @@ test('una publicació pública d’un poble de mostra no crea cap actor ni outbo
     return new Response(JSON.stringify([{ key, payload: key === 'feedPosts' ? [item, { ...item, id: 'avis-sella', poble_id: 'sella' }] : [] }]), { headers: { 'content-type':'application/json' } }); };
   const p = await preparaFederacioDelBuild({ origen, env, fetchImpl });
   assert.deepEqual(p.actors.map(a => a.slug), ['socdepoble', TORRE]);
-  assert.equal(p.fitxers.get(`ap/outbox/${TORRE}.json`).totalItems, 1);
+  // D05 · Expectativa actualitzada a posta: l'avís de La Torre i la pàgina pública del poble (abans, 1).
+  assert.equal(p.fitxers.get(`ap/outbox/${TORRE}.json`).totalItems, 2);
   assert.equal(p.fitxers.has('ap/outbox/sella.json'), false);
 });

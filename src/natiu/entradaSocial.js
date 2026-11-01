@@ -10,7 +10,10 @@
    (src/natiu/frontera.test.js). La plataforma es llig del pont que l'app injecta
    abans de la pàgina; mai s'importa el nucli de l'app nativa.
    Decisions del Mestre (261020 15:15): Apple NOMÉS a iOS; Android, Google natiu i
-   el correu; Google a iOS sempre amb forcePrompt. */
+   el correu; Google a iOS sempre amb forcePrompt.
+   D-10 (pla 261101_1246, BOT-A3) · Apple, a més, només amb appleActiu === true
+   (VITE_APPLE_OAUTH_ACTIU, que llig natiu/entrada.jsx): sense Apple encés a
+   Supabase el botó no ix, i a iOS tampoc Google (App Store 4.8): només el correu. */
 import { CODI_ENTRADA_NATIVA } from '../config/entradaNativa.js';
 import { esquemaInvertitDeGoogleIos } from '../config/publicCredentials.js';
 import { nonceNou, sha256Hex } from './resum.js';
@@ -31,10 +34,16 @@ export function plataformaDelDispositiu(finestra = globalThis) {
 /* Quins proveïdors oferix este dispositiu. Apple a Android queda fora per decisió
    del Mestre (D7: caldria el flux del navegador del sistema, §3.3). A iOS, Google
    només amb els dos clients i l'iOS amb forma de client: sense iOSClientId (o sense
-   el seu esquema a Info.plist, que el build natiu contrasta), GoogleSignIn peta en natiu. */
-export function proveidorsDe(plataforma, { googleWeb, googleIos } = {}) {
+   el seu esquema a Info.plist, que el build natiu contrasta), GoogleSignIn peta en natiu.
+   D-10 · Apple apagat per defecte (fail-closed): només un `true` booleà l'encén, mai
+   un text. Sense Apple, a iOS cap proveïdor: Google sol el retiraria la regla 4.8 del
+   registre (config/entradaNativa.js), i així el connector ni s'inicialitza. */
+export function proveidorsDe(plataforma, { googleWeb, googleIos } = {}, { appleActiu = false } = {}) {
   const web = textNet(googleWeb);
-  if (plataforma === 'ios') return ['apple', ...(web && esquemaInvertitDeGoogleIos(googleIos) ? ['google'] : [])];
+  if (plataforma === 'ios') {
+    if (appleActiu !== true) return [];
+    return ['apple', ...(web && esquemaInvertitDeGoogleIos(googleIos) ? ['google'] : [])];
+  }
   if (plataforma === 'android') return web ? ['google'] : [];
   return [];
 }
@@ -99,10 +108,12 @@ const ambTopall = (promesa, ms) => {
  * Fase D (261020, revisió) · A iOS i Android sempre hi ha adaptador, també sense
  * cap proveïdor (proveidors: []): la plataforma queda registrada, no hi ha cap
  * botó, el connector no es carrega mai i el Google web no apareix dins de l'app.
+ * D-10 (pla 261101_1246) · `appleActiu` (per defecte false) diu si Apple està encés;
+ * un proveïdor que no s'oferix no obri mai el full (NO_DISPONIBLE).
  */
-export function creaEntradaSocial({ plataforma, clients = {}, carregaConnector = carregaPerDefecte } = {}) {
+export function creaEntradaSocial({ plataforma, clients = {}, appleActiu = false, carregaConnector = carregaPerDefecte } = {}) {
   if (!PLATAFORMES.has(plataforma)) return null;
-  const proveidors = proveidorsDe(plataforma, clients);
+  const proveidors = proveidorsDe(plataforma, clients, { appleActiu });
   let connector = null;
   /* Resol amb { social }: el connector, embolicat (vegeu carregaPerDefecte). */
   const obri = () => (connector ??= ambTopall(
@@ -118,6 +129,11 @@ export function creaEntradaSocial({ plataforma, clients = {}, carregaConnector =
     /* Fase D (261020, revisió) · viu() fals després de carregar el connector i
        abans del full: ningú no l'espera ja («Cancel·la l'entrada»), i no s'obri. */
     async demana(proveidor, { viu = () => true } = {}) {
+      /* D-10 · Defensa en profunditat: el registre ja només deixa demanar els botons
+         oferits, però l'adaptador tampoc obri mai un full que no oferix. */
+      if (!proveidors.includes(proveidor)) {
+        throw errorNatiu(CODI_ENTRADA_NATIVA.NO_DISPONIBLE, 'Esta manera d’entrar no està disponible en este dispositiu.');
+      }
       try {
         const nonce = nonceNou();
         const nonceXifrat = await sha256Hex(nonce);

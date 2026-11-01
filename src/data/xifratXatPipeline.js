@@ -30,9 +30,9 @@ import { directoriAmbHistoria } from './xifratXatHistoria.js';
  * (equip signat, §4.8), l'alta de la identitat amb la frase (F2a, §5) i la
  * rotació d'època d'un fil on no sóc membre.
  */
-import { aBase64url, deBase64url, exigixCripto, sha256 } from './xifratXatCripto.js';
+import { aBase64url, bytesIguals, deBase64url, exigixCripto, numeroSeguretatParell, sha256 } from './xifratXatCripto.js';
 import { MOTIU_EPOCA, ROL_EPOCA, TIPUS_FIL } from './xifratXatFormats.js';
-import { CODI, aplicaEpoca, creaEpoca, esErrorProtocol, estatFilNou, obriMissatge, xifraMissatge } from './xifratXatProtocol.js';
+import { CODI, aplicaEpoca, creaEpoca, esErrorProtocol, estatFilNou, obriMissatge, publiquesDe, xifraMissatge } from './xifratXatProtocol.js';
 import { llegixEpoca } from './xifratXatFormats.js';
 import { desxifraAdjuntXat, errorPressupostBlobs, metadadesAdjuntDe, midaBlobAdjunt, TIPUS_DE_CLASSE, xifraAdjuntXat } from './xatMultimediaXifrat.js';
 
@@ -41,7 +41,9 @@ export const PREFIX_CLAUS_XAT = 'sdp_xat_';
 export const CODI_MOTOR = Object.freeze({
   senseAmbit: 'sense-ambit', clausBloquejades: 'claus-bloquejades', clauAbsent: 'clau-absent-del-contacte',
   equipPendent: 'equip-pendent', filSenseMembres: 'fil-sense-membres', senseCapacitat: 'sense-capacitat-e2ee',
-  ecoNoQuadra: 'eco-no-quadra', encuat: 'encuat'
+  ecoNoQuadra: 'eco-no-quadra', encuat: 'encuat',
+  /* Pas 17 (pla 261101_1246, T7 · S5) · El número de seguretat (§4.4). */
+  numeroNoDirecte: 'numero-no-directe', senseClauAltre: 'sense-clau-altre', kidCanviat: 'kid-canviat'
 });
 export const ESTAT_OBLIT = Object.freeze({ oblidat: 'oblidat', fallit: 'OBLIT_FALLIT' });
 
@@ -587,5 +589,75 @@ export function creaMotorXifrat({ cripto, impl, servei, magatzem, ara = () => Da
     return estat;
   };
 
-  return Object.freeze({ claus, contextDelFil, prepara, eco, descarta, obri, resumDelFil, encua, drena, publicaAdjunt, urlAdjunt, oblidaTot });
+  /* ── Número de seguretat i «Marca com a verificat» (§4.4; pla 261101_1246, T7 · S5) ──
+     Només en un directe entre dues persones: el número és d'un parell. Les claus de
+     l'altra persona són les del directori del fil refet ara mateix (kids nous, canvis
+     suaus i la fixació TOFU confirmada), mai les d'una memòria vella. */
+  const numeroAmbClau = async ({ fil, tipusFil, config, exigix }) => {
+    if (TIPUS_DEL_FIL[tipusFil] !== TIPUS_FIL.directe) {
+      throw errorMotor(CODI_MOTOR.numeroNoDirecte, 'El número de seguretat és d’un xat privat entre dues persones.', { reintentable: false });
+    }
+    const ctx = await contextDelFil({ fil, tipusFil, config, exigix, refresca: true });
+    exigix();
+    const { ci, joId } = claus();
+    const altres = ctx.membres.filter((usuari) => usuari !== joId);
+    if (altres.length !== 1) throw errorMotor(CODI_MOTOR.filSenseMembres, 'Este xat no té exactament una altra persona.', { reintentable: false });
+    const [altreId] = altres;
+    const altre = ctx.directori.de(altreId);
+    if (!altre?.sigPub || !altre?.dhPub || !altre?.kid) {
+      throw errorMotor(CODI_MOTOR.senseClauAltre, 'L’altra persona encara no té claus del xat publicades.', { reintentable: true });
+    }
+    const numero = await numeroSeguretatParell(cripto, publiquesDe(ctx.jo), altre);
+    exigix();
+    const pin = typeof magatzem.fixacio === 'function' ? await magatzem.fixacio(ci, altreId) : null;
+    exigix();
+    const resultat = Object.freeze({
+      usuari: altreId,
+      kid: aBase64url(altre.kid),
+      numero,
+      verificat: pin?.verificat === true && bytesIguals(pin.kid, altre.kid)
+    });
+    return { ci, resultat };
+  };
+
+  /** { usuari, kid (base64url), numero (12 grups de 5 xifres), verificat } del directe. */
+  const numeroDelFil = async (opcions) => (await numeroAmbClau(opcions)).resultat;
+
+  /* La marca va a la fixació d'este aparell (IndexedDB) i només per al kid que s'ha
+     mostrat: si la clau ha canviat entremig, kid-canviat i cap escriptura. El magatzem
+     torna a comprovar el kid dins de la transacció (FIXACIO_DIFERENT o
+     FIXACIO_CANVIADA): una marca no substituïx mai una fixació diferent. */
+  const marcaVerificatDelFil = async ({ kid, verificat, ...opcions }) => {
+    const { ci, resultat } = await numeroAmbClau(opcions);
+    if (typeof kid !== 'string' || resultat.kid !== kid) {
+      throw errorMotor(CODI_MOTOR.kidCanviat, 'La clau de l’altra persona ha canviat: cal comparar el número nou.', { reintentable: false });
+    }
+    if (typeof magatzem.fixa !== 'function') throw errorMotor(CODI_MOTOR.senseCapacitat, 'El magatzem d’este aparell no desa fixacions.', { reintentable: false });
+    opcions.exigix();
+    let fila;
+    try {
+      fila = await magatzem.fixa(ci, { usuari: resultat.usuari, kid: deBase64url(kid, 16), verificat: verificat === true, vistAl: ara() });
+    } catch (error) {
+      if (error?.codi === 'FIXACIO_DIFERENT' || error?.codi === 'FIXACIO_CANVIADA') {
+        throw errorMotor(CODI_MOTOR.kidCanviat, 'La clau fixada d’esta persona ha canviat: cal comparar el número nou.', { reintentable: false, cause: error });
+      }
+      throw error;
+    }
+    opcions.exigix();
+    return Object.freeze({ ...resultat, verificat: fila?.verificat === true });
+  };
+
+  /* IDEA-48 (estat previ a F7) · Quants contactes té verificats la persona en este aparell. */
+  const recompteVerificats = async ({ exigix }) => {
+    const { ci, joId } = claus();
+    if (typeof magatzem.fixacions !== 'function') return 0;
+    const files = await magatzem.fixacions(ci);
+    exigix();
+    return new Set(files.filter((f) => f?.verificat === true && f.usuari !== joId).map((f) => f.usuari)).size;
+  };
+
+  return Object.freeze({
+    claus, contextDelFil, prepara, eco, descarta, obri, resumDelFil, encua, drena, publicaAdjunt, urlAdjunt, oblidaTot,
+    numeroDelFil, marcaVerificatDelFil, recompteVerificats
+  });
 }

@@ -98,7 +98,7 @@ describe('l’ordre del fil de la IAIA', () => {
 
   it('un sol avís per pregunta, quan arriba la resposta i amb el seu seq', async () => {
     const callback = vi.fn();
-    await localXat.subscribeToXat(FIL, callback);
+    await localXat.subscribeToXat(FIL, callback, SEED);
     const pregunta = await localXat.enviaMissatge(FIL, { id: 'avis-1', text: 'Hola, Wiki' }, SEED);
     await buida();
     expect(callback).not.toHaveBeenCalled();
@@ -130,7 +130,7 @@ describe('la reserva', () => {
     const pendent = mock.respostes[0];
     reiniciaLocalXat();
     const callback = vi.fn();
-    await localXat.subscribeToXat(FIL, callback);
+    await localXat.subscribeToXat(FIL, callback, SEED);
     pendent.resol('Resposta vella');
     await buida();
     expect(callback).not.toHaveBeenCalled();

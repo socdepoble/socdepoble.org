@@ -24,6 +24,7 @@ import crypto from 'node:crypto';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
+import zlib from 'node:zlib';
 import { spawn, spawnSync } from 'node:child_process';
 
 export const FITXER_PER_DEFECTE = '.env.botigues.local';
@@ -44,7 +45,7 @@ export const EIXIDA = Object.freeze({
   PROHIBIDA: 4,    // un nom VITE_*, una clau escrita dins del fitxer, un nom repetit o una línia que no s'entén
   FALTA: 5,        // falta una variable o el fitxer que nomena, o eixe fitxer és dins del repositori
   EINA: 6,         // falta una eina, o no té les opcions que el script farà servir
-  ARBRE: 7,        // canvis sense cometre, dist-natiu/ absent, projecte natiu desincronitzat o versió que no casa
+  ARBRE: 7,        // canvis sense cometre, dist-natiu/ absent o d'un altre commit, projecte natiu desincronitzat o versió que no casa
   EXTERNA: 8,      // xcodebuild, gradle, altool, keytool o fastlane han fallat
   VERIFICACIO: 9,  // l'equip de la signatura o l'empremta del certificat de pujada no casen
   CONFIRMACIO: 10  // --confirma no casa amb --versio i --build
@@ -334,16 +335,83 @@ export function gitIgnora(arrel, cami) {
   return r.status === 1 ? false : null;
 }
 
-/** Cert si `git status --porcelain` no diu res. */
+/** Cert si `git status --porcelain` no diu res. Sense bloquejos opcionals (L5-NAT-01,
+ *  261101): només llig, no refresca ni escriu .git/index i no xoca amb l'index.lock d'una
+ *  altra mà a l'arbre compartit. */
 export function arbreNet(arrel) {
-  const r = spawnSync('git', ['status', '--porcelain'], { cwd: arrel, encoding: 'utf8' });
+  const r = spawnSync('git', ['--no-optional-locks', 'status', '--porcelain'], { cwd: arrel, encoding: 'utf8' });
   return !r.error && r.status === 0 && r.stdout.trim() === '';
 }
 
-/** El commit curt de HEAD, o null. */
-export function commitCurt(arrel) {
-  const r = spawnSync('git', ['rev-parse', '--short', 'HEAD'], { cwd: arrel, encoding: 'utf8' });
+/** El commit sencer de HEAD, o null. */
+export function commitDeHead(arrel) {
+  const r = spawnSync('git', ['rev-parse', '--verify', 'HEAD'], { cwd: arrel, encoding: 'utf8' });
   return r.error || r.status !== 0 ? null : r.stdout.trim();
+}
+
+/* ─────────────────────────── El segell de dist-natiu/ ───────────────────────────
+   BOT-A4 (261025) · dist-natiu/ i les seues còpies natives (ios/App/App/public i
+   android/app/src/main/assets/public) són fora de git: un paquet compilat abans de l'últim commit
+   passava el preflight amb l'arbre net i les còpies iguals, i el rebut deia el HEAD, no el commit
+   del paquet. Així van eixir binaris amb codi vell. Ara el build natiu (segellNatiuPlugin de
+   vite.natiu.config.js) deixa a dist-natiu/ el commit d'on ix i si l'arbre era net; el preflight
+   el contrasta amb HEAD, i com que cap sync el copia amb la resta, també diu si la còpia nativa
+   és d'este build (la data el fa únic). Els scripts de pujada miren, a més, que el binari que es
+   puja (l'AAB, l'app arxivada) porte este mateix segell (problemaDelPaquet). */
+export const SEGELL = Object.freeze(['dist-natiu', 'segell.json']);
+
+/* Un commit de git sencer: SHA-1 (40) o SHA-256 (64). */
+const COMMIT = /^(?:[0-9a-f]{40}|[0-9a-f]{64})$/;
+/* La data com l'escriu toISOString. */
+const DATA = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{3})?Z$/;
+
+/** El segell d'un build que comença ara a `arrel`: { commit, arbreNet, data }. */
+export function segellDelArbre(arrel, data = new Date()) {
+  return { commit: commitDeHead(arrel), arbreNet: arbreNet(arrel), data: data.toISOString() };
+}
+
+/** El segell de dist-natiu/ d'`arrel`, o null si no hi és o no és JSON. */
+export function llegixSegell(arrel) {
+  try { return JSON.parse(fs.readFileSync(path.join(arrel, ...SEGELL), 'utf8')); } catch { return null; }
+}
+
+/**
+ * Per què el segell de dist-natiu/ no val per a pujar des del commit `head`. Buit si val. Pura.
+ * @param {{ commit?: string, arbreNet?: boolean, data?: string } | null} segell
+ * @param {string|null} head
+ * @returns {string[]}
+ */
+export function problemesDelSegell(segell, head) {
+  const forma = `${SEGELL.join('/')} no hi és o no té la forma {commit, arbreNet, data}: el paquet és d'abans del segell; npm run build:natiu i npx cap sync`;
+  if (!segell || typeof segell !== 'object' || typeof segell.arbreNet !== 'boolean' || !DATA.test(String(segell.data))) return [forma];
+  /* segellDelArbre escriu commit: null quan git no respon: el build no sabia d'on eixia. */
+  if (segell.commit === null) return [`dist-natiu/ es va compilar sense saber de quin commit (git no hi era o no responia, ${segell.data}): npm run build:natiu dins del repositori`];
+  if (!COMMIT.test(String(segell.commit))) return [forma];
+  const problemes = [];
+  if (!segell.arbreNet) problemes.push(`dist-natiu/ es va compilar amb canvis sense cometre (${segell.data}): es compila des d'un commit`);
+  if (!head) problemes.push('git no diu quin és el commit de HEAD');
+  else if (segell.commit !== head) problemes.push(`dist-natiu/ és del commit ${segell.commit.slice(0, 12)}, no del HEAD ${head.slice(0, 12)}: npm run build:natiu i npx cap sync`);
+  return problemes;
+}
+
+/**
+ * Per què el binari que es pujarà no ix del dist-natiu/ d'`arrel`, el que el preflight ha
+ * contrastat amb HEAD: el segell que porta dins (`dins`, els octets, o null si no en porta) ha
+ * de ser el de dist-natiu/segell.json, octet per octet. null si ho és.
+ * @param {string} arrel
+ * @param {Uint8Array|null} dins
+ * @param {string} paquet  com es nomena el binari en el missatge
+ * @returns {string|null}
+ */
+export function problemaDelPaquet(arrel, dins, paquet) {
+  let delDist = null;
+  try { delDist = fs.readFileSync(path.join(arrel, ...SEGELL)); } catch { /* sense segell */ }
+  if (!delDist) return `no hi ha ${SEGELL.join('/')}: npm run build:natiu`;
+  if (!dins) return `${paquet} no porta cap segell.json: és d'un build d'abans del segell`;
+  if (Buffer.compare(Buffer.from(dins), delDist) === 0) return null;
+  let commit = null;
+  try { commit = JSON.parse(Buffer.from(dins).toString('utf8')).commit; } catch { /* il·legible */ }
+  return `${paquet} porta el segell d'un altre build de dist-natiu/ (${typeof commit === 'string' ? `commit ${commit.slice(0, 12)}` : 'il·legible'}), no el de ${SEGELL.join('/')}`;
 }
 
 /** sha256 en hexadecimal d'un fitxer. */
@@ -354,6 +422,43 @@ export function sha256DeFitxer(cami) {
 /** Cert si els dos fitxers existixen i tenen el mateix contingut. */
 export function mateixContingut(a, b) {
   return fs.existsSync(a) && fs.existsSync(b) && sha256DeFitxer(a) === sha256DeFitxer(b);
+}
+
+/* Un AAB és un zip. Per a traure'n un fitxer n'hi ha prou amb el directori central (APPNOTE.TXT
+   de PKWARE, §4.3): les mides bones hi són encara que el registre local porte un descriptor de
+   dades. Sense zip64, que un paquet d'esta app no necessita (l'AAB de 261023 fa 41 MB), i només
+   guardat (0) o deflate (8). */
+const ZIP = Object.freeze({ FINAL: 0x06054b50, CENTRAL: 0x02014b50, LOCAL: 0x04034b50 });
+
+/** Els octets del fitxer `nom` de dins del zip `cami`, o null si no hi és o el zip no s'entén. */
+export function llegixDelZip(cami, nom) {
+  try {
+    const zip = fs.readFileSync(cami);
+    // El registre final fa 22 octets i pot portar un comentari de fins a 65535.
+    let final = -1;
+    for (let i = zip.length - 22; i >= Math.max(0, zip.length - 22 - 0xffff); i -= 1) {
+      if (zip.readUInt32LE(i) === ZIP.FINAL) { final = i; break; }
+    }
+    if (final < 0) return null;
+    const entrades = zip.readUInt16LE(final + 10);
+    let i = zip.readUInt32LE(final + 16);
+    for (let n = 0; n < entrades; n += 1) {
+      if (zip.readUInt32LE(i) !== ZIP.CENTRAL) return null;
+      const llargNom = zip.readUInt16LE(i + 28);
+      if (zip.toString('utf8', i + 46, i + 46 + llargNom) === nom) {
+        const metode = zip.readUInt16LE(i + 10);
+        const comprimit = zip.readUInt32LE(i + 20);
+        const local = zip.readUInt32LE(i + 42);
+        if (zip.readUInt32LE(local) !== ZIP.LOCAL) return null;
+        const inici = local + 30 + zip.readUInt16LE(local + 26) + zip.readUInt16LE(local + 28);
+        const dades = zip.subarray(inici, inici + comprimit);
+        if (metode === 0) return Buffer.from(dades);
+        return metode === 8 ? zlib.inflateRawSync(dades) : null;
+      }
+      i += 46 + llargNom + zip.readUInt16LE(i + 30) + zip.readUInt16LE(i + 32);
+    }
+    return null;
+  } catch { return null; }
 }
 
 /** L'ajuda d'una eina (stdout i stderr), o null si l'eina no hi és. */

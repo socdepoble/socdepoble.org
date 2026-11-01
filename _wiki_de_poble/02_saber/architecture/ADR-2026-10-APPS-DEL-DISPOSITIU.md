@@ -52,7 +52,7 @@ Esta esmena fixa els deures; no certifica que cada app ja els complisca. La revi
 
 - **Qui el registra:** només `src/pwa/registre.js`, des de `src/main.jsx`, en producció, en context segur, fora d'un iframe i fora de l'app nativa.
 - **Qui no el porta mai:** `sw.js` i `manifest.webmanifest` són a `PROPIS_DEL_LLOC`. El connector de WordPress i el Web Component no els reben (`tests/standalone-build.test.mjs` i `tests/natiu-build.test.mjs`).
-- **Què guarda:** els recursos del build amb empremta, amb sostres de 300 entrades i 8 MiB, i la closca de les apps.
+- **Què guarda:** els recursos del build amb empremta, amb sostres de 600 entrades i 16 MiB (261101: un build té 354 chunks i 7,1 MB de JS), i la closca de les apps.
 - **Què no guarda mai:** l'API, `/auth/`, `/rest/`, cap altre origen, cap POST, cap petició amb Authorization ni cap dada de la persona.
 - **Sense xarxa, fora de /app/\*:** la pàgina honesta «Sense connexió» (503), com fins ara.
 
@@ -65,7 +65,7 @@ Ratifica l'esborrany `ADR_PWA_ESMENA.txt` amb una sola esmena: «cap HTML» pass
 3. La pàgina de l'app confirma la closca amb tots els recursos amb empremta que ha carregat. Només ho pot fer si és del mateix build i si eixos recursos ja són a la memòria. Cada confirmació nova s'afig a les anteriors: les vistes que s'obrin després també hi entren. Una navegació del mateix build conserva la confirmació. Un build nou la perd i ha d'esperar la de la pàgina nova. Una pestanya d'un altre build no la toca.
 4. Sense xarxa, una navegació a /app/\* només rep la closca de la seua app. També cal que la pàgina l'haja confirmada i que continuen desats tots els recursos, tant els de l'HTML com els de la pàgina. Si no, rep una pàgina honesta que explica com deixar l'app preparada. No rep mai la closca d'una altra app.
 5. Amb xarxa sempre mana la xarxa, i cada navegació a /app/\* refresca la closca de la seua app.
-6. Pujar la versió de la closca la invalida en activar el worker nou. Una closca que demana algun recurs que ja no hi és no es dona mai. Tampoc una que en demana més dels que caben a la memòria (300). Com a molt hi ha 32 closques: en desar-ne una de més, ix la que fa més temps que es va desar.
+6. Pujar la versió de la closca la invalida en activar el worker nou. Una closca que demana algun recurs que ja no hi és no es dona mai. Tampoc una que en demana més dels que caben a la memòria (600). Com a molt hi ha 32 closques: en desar-ne una de més, ix la que fa més temps que es va desar.
 
 ### L'escalfament: el component avisa, la pàgina parla amb el worker
 
@@ -95,7 +95,7 @@ El pont de sessió de les apps (`useSessioApp`) deixa escriure en local amb els 
 
 - Una vista que no s'ha obert mai amb xarxa no té el seu chunk desat. L'app arrenca, però eixa vista dona l'error de càrrega de sempre fins que torna la xarxa.
 - La closca d'una app demana tots els recursos amb empremta que la pàgina havia carregat, també els de seccions de fora de l'app visitades abans en la mateixa pestanya. Això la fa més prudent del compte: si la poda se n'emporta un que l'app no necessita, ix la pàgina honesta.
-- La poda FIFO de la memòria de recursos (300 entrades, 8 MiB) pot endur-se un recurs d'una closca. Llavors es dona la pàgina honesta fins a la pròxima visita amb xarxa.
+- La poda FIFO de la memòria de recursos (600 entrades, 16 MiB) no s'endú mai els recursos de la closca confirmada més nova: React i DOMPurify no canvien de nom entre desplegaments i, sense esta protecció, serien sempre els més vells (261101). Sí que pot endur-se un recurs d'una closca més vella. Llavors es dona la pàgina honesta fins a la pròxima visita amb xarxa.
 - Hi ha una finestra curta entre l'avís de `RutaApps` i el missatge que porta el chunk de l'app: en una xarxa lenta, el primer missatge pot eixir sense ell. Este chunk ja és a la memòria, perquè el worker controla la pàgina, i el missatge següent l'afig a la closca. La closca només queda incompleta si la pestanya es tanca dins d'eixa finestra i la poda se l'emporta abans de la visita següent.
 - La closca desada d'una app pot ser d'un build anterior al d'altres apps visitades després. Sense xarxa arrenca amb el seu build i amb els seus chunks.
 - El 261007, les cinc apps locals declaren `entorn: 'desenvolupament'` i només entren al paquet de producció amb la seua bandera (`VITE_SDP_APP_BAR=1`, `VITE_SDP_APP_GESTORIA=1`…). El worker només es registra en producció: fins que el Mestre promoga una app a producció, la closca no té cap app que arrencar.

@@ -44,6 +44,16 @@ import { TEXTOS_LLAVOR } from '../textosLlavor.js';
  *                       sempre. L'espai no suma res: cada opció porta el seu
  *                       recompte (si una carpeta ha de dur el total de les
  *                       seues fonts, el calcula la secció).
+ *                       Cada element de `items` pot portar `fixatATot`
+ *                       (opcional, D-4 del pla 261101_1246, per a la Card
+ *                       «Bloc de notes» del Bloc): amb `true` (el booleà, mai
+ *                       una cadena), a «Tot» va davant de la resta amb
+ *                       qualsevol ordenació (data o nom), també dins d'una
+ *                       cerca que el troba; entre dos fixats mana l'ordenació.
+ *                       La llista, el rail plegat i les fletxes del teclat
+ *                       seguixen este mateix ordre. En una carpeta, una
+ *                       categoria o una etiqueta, l'ordre de sempre. Sense el
+ *                       camp, res no canvia (cap altra secció el posa).
  *   - `labels`       → textos de capçaleres i botons
  *   - `icons`        → { categories, items } icones decoratives de cada capçalera
  *   - `renderItem`   → (opcional) targeta pròpia per a cada element del llistat
@@ -1479,10 +1489,18 @@ function ItemListColumn({
   const [creating, setCreating] = useState(false);
   const [sortBy, setSortBy] = useState('date');
   const [sortOpen, setSortOpen] = useState(false);
-  const sortedItems = useMemo(() => !sortable ? filteredItems : [...filteredItems].sort((a, b) =>
-    sortBy === 'name' ? (a.title || '').localeCompare(b.title || '', 'ca')
-      : (Date.parse(b.updatedAt) || 0) - (Date.parse(a.updatedAt) || 0)
-  ), [filteredItems, sortable, sortBy]);
+  const sortedItems = useMemo(() => {
+    const ordenats = !sortable ? filteredItems : [...filteredItems].sort((a, b) =>
+      sortBy === 'name' ? (a.title || '').localeCompare(b.title || '', 'ca')
+        : (Date.parse(b.updatedAt) || 0) - (Date.parse(a.updatedAt) || 0)
+    );
+    /* D-4 (pla 261101_1246) · A «Tot», els elements amb `fixatATot: true` (la
+       Card «Bloc de notes») van davant, en l'ordre de l'ordenació; la resta,
+       darrere i en el seu. Sense cap fixat, la mateixa llista de sempre. */
+    if (state.activeCategoryId !== ALL_CATEGORY_ID) return ordenats;
+    const fixats = ordenats.filter((item) => item?.fixatATot === true);
+    return fixats.length ? [...fixats, ...ordenats.filter((item) => item?.fixatATot !== true)] : ordenats;
+  }, [filteredItems, sortable, sortBy, state.activeCategoryId]);
   /* P6 · En estret la columna continua sent el panell del mestre-detall i el
      rail viu a part (#app-grid-rail, railAPart). En «ample», el plegat de
      sempre. Decisió 4 del Mestre (30-10-2026 ~15:00) · La columna de la

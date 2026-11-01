@@ -10,6 +10,7 @@ import { readFileSync, readdirSync, statSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { afterEach, beforeAll, describe, expect, test, vi } from 'vitest';
 import { BUILD_SISTEMA, VERSIO_SISTEMA, versioCanonica } from './versio.js';
+import { VERSIO_CLIENT_NATIU } from '../data/contracte.js';
 
 const ARREL = process.cwd();
 const llig = (ruta) => readFileSync(resolve(ARREL, ruta), 'utf8');
@@ -131,6 +132,22 @@ describe('paritat de versions amb les apps natives', () => {
       expect(builds.length, ruta).toBe(versions.length);
       expect(new Set(versions), ruta).toEqual(new Set([PAQUET.version]));
       expect(new Set(builds), ruta).toEqual(new Set([versionCode]));
+    }
+  });
+
+  /* T8 · P0-23 (pla 261101_1246) · La porta de versió mínima de l'app nativa
+     (src/natiu/versioMinima.js) compara el mínim del servidor amb
+     VERSIO_CLIENT_NATIU, i el servidor el fixa amb el número de build de les
+     botigues. La constant ha de ser el versionCode d'Android i cada
+     CURRENT_PROJECT_VERSION d'iOS: si es puja el build sense pujar-la (o a
+     l'inrevés), la porta compara el mínim amb un número que no és el del binari. */
+  test('VERSIO_CLIENT_NATIU de contracte.js és el número de build dels binaris natius', () => {
+    expect(Number.isSafeInteger(VERSIO_CLIENT_NATIU) && VERSIO_CLIENT_NATIU > 0).toBe(true);
+    expect(String(VERSIO_CLIENT_NATIU)).toBe(versionCode);
+    for (const ruta of projectes) {
+      const builds = [...llig(ruta).matchAll(/^[ \t]*CURRENT_PROJECT_VERSION = ([^;\n]+);/gm)].map((m) => m[1].trim());
+      expect(builds.length, ruta).toBeGreaterThan(0);
+      expect(new Set(builds), ruta).toEqual(new Set([String(VERSIO_CLIENT_NATIU)]));
     }
   });
 });

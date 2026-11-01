@@ -1,7 +1,8 @@
 import { useMemo, useCallback, useEffect, useRef, useState } from 'react';
 import { NotebookPen, Folder, SmilePlus } from 'lucide-react';
 import { useSearchParams } from '../../app/contexts/RouterContext';
-import { useIdentitat } from '../../app/contexts/IdentitatContext.jsx';
+import { useIdentitatOReserva } from '../../app/contexts/useIdentitatOReserva.js';
+import { esIdentitatDeLectura } from '../../app/contexts/identitatDeReserva.js';
 import { useNotes, etiquetesDeNota } from './NotesContext';
 import { useMur } from '../mur/MurContext';
 import { usePaginesDelSistema } from '../mur/usePublicacionsDeLActor.js';
@@ -132,7 +133,17 @@ const toWorkspaceNote = (note, noteFolders) => {
     searchText: note.searchText,
     revision: note.revision,
     updatedAt: note.updatedAt,
-    data: note
+    data: note,
+    /* D-4 (decisió del Mestre, pla 261101_1246) · La Card «Bloc de notes»
+       (la n1: la de veres en mode 'seed' i la de lectura de notaTutorial.js,
+       que espargix este element) és sempre la primera fila de «Tot», amb
+       qualsevol ordenació (UniversalWorkspace · fixatATot). «Mentre no estiga
+       arxivada»: la n1 de veres arxivada ix de la llista i el seu fixat amb
+       ella. Però, en mode 'seed', P1-72 hi torna a posar llavors la Card de
+       lectura (ambTutorial, davall), que també va fixada: la de lectura no
+       s'arxiva mai, i el Bloc no distingix una n1 arxivada d'una llavor
+       esborrada (cap camp que ho diga). */
+    ...(String(note.id) === ID_NOTA_BENVINGUDA ? { fixatATot: true } : {})
   };
 };
 
@@ -155,12 +166,15 @@ function mostraALaColumna(fila) {
 
 /* Gauntlet 261101 · X-C-notes (C-02) · La Card «Bloc de notes» (la n1: la
    tutorial de lectura o, en mode 'seed', la nota de veres) a la llista. A
-   l'entrada nua de /notes és la fitxa triada, però «Tot» s'ordena per data
-   i la seua (la de la llavor) la deixa l'última: quan hi és triada, la seua
+   l'entrada nua de /notes és la fitxa triada, però «Tot» s'ordenava per data
+   i la seua (la de la llavor) la deixava l'última: quan hi és triada, la seua
    fila es desplaça a la vista dins de la columna, sense moure el focus.
    L'espai de treball no dona cap ref de la fila: un marcador amagat, només
-   mentre cal, n'és el germà dins de l'element de la llista. Si la Card ha
-   d'anar fixada dalt de «Tot», ho decidix el Mestre (UniversalWorkspace). */
+   mentre cal, n'és el germà dins de l'element de la llista.
+   D-4 (decidit pel Mestre, pla 261101_1246) · La Card ja va fixada dalt de
+   «Tot» (fixatATot a toWorkspaceNote). Este desplaçament es conserva com a
+   reserva: és inofensiu i torna la fila a la vista si la columna ja s'havia
+   desplaçat avall. */
 function CardDeLEntrada({ mostra, children }) {
   const marcador = useRef(null);
   useEffect(() => {
@@ -234,12 +248,18 @@ function grupDe(id, categories, etiquetes) {
 }
 
 export default function NotesSection() {
-  const { activate, config } = useNotesData();
+  const { activate, config, nomesLectura: dadesDeLectura = false } = useNotesData();
   useEffect(() => activate(), [activate]);
   const notesContextValue = useNotes();
   /* T1 · el MAS també ensenya el que l'actor ha publicat, per carpeta.
-     T39 · `memberships` porta el copyright de les entitats (herència). */
-  const { actor, memberships } = useIdentitat();
+     T39 · `memberships` porta el copyright de les entitats (herència).
+     D-7 (pla 261101_1246; P1-71) · Fora d'IdentitatProvider, la reserva
+     anònima de només lectura (useIdentitatOReserva.js). Si la porta la
+     identitat o el proveïdor de dades (NotesDataContext), el Bloc es llig
+     com un visitant: ni CREAR NOTA ni nota preparada (calEntrar, davall). */
+  const identitatDelBloc = useIdentitatOReserva();
+  const { actor, memberships } = identitatDelBloc;
+  const nomesLectura = esIdentitatDeLectura(identitatDelBloc) || dadesDeLectura === true;
   const {
     sortedFeedPosts = CAP, sortedMarketItems = CAP, sortedEvents = CAP, status: estatMur, error: errorMur, refresh: refrescaMur
   } = useMur();
@@ -334,7 +354,9 @@ export default function NotesSection() {
      també és fals mentre es carrega i llig el mode de dades sense normalitzar:
      el botó desapareixia en cada càrrega i, amb el mode local de la política
      de compilació, eixia «Connecta…» damunt de notes que es podien crear. */
-  const { calEntrar } = useMemo(() => reglaDEntrada({ teSessio, config, canCreate }), [teSessio, config, canCreate]);
+  const { calEntrar: calEntrarPerSessio } = useMemo(() => reglaDEntrada({ teSessio, config, canCreate }), [teSessio, config, canCreate]);
+  // D-7 · Amb la reserva de només lectura, com sense sessió: res no es crea.
+  const calEntrar = calEntrarPerSessio || nomesLectura;
   const ambPreparada = !modeDesa && !calEntrar;
 
   /* Onada 11 (261010; prompt 261010_1730, tasca 2) · Les categories i

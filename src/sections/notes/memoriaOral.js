@@ -27,12 +27,16 @@
  * (`status: draft`, sense `verified`) i només una persona la promou, amb
  * marcaRevisioHumana(), que també li deixa descartar etiquetes i triar el
  * poble entre els candidats (o cap) abans de signar (Gauntlet 261101, B2-04).
- * La persona pot llevar el que sobra, però no afegir el que falta: el diàleg
- * del Bloc (FitxaMemoriaOral) no deixa posar una etiqueta que la màquina no
- * ha proposat (l'API sí, si és del vocabulari), i ni el diàleg ni l'API no
- * deixen posar un poble que no siga candidat (un que la llista no coneix o
- * que la màquina no ha trobat). Afegir-ne és decisió del Mestre (Gauntlet 2,
- * 261101, G2-MO-03). /page/fediversity descriu el Mètode Karpathy de la
+ * D-5 (pla 261101_1246, decisió del Mestre) · La persona també pot afegir el
+ * que falta: una etiqueta del vocabulari o una de lliure (etiquetaNova; com a
+ * molt MAX_ETIQUETES_LLIURES de lliures i MAX_ETIQUETES_REVISADES en total) i
+ * un poble que la màquina no ha trobat, dit com el diu la gent («Jijona», «la
+ * Torre», «Alcoy»: resolPobleDeText), d'entre els que coneix l'aplicació i
+ * els municipis de referència (pobles/aliesDePobles.js · catalegDePobles).
+ * El detector dels relats coneix els mateixos àlies, però només proposa
+ * pobles de la llista de l'aplicació: mai no s'inventa cap poble. Els àlies
+ * són dades (pobles/aliesDePoblesSeed.js o el camp `alies` de la fitxa del
+ * poble), mai codi. /page/fediversity descriu el Mètode Karpathy de la
  * candidatura «amb models de llenguatge»: este mòdul no és eixe mètode, en
  * fa només la part determinista.
  *
@@ -71,8 +75,11 @@
  */
 import { esLlavorDeNota } from './llavorNota.js';
 import { MOCK_TOWNS } from '../pobles/townsSeed.js';
+import { aliesDelPoble, catalegDePobles } from '../pobles/aliesDePobles.js';
 
-export const VERSIO_ESTRUCTURADOR = '1.0.0';
+/* 1.1.0 (D-5, 261101): el detector coneix els àlies de poble, i la revisió
+   humana pot afegir etiquetes lliures i un poble que no és candidat. */
+export const VERSIO_ESTRUCTURADOR = '1.1.0';
 /** L'actor de `generated.by` (OKF v0.2 §7: «<producer>/<version>»). */
 export const ACTOR_ESTRUCTURADOR = `socdepoble-memoria-oral/${VERSIO_ESTRUCTURADOR}`;
 export const OKF_VERSIO = '0.2';
@@ -96,6 +103,17 @@ const MAX_PROVA = 40;
 /** La llargària mínima d'una arrel del vocabulari. */
 export const MIN_ARREL = 4;
 const MAX_SLUG = 60;
+/* D-5 (pla 261101_1246) · Les etiquetes lliures de la revisió humana: de
+   MIN_ETIQUETA_LLIURE a MAX_ETIQUETA_LLIURE caràcters (punts de codi), com a
+   molt MAX_ETIQUETES_LLIURES, i MAX_ETIQUETES_REVISADES etiquetes en total. */
+export const MIN_ETIQUETA_LLIURE = 2;
+export const MAX_ETIQUETA_LLIURE = 40;
+export const MAX_ETIQUETES_LLIURES = 5;
+export const MAX_ETIQUETES_REVISADES = MAX_ETIQUETES + 5;
+/** El text més llarg (caràcters) que el selector de poble intenta resoldre. */
+export const MAX_TEXT_POBLE = 80;
+/* Un text d'etiqueta més llarg (abans de netejar-lo) ni es mira. */
+const MAX_TEXT_ETIQUETA = 4 * MAX_ETIQUETA_LLIURE;
 
 /* Gauntlet 2 (261101, G2-MO-07) · Cada avís del motor porta un codi
    (`codisAvis`, paral·lel a `avisos`), perquè la pantalla el puga traduir
@@ -572,7 +590,20 @@ function compila(pobles) {
     const formes = formesDe(ref.nom);
     const majuscula = poble.ambMajuscula === true || POBLES_AMB_SENTIT_COMU.has(formes.join(' '));
     afig(formes, { tipus: 'poble', ref, majuscula });
-    if (formes.length > 1 && ARTICLES.has(formes[0])) afig(formes.slice(1), { tipus: 'poble', ref, majuscula });
+    const ambArticle = formes.length > 1 && ARTICLES.has(formes[0]);
+    if (ambArticle) afig(formes.slice(1), { tipus: 'poble', ref, majuscula });
+    /* D-5 · Els àlies del poble (pobles/aliesDePobles.js), sense variant sense
+       article («la Torre» sense l'article seria «torre»). Un àlies amb
+       `ambMajuscula` només compta amb majúscula a la paraula `majusculaEn`
+       («a la Torre», i no «la torre de l'església»). */
+    const oficials = new Set([formes.join(' '), ...(ambArticle ? [formes.slice(1).join(' ')] : [])]);
+    for (const a of aliesDelPoble(poble)) {
+      const formesAlies = formesDe(a.forma);
+      if (!formesAlies.length || oficials.has(formesAlies.join(' '))) continue;
+      afig(formesAlies, {
+        tipus: 'poble', ref, majuscula: a.ambMajuscula === true || majuscula, majusculaEn: Math.min(a.majusculaEn, formesAlies.length - 1)
+      });
+    }
   }
   for (const t of VOCABULARI_RURAL) {
     for (const p of t.paraules) afig(formesDe(p), { tipus: 'tema', ref: t, majuscula: false });
@@ -618,13 +649,19 @@ function diccionariPer(pobles) {
 }
 
 /* Cert si l'entrada, que ja casa a partir de la paraula `i`, compta en el
-   seu context: la majúscula (amb una preposició de lloc davant si és l'inici
-   de la frase o una frase tota en majúscules), el nom propi de darrere, la
-   paraula de davant i la majúscula d'un nom de persona (B2-01 i B2-02). */
+   seu context: la majúscula (amb una preposició de lloc davant si la porta
+   la primera paraula de la frase o si la frase és tota en majúscules), el nom
+   propi de darrere, la paraula de davant i la majúscula d'un nom de persona
+   (B2-01 i B2-02). */
 function compta(entrada, formes, paraules, i, llarg, totMajuscules) {
   if (entrada.majuscula) {
-    if (!comencaAmbMajuscula(paraules[i])) return false;
-    if ((i === 0 || totMajuscules) && !(i > 0 && PREPOSICIONS_DE_LLOC.has(formes[i - 1]))) return false;
+    /* La majúscula, a la paraula que la porta: la primera, o la de
+       `majusculaEn` en un àlies com «la Torre» (D-5). */
+    if (!comencaAmbMajuscula(paraules[i + (entrada.majusculaEn ?? 0)])) return false;
+    /* Gauntlet D-05 · A l'inici de la frase, la majúscula de la primera
+       paraula no diu res; la d'una paraula de dins («La Torre era…») sí. */
+    const interior = (entrada.majusculaEn ?? 0) > 0;
+    if (((i === 0 && !interior) || totMajuscules) && !(i > 0 && PREPOSICIONS_DE_LLOC.has(formes[i - 1]))) return false;
   }
   if (entrada.noDespresDe && i > 0 && entrada.noDespresDe.has(formes[i - 1])) return false;
   if (entrada.nomPropi && i > 0 && !totMajuscules && comencaAmbMajuscula(paraules[i])) return false;
@@ -918,6 +955,11 @@ function cosMarkdown({ descripcio, resum, etiquetes, candidats, relatMd, subtito
     : `Proposades amb el vocabulari rural tancat de ${ACTOR_ESTRUCTURADOR}; una persona les ha de revisar.`, '');
   if (etiquetes.length) {
     for (const e of etiquetes) {
+      /* D-5 · Una etiqueta lliure: el text de la persona, escapat, i res del vocabulari. */
+      if (e.lliure === true) {
+        b.push(`* **${escapaMd(e.nom)}**: etiqueta lliure, afegida en la revisió humana.`);
+        continue;
+      }
       const perque = e.coincidencies > 0
         ? `Paraules del relat: ${escapaMd(e.proves.join(', '))} (${vegades(e.coincidencies, 'coincidència', 'coincidències')}).`
         : 'Afegida en la revisió humana.';
@@ -942,6 +984,8 @@ function cosMarkdown({ descripcio, resum, etiquetes, candidats, relatMd, subtito
     }
   } else {
     b.push('Cap poble de la llista de Sóc de Poble no hi apareix.');
+    /* D-5 · Sense candidats, la persona n'ha pogut triar un al selector. */
+    if (revisio?.municipi) b.push('', `Poble triat en la revisió: ${escapaMd(revisio.municipi.nom)}.`);
   }
   b.push('', '# Relat', '', relatMd, '');
   const delSubtitol = subtitol
@@ -1152,6 +1196,167 @@ export function estructuraMemoriaOral(entrada, opcions) {
   });
 }
 
+/* ───────────────────────── D-5 · El selector de poble ───────────────────────── */
+
+let indexDeLaLlavor = null;
+const indexos = new WeakMap();
+
+/* Les formes d'un nom amb l'article i, si en porta, també sense. */
+const ambISenseArticle = (formes) => (formes.length > 1 && ARTICLES.has(formes[0]) ? [formes, formes.slice(1)] : [formes]);
+
+/* L'índex del selector d'una llista de pobles: la forma de comparació del nom
+   oficial i de cada àlies (amb l'article i sense), cap a les refs del poble.
+   Al selector la majúscula no compta: la persona tria. També guarda les refs
+   per id, per a la revisió d'un poble que no és candidat (municipiCorregit). */
+function compilaIndex(pobles) {
+  const oficials = new Map();
+  const alies = new Map();
+  const perId = new Map();
+  const posa = (mapa, formes, ref) => {
+    if (!formes.length) return;
+    const clau = formes.join(' ');
+    const refs = mapa.get(clau) ?? new Map();
+    if (!refs.has(ref.id)) refs.set(ref.id, ref);
+    mapa.set(clau, refs);
+  };
+  for (const poble of pobles) {
+    const ref = refDePoble(poble);
+    if (!ref) continue;
+    if (!perId.has(ref.id)) perId.set(ref.id, ref);
+    for (const formes of ambISenseArticle(formesDe(ref.nom))) posa(oficials, formes, ref);
+    for (const a of aliesDelPoble(poble)) {
+      for (const formes of ambISenseArticle(formesDe(a.forma))) posa(alies, formes, ref);
+    }
+  }
+  return Object.freeze({ oficials, alies, perId });
+}
+
+function indexPer(pobles) {
+  if (pobles === undefined) {
+    indexDeLaLlavor ??= compilaIndex(catalegDePobles());
+    return indexDeLaLlavor;
+  }
+  if (!Array.isArray(pobles)) throw new TypeError('memoriaOral: «pobles» ha de ser una llista.');
+  let index = indexos.get(pobles);
+  if (!index) {
+    index = compilaIndex(pobles);
+    indexos.set(pobles, index);
+  }
+  return index;
+}
+
+/* Els pobles d'una clau: primer pels noms oficials i, si cap no hi casa, pels
+   àlies (un nom oficial mana sobre l'àlies d'un altre poble). */
+function refsDe(index, formes) {
+  if (!formes.length) return null;
+  const clau = formes.join(' ');
+  return index.oficials.get(clau) ?? index.alies.get(clau) ?? null;
+}
+
+const RESULTAT_BUIT = Object.freeze({ estat: 'buit' });
+const RESULTAT_CAP = Object.freeze({ estat: 'cap' });
+
+/**
+ * El poble que vol dir un text del selector de la fitxa, tal com el diu la
+ * gent: el nom oficial, sense accents ni majúscules, amb l'article o sense
+ * («Torre de les Maçanes»), o un àlies («Jijona», «la Torre», «Alcoy»).
+ * `pobles`: la llista on es busca; per defecte, el catàleg de la llavor i els
+ * municipis de referència (pobles/aliesDePobles.js · catalegDePobles).
+ * Torna, congelat: { estat: 'buit' } (cap text), { estat: 'cap' } (cap poble
+ * o un text de més de MAX_TEXT_POBLE caràcters), { estat: 'trobat', poble:
+ * { id, nom, comarca, provincia } } o { estat: 'ambigu', pobles: [...] }.
+ */
+export function resolPobleDeText(text, { pobles } = {}) {
+  const index = indexPer(pobles);
+  const t = net(text);
+  if (!t) return RESULTAT_BUIT;
+  if (t.length > MAX_TEXT_POBLE) return RESULTAT_CAP;
+  const formes = formesDe(t);
+  const refs = refsDe(index, formes) ?? (formes.length > 1 && ARTICLES.has(formes[0]) ? refsDe(index, formes.slice(1)) : null);
+  if (!refs) return RESULTAT_CAP;
+  const trobats = [...refs.values()];
+  return trobats.length === 1
+    ? Object.freeze({ estat: 'trobat', poble: trobats[0] })
+    : Object.freeze({ estat: 'ambigu', pobles: Object.freeze(trobats) });
+}
+
+/* ───────────────────────── D-5 · Les etiquetes lliures ───────────────────────── */
+
+/* El que no és lletra, marca, xifra, espai, apòstrof, punt volat o guionet. */
+const NO_ETIQUETA = /[^\p{L}\p{M}\p{N} '·-]+/gu;
+const APOSTROFS = /[‘’ʼ]/g;
+const VORES_ETIQUETA = new Set([' ', '-', "'", '·']);
+const TE_LLETRA_O_XIFRA = /[\p{L}\p{N}]/u;
+
+/* Cada tema del vocabulari, per la forma de comparació del seu id, del seu nom
+   i del seu títol («festes», «Festes i tradicions», «Les festes»). */
+const TEMES_PER_FORMA = new Map();
+for (const t of VOCABULARI_RURAL) {
+  for (const text of [t.id, t.nom, t.titol]) if (!TEMES_PER_FORMA.has(formaDe(text))) TEMES_PER_FORMA.set(formaDe(text), t);
+}
+
+/**
+ * Una etiqueta lliure, neta: sense els «#» del principi, amb l'apòstrof recte,
+ * en minúscules, els signes que no són lletres, xifres, «'», «·» ni «-» fets
+ * espais i sense guionets, apòstrofs ni punts volats a les puntes. Ha de fer
+ * de MIN_ETIQUETA_LLIURE a MAX_ETIQUETA_LLIURE punts de codi i portar alguna
+ * lletra o xifra; si no, null. Sense lookbehind ni Intl.Segmenter (Baseline
+ * Safari 16), i lineal: cap regex amb retrocés.
+ */
+export function normalitzaEtiquetaLliure(text) {
+  if (typeof text !== 'string') return null;
+  const crua = net(text);
+  if (!crua || crua.length > MAX_TEXT_ETIQUETA) return null;
+  let inici = 0;
+  while (inici < crua.length && crua[inici] === '#') inici += 1;
+  const neta = crua.slice(inici).normalize('NFC').replace(APOSTROFS, "'").replace(PUNTS_VOLATS, '·')
+    .toLocaleLowerCase('ca').replace(NO_ETIQUETA, ' ').replace(ESPAIS, ' ');
+  let a = 0;
+  let b = neta.length;
+  while (a < b && VORES_ETIQUETA.has(neta[a])) a += 1;
+  while (b > a && VORES_ETIQUETA.has(neta[b - 1])) b -= 1;
+  const etiqueta = neta.slice(a, b);
+  const punts = [...etiqueta].length;
+  if (punts < MIN_ETIQUETA_LLIURE || punts > MAX_ETIQUETA_LLIURE || !TE_LLETRA_O_XIFRA.test(etiqueta)) return null;
+  return etiqueta;
+}
+
+/**
+ * L'etiqueta d'un text de la persona: la del vocabulari rural si el text és
+ * l'id, el nom o el títol d'un tema ({ id, nom, lliure: false }), o una de
+ * lliure amb el text net ({ id: text, nom: text, lliure: true }); null si el
+ * text no val. `clau` és la forma de comparació (sense accents ni majúscules)
+ * per a no repetir-la. Congelada.
+ */
+export function etiquetaDeText(text) {
+  const n = normalitzaEtiquetaLliure(text);
+  if (n === null) return null;
+  const tema = TEMES_PER_FORMA.get(formaDe(n));
+  return Object.freeze(tema
+    ? { id: tema.id, nom: tema.nom, lliure: false, clau: tema.id }
+    : { id: n, nom: n, lliure: true, clau: formaDe(n) });
+}
+
+/**
+ * Si es pot afegir una etiqueta a les que ja estan marcades (`ids`), a la
+ * revisió de la fitxa. Torna, congelat: { estat: 'invalida' }, { estat:
+ * 'repetida', etiqueta } (sense accents ni majúscules), { estat: 'massa',
+ * maxim } (ja n'hi ha MAX_ETIQUETES_REVISADES; o, si és lliure, ja hi ha
+ * MAX_ETIQUETES_LLIURES de lliures, amb `lliures: true`) o { estat: 'ok',
+ * etiqueta }.
+ */
+export function etiquetaNova(text, ids = []) {
+  const etiqueta = etiquetaDeText(text);
+  if (!etiqueta) return Object.freeze({ estat: 'invalida' });
+  const marcades = Array.isArray(ids) ? ids.filter((id) => typeof id === 'string') : [];
+  if (marcades.some((id) => formaDe(id) === etiqueta.clau)) return Object.freeze({ estat: 'repetida', etiqueta });
+  if (marcades.length >= MAX_ETIQUETES_REVISADES) return Object.freeze({ estat: 'massa', maxim: MAX_ETIQUETES_REVISADES });
+  if (etiqueta.lliure && marcades.filter((id) => !TEMES_PER_ID.has(id)).length >= MAX_ETIQUETES_LLIURES) {
+    return Object.freeze({ estat: 'massa', maxim: MAX_ETIQUETES_LLIURES, lliures: true });
+  }
+  return Object.freeze({ estat: 'ok', etiqueta });
+}
+
 const nombreNatural = (n) => (Number.isInteger(n) && n >= 0 ? n : 0);
 
 /* Una etiqueta de la fitxa per al cos i per a la pantalla: el nom, el títol i
@@ -1176,39 +1381,112 @@ function etiquetesCorregides(ids, proposades) {
   return llista;
 }
 
-function municipiCorregit(id, candidats) {
+/* D-5 · Una etiqueta lliure dins de la fitxa: el nom és el text net, sense
+   títol ni descripció del vocabulari, i sense cap coincidència del relat. */
+const etiquetaLliure = (id) => ({ id, nom: id, titol: id, descripcio: '', coincidencies: 0, proves: [], lliure: true });
+
+/* Cert si una etiqueta d'una fitxa ja revisada és una lliure de veres: el
+   text ja net i que no és cap tema del vocabulari (una fitxa rehidratada pot
+   portar-ne qualsevol cosa). */
+function esLliureDeLaFitxa(e) {
+  if (e?.lliure !== true || typeof e.id !== 'string' || normalitzaEtiquetaLliure(e.id) !== e.id) return false;
+  return etiquetaDeText(e.id)?.lliure === true;
+}
+
+/* Les etiquetes que ja porta la fitxa: les del vocabulari (refetes des del
+   vocabulari) i les lliures d'una revisió anterior. */
+const etiquetesDeLaFitxa = (proposades) => proposades.flatMap((e) => {
+  if (TEMES_PER_ID.has(e?.id)) return [etiquetaDe(TEMES_PER_ID.get(e.id), e)];
+  return esLliureDeLaFitxa(e) ? [etiquetaLliure(e.id)] : [];
+});
+
+/*
+ * D-5 · Les etiquetes de la revisió: les del vocabulari que es queden (`ids`;
+ * sense, les de la fitxa) i, darrere, les que la persona ha escrit
+ * (`lliures`; sense, les lliures que ja portava la fitxa). Una de `lliures`
+ * que és del vocabulari hi entra com a afegida del vocabulari. Sense
+ * repetits (sense accents ni majúscules). TypeError si una no val, si hi ha
+ * més de MAX_ETIQUETES_LLIURES de lliures o més de MAX_ETIQUETES_REVISADES en
+ * total. null si no hi ha cap correcció d'etiquetes.
+ */
+function etiquetesRevisades(ids, lliures, proposades) {
+  if (ids === undefined && lliures === undefined) return null;
+  const llista = etiquetesCorregides(ids === undefined ? proposades.flatMap((e) => (TEMES_PER_ID.has(e?.id) ? [e.id] : [])) : ids, proposades);
+  const textos = lliures === undefined ? proposades.filter(esLliureDeLaFitxa).map((e) => e.id) : lliures;
+  if (!Array.isArray(textos)) throw new TypeError('memoriaOral: «etiquetesLliures» ha de ser una llista de textos.');
+  const lliuresFinals = [];
+  const claus = new Set();
+  for (const text of textos) {
+    const e = etiquetaDeText(text);
+    if (!e) {
+      throw new TypeError(`memoriaOral: «${String(text).slice(0, 40)}» no és cap etiqueta (de ${MIN_ETIQUETA_LLIURE} a ${MAX_ETIQUETA_LLIURE} caràcters, amb lletres o xifres).`);
+    }
+    if (!e.lliure) {
+      if (!llista.some((x) => x.id === e.id)) llista.push(etiquetaDe(TEMES_PER_ID.get(e.id), proposades.find((p) => p?.id === e.id)));
+    } else if (!claus.has(e.clau)) {
+      claus.add(e.clau);
+      lliuresFinals.push(etiquetaLliure(e.id));
+    }
+  }
+  if (lliuresFinals.length > MAX_ETIQUETES_LLIURES) throw new TypeError(`memoriaOral: com a molt ${MAX_ETIQUETES_LLIURES} etiquetes lliures.`);
+  if (llista.length + lliuresFinals.length > MAX_ETIQUETES_REVISADES) throw new TypeError(`memoriaOral: com a molt ${MAX_ETIQUETES_REVISADES} etiquetes.`);
+  return [...llista, ...lliuresFinals];
+}
+
+/* El poble de la revisió: un dels candidats, el que una revisió anterior ja
+   va signar (una segona revisió d'un poble triat al selector: `signat`) o,
+   si qui crida dona `coneguts` (D-5: el catàleg del selector), un poble
+   d'eixa llista, sense cap menció del relat. Si no, TypeError. */
+function municipiCorregit(id, candidats, coneguts, signat) {
   if (id === null) return null;
-  const triat = typeof id === 'string' && ID_POBLE.test(id) ? candidats.find((c) => c?.id === id) : undefined;
-  if (!triat) throw new TypeError('memoriaOral: «municipi» ha de ser un dels pobles candidats de la fitxa, o null.');
-  return { ...triat, mencions: nombreNatural(triat.mencions) };
+  const valid = typeof id === 'string' && ID_POBLE.test(id);
+  const triat = valid ? candidats.find((c) => c?.id === id) : undefined;
+  if (triat) return { ...triat, mencions: nombreNatural(triat.mencions) };
+  /* El signat, refet camp a camp (pot ser una fitxa rehidratada). */
+  if (valid && signat?.id === id && net(signat.nom)) {
+    return { id, nom: net(signat.nom), comarca: net(signat.comarca) || null, provincia: net(signat.provincia) || null, mencions: nombreNatural(signat.mencions) };
+  }
+  const conegut = valid && coneguts !== undefined ? indexPer(coneguts).perId.get(id) : undefined;
+  if (!conegut) throw new TypeError('memoriaOral: «municipi» ha de ser un dels pobles candidats de la fitxa (o dels «poblesConeguts»), o null.');
+  return { ...conegut, mencions: 0 };
 }
 
 /*
- * La correcció de la revisió humana (Gauntlet 261101, B2-04): les etiquetes
- * que es queden (ids del vocabulari, en l'ordre que les dona qui crida) i el
- * poble (un dels candidats o cap). Si no canvia res, null. Si canvia, refà el
- * títol (si era el del motor), la descripció, el cos i el camí; el resum i el
- * relat no es toquen: són frases del mateix relat.
+ * La correcció de la revisió humana (Gauntlet 261101, B2-04; D-5): les
+ * etiquetes que es queden (ids del vocabulari, en l'ordre que les dona qui
+ * crida) i les lliures, i el poble (un dels candidats, un dels `coneguts` o
+ * cap). Si no canvia res, null. Si canvia, refà el títol (si era el del
+ * motor), la descripció, el cos i el camí; el resum i el relat no es toquen:
+ * són frases del mateix relat. El títol i la descripció només nomenen
+ * etiquetes del vocabulari: una lliure no té cap títol amb article.
  */
-function correccioDe(fitxa, idsEtiquetes, idMunicipi) {
+function correccioDe(fitxa, idsEtiquetes, idMunicipi, lliures, coneguts) {
   const proposades = Array.isArray(fitxa.etiquetes) ? fitxa.etiquetes : [];
   const candidats = Array.isArray(fitxa.candidats) ? fitxa.candidats.filter((c) => c && typeof c === 'object') : [];
-  const etiquetes = idsEtiquetes === undefined ? null : etiquetesCorregides(idsEtiquetes, proposades);
-  const municipi = idMunicipi === undefined ? undefined : municipiCorregit(idMunicipi, candidats);
-  const abans = proposades.map((e) => e?.id).join(' ');
-  const canviaEtiquetes = etiquetes !== null && etiquetes.map((e) => e.id).join(' ') !== abans;
+  const etiquetes = etiquetesRevisades(idsEtiquetes, lliures, proposades);
+  /* Gauntlet T6a-G06 · El poble de la fitxa només compta com a triat si una
+     revisió anterior el va signar (status stable i el mateix `municipi` al
+     frontmatter): un esborrany no en pot colar cap que no siga candidat. */
+  const fm = fitxa.okf.frontmatter;
+  const signat = fm.status === 'stable' && fitxa.municipi?.id === fm.municipi ? fitxa.municipi : undefined;
+  const municipi = idMunicipi === undefined ? undefined : municipiCorregit(idMunicipi, candidats, coneguts, signat);
+  /* Les llistes d'ids, unides per un salt de línia: una etiqueta lliure pot
+     portar espais, però cap salt. */
+  const abans = proposades.map((e) => e?.id).join('\n');
+  const canviaEtiquetes = etiquetes !== null && etiquetes.map((e) => e.id).join('\n') !== abans;
   const canviaPoble = municipi !== undefined && (municipi?.id ?? null) !== (fitxa.municipi?.id ?? null);
   if (!canviaEtiquetes && !canviaPoble) return null;
 
   const relatMd = relatDelCos(fitxa.okf.cos);
   const empremtaDelCami = EMPREMTA_DEL_CAMI.exec(String(fitxa.okf.cami ?? ''))?.[1];
   if (relatMd === null || !empremtaDelCami) throw new TypeError('memoriaOral: esta fitxa no l\'ha feta este motor; no es pot corregir.');
-  const finals = canviaEtiquetes ? etiquetes : proposades.flatMap((e) => (TEMES_PER_ID.has(e?.id) ? [etiquetaDe(TEMES_PER_ID.get(e.id), e)] : []));
+  const finals = canviaEtiquetes ? etiquetes : etiquetesDeLaFitxa(proposades);
+  const delVocabulari = finals.filter((e) => e.lliure !== true);
   const triat = municipi === undefined ? (fitxa.municipi ?? null) : municipi;
   const titol = fitxa.titolDeLaPersona === false
-    ? titolDe(finals, triat, '', typeof fitxa.titolDelText === 'string' ? fitxa.titolDelText : '')
+    ? titolDe(delVocabulari, triat, '', typeof fitxa.titolDelText === 'string' ? fitxa.titolDelText : '')
     : fitxa.okf.frontmatter.title;
-  const descripcio = descripcioDe(finals, triat, candidats, true);
+  const descripcio = descripcioDe(delVocabulari, triat, candidats, true);
   const descartades = proposades.filter((e) => !finals.some((f) => f.id === e?.id)).map((e) => TEMES_PER_ID.get(e?.id)?.nom ?? escapaMd(String(e?.id)));
   const cos = cosMarkdown({
     descripcio,
@@ -1235,7 +1513,15 @@ function correccioDe(fitxa, idsEtiquetes, idMunicipi) {
  *  · etiquetes: la llista d'ids del vocabulari rural que es queden (les que
  *    falten són descartades; una que no havia proposat la màquina hi entra
  *    com a afegida en la revisió);
- *  · municipi: l'id d'un dels `candidats` de la fitxa, o null (cap).
+ *  · municipi: l'id d'un dels `candidats` de la fitxa, o null (cap);
+ *  · etiquetesLliures (D-5): els textos de les etiquetes que la persona ha
+ *    escrit (etiquetaDeText): una del vocabulari compta com a afegida del
+ *    vocabulari, i les altres van darrere, com a etiquetes lliures (com a
+ *    molt MAX_ETIQUETES_LLIURES, i MAX_ETIQUETES_REVISADES en total). Sense,
+ *    les lliures que ja portava la fitxa;
+ *  · poblesConeguts (D-5): la llista on `municipi` pot ser un poble que no és
+ *    candidat (el catàleg del selector, catalegDePobles). Sense, només un
+ *    candidat.
  * Si canvien, la fitxa segellada ho reflectix al frontmatter (`tags`,
  * `municipi`, `title` si era el del motor, `description`), al cos (cada
  * secció diu què s'ha corregit) i al camí. Sense correcció, només canvien
@@ -1246,17 +1532,18 @@ function correccioDe(fitxa, idsEtiquetes, idMunicipi) {
  * colats no arriba mai al YAML. Un `verified` en un sol mapa compta com una
  * llista d'un (§5.2).
  */
-export function marcaRevisioHumana(fitxa, { persona, ara, etiquetes, municipi } = {}) {
+export function marcaRevisioHumana(fitxa, { persona, ara, etiquetes, municipi, etiquetesLliures, poblesConeguts } = {}) {
   if (!fitxa?.okf?.frontmatter) throw new TypeError('memoriaOral: no hi ha cap fitxa OKF per revisar.');
   const at = instantDe(ara, 'ara');
   if (!at) throw new TypeError('memoriaOral: la revisió necessita «ara».');
   const by = actorHuma(persona, 'persona');
+  if (poblesConeguts !== undefined && !Array.isArray(poblesConeguts)) throw new TypeError('memoriaOral: «poblesConeguts» ha de ser una llista de pobles.');
   const anterior = fitxa.okf.frontmatter;
   const validacio = validaFitxaOkf(anterior);
   if (!validacio.valida) throw new TypeError(`memoriaOral: fitxa OKF no vàlida: ${validacio.errors.join(' ')}`);
   const previs = (anterior.verified == null ? [] : [].concat(anterior.verified))
     .map((v) => ({ by: v.by, at: instantDe(v.at, 'verified.at') }));
-  const c = correccioDe(fitxa, etiquetes, municipi);
+  const c = correccioDe(fitxa, etiquetes, municipi, etiquetesLliures, poblesConeguts);
 
   const frontmatter = { ...anterior, status: 'stable', verified: [...previs, { by, at }] };
   if (anterior.generated && 'at' in anterior.generated) frontmatter.generated = { ...anterior.generated, at: instantDe(anterior.generated.at, 'generated.at') };
@@ -1387,3 +1674,12 @@ export function entradaLog(fitxa, { ara } = {}) {
     : `* **Revisió**: ${enllac}, revisada per ${typeof darrera === 'string' ? escapaMd(darrera) : 'una persona'}.`;
   return `## ${at.slice(0, 10)}\n${linia}\n`;
 }
+
+/**
+ * T2 · D04/D10 (assalt 261101) · El fitxer Markdown d'una fitxa OKF a partir
+ * del seu frontmatter i del seu cos, amb el mateix serialitzador que la fitxa
+ * (fitxa.okf.markdown): el paquet Open Data l'escriu a data/okf/ i el
+ * restaurador comprova que els bytes hi tornen igual. Llança TypeError amb un
+ * estat o una data que no són d'OKF v0.2.
+ */
+export const markdownOkf = (frontmatter, cos) => markdownDe(frontmatter, cos);

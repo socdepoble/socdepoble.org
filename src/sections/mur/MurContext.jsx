@@ -7,7 +7,8 @@ import { MurContext } from './objectesDeContext.js';
 import { loadMur, loadSeccioPage, appendSectionSubmissionNetworkOnly, teCapacitat } from '../../data/backendPort.js';
 import { SECCIONS_PAGINABLES } from '../../data/contracte.js';
 import { sortPinnedContent } from '../../config/contentHelpers';
-import { useIdentitat } from '../../app/contexts/IdentitatContext.jsx';
+import { useIdentitatOReserva } from '../../app/contexts/useIdentitatOReserva.js';
+import { ErrorIdentitatDeLectura, esIdentitatDeLectura } from '../../app/contexts/identitatDeReserva.js';
 import { useRecarregaExterna } from '../../app/contexts/useRecarregaExterna.jsx';
 import { useModeracio } from '../../components/PedraSeca/hooks/moderacioDePoble.js';
 import { filtraElementsBloquejats } from '../../config/moderacio.js';
@@ -93,7 +94,15 @@ function extresVigents(extra, base) {
 }
 
 export function MurProvider({ children, config }) {
-  const { actorId, actorKey, actor } = useIdentitat();
+  /* D-7 (pla 261101_1246; P1-71) · Blindatge HMR. Fora d'IdentitatProvider
+     (una recàrrega en calent amb un context vell), la reserva anònima de
+     només lectura (identitatDeReserva.js) i no el pet que tombava el Mas
+     sencer: el Mur es llig com el veu qui no ha entrat (actorId null, àmbit
+     'anon') i publicar es refusa abans de cap xarxa. Dins del proveïdor, res
+     no canvia. */
+  const identitatDelMur = useIdentitatOReserva();
+  const { actorId, actorKey, actor } = identitatDelMur;
+  const nomesLectura = esIdentitatDeLectura(identitatDelMur);
   const { currentUser } = useSession();
   /* Fase D (261020, tasca 2) · El que has bloquejat no es veu enlloc on es
      llig el Mur, el Mercat o l'Agenda: es filtra UNA vegada, al valor (null
@@ -140,6 +149,8 @@ export function MurProvider({ children, config }) {
      havia fallat. El callback ara és estable entre 'loading' i 'ready'.
      `refresh` ja és estable (useScopedResource.js). */
   const sendSectionSubmission = useCallback(async (sub) => {
+    // D-7 · Amb la reserva de només lectura no se signa res amb ningú.
+    if (nomesLectura) throw new ErrorIdentitatDeLectura();
     const assertCurrent = () => {
       if (currentOperation.current !== operation) throw new DOMException('Sessió canviada.', 'AbortError');
     };
@@ -148,7 +159,7 @@ export function MurProvider({ children, config }) {
     assertCurrent();
     refresh();
     return saved;
-  }, [operation, config, autoria, refresh]);
+  }, [nomesLectura, operation, config, autoria, refresh]);
 
   /* Decisió 4 · L'àmbit d'AÏLLAMENT de les pàgines extres: el mateix que
      buida useScopedResource (la clau d'àmbit, la configuració i l'actor de la

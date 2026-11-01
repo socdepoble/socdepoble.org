@@ -42,6 +42,11 @@
  * perfil; XatSection, origenDelXat.js) hi torna amb la mateixa fletxa, ara
  * també en ample (sense d-mobile-only) i amb el seu nom («Torna a la pàgina
  * anterior»). Sense, la fletxa de sempre: només en estret i a la llista.
+ *
+ * P1-12 pas 17 (pla 261101_1246, T7 · S5) · `accioXifratge` ({ etiqueta, onTria }):
+ * darrere de «Seleccionar missatges», l'entrada que obri l'estat del xifratge i el
+ * número de seguretat. La porta Conversa només amb la bandera E2EE encesa (i
+ * l'etiqueta hi viu, plegada per la bandera); sense, el menú de sempre, igual.
  */
 import { useEffect, useId, useRef, useState } from 'react';
 import { ArrowLeft, MoreVertical, X } from 'lucide-react';
@@ -64,7 +69,7 @@ const esRutaInterna = (ruta) => typeof ruta === 'string' && ruta.startsWith('/')
 export default function CapcaleraConversa({
   fil, onTorna, onSeleccionar, seleccio = null, t,
   onDenunciaPersona = null, onBloqueja = null, onDesbloqueja = null, nomContrapart = '',
-  onTornaAOrigen = null
+  onTornaAOrigen = null, accioXifratge = null
 }) {
   const [menuObert, setMenuObert] = useState(false);
   const menuRef = useRef(null);
@@ -220,6 +225,11 @@ export default function CapcaleraConversa({
             >
               {t('section.xat.conversa.seleccionar', 'Seleccionar missatges')}
             </button>
+            {typeof accioXifratge?.onTria === 'function' && accioXifratge.etiqueta ? (
+              <button type="button" role="menuitem" className="sdp-xat-menu__item" onClick={() => triaDelMenu(accioXifratge.onTria)}>
+                {accioXifratge.etiqueta}
+              </button>
+            ) : null}
             {typeof onDenunciaPersona === 'function' && nomDeLaContrapart ? (
               <button type="button" role="menuitem" className="sdp-xat-menu__item" onClick={() => triaDelMenu(onDenunciaPersona)}>
                 {ambNom('section.moderacio.denunciaPersona', 'Denuncia {nom}')}

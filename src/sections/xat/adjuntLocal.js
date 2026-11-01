@@ -138,22 +138,49 @@ export async function senseUbicacioVideo(fitxer) {
   }
 }
 
+/* IDEA-36 (assalt 261101, T7 · S3) · Una captura de pantalla (PNG: el que
+   fan iOS, Android i el porta-retalls) porta text menut i es llig millor gran:
+   2048 px de costat llarg i, si no cap dins del sostre de la imatge
+   (MAXIM_ADJUNT_XAT.imatge, 2.000.000 B), 1600 i després 1200. Una foto
+   (JPEG, WebP, AVIF o GIF) va a 1200 px, com sempre. Un PNG que no és cap
+   captura només hi guanya resolució. */
+export const COSTAT_FOTO = 1200;
+export const COSTATS_CAPTURA = Object.freeze([2048, 1600, 1200]);
+export const esCapturaDePantalla = (fitxer) => fitxer?.type === 'image/png';
+
+/* La imatge recodificada (WebP o JPEG), sense EXIF/GPS, al costat més gran
+   de la llista que hi cap; l'últim costat es torna encara que no hi càpia
+   (validaAdjuntXat continua dient el que no es pot pujar). */
+async function imatgeRecodificada(fitxer, { signal, comprimeix }) {
+  const costats = esCapturaDePantalla(fitxer) ? COSTATS_CAPTURA : [COSTAT_FOTO];
+  let format = 'image/webp';
+  let imatge = null;
+  for (const [intent, costat] of costats.entries()) {
+    if (intent > 0 && signal?.aborted) throw abortat();
+    const opcions = { maxSize: costat, quality: 0.8, conservaExif: false };
+    let data = await comprimeix(fitxer, { ...opcions, format });
+    /* Gauntlet 261022_0225 (crítica Claude, MEDIA-3) · WebKit no sap codificar
+       WebP en canvas i torna PNG: es torna a demanar en JPEG, com fa
+       fotoDinsDelPressupost, i els costats següents ja van en JPEG. Una foto
+       mai no es puja en PNG: blobDeDataUrl talla de seguida amb 'foto'. */
+    if (format === 'image/webp' && !/^data:image\/webp[;,]/.test(String(data))) {
+      if (signal?.aborted) throw abortat();
+      format = 'image/jpeg';
+      data = await comprimeix(fitxer, { ...opcions, format });
+    }
+    imatge = blobDeDataUrl(String(data));
+    if (imatge.size <= MAXIM_ADJUNT_XAT.imatge) break;
+  }
+  return imatge;
+}
+
 export async function preparaAdjunt(fitxer, { signal, comprimeix = compressImage, lligDurada = duradaLocal, netejaVideo = senseUbicacioVideo } = {}) {
   if (!(fitxer instanceof Blob) || !fitxer.size) throw errorAdjuntXat('buit');
   if (signal?.aborted) throw abortat();
   let resultat;
   if (/^image\/(jpeg|png|webp|avif|gif)$/.test(fitxer.type)) {
     // Sempre recodificada i sense EXIF/GPS, també si l'original ja és menut.
-    const opcions = { maxSize: 1200, quality: 0.8, conservaExif: false };
-    let data = await comprimeix(fitxer, { ...opcions, format: 'image/webp' });
-    /* Gauntlet 261022_0225 (crítica Claude, MEDIA-3) · WebKit no sap codificar
-       WebP en canvas i torna PNG: es torna a demanar en JPEG, com fa
-       fotoDinsDelPressupost. Una foto mai no es puja en PNG. */
-    if (!/^data:image\/webp[;,]/.test(String(data))) {
-      if (signal?.aborted) throw abortat();
-      data = await comprimeix(fitxer, { ...opcions, format: 'image/jpeg' });
-    }
-    resultat = { fitxer: blobDeDataUrl(String(data)), tipus: 'imatge', duradaMs: null };
+    resultat = { fitxer: await imatgeRecodificada(fitxer, { signal, comprimeix }), tipus: 'imatge', duradaMs: null };
   } else if (/^video\/(mp4|webm|quicktime)$/.test(fitxer.type)) {
     comprovaMida(fitxer);
     const duradaMs = await lligDurada(fitxer, { signal });

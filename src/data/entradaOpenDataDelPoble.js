@@ -1,4 +1,6 @@
-/** Adaptador de slug a l'exportador pur. Només directori públic i outbox publicat.
+/** Adaptador de slug a l'exportador pur: el que el port servix com a públic
+ * (el directori i, amb la capacitat 'dadesObertes', notícies, agenda, memòria
+ * cultural i memòria oral; T2 · D04/D10, assalt 261101) i l'outbox publicat.
  * Decisió del Mestre del 31-10-2026 (Ronda 2): només els pobles federats
  * (POBLES_FEDERATS, hui La Torre) tenen actor i outbox. Per a un poble de
  * mostra el paquet no porta activitystreams.json ni cap enllaç federat, i no es
@@ -20,8 +22,10 @@ export async function entradaOpenDataDelPoble(slug, { municipi, port, ara = new 
   if (poble.slug !== slug || !poble.nom) throw new TypeError('Identitat municipal invàlida.');
   const { recullDadesPubliquesDelMunicipi } = await import('./exportaMunicipiOpenData.js');
   const dades = await recullDadesPubliquesDelMunicipi(backend, poble, { signal: AbortSignal.timeout(15000) });
-  /* Sense la capacitat directoriEntitats, entitats és null: el paquet ix igual i la memòria diu, a «Fonts pendents», que el directori no hi és. */
+  /* Sense la capacitat directoriEntitats, entitats és null: el paquet ix igual i la memòria diu, a «Fonts pendents», que el directori no hi és.
+     T2 · Les col·leccions que el port ha llegit hi van totes; les altres són a `pendents`, amb el seu motiu. */
   const llegides = { entitats: dades.entitats ?? undefined, pendents: dades.pendents };
+  for (const coleccio of ['noticies', 'agenda', 'memoria', 'memoriaOral']) if (Array.isArray(dades[coleccio])) llegides[coleccio] = dades[coleccio];
   if (!esPobleFederat(slug)) return { municipi: poble, ara, origen, actorsPublicats: [], ...llegides };
   const urls = urlsDeMunicipi(slug, { origen });
   const resposta = await fetchImpl(urls.outbox, { method: 'GET', credentials: 'omit', redirect: 'error', signal: AbortSignal.timeout(15000), headers: { Accept: 'application/activity+json' } });

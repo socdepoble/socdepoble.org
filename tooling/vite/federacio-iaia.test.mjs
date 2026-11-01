@@ -94,7 +94,12 @@ test('actor, outbox, followers i objecte: application/activity+json sempre, ids 
     }
   }
   const outbox = JSON.parse((await pide(`/ap/outbox/${TORRE}.json`)).text);
-  assert.deepEqual([outbox.totalItems, outbox.orderedItems], [0, []]);
+  /* D05 (pla 261101_1246) · Expectativa actualitzada a posta (abans [0, []]): la pàgina pública del poble, amb
+     l'URL de l'origen de la petició; federacio-iaia.mjs no canvia, el generador l'hi posa. */
+  assert.equal(outbox.totalItems, 1);
+  assert.deepEqual(outbox.orderedItems.map((a) => [a.object.id, a.object.url]), [
+    [`${origen}/ap/objectes/${TORRE}/pagina-del-poble.json`, `${origen}/pobles/${TORRE}`]
+  ]);
   const cap = await pide(`/ap/actors/${TORRE}.json`, { method: 'HEAD' });
   assert.equal(cap.status, 200);
   assert.equal(cap.text, '');
@@ -310,7 +315,8 @@ test('servidor dev sense xarxa: un .env remot no fa cap petició a app_content',
   assert.equal((await pide(`/ap/actors/${TORRE}.json`)).status, 200);
   const outbox = await pide(`/ap/outbox/${TORRE}.json`);
   assert.equal(outbox.status, 200);
-  assert.equal(JSON.parse(outbox.text).totalItems, 0);
+  // D05 · Expectativa actualitzada a posta: sense xarxa, la pàgina pública del poble (abans, 0).
+  assert.equal(JSON.parse(outbox.text).totalItems, 1);
   assert.equal(crides, 0);
 });
 

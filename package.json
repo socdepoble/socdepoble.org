@@ -74,7 +74,7 @@
     "build:tokens": "node tooling/scripts/build-tokens.mjs",
     "build:seo": "node tooling/gates/build-seo-manifest.mjs --escriu",
     "build:social": "node tooling/seo/projeccio-publica.mjs --root . --origin https://socdepoble.org --out node_modules/.cache/sdp-social/snapshot.json && node tooling/seo/prerender-social.mjs --root . --dist dist --origin https://socdepoble.org --snapshot node_modules/.cache/sdp-social/snapshot.json",
-    "build:web": "vite build",
+    "build:web": "vite build && node tooling/gates/pressupost-paquet.mjs --dist dist",
     "build:wp": "vite build -c vite.standalone.config.js",
     "build:wp:directori": "SDP_VARIANT=wordpress vite build -c vite.standalone.config.js",
     "build:natiu": "npm run build:tokens && npm run rag:build && npm run slugs:build && node tooling/wiki/compile-wiki-to-app.mjs && vite build -c vite.natiu.config.js --mode natiu",

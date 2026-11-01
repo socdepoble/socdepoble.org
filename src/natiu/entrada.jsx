@@ -19,6 +19,8 @@
  *   · el mode de dades és sempre 'remote';
  *   · no s'exposa window.SocDePoble: dins de l'app no hi ha cap amfitrió;
  *   · no es registra cap worker (la CSP de l'app porta worker-src 'none').
+ * I una de pròpia (P0-23, 261025; rebasada el 261101): la porta de versió
+ * mínima, que la web no té.
  */
 
 import styles from '../css/index.css?inline';
@@ -33,6 +35,8 @@ import { lliuraCompartit, registraAlliberadorCompartit, registraTalladorComparti
 import { registraAvisosNatius } from '../config/avisosNatius.js';
 import { creaReceptorCompartit } from './compartirNatiu.js';
 import { creaAvisosNatius } from './avisosNatius.js';
+import { bloqueigDeVersio } from './versioMinima.js';
+import CalActualitzar from './CalActualitzar.jsx';
 
 const styleNode = document.createElement('style');
 styleNode.textContent = styles;
@@ -52,14 +56,19 @@ const init = () => {
     /* Pas 0 del §1.2 (Fase D, 261020, tasca 1): els adaptadors natius, abans de
        la capa i del primer pintat (/registre llig el registre de manera síncrona).
        Mai tomba l'arrencada: sense ells, el correu continua. Els dos clients de
-       Google són públics i només viuen a .env.natiu.local (vite.natiu.config.js). */
+       Google són públics i només viuen a .env.natiu.local (vite.natiu.config.js).
+       D-10 (pla 261101_1246, BOT-A3) · «Continua amb Apple» només ix amb
+       VITE_APPLE_OAUTH_ACTIU exactament 'true' (Apple encés a Supabase): sense
+       el flag, a iOS no hi ha cap botó social (App Store 4.8) i queda el correu.
+       Va fora de `clients`, que són els ID públics de Google. */
     try {
       registraEntradaNativa(creaEntradaSocial({
         plataforma: plataformaDelDispositiu(),
         clients: {
           googleWeb: import.meta.env.VITE_NATIU_GOOGLE_WEB_CLIENT_ID,
           googleIos: import.meta.env.VITE_NATIU_GOOGLE_IOS_CLIENT_ID
-        }
+        },
+        appleActiu: import.meta.env.VITE_APPLE_OAUTH_ACTIU === 'true'
       }));
     } catch (e) {
       console.error('[natiu] Entrada nativa no registrada:', e);
@@ -123,7 +132,8 @@ const init = () => {
 
     /* Onada 12 (261011; ordres 261011_0130, punt 7) · Com main.jsx: el rebuig
        té amo, i quanLlest() torna a arrencar en el reintent de la vista. */
-    arrenca().catch((e) => console.error('[natiu] Arrencada fallida:', e));
+    const arrencada = arrenca();
+    arrencada.catch((e) => console.error('[natiu] Arrencada fallida:', e));
 
     // Pas 4b: la capa del paquet per davall de la del lloc, com main.jsx.
     /* Fase D (261020, tasca 4.1) · L1 · Com main.jsx: amb una tria desada que
@@ -137,6 +147,20 @@ const init = () => {
     pintaAmbDiccionari(() => root.render(
       <PedraSecaEmbed config={{ ...capaDelPaquet(), ...DEL_LLOC, ...delDispositiu }} isFirstInstance={true} targetNode={arrel} />
     ), { amfitrio: idioma });
+
+    /* P0-23 (BOT-A2; Gauntlet Claude 261025_1705; rebasat el 261101) · La
+       porta de versió mínima. Amb el backend ja segellat, l'app pregunta al
+       node pel port (capacitat 'versioClient') si encara servix esta versió
+       (VERSIO_CLIENT_NATIU) i, si no, pinta «Cal actualitzar l'app» en lloc de
+       l'App, en la llengua de l'App (la triada o la del dispositiu, TE-05).
+       L'App no espera la resposta. Fail-open: una arrencada fallida, la
+       capacitat absent o qualsevol error deixen l'App com està (versioMinima.js). */
+    arrencada
+      .then(() => bloqueigDeVersio({ plataforma: plataformaDelDispositiu(), config: capaDelPaquet() }), () => null)
+      .then((bloqueig) => {
+        if (bloqueig) pintaAmbDiccionari(() => root.render(<CalActualitzar enllac={bloqueig.enllac} amfitrio={idioma ?? null} />), { amfitrio: idioma });
+      })
+      .catch((e) => console.error('[natiu] Porta de versió:', e));
   }
 };
 
