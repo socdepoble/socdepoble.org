@@ -68,6 +68,9 @@ test('l’adaptador Supabase sencer valida i ofereix compte i consentiment', () 
   expect(presents).toEqual(expect.arrayContaining(['entradaAmbToken']));
   expect(teCapacitat('entradaAmbToken')).toBe(true);
   expect(typeof supabase.entraAmbTokenDeProveidor).toBe('function');
+  /* B8C-2 (marató 261101_2143; Bloc B8) · els aparells dels avisos push i el silenci de la conversa (B8-SERVIDOR §2.9). */
+  expect(presents).toEqual(expect.arrayContaining(['avisosPush', 'silenciXat']));
+  for (const nom of [...CAPACITATS.avisosPush, ...CAPACITATS.silenciXat]) expect(typeof supabase[nom], nom).toBe('function');
 });
 
 test('cap mètode de compte o consentiment es perd per ambigüitat entre mòduls', () => {

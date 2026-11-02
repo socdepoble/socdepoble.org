@@ -354,7 +354,7 @@ function socdepoble_enxufe_te_bundle() {
 function socdepoble_enxufe_marcatge( $instancia = array(), $embolcall = 'class="socdepoble-enxufe"' ) {
 	if ( ! socdepoble_enxufe_te_bundle() ) {
 		if ( current_user_can( 'edit_posts' ) ) {
-			return '<p>' . esc_html__( 'Sóc de Poble — Enxufe: dist/soc-de-poble.standalone.js is missing. Build it with npm run build:wp.', 'socdepoble' ) . '</p>';
+			return '<p>' . esc_html__( 'Sóc de Poble: dist/soc-de-poble.standalone.js is missing. Build it with npm run build:wp.', 'socdepoble' ) . '</p>';
 		}
 		return '';
 	}

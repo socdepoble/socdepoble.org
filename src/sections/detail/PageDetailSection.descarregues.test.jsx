@@ -73,6 +73,7 @@ const INSTALAR = "Instal·lar l'App (PWA)";
 const INSTALADA = 'Aplicació ja instal·lada en aquest dispositiu';
 const CLASSE = 'sdp-boto sdp-boto--primari sdp-boto--gran sdp-boto--ple';
 const PLAY = 'https://play.google.com/store/apps/details?id=org.socdepoble.app';
+const APP_STORE = 'https://apps.apple.com/app/id1234567890';
 const WORDPRESS = 'https://wordpress.org/plugins/socdepoble/';
 
 /* Decisió d'honestedat: a les zones d'acció, cap enllaç ni res que anuncie
@@ -434,8 +435,8 @@ describe('P1-69 · res que no es puga complir, i cap div buit', () => {
       const enllacos = document.querySelectorAll(`a[href="${PLAY}"]`);
       expect(enllacos).toHaveLength(1);
       expect([dalt().contains(enllacos[0]), baix().querySelectorAll('a').length]).toEqual([true, 0]);
-      // Dalt, una per canal obert, en l'ordre de la llista: Google Play i WordPress.org.
-      expect([...dalt().querySelectorAll('a')].map((a) => a.textContent)).toEqual(['Google Play', 'WordPress.org']);
+      // Dalt, una per canal obert, en l'ordre de la llista: Google Play (B9: on és l'app) i WordPress.org.
+      expect([...dalt().querySelectorAll('a')].map((a) => a.textContent)).toEqual(['Disponible a Google Play', 'WordPress.org']);
       expect(screen.getAllByRole('button', { name: INSTALAR })).toHaveLength(2);
       // L'oferta, gastada (una captura nova no la buida: en una càrrega de veres només n'hi ha una).
       await pagina.instalada();
@@ -447,6 +448,44 @@ describe('P1-69 · res que no es puga complir, i cap div buit', () => {
       expect([document.querySelectorAll(`a[href="${PLAY}"]`).length, dalt().contains(document.querySelector(`a[href="${PLAY}"]`)), baix()]).toEqual([1, true, null]);
     } finally {
       botigues.llista[0] = tancada;
+    }
+  });
+
+  /* B9 (marató 261101_2143; ordre: «/page/descarregues directe per als veïns:
+     botons de les botigues quan hi ha URL, res de «beta», sense trencar la
+     PWA») · Les dues botigues d'apps obertes: un enllaç per botiga a la
+     pàgina, dalt, amb «Disponible a…»; cap «beta» ni TestFlight a la zona
+     d'acció; el botó PWA continua sent el primari, un per lloc. */
+  test('les dues botigues d’apps obertes: «Disponible a…», un enllaç per botiga, res de beta i la PWA primària', async () => {
+    const [play, store] = botigues.llista;
+    // Les dues primeres ranures són les de les botigues d'apps; la prova les obri, estiguen com estiguen.
+    expect([play.id, store.id]).toEqual(['google-play', 'app-store']);
+    botigues.llista[0] = { ...play, url: PLAY };
+    botigues.llista[1] = { ...store, url: APP_STORE };
+    try {
+      ambAgent(AGENTS.chromeMac);
+      const pagina = entradaPropia();
+      visita('/page/descarregues');
+      await pagina.ofereix(oferta());
+      for (const href of [PLAY, APP_STORE]) {
+        const enllacos = document.querySelectorAll(`a[href="${href}"]`);
+        expect([href, enllacos.length, dalt().contains(enllacos[0])]).toEqual([href, 1, true]);
+      }
+      expect([...dalt().querySelectorAll('.sdp-accions > a')].map((a) => [a.getAttribute('href'), a.className, a.textContent])).toEqual([
+        [PLAY, 'sdp-boto sdp-boto--secundari sdp-boto--gran', 'Disponible a Google Play'],
+        [APP_STORE, 'sdp-boto sdp-boto--secundari sdp-boto--gran', "Disponible a l'App Store"],
+        [WORDPRESS, 'sdp-boto sdp-boto--secundari sdp-boto--gran', 'WordPress.org']
+      ]);
+      expect(baix().querySelectorAll('a')).toHaveLength(0);
+      for (const zona of [dalt(), baix()]) expect(zona.textContent).not.toMatch(/\bbeta\b|TestFlight|prompte|aviat|pròximament/i);
+      // La PWA no es trenca: un sol botó per lloc, el primari (blau, gran i ple); les botigues, secundàries.
+      expect([dalt(), baix()].map((zona) => [...zona.querySelectorAll('button')].map((boto) => [boto.className, boto.textContent])))
+        .toEqual([[[CLASSE, `📲 ${INSTALAR}`]], [[CLASSE, `📲 ${INSTALAR}`]]]);
+      expect(dalt().querySelectorAll('.sdp-boto--primari')).toHaveLength(1);
+      await pagina.instalada();
+    } finally {
+      botigues.llista[0] = play;
+      botigues.llista[1] = store;
     }
   });
 

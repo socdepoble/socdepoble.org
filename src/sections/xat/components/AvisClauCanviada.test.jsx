@@ -15,7 +15,7 @@ import { MemoryRouter } from '../../../app/contexts/RouterContext.jsx';
 import { AppGridContext } from '../../../components/layout/AppGridShell.jsx';
 import { estatXifratgeDelFil } from '../estatXifratgeFil.js';
 
-const m = vi.hoisted(() => ({ encesa: true, canvis: null, opcions: [], estat: null, quotaXat: null }));
+const m = vi.hoisted(() => ({ encesa: true, canvis: null, opcions: [], estat: null, quotaXat: null, real: false, servei: null, controls: null }));
 /* Corrector (P3-a) · Amb onSendMedia, ControlsAdjunt llig la quota del port: el fals
    diu que hi ha adjunts perquè la prova veja si el bloqueig els apaga. */
 vi.mock('../../../data/backendPort.js', async (importOriginal) => {
@@ -37,13 +37,28 @@ vi.mock('../useSeguretatDelFil.js', async (importOriginal) => ({
   ...(await importOriginal()),
   useEstatXifratgeDelFil: () => m.estat
 }));
-vi.mock('../useCanvisDeClau.js', async (importOriginal) => ({
-  ...(await importOriginal()),
-  useCanvisDeClau: (opcions) => {
-    m.opcions.push(opcions);
-    return m.canvis;
-  }
-}));
+/* E3 · Amb `m.real`, el hook de veres (amb el servei simulat de `m.servei`): la conversa
+   llig els canvis com en producció. Sense, els canvis simulats de `m.canvis`. */
+vi.mock('../useCanvisDeClau.js', async (importOriginal) => {
+  const original = await importOriginal();
+  return {
+    ...original,
+    useCanvisDeClau: (opcions) => {
+      m.opcions.push(opcions);
+      return m.real ? original.useCanvisDeClau(opcions) : m.canvis;
+    }
+  };
+});
+vi.mock('../../../data/xifratXat.js', async (importOriginal) => {
+  const original = await importOriginal();
+  return { ...original, serveiXifratXat: (...args) => (m.servei ?? original.serveiXifratXat(...args)) };
+});
+/* E3 · ControlsAdjunt de veres; la prova n'agafa l'onEnvia que li passa la conversa. */
+vi.mock('./ControlsAdjunt.jsx', async (importOriginal) => {
+  const original = await importOriginal();
+  const Real = original.default;
+  return { ...original, default: (props) => { m.controls = props; return <Real {...props} />; } };
+});
 
 const { default: AvisClauCanviada } = await import('./AvisClauCanviada.jsx');
 const { default: Conversa } = await import('./Conversa.jsx');
@@ -56,6 +71,7 @@ const nomDe = (usuari) => NOMS[usuari] ?? '';
 const pendent = (extres = {}) => ({ usuari: PEPA, motiu: 'sense-continuitat', kidFixat: 'kid-vell', kidNou: 'kid-nou', ...extres });
 const canvis = (extres = {}) => ({ pendents: [], suaus: [], alarmes: [], error: null, ...extres });
 const FORTA_PEPA = 'Pepa té una clau de seguretat nova que la clau anterior no ha confirmat. Passa quan algú perd l’aparell i la frase, o si algú s’ha posat pel mig. Parla amb Pepa per a saber què ha passat.';
+const RETIRADA_PEPA = 'Este aparell no troba cap clau de seguretat vàlida de Pepa que es puga confirmar. Passa quan algú perd l’aparell i la frase, o si algú s’ha posat pel mig. Fins que n’hi haja una de vàlida, no s’hi pot escriure. Parla amb Pepa per a saber què ha passat.';
 
 afterEach(cleanup);
 
@@ -95,16 +111,66 @@ describe('el cos presentacional', () => {
     expect(onAccepta).toHaveBeenCalledWith(TONI, 'kid-toni');
   });
 
-  test('un pendent sense clau nova (fora d’història) no té res a acceptar', () => {
-    render(<AvisClauCanviada canvis={canvis({ pendents: [pendent({ kidNou: null, motiu: 'fora-d-historia' })] })} nomDe={nomDe} onAccepta={vi.fn()} t={ca} />);
-    expect(screen.getByText(FORTA_PEPA)).toBeTruthy();
-    expect(screen.queryByRole('button')).toBeNull();
+  /* E3 · G2-A-doctr-02 (abans fixava FORTA_PEPA, «té una clau de seguretat nova», sense que n'hi
+     haguera cap) · Sense clau nova que es puga confirmar: el seu títol i el seu text, amb l'avís
+     de manipulació, i res a acceptar. També si el contacte era verificat. */
+  test.each([
+    ['fora d’història', { kidNou: null, motiu: 'fora-d-historia' }],
+    ['sense continuïtat', { kidNou: null }],
+    ['verificat', { kidNou: null, motiu: 'verificat' }],
+    ['clau nova no acceptable', { kidNou: 'kid-sense-declaracio', acceptable: false }]
+  ])('un pendent sense clau nova (%s): «Sense cap clau de seguretat vàlida», cap «Clau nova» i res a acceptar', (_cas, extres) => {
+    const { container } = render(<AvisClauCanviada canvis={canvis({ pendents: [pendent(extres)] })} nomDe={nomDe} onAccepta={vi.fn()} onObriNumero={vi.fn()} t={ca} />);
+    const alerta = screen.getByRole('status');
+    expect(alerta.className).toContain('sdp-alerta--avis');
+    expect(within(alerta).getByText('Sense cap clau de seguretat vàlida').className).toBe('sdp-alerta__titol');
+    expect(within(alerta).getByText(RETIRADA_PEPA)).toBeTruthy();
+    expect(container.textContent).not.toMatch(/[Cc]lau nova|clau de seguretat nova|Havies verificat/);
+    expect(screen.queryByRole('button', { name: /continua/ })).toBeNull();
+    /* El número de seguretat continua: el cos diu el mateix (CosSeguretatXat). */
+    expect(screen.getByRole('button', { name: 'Número de seguretat' })).toBeTruthy();
   });
 
   test('alarma de la clau pròpia: una alerta d’error, sense cap botó', () => {
     render(<AvisClauCanviada canvis={canvis({ alarmes: [{ tipus: 'clau-propia', kidActiu: null }] })} nomDe={nomDe} onAccepta={vi.fn()} onObriNumero={vi.fn()} t={ca} />);
     expect(screen.getByRole('alert').textContent).toBe('S’ha registrat una clau nova per al teu compte que no és d’este aparell. Si no has sigut tu, avisa’ns.');
     expect(screen.queryByRole('button')).toBeNull();
+  });
+
+  /* ARB-E3-1 · Abans afirmava «no n’hi ha cap altra de registrada»: amb un servidor honest no s'hi
+     arriba (retira i inserix en la mateixa transacció), i quan el servidor n'amaga una, era fals.
+     Ara diu el que veu l'aparell i conserva l'avís de manipulació. */
+  test('E3 · alarma pròpia sense cap clau activa al compte (senseClau): cap «clau nova», el que veu l’aparell i cap fet que no sàpia', () => {
+    render(<AvisClauCanviada canvis={canvis({ alarmes: [{ tipus: 'clau-propia', kidActiu: null, senseClau: true }] })} nomDe={nomDe} onAccepta={vi.fn()} t={ca} />);
+    const text = screen.getByRole('alert').textContent;
+    expect(text).toBe('Este aparell no troba cap clau activa del teu compte: ni la seua ni cap altra. Pot ser que algú s’haja posat pel mig. Per seguretat, no s’hi pot escriure. Si no has sigut tu, avisa’ns.');
+    expect(text).not.toMatch(/no n’hi ha cap altra|de registrada|[Cc]lau nova/);
+    expect(screen.queryByRole('button')).toBeNull();
+  });
+
+  test('E3 · en anglés i en les altres llengües, els textos nous amb el nom', () => {
+    const textos = (llengua) => {
+      const { container } = render(<AvisClauCanviada canvis={canvis({ pendents: [pendent({ kidNou: null })], alarmes: [{ tipus: 'clau-propia', kidActiu: null, senseClau: true }] })} nomDe={nomDe} t={createTranslator(llengua)} />);
+      const text = container.textContent;
+      cleanup();
+      return text;
+    };
+    const en = textos('en');
+    expect(en).toContain('No valid security key');
+    expect(en).toContain('This device cannot find any valid security key for Pepa that can be confirmed.');
+    expect(en).toContain('Talk to Pepa to find out what happened.');
+    expect(en).toContain('This device cannot find any active key for your account: neither its own nor any other.');
+    expect(en).not.toContain('no other key is registered');
+    for (const llengua of ['es', 'eu', 'gl']) {
+      const text = textos(llengua);
+      expect(text, llengua).toContain('Pepa');
+      expect(text, llengua).not.toContain('{nom}');
+      expect(text, llengua).not.toContain('Este aparell no troba');
+    }
+    /* ARB-E3-1 · Cap llengua afirma que el compte no té cap altra clau registrada. */
+    expect(textos('es')).not.toContain('no hay ninguna otra registrada');
+    expect(textos('gl')).not.toContain('non hai ningunha outra rexistrada');
+    expect(textos('eu')).not.toContain('ez dago beste gakorik erregistratuta');
   });
 
   test.each(['bifurcacio', 'kid-no-quadra', 'historia-incoherent'])('manipulació (%s): l’alerta d’error, sense cap botó', (codi) => {
@@ -195,7 +261,7 @@ describe('la conversa amb la bandera encesa (sonda) i els canvis simulats', () =
   const DIRECTE = estatXifratgeDelFil({ actiu: true, abast: { xifrat: true, bloquejat: false, motiu: 'directe-persona', tipusFil: 'directe' }, entornSegur: true });
   const vist = (extres = {}) => ({
     estat: 'pendent', pendents: [pendent()], suaus: [], alarmes: [], error: null, ocupat: false, bloquejat: true, avis: true,
-    accepta: m.accepta, refresca: vi.fn(), tancaSuau: vi.fn(), ...extres
+    accepta: m.accepta, refresca: vi.fn(), tancaSuau: vi.fn(), revisaEnviament: vi.fn(), ...extres
   });
   const NET = () => vist({ estat: 'net', pendents: [], bloquejat: false, avis: false });
 
@@ -204,6 +270,9 @@ describe('la conversa amb la bandera encesa (sonda) i els canvis simulats', () =
     m.estat = DIRECTE;
     m.accepta = vi.fn(async () => true);
     m.quotaXat = vi.fn(async () => ({ usats: 0, limit: 20_000_000, pendents: [] }));
+    m.real = false;
+    m.servei = null;
+    m.controls = null;
   });
 
   function pinta(extres = {}) {
@@ -310,5 +379,180 @@ describe('la conversa amb la bandera encesa (sonda) i els canvis simulats', () =
     pinta();
     expect(m.opcions.at(-1)).toMatchObject({ actiu: false });
     expect(screen.getByRole('textbox', { name: 'Escriu un missatge' })).toBeTruthy();
+  });
+
+  /* E3 · G2-A-doctr-01 · Conversa avisa el hook de cada enviament fallit. */
+  const escriuIEnvia = async (text) => {
+    fireEvent.change(screen.getByRole('textbox', { name: 'Escriu un missatge' }), { target: { value: text } });
+    await act(async () => { fireEvent.click(screen.getByRole('button', { name: 'Envia' })); });
+    await act(async () => { await new Promise((r) => setTimeout(r, 20)); });
+  };
+  const errorForta = () => Object.assign(new Error('La clau de seguretat d’esta persona ha canviat: cal confirmar-la abans d’escriure.'),
+    { codi: 'clau-canviada-forta', reintentable: false, encuable: false, usuari: PEPA, motiu: 'sense-continuitat', kidNou: 'kid-nou' });
+
+  test('E3 · un enviament que el context resol sense missatge (XatContext no llança) avisa el hook; un d’enviat, no', async () => {
+    m.canvis = NET();
+    const onSendMessage = vi.fn().mockResolvedValueOnce([]).mockResolvedValueOnce([{ id: 'm-1' }]);
+    pinta({ onSendMessage });
+    await escriuIEnvia('hola Pepa');
+    expect(m.canvis.revisaEnviament).toHaveBeenCalledTimes(1);
+    expect(m.canvis.revisaEnviament).toHaveBeenCalledWith();
+    await escriuIEnvia('segon');
+    expect(onSendMessage).toHaveBeenCalledTimes(2);
+    expect(m.canvis.revisaEnviament).toHaveBeenCalledTimes(1);
+  });
+
+  test('E3 · un rebuig amb el codi del motor arriba al hook tal qual, i el text torna al camp', async () => {
+    m.canvis = NET();
+    const error = errorForta();
+    pinta({ onSendMessage: vi.fn().mockRejectedValue(error) });
+    await escriuIEnvia('hola Pepa');
+    expect(m.canvis.revisaEnviament).toHaveBeenCalledWith(error);
+    expect(screen.getByRole('textbox', { name: 'Escriu un missatge' }).value).toBe('hola Pepa');
+  });
+
+  test('E3 · un adjunt que el motor rebutja avisa el hook i l’error continua cap a ControlsAdjunt; un d’enviat, no', async () => {
+    m.canvis = NET();
+    const error = errorForta();
+    const onSendMedia = vi.fn().mockRejectedValueOnce(error).mockResolvedValueOnce([{ id: 'a-1' }]);
+    pinta({ onSendMedia });
+    await waitFor(() => expect(typeof m.controls?.onEnvia).toBe('function'));
+    await expect(m.controls.onEnvia(FIL, { id: 'a-1', tipus: 'imatge' }, {})).rejects.toBe(error);
+    expect(m.canvis.revisaEnviament).toHaveBeenCalledWith(error);
+    await expect(m.controls.onEnvia(FIL, { id: 'a-1', tipus: 'imatge' }, {})).resolves.toEqual([{ id: 'a-1' }]);
+    expect(m.canvis.revisaEnviament).toHaveBeenCalledTimes(1);
+  });
+
+  test('E3 · G2-A-doctr-02 · un pendent sense clau nova: la barra diu «Sense cap clau de seguretat vàlida», no «Clau nova»', async () => {
+    m.canvis = vist({ pendents: [pendent({ kidNou: null })] });
+    const { container } = pinta();
+    await screen.findByText(RETIRADA_PEPA);
+    expect(screen.queryByRole('textbox', { name: 'Escriu un missatge' })).toBeNull();
+    expect(container.querySelector('.sdp-xat-compositor--avis').textContent).toBe('Sense cap clau de seguretat vàlida');
+    expect(screen.queryByRole('button', { name: /continua/ })).toBeNull();
+  });
+});
+
+/* E3 · G2-A-doctr-01 (sonda dels refutadors girada en regressió) · La conversa amb el hook de
+   veres i un servei simulat: el contacte canvia de clau amb el fil obert i sense cap seq nou.
+   Abans, cada enviament fallava i ni l'alerta ni el bloqueig apareixien fins a tornar a obrir
+   el fil (una sola lectura); ara, el primer enviament fallit els porta al moment. */
+describe('E3 · la conversa amb el hook de veres: el canvi de clau apareix en el primer enviament fallit', () => {
+  const t = (_clau, alternativa) => alternativa;
+  const FIL = { id: 'd-pepa', tipus: 'directe', name: 'Pepa', potEscriure: true, llegitFinsSeq: 0, ultimSeq: 0, altres: [{ id: PEPA, nom: 'Pepa', tipus: 'persona' }] };
+  const CONFIG = Object.freeze({ backendId: 'supabase', tenantId: 'poble-a' });
+  const SENSE = Object.freeze({ pendents: [], suaus: [], alarmes: [] });
+  const AMB_PENDENT = Object.freeze({ pendents: [pendent()], suaus: [], alarmes: [] });
+  const errorAmb = (codi) => Object.assign(new Error(codi), { codi, reintentable: false, encuable: false });
+  let respon;
+
+  beforeEach(() => {
+    m.real = true;
+    m.estat = estatXifratgeDelFil({ actiu: true, abast: { xifrat: true, bloquejat: false, motiu: 'directe-persona', tipusFil: 'directe' }, entornSegur: true });
+    m.quotaXat = vi.fn(async () => ({ usats: 0, limit: 20_000_000, pendents: [] }));
+    respon = SENSE;
+    m.servei = { canvisDeClau: vi.fn(async () => respon), acceptaCanviClau: vi.fn(async () => SENSE) };
+  });
+  afterEach(() => {
+    m.real = false;
+    m.servei = null;
+  });
+
+  function pinta(onSendMessage) {
+    return render(
+      <MemoryRouter>
+        <AppGridContext.Provider value={{ mida: 'ample' }}>
+          <Conversa fil={FIL} messages={[]} onSendMessage={onSendMessage} onBack={vi.fn()} onEnviaAlBloc={vi.fn()} onCopia={vi.fn()} hiHaMes={false}
+            carregantMes={false} onCarregaMes={vi.fn()} onReintenta={vi.fn()} onDescarta={vi.fn()} onMarcaVist={vi.fn()} locale="ca-ES" t={t}
+            configAdjunts={CONFIG} usuariAdjunts="jo-anna" />
+        </AppGridContext.Provider>
+      </MemoryRouter>
+    );
+  }
+  const envia = async (text) => {
+    fireEvent.change(screen.getByRole('textbox', { name: 'Escriu un missatge' }), { target: { value: text } });
+    await act(async () => { fireEvent.click(screen.getByRole('button', { name: 'Envia' })); });
+  };
+
+  test.each([
+    ['el context resol [] (XatContext de producció)', () => vi.fn(async () => [])],
+    ['l’enviament rebutja amb clau-canviada-forta', () => vi.fn(async () => { throw errorAmb('clau-canviada-forta'); })]
+  ])('%s: l’alerta, «He parlat amb Pepa: continua» i el compositor bloquejat, al moment', async (_cas, fesEnvia) => {
+    const onSendMessage = fesEnvia();
+    const { container } = pinta(onSendMessage);
+    await waitFor(() => expect(m.servei.canvisDeClau).toHaveBeenCalledTimes(1));
+    respon = AMB_PENDENT;
+    await envia('hola Pepa');
+    expect(await screen.findByRole('button', { name: 'He parlat amb Pepa: continua' })).toBeTruthy();
+    expect(m.servei.canvisDeClau).toHaveBeenCalledTimes(2);
+    expect(screen.queryByRole('textbox', { name: 'Escriu un missatge' })).toBeNull();
+    expect(container.querySelector('.sdp-xat-compositor--avis').textContent).toBe('Clau nova sense confirmar');
+    expect(onSendMessage).toHaveBeenCalledTimes(1);
+  });
+
+  test('l’alarma de la clau pròpia (clau-propia-alarma) també bloqueja al moment', async () => {
+    const { container } = pinta(vi.fn(async () => { throw errorAmb('clau-propia-alarma'); }));
+    await waitFor(() => expect(m.servei.canvisDeClau).toHaveBeenCalledTimes(1));
+    respon = { pendents: [], suaus: [], alarmes: [{ tipus: 'clau-propia', kidActiu: 'kid-altre' }] };
+    await envia('hola Pepa');
+    expect((await screen.findByRole('alert')).textContent).toBe('S’ha registrat una clau nova per al teu compte que no és d’este aparell. Si no has sigut tu, avisa’ns.');
+    expect(container.querySelector('.sdp-xat-compositor--avis').textContent).toBe('Clau nova sense confirmar');
+  });
+
+  /* ARB-E3-2 (mutant MA2) · L'avís al hook no depén del compositor: si la persona ha tornat a
+     escriure mentre l'enviament volava, el canvi de clau es llig igual (només la recuperació del
+     text depén de la revisió del compositor). */
+  test.each([
+    ['el context resol []', (promesa) => promesa.resol([])],
+    ['l’enviament rebutja amb clau-canviada-forta', (promesa) => promesa.rebutja(errorAmb('clau-canviada-forta'))]
+  ])('ARB-E3-2 · %s quan la persona ja ha tornat a escriure: es llig igual, i l’alerta i el bloqueig apareixen', async (_cas, acaba) => {
+    const promesa = {};
+    const onSendMessage = vi.fn(() => new Promise((resol, rebutja) => Object.assign(promesa, { resol, rebutja })));
+    const { container } = pinta(onSendMessage);
+    await waitFor(() => expect(m.servei.canvisDeClau).toHaveBeenCalledTimes(1));
+    respon = AMB_PENDENT;
+    await envia('hola Pepa');
+    fireEvent.change(screen.getByRole('textbox', { name: 'Escriu un missatge' }), { target: { value: 'i una altra cosa' } });
+    await act(async () => { acaba(promesa); });
+    expect(await screen.findByRole('button', { name: 'He parlat amb Pepa: continua' })).toBeTruthy();
+    expect(m.servei.canvisDeClau).toHaveBeenCalledTimes(2);
+    expect(screen.queryByRole('textbox', { name: 'Escriu un missatge' })).toBeNull();
+    expect(container.querySelector('.sdp-xat-compositor--avis').textContent).toBe('Clau nova sense confirmar');
+  });
+
+  /* ARB-E3-2 (mutant MA1) · L'alarma de reserva: el motor para amb clau-propia-alarma sense cap
+     llista i la UI no sap si el compte té una altra clau. El text de sempre, mai el de «cap clau
+     activa», i la barra «Clau nova sense confirmar» (decisió 5 del constructor). */
+  test('ARB-E3-2 · la lectura rebutja amb clau-propia-alarma (sense llistes): el text de sempre i la barra «Clau nova»', async () => {
+    m.servei.canvisDeClau.mockRejectedValue(errorAmb('clau-propia-alarma'));
+    const { container } = pinta(vi.fn(async () => []));
+    expect((await screen.findByRole('alert')).textContent).toBe('S’ha registrat una clau nova per al teu compte que no és d’este aparell. Si no has sigut tu, avisa’ns.');
+    expect(container.textContent).not.toContain('ni la seua ni cap altra');
+    expect(screen.queryByRole('textbox', { name: 'Escriu un missatge' })).toBeNull();
+    expect(container.querySelector('.sdp-xat-compositor--avis').textContent).toBe('Clau nova sense confirmar');
+  });
+
+  test('sense cap clau nova: la frase pròpia i la barra sense «Clau nova», cap botó «continua»', async () => {
+    const { container } = pinta(vi.fn(async () => []));
+    await waitFor(() => expect(m.servei.canvisDeClau).toHaveBeenCalledTimes(1));
+    respon = { pendents: [pendent({ kidNou: null })], suaus: [], alarmes: [] };
+    await envia('hola Pepa');
+    expect(await screen.findByText(RETIRADA_PEPA)).toBeTruthy();
+    expect(container.querySelector('.sdp-xat-compositor--avis').textContent).toBe('Sense cap clau de seguretat vàlida');
+    expect(screen.queryByRole('button', { name: /continua/ })).toBeNull();
+  });
+
+  test.each([
+    ['enviat de veres', () => vi.fn(async () => [{ id: 'm-1' }])],
+    ['normes rebutjades (AbortError)', () => vi.fn(async () => { throw new DOMException('Cal acceptar les normes de convivència.', 'AbortError'); })]
+  ])('control (%s): cap lectura de més, i el camp continua', async (_cas, fesEnvia) => {
+    pinta(fesEnvia());
+    await waitFor(() => expect(m.servei.canvisDeClau).toHaveBeenCalledTimes(1));
+    respon = AMB_PENDENT;
+    await envia('hola Pepa');
+    await act(async () => { await new Promise((r) => setTimeout(r, 30)); });
+    expect(m.servei.canvisDeClau).toHaveBeenCalledTimes(1);
+    expect(screen.getByRole('textbox', { name: 'Escriu un missatge' })).toBeTruthy();
+    expect(screen.queryByRole('button', { name: 'He parlat amb Pepa: continua' })).toBeNull();
   });
 });

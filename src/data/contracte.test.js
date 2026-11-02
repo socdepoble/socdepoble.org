@@ -633,3 +633,70 @@ test('titularPublic i consentimentTitular: capacitats a banda, fora del nucli i 
     expect(titularDelContracte(dolenta)).toBeNull();
   }
 });
+
+/* B8C-2 (marató 261101_2143; Bloc B8) · Els avisos push i el silenci de la
+   conversa: dues capacitats opcionals (B8-SERVIDOR §2.9), les seues
+   constants i la data de fi d'un silenci amb un rellotge fix. */
+describe('B8C-2 · avisosPush, silenciXat i finsAlDelSilenci', () => {
+  test('dues capacitats a banda, fora del nucli; a mitges, avisosPush para la validació', () => {
+    expect(CAPACITATS.avisosPush).toEqual(['desaDispositiuAvisos', 'retiraDispositiuAvisos']);
+    expect(CAPACITATS.silenciXat).toEqual(['silenciaFil']);
+    expect(Object.isFrozen(CAPACITATS.avisosPush) && Object.isFrozen(CAPACITATS.silenciXat)).toBe(true);
+    for (const nom of [...CAPACITATS.avisosPush, ...CAPACITATS.silenciXat]) {
+      expect(CONTRACTE_NUCLI).not.toContain(nom);
+      expect(CONTRACTE_BACKEND.filter((n) => n === nom)).toHaveLength(1);
+    }
+    expect(() => port.validaBackendImplementation({ ...nucli(), ...capacitat('avisosPush', 1) }))
+      .toThrow('Capacitat parcial: avisosPush');
+    expect(() => port.validaBackendImplementation({ ...nucli(), ...capacitat('silenciXat') })).not.toThrow();
+  });
+
+  test('un backend sense les capacitats no les té, i el port no inventa cap mètode', () => {
+    port.setBackendImplementation(nucli());
+    expect(port.teCapacitat('avisosPush')).toBe(false);
+    expect(port.teCapacitat('silenciXat')).toBe(false);
+    expect(() => port.silenciaFil({ filId: 'f', durada: '8h' }, {})).toThrow('El mètode "silenciaFil" no està implementat');
+    port.setBackendImplementation({ ...nucli(), ...capacitat('avisosPush'), ...capacitat('silenciXat') });
+    expect(port.teCapacitat('avisosPush') && port.teCapacitat('silenciXat')).toBe(true);
+    expect(port.desaDispositiuAvisos({}, {})).toBe('desaDispositiuAvisos');
+  });
+
+  test('les constants són les del servidor: tres plataformes, quatre durades i «sempre» finit a l’any 9999', async () => {
+    const { PLATAFORMES_AVISOS, DURADES_SILENCI, SILENCI_SEMPRE } = await import('./contracte.js');
+    expect(PLATAFORMES_AVISOS).toEqual(['web', 'ios', 'android']);
+    expect(DURADES_SILENCI).toEqual(['8h', '1setmana', 'sempre', 'cap']);
+    expect(Object.isFrozen(PLATAFORMES_AVISOS) && Object.isFrozen(DURADES_SILENCI)).toBe(true);
+    expect(SILENCI_SEMPRE).toBe('9999-12-31T00:00:00.000Z');
+    // Mai 'infinity' (NaN) ni les 23:59:59, que a Europe/Madrid ja serien l'any 10000.
+    expect(Number.isFinite(Date.parse(SILENCI_SEMPRE))).toBe(true);
+    expect(new Date(SILENCI_SEMPRE).getUTCFullYear()).toBe(9999);
+    expect(new Date(Date.parse(SILENCI_SEMPRE) + 14 * 3600000).getUTCFullYear()).toBe(9999);
+  });
+
+  test('finsAlDelSilenci: les quatre durades amb un rellotge fix (ms o Date)', async () => {
+    const { finsAlDelSilenci, SILENCI_SEMPRE } = await import('./contracte.js');
+    const ara = Date.parse('2026-11-02T03:00:00.000Z');
+    expect(finsAlDelSilenci('8h', ara)).toBe('2026-11-02T11:00:00.000Z');
+    expect(finsAlDelSilenci('1setmana', ara)).toBe('2026-11-09T03:00:00.000Z');
+    expect(finsAlDelSilenci('sempre', ara)).toBe(SILENCI_SEMPRE);
+    expect(finsAlDelSilenci('cap', ara)).toBeNull();
+    expect(finsAlDelSilenci('8h', new Date(ara))).toBe('2026-11-02T11:00:00.000Z');
+    // «sempre» i «cap» no depenen del rellotge.
+    expect(finsAlDelSilenci('sempre', Number.NaN)).toBe(SILENCI_SEMPRE);
+    expect(finsAlDelSilenci('cap', 'no és cap hora')).toBeNull();
+  });
+
+  test('finsAlDelSilenci: una durada desconeguda o un rellotge impossible són TypeError SILENCI_INVALID', async () => {
+    const { finsAlDelSilenci, SILENCI_SEMPRE } = await import('./contracte.js');
+    const ara = Date.parse('2026-11-02T03:00:00.000Z');
+    for (const dolenta of ['una-hora', '8H', 'SEMPRE', 'infinity', '', null, undefined, 8, ['8h'], { durada: '8h' }, 'constructor', 'toString']) {
+      let error = null;
+      try { finsAlDelSilenci(dolenta, ara); } catch (e) { error = e; }
+      expect(error, JSON.stringify(dolenta)).toBeInstanceOf(TypeError);
+      expect(error).toMatchObject({ code: 'SILENCI_INVALID', retriable: false });
+    }
+    for (const rellotge of [Number.NaN, Infinity, '2026-11-02', null, new Date('no'), Date.parse(SILENCI_SEMPRE) - 3600000, -8.64e15 - 9 * 3600000]) {
+      expect(() => finsAlDelSilenci('8h', rellotge), String(rellotge)).toThrow(expect.objectContaining({ code: 'SILENCI_INVALID' }));
+    }
+  });
+});

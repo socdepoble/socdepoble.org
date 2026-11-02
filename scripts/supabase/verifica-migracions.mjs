@@ -454,6 +454,63 @@ const RE_FUNCIONS_PROHIBIDES = /\b(set_config|nextval|setval|pg_(?:try_)?advisor
 const RE_ESQUEMA_PROHIBIT = /\b(vault|pgsodium)\s*\.\s*(?:[a-z_]|")/i;
 const AUTH_ADMESES = new Set(['uid', 'role', 'jwt', 'email']);
 
+/* C921-01 · Un nom que no consta al catàleg no és prova de lectura.
+   Llista tancada de primitives de consulta que el pla necessita. Cada alta
+   necessita revisió i cas positiu; pg_catalog no és una exempció general.
+   No és un parser ni una barrera d'autorització de PostgreSQL: el rol que
+   executa el pla també ha de tindre els permisos mínims. */
+const PRIMITIVES_DE_LECTURA = new Set([
+  'array_agg', 'array_length', 'array_to_string', 'bool_and', 'bool_or', 'btrim',
+  'cardinality', 'char_length', 'coalesce', 'concat', 'concat_ws', 'count',
+  'current_database', 'current_schema', 'current_schemas', 'current_setting',
+  'format', 'has_column_privilege', 'has_function_privilege', 'has_schema_privilege',
+  'has_table_privilege', 'json_agg', 'json_build_object', 'json_object_agg',
+  'jsonb_agg', 'jsonb_build_object', 'jsonb_object_agg', 'jsonb_object_keys',
+  'jsonb_typeof', 'length', 'lower', 'max', 'min', 'now', 'nullif', 'octet_length',
+  'oidvectortypes', 'pg_get_constraintdef', 'pg_get_expr', 'pg_get_functiondef',
+  'pg_get_function_identity_arguments', 'pg_get_triggerdef', 'pg_get_userbyid',
+  'pg_typeof', 'position', 'quote_ident', 'quote_literal', 'regexp_replace',
+  'replace', 'string_agg', 'string_to_array', 'substring', 'sum', 'to_regclass',
+  'to_regnamespace', 'to_regprocedure', 'to_regtype', 'trim', 'unnest', 'upper'
+]);
+// Construccions SQL seguides de parèntesi, no funcions executables.
+const CONSTRUCCIONS_SQL = new Set([
+  'all', 'and', 'any', 'as', 'case', 'distinct', 'else', 'except', 'exists',
+  'filter', 'from', 'in', 'intersect', 'join', 'lateral', 'not', 'on', 'or',
+  'over', 'select', 'then', 'union', 'values', 'when', 'where', 'with'
+]);
+/* G1-B-doctr-03 · Crida qualificada esquema.nom(, la mateixa per a nomesLectura i cridaDesconeguda.
+   La frontera esquerra (cap caràcter d'identificador al davant) fa que cada identificador es provi
+   només des del seu començament: sense ella, el motor tornava a provar des de cada lletra d'un
+   identificador llarg i el cost era quadràtic. Les xifres o els «$» del començament es consumixen
+   fora del grup, com els saltava abans el motor («9pg_catalog.f(» continua dient pg_catalog), i un
+   «.» al davant no para res: bd.esquema.f( continua veient esquema.f( (C921-01). */
+const RE_CRIDA_QUALIFICADA = /(?<![\w$])[0-9$]*([A-Za-z_][A-Za-z0-9_$]*)\s*\.\s*([A-Za-z_][A-Za-z0-9_$]*)\s*\(/g;
+
+function cridaDesconeguda(codi, cataleg) {
+  for (const c of codi.matchAll(RE_CRIDA_QUALIFICADA)) {
+    const esq = c[1].toLowerCase(), nom = c[2].toLowerCase();
+    if ((esq === 'pg_catalog' || esq === 'information_schema') && !PRIMITIVES_DE_LECTURA.has(nom)) return `${esq}.${nom}`;
+  }
+  for (const c of codi.matchAll(/(?<![.\w$"])([A-Za-z_][A-Za-z0-9_$]*)\s*\(/g)) {
+    const nom = c[1].toLowerCase();
+    if (CONSTRUCCIONS_SQL.has(nom)) continue;
+    // Lectures conegudes abans de mirar el context: una consulta amb moltes
+    // agregacions no torna a recórrer tot el prefix per cada crida.
+    if (PRIMITIVES_DE_LECTURA.has(nom)) continue;
+    const davant = codi.slice(Math.max(0, c.index - 32), c.index);
+    // AS alias(columna,...) i WITH nom(columna,...) AS (...): declaracions.
+    // Els noms de columna són només identificadors: cap crida queda amagada.
+    if (/\bas\s*$/i.test(davant) && /^[A-Za-z_][A-Za-z0-9_$]*(?:\s*,\s*[A-Za-z_][A-Za-z0-9_$]*)*\s*\)/.test(codi.slice(c.index + c[0].length))) continue;
+    if (/(?:\bwith(?:\s+recursive)?|,)\s*$/i.test(davant) && /^[A-Za-z_][A-Za-z0-9_$]*(?:\s*,\s*[A-Za-z_][A-Za-z0-9_$]*)*\s*\)\s+as\s*\(/i.test(codi.slice(c.index + c[0].length))) continue;
+    // Una sobrecàrrega VOLATILE ja s'ha rebutjat abans, també si tapa un builtin.
+    const conegudes = [...cataleg].filter(([k]) => k === `public.${nom}` || k === `private.${nom}`);
+    if (conegudes.length && conegudes.every(([, vol]) => vol === 'stable' || vol === 'immutable')) continue;
+    return nom;
+  }
+  return null;
+}
+
 /** null si `sql` és una sola consulta de només lectura; si no, el motiu. El catàleg és obligatori. */
 export function nomesLectura(sql, cataleg) {
   if (!(cataleg instanceof Map)) throw new TypeError('nomesLectura necessita el catàleg de volatilitat (Map)');
@@ -475,7 +532,7 @@ export function nomesLectura(sql, cataleg) {
   if (m) return `esquema no admès: ${m[1].toLowerCase()}`;
   if (/"q"\s*\(/.test(codi)) return 'crida a un identificador entre cometes';
   if (/"q"\s*\./.test(codi)) return 'qualificador entre cometes no admès';
-  for (const c of codi.matchAll(/([A-Za-z_][A-Za-z0-9_$]*)\s*\.\s*([A-Za-z_][A-Za-z0-9_$]*)\s*\(/g)) {
+  for (const c of codi.matchAll(RE_CRIDA_QUALIFICADA)) {
     const esq = c[1].toLowerCase();
     const nom = c[2].toLowerCase();
     if (esq === 'pg_catalog' || esq === 'information_schema') continue;
@@ -489,6 +546,8 @@ export function nomesLectura(sql, cataleg) {
     const nom = c[1].toLowerCase();
     for (const [k, vol] of cataleg) if (vol === 'volatile' && k.slice(k.indexOf('.') + 1) === nom) return `crida volatile (pot escriure): ${k}`;
   }
+  const desconeguda = cridaDesconeguda(codi, cataleg);
+  if (desconeguda) return `funció sense acreditació de lectura: ${desconeguda}`;
   // un cos entre dòlars no s'analitza: mai és una consulta de lectura emissible
   if (codi.includes('$$')) return 'cos entre dòlars';
   return null;

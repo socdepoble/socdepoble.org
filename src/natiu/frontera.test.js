@@ -272,7 +272,8 @@ describe('els adaptadors natius', () => {
      «Compartir» (compartirNatiu.js) no n'importa cap: el connector és propi de
      l'App i es crida pel pont global, com la plataforma. */
   /* Ordre nocturna 261030_0252 (Fase 3, WP) · El tercer, els avisos push (fase
-     N1, inert: ningú no l'importa). És l'únic que importa el nucli del pont,
+     N2 des del B8C-4: només l'importa l'entrada nativa, per import() i dins
+     de la bandera; vegeu la prova de baix). És l'únic que importa el nucli del pont,
      i només per a isPluginAvailable i registerPlugin d'un connector que no és
      cap paquet instal·lat (D-WP-7, decisió del Mestre); avisosPushNatius.test.js
      comprova que no n'importa cap altre ni carrega res per import(). */
@@ -307,10 +308,34 @@ describe('els adaptadors natius', () => {
     for (const ruta of [`${NATIU}/avisosNatius.js`, `${NATIU}/compartirNatiu.js`]) expect(llig(ruta).includes(`${CAP}/core`), ruta).toBe(false);
   });
 
-  test('els registres del menú Compartir i dels avisos (src/config/) no importen res i no nomenen el pont', () => {
+  /* B8C-4 (marató 261101_2143) · També el registre neutre dels avisos push. */
+  test('els registres del menú Compartir, dels avisos i dels avisos push (src/config/) no importen res i no nomenen el pont', () => {
     expect(especificadors(llig('src/config/compartirNatiu.js'))).toEqual([]);
     expect(especificadors(llig('src/config/avisosNatius.js'))).toEqual([]);
-    for (const ruta of ['src/config/compartirNatiu.js', 'src/config/avisosNatius.js']) expect(PAQUET_NATIU.test(llig(ruta)), ruta).toBe(false);
+    expect(especificadors(llig('src/config/avisosPushXat.js'))).toEqual([]);
+    for (const ruta of ['src/config/compartirNatiu.js', 'src/config/avisosNatius.js', 'src/config/avisosPushXat.js']) expect(PAQUET_NATIU.test(llig(ruta)), ruta).toBe(false);
+  });
+
+  /* B8C-4 (D-B8C4-1) · L'entrada nativa porta l'adaptador dels avisos push
+     només per import() i dins de la bandera: el nucli del pont no és lliure
+     d'efectes (en carregar-se fixa el global i registra tres connectors
+     propis) i un import estàtic el posaria al tros d'entrada encara amb la
+     bandera apagada. */
+  test('l’adaptador dels avisos push només arriba a l’entrada nativa per import(), dins de la bandera', () => {
+    const codi = llig(`${NATIU}/entrada.jsx`).replace(/\/\*[\s\S]*?\*\//g, '').replace(/^\s*\/\/.*$/gm, '');
+    const esPush = (especificador) => /(?:^|\/)avisosPushNatius(?:\.jsx?)?$/.test(especificador);
+    for (const forma of [FORMES[0], FORMES[1], FORMES[3], FORMES[4]]) {
+      expect([...codi.matchAll(forma)].map(textDe).filter(esPush), String(forma)).toEqual([]);
+    }
+    expect([...codi.matchAll(FORMES[2])].map(textDe).filter(esPush)).toEqual(['./avisosPushNatius.js']);
+    const bandera = codi.indexOf('if (AVISOS_PUSH_XAT_ACTIUS) {');
+    const dinamic = codi.indexOf("import('./avisosPushNatius.js')");
+    expect(bandera).toBeGreaterThan(-1);
+    expect(dinamic).toBeGreaterThan(bandera);
+    const dinsDeLaBandera = codi.slice(bandera, finsA(codi, bandera + 'if (AVISOS_PUSH_XAT_ACTIUS) {'.length, (c) => c === '}'));
+    expect(dinsDeLaBandera).toContain("import('./avisosPushNatius.js')");
+    expect(dinsDeLaBandera).toContain('registraAvisosPush(adaptadorPushNatiuPerAlRegistre())');
+    expect(codi).toMatch(/import \{ AVISOS_PUSH_XAT_ACTIUS, registraAvisosPush \} from '\.\.\/config\/avisosPushXat\.js';/);
   });
 
   test('el registre de l’entrada nativa (src/config/entradaNativa.js) no importa res i no nomena el pont', () => {

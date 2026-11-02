@@ -589,7 +589,7 @@ function socdepoble_enxufe_plugins_api( $resultat, $accio, $args ) {
 	}
 
 	$info                = new stdClass();
-	$info->name          = esc_html__( 'Sóc de Poble — Enxufe', 'socdepoble' );
+	$info->name          = esc_html__( 'Sóc de Poble', 'socdepoble' );
 	$info->slug          = SOCDEPOBLE_ENXUFE_SLUG_CANAL;
 	$info->version       = null !== $oferta ? $oferta['versio'] : SOCDEPOBLE_ENXUFE_VERSIO;
 	$info->author        = '<a href="https://socdepoble.org">Sóc de Poble</a>';

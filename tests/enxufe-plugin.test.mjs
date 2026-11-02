@@ -339,7 +339,7 @@ test('capçaleres coherents: plugin, readme, constant de versió, block.json i f
 /* ───────────────────────────────── i18n ───────────────────────────────── */
 
 const FUNCIONS_I18N = /\b(?:__|_e|esc_html__|esc_html_e|esc_attr__|esc_attr_e)\(\s*'((?:[^'\\]|\\.)*)'\s*,\s*'([^']*)'\s*\)/g;
-const SENSE_TRADUCCIO = new Set(['Sóc de Poble', 'Sóc de Poble — Enxufe', 'Sóc de Poble. Portal de Pobles Connectats']);
+const SENSE_TRADUCCIO = new Set(['Sóc de Poble', 'Sóc de Poble. Portal de Pobles Connectats']);
 
 test('un sol text domain i traducció valenciana completa de tots els textos PHP', () => {
   const msgids = new Set();
@@ -1287,4 +1287,65 @@ test('cap fitxer del torn porta caràcters de control, invisibles ni bidi', () =
   ];
   const trobats = fitxers.filter((f) => VETATS.test(fs.readFileSync(path.join(ARREL, f), 'utf8')));
   assert.deepEqual(trobats, []);
+});
+
+/* ───────── P1-09 · Purga de fantasmes «enxufe» (marató 261101_2143, B10-ESCOMBRADA) ─────────
+   El que veu una persona (textos traduïbles, títols de wp_die, avisos, «Mostra els detalls»,
+   comentaris que el PHP escriu a la pàgina, l'HTML de les plantilles i el readme) ja no diu
+   «Enxufe». Es mira tot el codi i totes les cadenes (sense comentaris) amb el tokenitzador
+   d'este fitxer, i el text fora de <?php … ?>; no només unes quantes funcions d'i18n.
+   Els identificadors interns (SOCDEPOBLE_ENXUFE_*, socdepoble_enxufe_*, l'opció
+   socdepoble_enxufe, la plantilla socdepoble-enxufe-pantalla-completa, la classe
+   .socdepoble-enxufe, els filtres documentats i el fitxer socdepoble-enxufe.php) es queden:
+   són contracte entre còpies i versions (la guarda de doble còpia llig SOCDEPOBLE_ENXUFE_FITXER
+   d'una còpia vella; active_plugins guarda «socdepoble/socdepoble-enxufe.php»). Reanomenar-los
+   és decisió del Mestre amb pont (D-B10C-1). \bEnxufe\b distingix majúscules: els noms interns
+   en minúscula o en majúscules sostingudes no casen. */
+function foraDePhp(text) {
+  let eixida = '';
+  let i = 0;
+  while (i < text.length) {
+    const obri = text.indexOf('<?php', i);
+    eixida += text.slice(i, obri < 0 ? text.length : obri);
+    if (obri < 0) break;
+    const tanca = text.indexOf('?>', obri + 5);
+    if (tanca < 0) break;
+    i = tanca + 2;
+  }
+  return eixida;
+}
+
+test('P1-09 · cap «Enxufe» visible: codi i cadenes PHP, HTML de plantilla, catàleg i readme; languages/ només del domini socdepoble', () => {
+  for (const rel of PHP) {
+    if (rel.startsWith('languages/')) continue;
+    const text = llig(rel);
+    const codi = nomesCodi(text, true);
+    assert.doesNotMatch(codi, /\bEnxufe\b/, `${rel}: «Enxufe» en una cadena o en el codi (fora de comentaris)`);
+    assert.doesNotMatch(foraDePhp(text), /\bEnxufe\b/, `${rel}: «Enxufe» a l'HTML fora de <?php … ?>`);
+  }
+  const traduccio = llig('languages/socdepoble-ca.l10n.php');
+  for (const [, clau, valor] of traduccio.matchAll(/^\t\t'((?:[^'\\]|\\.)*)' => '((?:[^'\\]|\\.)*)',$/gm)) {
+    assert.doesNotMatch(`${clau} ${valor}`, /\bEnxufe\b/, `catàleg ca: «${clau}»`);
+  }
+  assert.doesNotMatch(llig('readme.txt'), /\bEnxufe\b/, 'readme: el nom visible és Sóc de Poble, també al Changelog (els filtres socdepoble_enxufe_* i l’URL /enxufe/ són API)');
+  // L'editor de blocs també és text visible: el títol i la descripció de block.json i les cadenes d'editor.js.
+  assert.doesNotMatch(llig('includes/bloc/block.json'), /\bEnxufe\b/, 'block.json: el títol i la descripció del bloc');
+  for (const [, cadena] of llig('includes/bloc/editor.js').matchAll(/\b__\(\s*'((?:[^'\\]|\\.)*)'/g)) assert.doesNotMatch(cadena, /\bEnxufe\b/, `editor.js: «${cadena}»`);
+  const llengues = fs.readdirSync(path.join(PLUGIN, 'languages')).filter((nom) => !nom.startsWith('.'));
+  assert.ok(llengues.length > 0, 'languages/ porta el català');
+  for (const nom of llengues) {
+    assert.match(nom, /^socdepoble-(?!enxufe)[a-z]{2}(?:_[A-Za-z]+)?(?:-socdepoble-app-editor-script\.json|\.l10n\.php|\.mo|\.po)$/, `languages/${nom}: domini vell o fitxer estrany`);
+    // Qualsevol catàleg (també d'una llengua nova o del JSON de l'editor), sencer.
+    assert.doesNotMatch(llig(`languages/${nom}`), /\bEnxufe\b/, `languages/${nom}: «Enxufe» en una traducció`);
+  }
+  // Capçaleres que WordPress llig del comentari i mostra a Extensions («Per …») i al directori:
+  // nomesCodi les lleva amb els comentaris, així que es miren a banda (B10C-WP-ARB-01).
+  for (const camp of ['Plugin Name', 'Description', 'Author']) {
+    const valor = capcalera(llig('socdepoble-enxufe.php'), camp);
+    assert.ok(valor, `capçalera ${camp} present al fitxer principal`);
+    assert.doesNotMatch(valor, /\bEnxufe\b/, `capçalera ${camp}`);
+  }
+  // Contracte entre versions: estos noms NO canvien sense pont (D-B10C-1).
+  assert.ok(fs.existsSync(path.join(PLUGIN, 'socdepoble-enxufe.php')), 'el fitxer principal conserva el nom (active_plugins)');
+  assert.match(llig('socdepoble-enxufe.php'), /if \( defined\( 'SOCDEPOBLE_ENXUFE_FITXER' \) \) \{/, 'la guarda de doble còpia reconeix les còpies velles');
 });

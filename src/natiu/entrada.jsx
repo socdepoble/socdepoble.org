@@ -13,7 +13,9 @@
  * nomena un paquet natiu i només el carrega al primer toc. Encara arribaran, i
  * en este ordre: l'1 (tria del poble i sessió duradora) i el 4a (selector de
  * poble). El 5 (escoltes natives) hi és des del 261026: el menú «Compartir»
- * (natiu/compartirNatiu.js) i els avisos del xat (natiu/avisosNatius.js).
+ * (natiu/compartirNatiu.js) i els avisos del xat (natiu/avisosNatius.js); i,
+ * des del B8 (marató 261101_2143), darrere de la bandera, els avisos push
+ * (natiu/avisosPushNatius.js, inert sense el connector).
  *
  * Diferències amb main.jsx, totes del §1.2:
  *   · el mode de dades és sempre 'remote';
@@ -33,6 +35,7 @@ import { creaEntradaSocial, entradaSenseProveidors, plataformaDelDispositiu } fr
 import { createTranslator, llegeixIdiomaTriat, llenguaDelDispositiu, pintaAmbDiccionari, resolIdioma } from '../config/i18n.js';
 import { lliuraCompartit, registraAlliberadorCompartit, registraTalladorCompartit, sessioCompartit } from '../config/compartirNatiu.js';
 import { registraAvisosNatius } from '../config/avisosNatius.js';
+import { AVISOS_PUSH_XAT_ACTIUS, registraAvisosPush } from '../config/avisosPushXat.js';
 import { creaReceptorCompartit } from './compartirNatiu.js';
 import { creaAvisosNatius } from './avisosNatius.js';
 import { connectaEnrereNatiu } from './enrereNatiu.js';
@@ -101,6 +104,19 @@ const init = () => {
     };
     try { registraAvisosNatius(creaAvisosNatius({ plataforma: plataformaDelDispositiu(), canal: canalDelXat })); }
     catch (e) { console.error('[natiu] Avisos natius no registrats:', e); }
+    /* B8 (marató 261101_2143) · Els avisos push del Xat, només amb la bandera
+       (D-B8C-3). Sense el connector PushNotifications, que esta nit no
+       s'instal·la, motiu() diu 'sense-connector': cap interruptor, cap crida
+       nativa i res a la consola. L'adaptador arriba per import() i no per un
+       import estàtic (D-B8C4-1): @capacitor/core no és lliure d'efectes i, amb
+       la bandera apagada, un import estàtic el posaria al tros d'entrada i
+       l'arrencaria; així, apagada, Rollup plega el bloc i el tros no existix.
+       Mai tomba l'arrencada. */
+    if (AVISOS_PUSH_XAT_ACTIUS) {
+      import('./avisosPushNatius.js')
+        .then(({ adaptadorPushNatiuPerAlRegistre }) => registraAvisosPush(adaptadorPushNatiuPerAlRegistre()))
+        .catch((e) => console.error('[natiu] Avisos push no registrats:', e));
+    }
     /* P0-24 (G2120-07, marató 261101_2143) · L'Arrere d'Android tanca primer la
        capa de dalt (un Dialeg, un calaix, la pantalla completa) i només després
        torna arrere. Abans del primer pintat; mai tomba l'arrencada. */

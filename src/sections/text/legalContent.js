@@ -134,7 +134,6 @@ export const legalContent = {
     <ul>
       <li><strong>Supabase</strong> — base de dades, autenticació i emmagatzematge de fitxers. És on viu la informació del poble.</li>
       <li><strong>Sollutia</strong> (C/ Vistabella, 22, 03802 Alcoi, Alacant) — empresa sòcia que allotja i integra l'aplicació dins de la seua plataforma.</li>
-      <li><strong>Google, Anthropic i OpenAI</strong> — processen únicament el text que escrius a la IAIA MarIA (o a altres agents integrats), i només quan els escrius.</li>
       <li><strong>Google Workspace</strong> — gestió del correu i enviament de les notificacions d'accés (socdepoble.org).</li>
     </ul>
     <p>Fora d'aquesta llista, les teues dades no ixen d'ací, excepte el que el teu navegador envia, amb la teua adreça IP, als serveis de fora que tries fer servir amb un botó (apartat 21): el text de les pàgines que tries traduir amb el botó «Traduir», el nom del poble que completes amb «Porta-ho de la Viquipèdia» i la zona del mapa que mires amb «Vore mapa»; i excepte per obligació legal o requeriment formal d'un jutjat o de la policia.</p>
@@ -156,10 +155,11 @@ export const legalContent = {
     <p>Això no és una cessió a tercers: és el funcionament del servei que has demanat. El que sí que has de saber és que <strong>una persona que veu el teu contingut el pot copiar</strong>, i això no ho pot impedir cap tecnologia.</p>
 
     <h4>14. Intel·ligència artificial: què podem garantir i què no</h4>
-    <p>Quan escrius a la IAIA MarIA, el text de la teua consulta ix dels nostres servidors i arriba a <strong>Google, Anthropic o OpenAI</strong>, que el processa per a generar la resposta. Això és una comunicació de dades i te l'hem de contar clarament.</p>
-    <p><strong>El que podem garantir:</strong> tenim signat amb aquest proveïdor un contracte d'encarregat del tractament que <strong>prohibeix utilitzar el teu contingut per a entrenar els seus models</strong>, i que l'obliga a esborrar-lo quan acabe el processament.</p>
-    <p><strong>El que no podem garantir:</strong> no tenim accés als servidors d'una empresa aliena ni podem auditar-los per dins. La nostra garantia és contractual, no física. Per això la regla és senzilla: <em>no li contes a la IAIA res que no li contaries a un desconegut per telèfon</em>.</p>
-    <p>La IAIA no llig el teu Mur, ni les teues notes, ni els teus xats. Només rep allò que tu li escrius a ella.</p>
+    <p>La IAIA MarIA de l'aplicació <strong>no envia el que li escrius a cap empresa d'intel·ligència artificial</strong>. No fa servir cap model de llenguatge de fora: busca la resposta en textos de Sóc de Poble que l'aplicació ja porta (la Wiki pública, les pàgines del portal, les fitxes dels pobles i unes fitxes de cultura i d'ús del poble), i la busca al teu dispositiu.</p>
+    <p><strong>On va el que escrius:</strong> si escrius a la IAIA sense compte, o amb les dades guardades al teu dispositiu, la pregunta no ix d'allí. Si li escrius al xat de la IAIA amb el teu compte, la pregunta es publica al xat públic de la pàgina de la IAIA del teu poble, com qualsevol altre missatge d'un xat públic (apartat 13), i es guarda als nostres servidors; la resposta de la IAIA només la veus tu i no es guarda. «Pregunta a la IAIA», dins d'una conversa, no publica res.</p>
+    <p><strong>El que no podem garantir:</strong> la IAIA pot no trobar la resposta o donar-ne una que no et servisca; quan no en sap res, t'ho diu. Les seues respostes són suggeriments (apartats 6 i 15). I com que, amb compte, la pregunta queda al xat públic, la regla és senzilla: <em>no li contes a la IAIA res que no li contaries a un desconegut per telèfon</em>.</p>
+    <p>Si algun dia la IAIA parla per un altre canal (per exemple, WhatsApp) o fa servir un servei d'intel·ligència artificial de fora, ho posarem ací abans, amb el nom de cada empresa, i t'avisarem com diu l'apartat 18.</p>
+    <p>La IAIA no llig el teu Mur, ni les teues notes, ni els teus xats. Només veu allò que tu li escrius a ella.</p>
 
     <h4>15. Decisions automatitzades i perfilat</h4>
     <p>No prenem decisions automatitzades que produïsquen efectes jurídics sobre tu ni que t'afecten significativament. No fem perfilat comercial. Les respostes de la IAIA MarIA són suggeriments, no resolucions.</p>

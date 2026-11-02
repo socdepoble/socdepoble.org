@@ -157,6 +157,165 @@ describe('canvi suau d’un contacte', () => {
   });
 });
 
+/* G2-A-integ-01 (Gauntlet 2) · L'avís del canvi suau el gastava qui construïa el context primer
+   (la llista, la conversa, un altre fil amb la mateixa persona o un enviament), perquè eixa
+   construcció avança la fixació: canvisDeClau ja no el trobava i la interfície no el pintava
+   mai. Ara el servei de l'àmbit el guarda fins que canvisDeClau el lliura, una sola vegada. */
+describe('canvi suau: l’avís dura fins que la interfície el llig (G2-A-integ-01)', () => {
+  const ambSuau = async () => {
+    const parts = await conversaInicial();
+    const nova = await creaIdentitat(cripto, { usuari: B, creatMs: T0 + 1, anterior: parts.b.identitat });
+    parts.servidor.publica(B, nova);
+    const recarregat = await creaPart(parts.servidor, A, { identitat: parts.a.identitat, fals: parts.a.fals });
+    const suau = { pendents: [], suaus: [{ usuari: B, kidAnterior: b64(parts.b.identitat.kid), kidNou: b64(nova.kid) }], alarmes: [] };
+    return { ...parts, nova, recarregat, suau };
+  };
+
+  test('recàrrega i loadMissatges primer: la fixació ja ha avançat, però canvisDeClau encara dona el suau (i només una vegada)', async () => {
+    const { recarregat, nova, suau } = await ambSuau();
+    expect(textos(await recarregat.d.loadMissatges(FIL))).toEqual(['Bon dia, veïna', 'Bon dia!']);
+    expect(b64((await recarregat.magatzem.fixacio(ci(A), B)).kid)).toBe(b64(nova.kid));
+    expect(await recarregat.servei.canvisDeClau(FIL)).toEqual(suau);
+    expect(await recarregat.servei.canvisDeClau(FIL)).toEqual(SENSE_CANVIS);
+  });
+
+  test('la llista primer (el resum de l’últim missatge construïx el context): el suau continua', async () => {
+    const { recarregat, suau } = await ambSuau();
+    await recarregat.d.loadFils();
+    expect(await recarregat.servei.canvisDeClau(FIL)).toEqual(suau);
+  });
+
+  test('un altre fil amb la mateixa persona construït primer no el gasta per al fil que s’obri', async () => {
+    const { servidor, nova, recarregat, suau } = await ambSuau();
+    const b2 = await creaPart(servidor, B, { identitat: nova, publica: false });
+    await b2.d.enviaMissatge(FIL2, { id: ID4, text: 'Des de la clau nova' });
+    expect(textos(await recarregat.d.loadMissatges(FIL2))).toEqual(['Des de la clau nova']);
+    expect(await recarregat.servei.canvisDeClau(FIL)).toEqual(suau);
+    /* Un sol avís per persona: el fil que l'ha llegit primer se l'ha emportat. */
+    expect(await recarregat.servei.canvisDeClau(FIL2)).toEqual(SENSE_CANVIS);
+  });
+
+  test('enviar abans que la interfície llija (prepara refà el context) tampoc no el gasta', async () => {
+    const { recarregat, suau } = await ambSuau();
+    await recarregat.d.enviaMissatge(FIL, { id: ID3, text: 'Escric abans de mirar' });
+    expect(await recarregat.servei.canvisDeClau(FIL)).toEqual(suau);
+  });
+
+  test('l’avís és de la RAM de l’àmbit: un canvi de persona el buida', async () => {
+    const { recarregat } = await ambSuau();
+    await recarregat.d.loadMissatges(FIL);
+    recarregat.servei.fixaAmbit(ambit(B), ci(B));
+    recarregat.servei.fixaAmbit(ambit(A), ci(A));
+    expect(await recarregat.servei.canvisDeClau(FIL)).toEqual(SENSE_CANVIS);
+  });
+
+  /* E1 · H-2 (àrbitre) · Si la interfície descarta la resposta (eixir i tornar a la conversa, o
+     StrictMode), l'avís lliurat una sola vegada es perdia. Amb `conservaSuaus` (opcional) es torna
+     a dir fins que la interfície el tanca amb tancaAvisSuau; sense l'opció, res no canvia. */
+  test('H-2 · amb conservaSuaus l’avís es torna a dir fins que la interfície el tanca (tancaAvisSuau)', async () => {
+    const { recarregat, nova, b, suau } = await ambSuau();
+    await recarregat.d.loadMissatges(FIL);
+    const opcions = { conservaSuaus: true };
+    expect(await recarregat.servei.canvisDeClau(FIL, {}, opcions)).toEqual(suau);
+    /* La resposta s'ha descartat: la lectura següent el torna a donar. */
+    expect(await recarregat.servei.canvisDeClau(FIL, {}, opcions)).toEqual(suau);
+    /* Un kid que no és el de l'avís (o una persona sense avís) no el tanca. */
+    expect(recarregat.servei.tancaAvisSuau(B, b64(b.identitat.kid))).toBe(false);
+    expect(recarregat.servei.tancaAvisSuau(C, b64(nova.kid))).toBe(false);
+    expect(await recarregat.servei.canvisDeClau(FIL, {}, opcions)).toEqual(suau);
+    expect(recarregat.servei.tancaAvisSuau(B, b64(nova.kid))).toBe(true);
+    expect(await recarregat.servei.canvisDeClau(FIL, {}, opcions)).toEqual(SENSE_CANVIS);
+    expect(recarregat.servei.tancaAvisSuau(B, b64(nova.kid))).toBe(false);
+  });
+
+  test('H-2 · control: sense l’opció (el hook d’ara) l’avís es lliura una sola vegada, com abans', async () => {
+    const { recarregat, suau } = await ambSuau();
+    await recarregat.d.loadMissatges(FIL);
+    expect(await recarregat.servei.canvisDeClau(FIL, {}, {})).toEqual(suau);
+    expect(await recarregat.servei.canvisDeClau(FIL)).toEqual(SENSE_CANVIS);
+  });
+
+  /* Una altra construcció (la conversa) avança la fixació i deixa l'avís al servei sense lliurar-lo; després, B canvia en fort a K3. */
+  const suauIFort = async () => {
+    const parts = await ambSuau();
+    await parts.recarregat.d.enviaMissatge(FIL, { id: ID3, text: 'Amb K2' });
+    const k3 = await creaIdentitat(cripto, { usuari: B, creatMs: T0 + 2 });
+    parts.servidor.publica(B, k3);
+    const pendent = [{ usuari: B, motiu: 'sense-continuitat', kidFixat: b64(parts.nova.kid), kidNou: b64(k3.kid) }];
+    return { ...parts, k3, pendent };
+  };
+
+  test('MA6 · un avís suau guardat i després un canvi fort de la mateixa persona: canvisDeClau dona el pendent i cap suau', async () => {
+    const { recarregat, pendent } = await suauIFort();
+    expect(await recarregat.servei.canvisDeClau(FIL)).toEqual({ pendents: pendent, suaus: [], alarmes: [] });
+  });
+
+  test('MA6 amb conservaSuaus · el pendent i cap suau, i l’avís vell no torna després d’acceptar la clau nova', async () => {
+    const { recarregat, k3, pendent } = await suauIFort();
+    const opcions = { conservaSuaus: true };
+    expect(await recarregat.servei.canvisDeClau(FIL, {}, opcions)).toEqual({ pendents: pendent, suaus: [], alarmes: [] });
+    expect(await recarregat.servei.canvisDeClau(FIL, {}, opcions)).toEqual({ pendents: pendent, suaus: [], alarmes: [] });
+    expect(await recarregat.servei.acceptaCanviClau(FIL, { usuari: B, kid: b64(k3.kid), conservaSuaus: true })).toEqual(SENSE_CANVIS);
+    expect(await recarregat.servei.canvisDeClau(FIL, {}, opcions)).toEqual(SENSE_CANVIS);
+  });
+});
+
+/* G2-A-integ-03 (Gauntlet 2) · acceptaCanviDelFil fixava la clau i després refeia el context: si
+   eixe refresc fallava, l'acceptació es deia fallida («Torna-ho a provar») i el compositor
+   continuava bloquejat amb la clau ja fixada. Ara la confirmació no depén del refresc final. */
+describe('acceptar: la confirmació no depén del refresc final (G2-A-integ-03)', () => {
+  const ambPendent = async () => {
+    const { servidor, a } = await conversaInicial();
+    const nova = await creaIdentitat(cripto, { usuari: B, creatMs: T0 + 1 });
+    servidor.publica(B, nova);
+    const estat = { fixada: false };
+    const a2 = await creaPart(servidor, A, {
+      identitat: a.identitat, fals: a.fals,
+      embolcallaMagatzem: (real) => Object.freeze({ ...real, fixa: async (c, fila, opcions) => {
+        const resultat = await real.fixa(c, fila, opcions);
+        if (fila.usuari === B && b64(fila.kid) === b64(nova.kid)) estat.fixada = true;
+        return resultat;
+      } })
+    });
+    return { servidor, a2, nova, estat };
+  };
+
+  test('si el refresc cau després de fixar, no rebutja: torna els canvis sense el pendent acceptat i refrescat: false', async () => {
+    const { a2, nova, estat } = await ambPendent();
+    const original = a2.impl.epoquesDelFilXat.getMockImplementation();
+    a2.impl.epoquesDelFilXat.mockImplementation(async (...args) => {
+      if (estat.fixada) throw new TypeError('Failed to fetch');
+      return original(...args);
+    });
+    expect(await a2.servei.acceptaCanviClau(FIL, { usuari: B, kid: b64(nova.kid) })).toEqual({ ...SENSE_CANVIS, refrescat: false });
+    expect(b64((await a2.magatzem.fixacio(ci(A), B)).kid)).toBe(b64(nova.kid));
+    a2.impl.epoquesDelFilXat.mockImplementation(original);
+    expect(await a2.servei.canvisDeClau(FIL)).toEqual(SENSE_CANVIS);
+    await a2.d.enviaMissatge(FIL, { id: ID3, text: 'Rebut, B' });
+  });
+
+  test('contrast: si la xarxa cau abans de fixar, rebutja i no fixa res', async () => {
+    const { a2, nova } = await ambPendent();
+    a2.impl.epoquesDelFilXat.mockImplementationOnce(async () => { throw new TypeError('Failed to fetch'); });
+    await expect(a2.servei.acceptaCanviClau(FIL, { usuari: B, kid: b64(nova.kid) })).rejects.toThrow('Failed to fetch');
+    expect(b64((await a2.magatzem.fixacio(ci(A), B)).kid)).not.toBe(b64(nova.kid));
+  });
+
+  test('una manipulació al refresc final sí que es diu (historia-incoherent), encara que la clau ja siga fixada', async () => {
+    const { a2, nova, estat } = await ambPendent();
+    const intrusa = await creaIdentitat(cripto, { usuari: B, creatMs: T0 + 2 });
+    const original = a2.impl.clausDeXat.getMockImplementation();
+    a2.impl.clausDeXat.mockImplementation(async (...args) => {
+      const files = await original(...args);
+      if (!estat.fixada) return files;
+      /* Dues claus actives de B: el servidor manipula el registre. */
+      return [...files, { usuariId: B, kid: b64(intrusa.kid), sigPub: b64(intrusa.sigPub), dhPub: b64(intrusa.dhPub), declaracio: b64(intrusa.declaracio), autofirma: b64(intrusa.autofirma), firmaContinuitat: null, retiradaAl: null }];
+    });
+    await expect(a2.servei.acceptaCanviClau(FIL, { usuari: B, kid: b64(nova.kid) })).rejects.toMatchObject({ codi: 'historia-incoherent' });
+    expect(b64((await a2.magatzem.fixacio(ci(A), B)).kid)).toBe(b64(nova.kid));
+  });
+});
+
 describe('canvi fort d’un contacte (sense continuïtat): el fil no cau', () => {
   test('pendent; enviar llança clau-canviada-forta sense tocar el transport ni la safata ni crear cap època; la història d’abans s’obri', async () => {
     const { servidor, a } = await conversaInicial();
@@ -301,13 +460,17 @@ describe('canvi fort d’un contacte (sense continuïtat): el fil no cau', () =>
     expect((await a.servei.canvisDeClau(FIL)).pendents).toHaveLength(1);
   });
 
-  test('una clau nova sense declaració autofirmada: pendent sense candidata, el número dona sense-clau-altre i no es pot acceptar', async () => {
+  /* G2-A-integ-02 (girada) · Abans el pendent sense candidata portava kidNou i la interfície oferia
+     «He parlat amb {nom}: continua», un botó que sempre fallava. Ara kidNou és null (no es pot
+     acceptar), també a l'error de l'enviament, i el pendent continua bloquejant. */
+  test('una clau nova sense declaració autofirmada: pendent amb kidNou null (cap acceptació possible), el número dona sense-clau-altre i res es fixa', async () => {
     const { servidor, a } = await conversaInicial();
     const nova = await creaIdentitat(cripto, { usuari: B, creatMs: T0 + 1 });
     servidor.publica(B, nova, { declaracio: null, autofirma: null, firmaContinuitat: null });
-    expect((await a.servei.canvisDeClau(FIL)).pendents).toEqual([expect.objectContaining({ usuari: B, kidNou: b64(nova.kid) })]);
+    expect((await a.servei.canvisDeClau(FIL)).pendents).toEqual([{ usuari: B, motiu: 'sense-continuitat', kidFixat: b64((await a.magatzem.fixacio(ci(A), B)).kid), kidNou: null }]);
+    await expect(a.d.enviaMissatge(FIL, { id: ID3, text: 'hola?' })).rejects.toMatchObject({ codi: 'clau-canviada-forta', usuari: B, kidNou: null });
     await expect(a.servei.numeroSeguretat(FIL)).rejects.toMatchObject({ codi: 'sense-clau-altre' });
-    await expect(a.servei.acceptaCanviClau(FIL, { usuari: B, kid: b64(nova.kid) })).rejects.toMatchObject({ codi: 'sense-clau-altre' });
+    await expect(a.servei.acceptaCanviClau(FIL, { usuari: B, kid: b64(nova.kid) })).rejects.toMatchObject({ codi: 'kid-canviat' });
     expect(b64((await a.magatzem.fixacio(ci(A), B)).kid)).not.toBe(b64(nova.kid));
   });
 

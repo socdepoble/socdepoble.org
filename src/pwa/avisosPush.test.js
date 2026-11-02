@@ -592,7 +592,12 @@ describe('frontera i fase N1', () => {
     expect(codi).not.toMatch(/\bimport\b/);
   });
 
-  test('inert: cap fitxer de producció de src/ l\'importa encara (la connexió és la fase N2, decisió del Mestre)', () => {
+  /* B8C-3 (marató 261101_2143) · La porta de la fase N1 («cap fitxer de
+     producció l'importa») es gira en la frontera de la fase N2: l'únic
+     importador és l'adaptador web, que main.jsx carrega amb import() darrere
+     de la bandera. Compta pel nom del mòdul: cap altre mòdul de src/ no es
+     pot dir avisosPush (l'adaptador de dades és dispositiusAvisos.js). */
+  test('frontera N2: només src/pwa/adaptadorAvisosPush.js l\'importa (la UI, el registre i l\'adaptador de dades, no)', () => {
     const fitxers = [];
     const recorre = (directori) => {
       for (const entrada of readdirSync(path.join(ARREL, directori), { withFileTypes: true })) {
@@ -609,6 +614,161 @@ describe('frontera i fase N1', () => {
     const importaLaSubscripcio = (codi, ruta) => importaElModul(codi, 'avisosPush', ruta);
     expect(importaLaSubscripcio("import { useState } from 'react';\n/* N2: './avisosPush.js' (src/pwa) s'endollarà ací. */\n", 'XatContext.jsx')).toBe(false);
     expect(importaLaSubscripcio("import { activaAvisosPush } from '../../pwa/avisosPush.js';\n", 'XatContext.jsx')).toBe(true);
-    expect(fitxers.filter((ruta) => importaLaSubscripcio(readFileSync(path.join(ARREL, ruta), 'utf8'), ruta))).toEqual([]);
+    expect(fitxers.filter((ruta) => importaLaSubscripcio(readFileSync(path.join(ARREL, ruta), 'utf8'), ruta))).toEqual(['src/pwa/adaptadorAvisosPush.js']);
+    /* L'adaptador de dades del port té un altre nom, i no l'importa. */
+    expect(fitxers).toContain('src/data/supabase/dispositiusAvisos.js');
+    expect(fitxers.filter((ruta) => /(?:^|\/)avisosPush\.(?:m?js|jsx)$/.test(ruta))).toEqual([FITXER]);
+  });
+});
+
+/* B8C-3 (marató 261101_2143; B8-SERVIDOR §2.9, petició al carril de
+   src/pwa/avisosPush.js) · La paritat amb el servidor. El client no pot desar
+   cap endpoint que private.xat_push_adreca_valida rebutjaria (la
+   subscripció es faria per a res i es desfaria amb SDP-PUSH-003), i ha
+   d'acceptar tot el que el servidor desa. La regla del servidor, transcrita
+   ací (adrecaValidaDelServidor), es lliga a la migració viva: si la SQL
+   canvia, esta prova cau abans que les dues llistes divergisquen. */
+describe('paritat amb private.xat_push_adreca_valida (B8C-3)', () => {
+  const MIGRACIONS = path.join(ARREL, 'supabase/migrations');
+  const DEFINICIO = 'create or replace function private.xat_push_adreca_valida(p_tipus text, p_adreca text)';
+  /* La darrera migració que definix la funció. */
+  const migracio = readdirSync(MIGRACIONS).filter((nom) => nom.endsWith('.sql')).sort()
+    .map((nom) => readFileSync(path.join(MIGRACIONS, nom), 'utf8')).filter((sql) => sql.includes(DEFINICIO)).pop();
+  const AMFITRIONS = ['fcm.googleapis.com', 'updates.push.services.mozilla.com', 'push.apple.com', 'notify.windows.com'];
+
+  /* La branca web de la funció SQL, línia a línia. */
+  function adrecaValidaDelServidor(adreca) {
+    if (typeof adreca !== 'string') return false;
+    if (adreca.length > 2048 || !/^https:\/\/[!-~]+$/.test(adreca) || adreca.includes('#')) return false;
+    const resta = adreca.slice('https://'.length);
+    if (!resta.includes('/')) return false;
+    const amfitrio = resta.split('/')[0];
+    if (!/^[a-z0-9.-]{1,253}$/.test(amfitrio) || amfitrio.startsWith('.') || amfitrio.includes('..')) return false;
+    return AMFITRIONS.includes(amfitrio) || amfitrio.endsWith('.push.apple.com') || amfitrio.endsWith('.notify.windows.com');
+  }
+
+  test('la transcripció és la regla viva de la migració (la SQL no ha canviat)', () => {
+    expect(migracio, 'cap migració definix private.xat_push_adreca_valida').toBeTypeOf('string');
+    for (const fragment of [
+      "if char_length(p_adreca) > 2048 or p_adreca !~ '^https://[!-~]+$' or position('#' in p_adreca) > 0 then",
+      "v_resta := substr(p_adreca, 9);",
+      "if position('/' in v_resta) = 0 then",
+      "v_host := split_part(v_resta, '/', 1);",
+      "if v_host !~ '^[a-z0-9.-]{1,253}$' or left(v_host, 1) = '.' or position('..' in v_host) > 0 then",
+      "return v_host in ('fcm.googleapis.com', 'updates.push.services.mozilla.com', 'push.apple.com', 'notify.windows.com')",
+      "or v_host like '%.push.apple.com'",
+      "or v_host like '%.notify.windows.com';"
+    ]) expect(migracio, fragment).toContain(fragment);
+  });
+
+  test('etiquetes buides: https://.push.apple.com/x i https://a..push.apple.com/x → null; web.push.apple.com continua acceptat', () => {
+    for (const endpoint of ['https://.push.apple.com/x', 'https://a..push.apple.com/x', 'https://.notify.windows.com/x', 'https://a..notify.windows.com/x', 'https://a...push.apple.com/x']) {
+      expect(formaDeLaSubscripcio({ endpoint }), endpoint).toBeNull();
+    }
+    const apple = 'https://web.push.apple.com/QGuQyavXutnMb5wnb4CZcCKmyzpSXFOH-Iw4bDjB2y0Px0x8kBLJyQ';
+    expect(formaDeLaSubscripcio({ endpoint: apple })).toEqual({ endpoint: apple, caducaMs: null });
+  });
+
+  /* Correcció ARB-B8C3-04 (marató 261101_2143) · Un amfitrió d'Apple de
+     `llargada` caràcters exactes, amb etiquetes de 59 o menys: URL l'analitza
+     (sense límit de llargada) i la vora del servidor és 253. */
+  const amfitrioApple = (llargada) => {
+    const sufix = '.push.apple.com';
+    const etiquetes = [];
+    for (let resta = llargada - sufix.length; resta > 0; resta -= 60) etiquetes.push('a'.repeat(Math.min(59, resta - (resta > 59 ? 1 : 0))));
+    const amfitrio = `${etiquetes.join('.')}${sufix}`;
+    if (amfitrio.length !== llargada) throw new Error(`amfitrioApple(${llargada}) fa ${amfitrio.length}`);
+    return amfitrio;
+  };
+
+  /* Els casos que rebutja el servidor, per regla. Cada fila és un endpoint
+     que el navegador podria donar (URL l'analitza) i que la SQL no desa. */
+  const REBUTJA_EL_SERVIDOR = [
+    ['amfitrió de 254 caràcters', `https://${amfitrioApple(254)}/x`],
+    ['amfitrió de 258 caràcters', `https://${amfitrioApple(258)}/x`],
+    ['etiqueta buida al davant', 'https://.push.apple.com/x'],
+    ['etiqueta buida al mig', 'https://a..push.apple.com/x'],
+    ['etiqueta buida a WNS', 'https://a..notify.windows.com/x'],
+    ['guió baix a l\'amfitrió', 'https://a_b.push.apple.com/x'],
+    ['admiració a l\'amfitrió', 'https://a!b.push.apple.com/x'],
+    ['dòlar a l\'amfitrió', 'https://a$b.notify.windows.com/x'],
+    ['titlla a l\'amfitrió', 'https://a~b.push.apple.com/x'],
+    ['asterisc a l\'amfitrió', 'https://a*b.push.apple.com/x'],
+    ['clau a l\'amfitrió', 'https://a{b.push.apple.com/x'],
+    ['igual a l\'amfitrió', 'https://a=b.notify.windows.com/x'],
+    ['cometa a l\'amfitrió', 'https://a\'b.push.apple.com/x'],
+    ['majúscules', 'https://FCM.googleapis.com/x'],
+    ['punt final', 'https://fcm.googleapis.com./x'],
+    ['port', 'https://fcm.googleapis.com:443/x'],
+    ['credencials', 'https://u@fcm.googleapis.com/x'],
+    ['sense camí', 'https://fcm.googleapis.com'],
+    ['consulta sense camí', 'https://fcm.googleapis.com?x=/y'],
+    ['fragment', 'https://fcm.googleapis.com/x#f'],
+    ['massa llarg', `https://fcm.googleapis.com/${'a'.repeat(2048)}`],
+    ['espai', 'https://fcm.googleapis.com/a b'],
+    ['no ASCII', 'https://fcm.googleapis.com/é'],
+    ['http', 'http://fcm.googleapis.com/x'],
+    ['un altre servei', 'https://evil.example/x'],
+    ['sufix enganyós', 'https://evilpush.apple.com/x'],
+    ['subdomini de FCM', 'https://evil.fcm.googleapis.com/x'],
+    ['IP literal', 'https://127.0.0.1/x'],
+    ['barra inversa', 'https://fcm.googleapis.com\\@evil.com/x']
+  ];
+  const ACCEPTA_EL_SERVIDOR = [
+    'https://fcm.googleapis.com/fcm/send/dQw4w9WgXcQ:APA91bH-opac_0123456789',
+    'https://updates.push.services.mozilla.com/wpush/v2/gAAAAABl-opac',
+    'https://web.push.apple.com/QGx1bGx5LW9wYWM',
+    'https://wns2-par02p.notify.windows.com/w/?token=BQYAAAB%2bopac',
+    'https://push.apple.com/x',
+    'https://notify.windows.com/x',
+    'https://a-b.push.apple.com/x',
+    'https://-.push.apple.com/x',
+    `https://${amfitrioApple(253)}/x`,
+    `https://fcm.googleapis.com/${'a'.repeat(2048 - 'https://fcm.googleapis.com/'.length)}`
+  ];
+
+  test('el que rebutja el servidor, ho rebutja el client (cap subscripció per a res)', () => {
+    for (const [regla, endpoint] of REBUTJA_EL_SERVIDOR) {
+      expect(adrecaValidaDelServidor(endpoint), `servidor · ${regla}`).toBe(false);
+      expect(formaDeLaSubscripcio({ endpoint }), `client · ${regla}`).toBeNull();
+    }
+  });
+
+  test('servidor ⊆ client: el que desa el servidor ho accepta el client, tal qual', () => {
+    for (const endpoint of ACCEPTA_EL_SERVIDOR) {
+      expect(adrecaValidaDelServidor(endpoint), endpoint).toBe(true);
+      expect(formaDeLaSubscripcio({ endpoint })?.endpoint, endpoint).toBe(endpoint);
+    }
+  });
+
+  /* Només els endpoints que URL sap analitzar: el navegador no en pot donar
+     cap altre (una subscripció porta una URL vàlida). Un que no s'analitza
+     (p. ex. un punycode invàlid, xn--a) el client el rebutja sempre, i el
+     worker (webpush.js) també. */
+  test('igualtat en un corpus generat: cada amfitrió de 1 a 3 etiquetes amb caràcters de vora, davant dels sufixos admesos', () => {
+    const peces = ['', 'a', 'z9', '-', '_', '!', '~', '.', 'A', 'é', '%2e', 'xn--a', 'xn--pple-43d'];
+    const sufixos = ['push.apple.com', 'notify.windows.com', 'fcm.googleapis.com'];
+    let comprovats = 0;
+    let illegibles = 0;
+    for (const a of peces) for (const b of peces) for (const sufix of sufixos) {
+      for (const amfitrio of [`${a}.${sufix}`, `${a}${b}.${sufix}`, `${a}.${b}.${sufix}`, sufix]) {
+        const endpoint = `https://${amfitrio}/x`;
+        let client;
+        try {
+          client = formaDeLaSubscripcio({ endpoint }) !== null;
+        } catch {
+          client = 'llança';
+        }
+        if (!URL.canParse(endpoint)) {
+          expect(client, endpoint).toBe(false);
+          illegibles += 1;
+          continue;
+        }
+        expect(client, endpoint).toBe(adrecaValidaDelServidor(endpoint));
+        comprovats += 1;
+      }
+    }
+    expect(comprovats).toBeGreaterThan(1500);
+    expect(illegibles).toBeGreaterThan(0);
   });
 });

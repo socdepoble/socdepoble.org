@@ -4,7 +4,8 @@
  * Instal·lat el 261019 (Fase C, Capacitor 8.5.3) des del laboratori
  * _wiki_de_poble/04_escriptori/02_investigacio_ia/261003_1330_empaquetat_mobil_claude/nous/botigues/
  * (entorn.mjs.txt). Disseny i codis d'eixida: LLEGIU.txt d'eixa carpeta i RUNBOOK_BOTIGUES_IA.txt.
- * Proves: tests/botigues.test.mjs.
+ * Proves: tests/botigues.test.mjs i, per al canal de producció, el registre de pujades i l'eco
+ * (B9, marató 261101_2143), tests/botigues.produccio.test.js.
  *
  * Els secrets es lligen d'un fitxer d'entorn FORA del paquet de l'app: per defecte
  * .env.botigues.local a l'arrel del repositori (git l'ignora per «.env.*», .gitignore:15), o el
@@ -57,15 +58,18 @@ export const EIXIDA = Object.freeze({
    · directori: una carpeta FORA del repositori;
    · empremta: SHA-256 en hexadecimal (amb o sense dos punts);
    · secret: contrasenya; només viatja a l'entorn del procés fill que la necessita.
-   Contextos: 'ios', 'android' (verificar i pujar) i 'android-signa' (compilar i signar amb
-   --compila; per defecte signa el Mestre, RUNBOOK A4 opció A). */
+   `arreu: true` · la màscara el tapa on siga, encara que vaja enganxat a un altre text (G1-B-seg-02):
+   el Team ID ix a l'eixida d'xcodebuild dins d'«<equip>.org.socdepoble.app» i de «TeamIdentifierPrefix\=<equip>.».
+   Contextos: 'ios', 'android' (verificar i pujar), 'android-signa' (compilar i signar amb
+   --compila; per defecte signa el Mestre, RUNBOOK A4 opció A) i 'produccio' (--canal produccio:
+   SDP_BUILDS_DIR guarda el registre de pujades, també a Android; B9, marató 261101_2143). */
 export const VARIABLES = Object.freeze({
   SDP_APP_ID: Object.freeze({ tipus: 'id', per: ['ios', 'android'] }),
-  SDP_APPLE_TEAM_ID: Object.freeze({ tipus: 'id', per: ['ios'] }),
+  SDP_APPLE_TEAM_ID: Object.freeze({ tipus: 'id', per: ['ios'], arreu: true }),
   SDP_ASC_KEY_ID: Object.freeze({ tipus: 'id', per: ['ios'] }),
   SDP_ASC_ISSUER_ID: Object.freeze({ tipus: 'id', per: ['ios'] }),
   SDP_ASC_KEY_PATH: Object.freeze({ tipus: 'ruta', per: ['ios'], extensions: ['.p8'] }),
-  SDP_BUILDS_DIR: Object.freeze({ tipus: 'directori', per: ['ios'] }),
+  SDP_BUILDS_DIR: Object.freeze({ tipus: 'directori', per: ['ios', 'produccio'] }),
   SDP_PLAY_JSON_KEY_PATH: Object.freeze({ tipus: 'ruta', per: ['android'], extensions: ['.json'] }),
   SDP_ANDROID_UPLOAD_CERT_SHA256: Object.freeze({ tipus: 'empremta', per: ['android'] }),
   SDP_ANDROID_KEYSTORE_PATH: Object.freeze({ tipus: 'ruta', per: ['android-signa'], extensions: ['.jks', '.keystore'] }),
@@ -156,8 +160,8 @@ function substitucions(valors, arrel) {
   const llista = [];
   for (const [nom, cru] of Object.entries(valors)) {
     const valor = String(cru ?? '').trim();
-    const { tipus } = VARIABLES[nom] ?? {};
-    const arreu = !tipus || tipus === 'secret';
+    const { tipus, arreu: sempre } = VARIABLES[nom] ?? {};
+    const arreu = !tipus || tipus === 'secret' || sempre === true;
     const formes = [valor];
     if (tipus === 'ruta' || tipus === 'directori') {
       const desplegat = ambCasa(valor);
@@ -173,9 +177,10 @@ function substitucions(valors, arrel) {
 /**
  * Canvia per <NOM> cada valor del fitxer d'entorn que aparega en `text`. Els valors més llargs
  * primer; els de menys de 4 caràcters no es canvien (no són secrets i ho embrutarien tot).
- * Una contrasenya, o una variable que el script no coneix, es canvia on siga, encara que vaja
- * enganxada a un altre text. Un identificador, una ruta o una empremta només es canvia si és
- * una peça sencera: un àlies «upload» no ha de convertir «--upload-app» en «--<…>-app».
+ * Una contrasenya, el Team ID d'Apple (arreu: true) o una variable que el script no coneix es
+ * canvia on siga, encara que vaja enganxada a un altre text. Un altre identificador, una ruta o una
+ * empremta només es canvia si és una peça sencera: un àlies «upload» no ha de convertir
+ * «--upload-app» en «--<…>-app».
  * Amb `arrel`, una ruta relativa es busca també resolta des d'ella, com la passa rutaDe a les eines.
  * @param {string} text
  * @param {Record<string,string>} valors
@@ -240,8 +245,164 @@ export function opcionsQueFalten(ajuda, opcions = []) {
 export const VERSIO = /^\d+\.\d+\.\d+$/;
 export const BUILD = /^[1-9]\d{0,8}$/;
 
-/** El text que ha de portar --confirma per a esta versió i este build. */
-export const confirmacioEsperada = (versio, build) => `${versio}+${build}`;
+/* B9 (marató 261101_2143) · Els canals de pujada. «intern» és el de sempre (prova interna de Play;
+   a iOS, la build a App Store Connect). «produccio» deixa un ESBORRANY a la pista production de Play,
+   o la build d'iOS llesta per a adjuntar-la a la versió de l'App Store. Enviar a revisió i publicar
+   són sempre del Mestre (RUNBOOK P9 i S6). El canal per defecte és intern (D-B9-1). */
+export const CANALS = Object.freeze({ INTERN: 'intern', PRODUCCIO: 'produccio' });
+const SHA12 = /^[0-9a-f]{12}$/;
+export const MARCADOR_SHA12 = '<12 primers del sha256>';
+
+/**
+ * El text que ha de portar --confirma. Sense opcions (canal intern), `${versio}+${build}`, com
+ * sempre. En producció, lligat al canal i als 12 primers caràcters del sha256 del binari (D-B9-7):
+ * `produccio:V+B@<sha12>`, o el marcador si el sha256 encara no se sap.
+ */
+export function confirmacioEsperada(versio, build, { canal = CANALS.INTERN, sha256 = null } = {}) {
+  if (canal !== CANALS.PRODUCCIO) return `${versio}+${build}`;
+  const sha12 = String(sha256 ?? '').toLowerCase().slice(0, 12);
+  return `produccio:${versio}+${build}@${SHA12.test(sha12) ? sha12 : MARCADOR_SHA12}`;
+}
+
+/**
+ * Primera passada, abans de tocar res: si --confirma té la forma d'este canal. Un «sí» intern no
+ * val per a producció, ni al revés; un canal desconegut no val mai. Pura.
+ * @returns {{ valida: boolean, sha12: string|null }}
+ */
+export function analitzaConfirmacio(text, { versio, build, canal = CANALS.INTERN } = {}) {
+  if (typeof text !== 'string') return { valida: false, sha12: null };
+  if (canal === CANALS.INTERN) return { valida: text === `${versio}+${build}`, sha12: null };
+  if (canal !== CANALS.PRODUCCIO) return { valida: false, sha12: null };
+  const prefix = `produccio:${versio}+${build}@`;
+  if (!text.startsWith(prefix)) return { valida: false, sha12: null };
+  const sha12 = text.slice(prefix.length).toLowerCase();
+  return SHA12.test(sha12) ? { valida: true, sha12 } : { valida: false, sha12: null };
+}
+
+/** -1, 0 o 1 entre dues versions X.Y.Z, peça a peça i en enters sense límit; null si alguna no en té la forma. */
+export function comparaVersions(a, b) {
+  if (!VERSIO.test(String(a)) || !VERSIO.test(String(b))) return null;
+  const x = String(a).split('.').map(BigInt);
+  const y = String(b).split('.').map(BigInt);
+  for (let i = 0; i < 3; i += 1) if (x[i] !== y[i]) return x[i] < y[i] ? -1 : 1;
+  return 0;
+}
+
+/* B9 · El registre de pujades: una línia JSON per pujada feta pel script, dins de SDP_BUILDS_DIR
+   (fora del repositori), en 0600 i sense cap secret, Key ID ni adreça (com el rebut, RUNBOOK A10).
+   Només guarda: la botiga és l'autoritat final, i una pujada feta a mà no hi és (D-B9-8). */
+export const REGISTRE_DE_PUJADES = 'pujades.jsonl';
+const MIDA_MAXIMA_DEL_REGISTRE = 1024 * 1024; // un registre de pujades no s'hi acosta mai
+const PLATAFORMES_DEL_REGISTRE = Object.freeze(['ios', 'android']);
+const CAMPS_DEL_REGISTRE = Object.freeze(['plataforma', 'canal', 'versio', 'build', 'sha256', 'commit', 'data']);
+/* Obrir sense seguir enllaços, i sense quedar-se esperant si algú hi ha deixat una cua (FIFO). */
+const SENSE_ENLLAC = (fs.constants.O_NOFOLLOW ?? 0) | (fs.constants.O_NONBLOCK ?? 0);
+
+/**
+ * Les entrades del registre que s'entenen i els números de línia de les que no. Pura; mai llança.
+ * @returns {{ entrades: {plataforma:string, canal:string, versio:string, build:string, data:string|null}[], errors: number[] }}
+ */
+export function analitzaRegistre(text = '') {
+  const entrades = [];
+  const errors = [];
+  String(text).split(/\r?\n/).forEach((linia, index) => {
+    if (!linia.trim()) return;
+    try {
+      const e = JSON.parse(linia);
+      const bona = e && typeof e === 'object' && !Array.isArray(e) && PLATAFORMES_DEL_REGISTRE.includes(e.plataforma)
+        && Object.values(CANALS).includes(e.canal) && VERSIO.test(String(e.versio)) && BUILD.test(String(e.build));
+      if (bona) entrades.push({ plataforma: e.plataforma, canal: e.canal, versio: String(e.versio), build: String(e.build), data: typeof e.data === 'string' ? e.data : null });
+      else errors.push(index + 1);
+    } catch { errors.push(index + 1); }
+  });
+  return { entrades, errors };
+}
+
+/**
+ * Per què esta pujada no és monòtona respecte del registre, o null. Pura.
+ * · el mateix build ja pujat a intern i ara a producció: es promou o s'adjunta, no es torna a pujar;
+ * · el mateix build ja pujat al mateix canal (o a producció i ara a intern): cada pujada porta un build nou;
+ * · un build que no és més gran que el màxim de la plataforma, o una versió més vella que una de pujada: s'atura.
+ */
+export function problemaDeMonotonia({ plataforma, canal, versio, build }, entrades = []) {
+  const meues = entrades.filter((e) => e.plataforma === plataforma);
+  const quan = (e) => e.data ?? 'data desconeguda';
+  const mateix = meues.find((e) => e.build === String(build));
+  if (mateix) {
+    if (mateix.canal === CANALS.INTERN && canal === CANALS.PRODUCCIO) {
+      return plataforma === 'android'
+        ? `el build ${build} ja és a la prova interna (${quan(mateix)}): promou-lo des de Play Console (RUNBOOK P9) o puja el build següent`
+        : `el build ${build} ja és a App Store Connect (${quan(mateix)}): adjunta'l a la versió de l'App Store (RUNBOOK P9) o puja el build següent`;
+    }
+    return `el build ${build} ja s'ha pujat (${mateix.canal}, ${quan(mateix)}): cada pujada porta un build nou`;
+  }
+  const maxim = meues.reduce((m, e) => Math.max(m, Number(e.build)), 0);
+  if (Number(build) <= maxim) return `el build ${build} no és més gran que l'últim pujat (${maxim}): cada pujada porta un build nou`;
+  const vella = meues.find((e) => comparaVersions(versio, e.versio) === -1);
+  if (vella) return `la versió ${versio} és més vella que la ${vella.versio} ja pujada`;
+  return null;
+}
+
+/**
+ * El registre de `carpeta`. Sense fitxer: buit i sense errors. Un enllaç, un fitxer que no és
+ * regular, de més d'1 MiB o que no es pot llegir: errors [0] (en producció es tanca sense pujar).
+ */
+export function llegixRegistre(carpeta) {
+  const cami = path.join(carpeta, REGISTRE_DE_PUJADES);
+  let fd;
+  try { fd = fs.openSync(cami, fs.constants.O_RDONLY | SENSE_ENLLAC); } catch (error) {
+    return error?.code === 'ENOENT' ? { entrades: [], errors: [] } : { entrades: [], errors: [0] };
+  }
+  try {
+    const fitxa = fs.fstatSync(fd);
+    if (!fitxa.isFile() || fitxa.size > MIDA_MAXIMA_DEL_REGISTRE) return { entrades: [], errors: [0] };
+    return analitzaRegistre(fs.readFileSync(fd, 'utf8'));
+  } catch {
+    return { entrades: [], errors: [0] };
+  } finally {
+    try { fs.closeSync(fd); } catch { /* ja tancat */ }
+  }
+}
+
+/**
+ * Afig una línia al registre, DESPRÉS d'una pujada feta: només els camps de CAMPS_DEL_REGISTRE
+ * (cap secret), en 0600 si el fitxer és nou. No segueix enllaços i no fa chmod. Torna { cami, obert }
+ * (obert: el fitxer ja existia amb permisos per al grup o els altres) o null si no s'ha pogut
+ * (o si la línia no es podria tornar a llegir): llavors, el script avisa que s'apunte a mà.
+ * ARB-N05-01 · Si l'última línia (apuntada a mà) no acaba en salt de línia, primer se'n posa un:
+ * enganxada, la línia nova i l'anterior serien una sola línia il·legible.
+ */
+export function apuntaPujada(carpeta, entrada = {}) {
+  const linia = Object.fromEntries(CAMPS_DEL_REGISTRE.map((camp) => [camp, entrada[camp] ?? null]));
+  linia.build = String(linia.build);
+  const text = JSON.stringify(linia);
+  if (analitzaRegistre(text).errors.length) return null;
+  const cami = path.join(carpeta, REGISTRE_DE_PUJADES);
+  let fd = null;
+  try {
+    fd = fs.openSync(cami, fs.constants.O_RDWR | fs.constants.O_APPEND | fs.constants.O_CREAT | SENSE_ENLLAC, 0o600);
+    const fitxa = fs.fstatSync(fd);
+    if (!fitxa.isFile()) return null;
+    let davant = '';
+    if (fitxa.size > 0) {
+      const ultim = Buffer.alloc(1);
+      if (fs.readSync(fd, ultim, 0, 1, fitxa.size - 1) !== 1) return null;
+      if (ultim[0] !== 0x0a) davant = '\n';
+    }
+    fs.writeSync(fd, `${davant}${text}\n`);
+    return { cami, obert: process.platform !== 'win32' && (fitxa.mode & 0o077) !== 0 };
+  } catch {
+    return null;
+  } finally {
+    if (fd !== null) try { fs.closeSync(fd); } catch { /* ja tancat */ }
+  }
+}
+
+/** aps-environment ('production', 'development'…) de l'XML de «codesign -dv --entitlements - --xml», o null. */
+export function apsDeCodesign(eixida) {
+  const trobat = /<key>aps-environment<\/key>\s*<string>([a-z]+)<\/string>/.exec(String(eixida ?? ''));
+  return trobat ? trobat[1] : null;
+}
 
 /**
  * Arguments de la línia d'ordres: --nom=valor, --nom valor i banderes. `admesos` diu quines
@@ -598,15 +759,61 @@ export function comprovaVariables({ arrel, valors, contextos }) {
 export const rutaDe = (arrel, valors, nom) => path.resolve(arrel, ambCasa(String(valors[nom] ?? '').trim()));
 
 /**
+ * B9 · La guarda del registre de pujades, després del preflight i abans de compilar o pujar.
+ * Torna { carpeta, codi, problemes, avisos }; `carpeta` (o null) és on s'apuntarà la pujada feta.
+ * En producció tot tanca: sense SDP_BUILDS_DIR (eixida 5), un registre il·legible o una pujada no
+ * monòtona (eixida 7). En intern, sense carpeta (o dins del repositori) no hi ha registre, i una
+ * línia il·legible només és un avís; la monotonia sí que para. Cap missatge porta cap ruta.
+ */
+export function guardaDelRegistre({ arrel, valors = {}, canal = CANALS.INTERN, plataforma, versio, build }) {
+  const produccio = canal === CANALS.PRODUCCIO;
+  const resultat = (codi, { carpeta = null, problemes = [], avisos = [] } = {}) => ({ carpeta, codi, problemes, avisos });
+  let carpeta = null;
+  let motiu = 'falta SDP_BUILDS_DIR';
+  if (String(valors.SDP_BUILDS_DIR ?? '').trim()) {
+    const cami = rutaDe(arrel, valors, 'SDP_BUILDS_DIR');
+    let directori = false;
+    try { directori = fs.statSync(cami).isDirectory(); } catch { /* no hi és */ }
+    if (directori && ![cami, real(cami)].some((c) => esDins(arrel, c))) carpeta = cami;
+    else motiu = 'SDP_BUILDS_DIR no és un directori de fora del repositori';
+  }
+  if (!carpeta) {
+    return produccio
+      ? resultat(EIXIDA.FALTA, { problemes: [`${motiu}: en producció hi viu el registre de pujades (${REGISTRE_DE_PUJADES})`] })
+      : resultat(EIXIDA.BE, { avisos: [`${motiu}: esta pujada no es contrasta ni s'apunta al registre de pujades (${REGISTRE_DE_PUJADES})`] });
+  }
+  const { entrades, errors } = llegixRegistre(carpeta);
+  const illegible = errors.length
+    ? `SDP_BUILDS_DIR/${REGISTRE_DE_PUJADES}: ${errors.map((n) => (n === 0 ? 'el fitxer no es pot llegir (enllaç, no regular o massa gran)' : `la línia ${n} no s'entén`)).join(', ')}; arregla-ho a mà`
+    : null;
+  if (illegible && produccio) return resultat(EIXIDA.ARBRE, { carpeta, problemes: [`${illegible}: en producció no es puja res sense el registre sencer`] });
+  const avisos = illegible ? [illegible] : [];
+  const problema = problemaDeMonotonia({ plataforma, canal, versio, build }, entrades);
+  return problema ? resultat(EIXIDA.ARBRE, { carpeta, problemes: [problema], avisos }) : resultat(EIXIDA.BE, { carpeta, avisos });
+}
+
+/** Els avisos d'apuntaPujada: el que torna (null o { obert }) dit en una línia, o null si tot va bé. */
+export function avisDelRegistre(apuntat) {
+  if (!apuntat) return `no s'ha pogut apuntar la pujada a SDP_BUILDS_DIR/${REGISTRE_DE_PUJADES}: apunta-ho a mà (el rebut porta totes les dades)`;
+  if (apuntat.obert) return `SDP_BUILDS_DIR/${REGISTRE_DE_PUJADES} té permisos oberts: chmod 600 (el script no els canvia)`;
+  return null;
+}
+
+/**
  * Executa una ordre sense shell. Mostra l'ordre emmascarada i filtra l'eixida línia a línia amb
  * la mateixa màscara (amb `arrel`, la de les rutes resoltes: emmascara). `entornExtra` només
  * arriba al procés fill (mai s'imprimix).
  * `eixida` és el text emmascarat (el que s'ha vist). `crua` és el text tal qual: només per a
  * analitzar-lo dins del script (l'equip de codesign, l'empremta de keytool), mai per a imprimir-lo.
  * Si s'analitzara l'emmascarat, «TeamIdentifier=<SDP_APPLE_TEAM_ID>» faria fallar l'equip bo.
+ * `mostra: false` només amaga l'ordre. `eco: false` (B9, ARB-B9-03) amaga també l'eixida de l'eina:
+ * es guarda a `eixida` i a `crua` però no s'escriu ni a stdout ni a stderr. Va on l'eixida porta
+ * dades que no cal pintar: l'XML de drets de codesign (el script escriu la seua línia) o el
+ * propietari del certificat de keytool. El Team ID, a més, la màscara el tapa arreu (G1-B-seg-02),
+ * també en l'eixida amb eco d'xcodebuild archive i -exportArchive.
  * @returns {Promise<{ codi:number, eixida:string, crua:string }>}
  */
-export function executa(ordre, args, { cwd, valors = {}, arrel = null, entornExtra = {}, mostra = true } = {}) {
+export function executa(ordre, args, { cwd, valors = {}, arrel = null, entornExtra = {}, mostra = true, eco = true } = {}) {
   if (mostra) process.stdout.write(`$ ${mostraOrdre(ordre, args, valors, arrel)}\n`);
   return new Promise((resol) => {
     let fill;
@@ -624,7 +831,8 @@ export function executa(ordre, args, { cwd, valors = {}, arrel = null, entornExt
         const neta = emmascara(linia, valors, arrel);
         crues.push(linia);
         vistes.push(neta);
-        desti.write(`${neta}\n`);
+        // eco:false · l'eixida només es guarda: res a la pantalla.
+        if (eco) desti.write(`${neta}\n`);
       };
       return {
         dades: (tros) => {

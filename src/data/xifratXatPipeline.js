@@ -165,7 +165,8 @@ export function creaMotorXifrat({ cripto, impl, servei, magatzem, ara = () => Da
     exigixTransport('clausDeXat');
     const publiques=[];const ids=[...usuaris];
     for(let i=0;i<ids.length;i+=256){publiques.push(...(await impl.clausDeXat(ids.slice(i,i+256),config)??[]));exigix();}
-    const directori=await directoriAmbHistoria({cripto,jo,registres:Array.isArray(publiques)?publiques:[],usuaris,magatzem,ci,ara,exigix,declaracions}); exigix();
+    /* G2-A-seg-01 · El cap ancorat abans d'esta construcció és el límit de les claus substituïdes per un canvi fort. */
+    const directori=await directoriAmbHistoria({cripto,jo,registres:Array.isArray(publiques)?publiques:[],usuaris,magatzem,ci,ara,exigix,declaracions,capAncorat:ancorat?.epoca??0}); exigix();
     const estat=desat?{...desat.estat,epoques:new Map(desat.estat.epoques),vistos:new Set(desat.estat.vistos)}:estatFilNou({fil:fil.id,tipusFil:tipus});
     exigix();
     if (epoques.length) {
@@ -188,7 +189,14 @@ export function creaMotorXifrat({ cripto, impl, servei, magatzem, ara = () => Da
     if(ancorat && (!estat.cap || estat.cap.epoca<ancorat.epoca || aBase64url(estat.epoques.get(ancorat.epoca)?.hash??new Uint8Array())!==aBase64url(ancorat.hash)))throw errorMotor('cap-retrocedix','La cadena remota no conté el cap verificat d’este aparell.');
     // Només després de totes les firmes, cadena i sobres: cap fixació motivada
     // per una SDPE rebutjada no queda persistent.
-    if(!declaracions.length || estat.cap)await directori.confirma(new Set([...membres,...[...estat.epoques.values()].flatMap(e=>[...e.membres.keys()])]));exigix();
+    if(!declaracions.length || estat.cap){
+      const validats=new Set([...membres,...[...estat.epoques.values()].flatMap(e=>[...e.membres.keys()])]);
+      await directori.confirma(validats);exigix();
+      /* G2-A-integ-01 · La fixació ja ha avançat: l'avís del canvi suau queda al servei de l'àmbit
+         fins que la interfície el llig (canvisDelFil), siga qui siga qui ha construït el context. */
+      for(const s of directori.canvis.suaus)if(validats.has(s.usuari))servei.anotaAvisSuau?.(s);
+    }
+    exigix();
     if(estat.cap && (!ancorat || estat.cap.epoca>ancorat.epoca) && magatzem.avancaCap){await magatzem.avancaCap(ci,fil.id,{anterior:ancorat,nou:{epoca:estat.cap.epoca,hash:estat.cap.hash}});exigix();}
     const context = { estat, directori, canvis: directori.canvis, jo, membres, rols, fil, tipusFil, capPersistent:estat.cap?{epoca:estat.cap.epoca,hash:estat.cap.hash}:ancorat };
     servei.desaEstatFil(fil.id, context);
@@ -647,21 +655,54 @@ export function creaMotorXifrat({ cripto, impl, servei, magatzem, ara = () => Da
   };
   const errorKidCanviat = (cause) => errorMotor(CODI_MOTOR.kidCanviat, 'La clau fixada d’esta persona ha canviat: cal comparar el número nou.', { reintentable: false, ...(cause ? { cause } : {}) });
   const esFixacioCanviada = (error) => error?.codi === 'FIXACIO_DIFERENT' || error?.codi === 'FIXACIO_CANVIADA';
-  /* B2a-ARB-01 · Acceptar (o tornar a verificar) la clau nova d'un pendent. Si el tram suau
-     d'abans del pas fort encara no és al magatzem (cap fil ha corregut `confirma`), primer
-     s'hi avança (kidDesat → kidFixat; amb el mateix kid no fa res) i després la clau nova.
-     Les dues fixacions són comparar-i-canviar i `anteriors` guarda tot el tram (R5). */
-  const fixaSobrePendent = async (ci, p, { kid, verificat }, exigix) => {
-    try {
-      if (p.kidDesat && !bytesIguals(p.kidDesat, p.kidFixat)) {
-        await magatzem.fixa(ci, { usuari: p.usuari, kid: p.kidFixat, vistAl: ara() }, { anterior: p.kidDesat });
-        exigix();
-      }
-      return await magatzem.fixa(ci, { usuari: p.usuari, kid, verificat, vistAl: ara() }, { anterior: p.kidFixat });
-    } catch (error) {
+  const ambKidCanviat = async (escriu) => {
+    try { return await escriu(); } catch (error) {
       if (esFixacioCanviada(error)) throw errorKidCanviat(error);
       throw error;
     }
+  };
+  /* B2a-ARB-01 · Acceptar (o tornar a verificar) la clau nova d'un pendent. Si el tram suau
+     d'abans del pas fort encara no és al magatzem (cap fil ha corregut `confirma`), primer
+     s'hi avança (kidDesat → kidFixat; amb el mateix kid no fa res) i després la clau nova.
+     Les dues fixacions són comparar-i-canviar i `anteriors` guarda tot el tram (R5).
+     G2-A-seg-01 · `abansDeFixar` corre just abans de fixar la clau nova (amb la vella encara fixada). */
+  const fixaSobrePendent = async (ci, p, { kid, verificat }, exigix, abansDeFixar = null) => {
+    if (p.kidDesat && !bytesIguals(p.kidDesat, p.kidFixat)) {
+      await ambKidCanviat(() => magatzem.fixa(ci, { usuari: p.usuari, kid: p.kidFixat, vistAl: ara() }, { anterior: p.kidDesat }));
+      exigix();
+    }
+    if (typeof abansDeFixar === 'function') { await abansDeFixar(); exigix(); }
+    return ambKidCanviat(() => magatzem.fixa(ci, { usuari: p.usuari, kid, verificat, vistAl: ara() }, { anterior: p.kidFixat }));
+  };
+
+  /* G2-A-seg-01 · Una clau substituïda per un canvi fort només signa èpoques fins al cap que
+     l'aparell tenia ancorat abans de l'acceptació. Perquè la història d'abans dels altres fils
+     amb esta persona (que el decorador coneix: `filsAmb`) no quede tancada, abans de fixar la
+     clau nova cada fil ancora el seu cap amb el directori d'ara, on la vella encara és la
+     fixada. Millor esforç: un fil que falla (xarxa, cadena) es queda amb el cap d'abans i
+     l'acceptació continua; només un canvi d'àmbit l'atura. Com a molt MAX_FILS_ANCORA fils.
+     E1 · ARB-5 · CONCURRENCIA_ANCORA fils alhora (cada un és independent: el seu context, el
+     seu cap i fixacions comparar-i-canviar idempotents), no un darrere de l'altre. */
+  const MAX_FILS_ANCORA = 64;
+  const CONCURRENCIA_ANCORA = 4;
+  const ancoraAltresFils = async ({ usuari, fil, config, exigix, filsAmb }) => {
+    if (typeof filsAmb !== 'function') return;
+    let llista;
+    try { llista = filsAmb(usuari, fil.id); } catch { return; }
+    if (!Array.isArray(llista)) return;
+    const cua = llista.filter((altre) => typeof altre?.fil?.id === 'string' && altre.fil.id !== fil.id).slice(0, MAX_FILS_ANCORA);
+    let seguent = 0;
+    const treballa = async () => {
+      while (seguent < cua.length) {
+        const altre = cua[seguent];
+        seguent += 1;
+        try { await contextDelFil({ fil: altre.fil, tipusFil: altre.tipusFil, config, exigix, refresca: true }); } catch (error) {
+          if (esAmbitCanviat(error)) throw error;
+        }
+        exigix();
+      }
+    };
+    await Promise.all(Array.from({ length: Math.min(CONCURRENCIA_ANCORA, cua.length) }, treballa));
   };
 
   /* ── Número de seguretat i «Marca com a verificat» (§4.4; pla 261101_1246, T7 · S5) ──
@@ -722,7 +763,8 @@ export function creaMotorXifrat({ cripto, impl, servei, magatzem, ara = () => Da
     opcions.exigix();
     let fila;
     if (pendent) {
-      fila = await fixaSobrePendent(ci, pendent, { kid: deBase64url(kid, 16), verificat: true }, opcions.exigix);
+      fila = await fixaSobrePendent(ci, pendent, { kid: deBase64url(kid, 16), verificat: true }, opcions.exigix,
+        () => ancoraAltresFils({ usuari: resultat.usuari, fil: opcions.fil, config: opcions.config, exigix: opcions.exigix, filsAmb: opcions.filsAmb }));
     } else {
       try {
         fila = await magatzem.fixa(ci, { usuari: resultat.usuari, kid: deBase64url(kid, 16), verificat: verificat === true, vistAl: ara() }, {});
@@ -740,22 +782,32 @@ export function creaMotorXifrat({ cripto, impl, servei, magatzem, ara = () => Da
      B2a (risc obert del Llibre, :128) · Només compta qui té ara mateix com a clau activa al
      servidor (una sola fila sense retirar) exactament la clau verificada, amb el kid
      recalculat de les seues públiques. Un contacte verificat que publica una clau nova
-     deixa de comptar fins que es torna a verificar. Cap fixació ni cap canvi s'escriu ací. */
+     deixa de comptar fins que es torna a verificar. Cap fixació ni cap canvi s'escriu ací.
+     G2-A-seg-02 · La marca de verificat és d'este aparell: la petició no la diu. Es demanen
+     les claus de TOTES les persones fixades (el servidor ja sap amb qui parles, disseny
+     §2.4), en ordre d'usuari i en els mateixos lots, i els verificats es filtren ací. Amb 0
+     o amb N verificats, el servidor veu la mateixa petició.
+     ARB-01 · I el mateix desenllaç: una petició que falla rebutja sempre (mai un 0 només
+     quan no n'hi ha cap), i guardaIdentitat la torna AMBIT_CANVIAT si l'àmbit ha canviat. */
   const recompteVerificats = async ({ exigix, config = {} }) => {
     const { ci, joId } = claus();
     if (typeof magatzem.fixacions !== 'function') return 0;
     const files = await magatzem.fixacions(ci);
     exigix();
-    const pins = new Map(files.filter((f) => f?.verificat === true && f.usuari !== joId).map((f) => [f.usuari, f]));
-    if (!pins.size) return 0;
+    const fixades = (Array.isArray(files) ? files : []).filter((f) => f && typeof f.usuari === 'string' && f.usuari !== joId);
+    if (!fixades.length) return 0;
+    const pins = new Map(fixades.filter((f) => f.verificat === true).map((f) => [f.usuari, f]));
+    /* Sense transport no hi ha cap petició: zero verificats és zero sense el servidor. */
+    if (!pins.size && typeof impl.clausDeXat !== 'function') return 0;
     exigixTransport('clausDeXat');
-    const ids = [...pins.keys()];
+    const ids = [...new Set(fixades.map((f) => f.usuari))].sort();
     const registres = [];
     for (let i = 0; i < ids.length; i += 256) {
       const lot = await impl.clausDeXat(ids.slice(i, i + 256), config);
       exigix();
       if (Array.isArray(lot)) registres.push(...lot);
     }
+    if (!pins.size) return 0;
     let total = 0;
     for (const [usuari, pin] of pins) {
       const vigents = registres.filter((r) => r && typeof r === 'object' && (r.usuariId ?? r.usuari) === usuari && !r.retiradaAl);
@@ -778,26 +830,47 @@ export function creaMotorXifrat({ cripto, impl, servei, magatzem, ara = () => Da
   };
 
   /* ── Canvis de clau del fil (§4.4, CS-01, D-05 a; B2a, contracte de §2.1.6) ── */
-  const serialitzaCanvis = (canvis) => Object.freeze({
-    pendents: Object.freeze([...canvis.pendents.values()].map((p) => Object.freeze({
-      usuari: p.usuari, motiu: p.motiu, kidFixat: aBase64url(p.kidFixat), kidNou: p.kidNou ? aBase64url(p.kidNou) : null
-    }))),
-    suaus: Object.freeze(canvis.suaus.map((s) => Object.freeze({ usuari: s.usuari, kidAnterior: aBase64url(s.kidAnterior), kidNou: aBase64url(s.kidNou) }))),
-    alarmes: Object.freeze(canvis.alarmes.map((a) => Object.freeze({ tipus: a.tipus, kidActiu: a.kidActiu ? aBase64url(a.kidActiu) : null })))
-  });
+  /* G2-A-integ-01 · Els suaus són els d'esta construcció més els avisos que el servei de l'àmbit
+     guardava per a les persones del fil (un sol avís per persona i kid nou). Un suau d'una persona
+     que ara té un pendent no es diu: l'alerta forta ja ho cobrix (com el tram de B2a-ARB-01).
+     `excepte`: la persona que s'acaba d'acceptar (el seu pendent ja no hi és). */
+  const serialitzaCanvis = (canvis, avisos = [], excepte = null) => {
+    const suaus = new Map();
+    for (const s of [...avisos, ...canvis.suaus]) {
+      const clau = `${s.usuari}:${aBase64url(s.kidNou)}`;
+      if (!canvis.pendents.has(s.usuari) && !suaus.has(clau)) suaus.set(clau, s);
+    }
+    return Object.freeze({
+      pendents: Object.freeze([...canvis.pendents.values()].filter((p) => p.usuari !== excepte).map((p) => Object.freeze({
+        usuari: p.usuari, motiu: p.motiu, kidFixat: aBase64url(p.kidFixat), kidNou: p.kidNou ? aBase64url(p.kidNou) : null
+      }))),
+      suaus: Object.freeze([...suaus.values()].map((s) => Object.freeze({ usuari: s.usuari, kidAnterior: aBase64url(s.kidAnterior), kidNou: aBase64url(s.kidNou) }))),
+      alarmes: Object.freeze(canvis.alarmes.map((a) => Object.freeze({ tipus: a.tipus, kidActiu: a.kidActiu ? aBase64url(a.kidActiu) : null })))
+    });
+  };
+  /* Les persones d'un fil (d'ara i de qualsevol època vista), com la guarda d'enviament. */
+  const personesDelFil = (ctx) => new Set([...ctx.membres, ...[...ctx.estat.epoques.values()].flatMap((e) => [...e.membres.keys()])]);
+  /* G2-A-integ-01 · Els avisos suaus guardats per a estes persones, que la interfície rep ara (i el servei ja no guarda).
+     E1 · H-2 · Amb `conserva`, el servei els guarda fins que la interfície els tanca (tancaAvisSuau); el d'una
+     persona amb un pendent s'oblida sempre (l'alerta forta ja ho cobrix). */
+  const prenAvisosSuaus = (ctx, conserva = false) => (typeof servei.prenAvisosSuaus === 'function'
+    ? servei.prenAvisosSuaus(personesDelFil(ctx), { conserva: conserva === true, descarta: ctx.canvis?.pendents ?? null })
+    : []);
 
   /** { pendents: [{usuari, motiu, kidFixat, kidNou}], suaus: [{usuari, kidAnterior, kidNou}], alarmes: [{tipus, kidActiu}] }, kids en base64url. */
-  const canvisDelFil = async ({ fil, tipusFil, config, exigix }) => {
+  const canvisDelFil = async ({ fil, tipusFil, config, exigix, conservaSuaus = false }) => {
     const ctx = await contextDelFil({ fil, tipusFil, config, exigix, refresca: true });
     exigix();
-    return serialitzaCanvis(ctx.canvis);
+    return serialitzaCanvis(ctx.canvis, prenAvisosSuaus(ctx, conservaSuaus));
   };
+  /* G2-A-integ-03 · Errors del context que són manipulació: es diuen encara que la clau ja s'haja fixat. */
+  const CODIS_MANIPULACIO = new Set([CODI.bifurcacio, CODI.kidNoQuadra, CODI_MOTOR.historiaIncoherent]);
 
   /* «He parlat amb {nom}: continua» · Només la clau pendent que s'ha mostrat (TOCTOU: el
      kid es compara amb el pendent refet ara i, dins de la transacció, la fixació amb
      l'`anterior`), sense marca de verificat. La fixació és per persona: desbloqueja tots
      els fils amb ella. Torna els canvis del fil ja refets. */
-  const acceptaCanviDelFil = async ({ fil, tipusFil, config, exigix, usuari, kid }) => {
+  const acceptaCanviDelFil = async ({ fil, tipusFil, config, exigix, usuari, kid, filsAmb = null, conservaSuaus = false }) => {
     const ctx = await contextDelFil({ fil, tipusFil, config, exigix, refresca: true });
     exigix();
     const { ci } = claus();
@@ -810,10 +883,19 @@ export function creaMotorXifrat({ cripto, impl, servei, magatzem, ara = () => Da
     }
     if (typeof magatzem.fixa !== 'function') throw errorMotor(CODI_MOTOR.senseCapacitat, 'El magatzem d’este aparell no desa fixacions.', { reintentable: false });
     exigix();
-    await fixaSobrePendent(ci, p, { kid: p.kidNou, verificat: false }, exigix);
+    await fixaSobrePendent(ci, p, { kid: p.kidNou, verificat: false }, exigix, () => ancoraAltresFils({ usuari, fil, config, exigix, filsAmb }));
     exigix();
     descartaContextos(fil.id);
-    return canvisDelFil({ fil, tipusFil, config, exigix });
+    /* G2-A-integ-03 · La clau ja és fixada (i no es desfà): si el refresc final falla, l'acceptació
+       no es diu fallida. Torna els canvis d'abans sense el pendent acceptat i `refrescat: false`
+       (camp opcional nou); la pròxima lectura els refà. Un canvi d'àmbit o una manipulació, sí. */
+    try {
+      return await canvisDelFil({ fil, tipusFil, config, exigix, conservaSuaus });
+    } catch (error) {
+      if (esAmbitCanviat(error) || CODIS_MANIPULACIO.has(error?.codi)) throw error;
+      exigix();
+      return Object.freeze({ ...serialitzaCanvis(ctx.canvis, prenAvisosSuaus(ctx, conservaSuaus), usuari), refrescat: false });
+    }
   };
 
   return Object.freeze({

@@ -21,7 +21,7 @@ import { createHash } from 'node:crypto';
 import { fileURLToPath } from 'node:url';
 import { fixture, validDoc, writeDoc, relay } from './helpers/documental.mjs';
 import { arxiva, arxivables } from '../tooling/gates/porta-olivera.mjs';
-import { planificaArxiu, reescriuEnllacos, desfesSubstitucions, documentsAuditats, hashBytes } from '../tooling/documental/arxiu-enllacos.mjs';
+import { planificaArxiu, reescriuEnllacos, desfesSubstitucions, documentsAuditats, hashBytes, fallidesF9 } from '../tooling/documental/arxiu-enllacos.mjs';
 import { ambTornsArxiu, openTurn, bindPlan, sealTurn, checkTurn, validateDocument, inventory, readTurn } from '../tooling/documental/turns.mjs';
 import { checkDocuments } from '../tooling/gates/porta-documents.mjs';
 import { VerificadorSCC } from '../tooling/gates/verificador-scc.mjs';
@@ -599,4 +599,305 @@ test('T14 · al frontmatter el camí es reapunta sense àlies; si el camí nou e
   assert.ok(q.stderr.includes(e.file), q.stderr);
   assert.match(q.stderr, /frontmatter\.description: massa llarg/);
   assert.deepEqual(foto(root2), abans);
+});
+
+/* ── T15 · Portes Frontmatter (F9) i Doctrina després de l'arxivat (Gauntlet G1-A-integ-01/02) ── */
+
+const TRACTOR_FM = fileURLToPath(new URL('../tooling/wiki/tractor-frontmatter.mjs', import.meta.url));
+const DOCTRINA = fileURLToPath(new URL('../tooling/gates/tractor-doctrina.mjs', import.meta.url));
+const ESTAT = '.agents/ESTAT.md';
+const VIU_FM = (descripcio) => `---\ntype: index\nstatus: canonic\ndescription: ${descripcio}\n---\n`;
+/** Sense GIT_*: dins d'un hook, Git classificaria la fixture amb l'índex del repositori real. */
+const entorn = (root) => ({ ...Object.fromEntries(Object.entries(process.env).filter(([k]) => !k.startsWith('GIT_'))), SDP_ARREL: root });
+/** Les portes reals exigixen el marcador de l'arrel (tooling/lib/arrel.mjs). */
+const ambMarcador = (root) => posa(root, '.agents/AGENTS.md', '# Agents del Mas de proves\n');
+
+/** F9 per document segons el tractor real (tooling/wiki/tractor-frontmatter.mjs --json). */
+function f9(root) {
+  const r = spawnSync(process.execPath, [TRACTOR_FM, '--json'], { cwd: root, env: entorn(root), encoding: 'utf8', timeout: 60000 });
+  assert.notEqual(r.status, 2, `el tractor no pot jutjar la fixture: ${r.stderr}`);
+  const per = {};
+  for (const it of JSON.parse(r.stdout).fallades.F9) (per[it.n] ||= []).push(it.detall);
+  return per;
+}
+
+/** Veredicte de la Porta Doctrina real (tooling/gates/tractor-doctrina.mjs --json, abast per defecte .agents). */
+function doctrina(root) {
+  const r = spawnSync(process.execPath, [DOCTRINA, '--json'], { cwd: root, env: entorn(root), encoding: 'utf8', timeout: 60000 });
+  const j = JSON.parse(r.stdout);
+  return { status: r.status, absents: j.absents.map((a) => `${a.doc}:${a.linia} ${a.cami}`) };
+}
+
+test('T15 · G1-A-integ-01: un viu amb X com a única nota de «## Vincles» atura l’arxivat (--sec ix amb 1); amb una nota viva passa i el tractor de frontmatter no guanya cap F9', (t) => {
+  const root = masAmbX(t);
+  ambMarcador(root);
+  const Y = `${DESK}/250101_0920_pla_viu.md`;
+  const Z = `${ACTES}/250101_0930_acta_control.md`;
+  const vincles = (...notes) => `\n## Vincles\n\n${notes.map((n) => `- [[${n}]]`).join('\n')}\n`;
+  posa(root, Y, `${VIU_FM('Pla viu de proves')}# Pla viu\n\nText.\n${vincles(XS)}`);
+  // Control: el mateix vincle més una nota viva no atura res.
+  posa(root, Z, `${VIU_FM('Acta de control')}# Acta\n\nText.\n${vincles(XS, '00_index_escriptori')}`);
+  const T = openTurn(root, { actor: 'test', scope: 'documents' });
+  const abansF9 = f9(root);
+  assert.deepEqual(abansF9[Y] ?? [], [], 'Y és net a F9 abans d’arxivar');
+  assert.deepEqual(abansF9[Z] ?? [], []);
+
+  const abans = foto(root);
+  const sec = porta(root, ['--arxiva', '--sec', '--nom', X, '--torn', T.turn_id]);
+  assert.equal(sec.status, 1, sec.stdout + sec.stderr);
+  assert.ok(sec.stdout.includes(`❌ ${Y}: `), sec.stdout);
+  assert.match(sec.stdout, /quedaria sense cap nota viva resoluble/);
+  assert.match(sec.stdout, /Falta una nota interna única i diferent/);
+  assert.ok(!sec.stdout.includes(`❌ ${Z}`), `el control conserva una nota viva: ${sec.stdout}`);
+  assert.deepEqual(foto(root), abans, '--sec no toca res');
+  const q = porta(root, ['--arxiva', '--nom', X, '--torn', T.turn_id]);
+  assert.equal(q.status, 2, q.stdout);
+  assert.ok(q.stderr.includes(Y), q.stderr);
+  assert.match(q.stderr, /No s'ha mogut res/);
+  assert.deepEqual(foto(root), abans, 'l’aturada no mou res');
+  assert.deepEqual(f9(root)[Y] ?? [], [], 'Y continua net');
+
+  // Esmena humana: una nota viva a Y. L'arxivat passa i la Porta Frontmatter, executada després, no hi veu res nou.
+  posa(root, Y, `${VIU_FM('Pla viu de proves')}# Pla viu\n\nText.\n${vincles(XS, '00_index_escriptori')}`);
+  const fet = porta(root, ['--arxiva', '--nom', X, '--torn', T.turn_id]);
+  assert.equal(fet.status, 0, fet.stdout + fet.stderr);
+  assert.ok(hi(root, `${ARXIU}/${X}`));
+  assert.ok(llig(root, Y).includes(`- [[../90_arxiu_historic/${XS}|${XS}]]\n- [[00_index_escriptori]]`), llig(root, Y));
+  const despresF9 = f9(root);
+  assert.deepEqual(despresF9[Y] ?? [], [], 'el vincle històric és vàlid i la nota viva compta');
+  assert.deepEqual(despresF9[Z] ?? [], []);
+});
+
+test('T15 · G1-A-integ-01: també atura quan el viu no es reescriu (fora de les fonts de la porta) i X era la seua única nota viva', (t) => {
+  const root = masAmbX(t);
+  ambMarcador(root);
+  // .agents/LEDGER.md no és font de la porta: el seu [[X]] quedaria «unresolved» i sense cap nota viva.
+  fs.writeFileSync(path.join(root, '.agents/LEDGER.md'), `# Ledger\n\n## Vincles\n- [[${XS}]]\n\n## 250101_0900 · entrada\n- Text.\n`);
+  const T = openTurn(root, { actor: 'test', scope: 'documents' });
+  assert.deepEqual(f9(root)['.agents/LEDGER.md'] ?? [], []);
+  const abans = foto(root);
+  const sec = porta(root, ['--arxiva', '--sec', '--nom', X, '--torn', T.turn_id]);
+  assert.equal(sec.status, 1, sec.stdout + sec.stderr);
+  assert.ok(sec.stdout.includes('❌ .agents/LEDGER.md: '), sec.stdout);
+  assert.match(sec.stdout, new RegExp(`${XS}: unresolved`));
+  assert.deepEqual(foto(root), abans);
+});
+
+test('T15 · G1-A-integ-02: .agents/ESTAT.md amb el camí de X en codi inline atura l’arxivat (--sec ix amb 1); esmenat a mà, passa i la Porta Doctrina continua verda després', (t) => {
+  const root = masAmbX(t);
+  ambMarcador(root);
+  // Dos seccions ESTAT_ACTUAL: la Doctrina només llig la primera (operationalDocumentText).
+  fs.writeFileSync(path.join(root, ESTAT), [
+    '# Estat', '', '## ESTAT_ACTUAL · 250101', `Vegeu [[${XS}]] i \`${DESK}/${X}\`.`, '',
+    '## ESTAT_ACTUAL · 241231', `Històric: \`${DESK}/${X}\`.`, ''].join('\n'));
+  const T = openTurn(root, { actor: 'test', scope: 'documents' });
+  assert.deepEqual(doctrina(root), { status: 0, absents: [] }, 'Doctrina verda abans d’arxivar');
+
+  const abans = foto(root);
+  const sec = porta(root, ['--arxiva', '--sec', '--nom', X, '--torn', T.turn_id]);
+  assert.equal(sec.status, 1, sec.stdout + sec.stderr);
+  assert.ok(sec.stdout.includes(`❌ ${ESTAT}:4 cita «${DESK}/${X}» en codi inline`), sec.stdout);
+  assert.match(sec.stdout, /Porta Doctrina/);
+  assert.ok(!sec.stdout.includes(`${ESTAT}:7`), `la secció històrica no la llig la Doctrina: ${sec.stdout}`);
+  const q = porta(root, ['--arxiva', '--nom', X, '--torn', T.turn_id]);
+  assert.equal(q.status, 2, q.stdout);
+  assert.ok(q.stderr.includes(`${ESTAT}:4`), q.stderr);
+  assert.deepEqual(foto(root), abans, 'l’aturada no mou res');
+  assert.equal(doctrina(root).status, 0);
+
+  // Esmena humana del camí en codi: l'arxivat passa, reapunta el wikilink i la Doctrina, executada després, és verda.
+  fs.writeFileSync(path.join(root, ESTAT), llig(root, ESTAT).replace(`Vegeu [[${XS}]] i \`${DESK}/${X}\``, `Vegeu [[${XS}]] i \`${ARXIU}/${X}\``));
+  const fet = porta(root, ['--arxiva', '--nom', X, '--torn', T.turn_id]);
+  assert.equal(fet.status, 0, fet.stdout + fet.stderr);
+  assert.ok(llig(root, ESTAT).includes(`Vegeu [[../_wiki_de_poble/90_arxiu_historic/${XS}|${XS}]] i \`${ARXIU}/${X}\`.`), llig(root, ESTAT));
+  assert.deepEqual(doctrina(root), { status: 0, absents: [] }, 'Doctrina verda després d’arxivar');
+});
+
+test('T15 · G1-A-integ-02: un camí en prosa sense cap enllaç (ON_ESTIC) també atura; el nom sol en codi, que la Doctrina troba a l’arxiu, no', (t) => {
+  const root = masAmbX(t);
+  ambMarcador(root);
+  posa(root, '.agents/ON_ESTIC.md', `# On\n\nSeguix per ${DESK}/${X} quan tornes.\n`);
+  fs.appendFileSync(path.join(root, ESTAT), `\nNom sol: \`${X}\`.\n`);
+  const T = openTurn(root, { actor: 'test', scope: 'documents' });
+  assert.deepEqual(doctrina(root), { status: 0, absents: [] });
+  const abans = foto(root);
+  const sec = porta(root, ['--arxiva', '--sec', '--nom', X, '--torn', T.turn_id]);
+  assert.equal(sec.status, 1, sec.stdout + sec.stderr);
+  assert.ok(sec.stdout.includes(`❌ .agents/ON_ESTIC.md:3 cita «${DESK}/${X}» en prosa`), sec.stdout);
+  assert.ok(!sec.stdout.includes(`❌ ${ESTAT}`), `el nom sol resol a l’arxiu després del trasllat: ${sec.stdout}`);
+  assert.deepEqual(foto(root), abans);
+
+  // Sense el camí en prosa, l'arxivat passa i la Doctrina queda verda amb el nom sol.
+  posa(root, '.agents/ON_ESTIC.md', '# On\n\nSeguix per l’índex quan tornes.\n');
+  const fet = porta(root, ['--arxiva', '--nom', X, '--torn', T.turn_id]);
+  assert.equal(fet.status, 0, fet.stdout + fet.stderr);
+  assert.deepEqual(doctrina(root), { status: 0, absents: [] });
+});
+
+test('T15 · l’índex de l’Escriptori: amb X com a única nota viva de «## Vincles» atura; amb una altra nota viva, despenja lleva X i la Porta Frontmatter queda neta', (t) => {
+  const root = masAmbX(t);
+  ambMarcador(root);
+  const ACTA = '250101_1000_acta_viva';
+  posa(root, `${ACTES}/${ACTA}.md`, `${VIU_FM('Acta viva')}# Acta\n`);
+  fs.appendFileSync(path.join(root, INDEX), `\n## Vincles\n\n- [[${XS}]]\n`);
+  const T = openTurn(root, { actor: 'test', scope: 'documents' });
+  assert.deepEqual(f9(root)[INDEX] ?? [], []);
+  const sec = porta(root, ['--arxiva', '--sec', '--nom', X, '--torn', T.turn_id]);
+  assert.equal(sec.status, 1, sec.stdout + sec.stderr);
+  assert.ok(sec.stdout.includes(`❌ ${INDEX}: després de l'arxivat, «## Vincles» quedaria sense cap nota viva resoluble`), sec.stdout);
+
+  // Control: l'índex no es jutja amb el text d'abans (on [[X]] quedaria «unresolved»), sinó amb el que en deixa despenja.
+  fs.appendFileSync(path.join(root, INDEX), `- [[${ACTA}]]\n`);
+  const sec2 = porta(root, ['--arxiva', '--sec', '--nom', X, '--torn', T.turn_id]);
+  assert.equal(sec2.status, 0, sec2.stdout + sec2.stderr);
+  const fet = porta(root, ['--arxiva', '--nom', X, '--torn', T.turn_id]);
+  assert.equal(fet.status, 0, fet.stdout + fet.stderr);
+  assert.match(llig(root, INDEX), new RegExp(`## Vincles\\n\\n- \\[\\[${ACTA}\\]\\]\\n$`));
+  assert.deepEqual(f9(root)[INDEX] ?? [], [], 'la Porta Frontmatter, executada després, no hi veu res');
+});
+
+/** X amb un àlies: el resolutor de la Porta Frontmatter el troba també per l'àlies. */
+const ALIES = 'Prompt consumit de proves';
+const X_AMB_ALIES = `---\ntype: index\nstatus: canonic\ndescription: Consumit\naliases:\n  - ${ALIES}\n---\n# Consumit\n`;
+
+test('T15 · G1-A-integ-01 (ARB-F9-01): el deute F9 que el viu ja portava (un vincle absent) no atura; amb una nota viva i [[X]], l’arxivat passa i el tractor real no hi veu cap fallada nova', (t) => {
+  const root = masAmbX(t);
+  ambMarcador(root);
+  const Y = `${ACTES}/250101_1000_acta_amb_deute.md`;
+  posa(root, Y, `${VIU_FM('Acta amb deute previ')}# Acta\n\n## Vincles\n\n- [[${XS}]]\n- [[no_existix]]\n- [[00_index_escriptori]]\n`);
+  const T = openTurn(root, { actor: 'test', scope: 'documents' });
+  assert.deepEqual(f9(root)[Y], ['no_existix: unresolved'], 'Y ja porta deute F9 abans d’arxivar');
+  const sec = porta(root, ['--arxiva', '--sec', '--nom', X, '--torn', T.turn_id]);
+  assert.equal(sec.status, 0, sec.stdout + sec.stderr);
+  assert.ok(!sec.stdout.includes('❌'), `el deute vell no és cap fallada nova: ${sec.stdout}`);
+  const fet = porta(root, ['--arxiva', '--nom', X, '--torn', T.turn_id]);
+  assert.equal(fet.status, 0, fet.stdout + fet.stderr);
+  assert.ok(hi(root, `${ARXIU}/${X}`));
+  assert.ok(llig(root, Y).includes(`- [[../90_arxiu_historic/${XS}|${XS}]]\n- [[no_existix]]`), llig(root, Y));
+  assert.deepEqual(f9(root)[Y], ['no_existix: unresolved'], 'el mateix deute, cap fallada nova');
+});
+
+test('T15 · G1-A-integ-01 (ARB-F9-02): un «## Vincles» que només nomena X pel seu àlies també atura (--sec ix amb 1, l’arxivat amb 2) i no es mou res', (t) => {
+  const root = masAmbX(t);
+  ambMarcador(root);
+  posa(root, `${DESK}/${X}`, X_AMB_ALIES);
+  const Y = `${ACTES}/250101_1000_acta_per_alies.md`;
+  posa(root, Y, `${VIU_FM('Acta per àlies')}# Acta\n\n## Vincles\n\n- [[${ALIES}]]\n`);
+  const T = openTurn(root, { actor: 'test', scope: 'documents' });
+  assert.deepEqual(f9(root)[Y] ?? [], [], 'l’àlies resol a X abans d’arxivar');
+  const abans = foto(root);
+  const sec = porta(root, ['--arxiva', '--sec', '--nom', X, '--torn', T.turn_id]);
+  assert.equal(sec.status, 1, sec.stdout + sec.stderr);
+  assert.ok(sec.stdout.includes(`❌ ${Y}: després de l'arxivat, «## Vincles» quedaria sense cap nota viva resoluble`), sec.stdout);
+  assert.ok(sec.stdout.includes(`${ALIES}: unresolved`), sec.stdout);
+  const q = porta(root, ['--arxiva', '--nom', X, '--torn', T.turn_id]);
+  assert.equal(q.status, 2, q.stdout);
+  assert.ok(q.stderr.includes(Y), q.stderr);
+  assert.deepEqual(foto(root), abans, 'l’aturada no mou res');
+  assert.deepEqual(f9(root)[Y] ?? [], []);
+});
+
+test('T15 · l’índex de l’Escriptori (ARB-F9-04): un àlies de X a «## Vincles», que despenja no lleva, atura encara que hi quede una altra nota viva; amb el camí sencer de X, despenja el lleva i passa net', (t) => {
+  const root = masAmbX(t);
+  ambMarcador(root);
+  posa(root, `${DESK}/${X}`, X_AMB_ALIES);
+  const ACTA = '250101_1000_acta_viva';
+  posa(root, `${ACTES}/${ACTA}.md`, `${VIU_FM('Acta viva')}# Acta\n`);
+  const ambVincles = (primer) => fs.writeFileSync(path.join(root, INDEX),
+    `${INDEX_FM}\n## Activitat en curs\n\n- [[${XS}]] · Mestre 250101: prova\n\n## Vincles\n\n- [[${primer}]]\n- [[${ACTA}]]\n`);
+  ambVincles(ALIES);
+  const T = openTurn(root, { actor: 'test', scope: 'documents' });
+  assert.deepEqual(f9(root)[INDEX] ?? [], []);
+  const abans = foto(root);
+  const sec = porta(root, ['--arxiva', '--sec', '--nom', X, '--torn', T.turn_id]);
+  assert.equal(sec.status, 1, sec.stdout + sec.stderr);
+  assert.ok(sec.stdout.includes(`❌ ${INDEX}: després de l'arxivat, «## Vincles» guanyaria fallades a la Porta Frontmatter (F9: ${ALIES}: unresolved)`), sec.stdout);
+  const q = porta(root, ['--arxiva', '--nom', X, '--torn', T.turn_id]);
+  assert.equal(q.status, 2, q.stdout);
+  assert.deepEqual(foto(root), abans, 'l’aturada no mou res');
+
+  // Control: amb el camí sencer, resolAncora el porta a X, despenja el lleva i la Porta Frontmatter queda neta.
+  ambVincles(`${DESK}/${XS}`);
+  const fet = porta(root, ['--arxiva', '--nom', X, '--torn', T.turn_id]);
+  assert.equal(fet.status, 0, fet.stdout + fet.stderr);
+  assert.match(llig(root, INDEX), new RegExp(`## Vincles\\n\\n- \\[\\[${ACTA}\\]\\]\\n$`));
+  assert.deepEqual(f9(root)[INDEX] ?? [], [], 'la Porta Frontmatter, executada després, no hi veu res');
+});
+
+test('T15 · fail-closed:si el resolutor de la Porta Frontmatter no es pot carregar (arrel sense marcador) i un «## Vincles» nomena X, --sec ix amb 1 i no es mou res', (t) => {
+  const root = masAmbX(t); // sense .agents/AGENTS.md: parse.mjs no pot resoldre l'arrel imposada
+  const Y = `${DESK}/250101_0920_pla_viu.md`;
+  posa(root, Y, `${VIU_FM('Pla viu de proves')}# Pla viu\n\n## Vincles\n\n- [[${XS}]]\n- [[00_index_escriptori]]\n`);
+  const T = openTurn(root, { actor: 'test', scope: 'documents' });
+  const abans = foto(root);
+  const sec = porta(root, ['--arxiva', '--sec', '--nom', X, '--torn', T.turn_id]);
+  assert.equal(sec.status, 1, sec.stdout + sec.stderr);
+  assert.ok(sec.stdout.includes(`❌ ${Y}: «## Vincles» nomena un document que es mou, però el resolutor de la Porta Frontmatter no s'ha pogut carregar`), sec.stdout);
+  const q = porta(root, ['--arxiva', '--nom', X, '--torn', T.turn_id]);
+  assert.equal(q.status, 2, q.stdout);
+  assert.deepEqual(foto(root), abans);
+});
+
+test('T15 · paritat F9: la regla replicada al pla dona, document a document, les mateixes fallades F9 que el tractor real', async (t) => {
+  const root = masAmbX(t);
+  ambMarcador(root);
+  const doc = (nom, cos) => posa(root, `${ACTES}/${nom}.md`, `${VIU_FM(`Paritat ${nom}`)}# ${nom}\n\n${cos}`);
+  posa(root, `${ARXIU}/240101_0900_antic.md`, '# Antic\n');
+  posa(root, `${ARXIU}/240101_Sessio/240101_0901_antic_sessio.md`, '# Antic de sessió\n');
+  posa(root, `${ACTES}/homonim.md`, '# H1\n');
+  posa(root, `${DESK}/homonim.md`, '# H2\n');
+  doc('p01_viu', '## Vincles\n\n- [[00_index_escriptori]]\n');
+  doc('p02_auto', '## Vincles\n\n- [[p02_auto]]\n');
+  doc('p03_absent', '## Vincles\n\n- [[no_existix]]\n- [[00_index_escriptori]]\n');
+  doc('p04_ambigu', '## Vincles\n\n- [[homonim]]\n');
+  doc('p05_fragment', '## Vincles\n\n- [[00_index_escriptori#Activitat]]\n');
+  doc('p06_prosa', '## Vincles\n\nText lliure i [[00_index_escriptori]].\n');
+  doc('p07_dues', '## Vincles\n\n- [[00_index_escriptori]]\n\n## Vincles\n\n- [[p01_viu]]\n');
+  doc('p08_cap', '## Altres\n\n- [[00_index_escriptori]]\n');
+  doc('p09_arxivat', '## Vincles\n\n- [[../90_arxiu_historic/240101_0900_antic|antic]]\n');
+  doc('p10_arxivat_absent', '## Vincles\n\n- [[../90_arxiu_historic/240101_0902_mai]]\n- [[p01_viu]]\n');
+  doc('p11_sessio', '## Vincles\n\n- [[../90_arxiu_historic/240101_Sessio/240101_0901_antic_sessio]]\n- [[p01_viu]]\n');
+  doc('p12_escapat', '## Vincles\n\n- [[p01_viu\\|àlies]]\n');
+  doc('p13_codi', '## Vincles\n\n```\n## Vincles\n```\n- [[p01_viu]]\n<!-- - [[p99]] -->\n');
+  posa(root, `${ACTES}/p14_yaml.md`, '---\ntype: [obert\n---\n# Y\n\n## Vincles\n\n- [[p01_viu]]\n');
+  doc('p15_codi_inline', '## Vincles\n\n- `[[p01_viu]]`\n- [[p01_viu]]\n');
+  const tractor = f9(root);
+  const replica = await fallidesF9(root);
+  assert.ok(Object.keys(tractor).length > 10, `la fixture exercita F9: ${JSON.stringify(tractor)}`);
+  assert.deepEqual(replica, tractor);
+});
+
+test('T15 · paritat Doctrina: les línies que el pla atura són exactament les que la Porta Doctrina veu ABSENT si s’aplica el pla sense aturar-lo', async (t) => {
+  const root = masAmbX(t);
+  ambMarcador(root);
+  const ple = `${DESK}/${X}`;
+  // La Doctrina només informa la primera aparició de cada camí per document: una forma per fitxer.
+  const formes = {
+    f1: `Codi: \`${ple}\`.`,                         // codi inline: atura
+    f2: `Sufix: \`04_escriptori/${X}\`.`,            // sufix amb carpeta: atura
+    f3: `Nom sol: \`${X}\`.`,                         // nom sol: la Doctrina el troba a l'arxiu
+    f4: `Prosa: ${ple} quan tornes.`,                 // prosa: atura
+    f5: `Línia: \`${ple}:12\`.`,                      // sufix de línia: atura
+    f6: `\`\`\`\ncat \`${ple}\`\n\`\`\``,             // codi inline dins d'un bloc: atura
+    f7: `\`\`\`\ncat ${ple}\n\`\`\``,                 // prosa dins d'un bloc: no la llig
+    f8: `Enllaç: [el prompt](${ple}).`,               // destinació d'un enllaç que l'SCC no resol: atura
+    g1: `Punt: \`./${ple}\`.`,                        // R() de la Doctrina normalitza «./»: atura (ARB-F9-03)
+    g2: `Tornada: \`${ACTES}/../04_escriptori/${X}\`.`, // i «x/../»: atura (ARB-F9-03)
+  };
+  for (const [nom, cos] of Object.entries(formes)) posa(root, `.agents/notes/${nom}.md`, `# ${nom}\n\n${cos}\n`);
+  // ESTAT: l'enllaç es reescriu; la secció històrica, la Doctrina no la llig.
+  fs.writeFileSync(path.join(root, ESTAT), ['# Estat', '', '## ESTAT_ACTUAL · 250101', `[t](../${ple}) i [[${XS}]]`, '',
+    '## ESTAT_ACTUAL · 241231', `\`${ple}\``, ''].join('\n'));
+  const T = openTurn(root, { actor: 'test', scope: 'documents' });
+  assert.deepEqual(doctrina(root), { status: 0, absents: [] }, 'verda abans');
+  const pla = await planificaArxiu(root, { bruts: arxivables(root, { noms: [X] }), torn: T.turn_id });
+  const atura = pla.aturades.map((a) => /^(\.agents\/[^:]+:\d+) cita /.exec(a)?.[1]).filter(Boolean).sort();
+  assert.deepEqual(atura, ['f1.md:3', 'f2.md:3', 'f4.md:3', 'f5.md:3', 'f6.md:4', 'f8.md:3', 'g1.md:3', 'g2.md:3'].map((x) => `.agents/notes/${x}`), pla.aturades.join('\n'));
+  // Aplica el pla a mà, sense aturar-lo: els textos reescrits i el trasllat. La Doctrina real ha de veure les mateixes línies.
+  for (const r of pla.reescriptures) fs.writeFileSync(path.join(root, r.rel), r.despres);
+  fs.mkdirSync(path.join(root, ARXIU), { recursive: true });
+  fs.renameSync(path.join(root, ple), path.join(root, ARXIU, X));
+  const d = doctrina(root);
+  assert.equal(d.status, 1);
+  assert.deepEqual(d.absents.map((a) => a.split(' ')[0]).sort(), atura);
 });

@@ -36,6 +36,14 @@ export const RECURS_AMB_EMPREMTA = /^\/assets\/[^/]+-[A-Za-z0-9_-]{8}\.(js|mjs|c
    a mitges (revisió F1, 261007). */
 export const ESPERA_ESCALFAMENT_MS = 500;
 const CAMI_D_APP = /^\/app(?:\/|$)/;
+/* B8C-3 (marató 261101_2143; Bloc B8, D-B8C-1) · El missatge que envia
+   public/sw.js quan la persona toca un avís del Xat i la finestra ja era al
+   Xat (sw.test.js comprova que és el mateix): només { tipus }, cap dada. */
+export const MISSATGE_AVIS_XAT = 'sdp-avis-xat';
+/* L'esdeveniment de la finestra que en naix, també sense cap dada. L'escolta
+   l'adaptador web dels avisos push (src/pwa/adaptadorAvisosPush.js, que el
+   rep injectat de src/main.jsx) i el porta al registre del Xat. */
+export const ESDEVENIMENT_AVIS_XAT = 'sdp:avis-xat';
 
 /** Si una entrada de Resource Timing és un recurs amb empremta de l'origen `origen`, sense consulta. */
 function esRecursPropi(entrada, origen) {
@@ -173,12 +181,57 @@ export function escoltaEscalfament({ navegador, finestra } = {}) {
   };
 }
 
+/* Si `dades` és exactament el missatge del toc: un objecte pla amb una sola
+   clau, `tipus`, igual a MISSATGE_AVIS_XAT. Qualsevol altra forma (un filId,
+   un text, una llista, una instància) no ho és. Mai llança. */
+function esMissatgeDelToc(dades) {
+  try {
+    if (!dades || typeof dades !== 'object' || Array.isArray(dades)) return false;
+    const prototip = Object.getPrototypeOf(dades);
+    if (prototip !== Object.prototype && prototip !== null) return false;
+    const claus = Object.keys(dades);
+    return claus.length === 1 && claus[0] === 'tipus' && dades.tipus === MISSATGE_AVIS_XAT;
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * B8C-3 · Escolta els missatges del worker propi i, per al del toc d'un avís
+ * del Xat (MISSATGE_AVIS_XAT, exacte), dispara ESDEVENIMENT_AVIS_XAT a la
+ * finestra SENSE CAP DADA: el destí el calcula la pàgina amb la sessió
+ * actual (src/sections/xat/destiDelAvis.js), mai amb res que vinga del push.
+ * Un missatge d'un altre origen, o de qualsevol altra forma, s'ignora. Mai
+ * llança. Torna la funció que deixa d'escoltar.
+ */
+export function escoltaAvisosDelWorker({ navegador = globalThis.navigator, finestra = globalThis.window } = {}) {
+  const sw = navegador && navegador.serviceWorker;
+  if (!sw || typeof sw.addEventListener !== 'function' || !finestra ||
+    typeof finestra.dispatchEvent !== 'function' || typeof finestra.Event !== 'function') return () => {};
+  const rep = (event) => {
+    try {
+      if (!esMissatgeDelToc(event && event.data)) return;
+      const origen = event.origin;
+      const propi = finestra.location && finestra.location.origin;
+      if (origen && propi && origen !== propi) return;
+      finestra.dispatchEvent(new finestra.Event(ESDEVENIMENT_AVIS_XAT));
+    } catch {
+      /* sense toc, la pàgina continua igual */
+    }
+  };
+  sw.addEventListener('message', rep);
+  return () => {
+    if (typeof sw.removeEventListener === 'function') sw.removeEventListener('message', rep);
+  };
+}
+
 /**
  * Registra /sw.js amb abast / quan la pàgina ha acabat de carregar, per no
  * competir amb la primera pintada. No llança mai: torna
  * { registrat: true, registre } o { registrat: false, motiu[, error] }.
  * Quan s'ha de registrar, escolta des d'ara l'escalfament (escoltaEscalfament):
- * l'avís de RutaApps pot arribar abans de l'esdeveniment load.
+ * l'avís de RutaApps pot arribar abans de l'esdeveniment load. I el toc dels
+ * avisos del Xat (escoltaAvisosDelWorker, B8C-3), en el mateix cas.
  */
 export function registraServiceWorker({
   produccio = import.meta.env.PROD,
@@ -193,6 +246,11 @@ export function registraServiceWorker({
   } catch {
     /* sense escalfament, el registre continua */
   }
+  try {
+    escoltaAvisosDelWorker({ navegador, finestra });
+  } catch {
+    /* sense el toc dels avisos, el registre continua */
+  }
 
   const registra = () => Promise.resolve()
     .then(() => navegador.serviceWorker.register(RUTA_DEL_SW, { scope: ABAST_DEL_SW }))
@@ -205,8 +263,10 @@ export function registraServiceWorker({
   });
 }
 
-/* Ordre nocturna 261030_0252 (Fase 3, WP) · Avisos push del Xat, fase N1 i
-   inert: encara no la crida ningú. */
+/* Ordre nocturna 261030_0252 (Fase 3, WP) · Avisos push del Xat. Fase N2
+   (B8C-3, marató 261101_2143): src/main.jsx injecta registreActiu i
+   registreDelSw a l'adaptador web (src/pwa/adaptadorAvisosPush.js) només
+   amb la bandera AVISOS_PUSH_XAT_ACTIUS encesa; apagada, no els crida ningú. */
 /** Quant s'espera, com a molt, el registre del worker per als avisos push. */
 export const TOPALL_REGISTRE_ACTIU_MS = 3000;
 

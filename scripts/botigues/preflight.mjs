@@ -2,9 +2,10 @@
  * scripts/botigues/preflight.mjs — comprovacions prèvies a qualsevol pujada (261003).
  *
  * Instal·lat el 261019 (Fase C) des de nous/botigues/preflight.mjs.txt del laboratori
- * 261003_1330_empaquetat_mobil_claude. Proves: tests/botigues.test.mjs.
+ * 261003_1330_empaquetat_mobil_claude. Proves: tests/botigues.test.mjs i, per al canal de producció
+ * i els avisos push (B9, marató 261101_2143), tests/botigues.produccio.test.js.
  *
- *   node scripts/botigues/preflight.mjs --plataforma ios|android|totes [--signa]
+ *   node scripts/botigues/preflight.mjs --plataforma ios|android|totes [--signa] [--canal intern|produccio] [--push]
  *
  * Només llig: el fitxer d'entorn (mai n'imprimix cap valor), les rutes que nomena, les eines i
  * l'estat de l'arbre (amb iOS, també que cap fitxer porte el SDK de Facebook: P1-08, 261028).
@@ -12,13 +13,16 @@
  * que falla, en este ordre: fitxer (3), variable prohibida (4), variable o fitxer que falta (5),
  * eina (6), arbre (7). Els codis són a entorn.mjs (EIXIDA). L'arbre inclou el segell de dist-natiu/
  * (BOT-A4, 261025): el paquet ha d'eixir del commit de HEAD, amb l'arbre net.
+ * B9 · «Avisos push» (davall d'«Arbre», amb el codi 7): connector, aps-environment, reenviament de
+ * l'AppDelegate, google-services.json i POST_NOTIFICATIONS; sense connector ni --push no cal res.
+ * --canal produccio exigix SDP_BUILDS_DIR (el registre de pujades) i afig avisos de botiga.
  */
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import {
-  EIXIDA, JDK_MAXIM, JDK_MINIM, SEGELL, analitzaArguments, arbreNet, arrelDelRepositori, carregaEntorn, commitDeHead,
-  comprovaVariables, jdkPerAGradle, llegixAjuda, llegixSegell, mateixContingut, mostraCami, plega, problemesDelSegell
+  CANALS, EIXIDA, JDK_MAXIM, JDK_MINIM, SEGELL, analitzaArguments, arbreNet, arrelDelRepositori, carregaEntorn, commitDeHead,
+  comprovaVariables, gitIgnora, jdkPerAGradle, llegixAjuda, llegixSegell, mateixContingut, mostraCami, plega, problemesDelSegell
 } from './entorn.mjs';
 
 /** L'arrel on viu el script instal·lat: scripts/botigues/ → dos nivells amunt. */
@@ -97,18 +101,188 @@ export function sdkFacebookIos(arrel) {
   return trobats;
 }
 
+/* ───────────── B9 · Avisos push (marató 261101_2143, spec B9-BOTIGUES §3.1.2) ─────────────
+   Hui l'app no porta el connector d'avisos remots (B8 en fase N1, decisió D-WP-7 del Mestre): sense
+   connector ni --push no cal aps-environment ni FCM. Amb el connector, cada peça que falte és un ✗
+   de la família de l'arbre (7). Només llig, i de google-services.json no ix mai cap valor. */
+export const PAQUET_PUSH = '@capacitor/push-notifications';
+export const PRODUCTE_SPM_PUSH = 'CapacitorPushNotifications';
+export const PROJECTE_GRADLE_PUSH = ':capacitor-push-notifications';
+const PERMIS_D_AVISOS = 'android.permission.POST_NOTIFICATIONS';
+
+const lligDe = (arrel, ...trossos) => { try { return fs.readFileSync(path.join(arrel, ...trossos), 'utf8'); } catch { return null; } };
+/* Els comentaris d'XML fora, en una passada (sense regex: cap retrocés amb un «<!--» sense tancar). */
+function senseComentarisXml(text) {
+  const font = String(text ?? '');
+  let eixida = '';
+  let i = 0;
+  for (;;) {
+    const obri = font.indexOf('<!--', i);
+    if (obri < 0) return eixida + font.slice(i);
+    eixida += font.slice(i, obri);
+    const tanca = font.indexOf('-->', obri + 4);
+    if (tanca < 0) return eixida;
+    i = tanca + 3;
+  }
+}
+const codiSwift = (text) => senseComentarisSwift(String(text ?? ''));
+
+/* Els manifests dels connectors que inclou android/capacitor.settings.gradle (l'escriu cap sync). */
+function manifestsDeConnectors(arrel) {
+  const settings = codiSwift(lligDe(arrel, 'android', 'capacitor.settings.gradle'));
+  return [...settings.matchAll(/projectDir = new File\('([^']+)'\)/g)]
+    .map(([, rel]) => path.join(path.resolve(arrel, 'android', rel), 'src', 'main', 'AndroidManifest.xml'))
+    .filter((manifest) => fs.existsSync(manifest));
+}
+
+/* Les etiquetes <uses-permission …> d'un manifest, sense comentaris: el nom i si l'app el lleva. */
+function permisosDe(text) {
+  return [...senseComentarisXml(text).matchAll(/<uses-permission\b[^>]*>/g)].map(([etiqueta]) => ({
+    nom: /android:name="([^"]*)"/.exec(etiqueta)?.[1] ?? null,
+    lleva: /tools:node="remove"/.test(etiqueta)
+  }));
+}
+
+/**
+ * L'estat dels avisos push al projecte natiu. Només llig; de google-services.json només diu si hi
+ * és, si git l'ignora i si és del paquet de capacitor.config.json, mai cap valor.
+ * @returns {{ connector:{paquet:boolean, ios:boolean, android:boolean},
+ *   ios:{apsEnvironment:string|null, reenviaRegistre:boolean},
+ *   android:{postNotifications:boolean, googleServices:{hiEs:boolean, ignorat:boolean|null, delPaquet:boolean|null}, connectorGoogleServices:boolean} }}
+ */
+export function estatDelPush(arrel) {
+  let paquet = false;
+  try { paquet = Boolean(JSON.parse(lligDe(arrel, 'package.json') ?? '{}')?.dependencies?.[PAQUET_PUSH]); } catch { paquet = false; }
+  const ios = codiSwift(lligDe(arrel, 'ios', 'App', 'CapApp-SPM', 'Package.swift')).includes(PRODUCTE_SPM_PUSH);
+  const android = codiSwift(lligDe(arrel, 'android', 'capacitor.settings.gradle')).includes(`'${PROJECTE_GRADLE_PUSH}'`);
+  /* ARB-B9-05 · El connector oficial necessita que l'AppDelegate reenvie el testimoni d'APNs a
+     Capacitor (CAPNotifications.swift només definix els noms; el nucli no els publica). Un
+     reenviament comentat no compta. La detecció és per text, no per compilació. */
+  const delegat = codiSwift(lligDe(arrel, 'ios', 'App', 'App', 'AppDelegate.swift'));
+  const reenviaRegistre = ['didRegisterForRemoteNotificationsWithDeviceToken', '.capacitorDidRegisterForRemoteNotifications',
+    'didFailToRegisterForRemoteNotificationsWithError', '.capacitorDidFailToRegisterForRemoteNotifications'].every((nom) => delegat.includes(nom));
+  const drets = lligDe(arrel, 'ios', 'App', 'App', 'App.entitlements');
+  const apsEnvironment = drets === null ? null : (/<key>aps-environment<\/key>\s*<string>([a-z]+)<\/string>/.exec(senseComentarisXml(drets))?.[1] ?? null);
+  const delApp = permisosDe(lligDe(arrel, 'android', 'app', 'src', 'main', 'AndroidManifest.xml'));
+  const lleva = delApp.some((p) => p.nom === PERMIS_D_AVISOS && p.lleva);
+  const declarat = [...delApp, ...manifestsDeConnectors(arrel).flatMap((manifest) => permisosDe(lligDe(manifest)))]
+    .some((p) => p.nom === PERMIS_D_AVISOS && !p.lleva);
+  const fitxerGs = path.join(arrel, 'android', 'app', 'google-services.json');
+  let googleServices = { hiEs: false, ignorat: null, delPaquet: null };
+  if (fs.existsSync(fitxerGs)) {
+    let appId = null;
+    try { appId = JSON.parse(lligDe(arrel, 'capacitor.config.json') ?? '{}')?.appId ?? null; } catch { appId = null; }
+    let delPaquet = false;
+    try {
+      const clients = JSON.parse(fs.readFileSync(fitxerGs, 'utf8'))?.client;
+      delPaquet = Boolean(appId) && Array.isArray(clients) && clients.some((c) => c?.client_info?.android_client_info?.package_name === appId);
+    } catch { delPaquet = false; }
+    googleServices = { hiEs: true, ignorat: gitIgnora(arrel, fitxerGs), delPaquet };
+  }
+  const gradle = codiSwift(lligDe(arrel, 'android', 'app', 'build.gradle'));
+  return {
+    connector: { paquet, ios, android },
+    ios: { apsEnvironment, reenviaRegistre },
+    android: {
+      postNotifications: declarat && !lleva,
+      googleServices,
+      connectorGoogleServices: /apply plugin:\s*'com\.google\.gms\.google-services'/.test(gradle)
+    }
+  };
+}
+
+/**
+ * Les línies (✓, ! i ✗) de la família «Avisos push» per a estes plataformes. Pura. `mal` porta els ✗.
+ * @returns {{ linies: string[], mal: string[] }}
+ */
+export function liniesDelPush(estat, { push = false, plataformes = [] } = {}) {
+  const linies = [];
+  const mal = [];
+  const be = (text) => linies.push(`  ✓ ${text}`);
+  const avis = (text) => linies.push(`  ! ${text}`);
+  const falla = (text) => { linies.push(`  ✗ ${text}`); mal.push(text); };
+  const { connector } = estat;
+  const ambIos = plataformes.includes('ios');
+  const ambAndroid = plataformes.includes('android');
+  if (!(connector.paquet || connector.ios || connector.android)) {
+    if (push) falla(`--push: el connector ${PAQUET_PUSH} no és al projecte (package.json, ios/App/CapApp-SPM/Package.swift ni android/capacitor.settings.gradle); instal·lar-lo és decisió del Mestre (D-WP-7) i després npx cap sync`);
+    else be('push: l\'app no porta cap connector d\'avisos remots (B8 en fase N1): ni aps-environment ni FCM no calen per a esta pujada');
+    /* D-B9-17 · Un App ID amb Push i el dret és vàlid; si el perfil no el porta, xcodebuild para (8) sense pujar res. */
+    if (ambIos && estat.ios.apsEnvironment) avis('ios/App/App/App.entitlements porta aps-environment sense connector: el perfil de distribució ha de tindre Push Notifications; si l\'App ID no la té, l\'arxiu fallarà en signar (eixida 8)');
+    return { linies, mal };
+  }
+  if (!push) avis('el projecte porta el connector d\'avisos remots: es comprova com amb --push');
+  if (!connector.paquet) falla(`el connector d'avisos remots és als projectes natius però no a package.json (${PAQUET_PUSH}): npx cap sync`);
+  if (connector.paquet && ambIos && !connector.ios) falla(`${PAQUET_PUSH} és a package.json però no a ios/App/CapApp-SPM/Package.swift: npx cap sync ios`);
+  if (connector.paquet && ambAndroid && !connector.android) falla(`${PAQUET_PUSH} és a package.json però no a android/capacitor.settings.gradle: npx cap sync android`);
+  if (ambIos) {
+    /* A la font s'admeten development i production: Xcode el posa en production en exportar per a
+       l'App Store, i puja-ios el comprova dins de l'IPA. */
+    if (!estat.ios.apsEnvironment) falla('ios/App/App/App.entitlements no porta aps-environment: Xcode › Signing & Capabilities › Push Notifications (i la capacitat a l\'App ID)');
+    else be(`aps-environment ${estat.ios.apsEnvironment} a App.entitlements (l'IPA de l'App Store l'ha de portar en production: es mira després d'exportar)`);
+    if (!estat.ios.reenviaRegistre) falla('ios/App/App/AppDelegate.swift no reenvia el registre d\'APNs a Capacitor (didRegisterForRemoteNotificationsWithDeviceToken → .capacitorDidRegisterForRemoteNotifications, i el de fallada): l\'esdeveniment registration no arribaria mai');
+    else be('AppDelegate.swift reenvia el registre d\'APNs a Capacitor');
+  }
+  if (ambAndroid) {
+    const gs = estat.android.googleServices;
+    if (!gs.hiEs) falla('falta android/app/google-services.json (Firebase › configuració del projecte; git l\'ignora)');
+    else if (gs.ignorat !== true) falla('android/app/google-services.json: git no l\'ignora (o no s\'ha pogut comprovar), i no es versiona');
+    else if (!gs.delPaquet) falla('android/app/google-services.json no és del paquet de capacitor.config.json');
+    else be('google-services.json del paquet de l\'app, ignorat per git');
+    if (!estat.android.connectorGoogleServices) falla('android/app/build.gradle no aplica com.google.gms.google-services');
+    if (!estat.android.postNotifications) falla('cap manifest declara android.permission.POST_NOTIFICATIONS (o l\'app el lleva amb tools:node="remove"): Android 13 o més nou no mostraria cap avís');
+    else be('POST_NOTIFICATIONS declarat i no llevat');
+  }
+  return { linies, mal };
+}
+
+/* B9 · El targetSdk mínim de Google Play per a apps noves [NO VERIFICAT per a 2026: és el llindar
+   de 2025]. Si Play el puja, es puja ací; el preflight només n'avisa. */
+export const TARGET_SDK_PLAY_MINIM = 35;
+
+/**
+ * Avisos de botiga per a --canal produccio. Només llig i no para res: cap llindar no s'ha verificat
+ * aquesta nit contra les botigues (spec B9 §3.1.2). Cap valor de cap fitxer.
+ * @returns {string[]}
+ */
+export function avisosDeProduccio(arrel, plataformes = []) {
+  const avisos = [];
+  if (plataformes.includes('ios')) {
+    const plist = senseComentarisXml(lligDe(arrel, 'ios', 'App', 'App', 'Info.plist'));
+    if (plist.includes('com.googleusercontent.apps.pendent')) {
+      avisos.push('Info.plist porta l\'esquema de Google de reserva (com.googleusercontent.apps.pendent): l\'iPhone no oferirà l\'entrada amb Google fins que el Mestre hi pose el client d\'iOS');
+    }
+    if (!/<key>ITSAppUsesNonExemptEncryption<\/key>\s*<false\s*\/>/.test(plist)) {
+      avisos.push('Info.plist no diu ITSAppUsesNonExemptEncryption = false: App Store Connect preguntarà la conformitat de xifratge a cada build');
+    }
+    const families = [...String(lligDe(arrel, 'ios', 'App', 'App.xcodeproj', 'project.pbxproj') ?? '').matchAll(/TARGETED_DEVICE_FAMILY = "?([0-9,]+)"?;/g)]
+      .flatMap(([, valor]) => valor.split(','));
+    if (families.includes('2')) avisos.push('TARGETED_DEVICE_FAMILY porta l\'iPad (2): la fitxa de l\'App Store necessita captures d\'iPad (D-4)');
+    avisos.push('enviar la versió a App Review i publicar-la és del Mestre a App Store Connect (RUNBOOK P9 i S6): el script només puja la build');
+  }
+  if (plataformes.includes('android')) {
+    const objectiu = /^[ \t]*targetSdkVersion[ \t]*=[ \t]*(\d+)/m.exec(String(lligDe(arrel, 'android', 'variables.gradle') ?? ''));
+    if (!objectiu) avisos.push('no es troba targetSdkVersion a android/variables.gradle');
+    else if (Number(objectiu[1]) < TARGET_SDK_PLAY_MINIM) avisos.push(`targetSdkVersion ${objectiu[1]} és més baix que ${TARGET_SDK_PLAY_MINIM} [NO VERIFICAT el llindar de Play per a 2026]: Play pot rebutjar l'AAB`);
+    avisos.push('un compte personal de Play Console només publica a producció després de la prova tancada (12 provadors durant 14 dies, P0-23) o amb un compte d\'organització (D-B9-2): sense eixe accés, --validate_only pararà amb l\'eixida 8 i no es pujarà res');
+  }
+  return avisos;
+}
+
 /* Les dues consultes a eines de fora que fa el preflight. Les proves les canvien per unes de
    fingides, perquè la suite no arranque cap eina (ni fastlane, ni keytool, ni cap JDK). */
 const CONSULTES = Object.freeze({ llegixAjuda, jdkPerAGradle });
 
 /**
  * Totes les comprovacions d'una o dues plataformes. No llança i no imprimix valors.
- * @param {{ arrel: string, plataformes: ('ios'|'android')[], signa?: boolean, env?: object, consultes?: object }} opcions
+ * @param {{ arrel: string, plataformes: ('ios'|'android')[], signa?: boolean, env?: object, consultes?: object,
+ *   canal?: 'intern'|'produccio', push?: boolean }} opcions
  * @returns {{ codi:number, linies:string[], valors:Record<string,string>, fastlane:boolean, jdk:{home:string, major:number}|null,
- *   segell:{commit:string, arbreNet:boolean, data:string}|null }} `segell`, el de dist-natiu/ tal com es llig
- *   (val per al rebut només si `codi` és EIXIDA.BE)
+ *   segell:{commit:string, arbreNet:boolean, data:string}|null, push:{anuncia:boolean, estat:object} }} `segell`, el de
+ *   dist-natiu/ tal com es llig (val per al rebut només si `codi` és EIXIDA.BE); `push.anuncia`, si l'app anuncia avisos
+ *   remots (connector o --push): puja-ios hi lliga l'aps-environment de l'IPA
  */
-export function preflight({ arrel, plataformes, signa = false, env = process.env, consultes = {} }) {
+export function preflight({ arrel, plataformes, signa = false, env = process.env, consultes = {}, canal = CANALS.INTERN, push = false }) {
   const { llegixAjuda: ajuda, jdkPerAGradle: jdkDe } = { ...CONSULTES, ...consultes };
   const linies = [];
   const familia = { [EIXIDA.FITXER]: false, [EIXIDA.PROHIBIDA]: false, [EIXIDA.FALTA]: false, [EIXIDA.EINA]: false, [EIXIDA.ARBRE]: false };
@@ -123,7 +297,8 @@ export function preflight({ arrel, plataformes, signa = false, env = process.env
   for (const text of entorn.avisos) avis(text);
 
   linies.push('Variables i fitxers que nomena');
-  const contextos = [...plataformes, ...(signa ? ['android-signa'] : [])];
+  const produccio = canal === CANALS.PRODUCCIO;
+  const contextos = [...plataformes, ...(signa ? ['android-signa'] : []), ...(produccio ? ['produccio'] : [])];
   if (entorn.codi === EIXIDA.BE) {
     const variables = comprovaVariables({ arrel, valors: entorn.valors, contextos });
     if (variables.codi === EIXIDA.BE) be(`les de ${contextos.join(', ')} hi són, i les claus i carpetes són fora del repositori`);
@@ -187,9 +362,21 @@ export function preflight({ arrel, plataformes, signa = false, env = process.env
   }
   if (plataformes.includes('android') && !fs.existsSync(path.join(arrel, 'android', 'gradlew'))) mal(EIXIDA.ARBRE, 'no hi ha android/gradlew: npx cap add android');
 
+  /* B9 · Els problemes dels avisos push són de l'arbre (7: projecte natiu desincronitzat). */
+  linies.push('Avisos push');
+  const estatPush = estatDelPush(arrel);
+  const delPush = liniesDelPush(estatPush, { push, plataformes });
+  linies.push(...delPush.linies);
+  if (delPush.mal.length) familia[EIXIDA.ARBRE] = true;
+  if (produccio) {
+    linies.push('Producció (només avisos: cap llindar no s\'ha verificat contra les botigues)');
+    for (const text of avisosDeProduccio(arrel, plataformes)) avis(text);
+  }
+
   const ordre = [EIXIDA.FITXER, EIXIDA.PROHIBIDA, EIXIDA.FALTA, EIXIDA.EINA, EIXIDA.ARBRE];
   const codi = ordre.find((c) => familia[c]) ?? EIXIDA.BE;
-  return { codi, linies, valors: entorn.codi === EIXIDA.BE ? entorn.valors : {}, fastlane, jdk, segell };
+  const anuncia = Boolean(estatPush.connector.paquet || estatPush.connector.ios || estatPush.connector.android || push);
+  return { codi, linies, valors: entorn.codi === EIXIDA.BE ? entorn.valors : {}, fastlane, jdk, segell, push: { anuncia, estat: estatPush } };
 }
 
 /** L'arrel del repositori, si és la del script. */
@@ -201,17 +388,22 @@ export function arrelComprovada() {
 }
 
 function main(argv) {
-  const { opcions, errors } = analitzaArguments(argv, { plataforma: true, signa: false, ajuda: false });
+  const { opcions, errors } = analitzaArguments(argv, { plataforma: true, signa: false, canal: true, push: false, ajuda: false });
+  const us = 'Ús: --plataforma ios|android|totes [--signa] [--canal intern|produccio] [--push]';
   if (opcions.ajuda) {
-    process.stdout.write('node scripts/botigues/preflight.mjs --plataforma ios|android|totes [--signa]\n');
+    process.stdout.write(`node scripts/botigues/preflight.mjs ${us.slice(4)}\n`
+      + '  --canal intern (per defecte) o produccio: producció exigix SDP_BUILDS_DIR (registre de pujades) i afig avisos de botiga.\n'
+      + '  --push: l\'app anunciarà avisos remots; sense el connector @capacitor/push-notifications, falla.\n');
     return EIXIDA.BE;
   }
   const plataformes = { ios: ['ios'], android: ['android'], totes: ['ios', 'android'] }[opcions.plataforma];
-  if (errors.length || !plataformes) return plega(EIXIDA.US, 'Ús: --plataforma ios|android|totes [--signa]', errors);
+  if (errors.length || !plataformes) return plega(EIXIDA.US, us, errors);
   if (opcions.signa && !plataformes.includes('android')) return plega(EIXIDA.US, '--signa només té sentit amb Android');
+  const canal = opcions.canal ?? CANALS.INTERN;
+  if (!Object.values(CANALS).includes(canal)) return plega(EIXIDA.US, `--canal ha de ser ${Object.values(CANALS).join(' o ')}`);
   const arrel = arrelComprovada();
   if (!arrel) return plega(EIXIDA.EINA, 'git no reconeix l\'arrel del repositori on viu este script');
-  const resultat = preflight({ arrel, plataformes, signa: Boolean(opcions.signa) });
+  const resultat = preflight({ arrel, plataformes, signa: Boolean(opcions.signa), canal, push: Boolean(opcions.push) });
   process.stdout.write(`${resultat.linies.join('\n')}\n`);
   process.stdout.write(resultat.codi === EIXIDA.BE ? '\nPreflight net.\n' : `\nPreflight amb problemes: eixida ${resultat.codi}.\n`);
   return resultat.codi;

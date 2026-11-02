@@ -22,6 +22,8 @@
  *  · null · Firefox d'escriptori i la resta: cap botó que no puga complir.
  * Darrere, les ranures de botiga (config/canalsDeBotiga.js): hui només la de
  * WordPress.org és oberta (01-11-2026), i les tancades no pinten res.
+ * B9 (marató 261101_2143) · Una botiga d'apps oberta diu on és l'app
+ * (etiquetaDeBotiga: «Disponible a Google Play / a l'App Store», en cinc llengües).
  *
  * Es decidix amb la dada (useInstalacioDeLaPagina, que crida
  * PageDetailSection), mai amb l'element: un element que pinta null faria un
@@ -65,6 +67,16 @@ export const TITOL_INSTRUCCIONS = "Com s'instal·la des del navegador";
 const SENSE_ENTRADA_PROPIA = new Set(['sense-captura', 'sense-finestra', 'incrustat', 'nativa', 'context-insegur']);
 const MODES_DE_GUIA = new Set(['ios', 'safari-mac', 'menu']);
 const NO_ES_SAFARI = /\b(?:Chrome|Chromium|CriOS|FxiOS|EdgiOS|Edg|OPR|Firefox)\//;
+
+/**
+ * B9 · El text del botó d'una botiga oberta: les d'apps diuen on és l'app; la
+ * resta (WordPress.org), el nom. El nom accessible és el text visible (WCAG 2.5.3).
+ */
+export function etiquetaDeBotiga(canal, t) {
+  if (canal?.id === 'google-play') return t('section.descarregues.botiga.googlePlay', 'Disponible a Google Play');
+  if (canal?.id === 'app-store') return t('section.descarregues.botiga.appStore', "Disponible a l'App Store");
+  return canal?.nom ?? '';
+}
 
 /** La finestra és la de l'entrada pròpia (src/main.jsx) i s'hi pot instal·lar. */
 export function esEntradaPropia(motiu) {
@@ -283,7 +295,7 @@ export function InstalaLaPwa({ instalacio, lloc = 'dalt' }) {
       {ambBotigues ? (
         <div className="sdp-accions">
           {canals.map((canal) => (
-            <a key={canal.id} className="sdp-boto sdp-boto--secundari sdp-boto--gran" href={canal.url}>{canal.nom}</a>
+            <a key={canal.id} className="sdp-boto sdp-boto--secundari sdp-boto--gran" href={canal.url}>{etiquetaDeBotiga(canal, t)}</a>
           ))}
         </div>
       ) : null}

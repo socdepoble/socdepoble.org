@@ -47,6 +47,11 @@
  * darrere de «Seleccionar missatges», l'entrada que obri l'estat del xifratge i el
  * número de seguretat. La porta Conversa només amb la bandera E2EE encesa (i
  * l'etiqueta hi viu, plegada per la bandera); sense, el menú de sempre, igual.
+ *
+ * B8 (marató 261101_2143; B8C-5) · `accioSilenci` ({ etiqueta, onTria }): darrere
+ * de l'entrada del xifratge i davant de la moderació, «Silencia les
+ * notificacions» o «Deixa de silenciar» (useSilenciDelFil). Com les altres,
+ * tanca el menú i torna el focus al «⋯». Sense, el menú de sempre, igual.
  */
 import { useEffect, useId, useRef, useState } from 'react';
 import { ArrowLeft, MoreVertical, X } from 'lucide-react';
@@ -69,7 +74,7 @@ const esRutaInterna = (ruta) => typeof ruta === 'string' && ruta.startsWith('/')
 export default function CapcaleraConversa({
   fil, onTorna, onSeleccionar, seleccio = null, t,
   onDenunciaPersona = null, onBloqueja = null, onDesbloqueja = null, nomContrapart = '',
-  onTornaAOrigen = null, accioXifratge = null
+  onTornaAOrigen = null, accioXifratge = null, accioSilenci = null
 }) {
   const [menuObert, setMenuObert] = useState(false);
   const menuRef = useRef(null);
@@ -228,6 +233,11 @@ export default function CapcaleraConversa({
             {typeof accioXifratge?.onTria === 'function' && accioXifratge.etiqueta ? (
               <button type="button" role="menuitem" className="sdp-xat-menu__item" onClick={() => triaDelMenu(accioXifratge.onTria)}>
                 {accioXifratge.etiqueta}
+              </button>
+            ) : null}
+            {typeof accioSilenci?.onTria === 'function' && accioSilenci.etiqueta ? (
+              <button type="button" role="menuitem" className="sdp-xat-menu__item" onClick={() => triaDelMenu(accioSilenci.onTria)}>
+                {accioSilenci.etiqueta}
               </button>
             ) : null}
             {typeof onDenunciaPersona === 'function' && nomDeLaContrapart ? (

@@ -193,7 +193,10 @@ test('doble còpia al sandbox d’activació: la segona no peta i el ganxo d’a
     assert.ok(resultat.mort, 'wp_die abans que WordPress l’afija a active_plugins');
     assert.ok(resultat.mort.missatge.includes(carregada) && resultat.mort.missatge.includes(nova), resultat.mort.missatge);
     assert.deepEqual(resultat.mort.args, { back_link: true });
-    assert.equal(resultat.mort.titol, 'Sóc de Poble — Enxufe');
+    // P1-09 (B10-ESCOMBRADA) · el nom visible és «Sóc de Poble», sense «Enxufe», al títol, al missatge i a l'avís.
+    assert.equal(resultat.mort.titol, 'Sóc de Poble');
+    assert.ok(resultat.mort.missatge.startsWith('Sóc de Poble is already active from the folder '), resultat.mort.missatge);
+    assert.ok(resultat.avis.includes('<p>Sóc de Poble is installed twice and both copies are active.'), resultat.avis);
     assert.ok(resultat.avis.includes(carregada) && resultat.avis.includes(nova));
   }
 });
@@ -244,7 +247,8 @@ test('activació a tota la xarxa amb una altra còpia activa en un lloc secundar
   assert.ok(refusada.mort.missatge.includes(path.join(path.dirname(refusada.plugin), 'wordpress-plugin')), refusada.mort.missatge);
   assert.ok(refusada.mort.missatge.includes(fs.realpathSync(refusada.plugin)), refusada.mort.missatge);
   assert.deepEqual(refusada.mort.args, { back_link: true });
-  assert.equal(refusada.mort.titol, 'Sóc de Poble — Enxufe');
+  assert.equal(refusada.mort.titol, 'Sóc de Poble');
+  assert.ok(refusada.mort.missatge.startsWith('Sóc de Poble is already active from the folder '), refusada.mort.missatge);
   assert.deepEqual(refusada.transients, [], 'cap altre ganxo d’activació s’executa abans del refús');
 
   const deXarxa = xarxa({ actius: { 1: [] }, xarxa: { 'socdepoble-enxufe/socdepoble-enxufe.php': 1790000000 } });
@@ -310,6 +314,7 @@ test('readme: «Mostra els detalls» servix les seccions reals, escapades, i els
   assert.equal(info.tested, capcalera('readme.txt', 'Tested up to'));
   assert.equal(info.version, capcalera('socdepoble-enxufe.php', 'Version'));
   assert.equal(info.download_link, '', 'sense canal verificat no hi ha res descarregable');
+  assert.equal(info.name, 'Sóc de Poble', 'P1-09 · «Mostra els detalls» porta el nom visible, sense «Enxufe»');
 });
 
 /* P2-wp-petits (261101) · L'analitzador del readme de «Mostra els detalls» es carrega sol, amb els
@@ -469,7 +474,7 @@ test('readme: el codi és literal, sense cursiva, negreta ni enllaços dins', OP
 
 /* WP-09 (auditoria 261025) · el fitxer que WordPress carrega per al text domain
    'socdepoble', no el de la identitat vella (socdepoble-enxufe-ca.l10n.php,
-   domini 'socdepoble-enxufe'), que cap WordPress no llig. */
+   domini 'socdepoble-enxufe'), que cap WordPress no llig i que P1-09 (B10) ha retirat. */
 test('la traducció valenciana s’executa amb PHP i té la forma .l10n.php de WordPress', OPCIONS, t => {
   const l10n = executa(t, { mode: 'l10n' });
   assert.equal(l10n.domain, 'socdepoble');

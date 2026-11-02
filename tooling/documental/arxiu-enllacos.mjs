@@ -16,6 +16,13 @@
  *    · Tot el que aturaria l'operació (zona humana, laboratori, fitxer fora de la Wiki,
  *      preimatge divergent a l'Escriptori, enllaç ambigu, enllaç del frontmatter que en
  *      trencaria l'esquema, autor ambigu) ix com a aturada.
+ *    · Gauntlet 261101 (G1-A-integ-01/02): també s'atura el que deixaria roges dues portes del
+ *      hook després del trasllat: un viu amb una fallada F9 nova a «## Vincles» (Porta
+ *      Frontmatter; p. ex. sense cap nota viva) i un camí al document mogut citat fora
+ *      d'enllaços (codi inline o prosa) que la Porta Doctrina llig a `.agents`. Cap dels dos
+ *      es reescriu a cegues: el missatge nomena el document i la línia. L'índex de l'Escriptori
+ *      es jutja amb el text que en deixa `despenja`; els camins de la Doctrina, normalitzats
+ *      com `path.join` (`./…`, `x/../…`). El deute F9 que el viu ja portava no atura.
  *
  *  L'arxiu històric no s'obri mai: del destí només es comprova que no existix.
  *  No importa `porta-olivera.mjs`: la porta el carrega amb `import()` només per a --arxiva.
@@ -26,7 +33,7 @@ import { CAMINS } from '../lib/arrel.mjs';
 import { markdownProse } from '../lib/markdown-prose.mjs';
 import { resolveDocumentLink } from '../lib/document-links.mjs';
 import { VerificadorSCC } from '../gates/verificador-scc.mjs';
-import { splitFrontmatter } from '../wiki/lib/frontmatter.mjs';
+import { splitFrontmatter, parseFrontmatter } from '../wiki/lib/frontmatter.mjs';
 import { sha, json, parseDocument, checkSchema, validateSchema, receiptPattern, turnPattern, humanZone } from './core.mjs';
 import { readTurn, isActiveReceipt } from './turns.mjs';
 
@@ -258,6 +265,325 @@ function rebutDe(text) {
   return m ? { torn: m[1], rebut: m[2] } : null;
 }
 
+/* ── Porta Frontmatter (F9) des del pla · Gauntlet G1-A-integ-01 ──────────────────────────
+   Un vincle reescrit a `[[../90_arxiu_historic/X|X]]` és vàlid però no compta com a nota viva:
+   si X era l'única de «## Vincles», el viu guanya «Falta una nota interna única i diferent» i
+   el hook queda roig («Zero tolerància» al fitxer modificat o «El deute ha pujat»). Un viu que
+   la porta no reescriu (fora de les fonts) hi guanyaria «unresolved». El tractor és una CLI i
+   no s'importa: ací se'n replica l'abast (frontmatter-abast.json) i la regla de validaVincles,
+   amb el mateix resolutor (parse.mjs); tests/olivera-arxiva-enllacos.test.mjs ho compara amb
+   el tractor real. */
+const ABAST_FM = 'tooling/wiki/frontmatter-abast.json';
+const ABAST_FM_DEFECTE = Object.freeze({
+  arrels: ['.'],
+  exclou: ['node_modules', '.git', '.hg', '.svn', 'dist', 'build', 'coverage',
+    '.vite', '.next', '.nuxt', '.cache', '.turbo', '.obsidian', '.sdp-paperera',
+    '90_historic', '90_arxiu_historic', '.quarantena-*', 'bot'],
+  immutables: [],
+});
+const ARXIU_HISTORIC = `${CAMINS.arxiuHistoric}/`;
+const SESSIO_ARXIU = /^\d{6}_[A-Za-z0-9]+(?:_[A-Za-z0-9]+)*$/;
+const FALTA_VIVA = 'Falta una nota interna única i diferent';
+/** Glob de l'abast, idèntic al del tractor (`**` i `*`). */
+const globRegex = (p) => new RegExp('^' + p
+  .replace(/[.+^${}()|[\]\\]/g, '\\$&')
+  .replace(/\*\*\//g, '\u0001')
+  .replace(/\*\*/g, '\u0000')
+  .replace(/\*/g, '[^/]*')
+  .replace(/\u0000/g, '.*')
+  .replace(/\u0001/g, '(?:.*/)?') + '$');
+
+/* Graf d'importació estable (el control D6 de porta-olivera-diagnosi en copia la llista): els
+   mòduls de les portes es carreguen amb import() i només quan un filtre textual barat diu que
+   cal. Si no es poden carregar, s'atura (fail-closed). */
+const plana = (s) => String(s).normalize('NFC').toLocaleLowerCase('ca').trim(); // normalitza() de wiki/lib/text.mjs
+
+/** Recorregut del tractor sense podar l'arxiu: isDocumentArchive és per prefix i es pot aplicar després, fitxer a fitxer. */
+function documentsAmplis(arrel) {
+  const abast = path.join(arrel, ABAST_FM);
+  const cfg = fs.existsSync(abast) ? { ...ABAST_FM_DEFECTE, ...json(abast) } : ABAST_FM_DEFECTE;
+  const exclou = cfg.exclou.map((p) => globRegex(p.includes('/') ? p : `**/${p}`));
+  const immutables = cfg.immutables.map(globRegex);
+  const trobats = [];
+  const recorre = (rel) => {
+    let entrades;
+    try { entrades = fs.readdirSync(rel ? path.join(arrel, rel) : arrel, { withFileTypes: true }); } catch { return; }
+    for (const e of entrades) {
+      const r = rel ? `${rel}/${e.name}` : e.name;
+      if (exclou.some((re) => re.test(r))) continue;
+      if (e.isSymbolicLink()) continue;
+      if (e.isDirectory()) recorre(r);
+      else if (e.name.toLowerCase().endsWith('.md')) trobats.push(r);
+    }
+  };
+  for (const a of cfg.arrels.join(',').split(',').map((s) => s.trim()).filter(Boolean)) {
+    recorre(a === '.' ? '' : a.replace(/^\.\//, '').replace(/\/+$/, ''));
+  }
+  return [...new Set(trobats)].sort()
+    .filter((n) => !immutables.some((re) => re.test(n)))
+    .map((n) => { try { return { relPath: n, content: fs.readFileSync(path.join(arrel, n), 'utf8') }; } catch { return null; } })
+    .filter(Boolean);
+}
+
+/** Els documents que jutja la Porta Frontmatter ({ relPath, content }), amb el mateix abast i recorregut. */
+export async function universFrontmatter(arrel) {
+  const { isDocumentArchive } = await import('../lib/document-corpus.mjs');
+  return documentsAmplis(path.resolve(arrel)).filter((d) => !isDocumentArchive(d.relPath));
+}
+
+/** esNotaArxivada del tractor; `afegits`: destins que encara no hi són (els moviments del pla). */
+function arxivadesDe(arrel, afegits = []) {
+  const extra = new Map();
+  for (const desti of afegits) {
+    const carpeta = `${path.posix.dirname(desti)}/`;
+    if (!extra.has(carpeta)) extra.set(carpeta, new Set());
+    extra.get(carpeta).add(path.posix.basename(desti));
+  }
+  const noms = new Map();
+  return (target, relPath) => {
+    const t = target.trim();
+    if (!/(^|\/)90_arxiu_historic\//.test(t)) return false;
+    const cami = path.posix.normalize(path.posix.join(path.posix.dirname(relPath), `${t.replace(/\.md$/i, '')}.md`));
+    if (!cami.startsWith(ARXIU_HISTORIC)) return false;
+    const parts = cami.slice(ARXIU_HISTORIC.length).split('/');
+    if (parts.length > 2 || (parts.length === 2 && !SESSIO_ARXIU.test(parts[0]))) return false;
+    const carpeta = parts.length === 2 ? `${ARXIU_HISTORIC}${parts[0]}/` : ARXIU_HISTORIC;
+    if (!noms.has(carpeta)) {
+      let presents;
+      try {
+        presents = new Set(fs.readdirSync(path.join(arrel, carpeta), { withFileTypes: true }).filter((e) => e.isFile()).map((e) => e.name));
+      } catch { presents = new Set(); }
+      for (const n of extra.get(carpeta) ?? []) presents.add(n);
+      noms.set(carpeta, presents);
+    }
+    return noms.get(carpeta).has(parts[parts.length - 1]);
+  };
+}
+
+/** validaVincles del tractor (mateixos missatges), més les notes vives que compta. `P`: parse.mjs. */
+function avaluaVincles(doc, resolver, P, esArxivada) {
+  const p = parseFrontmatter(doc.content);
+  if (p.malformed || p.errors.length) return { errors: ['YAML no llegible'], vives: [] };
+  const seccions = [];
+  let actual = null;
+  for (const line of P.liveMarkdown(p.body).split('\n')) {
+    const h = /^ {0,3}(#{1,6})[\t ]+(.+?)(?:[\t ]+#+)?[\t ]*$/.exec(line);
+    if (h && h[1].length <= 2) {
+      actual = h[1].length === 2 && h[2] === 'Vincles' ? [] : null;
+      if (actual) seccions.push(actual);
+    } else if (actual) {
+      actual.push(line);
+    }
+  }
+  if (seccions.length !== 1) return { errors: ['Cal exactament una secció real ## Vincles'], vives: [] };
+  const errors = [], vives = [];
+  for (const line of seccions[0]) {
+    if (!line.trim()) continue;
+    const item = /^ {0,3}[-*][\t ]+(\[\[[^[\]\n]+\]\])[\t ]*$/.exec(line);
+    if (!item || item[1].includes('\\')) { errors.push('Vincles només admet una llista de wikilinks sencers'); continue; }
+    const links = P.extractLinks(item[1]);
+    if (links.length !== 1 || /[#^]/.test(links[0].target)) { errors.push('Cal enllaçar una nota sencera, sense fragments'); continue; }
+    const r = P.resolveLink(links[0], doc, resolver);
+    if (r.status === 'resolved' && r.doc.relPath !== doc.relPath) vives.push(r.doc.relPath);
+    else if (r.status === 'unresolved' && esArxivada(P.safeDecode(links[0].target), doc.relPath)) continue;
+    else errors.push(`${links[0].target}: ${r.status === 'resolved' ? 'autoreferència' : r.status}`);
+  }
+  if (!vives.length) errors.push(FALTA_VIVA);
+  return { errors, vives };
+}
+
+/** F9 de tot l'abast amb la regla replicada ({ relPath: errors }): la prova de paritat la compara amb el tractor. */
+export async function fallidesF9(arrel) {
+  arrel = path.resolve(arrel);
+  const P = await import('../wiki/core/parse.mjs');
+  const univers = await universFrontmatter(arrel);
+  const resolver = P.buildResolver(univers);
+  const esArxivada = arxivadesDe(arrel);
+  const out = {};
+  for (const d of univers) {
+    const { errors } = avaluaVincles(d, resolver, P, esArxivada);
+    if (errors.length) out[d.relPath] = errors;
+  }
+  return out;
+}
+
+/** Filtre ample i sense resolutor: algun [[…]] des del primer «## Vincles» porta el nom base o un àlies d'un mogut? */
+function nomenaMoguts(content, bases, alies) {
+  const inici = content.search(/##[\t ]+Vincles/);
+  if (inici < 0) return false;
+  for (const m of content.slice(inici).matchAll(/\[\[([^[\]\n]+)\]\]/g)) {
+    let t = m[1].split('|')[0];
+    try { t = decodeURIComponent(t); } catch { /* com safeDecode: es queda cru */ }
+    t = t.replace(/\\/g, '/').replace(/[#^].*$/, '').trim().replace(/\.md$/i, '');
+    if (bases.has(plana(path.posix.basename(t))) || alies.has(plana(t))) return true;
+  }
+  return false;
+}
+
+/** nomsSolts de la porta: fitxers regulars visibles del primer nivell de l'Escriptori, el cens de resolAncora. */
+function escriptoriSolts(arrel) {
+  try {
+    return new Set(fs.readdirSync(path.join(arrel, CAMINS.escriptori), { withFileTypes: true })
+      .filter((e) => e.isFile() && !e.name.startsWith('.')).map((e) => e.name));
+  } catch { return new Set(); } // cens buit: no es lleva res de l'índex i un vincle al mogut hi falla (fail-closed)
+}
+
+/** resolAncora de porta-olivera.mjs (referent, nomPrimerNivell i resolNomExacte): nom del primer nivell d'una àncora crua. */
+function ancoraPrimerNivell(raw, presents) {
+  const ref = path.posix.normalize(raw.replace(/\\(?=[|#])/g, '').split(/[|#]/)[0].trim());
+  const cami = [path.posix.join(CAMINS.escriptori, ref), path.posix.join(CAMINS.wiki, ref), ref]
+    .find((c) => path.posix.dirname(c) === CAMINS.escriptori);
+  if (!cami) return null;
+  const nom = path.posix.basename(cami);
+  return presents.has(nom) ? nom : !path.posix.extname(nom) && presents.has(`${nom}.md`) ? `${nom}.md` : null;
+}
+
+/** L'índex tal com el deixa `despenja`, per a F9: fora els ítems d'un sol wikilink que resolAncora porta a un mogut
+ *  (amb --reapunta passen a l'arxiu, que tampoc compta com a viu ni falla). Un àlies o un altre nom hi queda. */
+function indexDespenjat(content, nomsMoguts, presents) {
+  return content.split(/(?<=\n)/).filter((linia) => {
+    const item = /^ {0,3}[-*][\t ]+\[\[([^[\]\n]+)\]\][\t ]*\r?\n?$/.exec(linia);
+    return !(item && nomsMoguts.has(ancoraPrimerNivell(item[1], presents)));
+  }).join('');
+}
+
+const missatgeF9 = (rel, guanyats) => `${rel}: després de l'arxivat, «## Vincles» ${guanyats.includes(FALTA_VIVA) ? 'quedaria sense cap nota viva resoluble' : 'guanyaria fallades'} a la Porta Frontmatter (F9: ${guanyats.join('; ')}). Afig-hi una nota viva (p. ex. «- [[00_index]]») o corregix el vincle a mà abans d'arxivar; no s'ha mogut res.`;
+
+/** Aturades per F9 nou: compara cada viu afectat abans i després (moguts fora, textos reescrits, destins a l'arxiu). */
+async function aturadesF9(arrel, moviments, reescriptures) {
+  let amplis;
+  try { amplis = documentsAmplis(arrel); }
+  catch (error) { return [`No es pot reproduir l'abast de la Porta Frontmatter (${ABAST_FM}: ${error.message}): sense abast no es pot garantir F9; no s'ha mogut res.`]; }
+  const moguts = new Set(moviments.map((m) => m.rel));
+  const bases = new Set(moviments.map((m) => plana(senseMd(m.nom))));
+  const alies = new Set();
+  for (const m of moviments) {
+    let a = null;
+    try { a = parseFrontmatter(fs.readFileSync(path.join(arrel, m.rel), 'utf8')).data.aliases; } catch { /* sense àlies llegibles */ }
+    if (Array.isArray(a)) for (const x of a) alies.add(plana(x));
+  }
+  const candidats = amplis.filter((d) => !moguts.has(d.relPath) && nomenaMoguts(d.content, bases, alies));
+  if (!candidats.length) return [];
+  // parse.mjs resol l'arrel en carregar-se: només es carrega si cal i, si no pot, s'atura (fail-closed).
+  let P, isDocumentArchive;
+  try { [P, { isDocumentArchive }] = await Promise.all([import('../wiki/core/parse.mjs'), import('../lib/document-corpus.mjs')]); }
+  catch (error) { return [`${candidats.map((d) => d.relPath).join(', ')}: «## Vincles» nomena un document que es mou, però el resolutor de la Porta Frontmatter no s'ha pogut carregar (${error.message}); sense resolutor no es pot garantir F9: no s'ha mogut res.`]; }
+  const univers = amplis.filter((d) => !isDocumentArchive(d.relPath));
+  const afectats = candidats.filter((d) => !isDocumentArchive(d.relPath));
+  const nous = new Map(reescriptures.map((r) => [r.rel, r.despres]));
+  const despres = univers.filter((d) => !moguts.has(d.relPath))
+    .map((d) => (nous.has(d.relPath) ? { relPath: d.relPath, content: nous.get(d.relPath) } : d));
+  const perRel = new Map(despres.map((d) => [d.relPath, d]));
+  const resolAbans = P.buildResolver(univers), resolDespres = P.buildResolver(despres);
+  const arxAbans = arxivadesDe(arrel), arxDespres = arxivadesDe(arrel, moviments.map((m) => m.desti));
+  const nomsMoguts = new Set(moviments.map((m) => m.nom));
+  const presents = escriptoriSolts(arrel);
+  const aturades = [];
+  for (const d of afectats) {
+    const abans = avaluaVincles(d, resolAbans, P, arxAbans);
+    // L'índex no és cap reescriptura: el reescriu `despenja` en aplicar, i es jutja amb el text que en deixa.
+    const despresDoc = d.relPath === CAMINS.indexEscriptori
+      ? { relPath: d.relPath, content: indexDespenjat(d.content, nomsMoguts, presents) }
+      : perRel.get(d.relPath);
+    // Només atura el que guanya: el deute F9 que el viu ja portava no és cosa de l'arxivat.
+    const vells = new Set(abans.errors);
+    const guanyats = [...new Set(avaluaVincles(despresDoc, resolDespres, P, arxDespres).errors.filter((e) => !vells.has(e)))];
+    if (guanyats.length) aturades.push(missatgeF9(d.relPath, guanyats));
+  }
+  return aturades;
+}
+
+/* ── Porta Doctrina des del pla · Gauntlet G1-A-integ-02 ─────────────────────────────────
+   La porta només reescriu enllaços ([[…]] i […](…)); un camí en codi inline o en prosa no
+   ho és, però tooling/gates/tractor-doctrina.mjs el llig a l'abast per defecte (.agents, amb
+   el text operatiu d'ESTAT i LEDGER) i, després del trasllat, el camí vell seria ABSENT.
+   Defecte conservador: s'atura i es nomena la línia; reescriure codi a cegues, mai. Es
+   replica l'extracció de candidatsDeLinia (la CLI no s'importa). Un nom sol sense carpeta no
+   atura: la Doctrina el troba a l'arxiu pel sufix. */
+const DOCTRINA_EXCLOU_DIR = new Set(['node_modules', '.git', 'dist', 'build', '.next', 'vendor', 'coverage', '.sdp-paperera', '.sdp-reflex']);
+const DOCTRINA_IGNORA = ['.agents/doctrina-ignora.txt', 'tooling/gates/doctrina-ignora.txt'];
+
+/** Els .md de l'abast per defecte de la Doctrina (recullMd), sense podar l'evidència d'execució: es filtra després. */
+function documentsDoctrina(arrel) {
+  const out = [];
+  const recull = (rel) => {
+    let entrades;
+    try { entrades = fs.readdirSync(path.join(arrel, rel), { withFileTypes: true }); } catch { return; }
+    for (const e of entrades) {
+      if (DOCTRINA_EXCLOU_DIR.has(e.name)) continue;
+      const r = `${rel}/${e.name}`;
+      if (e.isDirectory()) recull(r);
+      else if (e.name.endsWith('.md')) out.push(r);
+    }
+  };
+  recull(CAMINS.agents);
+  return out;
+}
+
+/** Els tokens que candidatsDeLinia prova, amb la forma en què apareixen. */
+function* candidatsDoctrina(linia, dinsCodi) {
+  for (const m of linia.matchAll(/`([^`\n]+)`/g)) for (const tros of m[1].split(/\s+/)) yield [tros, 'en codi inline'];
+  for (const m of linia.matchAll(/\[[^\]]*\]\(([^)\s]+)\)/g)) {
+    if (!/^doc-[0-9a-f-]+/i.test(m[1])) yield [m[1].split('#')[0], "a la destinació d'un enllaç Markdown"];
+  }
+  if (dinsCodi) return;
+  const netejada = linia.replace(/`[^`\n]*`/g, ' ').replace(/\[\[[^\]]*\]\]/g, ' ');
+  for (const m of netejada.matchAll(/[A-Za-z0-9_./~-]+\.[a-z0-9]{1,6}\b/g)) yield [m[0], 'en prosa'];
+}
+
+/** Aturades per camins al document mogut que la Doctrina veuria ABSENT (sobre el text que quedaria). */
+async function aturadesDoctrina(arrel, moviments, reescriptures) {
+  const nous = new Map(reescriptures.map((r) => [r.rel, r.despres]));
+  // Filtre barat: cap camí al mogut sense el seu nom de fitxer (la Doctrina no descodifica res).
+  const noms = moviments.map((m) => m.nom.toLowerCase());
+  const textos = [];
+  for (const rel of documentsDoctrina(arrel)) {
+    let text = nous.get(rel);
+    if (text === undefined) { try { text = fs.readFileSync(path.join(arrel, rel), 'utf8'); } catch { continue; } }
+    const baix = text.toLowerCase();
+    if (noms.some((n) => baix.includes(n))) textos.push([rel, text]);
+  }
+  if (!textos.length) return [];
+  let isExecutionEvidence, operationalDocumentText;
+  try { [{ operationalDocumentText }, { isExecutionEvidence }] = await Promise.all([import('../lib/document-corpus.mjs'), import('../lib/corpus-scope.mjs')]); }
+  catch (error) { return [`${textos.map(([rel]) => rel).join(', ')}: citen un document que es mou, però l'abast de la Porta Doctrina no s'ha pogut carregar (${error.message}); no s'ha mogut res.`]; }
+  const fitxerIgnora = DOCTRINA_IGNORA.map((r) => path.join(arrel, r)).find((f) => fs.existsSync(f));
+  const ignorats = fitxerIgnora
+    ? fs.readFileSync(fitxerIgnora, 'utf8').split(/\r?\n/).map((l) => l.replace(/#.*$/, '').trim()).filter(Boolean)
+    : [];
+  const esIgnorat = (p) => ignorats.some((pref) => p === pref || p.startsWith(pref.endsWith('/') ? pref : `${pref}/`));
+  const moguts = moviments.map((m) => ({ m, baix: m.rel.toLowerCase() }));
+  const aturades = [];
+  for (const [rel, text] of textos) {
+    if (isExecutionEvidence(rel)) continue;
+    const operatiu = operationalDocumentText(text, rel);
+    const inici = operatiu === text ? 0 : text.indexOf(operatiu);
+    const desplacament = inici > 0 ? text.slice(0, inici).split(/\r?\n/).length - 1 : 0;
+    const vistos = new Set();
+    let dinsCodi = false;
+    for (const [i, linia] of operatiu.split(/\r?\n/).entries()) {
+      if (/^\s*(```|~~~)/.test(linia)) { dinsCodi = !dinsCodi; continue; }
+      for (const [brut, forma] of candidatsDoctrina(linia, dinsCodi)) {
+        // La normalització d'esCandidat: puntuació final, sufix de línia i barra final.
+        const c = brut.trim().replace(/[.,;:]+$/, '')
+          .replace(/:[0-9]+(?:[-–][0-9]+)?(?:,[0-9]+(?:[-–][0-9]+)?)*(?::[0-9]+)?$/, '').replace(/\/+$/, '');
+        if (!c.includes('/') || c.length > 240 || /[\s*?<>|"']/.test(c) || /^(https?:|mailto:|#|<|\{)/.test(c)) continue;
+        if (c.startsWith('../') || c.startsWith('~/') || c.startsWith('/') || esIgnorat(c) || vistos.has(c)) continue;
+        // Els tres llocs on resol() la trobaria: arrel (R() és path.join: normalitza «./» i «x/../»),
+        // sufix únic (cru, com la porta) i carpeta del document (APFS: sense caixa).
+        const baix = c.toLowerCase();
+        const desDeLArrel = path.posix.normalize(baix);
+        const desDelDoc = path.posix.normalize(path.posix.join(path.posix.dirname(rel), c)).toLowerCase();
+        const hit = moguts.find((x) => desDeLArrel === x.baix || x.baix.endsWith(`/${baix}`) || desDelDoc === x.baix);
+        if (!hit) continue;
+        vistos.add(c);
+        aturades.push(`${rel}:${desplacament + i + 1} cita «${c}» ${forma}, el camí d'un document que es mou (${hit.m.rel}): la porta no reescriu camins fora d'enllaços i la Porta Doctrina el veuria ABSENT després del trasllat. Corregix-lo a mà (p. ex. «${hit.m.desti}») o lleva'l abans d'arxivar; no s'ha mogut res.`);
+      }
+    }
+  }
+  return aturades;
+}
+
 /**
  * El pla sencer, sobre el disc d'abans. `bruts`: el que torna `arxivables` ({ nom, rel }).
  * Les col·lisions de destí no es mouen (la nota de sempre) i no entren als moviments.
@@ -302,6 +628,11 @@ export async function planificaArxiu(arrel, { bruts = [], carpeta = CAMINS.arxiu
     if (!stat.isFile() || stat.isSymbolicLink() || stat.nlink !== 1) { aturades.push(`${f.rel} enllaça ${quins} però no és un fitxer regular propi (enllaç dur o simbòlic): no es reescriu a cegues.`); continue; }
     if (esIndex) { index = { enllacos: r.substitucions.length }; continue; }
     reescriptures.push({ rel: f.rel, abans: text, despres: r.text, hashAbans: sha(text), hashDespres: sha(r.text), substitucions: r.substitucions, rebut: null });
+  }
+  // Gauntlet G1-A-integ-01/02: el que deixaria roges la Porta Frontmatter (F9) o la Doctrina també atura, abans de moure res.
+  if (moviments.length) {
+    aturades.push(...await aturadesF9(arrel, moviments, reescriptures));
+    aturades.push(...await aturadesDoctrina(arrel, moviments, reescriptures));
   }
 
   const registres = llegeixTorns(arrel, avisos);

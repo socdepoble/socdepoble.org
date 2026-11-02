@@ -53,7 +53,6 @@ vi.mock('./avisosNatius.js', async (importOriginal) => {
   const original = await importOriginal();
   return { ...original, creaAvisosNatius: vi.fn((opcions) => original.creaAvisosNatius(opcions)) };
 });
-
 /* Pla 261028_1526 (P1-22, TE-05) · La llengua del dispositiu (navigator.languages
    del WebView). La de jsdom és 'en-US'; els casos de sempre corren amb una que
    l'app no parla ('oc'), i per això no porten cap `language`. */
@@ -408,5 +407,100 @@ describe('l’Arrere natiu (P0-24)', () => {
     await new Promise((r) => setTimeout(r, 0));
     expect('__sdpEnrere' in window).toBe(false);
     expect(nativePromise).not.toHaveBeenCalledWith('EnrereNatiu', expect.anything(), expect.anything());
+  });
+});
+
+/* B8C-4 (marató 261101_2143) · Els avisos push natius, darrere de la bandera.
+   Amb la bandera de debò (apagada), l'adaptador ni es carrega. Amb la bandera
+   simulada encesa i el pont sense el connector PushNotifications (el que hi
+   haurà fins que el Mestre l'instal·le), es registra una sola vegada amb motiu
+   'sense-connector' (registrar no crida estat()), sense cap crida nativa i
+   sense res a la consola. Un registre que falla ho diu i l'App es pinta igual.
+   ARB-N04-01 (corrector) · Cada prova porta el seu adaptador: un vi.doMock nou
+   (un mòdul simulat sobreviu a resetModules) que compta les càrregues d'esta
+   prova i posa el nucli fals per l'embolcall. @capacitor/core no se simula mai:
+   simular-lo i desfer-ho el torna a avaluar, i el de veres trepitja el
+   Capacitor simulat de les proves de Fase D (getPlatform passa a dir 'web'). */
+describe('B8C-4 · els avisos push natius, darrere de la bandera', () => {
+  const nucliSenseConnector = () => ({
+    Capacitor: { isPluginAvailable: vi.fn(() => false), getPlatform: vi.fn(() => 'android') },
+    registerPlugin: vi.fn()
+  });
+  const carrega = { vegades: 0, fabrica: null };
+  const ambAdaptador = (nucli) => {
+    vi.doMock('./avisosPushNatius.js', async (importOriginal) => {
+      carrega.vegades += 1;
+      const original = await importOriginal();
+      carrega.fabrica = vi.fn((...args) => original.adaptadorPushNatiuPerAlRegistre(args[0], { ...args[1], nucli }));
+      return { ...original, adaptadorPushNatiuPerAlRegistre: carrega.fabrica };
+    });
+  };
+  const ambBanderaEncesa = (canvis = {}) => {
+    vi.doMock('../config/avisosPushXat.js', async (importOriginal) => {
+      const original = await importOriginal();
+      return { ...original, AVISOS_PUSH_XAT_ACTIUS: true, registraAvisosPush: vi.fn(original.registraAvisosPush), ...canvis };
+    });
+  };
+  afterEach(() => {
+    vi.doUnmock('../config/avisosPushXat.js');
+    vi.doUnmock('./avisosPushNatius.js');
+    carrega.vegades = 0;
+    carrega.fabrica = null;
+  });
+
+  test('amb la bandera de debò (apagada): l’adaptador ni es carrega i el registre continua sense adaptador', async () => {
+    ambAdaptador(nucliSenseConnector());
+    await avalua();
+    await new Promise((r) => setTimeout(r, 0));
+    const registre = await import('../config/avisosPushXat.js');
+    expect(registre.AVISOS_PUSH_XAT_ACTIUS).toBe(false);
+    expect(registre.avisosPushDisponibles()).toBe(false);
+    expect(registre.instantaniaAvisosPush()).toMatchObject({ disponible: false, tipus: null, motiu: null });
+    expect(carrega.vegades).toBe(0);
+    expect(pintats).toHaveLength(1);
+  });
+
+  test('amb la bandera encesa i el pont sense el connector: una sola vegada, motiu sense-connector, cap crida nativa ni res a la consola', async () => {
+    const consola = ['log', 'info', 'warn', 'error', 'debug'].map((nivell) => vi.spyOn(console, nivell).mockImplementation(() => {}));
+    const nucli = nucliSenseConnector();
+    ambAdaptador(nucli);
+    ambBanderaEncesa();
+    try {
+      await avalua();
+      const registre = await import('../config/avisosPushXat.js');
+      await vi.waitFor(() => expect(registre.avisosPushDisponibles()).toBe(true));
+      expect(registre.registraAvisosPush).toHaveBeenCalledTimes(1);
+      expect(registre.instantaniaAvisosPush()).toMatchObject({ disponible: true, tipus: 'natiu', motiu: 'sense-connector', estat: 'inactiu', ambServidor: false });
+      expect(carrega.vegades).toBe(1);
+      // L'entrada el construïx amb el nucli de per defecte: cap opció seua.
+      expect(carrega.fabrica.mock.calls).toEqual([[]]);
+      expect(nucli.Capacitor.isPluginAvailable).toHaveBeenCalledWith('PushNotifications');
+      expect(nucli.registerPlugin).not.toHaveBeenCalled();
+      expect(pintats).toHaveLength(1);
+      for (const espia of consola) expect(espia).not.toHaveBeenCalled();
+    } finally {
+      for (const espia of consola) espia.mockRestore();
+    }
+  });
+
+  test('un registre que falla ho diu per la consola, sense cap rebuig sense amo, i l’App es pinta igual', async () => {
+    const error = vi.spyOn(console, 'error').mockImplementation(() => {});
+    const senseAmo = vi.fn();
+    process.on('unhandledRejection', senseAmo);
+    const fallada = new Error('ja registrat');
+    ambAdaptador(nucliSenseConnector());
+    ambBanderaEncesa({ registraAvisosPush: vi.fn(() => { throw fallada; }) });
+    try {
+      const { host } = await avalua();
+      await vi.waitFor(() => expect(error).toHaveBeenCalledWith('[natiu] Avisos push no registrats:', fallada));
+      await new Promise((r) => setTimeout(r, 0));
+      expect(carrega.vegades).toBe(1);
+      expect(senseAmo).not.toHaveBeenCalled();
+      expect(host.arrenca).toHaveBeenCalledTimes(1);
+      expect(pintats).toHaveLength(1);
+    } finally {
+      process.off('unhandledRejection', senseAmo);
+      error.mockRestore();
+    }
   });
 });

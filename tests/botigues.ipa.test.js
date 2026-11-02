@@ -51,7 +51,8 @@ function desplega(ipa, desti) {
 vi.mock('../scripts/botigues/preflight.mjs', () => ({
   arrelComprovada: () => m.root,
   projecteIos: () => ({ opcio: '-project', cami: 'fixture.xcodeproj' }),
-  preflight: () => ({ codi: 0, linies: [], valors: m.valors, segell: { commit: 'a'.repeat(40) }, fastlane: false })
+  /* B9 (ARB-B9-02) · puja-ios tanca sense l'estat dels avisos push: el preflight simulat diu que l'app no n'anuncia. */
+  preflight: () => ({ codi: 0, linies: [], valors: m.valors, segell: { commit: 'a'.repeat(40) }, fastlane: false, push: { anuncia: false, estat: {} } })
 }));
 vi.mock('../scripts/botigues/entorn.mjs', async (original) => {
   const real = await original();

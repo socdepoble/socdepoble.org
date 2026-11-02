@@ -34,7 +34,10 @@
        MAI no llig el cos de l'esdeveniment, ni va a la xarxa, ni obri cap
        memòria: sempre mostra el mateix avís, «Tens missatges nous», sense
        text, remitent ni fil. En tocar-lo, enfoca una finestra pròpia i la
-       porta a /xat, o n'obri una. Cap versió d'este fitxer no pot eixir sense
+       porta a /xat?obri=no-llegits, o n'obri una; si ja hi és, li ho diu per
+       missatge, sense cap dada (B8C-3, marató 261101_2143: la pàgina tria la
+       conversa amb la sessió de qui hi ha, i el servei de push no sap mai el
+       fil). Cap versió d'este fitxer no pot eixir sense
        el gestor de push mentre hi haja subscripcions: Chrome mostraria un
        avís genèric i Safari les revocaria totes.
    Tota la resta passa sense tocar-la: API i autenticació (Supabase, /rest/,
@@ -346,6 +349,13 @@ function esOrdreLlegadaDeSaltarEspera(dades) {
    (sw.test.js comprova que és la mateixa). */
 const ETIQUETA_AVIS_XAT = 'sdp-xat';
 const CAMI_DEL_XAT = '/xat';
+/* B8C-3 (marató 261101_2143; D-B8C-1) · La ruta neutra de l'avís: la mateixa
+   per a tothom i per a cada avís, sense cap fil. La pàgina la reconeix
+   (src/sections/xat/destiDelAvis.js, CAMI_AVIS_XAT) i hi tria la conversa
+   amb la sessió actual. I el missatge a una finestra que ja és al Xat: només
+   { tipus }, el mateix de src/pwa/registre.js. sw.test.js prova la paritat. */
+const CAMI_AVIS_XAT = `${CAMI_DEL_XAT}?obri=no-llegits`;
+const MISSATGE_AVIS_XAT = 'sdp-avis-xat';
 const ICONA_AVIS = '/icona-app-192.png';
 /* /xat i el que penja de /xat/ (no /xatxa). */
 const RUTA_DEL_XAT = /^\/xat(?:\/|$)/;
@@ -372,7 +382,7 @@ function llenguaDeLAvis(llengues) {
 function avisCec(llengues) {
   const llengua = llenguaDeLAvis(llengues);
   const { titol, cos } = TEXTOS_AVIS[llengua];
-  return { titol, opcions: { body: cos, tag: ETIQUETA_AVIS_XAT, lang: llengua, icon: ICONA_AVIS, data: { cami: CAMI_DEL_XAT } } };
+  return { titol, opcions: { body: cos, tag: ETIQUETA_AVIS_XAT, lang: llengua, icon: ICONA_AVIS, data: { cami: CAMI_AVIS_XAT } } };
 }
 
 /** Si un avís és del Xat (porta la nostra etiqueta). Pura. */
@@ -748,9 +758,14 @@ function mostraAvisCec() {
    navega: en una finestra que este worker no controla (una recàrrega amb
    Maj, una pestanya d'abans del claim) navigate() rebutja sense gastar-lo i
    openWindow() encara el té. Només al final s'enfoca. Si la finestra ja era
-   al Xat i no es deixa enfocar, s'intenta obrir-ne una. */
+   al Xat i no es deixa enfocar, s'intenta obrir-ne una.
+   B8C-3 (marató 261101_2143) · El destí és la ruta neutra (CAMI_AVIS_XAT).
+   Una finestra que ja era al Xat no es navega (no recarrega l'SPA): després
+   d'enfocar-la, rep MISSATGE_AVIS_XAT, només { tipus }. postMessage no gasta
+   el permís d'interacció i, si falla, el toc acaba igual (la finestra ja és
+   al Xat, on la llista mostra els no llegits). */
 async function obriElXat() {
-  const desti = new URL(CAMI_DEL_XAT, self.location.origin).href;
+  const desti = new URL(CAMI_AVIS_XAT, self.location.origin).href;
   let finestres = [];
   try {
     finestres = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
@@ -780,6 +795,13 @@ async function obriElXat() {
   } catch {
     /* ja és al Xat; només si ja hi era, se n'obri una */
     if (jaAlXat) await self.clients.openWindow(desti);
+    return;
+  }
+  if (!jaAlXat) return;
+  try {
+    finestra.postMessage({ tipus: MISSATGE_AVIS_XAT });
+  } catch {
+    /* sense missatge, la finestra ja és al Xat */
   }
 }
 
@@ -824,7 +846,7 @@ self.addEventListener('push', (event) => {
 });
 
 /* El toc d'un avís del Xat (els d'altres etiquetes no són nostres): el tanca i
-   porta la persona al Xat. */
+   porta la persona al Xat, per la ruta neutra (obriElXat). */
 self.addEventListener('notificationclick', (event) => {
   if (!esAvisDelXat(event.notification)) return;
   event.notification.close();

@@ -12,6 +12,14 @@
  * d'este aparell és una alarma (`canvis.alarmes`) i el directori continua amb la
  * identitat de l'aparell per a llegir. Només la manipulació llança:
  * `historia-incoherent`, i `bifurcacio` o `kid-no-quadra` del protocol.
+ *
+ * G2-A-seg-01 (marató 261101_2143, E1) · `ordreKid(usuari, kid)` dona l'ordre de
+ * cada kid conegut (0 = el més nou: l'actiu, o el fixat si hi ha un pendent) i,
+ * per a un kid que un canvi fort ha substituït (de les `anteriors` i fora de la
+ * cadena suau de l'actual), `finsEpoca`: l'última època que encara pot signar
+ * en este fil, el cap que l'aparell hi tenia ancorat abans de construir el
+ * context (`capAncorat`; 0 si no n'hi havia cap). El protocol hi imposa el kid
+ * monòton per membre al llarg de la cadena (aplicaEpoca).
  */
 import { creaDirectori, verificaDeclaracioClau, exigixSenseBifurcacio } from './xifratXatProtocol.js';
 import { deBase64url, aBase64url } from './xifratXatCripto.js';
@@ -34,10 +42,19 @@ const nomesLectura = (mapa) => Object.freeze({
   forEach: (f) => mapa.forEach((v, k) => f(v, k)), [Symbol.iterator]: () => mapa.entries()
 });
 
-export async function directoriAmbHistoria({cripto, jo, registres, usuaris, magatzem, ci, ara, exigix, declaracions=[]}) {
+export async function directoriAmbHistoria({cripto, jo, registres, usuaris, magatzem, ci, ara, exigix, declaracions=[], capAncorat=0}) {
   const actiu=creaDirectori(cripto), historia=new Map(), desats=[];
   const pendents=new Map(), candidates=new Map(), suaus=[], alarmes=[];
   const guarda=k=>historia.set(k.usuari+':'+aBase64url(k.kid), k);
+  /* G2-A-seg-01 · Per usuari: kid (base64url) → ordre (0 el més nou); i els kids substituïts per un canvi fort. */
+  const ordres=new Map(), substituides=new Set();
+  const limit=Number.isSafeInteger(capAncorat)&&capAncorat>0?capAncorat:0;
+  const ordena=(usuari,kids,suaus=null)=>{
+    const ordre=new Map();
+    for(const k of kids){ const id=aBase64url(k); if(!ordre.has(id))ordre.set(id,ordre.size); }
+    ordres.set(usuari,ordre);
+    if(suaus)for(const id of ordre.keys())if(!suaus.has(id))substituides.add(usuari+':'+id);
+  };
   const rellotge=()=>(typeof ara==='function'?ara():null);
   /* El kid lliga les públiques (es recalcula): cap fila sense declaració verificada entra a la història sense esta comprovació. */
   const lliga=async(fila)=>{ if(!fila.valors){ await creaDirectori(cripto).fixa(fila); exigix(); } };
@@ -94,31 +111,40 @@ export async function directoriAmbHistoria({cripto, jo, registres, usuaris, maga
        d'activa (o cap), alarma; es continua llegint amb la de l'aparell. */
     if(usuari===jo.usuari) {
       const meva=claus.find(c=>igual(c.kid,jo.kid));
-      if(meva)for(const c of (await cadenaEnrere(meva,claus)).values())if(c!==meva)guarda(c);
+      const meues=meva?[...(await cadenaEnrere(meva,claus)).values()]:[];
+      for(const c of meues)if(c!==meva)guarda(c);
+      ordena(usuari,[jo.kid,...meues.map(c=>c.kid)]);
       if(claus.length && (!activa || !igual(activa.kid,jo.kid)))alarmes.push(Object.freeze({tipus:'clau-propia',kidActiu:activa?copia(activa.kid):null}));
       continue;
     }
 
     const pin=await magatzem.fixacio?.(ci,usuari); exigix();
-    if(pin && Array.isArray(pin.anteriors))for(const k of pin.anteriors)await guardaHistorica(usuari,k,claus);
+    const anteriors=pin && Array.isArray(pin.anteriors)?pin.anteriors:[];
+    for(const k of anteriors)await guardaHistorica(usuari,k,claus);
     const ancorada=pin?claus.find(c=>igual(c.kid,pin.kid)):activa;
     /* kidFixat: la clau de partida del canvi fort; kidDesat: la fixada ara al magatzem (són
-       diferents si hi ha un tram suau d'abans que `confirma` encara no ha desat). */
+       diferents si hi ha un tram suau d'abans que `confirma` encara no ha desat).
+       G2-A-integ-02 · kidNou només si la clau nova es pot acceptar (declaració autofirmada
+       vàlida, és a dir, candidata); si no, null: cap botó «continua» que sempre fallaria. */
     const pendent=(motiu,fixat=pin.kid)=>{
-      pendents.set(usuari,Object.freeze({usuari,motiu,kidFixat:copia(fixat),kidDesat:copia(pin.kid),kidNou:activa?copia(activa.kid):null,verificat:pin.verificat===true}));
+      pendents.set(usuari,Object.freeze({usuari,motiu,kidFixat:copia(fixat),kidDesat:copia(pin.kid),kidNou:activa?.valors?copia(activa.kid):null,verificat:pin.verificat===true}));
       if(activa?.valors)candidates.set(usuari,Object.freeze({usuari,kid:copia(activa.kid),sigPub:copia(activa.sigPub),dhPub:copia(activa.dhPub)}));
     };
     if(!ancorada) {
       if(!pin)continue; // TOFU sense cap clau activa: encara no n'ha publicada cap.
       await guardaHistorica(usuari,pin.kid,claus);
+      // La fixada és la més nova; les anteriors, sense cadena suau servida, són d'un canvi fort.
+      ordena(usuari,[pin.kid,...anteriors],new Set([aBase64url(pin.kid)]));
       // Una clau purgada pot verificar història ancorada, mai rebre enviaments nous.
       if(!claus.length)continue;
       pendent(MOTIU_CANVI.foraDHistoria);
       continue;
     }
     const confiades=await cadenaEnrere(ancorada,claus);
+    const enrere=[...confiades.values()].map(c=>c.kid); // l'ancorada i les predecessores, de la més nova a la més vella
     // Cap avant: només els passos suaus avancen; el primer que no ho és atura la cadena.
     let actual=ancorada, forta=null;
+    const avant=[]; // les successores suaus, de la més nova (actual) a la més vella
     for(let n=0;n<claus.length;n++) {
       const seguent=claus.find(c=>c.valors?.kidAnterior&&igual(c.valors.kidAnterior,actual.kid));
       if(!seguent)break;
@@ -126,8 +152,12 @@ export async function directoriAmbHistoria({cripto, jo, registres, usuaris, maga
         ara:rellotge(),alertaRecuperacioMs:msSegur(seguent.alertaRecuperacioMs)}); exigix();
       if(v.canvi!=='suau'){forta=v;break;}
       if(confiades.has(aBase64url(seguent.kid)))throw incoherent();
-      confiades.set(aBase64url(seguent.kid),seguent);actual=seguent;
+      confiades.set(aBase64url(seguent.kid),seguent);actual=seguent;avant.unshift(seguent.kid);
     }
+    /* G2-A-seg-01 · Ordre: actual … ancorada … predecessores (tota la cadena suau, que l'actual
+       acredita), i després les anteriors que no hi són: substituïdes per un canvi fort. La clau
+       nova d'un pendent no hi entra (cap època no la pot portar fins a l'acceptació). */
+    ordena(usuari,[...avant,...enrere,...anteriors,...(pin?[pin.kid]:[])],new Set(confiades.keys()));
     if(!pin && (forta || actual!==ancorada))throw incoherent(); // una successora de la clau activa
     if(forta || !activa || !igual(actual.kid,activa.kid)) {
       // Pendent: la història d'abans es conserva, la clau nova no rep res fins a l'acceptació.
@@ -152,6 +182,11 @@ export async function directoriAmbHistoria({cripto, jo, registres, usuaris, maga
   return Object.freeze({
     de:actiu.de, usuaris:actiu.usuaris, historica:(u,k)=>historia.get(u+':'+aBase64url(k))??null,
     candidata:(u)=>candidates.get(u)??null, canvis,
+    /* G2-A-seg-01 · { rang, finsEpoca } d'un kid conegut d'esta persona, o null. finsEpoca null: sense límit. */
+    ordreKid:(u,k)=>{
+      const id=Object.prototype.toString.call(k)==='[object Uint8Array]'?aBase64url(k):null, rang=id===null?undefined:ordres.get(u)?.get(id);
+      return rang===undefined?null:Object.freeze({rang,finsEpoca:substituides.has(u+':'+id)?limit:null});
+    },
     confirma:async(usuarisValidats)=>{for(const p of desats)if(usuarisValidats.has(p.usuari))await p.desa();}
   });
 }

@@ -5826,6 +5826,11 @@ details[open] summary.accordion-header svg:last-child {
     line-height: 1.4;
   }
   .sdp-xat-ajustos__nota--error { color: var(--sdp-error-text); }
+  /* B8C-6 · interruptor dels avisos (marató 261101_2143) · La targeta no té
+     padding: l'etiqueta comença a l'altura de les notes i de les files
+     (--sdp-space-4) i el control respira com el xebró (el seu --sdp-space-2
+     més este). L'alçada és la de les files: el min-height de l'Interruptor. */
+  .sdp-xat-ajustos__interruptor { padding: 0 var(--sdp-space-2) 0 var(--sdp-space-4); }
   /* La fila: icona lineal (només a l'arrel), etiqueta, valor gris i xebró o
      ✓. El separador és la vora de baix de la línia: comença a l'altura de
      l'etiqueta, no de la icona, i l'última fila de la targeta no en porta. */

@@ -4,11 +4,21 @@
  *
  * Instal·lat el 261019 (Fase C) des de nous/botigues/puja-ios.mjs.txt del laboratori
  * 261003_1330_empaquetat_mobil_claude. Proves: tests/botigues.test.mjs i, per a l'IPA que es puja
- * (PC155-03, marató 261101_2143), tests/botigues.ipa.test.js.
+ * (PC155-03, marató 261101_2143), tests/botigues.ipa.test.js; el canal de producció i els drets
+ * de push (B9, la mateixa marató), tests/botigues.produccio.ios.test.js.
  *
  *   node scripts/botigues/puja-ios.mjs --versio 1.0.0 --build 7                    en sec: comprova i mostra el pla
  *   node scripts/botigues/puja-ios.mjs --versio 1.0.0 --build 7 --compila          arxiva, exporta i verifica; NO puja
  *   node scripts/botigues/puja-ios.mjs --versio 1.0.0 --build 7 --confirma=1.0.0+7 valida i PUJA l'IPA ja exportat
+ *
+ * B9 · A iOS, intern i producció són la mateixa pujada (altool no té pista): --canal produccio canvia
+ * el «sí» (--confirma=produccio:VERSIO+BUILD@<12 primers del sha256 de l'IPA>, el que dona el rebut
+ * de --compila; --compila i --confirma no van junts), el registre de pujades i els passos que fa
+ * després el Mestre: adjuntar la build a la versió de l'App Store i enviar-la a App Review, sense cap
+ * grup de TestFlight (P9 i S6). Els drets de l'IPA es lligen amb codesign sense eco, i si l'app
+ * anuncia avisos remots, l'IPA ha de portar aps-environment production. G1-B-seg-02 · Cap pas pinta
+ * el Team ID: la màscara d'entorn.mjs el tapa arreu, també en l'eixida d'xcodebuild archive i
+ * -exportArchive, que bolca els drets amb «<Team ID>.org.socdepoble.app».
  *
  * PC155-03 · El que es verifica és el que es puja. A export/ hi ha d'haver un sol IPA; es copia
  * en una carpeta privada nova (verifica-ipa-*, dins de la carpeta del build) i el seu sha256 es
@@ -37,14 +47,36 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { pathToFileURL } from 'node:url';
 import {
-  BUILD, EIXIDA, REBUTS, SEGELL, VERSIO, analitzaArguments, confirmacioEsperada, equipDeCodesign,
-  executa, exportOptionsPlist, llegixAjuda, mostraOrdre, opcionsQueFalten, plega, problemaDelPaquet, rutaDe, sha256DeFitxer
+  BUILD, CANALS, EIXIDA, REBUTS, SEGELL, VERSIO, analitzaArguments, analitzaConfirmacio, apsDeCodesign, apuntaPujada, avisDelRegistre,
+  confirmacioEsperada, equipDeCodesign, executa, exportOptionsPlist, guardaDelRegistre, llegixAjuda, mostraOrdre, opcionsQueFalten, plega,
+  problemaDelPaquet, rutaDe, sha256DeFitxer
 } from './entorn.mjs';
 import { arrelComprovada, preflight, projecteIos } from './preflight.mjs';
 
 import { problemaDeVersioClient } from './versio-client.mjs';
 
-const ADMESOS = Object.freeze({ versio: true, build: true, compila: false, confirma: true, ajuda: false });
+const ADMESOS = Object.freeze({ versio: true, build: true, compila: false, confirma: true, canal: true, push: false, ajuda: false });
+const US = 'Ús: --versio X.Y.Z --build N [--canal intern|produccio] [--push] [--compila] [--confirma=X.Y.Z+N | --confirma=produccio:X.Y.Z+N@<sha12>]';
+
+/* B9 · Després d'una pujada a producció, el que fa el Mestre a App Store Connect (P9 i S6), sense
+   cap grup de proves: Apple processa la build i l'App Review és l'únic camí a la botiga. */
+export const PASSOS_REVISIO_IOS = Object.freeze([
+  'Espera que App Store Connect acabe de processar la build (de minuts a una hora; arriba un correu).',
+  'App Store Connect › Apps › Sóc de Poble › Distribució › versió iOS VERSIO (crea-la si no hi és) › Compilació › tria la BUILD [NO VERIFICAT el camí].',
+  'Metadades, captures d\'iPhone i d\'iPad, privacitat, edat, informació per a la revisió (el compte de prova l\'escriu el Mestre, P5) i estat de comerciant de la DSA (P6).',
+  '«Publicació de la versió: manual» (el botó final és del Mestre).',
+  '«Afegeix per a revisió» › «Envia a App Review»: ho fa el Mestre (RUNBOOK P9 i S6).'
+]);
+/* B9 · Abans d'enviar la primera versió a revisió (guia de publicació §14.2). */
+export const ABANS_DE_REVISIO_IOS = Object.freeze([
+  'L\'estat de comerciant de la DSA (UE) declarat a App Store Connect, abans de res.',
+  'Apple a Supabase si es vol el botó «Continua amb Apple» (D-10).',
+  'Les captures d\'iPhone i d\'iPad (TARGETED_DEVICE_FAMILY 1,2, D-4).',
+  'El compte de prova per al revisor (l\'escriu el Mestre, P5).'
+]);
+
+/** Una llista de passos numerada, amb VERSIO i BUILD posats. */
+const enumera = (passos, versio, build) => passos.map((p, i) => `  ${i + 1}. ${p}`).join('\n').replace(/VERSIO/g, versio).replace(/BUILD/g, build);
 
 /* Les opcions que el pla fa servir, per a buscar-les a l'ajuda abans de res. */
 export const OPCIONS_XCODEBUILD = Object.freeze(['-workspace', '-project', '-scheme', '-configuration', '-destination',
@@ -163,28 +195,43 @@ export function problemaDeLApp(arrel, app) {
 /* BOT-A4 (261025) · El commit és el del segell de dist-natiu/ (el que el preflight ha contrastat
    amb HEAD), no el HEAD d'ara; main només imprimix el rebut quan l'app arxivada i la de l'IPA
    porten eixe segell. */
-export function rebut({ segell, versio, build, ipa, sha256 = null, pujat }) {
+export function rebut({ segell, versio, build, ipa, sha256 = null, pujat, canal = CANALS.INTERN }) {
   /* PC155-03 · main passa el sha256 fixat abans de verificar: recalcular-lo ací acreditaria uns
-     octets que potser no són els verificats ni els pujats. Sense, es calcula com abans. */
+     octets que potser no són els verificats ni els pujats. Sense, es calcula com abans.
+     B9 · El canal, i en producció el «sí» exacte per a esta còpia. */
   const empremta = sha256 ?? (ipa ? sha256DeFitxer(ipa) : null);
+  const produccio = canal === CANALS.PRODUCCIO;
   return ['', `REBUT (per a ${REBUTS}/AAMMDD_HHMM_pujada_ios.txt; cap secret, cap Key ID, cap adreça):`,
     `  commit: ${segell?.commit ?? 'desconegut'} (el de ${SEGELL.join('/')}, que porta l'app arxivada)`, `  versio: ${versio}  build: ${build}`,
-    `  IPA: ${ipa ? path.basename(ipa) : 'sense IPA'}`, `  sha256 de l'IPA: ${empremta ?? 'sense IPA'}`, `  hora: ${new Date().toISOString()}`,
-    `  pujat a App Store Connect: ${pujat ? 'sí' : 'no'}`, '  qui ha dit «sí»: (ho escriu qui executa)', ''].join('\n');
+    `  IPA: ${ipa ? path.basename(ipa) : 'sense IPA'}`, `  sha256 de l'IPA: ${empremta ?? 'sense IPA'}`, `  canal: ${canal}`, `  hora: ${new Date().toISOString()}`,
+    `  pujat a App Store Connect: ${pujat ? 'sí' : 'no'}`,
+    ...(produccio && empremta && !pujat ? [`  «sí» per a pujar ESTE IPA: --canal produccio --confirma=${confirmacioEsperada(versio, build, { canal, sha256: empremta })}`] : []),
+    '  qui ha dit «sí»: (ho escriu qui executa)', ''].join('\n');
 }
 
 export async function main(argv) {
   const { opcions, errors } = analitzaArguments(argv, ADMESOS);
   if (opcions.ajuda) {
-    process.stdout.write('node scripts/botigues/puja-ios.mjs --versio X.Y.Z --build N [--compila] [--confirma=X.Y.Z+N]\n');
+    process.stdout.write(`node scripts/botigues/puja-ios.mjs ${US.slice(4)}\n`);
     return EIXIDA.BE;
   }
   const { versio, build } = opcions;
   if (errors.length || !VERSIO.test(versio ?? '') || !BUILD.test(build ?? '')) {
-    return plega(EIXIDA.US, 'Ús: --versio X.Y.Z --build N [--compila] [--confirma=X.Y.Z+N]', errors);
+    return plega(EIXIDA.US, US, errors);
   }
-  if (opcions.confirma !== undefined && opcions.confirma !== confirmacioEsperada(versio, build)) {
-    return plega(EIXIDA.CONFIRMACIO, `--confirma ha de ser exactament ${confirmacioEsperada(versio, build)}: un «sí» val per a una sola pujada`);
+  /* B9 · Les guardes del canal, en este ordre i abans de tocar res: canal conegut, en producció el
+     «sí» en una execució a banda de --compila, i un --confirma amb la forma d'este canal. */
+  const canal = opcions.canal ?? CANALS.INTERN;
+  if (!Object.values(CANALS).includes(canal)) return plega(EIXIDA.US, `--canal ha de ser ${Object.values(CANALS).join(' o ')}`);
+  const produccio = canal === CANALS.PRODUCCIO;
+  if (produccio && opcions.compila && opcions.confirma !== undefined) {
+    return plega(EIXIDA.US, 'en producció, primer --compila (el rebut porta el sha256 de l\'IPA); el «sí» va en una altra execució');
+  }
+  const confirmacio = opcions.confirma === undefined ? null : analitzaConfirmacio(opcions.confirma, { versio, build, canal });
+  if (confirmacio && !confirmacio.valida) {
+    const pista = produccio ? ' i per a un sol IPA (els 12 primers caràcters del sha256 que diu el rebut de --compila); un «sí» intern no val per a producció'
+      : (String(opcions.confirma).startsWith('produccio:') ? ' (este és un «sí» de producció: va amb --canal produccio)' : '');
+    return plega(EIXIDA.CONFIRMACIO, `--confirma ha de ser exactament ${confirmacioEsperada(versio, build, { canal })}: un «sí» val per a una sola pujada${pista}`);
   }
   // P0-23 · El build porta la versió del client que l'app dirà al node (versio-client.mjs).
   const deLaVersio = problemaDeVersioClient(build);
@@ -193,10 +240,20 @@ export async function main(argv) {
   const arrel = arrelComprovada();
   if (!arrel) return plega(EIXIDA.EINA, 'git no reconeix l\'arrel del repositori on viu este script');
 
-  const pre = preflight({ arrel, plataformes: ['ios'] });
+  const pre = preflight({ arrel, plataformes: ['ios'], canal, push: Boolean(opcions.push) });
   process.stdout.write(`${pre.linies.join('\n')}\n`);
   if (pre.codi !== EIXIDA.BE) return plega(pre.codi, 'Preflight amb problemes: no es fa res.');
+  /* ARB-B9-02 · Tancat per defecte: sense l'estat dels avisos push no se sap quin aps-environment
+     ha de portar l'IPA, i no es fa res (cap «?.» que apague la guarda en silenci). */
+  if (pre.push === null || typeof pre.push !== 'object' || typeof pre.push.anuncia !== 'boolean') {
+    return plega(EIXIDA.ARBRE, 'el preflight no ha dit l\'estat dels avisos push: no es fa res');
+  }
   const valors = pre.valors;
+
+  /* B9 · El registre de pujades, abans de --compila: no s'arxiva cap build que ja s'ha pujat. */
+  const registre = guardaDelRegistre({ arrel, valors, canal, plataforma: 'ios', versio, build });
+  for (const text of registre.avisos) process.stdout.write(`  ! ${text}\n`);
+  if (registre.codi !== EIXIDA.BE) return plega(registre.codi, 'El registre de pujades no deixa seguir: no es fa res.', registre.problemes);
 
   const faltenXcode = opcionsQueFalten(llegixAjuda('xcodebuild', ['-help']), OPCIONS_XCODEBUILD);
   const faltenAltool = opcionsQueFalten(llegixAjuda('xcrun', ['altool', '--help']), OPCIONS_ALTOOL);
@@ -212,18 +269,33 @@ export async function main(argv) {
     `  A6 ${mostraOrdre(...pla.arxiva, valors, arrel)}`,
     `  A7 ExportOptions.plist (destination export, mai upload) a ${mostraOrdre(pla.plist, [], valors, arrel)}`,
     `  A7 ${mostraOrdre(...pla.exporta, valors, arrel)}`,
-    `  V  l'únic IPA d'export/, copiat a una carpeta privada (verifica-ipa-*) amb el sha256 fixat i obert amb ditto: segell, codesign --verify --deep --strict, codesign -dv (TeamIdentifier = <SDP_APPLE_TEAM_ID>) i Info.plist ${versio} (${build})`,
+    `  V  l'únic IPA d'export/, copiat a una carpeta privada (verifica-ipa-*) amb el sha256 fixat i obert amb ditto: segell, codesign --verify --deep --strict, codesign -dv (TeamIdentifier = <SDP_APPLE_TEAM_ID>, drets (aps-environment), sense eco) i Info.plist ${versio} (${build})`,
     `  A8 ${mostraOrdre(...pla.valida(ipaPrevist), valors, arrel)}`,
     `  A8 ${mostraOrdre(...pla.puja(ipaPrevist), valors, arrel)}`, ''].join('\n'));
 
   if (!opcions.compila && opcions.confirma === undefined) {
+    if (produccio) {
+      /* El rebut d'iOS ix de --compila: ací el «sí» porta el marcador del sha256. ARB-N05-03 · Si l'arxiu
+         i l'IPA ja hi són (p. ex., d'un --compila intern), --compila pararia (eixida 7) i gastaria un
+         build: es diu d'on traure el sha12 (el rebut d'eixe --compila o shasum). Només llig la carpeta;
+         --confirma torna a verificar l'IPA sencer abans de pujar-lo. */
+      const { ipa: jaExportat } = fs.existsSync(pla.app) ? ipaUnicDe(pla.exportacio) : { ipa: null };
+      const primer = jaExportat
+        ? `En sec (producció): no s'ha fet res. L'arxiu i l'IPA de ${versio} (${build}) ja hi són: no cal --compila (pararia, perquè l'arxiu ja hi és). Els 12 primers caràcters del sha256 són els del rebut d'eixe --compila, o els de «${mostraOrdre('shasum', ['-a', '256', jaExportat], valors, arrel)} | cut -c1-12»; --confirma torna a verificar l'IPA sencer abans de pujar-lo. Amb el «sí» del Mestre per a ESTE IPA: --canal produccio --confirma=${confirmacioEsperada(versio, build, { canal })}\n`
+        : `En sec (producció): no s'ha fet res. Primer --canal produccio --compila (arxiva, exporta i verifica; el rebut porta el sha256). Després, amb el «sí» del Mestre per a ESTE IPA: --canal produccio --confirma=${confirmacioEsperada(versio, build, { canal })}\n`;
+      process.stdout.write(`${primer}Abans d'enviar la versió a revisió (guia de publicació §14.2):\n${enumera(ABANS_DE_REVISIO_IOS, versio, build)}\n`);
+      return EIXIDA.BE;
+    }
     process.stdout.write(`En sec: no s'ha fet res. Per a arxivar i exportar: --compila. Per a pujar, amb el «sí» del Mestre per a ESTA pujada: --confirma=${confirmacioEsperada(versio, build)}\n`);
     return EIXIDA.BE;
   }
 
   if (opcions.compila) {
     if (fs.existsSync(pla.arxiu)) {
-      return plega(EIXIDA.ARBRE, 'ja hi ha un arxiu per a esta versió i este build: puja el build següent (el Mestre decidix què fer amb l\'anterior)');
+      /* ARB-N05-03 · A producció, primer el camí que no gasta cap build: el --confirma de l'IPA que ja hi és. */
+      return plega(EIXIDA.ARBRE, produccio
+        ? `ja hi ha un arxiu per a esta versió i este build: si el seu IPA és el que vols publicar, no cal compilar-lo de nou: --canal produccio --confirma=${confirmacioEsperada(versio, build, { canal })} amb els 12 primers caràcters del sha256 del rebut del seu --compila (l'execució en sec diu com calcular-los); si no, puja el build següent (el Mestre decidix què fer amb l'anterior)`
+        : 'ja hi ha un arxiu per a esta versió i este build: puja el build següent (el Mestre decidix què fer amb l\'anterior)');
     }
     fs.mkdirSync(pla.carpeta, { recursive: true, mode: 0o700 });
     if ((await executa(...pla.arxiva, { cwd: arrel, valors, arrel })).codi !== 0) return plega(EIXIDA.EXTERNA, 'xcodebuild archive ha fallat');
@@ -255,6 +327,10 @@ export async function main(argv) {
     const empremta = sha256DeFitxer(copia);
     if (empremta !== delOriginal) return plega(EIXIDA.VERIFICACIO, 'l\'IPA ha canviat mentre es copiava: no es puja res');
     const intacta = () => sha256DeFitxer(copia) === empremta;
+    /* B9 · El «sí» de producció va lligat als 12 primers caràcters del sha256 de la còpia fixada (D-B9-7). */
+    if (produccio && confirmacio && empremta.slice(0, 12) !== confirmacio.sha12) {
+      return plega(EIXIDA.CONFIRMACIO, `l'IPA d'ara no és el del «sí»: el seu sha256 comença per ${empremta.slice(0, 12)}, no per ${confirmacio.sha12}; el rebut de --compila diu el bo`);
+    }
 
     const { app, problema: deLIpa } = await obriIpa(copia, path.join(privada, 'obert'), { valors, arrel });
     if (deLIpa) return plega(EIXIDA.VERIFICACIO, deLIpa);
@@ -265,10 +341,19 @@ export async function main(argv) {
     // PC155-03c · -dv només llig la signatura; --verify en comprova la integritat [VERIFICAT 261101: -dv dona 0 amb un recurs canviat].
     const integritat = await executa('codesign', ['--verify', '--deep', '--strict', '--verbose=2', app], { valors, arrel, mostra: false });
     if (integritat.codi !== 0) return plega(EIXIDA.VERIFICACIO, 'codesign --verify rebutja la signatura de l\'app de l\'IPA: no es puja res');
-    const signatura = await executa('codesign', ['-dv', '--verbose=4', app], { valors, arrel, mostra: false });
+    /* ARB-B9-03 · Els drets ixen en XML amb «<Team ID>.org.socdepoble.app»: l'eixida de codesign no es
+       pinta (eco: false) i el script escriu la seua línia. Des de G1-B-seg-02 la màscara també tapa eixe Team ID.
+       [VERIFICAT 261102: -dv --verbose=4 --entitlements - --xml torna 0, el detall a stderr i l'XML a stdout.] */
+    const signatura = await executa('codesign', ['-dv', '--verbose=4', '--entitlements', '-', '--xml', app], { valors, arrel, mostra: false, eco: false });
     const equip = equipDeCodesign(signatura.crua);
     if (signatura.codi !== 0 || !equip) return plega(EIXIDA.EXTERNA, 'codesign -dv no ha dit l\'equip de la signatura');
     if (equip !== valors.SDP_APPLE_TEAM_ID.trim()) return plega(EIXIDA.VERIFICACIO, 'l\'app de l\'IPA està signada per un altre equip que SDP_APPLE_TEAM_ID');
+    const aps = apsDeCodesign(signatura.crua);
+    process.stdout.write(`✓ signatura de l'equip de SDP_APPLE_TEAM_ID; aps-environment: ${aps ?? 'cap'}\n`);
+    if (pre.push.anuncia && aps !== 'production') {
+      return plega(EIXIDA.VERIFICACIO, 'l\'IPA no porta aps-environment production: revisa la capacitat Push de l\'App ID i torna a --compila');
+    }
+    if (!pre.push.anuncia && aps) process.stdout.write(`  ! l'IPA porta aps-environment ${aps} però l'app no anuncia avisos remots: el perfil ha de tindre Push Notifications (D-B9-17)\n`);
     const plist = fitxerDeLApp(app, 'Info.plist');
     if (!plist.cami) return plega(EIXIDA.VERIFICACIO, plist.problema ?? 'l\'app de l\'IPA no porta Info.plist');
     const [versioIpa, buildIpa] = await Promise.all([delInfoPlist(app, 'CFBundleShortVersionString', { valors, arrel }), delInfoPlist(app, 'CFBundleVersion', { valors, arrel })]);
@@ -279,7 +364,7 @@ export async function main(argv) {
     process.stdout.write(`✓ IPA ${path.basename(ipa)}: segell, signatura íntegra de l'equip de SDP_APPLE_TEAM_ID i Info.plist ${versio} (${build}); sha256 ${empremta}\n`);
 
     if (opcions.confirma === undefined) {
-      process.stdout.write(rebut({ segell: pre.segell, versio, build, ipa, sha256: empremta, pujat: false }));
+      process.stdout.write(rebut({ segell: pre.segell, versio, build, ipa, sha256: empremta, pujat: false, canal }));
       return EIXIDA.BE;
     }
 
@@ -294,8 +379,15 @@ export async function main(argv) {
     if (!intacta()) {
       return plega(EIXIDA.VERIFICACIO, 'la còpia de l\'IPA ha canviat durant la pujada: cap rebut; el Mestre mira a App Store Connect quin build ha arribat');
     }
-    process.stdout.write('✓ pujat. App Store Connect el processa uns minuts; la prova i l\'enviament a revisió són del Mestre (RUNBOOK P9).\n');
-    process.stdout.write(rebut({ segell: pre.segell, versio, build, ipa, sha256: empremta, pujat: true }));
+    // B9 · La pujada s'apunta al registre DESPRÉS de fer-se (mai abans).
+    if (registre.carpeta) {
+      const avis = avisDelRegistre(apuntaPujada(registre.carpeta, { plataforma: 'ios', canal, versio, build, sha256: empremta, commit: pre.segell?.commit ?? null, data: new Date().toISOString() }));
+      if (avis) process.stderr.write(`avís: ${avis}\n`);
+    }
+    process.stdout.write(produccio
+      ? `✓ pujat. Per a publicar-la, el Mestre (RUNBOOK P9 i S6), sense cap grup de proves:\n${enumera(PASSOS_REVISIO_IOS, versio, build)}\n`
+      : '✓ pujat. App Store Connect el processa uns minuts; la prova i l\'enviament a revisió són del Mestre (RUNBOOK P9).\n');
+    process.stdout.write(rebut({ segell: pre.segell, versio, build, ipa, sha256: empremta, pujat: true, canal }));
     return EIXIDA.BE;
   } finally {
     try { fs.rmSync(privada, { recursive: true, force: true }); } catch {

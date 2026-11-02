@@ -303,3 +303,46 @@ describe('M02 · número pendent (clau nova sense confirmar)', () => {
     expect(screen.getByRole('button', { name: 'I have talked to Pepa: continue' })).toBeTruthy();
   });
 });
+
+/* E3 (marató 261101_2143; G2-A-doctr-02, G2-A-integ-02) · Sense cap clau nova que es puga
+   confirmar, el número no es pot calcular (sense-clau): el cos diu el mateix que l'alerta del
+   fil, no que el contacte encara no ha activat els xats privats. */
+describe('E3 · un pendent sense clau nova', () => {
+  const PEPA = '22222222-2222-4222-8222-222222222222';
+  const pendentDe = (extres = {}) => ({ usuari: PEPA, motiu: 'sense-continuitat', kidFixat: 'kid-vell', kidNou: null, ...extres });
+  const RETIRADA = 'Este aparell no troba cap clau de seguretat vàlida de Pepa que es puga confirmar. Passa quan algú perd l’aparell i la frase, o si algú s’ha posat pel mig. Fins que n’hi haja una de vàlida, no s’hi pot escriure. Parla amb Pepa per a saber què ha passat.';
+  const SENSE_ACTIVAR = 'Pepa encara no ha activat els xats privats xifrats en cap aparell: encara no hi ha cap número que comparar.';
+
+  test.each([
+    ['kidNou null', pendentDe()],
+    ['clau nova no acceptable', pendentDe({ kidNou: 'kid-x', acceptable: false })]
+  ])('%s: «Sense cap clau de seguretat vàlida» amb el text del fil, cap «encara no ha activat» ni cap botó', (_cas, p) => {
+    render(<CosSeguretatXat estat={DIRECTE} nom="Pepa" numero={{ estat: 'sense-clau' }} onMarca={vi.fn()} canvis={{ pendents: [p] }} onAccepta={vi.fn()} t={ca} />);
+    const avis = screen.getByText('Sense cap clau de seguretat vàlida').closest('.sdp-alerta');
+    expect(avis.className).toContain('sdp-alerta--avis');
+    expect(within(avis).getByText(RETIRADA)).toBeTruthy();
+    expect(screen.queryByText(SENSE_ACTIVAR)).toBeNull();
+    expect(screen.queryByRole('button')).toBeNull();
+  });
+
+  test('sense cap pendent, o amb un de clau nova, el text de sempre de «sense-clau»', () => {
+    for (const canvis of [null, { pendents: [] }, { pendents: [pendentDe({ kidNou: 'k' })] }]) {
+      render(<CosSeguretatXat estat={DIRECTE} nom="Pepa" numero={{ estat: 'sense-clau' }} canvis={canvis} t={ca} />);
+      expect(screen.getByText(SENSE_ACTIVAR)).toBeTruthy();
+      expect(screen.queryByText('Sense cap clau de seguretat vàlida')).toBeNull();
+      cleanup();
+    }
+  });
+
+  test('un número pendent d’una clau que el motor diu no acceptable: cap «continua»', () => {
+    render(<CosSeguretatXat estat={DIRECTE} nom="Pepa" numero={llest({ pendent: true })} onMarca={() => {}}
+      canvis={{ pendents: [pendentDe({ kidNou: 'k', acceptable: false })] }} onAccepta={vi.fn()} t={ca} />);
+    expect(screen.queryByRole('button', { name: /He parlat amb/ })).toBeNull();
+  });
+
+  test('en anglés', () => {
+    render(<CosSeguretatXat estat={DIRECTE} nom="Pepa" numero={{ estat: 'sense-clau' }} canvis={{ pendents: [pendentDe()] }} t={createTranslator('en')} />);
+    expect(screen.getByText('No valid security key')).toBeTruthy();
+    expect(screen.getByText(/^This device cannot find any valid security key for Pepa/)).toBeTruthy();
+  });
+});

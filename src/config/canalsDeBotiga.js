@@ -25,6 +25,9 @@
  *
  * Pur i sense imports, com systemPages.js: el pinta InstalaLaPwa.jsx
  * (src/sections/detail), que ja no es munta dins de l'app nativa.
+ *
+ * B9 (marató 261101_2143) · urlDeCanal rebutja també ?beta= i /beta, i
+ * frasesCaducades guarda que /page/descarregues no parle de proves amb la botiga oberta.
  */
 
 /* L'identificador de l'app d'Android (capacitor.config.json, appId). */
@@ -38,6 +41,10 @@ export const CANALS_DE_BOTIGA = Object.freeze([
   Object.freeze({ id: 'app-store', nom: 'App Store', url: null }),
   Object.freeze({ id: 'wordpress-org', nom: 'WordPress.org', url: 'https://wordpress.org/plugins/socdepoble/' })
 ]);
+
+/* Una adreça de proves: internaltest, TestFlight, testing o «beta» com a paraula en qualsevol part
+   (?beta, &beta=, /beta, #beta, =beta), però no dins d'una altra paraula (/betanzos/). Lineal. */
+const ADRECA_DE_PROVES = /internaltest|testflight|testing|\bbeta\b/i;
 
 /* id del canal → l'única forma d'adreça pública que hi val (URL ja analitzada). */
 const FORMES = Object.freeze({
@@ -63,7 +70,8 @@ export function urlDeCanal(canal) {
     if (!canal || typeof canal.url !== 'string' || !Object.hasOwn(FORMES, canal.id)) return null;
     const url = new URL(canal.url);
     if (url.protocol !== 'https:' || url.username || url.password || url.port) return null;
-    if (/internaltest|testflight|testing/i.test(url.href)) return null;
+    // B9 · Cap enllaç de proves, tampoc amagat amb %-codis (%62eta); un %-codi mal format llança i el canal queda tancat.
+    if (ADRECA_DE_PROVES.test(url.href) || ADRECA_DE_PROVES.test(decodeURIComponent(url.href))) return null;
     return FORMES[canal.id](url) ? url.href : null;
   } catch {
     return null;
@@ -80,4 +88,67 @@ export function canalsOberts(canals = CANALS_DE_BOTIGA) {
   return canals
     .map((canal) => ({ id: canal?.id, nom: canal?.nom, url: urlDeCanal(canal) }))
     .filter((canal) => canal.url && typeof canal.nom === 'string' && canal.nom.trim());
+}
+
+/* B9 · Frases de PAGE_COPY.descarregues (lead, subtitle i html) que només són certes amb la botiga tancada.
+   Quan el Mestre òbriga un canal (una línia de CANALS_DE_BOTIGA), canalsDeBotiga.test.js cau
+   fins que el text deixe de dir-les (frontissa: --aprova descarregues). */
+export const FRASES_DE_BOTIGA_TANCADA = Object.freeze({
+  'google-play': Object.freeze([/proves internes/i, /no està publicada per a tothom/i, /equip de proves/i]),
+  'app-store': Object.freeze([/TestFlight/i, /encara no és a l[’']App Store/i, /enllaç públic de proves/i, /grup de treball intern/i])
+});
+/* Per a qualsevol botiga d'apps oberta (Google Play o App Store). */
+export const FRASES_DE_PROVES = Object.freeze([/\bbeta\b/i, /\ben proves\b/i, /en quin punt estan les proves/i]);
+const BOTIGUES_D_APPS = new Set(['google-play', 'app-store']);
+
+/* Cada «<…>» (fins al primer «>») passa a un espai, com /<[^>]*>/g però lineal: eixa regex
+   és quadràtica amb molts «<» sense «>» (40.000 «<», ~5 s). Un «<» sense tancar es queda. */
+function senseEtiquetes(text) {
+  let pla = '';
+  let i = 0;
+  for (;;) {
+    const obri = text.indexOf('<', i);
+    const tanca = obri === -1 ? -1 : text.indexOf('>', obri + 1);
+    if (tanca === -1) return pla + text.slice(i);
+    pla += `${text.slice(i, obri)} `;
+    i = tanca + 1;
+  }
+}
+
+/* Les entitats que el cos pot portar en lloc del caràcter que es llig: les numèriques (decimals o hex)
+   i un joc tancat de noms (apòstrofs, espai dur i lletres de la llengua). La resta es queda com està. */
+const ENTITATS = Object.freeze({
+  nbsp: ' ', rsquo: '’', lsquo: '‘', apos: "'", amp: '&', middot: '·',
+  agrave: 'à', egrave: 'è', eacute: 'é', iacute: 'í', ograve: 'ò', oacute: 'ó', uacute: 'ú', ccedil: 'ç'
+});
+/* Una sola passada (&amp;rsquo; es llig «&rsquo;») i regex lineal: quantificadors acotats entre «&» i «;». */
+const senseEntitats = (text) => text.replace(/&(?:#(\d{1,7})|#x([\da-f]{1,6})|([a-z]{2,8}));/gi, (entitat, dec, hex, nom) => {
+  if (nom) return Object.hasOwn(ENTITATS, nom.toLowerCase()) ? ENTITATS[nom.toLowerCase()] : entitat;
+  const codi = dec ? Number(dec) : parseInt(hex, 16);
+  return codi > 0 && codi <= 0x10ffff ? String.fromCodePoint(codi) : entitat;
+});
+
+/* El text pla d'un tros de PAGE_COPY: sense etiquetes, amb les entitats llegides i els espais plegats. Un no-text no diu res. */
+const textPla = (text) => (typeof text === 'string' ? senseEntitats(senseEtiquetes(text)).replace(/\s+/g, ' ') : '');
+
+/**
+ * [{ id, frase }] de les frases caducades per als canals oberts. `textos`: un
+ * text o una llista (lead, subtitle i html). Lleva etiquetes; pura; mai llança.
+ * @param {string|ReadonlyArray<string>} textos
+ * @param {ReadonlyArray<{ id?: string }>} [oberts]
+ * @returns {{ id: string, frase: string }[]}
+ */
+export function frasesCaducades(textos, oberts = canalsOberts()) {
+  const text = (Array.isArray(textos) ? textos : [textos]).map(textPla).join(' ');
+  const ids = new Set((Array.isArray(oberts) ? oberts : []).map((canal) => canal?.id));
+  const trobades = [];
+  for (const [id, frases] of Object.entries(FRASES_DE_BOTIGA_TANCADA)) {
+    if (!ids.has(id)) continue;
+    for (const frase of frases) if (frase.test(text)) trobades.push({ id, frase: frase.source });
+  }
+  const appsObertes = [...ids].filter((id) => BOTIGUES_D_APPS.has(id));
+  if (appsObertes.length) {
+    for (const frase of FRASES_DE_PROVES) if (frase.test(text)) trobades.push({ id: appsObertes.join('+'), frase: frase.source });
+  }
+  return trobades;
 }

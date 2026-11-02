@@ -64,6 +64,9 @@ import { E2EE_ACTIU_PER_DEFECTE } from '../../../config/xifratXat.js';
 import { useEstatXifratgeDelFil } from '../useSeguretatDelFil.js';
 import { TEXTOS_XIFRATGE } from '../estatXifratgeFil.js';
 import { avisDelBloqueig, nomDelMembre, useCanvisDeClau } from '../useCanvisDeClau.js';
+/* B8C-5 (marató 261101_2143) · Silenciar la conversa: sense bandera (D-B8C-10). */
+import { useSilenciDelFil } from '../useSilenciDelFil.js';
+import DialegSilenci from './DialegSilenci.jsx';
 
 /* P1-12 pas 17 (pla 261101_1246, T7 · S5) · L'estat del xifratge d'esta conversa i el
    diàleg del número de seguretat, darrere de la bandera compilada. Apagada, Rollup
@@ -314,6 +317,8 @@ export default function Conversa({
      diàleg del número: null mentre no s'ha obert mai (no es carrega), true obert, false tancat. */
   const xifratge = useXifratgeDelFil(fil);
   const [panellXifratge, setPanellXifratge] = useState(null);
+  /* B8C-5 · L'entrada del silenci al menú «⋯» i el seu diàleg (null fora del proveïdor). */
+  const silenci = useSilenciDelFil(fil, t, locale);
   /* Els nous d'altres que ha d'anunciar la regió en viu (#11): AnunciDeNous. */
   const anunciRef = useRef(null);
   /* En estret (mòbil), enfocar el camp obriria el teclat (#6). */
@@ -806,7 +811,15 @@ export default function Conversa({
       /* XatContext torna [definitiu]: el mateix id que el pendent. */
       idPropi = Array.isArray(enviats) && enviats[0]?.id != null ? String(enviats[0].id) : null;
       enviat = true;
-    } catch {
+      /* E3 (marató 261101_2143; G2-A-doctr-01) · XatContext no llança: un enviament sense
+         missatge definitiu ha fallat (la bombolla queda en error, sense el codi del motor). Si
+         era un canvi de clau, els canvis es tornen a llegir ara (revisaCanvisRef, al muntatge
+         de l'alerta) i l'alerta i el compositor bloquejat no esperen el ritme de 25 s. */
+      if (E2EE_ACTIU_PER_DEFECTE && idPropi === null) revisaCanvisRef.current?.();
+    } catch (error) {
+      /* E3 · G2-A-doctr-01 · Un rebuig amb el codi del motor (clau-canviada-forta o
+         clau-propia-alarma) també; unes normes rebutjades o la xarxa, no. */
+      if (E2EE_ACTIU_PER_DEFECTE) revisaCanvisRef.current?.(error ?? {});
       /* Si el compositor continua igual, es recuperen el text i la cita.
          Si la persona ja ha continuat, mana el que ha fet després. */
       if (revisioCompositorRef.current !== revisio) return;
@@ -1041,6 +1054,10 @@ export default function Conversa({
      pròpia o una manipulació, amb la barra de només lectura de sempre). */
   const canvisClau = useCanvisDelFil({ fil, config: configAdjunts, actiu: E2EE_ACTIU_PER_DEFECTE && xifratge.estat === 'xifrat', ambit: usuariAdjunts ?? null });
   const avisBloqueig = E2EE_ACTIU_PER_DEFECTE ? avisDelBloqueig(canvisClau) : null;
+  /* E3 (marató 261101_2143; G2-A-doctr-01) · `envia` (més amunt, abans d'este hook) avisa
+     d'un enviament fallit per esta ref; apagada la bandera, sempre null. */
+  const revisaCanvisRef = useRef(null);
+  revisaCanvisRef.current = E2EE_ACTIU_PER_DEFECTE ? canvisClau.revisaEnviament ?? null : null;
 
   return (
     <div className="sdp-xat-conversa" ref={arrelRef}>
@@ -1053,7 +1070,9 @@ export default function Conversa({
         t={t}
         {...accionsDeLaContrapart}
         accioXifratge={accioXifratge}
+        accioSilenci={silenci.accio}
       />
+      <DialegSilenci {...silenci.dialeg} t={t} />
       {E2EE_ACTIU_PER_DEFECTE && PanellSeguretatXat && panellXifratge !== null ? (
         <Suspense fallback={null}>
           <PanellSeguretatXat
@@ -1204,7 +1223,15 @@ export default function Conversa({
           fil={fil} externalConfig={configAdjunts} usuariId={usuariAdjunts} t={t} locale={locale}
           onTextOrfe={(orfe) => canviaText(text.trim() ? `${text}\n\n${orfe}` : orfe)}
           onEnvia={async (conversa, adjunt, opcions) => {
-            const resultat = await onSendMedia(conversa, { ...adjunt, respostaA: resposta?.id || null }, opcions);
+            let resultat;
+            try {
+              resultat = await onSendMedia(conversa, { ...adjunt, respostaA: resposta?.id || null }, opcions);
+            } catch (error) {
+              /* E3 (G2-A-doctr-01) · Un adjunt parat per un canvi de clau (el motor llança amb el
+                 codi) porta l'alerta al moment; ControlsAdjunt en pinta l'error com sempre. */
+              if (E2EE_ACTIU_PER_DEFECTE) canvisClau.revisaEnviament?.(error ?? {});
+              throw error;
+            }
             if (resultat?.length) cancelaResposta();
             return resultat;
           }}

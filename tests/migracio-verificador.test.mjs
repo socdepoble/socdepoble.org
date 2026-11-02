@@ -581,3 +581,72 @@ test('empremtes (N2): consulta de només lectura, objectes distintius i escapame
     assert.equal(r.migracions.find((m) => m.versio === '2610311900').estat, 'desconegut', 'fals després de 2611011800 no acredita absent');
   });
 });
+
+
+// C921-01 · Regressió adversarial de noms que el filtre anterior donava per bons.
+// Cap SQL s'executa: només es verifica el text que pot eixir al pla.
+test('C921-01: pg_catalog no acredita lectura, ni una funció sense esquema desconeguda', () => {
+  const cat = new Map([['public.segura', 'stable'], ['private.lig', 'immutable']]);
+  for (const sql of [
+    'select pg_catalog.pg_log_standby_snapshot();',
+    'select pg_log_standby_snapshot();',
+    'select pg_catalog.pg_stat_statements_reset();',
+    'select "pg_catalog"."pg_log_standby_snapshot"();',
+    'select pg_catalog /* comentari */ . pg_log_standby_snapshot();',
+    'select funcio_no_acreditada();',
+    'select coalesce(funcio_no_acreditada(), 0);',
+    'select pg_catalog.funcio_futura();',
+    'select information_schema.funcio_futura();'
+  ]) assert.notEqual(V.nomesLectura(sql, cat), null, sql);
+  for (const sql of [
+    'select count(*), pg_catalog.pg_get_userbyid(10) from pg_catalog.pg_class;',
+    "select to_regclass('public.x'), segura(), private.lig();",
+    "select 'pg_log_standby_snapshot()', 1; -- select pg_log_standby_snapshot()",
+    'with x(a) as (select 1) select * from x;',
+    'select * from (values (1, 2)) as e(a, b);'
+  ]) assert.equal(V.nomesLectura(sql, cat), null, sql);
+});
+
+test('C921-01: una consulta que escriu WAL queda exclosa del pla complet', () => {
+  amb({migracions: {'2611010000_a.sql': sqlBase('create table if not exists public.t (id int);',
+    '-- Abans (lectura):\n-- select pg_catalog.pg_log_standby_snapshot();\n-- select funcio_no_acreditada();\n-- select count(*) from public.t;')}, readme:{estats:{'2611010000':NO_APLICADA}}}, dir => {
+    const r = V.verifica({arrel:dir, ara:ARA});
+    assert.equal(r.migracions[0].consultes.previes.length, 1);
+    assert.equal(r.excloses.length, 2);
+    const pla = V.formataPla(r);
+    for (const sql of blocsSql(pla)) {
+      assert.ok(!sql.includes('pg_log_standby_snapshot'));
+      assert.ok(!sql.includes('funcio_no_acreditada'));
+    }
+    assert.ok(pla.includes('sense acreditació de lectura'));
+  });
+});
+
+// G1-B-doctr-03 · La crida esquema.nom( es buscava sense frontera esquerra: el motor tornava a provar
+// des de cada lletra d'un identificador llarg i el cost creixia amb el quadrat de la mida.
+test('G1-B-doctr-03: un identificador llarg es llig en temps lineal', () => {
+  const cat = new Map([['public.segura', 'stable']]);
+  const llarg = 'a'.repeat(40000);
+  const inici = process.hrtime.bigint();
+  assert.equal(V.nomesLectura(`select ${llarg} from t;`, cat), null);
+  assert.equal(V.nomesLectura(`select x.${llarg} from t;`, cat), null);
+  assert.equal(V.nomesLectura(`select ${llarg}.x from t;`, cat), null);
+  const ms = Number(process.hrtime.bigint() - inici) / 1e6;
+  assert.ok(ms < 200, `tres consultes amb un identificador de 40.000 caràcters: ${Math.round(ms)} ms`);
+});
+
+test('G1-B-doctr-03: la frontera esquerra no canvia cap veredicte de les crides qualificades', () => {
+  const cat = new Map([['public.segura', 'stable'], ['public.escriu', 'volatile']]);
+  // Noms de tres parts (bd.esquema.funció): la crida de pg_catalog continua sense acreditació.
+  for (const [sql, nom] of [
+    ['select postgres.pg_catalog.pg_log_standby_snapshot();', 'pg_catalog.pg_log_standby_snapshot'],
+    ['select postgres.pg_catalog.txid_current();', 'pg_catalog.txid_current'],
+    ['select x.information_schema._pg_foo();', 'information_schema._pg_foo'],
+    // Unes xifres o un «$» enganxats al davant no amaguen l'esquema, com abans.
+    ['select 9pg_catalog.txid_current();', 'pg_catalog.txid_current'],
+    ['select $pg_catalog.txid_current();', 'pg_catalog.txid_current']
+  ]) assert.equal(V.nomesLectura(sql, cat), `funció sense acreditació de lectura: ${nom}`, sql);
+  assert.equal(V.nomesLectura('select 9public.escriu();', cat), 'crida volatile (pot escriure): public.escriu');
+  assert.equal(V.nomesLectura('select a$b.segura();', cat), 'esquema no admès: a$b');
+  assert.equal(V.nomesLectura('select public . segura(), x.y from t;', cat), null);
+});

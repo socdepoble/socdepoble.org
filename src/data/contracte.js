@@ -626,6 +626,56 @@ export const CAPACITATS = Object.freeze({
          'sense-permis'. */
   restauracioDadesObertes: Object.freeze([
     'restauraDadesObertes'
+  ]),
+  /* B8C-2 (marató 261101_2143; Bloc B8, ordre del Mestre 261101) · Els
+     aparells que reben els avisos push del Xat (la fase N2 de
+     src/config/avisosPushXat.js). Opcional a posta: sense ella, Ajustos →
+     Notificacions continua «en construcció» i ningú no demana cap permís.
+     Contracte únic amb el servidor: B8-SERVIDOR §2.9. Formes (config sempre
+     l'últim):
+       desaDispositiuAvisos(d, config) → Promise<void>
+       retiraDispositiuAvisos(d, config) → Promise<void>
+         d = { plataforma, adreca, caducaMs?, llengua?, gest? }: plataforma
+         de PLATAFORMES_AVISOS (davall); adreca, l'endpoint https de la
+         subscripció web o el testimoni natiu; caducaMs, l'expirationTime de
+         la subscripció (o null); llengua, la de l'app (una altra o cap: la
+         del servidor); gest, cert només quan naix del gest de la persona
+         (activar): sense gest, el servidor no canvia mai l'amo d'un aparell.
+         Mai cap clau de la subscripció (p256dh, auth) ni cap dada de tornada.
+         retiraDispositiuAvisos és de cortesia i idempotent (la baixa en eixir).
+     Errors amb `code`: AVISOS_INVALID (una entrada que no casa la forma,
+     sense cap petició, o SDP-PUSH-002/003/004 del servidor), AVISOS_ALIE
+     (SDP-PUSH-011: l'aparell és d'una altra sessió i cal el gest) i
+     NO-DISPONIBLE (sense servidor, un servidor sense la migració o amb els
+     avisos apagats, SDP-PUSH-010). Ho servixen xat_push_desa i
+     xat_push_retira de 2611020417_xat_avisos_push.sql (B8-SERVIDOR; NO
+     aplicada: l'aplica el Mestre). Un node sense servidor la declara amb el rebuig honest
+     NO-DISPONIBLE (src/data/local/conversesLocal.js). */
+  avisosPush: Object.freeze([
+    'desaDispositiuAvisos',
+    'retiraDispositiuAvisos'
+  ]),
+  /* B8C-2 (marató 261101_2143; Bloc B8) · Silenciar una conversa: la columna
+     xat_participants.silenciat_fins_al, que ja es llig, es pot escriure.
+     Opcional: sense ella, el silenci es queda en la memòria de la pàgina
+     (XatContext), mai a l'emmagatzematge del navegador. Forma (config sempre
+     l'últim):
+       silenciaFil({ filId, durada }, config) → Promise<{ silenciatFinsAl: string | null }>
+         durada de DURADES_SILENCI (davall): '8h', '1setmana', 'sempre' o
+         'cap' (lleva el silenci). La interfície mai no calcula dates: passa
+         la durada. silenciatFinsAl és la data ISO de fi (per a «sempre», el
+         mateix instant que SILENCI_SEMPRE: una data finita, mai 'infinity'
+         ni null) o null. El text pot variar d'un adaptador a l'altre (el
+         servidor torna '+00:00', la llavor 'Z'): compareu l'instant
+         (Date.parse) o l'any ≥ 9999, mai la igualtat de text.
+     Errors amb `code`: SILENCI_INVALID (una durada o un fil invàlids, sense
+     cap petició, o SDP-XAT-050 del servidor), XAT_NO_PARTICIPANT (no eres
+     membre actiu del fil, SDP-XAT-006) i NO-DISPONIBLE (un servidor sense la
+     RPC). Ho servix xat_silencia(p_fil_id, p_durada) de
+     2611020417_xat_avisos_push.sql (NO aplicada: l'aplica el Mestre), i la data de fi la posa el
+     rellotge del servidor; en llavor i en local, finsAlDelSilenci (davall). */
+  silenciXat: Object.freeze([
+    'silenciaFil'
   ])
 });
 
@@ -989,4 +1039,37 @@ export function titularDelContracte(valor) {
   const nom = typeof valor.nom === 'string' ? valor.nom.trim() : '';
   if (!id || !nom) return null;
   return { tipus: 'persona', id, nom, avatar: typeof valor.avatar === 'string' ? valor.avatar : '' };
+}
+
+/* ── B8C-2 (marató 261101_2143; Bloc B8) · Avisos push i silenci del Xat ──
+   Les plataformes d'un aparell d'avisos (capacitat 'avisosPush') i les
+   durades del silenci (capacitat 'silenciXat'): les mateixes que B8-SERVIDOR
+   §2.9 (xat_push_desa passa 'ios' a APNs i 'android' a FCM; xat_silencia
+   només admet estes quatre durades). */
+export const PLATAFORMES_AVISOS = Object.freeze(['web', 'ios', 'android']);
+export const DURADES_SILENCI = Object.freeze(['8h', '1setmana', 'sempre', 'cap']);
+/* «Sempre»: 9999-12-31 00:00:00 UTC, el mateix instant que torna el servidor.
+   Una data finita a posta: new Date('infinity') és NaN i esSilenciat
+   (src/sections/xat/missatges.js) la llegiria com a «no silenciada»; i les
+   23:59:59 UTC ja serien l'any 10000 en una sessió de Europe/Madrid. */
+export const SILENCI_SEMPRE = '9999-12-31T00:00:00.000Z';
+const MS_DEL_SILENCI = Object.freeze({ '8h': 8 * 3600000, '1setmana': 7 * 24 * 3600000 });
+const errorDeSilenci = (missatge) => Object.assign(new TypeError(missatge), { code: 'SILENCI_INVALID', codi: 'SILENCI_INVALID', retriable: false });
+
+/**
+ * La data de fi (ISO) d'un silenci que comença `ara` (ms o Date): '8h' i
+ * '1setmana' sumen al rellotge de l'aparell, 'sempre' és SILENCI_SEMPRE i
+ * 'cap' és null. Una durada desconeguda, o un rellotge que no dona una data
+ * entre la del rellotge i SILENCI_SEMPRE: TypeError amb code
+ * 'SILENCI_INVALID'. Pura. En remot no es desa: la data la posa el servidor
+ * (xat_silencia); la usen la llavor, el node local i el silenci en memòria.
+ */
+export function finsAlDelSilenci(durada, ara = Date.now()) {
+  if (typeof durada !== 'string' || !DURADES_SILENCI.includes(durada)) throw errorDeSilenci('La durada del silenci no és vàlida.');
+  if (durada === 'cap') return null;
+  if (durada === 'sempre') return SILENCI_SEMPRE;
+  const inici = ara instanceof Date ? ara.getTime() : ara;
+  const fi = typeof inici === 'number' ? inici + MS_DEL_SILENCI[durada] : Number.NaN;
+  if (!Number.isFinite(fi) || fi < -8.64e15 || fi > Date.parse(SILENCI_SEMPRE)) throw errorDeSilenci('El rellotge de l’aparell no dona una data de fi vàlida.');
+  return new Date(fi).toISOString();
 }

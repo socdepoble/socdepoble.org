@@ -177,7 +177,12 @@ const RPC_DEL_XAT = {
     estat.marca.rebut = Math.max(estat.marca.rebut, rebut ?? 0, estat.marca.llegit);
     return [{ rebut_fins_seq: estat.marca.rebut, llegit_fins_seq: estat.marca.llegit }];
   },
-  membres_del_poble: () => [{ usuari_id: VEINA, nom: 'Veïna', fil_id: FIL, tipus: 'persona', avatar_url: null }]
+  membres_del_poble: () => [{ usuari_id: VEINA, nom: 'Veïna', fil_id: FIL, tipus: 'persona', avatar_url: null }],
+  /* B8C-2 (marató 261101_2143) · xat_silencia(p_fil_id, p_durada) de B8-SERVIDOR §2.9: la data de fi la
+     posa el rellotge del servidor ('sempre' → 9999-12-31 00:00:00 UTC, 'cap' → null). */
+  xat_silencia: ({ p_durada: durada }) => (durada === 'cap' ? null
+    : durada === 'sempre' ? '9999-12-31T00:00:00+00:00'
+      : new Date(Date.now() + (durada === '8h' ? 8 : 7 * 24) * 3600000).toISOString())
 };
 
 /* El client de supabase-js: rpc() i el canal privat. Les consultes es poden

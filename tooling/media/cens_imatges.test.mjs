@@ -4,6 +4,7 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { censImatges, usosDe, main, plaConsola } from './cens_imatges.mjs';
+import { idDelCens } from '../../src/sections/multimedia/censImatges.js';
 
 function fixture(t) {
   const arrel = fs.mkdtempSync(path.join(os.tmpdir(), 'sdp-cens-prova-'));
@@ -122,4 +123,89 @@ test('pla dels quatre esborranys declara acceptació i conserva les rutes actual
   assert.deepEqual(pla.map((i) => i.id), ['actors', 'salut', 'fluxos', 'calendari']);
   assert.equal(pla[0].actual, '/actual.webp');
   assert.ok(pla.every((i) => i.estat === 'pendent_obra_propia' && i.acceptacio.includes('imatgesConsola.test.js')));
+});
+
+/* P1-29 (B10 marató 261101_2143) · Opcions completes: cap taula real s'hi cola, i main pot donar 0. */
+const completes = (opcions, extra = {}) => ({
+  ...opcions, cens: [{ src: '/assets/viu.jpg', titol: 'Viu', ambit: 'contingut', origen: 'ia' }], excloses: {}, alies: {},
+  correccions: {}, acreditats: [], pares: [], svgs: {}, trazabilitat: {}, ...extra
+});
+const captura = () => {
+  const linies = [];
+  return { linies, text: () => linies.join('\n'), sortida: { log: (l) => linies.push(l), error: (l) => linies.push(l) } };
+};
+
+test('el verificador de duplicats tampoc es compta a si mateix; un altre fitxer de tooling sí (control)', (t) => {
+  const { arrel, escriu, opcions } = fixture(t);
+  opcions.arrels.push('tooling');
+  escriu('tooling/media/duplicats_assets.mjs', "const fixture = '/assets/viu.jpg';");
+  escriu('tooling/media/duplicats_assets.test.mjs', "const fixture = '/assets/viu.jpg';");
+  assert.equal(censImatges(arrel, opcions).imatges[0].estat, 'sense_referencia');
+  escriu('tooling/media/altra.mjs', "const fixture = '/assets/viu.jpg';");
+  assert.equal(censImatges(arrel, opcions).imatges[0].estat, 'nomes_dades');
+});
+
+test('procedència i assetIdArrel d’una còpia encadenada (còpia → còpia → cens) i de la seua bessona', (t) => {
+  const { arrel, escriu, opcions } = fixture(t);
+  escriu('public/assets/c1.jpg', 'bytes-c1');
+  escriu('public/assets/c2.jpg', 'bytes-c2');
+  escriu('public/assets/c2.webp', 'bytes-c2-webp');
+  escriu('public/assets/solta.jpg', 'bytes-solta');
+  escriu('public/assets/segell.svg', '<svg/>');
+  const opts = completes(opcions, {
+    cens: [{ src: '/assets/viu.jpg', titol: 'Viu', ambit: 'poble', origen: 'foto', poble: 'tibi' }],
+    excloses: { '/assets/c1.jpg': 'còpia de /assets/viu.jpg', '/assets/c2.jpg': 'còpia de /assets/c1.jpg' },
+    trazabilitat: { '/assets/viu.jpg': { commit: 'abc1234' } },
+    svgs: { '/assets/segell.svg': { ambit: 'entitat', commit: 'dbc5a1c14', motiu: 'insígnia vectorial' } }
+  });
+  const a = censImatges(arrel, opts);
+  const perSrc = Object.fromEntries(a.imatges.map((i) => [i.src, i]));
+  const procedencia = { font: 'cens', origen: 'foto', ambit: 'poble', poble: 'tibi', commit: 'abc1234' };
+  for (const src of ['/assets/c2.jpg', '/assets/c2.webp', '/assets/c1.jpg', '/assets/viu.jpg']) {
+    assert.equal(perSrc[src].arrelCens, '/assets/viu.jpg', src);
+    assert.equal(perSrc[src].assetIdArrel, idDelCens('/assets/viu.jpg'), src);
+    assert.deepEqual(perSrc[src].procedencia, procedencia, src);
+  }
+  /* assetId es conserva com abans (alies buit: la còpia no arriba al cens). */
+  assert.equal(perSrc['/assets/c2.jpg'].assetId, idDelCens('/assets/c2.jpg'));
+  assert.equal(perSrc['/assets/solta.jpg'].procedencia, null);
+  assert.equal(perSrc['/assets/solta.jpg'].assetIdArrel, idDelCens('/assets/solta.jpg'));
+  assert.deepEqual(perSrc['/assets/segell.svg'].procedencia, { font: 'svg_documentat', ambit: 'entitat', commit: 'dbc5a1c14' });
+  assert.equal(main([], { arrel, sortida: captura().sortida, opcions: opts }), 0);
+});
+
+test('duplicat no declarat, en tres temps: control 0, còpia byte a byte 1, declarada 0', (t) => {
+  const { arrel, escriu, opcions } = fixture(t);
+  const opts = completes(opcions);
+  const control = captura();
+  assert.equal(main([], { arrel, sortida: control.sortida, opcions: opts }), 0, control.text());
+  assert.match(control.text(), /0 sense acreditar; motius trencats: 0\./);
+  escriu('public/assets/copia.jpg', 'bytes-original');
+  const defecte = captura();
+  assert.equal(main([], { arrel, sortida: defecte.sortida, opcions: opts }), 1, defecte.text());
+  assert.match(defecte.text(), /· 1 sense acreditar;/);
+  assert.match(defecte.text(), /sense acreditar: \/assets\/copia\.jpg = \/assets\/viu\.jpg/);
+  const acreditats = [{ tipus: 'semantic_arxiu', fitxers: ['/assets/copia.jpg', '/assets/viu.jpg'], motiu: 'prova', decisio: 'pendent_mestre' }];
+  const declarat = captura();
+  assert.equal(main([], { arrel, sortida: declarat.sortida, opcions: { ...opts, acreditats } }), 0, declarat.text());
+  assert.match(declarat.text(), /1 declarats · 0 sense acreditar;/);
+  const json = captura();
+  assert.equal(main(['--json'], { arrel, sortida: json.sortida, opcions: opts }), 1);
+  const resultat = JSON.parse(json.text());
+  assert.equal(resultat.resum.duplicatsNoAcreditats, 1);
+  assert.deepEqual(resultat.duplicats[0].arrels, ['/assets/copia.jpg', '/assets/viu.jpg']);
+});
+
+test('motiu trencat: control 0; «còpia de» un original absent 1', (t) => {
+  const { arrel, escriu, opcions } = fixture(t);
+  escriu('public/assets/copia.jpg', 'bytes-copia-redimensionada');
+  const control = captura();
+  const bo = completes(opcions, { excloses: { '/assets/copia.jpg': 'còpia de /assets/viu.jpg' } });
+  assert.equal(main([], { arrel, sortida: control.sortida, opcions: bo }), 0, control.text());
+  assert.match(control.text(), /motius trencats: 0\./);
+  const trencat = captura();
+  const dolent = completes(opcions, { excloses: { '/assets/copia.jpg': 'còpia de /assets/absent.jpg' } });
+  assert.equal(main([], { arrel, sortida: trencat.sortida, opcions: dolent }), 1, trencat.text());
+  assert.match(trencat.text(), /0 sense acreditar; motius trencats: 1\./);
+  assert.match(trencat.text(), /motiu trencat \(excloses\): \/assets\/copia\.jpg → \/assets\/absent\.jpg absent/);
 });

@@ -43,6 +43,7 @@
 import { E2EE_ACTIU_PER_DEFECTE, esOrigenDeConfianca } from '../config/xifratXat.js';
 import { ambitDelFil, teMarcaApegalosa } from './xifratXatAbast.js';
 import { creaMagatzemXat } from './xifratXatMagatzem.js';
+import { aBase64url } from './xifratXatCripto.js';
 import { ESTAT_OBLIT, creaMotorXifrat } from './xifratXatPipeline.js';
 import { PRESSUPOST_BLOBS_MOBIL, PRESSUPOST_BLOBS_ESCRIPTORI, creaRegistreBlobsAdjunts } from './xatMultimediaXifrat.js';
 
@@ -92,6 +93,10 @@ function netejaBytes(valor) {
   }
 }
 
+/* G2-A-integ-01 · Un kid de 16 bytes (també d'un altre reialme, com netejaBytes) i el sostre d'avisos suaus en RAM. */
+const esKid = (k) => Object.prototype.toString.call(k) === '[object Uint8Array]' && k.length === 16;
+const MAXIM_AVISOS_SUAUS = 256;
+
 function normalitzaEntradaAmbit(entrada, segonaClau) {
   if (typeof entrada === 'string') {
     return {
@@ -134,6 +139,10 @@ export function creaServeiAmbitXat({ revocaUrl = () => {}, motorRef = {}, pressu
      clar (48 MB al mòbil, 100 MB a l'escriptori; un valor invàlid o per damunt de
      100 MB cau als 48 MB): en desallotjar es revoca i ix de blobsActius. */
   const adjuntsRebuts = new Map();
+  /* G2-A-integ-01 (marató 261101_2143, E1) · Els avisos de canvi suau que encara no han arribat a
+     la interfície, per persona: qualsevol construcció de context que avança una fixació en suau
+     n'hi deixa un, i canvisDeClau els lliura (i els trau). RAM de l'àmbit: un altre àmbit no els veu. */
+  const avisosSuaus = new Map();
   const pressupost = Number.isSafeInteger(pressupostBlobs) && pressupostBlobs > 0 && pressupostBlobs <= PRESSUPOST_BLOBS_ESCRIPTORI
     ? pressupostBlobs
     : PRESSUPOST_BLOBS_MOBIL;
@@ -166,6 +175,7 @@ export function creaServeiAmbitXat({ revocaUrl = () => {}, motorRef = {}, pressu
     textosDesxifrats.clear();
     registreFils.clear();
     adjuntsRebuts.clear();
+    avisosSuaus.clear();
     urlsAdjunts.buida();
     revocaTotsElsBlobs();
   };
@@ -333,6 +343,39 @@ export function creaServeiAmbitXat({ revocaUrl = () => {}, motorRef = {}, pressu
     desaEstatFil: (filId, context) => { if (context) clausEpocaRam.set(filId, context); else clausEpocaRam.delete(filId); },
     /* B2a · Una fixació nova (acceptada o tornada a verificar) és per persona: tots els contextos es refan del servidor. */
     descartaEstatsFils: () => { clausEpocaRam.clear(); },
+    /* G2-A-seg-01 · Els fils que el registre propi coneix ara (per a ancorar-los abans d'acceptar una clau nova). */
+    filsRegistrats: () => Object.freeze([...registreFils.values()]),
+    /* G2-A-integ-01 · Un avís suau per persona: si n'hi ha més d'un abans que la interfície el llija,
+       es conserva la clau de partida i s'hi posa la més nova. Com a molt MAXIM_AVISOS_SUAUS persones. */
+    anotaAvisSuau: (avis) => {
+      if (!avis || typeof avis.usuari !== 'string' || !esKid(avis.kidAnterior) || !esKid(avis.kidNou)) return;
+      const previ = avisosSuaus.get(avis.usuari);
+      avisosSuaus.delete(avis.usuari);
+      avisosSuaus.set(avis.usuari, Object.freeze({ usuari: avis.usuari, kidAnterior: new Uint8Array(previ?.kidAnterior ?? avis.kidAnterior), kidNou: new Uint8Array(avis.kidNou) }));
+      while (avisosSuaus.size > MAXIM_AVISOS_SUAUS) avisosSuaus.delete(avisosSuaus.keys().next().value);
+    },
+    /* E1 · H-2 · `conserva`: la interfície que confirma els avisos (tancaAvisSuau) els torna a
+       rebre fins que els tanca; sense, es lliuren una sola vegada. `descarta`: les persones amb
+       un pendent (l'alerta forta ja ho cobrix), que perden l'avís sense rebre'l. */
+    prenAvisosSuaus: (usuaris, { conserva = false, descarta = null } = {}) => {
+      const presos = [];
+      for (const usuari of usuaris ?? []) {
+        const avis = avisosSuaus.get(usuari);
+        if (!avis) continue;
+        if (descarta?.has?.(usuari) === true) { avisosSuaus.delete(usuari); continue; }
+        presos.push(avis);
+        if (conserva !== true) avisosSuaus.delete(usuari);
+      }
+      return Object.freeze(presos);
+    },
+    /* E1 · H-2 · La interfície tanca l'avís que ha mostrat (usuari i kid nou en base64url); un
+       avís més nou de la mateixa persona es conserva. Cert si l'ha tancat. */
+    tancaAvisSuau: (usuari, kidNou) => {
+      const avis = typeof usuari === 'string' ? avisosSuaus.get(usuari) : undefined;
+      if (!avis || typeof kidNou !== 'string' || aBase64url(avis.kidNou) !== kidNou) return false;
+      avisosSuaus.delete(usuari);
+      return true;
+    },
     textDesxifrat: (filId, id) => textosDesxifrats.get(`${filId}::${id}`) ?? null,
     desaTextDesxifrat: (filId, id, valor) => { textosDesxifrats.set(`${filId}::${id}`, valor); },
     adjuntDesat: (id) => adjuntsRebuts.get(id) ?? null,
@@ -392,8 +435,10 @@ export function creaServeiAmbitXat({ revocaUrl = () => {}, motorRef = {}, pressu
     /* B2a (marató 261101_2143; §4.4, CS-01, D-05 a) · Els canvis de clau d'un fil (pendents,
        suaus i l'alarma de la clau pròpia) i «He parlat amb {nom}: continua», que fixa la clau
        pendent en este aparell (cap mètode nou al port: l'acceptació és local). */
-    canvisDeClau: (filId, config = {}) => (typeof motorRef.canvis === 'function'
-      ? motorRef.canvis(filId, config)
+    /* E1 · H-2 · `opcions.conservaSuaus` (opcional, també a acceptaCanviClau): els avisos suaus
+       es tornen a dir fins que la interfície els tanca amb tancaAvisSuau. */
+    canvisDeClau: (filId, config = {}, opcions = {}) => (typeof motorRef.canvis === 'function'
+      ? motorRef.canvis(filId, config, opcions)
       : Promise.reject(errorSenseMotor())),
     acceptaCanviClau: (filId, opcions = {}, config = {}) => (typeof motorRef.accepta === 'function'
       ? motorRef.accepta(filId, opcions, config)
@@ -531,19 +576,26 @@ export function ambXifratXat(impl, entorn = {}) {
         const { fil, tipusFil } = await filXifratDelRegistre(filId, config, exigix);
         return motor.numeroDelFil({ fil, tipusFil, config, exigix });
       });
+      /* G2-A-seg-01 · Els altres fils xifrats del registre propi amb esta persona (fil.altres), per a
+         ancorar-los abans de fixar-ne una clau nova: un directe i els grups que la llisten. */
+      const filsAmb = (usuari, excepte) => servei.filsRegistrats()
+        .filter((f) => f.id !== excepte && Array.isArray(f.altres) && f.altres.some((p) => p?.id === usuari))
+        .map((f) => ({ fil: f, classificacio: classificaFil(f) }))
+        .filter(({ classificacio }) => classificacio.xifrat && !classificacio.bloquejat && classificacio.tipusFil)
+        .map(({ fil, classificacio }) => ({ fil, tipusFil: classificacio.tipusFil }));
       motorRef.verifica = (filId, { kid, verificat } = {}, config = {}) => servei.guardaAmbit(async (exigix) => {
         const { fil, tipusFil } = await filXifratDelRegistre(filId, config, exigix);
-        return motor.marcaVerificatDelFil({ fil, tipusFil, config, exigix, kid, verificat });
+        return motor.marcaVerificatDelFil({ fil, tipusFil, config, exigix, kid, verificat, filsAmb });
       });
       motorRef.verificats = (config = {}) => servei.guardaIdentitat((exigix) => motor.recompteVerificats({ exigix, config }));
       /* B2a · Els canvis de clau i l'acceptació, dins de la guarda d'àmbit i sobre el fil del registre propi. */
-      motorRef.canvis = (filId, config = {}) => servei.guardaAmbit(async (exigix) => {
+      motorRef.canvis = (filId, config = {}, opcions = {}) => servei.guardaAmbit(async (exigix) => {
         const { fil, tipusFil } = await filXifratDelRegistre(filId, config, exigix);
-        return motor.canvisDelFil({ fil, tipusFil, config, exigix });
+        return motor.canvisDelFil({ fil, tipusFil, config, exigix, conservaSuaus: opcions?.conservaSuaus === true });
       });
-      motorRef.accepta = (filId, { usuari, kid } = {}, config = {}) => servei.guardaAmbit(async (exigix) => {
+      motorRef.accepta = (filId, { usuari, kid, conservaSuaus = false } = {}, config = {}) => servei.guardaAmbit(async (exigix) => {
         const { fil, tipusFil } = await filXifratDelRegistre(filId, config, exigix);
-        return motor.acceptaCanviDelFil({ fil, tipusFil, config, exigix, usuari, kid });
+        return motor.acceptaCanviDelFil({ fil, tipusFil, config, exigix, usuari, kid, filsAmb, conservaSuaus: conservaSuaus === true });
       });
     }
 

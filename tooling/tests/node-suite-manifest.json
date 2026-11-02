@@ -99,6 +99,11 @@
       "reason": "Regressió portable del producte o d’una eina permanent; s’executa a la cadena primària, també quan està roja."
     },
     {
+      "path": "tests/capitol-estat.test.mjs",
+      "suite": "primary",
+      "reason": "P2-15 (B10 marató 261101_2143): mesura de l'arrencada i capítols d'ESTAT; model de segments que conserva Vincles, marcadors i seccions llegades, pla pur amb --ara obligatori, --escriu amb autorització, wx, CAS i rename. ESTAT sintètic a os.tmpdir()."
+    },
+    {
       "path": "tests/cerca-consulta.test.mjs",
       "suite": "primary",
       "reason": "Regressió portable del producte o d’una eina permanent; s’executa a la cadena primària, també quan està roja."
@@ -142,6 +147,11 @@
       "path": "tests/consell-l8-precommit.test.mjs",
       "suite": "primary",
       "reason": "B1 (261101, D5): Consell L8 i la taula de rutes SEO; a l'arbre preparat del hook prova el productor en sec, fora l'absència és infracció. Fixtures portables i processos reals."
+    },
+    {
+      "path": "tests/consum-acreditat.test.mjs",
+      "suite": "primary",
+      "reason": "P2-12 · B10 marató 261101_2143: detector de només lectura del consum acreditat (port de candidatsConsum del pegat 261025_1705). Reproducció del 261025, triatge CONS-A..D, protecció explícita, acreditació amb acta, HEAD i versió consolidada, actes que mantenen viu, rancis, CLI en fase avis (exit 0, cap escriptura), la porta Olivera no el crida; fixtures a mkdtemp."
     },
     {
       "path": "tests/contrast_calendari_mes.test.mjs",
@@ -267,6 +277,11 @@
       "path": "tests/fortificacio.test.mjs",
       "suite": "primary",
       "reason": "Regressió portable del producte o d’una eina permanent; s’executa a la cadena primària, també quan està roja."
+    },
+    {
+      "path": "tests/fronteres-skills.test.mjs",
+      "suite": "primary",
+      "reason": "P1-30 (B10 marató 261101_2143) · Porta Fronteres de Skills F1-F5 en trinquet: un cas mínim per regla, cicle de vida del deute (nou = 1, ranci = avís, trinquet) i, sobre l'arbre real, cap violació nova i cap deute ranci (D-7: segell i retirada en un sol lot). No executa cap ordre de les skills."
     },
     {
       "path": "tests/frontissa-contingut.test.mjs",
@@ -802,6 +817,11 @@
       "path": "tooling/media/cens_imatges.test.mjs",
       "suite": "primary",
       "reason": "Cens de mitjans permanent amb fixtures portables: traçabilitat, variants, duplicats i lectura confinada; cap mutació d’assets."
+    },
+    {
+      "path": "tooling/media/duplicats_assets.test.mjs",
+      "suite": "primary",
+      "reason": "P1-29 · unicitat semàntica de public/assets: cap duplicat de bytes sense àlies, bessona, parella o declaració; àlies transitius i motius trencats."
     },
     {
       "path": "tooling/media/optimitzar_webp.test.mjs",

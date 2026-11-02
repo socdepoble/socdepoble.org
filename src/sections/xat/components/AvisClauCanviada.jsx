@@ -16,6 +16,12 @@
  * Conversa.jsx el carrega amb lazy plegat per la bandera E2EE: apagada, no entra
  * al paquet. Després d'acceptar, si el focus ha caigut al body (el botó ja no hi
  * és), va a `destiFocus()` (el camp d'escriure o la llista).
+ *
+ * E3 (marató 261101_2143; G2-A-doctr-02, G2-A-integ-02) · Un pendent sense cap clau
+ * nova que es puga confirmar (kidNou null o `acceptable: false`: cap clau activa, o
+ * una sense declaració autofirmada vàlida) no diu «Clau nova»: «Sense cap clau de
+ * seguretat vàlida», un text propi que conserva l'avís de manipulació, i cap botó
+ * «continua». L'alarma pròpia sense cap clau activa (`senseClau`), igual.
  */
 import { Alerta, Boto } from '../../../components/PedraSeca/index.js';
 import { omple } from '../../../config/moderacio.js';
@@ -24,6 +30,18 @@ import { TEXTOS_XIFRATGE } from '../estatXifratgeFil.js';
 const T_RESERVA = (_clau, reserva) => reserva;
 const MANIPULACIO = Object.freeze(['bifurcacio', 'kid-no-quadra', 'historia-incoherent']);
 const llista = (valor) => (Array.isArray(valor) ? valor : []);
+
+/** E3 · Els textos [clau, reserva] de quan no hi ha cap clau nova que es puga confirmar
+    (també els usa el cos del número, CosSeguretatXat.jsx). */
+export const TEXTOS_SENSE_CLAU = Object.freeze({
+  titol: Object.freeze(['section.xat.xifratge.senseClauValida', 'Sense cap clau de seguretat vàlida']),
+  contacte: Object.freeze(['section.xat.xifratge.clauRetirada', 'Este aparell no troba cap clau de seguretat vàlida de {nom} que es puga confirmar. Passa quan algú perd l’aparell i la frase, o si algú s’ha posat pel mig. Fins que n’hi haja una de vàlida, no s’hi pot escriure. Parla amb {nom} per a saber què ha passat.']),
+  /* ARB-E3-1 · Diu el que veu l'aparell, no que el compte no tinga cap clau: només s'hi arriba si
+     el servidor n'amaga una (xat_publica_identitat retira i inserix en la mateixa transacció). */
+  propia: Object.freeze(['section.xat.xifratge.clauPropiaRetirada', 'Este aparell no troba cap clau activa del teu compte: ni la seua ni cap altra. Pot ser que algú s’haja posat pel mig. Per seguretat, no s’hi pot escriure. Si no has sigut tu, avisa’ns.'])
+});
+/* La clau nova d'un pendent, si es pot acceptar (la mateixa regla que teClauNova del hook). */
+const clauNovaAcceptable = (p) => typeof p?.kidNou === 'string' && p.kidNou !== '' && p.acceptable !== false;
 
 /* El focus només es mou si s'ha perdut (al body o fora de l'arrel d'ombra). */
 function rescataFocus(destiFocus) {
@@ -39,8 +57,8 @@ function rescataFocus(destiFocus) {
 }
 
 /**
- * canvis: { pendents: [{ usuari, motiu, kidNou }], suaus: [{ usuari, kidNou }],
- *   alarmes: [{ tipus }], error } (useCanvisDeClau).
+ * canvis: { pendents: [{ usuari, motiu, kidNou, acceptable? }], suaus: [{ usuari, kidNou }],
+ *   alarmes: [{ tipus, senseClau? }], error } (useCanvisDeClau).
  * nomDe(usuari) → el nom per a {nom}. onAccepta(usuari, kid) → Promise<boolean>.
  */
 export default function AvisClauCanviada({
@@ -62,11 +80,14 @@ export default function AvisClauCanviada({
 
   return (
     <>
-      {alarmes.length ? <Alerta to="error">{tr(TEXTOS_XIFRATGE.clauPropiaAlarma)}</Alerta> : null}
+      {alarmes.length ? (
+        <Alerta to="error">{tr(alarmes.every((a) => a?.senseClau === true) ? TEXTOS_SENSE_CLAU.propia : TEXTOS_XIFRATGE.clauPropiaAlarma)}</Alerta>
+      ) : null}
       {manipulacio ? <Alerta to="error">{tr(TEXTOS_XIFRATGE.bifurcacio)}</Alerta> : null}
       {pendents.map((p) => {
         const nomPersona = nom(p.usuari);
-        const potAcceptar = typeof onAccepta === 'function' && typeof p.kidNou === 'string' && p.kidNou !== '';
+        const clauNova = clauNovaAcceptable(p);
+        const potAcceptar = typeof onAccepta === 'function' && clauNova;
         const accions = potAcceptar || typeof onObriNumero === 'function' ? (
           <>
             {potAcceptar ? (
@@ -79,9 +100,12 @@ export default function AvisClauCanviada({
             ) : null}
           </>
         ) : null;
+        /* E3 · G2-A-doctr-02 · Sense clau nova, ni el títol ni el text diuen que n'hi ha una. */
+        const cos = !clauNova ? TEXTOS_SENSE_CLAU.contacte
+          : (p.motiu === 'verificat' ? TEXTOS_XIFRATGE.verificatBloquejat : TEXTOS_XIFRATGE.clauCanviadaForta);
         return (
-          <Alerta key={`pendent-${p.usuari}`} to="avis" titol={tr(TEXTOS_XIFRATGE.clauNovaSenseConfirmar)} accions={accions}>
-            {tr(p.motiu === 'verificat' ? TEXTOS_XIFRATGE.verificatBloquejat : TEXTOS_XIFRATGE.clauCanviadaForta, nomPersona)}
+          <Alerta key={`pendent-${p.usuari}`} to="avis" titol={tr(clauNova ? TEXTOS_XIFRATGE.clauNovaSenseConfirmar : TEXTOS_SENSE_CLAU.titol)} accions={accions}>
+            {tr(cos, nomPersona)}
           </Alerta>
         );
       })}

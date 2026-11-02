@@ -1,0 +1,97 @@
+{
+  "id": "12c51b63-7994-48b9-ab93-e018a00a3f5f",
+  "session": "5aeb79f4-4287-43c2-91e0-24a510512d23",
+  "operationId": "torn_3d9af83b-onada_tres_governanca_marato_extirpacio_botigues_govern_olivera-5aeb79f4",
+  "claim": "5aeb79f4-4287-43c2-91e0-24a510512d23:governance-write",
+  "planHash": "163670c8f5b34067388805083596657cdc16d0fdeb6ca97640a6cdfbabacd563",
+  "beforeSeal": "575b3382a25542d0a8de4ed27ce39da5aa849c70804f401a66ff2c978e6d095c",
+  "files": [
+    {
+      "path": "scripts/botigues/botigues.env.exemple.txt",
+      "before": "06f7ccce4dfe499d19f1aa2fa61178ce385941dbf0070a899238adff912b1191",
+      "after": "28b64ada6d6902d4f58a8390cacec82f05e690c9d1a32c0a20b68bf0770431a4"
+    },
+    {
+      "path": "scripts/botigues/entorn.mjs",
+      "before": "2bee05b1d76bc33eafbf57a1bdc56d6e4f12586364df05d749bd48825fab19a8",
+      "after": "f93682c260c44b01e21832330e48c0c20ca4c4cd8059cc76bcfc50a095459237"
+    },
+    {
+      "path": "scripts/botigues/preflight.mjs",
+      "before": "fc4aea89a9dd3f37b11dac9942b2d73cc4bfa3dee8332a1b2f951bb41bff2a4a",
+      "after": "c66aab336df8796e3f0e3328c41c1491924ba2a4697b0f5b1285a7d885acea62"
+    },
+    {
+      "path": "scripts/botigues/puja-android.mjs",
+      "before": "1e8764e30ad95db598d15910b05a51d148f442c14dc3e7a5fb93d13cc2c6daa8",
+      "after": "fab4f98bb2d713b1501a8eac30ebc0f73612ed3c8f2c7619ae62087153f9bffe"
+    },
+    {
+      "path": "scripts/botigues/puja-ios.mjs",
+      "before": "9ea15d6dc6cdc4e9d89b2aa31b66db90e9ec0ad8f1c3f97ae5b79c4d50830813",
+      "after": "eaceaa3fad1c871920b1803660d58c00371f591e8404e1bb19f73272a7fdd417"
+    },
+    {
+      "path": "scripts/supabase/verifica-migracions.mjs",
+      "before": "44ea30347f34e422761445ca27a535c97b01ad8f6ef6b9a6acd53aabeeb4b636",
+      "after": "0081f5a6302a3fb59d43bb6e5550cc621a2eef4f5add9bdf3725f6eda977c8c4"
+    },
+    {
+      "path": "tooling/brain/fronteres-skills.mjs",
+      "before": null,
+      "after": "f1071a84c8bdb523e1a72080660b36687afa5861f9f7f3447712d86006008ff2"
+    },
+    {
+      "path": "tooling/documental/arxiu-enllacos.mjs",
+      "before": "0ee6bd050d2a1206a14ddc8fbc9449ba86ba6428698a956c38be58a1750af909",
+      "after": "c95d4d85206eb79c1b78a14eccc8957d1539ed9d3d7f980542b285a9016440b1"
+    },
+    {
+      "path": "tooling/documental/capitol-estat.mjs",
+      "before": null,
+      "after": "175705e2681fd3dad2847720d2fa0bb1247459c06d6ad3ad3f4f48a9f38b8ee1"
+    },
+    {
+      "path": "tooling/documental/consum-acreditat.mjs",
+      "before": null,
+      "after": "66e0fc13d65baf6c8f2819c824c992fd790c86f076b8767f78f7227e7ca35709"
+    },
+    {
+      "path": "tooling/gates/porta-olivera.mjs",
+      "before": "2ae94fb3f2c2f67d455c172ef0dee116888dde5da62c88c6074ebf490fc5e6f3",
+      "after": "13138da56d3a75d3755540d503eb3871e4129c6f825859a641489e09ec3e2dfe"
+    },
+    {
+      "path": "tooling/gates/run-portes.mjs",
+      "before": "ae344c9c867d073967a0a11322ab901ce237d6730549be127c6d5759582905f8",
+      "after": "0f24b133891835e1fc1295c76ce41624e961e169a00a85040cc2b5d3530d7a51"
+    },
+    {
+      "path": "tooling/media/cens_imatges.mjs",
+      "before": "948fd6e8f2f85a9e934244aa39b4e28497906076408ab1416535b6968751e0aa",
+      "after": "c3056b8e8265da8a523fdf461c0694af9707a3ca5ee01447d860d003a66402a9"
+    },
+    {
+      "path": "tooling/media/cens_imatges.test.mjs",
+      "before": "62dbb808730e0538db47f292969d68ccd0bce7fd3b753b41dd9e459e3a167ef2",
+      "after": "2ab937ac98d671b8a0630f7206d37e4410fd1f8dc2c50fa4a3ef3b75d754aa8b"
+    },
+    {
+      "path": "tooling/media/duplicats_assets.mjs",
+      "before": null,
+      "after": "b98fe509276c4d9ed05766d5595090f2b685b0a4c5acba5b6c45287b977ed31b"
+    },
+    {
+      "path": "tooling/media/duplicats_assets.test.mjs",
+      "before": null,
+      "after": "57f55a8188c61a7b3ff51269a6e1f92d099a9c5820fdfb608c3a240e1550c154"
+    },
+    {
+      "path": "tooling/tests/node-suite-manifest.json",
+      "before": "d5ecfdd6f88e6831f94030588fa2d589fbccfb12657c241d696815c889c0130c",
+      "after": "076061bdd33f3cd07604d6da87b6de891fc1d1ace9a177f8f9d22a7a6dd7d76a"
+    }
+  ],
+  "state": "accepted",
+  "afterSeal": "d863c155441b09590117b6eb2a6e30dacfebf30e6a62f0b502590644b8434d0f"
+}

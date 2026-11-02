@@ -1,8 +1,8 @@
 /* Ordre nocturna 261030_0252 (Fase 3, WP) · Avisos push del Xat compatibles
-   amb l'E2EE (sdp-xat-v1), fase N1 i INERT: cap pantalla ni cap entrada no
-   importa este mòdul, cap servidor no desa subscripcions i encendre-ho és
-   decisió del Mestre (D-WP-1 a D-WP-10: reobrir «push: no» de la Fase 0, el
-   parell VAPID, la migració, el text legal…).
+   amb l'E2EE (sdp-xat-v1). Fase N2 (B8C-3, marató 261101_2143; paràgraf del
+   final): cap pantalla no importa este mòdul, només l'adaptador web, i
+   darrere de la bandera; encendre-ho (la bandera, el parell VAPID, la
+   migració i el servidor) és un pas del Mestre (D-B8C-2; D-WP-1 a D-WP-10).
 
    El mòdul pur de la subscripció. Tot entra injectat: el registre del worker
    (el resol src/pwa/registre.js, l'únic fitxer que el pot nomenar:
@@ -29,7 +29,14 @@
        (contra SSRF: la funció del servidor hi farà un POST i ho ha de tornar
        a comprovar);
      · res fora del Baseline 2022 (la clau es descodifica amb atob).
-   Cap funció no llança: totes tornen { estat[, error] } (o res, la neteja). */
+   Cap funció no llança: totes tornen { estat[, error] } (o res, la neteja).
+
+   B8C-3 (marató 261101_2143; Bloc B8, ordre del Mestre 261101) · Fase N2:
+   l'únic mòdul que el fa servir és l'adaptador web,
+   src/pwa/adaptadorAvisosPush.js, que src/main.jsx carrega en diferit només
+   amb la bandera AVISOS_PUSH_XAT_ACTIUS encesa (src/config/avisosPushXat.js).
+   Apagada, Rollup no el posa en cap tros. Ho prova avisosPush.test.js
+   (frontera N2). */
 
 /** L'etiqueta dels avisos del Xat, la mateixa que public/sw.js (sw.test.js ho comprova). */
 export const ETIQUETA_AVIS_XAT = 'sdp-xat';
@@ -86,6 +93,9 @@ const CLAU_VAPID = /^[A-Za-z0-9_-]{87}$/;
 const BYTES_CLAU = 65;
 /* Un endpoint: https i només caràcters ASCII visibles (cap espai ni control). */
 const ENDPOINT_VISIBLE = /^https:\/\/[!-~]+$/;
+/* L'amfitrió d'un endpoint, amb els caràcters i la llargada que admet el
+   servidor (private.xat_push_adreca_valida: ^[a-z0-9.-]{1,253}$). */
+const AMFITRIO_ADMES = /^[a-z0-9.-]{1,253}$/;
 
 /**
  * Una memòria nova dels endpoints que el servidor ja té en esta càrrega de la
@@ -182,6 +192,13 @@ export function formaDeLaSubscripcio(json) {
     return null;
   }
   if (url.protocol !== 'https:' || url.username || url.password || url.port || !endpoint.startsWith(`https://${url.hostname}/`)) return null;
+  /* B8C-3 (marató 261101_2143; B8-SERVIDOR §2.9, petició al client) · Cap
+     etiqueta buida (https://.push.apple.com, a..push.apple.com) ni cap
+     caràcter que el servidor no admet a l'amfitrió (URL hi deixa passar
+     a_b, a!b, a~b…): la mateixa regla que private.xat_push_adreca_valida i
+     webpush.js (SDP-PUSH-003). El client ja no desa res que el servidor
+     rebutjaria. */
+  if (!AMFITRIO_ADMES.test(url.hostname) || url.hostname.startsWith('.') || url.hostname.includes('..')) return null;
   if (!SERVEIS_DE_PUSH.some((servei) => servei.test(url.hostname))) return null;
   const caduca = json.expirationTime;
   return { endpoint, caducaMs: typeof caduca === 'number' && Number.isFinite(caduca) && caduca > 0 ? caduca : null };

@@ -29,6 +29,9 @@
  *     amb `codi: 'sense-capacitat'`. L'absència es recorda per node i poble
  *     fins que es torna a carregar la pàgina: les crides següents ja no van
  *     al servidor (reiniciaMemoriaXatDePagina, per a les proves).
+ *   Capacitat opcional 'silenciXat' (B8C-2, marató 261101_2143):
+ *   - silenciaFil({ filId, durada }, config) → { silenciatFinsAl } amb
+ *     xat_silencia(p_fil_id, p_durada) de B8-SERVIDOR §2.9 (al final del fitxer).
  * @errors Tot error llançat porta `code` i `retriable`. El text del servidor es
  *   conserva quan comença per `SDP-XAT-`; xarxa, temps d'espera i cancel·lació
  *   són reintentables, els codis SDP no (llevat de SDP-XAT-429, el límit de
@@ -39,8 +42,8 @@
 
 import { getClient } from './config.js';
 import { usuariDeSessio } from '../identitat.js';
-import { subjecteDeXat } from '../contracte.js';
-import { ambXatsPerDefecte, vestixLaIAIA } from '../xatsPerDefecte.js';
+import { DURADES_SILENCI, finsAlDelSilenci, subjecteDeXat } from '../contracte.js';
+import { PREFIX_PER_DEFECTE, ambXatsPerDefecte, vestixLaIAIA } from '../xatsPerDefecte.js';
 import { generateUUID, getResolvedConfig } from './runtime.js';
 import { handleError } from './utils.js';
 
@@ -830,5 +833,85 @@ export const carregaMembres = async (textSearch, config = {}) => {
     return Array.isArray(data) ? data : [];
   } catch (error) {
     throw errorDeXat(error, 'No s’ha pogut carregar la llista del poble.', config);
+  }
+};
+
+/* ─────────────────── Silenci d'una conversa (B8C-2, 'silenciXat') ─────────────────── */
+
+const silenciInvalid = () => errorLocal('No es pot silenciar: la durada o la conversa no són vàlides.', 'SILENCI_INVALID');
+/* Llargària màxima d'una data ISO de timestamptz: res més llarg no és una data. */
+const MAXIM_TEXT_DATA = 40;
+
+/* La data que ha posat el servidor, tal qual, si es pot llegir. Si no (una
+   resposta fora de contracte, però la RPC no ha fallat i el silenci ja és
+   desat): 'cap' és null i la resta, la mateixa durada amb el rellotge de
+   l'aparell; el sondeig següent porta la data exacta de la fila. */
+function finsDeLaResposta(valor, durada) {
+  if (typeof valor === 'string' && valor.length <= MAXIM_TEXT_DATA && !Number.isNaN(Date.parse(valor))) return valor;
+  return durada === 'cap' ? null : finsAlDelSilenci(durada, Date.now());
+}
+
+/* ARB-B8C2-05 · La memòria de F6 (xatDePaginaAbsent, dalt) per a xat_silencia:
+   un node sense la migració 2611020417 respon 404 o PGRST202 i, en esta
+   càrrega de pàgina, ja no es torna a cridar (cada silenci deixava un altre
+   404 a la consola; la interfície passa al silenci en memòria). Per node i
+   poble; mai per un SDP-XAT-0xx, la xarxa, la cancel·lació ni un 5xx.
+   Aplicada la migració, cal tornar a carregar. */
+const silenciAbsent = new Set();
+const silenciNoDisponible = (cause) => Object.assign(
+  errorLocal('Este servidor encara no sap silenciar converses.', 'NO-DISPONIBLE'),
+  cause ? { codi: 'NO-DISPONIBLE', cause } : { codi: 'NO-DISPONIBLE' }
+);
+
+/* Per a les proves: la memòria és del mòdul i duraria d'una prova a l'altra. */
+export function reiniciaMemoriaSilenci() {
+  silenciAbsent.clear();
+}
+
+/**
+ * B8C-2 (marató 261101_2143; Bloc B8) · silenciaFil({ filId, durada }, config)
+ * → { silenciatFinsAl }. Contracte de B8-SERVIDOR §2.9: xat_silencia(p_fil_id
+ * uuid, p_durada text) returns timestamptz, i la data de fi la posa el
+ * rellotge del servidor ('sempre' → 9999-12-31 00:00:00 UTC, 'cap' → null).
+ * Abans de cap petició: una durada fora de DURADES_SILENCI, un fil que no és
+ * cap text o que és una fila d'ajuda (Conversa.perDefecte) → SILENCI_INVALID;
+ * en remot, a més, un fil que no és cap UUID. En llavor, el magatzem local
+ * (localXat, amb finsAlDelSilenci). Errors del servidor: sense la RPC (404 o
+ * PGRST202) → NO-DISPONIBLE, i ja no es torna a cridar en esta càrrega de
+ * pàgina (reiniciaMemoriaSilenci); SDP-XAT-050 → SILENCI_INVALID; SDP-XAT-006 →
+ * XAT_NO_PARTICIPANT; la resta, errorDeXat (amb code i retriable).
+ */
+export const silenciaFil = async (dades = {}, config = {}) => {
+  const filId = dades?.filId;
+  const durada = dades?.durada;
+  try {
+    comprovaSenyal(config);
+    if (typeof durada !== 'string' || !DURADES_SILENCI.includes(durada)
+      || typeof filId !== 'string' || !filId.trim() || filId.startsWith(PREFIX_PER_DEFECTE)) throw silenciInvalid();
+    const seed = await local(config);
+    if (seed) return await seed.silenciaFil(filId, durada, config);
+    if (!RE_UUID.test(filId)) throw silenciInvalid();
+    const supabase = await getClient(config);
+    comprovaSenyal(config);
+    const { supabaseUrl, tenantId } = getResolvedConfig(config);
+    const clau = JSON.stringify(['xat_silencia', supabaseUrl || '', tenantId || '']);
+    /* Entre la consulta de la memòria i la crida no hi ha cap await. */
+    if (silenciAbsent.has(clau)) throw silenciNoDisponible();
+    const { data, error, status } = await ambSenyal(supabase.rpc('xat_silencia', { p_fil_id: filId, p_durada: durada }), config);
+    if (error) {
+      if (status === 404 || esFuncioAbsent(error)) {
+        silenciAbsent.add(clau);
+        throw silenciNoDisponible(error);
+      }
+      const codiSdp = RE_CODI_SDP.exec(String(error?.message || ''))?.[0];
+      if (codiSdp === 'SDP-XAT-050') throw Object.assign(silenciInvalid(), { cause: error });
+      if (codiSdp === 'SDP-XAT-006') {
+        throw Object.assign(errorLocal('No eres membre d’esta conversa.', 'XAT_NO_PARTICIPANT'), { cause: error });
+      }
+      throw ambEstat(error, status);
+    }
+    return { silenciatFinsAl: finsDeLaResposta(data, durada) };
+  } catch (error) {
+    throw errorDeXat(error, 'No s’ha pogut canviar el silenci de la conversa.', config);
   }
 };

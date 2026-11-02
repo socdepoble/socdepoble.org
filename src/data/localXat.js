@@ -51,7 +51,7 @@ import { backendScope, normalizeBackendConfig } from '../config/backendConfig.js
 import { XAT_SEED_MEMBRES, XAT_SEED_NOMS, construeixLlavorXat } from './xatSeed.js';
 import { ENTITATS_SEED, RESPOSTA_IAIA, esIAIA, rolALEntitat, IAIA_ID } from './identitatsSeed.js';
 import { AGENTS_MAP } from './agentsSeed.js';
-import { PAGINES_AMB_XAT, rutaDeSubjecte, subjecteDeXat } from './contracte.js';
+import { PAGINES_AMB_XAT, finsAlDelSilenci, rutaDeSubjecte, subjecteDeXat } from './contracte.js';
 import { respostaDeLaIAIA } from './iaiaLocal.js';
 
 const LIMIT_PER_DEFECTE = 50;
@@ -80,6 +80,9 @@ const errorPla = (missatge) => Object.assign(new Error(missatge), { code: 'LOCAL
    mirava 'LOCAL': ni reintent ni cap altre camí, només el text.
    xatCorporatiu.test.jsx vigila que el text siga el de la clau. */
 const errorForastera = () => Object.assign(new Error('Esta persona és forastera en este poble.'), { code: 'SDP-XAT-004', retriable: false });
+/* B8C-2 · El code que el contracte de 'silenciXat' dona a SDP-XAT-006 (no eres
+   membre actiu del fil): el mateix en remot (supabase/xat.js) i ací. */
+const errorNoParticipant = () => Object.assign(new Error('No eres membre d’esta conversa.'), { code: 'XAT_NO_PARTICIPANT', retriable: false });
 
 const copia = (missatge) => ({ ...missatge, metadades: { ...missatge.metadades } });
 
@@ -516,6 +519,24 @@ export function createLocalXatAdapter() {
         }
       }
       return { llegitFinsSeq: meu.llegitFinsSeq, rebutFinsSeq: meu.rebutFinsSeq };
+    },
+
+    /**
+     * B8C-2 (marató 261101_2143; Bloc B8) · Silencia (o desfà el silenci de)
+     * la conversa per a `jo`: el mateix silenciatFinsAl que xat_silencia
+     * escriu a xat_participants, amb la data de finsAlDelSilenci (contracte).
+     * Una durada desconeguda rebutja amb SILENCI_INVALID abans de tocar res; un
+     * fil on `jo` no pinta res, amb XAT_NO_PARTICIPANT. No avisa ningú: la
+     * resta de la conversa no ho sap.
+     */
+    async silenciaFil(filId, durada, config = {}) {
+      const silenciatFinsAl = finsAlDelSilenci(durada, Date.now());
+      const { estat, jo } = magatzem(config);
+      const fil = typeof filId === 'string' ? estat.fils.get(filId) : null;
+      const meu = fil ? participantDe(estat, fil, jo) : null;
+      if (!meu) throw errorNoParticipant();
+      meu.silenciatFinsAl = silenciatFinsAl;
+      return { silenciatFinsAl };
     },
 
     /**

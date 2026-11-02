@@ -1226,7 +1226,7 @@ description: "Documentació canònica de Sóc de Poble."
   empremta; la 2.0, la 2.2 i la 2.3 del web no tenien cap fila, i
   `registra_consentiment` guardava els consentiments a la `'v1'`. Una sola
   fila `'2.3'`: `text_complet` és l'HTML exacte de `legalContent.html`
-  (`src/sections/text/legalContent.js`, 51.925 caràcters), `text_sha256` el
+  (`src/sections/text/legalContent.js`, 52.392 caràcters), `text_sha256` el
   seu SHA-256 en UTF-8 (el CHECK `politiques_text_i_empremta` el torna a
   calcular), `vigent_des_de` la data del rètol (1-11-2026, 00:00 CET) i
   `on conflict (versio) do nothing`. Des que s'aplica, `estat_consentiment()`
@@ -1234,18 +1234,21 @@ description: "Documentació canònica de Sóc de Poble."
   (lectura), ha de donar només la `'v1'` sense segellar:
   `select versio, vigent_des_de, text_sha256 is not null as segellada from public.politiques_privacitat order by vigent_des_de;`
   Verificació posterior (lectura):
-  `select text_sha256 = '886e80fdf36718d205da887510f1f7f67b40ee22efc72751e47fd5c9277d4d8f' as segellada_2_3 from public.politiques_privacitat where versio = '2.3';`
+  `select text_sha256 = 'abd827d07af5aa30dc364f156a551deed4e9a43a830b9f57eca5a861ea4eadca' as segellada_2_3 from public.politiques_privacitat where versio = '2.3';`
   (cert). Sense inversa: una versió segellada no s'esborra ni es canvia
   (`SDP-RGPD-020` i `021`). Va després del desplegament web amb este mateix
   text de `/legal` (pas 12 de l'ordre obligatori); si el text canvia abans
   d'aplicar-la, es corregix el fitxer, i després, una versió nova. El 1-11 a
-  les 22:47 CET i el 2-11 a les 00:09 CET, `https://socdepoble.org` encara
-  servia la 2.2 (el paquet `pageContent` de producció): la 2.3 no era pública
-  i no calia dir-ne 2.4.
+  les 22:47 CET i el 2-11 a les 00:09 i a les 04:14 CET, `https://socdepoble.org`
+  encara servia la 2.2 (el paquet `pageContent` de producció): la 2.3 no era
+  pública i no calia dir-ne 2.4. Per això B10 (P1-24, mateix torn) hi va
+  corregir, abans d'aplicar-la, els apartats 11 i 14: la IAIA MarIA de
+  l'aplicació respon al dispositiu i no envia el text a cap empresa
+  d'intel·ligència artificial (prova: `src/sections/text/legal.iaia.test.js`).
   L'execució (la `'v1'` d'abans, l'empremta, el text idèntic, la
   idempotència, `SDP-RGPD-020` i `021` i la mutació d'un caràcter: 10
   comprovacions) la va fer el torn torn_3d9af83b a PGlite 0.3.16, fora del
-  repositori: és evidència no versionada. La prova estàtica és
+  repositori, i la va repetir amb el text de B10: és evidència no versionada. La prova estàtica és
   `src/data/supabase/politicaPrivacitat23.migracio.test.js`: comprova la
   migració per dins (una 2.4 en una migració nova no la fa caure) i exigix
   que l'última versió segellada porte el text que `/legal` servix hui (§18).
@@ -1287,6 +1290,53 @@ description: "Documentació canònica de Sóc de Poble."
   (també la paritat dels noms i dels paràmetres de les RPC amb
   `magatzemPostgrest.js`). Va abans del desplegament de la funció (vegeu
   «Funció `ap-inbox-verifica`»). Idempotent i en una sola transacció;
+  **NO aplicada: l'aplica el Mestre, mai un agent**.
+
+- `migrations/2611020417_xat_avisos_push.sql`
+  B8 (marató 261101_2143, carril P01-B8S-MIGRACIO; ordre del Mestre 261101):
+  els avisos push del Xat al servidor, tots apagats. `public.xat_dispositius_push`:
+  un aparell per fila (`web` amb l'endpoint d'un servei conegut, `apns` o
+  `fcm` amb el testimoni); únic per tipus i adreça; RLS de propietari; cap
+  columna d'adreça per a `authenticated`. Les RPC del client, amb el contracte
+  únic de B8-SERVIDOR §2.9 (plataforma `web`, `ios` o `android`):
+  `xat_push_desa` (només amb `private.ajustos` `push_xat_actiu` = `si`; una
+  adreça d'una altra persona només canvia d'amo amb `p_gest` = cert, i sense,
+  `SDP-PUSH-011`; deu aparells per persona) i `xat_push_retira` (sempre, també
+  apagat: és la baixa en eixir). `xat_silencia(fil, durada)`: el silenci per
+  conversa, que fins ara cap RPC no escrivia, amb `8h`, `1setmana`, `sempre` o
+  `cap` i el rellotge del servidor; «sempre» és 9999-12-31 00:00 UTC, mai
+  `infinity`. La cua `private.xat_push_cua`, amb el disparador
+  `xat_missatges_push_encua`: només s'omple amb l'ajust, es poda sola (res de
+  més d'una hora, com a molt 100 files per missatge) i mai atura un missatge.
+  La cua i `private.xat_push_credencials` tenen RLS sense cap política: només
+  hi entren les funcions. El General i els Avisos de pàgines i comunitats no
+  avisen sense `push_xat_generals` = `si`; un `push_xat_dies_dispositiu` que
+  no és un enter cau en 60 dies. Les RPC del worker `notifica-xat`, només per
+  a `service_role` i amb la guarda `auth.role()`: `xat_push_reclama` (com a
+  molt 5.000 aparells i 1.800.000 octets de JSON per lot, perquè el worker en
+  llig 2 MiB; la resta compta a `retallats`), `xat_push_expulsa`,
+  `xat_push_neteja`, `xat_push_credencial` i
+  `xat_push_desa_credencial`. Cap pg_net, Vault ni secret. Abans (lectura), ha
+  de donar fals:
+  `select to_regclass('public.xat_dispositius_push') is not null as te_dispositius;`
+  Verificació posterior (lectura):
+  `select to_regclass('public.xat_dispositius_push') is not null as te_dispositius, to_regprocedure('public.xat_silencia(uuid, text)') is not null as te_silenci, has_function_privilege('authenticated', 'public.xat_push_reclama(integer)', 'execute') as authenticated_reclama, coalesce((select valor from private.ajustos where clau = 'push_xat_actiu'), 'no') as actiu;`
+  (cert, cert, fals i no). L'execució (aplicar dues vegades, apagat i encés,
+  els codis, les crides de B8-CLIENT amb paràmetres amb nom, l'aparell
+  compartit amb gest i sense, el sostre, les quatre durades del silenci i la
+  sentinella llegida a quatre zones horàries, els permisos per rol, per
+  columna i amb `SET ROLE`, els filtres dels destinataris, els Avisos de
+  pàgina, la retenció de la cua sense worker, una cua trencada que no atura
+  el missatge, l'ajust de dies fora de rang, el silenci que només toca qui
+  crida i l'RLS de les taules privades: 104 comprovacions; i el pressupost
+  d'octets del reclam amb 5.000 aparells, també amb endpoints de 2.048
+  caràcters plens de cometes: 7) la va fer el torn torn_3d9af83b a PGlite
+  0.3.16, fora del repositori: és evidència no versionada. La prova estàtica és
+  `src/data/supabase/xatAvisosPush.migracio.test.js` (també la paritat de la
+  llista blanca amb el client i amb el worker, i dels paràmetres de cada
+  `rpc()` de `notifica-xat`). Va abans del desplegament de `notifica-xat`
+  (porta `funcio-notifica-xat`); `push_xat_actiu` es posa només després del
+  cron (vegeu «Funció `notifica-xat`»). Idempotent i en una sola transacció;
   **NO aplicada: l'aplica el Mestre, mai un agent**.
 
 - `seed.sql`
@@ -1458,6 +1508,7 @@ verificador sense avisos.
 | 67 | `2611011800` | `2611011800_contracte_exportacio_federacio_v1.sql` | **NO aplicada: l'aplica el Mestre** | contracte v1 de l'exportació de federació (P2-09) |
 | 68 | `2611012257` | `2611012257_politica_privacitat_2_3.sql` | **NO aplicada: l'aplica el Mestre** | política de privacitat 2.3 segellada (T11-05) |
 | 69 | `2611020106` | `2611020106_ap_inbox_persistencia_i_cua.sql` | **NO aplicada: l'aplica el Mestre** | persistència de la inbox ActivityPub i cua d'eixida (P1-23 fase 2) |
+| 70 | `2611020417` | `2611020417_xat_avisos_push.sql` | **NO aplicada: l'aplica el Mestre** | avisos push del Xat: aparells, silenci i cua (B8) |
 
 | Artefacte complementari | Ruta dins de `supabase/` | Rol operatiu |
 | :--- | :--- | :--- |
@@ -2079,6 +2130,115 @@ la fila de `storage.objects` i després li falla el binari al backend (l'ordre
 intern de storage-api, no verificat ací), eixe residu ja no el veu cap fila de
 la cua; les còpies de seguretat del proveïdor seguixen el seu cicle de 30
 dies.
+
+## Funció `notifica-xat` (avisos push del Xat)
+
+B8 (marató 261101_2143; ordre del Mestre 261101). Desperta els aparells dels
+membres d'un fil quan hi arriba un missatge: un **despertador cec**. El web
+rep un push sense cos (`public/sw.js` mostra sempre «Tens missatges nous») i
+els natius, el mateix text en la llengua de l'aparell amb `desti: '/xat'`.
+Cap fil, remitent ni text del missatge no ix mai cap a cap servei de push.
+Fitxers: `supabase/functions/notifica-xat/index.ts` (l'embolcall Deno, que
+només li passa les variables de baix), `gestor.js`, `webpush.js` i
+`natius.js` (la lògica, provada a `gestor.test.js`, `webpush.test.js`,
+`natius.test.js` i `paritat.test.js`). Necessita
+`migrations/2611020417_xat_avisos_push.sql` aplicada.
+
+Què fa cada passada (un POST amb la capçalera `x-sdp-cron`):
+
+1. Sense `SDP_PUSH_ACTIU=si`, només crida `xat_push_neteja` (cap servei de
+   push) i respon `{ok: true, apagat: true, neteja: {…}}`; si la base falla,
+   `502`.
+2. `xat_push_neteja`: aparells caducats o sense renovar en 60 dies, i la cua
+   de més d'una hora (el disparador ja la poda sol: com a molt 100 files per
+   missatge, també amb els avisos apagats).
+3. `xat_push_reclama` (50 missatges, `FOR UPDATE SKIP LOCKED`, s'esborren en
+   reclamar-los: com a molt una vegada): els aparells dels destinataris (els
+   filtres són a la vinyeta de la migració), un per lot, com a molt 5.000 en
+   ordre aleatori i 1.800.000 octets de JSON, perquè la funció llig com a
+   molt 2 MiB de la base i el lot ja és esborrat (`retallats` diu quants
+   s'han quedat fora).
+4. Web Push amb VAPID (ES256, WebCrypto), sense cos: `TTL: 86400`,
+   `Urgency: normal`, `Topic: sdp-xat`. APNs i FCM, si tenen secrets, amb el
+   text literal en la llengua de l'aparell.
+5. Només s'expulsa amb web 404 i 410, APNs 410 i FCM 404 `UNREGISTERED`
+   (`xat_push_expulsa`). Web 401 i 403, APNs `BadDeviceToken` o
+   `DeviceTokenNotForTopic` i FCM `SENDER_ID_MISMATCH` o
+   `THIRD_PARTY_AUTH_ERROR` es compten per aparell: mai expulsen ni pausen
+   el proveïdor, perquè una sola persona els pot provocar (G1-B-seg-01).
+   Només pausa el proveïdor la credencial pròpia (la signatura VAPID, APNs
+   403, FCM 401 o 403 sense codi d'aparell). Un 429 pausa l'amfitrió web o
+   el proveïdor natiu, excepte el `TooManyRequests` d'Apple (APNs i Web Push
+   d'Apple: massa avisos seguits a un sol aparell), que només salta eixe
+   aparell la resta de la passada.
+6. Com a molt 10 lots, 45 s, 8 peticions alhora i 8 s per petició. Respon
+   només recomptes: `{ok, missatges, retallats, dispositius, enviats,
+   expulsats, fallits, sense_proveidor, sense_provar, lots, esgotat}`.
+
+Panys (tot apagat per defecte): `private.ajustos` `push_xat_actiu` = `si`
+(sense, la cua no creix i desar dona `SDP-PUSH-010`), `SDP_PUSH_ACTIU=si` a la
+funció i la bandera del client. Són independents per a enviar, no per a la
+retenció: en cap combinació la cua guarda més d'una hora.
+
+Secrets. `SUPABASE_URL` i `SUPABASE_SERVICE_ROLE_KEY` els injecta Supabase.
+`SDP_CRON_SECRET` és el mateix de `compte-apple` i `purga-fitxers`.
+`SDP_PUSH_VAPID_PUBLICA` (87 caràcters base64url; la mateixa que
+`VITE_PUSH_VAPID_PUBLICA` del client), `SDP_PUSH_VAPID_PRIVADA` (43) i
+`SDP_PUSH_VAPID_SUBJECTE` (`mailto:` o `https://`). Natius, només quan hi haja
+el connector (D-WP-7): `SDP_APNS_EQUIP`, `SDP_APNS_CLAU_ID`,
+`SDP_APNS_CLAU_P8`, `SDP_APNS_TOPIC` (`org.socdepoble.app` per defecte),
+`SDP_APNS_ENTORN` (`produccio` per defecte; `sandbox` només en un projecte de
+proves) i `SDP_FCM_COMPTE_SERVEI` (el JSON del compte de servei del mateix
+projecte de Firebase que `google-services.json`). Sense VAPID, els aparells
+web no es desperten (`sense_proveidor`) i no s'esborren. El parell VAPID es fa
+a la màquina del Mestre, mai al repositori ni amb cap paquet (Node 20 o més):
+
+```
+node -e "const s=crypto.subtle;s.generateKey({name:'ECDSA',namedCurve:'P-256'},true,['sign']).then(async(k)=>{const j=await s.exportKey('jwk',k.privateKey);const r=Buffer.from(await s.exportKey('raw',k.publicKey)).toString('base64url');console.log('SDP_PUSH_VAPID_PUBLICA='+r);console.log('SDP_PUSH_VAPID_PRIVADA='+j.d)})"
+```
+
+Desplegament (la funció autoritza ella mateixa amb `x-sdp-cron`):
+
+```
+supabase functions deploy notifica-xat --no-verify-jwt --project-ref <ref>
+```
+
+L'ordre: política de privacitat 2.4 amb els serveis de push com a
+destinataris (D-B8S-8) → migració → secrets
+(`supabase secrets set SDP_PUSH_ACTIU=si SDP_PUSH_VAPID_PUBLICA=<…> SDP_PUSH_VAPID_PRIVADA=<…> SDP_PUSH_VAPID_SUBJECTE=mailto:<correu> --project-ref <ref>`)
+→ desplegament → cron → client amb la mateixa pública → per últim, la base:
+
+```
+insert into private.ajustos (clau, valor) values ('push_xat_actiu', 'si') on conflict (clau) do update set valor = excluded.valor;
+```
+
+Per a apagar, al revés: primer l'ajust, i buidar la cua (no queda cap
+metadada); després, si cal, `supabase secrets unset SDP_PUSH_ACTIU` i esborrar
+el cron:
+
+```
+delete from private.ajustos where clau = 'push_xat_actiu';
+delete from private.xat_push_cua;
+```
+
+Programació: Integrations → Cron → Create job → Supabase Edge Function
+`notifica-xat`, POST, horari `15 seconds`, capçalera
+`x-sdp-cron: <SDP_CRON_SECRET>`, cos `{}` i un temps d'espera de 60 s.
+Verificació (lectura): `select jobname, schedule from cron.job;`.
+
+Lectura per al Mestre (cap adreça):
+
+```
+select tipus, llengua, count(*) from public.xat_dispositius_push group by 1, 2;
+select count(*), min(creat_al) from private.xat_push_cua;
+```
+
+Límits coneguts: com a molt una vegada (un avís perdut si el worker cau a
+mitges); APNs exigix HTTP/2 (cal provar-lo en sandbox, en un projecte de
+proves, abans d'encendre iOS); el General i els Avisos de comunitat i de
+pàgina no avisen si `push_xat_generals` no és `si`; els aparells no entren a
+`exporta_les_meues_dades` (D-B8S-7: la persona els llig per RLS i la purga
+se'ls emporta).
 
 ## Funció `noticies` (lector territorial)
 

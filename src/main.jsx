@@ -7,7 +7,8 @@ import { createRoot } from 'react-dom/client';
 import PedraSecaEmbed from './PedraSecaEmbed.jsx';
 import { configura, arrenca, exposaGlobal } from './host.js';
 import { capaDelPaquet, fixaCapaDelPaquet } from './config/capaDelPaquet.js';
-import { registraServiceWorker } from './pwa/registre.js';
+import { registraServiceWorker, registreActiu, registreDelSw, ESDEVENIMENT_AVIS_XAT } from './pwa/registre.js';
+import { AVISOS_PUSH_XAT_ACTIUS, registraAvisosPush } from './config/avisosPushXat.js';
 import { capturaInstalacio } from './pwa/instalacio.js';
 import { pintaAmbDiccionari } from './config/i18n.js';
 import { instalaFallbackDeBessones } from './config/fallbackBessones.js';
@@ -105,6 +106,20 @@ if (document.readyState === 'loading') {
    ningú més. Només en producció, en context segur, fora d'iframe i fora de
    l'app nativa; el paquet autònom (embed.jsx) no la registra mai. */
 registraServiceWorker();
+
+/* B8 (marató 261101_2143) · Els avisos push del Xat, només amb la bandera
+   encesa: apagada, Rollup lleva este bloc i el tros de l'adaptador no existix.
+   L'adaptador es carrega en arrencar, no en tocar l'interruptor (el gest no
+   pot esperar cap import()). De l'entorn, només la clau pública VAPID: sense
+   una clau vàlida, motiu() diu 'sense-clau' i no s'oferix res. */
+if (AVISOS_PUSH_XAT_ACTIUS) {
+  import('./pwa/adaptadorAvisosPush.js')
+    .then(({ creaAvisosPushWeb }) => registraAvisosPush(creaAvisosPushWeb({
+      registreActiu, registreDelSw, esdevenimentToc: ESDEVENIMENT_AVIS_XAT,
+      clau: import.meta.env.VITE_PUSH_VAPID_PUBLICA, produccio: import.meta.env.PROD
+    })))
+    .catch(() => { /* sense avisos push, l'app continua igual */ });
+}
 
 /* Ordre del Mestre (261021, prompt 261021_0015, tasca 3) · L'oferta
    d'instal·lar a l'ordinador (beforeinstallprompt) es captura ací, en avaluar

@@ -18,13 +18,14 @@ import vm from 'node:vm';
 import { describe, expect, test, vi } from 'vitest';
 import { paletaDeTokens, valorDelToken } from './__fixtures__/tokens.js';
 import { ETIQUETA_AVIS_XAT } from './avisosPush.js';
-import { MISSATGE_ESCALFAMENT, RECURS_AMB_EMPREMTA } from './registre.js';
+import { MISSATGE_AVIS_XAT, MISSATGE_ESCALFAMENT, RECURS_AMB_EMPREMTA } from './registre.js';
+import { CAMI_AVIS_XAT, esRutaDeLAvis } from '../sections/xat/destiDelAvis.js';
 
 const CODI = readFileSync(path.join(process.cwd(), 'public/sw.js'), 'utf8');
 const ORIGEN = 'https://socdepoble.org';
 /* La darrera expressió del script és el seu valor: així es lligen les funcions
    i les constants de dalt sense que el fitxer publicat exporte res. */
-const LECTURA = '\n;({ classificaPeticio, esRespostaGuardable, esCloscaGuardable, esCamiDApp, camiDeLaClosca, recursosDeLHtml, recursosDeLaClau, esCloscaConfirmada, esDelBuild, llistesDeLaClosca, capcaleresDeLaClosca, recursosPerArrencar, planDEscalfament, cachesAEsborrar, esOrdreLlegadaDeSaltarEspera, NOMS_LLEGATS, MISSATGE_LLEGAT_SALTA_ESPERA, clausSobrants, midaDeLaClau, paginaSenseConnexio, CLASSE, MEMORIA_RECURSOS, MEMORIA_CLOSCA, MEMORIES_VIVES, CAMI_DEL_PORTAL, MAXIM_CLOSQUES, MAXIM_RECURSOS, MAXIM_BYTES, CAPCALERA_MIDA, CAPCALERA_RECURSOS, CAPCALERA_RECURSOS_PAGINA, CSP_SENSE_CONNEXIO, MISSATGE_ESCALFAMENT, RECURS_AMB_EMPREMTA, ETIQUETA_AVIS_XAT, CAMI_DEL_XAT, ICONA_AVIS, RUTA_DEL_XAT, TEXTOS_AVIS, llenguaDeLAvis, avisCec, esAvisDelXat, triaFinestra });';
+const LECTURA = '\n;({ classificaPeticio, esRespostaGuardable, esCloscaGuardable, esCamiDApp, camiDeLaClosca, recursosDeLHtml, recursosDeLaClau, esCloscaConfirmada, esDelBuild, llistesDeLaClosca, capcaleresDeLaClosca, recursosPerArrencar, planDEscalfament, cachesAEsborrar, esOrdreLlegadaDeSaltarEspera, NOMS_LLEGATS, MISSATGE_LLEGAT_SALTA_ESPERA, clausSobrants, midaDeLaClau, paginaSenseConnexio, CLASSE, MEMORIA_RECURSOS, MEMORIA_CLOSCA, MEMORIES_VIVES, CAMI_DEL_PORTAL, MAXIM_CLOSQUES, MAXIM_RECURSOS, MAXIM_BYTES, CAPCALERA_MIDA, CAPCALERA_RECURSOS, CAPCALERA_RECURSOS_PAGINA, CSP_SENSE_CONNEXIO, MISSATGE_ESCALFAMENT, RECURS_AMB_EMPREMTA, ETIQUETA_AVIS_XAT, CAMI_DEL_XAT, CAMI_AVIS_XAT, MISSATGE_AVIS_XAT, ICONA_AVIS, RUTA_DEL_XAT, TEXTOS_AVIS, llenguaDeLAvis, avisCec, esAvisDelXat, triaFinestra });';
 
 const urlDe = (x) => (typeof x === 'string' ? x : x.url);
 
@@ -1375,12 +1376,20 @@ describe('avisos push cecs (261030)', () => {
     interaccio.permisos -= 1;
   }
 
-  function finestraFalsa(url, { focused = false, visibilityState = 'hidden', enfocaFalla = false, navegaFalla = false } = {}) {
-    const finestra = { url, focused, visibilityState };
+  /* B8C-3 · postMessage no toca el permís d'interacció (com a Chromium):
+     només anota el missatge, una còpia plana, o llança si `missatgeFalla`. */
+  function finestraFalsa(url, { focused = false, visibilityState = 'hidden', enfocaFalla = false, enfocaFallaSensePermis = false, navegaFalla = false, missatgeFalla = false } = {}) {
+    const finestra = { url, focused, visibilityState, missatges: [] };
     finestra.focus = vi.fn(async () => {
+      /* Una finestra que ja no hi és (InvalidStateError) falla abans de gastar el permís. */
+      if (enfocaFallaSensePermis) throw new Error('InvalidStateError: la finestra ja no hi és');
       gastaElPermis('Not allowed to focus a window.');
       if (enfocaFalla) throw new Error('InvalidStateError: client no trobat');
       return finestra;
+    });
+    finestra.postMessage = vi.fn((missatge) => {
+      if (missatgeFalla) throw new Error('DataCloneError');
+      finestra.missatges.push(JSON.parse(JSON.stringify(missatge)));
     });
     finestra.navigate = vi.fn(async (desti) => {
       if (navegaFalla) throw new TypeError('This service worker is not the client\'s active service worker.');
@@ -1417,7 +1426,8 @@ describe('avisos push cecs (261030)', () => {
   }
 
   const avisDelXat = (tag = 'sdp-xat') => ({ tag, close: vi.fn() });
-  const XAT = `${ORIGEN}/xat`;
+  /* B8C-3 · El destí del toc és la ruta neutra, mai /xat/<fil>. */
+  const XAT = `${ORIGEN}/xat?obri=no-llegits`;
 
   test('llenguaDeLAvis: la primera llengua del navegador que el Mas té, per l\'etiqueta primària; si cap, ca; mai llança', () => {
     const { api } = carregaWorker();
@@ -1436,14 +1446,14 @@ describe('avisos push cecs (261030)', () => {
     expect(api.llenguaDeLAvis([Symbol('x'), 'eu'])).toBe('eu');
   });
 
-  test('avisCec: per a les cinc llengües, «Sóc de Poble», el text fix sense cap interpolació, l\'etiqueta del Xat, la icona pròpia i el camí /xat', () => {
+  test('avisCec: per a les cinc llengües, «Sóc de Poble», el text fix sense cap interpolació, l\'etiqueta del Xat, la icona pròpia i la ruta neutra /xat?obri=no-llegits', () => {
     const { api } = carregaWorker();
     expect(Object.keys(api.TEXTOS_AVIS).sort()).toEqual(['ca', 'en', 'es', 'eu', 'gl']);
     expect(api.TEXTOS_AVIS.ca.cos).toBe('Tens missatges nous');
     for (const llengua of ['ca', 'es', 'en', 'eu', 'gl']) {
       const { titol, opcions } = plaDe(api.avisCec([llengua]));
       expect(titol, llengua).toBe('Sóc de Poble');
-      expect(opcions, llengua).toEqual({ body: api.TEXTOS_AVIS[llengua].cos, tag: 'sdp-xat', lang: llengua, icon: '/icona-app-192.png', data: { cami: '/xat' } });
+      expect(opcions, llengua).toEqual({ body: api.TEXTOS_AVIS[llengua].cos, tag: 'sdp-xat', lang: llengua, icon: '/icona-app-192.png', data: { cami: '/xat?obri=no-llegits' } });
       expect(opcions.body, llengua).not.toMatch(/[{}$%<]/);
     }
     expect(api.ICONA_AVIS).toBe('/icona-app-192.png');
@@ -1458,7 +1468,7 @@ describe('avisos push cecs (261030)', () => {
     expect(showNotification).toHaveBeenCalledTimes(1);
     const [titol, opcions] = showNotification.mock.calls[0];
     expect(titol).toBe('Sóc de Poble');
-    expect(plaDe(opcions)).toEqual({ body: 'Mezu berriak dituzu', tag: 'sdp-xat', lang: 'eu', icon: '/icona-app-192.png', data: { cami: '/xat' } });
+    expect(plaDe(opcions)).toEqual({ body: 'Mezu berriak dituzu', tag: 'sdp-xat', lang: 'eu', icon: '/icona-app-192.png', data: { cami: '/xat?obri=no-llegits' } });
   });
 
   test('un push amb un cos de veres (o null) dona el mateix avís, sense res del cos', async () => {
@@ -1503,19 +1513,55 @@ describe('avisos push cecs (261030)', () => {
     expect(await toca(worker, null)).toBe(0);
   });
 
-  test('el toc amb una finestra pròpia enfocada que ja és al Xat: tanca l\'avís i l\'enfoca, sense navegar ni obrir-ne cap', async () => {
-    const finestra = finestraFalsa(`${ORIGEN}/xat/123`, { focused: true, visibilityState: 'visible' });
+  /* B8C-3 · Al Xat, l'SPA no es recarrega: s'enfoca i rep UN missatge cec. */
+  test('el toc amb una finestra pròpia enfocada que ja és al Xat: tanca l\'avís, l\'enfoca i després li envia un sol { tipus: \'sdp-avis-xat\' }, sense navegar ni obrir-ne cap', async () => {
+    for (const cami of ['/xat/123', '/xat', '/xat/', '/xat?obri=no-llegits']) {
+      const finestra = finestraFalsa(`${ORIGEN}${cami}`, { focused: true, visibilityState: 'visible' });
+      const worker = workerAmbFinestres([finestra]);
+      const avis = avisDelXat();
+      expect(await toca(worker, avis), cami).toBe(1);
+      expect(avis.close, cami).toHaveBeenCalledTimes(1);
+      expect(plaDe(worker.self.clients.matchAll.mock.calls[0][0])).toEqual({ type: 'window', includeUncontrolled: true });
+      expect(finestra.focus, cami).toHaveBeenCalledTimes(1);
+      expect(finestra.postMessage, cami).toHaveBeenCalledTimes(1);
+      expect(finestra.missatges, cami).toEqual([{ tipus: 'sdp-avis-xat' }]);
+      expect(Object.keys(finestra.postMessage.mock.calls[0][0]), cami).toEqual(['tipus']);
+      expect(finestra.focus.mock.invocationCallOrder[0], cami).toBeLessThan(finestra.postMessage.mock.invocationCallOrder[0]);
+      expect(finestra.navigate, cami).not.toHaveBeenCalled();
+      expect(worker.self.clients.openWindow, cami).not.toHaveBeenCalled();
+    }
+  });
+
+  test('la dada de l\'avís no mana: amb un data.cami o un filId estranys, el toc va igual a la ruta neutra i el missatge continua cec', async () => {
+    const avisAmbDades = () => ({ ...avisDelXat(), data: { cami: '/xat/fil-secret', filId: 'fil-secret', text: 'Pep: quedem?' } });
+    const fora = finestraFalsa(`${ORIGEN}/mur`, { visibilityState: 'visible' });
+    await toca(workerAmbFinestres([fora]), avisAmbDades());
+    expect(fora.navigate).toHaveBeenCalledWith(XAT);
+    const dins = finestraFalsa(`${ORIGEN}/xat`, { focused: true });
+    await toca(workerAmbFinestres([dins]), avisAmbDades());
+    expect(dins.missatges).toEqual([{ tipus: 'sdp-avis-xat' }]);
+    expect(JSON.stringify(dins.missatges)).not.toMatch(/secret|Pep/);
+  });
+
+  test('al Xat, si la finestra no es deixa enfocar però el permís continua intacte: se n\'obri una a la ruta neutra i la vella no rep cap missatge', async () => {
+    const vella = finestraFalsa(`${ORIGEN}/xat/123`, { focused: true, enfocaFallaSensePermis: true });
+    const worker = workerAmbFinestres([vella]);
+    await expect(toca(worker, avisDelXat())).resolves.toBe(1);
+    expect(worker.self.clients.obertes).toEqual([XAT]);
+    expect(vella.navigate).not.toHaveBeenCalled();
+    expect(vella.postMessage).not.toHaveBeenCalled();
+  });
+
+  test('un postMessage que llança no rebutja el toc ni obri cap finestra de més', async () => {
+    const finestra = finestraFalsa(`${ORIGEN}/xat/123`, { focused: true, missatgeFalla: true });
     const worker = workerAmbFinestres([finestra]);
-    const avis = avisDelXat();
-    expect(await toca(worker, avis)).toBe(1);
-    expect(avis.close).toHaveBeenCalledTimes(1);
-    expect(plaDe(worker.self.clients.matchAll.mock.calls[0][0])).toEqual({ type: 'window', includeUncontrolled: true });
+    await expect(toca(worker, avisDelXat())).resolves.toBe(1);
     expect(finestra.focus).toHaveBeenCalledTimes(1);
-    expect(finestra.navigate).not.toHaveBeenCalled();
+    expect(finestra.postMessage).toHaveBeenCalledTimes(1);
     expect(worker.self.clients.openWindow).not.toHaveBeenCalled();
   });
 
-  test('una finestra pròpia fora del Xat (també /xatxa): primer la porta a /xat i després l\'enfoca', async () => {
+  test('una finestra pròpia fora del Xat (també /xatxa): primer la porta a /xat?obri=no-llegits i després l\'enfoca, sense cap missatge', async () => {
     for (const cami of ['/mur', '/xatxa', '/']) {
       const finestra = finestraFalsa(`${ORIGEN}${cami}`, { visibilityState: 'visible' });
       const worker = workerAmbFinestres([finestra]);
@@ -1524,6 +1570,7 @@ describe('avisos push cecs (261030)', () => {
       expect(finestra.focus, cami).toHaveBeenCalledTimes(1);
       expect(finestra.navigate.mock.invocationCallOrder[0], cami).toBeLessThan(finestra.focus.mock.invocationCallOrder[0]);
       expect(finestra.url, cami).toBe(XAT);
+      expect(finestra.postMessage, cami).not.toHaveBeenCalled();
       expect(worker.self.clients.openWindow, cami).not.toHaveBeenCalled();
     }
   });
@@ -1551,6 +1598,9 @@ describe('avisos push cecs (261030)', () => {
     await expect(toca(altre, avisDelXat())).resolves.toBe(1);
     expect(alXat.navigate).not.toHaveBeenCalled();
     expect(altre.self.clients.openWindow).toHaveBeenCalledWith(XAT);
+    /* La finestra nova ja naix a la ruta neutra: la que no s'ha deixat enfocar no rep cap missatge. */
+    expect(alXat.postMessage).not.toHaveBeenCalled();
+    expect(navegada.postMessage).not.toHaveBeenCalled();
   });
 
   test('sense cap finestra pròpia (només d\'un altre origen), o si matchAll falla: se n\'obri una al Xat, i la d\'un altre origen no es toca', async () => {
@@ -1584,6 +1634,23 @@ describe('avisos push cecs (261030)', () => {
     expect(api.ETIQUETA_AVIS_XAT).toBe(ETIQUETA_AVIS_XAT);
     expect(api.CAMI_DEL_XAT).toBe('/xat');
     expect(api.RUTA_DEL_XAT.test(api.CAMI_DEL_XAT)).toBe(true);
+  });
+
+  /* B8C-3 (marató 261101_2143; D-B8C-1) · La ruta neutra i el missatge cec
+     són els mateixos al worker i a la pàgina, i la pàgina reconeix la ruta. */
+  test('paritat B8C-3: CAMI_AVIS_XAT és el de destiDelAvis.js (i la pàgina el reconeix com a ruta de l\'avís) i MISSATGE_AVIS_XAT el de registre.js', () => {
+    const { api } = carregaWorker();
+    expect(api.CAMI_AVIS_XAT).toBe('/xat?obri=no-llegits');
+    expect(api.CAMI_AVIS_XAT).toBe(CAMI_AVIS_XAT);
+    expect(api.MISSATGE_AVIS_XAT).toBe('sdp-avis-xat');
+    expect(api.MISSATGE_AVIS_XAT).toBe(MISSATGE_AVIS_XAT);
+    const url = new URL(api.CAMI_AVIS_XAT, ORIGEN);
+    expect(url.origin).toBe(ORIGEN);
+    expect(esRutaDeLAvis(url.pathname, url.search)).toBe(true);
+    expect(esRutaDeLAvis(url.pathname, url.search.slice(1))).toBe(true);
+    expect(api.RUTA_DEL_XAT.test(url.pathname)).toBe(true);
+    /* Cap identificador de fil: la ruta és la mateixa per a tothom. */
+    expect([...url.searchParams.keys()]).toEqual(['obri']);
   });
 
   test('R1: cap versió de sw.js sense gestor de push (Safari revocaria totes les subscripcions); cap pushsubscriptionchange', () => {

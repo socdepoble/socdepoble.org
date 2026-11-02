@@ -14,12 +14,13 @@ const ARREL = process.cwd();
 const llig = (ruta) => readFileSync(path.join(ARREL, ruta), 'utf8');
 
 /* Ordre del Mestre (261021, prompt 261021_0015, tasca 3) · i la instal·lació a l'ordinador: el magatzem, el ganxo i el botó.
-   Ordre nocturna 261030_0252 (Fase 3, WP) · i el mòdul pur dels avisos push. */
+   Ordre nocturna 261030_0252 (Fase 3, WP) · i el mòdul pur dels avisos push.
+   B8C-3 (marató 261101_2143) · i el seu adaptador web (fase N2). */
 const PRODUCCIO = ['public/sw.js', 'src/pwa/registre.js', 'src/main.jsx', 'src/pwa/instalacio.js', 'src/hooks/useInstalacioApp.js',
-  'src/components/universal/BotoInstalaApp.jsx', 'src/pwa/avisosPush.js'];
+  'src/components/universal/BotoInstalaApp.jsx', 'src/pwa/avisosPush.js', 'src/pwa/adaptadorAvisosPush.js'];
 const PROVES = ['src/pwa/registre.test.js', 'src/pwa/sw.test.js', 'src/pwa/manifest.test.js', 'src/pwa/qualitat.test.js',
   'src/pwa/__fixtures__/tokens.js', 'src/pwa/instalacio.test.js', 'src/hooks/useInstalacioApp.test.jsx',
-  'src/components/universal/BotoInstalaApp.test.jsx', 'src/pwa/avisosPush.test.js'];
+  'src/components/universal/BotoInstalaApp.test.jsx', 'src/pwa/avisosPush.test.js', 'src/pwa/adaptadorAvisosPush.test.js'];
 const TOTS = [...PRODUCCIO, ...PROVES];
 
 describe('ESLint', () => {

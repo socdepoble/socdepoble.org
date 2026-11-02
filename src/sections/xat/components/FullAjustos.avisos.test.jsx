@@ -1,0 +1,165 @@
+/* B8C-6 (marató 261101_2143; B8-CLIENT §5.1) · La pàgina «Notificacions» del
+   full Ajustos, muntat de veres dins de ClosCaXat (el banc de
+   FullAjustos.test.jsx), amb el registre DE DEBÒ dels avisos push i un
+   adaptador fals que s'hi registra quan la prova ho demana.
+     · Bandera apagada (cap adaptador): la pàgina és IDÈNTICA a la de hui
+       (el DOM de PaginaEnConstruccio de HEAD 333af8c2c, amb els id normalitzats).
+     · Amb un adaptador, sessió dins, mode remot, la capacitat i el servidor
+       fixat: l'interruptor, i el gest arriba a l'adaptador en el mateix tic.
+     · Amb el motiu d'iOS: només la nota d'instal·lar.
+     · Amb un adaptador natiu sense connector ('sense-connector'), o sense
+       alguna de les condicions: la construcció de hui (ARB-06). */
+import { cleanup, fireEvent, render, screen, within } from '@testing-library/react';
+import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
+import { delVal, getVal, setVal } from '../../../config/storage.js';
+import ClosCaXat, { BotoObriRail, CLAU_RAIL } from './ClosCaXat.jsx';
+import PanellInicialMobil from './PanellInicialMobil.jsx';
+import {
+  AVISOS_PUSH_XAT_ACTIUS, avisosPushDisponibles, fixaServidorAvisosPush, registraAvisosPush
+} from '../../../config/avisosPushXat.js';
+import { TEXTOS_AVISOS } from '../useAvisosPushXat.js';
+
+const mocks = vi.hoisted(() => ({
+  navigate: vi.fn(),
+  sessio: null,
+  mode: 'remote',
+  capacitat: true,
+  motiu: null,
+  tipus: 'web'
+}));
+
+vi.mock('../../../app/contexts/RouterContext', () => ({
+  useNavigate: () => mocks.navigate,
+  useLocation: () => ({ pathname: '/xat' }),
+  useSearchParams: () => [new URLSearchParams()],
+  useParams: () => ({})
+}));
+vi.mock('../../../app/contexts/UIContext', () => ({
+  useUIActions: () => ({ t: (_, alternativa) => alternativa, setTheme: vi.fn(), setLanguage: vi.fn() }),
+  useUIState: () => ({ themePreference: 'light', language: 'ca' })
+}));
+vi.mock('../../../app/contexts/CoreContentContext', () => ({ useCoreContent: () => ({ status: 'ready', towns: [] }) }));
+vi.mock('../XatContext', () => ({
+  useXat: () => ({ comunitats: [], joId: 'A', joNom: 'Javi Llinares', chatThreads: [], modeDades: mocks.mode })
+}));
+vi.mock('../../../app/contexts/SessionContext.jsx', () => ({
+  useSessioOpcional: () => mocks.sessio,
+  useSession: () => mocks.sessio
+}));
+vi.mock('../../../data/backendPort.js', async (importOriginal) => ({
+  ...(await importOriginal()),
+  teCapacitat: (cap) => cap === 'avisosPush' && mocks.capacitat
+}));
+
+Object.defineProperty(HTMLElement.prototype, 'clientWidth', { configurable: true, get() { return 1280; } });
+
+/* El DOM de la pàgina «Notificacions» a HEAD 333af8c2c (abans de B8C-6). */
+const CONSTRUCCIO_DE_HUI = '<section class="sdp-xat-ajustos__buit" aria-labelledby="ID"><h3 id="ID" class="sdp-xat-ajustos__buit-titol">En construcció</h3>'
+  + '<p class="sdp-xat-ajustos__buit-text">Ací podràs triar com t’avisa el xat dels missatges nous, dels grups i de les reaccions.</p>'
+  + '<p class="sdp-xat-ajustos__buit-text">Encara no està disponible: es construirà en una fase següent del xat.</p></section>';
+
+/* L'adaptador fals: el tipus i el motiu es lligen a cada publicació del registre. */
+const adaptador = {
+  get tipus() { return mocks.tipus; },
+  motiu: () => mocks.motiu,
+  estat: vi.fn(async () => ({ estat: 'inactiu' })),
+  activa: vi.fn(() => Promise.resolve({ estat: 'actiu' })),
+  desactiva: vi.fn(async () => ({ estat: 'inactiu' })),
+  sincronitza: vi.fn(async () => ({ estat: 'inactiu' })),
+  neteja: vi.fn(async () => {}),
+  oblida: vi.fn(),
+  escoltaToc: vi.fn(() => () => {})
+};
+/* Registra (una vegada) i torna a publicar l'instantània amb el servidor de la persona, o sense. */
+function ambAdaptador({ tipus = 'web', motiu = null, servidor = true } = {}) {
+  mocks.tipus = tipus;
+  mocks.motiu = motiu;
+  registraAvisosPush(adaptador);
+  fixaServidorAvisosPush(null);
+  if (servidor) fixaServidorAvisosPush({ ambit: 'A', desa: vi.fn(async () => {}), retira: vi.fn(async () => {}) });
+}
+
+let abans = null;
+beforeEach(() => {
+  vi.stubGlobal('ResizeObserver', class { observe() {} unobserve() {} disconnect() {} });
+  abans = getVal(CLAU_RAIL);
+  setVal(CLAU_RAIL, 'obert');
+  mocks.navigate.mockReset();
+  mocks.sessio = { estat: 'dins', currentUser: { id: 'A', email: 'a@exemple.org' }, preparaEixida: vi.fn(async () => ({})), logout: vi.fn() };
+  mocks.mode = 'remote';
+  mocks.capacitat = true;
+  vi.clearAllMocks();
+});
+afterEach(() => {
+  cleanup();
+  vi.unstubAllGlobals();
+  if (abans == null) delVal(CLAU_RAIL);
+  else setVal(CLAU_RAIL, abans);
+});
+
+const full = () => screen.getByRole('dialog', { name: 'Ajustos' });
+function obriNotificacions() {
+  const middle = (
+    <aside className="sdp-workspace-column" aria-label="Xats">
+      <PanellInicialMobil />
+      <BotoObriRail etiqueta="Menú" />
+    </aside>
+  );
+  render(<ClosCaXat middleTitle="Xats" middleColumn={middle} rightColumn={<div />} />);
+  fireEvent.click(within(document.getElementById('app-grid-sidebar')).getByRole('button', { name: 'Tu: ajustos' }));
+  fireEvent.click(within(full()).getByRole('button', { name: /^Notificacions/ }));
+  return full().querySelector('.sdp-xat-ajustos__cos');
+}
+const normalitza = (html) => html.replace(/(id|aria-labelledby)="[^"]*"/g, '$1="ID"');
+
+describe('bandera apagada (la de debò)', () => {
+  test('cap adaptador registrat: la pàgina és idèntica a la de hui, sense interruptor', () => {
+    expect(AVISOS_PUSH_XAT_ACTIUS).toBe(false);
+    expect(avisosPushDisponibles()).toBe(false);
+    const cos = obriNotificacions();
+    expect(normalitza(cos.innerHTML)).toBe(CONSTRUCCIO_DE_HUI);
+    expect(screen.queryByRole('switch')).toBeNull();
+  });
+});
+
+describe('amb un adaptador registrat', () => {
+  test('amb totes les condicions: l\'interruptor i les notes; el gest arriba a l\'adaptador en el mateix tic', () => {
+    ambAdaptador();
+    const cos = obriNotificacions();
+    expect(within(cos).queryByRole('region', { name: 'En construcció' })).toBeNull();
+    const interruptor = within(cos).getByRole('switch', { name: TEXTOS_AVISOS.interruptor[1] });
+    expect(interruptor.getAttribute('aria-checked')).toBe('false');
+    expect([...cos.querySelectorAll('.sdp-xat-ajustos__nota')].map((n) => n.textContent))
+      .toEqual([TEXTOS_AVISOS.cec[1], TEXTOS_AVISOS.eixida[1]]);
+    fireEvent.click(interruptor);
+    expect(adaptador.activa).toHaveBeenCalledTimes(1);
+    /* El registre ja és ocupat: l'interruptor, desactivat (el pany entre gestos). */
+    expect(interruptor.disabled).toBe(true);
+  });
+
+  test('amb el motiu d\'iOS (sense l\'app a la pantalla d\'inici): només la nota, sense interruptor', () => {
+    ambAdaptador({ motiu: 'ios-sense-instalar' });
+    const cos = obriNotificacions();
+    expect(screen.queryByRole('switch')).toBeNull();
+    expect([...cos.querySelectorAll('.sdp-xat-ajustos__nota')].map((n) => n.textContent)).toEqual([TEXTOS_AVISOS.ios[1]]);
+  });
+
+  test('adaptador natiu sense connector (motiu \'sense-connector\'): la construcció de hui (ARB-06)', () => {
+    ambAdaptador({ tipus: 'natiu', motiu: 'sense-connector' });
+    const cos = obriNotificacions();
+    expect(normalitza(cos.innerHTML)).toBe(CONSTRUCCIO_DE_HUI);
+  });
+
+  test.each([
+    ['sense el servidor fixat', () => ambAdaptador({ servidor: false })],
+    ['amb la sessió fora', () => { ambAdaptador(); mocks.sessio = null; }],
+    ['amb la sessió en comprovant', () => { ambAdaptador(); mocks.sessio = { ...mocks.sessio, estat: 'comprovant' }; }],
+    ['en llavor', () => { ambAdaptador(); mocks.mode = 'seed'; }],
+    ['sense la capacitat avisosPush', () => { ambAdaptador(); mocks.capacitat = false; }],
+    ['amb un motiu que no s\'oferix (sense clau)', () => ambAdaptador({ motiu: 'sense-clau' })]
+  ])('%s: la construcció de hui', (_nom, prepara) => {
+    prepara();
+    const cos = obriNotificacions();
+    expect(normalitza(cos.innerHTML)).toBe(CONSTRUCCIO_DE_HUI);
+  });
+});

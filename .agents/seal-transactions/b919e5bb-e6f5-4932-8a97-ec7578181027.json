@@ -1,0 +1,17 @@
+{
+  "id": "b919e5bb-e6f5-4932-8a97-ec7578181027",
+  "session": "9a7dd881-91e3-411d-951a-724a99249642",
+  "operationId": "torn_3d9af83b-onada_tres_frontissa_legal_fediversity_marato_extirpacio_avisos-9a7dd881",
+  "claim": "9a7dd881-91e3-411d-951a-724a99249642:governance-write",
+  "planHash": "f0a1feaf424a781237dc7193f37b2374b8d9874391c4ff0b08a4ffdeaedf2842",
+  "beforeSeal": "00d99b1a1b7f8c701a9be87b5aa514e31c36e4255fe42b8bee2b9002dd20a5e0",
+  "files": [
+    {
+      "path": ".agents/contingut_estructural.json",
+      "before": "a2ac60468f5c9eac7d6584b443b5b8268fbaafaeb5c1d93ffa7ac17055f01a82",
+      "after": "9c952c810937f2dbf201be2a8a8ad1713b2fdc3fcef996cb06b024745feaa98c"
+    }
+  ],
+  "state": "accepted",
+  "afterSeal": "d863c155441b09590117b6eb2a6e30dacfebf30e6a62f0b502590644b8434d0f"
+}

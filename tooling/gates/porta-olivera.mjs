@@ -170,7 +170,7 @@ export function nomsSolts(arrel = arrelPerDefecte()) {
 }
 
 /** Categoria d'un nom termodinàmic; les compostes no es parteixen pel primer «_». */
-function categoriaDe(resta) {
+export function categoriaDe(resta) {
   const m = COMPOSTES.exec(resta);
   if (!m) return resta.split('_')[0];
   return m[1] === 'pla_implementacio' ? 'pla' : m[1];
@@ -205,7 +205,7 @@ export function artefactes(arrel = arrelPerDefecte()) {
  * curs». Comparteix resolució amb `ancoratge()`: només compta si el camí
  * resol al primer nivell; un homònim d'una altra carpeta no protegix la taula.
  */
-function viusExactes(arrel) {
+export function viusExactes(arrel) {
   const p = path.join(arrel, INDEX);
   const text = fs.existsSync(p) ? fs.readFileSync(p, 'utf8') : '';
   const noms = new Set();
@@ -255,7 +255,7 @@ export function prosaIndex(text) {
   return markdownProse(text);
 }
 
-const referent = (raw, senseMarkdown = true) => {
+export const referent = (raw, senseMarkdown = true) => {
   const ref = raw.replace(/\\(?=[|#])/g,'').split(/[|#]/)[0].trim();
   return senseMarkdown ? ref.replace(/\.md$/, '') : ref;
 };
@@ -303,7 +303,7 @@ export function apuntaA(raw, rel, presents = null) {
 }
 
 /** `.md` s'omet a l'àncora només si el nom no porta cap altra extensió. */
-function senseMd(nom) {
+export function senseMd(nom) {
   return nom.endsWith('.md') && !path.posix.extname(nom.slice(0, -3)) ? nom.slice(0, -3) : nom;
 }
 /** Àlies o fragment d'una àncora crua, escapament inclòs; buit si no en té. */
@@ -334,7 +334,7 @@ export function ancoratge(arrel = arrelPerDefecte()) {
 /* ── Remei de les àncores fantasma ────────────────────────────────────────── */
 
 /** Fitxers i carpetes visibles d'una carpeta: només noms, mai contingut. */
-function entrades(arrel, rel) {
+export function entrades(arrel, rel) {
   try { return fs.readdirSync(path.join(arrel, rel), { withFileTypes: true }).filter(e => !e.name.startsWith('.')); }
   catch (error) { if (['ENOENT', 'ENOTDIR'].includes(error.code)) return []; throw error; }
 }
@@ -379,7 +379,7 @@ function textFantasmes(arrel, fantasmes) {
  * Escriptori net: la definició única (AGENTS §0.1) i el que jutja l'informe.
  * Brossa, Safata i àncores; el «pla de hui» no hi entra, és cosa de la petorreta.
  */
-function errorsEstructura(arrel) {
+export function errorsEstructura(arrel) {
   const errors = [];
   for (const [rel, directory] of [[ESCRIPTORI, true], [INDEX, false]]) {
     try {
@@ -423,14 +423,14 @@ const INICI_DECLARACIO = /^[ \t]*[-*][ \t]+$/;
 const PRIMERA_ANCORA = /!?\[\[([^[\]\n]+)\]\]/;
 const CREACIO = /^\|[ \t]*Creació[ \t]*\|[ \t]*([^|\n]+?)[ \t]*\|/m;
 const ESTAT_PLA = /^\*\*Estat del Pla:\*\*[ \t]*(.*)$/m;
-const tall = (text, max = 80) => (String(text).length > max ? `${String(text).slice(0, max - 1)}…` : String(text));
-const curt = (torn) => String(torn).slice(0, 13);
+export const tall = (text, max = 80) => (String(text).length > max ? `${String(text).slice(0, max - 1)}…` : String(text));
+export const curt = (torn) => String(torn).slice(0, 13);
 
 function textIndex(arrel) {
   try { return fs.readFileSync(path.join(arrel, INDEX), 'utf8'); }
   catch (error) { if (error.code === 'ENOENT') return ''; throw error; }
 }
-function llegeixSiPots(abs) {
+export function llegeixSiPots(abs) {
   try { return fs.readFileSync(abs, 'utf8'); } catch { return null; }
 }
 
@@ -457,7 +457,7 @@ export function faseConvocatoria(arrel = arrelPerDefecte()) {
  * Torn per identificador o prefix (`torn_` i almenys huit xifres): obert i vigent, o per què
  * no. Amb `tanca` (el torn que tanca tancament.mjs), eixe torn ja no sosté res. Només llig.
  */
-function estatTorn(arrel, token, ara, tanca = null) {
+export function estatTorn(arrel, token, ara, tanca = null) {
   let noms = [];
   try { noms = fs.readdirSync(path.join(arrel, TORNS)).filter((n) => /^torn_[0-9a-f-]+\.json$/.test(n)).map((n) => n.slice(0, -'.json'.length)); }
   catch { /* sense registres de torn */ }
@@ -588,7 +588,7 @@ function vidaDe(arrel, nom, linies, { dia, ara, vius = new Set(), tanca = null }
 }
 
 /** Declaracions agrupades per document. */
-function perNomDe(arrel) {
+export function perNomDe(arrel) {
   const perNom = new Map();
   for (const d of declaracions(arrel)) perNom.set(d.nom, [...(perNom.get(d.nom) ?? []), d]);
   return perNom;
@@ -652,6 +652,25 @@ export function trinitat(arrel, prompt, { contingut = null } = {}) {
   };
 }
 
+/**
+ * El text sense comentaris HTML, en una passada (ARB-F3I3-02): sense regex, cap retrocés amb un
+ * «<!--» sense tancar. El «-->» es busca després de l'obertura sencera i el primer tanca. Sense
+ * «-->», la cua es queda tal qual, com feia `/<!--[\s\S]*?-->/g`.
+ */
+function senseComentaris(text) {
+  const font = String(text ?? '');
+  let eixida = '';
+  let i = 0;
+  for (;;) {
+    const obri = font.indexOf('<!--', i);
+    if (obri < 0) return eixida + font.slice(i);
+    const tanca = font.indexOf('-->', obri + 4);
+    if (tanca < 0) return eixida + font.slice(i);
+    eixida += font.slice(i, obri);
+    i = tanca + 3;
+  }
+}
+
 function cosDeSeccio(text, titol) {
   const m = new RegExp(`^##[ \\t]+${titol}[ \\t]*\\r?\\n([\\s\\S]*?)(?=^##[ \\t]|(?![\\s\\S]))`, 'm').exec(text);
   return m ? m[1] : null;
@@ -665,7 +684,7 @@ export function completesaPla(text) {
   for (const titol of ['Verificació', 'Riscos']) {
     const cos = cosDeSeccio(text, titol);
     if (cos === null) faltes.push(`sense «## ${titol}»`);
-    else if (!cos.replace(/<!--[\s\S]*?-->/g, '').replace(/\[pendent\]/gi, '').trim()) faltes.push(`«${titol}» en [pendent]`);
+    else if (!senseComentaris(cos).replace(/\[pendent\]/gi, '').trim()) faltes.push(`«${titol}» en [pendent]`);
   }
   return faltes;
 }
@@ -674,7 +693,7 @@ export function completesaPla(text) {
 export function seccioZeroFeta(contingut) {
   const s = SECCIO_ZERO.exec(String(contingut ?? ''));
   if (!s) return false;
-  const cos = s[1].replace(/<!--[\s\S]*?-->/g, '');
+  const cos = senseComentaris(s[1]);
   return /^[ \t]*[-*+][ \t]+\[[xX]\]/m.test(cos) && !/^[ \t]*[-*+][ \t]+\[[ \t]\]/m.test(cos);
 }
 
@@ -1033,7 +1052,7 @@ function comprovaCarpeta(arrel, carpeta) {
 }
 
 /** Rebut de torn que du el frontmatter d'un Markdown de la taula: `{ torn, rebut }`, o null. */
-function reflexDe(abs) {
+export function reflexDe(abs) {
   if (!abs.endsWith('.md')) return null;
   let text;
   try { text = fs.readFileSync(abs, 'utf8'); } catch { return null; }

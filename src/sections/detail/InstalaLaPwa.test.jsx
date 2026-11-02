@@ -8,15 +8,23 @@
 import { cleanup, fireEvent, render } from '@testing-library/react';
 import { afterEach, describe, expect, test, vi } from 'vitest';
 
+/* El t() de la interfície: la reserva, llevat de la prova que el canvia per un diccionari (i el torna). */
+const ui = vi.hoisted(() => ({ t: (_, reserva) => reserva }));
 vi.mock('../../app/contexts/UIContext', async (importOriginal) => ({
   ...(await importOriginal()),
-  useUIActions: () => ({ t: (_, reserva) => reserva })
+  useUIActions: () => ({ t: (...args) => ui.t(...args) })
 }));
 
-import { InstalaLaPwa, PAGINA_D_INSTALACIO, esEntradaPropia, guiaDInstalacio, modeDInstalacio, useInstalacioDeLaPagina } from './InstalaLaPwa.jsx';
+import { InstalaLaPwa, PAGINA_D_INSTALACIO, esEntradaPropia, etiquetaDeBotiga, guiaDInstalacio, modeDInstalacio, useInstalacioDeLaPagina } from './InstalaLaPwa.jsx';
 import { creaInstalacio } from '../../pwa/instalacio.js';
+import CA from '../../config/idiomes/ca.js';
+import ES from '../../config/idiomes/es.js';
+import EN from '../../config/idiomes/en.js';
+import EU from '../../config/idiomes/eu.js';
+import GL from '../../config/idiomes/gl.js';
 
 const PLAY = 'https://play.google.com/store/apps/details?id=org.socdepoble.app';
+const APP_STORE = 'https://apps.apple.com/app/id1234567890';
 const WORDPRESS = 'https://wordpress.org/plugins/socdepoble/';
 const nav = (userAgent, maxTouchPoints = 0) => ({ userAgent, maxTouchPoints });
 /* Res que anuncie una botiga encara tancada, ni cap adreça (decisió del Mestre: cap «pròximament»). */
@@ -128,10 +136,50 @@ describe('les ranures de botiga', () => {
     render(<Ranures canals={[{ id: 'google-play', nom: 'Google Play', url: PLAY }, { id: 'app-store', nom: 'App Store', url: null }]} />);
     const enllacos = ranura().querySelectorAll('a');
     expect(enllacos).toHaveLength(1);
+    // B9 · Una botiga d'apps diu on és l'app («Disponible a Google Play»), no només el nom.
     expect([enllacos[0].getAttribute('href'), enllacos[0].className, enllacos[0].textContent])
-      .toEqual([PLAY, 'sdp-boto sdp-boto--secundari sdp-boto--gran', 'Google Play']);
+      .toEqual([PLAY, 'sdp-boto sdp-boto--secundari sdp-boto--gran', 'Disponible a Google Play']);
     expect(enllacos[0].parentElement.className).toBe('sdp-accions');
     expect(ranura().querySelectorAll('button')).toHaveLength(0);
+  });
+
+  /* B9 (marató 261101_2143) · L'App Store oberta: el mateix botó normal, amb
+     «Disponible a l'App Store». El nom accessible és el text visible (cap
+     aria-label, WCAG 2.5.3) i l'enllaç s'obri en la mateixa pestanya. */
+  test('l’App Store oberta pinta «Disponible a l’App Store», sense aria-label ni pestanya nova', () => {
+    render(<Ranures canals={[
+      { id: 'google-play', nom: 'Google Play', url: null },
+      { id: 'app-store', nom: 'App Store', url: APP_STORE },
+      { id: 'wordpress-org', nom: 'WordPress.org', url: WORDPRESS }
+    ]} />);
+    const enllacos = [...ranura().querySelectorAll('.sdp-accions > a')];
+    expect(enllacos.map((a) => [a.getAttribute('href'), a.className, a.textContent])).toEqual([
+      [APP_STORE, 'sdp-boto sdp-boto--secundari sdp-boto--gran', "Disponible a l'App Store"],
+      [WORDPRESS, 'sdp-boto sdp-boto--secundari sdp-boto--gran', 'WordPress.org']
+    ]);
+    for (const a of enllacos) expect([a.hasAttribute('aria-label'), a.hasAttribute('target')]).toEqual([false, false]);
+    expect(ranura().textContent).not.toMatch(/beta|TestFlight|prompte|aviat|pròximament/i);
+  });
+
+  /* B9 · El botó passa el t() de la interfície a etiquetaDeBotiga: amb la
+     interfície en anglés, el text del diccionari de veres, no la reserva valenciana. */
+  test('el text de cada botiga ve del t() de la interfície (anglés)', () => {
+    const reserva = ui.t;
+    ui.t = (clau, text) => EN[clau] || text;
+    try {
+      render(<Ranures canals={[
+        { id: 'google-play', nom: 'Google Play', url: PLAY },
+        { id: 'app-store', nom: 'App Store', url: APP_STORE },
+        { id: 'wordpress-org', nom: 'WordPress.org', url: WORDPRESS }
+      ]} />);
+      expect([...ranura().querySelectorAll('.sdp-accions > a')].map((a) => [a.getAttribute('href'), a.textContent])).toEqual([
+        [PLAY, 'Get it on Google Play'],
+        [APP_STORE, 'Download on the App Store'],
+        [WORDPRESS, 'WordPress.org']
+      ]);
+    } finally {
+      ui.t = reserva;
+    }
   });
 
   test('una adreça de proves internes o d’un altre host no obri el canal', () => {
@@ -221,5 +269,32 @@ describe('el ganxo dins de l’app nativa', () => {
     } finally {
       delete window.Capacitor;
     }
+  });
+});
+
+/* B9 (marató 261101_2143) · etiquetaDeBotiga, pura: la clau de cada botiga
+   d'apps en les cinc llengües (amb els diccionaris de veres) i la mateixa
+   reserva que el valor valencià; la resta, el nom del canal. */
+describe('etiquetaDeBotiga (pura)', () => {
+  test('cinc llengües per a Google Play i l’App Store; WordPress.org i un canal desconegut, el nom', () => {
+    const esperats = [
+      ['ca', CA, 'Disponible a Google Play', "Disponible a l'App Store"],
+      ['es', ES, 'Disponible en Google Play', 'Disponible en el App Store'],
+      ['en', EN, 'Get it on Google Play', 'Download on the App Store'],
+      ['eu', EU, 'Eskuragarri Google Play-n', 'Eskuragarri App Store-n'],
+      ['gl', GL, 'Dispoñible en Google Play', 'Dispoñible na App Store']
+    ];
+    for (const [codi, dicc, play, store] of esperats) {
+      const t = (clau, reserva) => dicc[clau] || reserva;
+      expect([codi, etiquetaDeBotiga({ id: 'google-play', nom: 'Google Play' }, t), etiquetaDeBotiga({ id: 'app-store', nom: 'App Store' }, t)])
+        .toEqual([codi, play, store]);
+      expect([codi, etiquetaDeBotiga({ id: 'wordpress-org', nom: 'WordPress.org' }, t)]).toEqual([codi, 'WordPress.org']);
+    }
+    // Sense traducció, la reserva és el valor valencià, caràcter a caràcter (Llei del Píxel).
+    const reserva = (_, text) => text;
+    expect([etiquetaDeBotiga({ id: 'google-play' }, reserva), etiquetaDeBotiga({ id: 'app-store' }, reserva)])
+      .toEqual([CA['section.descarregues.botiga.googlePlay'], CA['section.descarregues.botiga.appStore']]);
+    expect([etiquetaDeBotiga({ id: 'apk', nom: 'APK' }, reserva), etiquetaDeBotiga(null, reserva), etiquetaDeBotiga({ id: 'x' }, reserva)])
+      .toEqual(['APK', '', '']);
   });
 });

@@ -30,12 +30,18 @@
  * amb {nom}: continua» (`onAccepta`, només per al canvi pendent d'este mateix
  * kid). `rescataFocus`: el cos naix d'un canvi mentre el diàleg era obert; quan
  * el número arriba, si el focus és al body, va al primer botó.
+ *
+ * E3 (marató 261101_2143; G2-A-doctr-02) · Sense número (`sense-clau`) perquè el
+ * contacte té un canvi pendent sense cap clau nova que es puga confirmar, el cos
+ * no diu que encara no ha activat els xats privats (contradiria l'alerta del fil):
+ * diu el mateix que l'alerta, «Sense cap clau de seguretat vàlida».
  */
 import { useEffect, useRef } from 'react';
 import { ShieldCheck } from 'lucide-react';
 import { Alerta, Boto } from '../../../components/PedraSeca/index.js';
 import { omple } from '../../../config/moderacio.js';
 import { TEXTOS_XIFRATGE } from '../estatXifratgeFil.js';
+import { TEXTOS_SENSE_CLAU } from './AvisClauCanviada.jsx';
 
 const XIFRES = /^\d{5}( \d{5}){11}$/;
 const T_RESERVA = (_clau, reserva) => reserva;
@@ -62,9 +68,12 @@ export default function CosSeguretatXat({
      (mai un altre: la persona només pot acceptar la clau que compara). */
   const pendent = grups !== null && n.pendent === true;
   const canviPendent = pendent && Array.isArray(canvis?.pendents)
-    ? canvis.pendents.find((p) => typeof p?.kidNou === 'string' && p.kidNou === n.kid) ?? null
+    ? canvis.pendents.find((p) => typeof p?.kidNou === 'string' && p.kidNou === n.kid && p.acceptable !== false) ?? null
     : null;
   const potAcceptar = canviPendent !== null && typeof onAccepta === 'function';
+  /* E3 · G2-A-doctr-02 · Cap número perquè no hi ha cap clau nova que es puga confirmar. */
+  const senseClauNova = n.estat === 'sense-clau' && Array.isArray(canvis?.pendents)
+    && canvis.pendents.some((p) => p && !(typeof p.kidNou === 'string' && p.kidNou !== '' && p.acceptable !== false));
   const calculant = n.estat === 'calculant';
   /* «Verificat…» només al costat d'un número. */
   const verificat = grups !== null && n.verificat === true;
@@ -134,7 +143,8 @@ export default function CosSeguretatXat({
               ) : null}
             </>
           ) : null}
-          {n.estat === 'sense-clau' ? <p>{tr(TEXTOS_XIFRATGE.numero.senseClau)}</p> : null}
+          {senseClauNova ? <Alerta to="avis" titol={tr(TEXTOS_SENSE_CLAU.titol)}>{tr(TEXTOS_SENSE_CLAU.contacte)}</Alerta> : null}
+          {n.estat === 'sense-clau' && !senseClauNova ? <p>{tr(TEXTOS_XIFRATGE.numero.senseClau)}</p> : null}
           {n.estat === 'sense-claus-propies' ? <p>{tr(TEXTOS_XIFRATGE.numero.senseClausPropies)}</p> : null}
           {n.estat === 'clau-canviada' ? <Alerta to="avis">{tr(TEXTOS_XIFRATGE.clauCanviadaForta)}</Alerta> : null}
           {n.estat === 'error' ? <Alerta to="error">{tr(TEXTOS_XIFRATGE.numero.error)}</Alerta> : null}

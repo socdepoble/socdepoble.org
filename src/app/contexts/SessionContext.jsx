@@ -17,6 +17,9 @@ import { oblidaXatEnEixir } from '../../data/xifratXatEixida.js';
 import { configuraMarcaOblitCarpetesLocals, oblidaTotesLesCarpetesLocals } from '../../sections/multimedia/bibliotecaCarpetesLocals.js';
 import { registraEixidaDeVeres } from '../../data/expulsioAmfitrio.js';
 import { delVal, getVal, setVal } from '../../config/storage.js';
+import {
+  baixaAvisosPushEnEixir, baixaLocalAvisosPushEnEntrar, oblidaAvisosPushEnEixir, reprenAvisosPushTrasEixidaFallida
+} from '../../config/avisosPushXat.js';
 
 const EMPTY_CONFIG = Object.freeze({});
 
@@ -90,8 +93,18 @@ const definixContrasenyaDelPort = async (...args) => {
   oblidaRecuperacioPendent();
   return resultat;
 };
+/* B8C-1 (marató 261101_2143; B8-CLIENT §2.4, ARB-05) · Una entrada explícita
+   pot ser d'una altra persona en el mateix aparell: baixa LOCAL dels avisos
+   push que hi haja (sense retirada, encara no hi ha sessió). No s'espera ni
+   pot tallar l'entrada: té el seu propi límit i no rebutja. Qui torna a entrar
+   a mà torna a encendre els avisos amb el seu gest; una sessió que es recupera
+   sola no passa per ací i els conserva. */
+const baixaLocalPushEnEntrar = () => {
+  try { Promise.resolve(baixaLocalAvisosPushEnEntrar()).catch(() => {}); } catch { /* l'entrada no depén dels avisos */ }
+};
 const ambEntradaExplicita = (entra) => (...args) => {
   oblidaRecuperacioPendent();
+  baixaLocalPushEnEntrar();
   return entra(...args);
 };
 const loginWithPasswordDelPort = ambEntradaExplicita((...args) => loginWithPassword(...args));
@@ -122,12 +135,34 @@ const teCapacitatSegura = (nom) => {
    sessió», «Eixir del poble», la baixa (amb el seu `tanca`) i l'expulsió de
    l'amfitrió (host.js expulsaSessio, per data/expulsioAmfitrio.js) passen per
    ací. Primer l'intent final, després `tanca` i, només si ha anat bé,
-   DESPRES_DE_TANCAR (Notes, carpetes locals i, amb E2EE, el xat). */
+   DESPRES_DE_TANCAR (Notes, carpetes locals i, amb E2EE, el xat).
+   B8C-1 (marató 261101_2143; B8-CLIENT §2.4) · Els avisos push d'este aparell
+   se'n van amb la sessió: primer la baixa (amb la sessió encara vàlida, per a
+   retirar l'aparell al servidor) i, si tancar ha anat bé, l'oblit local. Mai
+   bloqueja l'eixida: la baixa té el seu propi límit i l'intent final, el seu.
+   NO va a ABANS_DE_TANCAR: preparaEixida (l'avís previ, que no tanca res)
+   també la crida, i la persona encara pot fer «Cancel·la». Si `tanca` llança,
+   la persona continua dins: el registre torna a admetre el seu servidor (el
+   push ja és apagat i el pot tornar a encendre, D-B8C-8). Les funcions no
+   reben res: sessio.js els passaria usuariId i el registre el prendria per
+   opcions. */
+const baixaPushEnEixir = () => baixaAvisosPushEnEixir();
+const oblitPushEnEixir = () => oblidaAvisosPushEnEixir();
 function eixidaDeVeres({ config, usuariId, tanca, opcionsXat }) {
+  let tancada = false;
+  const tancaIAnota = async () => {
+    const resultat = await tanca();
+    tancada = true;
+    return resultat;
+  };
   return iOblidaRecuperacio(eixDeLaSessio({
-    config, usuariId, tanca,
-    abansDeTancar: ABANS_DE_TANCAR, despresDeTancar: despresDeTancarAmb(config, opcionsXat),
-  }));
+    config, usuariId, tanca: tancaIAnota,
+    abansDeTancar: [...ABANS_DE_TANCAR, baixaPushEnEixir],
+    despresDeTancar: [...despresDeTancarAmb(config, opcionsXat), oblitPushEnEixir],
+  })).catch((error) => {
+    if (!tancada) reprenAvisosPushTrasEixidaFallida();
+    throw error;
+  });
 }
 
 /* QA-A01a · Sense cap proveïdor muntat (l'element tret de la pàgina de

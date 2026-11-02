@@ -47,9 +47,9 @@ Font: `src/data/contracte.js`. Una implementació vàlida les oferix totes:
 - `subscribeToXat`
 - `unsubscribeFromXat`
 
-## 35 capacitats atòmiques opcionals (`CAPACITATS`)
+## 37 capacitats atòmiques opcionals (`CAPACITATS`)
 
-83 mètodes addicionals; 115 mètodes en `CONTRACTE_BACKEND`. Una capacitat
+86 mètodes addicionals; 118 mètodes en `CONTRACTE_BACKEND`. Una capacitat
 està disponible només si el port disposa de tots els seus mètodes. No hi ha
 un camp `capacitats` obligatori a l'adaptador ni `capacitatsDisponibles()`.
 
@@ -90,6 +90,8 @@ un camp `capacitats` obligatori a l'adaptador ni `capacitatsDisponibles()`.
 | `consentimentTitular` | `estatTitularPublic`, `marcaTitularPublic` |
 | `dadesObertes` | `llegixDadesObertes` |
 | `restauracioDadesObertes` | `restauraDadesObertes` |
+| `avisosPush` | `desaDispositiuAvisos`, `retiraDispositiuAvisos` |
+| `silenciXat` | `silenciaFil` |
 
 ## Validació i conformitat
 
@@ -101,7 +103,7 @@ getters i capacitats parcials. No és una prova funcional d'un servidor remot.
 `src/data/conformitat/kit.js` exporta `CASOS`, `contextDeConformitat`,
 `executaCas` i `metodesSenseCas`. Els casos tornen `ok`, `falla` o `omés`.
 Les omissions i `metodesSenseCas()` fan visible la cobertura pendent; no es
-pot dir que les 115 operacions tinguen comportament certificat. Les proves
+pot dir que les 118 operacions tinguen comportament certificat. Les proves
 són `src/data/conformitat/kit.test.js` i `qualitat.test.js` en eixa carpeta.
 No hi ha les API `verificaContracteBackend` o `executaKitDeConformitat`.
 

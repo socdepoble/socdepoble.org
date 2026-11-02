@@ -471,7 +471,7 @@ function socdepoble_enxufe_seo_capcalera() {
 	$url        = socdepoble_enxufe_seo_url( $fila['ruta'] );
 	$lloc       = socdepoble_enxufe_seo_nom_del_lloc();
 
-	echo "\n<!-- Sóc de Poble — Enxufe: OpenGraph de la ruta -->\n";
+	echo "\n<!-- Sóc de Poble: OpenGraph de la ruta -->\n";
 	if ( '' !== $descripcio ) {
 		echo '<meta name="description" content="' . esc_attr( $descripcio ) . '">' . "\n";
 	}

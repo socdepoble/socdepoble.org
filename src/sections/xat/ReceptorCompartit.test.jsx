@@ -4,18 +4,24 @@
    sola vegada, si encara no hi és i si el lot no té conversa triada; el toc
    d'un avís del sistema obri el seu xat. El registre dels avisos només
    s'omple una vegada per mòdul: l'adaptador fals es registra ací dalt i en
-   guarda el toc. El lot pendent es buida abans i després de cada prova. */
+   guarda el toc. El lot pendent es buida abans i després de cada prova.
+   B8C-6 (marató 261101_2143) · El receptor també munta els avisos push del
+   Xat: la ruta de l'avís amb la bandera de debò (apagada) només lleva el
+   marcador, i amb un adaptador push registrat la sincronització corre en
+   muntar (i mai pregunta). La sessió és la del mock (sense proveïdor, fora). */
 import { act, cleanup, render } from '@testing-library/react';
 import { afterEach, beforeEach, expect, test, vi } from 'vitest';
 import ReceptorCompartit from './ReceptorCompartit.jsx';
 import { descartaCompartit, lliuraCompartit, triaDestiCompartit } from '../../config/compartirNatiu.js';
 import { registraAvisosNatius } from '../../config/avisosNatius.js';
+import { AVISOS_PUSH_XAT_ACTIUS, fixaServidorAvisosPush, registraAvisosPush } from '../../config/avisosPushXat.js';
 
-const router = vi.hoisted(() => ({ pathname: '/mur', navigate: vi.fn() }));
+const router = vi.hoisted(() => ({ pathname: '/mur', search: '', navigate: vi.fn(), sessio: null }));
 vi.mock('../../app/contexts/RouterContext', () => ({
-  useLocation: () => ({ pathname: router.pathname, search: '', state: null, hash: '' }),
+  useLocation: () => ({ pathname: router.pathname, search: router.search, state: null, hash: '' }),
   useNavigate: () => router.navigate
 }));
+vi.mock('../../app/contexts/SessionContext.jsx', () => ({ useSessioOpcional: () => router.sessio }));
 
 /* El pont natiu fals: el toc d'un avís arriba per la funció que rep escoltaToc. */
 let toca = null;
@@ -35,7 +41,7 @@ const comparteix = (text = 'Mira esta foto') => {
   return id;
 };
 
-beforeEach(() => { router.pathname = '/mur'; router.navigate.mockClear(); descartaCompartit(); });
+beforeEach(() => { router.pathname = '/mur'; router.search = ''; router.sessio = null; router.navigate.mockClear(); descartaCompartit(); });
 afterEach(() => { cleanup(); descartaCompartit(); });
 
 test('un lot nou fora del xat porta al Xat una sola vegada', () => {
@@ -113,4 +119,45 @@ test('el toc d’un avís obri el seu xat, amb l’id codificat a la ruta', () =
   vista();
   expect(router.navigate).toHaveBeenCalledTimes(2);
   expect(router.navigate).toHaveBeenLastCalledWith('/xat/f-2');
+});
+
+/* B8C-6 (marató 261101_2143) · Els avisos push del Xat. */
+test('B8C-6: la ruta de l\'avís amb la bandera de debò (apagada) només lleva el marcador, una sola vegada', async () => {
+  expect(AVISOS_PUSH_XAT_ACTIUS).toBe(false);
+  router.pathname = '/xat';
+  router.search = 'obri=no-llegits';
+  router.sessio = { estat: 'dins', currentUser: { id: 'A' } };
+  vista();
+  await act(async () => {});
+  expect(router.navigate).toHaveBeenCalledTimes(1);
+  expect(router.navigate).toHaveBeenCalledWith('/xat', { replace: true });
+});
+
+test('B8C-6: sense adaptador push, el receptor no toca res (ni a /xat ni fora)', async () => {
+  router.sessio = { estat: 'dins', currentUser: { id: 'A' } };
+  const { rerender } = vista();
+  vesA('/xat', rerender);
+  await act(async () => {});
+  expect(router.navigate).not.toHaveBeenCalled();
+});
+
+test('B8C-6: amb un adaptador push registrat i la sessió dins, la sincronització corre en muntar i no pregunta mai', async () => {
+  const sincronitza = vi.fn(async () => ({ estat: 'inactiu' }));
+  const activa = vi.fn(async () => ({ estat: 'actiu' }));
+  registraAvisosPush({
+    tipus: 'web', motiu: () => null, estat: async () => ({ estat: 'inactiu' }), activa,
+    desactiva: async () => ({ estat: 'inactiu' }), sincronitza, neteja: async () => {}, oblida: () => {}, escoltaToc: () => () => {}
+  });
+  try {
+    router.sessio = { estat: 'dins', currentUser: { id: 'A' } };
+    vista();
+    await act(async () => {});
+    /* Sense proveïdor del Xat ni port, no hi ha servidor: la sincronització fa d'interruptor. */
+    expect(sincronitza).toHaveBeenCalledTimes(1);
+    expect(sincronitza).toHaveBeenCalledWith(expect.objectContaining({ actiu: false }));
+    expect(activa).not.toHaveBeenCalled();
+    expect(router.navigate).not.toHaveBeenCalled();
+  } finally {
+    fixaServidorAvisosPush(null);
+  }
 });

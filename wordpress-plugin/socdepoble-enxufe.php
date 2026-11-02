@@ -94,12 +94,12 @@ if ( defined( 'SOCDEPOBLE_ENXUFE_FITXER' ) ) {
 					esc_html(
 						sprintf(
 							/* translators: 1: folder of the copy already active, 2: folder of this copy. */
-							__( 'Sóc de Poble — Enxufe is already active from the folder %1$s. Deactivate that copy in Plugins before activating this one, in %2$s.', 'socdepoble' ),
+							__( 'Sóc de Poble is already active from the folder %1$s. Deactivate that copy in Plugins before activating this one, in %2$s.', 'socdepoble' ),
 							dirname( SOCDEPOBLE_ENXUFE_FITXER ),
 							__DIR__
 						)
 					),
-					esc_html__( 'Sóc de Poble — Enxufe', 'socdepoble' ),
+					esc_html__( 'Sóc de Poble', 'socdepoble' ),
 					array( 'back_link' => true )
 				);
 			}
@@ -116,7 +116,7 @@ if ( defined( 'SOCDEPOBLE_ENXUFE_FITXER' ) ) {
 				esc_html(
 					sprintf(
 						/* translators: 1: folder of the copy that is loaded, 2: folder of this copy. */
-						__( 'Sóc de Poble — Enxufe is installed twice and both copies are active. The copy in %1$s is loaded and the copy in %2$s is ignored. Deactivate one of them in Plugins.', 'socdepoble' ),
+						__( 'Sóc de Poble is installed twice and both copies are active. The copy in %1$s is loaded and the copy in %2$s is ignored. Deactivate one of them in Plugins.', 'socdepoble' ),
 						dirname( SOCDEPOBLE_ENXUFE_FITXER ),
 						__DIR__
 					)

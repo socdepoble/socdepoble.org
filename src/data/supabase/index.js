@@ -77,5 +77,9 @@ export { loadTitularPublic, estatTitularPublic, marcaTitularPublic } from './per
 /* IDEA-24 (marató 261101_2143, B4) · Capacitat 'transferenciaPropietat', la
    transferència atòmica de la propietat (2610311500). Explícita pel mateix motiu. */
 export { transfereixPropietatOrganitzacio } from './organizations.js';
+/* B8C-2 (marató 261101_2143; Bloc B8) · Capacitat 'avisosPush', els aparells
+   dels avisos push del Xat (B8-SERVIDOR §2.9). Explícita pel mateix motiu.
+   'silenciXat' (silenciaFil) ix pel `export * from './xat.js'` de dalt. */
+export { desaDispositiuAvisos, retiraDispositiuAvisos } from './dispositiusAvisos.js';
 
 

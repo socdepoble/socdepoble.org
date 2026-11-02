@@ -34,6 +34,10 @@
  *   · CosAjustos: el marc presentacional (capçalera, cercador i pila). No llig
  *     cap context: tot li arriba per props, i per això el catàleg de disseny
  *     el pinta en línia, sense Dialeg (EspecimenXatAjustos).
+ *     B8C-6 (marató 261101_2143) · `avisos` (useControlAvisosPush): la pàgina
+ *     «Notificacions» passa a PaginaNotificacions només quan hi ha alguna
+ *     cosa a oferir (l'interruptor o la nota d'instal·lar); si no (la
+ *     bandera apagada, l'app sense connector), és la de sempre.
  *   · FullAjustos (per defecte): el Dialeg de Pedra Seca (variant
  *     «sense-marc»: el <dialog> és el marc) i les dades de l'app per
  *     useXat(), UIContext, SessionContext, useAppGrid() i la cara del poble
@@ -64,6 +68,8 @@ import {
 } from '../ajustosXat.js';
 import { PRESETS_AMPLARIA, presetDeMides } from '../amplariaColumnes.js';
 import { TEXTOS_CONSTRUCCIO, textosDeVista } from './VistaEnConstruccio.jsx';
+import PaginaNotificacions from './PaginaNotificacions.jsx';
+import { useControlAvisosPush } from '../useAvisosPushXat.js';
 
 const CAP = Object.freeze([]);
 const noop = () => {};
@@ -115,6 +121,9 @@ export default function FullAjustos({ obert = false, onTanca = noop, onRetornFoc
   const { poble, cara } = useCaraDelPoble();
   const preferits = filsAmbCaraDelPoble(Array.isArray(chatThreads) ? chatThreads : CAP, poble, cara)
     .filter((fil) => fil?.preferit === true && !fil.arxivat);
+  /* B8C-6 · Els avisos d'este dispositiu (apagats per defecte: sense
+     adaptador registrat, res a oferir). */
+  const avisos = useControlAvisosPush(t);
 
   /* El focus al cercador, no a la X. Els efectes del pare corren després
      dels del fill: quan arriba este, el Dialeg ja ha obert el <dialog> i el
@@ -166,6 +175,7 @@ export default function FullAjustos({ obert = false, onTanca = noop, onRetornFoc
           correu={correu}
           ambSessio={Boolean(usuari)}
           ambPrivacitat={ambPrivacitat}
+          avisos={avisos}
           FilaEixida={usuari ? FilaEixidaAmbSessio : null}
           tema={themePreference}
           contrast={contrastPreference}
@@ -252,11 +262,12 @@ function FilaEixidaAmbSessio({ fila, etiqueta }) {
  * Presentacional: tot per props. `pilaInicial` deixa el catàleg obrir-lo en
  * una subpàgina. `FilaEixida` (un component) pinta el grup de l'eixida quan
  * hi ha sessió; sense, el grup no hi és. `ambPrivacitat` (true, false o
- * null si no se sap) tria la nota que diu on porta «Privacitat».
+ * null si no se sap) tria la nota que diu on porta «Privacitat». `avisos`
+ * (B8C-6, null per defecte) és l'estat dels avisos d'este dispositiu.
  */
 export function CosAjustos({
   t, campRef = null, pilaInicial = ARREL, joId = null, joNom = null, joAvatar = null, preferits = CAP, correu = null,
-  ambSessio = false, ambPrivacitat = null, FilaEixida = null, tema = null, contrast = null, llengua = null, amplaria = null, mides = null,
+  ambSessio = false, ambPrivacitat = null, avisos = null, FilaEixida = null, tema = null, contrast = null, llengua = null, amplaria = null, mides = null,
   onTema = noop, onContrast = noop, onLlengua = noop, onAmplaria = noop, onVes = noop, onObriConversa = noop, onTanca = noop
 }) {
   const [pila, setPila] = useState(() => (Array.isArray(pilaInicial) && pilaInicial.length ? pilaInicial : ARREL));
@@ -354,6 +365,9 @@ export function CosAjustos({
   let cos;
   if (resultats) cos = <ResultatsAjustos resultats={resultats} terme={terme} t={t} onObri={obriResultat} />;
   else if (pagina.especial === 'preferits') cos = <PaginaPreferits preferits={preferits} t={t} onObri={onObriConversa} />;
+  /* B8C-6 · Per l'identificador de la pàgina: ajustosXat.js la continua
+     tenint «en construcció» (ARB-04), i ho és mentre no hi haja res a oferir. */
+  else if (pagina.id === 'notificacions' && (avisos?.oferit || avisos?.nomesNota)) cos = <PaginaNotificacions avisos={avisos} t={t} />;
   else if (pagina.construccio) cos = <PaginaEnConstruccio construccio={pagina.construccio} t={t} />;
   else {
     cos = (

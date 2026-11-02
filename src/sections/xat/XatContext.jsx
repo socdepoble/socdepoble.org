@@ -194,9 +194,12 @@ import {
   subscribeToXat,
   unsubscribeFromXat,
   obriFilDePagina as obriFilDePaginaAlBackend,
+  silenciaFil as silenciaFilAlPort,
   teCapacitat
 } from '../../data/backendPort.js';
-import { subjecteDeXat } from '../../data/contracte.js';
+import { DURADES_SILENCI, finsAlDelSilenci, subjecteDeXat } from '../../data/contracte.js';
+/* B8C-5 (marató 261101_2143) · El silenci de la conversa: les regles pures i el silenci en memòria. */
+import { aplicaSilencisLocals, estatSilenciLocal, potSilenciar, properaCaducitat } from './silenciXat.js';
 import {
   ID_FIL_DE_MOSTRA_DE_JAVI, ambXatsPerDefecte, esIdPerDefecte, esLaPersonaDeContacte, esXatDeLaIAIA, filDeMostraDeJavi,
   missatgesDeMostraDeJavi, senseLaIAIA
@@ -231,6 +234,7 @@ import {
   combinaMissatges,
   contactesFrequents as calculaContactesFrequents,
   creaAgrupadorMarques,
+  esSilenciat,
   esperaReintent,
   filsEquivalents,
   fusionaPerSeq,
@@ -298,6 +302,8 @@ const ESPERES_ANTICS = Object.freeze([2000, 5000]);
 const MAX_FALLADES_ANTICS = ESPERES_ANTICS.length + 1;
 /* Agrupació de les marques de lectura per conversa. */
 const MS_MARQUES = 2000;
+/* B8C-5 · L'espera més llarga del temporitzador del silenci en memòria (24 h). */
+const MS_MAXIM_RELLOTGE_SILENCI = 24 * 3600000;
 /* Gauntlet 261025_0545 (XC-02) · Posar-se al dia d'un fil: les pàgines
    incrementals seguides que una sola lectura demana mentre tornen plenes.
    xat_nous en torna com a molt 100, i el fil de pàgina LIMIT_PAGINA (50):
@@ -458,7 +464,10 @@ const BUIT = {
   /* P1-12 pas 17 (D-09) · Fora del proveïdor no hi ha cap oblit que dir ni reintentar. */
   oblitXat: null,
   oblitXatFallit: false,
-  reintentaOblitXat: async () => null
+  reintentaOblitXat: async () => null,
+  /* B8C-5 (ARB-08) · Fora del proveïdor no hi ha cap silenci: ni entrada de menú ni canvi. */
+  potSilenciarFil: () => false,
+  silenciaFil: async () => ({ estat: 'error', finsAl: null })
 };
 
 /** Espera `ms` o fins que el senyal s'aborte. Torna `false` si s'ha abortat. */
@@ -715,6 +724,21 @@ export function XatProvider({ children, config }) {
 
   const [fils, setFils] = useState([]);
   const filsRef = useRef([]);
+  /* B8C-5 (marató 261101_2143; D-B8C-4) · Els silencis en memòria d'esta càrrega
+     (filId → data de fi ISO, o null si s'ha desfet), quan el servidor encara no
+     sap silenciar. Mai a l'emmagatzematge del navegador: en un ordinador
+     compartit, la llista dels fils silenciats seria una metadada al disc. La ref
+     s'escriu alhora que l'estat (la llig avisaSiCal); `araSilenci` és l'instant
+     amb què s'apliquen, i el puja un temporitzador quan en caduca un. */
+  const [silencisLocals, setSilencisLocals] = useState(() => new Map());
+  const silencisLocalsRef = useRef(silencisLocals);
+  const [araSilenci, setAraSilenci] = useState(() => Date.now());
+  const mutaSilencisLocals = useCallback((fn) => {
+    const nou = fn(silencisLocalsRef.current);
+    if (nou === silencisLocalsRef.current) return;
+    silencisLocalsRef.current = nou;
+    setSilencisLocals(nou);
+  }, []);
   /* Auditoria 261007 (B) · El dia local («2026-10-07», clauDia) de l'última
      llista que el sondeig ha aplicat. Vegeu carregaFils: un canvi de dia
      aplica la llista encara que siga equivalent. */
@@ -939,7 +963,9 @@ export function XatProvider({ children, config }) {
     /* Gauntlet 261030 (cicle 2, Codex C3) · L'avís és d'esta generació de persona. */
     const generacio = avisosPersonaRef.current.generacio;
     const deLaPersona = () => !desmuntat.current && avisosPersonaRef.current.generacio === generacio;
-    avisadorRef.current?.(nom, filId, { silenciat: Boolean(fil?.silenciat || fil?.arxivat), vigent: deLaPersona });
+    /* B8C-5 · El silenci en memòria (sense servidor) mana sobre el de la fila. */
+    const silenciat = estatSilenciLocal(silencisLocalsRef.current, filId, Date.now()) ?? Boolean(fil?.silenciat);
+    avisadorRef.current?.(nom, filId, { silenciat: silenciat || Boolean(fil?.arxivat), vigent: deLaPersona });
   }, [joId]);
 
   /* Decisió 1 · Desmuntar tanca l'àmbit: els getters guardats tornen buit i
@@ -1011,6 +1037,8 @@ export function XatProvider({ children, config }) {
       reintentableLlistaRef.current = true;
       setLlistaFresca(true);
       setAvisLlista(null);
+      /* B8C-5 · Els silencis en memòria eren de l'àmbit d'abans (la persona, l'actor o el backend). */
+      mutaSilencisLocals((mapa) => (mapa.size ? new Map() : mapa));
       setEstat(joId ? 'loading' : 'ready');
     }
     setTokenEstat(token);
@@ -1018,7 +1046,7 @@ export function XatProvider({ children, config }) {
        l'operació nova si és el mateix àmbit; si no, rep null. */
     previa?.passa(renovacio ? op : null);
     return () => { op.controller.abort(); };
-  }, [token, joId, mutaPendents]);
+  }, [token, joId, mutaPendents, mutaSilencisLocals]);
 
   /* ── Llista de fils ──
      Torna true si s'ha aplicat, false si ha fallat (o l'àmbit ja no és el
@@ -1979,17 +2007,34 @@ export function XatProvider({ children, config }) {
      personal i servei tècnic de només lectura (filServeiTecnic, dalt), mai
      cap directe amb ell mateix (SDP-XAT-002). */
   const paginaDeLaIAIA = modeDades === 'remote';
+  /* B8C-5 (ARB-12) · Els silencis en memòria, aplicats als fils ABANS de les dues
+     derivacions: arriben a la llista (la pastilla «Silenciada») i també al
+     comptador (totalNoLlegits). La mateixa referència si no n'hi ha cap. */
+  const filsAmbSilencis = useMemo(
+    () => aplicaSilencisLocals(fils, silencisLocals, araSilenci),
+    [fils, silencisLocals, araSilenci]
+  );
+  /* El temporitzador del silenci en memòria més pròxim: en caducar, `araSilenci`
+     puja i el fil torna a sumar sense recarregar («8 hores» s'acaba sol). Com a
+     molt 24 h d'espera: després es torna a armar. */
+  useEffect(() => {
+    const proper = properaCaducitat(silencisLocals, Date.now());
+    if (proper === null) return undefined;
+    const espera = Math.min(Math.max(proper - Date.now() + 1, 0), MS_MAXIM_RELLOTGE_SILENCI);
+    const temporitzador = setTimeout(() => setAraSilenci(Date.now()), espera);
+    return () => clearTimeout(temporitzador);
+  }, [silencisLocals, araSilenci]);
   /* Onada 6 (tasca 12) · Amb la IAIA apagada, cap xat seu (senseLaIAIA): la
      llista, les dues cerques i les comunitats lligen d'ací. */
   const filsDeLaLlista = useMemo(() => {
-    const ids = new Set(fils.map((f) => f.id));
+    const ids = new Set(filsAmbSilencis.map((f) => f.id));
     const extra = Object.values(visitants).filter((f) => !ids.has(f.id));
-    const ambAjuda = ambXatsPerDefecte(extra.length ? [...fils, ...extra] : fils, { afig: false, paginaDeLaIAIA });
+    const ambAjuda = ambXatsPerDefecte(extra.length ? [...filsAmbSilencis, ...extra] : filsAmbSilencis, { afig: false, paginaDeLaIAIA });
     const llista = filDeMostra && ambAjuda.some((f) => f.perDefecte === 'javi')
       ? ambAjuda.map((f) => (f.perDefecte === 'javi' ? filDeMostra : f))
       : ambAjuda;
     return iaiaApagada ? senseLaIAIA(llista) : llista;
-  }, [fils, visitants, paginaDeLaIAIA, filDeMostra, iaiaApagada]);
+  }, [filsAmbSilencis, visitants, paginaDeLaIAIA, filDeMostra, iaiaApagada]);
   /* Integració Xat i Pobles (Onada 6, pla 261009_0245, ítem 4: «El fil de
      xat específic també es dirà 'Gent de la Torre'») · El xat d'un poble que
      és a les fitxes (useCoreContent) es diu com la seua gent a la llista, a
@@ -2004,8 +2049,8 @@ export function XatProvider({ children, config }) {
   /* Fase D (261020, tasca 2) · Ni els directes amb una persona bloquejada,
      com la IAIA apagada: el seu recompte del servidor no s'hi suma. */
   const filsComptats = useMemo(
-    () => senseDirectesBloquejats(iaiaApagada ? senseLaIAIA(fils) : fils, esPersonaBloquejada),
-    [fils, iaiaApagada, esPersonaBloquejada]
+    () => senseDirectesBloquejats(iaiaApagada ? senseLaIAIA(filsAmbSilencis) : filsAmbSilencis, esPersonaBloquejada),
+    [filsAmbSilencis, iaiaApagada, esPersonaBloquejada]
   );
   /* Fase D (261020, tasca 2) · La llista que es VEU, amb la vista prèvia
      d'una persona bloquejada amagada. Internament (missatgesDerivats,
@@ -2168,6 +2213,66 @@ export function XatProvider({ children, config }) {
     carregaMissatges(filId);
   }, [dins, carregaMissatges]);
 
+  /* ── B8C-5 (marató 261101_2143; B8-CLIENT §2.3) · Silenciar una conversa ──
+     potSilenciarFil(filId): cert dins de l'àmbit (amb persona, en qualsevol
+     mode de dades) per a un fil de la llista que és teu i es llig al port: mai
+     les files d'ajuda, el xat de només lectura de Javi ni un fil de visitant.
+     silenciaFil(filId, durada) → { estat: 'fet' | 'local' | 'error', finsAl }.
+     Mai llança. Amb la capacitat 'silenciXat', ho desa el port; sense, o amb un
+     servidor sense la RPC (NO-DISPONIBLE), es queda en memòria fins a
+     recarregar ('local', D-B8C-4). Un altre error (SILENCI_INVALID,
+     XAT_NO_PARTICIPANT, la xarxa) o un canvi d'àmbit pel camí → 'error', sense
+     cap silenci fals. */
+  const potSilenciarFil = useCallback((filId) => {
+    if (!dins() || typeof filId !== 'string' || senseLecturaAlPort(filId)) return false;
+    return potSilenciar(fils.find((f) => f.id === filId));
+  }, [dins, fils]);
+  const silenciaFil = useCallback(async (filId, durada) => {
+    const fallat = { estat: 'error', finsAl: null };
+    if (!potSilenciarFil(filId) || !DURADES_SILENCI.includes(durada)) return fallat;
+    const ambit = ambitActual.current;
+    const encaraAqui = () => !desmuntat.current && ambitActual.current === ambit;
+    let ambServidor = false;
+    try { ambServidor = teCapacitat('silenciXat') === true; } catch { ambServidor = false; }
+    if (ambServidor) {
+      try {
+        const resposta = await silenciaFilAlPort({ filId, durada }, config);
+        if (!encaraAqui()) return fallat;
+        const finsAl = typeof resposta?.silenciatFinsAl === 'string' ? resposta.silenciatFinsAl : null;
+        const silenciat = esSilenciat(finsAl);
+        /* AUTO-05 · Un sondeig de la llista que volava abans del silenci torna
+           null en arribar (una càrrega posterior) i no el desfà; el següent el
+           confirma des de la fila (mapejaFil). */
+        genFils.current += 1;
+        mutaSilencisLocals((mapa) => {
+          if (!mapa.has(filId)) return mapa;
+          const nou = new Map(mapa);
+          nou.delete(filId);
+          return nou;
+        });
+        mutaFils((previs) => {
+          let canviat = false;
+          const nous = previs.map((f) => {
+            if (f.id !== filId || Boolean(f.silenciat) === silenciat) return f;
+            canviat = true;
+            return { ...f, silenciat };
+          });
+          return canviat ? nous : previs;
+        });
+        return { estat: 'fet', finsAl };
+      } catch (error) {
+        if (!encaraAqui()) return fallat;
+        if (error?.code !== 'NO-DISPONIBLE' && error?.codi !== 'NO-DISPONIBLE') return fallat;
+      }
+    }
+    /* En memòria, amb la mateixa data de fi que els adaptadors (contracte). */
+    let finsAl = null;
+    try { finsAl = finsAlDelSilenci(durada, Date.now()); } catch { return fallat; }
+    mutaSilencisLocals((mapa) => new Map(mapa).set(filId, finsAl));
+    setAraSilenci(Date.now());
+    return { estat: 'local', finsAl };
+  }, [potSilenciarFil, config, mutaFils, mutaSilencisLocals]);
+
   const value = useMemo(() => ({
     status: visible ? estat : joId ? 'loading' : 'ready',
     error: null,
@@ -2239,12 +2344,15 @@ export function XatProvider({ children, config }) {
        persona ja ha eixit. Bandera apagada: null, false i un reintent buit. */
     oblitXat,
     oblitXatFallit,
-    reintentaOblitXat
+    reintentaOblitXat,
+    /* B8C-5 · Si el fil es pot silenciar i el silenci (8h, 1setmana, sempre o cap). */
+    potSilenciarFil,
+    silenciaFil
   }), [visible, joId, joNom, joAvatar, entitatActiva, estatSessio, estat, avis, llistaFresca, avisLlista, scopeKey, ambitEstable, filsAmbBloquejos, filServeiTecnic, missatgesDerivats,
     totalNoLlegits, filActiu, getThreadMessages, hiHaMesAntics, carregantAntics, esperaAntics, carregaMesAntics, filCarregat, avisFil, recarregaFil, tipusAvisFil, llegintFil,
     enviaAmbNormes, sendChatMedia, reintenta, descartaFallit, marcaVist,
     obriFil, creaFil, cercaMembres, carregaFils, obriFilDePagina, comunitats, contactesFrequents, marcaLlegides,
-    modeDades, consumixEntrada, iaiaApagada, filAmagat, oblitXat, oblitXatFallit, reintentaOblitXat]);
+    modeDades, consumixEntrada, iaiaApagada, filAmagat, oblitXat, oblitXatFallit, reintentaOblitXat, potSilenciarFil, silenciaFil]);
 
   return (
     <XatContext.Provider value={value}>

@@ -79,7 +79,9 @@ describe('amb la bandera E2EE apagada, la conversa no porta res del xifratge', (
     for (const rastre of ['PanellSeguretatXat', 'CosSeguretatXat', 'useEstatXifratgeDelFil', 'estatXifratgeDelFil', 'numeroSeguretat', 'section.xat.xifratge', 'Xifratge i número de seguretat', 'es xifren',
       /* M02 · L'alerta de canvi de clau, el hook, el servei, els textos i el compositor bloquejat. */
       'AvisClauCanviada', 'useCanvisDeClau', 'canvisDeClau', 'acceptaCanviClau', 'clauCanviadaContinua', 'He parlat amb', 'Clau nova sense confirmar',
-      'avisDelBloqueig', 'nomDelMembre', 'avisNomesLectura', 'potEscriure']) {
+      'avisDelBloqueig', 'nomDelMembre', 'avisNomesLectura', 'potEscriure',
+      /* E3 (marató 261101_2143) · L'avís d'enviament fallit al hook i els textos sense clau nova. */
+      'revisaEnviament', 'revisaCanvisRef.current?.', 'senseClauValida', 'Sense cap clau de seguretat vàlida', 'clauRetirada', 'clauPropiaRetirada', 'TEXT_BARRA_SENSE_CLAU']) {
       expect(apagada.codi, rastre).not.toContain(rastre);
     }
     expect(apagada.trossos).toBe(1);
@@ -91,7 +93,9 @@ describe('amb la bandera E2EE apagada, la conversa no porta res del xifratge', (
     expect(encesa.codi).toContain('numeroSeguretat');
     expect(encesa.codi).toContain('sdp-xat-numero');
     /* M02 · Control positiu: encesa, l'alerta (en un tros a part), el hook i el compositor bloquejat hi són. */
-    for (const rastre of ['AvisClauCanviada', 'canvisDeClau', 'acceptaCanviClau', 'clauCanviadaContinua', 'He parlat amb {nom}: continua', 'avisNomesLectura']) {
+    for (const rastre of ['AvisClauCanviada', 'canvisDeClau', 'acceptaCanviClau', 'clauCanviadaContinua', 'He parlat amb {nom}: continua', 'avisNomesLectura',
+      /* E3 · Control positiu: encesa, l'avís d'enviament fallit i els textos sense clau nova hi són. */
+      'revisaEnviament', 'Sense cap clau de seguretat vàlida', 'section.xat.xifratge.clauRetirada']) {
       expect(encesa.codi, rastre).toContain(rastre);
     }
     expect(encesa.trossos).toBeGreaterThan(2);

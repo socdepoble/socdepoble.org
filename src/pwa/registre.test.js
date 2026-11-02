@@ -4,11 +4,14 @@
    segur, fora d'iframe i fora de l'app nativa. Tot amb dobles: cap navegador. */
 import { readdirSync, readFileSync } from 'node:fs';
 import path from 'node:path';
+import { parse } from '@babel/parser';
 import { afterEach, describe, expect, test, vi } from 'vitest';
 import {
-  ABAST_DEL_SW, ESDEVENIMENT_APP_VISITADA, ESPERA_ESCALFAMENT_MS, MISSATGE_ESCALFAMENT, RUTA_DEL_SW, TOPALL_REGISTRE_ACTIU_MS, escoltaEscalfament,
-  missatgeDEscalfament, motiuPerNoRegistrar, registraServiceWorker, registreActiu, registreDelSw
+  ABAST_DEL_SW, ESDEVENIMENT_APP_VISITADA, ESDEVENIMENT_AVIS_XAT, ESPERA_ESCALFAMENT_MS, MISSATGE_AVIS_XAT, MISSATGE_ESCALFAMENT, RUTA_DEL_SW,
+  TOPALL_REGISTRE_ACTIU_MS, escoltaAvisosDelWorker, escoltaEscalfament, missatgeDEscalfament, motiuPerNoRegistrar, registraServiceWorker,
+  registreActiu, registreDelSw
 } from './registre.js';
+import { importaElModul } from '../../tests/helpers/especificadorsImport.js';
 
 /** Un navigator i una finestra de mostra, en producció i en condicions de registrar. */
 function entorn({ readyState = 'complete', segur = true, incrustat = false, capacitor, register } = {}) {
@@ -121,6 +124,108 @@ describe('registraServiceWorker', () => {
       const { navegador, finestra } = entorn(opcions);
       await registraServiceWorker({ produccio, navegador, finestra });
       expect(finestra.addEventListener, JSON.stringify(opcions)).not.toHaveBeenCalledWith(ESDEVENIMENT_APP_VISITADA, expect.any(Function));
+    }
+  });
+});
+
+/* ─────────── B8C-3 (marató 261101_2143) · El toc d'un avís del Xat, del worker a la finestra ─────────── */
+
+const ORIGEN_DEL_TOC = 'https://socdepoble.org';
+
+/** Un contenidor del worker que guarda els oients, i una finestra EventTarget de veres que anota els esdeveniments del toc. */
+function entornDelToc({ origen = ORIGEN_DEL_TOC } = {}) {
+  const oients = new Set();
+  const sw = {
+    addEventListener: vi.fn((tipus, fn) => { if (tipus === 'message') oients.add(fn); }),
+    removeEventListener: vi.fn((tipus, fn) => { if (tipus === 'message') oients.delete(fn); })
+  };
+  const finestra = new EventTarget();
+  finestra.Event = Event;
+  finestra.location = { origin: origen };
+  const rebuts = [];
+  finestra.addEventListener(ESDEVENIMENT_AVIS_XAT, (event) => rebuts.push(event));
+  const envia = (data, { origin = ORIGEN_DEL_TOC } = {}) => { for (const fn of [...oients]) fn({ data, origin }); };
+  return { navegador: { serviceWorker: sw }, finestra, sw, oients, rebuts, envia };
+}
+
+describe('escoltaAvisosDelWorker (B8C-3)', () => {
+  test('els noms: el missatge del worker i l\'esdeveniment de la finestra', () => {
+    expect(MISSATGE_AVIS_XAT).toBe('sdp-avis-xat');
+    expect(ESDEVENIMENT_AVIS_XAT).toBe('sdp:avis-xat');
+  });
+
+  test('{ tipus: \'sdp-avis-xat\' } exacte → UN Event(\'sdp:avis-xat\') a la finestra, sense cap dada (ni detail)', () => {
+    const t = entornDelToc();
+    escoltaAvisosDelWorker({ navegador: t.navegador, finestra: t.finestra });
+    expect(t.sw.addEventListener).toHaveBeenCalledWith('message', expect.any(Function));
+    t.envia({ tipus: 'sdp-avis-xat' });
+    expect(t.rebuts).toHaveLength(1);
+    expect(t.rebuts[0].type).toBe('sdp:avis-xat');
+    expect(t.rebuts[0].constructor).toBe(Event);
+    expect(t.rebuts[0].detail).toBeUndefined();
+    /* Safari pot no posar l'origen al missatge del worker: també val. */
+    t.envia({ tipus: 'sdp-avis-xat' }, { origin: '' });
+    expect(t.rebuts).toHaveLength(2);
+  });
+
+  test('qualsevol altra forma no despatxa res i no llança: un filId de més, un text, null, una llista, un altre tipus, l\'escalfament, una instància, un getter que llança', () => {
+    const t = entornDelToc();
+    escoltaAvisosDelWorker({ navegador: t.navegador, finestra: t.finestra });
+    class Avis { constructor() { this.tipus = 'sdp-avis-xat'; } }
+    const espia = {};
+    Object.defineProperty(espia, 'tipus', { enumerable: true, get() { throw new Error('no es llig'); } });
+    const proxyTrencat = new Proxy({}, { ownKeys() { throw new Error('no'); }, getPrototypeOf() { throw new Error('no'); } });
+    for (const data of [
+      { tipus: 'sdp-avis-xat', filId: '0b9a3f1e-1111-4111-8111-111111111111' },
+      { tipus: 'sdp-avis-xat', desti: '/xat/secret' },
+      'sdp-avis-xat', null, undefined, 42, ['sdp-avis-xat'], { tipus: 'altre' }, { type: 'sdp-avis-xat' },
+      { tipus: MISSATGE_ESCALFAMENT, recursos: [], closca: '/app/bar' }, new Avis(), espia, proxyTrencat
+    ]) {
+      expect(() => t.envia(data)).not.toThrow();
+    }
+    expect(t.rebuts).toEqual([]);
+  });
+
+  test('un missatge d\'un altre origen s\'ignora', () => {
+    const t = entornDelToc();
+    escoltaAvisosDelWorker({ navegador: t.navegador, finestra: t.finestra });
+    t.envia({ tipus: 'sdp-avis-xat' }, { origin: 'https://altre.org' });
+    expect(t.rebuts).toEqual([]);
+  });
+
+  test('torna la funció que deixa d\'escoltar; sense worker, sense finestra o sense Event, no escolta res i no llança', () => {
+    const t = entornDelToc();
+    const deixa = escoltaAvisosDelWorker({ navegador: t.navegador, finestra: t.finestra });
+    deixa();
+    expect(t.sw.removeEventListener).toHaveBeenCalledWith('message', t.sw.addEventListener.mock.calls[0][1]);
+    t.envia({ tipus: 'sdp-avis-xat' });
+    expect(t.rebuts).toEqual([]);
+    const quiet = entornDelToc();
+    expect(() => escoltaAvisosDelWorker()()).not.toThrow();
+    expect(() => escoltaAvisosDelWorker({ navegador: {}, finestra: quiet.finestra })()).not.toThrow();
+    expect(() => escoltaAvisosDelWorker({ navegador: quiet.navegador, finestra: null })()).not.toThrow();
+    expect(() => escoltaAvisosDelWorker({ navegador: quiet.navegador, finestra: { dispatchEvent: () => true } })()).not.toThrow();
+    expect(quiet.sw.addEventListener).not.toHaveBeenCalled();
+  });
+
+  test('registraServiceWorker l\'escolta només quan s\'ha de registrar (producció, segur, al nivell de dalt, al navegador), també abans de load', async () => {
+    const ambToc = (opcions) => {
+      const e = entorn(opcions);
+      e.navegador.serviceWorker.addEventListener = vi.fn();
+      e.finestra.Event = Event;
+      e.finestra.dispatchEvent = vi.fn();
+      return e;
+    };
+    const escoltaMissatges = (e) => e.navegador.serviceWorker.addEventListener.mock.calls.some(([tipus]) => tipus === 'message');
+    const carregant = ambToc({ readyState: 'interactive' });
+    const promesa = registraServiceWorker({ produccio: true, navegador: carregant.navegador, finestra: carregant.finestra });
+    expect(escoltaMissatges(carregant)).toBe(true);
+    carregant.escoltes.get('load')();
+    await promesa;
+    for (const [produccio, opcions] of [[false, {}], [true, { incrustat: true }], [true, { segur: false }], [true, { capacitor: { isNativePlatform: () => true } }]]) {
+      const e = ambToc(opcions);
+      await registraServiceWorker({ produccio, navegador: e.navegador, finestra: e.finestra });
+      expect(escoltaMissatges(e), JSON.stringify([produccio, opcions])).toBe(false);
     }
   });
 });
@@ -455,6 +560,123 @@ describe('frontera', () => {
     const importen = PRODUCCIO.filter((ruta) => /from\s+['"][^'"]*pwa\/registre(?:\.js)?['"]/.test(llig(ruta)));
     expect(importen).toEqual(['src/main.jsx']);
     expect(llig('src/main.jsx')).toMatch(/^registraServiceWorker\(\);$/m);
+  });
+
+  /* B8C-3 (marató 261101_2143; Bloc B8) · L'adaptador web dels avisos push
+     del Xat: només l'entrada pròpia el carrega, amb import() i darrere de la
+     bandera (apagada, Rollup lleva el bloc i el tros); de l'entorn, només la
+     clau pública. Es llig l'AST de main.jsx, no el text cru. */
+  const CLAUS_SENSE_CODI = new Set(['loc', 'start', 'end', 'extra', 'comments', 'leadingComments', 'trailingComments', 'innerComments', 'errors']);
+  function recorre(node, visita, pares = []) {
+    if (!node || typeof node !== 'object') return;
+    if (Array.isArray(node)) {
+      for (const fill of node) recorre(fill, visita, pares);
+      return;
+    }
+    if (typeof node.type === 'string') visita(node, pares);
+    const amb = typeof node.type === 'string' ? [...pares, node] : pares;
+    for (const [clau, fill] of Object.entries(node)) if (!CLAUS_SENSE_CODI.has(clau)) recorre(fill, visita, amb);
+  }
+  const astDe = (ruta) => parse(llig(ruta), { sourceType: 'module', plugins: ['jsx'] });
+  const esImportMeta = (node) => node?.type === 'MetaProperty' && node.meta?.name === 'import' && node.property?.name === 'meta';
+  const esLaBandera = (node) => node?.type === 'Identifier' && node.name === 'AVISOS_PUSH_XAT_ACTIUS';
+
+  test('B8C-3: només src/main.jsx carrega l\'adaptador web, amb UN import() dins d\'if (AVISOS_PUSH_XAT_ACTIUS) al nivell de dalt; mai un import estàtic', () => {
+    expect(PRODUCCIO.filter((ruta) => importaElModul(llig(ruta), 'adaptadorAvisosPush', ruta))).toEqual(['src/main.jsx']);
+    const ast = astDe('src/main.jsx');
+    const estatics = [];
+    const dinamics = [];
+    recorre(ast.program, (node, pares) => {
+      if (node.type === 'ImportDeclaration') {
+        if (/adaptadorAvisosPush/.test(node.source.value)) estatics.push(node.source.value);
+        if (node.source.value === './config/avisosPushXat.js') estatics.push(`bandera:${node.specifiers.map((s) => s.imported?.name).join(',')}`);
+      }
+      const font = node.type === 'ImportExpression' ? node.source : (node.type === 'CallExpression' && node.callee.type === 'Import' ? node.arguments[0] : null);
+      if (font && /adaptadorAvisosPush/.test(font.value)) dinamics.push({ font: font.value, pares });
+    });
+    expect(estatics.filter((e) => !e.startsWith('bandera:'))).toEqual([]);
+    expect(estatics.find((e) => e.startsWith('bandera:'))).toMatch(/\bAVISOS_PUSH_XAT_ACTIUS\b/);
+    expect(dinamics.map((d) => d.font)).toEqual(['./pwa/adaptadorAvisosPush.js']);
+    const [{ pares }] = dinamics;
+    const indexIf = pares.findIndex((pare) => pare.type === 'IfStatement' && esLaBandera(pare.test));
+    expect(indexIf, 'l\'import() ha d\'anar dins d\'if (AVISOS_PUSH_XAT_ACTIUS)').toBeGreaterThanOrEqual(0);
+    const siBandera = pares[indexIf];
+    expect(pares[indexIf + 1], 'dins de la branca certa, no de l\'else').toBe(siBandera.consequent);
+    expect(siBandera.alternate).toBeNull();
+    expect(pares[indexIf - 1]?.type, 'al nivell de dalt del mòdul').toBe('Program');
+    /* Cap altre import() ni cap altra crida al registre dels avisos fora del bloc. */
+    const registren = [];
+    recorre(ast.program, (node, pares) => {
+      if (node.type === 'CallExpression' && node.callee.type === 'Identifier' && node.callee.name === 'registraAvisosPush') registren.push(pares.includes(siBandera));
+    });
+    expect(registren).toEqual([true]);
+  });
+
+  test('B8C-3: main.jsx llig de l\'entorn VITE_PUSH_VAPID_PUBLICA i mai import.meta.env sencer', () => {
+    const variables = [];
+    let senceres = 0;
+    recorre(astDe('src/main.jsx').program, (node, pares) => {
+      if (node.type !== 'MemberExpression' || node.computed || !esImportMeta(node.object) || node.property.name !== 'env') return;
+      const pare = pares[pares.length - 1];
+      if (pare?.type === 'MemberExpression' && pare.object === node && !pare.computed) variables.push(pare.property.name);
+      else senceres += 1;
+    });
+    expect(senceres).toBe(0);
+    expect(variables).toContain('VITE_PUSH_VAPID_PUBLICA');
+    expect(variables).toContain('PROD');
+    expect(llig('src/main.jsx')).not.toMatch(/import\.meta\.env\s*[),;\]}]/);
+  });
+
+  /* Correcció ARB-B8C3-02 (marató 261101_2143) · El cablatge de l'adaptador,
+     propietat a propietat. Amb l'esdeveniment equivocat, el toc d'una finestra
+     que ja és al Xat es perdria en silenci; amb els dos registres
+     intercanviats, se subscriuria contra un worker en espera i la baixa en
+     eixir no el trobaria. */
+  test('B8C-3: main.jsx passa a creaAvisosPushWeb exactament registreActiu, registreDelSw i ESDEVENIMENT_AVIS_XAT de registre.js, la clau VITE i PROD, i el resultat va a registraAvisosPush', () => {
+    const ast = astDe('src/main.jsx');
+    /* Els noms locals dels imports de ./pwa/registre.js → el nom exportat. */
+    const delRegistre = new Map();
+    for (const node of ast.program.body) {
+      if (node.type !== 'ImportDeclaration' || node.source.value !== './pwa/registre.js') continue;
+      for (const s of node.specifiers) if (s.type === 'ImportSpecifier') delRegistre.set(s.local.name, s.imported.name);
+    }
+    const crides = [];
+    recorre(ast.program, (node, pares) => {
+      if (node.type === 'CallExpression' && node.callee.type === 'Identifier' && node.callee.name === 'creaAvisosPushWeb') crides.push({ node, pares });
+    });
+    expect(crides).toHaveLength(1);
+    const [{ node: crida, pares }] = crides;
+    const pare = pares[pares.length - 1];
+    expect(pare.type === 'CallExpression' && pare.callee.name === 'registraAvisosPush' && pare.arguments[0] === crida, 'dins de registraAvisosPush(…)').toBe(true);
+    /* creaAvisosPushWeb és el del tros de l'adaptador: el paràmetre desestructurat del .then de l'import(). */
+    expect(pares.some((p) => p.type === 'ArrowFunctionExpression' && p.params[0]?.type === 'ObjectPattern' &&
+      p.params[0].properties.some((q) => q.key?.name === 'creaAvisosPushWeb'))).toBe(true);
+    expect(crida.arguments).toHaveLength(1);
+    const [opcions] = crida.arguments;
+    expect(opcions.type).toBe('ObjectExpression');
+    const valor = new Map();
+    for (const p of opcions.properties) {
+      expect(p.type, 'cap spread ni mètode').toBe('ObjectProperty');
+      expect(p.computed).toBe(false);
+      valor.set(p.key.name, p.value);
+    }
+    expect([...valor.keys()].sort()).toEqual(['clau', 'esdevenimentToc', 'produccio', 'registreActiu', 'registreDelSw']);
+    const importat = (node) => (node?.type === 'Identifier' ? delRegistre.get(node.name) ?? null : null);
+    expect(importat(valor.get('registreActiu')), 'per a SUBSCRIURE').toBe('registreActiu');
+    expect(importat(valor.get('registreDelSw')), 'per a la BAIXA, l\'interruptor i la neteja').toBe('registreDelSw');
+    expect(importat(valor.get('esdevenimentToc')), 'el toc del worker').toBe('ESDEVENIMENT_AVIS_XAT');
+    const variableDEntorn = (node) => (node?.type === 'MemberExpression' && !node.computed && node.object?.type === 'MemberExpression' &&
+      !node.object.computed && esImportMeta(node.object.object) && node.object.property.name === 'env' ? node.property.name : null);
+    expect(variableDEntorn(valor.get('clau'))).toBe('VITE_PUSH_VAPID_PUBLICA');
+    expect(variableDEntorn(valor.get('produccio'))).toBe('PROD');
+  });
+
+  test('B8C-3: el bloc del push va darrere de registraServiceWorker(); i l\'adaptador no nomena el worker ni cap emmagatzematge', () => {
+    const main = llig('src/main.jsx');
+    expect(main.indexOf('\nregistraServiceWorker();\n')).toBeGreaterThan(0);
+    expect(main.indexOf('if (AVISOS_PUSH_XAT_ACTIUS)')).toBeGreaterThan(main.indexOf('\nregistraServiceWorker();\n'));
+    const adaptador = llig('src/pwa/adaptadorAvisosPush.js');
+    expect(adaptador).not.toMatch(new RegExp(['service', 'Worker|local', 'Storage|session', 'Storage|indexed', 'DB|Capacitor'].join('')));
   });
 
   /* Ordre del Mestre (261021, prompt 261021_0015, tasca 3) · L'oferta

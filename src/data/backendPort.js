@@ -339,3 +339,12 @@ export const quiEmSegueix = asseguraMetode('quiEmSegueix');
 export const loadTitularPublic = asseguraMetode('loadTitularPublic');
 export const estatTitularPublic = asseguraMetode('estatTitularPublic');
 export const marcaTitularPublic = asseguraMetode('marcaTitularPublic');
+
+/* B8C-2 (marató 261101_2143; Bloc B8) · Els aparells dels avisos push del
+   Xat (capacitat 'avisosPush') i el silenci d'una conversa ('silenciXat').
+   Cap és nucli: la interfície pregunta abans amb teCapacitat i, sense elles,
+   no oferix l'interruptor dels avisos i el silenci es queda en la memòria
+   de la pàgina. */
+export const desaDispositiuAvisos = asseguraMetode('desaDispositiuAvisos');
+export const retiraDispositiuAvisos = asseguraMetode('retiraDispositiuAvisos');
+export const silenciaFil = asseguraMetode('silenciaFil');

@@ -550,6 +550,46 @@ function exigixEstatFil(estat) {
   return estat;
 }
 
+/*
+ * G2-A-seg-01 (marató 261101_2143, E1) · Kid monòton per membre al llarg de la
+ * cadena (§4.5.3.4: la validesa d'un kid en una època la dona la cadena). Amb un
+ * directori que sap ordenar els kids (ordreKid; el directori nu no ho fa i no
+ * canvia res): (1) una època no pot portar cap persona (autora o membre) amb un
+ * kid més vell que el que portava en l'última època vàlida on hi era; (2) un kid
+ * substituït per un canvi fort no signa cap època posterior al cap que l'aparell
+ * hi tenia ancorat (finsEpoca). La història continua obrint el que ja era a la
+ * cadena; una època que no ho complix queda saltada (kid-no-fixat).
+ * E1 · ARB-1 · L'època saltada per (2) deixa la marca `substituidaSaltada` a
+ * l'estat: sense cap època vàlida d'abans, cap època posterior fa de gènesi.
+ */
+function exigixKidMonoton(estat, directori, v) {
+  if (typeof directori.ordreKid !== 'function') return;
+  const autor = directori.ordreKid(v.autor, v.kidAutor);
+  if (autor !== null && autor.finsEpoca !== null && v.epoca > autor.finsEpoca) {
+    estat.substituidaSaltada = true;
+    throw errorProtocol(CODI.kidNoFixat, 'Una clau substituïda per un canvi fort no signa cap època nova.');
+  }
+  const parells = [[v.autor, v.kidAutor], ...v.membres.map((membre) => [membre.usuari, membre.kid])];
+  const perResoldre = new Set(parells.map(([usuari]) => usuari));
+  const darrer = new Map();
+  /* L'últim kid de cada persona: de l'època vàlida més recent on hi era (autora o membre). */
+  for (const numero of [...estat.epoques.keys()].sort((a, b) => b - a)) {
+    if (perResoldre.size === 0) break;
+    const epoca = estat.epoques.get(numero);
+    for (const usuari of [...perResoldre]) {
+      const kid = epoca.membres.get(usuari)?.kid ?? (epoca.valors?.autor === usuari ? epoca.valors.kidAutor : null);
+      if (kid) { darrer.set(usuari, kid); perResoldre.delete(usuari); }
+    }
+  }
+  for (const [usuari, kid] of parells) {
+    const abans = darrer.has(usuari) ? directori.ordreKid(usuari, darrer.get(usuari)) : null;
+    const ara = directori.ordreKid(usuari, kid);
+    if (abans !== null && ara !== null && ara.rang > abans.rang) {
+      throw errorProtocol(CODI.kidNoFixat, 'Una època no pot tornar a una clau més vella d’un membre.');
+    }
+  }
+}
+
 /* §4.5.3.3: qui pot canviar què, respecte de l'última època vàlida. */
 function comprovaTransicio(estat, v) {
   const cap = estat.cap;
@@ -564,7 +604,15 @@ function comprovaTransicio(estat, v) {
       }
     }
   }
-  if (cap === null) return;
+  if (cap === null) {
+    /* E1 · ARB-1 (§4.5.3.2: e > 1 exigix l'última època vàlida) · Si la cadena d'abans l'ha
+       signada una clau substituïda i no n'ha quedat cap de vàlida, ningú no en té l'autoritat:
+       un compte qualsevol que el servidor hi posara entraria com a gènesi i rebria els sobres. */
+    if (estat.substituidaSaltada === true) {
+      throw errorProtocol(CODI.autorNoAutoritzat, 'Sense cap època vàlida d’abans (la va signar una clau substituïda), cap època no fa de gènesi.');
+    }
+    return;
+  }
   const autorAbans = cap.membres.get(v.autor);
   if (autorAbans === undefined) throw errorProtocol(CODI.autorNoAutoritzat, 'L’autor de l’època no era membre de l’última època vàlida.');
   const nous = v.membres.filter((membre) => !cap.membres.has(membre.usuari));
@@ -655,6 +703,7 @@ export async function aplicaEpoca(cripto, { estat, jo, declaracio, firma, sobres
     fixadaAmb(directori, v.autor, v.kidAutor, true);
     if (!(await pas(verificaSignatura(cripto, v.sigPubAutor, firma, declaracio)))) throw errorProtocol(CODI.firmaInvalida, 'La firma de l’època no verifica.');
     for (const membre of v.membres) fixadaAmb(directori, membre.usuari, membre.kid, true);
+    exigixKidMonoton(estat, directori, v);
     comprovaTransicio(estat, v);
     const meu = v.membres.find((membre) => membre.usuari === jo.usuari) ?? null;
     let ck = null;

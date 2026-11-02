@@ -913,6 +913,60 @@ export const CASOS = Object.freeze([
     titol: 'marcaTitularPublic(orgId, true, config) d’una organització que no existix rebutja amb un code i no desa res',
     arguments: (ctx) => [ID_ENTITAT_DE_CONFORMITAT, true, ctx.config],
     comprova: rebuigAmbCode
+  }),
+  /* B8C-2 (marató 261101_2143; Bloc B8) · El silenci d'una conversa
+     (capacitat 'silenciXat') i els aparells dels avisos push ('avisosPush').
+     Una durada, una plataforma o una adreça fora del contracte es rebutgen
+     amb un code, sense escriure ni cap petició. Amb escriptures, el fil
+     escrivible se silencia 8 hores (la fi, entre ara + 7 h 59 min i ara +
+     8 h 1 min: el rellotge del servidor i el del kit poden diferir) i després
+     se'n desfà el silenci: el kit deixa el fil com l'ha trobat. Cap cas desa
+     cap aparell: el kit no té cap endpoint ni cap testimoni de veres. */
+  cas({
+    metode: 'silenciaFil', capacitat: 'silenciXat', espera: 'rebutja',
+    titol: "silenciaFil({ filId, durada: 'una-hora' }, config) rebutja amb SILENCI_INVALID sense escriure",
+    arguments: (ctx) => [{ filId: ctx.filId ?? 'conformitat-sense-fil', durada: 'una-hora' }, ctx.config],
+    comprova: rebuigAmbCodi('SILENCI_INVALID')
+  }),
+  /* ARB-B8C2-03 · Una fila d'ajuda (el prefix de xatsPerDefecte.js, que el kit
+     no importa: només coneix ../contracte.js) no és cap conversa: el mateix
+     SILENCI_INVALID a tots els adaptadors, sense cap petició. */
+  cas({
+    metode: 'silenciaFil', capacitat: 'silenciXat', espera: 'rebutja',
+    titol: "silenciaFil({ filId: 'sdp-per-defecte:…', durada: '8h' }, config) d’una fila d’ajuda rebutja amb SILENCI_INVALID sense escriure",
+    arguments: (ctx) => [{ filId: 'sdp-per-defecte:conformitat', durada: '8h' }, ctx.config],
+    comprova: rebuigAmbCodi('SILENCI_INVALID')
+  }),
+  cas({
+    metode: 'silenciaFil', capacitat: 'silenciXat', escriu: true, requerix: ['filEscrivible'],
+    titol: "silenciaFil({ filId, durada: '8h' }, config) → { silenciatFinsAl: ISO entre ara + 7 h 59 min i ara + 8 h 1 min }",
+    arguments: (ctx) => [{ filId: ctx.filEscrivible, durada: '8h' }, ctx.config],
+    comprova: (valor) => {
+      if (!esObjecte(valor)) return [`havia de ser { silenciatFinsAl } i és ${tipusDe(valor)}`];
+      const fi = typeof valor.silenciatFinsAl === 'string' ? Date.parse(valor.silenciatFinsAl) : Number.NaN;
+      const ara = Date.now();
+      return Number.isFinite(fi) && fi >= ara + 479 * 60000 && fi <= ara + 481 * 60000
+        ? [] : [`silenciatFinsAl havia de ser ara + 8 h (±1 min): ${JSON.stringify(valor.silenciatFinsAl)?.slice(0, 80)}`];
+    }
+  }),
+  cas({
+    metode: 'silenciaFil', capacitat: 'silenciXat', escriu: true, requerix: ['filEscrivible'],
+    titol: "silenciaFil({ filId, durada: 'cap' }, config) → { silenciatFinsAl: null }: el silenci es desfà",
+    arguments: (ctx) => [{ filId: ctx.filEscrivible, durada: 'cap' }, ctx.config],
+    comprova: (valor) => (esObjecte(valor) && valor.silenciatFinsAl === null
+      ? [] : [`havia de ser { silenciatFinsAl: null }: ${JSON.stringify(valor)?.slice(0, 120)}`])
+  }),
+  cas({
+    metode: 'desaDispositiuAvisos', capacitat: 'avisosPush', espera: 'rebutja',
+    titol: "desaDispositiuAvisos({ plataforma: 'fax', adreca: 'x' }, config) rebutja amb un code sense cap petició",
+    arguments: (ctx) => [{ plataforma: 'fax', adreca: 'x' }, ctx.config],
+    comprova: rebuigAmbCode
+  }),
+  cas({
+    metode: 'retiraDispositiuAvisos', capacitat: 'avisosPush', espera: 'rebutja',
+    titol: "retiraDispositiuAvisos({ plataforma: 'web', adreca: 'http://insegur' }, config) rebutja amb un code sense cap petició",
+    arguments: (ctx) => [{ plataforma: 'web', adreca: 'http://insegur' }, ctx.config],
+    comprova: rebuigAmbCode
   })
 ]);
 

@@ -35,6 +35,7 @@ export const passos = [
   {nom:'Contracte de plantilles',cmd:'node',args:['tooling/gates/porta-plantilles.mjs'],readOnly:true,script:'porta:plantilles'},
   {nom:'Autoritat i arrencada',cmd:'node',args:['tooling/gates/porta-autoritat.mjs'],readOnly:true},
   {nom:'Segell de skills',cmd:'node',args:['tooling/gates/segella.mjs'],readOnly:true,script:'porta:segella'},
+  {nom:'Porta Fronteres de Skills',cmd:'node',args:['tooling/brain/fronteres-skills.mjs']},
   {nom:'Integritat del LEDGER',cmd:'node',args:['tooling/verify-ledger.mjs'],readOnly:true},
   { readOnly:true, nom: 'Contracte documental', cmd: 'node', args: ['tooling/gates/porta-documents.mjs'], script: 'porta:documents' },
   { nom: 'Proves del contracte documental', cmd: 'npm', args: ['run', 'test:documental'], prova: true },
