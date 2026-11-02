@@ -21,6 +21,13 @@ export const MIME_XAT = Object.freeze({
   'audio/webm': 'veu', 'audio/mp4': 'veu', 'audio/ogg': 'veu'
 });
 export const MAXIM_ADJUNT_XAT = Object.freeze({ imatge: 2_000_000, veu: 3_000_000, video: QUOTA_XAT_BYTES });
+/* B2e · P1-12 (marató 261101_2143) · El que veu el servidor d'un adjunt
+   xifrat: MIME opac i sostre del blob farcit (Padmé) al bucket. Viuen ací, al
+   mòdul neutral, perquè el transport de Supabase (supabase/xatXifrat.js) no
+   arrossegue el protocol ni els formats; xatMultimediaXifrat.js les reexporta.
+   Prova de deriva: supabase/index.e2eeApagat.produccio.test.js. */
+export const MIME_XIFRAT = 'application/octet-stream';
+export const MAXIM_BLOB_ADJUNT = 20_000_000;
 
 /* Gauntlet 261022_0225 (crítica Claude, MEDIA-5) · Cada fallada dels adjunts
    porta un `code`; este és el seu text en valencià. La interfície el tradueix

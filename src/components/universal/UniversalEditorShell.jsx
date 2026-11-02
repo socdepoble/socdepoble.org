@@ -7,7 +7,9 @@ import { extractPlainText } from '../../utils/contentAdapter.js';
 import useHeroImageHandler, { validaFitxerImatge } from '../../hooks/useHeroImageHandler.js';
 import { useResolvedAsset } from '../../hooks/useResolvedAsset.js';
 import { resolRecursPropi } from '../../config/assetResolver.js';
-import { Component, useRef, useCallback, useEffect, useId, useLayoutEffect, useState } from 'react';
+import { Component, useRef, useCallback, useEffect, useId, useLayoutEffect, useMemo, useState } from 'react';
+import { tradueix, useTraductorOpcional } from '../PedraSeca/hooks/useTraductorOpcional.js';
+import { omple } from '../../config/moderacio.js';
 import { useContent } from './ContentProvider.jsx';
 import { useToast } from './NotificationContext.jsx';
 import { IconaEstatDesament, RegioEstatDesament } from './EstatDesament.jsx';
@@ -17,6 +19,51 @@ import { configDeForma, costatDeSortida } from './enquadrament/useEnquadramentIm
 import { UniversalPage } from './UniversalPage.jsx';
 import { TEXTOS_LLAVOR } from './textosLlavor.js';
 import { FORASTER } from './UniversalUtils';
+
+/* P1-22 (marató 261101_2143, B3-I18N §3.D) · Els textos de la closca, en
+   parells [clau, reserva]. La reserva és el literal de sempre, caràcter a
+   caràcter (els apòstrofs rectes continuen rectes): fora de l'App, o en
+   valencià, el DOM no canvia (Llei del Píxel). Es pinten amb tradueix(t, …);
+   les constants exportades de sempre en naixen amb el mateix valor (les
+   importen useImatgeDeFitxa i les proves). El Perfil reutilitza imatgePujant. */
+const parellCloscaEditor = (nom, reserva) => Object.freeze([`editor.closca.${nom}`, reserva]);
+export const TEXTOS_CLOSCA = Object.freeze({
+  accioComentar: parellCloscaEditor('accio.comentar', 'Comentar no està operatiu mentre edites. Quan es publique, obrirà el xat per a comentar-ho.'),
+  accioCompartir: parellCloscaEditor('accio.compartir', 'Compartir no està operatiu mentre edites. Quan es publique, servirà per a enviar-ne l’enllaç.'),
+  accioConnectar: parellCloscaEditor('accio.connectar', 'Connectar no està operatiu mentre edites. Quan es publique, servirà per a guardar-ho al Bloc de Notes.'),
+  accioTraduir: parellCloscaEditor('accio.traduir', 'Traduir no està operatiu mentre edites. Quan es publique, servirà per a llegir-ho en una altra llengua.'),
+  errorTitol: parellCloscaEditor('error.titol', "L'editor ha fallat"),
+  errorDescripcio: parellCloscaEditor('error.descripcio', "S'ha produït un error inesperat dins del motor d'edició. Torna a carregar la pàgina per a continuar."),
+  campTitol: parellCloscaEditor('camp.titol', 'Títol'),
+  campSubtitol: parellCloscaEditor('camp.subtitol', 'Subtítol'),
+  campEntradilla: parellCloscaEditor('camp.entradilla', 'Entradilla'),
+  campCos: parellCloscaEditor('camp.cos', 'Cos'),
+  campCapcalera: parellCloscaEditor('camp.capcalera', 'Capçalera'),
+  campAvatar: parellCloscaEditor('camp.avatar', 'Avatar'),
+  campDrets: parellCloscaEditor('camp.drets', 'Drets d’autor'),
+  campEmoticona: parellCloscaEditor('camp.emoticona', 'Emoticona'),
+  comptador: parellCloscaEditor('comptador', '{camp}: {llargaria} de {maxim} caràcters'),
+  edicioAvancada: parellCloscaEditor('edicioAvancada', 'Edició avançada'),
+  imatgeAjuda: parellCloscaEditor('imatge.ajuda', "Pots pujar qualsevol tipus d'imatge o arxiu multimèdia."),
+  imatgePujant: parellCloscaEditor('imatge.pujant', 'Encara s’està desant la imatge. Quan acabe, la podràs tornar a canviar.'),
+  imatgeErrorDesar: parellCloscaEditor('imatge.errorDesar', "No s'ha pogut desar la imatge."),
+  formaCapcalera: parellCloscaEditor('forma.capcalera', 'Recomanat: la miniatura del llistat i la targeta del Mur ensenyen la mateixa imatge sencera. Si la nota ja és al Mur, la targeta no canvia fins que la tornes a publicar.'),
+  formaLliure: parellCloscaEditor('forma.lliure', 'La pàgina l’ensenya sencera; la miniatura del llistat i la targeta del Mur la retallen en quadrat.'),
+  enquadramentDescripcio: parellCloscaEditor('enquadrament.descripcio', 'Tria la forma, mou la foto i amplia-la fins que el que importa quede dins del marc. Només es guarda el que hi ha dins.'),
+  editaCapcalera: parellCloscaEditor('edita.capcalera', 'Editar capçalera'),
+  editaLogotip: parellCloscaEditor('edita.logotip', 'Editar logotip'),
+  altCapcalera: parellCloscaEditor('alt.capcalera', 'Capçalera'),
+  altLogotip: parellCloscaEditor('alt.logotip', 'Logotip'),
+  opcionsCapcalera: parellCloscaEditor('opcions.capcalera', 'Opcions de la capçalera'),
+  opcionsLogotip: parellCloscaEditor('opcions.logotip', 'Opcions del logotip'),
+  clicaLogotip: parellCloscaEditor('clica.logotip', 'Clica per canviar el logotip'),
+  clicaImatge: parellCloscaEditor('clica.imatge', 'Clica per canviar la imatge'),
+  botoEnquadra: parellCloscaEditor('boto.enquadra', 'Enquadrar'),
+  botoEnrere: parellCloscaEditor('boto.enrere', 'Enrere'),
+  botoEsborra: parellCloscaEditor('boto.esborra', 'Esborrar'),
+  avisImatgeEsborrada: parellCloscaEditor('avis.imatgeEsborrada', 'Imatge esborrada'),
+  avisLogotipEsborrat: parellCloscaEditor('avis.logotipEsborrat', 'Logotip esborrat'),
+});
 
 /* T36 (ordre del Mestre, 260928) · Mentre s'edita, Comentar, Compartir i
    Connectar es veuen com a la publicació però no fan la seua acció; Índex i
@@ -30,13 +77,32 @@ import { FORASTER } from './UniversalUtils';
    operatiu: en edició portava a /traduccions (UniversalPage) i treia la
    persona de l'editor sense cap avís. Ara es pinta igual, porta
    aria-disabled i el clic diu el seu missatge (BarraBlava · traduirInoperatiu). */
-export const AVISOS_ACCIONS_EDICIO = Object.freeze({
-  comentar: 'Comentar no està operatiu mentre edites. Quan es publique, obrirà el xat per a comentar-ho.',
-  compartir: 'Compartir no està operatiu mentre edites. Quan es publique, servirà per a enviar-ne l’enllaç.',
-  connectar: 'Connectar no està operatiu mentre edites. Quan es publique, servirà per a guardar-ho al Bloc de Notes.',
-  traduir: 'Traduir no està operatiu mentre edites. Quan es publique, servirà per a llegir-ho en una altra llengua.',
+const PARELLS_ACCIONS_EDICIO = Object.freeze({
+  comentar: TEXTOS_CLOSCA.accioComentar,
+  compartir: TEXTOS_CLOSCA.accioCompartir,
+  connectar: TEXTOS_CLOSCA.accioConnectar,
+  traduir: TEXTOS_CLOSCA.accioTraduir,
 });
+/* P1-22 · Les reserves de sempre ({ comentar: '…', … }), per a qui les importa. */
+export const AVISOS_ACCIONS_EDICIO = Object.freeze(Object.fromEntries(
+  Object.entries(PARELLS_ACCIONS_EDICIO).map(([accio, [, reserva]]) => [accio, reserva]),
+));
 export const DURADA_AVIS_ACCIONS = 5000;
+
+/* P1-22 · El fons d'error, en la llengua de la interfície. És un component
+   funció perquè el límit d'error és una classe i no pot usar el traductor;
+   el marcatge és el de sempre. */
+function EstatErrorEditor() {
+  const t = useTraductorOpcional();
+  return (
+    <div className="sdp-estat sdp-estat--error">
+      <div className="sdp-estat__contenidor">
+        <h3 className="sdp-estat__titol">{tradueix(t, TEXTOS_CLOSCA.errorTitol)}</h3>
+        <p className="sdp-estat__descripcio">{tradueix(t, TEXTOS_CLOSCA.errorDescripcio)}</p>
+      </div>
+    </div>
+  );
+}
 
 // Error Boundary per protegir l'editor i evitar tombar la pàgina hoste
 class EditorErrorBoundary extends Component {
@@ -51,16 +117,7 @@ class EditorErrorBoundary extends Component {
     console.error("EditorErrorBoundary:", error, errorInfo);
   }
   render() {
-    if (this.state.hasError) {
-      return (
-        <div className="sdp-estat sdp-estat--error">
-          <div className="sdp-estat__contenidor">
-            <h3 className="sdp-estat__titol">L'editor ha fallat</h3>
-            <p className="sdp-estat__descripcio">S'ha produït un error inesperat dins del motor d'edició. Torna a carregar la pàgina per a continuar.</p>
-          </div>
-        </div>
-      );
-    }
+    if (this.state.hasError) return <EstatErrorEditor />;
     return this.props.children;
   }
 }
@@ -78,11 +135,11 @@ function valorDelCamp(html) {
    (role=alert, amb les seues eixides) i, a partir del 80 % del límit, el
    comptador. Sense avisos no es pinta res. T66 · `icon`, l'emoticona del
    Perfil: un rebuig del servidor (sense columna, validació) també es veu. */
-const ETIQUETES_CAMP = Object.freeze({
-  title: 'Títol', subtitle: 'Subtítol', lead: 'Entradilla', content: 'Cos',
-  heroImage: 'Capçalera', logoImage: 'Avatar', copyright: 'Drets d’autor', icon: 'Emoticona',
+const PARELLS_CAMP = Object.freeze({
+  title: TEXTOS_CLOSCA.campTitol, subtitle: TEXTOS_CLOSCA.campSubtitol, lead: TEXTOS_CLOSCA.campEntradilla, content: TEXTOS_CLOSCA.campCos,
+  heroImage: TEXTOS_CLOSCA.campCapcalera, logoImage: TEXTOS_CLOSCA.campAvatar, copyright: TEXTOS_CLOSCA.campDrets, icon: TEXTOS_CLOSCA.campEmoticona,
 });
-const CAMPS_AMB_AVIS = Object.keys(ETIQUETES_CAMP);
+const CAMPS_AMB_AVIS = Object.keys(PARELLS_CAMP);
 
 /* Poliment T47 (ordre del Mestre, 260928) · On torna el focus després d'una
    acció d'avís: el botó premut sol desaparéixer amb l'avís i el focus cauria
@@ -120,9 +177,11 @@ const DESTINS_FOCUS = Object.freeze({
 });
 
 /* Bloc 3.9 · El text del desplegable. */
-export const ETIQUETA_EDICIO_AVANCADA = 'Edició avançada';
+export const ETIQUETA_EDICIO_AVANCADA = TEXTOS_CLOSCA.edicioAvancada[1];
 
 function AvisosCamps({ avisos, onAccio }) {
+  // P1-22 · El traductor abans del return null: l'ordre dels hooks no canvia.
+  const t = useTraductorOpcional();
   const camps = CAMPS_AMB_AVIS.filter((camp) => avisos?.[camp]?.error || avisos?.[camp]?.comptador);
   if (!camps.length) return null;
   /* Correcció de la revisió · role=alert és assertiu i atòmic: el lector el
@@ -133,6 +192,7 @@ function AvisosCamps({ avisos, onAccio }) {
     <ul className="sdp-avisos-camps">
       {camps.map((camp) => {
         const { error, comptador } = avisos[camp];
+        const etiqueta = tradueix(t, PARELLS_CAMP[camp]);
         const accions = error?.accions?.length ? error.accions.map((accio) => (
           <Boto key={accio.text} varietat="secundari" onClick={() => onAccio(camp, accio)}>{accio.text}</Boto>
         )) : null;
@@ -140,11 +200,11 @@ function AvisosCamps({ avisos, onAccio }) {
           <li key={camp}>
             {comptador ? (
               <p className="sdp-avis-camp__comptador">
-                {`${ETIQUETES_CAMP[camp]}: ${comptador.llargaria} de ${comptador.maxim} caràcters`}
+                {omple(tradueix(t, TEXTOS_CLOSCA.comptador), { camp: etiqueta, llargaria: comptador.llargaria, maxim: comptador.maxim })}
               </p>
             ) : null}
             {error ? (
-              <Alerta to="error" titol={ETIQUETES_CAMP[camp]} accions={accions} className="sdp-avis-camp">
+              <Alerta to="error" titol={etiqueta} accions={accions} className="sdp-avis-camp">
                 <p>{error.missatge}</p>
               </Alerta>
             ) : null}
@@ -189,9 +249,9 @@ export function EditableField({ html, placeholder, onChange, onBlur, className }
 /* Línia I1 de l'Onada 4 (pla 261008_1201) · El text d'ajuda de sèrie de les
    dues ranures d'imatge (capçalera i logotip). Abans era escrit dues voltes
    al codi; ara n'és la reserva de heroEditHelp i de logoEditHelp. */
-export const AJUDA_IMATGE_PER_DEFECTE = "Pots pujar qualsevol tipus d'imatge o arxiu multimèdia.";
+export const AJUDA_IMATGE_PER_DEFECTE = TEXTOS_CLOSCA.imatgeAjuda[1];
 /* L'ajuda d'una ranura sense imatge mentre la seua imatge encara puja. */
-export const AJUDA_IMATGE_PUJANT = 'Encara s’està desant la imatge. Quan acabe, la podràs tornar a canviar.';
+export const AJUDA_IMATGE_PUJANT = TEXTOS_CLOSCA.imatgePujant[1];
 
 /* Gauntlet 261016 (Bloc 1, Llei del Quadrat; pla §0.1.1) · La capçalera d'un
    document i la seua targeta (la miniatura del llistat i la del Mur) eren la
@@ -212,13 +272,21 @@ export const AJUDA_IMATGE_PUJANT = 'Encara s’està desant la imatge. Quan acab
 const CAPCALERA = configDeForma('capcalera');
 /* IDEA-20 · La forma amb què es re-enquadra una capçalera ja desada (vegeu obriEnquadrament). */
 const FORMAT_ORIGINAL = 'original';
-export const AJUDA_FORMA_CAPCALERA = 'Recomanat: la miniatura del llistat i la targeta del Mur ensenyen la mateixa imatge sencera. Si la nota ja és al Mur, la targeta no canvia fins que la tornes a publicar.';
-export const AJUDA_FORMA_LLIURE = 'La pàgina l’ensenya sencera; la miniatura del llistat i la targeta del Mur la retallen en quadrat.';
-export const FORMATS_CAPCALERA = Object.freeze(FORMATS.map((f) => Object.freeze({
-  ...f, ajuda: f.valor === CAPCALERA.formatInicial ? AJUDA_FORMA_CAPCALERA : AJUDA_FORMA_LLIURE,
-})));
+export const AJUDA_FORMA_CAPCALERA = TEXTOS_CLOSCA.formaCapcalera[1];
+export const AJUDA_FORMA_LLIURE = TEXTOS_CLOSCA.formaLliure[1];
+/* P1-22 · Les formes del diàleg amb la seua ajuda, en la llengua de la
+   interfície; sense traductor, les reserves (FORMATS_CAPCALERA, el mateix
+   valor de sempre). Congelades, com abans. */
+function formatsCapcalera(t = null) {
+  const recomanat = tradueix(t, TEXTOS_CLOSCA.formaCapcalera);
+  const lliure = tradueix(t, TEXTOS_CLOSCA.formaLliure);
+  return Object.freeze(FORMATS.map((f) => Object.freeze({
+    ...f, ajuda: f.valor === CAPCALERA.formatInicial ? recomanat : lliure,
+  })));
+}
+export const FORMATS_CAPCALERA = formatsCapcalera();
 /* Directiva 261024 · Torna «Tria la forma»: n'hi ha més d'una. */
-export const DESCRIPCIO_ENQUADRAMENT_CAPCALERA = 'Tria la forma, mou la foto i amplia-la fins que el que importa quede dins del marc. Només es guarda el que hi ha dins.';
+export const DESCRIPCIO_ENQUADRAMENT_CAPCALERA = TEXTOS_CLOSCA.enquadramentDescripcio[1];
 /** L'eixida del diàleg de la capçalera (1.200 pel costat llarg) per a una foto (File) o una adreça ja resolta. */
 export const sortidaCapcalera = (font) => CAPCALERA.sortida(font);
 
@@ -255,9 +323,12 @@ export function UniversalEditorShell({
   showLogoUpload = true,
   /* T35 · Punt d'extensió genèric: amb `onHeroEdit`, el botó de la capçalera
      crida el pare ({ acaba }) en lloc d'obrir el selector de fitxers. Només
-     el Perfil el passa (PerfilEditor); la resta de seccions no canvien. */
-  heroEditLabel = 'Editar capçalera',
-  heroEditHelp = AJUDA_IMATGE_PER_DEFECTE,
+     el Perfil el passa (PerfilEditor); la resta de seccions no canvien.
+     P1-22 · Sense `heroEditLabel`, `heroEditHelp`, `logoEditLabel` ni
+     `logoEditHelp` (null), els textos de sempre en la llengua de la
+     interfície (useEditorShell); una cadena explícita, també buida, mana. */
+  heroEditLabel = null,
+  heroEditHelp = null,
   onHeroEdit = null,
   /* Esmena 1 del pla 261007_1645 i ordre del Mestre (261007, ordre E) · El
      mirall exacte d'onHeroEdit per al logotip damunt de l'H1: amb
@@ -265,7 +336,7 @@ export function UniversalEditorShell({
      d'obrir el selector de fitxers, i `logoEditLabel` en dona el nom. Només
      el Perfil els passa (l'avatar d'una persona o d'un agent IA, que
      s'enquadra al diàleg); el Bloc de Notes continua amb «Editar logotip». */
-  logoEditLabel = 'Editar logotip',
+  logoEditLabel = null,
   onLogoEdit = null,
   /* Línia I1 de l'Onada 4 (pla 261008_1201) · Props opcionals que demanen
      els consumidors (el Perfil, que puja les imatges pel seu camí,
@@ -292,7 +363,7 @@ export function UniversalEditorShell({
        AJUDA_IMATGE_PUJANT. Per defecte, false: el DOM de sempre, literal. */
   logoPujant = false,
   heroPujant = false,
-  logoEditHelp = AJUDA_IMATGE_PER_DEFECTE,
+  logoEditHelp = null,
   ajudaAmbImatge = null,
   ajudaNomesEnPujada = false,
   statusIcon = null,
@@ -383,6 +454,8 @@ export function UniversalEditorShell({
   const onSaveFieldRef = useRef(onSaveField);
   const onLocalChangeRef = useRef(onLocalChange);
   const { showToast } = useToast();
+  /* P1-22 · null fora de l'App: les reserves en valencià (useTraductorOpcional). */
+  const t = useTraductorOpcional();
 
   onSaveFieldRef.current = onSaveField;
   onLocalChangeRef.current = onLocalChange;
@@ -494,7 +567,8 @@ export function UniversalEditorShell({
     onPublishDateChange,
     avisDataPublicacio,
     estatDesament,
-    onToast: onToast || showToast
+    onToast: onToast || showToast,
+    t
   });
 
   const contentContext = useContent();
@@ -520,9 +594,10 @@ export function UniversalEditorShell({
      NotificationProvider: un clic nou substituïx el missatge viu, i desmuntar
      la closca no deixa cap compte pendent ací. */
   const interceptaClicsInoperatius = useCallback((accio) => {
-    const missatge = AVISOS_ACCIONS_EDICIO[accio];
-    if (missatge) showToast(missatge, 'info', DURADA_AVIS_ACCIONS);
-  }, [showToast]);
+    // Només les quatre accions pròpies (cap clau heretada de l'objecte).
+    if (!Object.hasOwn(PARELLS_ACCIONS_EDICIO, accio)) return;
+    showToast(tradueix(t, PARELLS_ACCIONS_EDICIO[accio]), 'info', DURADA_AVIS_ACCIONS);
+  }, [showToast, t]);
 
   /* Gauntlet 261016 (Bloc 3.9) · Amb «Edició avançada», les ranures de la
      capçalera, el logotip i la classificació no van a la UniversalPage sinó
@@ -537,6 +612,7 @@ export function UniversalEditorShell({
     ...(onCanviaCopyright !== undefined ? { onCanviaCopyright } : null),
   };
   const desplegableDalt = edicioAvancada && posicioEdicioAvancada === 'despres-autoria';
+  const etiquetaEdicioAvancada = tradueix(t, TEXTOS_CLOSCA.edicioAvancada);
   const desplegable = edicioAvancada ? (
     <details className="sdp-edicio-avancada">
       <summary className="sdp-edicio-avancada__resum">
@@ -546,11 +622,11 @@ export function UniversalEditorShell({
               <SlidersHorizontal size={24} focusable="false" />
             </span>
             <span className="sdp-edicio-avancada__rotul">
-              <span className="sdp-edicio-avancada__titol">{titolEdicioAvancada || ETIQUETA_EDICIO_AVANCADA}</span>
+              <span className="sdp-edicio-avancada__titol">{titolEdicioAvancada || etiquetaEdicioAvancada}</span>
               {resumEdicioAvancada ? <span className="sdp-edicio-avancada__subtitol">{resumEdicioAvancada}</span> : null}
             </span>
           </>
-        ) : ETIQUETA_EDICIO_AVANCADA}
+        ) : etiquetaEdicioAvancada}
       </summary>
       {/* P1-58 · L'ordre de lectura de la fitxa: Capçalera → Avatar →
           Logotip. Els ganxos de cada embolcall no canvien: hi apunten els
@@ -593,7 +669,7 @@ export function UniversalEditorShell({
             avisAccions={null}
             topBarData={{
               ...(edicioAvancada
-                ? { heroImage: capcaleraDesada, heroAlt: 'Capçalera' }
+                ? { heroImage: capcaleraDesada, heroAlt: tradueix(t, TEXTOS_CLOSCA.altCapcalera) }
                 : {
                   heroComponent: shellData.topBarData.heroComponent,
                   isEmptyHero: !heroImage && !shellData.heroImage,
@@ -675,8 +751,8 @@ export function UniversalEditorShell({
 /* Correcció de la revisió (261008) · El nom de la imatge desada quan el botó
    de davall crida el pare (onEdit): diu que obri les opcions (Enrere,
    Esborrar), no el canvi. */
-export const NOM_OPCIONS_CAPCALERA = 'Opcions de la capçalera';
-export const NOM_OPCIONS_LOGOTIP = 'Opcions del logotip';
+export const NOM_OPCIONS_CAPCALERA = TEXTOS_CLOSCA.opcionsCapcalera[1];
+export const NOM_OPCIONS_LOGOTIP = TEXTOS_CLOSCA.opcionsLogotip[1];
 
 /* Esmena 1 del pla 261007_1645 (un sol editor) · La capçalera i el logotip
    damunt de l'H1 pinten el MATEIX control: la imatge clicable amb el seu
@@ -722,13 +798,16 @@ function ImageUploaderUI({
   ajudaAmbImatge = null, ajudaNomesEnPujada = false, botoRef = null
 }) {
   const idBase = useId();
-  const altText = isLogo ? "Logotip" : "Capçalera";
-  const nomDeLaImatge = onEdit ? (isLogo ? NOM_OPCIONS_LOGOTIP : NOM_OPCIONS_CAPCALERA) : undefined;
+  // P1-22 · Els textos de la ranura, en la llengua de la interfície.
+  const t = useTraductorOpcional();
+  const altText = tradueix(t, isLogo ? TEXTOS_CLOSCA.altLogotip : TEXTOS_CLOSCA.altCapcalera);
+  const nomDeLaImatge = onEdit ? tradueix(t, isLogo ? TEXTOS_CLOSCA.opcionsLogotip : TEXTOS_CLOSCA.opcionsCapcalera) : undefined;
   const cssImgClass = isLogo ? "sdp-logo-personalitzat sdp-logo-personalitzat--editable" : "sdp-hero__imatge";
-  const titleText = isLogo ? "Clica per canviar el logotip" : "Clica per canviar la imatge";
-  const uploadText = pujant ? AJUDA_IMATGE_PUJANT : editHelp;
+  const titleText = tradueix(t, isLogo ? TEXTOS_CLOSCA.clicaLogotip : TEXTOS_CLOSCA.clicaImatge);
+  const textPujant = tradueix(t, TEXTOS_CLOSCA.imatgePujant);
+  const uploadText = pujant ? textPujant : editHelp;
   const ajudaEnRepos = onEdit && typeof ajudaAmbImatge === 'string' && ajudaAmbImatge.trim()
-    ? (pujant ? AJUDA_IMATGE_PUJANT : ajudaAmbImatge) : null;
+    ? (pujant ? textPujant : ajudaAmbImatge) : null;
   /* `ajudaNomesEnPujada` (el Perfil d'una persona o d'un agent: davall del
      cercle de l'avatar) · en repòs, la línia només per al lector de pantalla;
      mentre puja, la visible de sempre. Sense la prop, la classe de sempre. */
@@ -786,12 +865,12 @@ function ImageUploaderUI({
           {/* T46 · Sense una font que es puga llegir (sdp-media sense resoldre), cap botó. */}
           {!isLogo && potEnquadrar && fontExistent ? (
             <button type="button" className="sdp-boto sdp-boto--secundari" aria-haspopup="dialog" disabled={pujant} onClick={() => obriEnquadrament(fontExistent)}>
-              <Crop size={16} aria-hidden="true" focusable="false" /> Enquadrar
+              <Crop size={16} aria-hidden="true" focusable="false" /> {tradueix(t, TEXTOS_CLOSCA.botoEnquadra)}
             </button>
           ) : null}
-          <button type="button" className="sdp-boto sdp-boto--fantasma" onClick={handler.cancelEdit}>Enrere</button>
+          <button type="button" className="sdp-boto sdp-boto--fantasma" onClick={handler.cancelEdit}>{tradueix(t, TEXTOS_CLOSCA.botoEnrere)}</button>
           {/* Esborrar mentre puja: la foto que arribara després la tornaria a posar. */}
-          <button type="button" className="sdp-boto sdp-boto--perill" disabled={pujant} onClick={handler.handleDelete}>Esborrar</button>
+          <button type="button" className="sdp-boto sdp-boto--perill" disabled={pujant} onClick={handler.handleDelete}>{tradueix(t, TEXTOS_CLOSCA.botoEsborra)}</button>
         </div>
       )}
     </div>
@@ -834,14 +913,14 @@ function useEditorShell({
   formattedDate,
   showStatusToggle = true,
   showLogoUpload = true,
-  heroEditLabel = 'Editar capçalera',
-  heroEditHelp = AJUDA_IMATGE_PER_DEFECTE,
+  heroEditLabel = null,
+  heroEditHelp = null,
   onHeroEdit = null,
-  logoEditLabel = 'Editar logotip',
+  logoEditLabel = null,
   onLogoEdit = null,
   logoPujant = false,
   heroPujant = false,
-  logoEditHelp = AJUDA_IMATGE_PER_DEFECTE,
+  logoEditHelp = null,
   ajudaAmbImatge = null,
   ajudaNomesEnPujada = false,
   statusIcon = null,
@@ -852,8 +931,15 @@ function useEditorShell({
   onPublishDateChange = null,
   avisDataPublicacio = null,
   estatDesament = null,
-  onToast = () => {}
+  onToast = () => {},
+  t = null
 }) {
+  /* P1-22 · Sense rètol ni ajuda del consumidor (null), els de sempre en la
+     llengua de la interfície. Una cadena explícita, també buida, mana. */
+  const etiquetaCapcalera = heroEditLabel ?? tradueix(t, TEXTOS_CLOSCA.editaCapcalera);
+  const ajudaCapcalera = heroEditHelp ?? tradueix(t, TEXTOS_CLOSCA.imatgeAjuda);
+  const etiquetaLogotip = logoEditLabel ?? tradueix(t, TEXTOS_CLOSCA.editaLogotip);
+  const ajudaLogotip = logoEditHelp ?? tradueix(t, TEXTOS_CLOSCA.imatgeAjuda);
   /* T46 · L'últim error de la capçalera, per a ensenyar-lo també dins del
      diàleg d'enquadrament: el modal tapa el toast. */
   const errorHeroRef = useRef(null);
@@ -866,7 +952,7 @@ function useEditorShell({
       onToast(msg, 'error');
     },
     onConfirmDelete: () => {
-      onToast("Imatge esborrada", "success");
+      onToast(tradueix(t, TEXTOS_CLOSCA.avisImatgeEsborrada), "success");
       return true;
     }
   });
@@ -877,7 +963,7 @@ function useEditorShell({
     onImageUpload,
     onError: (msg) => onToast(msg, 'error'),
     onConfirmDelete: () => {
-      onToast("Logotip esborrat", "success");
+      onToast(tradueix(t, TEXTOS_CLOSCA.avisLogotipEsborrat), "success");
       return true;
     }
   });
@@ -965,7 +1051,7 @@ function useEditorShell({
     const sessio = enquadrament;
     errorHeroRef.current = null;
     const fet = await heroHandler.processaFitxer(fitxer, { forma: 'capcalera', midaMaxima: costatDeSortida('capcalera'), ...metadades?.exif });
-    if (!fet) throw new Error(errorHeroRef.current || "No s'ha pogut desar la imatge.");
+    if (!fet) throw new Error(errorHeroRef.current || tradueix(t, TEXTOS_CLOSCA.imatgeErrorDesar));
     setEnquadrament((actual) => (actual === sessio ? null : actual));
     setEnfocaHero(true);
     return true;
@@ -994,7 +1080,12 @@ function useEditorShell({
   const srcLogoDeLectura = logoImage
     ? (resolvedLogoImage || (logoImage.startsWith('sdp-media://') ? '' : logoImage))
     : '';
-  const logoDeLectura = srcLogoDeLectura ? { clar: srcLogoDeLectura, alt: 'Logotip' } : null;
+  const logoDeLectura = srcLogoDeLectura ? { clar: srcLogoDeLectura, alt: tradueix(t, TEXTOS_CLOSCA.altLogotip) } : null;
+  /* P1-22 · Les ajudes de les formes i la descripció del diàleg, en la llengua
+     de la interfície. Sense traductor, FORMATS_CAPCALERA de sempre (la mateixa
+     identitat); amb, una llista nova només quan canvia el traductor. */
+  const formatsDelDialeg = useMemo(() => (t ? formatsCapcalera(t) : FORMATS_CAPCALERA), [t]);
+  const descripcioDelDialeg = tradueix(t, TEXTOS_CLOSCA.enquadramentDescripcio);
 
   return {
     heroImage,
@@ -1011,13 +1102,13 @@ function useEditorShell({
          consumidor, i `logoEditHelp` en dona l'ajuda (la de sempre per defecte). */
       logoComponent: showLogoUpload ? <ImageUploaderUI
         image={logoImage} handler={logoHandler} resolvedImage={resolvedLogoImage}
-        isLogo={true} editLabel={logoEditLabel} editHelp={logoEditHelp}
+        isLogo={true} editLabel={etiquetaLogotip} editHelp={ajudaLogotip}
         pujant={logoHandler.isUploading || Boolean(logoPujant)} onEdit={onLogoEdit}
         ajudaAmbImatge={ajudaAmbImatge} ajudaNomesEnPujada={ajudaNomesEnPujada} botoRef={logoBotoRef}
       /> : null,
       heroComponent: <ImageUploaderUI
         image={heroImage} handler={heroHandler} resolvedImage={resolvedHeroImage}
-        isLogo={false} editLabel={heroEditLabel} editHelp={heroEditHelp} imgRef={heroImgRef}
+        isLogo={false} editLabel={etiquetaCapcalera} editHelp={ajudaCapcalera} imgRef={heroImgRef}
         potEnquadrar={potEnquadrar} triaFitxer={triaHero} pujant={pujant}
         fontExistent={fontExistent} obriEnquadrament={obriEnquadrament} onEdit={onHeroEdit}
         ajudaAmbImatge={ajudaAmbImatge} ajudaNomesEnPujada={ajudaNomesEnPujada} botoRef={heroBotoRef}
@@ -1053,8 +1144,8 @@ function useEditorShell({
        (FORMATS_CAPCALERA, el quadrat de sèrie) i l'eixida de la sessió, 1.200
        pel costat llarg (derogada la Llei del Quadrat per a la capçalera). */
     dialegEnquadrament: enquadrament ? (
-      <DialegEnquadrament font={enquadrament.font} formatInicial={enquadrament.formatInicial ?? CAPCALERA.formatInicial} formats={FORMATS_CAPCALERA}
-        descripcio={DESCRIPCIO_ENQUADRAMENT_CAPCALERA} sortida={enquadrament.sortida}
+      <DialegEnquadrament font={enquadrament.font} formatInicial={enquadrament.formatInicial ?? CAPCALERA.formatInicial} formats={formatsDelDialeg}
+        descripcio={descripcioDelDialeg} sortida={enquadrament.sortida}
         onTanca={() => setEnquadrament(null)} onDesa={desaEnquadrament} ofereixConservarExif />
     ) : null
   };

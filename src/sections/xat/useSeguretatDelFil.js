@@ -39,7 +39,7 @@ export const ESTAT_NUMERO = Object.freeze({
   error: 'error'
 });
 
-const INACTIU = Object.freeze({ estat: ESTAT_NUMERO.inactiu, numero: null, kid: null, verificat: false, avis: null, ocupat: false });
+const INACTIU = Object.freeze({ estat: ESTAT_NUMERO.inactiu, numero: null, kid: null, verificat: false, pendent: false, avis: null, ocupat: false });
 const CALCULANT = Object.freeze({ ...INACTIU, estat: ESTAT_NUMERO.calculant });
 
 /* PC155-02 · Un número és d'un abast: el fil, la instància del servei (la del
@@ -125,7 +125,7 @@ export function useNumeroSeguretat({ fil, config = null, obert = false, potVerif
       const resultat = await servei.numeroSeguretat(filId, configRef.current ?? {});
       if (meua !== generacio.current) return;
       const avisFinal = avis === 'canviat' && kidMostrat !== null && resultat.kid === kidMostrat ? 'errorMarca' : avis;
-      setEstat({ estat: ESTAT_NUMERO.llest, numero: resultat.numero, kid: resultat.kid, verificat: resultat.verificat === true, avis: avisFinal, ocupat: false, clau });
+      setEstat({ estat: ESTAT_NUMERO.llest, numero: resultat.numero, kid: resultat.kid, verificat: resultat.verificat === true, pendent: resultat.pendent === true, avis: avisFinal, ocupat: false, clau });
     } catch (error) {
       if (meua !== generacio.current) return;
       /* Un àmbit nou: en silenci, sense número ni roda (el resultat ja no és de ningú).
@@ -156,7 +156,7 @@ export function useNumeroSeguretat({ fil, config = null, obert = false, potVerif
     try {
       const resultat = await servei.marcaVerificat(filId, { kid: estat.kid, verificat: verificat === true }, configRef.current ?? {});
       if (meua !== generacio.current) return;
-      setEstat({ estat: ESTAT_NUMERO.llest, numero: resultat.numero, kid: resultat.kid, verificat: resultat.verificat === true, avis: null, ocupat: false, clau: estat.clau });
+      setEstat({ estat: ESTAT_NUMERO.llest, numero: resultat.numero, kid: resultat.kid, verificat: resultat.verificat === true, pendent: resultat.pendent === true, avis: null, ocupat: false, clau: estat.clau });
     } catch (error) {
       if (meua !== generacio.current) return;
       if (esCanviDAmbit(error)) {

@@ -107,9 +107,32 @@ test('la clau, les etiquetes i el mínim de la cerca', () => {
 });
 
 test('IDEA-24 · potTransferirPropietat només per a la propietària sobre una altra persona membre', () => {
-  expect(potTransferirPropietat(persona('p2', 'Pepa', 'admin'), { rolMeu: 'owner', jo: 'p1' })).toBe(true);
-  expect(potTransferirPropietat(persona('p2', 'Pepa', 'member'), { rolMeu: 'owner', jo: 'p1' })).toBe(true);
-  expect(potTransferirPropietat(persona('p1', 'Jo', 'owner'), { rolMeu: 'owner', jo: 'p1' })).toBe(false);
-  expect(potTransferirPropietat(org('o1', 'Colla'), { rolMeu: 'owner', jo: 'p1' })).toBe(false);
-  expect(potTransferirPropietat(persona('p2', 'Pepa', 'member'), { rolMeu: 'admin', jo: 'p1' })).toBe(false);
+  const ctx = { rolMeu: 'owner', jo: 'p1', kind: 'company' };
+  expect(potTransferirPropietat(persona('p2', 'Pepa', 'admin'), ctx)).toBe(true);
+  expect(potTransferirPropietat(persona('p2', 'Pepa', 'member'), { ...ctx, kind: 'group' })).toBe(true);
+  expect(potTransferirPropietat(persona('p1', 'Jo', 'owner'), ctx)).toBe(false);
+  // Ella mateixa, encara que la llista la duga com a administradora (fila desfasada): mai.
+  expect(potTransferirPropietat(persona('p1', 'Jo', 'admin'), ctx)).toBe(false);
+  // Un id numèric i un de text: la mateixa persona.
+  expect(potTransferirPropietat(persona(7, 'Jo', 'admin'), { ...ctx, jo: '7' })).toBe(false);
+  expect(potTransferirPropietat(org('o1', 'Colla'), ctx)).toBe(false);
+  expect(potTransferirPropietat(persona(null, 'Sense id'), ctx)).toBe(false);
+  expect(potTransferirPropietat(persona('p2', 'Pepa', 'member'), { ...ctx, rolMeu: 'admin' })).toBe(false);
+  expect(potTransferirPropietat(persona('p2', 'Pepa', 'member'), { ...ctx, rolMeu: 'member' })).toBe(false);
+  expect(potTransferirPropietat(null, ctx)).toBe(false);
+  expect(potTransferirPropietat(persona('p2', 'Pepa'))).toBe(false);
+});
+
+test('IDEA-24 · cap transferència d’una entitat, d’un ajuntament o d’un tipus desconegut (R3 SQL-01; fallada tancada)', () => {
+  for (const kind of ['entity', 'city_hall', undefined, null, '', 'COMPANY', 'Group', ' company', 'toString']) {
+    expect(potTransferirPropietat(persona('p2', 'Pepa', 'admin'), { rolMeu: 'owner', jo: 'p1', kind }), String(kind)).toBe(false);
+  }
+});
+
+test('IDEA-24 · la llista de tipus transferibles és la del contracte (una sola font)', async () => {
+  const { TIPUS_TRANSFERIBLES } = await import('../../data/contracte.js');
+  expect([...TIPUS_TRANSFERIBLES].sort()).toEqual(['company', 'group']);
+  for (const kind of TIPUS_TRANSFERIBLES) {
+    expect(potTransferirPropietat(persona('p2', 'Pepa'), { rolMeu: 'owner', jo: 'p1', kind }), kind).toBe(true);
+  }
 });

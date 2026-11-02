@@ -80,7 +80,7 @@ describe('/consola · files de la mateixa alçada i títols sencers', () => {
     const css = MODULES();
     expect(cosDe(css, '.sdp-card-grid.sdp-consola__graella')).toMatch(/align-items:\s*stretch;/);
     expect(cosDe(css, '.sdp-consola__graella > .sp-card > .sp-card-footer')).toBe('margin-top: auto;');
-    // La targeta porta 32px de marge inferior: amb height: 100% el marge eixiria de la fila.
+    // La targeta d'una graella ja no porta marge inferior (PS-06), però height: 100% tornaria a desquadrar la fila
     expect(css).not.toMatch(/\.sdp-consola__graella > \.sp-card \{[^}]*height:\s*100%/);
     // La canònica no canvia: la resta de graelles de targetes continuen alineades dalt.
     expect(css.match(/\n\.sdp-card-grid \{([^}]*)\}/)[1]).toMatch(/align-items:\s*start;/);

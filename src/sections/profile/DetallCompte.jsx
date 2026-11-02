@@ -91,11 +91,14 @@ export function DetallCompte({ identitat, guardarAjust, pujaMitja, contacte = nu
   const desaMembre = perfil?.desaMembre;
   const llevaMembre = perfil?.llevaMembre;
   const cercaCandidats = perfil?.cercaCandidats;
+  /* IDEA-24 (marató 261101_2143, B4) · Opcional i fora de la condició: només
+     si el port sap transferir la propietat (capacitat 'transferenciaPropietat'). */
+  const transfereixPropietat = typeof perfil?.transfereixPropietat === 'function' ? perfil.transfereixPropietat : null;
   const membres = useMemo(() => (
     !persona && ambMembres && perfil?.ambMembres && llistaMembres && desaMembre && llevaMembre && cercaCandidats
-      ? { usuariId, llistaMembres, desaMembre, llevaMembre, cercaCandidats }
+      ? { usuariId, llistaMembres, desaMembre, llevaMembre, cercaCandidats, transfereixPropietat }
       : null
-  ), [persona, ambMembres, perfil?.ambMembres, usuariId, llistaMembres, desaMembre, llevaMembre, cercaCandidats]);
+  ), [persona, ambMembres, perfil?.ambMembres, usuariId, llistaMembres, desaMembre, llevaMembre, cercaCandidats, transfereixPropietat]);
 
   /* Gauntlet 261016 (encàrrec D; pla, Onada 1.1.4: «han de beure exactament
      de la mateixa instància de dades») · L'avatar de la barra taronja és la

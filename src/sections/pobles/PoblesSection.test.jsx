@@ -12,13 +12,17 @@ import React from 'react';
 import { cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 import { afterEach, beforeEach, expect, test, vi } from 'vitest';
 
-const mocks = vi.hoisted(() => ({ navigate: vi.fn(), t: (_, alternativa) => alternativa, core: {}, mur: {} }));
+const mocks = vi.hoisted(() => ({ navigate: vi.fn(), toast: vi.fn(), t: (_, alternativa) => alternativa, core: {}, mur: {}, entitats: {} }));
 vi.mock('../../app/contexts/RouterContext', () => ({
   useNavigate: () => mocks.navigate,
   useSearchParams: () => [new URLSearchParams('')],
   Link: ({ to, children, ...rest }) => React.createElement('a', { href: to, ...rest }, children)
 }));
-vi.mock('@/components/universal/NotificationContext.jsx', () => ({ useToast: () => ({ showToast: vi.fn() }) }));
+/* PS-07 · El toast d'una porta inerta, per a comprovar que avisa i no navega. */
+vi.mock('@/components/universal/NotificationContext.jsx', () => ({ useToast: () => ({ showToast: mocks.toast }) }));
+/* PS-07 · La graella d'entitats d'un poble (/pobles/:id) amb dades fixes: el
+   ganxo de dades és l'únic que es substituïx; la targeta és la de veres. */
+vi.mock('./useEntitatsDelPoble.js', async (original) => ({ ...(await original()), useEntitatsDelPoble: () => mocks.entitats }));
 vi.mock('../../app/contexts/UIContext', () => ({ useUIActions: () => ({ t: mocks.t }) }));
 vi.mock('../../hooks/useSEO', () => ({ useSEO: () => {} }));
 vi.mock('../../app/contexts/CoreContentContext', () => ({ useCoreContent: () => mocks.core }));
@@ -34,6 +38,8 @@ import { nomDeLaGent } from './nomsDelPoble.js';
 import { objecteDelPobleXat } from './xatDelPoble.js';
 import { APP_SEED } from '../../data/appSeed.js';
 import { llavorAmbDatesDeProva } from '../mur/datesDeProvaMur.js';
+import { PortaDePagina } from '../../components/PedraSeca/organismes/PortesTargeta.jsx';
+import { EntitatsDelPoble } from './EntitatsDelPoble.jsx';
 
 const llavor = (towns) => ({ status: 'ready', error: null, sortedTowns: towns });
 const targetes = (arrel) => [...arrel.querySelectorAll('article.sp-card')];
@@ -53,6 +59,8 @@ beforeEach(() => {
   vi.clearAllMocks();
   mocks.core = llavor(TOWNS);
   mocks.mur = { status: 'ready', feedPosts: [], marketItems: [], events: [] };
+  // PS-07 · Cada prova munta les seues entitats: res no passa d'una a l'altra.
+  mocks.entitats = {};
 });
 afterEach(() => {
   cleanup();
@@ -173,9 +181,79 @@ test('Onada 8 · la caputxa i el cos porten a la fitxa del poble; el botó «Ana
   const boto = within(torre).getByRole('link', { name: 'Anar al xat' });
   expect(boto.getAttribute('href')).toBe(rutaXatDePagina(objecteDelPobleXat(town)));
   expect(boto.getAttribute('href')).toMatch(/^\/xat\?sobre=poble:la-torre-de-les-macanes&titol=Gent%20de%20la%20Torre&/);
-  expect(boto.className.split(' ')).toEqual(expect.arrayContaining(['sdp-boto', 'sdp-boto--primari', 'sdp-boto--gran', 'sdp-boto--ple']));
+  /* PS-07 (B7, marató 261101_2143) · Expectativa girada a propòsit: un sol
+     primari per vista. El botó continua gran i a l'ample, però secundari. */
+  expect(boto.className).toBe('sdp-boto sdp-boto--secundari sdp-boto--gran sdp-boto--ple');
   expect(boto.closest('.sp-card-accio')).not.toBeNull();
   expect(vel.contains(boto)).toBe(false);
+});
+
+/* PS-07 (B7, marató 261101_2143; spec B7-PEDRA §2.6) · Un sol primari per
+   vista a /pobles. Abans, nou «Anar al xat» blaus (sdp-boto--primari) a la
+   graella, perquè PortaDePagina ignorava la varietat. Ara cap primari dins
+   de la graella, i cada targeta conserva el seu botó gran, secundari. */
+test('PS-07 · cap primari dins de la graella de /pobles: cada targeta porta «Anar al xat» gran i secundari', () => {
+  const { container } = render(<PoblesSection />);
+  const graella = container.querySelector('.sdp-card-grid');
+  expect(graella.querySelectorAll('.sdp-boto--primari')).toHaveLength(0);
+  const llista = targetes(container);
+  expect(llista).toHaveLength(TOWNS.length);
+  for (const targeta of llista) {
+    const botons = within(targeta).getAllByRole('link', { name: 'Anar al xat' });
+    expect(botons.map((b) => b.className)).toEqual(['sdp-boto sdp-boto--secundari sdp-boto--gran sdp-boto--ple']);
+  }
+  // Sonda: el selector veu un primari si n'hi ha.
+  graella.querySelector('.sp-card-accio a').classList.add('sdp-boto--primari');
+  expect(graella.querySelectorAll('.sdp-boto--primari')).toHaveLength(1);
+});
+
+/* PS-07 · La varietat de PortaDePagina és una prop explícita: per defecte, la
+   porta blava de sempre (la resta de pàgines no canvien); amb
+   varietat="secundari", la mateixa porta gran i a l'ample en secundari, oberta
+   o inerta. porta.varietat no la gira: normalitzaPortes hi posa 'secundari'
+   per defecte i giraria totes les portes de pàgina. */
+test('PS-07 · PortaDePagina: primari per defecte; varietat="secundari" gira el color, oberta i inerta; porta.varietat no gira res', () => {
+  const PRIMARI = 'sdp-boto sdp-boto--primari sdp-boto--gran sdp-boto--ple';
+  const SECUNDARI = 'sdp-boto sdp-boto--secundari sdp-boto--gran sdp-boto--ple';
+  const oberta = { id: 'xat', verb: 'Anar al xat', desti: '/xat' };
+  const inerta = { id: 'mapa', verb: 'Obrir', nom: 'Obrir el mapa', desti: null };
+  render(
+    <>
+      <div data-cas="defecte"><PortaDePagina porta={oberta} /></div>
+      <div data-cas="secundari"><PortaDePagina porta={oberta} varietat="secundari" /></div>
+      <div data-cas="dada"><PortaDePagina porta={{ ...oberta, varietat: 'secundari' }} /></div>
+      <div data-cas="desconeguda"><PortaDePagina porta={oberta} varietat="perill" /></div>
+      <div data-cas="inerta-defecte"><PortaDePagina porta={inerta} /></div>
+      <div data-cas="inerta-secundari"><PortaDePagina porta={inerta} varietat="secundari" /></div>
+    </>
+  );
+  const cas = (nom) => document.querySelector(`[data-cas="${nom}"]`).firstElementChild;
+  expect([cas('defecte'), cas('dada'), cas('desconeguda')].map((e) => [e.tagName, e.className, e.getAttribute('href')]))
+    .toEqual(Array(3).fill(['A', PRIMARI, '/xat']));
+  expect([cas('secundari').tagName, cas('secundari').className, cas('secundari').getAttribute('href')]).toEqual(['A', SECUNDARI, '/xat']);
+  expect(within(cas('secundari').parentElement).getByRole('link', { name: 'Anar al xat' })).toBe(cas('secundari'));
+  // Inerta: el mateix button aria-disabled, el nom «(en obres)» i el toast; mai navega.
+  expect(cas('inerta-defecte').className).toBe(PRIMARI);
+  const boto = cas('inerta-secundari');
+  expect([boto.tagName, boto.className, boto.getAttribute('aria-disabled')]).toEqual(['BUTTON', SECUNDARI, 'true']);
+  expect(within(boto.parentElement).getByRole('button', { name: 'Obrir el mapa (en obres)' })).toBe(boto);
+  fireEvent.click(boto);
+  expect(mocks.toast).toHaveBeenCalledWith('“Obrir el mapa” encara està en obres.');
+  expect(mocks.navigate).not.toHaveBeenCalled();
+});
+
+/* PS-07 · La pestanya «Empreses i entitats» de /pobles/:id: la mateixa regla.
+   El blau és de l'acció de la pàgina del poble (detailSectionMeta, fora
+   d'esta graella); el de cada entitat, secundari. */
+test('PS-07 · a la graella d’entitats d’un poble, «Anar al xat» de cada entitat és gran i secundari, cap primari', () => {
+  const fila = (id, name, kind) => ({ id, name, kind, lema: '', description: '.', logo_url: '', hero_url: '', town_name: 'Vilanova de Prova SdP' });
+  mocks.entitats = { estat: 'ready', entitats: [fila('org-forn', 'Forn de la Plaça', 'company'), fila('org-colla', 'Colla de la Serra', 'group')], error: null, refresh: vi.fn() };
+  const { container } = render(<EntitatsDelPoble poble={{ id: 'vilanova-de-prova-sdp', title: 'Vilanova de Prova SdP' }} />);
+  const botons = screen.getAllByRole('link', { name: 'Anar al xat' });
+  expect(botons).toHaveLength(2);
+  expect(botons.map((b) => b.className)).toEqual(Array(2).fill('sdp-boto sdp-boto--secundari sdp-boto--gran sdp-boto--ple'));
+  expect(botons.every((b) => b.closest('.sp-card-accio') && b.getAttribute('href').startsWith('/xat?'))).toBe(true);
+  expect(container.querySelectorAll('.sdp-boto--primari')).toHaveLength(0);
 });
 
 test('Onada 8 · cap boina de poble porta al xat: totes a la seua fitxa, i cada targeta porta el seu «Anar al xat»', () => {

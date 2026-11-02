@@ -185,7 +185,7 @@ const SidebarContent = memo(({ isCompact, isDesktopSidebarClosed, toggleSidebar,
       ? { label: section.label, shortLabel: section.shortLabel }
       : getSectionLabels(section.id, language);
     return (
-      <NavLink key={section.id} to={section.path} matchPaths={section.subrutes} className={['nav-item', classeExtra.trim()].filter(Boolean).join(' ')} aria-label={labels.label} onClick={() => { if (isCompact) toggleSidebar(); }}>
+      <NavLink key={section.id} to={section.path} matchPaths={section.subrutes} transicio className={['nav-item', classeExtra.trim()].filter(Boolean).join(' ')} aria-label={labels.label} onClick={() => { if (isCompact) toggleSidebar(); }}>
         <Icon className="icona-linia" strokeWidth={2.1} size={24} aria-hidden="true" focusable="false" />
         <span className="nav-item__text">
           {labels.label}
@@ -704,19 +704,10 @@ const TopBar = memo(function TopBar({ onToggleSidebar, menuObert = false, nomPob
     return () => window.removeEventListener(EVENT_NIVELL_IAIA, escolta);
   }, []);
   /* Encàrrec 261018_1220 (Tasca 1) · `options` (l'estat de l'historial que
-     porta la barra en anar a un workspace d'identitat) passa tal qual. */
-  const navigateWithTransition = (path, options) => {
-    const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    const ves = () => (options ? navigate(path, options) : navigate(path));
-    if (document.startViewTransition && !prefersReducedMotion) {
-      /* Una transició que en talla una altra rebutja `ready` (InvalidStateError):
-         és esperat i no ha d'eixir a la consola. Els errors de navegar van per `finished`. */
-      const transicio = document.startViewTransition(ves);
-      transicio?.ready?.catch(() => {});
-    } else {
-      ves();
-    }
-  };
+     porta la barra en anar a un workspace d'identitat) passa tal qual.
+     PS-01 (B7) · La fosa la fa el router (RouterContext, transicioDeVista.js),
+     que pinta la vista nova dins de la transició i escriu l'historial abans. */
+  const navigateWithTransition = (path, options) => navigate(path, { ...(options || {}), transicio: true });
   /* T43 (ordre del Mestre, 260928) · la identitat activa ha de ser evident:
      el botó diu amb qui actues (una entitat, el SEU logo o les SEUES
      inicials, mai la foto de la persona) i obri el calaix per a canviar-la. */
@@ -1173,7 +1164,7 @@ const MobileNav = memo(function MobileNav() {
       ? { label: section.label, shortLabel: section.shortLabel }
       : getSectionLabels(section.id, llenguaDelText);
     return (
-      <NavLink key={section.id} to={section.path} matchPaths={section.subrutes} className="nav-item" aria-label={labels.label}>
+      <NavLink key={section.id} to={section.path} matchPaths={section.subrutes} transicio className="nav-item" aria-label={labels.label}>
         <Icon className="nav-item__icon" strokeWidth={2.1} aria-hidden="true" focusable="false" />
         <span className="nav-item__text">
           <strong>{labels.shortLabel}</strong>
@@ -1182,15 +1173,8 @@ const MobileNav = memo(function MobileNav() {
     );
   };
 
-  const vesAlPanell = () => {
-    const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    if (document.startViewTransition && !prefersReducedMotion) {
-      const transicio = document.startViewTransition(() => navigate('/control'));
-      transicio?.ready?.catch(() => {});
-    } else {
-      navigate('/control');
-    }
-  };
+  // PS-01 (B7) · La fosa la fa el router (transicioDeVista.js).
+  const vesAlPanell = () => navigate('/control', { transicio: true });
 
   return (
     <nav className="mobile-nav" aria-label={tradueix(t, NOMS_CLOSCA.navegacioMobil)}>

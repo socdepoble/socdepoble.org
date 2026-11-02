@@ -669,3 +669,40 @@ describe('T2 · els casos de les dades obertes', () => {
       .toMatchObject({ estat: 'falla', falles: ['havia de rebutjar amb el codi conflicte-identificador: TypeError'] });
   });
 });
+
+/* IDEA-24 (marató 261101_2143, B4) · Els dos casos de la transferència de la
+   propietat: a la seua capacitat, sense escriure; un èxit o un rebuig sense
+   code són una falla. Els arguments no tenen res que existisca. */
+describe('IDEA-24 · els casos de la transferència de la propietat', () => {
+  const ctx = () => contextDeConformitat({ config: { dataMode: 'seed' }, escriptures: true });
+  const casos = () => CASOS.filter((c) => c.metode === 'transfereixPropietatOrganitzacio');
+  const ambCode = (code) => async () => { throw Object.assign(new Error('No.'), { code }); };
+
+  test('dos casos a la capacitat transferenciaPropietat, que no escriuen; el mètode ja no és al deute', () => {
+    expect(casos().map((c) => [c.capacitat, c.espera, Boolean(c.escriu)])).toEqual([
+      ['transferenciaPropietat', 'rebutja', false],
+      ['transferenciaPropietat', 'rebutja', false]
+    ]);
+    expect(CAPACITATS.transferenciaPropietat).toEqual(['transfereixPropietatOrganitzacio']);
+    expect(metodesSenseCas()).not.toContain('transfereixPropietatOrganitzacio');
+  });
+
+  test('els arguments: cap organització ni persona que existisca; la segona destinatària és una organització', () => {
+    const c = ctx();
+    expect(casos().map((cas) => cas.arguments(c))).toEqual([
+      ['conformitat-sense-organitzacio', { tipus: 'persona', id: 'conformitat-sense-persona' }, c.config],
+      ['conformitat-sense-organitzacio', { tipus: 'organitzacio', id: 'conformitat-sense-organitzacio-2' }, c.config]
+    ]);
+  });
+
+  test('un rebuig amb code és conforme; resoldre o rebutjar sense code, una falla; sense el mètode, s’omet', async () => {
+    for (const c of casos()) {
+      expect(await executaCas(c, { transfereixPropietatOrganitzacio: ambCode('SDP-ORGMEM-002') }, ctx())).toMatchObject({ estat: 'ok' });
+      expect(await executaCas(c, { transfereixPropietatOrganitzacio: async () => ({ organizationId: 'o', anticOwnerId: 'a', nouOwnerId: 'b' }) }, ctx()))
+        .toMatchObject({ estat: 'falla', falles: ['ha resolt i havia de rebutjar'] });
+      expect(await executaCas(c, { transfereixPropietatOrganitzacio: async () => { throw new Error('sense code'); } }, ctx()))
+        .toMatchObject({ estat: 'falla' });
+      expect(await executaCas(c, {}, ctx())).toMatchObject({ estat: 'omés', motiu: 'capacitat transferenciaPropietat absent' });
+    }
+  });
+});

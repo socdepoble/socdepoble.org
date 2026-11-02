@@ -339,3 +339,40 @@ export function textAmpliacio(zoom, t) {
   const plantilla = typeof t === 'function' ? t(clau, reserva) : reserva;
   return String(plantilla).split('{n}').join(String(Math.round(finit(zoom, 1) * 100)));
 }
+
+const ambDecimals = (valor, decimals) => Math.round(valor * 10 ** decimals) / 10 ** decimals;
+
+/**
+ * IDEA-42 (B7h, marató 261101_2143; spec B7-PEDRA §2.9c) · El punt focal de la
+ * targeta 16:9 del Mur, sense retallar cap fitxer. `punt` = { cx, cy, zoom },
+ * l'estat del diàleg (el centre del marc en fraccions de la foto), i
+ * `ratioImatge` = amplada / alçada naturals de la foto.
+ * La targeta pinta la foto amb object-fit: cover dins d'una caixa de la
+ * proporció del format, amb object-position i transform-origin al mateix punt
+ * p i transform: scale(zoom). Amb cover, el punt p de la caixa és el punt p de
+ * la foto, i escalar al seu voltant deixa veure exactament el marc: p és la
+ * posició del lliscador (lliscador, dalt) amb el zoom.
+ * Torna { x, y, zoom } (x i y en %, amb dos decimals) o null si l'estat no és
+ * de números finits, si encara no se sap la proporció de la foto o si el
+ * format no en té cap de fixa: la targeta es queda centrada. El zoom va a
+ * [1, ZOOM_MAX] i el centre, dins de la foto (com limita, sense el mínim de
+ * MIDA_MINIMA_RETALL, que demana els píxels de veres).
+ */
+export function posicioDeRetall(punt, ratioImatge, format = '16:9', formats = FORMATS) {
+  let cx, cy, zoom;
+  try {
+    if (!punt || typeof punt !== 'object') return null;
+    ({ cx, cy, zoom } = punt);
+  } catch {
+    return null;
+  }
+  const r = formats.find((f) => f.valor === format)?.ratio;
+  if (![cx, cy, zoom, ratioImatge, r].every((v) => Number.isFinite(v)) || !(ratioImatge > 0) || !(r > 0)) return null;
+  const z = entre(zoom, 1, ZOOM_MAX);
+  const base = marcBase(ratioImatge, 1, r);
+  const eix = (c, mig) => {
+    const rang = 1 - 2 * mig;
+    return rang <= EPSILON ? 50 : ambDecimals(((entre(c, mig, 1 - mig) - mig) / rang) * 100, 2);
+  };
+  return { x: eix(cx, base.w / z / ratioImatge / 2), y: eix(cy, base.h / z / 2), zoom: ambDecimals(z, 4) };
+}

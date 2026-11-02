@@ -63,6 +63,7 @@ import { desaEsborrany, llegixEsborrany } from '../esborranys.js';
 import { E2EE_ACTIU_PER_DEFECTE } from '../../../config/xifratXat.js';
 import { useEstatXifratgeDelFil } from '../useSeguretatDelFil.js';
 import { TEXTOS_XIFRATGE } from '../estatXifratgeFil.js';
+import { avisDelBloqueig, nomDelMembre, useCanvisDeClau } from '../useCanvisDeClau.js';
 
 /* P1-12 pas 17 (pla 261101_1246, T7 · S5) · L'estat del xifratge d'esta conversa i el
    diàleg del número de seguretat, darrere de la bandera compilada. Apagada, Rollup
@@ -71,6 +72,12 @@ import { TEXTOS_XIFRATGE } from '../estatXifratgeFil.js';
 const PanellSeguretatXat = E2EE_ACTIU_PER_DEFECTE ? lazy(() => import('./PanellSeguretatXat.jsx')) : null;
 const SENSE_XIFRATGE = Object.freeze({ visible: false });
 const useXifratgeDelFil = E2EE_ACTIU_PER_DEFECTE ? useEstatXifratgeDelFil : () => SENSE_XIFRATGE;
+/* M02 (marató 261101_2143; disseny E2EE §4.4) · Els canvis de clau dels contactes:
+   l'alerta al fil, el compositor bloquejat i «He parlat amb {nom}: continua», amb el
+   mateix plegat. Apagada, ni l'alerta ni el hook entren al paquet. */
+const AvisClauCanviada = E2EE_ACTIU_PER_DEFECTE ? lazy(() => import('./AvisClauCanviada.jsx')) : null;
+const SENSE_CANVIS = Object.freeze({ bloquejat: false, avis: false });
+const useCanvisDelFil = E2EE_ACTIU_PER_DEFECTE ? useCanvisDeClau : () => SENSE_CANVIS;
 
 /* Gauntlet 261025_0545 (IA-07) · El nom de la IAIA a la seua benvinguda, el
    del padró (identitatsSeed.js), com a la capçalera i a les bombolles. */
@@ -1029,6 +1036,11 @@ export default function Conversa({
   const accioXifratge = E2EE_ACTIU_PER_DEFECTE && xifratge.visible
     ? { etiqueta: t(TEXTOS_XIFRATGE.menu[0], TEXTOS_XIFRATGE.menu[1]), onTria: () => setPanellXifratge(true) }
     : null;
+  /* M02 (disseny §4.4) · Una sola instància dels canvis de clau del fil: l'alerta, el
+     diàleg i el compositor (bloquejat amb un canvi fort pendent, l'alarma de la clau
+     pròpia o una manipulació, amb la barra de només lectura de sempre). */
+  const canvisClau = useCanvisDelFil({ fil, config: configAdjunts, actiu: E2EE_ACTIU_PER_DEFECTE && xifratge.estat === 'xifrat', ambit: usuariAdjunts ?? null });
+  const avisBloqueig = E2EE_ACTIU_PER_DEFECTE ? avisDelBloqueig(canvisClau) : null;
 
   return (
     <div className="sdp-xat-conversa" ref={arrelRef}>
@@ -1051,6 +1063,22 @@ export default function Conversa({
             estat={xifratge}
             nom={accionsDeLaContrapart?.nomContrapart || fil?.name || fil?.title || ''}
             config={configAdjunts}
+            canvis={canvisClau}
+            onAccepta={canvisClau.accepta}
+            t={t}
+          />
+        </Suspense>
+      ) : null}
+      {E2EE_ACTIU_PER_DEFECTE && AvisClauCanviada && canvisClau.avis ? (
+        <Suspense fallback={null}>
+          <AvisClauCanviada
+            canvis={canvisClau}
+            nomDe={(usuari) => nomDelMembre(fil, usuari, accionsDeLaContrapart?.nomContrapart)}
+            ocupat={canvisClau.ocupat}
+            onAccepta={canvisClau.accepta}
+            onObriNumero={xifratge.potVerificar ? () => setPanellXifratge(true) : null}
+            onTancaSuau={canvisClau.tancaSuau}
+            destiFocus={() => (estret ? llistaRef.current : campRef.current || llistaRef.current)}
             t={t}
           />
         </Suspense>
@@ -1172,7 +1200,7 @@ export default function Conversa({
         </div>
       ) : (
         <ControlsAdjunt
-          actiu={potRespondre && !contrapartBloquejada && fil.participant !== false && Boolean(onSendMedia)}
+          actiu={potRespondre && !contrapartBloquejada && fil.participant !== false && Boolean(onSendMedia) && !(E2EE_ACTIU_PER_DEFECTE && avisBloqueig)}
           fil={fil} externalConfig={configAdjunts} usuariId={usuariAdjunts} t={t} locale={locale}
           onTextOrfe={(orfe) => canviaText(text.trim() ? `${text}\n\n${orfe}` : orfe)}
           onEnvia={async (conversa, adjunt, opcions) => {
@@ -1187,7 +1215,7 @@ export default function Conversa({
               onCanvia={canviaText}
               onEnvia={envia}
               t={t}
-              fil={fil}
+              fil={E2EE_ACTIU_PER_DEFECTE && avisBloqueig ? { ...fil, potEscriure: false, avisNomesLectura: t(avisBloqueig[0], avisBloqueig[1]) } : fil}
               entitatActiva={entitatActiva}
               campRef={campRef}
               onEscapa={resposta ? cancelaResposta : null}

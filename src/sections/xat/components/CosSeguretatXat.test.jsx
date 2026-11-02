@@ -4,7 +4,7 @@
    cert (cap número fora d'un directe, cap número mal format), i l'anglés amb
    el traductor de l'app. */
 import '../../../../tests/helpers/diccionaris.js';
-import { cleanup, fireEvent, render, screen } from '@testing-library/react';
+import { cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 import { afterEach, describe, expect, test, vi } from 'vitest';
 import { createTranslator } from '../../../config/i18n.js';
 import { estatXifratgeDelFil } from '../estatXifratgeFil.js';
@@ -213,4 +213,93 @@ test('en anglés, amb el traductor de l’app', () => {
   expect(screen.getByRole('group', { name: 'Safety number' })).toBeTruthy();
   expect(screen.getByText('Verified: you compared this number with Pepa.')).toBeTruthy();
   expect(screen.getByRole('button', { name: 'Remove the verified mark' })).toBeTruthy();
+});
+
+/* M02 (marató 261101_2143; disseny §4.4) · El número de la clau nova d'un canvi
+   fort pendent: l'avís, el número nou i dues eixides, «Marca com a verificat»
+   (accepta i verifica) i «He parlat amb {nom}: continua», que només accepta el
+   canvi pendent d'este mateix kid. */
+describe('M02 · número pendent (clau nova sense confirmar)', () => {
+  const PEPA = '22222222-2222-4222-8222-222222222222';
+  const pendentDe = (extres = {}) => ({ usuari: PEPA, motiu: 'sense-continuitat', kidFixat: 'kid-vell', kidNou: 'k', ...extres });
+  const forta = 'Pepa té una clau de seguretat nova que la clau anterior no ha confirmat. Passa quan algú perd l’aparell i la frase, o si algú s’ha posat pel mig. Parla amb Pepa per a saber què ha passat.';
+
+  test('l’avís «Clau nova sense confirmar», el número nou i els dos botons', () => {
+    const onMarca = vi.fn();
+    const onAccepta = vi.fn();
+    render(<CosSeguretatXat estat={DIRECTE} nom="Pepa" numero={llest({ pendent: true })} onMarca={onMarca}
+      canvis={{ pendents: [pendentDe()], ocupat: false, error: null }} onAccepta={onAccepta} t={ca} />);
+    const avis = screen.getByText('Clau nova sense confirmar').closest('.sdp-alerta');
+    expect(avis.className).toContain('sdp-alerta--avis');
+    expect(within(avis).getByText(forta)).toBeTruthy();
+    expect(screen.getByRole('group', { name: 'Número de seguretat' })).toBeTruthy();
+    const marca = screen.getByRole('button', { name: 'Marca com a verificat' });
+    const continua = screen.getByRole('button', { name: 'He parlat amb Pepa: continua' });
+    expect(marca.className).toContain('sdp-boto--primari');
+    expect(continua.className).toContain('sdp-boto--secundari');
+    fireEvent.click(continua);
+    expect(onAccepta).toHaveBeenCalledWith(PEPA, 'k');
+    fireEvent.click(marca);
+    expect(onMarca).toHaveBeenCalledWith(true);
+  });
+
+  test('contacte verificat: «Havies verificat Pepa…»', () => {
+    render(<CosSeguretatXat estat={DIRECTE} nom="Pepa" numero={llest({ pendent: true })} onMarca={() => {}}
+      canvis={{ pendents: [pendentDe({ motiu: 'verificat' })] }} onAccepta={() => {}} t={ca} />);
+    expect(screen.getByText('Havies verificat Pepa i la seua clau ha canviat. Torna-la a verificar per a continuar.')).toBeTruthy();
+  });
+
+  test('cap «continua» per a un altre kid (la clau ha tornat a canviar) ni sense onAccepta; el text fort per defecte', () => {
+    render(<CosSeguretatXat estat={DIRECTE} nom="Pepa" numero={llest({ pendent: true })} onMarca={() => {}}
+      canvis={{ pendents: [pendentDe({ kidNou: 'kid-un-altre', motiu: 'verificat' })] }} onAccepta={() => {}} t={ca} />);
+    expect(screen.getByText(forta)).toBeTruthy();
+    expect(screen.queryByRole('button', { name: /He parlat amb/ })).toBeNull();
+    expect(screen.getByRole('button', { name: 'Marca com a verificat' })).toBeTruthy();
+    cleanup();
+    render(<CosSeguretatXat estat={DIRECTE} nom="Pepa" numero={llest({ pendent: true })} onMarca={() => {}} canvis={{ pendents: [pendentDe()] }} t={ca} />);
+    expect(screen.queryByRole('button', { name: /He parlat amb/ })).toBeNull();
+  });
+
+  test('sense pendent (o sense número), cap avís de clau nova ni «continua»', () => {
+    render(<CosSeguretatXat estat={DIRECTE} nom="Pepa" numero={llest()} onMarca={() => {}} canvis={{ pendents: [pendentDe()] }} onAccepta={() => {}} t={ca} />);
+    expect(screen.queryByText('Clau nova sense confirmar')).toBeNull();
+    expect(screen.queryByRole('button', { name: /He parlat amb/ })).toBeNull();
+    cleanup();
+    render(<CosSeguretatXat estat={DIRECTE} nom="Pepa" numero={{ estat: 'calculant', pendent: true, kid: 'k' }} onMarca={() => {}} canvis={{ pendents: [pendentDe()] }} onAccepta={() => {}} t={ca} />);
+    expect(screen.queryByText('Clau nova sense confirmar')).toBeNull();
+    expect(screen.queryByRole('button')).toBeNull();
+  });
+
+  test('acceptant: «Treballant…» al «continua» i la marca desactivada; una fallada en acceptar, l’alerta', () => {
+    render(<CosSeguretatXat estat={DIRECTE} nom="Pepa" numero={llest({ pendent: true })} onMarca={() => {}}
+      canvis={{ pendents: [pendentDe()], ocupat: true, error: null }} onAccepta={() => {}} t={ca} />);
+    const [marca, continua] = screen.getAllByRole('button');
+    expect(marca.disabled).toBe(true);
+    expect(continua.disabled).toBe(true);
+    expect(continua.textContent).toBe('Treballant…');
+    cleanup();
+    render(<CosSeguretatXat estat={DIRECTE} nom="Pepa" numero={llest({ pendent: true })} onMarca={() => {}}
+      canvis={{ pendents: [pendentDe()], ocupat: false, error: 'acceptacio' }} onAccepta={() => {}} t={ca} />);
+    expect(screen.getByRole('alert').textContent).toBe('No s’ha pogut confirmar la clau nova. Torna-ho a provar.');
+  });
+
+  test('rescataFocus: un cos nou que naix amb el focus al body el porta al primer botó quan arriba el número; sense, no', () => {
+    const { rerender } = render(<CosSeguretatXat estat={DIRECTE} nom="Pepa" numero={{ estat: 'calculant' }} onMarca={() => {}} rescataFocus t={ca} />);
+    expect(document.activeElement).toBe(document.body);
+    rerender(<CosSeguretatXat estat={DIRECTE} nom="Pepa" numero={llest({ verificat: true })} onMarca={() => {}} rescataFocus t={ca} />);
+    expect(document.activeElement).toBe(screen.getByRole('button', { name: 'Lleva la marca de verificat' }));
+    cleanup();
+    const { rerender: rerender2 } = render(<CosSeguretatXat estat={DIRECTE} nom="Pepa" numero={{ estat: 'calculant' }} onMarca={() => {}} t={ca} />);
+    rerender2(<CosSeguretatXat estat={DIRECTE} nom="Pepa" numero={llest()} onMarca={() => {}} t={ca} />);
+    expect(document.activeElement).toBe(document.body);
+  });
+
+  test('en anglés', () => {
+    const en = createTranslator('en');
+    render(<CosSeguretatXat estat={DIRECTE} nom="Pepa" numero={llest({ pendent: true })} onMarca={() => {}}
+      canvis={{ pendents: [pendentDe({ motiu: 'verificat' })] }} onAccepta={() => {}} t={en} />);
+    expect(screen.getByText('New key not confirmed')).toBeTruthy();
+    expect(screen.getByText('You had verified Pepa and their key has changed. Verify it again to continue.')).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'I have talked to Pepa: continue' })).toBeTruthy();
+  });
 });

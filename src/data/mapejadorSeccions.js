@@ -265,6 +265,9 @@ export function mapSectionSubmissionToItem(submission) {
     if (poble.length <= MAXIM_POBLE_ID && SLUG_DE_POBLE.test(poble)) baseItem.poble_id = poble;
     else delete baseItem.poble_id;
   }
+  /* IDEA-42 (B7h) · La portada sencera i l'enquadrament de la targeta, nets
+     (portadaDeLaPublicacio, davall) abans de cap branca: totes escampen baseItem. */
+  netejaPortada(baseItem);
 
   if (sectionId === 'mur') {
     const element = {
@@ -630,6 +633,67 @@ function origenLlegible(origen) {
   }
 }
 
+/* IDEA-42 (B7h, marató 261101_2143; spec B7-PEDRA §2.9a) · El doble
+   enquadrament d'una publicació (un acte amb el seu cartell, sobretot): la
+   portada sencera a la pàgina universal (portada_sencera) i el punt focal de
+   la targeta 16:9 del Mur (enquadrament_targeta = { format, cx, cy, zoom },
+   l'estat del diàleg d'enquadrament, sense retallar cap fitxer). Les dues
+   claus són un jsonb que el veí escriu directament per l'API i acaben en una
+   classe i en propietats CSS: core-seguretat-audit, cap valor sense coacció.
+     · sencera: només el booleà true, propi (mai heretat del prototip).
+     · targeta: només un objecte pla amb el format de la llista blanca, cx i cy
+       finits a [0, 1] i zoom finit a [1, ZOOM_MAXIM_DE_TARGETA]; la resta de
+       claus no viatja. Qualsevol altra cosa, null.
+   ZOOM_MAXIM_DE_TARGETA és ZOOM_MAX d'enquadrament.js (la prova ho
+   comprova): el mapejador no importa components. */
+export const FORMES_DE_TARGETA = Object.freeze(['16:9']);
+export const ZOOM_MAXIM_DE_TARGETA = 4;
+const SENSE_PORTADA = Object.freeze({ sencera: false, targeta: null });
+const enRang = (valor, minim, maxim) => esNumeroFinit(valor) && valor >= minim && valor <= maxim;
+
+function enquadramentDeTargeta(valor) {
+  if (!esObjecte(valor) || Array.isArray(valor)) return null;
+  const prototip = Object.getPrototypeOf(valor);
+  if (prototip !== Object.prototype && prototip !== null) return null;
+  const propi = (clau) => (Object.hasOwn(valor, clau) ? valor[clau] : undefined);
+  const [format, cx, cy, zoom] = ['format', 'cx', 'cy', 'zoom'].map(propi);
+  if (typeof format !== 'string' || !FORMES_DE_TARGETA.includes(format)) return null;
+  if (!enRang(cx, 0, 1) || !enRang(cy, 0, 1) || !enRang(zoom, 1, ZOOM_MAXIM_DE_TARGETA)) return null;
+  /* + 0: el -0 d'un JSON es queda en 0. */
+  return { format, cx: cx + 0, cy: cy + 0, zoom };
+}
+
+/**
+ * IDEA-42 · La portada d'una publicació, coaccionada: { sencera, targeta }
+ * (vegeu dalt). Pura i idempotent: la crida el mapejador en escriure i en
+ * llegir, i la vista la torna a cridar per a les files que no hi passen (la
+ * llavor, app_content). Un valor que no es deixa llegir, la de sèrie.
+ * @param {object} payload
+ * @returns {{ sencera: boolean, targeta: null | { format: '16:9', cx: number, cy: number, zoom: number } }}
+ */
+export function portadaDeLaPublicacio(payload) {
+  if (!esObjecte(payload) || Array.isArray(payload)) return SENSE_PORTADA;
+  try {
+    const sencera = Object.hasOwn(payload, 'portada_sencera') && payload.portada_sencera === true;
+    const targeta = Object.hasOwn(payload, 'enquadrament_targeta') ? enquadramentDeTargeta(payload.enquadrament_targeta) : null;
+    return sencera || targeta ? { sencera, targeta } : SENSE_PORTADA;
+  } catch {
+    return SENSE_PORTADA;
+  }
+}
+
+/* Reescriu les dues claus amb el valor coaccionat: la portada sencera només
+   viatja com a true i l'enquadrament, només net. Sense cap de les dues claus,
+   les dades no canvien (una publicació d'abans arriba igual). */
+function netejaPortada(dades) {
+  if (!Object.hasOwn(dades, 'portada_sencera') && !Object.hasOwn(dades, 'enquadrament_targeta')) return;
+  const { sencera, targeta } = portadaDeLaPublicacio(dades);
+  delete dades.portada_sencera;
+  delete dades.enquadrament_targeta;
+  if (sencera) dades.portada_sencera = true;
+  if (targeta) dades.enquadrament_targeta = targeta;
+}
+
 function netejaTipusDelPayload(dades) {
   for (const clau of CLAUS_DE_TEXT_DEL_PAYLOAD) {
     const valor = dades[clau];
@@ -692,6 +756,7 @@ export function elementDeFilaPublicada({ id, payload, titol, createdAt, updatedA
   for (const clau of CLAUS_D_AUTORITAT) delete dades[clau];
   if (dades.type === 'sistema') delete dades.type;
   netejaTipusDelPayload(dades);
+  netejaPortada(dades);
   if (Array.isArray(dades.labels)) dades.labels = dades.labels.map(etiquetaDePublicacio).filter(Boolean);
   return {
     ...dades,

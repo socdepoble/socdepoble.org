@@ -15,7 +15,12 @@
  * src/sections/disseny/cataleg/detalls`, sense comptar les proves ni este
  * fitxer). Una versió que no és la darrera és una data falsa a la pastilla.
  *
- * Darrera posada al dia: EspecimenXatSeguretat.jsx, 2026-11-01T16:21:27+01:00, pla 261101_1246 (T7b, corrector del
+ * Darrera posada al dia: EspecimenEnquadrament.jsx, EspecimenXatSeguretat.jsx i manifest.js, 2026-11-02T04:12:00+01:00,
+ * Gauntlet 261102 de la marató 261101_2143: M24-B7h (IDEA-42) afig a EspecimenEnquadrament.jsx la targeta 16:9
+ * amb punt focal i el cartell sencer de l'Aplec; M02-B2b-UI afig a EspecimenXatSeguretat.jsx l'espècimen
+ * AvisClauCanviada (canvi fort pendent, verificat i canviat, suau, alarma de la clau pròpia i bifurcació) i la
+ * mostra del número pendent, maqueta darrere de la bandera E2EE apagada; manifest.js el nomena al subtítol.
+ * Versió anterior: EspecimenXatSeguretat.jsx, 2026-11-01T16:21:27+01:00, pla 261101_1246 (T7b, corrector del
  * Gauntlet, T7b-G02/G08): el contracte de CosPersonesConfianca afig la fila teRecuperacio (si la recuperació ja
  * està activa en este node; avui sempre fals) i el «Fes» diu que el bloc avisa que encara no ho està. Només text:
  * cap espècimen ni entrada de manifest nous.
@@ -303,4 +308,4 @@
  * Quan el manifest porte `creat` i `modificat` per espècimen, manaran eixos
  * camps i esta constant només farà de versió del conjunt.
  */
-export const VERSIO_CATALEG = '2026-11-01T16:21:27+01:00';
+export const VERSIO_CATALEG = '2026-11-02T04:12:00+01:00';

@@ -102,6 +102,12 @@ const SENSE_CARREGA = async () => false;
 /* Onada 6 · Els paràmetres de la URL que escriu el calendari de la pestanya
    (useEstatCalendari), menys el ?date=, que és el filtre comú del Mur. */
 const PARAMS_DEL_CALENDARI = Object.freeze(['vista', 'setmana', 'mes', 'any']);
+/* PS-10 (marató 261101_2143, B7f; default D-3 del Mestre) · La classe de la
+   pàgina del Mur (PageFrame la posa a .sdp-universal-page-container): en
+   mòbil, les píndoles del Mur en una fila que llisca i sense l'entradeta
+   (modules.css, darrere de .sdp-pindola). També mentre carrega o falla: la
+   capçalera no salta en arribar les dades. Es desfà llevant-la. */
+const CLASSE_PAGINA_MUR = 'sdp-pagina-mur';
 
 /* El filtre ?category= (les etiquetes de cada element), el mateix per a la
    graella i per al calendari de la pestanya. */
@@ -274,7 +280,7 @@ export default function MurSection() {
   if (estatMur === 'loading' || estatMur === 'error') {
     return (
       <ContentProvider initialConfig={config}>
-        <UniversalPage objecte={paginaMur}>
+        <UniversalPage className={CLASSE_PAGINA_MUR} objecte={paginaMur}>
           <div className="content-wrapper">
             {estatMur === 'loading'
               ? <Carregant etiqueta={t('loading.content', 'Carregant contingut...')} />
@@ -290,7 +296,7 @@ export default function MurSection() {
       {/* Gauntlet 261030 (Fase 3, TC3.2) · Traduir només si TOTES les
           publicacions del mur són públiques: una del veïnat (només per als
           membres) l'apaga (traduccio/visibilitatTraduible.js). */}
-      <UniversalPage layout="contained" objecte={paginaMur} traduccio={totsPublics(allItems)}>
+      <UniversalPage className={CLASSE_PAGINA_MUR} layout="contained" objecte={paginaMur} traduccio={totsPublics(allItems)}>
         <div className="content-wrapper">
           {/* T3.3 · L'única regió viva de les alertes municipals vigents,
               damunt dels filtres: s'hi munta buida quan hi ha candidates i

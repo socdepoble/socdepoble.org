@@ -18,13 +18,13 @@
  *   · Sostres: els del protocol en clar (MAXIM_CLAR_ADJUNT) i els
  *     20.000.000 B del bucket per al blob farcit (Padmé).
  */
-import { MAX_VIDEO_MS, MIME_XAT, errorAdjuntXat } from './xatMultimedia.js';
+import { MAXIM_BLOB_ADJUNT, MAX_VIDEO_MS, MIME_XAT, MIME_XIFRAT, errorAdjuntXat } from './xatMultimedia.js';
 import { BYTES_ETIQUETA, BYTES_IV, bytesIguals, exigixCripto, midaPadme, sha256 } from './xifratXatCripto.js';
 import { BYTES_CLAU, BYTES_HASH, CLASSE_ADJUNT, MAXIM_CLAR_ADJUNT } from './xifratXatFormats.js';
 import { CODI, esErrorProtocol, obriAdjunt, xifraAdjunt } from './xifratXatProtocol.js';
 
-export const MIME_XIFRAT = 'application/octet-stream';
-export const MAXIM_BLOB_ADJUNT = 20_000_000;
+/* B2e (marató 261101_2143) · Definides al mòdul neutral; ací es reexporten. */
+export { MAXIM_BLOB_ADJUNT, MIME_XIFRAT };
 export const PRESSUPOST_BLOBS_MOBIL = 48_000_000;
 export const PRESSUPOST_BLOBS_ESCRIPTORI = 100_000_000;
 export { CLASSE_ADJUNT, MAXIM_CLAR_ADJUNT };

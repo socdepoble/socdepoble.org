@@ -8,6 +8,11 @@ import { existsSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 import { ESLint } from 'eslint';
 import { describe, expect, test } from 'vitest';
+import CA from '../../config/idiomes/ca.js';
+import ES from '../../config/idiomes/es.js';
+import EN from '../../config/idiomes/en.js';
+import EU from '../../config/idiomes/eu.js';
+import GL from '../../config/idiomes/gl.js';
 
 const ARREL = process.cwd();
 
@@ -138,17 +143,19 @@ describe('Pedra Seca', () => {
 
   /* SN · El títol depén de la destinació (TEXTOS_DESTI): «Desar al Bloc»,
      el de sempre i el de per defecte, i «Afegir al Lector». Cap no acaba en
-     punt, ni el subtítol. */
+     punt, ni el subtítol. B3 · P1-22 (marató 261101_2143) · Són parells
+     section.notes.desa.* que es pinten amb tradueix(t, …): es comprova la
+     reserva del codi i el valor de les cinc llengües. */
   test('l’h1 i l’h2 del snippet no acaben en punt', () => {
     const codi = llig('src/sections/notes/SnippetCurador.jsx');
-    expect(codi).toMatch(/\stitle=\{textos\.titol\}/);
-    expect(codi).toMatch(/\ssubtitle=\{SUBTITOL\}/);
-    const bloc = codi.match(/const TEXTOS_DESTI = Object\.freeze\(\{([\s\S]*?)\n\}\);/)?.[1] ?? '';
-    const titols = [...bloc.matchAll(/titol: '([^']+)'/g)].map((m) => m[1]);
-    const subtitol = codi.match(/const SUBTITOL = '([^']+)';/)?.[1];
-    expect(titols).toEqual(['Desar al Bloc', 'Afegir al Lector']);
-    expect(subtitol).toBe('On el vols desar?');
-    expect([...titols, subtitol].filter((t) => t.endsWith('.'))).toEqual([]);
+    expect(codi).toMatch(/\stitle=\{tradueix\(t, textos\.titol\)\}/);
+    expect(codi).toMatch(/\ssubtitle=\{tradueix\(t, TEXTOS_DESA\.subtitol\)\}/);
+    const claus = ['bloc.titol', 'lector.titol', 'subtitol'];
+    const reserva = (nom) => codi.match(new RegExp(String.raw`parellDesa\('${nom.replaceAll('.', '\\.')}', '([^']+)'\)`))?.[1];
+    expect(claus.map(reserva)).toEqual(['Desar al Bloc', 'Afegir al Lector', 'On el vols desar?']);
+    const textos = [CA, ES, EN, EU, GL].flatMap((dicc) => claus.map((clau) => dicc[`section.notes.desa.${clau}`]));
+    expect(textos).toHaveLength(15);
+    expect(textos.filter((text) => typeof text !== 'string' || !text || text.endsWith('.'))).toEqual([]);
   });
 
   test('cap botó nou a la Pàgina Universal: el snippet no toca la barra blava ni la targeta', () => {

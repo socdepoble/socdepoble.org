@@ -331,6 +331,8 @@ export function creaServeiAmbitXat({ revocaUrl = () => {}, motorRef = {}, pressu
        (clausEpocaRam), els textos desxifrats per (fil, id), els adjunts rebuts i les URL. */
     estatFilDesat: (filId) => clausEpocaRam.get(filId) ?? null,
     desaEstatFil: (filId, context) => { if (context) clausEpocaRam.set(filId, context); else clausEpocaRam.delete(filId); },
+    /* B2a · Una fixació nova (acceptada o tornada a verificar) és per persona: tots els contextos es refan del servidor. */
+    descartaEstatsFils: () => { clausEpocaRam.clear(); },
     textDesxifrat: (filId, id) => textosDesxifrats.get(`${filId}::${id}`) ?? null,
     desaTextDesxifrat: (filId, id, valor) => { textosDesxifrats.set(`${filId}::${id}`, valor); },
     adjuntDesat: (id) => adjuntsRebuts.get(id) ?? null,
@@ -384,8 +386,17 @@ export function creaServeiAmbitXat({ revocaUrl = () => {}, motorRef = {}, pressu
     marcaVerificat: (filId, opcions = {}, config = {}) => (typeof motorRef.verifica === 'function'
       ? motorRef.verifica(filId, opcions, config)
       : Promise.reject(errorSenseMotor())),
-    contactesVerificats: () => (typeof motorRef.verificats === 'function'
-      ? motorRef.verificats()
+    contactesVerificats: (config = {}) => (typeof motorRef.verificats === 'function'
+      ? motorRef.verificats(config)
+      : Promise.reject(errorSenseMotor())),
+    /* B2a (marató 261101_2143; §4.4, CS-01, D-05 a) · Els canvis de clau d'un fil (pendents,
+       suaus i l'alarma de la clau pròpia) i «He parlat amb {nom}: continua», que fixa la clau
+       pendent en este aparell (cap mètode nou al port: l'acceptació és local). */
+    canvisDeClau: (filId, config = {}) => (typeof motorRef.canvis === 'function'
+      ? motorRef.canvis(filId, config)
+      : Promise.reject(errorSenseMotor())),
+    acceptaCanviClau: (filId, opcions = {}, config = {}) => (typeof motorRef.accepta === 'function'
+      ? motorRef.accepta(filId, opcions, config)
       : Promise.reject(errorSenseMotor()))
   });
 }
@@ -524,7 +535,16 @@ export function ambXifratXat(impl, entorn = {}) {
         const { fil, tipusFil } = await filXifratDelRegistre(filId, config, exigix);
         return motor.marcaVerificatDelFil({ fil, tipusFil, config, exigix, kid, verificat });
       });
-      motorRef.verificats = () => servei.guardaIdentitat((exigix) => motor.recompteVerificats({ exigix }));
+      motorRef.verificats = (config = {}) => servei.guardaIdentitat((exigix) => motor.recompteVerificats({ exigix, config }));
+      /* B2a · Els canvis de clau i l'acceptació, dins de la guarda d'àmbit i sobre el fil del registre propi. */
+      motorRef.canvis = (filId, config = {}) => servei.guardaAmbit(async (exigix) => {
+        const { fil, tipusFil } = await filXifratDelRegistre(filId, config, exigix);
+        return motor.canvisDelFil({ fil, tipusFil, config, exigix });
+      });
+      motorRef.accepta = (filId, { usuari, kid } = {}, config = {}) => servei.guardaAmbit(async (exigix) => {
+        const { fil, tipusFil } = await filXifratDelRegistre(filId, config, exigix);
+        return motor.acceptaCanviDelFil({ fil, tipusFil, config, exigix, usuari, kid });
+      });
     }
 
     if (typeof impl.loadFils === 'function') {

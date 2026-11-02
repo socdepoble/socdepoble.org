@@ -24,8 +24,14 @@
     vertical-align: top;
     border-block-end: 1px solid var(--sdp-vora);
   }
+  /* PS-03 (B7, marató 261101_2143) · La capçalera de tota taula es distingix
+     de les files en clar i en fosc (ΔE2000 ≥ 5, el token de P1-16). Abans era
+     el fons de l'app: damunt de l'app, igual que la fila senar. Les graelles
+     de calendari conserven el seu fons (modules.css), i l'enllaç de la
+     capçalera pren el color del títol a components.css: ací, a la capa sdp,
+     el perdria contra el color d'enllaç de base.css (capa legacy). */
   :where(thead th) {
-    background: var(--sdp-fons-app);
+    background: var(--sdp-taula-capcalera-fons);
     color: var(--sdp-text-titol);
     font-weight: 700;
     border-block-end: 1px solid var(--sdp-vora-forta);
@@ -183,7 +189,7 @@
   .sdp-avatar--to-5 { background: var(--sdp-accio-subtil); color: var(--sdp-accio-text); }
   .sdp-avatar--to-6 { background: var(--sdp-accent-subtil); color: var(--sdp-accent-text); }
   .sdp-avatar-grup { display: flex; }
-  .sdp-avatar-grup .sdp-avatar + .sdp-avatar { margin-left: -10px; }
+  .sdp-avatar-grup .sdp-avatar + .sdp-avatar { margin-left: calc(-1 * var(--sdp-space-3)); }
 
   /* ── ESCALA (Ajuda visual Catàleg) ─────────────────────────────── */
   .sdp-escala { display: grid; gap: var(--sdp-space-2); }

@@ -42,6 +42,22 @@ const FITXERS = Object.freeze([
   /* T5c · L'enquadrament */
   'src/components/universal/enquadrament/DialegEnquadrament.jsx',
   'src/components/universal/enquadrament/UbicacioImatge.jsx',
+  /* B3 · P1-22 · A (Notes: visibilitat i carpetes). carpetesSeed.js no: és dada
+     (vegeu el describe de les carpetes de sèrie, davant de D-9). */
+  'src/sections/notes/visibilitatNota.js',
+  'src/sections/notes/carpetes.js',
+  /* B3 · P1-22 · B (Notes: la closca del Bloc i el Snippet Curador) */
+  'src/sections/notes/NotesSection.jsx',
+  'src/sections/notes/SnippetCurador.jsx',
+  /* B3 · P1-22 · D (la closca de l'editor) */
+  'src/components/universal/UniversalEditorShell.jsx',
+  /* B3 · P1-22 · E (l'espai de treball) */
+  'src/components/universal/workspace/UniversalWorkspace.jsx',
+  /* B3 · P1-22 · C (la fitxa del Perfil) */
+  'src/sections/profile/PerfilEditor.jsx',
+  'src/sections/profile/useImatgeDeFitxa.jsx',
+  /* B6 · IDEA-46 (cerca a l'espai de treball) */
+  'src/sections/search/EspaiCerca.jsx',
 ]);
 
 /* Excepcions (`fitxer:línia tipus «text»`). Buida: cap marca no ho necessita. */
@@ -752,6 +768,50 @@ describe('la guarda mossega (sonda)', () => {
      corrompria. Es tradueix en pintar (carpetes.js), mai la llavor. */
   test('cap llavor de dades no entra a la llista', () => {
     expect(FITXERS.filter((fitxer) => /Seed\.js$/.test(fitxer))).toEqual([]);
+  });
+});
+
+/* B3 · P1-22 · A (marató 261101_2143) · LES CARPETES DE SÈRIE. carpetesSeed.js
+   no entra a FITXERS: els noms de la llavor són dades (app_content.noteFolders,
+   i el folder_id hi apunta). El nom es tradueix en pintar (carpetes.js ·
+   nomDeCarpeta), i només si és encara el de la llavor. Com la resta del
+   fitxer, sense importar cap mòdul de producció: es lligen les dues fonts. */
+describe('B3 · P1-22 · A · les carpetes de sèrie es tradueixen en pintar, amb el nom de la llavor de reserva', () => {
+  const programaDe = (ruta) => parse(readFileSync(path.join(ARREL, ruta), 'utf8'), { sourceType: 'module', plugins: ['jsx'] }).program;
+  const initDe = (programa, nom) => {
+    let init = null;
+    recorre(programa, (n) => { if (n.type === 'VariableDeclarator' && n.id?.name === nom) init = n.init; });
+    return init;
+  };
+  const senseFreeze = (n) => (esCrida(n) && esFreeze(n.callee) ? n.arguments[0] : n);
+  /* id → nom, de NOTE_FOLDERS_SEED. */
+  const llavor = programaDe('src/data/carpetesSeed.js');
+  const { avalua: avaluaLlavor } = avaluador(llavor);
+  const NOMS_LLAVOR = new Map(senseFreeze(initDe(llavor, 'NOTE_FOLDERS_SEED')).elements.map((carpeta) => {
+    const camp = (nom) => avaluaLlavor(carpeta.properties.find((p) => nomDeClau(p.key) === nom)?.value);
+    return [camp('id'), camp('name')];
+  }));
+  /* id → { clau, reserva }, de NOMS_CARPETES_DE_SERIE (un ajudant de prefix per entrada). */
+  const carpetes = programaDe('src/sections/notes/carpetes.js');
+  const ajudants = ajudantsDePrefix(carpetes);
+  const { avalua } = avaluador(carpetes, ajudants);
+  const DE_SERIE = new Map(senseFreeze(initDe(carpetes, 'NOMS_CARPETES_DE_SERIE')).properties.map((p) => {
+    const ajudant = ajudants.get(p.value?.callee?.name);
+    const clau = ajudant ? ajudant.prefix + p.value.arguments[ajudant.iClau]?.value : null;
+    return [nomDeClau(p.key), { clau, reserva: ajudant ? avalua(p.value.arguments[ajudant.iReserva]) : undefined }];
+  }));
+
+  test('cada reserva és el nom de la llavor amb el mateix id, i la clau és als cinc diccionaris', () => {
+    expect(DE_SERIE.size).toBe(7);
+    for (const [id, { clau, reserva }] of DE_SERIE) {
+      expect([id, reserva]).toEqual([id, NOMS_LLAVOR.get(id)]);
+      expect([id, clau, CA[clau]]).toEqual([id, clau, reserva]);
+      for (const dic of [ES, EN, EU, GL]) expect([clau, typeof dic[clau], Boolean(dic[clau])]).toEqual([clau, 'string', true]);
+    }
+  });
+
+  test('totes les de la llavor en tenen, menys «Tot» (no es pinta) i la Safata d’Entrada (nom propi, D-1)', () => {
+    expect([...NOMS_LLAVOR.keys()].filter((id) => !DE_SERIE.has(id))).toEqual(['f-tot', 'f-connectats']);
   });
 });
 

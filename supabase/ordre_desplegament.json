@@ -10,6 +10,7 @@
     { "id": "funcio-compte-apple", "tipus": "funcio", "descripcio": "Desplegar supabase/functions/compte-apple (secret SDP_CRON_SECRET, cron horari).", "despres": ["2610241420"], "abans": [], "font": "README «Funció compte-apple»" },
     { "id": "funcio-purga-fitxers", "tipus": "funcio", "descripcio": "Desplegar supabase/functions/purga-fitxers (secret SDP_CRON_SECRET, cron horari).", "despres": ["2610241440"], "abans": [], "font": "README «Funció purga-fitxers»" },
     { "id": "funcio-noticies", "tipus": "funcio", "descripcio": "Desplegar supabase/functions/noticies amb les fonts personals apagades (SDP_NOTICIES_PERSONALS sense valor).", "despres": [], "abans": [], "font": "README P0-21 §9" },
+    { "id": "funcio-ap-inbox-verifica", "tipus": "funcio", "descripcio": "Desplegar supabase/functions/ap-inbox-verifica (apagada per defecte: SDP_AP_ACTIVA).", "despres": ["2611020106"], "abans": [], "font": "README «Funció ap-inbox-verifica»" },
     { "id": "client-filtre-rgpd", "tipus": "client", "descripcio": "Publicar el client que espera el filtre RGPD del servidor.", "despres": ["2610311900"], "abans": [], "font": "README, vinyeta de 2610311900" },
     { "id": "web-legal-politica-2-3", "tipus": "client", "descripcio": "Desplegar el web amb el text final de /legal (política de privacitat 2.3).", "despres": [], "abans": ["2611012257"], "font": "README P0-21 §12; capçalera de 2611012257" }
   ],

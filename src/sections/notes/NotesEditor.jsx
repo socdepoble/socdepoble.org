@@ -22,8 +22,9 @@ import {
 } from '../../components/universal/classificacio/model.js';
 import { esConnexio, esExtern, netejaDrets, teDretsReservats } from '../../data/origenNota.js';
 import {
-  TEXT_DRETS_RESERVATS, TITOL_DRETS_RESERVATS, bloqueigDeNota, publicaAmbMotiu, textosAmbDrets, textosDeNota
+  TEXT_DRETS_RESERVATS, TITOL_DRETS_RESERVATS, bloqueigDeNota, publicaAmbMotiu, textosAmbDrets, textosDeNota, textosExtern
 } from './visibilitatNota.js';
+import { nomDeCarpeta } from './carpetes.js';
 import { Alerta, Insignia } from '../../components/PedraSeca';
 import { llicenciaDeLActor } from '../../components/universal/drets/herencia.js';
 import { ID_COPIA_PROVA, ID_NOTA_BENVINGUDA, autoriaDeLActor, modeDeDadesResolt, signaturaDeNota } from './autoriaNota.js';
@@ -75,13 +76,6 @@ const AVIS_SENSE_TOTES = 'Reanomenar i esborrar estaran disponibles quan s’hag
    des d'un altre dispositiu el Mur no rebria cap data triada i cauria a la de
    creació (created_at). */
 const AVIS_DATA_DISPOSITIU = 'Al servidor encara no hi ha on guardar la data de publicació. Es guarda en este dispositiu i només s’aplica si publiques des d’ací.';
-/* T71b · El selector de visibilitat d'un contingut de fora: els textos de
-   compartir (visibilitatNota.js, CONNEXIO), però és una còpia de la persona,
-   que l'edita: no es diu que siga d'altri ni que només es llig. */
-const TEXTOS_EXTERN = Object.freeze({
-  ...textosDeNota({ connexio: true }),
-  descripcio: 'Este contingut de fora és una còpia teua: el pots editar, i compartir-lo el porta al teu Mur citant-ne l’origen.'
-});
 
 /* Lògica de pujada d'imatges pròpia de Notes.
    Gauntlet 261016 (Bloc 1 i 1.2) · El fitxer que arriba ací (uploadMedia) ja
@@ -333,10 +327,11 @@ export default function NotesEditor({ activeNote, onToast = null }) {
      DialegCarpeta pinta l'arbre amb sagnat; la llavor és plana i es veu igual. */
   const carpetes = useMemo(() => {
     const llista = noteFolders?.length ? noteFolders : NOTE_FOLDERS_SEED;
+    /* P1-22 · El nom de sèrie en la llengua de l'app (nomDeCarpeta); l'id és el que es desa. */
     return llista.filter((f) => String(f.id) !== 'f-tot').map((f) => ({
-      id: String(f.id), nom: f.name, parentId: f.parentId == null ? null : String(f.parentId)
+      id: String(f.id), nom: nomDeCarpeta(f, t), parentId: f.parentId == null ? null : String(f.parentId)
     }));
-  }, [noteFolders]);
+  }, [noteFolders, t]);
   const classificacio = useMemo(() => (notaEnEdicio ? classificacioDe(notaEnEdicio) : null), [notaEnEdicio]);
   const carpetaId = String(notaEnEdicio?.folderId ?? CARPETA_PER_DEFECTE);
 
@@ -439,10 +434,12 @@ export default function NotesEditor({ activeNote, onToast = null }) {
       /* P4 · la nota preparada encara no és al servidor: no hi ha res a
          publicar. Revisió · el motiu segons la creació: buida, en camí o fallida. */
       preparada: esPreparada ? (creacioPreparada?.estat || 'buida') : false,
+      /* P1-22 · els motius en la llengua de l'app. */
+      t,
     });
     const visibilitat = {
       /* D4 · amb els drets reservats de l'original, el selector ho avisa. */
-      textos: textosAmbDrets(extern ? TEXTOS_EXTERN : textosDeNota({ connexio }), dretsReservats),
+      textos: textosAmbDrets(extern ? textosExtern(t) : textosDeNota({ connexio, t }), dretsReservats, t),
       bloqueig,
       /* La identitat que signa la publicació (MurContext signa amb el mateix
          actor), amb el nom que publishNote hi posarà: mai un correu. */
@@ -467,7 +464,8 @@ export default function NotesEditor({ activeNote, onToast = null }) {
            accepta, es publica una sola vegada més (publicaAmbMotiu). */
         return publicaAmbMotiu(() => (citaOrigen && compartirNota ? compartirNota : publishNote)(doc), {
           tornaAPreguntar: asseguraNormes ? () => asseguraNormes({ rebutjades: true }) : null,
-          motiuNormes: tradueix(t, TEXTOS_MODERACIO.calAcceptar)
+          /* P1-22 · amb `t`, el motiu de les normes i el de la xarxa ixen traduïts. */
+          t
         });
       },
     };

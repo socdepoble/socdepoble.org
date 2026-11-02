@@ -22,11 +22,10 @@
  * telèfon ni adreça postal, ni tan sols el poble, que no és cap domicili: la
  * funció no els accepta.
  *
- * Encara sense consumidor: el botó d'organització de la fitxa crida
- * vcardDOrganitzacio directament, i posar-ne un a la fitxa d'una persona és
- * un canvi visual que decidix el Mestre (Llei del Píxel). Excepció motivada a
- * la LLEI 8 de tooling/brain/tractor-pedra-seca.mjs. Pur: cap petició ni cap
- * servidor.
+ * Consumidor: FitxaPublica (sections/profile/PerfilPublicSection.jsx), per a
+ * les organitzacions i les persones publicades, des de la marató 261101_2143
+ * (B4: IDEA-25 i V-03, ordre del Mestre 261101 21:41). Pur: cap petició ni
+ * cap servidor.
  *
  * Capes: és l'únic mòdul de src/utils que importa de src/sections (la font de
  * la gramàtica i FORMA_USERNAME hi viuen). El camí ve del kit; el lloc natural

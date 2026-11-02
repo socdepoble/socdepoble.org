@@ -40,7 +40,7 @@
  *     categories i les etiquetes es trien en connectar; canviar-les ací
  *     espera que la lògica de NotesEditor es puga compartir sense duplicar-la.
  */
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { ExternalLink, Folder, Globe, Trash2 } from 'lucide-react';
 import { useNavigate } from '../../app/contexts/RouterContext';
 import { useToast } from '@/components/universal/NotificationContext.jsx';
@@ -63,7 +63,7 @@ import { resolRecursosDeHtml } from '../../config/assetResolver.js';
 import { ETIQUETA_OBJECTE } from '../connectar/abastConnexio.js';
 import { useNotes } from './NotesContext.jsx';
 import { DialegEsborrarNota } from './DialegEsborrarNota.jsx';
-import { CARPETA_CONNECTATS, NOM_CARPETA_CONNECTATS, carpetesDelBloc } from './carpetes.js';
+import { CARPETA_CONNECTATS, NOM_CARPETA_CONNECTATS, carpetesDelBloc, nomDeCarpeta } from './carpetes.js';
 import { bloqueigDeNota, publicaAmbMotiu, textosDeNota } from './visibilitatNota.js';
 import { autoriaDeLActor } from './autoriaNota.js';
 import { objecteDeConnexio, rutaSegura, senseParagrafHeretat, signaturaDeCaiguda } from './connexions.js';
@@ -72,6 +72,7 @@ import { objecteDeConnexio, rutaSegura, senseParagrafHeretat, signaturaDeCaiguda
    esborrar-ne (AGENTS §8). El diàleg ho diu, com a l'editor de Notes. */
 const AVIS_CARPETES = 'Crear, reanomenar i esborrar carpetes encara no té contracte de dades amb el servidor. De moment, tria la carpeta d’esta connexió.';
 const SENSE_ENLLAC = 'Esta connexió no porta cap enllaç de l’original per a compartir.';
+/* La reserva valenciana del botó de la tira (accioMur); el selector rep textosMur, traduïts. */
 const TEXTOS_MUR = textosDeNota({ connexio: true });
 
 export function ConnexioDetall({ nota }) {
@@ -83,6 +84,8 @@ export function ConnexioDetall({ nota }) {
   // D-7 · Fora d'IdentitatProvider, la reserva anònima de només lectura (useIdentitatOReserva.js).
   const { actor } = useIdentitatOReserva();
   const { t } = useUIActions();
+  /* P1-22 (marató 261101_2143) · Els textos del selector en la llengua de l'app. */
+  const textosMur = useMemo(() => textosDeNota({ connexio: true, t }), [t]);
   const {
     noteFolders, setLocalNoteField, mouNota, esborraNota, compartirNota, potEsborrar = false, config
   } = useNotes() || {};
@@ -115,7 +118,7 @@ export function ConnexioDetall({ nota }) {
 
   /* Carpeta: les del Bloc (amb la Safata d’Entrada sempre present), pel mateix
      canal que la resta de camps de la nota (setLocalNoteField desa i pinta). */
-  const carpetes = carpetesDelBloc(noteFolders).map((carpeta) => ({ id: String(carpeta.id), nom: carpeta.name }));
+  const carpetes = carpetesDelBloc(noteFolders).map((carpeta) => ({ id: String(carpeta.id), nom: nomDeCarpeta(carpeta, t) }));
   const carpetaId = String(nota?.folderId ?? CARPETA_CONNECTATS);
   const nomCarpeta = carpetes.find((carpeta) => carpeta.id === carpetaId)?.nom || NOM_CARPETA_CONNECTATS;
   const potMoure = Boolean(nota?.id && setLocalNoteField);
@@ -144,7 +147,7 @@ export function ConnexioDetall({ nota }) {
      de la tira ho diu amb el mateix text que el selector. Els errors es
      tradueixen com a l'editor (publicaAmbMotiu). */
   const compartida = Boolean(nota?.isPublished);
-  const bloqueigMur = bloqueigDeNota({ foraster: !currentUser, modeLocal, publicada: compartida, connexio: true });
+  const bloqueigMur = bloqueigDeNota({ foraster: !currentUser, modeLocal, publicada: compartida, connexio: true, t });
   const pucCompartirAlMur = Boolean(currentUser && compartirNota && nota?.id && bloqueigMur?.opcio !== 'publica');
   const autoria = autoriaDeLActor(actor, currentUser);
   const accioMur = compartida
@@ -155,8 +158,11 @@ export function ConnexioDetall({ nota }) {
      si les accepta, es compartix una sola vegada més. Sense proveïdor, el
      motiu en línia i prou. */
   const asseguraNormes = useModeracio()?.asseguraNormes ?? null;
+  /* P1-22 · Amb `t`, el rebuig per les normes i el de la xarxa ixen en la
+     llengua de l'app (abans, el de les normes eixia sempre en valencià). */
   const triaMur = async (publica) => (publica ? publicaAmbMotiu(() => compartirNota(nota), {
-    tornaAPreguntar: asseguraNormes ? () => asseguraNormes({ rebutjades: true }) : null
+    tornaAPreguntar: asseguraNormes ? () => asseguraNormes({ rebutjades: true }) : null,
+    t
   }) : true);
 
   const tira = (
@@ -189,7 +195,7 @@ export function ConnexioDetall({ nota }) {
           continua on era si el navegador el tanca mentre treballa. */}
       {pucCompartirAlMur ? (
         <SelectorVisibilitat obert={dialeg === 'mur'} onTanca={() => setDialeg(null)}
-          esPublica={compartida} onTria={triaMur} textos={TEXTOS_MUR}
+          esPublica={compartida} onTria={triaMur} textos={textosMur}
           bloqueig={bloqueigMur} comNom={autoria?.nom || null} />
       ) : null}
     </>

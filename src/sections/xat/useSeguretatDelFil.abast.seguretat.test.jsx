@@ -210,7 +210,7 @@ describe('invalidació per abast', () => {
   test('la forma pública no canvia: la clau no ix del ganxo', async () => {
     const { result } = renderGanxo({ config: { tenantId: TENANT_A } });
     await waitFor(() => expect(result.current.estat).toBe(ESTAT_NUMERO.llest));
-    expect(Object.keys(result.current).sort()).toEqual(['avis', 'estat', 'kid', 'marca', 'numero', 'ocupat', 'verificat']);
+    expect(Object.keys(result.current).sort()).toEqual(['avis', 'estat', 'kid', 'marca', 'numero', 'ocupat', 'pendent', 'verificat']);
   });
 });
 

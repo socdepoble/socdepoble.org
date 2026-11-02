@@ -16,8 +16,8 @@
  */
 import {
   CODI_MODERACIO, LIMIT_DIRECTORI_ENTITATS, VERSIO_NORMES_CONVIVENCIA, autorDelContracte, comDelContracte,
-  denunciaDelContracte, errorDeMembre, errorDeModeracio, errorDeTitular, membreDOrganitzacio, seguitDelContracte,
-  titularDelContracte
+  denunciaDelContracte, destinatariaDeTransferencia, errorDeMembre, errorDeModeracio, errorDeTitular, membreDOrganitzacio,
+  seguitDelContracte, titularDelContracte
 } from '../contracte.js';
 import { CODI_ENTRADA, ambCodi } from '../errorsBackend.js';
 import { normalitzaCorreu, validaCorreu } from '../correuOrganitzacio.js';
@@ -160,6 +160,16 @@ export function creaComunitatLocal(e) {
     async llevaMembreOrganitzacio(orgId, dades = {}) {
       const usuari = exigixSessio(() => errorDeMembre('SDP-ORGMEM-000'));
       return e.copia(perfils.llevaMembreOrganitzacio(orgId, membreDOrganitzacio(dades, { ambRol: false }), usuari));
+    },
+
+    /* IDEA-24 (marató 261101_2143, B4) · La transferència atòmica de la
+       propietat (capacitat 'transferenciaPropietat'): la mateixa regla
+       d'entrada que l'adaptador Supabase (destinatariaDeTransferencia) i les
+       regles de localPerfils, que canvia els dos rols en un sol pas síncron. */
+    async transfereixPropietatOrganitzacio(orgId, dades = {}) {
+      const usuari = exigixSessio(() => errorDeMembre('SDP-ORGMEM-000'));
+      const destinataria = destinatariaDeTransferencia(dades);
+      return e.copia(perfils.transfereixPropietatOrganitzacio(orgId, destinataria.id, usuari));
     },
 
     /* ── La titular que ha triat mostrar-se ── */

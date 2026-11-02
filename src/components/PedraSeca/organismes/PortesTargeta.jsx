@@ -164,22 +164,31 @@ export function PortesTargeta({ portes }) {
    Link del router (amb la base de l'amfitrió); inerta, el button
    aria-disabled que avisa amb el toast i no navega. A diferència de la
    targeta, la inerta també és blava: és l'acció de la pàgina i ho diu la
-   icona d'obres i el nom («(en obres)»), no el color. */
+   icona d'obres i el nom («(en obres)»), no el color.
+   PS-07 (B7, marató 261101_2143) · Un sol primari per vista: dins d'una
+   graella de targetes (/pobles, les entitats d'un poble), «Anar al xat» de
+   cada targeta és secundari amb varietat="secundari", gran i a l'ample com
+   sempre; només canvia el color, oberta o inerta. La varietat és una prop
+   explícita i no es llig de porta.varietat: normalitzaPortes hi posa
+   'secundari' per defecte i giraria totes les portes de pàgina. Qualsevol
+   altre valor, o cap, dona la porta blava de sempre. */
 const CLASSE_DE_PAGINA = 'sdp-boto sdp-boto--primari sdp-boto--gran sdp-boto--ple';
+const CLASSE_DE_PAGINA_SECUNDARIA = 'sdp-boto sdp-boto--secundari sdp-boto--gran sdp-boto--ple';
 
-export function PortaDePagina({ porta }) {
+export function PortaDePagina({ porta, varietat = 'primari' }) {
   const obri = useObriPorta();
   const [neta] = normalitzaPortes(porta ? [porta] : []);
   if (!neta) return null;
+  const classe = varietat === 'secundari' ? CLASSE_DE_PAGINA_SECUNDARIA : CLASSE_DE_PAGINA;
   if (neta.desti) {
     return (
-      <Link to={neta.desti} className={CLASSE_DE_PAGINA}>
+      <Link to={neta.desti} className={classe}>
         <TextDeLaPorta porta={neta} />
       </Link>
     );
   }
   return (
-    <button type="button" className={CLASSE_DE_PAGINA} aria-disabled="true" onClick={() => obri(neta)}>
+    <button type="button" className={classe} aria-disabled="true" onClick={() => obri(neta)}>
       <TextDeLaPorta porta={neta} inerta />
       <Construction size={20} aria-hidden="true" focusable="false" />
     </button>

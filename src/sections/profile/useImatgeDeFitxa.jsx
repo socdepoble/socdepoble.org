@@ -5,10 +5,16 @@ import {
 } from '../../components/universal/enquadrament/useEnquadramentImatge.jsx';
 import { TEXTOS_ENQUADRAMENT } from '../../components/universal/enquadrament/DialegEnquadrament.jsx';
 import { tradueix, useTraductorOpcional } from '../../components/PedraSeca/hooks/useTraductorOpcional.js';
-import { AJUDA_IMATGE_PUJANT as AVIS_IMATGE_PUJANT } from '../../components/universal/UniversalEditorShell.jsx';
+import { AJUDA_IMATGE_PUJANT as AVIS_IMATGE_PUJANT, TEXTOS_CLOSCA } from '../../components/universal/UniversalEditorShell.jsx';
 
-/* Un pas que falla sense missatge propi (no hauria de passar: el hook l'avisa). */
-export const ERROR_DESAT_IMATGE = 'No s’ha pogut desar la imatge.';
+/* Un pas que falla sense missatge propi (no hauria de passar: el hook l'avisa).
+   P1-22 (marató 261101_2143, B3-I18N §3.C) · En parell [clau, reserva], i es
+   pinta traduït; la reserva és el literal de sempre, amb l'apòstrof
+   tipogràfic: és una clau diferent de la de la closca, que el porta recte
+   (D-2). La constant de sempre en naix amb el mateix valor (les proves
+   l'importen). */
+export const PARELL_ERROR_DESAT_IMATGE = Object.freeze(['section.perfil.editor.imatge.errorDesar', 'No s’ha pogut desar la imatge.']);
+export const ERROR_DESAT_IMATGE = PARELL_ERROR_DESAT_IMATGE[1];
 /* Correcció de la revisió (261008) · El que es diu si es torna a obrir
    mentre la imatge encara puja: la MATEIXA constant que la guarda de la
    closca (AJUDA_IMATGE_PUJANT, ordre E, 261007), no una còpia del text que
@@ -16,7 +22,10 @@ export const ERROR_DESAT_IMATGE = 'No s’ha pogut desar la imatge.';
    les proves l'importen d'ací. No obri cap dependència nova: PerfilEditor ja
    importava la closca, i la closca no importa directament res de
    sections/profile. A més, és un enllaç viu que només es llig dins de
-   funcions, mai en avaluar el mòdul: un cicle transitiu no el trobaria buit. */
+   funcions, mai en avaluar el mòdul: un cicle transitiu no el trobaria buit.
+   P1-22 (B3-I18N §3.C) · Dins del hook es pinta el seu parell traduït
+   (TEXTOS_CLOSCA.imatgePujant, també un enllaç viu llegit dins de funcions);
+   la constant només es torna a exportar. */
 export { AVIS_IMATGE_PUJANT };
 
 /* Tancar el selector de fitxers sense triar dispara `cancel` a l'input, i
@@ -65,7 +74,8 @@ const paraCancel = (e) => e.stopPropagation();
  *   Correcció de la revisió (261008) · La guarda de pujada de l'ordre E
  *   (261007), ara per a la fitxa: Escape tanca la finestra encara que estiga
  *   desant, i el desat continua. Mentre dura, obri i un fitxer triat no fan
- *   res més que dir-ho (onError(AVIS_IMATGE_PUJANT, 'info')): cap segona
+ *   res més que dir-ho (onError(avís de pujada, 'info'); el de la closca,
+ *   TEXTOS_CLOSCA.imatgePujant, traduït): cap segona
  *   pujada trepitja la primera ni el seu control. Si la pujada falla amb la
  *   finestra ja tancada, l'avís va fora (onError), perquè dins ja no hi és.
  *
@@ -97,7 +107,9 @@ export function useImatgeDeFitxa({
   desaCampRef.current = onDesaCamp;
   const errorRef = useRef(onError);
   errorRef.current = onError;
-  /* P1-22 · L'avís del GPS es diu amb la finestra ja tancada: en la llengua de la interfície. */
+  /* P1-22 · L'avís del GPS es diu amb la finestra ja tancada: en la llengua de la interfície.
+     B3-I18N §3.C · I l'avís de pujada i l'error de desat, que es diuen des de
+     callbacks estables (el ref sempre porta el traductor d'este pintat). */
   const tRef = useRef(null);
   tRef.current = useTraductorOpcional();
   const desatRef = useRef(onDesat);
@@ -129,7 +141,7 @@ export function useImatgeDeFitxa({
      El missatge, si n'hi ha, el diu la finestra. */
   const canviaRef = useRef(null);
   const canviaFoto = useCallback((fitxer) => {
-    if (pujantRef.current) return AVIS_IMATGE_PUJANT;
+    if (pujantRef.current) return tradueix(tRef.current, TEXTOS_CLOSCA.imatgePujant);
     return canviaRef.current?.(fitxer) ?? null;
   }, []);
   const { canviaFoto: ambCanviaFoto = false, ...restaFinestra } = finestra || {};
@@ -142,7 +154,7 @@ export function useImatgeDeFitxa({
     onError: (missatge) => errorRef.current?.(missatge),
     onEnquadrat: async (fitxer, info, exif) => {
       // Un sol desat alhora: els refs (desat, errorPujada, controlRef) són d'ell.
-      if (pujantRef.current) throw new Error(AVIS_IMATGE_PUJANT);
+      if (pujantRef.current) throw new Error(tradueix(tRef.current, TEXTOS_CLOSCA.imatgePujant));
       pujantRef.current = true;
       setPujant(true);
       try {
@@ -156,10 +168,10 @@ export function useImatgeDeFitxa({
         const fet = await handlerRef.current.processaFitxer(fitxer, {
           pesMaxim: PES_MAXIM_FOTO, midaMaxima: costatDeSortida(forma), forma, ...exif,
         });
-        if (!fet) throw new Error(errorPujada.current || ERROR_DESAT_IMATGE);
+        if (!fet) throw new Error(errorPujada.current || tradueix(tRef.current, PARELL_ERROR_DESAT_IMATGE));
         /* Bloc 3.5.4 · Abans s'esperava sense mirar-ne el resultat: un 403
            tancava la finestra com si s'haguera desat. */
-        if ((await desat.current) === false) throw new Error(ERROR_DESAT_IMATGE);
+        if ((await desat.current) === false) throw new Error(tradueix(tRef.current, PARELL_ERROR_DESAT_IMATGE));
         const control = controlRef.current;
         controlRef.current = null;
         control?.acaba?.();
@@ -168,7 +180,7 @@ export function useImatgeDeFitxa({
         if (info?.gpsEliminat === true) errorRef.current?.(tradueix(tRef.current, TEXTOS_ENQUADRAMENT.gpsEliminat), 'info');
       } catch (err) {
         // Escape a mitja pujada: la finestra ja no hi és per a dir-ho.
-        if (!obertRef.current) errorRef.current?.(err?.message || ERROR_DESAT_IMATGE);
+        if (!obertRef.current) errorRef.current?.(err?.message || tradueix(tRef.current, PARELL_ERROR_DESAT_IMATGE));
         throw err;
       } finally {
         pujantRef.current = false;
@@ -182,7 +194,7 @@ export function useImatgeDeFitxa({
 
   const obri = useCallback((control) => {
     if (pujantRef.current) {
-      errorRef.current?.(AVIS_IMATGE_PUJANT, 'info');
+      errorRef.current?.(tradueix(tRef.current, TEXTOS_CLOSCA.imatgePujant), 'info');
       return;
     }
     controlRef.current = typeof control?.acaba === 'function' ? control : null;
@@ -196,7 +208,7 @@ export function useImatgeDeFitxa({
      amb fons blanc. */
   const ajusta = useCallback((font, control) => {
     if (pujantRef.current) {
-      errorRef.current?.(AVIS_IMATGE_PUJANT, 'info');
+      errorRef.current?.(tradueix(tRef.current, TEXTOS_CLOSCA.imatgePujant), 'info');
       return false;
     }
     if (typeof font !== 'string' || !font) return false;
@@ -209,7 +221,7 @@ export function useImatgeDeFitxa({
     e.target.value = '';
     if (!fitxer) return;
     if (pujantRef.current) {
-      errorRef.current?.(AVIS_IMATGE_PUJANT, 'info');
+      errorRef.current?.(tradueix(tRef.current, TEXTOS_CLOSCA.imatgePujant), 'info');
       return;
     }
     if (!obriFinestra(fitxer)) controlRef.current = null;

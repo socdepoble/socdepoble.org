@@ -376,6 +376,33 @@ export const CAPACITATS = Object.freeze({
     'desaMembreOrganitzacio',
     'llevaMembreOrganitzacio'
   ]),
+  /* IDEA-24 (Llibre Mestre; marató 261101_2143, B4) · La transferència
+     atòmica de la propietat d'una organització: la propietària ('owner') la
+     cedix a una persona que ja n'és membre i ella passa a 'admin'. Capacitat a
+     banda a posta, i no dins de 'membresOrganitzacio' (el control de capacitat
+     parcial de backendPort.js tombaria la gestió de membres d'un node que no
+     la sap fer, com 'titularPublic'). Opcional: qui oferisca «Transferir la
+     propietat» ha de preguntar abans per esta capacitat amb teCapacitat i,
+     sense ella, no l'ha d'oferir. Forma (config sempre l'últim):
+       transfereixPropietatOrganitzacio(orgId, { tipus: 'persona', id }, config)
+         → Promise<{ organizationId, anticOwnerId, nouOwnerId }>
+         Una sola transacció: o canvien tots dos rols o cap; mai cap
+         organització sense propietària ni amb dues. Només la propietària i
+         la seua sessió; només per a TIPUS_TRANSFERIBLES ('group' i 'company':
+         una entitat o un ajuntament només canvia de titular per reclamació
+         revisada); la destinatària és una persona, no és qui crida, ja és
+         membre de l'organització i del seu poble i no ha demanat la baixa.
+         La tria de mostrar-se com a titular (consentimentTitular) de l'antiga
+         propietària es perd. Mai torna cap correu.
+     Els errors porten `code` de MISSATGES_MEMBRES_ORGANITZACIO (000 sense
+     sessió, 001 tipus no transferible o destinatària que no és una persona,
+     002 organització que no existix o no s'administra, 003 destinatària que
+     no n'és membre o ha demanat la baixa, 004 una mateixa, 006 no n'és la
+     propietària), o NO-DISPONIBLE si el servidor encara no té la RPC
+     (2610311500_commutacio_grup_empresa_i_transferencia_propietat.sql). */
+  transferenciaPropietat: Object.freeze([
+    'transfereixPropietatOrganitzacio'
+  ]),
   /* Onada 11 (261010; prompt 261010_1730, tasca 2) · El segon factor (TOTP)
      del superadmin. private.es_superadmin() exigix aal2 (migració
      2610061448): sense ell, el Tauler no pot desar res. Opcional a posta: un
@@ -776,6 +803,23 @@ export function membreDOrganitzacio(dades, { ambRol = true } = {}) {
   const rolValid = !ambRol || (tipus === 'persona' ? rol === 'member' || rol === 'admin' : rol === 'member');
   if ((tipus !== 'persona' && tipus !== 'organitzacio') || !id || !rolValid) throw errorDeMembre('SDP-ORGMEM-001');
   return ambRol ? { tipus, id, rol } : { tipus, id };
+}
+
+/* IDEA-24 (marató 261101_2143, B4) · Els tipus d'organització que canvien de
+   propietària per transferència (capacitat 'transferenciaPropietat'), els
+   mateixos que la RPC transfereix_propietat_organitzacio (2610311500, R3
+   SQL-01). Una sola font per als adaptadors i per a la interfície. */
+export const TIPUS_TRANSFERIBLES = Object.freeze(['group', 'company']);
+
+/**
+ * La destinatària d'una transferència de propietat ({ tipus: 'persona', id }),
+ * normalitzada amb la regla de membreDOrganitzacio; si no és una persona amb
+ * id, llança SDP-ORGMEM-001. No valida la forma de l'id. Pura.
+ */
+export function destinatariaDeTransferencia(dades) {
+  const membre = membreDOrganitzacio(dades, { ambRol: false });
+  if (membre.tipus !== 'persona') throw errorDeMembre('SDP-ORGMEM-001');
+  return membre;
 }
 
 /* ── Fase D (261020, tasca 2; pla 261020_1300) · La moderació ────────────

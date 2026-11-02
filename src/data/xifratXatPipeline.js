@@ -25,6 +25,11 @@ import { directoriAmbHistoria } from './xifratXatHistoria.js';
  *     el navegador bloqueja l'esborrat), sessió i preferències (els magatzems
  *     web els injecta qui crida: `sessio` i `preferencies`), amb un estat
  *     explícit i mai un èxit fals.
+ *   · Canvis de clau (§4.4, CS-01, D-05 a; B2a, marató 261101_2143): un canvi
+ *     fort d'un contacte queda pendent al directori, bloqueja l'enviament
+ *     (clau-canviada-forta, mai a la safata) i deixa llegir la història d'abans;
+ *     acceptaCanviDelFil el fixa per a la persona. L'alarma de la clau pròpia
+ *     bloqueja tot enviament (clau-propia-alarma).
  *
  * Fora d'esta onada (es rebutja amb codi, mai en clar): els fils amb entitat
  * (equip signat, §4.8), l'alta de la identitat amb la frase (F2a, §5) i la
@@ -32,7 +37,7 @@ import { directoriAmbHistoria } from './xifratXatHistoria.js';
  */
 import { aBase64url, bytesIguals, deBase64url, exigixCripto, numeroSeguretatParell, sha256 } from './xifratXatCripto.js';
 import { MOTIU_EPOCA, ROL_EPOCA, TIPUS_FIL } from './xifratXatFormats.js';
-import { CODI, aplicaEpoca, creaEpoca, esErrorProtocol, estatFilNou, obriMissatge, publiquesDe, xifraMissatge } from './xifratXatProtocol.js';
+import { CODI, aplicaEpoca, creaDirectori, creaEpoca, esErrorProtocol, estatFilNou, obriMissatge, publiquesDe, xifraMissatge } from './xifratXatProtocol.js';
 import { llegixEpoca } from './xifratXatFormats.js';
 import { desxifraAdjuntXat, errorPressupostBlobs, metadadesAdjuntDe, midaBlobAdjunt, TIPUS_DE_CLASSE, xifraAdjuntXat } from './xatMultimediaXifrat.js';
 
@@ -43,8 +48,13 @@ export const CODI_MOTOR = Object.freeze({
   equipPendent: 'equip-pendent', filSenseMembres: 'fil-sense-membres', senseCapacitat: 'sense-capacitat-e2ee',
   ecoNoQuadra: 'eco-no-quadra', encuat: 'encuat',
   /* Pas 17 (pla 261101_1246, T7 · S5) · El número de seguretat (§4.4). */
-  numeroNoDirecte: 'numero-no-directe', senseClauAltre: 'sense-clau-altre', kidCanviat: 'kid-canviat'
+  numeroNoDirecte: 'numero-no-directe', senseClauAltre: 'sense-clau-altre', kidCanviat: 'kid-canviat',
+  /* B2a (marató 261101_2143) · Canvis de clau (§4.4, CS-01, D-05 a). */
+  clauCanviadaForta: 'clau-canviada-forta', clauPropiaAlarma: 'clau-propia-alarma',
+  clauNovaSenseConfirmar: 'clau-nova-sense-confirmar', historiaIncoherent: 'historia-incoherent'
 });
+/* Una fila tancada per un d'estos codis, d'un autor amb un canvi fort pendent, és de la clau nova sense confirmar. */
+const CODIS_CLAU_NOVA = new Set([CODI.kidNoFixat, CODI.epocaDesconeguda, 'epoca-saltada']);
 export const ESTAT_OBLIT = Object.freeze({ oblidat: 'oblidat', fallit: 'OBLIT_FALLIT' });
 
 const TIPUS_DEL_FIL = Object.freeze({ directe: TIPUS_FIL.directe, grup: TIPUS_FIL.grup, entitat: TIPUS_FIL.entitat });
@@ -180,7 +190,7 @@ export function creaMotorXifrat({ cripto, impl, servei, magatzem, ara = () => Da
     // per una SDPE rebutjada no queda persistent.
     if(!declaracions.length || estat.cap)await directori.confirma(new Set([...membres,...[...estat.epoques.values()].flatMap(e=>[...e.membres.keys()])]));exigix();
     if(estat.cap && (!ancorat || estat.cap.epoca>ancorat.epoca) && magatzem.avancaCap){await magatzem.avancaCap(ci,fil.id,{anterior:ancorat,nou:{epoca:estat.cap.epoca,hash:estat.cap.hash}});exigix();}
-    const context = { estat, directori, jo, membres, rols, fil, tipusFil, capPersistent:estat.cap?{epoca:estat.cap.epoca,hash:estat.cap.hash}:ancorat };
+    const context = { estat, directori, canvis: directori.canvis, jo, membres, rols, fil, tipusFil, capPersistent:estat.cap?{epoca:estat.cap.epoca,hash:estat.cap.hash}:ancorat };
     servei.desaEstatFil(fil.id, context);
     return context;
   };
@@ -188,6 +198,26 @@ export function creaMotorXifrat({ cripto, impl, servei, magatzem, ara = () => Da
   const confirmacions = new WeakMap();
 
   const normalitzaCos = (cos) => (typeof cos === 'string' ? { text: cos } : (cos && typeof cos === 'object' ? cos : { text: null }));
+
+  /* B2a (§4.4, CS-01) · Cap època ni cap missatge mentre hi ha una alarma de la clau pròpia o
+     un canvi fort pendent d'un membre (d'ara o de qualsevol època vista): mai a la safata, que
+     l'enviaria sol després d'acceptar (R3), i mai segellat per a una clau no confirmada (R2). */
+  const exigixSenseCanvis = (ctx) => {
+    const canvis = ctx?.canvis;
+    if (!canvis) return;
+    if (canvis.alarmes.length) {
+      throw errorMotor(CODI_MOTOR.clauPropiaAlarma, 'S’ha registrat una clau nova per al teu compte que no és d’este aparell.', { reintentable: false, encuable: false });
+    }
+    const membres = new Set([...ctx.membres, ...[...ctx.estat.epoques.values()].flatMap((e) => [...e.membres.keys()])]);
+    for (const usuari of membres) {
+      const p = canvis.pendents.get(usuari);
+      if (p) {
+        throw errorMotor(CODI_MOTOR.clauCanviadaForta, 'La clau de seguretat d’esta persona ha canviat: cal confirmar-la abans d’escriure.', {
+          reintentable: false, encuable: false, usuari, motiu: p.motiu, kidNou: p.kidNou ? aBase64url(p.kidNou) : null
+        });
+      }
+    }
+  };
 
   /** El paquet xifrat d'un enviament; amb la gènesi (epocaNova) si el fil encara no té època meua. */
   const prepara = async ({ fil, tipusFil, cos, config, exigix }) => {
@@ -203,6 +233,7 @@ export function creaMotorXifrat({ cripto, impl, servei, magatzem, ara = () => Da
     // concurrent ni una publicació fallida la poden convertir en àncora.
     const ctx={...baseCtx,estat:{...baseCtx.estat,epoques:new Map(baseCtx.estat.epoques),vistos:new Set(baseCtx.estat.vistos)}};
     if(ctx.estat.tipusFil===TIPUS_FIL.directe && ctx.membres.length!==2)throw errorMotor(CODI_MOTOR.filSenseMembres,'El directe necessita dues persones per enviar.',{reintentable:false});
+    exigixSenseCanvis(ctx);
     if(ctx.estat.ultima?.saltada)throw errorMotor('epoca-saltada','L’última època no verifica; no s’envia amb una CK anterior.',{reintentable:false});
     let epocaNova = null;
     if (ctx.estat.cap === null || ctx.estat.cap.ck === null || ctx.rols.length!==ctx.estat.cap.membres.size || ctx.rols.some(m=>{const vell=ctx.estat.cap.membres.get(m.usuari);return !vell||vell.rol!==m.rol||aBase64url(vell.kid)!==aBase64url(ctx.directori.de(m.usuari)?.kid??new Uint8Array());})) {
@@ -215,7 +246,14 @@ export function creaMotorXifrat({ cripto, impl, servei, magatzem, ara = () => Da
         });
       } catch (error) {
         if (esAmbitCanviat(error)) throw error;
-        if (error?.codi === CODI.kidNoFixat) throw bloquejat(CODI_MOTOR.clauAbsent, 'Esperant que l’altra persona active el xifrat.', error);
+        /* Només un membre sense cap clau publicada i sense cap canvi pendent espera a la safata. */
+        if (error?.codi === CODI.kidNoFixat) {
+          const senseClau = ctx.rols.filter((m) => !ctx.directori.de(m.usuari)).map((m) => m.usuari);
+          if (senseClau.some((u) => ctx.canvis?.pendents.has(u))) {
+            throw errorMotor(CODI_MOTOR.clauCanviadaForta, 'La clau de seguretat d’esta persona ha canviat: cal confirmar-la abans d’escriure.', { reintentable: false, encuable: false, cause: error });
+          }
+          throw bloquejat(CODI_MOTOR.clauAbsent, 'Esperant que l’altra persona active el xifrat.', error);
+        }
         throw error;
       }
       await aplicaEpoca(cripto, { estat: ctx.estat, jo: ctx.jo, declaracio: genesi.declaracio, firma: genesi.firma, sobres: genesi.sobres, directori: ctx.directori, vigent: exigix });
@@ -289,7 +327,17 @@ export function creaMotorXifrat({ cripto, impl, servei, magatzem, ara = () => Da
   };
 
   const obre = (ctx, filId, fila, exigix) => obriMissatge(cripto, { estat: ctx.estat, fila: desserialitzaXifrat(fila, filId), directori: ctx.directori, vigent: exigix });
-  const filaTancada = (error) => Object.freeze({ text: null, seguretat: Object.freeze({ xifrat: true, verificat: false, codi: esErrorProtocol(error) ? error.codi : (error?.codi ?? 'sobre-invalid') }), a: null });
+  /* B2a · Fase 1, tancada: la fila d'un autor amb un canvi fort pendent, signada amb una clau
+     que no és de la seua història, diu «clau nova sense confirmar» (cap text fins a acceptar). */
+  const esDeClauNova = (ctx, fila, codi) => {
+    const autor = fila?.usuariId ?? fila?.emissor;
+    if (!CODIS_CLAU_NOVA.has(codi) || !ctx?.canvis?.pendents.has(autor)) return false;
+    try { return !ctx.directori.historica(autor, deBase64url(fila.xifrat.kid, 16)); } catch { return false; }
+  };
+  const filaTancada = (error, ctx = null, fila = null) => {
+    const codi = esErrorProtocol(error) ? error.codi : (error?.codi ?? 'sobre-invalid');
+    return Object.freeze({ text: null, seguretat: Object.freeze({ xifrat: true, verificat: false, codi: esDeClauNova(ctx, fila, codi) ? CODI_MOTOR.clauNovaSenseConfirmar : codi }), a: null });
+  };
   /* L'època de la fila és posterior a l'última que este context ha vist? Només eixes justifiquen anar al servidor. */
   const esEpocaPosterior = (ctx, fila) => Number.isSafeInteger(fila?.xifrat?.epoca) && fila.xifrat.epoca > (ctx.estat.ultima?.epoca ?? 0);
 
@@ -316,7 +364,7 @@ export function creaMotorXifrat({ cripto, impl, servei, magatzem, ara = () => Da
     }
     if (fallada !== null) {
       if (esAmbitCanviat(fallada)) throw fallada;
-      return filaTancada(fallada);
+      return filaTancada(fallada, ctx, fila);
     }
     /* Gauntlet c2 (C1) · Res desxifrat a la memòria cau d'un àmbit que ja no és el de l'operació.
        Cicle 4 (MITJÀ-04, Gemini 1217) · Com a publicaAdjunt: fins que la RAM de l'àmbit no ho ha
@@ -441,6 +489,8 @@ export function creaMotorXifrat({ cripto, impl, servei, magatzem, ara = () => Da
   const publicaAdjunt = async ({ fil, tipusFil, entrada, config, exigix }) => {
     exigixTransport('publicaAdjuntXifratXat');
     const ctx = await contextDelFil({ fil, tipusFil, config, exigix });
+    /* B2a · Ni es llig ni es xifra el fitxer si ja se sap que no es pot enviar (prepara ho torna a mirar amb el context refet). */
+    exigixSenseCanvis(ctx);
     const fitxer = entrada?.fitxer;
     if (!fitxer || typeof fitxer.arrayBuffer !== 'function') throw errorMotor('adjunt-invalid', 'Cal el fitxer de l’adjunt.', { reintentable: false });
     const bytes = new Uint8Array(await fitxer.arrayBuffer());
@@ -589,10 +639,37 @@ export function creaMotorXifrat({ cripto, impl, servei, magatzem, ara = () => Da
     return estat;
   };
 
+  /* B2a · La fixació és per persona: després d'acceptar o de tornar a verificar una clau nova,
+     cap context en RAM (de cap fil amb eixa persona) es queda amb el directori vell. */
+  const descartaContextos = (filId) => {
+    if (typeof servei.descartaEstatsFils === 'function') servei.descartaEstatsFils();
+    else descarta(filId);
+  };
+  const errorKidCanviat = (cause) => errorMotor(CODI_MOTOR.kidCanviat, 'La clau fixada d’esta persona ha canviat: cal comparar el número nou.', { reintentable: false, ...(cause ? { cause } : {}) });
+  const esFixacioCanviada = (error) => error?.codi === 'FIXACIO_DIFERENT' || error?.codi === 'FIXACIO_CANVIADA';
+  /* B2a-ARB-01 · Acceptar (o tornar a verificar) la clau nova d'un pendent. Si el tram suau
+     d'abans del pas fort encara no és al magatzem (cap fil ha corregut `confirma`), primer
+     s'hi avança (kidDesat → kidFixat; amb el mateix kid no fa res) i després la clau nova.
+     Les dues fixacions són comparar-i-canviar i `anteriors` guarda tot el tram (R5). */
+  const fixaSobrePendent = async (ci, p, { kid, verificat }, exigix) => {
+    try {
+      if (p.kidDesat && !bytesIguals(p.kidDesat, p.kidFixat)) {
+        await magatzem.fixa(ci, { usuari: p.usuari, kid: p.kidFixat, vistAl: ara() }, { anterior: p.kidDesat });
+        exigix();
+      }
+      return await magatzem.fixa(ci, { usuari: p.usuari, kid, verificat, vistAl: ara() }, { anterior: p.kidFixat });
+    } catch (error) {
+      if (esFixacioCanviada(error)) throw errorKidCanviat(error);
+      throw error;
+    }
+  };
+
   /* ── Número de seguretat i «Marca com a verificat» (§4.4; pla 261101_1246, T7 · S5) ──
      Només en un directe entre dues persones: el número és d'un parell. Les claus de
      l'altra persona són les del directori del fil refet ara mateix (kids nous, canvis
-     suaus i la fixació TOFU confirmada), mai les d'una memòria vella. */
+     suaus i la fixació TOFU confirmada), mai les d'una memòria vella. B2a · Amb un canvi
+     fort pendent, el número és el de la clau nova (la candidata, autofirma verificada) i
+     porta `pendent: true`: comparar-lo és el camí per a tornar a verificar. */
   const numeroAmbClau = async ({ fil, tipusFil, config, exigix }) => {
     if (TIPUS_DEL_FIL[tipusFil] !== TIPUS_FIL.directe) {
       throw errorMotor(CODI_MOTOR.numeroNoDirecte, 'El número de seguretat és d’un xat privat entre dues persones.', { reintentable: false });
@@ -603,7 +680,8 @@ export function creaMotorXifrat({ cripto, impl, servei, magatzem, ara = () => Da
     const altres = ctx.membres.filter((usuari) => usuari !== joId);
     if (altres.length !== 1) throw errorMotor(CODI_MOTOR.filSenseMembres, 'Este xat no té exactament una altra persona.', { reintentable: false });
     const [altreId] = altres;
-    const altre = ctx.directori.de(altreId);
+    const pendent = ctx.canvis?.pendents.get(altreId) ?? null;
+    const altre = pendent ? ctx.directori.candidata(altreId) : ctx.directori.de(altreId);
     if (!altre?.sigPub || !altre?.dhPub || !altre?.kid) {
       throw errorMotor(CODI_MOTOR.senseClauAltre, 'L’altra persona encara no té claus del xat publicades.', { reintentable: true });
     }
@@ -615,49 +693,131 @@ export function creaMotorXifrat({ cripto, impl, servei, magatzem, ara = () => Da
       usuari: altreId,
       kid: aBase64url(altre.kid),
       numero,
-      verificat: pin?.verificat === true && bytesIguals(pin.kid, altre.kid)
+      verificat: !pendent && pin?.verificat === true && bytesIguals(pin.kid, altre.kid),
+      pendent: pendent !== null
     });
-    return { ci, resultat };
+    return { ci, resultat, pendent };
   };
 
-  /** { usuari, kid (base64url), numero (12 grups de 5 xifres), verificat } del directe. */
+  /** { usuari, kid (base64url), numero (12 grups de 5 xifres), verificat, pendent } del directe. */
   const numeroDelFil = async (opcions) => (await numeroAmbClau(opcions)).resultat;
 
   /* La marca va a la fixació d'este aparell (IndexedDB) i només per al kid que s'ha
      mostrat: si la clau ha canviat entremig, kid-canviat i cap escriptura. El magatzem
      torna a comprovar el kid dins de la transacció (FIXACIO_DIFERENT o
-     FIXACIO_CANVIADA): una marca no substituïx mai una fixació diferent. */
+     FIXACIO_CANVIADA): una marca no substituïx mai una fixació diferent. B2a · Sobre un
+     pendent, «Marca com a verificat» accepta i verifica la clau nova (amb l'`anterior`
+     fixada, comparar-i-canviar); llevar la marca d'una clau no acceptada no es pot. */
   const marcaVerificatDelFil = async ({ kid, verificat, ...opcions }) => {
-    const { ci, resultat } = await numeroAmbClau(opcions);
+    const { ci, resultat, pendent } = await numeroAmbClau(opcions);
     if (typeof kid !== 'string' || resultat.kid !== kid) {
       throw errorMotor(CODI_MOTOR.kidCanviat, 'La clau de l’altra persona ha canviat: cal comparar el número nou.', { reintentable: false });
+    }
+    if (pendent && verificat !== true) {
+      throw errorMotor(CODI_MOTOR.clauCanviadaForta, 'La clau nova d’esta persona encara no s’ha acceptat: no hi ha cap marca a llevar.', {
+        reintentable: false, encuable: false, usuari: resultat.usuari, motiu: pendent.motiu, kidNou: kid
+      });
     }
     if (typeof magatzem.fixa !== 'function') throw errorMotor(CODI_MOTOR.senseCapacitat, 'El magatzem d’este aparell no desa fixacions.', { reintentable: false });
     opcions.exigix();
     let fila;
-    try {
-      fila = await magatzem.fixa(ci, { usuari: resultat.usuari, kid: deBase64url(kid, 16), verificat: verificat === true, vistAl: ara() });
-    } catch (error) {
-      if (error?.codi === 'FIXACIO_DIFERENT' || error?.codi === 'FIXACIO_CANVIADA') {
-        throw errorMotor(CODI_MOTOR.kidCanviat, 'La clau fixada d’esta persona ha canviat: cal comparar el número nou.', { reintentable: false, cause: error });
+    if (pendent) {
+      fila = await fixaSobrePendent(ci, pendent, { kid: deBase64url(kid, 16), verificat: true }, opcions.exigix);
+    } else {
+      try {
+        fila = await magatzem.fixa(ci, { usuari: resultat.usuari, kid: deBase64url(kid, 16), verificat: verificat === true, vistAl: ara() }, {});
+      } catch (error) {
+        if (esFixacioCanviada(error)) throw errorKidCanviat(error);
+        throw error;
       }
-      throw error;
     }
     opcions.exigix();
-    return Object.freeze({ ...resultat, verificat: fila?.verificat === true });
+    if (pendent) descartaContextos(opcions.fil.id);
+    return Object.freeze({ ...resultat, verificat: fila?.verificat === true, pendent: false });
   };
 
-  /* IDEA-48 (estat previ a F7) · Quants contactes té verificats la persona en este aparell. */
-  const recompteVerificats = async ({ exigix }) => {
+  /* IDEA-48 (estat previ a F7) · Quants contactes té verificats la persona en este aparell.
+     B2a (risc obert del Llibre, :128) · Només compta qui té ara mateix com a clau activa al
+     servidor (una sola fila sense retirar) exactament la clau verificada, amb el kid
+     recalculat de les seues públiques. Un contacte verificat que publica una clau nova
+     deixa de comptar fins que es torna a verificar. Cap fixació ni cap canvi s'escriu ací. */
+  const recompteVerificats = async ({ exigix, config = {} }) => {
     const { ci, joId } = claus();
     if (typeof magatzem.fixacions !== 'function') return 0;
     const files = await magatzem.fixacions(ci);
     exigix();
-    return new Set(files.filter((f) => f?.verificat === true && f.usuari !== joId).map((f) => f.usuari)).size;
+    const pins = new Map(files.filter((f) => f?.verificat === true && f.usuari !== joId).map((f) => [f.usuari, f]));
+    if (!pins.size) return 0;
+    exigixTransport('clausDeXat');
+    const ids = [...pins.keys()];
+    const registres = [];
+    for (let i = 0; i < ids.length; i += 256) {
+      const lot = await impl.clausDeXat(ids.slice(i, i + 256), config);
+      exigix();
+      if (Array.isArray(lot)) registres.push(...lot);
+    }
+    let total = 0;
+    for (const [usuari, pin] of pins) {
+      const vigents = registres.filter((r) => r && typeof r === 'object' && (r.usuariId ?? r.usuari) === usuari && !r.retiradaAl);
+      if (vigents.length !== 1) continue;
+      let quadra = false;
+      try {
+        const kid = deBase64url(vigents[0].kid, 16);
+        if (bytesIguals(kid, pin.kid)) {
+          await creaDirectori(cripto).fixa({ usuari, kid, sigPub: deBase64url(vigents[0].sigPub, 65), dhPub: deBase64url(vigents[0].dhPub, 65) });
+          quadra = true;
+        }
+      } catch (error) {
+        if (esAmbitCanviat(error)) throw error;
+        /* Una fila mal formada o amb un kid que no és el de les seues claus: no compta. */
+      }
+      exigix();
+      if (quadra) total += 1;
+    }
+    return total;
+  };
+
+  /* ── Canvis de clau del fil (§4.4, CS-01, D-05 a; B2a, contracte de §2.1.6) ── */
+  const serialitzaCanvis = (canvis) => Object.freeze({
+    pendents: Object.freeze([...canvis.pendents.values()].map((p) => Object.freeze({
+      usuari: p.usuari, motiu: p.motiu, kidFixat: aBase64url(p.kidFixat), kidNou: p.kidNou ? aBase64url(p.kidNou) : null
+    }))),
+    suaus: Object.freeze(canvis.suaus.map((s) => Object.freeze({ usuari: s.usuari, kidAnterior: aBase64url(s.kidAnterior), kidNou: aBase64url(s.kidNou) }))),
+    alarmes: Object.freeze(canvis.alarmes.map((a) => Object.freeze({ tipus: a.tipus, kidActiu: a.kidActiu ? aBase64url(a.kidActiu) : null })))
+  });
+
+  /** { pendents: [{usuari, motiu, kidFixat, kidNou}], suaus: [{usuari, kidAnterior, kidNou}], alarmes: [{tipus, kidActiu}] }, kids en base64url. */
+  const canvisDelFil = async ({ fil, tipusFil, config, exigix }) => {
+    const ctx = await contextDelFil({ fil, tipusFil, config, exigix, refresca: true });
+    exigix();
+    return serialitzaCanvis(ctx.canvis);
+  };
+
+  /* «He parlat amb {nom}: continua» · Només la clau pendent que s'ha mostrat (TOCTOU: el
+     kid es compara amb el pendent refet ara i, dins de la transacció, la fixació amb
+     l'`anterior`), sense marca de verificat. La fixació és per persona: desbloqueja tots
+     els fils amb ella. Torna els canvis del fil ja refets. */
+  const acceptaCanviDelFil = async ({ fil, tipusFil, config, exigix, usuari, kid }) => {
+    const ctx = await contextDelFil({ fil, tipusFil, config, exigix, refresca: true });
+    exigix();
+    const { ci } = claus();
+    const p = typeof usuari === 'string' ? (ctx.canvis?.pendents.get(usuari) ?? null) : null;
+    if (!p || !p.kidNou || typeof kid !== 'string' || aBase64url(p.kidNou) !== kid) {
+      throw errorMotor(CODI_MOTOR.kidCanviat, 'La clau a acceptar ja no és la pendent: cal tornar-la a mirar.', { reintentable: false });
+    }
+    if (!ctx.directori.candidata(usuari)) {
+      throw errorMotor(CODI_MOTOR.senseClauAltre, 'La clau nova no porta cap declaració autofirmada vàlida: no es pot acceptar.', { reintentable: false });
+    }
+    if (typeof magatzem.fixa !== 'function') throw errorMotor(CODI_MOTOR.senseCapacitat, 'El magatzem d’este aparell no desa fixacions.', { reintentable: false });
+    exigix();
+    await fixaSobrePendent(ci, p, { kid: p.kidNou, verificat: false }, exigix);
+    exigix();
+    descartaContextos(fil.id);
+    return canvisDelFil({ fil, tipusFil, config, exigix });
   };
 
   return Object.freeze({
     claus, contextDelFil, prepara, eco, descarta, obri, resumDelFil, encua, drena, publicaAdjunt, urlAdjunt, oblidaTot,
-    numeroDelFil, marcaVerificatDelFil, recompteVerificats
+    numeroDelFil, marcaVerificatDelFil, recompteVerificats, canvisDelFil, acceptaCanviDelFil
   });
 }

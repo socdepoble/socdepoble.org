@@ -10,10 +10,17 @@
  * inventades: cap servei, cap port i cap mòdul criptogràfic (els números són
  * xifres de mostra, no cap empremta). La marca d'una mostra canvia de veres,
  * però només en esta pàgina.
+ *
+ * M02 (Gauntlet 261102 de la marató 261101_2143; disseny E2EE §4.4) · Primer l'espècimen: el número
+ * d'una clau nova sense confirmar i l'alerta de canvi de clau al fil
+ * (AvisClauCanviada) amb el canvi fort pendent, el contacte verificat que ha
+ * canviat, el canvi suau, l'alarma de la clau pròpia i la bifurcació, amb noms i
+ * kids inventats.
  */
 import { useState } from 'react';
 import { Especimen } from '../Especimen.jsx';
 import CosSeguretatXat from '../../../xat/components/CosSeguretatXat.jsx';
+import AvisClauCanviada from '../../../xat/components/AvisClauCanviada.jsx';
 import CosPersonesConfianca from '../../../profile/CosPersonesConfianca.jsx';
 import { estatXifratgeDelFil } from '../../../xat/estatXifratgeFil.js';
 
@@ -46,6 +53,18 @@ function MostraMarcable() {
   );
 }
 
+/* M02 · Els canvis de clau de mostra, amb la forma de useCanvisDeClau (kids inventats). */
+const PEPA = 'mostra-pepa';
+const nomDe = () => 'Pepa';
+const PENDENT_MOSTRA = Object.freeze({ usuari: PEPA, motiu: 'sense-continuitat', kidFixat: 'kid-vell', kidNou: 'kid-nou' });
+const canvisMostra = (extres = {}) => ({ pendents: [], suaus: [], alarmes: [], error: null, ...extres });
+
+/* L'avís suau es tanca de veres (només en esta pàgina). */
+function MostraSuau() {
+  const [suaus, setSuaus] = useState([{ usuari: PEPA, kidAnterior: 'kid-vell', kidNou: 'kid-nou' }]);
+  return <AvisClauCanviada canvis={canvisMostra({ suaus })} nomDe={nomDe} t={t} onTancaSuau={() => setSuaus([])} />;
+}
+
 /* Cada mostra diu que és una maqueta: fora de context, cap captura ha de semblar un xat xifrat. */
 const Mostra = ({ titol, children }) => (
   <>
@@ -61,9 +80,12 @@ export default function EspecimenXatSeguretat() {
         descripcio="Maqueta, encara no activa: el xifratge d’extrem a extrem del xat va darrere d’una bandera apagada i, avui, el xat no és xifrat. Quan s’encenga, el menú «⋯» de cada conversa portarà «Xifratge i número de seguretat», que obri este cos dins d’un diàleg (PanellSeguretatXat): què passa amb els missatges d’esta conversa i, en un xat privat entre dues persones, el número de seguretat per a comparar-lo en persona o per telèfon. La marca «verificat» viu només en este aparell. No hi ha cap interruptor per a xifrar o no una conversa: tota conversa privada es xifra o espera, i no ix en clar."
         contracte={[
           ['estat', '{ estat, potVerificar, text, nota }', '—', 'L’estat del xifratge de la conversa (estatXifratgeDelFil, xat/estatXifratgeFil.js).'],
-          ['numero', '{ estat, numero, kid, verificat, avis, ocupat }', 'null', 'El número del servei (useNumeroSeguretat): calculant, llest, sense-clau, sense-claus-propies, clau-canviada o error; avis: canviat o errorMarca.'],
+          ['numero', '{ estat, numero, kid, verificat, pendent, avis, ocupat }', 'null', 'El número del servei (useNumeroSeguretat): calculant, llest, sense-clau, sense-claus-propies, clau-canviada o error; avis: canviat o errorMarca; pendent: el número d’una clau nova sense confirmar.'],
           ['nom', 'string', '\'\'', 'El nom de l’altra persona, per a {nom}.'],
-          ['onMarca', '(verificat: boolean) => void', 'null', 'Marca o lleva la marca, només per al kid que s’ha mostrat.'],
+          ['onMarca', '(verificat: boolean) => void', 'null', 'Marca o lleva la marca, només per al kid que s’ha mostrat. Sobre un número pendent, accepta i verifica.'],
+          ['canvis', '{ pendents, ocupat, error }', 'null', 'Els canvis de clau del fil (useCanvisDeClau): el pendent del kid que es mostra porta «He parlat amb {nom}: continua».'],
+          ['onAccepta', '(usuari, kid) => Promise<boolean>', 'null', 'Accepta el canvi pendent del kid que es mostra; cap altre.'],
+          ['rescataFocus', 'boolean', 'false', 'El cos naix d’un canvi amb el diàleg obert: quan arriba el número, si el focus és al body, va al primer botó.'],
           ['t', '(clau, reserva) => string', 'reserva', 'El traductor de l’app; fora, el valencià.']
         ]}
         a11y={[
@@ -103,6 +125,11 @@ export default function EspecimenXatSeguretat() {
         <Mostra titol="Una clau nova sense confirmar">
           <CosSeguretatXat estat={ESTATS.directe} nom="Pepa" t={t} numero={{ estat: 'clau-canviada' }} />
         </Mostra>
+        <Mostra titol="Una clau nova sense confirmar: el número nou i les dues eixides">
+          <CosSeguretatXat estat={ESTATS.directe} nom="Pepa" t={t} onMarca={() => {}} onAccepta={() => {}}
+            numero={{ estat: 'llest', numero: NUMERO_NOU_MOSTRA, kid: 'kid-nou', verificat: false, pendent: true, avis: null, ocupat: false }}
+            canvis={{ pendents: [PENDENT_MOSTRA], ocupat: false, error: null }} />
+        </Mostra>
         <Mostra titol="Grup privat: sense número de grup">
           <CosSeguretatXat estat={ESTATS.grup} nom="Les Comares" t={t} />
         </Mostra>
@@ -112,6 +139,47 @@ export default function EspecimenXatSeguretat() {
           <CosSeguretatXat estat={ESTATS.public} t={t} />
           <CosSeguretatXat estat={ESTATS.bloquejat} t={t} />
           <CosSeguretatXat estat={ESTATS.sensePrimitives} t={t} />
+        </Mostra>
+      </Especimen>
+      <Especimen id="xat-canvi-clau" nom="AvisClauCanviada" fitxer="src/sections/xat/components/AvisClauCanviada.jsx"
+        descripcio="Maqueta, encara no activa: l’alerta que el xat posarà davall de la capçalera d’una conversa quan la clau de seguretat d’un contacte canvie, darrere de la mateixa bandera apagada (avui, el xat no és xifrat). Un canvi que no ha confirmat la clau anterior bloqueja l’enviament en eixa conversa, amb la barra de només lectura de sempre, fins que la persona toca «He parlat amb {nom}: continua»; un canvi confirmat per la clau anterior només s’avisa. L’alarma de la clau pròpia i les claus que no coincidixen no tenen cap botó."
+        contracte={[
+          ['canvis', '{ pendents, suaus, alarmes, error }', 'null', 'Els canvis del fil (useCanvisDeClau); error: acceptacio, bifurcacio, kid-no-quadra o historia-incoherent.'],
+          ['nomDe', '(usuari) => string', 'null', 'El nom de cada persona, per a {nom}.'],
+          ['ocupat', 'boolean', 'false', 'Mentre s’accepta: «Treballant…».'],
+          ['onAccepta', '(usuari, kid) => Promise<boolean>', 'null', '«He parlat amb {nom}: continua», només per al kid nou que es mostra.'],
+          ['onObriNumero', '() => void', 'null', 'En un directe, obri el diàleg del número de seguretat.'],
+          ['onTancaSuau', '(usuari, kidNou) => void', 'null', 'Tanca l’avís d’un canvi suau.'],
+          ['destiFocus', '() => HTMLElement', 'null', 'On va el focus després d’acceptar, si s’ha perdut (el camp d’escriure o la llista).'],
+          ['t', '(clau, reserva) => string', 'reserva', 'El traductor de l’app; fora, el valencià.']
+        ]}
+        a11y={[
+          'Cada canvi és una Alerta de Pedra Seca: d’avís o informativa amb rol status; l’alarma i la manipulació, d’error amb rol alert.',
+          'Els botons són Boto de 48 px que diuen el que faran; mentre s’accepta, «Treballant…».',
+          'Després d’acceptar, si el focus ha caigut al body, va al camp d’escriure (en estret, a la llista).'
+        ]}
+        fes={[
+          'Bloquejar l’enviament fins que la persona accepte expressament un canvi que la clau anterior no ha confirmat.',
+          'Acceptar només la clau que es mostra; si ha tornat a canviar, tornar a llegir i mostrar la nova.',
+          'Dir el canvi suau sense alarmar: la clau anterior l’ha confirmat.'
+        ]}
+        noFacis={[
+          'Un botó d’acceptar en l’alarma de la clau pròpia o quan les claus no coincidixen.',
+          'Desbloquejar el compositor perquè una lectura ha fallat.',
+          '«Mai», «100 %», «immune» o «inviolable».'
+        ]}>
+        <Mostra titol="Canvi fort pendent en un xat privat">
+          <AvisClauCanviada canvis={canvisMostra({ pendents: [PENDENT_MOSTRA] })} nomDe={nomDe} t={t} onAccepta={() => {}} onObriNumero={() => {}} />
+        </Mostra>
+        <Mostra titol="Havies verificat el contacte i la seua clau ha canviat">
+          <AvisClauCanviada canvis={canvisMostra({ pendents: [{ ...PENDENT_MOSTRA, motiu: 'verificat' }] })} nomDe={nomDe} t={t} onAccepta={() => {}} onObriNumero={() => {}} />
+        </Mostra>
+        <Mostra titol="Canvi suau (l’avís es pot tancar)"><MostraSuau /></Mostra>
+        <Mostra titol="Alarma de la clau pròpia">
+          <AvisClauCanviada canvis={canvisMostra({ alarmes: [{ tipus: 'clau-propia', kidActiu: null }] })} nomDe={nomDe} t={t} />
+        </Mostra>
+        <Mostra titol="Les claus no coincidixen entre aparells (bifurcació)">
+          <AvisClauCanviada canvis={canvisMostra({ error: 'bifurcacio' })} nomDe={nomDe} t={t} />
         </Mostra>
       </Especimen>
       <Especimen id="persones-confianca" nom="CosPersonesConfianca" fitxer="src/sections/profile/CosPersonesConfianca.jsx"

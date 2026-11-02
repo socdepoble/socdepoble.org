@@ -55,12 +55,12 @@
      Wiki és estreta fins i tot en una pantalla ampla, i en talla el sobrant. */
   .sdp-taula-prosa { max-width: 100%; overflow-x: auto; overscroll-behavior-inline: contain; }
   .sdp-taula-prosa > :where(table) { display: table; overflow: visible; }
-  /* P1-16 (pla 261028_1526 §3.5.1; abast .sdp-taula-prosa) · La capçalera es
-     distingix de les files en clar i en fosc (ΔE2000 ≥ 5). Damunt d'eixe fons
-     l'enllaç taronja de sèrie baixava a 3,84:1: dins de la capçalera, el color
-     del títol, subratllat. La resta de taules conserva sdp.css. */
-  .sdp-taula-prosa :where(thead th) { background: var(--sdp-taula-capcalera-fons); }
-  .sdp-taula-prosa :where(thead th a) { color: var(--sdp-text-titol); text-decoration: underline; }
+  /* P1-16 i PS-03 (B7, marató 261101_2143) · El fons de la capçalera de tota
+     taula és la regla d'elements de sdp.css. Damunt d'eixe fons l'enllaç
+     taronja de sèrie baixava a 3,84:1: dins de la capçalera, el color del
+     títol, subratllat. Va ací i no a sdp.css perquè el color d'enllaç de
+     base.css és de la capa legacy, que guanya la capa sdp. */
+  :where(thead th a) { color: var(--sdp-text-titol); text-decoration: underline; }
 
   .sdp-wrap { flex-wrap: wrap; }
   .sdp-align-center { align-items: center; }
@@ -1338,6 +1338,23 @@
   display: block;
 }
 
+/* IDEA-42 (B7h, marató 261101_2143; spec B7-PEDRA §2.9c) · La targeta 16:9
+   d'una publicació amb enquadrament (UniversalCard · MitjaEnquadrada):
+   excepció a la Pedra Seca §8 (1:1) validada per la directiva IDEA-42 del
+   Mestre. El punt focal arriba en tres propietats pròpies escrites des d'una
+   ref (usePropietatsCss): object-position i transform-origin al mateix punt i
+   l'ampliació al seu voltant (enquadrament.js · posicioDeRetall). Fins que la
+   foto carrega, centrada i sense ampliar. */
+.sp-card-media-container--16-9 {
+  aspect-ratio: 16 / 9;
+}
+
+.sp-card-media-container--16-9 > .sp-card-media {
+  object-position: var(--targeta-mitja-x, 50%) var(--targeta-mitja-y, 50%);
+  transform: scale(var(--targeta-mitja-zoom, 1));
+  transform-origin: var(--targeta-mitja-x, 50%) var(--targeta-mitja-y, 50%);
+}
+
 .sp-card-copyright {
   text-align: center;
 }
@@ -2003,7 +2020,8 @@ header.bar-blue { container-type: inline-size; }
    rail de 56px: 358px de barra en una finestra de 1255; 346-350 a 768 i
    1024 quan la barra de scroll no ocupa lloc). Per davall de 336px de barra
    (un telèfon de 320, el detall de la Wiki a 375, o a 768 i 1024 amb barra
-   de scroll clàssica) encara no hi cap res: decisió pendent del Mestre. */
+   de scroll clàssica) no hi caben les set cel·les: és el pas PS-04, just
+   davall. */
 @container (max-width: 367px) {
   header.bar-blue { gap: 0; padding: 0; }
   .bar-blue .btn-connectar.sp-card-connect {
@@ -2011,6 +2029,26 @@ header.bar-blue { container-type: inline-size; }
     min-width: var(--sdp-touch);
     height: var(--sdp-touch);
     min-height: var(--sdp-touch);
+  }
+}
+/* PS-04 (B7, marató 261101) · Per davall de 336px de barra (el detall amb el
+   rail de 56px fins a 391px de finestra, un telèfon de menys de 336px sense
+   rail, o la tercera columna fins a uns 1135px de finestra) no hi caben les
+   set cel·les de 48: s'amaga Endavant (l'historial cap avant, que també dona
+   el navegador) i en queden sis, 288px. Mira l'ample, no les cel·les: en una
+   barra de sis (sense CONNECTAR o sense Comentar) també s'amaga, encara que
+   hi cabria; afinar-ho demana una classe a BarraBlava.jsx (D-2). Default D-2
+   de la spec B7: es desfà llevant estos dos blocs. La consulta la respon la
+   barra, contenidor dels seus descendents. Sense @container (Chrome 100-104,
+   Firefox 100-109), la xarxa només sap la finestra: amb el rail, fins a
+   391.98px (336 + 56). Per davall de 288px de barra (de 320 a 343px de
+   finestra amb el rail) encara sobreïx: el pas 2 (Traduir) és D-2. */
+@container (max-width: 335.98px) {
+  .bar-blue .bar-blue-left__endavant { display: none; }
+}
+@supports not (container-type: inline-size) {
+  @media (max-width: 391.98px) {
+    .app-grid-shell[data-llista="rail"] .bar-blue .bar-blue-left__endavant { display: none; }
   }
 }
 /* T53 · Catàleg (EspecimenControlsBarra): les mostres de la barra blava.
@@ -3538,6 +3576,12 @@ section.bar-orange > .sdp-emoticona-barra--boto:focus-visible { outline-color: v
     max-height: min(75vh, 720px);
     margin-inline: auto;
   }
+  /* IDEA-42 (B7h, marató 261101_2143; spec B7-PEDRA §2.9b) · CARTELL SENCER:
+     quan l'autor ho tria (portada_sencera), la portada vertical perd el límit
+     d'alçada i es pinta a la seua mida natural, mai ampliada (max-width:
+     100% i width: auto de dalt). Un cartell A4 de 723×1024 es veu sencer a
+     1280px; en mòbil ja omplia l'amplada i no canvia. */
+  .hero-image .sdp-visor__obridor--sencer > img { max-height: none; }
 }
 
 /* ── Fase D (261020, tasca 2; pla 261020_1300) · MODERACIÓ: «Més opcions»

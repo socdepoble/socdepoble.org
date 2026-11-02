@@ -18,8 +18,9 @@ import { aBase64url, deBase64url } from '../xifratXatCripto.js';
 import { getResolvedConfig, request } from './runtime.js';
 import { usuariDeSessio } from '../identitat.js';
 import { transportAdjunts } from './xatMultimedia.js';
-import { errorAdjuntXat, tempsLimitPujada } from '../xatMultimedia.js';
-import { MAXIM_BLOB_ADJUNT, MIME_XIFRAT } from '../xatMultimediaXifrat.js';
+/* B2e (marató 261101_2143) · Del mòdul neutral, mai de xatMultimediaXifrat.js: este transport
+   no ha d'arrossegar el protocol ni els formats al paquet (index.e2eeApagat.produccio.test.js). */
+import { MAXIM_BLOB_ADJUNT, MIME_XIFRAT, errorAdjuntXat, tempsLimitPujada } from '../xatMultimedia.js';
 
 const { BUCKET, SEGONS_SIGNATURA, UUID, context, vigent, tradueix, crida, primera, puja } = transportAdjunts;
 

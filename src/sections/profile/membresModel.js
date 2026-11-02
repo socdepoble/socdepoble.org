@@ -11,6 +11,8 @@
      · una organització membre sempre és 'member' i no hereta cap permís.
    ═══════════════════════════════════════════════════════════════════ */
 import { esRolQueMana } from '../../components/universal/identitat/rols.js';
+/* IDEA-24 (marató 261101_2143, B4) · Els tipus que es poden transferir: una sola llista, la del contracte i la RPC. */
+import { TIPUS_TRANSFERIBLES } from '../../data/contracte.js';
 
 /** Les lletres mínimes per a cercar candidats (persones o organitzacions). */
 export const MINIM_CERCA = 2;
@@ -73,10 +75,14 @@ export function accionsSobre(membre, { rolMeu, jo } = {}) {
 
 /**
  * IDEA-24 · Només la propietària ('owner') pot transferir la propietat a una
- * altra persona que ja siga membre ('admin' o 'member') de l'organització.
+ * altra persona que ja siga membre ('admin' o 'member') de l'organització, i
+ * només d'un grup o d'una empresa (`kind` de TIPUS_TRANSFERIBLES, contracte.js:
+ * una entitat o un ajuntament canvia de titular per reclamació revisada).
+ * Sense `kind`, o amb un tipus desconegut, no (fallada tancada).
  */
-export function potTransferirPropietat(membre, { rolMeu, jo } = {}) {
-  if (!membre || rolMeu !== 'owner' || membre.tipus !== 'persona' || membre.rol === 'owner') return false;
+export function potTransferirPropietat(membre, { rolMeu, jo, kind } = {}) {
+  if (!membre || rolMeu !== 'owner' || !TIPUS_TRANSFERIBLES.includes(kind)) return false;
+  if (membre.tipus !== 'persona' || membre.rol === 'owner' || membre.id == null) return false;
   if (jo != null && String(membre.id) === String(jo)) return false;
   return true;
 }

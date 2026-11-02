@@ -215,4 +215,31 @@ describe('bandera encesa (sonda) i servei simulat', () => {
     await act(async () => { await result.current.marca(true); });
     expect(result.current).toMatchObject({ estat: ESTAT_NUMERO.llest, numero: NUMERO, verificat: false, ocupat: false, avis: 'errorMarca' });
   });
+
+  /* M02 (marató 261101_2143; disseny §4.4) · El número de la clau nova d'un canvi fort
+     ix amb `pendent`; només val el booleà de veres; la marca (accepta i verifica) torna
+     el número sense pendent, i sense número el pendent no queda enganxat. */
+  test('M02 · un número pendent ho diu; només pendent === true compta; la marca el deixa sense pendent', async () => {
+    m.servei = serveiSimulat({
+      numeroSeguretat: vi.fn(async () => ({ usuari: PERSONA, kid: 'kid-nou', numero: NUMERO_NOU, verificat: false, pendent: true })),
+      marcaVerificat: vi.fn(async (_fil, { kid, verificat }) => ({ usuari: PERSONA, kid, numero: NUMERO_NOU, verificat, pendent: false }))
+    });
+    const { result } = renderHook(() => useNumeroSeguretat({ fil: FIL, obert: true, potVerificar: true }));
+    expect(result.current.pendent).toBe(false);
+    await waitFor(() => expect(result.current.estat).toBe(ESTAT_NUMERO.llest));
+    expect(result.current).toMatchObject({ numero: NUMERO_NOU, kid: 'kid-nou', verificat: false, pendent: true });
+    await act(async () => { await result.current.marca(true); });
+    expect(m.servei.marcaVerificat).toHaveBeenLastCalledWith('f-directe', { kid: 'kid-nou', verificat: true }, {});
+    expect(result.current).toMatchObject({ verificat: true, pendent: false, ocupat: false });
+
+    m.servei.numeroSeguretat.mockResolvedValueOnce({ usuari: PERSONA, kid: 'kid-a', numero: NUMERO, verificat: false, pendent: 'true' });
+    const segon = renderHook(() => useNumeroSeguretat({ fil: { ...FIL, id: 'f-altre' }, obert: true, potVerificar: true }));
+    await waitFor(() => expect(segon.result.current.estat).toBe(ESTAT_NUMERO.llest));
+    expect(segon.result.current.pendent).toBe(false);
+
+    m.servei.numeroSeguretat.mockRejectedValueOnce(errorAmb('kid-no-fixat'));
+    const tercer = renderHook(() => useNumeroSeguretat({ fil: { ...FIL, id: 'f-tercer' }, obert: true, potVerificar: true }));
+    await waitFor(() => expect(tercer.result.current.estat).toBe(ESTAT_NUMERO.clauCanviada));
+    expect(tercer.result.current).toMatchObject({ numero: null, pendent: false });
+  });
 });

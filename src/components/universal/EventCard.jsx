@@ -112,7 +112,7 @@ export function rutaDeLaBoinaDeLActe(item, deQuiSigna) {
    navigation.js): ho diu qui pinta la targeta (TargetaDelMur).
    Fase D (261020, tasca 2) · `ambModeracio` (false), explícita: «Més
    opcions» a la caputxa (UniversalCard). Sense, el DOM de sempre. */
-export function EventCard({ item, esdeveniment = null, onConnect, objecte, authorHref, authorName, authorAvatar, ambModeracio = false }) {
+export function EventCard({ item, esdeveniment = null, onConnect, objecte, authorHref, authorName, authorAvatar, ambModeracio = false, enquadramentTargeta = null }) {
   const data = dataDeLActe(esdeveniment, item);
   const insignia = insigniaDeCalendari(esdeveniment, data.dateTime);
 
@@ -134,6 +134,12 @@ export function EventCard({ item, esdeveniment = null, onConnect, objecte, autho
       imageUrl={fontImatgePropia(resolveAsset((typeof item.image_url === 'string' ? item.image_url : null) || (typeof item.image === 'string' ? item.image : null) || ''))}
       imageAlt={item.imageAlt || item.title || item.name || ''}
       imatgePrivada
+      /* IDEA-42 (B7h, marató 261101_2143) · La targeta 16:9 amb el punt focal
+         de l’autor: l’enquadrament ja net que passa TargetaDelMur
+         (mapejadorSeccions · portadaDeLaPublicacio; components/ no el llig).
+         Sense, la targeta de sempre. */
+      formaMitja={enquadramentTargeta?.format}
+      posicioMitja={enquadramentTargeta ?? undefined}
       author={authorName || item.author_name || item.author || "Sóc de Poble"}
       /* T6 · Derogat per l'ordre del Mestre del 261004 (prompt 261004_0515):
          el sistema ja no porta a /pobles, i qui signa ja té enllaç. */

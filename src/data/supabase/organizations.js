@@ -1,6 +1,6 @@
 import { getCurrentUser, getResolvedConfig, request } from './runtime.js';
 import { normalitzaContacte, normalitzaCorreu, validaCorreu } from '../correuOrganitzacio.js';
-import { LIMIT_DIRECTORI_ENTITATS, errorDeMembre, membreDOrganitzacio } from '../contracte.js';
+import { LIMIT_DIRECTORI_ENTITATS, destinatariaDeTransferencia, errorDeMembre, membreDOrganitzacio } from '../contracte.js';
 import { esPobleImpossible, pobleDOrganitzacio, pobleDelFiltre } from '../pobleOrganitzacio.js';
 
 /* Lògica d'Usuari · en seed i local les organitzacions on la persona mana són
@@ -584,6 +584,7 @@ export async function desaContacteOrganitzacio(orgId, { correu = '', public: esP
    ═══════════════════════════════════════════════════════════════════ */
 const RE_CODI_ORGMEM = /SDP-ORGMEM-\d{3}/;
 const SENSE_MEMBRES = 'El servidor d’este poble encara no gestiona els membres de les organitzacions.';
+const SENSE_TRANSFERENCIA = 'El servidor d’este poble encara no sap transferir la propietat de les organitzacions.';
 const TIPUS_MEMBRE = new Set(['persona', 'organitzacio']);
 const ROLS_MEMBRE = new Set(['owner', 'admin', 'member']);
 
@@ -681,4 +682,46 @@ export async function llevaMembreOrganitzacio(orgId, dades = {}, config = {}) {
   }
   /* La RPC torna un booleà: true si hi era, false si ja no hi era (idempotent). */
   return { llevat: (Array.isArray(resposta) ? resposta[0] : resposta) === true };
+}
+
+/* IDEA-24 (marató 261101_2143, B4) · Capacitat OPCIONAL
+   'transferenciaPropietat' (contracte.js). En remot, la RPC
+   transfereix_propietat_organitzacio de 2610311500 (una transacció, pany
+   sdp-orgowner, FOR UPDATE i el disparador diferit sdp_una_propietaria); en
+   seed i local, localPerfils amb les mateixes regles. Els identificadors es
+   validen abans de la xarxa, com a les altres tres crides. Sense la fila que
+   confirma el canvi (una sola, amb els tres ids esperats) no s'anuncia cap
+   èxit. Un servidor sense la migració (404 o PGRST202) torna NO-DISPONIBLE
+   amb la seua frase: els membres sí que hi són; la transferència, no. */
+function errorDeTransferencia(error) {
+  if (jaNormalitzat(error) || esCancel(error) || RE_CODI_ORGMEM.test(String(error?.message || ''))) return errorDeMembres(error);
+  return esquemaAbsent(error) ? errorAmbCodi(SENSE_TRANSFERENCIA, 'NO-DISPONIBLE', error) : error;
+}
+const idDeFila = (valor) => String(valor ?? '').trim().toLowerCase();
+
+export async function transfereixPropietatOrganitzacio(orgId, dades = {}, config = {}) {
+  const { usuari, local } = contextDeMembres(config);
+  const destinataria = destinatariaDeTransferencia(dades);
+  if (local) return (await perfilsLocals()).transfereixPropietatOrganitzacio(orgId, destinataria.id, usuari);
+  const { id, membreId } = idsRemots(orgId, destinataria, config);
+  const jo = idDeFila(usuari.id);
+  /* Com la RPC: ningú no es cedix la propietat a ella mateixa (004), i sense xarxa. */
+  if (membreId === jo) throw errorDeMembre('SDP-ORGMEM-004');
+  let resposta;
+  try {
+    resposta = await request('/rest/v1/rpc/transfereix_propietat_organitzacio', config, {
+      method: 'POST', signal: config.signal,
+      body: { p_organization_id: id, p_nou_owner_id: membreId }
+    });
+  } catch (error) {
+    throw errorDeTransferencia(error);
+  }
+  /* RETURNS TABLE d'una fila: exactament una (dos o cap no confirmen res). */
+  const fila = Array.isArray(resposta) ? (resposta.length === 1 ? resposta[0] : null) : resposta;
+  const confirmada = fila !== null && typeof fila === 'object'
+    && idDeFila(fila.organization_id) === id
+    && idDeFila(fila.nou_owner_id) === membreId
+    && idDeFila(fila.antic_owner_id) === jo;
+  if (!confirmada) throw new Error('El servidor no ha confirmat la transferència. Torna a carregar la llista.');
+  return { organizationId: id, anticOwnerId: jo, nouOwnerId: membreId };
 }

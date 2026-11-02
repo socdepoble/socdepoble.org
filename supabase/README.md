@@ -1038,7 +1038,10 @@ description: "Documentació canònica de Sóc de Poble."
   `sdp-orgowner:` compartit amb `desa_membre_organitzacio` i
   `lleva_membre_organitzacio`. Torna a crear la política `orgs_read_auth` sense
   `created_by`: després d'una transferència, la creadora que ja no és membre no
-  llig una fitxa `members`. Cap client del port la crida encara. Abans:
+  llig una fitxa `members`. El client del port la crida des de la marató
+  261101_2143 (`transfereixPropietatOrganitzacio`, capacitat
+  `transferenciaPropietat`); sense la migració aplicada, el client diu
+  `NO-DISPONIBLE` i deixa d'oferir-la. Abans:
   `select kind, visibility, count(*) from
   public.organizations group by 1, 2;`. Va després de 2610290400. Idempotent i
   en una sola transacció;
@@ -1249,6 +1252,43 @@ description: "Documentació canònica de Sóc de Poble."
   Idempotent i en una sola transacció;
   **NO aplicada: l'aplica el Mestre, mai un agent**.
 
+- `migrations/2611020106_ap_inbox_persistencia_i_cua.sql`
+  P1-23 (fase 2) i la part ActivityPub de P2-07 (marató 261101_2143, carril
+  M14-B5-SQL): la persistència de la inbox ActivityPub i la cua d'eixida
+  signada, que fa servir la funció `ap-inbox-verifica` (no desplegada) a
+  través de `magatzemPostgrest.js`. Cinc taules a `private`
+  (`ap_inbox_lliuraments`, `ap_seguidors`, `ap_alertes_remotes`,
+  `ap_lapides` i `ap_cua_eixida`) amb RLS, sense cap política i amb tots els
+  permisos de taula revocats, també a `service_role`, que salta l'RLS: cap rol
+  de l'API les llig ni les escriu directament. Tretze RPC `public.ap_*`
+  SECURITY DEFINER, amb el `search_path` buit, la guarda
+  `auth.role() = 'service_role'` i EXECUTE només per a `service_role` (el
+  patró de `purga_fitxers_*`). Paràmetres tipats: l'únic jsonb és el cos de
+  `ap_cua_encua` (un objecte de 64 KiB com a molt, amb el mateix id que
+  l'activitat). Quotes amb els missatges de la memòria (`SDP-AP-QUOTA`,
+  54000): per host de l'actor, un sostre global per als subdominis comodí
+  (`p_maxim`, que es pot ometre: 100.000), per actor local i global de les
+  alertes. TTL a cada reclamació i a `ap_purga()`. A la cua, encuar és
+  idempotent per (activitat, inbox), el mateix Accept es reenvia com a molt
+  una vegada per hora i mai un cos distint amb el mateix id, i una fila
+  reclamada 50 vegades sense cap resolució passa a fallida. No encén res:
+  sense la funció desplegada, les claus de l'actor i la llista de nodes de
+  confiança, les taules es queden buides. Abans (lectura):
+  `select to_regclass('private.ap_inbox_lliuraments') is null as sense_inbox_ap, to_regprocedure('public.ap_cua_reclama(integer)') is null as sense_cua_ap;`
+  (cert i cert). Verificació posterior (lectura):
+  `select to_regclass('private.ap_cua_eixida') is not null as te_cua_ap, has_function_privilege('service_role', 'public.ap_inbox_reclama(text,text,text,text,integer,integer,integer)', 'execute') as servidor_reclama, has_function_privilege('authenticated', 'public.ap_inbox_reclama(text,text,text,text,integer,integer,integer)', 'execute') as authenticated_reclama, has_table_privilege('service_role', 'private.ap_seguidors', 'select') as servidor_llig_taula;`
+  (cert, cert, fals i fals). La inversa és a la capçalera i esborra els
+  seguidors, les alertes i la cua. L'execució (privilegis per defecte hostils
+  a `private` i la mutació sense els revoke de taula, guardes, idempotència,
+  quotes, TTL, cua i purga: 108 comprovacions) la va fer el torn
+  torn_3d9af83b a PGlite 0.3.16, fora del repositori: és evidència no
+  versionada, i PGlite no prova la concurrència real de `SKIP LOCKED` ni dels
+  panys. La prova estàtica és `src/data/supabase/apInbox.migracio.test.js`
+  (també la paritat dels noms i dels paràmetres de les RPC amb
+  `magatzemPostgrest.js`). Va abans del desplegament de la funció (vegeu
+  «Funció `ap-inbox-verifica`»). Idempotent i en una sola transacció;
+  **NO aplicada: l'aplica el Mestre, mai un agent**.
+
 - `seed.sql`
   Contingut inicial del portal.
 
@@ -1345,7 +1385,7 @@ verificador sense avisos.
   11. `2610311900` → `2611011800` (P2-09: només després de llegir les tres consultes «Abans» de la seua capçalera, i aplicada per la propietària de l'RPC; si mai es reaplica 2610311900, cal tornar a aplicar 2611011800).
   12. Primer el desplegament web amb el text final de `/legal`; després `2611012257` (T11-05: si s'aplica abans, el servidor demana acceptar la 2.3 mentre `/legal` encara mostra la 2.2; i només després de llegir la consulta «Abans» de la seua vinyeta). Abans de desplegar, cal tornar a construir el web i el connector (els `dist/` de l'1-11 a les 19:28 porten una altra «Versió 2.3», sense la ubicació de les fotos) i comprovar que el `/legal` desplegat té l'empremta de la migració.
 
-### Taula canònica ordenada: 60 fitxers de R1 + candidates 1500, 1800, 1900 i 2000 + assalt 2611011500, 2611011510 i 2611011800 + `seed.sql` + 2 snippets (`P0-05` / `DF-06`)
+### Taula canònica ordenada: 60 fitxers de R1 + candidates 1500, 1800, 1900 i 2000 + assalt 2611011500, 2611011510 i 2611011800 + marató 2611012257 i 2611020106 + `seed.sql` + 2 snippets (`P0-05` / `DF-06`)
 
 | Ordre | Versió | Fitxer a `supabase/migrations/` | Estat declarat | Objectiu resumit |
 | :---: | :--- | :--- | :--- | :--- |
@@ -1417,6 +1457,7 @@ verificador sense avisos.
 | 66 | `2611011510` | `2611011510_versio_minima_client.sql` | **NO aplicada: l'aplica el Mestre** | versió mínima de l'app nativa (P0-23) |
 | 67 | `2611011800` | `2611011800_contracte_exportacio_federacio_v1.sql` | **NO aplicada: l'aplica el Mestre** | contracte v1 de l'exportació de federació (P2-09) |
 | 68 | `2611012257` | `2611012257_politica_privacitat_2_3.sql` | **NO aplicada: l'aplica el Mestre** | política de privacitat 2.3 segellada (T11-05) |
+| 69 | `2611020106` | `2611020106_ap_inbox_persistencia_i_cua.sql` | **NO aplicada: l'aplica el Mestre** | persistència de la inbox ActivityPub i cua d'eixida (P1-23 fase 2) |
 
 | Artefacte complementari | Ruta dins de `supabase/` | Rol operatiu |
 | :--- | :--- | :--- |
@@ -2278,3 +2319,96 @@ resta del poble, després d'una sola petició fallida (per sessió, o una cada
 30–60 s quan torna a demanar, si el navegador veu el 404 com una xarxa que
 no arriba); obrir-lo en producció (`VITE_SDP_APP_LECTOR=1` i l'entorn del
 manifest) també és decisió del Mestre.
+
+## Funció `ap-inbox-verifica` (inbox ActivityPub, fase 2)
+
+P1-23 (fase 2) i la part ActivityPub de P2-07 (marató 261101_2143, Bloc B5).
+Rep les activitats ActivityPub dirigides als actors locals, en verifica la
+signatura HTTP (draft-cavage-12, el perfil de Mastodon; no és RFC 9421), les
+processa amb la biblioteca pura `src/data/federacio/inboxActivityPub.js` i
+envia els Accept per una cua signada amb reintents. Fitxers, a
+`supabase/functions/ap-inbox-verifica/`: `index.ts` (l'embolcall Deno, que
+només llig les variables i crida `Deno.serve`), `gestor.js` (les rutes i
+l'obtenció de claus), `magatzemPostgrest.js` (el magatzem de la inbox i la cua
+sobre les RPC `public.ap_*`), `cuaLliurament.js` (la signatura, l'espera
+exponencial i el buidatge de la cua) i `conformitatMagatzem.js` (el joc de
+casos que passen igual la memòria i l'adaptador), amb les seues proves.
+Necessita `migrations/2611020106_ap_inbox_persistencia_i_cua.sql` aplicada:
+sense les RPC, el magatzem respon `magatzem_no_disponible` i la inbox, 503.
+
+Rutes (el camí intern és el de la petició sense el prefix de la funció):
+
+1. `POST /ap/inbox/<slug>`: apagada (sense `SDP_AP_ACTIVA=1`), respon
+   `503 {"error":"federacio_apagada"}` i no llig res. Encesa, un altre mètode
+   és 405 i un `Content-Length` de més de 256 KiB és 413 abans de llegir; el cos es llig
+   per flux amb el mateix sostre. La signatura es verifica amb el `host` i el
+   camí públics de `SDP_AP_INBOX_PUBLICA` (no amb els que reescriga la
+   passarel·la): una petició signada per a un altre host o camí no verifica.
+   Una activitat nova es reclama (`ap_inbox_reclama`, idempotent per id) abans
+   de cap efecte, i l'Accept d'un Follow va a la cua (`ap_cua_encua`). Una
+   quota esgotada (`SDP-AP-QUOTA`) és 429 amb `Retry-After: 600`; el magatzem
+   caigut, 503 amb `Retry-After: 60` (el remot ho torna a provar).
+2. `POST /cua` amb la capçalera `x-sdp-cron` (comparada en temps constant):
+   apagada, `503 federacio_apagada` i no envia res. Encesa, buida la cua per
+   lots (`ap_cua_reclama`, `FOR UPDATE SKIP LOCKED`, reserva de 10 minuts),
+   signa cada lliurament amb la clau de l'actor local (`<actor>#main-key`,
+   rsa-sha256), l'envia sense seguir redireccions i amb un topall de 10 s, el
+   resol (`ap_cua_resol`) i acaba amb `ap_purga()`. Respon
+   `{ok, fets, reintents, fallits, sense_provar, lots, esgotat, purga}`: només
+   recomptes. Sense la capçalera bona, 401; la base caiguda, 502.
+3. La resta, 404.
+
+Reintents. 2xx és fet; un 3xx (redirecció) i els 4xx, llevat de 408, 425 i
+429, són fallits; 408, 425, 429, 5xx, la xarxa o el temps esgotat són reintents, amb
+espera exponencial i «equal jitter» (60 s de base, 6 h com a molt per
+espera, un `Retry-After` n'és el mínim). Al desé intent, fallit. Una inbox que
+resol a una adreça no pública és fallida (`adreca_vetada`). Una fila que el
+worker reclama 50 vegades sense resoldre-la mai passa sola a fallida. La purga
+lleva la cua feta de fa més de 7 dies i la fallida de fa més de 30.
+
+Variables. `SDP_AP_ACTIVA` (només `1` l'encén), `SDP_AP_ORIGEN` (l'origen dels
+ids d'actor; per defecte `https://socdepoble.org`), `SDP_AP_INBOX_PUBLICA`
+(l'URL base on arriben els POST; per defecte, l'origen),
+`SDP_AP_CLAUS_PRIVADES` (JSON `{"<slug>": "<PKCS#8 PEM RSA>"}`; un slug només
+és actor local si té clau i és de `socdepoble` o dels pobles federats),
+`SDP_AP_NODES_CONFIANCA` (orígens separats per comes; buit = cap alerta
+remota) i `SDP_CRON_SECRET` (el mateix de `compte-apple` i `purga-fitxers`).
+`SUPABASE_URL` i `SUPABASE_SERVICE_ROLE_KEY` els injecta Supabase. Amb la
+configuració incompleta, la funció respon `503 config` sense dir quina
+variable falta. Cap secret ni cap cos d'activitat ix als registres ni a les
+respostes.
+
+Desplegament (acció del Mestre; la funció autoritza ella mateixa, amb la
+signatura o amb `x-sdp-cron`):
+
+```
+supabase functions deploy ap-inbox-verifica --no-verify-jwt --project-ref <ref>
+```
+
+L'ordre: 2611020106 aplicada → secrets → desplegament → programació de `/cua`.
+La porta `funcio-ap-inbox-verifica` de `ordre_desplegament.json` ho diu al
+verificador de migracions.
+
+Programació: Integrations → Cron → Create job → Supabase Edge Function
+`ap-inbox-verifica`, mètode POST, camí `/cua`, cada 5 minuts (`*/5 * * * *`),
+capçalera `x-sdp-cron: <SDP_CRON_SECRET>`, cos `{}` i un temps d'espera de
+60 s com a mínim.
+
+La cua encallada (lectura, com a `postgres`; els recomptes no ensenyen cap
+inbox):
+
+```
+select estat, intents, ultim_error, count(*) from private.ap_cua_eixida group by 1, 2, 3 order by 1, 2 desc;
+```
+
+Què NO està encés, encara que es desplegue (decisions D-1 a D-5 del Mestre,
+especificació B5): el camp `inbox` dels actors publicats continua apuntant a
+`/ap/inbox/<slug>`, que el web respon amb 405 (D-1: on arriba el POST, directe
+a la funció o per un proxy al mateix origen); els actors no publiquen
+`publicKey` ni hi ha cap clau (D-2), de manera que cap remot no pot verificar
+un Accept; la llista de nodes de confiança és buida (D-3); la migració no
+està aplicada ni la funció desplegada (D-4); i el text de privacitat per a
+les dades dels seguidors remots està pendent (D-5). La interoperabilitat real
+amb Mastodon no s'ha provat: no hi ha desplegament ni endpoint públic. El
+residu de DNS rebinding és el mateix de `noticies`: cal un egrés aïllat abans
+d'encendre-ho.

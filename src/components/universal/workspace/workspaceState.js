@@ -188,8 +188,11 @@ export function primerElementTriable(items, categoryId) {
 /* T7 (P5) · `ambit`, opcional: el Set d'ids que compten com la categoria
    activa (ella i les seues subcarpetes, WorkspaceProvider amb
    inclouDescendents). Sense, només la categoria activa, com sempre. */
-export function filterWorkspaceItems(items, state, { ambit = null } = {}) {
-  const query = normalitza(state.query.trim());
+export function filterWorkspaceItems(items, state, { ambit = null, ambConsulta = true } = {}) {
+  /* B6-B2 (IDEA-46, marató 261101_2143) · Amb `ambConsulta: false` (només el
+     booleà) la consulta no filtra: la secció ja dona els elements de la seua
+     cerca. La carpeta i les etiquetes continuen filtrant. */
+  const query = ambConsulta === false ? '' : normalitza(state.query.trim());
 
   return items.filter((item) => {
     const categories = (item.categoryIds || []).map(String);

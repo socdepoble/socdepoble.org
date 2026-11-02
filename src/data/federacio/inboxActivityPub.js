@@ -7,14 +7,15 @@
  * (idempotència, seguidors i alertes) i el lliurament signat de l'Accept són
  * de qui la desplega.
  *
- * Honestedat del desplegament: hui CAP servidor no la crida. Firebase és
- * estàtic, i /ap/inbox/<slug> continua responent 405 al servidor de
- * desenvolupament i a NixOS (fase 1). Activar-la demana un runtime
- * (atenPeticioInbox darrere de Deno.serve o de node:http), el parell de claus
- * de l'actor (la pública amb construeixActor.clauPublicaPem; la privada,
- * secret del servidor), taules persistents i el lliurament de l'Accept amb
- * signaPeticioHttpActivityPub. Cap codi de src/ de producció no importa este
- * mòdul (la prova ho vigila): no entra al paquet del navegador.
+ * Honestedat del desplegament: la crida supabase/functions/ap-inbox-verifica
+ * (B5, marató 261101_2143), que NO està desplegada i, desplegada, naix
+ * apagada (SDP_AP_ACTIVA). Firebase és estàtic, i /ap/inbox/<slug> continua
+ * responent 405 al servidor de desenvolupament i a NixOS (fase 1). Encendre-la
+ * demana el parell de claus de l'actor (la pública amb
+ * construeixActor.clauPublicaPem; la privada, secret del servidor), aplicar la
+ * migració de les taules persistents i decidir on arriba el POST. Cap codi de
+ * src/ de producció no importa este mòdul (la prova ho vigila): no entra al
+ * paquet del navegador.
  *
  * Límits que posa qui desplega (la biblioteca no els pot posar sola):
  *   · el cos es llig amb un sostre de MAXIM_COS_INBOX + 1 octets, mai amb
@@ -40,6 +41,8 @@ import {
 
 export const MAXIM_COS_INBOX = 256 * 1024;
 export const LIMITS_SIGNATURA = Object.freeze({ capcalera: 4096, keyId: 2048, signatura: 2048, capcaleres: 16, url: 2048 });
+/* B5 · La clau pública més llarga que s'importa (importaClauPublica): qui la desa en memòria cau no en guarda cap de més llarga. */
+export const LIMITS_CLAU_PUBLICA = Object.freeze({ pem: 8192, multibase: 128 });
 export const FINESTRA_SIGNATURA = Object.freeze({ caducitatMs: 5 * 60_000, maximMs: 12 * 3_600_000, margeMs: 3_600_000 });
 export const ALGORISMES = Object.freeze(['rsa-sha256', 'hs2019', 'ed25519']);
 export const TIPUS_ENTRANTS = Object.freeze(['Follow', 'Undo', 'Create', 'Delete', 'Announce']);
@@ -48,6 +51,15 @@ export const TIPUS_OBJECTE_ALERTA = Object.freeze(['Note', 'Article', 'Page', 'E
 /* La mateixa vigència que VIGENCIA_ALERTA_MS de src/sections/mur/alertesMunicipals.js (la prova ho compara). */
 export const VIGENCIA_ALERTA_REMOTA_MS = 72 * 3_600_000;
 export const MAXIM_VIGENCIA_ALERTA_MS = 30 * 24 * 3_600_000;
+/* B5 · Quant es conserva l'id d'una activitat rebuda: la finestra màxima en què una rèplica encara verificaria (14 h). */
+export const RETENCIO_ACTIVITAT_MS = FINESTRA_SIGNATURA.maximMs + 2 * FINESTRA_SIGNATURA.margeMs;
+/* Una làpida dura més que la vigència màxima d'una alerta més la retenció. */
+export const RETENCIO_LAPIDA_MS = MAXIM_VIGENCIA_ALERTA_MS + RETENCIO_ACTIVITAT_MS;
+/* Una alerta caducada es conserva un dia més abans de purgar-la (el mateix interval que ap_purga). */
+export const MARGE_PURGA_ALERTA_MS = 24 * 3_600_000;
+/* B5 · Una reclamació «en curs» de fa més de 5 min és d'un procés que va caure, o d'un efecte i un alliberament que
+   van fallar alhora: es torna a prendre (el mateix interval que ap_inbox_reclama). */
+export const REPRESA_EN_CURS_MS = 5 * 60_000;
 
 const DATA_HTTP = /^(?:Mon|Tue|Wed|Thu|Fri|Sat|Sun), \d{2} (?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) \d{4} \d{2}:\d{2}:\d{2} GMT$/;
 const BASE64 = /^[A-Za-z0-9+/]+={0,2}$/;
@@ -55,7 +67,11 @@ const NOM_PARAMETRE = /^[A-Za-z]{1,16}$/;
 const ENTER = /^\d{1,12}$/;
 const NOM_CAPCALERA = /^(?:\([a-z-]+\)|[a-z0-9-]+)$/;
 const CAMI_INBOX = /^\/ap\/inbox\/([a-z0-9]+(?:-[a-z0-9]+)*)$/;
+/* B5 · El prefix d'una inbox que no penja de l'arrel: buit, o segments «/nom» (cada repetició comença per «/»: lineal). */
+const PREFIX_CAMI = /^(?:\/[A-Za-z0-9._~-]+)*$/;
 const IPV4 = /^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$/;
+/* B5 · Un host LDH tal com el deixa el parser (minúscules i punycode): sense «_» ni els signes que el parser admet. Lineal. */
+const HOST_LDH = /^[a-z0-9.-]+$/;
 /* Noms de la mateixa màquina o de la xarxa local (RFC 6761, 6762 i 8375, i .internal d'ICANN). */
 const DOMINIS_LOCALS = Object.freeze(['localhost', 'localdomain', 'local', 'internal', 'home.arpa']);
 const ED25519_SPKI = Object.freeze([0x30, 0x2a, 0x30, 0x05, 0x06, 0x03, 0x2b, 0x65, 0x70, 0x03, 0x21, 0x00]);
@@ -74,6 +90,15 @@ const b64 = (buffer) => { let s = ''; for (const b of new Uint8Array(buffer)) s 
 const desdeB64 = (text) => Uint8Array.from(atob(text), (c) => c.charCodeAt(0));
 const hex = (buffer) => Array.from(new Uint8Array(buffer), (b) => b.toString(16).padStart(2, '0')).join('');
 const no = (motiu) => ({ valida: false, motiu });
+/* B5 · Un subrogat sense parella (PostgreSQL rebutja el JSON que el porta): l'alta sense baixa, o la baixa sense alta. Lineal. */
+const SUBROGAT_SOL = /[\ud800-\udbff](?![\udc00-\udfff])|(?<![\ud800-\udbff])[\udc00-\udfff]/g;
+/* Talla un text desat sense deixar mig emoji al final, i canvia els subrogats solts per U+FFFD. */
+const tallaBe = (text, maxim) => {
+  let tros = text.slice(0, maxim);
+  const darrer = tros.charCodeAt(tros.length - 1);
+  if (darrer >= 0xd800 && darrer <= 0xdbff) tros = tros.slice(0, -1);
+  return tros.replace(SUBROGAT_SOL, '\ufffd');
+};
 
 /**
  * Una URL https pública, o null: sense credencials, ni IP literal, ni host
@@ -82,15 +107,37 @@ const no = (motiu) => ({ valida: false, motiu });
  * filtre lèxic: qui desplega ha de bloquejar també les IP privades DESPRÉS de
  * resoldre el DNS (com el PrivateAddressCheck de Mastodon) en obtenClauPublica,
  * en obtenDocument i en el lliurament de l'Accept.
+ * B5 (ARB-M13-03) · A més, la forma que accepten les CHECK de la migració
+ * 2611020106, perquè la memòria i l'SQL diguen el mateix (abans, l'SQL hi
+ * responia 23514 → 503 i el remot reintentava sense fi): el text comença
+ * literalment per «https://» (ni «HTTPS://» ni espais davant, que el parser
+ * normalitza), té de 12 caràcters (https://a.bc, la més curta amb un TLD real)
+ * a 2048, també la .href normalitzada, i el host és LDH (cap «_»: cap
+ * certificat públic no en porta) de 253 caràcters com a molt.
  */
 export function urlRemota(valor) {
-  if (typeof valor !== 'string' || valor.length > LIMITS_SIGNATURA.url) return null;
+  if (typeof valor !== 'string' || valor.length < 12 || valor.length > LIMITS_SIGNATURA.url || !valor.startsWith('https://')) return null;
   let url = null;
   try { url = new URL(valor); } catch { return null; }
   const host = url.hostname;
   if (url.protocol !== 'https:' || url.username || url.password || !host.includes('.') || host.endsWith('.')
+    || host.length > 253 || !HOST_LDH.test(host) || url.href.length > LIMITS_SIGNATURA.url
     || IPV4.test(host) || host.startsWith('[') || DOMINIS_LOCALS.some((d) => host === d || host.endsWith(`.${d}`))) return null;
   return url;
+}
+
+/**
+ * B5 · El host de la quota d'un actor: el hostname en minúscules i sense els
+ * punts finals, o '' si no és una URL. Tots els ports d'un host són una sola
+ * quota (Gauntlet B, B-V1). La fan servir el magatzem en memòria i l'adaptador
+ * PostgREST (supabase/functions/ap-inbox-verifica), que així calculen la
+ * mateixa quota.
+ */
+export function hostDeQuota(actor) {
+  let host = '';
+  try { host = new URL(actor).hostname.toLowerCase(); } catch { return ''; }
+  while (host.endsWith('.')) host = host.slice(0, -1);
+  return host;
 }
 const idDe = (valor) => (typeof valor === 'string' ? valor : valor && typeof valor === 'object' && typeof valor.id === 'string' ? valor.id : null);
 const mateixOrigen = (a, b) => { const [x, y] = [urlRemota(a), urlRemota(b)]; return Boolean(x && y && x.origin === y.origin); };
@@ -248,11 +295,11 @@ const conte = (der, seq, fins = 32) => {
 export async function importaClauPublica(clau, { subtle = globalThis.crypto?.subtle } = {}) {
   try {
     let der = null;
-    if (typeof clau?.publicKeyPem === 'string' && clau.publicKeyPem.length <= 8192) {
+    if (typeof clau?.publicKeyPem === 'string' && clau.publicKeyPem.length <= LIMITS_CLAU_PUBLICA.pem) {
       const pem = clau.publicKeyPem.replace(/\r/g, '');
       if (!pem.includes('-----BEGIN PUBLIC KEY-----') || !pem.includes('-----END PUBLIC KEY-----')) return null;
       der = desdeB64(pem.replace('-----BEGIN PUBLIC KEY-----', '').replace('-----END PUBLIC KEY-----', '').replace(/\s+/g, ''));
-    } else if (typeof clau?.publicKeyMultibase === 'string' && clau.publicKeyMultibase.startsWith('z') && clau.publicKeyMultibase.length <= 128) {
+    } else if (typeof clau?.publicKeyMultibase === 'string' && clau.publicKeyMultibase.startsWith('z') && clau.publicKeyMultibase.length <= LIMITS_CLAU_PUBLICA.multibase) {
       const crus = base58(clau.publicKeyMultibase.slice(1));
       if (!crus || crus.length !== 34 || crus[0] !== 0xed || crus[1] !== 0x01) return null;
       der = Uint8Array.from([...ED25519_SPKI, ...crus.slice(2)]);
@@ -386,12 +433,12 @@ export function textDHtmlRemot(html, maxim = 2000) {
     if (caracter === '<') { dins = true; eixida += ' '; } else if (dins) { if (caracter === '>') dins = false; } else eixida += caracter;
   }
   const entitats = { amp: '&', lt: '<', gt: '>', quot: '"', apos: "'", nbsp: ' ' };
-  return textPla(eixida.replace(/&(#\d{1,7}|#x[0-9a-f]{1,6}|[a-z]{2,6});/gi, (sencera, nom) => {
+  return tallaBe(textPla(eixida.replace(/&(#\d{1,7}|#x[0-9a-f]{1,6}|[a-z]{2,6});/gi, (sencera, nom) => {
     const clau = nom.toLowerCase();
     if (Object.hasOwn(entitats, clau)) return entitats[clau];
     const codi = clau.startsWith('#x') ? parseInt(clau.slice(2), 16) : clau.startsWith('#') ? Number(clau.slice(1)) : NaN;
     return Number.isInteger(codi) && codi > 31 && codi <= 0x10ffff && !(codi >= 0xd800 && codi <= 0xdfff) ? String.fromCodePoint(codi) : sencera;
-  })).slice(0, maxim);
+  })), maxim);
 }
 
 const esPublic = (objecte) => [].concat(objecte?.to ?? [], objecte?.cc ?? []).includes(PUBLIC);
@@ -418,7 +465,7 @@ function alertaDe(objecte, { actor, via = null, activitat, ara }) {
   return {
     alerta: {
       id: objecte.id, actor, via, activitat, tipus, url: urlRemota(urlDe(objecte.url) ?? '')?.href ?? null,
-      nom: textPla(typeof objecte.name === 'string' ? objecte.name : '').slice(0, 160),
+      nom: tallaBe(textPla(typeof objecte.name === 'string' ? objecte.name : ''), 160),
       text: textDHtmlRemot(objecte.content ?? objecte.summary ?? ''),
       publicat, caduca: new Date(caduca).toISOString(), rebuda: new Date(ara).toISOString()
     }
@@ -437,9 +484,22 @@ function alertaDe(objecte, { actor, via = null, activitat, ara }) {
  *                                           com a mínim caducitatMs + 2·margeMs (2 h 5 min), o
  *                                           maximMs + 2·margeMs (14 h) si admet (expires) signat:
  *                                           és la finestra en què una rèplica encara verifica
- *   alliberaActivitat(id)                   desfà la reclamació (i la quota) si un efecte falla
+ *                                           (RETENCIO_ACTIVITAT_MS). Una reclamació en curs de fa
+ *                                           més de REPRESA_EN_CURS_MS es torna a prendre (true),
+ *                                           sense gastar quota ni allargar la retenció
+ *   alliberaActivitat(id)                   desfà la reclamació (i la quota) si un efecte falla;
+ *                                           només una reclamació encara en curs, i una sola vegada.
+ *                                           Residu (ARB-M13-04): si l'efecte i l'alliberament fallen
+ *                                           alhora (la base caiguda), la reclamació queda en curs i
+ *                                           una rèplica d'abans de REPRESA_EN_CURS_MS és 'duplicada'
+ *                                           (202): el remot ja no reintenta i l'efecte es perd. Ho
+ *                                           tancaria una reclamació de tres estats (nova, feta, en
+ *                                           curs) que responga 503 a «en curs» (petició a M14)
+ *   confirmaActivitat(id) → bool            (opcional) l'efecte ha acabat bé: en curs → fet. Un
+ *                                           magatzem que no el té es comporta com abans
  *   desaSeguidor({slug, actor, inbox, followId, acceptId, des}) → 'nou'|'existent'
- *                                           (un Follow repetit actualitza followId i acceptId)
+ *                                           (un Follow repetit actualitza followId i acceptId); la
+ *                                           quota (`maxim`) és per actor local, com ap_seguidor_desa
  *   retiraSeguidor({slug, actor, followId}) → bool
  *   retiraActorRemot(actor) → n             seguidors i alertes de l'actor (o anunciades per ell)
  *   desaAlertaRemota(alerta) → 'nova'|'existent'|'esborrada'
@@ -447,15 +507,21 @@ function alertaDe(objecte, { actor, via = null, activitat, ara }) {
  *                                           directa (via null): ja no la retira qui l'anuncià. Residu:
  *                                           amb dos anunciadors, l'Undo d'un la retira (caldria un
  *                                           conjunt d'anunciadors)
- *   retiraAlertaRemota({id, actor, lapida}) → bool    Delete: només el propietari; amb `lapida`,
+ *   retiraAlertaRemota({id, actor, lapida, ara}) → bool  Delete: només el propietari; amb `lapida`,
  *                                           un Create posterior del mateix objecte i del mateix
  *                                           propietari no la ressuscita (com el Tombstone de
- *                                           Mastodon); la làpida d'un altre compte no veta l'autor
+ *                                           Mastodon); la làpida d'un altre compte no veta l'autor.
+ *                                           `ara` data la làpida (un servidor usa el seu rellotge)
  *   retiraAlertaRemota({activitat, actor}) → bool     Undo(Announce): només qui l'anuncià
  *   llistaAlertesVigents(ara) → [alerta]
- * `maxim` fita cada mapa i `maximPerOrigen`, les activitats de cada host: plens, llancen
+ *   purga(ara) → {activitats, alertes, lapides}       (opcional) el TTL: activitats rebudes fa més
+ *                                           de RETENCIO_ACTIVITAT_MS (tornen la quota), alertes
+ *                                           caducades fa més de MARGE_PURGA_ALERTA_MS i làpides
+ *                                           de fa més de RETENCIO_LAPIDA_MS
+ * `maxim` fita cada mapa (els seguidors, els de cada actor local) i `maximPerOrigen`, les activitats de cada host: plens, llancen
  * RangeError. Residu: els subdominis d'un mateix atacant (un DNS comodí) són hosts diferents i
- * només els fita `maxim`. En memòria no hi ha purga: un servidor real hi posa la quota i el TTL.
+ * només els fita `maxim`. En memòria la purga la crida qui la usa; el servidor
+ * (ap-inbox-verifica) purga a cada reclamació i a cada passada de la cua.
  */
 export function creaMagatzemInboxEnMemoria({ maxim = 10_000, maximPerOrigen = 1_000 } = {}) {
   const activitats = new Map();
@@ -466,36 +532,55 @@ export function creaMagatzemInboxEnMemoria({ maxim = 10_000, maximPerOrigen = 1_
   const clauSeguidor = (slug, actor) => `${slug} ${actor}`;
   /* La làpida és de l'objecte I del seu propietari: un altre compte del mateix origen no la pot posar per endavant. */
   const clauLapida = (id, actor) => `${id} ${actor}`;
-  /* La quota és per host, no per origen: l'origen porta el port, i urlRemota admet qualsevol port. */
-  const origenDe = (actor) => {
-    let host = '';
-    try { host = new URL(actor).hostname.toLowerCase(); } catch { return ''; }
-    while (host.endsWith('.')) host = host.slice(0, -1);
-    return host;
-  };
   const capHi = (mapa) => { if (mapa.size >= maxim) throw new RangeError('Magatzem de la inbox ple.'); };
+  /* Treu una activitat i torna la seua quota (una sola vegada: la fila ja no hi és). */
+  const trau = (id, registre) => {
+    activitats.delete(id);
+    const n = (perOrigen.get(registre.origen) ?? 1) - 1;
+    if (n > 0) perOrigen.set(registre.origen, n); else perOrigen.delete(registre.origen);
+  };
   return Object.freeze({
     async reclamaActivitat(id, registre) {
-      if (activitats.has(id)) return false;
-      const origen = origenDe(registre?.actor);
+      // `rebuda` en ms (Date.parse de l'ISO del processador); sense data, ni la purga ni la represa la toquen.
+      const rebuda = Date.parse(registre?.rebuda ?? '');
+      const actual = activitats.get(id);
+      if (actual) {
+        // Represa (com ap_inbox_reclama): una en curs de fa més de REPRESA_EN_CURS_MS es torna a prendre.
+        // `presa` compta la represa; `rebuda` (la retenció) no canvia.
+        if (actual.estat !== 'en_curs' || !(rebuda - actual.presa > REPRESA_EN_CURS_MS)) return false;
+        actual.presa = rebuda;
+        return true;
+      }
+      // La quota és per host, no per origen: l'origen porta el port, i urlRemota admet qualsevol port.
+      const origen = hostDeQuota(registre?.actor);
       const n = perOrigen.get(origen) ?? 0;
       if (n >= maximPerOrigen) throw new RangeError('Quota de la inbox esgotada per a este origen.');
       capHi(activitats);
-      activitats.set(id, { ...registre, origen });
+      activitats.set(id, { origen, estat: 'en_curs', rebuda, presa: rebuda });
       perOrigen.set(origen, n + 1);
       return true;
     },
     async alliberaActivitat(id) {
       const registre = activitats.get(id);
-      if (!registre) return;
-      activitats.delete(id);
-      const n = (perOrigen.get(registre.origen) ?? 1) - 1;
-      if (n > 0) perOrigen.set(registre.origen, n); else perOrigen.delete(registre.origen);
+      if (!registre || registre.estat !== 'en_curs') return false;
+      trau(id, registre);
+      return true;
+    },
+    async confirmaActivitat(id) {
+      const registre = activitats.get(id);
+      if (!registre || registre.estat !== 'en_curs') return false;
+      registre.estat = 'fet';
+      return true;
     },
     async desaSeguidor(seguidor) {
       const clau = clauSeguidor(seguidor.slug, seguidor.actor);
       const actual = seguidors.get(clau);
-      if (!actual) capHi(seguidors);
+      // La quota és per actor local (ap_seguidor_desa): un poble ple no bloqueja els altres.
+      if (!actual) {
+        let n = 0;
+        for (const s of seguidors.values()) if (s.slug === seguidor.slug) n += 1;
+        if (n >= maxim) throw new RangeError('Magatzem de la inbox ple.');
+      }
       seguidors.set(clau, { ...seguidor, des: actual?.des ?? seguidor.des });
       return actual ? 'existent' : 'nou';
     },
@@ -523,11 +608,14 @@ export function creaMagatzemInboxEnMemoria({ maxim = 10_000, maximPerOrigen = 1_
       alertes.set(alerta.id, { ...alerta });
       return 'nova';
     },
-    async retiraAlertaRemota({ id = null, actor, activitat = null, lapida = false }) {
+    async retiraAlertaRemota({ id = null, actor, activitat = null, lapida = false, ara = null }) {
       if (id) {
         const actual = alertes.get(id);
         if (actual && actual.actor !== actor) return false;
-        if (lapida && !lapides.has(clauLapida(id, actor))) { capHi(lapides); lapides.set(clauLapida(id, actor), id); }
+        if (lapida && !lapides.has(clauLapida(id, actor))) {
+          capHi(lapides);
+          lapides.set(clauLapida(id, actor), { id, creada: Number.isFinite(ara) ? ara : NaN });
+        }
         return alertes.delete(id);
       }
       for (const [clau, a] of alertes) {
@@ -536,10 +624,19 @@ export function creaMagatzemInboxEnMemoria({ maxim = 10_000, maximPerOrigen = 1_
       return false;
     },
     async llistaAlertesVigents(ara) { return [...alertes.values()].filter((a) => Date.parse(a.caduca) > ara).map((a) => ({ ...a })); },
+    async purga(ara) {
+      if (!Number.isFinite(ara)) throw new TypeError('purga necessita ara (ms).');
+      const purgades = { activitats: 0, alertes: 0, lapides: 0 };
+      // Una data que no s'entén (NaN) no caduca mai: la comparació és falsa.
+      for (const [id, r] of activitats) if (r.rebuda + RETENCIO_ACTIVITAT_MS < ara) { trau(id, r); purgades.activitats += 1; }
+      for (const [id, a] of alertes) if (Date.parse(a.caduca) + MARGE_PURGA_ALERTA_MS < ara) { alertes.delete(id); purgades.alertes += 1; }
+      for (const [clau, l] of lapides) if (l.creada + RETENCIO_LAPIDA_MS < ara) { lapides.delete(clau); purgades.lapides += 1; }
+      return purgades;
+    },
     instantania() {
       return {
         activitats: [...activitats.keys()].sort(), seguidors: [...seguidors.values()].map((s) => ({ ...s })),
-        alertes: [...alertes.values()].map((a) => ({ ...a })), lapides: [...new Set(lapides.values())].sort()
+        alertes: [...alertes.values()].map((a) => ({ ...a })), lapides: [...new Set([...lapides.values()].map((l) => l.id))].sort()
       };
     }
   });
@@ -641,7 +738,7 @@ export async function processaActivitatInbox(activitat, {
       }
       if (!objecte || !mateixOrigen(objecte, actor)) return resultat('rebutjada', { motiu: 'authorship_mismatch' });
       efecte = async () => {
-        const fet = await magatzem.retiraAlertaRemota({ id: objecte, actor, lapida: confiat(actor) });
+        const fet = await magatzem.retiraAlertaRemota({ id: objecte, actor, lapida: confiat(actor), ara });
         return fet ? resultat('processada', { efectes: [{ tipus: 'alerta_retirada', id: objecte }] }) : resultat('ignorada', { motiu: 'nothing_to_delete' });
       };
       break;
@@ -686,12 +783,20 @@ export async function processaActivitatInbox(activitat, {
     const lliuraments = activitat.type === 'Follow' ? [{ inbox: inboxDeLActor, activitat: await accept(activitat) }] : [];
     return resultat('duplicada', { lliuraments });
   }
+  let r = null;
   try {
-    return await efecte();
+    r = await efecte();
   } catch (fallada) {
+    // Si l'alliberament també falla, la reclamació queda en curs fins a la represa (residu ARB-M13-04, al port).
     await magatzem.alliberaActivitat(activitat.id);
     throw fallada;
   }
+  // B5 · Fora del try: l'efecte ja és fet i no s'ha d'alliberar. Si la confirmació falla, la
+  // reclamació queda «en curs» i el servidor la reprén més tard (els efectes són idempotents).
+  if (typeof magatzem.confirmaActivitat === 'function') {
+    try { await magatzem.confirmaActivitat(activitat.id); } catch { /* es reprendrà */ }
+  }
+  return r;
 }
 
 /**
@@ -702,14 +807,21 @@ export async function processaActivitatInbox(activitat, {
  * `cami` és el camí rebut amb la consulta: la consulta es signa, la ruta no la porta.
  * `cos`: qui desplega el llig amb un sostre de MAXIM_COS_INBOX + 1 octets (mai
  * req.arrayBuffer() sense límit); el que en passa ja és 413 ací.
+ * B5 · `prefixCami` ('' per defecte; p. ex. '/functions/v1/ap-inbox-verifica'): la
+ * ruta es busca després de llevar-lo del camí rebut, però la signatura es
+ * verifica sobre el camí SENCER. `hostEsperat`: el host signat que s'accepta
+ * (per defecte, el de l'origen). Amb un prefix mal format, cap ruta (404).
  */
 export async function atenPeticioInbox({ metode, cami, capcaleres, cos }, {
-  origen, actorsLocals = [], obtenClauPublica, magatzem, nodesDeConfianca = [], obtenDocument = null, ara, subtle = globalThis.crypto?.subtle
+  origen, actorsLocals = [], obtenClauPublica, magatzem, nodesDeConfianca = [], obtenDocument = null, ara, subtle = globalThis.crypto?.subtle,
+  hostEsperat = null, prefixCami = ''
 } = {}) {
   const json = (status, objecte, extra = {}) => ({ status, capcaleres: { 'Content-Type': 'application/json; charset=utf-8', ...extra }, cos: objecte, lliuraments: [] });
   if (String(metode).toUpperCase() !== 'POST') return json(405, { error: 'method_not_allowed' }, { Allow: 'POST' });
   const rebut = String(cami ?? '');
-  const ruta = CAMI_INBOX.exec(rebut.split('?')[0]);
+  const prefix = typeof prefixCami === 'string' ? prefixCami : '';
+  const camiSol = rebut.split('?')[0];
+  const ruta = PREFIX_CAMI.test(prefix) && camiSol.startsWith(prefix) ? CAMI_INBOX.exec(camiSol.slice(prefix.length)) : null;
   if (!ruta || !actorsLocals.includes(ruta[1])) return json(404, { error: 'not_found' });
   const mapa = mapaCapcaleres(capcaleres);
   const tipus = (mapa.get('content-type') ?? '').split(';')[0].trim().toLowerCase();
@@ -718,7 +830,7 @@ export async function atenPeticioInbox({ metode, cami, capcaleres, cos }, {
   if (!bytes || bytes.length > MAXIM_COS_INBOX) return json(413, { error: 'payload_too_large' });
   const base = normalitzaOrigen(origen);
   const verificacio = await verificaSignaturaHttpActivityPub({
-    metode: 'POST', cami: rebut, capcaleres: mapa, cos: bytes, obtenClauPublica, hostEsperat: new URL(base).host, ara, subtle
+    metode: 'POST', cami: rebut, capcaleres: mapa, cos: bytes, obtenClauPublica, hostEsperat: hostEsperat || new URL(base).host, ara, subtle
   });
   if (!verificacio.valida) return json(401, { error: verificacio.motiu });
   let activitat = null;

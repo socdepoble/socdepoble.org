@@ -253,6 +253,13 @@ export default function AppGridColumn({
       <div className="app-grid-col-header__accions">
         {renderActions(resolvedEndActions)}
         {children}
+        {/* PS-11 (marató 261101, B7e) · Quan la icona ja és el botó germà
+            que plega (iconaReplega), este [|<] la repetix: es marca amb
+            data-germana-de-la-icona perquè la Columna 1 estreta d'«ample»
+            l'amague i el títol guanye 48 px (modules.css, bloc P1-28).
+            És un atribut, no una prop (tractor-graella compara props), i el
+            focus en desplegar ja va a la icona (collapseBtnRef), mai a ell.
+            Sense icona germana és l'únic que plega: no porta la marca. */}
         {onReplega ? (
           <button
             ref={iconaReplega ? null : collapseBtnRef}
@@ -263,6 +270,7 @@ export default function AppGridColumn({
             title={etiquetaDelReplega}
             aria-expanded={declaraControl ? true : undefined}
             aria-controls={declaraControl ? controls : undefined}
+            data-germana-de-la-icona={iconaReplega ? '' : undefined}
           >
             <PanelLeftClose size={24} aria-hidden focusable="false" />
           </button>

@@ -7,6 +7,7 @@ import { Aplec2023Article } from '../mur/articles/Aplec2023Article.jsx';
 import { resolRecursPropi, resolRecursosDeHtml, resolveAsset } from '../../config/assetResolver.js';
 import { autorDe, objecteDe, rutaDePerfilPublicDAutor, rutaXatDePagina } from '../../config/navigation.js';
 import { signaturaDeQuiSigna } from '../../data/identitatsSeed.js';
+import { portadaDeLaPublicacio } from '../../data/mapejadorSeccions.js';
 import { imatgesDeProducte } from '../mercat/imatgesDeProducte.js';
 import { nomDeLaGent } from '../pobles/nomsDelPoble.js';
 import { esFontImatgePropia, sanitizeHtml } from '../../utils/sanitize.js';
@@ -221,11 +222,13 @@ export function portadaDElement(section, item, pagina, t) {
   if (!Array.isArray(fotos) || fotos.length < 2) {
     const portada = pagina?.heroImage;
     if (!ambVisor || typeof portada !== 'string' || portada.trim() === '') return null;
+    /* IDEA-42 (B7h) · El cartell sencer, si l'autor el vol (coaccionat: la
+       llavor i app_content no passen pel mapejador). */
     return {
       topBarData: {
         heroComponent: (
           <VisorDePublicacio key={clau} fotos={[portada]} dades={dadesDeLaPublicacio(section, item, pagina)}
-            etiquetaObri={obri} alt={pagina.heroAlt || ''} />
+            etiquetaObri={obri} alt={pagina.heroAlt || ''} sencera={portadaDeLaPublicacio(item).sencera} />
         )
       }
     };

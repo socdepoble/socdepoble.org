@@ -25,7 +25,8 @@ import { fileURLToPath } from 'node:url';
 import {
   FINESTRA_SIGNATURA, MAXIM_COS_INBOX, VIGENCIA_ALERTA_REMOTA_MS, analitzaCapcaleraSignatura, atenPeticioInbox, clauDeDocumentActor,
   creaMagatzemInboxEnMemoria, importaClauPublica, processaActivitatInbox, resolveWebFingerAcct, signaPeticioHttpActivityPub,
-  textDHtmlRemot, tipusDAlertaFederada, urlRemota, verificaSignaturaHttpActivityPub
+  textDHtmlRemot, tipusDAlertaFederada, urlRemota, verificaSignaturaHttpActivityPub,
+  MARGE_PURGA_ALERTA_MS, RETENCIO_ACTIVITAT_MS, RETENCIO_LAPIDA_MS, MAXIM_VIGENCIA_ALERTA_MS, hostDeQuota
 } from './inboxActivityPub.js';
 import { VIGENCIA_ALERTA_MS, tipusDAlerta } from '../../sections/mur/alertesMunicipals.js';
 
@@ -336,6 +337,32 @@ describe('signatures HTTP (verificaSignaturaHttpActivityPub)', () => {
       'https://nas.local/x', 'https://svc.internal/x', 'https://router.home.arpa/x', 'https://pc.localdomain/x', 'https://localdomain/x']) {
       expect([dolenta, urlRemota(dolenta)]).toEqual([dolenta, null]);
     }
+  });
+
+  test('B5 (ARB-M13-03) · urlRemota només admet la forma que accepten les CHECK de la migració', () => {
+    // L'esquema literal, el host LDH de 253 com a molt, i de 12 a 2048 caràcters també després de normalitzar.
+    const etiqueta = 'a'.repeat(63);
+    for (const dolenta of ['HTTPS://mastodon.example/x', 'Https://mastodon.example/x', ' https://mastodon.example/x', '\thttps://mastodon.example/x',
+      'https://a_b.example/x', 'https://a*b.example/x', "https://a'b.example/x", `https://${etiqueta}.${etiqueta}.${etiqueta}.${etiqueta}.example/x`,
+      'https://a.b', `https://a.example/${'é'.repeat(700)}`]) {
+      expect([dolenta, urlRemota(dolenta)]).toEqual([dolenta, null]);
+    }
+    // El parser encara normalitza el que la CHECK no mira: la caixa del host i la barra final.
+    expect(urlRemota('https://a.bc')?.href).toBe('https://a.bc/');
+    expect(urlRemota('https://Mastodon.Example/users/anna')?.href).toBe('https://mastodon.example/users/anna');
+    expect(urlRemota(`https://a.example/${'x'.repeat(2030)}`)?.href).toHaveLength(2048);
+  });
+
+  test('B5 (ARB-M13-03) · una activitat amb l’id o l’actor en una forma que l’SQL rebutja és 4xx sense tocar el magatzem, no 503', async () => {
+    const magatzem = creaMagatzemInboxEnMemoria();
+    const base = { slug: TORRE, origen: ORIGEN, actorsLocals: [TORRE], documentActor: docActor(pemRsa), magatzem, ara: ARA, subtle };
+    const borra = { type: 'Delete', actor: REMOT, object: 'https://mastodon.example/n/1' };
+    const id = await processaActivitatInbox({ ...borra, id: 'HTTPS://mastodon.example/users/anna#delete/1' }, { ...base, signant: { actor: REMOT } });
+    expect([id.estat, id.motiu, id.http]).toEqual(['rebutjada', 'activity_id_invalid', 400]);
+    const actor = 'https://mastodon_x.example/users/anna';
+    const ambHost = await processaActivitatInbox({ ...borra, id: `${actor}#delete/1`, actor, object: `${actor}/n/1` }, { ...base, signant: { actor } });
+    expect([ambHost.estat, ambHost.http]).toEqual(['rebutjada', 403]);
+    expect(magatzem.instantania().activitats).toEqual([]);
   });
 });
 
@@ -802,5 +829,146 @@ describe('frontera del mòdul', () => {
       .filter((abs) => /(?:\bfrom\s*|\bimport\s*\(\s*)['"][^'"]*inboxActivityPub(?:\.js)?['"]/.test(readFileSync(abs, 'utf8')))
       .map((abs) => path.relative(ARREL, abs));
     expect(importadors).toEqual([]);
+  });
+});
+
+/* B5 (marató 261101_2143, spec B5-FEDERACIO §2.1) · Els canvis compatibles que demana el servidor
+   supabase/functions/ap-inbox-verifica: purga per TTL, confirmació de la reclamació, prefix del camí
+   i host esperat, i el host de la quota com a funció pública. */
+describe('B5 · purga, confirmació, prefix del camí i host de la quota', () => {
+  const iso = (t) => new Date(t).toISOString();
+  const X = 'https://x.example/u';
+  const Y = 'https://y.example/u';
+
+  test('una sola font per a les retencions: 14 h per a les activitats, 30 dies i 14 h per a les làpides', () => {
+    expect(RETENCIO_ACTIVITAT_MS).toBe(14 * HORA);
+    expect(RETENCIO_ACTIVITAT_MS).toBe(FINESTRA_SIGNATURA.maximMs + 2 * FINESTRA_SIGNATURA.margeMs);
+    expect(RETENCIO_LAPIDA_MS).toBe(MAXIM_VIGENCIA_ALERTA_MS + RETENCIO_ACTIVITAT_MS);
+    expect(MARGE_PURGA_ALERTA_MS).toBe(24 * HORA);
+  });
+
+  test('purga: buida el que ha caducat, deixa el vigent i torna la quota del host', async () => {
+    const m = creaMagatzemInboxEnMemoria({ maximPerOrigen: 1 });
+    expect(await m.reclamaActivitat('https://x.example/a/1', { actor: X, tipus: 'Undo', rebuda: iso(ARA) })).toBe(true);
+    expect(await m.reclamaActivitat('https://y.example/a/1', { actor: Y, tipus: 'Undo', rebuda: iso(ARA + 2 * HORA) })).toBe(true);
+    await expect(m.reclamaActivitat('https://x.example/a/2', { actor: X, tipus: 'Undo', rebuda: iso(ARA) })).rejects.toThrow(RangeError);
+    // Sense data de recepció, la purga no la toca mai.
+    expect(await m.reclamaActivitat('https://z.example/a/1', { actor: 'https://z.example/u' })).toBe(true);
+    await m.desaAlertaRemota({ id: 'https://x.example/n/1', actor: X, activitat: 'https://x.example/c/1', caduca: iso(ARA + HORA) });
+    await m.desaAlertaRemota({ id: 'https://x.example/n/2', actor: X, activitat: 'https://x.example/c/2', caduca: iso(ARA + 72 * HORA) });
+    expect(await m.retiraAlertaRemota({ id: 'https://x.example/n/3', actor: X, lapida: true, ara: ARA })).toBe(false);
+    // Just a la frontera, res: la comparació és estricta.
+    expect(await m.purga(ARA + RETENCIO_ACTIVITAT_MS)).toEqual({ activitats: 0, alertes: 0, lapides: 0 });
+    expect(await m.purga(ARA + RETENCIO_ACTIVITAT_MS + 1)).toEqual({ activitats: 1, alertes: 0, lapides: 0 });
+    expect(m.instantania().activitats).toEqual(['https://y.example/a/1', 'https://z.example/a/1']);
+    // La quota del host torna amb la purga.
+    expect(await m.reclamaActivitat('https://x.example/a/2', { actor: X, tipus: 'Undo', rebuda: iso(ARA) })).toBe(true);
+    const t2 = ARA + HORA + MARGE_PURGA_ALERTA_MS + 1;
+    expect(await m.purga(t2)).toEqual({ activitats: 2, alertes: 1, lapides: 0 });
+    expect(m.instantania()).toMatchObject({ activitats: ['https://z.example/a/1'], alertes: [expect.objectContaining({ id: 'https://x.example/n/2' })], lapides: ['https://x.example/n/3'] });
+    // La làpida encara veta el mateix propietari; passada la seua retenció, ja no.
+    expect(await m.desaAlertaRemota({ id: 'https://x.example/n/3', actor: X, activitat: 'https://x.example/c/3', caduca: iso(t2 + HORA) })).toBe('esborrada');
+    expect(await m.purga(ARA + RETENCIO_LAPIDA_MS + 1)).toEqual({ activitats: 0, alertes: 1, lapides: 1 });
+    expect(await m.desaAlertaRemota({ id: 'https://x.example/n/3', actor: X, activitat: 'https://x.example/c/3', caduca: iso(ARA + RETENCIO_LAPIDA_MS + 2 * HORA) })).toBe('nova');
+    await expect(m.purga()).rejects.toThrow(TypeError);
+  });
+
+  test('el Delete del processador data la làpida amb `ara`: la purga la pot vèncer', async () => {
+    const magatzem = creaMagatzemInboxEnMemoria();
+    const del = { id: 'https://mastodon.example/a/b5-del', type: 'Delete', actor: REMOT, object: { id: 'https://mastodon.example/objects/b5', type: 'Tombstone' } };
+    expect((await atenPeticioInbox(peticio(del), confiat(magatzem))).cos).toEqual({ estat: 'ignorada', motiu: 'nothing_to_delete' });
+    expect(magatzem.instantania().lapides).toEqual(['https://mastodon.example/objects/b5']);
+    expect(await magatzem.purga(ARA + RETENCIO_LAPIDA_MS)).toMatchObject({ lapides: 0 });
+    expect(await magatzem.purga(ARA + RETENCIO_LAPIDA_MS + 1)).toMatchObject({ lapides: 1 });
+    expect(magatzem.instantania().lapides).toEqual([]);
+  });
+
+  test('rèplica: dins de la retenció és duplicada; passada la retenció, la verificació ja la rebutja', async () => {
+    const magatzem = creaMagatzemInboxEnMemoria();
+    // La signatura més llarga que s'admet: hs2019 amb (expires) signat a 12 h, més 1 h de marge.
+    const created = ARA / 1000;
+    const p = peticio({ ...follow, id: `${REMOT}#follows/b5` }, { algorithm: 'hs2019', noms: '(request-target) host (created) (expires) digest', created, expires: created + 12 * 3600 });
+    const aten = (ara) => atenPeticioInbox(p, opcions(magatzem, { ara }));
+    expect((await aten(ARA)).cos).toEqual({ estat: 'processada' });
+    const darrer = ARA + FINESTRA_SIGNATURA.maximMs + FINESTRA_SIGNATURA.margeMs;
+    await magatzem.purga(darrer);
+    expect((await aten(darrer)).cos).toEqual({ estat: 'duplicada' });
+    const tard = ARA + RETENCIO_ACTIVITAT_MS + 1;
+    await magatzem.purga(tard);
+    expect(magatzem.instantania().activitats).toEqual([]);
+    const r = await aten(tard);
+    expect([r.status, r.cos]).toEqual([401, { error: 'date_out_of_window' }]);
+  });
+
+  test('confirmaActivitat: una vegada si l’efecte va bé, cap si falla; si llança, el resultat continua sent processada', async () => {
+    const base = creaMagatzemInboxEnMemoria();
+    const crides = [];
+    const m1 = { ...base, async confirmaActivitat(id) { crides.push(id); return base.confirmaActivitat(id); } };
+    const r1 = await atenPeticioInbox(peticio(follow), opcions(m1));
+    expect([r1.cos, crides]).toEqual([{ estat: 'processada' }, [follow.id]]);
+    // Una reclamació confirmada ja no s'allibera.
+    expect(await base.alliberaActivitat(follow.id)).toBe(false);
+    expect(base.instantania().activitats).toEqual([follow.id]);
+    expect((await atenPeticioInbox(peticio(follow), opcions(m1))).cos).toEqual({ estat: 'duplicada' });
+    expect(crides).toHaveLength(1);
+    // L'efecte falla: cap confirmació, i la reclamació s'allibera.
+    const m2 = { ...base, async desaSeguidor() { throw new Error('BD caiguda'); }, async confirmaActivitat(id) { crides.push(id); return true; } };
+    await expect(atenPeticioInbox(peticio({ ...follow, id: `${REMOT}#follows/c2` }), opcions(m2))).rejects.toThrow('BD caiguda');
+    expect(crides).toHaveLength(1);
+    expect(base.instantania().activitats).toEqual([follow.id]);
+    // La confirmació llança: processada igual, amb l'Accept, i la reclamació es queda (una rèplica és duplicada).
+    const m3 = { ...base, async confirmaActivitat() { throw new Error('xarxa'); } };
+    const r3 = await atenPeticioInbox(peticio({ ...follow, id: `${REMOT}#follows/c3` }), opcions(m3));
+    expect([r3.status, r3.cos, r3.lliuraments.length]).toEqual([202, { estat: 'processada' }, 1]);
+    expect((await atenPeticioInbox(peticio({ ...follow, id: `${REMOT}#follows/c3` }), opcions(m3))).cos).toEqual({ estat: 'duplicada' });
+    // Un magatzem sense el mètode es comporta com abans.
+    const sense = Object.fromEntries(Object.entries(base).filter(([nom]) => nom !== 'confirmaActivitat'));
+    expect((await atenPeticioInbox(peticio({ ...follow, id: `${REMOT}#follows/c4` }), opcions(sense))).cos).toEqual({ estat: 'processada' });
+  });
+
+  test('prefixCami i hostEsperat: la ruta sense el prefix, la signatura sobre el camí sencer i el host públic', async () => {
+    const PREFIX = '/functions/v1/ap-inbox-verifica';
+    const FUNCIO = 'abc.supabase.co';
+    const magatzem = creaMagatzemInboxEnMemoria();
+    const op = (extra = {}) => opcions(magatzem, { prefixCami: PREFIX, hostEsperat: FUNCIO, ...extra });
+    const signada = (n, extra = {}) => peticio({ ...follow, id: `${REMOT}#f/pre${n}` }, { signat: `${PREFIX}${CAMI}`, host: FUNCIO, ...extra });
+    expect((await atenPeticioInbox(signada(1), op())).cos).toEqual({ estat: 'processada' });
+    // La mateixa petició rebuda per un altre prefix: la ruta hi és, però el camí signat no és el rebut.
+    expect((await atenPeticioInbox(signada(2, { rebut: `/altre${CAMI}` }), op({ prefixCami: '/altre' }))).cos).toEqual({ error: 'signature_invalid' });
+    // Rebuda amb el prefix però sense configurar-lo: cap ruta.
+    expect((await atenPeticioInbox(signada(3), op({ prefixCami: '' }))).status).toBe(404);
+    // Signada per al host de l'origen quan el públic és el de la funció: rèplica d'una altra inbox.
+    expect((await atenPeticioInbox(signada(4, { host: HOST }), op())).cos).toEqual({ error: 'host_mismatch' });
+    // Un prefix mal format no obri cap ruta.
+    for (const dolent of ['functions', '/functions/', '/a b', 7]) {
+      expect([dolent, (await atenPeticioInbox(signada(5), op({ prefixCami: dolent }))).status]).toEqual([dolent, 404]);
+    }
+    // Sense opcions, com abans: el host esperat és el de l'origen.
+    expect((await atenPeticioInbox(signada(6), opcions(magatzem))).status).toBe(404);
+    expect((await atenPeticioInbox(peticio({ ...follow, id: `${REMOT}#f/pre7` }), opcions(magatzem))).cos).toEqual({ estat: 'processada' });
+    expect(magatzem.instantania().activitats).toEqual([`${REMOT}#f/pre1`, `${REMOT}#f/pre7`]);
+  });
+
+  test('el text i el títol desats no tallen mai un emoji per la meitat ni porten subrogats solts (PostgreSQL rebutjaria el JSON)', () => {
+    const solt = /[\ud800-\udbff](?![\udc00-\udfff])|(?<![\ud800-\udbff])[\udc00-\udfff]/;
+    const tallat = textDHtmlRemot(`${'a'.repeat(1999)}😀 i més`);
+    expect([tallat.length, solt.test(tallat), tallat]).toEqual([1999, false, 'a'.repeat(1999)]);
+    expect(textDHtmlRemot(`${'a'.repeat(1998)}😀`)).toBe(`${'a'.repeat(1998)}😀`);
+    expect(textDHtmlRemot('abans \ud83d després \ude00 fi')).toBe('abans \ufffd després \ufffd fi');
+    expect(JSON.parse(JSON.stringify(textDHtmlRemot(`x\udbff${'b'.repeat(10)}`)))).toBe(`x\ufffd${'b'.repeat(10)}`);
+  });
+
+  test('hostDeQuota: la mateixa quota que la memòria (ports, caixa, punts finals, ap://)', async () => {
+    expect(hostDeQuota('https://HOSTIL.example:8443/users/x')).toBe('hostil.example');
+    expect(hostDeQuota('https://hostil.example../u')).toBe('hostil.example');
+    expect(hostDeQuota('ap://HOSTIL.example/x')).toBe('hostil.example');
+    expect([hostDeQuota('no és una url'), hostDeQuota(undefined), hostDeQuota(7)]).toEqual(['', '', '']);
+    expect(hostDeQuota('https://sub.hostil.example/u')).not.toBe(hostDeQuota('https://hostil.example/u'));
+    for (const [x, y] of [['https://a.example:1/u', 'https://A.EXAMPLE./v'], ['https://b.example/u', 'ap://B.example/v']]) {
+      expect(hostDeQuota(x)).toBe(hostDeQuota(y));
+      const m = creaMagatzemInboxEnMemoria({ maximPerOrigen: 1 });
+      expect(await m.reclamaActivitat(x, { actor: x })).toBe(true);
+      await expect(m.reclamaActivitat(y, { actor: y })).rejects.toThrow('Quota de la inbox esgotada per a este origen.');
+    }
   });
 });

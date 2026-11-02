@@ -618,6 +618,24 @@ export const CASOS = Object.freeze([
     arguments: (ctx) => ['conformitat-sense-organitzacio', { tipus: 'persona', id: 'conformitat-sense-persona' }, ctx.config],
     comprova: rebuigAmbCode
   }),
+  /* IDEA-24 (marató 261101_2143, B4) · La transferència de la propietat
+     (capacitat 'transferenciaPropietat'). Cap cas no escriu: el kit no és
+     la propietària de res. Una organització que no existix (amb un id que no
+     és cap UUID: cap servidor no hi arriba) i una destinatària que no és una
+     persona rebutgen amb un code, sense sessió o amb sessió, i sense canviar
+     cap rol. */
+  cas({
+    metode: 'transfereixPropietatOrganitzacio', capacitat: 'transferenciaPropietat', espera: 'rebutja',
+    titol: "transfereixPropietatOrganitzacio(orgId, { tipus: 'persona', id }, config) d’una organització que no existix rebutja amb un code",
+    arguments: (ctx) => ['conformitat-sense-organitzacio', { tipus: 'persona', id: 'conformitat-sense-persona' }, ctx.config],
+    comprova: rebuigAmbCode
+  }),
+  cas({
+    metode: 'transfereixPropietatOrganitzacio', capacitat: 'transferenciaPropietat', espera: 'rebutja',
+    titol: "transfereixPropietatOrganitzacio(orgId, { tipus: 'organitzacio', id }, config) rebutja amb un code: només una persona pot ser propietària",
+    arguments: (ctx) => ['conformitat-sense-organitzacio', { tipus: 'organitzacio', id: 'conformitat-sense-organitzacio-2' }, ctx.config],
+    comprova: rebuigAmbCode
+  }),
   cas({
     metode: 'llegeixContacteOrganitzacio', capacitat: 'contacteOrganitzacio', espera: 'rebutja',
     titol: 'llegeixContacteOrganitzacio(orgId, config) d’una organització que no existix rebutja amb un code',

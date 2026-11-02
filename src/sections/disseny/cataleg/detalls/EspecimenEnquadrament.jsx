@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { Circle, CircleUserRound, Crop, ImageUp, MapPin, Proportions, Square } from 'lucide-react';
 import { Especimen } from '../Especimen.jsx';
-import { Accions, Alerta, Avatar, Boto } from '../../../../components/PedraSeca/index.js';
+import { Accions, Alerta, Avatar, Boto, UniversalCard } from '../../../../components/PedraSeca/index.js';
 import { AVIS_GPS_ELIMINAT_PERFIL, DialegEnquadrament } from '../../../../components/universal/enquadrament/DialegEnquadrament.jsx';
 import { opcionsSortida } from '../../../../components/universal/enquadrament/enquadrament.js';
 import { ETIQUETA_CONSERVA_EXIF } from '../../../../components/universal/enquadrament/exifIncrustat.js';
@@ -11,6 +11,7 @@ import { sortidaAvatar, useEnquadramentAvatar } from '../../../profile/useEnquad
 import { MIDA_AVATAR } from '../../../../utils/pujadaImatge.js';
 import { resolRecursPropi } from '../../../../config/assetResolver';
 import { Llinatge } from '../Llinatge.jsx';
+import { VisorDePublicacio } from '../../../detail/VisorDePublicacio.jsx';
 
 /* T46 (ordre del Mestre, 260928) · Re-enquadrar la capçalera. Una foto
    apaisada del mateix origen (1376×768): en quadrat es veu que el marc talla i
@@ -26,6 +27,13 @@ const MOSTRA = '/assets/notes/bloc_notes_vintage.webp';
    escena quadrada de 1024 px: el retall és la cara. Cap imatge nova ni tocada
    (core-identitat-visual): l'espècimen la llig i el retall no ix del navegador. */
 const MOSTRA_AVATAR = '/assets/fotos/iaia-maria.png';
+
+/* IDEA-42 (B7h, Gauntlet 261102 de la marató 261101_2143; spec B7-PEDRA §2.9d) · El doble enquadrament
+   d'un acte amb la llavor de l'Aplec (cartell A4 de 723×1024): el cartell sencer
+   de la pàgina i la targeta 16:9 del Mur amb el punt focal, sense retallar res. */
+const MOSTRA_CARTELL = '/assets/events/aplec_2023_cartell.jpg';
+const PUNT_CARTELL = Object.freeze({ format: '16:9', cx: 0.5, cy: 0.3, zoom: 1 });
+const DADES_CARTELL = Object.freeze({ titol: '2n Aplec pel Territori', autor: 'Sóc de Poble', article: { sectionId: 'events', id: 'aplec-2023' } });
 
 const urlDe = (fitxer) => (typeof URL.createObjectURL === 'function' ? URL.createObjectURL(fitxer) : '');
 
@@ -296,6 +304,17 @@ export default function EspecimenEnquadrament() {
           </figcaption>
         </figure>
       ) : null}
+
+      <h4>Doble enquadrament: el cartell sencer i la targeta 16:9</h4>
+      <p className="sdp-camp__ajuda">
+        Un acte amb cartell es veu sencer a la seua pàgina (portada_sencera: la mida natural, mai ampliada) i, al Mur, en una targeta 16:9 amb el punt focal que tria l’autor (enquadrament_targeta: format, cx, cy i zoom). La foto no es retalla: el punt focal és una posició CSS que es calcula en carregar-la (posicioDeRetall).
+      </p>
+      <div className="sdp-enquadrament__resultat">
+        <UniversalCard title="2n Aplec pel Territori" imageUrl={resolRecursPropi(MOSTRA_CARTELL)} imageAlt="El cartell de l’Aplec en 16:9" formaMitja="16:9" posicioMitja={PUNT_CARTELL} />
+      </div>
+      <div className="hero-image">
+        <VisorDePublicacio fotos={[resolRecursPropi(MOSTRA_CARTELL)]} dades={DADES_CARTELL} etiquetaObri="Veure el cartell a pantalla completa" alt="El cartell sencer de l’Aplec" sencera />
+      </div>
 
       {font ? <DialegEnquadrament font={font} onTanca={() => setFont(null)} onDesa={desa} /> : null}
       {avatar.dialeg}

@@ -56,6 +56,11 @@ function creaServidor() {
     [D]: [{ id: FIL_D, tipus: 'directe', altres: [{ id: A, tipus: 'persona' }] }]
   };
   const publica = (jo, identitat) => claus.set(jo, { usuariId: jo, kid: aBase64url(identitat.kid), sigPub: aBase64url(identitat.sigPub), dhPub: aBase64url(identitat.dhPub) });
+  /* B2a · Amb la declaració SDPK autofirmada (la que donarà xat_publica_identitat): la candidata d'un canvi fort. */
+  const publicaDeclarada = (jo, identitat) => claus.set(jo, {
+    usuariId: jo, kid: aBase64url(identitat.kid), sigPub: aBase64url(identitat.sigPub), dhPub: aBase64url(identitat.dhPub),
+    declaracio: aBase64url(identitat.declaracio), autofirma: aBase64url(identitat.autofirma), firmaContinuitat: null
+  });
   const adaptadorDe = (jo) => ({
     ...Object.fromEntries(CONTRACTE_NUCLI.map((n) => [n, vi.fn()])),
     ...Object.fromEntries([...CAPACITATS.clausXat, ...CAPACITATS.xatMultimediaXifrat, ...CAPACITATS.xatMultimedia].map((n) => [n, vi.fn(async () => { throw new Error(`no simulat: ${n}`); })])),
@@ -67,7 +72,7 @@ function creaServidor() {
     sobresMeusXat: vi.fn(async () => []),
     estatXifratXat: vi.fn(async () => [])
   });
-  return { claus, publica, adaptadorDe };
+  return { claus, publica, publicaDeclarada, adaptadorDe };
 }
 
 async function creaPart(servidor, jo, { ambIdentitat = true, origen = ORIGEN, embolcallaMagatzem = null } = {}) {
@@ -101,8 +106,8 @@ describe('número de seguretat d’un directe (dos aparells, WebCrypto de veres)
     const perB = await b.servei.numeroSeguretat(FIL);
     expect(perA.numero).toMatch(FORMA_NUMERO);
     expect(perA.numero).toBe(perB.numero);
-    expect(perA).toMatchObject({ usuari: B, kid: aBase64url(b.identitat.kid), verificat: false });
-    expect(perB).toMatchObject({ usuari: A, kid: aBase64url(a.identitat.kid), verificat: false });
+    expect(perA).toMatchObject({ usuari: B, kid: aBase64url(b.identitat.kid), verificat: false, pendent: false });
+    expect(perB).toMatchObject({ usuari: A, kid: aBase64url(a.identitat.kid), verificat: false, pendent: false });
     expect(Object.isFrozen(perA)).toBe(true);
     /* El número no viatja: cap crida d'escriptura al transport. */
     expect(a.impl.enviaMissatge).not.toHaveBeenCalled();
@@ -134,17 +139,48 @@ describe('número de seguretat d’un directe (dos aparells, WebCrypto de veres)
     expect(await a.servei.contactesVerificats()).toBe(0);
   });
 
-  test('una clau nova sense continuïtat (canvi fort) no dona número ni deixa marcar: el protocol la bloqueja', async () => {
+  /* B2a (marató 261101_2143) · Girada: abans fixava el defecte (el directori llançava
+     kid-no-fixat i el fil queia). Ara el canvi fort queda pendent: el número és el de la clau
+     nova, amb `pendent`, i «Marca com a verificat» l'accepta i la verifica (§4.4). */
+  test('una clau nova sense continuïtat (canvi fort): el número de la clau nova amb pendent; la marca l’accepta i la verifica', async () => {
     const servidor2 = creaServidor();
     const a2 = await creaPart(servidor2, A);
     const d2 = await creaPart(servidor2, D);
-    const { kid } = await a2.servei.numeroSeguretat(FIL_D);
+    const { kid, numero: numeroVell } = await a2.servei.numeroSeguretat(FIL_D);
     expect(kid).toBe(aBase64url(d2.identitat.kid));
-    /* D publica una identitat nova sense firma de continuïtat. */
-    servidor2.publica(D, await creaIdentitat(cripto, { usuari: D, creatMs: T0 + 1 }));
-    await expect(a2.servei.numeroSeguretat(FIL_D)).rejects.toMatchObject({ codi: 'kid-no-fixat' });
-    await expect(a2.servei.marcaVerificat(FIL_D, { kid, verificat: true })).rejects.toMatchObject({ codi: 'kid-no-fixat' });
+    /* D publica una identitat nova sense firma de continuïtat (amb la declaració autofirmada). */
+    const nova = await creaIdentitat(cripto, { usuari: D, creatMs: T0 + 1 });
+    servidor2.publicaDeclarada(D, nova);
+    const pendent = await a2.servei.numeroSeguretat(FIL_D);
+    expect(pendent).toMatchObject({ usuari: D, kid: aBase64url(nova.kid), verificat: false, pendent: true });
+    expect(pendent.numero).toMatch(FORMA_NUMERO);
+    expect(pendent.numero).not.toBe(numeroVell);
+    expect(aBase64url((await a2.magatzem.fixacio(ci(A), D)).kid)).toBe(kid);
+    /* El kid vell no passa el TOCTOU, i llevar la marca d'una clau no acceptada no es pot. */
+    await expect(a2.servei.marcaVerificat(FIL_D, { kid, verificat: true })).rejects.toMatchObject({ codi: 'kid-canviat' });
+    await expect(a2.servei.marcaVerificat(FIL_D, { kid: pendent.kid, verificat: false })).rejects.toMatchObject({ codi: 'clau-canviada-forta' });
     expect((await a2.magatzem.fixacio(ci(A), D)).verificat).toBe(false);
+    expect(aBase64url((await a2.magatzem.fixacio(ci(A), D)).kid)).toBe(kid);
+    const marcat = await a2.servei.marcaVerificat(FIL_D, { kid: pendent.kid, verificat: true });
+    expect(marcat).toMatchObject({ usuari: D, kid: pendent.kid, numero: pendent.numero, verificat: true, pendent: false });
+    const fixacio = await a2.magatzem.fixacio(ci(A), D);
+    expect(fixacio.verificat).toBe(true);
+    expect(aBase64url(fixacio.kid)).toBe(pendent.kid);
+    expect(fixacio.anteriors.map(aBase64url)).toEqual([kid]);
+    expect(await a2.servei.numeroSeguretat(FIL_D)).toMatchObject({ kid: pendent.kid, verificat: true, pendent: false });
+    expect(await a2.servei.contactesVerificats()).toBe(1);
+  });
+
+  test('B2a · una clau nova sense declaració autofirmada: cap candidata, sense-clau-altre, i res es fixa', async () => {
+    const servidor8 = creaServidor();
+    const a8 = await creaPart(servidor8, A);
+    const d8 = await creaPart(servidor8, D);
+    const { kid } = await a8.servei.numeroSeguretat(FIL_D);
+    servidor8.publica(D, await creaIdentitat(cripto, { usuari: D, creatMs: T0 + 1 }));
+    await expect(a8.servei.numeroSeguretat(FIL_D)).rejects.toMatchObject({ codi: 'sense-clau-altre' });
+    await expect(a8.servei.marcaVerificat(FIL_D, { kid, verificat: true })).rejects.toMatchObject({ codi: 'sense-clau-altre' });
+    expect(aBase64url((await a8.magatzem.fixacio(ci(A), D)).kid)).toBe(aBase64url(d8.identitat.kid));
+    expect((await a8.magatzem.fixacio(ci(A), D)).verificat).toBe(false);
   });
 
   test('dins de la transacció: si la fixació d’IndexedDB és d’una altra clau, kid-canviat (mai la substituïx)', async () => {

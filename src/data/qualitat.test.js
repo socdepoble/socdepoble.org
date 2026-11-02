@@ -139,6 +139,9 @@ const CENS = Object.freeze([
      pura, sense servei desplegat) i les seues proves. */
   'src/data/federacio/inboxActivityPub.js',
   'src/data/federacio/inboxActivityPub.test.js',
+  /* B5 · persistència de la inbox i exportació amb dos comptes (marató 261101_2143) */
+  'src/data/supabase/apInbox.migracio.test.js',
+  'src/data/supabase/exportacioFederacio.dosComptes.test.js',
   /* T2 · D04/D10 (assalt 261101) · Les dades obertes: la lectura anònima de
      Supabase i l'opció anonim del runtime, el lot de restauració, el
      restaurador i les seues proves, l'exportador 1.2.0 i l'entrada del poble. */

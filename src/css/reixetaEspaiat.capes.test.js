@@ -40,30 +40,44 @@ function foraDeReixeta(css) {
   return trobades;
 }
 
+/** El mateix cens amb el selector de cada declaració, com «selector { propietat: valor }». */
+function foraDeReixetaAmbSelector(css) {
+  // Els comentaris es buiden sense moure els offsets.
+  const net = css.replace(/\/\*[\s\S]*?\*\//g, (c) => c.replace(/[^\n]/g, ' '));
+  const trobades = [];
+  for (const m of net.matchAll(/(?<![\w-])([a-z-]+)\s*:\s*([^;{}]+)/g)) {
+    const [declaracio] = foraDeReixeta(`${m[1]}: ${m[2]};`);
+    if (!declaracio) continue;
+    const abans = net.slice(0, m.index);
+    const obri = abans.lastIndexOf('{');
+    // El selector comença darrere de la regla, la declaració o l'obertura (@media, @layer) d'abans.
+    const tall = Math.max(...['}', ';', '{'].map((signe) => abans.lastIndexOf(signe, obri - 1)));
+    trobades.push(`${abans.slice(tall + 1, obri).trim().replace(/\s+/g, ' ')} { ${declaracio} }`);
+  }
+  return trobades;
+}
+
 /* Fora de la reixeta amb motiu, no són deute:
      · margin -1px a base.css i a .sdp-nomes-lector: el patró visualment
        amagat (clip d'un píxel);
      · la resta de components.css, exempta amb el seu motiu a
        components.abast.capes.test.js (ESPAI_EXEMPT): la vora encavalcada de
        les pestanyes, el filet de l'anatomia i l'ajust òptic de la icona de
-       l'alerta. */
+       l'alerta;
+     · margin-left 2px a modules.css (.audio-play-btn svg, B7b 261102): l'ajust
+       òptic del triangle de reproduir, que pesa a l'esquerra dins del cercle,
+       com la icona de l'alerta. */
 const AMB_MOTIU = {
   'src/css/base.css': ['margin: -1px'],
   'src/css/components.css': ['margin: -1px', 'margin-top: 2px', 'margin-bottom: -2px', 'gap: 2px'],
+  'src/css/modules.css': ['margin-left: 2px'],
 };
 
-/* Deute a HEAD b842160ac (cens del 261025). Es corregix passant a tokens
-   (--sdp-space-N); el canvi de .nav-item (13px) i el de .btn (11px) mouen un
-   píxel i demanen captura abans i després. */
-const DEUTE = {
-  'src/css/layout.css': ['gap: 13px', 'padding: 6px', 'padding: 6px', 'padding: 11px 20px', 'padding: 6px', 'padding: 11px 20px'],
-  'src/css/modules.css': ['gap: 2px', 'margin-left: 2px', 'padding: 6px var(--sdp-space-2)', 'margin-top: 18px',
-    'padding-inline: calc((var(--sdp-touch-min) - 18px) / 2)', 'gap: 2px', 'margin-top: 18px', 'padding: 2px 8px',
-    'gap: 6px', 'padding-inline: 10px'],
-  'src/css/sdp.css': ['margin-left: -10px'],
-  'src/css/utilities.css': ['margin-bottom: 2px'],
-  'src/css/wiki.css': ['padding: 10px 16px', 'margin-bottom: 18px', 'margin-bottom: 6px'],
-};
+/* PS-05 (B7b, marató 261101_2143) · Trinquet a 0. Dels 21 literals del cens
+   del 261025, 20 ja són tokens (--sdp-space-N, --sdp-mb-ul, --sdp-li-gap) i
+   el del triangle de reproduir ha passat a AMB_MOTIU. El deute no torna a
+   créixer: un literal nou es corregix amb un token, no s'apunta ací. */
+const DEUTE = {};
 
 describe('Pedra Seca §3 · reixeta de 4px a l’espaiat de tots els fulls de src/', () => {
   const cens = {};
@@ -88,6 +102,20 @@ describe('Pedra Seca §3 · reixeta de 4px a l’espaiat de tots els fulls de sr
     expect(sobrants, 'deute ja corregit: lleva’l de la llista').toEqual([]);
   });
 
+  /* PS-05 · El trinquet és a 0: cap deute, i les excepcions són les sis amb
+     motiu escrit. Una excepció nova demana el motiu ací i canviar el compte. */
+  test('trinquet a 0: el deute és buit i les excepcions amb motiu són sis', () => {
+    expect(DEUTE).toEqual({});
+    expect(Object.values(AMB_MOTIU).flat()).toHaveLength(6);
+  });
+
+  /* L'excepció de modules.css val per al triangle de reproduir i res més: el
+     mateix «margin-left: 2px» en un altre selector seria deute nou. */
+  test('l’ajust òptic de modules.css és només el del triangle de reproduir', () => {
+    const modules = readFileSync(resolve(ARREL, 'src/css/modules.css'), 'utf8');
+    expect(foraDeReixetaAmbSelector(modules)).toEqual(['.audio-play-btn svg { margin-left: 2px }']);
+  });
+
   test('el detector veu les formes fora de reixeta i deixa passar les bones', () => {
     expect(foraDeReixeta('.a { gap: 13px; padding: 0.3rem 8px; margin: 0 auto; }'))
       .toEqual(['gap: 13px', 'padding: 0.3rem 8px']);
@@ -96,5 +124,32 @@ describe('Pedra Seca §3 · reixeta de 4px a l’espaiat de tots els fulls de sr
     expect(foraDeReixeta('.a { padding-inline: calc((var(--sdp-touch-min) - 18px) / 2); }'))
       .toEqual(['padding-inline: calc((var(--sdp-touch-min) - 18px) / 2)']);
     expect(foraDeReixeta('.a { width: 13px; border: 1px solid; } /* gap: 13px */')).toEqual([]);
+    // Les formes amb què B7b ha tancat el deute: tokens dins de calc() i tokens de prosa.
+    expect(foraDeReixeta('.a { margin-left: calc(-1 * var(--sdp-space-3)); margin-bottom: var(--sdp-mb-ul); }')).toEqual([]);
+    expect(foraDeReixeta('.a { padding-inline: calc((var(--sdp-touch-min) - var(--sdp-space-6)) / 2); }')).toEqual([]);
+    expect(foraDeReixetaAmbSelector('.b {}\n.a svg { width: 9px; margin-left: 2px; }\n@media (x) { .c { gap: 6px; } }'))
+      .toEqual(['.a svg { margin-left: 2px }', '.c { gap: 6px }']);
+    // Un comentari amb «;» o «{» dins de la regla no ha de tallar el selector.
+    expect(foraDeReixetaAmbSelector('.a svg {\n  /* motiu; vegeu { */\n  margin-left: 2px;\n}'))
+      .toEqual(['.a svg { margin-left: 2px }']);
+  });
+
+  /* Ítem 11 de PS-05 · La icona de l'acció de text ocupa una cel·la de la
+     diana tàctil: el coixí és (touch-min − glif) / 2, i el token restat ha de
+     valdre el glif real que pinta AppGridColumn (24px), no un de suposat. */
+  test('la cel·la de la icona de l’acció de text fa la diana tàctil amb el glif real', () => {
+    const tokens = readFileSync(resolve(ARREL, 'src/css/tokens.css'), 'utf8')
+      + readFileSync(resolve(ARREL, 'src/css/design-tokens.css'), 'utf8');
+    const px = (nom) => Number(tokens.match(new RegExp(`${nom}:\\s*(\\d+)px`))?.[1]);
+    const modules = readFileSync(resolve(ARREL, 'src/css/modules.css'), 'utf8');
+    const regla = modules.match(/\.sdp-workspace \.app-grid-col-header__accio-text > svg \{([^}]*)\}/)?.[1] ?? '';
+    const restat = regla.match(/padding-inline:\s*calc\(\(var\(--sdp-touch-min\) - var\((--sdp-[\w-]+)\)\) \/ 2\)/)?.[1];
+    const columna = readFileSync(resolve(ARREL, 'src/components/layout/AppGridColumn.jsx'), 'utf8');
+    const glif = Number(columna.match(/<a\.icona size=\{a\.iconSize \|\| (\d+)\}/)?.[1]);
+    expect(restat, 'el coixí de la icona ha de ser (touch-min − token) / 2').toBeTruthy();
+    expect(glif).toBeGreaterThan(0);
+    expect(px(restat), 'el token restat ha de valdre el glif real').toBe(glif);
+    const cella = (px('--sdp-touch-min') - px(restat)) + glif;
+    expect(cella, 'la cel·la de la icona').toBe(48);
   });
 });

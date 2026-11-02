@@ -315,7 +315,7 @@ const SUPERPOSICIONS = [
     'El full que obri «Tu» al peu del rail del Xat: un modal centrat de mida fixa amb una pila de pàgines dins del mateix marc, amb l’anatomia habitual dels ajustos de missatgeria. Només hi ha el que el Xat ja té; la resta diu que està en construcció.',
     'ajustos tu perfil compte privacitat aparenca tema llengua amplaria columnes preferits destacats ajuda en construccio'),
   /* Pla 261101_1246 (T7 · S7; P1-12 pas 17 i IDEA-48) · maqueta darrere de la bandera E2EE apagada. */
-  especimen('superposicions', 'xat-seguretat', 'Xat · Xifratge i número de seguretat', 'CosSeguretatXat · CosPersonesConfianca (P1-12, IDEA-48)', ['organisme', 'xat', 'dialeg', 'maqueta'],
+  especimen('superposicions', 'xat-seguretat', 'Xat · Xifratge i número de seguretat', 'CosSeguretatXat · CosPersonesConfianca · AvisClauCanviada (P1-12, IDEA-48)', ['organisme', 'xat', 'dialeg', 'maqueta'],
     'Maqueta, encara no activa: el xifratge d’extrem a extrem del xat va darrere d’una bandera apagada i el xat, avui, no és xifrat. Quan s’encenga, cada conversa dirà què passa amb els seus missatges i, en un xat privat entre dues persones, el número de seguretat per a comparar i marcar com a verificat; i Privacitat i dades dirà quants contactes verificats tens per a les persones de confiança.',
     'xifratge numero seguretat verificat persones confianca recuperacio e2ee extrem a extrem'),
   /* T41 (ordre del Mestre, 260928) · pública o privada, amb avís. */

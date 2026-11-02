@@ -31,7 +31,7 @@
     display: flex;
     align-items: center;
     gap: 8px;
-    padding: 10px 16px;
+    padding: var(--sdp-space-3) var(--sdp-space-4);
     font-size: 0.82rem;
     font-weight: 600;
     letter-spacing: 0.02em;
@@ -58,15 +58,17 @@
     white-space: pre;
   }
 
-  /* ── RITME DE LLISTES (Compacte entre ítems, espaiat respecte a paràgrafs) ── */
+  /* ── RITME DE LLISTES (Compacte entre ítems, espaiat respecte a paràgrafs) ──
+     PS-05 (B7b, 261102) · Els tokens de prosa: 20px darrere de la llista
+     (--sdp-mb-ul) i 4px entre ítems (--sdp-li-gap, Llei de llistes del 261031). */
   .sdp-wiki-workspace .sdp-prose ul,
   .sdp-wiki-workspace .sdp-prose ol {
     margin-top: 8px;
-    margin-bottom: 18px;
+    margin-bottom: var(--sdp-mb-ul);
     padding-left: 24px;
   }
   .sdp-wiki-workspace .sdp-prose li {
-    margin-bottom: 6px;
+    margin-bottom: var(--sdp-li-gap);
     line-height: 1.55;
   }
   .sdp-wiki-workspace .sdp-prose li:last-child {

@@ -3,6 +3,7 @@ import React, { useContext, useState, useEffect, useLayoutEffect, useMemo, useCa
    viuen a objectesDeContext.js, que no importa res del projecte. */
 import { RouteParamsContext, RouterContext, RouterPrefixContext } from './objectesDeContext.js';
 import { normalitzaBase, resolRuta, treuBase } from './politicaRouter.js';
+import { ambTransicioDeVista } from './transicioDeVista.js';
 
 /* `currentPath` és la ruta de l'app, o `null` FORA DE BASE: el router de
    navegador té una base declarada i la URL del document no hi cau (és una
@@ -50,6 +51,18 @@ export function RouterProvider({ children, basename = '' }) {
   const currentPath = ubicacio.ruta;
   const searchParams = ubicacio.cerca;
 
+  /* ARB-B7a-01 (corrector B7a) · Entre el pushState d'una fosa i el seu callback,
+     l'historial ja és el nou però la vista pintada encara és la vella. Ací es
+     guarden l'estat i el fragment de l'entrada que encara es veu, perquè
+     useLocation no barreje la ruta vella amb l'estat nou. null sense cap fosa
+     pendent. Qualsevol ubicació confirmada (fosa, navegació, Arrere) el buida. */
+  const pintadaRef = useRef(null);
+  const fosaPendent = useCallback(() => pintadaRef.current, []);
+  const confirma = useCallback(() => {
+    pintadaRef.current = null;
+    setUbicacio(llegeixUbicacio());
+  }, [llegeixUbicacio]);
+
   // Si la base canvia en calent, la ruta es torna a llegir; si no, res no canvia.
   useEffect(() => {
     const nova = llegeixUbicacio();
@@ -57,13 +70,11 @@ export function RouterProvider({ children, basename = '' }) {
   }, [llegeixUbicacio]);
 
   useEffect(() => {
-    const handlePopState = () => {
-      // L'amfitrió pot tornar arrere a una pàgina seua: llavors la ruta és null i l'app queda inert.
-      setUbicacio(llegeixUbicacio());
-    };
+    // L'amfitrió pot tornar arrere a una pàgina seua: llavors la ruta és null i l'app queda inert.
+    const handlePopState = () => { confirma(); };
     window.addEventListener('popstate', handlePopState);
     return () => window.removeEventListener('popstate', handlePopState);
-  }, [llegeixUbicacio]);
+  }, [confirma]);
 
   const navigate = useCallback((to, options = {}) => {
     if (!to) return;
@@ -83,23 +94,38 @@ export function RouterProvider({ children, basename = '' }) {
     const targetPath = base + ruta;
 
     const state = options.state || null;
+    const ambFosa = options.transicio === true;
+    // La foto de l'entrada que es veu ara, abans d'escriure la nova (ARB-B7a-01).
+    const pintada = ambFosa ? { estat: window.history.state, hash: window.location.hash } : null;
 
+    // L'historial s'escriu abans i en sincronia: qui llig la URL just després de navigate() ja veu la nova.
     if (options.replace) {
       window.history.replaceState(state, '', targetPath);
     } else {
       window.history.pushState(state, '', targetPath);
     }
 
-    setUbicacio(llegeixUbicacio());
-  }, [base, llegeixUbicacio]);
+    /* PS-01 (B7) · Amb { transicio: true }, la vista nova es pinta dins de la
+       fosa (transicioDeVista.js). La ubicació es llig en el callback, no ara:
+       si una altra navegació l'avança, la fosa pinta la darrera URL. Amb dues
+       foses seguides, la pintada continua sent la de la primera. */
+    if (ambFosa) {
+      if (pintadaRef.current === null) pintadaRef.current = pintada;
+      ambTransicioDeVista(confirma);
+      return;
+    }
+    confirma();
+  }, [base, llegeixUbicacio, confirma]);
 
   const contextValue = useMemo(() => ({
     currentPath,
     searchParams,
     navigate,
     basename: base,
-    memoria: false
-  }), [currentPath, searchParams, navigate, base]);
+    memoria: false,
+    fosaPendent,
+    ubicacioViva: llegeixUbicacio
+  }), [currentPath, searchParams, navigate, base, fosaPendent, llegeixUbicacio]);
 
   return (
     <RouterContext.Provider value={contextValue}>
@@ -127,26 +153,36 @@ export function useNavigate() {
    Gauntlet 261017 (M07, C07) · `hash`, camp nou: el fragment (#…) de la URL
    del document, al navegador i dins de la base. En memòria i fora de base,
    '': l'entrada de memòria no el guarda i el fragment de fora és de
-   l'amfitrió. Els dobles d'abans no el porten: qui el llig hi posa ''. */
+   l'amfitrió. Els dobles d'abans no el porten: qui el llig hi posa ''.
+   ARB-B7a-01 · Mentre una fosa no ha pintat la vista nova, state i hash són
+   els de l'entrada que encara es veu (fosaPendent), no els de l'historial,
+   que ja és el nou: la vista vella no es pinta amb l'estat de la nova. */
 export function useLocation() {
-  const { currentPath, searchParams, memoria, estat } = useRouter();
+  const { currentPath, searchParams, memoria, estat, fosaPendent } = useRouter();
   const foraDeBase = currentPath === null;
   let state = null;
   let hash = '';
   if (memoria) state = estat;
   else if (!foraDeBase) {
-    state = window.history.state;
-    hash = window.location.hash;
+    const pintada = typeof fosaPendent === 'function' ? fosaPendent() : null;
+    state = pintada ? pintada.estat : window.history.state;
+    hash = pintada ? pintada.hash : window.location.hash;
   }
   return { pathname: foraDeBase ? '' : currentPath, search: searchParams.toString(), state, hash };
 }
 
 export function useSearchParams() {
-  const { searchParams, navigate, currentPath } = useRouter();
+  const { searchParams, navigate, currentPath, ubicacioViva } = useRouter();
 
+  /* ARB-B7a-01 · Al navegador, la consulta nova es resol sobre la URL viva (la
+     darrera escrita a l'historial), com resol navigate() les relatives. Dins
+     d'una fosa, la ruta de React encara és la de la vista vella: un replace
+     sobre ella esborrava l'entrada que la fosa acabava d'empényer. En memòria
+     (i en els dobles sense ubicacioViva), la ruta de React, com sempre. */
   const setParams = useCallback((newParams, options = { replace: true }) => {
-    const currentUrl = new URL(currentPath || '/', 'http://localhost');
-    currentUrl.search = searchParams.toString();
+    const viva = typeof ubicacioViva === 'function' ? ubicacioViva() : null;
+    const currentUrl = new URL((viva ? viva.ruta : currentPath) || '/', 'http://localhost');
+    currentUrl.search = (viva ? viva.cerca : searchParams).toString();
     if (newParams instanceof URLSearchParams) {
       currentUrl.search = newParams.toString();
     } else {
@@ -159,7 +195,7 @@ export function useSearchParams() {
       });
     }
     navigate(currentUrl.pathname + currentUrl.search, options);
-  }, [navigate, currentPath, searchParams]);
+  }, [navigate, currentPath, searchParams, ubicacioViva]);
   
   return [searchParams, setParams];
 }
@@ -177,19 +213,23 @@ function hrefDe(to, basename, currentPath) {
   return ruta === null ? to : basename + ruta;
 }
 
-export function Link({ to, children, className, onClick, ...props }) {
+/* PS-01 (B7) · `transicio` (booleà): el clic navega amb la fosa entre vistes.
+   Es desestructura perquè no arribe a l'<a>. El MemoryRouter (l'incrustat)
+   l'ignora: no té fosa. */
+export function Link({ to, children, className, onClick, transicio = false, ...props }) {
   const { navigate, basename, currentPath } = useRouter();
-  
+
   const handleClick = (e) => {
     if (e.button === 0 && !e.ctrlKey && !e.metaKey && !e.shiftKey && !e.altKey) {
       // Verificació creuada per no trencar links externs o ancoratges purs
       if (typeof to === 'string' && (to.startsWith('http://') || to.startsWith('https://') || to.startsWith('mailto:'))) {
         return; // Deixem que el navegador gestione links externs
       }
-      
+
       e.preventDefault();
       if (onClick) onClick(e);
-      navigate(to);
+      if (transicio === true) navigate(to, { transicio: true });
+      else navigate(to);
     }
   };
   

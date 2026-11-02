@@ -9,7 +9,7 @@ vi.mock('../../data/backendPort.js', async (importOriginal) => ({
   ...(await importOriginal()),
   teCapacitat: () => false,
 }));
-import { ERRORS_MEMBRES, GestioMembres, TEXTOS_MEMBRES } from './GestioMembres.jsx';
+import { ERRORS_MEMBRES, ERRORS_TRANSFERENCIA, GestioMembres, TEXTOS_MEMBRES } from './GestioMembres.jsx';
 import { MISSATGES_MEMBRES_ORGANITZACIO } from '../../data/contracte.js';
 import { PARELLS_ROL } from '../../components/universal/identitat/rols.js';
 import { PARELLS_TIPUS } from './membresModel.js';
@@ -92,8 +92,8 @@ describe('P1-22 · els parells', () => {
   const buitsDe = (text) => [...String(text).matchAll(/\{(\w+)\}/g)].map((m) => m[1]).sort();
 
   test('cada parell és a les cinc llengües, el valencià és la reserva i els buits són els mateixos', () => {
-    // 36 de la gestió + 2 claus comunes reutilitzades, 3 rols i 2 tipus.
-    expect(PARELLS).toHaveLength(43);
+    // 36 de la gestió (+6 de la transferència, IDEA-24, M12) + 2 claus comunes reutilitzades, 3 rols i 2 tipus.
+    expect(PARELLS).toHaveLength(49);
     expect(new Set(PARELLS.map(([clau]) => clau)).size).toBe(PARELLS.length);
     for (const [clau, reserva] of PARELLS) {
       expect(clau).toMatch(/^(?:section\.perfil\.(?:membres|rol)\.|common\.(?:search|cancela)$)/);
@@ -397,5 +397,99 @@ describe('T11-02 · els errors del port, pel codi', () => {
       expect((await screen.findByRole('alert')).textContent, code).toBe('No s’ha pogut llegir la llista de membres.');
       cleanup();
     }
+  });
+});
+
+/* ═══════════════════════════════════════════════════════════════════
+   IDEA-24 (M12-B4-UI; marató 261101_2143) · LA TRANSFERÈNCIA DE LA
+   PROPIETAT EN CINC LLENGÜES
+
+   Els sis parells nous ja són a PARELLS (dalt). Ací, els errors propis de la
+   transferència (ERRORS_TRANSFERENCIA: 003, 006 i NO-DISPONIBLE, que en la
+   gestió diria «no gestiona els membres» i mentiria) i el flux sencer en
+   castellà i en basc.
+   ═══════════════════════════════════════════════════════════════════ */
+describe('IDEA-24 · la transferència, en cinc llengües', () => {
+  const DICCIONARIS = { ca: CA, es: ES, en: EN, eu: EU, gl: GL };
+  const FORN_EMPRESA = { ...FORN, dades: { ...FORN.dades, kind: 'company' } };
+  function pintaTransferencia({ llengua = 'es', transfereixPropietat = vi.fn(async () => ({ organizationId: 'O', anticOwnerId: 'JO', nouOwnerId: 'M' })) } = {}) {
+    const accions = accionsAmb({ transfereixPropietat });
+    const vista = <GestioMembres organitzacio={FORN_EMPRESA} accions={accions} />;
+    render(<UIProvider externalConfig={{ language: llengua }}>{vista}</UIProvider>);
+    return accions;
+  }
+
+  test('ERRORS_TRANSFERENCIA: només codis que ja són de la gestió (cap d’inventat), a les cinc llengües, sense buits i amb frase pròpia', () => {
+    expect(Object.keys(ERRORS_TRANSFERENCIA).sort()).toEqual(['NO-DISPONIBLE', 'SDP-ORGMEM-003', 'SDP-ORGMEM-006']);
+    for (const codi of Object.keys(ERRORS_TRANSFERENCIA)) expect(Object.hasOwn(ERRORS_MEMBRES, codi), codi).toBe(true);
+    const parells = Object.values(ERRORS_TRANSFERENCIA);
+    const totes = [...parells, ...Object.values(ERRORS_MEMBRES)].map(([clau]) => clau);
+    expect(new Set(totes).size).toBe(totes.length);
+    for (const [codi, [clau, reserva]] of Object.entries(ERRORS_TRANSFERENCIA)) {
+      expect(clau).toMatch(/^section\.perfil\.membres\.error\.transfereix\w+$/);
+      expect(CA[clau], clau).toBe(reserva);
+      // La frase de la transferència no és la de la gestió (si no, sobraria).
+      expect(reserva, codi).not.toBe(ERRORS_MEMBRES[codi][1]);
+      for (const [llengua, dic] of Object.entries(DICCIONARIS)) {
+        expect(typeof dic[clau] === 'string' && dic[clau].trim() !== '', `${llengua}: ${clau}`).toBe(true);
+        expect(dic[clau], `${llengua}: ${clau}`).not.toMatch(/\{\w+\}/);
+        if (llengua !== 'ca') expect(dic[clau], `${llengua}: ${clau}`).not.toBe(reserva);
+      }
+    }
+  });
+
+  test('NO-DISPONIBLE de la transferència és la frase de l’adaptador remot (no l’exporta: es llig la font)', () => {
+    const reserva = ERRORS_TRANSFERENCIA['NO-DISPONIBLE'][1];
+    const font = 'src/data/supabase/organizations.js';
+    expect(readFileSync(path.join(process.cwd(), font), 'utf8'), font).toContain(`'${reserva}'`);
+  });
+
+  test('en castellà: el botó de la fila, la confirmació, l’èxit i el focus a «Cancelar»', async () => {
+    const accions = pintaTransferencia();
+    const regio = await screen.findByRole('region', { name: 'Miembros de Forn' });
+    expect(within(regio).getAllByRole('button').map((b) => b.getAttribute('aria-label'))).toEqual([
+      'Volver a miembro: Andreu', 'Transferir la propiedad: Andreu', 'Quitar: Andreu',
+      'Nombrar administradora: Marta', 'Transferir la propiedad: Marta', 'Quitar: Marta', 'Quitar: Colla',
+    ]);
+    fireEvent.click(within(regio).getByRole('button', { name: 'Transferir la propiedad: Marta' }));
+    const dialeg = screen.getByRole('dialog', { name: '¿Transferir la propiedad de Forn a Marta?' });
+    expect(within(dialeg).getByText('Marta será la propietaria y tú pasarás a administradora: seguirás gestionando la ficha y los miembros, pero ya no podrás nombrar ni quitar administradoras. Solo Marta podrá devolverte la propiedad.')).toBeTruthy();
+    expect(document.activeElement).toBe(within(dialeg).getByRole('button', { name: 'Cancelar' }));
+    expect(dialeg.textContent).not.toMatch(/Cancel·lar|propietat/);
+    await act(async () => { fireEvent.click(within(dialeg).getByRole('button', { name: 'Transferir la propiedad' })); });
+    expect(accions.transfereixPropietat).toHaveBeenCalledWith('O', { tipus: 'persona', id: 'M' });
+    expect(screen.getByRole('status').textContent).toBe('Marta ya es la propietaria de Forn. Tú sigues como administradora.');
+    expect(filesDe(screen.getByRole('region', { name: 'Miembros de Forn' })).map(([nom, , rol]) => [nom, rol])).toEqual([
+      ['Marta', 'Propietario'], ['Andreu', 'Administra'], ['Jo (tú)', 'Administra'], ['Colla', 'Miembro'],
+    ]);
+  });
+
+  test.each([
+    ['NO-DISPONIBLE', 'El servidor de este pueblo todavía no sabe transferir la propiedad de las organizaciones.'],
+    ['SDP-ORGMEM-006', 'Solo la persona propietaria puede transferir la propiedad.'],
+    ['SDP-ORGMEM-003', 'Solo se puede transferir a una persona que sea miembro de la organización y de su pueblo y que no haya pedido la baja.'],
+    // Un codi sense frase pròpia de la transferència: la de la gestió, en castellà.
+    ['SDP-ORGMEM-002', 'Solo quien administra la organización puede ver y gestionar sus miembros.'],
+    // Sense codi: el genèric de l'acció, mai el text de l'error.
+    [undefined, 'No se ha podido transferir la propiedad.'],
+  ])('en castellà, la transferència rebutjada (%s) diu la frase del diccionari, mai la valenciana ni la de l’error', async (code, esperat) => {
+    pintaTransferencia({ transfereixPropietat: vi.fn(async () => { throw errorAmb(code); }) });
+    await screen.findByRole('region', { name: 'Miembros de Forn' });
+    fireEvent.click(screen.getByRole('button', { name: 'Transferir la propiedad: Andreu' }));
+    await act(async () => { fireEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Transferir la propiedad' })); });
+    expect(screen.queryByRole('dialog')).toBeNull();
+    expect(screen.getByRole('alert').textContent).toBe(esperat);
+    expect(document.body.textContent).not.toMatch(/Text de l’adaptador|encara no sap|propietat/);
+  });
+
+  test('en basc, «Etiqueta: {nom}»: el botó i la confirmació no enganxen cap sufix al nom', async () => {
+    pintaTransferencia({ llengua: 'eu' });
+    const regio = await screen.findByRole('region', { name: 'Forn: kideak' });
+    fireEvent.click(within(regio).getByRole('button', { name: 'Jabetza eskualdatu: Marta' }));
+    const dialeg = screen.getByRole('dialog', { name: 'Jabetza eskualdatu nahi duzu? Erakundea: Forn. Jabe berria: Marta.' });
+    expect(within(dialeg).getByRole('button', { name: 'Utzi' })).toBeTruthy();
+    expect(within(dialeg).getByRole('button', { name: 'Jabetza eskualdatu' })).toBeTruthy();
+    const enganxats = Object.values(ERRORS_TRANSFERENCIA).map(([clau]) => [clau, EU[clau]]).filter(([, text]) => /\{(?:nom|org)\}\p{L}/u.test(text));
+    expect(enganxats).toEqual([]);
   });
 });

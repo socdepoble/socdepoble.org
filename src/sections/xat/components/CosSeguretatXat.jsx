@@ -22,6 +22,14 @@
  * muntades sempre que hi ha número: buides, van amagades i fora del flux de la
  * graella del panell (.sdp-nomes-lector); quan l'estat canvia, reben el text i
  * es veuen al mateix lloc que abans. Cap canvi visual i cap text repetit.
+ *
+ * M02 (marató 261101_2143; disseny §4.4) · Un número `pendent` és el de la clau
+ * nova d'un contacte, encara sense confirmar: l'avís «Clau nova sense
+ * confirmar» (amb «Havies verificat…» si el contacte era verificat), el número
+ * nou i dues eixides: «Marca com a verificat» (accepta i verifica) i «He parlat
+ * amb {nom}: continua» (`onAccepta`, només per al canvi pendent d'este mateix
+ * kid). `rescataFocus`: el cos naix d'un canvi mentre el diàleg era obert; quan
+ * el número arriba, si el focus és al body, va al primer botó.
  */
 import { useEffect, useRef } from 'react';
 import { ShieldCheck } from 'lucide-react';
@@ -35,17 +43,28 @@ const T_RESERVA = (_clau, reserva) => reserva;
 /**
  * estat: { estat, potVerificar, text, nota } (estatXifratgeDelFil).
  * numero: { estat: 'inactiu'|'calculant'|'llest'|'sense-clau'|'sense-claus-propies'|
- *   'clau-canviada'|'error', numero, verificat, avis: null|'canviat'|'errorMarca', ocupat }.
+ *   'clau-canviada'|'error', numero, kid, verificat, pendent, avis: null|'canviat'|'errorMarca', ocupat }.
+ * canvis: { pendents: [{ usuari, motiu, kidNou }], ocupat, error } (useCanvisDeClau).
+ * onAccepta(usuari, kid): «He parlat amb {nom}: continua».
  */
-export default function CosSeguretatXat({ estat, nom = '', numero = null, onMarca = null, t = T_RESERVA }) {
+export default function CosSeguretatXat({
+  estat, nom = '', numero = null, onMarca = null, canvis = null, onAccepta = null, rescataFocus = false, t = T_RESERVA
+}) {
   const nomNet = String(nom || '').trim();
   const tr = ([clau, reserva]) => omple(t(clau, reserva), { nom: nomNet });
   const n = numero || { estat: 'inactiu' };
   const grups = n.estat === 'llest' && XIFRES.test(n.numero ?? '') ? n.numero.split(' ') : null;
   const titol = tr(TEXTOS_XIFRATGE.numero.titol);
   const arrel = useRef(null);
-  const rescat = useRef(false);
+  const rescat = useRef(rescataFocus === true);
   const ocupat = n.ocupat === true;
+  /* M02 · El número de la clau nova i, si n'hi ha, el canvi pendent d'eixe mateix kid
+     (mai un altre: la persona només pot acceptar la clau que compara). */
+  const pendent = grups !== null && n.pendent === true;
+  const canviPendent = pendent && Array.isArray(canvis?.pendents)
+    ? canvis.pendents.find((p) => typeof p?.kidNou === 'string' && p.kidNou === n.kid) ?? null
+    : null;
+  const potAcceptar = canviPendent !== null && typeof onAccepta === 'function';
   const calculant = n.estat === 'calculant';
   /* «Verificat…» només al costat d'un número. */
   const verificat = grups !== null && n.verificat === true;
@@ -76,6 +95,11 @@ export default function CosSeguretatXat({ estat, nom = '', numero = null, onMarc
             <>
               {/* Gauntlet T7b-G03 · «Compareu este número nou» només al costat d'un número. */}
               {n.avis === 'canviat' ? <Alerta to="avis">{tr(TEXTOS_XIFRATGE.numero.canviat)}</Alerta> : null}
+              {pendent ? (
+                <Alerta to="avis" titol={tr(TEXTOS_XIFRATGE.clauNovaSenseConfirmar)}>
+                  {tr(canviPendent?.motiu === 'verificat' ? TEXTOS_XIFRATGE.verificatBloquejat : TEXTOS_XIFRATGE.clauCanviadaForta)}
+                </Alerta>
+              ) : null}
               <div className="sdp-xat-numero" role="group" aria-label={titol}>
                 {grups.map((grup, i) => <span key={`${i}-${grup}`}>{grup}</span>)}
               </div>
@@ -94,9 +118,19 @@ export default function CosSeguretatXat({ estat, nom = '', numero = null, onMarc
             <>
               {n.avis === 'errorMarca' ? <Alerta to="error">{tr(TEXTOS_XIFRATGE.numero.errorMarca)}</Alerta> : null}
               {typeof onMarca === 'function' ? (
-                <Boto varietat={n.verificat ? 'secundari' : 'primari'} carregant={n.ocupat === true} onClick={() => onMarca(!n.verificat)}>
+                <Boto varietat={n.verificat ? 'secundari' : 'primari'} carregant={n.ocupat === true} disabled={pendent && canvis?.ocupat === true}
+                  onClick={() => onMarca(!n.verificat)}>
                   {tr(n.verificat ? TEXTOS_XIFRATGE.numero.desmarca : TEXTOS_XIFRATGE.numero.marca)}
                 </Boto>
+              ) : null}
+              {potAcceptar ? (
+                <>
+                  {canvis?.error === 'acceptacio' ? <Alerta to="error">{tr(TEXTOS_XIFRATGE.errorAccepta)}</Alerta> : null}
+                  <Boto varietat="secundari" carregant={canvis?.ocupat === true} disabled={ocupat}
+                    onClick={() => onAccepta(canviPendent.usuari, canviPendent.kidNou)}>
+                    {tr(TEXTOS_XIFRATGE.clauCanviadaContinua)}
+                  </Boto>
+                </>
               ) : null}
             </>
           ) : null}

@@ -252,7 +252,7 @@ nav.app-sidebar > .app-sidebar-nav > .app-sidebar-nav__llista { flex: 1 0 auto; 
 .nav-item {
   display: flex;
   align-items: center;
-  gap: 13px;
+  gap: var(--sdp-space-3);
   font: var(--sdp-font-barra);
   letter-spacing: normal;
   text-transform: none;
@@ -337,7 +337,7 @@ header.bar-black {
   z-index: var(--z-barra-negra);
 }
 .bar-black .right-icons { display: flex; align-items: center; gap: var(--sdp-space-2); margin-left: auto; }
-.bar-black .right-icons .icon { width: var(--sdp-touch); height: var(--sdp-touch); padding: 6px; opacity: 0.8; cursor: pointer; transition: opacity var(--sdp-t); }
+.bar-black .right-icons .icon { width: var(--sdp-touch); height: var(--sdp-touch); padding: var(--sdp-space-2); opacity: 0.8; cursor: pointer; transition: opacity var(--sdp-t); }
 /* Fase C (pla 261004_0050, Kowalski) · cap hover alça: fora la pujada d'1px.
    El retorn en passar-hi per damunt és l'opacitat plena. */
 @media (hover: hover) and (pointer: fine) {
@@ -462,6 +462,10 @@ header.bar-blue > * { min-width: 0; }
   max-height: min(75vh, 720px);
   margin-inline: auto;
 }
+/* IDEA-42 (B7h, marató 261101_2143) · Cartell sencer (PageFrame,
+   portadaSencera): la vertical sense límit d'alçada, a la mida natural i mai
+   ampliada (max-width: 100% i width: auto de dalt). */
+.hero-image--sencera img { max-height: none; }
 
 /* Barra taronja (context: autor i poble) */
 section.bar-orange {
@@ -832,7 +836,7 @@ nav.mobile-nav { display: none; }
   header.bar-black .right-icons { flex: none; }
   header.bar-black .right-icons { gap: 0; margin-left: auto; }
   /* Q2 (pla 261004_0050) · la cel·la tàctil és el token, no un 44 a mà. */
-  header.bar-black .right-icons .icon { margin-left: 0; flex: 0 0 var(--sdp-touch); width: var(--sdp-touch); height: var(--sdp-touch); min-width: var(--sdp-touch); min-height: var(--sdp-touch); padding: 6px; }
+  header.bar-black .right-icons .icon { margin-left: 0; flex: 0 0 var(--sdp-touch); width: var(--sdp-touch); height: var(--sdp-touch); min-width: var(--sdp-touch); min-height: var(--sdp-touch); padding: var(--sdp-space-2); }
   header.bar-black .right-icons img.icon { width: var(--sdp-touch); height: var(--sdp-touch); min-width: var(--sdp-touch); min-height: var(--sdp-touch); }
   header.bar-black .right-icons svg { width: 22px; height: 22px; stroke-width: 2; }
 
@@ -846,7 +850,7 @@ nav.mobile-nav { display: none; }
      components.css, capa `components`: cap regla d'ací els pot tocar. */
 
   .swatch-color { height: 80px; padding: 12px; }
-  .btn { padding: 11px 20px; font-size: 0.95rem; }
+  .btn { padding: var(--sdp-space-3) var(--sdp-space-5); font-size: 0.95rem; }
   /* T3 (260930) · La barra mòbil ja no té regles pròpies ací: la de
      `header nav.mobile-nav` no casava mai (la barra és germana de <main>, fora
      de cap capçalera) i el coixí de 6px trencava el pressupost de sis
@@ -881,7 +885,7 @@ nav.mobile-nav { display: none; }
   }
   header.bar-black .right-icons { flex: none; }
   header.bar-black .right-icons { gap: 0; margin-left: auto; }
-  header.bar-black .right-icons .icon { margin-left: 0; flex: 0 0 var(--sdp-touch); width: var(--sdp-touch); height: var(--sdp-touch); min-width: var(--sdp-touch); min-height: var(--sdp-touch); padding: 6px; }
+  header.bar-black .right-icons .icon { margin-left: 0; flex: 0 0 var(--sdp-touch); width: var(--sdp-touch); height: var(--sdp-touch); min-width: var(--sdp-touch); min-height: var(--sdp-touch); padding: var(--sdp-space-2); }
   header.bar-black .right-icons img.icon { width: var(--sdp-touch); height: var(--sdp-touch); min-width: var(--sdp-touch); min-height: var(--sdp-touch); }
   header.bar-black .right-icons svg { width: 22px; height: 22px; stroke-width: 2; }
 
@@ -895,7 +899,7 @@ nav.mobile-nav { display: none; }
      components.css, capa `components`: cap regla d'ací els pot tocar. */
 
   .swatch-color { height: 80px; padding: 12px; }
-  .btn { padding: 11px 20px; font-size: 0.95rem; }
+  .btn { padding: var(--sdp-space-3) var(--sdp-space-5); font-size: 0.95rem; }
   /* T3 (260930) · La barra mòbil ja no té regles pròpies ací: la de
      `header nav.mobile-nav` no casava mai (la barra és germana de <main>, fora
      de cap capçalera) i el coixí de 6px trencava el pressupost de sis

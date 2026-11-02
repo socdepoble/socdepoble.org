@@ -20,7 +20,7 @@
  *    sempre (per defecte) o targetes (?vista=graella, push com els filtres;
  *    targetaDeResultat.js), amb les mateixes dades i el mateix enllaç.
  */
-import { Fragment, useCallback, useEffect, useId, useMemo, useRef, useState } from 'react';
+import { Fragment, Suspense, lazy, useCallback, useEffect, useId, useMemo, useRef, useState } from 'react';
 import { LayoutGrid, List, Search } from 'lucide-react';
 import { UniversalPage } from '../../components/universal/UniversalPage';
 import {
@@ -60,7 +60,7 @@ function ResultatAmbCara({ avatar, ...props }) {
   return <ResultatCerca {...props} avatar={cara} />;
 }
 
-export default function SearchSection() {
+function CercaClassica() {
   const { t } = useUIActions();
   const [params, setParams] = useSearchParams();
   const qURL = params.get('q') || '';
@@ -417,5 +417,22 @@ export default function SearchSection() {
         {cos}
       </div>
     </UniversalPage>
+  );
+}
+
+/* IDEA-46 (B6-B3, marató 261101_2143) · /cerca?mode=espai obri l'espai de
+   cerca en tres columnes (EspaiCerca.jsx, carregat a part: el tros de /cerca
+   no creix). Sense el mode, la /cerca de sempre (D-4: cap enllaç visible,
+   cap ruta nova). */
+const EspaiCerca = lazy(() => import('./EspaiCerca.jsx'));
+
+export default function SearchSection() {
+  const { t } = useUIActions();
+  const [params] = useSearchParams();
+  if (params.get('mode') !== 'espai') return <CercaClassica />;
+  return (
+    <Suspense fallback={<Carregant etiqueta={t('section.search.espai.carregant', "Obrint l'espai de cerca…")} />}>
+      <EspaiCerca />
+    </Suspense>
   );
 }

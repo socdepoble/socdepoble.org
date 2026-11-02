@@ -154,3 +154,83 @@ describe('P1-28 · la Columna 1 estreta no talla paraules', () => {
     expect(declaracions(espaiador.cos)).toMatchObject({ width: 'var(--sdp-touch-min)', flex: 'none' });
   });
 });
+
+/* PS-11 (marató 261101, B7e; default D-1 del Mestre) · Els títols de la
+   Columna 1 a 201 px: amb la columna per davall de 240 px, el [|<] que
+   repetix la icona (AppGridColumn el marca amb data-germana-de-la-icona)
+   s'amaga i el títol guanya 48 px (el grup d'accions buit conserva el gap de
+   8). jsdom no resol @container: es comprova la regla escrita, el llindar
+   contra el coixí real de la capçalera i la marca al JSX. La mesura de veres
+   (Chrome a 1024, 1100, 1280 i 1440: 0 títols tallats, el [|<] amagat només
+   a 1024 i, amb el focus, visible fins que el focus se'n va) és al registre
+   del carril M21-B7e-COLUMNA. */
+const CAPCALERA = '.app-grid-shell[data-layout="ample"] > .app-grid-content > .app-grid-column--left .app-grid-col-header:not(.app-grid-col-header--collapsed):not(.app-grid-col-header--replegable)';
+const CONSULTA_CAPCALERA = '@container sdp-capcalera-navegacio (max-width: 207.98px)';
+const GERMANA = '.app-grid-col-header__accions > [data-germana-de-la-icona]:not(:focus)';
+
+describe('PS-11 · el títol de la Columna 1 estreta no el talla el [|<] repetit', () => {
+  test('la capçalera de la Columna 1 és el contenidor: només en «ample», sense el rail plegat ni la capçalera sencera del Xat, dins de @layer components', () => {
+    const r = MODULS.filter((x) => /sdp-capcalera-navegacio/.test(x.cos));
+    expect(r).toHaveLength(1);
+    expect(r[0].prelud).toBe(CAPCALERA);
+    expect(declaracions(r[0].cos)).toEqual({ 'container-name': 'sdp-capcalera-navegacio', 'container-type': 'inline-size' });
+    expect(r[0].pares).toEqual(['@layer components']);
+  });
+
+  test('a la capçalera estreta només s’amaga el [|<] marcat: ni la icona, ni el títol, ni cap altre botó', () => {
+    const consulta = dins(CONSULTA_CAPCALERA);
+    expect(consulta).toHaveLength(1);
+    expect(consulta[0].prelud).toBe(GERMANA);
+    expect(declaracions(consulta[0].cos)).toEqual({ display: 'none' });
+    expect(consulta[0].pares).toEqual(['@layer components', CONSULTA_CAPCALERA]);
+    /* Cap altra consulta d'este contenidor, i cap regla fora d'ella que nomene la marca. */
+    expect(MODULS.filter((x) => x !== consulta[0] && x.pares.some((p) => p.includes('sdp-capcalera-navegacio')))).toEqual([]);
+    expect(MODULS.filter((x) => x !== consulta[0] && x.prelud.includes('data-germana-de-la-icona'))).toEqual([]);
+  });
+
+  test('el [|<] amb el focus no s’amaga quan la columna s’estreny: amagar-lo tiraria el focus al body (WCAG 2.4.3)', () => {
+    const [regla] = dins(CONSULTA_CAPCALERA);
+    expect(regla.prelud.endsWith('[data-germana-de-la-icona]:not(:focus)')).toBe(true);
+    /* :focus i no :focus-visible: a Chrome un clic de ratolí també dona el
+       focus al botó, i amagar-lo després el perdria igual. */
+    expect(regla.prelud).not.toMatch(/focus-(visible|within)/);
+  });
+
+  test('el llindar és la columna de 240 px: la consulta mesura la caixa de contingut, sense el coixí de 16 + 16 de la capçalera', () => {
+    const closca = regles(llig('src/components/layout/AppGridShell.css'));
+    const base = closca.filter((x) => x.prelud === '.app-grid-col-header' && x.pares.length === 0);
+    expect(base).toHaveLength(1);
+    expect(declaracions(base[0].cos).padding.split(/\s+/)).toEqual(['0', 'var(--sdp-space-4)']);
+    /* Cap regla de modules.css canvia el coixí de la capçalera de la Columna 1. */
+    expect(MODULS.filter((x) => /\.app-grid-col-header(?![\w-])/.test(x.prelud) && /column--left|sdp-workspace-column/.test(x.prelud)
+      && Object.keys(declaracions(x.cos)).some((p) => /^padding(-inline|-left|-right)?(-start|-end)?$/.test(p)))).toEqual([]);
+    /* El nom del token es compon perquè la porta de Tokens no el prenga per una segona declaració. */
+    const espai = Number(new RegExp(`${'--sdp-space'}-4:\\s*(\\d+)px`).exec(llig('src/css/tokens.css'))[1]);
+    const llindar = Number(/\(max-width: ([\d.]+)px\)/.exec(CONSULTA_CAPCALERA)[1]);
+    /* 201 px a 1024 (contingut 169): s'amaga. 246 a 1100 (214) i 260 a 1280 (228): es veu. */
+    expect(llindar + 2 * espai).toBeGreaterThan(239.9);
+    expect(llindar + 2 * espai).toBeLessThan(240);
+    expect(201 - 2 * espai).toBeLessThanOrEqual(llindar);
+    expect(246 - 2 * espai).toBeGreaterThan(llindar);
+  });
+
+  test('la marca viu al JSX on la CSS la busca: el [|<], fill directe del grup d’accions, només amb iconaReplega, sense el focus i amb el mateix onReplega que la icona', () => {
+    const elements = elementsJsx(parse(llig('src/components/layout/AppGridColumn.jsx'), { sourceType: 'module', plugins: ['jsx'] }));
+    const marcats = elements.filter((el) => atribut(el, 'data-germana-de-la-icona'));
+    expect(marcats).toHaveLength(1);
+    const [boto] = marcats;
+    expect(boto.openingElement.name.name).toBe('button');
+    const marca = atribut(boto, 'data-germana-de-la-icona').value.expression;
+    expect(marca).toMatchObject({ type: 'ConditionalExpression', test: { type: 'Identifier', name: 'iconaReplega' }, consequent: { type: 'StringLiteral', value: '' }, alternate: { type: 'Identifier', name: 'undefined' } });
+    /* El botó que es pot amagar mai no rep el focus en desplegar: amb la marca, la ref és de la icona. */
+    expect(atribut(boto, 'ref').value.expression).toMatchObject({ type: 'ConditionalExpression', test: { name: 'iconaReplega' }, consequent: { type: 'NullLiteral' }, alternate: { name: 'collapseBtnRef' } });
+    expect(atribut(boto, 'onClick').value.expression).toMatchObject({ type: 'Identifier', name: 'onReplega' });
+    const icona = elements.find((el) => classeDe(el) === 'app-grid-col-header__icona');
+    expect(atribut(icona, 'onClick').value.expression).toMatchObject({ type: 'Identifier', name: 'onReplega' });
+    expect(atribut(icona, 'ref').value.expression).toMatchObject({ type: 'Identifier', name: 'collapseBtnRef' });
+    /* Fill directe del grup d'accions al DOM: dins d'un {onReplega ? … : null}, sense cap element entremig. */
+    const grup = elements.find((el) => classeDe(el) === 'app-grid-col-header__accions'
+      && el.children.some((c) => c.type === 'JSXExpressionContainer' && c.expression.type === 'ConditionalExpression' && c.expression.consequent === boto));
+    expect(grup, 'el [|<] dins de .app-grid-col-header__accions').toBeTruthy();
+  });
+});

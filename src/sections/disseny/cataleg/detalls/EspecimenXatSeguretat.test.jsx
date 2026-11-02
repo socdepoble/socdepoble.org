@@ -2,7 +2,10 @@
    del xifratge per conversa i de «Persones de confiança»: el catàleg el coneix
    (registre en maqueta, ítem del manifest amb icona pròpia i carregador),
    es munta sol (sense UIProvider ni servei), diu que és una maqueta no activa,
-   no importa cap mòdul del xifratge de src/data, i la marca de la mostra canvia. */
+   no importa cap mòdul del xifratge de src/data, i la marca de la mostra canvia.
+   M02 (marató 261101_2143; disseny §4.4) · L'espècimen d'AvisClauCanviada (canvi
+   fort, verificat i canviat, suau, alarma pròpia i bifurcació) i el número d'una
+   clau nova sense confirmar. */
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import { cleanup, fireEvent, render, screen, within } from '@testing-library/react';
@@ -32,13 +35,13 @@ test('es munta sol, diu que és una maqueta no activa i pinta el número en 12 g
   const { container } = render(<EspecimenXatSeguretat />);
   expect(container.querySelector('h1')).toBeNull();
   expect(container.querySelector('[style]')).toBeNull();
-  expect([...container.querySelectorAll('.sdp-especimen__nom')].map((n) => n.textContent)).toEqual(['CosSeguretatXat', 'CosPersonesConfianca']);
+  expect([...container.querySelectorAll('.sdp-especimen__nom')].map((n) => n.textContent)).toEqual(['CosSeguretatXat', 'AvisClauCanviada', 'CosPersonesConfianca']);
   const descripcions = [...container.querySelectorAll('.sdp-especimen > p')].map((p) => p.textContent);
   expect(descripcions.every((text) => text.startsWith('Maqueta, encara no activa'))).toBe(true);
   expect(descripcions[0]).toMatch(/avui, el xat no és xifrat/);
   /* Cada mostra es diu maqueta: cap captura fora de context sembla un xat xifrat. */
   const titols = [...container.querySelectorAll('.sdp-especimen__viu > h4')].map((h) => h.textContent);
-  expect(titols.length).toBe(15);
+  expect(titols.length).toBe(21);
   expect(titols.every((titol) => titol.startsWith('Maqueta · '))).toBe(true);
   const numeros = screen.getAllByRole('group', { name: 'Número de seguretat' });
   expect(numeros.length).toBeGreaterThanOrEqual(3);
@@ -66,6 +69,7 @@ test('cap mòdul del xifratge de src/data: ni l’espècimen ni les peces que mu
   for (const fitxer of [
     'src/sections/disseny/cataleg/detalls/EspecimenXatSeguretat.jsx',
     'src/sections/xat/components/CosSeguretatXat.jsx',
+    'src/sections/xat/components/AvisClauCanviada.jsx',
     'src/sections/xat/estatXifratgeFil.js',
     'src/sections/profile/CosPersonesConfianca.jsx',
     'src/sections/profile/personesConfianca.js'
@@ -74,4 +78,29 @@ test('cap mòdul del xifratge de src/data: ni l’espècimen ni les peces que mu
     expect(font, fitxer).not.toMatch(/from\s+['"][^'"]*data\/xifratXat/);
     expect(font, fitxer).not.toMatch(/from\s+['"][^'"]*backendPort/);
   }
+});
+
+test('M02 · les mostres dels canvis de clau: cada estat amb el seu text i els seus botons, i el suau es tanca', () => {
+  const { container } = render(<EspecimenXatSeguretat />);
+  const especimen = container.querySelector('#xat-canvi-clau');
+  const mostres = [...especimen.querySelectorAll('.sdp-especimen__mostra')];
+  expect(mostres).toHaveLength(5);
+  const [fort, verificat, suau, alarma, bifurcacio] = mostres;
+  expect(within(fort).getByText('Clau nova sense confirmar')).toBeTruthy();
+  expect(within(fort).getByRole('button', { name: 'He parlat amb Pepa: continua' })).toBeTruthy();
+  expect(within(fort).getByRole('button', { name: 'Número de seguretat' })).toBeTruthy();
+  expect(within(verificat).getByText('Havies verificat Pepa i la seua clau ha canviat. Torna-la a verificar per a continuar.')).toBeTruthy();
+  expect(within(alarma).getByRole('alert').textContent).toMatch(/^S’ha registrat una clau nova per al teu compte/);
+  expect(within(alarma).queryByRole('button')).toBeNull();
+  expect(within(bifurcacio).getByRole('alert').textContent).toBe('Les claus d’este xat no coincidixen entre aparells. Compareu el número de seguretat.');
+  expect(within(bifurcacio).queryByRole('button')).toBeNull();
+  expect(within(suau).getByText('La clau de seguretat de Pepa ha canviat i ho ha confirmat la seua clau anterior.')).toBeTruthy();
+  fireEvent.click(within(suau).getByRole('button', { name: "Tancar l'avís" }));
+  expect(suau.textContent).toBe('');
+  /* El número d'una clau nova sense confirmar, a l'espècimen del cos: l'avís i les dues eixides. */
+  const cos = container.querySelector('#xat-seguretat');
+  const pendent = [...cos.querySelectorAll('.sdp-especimen__mostra')].find((mostra) => within(mostra).queryByRole('button', { name: 'He parlat amb Pepa: continua' }));
+  expect(within(pendent).getByRole('group', { name: 'Número de seguretat' })).toBeTruthy();
+  expect(within(pendent).getByRole('button', { name: 'Marca com a verificat' })).toBeTruthy();
+  expect(within(pendent).getByText('Clau nova sense confirmar')).toBeTruthy();
 });

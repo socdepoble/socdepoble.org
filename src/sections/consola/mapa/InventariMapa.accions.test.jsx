@@ -53,7 +53,7 @@ const net = (ruta) => readFileSync(resolve(process.cwd(), ruta), 'utf8')
 
 const ENGANXADA = '@media (min-width: 721px) { .sdp-inventari__accions { position: sticky; inset-inline-end: 0; '
   + 'z-index: 1; background: var(--sdp-fons-app); border-inline-start: 1px solid var(--sdp-vora); } '
-  + 'tbody tr:nth-child(even) > .sdp-inventari__accions { background: var(--sdp-fons-subtil); } }';
+  + 'tbody tr:nth-child(even) > .sdp-inventari__accions { background: var(--sdp-fons-subtil); } ' + 'thead tr > .sdp-inventari__accions { background: var(--sdp-taula-capcalera-fons); } }';
 const HOVER = '@media (min-width: 721px) and (hover: hover) and (pointer: fine) { '
   + 'tbody tr:hover > .sdp-inventari__accions { background: var(--sdp-accent-subtil); } }';
 
@@ -70,7 +70,7 @@ test('des de 721px s’enganxa a la dreta amb el fons de la seua fila i una vora
   expect(ENGANXADA + HOVER).not.toMatch(/box-shadow/);
   /* Els fons són els mateixos tokens que pinten les files a sdp.css. */
   const sdp = net('src/css/sdp.css');
-  expect(sdp).toContain(':where(thead th) { background: var(--sdp-fons-app);');
+  expect(sdp).toContain(':where(thead th) { background: var(--sdp-taula-capcalera-fons);');
   expect(sdp).toContain(':where(tbody tr:nth-child(even)) { background: var(--sdp-fons-subtil); }');
   expect(sdp).toContain(':where(tbody tr:hover) { background: var(--sdp-accent-subtil); }');
 });

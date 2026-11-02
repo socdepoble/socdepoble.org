@@ -43,7 +43,7 @@
   .xat-bubble-wrapper { display: flex; align-items: center; }
   .xat-bubble-wrapper--block { display: block; align-items: initial; }
   .xat-bubble-content { flex: 1; min-width: 0; }
-  .xat-sender-name { margin-bottom: 2px; }
+  .xat-sender-name { margin-bottom: var(--sdp-space-1); }
 
   /* UniversalPage.jsx · la variant la compon el JSX:
      `sdp-universal-page-container--${layout}`. No la llevem encara que

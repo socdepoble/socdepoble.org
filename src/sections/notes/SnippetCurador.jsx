@@ -53,6 +53,8 @@ import { useToast } from '@/components/universal/NotificationContext.jsx';
 import { useNotes } from './NotesContext';
 import { UniversalPage } from '../../components/universal/UniversalPage';
 import { Camp, CampText, Carregant, GrupOpcions, Selector } from '../../components/PedraSeca/index.js';
+import { tradueix, useTraductorOpcional } from '../../components/PedraSeca/hooks/useTraductorOpcional.js';
+import { omple } from '../../config/moderacio.js';
 import { PrevisualitzacioExtern } from './PrevisualitzacioExtern.jsx';
 import { BotoneraClassificacio } from '../../components/universal/classificacio/BotoneraClassificacio.jsx';
 import { DialegCarpeta } from '../../components/universal/classificacio/DialegCarpeta.jsx';
@@ -76,53 +78,81 @@ import {
 const CAP = Object.freeze([]);
 const RUTA_BLOC = '/notes';
 
-/* Carpetes: el port de dades no té cap mètode per a crear-ne, reanomenar-ne
-   ni esborrar-ne (backendPort.js, AGENTS §8): només es tria. */
-const AVIS_CARPETES = 'Crear, reanomenar i esborrar carpetes encara no té contracte de dades amb el servidor. De moment, tria on arriba este enllaç.';
-/* Reanomenar i esborrar toquen totes les notes: es fan des de l'editor. */
-const AVIS_CATALEG = 'Reanomenar i esborrar s’apliquen a totes les notes i es fan des d’una nota del Bloc. Ací només tries les d’este enllaç.';
-const ERROR_DESAR = 'No s’ha pogut desar. Torna-ho a provar.';
-/* Correcció T7C-R1 · Abans d'entrar, on s'aterra i com es recupera l'enllaç. */
-const AVIS_ENTRAR = 'Per a desar cal entrar al teu compte. Després d’entrar aniràs al teu perfil: per a desar este enllaç, torna arrere o obri’l de nou.';
-
-/* SN · Els textos de cada destinació. El títol i el subtítol no acaben en
-   punt (qualitat.test.js). */
-const SUBTITOL = 'On el vols desar?';
+/* B3 · P1-22 (marató 261101_2143) · Tots els textos del snippet, en parells
+   [clau, reserva] (section.notes.desa.*): es pinten amb tradueix(t, …) i la
+   reserva és el literal de sempre, lletra per lletra (Llei del Píxel). Les
+   frases amb buits van senceres i s'omplin amb omple(): mai trossos cosits. */
+const parellDesa = (nom, reserva) => Object.freeze([`section.notes.desa.${nom}`, reserva]);
+const TEXTOS_DESA = Object.freeze({
+  /* Carpetes: el port de dades no té cap mètode per a crear-ne, reanomenar-ne
+     ni esborrar-ne (backendPort.js, AGENTS §8): només es tria. */
+  avisCarpetes: parellDesa('avisCarpetes', 'Crear, reanomenar i esborrar carpetes encara no té contracte de dades amb el servidor. De moment, tria on arriba este enllaç.'),
+  /* Reanomenar i esborrar toquen totes les notes: es fan des de l'editor. */
+  avisCataleg: parellDesa('avisCataleg', 'Reanomenar i esborrar s’apliquen a totes les notes i es fan des d’una nota del Bloc. Ací només tries les d’este enllaç.'),
+  errorDesar: parellDesa('errorDesar', 'No s’ha pogut desar. Torna-ho a provar.'),
+  /* Correcció T7C-R1 · Abans d'entrar, on s'aterra i com es recupera l'enllaç. */
+  avisEntrar: parellDesa('avisEntrar', 'Per a desar cal entrar al teu compte. Després d’entrar aniràs al teu perfil: per a desar este enllaç, torna arrere o obri’l de nou.'),
+  /* SN · Els textos de cada destinació. El títol i el subtítol no acaben en
+     punt (qualitat.test.js). */
+  subtitol: parellDesa('subtitol', 'On el vols desar?'),
+  blocTitol: parellDesa('bloc.titol', 'Desar al Bloc'),
+  blocLead: parellDesa('bloc.lead', 'Un enllaç de fora de Sóc de Poble arriba com una nota teua, que podràs editar.'),
+  lectorTitol: parellDesa('lector.titol', 'Afegir al Lector'),
+  lectorLead: parellDesa('lector.lead', 'Un enllaç de fora de Sóc de Poble arriba al teu Lector com una font de notícies.'),
+  opcioBlocEtiqueta: parellDesa('opcio.bloc.etiqueta', 'Bloc de notes'),
+  opcioBlocAjuda: parellDesa('opcio.bloc.ajuda', 'Una anotació o un marcador: arriba com una nota teua, que podràs editar.'),
+  opcioLectorEtiqueta: parellDesa('opcio.lector.etiqueta', 'Lector de notícies'),
+  opcioLectorAjuda: parellDesa('opcio.lector.ajuda', 'Una font de notícies (RSS) per a seguir-la al Lector.'),
+  lectorAjuda: parellDesa('lector.ajuda', 'L’app no baixa res per ella mateixa: la font queda pendent del connector fins que l’amfitrió o el servidor la servisquen.'),
+  lectorNota: parellDesa('lector.nota', 'Arriba al Lector com una font teua, només en este dispositiu.'),
+  /* T3 (261024_1800, P2-11) · Les categories del Lector ja no són «del poble» (són les dels referents
+     del §23: coneixement obert i vídeos per a aprendre): l'etiqueta diu on va, no d'on venia. */
+  lectorAjudaCategoria: parellDesa('lector.ajudaCategoria', 'Les categories del Lector de notícies. Pots deixar-la sense.'),
+  lectorSenseCategoria: parellDesa('lector.senseCategoria', 'Sense categoria'),
+  /* Correcció SN-R1 · Només per a fallades de pas (el mòdul o el port no han
+     respost): una app sense destinació ja no arriba ací, no s'oferix. */
+  lectorError: parellDesa('lector.error', 'No s’ha pogut obrir el Lector ara mateix. Pots desar l’enllaç al Bloc de notes o tornar-ho a provar més tard.'),
+  lectorErrorAfegir: parellDesa('lector.errorAfegir', 'No s’ha pogut afegir al Lector. Torna-ho a provar.'),
+  desat: parellDesa('desat', 'Desat a «{carpeta}». És una nota teua: la pots editar.'),
+  afegida: parellDesa('afegida', 'Afegida al Lector: «{nom}». Queda pendent del connector.'),
+  botoEntra: parellDesa('boto.entra', 'Entra per a desar'),
+  botoObrint: parellDesa('boto.obrint', 'Obrint el teu Bloc…'),
+  botoDesa: parellDesa('boto.desa', 'Desar a «{carpeta}»'),
+  lectorBoto: parellDesa('lector.boto', 'Afegir al Lector'),
+  nota: parellDesa('nota', 'Arriba com una nota nova a «{carpeta}», que podràs editar. La imatge de l’altra web no es copia.'),
+  destiTitol: parellDesa('desti.titol', 'Destinació'),
+  destiLlegenda: parellDesa('desti.llegenda', 'Per a què és este enllaç?'),
+  destiTriada: parellDesa('desti.triada', 'Triada'),
+  lectorObrint: parellDesa('lector.obrint', 'Obrint el Lector…'),
+  lectorNomFont: parellDesa('lector.nomFont', 'Nom de la font'),
+  lectorCategoria: parellDesa('lector.categoria', 'Categoria al Lector'),
+  classificacio: parellDesa('classificacio', 'Classificació'),
+  categoriesTitol: parellDesa('categories.titol', 'Categories de l’enllaç'),
+  categoriesNou: parellDesa('categories.nou', 'Nova categoria'),
+  etiquetesTitol: parellDesa('etiquetes.titol', 'Etiquetes de l’enllaç'),
+  etiquetesNou: parellDesa('etiquetes.nou', 'Nova etiqueta')
+});
+/* El títol i l'entradeta de cada destinació. */
 const TEXTOS_DESTI = Object.freeze({
-  [DESTINS.bloc]: Object.freeze({
-    titol: 'Desar al Bloc',
-    lead: 'Un enllaç de fora de Sóc de Poble arriba com una nota teua, que podràs editar.'
-  }),
-  [DESTINS.lector]: Object.freeze({
-    titol: 'Afegir al Lector',
-    lead: 'Un enllaç de fora de Sóc de Poble arriba al teu Lector com una font de notícies.'
-  })
+  [DESTINS.bloc]: Object.freeze({ titol: TEXTOS_DESA.blocTitol, lead: TEXTOS_DESA.blocLead }),
+  [DESTINS.lector]: Object.freeze({ titol: TEXTOS_DESA.lectorTitol, lead: TEXTOS_DESA.lectorLead })
 });
 const ICONA_DESTI = { size: 28, strokeWidth: 1.5, 'aria-hidden': 'true', focusable: 'false' };
-const OPCIONS_DESTI = Object.freeze([
+/* Les dues targetes de la destinació, en la llengua de `t` (porten icones JSX: qui crida fa useMemo). */
+const opcionsDesti = (t) => Object.freeze([
   Object.freeze({
     valor: DESTINS.bloc,
-    etiqueta: 'Bloc de notes',
-    ajuda: 'Una anotació o un marcador: arriba com una nota teua, que podràs editar.',
+    etiqueta: tradueix(t, TEXTOS_DESA.opcioBlocEtiqueta),
+    ajuda: tradueix(t, TEXTOS_DESA.opcioBlocAjuda),
     icona: <NotebookPen {...ICONA_DESTI} />
   }),
   Object.freeze({
     valor: DESTINS.lector,
-    etiqueta: 'Lector de notícies',
-    ajuda: 'Una font de notícies (RSS) per a seguir-la al Lector.',
+    etiqueta: tradueix(t, TEXTOS_DESA.opcioLectorEtiqueta),
+    ajuda: tradueix(t, TEXTOS_DESA.opcioLectorAjuda),
     icona: <Rss {...ICONA_DESTI} />
   })
 ]);
-const AJUDA_LECTOR = 'L’app no baixa res per ella mateixa: la font queda pendent del connector fins que l’amfitrió o el servidor la servisquen.';
-const NOTA_LECTOR = 'Arriba al Lector com una font teua, només en este dispositiu.';
-/* T3 (261024_1800, P2-11) · Les categories del Lector ja no són «del poble» (són les dels referents
-   del §23: coneixement obert i vídeos per a aprendre): l'etiqueta diu on va, no d'on venia. */
-const AJUDA_CATEGORIA = 'Les categories del Lector de notícies. Pots deixar-la sense.';
-const SENSE_CATEGORIA = Object.freeze({ valor: '', etiqueta: 'Sense categoria' });
-/* Correcció SN-R1 · Només per a fallades de pas (el mòdul o el port no han
-   respost): una app sense destinació ja no arriba ací, no s'oferix. */
-const ERROR_LECTOR = 'No s’ha pogut obrir el Lector ara mateix. Pots desar l’enllaç al Bloc de notes o tornar-ho a provar més tard.';
-const ERROR_AFEGIR = 'No s’ha pogut afegir al Lector. Torna-ho a provar.';
 
 const INACTIU = Object.freeze({ estat: 'inactiu', api: null, categories: CAP });
 const CARREGANT = Object.freeze({ estat: 'carregant', api: null, categories: CAP });
@@ -163,6 +193,9 @@ export function SnippetCurador({ carpetes = CAP, carpetaId }) {
   const { currentUser } = useSession();
   const { showToast } = useToast();
   const { creaNota, canCreate, config, notes = CAP } = useNotes() || {};
+  /* P1-22 · El traductor de la interfície, o null (fora de l'app): la reserva. */
+  const t = useTraductorOpcional();
+  const opcionsDeDesti = useMemo(() => opcionsDesti(t), [t]);
   const id = useId();
   /* Onada 11 (261010; prompt 261010_1730, tasca 2) · Les llistes de sèrie
      del Bloc, ampliades per la taxonomia del poble si n'hi ha; sense
@@ -241,14 +274,15 @@ export function SnippetCurador({ carpetes = CAP, carpetaId }) {
     setDesant(true);
     try {
       const nota = await creaNota(entrada);
-      showToast(`Desat a «${nomCarpeta}». És una nota teua: la pots editar.`, 'success');
+      showToast(omple(tradueix(t, TEXTOS_DESA.desat), { carpeta: nomCarpeta }), 'success');
       if (!muntat.current) return;
       /* La URL passa a la nota desada; replace: Arrere no torna al snippet. */
       setParams(paramsDeLaNota({ carpeta: carpetaId, nota: nota?.id ?? null }), { replace: true });
     } catch (err) {
       /* El motiu de veres (també la migració de l'origen que falta, com a
-         /connectar); sense missatge, el de desar. */
-      if (muntat.current) setError(missatgeDeLError({ message: err?.message || ERROR_DESAR }));
+         /connectar: pel codi neutral del port o pel text de PostgREST); sense
+         missatge, el de desar. */
+      if (muntat.current) setError(missatgeDeLError({ codi: err?.codi, message: err?.message || tradueix(t, TEXTOS_DESA.errorDesar) }, t));
     } finally {
       if (muntat.current) setDesant(false);
     }
@@ -267,7 +301,7 @@ export function SnippetCurador({ carpetes = CAP, carpetaId }) {
     setDesant(true);
     try {
       const font = await lector.api.afig(entradaDeFont(valor, { nom: nomFont, categoriaId: categoriaTriada || null }));
-      showToast(`Afegida al Lector: «${font.nom}». Queda pendent del connector.`, 'success');
+      showToast(omple(tradueix(t, TEXTOS_DESA.afegida), { nom: font.nom }), 'success');
       if (!muntat.current) return;
       /* A la gestió de fonts del Lector, on es veu; replace: Arrere no torna al snippet. */
       if (font.ruta) navigate(font.ruta, { replace: true });
@@ -275,7 +309,7 @@ export function SnippetCurador({ carpetes = CAP, carpetaId }) {
       if (!muntat.current) return;
       /* Els motius del Lector i del magatzem porten `codi` i ja es diuen en
          valencià; la resta, el genèric. */
-      const motiu = typeof err?.codi === 'string' && err.message ? err.message : ERROR_AFEGIR;
+      const motiu = typeof err?.codi === 'string' && err.message ? err.message : tradueix(t, TEXTOS_DESA.lectorErrorAfegir);
       if (err?.camp === 'nom' || err?.camp === 'categoria') setErrorCamp({ [err.camp]: motiu });
       else setError(motiu);
     } finally {
@@ -283,9 +317,9 @@ export function SnippetCurador({ carpetes = CAP, carpetaId }) {
     }
   };
 
-  const etiquetaDesar = calEntrar ? 'Entra per a desar'
-    : !potDesar ? 'Obrint el teu Bloc…'
-      : `Desar a «${nomCarpeta}»`;
+  const etiquetaDesar = calEntrar ? tradueix(t, TEXTOS_DESA.botoEntra)
+    : !potDesar ? tradueix(t, TEXTOS_DESA.botoObrint)
+      : omple(tradueix(t, TEXTOS_DESA.botoDesa), { carpeta: nomCarpeta });
 
   /* Correcció T7C-R2 · Des del snippet el catàleg no es reanomena ni
      s'esborra. DialegValors encara no té cap opció per a no pintar el llapis
@@ -302,24 +336,26 @@ export function SnippetCurador({ carpetes = CAP, carpetaId }) {
     fixos: base,
     usos: usos(notes, camp),
     globalActiu: false,
-    avisGlobal: AVIS_CATALEG
+    avisGlobal: tradueix(t, TEXTOS_DESA.avisCataleg)
   });
 
   const textos = TEXTOS_DESTI[efectiu];
+  /* verb i participi encara els cus PrevisualitzacioExtern en frases seues
+     (residu de P1-22, B3-I18N §9): no es tradueixen a trossos. */
   const peu = alLector ? {
     calEntrar: false,
     verb: 'afegir',
     participi: 'afegit',
-    error: error || (lector.estat === 'error' ? ERROR_LECTOR : null),
-    boto: { etiqueta: 'Afegir al Lector', onClick: afegix, carregant: desant, disabled: lector.estat !== 'llest' },
-    nota: NOTA_LECTOR
+    error: error || (lector.estat === 'error' ? tradueix(t, TEXTOS_DESA.lectorError) : null),
+    boto: { etiqueta: tradueix(t, TEXTOS_DESA.lectorBoto), onClick: afegix, carregant: desant, disabled: lector.estat !== 'llest' },
+    nota: tradueix(t, TEXTOS_DESA.lectorNota)
   } : {
     calEntrar,
     verb: 'desar',
     participi: 'desat',
     error,
     boto: { etiqueta: etiquetaDesar, onClick: desa, carregant: desant, disabled: !calEntrar && !potDesar },
-    nota: `Arriba com una nota nova a «${nomCarpeta}», que podràs editar. La imatge de l’altra web no es copia.`
+    nota: omple(tradueix(t, TEXTOS_DESA.nota), { carpeta: nomCarpeta })
   };
 
   return (
@@ -327,37 +363,37 @@ export function SnippetCurador({ carpetes = CAP, carpetaId }) {
       /* Decisions 261030 §7 · El que desares i on (el teu Bloc): Traduir no envia res fora. */
       traduccio={false}
       chrome="system"
-      title={textos.titol}
-      subtitle={SUBTITOL}
-      lead={textos.lead}
+      title={tradueix(t, textos.titol)}
+      subtitle={tradueix(t, TEXTOS_DESA.subtitol)}
+      lead={tradueix(t, textos.lead)}
       onConnect={false}
     >
       <PrevisualitzacioExtern
         contingut={contingut}
         teSessio={Boolean(currentUser)}
-        avisEntrar={AVIS_ENTRAR}
+        avisEntrar={tradueix(t, TEXTOS_DESA.avisEntrar)}
         {...peu}
       >
         {ofertaLector || alLector ? (
           <section className="sdp-connectar__seccio" aria-labelledby={`${id}-desti`}>
-            <h3 id={`${id}-desti`} className="sdp-connectar__titol-seccio">Destinació</h3>
+            <h3 id={`${id}-desti`} className="sdp-connectar__titol-seccio">{tradueix(t, TEXTOS_DESA.destiTitol)}</h3>
             <GrupOpcions
-              llegenda="Per a què és este enllaç?"
+              llegenda={tradueix(t, TEXTOS_DESA.destiLlegenda)}
               nom={`${id}-desti-opcio`}
               aspecte="targetes"
-              textTriada="Triada"
-              opcions={OPCIONS_DESTI}
+              textTriada={tradueix(t, TEXTOS_DESA.destiTriada)}
+              opcions={opcionsDeDesti}
               valor={efectiu}
               onCanvi={triaDesti}
               disabled={desant}
             />
             {alLector ? (
               <div ref={panellLector} className="sdp-connectar__panell">
-                <p className="sdp-connectar__ajuda">{AJUDA_LECTOR}</p>
-                {lector.estat === 'carregant' ? <Carregant etiqueta="Obrint el Lector…" /> : null}
+                <p className="sdp-connectar__ajuda">{tradueix(t, TEXTOS_DESA.lectorAjuda)}</p>
+                {lector.estat === 'carregant' ? <Carregant etiqueta={tradueix(t, TEXTOS_DESA.lectorObrint)} /> : null}
                 {lector.estat === 'llest' ? (
                   <>
-                    <Camp etiqueta="Nom de la font" obligatori error={errorCamp?.nom}>
+                    <Camp etiqueta={tradueix(t, TEXTOS_DESA.lectorNomFont)} obligatori error={errorCamp?.nom}>
                       <CampText
                         value={nomFont}
                         maxLength={nomMaxim}
@@ -368,9 +404,16 @@ export function SnippetCurador({ carpetes = CAP, carpetaId }) {
                         }}
                       />
                     </Camp>
-                    <Camp etiqueta="Categoria al Lector" ajuda={AJUDA_CATEGORIA} error={errorCamp?.categoria}>
+                    <Camp
+                      etiqueta={tradueix(t, TEXTOS_DESA.lectorCategoria)}
+                      ajuda={tradueix(t, TEXTOS_DESA.lectorAjudaCategoria)}
+                      error={errorCamp?.categoria}
+                    >
                       <Selector
-                        opcions={[SENSE_CATEGORIA, ...lector.categories.map((c) => ({ valor: c.id, etiqueta: c.nom }))]}
+                        opcions={[
+                          { valor: '', etiqueta: tradueix(t, TEXTOS_DESA.lectorSenseCategoria) },
+                          ...lector.categories.map((c) => ({ valor: c.id, etiqueta: c.nom }))
+                        ]}
                         value={categoriaTriada}
                         onChange={(e) => {
                           setErrorCamp(null);
@@ -386,7 +429,7 @@ export function SnippetCurador({ carpetes = CAP, carpetaId }) {
         ) : null}
         {alLector ? null : (
           <section className="sdp-connectar__seccio" aria-labelledby={`${id}-classificacio`}>
-            <h3 id={`${id}-classificacio`} className="sdp-connectar__titol-seccio">Classificació</h3>
+            <h3 id={`${id}-classificacio`} className="sdp-connectar__titol-seccio">{tradueix(t, TEXTOS_DESA.classificacio)}</h3>
             <BotoneraClassificacio
               carpeta={nomCarpeta}
               categories={categories}
@@ -406,15 +449,15 @@ export function SnippetCurador({ carpetes = CAP, carpetaId }) {
           opcions={carpetes}
           seleccionada={String(carpetaId)}
           onDesa={(carpeta) => escriu({ carpeta })}
-          avis={AVIS_CARPETES}
+          avis={tradueix(t, TEXTOS_DESA.avisCarpetes)}
         />
       ) : null}
       {dialeg === 'categories' ? (
         <DialegValors
           key="categories"
           {...propsValors('categories', CATEGORIES_BASE)}
-          titol="Categories de l’enllaç"
-          etiquetaNou="Nova categoria"
+          titol={tradueix(t, TEXTOS_DESA.categoriesTitol)}
+          etiquetaNou={tradueix(t, TEXTOS_DESA.categoriesNou)}
           seleccionats={categories}
           minim={1}
           avisMinim={AVIS_CATEGORIA}
@@ -425,8 +468,8 @@ export function SnippetCurador({ carpetes = CAP, carpetaId }) {
         <DialegValors
           key="etiquetes"
           {...propsValors('tags', ETIQUETES_BASE)}
-          titol="Etiquetes de l’enllaç"
-          etiquetaNou="Nova etiqueta"
+          titol={tradueix(t, TEXTOS_DESA.etiquetesTitol)}
+          etiquetaNou={tradueix(t, TEXTOS_DESA.etiquetesNou)}
           seleccionats={etiquetes}
           minim={0}
           onDesa={(valors) => escriu({ etiquetes: valors })}

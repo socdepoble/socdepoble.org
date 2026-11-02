@@ -68,6 +68,9 @@ function TargetaDeLEntitat({ fila, textos, t, navigate }) {
   const connectar = rutaConnectarPerfil(perfil);
   const desti = rutaXatDePagina(objecteDePerfil(perfil));
   const poble = typeof fila.town_name === 'string' ? fila.town_name.trim() : '';
+  /* PS-07 (B7, marató 261101_2143) · Un sol primari per vista: el blau és
+     de l'acció de la pàgina del poble; «Anar al xat» de cada entitat de la
+     graella és secundari, gran i a l'ample com sempre. */
   return (
     <SectionItemCard
       to={rutaDePerfil(tipus, fila.id)}
@@ -78,7 +81,7 @@ function TargetaDeLEntitat({ fila, textos, t, navigate }) {
       eyebrow={textos.tipus[fila.kind] || textos.tipus.entity}
       buttonLabel={t('common.readMore', 'Llegir més')}
       onConnect={connectar ? () => navigate(connectar) : undefined}
-      accio={desti ? <PortaDePagina porta={{ id: 'xat-de-l-entitat', verb: t('section.xat.anarAlXat', 'Anar al xat'), desti, varietat: 'primari' }} /> : null}
+      accio={desti ? <PortaDePagina porta={{ id: 'xat-de-l-entitat', verb: t('section.xat.anarAlXat', 'Anar al xat'), desti, varietat: 'secundari' }} varietat="secundari" /> : null}
       etiquetesAmbAccio
       {...(poble ? { location: poble, avatarUrl: fila.logo_url || undefined } : {})}
     />

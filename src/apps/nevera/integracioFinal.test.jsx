@@ -170,15 +170,18 @@ describe('la fitxa de La compra en estret (375 px)', () => {
   });
 });
 
+/* PS-06 (marató 261101_2143, B7f; ordre del Mestre) · La regla va nàixer per a la Nevera i ara
+   és de totes les graelles (.sdp-card-grid > .sp-card): la Nevera continua coberta. La cascada
+   de totes les graelles la prova src/css/ritmeEntreBlocs.capes.test.js. */
 describe('T3 · un sol espaiat entre targetes de la Nevera (modules.css)', () => {
   test('la regla viu al bloc del front i el seu selector casa amb les targetes de la graella de la Nevera', async () => {
     const MODULES = readFileSync(path.join(process.cwd(), 'src/css/modules.css'), 'utf8');
     const inici = MODULES.indexOf('Front «lector-nevera».');
     const bloc = MODULES.slice(MODULES.indexOf('@layer components {', inici), MODULES.indexOf('\n}\n', inici) + 2);
-    const SELECTOR = '[data-sdp-app="nevera"] .sdp-card-grid > .sp-card';
-    expect(bloc).toMatch(/\[data-sdp-app="nevera"\] \.sdp-card-grid > \.sp-card \{\s*margin-block-end: 0;\s*\}/);
+    const SELECTOR = '.sdp-card-grid > .sp-card';
+    expect(bloc).toMatch(/\n {2}\.sdp-card-grid > \.sp-card \{\s*margin-block-end: 0;\s*\}/);
     munta('/app/nevera/llista/casa');
     await screen.findByRole('region', { name: 'Catàleg' });
-    expect(document.querySelectorAll(SELECTOR).length).toBeGreaterThan(50);
+    expect(document.querySelectorAll(`[data-sdp-app="nevera"] ${SELECTOR}`).length).toBeGreaterThan(50);
   });
 });

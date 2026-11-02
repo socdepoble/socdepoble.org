@@ -1,0 +1,22 @@
+{
+  "id": "ef5b1aff-8902-44ef-8174-1d1441d33e4b",
+  "session": "a2b14eb0-fc3f-4755-874c-80a5ecb860b0",
+  "operationId": "torn_3d9af83b-onada_dos_governanca_marato_extirpacio_pedra_seca_frontissa-a2b14eb0",
+  "claim": "a2b14eb0-fc3f-4755-874c-80a5ecb860b0:governance-write",
+  "planHash": "ee18434f665592bea0fb654a23ab72377150acafc8dbd2f617a93847a44230b4",
+  "beforeSeal": "7405c0e2dbb7ae9bc10cd0263e7b315df0a7e6c96d34b2ba5200772f3184c2cb",
+  "files": [
+    {
+      "path": ".agents/contingut_estructural.json",
+      "before": "af93c2aabfef4e73365a86079bfa12cde9acc3aedd8d47154ac9d91a864dbe9b",
+      "after": "a2ac60468f5c9eac7d6584b443b5b8268fbaafaeb5c1d93ffa7ac17055f01a82"
+    },
+    {
+      "path": "tooling/brain/tractor-pedra-seca.mjs",
+      "before": "2b669ffa7deeaab3352eb73108e834a6fd5107e32f446f6f80c2c2b0db40ebf1",
+      "after": "7caed720f3285dfe3af42e16ede37c4339cc11800a6a755d73df10760f675632"
+    }
+  ],
+  "state": "accepted",
+  "afterSeal": "d863c155441b09590117b6eb2a6e30dacfebf30e6a62f0b502590644b8434d0f"
+}

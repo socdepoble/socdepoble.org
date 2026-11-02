@@ -559,6 +559,14 @@ export function PageFrame({
      la proporció abans de carregar. Sense un parell vàlid, no s'endevina.
      La prioritat alta és una decisió explícita de qui posa la portada. */
   heroWidth, heroHeight, heroFetchPriority,
+  /* IDEA-42 (B7h) · `portadaSencera` (només true): una portada vertical de
+     lectura porta també hero-image--sencera i layout.css li lleva el límit
+     d'alçada (la mida natural, mai ampliada). Sense, el DOM de sempre.
+     RESERVADA (corrector B7h, B7h-A03): avui cap pàgina la passa; la portada
+     sola d'una publicació del Mur va per la ranura heroComponent
+     (VisorDePublicacio `sencera`). La fase 2 (D-4) la lliga a un productor
+     real o la lleva, amb la regla de layout.css i la seua prova. */
+  portadaSencera = false,
   /* T6 (ordre del Mestre, 261004) · Sense nom propi (ni ací ni a
      topBarData), la barra signa amb DEFAULT_AUTHOR i, si ningú hi posa ruta,
      enllaça al perfil de Sóc de Poble (DEFAULT_AUTHOR.href; Onada 8, 261009:
@@ -1064,7 +1072,7 @@ export function PageFrame({
           {topBarData.heroComponent}
         </div>
       ) : barHeroImage ? (
-        <div className={heroVertical ? 'hero-image hero-image--vertical' : 'hero-image'}>
+        <div className={heroVertical ? (portadaSencera === true ? 'hero-image hero-image--vertical hero-image--sencera' : 'hero-image hero-image--vertical') : 'hero-image'}>
           {/* Cicle 3 (tc3-lang-ca-sobre-interficie-traduida) · L'alt que ve de
               la pàgina (heroAlt, no el de topBarData) és text de la pàgina. */}
           <ImatgeDePortada alt={barHeroAlt} src={barHeroImage} width={midaHero?.width} height={midaHero?.height} fetchpriority={prioritatHero}

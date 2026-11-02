@@ -87,8 +87,8 @@ test('T53 · la graella base no canvia: el trio continua centrat respecte a tota
    --sdp-touch de 48, la barra compacta demana 8 + 144 + 8 + 144 + 8 + 48 + 8
    = 368px: el pas que la deixa sense separació ni coixí era a 336 (el càlcul
    de 44px) i entre 337 i 367px de barra CONNECTAR sobreeixia fins a 31px.
-   Ara és a 367: res canvia a 368 o més. Per davall de 336 continua sense
-   cabre (decisió pendent del Mestre). Derogada la xifra de 336 de la prova de
+   Ara és a 367: res canvia a 368 o més. Per davall de 336 s'amaga Endavant
+   (PS-04, default D-2, components.css). Derogada la xifra de 336 de la prova de
    dalt (ordre del Mestre, 261004). */
 test('261004 · el pas compacte de la barra blava és a 367px de barra: sense separació ni coixí, CONNECTAR a la cel·la de 48', () => {
   const pas = blocDe(components, '@container (max-width: 367px) {', 'header.bar-blue { gap: 0; padding: 0; }');

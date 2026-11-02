@@ -7,7 +7,7 @@ import { useUIActionsOpcional } from '../../app/contexts/UIContext';
 import { omple } from '../../config/moderacio.js';
 /* IDEA-22, punt 2 (pla 261025_0200) · La tria de la propietària (capacitat 'consentimentTitular'). */
 import { estatTitularPublic, marcaTitularPublic, teCapacitat } from '../../data/backendPort.js';
-import { MINIM_CERCA, accionsSobre, clauDeMembre, ordenaMembres, parellDeTipus } from './membresModel.js';
+import { MINIM_CERCA, accionsSobre, clauDeMembre, ordenaMembres, parellDeTipus, potTransferirPropietat } from './membresModel.js';
 import { QuiSegueixOrganitzacio } from './Seguidors.jsx';
 
 /* ═══════════════════════════════════════════════════════════════════
@@ -20,7 +20,10 @@ import { QuiSegueixOrganitzacio } from './Seguidors.jsx';
    de veres, el port (el servidor torna a dir-ho).
 
    `accions` ve del context del Perfil: { usuariId, llistaMembres,
-   desaMembre, llevaMembre, cercaCandidats }.
+   desaMembre, llevaMembre, cercaCandidats, transfereixPropietat? }.
+   IDEA-24 (marató 261101_2143, B4) · `transfereixPropietat` és opcional
+   (capacitat 'transferenciaPropietat'): la propietària d'un grup o d'una
+   empresa cedix la propietat a una persona membre, amb confirmació.
    ═══════════════════════════════════════════════════════════════════ */
 
 /* La cerca de candidats espera que la persona pare d'escriure. */
@@ -72,6 +75,13 @@ export const TEXTOS_MEMBRES = Object.freeze({
   anunciResultats: textMembres('anunciResultats', '{n} resultats per a «{consulta}».'),
   anunciUnResultat: textMembres('anunciUnResultat', 'Un resultat per a «{consulta}».'),
   anunciCapResultat: textMembres('anunciCapResultat', 'Cap resultat per a «{consulta}».'),
+  /* IDEA-24 (marató 261101_2143, B4) · Transferir la propietat. */
+  transfereix: textMembres('transfereix', 'Transferir la propietat'),
+  transferit: textMembres('transferit', '{nom} ja és la propietària de {org}. Tu continues com a administradora.'),
+  errorTransfereix: textMembres('errorTransfereix', 'No s’ha pogut transferir la propietat.'),
+  dialegTransfereixTitol: textMembres('dialegTransfereixTitol', 'Transferir la propietat de {org} a {nom}?'),
+  dialegTransfereixTitolBuit: textMembres('dialegTransfereixTitolBuit', 'Transferir la propietat'),
+  dialegTransfereixDescripcio: textMembres('dialegTransfereixDescripcio', '{nom} en serà la propietària i tu passaràs a administradora: continuaràs gestionant la fitxa i els membres, però ja no podràs nomenar ni llevar administradores. Només {nom} et podrà tornar la propietat.'),
   /* Claus comunes: el camp de cerca i el botó de tornar de la confirmació (abans, «Cancel·lar» en totes les llengües). */
   cerca: Object.freeze(['common.search', 'Cerca']),
   cancela: Object.freeze(['common.cancela', 'Cancel·lar']),
@@ -103,6 +113,21 @@ const textDError = (error, generic, t) => {
   return Object.hasOwn(ERRORS_MEMBRES, codi) ? tradueix(t, ERRORS_MEMBRES[codi]) : generic;
 };
 const esCancel = (error) => error?.name === 'AbortError';
+
+/* IDEA-24 (marató 261101_2143, B4) · Per a la transferència, tres codis volen
+   frase pròpia: la de NO-DISPONIBLE de dalt mentiria (els membres sí que es
+   gestionen; el que falta és la RPC, i la reserva és la frase de l'adaptador
+   remot), la de 006 parla de nomenar i la de 003 no diu que la destinatària
+   ha de ser membre (2610311500). La resta de codis, ERRORS_MEMBRES. */
+export const ERRORS_TRANSFERENCIA = Object.freeze({
+  'SDP-ORGMEM-003': textErrorMembre('transfereixOrgmem003', 'Només es pot transferir a una persona que siga membre de l’organització i del seu poble i que no haja demanat la baixa.'),
+  'SDP-ORGMEM-006': textErrorMembre('transfereixOrgmem006', 'Només la propietària pot transferir la propietat.'),
+  'NO-DISPONIBLE': textErrorMembre('transfereixNoDisponible', 'El servidor d’este poble encara no sap transferir la propietat de les organitzacions.'),
+});
+const textDErrorTransferencia = (error, generic, t) => {
+  const codi = typeof error?.code === 'string' ? error.code : '';
+  return Object.hasOwn(ERRORS_TRANSFERENCIA, codi) ? tradueix(t, ERRORS_TRANSFERENCIA[codi]) : textDError(error, generic, t);
+};
 
 /* ═══════════════════════════════════════════════════════════════════
    IDEA-22, punt 2 (Directiva del Mestre, àudios 01:14-01:16; pla
@@ -253,9 +278,16 @@ export function GestioMembres({ organitzacio, accions }) {
   tRef.current = t;
   const orgId = organitzacio?.id;
   const nomOrg = organitzacio?.nom || '';
-  const rolMeu = organitzacio?.dades?.role;
+  const { usuariId = null, llistaMembres, desaMembre, llevaMembre, cercaCandidats, transfereixPropietat = null } = accions || {};
+  /* IDEA-24 (marató 261101_2143, B4) · Les entitats que esta persona acaba de
+     cedir. Mentre la fitxa encara diga 'owner' (arriba tard, o cap context no
+     l'actualitza), el seu rol ja és 'admin' (fallada tancada); quan la fitxa
+     diu una altra cosa, la marca s'allibera (efecte de baix) i mana la fitxa. */
+  const rolDeLaFitxa = organitzacio?.dades?.role;
+  const kind = organitzacio?.dades?.kind;
+  const [cedides, setCedides] = useState(() => new Set());
+  const rolMeu = orgId != null && rolDeLaFitxa === 'owner' && cedides.has(String(orgId)) ? 'admin' : rolDeLaFitxa;
   const propietaria = rolMeu === 'owner';
-  const { usuariId = null, llistaMembres, desaMembre, llevaMembre, cercaCandidats } = accions || {};
 
   const [estat, setEstat] = useState({ carregant: true, membres: [], error: null });
   const [missatge, setMissatge] = useState(null);
@@ -266,6 +298,10 @@ export function GestioMembres({ organitzacio, accions }) {
   const [triat, setTriat] = useState('');
   const [rolNou, setRolNou] = useState('member');
   const [aLlevar, setALlevar] = useState(null);
+  /* IDEA-24 · La persona a qui es vol cedir la propietat (la confirmació) i
+     si el servidor encara no la sap transferir (NO-DISPONIBLE: no s'oferix més). */
+  const [aTransferir, setATransferir] = useState(null);
+  const [senseTransferencia, setSenseTransferencia] = useState(false);
 
   /* Guarda de doble enviament (síncrona: dos clics al mateix tic) i de
      desmuntatge (una resposta tardana no escriu en un component mort). */
@@ -279,6 +315,8 @@ export function GestioMembres({ organitzacio, accions }) {
      va obrir la confirmació de «Llevar». */
   const opActual = useRef(null);
   const orgDeLaConfirmacio = useRef(null);
+  /* IDEA-24 · L'entitat on es va obrir la confirmació de la transferència (P1-15). */
+  const orgDeLaTransferencia = useRef(null);
   const membresRef = useRef(estat.membres);
   membresRef.current = estat.membres;
 
@@ -294,14 +332,28 @@ export function GestioMembres({ organitzacio, accions }) {
   const despresDeTancar = useRef(null);
   useEffect(() => {
     const pendent = despresDeTancar.current;
-    if (!pendent || aLlevar) return;
+    /* IDEA-24 · També la confirmació de la transferència: el missatge, quan ja s'ha tancat. */
+    if (!pendent || aLlevar || aTransferir) return;
     despresDeTancar.current = null;
     if (pendent.missatge) setMissatge(pendent.missatge);
     if (pendent.focusALaLlista) {
       const desti = arrel.current?.querySelector('[role="region"]') || arrel.current?.querySelector('input[type="search"]');
       desti?.focus?.();
     }
-  }, [aLlevar]);
+  }, [aLlevar, aTransferir]);
+
+  /* IDEA-24 · La fitxa ja no diu 'owner' en esta entitat: la marca de cedida
+     sobra i s'allibera. Si més tard torna a dir 'owner' (li han tornat la
+     propietat i s'ha rellegit), mana la fitxa. */
+  useEffect(() => {
+    if (orgId == null || rolDeLaFitxa === 'owner') return;
+    setCedides((previ) => {
+      if (!previ.has(String(orgId))) return previ;
+      const sense = new Set(previ);
+      sense.delete(String(orgId));
+      return sense;
+    });
+  }, [orgId, rolDeLaFitxa]);
 
   /* ── La llista: es llig en obrir-se i quan canvia l'organització ── */
   useEffect(() => {
@@ -332,9 +384,12 @@ export function GestioMembres({ organitzacio, accions }) {
     opActual.current = null;
     ocupatRef.current = false;
     orgDeLaConfirmacio.current = null;
+    /* IDEA-24 · I la de la transferència: mai la propietat d'A cedida des de B. */
+    orgDeLaTransferencia.current = null;
     despresDeTancar.current = null;
     setOcupat(null);
     setALlevar(null);
+    setATransferir(null);
   }, [orgId]);
 
   /* ── La cerca de candidats, amb espera ── */
@@ -495,6 +550,67 @@ export function GestioMembres({ organitzacio, accions }) {
 
   const tancaLleva = () => { if (!ocupatRef.current) setALlevar(null); };
 
+  /* IDEA-24 (marató 261101_2143, B4) · TRANSFERIR LA PROPIETAT. Només la
+     propietària d'un grup o d'una empresa, sobre una altra persona membre
+     (membresModel.js), amb el port que en sap i un servidor que no ha dit
+     NO-DISPONIBLE. La confirmació és destructiva (el focus a «Cancel·lar») i
+     diu què canvia abans del clic. La cessió és de l'entitat on es va obrir
+     (P1-15) i el missatge es pinta després de tancar-la, com la baixa.
+     Confirmada pel port, la llista canvia els dos rols i esta persona deixa
+     d'oferir el que ara és de la propietària. */
+  const potTransferir = (membre) => typeof transfereixPropietat === 'function' && !senseTransferencia
+    && potTransferirPropietat(membre, { rolMeu, jo: usuariId, kind });
+
+  function obriTransfereix(membre) {
+    orgDeLaTransferencia.current = orgId;
+    setATransferir(membre);
+  }
+
+  function confirmaTransfereix() {
+    const membre = aTransferir;
+    if (!membre) return undefined;
+    const orgDeLaCessio = orgDeLaTransferencia.current;
+    if (orgDeLaCessio !== orgId || typeof transfereixPropietat !== 'function') {
+      setATransferir(null);
+      return undefined;
+    }
+    return opera('transfereix', async (vigent) => {
+      try {
+        await transfereixPropietat(orgDeLaCessio, { tipus: membre.tipus, id: membre.id });
+        /* Ja és cedida al servidor: encara que ara es veja una altra entitat, esta no la torna a oferir. */
+        if (viu.current) setCedides((previ) => new Set(previ).add(String(orgDeLaCessio)));
+        if (!vigent()) return null;
+        setEstat((previ) => ({
+          ...previ,
+          membres: ordenaMembres(previ.membres.map((m) => {
+            if (clauDeMembre(m) === clauDeMembre(membre)) return { ...m, rol: 'owner' };
+            if (m.tipus === 'persona' && usuariId != null && String(m.id) === String(usuariId)) return { ...m, rol: 'admin' };
+            return m;
+          })),
+        }));
+        despresDeTancar.current = {
+          missatge: { tipus: 'exit', text: omple(tradueix(t, TEXTOS_MEMBRES.transferit), { nom: membre.nom || senseNom, org: nomOrg }) },
+          focusALaLlista: true,
+        };
+      } catch (error) {
+        if (esCancel(error)) throw error;
+        /* Un servidor sense la RPC: ja no s'oferix en cap entitat (és cosa del servidor). */
+        if (error?.code === 'NO-DISPONIBLE' && viu.current) setSenseTransferencia(true);
+        if (vigent()) {
+          despresDeTancar.current = {
+            missatge: { tipus: 'error', text: textDErrorTransferencia(error, tradueix(tRef.current, TEXTOS_MEMBRES.errorTransfereix), tRef.current) },
+          };
+        }
+      } finally {
+        /* Una cessió d'A que torna tard no tanca la confirmació que B haja obert. */
+        if (vigent()) setATransferir(null);
+      }
+      return null;
+    }, tradueix(t, TEXTOS_MEMBRES.errorTransfereix));
+  }
+
+  const tancaTransfereix = () => { if (!ocupatRef.current) setATransferir(null); };
+
   /* Correcció 261008 · L'alta només s'oferix amb la llista llegida: si el
      servidor ja ha dit que no (NO-DISPONIBLE, SDP-ORGMEM-002…), el formulari
      prometria el que fallarà; i mentre es llig, la cerca no sabria qui ja hi és. */
@@ -527,6 +643,8 @@ export function GestioMembres({ organitzacio, accions }) {
               const clau = clauDeMembre(membre);
               const sobre = accionsSobre(membre, { rolMeu, jo: usuariId });
               const esJo = membre.tipus === 'persona' && usuariId != null && String(membre.id) === String(usuariId);
+              /* IDEA-24 · «Transferir la propietat», entre el canvi de rol i «Llevar». */
+              const cedible = potTransferir(membre);
               return (
                 <tr key={clau}>
                   <td>
@@ -536,13 +654,19 @@ export function GestioMembres({ organitzacio, accions }) {
                   <td>{etiquetaTipus(membre.tipus)}</td>
                   <td>{etiquetaRol(membre.rol)}</td>
                   <td>
-                    {sobre.rol || sobre.lleva ? (
+                    {sobre.rol || sobre.lleva || cedible ? (
                       <div className="sdp-alerta__accions">
                         {sobre.rol ? (
                           <Boto varietat="secundari" onClick={() => canviaRol(membre, sobre.rol)}
                             disabled={Boolean(ocupat)} carregant={ocupat === `rol:${clau}`}
                             aria-label={`${tradueix(t, sobre.rol === 'admin' ? TEXTOS_MEMBRES.nomenaAdmin : TEXTOS_MEMBRES.tornaMembre)}: ${membre.nom}`}>
                             {tradueix(t, sobre.rol === 'admin' ? TEXTOS_MEMBRES.nomenaAdmin : TEXTOS_MEMBRES.tornaMembre)}
+                          </Boto>
+                        ) : null}
+                        {cedible ? (
+                          <Boto varietat="secundari" onClick={() => obriTransfereix(membre)} disabled={Boolean(ocupat)}
+                            aria-label={`${tradueix(t, TEXTOS_MEMBRES.transfereix)}: ${membre.nom || senseNom}`}>
+                            {tradueix(t, TEXTOS_MEMBRES.transfereix)}
                           </Boto>
                         ) : null}
                         {sobre.lleva ? (
@@ -611,6 +735,21 @@ export function GestioMembres({ organitzacio, accions }) {
         etiquetaCancela={tradueix(t, TEXTOS_MEMBRES.cancela)}
         destructiu
         carregant={ocupat === 'lleva'}
+      />
+
+      {/* IDEA-24 · La confirmació de la transferència, destructiva: el focus inicial a «Cancel·lar». */}
+      <DialegConfirmacio
+        obert={Boolean(aTransferir)}
+        onTanca={tancaTransfereix}
+        onConfirma={confirmaTransfereix}
+        titol={aTransferir
+          ? omple(tradueix(t, TEXTOS_MEMBRES.dialegTransfereixTitol), { nom: aTransferir.nom || senseNom, org: nomOrg })
+          : tradueix(t, TEXTOS_MEMBRES.dialegTransfereixTitolBuit)}
+        descripcio={omple(tradueix(t, TEXTOS_MEMBRES.dialegTransfereixDescripcio), { nom: aTransferir?.nom || senseNom })}
+        etiquetaConfirma={tradueix(t, TEXTOS_MEMBRES.transfereix)}
+        etiquetaCancela={tradueix(t, TEXTOS_MEMBRES.cancela)}
+        destructiu
+        carregant={ocupat === 'transfereix'}
       />
     </div>
   );

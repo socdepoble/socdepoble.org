@@ -98,7 +98,9 @@
  *    els fills de l'article no canvien. Sense element principal no hi ha qui
  *    la diga: res.
  * La variant 16:9 del Lector NO entra ací: qualitat.panoramica.test.js limita
- * l'excepció a agrupacio.jsx, al Lector i al seu espècimen.
+ * l'excepció a agrupacio.jsx, al Lector i al seu espècimen. IDEA-42 (B7h) ·
+ * La forma 16:9 amb punt focal d'una publicació del Mur (`formaMitja`) és una
+ * altra excepció del Mestre, amb classe pròpia (vegeu MitjaEnquadrada).
  * W4-07 · rutaDAutorSegura ja és la compartida d'UniversalUtils (la de la
  * barra taronja de les pàgines és la mateixa).
  *
@@ -153,11 +155,14 @@
  * un 'SDP-MEDIA://…' anava al resolutor de camins, tornava '/SDP-MEDIA://…' i
  * el filtre el deixava passar com un camí del mateix origen.
  */
-import { useId } from 'react';
+import { useId, useRef, useState } from 'react';
+import { flushSync } from 'react-dom';
 import { Link } from '../../../app/contexts/RouterContext';
 import { resolRecursPropi } from '../../../config/assetResolver.js';
 import { RUTA_DRETS_AUTOR } from '../../../config/systemPages.js';
+import { usePropietatsCss } from '../../../hooks/usePropietatsCss.js';
 import { useResolvedAsset } from '../../../hooks/useResolvedAsset.js';
+import { posicioDeRetall } from '../../universal/enquadrament/enquadrament.js';
 import { esMitjaOpac } from '../../../utils/mitjaOpac.js';
 import { isSafeAsset, isSafeUrl, rutaDAutorSegura } from '../../universal/UniversalUtils';
 import { llevaPuntFinal } from '../../universal/editorial.js';
@@ -352,11 +357,45 @@ function EnllacDrets({ children }) {
    prop a UniversalCard). Amb ella, el seu contenidor ocupa el lloc de les
    etiquetes, que no es pinten. Onada 8 (261009) · Amb `etiquetesAmbAccio`,
    les etiquetes es queden al seu lloc i el botó va just després. */
-function CardBody({ imatge, imageAlt, calendarBadge, squareBadge, price, icon, title, TitleTag, subtitle, body, etiquetes, copyright, portes = null, privada = false, accio = null, etiquetesAmbAccio = false }) {
+/* IDEA-42 (B7h, marató 261101_2143; spec B7-PEDRA §2.9c; excepció a la
+   Pedra Seca §8 validada per la directiva IDEA-42 del Mestre, com la de la
+   capçalera del 261024) · La forma 16:9 del mitjà de la targeta, amb el punt
+   focal que tria l'autor (posicioMitja = { cx, cy, zoom }, l'estat del diàleg
+   d'enquadrament). La posició CSS depén de la proporció de la foto, que només
+   se sap en carregar-la: posicioDeRetall la calcula llavors i
+   usePropietatsCss l'escriu des d'una ref (--targeta-mitja-x, -y i -zoom;
+   cap atribut style). Fins que carrega, o sense punt, la foto va centrada
+   (components.css). Un punt que no és de números finits no hi arriba mai.
+   El load es confirma amb flushSync, dins de la mateixa tasca: mesurat al Mur
+   (Chrome), la foto mandrosa que entra a la vista ja té mida abans que una
+   actualització diferida escriga les propietats, i es podia pintar un
+   fotograma centrada. */
+const FORMA_MITJA_16_9 = '16:9';
+
+function MitjaEnquadrada({ imatge, imageAlt, privada, posicio }) {
+  const ref = useRef(null);
+  const [carregada, setCarregada] = useState(null);
+  const ratio = carregada && carregada.src === imatge ? carregada.ratio : null;
+  const punt = posicioDeRetall(posicio, ratio);
+  usePropietatsCss(ref, punt ? { '--targeta-mitja-x': `${punt.x}%`, '--targeta-mitja-y': `${punt.y}%`, '--targeta-mitja-zoom': punt.zoom } : {});
+  const onCarrega = (ev) => {
+    const { naturalWidth: amplada, naturalHeight: alcada } = ev.currentTarget;
+    if (amplada > 0 && alcada > 0) flushSync(() => setCarregada({ src: imatge, ratio: amplada / alcada }));
+  };
+  return (
+    <div className="sp-card-media-container sp-card-media-container--16-9">
+      <img ref={ref} className="sp-card-media" src={imatge} alt={imageAlt} loading="lazy" decoding="async" onLoad={onCarrega} {...(privada ? SENSE_REFERENT : null)} />
+    </div>
+  );
+}
+
+function CardBody({ imatge, imageAlt, calendarBadge, squareBadge, price, icon, title, TitleTag, subtitle, body, etiquetes, copyright, portes = null, privada = false, accio = null, etiquetesAmbAccio = false, formaMitja, posicioMitja }) {
   const activeBadge = squareBadge || (price ? { type: 'price', value: price } : null) || calendarBadge;
   return (
     <>
-      {imatge && (
+      {imatge && formaMitja === FORMA_MITJA_16_9 ? (
+        <MitjaEnquadrada imatge={imatge} imageAlt={imageAlt} privada={privada} posicio={posicioMitja} />
+      ) : imatge && (
         <div className="sp-card-media-container">
           <img className="sp-card-media" src={imatge} alt={imageAlt} loading="lazy" decoding="async" {...(privada ? SENSE_REFERENT : null)} />
         </div>
@@ -496,7 +535,13 @@ export function UniversalCard({
      targeta d'un poble hi afig «Anar al xat» sense perdre la seua
      classificació ni l'enllaç a la Viquipèdia (Llei del Píxel). Sense la prop,
      la ranura ocupa el lloc de les etiquetes, com a la targeta d'El Xat. */
-  etiquetesAmbAccio = false
+  etiquetesAmbAccio = false,
+  /* IDEA-42 (B7h) · `formaMitja` ('16:9') i `posicioMitja` ({ cx, cy, zoom },
+     ja coaccionat per qui pinta: mapejadorSeccions · portadaDeLaPublicacio):
+     el mitjà en 16:9 amb el punt focal de l'autor (MitjaEnquadrada, dalt).
+     Sense `formaMitja` o amb un altre valor, el DOM de sempre, byte a byte. */
+  formaMitja,
+  posicioMitja
 }) {
   const idDescripcio = useId();
   const safeMainHref = mainHref && isSafeUrl(mainHref) ? mainHref : null;
@@ -740,6 +785,8 @@ export function UniversalCard({
         privada={imatgePrivada}
         accio={accio}
         etiquetesAmbAccio={etiquetesAmbAccio === true}
+        formaMitja={formaMitja}
+        posicioMitja={posicioMitja}
       />
 
       {/* P6 (directriu 2325, confirmació 2) · El peu es pinta amb portes o sense. */}

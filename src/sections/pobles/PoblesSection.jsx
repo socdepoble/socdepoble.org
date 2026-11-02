@@ -133,11 +133,15 @@ export default function PoblesSection() {
              mateix botó de la targeta d'El Xat) i per «Comentar · En públic».
              El requeriment diu «afegir»: amb etiquetesAmbAccio, la targeta
              conserva les seues etiquetes (la província, la comarca i la
-             Viquipèdia, Onada 5) i el botó va just després (Llei del Píxel). */
+             Viquipèdia, Onada 5) i el botó va just després (Llei del Píxel).
+             PS-07 (B7, marató 261101_2143) · Un sol primari per vista: nou
+             targetes no poden dur nou botons blaus. «Anar al xat» és
+             secundari (PortaDePagina varietat="secundari"), gran i a l'ample
+             com sempre: només canvia el color. */
           const xatDelPobleObjecte = objecteDelPobleXat(town);
           const xatDelPoble = rutaXatDePagina(xatDelPobleObjecte);
           const portaDelXat = xatDelPoble
-            ? { id: 'xat-del-poble', verb: t('section.xat.anarAlXat', 'Anar al xat'), desti: xatDelPoble, varietat: 'primari' }
+            ? { id: 'xat-del-poble', verb: t('section.xat.anarAlXat', 'Anar al xat'), desti: xatDelPoble, varietat: 'secundari' }
             : null;
           const data = dataDElement(town);
           /* Onada 5 (F5, fase 3) · Les dades manen: l'`author` de la fitxa
@@ -157,7 +161,7 @@ export default function PoblesSection() {
               key={town.id}
               author={town.author || nomDeLaGent(town.title || town.name)}
               authorHref={poble?.ruta || undefined}
-              accio={portaDelXat ? <PortaDePagina porta={portaDelXat} /> : null}
+              accio={portaDelXat ? <PortaDePagina porta={portaDelXat} varietat="secundari" /> : null}
               etiquetesAmbAccio
               avatarUrl={town.avatar_url || town.image_url || town.imageSrc}
               location={town.title || town.name}

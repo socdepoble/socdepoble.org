@@ -55,7 +55,7 @@ export const ITERACIONS_NUMERO = 5200;
 
 /* Els identificadors d'HPKE (RFC 9180 §7). L'AEAD 0x0001 només hi és per a
    validar l'apèndix A.3 de l'RFC, que el porta: el protocol usa sempre 0x0002. */
-export const HPKE = Object.freeze({
+export const HPKE = /* @__PURE__ */ Object.freeze({
   MODE_BASE: 0x00,
   KEM_P256_HKDF_SHA256: 0x0010,
   KDF_HKDF_SHA256: 0x0001,
@@ -72,7 +72,9 @@ export const ETIQUETES_HPKE = Object.freeze({
   KEY: 'key',
   BASE_NONCE: 'base_nonce'
 });
-const NK_AEAD = Object.freeze({ [HPKE.AEAD_AES_128_GCM]: 16, [HPKE.AEAD_AES_256_GCM]: 32 });
+/* Claus literals (= HPKE.AEAD_AES_128_GCM i HPKE.AEAD_AES_256_GCM): una clau calculada que
+   llig HPKE és un efecte per a Rollup i retindria la taula als paquets que no xifren (B2e). */
+const NK_AEAD = /* @__PURE__ */ Object.freeze({ 0x0001: 16, 0x0002: 32 });
 const NN = 12;
 const NH = 32;
 
@@ -410,7 +412,7 @@ export function infoHkdf(nom, ...context) {
 
 /* ── HPKE, RFC 9180, mode_base (§4.2) ──────────────────────────────────── */
 
-const PREFIX_HPKE = codifica('HPKE-v1');
+const PREFIX_HPKE = /* @__PURE__ */ codifica('HPKE-v1');
 
 function nkDe(aead) {
   const nk = NK_AEAD[aead];

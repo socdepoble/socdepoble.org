@@ -13,7 +13,7 @@ import { extractPlainText } from '../../utils/contentAdapter.js';
 import { promoteToPublic, teCapacitat } from '../../data/backendPort.js';
 import { dataIsoONull } from '../../utils/calendari.js';
 import { estatPerAlEditor } from './useEstatDesamentNota.js';
-import { ErrorPublicacio, MOTIU_LOCAL, MOTIU_LOCAL_CONNEXIO, motiuDesatPendent, motiuSignaturaAliena } from './visibilitatNota.js';
+import { ErrorPublicacio, motiuDesatPendent, motiuModeLocal, motiuSignaturaAliena } from './visibilitatNota.js';
 import { autorDe } from '../../config/navigation.js';
 import { aliesDeLActor } from '../../data/identitatsSeed.js';
 import { pertanyALActor } from './masDeLUsuari.js';
@@ -235,7 +235,8 @@ export function NotesProvider({ children }) {
     const compartir = mode === 'compartir' || esConnexio(activeNote) || esExtern(activeNote);
     if (!activeNote || operationRef.current !== operation) return Promise.resolve(false);
     if (config?.dataMode === 'seed' || config?.dataMode === 'local') {
-      const motiu = compartir ? MOTIU_LOCAL_CONNEXIO : MOTIU_LOCAL;
+      // P1-22 · El motiu en la llengua de l'app (visibilitatNota.js, amb `t`).
+      const motiu = motiuModeLocal({ connexio: compartir, t });
       showToast(motiu, 'info');
       return Promise.reject(new ErrorPublicacio(motiu));
     }
@@ -259,7 +260,7 @@ export function NotesProvider({ children }) {
       const idPublicat = String(activeNote.publishedSubmissionId);
       const publicada = (publicacionsDelMur.current || []).find((element) => element && String(element.id) === idPublicat);
       if (publicada && autorDe(publicada) && !pertanyALActor(publicada, aliesDeLActor(actor, { dataMode: modeDeDadesResolt(config) }))) {
-        const motiu = motiuSignaturaAliena(publicada.author_name || publicada.seller);
+        const motiu = motiuSignaturaAliena(publicada.author_name || publicada.seller, t);
         showToast(motiu, 'info');
         return Promise.reject(new ErrorPublicacio(motiu));
       }
@@ -487,13 +488,13 @@ export function NotesProvider({ children }) {
       if (esRebuigDeNormes(error)) throw error;
       /* T47 · El desat previ no s'ha confirmat: el motiu és el de la ploma
          (conflicte D01, validació, sense còpia al dispositiu…), no «torna-ho a provar». */
-      const motiu = motiuDesatPendent(estatPerAlEditor(bgSaveManager.estat(scopeKey, activeNote.id)).detall);
+      const motiu = motiuDesatPendent(estatPerAlEditor(bgSaveManager.estat(scopeKey, activeNote.id)).detall, t);
       showToast(motiu, 'error');
       throw new ErrorPublicacio(motiu);
     }).finally(() => publishing.current.delete(key));
     publishing.current.set(key, result);
     return result;
-  }, [noteFolders, sendSectionSubmission, saveNoteField, externalConfig, autoria, actor, config, workspaceKey, scopeKey, operation, updateNoteContext, clearLocalNoteFields, showToast, nomesLectura]);
+  }, [noteFolders, sendSectionSubmission, saveNoteField, externalConfig, autoria, actor, config, workspaceKey, scopeKey, operation, updateNoteContext, clearLocalNoteFields, showToast, nomesLectura, t]);
 
   const compartirNota = useCallback((note) => publishNote(note, { mode: 'compartir' }), [publishNote]);
 

@@ -80,7 +80,7 @@ import {
   AGENTS_IA_SEED, ENTITATS_SEED, PERSONA_PILOT, agentIASeed, entitatSeed, esIAIA, rolALEntitat
 } from './identitatsSeed.js';
 import { normalitzaCorreu, validaCorreu } from './correuOrganitzacio.js';
-import { errorDeMembre, errorDeTitular, membreDOrganitzacio } from './contracte.js';
+import { TIPUS_TRANSFERIBLES, errorDeMembre, errorDeTitular, membreDOrganitzacio } from './contracte.js';
 import { esDelPobleDelFiltre, pobleDelFiltre } from './pobleOrganitzacio.js';
 import { emojiSol } from '../utils/emoji.js';
 import {
@@ -648,7 +648,8 @@ export function createLocalPerfilsAdapter({ entitats = ENTITATS_SEED, persones =
       if (!usuari?.id) throw errorDeMembre('SDP-ORGMEM-000');
       const org = orgQueGestiona(orgId, usuari);
       if (rolDe(org.id, usuari) !== 'owner') throw errorDeMembre('SDP-ORGMEM-006');
-      if (!['group', 'company'].includes(org.kind)) throw errorDeMembre('SDP-ORGMEM-001');
+      /* La mateixa llista que la RPC i la interfície (contracte.js, B4). */
+      if (!TIPUS_TRANSFERIBLES.includes(org.kind)) throw errorDeMembre('SDP-ORGMEM-001');
       const destiId = String(nouOwnerId ?? '').trim();
       if (!destiId || destiId === String(usuari.id)) throw errorDeMembre('SDP-ORGMEM-004');
       const actualDesti = connexio(org.id, destiId);

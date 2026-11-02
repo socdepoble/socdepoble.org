@@ -28,6 +28,15 @@ export const TEXTOS_XIFRATGE = Object.freeze({
   canviInesperat: parell('canviInesperat', 'Este xat ha canviat al servidor de manera inesperada. Per seguretat, no s’hi pot escriure.'),
   entitatPendent: parell('entitatPendent', 'Els xats amb entitats encara no es poden xifrar d’extrem a extrem: des d’este aparell, de moment, no s’hi pot escriure.'),
   clauCanviadaForta: parell('clauCanviadaForta', '{nom} té una clau de seguretat nova que la clau anterior no ha confirmat. Passa quan algú perd l’aparell i la frase, o si algú s’ha posat pel mig. Parla amb {nom} per a saber què ha passat.'),
+  /* M02 · Canvis de clau d'un contacte (disseny E2EE §4.4, CS-01, D-05 a; marató
+     261101_2143): l'alerta al fil, l'acceptació expressa i la clau pròpia. */
+  clauCanviadaContinua: parell('clauCanviadaContinua', 'He parlat amb {nom}: continua'),
+  clauCanviadaSuau: parell('clauCanviadaSuau', 'La clau de seguretat de {nom} ha canviat i ho ha confirmat la seua clau anterior.'),
+  verificatBloquejat: parell('verificatBloquejat', 'Havies verificat {nom} i la seua clau ha canviat. Torna-la a verificar per a continuar.'),
+  clauPropiaAlarma: parell('clauPropiaAlarma', 'S’ha registrat una clau nova per al teu compte que no és d’este aparell. Si no has sigut tu, avisa’ns.'),
+  clauNovaSenseConfirmar: parell('clauNovaSenseConfirmar', 'Clau nova sense confirmar'),
+  bifurcacio: parell('bifurcacio', 'Les claus d’este xat no coincidixen entre aparells. Compareu el número de seguretat.'),
+  errorAccepta: parell('errorAccepta', 'No s’ha pogut confirmar la clau nova. Torna-ho a provar.'),
   numero: Object.freeze({
     titol: parell('numero.titol', 'Número de seguretat'),
     explica: parell('numero.explica', 'Si este número és igual al teu aparell i al de {nom}, ningú no ha canviat les vostres claus pel camí. Compareu-lo en persona o per telèfon.'),

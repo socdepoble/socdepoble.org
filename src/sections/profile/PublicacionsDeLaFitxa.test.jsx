@@ -172,15 +172,63 @@ describe('l’aparador', () => {
     expect(screen.getByRole('link', { name: 'Cooperativa Agrícola' }).getAttribute('href')).toBe('/entitat/cooperativa');
   });
 
-  test('IDEA-25 · una ruta que no és interna no ix a l’enllaç: torna a la fitxa de l’entitat', () => {
+  /* Marató 261101_2143 (B4, IDEA-25) · Regressió: abans tornava a /entitat/<id>, una ruta que
+     l'App no té (App.jsx: /gent, /empresa, /grup, /ajuntament i /perfil). Ara, la fitxa pública
+     del seu tipus (rutaDePerfil), i sense id cap destí inventat. */
+  test('IDEA-25 · una ruta que no és interna no ix a l’enllaç: torna a la fitxa pública del seu tipus', () => {
     render(
       <PublicacionsDeLaFitxa
         perfil={FORN}
-        connectats={[{ tipus: 'entitat', id: 'forn', nom: 'Fora', ruta: 'javascript:alert(1)' }, { tipus: 'entitat', id: 'altre', nom: 'Altre', ruta: '//evil.example/x' }]}
+        connectats={[
+          { tipus: 'entitat', id: 'forn', nom: 'Fora', ruta: 'javascript:alert(1)' },
+          { tipus: 'entitat', id: 'altre', nom: 'Altre', ruta: '//evil.example/x' },
+          { tipus: 'grup', id: 'colla', nom: 'Colla', ruta: '/grup/colla\\x' },
+          { tipus: 'persona', id: 'u-pepa', nom: 'Pepa' },
+          { id: 'sense tipus', nom: 'Sense tipus' },
+          { tipus: 'grup', nom: 'Sense id' }
+        ]}
       />
     );
     fireEvent.click(screen.getByRole('tab', { name: 'El que connecta' }));
-    expect(screen.getByRole('link', { name: 'Fora' }).getAttribute('href')).toBe('/entitat/forn');
-    expect(screen.getByRole('link', { name: 'Altre' }).getAttribute('href')).toBe('/entitat/altre');
+    const enllacos = screen.getAllByRole('link').map((a) => a.getAttribute('href'));
+    expect(enllacos.some((href) => href.startsWith('/entitat/'))).toBe(false);
+    expect(screen.getByRole('link', { name: 'Fora' }).getAttribute('href')).toBe('/empresa/forn');
+    expect(screen.getByRole('link', { name: 'Altre' }).getAttribute('href')).toBe('/empresa/altre');
+    expect(screen.getByRole('link', { name: 'Colla' }).getAttribute('href')).toBe('/grup/colla');
+    expect(screen.getByRole('link', { name: 'Pepa' }).getAttribute('href')).toBe('/gent/u-pepa');
+    expect(screen.getByRole('link', { name: 'Sense tipus' }).getAttribute('href')).toBe('/empresa/sense%20tipus');
+    // Sense id: el nom, sense cap enllaç (ni «/entitat/undefined»).
+    expect(screen.getByText('Sense id').hasAttribute('href')).toBe(false);
+    expect(screen.queryByRole('link', { name: 'Sense id' })).toBeNull();
+  });
+
+  /* Correcció ARB-01 (marató 261101_2143, B4) · Un tipus que no té fitxa pública (un poble, una
+     «organitzacio» sense normalitzar) no cau a /gent/<id>, la fitxa d'una persona: es queda sense
+     enllaç fins que D-B4-2 en decidisca la font i la ruta. «empresa» és l'àlies d'entitat de
+     rutaDePerfil i objecteDePerfil. Una ruta interna de les dades continua manant. */
+  test('IDEA-25 · un tipus sense fitxa pública no porta cap enllaç inventat', () => {
+    render(
+      <PublicacionsDeLaFitxa
+        perfil={FORN}
+        connectats={[
+          { tipus: 'poble', id: 'la-torre', nom: 'La Torre' },
+          { tipus: 'organitzacio', id: 'coop', nom: 'Coop' },
+          { tipus: 'persona ', id: 'u-espai', nom: 'Amb espai' },
+          { tipus: 'empresa', id: 'forn', nom: 'Empresa' },
+          { tipus: 'ia', id: 'iaia-maria', nom: 'IAIA' },
+          { tipus: 'poble', id: 'la-vila', nom: 'La Vila', ruta: '/pobles' }
+        ]}
+      />
+    );
+    fireEvent.click(screen.getByRole('tab', { name: 'El que connecta' }));
+    const enllacos = screen.getAllByRole('link').map((a) => a.getAttribute('href'));
+    expect(enllacos.some((href) => href.startsWith('/gent/'))).toBe(false);
+    for (const nom of ['La Torre', 'Coop', 'Amb espai']) {
+      expect(screen.getByText(nom).hasAttribute('href')).toBe(false);
+      expect(screen.queryByRole('link', { name: nom })).toBeNull();
+    }
+    expect(screen.getByRole('link', { name: 'Empresa' }).getAttribute('href')).toBe('/empresa/forn');
+    expect(screen.getByRole('link', { name: 'IAIA' }).getAttribute('href')).toBe('/perfil/iaia-maria');
+    expect(screen.getByRole('link', { name: 'La Vila' }).getAttribute('href')).toBe('/pobles');
   });
 });

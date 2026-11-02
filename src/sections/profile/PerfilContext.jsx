@@ -8,6 +8,7 @@ import {
   listMyAgents, updateAgent,
   llegeixContacteOrganitzacio, desaContacteOrganitzacio,
   llistaMembresOrganitzacio, desaMembreOrganitzacio, llevaMembreOrganitzacio, carregaMembres,
+  transfereixPropietatOrganitzacio,
 } from '../../data/backendPort.js';
 import { creaOrganitzacio as creaOrganitzacioAlServei } from '../../data/organizations.js';
 import { ERROR_POBLE_MASSA_LLARG, MAXIM_NOM_POBLE, pobleDOrganitzacio } from '../../data/pobleOrganitzacio.js';
@@ -59,6 +60,17 @@ function membresDelPort() {
       && typeof llevaMembreOrganitzacio === 'function' && typeof carregaMembres === 'function'
       ? { llista: llistaMembresOrganitzacio, desa: desaMembreOrganitzacio, lleva: llevaMembreOrganitzacio, cerca: carregaMembres }
       : null;
+  } catch { return null; }
+}
+
+/* IDEA-24 (marató 261101_2143, B4) · La transferència de la propietat és una
+   capacitat a banda ('transferenciaPropietat'): sense ella, o amb un mock
+   parcial del port, null i la gestió dels membres no l'oferix. Mateix
+   blindatge que els membres. */
+function transferenciaDelPort() {
+  try {
+    if (!teCapacitat('transferenciaPropietat')) return null;
+    return typeof transfereixPropietatOrganitzacio === 'function' ? transfereixPropietatOrganitzacio : null;
   } catch { return null; }
 }
 
@@ -377,6 +389,8 @@ function PerfilScope({ children, config, usuariId, usuariSessio, onCanviOrganitz
      (una vegada per àmbit; el PerfilProvider el remunta si canvia el backend). */
   const [portMembres] = useState(membresDelPort);
   const ambMembres = Boolean(portMembres);
+  /* IDEA-24 · La transferència de la propietat, si el port en sap (també una vegada per àmbit). */
+  const [portTransferencia] = useState(transferenciaDelPort);
   const [carregant, setCarregant] = useState(true);
   const [error, setError] = useState(null);
 
@@ -804,6 +818,22 @@ function PerfilScope({ children, config, usuariId, usuariSessio, onCanviOrganitz
     return resultat;
   }, [assertCurrent, portMembres, avisaOrganitzacions]);
 
+  /* IDEA-24 (marató 261101_2143, B4) · Transferir la propietat: la
+     destinatària passa a 'owner' i esta persona, a 'admin', en una sola
+     operació del port (que valida la destinatària i el tipus). Confirmada, el
+     rol canvia ací i al selector d'identitat sense esperar cap recàrrega (com
+     «Eixir»): la gestió deixa d'oferir el que ara és de la propietària. Una
+     sessió que ha canviat (assertCurrent) no hi escriu res. Només es publica
+     amb el port (al valor, null sense ell): cap branca per a un port absent. */
+  const transfereixPropietat = useCallback(async (orgId, membre) => {
+    assertCurrent();
+    const resultat = await portTransferencia(orgId, { tipus: membre?.tipus, id: membre?.id }, configRef.current);
+    assertCurrent();
+    setOrganitzacions((prev) => prev.map((o) => (String(o.id) === String(orgId) ? { ...o, role: 'admin' } : o)));
+    avisaOrganitzacions();
+    return resultat;
+  }, [assertCurrent, portTransferencia, avisaOrganitzacions]);
+
   /* Persones del poble (carregaMembres, el padró del nucli) i organitzacions
      que la persona també administra, sense les que ja en són membres. */
   const cercaCandidats = useCallback(async (orgId, text, { signal, membres = [] } = {}) => {
@@ -830,8 +860,10 @@ function PerfilScope({ children, config, usuariId, usuariSessio, onCanviOrganitz
     usuari, identitats, contactes, carregant, error, autodesament,
     guardarCampPerfil, guardarAjust, creaOrganitzacio, pujaMitja, recarrega,
     ambMembres, llistaMembres, desaMembre, llevaMembre, cercaCandidats,
+    /* IDEA-24 · null sense la capacitat: «Transferir la propietat» no s'oferix. */
+    transfereixPropietat: portTransferencia ? transfereixPropietat : null,
   }), [usuari, identitats, contactes, carregant, error, autodesament, guardarCampPerfil, guardarAjust, creaOrganitzacio, pujaMitja, recarrega,
-    ambMembres, llistaMembres, desaMembre, llevaMembre, cercaCandidats]);
+    ambMembres, llistaMembres, desaMembre, llevaMembre, cercaCandidats, portTransferencia, transfereixPropietat]);
 
   return <PerfilContext.Provider value={valor}>{children}</PerfilContext.Provider>;
 }

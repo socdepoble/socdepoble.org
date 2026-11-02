@@ -135,9 +135,10 @@
   --sdp-fons-roca:       var(--sdp-pedra-900);
   --sdp-sobre-roca:      var(--sdp-pedra-50);
   --sdp-fons-subtil:     var(--sdp-pedra-200);
-  /* P1-16 (pla 261028_1526 §3.5.1) · Capçalera de .sdp-taula-prosa: ΔE2000
-     ≥ 5 contra totes les files (5,19 la parella; 6,17 sobre l'app, 9,78 sobre
-     la targeta) i el títol a 13,54:1 (taules.contrast.capes.test.js). */
+  /* P1-16 (pla 261028_1526 §3.5.1) i PS-03 (B7) · Capçalera de tota taula
+     (sdp.css, :where(thead th)): ΔE2000 ≥ 5 contra totes les files (5,19 la
+     parella; 6,17 sobre l'app, 9,78 sobre la targeta) i el títol a 13,54:1
+     (taules.contrast.capes.test.js). */
   --sdp-taula-capcalera-fons: var(--sdp-pedra-300);
   --sdp-fons-invers:     var(--sdp-pedra-900);
   --sdp-fons-vel:        rgba(14, 13, 12, 0.55);

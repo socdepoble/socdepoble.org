@@ -1,5 +1,7 @@
 import { act, cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
+/* P1-22 (B3-I18N §3.C) · Els diccionaris diferits, per al bloc en anglés del final. */
+import '../../../tests/helpers/diccionaris.js';
 
 /* Onada 4 (retallador senzill, ordre del Mestre 261008) · Un botó, una
    imatge: el selector de fitxers amagat, els 10 MB, la finestra de retall i
@@ -20,6 +22,9 @@ import {
 } from '../../components/universal/enquadrament/useEnquadramentImatge.jsx';
 import { AJUDA_IMATGE_PUJANT } from '../../components/universal/UniversalEditorShell.jsx';
 import { ERROR_PRESSUPOST } from '../../utils/pujadaImatge.js';
+import { UIActionsContext } from '../../app/contexts/objectesDeContext.js';
+import { createTranslator } from '../../config/i18n.js';
+import EN from '../../config/idiomes/en.js';
 
 const MB = 1024 * 1024;
 const URL_MITJA = 'sdp-media://mitjans/t/u/avatars/hero.webp';
@@ -548,5 +553,116 @@ describe('Pla 2000 · ajusta, finestra i tanca', () => {
     expect(finestraOberta()).toBeTruthy();
     await act(async () => { fireEvent.click(screen.getByRole('button', { name: 'Tancar' })); });
     expect(screen.queryByRole('dialog')).toBeNull();
+  });
+});
+
+/* ═══════════════════════════════════════════════════════════════════
+   P1-22 (marató 261101_2143, B3-I18N §3.C) · EN LA LLENGUA DE LA INTERFÍCIE
+   L'error de desat (PARELL_ERROR_DESAT_IMATGE, amb l'apòstrof tipogràfic) i
+   l'avís de pujada (TEXTOS_CLOSCA.imatgePujant, el de la closca) es diuen
+   traduïts, també des dels callbacks estables (tRef) i amb la finestra ja
+   tancada. Amb el proveïdor d'accions de veres (UIActionsContext) i el
+   traductor anglés de veres. Les proves de dalt, sense proveïdor, continuen
+   exigint el valencià de sempre (AVIS_IMATGE_PUJANT, ERROR_DESAT_IMATGE).
+   ═══════════════════════════════════════════════════════════════════ */
+describe('P1-22 · en anglés', () => {
+  const T_EN = createTranslator('en');
+  const DESA_EN = EN['section.perfil.editor.imatge.errorDesar'];
+  const PUJANT_EN = EN['editor.closca.imatge.pujant'];
+  function muntaEn({ camp = 'heroImage', forma = 'capcalera', control = undefined, ...resta } = {}) {
+    const p = {
+      onImageUpload: vi.fn(async () => URL_MITJA), onDesaCamp: vi.fn(async () => true), onError: vi.fn(), onDesat: vi.fn(), ...resta,
+    };
+    const vista = render(
+      <UIActionsContext.Provider value={{ t: T_EN }}>
+        <Prova camp={camp} forma={forma} control={control} {...p} />
+      </UIActionsContext.Provider>,
+    );
+    return { ...vista, ...p, input: vista.container.querySelector(`input[data-imatge-de-fitxa="${camp}"]`) };
+  }
+  const guardaEn = () => act(async () => {
+    fireEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: EN['editor.enquadrament.guardar'] }));
+  });
+
+  test('els dos textos són de veres anglés, i no el valencià', () => {
+    expect(DESA_EN).toBe('The image could not be saved.');
+    expect(PUJANT_EN).toBe('The image is still being saved. When it finishes, you can change it again.');
+    expect(DESA_EN).not.toBe(ERROR_DESAT_IMATGE);
+    expect(PUJANT_EN).not.toBe(AVIS_IMATGE_PUJANT);
+  });
+
+  test('en: un desat del camp que torna false diu l’error de desat en anglés, dins de la finestra', async () => {
+    const vista = muntaEn({ camp: 'logoImage', forma: 'avatar', onDesaCamp: vi.fn(async () => false) });
+    fireEvent.click(screen.getByRole('button', { name: 'Obrir' }));
+    await tria(vista, foto(1));
+    await guardaEn();
+    expect(within(screen.getByRole('dialog')).getByRole('alert').textContent).toBe(DESA_EN);
+    expect(vista.onError).not.toHaveBeenCalled();
+    expect(vista.onDesat).not.toHaveBeenCalled();
+  });
+
+  test('en: mentre puja, obri i un fitxer triat diuen l’avís de pujada en anglés; un desat fallat amb la finestra tancada diu l’error en anglés fora', async () => {
+    let resol;
+    const onImageUpload = vi.fn(() => new Promise((r) => { resol = r; }));
+    const vista = muntaEn({ onImageUpload, onDesaCamp: vi.fn(async () => false) });
+    fireEvent.click(screen.getByRole('button', { name: 'Obrir' }));
+    await tria(vista, foto(1));
+    await guardaEn();
+    await waitFor(() => expect(screen.getByRole('status').textContent).toBe('pujant'));
+    await act(async () => { fireEvent(screen.getByRole('dialog'), new Event('cancel', { cancelable: true })); });
+    expect(screen.queryByRole('dialog')).toBeNull();
+    fireEvent.click(screen.getByRole('button', { name: 'Obrir' }));
+    await tria(vista, foto(1, 'segona.jpg'));
+    expect(vista.onError.mock.calls).toEqual([[PUJANT_EN, 'info'], [PUJANT_EN, 'info']]);
+    await act(async () => { resol(URL_MITJA); });
+    await waitFor(() => expect(screen.getByRole('status').textContent).toBe('quiet'));
+    expect(vista.onError.mock.calls.at(-1)).toEqual([DESA_EN]);
+    expect(vista.onDesat).not.toHaveBeenCalled();
+  });
+
+  /* Correcció A-1 de l'àrbitre (marató 261101_2143) · Les tres guardes de
+     pujada que no tenien cap prova en anglés: ajusta, «Canviar foto»
+     (canviaFoto) i un segon desat (onEnquadrat). Mentre desa, la finestra
+     desactiva els seus botons: les dues últimes són la reserva per a un gest
+     que arriba abans del render, i es criden pels callbacks que la finestra
+     té a les props (els mateixos que cridaria ella). */
+  test('en: mentre puja, ajusta, «Canviar foto» i un segon desat diuen l’avís de pujada en anglés', async () => {
+    const vist = { finestra: null };
+    function ProvaAjustEn(opcions) {
+      const imatge = useImatgeDeFitxa(opcions);
+      if (imatge.dialeg) vist.finestra = imatge.dialeg.props;
+      return (
+        <>
+          <button type="button" onClick={() => imatge.ajusta('https://mitjans.test/avatar.webp')}>Ajustar</button>
+          <output>{imatge.pujant ? 'pujant' : 'quiet'}</output>
+          {imatge.input}
+          {imatge.dialeg}
+        </>
+      );
+    }
+    let resol;
+    const p = {
+      onImageUpload: vi.fn(() => new Promise((r) => { resol = r; })), onDesaCamp: vi.fn(async () => true), onError: vi.fn(), onDesat: vi.fn(),
+    };
+    render(
+      <UIActionsContext.Provider value={{ t: T_EN }}>
+        <ProvaAjustEn camp="logoImage" forma="avatar" finestra={{ canviaFoto: true, etiquetaDesa: 'Save framing' }} {...p} />
+      </UIActionsContext.Provider>,
+    );
+    await act(async () => { fireEvent.click(screen.getByRole('button', { name: 'Ajustar' })); });
+    await act(async () => { fireEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Save framing' })); });
+    await waitFor(() => expect(screen.getByRole('status').textContent).toBe('pujant'));
+    expect(vist.finestra.onCanviaFoto(foto(1, 'nova.jpg'))).toBe(PUJANT_EN);
+    let segon = null;
+    await act(async () => { segon = await vist.finestra.onDesa(foto(0.3, 'retall.jpg'), {}, {}).catch((err) => err); });
+    expect(segon?.message).toBe(PUJANT_EN);
+    expect(p.onImageUpload).toHaveBeenCalledTimes(1);
+    await act(async () => { fireEvent(screen.getByRole('dialog'), new Event('cancel', { cancelable: true })); });
+    await act(async () => { fireEvent.click(screen.getByRole('button', { name: 'Ajustar' })); });
+    expect(screen.queryByRole('dialog')).toBeNull();
+    expect(p.onError.mock.calls).toEqual([[PUJANT_EN, 'info']]);
+    await act(async () => { resol(URL_MITJA); });
+    await waitFor(() => expect(screen.getByRole('status').textContent).toBe('quiet'));
+    expect(p.onDesaCamp.mock.calls).toEqual([['logoImage', URL_MITJA]]);
   });
 });

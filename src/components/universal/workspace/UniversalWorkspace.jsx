@@ -54,7 +54,18 @@ import { TEXTOS_LLAVOR } from '../textosLlavor.js';
  *                       seguixen este mateix ordre. En una carpeta, una
  *                       categoria o una etiqueta, l'ordre de sempre. Sense el
  *                       camp, res no canvia (cap altra secció el posa).
- *   - `labels`       → textos de capçaleres i botons
+ *                       `filtraPerConsulta` (false) i `onQueryChange(consulta)`
+ *                       (opcionals, B6-B2 · IDEA-46): la lupa alimenta una
+ *                       cerca de la secció, que ja dona els elements filtrats.
+ *   - `labels`       → textos de capçaleres i botons. Els que la secció no
+ *                       passa són els de PARELLS_ETIQUETES_ESPAI, traduïts a
+ *                       la llengua de la interfície (B3 · P1-22, marató
+ *                       261101_2143); fora de l'app, el valencià de sempre.
+ *                       Tres claus més, dels estats propis del detall:
+ *                       `openError` («No s’ha pogut obrir l’element.», amb
+ *                       «Reintentar» darrere), `notFound` («L’element no és
+ *                       accessible o ja no existix.») i `backToList` (el nom
+ *                       de la fletxa ← del detall, «Tornar a la llista»).
  *   - `icons`        → { categories, items } icones decoratives de cada capçalera
  *   - `renderItem`   → (opcional) targeta pròpia per a cada element del llistat
  *   - `renderDetail` → l'editor o visor de la columna dreta. Rep
@@ -200,41 +211,61 @@ const COLUMNES_COMPACTE = Object.freeze({ left: true, middle: true });
    (navegacioPlegadaEnArrencar), la navegació arrenca plegada en rail. */
 const NAVEGACIO_PLEGADA = Object.freeze({ left: true });
 
-const DEFAULT_LABELS = {
-  categories: 'CATEGORIES',
-  items: 'ELEMENTS',
-  create: 'CREAR',
-  creating: 'CREANT…',
-  all: 'Tot',
-  search: 'Cercar elements',
-  close: 'Tancar',
-  clear: 'Netejar',
-  tags: 'Filtrar per etiquetes',
-  manage: 'Configurar categories',
-  settings: 'Configuració de l’espai de treball',
-  loading: 'Carregant…',
-  error: 'No s’han pogut carregar les dades.',
-  empty: 'No hi ha elements.',
-  select: 'Selecciona un element.',
+/* B3 · P1-22 (marató 261101_2143) · Les etiquetes per defecte, en parells
+   [clau i18n, reserva en valencià]: la reserva és el text de sempre, lletra
+   per lletra (apòstrof recte a «Data d'actualització»), i el traductor de la
+   interfície les dona en la llengua de la persona. Les que passa la secció
+   (`labels`) continuen manant. L'ajudant és d'una línia: i18n.usades.test.js
+   (AJUDANT) en llig les claus. */
+const parellEtiqueta = (nom, reserva) => Object.freeze([`workspace.etiqueta.${nom}`, reserva]);
+export const PARELLS_ETIQUETES_ESPAI = Object.freeze({
+  categories: parellEtiqueta('categories', 'CATEGORIES'),
+  items: parellEtiqueta('elements', 'ELEMENTS'),
+  create: parellEtiqueta('crea', 'CREAR'),
+  creating: parellEtiqueta('creant', 'CREANT…'),
+  all: parellEtiqueta('tot', 'Tot'),
+  search: parellEtiqueta('cerca', 'Cercar elements'),
+  close: parellEtiqueta('tanca', 'Tancar'),
+  clear: parellEtiqueta('neteja', 'Netejar'),
+  tags: parellEtiqueta('etiquetes', 'Filtrar per etiquetes'),
+  manage: parellEtiqueta('configura', 'Configurar categories'),
+  settings: parellEtiqueta('ajustos', 'Configuració de l’espai de treball'),
+  loading: parellEtiqueta('carregant', 'Carregant…'),
+  error: parellEtiqueta('error', 'No s’han pogut carregar les dades.'),
+  empty: parellEtiqueta('buit', 'No hi ha elements.'),
+  select: parellEtiqueta('tria', 'Selecciona un element.'),
   /* MD · La fletxa ← de la llista sense navegació (tornaDeLaLlista). */
-  back: 'Tornar arrere',
+  back: parellEtiqueta('torna', 'Tornar arrere'),
   /* El recompte d'una opció de la navegació (`count`), per al lector de
      pantalla: {n} és el número sencer. */
-  count: '{n} sense llegir',
-  untitled: TEXTOS_LLAVOR.titol,
+  count: parellEtiqueta('recompte', '{n} sense llegir'),
   /* Gauntlet 261029 (cicle 1, i18n) · Els textos que abans eren literals
      dins del JSX: el chevron d'una carpeta amb fills ({nom}, la carpeta), el
      «Reintentar» dels estats d'error i el menú de `sortable` (el botó, el
-     títol i les dues opcions). La reserva és el text de sempre: qui no els
-     passa no canvia cap píxel; /multimedia els passa traduïts. */
-  expand: 'Desplegar {nom}',
-  collapse: 'Plegar {nom}',
-  retry: 'Reintentar',
-  sort: 'Ordenar per data o nom',
-  sortTitle: 'Ordenar notes per',
-  sortDate: 'Data d\'actualització',
-  sortName: 'Nom (A-Z)'
-};
+     títol i les dues opcions). /multimedia els passa traduïts amb les seues
+     claus. */
+  expand: parellEtiqueta('desplega', 'Desplegar {nom}'),
+  collapse: parellEtiqueta('plega', 'Plegar {nom}'),
+  retry: parellEtiqueta('reintenta', 'Reintentar'),
+  sort: parellEtiqueta('ordena', 'Ordenar per data o nom'),
+  sortTitle: parellEtiqueta('ordena.titol', 'Ordenar notes per'),
+  sortDate: parellEtiqueta('ordena.data', 'Data d\'actualització'),
+  sortName: parellEtiqueta('ordena.nom', 'Nom (A-Z)'),
+  /* Els estats propis del detall (DetailColumn) i la fletxa ← que hi torna
+     a la llista (TornadaDelDetall), abans literals dins del JSX. */
+  openError: Object.freeze(['workspace.detall.errorObrir', 'No s’ha pogut obrir l’element.']),
+  notFound: Object.freeze(['workspace.detall.noAccessible', 'L’element no és accessible o ja no existix.']),
+  backToList: Object.freeze(['workspace.detall.tornaLlista', 'Tornar a la llista'])
+});
+/* Les etiquetes per defecte en la llengua del traductor (null: les reserves).
+   `untitled` és la reserva de les targetes (textosLlavor.js), que no canvia. */
+const etiquetesDe = (t) => Object.freeze({
+  ...Object.fromEntries(Object.entries(PARELLS_ETIQUETES_ESPAI).map(([nom, parell]) => [nom, tradueix(t, parell)])),
+  untitled: TEXTOS_LLAVOR.titol
+});
+/* Les reserves de sempre: textDelRecompte, CategoryBranch i DefaultItemCard
+   en continuen llegint. */
+const DEFAULT_LABELS = etiquetesDe(null);
 
 /* Amplàries predefinides de les columnes (AppGridShell.PRESETS), amb la seua
    etiqueta en parell [clau i18n, reserva en valencià]: les claus són les de
@@ -569,7 +600,13 @@ export function UniversalWorkspace({
      no li quedava cap efecte. El Bloc tampoc no la passa ja (corrector del
      Gauntlet f4, 30-10-2026). */
 }) {
-  const copy = { ...DEFAULT_LABELS, ...labels };
+  /* El traductor de la interfície (null fora de l'app). Puja ací des dels
+     textos de les columnes (B3 · P1-22): les etiquetes per defecte també
+     passen per ell. Cap retorn primerenc abans: l'ordre dels hooks no canvia
+     d'un pintat a l'altre. */
+  const traductor = useTraductorOpcional();
+  const etiquetesPerDefecte = useMemo(() => (traductor ? etiquetesDe(traductor) : DEFAULT_LABELS), [traductor]);
+  const copy = { ...etiquetesPerDefecte, ...labels };
   /* Llei de la Roda Dentada · Qui és l'espai per a les seues preferències:
      idEspai i, de reserva, la clau del mestre-detall (també en mode
      compacte: el Snippet és el mateix Bloc) o l'espai comú. */
@@ -646,7 +683,6 @@ export function UniversalWorkspace({
     ?? (compacte ? COLUMNES_COMPACTE : (plegadaPerLaFinestra ? NAVEGACIO_PLEGADA : undefined));
   /* Ordre d'usabilitat (30-10-2026) · Els noms traduïts dels botons que
      pleguen i despleguen cada columna (AppGridColumn, TextosDeLaColumna). */
-  const traductor = useTraductorOpcional();
   const textosDeLaColumna = useMemo(
     () => Object.freeze(Object.fromEntries(
       Object.entries(TEXTOS_DE_LA_COLUMNA).map(([nom, parell]) => [nom, tradueix(traductor, parell)])
@@ -672,6 +708,8 @@ export function UniversalWorkspace({
       columnesInicials={columnesDeMuntada}
       inclouDescendents={inclouDescendents}
       categoriaSenseElement={compacte}
+      filtraPerConsulta={model.filtraPerConsulta !== false}
+      onQueryChange={model.onQueryChange ?? null}
     >
       <WorkspaceFrame
         columnesRef={columnesRef}
@@ -712,7 +750,9 @@ export function UniversalWorkspace({
 function WorkspaceFrame({
   columnesRef, compacte, espai, grups, amagades, vigilaAmagada, mestreDetall, panellEstret, onPanell, tornaDeLaLlista, error, onCreate, onCreateError, onManageCategories, renderItem, renderDetail,
   labels, icons, tagFilter, collapsibleNavigation, sortable, canCreate, onRetry, listClassName, detailClassName, className,
-  accionsLlista, etiquetaEspai = TEXT_ESPAI_DE_TREBALL[1], peuNavegacio = null
+  /* etiquetaEspai: sense valor per defecte (B3 · P1-22). L'únic que la crida,
+     UniversalWorkspace, sempre li passa la traduïda de TEXT_ESPAI_DE_TREBALL. */
+  accionsLlista, etiquetaEspai, peuNavegacio = null
 }) {
   const workspace = useWorkspace();
   const focusAfterLayout = useFocusAfterLayout();
@@ -1988,7 +2028,9 @@ function DocumentRail({ items, activeItemId, glifDeCategoria, onChoose, label, u
    la closca oferix la tornada (estret, mestre-detall, detall a la vista), una
    capçalera de columna porta la fletxa ←, la mateixa peça que el detall
    d'Admin. Fora d'això, res: ni en mitja ni en ample canvia cap píxel. */
-function TornadaDelDetall() {
+/* B3 · P1-22 · El nom de la fletxa és `labels.backToList` (DetailColumn el
+   passa): traduït, o el que done la secció. */
+function TornadaDelDetall({ etiqueta }) {
   const { tornaDelDetall } = useAppGrid();
   if (!tornaDelDetall) return null;
   return (
@@ -1998,8 +2040,8 @@ function TornadaDelDetall() {
           type="button"
           className="app-grid-col-header__accio-icon"
           onClick={() => tornaDelDetall()}
-          aria-label="Tornar a la llista"
-          title="Tornar a la llista"
+          aria-label={etiqueta}
+          title={etiqueta}
         >
           <ArrowLeft size={24} aria-hidden="true" focusable="false" />
         </button>
@@ -2026,9 +2068,9 @@ const DetailColumn = memo(function DetailColumn({
   } else if (resolution?.status === 'loading') {
     content = <p role="status">{labels.loading}</p>;
   } else if (resolution?.status === 'error') {
-    content = <div role="alert">No s’ha pogut obrir l’element. <button type="button" onClick={onRetry}>{labels.retry}</button></div>;
+    content = <div role="alert">{labels.openError} <button type="button" onClick={onRetry}>{labels.retry}</button></div>;
   } else if (resolution?.status === 'not-found') {
-    content = <p role="status">L’element no és accessible o ja no existix.</p>;
+    content = <p role="status">{labels.notFound}</p>;
   } else {
     const injectat = renderDetail?.({
       item: activeItem || null,
@@ -2056,7 +2098,7 @@ const DetailColumn = memo(function DetailColumn({
       data-error={error ? 'true' : 'false'}
       onKeyDown={(event) => gestionaEscapeDelDetall(event, llistaRef?.current ?? null)}
     >
-      {estatPropi ? <TornadaDelDetall /> : null}
+      {estatPropi ? <TornadaDelDetall etiqueta={labels.backToList} /> : null}
       {content}
     </div>
   );

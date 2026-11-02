@@ -102,7 +102,8 @@ describe('els textos', () => {
   recull(TEXTOS_XIFRATGE);
 
   test('totes les claus són de section.xat.xifratge.* i la reserva és el valor valencià, idèntic', () => {
-    expect(parells.length).toBe(21);
+    /* 21 de T7 · S5 i 7 dels canvis de clau (M02, marató 261101_2143). */
+    expect(parells.length).toBe(28);
     for (const [clau, reserva] of parells) {
       expect(clau.startsWith('section.xat.xifratge.')).toBe(true);
       expect(CA[clau], clau).toBe(reserva);

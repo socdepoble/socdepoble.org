@@ -26,6 +26,8 @@ import { omple } from '../../config/moderacio.js';
 import { useMur } from '../mur/MurContext';
 import { FalladaDeLHistoric, VistaPublicacionsDeLActor } from '../mur/PublicacionsDeLActor.jsx';
 import { SECCIONS_DE_LA_FITXA, teAparador, usePublicacionsDeLaFitxa } from './usePublicacionsDeLaFitxa.js';
+/* IDEA-25 (marató 261101_2143, B4) · La fitxa d'una connexió sense ruta interna: la ruta pública del seu tipus. */
+import { rutaDePerfil } from '../../config/navigation.js';
 
 const senseTraduccio = (_clau, reserva) => reserva;
 
@@ -73,8 +75,22 @@ export function textosDeLAparador(nom, t = senseTraduccio) {
 }
 
 /* Ronda 2 (auditoria del Kit de Gemini, M2) · La ruta d'una connexió ve de les
-   dades: només un camí intern de l'app («/…», mai «//…» ni un esquema). */
+   dades: només un camí intern de l'app («/…», mai «//…» ni un esquema).
+   Marató 261101_2143 (B4, IDEA-25) · Sense ruta interna, la fitxa pública del
+   seu tipus (rutaDePerfil: /empresa, /grup, /perfil o /gent; sense tipus, una
+   entitat). Abans tornava /entitat/<id>, una ruta que l'App no té. Sense id,
+   cap destí: el nom es queda sense enllaç. La pestanya continua sense cap font
+   de dades que li passe `connectats` (D-B4-2, decisió del Mestre). */
 const rutaInterna = (ruta) => (typeof ruta === 'string' && /^\/(?!\/)/.test(ruta) && !/[\\\s]/.test(ruta) ? ruta : null);
+
+/* Correcció ARB-01 (B4) · Només els tipus amb fitxa pública (els de rutaDePerfil,
+   «empresa» com a àlies d'entitat). Un altre tipus, com un poble, no cau a
+   /gent/<id>, la fitxa d'una persona: sense destí fins que D-B4-2 en fixe la ruta. */
+const TIPUS_AMB_FITXA = new Set(['persona', 'entitat', 'empresa', 'grup', 'ia']);
+const rutaDeLaFitxa = (item) => {
+  const tipus = item.tipus || 'entitat';
+  return TIPUS_AMB_FITXA.has(tipus) ? rutaDePerfil(tipus, item.id) : null;
+};
 
 function AparadorAmbDades({ perfil, textos, connectats = null }) {
   const fonts = usePublicacionsDeLaFitxa(perfil);
@@ -98,7 +114,7 @@ function AparadorAmbDades({ perfil, textos, connectats = null }) {
           <ul>
             {connectats.map((item) => (
               <li key={`${item.tipus || 'entitat'}:${item.id}`}>
-                <a href={rutaInterna(item.ruta) || `/entitat/${encodeURIComponent(item.id)}`}>{item.nom}</a>
+                <a href={rutaInterna(item.ruta) || rutaDeLaFitxa(item) || undefined}>{item.nom}</a>
               </li>
             ))}
           </ul>

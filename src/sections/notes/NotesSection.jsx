@@ -8,6 +8,7 @@ import { useMur } from '../mur/MurContext';
 import { usePaginesDelSistema } from '../mur/usePublicacionsDeLActor.js';
 import { useMultimedia } from '../multimedia/MultimediaContext.jsx';
 import { UniversalWorkspace } from '../../components/universal/workspace/UniversalWorkspace';
+import { tradueix, useTraductorOpcional } from '../../components/PedraSeca/hooks/useTraductorOpcional.js';
 import NotesDetail from './NotesDetail.jsx';
 import { useNotesData } from './NotesDataContext.jsx';
 import { NotaFitxa } from './NotaFitxa.jsx';
@@ -39,10 +40,30 @@ import {
   CanalEmojisContext, TEXTOS_EMOJIS, carregaCatalegEmojis, copiaAlPortaretalls, textCopiat, textEmojiNoReconegut, useCanalEmojisDelBloc
 } from './canalEmojis.js';
 
-/* Pell del Bloc de Notes: tot allò que el UniversalWorkspace no ha de saber. */
-const ETIQUETES = { categories: 'CARPETES', items: 'NOTES', create: 'CREAR NOTA', search: 'Cercar notes', empty: 'No hi ha notes.' };
-/* P4 · Només sense sessió i amb dades remotes (reglaDEntrada). */
-const TEXT_CAL_ENTRAR = 'Connecta per veure les teues notes.';
+/* Pell del Bloc de Notes: tot allò que el UniversalWorkspace no ha de saber.
+   B3 · P1-22 (marató 261101_2143) · Els rètols, en parells [clau, reserva]
+   (section.notes.espai.*): la reserva és el literal de sempre (Llei del Píxel). */
+const parellEspai = (nom, reserva) => Object.freeze([`section.notes.espai.${nom}`, reserva]);
+const TEXTOS_ESPAI_NOTES = Object.freeze({
+  carpetes: parellEspai('carpetes', 'CARPETES'),
+  notes: parellEspai('notes', 'NOTES'),
+  crea: parellEspai('crea', 'CREAR NOTA'),
+  cerca: parellEspai('cerca', 'Cercar notes'),
+  buit: parellEspai('buit', 'No hi ha notes.'),
+  /* P4 · Només sense sessió i amb dades remotes (reglaDEntrada). */
+  calEntrar: parellEspai('calEntrar', 'Connecta per veure les teues notes.'),
+  categories: parellEspai('categories', 'CATEGORIES'),
+  etiquetes: parellEspai('etiquetes', 'ETIQUETES')
+});
+/* Les etiquetes que el Bloc passa a l'espai de treball, en la llengua de `t`
+   (sense traductor, les de sempre). La resta són les de l'espai. */
+const etiquetesDelBloc = (t, calEntrar) => Object.freeze({
+  categories: tradueix(t, TEXTOS_ESPAI_NOTES.carpetes),
+  items: tradueix(t, TEXTOS_ESPAI_NOTES.notes),
+  create: tradueix(t, TEXTOS_ESPAI_NOTES.crea),
+  search: tradueix(t, TEXTOS_ESPAI_NOTES.cerca),
+  empty: tradueix(t, calEntrar ? TEXTOS_ESPAI_NOTES.calEntrar : TEXTOS_ESPAI_NOTES.buit)
+});
 const ICONES = { categories: Folder, items: NotebookPen };
 const CAP = Object.freeze([]);
 /* T7 (P9) · A la URL del Bloc l'element es diu «nota» (?carpeta=&nota=&seccio=).
@@ -69,9 +90,13 @@ const ESTATS_PENDENTS = new Set(['loading', 'revalidating', 'error']);
 const FONT_DE_SECCIO = Object.freeze({ mur: 'murAmbPagines', mercat: 'mur', events: 'mur', multimedia: 'multimedia' });
 const fontDe = (fonts, seccio) => (seccio == null ? null : fonts[FONT_DE_SECCIO[seccio]] ?? null);
 /* Els mateixos textos que l'espai de treball pinta quan carrega o falla
-   (UniversalWorkspace · DEFAULT_LABELS.loading i .error). */
-const TEXT_CARREGANT = 'Carregant…';
-const TEXT_ERROR_FONT = 'No s’han pogut carregar les dades.';
+   (UniversalWorkspace · PARELLS_ETIQUETES_ESPAI loading, error i retry): les
+   mateixes claus i la mateixa reserva. */
+const TEXTOS_DETALL_PENDENT = Object.freeze({
+  carregant: Object.freeze(['workspace.etiqueta.carregant', 'Carregant…']),
+  error: Object.freeze(['workspace.etiqueta.error', 'No s’han pogut carregar les dades.']),
+  reintenta: Object.freeze(['workspace.etiqueta.reintenta', 'Reintentar'])
+});
 
 const toWorkspaceNote = (note, noteFolders) => {
   /* Gauntlet 261016 (Bloc 3.9) · La llavor es reconeix normalitzada (la d'ara
@@ -360,6 +385,10 @@ export default function NotesSection() {
   // D-7 · Amb la reserva de només lectura, com sense sessió: res no es crea.
   const calEntrar = calEntrarPerSessio || nomesLectura;
   const ambPreparada = !modeDesa && !calEntrar;
+  /* P1-22 (marató 261101_2143) · El traductor de la interfície, o null (fora
+     de l'app, o una prova sense UIContext): la reserva valenciana. */
+  const t = useTraductorOpcional();
+  const etiquetesEspai = useMemo(() => etiquetesDelBloc(t, calEntrar), [t, calEntrar]);
 
   /* Onada 11 (261010; prompt 261010_1730, tasca 2) · Les categories i
      etiquetes de sèrie (classificacioBloc.js), ampliades per la taxonomia del
@@ -378,14 +407,16 @@ export default function NotesSection() {
 
   const allTags = useMemo(() => {
     const tags = new Set(etiquetesDeSerie);
-    notes.forEach(n => (n.tags || []).forEach(t => tags.add(t)));
-    return Array.from(tags).sort().map(t => ({ id: `tag_${t}`, label: t }));
+    notes.forEach(n => (n.tags || []).forEach(etiqueta => tags.add(etiqueta)));
+    return Array.from(tags).sort().map(etiqueta => ({ id: `tag_${etiqueta}`, label: etiqueta }));
   }, [notes, etiquetesDeSerie]);
 
   // Sense sessió o amb el backend apagat l'adaptador torna [] de carpetes:
   // pintem el catàleg de carpetes de sèrie perquè la vista siga sempre completa.
   // T7 (P5) · amb el parentId de cada carpeta: l'arbre niat ja el pinta el Workspace.
-  const carpetes = useMemo(() => opcionsDeCarpetes(noteFolders), [noteFolders]);
+  /* P1-22 · El nom de les carpetes de sèrie, en la llengua de `t` (només el
+     que es pinta: l'id és el que es desa i la llavor no es toca). */
+  const carpetes = useMemo(() => opcionsDeCarpetes(noteFolders, t), [noteFolders, t]);
   /* Totes les entrades de la navegació (carpetes, categories i etiquetes):
      la nota preparada hi pertany (itemPreparadaBase) i, des de la revisió de
      F4 (R6c), són les que l'espai de treball reconeix en una ?carpeta=. */
@@ -649,8 +680,8 @@ export default function NotesSection() {
          carpetes. Categories i etiquetes es trien a la botonera. */
       navigationGroups: modeDesa ? [grupCarpetes] : [
         grupCarpetes,
-        { id: 'categories', label: 'CATEGORIES', options: allCategories },
-        { id: 'tags', label: 'ETIQUETES', options: allTags }
+        { id: 'categories', label: tradueix(t, TEXTOS_ESPAI_NOTES.categories), options: allCategories },
+        { id: 'tags', label: tradueix(t, TEXTOS_ESPAI_NOTES.etiquetes), options: allTags }
       ],
       /* P4 · La nota preparada que acaba d'arribar a la llista porta damunt,
          en este render, el que s'hi ha escrit mentre es creava: l'editor (el
@@ -664,7 +695,7 @@ export default function NotesSection() {
         ...(itemPreparada ? [itemPreparada] : [])
       ]
     };
-  }, [status, error, notesComplete, esperaCarpeta, triaPublicacio, resolveNote, resolPublicacio, workspaceKey, canAutoSelect, refresh, calEntrar, noteFolders, notes, carpetes, allCategories, allTags, publicacions, conservada, modeDesa, preparada.id, preparada.camps, itemDeTutorial, itemPreparada]);
+  }, [status, error, notesComplete, esperaCarpeta, triaPublicacio, resolveNote, resolPublicacio, workspaceKey, canAutoSelect, refresh, calEntrar, noteFolders, notes, carpetes, allCategories, allTags, publicacions, conservada, modeDesa, preparada.id, preparada.camps, itemDeTutorial, itemPreparada, t]);
 
   /* T7C · La carpeta on arriba l'enllaç (la de la URL si és del Bloc; si
      no, la Safata d’Entrada) és la categoria activa del Workspace, i el
@@ -683,14 +714,17 @@ export default function NotesSection() {
      llista el que l'actor té publicat (vegeu renderDetall). */
   const renderDetallBloc = useCallback((props) => {
     if (!esperaCarpeta || props?.item) return renderDetall(props);
-    if (estatEntrada !== 'error') return <p role="status">{TEXT_CARREGANT}</p>;
+    if (estatEntrada !== 'error') return <p role="status">{tradueix(t, TEXTOS_DETALL_PENDENT.carregant)}</p>;
+    /* L'espai inicial del fragment és un node de text: el marcatge de sempre. */
     return (
       <div role="alert">
-        {TEXT_ERROR_FONT}
-        {typeof refrescaEntrada === 'function' ? <> <button type="button" onClick={refrescaEntrada}>Reintentar</button></> : null}
+        {tradueix(t, TEXTOS_DETALL_PENDENT.error)}
+        {typeof refrescaEntrada === 'function'
+          ? <> <button type="button" onClick={refrescaEntrada}>{tradueix(t, TEXTOS_DETALL_PENDENT.reintenta)}</button></>
+          : null}
       </div>
     );
-  }, [esperaCarpeta, estatEntrada, refrescaEntrada]);
+  }, [esperaCarpeta, estatEntrada, refrescaEntrada, t]);
   /* Gauntlet 261101 · X-C-notes (C-02) · La fitxa de cada element; la Card
      «Bloc de notes» sap si és l'entrada nua (CardDeLEntrada). */
   const renderFitxaBloc = useCallback((props) => renderNota({ ...props, entradaNua }), [entradaNua]);
@@ -841,7 +875,7 @@ export default function NotesSection() {
         onCreateError={informaError}
         onManageCategories={obriConfiguracioNotes}
         sortable={true}
-        labels={{ ...ETIQUETES, empty: calEntrar ? TEXT_CAL_ENTRAR : ETIQUETES.empty }}
+        labels={etiquetesEspai}
         icons={ICONES}
         tagFilter={false}
         renderItem={renderFitxaBloc}

@@ -56,6 +56,7 @@ import { useEntitatDelProjecte } from '../../hooks/useEntitatDelProjecte.js';
 import { fontImatgePropia } from '../../utils/sanitize.js';
 import { esMitjaOpac, fotoDelBucketPublic } from '../../utils/mitjaOpac.js';
 import { signaturaDeQuiSigna } from '../../data/identitatsSeed.js';
+import { portadaDeLaPublicacio } from '../../data/mapejadorSeccions.js';
 import { TIPUS_ALERTA } from './alertesMunicipals.js';
 import { tradueix } from '../../components/PedraSeca/hooks/useTraductorOpcional.js';
 import { CLASSE_DE_LA_TARGETA, DistintiuAlertaMunicipal } from './AlertaMunicipal.jsx';
@@ -88,6 +89,10 @@ export function TargetaDelMur({ item, esdeveniment = null, alertaMunicipal = nul
   /* T6 en remot · l'id de servidor de l'entitat pilot: quan arriba, la boina
      de les seues publicacions torna a pintar-se i porta al seu perfil. */
   useEntitatDelProjecte();
+  /* IDEA-42 (B7h) · El punt focal de la targeta 16:9, tornat a coaccionar
+     (portadaDeLaPublicacio és pura i idempotent): la llavor i app_content no
+     passen pel mapejador. Sense enquadrament net, la targeta de sempre. */
+  const { targeta: enquadrament } = portadaDeLaPublicacio(item);
 
   if (item.type === 'event') {
     /* T43 (ordre del Mestre, 260928) · el calendari també es connecta amb el seu
@@ -120,6 +125,10 @@ export function TargetaDelMur({ item, esdeveniment = null, alertaMunicipal = nul
         onConnect={() => navigate(rutaConnectarObjecte(acte))}
         /* Fase D (261020, tasca 2) · «Més opcions»: denunciar i bloquejar. */
         ambModeracio
+        /* IDEA-42 (B7h) · L'enquadrament net de la targeta de l'acte; EventCard
+           el passarà a UniversalCard (formaMitja i posicioMitja) quan el seu
+           carril l'accepte: fins llavors, la targeta de sempre. */
+        enquadramentTargeta={enquadrament}
       />
     );
   }
@@ -204,6 +213,9 @@ export function TargetaDelMur({ item, esdeveniment = null, alertaMunicipal = nul
       imageUrl={fontImatgePropia(resolveAsset(seccio === 'mercat' ? fotoDeLaTargeta(item, imatge) : imatge))}
       imageAlt={item.imageAlt || item.title || ''}
       imatgePrivada
+      /* IDEA-42 (B7h) · La targeta 16:9 amb el punt focal de l'autor. */
+      formaMitja={enquadrament?.format}
+      posicioMitja={enquadrament ?? undefined}
       author={signatura.nom}
       /* T6 · Derogat per l'ordre del Mestre del 261004 (prompt 261004_0515):
          el sistema ja no porta a /pobles, sinó a la pàgina de qui signa. */

@@ -59,8 +59,9 @@
  *                  (QA-E06).
  *                  [ci, 'llibreta'] { comptador }: el comptador monòton de la
  *                  llibreta de seguretat (§5.5), que mai baixa.
- *   · fixacions    [ci, usuari] { usuari, kid, verificat, vistAl }: TOFU; un kid
- *                  diferent només entra comparant amb el fixat (§4.4).
+ *   · fixacions    [ci, usuari] { usuari, kid, verificat, vistAl, anteriors? }: TOFU;
+ *                  un kid diferent només entra comparant amb el fixat (§4.4), i
+ *                  el substituït passa a `anteriors` (com a molt 8; B2a).
  *   · filsXifrats  [ci, fil] { fil, epoca, hash }: el cap verificat de la cadena
  *                  d'èpoques, que també és la marca apegalosa del fil
  *                  (§4.5.3.8): només avança, comparant amb el cap d'abans.
@@ -120,6 +121,8 @@ export const MAX_BYTES_SAFATA = 64 * 1024;
 export const TERMINI_OBRIR_MS = 10 * 1000;
 /* L'`anterior` de desaIdentitat per a substituir una identitat desada que ja no es pot llegir (CLAUS_MALMESES). */
 export const IDENTITAT_MALMESA = 'malmesa';
+/* B2a (marató 261101_2143) · Quants kids substituïts guarda una fixació (16 B cadascun), per a la història d'abans d'un canvi acceptat. */
+export const MAX_ANTERIORS_FIXACIO = 8;
 /* El sostre de l'època és el del format (xifratXatFormats.MAX_EPOCA: u32be d'1 a 2³¹ − 1, perquè la columna
    del servidor és `integer`): cap CK ni cap cap d'un fil per damunt del que una declaració SDPE pot portar. */
 const MAX_EPOCA = 2147483647;
@@ -181,6 +184,7 @@ const esEpoca = (valor) => Number.isSafeInteger(valor) && valor >= 1 && valor <=
 const esObjectePla = (valor) => valor !== null && typeof valor === 'object'
   && [Object.prototype, null].includes(Object.getPrototypeOf(valor));
 const iguals = (a, b) => a.length === b.length && a.every((x, i) => x === b[i]);
+const kidHex = (k) => Array.from(k, (b) => b.toString(16).padStart(2, '0')).join('');
 const exigix = (condicio, detall) => {
   if (!condicio) throw invalides(detall);
 };
@@ -587,9 +591,28 @@ export function creaMagatzemXat({
 
   /* ── Fixacions, caps i llibreta ───────────────────────────────────────── */
 
-  const filaFixacio = ({ usuari, kid, verificat, vistAl }) => ({ usuari, kid: new Uint8Array(kid), verificat, vistAl });
+  /* B2a (marató 261101_2143) · `anteriors`: els kids que esta fixació ha substituït (el més
+     recent primer, com a molt MAX_ANTERIORS_FIXACIO, sense el kid actiu ni repetits). El
+     directori els torna a posar a la història perquè, després d'acceptar un canvi fort, els
+     missatges d'abans es continuen obrint. Camp opcional: les files velles no el porten. */
+  const anteriorsNets = (llista, kid) => {
+    const vistos = new Set([kidHex(kid)]);
+    const nets = [];
+    for (const k of llista) {
+      if (!esBytes(k, 16) || vistos.has(kidHex(k))) continue;
+      vistos.add(kidHex(k));
+      nets.push(new Uint8Array(k));
+      if (nets.length === MAX_ANTERIORS_FIXACIO) break;
+    }
+    return nets;
+  };
+  const filaFixacio = ({ usuari, kid, verificat, vistAl, anteriors = [] }) => {
+    const nets = anteriorsNets(anteriors, kid);
+    return { usuari, kid: new Uint8Array(kid), verificat, vistAl, ...(nets.length ? { anteriors: nets } : {}) };
+  };
   const fixacioSencera = (fila) => esObjectePla(fila) && esUuid(fila.usuari) && esBytes(fila.kid, 16)
-    && typeof fila.verificat === 'boolean' && esMs(fila.vistAl);
+    && typeof fila.verificat === 'boolean' && esMs(fila.vistAl)
+    && (fila.anteriors === undefined || (Array.isArray(fila.anteriors) && fila.anteriors.length <= MAX_ANTERIORS_FIXACIO && fila.anteriors.every((k) => esBytes(k, 16))));
   const capSencer = (fila) => esObjectePla(fila) && esEpoca(fila.epoca) && esBytes(fila.hash, 32);
   const filSencer = (fila) => capSencer(fila) && esUuid(fila.fil);
   const mateixCap = (a, b) => (a === null || b === null ? a === b : a.epoca === b.epoca && iguals(a.hash, b.hash));
@@ -864,9 +887,9 @@ export function creaMagatzemXat({
             avorta(malmes());
             return;
           } else if (iguals(actual.kid, kid)) {
-            fila = filaFixacio({ usuari, kid, verificat: verificat ?? actual.verificat, vistAl: Math.max(actual.vistAl, vist) });
+            fila = filaFixacio({ usuari, kid, verificat: verificat ?? actual.verificat, vistAl: Math.max(actual.vistAl, vist), anteriors: actual.anteriors ?? [] });
           } else if (anterior !== null && iguals(actual.kid, anterior)) {
-            fila = filaFixacio({ usuari, kid, verificat: verificat === true, vistAl: vist });
+            fila = filaFixacio({ usuari, kid, verificat: verificat === true, vistAl: vist, anteriors: [actual.kid, ...(actual.anteriors ?? [])] });
           } else {
             avorta(anterior === null
               ? errorAmbCodi('FIXACIO_DIFERENT', 'Este contacte té fixada una altra clau.')
@@ -1068,7 +1091,7 @@ export function creaMagatzemXat({
               }
               const fila = local === undefined
                 ? filaFixacio(f)
-                : filaFixacio({ ...f, verificat: f.verificat || local.verificat, vistAl: Math.max(f.vistAl, local.vistAl) });
+                : filaFixacio({ ...f, verificat: f.verificat || local.verificat, vistAl: Math.max(f.vistAl, local.vistAl), anteriors: [...(local.anteriors ?? []), ...(f.anteriors ?? [])] });
               s(FIXACIONS).put(fila, [ci, f.usuari]);
               resultat.fixacions += 1;
             });

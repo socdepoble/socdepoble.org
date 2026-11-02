@@ -717,6 +717,29 @@ aside.sdp-workspace-column > .app-grid-col-header--dark:nth-of-type(2) {
   .sdp-pindola__icona { display: inline-flex; }
   /* Centrat dins d'un bloc (Onboarding): 0,1,0 com .sdp-pindola, va després. */
   .sdp-pindola--centrada { display: flex; width: fit-content; margin-inline: auto; }
+  /* PS-10 (marató 261101_2143, B7f; default D-3 del Mestre) · El Mur en
+     mòbil. Amb la pàgina a 480px o menys (el contenidor és la
+     .sdp-universal-page-container, T20), les píndoles del Mur van en una sola
+     fila que llisca dins de la píndola, com .sdp-cerca__filtres, i
+     l'entradeta, que diu el mateix que les píndoles, no es pinta: la primera
+     targeta puja de 698 a 542px a 385 (Chrome, 261102). Només el selector del
+     Mur, fill directe del seu .content-wrapper: el de les vistes del
+     calendari de la pestanya Calendari no canvia. La targeta de l'h1 i el
+     logotip es queden (ordre del Mestre, 261004). Sense @container (Chrome
+     100 a 104, Firefox 100 a 109), la finestra. Es desfà esborrant este bloc
+     i la classe de MurSection.jsx. */
+  @container (max-width: 480px) {
+    .sdp-pagina-mur .content-wrapper > .sdp-pindola { flex-wrap: nowrap; justify-content: flex-start; overflow-x: auto; overscroll-behavior-inline: contain; }
+    .sdp-pagina-mur .content-wrapper > .sdp-pindola > .sdp-pindola__opcio { flex: none; white-space: nowrap; }
+    .sdp-pagina-mur .page-intro .lead { display: none; }
+  }
+  @supports not (container-type: inline-size) {
+    @media (max-width: 480px) {
+      .sdp-pagina-mur .content-wrapper > .sdp-pindola { flex-wrap: nowrap; justify-content: flex-start; overflow-x: auto; overscroll-behavior-inline: contain; }
+      .sdp-pagina-mur .content-wrapper > .sdp-pindola > .sdp-pindola__opcio { flex: none; white-space: nowrap; }
+      .sdp-pagina-mur .page-intro .lead { display: none; }
+    }
+  }
 
 /* Animació d'aparició. Definida ací, consumida per @layer sdp (sdp.css).
    Els @keyframes no pertanyen a cap capa: el nom es resol globalment.
@@ -920,7 +943,7 @@ aside.sdp-workspace-column > .app-grid-col-header--dark:nth-of-type(2) {
 .sdp-slash-menu__opcio {
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: var(--sdp-space-1);
   padding: calc(var(--sdp-space-2) * 1.5) var(--sdp-space-4);
   border: none;
   background: transparent;
@@ -1835,6 +1858,8 @@ details[open] summary.accordion-header svg:last-child {
   width: 20px;
   height: 20px;
   fill: currentColor;
+  /* Ajust òptic fora de la reixeta, amb motiu (reixetaEspaiat.capes.test.js,
+     AMB_MOTIU): el triangle de reproduir pesa a l'esquerra dins del cercle. */
   margin-left: 2px;
 }
 
@@ -2053,7 +2078,7 @@ details[open] summary.accordion-header svg:last-child {
   border: none;
   text-align: left;
   width: 100%;
-  padding: 6px var(--sdp-space-2);
+  padding: var(--sdp-space-2);
   color: var(--sdp-text-cos);
   font-size: 0.95rem;
   cursor: pointer;
@@ -2520,7 +2545,7 @@ details[open] summary.accordion-header svg:last-child {
 }
 
 .card--soft + .feed-grid {
-  margin-top: 18px;
+  margin-top: var(--sdp-space-4);
 }
 
 /* ── COMPONENTS TIPTAP (PoC) ── */
@@ -2830,6 +2855,32 @@ details[open] summary.accordion-header svg:last-child {
       .app-grid-shell[data-layout="ample"] > .app-grid-content > .app-grid-column--left .sdp-workspace-groups .sdp-workspace-folder-row .sdp-workspace-nav-item__label { white-space: normal; }
     }
   }
+  /* PS-11 (marató 261101, B7e; default D-1 del Mestre) · Els títols de la
+     Columna 1 a 201 px (1024 px): la capçalera porta la icona, que ja plega
+     (botó germà, AppGridColumn), i un [|<] que fa el mateix. Mesurat amb
+     Chrome: CARPETES 70/45, MULTIMÈDIA 94/73, WIKI DE POBLE 107/73. Amb la
+     columna per davall de 240 px, el [|<] repetit (data-germana-de-la-icona)
+     s'amaga i el títol guanya 48 px (el grup d'accions buit conserva el gap
+     de 8); el focus en desplegar ja anava a la icona. Si el [|<] té el focus
+     quan la columna s'estreny (zoom, finestra), no s'amaga fins que el focus
+     se'n va: amagar-lo el tiraria al body (WCAG 2.4.3). Amb Tab no s'hi
+     arriba, perquè amagat no és focusable. Residu: si en eixe estat la
+     finestra perd el focus, :focus deixa de casar i el focus cau al body
+     igual (registre M21-B7e-COLUMNA). La consulta mesura la caixa de
+     contingut de la capçalera, sense el coixí de 16 + 16 (AppGridShell.css):
+     207.98 + 32 = columna < 240. A 1100 px (246, contingut 214) i a 1280 o
+     1440 (260, 228) res no canvia. Només en «ample», on la capçalera fa
+     l'amplària de la pista; fora el rail plegat i la capçalera sencera del
+     Xat, que no porten la marca.
+     Sense @container (Chrome 100 a 104, Firefox 100 a 109), el de sempre: el
+     títol amb el·lipsi i els dos botons. */
+  .app-grid-shell[data-layout="ample"] > .app-grid-content > .app-grid-column--left .app-grid-col-header:not(.app-grid-col-header--collapsed):not(.app-grid-col-header--replegable) {
+    container-name: sdp-capcalera-navegacio;
+    container-type: inline-size;
+  }
+  @container sdp-capcalera-navegacio (max-width: 207.98px) {
+    .app-grid-col-header__accions > [data-germana-de-la-icona]:not(:focus) { display: none; }
+  }
   .sdp-workspace .app-grid-col-header .app-grid-col-header__plegable {
     padding: 0;
     gap: var(--sdp-space-2);
@@ -2853,9 +2904,13 @@ details[open] summary.accordion-header svg:last-child {
      .sdp-workspace-nav-item__icon (d'ací i de l'harmonització de davall) no
      tenien cap element on casar i s'han retirat; computedStyle idèntic a
      /notes, /app/lector, /disseny, /wikidepoble, /multimedia i /xat. */
+  /* PS-05 (B7b, 261102) · A la reixeta amb el patró del plec de davall: el
+     coixí és la cel·la tàctil menys el glif (24px, el de AppGridColumn). Fora
+     de la columna esquerra (l'espècimen de /disseny), la icona passa de 54 a
+     48px de caixa (reixetaEspaiat.capes.test.js en fixa la cel·la). */
   .sdp-workspace .app-grid-col-header__accio-text > svg {
     box-sizing: content-box;
-    padding-inline: calc((var(--sdp-touch-min) - 18px) / 2);
+    padding-inline: calc((var(--sdp-touch-min) - var(--sdp-space-6)) / 2);
     flex: none;
   }
   .sdp-workspace .app-grid-col-header .app-grid-col-header__accio-text {
@@ -2956,7 +3011,7 @@ details[open] summary.accordion-header svg:last-child {
     font-size: calc(var(--sdp-bloc-fitxa-mida) * 11 / 16);
   }
   .sdp-bloc-list--notes .sdp-gestor-fitxa__text {
-    gap: 2px;
+    gap: var(--sdp-space-1);
     padding: var(--sdp-space-2) var(--sdp-space-3);
     justify-content: center;
   }
@@ -6085,7 +6140,7 @@ details[open] summary.accordion-header svg:last-child {
 /* AAA (Q1, 261004): el to suau ve d'un token sòlid (--sdp-text-suau, 9,09:1
    sobre la targeta), no d'una opacitat de 0,7 sobre el text. */
 .detail-seller { color: var(--sdp-text-suau); text-transform: uppercase; }
-.badge-row.detail-tags, .detail-hero__media.detail-media { margin-top: 18px; }
+.badge-row.detail-tags, .detail-hero__media.detail-media { margin-top: var(--sdp-space-4); }
 .sdp-article.sdp-inventari-global { padding: 2rem; }
 .sdp-media-externa-video { position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: 0; }
 .sdp-media-externa-mapa { border: 0; }
@@ -6192,9 +6247,11 @@ details[open] summary.accordion-header svg:last-child {
         canònica) i el peu blau baixa al fons (margin-top: auto; la .sp-card ja
         és una columna flex). Tots els peus d'una fila queden a la mateixa
         altura i la fila de sota comença on acaba la de dalt, sense forats
-        fantasma. Sense height: 100%: la targeta porta 32px de marge inferior
-        i, amb el 100% de la cel·la, el marge eixia de la fila i la separació
-        entre files baixava de 56 a 24px (mesurat a 1440 i 1920). */
+        fantasma. Sense height: 100%: quan la targeta portava 32px de marge
+        inferior, amb el 100% de la cel·la el marge eixia de la fila. Des de
+        PS-06 (marató 261101_2143, B7f) la targeta de la graella no en porta
+        (.sdp-card-grid > .sp-card): entre files hi ha els 24 del gap i, sota
+        l'última, el coixí de la graella. */
   .sdp-card-grid.sdp-consola__graella {
     grid-template-columns: repeat(auto-fill, minmax(min(100%, 360px), 1fr));
     align-items: stretch;
@@ -6812,6 +6869,8 @@ details[open] summary.accordion-header svg:last-child {
       border-inline-start: 1px solid var(--sdp-vora);
     }
     tbody tr:nth-child(even) > .sdp-inventari__accions { background: var(--sdp-fons-subtil); }
+    /* PS-03 (B7) · La cel·la «Accions» de la capçalera porta el fons de la capçalera de sdp.css. */
+    thead tr > .sdp-inventari__accions { background: var(--sdp-taula-capcalera-fons); }
   }
   @media (min-width: 721px) and (hover: hover) and (pointer: fine) {
     tbody tr:hover > .sdp-inventari__accions { background: var(--sdp-accent-subtil); }
@@ -7098,7 +7157,7 @@ details[open] summary.accordion-header svg:last-child {
      sobre la superfície de control, 9,21:1 (el hover, just davall, 7,20:1). */
   .sdp-classificacio-botonera > .sdp-boto, .sdp-copyright-selector {
     /* Q2 (261004) · sòl tàctil de 48px, com tot control (abans 24px). */
-    min-height: var(--sdp-touch-min); height: auto; padding: 2px 8px; font-size: var(--sdp-text-meta);
+    min-height: var(--sdp-touch-min); height: auto; padding: var(--sdp-space-1) var(--sdp-space-2); font-size: var(--sdp-text-meta);
     line-height: 1.4; border: 0; border-radius: var(--sdp-radi-boto);
     background: var(--sdp-accio-control); color: var(--sdp-sobre-accio); cursor: pointer;
   }
@@ -7190,8 +7249,8 @@ details[open] summary.accordion-header svg:last-child {
 
 @layer components {
   .sdp-copyright-control { display: flex; flex-wrap: wrap; gap: var(--sdp-space-2); }
-  .sdp-copyright-selector { display: inline-flex; align-items: center; gap: 6px; }
-  .sdp-copyright-selector { padding-inline: 10px; }
+  .sdp-copyright-selector { display: inline-flex; align-items: center; gap: var(--sdp-space-2); }
+  .sdp-copyright-selector { padding-inline: var(--sdp-space-3); }
   .sdp-workspace .app-grid-col-header .app-grid-col-header__plegable,
   .sdp-workspace .app-grid-col-header .app-grid-col-header__accio-text,
   .sdp-workspace .app-grid-col-header .app-grid-col-header__plegable svg,
@@ -7453,8 +7512,10 @@ details[open] summary.accordion-header svg:last-child {
      (--sdp-vora), sense zebra ni hover taronja, i píndoles d'amplària
      uniforme amb el text sencer. */
   .sdp-calendari--gran table { table-layout: fixed; min-inline-size: 42rem; }
+  /* PS-03 (B7) · La capçalera de taula genèrica de sdp.css ja no és el fons
+     de l'app: el calendari gran i la taula de Tasques conserven el seu píxel. */
   .sdp-calendari--gran thead th,
-  .sdp-calendari__taula thead th { border-block-end-color: var(--sdp-vora); }
+  .sdp-calendari__taula thead th { border-block-end-color: var(--sdp-vora); background: var(--sdp-fons-app); }
   /* La taula de la pàgina del Calendari (Tasques per cadència): només les vores. */
   .sdp-calendari__taula .sdp-insignia { border-color: var(--sdp-vora); }
   .sdp-calendari--gran th + th,
@@ -8399,6 +8460,12 @@ details[open] summary.accordion-header svg:last-child {
     margin-inline: auto;
     padding-bottom: var(--sdp-space-16);
   }
+  /* PS-06 (marató 261101_2143, B7f; ordre del Mestre) · Un sol espaiat entre
+     blocs: l'Alerta filla de la vista (Mode Foraster, l'enllaç que no es pot
+     connectar) sumava el seu marge de bloc (12, components.css) al gap de 32 i
+     en feia 44. Ara, el gap i prou. Les de dins d'una secció o del peu no
+     canvien. Es desfà esborrant esta regla. */
+  .sdp-connectar > .sdp-alerta { margin-block: 0; }
   .sdp-connectar__objecte {
     display: flex;
     flex-direction: column;
@@ -10510,11 +10577,23 @@ details[open] summary.accordion-header svg:last-child {
        d'una targeta de la graella (--sdp-targeta-incrustada-ample, 360px, la
        columna de .sdp-card-grid), centrada. La peça és legítima; el defecte
        era només el sostre (Codex i l'orquestrador hi coincidixen).
-     · [data-sdp-app="nevera"] .sdp-card-grid > .sp-card · a la Nevera, entre
-       targeta i targeta hi havia 56px: el gap de la graella (24) més el marge
-       de baix de la targeta del Mur (32, components.css). Un sol espaiat, el
-       canònic de la graella: el marge de baix fora. Només la Nevera (l'ordre);
-       el Lector, el Mercat i la Consola continuen com eren (Llei del Píxel).
+     · .sdp-card-grid > .sp-card · entre targeta i targeta hi havia 56px: el
+       gap de la graella (24) més el marge de baix de la targeta del Mur (32,
+       components.css). Un sol espaiat, el canònic de la graella: el marge de
+       baix fora. Va nàixer només per a la Nevera (261004); PS-06 (marató
+       261101_2143, B7f; ordre del Mestre) el porta a totes les graelles: el
+       Mur, el Mercat, /pobles, el Calendari, el Control, la Consola i el
+       catàleg passen de 56 a 24px entre files. La columna (.sdp-card-llista)
+       i les targetes soltes conserven el seu marge.
+     · .sdp-card-grid:not(:empty) · el marge de l'última fila era també el
+       que separava la graella del bloc següent: sense ell, el títol de la
+       secció de sota s'hi enganxava (0px a /control, /consola, /traduccions
+       i davant de «Mostra més» del Mur; Chrome, 261102). Ara són 32px de
+       coixí de baix de la graella, el píxel de sempre (Llei del Píxel). La
+       Nevera ja no en portava i la graella de /dispositius (.card--soft, sense
+       targetes .sp-card) tampoc: sense coixí. Es desfà tornant a posar
+       [data-sdp-app="nevera"] davant de .sdp-card-grid > .sp-card i esborrant
+       les dues regles del coixí.
    Bloc 0 del Gauntlet (ordre del Mestre, 261016) · Retirada la vora de la
    carpeta oberta del Lector (arreglo 6 del 261004, [data-sdp-app="lector"] …
    [aria-current="true"]): les seues carpetes i fonts ja no són UniversalCard,
@@ -10526,8 +10605,15 @@ details[open] summary.accordion-header svg:last-child {
     max-inline-size: var(--sdp-targeta-incrustada-ample);
     margin-inline: auto;
   }
-  [data-sdp-app="nevera"] .sdp-card-grid > .sp-card {
+  .sdp-card-grid > .sp-card {
     margin-block-end: 0;
+  }
+  .sdp-card-grid:not(:empty) {
+    padding-block-end: var(--sdp-space-8);
+  }
+  [data-sdp-app="nevera"] .sdp-card-grid,
+  .devices-panel__body > .sdp-card-grid {
+    padding-block-end: 0;
   }
 }
 

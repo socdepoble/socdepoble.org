@@ -90,7 +90,7 @@ import { useSession } from '../../app/contexts/SessionContext';
 import { useIdentitat } from '../../app/contexts/IdentitatContext.jsx';
 import { useNotesData } from '../notes/NotesDataContext';
 import { useXat } from '../xat/XatContext.jsx';
-import { CARPETA_CONNECTATS, NOM_CARPETA_CONNECTATS, carpetesDelBloc, iconaDeCarpeta } from '../notes/carpetes.js';
+import { CARPETA_CONNECTATS, NOM_CARPETA_CONNECTATS, carpetesDelBloc, iconaDeCarpeta, nomDeCarpeta } from '../notes/carpetes.js';
 import { autorDe, esRutaInterna, getSectionItemPath, objecteDe, objecteDePerfil, tipusDeSeccio, TIPUS_OBJECTE } from '../../config/navigation.js';
 import { rutaDEntrada } from '../../config/rutaEntrada.js';
 import { ENTITATS_SEED, IAIA_ID, PERSONA_PILOT, aliesDeLActor, esComptePersonaPilot } from '../../data/identitatsSeed.js';
@@ -679,7 +679,7 @@ function ConnectarElementIntern() {
   const grupsDeLaTria = grups.filter((grup) => grupsTriats.includes(grup.id));
   const tria = { mode, persones: mode === 'persones' ? persones : [], grups: mode === 'grups' ? grupsDeLaTria : [] };
   const faltenDestins = (mode === 'persones' && persones.length === 0) || (mode === 'grups' && grupsDeLaTria.length === 0);
-  const nomCarpeta = displayFolders.find((folder) => folder.id === selectedFolder)?.name || NOM_CARPETA_CONNECTATS;
+  const nomCarpeta = nomDeCarpeta(displayFolders.find((folder) => folder.id === selectedFolder), t) || NOM_CARPETA_CONNECTATS;
 
   const handleConnect = async () => {
     /* D1 · Sense sessió en remot, a entrar; en tornar, esta mateixa consulta. */
@@ -968,7 +968,7 @@ function ConnectarElementIntern() {
                   aria-pressed={isSelected}
                 >
                   <Icon size={32} className="sdp-connectar__carpeta-icona" aria-hidden="true" />
-                  <span className="sdp-connectar__carpeta-nom">{folder.name}</span>
+                  <span className="sdp-connectar__carpeta-nom">{nomDeCarpeta(folder, t)}</span>
                   {/* Correcció C18 (260928) · La triada es llig sense color (la
                       vora taronja no arriba al 3:1). Sempre hi és, perquè triar
                       no moga la graella, i només es veu en la triada (CSS, des

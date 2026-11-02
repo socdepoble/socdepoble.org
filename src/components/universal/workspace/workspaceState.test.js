@@ -80,3 +80,50 @@ describe('primerElementTriable', () => {
     expect(primerElementTriable([null, FIXAT], ALL_CATEGORY_ID)).toBe(FIXAT);
   });
 });
+
+/* B6-B2 (IDEA-46, marató 261101_2143) · `ambConsulta: false` deixa passar la
+   consulta (la secció ja dona els elements de la seua cerca) i manté la
+   carpeta, l'àmbit i les etiquetes. Només el booleà false: la resta, com
+   sempre. (Import propi: este bloc és l'únic tros del fitxer compartit que
+   toca B6-B2; les importacions s'eleven igualment.) */
+import { filterWorkspaceItems as filtraElements } from './workspaceState.js';
+
+describe('filterWorkspaceItems · ambConsulta', () => {
+  const ELEMENTS = Object.freeze([
+    Object.freeze({ id: 't', title: 'Tomaques', categoryIds: ['hort'], tags: ['estiu'] }),
+    Object.freeze({ id: 'c', title: 'Carxofes', categoryIds: ['hort'], tags: ['hivern'] }),
+    Object.freeze({ id: 'p', title: 'Pebreres', categoryIds: ['planter'], tags: ['estiu'] }),
+    Object.freeze({ id: 'g', title: 'Gallines', categoryIds: ['corral'], searchText: 'ous' })
+  ]);
+  const estat = (canvis = {}) => ({ activeCategoryId: ALL_CATEGORY_ID, activeTagIds: [], query: 'tomaq', ...canvis });
+  const ids = (llista) => llista.map((element) => element.id);
+
+  it('sense opcions, o amb ambConsulta:true, la consulta filtra com sempre', () => {
+    expect(ids(filtraElements(ELEMENTS, estat()))).toEqual(['t']);
+    expect(ids(filtraElements(ELEMENTS, estat(), { ambConsulta: true }))).toEqual(['t']);
+  });
+
+  it('amb ambConsulta:false, cap element no cau per la consulta', () => {
+    expect(ids(filtraElements(ELEMENTS, estat(), { ambConsulta: false }))).toEqual(['t', 'c', 'p', 'g']);
+    expect(ids(filtraElements(ELEMENTS, estat({ query: 'ous' }), { ambConsulta: false }))).toEqual(['t', 'c', 'p', 'g']);
+  });
+
+  it('amb ambConsulta:false, la categoria, l’àmbit i les etiquetes continuen filtrant', () => {
+    expect(ids(filtraElements(ELEMENTS, estat({ activeCategoryId: 'hort' }), { ambConsulta: false }))).toEqual(['t', 'c']);
+    expect(ids(filtraElements(ELEMENTS, estat({ activeCategoryId: 'hort' }), { ambit: new Set(['hort', 'planter']), ambConsulta: false })))
+      .toEqual(['t', 'c', 'p']);
+    expect(ids(filtraElements(ELEMENTS, estat({ activeTagIds: ['estiu'] }), { ambConsulta: false }))).toEqual(['t', 'p']);
+    expect(ids(filtraElements(ELEMENTS, estat({ activeCategoryId: 'hort', activeTagIds: ['hivern'] }), { ambConsulta: false }))).toEqual(['c']);
+  });
+
+  it('només el booleà false la desactiva: null, 0, \'\' o \'false\' filtren com sempre', () => {
+    for (const valor of [null, 0, '', 'false', undefined]) {
+      expect(ids(filtraElements(ELEMENTS, estat(), { ambConsulta: valor }))).toEqual(['t']);
+    }
+  });
+
+  it('la consulta buida o d’espais no filtra, amb ambConsulta o sense', () => {
+    expect(ids(filtraElements(ELEMENTS, estat({ query: '   ' })))).toEqual(['t', 'c', 'p', 'g']);
+    expect(ids(filtraElements(ELEMENTS, estat({ query: '' }), { ambConsulta: false }))).toEqual(['t', 'c', 'p', 'g']);
+  });
+});

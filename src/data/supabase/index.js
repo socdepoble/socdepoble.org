@@ -74,5 +74,8 @@ export {
    'consentimentTitular': la titular que ha triat mostrar-se i la seua tria.
    Explícites pel mateix motiu. */
 export { loadTitularPublic, estatTitularPublic, marcaTitularPublic } from './perfils.js';
+/* IDEA-24 (marató 261101_2143, B4) · Capacitat 'transferenciaPropietat', la
+   transferència atòmica de la propietat (2610311500). Explícita pel mateix motiu. */
+export { transfereixPropietatOrganitzacio } from './organizations.js';
 
 

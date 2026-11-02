@@ -188,7 +188,13 @@ class BarreraDelVisor extends Component {
 const refDelPort = (src) => (esMitjaOpac(src) ? src.trim().replace(/^sdp-media:/i, 'sdp-media:') : '');
 const urlDelPort = (url) => (!esMitjaOpac(url) && isSafeAsset(url) ? url : '');
 
-export function VisorDePublicacio({ fotos, dades, etiquetaObri, alt = '', children }) {
+/* IDEA-42 (B7h, marató 261101_2143; spec B7-PEDRA §2.9b) · `sencera`: l'autor
+   vol el cartell sencer a la pàgina (portada_sencera, coaccionada per qui
+   pinta: mapejadorSeccions · portadaDeLaPublicacio). Una portada vertical hi
+   guanya sdp-visor__obridor--sencer i components.css li lleva el límit
+   d'alçada: la mida natural, mai ampliada (max-width: 100%). Sense, o amb una
+   foto quadrada o apaïsada, el DOM de sempre. */
+export function VisorDePublicacio({ fotos, dades, etiquetaObri, alt = '', sencera = false, children }) {
   const [visor, setVisor] = useState({ capa: null, obert: false, index: 0 });
   /* IDEA-20 (revisió adversarial 261024, lent multiformat) · La portada sola
      d'una publicació va per la ranura heroComponent de PageFrame, on no hi
@@ -229,8 +235,9 @@ export function VisorDePublicacio({ fotos, dades, etiquetaObri, alt = '', childr
     const { naturalWidth: amplada, naturalHeight: alcada } = ev.currentTarget;
     if (amplada > 0 && alcada > 0) setCarregada({ src: font, vertical: alcada > amplada });
   };
+  const classeVertical = sencera === true ? 'sdp-visor__obridor sdp-visor__obridor--vertical sdp-visor__obridor--sencer' : 'sdp-visor__obridor sdp-visor__obridor--vertical';
   const disparador = typeof children === 'function' ? children(obri) : ref && !font ? null : (
-    <button type="button" className={vertical ? 'sdp-visor__obridor sdp-visor__obridor--vertical' : 'sdp-visor__obridor'}
+    <button type="button" className={vertical ? classeVertical : 'sdp-visor__obridor'}
       aria-haspopup="dialog" aria-label={etiquetaObri}
       onPointerEnter={precarregaElVisor} onFocus={precarregaElVisor}
       onClick={(event) => { if (event.detail <= 1) obri(0, event.currentTarget); }}>

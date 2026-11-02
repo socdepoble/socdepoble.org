@@ -33,7 +33,9 @@ import { entradaSessio } from '../../data/identitat.js';
 import { esRolQueMana } from '../../components/universal/identitat/rols.js';
 import { omple } from '../../config/moderacio.js';
 import { enllacMailto } from './contacteOrganitzacio.js';
-import { desaVcard, nomFitxerVcard, vcardDOrganitzacio } from './vcardOrganitzacio.js';
+import { desaVcard, nomFitxerVcard } from './vcardOrganitzacio.js';
+/* IDEA-25 i V-03 (marató 261101_2143, B4) · La porta única de la targeta de contacte: organització o persona. */
+import { vcardDePerfilPublic } from '../../utils/exportaVCard.js';
 import { FORMA_USERNAME } from '../onboarding/onboardingModel.js';
 import { rutaFitxaOrganitzacio } from './perfilModel.js';
 import { UniversalPage } from '../../components/universal/UniversalPage';
@@ -654,13 +656,19 @@ export function FitxaPublica({ perfil, ambEdita = true, ambXat = true, chrome = 
   const mailto = correuPublic ? enllacMailto(correuPublic) : null;
   /* P1-59 (b) (Llibre Mestre, Fita 23 i IDEA-45; guàrdia nocturna 261030) ·
      «📇 Descarrega el contacte (vCard)» a la fitxa d'una organització PÚBLICA
-     (entitat o grup; mai una persona ni una IA): la targeta es fa en local
-     amb el que la pàgina ja ensenya (nom, poble, el correu si és públic i
-     l'adreça de la fitxa; vcardOrganitzacio.js). Dins de l'app nativa un
-     enllaç blob: no desa res (vegeu DetallPrivacitat): allí, cap botó. */
-  const vcard = esOrganitzacio && perfil.publicat === true && !perfil.esIA && !esAppNativa()
-    ? vcardDOrganitzacio({ nom: perfil.nom, poble, correu: mailto ? correuPublic : '', url: urlCanonica(rutaCanonicaDePerfil(perfil) || rutaDAutoria({ tipus: perfil.tipus, id: perfil.id })) })
-    : null;
+     (entitat o grup): la targeta es fa en local amb el que la pàgina ja
+     ensenya (nom, poble, el correu si és públic i l'adreça de la fitxa).
+     IDEA-25 (marató 261101_2143, B4) · I a la d'una persona PUBLICADA: el nom,
+     el @usuari, la bio, el lema i l'adreça de la fitxa; mai cap correu,
+     telèfon, adreça ni poble. V-03 · Totes dues passen per la porta única
+     (vcardDePerfilPublic, utils/exportaVCard.js): la d'una organització és la
+     de vcardOrganitzacio.js byte a byte (el mateix correu validat que el
+     mailto). Mai la d'una IA, la d'una fitxa sense publicar ni la d'un tipus
+     desconegut. Dins de l'app nativa un enllaç blob: no desa res (vegeu
+     DetallPrivacitat): allí, cap botó. */
+  const vcard = esAppNativa()
+    ? null
+    : vcardDePerfilPublic(perfil, { poble, url: urlCanonica(rutaCanonicaDePerfil(perfil) || rutaDAutoria({ tipus: perfil.tipus, id: perfil.id })) });
   /* Gauntlet 261016 (Bloc 3) · L'avís i el botó d'una IA porten el seu nom:
      abans deien «La IAIA MarIA» i «Parla amb la IAIA» per a qualsevol IA (un
      personatge del catàleg, com El Gall o Nano Banana). Per a la IAIA, pel seu
@@ -830,7 +838,7 @@ export function FitxaPublica({ perfil, ambEdita = true, ambXat = true, chrome = 
           <a href={mailto}>{correuPublic}</a>
         </p>
       ) : null}
-      {/* P1-59 (b) · La targeta de contacte (.vcf), al costat del correu. */}
+      {/* P1-59 (b) i IDEA-25 · La targeta de contacte (.vcf), al costat del correu públic d'una organització (el d'una persona no ix mai). */}
       {vcard ? (
         <div className="sdp-alerta__accions">
           <Boto varietat="secundari" icona={Contact} onClick={() => desaVcard(vcard, nomFitxerVcard(perfil.nom))}>

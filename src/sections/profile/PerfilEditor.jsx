@@ -6,9 +6,11 @@ import { desaLlicenciaPerDefecte, sincronitzaLlicenciaPerDefecte } from '../../c
 import { useToast } from '@/components/universal/NotificationContext.jsx';
 import { Alerta, DialegConfirmacio } from '../../components/PedraSeca/index.js';
 import { usePerfil } from './PerfilContext.jsx';
-import { AVIS_IMATGE_PUJANT, ERROR_DESAT_IMATGE, useImatgeDeFitxa } from './useImatgeDeFitxa.jsx';
+import { PARELL_ERROR_DESAT_IMATGE, useImatgeDeFitxa } from './useImatgeDeFitxa.jsx';
 import { AJUDA_FOTO, textDeSerie } from '../../components/universal/enquadrament/useEnquadramentImatge.jsx';
-import { useTraductorOpcional } from '../../components/PedraSeca/hooks/useTraductorOpcional.js';
+import { tradueix, useTraductorOpcional } from '../../components/PedraSeca/hooks/useTraductorOpcional.js';
+import { TEXTOS_CLOSCA } from '../../components/universal/UniversalEditorShell.jsx';
+import { omple } from '../../config/moderacio.js';
 import { AvatarDeCapcalera } from '../../components/universal/PageFrame.jsx';
 import { DialegEmoticona } from '../../components/universal/classificacio/DialegEmoticona.jsx';
 import { carregaCatalegEmojis } from '../notes/canalEmojis.js';
@@ -49,18 +51,75 @@ import {
    ser l'entitat pilot (slugDEntitat torna ''). */
 export { ETIQUETA_IA, rutaDeFitxaPublica, slugDEntitat };
 
+/* P1-22 (marató 261101_2143, B3-I18N §3.C) · Els textos de la fitxa, en
+   parells [clau, reserva]. La reserva és el literal de sempre, caràcter a
+   caràcter (els apòstrofs tipogràfics continuen tipogràfics): fora de l'App,
+   o en valencià, el DOM no canvia (Llei del Píxel). Es pinten amb
+   tradueix(t, …) i les frases amb buits, senceres, amb omple(): el lloc («en
+   este dispositiu») entra per {lloc}, i «amb motiu» o «amb columna» són una
+   altra clau, mai un tros cosit. Les constants exportades de sempre en naixen
+   amb el mateix valor (les importen les proves i DetallAjust). L'avís de
+   pujada és el de la closca (TEXTOS_CLOSCA.imatgePujant) i l'error de desat
+   de la imatge, el d'useImatgeDeFitxa (PARELL_ERROR_DESAT_IMATGE). */
+const parellEditor = (nom, reserva) => Object.freeze([`section.perfil.editor.${nom}`, reserva]);
+export const TEXTOS_EDITOR_FITXA = Object.freeze({
+  senseColumna: parellEditor('senseColumna', 'Este camp encara no té columna al servidor'),
+  senseColumnaNom: parellEditor('senseColumnaNom', 'Este camp encara no té columna al servidor «{columna}»'),
+  llocDispositiu: parellEditor('lloc.dispositiu', 'en este dispositiu'),
+  llocPestanya: parellEditor('lloc.pestanya', 'en esta pestanya'),
+  errorMassaLlarg: parellEditor('error.massaLlarg', 'Com a màxim {maxim} caràcters. El text es guarda {lloc} fins que l’escurces o tanques la sessió.'),
+  errorValidacio: parellEditor('error.validacio', '{missatge} El text es guarda {lloc} fins que el corregisques o tanques la sessió.'),
+  errorColumna: parellEditor('error.columna', 'Este camp encara no té columna al servidor: el canvi es guarda {lloc} fins que s’aplique la migració o tanques la sessió.'),
+  errorColumnaNom: parellEditor('error.columnaNom', 'Este camp encara no té columna al servidor («{columna}»): el canvi es guarda {lloc} fins que s’aplique la migració o tanques la sessió.'),
+  errorConflicte: parellEditor('error.conflicte', 'Hi ha una versió més nova al servidor. El teu text es guarda {lloc} fins que tries o tanques la sessió.'),
+  errorServidor: parellEditor('error.servidor', 'El servidor no ha acceptat el canvi. El text es guarda {lloc} fins que tanques la sessió.'),
+  errorServidorMotiu: parellEditor('error.servidorMotiu', 'El servidor no ha acceptat el canvi ({motiu}). El text es guarda {lloc} fins que tanques la sessió.'),
+  imatgeRebutjada: parellEditor('imatge.rebutjada', 'El servidor no ha acceptat la imatge. No s’ha desat: es guarda {lloc} fins que tanques la sessió, i la pots tornar a provar.'),
+  imatgeRebutjadaMotiu: parellEditor('imatge.rebutjadaMotiu', 'El servidor no ha acceptat la imatge ({motiu}). No s’ha desat: es guarda {lloc} fins que tanques la sessió, i la pots tornar a provar.'),
+  imatgeTemporal: parellEditor('imatge.temporal', 'No s’ha pogut desar la imatge. Es tornarà a provar sola; mentrestant, es guarda {lloc} fins que tanques la sessió.'),
+  imatgeTemporalMotiu: parellEditor('imatge.temporalMotiu', 'No s’ha pogut desar la imatge ({motiu}). Es tornarà a provar sola; mentrestant, es guarda {lloc} fins que tanques la sessió.'),
+  imatgePendent: parellEditor('imatge.pendent', 'La imatge encara no s’ha desat al servidor. Es guarda {lloc} fins que tanques la sessió, i eixirà sola quan es puga.'),
+  desamentTemporal: parellEditor('desament.temporal', 'No s’ha pogut desar. Es tornarà a provar sol; mentrestant, el text es guarda {lloc} fins que tanques la sessió.'),
+  desamentTemporalMotiu: parellEditor('desament.temporalMotiu', 'No s’ha pogut desar ({motiu}). Es tornarà a provar sol; mentrestant, el text es guarda {lloc} fins que tanques la sessió.'),
+  desamentError: parellEditor('desament.error', 'Hi ha canvis que el servidor encara no té: mira els avisos del document. Es guarden {lloc} fins que tanques la sessió.'),
+  edicioAvancadaTitol: parellEditor('edicioAvancada.titol', 'Edició avançada de la fitxa'),
+  resumPersona: parellEditor('edicioAvancada.resum.persona', 'Canvia el teu avatar, afig la teua foto de capçalera i gestiona les dades'),
+  resumOrganitzacio: parellEditor('edicioAvancada.resum.organitzacio', 'Canvia el logotip, afig la foto de capçalera i gestiona els drets i les dades'),
+  resumAgent: parellEditor('edicioAvancada.resum.agent', 'Canvia l’avatar, afig la foto de capçalera i gestiona els drets i les dades'),
+  etiquetaCapcalera: parellEditor('etiqueta.capcalera', 'Capçalera'),
+  etiquetaAvatar: parellEditor('etiqueta.avatar', 'Avatar'),
+  etiquetaLogotip: parellEditor('etiqueta.logotip', 'Logotip'),
+  etiquetaLlevaAvatar: parellEditor('etiqueta.llevaAvatar', 'Llevar l’avatar'),
+  etiquetaAjustaAvatar: parellEditor('etiqueta.ajustaAvatar', 'Ajusta o canvia l’avatar'),
+  etiquetaPosaAvatar: parellEditor('etiqueta.posaAvatar', 'Posa un avatar'),
+  etiquetaLlevaAvatarFinestra: parellEditor('etiqueta.llevaAvatarFinestra', 'Llevar avatar'),
+  etiquetaGuardaEnquadre: parellEditor('etiqueta.guardaEnquadre', 'Guardar enquadre'),
+  avisIA: parellEditor('avisIA', 'Esta fitxa és d’una intel·ligència artificial de Sóc de Poble. La mantenen les persones que administren l’entitat; el que hi escrigues és el que veurà tot el poble.'),
+  placeholderCos: parellEditor('placeholderCos', 'Este és el teu perfil personal. Si tens una empresa, un comerç, un taller o una associació, crea-la amb el botó NOVA ORG, dalt de la llista d’apartats, per a tindre logotip, lema i presència pública als pobles.'),
+  accioRetalla: parellEditor('accio.retalla', 'Retallar a {maxim}'),
+  accioReintenta: parellEditor('accio.reintenta', 'Tornar a provar'),
+  accioConserva: parellEditor('accio.conserva', 'Conservar el meu'),
+  accioDescarta: parellEditor('accio.descarta', 'Tornar al que hi ha desat'),
+  altAvatar: parellEditor('alt.avatar', 'Avatar de {nom}'),
+  altLogotip: parellEditor('alt.logotip', 'Logotip de {nom}'),
+  llevaTitol: parellEditor('lleva.titol', 'Llevar l’avatar?'),
+  llevaDescripcio: parellEditor('lleva.descripcio', 'La fitxa es quedarà sense foto. La pots tornar a posar quan vulgues.'),
+  reservaAvis: parellEditor('reserva.avis', 'No s’ha pogut llegir la fitxa del servidor. Es mostra en lectura perquè cap canvi trepitge el que ja hi ha.'),
+});
+const T = TEXTOS_EDITOR_FITXA;
+
 /* T47 (ordre del Mestre, 260928) · Els errors de desat ja no són toasts
    efímers: van en línia, davall del camp, i el text es conserva. PostgREST
    diu PGRST204 (o Postgres 42703) quan la columna no existix: passa mentre
    una migració no s'ha aplicat. */
-export const AVIS_SENSE_COLUMNA = 'Este camp encara no té columna al servidor';
+export const AVIS_SENSE_COLUMNA = T.senseColumna[1];
 
 /* Camps de text de la fitxa amb límit de llargària: comptador a partir del
    80 % (LLINDAR_COMPTADOR, limitsText.js; el catàleg en deriva les mostres). */
 const CAMPS_AMB_COMPTADOR = Object.freeze(['title', 'subtitle', 'lead']);
 
-/** On es guarda de veres el que encara no té el servidor. */
-const llocDelText = (persistent) => (persistent ? 'en este dispositiu' : 'en esta pestanya');
+/** On es guarda de veres el que encara no té el servidor (entra a cada frase per {lloc}). */
+const llocDelText = (persistent, t) => tradueix(t, persistent ? T.llocDispositiu : T.llocPestanya);
 
 /** Un error de validació per excés de llargària (el que té eixida «Retallar»). */
 const esMassaLlarg = (error) => error?.tipus === 'validacio'
@@ -74,18 +133,20 @@ const esMassaLlarg = (error) => error?.tipus === 'validacio'
  * T47 (correcció de la revisió C01, 260928) · Eixir de la sessió l'esborra
  * d'este dispositiu (després d'avisar-ho): el text ho diu.
  */
-function missatgeDError(error, persistent) {
-  const lloc = llocDelText(persistent);
-  if (esMassaLlarg(error)) return `Com a màxim ${error.maxim} caràcters. El text es guarda ${lloc} fins que l’escurces o tanques la sessió.`;
-  if (error.tipus === 'validacio') return `${error.missatge} El text es guarda ${lloc} fins que el corregisques o tanques la sessió.`;
+function missatgeDError(error, persistent, t) {
+  const lloc = llocDelText(persistent, t);
+  if (esMassaLlarg(error)) return omple(tradueix(t, T.errorMassaLlarg), { maxim: error.maxim, lloc });
+  if (error.tipus === 'validacio') return omple(tradueix(t, T.errorValidacio), { missatge: error.missatge, lloc });
   if (error.tipus === 'columna') {
-    return `${AVIS_SENSE_COLUMNA}${error.columna ? ` («${error.columna}»)` : ''}: el canvi es guarda ${lloc} fins que s’aplique la migració o tanques la sessió.`;
+    return error.columna
+      ? omple(tradueix(t, T.errorColumnaNom), { columna: error.columna, lloc })
+      : omple(tradueix(t, T.errorColumna), { lloc });
   }
-  if (error.tipus === 'conflicte') return `Hi ha una versió més nova al servidor. El teu text es guarda ${lloc} fins que tries o tanques la sessió.`;
+  if (error.tipus === 'conflicte') return omple(tradueix(t, T.errorConflicte), { lloc });
   /* T47 (correcció de la revisió, 260928) · Ara també arriben ací els
      missatges de l'adaptador (frases amb punt final): sense «.).». */
   const motiu = String(error.missatge || '').replace(/[.\s]+$/, '');
-  return `El servidor no ha acceptat el canvi${motiu ? ` (${motiu})` : ''}. El text es guarda ${lloc} fins que tanques la sessió.`;
+  return motiu ? omple(tradueix(t, T.errorServidorMotiu), { motiu, lloc }) : omple(tradueix(t, T.errorServidor), { lloc });
 }
 
 /**
@@ -94,27 +155,27 @@ function missatgeDError(error, persistent) {
  * el motiu de l'avís en línia (missatgeDError), dit per a una imatge, i on es
  * guarda mentrestant. `desament` és la instantània de la cua (cuaDesament.llig).
  */
-export function avisDeImatgeNoDesada(desament, camp) {
-  const lloc = llocDelText(desament?.persistent);
+export function avisDeImatgeNoDesada(desament, camp, t = null) {
+  const lloc = llocDelText(desament?.persistent, t);
   const error = desament?.errors?.[camp];
   const temporal = !error && desament?.problema?.tipus === 'temporal' ? desament.problema : null;
+  const senseColumna = () => (error.columna ? omple(tradueix(t, T.senseColumnaNom), { columna: error.columna }) : tradueix(t, T.senseColumna));
   const motiu = error?.tipus === 'columna'
-    ? `${AVIS_SENSE_COLUMNA}${error.columna ? ` «${error.columna}»` : ''}`
+    ? senseColumna()
     : String((error || temporal)?.missatge || '').replace(/[.\s]+$/, '');
-  const perque = motiu ? ` (${motiu})` : '';
-  if (error) return `El servidor no ha acceptat la imatge${perque}. No s’ha desat: es guarda ${lloc} fins que tanques la sessió, i la pots tornar a provar.`;
-  if (temporal) return `No s’ha pogut desar la imatge${perque}. Es tornarà a provar sola; mentrestant, es guarda ${lloc} fins que tanques la sessió.`;
-  return `La imatge encara no s’ha desat al servidor. Es guarda ${lloc} fins que tanques la sessió, i eixirà sola quan es puga.`;
+  if (error) return omple(tradueix(t, motiu ? T.imatgeRebutjadaMotiu : T.imatgeRebutjada), { motiu, lloc });
+  if (temporal) return omple(tradueix(t, motiu ? T.imatgeTemporalMotiu : T.imatgeTemporal), { motiu, lloc });
+  return omple(tradueix(t, T.imatgePendent), { lloc });
 }
 
 /** El text de la ploma (EstatDesament) quan cal més que el text per defecte. */
-function detallDesament(desament) {
-  const lloc = llocDelText(desament.persistent);
+function detallDesament(desament, t) {
+  const lloc = llocDelText(desament.persistent, t);
   if (desament.problema?.tipus === 'temporal') {
-    const motiu = desament.problema.missatge ? ` (${desament.problema.missatge})` : '';
-    return `No s’ha pogut desar${motiu}. Es tornarà a provar sol; mentrestant, el text es guarda ${lloc} fins que tanques la sessió.`;
+    const motiu = desament.problema.missatge;
+    return motiu ? omple(tradueix(t, T.desamentTemporalMotiu), { motiu, lloc }) : omple(tradueix(t, T.desamentTemporal), { lloc });
   }
-  if (desament.estat === 'error') return `Hi ha canvis que el servidor encara no té: mira els avisos del document. Es guarden ${lloc} fins que tanques la sessió.`;
+  if (desament.estat === 'error') return omple(tradueix(t, T.desamentError), { lloc });
   return '';
 }
 
@@ -131,11 +192,11 @@ const DESTI_FOCUS_AVATAR = '.sdp-editor-document .sdp-edicio-avancada .page-titl
 /* Encàrrec 261018 (ordre del Mestre) · El títol i el resum de la barra
    «Edició avançada» de la fitxa: la persona hi canvia l'avatar i la capçalera;
    una organització o un agent, el seu logotip o avatar, la capçalera i els drets. */
-export const TITOL_EDICIO_AVANCADA = 'Edició avançada de la fitxa';
-export const resumEdicioAvancadaDe = (mena) => {
-  if (mena === 'persona') return 'Canvia el teu avatar, afig la teua foto de capçalera i gestiona les dades';
-  if (mena === 'organitzacio') return 'Canvia el logotip, afig la foto de capçalera i gestiona els drets i les dades';
-  return 'Canvia l’avatar, afig la foto de capçalera i gestiona els drets i les dades';
+export const TITOL_EDICIO_AVANCADA = T.edicioAvancadaTitol[1];
+export const resumEdicioAvancadaDe = (mena, t = null) => {
+  if (mena === 'persona') return tradueix(t, T.resumPersona);
+  if (mena === 'organitzacio') return tradueix(t, T.resumOrganitzacio);
+  return tradueix(t, T.resumAgent);
 };
 /* Cicle 3 del Gauntlet (261030, VD) · La ranura del desplegable es diu amb
    data-sdp-ranura (UniversalEditorShell): era una classe sense estil. */
@@ -185,30 +246,30 @@ function useTancadaAMitjaPujada(pujant, obert, enAcabar) {
 
 /* Onada 4 (retallador senzill, ordre del Mestre 261008) · Els noms dels dos
    botons d'imatge i del de llevar l'avatar. */
-export const ETIQUETA_CAPCALERA = 'Capçalera';
-export const ETIQUETA_AVATAR = 'Avatar';
-export const ETIQUETA_LOGOTIP = 'Logotip';
-export const ETIQUETA_LLEVA_AVATAR = 'Llevar l’avatar';
+export const ETIQUETA_CAPCALERA = T.etiquetaCapcalera[1];
+export const ETIQUETA_AVATAR = T.etiquetaAvatar[1];
+export const ETIQUETA_LOGOTIP = T.etiquetaLogotip[1];
+export const ETIQUETA_LLEVA_AVATAR = T.etiquetaLlevaAvatar[1];
 
 /* Ordre del Mestre (18-10-2026, relleu del Pla 2000, punt 2) · «Neteja visual
    total sota l'avatar»: el cercle sol és el botó. El seu nom diu el que fa:
    amb una imatge que s'hi pot obrir, la finestra de retall amb eixa imatge;
    sense, el selector de fitxers. Dins de la finestra, els tres botons amb els
    noms que va escriure el Mestre («Canviar foto» és el de sèrie del diàleg). */
-export const ETIQUETA_AJUSTA_AVATAR = 'Ajusta o canvia l’avatar';
-export const ETIQUETA_POSA_AVATAR = 'Posa un avatar';
-export const ETIQUETA_LLEVA_AVATAR_FINESTRA = 'Llevar avatar';
-export const ETIQUETA_GUARDA_ENQUADRE = 'Guardar enquadre';
+export const ETIQUETA_AJUSTA_AVATAR = T.etiquetaAjustaAvatar[1];
+export const ETIQUETA_POSA_AVATAR = T.etiquetaPosaAvatar[1];
+export const ETIQUETA_LLEVA_AVATAR_FINESTRA = T.etiquetaLlevaAvatarFinestra[1];
+export const ETIQUETA_GUARDA_ENQUADRE = T.etiquetaGuardaEnquadre[1];
 
 /* Lògica d'Usuari (T4): la fitxa d'un agent IA es diu clarament el que és
    (ETIQUETA_IA ve de fitxaDePerfil.js, la mateixa de la seua píndola). */
-export const AVIS_FITXA_IA = 'Esta fitxa és d’una intel·ligència artificial de Sóc de Poble. La mantenen les persones que administren l’entitat; el que hi escrigues és el que veurà tot el poble.';
+export const AVIS_FITXA_IA = T.avisIA[1];
 
 /* P1-59 (a) (Llibre Mestre, Fita 23, «Didàctica Activa»; doctrina anti-efecte
    Facebook del Mestre, 27-10-2026) · El text fantasma del cos buit de la fitxa
    personal: desapareix en escriure i torna quan el cos queda buit. El botó i
    el seu lloc són els de DetallEspai («dalt de la llista d’apartats»). */
-export const PLACEHOLDER_COS_PERSONA = 'Este és el teu perfil personal. Si tens una empresa, un comerç, un taller o una associació, crea-la amb el botó NOVA ORG, dalt de la llista d’apartats, per a tindre logotip, lema i presència pública als pobles.';
+export const PLACEHOLDER_COS_PERSONA = T.placeholderCos[1];
 
 /**
  * La fitxa de la persona, de l'organització o d'un agent IA, amb l'Editor
@@ -218,10 +279,14 @@ export const PLACEHOLDER_COS_PERSONA = 'Este és el teu perfil personal. Si tens
 export function PerfilEditor({ identitat }) {
   const { guardarCampPerfil, pujaMitja, recarrega, identitats, autodesament } = usePerfil();
   const { showToast } = useToast();
+  /* P1-22 (marató 261101_2143, B3-I18N §3.C) · El traductor de la interfície
+     o null (fora de l'App, o amb un UIContext simulat sense
+     useUIActionsOpcional): llavors, la reserva valenciana de cada parell. */
+  const t = useTraductorOpcional();
   /* P1-22 (T5c, correcció G1) · Els formats admesos (AJUDA_FOTO) de la ranura
      del logotip i de la capçalera, en la llengua de la interfície; fora de
      l'App, el valencià de sempre. */
-  const ajudaFotoTraduida = textDeSerie(AJUDA_FOTO, useTraductorOpcional());
+  const ajudaFotoTraduida = textDeSerie(AJUDA_FOTO, t);
   const mena = menaDeFitxa(identitat);
   const dades = identitat?.dades || {};
   const esAgent = mena === 'agent';
@@ -442,21 +507,21 @@ export function PerfilEditor({ identitat }) {
          «Conservar el meu»: seria triar a cegues un valor que no es veu. */
       const dretsSenseFitxa = mena === 'persona' && camp === 'copyright';
       if (massaLlarg && CAMPS_AMB_COMPTADOR.includes(camp)) {
-        accions.push({ text: `Retallar a ${error.maxim}`, onClick: () => retalla(camp, error.maxim) });
+        accions.push({ text: omple(tradueix(t, T.accioRetalla), { maxim: error.maxim }), onClick: () => retalla(camp, error.maxim) });
       }
-      if (error.tipus === 'servidor' && !dretsSenseFitxa) accions.push({ text: 'Tornar a provar', onClick: () => reintenta(camp) });
-      if (error.tipus === 'conflicte' && !dretsSenseFitxa) accions.push({ text: 'Conservar el meu', onClick: () => conserva(camp) });
-      accions.push({ text: 'Tornar al que hi ha desat', onClick: () => descarta(camp) });
+      if (error.tipus === 'servidor' && !dretsSenseFitxa) accions.push({ text: tradueix(t, T.accioReintenta), onClick: () => reintenta(camp) });
+      if (error.tipus === 'conflicte' && !dretsSenseFitxa) accions.push({ text: tradueix(t, T.accioConserva), onClick: () => conserva(camp) });
+      accions.push({ text: tradueix(t, T.accioDescarta), onClick: () => descarta(camp) });
       /* La xifra viva sempre al comptador (fora de l'alerta), també per al cos. */
       const comptador = avisos[camp]?.comptador
         ?? (massaLlarg ? { llargaria: error.llargaria, maxim: error.maxim } : undefined);
       avisos[camp] = {
         ...(comptador ? { comptador } : {}),
-        error: { missatge: missatgeDError(error, desament.persistent), accions },
+        error: { missatge: missatgeDError(error, desament.persistent, t), accions },
       };
     }
     return avisos;
-  }, [ref, mena, fitxa, desament, retalla, reintenta, conserva, descarta]);
+  }, [ref, mena, fitxa, desament, retalla, reintenta, conserva, descarta, t]);
 
   /* La ploma de la skill sdp-universal-editor §1, a la barra taronja.
      T47 (correcció de la revisió) · Amb `ref`, PerfilScope té àmbit, i només en
@@ -471,10 +536,10 @@ export function PerfilEditor({ identitat }) {
   const estatDesament = useMemo(
     () => (ref ? {
       estat: desament.estat === 'sessio' ? 'pendent' : desament.estat,
-      detall: detallDesament(desament),
+      detall: detallDesament(desament, t),
       ...(desament.problema?.tipus === 'temporal' ? { reintentant: true } : null),
     } : undefined),
-    [ref, desament],
+    [ref, desament, t],
   );
 
   /* T41 (ordre del Mestre, 260928) · PUBLICAR i la bola del món obrin el
@@ -587,8 +652,8 @@ export function PerfilEditor({ identitat }) {
      es tanca i l'avís en línia diu el que ha passat. */
   const desaImatgeDeLaFinestra = useCallback(async (camp, valor) => {
     if (await desaImatge(camp, valor)) return true;
-    throw new Error(ref ? avisDeImatgeNoDesada(cuaDesament.llig(ref), camp) : ERROR_DESAT_IMATGE);
-  }, [desaImatge, ref]);
+    throw new Error(ref ? avisDeImatgeNoDesada(cuaDesament.llig(ref), camp, t) : tradueix(t, PARELL_ERROR_DESAT_IMATGE));
+  }, [desaImatge, ref, t]);
   /* Correcció de la revisió (261008) · «Encara s'està desant» no és cap error: 'info'. */
   const avisImatge = useCallback((missatge, tipus = 'error') => showToast(missatge, tipus), [showToast]);
   /* Auditoria 261007 (retocs de l'ordre E, accessibilitat) · Una persona sense
@@ -622,10 +687,12 @@ export function PerfilEditor({ identitat }) {
      pujada d'esta mateixa imatge): un trampolí estable. */
   const llevaDesDeLaFinestraRef = useRef(null);
   const llevaDesDeLaFinestra = useCallback((e) => llevaDesDeLaFinestraRef.current?.(e), []);
+  /* P1-22 (B3-I18N §3.C) · ajudaFoto va crua: la tradueix la finestra
+     (useEnquadramentImatge, textDeSerie). Els dos rètols, ací. */
   const finestraAvatar = useMemo(() => (ambAvatarRedo ? {
-    canviaFoto: true, ajudaFoto: AJUDA_FOTO, etiquetaDesa: ETIQUETA_GUARDA_ENQUADRE,
-    ...(imatgeDeLaFitxa ? { onLleva: llevaDesDeLaFinestra, etiquetaLleva: ETIQUETA_LLEVA_AVATAR_FINESTRA } : null),
-  } : null), [ambAvatarRedo, imatgeDeLaFitxa, llevaDesDeLaFinestra]);
+    canviaFoto: true, ajudaFoto: AJUDA_FOTO, etiquetaDesa: tradueix(t, T.etiquetaGuardaEnquadre),
+    ...(imatgeDeLaFitxa ? { onLleva: llevaDesDeLaFinestra, etiquetaLleva: tradueix(t, T.etiquetaLlevaAvatarFinestra) } : null),
+  } : null), [ambAvatarRedo, imatgeDeLaFitxa, llevaDesDeLaFinestra, t]);
   const imatgePropia = useImatgeDeFitxa({
     camp: 'logoImage', forma: mena === 'organitzacio' ? 'logotip' : 'avatar',
     onImageUpload: uploadMedia, onDesaCamp: desaImatgeDeLaFinestra, onError: avisImatge, onDesat: apuntaFocusAvatar,
@@ -682,12 +749,12 @@ export function PerfilEditor({ identitat }) {
   const [llevant, setLlevant] = useState(false);
   const obriLleva = useCallback((e) => {
     if (imatgePropiaPujant) {
-      avisImatge(AVIS_IMATGE_PUJANT, 'info');
+      avisImatge(tradueix(t, TEXTOS_CLOSCA.imatgePujant), 'info');
       return;
     }
     arrelImatgePropia.current = arrelDe(e?.currentTarget ?? null);
     setConfirmaLleva(true);
-  }, [imatgePropiaPujant, avisImatge]);
+  }, [imatgePropiaPujant, avisImatge, t]);
   llevaDesDeLaFinestraRef.current = obriLleva;
   /* Escape s'accepta sempre (el navegador pot tancar el <dialog> pel seu compte). */
   const tancaLleva = useCallback((motiu) => {
@@ -903,33 +970,34 @@ export function PerfilEditor({ identitat }) {
      d'una organització. En lectura, l'avatar redó d'un agent, sense botó; una
      persona, cap (Gauntlet 261022_0225, PERF-5). Mentre la foto nova puja, el cercle ho diu (ocupat → aria-busy) i el clic
      ho avisa (la guarda d'useImatgeDeFitxa). Correcció de la revisió · I es
-     veu i s'anuncia: el carregador al lloc de la càmera i, amagat,
-     l'AVIS_IMATGE_PUJANT de sempre en una regió d'estat (textOcupat). */
+     veu i s'anuncia: el carregador al lloc de la càmera i, amagat, l'avís
+     de pujada de la closca (TEXTOS_CLOSCA.imatgePujant, traduït) en una
+     regió d'estat (textOcupat). */
   const ranuraDelLogo = potEditar && !esPilot && !ambAvatarRedo;
-  const etiquetaImatgePropia = ETIQUETA_LOGOTIP;
+  const etiquetaImatgePropia = tradueix(t, T.etiquetaLogotip);
   /* Gauntlet 261022_0225 (Tasca 2; PERF-5) · En lectura, una persona no porta
      el cercle de 300px damunt de l'H1: com a la seua fitxa pública (ordre del
      Mestre, 261022), la cara viu a la barra taronja. L'agent el conserva. */
   const avatarDeCapcalera = useMemo(() => (ambAvatarRedo && mena !== 'persona' && avatarDesat && !potEditar ? {
     src: avatarDesat,
-    alt: `Avatar de ${identitat.nom}`,
-  } : null), [ambAvatarRedo, mena, avatarDesat, identitat.nom, potEditar]);
+    alt: omple(tradueix(t, T.altAvatar), { nom: identitat.nom }),
+  } : null), [ambAvatarRedo, mena, avatarDesat, identitat.nom, potEditar, t]);
   const avatarDeLEdicio = useMemo(() => (ambAvatarRedo && potEditar ? {
     src: avatarDesat,
-    alt: `Avatar de ${identitat.nom}`,
+    alt: omple(tradueix(t, T.altAvatar), { nom: identitat.nom }),
     onCanvia: ajustaAvatar,
-    nomBoto: fontDelAvatar ? ETIQUETA_AJUSTA_AVATAR : ETIQUETA_POSA_AVATAR,
+    nomBoto: tradueix(t, fontDelAvatar ? T.etiquetaAjustaAvatar : T.etiquetaPosaAvatar),
     botoBuit: true,
     obriFinestra: Boolean(fontDelAvatar),
     ocupat: imatgePropiaPujant,
-    textOcupat: AVIS_IMATGE_PUJANT,
-  } : null), [ambAvatarRedo, potEditar, avatarDesat, identitat.nom, ajustaAvatar, fontDelAvatar, imatgePropiaPujant]);
+    textOcupat: tradueix(t, TEXTOS_CLOSCA.imatgePujant),
+  } : null), [ambAvatarRedo, potEditar, avatarDesat, identitat.nom, ajustaAvatar, fontDelAvatar, imatgePropiaPujant, t]);
   /* El logo_url ja resolt (avatarBarra): PageFrame no resol cap sdp-media://
      del logotip d'una entitat. */
   const logoDeLectura = useMemo(() => (
     !potEditar && !ambAvatarRedo && identitat.mena !== 'grup' && !esPilot && avatarBarra
-      ? { clar: avatarBarra, alt: `Logotip de ${identitat.nom}` } : null
-  ), [potEditar, ambAvatarRedo, identitat.mena, identitat.nom, esPilot, avatarBarra]);
+      ? { clar: avatarBarra, alt: omple(tradueix(t, T.altLogotip), { nom: identitat.nom }) } : null
+  ), [potEditar, ambAvatarRedo, identitat.mena, identitat.nom, esPilot, avatarBarra, t]);
 
   const documentViu = useMemo(
     () => ({ document: fitxa, autor: autorTargeta, etiquetes }),
@@ -977,7 +1045,7 @@ export function PerfilEditor({ identitat }) {
          editar, el text fantasma que l'adreça a NOVA ORG si té una empresa.
          No és cap llavor: no s'escriu ni es desa (placeholderCos.js). Les
          organitzacions i els agents, cap clau nova. */
-      ...(mena === 'persona' && potEditar ? { placeholderCos: PLACEHOLDER_COS_PERSONA } : null),
+      ...(mena === 'persona' && potEditar ? { placeholderCos: tradueix(t, T.placeholderCos) } : null),
       /* Onada 4 (retallador senzill, ordre del Mestre 261008) · Derogat el
          botó únic de T35 («Editar capçalera i avatar» i el seu diàleg): la
          capçalera té el seu botó, «Capçalera», que diu ABANS de triar què
@@ -998,7 +1066,7 @@ export function PerfilEditor({ identitat }) {
          Correcció de la revisió de la línia I2 · Mentre puja, la closca hi
          diu AJUDA_IMATGE_PUJANT i, quan acaba, torna el focus al seu botó si
          s'havia perdut (Escape a mitja pujada, amb el botó desactivat). */
-      heroEditLabel: ETIQUETA_CAPCALERA,
+      heroEditLabel: tradueix(t, T.etiquetaCapcalera),
       heroEditHelp: ajudaFotoTraduida,
       onHeroEdit: obriCapcalera,
       heroPujant: capcaleraPujant,
@@ -1033,8 +1101,8 @@ export function PerfilEditor({ identitat }) {
       posicioEdicioAvancada: 'despres-autoria',
       /* Encàrrec 261018 (ordre del Mestre: «barra d'acció prominent, amb text
          gran i explicatiu») · El títol i el resum diuen què s'hi fa. */
-      titolEdicioAvancada: TITOL_EDICIO_AVANCADA,
-      resumEdicioAvancada: resumEdicioAvancadaDe(mena),
+      titolEdicioAvancada: tradueix(t, T.edicioAvancadaTitol),
+      resumEdicioAvancada: resumEdicioAvancadaDe(mena, t),
       /* L'entitat pilot no pinta mai el logo de la fila: damunt de l'H1 hi va la
          marca fixa de Sóc de Poble (PageFrame), com en lectura. */
       logoAlTitol: !ambAvatarRedo && !esPilot,
@@ -1081,7 +1149,7 @@ export function PerfilEditor({ identitat }) {
     };
   }, [mena, esAgent, ambAvatarRedo, esPilot, potEditar, fitxa, identitat, etiquetes, autorTargeta, rutaFitxa, updateLocal, saveRemote, visibilitat, uploadMedia,
     obriCapcalera, capcaleraPujant, obriImatgePropia, imatgePropiaPujant, etiquetaImatgePropia, ranuraDelLogo, avatarDeCapcalera, avatarDeLEdicio,
-    logoDeLectura, estatDesament, avisosCamps, dretsTriats, ambEmoticona, obriEmoticona, identitatAlPoble, ajudaFotoTraduida]);
+    logoDeLectura, estatDesament, avisosCamps, dretsTriats, ambEmoticona, obriEmoticona, identitatAlPoble, ajudaFotoTraduida, t]);
 
   /* Només qui pot editar la fitxa té els selectors i les finestres de retall.
      Germans del DocumentEditor i no fills de cap altre diàleg. La confirmació
@@ -1098,9 +1166,9 @@ export function PerfilEditor({ identitat }) {
           obert={confirmaLleva}
           onTanca={tancaLleva}
           onConfirma={llevaAvatar}
-          titol="Llevar l’avatar?"
-          descripcio="La fitxa es quedarà sense foto. La pots tornar a posar quan vulgues."
-          etiquetaConfirma={ETIQUETA_LLEVA_AVATAR}
+          titol={tradueix(t, T.llevaTitol)}
+          descripcio={tradueix(t, T.llevaDescripcio)}
+          etiquetaConfirma={tradueix(t, T.etiquetaLlevaAvatar)}
           destructiu
           carregant={llevant}
         />
@@ -1127,9 +1195,9 @@ export function PerfilEditor({ identitat }) {
     return (
       <>
         <div className="sdp-alerta sdp-alerta--error" role="alert">
-          <p>No s’ha pogut llegir la fitxa del servidor. Es mostra en lectura perquè cap canvi trepitge el que ja hi ha.</p>
+          <p>{tradueix(t, T.reservaAvis)}</p>
           <div className="sdp-alerta__accions">
-            <button type="button" className="sdp-boto sdp-boto--secundari" onClick={recarrega}>Tornar a provar</button>
+            <button type="button" className="sdp-boto sdp-boto--secundari" onClick={recarrega}>{tradueix(t, T.accioReintenta)}</button>
           </div>
         </div>
         <DocumentEditor adapter={adapter} onToast={showToast} />
@@ -1140,7 +1208,7 @@ export function PerfilEditor({ identitat }) {
   if (esAgent) {
     return (
       <>
-        <Alerta to="avis" titol={ETIQUETA_IA}>{AVIS_FITXA_IA}</Alerta>
+        <Alerta to="avis" titol={ETIQUETA_IA}>{tradueix(t, T.avisIA)}</Alerta>
         <DocumentEditor adapter={adapter} onToast={showToast} />
         {dialegsImatge}
         {dialegDEmoticona}

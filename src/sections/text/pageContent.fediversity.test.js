@@ -653,13 +653,14 @@ describe('honestedat: cada afirmació ancorada al codi', () => {
   });
 
   /* T2 · D04/D10 (assalt 261101) · Refet amb el contracte final: 'versioClient' (T8b) i 'dadesObertes' i
-     'restauracioDadesObertes' (T2) hi afigen tres capacitats. */
-  test('F4 · la partida 1 i el document del Model B diuen les xifres exactes del contracte (32 nucli, 34 capacitats i 114 totals) sense dades inventades', () => {
+     'restauracioDadesObertes' (T2) hi afigen tres capacitats.
+     IDEA-24 (marató 261101_2143, B4) · 'transferenciaPropietat' n'afig una altra: 35 capacitats i 115 mètodes. */
+  test('F4 · la partida 1 i el document del Model B diuen les xifres exactes del contracte (32 nucli, 35 capacitats i 115 totals) sense dades inventades', () => {
     const primeraFet = apartat(0, 'Fet hui (verificable)');
     const primeraPendent = apartat(0, 'Pendent');
     expect(CONTRACTE_NUCLI).toHaveLength(32);
-    expect(Object.keys(CAPACITATS)).toHaveLength(34);
-    expect(CONTRACTE_BACKEND).toHaveLength(114);
+    expect(Object.keys(CAPACITATS)).toHaveLength(35);
+    expect(CONTRACTE_BACKEND).toHaveLength(115);
     expect(primeraFet).toContain(
       `L'inventari de l'API del port neutral (${CONTRACTE_NUCLI.length} mètodes del nucli i ${Object.keys(CAPACITATS).length} capacitats atòmiques a src/data/contracte.js) i dels requisits d'allotjament verificables del Model B, en esborrany a la Wiki de Poble.`
     );
@@ -682,19 +683,19 @@ describe('honestedat: cada afirmació ancorada al codi', () => {
       'utf8'
     );
     expect(docModelB).toContain('32 operacions obligatòries del Nucli (`CONTRACTE_NUCLI`)');
-    expect(docModelB).toContain('34 capacitats atòmiques opcionals (`CAPACITATS`)');
-    expect(docModelB).toContain('82 mètodes addicionals');
-    expect(docModelB).toContain('114 mètodes');
-    /* Gauntlet transversal 261101 (H4-02) · Cap recompte vell (els 111 de la Ronda 2, o qualsevol de 100 a 113)
-       d'operacions o de mètodes: el document diu els 114 de CONTRACTE_BACKEND a tot arreu. */
-    expect(docModelB).not.toMatch(/\b1(0\d|1[0-3]) (operacions|mètodes)/);
+    expect(docModelB).toContain('35 capacitats atòmiques opcionals (`CAPACITATS`)');
+    expect(docModelB).toContain('83 mètodes addicionals');
+    expect(docModelB).toContain('115 mètodes');
+    /* Gauntlet transversal 261101 (H4-02) · Cap recompte vell (els 111 de la Ronda 2, o qualsevol de 100 a 114)
+       d'operacions o de mètodes: el document diu els 115 de CONTRACTE_BACKEND a tot arreu. */
+    expect(docModelB).not.toMatch(/\b1(0\d|1[0-4]) (operacions|mètodes)/);
     expect(docModelB).not.toMatch(/12\s*€|2\s*vCPU|40\s*GB|CouchDB|PocketBase/i);
   });
 });
 
 test('Lot5 · el document enumera exactament els noms reals del nucli i les capacitats',()=>{
  const doc=readFileSync(path.join(ARREL,'_wiki_de_poble/02_saber/architecture/api_port_neutral_i_allotjament_model_b.md'),'utf8');
- const nucli=doc.slice(doc.indexOf('## 32 operacions'),doc.indexOf('## 34 capacitats'));
+ const nucli=doc.slice(doc.indexOf('## 32 operacions'),doc.indexOf('## 35 capacitats'));
  expect([...nucli.matchAll(/^- `([^`]+)`$/gm)].map(m=>m[1])).toEqual(CONTRACTE_NUCLI);
  const files=[...doc.matchAll(/^\| `([^`]+)` \| (.+) \|$/gm)].map(m=>[m[1],[...m[2].matchAll(/`([^`]+)`/g)].map(m=>m[1])]);expect(Object.fromEntries(files)).toEqual(CAPACITATS);
  for(const ruta of [...doc.matchAll(/`((?:src|tooling|wordpress-plugin)\/[a-zA-Z0-9_./-]+\.(?:js|jsx|mjs|nix|php))`/g)].map(m=>m[1]))expect(existix(ruta),ruta).toBe(true);

@@ -290,6 +290,10 @@ export const entraAmbTokenDeProveidor = asseguraMetode('entraAmbTokenDeProveidor
 export const llistaMembresOrganitzacio = asseguraMetode('llistaMembresOrganitzacio');
 export const desaMembreOrganitzacio = asseguraMetode('desaMembreOrganitzacio');
 export const llevaMembreOrganitzacio = asseguraMetode('llevaMembreOrganitzacio');
+/* IDEA-24 (marató 261101_2143, B4) · La transferència atòmica de la
+   propietat (capacitat 'transferenciaPropietat'). No és nucli: qui l'oferisca
+   ha de preguntar abans amb teCapacitat i, sense ella, no oferir-la. */
+export const transfereixPropietatOrganitzacio = asseguraMetode('transfereixPropietatOrganitzacio');
 
 /* Onada 11 (261010; prompt 261010_1730, tasca 2) · El segon factor del
    superadmin (capacitat 'segonFactor'). No és nucli: «El compte» pregunta

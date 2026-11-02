@@ -35,6 +35,13 @@ export function WorkspaceProvider({
      Un element només s'obri quan es tria (selectItem) o el porta `selection`.
      Sense, el de sempre: la categoria obri el seu primer element. */
   categoriaSenseElement = false,
+  /* B6-B2 (IDEA-46, marató 261101_2143) · Amb false (només el booleà), la
+     consulta de la lupa no filtra la llista: la secció ja dona els elements
+     de la seua cerca. Sense, filtra per subcadena, com sempre. */
+  filtraPerConsulta = true,
+  /* B6-B2 · onQueryChange(consulta): cada canvi de la consulta (escriure,
+     «Tancar», «Netejar»), mai la de muntar. Sense, ningú no l'escolta. */
+  onQueryChange = null,
   children
 }) {
   const [state, dispatch] = useReducer(
@@ -111,9 +118,9 @@ export function WorkspaceProvider({
     () => filterWorkspaceItems(
       normalizedItems,
       { activeCategoryId, activeTagIds, query },
-      { ambit: ambitDe(activeCategoryId) }
+      { ambit: ambitDe(activeCategoryId), ambConsulta: filtraPerConsulta }
     ),
-    [normalizedItems, activeCategoryId, activeTagIds, query, ambitDe]
+    [normalizedItems, activeCategoryId, activeTagIds, query, ambitDe, filtraPerConsulta]
   );
   const activeItem = state.activeItemId
     ? itemById.get(state.activeItemId) || null
@@ -128,6 +135,21 @@ export function WorkspaceProvider({
   const emitSelection = useCallback((next, reason) => {
     onSelectionChangeRef.current?.(next, { reason });
   }, []);
+
+  /* B6-B2 (IDEA-46) · La consulta cap a la secció. Amb una ref, com
+     onSelectionChange: un callback nou no emet res. La consulta de muntar
+     (initialSelection.query, també en remuntar per workspaceKey) ja és la
+     de la secció i no s'emet. */
+  const onQueryChangeRef = useRef(onQueryChange);
+  useEffect(() => {
+    onQueryChangeRef.current = onQueryChange;
+  }, [onQueryChange]);
+  const consultaEmesa = useRef(query);
+  useEffect(() => {
+    if (query === consultaEmesa.current) return;
+    consultaEmesa.current = query;
+    if (typeof onQueryChangeRef.current === 'function') onQueryChangeRef.current(query);
+  }, [query]);
 
   const stateRef = useRef(state);
   const normalizedItemsRef = useRef(normalizedItems);
@@ -152,10 +174,12 @@ export function WorkspaceProvider({
     let itemId = null;
     let deferred = false;
     if (!categoriaSenseElement) {
+      /* B6-B2 · Amb filtraPerConsulta:false, la consulta no tria: els
+         candidats són els que la llista mostra. */
       const candidates = filterWorkspaceItems(items, {
         ...currentState,
         activeCategoryId: id
-      }, { ambit: ambitDeRef.current(id) });
+      }, { ambit: ambitDeRef.current(id), ambConsulta: filtraPerConsulta });
       // La pell pot ajornar sols la tria automàtica d'una carpeta pendent.
       // Una nota disponible continua elegible; selectItem i requestItem són manuals.
       const eligible = typeof canAutoSelectRef.current === 'function'
@@ -172,7 +196,7 @@ export function WorkspaceProvider({
 
     dispatch({ type: 'category/select', categoryId: id, itemId, needsInitialSelection: deferred });
     emitSelection({ categoryId: id, itemId }, 'user');
-  }, [emitSelection, categoriaSenseElement]);
+  }, [emitSelection, categoriaSenseElement, filtraPerConsulta]);
 
   /* Gauntlet 261030 (cicle 2) · La raó d'una tria de la persona: 'user' (el
      clic, l'Enter, la primera fletxa d'un recorregut: les seccions fan push)
