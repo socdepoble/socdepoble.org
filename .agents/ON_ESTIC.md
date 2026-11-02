@@ -6,7 +6,7 @@ description: Punter d'arrencada de sessió generat per despertar.mjs
 # ON_ESTIC.md (Punter de Sessió)
 
 > [!IMPORTANT]
-> **GENERAT:** 2026-10-31T02:38:47.912Z
+> **GENERAT:** 2026-11-02T07:06:55.192Z
 > Aquest document l'`@`-importa `CLAUDE.md`, i eixa importació es resol ABANS
 > que el hook l'escriga: la còpia que tens al context és la de la sessió
 > anterior. Per això **ací no hi ha cap llista de l'Escriptori**: la d'ahir
@@ -14,7 +14,7 @@ description: Punter d'arrencada de sessió generat per despertar.mjs
 > llegir eixa carpeta en procediments automàtics.
 
 **Branca Git:** backup-notes-publish
-**Commit:** d6ab025f4
+**Commit:** e1b7210b0
 
 ## 1. Contingut de l'Escriptori (Taula de Treball)
 
@@ -27,22 +27,47 @@ Si no tens cap de les dues, llista `_wiki_de_poble/04_escriptori/` amb una eina 
 
 ## 2. Resum de l'ESTAT recent
 
+> [!WARNING]
+> ESTAT RANCI: l'últim relleu és de 261102_0806 i `_wiki_de_poble/04_escriptori/03_llibre_mestre_tasques_i_idees.md` s'ha tocat 0 min després. Hi ha faena feta que ningú ha anotat a `.agents/ESTAT.md`.
+
 Últim relleu anotat a `.agents/ESTAT.md` (primera capçalera del fitxer):
 
-## ESTAT_ACTUAL · 2026-10-31T03:38:00+01:00 · Claude · Tancament pre-desplegament del prompt 261030_2208 (cobertura social, Consola pública amb instantània, tauler d'Umami, llistes i portes)
+## ESTAT_ACTUAL · 2026-11-02T08:06:00+01:00 · Claude · Marató nocturna 261101_2143: B0-B10 en Gauntlet, quatre commits locals i delegació autònoma fins a l'alba
 
-- **Torn i ordre:** `torn_f298d1e0-3122-47a0-b815-bf2f719c5be3` (code). [Prompt 2208](../_wiki_de_poble/90_arxiu_historic/261030_2208_prompt_claude_tancament_seo_consola_publica_i_telemetria_didactica.md) amb les auditories vespertines de [Gemini](../_wiki_de_poble/90_arxiu_historic/261030_2114_auditoria_vespertina_gemini.md) i [Codex](../_wiki_de_poble/90_arxiu_historic/261030_2114_auditoria_vespertina_codex.md), i les ordres del Mestre al xat de la nit del 30 al 31-10. Informe: [261031_0040_auditoria_claude](../_wiki_de_poble/04_escriptori/261031_0040_auditoria_claude.md).
-- **Fet (sense commit ni desplegament):**
-  - **T1 · Cobertura social:** 34 rutes públiques amb `og:image` pròpia al client, al manifest i a l'HTML prerenderitzat (8 de plugins, 10 de `/page`, `/wikidepoble`, `/disseny`, `/consola`, 9 pàgines i 4 del Govern), amb 26 variants socials noves.
-  - **T2 · Obertura pública:** `/disseny` i `/consola` públiques i indexables; la Consola es munta sense guarda i, a cada build web, publica una instantània sanejada (fail-closed) de les seues quatre fonts; textos de consola, cervell i fediversity certs i frontissa 16/16.
-  - **T3 · Telemetria:** tauler nadiu d'Umami sense iframe, construït amb l'organisme reutilitzable de Pedra Seca `QuadreDeComandament` i el full `src/css/taulers.css`; textos didàctics; cap enviament des d'un servidor local.
-  - **T4 · Polits:** prosa del contracte de la graella, fila de l'enllaç de la imatge només a l'Arxiu o amb enllaç públic, vinyeta de Fedivers a sang.
-  - **Llistes:** `--sdp-li-gap` a 4px i cap llista de text que sume `gap` al marge dels `<li>`.
-  - **Documents i portes:** rebuts renovats de 14 documents de l'Escriptori; portes del cens arreglades segons les decisions del Mestre (Consell, Llavor, Rutes, Nomenclatura N2, Crom, Doctrina, Promesa, Llaurador); dades personals retirades d'una fila del Llibre Mestre perquè la matriu del Govern ara es publica.
-- **Per al Mestre:** posar l'enllaç d'Umami amb la `m` minúscula al seu fitxer d'entorn de producció abans del build de desplegament; Reflex i Nomenclatura N1 després del commit; la part C de Pedra Seca i els punts 5 i 6 de Tokens; les decisions D-1 a D-6 de les llistes; i la resta de decisions de l'informe.
-- **Porta final:** Vitest 26.725 passades i 0 fallades, `test:node` 1.713 i 0, `test:precommit`, ESLint, Doctrina, Promesa, Frontmatter, segell, LEDGER, frontissa 16/16 i Olivera en verd; el cens de `run-portes` en deixa 7 de roges, quatre per decisió del Mestre (Reflex, Nomenclatura N1, Pedra Seca i Tokens) i tres per un enllaç de l'índex a una acta de MarIA amb un altre nom.
-- **Torn:** no s'ha tancat amb `--close`. Falten un pla d'implementació del prompt 2208 per a vincular-lo, el reconeixement del canvi autoritzat a la zona humana (`contracte_graella.md`, que este torn no pot fer mecànicament) i l'enllaç de l'índex a l'acta de MarIA; no es fabrica cap tancament.
-- **Fronteres:** cap commit, push, desplegament, `npm install`, SQL remot ni lectura de fitxers d'entorn.
+- **Torn i ordre:** `torn_3d9af83b-3a4a-4735-a6ec-925b1d9c633e` (code). Ordres del Mestre al xat: B0-B7 del [prompt 2059](../_wiki_de_poble/04_escriptori/261101_2059_prompt_marato_nocturna_extirpacio_total_deute_llibre_mestre.md) (21:41) i, abans de dormir, B8-B10 amb delegació autònoma (`requires_human_decision: false`). Informe: [261101_2143_auditoria_claude](../_wiki_de_poble/04_escriptori/261101_2143_auditoria_claude.md).
+- **Commits locals (sense push):** `921c332ac` (Onada 1: B0, B1 i les bases de B2, B3 i B6), `333af8c2c` (Onada 2: B2-B7, que segella B0-B7), `e1b7210b0` (Onada 3: B8, B9 i B10, més les correccions dels dos Gauntlets transversals) i el commit documental del tancament.
+- **Fet:**
+  - **B0:** PC155-01..03 i T11-01..05.
+  - **B1:** Olivera, hook i portes.
+  - **B2:** E2EE amb el kid monòton i F2a, darrere de la bandera apagada.
+  - **B3:** Arrere natiu, sis mòduls de literals i verificador de migracions.
+  - **B4:** vCard i transferència.
+  - **B5:** inbox i cua signada.
+  - **B6:** benzina, facetes, EspaiCerca i germanes.
+  - **B7:** PS-01..PS-11 i el cartell A4.
+  - **B8:** avisos del Xat apagats (funció `notifica-xat`, migració 2611020417, port de 37 capacitats, PWA, silenci, ajustos i baixa en eixir).
+  - **B9:** `--canal produccio` en esborrany i `/page/descarregues` directe.
+  - **B10:** P1-09, P1-24, P1-29, P1-30, P2-12, P2-15 (sense rotar) i P1-71.
+- **Governança (executor i CAS):**
+  - Reflex `bf4dcc4c`, `a2b14eb0`, `5aeb79f4` i `9a7dd881`.
+  - La transacció de tancament (ESTAT i LEDGER).
+  - Frontissa 16/16.
+- **Proves:**
+  - **Vitest:** 30.610 passades.
+  - **Node:** 2.015 passades.
+  - **ESLint i `design_guard`:** 0/0.
+  - **Roges de còpia:** són les de sempre (sense `.git` ni fitxers d'entorn).
+  - **`run-portes` encara roig per:** Cens C4 (l'informe de Codex), Reflex (arbre brut) i Llaurador (fins que es regenere ON_ESTIC).
+- **Per al Mestre:**
+  - Aplicar les migracions (2611012257, 2611020106, 2611020417 i les anteriors) en l'ordre de `supabase/ordre_desplegament.json`.
+  - Tornar a construir i desplegar el web.
+  - Tornar a segellar les cinc skills de `skills-per-segellar/`.
+  - Avisos: VAPID, secrets, funció i bandera.
+  - Botigues: D-B9-2.
+  - Arrere en un aparell.
+  - Decisions D-E1-2, D-E1-4, D-2 i D-1 de L08.
+  - El detall és al bloc de relleu de §0.3 del Llibre Mestre.
+- **Fronteres:** cap push, cap operació remota, cap `npm install`, cap secret ni lectura de fitxers d'entorn.
 
 ## 3. Què has de fer ara?
 

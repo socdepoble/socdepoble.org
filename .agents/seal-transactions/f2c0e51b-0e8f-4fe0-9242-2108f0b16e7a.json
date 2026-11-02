@@ -1,0 +1,22 @@
+{
+  "id": "f2c0e51b-0e8f-4fe0-9242-2108f0b16e7a",
+  "session": "5232fbd2-6f8d-4845-80e6-696dea2f216e",
+  "operationId": "torn_3d9af83b-tancament_marato_extirpacio_relleu_estat_ledger_torn_claude-5232fbd2",
+  "claim": "5232fbd2-6f8d-4845-80e6-696dea2f216e:governance-write",
+  "planHash": "41a99a479b1a77f882f86631c454f48de8726095a4e23fe03f139050cd316f1e",
+  "beforeSeal": "93370e995fead641507aa89a22f45f946913094a9da70e871dc97134793e9596",
+  "files": [
+    {
+      "path": ".agents/ESTAT.md",
+      "before": "2a0ba76be315d497d07c8e951d8c40aa76ae6ac1766811d260fd5da7754a565b",
+      "after": "f44cc8a370d57d499ebbdc081d6749a4dce0fd65df600fbbc521d19f529f12ed"
+    },
+    {
+      "path": ".agents/LEDGER.md",
+      "before": "f0b3dce8813f0d7c9f997085f248245f5acb4e801bfb1a61fc94b0e2f5de51c6",
+      "after": "21402cae8d0d1b7b8b7043296dc01f92d2429185fa8524b347358fd764297077"
+    }
+  ],
+  "state": "accepted",
+  "afterSeal": "d863c155441b09590117b6eb2a6e30dacfebf30e6a62f0b502590644b8434d0f"
+}

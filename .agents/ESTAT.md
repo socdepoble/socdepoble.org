@@ -7,6 +7,54 @@ description: ESTAT DE LA SESSIÓ
 
 <!-- SDP:ESTAT_ACTUAL -->
 
+## ESTAT_ACTUAL · 2026-11-02T08:06:00+01:00 · Claude · Marató nocturna 261101_2143: B0-B10 en Gauntlet, quatre commits locals i delegació autònoma fins a l'alba
+
+- **Torn i ordre:** `torn_3d9af83b-3a4a-4735-a6ec-925b1d9c633e` (code). Ordres del Mestre al xat: B0-B7 del [prompt 2059](../_wiki_de_poble/04_escriptori/261101_2059_prompt_marato_nocturna_extirpacio_total_deute_llibre_mestre.md) (21:41) i, abans de dormir, B8-B10 amb delegació autònoma (`requires_human_decision: false`). Informe: [261101_2143_auditoria_claude](../_wiki_de_poble/04_escriptori/261101_2143_auditoria_claude.md).
+- **Commits locals (sense push):** `921c332ac` (Onada 1: B0, B1 i les bases de B2, B3 i B6), `333af8c2c` (Onada 2: B2-B7, que segella B0-B7), `e1b7210b0` (Onada 3: B8, B9 i B10, més les correccions dels dos Gauntlets transversals) i el commit documental del tancament.
+- **Fet:**
+  - **B0:** PC155-01..03 i T11-01..05.
+  - **B1:** Olivera, hook i portes.
+  - **B2:** E2EE amb el kid monòton i F2a, darrere de la bandera apagada.
+  - **B3:** Arrere natiu, sis mòduls de literals i verificador de migracions.
+  - **B4:** vCard i transferència.
+  - **B5:** inbox i cua signada.
+  - **B6:** benzina, facetes, EspaiCerca i germanes.
+  - **B7:** PS-01..PS-11 i el cartell A4.
+  - **B8:** avisos del Xat apagats (funció `notifica-xat`, migració 2611020417, port de 37 capacitats, PWA, silenci, ajustos i baixa en eixir).
+  - **B9:** `--canal produccio` en esborrany i `/page/descarregues` directe.
+  - **B10:** P1-09, P1-24, P1-29, P1-30, P2-12, P2-15 (sense rotar) i P1-71.
+- **Governança (executor i CAS):**
+  - Reflex `bf4dcc4c`, `a2b14eb0`, `5aeb79f4` i `9a7dd881`.
+  - La transacció de tancament (ESTAT i LEDGER).
+  - Frontissa 16/16.
+- **Proves:**
+  - **Vitest:** 30.610 passades.
+  - **Node:** 2.015 passades.
+  - **ESLint i `design_guard`:** 0/0.
+  - **Roges de còpia:** són les de sempre (sense `.git` ni fitxers d'entorn).
+  - **`run-portes` encara roig per:** Cens C4 (l'informe de Codex), Reflex (arbre brut) i Llaurador (fins que es regenere ON_ESTIC).
+- **Per al Mestre:**
+  - Aplicar les migracions (2611012257, 2611020106, 2611020417 i les anteriors) en l'ordre de `supabase/ordre_desplegament.json`.
+  - Tornar a construir i desplegar el web.
+  - Tornar a segellar les cinc skills de `skills-per-segellar/`.
+  - Avisos: VAPID, secrets, funció i bandera.
+  - Botigues: D-B9-2.
+  - Arrere en un aparell.
+  - Decisions D-E1-2, D-E1-4, D-2 i D-1 de L08.
+  - El detall és al bloc de relleu de §0.3 del Llibre Mestre.
+- **Fronteres:** cap push, cap operació remota, cap `npm install`, cap secret ni lectura de fitxers d'entorn.
+
+## ESTAT_ACTUAL · 2026-11-01T21:16:00+01:00 · MarIA · Tancament de l'Assalt 10/10 (Commits 155d84bd8 i b5878593a) i Obertura de la Marató Nocturna d'Extirpació Total de Deute (261101_2059 · Blocs B0-B7)
+
+- **Torn i ordre:** `torn_fb2dbe5c-8d35-4849-9f15-52798f667d42` (documents). Acta Marmota de tancament i relleu: [261101_2059_acta_marmota_tancament_assalt_155d84bd8_b5878593a_i_obertura_marato_nocturna](../_wiki_de_poble/10_actes/261101_2059_acta_marmota_tancament_assalt_155d84bd8_b5878593a_i_obertura_marato_nocturna.md).
+- **Segellat per Claude Opus 5.5 a `backup-notes-publish` (sense push):**
+  - **Commit 1 (`155d84bd8`):** `feat(dades,opendata,federacio,paquet,i18n,a11y,notes,xat,botigues,wp): assalt 10/10 · T1-T10 del pla 261101_1246` (`28.246` proves Vitest + `1.823` proves Node superades amb `0` fallades; `tests/inicia-node-germa.test.mjs` `7/7`).
+  - **Commit 2 (`b5878593a`):** `feat(opendata,iaia,noticies,vcard,css,i18n): Onada 2 del Llibre Mestre · sis pegats de Codex i Gemini integrats` (`P1-07`, `P2-09`, `P1-24`, `IDEA-25/45`, `PS-02`, `P1-22`; `1.096` proves dirigides + `test:precommit` en verd).
+- **Preparat a l'Escriptori per al Nou Xat amb el Compte Javi Llinares (100% disponible) i la Colmena:**
+  - Pla d'Implementació actiu: [261101_2059_pla_implementacio_marato_nocturna_extirpacio_total_deute_llibre_mestre](../_wiki_de_poble/04_escriptori/261101_2059_pla_implementacio_marato_nocturna_extirpacio_total_deute_llibre_mestre.md).
+  - Prompt Local actiu: [261101_2059_prompt_marato_nocturna_extirpacio_total_deute_llibre_mestre](../_wiki_de_poble/04_escriptori/261101_2059_prompt_marato_nocturna_extirpacio_total_deute_llibre_mestre.md) (`Blocs B0–B7`: sanejament dels 3 P2 de Codex `PC155-01..03` i les 5 troballes de Gemini `T11-01..05`, tancament de vCard/eu/gl, `P1-22` als 6 mòduls restants, `P1-28` Pedra Seca `PS-01..PS-11`, `P1-71` `/multimedia`, `P1-06`/`P1-09` Accessibilitat/PWA, i escombrada `P2` + bateries adversarials).
+  - Llibre Mestre i Índex d'Escriptori actualitzats (`porta-olivera`, `tractor-cens` i `verificador-scc` amb `exit 0`).
+
 ## ESTAT_ACTUAL · 2026-11-01T20:55:00+01:00 · Claude · Commits de l'assalt 10/10 (155d84bd8) i de l'Onada 2; torn tancat
 
 - **Torn i ordre:** `torn_3f5652a2-ce26-464c-b29b-9649b7323c98` (code); ordre del Mestre al xat de l'1-11 (vespre): dos commits locals consecutius, sense push, i tancament del torn per l'esgotament del compte. Informe: [261101_1355_auditoria_claude](../_wiki_de_poble/04_escriptori/261101_1355_auditoria_claude.md).

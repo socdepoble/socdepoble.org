@@ -13,7 +13,7 @@ Esta guia reunix el que cal copiar i enganxar per a pujar l'App de Sóc de Poble
 
 ## 1. Estat verificat i abast
 
-- **Tall:** arbre viu del repositori a la branca `backup-notes-publish` (HEAD `a6e4b0d81`) i producció de `https://socdepoble.org`, l'1 de novembre de 2026.
+- **Tall:** repositori a la branca `backup-notes-publish` amb HEAD `921c332ac` (2 de novembre de 2026), on valen totes les cites de línia, i producció de `https://socdepoble.org`, consultada l'1 de novembre de 2026. Les seccions 6.3 (identificadors del dispositiu) i 14.4 descriuen, a més, l'arbre viu del 2 de novembre sense commit (avisos push de la marató 261101_2143): `src/config/avisosPushXat.js`, `motiuPushNatiu` de `src/natiu/avisosPushNatius.js` i la secció «Funció `notifica-xat`» de `supabase/README.md` encara no són a cap commit. També són de l'arbre viu, amb la 2.3 esmenada de la marató (B10C legal, sense commit), les cites de `legalContent.js` de la secció 6.2 (`:132-138` i `:157-162`) i de l'apartat 13 (`:153`, a les seccions 6.2 i 14.1): a `921c332ac` l'apartat 11 portava encara la vinyeta dels proveïdors d'IA i l'apartat 13 queda una línia més avall. La resta de cites de `legalContent.js` valen igual als dos. També descriuen l'arbre viu sense commit (B9, marató 261101_2143) el pas 3 de la secció 14.2, el pas 1 de la secció 14.3 i el bloc «Obrir una botiga a `/page/descarregues`», amb la cita `PageDetailSection.descarregues.test.jsx:211`: a `921c332ac` i a `333af8c2c` els scripts de pujada encara no tenen `--canal`, no hi ha el registre `pujades.jsonl` ni la guarda `frasesCaducades`, i la línia 211 és una altra prova.
 - **Identificador de l'App:** `org.socdepoble.app` a `capacitor.config.json`, `android/app/build.gradle` i el projecte d'Xcode.
 - **Versions al repositori:** Android `versionCode 2` i `versionName "1.0.0"`; iOS `MARKETING_VERSION = 1.0.0` i `CURRENT_PROJECT_VERSION = 2`.
 - **Fora d'esta guia:** compilar, signar i pujar binaris (`scripts/botigues/`), que són passos del Mestre (secció 14).
@@ -27,7 +27,7 @@ Esta guia reunix el que cal copiar i enganxar per a pujar l'App de Sóc de Poble
 | Política de privacitat | `https://socdepoble.org/legal` | `src/config/sections.js:56`; en producció, 200 amb la descripció de privacitat |
 | URL de suport | `https://socdepoble.org/legal` | Apartat 1 de la pàgina, amb el correu públic del projecte (`src/sections/text/legalContent.js:33`) |
 | URL de màrqueting (opcional a Apple) | `https://socdepoble.org/projecte` | En producció, 200 |
-| URL per a esborrar el compte (Google) | `https://socdepoble.org/legal#esborra-compte` | `src/sections/text/legalContent.js:180`; l'àncora és al paquet de producció |
+| URL per a esborrar el compte (Google) | `https://socdepoble.org/legal#esborra-compte` | `src/sections/text/legalContent.js:182`; l'àncora és al paquet de producció |
 | Correu de contacte de la fitxa | El correu públic de l'apartat 1 de `/legal` | Cap correu personal |
 | Drets del contingut (Apple) | L'App mostra contingut que publiquen les persones usuàries | Normes a l'apartat 3 de `/legal` |
 | Xifratge (Apple) | `ITSAppUsesNonExemptEncryption = false` | `ios/App/App/Info.plist:44` |
@@ -307,41 +307,41 @@ Les definicions són les de Google: «recollir» és transmetre dades fora del d
 | --- | --- | --- |
 | L'App recull o compartix dades dels tipus exigits? | Sí | Taula de la secció 6.2 |
 | Totes les dades es xifren en trànsit? | Sí | `vite.natiu.config.js:250` (el binari para sense un Supabase `https`); `capacitor.config.json` (`androidScheme: https`, `allowMixedContent: false`) |
-| Hi ha manera de demanar l'eliminació de les dades? | Sí | Dins de l'App (secció 8) i per correu (`legalContent.js:180`) |
+| Hi ha manera de demanar l'eliminació de les dades? | Sí | Dins de l'App (secció 8) i per correu (`legalContent.js:182`) |
 | URL per a esborrar el compte | `https://socdepoble.org/legal#esborra-compte` | Explica els dos camins, què s'esborra, què es conserva i els terminis |
 | Es poden esborrar dades sense esborrar el compte? | Sí, en part | Notes (`src/data/supabase/notes.js:261`); la resta de continguts, No verificat |
 | Comptes que es poden crear | Correu i contrasenya; Apple a iOS i Google, quan estiguen actius (secció 9) | `src/data/supabase/auth.js:522`, `:639`; `src/natiu/entradaSocial.js:41` |
 
 ### 6.2 Tipus de dades recollides
 
-Cap tipus es compartix: Supabase i els proveïdors de la IAIA MarIA són encarregats del tractament per contracte (`legalContent.js:131-136`). A l'App nativa no hi ha «Vore mapa» i no es connecta a OpenStreetMap (`legalContent.js:240`; `src/sections/mur/MapaFotografic.jsx:842`). Només l'historial de cerques podria marcar-se com a processat de manera efímera, i només amb la comprovació de la secció 14.1.
+Cap tipus es compartix: Supabase, Sollutia i Google Workspace són encarregats del tractament per contracte (`legalContent.js:132-138`), i la IAIA MarIA de l'aplicació no envia el que li escrius a cap proveïdor d'intel·ligència artificial: respon al dispositiu (`legalContent.js:157-162`; `src/data/iaiaLocal.js:43-44`; la guarda és `src/sections/text/legal.iaia.test.js`). Amb compte, la pregunta al xat de la IAIA es publica al xat públic de la seua pàgina (fila «Activitat › Altre contingut generat»). A l'App nativa no hi ha «Vore mapa» i no es connecta a OpenStreetMap (`legalContent.js:242`; `src/sections/mur/MapaFotografic.jsx:842`). Només l'historial de cerques podria marcar-se com a processat de manera efímera, i només amb la comprovació de la secció 14.1.
 
 | Categoria › tipus | Obligatori o opcional | Finalitats | Evidència |
 | --- | --- | --- | --- |
 | Informació personal › Nom | Obligatori (pot ser un pseudònim) | Funcionalitat; gestió del compte | `legalContent.js:96`; `src/data/supabase/perfils.js:101` |
-| Informació personal › Adreça electrònica | Obligatori | Funcionalitat; gestió del compte; frau, seguretat i compliment | `legalContent.js:95` i `:100` (empremta per a la prova del consentiment) |
+| Informació personal › Adreça electrònica | Obligatori | Funcionalitat; gestió del compte; frau, seguretat i compliment | `legalContent.js:95` i `:101` (empremta per a la prova del consentiment) |
 | Informació personal › Identificadors d'usuari | Obligatori | Funcionalitat; gestió del compte; frau, seguretat i compliment | `legalContent.js:95` (identificador d'Apple o Google); `src/data/supabase/moderacio.js:106` |
-| Ubicació › Ubicació aproximada | Opcional | Funcionalitat | `src/components/universal/enquadrament/geolocalitzacio.js:14-20` (precisions «100m» i «poble») |
-| Ubicació › Ubicació precisa | Opcional | Funcionalitat | `geolocalitzacio.js:28` (precisió «exacta» de sèrie a les fotos de publicació); `src/utils/imageUtils.js:17-30` |
-| Missatges › Altres missatges a l'App | Opcional | Funcionalitat | `legalContent.js:97`, `:123`; el xifratge d'extrem a extrem encara no és actiu (`src/data/supabase/xatXifrat.js:9-13`) |
+| Ubicació › Ubicació aproximada | Opcional | Funcionalitat | `src/components/universal/enquadrament/geolocalitzacio.js:14-20` (precisions «100m» i «poble»); la política ho diu a `legalContent.js:98` (apartat 8) i `:153` (apartat 13) |
+| Ubicació › Ubicació precisa | Opcional | Funcionalitat | `geolocalitzacio.js:28` (precisió «exacta» de sèrie a les fotos de publicació); `src/utils/imageUtils.js:17-30`; la política ho diu a `legalContent.js:98` (apartat 8) i `:153` (apartat 13) |
+| Missatges › Altres missatges a l'App | Opcional | Funcionalitat | `legalContent.js:97`, `:124`; el xifratge d'extrem a extrem encara no és actiu (`src/data/supabase/xatXifrat.js:9-13`) |
 | Fotos i vídeos › Fotos | Opcional | Funcionalitat | `src/data/xatMultimedia.js:18-22`; foto de perfil (`legalContent.js:96`) |
 | Fotos i vídeos › Vídeos | Opcional | Funcionalitat | `xatMultimedia.js:20` |
 | Fitxers d'àudio › Gravacions de veu o so | Opcional | Funcionalitat | `xatMultimedia.js:21` (notes de veu del xat) |
-| Contactes | Opcional | Funcionalitat | Seguiments, el graf social de l'App (`legalContent.js:98`; `src/data/supabase/seguiments.js:118`). Decisió del Mestre (secció 14.1) |
-| Activitat › Altre contingut generat | Opcional | Funcionalitat; frau, seguretat i compliment | Publicacions, notes, consultes a la IAIA MarIA i denúncies (`legalContent.js:97`, `:101`, `:104`) |
+| Contactes | Opcional | Funcionalitat | Seguiments, el graf social de l'App (`legalContent.js:99`; `src/data/supabase/seguiments.js:118`). Decisió del Mestre (secció 14.1) |
+| Activitat › Altre contingut generat | Opcional | Funcionalitat; frau, seguretat i compliment | Publicacions, notes, consultes a la IAIA MarIA i denúncies (`legalContent.js:97`, `:102`, `:105`) |
 | Activitat › Altres accions | Opcional | Funcionalitat; frau, seguretat i compliment | Bloquejos i acceptació de les normes (`moderacio.js:149`, `:216`) |
 | Activitat › Historial de cerques a l'App | Opcional | Funcionalitat | La cerca del directori va dins de la URL de PostgREST, una paraula per filtre `ilike` (`src/data/supabase/organizations.js:212-220` i `:254-259`), i la de membres del xat, dins de la crida `membres_del_poble` (`src/data/supabase/xat.js:825-828`). Google demana declarar-la encara que el tractament siga efímer. Processat de manera efímera: Sí només si es confirma que ni l'API ni els registres de Supabase guarden la consulta (secció 14.1); fins aleshores, No |
 
 ### 6.3 Dades que l'App no recull
 
-- **Interaccions i analítica:** No. El build natiu para si porta Umami (`vite.natiu.config.js:261-262`) i la telemetria no envia res des de `localhost`, l'origen de l'App (`src/data/telemetria.js:132-140`, `:210`).
+- **Interaccions i analítica:** No. El build natiu para si porta Umami (`vite.natiu.config.js:261-262`) i la telemetria no envia res des de `localhost`, l'origen de l'App (`src/data/telemetria.js:145-153`, `:223`).
 - **Registres d'errors i diagnòstics:** No. Cap SDK d'errors a `package.json`.
-- **Identificadors del dispositiu:** No. Els avisos push no estan connectats (`src/natiu/avisosPushNatius.js:1-6`) i no hi ha identificador de publicitat.
+- **Identificadors del dispositiu:** No. El connector de push (`@capacitor/push-notifications`) no és a `package.json` i l'adaptador natiu només es registra amb la bandera `AVISOS_PUSH_XAT_ACTIUS` (apagada, `src/config/avisosPushXat.js`); sense el connector, diu `sense-connector` i no registra cap testimoni (`src/natiu/avisosPushNatius.js`, `motiuPushNatiu`). No hi ha identificador de publicitat.
 - **Calendari:** No. Google Calendar no funciona dins de l'App (`vite.natiu.config.js:264-266`).
 - **Fitxers i documents:** No. El xat només admet imatge, vídeo i veu (`xatMultimedia.js:18-22`).
-- **Traduccions:** No ix cap text: el botó «Traduir» encara no traduïx dins de l'App nativa (`legalContent.js:241`).
+- **Traduccions:** No ix cap text: el botó «Traduir» encara no traduïx dins de l'App nativa (`legalContent.js:243`).
 - **Dades del SDK d'inici de sessió de Google:** No verificat. Cal contrastar la fitxa de Google Sign-In al Google Play SDK Index abans d'enviar el formulari.
-- **Adreça IP i registres tècnics:** no són cap tipus del formulari; la política ho explica (`legalContent.js:99`).
+- **Adreça IP i registres tècnics:** no són cap tipus del formulari; la política ho explica (`legalContent.js:100`).
 
 ## 7. Privacitat a l'App Store
 
@@ -371,20 +371,20 @@ Cap tipus es compartix: Supabase i els proveïdors de la IAIA MarIA són encarre
 La regla 5.1.1(v) d'Apple i Google Play demanen que el compte es puga esborrar des de l'App. El camí real és este:
 
 1. Entra amb el teu compte: l'App obri el Perfil (`src/config/rutaEntrada.js:28`). Des del Xat, també s'hi arriba tocant l'avatar de dalt (`src/sections/xat/components/ClosCaXat.jsx:349`).
-2. Toca «Privacitat i dades» a la llista del Perfil (`TEXTOS_PRIVACITAT_LLISTA` a `src/sections/profile/perfilModel.js:133-136`). L'element es pinta en la llengua de la interfície (`src/sections/profile/PerfilShell.jsx:241-258`): «Privacidad y datos» en castellà i «Privacy and data» en anglés.
-3. Baixa fins a «Donar-se de baixa» i toca «Donar-me de baixa» (`src/sections/profile/DetallPrivacitat.jsx:593`).
-4. Confirma amb «Sí, donar-me de baixa» (`DetallPrivacitat.jsx:603`), que crida `demanaBaixa` (`src/data/supabase/compte.js:126`).
+2. Toca «Privacitat i dades» a la llista del Perfil (`TEXTOS_PRIVACITAT_LLISTA` a `src/sections/profile/perfilModel.js:133-136`). L'element es pinta en la llengua de la interfície (`src/sections/profile/PerfilShell.jsx:252-267`): «Privacidad y datos» en castellà i «Privacy and data» en anglés.
+3. Baixa fins a «Donar-se de baixa» i toca «Donar-me de baixa» (`src/sections/profile/DetallPrivacitat.jsx:650`).
+4. Confirma amb «Sí, donar-me de baixa» (`DetallPrivacitat.jsx:660`), que crida `demanaBaixa` (`src/data/supabase/compte.js:126`).
 
 - **Tocs des del Perfil:** dos per a iniciar l'eliminació i un de confirmació.
-- **Efecte:** el perfil s'amaga al moment, es tanquen totes les sessions i el compte s'esborra als 30 dies; amb Apple, fins a 7 dies més (`legalContent.js:120`).
+- **Efecte:** el perfil s'amaga al moment, es tanquen totes les sessions i el compte s'esborra als 30 dies; amb Apple, fins a 7 dies més (`legalContent.js:121`).
 - **Còpia de les dades:** a la mateixa pantalla (`compte.js:95`).
-- **Condició:** l'apartat només ix si el servidor oferix la capacitat `compte` o `consentiment` (`src/sections/profile/PerfilShell.jsx:218-219`). No verificat en un dispositiu en este torn.
+- **Condició:** l'apartat només ix si el servidor oferix la capacitat `compte` o `consentiment` (`src/sections/profile/PerfilShell.jsx:229-230`). No verificat en un dispositiu en este torn.
 
 ## 9. Inici de sessió i accés sense registre
 
 - **Lectura sense compte:** el Mur, els Pobles, el Calendari i les pàgines es poden llegir sense entrar. Només dues rutes porten guarda de sessió, el Perfil i l'administració (`src/app/App.jsx:1044`, `:1106`); el Xat demana entrar per a conversar. No verificat en un dispositiu en este torn.
 - **Correu i contrasenya:** `src/data/supabase/auth.js:522` (registre) i `:639` (entrada).
-- **Sign in with Apple:** el dret `com.apple.developer.applesignin` és a `ios/App/App/App.entitlements`. Des de D-10 (pla 261101_1246), el botó d'Apple només ix a iOS si el build porta `VITE_APPLE_OAUTH_ACTIU=true` (`src/natiu/entrada.jsx:71`; `proveidorsDe`, `src/natiu/entradaSocial.js:41-46`). Sense el flag, o amb `false`, el botó no ix. El flag va a `.env.natiu.local` o al procés del build, mai a `.env.local`, que el build natiu no hereta. Un valor que no siga exactament `true` o `false` para el build (`errorsEntornNatiu`, `vite.natiu.config.js:280-282`).
+- **Sign in with Apple:** el dret `com.apple.developer.applesignin` és a `ios/App/App/App.entitlements`. Des de D-10 (pla 261101_1246), el botó d'Apple només ix a iOS si el build porta `VITE_APPLE_OAUTH_ACTIU=true` (`src/natiu/entrada.jsx:72`; `proveidorsDe`, `src/natiu/entradaSocial.js:41-46`). Sense el flag, o amb `false`, el botó no ix. El flag va a `.env.natiu.local` o al procés del build, mai a `.env.local`, que el build natiu no hereta. Un valor que no siga exactament `true` o `false` para el build (`errorsEntornNatiu`, `vite.natiu.config.js:280-282`).
 - **Apple al servidor:** segons P0-03, P0-04 i P0-23 del Llibre Mestre, el proveïdor d'Apple de Supabase, la clau `.p8`, els secrets i la funció `compte-apple` estan pendents del Mestre. No verificat en viu en este torn.
 - **Google a iOS:** apagat fins que hi haja els dos clients; `Info.plist:38` porta encara l'esquema de reserva `com.googleusercontent.apps.pendent` (P0-03).
 - **Google a Android:** només si el build porta el client web (`entradaSocial.js:47`). Apple no s'oferix a Android (decisió D7), tampoc amb `VITE_APPLE_OAUTH_ACTIU=true`.
@@ -416,7 +416,7 @@ Privacy: no advertising, no tracking and no analytics inside the app.
 ```
 
 - **Etiquetes en anglés citades:** són les del diccionari anglés de l'App, `src/config/idiomes/en.js`, amb les claus `section.perfil.privacitat.pagina.titol`, `section.perfil.privacitat.baixa.titol`, `section.perfil.privacitat.baixa.boto` i `section.perfil.privacitat.baixa.confirma`. Es citen per clau perquè les línies del diccionari es mouen.
-- **Baixa:** el bloc descriu la pantalla (`DetallPrivacitat.jsx:591-603`) i la política (`legalContent.js:120`), no el que fa el servidor, que no s'ha provat en este torn.
+- **Baixa:** el bloc descriu la pantalla (`DetallPrivacitat.jsx:648-660`) i la política (`legalContent.js:121`), no el que fa el servidor, que no s'ha provat en este torn.
 - **Analítica:** «no analytics inside the app» val mentre Google Sign-In no s'invoque a iOS; si s'encén, cal revisar la frase amb la secció 7.1.
 
 Per verificar abans d'enviar, i fora del bloc fins que es verifique:
@@ -532,7 +532,7 @@ Per a encendre App Links calen, junts, estos passos:
 
 1. Triar la llengua principal de cada fitxa i les categories (secció 2).
 2. Confirmar «Contactes» al Data Safety i a l'etiqueta d'Apple pel graf de seguiments, o retirar-lo de les dues bandes i de `PrivacyInfo.xcprivacy`.
-3. Afegir a l'apartat 8 de `/legal` la ubicació de les fotos, que hui no hi consta.
+3. Fet (marató 261101_2143, T11-05): la ubicació, la data i les dades de la càmera de les fotos són a l'apartat 8 de `/legal` (`legalContent.js:98`), amb les dues etiquetes de la casella i que el fitxer d'una foto publicada és en un espai públic, i qui les veu, a l'apartat 13 (`:153`), dins de la versió 2.3; la guarda és `src/sections/text/legal.ubicacioFotos.test.js`, que llig el codi (i les apps natives, sense cap permís d'ubicació). Falta que el Mestre torne a construir i desplegue el web i, després, aplique `supabase/migrations/2611012257_politica_privacitat_2_3.sql`, que segella la 2.3 al servidor (pas 12 de l'ordre de `supabase/README.md`).
 4. Mirar al tauler de Supabase si els registres de l'API guarden la URL o el cos de les peticions amb la consulta de cerca, i quant de temps. Si no la guarden, l'historial de cerques es marca com a efímer al Data Safety (secció 6.2). Si la guarden, a més, s'afig a l'etiqueta d'Apple (secció 7.1), a `ios/App/App/PrivacyInfo.xcprivacy` (`NSPrivacyCollectedDataTypeSearchHistory`, vinculat, sense rastreig i per a `AppFunctionality`) i a `TIPUS_DE_DADES` de `src/natiu/projecteIos.test.js`.
 5. Crear el compte de prova per a les dues consoles, amb correu i contrasenya.
 6. Posar en marxa la revisió real de denúncies en 24 hores (P0-18).
@@ -543,7 +543,7 @@ Per a encendre App Links calen, junts, estos passos:
 
 1. Sign in with Apple: des del build 2, el botó està amagat per defecte (D-10). Si es vol oferir, cal encendre'l primer al servidor: proveïdor d'Apple a Supabase, clau `.p8`, secrets i funció `compte-apple` (P0-03 i P0-04). Després cal posar `VITE_APPLE_OAUTH_ACTIU=true` a `.env.natiu.local` abans del build.
 2. Compilar un build nou amb un `CURRENT_PROJECT_VERSION` que no s'haja pujat mai (el build 1 ja està gastat, P0-23) i el paquet web del mateix commit.
-3. Pujar-lo amb `scripts/botigues/puja-ios.mjs` després del `preflight.mjs`.
+3. Pujar-lo amb `scripts/botigues/puja-ios.mjs` després del `preflight.mjs`. Per a la botiga, amb el canal de producció (B9, marató 261101_2143): `node scripts/botigues/preflight.mjs --plataforma ios --canal produccio`, després `node scripts/botigues/puja-ios.mjs --versio 1.0.0 --build 2 --canal produccio --compila` (arxiva, exporta i verifica; el rebut porta el sha256 de l'IPA i el «sí» exacte) i, en una altra execució, `node scripts/botigues/puja-ios.mjs --versio 1.0.0 --build 2 --canal produccio --confirma=produccio:1.0.0+2@<els 12 primers del sha256 del rebut>`. A iOS, intern i producció són la mateixa pujada: no cal cap grup de TestFlight ni cap provador, però Apple processa tota build i l'App Review és l'únic camí a la botiga. El script només puja; adjuntar la build a la versió, «Publicació de la versió: manual» i «Envia a App Review» són del Mestre (punts P9 i S6 de `RUNBOOK_BOTIGUES_IA.txt`, al laboratori `_investigacio_ia_de_poble/261003_1330_empaquetat_mobil_claude/`, fora del repositori). Si la build ja s'ha pujat al canal intern, no se'n puja una altra: s'adjunta la mateixa a la versió (el registre `SDP_BUILDS_DIR/pujades.jsonl` ho para).
 4. Omplir la fitxa amb les seccions 2, 3 i 5, l'etiqueta de la secció 7.1 i el qüestionari d'edat de la secció 10. Abans de publicar els textos de la secció 3 amb les frases de la 3.4, comprovar en un dispositiu que el Mur i els Pobles es lligen sense compte.
 5. Pujar les captures de la secció 12 i omplir les notes de la secció 11 amb el compte de prova.
 6. Respondre la conformitat de xifratge: només xifratge exempt, com diu `Info.plist`.
@@ -551,7 +551,7 @@ Per a encendre App Links calen, junts, estos passos:
 
 ### 14.3 Google Play
 
-1. Signar l'AAB amb la clau de pujada i pujar-lo amb `scripts/botigues/puja-android.mjs`, primer a la pista de proves.
+1. Signar l'AAB amb la clau de pujada i pujar-lo amb `scripts/botigues/puja-android.mjs`, primer a la pista de proves. Per a la pista de producció (B9, marató 261101_2143), sempre en esborrany: `node scripts/botigues/preflight.mjs --plataforma android --canal produccio` (exigix `SDP_BUILDS_DIR`, on viu el registre de pujades). Opció A, per defecte (signa el Mestre a Android Studio › Build › Generate Signed Bundle): `node scripts/botigues/puja-android.mjs --versio 1.0.0 --build 2 --canal produccio` en sec, que amb l'AAB signat el verifica en local i dona el rebut amb el sha256 i el «sí» exacte; després `node scripts/botigues/puja-android.mjs --versio 1.0.0 --build 2 --canal produccio --confirma=produccio:1.0.0+2@<els 12 primers del sha256 del rebut>`. Opció B (signa el script amb les claus del fitxer d'entorn): la mateixa ordre amb `--compila` dona el rebut i el «sí», i el «sí» va en una altra execució. Comprovació a mà, si cal: `shasum -a 256 android/app/build/outputs/bundle/release/app-release.aab | cut -c1-12`. El script mai no escriu `completed` ni fa cap desplegament per fases: «Envia a revisió» a Play Console › Production és del Mestre (P9 del RUNBOOK de botigues citat a la secció 14.2). Un compte personal no pot publicar a producció fins que passa el pas 2 (o amb un compte d'organització, D-B9-2): fins llavors, `--validate_only` para amb l'eixida 8 i no es puja res.
 2. Completar la prova tancada que demana Play per a comptes personals nous (P0-23: 12 provadors durant 14 dies).
 3. Omplir la fitxa amb les seccions 2, 4 i 5 i el gràfic destacat i la icona de la secció 12. Abans de publicar la descripció completa amb la frase de la secció 3.4, comprovar en un dispositiu que el Mur i els Pobles es lligen sense compte.
 4. Omplir el Data Safety amb la secció 6 i l'URL per a esborrar el compte.
@@ -559,6 +559,53 @@ Per a encendre App Links calen, junts, estos passos:
 6. Donar les credencials de prova a «Accés a l'aplicació».
 7. Copiar l'empremta de la clau de signatura de Play si es vol encendre App Links (secció 13).
 8. Enviar a producció.
+
+**Obrir una botiga a `/page/descarregues` (B9, annex B pas 5 de la spec B9-BOTIGUES).** Tot en un sol commit:
+
+1. La URL pública a la línia del canal de `src/config/canalsDeBotiga.js`.
+2. El text de `PAGE_COPY.descarregues` reescrit amb l'annex A, i `node tooling/gates/frontissa-contingut.mjs --aprova descarregues --per Mestre`. La guarda `frasesCaducades` de `canalsDeBotiga.test.js` diu quines frases sobren, i el missatge de la prova diu què cal fer.
+3. Les proves que cauen. L'autoritat és esta comanda, no els números de línia:
+
+   `npx vitest run src/config/canalsDeBotiga.test.js src/config/systemPages.test.js src/sections/detail/PageDetailSection.descarregues.test.jsx src/sections/detail/InstalaLaPwa.test.jsx src/app/App.descarregues.test.jsx --maxWorkers=2`
+
+   Simulacre del 2026-11-02 a les 04:55, en una còpia aïllada, amb només Google Play obert i el text sense reescriure: en cauen **16 de 74**.
+   - **12 a `PageDetailSection.descarregues.test.jsx`:** els escenaris que esperen només WordPress.org a les zones d'acció, i «una botiga oberta…», que comprova que la ranura està tancada abans d'obrir-la.
+   - **2 a `canalsDeBotiga.test.js`:** la llista de canals oberts i la guarda.
+   - **1 a `InstalaLaPwa.test.jsx`:** «hui, només WordPress.org».
+   - **1 a `src/config/systemPages.test.js`:** l'honestedat del cos (`:256` i `:257`).
+   - `App.descarregues.test.jsx` no en perd cap.
+
+   Quan es reescriga el text, canvien també:
+   - les cinc línies de la guarda que mosseguen el text d'avui;
+   - `systemPages.test.js:266` i `:281`, si se suprimix l'apartat de TestFlight (només amb l'App Store oberta);
+   - `PageDetailSection.descarregues.test.jsx:211` (l'`h4` «Apple TestFlight»).
+
+El botó ja diu «Disponible a Google Play» o «Disponible a l'App Store» en les cinc llengües.
+
+### 14.4 Avisos push natius (APNs i FCM), quan el Mestre ho aprove
+
+Esta nit no s'ha instal·lat res (D-B8C-3). L'App ja porta l'adaptador, darrere de la bandera i sense connector: no ensenya cap interruptor fins al pas 3. El servidor (migració, secrets, funció `notifica-xat` i encesa) va primer, en l'ordre de `supabase/README.md` (secció «Funció `notifica-xat`»).
+
+1. **Connector:** comprovar quina 8.x és compatible amb `@capacitor/core` 8.5.3 i instal·lar-la exacta:
+
+   ```bash
+   npm view @capacitor/push-notifications@8 version
+   npm install --save-exact @capacitor/push-notifications@<la 8.x que ha tornat la comanda anterior>
+   npx cap sync
+   ```
+
+2. **Plataformes:**
+   - **Android:** crear el projecte de Firebase i posar `android/app/google-services.json` (el `build.gradle` ja aplica el connector de Google si el fitxer hi és). El canal `xat` el crea l'App amb el primer avís local; fins llavors, un push de FCM amb `channel_id: xat` cau al canal per defecte del sistema.
+   - **iOS:** activar «Push Notifications» a l'App ID del portal d'Apple, fer un perfil nou, posar `aps-environment` = `production` a `ios/App/App/App.entitlements` i afegir a `AppDelegate.swift` els dos delegats que demana el connector (`didRegisterForRemoteNotificationsWithDeviceToken` i `didFailToRegisterForRemoteNotificationsWithError`). La clau `.p8` d'APNs va als secrets de la funció (`supabase/README.md`, secció «Funció `notifica-xat`»).
+3. **Bandera:** `src/config/avisosPushXat.js` → `export const AVISOS_PUSH_XAT_ACTIUS = true;` (el mateix pas que encén la web). Després, el build natiu.
+4. **Preflight de B9:** amb el connector, ha d'exigir `aps-environment = production`, `google-services.json` present (sense mostrar-ne el contingut) i els delegats d'APNs.
+5. **Privacitat a les botigues (abans d'enviar):** el testimoni de push és un identificador del dispositiu. Cal canviar §6.3 i §7.1 d'esta guia (Data Safety: «Identificadors del dispositiu: Sí, per a la funcionalitat de l'App, no es compartix per a publicitat»; etiqueta d'Apple: «Device ID», vinculat, sense rastreig, `AppFunctionality`) i el `PrivacyInfo.xcprivacy`.
+6. **Prova en un aparell de veres:**
+   - activar des d'Ajustos del Xat → Notificacions;
+   - rebre l'avís cec;
+   - tocar-lo amb l'App tancada: ha d'obrir `/xat` i, si hi ha un sol fil no llegit, el fil. Este cas depén que el connector lliure el toc a l'oient que es registra en arrencar, i cal comprovar-ho al dispositiu;
+   - tancar la sessió: l'aparell deixa de rebre avisos.
+7. **Decisió pendent (R12 de l'especificació B8-SERVIDOR de la marató 261101_2143):** sense gest, l'App no torna a desar el testimoni (D-B8C-12). Per això, al cap de 60 dies sense que la persona torne a tocar l'interruptor, el servidor el considera vell i els avisos natius s'aturen. Per a renovar-lo sense inscriure ningú de nou cal la petició P-B8C→B8S-1: una renovació sense reclam, que només actualitza una fila que ja és de la persona i mai n'insereix cap.
 
 ## 15. Fonts oficials consultades
 

@@ -14,19 +14,19 @@ Documents actius de la sessió. Cada àncora correspon a un fitxer físic; la me
 
 ## Activitat en curs
 
-- [[261101_1355_auditoria_claude]]
-- [[261101_1246_prompt_assalt_excel_lencia_10_10_les_15_dimensions_i_deute_llibre_mestre]]
-- [[261101_1246_pla_implementacio_assalt_excel_lencia_10_10_les_15_dimensions_i_deute_llibre_mestre]]
-- [[261101_0409_auditoria_claude]]
-- [[261101_0407_auditoria_gemini_marato_nocturna]]
-- [[261101_0403_auditoria_codex_marato_nocturna]]
-- [[261101_0311_prompt_marato_nocturna_fediversity_notes_i_llibre_mestre]]
-- [[261101_0311_pla_implementacio_marato_nocturna_fediversity_notes_i_llibre_mestre]]
+- [[261101_2143_auditoria_claude]]
+- [[261101_2059_prompt_marato_nocturna_extirpacio_total_deute_llibre_mestre]] · Mestre 261101: Prompt viu de la Marató Nocturna B0-B7
+- [[261101_2059_pla_implementacio_marato_nocturna_extirpacio_total_deute_llibre_mestre]] · Mestre 261101: Pla aprovat de la Marató Nocturna B0-B7
+- [[261101_1355_auditoria_claude]] · per a [[261101_2059_prompt_marato_nocturna_extirpacio_total_deute_llibre_mestre]]
+- [[261101_0407_auditoria_gemini_marato_nocturna]] · per a [[261101_2059_prompt_marato_nocturna_extirpacio_total_deute_llibre_mestre]]
+- [[261101_0403_auditoria_codex_marato_nocturna]] · per a [[261101_2059_prompt_marato_nocturna_extirpacio_total_deute_llibre_mestre]]
 - [[03_llibre_mestre_tasques_i_idees]] · Mestre 261021: Llibre Mestre permanent
 
 ## Producció humana
 
 Inventari d’àncores dels originals presents; els continguts es conserven sota custòdia humana.
+
+- [261101_0252_captura_sistema_xat.jpg](01_produccio/261101_0252_captura_sistema_xat.jpg) · [261101_1242_captura_claude_81pct_revisio_commits_c2_c3_c4.png](01_produccio/261101_1242_captura_claude_81pct_revisio_commits_c2_c3_c4.png) · [261101_1253_captura_claude_pregunta_tres_commits_c2_c3_c4.png](01_produccio/261101_1253_captura_claude_pregunta_tres_commits_c2_c3_c4.png)
 
 - [260911_0006_tasques_ui_standardization.md](01_produccio/260911_0006_tasques_ui_standardization.md) · [260911_0012_agenda_futur_extensio_chrome.md](01_produccio/260911_0012_agenda_futur_extensio_chrome.md) · [260911_0645_propostes_manifest_panell_control.md](01_produccio/260911_0645_propostes_manifest_panell_control.md) · [Full_dEixides_-_Plantilla.xls](01_produccio/Banda%20La%20Torre%20-%20Gesti%C3%B3/Full_dEixides_-_Plantilla.xls) · [Full_de_control_loteria_nadal.ots](01_produccio/Banda%20La%20Torre%20-%20Gesti%C3%B3/Full_de_control_loteria_nadal.ots) · [Model Fitxa dAlumne 2007.xls](01_produccio/Banda%20La%20Torre%20-%20Gesti%C3%B3/Model%20Fitxa%20dAlumne%202007.xls) · [Planning Contrates 2007.xls](01_produccio/Banda%20La%20Torre%20-%20Gesti%C3%B3/Planning%20Contrates%202007.xls) · [full-eixides-socdepoble.xls](01_produccio/Banda%20La%20Torre%20-%20Gesti%C3%B3/full-eixides-socdepoble.xls)
 - [model_ficha_alumno_banda_1020.jpg](01_produccio/Banda%20La%20Torre%20-%20Gesti%C3%B3/model_ficha_alumno_banda_1020.jpg) · [model_ficha_d_alumno_para_banda_d_musica.xls](01_produccio/Banda%20La%20Torre%20-%20Gesti%C3%B3/model_ficha_d_alumno_para_banda_d_musica.xls) · [animalets_vinyeta.jpg](01_produccio/Targetes_Davinci_Llestes/animalets_vinyeta.jpg) · [bascula_vinyeta.jpg](01_produccio/Targetes_Davinci_Llestes/bascula_vinyeta.jpg) · [calendari_nano_card.jpg](01_produccio/Targetes_Davinci_Llestes/calendari_nano_card.jpg) · [cervell_vinyeta.jpg](01_produccio/Targetes_Davinci_Llestes/cervell_vinyeta.jpg) · [consola_vinyeta.jpg](01_produccio/Targetes_Davinci_Llestes/consola_vinyeta.jpg) · [disseny_vinyeta.jpg](01_produccio/Targetes_Davinci_Llestes/disseny_vinyeta.jpg)
@@ -75,6 +75,11 @@ Laboratori evacuat per ordre expressa a `../_investigacio_ia_de_poble/`: 10 elem
 
 ## Arxivat amb la Porta Olivera
 
+- [[../90_arxiu_historic/261101_0311_pla_implementacio_marato_nocturna_fediversity_notes_i_llibre_mestre]]
+- [[../90_arxiu_historic/261101_0311_prompt_marato_nocturna_fediversity_notes_i_llibre_mestre]]
+- [[../90_arxiu_historic/261101_0409_auditoria_claude]]
+- [[../90_arxiu_historic/261101_1246_pla_implementacio_assalt_excel_lencia_10_10_les_15_dimensions_i_deute_llibre_mestre]]
+- [[../90_arxiu_historic/261101_1246_prompt_assalt_excel_lencia_10_10_les_15_dimensions_i_deute_llibre_mestre]]
 - [[../90_arxiu_historic/261030_0252_prompt_ordre_nocturna_autonoma_opus]]
 - [[../90_arxiu_historic/261029_1605_pla_implementacio_album_multimedia_local_negreta_xat_i_deute_e2ee_pwa]]
 - [[../90_arxiu_historic/261029_1605_prompt_opus_album_multimedia_local_negreta_xat_i_deute_e2ee_pwa]]
@@ -191,3 +196,4 @@ Laboratori evacuat per ordre expressa a `../_investigacio_ia_de_poble/`: 10 elem
 - [[../10_actes/261031_0142_acta_tancament_seo_consola_telemetria_i_full_de_ruta_fediversity]]
 - [[../10_actes/261101_0334_acta_marmota_trilogia_produccio_wordpress_org_i_marato_nocturna]]
 - [[../10_actes/261101_1304_acta_marmota_tancament_marato_nocturna_i_preparacio_assalt_10_10]]
+- [[../10_actes/261101_2059_acta_marmota_tancament_assalt_155d84bd8_b5878593a_i_obertura_marato_nocturna]]

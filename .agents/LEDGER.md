@@ -1190,4 +1190,20 @@ Ordre del Mestre al xat de l'1-11. T1-T8 executats a l'arbre viu en 14 carrils G
 
 Ordre del Mestre al xat de l'1-11 (vespre). Commit 1 155d84bd8: assalt T1-T10 i pendent-de-commit (e2e del node germà 7/7 contra HEAD; arbre assajat, Vitest 28.246 i 0 fallades). Commit 2: sis pegats de l'Onada 2 de Codex i Gemini auditats, corregits i integrats (P1-07, P2-09, P1-24, IDEA-25/45, PS-02, P1-22), amb proves dirigides i test:precommit en verd. Governança per l'executor (frontissa de versions, excepció LLEI_08 de la vCard, ESTAT i LEDGER). Sense push ni desplegament.
 
-<!-- HASH: 51a7b1de021ed94085cc1efdd9a15f83a87889957d391271826dd826ec8e701e -->
+## 2026-11-01T21:16:00+01:00 · MarIA · Relleu cap a la Marató Nocturna d'Extirpació Total de Deute (261101_2059 · Blocs B0-B7) · torn_fb2dbe5c-8d35-4849-9f15-52798f667d42
+
+Tancament documental de l'assalt 10/10 (commits 155d84bd8 i b5878593a) i obertura de la Marató Nocturna d'Extirpació Total de Deute Tècnic amb el compte nou de Claude (Javi Llinares, 100% disponible) en coordinació amb GPT Codex i Gemini. Creats i validats amb plantilla viva el Pla 261101_2059, el Prompt 261101_2059 i l'Acta Marmota 261101_2059; Llibre Mestre i 00_index_escriptori actualitzats; portes Olivera, Cens i SCC en verd.
+
+## 2026-11-02T08:06:00+01:00 · Claude · Marató nocturna 261101_2143 (B0-B10) amb delegació autònoma · torn_3d9af83b-3a4a-4735-a6ec-925b1d9c633e
+
+Ordres del Mestre al xat de l'1-11 (21:41: B0-B7 del prompt 2059; abans de dormir: B8-B10 amb delegació autònoma fins a l'alba).
+- **Treball:** 61 carrils Gauntlet en quatre onades, amb constructor, àrbitre i corrector. Els han precedit 18 especificacions verificades. Dos Gauntlets transversals de només lectura han confirmat 14 troballes (un P1 i dos P2 a l'E2EE i a `notifica-xat`), totes corregides als carrils F1-F3 i E1-E3. La integració documental s'ha fet en dos passades (D1 i D2), també en Gauntlet.
+- **Commits locals (sense push):** 921c332ac, 333af8c2c i e1b7210b0, més el commit documental del tancament.
+- **Governança:** per l'executor, amb les transaccions Reflex bf4dcc4c, a2b14eb0, 5aeb79f4 i 9a7dd881 i la del tancament.
+- **Kits:** els de Codex i Gemini s'han auditat com a dada. El pegat C921-01 s'ha integrat després de provar-lo.
+- **Proves:** Vitest 30.610 passades i test:node 2.015. Les úniques roges són de còpia sense .git.
+- **Sense fer:** cap migració aplicada, cap desplegament, cap pujada a les botigues i cap npm install.
+
+Informe: 261101_2143_auditoria_claude.
+
+<!-- HASH: a766c8bd499bbc97151babe4ee59251da547b8595f0aba8746773bcbfa7073f5 -->
