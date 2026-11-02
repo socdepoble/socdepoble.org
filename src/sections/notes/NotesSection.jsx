@@ -39,6 +39,8 @@ import { useToast } from '@/components/universal/NotificationContext.jsx';
 import {
   CanalEmojisContext, TEXTOS_EMOJIS, carregaCatalegEmojis, copiaAlPortaretalls, textCopiat, textEmojiNoReconegut, useCanalEmojisDelBloc
 } from './canalEmojis.js';
+import { CanalAmbitContext } from '../../components/universal/ambits/canalAmbit.js';
+import { AMBITS } from '../../utils/publicacioUniversal.js';
 
 /* Pell del Bloc de Notes: tot allò que el UniversalWorkspace no ha de saber.
    B3 · P1-22 (marató 261101_2143) · Els rètols, en parells [clau, reserva]
@@ -69,6 +71,15 @@ const CAP = Object.freeze([]);
 /* T7 (P9) · A la URL del Bloc l'element es diu «nota» (?carpeta=&nota=&seccio=).
    T7C · La clau viu a modeDesa.js: el Snippet Curador l'escriu en eixir. */
 const CLAUS_URL = CLAUS_BLOC;
+/* IDEA-61 (T0, prompt 261102_1532) · ?ambit=<mercat|vehicle|treball|habitatge>
+   (mai 'mur'): l'entrada des d'una secció vertical («Publicar un viatge»). La
+   nota oberta (o la preparada, si la URL no en porta cap) rep la fitxa de
+   l'àmbit i l'editor obri «On es publica?» (canalAmbit.js). */
+const CLAU_AMBIT = 'ambit';
+const ambitDeLaUrl = (params) => {
+  const valor = params.get(CLAU_AMBIT);
+  return typeof valor === 'string' && valor !== 'mur' && AMBITS.includes(valor) ? valor : null;
+};
 /* Ordre del Mestre (30-10-2026) · CARPETES arrenca oberta, com a la resta
    d'espais de treball: el Bloc no força cap columna plegada. En la franja
    estreta de la finestra la plega l'UniversalWorkspace, per a tots
@@ -375,6 +386,18 @@ export default function NotesSection() {
   /* T7C (P1) · ?mode=desa obri el Snippet Curador (modeDesa.js): el mateix
      espai de treball en mode compacte, sense cap ruta nova. */
   const modeDesa = esModeDesa(params);
+  /* IDEA-61 (T0) · L'àmbit que demana la URL queda pendent fins que l'editor
+     el consumix (canalAmbit): es captura en entrar i a cada canvi de la URL
+     que en porte un (la ref distingix el canvi de la mateixa URL repintada).
+     Al Snippet Curador no s'aplica. */
+  const ambitUrl = modeDesa ? null : ambitDeLaUrl(params);
+  const [ambitPendent, setAmbitPendent] = useState(ambitUrl);
+  const ambitVist = useRef(ambitUrl);
+  useEffect(() => {
+    if (ambitUrl === ambitVist.current) return;
+    ambitVist.current = ambitUrl;
+    if (ambitUrl) setAmbitPendent(ambitUrl);
+  }, [ambitUrl]);
   /* P4 (ordre del Mestre, 261003) · Una sola regla per a la sessió, la de
      Connectar i el Snippet Curador (reglaDEntrada): sense sessió i amb dades
      remotes, «Connecta…» i cap botó de crear. Abans ho decidia canCreate, que
@@ -437,7 +460,10 @@ export default function NotesSection() {
      fins a l'entrada hi torna. Un enllaç amb nota o carpeta mana, com
      sempre. Al Snippet Curador no s'aplica. */
   const urlCrua = llegixSeleccio(params, CLAUS_URL);
-  const entradaNua = !modeDesa && urlCrua.carpeta == null && urlCrua.item == null;
+  /* IDEA-61 (T0) · Amb un àmbit pendent i cap nota a la URL, l'entrada no és
+     la Card tutorial: és la nota preparada, que rep la fitxa (itemDAmbit). */
+  const ambitDEntrada = ambitPendent != null && !modeDesa && urlCrua.item == null;
+  const entradaNua = !modeDesa && urlCrua.carpeta == null && urlCrua.item == null && !ambitDEntrada;
   const enUrl = entradaNua ? { ...urlCrua, carpeta: ALL_CATEGORY_ID, item: ID_NOTA_BENVINGUDA } : urlCrua;
 
   /* ── F4 (bloquejant de Codex, relleus 16, 17 i 21 de l'auditoria 261004_2240)
@@ -610,13 +636,39 @@ export default function NotesSection() {
      revalida el Workspace no reconcilia: es conserva, i la llista no
      parpelleja a cada refresc. */
   const llistaParcial = status === 'ready' && notesComplete === false;
-  const fixada = demanada === preparada.id || enUrl.item === preparada.id;
+  /* IDEA-61 (T0) · La nota que rep l'àmbit demanat per la URL quan esta no en
+     porta cap: la preparada, fixada a la llista com amb CREAR NOTA. */
+  const itemDAmbit = ambitDEntrada && itemPreparadaBase ? itemPreparadaBase.id : null;
+  const fixada = demanada === preparada.id || enUrl.item === preparada.id || itemDAmbit != null;
   /* F4 (relleu 21) · Tampoc mentre la font de la carpeta d'entrada carrega. */
   const itemPreparada = itemPreparadaBase && ((!llistaParcial && !esperaCarpeta) || fixada) ? itemPreparadaBase : null;
   const contextPreparada = useMemo(
     () => ({ escriu: preparada.escriu, desa: preparada.desa, creacio: preparada.creacio, reintenta: preparada.reintenta }),
     [preparada.escriu, preparada.desa, preparada.creacio, preparada.reintenta]
   );
+  /* IDEA-61 (T0) · Consumir l'àmbit: l'editor ja ha obert el diàleg. La URL
+     es queda neta (sense ?ambit=) i, si no portava cap nota, amb la preparada
+     que l'ha rebuda, perquè la selecció no depenga d'un àmbit que ja no és
+     pendent. Estable (refs als valors vius): l'efecte de l'editor que el
+     crida no es repetix per una funció nova. */
+  const paramsVius = useRef(params);
+  paramsVius.current = params;
+  const setParamsViu = useRef(setParams);
+  setParamsViu.current = setParams;
+  const itemDAmbitViu = useRef(itemDAmbit);
+  itemDAmbitViu.current = itemDAmbit;
+  const consumixAmbit = useCallback(() => {
+    setAmbitPendent(null);
+    const actuals = paramsVius.current;
+    const item = itemDAmbitViu.current;
+    const ambNota = llegixSeleccio(actuals, CLAUS_URL).item != null;
+    const fixaLaPreparada = !ambNota && item != null;
+    if (actuals.get(CLAU_AMBIT) == null && !fixaLaPreparada) return;
+    const nets = escriuSeleccio(actuals, fixaLaPreparada ? { item } : {}, CLAUS_URL);
+    nets.delete(CLAU_AMBIT);
+    setParamsViu.current(nets, { replace: true });
+  }, []);
+  const canalAmbit = useMemo(() => ({ pendent: ambitPendent, consumix: consumixAmbit }), [ambitPendent, consumixAmbit]);
 
   /* ── IDEA-59 / P1-72 (punt 0) · La Card tutorial «Bloc de notes» ─────────
      Sempre a NOTES (Tot): quan la llista ja és llesta i no porta la n1 (amb
@@ -640,12 +692,16 @@ export default function NotesSection() {
   /* F1/F2 · El Workspace pregunta per la carpeta destí abans que la URL
      canviï. Només ajornem la preparada de reserva o una carpeta sense cap
      candidat mentre la seua font és pendent. Les notes/publicacions existents
-     continuen elegibles. CREAR NOTA i les tries manuals no passen per esta
-     política: una demanda anterior no autoritza el fallback d'una altra carpeta. */
-  const canAutoSelect = useCallback(({ categoryId, item }) => {
+     continuen elegibles. O2-T5 / P1-73 · La preparada només és reserva si
+     no queda cap altra candidata visible en la carpeta (incloent descendents,
+     consulta i etiquetes, que filtra el Workspace). CREAR NOTA, la URL i les
+     tries manuals no passen per esta política; una preparada recordada d'una
+     carpeta buida no ha de desplaçar una nota que hi ha arribat després. */
+  const canAutoSelect = useCallback(({ categoryId, item, candidates = [] }) => {
     if (modeDesa || (item && item.id !== preparada.id)) return true;
     const font = fontDe(fontsDelMas, seccioDeCarpeta(categoryId));
-    return !ESTATS_PENDENTS.has(font?.status);
+    return !ESTATS_PENDENTS.has(font?.status)
+      && (!item || !candidates.some(candidate => candidate.id !== preparada.id));
   }, [modeDesa, preparada.id, fontsDelMas]);
 
   const model = useMemo(() => {
@@ -760,6 +816,10 @@ export default function NotesSection() {
       carpeta: nomesReconciliaCarpeta ? undefined : (categoryId ?? null),
       item: itemId ?? null
     }, CLAUS_URL);
+    /* IDEA-61 / T-06 · La URL conserva l'àmbit fins que l'editor el
+       consumix: una reconciliació o selecció pot precedir l'inici de sessió
+       i el canal en memòria no sobreviu al remuntatge. consumixAmbit és
+       l'únic camí que el retira quan el diàleg ja l'ha rebut. */
     if (next.toString() === params.toString()) return;
 
     setParams(next, { replace: !isPush });
@@ -849,6 +909,8 @@ export default function NotesSection() {
   return (
     <NotaPreparadaContext.Provider value={contextPreparada}>
       <CanalEmojisContext.Provider value={modeDesa ? null : emojis.canal}>
+      {/* IDEA-61 (T0) · El canal de l'àmbit (?ambit=) cap a l'editor; al Snippet, cap. */}
+      <CanalAmbitContext.Provider value={modeDesa ? null : canalAmbit}>
       <ProveidorSincronitzacioTargetes>
       {/* IDEA-58: el Bloc hereta ↑ ↓ Home End i els rails del manejador comú. */}
       <UniversalWorkspace
@@ -857,10 +919,11 @@ export default function NotesSection() {
         initialSelection={modeDesa ? seleccioDesa : {
           categoryId: enUrl.carpeta ?? model.primeraCarpeta,
           /* IDEA-59 / P1-72 · L'entrada nua ja naix amb la Card triada: cap
-             pintada intermèdia sense element. */
-          ...(entradaNua ? { itemId: enUrl.item } : {})
+             pintada intermèdia sense element. IDEA-61 · L'entrada amb ?ambit=
+             i sense nota, amb la preparada. */
+          ...(entradaNua ? { itemId: enUrl.item } : itemDAmbit != null ? { itemId: itemDAmbit } : {})
         }}
-        selection={modeDesa ? seleccioDesa : { categoryId: enUrl.carpeta ?? undefined, itemId: enUrl.item ?? undefined }}
+        selection={modeDesa ? seleccioDesa : { categoryId: enUrl.carpeta ?? undefined, itemId: enUrl.item ?? itemDAmbit ?? undefined }}
         onSelectionChange={handleSelectionChange}
         compacte={modeDesa}
         /* MD (ordre del Mestre, 261003) · En mòbil, primer les carpetes; amb
@@ -869,7 +932,7 @@ export default function NotesSection() {
            soles): llavors, el nivell on era (nivellMestreDetall.js). Al
            snippet no s'aplica. IDEA-59 / P1-72 · La URL crua: l'entrada nua
            (la Card a «Tot», derivada) comença per les CARPETES. */
-        mestreDetall={{ clau: 'notes', element: urlCrua.item }}
+        mestreDetall={{ clau: 'notes', element: urlCrua.item ?? itemDAmbit }}
         inclouDescendents={true}
         onCreate={modeDesa ? undefined : onCreate}
         onCreateError={informaError}
@@ -890,6 +953,7 @@ export default function NotesSection() {
            capçalera de NOTES és la mateixa amb la prop o sense. */
       />
       </ProveidorSincronitzacioTargetes>
+      </CanalAmbitContext.Provider>
       {/* Selector d'emojis com a subvista / pàgina dedicada de columna (PaginaEmojis),
           substituint la finestra flotant modal: accés fluid i net. */}
       {modeDesa ? null : (

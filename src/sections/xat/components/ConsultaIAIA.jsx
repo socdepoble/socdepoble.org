@@ -3,7 +3,13 @@
 import { useEffect, useId, useRef, useState } from 'react';
 import { Link } from '../../../app/contexts/RouterContext.jsx';
 import { Dialeg, Boto } from '../../../components/PedraSeca/index.js';
-import { consultaTecnicaIAIA, MAXIM_PREGUNTA_IAIA, preparaWikiDeLaIAIA, SALUTACIO_TECNICA_IAIA } from '../../../data/iaiaLocal.js';
+import {
+  consultaTecnicaIAIA,
+  MAXIM_PREGUNTA_IAIA,
+  preparaWikiDeLaIAIA,
+  SALUTACIO_TECNICA_IAIA,
+  SUGGERIMENTS_RAPIDS_IAIA
+} from '../../../data/iaiaLocal.js';
 
 /* Gauntlet 261022_0225 (crítica Claude) · La Wiki (183 KB gzip) comença a
    baixar quan el diàleg porta un moment obert: el temps d'escriure la
@@ -54,21 +60,30 @@ function Contingut({ t, consulta, prepara, onFont }) {
     const rellotge = setTimeout(() => prepara?.(), ESPERA_PER_A_PREPARAR);
     return () => clearTimeout(rellotge);
   }, [prepara]);
-  const envia = async (event) => {
-    event.preventDefault();
-    if (actual.current || !pregunta.trim()) return;
+  const executaConsulta = async (textConsulta) => {
+    const neta = String(textConsulta ?? '').trim();
+    if (actual.current || !neta) return;
     const control = new AbortController();
     actual.current = control;
     setPendent(true);
     setResultat(null);
     try {
-      const resposta = await consulta(pregunta.trim(), { signal: control.signal });
+      const resposta = await consulta(neta, { signal: control.signal });
       if (!control.signal.aborted) setResultat(resposta);
     } catch {
       if (!control.signal.aborted) setResultat({ estat: 'no_disponible', fonts: [] });
     } finally {
       if (actual.current === control) { actual.current = null; setPendent(false); }
     }
+  };
+  const envia = async (event) => {
+    event.preventDefault();
+    await executaConsulta(pregunta);
+  };
+  const triaSuggeriment = (textSuggerit) => {
+    if (actual.current) return;
+    setPregunta(textSuggerit);
+    executaConsulta(textSuggerit);
   };
   const avis = avisDe(resultat, t);
   const fonts = resultat?.estat === 'resposta' ? resultat.fonts : [];
@@ -80,6 +95,19 @@ function Contingut({ t, consulta, prepara, onFont }) {
     <p>{t('section.xat.iaia.salutacio', SALUTACIO_TECNICA_IAIA)}</p>
     <p>{t('section.xat.iaia.consulta.abast', 'Consulte la Wiki pública d’esta versió. La pregunta es queda en este navegador i no s’envia al xat compartit.')}</p>
     <form onSubmit={envia}>
+      <div className="sdp-xat-iaia-suggeriments" role="group" aria-label={t('section.xat.iaia.suggeriments', 'Suggeriments ràpids d’ajuda rural')}>
+        {SUGGERIMENTS_RAPIDS_IAIA.map((sug) => (
+          <button
+            key={sug.id}
+            type="button"
+            className="sdp-xat-iaia-suggeriment"
+            onClick={() => triaSuggeriment(sug.pregunta)}
+            aria-disabled={pendent || undefined}
+          >
+            {t(sug.clau, sug.etiqueta)}
+          </button>
+        ))}
+      </div>
       <label htmlFor={id}>{t('section.xat.iaia.consulta.pregunta', 'Què necessites saber?')}</label>
       <textarea id={id} value={pregunta} onChange={(e) => setPregunta(e.target.value)}
         maxLength={MAXIM_PREGUNTA_IAIA} rows={3} readOnly={pendent} data-sdp-focus-inicial

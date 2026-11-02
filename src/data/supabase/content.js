@@ -42,8 +42,13 @@ const RANG = /^(?:0-(\d+)|\*)\/(\d+)$/;
    veïns) passen per elementDeFilaPublicada (mapejadorSeccions.js): autoria
    de les columnes i cap clau d'autoritat del payload. La primera pàgina de
    loadMur i les següents (loadSeccioPage) fan servir este mateix camí. */
-const elementDeFila = (row) => elementDeFilaPublicada({ id: row.id, payload: row.payload, titol: row.title,
-  createdAt: row.created_at, updatedAt: row.updated_at, ownerUserId: row.owner_user_id, authorOrgId: row.author_org_id });
+/* IDEA-61 (T0, prompt 261102_1532; L1-A3) · `sectionId` és la secció de la
+   consulta (la columna section_id de la fila), no el payload: el mapejador
+   la contrasta amb l'àmbit de la fitxa perquè un payload hostil no entre
+   com a fitxa d'una altra secció. */
+const elementDeFila = (row, sectionId) => elementDeFilaPublicada({ id: row.id, payload: row.payload, titol: row.title,
+  createdAt: row.created_at, updatedAt: row.updated_at, ownerUserId: row.owner_user_id, authorOrgId: row.author_org_id,
+  ...(typeof sectionId === 'string' ? { sectionId } : {}) });
 
 /* Decisió 4 · La clau (created_at, id) d'una fila, o null si no és prou
    fiable per a fer de cursor. `ordre` és l'instant en microsegons (Date
@@ -179,7 +184,7 @@ async function loadSections(ownerUserId, config, sections, { ambPaginacio = fals
      es pinten igual. */
   const llistes = Object.fromEntries(sections.map(([key], index) => [key, mergeById(
     llistaDe(rows.find(row => row.key === key)?.payload, key),
-    submissions[index].map(elementDeFila)
+    submissions[index].map((row) => elementDeFila(row, sections[index][1]))
   )]));
   if (!ambPaginacio) return llistes;
   /* Decisió 4 · El cursor de cada secció ix de l'última fila de
@@ -254,7 +259,7 @@ export async function loadSeccioPage({ seccio, cursor = null, limit = LIMIT_SECC
      l'ordre posa al final: d'ací ja no es pot avançar, i és la darrera. */
   const seguent = ultimaClau(rows);
   const complete = esCompleta(rows, contentRange) || seguent === null;
-  return { elements: rows.map(elementDeFila), complete, nextCursor: complete ? null : cursorDe(tenantId, seccio, seguent) };
+  return { elements: rows.map((row) => elementDeFila(row, seccio)), complete, nextCursor: complete ? null : cursorDe(tenantId, seccio, seguent) };
 }
 export function loadMultimedia(ownerUserId = getDefaultUserId(), config = {}) {
   return loadSections(ownerUserId, config, [['mediaItems', 'multimedia']]);

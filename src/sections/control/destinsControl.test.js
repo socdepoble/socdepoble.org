@@ -250,12 +250,16 @@ describe('destinsControl · les targetes i on porta cada porta', () => {
     expect(Object.isFrozen(DESTINS_CONTROL)).toBe(true);
   });
 
-  /* PRD §2 corregit · De les 16 accions, 9 tenen destí: Publicar al Mur i
-     els huit Saber-ne més. Les 7 Publicar restants esperen el seu editor. */
-  test('cada destí no nul és una ruta estàtica d’App o una pàgina que pinta /page/:slug; 9 de 16', () => {
+  /* PRD §2 corregit · De les 16 accions, 9 tenien destí: Publicar al Mur i
+     els huit Saber-ne més.
+     IDEA-61 (T0, prompt 261102_1532) · Ara en són 13: Publicar al Mercat,
+     Vehicle Compartit, Treball i Habitatge porten a l'editor amb l'àmbit
+     (/notes?ambit=…, una ruta estàtica d'App amb consulta). Les 3 Publicar
+     restants (Calendari, Mapa, Animalets) esperen el seu editor. */
+  test('cada destí no nul és una ruta estàtica d’App o una pàgina que pinta /page/:slug; 13 de 16', () => {
     const rutes = rutesEstatiques();
     const destins = DESTINS_CONTROL.flatMap((desti) => [desti.publicar, desti.saberMes]).filter(Boolean);
-    expect(destins.length).toBe(9);
+    expect(destins.length).toBe(13);
     for (const cami of destins) {
       expect(cami.startsWith('/'), cami).toBe(true);
       expect(rutes.has(camiDe(cami)) || esPaginaServida(cami), cami).toBe(true);
@@ -271,28 +275,36 @@ describe('destinsControl · les targetes i on porta cada porta', () => {
     expect(rutaDePagina('vehicle_compartit')).toBe('/page/vehicle_compartit');
   });
 
-  test('Mercat i Calendari: la secció existix, però encara cap camí per a publicar', () => {
-    expect([perId.mercat.publicar, perId.mercat.seccio, perId.mercat.saberMes]).toEqual([null, '/mercat', '/page/publicar_mercat']);
+  /* IDEA-61 (T0, prompt 261102_1532) · El Mercat ja té camí per a publicar:
+     l'editor del Bloc amb l'àmbit 'mercat'. El Calendari, encara no. */
+  test('Mercat: la secció i Publicar cap a l’editor amb l’àmbit (IDEA-61); Calendari: la secció, però encara cap camí per a publicar', () => {
+    expect([perId.mercat.publicar, perId.mercat.seccio, perId.mercat.saberMes]).toEqual(['/notes?ambit=mercat', '/mercat', '/page/publicar_mercat']);
     expect([perId.calendari.publicar, perId.calendari.seccio, perId.calendari.saberMes]).toEqual([null, '/calendari', '/page/publicar_calendari']);
   });
 
-  test('W4-04 · Mapa, Vehicle Compartit i Animalets: cap camí per a publicar, cap secció (no hi ha ruta /mapa) i «EN OBRES»', () => {
-    for (const id of ['mapa', 'vehicle', 'animalets']) {
+  /* IDEA-61 (T0, prompt 261102_1532) · Vehicle Compartit ix d'«en obres»: té
+     la secció /vehicle (sections.js) i Publicar cap a l'editor amb l'àmbit. */
+  test('W4-04 · Mapa i Animalets: cap camí per a publicar, cap secció (no hi ha ruta /mapa) i «EN OBRES»; Vehicle Compartit ja no (IDEA-61)', () => {
+    for (const id of ['mapa', 'animalets']) {
       expect([perId[id].publicar, perId[id].seccio], id).toEqual([null, null]);
       expect(enObres(perId[id]), id).toBe(true);
     }
-    for (const id of ['mur', 'mercat', 'calendari']) expect(enObres(perId[id]), id).toBe(false);
+    expect([perId.vehicle.publicar, perId.vehicle.seccio]).toEqual(['/notes?ambit=vehicle', '/vehicle']);
+    for (const id of ['mur', 'mercat', 'calendari', 'vehicle']) expect(enObres(perId[id]), id).toBe(false);
     expect(rutesEstatiques().has('mapa')).toBe(false);
+    expect(rutesEstatiques().has('vehicle')).toBe(true);
   });
 
-  /* W4-08 · Treball i Habitatge, darrere d'Animalets: com Mapa, Vehicle
-     Compartit i Animalets, sense secció ni camí per a publicar, i Saber-ne més
-     cap a la seua pàgina. */
-  test('W4-08 · Treball i Habitatge: posicions 7 i 8, cap camí per a publicar, «en obres» i la seua pàgina', () => {
+  /* W4-08 · Treball i Habitatge, darrere d'Animalets, amb Saber-ne més cap a
+     la seua pàgina. IDEA-61 (T0, prompt 261102_1532) · Ja no són «en obres»:
+     secció pròpia (/treball, /habitatge) i Publicar cap a l'editor amb
+     l'àmbit. */
+  test('W4-08 · Treball i Habitatge: posicions 7 i 8, la seua secció, Publicar amb l’àmbit (IDEA-61) i la seua pàgina', () => {
     expect(DESTINS_CONTROL.slice(6).map((desti) => desti.id)).toEqual(['treball', 'habitatge']);
     for (const id of ['treball', 'habitatge']) {
-      expect([perId[id].publicar, perId[id].seccio, perId[id].saberMes], id).toEqual([null, null, `/page/${id}`]);
-      expect(enObres(perId[id]), id).toBe(true);
+      expect([perId[id].publicar, perId[id].seccio, perId[id].saberMes], id).toEqual([`/notes?ambit=${id}`, `/${id}`, `/page/${id}`]);
+      expect(enObres(perId[id]), id).toBe(false);
+      expect(rutesEstatiques().has(id), id).toBe(true);
     }
   });
 
@@ -434,8 +446,9 @@ describe('destinsControl · les portes', () => {
       { id: 'publicar', verb: 'Publicar', nom: 'Publicar al Mur', desti: '/notes', varietat: 'primari', enObres: '(en obres)', avis: '“Publicar al Mur” encara està en obres.' },
       { id: 'saber', verb: 'Saber-ne més', nom: 'Saber-ne més sobre el Mur', desti: '/page/publicar_mur', varietat: 'secundari', enObres: '(en obres)', avis: '“Saber-ne més sobre el Mur” encara està en obres.' }
     ]);
+    /* IDEA-61 (T0, prompt 261102_1532) · Vehicle Compartit publica a l'editor amb l'àmbit. */
     expect(portesDe(perId.vehicle, reserva).map((porta) => [porta.nom, porta.desti])).toEqual([
-      ['Publicar: Vehicle Compartit', null], ['Saber-ne més: Vehicle Compartit', '/page/vehicle_compartit']
+      ['Publicar: Vehicle Compartit', '/notes?ambit=vehicle'], ['Saber-ne més: Vehicle Compartit', '/page/vehicle_compartit']
     ]);
     expect(portesDe(perId.animalets, reserva).map((porta) => [porta.nom, porta.desti])).toEqual([
       ['Publicar: Animalets', null], ['Saber-ne més: Animalets', '/page/animalets']

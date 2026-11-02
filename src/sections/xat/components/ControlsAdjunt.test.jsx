@@ -12,6 +12,7 @@ import { ERRORS_ADJUNT_XAT, errorAdjuntXat } from '../../../data/xatMultimedia.j
 const m = vi.hoisted(() => ({ user: 'A', preparaAdjunt: vi.fn(), gravaVeu: vi.fn() }));
 vi.mock('../adjuntLocal.js', async (importOriginal) => ({ ...(await importOriginal()), preparaAdjunt: m.preparaAdjunt, gravaVeu: m.gravaVeu, mimeDeGravacio: () => 'audio/mp4' }));
 vi.mock('../../../data/backendPort.js', () => ({ quotaXat: vi.fn(), teCapacitat: () => true, urlAdjuntXat: vi.fn(), descartaAdjuntXat: vi.fn() }));
+const NativeURL = globalThis.URL;
 const adjunt = () => ({ id: 'mateix-id', tipus: 'imatge', fitxer: new Blob(['foto'], { type: 'image/webp' }) });
 // ADV-MEDIA-4 · La quota desada és per port: cada prova en porta un de nou.
 let servei;
@@ -21,7 +22,7 @@ beforeEach(() => {
   vi.clearAllMocks(); m.user = 'A';
   servei = { teCapacitat: () => true, quotaXat: vi.fn().mockResolvedValue({ usats: 0, limit: 20_000_000 }) };
   m.preparaAdjunt.mockImplementation(async () => adjunt());
-  vi.stubGlobal('URL', { createObjectURL: vi.fn().mockReturnValue('blob:foto-local'), revokeObjectURL: vi.fn() });
+  vi.stubGlobal('URL', Object.assign(class extends NativeURL {}, { createObjectURL: vi.fn().mockReturnValue('blob:foto-local'), revokeObjectURL: vi.fn() }));
   // jsdom no reproduïx: el reproductor de veu de la previsualització només ha de poder cridar-ho.
   for (const metode of ['pause', 'load']) vi.spyOn(HTMLMediaElement.prototype, metode).mockImplementation(() => {});
   vi.spyOn(HTMLMediaElement.prototype, 'play').mockImplementation(() => Promise.resolve());
@@ -598,4 +599,18 @@ test('P1-66 · una lectura bona esborra l’error d’abans: «sense migració»
   vista.rerender(<Barra usuariId={m.user} fil={{ id: 'fil-B' }} servei={servei} onEnvia={vi.fn()} />);
   expect(await screen.findByRole('button', { name: 'Adjunta' })).toBeTruthy();
   expect(peuDelMenu()[0]).toBe('0,0 de 20 MB del xat');
+});
+
+
+test('el mateix usuari en un altre backend no rep la quota ni els pendents del primer', async () => {
+  const configA = { backendUrl: 'https://a.example.test' };
+  const configB = { backendUrl: 'https://b.example.test' };
+  servei.quotaXat.mockResolvedValueOnce({ usats: 12_000_000, limit: 20_000_000, pendents: [{ id: 'privat-a', bytes: 12_000_000 }] });
+  const vista = render(<Barra usuariId="mateix-uuid" externalConfig={configA} fil={fil} servei={servei} onEnvia={vi.fn()} />);
+  await screen.findByRole('button', { name: 'Descarta el fitxer pendent (12,0 MB)' });
+  vista.unmount();
+  servei.quotaXat.mockReturnValueOnce(new Promise(() => {}));
+  render(<Barra usuariId="mateix-uuid" externalConfig={configB} fil={fil} servei={servei} onEnvia={vi.fn()} />);
+  expect(screen.queryByRole('button', { name: 'Descarta el fitxer pendent (12,0 MB)' })).toBeNull();
+  expect(screen.queryByRole('button', { name: 'Adjunta' })).toBeNull();
 });

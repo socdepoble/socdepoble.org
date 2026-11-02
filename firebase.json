@@ -5,7 +5,9 @@
     "ignore": [
       "**/.*",
       "!.well-known",
-      "**/node_modules/**"
+      "**/node_modules/**",
+      "_headers",
+      "_redirects"
     ],
     "cleanUrls": false,
     "trailingSlash": false,
@@ -24,7 +26,7 @@
         "destination": "/.well-known/webfinger/la-torre-de-les-macanes.json"
       },
       {
-        "source": "!/@(assets|fonts|ap|.well-known)/**",
+        "source": "!/@(assets|fonts|ap|opendata|nodeinfo|.well-known)/**",
         "destination": "/index.html"
       }
     ],
@@ -148,6 +150,40 @@
           {
             "key": "Content-Type",
             "value": "application/activity+json; charset=utf-8"
+          },
+          {
+            "key": "Access-Control-Allow-Origin",
+            "value": "*"
+          },
+          {
+            "key": "Cache-Control",
+            "value": "public, max-age=300"
+          }
+        ]
+      },
+      {
+        "source": "/opendata/*.jsonld",
+        "headers": [
+          {
+            "key": "Content-Type",
+            "value": "application/ld+json; charset=utf-8"
+          },
+          {
+            "key": "Access-Control-Allow-Origin",
+            "value": "*"
+          },
+          {
+            "key": "Cache-Control",
+            "value": "public, max-age=300"
+          }
+        ]
+      },
+      {
+        "source": "/opendata/*.json",
+        "headers": [
+          {
+            "key": "Content-Type",
+            "value": "application/json; charset=utf-8"
           },
           {
             "key": "Access-Control-Allow-Origin",

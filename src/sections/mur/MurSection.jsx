@@ -142,7 +142,7 @@ export default function MurSection() {
 
   useSEO({
     title: t('section.mur.kicker', 'Mur'),
-    description: t('section.mur.subtitle', 'Llig el mur públic amb les darreres publicacions del poble.')
+    description: t('section.mur.subtitle')
   });
 
   const systemPages = useMemo(() => targetesDeSistema(pageCopy, {

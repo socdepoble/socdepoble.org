@@ -4,9 +4,9 @@
   "actor": "claude",
   "scope": "code",
   "state": "planned",
-  "revision": 4,
+  "revision": 5,
   "createdAt": "2026-11-01T20:43:26.479Z",
-  "updatedAt": "2026-11-01T20:47:51.125Z",
+  "updatedAt": "2026-11-02T13:56:32.797Z",
   "expiresAt": "2026-11-02T20:43:26.480Z",
   "contractHash": "1839756fa153a68d945b48956d870a4a082ab80adcf874a04dd10fc1327d8c45",
   "humanInventoryVersion": 1,
@@ -4427,6 +4427,40 @@
       "file": "_wiki_de_poble/04_escriptori/261101_2143_auditoria_claude.md",
       "at": "2026-11-01T20:47:51.125Z",
       "hash": "79817ad15d3ecb4aa34d4cc311dff584e9b2eb6a2cf1cb929863c9a5995d2404"
+    },
+    {
+      "action": "archive-links",
+      "at": "2026-11-02T13:56:32.797Z",
+      "by": "torn_fad962dd-2cbf-457d-98d7-ee28c04f647f",
+      "relocated": [
+        {
+          "from": "_wiki_de_poble/04_escriptori/261101_0403_auditoria_codex_marato_nocturna.md",
+          "to": "_wiki_de_poble/90_arxiu_historic/261101_0403_auditoria_codex_marato_nocturna.md"
+        },
+        {
+          "from": "_wiki_de_poble/04_escriptori/261101_0407_auditoria_gemini_marato_nocturna.md",
+          "to": "_wiki_de_poble/90_arxiu_historic/261101_0407_auditoria_gemini_marato_nocturna.md"
+        },
+        {
+          "from": "_wiki_de_poble/04_escriptori/261101_1355_auditoria_claude.md",
+          "to": "_wiki_de_poble/90_arxiu_historic/261101_1355_auditoria_claude.md"
+        },
+        {
+          "from": "_wiki_de_poble/04_escriptori/261101_2059_pla_implementacio_marato_nocturna_extirpacio_total_deute_llibre_mestre.md",
+          "to": "_wiki_de_poble/90_arxiu_historic/261101_2059_pla_implementacio_marato_nocturna_extirpacio_total_deute_llibre_mestre.md"
+        },
+        {
+          "from": "_wiki_de_poble/04_escriptori/261101_2059_prompt_marato_nocturna_extirpacio_total_deute_llibre_mestre.md",
+          "to": "_wiki_de_poble/90_arxiu_historic/261101_2059_prompt_marato_nocturna_extirpacio_total_deute_llibre_mestre.md"
+        }
+      ]
     }
+  ],
+  "relocated": [
+    "_wiki_de_poble/04_escriptori/261101_0403_auditoria_codex_marato_nocturna.md",
+    "_wiki_de_poble/04_escriptori/261101_0407_auditoria_gemini_marato_nocturna.md",
+    "_wiki_de_poble/04_escriptori/261101_1355_auditoria_claude.md",
+    "_wiki_de_poble/04_escriptori/261101_2059_pla_implementacio_marato_nocturna_extirpacio_total_deute_llibre_mestre.md",
+    "_wiki_de_poble/04_escriptori/261101_2059_prompt_marato_nocturna_extirpacio_total_deute_llibre_mestre.md"
   ]
 }

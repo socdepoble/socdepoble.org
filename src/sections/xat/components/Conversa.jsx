@@ -41,10 +41,17 @@
  *     l'original (#12).
  */
 import { BENVINGUDA_IAIA, IAIA_ID, RESPOSTA_IAIA, agentIASeed } from '../../../data/identitatsSeed.js';
-import { respostaDeLaIAIA } from '../../../data/iaiaLocal.js';
+import {
+  SUGGERIMENTS_RAPIDS_IAIA,
+  esborranyDeRespostaIAIA,
+  extreuAccionsDeRespostaIAIA,
+  respostaDeLaIAIA
+} from '../../../data/iaiaLocal.js';
 import { Fragment, Suspense, forwardRef, lazy, useCallback, useContext, useEffect, useImperativeHandle, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { AlertTriangle, FileText } from 'lucide-react';
+import { Link } from '../../../app/contexts/RouterContext.jsx';
 import { AppGridContext } from '../../../components/layout/AppGridShell.jsx';
+import { useCapaEnrere } from '../../../components/PedraSeca/hooks/useCapaEnrere.js';
 import CapcaleraConversa from './CapcaleraConversa.jsx';
 import Bombolla from './Bombolla.jsx';
 import SeparadorDia from './SeparadorDia.jsx';
@@ -115,7 +122,7 @@ function intercalaRespostesLocals(files, respostes) {
       ? (perClau.has(pregunta.id) ? pregunta.id : null)
       : propies.find((fila) => !preses.has(fila.clau) && !pregunta.previs.has(fila.clau)
         && String(fila.msg.text ?? '').trim() === pregunta.text)?.clau ?? null;
-    const fila = { tipus: 'iaia-local', clau: missatge.id, msg: missatge };
+    const fila = { tipus: 'iaia-local', clau: missatge.id, msg: missatge, preguntaText: pregunta?.text ?? '' };
     if (ancora == null) {
       soltes.push(fila);
       continue;
@@ -786,6 +793,25 @@ export default function Conversa({
     return () => clearTimeout(temporitzador);
   }, [ressalt]);
 
+  const encuaRespostaLocal = useCallback((value, idPropi, previs) => {
+    if (!cortesiaIAIA || typeof respostaLocalIAIA !== 'function') return;
+    cuaLocalRef.current = cuaLocalRef.current
+      .then(() => respostaLocalIAIA(value))
+      .catch(() => null)
+      .then((trobada) => {
+        if (!muntadaRef.current) return;
+        comptadorLocalRef.current += 1;
+        const missatge = {
+          id: `iaia-local:${comptadorLocalRef.current}`, sender: 'other', author: NOM_IAIA, usuariId: IAIA_ID, is_ai: true,
+          text: typeof trobada === 'string' && trobada.trim() ? trobada : RESPOSTA_IAIA, creatAl: new Date().toISOString()
+        };
+        const pregunta = { id: idPropi, text: value, previs };
+        setRespostesLocals((previes) => [...previes, { missatge, pregunta }].slice(-MAXIM_RESPOSTES_LOCALS));
+        anunciRef.current?.([missatge]);
+      })
+      .catch(() => {});
+  }, [cortesiaIAIA, respostaLocalIAIA]);
+
   const envia = useCallback(async () => {
     const value = text.trim();
     if (!value) return;
@@ -810,7 +836,7 @@ export default function Conversa({
       const enviats = citat?.id != null ? await onSendMessage(fil, value, { respostaA: citat.id }) : await onSendMessage(fil, value);
       /* XatContext torna [definitiu]: el mateix id que el pendent. */
       idPropi = Array.isArray(enviats) && enviats[0]?.id != null ? String(enviats[0].id) : null;
-      enviat = true;
+      enviat = !Array.isArray(enviats) || enviats.length > 0;
       /* E3 (marató 261101_2143; G2-A-doctr-01) · XatContext no llança: un enviament sense
          missatge definitiu ha fallat (la bombolla queda en error, sense el codi del motor). Si
          era un canvi de clau, els canvis es tornen a llegir ara (revisaCanvisRef, al muntatge
@@ -830,23 +856,45 @@ export default function Conversa({
     /* IDEA-56 (Bloc F.2) · La pregunta ja ha anat al grup públic: la IAIA
        respon ací, només per a qui pregunta. Si no troba res, la seua frase
        de sempre (RESPOSTA_IAIA). */
-    if (!enviat || !cortesiaIAIA || typeof respostaLocalIAIA !== 'function') return;
-    cuaLocalRef.current = cuaLocalRef.current
-      .then(() => respostaLocalIAIA(value))
-      .catch(() => null)
-      .then((trobada) => {
-        if (!muntadaRef.current) return;
-        comptadorLocalRef.current += 1;
-        const missatge = {
-          id: `iaia-local:${comptadorLocalRef.current}`, sender: 'other', author: NOM_IAIA, usuariId: IAIA_ID, is_ai: true,
-          text: typeof trobada === 'string' && trobada.trim() ? trobada : RESPOSTA_IAIA, creatAl: new Date().toISOString()
-        };
-        const pregunta = { id: idPropi, text: value, previs };
-        setRespostesLocals((previes) => [...previes, { missatge, pregunta }].slice(-MAXIM_RESPOSTES_LOCALS));
-        anunciRef.current?.([missatge]);
-      })
-      .catch(() => {});
-  }, [text, resposta, fil, onSendMessage, clauEsborrany, cortesiaIAIA, respostaLocalIAIA]);
+    if (!enviat) return;
+    encuaRespostaLocal(value, idPropi, previs);
+  }, [text, resposta, fil, onSendMessage, clauEsborrany, cortesiaIAIA, encuaRespostaLocal]);
+
+  const enviaPreguntaRapida = useCallback(async (preguntaSuggerida) => {
+    const value = String(preguntaSuggerida ?? '').trim();
+    if (!value) return;
+    if (!potRespondre || typeof onSendMessage !== 'function') {
+      canviaText(value);
+      campRef.current?.focus();
+      return;
+    }
+    const previs = cortesiaIAIA
+      ? new Set((establesRef.current?.llista || [])
+        .filter((m) => m?.sender === 'me' && m.id != null && String(m.text ?? '').trim() === value).map((m) => String(m.id)))
+      : null;
+    try {
+      const enviats = await onSendMessage(fil, value);
+      if (Array.isArray(enviats) && enviats.length === 0) return;
+      const idPropi = Array.isArray(enviats) && enviats[0]?.id != null ? String(enviats[0].id) : null;
+      encuaRespostaLocal(value, idPropi, previs);
+    } catch {
+      canviaText(value);
+    }
+  }, [potRespondre, onSendMessage, canviaText, cortesiaIAIA, fil, encuaRespostaLocal]);
+
+  const enviaEsborranyIAIA = useCallback(async (preguntaText, respostaText) => {
+    if (creantNota || typeof onEnviaAlBloc !== 'function') return;
+    const esborrany = esborranyDeRespostaIAIA(preguntaText, respostaText);
+    if (!esborrany) return;
+    setCreantNota(true);
+    try {
+      await onEnviaAlBloc([esborrany]);
+    } catch {
+      // El pare ja avisa.
+    } finally {
+      setCreantNota(false);
+    }
+  }, [creantNota, onEnviaAlBloc]);
 
   /* En triar «Respon» el focus va al camp, com a les apps de missatgeria.
      Directament i no amb un efecte sobre `resposta`: respondre al missatge que ja és la
@@ -863,6 +911,9 @@ export default function Conversa({
     setResposta(null);
     campRef.current?.focus();
   }, []);
+  /* P0-24b (T2b, prompt 261102_1532) · Amb resposta, la barra és a la pila de
+     l'Arrere d'Android amb el camí de l'Escape del camp (cancelaResposta). */
+  useCapaEnrere(Boolean(resposta), cancelaResposta);
 
   const baixaAlFinal = () => {
     const ol = llistaRef.current;
@@ -981,55 +1032,102 @@ export default function Conversa({
     return tria;
   }, [triesPerClau, alterna]);
 
-  const bombolles = useMemo(() => files.map((fila) => {
-    if (fila.tipus === 'dia') return <SeparadorDia key={fila.clau} iso={fila.iso} locale={locale} t={t} />;
-    if (fila.tipus === 'no-llegits') return <SeparadorNoLlegits key={fila.clau} quants={fila.quants} t={t} />;
-    /* IDEA-56 (Bloc F.2) · Una resposta local de la IAIA, amb el seu avís
-       (la classe de la cortesia): només la veu qui ha preguntat. Sense seq
-       (cap data-vist), sense «Respon» ni denúncia. Gauntlet 261029 (cicle
-       1) · Darrere de la seua pregunta (intercalaRespostesLocals). */
-    if (fila.tipus === 'iaia-local') {
+  const bombolles = useMemo(() => {
+    const pintaAccionsIAIA = (preguntaText, respostaText) => {
+      const accionsIAIA = extreuAccionsDeRespostaIAIA(respostaText);
+      const esborranyIAIA = typeof onEnviaAlBloc === 'function' ? esborranyDeRespostaIAIA(preguntaText, respostaText) : null;
+      if (accionsIAIA.length === 0 && !esborranyIAIA) return null;
+      return (
+        <li className="sdp-xat-iaia-accions">
+          {accionsIAIA.map((accio) => (
+            <Link key={accio.ruta} to={accio.ruta} className="sdp-xat-iaia-accio">
+              {`${t('section.xat.iaia.accio.obri', 'Obri')} ${accio.titol}`}
+            </Link>
+          ))}
+          {esborranyIAIA ? (
+            <button
+              type="button"
+              className="sdp-xat-iaia-accio sdp-xat-iaia-accio--bloc"
+              onClick={() => enviaEsborranyIAIA(preguntaText, respostaText)}
+              disabled={creantNota}
+              aria-busy={creantNota || undefined}
+            >
+              {t('section.xat.iaia.accio.enviaEsborrany', 'Envia l’esborrany al Bloc de Notes')}
+            </button>
+          ) : null}
+        </li>
+      );
+    };
+    return files.map((fila, idxFila) => {
+      if (fila.tipus === 'dia') return <SeparadorDia key={fila.clau} iso={fila.iso} locale={locale} t={t} />;
+      if (fila.tipus === 'no-llegits') return <SeparadorNoLlegits key={fila.clau} quants={fila.quants} t={t} />;
+      /* IDEA-56 (Bloc F.2) · Una resposta local de la IAIA, amb el seu avís
+         (la classe de la cortesia): només la veu qui ha preguntat. Sense seq
+         (cap data-vist), sense «Respon» ni denúncia. Gauntlet 261029 (cicle
+         1) · Darrere de la seua pregunta (intercalaRespostesLocals). */
+      if (fila.tipus === 'iaia-local') {
+        return (
+          <Fragment key={fila.clau}>
+            <Bombolla missatge={fila.msg} locale={locale} t={t} onCopia={onCopia} />
+            <li className="sdp-xat-conversa-buida">
+              <small>{t('section.xat.iaia.local.avis', 'Resposta local de la IAIA: només la veus tu i no s’ha guardat al xat compartit.')}</small>
+            </li>
+            {pintaAccionsIAIA(fila.preguntaText, fila.msg?.text)}
+          </Fragment>
+        );
+      }
+      const msg = fila.msg;
+      /* Fase D (261020, tasca 2) · Què es pot denunciar o bloquejar d'esta bombolla. */
+      const objectiu = moderacio && !msg.bloquejat ? moderacio.objectiuDeMissatge?.(msg, fil) ?? null : null;
+      const accions = objectiu ? accionsDe(msg) : null;
+      const esRespostaIAIA = (cortesiaIAIA || consultaIAIA) && Boolean(msg?.is_ai || msg?.esIA || msg?.usuariId === IAIA_ID);
+      let preguntaPrevia = '';
+      if (esRespostaIAIA) {
+        for (let k = idxFila - 1; k >= 0; k -= 1) {
+          if (files[k]?.tipus === 'missatge' && files[k].msg?.sender === 'me') {
+            preguntaPrevia = String(files[k].msg?.text ?? '');
+            break;
+          }
+        }
+      }
+      const accionsIAIANode = esRespostaIAIA ? pintaAccionsIAIA(preguntaPrevia, msg?.text) : null;
+      const bombollaNode = (
+        <Bombolla
+          key={accionsIAIANode ? undefined : fila.clau}
+          missatge={msg}
+          configAdjunts={configAdjunts}
+          usuariAdjunts={usuariAdjunts}
+          onDenuncia={objectiu ? accions.denuncia : null}
+          onBloqueja={objectiu?.bloquejable && moderacio.potBloquejar ? accions.bloqueja : null}
+          nomAutor={objectiu?.autor?.nom ?? ''}
+          esGrup={esGrup}
+          primerDelGrup={fila.primerDelGrup}
+          citat={msg.respostaA != null ? perId.get(String(msg.respostaA)) ?? null : null}
+          onVesACita={vesAlMissatge}
+          onRespon={potRespondre ? respon : null}
+          ressaltat={ressalt != null && msg.id != null && ressalt.id === String(msg.id)}
+          locale={locale}
+          t={t}
+          seleccio={modeSeleccio ? seleccioDe(fila.clau, triats.has(fila.clau)) : null}
+          onReintenta={onReintenta}
+          onDescarta={onDescarta}
+          onCopia={onCopia}
+          actorLlista={actorLlista}
+          onMutaLlista={onMutaLlista}
+        />
+      );
+      if (!accionsIAIANode) return bombollaNode;
       return (
         <Fragment key={fila.clau}>
-          <Bombolla missatge={fila.msg} locale={locale} t={t} onCopia={onCopia} />
-          <li className="sdp-xat-conversa-buida">
-            <small>{t('section.xat.iaia.local.avis', 'Resposta local de la IAIA: només la veus tu i no s’ha guardat al xat compartit.')}</small>
-          </li>
+          {bombollaNode}
+          {accionsIAIANode}
         </Fragment>
       );
-    }
-    const msg = fila.msg;
-    /* Fase D (261020, tasca 2) · Què es pot denunciar o bloquejar d'esta bombolla. */
-    const objectiu = moderacio && !msg.bloquejat ? moderacio.objectiuDeMissatge?.(msg, fil) ?? null : null;
-    const accions = objectiu ? accionsDe(msg) : null;
-    return (
-      <Bombolla
-        key={fila.clau}
-        missatge={msg}
-        configAdjunts={configAdjunts}
-        usuariAdjunts={usuariAdjunts}
-        onDenuncia={objectiu ? accions.denuncia : null}
-        onBloqueja={objectiu?.bloquejable && moderacio.potBloquejar ? accions.bloqueja : null}
-        nomAutor={objectiu?.autor?.nom ?? ''}
-        esGrup={esGrup}
-        primerDelGrup={fila.primerDelGrup}
-        citat={msg.respostaA != null ? perId.get(String(msg.respostaA)) ?? null : null}
-        onVesACita={vesAlMissatge}
-        onRespon={potRespondre ? respon : null}
-        ressaltat={ressalt != null && msg.id != null && ressalt.id === String(msg.id)}
-        locale={locale}
-        t={t}
-        seleccio={modeSeleccio ? seleccioDe(fila.clau, triats.has(fila.clau)) : null}
-        onReintenta={onReintenta}
-        onDescarta={onDescarta}
-        onCopia={onCopia}
-        actorLlista={actorLlista}
-        onMutaLlista={onMutaLlista}
-      />
-    );
-  }), [
+    });
+  }, [
     files, moderacio, fil, accionsDe, configAdjunts, usuariAdjunts, esGrup, perId, vesAlMissatge, potRespondre, respon,
-    ressalt, locale, t, modeSeleccio, seleccioDe, triats, onReintenta, onDescarta, onCopia, actorLlista, onMutaLlista
+    ressalt, locale, t, modeSeleccio, seleccioDe, triats, onReintenta, onDescarta, onCopia, actorLlista, onMutaLlista,
+    cortesiaIAIA, consultaIAIA, onEnviaAlBloc, enviaEsborranyIAIA, creantNota
   ]);
 
   /* Fase D (261020, tasca 2) · L'altra part d'un directe 1:1 amb una persona
@@ -1139,6 +1237,33 @@ export default function Conversa({
             <strong>{`${NOM_IAIA} · ${t('section.xat.ia.etiqueta', 'IA')}`}</strong>
             <p>{t('section.xat.iaia.salutacio', BENVINGUDA_IAIA)}</p>
             <small>{t('section.xat.iaia.cortesia', 'Benvinguda automàtica. Es mostra només ací; no és una resposta guardada al xat compartit.')}</small>
+            <div className="sdp-xat-iaia-suggeriments" role="group" aria-label={t('section.xat.iaia.suggeriments', 'Suggeriments ràpids d’ajuda rural')}>
+              {SUGGERIMENTS_RAPIDS_IAIA.map((sug) => (
+                <button
+                  key={sug.id}
+                  type="button"
+                  className="sdp-xat-iaia-suggeriment"
+                  onClick={() => enviaPreguntaRapida(sug.pregunta)}
+                >
+                  {t(sug.clau, sug.etiqueta)}
+                </button>
+              ))}
+            </div>
+          </li>
+        ) : consultaIAIA ? (
+          <li className="sdp-xat-conversa-buida sdp-xat-iaia-benvinguda-suggeriments">
+            <div className="sdp-xat-iaia-suggeriments" role="group" aria-label={t('section.xat.iaia.suggeriments', 'Suggeriments ràpids d’ajuda rural')}>
+              {SUGGERIMENTS_RAPIDS_IAIA.map((sug) => (
+                <button
+                  key={sug.id}
+                  type="button"
+                  className="sdp-xat-iaia-suggeriment"
+                  onClick={() => enviaPreguntaRapida(sug.pregunta)}
+                >
+                  {t(sug.clau, sug.etiqueta)}
+                </button>
+              ))}
+            </div>
           </li>
         ) : null}
         {/* Gauntlet 261025_0545 (XC-14 / XU-07) · Mentre el fil no s'ha llegit

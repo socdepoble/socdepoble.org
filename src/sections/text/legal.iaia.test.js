@@ -116,8 +116,8 @@ describe('P1-24 · la IAIA de /legal és la IAIA del codi', () => {
     expect(catorze).toMatch(/apartat 18/);
   });
 
-  test('el xat de la IAIA amb compte és el xat públic de la seua pàgina, i la resposta local no es guarda', () => {
-    // El xat públic de /iaia és el xat de la IAIA; un grup on la IAIA és una més, no.
+  test('l’assistent amb compte és local; el grup públic conserva la cortesia local', () => {
+    // El grup compartit continua accessible expressament, separat de l'assistent.
     expect(esXatDeLaIAIA({ id: 'f-iaia', tipus: 'grup', altres: [], subjecte: { tipus: 'pagina', id: '/iaia' } })).toBe(true);
     expect(esXatDeLaIAIA({ id: 'f-grup', tipus: 'grup', altres: [{ id: IAIA_ID, tipus: 'ia' }], subjecte: null })).toBe(false);
     // La resposta local (cortesiaIAIA) només hi és en remot i amb sessió.

@@ -16,7 +16,7 @@ import { rutaXatDePagina, rutaXatPrivat } from '../../config/objecteConnectable.
 import { PAGINES_AMB_XAT } from '../../data/contracte.js';
 import { IAIA_ID } from '../../data/identitatsSeed.js';
 import { AJUDA_PER_CLAU, esXatDeLaIAIA, vestixLaIAIA } from '../../data/xatsPerDefecte.js';
-import { RUTA_XAT_DE_LA_IAIA, rutaDelXatDeLaIAIA } from './useObriXatPerDefecte.js';
+import { RUTA_XAT_DE_LA_IAIA, RUTA_XAT_LOCAL_IAIA, rutaDelXatDeLaIAIA } from './useObriXatPerDefecte.js';
 
 const consultaDe = (ruta) => new URL(ruta, 'http://localhost');
 
@@ -31,8 +31,8 @@ describe('rutaDelXatDeLaIAIA', () => {
     }
   });
 
-  test('en remot, el xat públic de la seua pàgina: la via de la fila d’ajuda per defecte', () => {
-    expect(rutaDelXatDeLaIAIA('remote')).toBe(RUTA_XAT_DE_LA_IAIA);
+  test('en remot, la fila obri ajuda local i la ruta del grup públic es conserva', () => {
+    expect(rutaDelXatDeLaIAIA('remote')).toBe(RUTA_XAT_LOCAL_IAIA);
     const url = consultaDe(RUTA_XAT_DE_LA_IAIA);
     expect([url.pathname, url.searchParams.get('sobre'), url.searchParams.get('titol'), url.searchParams.get('ruta')])
       .toEqual(['/xat', 'pagina:/iaia', PAGINES_AMB_XAT['/iaia'], '/iaia']);
@@ -46,7 +46,7 @@ describe('rutaDelXatDeLaIAIA', () => {
 
   test('un mode desconegut va per la via del remot, i totes dues rutes són de l’app', () => {
     for (const mode of [undefined, null, '', 'altre']) {
-      expect([String(mode), rutaDelXatDeLaIAIA(mode)]).toEqual([String(mode), RUTA_XAT_DE_LA_IAIA]);
+      expect([String(mode), rutaDelXatDeLaIAIA(mode)]).toEqual([String(mode), RUTA_XAT_LOCAL_IAIA]);
     }
     for (const mode of ['seed', 'local', 'remote']) {
       expect([mode, esRutaDeLaPorta(rutaDelXatDeLaIAIA(mode))]).toEqual([mode, true]);

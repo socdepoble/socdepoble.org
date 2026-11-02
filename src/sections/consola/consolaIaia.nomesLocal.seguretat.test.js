@@ -17,9 +17,13 @@
    eixir. La resta de la ruta del Govern (JSON, errors, compilador, Vite de
    veres) es queda a tooling/vite/consola-iaia.test.mjs. */
 import { describe, expect, test, vi } from 'vitest';
-import consolaIaia, { RUTA_CONSOLA, RUTA_EMPAQUETATS, RUTA_GOVERN, RUTA_MAPA } from '../../../tooling/vite/consola-iaia.mjs';
+import consolaIaia, {
+  ESQUEMA_JARVIS, RUTA_CONSOLA, RUTA_EMPAQUETATS, RUTA_GOVERN, RUTA_MAPA,
+  RUTA_PROGRES_JARVIS, RUTA_PUBLICA_TOT, oblidaCorredorJarvis
+} from '../../../tooling/vite/consola-iaia.mjs';
 
-const RUTES = [RUTA_CONSOLA, RUTA_MAPA, RUTA_EMPAQUETATS, RUTA_GOVERN];
+const RUTES_GET = [RUTA_CONSOLA, RUTA_MAPA, RUTA_EMPAQUETATS, RUTA_GOVERN];
+const RUTES = [...RUTES_GET, RUTA_PUBLICA_TOT];
 const MATRIU = Object.freeze({ schema: 'sdp.govern.v1' });
 
 /* Decisió del Mestre (31-10-2026) · consolaIaia() (vite.config.js) torna dos
@@ -63,8 +67,8 @@ const DE_FORA = Object.freeze([
 const LOCALS = Object.freeze(['127.0.0.1', '::1', '::ffff:127.0.0.1']);
 
 describe('/__iaia · només el mateix ordinador (local() de tooling/vite/consola-iaia.mjs)', () => {
-  test('el connector munta les quatre rutes, i només en desenvolupament (el build no les coneix)', () => {
-    expect(RUTES).toEqual(['/__iaia/consola.json', '/__iaia/mapa.json', '/__iaia/empaquetats.json', '/__iaia/govern.json']);
+  test('el connector munta les cinc rutes, i només en desenvolupament (el build no les coneix)', () => {
+    expect(RUTES).toEqual(['/__iaia/consola.json', '/__iaia/mapa.json', '/__iaia/empaquetats.json', '/__iaia/govern.json', '/__iaia/botigues/publica-tot']);
     expect([...munta().gestors.keys()]).toEqual(RUTES);
     // Les rutes vives, només el de desenvolupament; el del build no munta cap servidor (ni el de preview).
     const connectors = consolaIaia();
@@ -75,19 +79,53 @@ describe('/__iaia · només el mateix ordinador (local() de tooling/vite/consola
   test.each(RUTES)('%s: des d’un altre ordinador de la xarxa, 403 i res més (ni es compila el Llibre Mestre)', async (ruta) => {
     const { gestors, compilador } = munta();
     for (const cas of DE_FORA) {
-      const res = await demana(gestors.get(ruta), ruta, cas);
-      expect([cas, res.statusCode, res.cos, res.seguix]).toEqual([cas, 403, 'Forbidden', false]);
+      for (const method of ['GET', 'POST']) {
+        const res = await demana(gestors.get(ruta), ruta, { ...cas, method });
+        expect([cas, method, res.statusCode, res.cos, res.seguix]).toEqual([cas, method, 403, 'Forbidden', false]);
+      }
     }
     expect(compilador).not.toHaveBeenCalled();
   });
 
-  test.each(RUTES)('%s: del mateix ordinador, només GET', async (ruta) => {
+  test.each(RUTES_GET)('%s: del mateix ordinador, només GET', async (ruta) => {
     const { gestors, compilador } = munta();
     for (const method of ['POST', 'PUT', 'PATCH', 'DELETE']) {
       for (const ip of LOCALS) {
         const res = await demana(gestors.get(ruta), ruta, { method, ip });
         expect([method, ip, res.statusCode, res.cos, res.seguix]).toEqual([method, ip, 403, 'Forbidden', false]);
       }
+    }
+    expect(compilador).not.toHaveBeenCalled();
+  });
+
+  test(`${RUTA_PUBLICA_TOT}: del mateix ordinador, només POST amb mateix Origin i JSON; GET a .json sense corredor torna 404`, async () => {
+    oblidaCorredorJarvis();
+    const { gestors, compilador } = munta();
+    const gestor = gestors.get(RUTA_PUBLICA_TOT);
+    for (const method of ['GET', 'PUT', 'PATCH', 'DELETE']) {
+      for (const ip of LOCALS) {
+        const res = await demana(gestor, RUTA_PUBLICA_TOT, { method, ip });
+        expect([method, ip, res.statusCode, res.cos, res.seguix]).toEqual([method, ip, 403, 'Forbidden', false]);
+      }
+    }
+    for (const ip of LOCALS) {
+      // POST local sense Origin -> 403 (CSRF, T1a-ARB-01)
+      const senseOrigen = await demana(gestor, RUTA_PUBLICA_TOT, { method: 'POST', ip });
+      expect([ip, senseOrigen.statusCode, senseOrigen.cos]).toEqual([ip, 403, 'Forbidden']);
+
+      // POST local amb Origin i Host bons i Content-Type application/json però req sense cos (.on) -> 400 codi 'cos'
+      const senseCos = await demana(gestor, RUTA_PUBLICA_TOT, {
+        method: 'POST',
+        ip,
+        headers: { origin: 'http://localhost:3340', host: 'localhost:3340', 'sec-fetch-site': 'same-origin', 'content-type': 'application/json' }
+      });
+      expect(senseCos.statusCode).toBe(400);
+      expect(JSON.parse(senseCos.cos)).toMatchObject({ schema: ESQUEMA_JARVIS, codi: 'cos' });
+
+      // GET local a RUTA_PROGRES_JARVIS sense corredor -> 404 codi 'cap'
+      const senseCorredor = await demana(gestor, RUTA_PROGRES_JARVIS, { method: 'GET', ip });
+      expect(senseCorredor.statusCode).toBe(404);
+      expect(JSON.parse(senseCorredor.cos)).toMatchObject({ schema: ESQUEMA_JARVIS, codi: 'cap' });
     }
     expect(compilador).not.toHaveBeenCalled();
   });

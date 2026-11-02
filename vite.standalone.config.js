@@ -46,7 +46,13 @@ export const PROPIS_DEL_LLOC = Object.freeze({
        les llig eixe manifest, així que tampoc viatgen (el zip del directori
        de WordPress.org no creix). apple-touch-icon.png sí que hi va, com abans. */
     'icona-app-192.png',
-    'icona-app-512.png'
+    'icona-app-512.png',
+    /* O3-GEMINI-1 (261102) · Les regles de capçaleres i d'encaminament de
+       Netlify/Cloudflare per a /.well-known, /nodeinfo, /ap i /opendata: decidixen
+       com socdepoble.org servix el seu domini (com robots.txt), així que no
+       viatgen a la carpeta d'un amfitrió ni a l'app nativa. */
+    '_headers',
+    '_redirects'
   ])
 });
 

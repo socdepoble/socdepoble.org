@@ -5,21 +5,30 @@
    T1), WordPress.org és obert; Google Play i App Store, tancats. urlDeCanal
    només admet l'adreça pública de la fitxa de Sóc de Poble a cada botiga.
    B9 (marató 261101_2143) · Cap ?beta= ni /beta, i la guarda frasesCaducades
-   sobre el lead, el subtítol i el cos reals de /page/descarregues. */
+   sobre el lead, el subtítol i el cos reals de /page/descarregues.
+   IDEA-60 (T1, prompt 261102_1532) · Dues ranures més, tancades: l'APK
+   directe (el fitxer signat al domini propi) i TestFlight (l'única ranura on
+   una adreça de proves és la bona). Quan s'òbriguen, les seues frases del
+   cos caduquen, com les de les botigues. */
 import { describe, expect, test } from 'vitest';
 import { CANALS_DE_BOTIGA, FRASES_DE_BOTIGA_TANCADA, FRASES_DE_PROVES, canalsOberts, frasesCaducades, urlDeCanal } from './canalsDeBotiga.js';
 import { PAGE_COPY } from '../sections/text/pageContent.js';
 
 const PLAY = 'https://play.google.com/store/apps/details?id=org.socdepoble.app';
 const WORDPRESS = 'https://wordpress.org/plugins/socdepoble/';
+/* IDEA-60 · L'APK signat al domini propi i un enllaç públic de TestFlight. */
+const APK = 'https://socdepoble.org/descarregues/socdepoble-android-latest.apk';
+const TESTFLIGHT = 'https://testflight.apple.com/join/AbCd1234';
 
 describe('CANALS_DE_BOTIGA', () => {
-  test('tres ranures congelades: Google Play, App Store i WordPress.org', () => {
+  test('cinc ranures congelades, en este ordre: Google Play, App Store, APK directe, TestFlight i WordPress.org', () => {
     expect(Object.isFrozen(CANALS_DE_BOTIGA)).toBe(true);
     expect(CANALS_DE_BOTIGA.every((canal) => Object.isFrozen(canal))).toBe(true);
     expect(CANALS_DE_BOTIGA.map((canal) => [canal.id, canal.nom])).toEqual([
       ['google-play', 'Google Play'],
       ['app-store', 'App Store'],
+      ['apk-directe', 'APK directe'],
+      ['testflight', 'TestFlight'],
       ['wordpress-org', 'WordPress.org']
     ]);
   });
@@ -27,11 +36,16 @@ describe('CANALS_DE_BOTIGA', () => {
   /* 01-11-2026 · El connector socdepoble 1.1.10 és públic al directori de
      WordPress.org (api.wordpress.org i la fitxa, 200). Les botigues mòbils no
      són obertes a tothom (actes 261024_0345 i 261026_1630): quan el Mestre
-     en done les adreces públiques, esta prova canvia amb elles. */
-  test('només WordPress.org és obert, amb la fitxa del connector socdepoble; Google Play i App Store, tancats', () => {
+     en done les adreces públiques, esta prova canvia amb elles.
+     IDEA-60 (02-11-2026) · L'APK encara no s'ha generat ni publicat i
+     l'enllaç públic de TestFlight encara no existix: les dues ranures,
+     tancades. */
+  test('només WordPress.org és obert, amb la fitxa del connector socdepoble; Google Play, App Store, APK directe i TestFlight, tancats', () => {
     expect(CANALS_DE_BOTIGA.map((canal) => [canal.id, canal.url])).toEqual([
       ['google-play', null],
       ['app-store', null],
+      ['apk-directe', null],
+      ['testflight', null],
       ['wordpress-org', WORDPRESS]
     ]);
     expect(canalsOberts()).toEqual([{ id: 'wordpress-org', nom: 'WordPress.org', url: WORDPRESS }]);
@@ -52,6 +66,15 @@ describe('urlDeCanal', () => {
     expect(urlDeCanal({ id: 'app-store', url: 'https://apps.apple.com/app/betanzos/id1234567890' })).toBe('https://apps.apple.com/app/betanzos/id1234567890');
     expect(urlDeCanal({ id: 'app-store', url: 'https://apps.apple.com/es/app/s%C3%B3c-de-poble/id1234567890' }))
       .toBe('https://apps.apple.com/es/app/s%C3%B3c-de-poble/id1234567890');
+    // IDEA-60 · L'APK signat (el camí exacte) i l'enllaç públic de TestFlight (/join/ i un codi de 4 a 32 caràcters), normalitzats.
+    expect(urlDeCanal({ id: 'apk-directe', url: APK })).toBe(APK);
+    expect(urlDeCanal({ id: 'apk-directe', url: 'HTTPS://SOCDEPOBLE.ORG/descarregues/socdepoble-android-latest.apk' })).toBe(APK);
+    // El host «testflight» no tanca la seua pròpia ranura: és el canal públic de proves que es vol enllaçar.
+    expect(urlDeCanal({ id: 'testflight', url: TESTFLIGHT })).toBe(TESTFLIGHT);
+    expect(urlDeCanal({ id: 'testflight', url: 'HTTPS://TESTFLIGHT.APPLE.COM/join/AbCd1234' })).toBe(TESTFLIGHT);
+    expect(urlDeCanal({ id: 'testflight', url: 'https://testflight.apple.com/join/ABCD' })).toBe('https://testflight.apple.com/join/ABCD');
+    expect(urlDeCanal({ id: 'testflight', url: `https://testflight.apple.com/join/${'a1'.repeat(16)}` }))
+      .toBe(`https://testflight.apple.com/join/${'a1'.repeat(16)}`);
   });
 
   test('rebutja tot el que no és eixa adreça, sense llançar', () => {
@@ -97,6 +120,41 @@ describe('urlDeCanal', () => {
       ['wordpress-org', 'https://wordpress.org/plugins/soc-de-poble-mur/'],
       ['wordpress-org', 'https://wordpress.org/plugins/socdepoble/socdepoble/'],
       ['wordpress-org', 'https://wordpress.org/plugins/socdepoblex/'],
+      // IDEA-60 · L'APK: només el fitxer signat al domini propi, en https, sense query ni fragment.
+      ['apk-directe', APK.replace('https:', 'http:')],
+      ['apk-directe', `${APK}?v=2`],
+      ['apk-directe', `${APK}?beta=1`],
+      ['apk-directe', `${APK}#x`],
+      ['apk-directe', `${APK}/`],
+      ['apk-directe', 'https://www.socdepoble.org/descarregues/socdepoble-android-latest.apk'],
+      ['apk-directe', 'https://socdepoble.org.evil.org/descarregues/socdepoble-android-latest.apk'],
+      ['apk-directe', 'https://socdepoble.org/socdepoble-android-latest.apk'],
+      ['apk-directe', 'https://socdepoble.org/descarregues/socdepoble.apk'],
+      ['apk-directe', 'https://socdepoble.org/descarregues/SOCDEPOBLE-ANDROID-LATEST.APK'],
+      ['apk-directe', 'https://u:p@socdepoble.org/descarregues/socdepoble-android-latest.apk'],
+      ['apk-directe', PLAY],
+      // IDEA-60 · TestFlight: el host exacte, /join/ i un codi de 4 a 32 caràcters alfanumèrics, sense res més.
+      ['testflight', TESTFLIGHT.replace('https:', 'http:')],
+      ['testflight', 'https://testflight.apple.com/join/ABC'],
+      ['testflight', `https://testflight.apple.com/join/${'a'.repeat(33)}`],
+      ['testflight', 'https://testflight.apple.com/join/'],
+      ['testflight', 'https://testflight.apple.com/join/AbCd1234/'],
+      ['testflight', 'https://testflight.apple.com/join/AbCd-1234'],
+      ['testflight', 'https://testflight.apple.com/v1/join/AbCd1234'],
+      ['testflight', 'https://testflight.apple.com.evil.org/join/AbCd1234'],
+      ['testflight', 'https://apps.apple.com/join/AbCd1234'],
+      ['testflight', 'https://beta.itunes.apple.com/v1/invite/AbCd1234'],
+      ['testflight', 'https://u:p@testflight.apple.com/join/AbCd1234'],
+      ['testflight', 'https://testflight.apple.com:8443/join/AbCd1234'],
+      // Sense query ni fragment (àrbitre T1b-A01): l'enllaç que es pinta és el públic, sense cap paràmetre de seguiment.
+      ['testflight', `${TESTFLIGHT}?beta=1`],
+      ['testflight', `${TESTFLIGHT}?utm_source=x`],
+      ['testflight', `${TESTFLIGHT}?internaltest`],
+      ['testflight', `${TESTFLIGHT}#x`],
+      ['testflight', PLAY],
+      // IDEA-60 · A la resta de ranures, una adreça de proves (testflight, internaltest, beta) continua tancant el canal.
+      ['google-play', `${PLAY}&testflight=1`],
+      ['wordpress-org', 'https://wordpress.org/plugins/socdepoble/?beta'],
       ['apk', 'https://socdepoble.org/app.apk'],
       ['constructor', PLAY]
     ];
@@ -110,11 +168,18 @@ describe('canalsOberts', () => {
   test('només els que porten una adreça vàlida i un nom, en l’ordre de la llista', () => {
     const canals = [
       { id: 'google-play', nom: 'Google Play', url: PLAY },
-      { id: 'app-store', nom: 'App Store', url: 'https://testflight.apple.com/join/ABCDEF12' },
+      { id: 'app-store', nom: 'App Store', url: TESTFLIGHT },
+      // IDEA-60 · L'APK amb query queda tancat; la mateixa adreça de TestFlight obri la seua ranura i no la de l'App Store.
+      { id: 'apk-directe', nom: 'APK directe', url: `${APK}?v=2` },
+      { id: 'testflight', nom: 'TestFlight', url: TESTFLIGHT },
       { id: 'wordpress-org', nom: '  ', url: WORDPRESS },
       null
     ];
-    expect(canalsOberts(canals)).toEqual([{ id: 'google-play', nom: 'Google Play', url: PLAY }]);
+    expect(canalsOberts(canals)).toEqual([
+      { id: 'google-play', nom: 'Google Play', url: PLAY },
+      { id: 'testflight', nom: 'TestFlight', url: TESTFLIGHT }
+    ]);
+    expect(canalsOberts([{ id: 'apk-directe', nom: 'APK directe', url: APK }])).toEqual([{ id: 'apk-directe', nom: 'APK directe', url: APK }]);
     expect(canalsOberts('no és llista')).toEqual([]);
   });
 });
@@ -124,6 +189,9 @@ describe('canalsOberts', () => {
 describe('frasesCaducades', () => {
   const PLAY_OBERT = [{ id: 'google-play' }];
   const STORE_OBERT = [{ id: 'app-store' }];
+  /* IDEA-60 (T1, prompt 261102_1532) · Les dues ranures d'instal·lació immediata. */
+  const APK_OBERT = [{ id: 'apk-directe' }];
+  const TESTFLIGHT_OBERT = [{ id: 'testflight' }];
   const frases = (trobades) => trobades.map(({ id, frase }) => `${id}: ${frase}`);
 
   test('llistes congelades i regex sense quantificadors oberts', () => {
@@ -216,6 +284,30 @@ describe('frasesCaducades', () => {
     const entitats = frasesCaducades(`${'&#x'.repeat(20_000)}${'&nbsp'.repeat(10_000)}${'&#1'.repeat(20_000)} en&nbsp;proves`, PLAY_OBERT);
     expect(performance.now() - t1).toBeLessThan(1500);
     expect(frases(entitats)).toEqual(['google-play: \\ben proves\\b']);
+  });
+
+  /* IDEA-60 (T1, prompt 261102_1532) · Les dues ranures noves sobre el cos
+     real d'avui: obertes, troben les seues frases («Hui encara no hi ha APK
+     públic», «hem demanat a Apple un enllaç públic»), el mecanisme
+     d'honestedat de sempre; tancades, res. No són botigues d'apps: les frases
+     generals de proves no hi compten. */
+  test('IDEA-60 · apk-directe i testflight oberts sobre el cos real troben les seues frases; tancats, cap', () => {
+    const { lead, subtitle, html } = PAGE_COPY.descarregues;
+    expect(frases(frasesCaducades(html, APK_OBERT))).toEqual(['apk-directe: no hi ha APK públic', "apk-directe: Quan n[’']hi haja un"]);
+    expect(frases(frasesCaducades(html, TESTFLIGHT_OBERT))).toEqual(['testflight: hem demanat a Apple un enllaç públic', 'testflight: Mentre Apple no el revise']);
+    expect(frasesCaducades('Versió beta, en proves. En quin punt estan les proves.', [...APK_OBERT, ...TESTFLIGHT_OBERT])).toEqual([]);
+    // Les frases de cada ranura són seues: amb l'altra oberta, o amb WordPress.org, cap.
+    expect(frasesCaducades("Hui encara no hi ha APK públic. Quan n'hi haja un, l'enllaç eixirà ací.", TESTFLIGHT_OBERT)).toEqual([]);
+    expect(frasesCaducades('Hem demanat a Apple un enllaç públic. Mentre Apple no el revise, res.', APK_OBERT)).toEqual([]);
+    expect(frasesCaducades([lead, subtitle, html], [{ id: 'wordpress-org' }])).toEqual([]);
+    // Amb l'apòstrof tipogràfic i les etiquetes del cos, igual.
+    expect(frases(frasesCaducades('<strong>Hui encara no hi ha APK públic</strong>. Quan n’hi haja un…', APK_OBERT)))
+      .toEqual(['apk-directe: no hi ha APK públic', "apk-directe: Quan n[’']hi haja un"]);
+    // Per la cadena de veres: la ranura oberta en una còpia de CANALS_DE_BOTIGA (canalsOberts → frasesCaducades) fa caure la guarda.
+    for (const [id, url] of [['apk-directe', APK], ['testflight', TESTFLIGHT]]) {
+      const ambRanura = CANALS_DE_BOTIGA.map((canal) => (canal.id === id ? { ...canal, url } : canal));
+      expect([id, frasesCaducades([lead, subtitle, html], canalsOberts(ambRanura)).map((trobada) => trobada.id)]).toEqual([id, [id, id]]);
+    }
   });
 
   /* La guarda real. Hui només és obert WordPress.org, i el text (cert hui)

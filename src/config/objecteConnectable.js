@@ -39,7 +39,9 @@ export function objecteDePagina({ titol = '', ruta = '', id = '' } = {}) {
    el necessita sense arrossegar la llavor; navigation.js el reexporta. */
 const TIPUS_DE_SECCIO = Object.freeze({
   mur: 'publicacio', mercat: 'producte', events: 'esdeveniment',
-  pobles: 'poble', multimedia: 'multimedia', notes: 'nota'
+  pobles: 'poble', multimedia: 'multimedia', notes: 'nota',
+  /* IDEA-61 (T0, prompt 261102_1532) · Una fitxa vertical és una publicació del Mur. */
+  vehicle: 'publicacio', treball: 'publicacio', habitatge: 'publicacio'
 });
 
 /** El tipus d'objecte d'una secció, o null si no és cap secció d'elements. */

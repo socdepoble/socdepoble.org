@@ -11,6 +11,7 @@
  * MercatSection.error.test.jsx i MurSection.carregaMes.test.jsx.
  */
 import React from 'react';
+import { createTranslator } from '../../config/i18n.js';
 import { act, cleanup, render, screen, waitFor } from '@testing-library/react';
 import { afterEach, beforeEach, expect, test, vi } from 'vitest';
 
@@ -63,6 +64,7 @@ afterEach(() => {
   vi.restoreAllMocks();
 });
 beforeEach(() => {
+  mocks.t = createTranslator('ca');
   mocks.load.mockReset();
   mocks.pagina.mockReset();
 });
@@ -127,7 +129,8 @@ test('si la càrrega falla, l’avís de sempre del Mercat; «Torna-ho a provar�
   const boto = await screen.findByRole('button', { name: 'Mostra més' });
   await act(async () => { boto.click(); });
   const avis = await screen.findByRole('alert');
-  expect(avis.textContent).toContain("No s'ha pogut carregar el Mercat");
+  // T5 · P1-22 (kit de Codex, 261102): la reserva de t() ja no viu al component; el text és el de ca.js.
+  expect(avis.textContent).toContain('No s’ha pogut carregar el Mercat');
   expect(avis.textContent).toContain('El servidor del poble ha tornat un error.');
   expect(avis.textContent).not.toMatch(/Supabase|503|upstream/);
   // Els productes que ja hi eren no se'n van.

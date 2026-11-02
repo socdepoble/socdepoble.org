@@ -82,6 +82,7 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { Building2, Keyboard, Megaphone, Plus, Send, Smile, UserRound, Users } from 'lucide-react';
 import { useAppGrid } from '../../../components/layout/AppGridShell.jsx';
+import { useCapaEnrere } from '../../../components/PedraSeca/hooks/useCapaEnrere.js';
 import { CONSULTA_TACTIL } from '../../../hooks/useBarresAmbScroll.js';
 import { inserixAlCursor } from '../emoticonesXat.js';
 import { commutaNegreta, esDreceraDeNegreta } from '../negreta.js';
@@ -383,6 +384,9 @@ function Formulari({ valor, onCanvia, onEnvia, t, desactivat, onEscapa, campRef,
     setSuperposicio(null);
     botoAdjunta.current?.focus();
   };
+  /* P0-24b (T2b, prompt 261102_1532) · Obert, el menú és a la pila de
+     l'Arrere d'Android amb el camí del seu Escape (tancaMenu). */
+  useCapaEnrere(menuObert, tancaMenu);
   const commutaMenu = () => {
     if (!adjunts || adjunts.bloquejat || desactivat) return;
     /* Tancar-lo amb el mateix + torna el focus al +: Safari no enfoca un

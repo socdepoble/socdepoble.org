@@ -9,8 +9,8 @@ import { afterEach, describe, expect, test, vi } from 'vitest';
 import { readFileSync } from 'node:fs';
 import {
   ATLES_OPERATIU, DF_MAXIM_DEL_COS, ENCAPCALAMENT_DE_LA_WIKI, ENCAPCALAMENT_DE_SOC_DE_POBLE, EQUIVALENCIES, MAXIM_FRAGMENT_DE_L_ATLES,
-  PAGINES_PER_A_LA_IAIA, RUTA_INTERNA, RUTES_DE_PAGINA, componResposta, construeixIndex, cercaRellevant, documentDelPoble,
-  documentsDePageCopy, indexDeLaCapaLocal, oblidaIndexDeLaWiki, respostaDeLaIAIA, rutaDePagina, termesDeLaPregunta, textDeHtml, tokenitza
+  PAGINES_PER_A_LA_IAIA, RUTA_INTERNA, RUTES_DE_PAGINA, SUGGERIMENTS_RAPIDS_IAIA, componResposta, construeixIndex, cercaRellevant, documentDelPoble,
+  documentsDePageCopy, esborranyDeRespostaIAIA, extreuAccionsDeRespostaIAIA, indexDeLaCapaLocal, oblidaIndexDeLaWiki, respostaDeLaIAIA, rutaDePagina, termesDeLaPregunta, textDeHtml, tokenitza
 } from './iaiaLocal.js';
 import { MOCK_TOWNS } from '../sections/pobles/townsSeed.js';
 import { PAGE_COPY } from '../sections/text/pageContent.js';
@@ -144,7 +144,7 @@ describe('l’Atles Operatiu del Sistema', () => {
      només la candidatura, /page/fediversity. */
   const RUTES_DE_L_APP = ['/calendari', '/traduccions', '/el-meu-perfil', '/cerca'];
   const rutesValides = new Set([
-    ...SECTIONS.filter((seccio) => ['xat', 'mur', 'mercat', 'pobles', 'notes', 'multimedia', 'projecte'].includes(seccio.id)).map((seccio) => seccio.path),
+    ...SECTIONS.filter((seccio) => ['xat', 'mur', 'mercat', 'vehicle', 'treball', 'habitatge', 'pobles', 'notes', 'multimedia', 'projecte'].includes(seccio.id)).map((seccio) => seccio.path),
     RUTES_CANONIQUES.javillinares, RUTES_CANONIQUES.rentonar,
     ...SYSTEM_PAGES.map((pagina) => pagina.href).filter((ruta) => ruta.startsWith('/page/')),
     /* Revisió de la Ronda 2 (R2-COR-08 i V1-03) · Les rutes que l'Atles cita fora de SECTIONS (App.jsx les servix: ho fixa
@@ -517,5 +517,24 @@ describe('temps', () => {
     expect(performance.now() - inici).toBeLessThan(50);
     expect(index.documents).toHaveLength(ATLES_OPERATIU.length + MOCK_TOWNS.length);
     expect(indexDeLaCapaLocal()).toBe(index);
+  });
+});
+
+describe('suggeriments ràpids, accions directes i esborrany per a Proposa Card (IDEA-28 / IDEA-56)', () => {
+  test('els tres suggeriments ràpids d’ajuda rural responen des de la capa local sense xarxa i porten accions directes', async () => {
+    const carrega = vi.fn(async () => ({ items: [] }));
+    expect(SUGGERIMENTS_RAPIDS_IAIA).toHaveLength(3);
+    for (const sug of SUGGERIMENTS_RAPIDS_IAIA) {
+      const resposta = await respostaDeLaIAIA(sug.pregunta, { carrega });
+      expect(typeof resposta).toBe('string');
+      expect(resposta.length).toBeGreaterThan(20);
+      const accions = extreuAccionsDeRespostaIAIA(resposta);
+      expect(accions.map((a) => a.ruta)).toContain(sug.ruta);
+      const esborrany = esborranyDeRespostaIAIA(sug.pregunta, resposta);
+      expect(esborrany).toMatchObject({ esEsborranyIAIA: true });
+      expect(esborrany.titolEsborrany.length).toBeGreaterThan(3);
+      expect(esborrany.text.split('\n\n').length).toBeGreaterThanOrEqual(2);
+    }
+    expect(carrega).not.toHaveBeenCalled();
   });
 });

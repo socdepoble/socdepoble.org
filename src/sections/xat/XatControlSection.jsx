@@ -51,7 +51,7 @@ const OPCIONS = [
   { id: 'multimedia', icona: ImageIcon, titol: ['section.xat.control.multimedia.titol', 'Multimèdia, enllaços i documents'], text: ['section.xat.control.multimedia.text', "Revisa tot el que s'ha enviat al xat."], pendent: false, ruta: RUTES_AJUSTOS.multimedia },
   { id: 'temporals', icona: Timer, titol: ['section.xat.control.temporals.titol', 'Missatges temporals'], text: ['section.xat.control.temporals.text', "Activa l'autodestrucció de missatges per a converses sensibles."], pendent: true },
   { id: 'privacitat', icona: ShieldCheck, titol: ['section.xat.control.privacitat.titol', 'Privacitat i seguretat'], text: ['section.xat.control.privacitat.text', 'Silenciar notificacions, bloquejar, xifratge extrem a extrem.'], pendent: true },
-  { id: 'espai', icona: PanelLeft, titol: ['section.xat.control.espai.titol', 'Amplària de les columnes'], text: ['section.xat.control.espai.text', 'Tria com d\'amples són les columnes de navegació i de llista.'], pendent: false }
+  { id: 'espai', icona: PanelLeft, titol: ['section.xat.control.espai.titol', 'Amplària de les columnes'], text: ['section.xat.control.espai.text', 'Tria com d\'amples són les columnes de navegació i de llista, també al xat.'], pendent: false }
 ];
 
 /* Torn 260930 (T1) · Els tres valors predefinits viuen a amplariaColumnes.js:
@@ -77,7 +77,7 @@ export default function XatControlSection() {
      ja hi posava la imatge base. El <head> és el mateix. */
   useSEO({
     title: titol,
-    description: t('section.xatcontrol.subtitle', 'Ajustos, missatges temporals i organització de converses.')
+    description: t('section.xatcontrol.subtitle')
   });
 
   /* La capçalera de la columna porta el mateix dibuix que l'entrada del rail

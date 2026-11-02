@@ -1339,6 +1339,30 @@ description: "Documentació canònica de Sóc de Poble."
   cron (vegeu «Funció `notifica-xat`»). Idempotent i en una sola transacció;
   **NO aplicada: l'aplica el Mestre, mai un agent**.
 
+- `migrations/2611021800_notes_fitxa_ambit.sql`
+  IDEA-61 (T0, prompt 261102_1532; carril L1): la fitxa d'àmbit d'una nota del
+  Flux Universal de Publicació (Mur <-> Mercat · Compartir cotxe · Treball ·
+  Habitatge). Afig `public.notes.fitxa` (`jsonb`, `null` a les notes de
+  sempre): un sol objecte `{ ambit, estat, dades }` amb el CHECK lleuger
+  `notes_fitxa_objecte` (`null` o `jsonb_typeof = 'object'`), com
+  `notes.origen` (2609272100), i el comentari de la columna. La forma de dins
+  la coacciona el client (`src/utils/publicacioUniversal.js` ·
+  `coaccionaAmbit`) en escriure-la i en llegir-la; la fitxa publicada viu al
+  payload de `section_submissions` (secció `mur` o `mercat`: cap `section_id`
+  nou). Cap política, permís, índex, funció, disparador ni backfill. Fins que
+  s'aplique, el client la tracta com a columna opcional
+  (`src/data/supabase/columnesOpcionals.js`, PGRST204): la fitxa es queda en
+  quarantena al dispositiu, la resta de la nota es desa i publicar funciona
+  igual, perquè `publishNote` la llig de la nota viva. Abans (lectura), ha de
+  donar fals:
+  `select exists (select 1 from information_schema.columns where table_schema = 'public' and table_name = 'notes' and column_name = 'fitxa') as te_fitxa;`
+  Verificació posterior (lectura):
+  `select exists (select 1 from information_schema.columns where table_schema = 'public' and table_name = 'notes' and column_name = 'fitxa') as te_fitxa, exists (select 1 from pg_constraint where conname = 'notes_fitxa_objecte') as te_check;`
+  (cert i cert). Per a desfer-la: `alter table public.notes drop column if exists fitxa;`.
+  La prova estàtica és `src/data/supabase/notesFitxa.migracio.test.js`.
+  Idempotent i en una sola transacció; **NO aplicada: l'aplica el Mestre, mai
+  un agent**.
+
 - `seed.sql`
   Contingut inicial del portal.
 
@@ -1509,6 +1533,7 @@ verificador sense avisos.
 | 68 | `2611012257` | `2611012257_politica_privacitat_2_3.sql` | **NO aplicada: l'aplica el Mestre** | política de privacitat 2.3 segellada (T11-05) |
 | 69 | `2611020106` | `2611020106_ap_inbox_persistencia_i_cua.sql` | **NO aplicada: l'aplica el Mestre** | persistència de la inbox ActivityPub i cua d'eixida (P1-23 fase 2) |
 | 70 | `2611020417` | `2611020417_xat_avisos_push.sql` | **NO aplicada: l'aplica el Mestre** | avisos push del Xat: aparells, silenci i cua (B8) |
+| 71 | `2611021800` | `2611021800_notes_fitxa_ambit.sql` | **NO aplicada: l'aplica el Mestre** | fitxa d'àmbit de les notes del Flux Universal de Publicació (IDEA-61, T0) |
 
 | Artefacte complementari | Ruta dins de `supabase/` | Rol operatiu |
 | :--- | :--- | :--- |

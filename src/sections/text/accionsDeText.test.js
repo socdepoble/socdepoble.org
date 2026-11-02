@@ -26,7 +26,7 @@ import { SYSTEM_PAGES, accioAlFinal, accioDeLaPagina } from '../../config/system
 import { PAGINES_AMB_XAT } from '../../data/contracte.js';
 import { IAIA_ID } from '../../data/identitatsSeed.js';
 import {
-  ID_FIL_DE_MOSTRA_DE_LA_IAIA, RUTA_XAT_DE_LA_IAIA, RUTA_XAT_DE_MOSTRA_DE_LA_IAIA, rutaDelXatDeLaIAIA
+  ID_FIL_DE_MOSTRA_DE_LA_IAIA, RUTA_XAT_DE_LA_IAIA, RUTA_XAT_DE_MOSTRA_DE_LA_IAIA, RUTA_XAT_LOCAL_IAIA, rutaDelXatDeLaIAIA
 } from '../xat/useObriXatPerDefecte.js';
 import fontMostra from '../xat/components/FakeChatOnboarding.jsx?raw';
 import { accioDeLaPaginaDeText, accioDeTextAlFinal, objecteDeLaPaginaDeText } from './accionsDeText.js';
@@ -37,14 +37,15 @@ const DIRECTE = `/xat?amb=${IAIA_ID}`;
 describe('accioDeLaPaginaDeText', () => {
   test('«L’Ànima de la IAIA»: la porta gran «Anar al xat», amb la forma exacta de les portes', () => {
     const porta = accioDeLaPaginaDeText('anima');
-    expect(porta).toEqual({ id: 'anar-al-xat-de-la-iaia', verb: 'Anar al xat', desti: RUTA_XAT_DE_LA_IAIA, varietat: 'primari' });
+    /* T6 (kit Codex xat/iaia, 261102) · Sense mode conegut i en remot amb sessió, la conversa local amb la IAIA. */
+    expect(porta).toEqual({ id: 'anar-al-xat-de-la-iaia', verb: 'Anar al xat', desti: RUTA_XAT_LOCAL_IAIA, varietat: 'primari' });
     expect(Object.keys(porta)).toEqual(['id', 'verb', 'desti', 'varietat']);
   });
 
   test('el destí és el de la fila «IAIA MarIA» de cada mode de dades, i sempre una ruta de l’app', () => {
     expect(accioDeLaPaginaDeText('anima', undefined, 'seed').desti).toBe(DIRECTE);
     expect(accioDeLaPaginaDeText('anima', undefined, 'local').desti).toBe(DIRECTE);
-    expect(accioDeLaPaginaDeText('anima', undefined, 'remote').desti).toBe(RUTA_XAT_DE_LA_IAIA);
+    expect(accioDeLaPaginaDeText('anima', undefined, 'remote').desti).toBe(RUTA_XAT_LOCAL_IAIA);
     for (const mode of ['seed', 'local', 'remote', undefined]) {
       const { desti } = accioDeLaPaginaDeText('anima', undefined, mode);
       expect([mode, desti]).toEqual([mode, rutaDelXatDeLaIAIA(mode)]);
@@ -59,7 +60,7 @@ describe('accioDeLaPaginaDeText', () => {
     expect(RUTA_XAT_DE_MOSTRA_DE_LA_IAIA).toBe('/xat/fake-iaia');
     expect(accioDeLaPaginaDeText('anima', undefined, 'remote', true).desti).toBe(RUTA_XAT_DE_MOSTRA_DE_LA_IAIA);
     expect(accioDeLaPaginaDeText('anima', undefined, undefined, true).desti).toBe(RUTA_XAT_DE_MOSTRA_DE_LA_IAIA);
-    expect(accioDeLaPaginaDeText('anima', undefined, 'remote', false).desti).toBe(RUTA_XAT_DE_LA_IAIA);
+    expect(accioDeLaPaginaDeText('anima', undefined, 'remote', false).desti).toBe(RUTA_XAT_LOCAL_IAIA);
     expect(accioDeLaPaginaDeText('anima', undefined, 'seed', true).desti).toBe(DIRECTE);
     expect(accioDeLaPaginaDeText('anima', undefined, 'local', true).desti).toBe(DIRECTE);
     expect(esRutaDeLaPorta(RUTA_XAT_DE_MOSTRA_DE_LA_IAIA)).toBe(true);

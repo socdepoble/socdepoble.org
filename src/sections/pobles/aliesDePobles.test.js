@@ -123,7 +123,10 @@ describe('catalegDePobles', () => {
    els municipis de referència, i la comarca de València, que és «València»
    (la divisió comarcal oficial), no «L'Horta». */
 describe('T11-04 · els municipis de referència de la Muntanya d’Alacant', () => {
-  /* Quants municipis té cada comarca (llistes comarcals de la Viquipèdia en català). */
+  /* Quants municipis té cada comarca: relació del PEGV a 1/1/2026 amb la comarca de la
+     Llei 2/2020 (https://pegv.gva.es/va/municipis) i AVL 23/04/2026
+     (https://www.avl.gva.es/municipis/), contrastades el 261102 (IDEA-49): les quatre
+     comarques fan 10, 8, 24 i 18, i la comarca de València és «València» (codi 06). */
   const MIDA_DE_LA_COMARCA = { "L'Alacantí": 10, "L'Alcoià": 8, 'El Comtat': 24, 'La Marina Baixa': 18 };
   const COMARQUES_ADMESES = [...Object.keys(MIDA_DE_LA_COMARCA), "L'Alt Vinalopó", 'València'].sort();
 
@@ -140,7 +143,7 @@ describe('T11-04 · els municipis de referència de la Muntanya d’Alacant', ()
     expect(tots.filter((p) => p.provincia !== PROVINCIA_DE_LA_COMARCA[p.comarca]).map((p) => `${p.id}: ${p.provincia}`)).toEqual([]);
   });
 
-  test('els noms oficials que la Viquipèdia no dona: Alcosser (Decret 115/2021) i Muro de Alcoy, com a àlies', () => {
+  test('els noms oficials segons l’AVL i el BOE-A-2022-2683: Alcosser (Decret 115/2021) i Muro de Alcoy, com a àlies', () => {
     expect(MUNICIPIS_DE_REFERENCIA.find((m) => m.title.startsWith('Alcosser'))).toEqual({ id: 'alcosser', title: 'Alcosser', comarca: 'El Comtat', provincia: 'Alacant' });
     expect(formes(aliesDelPoble({ id: 'alcosser' }))).toEqual(['Alcocer de Planes', 'Alcosser de Planes']);
     expect(formes(aliesDelPoble({ id: 'muro-d-alcoi' }))[0]).toBe('Muro de Alcoy');

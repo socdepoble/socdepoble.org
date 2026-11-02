@@ -10,10 +10,16 @@
 import { sanitizeHtml, netejaText, esFontImatgeSegura } from '../../utils/sanitize.js';
 import { emojiSol } from '../../utils/emoji.js';
 import { dataIsoONull } from '../../utils/calendari.js';
+import { coaccionaAmbit, esFitxaDAmbit } from '../../utils/publicacioUniversal.js';
 
 const CAMPS_HTML = new Set(['title', 'subtitle', 'lead', 'content']);
 
 export function netejaCamp(field, value) {
+  /* IDEA-61 (T0, prompt 261102_1532; L2-A3) · La fitxa d'àmbit és un objecte
+     { ambit, estat, dades } coaccionat pel contracte, o null (res, o «Mur»): la
+     nota preparada (notaPreparada.js) i el buidatge d'eixida del Bloc passen
+     per ací, i sense esta branca un objecte acabava en «[object Object]». */
+  if (field === 'fitxa') return esFitxaDAmbit(value) ? coaccionaAmbit(value) : null;
   if (field === 'copyright') return netejaText(value).slice(0, 256);
   /* T40 (ordre del Mestre, 260928) · data de publicació: ISO vàlida o null. */
   if (field === 'publishDate') return dataIsoONull(value);

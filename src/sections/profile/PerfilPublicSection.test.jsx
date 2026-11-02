@@ -40,7 +40,7 @@ import { AGENTS_MAP, tipusDAgent } from '../../data/agentsSeed.js';
 import { ENTITAT_PILOT_SLUG, IAIA_ID, PERSONA_PILOT } from '../../data/identitatsSeed.js';
 /* Gauntlet 261016 (Bloc 3) · El magatzem local de perfils, que en llavor fa de servidor. */
 import { createLocalPerfilsAdapter } from '../../data/localPerfils.js';
-import { RUTA_XAT_DE_LA_IAIA, RUTA_XAT_DE_MOSTRA_DE_LA_IAIA } from '../xat/useObriXatPerDefecte.js';
+import { RUTA_XAT_DE_LA_IAIA, RUTA_XAT_DE_MOSTRA_DE_LA_IAIA, RUTA_XAT_LOCAL_IAIA } from '../xat/useObriXatPerDefecte.js';
 
 const IAIA = { tipus: 'ia', id: 'iaia', slug: 'iaia-maria', nom: 'IAIA MarIA', avatar: '', hero: '', lema: 'Pensant en global', bio: 'Matriarca Digital', presentacioHtml: '<p>Cor antic i circuits nous.</p>', poble: 'La Torre de les Maçanes', esIA: true, publicat: true, propietari: false, copyright: '' };
 const ENTITAT = { ...IAIA, tipus: 'entitat', id: 'socdepoble', nom: 'Sóc de Poble', esIA: false, propietari: true, presentacioHtml: '' };
@@ -130,8 +130,10 @@ test.each([true, false])('en remot cap catàleg suplix un perfil absent (directo
    la IA del paquet.
    Refutació del front C (261010) · El botó «Parla amb la IAIA» va on va la
    seua fila de la llista del Xat (rutaDelXatDeLaIAIA): en remot amb sessió,
-   el xat públic de /iaia (RUTA_XAT_DE_LA_IAIA); sense sessió, la seua
-   conversa de mostra (RUTA_XAT_DE_MOSTRA_DE_LA_IAIA). DEROGAT el directe
+   la conversa local d'ajuda (RUTA_XAT_LOCAL_IAIA, T6 del kit Xat/IAIA de
+   Codex, 261102: el xat públic de /iaia conserva la seua ruta explícita de
+   Comentar); sense sessió, la seua conversa de mostra
+   (RUTA_XAT_DE_MOSTRA_DE_LA_IAIA). DEROGAT el directe
    /xat?amb=<id> en remot: el servidor no coneix el seu UUID (crea_fil_directe
    fallava amb un avís) i, sense sessió, obria la mostra de Sóc de Poble. En
    llavor i en local el directe es conserva (PerfilPublicSection.iaia.test). */
@@ -163,7 +165,8 @@ test.each([['per id', IAIA_ID], ['per slug', 'iaia-maria']])('D12 · en remot, q
   expect(screen.queryByText(/encara no es poden obrir/)).toBeNull();
   expect(screen.queryByRole('button', { name: 'Edita la fitxa' })).toBeNull();
   fireEvent.click(screen.getByRole('button', { name: 'Parla amb la IAIA' }));
-  expect(mocks.navigate).toHaveBeenCalledWith(RUTA_XAT_DE_LA_IAIA);
+  expect(mocks.navigate).toHaveBeenCalledWith(RUTA_XAT_LOCAL_IAIA);
+  expect(mocks.navigate).not.toHaveBeenCalledWith(RUTA_XAT_DE_LA_IAIA);
   expect(mocks.navigate).not.toHaveBeenCalledWith(`/xat?amb=${IAIA_ID}`);
   expect(mocks.seo).toHaveBeenLastCalledWith(expect.objectContaining({ title: 'IAIA MarIA', index: true }));
 });

@@ -62,19 +62,22 @@ test('Publicar al Mur: el botó és dins del bloc del títol, davall de l’H1 i
   expect(screen.getByTestId('ubicacio').textContent).toBe('/notes');
 });
 
-test('Vehicle Compartit: dalt i baix, el mateix botó inert que avisa; la capçalera és la imatge de la seua targeta', () => {
+/* IDEA-61 (T0, prompt 261102_1532) · Vehicle Compartit ja publica pel Bloc amb l'àmbit triat. */
+test('Vehicle Compartit: dalt i baix, el mateix enllaç cap al Bloc amb ?ambit=vehicle; la capçalera és la imatge de la seua targeta', () => {
   visita('vehicle_compartit');
-  const inerts = screen.getAllByRole('button', { name: 'Publicar: Vehicle Compartit (en obres)' });
-  expect(inerts).toHaveLength(2);
-  expect(inerts[0].closest('.page-title-accio')).not.toBeNull();
-  expect(inerts[1].closest('.sdp-pagina-accio')).not.toBeNull();
-  fireEvent.click(inerts[0]);
-  expect(estat.toast).toHaveBeenLastCalledWith('“Publicar: Vehicle Compartit” encara està en obres.');
-  /* T8 · El hero de la pàgina és el SEAT 600, el mateix que la targeta del Panell. */
+  const enllacos = screen.getAllByRole('link', { name: 'Publicar: Vehicle Compartit' });
+  expect(enllacos).toHaveLength(2);
+  expect(enllacos[0].closest('.page-title-accio')).not.toBeNull();
+  expect(enllacos[1].closest('.sdp-pagina-accio')).not.toBeNull();
+  expect(enllacos.map((enllac) => enllac.getAttribute('href'))).toEqual(['/notes?ambit=vehicle', '/notes?ambit=vehicle']);
+  /* T8 · El hero de la pàgina és el SEAT 600, el mateix que la targeta del Panell (abans de navegar). */
   const hero = document.querySelector('.hero-image img');
   const targeta = contingutDe(destiDePagina('vehicle_compartit'));
   expect([hero.getAttribute('src'), hero.getAttribute('alt')]).toEqual([targeta.imatge, targeta.imatgeAlt]);
   expect(targeta.imatge).toBe('/assets/nano_cards/vehicle_nano_card.jpg');
+  fireEvent.click(enllacos[0]);
+  expect(screen.getByTestId('ubicacio').textContent).toBe('/notes');
+  expect(estat.toast).not.toHaveBeenCalled();
 });
 
 test('una pàgina sense destí no porta cap div.page-title-accio ni cap botó', () => {

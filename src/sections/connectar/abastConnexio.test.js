@@ -136,6 +136,10 @@ test('«des del / des de l’ / des dels», mai «des el»', () => {
   expect(desDe('events')).toBe('des de l’agenda');
   expect(desDe('pobles')).toBe('des dels Pobles');
   expect(desDe('perfil')).toBe('des del directori');
+  /* IDEA-61 (T0, prompt 261102_1532; L3-A3) · Les verticals del flux universal tenen «des de». */
+  expect(desDe('vehicle')).toBe('des de Compartir cotxe');
+  expect(desDe('treball')).toBe('des de Treball');
+  expect(desDe('habitatge')).toBe('des d’Habitatge');
   expect(desDe('')).toBe('des de Sóc de Poble');
 });
 

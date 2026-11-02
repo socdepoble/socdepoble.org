@@ -51,7 +51,10 @@ const CAP = Object.freeze([]);
    (T71 · les pàgines de text les resol useOriginalDeConnexio, més avall).
    Un Map, no un objecte: un sectionId com «constructor» no casa amb res. */
 const FONT_DE_SECCIO = new Map([
-  ['mur', 'mur'], ['mercat', 'mur'], ['events', 'mur'], ['pobles', 'core'], ['multimedia', 'media']
+  ['mur', 'mur'], ['mercat', 'mur'], ['events', 'mur'], ['pobles', 'core'], ['multimedia', 'media'],
+  /* IDEA-61 (T0, prompt 261102_1532) · Les verticals són files de la secció
+     'mur' amb àmbit: la mateixa font. */
+  ['vehicle', 'mur'], ['treball', 'mur'], ['habitatge', 'mur']
 ]);
 
 /** L'element d'una secció per id o, si cap id no casa, per slug; null si no hi és.

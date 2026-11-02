@@ -37,7 +37,9 @@ import { capaDelPaquet } from '../../config/capaDelPaquet.js';
 /* Fase D (261020, tasca 2; pla 261020_1300) · Les seccions on la barra
    taronja del detall porta «Més opcions» (denunciar i bloquejar): el
    contingut de la gent. Pobles, Multimèdia i Notes, no. */
-const SECCIONS_AMB_MODERACIO = new Set(['mur', 'mercat', 'events']);
+/* IDEA-61 (T0, prompt 261102_1532) · Les tres verticals són contingut de la
+   gent, com el Mur. */
+const SECCIONS_AMB_MODERACIO = new Set(['mur', 'mercat', 'events', 'vehicle', 'treball', 'habitatge']);
 
 /* Pla 261027_1154 (P1-61), Fase 1 · Les seccions on og:image i twitter:image
    són la imatge que l'autor ha triat per a xarxes (og_image, o si no,
@@ -46,7 +48,7 @@ const SECCIONS_AMB_MODERACIO = new Set(['mur', 'mercat', 'events']);
    primeraImatgeSocial), no la portada que es pinta.
    La resta (Notes, que no es compartix, i qualsevol altra) porta la portada
    de sempre (pagina.heroImage). */
-const SECCIONS_AMB_IMATGE_SOCIAL = new Set(['mercat', 'mur', 'events', 'pobles']);
+const SECCIONS_AMB_IMATGE_SOCIAL = new Set(['mercat', 'mur', 'events', 'pobles', 'vehicle', 'treball', 'habitatge']);
 
 /* Pla 261027_1154 (P1-61) · Les opcions d'urlSocialDe al client:
    · l'origen públic (origenPublic) només si és https: el servidor de dev

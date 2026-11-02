@@ -22,6 +22,10 @@ const SECTION_LABEL_KEYS = {
   xat: { label: 'nav.xat', short: 'nav.xat' },
   mur: { label: 'nav.mur', short: 'nav.mur' },
   mercat: { label: 'nav.mercat', short: 'nav.mercat' },
+  /* IDEA-61 (T0, prompt 261102_1532) · Les tres seccions verticals. */
+  vehicle: { label: 'nav.vehicle', short: 'nav.vehicle' },
+  treball: { label: 'nav.treball', short: 'nav.treball' },
+  habitatge: { label: 'nav.habitatge', short: 'nav.habitatge' },
   pobles: { label: 'nav.pobles', short: 'nav.pobles' },
   events: { label: 'nav.events', short: 'nav.events' },
   calendari: { label: 'section.events.calendarMeta', short: 'section.events.calendarMeta' },

@@ -132,8 +132,9 @@ describe('el rail i el teclat seguixen el mateix ordre', () => {
    (`mitjana`), que per data és la segona fila. L'element recordat de «Tot»
    i la política de la secció (canAutoSelect) continuen manant; dins d'una
    carpeta, i amb una cadena 'true', res no canvia. La paritat amb la
-   primera fila pintada val amb un sol fixat (el cas del Bloc): amb dos,
-   mana l'entrada i no `sortBy` (ARB-T11C-01, deute nou de T11-03). */
+   primera fila pintada val també amb dos fixats o més: mana `sortBy`
+   (P1-73, T3, prompt 261102_1532; UniversalWorkspace.sortBy.test.jsx).
+   ARB-T11C-01 queda resolt. */
 describe('T11-03 · la tria automàtica segueix la primera fila', () => {
   const ultimaTria = (espia) => espia.mock.calls.at(-1)?.[0];
   const fitxa = (titol) => within(columna('app-grid-list')).getByRole('button', { name: titol });

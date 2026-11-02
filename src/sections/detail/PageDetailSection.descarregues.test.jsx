@@ -75,6 +75,8 @@ const CLASSE = 'sdp-boto sdp-boto--primari sdp-boto--gran sdp-boto--ple';
 const PLAY = 'https://play.google.com/store/apps/details?id=org.socdepoble.app';
 const APP_STORE = 'https://apps.apple.com/app/id1234567890';
 const WORDPRESS = 'https://wordpress.org/plugins/socdepoble/';
+/* IDEA-60 (T1, prompt 261102_1532) · L'APK signat al domini propi. */
+const APK = 'https://socdepoble.org/descarregues/socdepoble-android-latest.apk';
 
 /* Decisió d'honestedat: a les zones d'acció, cap enllaç ni res que anuncie
    una botiga tancada (ni «pròximament»), en cap escenari.
@@ -486,6 +488,44 @@ describe('P1-69 · res que no es puga complir, i cap div buit', () => {
     } finally {
       botigues.llista[0] = play;
       botigues.llista[1] = store;
+    }
+  });
+
+  /* IDEA-60 (T1, prompt 261102_1532) · L'APK directe obert (una línia de
+     canalsDeBotiga.js amb l'adreça del fitxer signat): dalt, l'enllaç amb
+     download i, davall dels botons, l'enllaç a la suma SHA-256 dins d'un
+     paràgraf; baix, cap enllaç; res de TestFlight ni de proves; la PWA
+     continua sent el primari. Hui la ranura és tancada i res d'açò es pinta. */
+  test('IDEA-60 · l’APK directe obert: un sol enllaç dalt, amb download i la suma; cap baix', async () => {
+    const indexApk = botigues.llista.findIndex((canal) => canal.id === 'apk-directe');
+    const tancada = botigues.llista[indexApk];
+    expect(tancada).toEqual({ id: 'apk-directe', nom: 'APK directe', url: null });
+    botigues.llista[indexApk] = { ...tancada, url: APK };
+    try {
+      ambAgent(AGENTS.chromeMac);
+      const pagina = entradaPropia();
+      visita('/page/descarregues');
+      await pagina.ofereix(oferta());
+      const enllacos = document.querySelectorAll(`a[href="${APK}"]`);
+      expect(enllacos).toHaveLength(1);
+      expect([dalt().contains(enllacos[0]), enllacos[0].getAttribute('download'), baix().querySelectorAll('a').length])
+        .toEqual([true, 'socdepoble-android-latest.apk', 0]);
+      expect([...dalt().querySelectorAll('.sdp-accions > a')].map((a) => [a.getAttribute('href'), a.className, a.textContent, a.hasAttribute('download')])).toEqual([
+        [APK, 'sdp-boto sdp-boto--secundari sdp-boto--gran', "Descarregar l'APK d'Android", true],
+        [WORDPRESS, 'sdp-boto sdp-boto--secundari sdp-boto--gran', 'WordPress.org', false]
+      ]);
+      const suma = document.querySelectorAll(`a[href="${APK}.sha256"]`);
+      expect([suma.length, dalt().contains(suma[0]), suma[0].closest('.sdp-accions'), suma[0].parentElement.tagName, suma[0].textContent])
+        .toEqual([1, true, null, 'P', 'Comprovar la suma SHA-256 del fitxer']);
+      expect(dalt().querySelector('.sdp-accions').nextElementSibling).toBe(suma[0].parentElement);
+      // Dalt, tres enllaços en total (l'APK, la suma i WordPress.org) i cap guia.
+      expect([dalt().querySelectorAll('ol').length, dalt().querySelectorAll('a').length]).toEqual([0, 3]);
+      for (const zona of [dalt(), baix()]) expect(zona.textContent).not.toMatch(/TestFlight|\bbeta\b|prompte|aviat|pròximament/i);
+      expect(screen.getAllByRole('button', { name: INSTALAR })).toHaveLength(2);
+      expect(dalt().querySelectorAll('.sdp-boto--primari')).toHaveLength(1);
+      await pagina.instalada();
+    } finally {
+      botigues.llista[indexApk] = tancada;
     }
   });
 

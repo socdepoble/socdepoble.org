@@ -62,32 +62,10 @@ import { expulsaPerLEixidaDeVeres } from './data/expulsioAmfitrio.js';
 
 /* ═══════════════════════ Estat de l'arrencada ═══════════════════════ */
 
-const FASE = { CONFIGURABLE: 'configurable', ARRENCANT: 'arrencant', SEGELLAT: 'segellat' };
-let fase = FASE.CONFIGURABLE;
-let arrencada = null;
-let resolveLlest = null;
-let rejectLlest = null;
-let promesaLlest = null;
-const esperes = new Set();
+import { FASE, estatArrencada as inici, creaPromesaLlest } from './hostEstatIntern.js';
 
-function creaPromesaLlest() {
-  promesaLlest = new Promise((resolve, reject) => { 
-    resolveLlest = resolve; 
-    rejectLlest = reject;
-  });
-  promesaLlest.catch(() => {}); // Evita warnings de unhandled rejection abans d'hora
-}
-creaPromesaLlest();
-
-// Re-exportem CONTRACTE_BACKEND per retrocompatibilitat si algú l'importa des d'ací
+// Re-exportem CONTRACTE_BACKEND per retrocompatibilitat.
 export { CONTRACTE_BACKEND };
-
-let _segellat = false;
-let _deferArrenca = false;
-/* Onada 12 (261011; ordres 261011_0130, punt 7) · L'última arrencada ha
-   fallat i ningú no l'ha tornada a provar encara (quanLlest la consumix). */
-let arrencadaFallida = false;
-let backendExtern = false;
 
 /* P1-12 pas 17 (disseny §4.7) · Els senyals de l'aparell per al pressupost LRU
    dels adjunts desxifrats (48 MB al mòbil, 100 MB a l'escriptori). Només es
@@ -132,7 +110,7 @@ function backendAmbXifrat(impl) {
 }
 
 export function deferArrenca() {
-  _deferArrenca = true;
+  inici._deferArrenca = true;
 }
 
 /* ═══════════════════════ Fase 1 · Configuració ═══════════════════════ */
@@ -158,7 +136,7 @@ function opcionsDeLAmfitrio(opcions) {
  *   `descartades`: el que s'ha llevat per Model B (p. ex. 'backend', 'config.tenantId').
  */
 export function configura(opcions = {}) {
-  if (_segellat || fase !== FASE.CONFIGURABLE) throw new Error('[host] L’arrancada ja ha començat');
+  if (inici._segellat || inici.fase !== FASE.CONFIGURABLE) throw new Error('[host] L’arrancada ja ha començat');
   const { auth, config: configAmfitrio, descartades } = opcionsDeLAmfitrio(opcions);
   // Tot es valida abans de congelar la política.
   const config = normalizeBackendConfig({ ...capaDelPaquet(), ...configAmfitrio });
@@ -183,12 +161,12 @@ export function configura(opcions = {}) {
  * @returns {{acceptats: string[], pendents: string[]}}
  */
 export function injectaBackendDelPaquet(backend) {
-  if (_segellat || fase !== FASE.CONFIGURABLE) throw new Error('[host] L’arrancada ja ha començat');
-  if (backendExtern) throw new Error('[host] El paquet ja porta un adaptador.');
+  if (inici._segellat || inici.fase !== FASE.CONFIGURABLE) throw new Error('[host] L’arrancada ja ha començat');
+  if (inici.backendExtern) throw new Error('[host] El paquet ja porta un adaptador.');
   const decorat = backendAmbXifrat(backend);
   const { candidate } = validaBackendImplementation(decorat);
   setBackendImplementation(decorat);
-  backendExtern = true;
+  inici.backendExtern = true;
   const acceptats = Object.keys(candidate);
   return { acceptats, pendents: CONTRACTE_NUCLI.filter((k) => !acceptats.includes(k)) };
 }
@@ -201,13 +179,13 @@ export function injectaBackendDelPaquet(backend) {
  * @returns {Promise<{fase: string, backend: string[]}>}
  */
 export function arrenca() {
-  if (arrencada) return arrencada;
+  if (inici.arrencada) return inici.arrencada;
 
   /* Un intent nou, vinga de qui vinga, gasta la marca: mentre és en vol, un
      quanLlest() no ha d'anotar un reintent que no fa (refutació 261011). */
-  arrencadaFallida = false;
-  fase = FASE.ARRENCANT;
-  _segellat = true;
+  inici.arrencadaFallida = false;
+  inici.fase = FASE.ARRENCANT;
+  inici._segellat = true;
 
   let fallidaAlMateixTick = false;
   const intent = (async () => {
@@ -225,21 +203,21 @@ export function arrenca() {
       freezeImplementation();
       defineCustomElement();
       
-      fase = FASE.SEGELLAT;
+      inici.fase = FASE.SEGELLAT;
       
-      const finalEstat = { fase, backend: Object.keys(getBackendImplementation()) };
-      if (resolveLlest) resolveLlest(finalEstat);
-      for (const espera of [...esperes]) espera.resolve(finalEstat);
+      const finalEstat = { fase: inici.fase, backend: Object.keys(getBackendImplementation()) };
+      if (inici.resolveLlest) inici.resolveLlest(finalEstat);
+      for (const espera of [...inici.esperes]) espera.resolve(finalEstat);
       return finalEstat;
     } catch (e) {
-      fase = FASE.CONFIGURABLE; // Permetem tornar a intentar
-      _segellat = false;
-      arrencada = null;
+      inici.fase = FASE.CONFIGURABLE; // Permetem tornar a intentar
+      inici._segellat = false;
+      inici.arrencada = null;
       fallidaAlMateixTick = true;
-      arrencadaFallida = true; // quanLlest() hi tornarà una vegada (Onada 12)
+      inici.arrencadaFallida = true; // quanLlest() hi tornarà una vegada (Onada 12)
       registraIncident('arrencada', 'host', 'fallada');
-      if (rejectLlest) rejectLlest(e);
-      for (const espera of [...esperes]) espera.reject(e);
+      if (inici.rejectLlest) inici.rejectLlest(e);
+      for (const espera of [...inici.esperes]) espera.reject(e);
       creaPromesaLlest(); // Preparem una nova promesa per si hi ha un reintent
       throw e;
     }
@@ -249,18 +227,18 @@ export function arrenca() {
      guardar-ne la promesa deixava `arrencada` rebutjada per sempre i cap
      arrenca() posterior tornava a provar res («Permetem tornar a intentar»).
      Una fallada després d'una espera ja la buida el catch, com sempre. */
-  arrencada = fallidaAlMateixTick ? null : intent;
+  inici.arrencada = fallidaAlMateixTick ? null : intent;
 
   return intent;
 }
 
 export function quanLlest({ signal } = {}) {
-  const base = (fase === FASE.SEGELLAT) ? Promise.resolve(estat()) : (arrencada || promesaLlest);
+  const base = (inici.fase === FASE.SEGELLAT) ? Promise.resolve(estat()) : (inici.arrencada || inici.promesaLlest);
   if (signal?.aborted) return Promise.reject(new DOMException('Operació cancel·lada.', 'AbortError'));
-  if (fase === FASE.SEGELLAT) return base;
+  if (inici.fase === FASE.SEGELLAT) return base;
   return new Promise((resolve, reject) => {
     const cleanup = () => { 
-      esperes.delete(espera); 
+      inici.esperes.delete(espera); 
       if (signal) signal.removeEventListener('abort', onAbort); 
     };
     const espera = {
@@ -268,7 +246,7 @@ export function quanLlest({ signal } = {}) {
       reject: error => { cleanup(); reject(error); }
     };
     const onAbort = () => espera.reject(new DOMException('Operació cancel·lada.', 'AbortError'));
-    esperes.add(espera);
+    inici.esperes.add(espera);
     if (signal) signal.addEventListener('abort', onAbort, { once: true });
     /* Onada 12 (261011; ordres 261011_0130, punt 7) · Després d'una arrencada
        fallida (el tros de l'adaptador que no baixa), l'espera d'un «Torna-ho a
@@ -283,8 +261,8 @@ export function quanLlest({ signal } = {}) {
        tick (adaptador ja injectat) també la resol. Amb deferArrenca() mana
        l'amfitrió també després d'una fallada: pot voler tornar a configurar
        abans d'arrencar, i ací no se li avança ningú (refutació 261011). */
-    if (arrencadaFallida && !_deferArrenca) {
-      arrencadaFallida = false;
+    if (inici.arrencadaFallida && !inici._deferArrenca) {
+      inici.arrencadaFallida = false;
       registraIncident('arrencada', 'host', 'reintent');
       arrenca().catch(() => {});
     }
@@ -339,9 +317,9 @@ function processarCua() {
  * `arrencada="manual"`.
  */
 export function arrencaAuto() {
-  if (fase === FASE.SEGELLAT || _deferArrenca) return;
+  if (inici.fase === FASE.SEGELLAT || inici._deferArrenca) return;
   setTimeout(() => {
-    if (_deferArrenca) return;
+    if (inici._deferArrenca) return;
     // Al tick següent: si encara som configurables i cap <soc-de-poble arrencada="manual"> ho ha aturat
     const tags = typeof document !== 'undefined' ? document.querySelectorAll('soc-de-poble') : [];
     let isManual = false;
@@ -349,7 +327,7 @@ export function arrencaAuto() {
       if (tag.getAttribute('arrencada') === 'manual') isManual = true;
     });
     
-    if (!isManual && fase !== FASE.SEGELLAT && fase !== FASE.ARRENCANT) {
+    if (!isManual && inici.fase !== FASE.SEGELLAT && inici.fase !== FASE.ARRENCANT) {
       arrenca().catch((e) => {
         console.error('[host] Arrencada fallida. El component no es muntarà:', e);
         if (typeof document !== 'undefined') {
@@ -371,8 +349,8 @@ export function arrencaAuto() {
 export function estat() {
   const policy = getRuntimePolicy(true);
   return {
-    fase,
-    configurable: fase === FASE.CONFIGURABLE,
+    fase: inici.fase,
+    configurable: inici.fase === FASE.CONFIGURABLE,
     contracte: CONTRACTE_BACKEND,
     implementat: Object.keys(getBackendImplementation()),
     config: {
@@ -408,7 +386,7 @@ export function estat() {
 export function injectaSessio(sessio, opcions = {}) {
   const { neta, descartades } = separaClausDelPaquet(opcions);
   avisaClausDescartades('sessio', descartades);
-  if (backendExtern) {
+  if (inici.backendExtern) {
     const adopta = getBackendImplementation().adoptaSessioExterna;
     return adopta ? adopta(sessio, neta) : false;
   }
@@ -547,7 +525,7 @@ export function exposaGlobal(objectiu = (typeof window !== 'undefined' ? window 
           const opcions = payload.opcions || {};
           const policy = getRuntimePolicy(true);
           
-          if (!backendExtern && !policy?.auth?.issuer) {
+          if (!inici.backendExtern && !policy?.auth?.issuer) {
              responHost(false, null, 'Política d’autenticació sense emissor.');
              return;
           }

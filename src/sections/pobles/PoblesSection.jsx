@@ -99,12 +99,12 @@ export default function PoblesSection() {
       <div className="sdp-card-grid" onKeyDown={gestionaTeclaGraella}>
         {status === 'loading' && (
           <div>
-            <p>{t('section.pobles.loading', 'Carregant els pobles...')}</p>
+            <p>{t('section.pobles.loading')}</p>
           </div>
         )}
         {status === 'error' && (
           <div>
-            <p>{t('section.pobles.error', 'Hi ha hagut un problema carregant els pobles.')}</p>
+            <p>{t('section.pobles.error')}</p>
             <pre>{error?.message || String(error)}</pre>
           </div>
         )}
@@ -184,9 +184,9 @@ export default function PoblesSection() {
                 ...(town.provincia ? [{ text: town.provincia, className: 'sdp-badge-category' }] : []),
                 ...(town.comarca ? [{ text: town.comarca, className: 'sdp-badge-tag' }] : []),
                 ...(town.population ? [{ text: town.population, className: 'sdp-badge-accent', href: '/poblacio' }] : []),
-                { 
-                  text: t('section.pobles.wikipedia_link', "Publicat a la Viquipèdia"), 
-                  className: 'sdp-badge-neutral', 
+                {
+                  text: t('section.pobles.wikipedia_link'),
+                  className: 'sdp-badge-neutral',
                   href: `https://ca.wikipedia.org/wiki/${articleDeViquipedia}`
                 }
               ]}

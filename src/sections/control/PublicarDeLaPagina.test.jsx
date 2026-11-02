@@ -103,7 +103,10 @@ describe('P6 · les sis pàgines de la doble acció', () => {
       }
       cleanup();
     }
-    expect(DESTINS_CONTROL.filter((desti) => portesDe(desti, reserva)[0].desti).map((desti) => desti.id)).toEqual(['mur']);
+    /* IDEA-61 (T0, prompt 261102_1532) · Mercat, Vehicle, Treball i Habitatge publiquen pel
+       Bloc amb l'àmbit (/notes?ambit=…); Calendari, Mapa i Animalets continuen en obres. */
+    expect(DESTINS_CONTROL.filter((desti) => portesDe(desti, reserva)[0].desti).map((desti) => desti.id))
+      .toEqual(['mur', 'mercat', 'vehicle', 'treball', 'habitatge']);
   });
 
   /* T8 · Amb el de dalt, el nom «Publicar al Mur» és de dos enllaços iguals. */
@@ -119,13 +122,29 @@ describe('P6 · les sis pàgines de la doble acció', () => {
     }
   });
 
-  /* W4-08 · Treball i Habitatge també són inertes. T8 · Els dos botons de cada
-     pàgina diuen el mateix i avisen igual. */
-  test('les altres set: inerts, «(en obres)» al nom, avisen amb el toast i no naveguen, dalt i baix', () => {
+  /* IDEA-61 (T0, prompt 261102_1532) · Les quatre verticals del flux universal
+     publiquen pel Bloc amb l'àmbit ja triat: dos enllaços iguals, dalt i baix. */
+  test('Mercat, Vehicle, Treball i Habitatge: «Publicar…» obri el Bloc amb ?ambit=, dalt i baix', () => {
+    const obertes = [
+      ['publicar_mercat', 'Publicar al Mercat', 'mercat'], ['vehicle_compartit', 'Publicar: Vehicle Compartit', 'vehicle'],
+      ['treball', 'Publicar: Treball', 'treball'], ['habitatge', 'Publicar: Habitatge', 'habitatge']
+    ];
+    for (const [clau, nom, ambit] of obertes) {
+      visita(clau);
+      const enllacos = screen.getAllByRole('link', { name: nom });
+      expect([clau, enllacos.length]).toEqual([clau, 2]);
+      for (const enllac of enllacos) expect([clau, enllac.getAttribute('href')]).toEqual([clau, `/notes?ambit=${ambit}`]);
+      expect(fireEvent.click(enllacos[1])).toBe(false);
+      expect(ubicacio(), clau).toBe(`/notes?ambit=${ambit}`);
+      cleanup();
+    }
+  });
+
+  /* W4-08 · Calendari, Mapa i Animalets continuen inertes. T8 · Els dos botons
+     de cada pàgina diuen el mateix i avisen igual. */
+  test('les altres tres: inerts, «(en obres)» al nom, avisen amb el toast i no naveguen, dalt i baix', () => {
     const inertes = [
-      ['publicar_mercat', 'Publicar al Mercat'], ['publicar_calendari', 'Publicar al Calendari'],
-      ['publicar_mapa', 'Publicar al Mapa'], ['vehicle_compartit', 'Publicar: Vehicle Compartit'], ['animalets', 'Publicar: Animalets'],
-      ['treball', 'Publicar: Treball'], ['habitatge', 'Publicar: Habitatge']
+      ['publicar_calendari', 'Publicar al Calendari'], ['publicar_mapa', 'Publicar al Mapa'], ['animalets', 'Publicar: Animalets']
     ];
     for (const [clau, nom] of inertes) {
       visita(clau);
@@ -151,7 +170,11 @@ describe('P6 · les sis pàgines de la doble acció', () => {
     expect(ubicacio()).toBe('/notes');
     cleanup();
     visita('vehicle_compartit');
-    const inerts = screen.getAllByRole('button', { name: 'Publish: Shared Vehicle (under construction)' });
+    const vehicle = screen.getAllByRole('link', { name: 'Publish: Shared Vehicle' });
+    expect(vehicle.map((enllac) => enllac.getAttribute('href'))).toEqual(['/notes?ambit=vehicle', '/notes?ambit=vehicle']);
+    cleanup();
+    visita('animalets');
+    const inerts = screen.getAllByRole('button', { name: 'Publish: Animals (under construction)' });
     expect(inerts.map((inert) => inert.getAttribute('aria-disabled'))).toEqual(['true', 'true']);
   });
 });

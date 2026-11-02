@@ -1,6 +1,7 @@
 /**
  * EspaiCerca.jsx — L'espai de cerca en tres columnes (IDEA-46, fase 1; B6-B3
- * de la marató 261101_2143): criteris (Tipus, Pobles, Data) · resultats ·
+ * de la marató 261101_2143): criteris (Tipus, Estat, Pobles, Data; l'Estat
+ * és de les fitxes d'àmbit, IDEA-61, T0, prompt 261102_1532) · resultats ·
  * detall, sobre UniversalWorkspace i sense cap UniversalPage al voltant
  * (skill sdp-app-grid-shell §1). S'obri amb /cerca?mode=espai i cap enllaç
  * no hi porta (D-4): /cerca sense el mode és la de sempre.
@@ -37,7 +38,7 @@ import { useUIActions } from '../../app/contexts/UIContext';
 import { rutaDEntrada } from '../../config/rutaEntrada.js';
 import { useResolvedAsset } from '../../hooks/useResolvedAsset.js';
 import { esMitjaOpac } from '../../utils/mitjaOpac.js';
-import { GRUPS_FACETES, TRAMS_DATA, ambEtiquetes, grupsDeFacetes, idDeFaceta, itemsDeLEspai } from './facetesCerca.js';
+import { ESTATS_FACETA, GRUPS_FACETES, TRAMS_DATA, ambEtiquetes, grupsDeFacetes, idDeFaceta, itemsDeLEspai } from './facetesCerca.js';
 import { TIPUS_CERCA, extracteDeResultat, partsRessaltades } from './indexCerca.js';
 import { useCercaGlobal } from './useCercaGlobal.js';
 
@@ -59,6 +60,7 @@ const MAXIM_FACETA = 160;
 const TIPUS_DE_FACETA = TIPUS_CERCA.filter((tipus) => tipus.id !== 'tot');
 const ORDRE_TIPUS = TIPUS_DE_FACETA.map((tipus) => idDeFaceta('tipus', tipus.id));
 const ORDRE_DATA = TRAMS_DATA.map((tram) => idDeFaceta('data', tram.id));
+const ORDRE_ESTAT = ESTATS_FACETA.map((estat) => idDeFaceta('estat', estat.id));
 
 const plantilla = (text, valors) => String(text).replace(/\{(\w+)\}/g, (marca, clau) => (clau in valors ? String(valors[clau]) : marca));
 
@@ -82,6 +84,11 @@ function criteriDeLaUrl(faceta, retolPoble = null) {
   if (prefix === 'data') {
     const tram = TRAMS_DATA.find((candidat) => candidat.id === valor);
     return tram ? { grup: 'data', ordre: ORDRE_DATA, opcio: { id: faceta, clau: tram.clau, text: tram.text, count: 0 } } : null;
+  }
+  /* IDEA-61 (T0, prompt 261102_1532) · estat:<estat> d'una fitxa d'àmbit. */
+  if (prefix === 'estat') {
+    const estat = ESTATS_FACETA.find((candidat) => candidat.id === valor);
+    return estat ? { grup: 'estat', ordre: ORDRE_ESTAT, opcio: { id: faceta, clau: estat.clau, text: estat.text, count: 0 } } : null;
   }
   if (prefix === 'poble' && SLUG_POBLE.test(valor)) {
     const text = retolPoble?.id === faceta && retolPoble.text ? retolPoble.text : valor.split('-').join(' ');

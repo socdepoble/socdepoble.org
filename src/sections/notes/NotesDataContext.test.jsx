@@ -284,10 +284,13 @@ test('paperera, arxiu i esborrat lleven la nota del Bloc; un 409 torna a carrega
 });
 
 /* Poliment T23/T40 · SUMMARY_COLUMNS no porta `icon` ni `publish_date`: una
-   pàgina de resums de la mateixa revisió no els esborra del detall. */
-test('una pàgina de resums conserva l’emoticona i la data de publicació del detall', async () => {
+   pàgina de resums de la mateixa revisió no els esborra del detall.
+   IDEA-61 (T0, prompt 261102_1532; L1-A1) · Tampoc `fitxa`: sense ella,
+   «Actualitzar al Mur» publicaria la nota sense àmbit. */
+const FITXA = Object.freeze({ ambit: 'vehicle', estat: 'disponible', dades: { lloc_eixida: 'Xixona', lloc_arribada: 'Alcoi' } });
+test('una pàgina de resums conserva l’emoticona, la data de publicació i la fitxa d’àmbit del detall', async () => {
   const resum = { id: 'old', title: 'Fira', revision: 1, contentLoaded: false };
-  const detall = { ...resum, content: '<p>Cos</p>', contentLoaded: true, icon: '🌿', publishDate: '2026-10-05T08:30:00.000Z' };
+  const detall = { ...resum, content: '<p>Cos</p>', contentLoaded: true, icon: '🌿', publishDate: '2026-10-05T08:30:00.000Z', fitxa: FITXA };
   mocks.loadNotes.mockImplementation(async (_owner, cfg) => (cfg.noteId
     ? { notes: [detall], noteResolution: { id: 'old', status: 'found' } }
     : { notes: [resum], noteFolders: [], notesComplete: true }));
@@ -295,21 +298,22 @@ test('una pàgina de resums conserva l’emoticona i la data de publicació del 
   const { result } = renderHook(useNotesData, { wrapper });
   await waitFor(() => expect(result.current.status).toBe('ready'));
   await act(async () => { await result.current.resolveNote('old'); });
-  expect(result.current.notes[0]).toMatchObject({ icon: '🌿', publishDate: '2026-10-05T08:30:00.000Z' });
+  expect(result.current.notes[0]).toMatchObject({ icon: '🌿', publishDate: '2026-10-05T08:30:00.000Z', fitxa: FITXA });
   const carregues = mocks.loadNotes.mock.calls.length;
   act(() => { result.current.refresh(); });
   await waitFor(() => expect(mocks.loadNotes.mock.calls.length).toBeGreaterThan(carregues));
   await waitFor(() => expect(result.current.status).toBe('ready'));
   expect(result.current.notes[0]).toMatchObject({
-    content: '<p>Cos</p>', contentLoaded: true, icon: '🌿', publishDate: '2026-10-05T08:30:00.000Z'
+    content: '<p>Cos</p>', contentLoaded: true, icon: '🌿', publishDate: '2026-10-05T08:30:00.000Z', fitxa: FITXA
   });
   // Quan la fila ja porta la columna (migració aplicada), mana el que diu el servidor.
-  mocks.loadNotes.mockImplementation(async () => ({ notes: [{ ...resum, icon: '', publishDate: null }], noteFolders: [], notesComplete: true }));
+  mocks.loadNotes.mockImplementation(async () => ({ notes: [{ ...resum, icon: '', publishDate: null, fitxa: null }], noteFolders: [], notesComplete: true }));
   const abans = mocks.loadNotes.mock.calls.length;
   act(() => { result.current.refresh(); });
   await waitFor(() => expect(mocks.loadNotes.mock.calls.length).toBeGreaterThan(abans));
   await waitFor(() => expect(result.current.notes[0].icon).toBe(''));
   expect(result.current.notes[0].publishDate).toBeNull();
+  expect(result.current.notes[0].fitxa).toBeNull();
 });
 
 test('sense sessió i amb dades remotes no es demanen notes', async () => {

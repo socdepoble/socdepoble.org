@@ -1,0 +1,36 @@
+{
+  "@context": "https://www.w3.org/ns/activitystreams",
+  "id": "https://socdepoble.org/ap/outbox/la-torre-de-les-macanes.json",
+  "orderedItems": [
+    {
+      "actor": "https://socdepoble.org/ap/actors/la-torre-de-les-macanes.json",
+      "cc": [
+        "https://socdepoble.org/ap/followers/la-torre-de-les-macanes.json"
+      ],
+      "id": "https://socdepoble.org/ap/objectes/la-torre-de-les-macanes/pagina-del-poble.json#create",
+      "object": {
+        "attributedTo": "https://socdepoble.org/ap/actors/la-torre-de-les-macanes.json",
+        "cc": [
+          "https://socdepoble.org/ap/followers/la-torre-de-les-macanes.json"
+        ],
+        "id": "https://socdepoble.org/ap/objectes/la-torre-de-les-macanes/pagina-del-poble.json",
+        "name": "La Torre de les Maçanes a Sóc de Poble",
+        "summary": "<p>Pàgina pública de La Torre de les Maçanes a Sóc de Poble. No és el compte oficial de l’Ajuntament.</p>",
+        "summaryMap": {
+          "ca": "<p>Pàgina pública de La Torre de les Maçanes a Sóc de Poble. No és el compte oficial de l’Ajuntament.</p>"
+        },
+        "to": [
+          "https://www.w3.org/ns/activitystreams#Public"
+        ],
+        "type": "Article",
+        "url": "https://socdepoble.org/pobles/la-torre-de-les-macanes"
+      },
+      "to": [
+        "https://www.w3.org/ns/activitystreams#Public"
+      ],
+      "type": "Create"
+    }
+  ],
+  "totalItems": 1,
+  "type": "OrderedCollection"
+}

@@ -5,8 +5,13 @@ import { normalitzaOrigen } from './origenNota.js';
 import { emojiSol } from '../utils/emoji.js';
 import { dataIsoONull } from '../utils/calendari.js';
 import { registraIncident } from '../utils/autocuracio.js';
+import { coaccionaAmbit, esFitxaDAmbit } from '../utils/publicacioUniversal.js';
 
 const STORE = 'notes';
+
+/* IDEA-61 (T0, prompt 261102_1532) · La fitxa d'àmbit d'una nota, un sol
+   objecte { ambit, estat, dades } net pel contracte; sense àmbit vertical, null. */
+const fitxaDeNota = (valor) => (esFitxaDAmbit(valor) ? coaccionaAmbit(valor) : null);
 function openDB() {
   return new Promise((resolve, reject) => {
     if (!globalThis.indexedDB) { reject(new Error('El navegador no permet desar notes locals.')); return; }
@@ -70,6 +75,8 @@ function clean(input) {
   if (input.publishDate !== undefined) result.publishDate = dataIsoONull(input.publishDate);
   /* T5 · d'on ve una nota connectada; null si no és cap origen conegut. */
   if (input.origen !== undefined) result.origen = normalitzaOrigen(input.origen);
+  /* IDEA-61 · la fitxa d'àmbit: neta pel contracte, o null per a llevar-la. */
+  if (input.fitxa !== undefined) result.fitxa = fitxaDeNota(input.fitxa);
   return result;
 }
 

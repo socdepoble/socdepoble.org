@@ -1,0 +1,183 @@
+LLEGIM_HIGIENE.txt · IDEA-62 (T4, prompt 261102_1532) · torn torn_d19293b9 · Claude Fable 5.1 (constructor → àrbitre → corrector)
+Dipòsit de governança per a MarIA. Text pla. Cap valor de secret ací dins.
+
+Fitxer nou: tests/higiene-estructural.test.mjs (nou regles H1-H9 + sonda «la guarda mossega»).
+Resum real de `node --test tests/higiene-estructural.test.mjs` (261102, després de les correccions de l'àrbitre):
+  ℹ tests 10 / ℹ pass 10 / ℹ fail 0 / ℹ skipped 0 / ℹ duration_ms 383.577083
+
+====================================================================
+(0) CORRECCIONS DE L'ÀRBITRE APLICADES PEL CORRECTOR (261102)
+====================================================================
+
+Totes reproduïdes abans d'aplicar-les; cap rebutjada.
+  A1 (P2, H8) · REPRODUÏDA: alergens.js:50 («…/alergens/*.svg») amb «*/» reals a :57-:78; registreTractors.js:25 → :46;
+      registreSentinelles.js:31 → :47. Amb la regex vella, dos casos sintètics (un «/*» de glob abans d'un import de
+      data/supabase/ i un «//» dins d'una cadena abans d'un import de data/local/) eren invisibles (sonda roja: pass 9 / fail 1).
+      APLICADA: senseComentaris és ara un escàner lineal de caràcters sense regex (estats codi, ', ", `, línia, bloc);
+      conserva la llargària del text; els dos casos són a la sonda i es detecten. Límit documentat: un literal de regex
+      amb «/*» sense escapar dins d'una classe (/[/*]/) encara obriria un bloc; no n'hi ha cap a les carpetes de UI.
+  A2 (P2, manifest) · REPRODUÏDA: node --test tests/node-suite-policy.test.mjs → tests 9 / pass 8 / fail 1,
+      «Proves sense classificar: tests/higiene-estructural.test.mjs, tests/higiene-paquets.test.mjs». No és carril
+      de Claude (tooling/): el punt (1) porta ara les DUES entrades.
+  A3 (P3, recorre) · APLICADA: el recorregut salta per nom només node_modules i .git, i per ruta exacta
+      wordpress-plugin/dist (SALTATS_H7, derivat d'EIXIDES_BUILD_WP). EXCLOSOS de tooling/lib/arrel.mjs ja no s'importa.
+      Sonda: salta('src/sections/android','android') i salta('public/build','build') són false; H7 caça
+      src/sections/android/x.test.mjs.
+  A4 (P3, H5) · APLICADA: fitxersAdaptador() dins de try/catch; si llança (comprovaHigienePaquet), H5 reconstruïx la
+      llista amb ADAPTADOR.fitxers + recorregut propi d'ADAPTADOR.carpetes i imprimix la llista completa en el seu
+      format, afegint el motiu de l'empaquetador si H5 sol no en caça cap.
+  A5 (P3, sonda) · APLICADA: llindar de temps a 10 s (l'escàner és lineal per construcció) i asserció nova de
+      llargària conservada; tres casos de vora (regex amb «\/», apòstrof de JSX, plantilla multilínia).
+  A6 (P3, cites) · APLICADA: .gitignore:6 (.DS_Store) i :7 (*DS_Store*) ací i al comentari de la guarda (H6).
+  A7 (P3, rigidesa) · APLICADA (reversible pel Mestre): H3 tolera les plantilles /^\.env(\..+)?\.example$/;
+      H6 admet els formats de la vitrina de WordPress.org (banner png|jpg, icon png|jpg + icon.svg,
+      screenshot png|jpg|jpeg|gif) i blueprints/ amb només blueprint.json. Si el Mestre vol el regex estricte de
+      l'encàrrec, és tornar RE_VITRINA_H6 i RE_PLANTILLA_ENV al literal del prompt: dues línies.
+
+====================================================================
+(1) ENTRADES PER A tooling/tests/node-suite-manifest.json (carril de MarIA)
+====================================================================
+
+A «files» (ordre alfabètic: després de tests/governanca-260930b-torns.test.mjs (:362-365) i abans de
+tests/hooks-local.test.mjs (:367)):
+
+    {
+      "path": "tests/higiene-estructural.test.mjs",
+      "suite": "primary",
+      "reason": "IDEA-62 · higiene estructural: vitrina fora del paquet, brossa fora de l'índex, capes separades"
+    },
+    {
+      "path": "tests/higiene-paquets.test.mjs",
+      "suite": "primary",
+      "reason": "IDEA-62 · higiene de paquets (carril Codex): motiuContaminacio i comprovaHigienePaquet de tooling/lib/higiene-paquets.mjs i el tractor tooling/gates/tractor-higiene-paquets.mjs sobre fixtures portables en os.tmpdir(); la vitrina queda fora dels paquets WordPress."
+    },
+
+A «requiredPrimary» (entre tests/git-hooks.test.mjs (:30) i tests/hooks-local.test.mjs (:31)):
+
+    "tests/higiene-estructural.test.mjs",
+    "tests/higiene-paquets.test.mjs",
+
+Sense estes entrades, tests/node-suite-policy.test.mjs bloqueja la cadena (261102: tests 9 / pass 8 / fail 1,
+run-node-tests.mjs:50). La segona és del carril de Codex (fitxer untracked hui, amb tooling/lib/higiene-paquets.mjs i
+tooling/gates/tractor-higiene-paquets.mjs, que run-portes.mjs:50 ja encadena com a porta «Higiene de paquets», readOnly):
+si Codex preferix una altra categoria, que ho diga al mateix commit. Verificació: node --test tests/node-suite-policy.test.mjs → 9/9.
+
+====================================================================
+(2) REGLES DIFERIDES (hui roges: NO entren a la guarda fins que el deute s'haja retirat)
+====================================================================
+
+Criteri: una regla entra a la guarda només quan és verda de veritat. Cada diferida porta
+l'evidència verificada el 261102 i la retirada que la faria entrar.
+
+H1b · Cap «.DS-Store» (amb GUIÓ) seguit per git.
+  Evidència: `rg --files --no-ignore --hidden -g "*DS-Store*" public` → 69 rutes, totes sota
+  public/assets/ (pages/, uploads/gent/**, uploads/poble/**, uploads/empresa/**, uploads/grup/**,
+  uploads/ia/**). .gitignore:6-7 només cobrix «.DS_Store» i «*DS_Store*» (guió baix; la línia 5 és
+  /release/): el nom amb guió se li escapa i per això els 69 són a l'índex.
+  Retirada (Mestre o MarIA amb lease): `git rm --cached` dels 69 (llista: eixida de l'ordre de dalt),
+  i afegir a .gitignore les dues línies «.DS-Store» i «*DS-Store*».
+  Guarda quan siga verd: a infraccionsH1, afegir `nom === '.DS-Store'` (o /^\.DS[-_]Store$/).
+
+H10 · Cap *.sql fora de supabase/ i de tests/fixtures/.
+  Evidència: wordpress-plugin/builds/migracions_pendents.sql (153.315 bytes, 8 d'octubre) al disc.
+  motiuContaminacio (tooling/lib/higiene-paquets.mjs:7) ja rebutja .sql dins del paquet, però el
+  fitxer viu a builds/ (fora de l'adaptador) i no el vigila ningú. Cal comprovar amb
+  `git ls-files wordpress-plugin/builds` si és a l'índex.
+  Retirada: moure'l a supabase/ (si encara és migració viva) o a 90_arxiu_historic/ via Olivera.
+  Guarda: regla (disc+git) `/\.sql$/i` sobre rutes que no comencen per supabase/ ni tests/fixtures/.
+
+H11 · Cap scratch*/probe_* dins de tooling/.
+  Evidència: tooling/scratch_malformades.mjs (ls tooling → present).
+  Retirada: a l'Escriptori o a la paperera (neteja_brossa_arrel només mira l'arrel: no el veu).
+  Guarda: regla (disc) `/^(scratch|probe_)/i` sobre basenames sota tooling/.
+
+H12 · Cap duplicat byte a byte entre wordpress-plugin/assets/* i public/**.
+  Evidència: wordpress-plugin/assets/icon.svg = 213.730 bytes;
+  public/assets/system/ui/logo-socdepoble-cuadrat-verd.svg = 213.730 bytes;
+  public/assets/uploads/empresa/soc-de-poble/avatars/logo-socdepoble-cuadrat-verd.svg = 213.730 bytes
+  (R7: idèntics byte a byte; ací verificat per mida amb wc -c). Tres còpies del mateix SVG.
+  Decisió pendent (Mestre): la vitrina SVN de WordPress.org exigix els fitxers a assets/, així que
+  la còpia d'assets/ pot ser legítima; el que sobra és la duplicitat dins de public/ (ui/ vs avatars/).
+  Guarda proposada: sha256 de wordpress-plugin/assets/* contra public/** amb una llista
+  ORIGEN documentada (quina còpia és la font); qualsevol duplicat fora de la llista, roig.
+
+H13 · Tots els TARGETS de tests/inventari-directoris.test.mjs existixen.
+  Evidència: tests/inventari-directoris.test.mjs:53 → ['src/context', 0, []]; `ls src` no té context
+  (els contextos viuen a src/app/contexts/).
+  Retirada: esmenar la línia 53 (src/app/contexts) o llevar-la.
+  Guarda: fs.statSync de cada TARGET al començar la prova (o regla H13 ací).
+
+H14 · Cap banner-*.png a les entrades del directori (zip de WordPress.org).
+  Evidència R7 (sobre HEAD 10fc94c82 d'empaqueta.mjs): ADAPTADOR.fitxers portava
+  'assets/banner-772x250.png' i 'assets/banner-1544x500.png'. Correcte a HEAD.
+  Evidència ACTUALITZADA (261102, arbre de treball, SENSE COMMIT, carril de Codex; vist amb
+  `git diff --no-ext-diff --no-textconv`): ja està aplicat per una altra via.
+    · empaqueta.mjs:63-67: ADAPTADOR.fitxers = [socdepoble-enxufe.php, uninstall.php, readme.txt]
+      (els dos banners llevats) amb el comentari «IDEA-62: assets/ és la vitrina SVN; mai forma part
+      del connector instal·lable»; fitxersAdaptador() i verificaInventari() criden
+      comprovaHigienePaquet() del fitxer NOU tooling/lib/higiene-paquets.mjs (untracked hui).
+    · tooling/lib/higiene-paquets.mjs:9: motiuContaminacio(…, { wordpress: true }) rebutja
+      assets/banner-*, screenshot-* i icon* («actiu de la vitrina WordPress.org»).
+    · tests/enxufe-empaqueta.test.mjs:691 invertit (cap «banners» als detalls del directori) i dues
+      proves noves al final (cap banner en cap zip; un *.spec.js a includes/ bloqueja el paquet).
+  Per tant «FORA_DEL_DIRECTORI += 'assets/' a empaqueta.mjs:78» (R7 deia :77) ja no cal: assets/ mai
+  arriba a l'adaptador. H5 d'esta guarda ja prohibix icon-*/icon.svg/screenshot-* a fitxersAdaptador();
+  H14 (banner-*) és promocionable quan eixe carril de Codex estiga COMMITAT amb
+  tooling/lib/higiene-paquets.mjs, tests/higiene-paquets.test.mjs i tooling/gates/tractor-higiene-paquets.mjs
+  (els tres untracked hui): afegir `banner-\d+x\d+\.png` a RE_VITRINA_H5 i prou.
+  AVÍS per al commit: tests/higiene-estructural.test.mjs importa empaqueta.mjs, que a l'arbre de treball
+  importa tooling/lib/higiene-paquets.mjs; si es commita empaqueta.mjs sense eixe fitxer, les dues
+  suites (enxufe-empaqueta i higiene-estructural) cauen en carregar.
+
+NOTES D'IMPLEMENTACIÓ DE LA GUARDA (desviacions respecte a l'encàrrec, documentades)
+  · H4: wordpress-plugin/dist/ existix al disc (outDir de vite.standalone.config.js:725, llegit per
+    empaqueta.mjs:604) i no és a la llista de l'encàrrec. Es tolera com a EIXIDES_BUILD_WP = {dist},
+    sense versionar (H2 ho garantix). Qualsevol altra entrada nova fa caure H4.
+  · H4 i H6 salten els noms que comencen per «.» (el Finder deixa .DS_Store a wordpress-plugin/ i
+    pot deixar-lo a assets/); l'índex de git el vigila H1 i .gitignore:6.
+  · H3 i H6 són més amples que el literal de l'encàrrec (A7, punt 0): plantilles .env.<canal>.example i
+    els formats de vitrina que WordPress.org admet. Reversible en dues línies.
+  · H7 recorre wordpress-plugin/ sense entrar a wordpress-plugin/dist (eixida de build, regenerable,
+    no versionada per H2); dins de src/ i public/ no salta cap nom llevat de node_modules i .git (A3).
+  · H8: cap excepció hui (EXCEPCIONS_H8 buit). rg del 261102 sobre src/{app,apps,components,sections,
+    hooks,pages,pwa,natiu,utils,config} sense proves: només data/adaptadors/noticies/ i
+    data/adaptadors/viquipedia/ (permesos). src/host.js:220 (import dinàmic de data/supabase/index.js)
+    queda fora de les carpetes a posta. senseComentaris és un escàner lineal (A1): les cadenes amb
+    «/*» (globs de Vite a alergens.js:50, registreTractors.js:25, registreSentinelles.js:31) ja no
+    amaguen cap import posterior.
+  · H9 mira el mateix perímetre que candidats() de neteja_brossa_arrel.mjs: fitxers solts de l'arrel
+    que no comencen per «.».
+
+====================================================================
+(3) TROBALLA P1 · SEGURETAT (secrets a l'índex de git)
+====================================================================
+
+Segons l'auditoria de reconeixement R7 (261102), són a l'índex de git:
+  · supabase/.temp/start-secrets/supabase_edge_runtime_socdepoble.org/env/docker.env
+  · supabase/.temp/cli-latest
+  · supabase/.branches/_current_branch
+Corroboració al repositori: .gitignore:53-57 ho reconeix amb les seues paraules («Ignorar no
+desversiona: el que ja és a l'índex (scratch/, supabase/.temp/, supabase/.branches/) ho ha de
+retirar el Mestre») i ignora supabase/.temp/ i supabase/.branches/ només per a fitxers nous.
+Al disc hui (ls -la, sense llegir contingut): supabase/.temp/{cli-latest, linked-project.json (0600),
+start-secrets/} i supabase/.branches/_current_branch.
+
+Per què és P1: docker.env és l'entorn de l'Edge Runtime local de Supabase (claus de servei, secret
+JWT i credencials de la base de dades, segons el format estàndard del CLI). Un secret que ha entrat
+a l'índex està compromés encara que es retire: la retirada és higiene; la rotació és obligatòria.
+
+Passos (Mestre; MarIA prepara, no executa operacions remotes):
+  1. `git rm -r --cached supabase/.temp supabase/.branches` i commit (el .gitignore ja els cobrix).
+  2. Rotar a Supabase (projecte real, no només el local): secret JWT, claus anon i service_role,
+     contrasenya de la base de dades, i qualsevol clau de tercers que docker.env continga.
+     Després, regenerar els .env.*.local i les Edge Functions que les lligen.
+  3. Avaluar `git filter-repo` per a purgar-los de l'historial. Precedent: la sessió de WhatsApp
+     (.wwebjs_auth/, commit 5a5d7023) abastable des d'upstream/main; cal coordinar amb el remot,
+     força-push i reclonat del Consell. Decisió del Mestre (D-?), no de cap agent.
+  4. Guarda nova (després de la retirada): regla (git) «cap ruta amb segment .temp/, .branches/
+     ni basename *.env dins de supabase/», més «cap docker.env ni *.env fora de .env.example».
+     H3 d'esta guarda ja cobrix basenames .env* ; docker.env no comença per «.env» i per això hui no
+     el caça: afegir `/(^|\.)env$/` quan el deute s'haja retirat.
+
+Tot verificat el 261102 amb rg, ls, wc i node --test (sense cap escriptura fora dels dos fitxers
+d'este encàrrec). Cap valor de secret s'ha llegit ni copiat.

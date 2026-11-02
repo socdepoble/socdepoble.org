@@ -1,6 +1,10 @@
 import { sanitizeHtml, netejaText, esFontImatgePropia } from '../utils/sanitize.js';
 import { origenPublic } from './origenNota.js';
 import { fotoDelBucketPublic } from '../utils/mitjaOpac.js';
+/* IDEA-61 (T0, prompt 261102_1532) · El contracte del Flux Universal de
+   Publicació: JS pur, sense React ni xarxa (la seua única importació és
+   sanitize.js, com la d'ací). */
+import { coaccionaAmbit, esFitxaDAmbit } from '../utils/publicacioUniversal.js';
 
 function generateUUID() {
   if (typeof crypto !== 'undefined' && crypto.randomUUID) return crypto.randomUUID();
@@ -306,12 +310,15 @@ export function mapSectionSubmissionToItem(submission) {
     if (fotos?.length) element.fotos_geo = fotos;
     /* Revisió adversarial 261028 · I la data del hero, només el text ISO del contracte. */
     if (Object.hasOwn(element, 'dataCaptura') && !esDataCaptura(element.dataCaptura)) delete element.dataCaptura;
+    /* IDEA-61 (T0, prompt 261102_1532) · La fitxa d'àmbit (vehicle, treball o
+       habitatge viuen a 'mur'), neta pel contracte o fora (netejaAmbit, baix). */
+    netejaAmbit(element, sectionId);
     return element;
   }
 
   if (sectionId === 'mercat') {
     const imageSrc = validaUrl(baseItem.imageSrc || firstAsset(baseItem.image_url || baseItem.image || baseItem.avatar_url));
-    return {
+    const element = {
       ...baseItem,
       type: netejaText(baseItem.type || 'product'),
       title: netejaText(baseItem.title || 'Producte'),
@@ -329,6 +336,9 @@ export function mapSectionSubmissionToItem(submission) {
         baseItem.title, baseItem.description, baseItem.seller, baseItem.tag, baseItem.sectionId
       ]))
     };
+    /* IDEA-61 (T0, prompt 261102_1532) · La fitxa de mercat, neta o fora. */
+    netejaAmbit(element, sectionId);
+    return element;
   }
 
   if (sectionId === 'events') {
@@ -694,6 +704,32 @@ function netejaPortada(dades) {
   if (targeta) dades.enquadrament_targeta = targeta;
 }
 
+/* IDEA-61 (T0, prompt 261102_1532) · La fitxa d'àmbit del Flux Universal de
+   Publicació (ambit, estat i dades del payload), coaccionada pel contracte
+   (utils/publicacioUniversal.js · coaccionaAmbit) en escriure i en llegir:
+   l'àmbit tancat, l'estat d'ESTATS i `dades` només amb els camps de l'àmbit,
+   primitius. Amb la secció de la fila, un àmbit que no hi viu (mercat a 'mur',
+   vehicle a 'mercat') tampoc viatja. Sense fitxa vertical neta, les tres claus
+   se'n van; sense cap de les tres (el Mur de sempre), les dades no canvien
+   (Llei del Píxel). Com portadaDeLaPublicacio: un valor que no es deixa
+   llegir, cap clau. Reescriu les claus al mateix objecte. */
+function netejaAmbit(payload, sectionId) {
+  if (!Object.hasOwn(payload, 'ambit') && !Object.hasOwn(payload, 'estat') && !Object.hasOwn(payload, 'dades')) return;
+  let fitxa = null;
+  try {
+    fitxa = coaccionaAmbit(payload, typeof sectionId === 'string' ? sectionId : undefined);
+  } catch {
+    fitxa = null;
+  }
+  delete payload.ambit;
+  delete payload.estat;
+  delete payload.dades;
+  if (!esFitxaDAmbit(fitxa)) return;
+  payload.ambit = fitxa.ambit;
+  payload.estat = fitxa.estat;
+  payload.dades = fitxa.dades;
+}
+
 function netejaTipusDelPayload(dades) {
   for (const clau of CLAUS_DE_TEXT_DEL_PAYLOAD) {
     const valor = dades[clau];
@@ -747,16 +783,21 @@ function netejaTipusDelPayload(dades) {
  * seua fila amb noms del port; una regla de producte no es tanca dins d'un
  * adaptador. Només per a publicacions dels veïns: el contingut de
  * l'administració (app_content) signa legítimament dins del payload.
+ * IDEA-61 (T0, prompt 261102_1532) · `sectionId` (el section_id de la fila)
+ * és opcional: amb ell, una fitxa d'àmbit que no viu en eixa secció no
+ * viatja; sense, es mira el sectionId del payload (el que escriu publishNote)
+ * i, si tampoc hi és, només l'àmbit.
  * @param {{ id: string, payload?: object, titol?: string, createdAt?: string,
- *   updatedAt?: string, ownerUserId?: string|null, authorOrgId?: string|null }} fila
+ *   updatedAt?: string, ownerUserId?: string|null, authorOrgId?: string|null, sectionId?: string }} fila
  * @returns {object}
  */
-export function elementDeFilaPublicada({ id, payload, titol, createdAt, updatedAt, ownerUserId = null, authorOrgId = null } = {}) {
+export function elementDeFilaPublicada({ id, payload, titol, createdAt, updatedAt, ownerUserId = null, authorOrgId = null, sectionId } = {}) {
   const dades = payload && typeof payload === 'object' && !Array.isArray(payload) ? { ...payload } : {};
   for (const clau of CLAUS_D_AUTORITAT) delete dades[clau];
   if (dades.type === 'sistema') delete dades.type;
   netejaTipusDelPayload(dades);
   netejaPortada(dades);
+  netejaAmbit(dades, typeof sectionId === 'string' ? sectionId : dades.sectionId);
   if (Array.isArray(dades.labels)) dades.labels = dades.labels.map(etiquetaDePublicacio).filter(Boolean);
   return {
     ...dades,

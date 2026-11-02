@@ -6,18 +6,31 @@
  */
 import { expect, test } from 'vitest';
 import { TIPUS_AMB_TARGETES, propsDeTargetaDeResultat, teVistaDeTargetes, vistaValida } from './targetaDeResultat.js';
-import { deAgent, deIdentitat, deMembre, dePoble, deProducte, IDS_TIPUS } from './indexCerca.js';
+import { deAgent, deIdentitat, deMembre, dePoble, deProducte, dePublicacio, IDS_TIPUS } from './indexCerca.js';
 
 test('?vista=: només «graella» obri les targetes; qualsevol altre valor (o cap) és la llista', () => {
   expect(vistaValida('graella')).toBe('graella');
   for (const valor of [null, undefined, '', 'llista', 'targetes', 'GRAELLA', '<script>']) expect([valor, vistaValida(valor)]).toEqual([valor, 'llista']);
 });
 
-test('només Persones, Entitats, Pobles i Mercat ofereixen les targetes; Tot i la resta, no', () => {
-  expect(TIPUS_AMB_TARGETES).toEqual(['persones', 'entitats', 'pobles', 'mercat']);
+test('Persones, Entitats, Pobles, Mercat i les tres verticals (IDEA-61) ofereixen les targetes; Tot i la resta, no', () => {
+  const amb = ['persones', 'entitats', 'pobles', 'mercat', 'vehicle', 'treball', 'habitatge'];
+  expect(TIPUS_AMB_TARGETES).toEqual(amb);
   expect(TIPUS_AMB_TARGETES.every((tipus) => IDS_TIPUS.includes(tipus))).toBe(true);
-  expect(IDS_TIPUS.filter(teVistaDeTargetes)).toEqual(['persones', 'entitats', 'pobles', 'mercat']);
+  expect(IDS_TIPUS.filter(teVistaDeTargetes)).toEqual(amb);
   expect(teVistaDeTargetes('tot')).toBe(false);
+  for (const tipus of ['publicacions', 'agenda', 'multimedia', 'notes', 'converses', 'pagines']) expect(teVistaDeTargetes(tipus), tipus).toBe(false);
+});
+
+/* IDEA-61 (T0, prompt 261102_1532) · Una fitxa d'àmbit és una targeta com un
+   producte: l'enllaç és el del seu àmbit i la meta de la fila va en etiquetes. */
+test('una fitxa de Compartir cotxe: l’enllaç /vehicle/<id>, la meta de la fila en etiquetes, sense boina ni foto', () => {
+  const vehicle = propsDeTargetaDeResultat(dePublicacio({
+    id: 'v1', title: 'Cotxe a Alcoi', ambit: 'vehicle', estat: 'disponible', author_name: 'Pepa Fictícia',
+    dades: { modalitat: 'oferisc_places', lloc_eixida: 'Benifallim', lloc_arribada: 'Alcoi', data_eixida: '2026-11-03' }
+  }));
+  expect([vehicle.title, vehicle.mainHref, vehicle.imageUrl, vehicle.avatarUrl, vehicle.labels, vehicle.idElement, vehicle.hasFooter])
+    .toEqual(['Cotxe a Alcoi', '/vehicle/v1', undefined, undefined, ['Pepa Fictícia'], 'vehicle:v1', false]);
 });
 
 /* Revisió adversarial · La boina és la del directori (boinaDelPoble): cara i

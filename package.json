@@ -84,6 +84,8 @@
     "botigues:preflight": "node scripts/botigues/preflight.mjs --plataforma totes",
     "botigues:ios": "node scripts/botigues/puja-ios.mjs",
     "botigues:android": "node scripts/botigues/puja-android.mjs",
+    "botigues:publica-tot": "node scripts/botigues/publica-tot.mjs",
+    "jarvis:publica-tot": "node scripts/botigues/publica-tot.mjs",
     "prepare": "husky",
     "preview": "vite preview --host 0.0.0.0",
     "db:seed:generate": "sh scripts/generate-supabase-seed.sh",

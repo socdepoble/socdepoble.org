@@ -353,7 +353,7 @@ export function CosAjustos({
     if (grup.notaDinamica === 'privacitat' && typeof ambPrivacitat === 'boolean') {
       return ambPrivacitat
         ? t('section.xat.ajustos.privacitat.nota', '«Privacitat» obri el teu perfil: hi trobaràs l’apartat «Privacitat i dades».')
-        : t('section.xat.ajustos.privacitat.notaSense', '«Privacitat» obri el teu perfil, però el servidor d’este poble encara no hi ofereix l’apartat «Privacitat i dades».');
+        : t('section.xat.ajustos.privacitat.notaSense');
     }
     return textDe(grup.nota, t);
   };

@@ -50,9 +50,10 @@ const UI = /\.(?:jsx|css)(?:\?[^/]*)?$/;
 const XIFRATGE = /[\\/]data[\\/](xifratXat[A-Za-z]*|xatMultimediaXifrat)\.js$/;
 /* Les primitives: l'única peça del xifratge que el transport usa. */
 const PRIMITIVES = /[\\/]data[\\/]xifratXatCripto\.js$/;
-/* El que en pot quedar: el base64url canònic dels kid i dels bytea, el seu error amb codi i
-   la taula HPKE (efecte de mòdul fins que s'aplique la petició @__PURE__; després, fora). */
-const PRIMITIVES_PERMESES = ['aBase64url', 'deBase64url', 'errorAmbCodi', 'HPKE'];
+/* El que en pot quedar: el base64url canònic dels kid i dels bytea i el seu error amb codi.
+   La taula HPKE ja no: les tres @__PURE__ i les claus literals de NK_AEAD són aplicades
+   (P1-12, trinquet tancat el 261102, torn torn_d19293b9). */
+const PRIMITIVES_PERMESES = ['aBase64url', 'deBase64url', 'errorAmbCodi'];
 /* Al graf de producció, a més de les primitives: el canal lateral dels serveis (un WeakMap) i
    l'oblit en eixir de la sessió (guardat per la bandera, no importa el motor). */
 const PERMESOS_APP = /[\\/]data[\\/](xifratXatCripto|xifratXatServei|xifratXatEixida)\.js$/;

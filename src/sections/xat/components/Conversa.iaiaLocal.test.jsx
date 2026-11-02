@@ -11,7 +11,9 @@ import { MemoryRouter } from '../../../app/contexts/RouterContext.jsx';
 import { AppGridContext } from '../../../components/layout/AppGridShell.jsx';
 import Conversa from './Conversa.jsx';
 import { IAIA_ID, RESPOSTA_IAIA } from '../../../data/identitatsSeed.js';
-import { ENCAPCALAMENT_DE_SOC_DE_POBLE, oblidaIndexDeLaWiki, respostaDeLaIAIA } from '../../../data/iaiaLocal.js';
+import { ENCAPCALAMENT_DE_SOC_DE_POBLE, SUGGERIMENTS_RAPIDS_IAIA, oblidaIndexDeLaWiki, respostaDeLaIAIA } from '../../../data/iaiaLocal.js';
+import { construeixRetall } from '../retall.js';
+import { proposaCard } from '../../notes/proposaCard.js';
 import { buidaEsborranys } from '../esborranys.js';
 
 const t = (_, alternativa) => alternativa;
@@ -249,4 +251,39 @@ test('sense id, pel text: el missatge propi nou (i cada pregunta igual, el seu),
   await pregunta('Hola Mercat');
   repinta(vista, [abans, propi('s-1', 2, 'Hola Mercat'), propi('s-2', 3, 'Hola Mercat'), dePep('s-pep', 4)]);
   expect(ordre()).toEqual(['s-0', 's-1', 'iaia-local:1', 's-2', 'iaia-local:2', 's-pep']);
+});
+
+test('una confirmació buida del port no fabrica una resposta de la IAIA al grup públic', async () => {
+  const respostaLocalIAIA = vi.fn(async () => RESPOSTA);
+  pinta({ respostaLocalIAIA, onSendMessage: vi.fn().mockResolvedValue([]) });
+  await pregunta('Què és el Mercat?');
+  expect(respostaLocalIAIA).not.toHaveBeenCalled();
+  expect(locals()).toEqual([]);
+});
+
+test('suggeriments ràpids clicables, botons directes a cada secció i enviament d’esborrany al Bloc de Notes compatible amb Proposa Card (IDEA-28)', async () => {
+  const carrega = vi.fn(async () => ({ items: [] }));
+  const { props } = pinta({ respostaLocalIAIA: (text) => respostaDeLaIAIA(text, { carrega }) });
+  const grupSuggeriments = screen.getByRole('group', { name: 'Suggeriments ràpids d’ajuda rural' });
+  const botonsSug = within(grupSuggeriments).getAllByRole('button');
+  expect(botonsSug.map((b) => b.textContent)).toEqual(SUGGERIMENTS_RAPIDS_IAIA.map((s) => s.etiqueta));
+
+  /* Clic al suggeriment de redactar un bàndol o avís per al Mur */
+  await act(async () => { fireEvent.click(botonsSug[1]); });
+  await buida();
+
+  expect(props.onSendMessage).toHaveBeenCalledWith(FIL, SUGGERIMENTS_RAPIDS_IAIA[1].pregunta);
+  expect(screen.getByRole('link', { name: 'Obri El Mur' }).getAttribute('href')).toBe('/mur');
+
+  const botoEsborrany = screen.getByRole('button', { name: 'Envia l’esborrany al Bloc de Notes' });
+  await act(async () => { fireEvent.click(botoEsborrany); });
+  expect(props.onEnviaAlBloc).toHaveBeenCalledTimes(1);
+  const [missatgesEnviats] = props.onEnviaAlBloc.mock.calls[0];
+  const retall = construeixRetall({ fil: FIL, missatges: missatgesEnviats, locale: 'ca-ES', t });
+  expect(retall.title).toBe('El Mur');
+  expect(retall.content).not.toContain('<blockquote>');
+  const proposta = proposaCard(retall);
+  expect(proposta.motiu).toBe('proposta');
+  expect(proposta.camps.subtitle.length).toBeGreaterThan(10);
+  expect(proposta.camps.lead.length).toBeGreaterThan(10);
 });

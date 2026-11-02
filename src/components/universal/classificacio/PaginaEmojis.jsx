@@ -8,6 +8,7 @@
  */
 import { useEffect, useRef } from 'react';
 import { ArrowLeft } from 'lucide-react';
+import { useCapaEnrere } from '../../PedraSeca/hooks/useCapaEnrere.js';
 import { Boto } from '../../PedraSeca/index.js';
 import { GraellaEmojis } from './GraellaEmojis.jsx';
 
@@ -27,6 +28,10 @@ export function PaginaEmojis({
   accioSecundaria = null
 }) {
   const arrel = useRef(null);
+
+  /* P0-24b (T2, prompt 261102_1532) · La pàgina es munta només oberta: mentre
+     viu és a la pila de l'Arrere d'Android, amb el camí de l'Escape (onTornar). */
+  useCapaEnrere(true, () => onTornar?.());
 
   /* Escolta la tecla Escape per tornar a la vista anterior */
   useEffect(() => {

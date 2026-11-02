@@ -1,5 +1,7 @@
 import { describe, expect, it } from 'vitest';
-import { ALL_CATEGORY_ID, createWorkspaceState, primerElementTriable, workspaceReducer } from './workspaceState.js';
+import {
+  ALL_CATEGORY_ID, ORDENACIONS, createWorkspaceState, ordenaElements, primerElementTriable, workspaceReducer
+} from './workspaceState.js';
 
 describe('workspaceReducer', () => {
   it('conserva la identitat de l’estat quan selection/sync no canvia res', () => {
@@ -61,10 +63,10 @@ describe('primerElementTriable', () => {
     expect(primerElementTriable([A, { id: 'b' }], ALL_CATEGORY_ID)).toBe(A);
   });
 
-  /* ARB-T11C-01 · Amb dos fixats mana l'entrada, no `sortBy` (que viu a
-     UniversalWorkspace): la paritat amb la primera fila pintada només val amb
-     un sol fixat. Deute nou de T11-03 (pujar `sortBy` al context). */
-  it('amb dos fixats, el primer de l’entrada (no el de l’ordenació de la llista)', () => {
+  /* ARB-T11C-01 · Sense el tercer argument (l'ordre de la llista), amb dos
+     fixats mana l'entrada: és la compatibilitat de T11-03. Amb l'ordre
+     (P1-73, el describe de més avall) guanya el primer per data o per nom. */
+  it('sense l’ordre de la llista, amb dos fixats, el primer de l’entrada', () => {
     expect(primerElementTriable([A, ALTRE_FIXAT, FIXAT], ALL_CATEGORY_ID)).toBe(ALTRE_FIXAT);
   });
 
@@ -78,6 +80,94 @@ describe('primerElementTriable', () => {
 
   it('un forat a la llista no peta en buscar el fixat', () => {
     expect(primerElementTriable([null, FIXAT], ALL_CATEGORY_ID)).toBe(FIXAT);
+  });
+});
+
+/* P1-73 / O2-T5 · Mateix ordre de la llista en qualsevol carpeta. Les
+   reserves pròpies es filtren en canAutoSelect abans d'entrar ací. */
+describe('P1-73 · primerElementTriable amb l’ordre de la llista', () => {
+  const VELL = Object.freeze({ id: 'vell', title: 'Zona del pou vell', updatedAt: '2026-01-01T09:00:00Z', fixatATot: true });
+  const AVIS = Object.freeze({ id: 'avis', title: 'Avís fixat', updatedAt: '2025-12-01T09:00:00Z', fixatATot: true });
+  const NOVA = Object.freeze({ id: 'nova', title: 'Bancal del pou', updatedAt: '2026-10-31T09:00:00Z' });
+  const PREPARADA = Object.freeze({ id: 'preparada', title: 'Nota sense títol', updatedAt: '2026-11-02T17:00:00Z' });
+  const ENTRADA = Object.freeze([AVIS, NOVA, VELL]);
+  const ids = (llista) => llista.map((element) => element.id);
+
+  it('a «Tot» amb dos fixats i sortBy name, el de títol alfabèticament primer', () => {
+    expect(primerElementTriable([NOVA, VELL, AVIS], ALL_CATEGORY_ID, { sortable: true, sortBy: 'name' })).toBe(AVIS);
+  });
+
+  it('a «Tot» amb dos fixats i sortBy date, el d’updatedAt més nou', () => {
+    expect(primerElementTriable(ENTRADA, ALL_CATEGORY_ID, { sortable: true, sortBy: 'date' })).toBe(VELL);
+  });
+
+  it('sense sortable, el primer fixat de l’entrada (compatibilitat), diga el que diga sortBy', () => {
+    expect(primerElementTriable(ENTRADA, ALL_CATEGORY_ID)).toBe(AVIS);
+    expect(primerElementTriable(ENTRADA, ALL_CATEGORY_ID, { sortBy: 'date' })).toBe(AVIS);
+    expect(primerElementTriable(ENTRADA, ALL_CATEGORY_ID, { sortable: false, sortBy: 'name' })).toBe(AVIS);
+  });
+
+  it('el motor genèric ordena totes les candidates; la política de reserva correspon a la secció', () => {
+    expect(primerElementTriable([NOVA, PREPARADA], 'carpeta', { sortable: true, sortBy: 'date' })).toBe(PREPARADA);
+    expect(primerElementTriable([NOVA, PREPARADA], ALL_CATEGORY_ID, { sortable: true, sortBy: 'date' })).toBe(PREPARADA);
+    expect(primerElementTriable([PREPARADA], 'carpeta', { sortable: true, sortBy: 'date' })).toBe(PREPARADA);
+  });
+
+  it.each(['name', 'date'])('ARB-T3-01 tancat: amb %s tria la primera fila pintada, fora de Tot i a Tot sense fixats', sortBy => {
+    const ordre = { sortable: true, sortBy };
+    const entrada = [VELL, NOVA, AVIS];
+    expect(primerElementTriable(entrada, 'carpeta', ordre)).toBe(ordenaElements(entrada, { ...ordre, categoryId: 'carpeta' })[0]);
+    const altra = Object.freeze({ id: 'altra', title: 'Almàssera', updatedAt: '2026-10-20T09:00:00Z' });
+    const senseFixats = [altra, NOVA];
+    expect(primerElementTriable(senseFixats, ALL_CATEGORY_ID, ordre)).toBe(ordenaElements(senseFixats, { ...ordre, categoryId: ALL_CATEGORY_ID })[0]);
+  });
+
+  it('primerElementTriable amb sortable no muta l’entrada', () => {
+    const entrada = [NOVA, VELL, AVIS];
+    const abans = [...entrada];
+    expect(primerElementTriable(entrada, ALL_CATEGORY_ID, { sortable: true, sortBy: 'name' })).toBe(AVIS);
+    expect(entrada).toEqual(abans);
+  });
+
+  it('ordenaElements no muta l’entrada i torna sempre una còpia', () => {
+    const entrada = [VELL, NOVA, AVIS];
+    const abans = [...entrada];
+    expect(ids(ordenaElements(entrada, { sortable: true, sortBy: 'name', categoryId: 'carpeta' }))).toEqual(['avis', 'nova', 'vell']);
+    expect(entrada).toEqual(abans);
+    const copia = ordenaElements(entrada);
+    expect(copia).not.toBe(entrada);
+    expect(ids(copia)).toEqual(['vell', 'nova', 'avis']);
+    expect(ordenaElements(null)).toEqual([]);
+  });
+
+  it('ordenaElements a «Tot»: els fixats davant en l’ordre de l’ordenació; sense sortable, el de l’entrada', () => {
+    expect(ids(ordenaElements([NOVA, VELL, AVIS], { sortable: true, sortBy: 'date', categoryId: ALL_CATEGORY_ID }))).toEqual(['vell', 'avis', 'nova']);
+    expect(ids(ordenaElements([NOVA, VELL, AVIS], { sortable: true, sortBy: 'name', categoryId: ALL_CATEGORY_ID }))).toEqual(['avis', 'vell', 'nova']);
+    expect(ids(ordenaElements([NOVA, VELL, AVIS], { categoryId: ALL_CATEGORY_ID }))).toEqual(['vell', 'avis', 'nova']);
+    expect(ids(ordenaElements([NOVA, VELL, AVIS], { sortable: true, sortBy: 'name', categoryId: 'carpeta' }))).toEqual(['avis', 'nova', 'vell']);
+  });
+
+  it('ORDENACIONS: data (la de muntar) i nom; l’estat naix per data i sense ordenar, o amb l’ordre de muntar', () => {
+    expect(ORDENACIONS).toEqual(['date', 'name']);
+    expect(Object.isFrozen(ORDENACIONS)).toBe(true);
+    expect(createWorkspaceState()).toMatchObject({ sortBy: 'date', sortable: false });
+    expect(createWorkspaceState({}, {}, { sortable: true, sortBy: 'name' })).toMatchObject({ sortBy: 'name', sortable: true });
+    expect(createWorkspaceState({}, {}, { sortable: true, sortBy: 'preu' })).toMatchObject({ sortBy: 'date', sortable: true });
+  });
+
+  it('el reducer sort/set conserva la identitat si no canvia res i actualitza si canvia', () => {
+    const estat = createWorkspaceState();
+    expect(workspaceReducer(estat, { type: 'sort/set', sortBy: 'date', sortable: false })).toBe(estat);
+    expect(workspaceReducer(estat, { type: 'sort/set' })).toBe(estat);
+    expect(workspaceReducer(estat, { type: 'sort/set', sortBy: 'preu' })).toBe(estat);
+    const perNom = workspaceReducer(estat, { type: 'sort/set', sortBy: 'name' });
+    expect(perNom).not.toBe(estat);
+    expect(perNom).toMatchObject({ sortBy: 'name', sortable: false });
+    const ordenable = workspaceReducer(perNom, { type: 'sort/set', sortable: true });
+    expect(ordenable).not.toBe(perNom);
+    expect(ordenable).toMatchObject({ sortBy: 'name', sortable: true });
+    expect(workspaceReducer(ordenable, { type: 'sort/set', sortBy: 'name', sortable: true })).toBe(ordenable);
+    expect(ordenable.activeCategoryId).toBe(estat.activeCategoryId);
   });
 });
 

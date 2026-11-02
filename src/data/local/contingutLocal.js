@@ -63,7 +63,9 @@ export function creaContingutLocal(e) {
     .filter((fila) => fila.sectionId === seccio)
     .sort((a, b) => (a.createdAt === b.createdAt ? (a.id < b.id ? 1 : a.id > b.id ? -1 : 0) : (a.createdAt < b.createdAt ? 1 : -1)))
     .map((fila) => elementDeFilaPublicada({ id: fila.id, payload: e.copia(fila.payload), titol: fila.title,
-      createdAt: fila.createdAt, updatedAt: fila.updatedAt, ownerUserId: fila.ownerUserId, authorOrgId: fila.authorOrgId }));
+      createdAt: fila.createdAt, updatedAt: fila.updatedAt, ownerUserId: fila.ownerUserId, authorOrgId: fila.authorOrgId,
+      /* IDEA-61 (T0, prompt 261102_1532; L1-A3) · La secció de la fila, no la del payload. */
+      sectionId: fila.sectionId }));
   /* T2 · D04/D10 · Les notícies i els actes restaurats (dadesObertesLocal.js) són de l'administració del node. */
   const RESTAURADES_DE_LA_LLISTA = Object.freeze({ feedPosts: 'noticies', events: 'agenda' });
   /* La llista de l'administració (llavor o dades, amb el que s'hi ha restaurat) i, si n'hi ha, les dels veïns, com content.js. */

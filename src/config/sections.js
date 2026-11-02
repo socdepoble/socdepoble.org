@@ -1,4 +1,4 @@
-import { BrainCircuit, FileText, GalleryVerticalEnd, LandPlot, Newspaper, NotebookPen, Palette, Route, ShieldCheck, ShoppingCart, Waves, MessageSquare, Wifi, Settings, UserRound, CalendarDays, Network } from 'lucide-react';
+import { BrainCircuit, Briefcase, Car, FileText, GalleryVerticalEnd, House, LandPlot, Newspaper, NotebookPen, Palette, Route, ShieldCheck, ShoppingCart, Waves, MessageSquare, Wifi, Settings, UserRound, CalendarDays, Network } from 'lucide-react';
 import { RUTA_FITXA_IAIA, RUTES_CANONIQUES } from './navigation.js';
 
 /*
@@ -10,7 +10,11 @@ import { RUTA_FITXA_IAIA, RUTES_CANONIQUES } from './navigation.js';
  * l'auditoria «Sol Muy Alto» com a /calendari i queda sense cap importador.
  */
 /* Disseny, Skills, IA i Realitat s'incorporen a la navegació pública a petició de l'usuari */
-export const SECTION_ORDER = ['xat', 'mur', 'mercat', 'pobles', 'calendari', 'multimedia', 'dispositius', 'disseny', 'wikidepoble', 'notes', 'projecte', 'constitucio', 'ia', 'roadmap', 'versions', 'legal'];
+/* IDEA-61 (T0, prompt 261102_1532) · Les tres seccions verticals (Compartir
+   cotxe, Treball, Habitatge) van darrere del Mercat. No entren a
+   SECCIONS_VISIBLES ni a la barra mòbil (App.jsx; decisió del Mestre): cauen al
+   desplegable «Sistema». */
+export const SECTION_ORDER = ['xat', 'mur', 'mercat', 'vehicle', 'treball', 'habitatge', 'pobles', 'calendari', 'multimedia', 'dispositius', 'disseny', 'wikidepoble', 'notes', 'projecte', 'constitucio', 'ia', 'roadmap', 'versions', 'legal'];
 /* T27 (ordre del Mestre, 260927 nit) · `subrutes`: rutes que viuen dins de la
    jerarquia d'una secció sense penjar del seu path (App.jsx, ActorRoutes).
    La barra principal i la mòbil les encenen com a filles (NavLink matchPaths),
@@ -41,6 +45,12 @@ export const SECTIONS = [
   { id: 'xat', path: '/xat', label: 'Xat', shortLabel: 'Xat', icon: MessageSquare, kind: 'xat', subrutes: ['/control-xat'] },
   { id: 'mur', path: '/mur', label: 'Mur', shortLabel: 'Mur', icon: Newspaper, kind: 'mur' },
   { id: 'mercat', path: '/mercat', label: 'Mercat', shortLabel: 'Mercat', icon: ShoppingCart, kind: 'market' },
+  /* IDEA-61 (T0, prompt 261102_1532) · Verticals del Flux Universal de
+     Publicació: una llista del Mur filtrada per àmbit (sections/verticals/
+     SeccioVertical.jsx), amb el detall a /<ambit>/:id. */
+  { id: 'vehicle', path: '/vehicle', label: 'Compartir cotxe', shortLabel: 'Cotxe', icon: Car, kind: 'vertical' },
+  { id: 'treball', path: '/treball', label: 'Treball', shortLabel: 'Treball', icon: Briefcase, kind: 'vertical' },
+  { id: 'habitatge', path: '/habitatge', label: 'Habitatge', shortLabel: 'Habitatge', icon: House, kind: 'vertical' },
   { id: 'pobles', path: '/pobles', label: 'Pobles', shortLabel: 'Pobles', icon: LandPlot, kind: 'pobles', subrutes: ['/poblacio', '/perfil', '/gent', '/empresa', '/ajuntament', '/grup', ...Object.values(RUTES_CANONIQUES), RUTA_FITXA_IAIA] },
   { id: 'calendari', path: '/calendari', label: 'Calendari', shortLabel: 'Calendari', icon: CalendarDays, kind: 'agenda' },
   { id: 'multimedia', path: '/multimedia', label: 'Multimèdia', shortLabel: 'Media', icon: GalleryVerticalEnd, kind: 'multimedia' },

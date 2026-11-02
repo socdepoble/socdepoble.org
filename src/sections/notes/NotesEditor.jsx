@@ -15,6 +15,9 @@ import { BotoneraClassificacio } from '../../components/universal/classificacio/
 import { DialegCarpeta } from '../../components/universal/classificacio/DialegCarpeta.jsx';
 import { DialegValors } from '../../components/universal/classificacio/DialegValors.jsx';
 import { DialegEmoticona } from '../../components/universal/classificacio/DialegEmoticona.jsx';
+import { DialegAmbit } from '../../components/universal/ambits/DialegAmbit.jsx';
+import { useCanalAmbit } from '../../components/universal/ambits/canalAmbit.js';
+import { ESTAT_PER_DEFECTE, coaccionaAmbit, esFitxaDAmbit, etiquetaDAmbit, validaFitxa } from '../../utils/publicacioUniversal.js';
 import { DialegEsborrarNota } from './DialegEsborrarNota.jsx';
 import { carregaCatalegEmojis, useCanalEmojis } from './canalEmojis.js';
 import {
@@ -41,6 +44,7 @@ import { cercaEntrades, deActe, dePagina, dePoble, deProducte, dePublicacio, tex
 import { rutaDePerfilDAutor } from '../../config/navigation.js';
 import { useModeracio } from '../../components/PedraSeca/hooks/moderacioDePoble.js';
 import { tradueix } from '../../components/PedraSeca/hooks/useTraductorOpcional.js';
+import { omple } from '../../config/moderacio.js';
 import { TEXTOS_MODERACIO } from '../../components/PedraSeca/organismes/textosModeracio.js';
 
 /* Constants de mòdul */
@@ -50,7 +54,7 @@ const CAP = Object.freeze([]);
 /* Revisió del Gauntlet 261017 (ID4) · El text de càrrega de l'espai de
    treball (UniversalWorkspace · DEFAULT_LABELS.loading; NotesSection ·
    TEXT_CARREGANT), mentre la sessió recordada es restaura. */
-const TEXT_CARREGANT = 'Carregant…';
+const TEXT_CARREGANT = ['section.xat.carregant', 'Carregant…'];
 
 /* La nota de benvinguda (n1) és la font del text de l'estat buit.
    IDEA-59 / P1-72 · La mateixa de la Card tutorial de NOTES (notaTutorial.js). */
@@ -65,17 +69,17 @@ const NOTA_BENVINGUDA = NOTA_TUTORIAL;
    mateixes llistes de sèrie. */
 const CARPETA_PER_DEFECTE = 'f-notes';
 
-const AVIS_CATEGORIA = `Cal almenys una categoria. Si vols netejar-les, marca'n una de general, com «${CATEGORIA_GENERAL}».`;
+const AVIS_CATEGORIA = ["section.notes.editor.avisCategoria", "Cal almenys una categoria. Si vols netejar-les, marca'n una de general, com «{categoria}»."];
 /* Carpetes: el port de dades (backendPort.js) no té cap mètode per a crear,
    reanomenar ni esborrar carpetes; el catàleg és el de sèrie. Fins que hi haja
    contracte amb Sollutia (AGENTS §8) només es pot triar. */
-const AVIS_CARPETES = 'Crear, reanomenar i esborrar carpetes encara no té contracte de dades amb el servidor. De moment, tria la carpeta d’esta nota.';
-const AVIS_SENSE_TOTES = 'Reanomenar i esborrar estaran disponibles quan s’hagen carregat totes les notes.';
+const AVIS_CARPETES = ["section.notes.editor.avisCarpetes", "Crear, reanomenar i esborrar carpetes encara no té contracte de dades amb el servidor. De moment, tria la carpeta d’esta nota."];
+const AVIS_SENSE_TOTES = ["section.notes.editor.avisSenseTotes", "Reanomenar i esborrar estaran disponibles quan s’hagen carregat totes les notes."];
 /* T40 (ordre del Mestre, 260928) · Sense la columna publish_date (D2), la data
    queda en quarantena al dispositiu i publishNote la pren de la nota d'ací:
    des d'un altre dispositiu el Mur no rebria cap data triada i cauria a la de
    creació (created_at). */
-const AVIS_DATA_DISPOSITIU = 'Al servidor encara no hi ha on guardar la data de publicació. Es guarda en este dispositiu i només s’aplica si publiques des d’ací.';
+const AVIS_DATA_DISPOSITIU = ["section.notes.editor.avisDataDispositiu", "Al servidor encara no hi ha on guardar la data de publicació. Es guarda en este dispositiu i només s’aplica si publiques des d’ací."];
 
 /* Lògica de pujada d'imatges pròpia de Notes.
    Gauntlet 261016 (Bloc 1 i 1.2) · El fitxer que arriba ací (uploadMedia) ja
@@ -184,6 +188,12 @@ export default function NotesEditor({ activeNote, onToast = null }) {
      (NotesSection): l'editor s'hi registra per a escriure al cursor, i l'ordre
      «/» Emoji l'obri. Fora del Bloc (sense canal), l'adaptador de sempre. */
   const canalEmojis = useCanalEmojis();
+  /* IDEA-61 (T0, prompt 261102_1532) · El canal de l'àmbit del Bloc
+     (NotesSection · ?ambit=): l'àmbit pendent que la secció demana obrir, o
+     null fora del Bloc. Amb canal, la botonera oferix el grup «Àmbit»; sense
+     (el catàleg, una peça sola), el DOM de sempre, tret que la nota ja porte
+     una fitxa d'àmbit. */
+  const canalAmbit = useCanalAmbit();
 
   /* T7 · La font de les targetes incrustades (DocumentEditor · targetes). La
      funció és estable: notesAdapter es recalcula amb trenta dependències i
@@ -227,10 +237,10 @@ export default function NotesEditor({ activeNote, onToast = null }) {
     subtitle: NOTA_BENVINGUDA.subtitle,
     lead: NOTA_BENVINGUDA.lead,
     heroImage: NOTA_BENVINGUDA.heroImage,
-    heroAlt: 'Una llibreta oberta amb algú escrivint',
+    heroAlt: t("section.notes.editor.portadaAlt", "Una llibreta oberta amb algú escrivint"),
     content: NOTA_BENVINGUDA.content,
     labels: etiquetesDeNota(NOTA_BENVINGUDA, noteFolders, SENSE_PARAMS),
-    copyright: '© Sóc de Poble',
+    copyright: `© ${t('section.detail.mur.author', 'Sóc de Poble')}`,
     /* Gauntlet 261030 (cicle 3, traduir-perfil-lectura-fitxa-no-publica) ·
        La nota de benvinguda és text del sistema, públic: Traduir hi continua
        actiu (DocumentEditor · EmptyDocumentPage només el deixa actiu amb la
@@ -334,6 +344,15 @@ export default function NotesEditor({ activeNote, onToast = null }) {
   }, [noteFolders, t]);
   const classificacio = useMemo(() => (notaEnEdicio ? classificacioDe(notaEnEdicio) : null), [notaEnEdicio]);
   const carpetaId = String(notaEnEdicio?.folderId ?? CARPETA_PER_DEFECTE);
+  /* IDEA-61 (T0) · La fitxa d'àmbit de la nota ({ ambit, estat, dades } net,
+     o null), coaccionada pel contracte com en llegir una fila del port. */
+  const fitxaDeLaNota = notaEnEdicio?.fitxa;
+  const fitxaDAmbit = useMemo(() => coaccionaAmbit(fitxaDeLaNota), [fitxaDeLaNota]);
+  /* Revisió L2-A4 (IDEA-61) · Una obra d'altri (connexió o contingut de fora)
+     es compartix, mai es publica amb fitxa pròpia (NotesContext · publishNote
+     la descarta): dins del Bloc no oferix el grup, com l'efecte del canal.
+     Amb una fitxa ja desada, sí: es pot vore i llevar. */
+  const ambAmbit = (Boolean(canalAmbit) && !citaOrigen) || fitxaDAmbit !== null;
 
   const idEnEdicio = notaEnEdicio?.id;
   const escriu = useCallback((operacions) => {
@@ -366,7 +385,43 @@ export default function NotesEditor({ activeNote, onToast = null }) {
     setDialeg(null);
   }, [notaEnEdicio, escriu]);
 
-  const tancaDialeg = useCallback(() => setDialeg(null), []);
+  /* IDEA-61 (T0, prompt 261102_1532) · La fitxa d'àmbit és un camp més del
+     document (`fitxa`): pel canal de la classificació (nota, còpia de prova o
+     nota preparada), ja validada i normalitzada pel diàleg. `fitxaDelCanal`:
+     la fitxa acabada de demanar per la URL (vegeu l'efecte de davall). */
+  const [fitxaDelCanal, setFitxaDelCanal] = useState(null);
+  const desaAmbit = useCallback((fitxa) => {
+    /* Triar «Mur» és la publicació de sempre: cap fitxa (null la lleva, com
+       la desa el port), no una fitxa amb àmbit 'mur'. */
+    if (notaEnEdicio) escriu([{ doc: notaEnEdicio, canvis: { fitxa: esFitxaDAmbit(fitxa) ? fitxa : null } }]);
+    setFitxaDelCanal(null);
+    setDialeg(null);
+  }, [notaEnEdicio, escriu]);
+
+  const tancaDialeg = useCallback(() => {
+    setFitxaDelCanal(null);
+    setDialeg(null);
+  }, []);
+  /* IDEA-61 · L'entrada des d'una secció (/notes?ambit=vehicle): la nota
+     oberta queda amb la fitxa de l'àmbit demanat si encara no en té cap de
+     vertical, i el diàleg «On es publica?» s'obri sol, una vegada per demanda
+     (el canal es consumix; la ref evita repetir-ho si el canal no canvia).
+     `fitxaDelCanal` és la fitxa acabada de demanar, perquè el diàleg nasca
+     amb l'àmbit triat encara que la nota no l'haja rebuda en la mateixa
+     pintada. Mai sobre la còpia de prova ni sobre una obra d'altri. */
+  const canalConsumit = useRef(null);
+  useEffect(() => {
+    const pendent = canalAmbit?.pendent;
+    if (!pendent || !notaEnEdicio || esSandbox || citaOrigen || canalConsumit.current === canalAmbit) return;
+    canalConsumit.current = canalAmbit;
+    if (!esFitxaDAmbit(notaEnEdicio.fitxa)) {
+      const fitxa = { ambit: pendent, estat: ESTAT_PER_DEFECTE, dades: {} };
+      escriu([{ doc: notaEnEdicio, canvis: { fitxa } }]);
+      setFitxaDelCanal(fitxa);
+    }
+    setDialeg('ambit');
+    canalAmbit.consumix?.();
+  }, [canalAmbit, notaEnEdicio, esSandbox, citaOrigen, escriu]);
   /* Gauntlet 261016 (Bloc 3.9; ordre del Mestre: «eliminar la ploma blanca
      central» de la barra taronja) · El DialegEmoticona (amb la graella del
      catàleg) només s'obri des del quart botó de la botonera, «Emojis XL»,
@@ -418,6 +473,14 @@ export default function NotesEditor({ activeNote, onToast = null }) {
     () => signaturaDeNota({ notaId: idSignatura, actor, actorId, agents, currentUser, dataMode }),
     [idSignatura, actor, actorId, agents, currentUser, dataMode]
   );
+  /* IDEA-61 (T0) · El que veu la previsualització del diàleg d'àmbit: els
+     textos plans de la nota (el títol pot portar HTML) i la signatura de la
+     barra taronja (mai «Sóc de Poble» per defecte). */
+  const documentDePrevisualitzacio = useMemo(() => (notaEnEdicio ? {
+    title: textDe(notaEnEdicio.title), subtitle: textDe(notaEnEdicio.subtitle), lead: textDe(notaEnEdicio.lead),
+    heroImage: notaEnEdicio.heroImage || undefined,
+    authorName: signatura.nom || null, authorAvatar: signatura.avatar || null, authorLocation: signatura.poble || null
+  } : null), [notaEnEdicio, signatura]);
 
   const notesAdapter = useMemo(() => {
     /* T41 (ordre del Mestre, 260928) · PUBLICAR (i la bola del món) obrin el
@@ -453,6 +516,13 @@ export default function NotesEditor({ activeNote, onToast = null }) {
          la de visibilitatNota.js (publicaAmbMotiu), la mateixa del lector. */
       onTria: async (publica, doc) => {
         if (!publica || bloqueig?.opcio === 'publica') return true;
+        /* IDEA-61 (T0, prompt 261102_1532) · Una fitxa d'àmbit vertical
+           incompleta no ix al Mur: el motiu, en línia, al selector
+           (SelectorVisibilitat pinta el missatge de l'error que llança onTria). */
+        const fitxa = doc?.fitxa;
+        if (esFitxaDAmbit(fitxa) && !validaFitxa(fitxa.ambit, fitxa.dades).ok) {
+          throw new Error(omple(t('editor.ambit.errorPublicar', 'La fitxa de «{ambit}» no està completa.'), { ambit: etiquetaDAmbit(fitxa.ambit, t) }));
+        }
         /* Fase D (261020, tasca 2; pla 261020_1300 · Google Play UGC) · Abans
            de la primera publicació, les normes de convivència
            (ModeracioContext · asseguraNormes, estable). Declinar deixa el
@@ -485,7 +555,7 @@ export default function NotesEditor({ activeNote, onToast = null }) {
       ambDataPublicacio: true,
       /* Només quan el servidor no la pot guardar: el calendari deixa de dir
          que es desa com la resta i ho explica en línia. */
-      avisDataPublicacio: dataNomesAlDispositiu ? AVIS_DATA_DISPOSITIU : null,
+      avisDataPublicacio: dataNomesAlDispositiu ? tradueix(t, AVIS_DATA_DISPOSITIU) : null,
       publishLabel: citaOrigen ? t('section.notes.compartir', 'Compartir') : null,
       // UniversalToolbar pinta «Borrar» al costat de «Publicar» només si hi és.
       deleteDocument: pucBorrar ? obriBorrar : undefined,
@@ -532,7 +602,13 @@ export default function NotesEditor({ activeNote, onToast = null }) {
           categories={classificacio.categories}
           etiquetes={classificacio.tags}
           emoticona={notaEnEdicio?.icon || ''}
-          etiquetaEmoticona="Emojis XL"
+          etiquetaEmoticona={t("section.notes.editor.emojis", "Emojis XL")}
+          /* IDEA-61 (T0) · El grup «Àmbit»: dins del Bloc (canal) o amb fitxa. */
+          ambit={ambAmbit ? {
+            text: t('editor.ambit.boto', 'Àmbit'),
+            valor: fitxaDAmbit ? etiquetaDAmbit(fitxaDAmbit.ambit, t) : '',
+            nom: fitxaDAmbit ? omple(t('editor.ambit.actual', 'Àmbit: {ambit}'), { ambit: etiquetaDAmbit(fitxaDAmbit.ambit, t) }) : ''
+          } : undefined}
           onObri={setDialeg}
         />
       ) : null,
@@ -556,7 +632,7 @@ export default function NotesEditor({ activeNote, onToast = null }) {
       /* Ordre del Mestre (261007) · L'autoria de la barra taronja porta a la
          pàgina de qui signa, també a l'estat buit (la benvinguda). */
       barAuthorHref: signatura.ruta,
-      copyright: '© Sóc de Poble',
+      copyright: `© ${t('section.detail.mur.author', 'Sóc de Poble')}`,
       posicioEines: 'davall-entradilla',
       /* T7 (ordre del Mestre, 261004) · Targetes incrustades al cos: l'ordre
          «/» «Targeta». Sempre present (constant): l'esquema no es reconstruïx. */
@@ -592,7 +668,7 @@ export default function NotesEditor({ activeNote, onToast = null }) {
          l'ordre «/» Emoji. Totes dues funcions són estables (canalEmojis.js). */
       ...(canalEmojis ? { registraInsercio: canalEmojis.registra, obreEmojis: canalEmojis.obri } : {})
     };
-  }, [notaEnEdicio, documentPerAlEditor, esSandbox, esPreparada, creacioPreparada, escriuPreparada, desaPreparada, senseSessio, actor, actorId, autoria, memberships, actualitzaSandbox, setLocalNoteField, saveNoteField, publishNote, compartirNota, connexio, dretsReservats, dretsDeLOriginal, extern, citaOrigen, pucBorrar, obriBorrar, noteFolders, t, signatura, emptyDocument, config, classificacio, carpetes, carpetaId, estatDesament, dataNomesAlDispositiu, targetes, canalEmojis, asseguraNormes, memoriaOral]);
+  }, [notaEnEdicio, documentPerAlEditor, esSandbox, esPreparada, creacioPreparada, escriuPreparada, desaPreparada, senseSessio, actor, actorId, autoria, memberships, actualitzaSandbox, setLocalNoteField, saveNoteField, publishNote, compartirNota, connexio, dretsReservats, dretsDeLOriginal, extern, citaOrigen, pucBorrar, obriBorrar, noteFolders, t, signatura, emptyDocument, config, classificacio, carpetes, carpetaId, estatDesament, dataNomesAlDispositiu, targetes, canalEmojis, asseguraNormes, memoriaOral, ambAmbit, fitxaDAmbit]);
 
   // Reanomenar i esborrar necessiten veure totes les notes: amb el llistat a
   // mitges, una nota no carregada es quedaria amb el nom vell.
@@ -608,7 +684,7 @@ export default function NotesEditor({ activeNote, onToast = null }) {
     onReanomena: (vell, nou) => escriu(reanomena(documents, camp, vell, nou)),
     onEsborra: (valor) => escriu(esborra(documents, camp, valor)),
     globalActiu,
-    avisGlobal: AVIS_SENSE_TOTES
+    avisGlobal: tradueix(t, AVIS_SENSE_TOTES)
   });
 
   /* Revisió del Gauntlet 261017 (ID4) · Sense cap nota oberta i amb la
@@ -617,7 +693,7 @@ export default function NotesEditor({ activeNote, onToast = null }) {
      no la còpia de prova del Foraster ni l'estat buit signat per Sóc de
      Poble. Després de tots els ganxos: l'ordre no canvia entre pintades. */
   if (sessioPendent && !notaEnEdicio) {
-    return <p role="status">{TEXT_CARREGANT}</p>;
+    return <p role="status">{tradueix(t, TEXT_CARREGANT)}</p>;
   }
 
   return (
@@ -654,22 +730,22 @@ export default function NotesEditor({ activeNote, onToast = null }) {
           opcions={carpetes}
           seleccionada={carpetaId}
           onDesa={desaCarpeta}
-          avis={AVIS_CARPETES}
+          avis={tradueix(t, AVIS_CARPETES)}
         />
       ) : null}
       {dialeg === 'categories' && notaEnEdicio ? (
         <DialegValors
           key={`categories:${notaEnEdicio.id}`}
           {...propsValors('categories')}
-          titol="Categories de la nota"
-          etiquetaNou="Nova categoria"
+          titol={t("section.notes.editor.categories", "Categories de la nota")}
+          etiquetaNou={t("section.notes.editor.novaCategoria", "Nova categoria")}
           minim={1}
-          avisMinim={AVIS_CATEGORIA}
+          avisMinim={omple(tradueix(t, AVIS_CATEGORIA), { categoria: CATEGORIA_GENERAL })}
           extra={esSuperadmin ? (
             // Només la persona superadministradora ho veu, com abans a la barra.
             // T7 (P8) · L'avís es queda; els dos botons desactivats sense funció, no.
             <div className="sdp-classificacio-dialeg__reservat">
-              <p className="sdp-classificacio-dialeg__avis">Les categories de sistema i de projecte encara no tenen model de dades: decisió pendent del Mestre.</p>
+              <p className="sdp-classificacio-dialeg__avis">{t("section.notes.editor.avisCategories", "Les categories de sistema i de projecte encara no tenen model de dades: decisió pendent del Mestre.")}</p>
             </div>
           ) : null}
         />
@@ -678,8 +754,8 @@ export default function NotesEditor({ activeNote, onToast = null }) {
         <DialegValors
           key={`etiquetes:${notaEnEdicio.id}`}
           {...propsValors('tags')}
-          titol="Etiquetes de la nota"
-          etiquetaNou="Nova etiqueta"
+          titol={t("section.notes.editor.etiquetes", "Etiquetes de la nota")}
+          etiquetaNou={t("section.notes.editor.novaEtiqueta", "Nova etiqueta")}
           minim={0}
         />
       ) : null}
@@ -695,6 +771,20 @@ export default function NotesEditor({ activeNote, onToast = null }) {
           actual={notaEnEdicio.icon || ''}
           onDesa={desaEmoticona}
           carregaCataleg={carregaCatalegEmojis}
+        />
+      ) : null}
+      {/* IDEA-61 (T0, prompt 261102_1532) · «On es publica?»: l'àmbit i la fitxa
+          guiada, desats pel canal de la classificació (desaAmbit); la
+          previsualització signa com la barra taronja. */}
+      {dialeg === 'ambit' && notaEnEdicio ? (
+        <DialegAmbit
+          key={`ambit:${notaEnEdicio.id}`}
+          obert
+          valor={fitxaDAmbit ?? fitxaDelCanal}
+          document={documentDePrevisualitzacio}
+          onDesa={desaAmbit}
+          onTanca={tancaDialeg}
+          t={t}
         />
       ) : null}
       {dialeg === 'esborrar' && pucBorrar && notaEnEdicio && aBorrar === notaEnEdicio.id ? (

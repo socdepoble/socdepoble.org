@@ -1,0 +1,14 @@
+{
+  "@context": "https://schema.org",
+  "@id": "municipi.jsonld#la-torre-de-les-macanes",
+  "@type": "AdministrativeArea",
+  "identifier": "la-torre-de-les-macanes",
+  "name": "La Torre de les Maçanes",
+  "subjectOf": {
+    "@type": "CreativeWork",
+    "encodingFormat": "application/activity+json",
+    "name": "Actor ActivityPub de la Torre de les Maçanes a Sóc de Poble (fase 1, només lectura)",
+    "url": "https://socdepoble.org/ap/actors/la-torre-de-les-macanes.json"
+  },
+  "url": "https://socdepoble.org/pobles/la-torre-de-les-macanes"
+}

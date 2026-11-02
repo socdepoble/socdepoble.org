@@ -7,9 +7,10 @@
  * defecte (jsdom): la regla de les imatges (isSafeAsset) mira la finestra.
  */
 import { afterEach, describe, expect, test, vi } from 'vitest';
+import { ESTATS, RESERVES_I18N } from '../../utils/publicacioUniversal.js';
 import fontFacetes from './facetesCerca.js?raw';
 import {
-  GRUPS_FACETES, TRAMS_DATA, ambEtiquetes, facetesDeLEntrada, grupsDeFacetes, idDeFaceta, itemsDeLEspai, tramsDeData
+  ESTATS_FACETA, GRUPS_FACETES, TRAMS_DATA, ambEtiquetes, facetesDeLEntrada, grupsDeFacetes, idDeFaceta, itemsDeLEspai, tramsDeData
 } from './facetesCerca.js';
 import {
   TIPUS_CERCA, deActe, deAgent, deNota, dePagina, dePoble, deProducte, dePublicacio, esCorreu, marcaTemps, plega
@@ -234,9 +235,10 @@ describe('facetesDeLEntrada', () => {
 });
 
 describe('grupsDeFacetes', () => {
-  test('tres grups en l’ordre de GRUPS_FACETES, amb clau i text', () => {
+  test('els grups en l’ordre de GRUPS_FACETES, amb clau i text; sense cap fitxa d’àmbit, cap grup Estat', () => {
     const grups = grupsDeFacetes(ENTRADES, OPCIONS);
-    expect(grups.map((g) => [g.id, g.clau, g.text])).toEqual(GRUPS_FACETES.map((g) => [g.id, g.clau, g.text]));
+    expect(grups.map((g) => [g.id, g.clau, g.text])).toEqual(GRUPS_FACETES.filter((g) => g.id !== 'estat').map((g) => [g.id, g.clau, g.text]));
+    expect(GRUPS_FACETES.map((g) => g.id)).toEqual(['tipus', 'estat', 'pobles', 'data']);
   });
 
   test('Tipus: en l’ordre de TIPUS_CERCA, sense «tot» i només els que tenen recompte', () => {
@@ -414,7 +416,79 @@ describe('puresa', () => {
   test('frontera: cap React, cap xarxa, cap rellotge ni atzar propis', () => {
     const codi = fontFacetes.replace(/\/\*[\s\S]*?\*\//g, '').replace(/\/\/[^\n]*/g, '');
     expect(codi).not.toMatch(/from\s+['"]react|fetch\(|Date\.now|new Date\(\)|Math\.random|performance\.now/);
-    expect([...codi.matchAll(/import\s[^;]*from\s+['"]([^'"]+)['"]/g)].map((m) => m[1])).toEqual(['./indexCerca.js']);
+    /* IDEA-61 · El contracte pur del flux universal (JS pur, sense xarxa ni rellotge) és l'única importació nova. */
+    expect([...codi.matchAll(/import\s[^;]*from\s+['"]([^'"]+)['"]/g)].map((m) => m[1]))
+      .toEqual(['../../utils/publicacioUniversal.js', './indexCerca.js']);
+  });
+});
+
+/* ── IDEA-61 (T0, prompt 261102_1532) · Fitxes d'àmbit ────────────────────── */
+
+/* Viuen a la secció 'mur' amb l'àmbit, l'estat i les dades al payload
+   (publicacioUniversal.js); el mercat, a la seua secció. */
+const DADES_VEHICLE = Object.freeze({ modalitat: 'oferisc_places', lloc_eixida: TORRE, lloc_arribada: 'Alcoi', data_eixida: '2026-11-03', places: 3 });
+const C1 = dePublicacio({
+  id: 'c1', title: 'Cotxe a Alcoi', ambit: 'vehicle', estat: 'disponible', dades: DADES_VEHICLE, town_name: TORRE, created_at: iso(local(2026, 11, 1, 8))
+});
+const C2 = dePublicacio({
+  id: 'c2', title: 'Cotxe a Xixona', ambit: 'vehicle', estat: 'reservat', dades: { ...DADES_VEHICLE, lloc_arribada: 'Xixona' }, created_at: iso(local(2026, 10, 20, 8))
+});
+const T1 = dePublicacio({ id: 't1', title: 'Busquem fuster', ambit: 'treball', estat: 'zzz', dades: { modalitat: 'oferta_feina', ofici: 'Fusteria' } });
+const H1 = dePublicacio({ id: 'h1', title: 'Casa al carrer Major', ambit: 'habitatge', estat: 'tancat', dades: { modalitat: 'lloguer', preu: '400 €' } });
+const MP = deProducte({ id: 'mp', title: 'Mel del flux', ambit: 'mercat', estat: 'complet', dades: { preu: '8 €' } });
+const AMB_FITXES = Object.freeze([...ENTRADES, C1, C2, T1, H1, MP]);
+const senseData = (e) => facetesDeLEntrada(e, OPCIONS).filter((id) => !id.startsWith('data:'));
+
+describe('IDEA-61 · la faceta Estat de les fitxes d’àmbit', () => {
+  test('ESTATS_FACETA són els ESTATS del contracte, en el seu ordre, amb la clau i la reserva idèntiques', () => {
+    expect(ESTATS_FACETA.map((e) => e.id)).toEqual([...ESTATS]);
+    for (const e of ESTATS_FACETA) expect([e.clau, e.text], e.id).toEqual([`ambit.estat.${e.id}`, RESERVES_I18N[`ambit.estat.${e.id}`]]);
+    expect(ESTATS_FACETA.map((e) => e.text)).toEqual(['Disponible', 'Reservat', 'Complet', 'Tancat']);
+  });
+
+  test('una fitxa d’àmbit porta tipus:<ambit> i estat:<estat> darrere del tipus; un estat desconegut és «disponible»; una entrada de sempre, cap estat', () => {
+    expect(senseData(C1)).toEqual(['tipus:vehicle', 'estat:disponible', 'poble:la-torre-de-les-macanes']);
+    expect(senseData(C2)).toEqual(['tipus:vehicle', 'estat:reservat']);
+    expect(senseData(T1)).toEqual(['tipus:treball', 'estat:disponible']);
+    expect(senseData(H1)).toEqual(['tipus:habitatge', 'estat:tancat']);
+    expect(senseData(MP)).toEqual(['tipus:mercat', 'estat:complet']);
+    for (const e of ENTRADES) expect(facetesDeLEntrada(e, OPCIONS).some((id) => id.startsWith('estat:')), e.clau).toBe(false);
+    /* Una entrada que no ve de l'índex i porta un `ambit` que no és del vocabulari tampoc. */
+    expect(facetesDeLEntrada({ clau: 'publicacions:x', tipus: 'publicacions', titol: 'X', ambit: 'cotxe', estat: 'reservat', data: 0 }, OPCIONS)).toEqual(['tipus:publicacions']);
+    expect(facetesDeLEntrada({ clau: 'publicacions:y', tipus: 'publicacions', titol: 'Y', ambit: 'mur', estat: 'reservat', data: 0 }, OPCIONS)).toEqual(['tipus:publicacions']);
+  });
+
+  test('el grup Estat, entre Tipus i Pobles, en l’ordre d’ESTATS_FACETA i només amb els estats que tenen recompte', () => {
+    const grups = grupsDeFacetes(AMB_FITXES, OPCIONS);
+    expect(grups.map((g) => g.id)).toEqual(['tipus', 'estat', 'pobles', 'data']);
+    const estat = grups[1];
+    expect([estat.clau, estat.text]).toEqual(['section.search.faceta.estat', 'Estat']);
+    expect(estat.options).toEqual([
+      { id: 'estat:disponible', clau: 'ambit.estat.disponible', text: 'Disponible', count: 2 },
+      { id: 'estat:reservat', clau: 'ambit.estat.reservat', text: 'Reservat', count: 1 },
+      { id: 'estat:complet', clau: 'ambit.estat.complet', text: 'Complet', count: 1 },
+      { id: 'estat:tancat', clau: 'ambit.estat.tancat', text: 'Tancat', count: 1 }
+    ]);
+    /* La faceta de tipus naix sola de TIPUS_CERCA: les tres verticals, al seu lloc, darrere del Mercat. */
+    expect(grups[0].options.map((o) => o.id)).toEqual([
+      'tipus:persones', 'tipus:pobles', 'tipus:publicacions', 'tipus:agenda', 'tipus:mercat', 'tipus:vehicle', 'tipus:treball', 'tipus:habitatge', 'tipus:notes'
+    ]);
+    expect(grups[0].options.find((o) => o.id === 'tipus:vehicle')).toEqual({ id: 'tipus:vehicle', clau: 'section.search.tipus.vehicle', text: 'Compartir cotxe', count: 2 });
+    /* Un sol estat per element, i el recompte quadra. */
+    const items = itemsDeLEspai(AMB_FITXES, OPCIONS);
+    for (const item of items) expect(item.categoryIds.filter((id) => id.startsWith('estat:')).length, item.id).toBeLessThanOrEqual(1);
+    for (const opcio of estat.options) expect(items.filter((item) => item.categoryIds.includes(opcio.id)), opcio.id).toHaveLength(opcio.count);
+    /* Només amb un estat: el grup hi és igualment, amb una sola opció. */
+    expect(grupsDeFacetes([C2], OPCIONS).find((g) => g.id === 'estat').options.map((o) => [o.id, o.count])).toEqual([['estat:reservat', 1]]);
+  });
+
+  test('ambEtiquetes tradueix l’Estat i els seus estats per la seua clau; sense traductor, el text en valencià', () => {
+    const t = vi.fn((clau, reserva) => (clau === 'ambit.estat.reservat' ? 'Reservado' : clau === 'section.search.faceta.estat' ? 'Estado' : reserva));
+    const amb = ambEtiquetes(grupsDeFacetes([C1, C2], OPCIONS), t);
+    expect(amb.map((g) => g.label)).toEqual(['Tipus', 'Estado', 'Pobles', 'Data']);
+    expect(amb[1].options.map((o) => o.label)).toEqual(['Disponible', 'Reservado']);
+    expect(amb[0].options.map((o) => o.label)).toEqual(['Compartir cotxe']);
+    expect(ambEtiquetes(grupsDeFacetes([C1, C2], OPCIONS))[1].options.map((o) => o.label)).toEqual(['Disponible', 'Reservat']);
   });
 });
 

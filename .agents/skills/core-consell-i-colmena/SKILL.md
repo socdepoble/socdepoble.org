@@ -13,6 +13,7 @@ triggers_on:
   - ment colmena
   - rols ia
 contracte.llig:
+  - .agents/consell.json
   - AGENTS.md
   - _wiki_de_poble/04_escriptori
   - _wiki_de_poble/10_actes

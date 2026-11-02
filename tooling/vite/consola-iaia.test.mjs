@@ -8,9 +8,13 @@ import http from 'node:http';
 import os from 'node:os';
 import path from 'node:path';
 import { execFileSync } from 'node:child_process';
+import { EventEmitter } from 'node:events';
+import { PassThrough, Readable } from 'node:stream';
 import { pathToFileURL } from 'node:url';
 import consolaIaia, {
-  ERROR_GOVERN_INTERN, ESQUEMA_GOVERN, RUTA_GOVERN, carregaAmbMarca, compiladorGovern, servixGovern, vocabulariGovern
+  ERROR_GOVERN_INTERN, ERROR_JARVIS, ESQUEMA_GOVERN, ESQUEMA_JARVIS, RUTA_GOVERN,
+  RUTA_PROGRES_JARVIS, RUTA_PUBLICA_TOT, carregaAmbMarca, compiladorGovern,
+  oblidaCorredorJarvis, servixGovern, vocabulariGovern
 } from './consola-iaia.mjs';
 import { RUTA_LLIBRE } from '../brain/fonts-govern.mjs';
 import { PROJECT_DIR } from '../wiki/lib/project_paths.mjs';
@@ -67,9 +71,9 @@ function resposta() {
 }
 const peticio = (method = 'GET', ip = '127.0.0.1') => ({ method, socket: { remoteAddress: ip }, url: RUTA_GOVERN });
 
-test('la ruta és la que llig la Consola, i el connector la munta amb les altres tres', () => {
+test('la ruta és la que llig la Consola, i el connector la munta amb les altres quatre i el corredor Jarvis', () => {
   assert.equal(RUTA_GOVERN, FONT_GOVERN);
-  assert.deepEqual([...gestors().keys()], ['/__iaia/consola.json', '/__iaia/mapa.json', '/__iaia/empaquetats.json', RUTA_GOVERN]);
+  assert.deepEqual([...gestors().keys()], ['/__iaia/consola.json', '/__iaia/mapa.json', '/__iaia/empaquetats.json', RUTA_GOVERN, RUTA_PUBLICA_TOT]);
   assert.equal(connectorDev().apply, 'serve', 'només en desenvolupament: el build no la coneix');
   // El del build no munta cap servidor: només emet la instantània estàtica (instantania-consola.test.mjs).
   assert.deepEqual(consolaIaia().filter((c) => c.configureServer || c.configurePreviewServer).map((c) => c.name), ['sdp:consola-iaia']);
@@ -237,4 +241,226 @@ test('dins d’un servidor de Vite de veres: sense el connector, l’SPA; amb el
   const error = await pide(RUTA_GOVERN);
   assert.equal(error.status, 500);
   assert.equal(JSON.parse(error.text).codi, 'llibre-absent');
+});
+
+/* ── IDEA-60 (T1a) · Proves del corredor Jarvis ─────────────────────────── */
+function peticioPostJarvis(cos, {
+  ip = '127.0.0.1',
+  url = RUTA_PUBLICA_TOT,
+  method = 'POST',
+  headers = {}
+} = {}) {
+  const bytes = typeof cos === 'string' ? Buffer.from(cos, 'utf8') : Buffer.from(JSON.stringify(cos), 'utf8');
+  const req = Readable.from([bytes]);
+  req.method = method;
+  req.url = url;
+  req.socket = { remoteAddress: ip };
+  req.headers = {
+    'content-length': String(bytes.length),
+    'content-type': 'application/json',
+    origin: 'http://localhost:3340',
+    host: 'localhost:3340',
+    'sec-fetch-site': 'same-origin',
+    ...headers
+  };
+  return req;
+}
+
+function falsExecuta() {
+  const crides = [];
+  const executa = (fitxer, args, opcions) => {
+    const proc = new EventEmitter();
+    proc.stdout = new PassThrough();
+    crides.push({ fitxer, args, opcions, proc });
+    return proc;
+  };
+  return { crides, executa };
+}
+
+test('POST local bo: 202 amb el progrés inicial, execFile sense shell, cwd a l’arrel, i el progrés es llig a .json', async (t) => {
+  oblidaCorredorJarvis();
+  t.after(() => oblidaCorredorJarvis());
+  const { crides, executa } = falsExecuta();
+  const rutes = gestors({ executaJarvis: executa, arrelJarvis: '/arrel/de/mentides' });
+  const gestor = rutes.get(RUTA_PUBLICA_TOT);
+
+  const res = resposta();
+  gestor(peticioPostJarvis({ schema: ESQUEMA_JARVIS, notes: 'Arreglem el xat', canals: ['web', 'ios'], sec: false }), res);
+  await res.fet;
+  assert.equal(res.statusCode, 202);
+  assert.equal(res.capcaleres['content-type'], 'application/json; charset=utf-8');
+  assert.equal(res.capcaleres['cache-control'], 'no-store');
+  assert.deepEqual(JSON.parse(res.cos), {
+    schema: ESQUEMA_JARVIS,
+    estat: 'en_curs',
+    passos: [
+      { id: 'web', canal: 'web', titol: '1/2 Web al dia', estat: 'pendent' },
+      { id: 'ios', canal: 'ios', titol: '2/2 Apple enviat', estat: 'pendent' }
+    ]
+  });
+  assert.equal(crides.length, 1);
+  assert.equal(crides[0].fitxer, process.execPath);
+  assert.deepEqual(crides[0].args, ['scripts/botigues/publica-tot.mjs', '--notes', 'Arreglem el xat', '--canals', 'web,ios']);
+  assert.equal(crides[0].opcions.cwd, '/arrel/de/mentides');
+  assert.equal('shell' in crides[0].opcions, false);
+
+  crides[0].proc.stdout.write('{"pas":"web","estat":"en_curs"}\n{"pas":"web","estat":"fet","text":"a /Users/algu/dist"}\n');
+  await new Promise((r) => setImmediate(r));
+
+  const resProgres = resposta();
+  gestor({ method: 'GET', url: RUTA_PROGRES_JARVIS, socket: { remoteAddress: '127.0.0.1' }, headers: {} }, resProgres);
+  await resProgres.fet;
+  assert.equal(resProgres.statusCode, 200);
+  const prog1 = JSON.parse(resProgres.cos);
+  assert.equal(prog1.estat, 'en_curs');
+  assert.deepEqual(prog1.passos, [
+    { id: 'web', canal: 'web', titol: '1/2 Web al dia', estat: 'fet', detall: 'a <camí>' },
+    { id: 'ios', canal: 'ios', titol: '2/2 Apple enviat', estat: 'pendent' }
+  ]);
+
+  // close(0) sense que ios haja dit res -> estat 'error'
+  crides[0].proc.emit('close', 0);
+  const resTancatError = resposta();
+  gestor({ method: 'GET', url: RUTA_PROGRES_JARVIS, socket: { remoteAddress: '127.0.0.1' }, headers: {} }, resTancatError);
+  await resTancatError.fet;
+  assert.equal(JSON.parse(resTancatError.cos).estat, 'error');
+
+  // Segon cas: ios també diu 'fet' abans de close(0) -> estat 'fet'
+  oblidaCorredorJarvis();
+  const res2 = resposta();
+  gestor(peticioPostJarvis({ schema: ESQUEMA_JARVIS, notes: 'Segona pujada', canals: ['web', 'ios'], sec: false }), res2);
+  await res2.fet;
+  assert.equal(res2.statusCode, 202);
+  crides[1].proc.stdout.write('{"pas":"web","estat":"fet"}\n{"pas":"ios","estat":"fet"}\n');
+  await new Promise((r) => setImmediate(r));
+  crides[1].proc.emit('close', 0);
+  const resTancatFet = resposta();
+  gestor({ method: 'GET', url: RUTA_PROGRES_JARVIS, socket: { remoteAddress: '127.0.0.1' }, headers: {} }, resTancatFet);
+  await resTancatFet.fet;
+  assert.equal(JSON.parse(resTancatFet.cos).estat, 'fet');
+});
+
+test('un sol corredor alhora: segon POST mentre corre torna 409 ocupat, i després de close(0) torna 202', async (t) => {
+  oblidaCorredorJarvis();
+  t.after(() => oblidaCorredorJarvis());
+  const { crides, executa } = falsExecuta();
+  const gestor = gestors({ executaJarvis: executa }).get(RUTA_PUBLICA_TOT);
+
+  const r1 = resposta();
+  gestor(peticioPostJarvis({ schema: ESQUEMA_JARVIS, notes: 'Primera', canals: ['web'], sec: false }), r1);
+  await r1.fet;
+  assert.equal(r1.statusCode, 202);
+  assert.equal(crides.length, 1);
+
+  const r2 = resposta();
+  gestor(peticioPostJarvis({ schema: ESQUEMA_JARVIS, notes: 'Segona', canals: ['web'], sec: false }), r2);
+  await r2.fet;
+  assert.equal(r2.statusCode, 409);
+  assert.equal(JSON.parse(r2.cos).codi, 'ocupat');
+  assert.equal(crides.length, 1);
+
+  crides[0].proc.emit('close', 0);
+  const r3 = resposta();
+  gestor(peticioPostJarvis({ schema: ESQUEMA_JARVIS, notes: 'Tercera', canals: ['web'], sec: false }), r3);
+  await r3.fet;
+  assert.equal(r3.statusCode, 202);
+  assert.equal(crides.length, 2);
+});
+
+test('el cos: JSON invàlid, schema erroni, notes buides o >500, canal desconegut, sec cadena o cos >4096 bytes', async (t) => {
+  oblidaCorredorJarvis();
+  t.after(() => oblidaCorredorJarvis());
+  const { crides, executa } = falsExecuta();
+  const gestor = gestors({ executaJarvis: executa }).get(RUTA_PUBLICA_TOT);
+
+  const invalids = [
+    'no es json {',
+    { schema: 'altre', notes: 'ok', canals: [], sec: false },
+    { schema: ESQUEMA_JARVIS, notes: '   ', canals: [], sec: false },
+    { schema: ESQUEMA_JARVIS, notes: 'a'.repeat(501), canals: [], sec: false },
+    { schema: ESQUEMA_JARVIS, notes: 'ok', canals: ['tv'], sec: false },
+    { schema: ESQUEMA_JARVIS, notes: 'ok', canals: [], sec: 'true' }
+  ];
+  for (const cos of invalids) {
+    const res = resposta();
+    gestor(peticioPostJarvis(cos), res);
+    await res.fet;
+    assert.equal(res.statusCode, 400);
+    assert.equal(JSON.parse(res.cos).codi, 'cos');
+  }
+
+  const resGran = resposta();
+  gestor(peticioPostJarvis({ schema: ESQUEMA_JARVIS, notes: 'ok', canals: [], sec: false }, { headers: { 'content-length': '5000' } }), resGran);
+  await resGran.fet;
+  assert.equal(resGran.statusCode, 413);
+  assert.equal(JSON.parse(resGran.cos).codi, 'mida');
+  assert.equal(crides.length, 0);
+
+  for (const text of Object.values(ERROR_JARVIS)) {
+    assert.equal(text.includes('/'), false, text);
+  }
+});
+
+test('fronteres i CSRF (T1a-ARB-01): mètodes, IP externa, Origin/Host/Sec-Fetch-Site i Content-Type', async (t) => {
+  oblidaCorredorJarvis();
+  t.after(() => oblidaCorredorJarvis());
+  const { crides, executa } = falsExecuta();
+  const gestor = gestors({ executaJarvis: executa }).get(RUTA_PUBLICA_TOT);
+  const cosBo = { schema: ESQUEMA_JARVIS, notes: 'Arreglem el xat', canals: ['web'], sec: true };
+
+  // GET .json sense corredor -> 404 codi 'cap'
+  const resCap = resposta();
+  gestor({ method: 'GET', url: RUTA_PROGRES_JARVIS, socket: { remoteAddress: '127.0.0.1' }, headers: {} }, resCap);
+  await resCap.fet;
+  assert.equal(resCap.statusCode, 404);
+  assert.equal(JSON.parse(resCap.cos).codi, 'cap');
+
+  // GET local a RUTA_PUBLICA_TOT (sense .json) -> 403
+  const resGet = resposta();
+  gestor({ method: 'GET', url: RUTA_PUBLICA_TOT, socket: { remoteAddress: '127.0.0.1' }, headers: {} }, resGet);
+  await resGet.fet;
+  assert.equal(resGet.statusCode, 403);
+
+  // POST/PUT/DELETE a .json -> 403
+  for (const method of ['POST', 'PUT', 'DELETE']) {
+    const res = resposta();
+    gestor({ method, url: RUTA_PROGRES_JARVIS, socket: { remoteAddress: '127.0.0.1' }, headers: {} }, res);
+    await res.fet;
+    assert.equal(res.statusCode, 403, method);
+  }
+
+  // POST des de 192.168.1.20 -> 403
+  const resFora = resposta();
+  gestor(peticioPostJarvis(cosBo, { ip: '192.168.1.20' }), resFora);
+  await resFora.fet;
+  assert.equal(resFora.statusCode, 403);
+
+  // CSRF: sense Origin, Origin extern, port diferent, Sec-Fetch-Site cross-site -> 403
+  for (const headers of [
+    { origin: undefined },
+    { origin: 'http://evil.example', host: 'localhost:3340' },
+    { origin: 'http://localhost:8080', host: 'localhost:3340' },
+    { origin: 'http://localhost:3340', host: 'localhost:3340', 'sec-fetch-site': 'cross-site' }
+  ]) {
+    const res = resposta();
+    gestor(peticioPostJarvis(cosBo, { headers }), res);
+    await res.fet;
+    assert.equal(res.statusCode, 403);
+  }
+
+  // Content-Type text/plain -> 415 codi 'cos'
+  const res415 = resposta();
+  gestor(peticioPostJarvis(cosBo, { headers: { 'content-type': 'text/plain' } }), res415);
+  await res415.fet;
+  assert.equal(res415.statusCode, 415);
+  assert.equal(JSON.parse(res415.cos).codi, 'cos');
+  assert.equal(crides.length, 0);
+
+  // Content-Type application/json; charset=utf-8 -> 202 i --sec al final d'args
+  const res202 = resposta();
+  gestor(peticioPostJarvis(cosBo, { headers: { 'content-type': 'application/json; charset=utf-8' } }), res202);
+  await res202.fet;
+  assert.equal(res202.statusCode, 202);
+  assert.equal(crides.length, 1);
+  assert.equal(crides[0].args.at(-1), '--sec');
 });

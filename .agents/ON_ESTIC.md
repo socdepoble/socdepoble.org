@@ -6,7 +6,7 @@ description: Punter d'arrencada de sessió generat per despertar.mjs
 # ON_ESTIC.md (Punter de Sessió)
 
 > [!IMPORTANT]
-> **GENERAT:** 2026-11-02T07:06:55.192Z
+> **GENERAT:** 2026-11-02T17:30:33.232Z
 > Aquest document l'`@`-importa `CLAUDE.md`, i eixa importació es resol ABANS
 > que el hook l'escriga: la còpia que tens al context és la de la sessió
 > anterior. Per això **ací no hi ha cap llista de l'Escriptori**: la d'ahir
@@ -14,7 +14,7 @@ description: Punter d'arrencada de sessió generat per despertar.mjs
 > llegir eixa carpeta en procediments automàtics.
 
 **Branca Git:** backup-notes-publish
-**Commit:** e1b7210b0
+**Commit:** 4ee8d78c4
 
 ## 1. Contingut de l'Escriptori (Taula de Treball)
 
@@ -28,46 +28,22 @@ Si no tens cap de les dues, llista `_wiki_de_poble/04_escriptori/` amb una eina 
 ## 2. Resum de l'ESTAT recent
 
 > [!WARNING]
-> ESTAT RANCI: l'últim relleu és de 261102_0806 i `_wiki_de_poble/04_escriptori/03_llibre_mestre_tasques_i_idees.md` s'ha tocat 0 min després. Hi ha faena feta que ningú ha anotat a `.agents/ESTAT.md`.
+> ESTAT RANCI: l'últim relleu és de 261102_1538 i `_wiki_de_poble/04_escriptori/03_llibre_mestre_tasques_i_idees.md` s'ha tocat 3 h després. Hi ha faena feta que ningú ha anotat a `.agents/ESTAT.md`.
 
 Últim relleu anotat a `.agents/ESTAT.md` (primera capçalera del fitxer):
 
-## ESTAT_ACTUAL · 2026-11-02T08:06:00+01:00 · Claude · Marató nocturna 261101_2143: B0-B10 en Gauntlet, quatre commits locals i delegació autònoma fins a l'alba
+## ESTAT_ACTUAL · 2026-11-02T15:38:00+01:00 · MarIA · Desplegament a Producció de la Marató Nocturna (70 Migracions Supabase, socdepoble.org amb Avisos Push del Xat actius, 7 Skills Resegellades, Botigues iOS i Android 1.0.0+2 PUBLICADES en Mode Jarvis) i Pla/Prompt 261102_1532 llestos amb Estalvi de Quota
 
-- **Torn i ordre:** `torn_3d9af83b-3a4a-4735-a6ec-925b1d9c633e` (code). Ordres del Mestre al xat: B0-B7 del [prompt 2059](../_wiki_de_poble/04_escriptori/261101_2059_prompt_marato_nocturna_extirpacio_total_deute_llibre_mestre.md) (21:41) i, abans de dormir, B8-B10 amb delegació autònoma (`requires_human_decision: false`). Informe: [261101_2143_auditoria_claude](../_wiki_de_poble/04_escriptori/261101_2143_auditoria_claude.md).
-- **Commits locals (sense push):** `921c332ac` (Onada 1: B0, B1 i les bases de B2, B3 i B6), `333af8c2c` (Onada 2: B2-B7, que segella B0-B7), `e1b7210b0` (Onada 3: B8, B9 i B10, més les correccions dels dos Gauntlets transversals) i el commit documental del tancament.
-- **Fet:**
-  - **B0:** PC155-01..03 i T11-01..05.
-  - **B1:** Olivera, hook i portes.
-  - **B2:** E2EE amb el kid monòton i F2a, darrere de la bandera apagada.
-  - **B3:** Arrere natiu, sis mòduls de literals i verificador de migracions.
-  - **B4:** vCard i transferència.
-  - **B5:** inbox i cua signada.
-  - **B6:** benzina, facetes, EspaiCerca i germanes.
-  - **B7:** PS-01..PS-11 i el cartell A4.
-  - **B8:** avisos del Xat apagats (funció `notifica-xat`, migració 2611020417, port de 37 capacitats, PWA, silenci, ajustos i baixa en eixir).
-  - **B9:** `--canal produccio` en esborrany i `/page/descarregues` directe.
-  - **B10:** P1-09, P1-24, P1-29, P1-30, P2-12, P2-15 (sense rotar) i P1-71.
-- **Governança (executor i CAS):**
-  - Reflex `bf4dcc4c`, `a2b14eb0`, `5aeb79f4` i `9a7dd881`.
-  - La transacció de tancament (ESTAT i LEDGER).
-  - Frontissa 16/16.
-- **Proves:**
-  - **Vitest:** 30.610 passades.
-  - **Node:** 2.015 passades.
-  - **ESLint i `design_guard`:** 0/0.
-  - **Roges de còpia:** són les de sempre (sense `.git` ni fitxers d'entorn).
-  - **`run-portes` encara roig per:** Cens C4 (l'informe de Codex), Reflex (arbre brut) i Llaurador (fins que es regenere ON_ESTIC).
-- **Per al Mestre:**
-  - Aplicar les migracions (2611012257, 2611020106, 2611020417 i les anteriors) en l'ordre de `supabase/ordre_desplegament.json`.
-  - Tornar a construir i desplegar el web.
-  - Tornar a segellar les cinc skills de `skills-per-segellar/`.
-  - Avisos: VAPID, secrets, funció i bandera.
-  - Botigues: D-B9-2.
-  - Arrere en un aparell.
-  - Decisions D-E1-2, D-E1-4, D-2 i D-1 de L08.
-  - El detall és al bloc de relleu de §0.3 del Llibre Mestre.
-- **Fronteres:** cap push, cap operació remota, cap `npm install`, cap secret ni lectura de fitxers d'entorn.
+- **Torn i ordre:** `torn_fad962dd-2cbf-457d-98d7-ee28c04f647f` (documents). Acta Marmota de tancament: [261102_1456_acta_marmota_produccio_b1_b12_avisos_xat_botigues_1_0_0_2_i_idea60](../_wiki_de_poble/10_actes/261102_1456_acta_marmota_produccio_b1_b12_avisos_xat_botigues_1_0_0_2_i_idea60.md).
+- **Fet en Producció i Mode Jarvis (Blocs B1..B12 en viu):**
+  1. **Supabase Producció (`70/70 migracions`):** Aplicades i verificades les 6 migracions SQL noves (`2611011500` → `2611020417`) amb `node tooling/gates/verifica-migracions-supabase.mjs` (`0 violacions`).
+  2. **Avisos Push del Xat (`B8` en viu):** Generat parell de claus VAPID, configurats secrets a Supabase, desplegada l'Edge Function `notifica-xat` (`ACTIVE`), activat `push_xat_actiu = 'si'` a `private.ajustos`, compilada i desplegada `https://socdepoble.org` a Firebase Hosting i verificats els avisos push entre Chrome i Safari.
+  3. **Skills Segellades (`42/42`):** Resegellades les 7 skills pendents a `.agents/SKILLS_SEAL.json` (`0 violacions`).
+  4. **Botigues iOS i Android `1.0.0 (2)` (`1.0.0+2`) PUBLICADES:**
+     - **🍏 iOS (`1.0.0 (2)`):** Compilat `../_builds_de_poble/ios/261102_socdepoble_1.0.0+2.xcarchive` i pujat i processat a **App Store Connect / TestFlight** (`Uploaded App · ** EXPORT SUCCEEDED **`).
+     - **🤖 Android (`2 (1.0.0)` PUBLICADA A GOOGLE PLAY):** Desbloquejat el keystore oficial del 24 d'octubre `_oficina_de_poble/claus/upload-socdepoble.jks` (`SHA1: AC:5F:98:33:45:2A:C2:B3:30:E6:A4:8E:D4:1D:AA:C3:9D:E2:CC:6B`), custodiat a `.env.botigues.local`, re-signat `../_builds_de_poble/android/261102_socdepoble_1.0.0+2.aab` (`jar verified`) i **publicat en viu a Google Play Console (`Prova interna` · `19.486 dispositius Android compatibles`)** ([261102_1521_google_play_versio_2_publicada.png](../_wiki_de_poble/04_escriptori/01_produccio/261102_1521_google_play_versio_2_publicada.png)).
+  5. **Pla i Prompt `261102_1532` preparats a l'Escriptori amb Protocol d'Estalvi Termodinàmic de Quota:**
+     - Creats, validats i ancorats [261102_1532_pla_implementacio_mode_jarvis_idea60_fediversity_i_deute_llibre_mestre](../_wiki_de_poble/04_escriptori/261102_1532_pla_implementacio_mode_jarvis_idea60_fediversity_i_deute_llibre_mestre.md) i [261102_1532_prompt_mode_jarvis_idea60_fediversity_i_deute_llibre_mestre](../_wiki_de_poble/90_arxiu_historic/261102_1532_prompt_mode_jarvis_idea60_fediversity_i_deute_llibre_mestre.md) per a la següent sessió (post-reinici del Mac), amb Claude en fil únic sense `Extra/Ultracode` ni subagents ([261102_1531_consum_claude_opus_ultracode_59_per_cent.png](../_wiki_de_poble/04_escriptori/01_produccio/261102_1531_consum_claude_opus_ultracode_59_per_cent.png)).
 
 ## 3. Què has de fer ara?
 

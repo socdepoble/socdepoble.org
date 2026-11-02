@@ -106,7 +106,7 @@ requereix_auditoria: false
 <!-- SDP:SECTION acta.s5 -->
 ## Pendents
 
-- Executar en els nous xats nocturns els **Blocs `B0` a `B7`** del Pla [`261101_2059_pla_implementacio_marato_nocturna_extirpacio_total_deute_llibre_mestre.md`](../04_escriptori/261101_2059_pla_implementacio_marato_nocturna_extirpacio_total_deute_llibre_mestre.md) i del Prompt [`261101_2059_prompt_marato_nocturna_extirpacio_total_deute_llibre_mestre.md`](../04_escriptori/261101_2059_prompt_marato_nocturna_extirpacio_total_deute_llibre_mestre.md).
+- Executar en els nous xats nocturns els **Blocs `B0` a `B7`** del Pla [`261101_2059_pla_implementacio_marato_nocturna_extirpacio_total_deute_llibre_mestre.md`](../90_arxiu_historic/261101_2059_pla_implementacio_marato_nocturna_extirpacio_total_deute_llibre_mestre.md) i del Prompt [`261101_2059_prompt_marato_nocturna_extirpacio_total_deute_llibre_mestre.md`](../90_arxiu_historic/261101_2059_prompt_marato_nocturna_extirpacio_total_deute_llibre_mestre.md).
 - Al matí, amb supervisió del Mestre: aplicar les migracions `2611011500`, `2611011510` i `2611011800` a Supabase producció, desplegar el web, publicar la `1.1.11` al SVN de WordPress.org i compilar/pujar el Build 2 d'iOS i Android.
 
 <!-- SDP:SECTION acta.s6 -->
@@ -115,8 +115,8 @@ requereix_auditoria: false
 - [[00_index]]
 - [[00_index_escriptori]]
 - [[03_llibre_mestre_tasques_i_idees]]
-- [[261101_2059_pla_implementacio_marato_nocturna_extirpacio_total_deute_llibre_mestre]]
-- [[261101_2059_prompt_marato_nocturna_extirpacio_total_deute_llibre_mestre]]
-- [[261101_0403_auditoria_codex_marato_nocturna]]
-- [[261101_0407_auditoria_gemini_marato_nocturna]]
-- [[261101_1355_auditoria_claude]]
+- [[../90_arxiu_historic/261101_2059_pla_implementacio_marato_nocturna_extirpacio_total_deute_llibre_mestre|261101_2059_pla_implementacio_marato_nocturna_extirpacio_total_deute_llibre_mestre]]
+- [[../90_arxiu_historic/261101_2059_prompt_marato_nocturna_extirpacio_total_deute_llibre_mestre|261101_2059_prompt_marato_nocturna_extirpacio_total_deute_llibre_mestre]]
+- [[../90_arxiu_historic/261101_0403_auditoria_codex_marato_nocturna|261101_0403_auditoria_codex_marato_nocturna]]
+- [[../90_arxiu_historic/261101_0407_auditoria_gemini_marato_nocturna|261101_0407_auditoria_gemini_marato_nocturna]]
+- [[../90_arxiu_historic/261101_1355_auditoria_claude|261101_1355_auditoria_claude]]

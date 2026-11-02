@@ -18,6 +18,7 @@ import { useEffect, useId, useRef, useState } from 'react';
 import { Camera, ImagePlus, Mic, RefreshCw, Send, Square, X } from 'lucide-react';
 import { descartaAdjuntXat, quotaXat, teCapacitat } from '../../../data/backendPort.js';
 import { errorAdjuntXat } from '../../../data/xatMultimedia.js';
+import { getRuntimePolicy } from '../../../config/runtimePolicy.js';
 import { CONSULTA_TACTIL } from '../../../hooks/useBarresAmbScroll.js';
 import { MAX_VEU_MS, gravaVeu, mimeDeGravacio, preparaAdjunt, textDErrorAdjunt } from '../adjuntLocal.js';
 import { PrevisualitzacioAdjunt, callaVeuActiva, tempsDeVeu, traductorAdjunt } from './AdjuntXat.jsx';
@@ -47,7 +48,15 @@ function quotesDe(servei) {
 
 export default function ControlsAdjunt({ fil, onEnvia, onTextOrfe = null, servei = PORT, externalConfig, usuariId, t: tProp, locale = 'ca-ES', actiu = true, children = null }) {
   const t = traductorAdjunt(tProp);
-  const clauQuota = String(usuariId ?? '');
+  // La cau és de la persona EN ESTE backend i poble, no del seu UUID a soles.
+  // No valida el port des del render: la quota continua passant pel servei.
+  const base = getRuntimePolicy(true)?.backendConfig || {};
+  const clauQuota = JSON.stringify([
+    externalConfig?.backendId ?? base.backendId ?? 'supabase',
+    externalConfig?.backend_url ?? externalConfig?.backendUrl ?? externalConfig?.supabaseUrl ?? base.backendUrl ?? base.supabaseUrl ?? '',
+    externalConfig?.tenant_id ?? externalConfig?.tenantId ?? base.tenantId ?? null,
+    externalConfig?.dataMode ?? base.dataMode ?? 'remote', String(usuariId ?? '')
+  ]);
   const [quota, setQuota] = useState(() => quotesDe(servei).get(clauQuota) ?? null);
   const [errorQuota, setErrorQuota] = useState(null);
   const [intentQuota, setIntentQuota] = useState(0);

@@ -64,6 +64,13 @@
  *     backend.
  *     T6 (ordre del Mestre, 261004) · Eixe enllaç resolt és ara el de
  *     Comentar; la boina porta a RUTA_PROJECTE, que no depén del backend.
+ *
+ * IDEA-61 (T0, prompt 261102_1532) · El Flux Universal de Publicació obri
+ * quatre portes més: Mercat, Vehicle Compartit, Treball i Habitatge deixen
+ * d'estar «en obres». Publicar porta a l'editor del Bloc amb l'àmbit fixat
+ * (/notes?ambit=<ambit>, rutaDePublicarAmbit) i les tres verticals tenen
+ * secció pròpia (/vehicle, /treball, /habitatge: sections.js). Mapa,
+ * Calendari i Animalets continuen com abans.
  */
 import { getSectionListPath, rutaDAutoria } from '../../config/navigation.js';
 import { dataHoraDeBarra } from '../../components/universal/editorial.js';
@@ -100,6 +107,9 @@ export const AUTORIA_SOCDEPOBLE = Object.freeze({
 /** La ruta de la UniversalPage d'una pàgina de PAGE_COPY (PageDetailSection). */
 export const rutaDePagina = (clau) => `/page/${encodeURIComponent(clau)}`;
 
+/** IDEA-61 (T0, prompt 261102_1532) · L'editor del Bloc amb l'àmbit fixat (mercat, vehicle, treball, habitatge). */
+export const rutaDePublicarAmbit = (ambit) => `/notes?ambit=${ambit}`;
+
 /* T8 (261004) · Cap `imatge` a la taula: la de la targeta és la de la seua
    pàgina (contingutDe). */
 const desti = ({ id, pagina, icona = null, publicar = null, seccio = null, nomPublicar, nomSaber }) => Object.freeze({
@@ -129,6 +139,8 @@ export const DESTINS_CONTROL = Object.freeze([
   desti({
     id: 'mercat',
     pagina: 'publicar_mercat',
+    /* IDEA-61 · Publicar al Mercat: l'editor amb l'àmbit 'mercat'. */
+    publicar: rutaDePublicarAmbit('mercat'),
     seccio: getSectionListPath('mercat'),
     nomPublicar: 'Publicar al Mercat',
     nomSaber: 'Saber-ne més sobre el Mercat'
@@ -149,6 +161,9 @@ export const DESTINS_CONTROL = Object.freeze([
   desti({
     id: 'vehicle',
     pagina: 'vehicle_compartit',
+    /* IDEA-61 · La secció /vehicle i l'editor amb l'àmbit 'vehicle'. */
+    publicar: rutaDePublicarAmbit('vehicle'),
+    seccio: getSectionListPath('vehicle'),
     nomPublicar: 'Publicar: Vehicle Compartit',
     nomSaber: 'Saber-ne més: Vehicle Compartit'
   }),
@@ -161,12 +176,18 @@ export const DESTINS_CONTROL = Object.freeze([
   desti({
     id: 'treball',
     pagina: 'treball',
+    /* IDEA-61 · La secció /treball i l'editor amb l'àmbit 'treball'. */
+    publicar: rutaDePublicarAmbit('treball'),
+    seccio: getSectionListPath('treball'),
     nomPublicar: 'Publicar: Treball',
     nomSaber: 'Saber-ne més: Treball'
   }),
   desti({
     id: 'habitatge',
     pagina: 'habitatge',
+    /* IDEA-61 · La secció /habitatge i l'editor amb l'àmbit 'habitatge'. */
+    publicar: rutaDePublicarAmbit('habitatge'),
+    seccio: getSectionListPath('habitatge'),
     nomPublicar: 'Publicar: Habitatge',
     nomSaber: 'Saber-ne més: Habitatge'
   })

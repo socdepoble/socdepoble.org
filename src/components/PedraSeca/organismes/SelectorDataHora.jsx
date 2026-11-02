@@ -25,6 +25,8 @@
  * Importa per camí directe (mai per index.js).
  */
 import { useEffect, useRef, useState } from 'react';
+import { useTraductorOpcional, tradueix } from '../hooks/useTraductorOpcional.js';
+import { omple } from '../../../config/moderacio.js';
 import { Boto } from '../atoms/Boto.jsx';
 import { Alerta } from '../molecules/Alerta.jsx';
 import { Dialeg } from './Dialeg.jsx';
@@ -34,10 +36,10 @@ import { combinaDataHora, cursorDe, esMateixDia, horaDe } from '../../../utils/c
 import { dataDeDocument } from '../../universal/editorial.js';
 import { ETIQUETA_RESERVA_ARA, dataHoraAra, dataHoraEdicio } from '../../universal/barres/dataHoraBarra.js';
 
-const DESCRIPCIO = 'Tria el dia i l’hora de la publicació. Es desa sola, com la resta del document. Si no en tries cap, s’hi posarà l’hora en què publiques.';
+const DESCRIPCIO = ["editor.data.descripcio", "Tria el dia i l’hora de la publicació. Es desa sola, com la resta del document. Si no en tries cap, s’hi posarà l’hora en què publiques."];
 /* Amb `avisDesament` la descripció no promet el desat de sempre: ho diu l'avís. */
-const DESCRIPCIO_SENSE_DESAT = 'Tria el dia i l’hora de la publicació. Si no en tries cap, s’hi posarà l’hora en què publiques.';
-const AVIS_FUTUR = 'La data no programa res: la publicació ix quan la publiques, però el Mur l’ordena amb esta data.';
+const DESCRIPCIO_SENSE_DESAT = ["editor.data.descripcioSenseDesat", "Tria el dia i l’hora de la publicació. Si no en tries cap, s’hi posarà l’hora en què publiques."];
+const AVIS_FUTUR = ["editor.data.avisFutur", "La data no programa res: la publicació ix quan la publiques, però el Mur l’ordena amb esta data."];
 const HORA_VALIDA = /^\d{2}:\d{2}$/;
 
 /** L'hora d'ara arrodonida cap avall a 5 minuts (el pas del camp d'hora). */
@@ -51,8 +53,11 @@ const dataLlarga = (data, locale) => data.toLocaleDateString(locale, { weekday: 
 
 export function SelectorDataHora({
   valor = null, onTria, locale = 'ca-ES', reserva = null, etiquetaReserva = ETIQUETA_RESERVA_ARA,
-  etiqueta = 'Data de publicació', descripcio, avisFutur = AVIS_FUTUR, avisDesament = null, avui: avuiProp = null,
+  etiqueta: etiquetaProp, descripcio, avisFutur: avisFuturProp, avisDesament = null, avui: avuiProp = null,
 }) {
+  const t = useTraductorOpcional();
+  const etiqueta = etiquetaProp === undefined ? tradueix(t, ["editor.data.etiqueta", "Data de publicació"]) : etiquetaProp;
+  const avisFutur = avisFuturProp === undefined ? tradueix(t, AVIS_FUTUR) : avisFuturProp;
   const avui = avuiProp || new Date();
   /* Correcció W3A D4 · La tria es llig amb el MATEIX lector que la pastilla
      (editorial.js · dataDeDocument, el de dataHoraEdicio): el dia marcat, la
@@ -68,7 +73,7 @@ export function SelectorDataHora({
   const cosRef = useRef(null);
   const disparadorRef = useRef(null);
   /* Sense la prop (undefined), la descripció de sèrie; null explícit, cap. */
-  const descripcioVigent = descripcio !== undefined ? descripcio : (avisDesament ? DESCRIPCIO_SENSE_DESAT : DESCRIPCIO);
+  const descripcioVigent = descripcio !== undefined ? descripcio : tradueix(t, avisDesament ? DESCRIPCIO_SENSE_DESAT : DESCRIPCIO);
 
   /* Correcció T40 (ordre del Mestre, 260928) · El <dialog> naix dins de la
      barra taronja, que T38 amaga (display:none) en mòbil i en columna
@@ -139,14 +144,15 @@ export function SelectorDataHora({
   const mostra = triada
     ? dataHoraEdicio({ publicat: valor }, avui)
     : (reservaAmbText ? reserva : dataHoraAra(avui));
-  const queEsLaReserva = reservaAmbText ? etiquetaReserva : ETIQUETA_RESERVA_ARA;
+  const queEsLaReserva = reservaAmbText && etiquetaReserva !== ETIQUETA_RESERVA_ARA
+    ? etiquetaReserva : tradueix(t, ["editor.data.ara", "la data i l’hora d’ara"]);
   const visible = [mostra.time, mostra.date].filter(Boolean).join(' ');
   /* Poliment T40 (ordre del Mestre, 260928) · WCAG 2.5.3: amb data triada, el
      nom comença pel que es veu a la pastilla (hora i data curta), perquè qui
      la nomena per veu l'encerte; després, la data llarga amb el dia. */
   const nom = triada
-    ? `${visible}. ${etiqueta}: ${dataLlarga(triada, locale)}. Canviar-la`
-    : `${etiqueta}: sense triar; ara es mostra ${queEsLaReserva} (${visible}). Triar-la`;
+    ? omple(tradueix(t, ["editor.data.triada", "{visible}. {etiqueta}: {data}. Canviar-la"]), { visible, etiqueta, data: dataLlarga(triada, locale) })
+    : omple(tradueix(t, ["editor.data.senseTriar", "{etiqueta}: sense triar; ara es mostra {reserva} ({visible}). Triar-la"]), { etiqueta, reserva: queEsLaReserva, visible });
   const futura = Boolean(triada && avisFutur && triada.getTime() > avui.getTime());
 
   return (
@@ -160,15 +166,15 @@ export function SelectorDataHora({
         mida="s" lloc="barra" className="sdp-selector-data"
         accions={(
           <>
-            <Boto varietat="secundari" onClick={buida} aria-disabled={triada ? undefined : 'true'}>Sense data</Boto>
-            <Boto varietat="primari" onClick={() => setObert(false)}>Fet</Boto>
+            <Boto varietat="secundari" onClick={buida} aria-disabled={triada ? undefined : 'true'}>{tradueix(t, ["editor.data.senseData", "Sense data"])}</Boto>
+            <Boto varietat="primari" onClick={() => setObert(false)}>{tradueix(t, ["editor.data.fet", "Fet"])}</Boto>
           </>
         )}>
         {obert ? (
           <div ref={cosRef} className="sdp-calendari">
             {/* Correcció C20 (260928) · L'«Hora» damunt del mes: en una pantalla
                 curta, davall de la graella quedava fora de la vista. */}
-            <Camp etiqueta="Hora" ajuda={triada ? undefined : 'Si encara no has triat cap dia, l’hora s’aplica a hui.'}>
+            <Camp etiqueta={tradueix(t, ["editor.data.hora", "Hora"])} ajuda={triada ? undefined : tradueix(t, ["editor.data.ajudaHora", "Si encara no has triat cap dia, l’hora s’aplica a hui."])}>
               <CampText tipus="time" step={300} value={hora} onChange={canviaHora} />
             </Camp>
             <NavegacioMes className="sdp-calendari__navegacio" cursor={cursor} onCanvia={setCursor} avui={avui} />

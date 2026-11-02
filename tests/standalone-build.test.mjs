@@ -140,7 +140,7 @@ test('sobre el public/ real: viatgen la Wiki (RAG, slugs), les fonts i els compo
     if (fs.existsSync(path.join(arrel, rel))) assert.ok(rels.includes(rel), rel);
   }
   assert.ok(rels.every((rel) => !rel.split('/').some((s) => s.startsWith('.'))), 'cap ocult');
-  assert.ok(rels.every((rel) => !['robots.txt', 'sitemap.xml'].includes(rel) && !rel.startsWith('auth/')), 'res del servidor');
+  assert.ok(rels.every((rel) => !['robots.txt', 'sitemap.xml', '_headers', '_redirects'].includes(rel) && !rel.startsWith('auth/')), 'res del servidor');
 });
 
 test('la llista d\'exclusions és curta, congelada i no toca els recursos de l\'app', () => {
@@ -149,8 +149,9 @@ test('la llista d\'exclusions és curta, congelada i no toca els recursos de l\'
   // enxufe/ és el canal de releases de socdepoble.org (stable.json i la signatura).
   // sw.js i manifest.webmanifest: la PWA de l'entrada pròpia (Fase 0, 261003).
   // Ordre del Mestre (261021, prompt 261021_0015, tasca 3) · i les icones de 192 i 512 que només llig eixe manifest.
-  assert.deepEqual([...PROPIS_DEL_LLOC.arrel].sort(), ['auth', 'enxufe', 'icona-app-192.png', 'icona-app-512.png', 'manifest.webmanifest',
-    'robots.txt', 'sitemap.xml', 'sw.js']);
+  // O3-GEMINI-1 (261102) · _headers i _redirects: regles del domini per a Netlify/Cloudflare.
+  assert.deepEqual([...PROPIS_DEL_LLOC.arrel].sort(), ['_headers', '_redirects', 'auth', 'enxufe', 'icona-app-192.png', 'icona-app-512.png',
+    'manifest.webmanifest', 'robots.txt', 'sitemap.xml', 'sw.js']);
   for (const rel of ['rag-index.json', 'slugIndex.json', 'assets', 'fonts', 'components']) {
     assert.ok(!PROPIS_DEL_LLOC.arrel.includes(rel), rel);
   }

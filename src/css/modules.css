@@ -13813,6 +13813,124 @@ details[open] summary.accordion-header svg:last-child {
 }
 /* ═══ FI DEL BLOC ConsultaIAIA ═══ */
 
+/* ═══ BLOC SuggerimentsIAIA i PersonesConfianca (IDEA-28, IDEA-48, IDEA-56) ═══ */
+@layer components {
+  .sdp-xat-iaia-benvinguda-suggeriments { padding-block: var(--sdp-space-2); }
+  .sdp-xat-iaia-suggeriments {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: var(--sdp-space-2);
+    margin-block-start: var(--sdp-space-2);
+  }
+  .sdp-iaia-consulta .sdp-xat-iaia-suggeriments {
+    justify-content: flex-start;
+    margin-block: 0 var(--sdp-space-2);
+  }
+  .sdp-xat-iaia-suggeriment {
+    display: inline-flex;
+    align-items: center;
+    min-block-size: var(--sdp-touch);
+    padding: var(--sdp-space-1) var(--sdp-space-3);
+    border: 1px solid var(--sdp-vora-control);
+    border-radius: var(--sdp-radi-pastilla);
+    background: var(--sdp-fons-elevat);
+    color: var(--sdp-accio-text);
+    font: inherit;
+    font-size: var(--sdp-text-meta);
+    font-weight: 600;
+    line-height: 1.35;
+    text-align: start;
+    cursor: pointer;
+    transition: background-color var(--sdp-t);
+  }
+  .sdp-xat-iaia-suggeriment[aria-disabled="true"] {
+    cursor: not-allowed;
+    opacity: 0.55;
+  }
+  .sdp-xat-iaia-accions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--sdp-space-2);
+    padding-inline: var(--sdp-space-3);
+    padding-block: var(--sdp-space-1) var(--sdp-space-2);
+    list-style: none;
+  }
+  .sdp-xat-iaia-accio {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-block-size: var(--sdp-touch);
+    padding: var(--sdp-space-1) var(--sdp-space-3);
+    border: 1px solid var(--sdp-vora-control);
+    border-radius: var(--sdp-radi-pastilla);
+    background: var(--sdp-fons-elevat);
+    color: var(--sdp-accio-text);
+    font: inherit;
+    font-size: var(--sdp-text-meta);
+    font-weight: 600;
+    text-decoration: none;
+    cursor: pointer;
+    transition: background-color var(--sdp-t);
+  }
+  .sdp-xat-iaia-accio--bloc {
+    border-color: transparent;
+    background: var(--sdp-accio-control);
+    color: var(--sdp-sobre-accio);
+  }
+  .sdp-xat-iaia-accio:disabled {
+    cursor: not-allowed;
+    opacity: 0.55;
+  }
+  .sdp-xat-iaia-suggeriment:focus-visible,
+  .sdp-xat-iaia-accio:focus-visible {
+    outline: var(--sdp-focus-gruix) solid var(--sdp-focus);
+    outline-offset: var(--sdp-focus-separacio);
+  }
+  @media (hover: hover) and (pointer: fine) {
+    .sdp-xat-iaia-suggeriment:hover,
+    .sdp-xat-iaia-accio:hover {
+      background: var(--sdp-fons-subtil);
+    }
+    .sdp-xat-iaia-accio--bloc:hover {
+      background: var(--sdp-accio-control-hover);
+    }
+  }
+  .perfil-compte__confianca-targeta {
+    display: flex;
+    flex-direction: column;
+    gap: var(--sdp-space-3);
+    padding: var(--sdp-space-4);
+    border: 1px solid var(--sdp-vora);
+    border-radius: var(--sdp-radi-m);
+    background: var(--sdp-fons-elevat);
+  }
+  .perfil-compte__confianca-ranures {
+    display: flex;
+    align-items: center;
+    gap: var(--sdp-space-2);
+  }
+  .perfil-compte__confianca-ranura,
+  .perfil-compte__confianca-escut {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    inline-size: var(--sdp-touch);
+    block-size: var(--sdp-touch);
+    border: 1px solid var(--sdp-vora-control);
+    border-radius: var(--sdp-radi-pastilla);
+    background: var(--sdp-fons-subtil);
+    color: var(--sdp-text-suau);
+  }
+  .perfil-compte__confianca-ranura--verificada,
+  .perfil-compte__confianca-escut {
+    border-color: var(--sdp-accio);
+    background: var(--sdp-accio-control);
+    color: var(--sdp-sobre-accio);
+  }
+}
+
 /* DT-LLISTES-D1 · Cada llista de components gestiona el seu espai amb gap.
    El marge de la prosa no s’afig als seus fills (cens Ronda 2). */
 @layer components {

@@ -6,10 +6,14 @@ import { act, cleanup, fireEvent, render, screen, waitFor, within } from '@testi
    llançament a /consola, amb el router de veres i les targetes de veres: la
    secció del tauler (el seu H2 i una targeta que porta a la seua pàgina),
    /consola/empaquetats amb cada plataforma (semàfor, versió declarada, noms
-   dels artefactes i l'ordre exacta per a copiar, cap botó que publique), el
-   mode privacitat, l'estat buit honest sense font, i la Versió Canònica del
-   Sistema al peu de totes les pàgines, sense una segona regió viva. Només es
-   falsegen les fonts i el que no té res a vore (SEO, avisos, graf, closca). */
+   dels artefactes i l'ordre exacta per a copiar), el mode privacitat, l'estat
+   buit honest sense font, i la Versió Canònica del Sistema al peu de totes
+   les pàgines, sense una segona regió viva. Només es falsegen les fonts i el
+   que no té res a vore (SEO, avisos, graf, closca).
+   Derogat per l'ordre del Mestre del 2026-11-02 14:46 (Llibre Mestre,
+   IDEA-60; prompt 261102_1532, T1): «cap botó que publique». El Mode Jarvis
+   Omnicanal d'1 Clic (SeccioJarvis) porta un sol botó de publicar, davant de
+   les plataformes; el seu comportament viu a EmpaquetatsConsola.jarvis.test.jsx. */
 const fonts = vi.hoisted(() => ({ empaquetats: null }));
 /* El segell del build: a les proves no n'hi ha (vite.config.js només el posa
    en compilar). Una prova el fixa per a vore que el peu i la pàgina diuen
@@ -60,6 +64,7 @@ import {
   ETIQUETA_NAV_EMPAQUETATS, RUTA_EMPAQUETATS, TITOL_EMPAQUETATS, normalitzaEmpaquetats, paginaEmpaquetats
 } from './empaquetats.js';
 import { versioCanonica } from '../../config/versio.js';
+import { TEXT_BOTO_JARVIS, TITOL_JARVIS } from './jarvis.js';
 
 const BRUT = {
   schema: 'sdp.empaquetats.v1',
@@ -148,14 +153,17 @@ describe('el tauler de /consola', () => {
 });
 
 describe('/consola/empaquetats', () => {
-  test('cada plataforma: el semàfor, la versió declarada, els noms dels artefactes i l’ordre exacta; cap botó publica', async () => {
+  test('cada plataforma: el semàfor, la versió declarada, els noms dels artefactes i l’ordre exacta; el Mode Jarvis davant, amb l’únic botó de publicar', async () => {
     fonts.empaquetats = normalitzaEmpaquetats(BRUT);
     await obri(RUTA_EMPAQUETATS);
     expect(screen.getByRole('heading', { level: 1 }).textContent).toBe(paginaEmpaquetats().title);
     const molla = screen.getByRole('navigation', { name: 'Molla de pa' });
     expect(main().querySelector('.page-intro').nextElementSibling).toBe(molla);
     expect(main().textContent).toContain(`Versió Canònica del Sistema: ${versioCanonica()}`);
-    const seccions = [...main().querySelectorAll('section')];
+    /* IDEA-60 (ordre del Mestre, 2026-11-02 14:46) · El Mode Jarvis és la
+       primera secció, darrere de la Versió Canònica; després, les plataformes. */
+    const [jarvis, ...seccions] = [...main().querySelectorAll('section')];
+    expect(jarvis).toBe(screen.getByRole('region', { name: TITOL_JARVIS }));
     expect(seccions.map((s) => s.querySelector('h3').textContent)).toEqual(['Android', 'iOS', 'Web (socdepoble.org)', 'Connector de WordPress']);
     const [android, ios, web, wordpress] = seccions;
     expect(android.querySelector('.sdp-insignia').textContent).toBe('Alineat');
@@ -177,8 +185,13 @@ describe('/consola/empaquetats', () => {
     expect(wordpress.querySelector('pre').textContent).toMatch(/^SDP_RELEASE=1 SDP_VERSIO=1\.1\.9 npm run build:wp && SDP_RELEASE=1 SDP_VERSIO=1\.1\.9 npm run build:wp:directori && node wordpress-plugin\/eines\/empaqueta\.mjs /);
     expect(wordpress.querySelector('pre').nextElementSibling.tagName).toBe('P');
     expect(wordpress.textContent).not.toContain('Puja ');
-    // Cap botó publica: al peu, només Refrescar i l'interruptor de privacitat.
-    expect(screen.getAllByRole('button').map((b) => b.textContent)).toEqual(['Refrescar']);
+    /* Derogat (IDEA-60, ordre del Mestre 2026-11-02 14:46): «cap botó publica».
+       L'únic botó que publica és el del Mode Jarvis, desactivat sense notes;
+       al peu, Refrescar i l'interruptor de privacitat. Cap plataforma porta
+       botó: la seua ordre es continua copiant al terminal. */
+    expect(screen.getAllByRole('button').map((b) => b.textContent)).toEqual([TEXT_BOTO_JARVIS, 'Refrescar']);
+    expect(within(jarvis).getByRole('button', { name: TEXT_BOTO_JARVIS }).disabled).toBe(true);
+    for (const s of seccions) expect(s.querySelector('button')).toBeNull();
     expect(main().querySelector('a[href^="http"], form')).toBeNull();
     // El peu: l'últim, amb la instantània dels empaquetats i la versió.
     const germans = [...main().children].filter((el) => el.tagName !== 'DIALOG');
@@ -209,7 +222,9 @@ describe('/consola/empaquetats', () => {
   test('sense font: ho diu, i cap plataforma inventada', async () => {
     await obri(RUTA_EMPAQUETATS);
     expect(screen.getByText('Empaquetats no disponibles')).toBeTruthy();
-    expect(main().querySelector('section')).toBeNull();
+    // IDEA-60 · L'única secció és el Mode Jarvis (amb «Sense dades» i el botó desactivat); cap plataforma.
+    expect([...main().querySelectorAll('section h3')].map((h) => h.textContent)).toEqual([TITOL_JARVIS]);
+    expect(screen.getByRole('button', { name: TEXT_BOTO_JARVIS }).disabled).toBe(true);
     expect(main().querySelector('pre')).toBeNull();
     expect(within(peu()).getByRole('status').textContent).toBe('Instantània encara no disponible.');
     expect(errors).not.toHaveBeenCalled();

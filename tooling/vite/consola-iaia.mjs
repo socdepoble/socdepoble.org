@@ -16,6 +16,11 @@
  *                             tooling/brain/fonts-govern.mjs des del Llibre
  *                             Mestre i el HEAD; un error, 500 amb JSON
  *                             { schema, codi, error } (servixGovern).
+ *   POST /__iaia/botigues/publica-tot        IDEA-60 (T1, prompt 261102_1532) ·
+ *                             arranca el corredor Jarvis (scripts/botigues/
+ *                             publica-tot.mjs) i torna 202 amb el progrés
+ *                             inicial (sdp.jarvis.publica.v1).
+ *   GET  /__iaia/botigues/publica-tot.json   el progrés del corredor d'ara.
  *
  * Gauntlet f4b (govern, «text-falta-un-pas-de-maria-ara-fals») · Derogat:
  * «DESTÍ: … (substitució sencera; l'única diferència amb l'original és la
@@ -23,16 +28,23 @@
  * del Govern.
  *
  * `apply: 'serve'` → el build de producció no coneix estes rutes.
- * No s'escriu res a disc. No es fa cap crida de xarxa.
+ * No s'escriu res a disc. No es fa cap crida de xarxa. L'única escriptura
+ * indirecta és la del corredor Jarvis (un procés fill, mai un intèrpret),
+ * que només arranca un POST del mateix ordinador, del mateix origen
+ * (Origin i Sec-Fetch-Site: cap pàgina de fora oberta al navegador pot
+ * arrancar-lo per CSRF) i amb cos application/json, en desenvolupament.
  *
  * Decisió del Mestre (31-10-2026) · consolaIaia() torna dos connectors: el
- * de desenvolupament d'ací dalt (consolaIaiaDev, les quatre rutes vives) i
- * sdp:consola-instantania (apply 'build', instantaniaConsola, al final del
- * fitxer), que emet a dist/__iaia/ la instantània SANEJADA de les quatre
- * fonts amb els mateixos productors (tooling/vite/instantania-consola.mjs).
+ * de desenvolupament d'ací dalt (consolaIaiaDev, les quatre rutes vives i el
+ * corredor Jarvis) i sdp:consola-instantania (apply 'build',
+ * instantaniaConsola, al final del fitxer), que emet a dist/__iaia/ la
+ * instantània SANEJADA de les quatre fonts amb els mateixos productors
+ * (tooling/vite/instantania-consola.mjs). El corredor no té instantània: és
+ * una acció, no una font.
  */
 import fs from 'node:fs';
 import path from 'node:path';
+import { execFile } from 'node:child_process';
 import { loadEnv } from 'vite';
 import { PROJECT_DIR, AGENTS_DIR, SKILLS_DIR } from '../wiki/lib/project_paths.mjs';
 import { parseFrontmatter } from '../wiki/lib/frontmatter.mjs';
@@ -229,16 +241,265 @@ export function recullEmpaquetats(arrel = PROJECT_DIR, { carpeta = path.resolve(
 }
 
 /* Només el mateix ordinador: la Consola descriu la maquinària interna. */
+const IPS_LOCALS = new Set(['127.0.0.1', '::1', '::ffff:127.0.0.1']);
+const delMateixOrdinador = (req) => IPS_LOCALS.has(req.socket?.remoteAddress);
 function local(req) {
-  const ip = req.socket.remoteAddress;
-  return req.method === 'GET' && (ip === '127.0.0.1' || ip === '::1' || ip === '::ffff:127.0.0.1');
+  return req.method === 'GET' && delMateixOrdinador(req);
 }
+/* IDEA-60 (T1, prompt 261102_1532) · La mateixa comprovació d'IP per a
+   l'única ruta que accepta POST, l'arrencada del corredor Jarvis. */
+function localPost(req) {
+  return req.method === 'POST' && delMateixOrdinador(req);
+}
+/* Àrbitre T1a-ARB-01 (CSRF) · Una IP local no diu qui ha enviat el POST:
+   mentre el servidor corre, qualsevol pàgina de fora oberta al navegador
+   del Mestre pot fer un fetch no-cors (o un <form> text/plain) a localhost,
+   una petició «simple» sense preflight que arriba amb remoteAddress
+   127.0.0.1; el CORS de Vite només governa la resposta. El navegador posa
+   Origin en tot POST i Sec-Fetch-Site quan el coneix: l'origen ha de ser el
+   d'este servidor (localhost, 127.0.0.1 o [::1], amb la mateixa autoritat
+   que Host: un altre port local tampoc no val) i, si Sec-Fetch-Site hi és,
+   'same-origin'. Sense Origin (curl, un script) no s'arranca res: el client
+   és el panell, i l'ordre del terminal és el camí de reserva. */
+const ORIGEN_LOCAL = /^https?:\/\/(?:localhost|127\.0\.0\.1|\[::1\])(?::\d{1,5})?$/;
+function origenLocal(req) {
+  const origen = String(req.headers?.origin ?? '');
+  if (!ORIGEN_LOCAL.test(origen)) return false;
+  const host = String(req.headers?.host ?? '');
+  if (!host || origen.slice(origen.indexOf('://') + 3) !== host) return false;
+  const lloc = req.headers?.['sec-fetch-site'];
+  return lloc === undefined || lloc === 'same-origin';
+}
+/* Un formulari o un fetch no-cors no poden posar application/json sense preflight. */
+const ambCosJson = (req) => String(req.headers?.['content-type'] ?? '').trim().toLowerCase().startsWith('application/json');
 
 function servix(res, estat, cos) {
   res.statusCode = estat;
   res.setHeader('Content-Type', 'application/json; charset=utf-8');
   res.setHeader('Cache-Control', 'no-store');
   res.end(JSON.stringify(cos));
+}
+
+/* ── IDEA-60 (T1, prompt 261102_1532) · El corredor Jarvis ────────────────
+   Ordre del Mestre (Llibre Mestre, fila IDEA-60, 2026-11-02 14:46): un sol
+   botó a /consola/empaquetats (src/sections/consola/jarvis.js i SeccioJarvis
+   d'EmpaquetatsConsola.jsx) publica a totes les botigues. Ací, l'endpoint
+   local que eixe botó crida:
+     POST RUTA_PUBLICA_TOT          arranca el corredor → 202 { schema, estat, passos }
+     GET  RUTA_PROGRES_JARVIS       el progrés d'ara   → 200 { schema, estat, passos }
+   Les dos rutes compartixen prefix i connect les fa arribar al mateix gestor
+   (gestorJarvis), que mira el mètode i el sufix. Només des del mateix
+   ordinador (local() per al GET, localPost() per al POST), només del mateix
+   origen i amb Content-Type application/json (origenLocal() i ambCosJson():
+   cap CSRF des d'una pàgina de fora), només en DEV (el connector és apply
+   'serve'), amb un cos JSON de MAX_COS_JARVIS bytes com a
+   molt validat sencer (validaPeticioJarvis: schema, notes de MAX_NOTES_JARVIS
+   caràcters com a molt sense caràcters de control, canals del conjunt
+   CANALS_JARVIS, sec booleà) i un sol corredor alhora (corredorJarvis, el
+   pany de mòdul: un segon POST mentre corre és 409).
+   El corredor és `node scripts/botigues/publica-tot.mjs --notes <notes>
+   --canals <llista> [--sec]`, llançat amb execFile (mai cap intèrpret) i cwd
+   a l'arrel: les notes viatgen com a argument, no per cap shell. El seu
+   stdout són línies JSON { pas, estat, text } que omplin el progrés
+   (aplicaLiniaJarvis); el que no és JSON s'ignora, i el codi d'eixida tanca
+   el que quede (tancaJarvis). L'entorn del procés és el del servidor, com el
+   d'un terminal: el middleware no en llig cap valor.
+   Cap error no porta camins: els textos són fixos (ERROR_JARVIS) i el detall
+   d'un pas que porte un camí absolut s'emmascara (emmascaraCamins). */
+export const RUTA_PUBLICA_TOT = '/__iaia/botigues/publica-tot';
+export const RUTA_PROGRES_JARVIS = `${RUTA_PUBLICA_TOT}.json`;
+export const ESQUEMA_JARVIS = 'sdp.jarvis.publica.v1';
+export const SCRIPT_PUBLICA_TOT = 'scripts/botigues/publica-tot.mjs';
+export const CANALS_JARVIS = Object.freeze(['web', 'wordpress', 'android', 'ios']);
+export const ERROR_JARVIS = Object.freeze({
+  cos: 'La petició no és vàlida.',
+  mida: 'La petició és massa gran.',
+  ocupat: 'Ja hi ha una publicació en marxa.',
+  arrancada: 'No s’ha pogut arrancar el corredor.',
+  cap: 'Cap publicació en marxa.'
+});
+const MAX_COS_JARVIS = 4096;
+const MAX_NOTES_JARVIS = 500;
+const MAX_LINIA_JARVIS = 4096;
+const MAX_TEXT_PAS = 300;
+const TEMPS_MAXIM_CORREDOR = 30 * 60 * 1000;
+const ESTATS_PAS = new Set(['pendent', 'en_curs', 'fet', 'error']);
+const TITOL_PAS = Object.freeze({ web: 'Web al dia', wordpress: 'WordPress al dia', android: 'Google Play i APK enviats', ios: 'Apple enviat' });
+const CAMI_ABSOLUT = /\/(?:Users|home|private|var|tmp|etc|opt|Volumes)\/[^\s"')]*/g;
+const SUFIX_PROGRES = /^\.json(?:\?|$)/;
+const SUFIX_ARRENCADA = /^\/?(?:\?|$)/;
+
+/* Un caràcter de control fora del tabulador i del salt de línia. */
+const teControl = (text) => [...text].some((c) => {
+  const n = c.charCodeAt(0);
+  return (n < 32 && n !== 9 && n !== 10) || n === 127;
+});
+const emmascaraCamins = (text) => String(text).replace(CAMI_ABSOLUT, '<camí>');
+
+/** La petició validada ({ notes, canals, sec }) o null. Canals buits vol dir tots. Pura. */
+export function validaPeticioJarvis(cos) {
+  if (!cos || typeof cos !== 'object' || Array.isArray(cos)) return null;
+  if (cos.schema !== ESQUEMA_JARVIS || typeof cos.notes !== 'string' || typeof cos.sec !== 'boolean') return null;
+  const notes = cos.notes.replace(/\r\n?/g, '\n').trim();
+  if (!notes || notes.length > MAX_NOTES_JARVIS || teControl(notes)) return null;
+  if (!Array.isArray(cos.canals) || cos.canals.some((c) => !CANALS_JARVIS.includes(c))) return null;
+  const canals = CANALS_JARVIS.filter((c) => cos.canals.includes(c));
+  return { notes, canals: canals.length ? canals : [...CANALS_JARVIS], sec: cos.sec };
+}
+
+/** Els passos inicials del corredor, numerats sobre els canals demanats (els mateixos títols que la Consola). Pura. */
+export const passosJarvis = (canals) => canals.map((canal, i) => ({ id: canal, canal, titol: `${i + 1}/${canals.length} ${TITOL_PAS[canal]}`, estat: 'pendent' }));
+
+/**
+ * Aplica una línia del stdout del corredor al progrés: { pas, estat, text? }.
+ * Una línia que no és del protocol (no és JSON, pas desconegut, estat fora
+ * del vocabulari) no canvia res i torna false. Pura sobre `progres`.
+ */
+export function aplicaLiniaJarvis(progres, linia) {
+  if (typeof linia !== 'string' || !linia.trim() || linia.length > MAX_LINIA_JARVIS) return false;
+  let m;
+  try { m = JSON.parse(linia); } catch { return false; }
+  if (!m || typeof m !== 'object' || Array.isArray(m)) return false;
+  const pas = progres.passos.find((p) => p.id === m.pas);
+  if (!pas || !ESTATS_PAS.has(m.estat)) return false;
+  pas.estat = m.estat;
+  if (typeof m.text === 'string' && m.text.trim()) pas.detall = emmascaraCamins(m.text.trim()).slice(0, MAX_TEXT_PAS);
+  else delete pas.detall;
+  return true;
+}
+
+/**
+ * Tanca el progrés quan el procés acaba: l'última línia sense salt, cap pas
+ * que es quede «en curs» (el procés ha mort a mitges: error), i 'fet' només
+ * si el codi d'eixida és 0 i tots els passos han dit 'fet'. Pura.
+ */
+export function tancaJarvis(progres, resta, codi) {
+  if (progres.estat !== 'en_curs') return progres;
+  if (typeof resta === 'string' && resta.trim()) aplicaLiniaJarvis(progres, resta);
+  for (const p of progres.passos) if (p.estat === 'en_curs') p.estat = 'error';
+  progres.estat = codi === 0 && progres.passos.every((p) => p.estat === 'fet') ? 'fet' : 'error';
+  return progres;
+}
+
+/* El pany de mòdul: un sol corredor alhora. */
+let corredorJarvis = null;
+
+/** El progrés del corredor d'ara (sdp.jarvis.publica.v1), o null si no se n'ha arrancat cap. */
+export function progresJarvis() {
+  if (!corredorJarvis) return null;
+  const { progres } = corredorJarvis;
+  return { schema: ESQUEMA_JARVIS, estat: progres.estat, passos: progres.passos.map((p) => ({ ...p })), iniciat: progres.iniciat };
+}
+
+/** Per a les proves: oblida el corredor d'ara (no mata cap procés). */
+export function oblidaCorredorJarvis() {
+  corredorJarvis = null;
+}
+
+/**
+ * Arranca el corredor amb execFile (mai shell), un sol alhora. `executa`
+ * (execFile per defecte) i `arrel` són per a les proves. Torna el progrés
+ * inicial, o llança amb codi 'ocupat' si n'hi ha un en marxa.
+ */
+export function arrancaJarvis({ notes, canals, sec }, { arrel = PROJECT_DIR, executa = execFile } = {}) {
+  if (corredorJarvis && corredorJarvis.progres.estat === 'en_curs') {
+    const e = new Error(ERROR_JARVIS.ocupat);
+    e.codi = 'ocupat';
+    throw e;
+  }
+  const progres = { estat: 'en_curs', passos: passosJarvis(canals), iniciat: new Date().toISOString() };
+  const args = [SCRIPT_PUBLICA_TOT, '--notes', notes, '--canals', canals.join(',')];
+  if (sec) args.push('--sec');
+  const proces = executa(process.execPath, args, { cwd: arrel, timeout: TEMPS_MAXIM_CORREDOR, maxBuffer: 16 * 1024 * 1024, windowsHide: true }, () => {});
+  corredorJarvis = { progres, proces };
+  let resta = '';
+  proces.stdout?.on('data', (tros) => {
+    resta += String(tros);
+    for (let i = resta.indexOf('\n'); i !== -1; i = resta.indexOf('\n')) {
+      aplicaLiniaJarvis(progres, resta.slice(0, i));
+      resta = resta.slice(i + 1);
+    }
+    if (resta.length > MAX_LINIA_JARVIS) resta = '';
+  });
+  proces.on?.('error', () => { tancaJarvis(progres, resta, 1); });
+  proces.on?.('close', (codi) => { tancaJarvis(progres, resta, codi); });
+  return progres;
+}
+
+/* El cos d'una petició, com a text, fins a `maxim` bytes: més, error amb codi 'mida'. */
+function lligCos(req, maxim) {
+  return new Promise((resol, rebutja) => {
+    const massaGran = () => Object.assign(new Error(ERROR_JARVIS.mida), { codi: 'mida' });
+    const declarada = Number(req.headers?.['content-length']);
+    if (Number.isFinite(declarada) && declarada > maxim) { rebutja(massaGran()); return; }
+    const trossos = [];
+    let mida = 0;
+    req.on('data', (tros) => {
+      mida += tros.length;
+      if (mida > maxim) { rebutja(massaGran()); req.destroy?.(); return; }
+      trossos.push(tros);
+    });
+    req.on('end', () => resol(Buffer.concat(trossos).toString('utf8')));
+    req.on('error', (e) => rebutja(Object.assign(e ?? new Error(ERROR_JARVIS.cos), { codi: 'cos' })));
+  });
+}
+
+/**
+ * El gestor de RUTA_PUBLICA_TOT: POST a l'arrel arranca (202, 400, 409, 413,
+ * 415 o 500 en JSON amb text fix); GET a .json, el progrés (200, o 404 si no
+ * se n'ha arrancat cap). Qualsevol altre mètode, una petició de fora o un
+ * POST d'un altre origen (Origin, Sec-Fetch-Site), 403 i res més, com les
+ * quatre fonts; un POST local sense Content-Type application/json, 415.
+ * `opcions` (arrel, executa) són per a les proves. Connect lleva el prefix
+ * de req.url; una prova que crida el gestor a pèl pot passar la ruta sencera.
+ */
+export function gestorJarvis(opcions = {}) {
+  return async (req, res) => {
+    const url = String(req.url ?? '');
+    const sufix = url.startsWith(RUTA_PUBLICA_TOT) ? url.slice(RUTA_PUBLICA_TOT.length) : url;
+    if (SUFIX_PROGRES.test(sufix)) {
+      if (!local(req)) {
+        res.statusCode = 403;
+        res.end('Forbidden');
+        return;
+      }
+      const progres = progresJarvis();
+      if (!progres) {
+        servix(res, 404, { schema: ESQUEMA_JARVIS, codi: 'cap', error: ERROR_JARVIS.cap });
+        return;
+      }
+      servix(res, 200, progres);
+      return;
+    }
+    if (!SUFIX_ARRENCADA.test(sufix) || !localPost(req) || !origenLocal(req)) {
+      res.statusCode = 403;
+      res.end('Forbidden');
+      return;
+    }
+    if (!ambCosJson(req)) {
+      servix(res, 415, { schema: ESQUEMA_JARVIS, codi: 'cos', error: ERROR_JARVIS.cos });
+      return;
+    }
+    let peticio = null;
+    try {
+      peticio = validaPeticioJarvis(JSON.parse(await lligCos(req, MAX_COS_JARVIS)));
+    } catch (e) {
+      const mida = e?.codi === 'mida';
+      servix(res, mida ? 413 : 400, { schema: ESQUEMA_JARVIS, codi: mida ? 'mida' : 'cos', error: mida ? ERROR_JARVIS.mida : ERROR_JARVIS.cos });
+      return;
+    }
+    if (!peticio) {
+      servix(res, 400, { schema: ESQUEMA_JARVIS, codi: 'cos', error: ERROR_JARVIS.cos });
+      return;
+    }
+    try {
+      const progres = arrancaJarvis(peticio, opcions);
+      servix(res, 202, { schema: ESQUEMA_JARVIS, estat: progres.estat, passos: progres.passos.map((p) => ({ ...p })) });
+    } catch (e) {
+      if (e?.codi === 'ocupat') servix(res, 409, { schema: ESQUEMA_JARVIS, codi: 'ocupat', error: ERROR_JARVIS.ocupat });
+      else servix(res, 500, { schema: ESQUEMA_JARVIS, codi: 'arrancada', error: ERROR_JARVIS.arrancada });
+    }
+  };
 }
 
 /* ── GET /__iaia/govern.json · ordre del Mestre del 30-10-2026 (B2) ───────
@@ -293,9 +554,12 @@ export async function servixGovern(res, { arrel = PROJECT_DIR, compilador = comp
 /* `arrelGovern`, `compiladorGovern` i `vocabulariGovern` són per a les proves;
    sense opcions, el connector de sempre més la ruta del Govern.
    Decisió del Mestre (31-10-2026) · El connector de desenvolupament es diu
-   consolaIaiaDev; consolaIaia() (vite.config.js) el torna amb el del build. */
+   consolaIaiaDev; consolaIaia() (vite.config.js) el torna amb el del build.
+   IDEA-60 (T1, prompt 261102_1532) · `arrelJarvis` i `executaJarvis` (execFile
+   per defecte) són per a les proves del corredor Jarvis. */
 export function consolaIaiaDev({
-  arrelGovern = PROJECT_DIR, compiladorGovern: compilador = compiladorGovern, vocabulariGovern: vocabulari = vocabulariGovern
+  arrelGovern = PROJECT_DIR, compiladorGovern: compilador = compiladorGovern, vocabulariGovern: vocabulari = vocabulariGovern,
+  arrelJarvis = PROJECT_DIR, executaJarvis = execFile
 } = {}) {
   return {
     name: 'sdp:consola-iaia',
@@ -339,6 +603,10 @@ export function consolaIaiaDev({
         }
         servixGovern(res, { arrel: arrelGovern, compilador, vocabulari });
       });
+      /* IDEA-60 (T1, prompt 261102_1532) · El corredor Jarvis: POST a la ruta
+         arranca; GET a la ruta .json, el progrés. Connect fa arribar les dos
+         (el prefix i el sufix «.json») al mateix gestor. */
+      server.middlewares.use(RUTA_PUBLICA_TOT, gestorJarvis({ arrel: arrelJarvis, executa: executaJarvis }));
     }
   };
 }

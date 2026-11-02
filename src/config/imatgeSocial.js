@@ -727,7 +727,9 @@ function primerDe(valor, nivell) {
 /** Pla 261027_1154 (P1-61) · Els tipus de pàgina que coneix el selector.
  *  'notes' hi és per a dir-ho: una nota és privada i no té mai imatge social.
  *  OG-6 · Cap 'wiki' encara: els documents de la Wiki continuen genèrics. */
-export const TIPUS_DE_PAGINA = Object.freeze(['mercat', 'mur', 'events', 'pobles', 'pagina', 'notes']);
+export const TIPUS_DE_PAGINA = Object.freeze(['mercat', 'mur', 'events', 'pobles', 'pagina', 'notes',
+  /* IDEA-61 (T0, prompt 261102_1532) · Les verticals: les mateixes candidates que el Mur. */
+  'vehicle', 'treball', 'habitatge']);
 
 const llistaDe = (valor) => (Array.isArray(valor) ? valor.map(primerValor) : []);
 
@@ -765,7 +767,11 @@ function candidatesDe(tipus, item) {
       const galeria = galeriaPresent ? llistaDe(item.images) : [item.image_url, item.image, item.imageSrc].map(primerValor);
       return [...galeria, ...srcsDeLesImg(item.description)];
     }
-    case 'mur': {
+    case 'mur':
+    /* IDEA-61 (T0, prompt 261102_1532) · Una vertical és una publicació del Mur. */
+    case 'vehicle':
+    case 'treball':
+    case 'habitatge': {
       /* La portada del detall (detailSectionMeta.jsx · getImage del Mur):
          imageSrc si n'hi ha, i si no, image_url o image. Després, les del cos
          (content, o summary). */

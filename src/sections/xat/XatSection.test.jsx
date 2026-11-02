@@ -13,7 +13,7 @@ import { PAGINA_DESTACADA_DEL_XAT } from './paginaDestacada.js';
 import { paginaDeRuta } from '../text/paginaDeText.js';
 import { PAGE_COPY } from '../text/pageContent.js';
 import { ambXatsPerDefecte } from '../../data/xatsPerDefecte.js';
-import { RUTA_XAT_DE_LA_IAIA } from './useObriXatPerDefecte.js';
+import { RUTA_XAT_DE_LA_IAIA, RUTA_XAT_LOCAL_IAIA } from './useObriXatPerDefecte.js';
 import { RUTA_SOBRE_DE_SOC_DE_POBLE } from './actorsDelXat.js';
 import { oblidaEntitatDelProjecte, registraEntitatDelProjecte } from '../../config/navigation.js';
 import { DURADA_PULSACIO } from '../../components/PedraSeca/organismes/pulsacioLlarga.js';
@@ -2794,7 +2794,7 @@ test('D17 · ?vista=telefonades: el «+», el cercador i la targeta diuen el tex
   expect(targeta.textContent).not.toContain('Encara no està disponible');
   fireEvent.click(within(columna).getByRole('button', { name: 'Nova telefonada' }));
   expect(mocks.showToast).toHaveBeenLastCalledWith(AVIS_D17, 'info');
-  fireEvent.click(within(columna).getByRole('searchbox', { name: "Nom, número o @nom d'usuari" }));
+  fireEvent.click(within(columna).getByRole('searchbox', { name: "Nom del contacte" }));
   expect(mocks.showToast).toHaveBeenLastCalledWith(AVIS_D17, 'info');
   expect(mocks.showToast).not.toHaveBeenCalledWith('En construcció', 'info');
 });
@@ -2805,7 +2805,7 @@ test('3B · cada vista porta els controls de la seua captura', () => {
   const view = render(<XatSection />);
   const tel = () => screen.getByRole('complementary', { name: 'Telefonades' });
   expect(within(tel()).getByRole('button', { name: 'Nova telefonada' }).classList.contains('sdp-xat-nova')).toBe(true);
-  expect(within(tel()).getByRole('searchbox', { name: "Nom, número o @nom d'usuari" }).readOnly).toBe(true);
+  expect(within(tel()).getByRole('searchbox', { name: "Nom del contacte" }).readOnly).toBe(true);
 
   mocks.params = new URLSearchParams({ vista: 'multimedia' });
   view.rerender(<XatSection />);
@@ -3232,8 +3232,8 @@ test('261007 · /xat/sdp-per-defecte:iaia porta al xat públic de /iaia una sola
   mocks.threadId = 'sdp-per-defecte:iaia';
   ambFilesPerDefecte();
   const view = render(<StrictMode><XatSection /></StrictMode>);
-  const cap = mocks.navigate.mock.calls.filter(([ruta]) => ruta === RUTA_XAT_DE_LA_IAIA);
-  expect(cap).toEqual([[RUTA_XAT_DE_LA_IAIA, { replace: true }]]);
+  const cap = mocks.navigate.mock.calls.filter(([ruta]) => ruta === RUTA_XAT_LOCAL_IAIA);
+  expect(cap).toEqual([[RUTA_XAT_LOCAL_IAIA, { replace: true }]]);
   const url = new URL(RUTA_XAT_DE_LA_IAIA, 'http://localhost');
   expect(RUTA_XAT_DE_LA_IAIA.startsWith('/xat?sobre=pagina:%2Fiaia&titol=')).toBe(true);
   expect(RUTA_XAT_DE_LA_IAIA.endsWith('&ruta=%2Fiaia')).toBe(true);
@@ -3243,10 +3243,10 @@ test('261007 · /xat/sdp-per-defecte:iaia porta al xat públic de /iaia una sola
   /* Un altre pintat sense navegar no hi torna; una navegació nova (la
      persona torna a prémer la fila), sí. */
   view.rerender(<StrictMode><XatSection /></StrictMode>);
-  expect(mocks.navigate.mock.calls.filter(([ruta]) => ruta === RUTA_XAT_DE_LA_IAIA)).toHaveLength(1);
+  expect(mocks.navigate.mock.calls.filter(([ruta]) => ruta === RUTA_XAT_LOCAL_IAIA)).toHaveLength(1);
   mocks.params = new URLSearchParams();
   view.rerender(<StrictMode><XatSection /></StrictMode>);
-  expect(mocks.navigate.mock.calls.filter(([ruta]) => ruta === RUTA_XAT_DE_LA_IAIA)).toHaveLength(2);
+  expect(mocks.navigate.mock.calls.filter(([ruta]) => ruta === RUTA_XAT_LOCAL_IAIA)).toHaveLength(2);
 });
 
 test('261007 · un id sintètic no s’obri mai com a fil, ni abans que arribe la llista', () => {

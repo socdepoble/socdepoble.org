@@ -4,12 +4,15 @@
  */
 import { useRef, useState } from 'react';
 import { usePropietatsCss } from '../../../hooks/usePropietatsCss.js';
+import { useCapaEnrere } from '../hooks/useCapaEnrere.js';
 
 export function Dropdown({ trigger, children, className = '', right = false, minWidth = '200px' }) {
   const [isOpen, setIsOpen] = useState(false);
   const menuRef = useRef(null);
   usePropietatsCss(menuRef, { '--sdp-desplegable-ample': isOpen ? minWidth : null });
-  
+  /* P0-24b (T2, prompt 261102_1532) · L'Arrere d'Android el tanca, com l'Escape de handleKeyDown. */
+  useCapaEnrere(isOpen, () => setIsOpen(false));
+
   const handleKeyDown = (e) => {
     if (e.key === 'Enter' || e.key === ' ') {
       e.preventDefault();

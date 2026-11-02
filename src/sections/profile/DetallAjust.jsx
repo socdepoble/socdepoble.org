@@ -17,6 +17,7 @@ import { AVIS_FITXA_PUBLICA } from './visibilitatFitxa.js';
 import { useEnquadramentAvatar } from './useEnquadramentAvatar.jsx';
 import { AVIS_GPS_ELIMINAT_PERFIL } from '../../components/universal/enquadrament/DialegEnquadrament.jsx';
 import { GestioMembres } from './GestioMembres.jsx';
+import { useTraductorOpcional, tradueix } from '../../components/PedraSeca/hooks/useTraductorOpcional.js';
 import { SegonFactor } from '../admin/SegonFactor.jsx';
 
 /* Onada 11 (261010; prompt 261010_1730, tasca 2) · La ruta del Tauler de
@@ -84,6 +85,7 @@ export default function DetallAjust({
   membres = null,
 }) {
   const navigate = useNavigate();
+  const t = useTraductorOpcional();
   /* T47 (correcció de la revisió C01, 260928) · «Confirmar eixida» pregunta
      primer què no ha arribat al servidor i ho diu abans d'esborrar-ho.
      Recàrrega completa: cap context en memòria sobreviu a la sessió. */
@@ -265,8 +267,8 @@ export default function DetallAjust({
 
       if (url) {
         setValorTemp(url);
-        const pujada = 'Imatge pujada. Ara dóna-li a Guardar.';
-        setMissatge({ tipus: 'exit', text: info?.gpsEliminat === true ? `${pujada} ${AVIS_GPS_ELIMINAT_PERFIL}` : pujada });
+        const pujada = tradueix(t, ["section.perfil.ajust.imatgePujada", "Imatge pujada. Ara dóna-li a Guardar."]);
+        setMissatge({ tipus: 'exit', text: info?.gpsEliminat === true ? `${pujada} ${tradueix(t, ['editor.enquadrament.gpsEliminat', AVIS_GPS_ELIMINAT_PERFIL])}` : pujada });
         return;
       }
     } catch (err) {

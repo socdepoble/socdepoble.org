@@ -27,8 +27,13 @@
  *    el menú es tanca, sense tornar el focus al botó. Les files van amb
  *    tabIndex -1 (les mou el teclat amb les fletxes): el menú és una sola
  *    parada. Sense l'opció (Comentar, Moderació), com abans.
+ *  · P0-24b (T2, prompt 261102_1532) · L'Arrere d'Android (useCapaEnrere)
+ *    fa el mateix camí que l'Escape: tanca el menú i torna el focus al botó.
+ *    El menú viu mentre el hook viu (qui el munta ho fa en obrir-lo); amb
+ *    `mostra` no s'apunta cap capa.
  */
 import { useEffect, useRef } from 'react';
+import { useCapaEnrere } from './useCapaEnrere.js';
 
 const PASSOS = Object.freeze({ ArrowDown: 1, ArrowUp: -1 });
 
@@ -39,6 +44,8 @@ export function useMenuEmergent({ files, onTria, onTanca, botoRef = null, mostra
   const tabRef = useRef(null);
   useEffect(() => { tancaRef.current = onTanca; }, [onTanca]);
   useEffect(() => () => clearTimeout(tabRef.current), []);
+  /* P0-24b (T2, prompt 261102_1532) · L'Arrere, el camí de l'Escape (tancaEsc). */
+  useCapaEnrere(!mostra, () => { tancaRef.current?.(); botoRef?.current?.focus(); });
 
   useEffect(() => {
     if (mostra) return undefined;

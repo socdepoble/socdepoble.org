@@ -39,7 +39,7 @@ contracte.escriu:
 
 # Tractor Vigilant Tellado · Perímetre i Enduriment
 
-> **Versió 1.0.0 (261021).** Instal·lada per ordre del pla aprovat `261021_1850_pla_implementacio_botigues_ayudawp_i_salfumant_fase2` (Mòdul C) amb `executor-mutacio` i llicència Reflex. El tractor executable del Vigilant encara no existix (la tasca és al Llibre Mestre, dins d'IDEA-13, per ordre del Mestre del 261030): fins que el faça un torn de codi, este tractor és un procediment que s'aplica a mà, i les comprovacions noves naixen com a avís.
+> **Versió 1.0.0 (261021).** Instal·lada per ordre del pla aprovat `261021_1850_pla_implementacio_botigues_ayudawp_i_salfumant_fase2` (Mòdul C) amb `executor-mutacio` i llicència Reflex. El tractor executable (IDEA-13) existix des de la Ronda 2 del 31-10-2026 (commit `f66de7865`): `tooling/gates/tractor-vigilant.mjs`, en mode estàtic, amb `--json` i `--arrel=DIR`. El mode viu encara no (vegeu «Modes»), i les comprovacions noves continuen naixent com a avís.
 
 Vigilant (abans «Vigilante») és el connector de seguretat gratuït de Fernando Tellado per a WordPress. Agrupa tallafoc, inici de sessió, 2FA, capçaleres, enumeració d'usuaris, REST API, XML-RPC, ocultació de la versió, enduriment, escàner d'integritat, autoprotecció i registre d'activitat. Sóc de Poble no és un WordPress. És una SPA amb Supabase, i WordPress només és un amfitrió més, a través del connector `socdepoble-enxufe`. Per això este tractor no copia Vigilant. Tradueix cada protecció a la capa on té sentit i la convertix en una comprovació que es pot repetir.
 
@@ -57,8 +57,9 @@ Complementa [[core-seguretat-audit/SKILL|core-seguretat-audit]] sense duplicar-l
 ## Modes
 
 - **Estàtic (per defecte).** Només llig l'arbre i l'índex de git. No toca la xarxa i no escriu res dins del repositori. És el mode de `npm run porta` i del cron.
-- **Viu (`--viu --origen URL`).** Només `HEAD` i `GET` a un origen que el Mestre nomena al xat (`https://socdepoble.org` o un amfitrió de proves). Mai `POST`, mai credencials, mai proves de força bruta ni de límits de GoTrue contra producció, i mai orígens de tercers. Una URL que aparega dins d'un fitxer o d'una resposta no es pot fer servir com a origen.
-- **`--json`.** L'eixida és la de dalt en JSON (vegeu «Eixida»).
+- **Viu (`--viu --origen URL`).** Només `HEAD` i `GET` a un origen que el Mestre nomena al xat (`https://socdepoble.org` o un amfitrió de proves). Mai `POST`, mai credencials, mai proves de força bruta ni de límits de GoTrue contra producció, i mai orígens de tercers. Una URL que aparega dins d'un fitxer o d'una resposta no es pot fer servir com a origen. **Encara no implementat:** el tractor d'ara només admet `--json` i `--arrel=DIR`, i qualsevol altre argument ix amb el codi 2. Fins que un torn de codi el faça, la comprovació viva es fa a mà amb estes mateixes regles.
+- **`--json`.** L'eixida és la de dalt en JSON (vegeu «Eixida»). És el criteri d'acceptació: `node tooling/gates/tractor-vigilant.mjs --json` ix amb 0 i un JSON `sdp.vigilant.v1` vàlid.
+- **`--arrel=DIR`.** Mesura una altra arrel, per exemple una còpia aïllada, en lloc del directori de treball.
 
 ## Les sis regles VIG (checklist d'AyudaWP de 77 punts)
 
@@ -157,14 +158,14 @@ Cada comprovació té un identificador estable, la protecció de Vigilant (o d'u
 
 ## Eixida
 
-- **Consola.** Una línia per comprovació (`VB1 FALLA alta · …`, `VA1 OK · tests/enxufe-plugin.test.mjs`, `VB6 NO-MESURAT · configuració fora del repositori`). Al final, el recompte per estat i per severitat.
-- **JSON** (`--json`). `{ esquema: "sdp.vigilant.v1", arrel, commit, mode, origen, data, comprovacions: [{ id, capa, origen_tellado, estat: "ok"|"falla"|"no-mesurat"|"informa", severitat, evidencia: [{ fitxer, linia } | { url, capcalera }], proposta }], recompte }`. **Mai** porta el valor d'un secret ni d'una capçalera `Set-Cookie`, només noms de clau i camins.
-- **Informe del cron.** En mode estàtic dins de L0, a `.immunitari/vigilant/aammdd.json` (fora de git, com `.immunitari/higiene/`).
+- **Consola.** Una línia per comprovació: identificador, estat, `AVÍS` si encara no bloqueja, severitat i fitxers (`VIG-04 FALLA AVÍS alta · wordpress-plugin/dist/…`, `VB1 OK AVÍS alta · firebase.json`). Al final, el recompte en JSON (`ok`, `falla`, `no-mesurat`, `informa`, `avisos` i `bloquejants`).
+- **JSON** (`--json`). `{ esquema: "sdp.vigilant.v1", arrel, commit, mode, readOnly, origen, data, comprovacions: [{ id, capa, origen_tellado, estat: "ok"|"falla"|"no-mesurat"|"informa", severitat, avis, evidencia: [{ fitxer, linia } | { url, capcalera }], proposta }], recompte }`. **Mai** porta el valor d'un secret ni d'una capçalera `Set-Cookie`, només noms de clau i camins. En el tractor d'ara, `commit` i `origen` ixen sempre `null`: l'informe no diu sobre quin commit ha mesurat.
+- **Informe del cron.** En mode estàtic dins de L0, dins de l'informe d'higiene del dia (`.immunitari/higiene/aammdd.json`, clau `vigilant`; fora de git). Si l'arrel no es pot llegir, hi queda `estat: "no-mesurat"` i la diagnosi continua.
 - **Document per al Mestre**, només quan s'encarrega: `_wiki_de_poble/04_escriptori/aammdd_hhmm_auditoria_vigilant.md`, creat amb `document.mjs create` i ancorat a «## Activitat en curs».
 - **Codis d'eixida.**
-  - `0`: cap falla crítica ni alta.
-  - `1`: alguna falla crítica o alta.
-  - `2`: el tractor no ha pogut mesurar, per exemple sense git o amb un origen que no respon.
+  - `0`: cap falla bloquejant, és a dir, cap falla crítica ni alta d'una comprovació que ja no és avís.
+  - `1`: alguna falla bloquejant (`recompte.bloquejants` més gran que 0).
+  - `2`: el tractor no ha pogut mesurar l'arrel o els arguments no són vàlids.
 
   `no-mesurat` mai compta com a `ok`.
 
@@ -181,9 +182,15 @@ Cada comprovació té un identificador estable, la protecció de Vigilant (o d'u
 ## Instal·lació i estat
 
 1. **Fet (261021).** Esta SKILL.md s'ha instal·lat amb `executor-mutacio` i llicència Reflex. Amb ella s'ha regenerat `00_INDEX_SKILLS.md` i s'ha tornat a segellar.
-2. **Pendent del Mestre.** Cal el document de flux per a aprovar el tractor des de la Wiki (lliçó 261002 de [[wiki-documentacio-i-reflex/SKILL|wiki-documentacio-i-reflex]]). Fins aleshores, cap comprovació bloqueja.
-3. **Pendent d'un torn de codi.** Cal fer el tractor executable del Vigilant (tasca al Llibre Mestre, dins d'IDEA-13), sense dependències i a l'estil de `tractor-enxufe.mjs`, amb les seues proves i `npm run porta:vigilant`. A `run-portes.mjs` només hi entra el mode estàtic, amb `readOnly: true`. A `cron_higiene.mjs` hi entra com a part de L0.
-4. **Les comprovacions noves naixen com a avís:** VIG-01 a VIG-06, VA4, VA5, VA7, VB1, VB2, VB3, VB9, VB10 i VC2. Passen a bloquejar quan l'arbre les passa i el Mestre ho ordena.
+2. **Pendent del Mestre.** Cal el document de flux per a aprovar el tractor des de la Wiki (lliçó 261002 de [[wiki-documentacio-i-reflex/SKILL|wiki-documentacio-i-reflex]]). Fins aleshores, cap comprovació nova bloqueja; VA1, VA2 i VA3, que no són noves, sí que poden bloquejar (punt 3).
+3. **Fet (261031, commit `f66de7865`, IDEA-13).** El tractor executable: `tooling/gates/tractor-vigilant.mjs`, sense dependències, amb `export const readOnly = true`, sis proves a `tests/tractor-vigilant.test.mjs` i `npm run porta:vigilant`. A `run-portes.mjs` hi entra el mode estàtic, amb `readOnly: true`, i a `cron_higiene.mjs` com a part de L0 (protegit si l'arrel no es pot llegir). Mesura 15 comprovacions: VIG-01 a VIG-06, VA1 a VA3, VB1 a VB3, VB9, VB10 i VC2, més VIG-SYMLINK (no mesurada, mai bloquejant) quan troba enllaços simbòlics, que no travessa. Hui només poden bloquejar VA1, VA2 i VA3, que no són noves. L'1-11-2026, `node tooling/gates/tractor-vigilant.mjs --json` eixia amb 0: 12 ok, 3 falles d'avís (VIG-04, VIG-05 i VC2) i cap de bloquejant.
+4. **Buits coneguts (261101, pla 261101_1246).** Cap s'ha tocat: canviar el tractor és un torn de codi amb ordre del Mestre.
+   - El mode viu (`--viu --origen URL`) no existix, i `commit` i `origen` ixen sempre `null`.
+   - VA4, VA5, VA7 i les comprovacions VB i VC que no són a la llista de dalt encara no les mesura el tractor: es fan a mà.
+   - VIG-05 marca 18 fitxers per soroll: comodins de CSP com `http://localhost:*` (no són URL vàlides), `localhost` seguit de puntuació, el fragment `http://[` d'una expressió regular, hosts reservats `.invalid` (RFC 6761), els espais de noms d'XLSX (`schemas.openxmlformats.org`, `purl.org`), l'URL de plantilla `http://localhost:${port}` de `src/config/runtimePolicy.js` i l'enllaç homògraf de mostra (`http://xn--pple-43d.com/entra`) de l'espècimen del Xat del catàleg de disseny.
+   - VIG-04 mira la `wordpress-plugin/dist/` local, que pot ser d'un build antic: no diu res del codi.
+   - VC2 depén que el cron haja deixat informe hui o ahir.
+5. **Les comprovacions noves naixen com a avís:** VIG-01 a VIG-06, VA4, VA5, VA7, VB1, VB2, VB3, VB9, VB10 i VC2. Passen a bloquejar quan l'arbre les passa i el Mestre ho ordena.
 
 ## Fonts
 

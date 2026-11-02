@@ -13,14 +13,9 @@
  *     amb l'entitat. Ja no hi ha cap fila sintètica de Sóc de Poble: el seu
  *     actor és la comunitat (sections/xat/actorsDelXat.js), i un directe amb
  *     l'entitat només naix quan algú el demana («Nova conversa», «En privat»).
- *   · 'iaia' · el xat públic de la seua pàgina (/iaia), com el «Comentar» de
- *     la pàgina: /xat?sobre=pagina:%2Fiaia&titol=…&ruta=%2Fiaia. El primer
- *     missatge hi entra (xat_entra_al_fil_de_pagina).
- *     Gauntlet 261016 (Bloc 3.6.2, «la IAIA falla a localhost») · Era el camí
- *     de TOTS els modes. En llavor i en local el xat públic de /iaia és un
- *     grup on ningú no contesta (localXat només fa respondre el fil 'iaia'),
- *     i el directe és rutaDelXatDeLaIAIA, la mateixa porta de «Anar al xat»
- *     de /iaia. Ara la fila també hi va per eixa funció, amb el mode del xat.
+ *   · 'iaia' · l'assistent local: en remot autenticat /xat/iaia-local,
+ *     en remot anònim /xat/fake-iaia i en llavor/local el directe existent.
+ *     El grup públic de /iaia conserva la seua ruta explícita de Comentar.
  *   · 'javi' (Gauntlet 261016, Bloc 3.6.1) · el directe amb la persona de
  *     contacte. En llavor i en local, el seu id del padró (xatSeed.js), que
  *     localXat obri. En remot el servidor no declara quin compte és el seu
@@ -59,42 +54,22 @@ export const RUTA_XAT_DE_LA_IAIA = rutaXatDePagina(objecteDePagina({ titol: PAGI
 const MODES_LOCALS = new Set(['seed', 'local']);
 
 /**
- * Onada 10 (261010; decisió del Mestre del 261010) · Per on s'entra al xat de
- * la IAIA des de FORA del Xat (el botó «Anar al xat» de /iaia): la mateixa
- * conversa que obri la fila «IAIA MarIA» de la llista, en cada mode de dades
- * (`modeDades` és el de useXat()).
- *   · remot · la fila és la d'ajuda per defecte, que porta a
- *     RUTA_XAT_DE_LA_IAIA, o el xat públic de /iaia ja obert, que és eixe
- *     mateix fil amb el seu nom (vestixLaIAIA, data/xatsPerDefecte.js);
- *   · llavor i local · la fila és el fil 'iaia' (el de data/xatSeed.js, o el
- *     que crea «Parla amb la IAIA»): el directe de sempre, /xat?amb=<id>, que
- *     creaFilDirecte troba o crea (data/localXat.js). Allí el xat públic de la
- *     pàgina és un altre xat, i la IAIA no hi contesta.
- * Un mode desconegut va per la via del remot. Pura: no navega ni obri cap
- * fil; XatSection resol totes dues rutes amb els efectes de sempre (?amb= i
- * ?sobre=). Si el Mestre tria una altra via per a la IAIA, canvia ací, amb la
- * constant de dalt.
- *
- * Revisió de l'Onada 10 (261010) · «La mateixa conversa que la fila» val AMB
- * sessió. En remot i sense sessió, la fila «IAIA MarIA» que veu el convidat
- * és la conversa de mostra (FakeChatOnboarding, 'fake-iaia'); amb només el
- * mode de dades, esta funció tornava igualment RUTA_XAT_DE_LA_IAIA i l'efecte
- * ?sobre= de XatSection portava el convidat a l'entrada (rutaDEntrada), com el
- * «Comentar» de /iaia, i després d'entrar a la pròpia identitat
- * (RUTA_DESPRES_D_ENTRAR), no al xat.
- * Onada 11 (261010; prompt 261010_1730, tasca 6, D2) · Decisió del Mestre: el
- * convidat va a la conversa de mostra, la mateixa fila que veu a la llista.
- * `senseSessio` és el de useXat() (remot sense sessió, ja comprovat); en
- * llavor i en local sempre hi ha joId i no canvia res.
+ * La porta de l'assistent és la mateixa dins i fora del Xat. Amb sessió
+ * remota té memòria efímera pròpia: no publica preguntes al grup de /iaia.
+ * Sense sessió usa el fil local del convidat; llavor/local conserven el
+ * directe del port local. Un mode desconegut seguix la via remota.
  */
 /** El fil de mostra de la IAIA per a qui entra sense sessió (FakeChatOnboarding.jsx · fakeThreads). */
 export const ID_FIL_DE_MOSTRA_DE_LA_IAIA = 'fake-iaia';
 /** La ruta d'eixa conversa de mostra. */
 export const RUTA_XAT_DE_MOSTRA_DE_LA_IAIA = `/xat/${ID_FIL_DE_MOSTRA_DE_LA_IAIA}`;
 
+export const ID_FIL_LOCAL_IAIA = 'iaia-local';
+export const RUTA_XAT_LOCAL_IAIA = `/xat/${ID_FIL_LOCAL_IAIA}`;
+
 export function rutaDelXatDeLaIAIA(modeDades, senseSessio = false) {
   if (MODES_LOCALS.has(modeDades)) return rutaXatPrivat({ id: IAIA_ID });
-  return senseSessio ? RUTA_XAT_DE_MOSTRA_DE_LA_IAIA : RUTA_XAT_DE_LA_IAIA;
+  return senseSessio ? RUTA_XAT_DE_MOSTRA_DE_LA_IAIA : RUTA_XAT_LOCAL_IAIA;
 }
 
 /**

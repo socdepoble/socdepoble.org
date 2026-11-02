@@ -85,6 +85,7 @@ import { useLocation, useNavigate, useParams, useSearchParams } from '../../app/
 import NotFoundPage from '../../pages/NotFoundPage';
 import AppGridColumn from '../../components/layout/AppGridColumn.jsx';
 import { useAppGrid } from '../../components/layout/AppGridShell.jsx';
+import { useCapaEnrere } from '../../components/PedraSeca/hooks/useCapaEnrere.js';
 import { useModeImmersiu } from '../../app/contexts/ModeImmersiuContext.jsx';
 /* Fase D (261020, L4) · El document destacat (TextSection i PAGE_COPY) arriba en diferit. */
 import { esErrorLazy, lazyRoute, lazyRouteRenovable } from '../../apps/plataforma/lazyRoute.js';
@@ -123,6 +124,7 @@ import { desaEsborrany, llegixEsborrany } from './esborranys.js';
 import { descartaCompartit, prenTextCompartit, triaDestiCompartit } from '../../config/compartirNatiu.js';
 import { esComunitat } from './components/FilaConversa.jsx';
 import FakeChatOnboarding from './components/FakeChatOnboarding.jsx';
+import IAIALocalProvider from './IAIALocalProvider.jsx';
 import EntradaDelPoble from './components/EntradaDelPoble.jsx';
 import usePobleAmfitrio from './usePobleAmfitrio.js';
 /* Ordre del Mestre (261007) · Les files d'ajuda per defecte i on porten. */
@@ -297,6 +299,7 @@ const ID_FILA_DE_LA_IAIA = `${PREFIX_PER_DEFECTE}iaia`;
 
 export default function XatSection() {
   const xat = useXat();
+  const { t } = useUIActions();
   /* Ordre del Mestre (261021, pla 261021_0015 §8.5) · La pàgina de l'app
      d'on s'ha entrat a la conversa (origenDelXat.js). Viu ací, per damunt de
      XatWorkspace: un àmbit nou torna a muntar l'espai, no tornar a entrar. */
@@ -314,6 +317,9 @@ export default function XatSection() {
         <XatWorkspace key={xat.ambitEstable ?? 'xat-fake'} origen={origen} />
       </FakeChatOnboarding>
     );
+  }
+  if (xat.modeDades === 'remote') {
+    return <IAIALocalProvider key={xat.ambitEstable ?? 'xat'} t={t}><XatWorkspace origen={origen} /></IAIALocalProvider>;
   }
   return <XatWorkspace key={xat.ambitEstable ?? 'xat'} origen={origen} />;
 }
@@ -454,7 +460,7 @@ function XatWorkspace({ origen = null }) {
      ja hi posava la imatge base. El <head> és el mateix. */
   const seoXat = {
     title: totalNoLlegits > 0 ? `(${totalNoLlegits}) ${titolSeccio}` : titolSeccio,
-    description: t('section.xat.subtitle', 'Espai de xat')
+    description: t('section.xat.subtitle')
   };
   useSEO(seoXat);
 
@@ -1032,6 +1038,11 @@ function XatWorkspace({ origen = null }) {
     window.addEventListener('keydown', alTeclat);
     return () => window.removeEventListener('keydown', alTeclat);
   }, [modeSeleccio]);
+  /* P0-24b (T2b, prompt 261102_1532) · La selecció és a la pila de l'Arrere
+     d'Android amb el mateix camí que l'Escape (ix i buida les marques).
+     Corrector (ARB-T2B-01) · Només mentre la barra es pinta (1538): amb la
+     fitxa d'una comunitat damunt, l'Arrere no es gasta en una capa invisible. */
+  useCapaEnrere(modeSeleccio && !comunitatId, () => { setModeSeleccio(false); setTriades(new Set()); });
 
   /* Focus coherent (T68). Només si el control que el tenia s'ha desmuntat.
      Ordre del Mestre (261026_2126, P1-36) · Sense el «…», la fila que ha obert
@@ -1724,7 +1735,8 @@ function XatWorkspace({ origen = null }) {
           key={`${activeThread.id}\n${revisioEsborrany}`}
           clauEsborrany={ambitEstable ? `${ambitEstable}::${activeThread.id}` : null}
           initialText={connectionContext}
-          cortesiaIAIA={modeDades === 'remote' && !senseSessio && !iaiaApagada && esXatDeLaIAIA(activeThread)}
+          peu={activeThread.filLocalIAIA ? <p className="sdp-xat-conversa-buida">{t('section.xat.iaia.local.conversa')}</p> : null}
+          cortesiaIAIA={modeDades === 'remote' && !senseSessio && !iaiaApagada && !activeThread.filLocalIAIA && esXatDeLaIAIA(activeThread)}
           consultaIAIA={!iaiaApagada && (esXatDeLaIAIA(activeThread) || (senseSessio && activeThread.id === ID_FIL_DE_MOSTRA_DE_LA_IAIA))}
           fil={activeThread}
           entitatActiva={entitatActiva}

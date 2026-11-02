@@ -14,19 +14,27 @@ Documents actius de la sessió. Cada àncora correspon a un fitxer físic; la me
 
 ## Activitat en curs
 
-- [[261101_2143_auditoria_claude]]
-- [[261101_2059_prompt_marato_nocturna_extirpacio_total_deute_llibre_mestre]] · Mestre 261101: Prompt viu de la Marató Nocturna B0-B7
-- [[261101_2059_pla_implementacio_marato_nocturna_extirpacio_total_deute_llibre_mestre]] · Mestre 261101: Pla aprovat de la Marató Nocturna B0-B7
-- [[261101_1355_auditoria_claude]] · per a [[261101_2059_prompt_marato_nocturna_extirpacio_total_deute_llibre_mestre]]
-- [[261101_0407_auditoria_gemini_marato_nocturna]] · per a [[261101_2059_prompt_marato_nocturna_extirpacio_total_deute_llibre_mestre]]
-- [[261101_0403_auditoria_codex_marato_nocturna]] · per a [[261101_2059_prompt_marato_nocturna_extirpacio_total_deute_llibre_mestre]]
+- [[261102_1918_prompt_teler_invertit_onada3_codex_gemini_constructors_claude_arbitre]]
+- [[261102_1836_auditoria_maria]] · Informe viu de la IAIA MarIA (Carril 4: T8, corredor Jarvis, APK 1.0.0+2 signat, WordPress 1.1.11 sense banners, kits de governança, P1-30/P2-15 i correu executiu per a Fede de NLnet Fediversity)
+- [[261102_1832_auditoria_gemini]] · Informe viu de Gemini 4 (Carril 3: T7-GEMINI, Kits Xat/IAIA UX + IDEA-48 + Higiene IDEA-62, revisió creuada dels 11 kits de Codex i matriu 10/10 D01-D15)
+
+<!-- SDP:CODEX_ANCORES_DIPOSIT_CLAUDE_261102 -->
+- [Índex del dipòsit de governança de Claude](02_investigacio_ia/261102_1640_claude/governanca/00_LLEGIM.txt) · relleu viu a MarIA.
+- [Contracte Jarvis pendent d’integració](02_investigacio_ia/261102_1640_claude/governanca/LLEGIM.txt).
+- [Higiene estructural: instruccions d’integració](02_investigacio_ia/261102_1640_claude/governanca/LLEGIM_HIGIENE.txt).
+- [Middleware Jarvis preparat per Claude](02_investigacio_ia/261102_1640_claude/governanca/tooling/vite/consola-iaia.mjs).
+<!-- /SDP:CODEX_ANCORES_DIPOSIT_CLAUDE_261102 -->
+
+- [[261102_1640_auditoria_claude]] · Informe viu de Claude Fable 5.1 (Carril 1: T0-T4 + IDEA-62 + integració kits Codex)
+- [[261102_1638_auditoria_codex]] · Informe viu de GPT-6.1 Astra Ultra (Carril 2: T5, T6, IDEA-62, IDEA-48, documents)
+- [[261102_1532_pla_implementacio_mode_jarvis_idea60_fediversity_i_deute_llibre_mestre]] · Mestre 261102: Pla d'Implementació a Màxima Potència (Claude Opus 5.5 Extra Ultracode amb Eixam Gauntlet + GPT-6.1 Astra Ultra) per a IDEA-61 (Flux Universal de Publicació UX), IDEA-60, Llibre Mestre i NLnet Fediversity
 - [[03_llibre_mestre_tasques_i_idees]] · Mestre 261021: Llibre Mestre permanent
 
 ## Producció humana
 
 Inventari d’àncores dels originals presents; els continguts es conserven sota custòdia humana.
 
-- [261101_0252_captura_sistema_xat.jpg](01_produccio/261101_0252_captura_sistema_xat.jpg) · [261101_1242_captura_claude_81pct_revisio_commits_c2_c3_c4.png](01_produccio/261101_1242_captura_claude_81pct_revisio_commits_c2_c3_c4.png) · [261101_1253_captura_claude_pregunta_tres_commits_c2_c3_c4.png](01_produccio/261101_1253_captura_claude_pregunta_tres_commits_c2_c3_c4.png)
+- [261101_0252_captura_sistema_xat.jpg](01_produccio/261101_0252_captura_sistema_xat.jpg) · [261101_1242_captura_claude_81pct_revisio_commits_c2_c3_c4.png](01_produccio/261101_1242_captura_claude_81pct_revisio_commits_c2_c3_c4.png) · [261101_1253_captura_claude_pregunta_tres_commits_c2_c3_c4.png](01_produccio/261101_1253_captura_claude_pregunta_tres_commits_c2_c3_c4.png) · [261102_1521_google_play_versio_2_publicada.png](01_produccio/261102_1521_google_play_versio_2_publicada.png) · [261102_1531_consum_claude_opus_ultracode_59_per_cent.png](01_produccio/261102_1531_consum_claude_opus_ultracode_59_per_cent.png) · [261102_1550_chatgpt_codex_56pct_749_credits_2_restabliments_astra_ultra.png](01_produccio/261102_1550_chatgpt_codex_56pct_749_credits_2_restabliments_astra_ultra.png) · [261102_1552_claude_fable_5_1_extra_ultracode_0_per_cent.png](01_produccio/261102_1552_claude_fable_5_1_extra_ultracode_0_per_cent.png) · [261102_1556_uniformitat_titols_xats_antigravity.png](01_produccio/261102_1556_uniformitat_titols_xats_antigravity.png) · [261102_1612_wordpress_org_svn_commit_r3777455_first_release.png](01_produccio/261102_1612_wordpress_org_svn_commit_r3777455_first_release.png) · [261102_1612_wordpress_org_svn_commit_r3777487_screenshots.png](01_produccio/261102_1612_wordpress_org_svn_commit_r3777487_screenshots.png) · [261102_1613_openai_doble_quota_pro_codex.jpg](01_produccio/261102_1613_openai_doble_quota_pro_codex.jpg) · [261102_1627_google_contactos_recuperacion_amigo_idea48.png](01_produccio/261102_1627_google_contactos_recuperacion_amigo_idea48.png) · [261102_1819_captura_quota_setmanal_claude_91_per_cent.png](01_produccio/261102_1819_captura_quota_setmanal_claude_91_per_cent.png) · [261102_1845_claude_javi_ultra_94_per_cent_tancat.png](01_produccio/261102_1845_claude_javi_ultra_94_per_cent_tancat.png) · [261102_1845_claude_socdepoble_ultra_0_per_cent_opus_5_5_ultracode.png](01_produccio/261102_1845_claude_socdepoble_ultra_0_per_cent_opus_5_5_ultracode.png) · [261102_1914_escriptori_teler_invertit_claude_gemini_codex.jpg](01_produccio/261102_1914_escriptori_teler_invertit_claude_gemini_codex.jpg) · [261102_1928_codex_quota_13pct_2_restabliments_disponibles.png](01_produccio/261102_1928_codex_quota_13pct_2_restabliments_disponibles.png) · [261102_1928_codex_xat_nou_gpt_6_1_sol_ultra.png](01_produccio/261102_1928_codex_xat_nou_gpt_6_1_sol_ultra.png) · [261102_2000_finder_04_escriptori_prompts_consumits.png](01_produccio/261102_2000_finder_04_escriptori_prompts_consumits.png) · [261102_2000_trio_en_marxa_onada3_teler_invertit.jpg](01_produccio/261102_2000_trio_en_marxa_onada3_teler_invertit.jpg) · [261102_2000_antigravity_llista_converses_pride_in_village_life.png](01_produccio/261102_2000_antigravity_llista_converses_pride_in_village_life.png) · [261102_2017_claude_o3_claude_1_completat_pregunta_tancament.png](01_produccio/261102_2017_claude_o3_claude_1_completat_pregunta_tancament.png) · [261102_2108_mac_keychain_supabase_cli_permis.png](01_produccio/261102_2108_mac_keychain_supabase_cli_permis.png) · [261102_2017_claude_o3_claude_1_completat_pregunta_tancament.png](01_produccio/261102_2017_claude_o3_claude_1_completat_pregunta_tancament.png) · [261102_2108_mac_keychain_supabase_cli_permis.png](01_produccio/261102_2108_mac_keychain_supabase_cli_permis.png)
 
 - [260911_0006_tasques_ui_standardization.md](01_produccio/260911_0006_tasques_ui_standardization.md) · [260911_0012_agenda_futur_extensio_chrome.md](01_produccio/260911_0012_agenda_futur_extensio_chrome.md) · [260911_0645_propostes_manifest_panell_control.md](01_produccio/260911_0645_propostes_manifest_panell_control.md) · [Full_dEixides_-_Plantilla.xls](01_produccio/Banda%20La%20Torre%20-%20Gesti%C3%B3/Full_dEixides_-_Plantilla.xls) · [Full_de_control_loteria_nadal.ots](01_produccio/Banda%20La%20Torre%20-%20Gesti%C3%B3/Full_de_control_loteria_nadal.ots) · [Model Fitxa dAlumne 2007.xls](01_produccio/Banda%20La%20Torre%20-%20Gesti%C3%B3/Model%20Fitxa%20dAlumne%202007.xls) · [Planning Contrates 2007.xls](01_produccio/Banda%20La%20Torre%20-%20Gesti%C3%B3/Planning%20Contrates%202007.xls) · [full-eixides-socdepoble.xls](01_produccio/Banda%20La%20Torre%20-%20Gesti%C3%B3/full-eixides-socdepoble.xls)
 - [model_ficha_alumno_banda_1020.jpg](01_produccio/Banda%20La%20Torre%20-%20Gesti%C3%B3/model_ficha_alumno_banda_1020.jpg) · [model_ficha_d_alumno_para_banda_d_musica.xls](01_produccio/Banda%20La%20Torre%20-%20Gesti%C3%B3/model_ficha_d_alumno_para_banda_d_musica.xls) · [animalets_vinyeta.jpg](01_produccio/Targetes_Davinci_Llestes/animalets_vinyeta.jpg) · [bascula_vinyeta.jpg](01_produccio/Targetes_Davinci_Llestes/bascula_vinyeta.jpg) · [calendari_nano_card.jpg](01_produccio/Targetes_Davinci_Llestes/calendari_nano_card.jpg) · [cervell_vinyeta.jpg](01_produccio/Targetes_Davinci_Llestes/cervell_vinyeta.jpg) · [consola_vinyeta.jpg](01_produccio/Targetes_Davinci_Llestes/consola_vinyeta.jpg) · [disseny_vinyeta.jpg](01_produccio/Targetes_Davinci_Llestes/disseny_vinyeta.jpg)
@@ -75,6 +83,11 @@ Laboratori evacuat per ordre expressa a `../_investigacio_ia_de_poble/`: 10 elem
 
 ## Arxivat amb la Porta Olivera
 
+- [[../90_arxiu_historic/261102_1532_prompt_mode_jarvis_idea60_fediversity_i_deute_llibre_mestre]]
+- [[../90_arxiu_historic/261102_1647_prompt_gemini_revisio_codex]]
+- [[../90_arxiu_historic/261102_1821_prompt_claude_alerta_quota_91pct_tancament_ordenat_t0]]
+- [[../90_arxiu_historic/261102_1852_prompt_claude_onada2_socdepoble_ultra_tancament_10_10]]
+- [[../90_arxiu_historic/261101_2143_auditoria_claude]]
 - [[../90_arxiu_historic/261101_0311_pla_implementacio_marato_nocturna_fediversity_notes_i_llibre_mestre]]
 - [[../90_arxiu_historic/261101_0311_prompt_marato_nocturna_fediversity_notes_i_llibre_mestre]]
 - [[../90_arxiu_historic/261101_0409_auditoria_claude]]
@@ -197,3 +210,6 @@ Laboratori evacuat per ordre expressa a `../_investigacio_ia_de_poble/`: 10 elem
 - [[../10_actes/261101_0334_acta_marmota_trilogia_produccio_wordpress_org_i_marato_nocturna]]
 - [[../10_actes/261101_1304_acta_marmota_tancament_marato_nocturna_i_preparacio_assalt_10_10]]
 - [[../10_actes/261101_2059_acta_marmota_tancament_assalt_155d84bd8_b5878593a_i_obertura_marato_nocturna]]
+- [[../10_actes/261102_1456_acta_marmota_produccio_b1_b12_avisos_xat_botigues_1_0_0_2_i_idea60]]
+- [[../10_actes/261102_1929_acta_marmota_onada1_onada2_verdes_i_teler_invertit_onada3]]
+- [[../10_actes/261102_2015_acta_marmota_lliurament_codex_onada3_teler_invertit]]

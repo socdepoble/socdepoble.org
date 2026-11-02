@@ -17,6 +17,7 @@
 import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { afterEach, beforeEach, expect, test, vi } from 'vitest';
 import { delVal, getVal, setVal } from '../../../config/storage.js';
+import { createTranslator } from '../../../config/i18n.js';
 import ClosCaXat, { BotoObriRail, CLAU_RAIL } from './ClosCaXat.jsx';
 import PanellInicialMobil from './PanellInicialMobil.jsx';
 
@@ -32,7 +33,7 @@ vi.mock('../../../app/contexts/RouterContext', () => ({
   useParams: () => ({})
 }));
 vi.mock('../../../app/contexts/UIContext', () => ({
-  useUIActions: () => ({ t: (_, alternativa) => alternativa, setTheme: vi.fn(), setLanguage: vi.fn() }),
+  useUIActions: () => ({ t: createTranslator('ca'), setTheme: vi.fn(), setLanguage: vi.fn() }),
   useUIState: () => ({ themePreference: 'light', language: 'ca' })
 }));
 vi.mock('../XatContext', () => ({
@@ -140,7 +141,7 @@ test('P3 · la nota de l’arrel diu on porta «Privacitat», i no promet un apa
 
   ambSessio({ capacitats: [] });
   obriElFull();
-  expect(within(full()).getByText('«Privacitat» obri el teu perfil, però el servidor d’este poble encara no hi ofereix l’apartat «Privacitat i dades».')).toBeTruthy();
+  expect(within(full()).getByText('«Privacitat» obri el teu perfil, però el servidor d’este poble encara no hi oferix l’apartat «Privacitat i dades».')).toBeTruthy();
   fireEvent.click(fila('Privacitat'));
   expect(mocks.navigate).toHaveBeenLastCalledWith('/el-meu-perfil');
 });

@@ -240,7 +240,7 @@ export function segmentaEnllacos(text) {
    «/xat/123», «/mercatx», «/mercat?x=1» o «/mercat*» es queden en text. Cap
    «*» ni cap salt de línia dins de la ruta (negreta.js la tracta com a peça
    opaca). Lineal: només comença en una «/» darrere d'un blanc. */
-const PATRO_RUTA_WIKI = /(^|\s)(\/wikidepoble\?item=[\w.~%-]*[\w~%-]|\/(?:pobles\/[a-z0-9-]+|page\/[a-z0-9_-]+|projecte|constitucio|anima|roadmap|versions|fedivers|xat|mur|mercat|pobles|notes|multimedia|calendari|traduccions|el-meu-perfil|cerca|javillinares|rentonar)(?=$|\s|[.,;:!](?=\s|$)))/g;
+const PATRO_RUTA_WIKI = /(^|\s)(\/wikidepoble\?item=[\w.~%-]*[\w~%-]|\/(?:pobles\/[a-z0-9-]+|page\/[a-z0-9_-]+|projecte|constitucio|anima|roadmap|versions|fedivers|xat|mur|mercat|vehicle|treball|habitatge|pobles|notes|multimedia|calendari|traduccions|el-meu-perfil|cerca|javillinares|rentonar)(?=$|\s|[.,;:!](?=\s|$)))/g;
 
 /**
  * Parteix els segments de text de `segments` (els de segmentaEnllacos) on hi

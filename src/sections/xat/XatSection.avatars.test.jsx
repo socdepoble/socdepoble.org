@@ -268,7 +268,8 @@ test('la cara de la IAIA porta l’enquadrament «iaia», a la llista amb sessi�
   for (const valor of [senseSessio(), ambSessio()]) {
     munta(valor);
     const enquadrats = [...llista().querySelectorAll('.sdp-avatar--enquadrat')].map((a) => a.getAttribute('title'));
-    expect(enquadrats).toEqual(['IAIA MarIA']);
+    // L'assistent local i, si ja existix, el directe anterior conserven la mateixa identitat.
+    expect(enquadrats).toEqual(valor.senseSessio ? ['IAIA MarIA'] : ['IAIA MarIA', 'IAIA MarIA']);
     expect(llista().querySelector('.sdp-avatar[title="IAIA MarIA"]').classList.contains('sdp-avatar--enquadrat-iaia')).toBe(true);
     cleanup();
   }

@@ -39,6 +39,7 @@
  */
 import crypto from 'node:crypto';
 import { findDeepLSecrets } from '../../tooling/lib/dist-secrets.mjs';
+import { comprovaHigienePaquet } from '../../tooling/lib/higiene-paquets.mjs';
 import { bessonaDe, bessonesDe, esExtern, esHostLocal } from '../../src/config/politicaDeMitjans.js';
 import fs from 'node:fs';
 import path from 'node:path';
@@ -60,8 +61,8 @@ export const ARREL_REPO = path.resolve(ARREL_PLUGIN, '..');
 
 /** Fitxers de l'adaptador que viatgen al paquet de WordPress (llista blanca). */
 export const ADAPTADOR = Object.freeze({
-  fitxers: Object.freeze(['socdepoble-enxufe.php', 'uninstall.php', 'readme.txt',
-    'assets/banner-772x250.png', 'assets/banner-1544x500.png']),
+  // IDEA-62: assets/ és la vitrina SVN; mai forma part del connector instal·lable.
+  fitxers: Object.freeze(['socdepoble-enxufe.php', 'uninstall.php', 'readme.txt']),
   carpetes: Object.freeze(['includes', 'templates', 'languages'])
 });
 
@@ -466,6 +467,7 @@ export function verificaInventari(dist, release) {
     if (cami === ENTRADA && esperat !== release.entrada.sha256) throw new Error('L’inventari i el manifest no coincidixen en el bundle.');
   }
   if (!camins.has(ENTRADA)) throw new Error(`L'inventari no porta ${ENTRADA}.`);
+  comprovaHigienePaquet([...camins]);
   const restes = recorre(dist, '', []).filter((cami) => !camins.has(cami) && ![FITXER_RELEASE, FITXER_INVENTARI].includes(cami));
   return { camins: [...camins].sort(), restes };
 }
@@ -586,6 +588,7 @@ function senseEnllacos(arrelPlugin, rel) {
 export function fitxersAdaptador(arrelPlugin = ARREL_PLUGIN) {
   const rels = [...ADAPTADOR.fitxers];
   for (const carpeta of ADAPTADOR.carpetes) rels.push(...recorre(arrelPlugin, carpeta, []));
+  comprovaHigienePaquet(rels, { wordpress: true });
   return rels
     .filter((rel) => !rel.split('/').some((segment) => segment.startsWith('.')))
     .sort()

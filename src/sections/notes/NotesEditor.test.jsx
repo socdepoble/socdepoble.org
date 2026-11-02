@@ -1,13 +1,14 @@
 import React from 'react';
 import { render, screen, cleanup, fireEvent, within, act } from '@testing-library/react';
 import { afterEach, beforeEach, expect, test, vi } from 'vitest';
+import '../../../tests/helpers/diccionaris.js';
 const mocks = vi.hoisted(() => {
   const NET = Object.freeze({ estat: 'net', problema: null, quarantena: Object.freeze([]) });
   /* L0 · backendConfig exigix un tenant_id UUID: abasts sintètics, en minúscules. */
   const TENANT_A = '00000000-0000-4000-8000-0000000000a1';
   const TENANT_B = '00000000-0000-4000-8000-0000000000b1';
   return {
-    TENANT_A, TENANT_B, showToast: vi.fn(), onToast: undefined, noteFolders: [],
+    TENANT_A, TENANT_B, t: (_key, fallback) => fallback, showToast: vi.fn(), onToast: undefined, noteFolders: [],
     adapter: null, upload: vi.fn(), config: { tenantId: TENANT_A }, notes: [], setLocal: vi.fn(), session: {},
     mou: vi.fn(), esborra: vi.fn(), potEsborrar: false, publish: vi.fn(), compartir: vi.fn(),
     scopeKey: undefined, NET, desament: vi.fn(() => NET), identitat: { actorId: 'user' },
@@ -23,7 +24,7 @@ vi.mock('../../config/dataMode.js', async (importOriginal) => {
 });
 vi.mock('./NotesContext', () => ({
   useNotes: () => ({
-    noteFolders: mocks.noteFolders, t: (_key, fallback) => fallback, config: mocks.config, workspaceKey: mocks.config.tenantId,
+    noteFolders: mocks.noteFolders, t: mocks.t, config: mocks.config, workspaceKey: mocks.config.tenantId,
     notes: mocks.notes, setLocalNoteField: mocks.setLocal, notesComplete: true,
     mouNota: mocks.mou, esborraNota: mocks.esborra, potEsborrar: mocks.potEsborrar,
     publishNote: mocks.publish, compartirNota: mocks.compartir, scopeKey: mocks.scopeKey
@@ -48,6 +49,7 @@ vi.mock('../../app/contexts/CoreContentContext.jsx', () => ({ useCoreContent: ()
 vi.mock('../../app/contexts/SessionContext.jsx', () => ({ useSession: () => mocks.session, ESTAT: { DINS: 'dins' } }));
 vi.mock('../../app/contexts/RouterContext', () => ({ useNavigate: () => vi.fn(), Link: 'a' }));
 vi.mock('@/components/universal/NotificationContext.jsx', () => ({ useToast: () => ({ showToast: mocks.showToast }) }));
+import { carregaDiccionari, createTranslator } from '../../config/i18n.js';
 import NotesEditor from './NotesEditor.jsx';
 import { IconaEstatDesament, TEXTOS_ESTAT_DESAMENT } from '../../components/universal/EstatDesament.jsx';
 import { desaLlicenciaPerDefecte } from '../../components/universal/drets/herencia.js';
@@ -62,6 +64,7 @@ import { llegixExif } from '../../components/universal/enquadrament/exif.js';
 import { proposaCard } from './proposaCard.js';
 
 beforeEach(() => {
+  mocks.t = (_key, fallback) => fallback;
   mocks.notes = [];
   mocks.noteFolders = [];
   mocks.onToast = undefined;
@@ -1239,4 +1242,17 @@ test('IDEA-41 · una connexió i un contingut de fora no porten el motor de «Pr
   render(<NotesEditor activeNote={{ id: 'p', folderId: 'f-notes', categories: ['Sistema'], tags: [] }} />);
   expect(mocks.adapter.document.id).toBe('p');
   expect(mocks.adapter.proposaCard).toBe(proposaCard);
+});
+
+/* T5 · Un canvi d’idioma refà els textos de l’adaptador, sense reescriure la nota. */
+test.each(['ca', 'es', 'en', 'eu', 'gl'])('%s: la portada i la classificació de l’editor reben textos traduïts', async (idioma) => {
+  await carregaDiccionari(idioma);
+  mocks.t = createTranslator(idioma);
+  const document = { id: 'n-traduccio', title: 'Títol de la persona', content: '<p>Text privat</p>', categories: ['General'], folderId: 'f-notes' };
+  render(<NotesEditor activeNote={document} />);
+  expect(mocks.adapter.emptyDocument.heroAlt).toBe(mocks.t('section.notes.editor.portadaAlt'));
+  expect(mocks.adapter.emptyDocument.copyright).toBe('© Sóc de Poble');
+  expect(mocks.adapter.classificacio.props.etiquetaEmoticona).toBe(mocks.t('section.notes.editor.emojis'));
+  expect(document.title).toBe('Títol de la persona');
+  expect(document.content).toBe('<p>Text privat</p>');
 });

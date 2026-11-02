@@ -3,6 +3,7 @@ import { useContext, useState, useRef, useEffect, useLayoutEffect, useId, forwar
 import { AppGridContext } from '../layout/AppGridShell';
 import { PUNTS_DE_TALL } from '../layout/graella.js';
 import { useMenuEmergent } from '../PedraSeca/hooks/useMenuEmergent.js';
+import { useCapaEnrere } from '../PedraSeca/hooks/useCapaEnrere.js';
 import {
   IconaCitacio, IconaCursiva, IconaDesplega, IconaDivisor, IconaLlista, IconaLlistaNumerada, IconaMesEines, IconaNegreta, IconaRatllat
 } from './richText/iconesBarra.jsx';
@@ -113,6 +114,9 @@ function esDUnaCapaModal(event, contenidor) {
    la fitxa de la Columna 2. Esta escolta s'apunta en obrir les opcions, i
    per això sempre corre abans. Un Escape que algú ja ha atés no és seu. */
 function useTancaFora(obert, contenidorRef, tanca, enEscape) {
+  /* P0-24b (T2b, prompt 261102_1532) · Obertes, les opcions són a la pila de
+     l'Arrere d'Android amb el camí del seu Escape (enEscape). */
+  useCapaEnrere(obert, enEscape);
   useEffect(() => {
     if (!obert || !contenidorRef.current) return undefined;
     const root = contenidorRef.current.getRootNode();

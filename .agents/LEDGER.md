@@ -158,7 +158,7 @@ Qualsevol IA (o humà) que modifique codi està obligada a afegir-hi una entrada
 - **Verificació:** 44 proves superades, `build:web` correcte i comprovació visual fins al final d'una pàgina llarga.
 
 
-<!-- HASH: 35a609650d0442a098b5e1db3d1ebeb8ce3e474b93efc7a6e769294d7bded800 -->
+<!-- HASH: 46d247bd093bc429799a7ae6d31e1120ad3047b8c619e511ebc4c767c69bd79b -->
 
 ## 2026-09-19 — Codex — Pla del Bloc B i tractor documental
 - Què: pla de quatre intervencions P1 amb mapa de les 31 troballes i proposta executable d’Acte Reflex, sense modificar codi funcional.
@@ -1206,4 +1206,28 @@ Ordres del Mestre al xat de l'1-11 (21:41: B0-B7 del prompt 2059; abans de dormi
 
 Informe: 261101_2143_auditoria_claude.
 
-<!-- HASH: a766c8bd499bbc97151babe4ee59251da547b8595f0aba8746773bcbfa7073f5 -->
+## 2026-11-02T18:50:00+01:00 · Claude Fable 5.1 + GPT Codex + Gemini 4 + IAIA MarIA · Torns torn_d19293b9 / torn_099a70a6 / torn_97e82a39 / torn_f69976f9 (T0-T8, IDEA-61, IDEA-60, IDEA-62, tancament quota 94% i relleu a Sóc de Poble Ultra 0%)
+
+261102 | torn | torn_d19293b9 | Claude Fable 5.1 (code) · Carril 1 del prompt 261102_1532: T0-T4 i IDEA-62 amb Gauntlets; kits de Codex integrats; Llibre Mestre posat al dia
+261102 | correcció | kits-codex | 38 claus amb cometes dobles trencaven i18n.idiomes; forma canònica restituïda; helper dels diccionaris a tres proves
+261102 | seguretat | consola-iaia | CSRF al corredor Jarvis del dipòsit (Origin/Host, Sec-Fetch-Site, Content-Type) corregit abans d'aplicar-lo
+261102 | troballa | supabase/.temp | secrets de l'edge runtime a l'índex de git (R7): retirada, rotació i filter-repo per al Mestre
+261102 | tancament | torn_d19293b9 | ordre del Mestre 18:19 (quota 91-94%): T0 L0-L4 tancat amb verificador (493/493 suites verdes); L2b aturat sense escriure; relleu a MarIA, Codex, Gemini i compte Sóc de Poble Ultra (0% usat)
+261102 | torn | torn_f69976f9-6724-431f-b2f1-02efeedf6406 | IAIA MarIA · Carril 4 (T8) + Onada 2 (O2-T1..T6): corredor Jarvis, APK 1.0.0+2 signat, WP 1.1.11 sense banners, kits Codex/Gemini integrats (873/873 + 686/686), Acta Marmota 261102_1929 i prompt Onada 3 (Teler Invertit)
+261102 | torn | torn_d19293b9-1bb0-4073-8218-3da898ce7533 | Claude Opus 5.5 (code) · relleu 6 Teler Invertit: Gauntlet Onada 2, AUD-01 i AUD-O2-T4-01 materialitzats, PERFIL-D12; kits d'Onada 3 encara absents
+261102 | correcció | seccio-vertical | AUD-O2-T4-01: una pàgina filtrada ja no talla la paginació per àmbit
+261102 | correcció | opendata | Data Package estàtic complet: 8 recursos que el manifest citava; _headers/_redirects fora dels paquets
+
+## 2026-11-02T20:18:11+01:00 · Codex · torn_858b8642-1deb-48dd-a79e-da025c5d6abe · Onada 3 Teler Invertit
+
+261102 | lliurament | torn_858b8642-1deb-48dd-a79e-da025c5d6abe | Tres kits CAS O3-CODEX-1/2/3 al satèl·lit, preimatges/payload/hash/patch/evidència verificats; cap font del producte escrita al viu
+261102 | proves | torn_858b8642-1deb-48dd-a79e-da025c5d6abe | Aplicació independent:540 Vitest+1 omesa històrica,46/46 Node; Frontissa16/16; DesignGuard3055/0/0; lint net; build893fitxers/0 Finder/235375B gzip
+261102 | gauntlet | torn_858b8642-1deb-48dd-a79e-da025c5d6abe | CLI symlink i precondicions base-candidat corregides; F7 revocació foreign-tab, cancelSAS i lectura0escriptures corregits/revalidats per segon parell; snapshots entre BDs delimitats
+261102 | relleu | torn_858b8642-1deb-48dd-a79e-da025c5d6abe | Claude Àrbitre/materialitzador; E2EE false; cap deploy/SQL remot/commit; cap timer/heartbeat/automatització creats i sis automacions existents PAUSED
+
+261102 | tancament-concurrent | torn_858b8642-1deb-48dd-a79e-da025c5d6abe | Global 8/8 verd; segell estricte refusat per cinc canvis aliens de codi i quatre captures postobertura; captura2017 ancorada sense alterar-la, inventari inicial intacte. Claude confirma dos correctors O2; root revalida62/62 en còpia. Cap procés recurrent pendent.
+
+<!-- HASH: c6321dca7fc9f04d6227673ce1f9db7a98d8b627f96585be3f6feaec235e52f1 -->
+
+
+<!-- HASH: 33544240fd2d237d42c531eff85698bce01411ff0f791f82271844f34a9c9b0e -->

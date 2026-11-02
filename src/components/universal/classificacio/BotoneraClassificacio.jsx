@@ -27,23 +27,28 @@
  * El valor va en un element propi perquè un nom llarg s'escurce amb punts
  * suspensius en una columna estreta; el `title` el mostra sencer.
  */
-import { Feather, Folder, Shapes, Tags } from 'lucide-react';
+import { Feather, Folder, Layers, Shapes, Tags } from 'lucide-react';
 
 
 const CAP = Object.freeze([]);
 
 /* Classe de badge, nom i icona del grup (el text i la icona del botó de
-   resum) quan ja està triat. */
+   resum) quan ja està triat.
+   IDEA-61 (T0, prompt 261102_1532) · `ambit`: el grup «Àmbit» (Mur, Mercat,
+   Compartir cotxe, Treball o Habitatge), amb la classe de l'àmbit a les
+   targetes (etiquetesDAmbit · sdp-badge-system). */
 const PINDOLES = Object.freeze({
   carpeta: Object.freeze({ badge: 'sdp-badge-system', nom: 'Carpetes', icona: Folder }),
   categories: Object.freeze({ badge: 'sdp-badge-category', nom: 'Categories', icona: Shapes }),
   etiquetes: Object.freeze({ badge: 'sdp-badge-tag', nom: 'Etiquetes', icona: Tags }),
+  ambit: Object.freeze({ badge: 'sdp-badge-system', nom: 'Àmbit', icona: Layers }),
 });
 
-/* Un botó per grup amb totes les píndoles del grup a dins (T7B-V1). */
-function Pindoles({ tipus, valors, onObri }) {
+/* Un botó per grup amb totes les píndoles del grup a dins (T7B-V1).
+   IDEA-61 · `nom` (opcional): el nom accessible ja traduït; sense, el de sempre. */
+function Pindoles({ tipus, valors, onObri, nom: nomPropi }) {
   const { badge, nom, icona: Icona } = PINDOLES[tipus];
-  const etiqueta = `${nom}: ${valors.join(', ')}`;
+  const etiqueta = nomPropi || `${nom}: ${valors.join(', ')}`;
   return (
     <button type="button" className="sdp-classificacio-pindola" aria-haspopup="dialog"
       aria-label={etiqueta} title={etiqueta} onClick={() => onObri?.(tipus)}>
@@ -79,8 +84,13 @@ function BotoResum({ tipus, icona: Icona, glif = null, text, resum, onObri }) {
    Gauntlet 261016 (Bloc 3.9) · `etiquetaEmoticona` (opcional): el text del
    quart botó. El Bloc de Notes hi posa «Emojis XL» (el diàleg porta la
    graella del catàleg, i és l'únic camí per a obrir-lo: la barra taronja ja
-   no porta la ploma central). Sense, «Emoticona», el DOM de sempre. */
-export function BotoneraClassificacio({ carpeta, categories = CAP, etiquetes = CAP, emoticona = '', etiquetaEmoticona = 'Emoticona', onObri }) {
+   no porta la ploma central). Sense, «Emoticona», el DOM de sempre.
+   IDEA-61 (T0, prompt 261102_1532) · `ambit` (opcional): el quart grup,
+   «Àmbit», entre les etiquetes i l'emoticona: { text, valor, nom }. Amb
+   `valor` (el nom de l'àmbit triat, ja traduït), una píndola amb `nom` com a
+   nom accessible («Àmbit: Compartir cotxe»); sense, el botó de resum amb
+   `text` («Àmbit»). Sense la prop, el DOM de sempre, byte a byte. */
+export function BotoneraClassificacio({ carpeta, categories = CAP, etiquetes = CAP, emoticona = '', etiquetaEmoticona = 'Emoticona', ambit, onObri }) {
   const valorsDe = (llista) => llista.filter(Boolean);
   const triatsCategories = valorsDe(categories);
   const triatsEtiquetes = valorsDe(etiquetes);
@@ -95,6 +105,9 @@ export function BotoneraClassificacio({ carpeta, categories = CAP, etiquetes = C
       {triatsEtiquetes.length
         ? <Pindoles tipus="etiquetes" valors={triatsEtiquetes} onObri={onObri} />
         : <BotoResum tipus="etiquetes" icona={Tags} text="Etiquetes" resum={0} onObri={onObri} />}
+      {ambit ? (ambit.valor
+        ? <Pindoles tipus="ambit" valors={[ambit.valor]} nom={ambit.nom} onObri={onObri} />
+        : <BotoResum tipus="ambit" icona={Layers} text={ambit.text} resum="—" onObri={onObri} />) : null}
       {emoticona
         ? <BotoResum tipus="emoticona" icona={null} glif={emoticona} text={etiquetaEmoticona} resum={null} onObri={onObri} />
         : <BotoResum tipus="emoticona" icona={Feather} text={etiquetaEmoticona} resum="—" onObri={onObri} />}

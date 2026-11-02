@@ -587,3 +587,39 @@ test.each([
     delete window.Capacitor;
   }
 });
+
+/* IDEA-61 (T0, prompt 261102_1532) · ARB-L4-01 · Les fitxes de les verticals
+   (Compartir cotxe, Treball, Habitatge) viuen a la font «mur» (feedPosts →
+   dePublicacio). El control: amb un tipus que la font declara (mercat), el Mur
+   que carrega compta i es veu «Buscant…», mai «Cap resultat». */
+test('amb ?tipus=mercat i el Mur carregant, es veu «Buscant…» i mai «Cap resultat»', async () => {
+  mocks.mur = { ...mocks.mur, status: 'loading' };
+  mocks.url = '?q=cotxe&tipus=mercat';
+  await pinta();
+  expect(screen.queryByText('Cap resultat per a «cotxe»')).toBeNull();
+  expect(document.querySelector('.sdp-esquelet')).not.toBeNull();
+  expect(estat().textContent).toBe('Buscant…');
+});
+
+/* ARB-L4-01 (IDEA-61, T0, prompt 261102_1532; corregit per l'orquestradora el
+   261102) · La font «mur» declara també vehicle, treball i habitatge
+   (useCercaGlobal.js · fonts): amb el filtre d'una vertical, el Mur que
+   carrega és rellevant («Buscant…», no «Cap resultat») i, si falla, ix l'avís
+   de la font. Les dos proves van nàixer com a `test.fails` mentre el defecte
+   hi era; ara fixen el comportament correcte. */
+test('ARB-L4-01 (corregit) · amb ?tipus=vehicle i el Mur carregant, es veu «Buscant…» i mai «Cap resultat»', async () => {
+  mocks.mur = { ...mocks.mur, status: 'loading' };
+  mocks.url = '?q=cotxe&tipus=vehicle';
+  await pinta();
+  expect(screen.queryByText('Cap resultat per a «cotxe»')).toBeNull();
+  expect(document.querySelector('.sdp-esquelet')).not.toBeNull();
+  expect(estat().textContent).toBe('Buscant…');
+});
+
+test('ARB-L4-01 (corregit) · amb ?tipus=treball i el Mur en error, l’avís de la font amb «Torna-ho a provar»', async () => {
+  mocks.mur = { ...mocks.mur, status: 'error', error: new Error('No ha respost a temps.') };
+  mocks.url = '?q=cotxe&tipus=treball';
+  await pinta();
+  expect(screen.getByText("No s'ha pogut buscar en el Mur, l'agenda i el mercat")).toBeTruthy();
+  expect(screen.getByRole('button', { name: 'Torna-ho a provar' })).toBeTruthy();
+});

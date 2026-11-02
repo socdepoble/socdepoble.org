@@ -41,6 +41,8 @@
  *     espera que la lògica de NotesEditor es puga compartir sense duplicar-la.
  */
 import { useMemo, useState } from 'react';
+import { tradueix } from '../../components/PedraSeca/hooks/useTraductorOpcional.js';
+import { omple } from '../../config/moderacio.js';
 import { ExternalLink, Folder, Globe, Trash2 } from 'lucide-react';
 import { useNavigate } from '../../app/contexts/RouterContext';
 import { useToast } from '@/components/universal/NotificationContext.jsx';
@@ -60,7 +62,7 @@ import { paginaDElement, useOriginalDeConnexio } from '../detail/elementDeSeccio
 import { propsDePaginaDeText, rutaVigentDePagina } from '../text/paginaDeText.js';
 import { sanitizeHtml } from '../../utils/sanitize';
 import { resolRecursosDeHtml } from '../../config/assetResolver.js';
-import { ETIQUETA_OBJECTE } from '../connectar/abastConnexio.js';
+import { etiquetaObjecte } from '../connectar/abastConnexio.js';
 import { useNotes } from './NotesContext.jsx';
 import { DialegEsborrarNota } from './DialegEsborrarNota.jsx';
 import { CARPETA_CONNECTATS, NOM_CARPETA_CONNECTATS, carpetesDelBloc, nomDeCarpeta } from './carpetes.js';
@@ -70,8 +72,8 @@ import { objecteDeConnexio, rutaSegura, senseParagrafHeretat, signaturaDeCaiguda
 
 /* Carpetes: el port de dades no té cap mètode per a crear-ne, reanomenar-ne ni
    esborrar-ne (AGENTS §8). El diàleg ho diu, com a l'editor de Notes. */
-const AVIS_CARPETES = 'Crear, reanomenar i esborrar carpetes encara no té contracte de dades amb el servidor. De moment, tria la carpeta d’esta connexió.';
-const SENSE_ENLLAC = 'Esta connexió no porta cap enllaç de l’original per a compartir.';
+const AVIS_CARPETES = ["section.notes.connexio.avisCarpetes", "Crear, reanomenar i esborrar carpetes encara no té contracte de dades amb el servidor. De moment, tria la carpeta d’esta connexió."];
+const SENSE_ENLLAC = ["section.notes.connexio.senseEnllac", "Esta connexió no porta cap enllaç de l’original per a compartir."];
 /* La reserva valenciana del botó de la tira (accioMur); el selector rep textosMur, traduïts. */
 const TEXTOS_MUR = textosDeNota({ connexio: true });
 
@@ -104,12 +106,12 @@ export function ConnexioDetall({ nota }) {
   const rutaDesada = rutaSegura(origen);
   const esPagina = !origen.objecte || origen.objecte === 'pagina';
   const ruta = esPagina ? rutaVigentDePagina(rutaDesada) : rutaDesada;
-  const titolOrigen = origen.titol || nota?.title || 'Element connectat';
+  const titolOrigen = origen.titol || nota?.title || t('section.notes.connexio.titol', 'Element connectat');
   /* Resolt l'original, el seu títol; si no, el que recorda l'origen. */
   const titolCompartit = targeta?.titol || titolOrigen;
   const onShare = () => (ruta
     ? compartix(titolCompartit, urlPerCompartir(ruta, router), showToast)
-    : showToast(SENSE_ENLLAC, 'info'));
+    : showToast(tradueix(t, SENSE_ENLLAC), 'info'));
   /* T63.2 · Comentar va al xat de l'ORIGINAL, en les tres vistes, i mai al de
      la nota (/notes?nota=…), que és privada. Un contingut de fora no té
      Pàgina Universal: objecte null, el botó es queda i el clic avisa. Una
@@ -166,18 +168,18 @@ export function ConnexioDetall({ nota }) {
   }) : true);
 
   const tira = (
-    <div className="sdp-connexio-lector__tira" role="group" aria-label="Recopilació de la connexió">
+    <div className="sdp-connexio-lector__tira" role="group" aria-label={t("section.notes.connexio.recopilacio", "Recopilació de la connexió")}>
       {ruta ? (
-        <Boto varietat="secundari" icona={ExternalLink} onClick={() => navigate(ruta)}>Obri l’original</Boto>
+        <Boto varietat="secundari" icona={ExternalLink} onClick={() => navigate(ruta)}>{t("section.notes.connexio.obriOriginal", "Obri l’original")}</Boto>
       ) : null}
       {pucCompartirAlMur ? (
         <Boto varietat="secundari" icona={Globe} onClick={() => setDialeg('mur')}>{accioMur}</Boto>
       ) : null}
       {potMoure ? (
-        <Boto varietat="secundari" icona={Folder} onClick={() => setDialeg('carpeta')}>{`Carpeta: ${nomCarpeta}`}</Boto>
+        <Boto varietat="secundari" icona={Folder} onClick={() => setDialeg('carpeta')}>{omple(t("section.notes.connexio.carpeta", "Carpeta: {nom}"), { nom: nomCarpeta })}</Boto>
       ) : null}
       {pucBorrar ? (
-        <Boto varietat="secundari" icona={Trash2} onClick={() => setDialeg('esborrar')}>Borrar</Boto>
+        <Boto varietat="secundari" icona={Trash2} onClick={() => setDialeg('esborrar')}>{t("section.notes.connexio.borrar", "Borrar")}</Boto>
       ) : null}
     </div>
   );
@@ -186,7 +188,7 @@ export function ConnexioDetall({ nota }) {
     <>
       {dialeg === 'carpeta' && potMoure ? (
         <DialegCarpeta obert onTanca={() => setDialeg(null)} opcions={carpetes} seleccionada={carpetaId}
-          onDesa={desaCarpeta} avis={AVIS_CARPETES} />
+          onDesa={desaCarpeta} avis={tradueix(t, AVIS_CARPETES)} />
       ) : null}
       {dialeg === 'esborrar' && pucBorrar ? (
         <DialegEsborrarNota obert nota={nota} onTanca={() => setDialeg(null)} onTria={triaBorrar} ocupat={borrant} />
@@ -244,7 +246,7 @@ export function ConnexioDetall({ nota }) {
      entitat, un grup, una IA o una obra conserven la seua. */
   const etiquetes = origen.objecte === 'persona'
     ? []
-    : [{ text: ETIQUETA_OBJECTE[origen.objecte] || 'Element', className: 'sdp-badge-system' }];
+    : [{ text: etiquetaObjecte(origen.objecte, t), className: 'sdp-badge-system' }];
 
   return (
     <>
@@ -266,21 +268,21 @@ export function ConnexioDetall({ nota }) {
         onShare={onShare}
         {...comentar}
       >
-        {estat === 'carregant' ? <Carregant etiqueta="Carregant l’original…" /> : null}
+        {estat === 'carregant' ? <Carregant etiqueta={t("section.notes.connexio.carregantOriginal", "Carregant l’original…")} /> : null}
         {/* La font de la secció ha fallat (xarxa, servidor): no sabem si
             l'original hi és, i no es diu que no hi siga. */}
         {estat === 'error' ? (
-          <Alerta to="avis" titol="No s’ha pogut carregar l’original">
+          <Alerta to="avis" titol={t("section.notes.connexio.errorOriginal", "No s’ha pogut carregar l’original")}>
             {ruta
-              ? 'Ara mateix no arriba el contingut d’on ve. Obri’l a la seua pàgina o torna-ho a provar d’ací a una estona.'
-              : 'Ara mateix no arriba el contingut d’on ve, i la connexió no en porta l’enllaç.'}
+              ? t("section.notes.connexio.errorAmbEnllac", "Ara mateix no arriba el contingut d’on ve. Obri’l a la seua pàgina o torna-ho a provar d’ací a una estona.")
+              : t("section.notes.connexio.errorSenseEnllac", "Ara mateix no arriba el contingut d’on ve, i la connexió no en porta l’enllaç.")}
           </Alerta>
         ) : null}
         {estat === 'absent' ? (
-          <Alerta to="info" titol="L’original no es pot mostrar ací">
+          <Alerta to="info" titol={t("section.notes.connexio.originalAbsent", "L’original no es pot mostrar ací")}>
             {ruta
-              ? 'No és entre el que s’ha carregat ací (un perfil, una pàgina, un altre poble o un element retirat). Obri’l a la seua pàgina.'
-              : 'No és entre el que s’ha carregat ací i la connexió no en porta l’enllaç.'}
+              ? t("section.notes.connexio.absentAmbEnllac", "No és entre el que s’ha carregat ací (un perfil, una pàgina, un altre poble o un element retirat). Obri’l a la seua pàgina.")
+              : t("section.notes.connexio.absentSenseEnllac", "No és entre el que s’ha carregat ací i la connexió no en porta l’enllaç.")}
           </Alerta>
         ) : null}
         {renderRichText(senseParagrafHeretat(nota?.content))}

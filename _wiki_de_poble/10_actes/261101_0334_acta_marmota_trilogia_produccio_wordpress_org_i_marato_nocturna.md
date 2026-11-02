@@ -70,8 +70,8 @@ Plantilla entregada: _wiki_de_poble/03_actuar/plantilles/acta.md; SHA-256 4d4b9d
 
 ### Marató Nocturna Preparada per a Després del Reinici del Mac (`261101_0311`)
 1. **Pla i Prompt Vius a l'Escriptori:**
-   - [[261101_0311_pla_implementacio_marato_nocturna_fediversity_notes_i_llibre_mestre]]
-   - [[261101_0311_prompt_marato_nocturna_fediversity_notes_i_llibre_mestre]]
+   - [[../90_arxiu_historic/261101_0311_pla_implementacio_marato_nocturna_fediversity_notes_i_llibre_mestre|261101_0311_pla_implementacio_marato_nocturna_fediversity_notes_i_llibre_mestre]]
+   - [[../90_arxiu_historic/261101_0311_prompt_marato_nocturna_fediversity_notes_i_llibre_mestre|261101_0311_prompt_marato_nocturna_fediversity_notes_i_llibre_mestre]]
 2. **Tasques `T1`..`T8` per a Claude Opus 5.5 (amb Gemini CLI en revisió contínua i GPT Codex cada 2 hores):**
    - **`T1` + `T2`:** Activar l'enllaç oficial `https://wordpress.org/plugins/socdepoble/` a `src/config/canalsDeBotiga.js` i actualitzar `/page/descarregues` i `/page/fediversity` («Fet hui (verificable)» + enllaços d'1 clic per als avaluadors).
    - **`T3`:** Tancament tècnic 100% de les Partides 1, 3 i 4 de NLnet Fediversity (`exportaMunicipiOpenData.js` v1.1.0, `proposaCard.js` Mètode Karpathy local OKF v0.2, alertes/bàndols a `Mur.jsx`, test E2E `inicia-node-germa.test.mjs` i `perfil_minim_allotjament_node_municipal.md`).
@@ -87,5 +87,5 @@ Plantilla entregada: _wiki_de_poble/03_actuar/plantilles/acta.md; SHA-256 4d4b9d
 - [[00_index]]
 - [[00_index_escriptori]]
 - [[03_llibre_mestre_tasques_i_idees]]
-- [[261101_0311_pla_implementacio_marato_nocturna_fediversity_notes_i_llibre_mestre]]
-- [[261101_0311_prompt_marato_nocturna_fediversity_notes_i_llibre_mestre]]
+- [[../90_arxiu_historic/261101_0311_pla_implementacio_marato_nocturna_fediversity_notes_i_llibre_mestre|261101_0311_pla_implementacio_marato_nocturna_fediversity_notes_i_llibre_mestre]]
+- [[../90_arxiu_historic/261101_0311_prompt_marato_nocturna_fediversity_notes_i_llibre_mestre|261101_0311_prompt_marato_nocturna_fediversity_notes_i_llibre_mestre]]

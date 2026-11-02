@@ -4,7 +4,9 @@ dist
 # (destinació única, skill core-empaquetat-wp), i els *.zip queden fora per la regla de més avall.
 /release/
 .DS_Store
+.DS-Store
 *DS_Store*
+*DS-Store*
 ._*
 *.log
 .sdp-reflex/

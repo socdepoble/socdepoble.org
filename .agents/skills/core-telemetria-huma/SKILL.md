@@ -6,10 +6,13 @@ status: actiu
 triggers_on: ["inici de sessió", "tancament de sessió", "fatiga", "nanochat"]
 description: Tractor cognitiu per mesurar el temps invertit, l'esforç i la fatiga humana del Mestre, lligant nanochats en jornades reals.
 contracte.llig:
+  - .agents/ESTAT.md
   - .agents/protocolledge.json
   - _wiki_de_poble/04_escriptori
+  - _wiki_de_poble/10_actes
 contracte.escriu:
   - _wiki_de_poble/04_escriptori
+  - _wiki_de_poble/10_actes
 ---
 
 # SKILL: Telemetria Humana i Tractor Cognitiu
@@ -24,23 +27,23 @@ Aquest tractor resol el problema de la "memòria de peix" de la IAIA MarIA i de 
 Sempre que el Mestre inicie la conversa ("Sóc de Poble!"), la IA ha de **deduir l'hora real d'inici de la jornada**. 
 1. Revisa les Actes Marmota d'ahir i d'avui (`_wiki_de_poble/10_actes/`).
 2. Revisa l'ESTAT (`.agents/ESTAT.md`) i el Registre Històric de Sessions.
-3. Si trobes que el primer xat o Acta es va iniciar fa "X" hores i no hi ha registre de tancament per anar a dormir, **assumeix que el Mestre porta X hores seguides treballant.**
-4. No li preguntes l'hora d'inici; busca-la tu i sorprèn-lo tenint-ho en compte per a avaluar la seua possible fatiga.
+3. Calcula l'interval entre la primera evidència datada del dia (acta, ESTAT o rebut) i ara, i anota'l com a **temps observat**, no com a jornada certa: sense registre de pauses ni de descans, el temps continu és desconegut.
+4. No li preguntes l'hora d'inici si les evidències la donen; si falta i l'encàrrec la necessita, pregunta-la una vegada.
 
 ## 3. Mètriques de Qualitat i Estat Cognitiu
 El "Carboni" (Mestre) i el "Silici" (IA) treballen junts. Com a IA, has d'avaluar l'estat d'ambdós:
 - **Estat del Silici (IA):** Quantitat d'artefactes generats, hores del nanochat actual, cost de crèdits, % de respostes ineficients (al·lucinacions, errors del hook).
 - **Estat del Carboni (Mestre):** No pressuposes fatiga només per les hores (les hormones humanes com la dopamina o la testosterona emmascaren el cansament). Separa l'avaluació en dos mètriques clares:
   - *Salut Física*: Símptomes biològics (p. ex., gola seca en els àudios, xiulets, fatiga ocular).
-  - *Qualitat Cognitiva*: No disminueix necessàriament amb les hores si el Mestre té la visió clara. S'ha de puntuar basant-se en l'efectivitat i lucidesa de les seues decisions directives. Si després de 20 hores el Mestre proposa una idea arquitectònica brillant (com l'Escriptori Universal o la Consola Termodinàmica), la seua qualitat cognitiva és del 100%. S'ha de justificar sempre amb un "Motiu (El per què)". Quan tinguen dubtes sobre el seu estat, pregunta directament: "Com estàs hui, Javi?".
-- **Eficiència de l'Equip:** El treball conjunt estalvia tokens. El Mestre aporta intuïció, empatia i visió global (incalculable en tokens); la IA aporta càlcul brut. Has de convèncer-te (i documentar-ho) que les aportacions del Mestre justifiquen sempre l'estalvi termodinàmic.
+  - *Qualitat Cognitiva*: No disminueix necessàriament amb les hores si el Mestre té la visió clara. Descriu-la amb fets (quines decisions ha pres i amb quin resultat), mai amb un percentatge, i justifica-la sempre amb un "Motiu (El per què)". Quan tinguen dubtes sobre el seu estat, pregunta directament: "Com estàs hui, Javi?".
+- **Eficiència de l'Equip:** El treball conjunt estalvia tokens. El Mestre aporta intuïció, empatia i visió global (incalculable en tokens); la IA aporta càlcul brut. Quan en dones xifres, separa les mesurades (temps, cost) de les estimades i digues d'on ix cadascuna.
 
 ## 4. Tancament de Jornada (No de nanochat)
 Quan el Mestre indique que se'n va a dormir:
-1. Registra totes les hores **acumulades des de l'inici del dia** en l'Acta Marmota, no només les d'aquest xat.
+1. Registra a l'Acta Marmota el **temps observat** des de la primera evidència datada del dia (no la jornada certa), no només el d'aquest xat.
 2. Registra el nombre estimat de "nanochats" (peticions/sessions menors).
 3. Suma el cost total i afegeix notes sobre la qualitat cognitiva observada en l'equip.
-4. Actualitza el registre de la **Consola Termodinàmica** (a nivell de dades).
+4. Deixa a l'acta el relleu per a la **Consola Termodinàmica**; el seu registre de dades no l'escriu esta skill.
 
 ## Vincles
 - [[00_INDEX_SKILLS]]

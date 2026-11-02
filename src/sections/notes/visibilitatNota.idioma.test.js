@@ -243,8 +243,8 @@ describe('ConnexioDetall · el selector i el rebuig per les normes en la llengua
     await expect(mocks.selector.onTria(true)).rejects.toThrow(EN_NORMES);
     mocks.notes.compartirNota.mockRejectedValueOnce(new TypeError('Failed to fetch'));
     await expect(mocks.selector.onTria(true)).rejects.toThrow(EN_XARXA);
-    // «Carpeta:» encara és residu del lector (B3-I18N §9); el nom de la carpeta de sèrie, ja no.
-    fireEvent.click(screen.getByRole('button', { name: 'Carpeta: Wall' }));
+    // T5 · P1-22 (261102, kit de Codex): «Carpeta:» ja es traduïx (section.notes.connexio.carpeta); el nom de la carpeta de sèrie també.
+    fireEvent.click(screen.getByRole('button', { name: 'Folder: Wall' }));
     expect(mocks.carpeta.opcions).toEqual(expect.arrayContaining([{ id: 'f-mur', nom: 'Wall' }, { id: 'f-connectats', nom: 'Safata d’Entrada' }]));
     expect(mocks.carpeta.seleccionada).toBe('f-mur');
   });

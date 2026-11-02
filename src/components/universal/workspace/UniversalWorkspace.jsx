@@ -8,7 +8,7 @@ import { WorkspaceProvider, useWorkspace } from './WorkspaceContext.jsx';
 import { entradaMestreDetall, recordaNivell } from './nivellMestreDetall.js';
 import { buildWorkspaceFolderForest } from './workspaceFolderForest.js';
 import { carpetesAmagadesDe, desaCarpetaAmagada, espaiDe, subscriuCarpetesVisibles } from './carpetesVisibles.js';
-import { ALL_CATEGORY_ID } from './workspaceState.js';
+import { ALL_CATEGORY_ID, ORDENACIONS, ordenaElements } from './workspaceState.js';
 import { navegacioPlegadaDeLaFinestra } from '../../layout/graella.js';
 import { ItemMedia } from './ItemMedia.jsx';
 import { NavGlyph, GlifCategoriaContext, GLIF_DOCUMENT, emojiInicial, primerGlif } from './NavGlyph.jsx';
@@ -706,6 +706,11 @@ export function UniversalWorkspace({
       selection={seleccio}
       onSelectionChange={onSelectionChange}
       columnesInicials={columnesDeMuntada}
+      /* P1-73 (T3, prompt 261102_1532) · L'ordre de la llista en muntar (per
+         data, ORDENACIONS[0], el mateix que el selector d'ItemListColumn):
+         la selecció inicial seguix la primera fila pintada des del primer
+         pintat. Després, ItemListColumn el sincronitza amb setSort. */
+      ordreInicial={{ sortable }}
       inclouDescendents={inclouDescendents}
       categoriaSenseElement={compacte}
       filtraPerConsulta={model.filtraPerConsulta !== false}
@@ -1470,7 +1475,7 @@ function ItemListColumn({
 }) {
   const {
     items, categories, navigationGroups, state, status, filteredItems, selectItem, requestItem,
-    toggleColumn, setQuery, clearFilters, openSearch, closeSearch, toggleTag
+    toggleColumn, setQuery, clearFilters, openSearch, closeSearch, toggleTag, setSort
   } = useWorkspace();
   const { mida, panellObert, setPanellObert, tancaPanells, obriPanell, llistaPlegable, nodeRail } = useAppGrid();
   /* MD · En estret, amb el mestre-detall, l'obridor de la navegació l'obri
@@ -1527,20 +1532,22 @@ function ItemListColumn({
     if (cercaDemanada) campCercaRef.current?.focus({ preventScroll: true });
   }, [cercaDemanada]);
   const [creating, setCreating] = useState(false);
-  const [sortBy, setSortBy] = useState('date');
+  const [sortBy, setSortBy] = useState(ORDENACIONS[0]);
   const [sortOpen, setSortOpen] = useState(false);
-  const sortedItems = useMemo(() => {
-    const ordenats = !sortable ? filteredItems : [...filteredItems].sort((a, b) =>
-      sortBy === 'name' ? (a.title || '').localeCompare(b.title || '', 'ca')
-        : (Date.parse(b.updatedAt) || 0) - (Date.parse(a.updatedAt) || 0)
-    );
-    /* D-4 (pla 261101_1246) · A «Tot», els elements amb `fixatATot: true` (la
-       Card «Bloc de notes») van davant, en l'ordre de l'ordenació; la resta,
-       darrere i en el seu. Sense cap fixat, la mateixa llista de sempre. */
-    if (state.activeCategoryId !== ALL_CATEGORY_ID) return ordenats;
-    const fixats = ordenats.filter((item) => item?.fixatATot === true);
-    return fixats.length ? [...fixats, ...ordenats.filter((item) => item?.fixatATot !== true)] : ordenats;
-  }, [filteredItems, sortable, sortBy, state.activeCategoryId]);
+  /* P1-73 (T3, prompt 261102_1532) · L'ordre de la llista puja al context
+     (sort/set): la tria automàtica (primerElementTriable) seguix el mateix
+     sortBy que la llista entre els fixats de «Tot». El selector no canvia. */
+  useEffect(() => {
+    setSort({ sortBy, sortable });
+  }, [setSort, sortBy, sortable]);
+  /* D-4 (pla 261101_1246) · A «Tot», els elements amb `fixatATot: true` (la
+     Card «Bloc de notes») van davant, en l'ordre de l'ordenació; la resta,
+     darrere i en el seu. P1-73 · El comparador i els fixats viuen a
+     ordenaElements (workspaceState), un sol criteri per a la llista i la tria. */
+  const sortedItems = useMemo(
+    () => ordenaElements(filteredItems, { sortable, sortBy, categoryId: state.activeCategoryId }),
+    [filteredItems, sortable, sortBy, state.activeCategoryId]
+  );
   /* P6 · En estret la columna continua sent el panell del mestre-detall i el
      rail viu a part (#app-grid-rail, railAPart). En «ample», el plegat de
      sempre. Decisió 4 del Mestre (30-10-2026 ~15:00) · La columna de la

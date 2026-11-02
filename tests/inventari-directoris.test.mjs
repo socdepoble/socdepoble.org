@@ -50,7 +50,6 @@ const TARGETS = [
   ['src/css', 0, []],
   ['src/config', 0, []],
   ['src/data', 0, []],
-  ['src/context', 0, []],
   ['src/hooks', 0, []],
 ];
 

@@ -60,6 +60,11 @@ import { portadaDeLaPublicacio } from '../../data/mapejadorSeccions.js';
 import { TIPUS_ALERTA } from './alertesMunicipals.js';
 import { tradueix } from '../../components/PedraSeca/hooks/useTraductorOpcional.js';
 import { CLASSE_DE_LA_TARGETA, DistintiuAlertaMunicipal } from './AlertaMunicipal.jsx';
+/* IDEA-61 (T0, prompt 261102_1532) · L'àmbit d'una fitxa del Flux Universal
+   de Publicació (vehicle, treball, habitatge o mercat): la secció, la ruta
+   del detall, les dues etiquetes (àmbit i estat) i el resum de la fitxa. Un
+   element sense àmbit no rep res (Llei del Píxel). */
+import { ambitDe, esFitxaDAmbit, etiquetesDAmbit, resumDeFitxa, rutaDAmbit } from '../../utils/publicacioUniversal.js';
 
 /**
  * T6 (ordre del Mestre, 261004, prompt 261004_0515 §5) · On porta la boina
@@ -139,8 +144,13 @@ export function TargetaDelMur({ item, esdeveniment = null, alertaMunicipal = nul
      no porta pastilla (un deute de dades, no de pantalla). */
   const data = dataDElement(item);
   /* Lògica d'Usuari (T4, T5): l'autoria enllaça al perfil públic de qui
-     signa, i Connectar s'emporta l'origen sencer cap al MAS. */
-  const seccio = (item.type === 'market' || item.type === 'product') ? 'mercat' : 'mur';
+     signa, i Connectar s'emporta l'origen sencer cap al MAS.
+     IDEA-61 (T0, prompt 261102_1532) · La secció és l'àmbit (ambitDe): per a
+     un element sense àmbit, 'mercat' si és un producte i 'mur' per a la resta,
+     exactament com abans; per a una fitxa vertical, el seu àmbit
+     ('vehicle', 'treball' o 'habitatge'), que té detall propi (/vehicle/:id). */
+  const seccio = ambitDe(item);
+  const fitxaDAmbit = esFitxaDAmbit(item);
   /* T43 (D9) · els avisos del sistema també es connecten: són pàgines
      del sistema, amb la seua ruta, i no porten cap autor inventat.
      T63.2 · el mateix descriptor diu quin és el xat públic de Comentar
@@ -192,6 +202,32 @@ export function TargetaDelMur({ item, esdeveniment = null, alertaMunicipal = nul
      interfície (el parell de TIPUS_ALERTA); en valencià, el de sempre. */
   const alerta = !item.isSystem && seccio !== 'mercat' && Object.hasOwn(TIPUS_ALERTA, alertaMunicipal)
     ? TIPUS_ALERTA[alertaMunicipal] : null;
+  /* IDEA-61 (T0, prompt 261102_1532) · Les etiquetes de sempre, tal qual (un
+     element sense àmbit les rep byte a byte). Una fitxa d'àmbit porta
+     davant les dues del contracte (l'àmbit i l'estat), calculades en pintar.
+     Correcció L3-A6 · Darrere, les `labels` del payload si en porta; si no,
+     les de reserva SENSE la primera (el type cru, 'vehicle', o «Mercat»:
+     text sense t() i redundant amb l'etiqueta de l'àmbit), només les del
+     Mercat que afigen informació (variants, categoria, etiqueta). */
+  const etiquetesDeReserva = [
+    {
+      text: item.isSystem ? 'Sistema' : ((item.type === 'market' || item.type === 'product') ? 'Mercat' : (item.type || 'Publicació')),
+      className: (item.isSystem || item.type === 'market' || item.type === 'product') ? 'sdp-badge-system' : 'sdp-badge-category'
+    },
+    (item.type === 'market' || item.type === 'product') && item.variations?.length ? { text: `${item.variations.length} ${t('section.mercat.variations', 'variants')}`, className: 'sdp-badge-accent' } : null,
+    (item.type === 'market' || item.type === 'product') && item.category_slug ? { text: item.category_slug, className: 'sdp-badge-category' } : null,
+    (item.type === 'market' || item.type === 'product') && item.tag ? { text: item.tag, className: 'sdp-badge-tag' } : null
+  ].filter(Boolean);
+  const etiquetesDeSempre = item.labels || etiquetesDeReserva;
+  const etiquetes = fitxaDAmbit
+    ? [...etiquetesDAmbit(item, t), ...(Array.isArray(item.labels) ? item.labels : etiquetesDeReserva.slice(1))]
+    : etiquetesDeSempre;
+  /* IDEA-61 · El resum de la fitxa («Oferisc places · La Torre → Alcoi …»)
+     fa de subtítol quan n'hi ha; sense àmbit, el subtítol de sempre. */
+  const resum = fitxaDAmbit ? resumDeFitxa(item, t) : '';
+  /* IDEA-61 · La ruta del detall d'una fitxa d'àmbit (/vehicle/<id>); la de
+     sempre per a la resta. */
+  const rutaDeSempre = getSectionItemPath(item.type === 'event' ? 'events' : ((item.type === 'market' || item.type === 'product') ? 'mercat' : (item.type === 'poble' ? 'pobles' : 'mur')), item.id);
 
   return (
     <UniversalCard
@@ -201,7 +237,7 @@ export function TargetaDelMur({ item, esdeveniment = null, alertaMunicipal = nul
       /* T51 · l'emoticona que la nota porta al payload (icon); la
          targeta només la pinta si és un sol emoji. */
       emoticona={item.icon}
-      subtitle={item.subtitle}
+      subtitle={resum || item.subtitle}
       body={alerta ? (
         <>
           <DistintiuAlertaMunicipal tipus={alerta.clau} />
@@ -256,20 +292,12 @@ export function TargetaDelMur({ item, esdeveniment = null, alertaMunicipal = nul
       copyright={item.copyright || COPYRIGHT_SDP}
       calendarBadge={null}
       price={item.price}
-      labels={item.labels || [
-        {
-          text: item.isSystem ? 'Sistema' : ((item.type === 'market' || item.type === 'product') ? 'Mercat' : (item.type || 'Publicació')),
-          className: (item.isSystem || item.type === 'market' || item.type === 'product') ? 'sdp-badge-system' : 'sdp-badge-category'
-        },
-        (item.type === 'market' || item.type === 'product') && item.variations?.length ? { text: `${item.variations.length} ${t('section.mercat.variations', 'variants')}`, className: 'sdp-badge-accent' } : null,
-        (item.type === 'market' || item.type === 'product') && item.category_slug ? { text: item.category_slug, className: 'sdp-badge-category' } : null,
-        (item.type === 'market' || item.type === 'product') && item.tag ? { text: item.tag, className: 'sdp-badge-tag' } : null
-      ].filter(Boolean)}
+      labels={etiquetes}
       /* Auditoria 261007 (B) · Defensa en profunditat: només una ruta de l'app
          (esRutaInterna). Un mainHref de fora en un payload escrit per PostgREST
          navegava la pestanya de l'amfitrió; les pàgines de sistema
          (targetesMur.js) ja porten rutes internes. */
-      mainHref={(esRutaInterna(item.mainHref) ? item.mainHref : null) || getSectionItemPath(item.type === 'event' ? 'events' : ((item.type === 'market' || item.type === 'product') ? 'mercat' : (item.type === 'poble' ? 'pobles' : 'mur')), item.id)}
+      mainHref={(esRutaInterna(item.mainHref) ? item.mainHref : null) || (fitxaDAmbit ? rutaDAmbit(seccio, item.id) : rutaDeSempre)}
       showPin={item.isAvis}
       /* Fase D (261020, tasca 2) · «Més opcions» (denunciar i bloquejar) a
          tota publicació d'algú; mai a una pàgina del sistema. */

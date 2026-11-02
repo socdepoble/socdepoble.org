@@ -54,28 +54,7 @@ export const motiuDeute = (skill) =>
   `pegat a skills-per-segellar/${skill}; el segell és del Mestre i retira esta entrada en el mateix lot (B10 marató 261101_2143)`;
 
 /** Deute conegut, amb empremta estable. Cicle de vida a la capçalera (D-7). */
-export const DEUTE_ACCEPTAT = Object.freeze([
-  Object.freeze({
-    skill: 'core-consell-i-colmena', regla: 'F5', empremta: '16b464b2238c28ea',
-    detall: 'lectura fora de contracte.llig .agents/consell.json',
-    motiu: motiuDeute('core-consell-i-colmena')
-  }),
-  Object.freeze({
-    skill: 'sdp-universal-page', regla: 'F4', empremta: 'b945013bfe346014',
-    detall: 'token no declarat --sdp-blanc',
-    motiu: motiuDeute('sdp-universal-page')
-  }),
-  Object.freeze({
-    skill: 'sdp-universal-page', regla: 'F4', empremta: 'bfb5a03280d1d52a',
-    detall: 'valor CSS literal border-radius: 32px',
-    motiu: motiuDeute('sdp-universal-page')
-  }),
-  Object.freeze({
-    skill: 'sdp-universal-page', regla: 'F4', empremta: '21900a16661a95c7',
-    detall: 'valor CSS literal box-shadow: 0 4px 20px rgba(0,0,0,0.03), ...',
-    motiu: motiuDeute('sdp-universal-page')
-  })
-]);
+export const DEUTE_ACCEPTAT = Object.freeze([]);
 
 /* Una línia de prohibició («Mai …», «prohibit …», «cap component …») pot citar el literal que prohibix.
    Ni `ni` ni `cap` sols: eximirien qualsevol frase descriptiva (B10G-ARB-06). */

@@ -44,6 +44,9 @@ import './autodesamentEscriptors.js';
 const XatSection = lazyRoute(() => import('../sections/xat/XatSection'));
 const MurSection = lazyRoute(() => import('../sections/mur/MurSection'));
 const MercatSection = lazyRoute(() => import('../sections/mercat/MercatSection'));
+/* IDEA-61 (T0, prompt 261102_1532) · Les tres verticals del Mur (Compartir
+   cotxe, Treball, Habitatge): un sol component amb l'àmbit com a prop. */
+const SeccioVertical = lazyRoute(() => import('../sections/verticals/SeccioVertical.jsx'));
 const PoblesSection = lazyRoute(() => import('../sections/pobles/PoblesSection'));
 const PoblacioSection = lazyRoute(() => import('../sections/poblacio/PoblacioSection'));
 const CalendariSection = lazyRoute(() => import('../sections/calendari/CalendariSection'));
@@ -409,9 +412,9 @@ function AppShell({ children, mobileNav }) {
   // Lliscar per recarregar (mòbil): les regles del gest viuen al hook.
   const indicatorRef = useRef(null);
   const textosRecarrega = useMemo(() => ({
-    estirant: t('pull.pull', 'Estira per recarregar…'),
-    llest: t('pull.release', 'Deixa anar per recarregar…'),
-    recarregant: t('pull.refreshing', 'Recarregant…')
+    estirant: t('pull.pull'),
+    llest: t('pull.release'),
+    recarregant: t('pull.refreshing')
   }), [t]);
   usePullToRefresh({
     superficieRef: mainRef,
@@ -500,7 +503,7 @@ function AppShell({ children, mobileNav }) {
           return;
         }
         if (!shellMuntat.current) return;
-        showToast(t('section.login.success.login', 'Benvingut de nou!'), 'success');
+        showToast(t('section.login.success.login'), 'success');
         const tornar = new URLSearchParams(consultaDeLaTornada.current).get('tornar');
         navigate(aterratgeDespresDEntrar(tornar), { replace: true });
       })
@@ -1085,6 +1088,11 @@ function ActorRoutes({ agents }) {
       <Route path="chat/:threadId" element={<RedireccioXat />} />
       <Route path="mur" element={<MurSection />} />
       <Route path="mercat" element={<MercatSection />} />
+      {/* IDEA-61 (T0, prompt 261102_1532) · Les tres seccions verticals, cadascuna
+          amb identitat pròpia per al tractor de rutes (W7). */}
+      <Route path="vehicle" element={<SeccioVertical ambit="vehicle" />} />
+      <Route path="treball" element={<SeccioVertical ambit="treball" />} />
+      <Route path="habitatge" element={<SeccioVertical ambit="habitatge" />} />
       <Route path="calendari" element={<CalendariSection />} />
       <Route path="multimedia" element={<MultimediaSection />} />
       {/* Gauntlet 261017 (M07) · Abans del comodí ':sectionId/:itemId'. */}

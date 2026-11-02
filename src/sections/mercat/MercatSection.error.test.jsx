@@ -12,6 +12,7 @@
  * src/data/supabase/content.test.js (E1 de tractor-enxufe).
  */
 import React from 'react';
+import { createTranslator } from '../../config/i18n.js';
 import { act, cleanup, render, screen, waitFor } from '@testing-library/react';
 import { afterEach, beforeEach, expect, test, vi } from 'vitest';
 
@@ -74,6 +75,7 @@ afterEach(() => {
   vi.restoreAllMocks();
 });
 beforeEach(() => {
+  mocks.t = createTranslator('ca');
   mocks.load.mockReset();
   mocks.eleccio.mockReset();
   mocks.exit.mockReset();
@@ -89,7 +91,7 @@ test('amb el servidor aturat, el Mercat ho diu amb paraules neutrals, sense el m
   mocks.load.mockRejectedValue(errorDeXarxa());
   pinta(CONFIG_REMOT);
   const avis = await alerta();
-  expect(avis.textContent).toContain("No s'ha pogut carregar el Mercat");
+  expect(avis.textContent).toContain('No s’ha pogut carregar el Mercat');
   expect(avis.textContent).toContain(TEXT_INABASTABLE);
   expect(avis.textContent).not.toMatch(/Supabase|backend local|Error de xarxa/);
   expect(avis.querySelector('.sdp-error-pre')).toBeNull();

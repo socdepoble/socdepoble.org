@@ -28,6 +28,16 @@
  *
  * B9 (marató 261101_2143) · urlDeCanal rebutja també ?beta= i /beta, i
  * frasesCaducades guarda que /page/descarregues no parle de proves amb la botiga oberta.
+ *
+ * IDEA-60 (T1, prompt 261102_1532) · Dues ranures més per a la instal·lació
+ * immediata: 'apk-directe' (el fitxer signat oficialment, que MarIA publica
+ * a public/descarregues/socdepoble-android-latest.apk, carril T8) i
+ * 'testflight' (l'enllaç públic de proves d'Apple, demanat i encara no
+ * revisat). Hui les dues són tancades (url: null) i a la pàgina no canvia
+ * res. TestFlight és, per definició, el canal públic de proves d'Apple que el
+ * Mestre ha demanat enllaçar: és l'única ranura on ADRECA_DE_PROVES no tanca
+ * el canal. Obrir-les és la mateixa línia de sempre; mentre el cos diga «no hi
+ * ha APK públic» o «hem demanat a Apple un enllaç públic», canalsDeBotiga.test.js cau.
  */
 
 /* L'identificador de l'app d'Android (capacitor.config.json, appId). */
@@ -35,16 +45,25 @@ const APP_ANDROID = 'org.socdepoble.app';
 /* L'slug del connector al directori de WordPress.org (api.wordpress.org,
    plugins/info 1.2: slug «socdepoble», 01-11-2026). */
 const CONNECTOR_WORDPRESS = 'socdepoble';
+/* IDEA-60 (T1, prompt 261102_1532) · L'únic camí de l'APK signat oficialment
+   (carril T8: public/descarregues/), al domini propi i sense cap paràmetre. */
+const FITXER_APK = '/descarregues/socdepoble-android-latest.apk';
 
 export const CANALS_DE_BOTIGA = Object.freeze([
   Object.freeze({ id: 'google-play', nom: 'Google Play', url: null }),
   Object.freeze({ id: 'app-store', nom: 'App Store', url: null }),
+  // IDEA-60 (T1, prompt 261102_1532) · Tancades fins que el Mestre done l'adreça (una línia cada una).
+  Object.freeze({ id: 'apk-directe', nom: 'APK directe', url: null }),
+  Object.freeze({ id: 'testflight', nom: 'TestFlight', url: null }),
   Object.freeze({ id: 'wordpress-org', nom: 'WordPress.org', url: 'https://wordpress.org/plugins/socdepoble/' })
 ]);
 
 /* Una adreça de proves: internaltest, TestFlight, testing o «beta» com a paraula en qualsevol part
    (?beta, &beta=, /beta, #beta, =beta), però no dins d'una altra paraula (/betanzos/). Lineal. */
 const ADRECA_DE_PROVES = /internaltest|testflight|testing|\bbeta\b/i;
+/* IDEA-60 (T1, prompt 261102_1532) · TestFlight és el canal públic de proves d'Apple que el Mestre
+   ha demanat enllaçar: l'única ranura on una adreça de proves és la bona. La resta la rebutgen. */
+const CANALS_DE_PROVES = new Set(['testflight']);
 
 /* id del canal → l'única forma d'adreça pública que hi val (URL ja analitzada). */
 const FORMES = Object.freeze({
@@ -52,6 +71,12 @@ const FORMES = Object.freeze({
     && url.searchParams.get('id') === APP_ANDROID,
   'app-store': (url) => url.hostname === 'apps.apple.com'
     && /^\/(?:[a-z]{2}(?:-[a-z]{2,4})?\/)?app\/(?:[\w%-]+\/)?id\d+\/?$/i.test(url.pathname),
+  // IDEA-60 (T1, prompt 261102_1532) · El fitxer signat al domini propi, sense query ni fragment.
+  'apk-directe': (url) => url.hostname === 'socdepoble.org' && url.pathname === FITXER_APK && !url.search && !url.hash,
+  // IDEA-60 (T1, prompt 261102_1532) · L'enllaç públic de TestFlight: /join/ i un codi de 4 a 32 caràcters,
+  // sense query ni fragment (esta ranura salta ADRECA_DE_PROVES: la forma és l'única guarda que hi queda).
+  'testflight': (url) => url.hostname === 'testflight.apple.com' && !url.search && !url.hash
+    && /^\/join\/[A-Za-z0-9]{4,32}$/.test(url.pathname),
   'wordpress-org': (url) => url.hostname === 'wordpress.org'
     && (url.pathname === `/plugins/${CONNECTOR_WORDPRESS}/` || url.pathname === `/plugins/${CONNECTOR_WORDPRESS}`)
 });
@@ -71,7 +96,8 @@ export function urlDeCanal(canal) {
     const url = new URL(canal.url);
     if (url.protocol !== 'https:' || url.username || url.password || url.port) return null;
     // B9 · Cap enllaç de proves, tampoc amagat amb %-codis (%62eta); un %-codi mal format llança i el canal queda tancat.
-    if (ADRECA_DE_PROVES.test(url.href) || ADRECA_DE_PROVES.test(decodeURIComponent(url.href))) return null;
+    // IDEA-60 (T1, prompt 261102_1532) · Llevat de la ranura de TestFlight, que és el canal públic de proves.
+    if (!CANALS_DE_PROVES.has(canal.id) && (ADRECA_DE_PROVES.test(url.href) || ADRECA_DE_PROVES.test(decodeURIComponent(url.href)))) return null;
     return FORMES[canal.id](url) ? url.href : null;
   } catch {
     return null;
@@ -95,7 +121,10 @@ export function canalsOberts(canals = CANALS_DE_BOTIGA) {
    fins que el text deixe de dir-les (frontissa: --aprova descarregues). */
 export const FRASES_DE_BOTIGA_TANCADA = Object.freeze({
   'google-play': Object.freeze([/proves internes/i, /no està publicada per a tothom/i, /equip de proves/i]),
-  'app-store': Object.freeze([/TestFlight/i, /encara no és a l[’']App Store/i, /enllaç públic de proves/i, /grup de treball intern/i])
+  'app-store': Object.freeze([/TestFlight/i, /encara no és a l[’']App Store/i, /enllaç públic de proves/i, /grup de treball intern/i]),
+  // IDEA-60 (T1, prompt 261102_1532) · Quan s'òbriguen, el cos deixa de poder dir que no hi ha APK ni enllaç públic.
+  'apk-directe': Object.freeze([/no hi ha APK públic/i, /Quan n[’']hi haja un/i]),
+  'testflight': Object.freeze([/hem demanat a Apple un enllaç públic/i, /Mentre Apple no el revise/i])
 });
 /* Per a qualsevol botiga d'apps oberta (Google Play o App Store). */
 export const FRASES_DE_PROVES = Object.freeze([/\bbeta\b/i, /\ben proves\b/i, /en quin punt estan les proves/i]);

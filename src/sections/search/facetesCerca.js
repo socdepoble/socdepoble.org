@@ -8,8 +8,11 @@
  * elements de la llista amb la forma de UniversalWorkspace. Cap mòdul el
  * munta encara: la vista (EspaiCerca) és de l'onada 2.
  *
- * Tres grups de criteris, cadascun amb el seu recompte (`count`):
+ * Quatre grups de criteris, cadascun amb el seu recompte (`count`):
  *   · Tipus: els de TIPUS_CERCA (sense «tot»), en el seu ordre;
+ *   · Estat (IDEA-61, T0, prompt 261102_1532): l'estat d'una fitxa d'àmbit
+ *     vertical (Disponible, Reservat, Complet, Tancat), només per a les
+ *     entrades que en porten (`ambit`); la resta no entra en cap opció;
  *   · Pobles: el poble llegible de l'entrada (`poble`); la clau és el slug
  *     del poble plegat («La Torre» i «la torre» són una sola opció) i
  *     l'etiqueta, la primera grafia vista; mai un correu;
@@ -17,14 +20,22 @@
  * Un element compta a cada opció que porta entre els seus `categoryIds`, i
  * el recompte d'una opció és sempre el nombre d'elements que la porten.
  */
+import { ESTATS, RESERVES_I18N, esFitxaDAmbit, normalitzaEstat } from '../../utils/publicacioUniversal.js';
 import { TIPUS_CERCA, plega } from './indexCerca.js';
 
 /* `text` és el valor per defecte de la clau d'i18n `clau` (com TIPUS_CERCA). */
 export const GRUPS_FACETES = Object.freeze([
   Object.freeze({ id: 'tipus', clau: 'section.search.espai.grup.tipus', text: 'Tipus' }),
+  Object.freeze({ id: 'estat', clau: 'section.search.faceta.estat', text: 'Estat' }),
   Object.freeze({ id: 'pobles', clau: 'section.search.espai.grup.pobles', text: 'Pobles' }),
   Object.freeze({ id: 'data', clau: 'section.search.espai.grup.data', text: 'Data' })
 ]);
+
+/* IDEA-61 (T0, prompt 261102_1532) · Les opcions d'Estat: els ESTATS del
+   contracte, en el seu ordre, amb la clau i la reserva d'ambit.estat.<estat>. */
+export const ESTATS_FACETA = Object.freeze(ESTATS.map((estat) => Object.freeze({
+  id: estat, clau: `ambit.estat.${estat}`, text: RESERVES_I18N[`ambit.estat.${estat}`]
+})));
 
 export const TRAMS_DATA = Object.freeze([
   Object.freeze({ id: 'futur', clau: 'section.search.espai.data.futur', text: 'Pròximament' }),
@@ -168,13 +179,15 @@ function teFormaDeCorreu(valor) {
 /* ── Facetes d'una entrada ──────────────────────────────────────────────── */
 
 /**
- * Els `categoryIds` d'una entrada: el seu tipus, el seu poble i els seus
- * trams de data (`opcions`: { ara, desfasMinuts }, com tramsDeData).
+ * Els `categoryIds` d'una entrada: el seu tipus, l'estat si és una fitxa
+ * d'àmbit (IDEA-61), el seu poble i els seus trams de data (`opcions`:
+ * { ara, desfasMinuts }, com tramsDeData).
  */
 export function facetesDeLEntrada(entrada, opcions = {}) {
   if (!entrada || typeof entrada !== 'object') return [];
   const ids = [];
   if (IDS_TIPUS_DE_FACETA.has(entrada.tipus)) ids.push(idDeFaceta('tipus', entrada.tipus));
+  if (esFitxaDAmbit(entrada)) ids.push(idDeFaceta('estat', normalitzaEstat(entrada.estat)));
   const poble = pobleDe(entrada);
   if (poble) ids.push(idDeFaceta('poble', poble.id));
   for (const tram of tramsDeData(entrada.data, opcions)) ids.push(idDeFaceta('data', tram));
@@ -211,6 +224,7 @@ function catalegDe(entrades, opcions) {
  * [{ id, clau, text, options: [{ id, clau?, text, count }] }]. Només hi ha
  * les opcions amb recompte, i un grup sense cap opció no hi és.
  *   · Tipus: en l'ordre de TIPUS_CERCA.
+ *   · Estat: en l'ordre d'ESTATS_FACETA (IDEA-61).
  *   · Pobles: de més a menys recompte; en empat, pel nom ('ca') i per l'id.
  *     Sense `clau`: el nom d'un poble no es traduïx.
  *   · Data: en l'ordre de TRAMS_DATA.
@@ -223,6 +237,11 @@ export function grupsDeFacetes(entrades, opcions = {}) {
       id: idDeFaceta('tipus', unTipus.id), clau: unTipus.clau, text: unTipus.text, count: recompte(idDeFaceta('tipus', unTipus.id))
     }))
     .filter((opcio) => opcio.count > 0);
+  const estat = ESTATS_FACETA
+    .map((unEstat) => ({
+      id: idDeFaceta('estat', unEstat.id), clau: unEstat.clau, text: unEstat.text, count: recompte(idDeFaceta('estat', unEstat.id))
+    }))
+    .filter((opcio) => opcio.count > 0);
   const pobles = [...retolsDePoble]
     .map(([id, text]) => ({ id: idDeFaceta('poble', id), text, count: recompte(idDeFaceta('poble', id)) }))
     .filter((opcio) => opcio.count > 0)
@@ -230,7 +249,7 @@ export function grupsDeFacetes(entrades, opcions = {}) {
   const data = TRAMS_DATA
     .map((tram) => ({ id: idDeFaceta('data', tram.id), clau: tram.clau, text: tram.text, count: recompte(idDeFaceta('data', tram.id)) }))
     .filter((opcio) => opcio.count > 0);
-  const opcionsDelGrup = { tipus, pobles, data };
+  const opcionsDelGrup = { tipus, estat, pobles, data };
   return GRUPS_FACETES
     .map((grup) => ({ id: grup.id, clau: grup.clau, text: grup.text, options: opcionsDelGrup[grup.id] }))
     .filter((grup) => grup.options.length > 0);

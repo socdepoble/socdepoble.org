@@ -285,3 +285,33 @@ test('T2 · amb el mode remot declarat, publicar continua viatjant al servidor',
   expect(request).toHaveBeenCalledTimes(1);
   expect(filaEnviada()).toMatchObject({ owner_user_id: 'U', section_id: 'mur' });
 }));
+
+/* IDEA-61 (T0, prompt 261102_1532; L1-A3) · La secció de la fila (la columna
+   section_id de la consulta) mana sobre el que diu el payload: una fila de
+   'mercat' amb un payload que es declara de 'mur' i porta una fitxa de vehicle
+   no entra a marketItems com a fitxa (cap ambit, estat ni dades); la mateixa
+   fila servida per a 'mur' sí que és una fitxa de vehicle. */
+test('L1-A3 · la secció de la fila mana sobre el sectionId i l’àmbit del payload', async () => {
+  request.mockReset();
+  const fila = (id) => ({
+    id, title: 'Cotxe a Xixona', created_at: '2026-11-02T10:00:00+00:00', updated_at: '2026-11-02T10:00:00+00:00',
+    owner_user_id: 'U', author_org_id: null,
+    payload: {
+      title: 'Cotxe a Xixona', sectionId: 'mur', ambit: 'vehicle', type: 'vehicle', estat: 'disponible',
+      dades: { modalitat: 'oferisc_places', lloc_eixida: 'Xixona', lloc_arribada: 'Alcoi', data_eixida: '2026-11-20', places: 3 }
+    }
+  });
+  request.mockImplementation(async (url) => {
+    if (!url.includes('section_submissions')) return [];
+    if (url.includes('section_id=eq.mercat')) return [fila('v-al-mercat')];
+    if (url.includes('section_id=eq.mur')) return [fila('v-al-mur')];
+    return [];
+  });
+  const { marketItems, feedPosts } = await loadMur('A');
+  const alMercat = marketItems.find((item) => item.id === 'v-al-mercat');
+  expect(alMercat).toBeTruthy();
+  for (const clau of ['ambit', 'estat', 'dades']) expect(alMercat, clau).not.toHaveProperty(clau);
+  const alMur = feedPosts.find((item) => item.id === 'v-al-mur');
+  expect(alMur).toMatchObject({ ambit: 'vehicle', estat: 'disponible', type: 'vehicle' });
+  expect(alMur.dades).toMatchObject({ lloc_eixida: 'Xixona', lloc_arribada: 'Alcoi' });
+});

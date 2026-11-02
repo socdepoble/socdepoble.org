@@ -688,7 +688,7 @@ test('MISSED P3 i T5.1: canal propi separat dels detalls locals, sense canal d�
     assert.equal(Object.hasOwn(directori.detalls, 'download_link'), false, 'els detalls locals no oferixen cap paquet');
     assert.deepEqual(Object.keys(directori.detalls.sections), ['description', 'installation', 'faq', 'changelog']);
     assert.ok(directori.detalls.sections.installation.includes('[socdepoble_app]'));
-    assert.ok(directori.detalls.banners.low.endsWith('/assets/banner-772x250.png'));
+    assert.equal(Object.hasOwn(directori.detalls, 'banners'), false, 'IDEA-62: la vitrina SVN no viatja dins del connector');
     assert.equal(directori.detalls_aliens, false);
     assert.equal(directori.detalls_altra_accio, false);
     assert.equal(directori.detalls_preserven_previ, true);
@@ -1276,5 +1276,31 @@ test('Revisió de WordPress.org (261027): --directori admet un autònom lleuger 
     assert.equal(r.mitjans.contrastat, false);
     assert.deepEqual(r.mitjans.carpetes, ['assets/fotos/']);
     assert.ok(r.avisos.some((avis) => /^dist\/ és l'autònom lleuger \(mitjans des de https:\/\/socdepoble\.org\): no s'ha pogut contrastar/.test(avis)), 'el contrast que no es fa, avisat');
+  } finally { neteja(f); }
+});
+
+test('IDEA-62: els banners de la vitrina no entren en cap zip i la font es conserva', () => {
+  const f = fixture();
+  try {
+    const banners = ['banner-772x250.png', 'banner-1544x500.png'];
+    fs.mkdirSync(path.join(f.plugin, 'assets'), { recursive: true });
+    for (const nom of banners) fs.writeFileSync(path.join(f.plugin, 'assets', nom), 'vitrina');
+    const { pem, publicaHex } = generaClau();
+    posaClau(f, publicaHex);
+    const r = empaqueta({ arrelPlugin: f.plugin, sortida: f.sortida, urlBase: URL_BASE, clauPem: pem });
+    for (const nom of r.escrits.filter(n => n.endsWith('.zip'))) {
+      assert.ok(!llegixZip(fs.readFileSync(path.join(f.sortida, nom))).some(e => /banner-(?:772x250|1544x500)/.test(e.nom)), nom);
+    }
+    assert.ok(!llegixZip(empaquetaDirectori({ arrelPlugin: f.plugin }).zip).some(e => /banner-/.test(e.nom)));
+    for (const nom of banners) assert.equal(fs.readFileSync(path.join(f.plugin, 'assets', nom), 'utf8'), 'vitrina');
+  } finally { neteja(f); }
+});
+
+test('IDEA-62: un fitxer de prova a includes bloqueja els paquets abans de qualsevol escriptura', () => {
+  const f = fixture();
+  try {
+    fs.writeFileSync(path.join(f.plugin, 'includes', 'error.spec.js'), 'fixture');
+    assert.throws(() => empaquetaDirectori({ arrelPlugin: f.plugin }), /IDEA-62.*[^]*error.spec.js/);
+    assert.equal(fs.existsSync(path.join(f.plugin, 'builds', ZIP_DIRECTORI)), false);
   } finally { neteja(f); }
 });

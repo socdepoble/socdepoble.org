@@ -30,7 +30,8 @@ test('totsPublics: una sola llista dolenta o un sol element no públic ho apaga 
 });
 
 test('elementTraduible: només les seccions que poden tindre contingut públic; notes i desconegudes, mai', () => {
-  expect([...SECCIONS_AMB_CONTINGUT_PUBLIC]).toEqual(['mur', 'mercat', 'events', 'pobles', 'multimedia']);
+  /* IDEA-61 (T0, prompt 261102_1532) · Les tres verticals, com el Mur. */
+  expect([...SECCIONS_AMB_CONTINGUT_PUBLIC]).toEqual(['mur', 'mercat', 'events', 'pobles', 'multimedia', 'vehicle', 'treball', 'habitatge']);
   for (const seccio of SECCIONS_AMB_CONTINGUT_PUBLIC) expect(elementTraduible(seccio, { id: 'a' }), seccio).toBe(true);
   for (const seccio of ['notes', 'xat', 'perfil', '', undefined, 'MUR']) expect(elementTraduible(seccio, { id: 'a' }), String(seccio)).toBe(false);
   expect(elementTraduible('mur', { id: 'a', ownerUserId: null })).toBe(false);

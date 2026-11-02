@@ -70,6 +70,7 @@
 
 import { iniciDelContingut } from '../utils/iniciEditorial.js';
 import { CAPSULES_RURALS } from './iaiaRebostRural.js';
+import { ajudaDePublicacioIAIA } from './iaiaPublicacions.js';
 import { MOCK_TOWNS } from '../sections/pobles/townsSeed.js';
 import { SALUTACIO_TECNICA_IAIA } from './iaiaTextos.js';
 export { SALUTACIO_TECNICA_IAIA } from './iaiaTextos.js';
@@ -177,7 +178,8 @@ export const EQUIVALENCIES = Object.freeze({
   piedra: 'pedra', receta: 'recepta', recetas: 'receptes', recetario: 'receptari', refran: 'refrany', refranes: 'refranys',
   oficio: 'ofici', oficios: 'oficis', herramientas: 'eines', lavadero: 'llavador', lavaderos: 'llavadors', cancion: 'canco',
   canciones: 'cancons', cancionero: 'canconer', cartel: 'cartell', carteles: 'cartells', reunion: 'reunio', reuniones: 'reunions',
-  objeto: 'objecte', perdido: 'perdut', quedada: 'trobada', toponimos: 'toponims'
+  objeto: 'objecte', perdido: 'perdut', quedada: 'trobada', toponimos: 'toponims',
+  coche: 'cotxe', coches: 'cotxes', viaje: 'viatge', viajes: 'viatges', bando: 'bandol', bandos: 'bandols'
 });
 
 /* IDEA-56 (Bloc F.2) · «Sóc de Poble» (o «soy de pueblo») és un sol terme:
@@ -520,7 +522,7 @@ function esPublic(item) {
    (sections/xat/enllacos.js · PATRO_RUTA_WIKI; enllacos.test.js les compara
    ruta a ruta). Duplicada a posta: si enllacos.js importara este mòdul,
    l'Atles aniria a cada tros que pinta una bombolla. */
-export const RUTA_INTERNA = /^\/(?:pobles\/[a-z0-9-]+|page\/[a-z0-9_-]+|projecte|constitucio|anima|roadmap|versions|fedivers|xat|mur|mercat|pobles|notes|multimedia|calendari|traduccions|el-meu-perfil|cerca|javillinares|rentonar)$/;
+export const RUTA_INTERNA = /^\/(?:pobles\/[a-z0-9-]+|page\/[a-z0-9_-]+|projecte|constitucio|anima|roadmap|versions|fedivers|xat|mur|mercat|vehicle|treball|habitatge|pobles|notes|multimedia|calendari|traduccions|el-meu-perfil|cerca|javillinares|rentonar)$/;
 
 /* IDEA-56 (Bloc F.2) · El sanejament d'un ítem: un carregador injectat (un
    pont, una prova) no pot colar cap ruta externa ni «javascript:». Una font
@@ -758,6 +760,41 @@ export const ATLES_OPERATIU = Object.freeze([
     ]
     /* [PAGE_COPY.publicar_mercat (pageContent.js), lead i html] */
   },
+  /* IDEA-61 (T0, prompt 261102_1532) · Les tres verticals del Flux Universal
+     de Publicació. La ruta de cadascuna és la seua llista viva (/vehicle,
+     /treball i /habitatge, sections.js), registrada a RUTA_INTERNA i a la
+     bombolla del Xat (enllacos.js). Sense «mercat» ni «mur» a les claus:
+     «Què és el Mercat?» continua sent només atles:mercat. */
+  {
+    id: 'atles:vehicle', titol: 'Compartir cotxe', ruta: '/vehicle',
+    claus: ['cotxe', 'vehicle', 'viatge', 'viatges', 'trajecte', 'places', 'transport'],
+    paragrafs: [
+      "Compartir cotxe és el tauler de viatges del poble: qui té places lliures al cotxe oferix el trajecte, i qui busca lloc el demana, per a anar i tornar del poble, al metge o a fer encàrrecs.",
+      "Per a publicar un viatge, obri la secció Compartir cotxe i prem «Publicar un viatge»: dius d'on ixes, on vas, el dia i les places. Les despeses s'acorden entre persones pel Xat; la plataforma no hi cobra res."
+    ]
+    /* [sections.js (vehicle a /vehicle); verticals/SeccioVertical.jsx (section.vehicle.publicar); publicacioUniversal.js (CAMPS.vehicle);
+       PAGE_COPY.vehicle_compartit (pageContent.js)] */
+  },
+  {
+    id: 'atles:treball', titol: 'Treball', ruta: '/treball',
+    claus: ['treball', 'feina', 'faena', 'ofici', 'oficis', 'jornal', 'oferta', 'ofertes'],
+    paragrafs: [
+      "Treball és el tauler de feina del poble: ofertes de feina, oficis que s'oferixen, jornals agrícoles i relleu generacional d'un negoci o d'una explotació.",
+      "Per a publicar una oferta, obri la secció Treball i prem «Publicar una oferta»: dius la modalitat, l'ofici o sector, el municipi i com contactar. L'acord laboral es tanca entre persones, fora de la plataforma."
+    ]
+    /* [sections.js (treball a /treball); verticals/SeccioVertical.jsx (section.treball.publicar); publicacioUniversal.js (MODALITATS.treball);
+       PAGE_COPY.treball (pageContent.js)] */
+  },
+  {
+    id: 'atles:habitatge', titol: 'Habitatge', ruta: '/habitatge',
+    claus: ['habitatge', 'habitatges', 'casa', 'cases', 'pisos', 'lloguer', 'llogar', 'masoveria'],
+    paragrafs: [
+      "Habitatge és el tauler de cases i pisos del poble: lloguer, venda, cases per a compartir i masoveria urbana, per a obrir portes tancades i atraure gent nova.",
+      "Per a publicar un habitatge, obri la secció Habitatge i prem «Publicar un habitatge»: dius la modalitat, el preu i, si vols, la superfície, les habitacions i l'estat de l'immoble. El tracte es fa entre persones, sense comissions."
+    ]
+    /* [sections.js (habitatge a /habitatge); verticals/SeccioVertical.jsx (section.habitatge.publicar); publicacioUniversal.js (CAMPS.habitatge);
+       PAGE_COPY.habitatge (pageContent.js)] */
+  },
   {
     id: 'atles:pobles', titol: 'Pobles', ruta: '/pobles', claus: ['pobles', 'territori', 'comarca', 'municipis'],
     paragrafs: [
@@ -913,6 +950,15 @@ export const ATLES_OPERATIU = Object.freeze([
       "Pots obrir la cerca des de la barra superior en qualsevol pantalla i filtrar els resultats per tipus."
     ]
     /* [indexCerca.js (TIPUS_CERCA, sense documents de la Wiki); App.jsx (el botó de la barra superior obri /cerca)] */
+  },
+  {
+    id: 'atles:bandol_mur', titol: 'Bàndols i comunicats municipals', ruta: '/mur',
+    claus: ['bàndol', 'bàndols', 'comunicat', 'redactar bàndol'],
+    paragrafs: [
+      "Per a redactar un bàndol o comunicat municipal al Mur, comença amb un títol clar que diga què passa, el dia, l'hora i el lloc.",
+      "Pots preparar l'esborrany al Bloc de Notes amb Proposa Card i publicar-lo en nom del teu perfil o de la teua entitat."
+    ]
+    /* [PAGE_COPY.publicar_mur (pageContent.js); proposaCard.js; PerfilContext.jsx] */
   }
 ].map((entrada) => Object.freeze({ ...entrada, claus: Object.freeze([...entrada.claus]), paragrafs: Object.freeze([...entrada.paragrafs]) })));
 
@@ -1152,6 +1198,8 @@ export async function respostaDeLaIAIA(pregunta, { carrega = carregaPaquetDeLaIA
   if (typeof pregunta !== 'string' || pregunta.length > MAXIM_PREGUNTA_IAIA) return null;
   if (!termesDeLaPregunta(pregunta).length) return pregunta.trim() ? SALUTACIO_TECNICA_IAIA : null;
   if (capaLocal) {
+    const ajuda = ajudaDePublicacioIAIA(pregunta);
+    if (ajuda) return ajuda;
     try {
       const locals = cercaRellevant(indexDeLaCapaLocal(), pregunta);
       if (locals.length) return componResposta(locals);
@@ -1207,4 +1255,114 @@ export function oblidaIndexDeLaWiki() {
   indexosDelPaquet.clear();
   indexLocal = null;
   rebostRural = null;
+}
+
+/**
+ * Suggeriments ràpids clicables d'ajuda rural per a la IAIA MarIA al Xat
+ * (P1-24, P1-70, IDEA-28, IDEA-56).
+ */
+export const SUGGERIMENTS_RAPIDS_IAIA = Object.freeze([
+  Object.freeze({
+    id: 'mercat-cotxe',
+    clau: 'section.xat.iaia.suggeriments.mercatCotxe',
+    etiqueta: 'Com publique un producte al Mercat o un viatge per Compartir Cotxe?',
+    pregunta: 'Com publique un producte al Mercat o un viatge per Compartir Cotxe?',
+    ruta: '/page/vehicle_compartit'
+  }),
+  Object.freeze({
+    id: 'bandol-mur',
+    clau: 'section.xat.iaia.suggeriments.bandolMur',
+    etiqueta: "Ajuda'm a redactar un bàndol o avís per al Mur",
+    pregunta: "Ajuda'm a redactar un bàndol o avís per al Mur",
+    ruta: '/mur'
+  }),
+  Object.freeze({
+    id: 'bloc-notes',
+    clau: 'section.xat.iaia.suggeriments.blocNotes',
+    etiqueta: 'Com funciona el Bloc de Notes?',
+    pregunta: 'Com funciona el Bloc de Notes?',
+    ruta: '/notes'
+  })
+]);
+
+const LINIA_ACCIO_IAIA = /^·\s+(.+?)\s+—\s+(\/\S+)\s*$/;
+const RUTA_INTERNA_EN_TEXT = /\/(?:page\/[\w-]+|wikidepoble\?item=[\w.~%-]+|[\w-]+)\b/g;
+const RUTES_EQUIVALENTS_ATLES = new Map([
+  ['/page/vehicle_compartit', '/vehicle'],
+  ['/page/treball', '/treball'],
+  ['/page/habitatge', '/habitatge']
+]);
+
+/**
+ * Extreu de la resposta de la IAIA les accions directes (títol i ruta interna
+ * o de la Wiki) sense duplicats. Funció pura.
+ */
+export function extreuAccionsDeRespostaIAIA(resposta) {
+  if (typeof resposta !== 'string' || !resposta.trim()) return [];
+  const vistes = new Set();
+  const accions = [];
+  for (const linia of resposta.split('\n')) {
+    const coincidencia = LINIA_ACCIO_IAIA.exec(linia.trim());
+    if (!coincidencia) continue;
+    const titol = coincidencia[1].trim();
+    const ruta = coincidencia[2].trim();
+    const valida = RUTA_INTERNA.test(ruta) || /^\/wikidepoble\?item=[\w.~%-]+$/.test(ruta);
+    if (!titol || !valida || vistes.has(ruta)) continue;
+    vistes.add(ruta);
+    accions.push(Object.freeze({ titol, ruta }));
+  }
+  if (!accions.length) {
+    for (const coincidencia of resposta.matchAll(RUTA_INTERNA_EN_TEXT)) {
+      const ruta = coincidencia[0];
+      if (vistes.has(ruta) || !RUTA_INTERNA.test(ruta)) continue;
+      const rutaAtles = RUTES_EQUIVALENTS_ATLES.get(ruta) || ruta;
+      const entrada = ATLES_OPERATIU.find((item) => item.ruta === rutaAtles);
+      if (!entrada?.titol) continue;
+      vistes.add(ruta);
+      accions.push(Object.freeze({ titol: entrada.titol, ruta }));
+    }
+  }
+  return Object.freeze(accions);
+}
+
+/**
+ * Construeix un missatge d'esborrany de la IAIA estructurat per al Bloc de
+ * Notes i «Proposa Card» (IDEA-28 / IDEA-41): títol, subtítol, entradilla i
+ * cos net sense marques d'encapçalament tècnic. Funció pura.
+ */
+export function esborranyDeRespostaIAIA(pregunta, resposta) {
+  const consulta = String(pregunta ?? '').replace(/\s+/g, ' ').trim();
+  const linies = String(resposta ?? '')
+    .split('\n')
+    .map((l) => l.trim())
+    .filter(Boolean);
+  const accions = extreuAccionsDeRespostaIAIA(resposta);
+  const cosLinies = linies.filter(
+    (l) => l !== ENCAPCALAMENT_DE_SOC_DE_POBLE && l !== ENCAPCALAMENT_DE_LA_WIKI && !LINIA_ACCIO_IAIA.test(l)
+  );
+  const titolFont = accions[0]?.titol || (consulta ? consulta.replace(/[?¿!¡.]+$/g, '').trim() : 'Esborrany de la IAIA MarIA');
+  const titol = titolFont.slice(0, 120);
+  const subtitol = (consulta && consulta !== titol
+    ? consulta.replace(/\.+$/g, '').trim()
+    : `Esborrany preparat amb la IAIA MarIA${accions[0]?.ruta ? ` (${accions[0].ruta})` : ''}`).slice(0, 160);
+  const entradilla = (cosLinies[0] || String(resposta ?? '').trim()).slice(0, 500);
+  const resta = cosLinies.slice(1);
+  const referencies = accions.map((a) => `${a.titol} (${a.ruta})`);
+  const text = [titol, subtitol, entradilla, ...resta, ...(referencies.length ? [`Referències: ${referencies.join(' · ')}`] : [])]
+    .filter(Boolean)
+    .join('\n\n');
+  return Object.freeze({
+    id: 'iaia-esborrany',
+    sender: 'other',
+    author: 'IAIA MarIA',
+    is_ai: true,
+    esEsborranyIAIA: true,
+    titolEsborrany: titol,
+    subtitolEsborrany: subtitol,
+    entradillaEsborrany: entradilla,
+    cosEsborrany: Object.freeze(resta),
+    referenciesEsborrany: Object.freeze(referencies),
+    text,
+    creatAl: new Date().toISOString()
+  });
 }

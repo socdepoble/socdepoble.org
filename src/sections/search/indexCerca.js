@@ -22,10 +22,14 @@ import {
   ENTITAT_PILOT_SLUG, PERSONA_PILOT, POBLE_FUNDACIONAL, clauFundacional, entitatSeed, esIAIA, fundacionalDeLaClau
 } from '../../data/identitatsSeed.js';
 import { fotoDelBucketPublic } from '../../utils/mitjaOpac.js';
+import { esFitxaDAmbit, normalitzaEstat, rutaDAmbit, textCercable } from '../../utils/publicacioUniversal.js';
 import { imatgesDeProducte } from '../mercat/imatgesDeProducte.js';
 
 /* Els tipus de la cerca, en l'ordre en què es pinten els grups i els filtres.
-   `text` és el valor per defecte de la clau d'i18n `clau`. */
+   `text` és el valor per defecte de la clau d'i18n `clau`.
+   IDEA-61 (T0, prompt 261102_1532) · Les tres verticals del flux universal
+   de publicació (Compartir cotxe, Treball i Habitatge), darrere del Mercat i
+   amb el seu mateix patró. */
 export const TIPUS_CERCA = Object.freeze([
   Object.freeze({ id: 'tot', clau: 'section.search.tipus.tot', text: 'Tot' }),
   Object.freeze({ id: 'persones', clau: 'section.search.tipus.persones', text: 'Persones' }),
@@ -34,6 +38,9 @@ export const TIPUS_CERCA = Object.freeze([
   Object.freeze({ id: 'publicacions', clau: 'section.search.tipus.publicacions', text: 'Publicacions' }),
   Object.freeze({ id: 'agenda', clau: 'section.search.tipus.agenda', text: 'Agenda' }),
   Object.freeze({ id: 'mercat', clau: 'section.search.tipus.mercat', text: 'Mercat' }),
+  Object.freeze({ id: 'vehicle', clau: 'section.search.tipus.vehicle', text: 'Compartir cotxe' }),
+  Object.freeze({ id: 'treball', clau: 'section.search.tipus.treball', text: 'Treball' }),
+  Object.freeze({ id: 'habitatge', clau: 'section.search.tipus.habitatge', text: 'Habitatge' }),
   Object.freeze({ id: 'multimedia', clau: 'section.search.tipus.multimedia', text: 'Multimèdia' }),
   Object.freeze({ id: 'notes', clau: 'section.search.tipus.notes', text: 'Notes' }),
   Object.freeze({ id: 'converses', clau: 'section.search.tipus.converses', text: 'Converses' }),
@@ -260,10 +267,13 @@ const primeraImatge = (...valors) => {
  * poble), per a la faceta Pobles de l'espai de cerca
  * (facetesCerca.js). No es pinta enlloc més ni compta al rànquing, i
  * `poblePlegat` és el de sempre.
+ * IDEA-61 (T0, prompt 261102_1532) · Dos camps més, NOMÉS a una fitxa d'àmbit
+ * vertical (`ambit` no nul): `ambit` i `estat` (normalitzat), per a la faceta
+ * Estat de l'espai de cerca. Cap altra entrada porta estes claus.
  */
 function entrada({ tipus, id, titol, meta = [], extracte = '', detall = '', cos = [], etiquetes = [], poble = '',
   imatge = null, avatar = null, href = null, accio = null, data = null, privada = false, propia = false, fotoDe = null,
-  canonica = null }) {
+  canonica = null, ambit = null, estat = null }) {
   if (id == null || String(id) === '') return null;
   const textExtracte = textPla(extracte);
   const textTitol = textPla(titol).slice(0, 200) || textExtracte.slice(0, 80);
@@ -293,6 +303,7 @@ function entrada({ tipus, id, titol, meta = [], extracte = '', detall = '', cos 
     /* La clau de l'article del qual esta entrada és la foto (deMedia), o null. */
     fotoDe,
     canonica,
+    ...(ambit ? { ambit, estat: normalitzaEstat(estat) } : {}),
     titolPlegat: plega(textTitol),
     etiquetesPlegades: plega(etiquetes.map((valor) => textPla(valor)).join(' ')),
     poblePlegat: plega(textPoble),
@@ -588,22 +599,42 @@ export function dePoble(poble) {
    la triada al calendari i, si no n'hi ha, la de creació. */
 const dataDePublicacio = (post) => post?.date || post?.publish_date || post?.created_at || null;
 
+/* IDEA-61 (T0, prompt 261102_1532) · L'àmbit vertical explícit d'un element
+   del port (esFitxaDAmbit: mercat, vehicle, treball o habitatge), o null per
+   a tot el que és de sempre; i el seu text cercable (els camps estructurats,
+   mai el contacte), que buit no entra al cos. */
+const ambitVertical = (item) => (esFitxaDAmbit(item) ? item.ambit : null);
+const cosDAmbit = (item) => {
+  const cercable = ambitVertical(item) ? textCercable(item) : '';
+  return cercable ? [cercable] : [];
+};
+
+/**
+ * IDEA-61 (T0, prompt 261102_1532) · Una fitxa de vehicle, treball o habitatge
+ * viu a la secció 'mur' amb l'àmbit al payload (una sola fila, dues vistes):
+ * és del tipus del seu àmbit, obri /<ambit>/<id> (rutaDAmbit) i es busca
+ * també pels seus camps estructurats (textCercable). Una publicació de
+ * sempre, sense àmbit, no canvia en res (Llei del Píxel).
+ */
 export function dePublicacio(post, opcions = {}) {
   const autor = primerText(post?.author_name, post?.author);
   const data = dataDePublicacio(post);
+  const ambit = ambitVertical(post);
   return entrada({
-    tipus: 'publicacions',
+    tipus: ambit ?? 'publicacions',
     id: post?.id,
     titol: post?.title,
     meta: [autor, post?.town_name, formataData(data, opcions.locale)],
     extracte: primerText(post?.summary, post?.post_subtitle, post?.description, post?.content),
     detall: post?.content,
-    cos: [post?.post_subtitle, post?.description, autor, post?.town_name, post?.tag],
+    cos: [post?.post_subtitle, post?.description, autor, post?.town_name, post?.tag, ...cosDAmbit(post)],
     etiquetes: [post?.post_subtitle, post?.tag],
     poble: post?.town_name,
     imatge: { src: primeraImatge(post?.imageSrc, post?.image_url, post?.image) },
-    href: resolveItemPath({ ...post, sectionId: post?.sectionId || 'mur' }),
-    data
+    href: ambit ? rutaDAmbit(ambit, post?.id) : resolveItemPath({ ...post, sectionId: post?.sectionId || 'mur' }),
+    data,
+    ambit,
+    estat: post?.estat
   });
 }
 
@@ -631,6 +662,8 @@ export function deProducte(producte) {
   const venedor = producte?.ownerUserId != null
     ? primerText(producte?.author_name)
     : primerText(producte?.author_name, producte?.seller);
+  /* IDEA-61 (T0, prompt 261102_1532) · Un producte del flux universal (ambit
+     'mercat') porta l'estat i els seus camps al cos; un de llegat, res nou. */
   return entrada({
     tipus: 'mercat',
     id: producte?.id,
@@ -638,7 +671,7 @@ export function deProducte(producte) {
     meta: [producte?.price, venedor, producte?.population],
     extracte: primerText(producte?.subtitle, producte?.summary, producte?.description),
     detall: producte?.description,
-    cos: [producte?.subtitle, venedor, producte?.tag, producte?.category_slug, producte?.population],
+    cos: [producte?.subtitle, venedor, producte?.tag, producte?.category_slug, producte?.population, ...cosDAmbit(producte)],
     etiquetes: [producte?.subtitle, producte?.tag, producte?.category_slug],
     poble: producte?.population,
     /* Onada 12 (261011; ordres 261011_0130, punt 1) · La miniatura és la foto
@@ -649,17 +682,24 @@ export function deProducte(producte) {
        Sense cap foto pròpia que es puga pintar, la reserva de sempre. */
     imatge: { src: primeraImatge(imatgesDeProducte(producte), producte?.imageSrc, producte?.image_url, producte?.image) },
     href: resolveItemPath({ ...producte, sectionId: producte?.sectionId || 'mercat' }),
-    data: producte?.created_at
+    data: producte?.created_at,
+    ambit: ambitVertical(producte),
+    estat: producte?.estat
   });
 }
 
 /* Onada 12 (261011; ordres 261011_0130, punt 1: «hi ha dos Mac Mini») · El
    tipus de la cerca on ix l'article de cada secció: amb ell es fa la clau
-   (`tipus:id`) de l'article d'una foto (mediaContent.js · `article`). */
-const TIPUS_DE_SECCIO = Object.freeze({ mur: 'publicacions', mercat: 'mercat', events: 'agenda', pobles: 'pobles' });
+   (`tipus:id`) de l'article d'una foto (mediaContent.js · `article`).
+   IDEA-61 (T0, prompt 261102_1532) · Les tres verticals, pel seu sectionId
+   o, com que la fila viu a 'mur', per l'àmbit explícit de l'article. */
+const TIPUS_DE_SECCIO = Object.freeze({
+  mur: 'publicacions', mercat: 'mercat', events: 'agenda', pobles: 'pobles', vehicle: 'vehicle', treball: 'treball', habitatge: 'habitatge'
+});
 
 function clauDeLArticle(article) {
-  const tipus = Object.hasOwn(TIPUS_DE_SECCIO, article?.sectionId) ? TIPUS_DE_SECCIO[article.sectionId] : null;
+  const tipus = ambitVertical(article)
+    ?? (Object.hasOwn(TIPUS_DE_SECCIO, article?.sectionId) ? TIPUS_DE_SECCIO[article.sectionId] : null);
   return tipus && article.id != null && String(article.id) !== '' ? `${tipus}:${article.id}` : null;
 }
 

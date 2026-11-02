@@ -23,18 +23,29 @@
  * València) no són a la llavor de l'aplicació: el detector de pobles dels
  * relats no els proposa mai (no s'inventa cap poble), però la persona que
  * revisa la fitxa els pot triar. La comarca i la província no ixen al markdown
- * de la fitxa (només el nom), però viatgen a `fitxa.municipi`: cal
- * contrastar-les amb el Nomenclàtor abans que cap exportació les publique.
+ * de la fitxa (només el nom), però viatgen a `fitxa.municipi`: el 261102
+ * (IDEA-49, torn torn_d19293b9) els 53 municipis de referència s'han
+ * contrastat, nom i comarca, amb les fonts oficials: AVL, «Noms dels
+ * municipis valencians» (https://www.avl.gva.es/municipis/, 23/04/2026) i
+ * Nomenclàtor Toponímic Valencià (https://www.avl.gva.es/ntv/); PEGV,
+ * «Municipis · Relació a 1 de gener de 2026» amb la comarca de la Llei 2/2020
+ * (https://pegv.gva.es/va/municipis); INE, taules 2856 i 2903 i modificacions
+ * des de l'1/1/2026 (https://www.ine.es/daco/daco42/codmun/codmun_anual.htm).
+ * 53 coincidixen, 0 diferixen. Les fonts escriuen l'article en minúscula
+ * («el Campello», «l'Orxa»): ací va en majúscula com a títol de fitxa; una
+ * exportació que publique la forma del Nomenclàtor l'ha de passar a minúscula.
  *
  * T11-04 (Gemini, Tall 11; marató 261101_2143) · Darrere dels set de
  * sempre, la resta dels municipis de les quatre comarques on hi ha pobles de
  * l'aplicació (l'Alacantí, l'Alcoià, el Comtat i la Marina Baixa: la Muntanya
- * d'Alacant), contrastats amb les llistes comarcals de la Viquipèdia en
- * català, no amb el Nomenclàtor. «Alcosser» és el nom oficial des del Decret
- * 115/2021 (BOE-A-2022-2683), només en valencià: «Alcocer de Planes» i
- * «Alcosser de Planes» en són àlies. «Muro d'Alcoi» és la forma valenciana,
- * però el nom oficial continua sent «Muro de Alcoy» (àlies). La resta s'ha de
- * contrastar amb el Nomenclàtor abans de cap exportació. Els àlies són les
+ * d'Alacant). «Alcosser» és el nom oficial des del Decret 115/2021
+ * (BOE-A-2022-2683), només en valencià: «Alcocer de Planes» i «Alcosser de
+ * Planes» en són àlies. «Muro d'Alcoi» és la forma valenciana (nom en
+ * valencià de l'AVL), però el nom oficial continua sent «Muro de Alcoy»
+ * (àlies; cap font oficial recull encara el canvi que l'ajuntament demana).
+ * Els oficials dobles (Alcoi / Alcoy, Alacant / Alicante, Sant Vicent del
+ * Raspeig / San Vicente del Raspeig, l'Orxa / Lorcha, la Vila Joiosa /
+ * Villajoyosa) porten la meitat castellana com a àlies. Els àlies són les
  * formes castellanes i curtes d'ús comú; les que només canvien un accent
  * (Tárbena, Beniardá, La Nucía) no en necessiten, i «Campello» tampoc: és el
  * nom oficial sense l'article. «Sant Joan» i «Sant Vicent» no ho són: hi ha

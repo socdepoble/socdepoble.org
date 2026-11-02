@@ -420,8 +420,11 @@ export function useCercaGlobal({ q = '', tipus = 'tot' } = {}) {
     return [
       font('contingut', t('section.search.font.contingut', 'el catàleg de persones i pobles'), core.status, core.error, core.refresh,
         ['persones', 'entitats', 'pobles', 'pagines']),
+      /* IDEA-61 (T0, prompt 261102_1532; ARB-L4-01) · Les fitxes de vehicle, treball i
+         habitatge viuen a la font del Mur: amb eixos filtres, el Mur carregant o en
+         error ha de comptar com a rellevant (esquelet i avís, no un buit fals). */
       font('mur', t('section.search.font.mur', "el Mur, l'agenda i el mercat"), mur.status, mur.error, mur.refresh,
-        ['publicacions', 'agenda', 'mercat']),
+        ['publicacions', 'agenda', 'mercat', 'vehicle', 'treball', 'habitatge']),
       font('multimedia', t('section.search.font.multimedia', 'la multimèdia'), media.status, media.error, media.refresh, ['multimedia']),
       font('notes', t('section.search.font.notes', 'les teues notes'), notes.status, notes.error, notes.refresh, ['notes']),
       font('converses', t('section.search.font.converses', 'les teues converses'), xat.status, null, xat.recarrega, ['converses']),

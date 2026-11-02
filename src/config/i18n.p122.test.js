@@ -32,33 +32,114 @@ const ARREL = process.cwd();
 
 /* Els fitxers de P1-22 que ja passen sencers pel traductor. Cada carril hi
    afig els seus, un per línia, dins del seu bloc. */
-const FITXERS = Object.freeze([
-  /* T5a · la gestió dels membres i la privacitat */
-  'src/sections/profile/GestioMembres.jsx',
-  'src/sections/profile/DetallPrivacitat.jsx',
-  /* T5b · Connectar */
-  'src/sections/connectar/ConnectarSection.jsx',
-  'src/sections/connectar/ResumConnexio.jsx',
-  /* T5c · L'enquadrament */
-  'src/components/universal/enquadrament/DialegEnquadrament.jsx',
-  'src/components/universal/enquadrament/UbicacioImatge.jsx',
-  /* B3 · P1-22 · A (Notes: visibilitat i carpetes). carpetesSeed.js no: és dada
-     (vegeu el describe de les carpetes de sèrie, davant de D-9). */
-  'src/sections/notes/visibilitatNota.js',
-  'src/sections/notes/carpetes.js',
-  /* B3 · P1-22 · B (Notes: la closca del Bloc i el Snippet Curador) */
-  'src/sections/notes/NotesSection.jsx',
-  'src/sections/notes/SnippetCurador.jsx',
-  /* B3 · P1-22 · D (la closca de l'editor) */
-  'src/components/universal/UniversalEditorShell.jsx',
-  /* B3 · P1-22 · E (l'espai de treball) */
-  'src/components/universal/workspace/UniversalWorkspace.jsx',
-  /* B3 · P1-22 · C (la fitxa del Perfil) */
-  'src/sections/profile/PerfilEditor.jsx',
-  'src/sections/profile/useImatgeDeFitxa.jsx',
-  /* B6 · IDEA-46 (cerca a l'espai de treball) */
-  'src/sections/search/EspaiCerca.jsx',
+const FITXERS_AUDITATS_P122 = Object.freeze([
+  "src/app/contexts/ModeracioContext.jsx",
+  "src/components/PedraSeca/UniversalListCard/textosComu.js",
+  "src/components/PedraSeca/atoms/Boto.jsx",
+  "src/components/PedraSeca/hooks/useTraduccioPagina.js",
+  "src/components/PedraSeca/molecules/Alerta.jsx",
+  "src/components/PedraSeca/organismes/SelectorDataHora.jsx",
+  "src/components/PedraSeca/organismes/textosComentar.js",
+  "src/components/PedraSeca/organismes/textosModeracio.js",
+  "src/components/universal/BotoInstalaApp.jsx",
+  "src/components/universal/FitxaMemoriaOral.jsx",
+  "src/components/universal/MarcaAmfitrio.jsx",
+  "src/components/universal/UniversalEditorShell.jsx",
+  "src/components/universal/UniversalToolbar.jsx",
+  "src/components/universal/barres/textosBarres.js",
+  "src/components/universal/connexio/estatConnexio.js",
+  "src/components/universal/enquadrament/DialegEnquadrament.jsx",
+  "src/components/universal/enquadrament/UbicacioImatge.jsx",
+  "src/components/universal/richText/extensions/targetes/DialegTriaTargeta.jsx",
+  "src/components/universal/richText/extensions/targetes/TargetaIncrustadaNodeView.jsx",
+  "src/components/universal/traduccio/MenuTraduir.jsx",
+  "src/components/universal/workspace/UniversalWorkspace.jsx",
+  "src/config/systemPages.js",
+  "src/natiu/CalActualitzar.jsx",
+  "src/natiu/entrada.jsx",
+  "src/sections/connectar/BlocRelacio.jsx",
+  "src/sections/connectar/ConnectarSection.jsx",
+  "src/sections/connectar/ResumConnexio.jsx",
+  "src/sections/connectar/organitzacio/BlocFormarPart.jsx",
+  "src/sections/connectar/useAplicaAbast.js",
+  "src/sections/connectar/useSeguiment.js",
+  "src/sections/control/xatCorporatiu.js",
+  "src/sections/multimedia/AccionsCarpetaLocal.jsx",
+  "src/sections/multimedia/EditorTextLocal.jsx",
+  "src/sections/multimedia/GestorMultimediaLocal.jsx",
+  "src/sections/multimedia/LaboratoriWebpLocal.jsx",
+  "src/sections/multimedia/MultimediaSection.jsx",
+  "src/sections/multimedia/OperacionsArxiuLocal.jsx",
+  "src/sections/multimedia/PaginesEspaiMultimedia.jsx",
+  "src/sections/multimedia/VisorDeLArxiu.jsx",
+  "src/sections/multimedia/panellDeLaFoto.js",
+  "src/sections/multimedia/textosEspaiMultimedia.js",
+  "src/sections/multimedia/textosGestorLocal.js",
+  "src/sections/mur/EstatErrorDades.jsx",
+  "src/sections/mur/PublicacionsDeLActor.jsx",
+  "src/sections/mur/usePublicacionsDeLActor.js",
+  "src/sections/notes/ConnexioDetall.jsx",
+  "src/sections/notes/NotesEditor.jsx",
+  "src/sections/notes/NotesSection.jsx",
+  "src/sections/notes/SnippetCurador.jsx",
+  "src/sections/notes/carpetes.js",
+  "src/sections/notes/llavorNota.js",
+  "src/sections/notes/visibilitatNota.js",
+  "src/sections/onboarding/CampsDIdentitatALAlta.jsx",
+  "src/sections/onboarding/OnboardingSteps.jsx",
+  "src/sections/onboarding/RecuperacioSteps.jsx",
+  "src/sections/plugins/PluginPage.jsx",
+  "src/sections/plugins/useDestiDelPlugin.js",
+  "src/sections/pobles/EntitatsDelPoble.jsx",
+  "src/sections/pobles/usePublicacionsDelPoble.js",
+  "src/sections/profile/DetallPrivacitat.jsx",
+  "src/sections/profile/GestioMembres.jsx",
+  "src/sections/profile/PerfilEditor.jsx",
+  "src/sections/profile/ProfileSection.jsx",
+  "src/sections/profile/PublicacionsDeLaFitxa.jsx",
+  "src/sections/profile/membresModel.js",
+  "src/sections/profile/personesConfianca.js",
+  "src/sections/profile/useImatgeDeFitxa.jsx",
+  "src/sections/search/EspaiCerca.jsx",
+  "src/sections/search/useCercaGlobal.js",
+  "src/sections/translations/TranslationsSection.jsx",
+  "src/sections/xat/components/AdjuntXat.jsx",
+  "src/sections/xat/components/AvisClauCanviada.jsx",
+  "src/sections/xat/components/AvisOblitXat.jsx",
+  "src/sections/xat/components/BarraResposta.jsx",
+  "src/sections/xat/components/BarraSeleccio.jsx",
+  "src/sections/xat/components/Bombolla.jsx",
+  "src/sections/xat/components/BotoBaixar.jsx",
+  "src/sections/xat/components/BotoInformaDUnError.jsx",
+  "src/sections/xat/components/CapcaleraConversa.jsx",
+  "src/sections/xat/components/CitaResposta.jsx",
+  "src/sections/xat/components/Compositor.jsx",
+  "src/sections/xat/components/ConsultaIAIA.jsx",
+  "src/sections/xat/components/ControlsAdjunt.jsx",
+  "src/sections/xat/components/DialegCompartir.jsx",
+  "src/sections/xat/components/DialegNovaConversa.jsx",
+  "src/sections/xat/components/EnllacSegur.jsx",
+  "src/sections/xat/components/FilaConversa.jsx",
+  "src/sections/xat/components/FilaPersona.jsx",
+  "src/sections/xat/components/FilaPoble.jsx",
+  "src/sections/xat/components/FiltreConverses.jsx",
+  "src/sections/xat/components/FiltresCerca.jsx",
+  "src/sections/xat/components/FitxaComunitat.jsx",
+  "src/sections/xat/components/LlistaConverses.jsx",
+  "src/sections/xat/components/PaginaNotificacions.jsx",
+  "src/sections/xat/components/PastillaNoLlegits.jsx",
+  "src/sections/xat/components/ResultatsCercaXat.jsx",
+  "src/sections/xat/components/SeparadorNoLlegits.jsx",
+  "src/sections/xat/components/VistaComunitats.jsx",
+  "src/sections/xat/conversa.js",
+  "src/sections/xat/errorsXat.js",
+  "src/sections/xat/estatXifratgeFil.js",
+  "src/sections/xat/silenciXat.js",
+  "src/sections/xat/useAvisosPushXat.js",
+  "src/sections/xat/useCanvisDeClau.js",
+  "src/sections/xat/useInformaDUnError.js",
 ]);
+const FITXERS = FITXERS_AUDITATS_P122;
 
 /* Excepcions (`fitxer:línia tipus «text»`). Buida: cap marca no ho necessita. */
 const ADMESOS = new Set([]);
@@ -749,7 +830,8 @@ describe('la guarda mossega (sonda)', () => {
   });
 
   test('les fonts de la llista existixen: les .jsx porten JSX i les .js són mòduls', () => {
-    expect(FITXERS.length).toBeGreaterThanOrEqual(2);
+    expect(FITXERS_AUDITATS_P122.length).toBeGreaterThanOrEqual(105);
+    expect(new Set(FITXERS_AUDITATS_P122).size).toBe(FITXERS_AUDITATS_P122.length);
     for (const fitxer of FITXERS) {
       expect([fitxer, formaDeLaFont(fitxer, readFileSync(path.join(ARREL, fitxer), 'utf8'))]).toEqual([fitxer, true]);
     }

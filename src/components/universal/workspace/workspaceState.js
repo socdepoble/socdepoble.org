@@ -1,10 +1,16 @@
 // src/components/universal/workspace/workspaceState.js
 export const ALL_CATEGORY_ID = '__all__';
 
+/* P1-73 (T3, prompt 261102_1532) · Les dues ordenacions de la llista
+   d'UniversalWorkspace; la primera és la de muntar. */
+export const ORDENACIONS = Object.freeze(['date', 'name']);
+
 /* T7 (P3) · `columnes` diu quines columnes arrenquen plegades en rail
    ({ left, middle }); sense, cap, com sempre. Només compta en «ample»: en
-   mitjà i estret la navegació ja comença tancada (AppGridShell). */
-export function createWorkspaceState(initial = {}, columnes = {}) {
+   mitjà i estret la navegació ja comença tancada (AppGridShell).
+   P1-73 (T3, prompt 261102_1532) · `ordre` ({ sortable, sortBy }) és l'ordre
+   de la llista en muntar; sense, per data i sense ordenar, com la llista. */
+export function createWorkspaceState(initial = {}, columnes = {}, ordre = {}) {
   return {
     activeCategoryId: initial.categoryId == null
       ? ALL_CATEGORY_ID
@@ -17,7 +23,9 @@ export function createWorkspaceState(initial = {}, columnes = {}) {
     searchOpen: Boolean(initial.query),
     needsInitialSelection: initial.itemId === undefined,
     pendingItemId: null,
-    selectionToken: null
+    selectionToken: null,
+    sortBy: ORDENACIONS.includes(ordre?.sortBy) ? ordre.sortBy : ORDENACIONS[0],
+    sortable: Boolean(ordre?.sortable)
   };
 }
 
@@ -158,6 +166,16 @@ export function workspaceReducer(state, action) {
         }
       };
 
+    /* P1-73 (T3, prompt 261102_1532) · L'ordre de la llista ({ sortBy?,
+       sortable? }). Un sortBy desconegut no canvia res; sense cap canvi, el
+       mateix estat (cap pintat de més). */
+    case 'sort/set': {
+      const sortBy = ORDENACIONS.includes(action.sortBy) ? action.sortBy : state.sortBy;
+      const sortable = action.sortable === undefined ? state.sortable : Boolean(action.sortable);
+      if (sortBy === state.sortBy && sortable === state.sortable) return state;
+      return { ...state, sortBy, sortable };
+    }
+
     default:
       return state;
   }
@@ -167,22 +185,40 @@ const normalitza = (value) =>
   String(value ?? '').normalize('NFD').replace(/\p{Diacritic}/gu, '').toLocaleLowerCase('ca');
 
 /**
- * T11-03 (Gemini, Tall 11; marató 261101_2143) · El primer element que la
- * tria automàtica pot obrir: a «Tot», el primer amb `fixatATot: true` (el
- * booleà), que UniversalWorkspace pinta a la primera fila (D-4); fora de
- * «Tot», o sense cap fixat, el primer de la llista. Pura. Torna l'element o
- * null. Mana l'ordre de l'ENTRADA, no el de `sortBy` (viu a UniversalWorkspace):
- * amb un sol fixat, és la primera fila pintada; amb dos o més, la llista els
- * ordena per data o per nom i ací guanya el primer de l'entrada. Igualar-ho
- * vol pujar `sortBy` al context (deute nou de T11-03, dipòsit de la Wiki).
+ * P1-73 (T3, prompt 261102_1532) · El comparador de la llista
+ * d'UniversalWorkspace, l'únic: per nom, el títol (localeCompare 'ca'); per
+ * data (i qualsevol altre valor), updatedAt descendent. Pur.
  */
-export function primerElementTriable(items, categoryId) {
-  if (!Array.isArray(items) || !items.length) return null;
-  if (categoryId === ALL_CATEGORY_ID) {
-    const fixat = items.find((item) => item?.fixatATot === true);
-    if (fixat) return fixat;
+export function comparadorElements(sortBy) {
+  if (sortBy === 'name') {
+    return (a, b) => (a?.title || '').localeCompare(b?.title || '', 'ca');
   }
-  return items[0] ?? null;
+  return (a, b) => (Date.parse(b?.updatedAt) || 0) - (Date.parse(a?.updatedAt) || 0);
+}
+
+/**
+ * P1-73 (T3, prompt 261102_1532) · La llista tal com la pinta
+ * UniversalWorkspace: una còpia (mai muta l'entrada) en l'ordre d'entrada o,
+ * amb `sortable`, ordenada per `sortBy`; a «Tot» (`categoryId`), els
+ * `fixatATot: true` (el booleà, D-4) davant, en el mateix ordre, i la resta
+ * darrere i en el seu. Pura.
+ */
+export function ordenaElements(items, { sortable = false, sortBy = ORDENACIONS[0], categoryId } = {}) {
+  const ordenats = Array.isArray(items) ? [...items] : [];
+  if (sortable) ordenats.sort(comparadorElements(sortBy));
+  if (categoryId !== ALL_CATEGORY_ID) return ordenats;
+  const fixats = ordenats.filter((item) => item?.fixatATot === true);
+  return fixats.length ? [...fixats, ...ordenats.filter((item) => item?.fixatATot !== true)] : ordenats;
+}
+
+/**
+ * P1-73 / O2-T5 · La primera candidata en el mateix ordre que la llista,
+ * també fora de Tot i sense fixats. Les reserves pròpies d'una secció les
+ * filtra canAutoSelect abans d'arribar ací. Sense sortable conserva l'ordre
+ * d'entrada (i la prioritat fixatATot); no muta les candidates.
+ */
+export function primerElementTriable(items, categoryId, ordre = {}) {
+  return ordenaElements(items, { ...ordre, categoryId })[0] ?? null;
 }
 
 /* T7 (P5) · `ambit`, opcional: el Set d'ids que compten com la categoria

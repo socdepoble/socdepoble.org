@@ -90,6 +90,12 @@ const N1 = deNota({ id: 'n1', title: 'Llista de la festa', lead: 'Coses per a la
 const POBLE = dePoble({ id: 'benifallim', title: 'Benifallim', comarca: "L'Alcoià" });
 const MEMBRE = deMembre({ usuari_id: 'u-ferrer', nom: 'Javi Ferrer', tipus: 'persona', fil_id: null });
 const ENTRADES = Object.freeze([P1, P2, A1, U9, N1, POBLE, MEMBRE]);
+/* IDEA-61 (T0, prompt 261102_1532) · Dues fitxes de Compartir cotxe (viuen a
+   la secció 'mur' amb l'àmbit al payload), que només «cotxe» troba. */
+const DADES_COTXE = Object.freeze({ modalitat: 'oferisc_places', lloc_eixida: 'Benifallim', lloc_arribada: 'Alcoi', data_eixida: '2026-12-01', places: 3 });
+const V1 = dePublicacio({ id: 'v1', title: 'Cotxe a Alcoi dilluns', ambit: 'vehicle', estat: 'disponible', dades: DADES_COTXE, town_name: 'Benifallim', created_at: ARA });
+const V2 = dePublicacio({ id: 'v2', title: 'Cotxe a Xixona', ambit: 'vehicle', estat: 'reservat', dades: { ...DADES_COTXE, lloc_arribada: 'Xixona' }, created_at: ARA });
+const AMB_COTXES = Object.freeze([...ENTRADES, V1, V2]);
 
 let resultatsPerConsulta;
 let amplada = 1400;
@@ -365,6 +371,64 @@ describe('els criteris', () => {
   });
 });
 
+describe('IDEA-61 · l’Estat de les fitxes d’àmbit', () => {
+  const etiquetesDeNavegacio = () => [...criteris().querySelectorAll('.sdp-workspace-nav-item__label')].map((node) => node.textContent);
+
+  test('els criteris porten Estat, entre Tipus i Pobles, amb el recompte de cada estat; un estat filtra la llista i fa push de ?faceta=', () => {
+    ambEntrades(AMB_COTXES);
+    pinta('mode=espai&q=cotxe');
+    const nav = within(criteris());
+    for (const grup of ['Tipus', 'Estat', 'Pobles', 'Data']) expect(nav.getByRole('button', { name: grup }).getAttribute('aria-expanded')).toBe('true');
+    const noms = etiquetesDeNavegacio();
+    const posicions = ['Tipus', 'Estat', 'Pobles', 'Data'].map((nom) => noms.indexOf(nom));
+    expect(posicions.every((posicio, i) => posicio >= 0 && (i === 0 || posicio > posicions[i - 1]))).toBe(true);
+    expect(noms.slice(noms.indexOf('Estat') + 1, noms.indexOf('Pobles'))).toEqual(['Disponible', 'Reservat']);
+    for (const opcio of ['Compartir cotxe 2 resultats', 'Disponible 1 resultats', 'Reservat 1 resultats', 'Benifallim 1 resultats']) {
+      expect(nav.getByRole('button', { name: opcio })).toBeTruthy();
+    }
+    expect(titols()).toHaveLength(2);
+    const reservat = nav.getByRole('button', { name: 'Reservat 1 resultats' });
+    fireEvent.click(reservat);
+    expect(titols()).toEqual(['Cotxe a Xixona']);
+    expect(url().get('faceta')).toBe('estat:reservat');
+    expect(estat.historial).toHaveLength(2);
+    expect(reservat.getAttribute('aria-current')).toBe('page');
+    /* El detall d'una fitxa obri la seua vertical: /vehicle/<id>. */
+    fireEvent.click(fitxa('Cotxe a Xixona'));
+    expect(url().get('resultat')).toBe(V2.clau);
+    expect(within(detall()).getByRole('link', { name: 'Obri' }).getAttribute('href')).toBe('/vehicle/v2');
+    fireEvent.click(within(criteris()).getByRole('button', { name: 'Tots els resultats' }));
+    expect(titols()).toHaveLength(2);
+    expect(url().has('faceta')).toBe(false);
+  });
+
+  test('sense cap fitxa d’àmbit entre els resultats no hi ha cap grup Estat', () => {
+    ambEntrades(AMB_COTXES);
+    pinta('mode=espai&q=festa');
+    expect(within(criteris()).queryByRole('button', { name: 'Estat' })).toBeNull();
+    expect(titols()).toEqual(ordreDe('festa'));
+  });
+
+  test('?faceta=estat:… de l’URL filtra des del primer pintat; un estat que no ho és mostra «Tots els resultats»; un de vàlid sense resultats es pinta al seu lloc', () => {
+    ambEntrades(AMB_COTXES);
+    const vista = pinta('mode=espai&q=cotxe&faceta=estat%3Adisponible');
+    expect(within(criteris()).getByRole('button', { name: 'Disponible 1 resultats' }).getAttribute('aria-current')).toBe('page');
+    expect(titols()).toEqual(['Cotxe a Alcoi dilluns']);
+    expect(estat.escriptures).toEqual([]);
+    vista.unmount();
+    const altra = pinta('mode=espai&q=cotxe&faceta=estat%3Avenut');
+    expect(within(criteris()).getByRole('button', { name: 'Tots els resultats' }).getAttribute('aria-pressed')).toBe('true');
+    expect(titols()).toHaveLength(2);
+    altra.unmount();
+    /* «festa» no troba cap fitxa d'àmbit: el criteri es queda, amb recompte 0, al seu lloc (davant de Pobles). */
+    pinta('mode=espai&q=festa&faceta=estat%3Atancat');
+    expect(within(criteris()).getByRole('button', { name: 'Tancat' }).getAttribute('aria-current')).toBe('page');
+    const noms = etiquetesDeNavegacio();
+    expect(noms.slice(noms.indexOf('Estat') + 1, noms.indexOf('Pobles'))).toEqual(['Tancat']);
+    expect(titols()).toEqual([]);
+  });
+});
+
 describe('el detall', () => {
   test('triar un resultat el pinta amb el títol enllaçat i ressaltat, la meta i «Obri», i fa push de ?resultat=', () => {
     pinta('mode=espai&q=festa');
@@ -473,6 +537,39 @@ describe('les llengües', () => {
     expect(within(detall()).getByText('Elige un resultado para verlo aquí.')).toBeTruthy();
     fireEvent.click(fitxa('Concert de festa'));
     expect(within(detall()).getByRole('link', { name: 'Abrir' })).toBeTruthy();
+  });
+
+  /* IDEA-61 (T0, prompt 261102_1532) · El grup Estat, els seus estats i la
+     vertical del Tipus ixen en castellà (es.js: Estado, Disponible, Reservado,
+     Compartir coche); l'URL conserva l'id de l'estat, mai la traducció. */
+  test('en castellà, el grup Estado, els seus estats i «Compartir coche» al Tipo es tradueixen; ?faceta= porta l’id', () => {
+    estat.t = createTranslator('es');
+    ambEntrades(AMB_COTXES);
+    pinta('mode=espai&q=cotxe');
+    const columna = screen.getByRole('complementary', { name: 'CRITERIOS' });
+    const nav = within(columna);
+    for (const nom of ['Tipo', 'Estado', 'Pueblos', 'Fecha', 'Compartir coche 2 resultados', 'Disponible 1 resultados', 'Reservado 1 resultados']) {
+      expect(nav.getByRole('button', { name: nom })).toBeTruthy();
+    }
+    /* Cap etiqueta en la llengua de la reserva. */
+    for (const nom of ['Estat', 'Reservat 1 resultats', 'Compartir cotxe 2 resultats']) expect(nav.queryByRole('button', { name: nom })).toBeNull();
+    const noms = [...columna.querySelectorAll('.sdp-workspace-nav-item__label')].map((node) => node.textContent);
+    expect(noms.slice(noms.indexOf('Estado') + 1, noms.indexOf('Pueblos'))).toEqual(['Disponible', 'Reservado']);
+    fireEvent.click(nav.getByRole('button', { name: 'Reservado 1 resultados' }));
+    expect(titols()).toEqual(['Cotxe a Xixona']);
+    expect(url().get('faceta')).toBe('estat:reservat');
+  });
+
+  test('en castellà, a la /cerca de sempre les pastilles i el grup de la vista Tot diuen «Compartir coche», «Trabajo» i «Vivienda»', () => {
+    estat.t = createTranslator('es');
+    ambEntrades(AMB_COTXES);
+    estat.historial = ['q=cotxe'];
+    render(<SearchSection />);
+    for (const nom of ['Compartir coche 2', 'Trabajo 0', 'Vivienda 0', 'Mercado 0']) {
+      expect(screen.getByRole('button', { name: nom })).toBeTruthy();
+    }
+    expect(screen.queryByRole('button', { name: 'Compartir cotxe 2' })).toBeNull();
+    expect(screen.getByRole('heading', { level: 3, name: 'Compartir coche (2)' })).toBeTruthy();
   });
 });
 

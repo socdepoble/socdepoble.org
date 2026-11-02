@@ -127,8 +127,9 @@ export function loadContract(root, {route: selected, templates = true} = {}) {
     route.output = output;
     route.templateText = raw;
     route.templateHash = sha(raw);
+    route.fixedBlocksFormat = 'markdown-v1';
     route.fixedBlocks = Object.fromEntries((route.blocsFixos || []).map(name => {
-      const value = sections(template.body).get(name);
+      const value = sourceSections(template.body).get(name);
       if (!value) throw new Error(`Bloc fix absent: ${route.id}: ${name}`);
       return [name, value];
     }));
@@ -165,14 +166,36 @@ export function sections(body) {
   const chunks = [...clean.matchAll(/^##\s+(.+)\r?\n([\s\S]*?)(?=^##\s|$(?![\s\S]))/gm)];
   return new Map(chunks.map(m => [m[1].trim(), m[2].trim()]));
 }
+// Detecta capçaleres en prosa (mai dins de codi), però copia els bytes de la
+// font. Emmascarar la prosa també en el resultat mutilava rutes i ordres.
+export function sourceSections(body) {
+  const clean = withoutCode(body);
+  const chunks = [...clean.matchAll(/^##\s+(.+)\r?\n([\s\S]*?)(?=^##\s|$(?![\s\S]))/gm)];
+  return new Map(chunks.map(m => {
+    const start = m.index + m[0].length - m[2].length;
+    const value = body.slice(start, start + m[2].length)
+      // La marca de la secció següent és estructura del generador, no text.
+      .replace(/\s*<!-- SDP:SECTION [a-zA-Z0-9._-]+ -->\s*$/, '').trim();
+    return [m[1].trim(), value];
+  }));
+}
 export function validateSections(body, route) {
   const found = sections(body), errors = [];
   for (const name of route.seccions) {
     const content = found.get(name);
     if (!content || /^\[pendent\]$/i.test(content)) errors.push(`Secció absent o pendent: ${name}`);
   }
+  if (route.fixedBlocksFormat !== undefined && route.fixedBlocksFormat !== 'markdown-v1') return [...errors, 'Format de blocs normatius desconegut'];
+  // Els rebuts emesos abans de markdown-v1 mantenen el seu contracte immutable.
+  const fixed = route.fixedBlocksFormat === 'markdown-v1' ? sourceSections(body) : found;
+  if (route.fixedBlocksFormat === 'markdown-v1') {
+    const names = [...withoutCode(body).matchAll(/^##\s+(.+)\r?\n/gm)].map(m => m[1].trim());
+    for (const name of Object.keys(route.fixedBlocks || {})) {
+      if (names.filter(n => n === name).length > 1) errors.push(`Bloc normatiu duplicat: ${name}`);
+    }
+  }
   for (const [name, expected] of Object.entries(route.fixedBlocks || {})) {
-    if (found.get(name) !== expected) errors.push(`Bloc normatiu alterat: ${name}`);
+    if (fixed.get(name) !== expected) errors.push(`Bloc normatiu alterat: ${name}`);
   }
   return errors;
 }

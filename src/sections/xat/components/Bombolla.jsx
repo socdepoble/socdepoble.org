@@ -62,9 +62,10 @@
  * «2 * 3 = 6», «a*b» o una llista «* element» no canvien. Sense cap negreta,
  * el DOM de sempre. «Copia el text» copia el text cru, amb els asteriscs.
  */
-import { memo, useEffect, useRef, useState } from 'react';
+import { memo, useCallback, useEffect, useRef, useState } from 'react';
 import { AlertTriangle, Ban, CheckCircle2, Circle, Copy, Flag, MoreVertical, Reply } from 'lucide-react';
 import { Link } from '../../../app/contexts/RouterContext';
+import { useCapaEnrere } from '../../../components/PedraSeca/hooks/useCapaEnrere.js';
 import MarquesEstat from './MarquesEstat.jsx';
 import CitaResposta from './CitaResposta.jsx';
 import EnllacSegur from './EnllacSegur.jsx';
@@ -155,6 +156,25 @@ function Bombolla({
   const botoRef = useRef(null);
   const arrelRef = useRef(null);
   const triable = Boolean(seleccio?.actiu);
+  const meu = missatge.sender === 'me';
+  const esborrat = Boolean(missatge.esborrat) || Boolean(missatge.esborratAl);
+  const estat = missatge.estatEnviament || 'enviat';
+  const enError = estat === 'error';
+  const text = missatge.text ?? missatge.content ?? '';
+  const triat = Boolean(seleccio?.triat);
+  /* Només es respon a un missatge que el servidor ja té: amb id, ni pendent
+     ni en error, i mai a una làpida (T1). */
+  const potRespondre = typeof onRespon === 'function' && !esborrat && missatge.id != null
+    && estat !== 'pendent' && !enError;
+  /* Fase D (261020, tasca 2) · «Bloqueja {nom}» només amb un nom que dir. */
+  const potDenunciar = typeof onDenuncia === 'function';
+  const nomBloqueig = String(nomAutor || '').trim();
+  const potBloquejar = typeof onBloqueja === 'function' && Boolean(nomBloqueig);
+  const teMenu = missatge.tipus !== 'sistema' && !missatge.bloquejat && !triable && !esborrat && (Boolean(text) || potRespondre || potDenunciar || potBloquejar);
+  const menuVisible = menuObert && teMenu;
+  // Un canvi remot o la selecció pot retirar el menú sense desmuntar la bombolla.
+  // Reiniciar l'estat impedix que reaparega o consumisca un Arrere invisible.
+  useEffect(() => { if (!teMenu && menuObert) setMenuObert(false); }, [teMenu, menuObert]);
 
   /* Gauntlet 261022_0225 (crítica Claude, REV-ESTRES-1) · En el mode de
      selecció l'adjunt continua muntat i sense controls (STRESS-2). El que
@@ -169,12 +189,20 @@ function Bombolla({
     return () => node.removeEventListener('play', para, true);
   }, [triable]);
 
+  /* P0-24b (T2c, prompt 261102_1532) · El camí de l'Escape del menú: tancar-lo
+     i tornar el focus al «⋯». És una sola funció perquè l'Arrere d'Android, des
+     de la pila, faça exactament este camí. */
+  const tancaMenu = useCallback(() => {
+    setMenuObert(false);
+    botoRef.current?.focus();
+  }, []);
+
   /* El patró de MenuLlista, retirat el 261026 (revisió adversarial 260930, #7 i #8): en obrir,
      el focus entra a la primera opció; Escape tanca, queda consumit (un sol
      Escape tanca UNA cosa: la selecció de xats l'escolta a window) i torna
      el focus al «⋯». */
   useEffect(() => {
-    if (!menuObert) return undefined;
+    if (!menuVisible) return undefined;
     const node = menuRef.current;
     node?.querySelector('[role="menuitem"]')?.focus();
     const arrel = node?.getRootNode?.() || document;
@@ -182,8 +210,7 @@ function Bombolla({
     const tancaEsc = (e) => {
       if (e.key !== 'Escape') return;
       e.preventDefault();
-      setMenuObert(false);
-      botoRef.current?.focus();
+      tancaMenu();
     };
     arrel.addEventListener('pointerdown', tancaFora);
     arrel.addEventListener('keydown', tancaEsc);
@@ -191,7 +218,11 @@ function Bombolla({
       arrel.removeEventListener('pointerdown', tancaFora);
       arrel.removeEventListener('keydown', tancaEsc);
     };
-  }, [menuObert]);
+  }, [menuVisible, tancaMenu]);
+  /* P0-24b (T2c, prompt 261102_1532) · Mentre el menú és obert, és a la pila de
+     l'Arrere d'Android (config/pilaEnrere.js) amb el camí de l'Escape (ARB-T2B-04:
+     damunt de la resposta o de la selecció, l'Arrere el tanca a ell primer). */
+  useCapaEnrere(menuVisible, tancaMenu);
 
   if (missatge.tipus === 'sistema') {
     return (
@@ -215,22 +246,7 @@ function Bombolla({
     );
   }
 
-  const meu = missatge.sender === 'me';
-  const esborrat = Boolean(missatge.esborrat) || Boolean(missatge.esborratAl);
-  const estat = missatge.estatEnviament || 'enviat';
-  const enError = estat === 'error';
   const hora = etiquetaHora(missatge.creatAl, locale);
-  const text = missatge.text ?? missatge.content ?? '';
-  const triat = Boolean(seleccio?.triat);
-  /* Només es respon a un missatge que el servidor ja té: amb id, ni pendent
-     ni en error, i mai a una làpida (T1). */
-  const potRespondre = typeof onRespon === 'function' && !esborrat && missatge.id != null
-    && estat !== 'pendent' && !enError;
-  /* Fase D (261020, tasca 2) · «Bloqueja {nom}» només amb un nom que dir. */
-  const potDenunciar = typeof onDenuncia === 'function';
-  const nomBloqueig = String(nomAutor || '').trim();
-  const potBloquejar = typeof onBloqueja === 'function' && Boolean(nomBloqueig);
-  const teMenu = !triable && !esborrat && (Boolean(text) || potRespondre || potDenunciar || potBloquejar);
   /* Tanca el menú, torna el focus al «⋯» i li'l passa (l'obridor del diàleg). */
   const triaDelMenu = (accio) => {
     setMenuObert(false);

@@ -1,6 +1,6 @@
 // src/components/universal/workspace/WorkspaceContext.jsx
 import {
-  createContext, useCallback, useContext, useEffect,
+  useCallback, useContext, useEffect,
   useMemo, useReducer, useRef, useState
 } from 'react';
 import {
@@ -9,7 +9,16 @@ import {
 } from './workspaceState.js';
 import { buildWorkspaceFolderForest, descendentsDeCarpeta } from './workspaceFolderForest.js';
 
-const WorkspaceContext = createContext(null);
+/* T-05 (261102, kit 261102_kit_codex_hmr_workspace) · La identitat del context
+   viu fora d'este mòdul: Fast Refresh el reavalua quan canvia el proveïdor i
+   dos versions temporals han de compartir el mateix context (P1-71, S2.B). */
+import { WorkspaceContext } from './workspaceContextIntern.js';
+
+/* O2-T5-AUD-01 · Cap coincidència no extingix una demanda de reserva:
+   en netejar consulta/etiquetes s'ha de poder resoldre. Només es consulta
+   després d'una demanda automàtica, mai per al nul explícit. */
+const esperaCandidatsFiltrats = (candidates, query, activeTagIds, filtraPerConsulta) => candidates.length === 0
+  && (activeTagIds.length > 0 || (filtraPerConsulta !== false && query.trim() !== ''));
 
 export function WorkspaceProvider({
   navigationGroups,
@@ -17,6 +26,9 @@ export function WorkspaceProvider({
   items = [],
   itemsComplete = false,
   resolveItemId,
+  /* Política de reserva opcional. Rep { categoryId, item, candidates };
+     candidates és la llista ja filtrada de la carpeta destí, només lectura.
+     No governa les tries manuals ni substituïx la selecció actual. */
   canAutoSelect,
   resolutionKey = 0,
   status = 'ready',
@@ -26,6 +38,11 @@ export function WorkspaceProvider({
   /* T7 (P3) · Columnes que arrenquen plegades en rail ({ left, middle }).
      Només es llig en muntar, com la selecció inicial. */
   columnesInicials,
+  /* P1-73 (T3, prompt 261102_1532) · L'ordre de la llista en muntar
+     ({ sortable, sortBy }), com columnesInicials: només es llig en muntar.
+     Després el porta setSort. Cal des del primer pintat: la selecció inicial
+     es tria abans que cap efecte d'un fill puga sincronitzar l'ordre. */
+  ordreInicial,
   /* T7 (P5) · Amb true, triar una carpeta també mostra els elements de les
      seues subcarpetes. Sense, només els de la carpeta, com sempre. */
   inclouDescendents = false,
@@ -47,7 +64,7 @@ export function WorkspaceProvider({
   const [state, dispatch] = useReducer(
     workspaceReducer,
     initialSelection,
-    (inicial) => createWorkspaceState(inicial, columnesInicials)
+    (inicial) => createWorkspaceState(inicial, columnesInicials, ordreInicial)
   );
 
   // Normalització única a la frontera: des d’ací tots els IDs són strings.
@@ -183,15 +200,17 @@ export function WorkspaceProvider({
       // La pell pot ajornar sols la tria automàtica d'una carpeta pendent.
       // Una nota disponible continua elegible; selectItem i requestItem són manuals.
       const eligible = typeof canAutoSelectRef.current === 'function'
-        ? candidates.filter(item => canAutoSelectRef.current({ categoryId: id, item }) !== false)
+        ? candidates.filter(item => canAutoSelectRef.current({ categoryId: id, item, candidates }) !== false)
         : candidates;
       // T11-03 · L'element recordat mana; de reserva, primerElementTriable (a «Tot», el fixat).
+      // P1-73 / O2-T5 · Amb l'ordre de la llista: la primera fila elegible.
       const remembered = currentState.lastItemByCategory[id];
       itemId = eligible.some((item) => String(item.id) === remembered)
         ? remembered
-        : primerElementTriable(eligible, id)?.id ?? null;
-      deferred = itemId === null && typeof canAutoSelectRef.current === 'function'
-        && canAutoSelectRef.current({ categoryId: id, item: null }) === false;
+        : primerElementTriable(eligible, id, { sortable: currentState.sortable, sortBy: currentState.sortBy })?.id ?? null;
+      deferred = itemId === null && (esperaCandidatsFiltrats(candidates, currentState.query, currentState.activeTagIds, filtraPerConsulta)
+        || (typeof canAutoSelectRef.current === 'function'
+          && canAutoSelectRef.current({ categoryId: id, item: null, candidates }) === false));
     }
 
     dispatch({ type: 'category/select', categoryId: id, itemId, needsInitialSelection: deferred });
@@ -217,6 +236,13 @@ export function WorkspaceProvider({
     dispatch({ type: 'item/request', itemId: id });
     emitSelection({ categoryId: stateRef.current.activeCategoryId, itemId: id }, 'create');
   }, [emitSelection]);
+
+  /* P1-73 (T3, prompt 261102_1532) · L'ordre de la llista ({ sortBy, sortable }),
+     des de la columna que el tria (ItemListColumn). Estable: l'efecte que el
+     sincronitza no es repetix per un callback nou. */
+  const setSort = useCallback((ordre) => {
+    dispatch({ type: 'sort/set', sortBy: ordre?.sortBy, sortable: ordre?.sortable });
+  }, []);
 
   const controlled = selection != null;
   const selectedCategory = selection?.categoryId;
@@ -402,13 +428,16 @@ export function WorkspaceProvider({
     // T7C · Amb categoriaSenseElement, cap element per defecte.
     // La política opcional només participa en les tries de reserva, mai en
     // una selecció existent. Sense política es conserva el comportament habitual.
+    const candidates = filterWorkspaceItems(normalizedItems, {
+      activeCategoryId: categoryId, activeTagIds: state.activeTagIds, query: state.query
+    }, { ambit: ambitDe(categoryId), ambConsulta: filtraPerConsulta });
     const permits = item => typeof canAutoSelect !== 'function'
-      || canAutoSelect({ categoryId, item }) !== false;
+      || canAutoSelect({ categoryId, item, candidates }) !== false;
     // T11-03 · La reserva, entre els permesos: primerElementTriable (a «Tot», el fixat).
-    const firstItemId = () => (categoriaSenseElement ? null : primerElementTriable(normalizedItems.filter((item) =>
-      pertanyA(item, categoryId) && permits(item)
-    ), categoryId)?.id ?? null);
-    const deferred = itemId => itemId === null && !categoriaSenseElement && !permits(null);
+    // P1-73 / O2-T5 · Amb l'ordre de la llista: la primera fila elegible.
+    const firstItemId = () => (categoriaSenseElement ? null : primerElementTriable(candidates.filter(permits), categoryId, { sortable: state.sortable, sortBy: state.sortBy })?.id ?? null);
+    const deferred = itemId => itemId === null && !categoriaSenseElement
+      && (esperaCandidatsFiltrats(candidates, state.query, state.activeTagIds, filtraPerConsulta) || !permits(null));
 
     if (itemId !== null && !itemById.has(itemId)) {
       // Error, càrrega i "found però encara no injectat" conserven
@@ -471,6 +500,12 @@ export function WorkspaceProvider({
     state.activeItemId,
     state.needsInitialSelection,
     state.pendingItemId,
+    state.sortable,
+    state.sortBy,
+    state.activeTagIds,
+    state.query,
+    ambitDe,
+    filtraPerConsulta,
     emitSelection,
     pertanyA,
     categoriaSenseElement,
@@ -490,6 +525,7 @@ export function WorkspaceProvider({
     selectCategory,
     selectItem,
     requestItem,
+    setSort,
     setQuery: (query) => dispatch({ type: 'query/set', query }),
     toggleTag: (tagId) => dispatch({ type: 'tag/toggle', tagId }),
     clearFilters: () => dispatch({ type: 'filters/clear' }),
@@ -497,7 +533,7 @@ export function WorkspaceProvider({
     closeSearch: () => dispatch({ type: 'search/close' }),
     toggleColumn: (column) => dispatch({ type: 'column/toggle', column })
   }), [navigationGroups, normalizedCategories, normalizedItems, filteredItems, activeItem, state,
-    itemResolution, retryItemResolution, selectCategory, selectItem, requestItem, status]);
+    itemResolution, retryItemResolution, selectCategory, selectItem, requestItem, setSort, status]);
 
   return (
     <WorkspaceContext.Provider value={value}>

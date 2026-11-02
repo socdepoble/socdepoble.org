@@ -32,6 +32,39 @@ import { CODI_ENTRADA, esRebuigDeNormes } from '../../data/errorsBackend.js';
 import { netejaCamp } from './netejaCamp.js';
 import { esLlavorDeNota } from './llavorNota.js';
 import { setVal } from '../../config/storage.js';
+/* IDEA-61 (T0, prompt 261102_1532) · El contracte pur del Flux Universal de
+   Publicació: la fitxa d'àmbit d'una nota es projecta al payload amb ell. */
+import { ESTATS, canviaEstat, coaccionaAmbit, esFitxaDAmbit, projeccioPayload, seccioDAmbit } from '../../utils/publicacioUniversal.js';
+
+/**
+ * IDEA-61 (T0, prompt 261102_1532) · La fitxa d'àmbit d'una nota (note.fitxa =
+ * { ambit, estat, dades }, un sol objecte), neta pel contracte; null si no és
+ * cap fitxa vertical (la nota de sempre, o brossa).
+ */
+export function fitxaDeNota(valor) {
+  return esFitxaDAmbit(valor) ? coaccionaAmbit(valor) : null;
+}
+
+/* Correcció L1-A5 (àrbitre, 261102; IDEA-61, T0, prompt 261102_1532) · La capa
+   local d'un camp que és un objecte o una llista (la fitxa d'àmbit, les
+   categories, les etiquetes) es compara amb el desat per valor: el sanejador
+   torna sempre un objecte nou i, per identitat, la capa no s'esborrava mai i
+   tapava el que el servidor diguera després (l'estat canviat des d'un altre
+   aparell). Un primitiu, com sempre. */
+function mateixValor(a, b) {
+  if (a === b) return true;
+  if (a === null || b === null || typeof a !== 'object' || typeof b !== 'object') return false;
+  try {
+    return JSON.stringify(a) === JSON.stringify(b);
+  } catch {
+    return false;
+  }
+}
+
+/* Correcció L1-A2 (àrbitre, 261102; IDEA-61) · El termini per a vore arribar
+   el detall d'una nota resum a la llista (canviaEstatPublicacio): cap botó es
+   queda penjat si la llista no es torna a pintar. */
+const TEMPS_NOTA_RESOLTA_MS = 4000;
 
 /* T11-03 (marató 261101_2143, D-M1) · En mode 'seed', la n1 retirada amb èxit
    (arxiu, paperera o esborrat) es recorda per àmbit de la cua, amb la clau que
@@ -127,7 +160,10 @@ export function NotesProvider({ children }) {
       const nextOverrides = { ...currentOverrides };
       let changed = false;
       for (const k of Object.keys(savedPayload)) {
-        if (k in nextOverrides && nextOverrides[k] === savedPayload[k]) {
+        /* L1-A5 · La fitxa es compara neta (el desat és fitxaDeNota del valor
+           de la capa): un '3' escrit i el 3 desat són el mateix canvi. */
+        const local = k === 'fitxa' ? fitxaDeNota(nextOverrides[k]) : nextOverrides[k];
+        if (k in nextOverrides && mateixValor(local, savedPayload[k])) {
           delete nextOverrides[k];
           changed = true;
         }
@@ -182,7 +218,9 @@ export function NotesProvider({ children }) {
     if (noteId && delMateixActor()) return vigentRef.current.saveNoteField(noteId, field, value);
     if (!noteId || operationRef.current !== operation) return Promise.resolve(false);
     if (esborrades.current.has(noteId)) return Promise.resolve(false);
-    const netejat = netejaCamp(field, value);
+    /* IDEA-61 · La fitxa d'àmbit és un objecte: la neteja el contracte, no el
+       sanejador de text (que en faria «[object Object]»). */
+    const netejat = field === 'fitxa' ? fitxaDeNota(value) : netejaCamp(field, value);
     return bgSaveManager.enqueue(
       scopeKey,
       noteId,
@@ -272,7 +310,8 @@ export function NotesProvider({ children }) {
     /* Revisió de D4 (260930) · Una connexió no té drets propis que desar: el
        copyright que li pinta l'editor és el de l'original (NotesEditor), i
        desar-lo ací l'escriuria a la nota. */
-    for (const field of ['title', 'subtitle', 'lead', 'content', 'heroImage', 'logoImage', 'folderId', 'categories', 'tags', 'copyright', 'icon', 'publishDate']) {
+    /* IDEA-61 · També la fitxa d'àmbit (`fitxa`): sense ella (undefined) no es desa res. */
+    for (const field of ['title', 'subtitle', 'lead', 'content', 'heroImage', 'logoImage', 'folderId', 'categories', 'tags', 'copyright', 'icon', 'publishDate', 'fitxa']) {
       if (field === 'copyright' && esConnexio(activeNote)) continue;
       if (activeNote[field] !== undefined) void saveNoteField(activeNote.id, field, activeNote[field]);
     }
@@ -397,8 +436,17 @@ export function NotesProvider({ children }) {
          escrit (author_location) es queda com el diu qui signa. */
       const llocDePublicacio = String(autoria?.poble || externalConfig?.appLocation || '').trim();
       const pobleDePublicacio = slugDelPoble(poblePrincipal(llocDePublicacio)) || pobleDeConfig(externalConfig)?.id || null;
-      const payload = {
-        sectionId: 'mur',
+      /* IDEA-61 (T0, prompt 261102_1532) · La fitxa d'àmbit de la nota: el
+         payload de sempre es projecta amb el contracte (ambit, estat i dades
+         nets, el type de l'àmbit i, per al mercat, price i tag) i la fila va
+         a la secció de l'àmbit ('mercat' o 'mur': cap section_id nou). Una
+         connexió o un contingut de fora és d'altri: mai una fitxa pròpia.
+         Sense fitxa, el payload és byte a byte el de sempre i la secció,
+         'mur' (Llei del Píxel). */
+      const fitxa = compartir ? null : fitxaDeNota(activeNote.fitxa);
+      const seccio = seccioDAmbit(fitxa?.ambit);
+      const payloadDeSempre = {
+        sectionId: seccio,
         type: compartir ? 'compartit' : 'feed',
         ...(compartir && activeNote.origen ? { origen: activeNote.origen } : {}),
         title: netejaCamp('title', activeNote.title) || 'Sense Títol',
@@ -447,12 +495,16 @@ export function NotesProvider({ children }) {
       ...(geoHero.geolocalitzacio ? { geolocalitzacio: geoHero.geolocalitzacio } : {}),
       ...(geoHero.dataCaptura ? { dataCaptura: geoHero.dataCaptura } : {})
     };
+    /* IDEA-61 · Amb fitxa, la projecció del contracte; sense, el de sempre tal qual. */
+    const payload = fitxa
+      ? projeccioPayload({ ...payloadDeSempre, ambit: fitxa.ambit, estat: fitxa.estat, dades: fitxa.dades })
+      : payloadDeSempre;
 
     assertCurrent();
     // The note UUID is also the stable submission UUID. Retrying an uncertain
     // POST upserts the same row; linking can then be retried without duplicates.
     const submissionId = activeNote.publishedSubmissionId || activeNote.id;
-    await sendSectionSubmission({ id: submissionId, sectionId: 'mur', payload });
+    await sendSectionSubmission({ id: submissionId, sectionId: seccio, payload });
     assertCurrent();
     const changes = { isPublished: true, publishedSubmissionId: submissionId };
     const expectedRevision = bgSaveManager.getExpectedRevision(scopeKey, activeNote.id, activeNote.revision);
@@ -497,6 +549,78 @@ export function NotesProvider({ children }) {
   }, [noteFolders, sendSectionSubmission, saveNoteField, externalConfig, autoria, actor, config, workspaceKey, scopeKey, operation, updateNoteContext, clearLocalNoteFields, showToast, nomesLectura, t]);
 
   const compartirNota = useCallback((note) => publishNote(note, { mode: 'compartir' }), [publishNote]);
+
+  /* IDEA-61 (T0, prompt 261102_1532) · Les notes vives (amb la capa local), en
+     una referència: canviaEstatPublicacio no ha de canviar a cada tecla. Qui
+     espera la llista següent (esperenLaLlista: notaResolta, amb una nota resum)
+     es desperta ací, perquè el detall que resolveNote posa a la llista arriba
+     amb un render, mai amb el seu retorn. */
+  const notesVives = useRef(notes);
+  const esperenLaLlista = useRef([]);
+  useLayoutEffect(() => {
+    notesVives.current = notes;
+    if (!esperenLaLlista.current.length) return;
+    const pendents = esperenLaLlista.current;
+    esperenLaLlista.current = [];
+    for (const desperta of pendents) desperta();
+  }, [notes]);
+  /* La nota viva (rawNote més la capa local) per id, o null. */
+  const notaViva = useCallback((noteId) => (notesVives.current || []).find((n) => n && String(n.id) === String(noteId)) || null, []);
+
+  /* Correcció L1-A2 (àrbitre, 261102; IDEA-61) · Una nota resum (contentLoaded
+     false: la llista en remot no porta el cos, ni l'emoticona, la data o la
+     fitxa) es resol abans de tocar-la: republicar-la tal qual reescriuria la
+     fila del Mur amb el cos buit i sense publish_date ni icon. resolveNote no
+     torna el detall: arriba amb la llista següent, que s'espera amb un termini
+     (TEMPS_NOTA_RESOLTA_MS). La nota resolta, o null si no s'ha pogut. */
+  const notaResolta = useCallback(async (noteId) => {
+    let resolucio;
+    try {
+      resolucio = await resolveNote(noteId);
+    } catch {
+      return null;
+    }
+    if (operationRef.current !== operation || resolucio?.status !== 'found') return null;
+    let note = notaViva(noteId);
+    if (note?.contentLoaded === false) {
+      let termini;
+      await Promise.race([
+        new Promise((desperta) => { esperenLaLlista.current.push(desperta); }),
+        new Promise((resolve) => { termini = setTimeout(resolve, TEMPS_NOTA_RESOLTA_MS); })
+      ]);
+      clearTimeout(termini);
+      if (operationRef.current !== operation) return null;
+      note = notaViva(noteId);
+    }
+    return note && note.contentLoaded !== false ? note : null;
+  }, [resolveNote, operation, notaViva]);
+
+  /* IDEA-61 (T0, prompt 261102_1532) · El canvi d'estat d'una fitxa d'àmbit
+     (Disponible / Reservat / Complet / Tancat): actualitza note.fitxa.estat
+     amb el contracte (canviaEstat), el desa pel canal de sempre i, si la nota
+     és publicada, torna a publicar amb el mateix id i el payload complet
+     (l'upsert reemplaça el payload sencer). Torna true si ha canviat; false
+     sense fitxa, amb un estat de fora d'ESTATS, sense sessió d'escriptura, amb
+     una nota resum que no es pot resoldre (L1-A2) o si la publicació no ha
+     eixit, també quan publishNote rebutja (L1-A4: mode local, desat pendent,
+     signatura aliena; el toast ja l'ha fet publishNote). Només el rebuig del
+     servidor per les normes (SDP-MOD-428) passa tal qual: l'editor el tracta. */
+  const canviaEstatPublicacio = useCallback(async (noteId, estat) => {
+    if (nomesLectura || !noteId || operationRef.current !== operation) return false;
+    if (typeof estat !== 'string' || !ESTATS.includes(estat)) return false;
+    let note = notaViva(noteId);
+    if (note?.contentLoaded === false) note = await notaResolta(noteId);
+    if (!note || operationRef.current !== operation) return false;
+    const fitxa = fitxaDeNota(note.fitxa);
+    if (!fitxa) return false;
+    const nova = canviaEstat(fitxa, estat);
+    setLocalNoteField(note.id, 'fitxa', nova);
+    if (!note.isPublished) return true;
+    return publishNote({ ...note, fitxa: nova }).catch((error) => {
+      if (esRebuigDeNormes(error)) throw error;
+      return false;
+    });
+  }, [operation, nomesLectura, setLocalNoteField, publishNote, notaViva, notaResolta]);
 
   const informaError = useCallback((msg) => showToast(msg?.message || msg || 'Error', 'error'), [showToast]);
   // La roda de CARPETES ja es veu (sdp-app-grid-shell §2), però el gestor de
@@ -613,6 +737,8 @@ export function NotesProvider({ children }) {
     setLocalNoteField,
     publishNote,
     compartirNota,
+    /* IDEA-61 · el canvi d'estat d'una fitxa d'àmbit (Disponible / Reservat / Complet / Tancat). */
+    canviaEstatPublicacio,
     creaNota,
     updateNote: updateNoteContext,
     status,
@@ -635,7 +761,7 @@ export function NotesProvider({ children }) {
     t
   }), [
     notes, noteFolders, saveNoteField, setLocalNoteField,
-    publishNote, compartirNota, creaNota, updateNoteContext, status, error, scopeKey, workspaceKey, notesComplete, resolveNote, refresh, config, canCreate, currentUser, informaError, obriConfiguracioNotes, resolConflicteEsborrany,
+    publishNote, compartirNota, canviaEstatPublicacio, creaNota, updateNoteContext, status, error, scopeKey, workspaceKey, notesComplete, resolveNote, refresh, config, canCreate, currentUser, informaError, obriConfiguracioNotes, resolConflicteEsborrany,
     mouNota, esborraNota, potEsborrar, t, nomesLectura
   ]);
 

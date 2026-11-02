@@ -48,6 +48,11 @@ import { useResolvedAssetState } from '../../hooks/useResolvedAsset.js';
 import { esMitjaOpac, fotoDelBucketPublic } from '../../utils/mitjaOpac.js';
 import { SelectorDeVariacions } from '../mercat/SelectorDeVariacions.jsx';
 import { variacioActiva, variacionsDelProducte } from '../mercat/variacionsDeProducte.js';
+/* IDEA-61 (T0, prompt 261102_1532) · El contracte del Flux Universal de
+   Publicació: els camps de cada àmbit i la seua pintura (buildVerticalDetailSectionMeta). */
+import {
+  CAMPS, TO_PER_ESTAT, ambitDe, esFitxaDAmbit, etiquetaDAmbit, etiquetaDEstat, etiquetaDOpcio, etiquetaDeCamp, normalitzaDades, normalitzaEstat, perAmbit
+} from '../../utils/publicacioUniversal.js';
 
 const PublicacionsDelPoble = lazyRoute(() => import('../pobles/PublicacionsDelPoble.jsx'));
 /* P1-11 (pla 261024_2230, T5B-01) · El panell «Empreses i entitats», també en
@@ -98,7 +103,11 @@ export { imatgesDeProducte };
    foto de Google de l'H1. Ara la regla és d'ací, una sola vegada, i la lligen
    tots; el cos HTML hi passa per cosAmbImatgesPropies, més avall.
    elementDeSeccio.js ja importava este mòdul: cap cicle nou. */
-const LLISTA_DE_SECCIO_DEL_MUR = new Map([['mur', '/mur'], ['mercat', '/mercat'], ['events', '/calendari']]);
+const LLISTA_DE_SECCIO_DEL_MUR = new Map([
+  ['mur', '/mur'], ['mercat', '/mercat'], ['events', '/calendari'],
+  /* IDEA-61 (T0, prompt 261102_1532) · Les verticals són del Mur: el mateix mode estricte d'imatges. */
+  ['vehicle', '/vehicle'], ['treball', '/treball'], ['habitatge', '/habitatge']
+]);
 const LLISTES_DEL_MUR = new Set(LLISTA_DE_SECCIO_DEL_MUR.values());
 
 /** Si `seccio` és del Mur: la meta d'un detall (per la seua llista, listPath)
@@ -740,6 +749,12 @@ export function buildMurDetailSectionMeta({ feedPosts = [], t }) {
     getImage: (item) => item.imageSrc || getFirstImage(item.image_url || item.image) || null,
     renderBody: (item) => (
       <>
+        {/* IDEA-61 (T0, prompt 261102_1532; correcció L3-A2) · Una fitxa d'àmbit
+            porta la fitxa de lectura davant del cos, també a /mur/<id>: és la
+            ruta del subjecte del xat (contracte.js · PREFIX_DE_SUBJECTE.publicacio)
+            i elementDeSeccio hi resol qualsevol feedPost. Una publicació sense
+            àmbit, byte a byte com sempre (null no pinta res). */}
+        {esFitxaDAmbit(item) ? <FitxaDeLectura ambit={ambitDe(item)} item={item} t={t} /> : null}
         <div className="badge-row">
           <span className="pill"><UserRound size={14} /> {item.author || t('section.detail.mur.author', 'Sóc de Poble')}</span>
           <span className="pill"><MapPin size={14} /> {item.town_name || t('section.detail.mur.town', 'La Torre de les Maçanes')}</span>
@@ -757,6 +772,58 @@ export function buildMurDetailSectionMeta({ feedPosts = [], t }) {
         ) : null}
       </>
     )
+  };
+}
+
+/* IDEA-61 (T0, prompt 261102_1532) · El valor d'un camp de la fitxa de
+   lectura: els enums, traduïts; la superfície, amb la unitat; la resta, el
+   text ja coaccionat. */
+function valorDeCamp(campDef, valor, t) {
+  if (campDef.tipus === 'enum') return etiquetaDOpcio(campDef, valor, t);
+  if (campDef.id === 'superficie_m2') return `${valor} m²`;
+  return String(valor);
+}
+
+/* IDEA-61 (T0, prompt 261102_1532) · La fitxa de lectura d'una vertical: la
+   Insígnia d'estat i, darrere, cada camp del contracte (CAMPS[ambit])
+   present a `dades`, en un <dl> (sdp.css ja el maqueta amb :where(dl): cap
+   classe nova). Les dades es tornen a coaccionar en pintar
+   (normalitzaDades: el payload és un jsonb que un veí pot escriure per
+   l'API). Es pinta ABANS del cos de sempre de la publicació. */
+function FitxaDeLectura({ ambit, item, t }) {
+  const dades = normalitzaDades(ambit, item?.dades);
+  const estat = normalitzaEstat(item?.estat);
+  const files = CAMPS[ambit].filter((campDef) => dades[campDef.id] !== undefined);
+  return (
+    <dl>
+      <dt>{t('ambit.camp.estat', 'Estat')}</dt>
+      <dd><Insignia to={TO_PER_ESTAT[estat]}>{etiquetaDEstat(estat, t)}</Insignia></dd>
+      {files.map((campDef) => (
+        <React.Fragment key={campDef.id}>
+          <dt>{etiquetaDeCamp(campDef, t)}</dt>
+          <dd>{valorDeCamp(campDef, dades[campDef.id], t)}</dd>
+        </React.Fragment>
+      ))}
+    </dl>
+  );
+}
+
+/**
+ * IDEA-61 (T0, prompt 261102_1532) · La meta del detall d'una vertical
+ * (/vehicle/:id, /treball/:id, /habitatge/:id): la del Mur
+ * (buildMurDetailSectionMeta) amb els elements filtrats per àmbit (també una
+ * fitxa 'tancada': el detall continua existint), l'etiqueta de l'àmbit i la
+ * llista /<ambit>. El cos és el del Mur, que ja pinta la fitxa de lectura
+ * d'una fitxa d'àmbit davant del cos de sempre (correcció L3-A2: una sola
+ * pintura per a /vehicle/<id> i per a /mur/<id>).
+ */
+export function buildVerticalDetailSectionMeta(ambit, { feedPosts = [], t }) {
+  return {
+    ...buildMurDetailSectionMeta({ feedPosts, t }),
+    title: etiquetaDAmbit(ambit, t),
+    label: etiquetaDAmbit(ambit, t),
+    listPath: `/${ambit}`,
+    items: perAmbit(feedPosts, ambit)
   };
 }
 
@@ -831,6 +898,10 @@ export function buildDetailSectionMeta({ events, feedPosts, marketItems, mediaIt
     /* Onada 6 · Les publicacions del Mur, per al naixement de cada poble. */
     pobles: buildPoblesDetailSectionMeta({ towns, t, publicacions: { feedPosts, marketItems, events } }),
     multimedia: buildMultimediaDetailSectionMeta({ mediaItems, t, rol }),
-    notes: buildNotesDetailSectionMeta({ notes, t })
+    notes: buildNotesDetailSectionMeta({ notes, t }),
+    /* IDEA-61 (T0, prompt 261102_1532) · Les tres verticals, de les publicacions del Mur. */
+    vehicle: buildVerticalDetailSectionMeta('vehicle', { feedPosts, t }),
+    treball: buildVerticalDetailSectionMeta('treball', { feedPosts, t }),
+    habitatge: buildVerticalDetailSectionMeta('habitatge', { feedPosts, t })
   };
 }

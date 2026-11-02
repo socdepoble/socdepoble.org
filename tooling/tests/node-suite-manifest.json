@@ -10,6 +10,7 @@
   "requiredPrimary": [
     "tests/antigravity-hook.test.mjs",
     "tests/backend_consolidacio.test.mjs",
+    "tests/build-net-dsstore.test.mjs",
     "tests/cognitive-document-handoff.test.mjs",
     "tests/cognitive-hook-safety.test.mjs",
     "tests/cognitive-preflight.test.mjs",
@@ -17,6 +18,7 @@
     "tests/destins-canonics.test.mjs",
     "tests/destins-hook.test.mjs",
     "tests/dist-secrets.test.mjs",
+    "tests/document-fixed-blocks.test.mjs",
     "tests/document-links-prose.test.mjs",
     "tests/documental.test.mjs",
     "tests/draft-attachment-anchoring.test.mjs",
@@ -28,13 +30,17 @@
     "tests/fonts-vigilancia.test.mjs",
     "tests/fortificacio.test.mjs",
     "tests/git-hooks.test.mjs",
+    "tests/higiene-estructural.test.mjs",
+    "tests/higiene-paquets.test.mjs",
     "tests/hooks-local.test.mjs",
+    "tests/kit-carril.test.mjs",
     "tests/lint_enxufe.test.mjs",
     "tests/llaurador-managed-region.test.mjs",
     "tests/mapa-consola.test.mjs",
     "tests/migracio-convergencia-perfil.test.mjs",
     "tests/migracio-xat-de-pagina.test.mjs",
     "tests/node-suite-policy.test.mjs",
+    "tests/opendata-fediversity.test.mjs",
     "tests/plantilla-viva-escriptori.test.mjs",
     "tests/porta-olivera-v3.test.mjs",
     "tests/porta-reflex.test.mjs",
@@ -92,6 +98,11 @@
       "path": "tests/botigues.test.mjs",
       "suite": "primary",
       "reason": "Regressió portable dels scripts de pujada a les botigues (scripts/botigues/): peces pures, fitxers temporals fora del repositori i git de només lectura (més un repositori de mostra en una carpeta temporal per al paquet caducat, BOT-A4); cap compilació, signatura ni pujada, i cap crida a xcodebuild, altool, gradle, keytool ni fastlane (el preflight rep consultes fingides)."
+    },
+    {
+      "path": "tests/build-net-dsstore.test.mjs",
+      "suite": "primary",
+      "reason": "Regressió portable O3-CODEX-3: builds Vite reals exclouen residus Finder abans de copiar public/ i preserven recursos legítims."
     },
     {
       "path": "tests/canonada-generats.test.mjs",
@@ -212,6 +223,11 @@
       "path": "tests/document-create-race.test.mjs",
       "suite": "primary",
       "reason": "Regressió portable del producte o d’una eina permanent; s’executa a la cadena primària, també quan està roja."
+    },
+    {
+      "path": "tests/document-fixed-blocks.test.mjs",
+      "suite": "primary",
+      "reason": "P2-12/P1-10: generació íntegra de blocs normatius, alteracions i compatibilitat dels rebuts històrics."
     },
     {
       "path": "tests/document-links-prose.test.mjs",
@@ -364,6 +380,16 @@
       "reason": "Assaig d’adopció del paquet de governança 260930 amb imports del laboratori i/o hashes de preimatges congelades. No substituïx les proves de les eines instal·lades."
     },
     {
+      "path": "tests/higiene-estructural.test.mjs",
+      "suite": "primary",
+      "reason": "IDEA-62: higiene estructural, separació de capes i inventari versionat; guarda portable amb sondes."
+    },
+    {
+      "path": "tests/higiene-paquets.test.mjs",
+      "suite": "primary",
+      "reason": "IDEA-62: contaminació de paquets i vitrina WordPress, sobre fixtures portables."
+    },
+    {
       "path": "tests/hooks-local.test.mjs",
       "suite": "primary",
       "reason": "Regressió portable del producte o d’una eina permanent; s’executa a la cadena primària, també quan està roja."
@@ -377,6 +403,11 @@
       "path": "tests/inventari-directoris.test.mjs",
       "suite": "primary",
       "reason": "Regressió portable del producte o d’una eina permanent; s’executa a la cadena primària, també quan està roja."
+    },
+    {
+      "path": "tests/kit-carril.test.mjs",
+      "suite": "primary",
+      "reason": "O3-CODEX-1 · kits CAS: generació/aplicació amb staging, rollback, paths/symlinks i Frontissa real sobre candidat; fixtures portables, sense xarxa ni temporitzadors."
     },
     {
       "path": "tests/lint-sessio.test.mjs",
@@ -512,6 +543,11 @@
       "path": "tests/olivera-arxiva-enllacos.test.mjs",
       "suite": "primary",
       "reason": "Regressió B1 261101: --arxiva reapunta els enllaços dels documents vius amb el resolutor de l'SCC, esmena només el torn tancat del rebut propi amb preimatge i substitucions reversibles, plan.hash i relocated dels torns oberts de qualsevol abast, frontmatter sense àlies i aturada si en trenca l'esquema, aturades sense moure res i --sec pur; fixtures a mkdtemp."
+    },
+    {
+      "path": "tests/opendata-fediversity.test.mjs",
+      "suite": "primary",
+      "reason": "O3-GEMINI-1 (D04): existència, esquema JSON/JSON-LD/XRD, absència d'HTML i regles d'encaminament/capçaleres estàtiques dels 7 recursos de federació i dades obertes."
     },
     {
       "path": "tests/pedra-debt.test.mjs",

@@ -424,8 +424,7 @@ function PanellControl({ vistaRef, abansDeLaFitxa }) {
         "Node principal i accés a les eines d'administració i gestió"
       )}
       lead={t(
-        'section.control.lead',
-        "Tria on vols publicar i crea nous continguts des de l'editor universal."
+        'section.control.lead'
       )}
       chrome="system"
       showLogos={true}

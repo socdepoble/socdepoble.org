@@ -25,10 +25,13 @@
  *   · un poble o un producte (porta imatge): la imatge damunt i la meta en
  *     etiquetes;
  *   · cap peu (Comentar, Compartir, Connectar): la fila tampoc no en porta.
+ * IDEA-61 (T0, prompt 261102_1532) · Les tres verticals del flux universal
+ * (Compartir cotxe, Treball, Habitatge) també: una fitxa és una targeta, com
+ * un producte, amb la meta de la fila en etiquetes.
  */
 
 /** Els tipus del filtre que ofereixen la vista de targetes. */
-export const TIPUS_AMB_TARGETES = Object.freeze(['persones', 'entitats', 'pobles', 'mercat']);
+export const TIPUS_AMB_TARGETES = Object.freeze(['persones', 'entitats', 'pobles', 'mercat', 'vehicle', 'treball', 'habitatge']);
 
 /** Les vistes d'un ?vista=: 'llista' (per defecte) o 'graella' (les targetes). */
 export const VISTES_CERCA = Object.freeze(['llista', 'graella']);

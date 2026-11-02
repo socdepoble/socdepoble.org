@@ -35,7 +35,7 @@ import { afterEach, beforeAll, beforeEach, describe, expect, test, vi } from 'vi
 import XatSection from './XatSection';
 import { agrupaComunitats, mapejaFil } from './missatges.js';
 import { buidaEsborranys } from './esborranys.js';
-import useObriXatPerDefecte, { RUTA_XAT_DE_LA_IAIA, RUTA_XAT_DE_SERVEI_TECNIC_DE_JAVI, rutaDelXatDeJavi } from './useObriXatPerDefecte.js';
+import useObriXatPerDefecte, { RUTA_XAT_DE_LA_IAIA, RUTA_XAT_LOCAL_IAIA, RUTA_XAT_DE_SERVEI_TECNIC_DE_JAVI, rutaDelXatDeJavi } from './useObriXatPerDefecte.js';
 import { POBLE_PER_DEFECTE, pobleDelXat } from './pobleAmfitrio.js';
 import { CLAU_FILA_DE_SOC_DE_POBLE, RUTA_SOBRE_DE_SOC_DE_POBLE } from './actorsDelXat.js';
 import Compositor from './components/Compositor.jsx';
@@ -380,10 +380,10 @@ describe('la IAIA a localhost (Bloc 3.6.2)', () => {
     expect(mocks.openThread).not.toHaveBeenCalledWith('sdp-per-defecte:iaia');
   });
 
-  test('en remot, com sempre: el xat públic de /iaia, una sola vegada', () => {
+  test('en remot, l’assistent local sense publicar al grup, una sola vegada', () => {
     mocks.threadId = 'sdp-per-defecte:iaia';
     render(<XatSection />);
-    expect(navegacions().filter(([ruta]) => ruta === RUTA_XAT_DE_LA_IAIA)).toEqual([[RUTA_XAT_DE_LA_IAIA, { replace: true }]]);
+    expect(navegacions().filter(([ruta]) => ruta === RUTA_XAT_LOCAL_IAIA)).toEqual([[RUTA_XAT_LOCAL_IAIA, { replace: true }]]);
   });
 
   test('en mode local, prémer la fila de la IAIA passa per la ruta de pas i acaba al directe', async () => {

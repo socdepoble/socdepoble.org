@@ -6,6 +6,7 @@ import wikiWatcher from './tooling/vite/wiki-watcher.mjs';
 import hmrBfcache from './tooling/vite/hmr-bfcache.mjs';
 import federacioIaia from './tooling/vite/federacio-iaia.mjs';
 import associacioApps from './tooling/vite/associacio-apps.mjs';
+import publicNet from './tooling/vite/public-net.mjs';
 import { createHash } from 'node:crypto';
 import fs from 'node:fs';
 import os from 'node:os';
@@ -124,6 +125,7 @@ export default defineConfig(({ command, mode, isPreview }) => {
   return {
     plugins: [
       react(),
+      publicNet(),
       consolaIaia(),
       /* IDEA-31 (QA-R2-13) · Només-dev: POST /__iaia/traduir, el Traductor Sobirà amb
          Apertium a http://localhost:3340 (tooling/vite/traductor-iaia.mjs). */

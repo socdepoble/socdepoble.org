@@ -1,0 +1,8 @@
+# Regles d'encaminament estàtic (federació ActivityPub, NodeInfo i OpenData municipal)
+/.well-known/webfinger/acct:socdepoble@socdepoble.org /.well-known/webfinger/socdepoble.json 200
+/.well-known/webfinger/acct:la-torre-de-les-macanes@socdepoble.org /.well-known/webfinger/la-torre-de-les-macanes.json 200
+/.well-known/webfinger/acct:latorredelesmacanes@socdepoble.org /.well-known/webfinger/la-torre-de-les-macanes.json 200
+/.well-known/* /.well-known/:splat 200
+/nodeinfo/* /nodeinfo/:splat 200
+/ap/* /ap/:splat 200
+/opendata/* /opendata/:splat 200

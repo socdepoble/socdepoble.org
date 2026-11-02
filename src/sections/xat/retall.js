@@ -61,6 +61,22 @@ export function construeixRetall({ fil, missatges, locale = 'ca-ES' }) {
   const nomFil = fil?.name || fil?.title || 'Conversa';
   const quants = missatges.length;
 
+  if (quants === 1 && missatges[0]?.esEsborranyIAIA === true) {
+    const esborrany = missatges[0];
+    const title = netejaText(escapa(esborrany.titolEsborrany || nomFil), 120);
+    const paragrafs = String(esborrany.text ?? esborrany.content ?? '')
+      .split(/\n{2,}/)
+      .map((bloc) => bloc.trim())
+      .filter(Boolean)
+      .map((bloc) => `<p>${escapa(bloc).replace(/\n/g, '<br />')}</p>`)
+      .join('\n');
+    return {
+      title,
+      folderId: 'f-notes',
+      content: sanitizeHtml(paragrafs)
+    };
+  }
+
   /* El títol acaba a `titleHtml` d'UniversalEditorShell, o siga que viatja com
      a HTML: el nom del fil el pot haver escrit un altre usuari i va escapat. */
   const title = netejaText(`Retall de «${escapa(nomFil)}»`, 160);

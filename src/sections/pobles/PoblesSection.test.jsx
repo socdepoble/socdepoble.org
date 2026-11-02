@@ -9,6 +9,7 @@
  * (vite.config.js), i per això les hores literals són les de València.
  */
 import React from 'react';
+import { createTranslator } from '../../config/i18n.js';
 import { cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 import { afterEach, beforeEach, expect, test, vi } from 'vitest';
 
@@ -56,6 +57,7 @@ const pastilla = (targeta) => {
 };
 
 beforeEach(() => {
+  mocks.t = createTranslator('ca');
   vi.clearAllMocks();
   mocks.core = llavor(TOWNS);
   mocks.mur = { status: 'ready', feedPosts: [], marketItems: [], events: [] };
@@ -467,11 +469,11 @@ test('Onada 5 · la targeta es classifica per província (categoria) i comarca (
     ['Alacant', 'sdp-badge-category'],
     ['L\'Alacantí', 'sdp-badge-tag'],
     ['700 hab', 'sdp-badge-accent'],
-    ['Publicat a la Viquipèdia', 'sdp-badge-neutral']
+    ['Enllaç a Wikipedia', 'sdp-badge-neutral']
   ]);
   expect(etiquetes(targetaDe(container, 'Remot'))).toEqual([
     ['Pobles', 'sdp-badge-system'],
-    ['Publicat a la Viquipèdia', 'sdp-badge-neutral']
+    ['Enllaç a Wikipedia', 'sdp-badge-neutral']
   ]);
 });
 

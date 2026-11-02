@@ -44,7 +44,7 @@ test('textosDeVista: les dos vistes en construcció, i res per a les altres', ()
   expect(textosDeVista('comunitats', t)).toBeNull();
   expect(textosDeVista('multimedia', t)).toBeNull();
   expect(textosDeVista('telefonades', t)).toEqual(expect.objectContaining({
-    accio: { tipus: 'nou', etiqueta: 'Nova telefonada' }, cerca: "Nom, número o @nom d'usuari", segments: null, subtitol: ''
+    accio: { tipus: 'nou', etiqueta: 'Nova telefonada' }, cerca: 'Nom del contacte', segments: null, subtitol: ''
   }));
   expect(textosDeVista('telefonades', t).icones).toEqual([]);
   expect(textosDeVista('destacats', t).icones).toEqual([]);
@@ -67,7 +67,7 @@ test('Telefonades: títol i «+» redó inert, cercador de només lectura i la t
   fireEvent.click(nova);
   expect(onEnConstruccio).toHaveBeenCalledTimes(1);
 
-  const cerca = screen.getByRole('searchbox', { name: "Nom, número o @nom d'usuari" });
+  const cerca = screen.getByRole('searchbox', { name: 'Nom del contacte' });
   expect(cerca.readOnly).toBe(true);
   expect(cerca.getAttribute('aria-disabled')).toBe('true');
   fireEvent.click(cerca);

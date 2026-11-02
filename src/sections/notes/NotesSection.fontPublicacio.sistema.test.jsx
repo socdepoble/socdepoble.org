@@ -200,10 +200,14 @@ test('entrar a «Mur» amb el Mur carregant i el core llest no hi fixa cap pàgi
   // La llista de la carpeta tampoc no pinta cap pàgina mentre el Mur carrega.
   expect(screen.queryByRole('button', { name: PAGE_COPY.projecte.title })).toBeNull();
 
-  Object.assign(dades, { murStatus: 'ready', feed: [{ id: 'p1', title: 'La més nova', author_org_id: ENTITAT_PILOT_ID }] });
+  // O2-T5: «més nova» necessita data; l'ordre d'entrada no establix antiguitat.
+  Object.assign(dades, { murStatus: 'ready', feed: [{ id: 'p1', title: 'La més nova', date: '2099-01-01T09:00:00Z', author_org_id: ENTITAT_PILOT_ID }] });
   repinta();
   expect(nota()).toBe('publicacio:mur:p1');
   expect(detall()).toBe('publicacio:mur:p1');
+  const primera = document.querySelector('#app-grid-list .sdp-gestor-llista button');
+  expect(primera?.textContent).toBe('La més nova');
+  expect(primera?.getAttribute('aria-current')).toBe('true');
   // Amb el Mur llest, les pàgines hi tornen.
   expect(screen.getByRole('button', { name: PAGE_COPY.projecte.title })).toBeTruthy();
 });

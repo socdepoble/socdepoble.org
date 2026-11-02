@@ -24,6 +24,10 @@
  * WordPress.org és oberta (01-11-2026), i les tancades no pinten res.
  * B9 (marató 261101_2143) · Una botiga d'apps oberta diu on és l'app
  * (etiquetaDeBotiga: «Disponible a Google Play / a l'App Store», en cinc llengües).
+ * IDEA-60 (T1, prompt 261102_1532) · Instal·lació immediata: la ranura de
+ * l'APK directe, oberta, és un enllaç amb `download` i, davall, l'enllaç a
+ * la suma SHA-256 del fitxer; la de TestFlight, oberta, porta davall la guia
+ * de dos passos. Hui les dues són tancades: no es pinta res (Llei del Píxel).
  *
  * Es decidix amb la dada (useInstalacioDeLaPagina, que crida
  * PageDetailSection), mai amb l'element: un element que pinta null faria un
@@ -75,7 +79,20 @@ const NO_ES_SAFARI = /\b(?:Chrome|Chromium|CriOS|FxiOS|EdgiOS|Edg|OPR|Firefox)\/
 export function etiquetaDeBotiga(canal, t) {
   if (canal?.id === 'google-play') return t('section.descarregues.botiga.googlePlay', 'Disponible a Google Play');
   if (canal?.id === 'app-store') return t('section.descarregues.botiga.appStore', "Disponible a l'App Store");
+  // IDEA-60 (T1, prompt 261102_1532) · L'APK signat i l'enllaç públic de TestFlight.
+  if (canal?.id === 'apk-directe') return t('section.descarregues.botiga.apk', "Descarregar l'APK d'Android");
+  if (canal?.id === 'testflight') return t('section.descarregues.botiga.testflight', "Provar-la a l'iPhone i a l'iPad amb TestFlight");
   return canal?.nom ?? '';
+}
+
+/* IDEA-60 (T1, prompt 261102_1532) · El nom del fitxer d'una adreça ja validada
+   (urlDeCanal), per a l'atribut download de l'APK; buit, el navegador el trau de l'adreça. */
+function nomDelFitxer(url) {
+  try {
+    return decodeURIComponent(new URL(url).pathname.split('/').pop() || '');
+  } catch {
+    return '';
+  }
 }
 
 /** La finestra és la de l'entrada pròpia (src/main.jsx) i s'hi pot instal·lar. */
@@ -228,6 +245,9 @@ export function InstalaLaPwa({ instalacio, lloc = 'dalt' }) {
   const guiaOberta = obert && ambBoto;
   // Les botigues, només dalt: un sol enllaç per botiga a la pàgina, visible també amb la pàgina traduïda.
   const ambBotigues = lloc !== 'baix' && canals.length > 0;
+  // IDEA-60 (T1, prompt 261102_1532) · Davall de les botigues: la suma de l'APK i la guia de TestFlight, només oberts.
+  const apk = ambBotigues ? canals.find((canal) => canal.id === 'apk-directe') : null;
+  const testflight = ambBotigues ? canals.find((canal) => canal.id === 'testflight') : null;
   if (!mode && !ambBotigues) return null;
 
   const obriLaGuia = (node) => {
@@ -295,9 +315,27 @@ export function InstalaLaPwa({ instalacio, lloc = 'dalt' }) {
       {ambBotigues ? (
         <div className="sdp-accions">
           {canals.map((canal) => (
-            <a key={canal.id} className="sdp-boto sdp-boto--secundari sdp-boto--gran" href={canal.url}>{etiquetaDeBotiga(canal, t)}</a>
+            <a
+              key={canal.id}
+              className="sdp-boto sdp-boto--secundari sdp-boto--gran"
+              href={canal.url}
+              download={canal.id === 'apk-directe' ? nomDelFitxer(canal.url) : undefined}
+            >
+              {etiquetaDeBotiga(canal, t)}
+            </a>
           ))}
         </div>
+      ) : null}
+      {apk ? (
+        <p><a href={`${apk.url}.sha256`}>{t('section.descarregues.botiga.apkSuma', 'Comprovar la suma SHA-256 del fitxer')}</a></p>
+      ) : null}
+      {testflight ? (
+        <Alerta to="info" viva={false}>
+          <ol>
+            <li>{t('section.descarregues.guia.testflight.pas1', "Instal·la l'app TestFlight d'Apple des de l'App Store.")}</li>
+            <li>{t('section.descarregues.guia.testflight.pas2', "Obri l'enllaç de TestFlight i prem «Accepta» per a instal·lar Sóc de Poble.")}</li>
+          </ol>
+        </Alerta>
       ) : null}
     </>
   );

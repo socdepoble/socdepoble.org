@@ -4,6 +4,7 @@ import { ErrorSupabase, generateUUID, getCurrentUser, getResolvedConfig, request
 import { emojiSol } from '../../utils/emoji.js';
 import { dataIsoONull } from '../../utils/calendari.js';
 import { ambDescartats, creaColumnesOpcionals } from './columnesOpcionals.js';
+import { coaccionaAmbit, esFitxaDAmbit } from '../../utils/publicacioUniversal.js';
 
 /* T47b (ordre del Mestre, 260928) · Columnes de `notes` que el client ja
    escriu i que el servidor pot no tindre encara (cap migració aplicada, D2).
@@ -12,8 +13,15 @@ import { ambDescartats, creaColumnesOpcionals } from './columnesOpcionals.js';
    el conserva a l'esborrany del dispositiu.
    T40 (ordre del Mestre, 260928) · `publish_date`, la data de publicació
    triada al calendari de la barra taronja. Mateixa quarantena: sense la
-   migració, la data es guarda al dispositiu i publishNote l'aplica igual. */
-const opcionalsNotes = creaColumnesOpcionals('notes', { icon: 'icon', publishDate: 'publish_date' });
+   migració, la data es guarda al dispositiu i publishNote l'aplica igual.
+   IDEA-61 (T0, prompt 261102_1532) · `fitxa`, la fitxa d'àmbit del Flux
+   Universal de Publicació (jsonb, migració 2611021800). Mateixa quarantena. */
+const opcionalsNotes = creaColumnesOpcionals('notes', { icon: 'icon', publishDate: 'publish_date', fitxa: 'fitxa' });
+
+/* IDEA-61 (T0, prompt 261102_1532) · La fitxa d'àmbit d'una nota, un sol
+   objecte { ambit, estat, dades } coaccionat pel contracte en escriure i en
+   llegir (el jsonb torna del servidor): sense àmbit vertical, null. */
+const fitxaDeNota = (valor) => (esFitxaDAmbit(valor) ? coaccionaAmbit(valor) : null);
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 function requireUuid(value, label) {
@@ -40,6 +48,8 @@ const nota = (row) => ({ id: row.id, folderId: row.folder_id, title: row.title, 
   /* T40 · la data de publicació, amb el mateix criteri: només si la fila la
      porta (fora de SUMMARY_COLUMNS: una base sense migració serveix el Bloc). */
   ...(row.publish_date !== undefined ? { publishDate: dataIsoONull(row.publish_date) } : {}),
+  /* IDEA-61 · la fitxa d'àmbit, amb el mateix criteri (només si la fila la porta). */
+  ...(row.fitxa !== undefined ? { fitxa: fitxaDeNota(row.fitxa) } : {}),
   createdAt: row.created_at, updatedAt: row.updated_at });
 
 // Columnes de targeta explícites: el cos ric només viatja en resoldre un ID.
@@ -186,7 +196,9 @@ export async function createNote(input, config = {}) {
     /* T47b · l'emoticona, com a localNotes: un sol emoji o buida. */
     ...(input.icon !== undefined ? { icon: emojiSol(input.icon) || '' } : {}),
     /* T40 · la data de publicació, si ve: ISO o null. */
-    ...(input.publishDate !== undefined ? { publish_date: dataIsoONull(input.publishDate) } : {}) };
+    ...(input.publishDate !== undefined ? { publish_date: dataIsoONull(input.publishDate) } : {}),
+    /* IDEA-61 · la fitxa d'àmbit, si ve: neta pel contracte o null. */
+    ...(input.fitxa !== undefined ? { fitxa: fitxaDeNota(input.fitxa) } : {}) };
   const { resultat: rows, descartats } = await opcionalsNotes.envia(body, (cos) => request('/rest/v1/notes', config, {
     method: 'POST', headers: { Prefer: 'return=representation' }, body: cos
   }));
@@ -212,7 +224,9 @@ export async function updateNote(id, updates, expectedRevision, config = {}) {
     /* T47b · l'emoticona (T23). Abans no es mapejava i es perdia en remot. */
     icon: updates.icon === undefined ? undefined : (emojiSol(updates.icon) || ''),
     /* T40 · la data de publicació (columna opcional, amb quarantena). */
-    publish_date: updates.publishDate === undefined ? undefined : dataIsoONull(updates.publishDate) };
+    publish_date: updates.publishDate === undefined ? undefined : dataIsoONull(updates.publishDate),
+    /* IDEA-61 · la fitxa d'àmbit (columna opcional, amb quarantena). */
+    fitxa: updates.fitxa === undefined ? undefined : fitxaDeNota(updates.fitxa) };
   for (const key of Object.keys(payload)) if (payload[key] === undefined) delete payload[key];
   const revision = expectedRevision != null ? `&revision=eq.${expectedRevision}` : '';
   const url = `/rest/v1/notes?id=eq.${encodeURIComponent(id)}&tenant_id=eq.${encodeURIComponent(tenantId)}${revision}`;

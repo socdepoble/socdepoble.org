@@ -16,7 +16,7 @@ triggers_on:
   - arrencada de sessió
   - briefing de taula
   - declarats vius
-version: 4.0.0
+version: 4.1.0
 contracte.llig:
   - _wiki_de_poble/04_escriptori
   - _wiki_de_poble/10_actes
@@ -63,14 +63,15 @@ L'orquestradora (MarIA) o el Mestre. Claude i Codex no poden moure fitxers. La n
    - Declarats vius que ja no necessita ningú, de hui o d'abans: `--arxiva --nom FITXER`, un `--nom` per document. Per nom ixen documents i artefactes solts del primer nivell, de qualsevol extensió, amb categoria de torn, `produccio` o `avaluacio`, i amb la part termodinàmica del nom en minúscules: els `BUNDLE`, `PROMPT` i `ABSENTS` que escriu `crear_bundle` no ixen per nom (el remei és ANC-06, de `crear_bundle`), i per a eixos preguntes al Mestre.
    - Una sessió sencera a una carpeta pròpia de l'arxiu: afig `--sessio aammdd_Nom` a l'ordre anterior.
    - Àncores de fora d'«Activitat en curs»: sense `--reapunta`, `--arxiva` les despenja; amb `--reapunta`, les reescriu cap al document arxivat (`[[../90_arxiu_historic/…]]`). El document que es queda sense cap àncora rep una línia amb camí davall de «## Arxivat amb la Porta Olivera»: sempre amb `--reapunta`, i sense la bandera només si és un Markdown amb rebut d'un torn obert, perquè el `handoff` no el deixe sense àncora.
+   - Enllaços dels documents vius: en la mateixa passada, `--arxiva` reapunta cap al lloc nou de l'arxiu cada enllaç que resolia al document mogut, dins de `_wiki_de_poble/` (fora de `01_produccio/` i `02_investigacio_ia/`) i a `.agents/ESTAT.md` i `.agents/ON_ESTIC.md`, amb el mateix resolutor que `verificador-scc.mjs`, i conserva àlies, fragments i el text visible (en una fila de taula i al frontmatter no hi afig àlies: el wikilink mostra el camí nou). També esmena `verification.files` del torn tancat del rebut de cada document reescrit (amb la preimatge comprovada), actualitza `plan.hash` dels torns oberts el pla dels quals es reescriu, registra `relocated` als torns oberts que veien el document i deixa el rastre `archive-links` al torn que passes amb `--torn ID` (o a l'únic torn documental obert). `--sec` mostra el pla sencer: documents, enllaços, torns i motius d'aturada. Versiona junts els documents reescrits i els registres `.agents/runtime/turns/*.json` que llista l'informe.
    - Reanomenar un document de la taula: `--renomena VELL --a NOU`. Reescriu les àncores i imprimix el relleu del torn.
    - Àncores a documents absents: `--repara`.
    - Amb rebut de torn: l'ordre `document.mjs handoff` que imprimix la porta.
    - «## Arxivat amb la Porta Olivera» creix amb cada arxivat de torn obert i la porta no la poda: quan el torn d'una línia ja està tancat, lleva la línia amb l'eina d'edició en la neteja de tancament.
    - Safata d'Entrada: classifica o arxiva cada element fins que quede buida.
-   - Si la porta no et deixa fer el gest (categoria que no ix per nom, nom amb majúscules, subcarpeta, àncora ambigua o relleu impossible), no el faces a mà: ni `mv`, ni `rm`, ni scripts, `sed` o `node -e` sobre l'índex. Pregunta al Mestre.
+   - Si la porta no et deixa fer el gest (categoria que no ix per nom, nom amb majúscules, subcarpeta, àncora o enllaç ambigu, relleu impossible, document de torn tancat ja modificat, zona humana, laboratori (`02_investigacio_ia/`) o fitxer fora de la Wiki que enllaça el document, o enllaç del frontmatter que en trencaria l'esquema), no el faces a mà: ni `mv`, ni `rm`, ni scripts, `sed` o `node -e` sobre l'índex. Pregunta al Mestre. Si l'únic motiu és l'autor (hi ha més d'un torn documental obert), torna a executar l'ordre amb `--torn ID`.
 4. **Verifica:** `npm run porta:olivera` ix amb 0, `npm run porta:orfandat` no puja orfes i saps dir, per a cada declarat viu, qui el necessita.
-5. **Informa:** una línia al Mestre amb el que has mogut, el que has conservat i, per a cada document conservat, qui el necessita i per a què.
+5. **Informa:** una línia al Mestre amb el que has mogut, el que has conservat i, per a cada document conservat, qui el necessita i per a què. En el tancament d'una sessió d'Antigravity, el lliurament acaba amb el Títol Termodinàmic únic del xat ([[wiki-cicle-de-vida/SKILL|wiki-cicle-de-vida]], pas 10).
 
 ## Procediment: Convocatòria (Onada nova / Nova Auditoria)
 
@@ -90,6 +91,8 @@ Una prova de diagnosi etiquetada `[DEFECTE]` pot passar perquè reproduïx el de
 
 ## Lliçons del Mestre
 
+- **261101 · Un sol títol en tancar.** En tancar una sessió d'Antigravity, MarIA lliura un únic Títol Termodinàmic (`aammdd_hhmm_…`, 70 caràcters com a màxim) per al xat d'Antigravity, i el títol del xat de cada altra IA viatja integrat dins del bloc de prompt d'eixa IA.
+- **261101 · Arxivar reapunta els enllaços.** L'arxivat amb la porta Olivera deixa els enllaços dels documents vius apuntant a l'arxiu en la mateixa passada; els enllaços cap a un document arxivat es reapunten amb la porta (`--arxiva`, i abans amb `--sec`).
 - **261025 · El Cicle Atòmic de l'Auditoria i la Neteja:** Preparar una auditoria nova amb pla nou, prompt nou i llibre mestre actualitzat és un sol flux de treball inseparable que inclou l'arxivament amb la porta Olivera dels informes, plans i prompts del torn precedent quan ja estan consumits; si un torn o consumidor viu encara els necessita, es conserven segons la Transició d’onada. L'exit code 0 de la porta mai serà excusa per a deixar ferralla consumida a la taula.
 - **260929 · La neteja és acció de l'orquestradora.** Quan l'Escriptori està brut, MarIA l'arxiva amb la porta, verifica el verd i després escriu el prompt.
 - **260924 · Arxivar i despenjar l'àncora són un sol acte.** `--arxiva` fa les dues coses en la mateixa passada.

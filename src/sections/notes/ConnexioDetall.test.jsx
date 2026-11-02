@@ -6,6 +6,7 @@
 import React from 'react';
 import { act, cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { afterEach, beforeEach, expect, test, vi } from 'vitest';
+import '../../../tests/helpers/diccionaris.js';
 
 /* Objectes i funcions estables (hoisted): cap valor nou a cada render. */
 const mocks = vi.hoisted(() => ({
@@ -34,6 +35,7 @@ vi.mock('../../components/universal/UniversalPage', async (importOriginal) => {
   const real = await importOriginal();
   return { UniversalPage: (props) => { mocks.pagina = props; return React.createElement(real.UniversalPage, props); } };
 });
+import { carregaDiccionari, createTranslator } from '../../config/i18n.js';
 import { ConnexioDetall } from './ConnexioDetall.jsx';
 import { PublicacioDetall } from './PublicacioDetall.jsx';
 import { publicacioComANota } from './masDeLUsuari.js';
@@ -57,6 +59,7 @@ afterEach(cleanup);
 beforeEach(() => {
   vi.clearAllMocks();
   mocks.pagina = null;
+  mocks.t = (_, reserva) => reserva;
   mocks.user = { id: 'U' };
   mocks.mur = { status: 'ready', feedPosts: [], events: [], marketItems: [SAMARRETA] };
   mocks.notes.potEsborrar = true;
@@ -450,4 +453,17 @@ test('Compartir al Mur només amb sessió, amb servidor i amb l’acció del con
     expect(screen.getByRole('button', { name: 'Obri l’original' })).toBeTruthy();
     unmount();
   }
+});
+
+/* T5 · Les accions i la caiguda del lector passen pel traductor real. */
+test.each(['ca', 'es', 'en', 'eu', 'gl'])('%s: el lector tradueix les accions i la caiguda sense canviar les dades', async (idioma) => {
+  await carregaDiccionari(idioma);
+  const t = createTranslator(idioma); mocks.t = t;
+  render(<ConnexioDetall nota={nota(ORIGEN_PERFIL)} />);
+  const tira = screen.getByRole('group', { name: t('section.notes.connexio.recopilacio') });
+  expect(within(tira).getByRole('button', { name: t('section.notes.connexio.obriOriginal') })).toBeTruthy();
+  expect(within(tira).getByRole('button', { name: t('section.notes.connexio.borrar') })).toBeTruthy();
+  expect(screen.getByText(t('section.notes.connexio.originalAbsent'))).toBeTruthy();
+  expect(screen.getByText(t('section.notes.connexio.absentAmbEnllac'))).toBeTruthy();
+  expect(mocks.pagina.title).toBe('Pepa Soler');
 });

@@ -53,10 +53,11 @@
  * notificacions» o «Deixa de silenciar» (useSilenciDelFil). Com les altres,
  * tanca el menú i torna el focus al «⋯». Sense, el menú de sempre, igual.
  */
-import { useEffect, useId, useRef, useState } from 'react';
+import { useCallback, useEffect, useId, useRef, useState } from 'react';
 import { ArrowLeft, MoreVertical, X } from 'lucide-react';
 import { Link } from '../../../app/contexts/RouterContext';
 import { rutaDePerfil } from '../../../config/navigation.js';
+import { useCapaEnrere } from '../../../components/PedraSeca/hooks/useCapaEnrere.js';
 import { AvatarFil } from './FilaConversa.jsx';
 import { rutaCanonicaDelXat } from '../actorsDelXat.js';
 
@@ -89,18 +90,26 @@ export default function CapcaleraConversa({
   const nomDeLaContrapart = String(nomContrapart || '').trim();
   const ambNom = (clau, reserva) => t(clau, reserva).replace('{nom}', () => nomDeLaContrapart);
 
+  /* Escape i Arrere tornen al botó obridor, també si el focus era dins del menú. */
+  const tancaMenu = useCallback(() => {
+    setMenuObert(false);
+    botoRef.current?.focus();
+  }, []);
+  const menuVisible = menuObert && !seleccio;
+  useEffect(() => { if (seleccio && menuObert) setMenuObert(false); }, [seleccio, menuObert]);
+
   /* El menú es tanca en clicar fora o amb Escape, sense tocar el cos del document.
      L'Escape que el tanca queda consumit (preventDefault): la selecció de
      xats de la llista, que també l'escolta, no l'ha de rebre dos vegades. */
   useEffect(() => {
-    if (!menuObert) return undefined;
+    if (!menuVisible) return undefined;
     const node = menuRef.current;
     const arrel = node?.getRootNode?.() || document;
     const tancaFora = (e) => { if (node && !node.contains(e.target)) setMenuObert(false); };
     const tancaEsc = (e) => {
       if (e.key !== 'Escape') return;
       e.preventDefault();
-      setMenuObert(false);
+      tancaMenu();
     };
     arrel.addEventListener('pointerdown', tancaFora);
     arrel.addEventListener('keydown', tancaEsc);
@@ -108,7 +117,11 @@ export default function CapcaleraConversa({
       arrel.removeEventListener('pointerdown', tancaFora);
       arrel.removeEventListener('keydown', tancaEsc);
     };
-  }, [menuObert]);
+  }, [menuVisible, tancaMenu]);
+  /* P0-24b (T2c, prompt 261102_1532) · Mentre el menú és obert, és a la pila de
+     l'Arrere d'Android (config/pilaEnrere.js) amb el camí de l'Escape (ARB-T2B-04:
+     damunt de la selecció o de la resposta, l'Arrere el tanca a ell primer). */
+  useCapaEnrere(menuVisible, tancaMenu);
 
   if (seleccio) {
     const { quants, onEixir } = seleccio;

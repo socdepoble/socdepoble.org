@@ -134,12 +134,16 @@ function mergeNotes(current, incoming, complete = false) {
     // cos ni l'origen (T5), que només viatgen en resoldre per id. Tampoc
     // l'emoticona (T23) ni la data de publicació (T40): no són a
     // SUMMARY_COLUMNS i, sense elles, publishNote publicaria sense la data.
+    // IDEA-61 (T0, prompt 261102_1532; L1-A1) · Tampoc la fitxa d'àmbit:
+    // sense ella, publishNote publicaria al Mur sense àmbit (type 'feed') i
+    // un producte del Mercat es mouria de la fila 'mercat' a 'mur'.
     if (local && local.revision === remote.revision && remote.contentLoaded === false
         && local.contentLoaded !== false) {
       return {
         ...remote,
         ...detallFora(local, remote, 'icon'),
         ...detallFora(local, remote, 'publishDate'),
+        ...detallFora(local, remote, 'fitxa'),
         content: local.content, contentLoaded: true, origen: local.origen ?? remote.origen ?? null
       };
     }

@@ -11,8 +11,8 @@ export default function PoblacioSection() {
   const { t } = useUIActions();
 
   useSEO({
-    title: t('section.poblacio.title', 'Cens de Població'),
-    description: t('section.poblacio.subtitle', 'Demografia i nombre d\'habitants dels pobles connectats.')
+    title: t('section.poblacio.title'),
+    description: t('section.poblacio.subtitle')
   });
 
   const sortedByPopulation = useMemo(() => {
@@ -26,9 +26,9 @@ export default function PoblacioSection() {
 
   return (
     <UniversalPage
-      title={t('section.poblacio.title', 'Cens de Població')}
-      subtitle={t('section.poblacio.subtitle', 'Demografia')}
-      lead={t('section.poblacio.lead', 'Llistat de tots els pobles registrats al sistema, ordenats pel seu nombre d\'habitants.')}
+      title={t('section.poblacio.title')}
+      subtitle={t('section.poblacio.subtitle')}
+      lead={t('section.poblacio.lead')}
       chrome="system"
       showLogos={true}
     >

@@ -100,7 +100,11 @@ const DES_DE = Object.freeze({
   pobles: 'des dels Pobles',
   multimedia: 'des de Multimèdia',
   notes: 'des del Bloc',
-  perfil: 'des del directori'
+  perfil: 'des del directori',
+  /* IDEA-61 (T0, prompt 261102_1532; L3-A3) · Les tres verticals del flux universal. */
+  vehicle: 'des de Compartir cotxe',
+  treball: 'des de Treball',
+  habitatge: 'des d’Habitatge'
 });
 export const desDe = (seccio) => DES_DE[seccio] || 'des de Sóc de Poble';
 

@@ -16,6 +16,12 @@ import { EstatErrorDades } from '../mur/EstatErrorDades.jsx';
    (PublicacioDetall; l'editor de Notes ja no en porta, F45). */
 import { TargetaDelMercat } from './TargetaDelMercat.jsx';
 import { totsPublics } from '../../components/universal/traduccio/visibilitatTraduible.js';
+/* IDEA-61 (T0, prompt 261102_1532) · El botó «Publicar un producte» a la
+   ranura accioPrincipal de la UniversalPage: la mateixa porta que
+   /page/publicar_mur (PortaDePagina), cap a l'editor amb l'àmbit fixat. */
+import { PortaDePagina } from '../../components/PedraSeca/organismes/PortesTargeta.jsx';
+
+const RUTA_PUBLICAR_PRODUCTE = '/notes?ambit=mercat';
 
 /* Decisió 4 del Mestre (261007) · «Carregar-ne més». Un useMur sense
    paginació (un doble d'abans de la Decisió 4) no en porta: cap botó. */
@@ -47,16 +53,20 @@ export default function MercatSection() {
     chrome: "system",
     showLogos: true
   };
+  /* IDEA-61 (T0, prompt 261102_1532) · «Publicar un producte»: verb i nom
+     iguals (el nom accessible conté el text visible, WCAG 2.5.3). */
+  const textPublicar = t('section.mercat.publicar', 'Publicar un producte');
+  const portaPublicar = { id: 'publicar', verb: textPublicar, nom: textPublicar, desti: RUTA_PUBLICAR_PRODUCTE, varietat: 'primari' };
 
   return (
     <ContentProvider initialConfig={config}>
       {/* Gauntlet 261030 (Fase 3, TC3.2) · Traduir només si tots els
           productes són públics: un del veïnat (només per als membres)
           l'apaga (traduccio/visibilitatTraduible.js). */}
-      <UniversalPage traduccio={totsPublics(sortedMarketItems)}>
+      <UniversalPage traduccio={totsPublics(sortedMarketItems)} accioPrincipal={<PortaDePagina porta={portaPublicar} />}>
         {status === 'loading' ? <Carregant etiqueta={t('section.mercat.carregant', 'Carregant els productes…')} /> : null}
         {status === 'error'
-          ? <EstatErrorDades titol={t('section.mercat.error', "No s'ha pogut carregar el Mercat")} error={error} onReintenta={refresh} />
+          ? <EstatErrorDades titol={t('section.mercat.error', 'No s’ha pogut carregar el Mercat')} error={error} onReintenta={refresh} />
           : null}
         {status === 'ready' && !sortedMarketItems.length ? <p role="status">
           {t('section.mercat.buit', 'Encara no hi ha productes publicats en este poble.')}
@@ -69,7 +79,7 @@ export default function MercatSection() {
         {/* Decisió 4 del Mestre (261007) · «Carregar-ne més», al final de la
             llista i només amb més pàgines. Sense, el DOM és el de sempre. */}
         {errorDeMes
-          ? <EstatErrorDades titol={t('section.mercat.error', "No s'ha pogut carregar el Mercat")} error={errorDeMes} onReintenta={mostraMes} />
+          ? <EstatErrorDades titol={t('section.mercat.error', 'No s’ha pogut carregar el Mercat')} error={errorDeMes} onReintenta={mostraMes} />
           : hiHaMes('mercat')
             ? (
               <div className="sdp-camp sdp-camp--centrat">
