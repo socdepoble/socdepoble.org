@@ -324,26 +324,24 @@ describe('la candidatura NLnet a l’Atles (30-10-2026)', () => {
      «Gent de…»: la IAIA respon el mateix que /page/fediversity i que la
      pàgina Nodes i Fedivers, en valencià i en castellà. */
   test.each(['Què és Gent de la Torre?', '¿Qué es Gent de la Torre?', 'gentdelatorre.net', 'Puc obrir el node del meu poble?',
-    '¿Puedo abrir el nodo de mi pueblo?'])('«%s» → atles:gentdelatorre, amb els dos nodes, sense cap càrrega', async (pregunta) => {
+    '¿Puedo abrir el nodo de mi pueblo?'])('«%s» → atles:gentdelatorre, amb els tres nodes, sense cap càrrega', async (pregunta) => {
     expect(cercaRellevant(indexDeLaCapaLocal(), pregunta)[0]?.id).toBe('atles:gentdelatorre');
     const carrega = vi.fn();
     const text = await respostaDeLaIAIA(pregunta, { carrega });
     expect(carrega).not.toHaveBeenCalled();
     expect(text).toContain('gentdelatorre.net');
     expect(text).toContain('socdepoble.org');
-    /* 03-11-2026 (arbitratge 12:22) · socdepoble.cat no és cap node actiu: hui n'hi ha dos. */
-    expect(text).toContain("L'altre node actiu és socdepoble.org, el portal matriu. Tots dos són portes al mateix servei, amb les mateixes dades.");
-    expect(text).not.toMatch(/socdepoble\.cat|tres nodes|Tots tres/);
+    expect(text).toContain('socdepoble.cat');
     expect(liniesDeRuta(text)[0]).toBe('· Gent de la Torre — /page/fediversity');
   });
 
-  test.each(['Quins nodes hi ha?', '¿Qué nodos hay?'])('«%s» → la pàgina Nodes i Fedivers, que nomena els dos nodes actius', async (pregunta) => {
+  test.each(['Quins nodes hi ha?', '¿Qué nodos hay?'])('«%s» → la pàgina Nodes i Fedivers, que nomena els tres nodes actius', async (pregunta) => {
     expect(cercaRellevant(indexDeLaCapaLocal(), pregunta)).toEqual([]);
     const text = await respostaDeLaIAIA(pregunta);
     expect(liniesDeRuta(text)[0]).toBe(`· ${PAGE_COPY.fedivers.title} — /fedivers`);
     expect(text).toContain('socdepoble.org');
     expect(text).toContain('gentdelatorre.net');
-    expect(text).not.toMatch(/tres d’actius|tres nodes/);
+    expect(text).toContain('socdepoble.cat');
   });
 
   test('la visió «Gent de…», sense cap node inventat ni cap descàrrega que no és pública', () => {

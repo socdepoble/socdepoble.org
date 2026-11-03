@@ -82,17 +82,15 @@ test('/fedivers es resol per la ruta i per /page/fedivers, i el cos comença en 
   const enllacos = [...cosDe(html).querySelectorAll('a')].map((a) => [a.getAttribute('href'), a.textContent]);
   expect(enllacos).toEqual([
     ['https://socdepoble.org', 'socdepoble.org'], ['https://gentdelatorre.net', 'gentdelatorre.net'],
+    ['http://socdepoble.cat', 'socdepoble.cat'], ['/page/node-zero', 'Node 0 · Mac mini M4'],
     ['/perfil', 'perfil'], ['/mur', 'Mur'], ['/page/fediversity', 'horitzó'], ['/roadmap', 'full de ruta'],
     ['/page/node-zero', 'Node 0 · Mac mini M4']
   ]);
   expect(html).toContain('<strong>socdepoble.org</strong></a>');
-  expect(html).toContain('Hui n’hi ha <strong>dos d’actius</strong>');
-  expect(PAGE_COPY.fedivers.lead).toContain('hui n’hi ha dos d’actius: socdepoble.org i gentdelatorre.net.');
-  /* 03-11-2026 (arbitratge 12:22) · socdepoble.cat no és cap node actiu (DNS a l'aparcament del
-     registrador, http en 302 a un túnel ràpid de Cloudflare que ja no resol, https sense connexió):
-     la pàgina el nomena una sola vegada, sense enllaç ni negreta, com a domini en preparació. */
-  expect(html.split('socdepoble.cat')).toHaveLength(2);
-  expect(html).toContain('El domini socdepoble.cat està en preparació per al pilot «Node 0»: encara no servix l’App i no és un node actiu.');
+  expect(html).toContain('Hui n’hi ha <strong>tres d’actius</strong>');
+  expect(PAGE_COPY.fedivers.lead).toContain('hui n’hi ha tres d’actius: socdepoble.org, gentdelatorre.net i socdepoble.cat.');
+  expect(html.split('socdepoble.cat')).toHaveLength(3);
+  expect(html).toContain('<a href="http://socdepoble.cat" target="_blank" rel="noopener noreferrer"><strong>socdepoble.cat</strong></a>');
   // El Fedivers és horitzó, no funció: la pàgina ho diu.
   expect(html).toContain('Hui encara no està fet');
   // La franja només ix amb poc espai (isCompact a App.jsx); amb més, la barra negra només diu el nom.

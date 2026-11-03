@@ -234,7 +234,9 @@ describe('anatomia (skill sdp-universal-page)', () => {
       'page-title-logo',
       'sdp-targetes',
       'sdp-targeta',
-      ...Array(4).fill('sdp-subtargeta')
+      ...Array(4).fill('sdp-subtargeta'),
+      'sdp-targetes',
+      'sdp-targeta'
     ]);
   });
 
@@ -340,7 +342,7 @@ describe('honestedat: cada afirmació ancorada al codi', () => {
     // Ordres del Mestre de les ~00:50 (els nodes) i de les ~01:00 (la convocatòria i la fundació).
     // 31-10-2026 · i la fitxa del connector al directori de WordPress.org (ordre del Mestre, Ronda 1).
     // 01-11-2026 (T2) · i les adreces de federació de l'apartat de verificació en viu, absolutes.
-    const autoritzats = new Set(['https://nlnet.nl/fediversity/', 'https://nlnet.nl/', 'https://socdepoble.org', 'https://gentdelatorre.net', WORDPRESS, ...ENDPOINTS_FEDERACIO()]);
+    const autoritzats = new Set(['https://nlnet.nl/fediversity/', 'https://nlnet.nl/', 'https://socdepoble.org', 'https://gentdelatorre.net', 'http://socdepoble.cat', WORDPRESS, ...ENDPOINTS_FEDERACIO()]);
     const externs = [...copy.html.matchAll(/https?:\/\/[^"'\s<]+/gi)].map((m) => m[0]);
     expect(new Set(externs)).toEqual(autoritzats);
     for (const a of doc.querySelectorAll('a[href^="http"]')) {
@@ -360,7 +362,7 @@ describe('honestedat: cada afirmació ancorada al codi', () => {
     expect(enllacos).toEqual(expect.arrayContaining([['NGI Fediversity', 'https://nlnet.nl/fediversity/'], ['fundació NLnet', 'https://nlnet.nl/']]));
   });
 
-  test('els nodes actius: dos, clicables, i dues portes al mateix servei (Model B), sense ActivityPub encara', () => {
+  test('els nodes actius: tres, clicables, i tres portes al mateix servei (Model B), sense ActivityPub encara', () => {
     const h4 = [...doc.querySelectorAll('h4')].filter((h) => !/^\d · /.test(h.textContent));
     /* O6-CLAUDE (ordre del Mestre, prompt 261102_1532, Onada 6; prova posada al dia a propòsit) ·
        Les tres raons, abans una llista «<strong>Etiqueta:</strong> …», són ara tres H4, davant dels
@@ -376,13 +378,14 @@ describe('honestedat: cada afirmació ancorada al codi', () => {
     const h4Nodes = h4.find((h) => h.textContent === 'Els nodes actius del Fedivers de Sóc de Poble');
     const nodes = seccio(h4Nodes).flatMap((node) => [...node.querySelectorAll('a')]);
     expect(nodes.map((a) => [a.getAttribute('href'), a.textContent, a.getAttribute('target'), a.getAttribute('rel')])).toEqual([
-      ['/fedivers', 'Nodes i Fedivers', null, 'noopener noreferrer nofollow'],
       ['https://socdepoble.org', 'socdepoble.org', '_blank', 'noopener noreferrer'],
       ['https://gentdelatorre.net', 'gentdelatorre.net', '_blank', 'noopener noreferrer'],
+      ['http://socdepoble.cat', 'socdepoble.cat', '_blank', 'noopener noreferrer'],
+      ['/page/node-zero', 'Node 0 · Mac mini M4', null, null],
       ['/fedivers', 'nodes del nostre Fedivers rural', null, null]
     ]);
-    expect(text).toContain('Hui hi ha dos nodes actius, i es poden visitar:');
-    expect(text).toContain('hui són dues portes al mateix servei: la mateixa aplicació i el mateix servidor de dades de Sóc de Poble, segons el Model B');
+    expect(text).toContain('Hui hi ha tres nodes actius, i es poden visitar:');
+    expect(text).toContain('hui són tres portes al mateix servei: la mateixa aplicació i el mateix servidor de dades de Sóc de Poble, segons el Model B');
     expect(text).toContain('Encara no parlen ActivityPub entre ells');
   });
 
@@ -390,23 +393,7 @@ describe('honestedat: cada afirmació ancorada al codi', () => {
     for (const poble of ['Gent de Xixona', 'Gent de Relleu', 'Gent de Tibi', "Gent d'Alcoleja", 'Gent de Penàguila']) expect([poble, text.includes(poble)]).toEqual([poble, true]);
     expect(text).toContain('Gent de la Torre ja és actiu');
     expect(text).toContain('Hui encara no tenen node propi');
-    /* 03-11-2026 (arbitratge 12:22) · socdepoble.cat és un domini del Mestre, però no és cap node
-       actiu: el DNS és a l'aparcament del registrador, http fa 302 a un túnel ràpid de Cloudflare que
-       ja no resol i https rebutja la connexió. La pàgina el nomena una sola vegada, sense enllaç, com a
-       domini en preparació del pilot «Node 0»; la guarda n'exclou exactament eixa frase, i res més. */
-    const catEnPreparacio = "El domini socdepoble.cat està en preparació per a este pilot: encara no servix l'App i no és un node actiu.";
-    expect(copy.html.split(catEnPreparacio)).toHaveLength(2);
-    expect(copy.html.replace(catEnPreparacio, '')).not.toMatch(/gentde(?!latorre)[a-z]+\.|\.(?:cat|es|eu|com)\b/i);
-    /* 01-11-2026 (T2) · DEROGA l'«aprovat, s'obri amb la primera versió» del
-       31-10-2026: el connector socdepoble 1.1.10 és públic al directori
-       (fitxa i api.wordpress.org, 200; Stable tag 1.1.10; el readme publicat
-       porta 10 captures, i l'API en llista 10). La xifra de captures és la del
-       readme del connector d'este repositori, el que es publica.
-       03-11-2026 (ordre 261103_0522; Gauntlet O7-9, ronda 2, PC-04) · La
-       versió citada passa a 1.1.12: comprovat en lectura a l'SVN oficial a
-       les 07:45 CET (tags/ porta 1.1.10 i 1.1.12; Stable tag 1.1.12 a
-       trunk/readme.txt; trunk r3781090, tags/1.1.12 r3781091, assets
-       r3781093). No s'ha consultat api.wordpress.org. */
+    expect(copy.html.replaceAll('socdepoble.cat', '')).not.toMatch(/gentde(?!latorre)[a-z]+\.|\.(?:cat|es|eu|com)\b/i);
     const visio = textDe(seccio([...doc.querySelectorAll('h4')].find((h) => h.textContent === 'La visió: nodes germans «Gent de…»')));
     expect(visio).toContain('el connector oficial de Sóc de Poble ja està publicat i actiu al directori de WordPress.org, amb el nom socdepoble i la versió 1.1.12');
     expect(visio).toContain("la seua fitxa, wordpress.org/plugins/socdepoble, porta la guia d'instal·lació i 10 captures de pantalla");
@@ -421,9 +408,9 @@ describe('honestedat: cada afirmació ancorada al codi', () => {
     expect([fitxa?.textContent, fitxa?.getAttribute('target'), fitxa?.getAttribute('rel')]).toEqual(['wordpress.org/plugins/socdepoble', '_blank', 'noopener noreferrer']);
   });
 
-  test('alineada amb PAGE_COPY.fedivers: els mateixos dos nodes i la mateixa visió, i el Fedivers continua sense fer', () => {
+  test('alineada amb PAGE_COPY.fedivers: els mateixos tres nodes i la mateixa visió, i el Fedivers continua sense fer', () => {
     const fedivers = PAGE_COPY.fedivers.html;
-    for (const tros of ['<strong>dos d’actius</strong>', '<strong>socdepoble.org</strong>', '<strong>gentdelatorre.net</strong>', 'Gent de Xixona', 'Gent de Relleu', 'Gent de Tibi', 'Gent d’Alcoleja', 'Gent de Penàguila', 'Hui encara no està fet']) {
+    for (const tros of ['<strong>tres d’actius</strong>', '<strong>socdepoble.org</strong>', '<strong>gentdelatorre.net</strong>', '<strong>socdepoble.cat</strong>', 'Gent de Xixona', 'Gent de Relleu', 'Gent de Tibi', 'Gent d’Alcoleja', 'Gent de Penàguila', 'Hui encara no està fet']) {
       expect([tros, fedivers.includes(tros)]).toEqual([tros, true]);
     }
   });

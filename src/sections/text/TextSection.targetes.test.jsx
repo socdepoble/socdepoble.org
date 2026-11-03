@@ -155,7 +155,7 @@ describe('Llei del Píxel: una pàgina sense targetes, byte a byte el camí de s
     cleanup();
 
     const cosB = cosDe(render(<TextSection page={PAGE_COPY[clauB]} pageKey={clauB} />).container);
-    const grupB = cosB.querySelector('.sdp-targetes');
+    const grupB = [...cosB.querySelectorAll('.sdp-targetes')].find((g) => g.querySelector('.sdp-targeta a.sp-card-link-overlay')?.getAttribute('to') === rutaA) ?? cosB.querySelector('.sdp-targetes');
     expect([grupB?.getAttribute('data-forma'), grupB?.getAttribute('data-alineacio')]).toEqual(['sola', 'dreta']);
     expect(grupB?.querySelector('.sdp-targeta a.sp-card-link-overlay')?.getAttribute('to')).toBe(rutaA);
     expect(cosB.querySelector(`.sdp-cos-tros a[href="${rutaA}"]`)).not.toBeNull();
