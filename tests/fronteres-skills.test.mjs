@@ -124,6 +124,27 @@ test('F2: motor absent i script absent (també dins d\'un bloc de codi) caen; el
   assert.deepEqual(detalls(audita(root), 'sdp-f2'), []);
 });
 
+test('F2: el motor ha de ser fitxer regular canònic, sense eixida de l’arrel ni symlinks', (t) => {
+  const { root, cas } = fixture(t);
+  const exterior = fs.mkdtempSync(path.join(path.dirname(root), 'sdp-fronteres-exterior-'));
+  t.after(() => fs.rmSync(exterior, { recursive: true, force: true }));
+  fs.writeFileSync(path.join(exterior, 'fora.mjs'), 'export default 0;\n');
+  fs.mkdirSync(path.join(root, 'tooling/gates/directori.mjs'));
+  fs.symlinkSync(path.join(exterior, 'fora.mjs'), path.join(root, 'tooling/gates/enllac.mjs'));
+  const motors = [
+    `tooling/../../${path.basename(exterior)}/fora.mjs`,
+    'tooling/gates/directori.mjs',
+    'tooling/gates/enllac.mjs'
+  ];
+  const diagnostics = motors.map((motor, i) => {
+    cas(`sdp-motor-${i}`, `Executa \`node ${motor}\`.`);
+    return detalls(audita(root), `sdp-motor-${i}`).map(d => d.slice(0, 2));
+  });
+  assert.deepEqual(diagnostics, [['F2'], ['F2'], ['F2']]);
+  cas('sdp-motor-regular', 'Executa `node tooling/gates/porta.mjs`.');
+  assert.deepEqual(detalls(audita(root), 'sdp-motor-regular'), []);
+});
+
 test('F3: una ordre recursiva cau; l\'exclusió de 01_produccio i la prohibició l\'eximixen; el bloc de codi també compta', (t) => {
   const { root, cas } = fixture(t);
   cas('sdp-f3-ordre', "Neteja amb `find _wiki_de_poble -name '*.md' -exec sed -i 's/a/b/' {} +`.");

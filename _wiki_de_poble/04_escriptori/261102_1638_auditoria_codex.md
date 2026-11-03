@@ -1,15 +1,15 @@
 ---
 type: informe
 status: esborrany
-description: "Onada 3 del Teler Invertit: tres kits CAS Codex en còpies aïllades, verificació independent i relleu per a Claude sense temporitzadors."
+description: "Onada 6: WordPress 1.1.12 en cinc idiomes, quatre skills restaurades i kit CAS legal/documental; històric preservat i límits de tancament declarats."
 tags:
   - auditoria
 visibility: private
 reflex: sdp:torn_099a70a6-eb5d-4606-8d22-319bc215821b:1ecbd94f-506a-4f89-86ed-914b75ecfa16
 ---
-# Auditoria Codex — Onada 3 del Teler Invertit i historial de les onades anteriors
+# Auditoria Codex — Onada 6, editorial, WordPress i tancament CAS
 
-Informe viu del carril Codex. El treball continua en kits aïllats per a integració de Claude; cap certificació 10/10 sense evidència de les quatre IAs.
+Informe viu del carril Codex. Distingix els canvis aplicats al viu dels kits pendents d’integració de Claude; cap certificació 10/10 sense evidència de les quatre IAs.
 
 <!-- SDP:SECTION auditoria.s1 -->
 ## Registre
@@ -17,12 +17,12 @@ Informe viu del carril Codex. El treball continua en kits aïllats per a integra
 | Camp | Valor |
 | --- | --- |
 | Identificador | sdp:torn_099a70a6-eb5d-4606-8d22-319bc215821b:1ecbd94f-506a-4f89-86ed-914b75ecfa16 |
-| Versió del document | 1.1.0 |
+| Versió del document | 1.5.0 |
 | Entorn | entorn-dev-local |
 | Creació | 2026-11-02T15:40:42.387Z |
-| Modificació | 2026-11-02T20:23:19+01:00 |
+| Modificació | 2026-11-03T04:30:43+01:00 |
 | Propietari | Codex |
-| Aprovació humana | Ordre directa del Mestre al xat del 261102; autonomia i pla aprovats |
+| Aprovació humana | Ordres directes del Mestre; últim carril T3 d’Onada 6 al xat del 261103, amb prompt i Bloc T6 vinculats |
 | Plantilla | _wiki_de_poble/02_saber/protocols_tecnics/auditoria_canonica.md (v2.0.0) |
 | Model IA | Codex, agent basat en GPT-6; identificador exacte del backend no exposat per les eines |
 | Tokens consumits | No disponibles en la telemetria d’este torn |
@@ -39,6 +39,174 @@ Plantilla entregada: _wiki_de_poble/02_saber/protocols_tecnics/auditoria_canonic
 
 <!-- SDP:SECTION auditoria.s4 -->
 ## Troballes
+
+<!-- O6:CODEX:INICI -->
+### Onada 6 · CARRIL 2 · T3 — lliurament construït i verificat
+
+Llegits íntegrament el prompt canònic inicial (218 línies), l’ampliació fins a 258 línies i el Bloc T6 amb el seu delta. Tall final del prompt: SHA-256 `9199757d7ea23534eb672e8c84739bf86a9f9d39fe99b72b0b06388f9a913f56`; pla: `f290258294181300446c01360581798bd13d6c6831b397589e479df02c60da9a`. S’han incorporat la revisió MD, el DAFO de 15 dimensions, l’Oblit Saludable i la migració legal 2.4 de l’encàrrec ampliat. Torn `torn_73df43cb-e9c8-47f3-8c99-857669036387`; rebut de la plantilla viva `sdp:torn_73df43cb-e9c8-47f3-8c99-857669036387:54cf5cbb-7d47-4edb-99ff-70b005ac9494`. El rebut original de l’informe i els blocs anteriors es preserven.
+
+L’àmbit del torn, obert inicialment com a documental per error, s’ha corregit a codi mitjançant l’API canònica de mutació de torns. Es conserven l’inventari inicial, el pla, els rebuts i la traça explícita de reconciliació; no s’ha reconstruït una baseline per absorbir canvis aliens. Les còpies de treball es troben sota `/private/tmp/sdp-codex-o6-{wp,skills,md,legal}/`.
+
+#### WordPress 1.1.12 i cinc idiomes — aplicat al viu
+
+Deu fitxers materialitzats després de comprovar totes les preimatges CAS; staging per fitxer, rename i comprovació de les deu postimatges. `ajustos.php` incorpora 39 claus completes per idioma, les pestanyes **Valencià · VA, Castellano · ES, English · EN, Euskara · EU i Galego · GL**, canvi immediat i selecció inicial pel locale d’usuari de WordPress, amb el del lloc com a reserva. `ca`/`ca_valencia` es resolen a `va`; es respecten els prefixos `es`, `en`, `eu`, `gl` i el fallback és `va`. Els textos no necessiten paquets `.mo`.
+
+| Idioma | Marca i lema exactes |
+| --- | --- |
+| VA i ES | Sóc de Poble. Portal de Pobles Connectats |
+| EN | Sóc de Poble. Portal of Connected Villages |
+| EU | Sóc de Poble. Konektatutako Herrien Ataria |
+| GL | Sóc de Poble. Portal de Pobos Conectados |
+
+El `.po` castellà conserva la marca i el mateix lema que el valencià. Cos de **17 px**, interlineat **1,65**, targetes espaioses i negretes als tres passos, identitat, traducció i diagnosi. Hi ha un únic formulari: canviar d’idioma conserva valors sense guardar, selecció, nonce i els dos noms de camp. Les pestanyes tenen ARIA, focus i navegació amb fletxes/Home/End; no envien peticions ni activen el guardat. Es mantenen `manage_options`, `options.php`, el Model B i el port de dades.
+
+S’ha corregit també un avís heretat de conversió d’array a text quan una opció malformada no era escalar. El text ric passa pel sanejador de WordPress; el JSON usa els quatre flags HEX, i els scripts passen per `wp_print_inline_script_tag` amb suport del seu hook de nonce. La interfície tradueix la diagnosi sense alterar el contracte públic preexistent de diagnòstic. Versió 1.1.12 coherent a capçalera, constant i `Stable tag`, amb l’historial 1.1.11/1.1.10 preservat.
+
+**Proves:** 187/187 Node en les set suites dirigides de WordPress, sense omissions ni TODO. La nova bateria PHP real + JSDOM aporta 16/16 i entra a la cadena primària existent mitjançant el test del connector. La repetició dirigida al viu dona 43/43, incloent les 27 de Fronteres. L’execució més àmplia del lint d’Enxufe acaba amb codi 0 però conserva **195 passades, dues omissions i un TODO** de classes preexistents; no es presenta com 198 proves verdes. ESLint dels fitxers afectats: 0.
+
+**Inspecció visual:** PHP sobre dobles de l’amfitrió i Chromium/CDP, amb 390 px reals en les cinc llengües, amplària de document igual al viewport i cap element fora de pantalla. Pestanyes de 46 px; captures VA a 1440 i ES a 390. El primer intent CLI havia fixat una finestra de 390 però el navegador mesurava 500: s’ha descartat eixa suposició i repetit amb mètriques CDP. La reproducció portable inclosa supera sis casos, sense errors JavaScript ni HTTP del target; Chrome, port, perfil i cau queden tancats. Açò acredita el render local, no una instal·lació WP Admin real, CSP de producció ni revisió amb lectors de pantalla.
+
+#### Quatre skills — memòria literal restaurada i segell verificat
+
+Restaurats **14 blocs històrics i 36 línies que faltaven** a `core-context-panic`, `core-secretaria-auditoria`, `core-higiene-escriptori` i `core-comprensio-reflexiva`, contrastant les fonts anteriors a l’Onada 4 i HEAD. La prova d’alteració d’un byte detecta els 14 blocs. Els contractes operatius i les metadades es conserven; l’explicació de la vigència es deixa fora de les seccions literals.
+
+La regla d’**Oblit Saludable** de captures del xat documenta identificació del lot, assimilació, dependències, ordre humana que cobrisca els fitxers, retirada/desancoratge conjunts i verificació. No s’ha executat cap esborrat de captures ni editat l’índex del carril MarIA. S’ha usat la skill de suport `skill-creator`; el seu validador genèric no reconeix el contracte propi del repositori i no s’ha usat per eliminar-ne camps.
+
+`node tooling/brain/fronteres-skills.mjs`: **0**, 42 skills vàlides, sense violacions, deute ni avisos; regressions **27/27**. Índex/catalogació regenerats sense delta. Segell reconciliat explícitament només amb les quatre skills autoritzades: `262585b736d4c8c12abdb98d2fec16705baab93d968f5205699584b3f98100b2`. La verificació del segell acaba a 0; no s’ha acceptat un canvi d’un altre carril.
+
+#### Markdown públic, correccions científiques i compilador
+
+Inventari i anàlisi mecànica dels **82 Markdown públics** (553.780 bytes), amb lectura íntegra de deu documents de context i revisió específica de les troballes. No s’afirma una lectura manual íntegra dels 82. Les carpetes reals són `01_ser`, `02_saber` i `03_actuar`; no s’han creat equivalents inexistents dels noms antics del prompt.
+
+Quatre fonts corregides al viu per CAS, més el seu derivat obligatori:
+
+- `03_actuar/plantilles/skill.md`: versió 2.1, ruta real i estat acreditat de Model B, Supabase/Sollutia GET, IndexedDB/PWA i federació estàtica/interactiva.
+- `02_saber/03_consola_termodinamica/00_portada.md`: diferencia mapa local i projecció web sanejada de quatre fonts, excepcions de persistència local i ritus no demostrats.
+- `02_saber/codex_huma/arquitectura_sistema_nervios.md`: separa retirada de Dexie i implementació parcial posterior d’IndexedDB/PWA; cap CRDT, sincronització completa ni ADR proposta convertida en norma.
+- `02_saber/03_consola_termodinamica/05_actors_i_salut.md`: rutes reals i Frontissa instrumentada, sense atribuir-li 16/16 actuals, torns vigents ni llançadors que no s’han observat.
+- `.agents/protocolledge.json`: només la versió de la plantilla `skill` de 2.0.0 a 2.1.0, mantenint la versió global 4.0.0.
+
+Les cinc postimatges s’han verificat; metadades públiques 82/82, plantilles 12/12 i graf físic sense enllaços trencats en la còpia dirigida. Les dotze lliçons de memòria s’han conservat. Les llistes CommonMark vàlides no s’han renumerat per dissimular errors del render.
+
+El **corrector del compilador queda al kit**, amb tres fixtures: reutilitza la màscara Markdown existent per no convertir WikiLinks en codi, comentaris o escapaments, i permet importar el mòdul des de stdin sense intentar resoldre el fitxer `-`. Proves dirigides **55/55**, consumidors compartits **42/42** i ESLint 0. Revisió independent repetida 55/55; s’ha mantingut la frontera de documents privats.
+
+Quatre reproductors de `parseMarkdown.js` mostren reinici de llistes vàlides separades per línia buida, pèrdua del començament en 4, continuacions imbricades separades i les dotze entrades de memòria dividides en dotze `<ol>` amb text fora de llista. Es facilita prova sobre el parser i sanejador reals; la reparació correspon a C1. No hi ha una certificació visual del renderer Wiki.
+
+#### Kit CAS legal 2.4, ARB-XAT-01 i G-D-01 — dipositat
+
+[Kit complet i instruccions d’integració](02_investigacio_ia/261103_kit_codex_onada6_legal_i_tancament/README.md), amb manifest complet, preimatges, payload, aplicador sec per defecte, motor canònic fixat i inventari exacte. **19 payloads i 15 precondicions**; les cinc fonts MD/protocol ja aplicades van com a pins i instantànies de context B, sense duplicar-les al payload. Les evidències WP i skills també queden separades del payload. El tall B és la base immutable inicial més eixes cinc fonts revisades; no equival a tot l’arbre viu posterior.
+
+Manifest SHA-256: `8d26f5090523dc5946d9ea1011306dd079cd39e0b07fb719926dfee5f067f2b7`. Inventari SHA-256: `0e3b2e8c0f4a90b20fa97a92ca693ea2a90c215c3a1110101510df47d2ed2e8b`. Artefactes inventariats: **112**. L’aplicador comprova inventari exacte, àlies, modes, pins, preimatges i Frontissa de confiança abans del staging. No hi ha `--force`. Atomicitat per fitxer i rollback d’errors capturables; no es promet transacció davant tall de corrent o SIGKILL.
+
+**Legal:** 72 paràgrafs totals. Els 29 inicialment sense `<strong>` reben 6–8 negretes cadascun; els altres 43 es preserven literalment. Cos substantiu, enllaços i dades intactes, amb el canvi explícit de versió/data a **2.4, 3 de novembre de 2026**. HTML SHA-256 `2956bc30112b2e8d097815d502f9cd711e9ee0c213c5c73634340d9657343ff3`. La migració històrica 2.3 no s’edita i continua com a precondició. La nova `2611030330_politica_privacitat_2_4.sql` és append-only: INSERT idempotent i comprovació transaccional que rebutja una 2.4 existent amb URL, empremta, data o text nul divergents. No hi ha UPDATE/DELETE ni SQL remot executat. Primer cal publicar web/connector amb el text exacte, verificar l’empremta i després aplicar SQL; la nova fila implica reacceptació.
+
+**ARB-XAT-01:** `politicaPrivacitat23.migracio.test.js` conserva la coherència històrica; una bateria separada comprova 2.4, conflictes i mutants. Les 24 proves IAIA de proveïdor/ruta/conversa usen un remot sintètic. L’apartat 14 encara requerix aclarir ajuda local i grup públic: no s’han inventat obligacions substantives ni presentat la guarda de migracions com una certificació de tot el xat.
+
+**G-D-01:** regles exactes d’`activitystreams.json` a Firebase, Vercel i `public/_headers`, després de la regla JSON genèrica, amb `application/activity+json`. Prova HTTP local GET/HEAD de bytes, MIME i CORS: sis casos i 18 peticions. No s’ha verificat el desplegament real dels proveïdors.
+
+**Validació conjunta en còpia nova B:** **427/427 Vitest, 55/55 Node del compilador, 6/6 HTTP, Frontissa 16/16, 9/9 controls de l’aplicador, motor canònic 29/29 i lint 0**. Catàleg de 72 migracions: zero errors i 14 avisos preexistents. No s’ha aplicat al viu cap dels 19 payloads ni la migració 2.4. La revisió independent del paquet publicat confirma 112/112 artefactes, els dos SHA anteriors, dry-run sobre la còpia completa B amb Frontissa 16/16 i 9/9 proves CAS. Per repetir estes proves des del viu, cal fixar `SDP_KIT_TEST_SOURCE=/private/tmp/sdp-codex-o6-legal/fresh-b/socdepoble.org`: usar per defecte les fonts vives concurrents produïx 7/9 perquè les dues proves positives es tanquen davant les 14 empremtes divergents. No s’ha modificat cap guarda per evitar eixe rebuig.
+
+#### Tancament observat, propietaris i límits
+
+Olivera de primer nivell: **0**. Check del document d’auditoria: **0**. El check global del torn passa huit portes —Olivera, plantilles, autoritat, ledger, segell, skills, Wiki i proves documentals— però **SCC/tancament estricte continuen rojos**. Falta el relleu d’este torn a ESTAT/LEDGER i l’ancoratge directe del laboratori per part de MarIA. El check també tracta Markdown literal intern del kit com a nous documents que necessiten rebut: és un conflicte de classificació artefacte/document que es declara, sense alterar preimatges ni fabricar rebuts. Les instantànies de context usen extensió `.snapshot` per no crear títols Wiki duplicats. L’auditoria enllaça el README; això no substituïx l’àncora directa exigida per SCC. L’últim SCC observa 118 errors: 116 artefactes sense àncora directa i dos documents orfes; zero enllaços ambigus després de passar les quatre còpies a `.snapshot`.
+
+Al tall final observat, la Frontissa **viva dona 2/16**, amb 14 empremtes divergents dels canvis editorials concurrents de C1. El kit passa 16/16 en la seua còpia. No s’ha resegellat ni sobreescrit el registre compartit per forçar-ne l’aplicació. Claude ha de reconciliar eixes empremtes i qualsevol pin divergent abans d’integrar, executar les regressions del conjunt i seguir l’ordre de desplegament legal.
+
+La projecció sanejada del diagnòstic local de mapa (2026-11-03T03:02:32.997Z) registra 403 nodes, 560 arestes, 13 tasques declarades i 22 avisos: 19 alts, dos mitjans i un baix. Inclou 14 de Frontissa, dos de porta documental, dos de tasca morta i quatre altres. És un tall de fonts, no una acreditació de runtime de torns o launchd ni una comprovació nova del nombre històric de torns caducats. El mapa cru privat no s’incorpora al kit.
+
+**Relleu concret per a MarIA:** registrar el torn `torn_73df43cb-e9c8-47f3-8c99-857669036387` a ESTAT i LEDGER amb el lliurament T3, el manifest anterior i les limitacions de tancament; incorporar les línies d’[ANCORA_PER_MARIA.md](02_investigacio_ia/261103_kit_codex_onada6_legal_i_tancament/ANCORA_PER_MARIA.md) a l’índex. L’exclusivitat d’escriptura d’eixos fitxers es respecta. Cap fals consens de les quatre IAs ni 10/10 global.
+
+**Desconvocatòria:** cap temporitzador, heartbeat ni automatització creats per este carril. Les sis automatitzacions Codex consultades consten PAUSED i la guarda nocturna està inactiva. Els servidors, navegadors, ports, perfils i caus propis de les proves finites han acabat o s’han eliminat. No s’han fet commits, desplegaments, consultes de comptes, signatures, pujades a botigues ni execucions SQL remotes.
+
+
+#### DAFO a 15 dimensions i límit de la certificació
+
+S’adopten els identificadors de la matriu compartida de Gemini, documentada a `dafo-dimensions-source.json`. Les fortaleses següents es limiten a les proves i fonts citades; els resultats d’Onades 3–5 no es presenten com una nova execució global d’Onada 6. No s’ha fet una inspecció de producció, de comptes reals ni de tots els dispositius.
+
+| Dimensió | Fortalesa acreditada | Debilitat o límit | Oportunitat | Amenaça concreta |
+| --- | --- | --- | --- | --- |
+| D01 · Arquitectura i Enxufabilitat | WordPress conserva el Model B, el port de dades i dos camps públics; regressions d’amfitrió incloses en les 187 proves. | Els endpoints reals de Sollutia continuen requerint captures i fixtures pròpies. | Incorporar cada recurs GET amb el contracte de conformitat existent. | Confondre amfitrió amb backend i acceptar claus d’autoritat des de la interfície. |
+| D02 · Pedra Seca i Disseny Atòmic | Les proves O5 de BlocAmbit/subtargetes i el nou disseny WP acrediten comportament i estructura delimitats. | El render de WP s’ha inspeccionat amb un host doble; no amb tots els temes i extensions. | Reutilitzar els controls accessibles i el formulari únic. | Donar per bona una captura retallada: el primer intent CLI de 390px tenia un viewport real de 500px; CDP ho ha corregit i mesurat. |
+| D03 · Xat i IAIA Local | Les 24 proves del proveïdor/ruta/conversa IAIA passen en remot sintètic i separen ajuda local del port. | L’apartat 14 legal encara no explica amb precisió la separació entre ajuda local i grup públic. | Reconciliar eixa explicació en un canvi substantiu de privacitat amb prova del flux. | Presentar una comprovació de migració com una certificació del comportament complet o de sessions reals. |
+| D04 · Notes i Flux Universal | BlocAmbit valida els valors abans de normalitzar-los; les regressions O5 inclouen l’editor compartit. | No s’ha reexecutat ací una sessió real de publicació i canvi d’identitat. | Mantindre un únic contracte de cinc àmbits i provar-ne els consumidors. | Normalitzar silenciosament valors invàlids i publicar al destí equivocat. |
+| D05 · Cinc Idiomes i Llei del Lema | Cinc catàlegs WP incorporats, lemes exactes, 16 proves PHP/DOM i locale d’usuari/lloc; el castellà conserva el lema valencià. | La qualitat lingüística d’euskara i gallec necessita lectura de persones parlants. | Revisar el text sobre el mateix formulari, sense perdre dades ni demanar paquets `.mo`. | Una actualització que torne a dependre d’un catàleg absent o traduïsca la marca. |
+| D06 · Seguretat, RLS i Privacitat | O5 aporta reproductors RLS de noms quoted i esquemes; WP conserva capacitat, nonce, sanejador i escapament. | L’anàlisi SQL és estàtica i no acredita RLS efectiva d’una base remota. | Executar les migracions en un PostgreSQL de prova amb el mateix esquema abans de desplegar-les. | Un conflicte de versió legal silenciós; la nova 2.4 el rebutja transaccionalment. |
+| D07 · Recuperació Social i E2EE | Les evidències F7 de l’Onada 3 continuen disponibles; este carril no ha activat E2EE ni ha afegit booleans de confiança. | No és una nova auditoria criptogràfica; hi ha comprovacions externes històriques omeses. | Revisió independent del protocol i dels límits del consumidor abans d’activar-lo. | Confondre una biblioteca provada amb un protocol desplegat o amb confiança aportada per la UI. |
+| D08 · Navegació Mòbil | O5 prova router encastat, clics modificats i lectura sense proveïdor; WP manté els inputs entre canvis d’idioma. | No s’ha certificat el botó físic d’Android en dispositiu real durant T3. | Reproduir els casos de retorn i focus en dispositius després de la integració. | Un fallback que canvie la base de l’amfitrió o substituïsca el formulari amb dades pendents. |
+| D09 · Botigues i Jarvis | La font del connector marca 1.1.12; el prompt T6 declara Apple i Google en revisió. | No s’han consultat comptes de botigues, signat binaris ni comprovat l’arxiu iOS pujat. | Preparar una release reproduïble després d’integrar el kit i validar el paquet. | Confondre la versió del repositori amb una actualització ja publicada. |
+| D10 · OpenData i Fediversity | El corrector MIME està provat amb GET/HEAD local; el compilador respecta la política d’exportació pública. | Les capçaleres del kit encara requerixen integració i desplegament. | Servir ActivityStreams amb el tipus correcte i conservar la separació entre projecció estàtica i federació interactiva. | Un HTTP200 amb HTML de fallback o un MIME JSON genèric que es presente com ActivityPub verificat. |
+| D11 · Rendiment i HMR | El canvi WP queda en l’administració del connector; les captures mesuren el viewport real. | No s’ha repetit tot el pressupost del bundle SPA ni tota la suite HMR amb els canvis concurrents de C1. | Mantindre les portes de pes i els informes de build com a evidència de la release final. | Donar vigència a xifres antigues de rendiment després de canviar l’entrada o el contingut. |
+| D12 · Accessibilitat i Llegibilitat | Cos WP de 17px/1.65, pestanyes de 46px, teclat circular i ARIA; cinc viewports reals de 390px sense desbordament. | No s’ha fet VoiceOver/TalkBack ni validació amb persones lectores. | Revisió diagonal humana i prova del WP Admin real amb la configuració del portal. | Convertir la quota de negretes en una mètrica automàtica de comprensió o retallar text per encaixar-lo. |
+| D13 · Govern Documental | 19 lliçons O5 i 14 blocs O6 restaurats literalment; quatre skills resegellades, Fronteres 0 i Olivera 0. | El canònic canvia durant la construcció; hi ha ancoratges de laboratori i relleus reservats a MarIA. | Congelar el SHA de cada encàrrec i publicar deltes amb responsable i ordre d’integració. | Resumir memòria històrica, promoure una ADR sense signatura o amagar rojos de tancament. |
+| D14 · Proves i CI | WP 187/187, dirigida viva 43/43, kit legal i compilador amb regressions i controls negatius. | No s’ha repetit tota la suite global; el diagnòstic ampli de classes conserva un TODO i dues omissions. | Un únic assaig de la release integrada amb els mateixos hashes i precondicions. | Transformar un TODO, una omissió o un error d’entorn en «100% verd» sense explicar-ne l’abast. |
+| D15 · Coordinació Multiagent | Carrils aïllats, revisió independent, CAS i fonts directes limitades per preimatge. | El registre de Frontissa de Claude continua evolucionant durant el muntatge del kit. | Separar fonts ja aplicades, payload pendent i pins de context, amb un tall B explícit. | Forçar un kit antic damunt del registre nou i perdre contingut d’un altre carril. |
+
+#### Matriu d’importància i urgència
+
+| Quadrant | Acció concreta | Responsable i condició de tancament |
+| --- | --- | --- |
+| Q1 · Important i immediat | Integrar el kit legal/compilador sobre un tall estable, revisar el CAS compartit i restaurar Frontissa 16/16 abans d’aplicar. | Claude, amb preimatges actuals revisades i regressions del conjunt integrat. |
+| Q1 · Important i immediat | Reparar el render de llistes Markdown vàlides i paràgrafs en `src/sections/wiki-de-poble/`, amb els reproductors aportats. | C1, amb prova sobre el parser/sanejador real; no renumerar la font per amagar el defecte. |
+| Q1 · Important i immediat | Aplicar la política 2.4 només després de publicar el text exacte i verificar-ne l’empremta; confirmar la reacceptació prevista. | Responsable de desplegament/Mestre. Este carril no executa SQL remot. |
+| Q2 · Important i planificat | Completar ancoratges del laboratori, relleus ESTAT/LEDGER, vigència de les mètriques i explicació legal de l’ajuda IAIA. | MarIA i responsables de cada superfície, amb proves i tall datat; sense inventar activitat de llançadors. |
+| Q2 · Important i planificat | Validar WP Admin real, CSP efectiva, paquets signats i lectura assistida. | Responsable de release i persones lectores; els dobles locals no acrediten estos entorns. |
+| Q3 · Tàctic | Polir euskara/gallec amb parlants i mantindre coherents readme, capçaleres i catàlegs en cada release. | Carril d’internacionalització/release, amb la marca i el lema com a invariants. |
+| Q4 · Soroll a evitar | Nous crons sense necessitat, segells forçats, reanomenats massius i xifres globals sense font. | Cap automatització nova. Corregir només defectes reproduïts dins del carril. |
+
+La visió de futur és mantindre **fonts úniques**, **contractes explícits**, **proves reproduïbles**, **integració amb CAS**, **revisió humana** i **mesures honestes**. Un 10/10 requerix la release integrada i les comprovacions que encara falten; no deriva de sumar proves de talls diferents.
+
+#### Proposta d’Automillora
+
+«Si m’hagueres demanat això d’aquesta altra forma, hauria sigut més eficient»: fixar el SHA del canònic, separar des del principi l’èmfasi visual del versionat legal, i anomenar els fitxers reals de proves i les carpetes vigents. La migració 2.4 va entrar en una ampliació posterior; un addendum datat hauria evitat construir primer una projecció que preservava la 2.3.
+
+No hi ha una nova capacitat de backend acreditada en este torn. El flux que ha ajudat és la delegació en còpies amb propietat de fitxers, un àrbitre independent, PHP/DOM per als ajustos i CDP per contrastar captures amb dimensions reals. Propose conservar eixe circuit i un únic tall de verificació final, amb relleus de cada propietari i sense processos periòdics quan s’acaba l’onada.
+<!-- O6:CODEX:FI -->
+
+<!-- O5:CODEX:INICI -->
+### Onada 5 · CARRIL2 · kit CAS dipositat, congelat contra el tall T5
+
+Kit complet a `../_investigacio_ia_de_poble/261103_kit_codex_onada5_reconciliacio_llicons_i_apple_audit/`:23payloads,154precondicions i inventari exacte de120artefactes. Manifest SHA-256 `03b412a9c8a53fcfa90cf6651b9e2a503b4b293ed1692c134237c22396c58e70`; inventari `fcdbc3e3248cb0c5f7ad62a20e04f8d499cf8b453ec06d09e1d4763889b322d6`. Publicat amb rename atòmic, aplicador sec per defecte i bloqueig CAS estricte. Es rebutja l’arbre O6, que ja ha evolucionat; el kit no s’hi força ni s’hi aplica automàticament.
+
+Reconciliats el certificador (Wiki, rutes de targetes, atributs sense cometes, entitatsHTML5 i separadorsASCII), el lector complet sense Router, quatre grups relacionats amb9destins preservats i16empremtes; recuperades literalment19lliçons (6+13). Dos bypassos nous de RLS sobre noms amb punt entre cometes i reanomenat d’esquemes tenen reproductor i corrector. El kit de Gemini té integritat de payload, però el seu aplicador falla l’atomicitat davant EIO i el seu testFirebase descartava garanties vives; el lliurament usa el motor canònic i conserva eixes garanties.
+
+Aplicació nova en còpia independent:633/633Vitest i107/107Node, Frontissa16/16, Fronteres42 vàlida, segell intacte i ESLint0. Controls negatius: reaplicació, drift, payload alterat, fitxer extra i motor divergent, tots rebutjats. Les proves globals de producció i els serveis reals no formen part d’este resultat.
+
+L’auditoria iOS del tall T5 verificà1.0.0Build2 i trobà UserDefaults al SDKCapgo8.5.12 sense manifest propi; hi ha reproductor i hashes. No s’ha auditat l’arxiu binari de la pujada posterior: el prompt T6 declara Apple«Waiting for Review», que és una afirmació de la convocatòria, no una consulta nostra a App Store Connect. Cap signatura, clauer, compte, credencial o pujada utilitzats.
+<!-- O5:CODEX:FI -->
+
+<!-- O4:CODEX:INICI -->
+### Onada 4 Nocturna · CARRIL2 · kit CAS dipositat i verificat
+
+**Lliurament complet del constructor:** `../_investigacio_ia_de_poble/261102_kit_codex_onada4_skills_tractors_i_destrossa/`.70 rutes de payload,10 precondicions,65 preimatges i inventari complet de388 fitxers. Manifest canònic amb `target_path`, `preimage_sha256` i `sha256`, wrapper sec per defecte i aplicació amb `--write` explícit. Dipòsit amb rename atòmic; no s’ha aplicat codi del producte al viu. Manifest SHA256 `d80e9d2baa6eca58fffd9b57f609231e9f72a18b738275d793fc8ed91651156b`; inventari SHA256 `1ad58a5646a98bf402a790fd6977acc4bf4915acd2b3d73de0d5d7927bb4c64e`.
+
+Prompt 2138 íntegre i Bloc T4 llegits. El canònic s’ha ampliat de 214 a 240 línies durant el torn (IDEA-63 i BOTIGUES); el delta també s’ha llegit i executat. Torn `torn_b208c6a3-28e3-484d-a788-d8cdeba7fe15`, plantilla viva rebuda i pla original vinculat. Baseline immutable del HEAD `cc3e443dc973ad286b8faf0a5c3379d7e6ae9fff` amb els canvis previs preservats, sota `/private/tmp/sdp-codex-o4-p9vxg3u7/`. Els informes congelats dels auditors i les preimatges originals no s’han reescrit.
+
+**O4-CODEX-1:** revisades una per una les 42 skills físiques (9 core+33 plugins), no 33 en total:41 millorades i1 conservada. `evidencia/auditoria-42-skills.json` documenta per a cadascuna propòsit, contradicció, corrector, hashes, fonts amb línia, regla mecànica i criteri manual/absent. Corregides regles de congelació d’edició per qualsevol auditoria, autoritat ja concedida, buildWP, quotes/models fixos, PDF, taxonomia i descripcions de tractors que afirmaven controls inexistents. S’han preservat els camps del contracte propi de les skills; el validador genèric de skill-creator no reconeix eixe esquema i no s’ha usat per esborrar metadades.
+
+Els cinc documents d’exemplars incorporen targetes internes reals de Legal, `PublicacioUniversal` de cinc àmbits, doble comprovació d’enllaços, edició avançada Hero→Avatar→àmbit→classificació i calaix compartit. Una instantània complementària del carril Claude, separada de la baseline, passa140/140 proves en7 suites amb15 hashes de context. La geometria sota barra negra correspon a la SPA; l’encastat manté la capa modal. No es confon DOM/CSS amb viewport real. `/page/privadesa` era absent: mentre es construïa el corrector, Claude ha integrat els àlies privadesa+privacitat→`/legal`; navigation queda com a precondició, fora del payload, preservant el seu canvi i la política existent.
+
+| Família | Corrector i evidència |
+| --- | --- |
+| Fronteres | Motors com a fitxers regulars dins de l’arbre; rebutja traversal/directoris/symlinks.27/27 proves. Cens42, zero violacions, deute i avisos. |
+| Enllaços | Router JSX i resolutors reals; comodins/dades pendents sense fals404 ni fals verd; URL, controls, rutes relatives, fitxers públics, MIME/JSON, NotFound200 i límits.22 roges sobre preimatge;26/26després amb HTTP local i fuzz2000. |
+| Dades/ZIP | UTF16 escalar, claus reservades, ID malformat i coherència local/central/descriptors ZIP; reproductors i controls de compatibilitat. No s’afirma explotació remota. |
+| RLS | Estat DDL per fitxer i entre migracions; DISABLE, recreació, ALTER amb llistes/asterisc, UNLOGGED i dollar-quote.32/32amb Realtime i74 SQL analitzats, sense executar migracions. |
+| PDF/telemetria/segell | Perfil/cau del navegador aïllats i netejats; unitats reals dels avisos; API de segell importable des de stdin. Reproductors rojos/verds i límits declarats. |
+| SCC | Exclou només `dist-natiu` generat de l’arrel; l’homònim dins de la Wiki continua auditat.9 verdes+1roja abans,10/10després. |
+| Botigues | Enllaç APK amb text neutre i atributs adjacents: proves DOM amb sanejador real, controls de web/enllaços legítims; SDK mínim 36 i resolució conservadora de Gradle, expressions no acreditades→avís.99 verdes+2 omissions de guardes; contrast independent9 casos SDK. |
+
+Catàleg i índex regenerats. Segell final reconciliat explícitament contra l’original: `c82137841dda7ede692a9716b64104a6596780d66446e588e2eb4cbbab0f60da`. La revisió independent local tanca sense bloquejants els defectes reportats; no substituïx el consens de Claude/Gemini/MarIA.
+
+**Prova final de lliurament:** el wrapper verifica inventari i àlies; tres controls negatius (target divergent, payload alterat i àlies incoherent) rebutgen sense modificar el target. Aplicació real dels 70 fitxers en una segona còpia: hashes i modes concordants, Frontissa16/16, cap lock/staging residual i reaplicació rebutjada per CAS. Després d’aplicar: **119 Node verdes+1 omesa i207 Vitest verdes+5 omeses**,0 fallades. Design Guard:3032 fitxers,0 crítics i0 avisos. Quatre fonts oficials de botigues passen arbre+HTTP. Les dues entrades literals `[text](adreça/ruta)` de la skill Markdown són exemples de sintaxi, no URLs clicables; el scanner conservador les registra i la classificació manual consta al kit.
+
+**Límit de les suites àmplies:** la primera suite Vitest dóna 30.826 verdes,14 roges,176 omeses,16 fitxers fallits i1error de listen del sandbox. Node primari: 2120 verdes,19 roges,12 omeses i2 TODO. No es presenten com a verd global. El triatge Node separa17 precondicions excloses i2tests del Mapa ja corregits per Claude; Vitest identifica resolució de React des del cau Lucide, fonts natives exclosos, harness d’originals humans i assertions antigues de Firebase/IAIA. La reexecució de 14 fitxers amb context adequat dóna 477 verdes,2 roges IAIA antigues del carril Claude i4 omeses. El harness d’al·lèrgens està corregit al kit; els correctors simultanis de Claude no es dupliquen.
+
+**Integració pendent de Claude:** la comprovació seca sobre el viu s’atura a Frontissa13/16 perquè descarregues/fediversity/projecte han canviat durant la construcció i encara tenen l’empremta anterior. No es força ni es reaprova contingut d’un altre carril; cal completar eixa validació i revisar/rebasar qualsevol pin divergent abans d’aplicar. El kit és verd en la còpia de referència. El check global observat passa7 portes i SCC queda roig pels 2Markdown generats en dist-natiu; el seu corrector és al kit. El check estricte del torn també registra pla ampliat, codi/captures concurrents i relleu ESTAT/LEDGER pendent. `RELLEU_DOCUMENTAL.md` prepara eixes anotacions respectant l’exclusivitat d’escriptura. No s’ha fabricat un tancament ni un10/10 global.
+
+No s’ha fet cap operació real de compte, Supabase, signatura, pujada o publicació a botigues. Font nativa1.0.0/2 coherent amb el pipeline; preparar Build3 és el pas de release de Claude. Les proves de baixa/Apple són amb mocks, SQL és estàtic i PDF usa navegador simulat. Cap comprovació local garantix aprovació de botiga.
+
+**Desconvocatòria:** cap temporitzador ni automatització creats;6 automatitzacions Codex observades PAUSED, guarda nocturna inactiva i processos propis finits acabats. Informe i kit lliurats; queda el relleu d’integració, no una tasca de fons.
+<!-- O4:CODEX:FI -->
 
 <!-- O3:CODEX:INICI -->
 ### Onada 3 · Teler Invertit · tres kits CAS dipositats i verificats

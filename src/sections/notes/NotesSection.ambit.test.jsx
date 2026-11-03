@@ -7,13 +7,13 @@
    valor estrany no fan res. El detall és una sonda que llig el canal; el
    diàleg de veres es prova a NotesEditor.ambit.test.jsx. Dades sintètiques. */
 import React from 'react';
-import { act, cleanup, fireEvent, render, screen, within } from '@testing-library/react';
+import { act, cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { afterEach, beforeAll, beforeEach, expect, test, vi } from 'vitest';
 import { MemoryRouter, useLocation, useNavigate } from '../../app/contexts/RouterContext';
 
 const dades = vi.hoisted(() => ({
   notes: [], status: 'ready', teSessio: true, canCreate: true, config: { dataMode: 'remote' }, notesComplete: true,
-  creaNota: null, setLocalNoteField: null, canal: null, buit: []
+  creaNota: null, setLocalNoteField: null, canal: null, preparada: null, buit: [], estatMur: undefined
 }));
 
 vi.mock('./NotesContext', async (importOriginal) => ({
@@ -26,15 +26,18 @@ vi.mock('./NotesContext', async (importOriginal) => ({
 }));
 vi.mock('./NotesDataContext.jsx', () => ({ useNotesData: () => ({ activate: () => () => {}, config: dades.config }) }));
 vi.mock('../../app/contexts/IdentitatContext.jsx', () => ({ useIdentitat: () => ({ actor: { tipus: 'persona', id: 'uuid-prova', rol: 'persona' }, memberships: [] }) }));
-vi.mock('../mur/MurContext', () => ({ useMur: () => ({ sortedFeedPosts: dades.buit, sortedEvents: dades.buit, sortedMarketItems: dades.buit }) }));
+vi.mock('../mur/MurContext', () => ({ useMur: () => ({ sortedFeedPosts: dades.buit, sortedEvents: dades.buit, sortedMarketItems: dades.buit, status: dades.estatMur }) }));
 /* El detall diu quina nota té oberta, si és la preparada i què porta el canal de l'àmbit. */
 vi.mock('./NotesDetail.jsx', async () => {
   const { useCanalAmbit } = await import('../../components/universal/ambits/canalAmbit.js');
+  const { useNotaPreparadaDelBloc } = await import('./notaPreparada.js');
   function DetallFals({ activeNote }) {
     const canal = useCanalAmbit();
     dades.canal = canal;
+    // El canal de la preparada, com el que fa servir l'editor (NotesEditor).
+    dades.preparada = useNotaPreparadaDelBloc();
     return (
-      <p data-testid="detall" data-preparada={activeNote?.preparada ? 'si' : 'no'} data-pendent={canal?.pendent ?? ''}>
+      <p data-testid="detall" data-preparada={activeNote?.preparada ? 'si' : 'no'} data-pendent={canal?.pendent ?? ''} data-carpeta={activeNote?.folderId ?? ''} data-fitxa={activeNote?.fitxa?.ambit ?? ''}>
         {activeNote?.id ?? 'cap'}
       </p>
     );
@@ -64,7 +67,7 @@ beforeAll(() => {
   Object.defineProperty(HTMLElement.prototype, 'clientWidth', { configurable: true, get: () => 1400 });
 });
 beforeEach(() => {
-  Object.assign(dades, { notes: [NOTA_A], status: 'ready', teSessio: true, canCreate: true, config: { dataMode: 'remote' }, notesComplete: true, canal: null });
+  Object.assign(dades, { notes: [NOTA_A], status: 'ready', teSessio: true, canCreate: true, config: { dataMode: 'remote' }, notesComplete: true, canal: null, estatMur: undefined });
   dades.creaNota = vi.fn(async (entrada) => ({ ...entrada, revision: 1 }));
   dades.setLocalNoteField = vi.fn();
 });
@@ -177,4 +180,73 @@ test.each(['mercat', 'vehicle', 'treball', 'habitatge'])('sense sessió, l’àm
   expect(url()).not.toContain('ambit=');
   expect(pendent()).toBe('');
   expect(dades.creaNota).not.toHaveBeenCalled();
+});
+
+/* O4-CLAUDE-1 (ordre del Mestre, captura 261102_2121) · La «Nota sense títol»
+   d'una entrada ?ambit= naix a la carpeta de la secció de l'àmbit
+   (carpetaAmbit.js): el Mercat, a la del Mercat; Compartir cotxe, Treball i
+   Habitatge, a la del Mur. La carpeta oberta i la URL no canvien, i l'entrada
+   no espera la font del Mercat (pitfall esperaCarpeta): la preparada de
+   l'àmbit hi va fixada, també amb el Mur carregant. */
+test.each([
+  ['mercat', 'f-mercat'],
+  ['vehicle', 'f-mur'],
+  ['treball', 'f-mur'],
+  ['habitatge', 'f-mur']
+])('?ambit=%s sense nota: la preparada naix a %s', (ambit, carpeta) => {
+  munta(`/notes?ambit=${ambit}`);
+  expect(detall().dataset.preparada).toBe('si');
+  expect(detall().dataset.carpeta).toBe(carpeta);
+  expect(pendent()).toBe(ambit);
+  expect(dades.creaNota).not.toHaveBeenCalled();
+});
+
+test('?ambit=mercat amb el Mur (la font del Mercat) carregant: la preparada s’obri igual, a la carpeta del Mercat, sense esperar', () => {
+  dades.estatMur = 'loading';
+  munta('/notes?ambit=mercat');
+  expect(detall().textContent).toMatch(UUID_V4);
+  expect(detall().dataset.preparada).toBe('si');
+  expect(detall().dataset.carpeta).toBe('f-mercat');
+  expect(pendent()).toBe('mercat');
+  consumix();
+  expect(url()).not.toContain('ambit=');
+  expect(url()).toContain(`nota=${detall().textContent}`);
+});
+
+test('una nota de la URL no canvia de carpeta per l’entrada (ho decidix l’editor), i sense àmbit la preparada naix on és la persona', () => {
+  munta('/notes?nota=a1&ambit=mercat');
+  expect(detall().dataset.carpeta).toBe('f-mur');
+  cleanup();
+  munta('/notes?carpeta=f-notes');
+  fireEvent.click(within(columnaNotes()).getByRole('button', { name: 'Nota sense títol' }));
+  expect(detall().dataset.preparada).toBe('si');
+  expect(detall().dataset.carpeta).toBe('f-notes');
+});
+
+/* O4-CLAUDE-3 (D2-publicacio-5-verticals-01) · /notes?ambit=vehicle: l'editor
+   deixa a la preparada la fitxa de l'àmbit i la carpeta del Mur, i consumix
+   el canal. La persona canvia d'idea sense escriure res: tria una altra
+   carpeta al rail i prem CREAR NOTA. La mateixa preparada hi naix, sense la
+   fitxa de Compartir cotxe, i en escriure es crea en eixa carpeta. */
+test('?ambit=vehicle consumit, canvi de carpeta i CREAR NOTA: la preparada perd la fitxa i naix a la carpeta triada', async () => {
+  munta('/notes?ambit=vehicle');
+  const id = detall().textContent;
+  // Com l'efecte de NotesEditor en consumir el canal.
+  act(() => {
+    dades.preparada.escriu(id, 'fitxa', { ambit: 'vehicle', estat: 'disponible', dades: {} });
+    dades.preparada.escriu(id, 'folderId', 'f-mur');
+  });
+  consumix();
+  expect(detall().dataset.fitxa).toBe('vehicle');
+  fireEvent.click(within(screen.getByRole('navigation', { name: 'CARPETES' })).getByRole('button', { name: 'Altres notes' }));
+  fireEvent.click(screen.getByRole('button', { name: 'CREAR NOTA' }));
+  await waitFor(() => expect(detall().textContent).toBe(id));
+  expect(detall().dataset.preparada).toBe('si');
+  expect(detall().dataset.fitxa).toBe('');
+  expect(detall().dataset.carpeta).toBe('f-notes');
+  await act(async () => { dades.preparada.escriu(id, 'content', '<p>Coca de llanda</p>'); });
+  expect(dades.creaNota).toHaveBeenCalledTimes(1);
+  const entrada = dades.creaNota.mock.lastCall[0];
+  expect(entrada).toMatchObject({ id, folderId: 'f-notes' });
+  expect(entrada.fitxa).toBeUndefined();
 });

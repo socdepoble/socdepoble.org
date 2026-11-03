@@ -1226,8 +1226,12 @@ Informe: 261101_2143_auditoria_claude.
 261102 | relleu | torn_858b8642-1deb-48dd-a79e-da025c5d6abe | Claude Àrbitre/materialitzador; E2EE false; cap deploy/SQL remot/commit; cap timer/heartbeat/automatització creats i sis automacions existents PAUSED
 
 261102 | tancament-concurrent | torn_858b8642-1deb-48dd-a79e-da025c5d6abe | Global 8/8 verd; segell estricte refusat per cinc canvis aliens de codi i quatre captures postobertura; captura2017 ancorada sense alterar-la, inventari inicial intacte. Claude confirma dos correctors O2; root revalida62/62 en còpia. Cap procés recurrent pendent.
+261103 | torn | torn_d19293b9-1bb0-4073-8218-3da898ce7533 | Claude Opus 5.5 (code) · relleus 8-9 Onades 4-5: eixam A-D, Gauntlet 31/31, kits Codex i R2, fusió Gemini reconciliada, lliçons restaurades
+261103 | correcció | sdp-workflow | Lliçons del Mestre restaurades íntegres després del kit Codex O4
+261103 | correcció | wiki-documentacio-i-reflex | Lliçons del Mestre restaurades íntegres després del kit Codex O4
+261103 | torn | torn_d19293b9-1bb0-4073-8218-3da898ce7533 | Claude Opus 5.5 (code) · relleu 10 Onada 6: v1.1.0, negretes d'escaneig a tota la web, kit legal 2.4 integrat
+261103 | frontissa | contingut_estructural | 15 empremtes aprovades per l'ordre O6 T2.4 (Onada 6), 16/16
+261103 | torn | torn_73df43cb-e9c8-47f3-8c99-857669036387 | GPT Codex · Onada 6 Carril 2: WordPress v1.1.12 5 idiomes, 4 skills resegellades i kit CAS legal 2.4 + MIME + compilador Wiki
+261103 | deploy | torn_f69976f9-6724-431f-b2f1-02efeedf6406 | IAIA MarIA · Mode Jarvis: tests/fixtures/ajustos.suite.mjs (H4/H7 verd), build + deploy Firebase Hosting v1.1.0 i Git commit/push
 
-<!-- HASH: c6321dca7fc9f04d6227673ce1f9db7a98d8b627f96585be3f6feaec235e52f1 -->
-
-
-<!-- HASH: 33544240fd2d237d42c531eff85698bce01411ff0f791f82271844f34a9c9b0e -->
+<!-- HASH: 05c98e4f2099d7341244bb85394ce155db3c09eea95353bb2f8d4978a388149a -->

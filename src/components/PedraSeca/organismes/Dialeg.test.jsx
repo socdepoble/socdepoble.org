@@ -4,6 +4,8 @@
    showModal (el Dialeg posa l'atribut `open`): el tancament natiu s'emula
    com el fa el navegador (fora `open` i l'esdeveniment `close`). */
 import React, { useState } from 'react';
+import { readdirSync, readFileSync } from 'node:fs';
+import { join, resolve } from 'node:path';
 import { act, cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 import { afterEach, expect, test, vi } from 'vitest';
 import { Dialeg, DialegConfirmacio } from './Dialeg.jsx';
@@ -468,4 +470,303 @@ test('T2 · en l’encastat la finestra de la barra no puja mai: la capa modal j
   act(() => { window.dispatchEvent(new Event('resize')); });
   rerender(<ArnesBarra text="Cos més llarg" />);
   expect(dialeg().classList.contains('sdp-dialeg--barra-amunt')).toBe(false);
+});
+
+/* O4-CLAUDE-1b (IDEA-63, ordre del Mestre, captura 261102_2149) · Tot
+   calaix del Dialeg (costat esquerra o dreta: «Amb qui actues?», el Crom del
+   sistema, l'espècimen del catàleg i el menú compacte d'App.jsx) naix davall
+   de la barra negra amb el mateix càlcul que l'Índex de la Pàgina Universal:
+   els tokens compartits --sdp-calaix-dalt i --sdp-calaix-alt (tokens.css).
+   jsdom no maqueta ni resol la cascada: es lligen els fulls de veres, com
+   les proves de capes (src/css/*.capes.test.js), i les classes que pinta. */
+const BARRA_NEGRA = 'calc(var(--sdp-alt-negra) + env(safe-area-inset-top, 0px))';
+const lligFull = (ruta) => readFileSync(resolve(process.cwd(), ruta), 'utf8');
+const senseComentaris = (css) => css.replace(/\/\*[\s\S]*?\*\//g, '');
+/** Regles fulla d'un full: { prelud, cos, pares } (pares: els blocs que la contenen). */
+function regles(css) {
+  const eixida = [];
+  const pila = [];
+  let tros = '';
+  for (const c of senseComentaris(css)) {
+    if (c === '{') {
+      if (pila.length) pila[pila.length - 1].fills = true;
+      pila.push({ prelud: tros.split(';').pop().trim().replace(/\s+/g, ' '), fills: false });
+      tros = '';
+    } else if (c === '}') {
+      const marc = pila.pop();
+      if (marc && !marc.fills) eixida.push({ prelud: marc.prelud, cos: tros.replace(/\s+/g, ' ').trim(), pares: pila.map((p) => p.prelud) });
+      tros = '';
+    } else {
+      tros += c;
+    }
+  }
+  return eixida;
+}
+/** Declaracions d'un cos: [[propietat, valor], …]. */
+const declaracionsDe = (cos) => cos.split(';').map((d) => d.trim()).filter((d) => d.includes(':'))
+  .map((d) => [d.slice(0, d.indexOf(':')).trim(), d.slice(d.indexOf(':') + 1).trim()]);
+/** Tots els valors de `propietat` a les regles amb eixe prelud exacte. */
+const valors = (full, prelud, propietat) => full.filter((r) => r.prelud === prelud)
+  .flatMap((r) => declaracionsDe(r.cos)).filter(([p]) => p === propietat).map(([, v]) => v);
+/** Tots els fulls .css de src/, amb el camí relatiu. */
+const fullsCss = () => readdirSync(resolve(process.cwd(), 'src'), { recursive: true })
+  .filter((rel) => String(rel).endsWith('.css')).map((rel) => join('src', String(rel)));
+
+test('O4-CLAUDE-1b · els tokens del calaix: el dalt és l’alçada de la barra negra; l’alçada, la resta (vh, i dvh només dins de @supports)', () => {
+  const tokens = regles(lligFull('src/css/tokens.css'));
+  const deTokens = (pares, nom) => tokens.filter((r) => r.prelud === ':root, :host, .sdp-root' && r.pares.join(' ') === pares)
+    .flatMap((r) => declaracionsDe(r.cos)).filter(([p]) => p === nom).map(([, v]) => v);
+  expect(deTokens('', '--sdp-calaix-dalt')).toEqual([BARRA_NEGRA]);
+  expect(deTokens('', '--sdp-calaix-alt')).toEqual(['calc(100vh - var(--sdp-calaix-dalt))']);
+  expect(deTokens('@supports (height: 100dvh)', '--sdp-calaix-alt')).toEqual(['calc(100dvh - var(--sdp-calaix-dalt))']);
+  // Un sol lloc per al dalt, i cap dvh de token fora del seu @supports: una
+  // segona declaració de la custom property no fa de reserva en Chrome 100.
+  const totes = tokens.flatMap((r) => declaracionsDe(r.cos).map(([p, v]) => ({ ...r, p, v })));
+  expect(totes.filter((d) => d.p === '--sdp-calaix-dalt')).toHaveLength(1);
+  expect(totes.filter((d) => /\ddvh\b/.test(d.v) && !d.pares.includes('@supports (height: 100dvh)')).map((d) => `${d.prelud} { ${d.p}: ${d.v} }`)).toEqual([]);
+  // La barra negra fa exactament esta alçada: el calaix comença on ella acaba.
+  expect(senseComentaris(lligFull('src/css/layout.css')).replace(/\s+/g, ' '))
+    .toContain(`header.bar-black { box-sizing: border-box; height: ${BARRA_NEGRA}; min-height: ${BARRA_NEGRA};`);
+});
+
+test('O4-CLAUDE-1b · el calaix i el seu vel comencen davall de la barra amb els tokens; els costats només posen left i right; l’Índex, els mateixos', () => {
+  const components = regles(lligFull('src/css/components.css'));
+  expect(valors(components, '.sdp-dialeg--calaix', 'top')).toEqual(['var(--sdp-calaix-dalt)']);
+  expect(valors(components, '.sdp-dialeg--calaix', 'bottom')).toEqual(['0']);
+  expect(valors(components, '.sdp-dialeg--calaix', 'height')).toEqual(['var(--sdp-calaix-alt)']);
+  // El sostre, el mateix token: ni el de l'agent d'usuari (100% − 2em) ni el de .sdp-dialeg el retallen.
+  expect(valors(components, '.sdp-dialeg--calaix', 'max-height')).toEqual(['var(--sdp-calaix-alt)']);
+  expect(valors(components, '.sdp-dialeg--calaix', 'margin')).toEqual(['0']);
+  // El vel comença a enfosquir on comença el calaix, amb el mateix token (B1b-02: transparent damunt de la barra).
+  expect(valors(components, '.sdp-dialeg--calaix::backdrop', 'background')).toEqual([
+    'linear-gradient(to bottom, transparent var(--sdp-calaix-dalt), var(--sdp-fons-vel) var(--sdp-calaix-dalt))'
+  ]);
+  expect(valors(components, '.sdp-dialeg--esquerra', 'left')).toEqual(['0']);
+  expect(valors(components, '.sdp-dialeg--dreta', 'right')).toEqual(['0']);
+  for (const costat of ['.sdp-dialeg--esquerra', '.sdp-dialeg--dreta']) {
+    const propietats = components.filter((r) => r.prelud === costat).flatMap((r) => declaracionsDe(r.cos)).map(([p]) => p);
+    // Un inset sencer tornaria el dalt a 0, damunt de la barra.
+    expect(propietats.filter((p) => /^(inset|inset-block|inset-block-start|top|height|max-height)$/.test(p)), costat).toEqual([]);
+  }
+  // El cos fa el seu scroll i el peu queda damunt de la zona segura de baix.
+  expect(valors(components, '.sdp-dialeg--calaix .sdp-dialeg__marc', 'height')).toEqual(['100%']);
+  expect(valors(components, '.sdp-dialeg__cos', 'overflow-y')).toEqual(['auto']);
+  expect(valors(components, '.sdp-dialeg--calaix .sdp-dialeg__peu', 'padding-bottom'))
+    .toEqual(['calc(var(--sdp-space-4) + env(safe-area-inset-bottom, 0px))']);
+  // L'Índex de la Pàgina Universal (modules.css): els mateixos tokens i una sola alçada.
+  const moduls = regles(lligFull('src/css/modules.css'));
+  expect(valors(moduls, '.toc-overlay', 'top')).toEqual(['var(--sdp-calaix-dalt)']);
+  expect(valors(moduls, '.toc-overlay', 'height')).toEqual(['var(--sdp-calaix-alt)']);
+});
+
+test('O4-CLAUDE-1b · cap regla de calaix, del seu vel ni de l’Índex torna a 100dvh (ni a cap vh) sense restar la barra, ni posa el dalt a 0', () => {
+  const SUBJECTE = /(\.sdp-dialeg--(calaix|esquerra|dreta)|\.sdp-dialeg-sidebar|\.toc-overlay)(::backdrop)?$/;
+  const VERTICALS = /^(height|max-height|min-height|top|inset|inset-block|inset-block-start)$/;
+  const trobades = [];
+  const infraccions = [];
+  for (const full of fullsCss()) {
+    for (const regla of regles(lligFull(full))) {
+      // L'encastat (:host) el dimensiona la capa modal de layout.css: 100% de la caixa de l'App.
+      const selectors = regla.prelud.split(',').map((s) => s.trim()).filter((s) => !s.startsWith(':host') && SUBJECTE.test(s));
+      if (!selectors.length) continue;
+      trobades.push(regla.prelud);
+      for (const [propietat, valor] of declaracionsDe(regla.cos)) {
+        if (!VERTICALS.test(propietat)) continue;
+        const dalt = /^(top|inset|inset-block|inset-block-start)$/.test(propietat) ? valor.split(/\s+/)[0] : null;
+        if (/\d(s|l|d)?vh\b/.test(valor) || dalt === '0' || dalt === '0px') infraccions.push(`${full} · ${regla.prelud} { ${propietat}: ${valor} }`);
+      }
+    }
+  }
+  expect(trobades).toEqual(expect.arrayContaining(['.sdp-dialeg--calaix', '.sdp-dialeg--calaix::backdrop', '.toc-overlay']));
+  expect(infraccions).toEqual([]);
+});
+
+/* O4-CLAUDE-1b · B1b-02 (àrbitre, P2) · Amb showModal() el document és
+   inert: un vel que començara davall de la barra deixaria la barra visible
+   però morta (un toc no arriba ni a ella ni al <dialog>, i tornar a tocar
+   l'avatar per a tancar no faria res). El vel ocupa tota la pantalla, com
+   el ::backdrop de l'agent d'usuari (fixed, inset: 0), i és transparent
+   damunt de la barra: no l'enfosquix, i un toc allí cau al vel i tanca el
+   calaix amb el motiu 'vel', com abans. */
+const VEL_CALAIX = 'linear-gradient(to bottom, transparent var(--sdp-calaix-dalt), var(--sdp-fons-vel) var(--sdp-calaix-dalt))';
+const GEOMETRIA_VERTICAL = /^(position|inset|inset-block|inset-block-start|inset-block-end|top|bottom|height|min-height|max-height|block-size)$/;
+
+test('O4-CLAUDE-1b · B1b-02 · el vel del calaix cobrix tota la pantalla i és transparent damunt de la barra negra: un toc a la barra el tanca', () => {
+  const components = regles(lligFull('src/css/components.css'));
+  const delVel = components.filter((r) => r.prelud.split(',').map((s) => s.trim()).includes('.sdp-dialeg--calaix::backdrop'));
+  // Cap geometria pròpia: la de l'agent d'usuari, tota la pantalla.
+  expect(delVel.flatMap((r) => declaracionsDe(r.cos)).map(([p]) => p).filter((p) => GEOMETRIA_VERTICAL.test(p))).toEqual([]);
+  // La franja de la barra, transparent; davall, el vel de sempre, des del mateix token que el calaix.
+  expect(valors(components, '.sdp-dialeg--calaix::backdrop', 'background')).toEqual([VEL_CALAIX]);
+  expect(valors(components, '.sdp-dialeg--calaix', 'top')).toEqual(['var(--sdp-calaix-dalt)']);
+  // jsdom: el toc al vel arriba al <dialog> mateix (e.target) i el tanca amb el motiu 'vel'.
+  const onTanca = vi.fn();
+  render(<Dialeg obert costat="dreta" titol="Calaix del vel" onTanca={onTanca}><p>Cos</p></Dialeg>);
+  fireEvent.click(screen.getByRole('dialog', { name: 'Calaix del vel' }));
+  expect(onTanca).toHaveBeenCalledTimes(1);
+  expect(onTanca).toHaveBeenCalledWith('vel');
+});
+
+/* O4-CLAUDE-1b · B1b-04 (àrbitre, P3) · Els valors no basten: l'ordre del
+   full també mana. (1) Si el @supports (height: 100dvh) de tokens.css pujara
+   per damunt del :root principal, el vh guanyaria a tots els navegadors
+   moderns: l'Índex deixaria de ser idèntic al píxel i el peu dels calaixos
+   quedaria davall de la barra del navegador. (2) Si .sdp-dialeg--calaix
+   pujara per damunt de .sdp-dialeg (la mateixa especificitat, 0,1,0),
+   tornarien a manar el margin: auto i el max-height: min(88dvh, 48rem), i el
+   calaix es retallaria. El mateix per al vel. Les guardes es proven també
+   contra un full girat: han de detectar l'ordre invers. */
+function problemesDOrdreDelToken(css) {
+  const declaracions = regles(css).flatMap((r) => declaracionsDe(r.cos).filter(([p]) => p === '--sdp-calaix-alt')
+    .map(([, v]) => ({ v, dins: r.pares.includes('@supports (height: 100dvh)') })));
+  const vh = declaracions.findIndex((d) => !d.dins && d.v === 'calc(100vh - var(--sdp-calaix-dalt))');
+  const dvh = declaracions.findIndex((d) => d.dins && d.v === 'calc(100dvh - var(--sdp-calaix-dalt))');
+  if (vh < 0 || dvh < 0) return ['falta el vh o el dvh de --sdp-calaix-alt'];
+  const problemes = [];
+  if (dvh < vh) problemes.push('el dvh del @supports va davant del vh: el vh guanyaria');
+  if (declaracions.length - 1 !== dvh) problemes.push('una declaració posterior tapa el dvh');
+  return problemes;
+}
+function problemesDOrdreDelCalaix(css) {
+  const totes = regles(css);
+  const ultima = (prelud, propietats) => totes.reduce((i, r, j) => (r.prelud === prelud
+    && declaracionsDe(r.cos).some(([p]) => propietats.test(p)) ? j : i), -1);
+  const primera = (prelud) => totes.findIndex((r) => r.prelud === prelud);
+  const problemes = [];
+  const base = ultima('.sdp-dialeg', /^(margin|max-height|height|top|inset)$/);
+  const calaix = primera('.sdp-dialeg--calaix');
+  if (base < 0 || calaix < base) problemes.push('.sdp-dialeg--calaix ha d’anar darrere de .sdp-dialeg');
+  const velBase = ultima('.sdp-dialeg::backdrop', /^background$/);
+  const velCalaix = primera('.sdp-dialeg--calaix::backdrop');
+  if (velBase < 0 || velCalaix < velBase) problemes.push('.sdp-dialeg--calaix::backdrop ha d’anar darrere de .sdp-dialeg::backdrop');
+  return problemes;
+}
+
+test('O4-CLAUDE-1b · B1b-04 · l’ordre del full: el dvh del token, darrere del vh; el calaix i el seu vel, darrere de .sdp-dialeg', () => {
+  expect(problemesDOrdreDelToken(lligFull('src/css/tokens.css'))).toEqual([]);
+  expect(problemesDOrdreDelCalaix(lligFull('src/css/components.css'))).toEqual([]);
+  // Les guardes veuen l'ordre invers.
+  // El nom del token a banda: un full de mentida no és una segona definició (tractor-tokens, T3).
+  const alt = '--sdp-calaix-alt';
+  const vh = `:root, :host, .sdp-root { ${alt}: calc(100vh - var(--sdp-calaix-dalt)); }`;
+  const dvh = `@supports (height: 100dvh) { :root, :host, .sdp-root { ${alt}: calc(100dvh - var(--sdp-calaix-dalt)); } }`;
+  expect(problemesDOrdreDelToken(`${vh}\n${dvh}`)).toEqual([]);
+  expect(problemesDOrdreDelToken(`${dvh}\n${vh}`)).not.toEqual([]);
+  const base = '.sdp-dialeg { margin: auto; max-height: min(88dvh, 48rem); } .sdp-dialeg::backdrop { background: var(--sdp-fons-vel); }';
+  const calaix = `.sdp-dialeg--calaix { margin: 0; max-height: var(--sdp-calaix-alt); } .sdp-dialeg--calaix::backdrop { background: ${VEL_CALAIX}; }`;
+  expect(problemesDOrdreDelCalaix(`${base}\n${calaix}`)).toEqual([]);
+  expect(problemesDOrdreDelCalaix(`${calaix}\n${base}`)).toHaveLength(2);
+});
+
+/* O4-CLAUDE-1b · B1b-05 (àrbitre, P3) · El càlcul de la barra encara viu
+   copiat en literal fora del token (header.bar-black, .brand, :host
+   .toc-overlay a layout.css i .sdp-ptr-indicator a modules.css: fora del
+   carril, petició a l'orquestrador per a passar-los a var(--sdp-calaix-dalt)).
+   Mentre hi siguen, cap còpia no es pot desviar del token: si canvia l'un i
+   no l'altre, el calaix, l'Índex de l'encastat o l'indicador de recarregar
+   deixen de començar on acaba la barra. */
+test('O4-CLAUDE-1b · B1b-05 · cap còpia literal del càlcul de la barra negra es desvia del token --sdp-calaix-dalt', () => {
+  const token = regles(lligFull('src/css/tokens.css')).filter((r) => r.prelud === ':root, :host, .sdp-root' && !r.pares.length)
+    .flatMap((r) => declaracionsDe(r.cos)).find(([p]) => p === '--sdp-calaix-dalt')?.[1];
+  expect(token).toBe(BARRA_NEGRA);
+  const FIRMA = 'var(--sdp-alt-negra) + env(safe-area-inset-top';
+  const copies = [];
+  for (const full of fullsCss()) {
+    if (full === join('src', 'css', 'tokens.css')) continue;
+    for (const regla of regles(lligFull(full))) {
+      for (const [propietat, valor] of declaracionsDe(regla.cos)) {
+        for (let i = valor.indexOf(FIRMA); i >= 0; i = valor.indexOf(FIRMA, i + 1)) {
+          // El calc() que la conté, sencer (parèntesis equilibrats).
+          const inici = valor.lastIndexOf('calc(', i);
+          let fi = inici;
+          for (let profunditat = 0; fi < valor.length; fi += 1) {
+            if (valor[fi] === '(') profunditat += 1;
+            else if (valor[fi] === ')' && --profunditat === 0) break;
+          }
+          copies.push({ on: `${full} · ${regla.prelud} { ${propietat} }`, calcul: valor.slice(inici, fi + 1) });
+        }
+      }
+    }
+  }
+  expect(copies.map((c) => c.on)).toEqual(expect.arrayContaining([expect.stringContaining('header.bar-black { height }')]));
+  expect(copies.filter((c) => c.calcul !== token).map((c) => `${c.on}: ${c.calcul}`)).toEqual([]);
+});
+
+/* O4-CLAUDE-1b · B1b-01 (àrbitre, P1) · [DEFECTE] fora del carril
+   (layout.css). El menú compacte (App.jsx, <Dialeg costat="esquerra"
+   className="sdp-dialeg-sidebar">) naix ara davall de la barra negra i de la
+   zona segura, però la seua marca (.brand, @layer legacy de layout.css)
+   continua sumant la zona segura de dalt (padding-top: env(...) !important i
+   height amb env), com quan el calaix obria des de dalt de la pantalla: a
+   l'iPhone amb osca, una franja negra buida de 47-59px al cim del menú. Des
+   de components.css no s'hi pot guanyar: amb !important l'ordre de les capes
+   s'invertix i legacy guanya a components. test.fails mentre el defecte hi
+   siga. Aplicada a layout.css (orquestrador, 261102 23:4x): ara és una prova
+   normal. Amagar la marca dins del calaix continua sent tria del Mestre. */
+test('O4-CLAUDE-1b · B1b-01 · la marca del menú compacte no torna a sumar la zona segura de dalt davall de la barra', () => {
+  const marcaDelCalaix = (r) => r.prelud.split(',').some((s) => /\.sdp-dialeg-sidebar\b.*\s\.brand(\.[\w-]+)*$/.test(s.trim()));
+  const fulls = ['src/css/layout.css', 'src/css/components.css'].flatMap((full) => regles(lligFull(full)));
+  // (a) Amagada dins del calaix (tria del Mestre: el logotip ja es veu a la barra).
+  const amagada = fulls.filter(marcaDelCalaix).some((r) => declaracionsDe(r.cos).some(([p, v]) => p === 'display' && v === 'none'));
+  // (b) Sense la zona segura: padding-top a 0 amb !important en una capa que guanye a legacy, i una alçada sense env().
+  const neta = fulls.filter((r) => marcaDelCalaix(r) && r.pares.some((p) => /^@layer (reset|sdp|legacy)$/.test(p))).some((r) => {
+    const declaracions = declaracionsDe(r.cos);
+    const senseCoixi = declaracions.some(([p, v]) => /^(padding-top|padding-block-start)$/.test(p) && /^0(px)? !important$/.test(v))
+      || declaracions.some(([p, v]) => p === 'padding' && /^0(px)?\b.*!important$/.test(v));
+    const alcada = declaracions.some(([p, v]) => p === 'height' && !v.includes('safe-area-inset-top'));
+    return senseCoixi && alcada;
+  });
+  expect(amagada || neta).toBe(true);
+});
+
+/* O4-CLAUDE-1b · B1b-03 (àrbitre, P2) · [DEFECTE] fora del carril
+   (layout.css). Encastada (<soc-de-poble>, mode local del Dialeg), la capa
+   modal del calaix (:host .sdp-capa-modal, inset: 0, amb --calaix només
+   padding: 0) i el calaix (height: 100%) continuen cobrint i enfosquint la
+   barra negra de l'App. Petició: el mateix patró que a la SPA (B1b-02), la
+   capa sencera, transparent damunt de la barra i amb el calaix davall
+   d'ella; un inset que la fera començar davall de la barra també ho
+   resoldria, però deixaria la barra inert (modalLocal.js) sense cap toc.
+   Aplicada a layout.css (orquestrador, 261102 23:4x): ara és una prova
+   normal. */
+test('O4-CLAUDE-1b · B1b-03 · encastada, la capa del calaix no vela la barra negra de l’App', () => {
+  const capa = regles(lligFull('src/css/layout.css'))
+    .filter((r) => r.prelud.split(',').map((s) => s.trim()).includes(':host .sdp-capa-modal--calaix'))
+    .flatMap((r) => declaracionsDe(r.cos));
+  const darrer = (propietat) => capa.filter(([p]) => p === propietat).map(([, v]) => v).at(-1);
+  const davall = (darrer('inset') ?? '').startsWith('var(--sdp-calaix-dalt)') || darrer('top') === 'var(--sdp-calaix-dalt)';
+  const transparent = darrer('background') === VEL_CALAIX
+    && (darrer('padding-top') ?? darrer('padding') ?? '').startsWith('var(--sdp-calaix-dalt)');
+  expect(davall || transparent).toBe(true);
+});
+
+test('O4-CLAUDE-1b · a la SPA el Dialeg pinta el calaix fora de la capa modal, amb la classe compartida i el costat; cap estil en línia', () => {
+  for (const [costat, extra] of [['dreta', {}], ['esquerra', {}], ['esquerra', { variant: 'sense-marc', className: 'sdp-dialeg-sidebar' }]]) {
+    render(<Dialeg obert costat={costat} titol={`Calaix ${costat}`} accions={<button type="button">Peu</button>} {...extra}><p>Cos</p></Dialeg>);
+    const dialeg = screen.getByRole('dialog', { name: `Calaix ${costat}` });
+    expect(dialeg.classList.contains('sdp-dialeg--calaix'), costat).toBe(true);
+    expect(dialeg.classList.contains(`sdp-dialeg--${costat}`), costat).toBe(true);
+    // Fora d'un encastament, cap regla :host .sdp-capa-modal no hi guanya.
+    expect(dialeg.closest('.sdp-capa-modal')).toBeNull();
+    expect(dialeg.getAttribute('style')).toBeNull();
+    expect(dialeg.querySelectorAll('[style]')).toHaveLength(0);
+    if (!extra.variant) {
+      expect(dialeg.querySelector(':scope > .sdp-dialeg__marc > .sdp-dialeg__cos')).not.toBeNull();
+      expect(dialeg.querySelector(':scope > .sdp-dialeg__marc > footer.sdp-dialeg__peu')).not.toBeNull();
+    }
+    cleanup();
+  }
+});
+
+/* La petició de B1b-03 no toca estes regles: el calaix continua fent el 100%
+   de la capa, i és la capa la que el deixa davall de la barra. */
+test('O4-CLAUDE-1b · l’encastat no canvia: la capa modal de layout.css continua dimensionant el calaix (inset: auto, 100% de la caixa) i hi guanya', () => {
+  const layout = regles(lligFull('src/css/layout.css'));
+  expect(valors(layout, ':host .sdp-capa-modal > .sdp-dialeg', 'inset')).toEqual(['auto']);
+  expect(valors(layout, ':host .sdp-capa-modal > .sdp-dialeg', 'max-height')).toEqual(['100%']);
+  expect(valors(layout, ':host .sdp-capa-modal > .sdp-dialeg--calaix', 'height')).toEqual(['100%']);
+  // (0,3,0) contra (0,1,0), a la mateixa capa: el :host guanya al top, al bottom, al left, al right i a l'alçada del calaix.
+  const capa = (full, prelud) => regles(lligFull(full)).find((r) => r.prelud === prelud)?.pares;
+  expect(capa('src/css/layout.css', ':host .sdp-capa-modal > .sdp-dialeg')).toEqual(['@layer components']);
+  expect(capa('src/css/components.css', '.sdp-dialeg--calaix')).toEqual(['@layer components']);
 });

@@ -214,9 +214,13 @@ test('sense sessió (remot): la Card també hi és, sense CREAR NOTA', () => {
 
 /* Gauntlet 261101 · X-C-notes (C-07) · La frase final de la Card val amb
    sessió i sense: sense sessió (dades remotes) no hi ha «CREAR NOTA», i la
-   Card no pot manar prémer-lo sense dir que primer cal entrar. */
+   Card no pot manar prémer-lo sense dir que primer cal entrar.
+   O6-CLAUDE-2 (ordre del Mestre, Onada 6, 261103) · El paràgraf porta negretes d'escaneig: es compara
+   el seu text, sense etiquetes. */
 test('la frase final de la Card val per als dos casos: CREAR NOTA i, si no hi és, entrar abans', () => {
-  const finals = NOTA_TUTORIAL.content.match(/<p>[^<]*CREAR NOTA[^<]*<\/p>/g);
+  const finals = NOTA_TUTORIAL.content.match(/<p>[\s\S]*?<\/p>/g)
+    .map((p) => p.replace(/<[^>]+>/g, ''))
+    .filter((p) => p.includes('CREAR NOTA'));
   expect(finals).toHaveLength(1);
   expect(finals[0]).toContain('si no hi veus el botó, primer entra amb el teu compte');
 });

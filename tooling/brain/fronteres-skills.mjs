@@ -39,7 +39,7 @@ export const ESQUEMA = 'sdp.fronteres-skills.v2';
 
 export const REGLES = Object.freeze({
   F1: 'contracte.llig i contracte.escriu: llistes no buides de camins canònics que existixen',
-  F2: 'cada `node <camí>` existix i cada `npm run <script>` és a package.json (també dins de blocs de codi)',
+  F2: 'cada `node <camí>` és un fitxer regular canònic dins de l’arrel, sense symlinks; cada `npm run <script>` és a package.json (també dins de blocs de codi)',
   F3: 'cap ordre d’escriptura recursiva (sed -i, perl -i, find … -exec/-delete, xargs rm|sed|perl) sense excloure 01_produccio',
   F4: 'cada var(--sdp-*) està declarat a src/**/*.css; cap color, ombra ni radi literal fora d’una prohibició o del valor del token que la línia nomena',
   F5: 'el que una ordre de la skill llig (require(\'./…\'), readFileSync(\'…\'), cat <camí>) cap dins de contracte.llig o contracte.escriu'
@@ -254,7 +254,11 @@ export function auditaSkill(skill, { arrel, scripts = {}, tokens = new Map() }) 
     // F2 · motors i scripts, també dins de blocs de codi.
     for (const m of l.matchAll(RE_NODE)) {
       motors.add(m[1]);
-      if (!fs.existsSync(path.join(arrel, m[1]))) afig('F2', `motor absent ${m[1]}`, n);
+      let abs;
+      try { abs = segura(arrel, m[1]); }
+      catch { afig('F2', `motor no canònic ${m[1]}`, n); continue; }
+      if (!fs.existsSync(abs)) afig('F2', `motor absent ${m[1]}`, n);
+      else if (!fs.lstatSync(abs).isFile()) afig('F2', `motor no és fitxer regular ${m[1]}`, n);
     }
     for (const m of l.matchAll(RE_NPM)) {
       if (!Object.hasOwn(scripts, m[1])) afig('F2', `script absent ${m[1]}`, n);

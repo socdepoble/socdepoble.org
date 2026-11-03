@@ -1990,16 +1990,22 @@ details[open] summary.accordion-header svg:last-child {
    naixen davall de la barra negra (header.bar-black, layout.css): el mateix
    calc que la seua alçada, var(--sdp-alt-negra) més la zona segura de dalt.
    Ni tapen la barra ni topen amb la barra d'estat del sistema (la Dynamic
-   Island). L'alçada, la resta de la pantalla: vh primer per a la Baseline
-   2022 i dvh on existix (la barra del navegador mòbil no la retalla). */
+   Island). L'alçada, la resta de la pantalla: vh per a la Baseline 2022 i
+   dvh on existix (la barra del navegador mòbil no la retalla).
+   O4-CLAUDE-1b (IDEA-63, ordre del Mestre, captura 261102_2149) · El càlcul
+   ja no viu ací: són els tokens compartits --sdp-calaix-dalt i
+   --sdp-calaix-alt (tokens.css), els mateixos que fan servir tots els
+   calaixos del Dialeg (.sdp-dialeg--calaix, components.css). El valor és
+   idèntic. El parell vh/dvh passa al @supports del token: abans, el var()
+   de la segona alçada la feia vàlida en llegir-la també on no hi ha dvh
+   (Chrome 100-107, Firefox 100), i allà el vel es quedava sense alçada. */
 
 .toc-overlay {
   position: fixed;
-  top: calc(var(--sdp-alt-negra) + env(safe-area-inset-top, 0px));
+  top: var(--sdp-calaix-dalt);
   left: 0;
   width: 100vw;
-  height: calc(100vh - var(--sdp-alt-negra) - env(safe-area-inset-top, 0px));
-  height: calc(100dvh - var(--sdp-alt-negra) - env(safe-area-inset-top, 0px));
+  height: var(--sdp-calaix-alt);
   background: var(--sdp-fons-vel);
   z-index: var(--z-calaix);
   display: flex;
@@ -7107,7 +7113,7 @@ details[open] summary.accordion-header svg:last-child {
      transform al contingut trencaria els seus position: fixed. Sobreescriu
      el bloc antic .sdp-ptr-indicator de més amunt en este full. */
   .sdp-ptr-indicator {
-    top: calc(var(--sdp-alt-negra) + env(safe-area-inset-top, 0px));
+    top: var(--sdp-calaix-dalt);
     height: var(--sdp-space-12);
     font-size: var(--sdp-text-small);
     opacity: 0;
@@ -10794,6 +10800,85 @@ details[open] summary.accordion-header svg:last-child {
   :host([data-contrast="bancal"]) .sdp-xat-fila--nova .sdp-xat-fila__hora,
   :root[data-contrast="bancal"] .sdp-cal-setmana .sdp-cal-dia__nom,
   :host([data-contrast="bancal"]) .sdp-cal-setmana .sdp-cal-dia__nom { font-weight: 700; }
+}
+
+/* ═══ SUBTARGETA · O4-CLAUDE-2 (ordre del Mestre, 261102 21:38) ══════════
+   La primitiva única «Subtargeta» de Pedra Seca: una targeta interna, ben
+   delimitada, dins de la carta d'una pàgina o d'un document. HTML pur que el
+   sanejador ja admet (src/utils/sanitize.js no canvia):
+     <div class="sdp-subtargeta" data-sdp-subtargeta="">
+       <h4>Títol</h4>              el primer encapçalament (h3 a h5 segons el context)
+       <p>Metadada o subtítol</p>  opcional: el primer paràgraf darrere del títol
+       …cos ric (paràgrafs, llistes, enllaços)…
+     </div>
+   Cap classe nova al contingut: el títol i la metadada es trien per
+   estructura (:first-child i :first-child + p). La mateixa regla val a la
+   lectura (article.cms-preview de les pàgines, article.detail-content de
+   renderRichText) i a l'editor (.ProseMirror: el node sdpSubtargeta de
+   richText/extensions/subtargeta.js pinta el mateix div). Estàtica: el
+   sanejador lleva details i summary, i la caixa no es plega.
+     · La caixa: el fons de superfície, la vora decorativa, el radi de les
+       targetes (--sdp-radi-m, el de .sp-card) i l'ombra suau de repòs
+       (--sdp-ombra-1), amb el coixí de la reixeta. clear: both la deixa
+       davall d'una targeta incrustada flotant (bloc T7). El marge de dalt i
+       de baix és el ritme dels blocs; els costats, els de .cms-preview > *
+       (base.css).
+     · El títol: l'aspecte del títol de targeta (.sp-card-title de
+       components.css): --sdp-text-h5, el pes extra (--sdp-pes-extra, 800;
+       C2-08), el blau del text d'acció i el
+       filet fi de davall, a l'esquerra com la prosa. Qualsevol nivell (h3 a
+       h6) es veu igual dins de la caixa: el nivell és del document (l'Índex
+       de la barra blava el llig), l'aspecte és de la targeta.
+     · La metadada: text suau, un graó més menut (--sdp-text-small, 16px:
+       mai per davall del sòl de 14px).
+     · L'últim fill sense marge de baix (C2-03): el paràgraf o la llista
+       final portaven el seu (--sdp-mb-p, --sdp-mb-ul) i el coixí de baix de
+       la caixa doblava el de dalt.
+     · A l'editor, la caixa triada sencera (Supr des del paràgraf d'abans)
+       porta l'anell de focus del sistema, com la targeta incrustada.
+   Cap :has() ni consulta de contenidor (Baseline 2022). */
+@layer components {
+  .sdp-subtargeta {
+    clear: both;
+    min-inline-size: 0;
+    margin-block: var(--sdp-space-6);
+    padding: var(--sdp-space-4) var(--sdp-space-5);
+    background: var(--sdp-fons-superficie);
+    border: 1px solid var(--sdp-vora);
+    border-radius: var(--sdp-radi-m);
+    box-shadow: var(--sdp-ombra-1);
+    overflow-wrap: break-word;
+  }
+  .sdp-subtargeta > :first-child {
+    font-size: var(--sdp-text-h5);
+    font-weight: var(--sdp-pes-extra);
+    line-height: var(--sdp-leading-titol);
+    color: var(--sdp-accio-text);
+    text-align: left;
+    text-transform: none;
+    letter-spacing: normal;
+    margin-block: 0 var(--sdp-space-3);
+    padding-block-end: var(--sdp-space-3);
+    border-bottom: 1px solid var(--sdp-vora);
+  }
+  /* O4 · Els apartats de dins (h3 a h5 darrere del títol) mai passen del
+     títol: --sdp-fluid-h5 arriba a 26px en un contenidor ample i el títol en
+     fa 24 (--sdp-text-h5). En amplades menudes, el mateix valor fluid; el
+     sostre és --sdp-text-h6 (20px). L'h6 (16 a 22px) ja hi queda davall. */
+  .sdp-subtargeta > :first-child ~ :is(h3, h4, h5) {
+    font-size: min(var(--sdp-fluid-h5), var(--sdp-text-h6));
+  }
+  .sdp-subtargeta > :first-child + p {
+    font-size: var(--sdp-text-small);
+    color: var(--sdp-text-suau);
+  }
+  .sdp-subtargeta > :last-child {
+    margin-block-end: 0;
+  }
+  .sdp-subtargeta.ProseMirror-selectednode {
+    outline: var(--sdp-focus-gruix) solid var(--sdp-focus);
+    outline-offset: var(--sdp-focus-separacio);
+  }
 }
 
 /* ── GESTORIA TAULER (261004) ── */

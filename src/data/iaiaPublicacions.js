@@ -1,8 +1,8 @@
 /** Guia editorial local. No llig dades de sessió ni publica en nom de ningú. */
 const GUIES = Object.freeze([
-  { id: 'vehicle', paraules: /\b(cotxe|vehicle|viatge|trajecte|coche|viaje)\b/, nom: 'Compartir cotxe', ruta: '/page/vehicle_compartit', camps: 'origen, destí, dia i hora, places, aportació i punt de trobada', titol: 'Compartim viatge de [origen] a [destí]', text: 'El [dia] eixiré de [origen] cap a [destí] a les [hora]. Tinc [places] places. Ens trobem a [lloc]. Aportació: [import o acord].' },
-  { id: 'treball', paraules: /\b(treball|feina|faena|ofici|jornal|trabajo|empleo)\b/, nom: 'Treball i oficis', ruta: '/page/treball', camps: 'si oferixes o busques treball, ofici, poble, dedicació, remuneració i contacte', titol: '[Oferisc / busque] treball de [ofici] a [poble]', text: 'Busquem una persona per a [tasca] a [poble]. Dedicació: [horari]. Condicions i remuneració: [dades]. Inici: [dia].' },
-  { id: 'habitatge', paraules: /\b(habitatge|lloguer|llogar|pis|casa|vivienda|alquiler|alquilar)\b/, nom: 'Habitatge', ruta: '/page/habitatge', camps: 'lloguer o venda, poble, preu, habitacions, superfície, estat i condicions', titol: '[Lloguer / venda] de [pis / casa] a [poble]', text: 'Oferisc [tipus d’habitatge] a [poble], amb [habitacions] habitacions i [superfície] m². Preu: [import]. Estat i condicions: [detalls].' },
+  { id: 'vehicle', paraules: /\b(cotxe|vehicle|viatge|trajecte|coche|viaje)\b/, nom: 'Compartir cotxe', ruta: '/vehicle', camps: 'origen, destí, dia i hora, places, aportació i punt de trobada', titol: 'Compartim viatge de [origen] a [destí]', text: 'El [dia] eixiré de [origen] cap a [destí] a les [hora]. Tinc [places] places. Ens trobem a [lloc]. Aportació: [import o acord].' },
+  { id: 'treball', paraules: /\b(treball|feina|faena|ofici|jornal|trabajo|empleo)\b/, nom: 'Treball i oficis', ruta: '/treball', camps: 'si oferixes o busques treball, ofici, poble, dedicació, remuneració i contacte', titol: '[Oferisc / busque] treball de [ofici] a [poble]', text: 'Busquem una persona per a [tasca] a [poble]. Dedicació: [horari]. Condicions i remuneració: [dades]. Inici: [dia].' },
+  { id: 'habitatge', paraules: /\b(habitatge|lloguer|llogar|pis|casa|vivienda|alquiler|alquilar)\b/, nom: 'Habitatge', ruta: '/habitatge', camps: 'lloguer o venda, poble, preu, habitacions, superfície, estat i condicions', titol: '[Lloguer / venda] de [pis / casa] a [poble]', text: 'Oferisc [tipus d’habitatge] a [poble], amb [habitacions] habitacions i [superfície] m². Preu: [import]. Estat i condicions: [detalls].' },
   { id: 'mercat', paraules: /\b(mercat|botiga|vendre|venc|compre|comprar|producte|mercado|tienda|vendo|vender|regale|regalar)\b/, nom: 'Mercat', ruta: '/mercat', camps: 'producte, estat, preu o intercanvi, quantitat, poble i una foto clara', titol: '[Producte] a [poble]', text: 'Oferisc [producte i quantitat]. Estat: [detalls]. Preu o intercanvi: [condicions]. Recollida a [poble].' },
   { id: 'calendari', paraules: /\b(calendari|acte|festa|event|evento|agenda)\b/, nom: 'Calendari', ruta: '/calendari', camps: 'nom de l’acte, dia, hora, lloc, organització i si cal inscripció', titol: '[Nom de l’acte] a [poble]', text: 'El [dia] a les [hora] ens trobem a [lloc] per a [activitat]. Organitza: [entitat]. Inscripció: [condicions].' },
   { id: 'mur', paraules: /\b(mur|muro|avis|anunci|publicacio|publicacion|noticia)\b/, nom: 'Mur', ruta: '/mur', camps: 'què passa, a qui va dirigit, poble, dia i lloc', titol: '[Què passa] a [poble]', text: 'El [dia] a [lloc], [explica què passa i a qui va dirigit]. Si vols saber-ne més, escriu-me pel Xat.' }
@@ -10,15 +10,25 @@ const GUIES = Object.freeze([
 const plega = (s) => s.normalize('NFD').replace(/\p{M}/gu, '').toLowerCase();
 const DEMANA_REDACCIO = /\b(redacta|redactar|redactem|escriu|escriure|escribe|escribir|esborrany|borrador|prepara)\b/;
 const DEMANA_GUIA = /\b(publicar|publique|publico|publicacio|publicacion|penjar|anunciar)\b/;
+/* D3-xat-iaia-e2ee-02 · On diu la persona que vol publicar («al Mur», «per
+   Compartir cotxe», «la secció de treball»): mana sobre les paraules clau del
+   contingut (una «casa de la cultura» al Mur no és Habitatge). */
+const DESTI_EXPLICIT = /\b(?:al|per al|en el|del)\s+(mur|mercat|calendari)\b|\b(compartir cotxe)\b|\bseccio\s+(?:de\s+)?(treball|habitatge)\b/g;
+const ID_DEL_DESTI = Object.freeze({ mur: 'mur', mercat: 'mercat', calendari: 'calendari', 'compartir cotxe': 'vehicle', treball: 'treball', habitatge: 'habitatge' });
+const PAS_DEL_BLOC = 'Pots redactar primer al Bloc de Notes (/notes), revisar la targeta amb «Proposa Card» i triar on publicar-la. La publicació només ix quan tu la confirmes; jo no l’he publicada.';
+const passosDe = (guia) => `Per a ${guia.nom}, prepara: ${guia.camps}.\nObri ${guia.ruta} per a consultar la secció.`;
 
 export function ajudaDePublicacioIAIA(pregunta) {
   if (typeof pregunta !== 'string' || !pregunta.trim() || pregunta.length > 2000) return null;
   const normal = plega(pregunta);
   const redacta = DEMANA_REDACCIO.test(normal);
   if (!redacta && !DEMANA_GUIA.test(normal)) return null;
-  const guia = GUIES.find((g) => g.paraules.test(normal));
+  const destins = new Set([...normal.matchAll(DESTI_EXPLICIT)].map((m) => ID_DEL_DESTI[m[1] || m[2] || m[3]]));
+  const triades = destins.size ? GUIES.filter((g) => destins.has(g.id)) : GUIES.filter((g) => g.paraules.test(normal)).slice(0, 1);
+  if (triades.length > 1 && !redacta) return `${triades.map(passosDe).join('\n\n')}\n\n${PAS_DEL_BLOC}`;
+  const guia = triades.length === 1 ? triades[0] : null;
   if (!guia) return 'T’ajude a preparar la publicació. Digues si és per al Mur, Mercat, compartir cotxe, treball, habitatge o calendari, i conta’m què vols anunciar, en quin poble i per a quan. Pots guardar l’esborrany al Bloc de Notes: /notes';
-  const passos = `Per a ${guia.nom}, prepara: ${guia.camps}.\nObri ${guia.ruta} per a consultar la secció. Pots redactar primer al Bloc de Notes (/notes), revisar la targeta amb «Proposa Card» i triar on publicar-la. La publicació només ix quan tu la confirmes; jo no l’he publicada.`;
+  const passos = `${passosDe(guia)} ${PAS_DEL_BLOC}`;
   if (!redacta) return passos;
   // Amb dades explícites després del tipus d'anunci, conserva el relat de la
   // persona. No endevina noms, preus, horaris ni interpreta un 17:30 com a camp.

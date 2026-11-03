@@ -38,8 +38,12 @@ Abans de promoure esta visió a `canonic` i “implementat” cal:
 Fins aleshores, la realitat verificable és la descrita en
 [[00_arquitectura_tecnica_unificada]]: React/Vite i una arquitectura online-first
 amb el Supabase de Sóc de Poble com a font de veritat ([[ADR-2026-08-ONLINE-FIRST]]),
-integrat amb Sollutia pel Model B ([[ADR-2026-09-SOLLUTIA-MODEL-B]]). La PWA,
-Dexie i la persistència offline es van retirar.
+integrat amb Sollutia pel Model B ([[ADR-2026-09-SOLLUTIA-MODEL-B]]). Dexie es va
+retirar. El codi torna a incloure PWA, IndexedDB per a dades del dispositiu i
+una closca de `/app/*` sense xarxa. L'[[ADR-2026-10-APPS-DEL-DISPOSITIU]] en
+documenta la implementació parcial i la proposta d'abast, encara pendent de
+signatura. Estes excepcions no implementen reconciliació de dades compartides,
+sincronització en segon pla ni CRDT.
 
 ## Vincles
 
@@ -47,4 +51,5 @@ Dexie i la persistència offline es van retirar.
 - [[00_arquitectura_tecnica_unificada]]
 - [[ADR-2026-08-ONLINE-FIRST]]
 - [[ADR-2026-09-SOLLUTIA-MODEL-B]]
+- [[ADR-2026-10-APPS-DEL-DISPOSITIU]]
 - [[arquitectura_l_anima]]

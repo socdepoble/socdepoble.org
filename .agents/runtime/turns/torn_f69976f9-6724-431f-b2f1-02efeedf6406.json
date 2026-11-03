@@ -3,10 +3,10 @@
   "turn_id": "torn_f69976f9-6724-431f-b2f1-02efeedf6406",
   "actor": "maria",
   "scope": "documents",
-  "state": "context_loaded",
-  "revision": 18,
+  "state": "planned",
+  "revision": 50,
   "createdAt": "2026-11-02T17:21:54.622Z",
-  "updatedAt": "2026-11-02T19:02:13.077Z",
+  "updatedAt": "2026-11-03T02:28:54.755Z",
   "expiresAt": "2026-11-03T17:21:54.623Z",
   "contractHash": "1839756fa153a68d945b48956d870a4a082ab80adcf874a04dd10fc1327d8c45",
   "humanInventoryVersion": 1,
@@ -4622,11 +4622,23 @@
       "id": "4d74b79a-23b9-4c68-91fa-019ca009baeb",
       "route": "prompt.local",
       "routeVersion": "3.11.0",
-      "file": "_wiki_de_poble/04_escriptori/261102_1918_prompt_teler_invertit_onada3_codex_gemini_constructors_claude_arbitre.md",
+      "file": "_wiki_de_poble/90_arxiu_historic/261102_1918_prompt_teler_invertit_onada3_codex_gemini_constructors_claude_arbitre.md",
       "contractSnapshot": "7c2ae1e44975784cd341e0d4dec3249dceeddc6e653fbc09c140f3cb6debe9ad",
       "template": "_wiki_de_poble/03_actuar/plantilles/prompt_local.md",
       "templateHash": "edf7daf4d81ab3640d195369807d5ab047bbc60027abd2663f86de3b076d992a",
-      "issuedAt": "2026-11-02T18:18:05.372Z"
+      "issuedAt": "2026-11-02T18:18:05.372Z",
+      "moves": [
+        {
+          "from": "_wiki_de_poble/04_escriptori/261102_1918_prompt_teler_invertit_onada3_codex_gemini_constructors_claude_arbitre.md",
+          "to": "_wiki_de_poble/90_arxiu_historic/261102_1918_prompt_teler_invertit_onada3_codex_gemini_constructors_claude_arbitre.md",
+          "hash": "5b66b7c4a49a327977705d9cfc1e8c061994f5dbcb3cb8afaad7f521e4e22e6d",
+          "at": "2026-11-02T20:36:19.910Z",
+          "receiptIds": [
+            "4d74b79a-23b9-4c68-91fa-019ca009baeb",
+            "397bfa8d-19e2-4416-b4cf-831a7875317c"
+          ]
+        }
+      ]
     },
     "7fcfdb44-be66-45d7-8ac2-c423d60b0499": {
       "id": "7fcfdb44-be66-45d7-8ac2-c423d60b0499",
@@ -4648,7 +4660,7 @@
       "id": "397bfa8d-19e2-4416-b4cf-831a7875317c",
       "route": "prompt.local",
       "routeVersion": "3.11.0",
-      "file": "_wiki_de_poble/04_escriptori/261102_1918_prompt_teler_invertit_onada3_codex_gemini_constructors_claude_arbitre.md",
+      "file": "_wiki_de_poble/90_arxiu_historic/261102_1918_prompt_teler_invertit_onada3_codex_gemini_constructors_claude_arbitre.md",
       "contractSnapshot": "7c2ae1e44975784cd341e0d4dec3249dceeddc6e653fbc09c140f3cb6debe9ad",
       "template": "_wiki_de_poble/03_actuar/plantilles/prompt_local.md",
       "templateHash": "edf7daf4d81ab3640d195369807d5ab047bbc60027abd2663f86de3b076d992a",
@@ -4658,7 +4670,19 @@
         "preparedAt": "2026-11-02T18:18:35.441Z",
         "committedAt": "2026-11-02T18:18:35.501Z",
         "documentHash": "61bd95b13f92b1ab8ddbdbc012055eed7b5947023b9168ee5c15453a7e483ae2"
-      }
+      },
+      "moves": [
+        {
+          "from": "_wiki_de_poble/04_escriptori/261102_1918_prompt_teler_invertit_onada3_codex_gemini_constructors_claude_arbitre.md",
+          "to": "_wiki_de_poble/90_arxiu_historic/261102_1918_prompt_teler_invertit_onada3_codex_gemini_constructors_claude_arbitre.md",
+          "hash": "5b66b7c4a49a327977705d9cfc1e8c061994f5dbcb3cb8afaad7f521e4e22e6d",
+          "at": "2026-11-02T20:36:19.910Z",
+          "receiptIds": [
+            "4d74b79a-23b9-4c68-91fa-019ca009baeb",
+            "397bfa8d-19e2-4416-b4cf-831a7875317c"
+          ]
+        }
+      ]
     },
     "433d1423-10c6-4bae-9206-6b904bf71f7c": {
       "id": "433d1423-10c6-4bae-9206-6b904bf71f7c",
@@ -4685,9 +4709,261 @@
         "committedAt": "2026-11-02T18:30:33.498Z",
         "documentHash": "fd4d7bcadf4e17c3b00600a3c03f1c0012815c720c23203c7122d3470b0ea3f1"
       }
+    },
+    "e4f71818-e5fa-4bf2-8aa9-76f64811c95b": {
+      "id": "e4f71818-e5fa-4bf2-8aa9-76f64811c95b",
+      "route": "prompt.local",
+      "routeVersion": "3.11.0",
+      "file": "_wiki_de_poble/90_arxiu_historic/261102_2138_prompt_onada4_nocturna_claude_eixam_codex_gemini_10_de_10.md",
+      "contractSnapshot": "7c2ae1e44975784cd341e0d4dec3249dceeddc6e653fbc09c140f3cb6debe9ad",
+      "template": "_wiki_de_poble/03_actuar/plantilles/prompt_local.md",
+      "templateHash": "edf7daf4d81ab3640d195369807d5ab047bbc60027abd2663f86de3b076d992a",
+      "issuedAt": "2026-11-02T20:37:35.575Z",
+      "moves": [
+        {
+          "from": "_wiki_de_poble/04_escriptori/261102_2138_prompt_onada4_nocturna_claude_eixam_codex_gemini_10_de_10.md",
+          "to": "_wiki_de_poble/90_arxiu_historic/261102_2138_prompt_onada4_nocturna_claude_eixam_codex_gemini_10_de_10.md",
+          "hash": "64b7e9a6bd8e5d9614c4f84499fb1f2fce6fda644274416b8191459452d795f8",
+          "at": "2026-11-02T23:37:24.987Z",
+          "receiptIds": [
+            "e4f71818-e5fa-4bf2-8aa9-76f64811c95b",
+            "5472190e-3c97-478e-a44e-506a14e63bcd"
+          ]
+        }
+      ]
+    },
+    "2f695585-b1c5-48c3-9e5e-31d6973a86a3": {
+      "id": "2f695585-b1c5-48c3-9e5e-31d6973a86a3",
+      "route": "prompt.local",
+      "routeVersion": "3.11.0",
+      "file": "_wiki_de_poble/04_escriptori/261102_2138_prompt_onada4_nocturna_claude_eixam_codex_gemini_10_de_10.md",
+      "contractSnapshot": "7c2ae1e44975784cd341e0d4dec3249dceeddc6e653fbc09c140f3cb6debe9ad",
+      "template": "_wiki_de_poble/03_actuar/plantilles/prompt_local.md",
+      "templateHash": "edf7daf4d81ab3640d195369807d5ab047bbc60027abd2663f86de3b076d992a",
+      "issuedAt": "2026-11-02T20:37:45.303Z",
+      "creation": {
+        "state": "failed",
+        "preparedAt": "2026-11-02T20:37:45.303Z",
+        "failedAt": "2026-11-02T20:37:45.308Z",
+        "absent": true
+      }
+    },
+    "5472190e-3c97-478e-a44e-506a14e63bcd": {
+      "id": "5472190e-3c97-478e-a44e-506a14e63bcd",
+      "route": "prompt.local",
+      "routeVersion": "3.11.0",
+      "file": "_wiki_de_poble/90_arxiu_historic/261102_2138_prompt_onada4_nocturna_claude_eixam_codex_gemini_10_de_10.md",
+      "contractSnapshot": "7c2ae1e44975784cd341e0d4dec3249dceeddc6e653fbc09c140f3cb6debe9ad",
+      "template": "_wiki_de_poble/03_actuar/plantilles/prompt_local.md",
+      "templateHash": "edf7daf4d81ab3640d195369807d5ab047bbc60027abd2663f86de3b076d992a",
+      "issuedAt": "2026-11-02T20:37:54.084Z",
+      "creation": {
+        "state": "committed",
+        "preparedAt": "2026-11-02T20:37:54.084Z",
+        "committedAt": "2026-11-02T20:37:54.124Z",
+        "documentHash": "281a061494da7ac1774734888e0ea0ca00abb453bae127b36bdf1be18606d160"
+      },
+      "moves": [
+        {
+          "from": "_wiki_de_poble/04_escriptori/261102_2138_prompt_onada4_nocturna_claude_eixam_codex_gemini_10_de_10.md",
+          "to": "_wiki_de_poble/90_arxiu_historic/261102_2138_prompt_onada4_nocturna_claude_eixam_codex_gemini_10_de_10.md",
+          "hash": "64b7e9a6bd8e5d9614c4f84499fb1f2fce6fda644274416b8191459452d795f8",
+          "at": "2026-11-02T23:37:24.988Z",
+          "receiptIds": [
+            "e4f71818-e5fa-4bf2-8aa9-76f64811c95b",
+            "5472190e-3c97-478e-a44e-506a14e63bcd"
+          ]
+        }
+      ]
+    },
+    "cf82495a-d176-42ea-b589-3bcf12388db9": {
+      "id": "cf82495a-d176-42ea-b589-3bcf12388db9",
+      "route": "pla.implementacio",
+      "routeVersion": "2.0.0",
+      "file": "_wiki_de_poble/04_escriptori/261103_0038_pla_implementacio_onada5_reconciliacio_botigues_i_tancament_10_de_10.md",
+      "contractSnapshot": "7ff1583a77a8e41337096d0d21896bf0179cc23ae6b9ec387ecd73a85b5e3060",
+      "template": "_wiki_de_poble/03_actuar/plantilles/pla_implementacio.md",
+      "templateHash": "d05074ef89d1ec60596509565d7ac7a1e02b0e2bed1b304311b7fa651b0d23d0",
+      "issuedAt": "2026-11-02T23:37:40.389Z"
+    },
+    "cd12da5a-4ea4-4e1e-970f-9c441dcbeff6": {
+      "id": "cd12da5a-4ea4-4e1e-970f-9c441dcbeff6",
+      "route": "prompt.local",
+      "routeVersion": "3.11.0",
+      "file": "_wiki_de_poble/04_escriptori/261102_2355_prompt_onada5_reconciliacio_botigues_i_tancament_10_de_10.md",
+      "contractSnapshot": "7c2ae1e44975784cd341e0d4dec3249dceeddc6e653fbc09c140f3cb6debe9ad",
+      "template": "_wiki_de_poble/03_actuar/plantilles/prompt_local.md",
+      "templateHash": "edf7daf4d81ab3640d195369807d5ab047bbc60027abd2663f86de3b076d992a",
+      "issuedAt": "2026-11-02T23:39:29.998Z"
+    },
+    "e4589dda-97ba-4a31-869f-4107f6b449c0": {
+      "id": "e4589dda-97ba-4a31-869f-4107f6b449c0",
+      "route": "prompt.local",
+      "routeVersion": "3.11.0",
+      "file": "_wiki_de_poble/90_arxiu_historic/261102_1532_prompt_onada5_reconciliacio_botigues_i_tancament_10_de_10.md",
+      "contractSnapshot": "7c2ae1e44975784cd341e0d4dec3249dceeddc6e653fbc09c140f3cb6debe9ad",
+      "template": "_wiki_de_poble/03_actuar/plantilles/prompt_local.md",
+      "templateHash": "edf7daf4d81ab3640d195369807d5ab047bbc60027abd2663f86de3b076d992a",
+      "issuedAt": "2026-11-02T23:41:09.610Z",
+      "moves": [
+        {
+          "from": "_wiki_de_poble/04_escriptori/261102_1532_prompt_onada5_reconciliacio_botigues_i_tancament_10_de_10.md",
+          "to": "_wiki_de_poble/90_arxiu_historic/261102_1532_prompt_onada5_reconciliacio_botigues_i_tancament_10_de_10.md",
+          "hash": "249a8b3f312069e56527473695c6fcffe9194d35e3c900ddf4e030b15b145405",
+          "at": "2026-11-03T01:38:05.511Z",
+          "receiptIds": [
+            "e4589dda-97ba-4a31-869f-4107f6b449c0",
+            "52cdcd14-8515-4e47-a683-2d373956b88c",
+            "911e37c7-d050-47b2-8bde-597476035f2d"
+          ]
+        }
+      ]
+    },
+    "52cdcd14-8515-4e47-a683-2d373956b88c": {
+      "id": "52cdcd14-8515-4e47-a683-2d373956b88c",
+      "route": "prompt.local",
+      "routeVersion": "3.11.0",
+      "file": "_wiki_de_poble/90_arxiu_historic/261102_1532_prompt_onada5_reconciliacio_botigues_i_tancament_10_de_10.md",
+      "contractSnapshot": "7c2ae1e44975784cd341e0d4dec3249dceeddc6e653fbc09c140f3cb6debe9ad",
+      "template": "_wiki_de_poble/03_actuar/plantilles/prompt_local.md",
+      "templateHash": "edf7daf4d81ab3640d195369807d5ab047bbc60027abd2663f86de3b076d992a",
+      "issuedAt": "2026-11-02T23:41:39.783Z",
+      "moves": [
+        {
+          "from": "_wiki_de_poble/04_escriptori/261102_1532_prompt_onada5_reconciliacio_botigues_i_tancament_10_de_10.md",
+          "to": "_wiki_de_poble/90_arxiu_historic/261102_1532_prompt_onada5_reconciliacio_botigues_i_tancament_10_de_10.md",
+          "hash": "249a8b3f312069e56527473695c6fcffe9194d35e3c900ddf4e030b15b145405",
+          "at": "2026-11-03T01:38:05.512Z",
+          "receiptIds": [
+            "e4589dda-97ba-4a31-869f-4107f6b449c0",
+            "52cdcd14-8515-4e47-a683-2d373956b88c",
+            "911e37c7-d050-47b2-8bde-597476035f2d"
+          ]
+        }
+      ]
+    },
+    "911e37c7-d050-47b2-8bde-597476035f2d": {
+      "id": "911e37c7-d050-47b2-8bde-597476035f2d",
+      "route": "prompt.local",
+      "routeVersion": "3.11.0",
+      "file": "_wiki_de_poble/90_arxiu_historic/261102_1532_prompt_onada5_reconciliacio_botigues_i_tancament_10_de_10.md",
+      "contractSnapshot": "7c2ae1e44975784cd341e0d4dec3249dceeddc6e653fbc09c140f3cb6debe9ad",
+      "template": "_wiki_de_poble/03_actuar/plantilles/prompt_local.md",
+      "templateHash": "edf7daf4d81ab3640d195369807d5ab047bbc60027abd2663f86de3b076d992a",
+      "issuedAt": "2026-11-02T23:41:39.904Z",
+      "creation": {
+        "state": "committed",
+        "preparedAt": "2026-11-02T23:41:39.904Z",
+        "committedAt": "2026-11-02T23:41:39.961Z",
+        "documentHash": "19d74d4a0a45e7c921c29ef1d73788b70d3dcc36df0d13b1781b6c4d56eefe6e"
+      },
+      "moves": [
+        {
+          "from": "_wiki_de_poble/04_escriptori/261102_1532_prompt_onada5_reconciliacio_botigues_i_tancament_10_de_10.md",
+          "to": "_wiki_de_poble/90_arxiu_historic/261102_1532_prompt_onada5_reconciliacio_botigues_i_tancament_10_de_10.md",
+          "hash": "249a8b3f312069e56527473695c6fcffe9194d35e3c900ddf4e030b15b145405",
+          "at": "2026-11-03T01:38:05.512Z",
+          "receiptIds": [
+            "e4589dda-97ba-4a31-869f-4107f6b449c0",
+            "52cdcd14-8515-4e47-a683-2d373956b88c",
+            "911e37c7-d050-47b2-8bde-597476035f2d"
+          ]
+        }
+      ]
+    },
+    "2615634c-9b08-4112-b840-6877ea8b79cc": {
+      "id": "2615634c-9b08-4112-b840-6877ea8b79cc",
+      "route": "prompt.local",
+      "routeVersion": "3.11.0",
+      "file": "_wiki_de_poble/04_escriptori/261102_1532_prompt_onada6_disseny_editorial_negrites_versions_1_1_0_i_tancament.md",
+      "contractSnapshot": "7c2ae1e44975784cd341e0d4dec3249dceeddc6e653fbc09c140f3cb6debe9ad",
+      "template": "_wiki_de_poble/03_actuar/plantilles/prompt_local.md",
+      "templateHash": "edf7daf4d81ab3640d195369807d5ab047bbc60027abd2663f86de3b076d992a",
+      "issuedAt": "2026-11-03T01:39:26.898Z"
+    },
+    "9db5093a-2f1a-4d17-9cab-cb65c1876502": {
+      "id": "9db5093a-2f1a-4d17-9cab-cb65c1876502",
+      "route": "prompt.local",
+      "routeVersion": "3.11.0",
+      "file": "_wiki_de_poble/04_escriptori/261102_1532_prompt_onada6_disseny_editorial_negrites_versions_1_1_0_i_tancament.md",
+      "contractSnapshot": "7c2ae1e44975784cd341e0d4dec3249dceeddc6e653fbc09c140f3cb6debe9ad",
+      "template": "_wiki_de_poble/03_actuar/plantilles/prompt_local.md",
+      "templateHash": "edf7daf4d81ab3640d195369807d5ab047bbc60027abd2663f86de3b076d992a",
+      "issuedAt": "2026-11-03T01:39:48.685Z"
+    },
+    "55e2c4bd-38f8-4bcf-856d-1ac4a18e91a3": {
+      "id": "55e2c4bd-38f8-4bcf-856d-1ac4a18e91a3",
+      "route": "prompt.local",
+      "routeVersion": "3.11.0",
+      "file": "_wiki_de_poble/04_escriptori/261102_1532_prompt_onada6_disseny_editorial_negrites_versions_1_1_0_i_tancament.md",
+      "contractSnapshot": "7c2ae1e44975784cd341e0d4dec3249dceeddc6e653fbc09c140f3cb6debe9ad",
+      "template": "_wiki_de_poble/03_actuar/plantilles/prompt_local.md",
+      "templateHash": "edf7daf4d81ab3640d195369807d5ab047bbc60027abd2663f86de3b076d992a",
+      "issuedAt": "2026-11-03T01:40:19.501Z"
+    },
+    "022484a9-857e-48d7-9da6-947f946d2f01": {
+      "id": "022484a9-857e-48d7-9da6-947f946d2f01",
+      "route": "prompt.local",
+      "routeVersion": "3.11.0",
+      "file": "_wiki_de_poble/04_escriptori/261102_1532_prompt_onada6_disseny_editorial_negrites_versions_1_1_0_i_tancament.md",
+      "contractSnapshot": "7c2ae1e44975784cd341e0d4dec3249dceeddc6e653fbc09c140f3cb6debe9ad",
+      "template": "_wiki_de_poble/03_actuar/plantilles/prompt_local.md",
+      "templateHash": "edf7daf4d81ab3640d195369807d5ab047bbc60027abd2663f86de3b076d992a",
+      "issuedAt": "2026-11-03T01:40:19.593Z",
+      "creation": {
+        "state": "committed",
+        "preparedAt": "2026-11-03T01:40:19.593Z",
+        "committedAt": "2026-11-03T01:40:19.646Z",
+        "documentHash": "fc8a8f6fa2b7283d6378dde86105985ec2596de87174feb8c5df1279ba0d2027"
+      }
+    },
+    "813d2c7c-2f33-4af2-8d6c-df9df7f2c403": {
+      "id": "813d2c7c-2f33-4af2-8d6c-df9df7f2c403",
+      "route": "acta",
+      "routeVersion": "2.1.0",
+      "file": "_wiki_de_poble/10_actes/261103_0328_acta_marmota_botigues_en_revisio_i_relleu_fresc_onada6_nocturna.md",
+      "contractSnapshot": "694ad8f229bcebbe247d6e7527783ce52e9f79fc89cd0435c7b1157607baefcf",
+      "template": "_wiki_de_poble/03_actuar/plantilles/acta.md",
+      "templateHash": "4d4b9d269e40c3084dead7c3f14cf63dd58fd4a7e7f4d075d2d09ef90f8a6d48",
+      "issuedAt": "2026-11-03T02:28:32.187Z"
+    },
+    "08c2ff7d-1f8a-4bb6-aa46-a48d2ca70abd": {
+      "id": "08c2ff7d-1f8a-4bb6-aa46-a48d2ca70abd",
+      "route": "acta",
+      "routeVersion": "2.1.0",
+      "file": "_wiki_de_poble/10_actes/261103_0328_acta_marmota_botigues_en_revisio_i_relleu_fresc_onada6_nocturna.md",
+      "contractSnapshot": "694ad8f229bcebbe247d6e7527783ce52e9f79fc89cd0435c7b1157607baefcf",
+      "template": "_wiki_de_poble/03_actuar/plantilles/acta.md",
+      "templateHash": "4d4b9d269e40c3084dead7c3f14cf63dd58fd4a7e7f4d075d2d09ef90f8a6d48",
+      "issuedAt": "2026-11-03T02:28:41.308Z",
+      "creation": {
+        "state": "failed",
+        "preparedAt": "2026-11-03T02:28:41.309Z",
+        "failedAt": "2026-11-03T02:28:41.316Z",
+        "absent": true
+      }
+    },
+    "3179a6e1-92e2-420d-90ea-2d2fe3c7ba63": {
+      "id": "3179a6e1-92e2-420d-90ea-2d2fe3c7ba63",
+      "route": "acta",
+      "routeVersion": "2.1.0",
+      "file": "_wiki_de_poble/10_actes/261103_0328_acta_marmota_botigues_en_revisio_i_relleu_fresc_onada6_nocturna.md",
+      "contractSnapshot": "694ad8f229bcebbe247d6e7527783ce52e9f79fc89cd0435c7b1157607baefcf",
+      "template": "_wiki_de_poble/03_actuar/plantilles/acta.md",
+      "templateHash": "4d4b9d269e40c3084dead7c3f14cf63dd58fd4a7e7f4d075d2d09ef90f8a6d48",
+      "issuedAt": "2026-11-03T02:28:54.725Z",
+      "creation": {
+        "state": "committed",
+        "preparedAt": "2026-11-03T02:28:54.726Z",
+        "committedAt": "2026-11-03T02:28:54.755Z",
+        "documentHash": "62c7a3b100d6f5663f9c55df42021724be9c57b3ce21868215e4c173a172336e"
+      }
     }
   },
-  "plan": null,
+  "plan": {
+    "file": "_wiki_de_poble/04_escriptori/261102_1532_pla_implementacio_mode_jarvis_idea60_fediversity_i_deute_llibre_mestre.md",
+    "hash": "f290258294181300446c01360581798bd13d6c6831b397589e479df02c60da9a"
+  },
   "verification": null,
   "history": [
     {
@@ -4880,10 +5156,215 @@
         "torn_d19293b9-1bb0-4073-8218-3da898ce7533",
         "torn_f69976f9-6724-431f-b2f1-02efeedf6406"
       ]
+    },
+    {
+      "action": "archive-links",
+      "role": "autor",
+      "at": "2026-11-02T20:36:11.157Z",
+      "moves": [
+        {
+          "from": "_wiki_de_poble/04_escriptori/261102_1918_prompt_teler_invertit_onada3_codex_gemini_constructors_claude_arbitre.md",
+          "to": "_wiki_de_poble/90_arxiu_historic/261102_1918_prompt_teler_invertit_onada3_codex_gemini_constructors_claude_arbitre.md",
+          "hash": "5b66b7c4a49a327977705d9cfc1e8c061994f5dbcb3cb8afaad7f521e4e22e6d"
+        }
+      ],
+      "rewrites": [
+        {
+          "file": "_wiki_de_poble/10_actes/261102_2015_acta_marmota_lliurament_codex_onada3_teler_invertit.md",
+          "fromHash": "f92f108229def4ab782aa30fcb50541dd265b030087829c35d6a687bcc8bb82b",
+          "toHash": "9e2a3e8022bc27f6e8de118ecddcc81ca531dc177643c23f72da31ceec647b83",
+          "links": 1
+        },
+        {
+          "file": ".agents/ESTAT.md",
+          "fromHash": "61a8958b824f056a8fb2d780b44eb90d15e8493f36d6e5efd6291f3672c37da0",
+          "toHash": "fd5ecd896d86232e32c7b549896179bad0e32df90a8b5a9a76c7d3121a3798be",
+          "links": 2
+        }
+      ],
+      "amended": [],
+      "relocatedIn": [
+        "torn_858b8642-1deb-48dd-a79e-da025c5d6abe"
+      ]
+    },
+    {
+      "state": "context_loaded",
+      "action": "handoff",
+      "at": "2026-11-02T20:36:19.910Z"
+    },
+    {
+      "state": "context_loaded",
+      "action": "context",
+      "at": "2026-11-02T20:37:35.576Z"
+    },
+    {
+      "state": "context_loaded",
+      "action": "context",
+      "at": "2026-11-02T20:37:45.303Z"
+    },
+    {
+      "action": "create-failed",
+      "receiptId": "2f695585-b1c5-48c3-9e5e-31d6973a86a3",
+      "file": "_wiki_de_poble/04_escriptori/261102_2138_prompt_onada4_nocturna_claude_eixam_codex_gemini_10_de_10.md",
+      "at": "2026-11-02T20:37:45.308Z",
+      "absent": true
+    },
+    {
+      "state": "context_loaded",
+      "action": "context",
+      "at": "2026-11-02T20:37:54.084Z"
+    },
+    {
+      "action": "create-committed",
+      "receiptId": "5472190e-3c97-478e-a44e-506a14e63bcd",
+      "file": "_wiki_de_poble/04_escriptori/261102_2138_prompt_onada4_nocturna_claude_eixam_codex_gemini_10_de_10.md",
+      "at": "2026-11-02T20:37:54.124Z",
+      "hash": "281a061494da7ac1774734888e0ea0ca00abb453bae127b36bdf1be18606d160"
+    },
+    {
+      "state": "context_loaded",
+      "action": "handoff",
+      "at": "2026-11-02T23:37:24.988Z"
+    },
+    {
+      "state": "context_loaded",
+      "action": "context",
+      "at": "2026-11-02T23:37:40.389Z"
+    },
+    {
+      "state": "context_loaded",
+      "action": "context",
+      "at": "2026-11-02T23:39:29.998Z"
+    },
+    {
+      "state": "context_loaded",
+      "action": "context",
+      "at": "2026-11-02T23:41:09.610Z"
+    },
+    {
+      "state": "context_loaded",
+      "action": "context",
+      "at": "2026-11-02T23:41:39.784Z"
+    },
+    {
+      "state": "context_loaded",
+      "action": "context",
+      "at": "2026-11-02T23:41:39.905Z"
+    },
+    {
+      "action": "create-committed",
+      "receiptId": "911e37c7-d050-47b2-8bde-597476035f2d",
+      "file": "_wiki_de_poble/04_escriptori/261102_1532_prompt_onada5_reconciliacio_botigues_i_tancament_10_de_10.md",
+      "at": "2026-11-02T23:41:39.961Z",
+      "hash": "19d74d4a0a45e7c921c29ef1d73788b70d3dcc36df0d13b1781b6c4d56eefe6e"
+    },
+    {
+      "state": "planned",
+      "action": "bind-plan",
+      "at": "2026-11-02T23:42:50.375Z"
+    },
+    {
+      "state": "planned",
+      "action": "handoff",
+      "at": "2026-11-03T01:38:05.512Z"
+    },
+    {
+      "state": "planned",
+      "action": "bind-plan",
+      "at": "2026-11-03T01:39:26.813Z"
+    },
+    {
+      "state": "planned",
+      "action": "context",
+      "at": "2026-11-03T01:39:26.898Z"
+    },
+    {
+      "state": "planned",
+      "action": "context",
+      "at": "2026-11-03T01:39:48.685Z"
+    },
+    {
+      "state": "planned",
+      "action": "context",
+      "at": "2026-11-03T01:40:19.501Z"
+    },
+    {
+      "state": "planned",
+      "action": "context",
+      "at": "2026-11-03T01:40:19.593Z"
+    },
+    {
+      "action": "create-committed",
+      "receiptId": "022484a9-857e-48d7-9da6-947f946d2f01",
+      "file": "_wiki_de_poble/04_escriptori/261102_1532_prompt_onada6_disseny_editorial_negrites_versions_1_1_0_i_tancament.md",
+      "at": "2026-11-03T01:40:19.646Z",
+      "hash": "fc8a8f6fa2b7283d6378dde86105985ec2596de87174feb8c5df1279ba0d2027"
+    },
+    {
+      "state": "planned",
+      "action": "bind-plan",
+      "at": "2026-11-03T02:02:24.870Z"
+    },
+    {
+      "state": "planned",
+      "action": "bind-plan",
+      "at": "2026-11-03T02:04:18.584Z"
+    },
+    {
+      "state": "planned",
+      "action": "bind-plan",
+      "at": "2026-11-03T02:17:00.803Z"
+    },
+    {
+      "state": "planned",
+      "action": "bind-plan",
+      "at": "2026-11-03T02:23:40.489Z"
+    },
+    {
+      "state": "planned",
+      "action": "bind-plan",
+      "at": "2026-11-03T02:25:51.766Z"
+    },
+    {
+      "state": "planned",
+      "action": "context",
+      "at": "2026-11-03T02:28:32.187Z"
+    },
+    {
+      "state": "planned",
+      "action": "context",
+      "at": "2026-11-03T02:28:41.309Z"
+    },
+    {
+      "action": "create-failed",
+      "receiptId": "08c2ff7d-1f8a-4bb6-aa46-a48d2ca70abd",
+      "file": "_wiki_de_poble/10_actes/261103_0328_acta_marmota_botigues_en_revisio_i_relleu_fresc_onada6_nocturna.md",
+      "at": "2026-11-03T02:28:41.316Z",
+      "absent": true
+    },
+    {
+      "state": "planned",
+      "action": "context",
+      "at": "2026-11-03T02:28:54.726Z"
+    },
+    {
+      "action": "create-committed",
+      "receiptId": "3179a6e1-92e2-420d-90ea-2d2fe3c7ba63",
+      "file": "_wiki_de_poble/10_actes/261103_0328_acta_marmota_botigues_en_revisio_i_relleu_fresc_onada6_nocturna.md",
+      "at": "2026-11-03T02:28:54.755Z",
+      "hash": "62c7a3b100d6f5663f9c55df42021724be9c57b3ce21868215e4c173a172336e"
     }
   ],
   "relocated": [
     "_wiki_de_poble/04_escriptori/261102_1532_prompt_mode_jarvis_idea60_fediversity_i_deute_llibre_mestre.md",
-    "_wiki_de_poble/04_escriptori/261102_1647_prompt_gemini_revisio_codex.md"
+    "_wiki_de_poble/04_escriptori/261102_1647_prompt_gemini_revisio_codex.md",
+    "_wiki_de_poble/04_escriptori/261102_1918_prompt_teler_invertit_onada3_codex_gemini_constructors_claude_arbitre.md",
+    "_wiki_de_poble/04_escriptori/261102_2138_prompt_onada4_nocturna_claude_eixam_codex_gemini_10_de_10.md",
+    "_wiki_de_poble/04_escriptori/261102_1532_prompt_onada5_reconciliacio_botigues_i_tancament_10_de_10.md"
+  ],
+  "ownedPaths": [
+    "_wiki_de_poble/90_arxiu_historic/261102_1918_prompt_teler_invertit_onada3_codex_gemini_constructors_claude_arbitre.md",
+    "_wiki_de_poble/90_arxiu_historic/261102_2138_prompt_onada4_nocturna_claude_eixam_codex_gemini_10_de_10.md",
+    "_wiki_de_poble/90_arxiu_historic/261102_1532_prompt_onada5_reconciliacio_botigues_i_tancament_10_de_10.md"
   ]
 }

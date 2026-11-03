@@ -10,10 +10,11 @@
  *  contingut. L'Escriptori i la resta de carpetes no entren mai (AGENTS §5).
  */
 
-import { CAMINS } from '../lib/arrel.mjs';
+import { CAMINS, esMain } from '../lib/arrel.mjs';
+import { markdownProse } from '../lib/markdown-prose.mjs';
 import fs from 'node:fs';
 import path from 'node:path';
-import { fileURLToPath, pathToFileURL } from 'node:url';
+import { fileURLToPath } from 'node:url';
 import { parseFrontmatter } from './lib/frontmatter.mjs';
 import { escriuGenerat } from '../scripts/canonada.mjs';
 import { PUBLIC_WIKI_DIRS, publicWikiFiles, readPublicWikiFile, publicMetadata } from './lib/publication-policy.mjs';
@@ -57,10 +58,12 @@ function resolIdentitat(targetOrPath) {
    lectura que compartix amb el RAG i els slugs. Cos, títol, subtítol,
    etiquetes i atributs ixen d'eixe text ja emmascarat. */
 
-// Convert [[Target]] or [[Target|Alias]] to [Alias o Target](#Target)
-// Però per a UniversalWorkspace preferim [Alias](?item=Target)
+// Convertix WikiLinks actius, conservant codi, comentaris i escapaments literals.
+// La màscara compartida conserva els offsets: mai es reconstruïx el document.
 function processWikiLinks(text) {
-  return text.replace(/\[\[(.*?)\]\]/g, (match, inner) => {
+  const prose = markdownProse(text);
+  return text.replace(/\[\[(.*?)\]\]/g, (match, inner, offset) => {
+    if (prose.slice(offset, offset + match.length) !== match) return match;
     let target = inner;
     let label = inner;
     if (inner.includes('|')) {
@@ -181,8 +184,9 @@ export function verificaEnllacos(root, { items }, { log = console } = {}) {
 
   for (const item of items) {
     const regex = /\?item=([^)]+)/g;
+    const prose = markdownProse(item.content);
     let match;
-    while ((match = regex.exec(item.content)) !== null) {
+    while ((match = regex.exec(prose)) !== null) {
       const targetId = decodeURIComponent(match[1]);
       const pla = targetId.toLowerCase();
       if (viusPlans.has(pla)) continue;
@@ -253,4 +257,4 @@ function main() {
 // fixture de proves a os.tmpdir()) no coincidixen, el mòdul es carrega en
 // silenci i la porta ix 0 sense comprovar res. Resoldre el symlink és el que
 // fa que la guarda parle sempre.
-if (process.argv[1] && import.meta.url === pathToFileURL(fs.realpathSync(process.argv[1])).href) main();
+if (esMain(import.meta.url)) main();

@@ -5,9 +5,18 @@
    bandera apagada i pendent d'activació. Si un dia s'encén la bandera, esta
    prova obliga a tornar a escriure el text (no se'n deriva cap). El text de
    /versions només existix en valencià (PAGE_COPY no té traduccions).
-   Gauntlet 2 261101 (carril Y; correcció del crític) · L'entrega de l'1 de
-   novembre ja té la seua entrada, la primera. El bloc del 29 d'octubre es
-   busca pel seu títol, no per la posició. */
+   Gauntlet 2 261101 (carril Y; correcció del crític) · Cada entrega es busca
+   pel seu títol, no per la posició.
+   Onada 6 (prompt 261102_1532, ordre del Mestre 261103 02:31; carril 1, grup
+   G1-versions) · /versions deixa les llistes de punts: cada element passa a un
+   <h4> amb el prefix de la seua categoria («Novetat ·», «Millora ·» o
+   «Correcció ·») seguit d'un <p>, i cada paràgraf porta les seues paraules
+   clau en negreta (contracte de densitat de core-llegibilitat-text §4). Les
+   entregues del 29-10 a l'1-11, que portaven totes v1.0.0, reben ara la
+   numeració v1.0.1–v1.0.4, i al capdamunt hi ha l'entrada de la 1.1.0 (3-11).
+   Les invariants d'honestedat de cada entrega es conserven: només ha canviat
+   l'estructura (els h4 de categoria i els <li> → h4 amb prefix + <p>) i el
+   número dels títols. */
 import { describe, expect, test } from 'vitest';
 import { E2EE_ACTIU_PER_DEFECTE } from '../../config/xifratXat.js';
 import { CANALS_DE_BOTIGA } from '../../config/canalsDeBotiga.js';
@@ -15,11 +24,19 @@ import { VERSIO_FORMAT } from '../../data/exportaMunicipiOpenData.js';
 import { VIGENCIA_ALERTA_MS } from '../mur/alertesMunicipals.js';
 import { PAGE_COPY } from './pageContent.js';
 import { CAPACITATS_NO_DECLARADES } from '../../data/local/adaptadorLocal.js';
+import { PLATAFORMA_ALIENA } from './perAppNativa.js';
+import { AMBITS, RESERVES_I18N } from '../../utils/publicacioUniversal.js';
+import { TOOLBAR_SCHEMA, FORMATS } from '../../components/universal/richText/toolbarContract.js';
 // T8 · D-12: la capçalera es contrasta amb package.json i amb la capçalera del connector.
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 
 const html = String(PAGE_COPY.versions?.html ?? '');
+const llegix = (ruta) => readFileSync(resolve(process.cwd(), ruta), 'utf8');
+const PAQUET = JSON.parse(llegix('package.json'));
+const CONNECTOR = llegix('wordpress-plugin/socdepoble-enxufe.php').match(/^ \* Version:\s+(\d+\.\d+\.\d+)\s*$/m)?.[1];
+const RUTES = llegix('src/app/App.jsx');
+
 /* Un bloc d'entrega: del seu <h3> fins al <h3> següent (o fins al final). */
 const blocDe = (titol) => {
   const inici = html.indexOf(`<h3>${titol}`);
@@ -27,14 +44,39 @@ const blocDe = (titol) => {
   const seguent = html.indexOf('<h3>', inici + 1);
   return html.slice(inici, seguent < 0 ? undefined : seguent);
 };
-/* L'entrega del 29 d'octubre, on parla de l'E2EE. */
-const entrega261029 = blocDe("29 d'octubre de 2026");
-/* L'entrega de la nit de l'1 de novembre (Gauntlet 2 261101). Des de l'assalt de la tarda (pla
-   261101_1246) ja no és la primera: es busca pel seu títol sencer, que comença per «· v». */
-const entrega261101 = blocDe('1 de novembre de 2026 · v');
-/* L'entrega de l'assalt al 10/10 (pla 261101_1246), la primera. */
+/* El text que es llig: un bloc (h3, h4, p…) és un espai; una etiqueta de línia (strong, code, a), res. */
+const text = (fragment) => fragment
+  .replace(/<\/?(?:h[1-6]|p|ul|ol|li|div|img)\b[^>]*>/g, ' ')
+  .replace(/<[^>]+>/g, '')
+  .replace(/\s+/g, ' ');
+/* Els apartats d'una entrega: cada <h4> amb el <p> que el seguix. */
+const apartats = (entrega) => [...entrega.matchAll(/<h4>([\s\S]*?)<\/h4>\n {6}<p>([\s\S]*?)<\/p>/g)]
+  .map((m) => ({ titol: text(m[1]).trim(), cos: m[2] }));
+const apartat = (entrega, inici) => apartats(entrega).find((a) => a.titol.startsWith(inici));
+const titolsH4 = (entrega) => [...entrega.matchAll(/<h4>([\s\S]*?)<\/h4>/g)].map((m) => text(m[1]).trim());
+/** a ≤ b, per a versions X.Y.Z. */
+const noMesNova = (a, b) => {
+  const [x, y] = [a, b].map((v) => v.split('.').map(Number));
+  const i = x.findIndex((n, j) => n !== y[j]);
+  return i < 0 || x[i] < y[i];
+};
+/* Una ruta interna existix si l'enrutador la declara (App.jsx), amb barra o sense (ActorRoutes), o si
+   és /page/<clau> d'una pàgina de PAGE_COPY. */
+const rutaExistix = (href) => {
+  const cami = href.split(/[?#]/)[0];
+  const pagina = /^\/page\/([^/]+)$/.exec(cami);
+  if (pagina) return RUTES.includes('<Route path="/page/:slug" ') && Object.hasOwn(PAGE_COPY, pagina[1]);
+  const primer = cami.slice(1).split('/')[0];
+  return new RegExp(`<Route path="/?${primer}(?:/\\*)?" `).test(RUTES);
+};
+const interns = (fragment) => [...fragment.matchAll(/href="(\/[^"]*)"/g)].map((m) => m[1]);
+
+const TITOL_110 = `3 de novembre de 2026 · v1.1.0 (build pendent de desplegar) · Connector WordPress v${CONNECTOR} al repositori`;
+const entrega110 = blocDe('3 de novembre de 2026 · v');
 const entregaAssalt = blocDe('1 de novembre de 2026, tarda');
-const text = (fragment) => fragment.replace(/<[^>]+>/g, '').replace(/\s+/g, ' ');
+const entrega261101 = blocDe('1 de novembre de 2026 · v');
+const entregaRondes = blocDe("31 d'octubre de 2026");
+const entrega261029 = blocDe("29 d'octubre de 2026");
 
 describe('QA-R2-09 · /versions diu la veritat sobre l’E2EE', () => {
   test('la bandera continua apagada', () => {
@@ -55,21 +97,251 @@ describe('QA-R2-09 · /versions diu la veritat sobre l’E2EE', () => {
   });
 });
 
-/* Gauntlet 2 261101 (carril Y) · L'entrega de l'1 de novembre: el mateix format que les altres
-   (un <h3> amb la data, la versió, el build i el connector; un paràgraf; Novetats, Millorat i
-   Corregit) i cap mentida bella. El build el posa el desplegament: mentre no s'ha desplegat, el
-   títol diu «pendent de desplegar» i cap frase no diu que ja siga al lloc publicat. Cada xifra
-   que es pot derivar del codi, se'n deriva: si la peça canvia, la prova cau. */
-describe('Gauntlet 2 261101 · /versions té l’entrada honesta de l’1 de novembre', () => {
-  test('és la segona entrada, darrere de la de l’assalt, amb el format de les altres', () => {
+/* Onada 6 · L'estructura editorial: data i versió (h3), obertura (p), i cada novetat, millora o
+   correcció en un h4 amb prefix seguit del seu paràgraf. Cap llista de punts a tota la pàgina. */
+describe('Onada 6 · /versions sense llistes: h3 + obertura + h4 amb prefix i paràgraf', () => {
+  test('cap <ul>, <ol> ni <li> a /versions', () => {
+    expect(html).not.toMatch(/<(?:ul|ol|li)\b/);
+  });
+
+  test('els títols de les entregues, amb numeració pròpia i de la més nova a la més vella', () => {
     const titols = [...html.matchAll(/<h3>([^<]+)<\/h3>/g)].map((m) => m[1]);
-    expect(titols[1]).toMatch(/^1 de novembre de 2026 · v/);
-    expect(entrega261101).toMatch(/^<h3>1 de novembre de 2026 · v\d+\.\d+\.\d+ \(build pendent de desplegar\) · Connector WordPress v1\.1\.10<\/h3>\n {6}<p>/);
-    const apartats = [...entrega261101.matchAll(/<h4>([^<]+)<\/h4>\n {6}<ul>/g)].map((m) => m[1]);
-    expect(apartats).toEqual(['Novetats', 'Millorat', 'Corregit']);
-    /* Cada element de llista, amb el seu nom en negreta i dos punts, com a les altres entrades. */
-    for (const li of entrega261101.match(/<li>[\s\S]*?<\/li>/g)) expect(li).toMatch(/^<li><strong>[^<]+(?:<a [^>]+>[^<]+<\/a>\))?:<\/strong> /);
-    expect(entrega261101.endsWith('</ul>\n\n      ')).toBe(true);
+    expect(titols).toEqual([
+      TITOL_110,
+      '1 de novembre de 2026, tarda · v1.0.4 (build pendent de desplegar) · Connector WordPress v1.1.11 al repositori',
+      '1 de novembre de 2026 · v1.0.3 (build pendent de desplegar) · Connector WordPress v1.1.10',
+      "31 d'octubre de 2026 · v1.0.2 (build 261101) · Connector WordPress v1.1.10",
+      "29 d'octubre de 2026 · v1.0.1 (build 261029) · Connector WordPress v1.1.10",
+      "26 d'octubre de 2026 · v1.0.0 (build 261026) · Connector WordPress v1.1.9",
+      "17 d'octubre de 2026 · v0.9.5 · El Llibre d'Or i la Plataforma d'Apps",
+      'Crònica fundacional (2013 – setembre de 2026)'
+    ]);
+    const versions = titols.map((t) => / · v(\d+\.\d+\.\d+)\b/.exec(t)?.[1]).filter(Boolean);
+    for (let i = 1; i < versions.length; i += 1) {
+      expect(noMesNova(versions[i], versions[i - 1]) && versions[i] !== versions[i - 1], `${versions[i]} < ${versions[i - 1]}`).toBe(true);
+    }
+  });
+
+  test('cada entrega: h3, obertura i apartats «Novetat · / Millora · / Correcció ·» en este ordre, sense els h4 de categoria', () => {
+    const ORDRE = ['Novetat', 'Millora', 'Correcció'];
+    const entregues = html.split(/(?=<h3>)/).filter((b) => b.startsWith('<h3>') && !b.startsWith('<h3>Crònica'));
+    expect(entregues).toHaveLength(7);
+    for (const entrega of entregues) {
+      const titol = entrega.match(/^<h3>([^<]+)<\/h3>/)[1];
+      expect(entrega, titol).toMatch(/^<h3>[^<]+<\/h3>\n {6}<p>/);
+      expect(entrega, titol).not.toMatch(/<h4>(?:Novetats|Millorat|Corregit)<\/h4>/);
+      const cos = entrega.slice(entrega.indexOf('<h4>'));
+      /* Darrere del primer h4, només parells h4 + p. */
+      expect(cos.replace(/<h4>[\s\S]*?<\/h4>\n {6}<p>[\s\S]*?<\/p>(?:\n {6}|\n\n {6}|\n {4}$)/g, ''), titol).toBe('');
+      const prefixos = titolsH4(entrega).map((t) => t.split(' · ')[0]);
+      for (const p of prefixos) expect(ORDRE, `${titol}: ${p}`).toContain(p);
+      expect(prefixos.map((p) => ORDRE.indexOf(p)), titol).toEqual([...prefixos.map((p) => ORDRE.indexOf(p))].sort((a, b) => a - b));
+      /* L'explicació comença en majúscula (o per un codi, o per un domini, que es queden com són). */
+      for (const { titol: h4, cos: p } of apartats(entrega)) expect(p.replace(/<\/?strong>/g, ''), h4).toMatch(/^(?:<code>|<a |[«(]?[A-ZÀ-ÚÇ]|[a-z0-9-]+\.[a-z]{2,}\b)/);
+      expect(entrega.endsWith('</p>\n\n      '), titol).toBe(true);
+    }
+  });
+
+  test('la Crònica fundacional: V8 en un sol paràgraf que nomena els quatre pilars, i la il·lustració al final', () => {
+    const cronica = blocDe('Crònica fundacional');
+    const v8 = cronica.match(/<h4>Gener – Juny de 2026 · V8: L'Arquitectura de la Vella Wiki<\/h4>\n {6}<p>([\s\S]*?)<\/p>\n\n {6}<h4>/)?.[1] ?? '';
+    for (const pilar of ['Gestoria', 'Llibreria i El Lector', 'Tràmits agraris', 'Consola Termodinàmica']) expect(v8).toContain(`<strong>${pilar}</strong>`);
+    for (const frase of ['simplificació de formularis i tràmits per al veïnat i les associacions', 'catalogació i lectura accessible per a la comunitat',
+      'assistència documental per al camp i la cooperativa', 'tauler de control per a vigilar la salut del codi i el consum de recursos']) expect(text(v8)).toContain(frase);
+    expect(html.trimEnd()).toMatch(/<img src="\/assets\/uploads\/brain\/nano_versions_ibanez_v1_1_10\.webp" alt="[^"]+" \/>$/);
+  });
+});
+
+/* Onada 6 · Contracte de densitat (core-llegibilitat-text §4; el mateix recompte de paraules que
+   l'auditoria): ≥40 paraules → 6–8 negretes; 25–39 → 5–7; 12–24 → 2–4; menys → 1–3. Cap paràgraf
+   pla, cap negreta buida, niuada, dins d'un encapçalament ni d'un codi, i cap sintagma llarg. */
+describe('Onada 6 · cada paràgraf de /versions es llig en diagonal', () => {
+  const segmentador = new Intl.Segmenter('ca', { granularity: 'word' });
+  const paraules = (t) => [...segmentador.segment(t)].filter((s) => s.isWordLike).length;
+  const pla = (h) => h.replace(/<[^>]+>/g, '');
+  const BUIDES = new Set(['i', 'o', 'de', 'del', 'dels', 'la', 'el', 'els', 'les', 'l', 'a', 'al', 'als', 'en', 'amb', 'per', 'que', 'un', 'una', 'és', 'si', 'no', 'ni', 'ja', 'es', 'se', 'hi', 'ho', 'ne', 'd']);
+  const paragrafs = [...html.matchAll(/<p>([\s\S]*?)<\/p>/g)].map((m) => m[1]);
+
+  test('hi ha paràgrafs per a mesurar', () => {
+    expect(paragrafs.length).toBeGreaterThan(80);
+  });
+
+  test('negretes per paràgraf segons la llargària, i cap paràgraf pla', () => {
+    for (const p of paragrafs) {
+      const w = paraules(pla(p));
+      const n = (p.match(/<strong>/g) ?? []).length;
+      const [min, max] = w >= 40 ? [6, 8] : w >= 25 ? [5, 7] : w >= 12 ? [2, 4] : [1, 3];
+      expect(n >= min && n <= max, `${n} negretes per a ${w} paraules (${min}–${max}): «${pla(p).slice(0, 70)}…»`).toBe(true);
+    }
+  });
+
+  test('negretes ben formades: cap buida, niuada, sobre una paraula buida, de més de sis paraules, dins de codi ni d’encapçalament', () => {
+    expect((html.match(/<strong>/g) ?? []).length).toBe((html.match(/<\/strong>/g) ?? []).length);
+    expect(html).not.toMatch(/<h([1-6])>(?:(?!<\/h\1>)[\s\S])*<strong>/);
+    expect(html).not.toMatch(/<code>(?:(?!<\/code>)[\s\S])*<strong>/);
+    for (const m of html.matchAll(/<strong>([\s\S]*?)<\/strong>/g)) {
+      const t = m[1].trim();
+      expect(m[1], 'niuada').not.toMatch(/<strong>/);
+      expect(t, 'buida').not.toBe('');
+      expect(BUIDES.has(t.toLowerCase()), `buida: «${t}»`).toBe(false);
+      expect(paraules(pla(t)), `llarga: «${t}»`).toBeLessThanOrEqual(6);
+    }
+  });
+});
+
+/* Onada 6 · L'entrada de la 1.1.0 (3 de novembre): la primera, pendent de desplegar i sense cap mentida
+   bella. Cada fet que es pot derivar del codi o d'un fitxer del repositori, se'n deriva. */
+describe('Onada 6 · l’entrada de la 1.1.0, la primera i honesta', () => {
+  const pla = text(entrega110);
+
+  test('és la primera entrada, amb el títol literal, i la versió és la de package.json', () => {
+    expect(html.indexOf('<h3>')).toBe(html.indexOf(`<h3>${TITOL_110}</h3>`));
+    expect(PAQUET.version).toBe('1.1.0');
+    expect(TITOL_110).toContain(`· v${PAQUET.version} (`);
+    /* Gauntlet O6 (VER-02/VER-03) · El connector del títol és el del repositori (la capçalera del
+       connector), amb «al repositori» com a la v1.0.4: no es publica fins que l'SVN el porte. */
+    expect(TITOL_110.match(/Connector WordPress v(\d+\.\d+\.\d+) al repositori$/)?.[1]).toBe(CONNECTOR);
+  });
+
+  test('pendent de desplegar: cap frase no diu que siga desplegat, en viu o en producció', () => {
+    expect(pla).toContain('està pendent de desplegar');
+    expect(pla).toContain('El build del web portarà la data del desplegament.');
+    expect(entrega110).not.toMatch(/build \d{6}/);
+    expect(pla).not.toMatch(/\bdesplega(?:t|ts|d[ae]s?)\b|\ben viu\b|en producció|ja és públic|publicada a socdepoble/i);
+  });
+
+  test('la versió de les apps passa a 1.1.0 i el número de build no canvia', () => {
+    const gradle = llegix('android/app/build.gradle');
+    const pbx = llegix('ios/App/App.xcodeproj/project.pbxproj');
+    expect(gradle).toMatch(/versionName "1\.1\.0"/);
+    expect([...pbx.matchAll(/MARKETING_VERSION = ([^;]+);/g)].map((m) => m[1])).toEqual(expect.arrayContaining(['1.1.0']));
+    expect(new Set([...pbx.matchAll(/MARKETING_VERSION = ([^;]+);/g)].map((m) => m[1]))).toEqual(new Set(['1.1.0']));
+    const build = gradle.match(/versionCode (\d+)/)[1];
+    expect(new Set([...pbx.matchAll(/CURRENT_PROJECT_VERSION = (\d+);/g)].map((m) => m[1]))).toEqual(new Set([build]));
+    expect(pla).toContain(`el número de build de les apps, el ${build}, no canvia`);
+  });
+
+  test('la numeració retrospectiva de les entregues del 29-10 a l’1-11, dita a l’obertura', () => {
+    expect(pla).toContain("Les entregues del 29 d'octubre a l'1 de novembre portaven totes el número v1.0.0.");
+    expect(pla).toContain("La numeració v1.0.1–v1.0.4 se'ls dona ara, en retrospectiva, perquè l'historial mostre l'evolució.");
+  });
+
+  test('l’App Store: «Waiting for Review» és el que ha vist el Mestre, i les mides de les captures', () => {
+    const app = text(apartat(entrega110, "Novetat · L'app d'iPhone i iPad").cos);
+    expect(app).toContain("s'ha enviat a revisió a l'App Store");
+    expect(app).toContain('el Mestre l\'ha vista en l\'estat «Waiting for Review»');
+    expect(app).toContain('1290 × 2796');
+    expect(app).toContain('2048 × 2732');
+  });
+
+  test('2.3.10 · cap bloc de /versions barreja una altra plataforma mòbil amb Apple, l’iPhone o l’App Store', () => {
+    /* /versions s'obri dins de l'app d'iPhone: un bloc que nomena Google Play, Android o l'APK no s'hi
+       pinta (perAppNativa.js), i no pot arrossegar amb ell una frase d'Apple. Hui no n'hi ha cap:
+       perAppNativa.test.js vigila que /versions no canvie dins de l'app. */
+    for (const m of html.matchAll(/<(p|h[1-6])>([\s\S]*?)<\/\1>/g)) {
+      if (PLATAFORMA_ALIENA.test(text(m[2]))) expect(text(m[2])).not.toMatch(/App Store|Apple|iPhone|iPad|\biOS\b/);
+    }
+  });
+
+  test('«On es publica?»: en línia dins de l’«Edició avançada», en l’ordre del codi, amb els àmbits del contracte', () => {
+    const cos = text(apartat(entrega110, 'Novetat · «On es publica?»').cos);
+    expect(cos).toContain('en este ordre: capçalera, logotip, «On es publica?» i classificació');
+    const closca = llegix('src/components/universal/UniversalEditorShell.jsx');
+    const desplegable = closca.slice(closca.indexOf('className="sdp-edicio-avancada__cos"'));
+    const posicions = ['data-sdp-ranura="capcalera"', 'data-sdp-ranura="logotip"', 'data-sdp-ranura="ambit"', 'page-title-classificacio'].map((m) => desplegable.indexOf(m));
+    expect(posicions.every((p) => p >= 0)).toBe(true);
+    expect([...posicions].sort((a, b) => a - b)).toEqual(posicions);
+    expect(cos).toContain(`(${AMBITS.map((a) => RESERVES_I18N[`ambit.${a}`]).join(', ').replace(/, ([^,]+)$/, ' o $1')})`);
+    expect(llegix('src/sections/notes/NotesSection.jsx')).toContain("const CLAU_AMBIT = 'ambit';");
+    expect(llegix('src/sections/disseny/cataleg/manifest.js')).toContain("item: 'formularis-ambit'");
+    expect(entrega110).toContain('<a href="/disseny?categoria=formularis&amp;item=formularis-ambit">');
+  });
+
+  test('les subtargetes: botó de la segona fila, i ja n’hi ha a les tres pàgines que nomena', () => {
+    const boto = TOOLBAR_SCHEMA.find((b) => b.id === FORMATS.SUBTARGETA);
+    expect(boto?.fila).toBe('segona');
+    for (const clau of ['projecte', 'descarregues', 'fediversity']) expect(PAGE_COPY[clau].html, clau).toContain('class="sdp-subtargeta"');
+    const cos = apartat(entrega110, 'Novetat · Subtargetes').cos;
+    expect(interns(cos)).toEqual(['/projecte', '/descarregues', '/page/fediversity']);
+  });
+
+  test('les dades obertes: sis fitxers enllaçats, el manifest i els nou recursos del paquet, format 1.2.0', () => {
+    const enllacats = [...PAGE_COPY.fediversity.html.matchAll(/href="(\/opendata\/[^"]+)"/g)].map((m) => m[1]);
+    expect(enllacats).toHaveLength(6);
+    const manifest = JSON.parse(llegix('public/opendata/manifest.json'));
+    expect(manifest.resources).toHaveLength(9);
+    expect(manifest.socdepoble.schemaVersion).toBe(VERSIO_FORMAT);
+    expect(llegix('src/config/assetResolver.js')).toContain('RE_HREF_OPENDATA');
+    const cos = text(apartat(entrega110, 'Novetat · Dades obertes').cos);
+    expect(cos).toContain('enllaça sis fitxers');
+    expect(cos).toContain('el manifest i els nou recursos que llista');
+    expect(cos).toContain(`en el format ${VERSIO_FORMAT}`);
+  });
+
+  test('els calaixos naixen davall de la barra negra: un sol càlcul per a l’Índex i per als calaixos', () => {
+    expect(llegix('src/css/tokens.css')).toMatch(/--sdp-calaix-dalt: calc\(var\(--sdp-alt-negra\)/);
+    expect(llegix('src/css/modules.css')).toMatch(/\.toc-overlay \{[^}]*top: var\(--sdp-calaix-dalt\)/);
+    expect(llegix('src/css/components.css')).toMatch(/\.sdp-dialeg--calaix \{[^}]*top: var\(--sdp-calaix-dalt\)/);
+    expect(llegix('src/components/universal/PanellCrom.jsx')).toMatch(/titol="Crom del sistema" costat=/);
+    expect(llegix('src/components/universal/identitat/CalaixIdentitats.jsx')).toContain('titol="Amb qui actues?"');
+  });
+
+  test('el connector: el del repositori, pendent de publicar; WordPress.org servix la de la capçalera', () => {
+    const publicada = PAGE_COPY.versions.subtitle.match(/Connector WordPress v(\d+\.\d+\.\d+) a WordPress\.org$/)?.[1];
+    const cos = text(apartat(entrega110, 'Millora · Actualitzacions automàtiques').cos);
+    expect(cos).toContain(`El connector ${CONNECTOR} és al repositori i està pendent de publicar a WordPress.org, que encara servix la ${publicada}.`);
+    expect(noMesNova(publicada, CONNECTOR) && publicada !== CONNECTOR).toBe(true);
+    /* La capçalera llig la versió publicada d'una altra entrada (T8 · D-12). */
+    expect(entrega110).not.toContain('en la versió');
+  });
+
+  /* Gauntlet O6 (VER-03) · El text diu que la descàrrega directa i Google Play són tancats: si
+     s'obri un dels dos canals, el text queda fals i la prova cau. */
+  test('Android: la descàrrega directa i Google Play, tancades mentre el text ho diga', () => {
+    expect(text(apartat(entrega110, "Novetat · L'app per a Android").cos)).toContain('La descàrrega directa encara no és oberta.');
+    for (const id of ['apk-directe', 'google-play']) expect(CANALS_DE_BOTIGA.find((c) => c.id === id).url, id).toBeNull();
+  });
+
+  /* Gauntlet O6 (VER-01) · Legal 2.4 (kit de Codex) ja no té cap paràgraf pla, però conserva les
+     llistes «<li><strong>Etiqueta:</strong> …»: el text ho diu. Quan les passe a subtítols, esta
+     prova cau i cal llevar «llevat de Legal». */
+  test('les pàgines del sistema que es lligen d’un colp d’ull, llevat de Legal mentre conserve les llistes', () => {
+    const cos = text(apartat(entrega110, "Millora · Pàgines que es lligen d'un colp d'ull").cos);
+    expect(cos).toContain('Esta pàgina i les pàgines del sistema, llevat de Legal, passen');
+    expect((PAGE_COPY.legal.html.match(/<li><strong>[^<]*:<\/strong>/g) ?? []).length).toBeGreaterThan(0);
+  });
+
+  test('la qualitat: la data i les xifres de la suite, i el certificador valida els ?item= de la Wiki', () => {
+    expect(pla).toContain('La matinada del 3 de novembre, la suite de Vitest va executar 31.458 proves en 1.765 fitxers, totes en verd.');
+    expect(llegix('tooling/gates/certifica-enllacos.mjs')).toContain("parsed.searchParams.get('item')");
+  });
+
+  test('cap identificador intern, ni avisos push ni migracions', () => {
+    expect(pla).not.toMatch(/IDEA-\d|O\d-[A-Z]+-\d|torn_|\bpush\b|migraci/i);
+  });
+
+  test('els enllaços interns porten a rutes de l’aplicació', () => {
+    expect(interns(entrega110)).toEqual(['/disseny?categoria=formularis&amp;item=formularis-ambit', '/projecte', '/descarregues', '/page/fediversity', '/page/fediversity']);
+    for (const ruta of interns(entrega110)) expect(rutaExistix(ruta), ruta).toBe(true);
+  });
+});
+
+/* Gauntlet 2 261101 (carril Y) · L'entrega de l'1 de novembre (v1.0.3 des de l'Onada 6): el mateix
+   format que les altres i cap mentida bella. El build el posa el desplegament: mentre no s'ha
+   desplegat, el títol diu «pendent de desplegar» i cap frase no diu que ja siga al lloc publicat.
+   Cada xifra que es pot derivar del codi, se'n deriva: si la peça canvia, la prova cau. */
+describe('Gauntlet 2 261101 · /versions té l’entrada honesta de l’1 de novembre', () => {
+  test('és la tercera entrada, darrere de la 1.1.0 i de la de l’assalt, amb el format de les altres', () => {
+    const titols = [...html.matchAll(/<h3>([^<]+)<\/h3>/g)].map((m) => m[1]);
+    expect(titols[2]).toMatch(/^1 de novembre de 2026 · v/);
+    expect(entrega261101).toMatch(/^<h3>1 de novembre de 2026 · v1\.0\.3 \(build pendent de desplegar\) · Connector WordPress v1\.1\.10<\/h3>\n {6}<p>/);
+    expect(titolsH4(entrega261101)).toEqual([
+      'Novetat · Connector a WordPress.org (wordpress.org/plugins/socdepoble)', 'Novetat · Alertes municipals al Mur',
+      'Novetat · Fitxa de memòria oral (OKF v0.2) al Bloc de Notes', "Novetat · Agenda en iCalendar a l'Open Data (format 1.1.0)",
+      'Millora · Candidatura NGI Fediversity verificable (/page/fediversity)', 'Millora · Bloc de Notes',
+      'Millora · Volums locals a Multimèdia (/multimedia)', "Millora · Miniatura de l'avatar al Xat",
+      'Correcció · Noms accessibles en la llengua de la interfície', "Correcció · Títols de l'Open Data"
+    ]);
   });
 
   test('pendent de desplegar: cap frase no diu que ja siga al lloc publicat, tret del connector de WordPress.org', () => {
@@ -109,8 +381,8 @@ describe('Gauntlet 2 261101 · /versions té l’entrada honesta de l’1 de nov
   });
 
   test('els enllaços interns porten a rutes de l’aplicació', () => {
-    const interns = [...entrega261101.matchAll(/href="(\/[^"]*)"/g)].map((m) => m[1]);
-    expect(interns).toEqual(['/descarregues', '/page/fediversity', '/multimedia']);
+    expect(interns(entrega261101)).toEqual(['/descarregues', '/page/fediversity', '/multimedia']);
+    for (const ruta of interns(entrega261101)) expect(rutaExistix(ruta), ruta).toBe(true);
   });
 });
 
@@ -118,21 +390,11 @@ describe('Gauntlet 2 261101 · /versions té l’entrada honesta de l’1 de nov
    text de pageContent.js no pot saber quin build hi ha desplegat (la frontissa l'importa des de
    Node, sense Vite), i per això no en nomena cap. Diu la versió de package.json i la del
    connector publicada a WordPress.org, que no pot ser més nova que la del connector d'este
-   repositori. L'entrada de les Rondes 1, 2 i 3 (31-10) porta el build que servia socdepoble.org
-   en escriure-la, 261101 (assets/versio-Cuzo1lYB.js amb const t="261101" i index.html amb
-   last-modified 2026-11-01T00:39:59Z, comprovat l'1-11-2026), i cada frase s'ha contrastat amb
-   els trossos de producció d'eixe build. És història: es fixa literal i no es deriva del codi
-   d'ara, que continuarà canviant. */
-const llegix = (ruta) => readFileSync(resolve(process.cwd(), ruta), 'utf8');
-const PAQUET = JSON.parse(llegix('package.json'));
-const entregaRondes = blocDe("31 d'octubre de 2026");
-/** a ≤ b, per a versions X.Y.Z. */
-const noMesNova = (a, b) => {
-  const [x, y] = [a, b].map((v) => v.split('.').map(Number));
-  const i = x.findIndex((n, j) => n !== y[j]);
-  return i < 0 || x[i] < y[i];
-};
-
+   repositori. L'entrada de les Rondes 1, 2 i 3 (31-10, v1.0.2 des de l'Onada 6) porta el build que
+   servia socdepoble.org en escriure-la, 261101 (assets/versio-Cuzo1lYB.js amb const t="261101" i
+   index.html amb last-modified 2026-11-01T00:39:59Z, comprovat l'1-11-2026), i cada frase s'ha
+   contrastat amb els trossos de producció d'eixe build. És història: es fixa literal i no es deriva
+   del codi d'ara, que continuarà canviant. */
 describe('T8 · D-12 · capçalera estàtica i entrada de les Rondes 1, 2 i 3', () => {
   test('la capçalera diu la versió de package.json i la del connector publicada, sense cap build', () => {
     const { subtitle, labels } = PAGE_COPY.versions;
@@ -141,29 +403,27 @@ describe('T8 · D-12 · capçalera estàtica i entrada de les Rondes 1, 2 i 3', 
     const publicada = capcalera[2];
     expect(labels.map((l) => l.text)).toEqual([`v${PAQUET.version} · WP v${publicada}`, 'Registre de canvis', 'Sistema']);
     for (const t of [subtitle, ...labels.map((l) => l.text)]) expect(t).not.toMatch(/build|\b\d{6}\b/i);
-    /* La publicada és la que diu l'entrada més recent que nomena una versió a WordPress.org (la
-       primera del registre, que va de la més nova a la més vella): les entrades velles són història
-       i no es reescriuen quan es publica una versió nova. No pot ser més nova que la del connector. */
+    /* La publicada és la que diu l'entrada més recent que nomena una versió a WordPress.org (el
+       registre va de la més nova a la més vella): les entrades velles són història i no es
+       reescriuen quan es publica una versió nova. No pot ser més nova que la del connector. */
     const darreraPublicada = html.match(/<code>socdepoble<\/code>, en la versió (\d+\.\d+\.\d+)/)?.[1];
     expect(publicada).toBe(darreraPublicada);
-    const connector = llegix('wordpress-plugin/socdepoble-enxufe.php').match(/^ \* Version:\s+(\d+\.\d+\.\d+)\s*$/m)?.[1];
-    expect(noMesNova(publicada, connector), `${publicada} ≤ ${connector}`).toBe(true);
+    expect(noMesNova(publicada, CONNECTOR), `${publicada} ≤ ${CONNECTOR}`).toBe(true);
   });
 
   test('l’entrada va entre la de l’1 de novembre i la del 29 d’octubre, amb el format de les altres', () => {
     const posicio = (titol) => html.indexOf(`<h3>${titol}`);
-    expect(posicio('1 de novembre de 2026')).toBeLessThan(posicio("31 d'octubre de 2026"));
+    expect(posicio('3 de novembre de 2026')).toBeLessThan(posicio('1 de novembre de 2026, tarda'));
+    expect(posicio('1 de novembre de 2026, tarda')).toBeLessThan(posicio('1 de novembre de 2026 · v'));
+    expect(posicio('1 de novembre de 2026 · v')).toBeLessThan(posicio("31 d'octubre de 2026"));
     expect(posicio("31 d'octubre de 2026")).toBeLessThan(posicio("29 d'octubre de 2026"));
-    expect(entregaRondes).toMatch(/^<h3>31 d'octubre de 2026 · v1\.0\.0 \(build 261101\) · Connector WordPress v1\.1\.10<\/h3>\n {6}<p>/);
-    expect([...entregaRondes.matchAll(/<h4>([^<]+)<\/h4>\n {6}<ul>/g)].map((m) => m[1])).toEqual(['Novetats', 'Millorat', 'Corregit']);
-    const elements = entregaRondes.match(/<li>[\s\S]*?<\/li>/g) ?? [];
-    for (const li of elements) expect(li).toMatch(/^<li><strong>[^<]+(?:<a [^>]+>[^<]+<\/a>\))?:<\/strong> /);
-    expect(elements.map((li) => text(li.match(/^<li><strong>([\s\S]*?)<\/strong>/)[1]))).toEqual([
-      'Consola pública (/consola):', 'Tauler del comptador de visites (/legal):', 'Federació de només lectura:', 'Dades obertes del poble:',
-      'Telemetria més clara:', 'Fletxes del teclat a les graelles de targetes:', 'Perfil públic en cinc llengües:', 'Atles de la IAIA:',
-      'Fitxers del núvol:', 'Llistes:', "Fitxa d'empreses, entitats i ajuntaments:"
+    expect(entregaRondes).toMatch(/^<h3>31 d'octubre de 2026 · v1\.0\.2 \(build 261101\) · Connector WordPress v1\.1\.10<\/h3>\n {6}<p>/);
+    expect(titolsH4(entregaRondes)).toEqual([
+      'Novetat · Consola pública (/consola)', 'Novetat · Tauler del comptador de visites (/legal)', 'Novetat · Federació de només lectura',
+      'Novetat · Dades obertes del poble', 'Millora · Telemetria més clara', 'Millora · Fletxes del teclat a les graelles de targetes',
+      'Millora · Perfil públic en cinc llengües', 'Millora · Atles de la IAIA', 'Correcció · Fitxers del núvol', 'Correcció · Llistes',
+      "Correcció · Fitxa d'empreses, entitats i ajuntaments"
     ]);
-    expect(entregaRondes.endsWith('</ul>\n\n      ')).toBe(true);
   });
 
   test('només el que ja servia producció: res de migracions sense aplicar, del xifratge ni dels rebuts d’entrega', () => {
@@ -179,40 +439,40 @@ describe('T8 · D-12 · capçalera estàtica i entrada de les Rondes 1, 2 i 3', 
     expect(pla).not.toMatch(/Hui porta el directori|encara no s'hi exporten/);
     expect(pla).toContain('El registre final no es pot comprovar des del navegador.');
     // Les fletxes del Bloc de Notes ja hi eren: la Ronda 2 només les va posar a Pobles, al Mur i a la Consola.
-    expect(text(entregaRondes.match(/<li><strong>Fletxes[\s\S]*?<\/li>/)[0])).not.toMatch(/Notes/);
+    expect(text(apartat(entregaRondes, 'Millora · Fletxes').cos)).not.toMatch(/Notes/);
     // DT-LLISTES-D1 (modules.css) lleva el marge de cada li (--sdp-li-gap), no cap marge de paràgraf.
-    const llistes = text(entregaRondes.match(/<li><strong>Llistes:[\s\S]*?<\/li>/)[0]);
+    const llistes = text(apartat(entregaRondes, 'Correcció · Llistes').cos);
     expect(llistes).toContain('el marge de cada element de llista');
     expect(llistes).not.toMatch(/paràgraf/);
   });
 
   test('els enllaços interns porten a rutes de l’aplicació', () => {
-    const interns = [...entregaRondes.matchAll(/href="(\/[^"]*)"/g)].map((m) => m[1]);
-    expect(interns).toEqual(['/consola', '/legal']);
-    const rutes = llegix('src/app/App.jsx');
-    for (const ruta of interns) expect(rutes).toMatch(new RegExp(`<Route path="${ruta}(?:/\\*)?" `));
+    expect(interns(entregaRondes)).toEqual(['/consola', '/legal']);
+    for (const ruta of interns(entregaRondes)) expect(RUTES).toMatch(new RegExp(`<Route path="${ruta}(?:/\\*)?" `));
   });
 });
 
-/* Assalt 10/10 (pla 261101_1246, torn_3f5652a2) · L'entrada de la tarda de l'1 de novembre: la
-   primera, amb el format de les altres, i cap mentida bella. Res no és desplegat ni publicat, les
-   migracions noves no estan aplicades i el xifratge continua apagat: el text ho diu, i cada peça
-   que es pot derivar del codi se'n deriva. */
+/* Assalt 10/10 (pla 261101_1246, torn_3f5652a2) · L'entrada de la tarda de l'1 de novembre (v1.0.4 des de
+   l'Onada 6): ara la segona, amb el format de les altres, i cap mentida bella. Res no és desplegat ni
+   publicat, les migracions noves no estan aplicades i el xifratge continua apagat: el text ho diu, i
+   cada peça que es pot derivar del codi se'n deriva. */
 describe('Assalt 10/10 · /versions té l’entrada honesta de la tarda de l’1 de novembre', () => {
   const pla = text(entregaAssalt);
 
-  test('és la primera entrada, amb el format de les altres', () => {
-    expect(html.indexOf('<h3>')).toBe(html.indexOf('<h3>1 de novembre de 2026, tarda'));
-    expect(entregaAssalt).toMatch(/^<h3>1 de novembre de 2026, tarda · v\d+\.\d+\.\d+ \(build pendent de desplegar\) · Connector WordPress v(\d+\.\d+\.\d+) al repositori<\/h3>\n {6}<p>/);
-    expect([...entregaAssalt.matchAll(/<h4>([^<]+)<\/h4>\n {6}<ul>/g)].map((m) => m[1])).toEqual(['Novetats', 'Millorat', 'Corregit']);
-    for (const li of entregaAssalt.match(/<li>[\s\S]*?<\/li>/g)) expect(li).toMatch(/^<li><strong>[^<]+:<\/strong> /);
-    expect(entregaAssalt.endsWith('</ul>\n\n      ')).toBe(true);
+  test('és la segona entrada, darrere de la 1.1.0, amb el format de les altres', () => {
+    const titols = [...html.matchAll(/<h3>([^<]+)<\/h3>/g)].map((m) => m[1]);
+    expect(titols[1]).toMatch(/^1 de novembre de 2026, tarda · /);
+    expect(entregaAssalt).toMatch(/^<h3>1 de novembre de 2026, tarda · v1\.0\.4 \(build pendent de desplegar\) · Connector WordPress v(\d+\.\d+\.\d+) al repositori<\/h3>\n {6}<p>/);
+    expect(titolsH4(entregaAssalt).map((t) => t.split(' · ')[0])).toEqual([
+      ...Array(6).fill('Novetat'), ...Array(12).fill('Millora'), ...Array(3).fill('Correcció')
+    ]);
   });
 
-  test('el connector del títol és el del repositori, i no es diu publicat', () => {
-    const connector = llegix('wordpress-plugin/socdepoble-enxufe.php').match(/^ \* Version:\s+(\d+\.\d+\.\d+)\s*$/m)?.[1];
-    expect(entregaAssalt).toContain(`Connector WordPress v${connector} al repositori</h3>`);
-    expect(pla).toContain(`Connector WordPress ${connector}: és al repositori`);
+  test('el connector del títol és el de l’apartat, al repositori, no més nou que el d’ara, i no es diu publicat', () => {
+    const delTitol = entregaAssalt.match(/Connector WordPress v(\d+\.\d+\.\d+) al repositori<\/h3>/)[1];
+    expect(noMesNova(delTitol, CONNECTOR), `${delTitol} ≤ ${CONNECTOR}`).toBe(true);
+    const connector = apartat(entregaAssalt, `Millora · Connector WordPress ${delTitol}`);
+    expect(text(connector.cos)).toContain('És al repositori');
     expect(pla).toContain('pendent de publicar a WordPress.org');
     expect(entregaAssalt).not.toContain('en la versió'); // la capçalera llig la publicada d'una altra entrada
   });
@@ -230,10 +490,10 @@ describe('Assalt 10/10 · /versions té l’entrada honesta de la tarda de l’1
 
   test('les peces que es poden derivar del codi', () => {
     expect(VERSIO_FORMAT).toBe('1.2.0');
-    expect(pla).toContain('Dades obertes 1.2.0 i restaurador:');
+    expect(titolsH4(entregaAssalt)).toContain('Novetat · Dades obertes 1.2.0 i restaurador');
     expect(CAPACITATS_NO_DECLARADES).toEqual(['versioClient']);
     expect(pla).toContain("llevat de la versió mínima de l'app");
-    expect(pla).toContain('<code>src/data/federacio/inboxActivityPub.js</code>'.replace(/<[^>]+>/g, ''));
+    expect(entregaAssalt).toContain('<code>src/data/federacio/inboxActivityPub.js</code>');
   });
 
   test('cap enllaç intern ni «masia»', () => {

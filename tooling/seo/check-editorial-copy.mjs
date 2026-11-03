@@ -16,10 +16,13 @@ for (const [key, page] of Object.entries(PAGE_COPY)) {
   const dom = new JSDOM(page.html || '');
   const paragraphs = [...dom.window.document.querySelectorAll('p')].map((paragraph, i) => ({
     paragraph: i + 1, words: count(paragraph.textContent),
-    boldWords: count([...paragraph.querySelectorAll('strong')].map(node => node.textContent).join(' '))
+    boldWords: count([...paragraph.querySelectorAll('strong')].map(node => node.textContent).join(' ')),
+    strongs: paragraph.querySelectorAll('strong').length
   }));
   const long = paragraphs.filter(p => p.words >= 20);
-  const failures = long.filter(p => p.boldWords < 6 || p.boldWords > 8);
+  /* Onada 6 (ordre del Mestre 261103) · 6–8 SINTAGMES en <strong> per paràgraf llarg, no 6–8 paraules. */
+  const tram = (w) => (w >= 40 ? [6, 8] : w >= 25 ? [5, 7] : [2, 4]);
+  const failures = long.filter(p => { const [mn, mx] = tram(p.words); return p.strongs < mn || p.strongs > mx; });
   census.push({ key, subtitle: page.subtitle || '', lead: page.lead || '',
     longParagraphs: long.length, compliant: long.length - failures.length, failures });
   if (scope.has(key)) {

@@ -4,9 +4,9 @@
   "actor": "codex",
   "scope": "documents",
   "state": "planned",
-  "revision": 7,
+  "revision": 8,
   "createdAt": "2026-11-02T18:54:14.322Z",
-  "updatedAt": "2026-11-02T19:16:46.063Z",
+  "updatedAt": "2026-11-02T20:36:11.157Z",
   "expiresAt": "2026-11-03T18:54:14.322Z",
   "contractHash": "1839756fa153a68d945b48956d870a4a082ab80adcf874a04dd10fc1327d8c45",
   "humanInventoryVersion": 1,
@@ -4662,6 +4662,17 @@
       "file": "_wiki_de_poble/10_actes/261102_2015_acta_marmota_lliurament_codex_onada3_teler_invertit.md",
       "at": "2026-11-02T19:16:46.063Z",
       "hash": "bb738037bbbcfb7a785e03b19ab9221f0f5580e0d8004991e2deadc0874d16c1"
+    },
+    {
+      "action": "archive-links",
+      "at": "2026-11-02T20:36:11.157Z",
+      "by": "torn_f69976f9-6724-431f-b2f1-02efeedf6406",
+      "relocated": [
+        {
+          "from": "_wiki_de_poble/04_escriptori/261102_1918_prompt_teler_invertit_onada3_codex_gemini_constructors_claude_arbitre.md",
+          "to": "_wiki_de_poble/90_arxiu_historic/261102_1918_prompt_teler_invertit_onada3_codex_gemini_constructors_claude_arbitre.md"
+        }
+      ]
     }
   ],
   "ownedPaths": [
@@ -4671,6 +4682,7 @@
     "_wiki_de_poble/04_escriptori/261102_1532_prompt_mode_jarvis_idea60_fediversity_i_deute_llibre_mestre.md",
     "_wiki_de_poble/04_escriptori/261102_1647_prompt_gemini_revisio_codex.md",
     "_wiki_de_poble/04_escriptori/261102_1821_prompt_claude_alerta_quota_91pct_tancament_ordenat_t0.md",
-    "_wiki_de_poble/04_escriptori/261102_1852_prompt_claude_onada2_socdepoble_ultra_tancament_10_10.md"
+    "_wiki_de_poble/04_escriptori/261102_1852_prompt_claude_onada2_socdepoble_ultra_tancament_10_10.md",
+    "_wiki_de_poble/04_escriptori/261102_1918_prompt_teler_invertit_onada3_codex_gemini_constructors_claude_arbitre.md"
   ]
 }

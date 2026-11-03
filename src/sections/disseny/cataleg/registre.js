@@ -143,6 +143,9 @@ REGISTRE.push({ nom: 'BotoneraClassificacio', fitxer: 'universal/classificacio/B
 REGISTRE.push({ nom: 'DialegCarpeta', fitxer: 'universal/classificacio/DialegCarpeta.jsx', pagina: 'formularis', estat: 'viu', fora: true });
 REGISTRE.push({ nom: 'DialegValors', fitxer: 'universal/classificacio/DialegValors.jsx', pagina: 'formularis', estat: 'viu', fora: true });
 REGISTRE.push({ nom: 'DialegEmoticona', fitxer: 'universal/classificacio/DialegEmoticona.jsx', pagina: 'formularis', estat: 'viu', fora: true });
+/* O4-CLAUDE-1 (ordre del Mestre, captura 261102_2121) · «On es publica?» en línia, dins de
+   l'«Edició avançada»; viu a universal/ambits/, fora de PedraSeca. Espècimen: EspecimenBlocAmbit. */
+REGISTRE.push({ nom: 'BlocAmbit', fitxer: 'universal/ambits/BlocAmbit.jsx', pagina: 'formularis', estat: 'viu', fora: true });
 REGISTRE.push({ nom: 'DocumentPrintPreview', fitxer: 'universal/DocumentPrintPreview.jsx', pagina: 'superposicions', estat: 'viu', fora: true });
 /* T51 (ordre del Mestre, 260928) · les barres de color de PageFrame, ja components propis;
    els espècimens vius són EspecimenControlsBarra i, per a l'espai central, EspecimenEmoticonaBarra. */

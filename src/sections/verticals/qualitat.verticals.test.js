@@ -36,12 +36,11 @@ describe('les tres verticals, cablejades a tot arreu', () => {
     expect(VERTICALS).toEqual(['vehicle', 'treball', 'habitatge']);
   });
 
-  test('sections.js: una entrada per àmbit, amb path /<ambit> i kind vertical, darrere del Mercat a SECTION_ORDER', () => {
+  test('sections.js: una entrada per àmbit, amb path /<ambit> i kind vertical, fora de SECTION_ORDER (no ixen a la barra lateral)', () => {
     for (const ambit of VERTICALS) {
       expect(SECTIONS.find((seccio) => seccio.id === ambit), ambit).toMatchObject({ id: ambit, path: `/${ambit}`, kind: 'vertical' });
+      expect(SECTION_ORDER).not.toContain(ambit);
     }
-    const mercat = SECTION_ORDER.indexOf('mercat');
-    expect(SECTION_ORDER.slice(mercat, mercat + 1 + VERTICALS.length)).toEqual(['mercat', ...VERTICALS]);
   });
 
   test.each(Object.keys(DICCIONARIS))('%s: nav.<ambit> i section.<ambit>.* amb text propi, i la clau del Publicar del Mercat', (codi) => {

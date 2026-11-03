@@ -30,6 +30,7 @@ contracte.llig:
   - AGENTS.md
   - .agents/protocolledge.json
 contracte.escriu:
+  - .sdp-paperera
   - _wiki_de_poble/04_escriptori
 ---
 
@@ -41,6 +42,10 @@ Procediment per a substituir un fitxer per una revisió de Git. La ruta executab
 única és `tooling/brain/desenterrar.mjs`; `tooling/scripts/desenterrar.mjs` està
 retirada i no restaura res. Integrar un pegat de desenvolupament aprovat no és
 restaurar contingut històric.
+
+El contracte estàtic declara els artefactes estables. El fitxer concret a restaurar
+ha de constar en l’encàrrec i en el scope mínim de la lease; cap entrada de
+metadades autoritza substituir altres rutes.
 
 ## Contracte verificable
 

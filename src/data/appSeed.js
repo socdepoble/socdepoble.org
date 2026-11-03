@@ -77,31 +77,39 @@ export const NOTES_SEED = [
        Gauntlet 2 · 261101 · Y-Notes (G2-N-06) · A l'editor de Notes, entre
        l'entradilla i la barra d'eines hi ha l'«Edició avançada» plegada
        (NotesEditor · edicioAvancada, UniversalEditorShell): el text diu on és
-       de veritat la barra. */
+       de veritat la barra.
+       Onada 6 (261103, prompt 261102_1532, carril G5) · Les dues llistes passen
+       a <h4> + <p> amb negretes d'escaneig, i Carpetes i la Publicació diuen el
+       que fa de veritat «On es publica?» (BlocAmbit.jsx, NotesEditor ·
+       desaAmbit/desaCarpeta/onTria, carpetaAmbit.js). */
     content: `
       <h3>1. La Identitat Visual: Com escrius, com es llig</h3>
-      <p>L'editor està dissenyat perquè allò que veus a la pantalla siga exactament allò que llegiran les usuàries quan ho publiques. Sense sorpreses. La imatge de capçalera s'estén d'extrem a extrem, just per damunt de la teua targeta d'autoria. L'estructura de l'article sempre comença amb un gran Títol (H1), un subtítol (H2) que acompanya la lectura, i una entradilla o resum que convida a entrar en matèria.</p>
+      <p>L'editor està dissenyat perquè allò que veus a la pantalla siga <strong>exactament allò que llegiran</strong> les usuàries quan ho publiques. <strong>Sense sorpreses</strong>. La <strong>imatge de capçalera</strong> s'estén d'extrem a extrem, just per damunt de la teua <strong>targeta d'autoria</strong>. L'estructura de l'article sempre comença amb un gran <strong>Títol (H1)</strong>, un <strong>subtítol (H2)</strong> que acompanya la lectura, i una <strong>entradilla o resum</strong> que convida a entrar en matèria.</p>
       
       <h3>2. Les Eines de Text (la barra d'eines)</h3>
-      <p>Davall de l'entradilla, just després del desplegable «Edició avançada», tens la barra d'eines d'escriptura. Està pensada per a ser ràpida i intuïtiva:</p>
-      <ul>
-        <li><strong>Estructura:</strong> El desplegable d'encapçalaments (H3, H4, H5, H6 i H2) divideix el text en seccions i dona ritme a la lectura.</li>
-        <li><strong>Llistes:</strong> Utilitza les llistes de punts o les numerades per a enumerar fets, receptes, materials o arguments.</li>
-        <li><strong>Estil:</strong> Tens la negreta per a donar èmfasi i la cursiva per a citacions o localismes. Al botó «⋯» hi ha més eines: el text ratllat, la citació i el divisor.</li>
-        <li><strong>Enllaços i imatges:</strong> Un enllaç enganxat al text es queda com a enllaç, i escrivint «/» pots inserir una imatge, una targeta o un emoji.</li>
-      </ul>
+      <p>Davall de l'entradilla, just després del desplegable <strong>«Edició avançada»</strong>, tens la <strong>barra d'eines</strong> d'escriptura. Està pensada per a ser <strong>ràpida i intuïtiva</strong>:</p>
+      <h4>Estructura</h4>
+      <p>El <strong>desplegable d'encapçalaments</strong> (H3, H4, H5, H6 i H2) divideix el text en <strong>seccions</strong> i <strong>dona ritme</strong> a la lectura.</p>
+      <h4>Llistes</h4>
+      <p>Utilitza les <strong>llistes de punts</strong> o les <strong>numerades</strong> per a <strong>enumerar</strong> fets, receptes, materials o arguments.</p>
+      <h4>Estil</h4>
+      <p>Tens la <strong>negreta</strong> per a donar <strong>èmfasi</strong> i la <strong>cursiva</strong> per a <strong>citacions o localismes</strong>. Al <strong>botó «⋯»</strong> hi ha més eines: el <strong>text ratllat</strong>, la citació i el <strong>divisor</strong>.</p>
+      <h4>Enllaços i imatges</h4>
+      <p>Un <strong>enllaç enganxat</strong> al text es queda com a enllaç, i <strong>escrivint «/»</strong> pots inserir una <strong>imatge, una targeta o un emoji</strong>.</p>
       
       <h3>3. Organització al Bancal (la columna de l'esquerra)</h3>
-      <p>A l'esquerra tens el teu arxivador privat. Està dividit en diverses seccions perquè no et perdes mai:</p>
-      <ul>
-        <li><strong>Carpetes:</strong> Cada nota viu en una de les carpetes del Bloc. La tries a l'«Edició avançada» de la nota.</li>
-        <li><strong>Categories i Etiquetes:</strong> Abans de publicar, assegura't de classificar bé la teua nota. Aquestes etiquetes apareixeran tant ací a l'editor com en la publicació final al Mur.</li>
-      </ul>
+      <p>A l'esquerra tens el teu <strong>arxivador privat</strong>. Està dividit en <strong>diverses seccions</strong> perquè <strong>no et perdes</strong> mai:</p>
+      <h4>Carpetes</h4>
+      <p>Cada nota viu en una de les <strong>carpetes del Bloc</strong>. La <strong>tries</strong> a l'<strong>«Edició avançada»</strong> de la nota.</p>
+      <p>Allí mateix, en una <strong>nota teua</strong>, el selector <strong>«On es publica?»</strong> et deixa triar si és una <strong>publicació del Mur</strong> o una <strong>fitxa</strong> per al Mercat, Compartir cotxe, Treball o Habitatge, i <strong>la carpeta el seguix</strong>: el Mercat va a la <strong>carpeta del Mercat</strong>, i la resta, a la del Mur. També <strong>al revés</strong>: si mous la nota a la carpeta del Mercat, passa a ser una <strong>fitxa del Mercat</strong>.</p>
+      <h4>Categories i Etiquetes</h4>
+      <p><strong>Abans de publicar</strong>, assegura't de <strong>classificar bé</strong> la teua nota. Aquestes etiquetes apareixeran tant ací a l'editor com en la <strong>publicació final</strong> al Mur.</p>
 
       <h3>4. El Procés de Publicació</h3>
-      <p>Tot allò que escrius ací es guarda automàticament i és estrictament <strong>privat</strong>. Ningú ho pot veure fins que tu ho decidisques. Quan tingues un article polit, revisat i llest per vore la llum, simplement hauràs de fer servir el botó «Publicar» de la barra d'eines per a enviar-lo al Mur del teu poble o al teu grup de treball.</p>
-      
-      <p>Ara, prem «CREAR NOTA», dalt de la columna de les notes, per a començar a escriure la teua pròpia història (si no hi veus el botó, primer entra amb el teu compte). El llenç és teu!</p>
+      <p>Tot allò que escrius ací <strong>es guarda automàticament</strong> i és estrictament <strong>privat</strong>. <strong>Ningú ho pot veure</strong> fins que tu ho decidisques. Quan tingues un <strong>article polit</strong>, revisat i llest per vore la llum, simplement hauràs de fer servir el <strong>botó «Publicar»</strong> de la barra d'eines per a enviar-lo al <strong>Mur del teu poble</strong> o al teu <strong>grup de treball</strong>.</p>
+      <p>Si a <strong>«On es publica?»</strong> has triat una fitxa per al Mercat, Compartir cotxe, Treball o Habitatge, davall de l'opció triada t'apareixen els <strong>seus camps</strong> i el seu <strong>«Estat»</strong>, i la previsualització <strong>«Així es veurà al Mur»</strong> t'ensenya la targeta abans de publicar-la. Si a la fitxa li falta un <strong>camp obligatori</strong>, <strong>«Publicar» no la deixa eixir</strong>: t'obri l'«Edició avançada» i t'hi marca <strong>què falta</strong>.</p>
+
+      <p>Ara, prem <strong>«CREAR NOTA»</strong>, dalt de la columna de les notes, per a començar a escriure la teua <strong>pròpia història</strong> (si <strong>no hi veus el botó</strong>, <strong>primer entra</strong> amb el teu compte). <strong>El llenç és teu</strong>!</p>
     `,
     category: 'Productivitat',
     tags: ['Tutorial'],

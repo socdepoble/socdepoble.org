@@ -177,14 +177,17 @@ export function CosTraduit({ blocs = [], llengua = undefined }) {
       </Llista>
     );
   };
+  /* O4-CLAUDE-3 (D5-a11y-pedra-seca-02) · L'índex de la caixa de subtargeta
+     (blocsTraduibles), o null: d'una llista, el del seu primer element. */
+  const caixaDe = (bloc) => (Number.isInteger(bloc?.subtargeta) ? bloc.subtargeta : null);
   const pintats = grups.map((grup, i) => {
     if (grup.items) {
-      return { entrada: grup.items.some(({ bloc }) => bloc.entrada), node: pintaLlista(grup, i) };
+      return { entrada: grup.items.some(({ bloc }) => bloc.entrada), subtargeta: caixaDe(grup.items[0]?.bloc), node: pintaLlista(grup, i) };
     }
     const Etiqueta = ETIQUETES.has(grup.etiqueta) ? grup.etiqueta : 'p';
     /* TC3.3 · L'entradilla torna amb la seua classe (.lead, base.css). */
     const classe = Etiqueta === 'p' && grup.entradilla ? 'lead' : undefined;
-    return { entrada: Boolean(grup.entrada), node: <Etiqueta key={i} className={classe} lang={langDe(grup)}>{contingutDe(grup)}</Etiqueta> };
+    return { entrada: Boolean(grup.entrada), subtargeta: caixaDe(grup), node: <Etiqueta key={i} className={classe} lang={langDe(grup)}>{contingutDe(grup)}</Etiqueta> };
   });
   /* Gauntlet 261030 (Fase 3, TC3.3; vista-traduida-perd-entradilla) · Els
      blocs seguits de la capçalera de l'original (.page-intro: el subtítol i
@@ -192,6 +195,22 @@ export function CosTraduit({ blocs = [], llengua = undefined }) {
      conserva l'anatomia H1 → H2 → lead (ordre del Mestre de la Fase 3, TC3). */
   const eixida = [];
   for (let i = 0; i < pintats.length; i += 1) {
+    /* O4-CLAUDE-3 (D5-a11y-pedra-seca-02) · Els blocs seguits d'una mateixa
+       caixa de subtargeta tornen dins del seu div.sdp-subtargeta (modules.css):
+       la vista traduïda conserva la vora, el títol i la línia de context. Dos
+       caixes veïnes (índexs diferents) són dos div. */
+    if (!pintats[i].entrada && pintats[i].subtargeta !== null) {
+      const inici = i;
+      const caixa = pintats[i].subtargeta;
+      const fills = [];
+      while (i < pintats.length && !pintats[i].entrada && pintats[i].subtargeta === caixa) {
+        fills.push(pintats[i].node);
+        i += 1;
+      }
+      i -= 1;
+      eixida.push(<div key={`subtargeta-${inici}`} className="sdp-subtargeta" data-sdp-subtargeta="">{fills}</div>);
+      continue;
+    }
     if (!pintats[i].entrada) {
       eixida.push(pintats[i].node);
       continue;

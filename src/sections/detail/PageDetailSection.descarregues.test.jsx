@@ -212,6 +212,13 @@ test('/page/descarregues: un apartat per a cada camí i un per a la visió, amb 
   ]);
   expect(text('h4')).toEqual(expect.arrayContaining(['Google Play', 'APK directe', 'Apple TestFlight', 'App Store', TITOL_INSTRUCCIONS, 'WordPress.org']));
   expect(text('h5')).toEqual(["A l'ordinador", 'Al mòbil i a la tauleta']);
+  /* O4-CLAUDE-2 (ordre del Mestre, 261102 21:38) · Prova posada al dia a propòsit: els dos blocs
+     de les instruccions són dues Subtargetes (div.sdp-subtargeta, fills directes del cos), amb el
+     seu H5 com a títol i la seua llista; la resta del cos, fora. Els mateixos títols de dalt. */
+  const caixes = [...cos().querySelectorAll(':scope > div.sdp-subtargeta[data-sdp-subtargeta]')];
+  expect(caixes.map((caixa) => [...caixa.children].map((fill) => fill.tagName))).toEqual([['H5', 'UL'], ['H5', 'UL']]);
+  expect(caixes.map((caixa) => caixa.firstElementChild.textContent)).toEqual(["A l'ordinador", 'Al mòbil i a la tauleta']);
+  expect(caixes[0].previousElementSibling.textContent).toBe(TITOL_INSTRUCCIONS);
   /* 01-11-2026 (T1) · Un sol enllaç al cos: la fitxa pública del connector a
      WordPress.org, en una pestanya nova i amb el rel del sanejador. Cap
      botiga mòbil ni cap APK, que encara no són públics per a tothom. */

@@ -193,3 +193,56 @@ test('el CSS: la segona fila, el desplegable i les opcions, només amb tokens; c
     expect(regla(selector), selector).not.toMatch(/#[0-9a-f]{3,8}\b|rgba?\(/i);
   }
 });
+
+/* O4-CLAUDE-2 (ordre del Mestre, 261102 21:38) · Les dues eines d'inserció de
+   targetes, darrere del divisor: la «Subtargeta» (inserirSubtargeta) i la
+   «Targeta incrustada» (el selector del consumidor, que abans només obria
+   l'ordre «/»). Només hi són quan el motor n'oferix l'acció (la barra muda no
+   en pinta cap d'apagada que no podria fer res mai): sense, les files
+   d'abans, tal qual (les proves de dalt). Inserixen: cap aria-pressed. */
+test('subtargeta i targeta: darrere del divisor, només amb la seua acció; en compacte, a les opcions; inserixen sense aria-pressed', () => {
+  const insertSubtargeta = vi.fn();
+  const insertTargeta = vi.fn();
+  amplada(900);
+  const { unmount } = render(<UniversalToolbar formatActions={{ ...ACCIONS, insertSubtargeta, insertTargeta }} onPublish={() => {}} />);
+  fireEvent.click(within(barra()).getByRole('button', { name: 'Més eines' }));
+  expect(einesDe(segona())).toEqual(['ratllat', 'citacio', 'divisor', 'subtargeta', 'targeta']);
+  const subtargeta = within(segona()).getByRole('button', { name: 'Subtargeta' });
+  const targeta = within(segona()).getByRole('button', { name: 'Targeta incrustada' });
+  for (const boto of [subtargeta, targeta]) {
+    expect([boto.hasAttribute('aria-pressed'), boto.disabled, boto.className]).toEqual([false, false, 'sdp-bloc-icon']);
+  }
+  fireEvent.click(subtargeta);
+  fireEvent.click(targeta);
+  expect([insertSubtargeta.mock.calls.length, insertTargeta.mock.calls.length]).toEqual([1, 1]);
+  unmount();
+  // Sense el selector de targetes (un editor sense ambTargetes): només la subtargeta.
+  amplada(900);
+  const segonCop = render(<UniversalToolbar formatActions={{ ...ACCIONS, insertSubtargeta }} onPublish={() => {}} />);
+  expect(einesDe(segona())).toEqual(['ratllat', 'citacio', 'divisor', 'subtargeta']);
+  segonCop.unmount();
+  // En compacte, les dues van a les opcions de «⋯», darrere del divisor.
+  amplada(320);
+  render(<UniversalToolbar formatActions={{ ...ACCIONS, insertSubtargeta, insertTargeta }} onPublish={() => {}} />);
+  const format = within(barra()).getByRole('button', { name: 'Format del text' });
+  fireEvent.click(format);
+  const opcions = document.getElementById(format.getAttribute('aria-controls'));
+  expect(einesDe(opcions).slice(-3)).toEqual(['divisor', 'subtargeta', 'targeta']);
+});
+
+test('subtargeta i targeta: glif propi de la barra (24 px, currentColor, data-icona) i el nom del traductor', () => {
+  amplada(900);
+  const propies = new Set(['section.notes.format.subtargeta', 'section.notes.format.targeta']);
+  const t = vi.fn((clau, reserva) => (propies.has(clau) ? `${reserva}·${clau.split('.').pop()}` : reserva));
+  render(<UniversalToolbar formatActions={{ ...ACCIONS, insertSubtargeta: () => {}, insertTargeta: () => {} }} onPublish={() => {}} t={t} />);
+  fireEvent.click(within(barra()).getByRole('button', { name: 'Més eines' }));
+  expect(t).toHaveBeenCalledWith('section.notes.format.subtargeta', 'Subtargeta');
+  expect(t).toHaveBeenCalledWith('section.notes.format.targeta', 'Targeta incrustada');
+  for (const [nom, icona] of [['Subtargeta·subtargeta', 'subtargeta'], ['Targeta incrustada·targeta', 'targeta']]) {
+    const svg = segona().querySelector(`button[aria-label="${nom}"] svg`);
+    expect([svg.getAttribute('data-icona'), svg.getAttribute('width'), svg.getAttribute('viewBox'), svg.getAttribute('stroke'), svg.getAttribute('class')], nom)
+      .toEqual([icona, '24', '0 0 24 24', 'currentColor', null]);
+    const colors = [...svg.querySelectorAll('[fill], [stroke]')].flatMap((el) => [el.getAttribute('fill'), el.getAttribute('stroke')]).filter(Boolean);
+    expect(colors.every((c) => c === 'currentColor' || c === 'none'), nom).toBe(true);
+  }
+});

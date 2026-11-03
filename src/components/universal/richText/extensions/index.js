@@ -16,6 +16,7 @@ import SdpImageNodeView from './SdpImageNodeView.jsx';
 import { TargetesIncrustades } from './targetes/targetesIncrustades.js';
 import { PlaceholderCos } from './placeholderCos.js';
 import { GuiaCos, blocsDeGuia } from './guiaCos.js';
+import { ORDRE_SUBTARGETA, Subtargeta, textosDeLOrdre } from './subtargeta.js';
 
 /* RICH-EXIF (Onada 4, ADR multimèdia D4) · allowBase64 es queda (les notes
    sense servidor hi desen el data URL de compressImage), però cap data URL
@@ -216,6 +217,13 @@ async function comprimixDelCos(original, tria) {
  *        res. Conservada, la foto porta l'EXIF (amb la ubicació ja arrodonida)
  *        i el node, els data-* de SdpImage. Sense la funció, o una foto sense
  *        res a conservar, el camí de sempre: cap pregunta i la foto neta.
+ *
+ * O4-CLAUDE-2 (ordre del Mestre, 261102 21:38) · L'ordre «/» Subtargeta hi és
+ * sempre, darrere del Divisor: el node és a totes les extensions riques. Els
+ * textos de mostra són els del magatzem de l'extensió (els traduïts que hi
+ * posa DocumentEditor) o les reserves de subtargeta.js. Una ordre pot portar
+ * `tradueix(editor)`, que torna el seu títol i la seua ajuda en la llengua de
+ * la interfície; el menú «/» els hi posa en pintar-se (C2-07).
  */
 export function creaOrdres({
   onImageUpload = null, ambTargetes = false, onToast = null, ambEmojis = false, obreEmojis = null, demanaExif = null,
@@ -309,6 +317,24 @@ export function creaOrdres({
         editor.chain().focus().deleteRange(range).setHorizontalRule().run()
     },
     {
+      /* O4-CLAUDE-2 · La subtargeta (subtargeta.js): una targeta interna amb
+         el títol, la línia de context i el cos de mostra. Lleva la «/» i
+         després la inserix (el paràgraf que queda buit en deixa el lloc).
+         Sense el node (un editor que no ve d'extensionsRiques), no fa res.
+         C2-07 (àrbitre) · El títol i l'ajuda són les reserves de ca.js
+         (ORDRE_SUBTARGETA); el menú «/» (slash.js) hi posa els traduïts del
+         magatzem en pintar-se (tradueix). */
+      id: 'subtargeta',
+      titol: ORDRE_SUBTARGETA.titol,
+      ajuda: ORDRE_SUBTARGETA.ajuda,
+      tradueix: textosDeLOrdre,
+      paraules: ['subtargeta', 'caixa', 'requadre', 'apartat'],
+      executa: ({ editor, range }) => {
+        editor.chain().focus().deleteRange(range).run();
+        if (typeof editor.commands.inserirSubtargeta === 'function') editor.commands.inserirSubtargeta();
+      }
+    },
+    {
       id: 'imatge',
       titol: 'Imatge',
       ajuda: 'Puja una foto del dispositiu',
@@ -387,6 +413,11 @@ export function creaOrdres({
  * resum }, constant) afig la guia reversible del cos buit (guiaCos.js): una
  * decoració que s'amaga en entrar al cos i torna si s'ix sense escriure.
  * Sense cap bloc, les extensions de sempre.
+ * O4-CLAUDE-2 (ordre del Mestre, 261102 21:38) · La subtargeta
+ * (subtargeta.js) hi és SEMPRE, sense opció: un cos que en porta (les
+ * pàgines del sistema, una nota) l'ha de llegir qualsevol editor, o el
+ * primer desat en perdria la caixa. Els textos de mostra traduïts no hi
+ * entren per ací: van pel magatzem de l'extensió (DocumentEditor).
  */
 export function extensionsRiques({
   onImageUpload = null, ambTargetes = false, onToast = null, obreEmojis = null, demanaExif = null, placeholderCos = null,
@@ -407,6 +438,7 @@ export function extensionsRiques({
         onImageUpload, ambTargetes, onToast, ...(ambEmojis ? { ambEmojis, obreEmojis } : {}), ...(ambExif ? { demanaExif } : {}),
       })
     }),
+    Subtargeta,
     ...(ambTargetes ? [TargetesIncrustades] : []),
     ...(ambPlaceholder ? [PlaceholderCos.configure({ text: placeholderCos })] : []),
     ...(ambGuia ? [GuiaCos.configure({ blocs: guiaCos.blocs, etiqueta: guiaCos.etiqueta || '', resum: guiaCos.resum || '' })] : [])

@@ -1,7 +1,7 @@
 ---
 type: skill
 status: actiu
-description: Directriu arquitectònica i de disseny per clonar la UI/UX de WhatsApp al mil·límetre (Patró Pedra Seca).
+description: Referent visual de WhatsApp per al xat, ajustos i interaccions equivalents; conserva els contractes propis de dades i seguretat de Sóc de Poble.
 name: sdp-clon-whatsapp
 tags:
   - disseny
@@ -9,7 +9,7 @@ tags:
 triggers_on:
   - clon de whatsapp
   - com ho fa whatsapp
-  - pantalla nova
+  - pantalla de xat nova
   - menú d'ajustos
   - bottom sheet
 contracte.llig:
@@ -20,7 +20,7 @@ contracte.escriu:
 ---
 # Llei del Clonatge de WhatsApp (Pedra Seca v2)
 
-La premissa d'interacció principal de Sóc de Poble és aconseguir una corba d'aprenentatge ZERO per a la gent major i els usuaris rurals. Per aconseguir-ho, **l'aplicació ha de ser un clon visual i de comportament de WhatsApp** en tot el que siga tecnològicament possible i coherent amb les nostres dades.
+La premissa d'interacció principal de Sóc de Poble és aconseguir una corba d'aprenentatge ZERO per a la gent major i els usuaris rurals. Per aconseguir-ho, usa WhatsApp com a referent del xat, ajustos i interaccions equivalents, dins dels components de Pedra Seca. El TPV té el seu referent Loiverse i la publicació universal el seu contracte: no els substituïsques per una pantalla de WhatsApp.
 
 ## 1. La Còpia Vil i Descarada (Norma d'Or)
 Davant qualsevol dubte sobre com dissenyar una pantalla, un menú d'ajustos, un botó o un flux d'usuari: **CAL MIRAR COM HO FA WHATSAPP I COPIAR-HO AL MIL·LÍMETRE**.
@@ -30,7 +30,7 @@ Davant qualsevol dubte sobre com dissenyar una pantalla, un menú d'ajustos, un 
 
 ## 2. El Flux de Treball (Com implementar noves pantalles)
 Sempre que es demane a una IA dissenyar o programar una nova vista (com ara el "Panell de Control" o la "Configuració"):
-1. **Requeriment de Captura:** La IA pot i ha de demanar al Mestre una captura de pantalla de la vista equivalent a WhatsApp (si el Mestre no l'ha proporcionada ja).
+1. **Referència disponible:** consulta primer les captures ja aportades i els components propis que les implementen. Si falta una decisió visual material i no es pot resoldre amb eixa evidència, demana la referència concreta; no repetisques la petició d'una captura disponible ni bloqueges una correcció rutinària que ja té patró.
 2. **Abstracció:** La IA disseccionarà la captura (Llista, Ítem amb fletxa `> `, Switch de palanca, etc.).
 3. **Mapeig de Conceptes:** Els ítems s'adaptaran al món de Sóc de Poble mantenint el pes visual. Per exemple, l'equivalent d'"Almacenamiento y datos" de WhatsApp es pot mapar a "Dades i memòria local" de la nostra App, conservant el mateix lloc.
 4. **Censura Creativa:** La IA TÉ PROHIBIT inventar patrons de disseny web moderns "creatius" (ex. menús d'hamburguesa, estructures complexes, sliders inusuals) que no existisquen a l'univers WhatsApp.
@@ -46,6 +46,10 @@ El Mas té el seu propi xifratge d'extrem a extrem del xat, `sdp-xat-v1` (P1-12)
 2. **El fons, nostre:** la criptografia, els estats i els textos són els del disseny (§4.4 i §13), a l'espai `section.xat.xifratge.*` dels cinc diccionaris. Res del protocol, de les polítiques ni de les FAQ de WhatsApp o Meta no s'hi aplica.
 3. **Textos honestos:** un text només on és cert (l'estat real de cada conversa i la fase que el fa cert), sense «mai», «100 %», «immune» ni «inviolable». Cap interruptor per conversa per a xifrar o no: tota conversa privada es xifra o espera, i no ix en clar.
 4. **Primer l'espècimen:** cada peça nova de seguretat del xat té el seu espècimen al catàleg abans de cablejar-se (Pedra Seca §9).
+
+## Cobertura
+
+`src/config/xifratXat.js` i `src/data/xifratXat.seguretat.test.js` fixen la bandera apagada; les suites del xat contrasten estats concrets. Ni la semblança amb WhatsApp ni un test d'UI certifiquen xifratge, seguretat criptogràfica o compatibilitat amb Meta. Mantín la bandera apagada si l'encàrrec no n'autoritza explícitament l'activació.
 
 ## Vincles
 - [[00_INDEX_SKILLS]]

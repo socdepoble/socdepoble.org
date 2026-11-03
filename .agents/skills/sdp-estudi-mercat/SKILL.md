@@ -10,6 +10,7 @@ triggers_on:
   - analitza la competència
   - investiga un competidor
 contracte.llig:
+  - .agents/protocolledge.json
   - _wiki_de_poble/01_ser/02_genotip.md
   - _wiki_de_poble/04_escriptori
 contracte.escriu:
@@ -35,7 +36,8 @@ Quan inicies un estudi de mercat, has d'executar els següents passos i incloure
 
 ### B. Enginyeria Inversa i Stack Tecnològic
 - Utilitza eines com l'anàlisi del codi font web (HTML/JS) i les polítiques de privacitat per descobrir quines tecnologies empren.
-- Detalla: Framework de frontend, proveïdors de Backend/BBDD, IA utilitzada, sistemes de pagament i eines de notificació (WhatsApp, emails transaccionals, etc.).
+- Detalla només el que les fonts permeten acreditar: framework visible, proveïdors declarats, IA, pagaments i notificacions. Separa l'observació de la inferència i escriu «no verificat» quan el backend no siga observable. Una dependència al bundle o un text comercial no proven tota l'arquitectura.
+- Registra URL, data de consulta i versió si es coneix; prioritza fonts primàries per a afirmacions tècniques. No accedisques a comptes privats ni executes codi de tercers per completar una casella de l'estudi.
 
 ### C. Estratègia de Màrqueting i Captació (Growth Hacking)
 - Com aconsegueixen clients? És un model *Top-Down* (venen als ajuntaments) o *Bottom-Up* (demanda ciutadana)?
@@ -53,6 +55,10 @@ Aquesta és la part més important. Què significa tot açò per al nostre codi,
 1. Quines funcionalitats resolen necessitats reals i haurien de planificar-se per al nostre *backend*? (ex. Vehicle compartit).
 2. Quines pràctiques descartem totalment perquè xoquen amb la nostra ètica, rendiment o independència?
 3. Quins canvis de rumb hem de prendre en la nostra comunicació per diferenciar-nos?
+
+## Cobertura
+
+Esta és una investigació amb fonts i judici humà. Els tractors documentals validen el format del lliurable, no la correcció de les conclusions sobre un competidor. Reutilitza `core-tecniques-investigacio` per al contrast de fonts sense crear un segon protocol de recerca.
 
 ## 3. Format de Sortida
 L'informe es redacta en valencià a l'Escriptori mitjançant el contracte documental vigent. Consulta `.agents/protocolledge.json` per obtindre ruta, plantilla i rebut. La carpeta `01_produccio` és zona humana; no és la destinació automàtica dels informes de l'agent.

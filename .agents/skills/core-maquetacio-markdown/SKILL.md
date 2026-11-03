@@ -20,12 +20,16 @@ contracte.llig:
   - .agents/skills/core-llegibilitat-text/SKILL.md
   - .agents/skills/sdp-universal-page/SKILL.md
   - .agents/skills/wiki-documentacio-i-reflex/SKILL.md
+  - src/sections/wiki-de-poble/parseMarkdown.js
+  - .agents/protocolledge.json
+  - tooling/wiki/schema.json
 contracte.escriu:
-  - _wiki_de_poble/00_index.md
+  - _wiki_de_poble
+  - .agents/skills
 ---
 # Maquetació de Markdown
 
-Esta skill fixa com es maqueta un fitxer Markdown del repositori perquè el Mestre el llija d'un colp d'ull i les portes el puguen validar. S'aplica en escriure o revisar qualsevol `.md` de la Wiki, de `.agents/` o de l'Escriptori.
+Esta skill fixa com es maqueta un fitxer Markdown del repositori perquè el Mestre el llija d'un colp d'ull i les portes el puguen validar. S'aplica en escriure o revisar qualsevol `.md` de la Wiki, de `.agents/skills/` o de l'Escriptori.
 
 ## 1. Abast i frontera
 
@@ -34,8 +38,9 @@ Esta secció diu on s'aplica la skill i on comença la feina d'una altra.
 - **Aplica a:** tot fitxer `.md` que escriga o revise una IA, com documents de la Wiki, skills, prompts, plans, auditories, actes i índexs, també quan la Wiki integrada el pinta a l'aplicació.
 - **No aplica a:** els components, les pàgines generades i l'HTML de l'aplicació, que són de `core-llegibilitat-text`.
 - **Frontera amb core-llegibilitat-text:** es definix per superfície. Un fitxer `.md` és d'esta skill i un component o un HTML són d'aquella. Les regles comunes (un sol H1 i cap salt de nivell) diuen el mateix a les dues, i les negretes de la seua secció 3 també valen dins d'un `.md`.
-- **Correcció de fitxers existents:** la secció 4 de `core-llegibilitat-text` deixa triar entre avisar i corregir. Sobre un `.md` existent, esta skill tria avisar (secció 6).
-- **Frontera amb sdp-universal-page:** la seua secció 1.E mana l'anatomia Títol (H1), Subtítol (H2), Entradilla i Cos (H3 en avant) de la pàgina pintada. El font `.md` no l'escriu a mà: seguix R2, R4 i R5 i obri les seccions amb `##`. La conversió la fan `src/sections/wiki-de-poble/parseMarkdown.js` i la `UniversalPage`.
+- **Correcció de fitxers existents:** la secció 5 de `core-llegibilitat-text` permet corregir dins de l'encàrrec autoritzat. Sobre un `.md` existent, esta skill tria avisar (secció 6).
+- **Frontera amb sdp-universal-page:** la seua secció 1.E mana l'anatomia Títol (H1), Subtítol (H2), Entradilla i Cos (H3 en avant) de la pàgina pintada. El font `.md` no l'escriu a mà: seguix R2, R4 i R5 i obri les seccions amb `##`. 
+- **Font de lectura:** llig `src/sections/wiki-de-poble/parseMarkdown.js` per contrastar la conversió amb la `UniversalPage`.
 - **Com es convertix:** el compilador de la Wiki passa la `description` a Subtítol (H2), `extreuEditorial` passa l'entradeta de R5 a Entradilla i `parseMarkdown` pinta cada `##` del font com a H3 del cos. Per això el Subtítol no s'escriu com a `##` davall de l'H1: incompliria R5 i la pàgina quedaria sense Entradilla.
 - **Frontera amb les plantilles:** quan el document naix de `document.mjs create`, l'ordre i el nom de les seccions els posa la plantilla de `.agents/protocolledge.json`. Esta skill ordena el que va dins de cada secció. Si la plantilla porta un element que una regla prohibix, el document el conserva com a excepció declarada i la plantilla s'anota amb ruta:línia.
 - **Fitxers generats:** `00_INDEX_SKILLS.md`, `manifest.yaml` i les àncores que escriuen les eines no es retoquen a mà. Si la seua forma incomplix una regla, es corregix l'eina pel seu circuit.
@@ -43,7 +48,7 @@ Esta secció diu on s'aplica la skill i on comença la feina d'una altra.
 
 ## 2. Regles
 
-Cada regla porta un codi (R1 a R22). R12, R15, R18 i R19 demanen llegir el contingut amb la pregunta que porten; la resta es comproven mecànicament sobre el text del fitxer.
+Cada regla porta un codi (R1 a R22). R12, R15, R18 i R19 demanen llegir el contingut amb la pregunta que porten; la resta tenen criteris textuals comprovables. Això no implica que totes tinguen una porta instal·lada: la cobertura mecànica concreta i la llista manual es distingixen a la secció 4.
 
 ### 2.1 Frontmatter
 
@@ -80,7 +85,7 @@ Cada regla porta un codi (R1 a R22). R12, R15, R18 i R19 demanen llegir el conti
 - **R19.** El text que el Mestre ha de copiar va en bloc de codi, mai en cita amb `> `. La cita es reserva per a reproduir una font literal, amb la font nomenada.
 - **R20.** El cos no porta cap línia horitzontal `---`: eixe separador només delimita el frontmatter.
 - **R21.** Els enllaços interns són wikilinks `[[nom]]` i mai apunten a la mateixa nota. La forma `[text](adreça)` queda per a adreces externes.
-- **R22.** Tot el fitxer usa una sola forma d'apòstrof, la recta (`'`).
+- **R22.** Mantín una forma d'apòstrof consistent en la prosa. El codi, els títols de proves, les cites literals i els valors de la interfície conserven els seus bytes: no es normalitzen per estil.
 
 ## 3. Procediment
 
@@ -158,6 +163,13 @@ Esta skill fixa la forma, no el contingut ni el lloc dels documents.
 ## Lliçons del Mestre
 
 - **261006** | **Markdown llegible i verificable**: Tot fitxer Markdown que escriu una IA porta un sol H1 amb entradeta, encapçalaments sense salts i amb numeració contínua, una idea per secció i «## Vincles» com a última secció. El procediment viu a les skills i la filosofia a la Wiki.
+
+## Cobertura real de les portes
+
+- `tractor-frontmatter.mjs` valida metadades i esquema; no prova per si sol tota la jerarquia, la numeració ni R1–R22.
+- `tractor-registre.mjs` i `cataleg_skills.mjs --check` validen registre i catàleg; `fronteres-skills.mjs` comprova F1–F5 dels contractes, ordres i tokens. Cap d'estes portes avalua la prova de la tisora, el to o la utilitat del text.
+- Usa la llista de la secció 4 per als criteris sense tractor específic i registra qui ha inspeccionat el fitxer i amb quin resultat. Una prova de comportament del parser pot acreditar un cas de renderitzat, no tots els documents futurs.
+- Els casos de la secció 5 són evidència del commit que citen, no una declaració que les mateixes línies del fitxer viu continuen fallant. Torna a contrastar abans de corregir.
 
 ## Vincles
 

@@ -9,33 +9,36 @@ triggers_on:
   - "sms llauradors"
 version: "2.0.0"
 contracte.llig:
+  - src/sections/calendari/CalendariSection.jsx
+  - src/sections/calendari/fonts/contracteFonts.js
+  - src/data/backendPort.js
   - .agents/skills/sdp-pedra-seca/SKILL.md
   - _wiki_de_poble/01_ser/02_genotip.md
 contracte.escriu:
   - _wiki_de_poble/04_escriptori
 ---
+# Calendari agrícola i avisos per SMS
 
-# 🍅 Calendari Agrícola i Avisos per SMS (Plug & Play)
+Esta és una especificació de producte per a subscripcions de cultius i dates de plantació. El mòdul agrícola i l'enviament d'SMS no queden acreditats com a implementats perquè existisca esta skill.
 
-## 1. Propòsit de la Skill
-Definir l'arquitectura i les regles de negoci per al **Calendari Agrícola Proactiu**. Aquest sistema permetrà als llauradors subscriure's a alertes per SMS (o via web) que els avisaran de les temporades òptimes de plantació (ex: "És l'hora de plantar tomaques!"). Aquesta skill serveix com a cas d'ús "Or" per testar l'autonomia d'integració de noves IAs al sistema de Sóc de Poble.
+## Reutilitzar el calendari real
 
-## 2. Frontera de Confiança
-- **Prohibicions de Base de Dades:** Cap script ni agent que desenvolupe aquesta funcionalitat pot alterar les taules core de Sollutia/Supabase sense aprovació prèvia. Totes les taules noves (ex: `cultius`, `subscripcions_agricoles`) s'han de dissenyar com a mòduls independents i acoblables.
-- **Enviament d'SMS:** S'ha d'emprar una interfície "Mock" o de proves per als SMS fins que el Mestre aprove els costos i l'API real en producció.
+Llig primer `src/sections/calendari/CalendariSection.jsx` i el contracte de fonts de `src/sections/calendari/fonts/contracteFonts.js`. Integra el nou cas amb el calendari existent i els components de Pedra Seca; no inventes una nova Card o una segona navegació abans de comprovar què resolen les peces actuals.
 
-## 3. Instruccions d'Execució
-Qualsevol agent (Claude, Codex, Fable) que reba la tasca de programar el Calendari Agrícola ha de:
-1. Llegir l'arquitectura de *Pedra Seca* (`sdp-pedra-seca`) per garantir que la UI encaixe visualment amb Sóc de Poble.
-2. Dissenyar un esquema de dades eficient relacionant `usuari_id` amb `tipus_cultiu` i `data_optima`.
-3. Crear un component React modular (una nova "Card" o mòdul) per a la subscripció.
-4. Generar el codi d'excel·lència, evitant fem i deute tècnic, i integrant-se nativament amb Supabase.
+Proposa el model de cultiu, zona, data òptima i subscripció amb procedència i límits de les dades agrícoles. Una data de plantació no és universal: no inventes recomanacions sense una font adequada al lloc i al cultiu.
 
-## 4. Context Tècnic Actualitzat
-Aquesta funcionalitat es desplegarà en el context vigent: **Arquitectura 100% Online, desenvolupament basat en React i modularitat pura integrant-se a Sollutia**. El frontend dependrà exclusivament dels components de Sóc de Poble (Pedra Seca).
+## Dades i confiança
 
-***
-**Ancoratge de Seguretat:** [[00_INDEX_SKILLS]]
+- Sollutia és l'amfitrió de lectura GET de la Frontissa, no el lloc on crear o escriure taules.
+- Supabase és el backend propi vigent; qualsevol canvi autoritzat va pel port neutral `src/data/backendPort.js`, una migració revisada i permisos/RLS mínims. No alteres taules core fora de l'encàrrec.
+- Els avisos d'SMS es desenvolupen amb un proveïdor simulat. Activar una API real, gastar crèdits o enviar missatges requerix l'autorització corresponent del Mestre i la subscripció del destinatari; cap ordre de generar codi activa eixos enviaments.
+
+## Acceptació
+
+Prova la conversió de dates, la zona horària, la baixa de subscripció i la denegació entre usuaris amb fonts simulades. Declara què és proposta i què s'ha verificat al producte. Les suites actuals de calendari cobrixen el calendari i les seues fonts; no certifiquen el futur sistema agrícola ni el lliurament d'SMS.
 
 ## Vincles
+
 - [[00_INDEX_SKILLS]]
+- [[sdp-pedra-seca/SKILL]]
+- [[core-seguretat-audit/SKILL]]

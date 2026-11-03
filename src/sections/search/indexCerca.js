@@ -198,7 +198,11 @@ const ENTITATS = Object.freeze({ '&nbsp;': ' ', '&amp;': '&', '&lt;': '<', '&gt;
  *  les passa per a tothom sobre cada publicació i cada producte. */
 export function textPla(valor) {
   if (valor == null || typeof valor === 'object') return '';
-  return llevaEtiquetes(llevaScriptsIEstils(stripMarkdownImages(String(valor))))
+  /* Gauntlet O6 (O6-G1-C1-03) · Les etiquetes de línia (negreta, cursiva, enllaç…) es lleven sense
+     espai, com les pinta el navegador: «l'<strong>APK</strong>» es llig «l'APK», no «l' APK». Lineal:
+     [^<>]* s'atura al primer < o >. Els blocs, <br> i <img> continuen separant (llevaEtiquetes). */
+  return llevaEtiquetes(llevaScriptsIEstils(stripMarkdownImages(String(valor)))
+    .replace(/<\/?(?:strong|b|em|i|code|span|mark|u|s|sub|sup|small|abbr|a)\b[^<>]*>/gi, ''))
     .replace(/&(nbsp|amp|lt|gt|quot|apos|#39);/g, (entitat) => ENTITATS[entitat] || ' ')
     .replace(/\s+/g, ' ')
     .trim();

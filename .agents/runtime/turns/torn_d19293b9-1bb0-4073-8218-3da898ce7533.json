@@ -4,9 +4,9 @@
   "actor": "Claude",
   "scope": "code",
   "state": "planned",
-  "revision": 5,
+  "revision": 7,
   "createdAt": "2026-11-02T15:40:49.371Z",
-  "updatedAt": "2026-11-02T19:11:51.401Z",
+  "updatedAt": "2026-11-03T03:52:47.323Z",
   "expiresAt": "2026-11-03T15:40:49.371Z",
   "contractHash": "1839756fa153a68d945b48956d870a4a082ab80adcf874a04dd10fc1327d8c45",
   "humanInventoryVersion": 1,
@@ -4522,7 +4522,7 @@
   },
   "plan": {
     "file": "_wiki_de_poble/04_escriptori/261102_1532_pla_implementacio_mode_jarvis_idea60_fediversity_i_deute_llibre_mestre.md",
-    "hash": "da64a7a5eed8d0f5327feac9a43dd3f60efe984675224fff11fd2efb63d30872"
+    "hash": "f290258294181300446c01360581798bd13d6c6831b397589e479df02c60da9a"
   },
   "verification": null,
   "history": [
@@ -4563,6 +4563,16 @@
       "state": "planned",
       "action": "bind-plan",
       "at": "2026-11-02T19:11:51.400Z"
+    },
+    {
+      "state": "planned",
+      "action": "bind-plan",
+      "at": "2026-11-03T00:21:11.445Z"
+    },
+    {
+      "state": "planned",
+      "action": "bind-plan",
+      "at": "2026-11-03T03:52:47.322Z"
     }
   ],
   "relocated": [

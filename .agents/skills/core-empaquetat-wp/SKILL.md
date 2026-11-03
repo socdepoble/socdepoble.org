@@ -15,46 +15,38 @@ triggers_on:
 contracte.llig:
   - package.json
   - vite.config.js
+  - vite.standalone.config.js
+  - wordpress-plugin/eines/empaqueta.mjs
+  - tooling/lib/higiene-paquets.mjs
+  - tests/enxufe-empaqueta.test.mjs
 contracte.escriu:
-  - package.json
+  - wordpress-plugin/builds
 ---
 # Tractors i Procediment d'Empaquetat del Plugin de WordPress (Enxufe)
 
 Aquesta skill s'ha d'invocar **SEMPRE** que una IA (o el Mestre) demane generar un arxiu ZIP per a pujar l'aplicació a WordPress o distribuir la SPA independent. Serveix com a tallafoc contra el "Llop Salvatge" d'escopir zips i carpetes temporals sense rumb per qualsevol lloc de l'espai de treball.
 
-## 1. Nomenclatura Estàndard i Termodinàmica
-Qualsevol ZIP compilat (siga a mà, per script de laboratori, o per IA autònoma) HA DE TENIR obligatòriament el format canònic de Sóc de Poble:
-`aammdd_hhmm_categoria_titol.ext`
+## 1. Tria el paquet abans de generar-lo
 
-La **categoria** reflectix l'amfitrió o sistema al qual s'enxufa el paquet:
-- Per al plugin de WordPress: `AAMMDD_HHMM_wordpress_enxufe_v[MAJOR].[MINOR].[PATCH].zip` (Exemple: `261015_2250_wordpress_enxufe_v1.1.3.zip`)
-- Per a la SPA autònoma (servidor estàtic/Sollutia): `AAMMDD_HHMM_estatic_spa_v[MAJOR].[MINOR].[PATCH].zip`
-- Per a altres amfitrions futurs: `AAMMDD_HHMM_sollutia_enxufe_vX.Y.Z.zip`, `AAMMDD_HHMM_joomla_enxufe_vX.Y.Z.zip`, `AAMMDD_HHMM_wikimedia_enxufe_vX.Y.Z.zip`
+Consulta `node wordpress-plugin/eines/empaqueta.mjs --ajuda` i l'inventari dels builds. L'empaquetador té tres eixides diferents; esta skill no canvia el canal ni la ruta que implementa cada variant:
 
-## 2. Destinació Única Satèl·lit (_builds_de_poble/wordpress/)
-D'acord amb la Llei de la Puresa de Capes i per no ofegar el repositori de codi font (`socdepoble.org`), tots els productes finals, binaris compilats i arxius ZIP del connector de WordPress van **EXCLUSIVAMENT** al magatzem satèl·lit extern:
-**Ruta canònica externa:** `../_builds_de_poble/wordpress/`
+- **Release signada:** dos ZIP datats (`AAMMDD_HHMM_wordpress_enxufe_vX.zip` i `AAMMDD_HHMM_estatic_spa_vX.zip`) dins de `wordpress-plugin/builds/`. `--sortida DIR` només admet una carpeta dins d'eixa frontera i refusa enllaços simbòlics. La data ix del build, amb fus horari Europe/Madrid.
+- **Directori de WordPress.org:** `--directori` genera només `wordpress-plugin/builds/directori/socdepoble.zip` a partir dels builds de release existents. No compila ni modifica el canal. No es combina amb altres opcions. Esta variant exclou l'actualitzador, `Update URI`, `languages/` i `Domain Path`.
+- **Paquet lleuger manual:** `--lleuger` genera `../_builds_de_poble/wordpress/socdepoble.zip`, amb mitjans externs i límit de 2.500.000 bytes. La carpeta satèl·lit ha d'existir; el tractor no la crea ni publica un canal. És una eixida externa: confirma l'abast autoritzat de la sessió abans d'executar-la; el contracte local de Fronteres només descriu camins del repositori.
 
-Està **ESTRICTAMENT PROHIBIT** guardar arxius `.zip`, `.tar.gz`, `.apk`, `.aab` o binaris compilats pesats a:
-- L'arrel del repositori `/`
-- L'arbre intern de `wordpress-plugin/` (ni a `wordpress-plugin/builds/` ni subcarpetes)
-- La carpeta `scratch/`
-- `_wiki_de_poble/04_escriptori/`
+El nom fix `socdepoble.zip` dels dos modes manuals és una excepció deliberada a la nomenclatura datada. No reanomenes eixe lliurable ni copies un ZIP a un altre circuit per fer-lo encaixar en una regla documental.
 
-Dins de `wordpress-plugin/builds/` només hi poden residir els manifests lleugers en text JSON per a l'actualitzador autònom (`stable.json`, signatures `.sig`), mai binaris ZIP.
+## 2. Higiene i retenció
 
-## 3. Neteja de Brossa Temporal (Acte Reflex)
-Quan es genere un paquet ZIP per a la comunitat o per a WordPress.org (`socdepoble.zip`), es diposita directament a `../_builds_de_poble/wordpress/`. Si cap eina d'empaquetat o procés intermedi deixa fitxers temporals o còpies locals de `.zip` a l'arbre de treball de `socdepoble.org`, s'han de moure immediatament a `_builds_de_poble/wordpress/` o purgar de l'arbre abans de tancar el torn.
+Els ZIP no es versionen a Git. Mantín les eixides en la carpeta que correspon al mode seleccionat; no les deixes a l'arrel, `scratch/` o l'Escriptori documental. `tooling/lib/higiene-paquets.mjs` i les proves del packager comproven exclusions i frontera; no acrediten l'aprovació editorial d'una release.
 
-## 4. Retenció a _builds_de_poble/wordpress/
-A `_builds_de_poble/wordpress/` es conserven:
-- L'últim paquet vigent per a WordPress.org (`socdepoble.zip`).
-- Els paquets datats per versió (`AAMMDD_HHMM_wordpress_...zip`).
-- Els informes de validació JSON associats a cada paquet.
-Els fitxers ZIP mai es versionen a Git (`.gitignore`).
+La retenció del satèl·lit i els builds de release són circuits diferents. Conserva els artefactes aliens i les preimatges: la mera presència d'un ZIP no autoritza moure'l o esborrar-lo. Per a restes creades en este torn, usa el temporal aïllat i la neteja prevista pel tractor; per a una migració d'emmagatzematge, registra origen, destí, hash i autorització específica.
 
-## 5. Constància
-El paquet que es lliura es cita amb el seu nom exacte a l'informe o a l'Acta Marmota de la sessió: és el que la retenció a `_builds_de_poble/wordpress/` conserva.
+## 3. Verifica i deixa constància
+
+Executa les proves `node --test tests/enxufe-empaqueta.test.mjs tests/higiene-paquets.test.mjs` quan canvies el circuit. No fabriques una release, una clau privada o una publicació per a comprovar una skill. La generació de cada variant ha de verificar l'inventari, la mida i el SHA-256 retornats pel tractor, i la correspondència de versió amb els builds d'entrada.
+
+L'informe cita mode, ruta exacta, versió, mida, hash i proves executades. Empaquetar no autoritza pujar a WordPress.org, publicar manifests o substituir un canal: són accions separades de l'encàrrec.
 
 ## Vincles
 - [[00_INDEX_SKILLS]]

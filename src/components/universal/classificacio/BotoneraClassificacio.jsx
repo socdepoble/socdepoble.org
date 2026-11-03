@@ -44,13 +44,19 @@ const PINDOLES = Object.freeze({
   ambit: Object.freeze({ badge: 'sdp-badge-system', nom: 'Àmbit', icona: Layers }),
 });
 
+/* O4-CLAUDE-1 (ordre del Mestre, captura 261102_2121) · Cada grup obri el seu
+   diàleg (aria-haspopup="dialog"), tret de l'«Àmbit»: «On es publica?» ja no
+   és cap finestra modal, viu en línia dins de l'«Edició avançada» i el botó hi
+   porta (qui munta la botonera ho fa, per onObri('ambit')). */
+const popupDe = (tipus) => (tipus === 'ambit' ? undefined : 'dialog');
+
 /* Un botó per grup amb totes les píndoles del grup a dins (T7B-V1).
    IDEA-61 · `nom` (opcional): el nom accessible ja traduït; sense, el de sempre. */
 function Pindoles({ tipus, valors, onObri, nom: nomPropi }) {
   const { badge, nom, icona: Icona } = PINDOLES[tipus];
   const etiqueta = nomPropi || `${nom}: ${valors.join(', ')}`;
   return (
-    <button type="button" className="sdp-classificacio-pindola" aria-haspopup="dialog"
+    <button type="button" className="sdp-classificacio-pindola" aria-haspopup={popupDe(tipus)}
       aria-label={etiqueta} title={etiqueta} onClick={() => onObri?.(tipus)}>
       {valors.map((valor, i) => (
         <span key={`${i}:${valor}`} className={`sp-card-label ${badge}`}>
@@ -64,7 +70,7 @@ function Pindoles({ tipus, valors, onObri, nom: nomPropi }) {
 
 function BotoResum({ tipus, icona: Icona, glif = null, text, resum, onObri }) {
   return (
-    <button type="button" className="sdp-classificacio-pindola" aria-haspopup="dialog" onClick={() => onObri?.(tipus)}>
+    <button type="button" className="sdp-classificacio-pindola" aria-haspopup={popupDe(tipus)} onClick={() => onObri?.(tipus)}>
       <span className="sp-card-label sdp-badge-buit">
         {glif ? <span className="sdp-classificacio-botonera__glif" aria-hidden="true">{glif}</span> : Icona ? <Icona aria-hidden="true" focusable="false" /> : null}
         <span className="sdp-classificacio-pindola__text">
@@ -89,7 +95,10 @@ function BotoResum({ tipus, icona: Icona, glif = null, text, resum, onObri }) {
    «Àmbit», entre les etiquetes i l'emoticona: { text, valor, nom }. Amb
    `valor` (el nom de l'àmbit triat, ja traduït), una píndola amb `nom` com a
    nom accessible («Àmbit: Compartir cotxe»); sense, el botó de resum amb
-   `text` («Àmbit»). Sense la prop, el DOM de sempre, byte a byte. */
+   `text` («Àmbit»). Sense la prop, el DOM de sempre, byte a byte.
+   O4-CLAUDE-1 · El botó «Àmbit» no obri cap diàleg (sense aria-haspopup): qui
+   munta la botonera hi porta, al bloc «On es publica?» en línia. Continua
+   abans de l'emoticona, que ha de ser l'últim botó (DESTINS_FOCUS.icon). */
 export function BotoneraClassificacio({ carpeta, categories = CAP, etiquetes = CAP, emoticona = '', etiquetaEmoticona = 'Emoticona', ambit, onObri }) {
   const valorsDe = (llista) => llista.filter(Boolean);
   const triatsCategories = valorsDe(categories);

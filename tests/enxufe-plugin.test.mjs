@@ -359,7 +359,10 @@ test('un sol text domain i traducció valenciana completa de tots els textos PHP
   const falten = [...msgids].filter((id) => !SENSE_TRADUCCIO.has(id) && !claus.has(id));
   assert.deepEqual(falten, [], 'textos sense traducció al valencià');
   const sobren = [...claus].filter((id) => !msgids.has(id));
-  assert.deepEqual(sobren, [], 'traduccions de textos que ja no existixen');
+  // O6: estes cadenes d’ajustos s’han traslladat al catàleg integrat de5llengües.
+  // Es conserva la traducció històrica; qualsevol altre sobrant continua fallant.
+  const migrats = new Set(JSON.parse(fs.readFileSync(path.join(ARREL, 'tests/fixtures/ajustos-msgids-historics.json'), 'utf8')));
+  assert.deepEqual(sobren.filter(id => !migrats.has(id)), [], 'traduccions sobrants fora de la migració documentada dels ajustos');
   const bloc = JSON.parse(llig('includes/bloc/block.json'));
   assert.ok(traduccio.includes(`"block description\\x04${bloc.description}"`), 'la descripció del bloc, amb el context de block.json');
   for (const paraula of bloc.keywords.filter((k) => !['socdepoble', 'poble'].includes(k))) {
@@ -395,8 +398,8 @@ const FUNCIONS_WP = {
   apply_filters: '0.71', bloginfo: '0.71', body_class: '2.8', check_admin_referer: '1.2', current_user_can: '2.0',
   delete_option: '1.2', delete_site_option: '2.8', delete_site_transient: '2.9', determine_locale: '5.0',
   do_settings_sections: '2.7', esc_attr: '2.8', esc_html: '2.8', esc_html__: '2.8', esc_html_e: '2.8', esc_url: '2.8',
-  esc_url_raw: '2.8', get_admin_page_title: '1.5', get_block_wrapper_attributes: '5.6', get_blog_option: '3.0',
-  get_bloginfo: '0.71', get_file_data: '2.9', get_main_site_id: '4.9', get_option: '1.5', get_page_template_slug: '3.4',
+  esc_url_raw: '2.8', get_block_wrapper_attributes: '5.6', get_blog_option: '3.0',
+  get_bloginfo: '0.71', get_file_data: '2.9', get_main_site_id: '4.9', get_user_locale: '4.7', get_locale: '0.71', get_option: '1.5', get_page_template_slug: '3.4',
   get_permalink: '1.0', get_queried_object: '3.1', get_queried_object_id: '3.1', get_site_option: '2.8',
   get_site_transient: '2.9', get_sites: '4.6', get_transient: '2.8', has_block: '5.0', has_shortcode: '3.6',
   have_posts: '1.5', home_url: '3.0', is_locale_switched: '4.7', is_multisite: '3.0', is_page: '1.5', is_php_version_compatible: '5.2',
@@ -413,7 +416,7 @@ const FUNCIONS_WP = {
   update_site_option: '2.8', wp_add_inline_script: '4.5', wp_add_inline_style: '3.3', wp_body_open: '5.2',
   wp_cache_delete: '2.0', wp_date: '5.3', wp_delete_file: '4.2', wp_die: '2.0.4', wp_enqueue_script: '2.1',
   wp_enqueue_style: '2.6', wp_footer: '1.5.1', wp_generate_uuid4: '4.7', wp_get_environment_type: '5.5',
-  wp_head: '1.2', wp_json_encode: '4.1', wp_kses: '1.0', wp_kses_post: '2.9', wp_nonce_field: '2.0.4',
+  wp_head: '1.2', wp_print_inline_script_tag: '5.7', wp_json_encode: '4.1', wp_kses: '1.0', wp_kses_post: '2.9', wp_nonce_field: '2.0.4',
   wp_parse_url: '4.7', // 4.4; amb el paràmetre $component (PHP_URL_HOST), 4.7
   wp_register_script: '2.1', wp_register_style: '2.6', wp_remote_post: '2.7', wp_remote_retrieve_body: '2.7',
   wp_remote_retrieve_response_code: '2.7', wp_safe_redirect: '2.3', wp_safe_remote_get: '3.6', wp_salt: '2.5',
@@ -487,7 +490,7 @@ const TAULA_WP = [
 // El que crida el plugin i és de PHP, no de WordPress (comprovat amb get_defined_functions de PHP 8.4).
 const PHP_INTERN = new Set([
   'array_diff', 'array_filter', 'array_key_exists', 'array_keys', 'array_map', 'array_merge', 'array_slice', 'array_unique', 'array_unshift',
-  'array_values', 'basename', 'class_exists', 'clearstatcache', 'constant', 'count', 'define', 'defined', 'dirname', 'explode',
+  'array_values', 'array_search', 'basename', 'class_exists', 'clearstatcache', 'constant', 'count', 'define', 'defined', 'dirname', 'explode',
   'file_exists', 'file_get_contents', 'filemtime', 'filesize', 'filter_var', 'function_exists', 'get_class', 'getenv', 'gmdate',
   'hash_equals', 'hash_file', 'hash_hmac', 'hex2bin', 'html_entity_decode', 'implode', 'in_array', 'is_array', 'is_int',
   'is_link', 'is_object', 'is_readable', 'is_scalar', 'is_string', 'json_decode', 'ksort', 'ltrim', 'max', 'ob_get_clean',
@@ -1106,17 +1109,15 @@ test('T5.1 · Plugin URI navegable, «Mostra els detalls» local per a l’slug 
 
   // La benvinguda: cap municipi inventat, i la veritat sobre l'arrel i el primer portal actiu.
   assert.doesNotMatch(ajustos, /9 municipalities|<code>(?:penaguila|benifallim|sella|orxeta|relleu|alcoleja|xixona|tibi)<\/code>|Active village nodes|anys de llegat rural/i, 'la llista inventada ha desaparegut');
-  assert.match(ajustos, /El Rentonar, 30 years of rural activism/);
-  assert.match(ajustos, /La Torre de les Maçanes \(%1\$s · Gent de la Torre\)/);
-  assert.match(ajustos, /<code>la-torre-de-les-macanes<\/code>/);
-  // La guia: tres passos, cada text per la traducció i l'escapat, i cap sprintf cru.
+  const copies = cosDe('includes/ajustos.php', 'socdepoble_enxufe_copies_ajustos');
+  for (const text of ['El Rentonar', '30 years of rural activism', 'La Torre de les Maçanes', '<code>la-torre-de-les-macanes</code>', '<code>[socdepoble_app]</code>', 'Pages → Add New Page', 'Sóc de Poble · full screen', 'Settings → Reading']) assert.ok(copies.includes(text), text);
   const pagina = cosDe('includes/ajustos.php', 'socdepoble_enxufe_pagina');
-  for (const pas of ['Step 1 · ', 'Step 2 · ', 'Step 3 · ']) assert.ok(pagina.includes(`esc_html_e( '${pas}`), pas);
-  for (const text of ['Save Changes', 'Pages ➔ Add New Page', '<code>[socdepoble_app]</code>', 'Publish', 'Add block', 'Template', 'Sóc de Poble · full screen', 'Settings ➔ Reading', 'A static page', 'Homepage']) {
-    assert.ok(pagina.includes(text), text);
-  }
-  assert.doesNotMatch(pagina, /echo\s+sprintf\(/, 'cap sprintf sense escapar: tot passa per wp_kses_post');
-  assert.equal((pagina.match(/echo wp_kses_post\(\n\s*sprintf\(/g) ?? []).length, 5, 'l\'arrel i els quatre textos de la guia amb marcatge');
+  for (const pas of ['step1_title', 'step2_title', 'step3_title']) assert.ok(pagina.includes(`socdepoble_enxufe_etiqueta_ajustos( '${pas}' )`), pas);
+  const etiqueta = cosDe('includes/ajustos.php', 'socdepoble_enxufe_etiqueta_ajustos');
+  assert.match(etiqueta, /wp_kses_post\( \$text \)/);
+  assert.match(etiqueta, /esc_html\( \$text \)/);
+  assert.match(pagina, /JSON_HEX_TAG \| JSON_HEX_AMP \| JSON_HEX_APOS \| JSON_HEX_QUOT/);
+  // El comportament de les5llengües, formulari i teclat s’executa amb PHP+DOM.
 
   /* readme: instal·lació en tres passos i el crèdit de la tipografia.
      T5.3 (261101) · El Mestre va publicar a WordPress.org (1.1.10) la guia en valencià, amb un
@@ -1349,3 +1350,6 @@ test('P1-09 · cap «Enxufe» visible: codi i cadenes PHP, HTML de plantilla, ca
   assert.ok(fs.existsSync(path.join(PLUGIN, 'socdepoble-enxufe.php')), 'el fitxer principal conserva el nom (active_plugins)');
   assert.match(llig('socdepoble-enxufe.php'), /if \( defined\( 'SOCDEPOBLE_ENXUFE_FITXER' \) \) \{/, 'la guarda de doble còpia reconeix les còpies velles');
 });
+
+// O6: la regressió PHP/DOM dels ajustos forma part de la cadena primària.
+import './fixtures/ajustos.suite.mjs';

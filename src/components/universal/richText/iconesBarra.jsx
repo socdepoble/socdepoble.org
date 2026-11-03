@@ -129,6 +129,35 @@ export function IconaDivisor({ strokeWidth = 2, ...props }) {
   );
 }
 
+/** O4-CLAUDE-2 · Subtargeta: una caixa de cantons arrodonits amb el títol
+ *  (la ratlla de dalt, sencera) i dues línies de text davall. */
+export function IconaSubtargeta({ strokeWidth = 2, ...props }) {
+  const prim = strokeWidth * 0.75;
+  return (
+    <Icona nom="subtargeta" strokeWidth={strokeWidth} {...props}>
+      <rect x="4" y="4.5" width="16" height="15" rx="2.5" />
+      <path d="M7.5 9h9" />
+      <path d="M7.5 13h9" strokeWidth={prim} />
+      <path d="M7.5 16h6" strokeWidth={prim} />
+    </Icona>
+  );
+}
+
+/** O4-CLAUDE-2 · Targeta incrustada: la targeta del Mur, amb la imatge a
+ *  dalt (el sol i la serra) i el títol davall. */
+export function IconaTargeta({ strokeWidth = 2, ...props }) {
+  const prim = strokeWidth * 0.75;
+  return (
+    <Icona nom="targeta" strokeWidth={strokeWidth} {...props}>
+      <rect x="4" y="4" width="16" height="16" rx="2.5" />
+      <path d="M4 12.5h16" />
+      <path d="m7 12.5 3-3 2.5 2.5 1.5-1.5 2 2" strokeWidth={prim} />
+      <circle cx="15.5" cy="7.5" r="1.1" fill="currentColor" stroke="none" />
+      <path d="M7.5 16.25h9" />
+    </Icona>
+  );
+}
+
 /** Més eines: tres punts en filera («⋯»). */
 export function IconaMesEines(props) {
   return (

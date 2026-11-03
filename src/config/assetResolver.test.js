@@ -340,6 +340,32 @@ test('resolRecursosDeHtml: sense base, el mateix HTML; amb base, només els src=
   expect(resolRecursosDeHtml(undefined)).toBeUndefined();
 });
 
+/* O4 (C2-10) · Incrustada en un amfitrió, /page/fediversity obria
+   https://amfitrio/opendata/… (404): els enllaços porten target=_blank i
+   l'interceptor no els agafa. Ara viatgen amb el paquet, com les imatges. */
+test('resolRecursosDeHtml: els href="/opendata/…" viatgen amb el paquet i conserven target i rel', () => {
+  const ancora = '<a href="/opendata/x.jsonld" target="_blank" rel="noopener">x</a>';
+  const html = `<p>${ancora}<a href='/opendata/memoria.md'>m</a><a href="/pobles">p</a><a href="/opendatax/y">y</a></p>`;
+  expect(resolRecursosDeHtml(html)).toBe(html);
+  fixaBaseRecursos('https://amfitrio.test/wp-content/plugins/socdepoble/dist/');
+  const paquet = 'https://amfitrio.test/wp-content/plugins/socdepoble/dist';
+  expect(resolRecursosDeHtml(html)).toBe(
+    `<p><a href="${paquet}/opendata/x.jsonld" target="_blank" rel="noopener">x</a>`
+    + `<a href='${paquet}/opendata/memoria.md'>m</a><a href="/pobles">p</a><a href="/opendatax/y">y</a></p>`
+  );
+});
+
+test('/page/fediversity: amb base, els sis enllaços /opendata/ ixen del sanejador apuntant al paquet', () => {
+  const hrefs = (html) => [...new DOMParser().parseFromString(html, 'text/html').querySelectorAll('a[href*="/opendata/"]')]
+    .map((a) => a.getAttribute('href'));
+  const sense = hrefs(sanitizeHtml(resolRecursosDeHtml(PAGE_COPY.fediversity.html)));
+  expect(sense.length).toBeGreaterThanOrEqual(6);
+  expect(sense.every((href) => href.startsWith('/opendata/'))).toBe(true);
+  fixaBaseRecursos(PAQUET);
+  const amb = hrefs(sanitizeHtml(resolRecursosDeHtml(PAGE_COPY.fediversity.html)));
+  expect(amb).toEqual(sense.map((href) => `${PAQUET}${href}`));
+});
+
 test('resolRecursPropi: sense base, qualsevol valor torna idèntic (Llei del Píxel)', () => {
   const objecte = {};
   const valors = [

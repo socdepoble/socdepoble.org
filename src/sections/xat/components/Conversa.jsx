@@ -88,6 +88,10 @@ const useXifratgeDelFil = E2EE_ACTIU_PER_DEFECTE ? useEstatXifratgeDelFil : () =
 const AvisClauCanviada = E2EE_ACTIU_PER_DEFECTE ? lazy(() => import('./AvisClauCanviada.jsx')) : null;
 const SENSE_CANVIS = Object.freeze({ bloquejat: false, avis: false });
 const useCanvisDelFil = E2EE_ACTIU_PER_DEFECTE ? useCanvisDeClau : () => SENSE_CANVIS;
+/* O4-CLAUDE-3 (D3-xat-iaia-e2ee-03; disseny E2EE D-18 a) · El retall d'una conversa
+   xifrada es guarda a Notes sense xifratge d'extrem a extrem: abans, l'avís i la
+   confirmació. Amb el mateix plegat: apagada, l'avís no entra al paquet. */
+const AvisRetallXifrat = E2EE_ACTIU_PER_DEFECTE ? lazy(() => import('./AvisRetallXifrat.jsx')) : null;
 
 /* Gauntlet 261025_0545 (IA-07) · El nom de la IAIA a la seua benvinguda, el
    del padró (identitatsSeed.js), com a la capçalera i a les bombolles. */
@@ -960,10 +964,7 @@ export default function Conversa({
     setTriats(new Set());
   };
 
-  const enviaAlBloc = async () => {
-    if (creantNota) return;
-    const tria = messages.filter((m, i) => triats.has(clauDe(m, i)));
-    if (tria.length === 0) return;
+  const enviaTriaAlBloc = async (tria) => {
     setCreantNota(true);
     try {
       await onEnviaAlBloc(tria);
@@ -973,6 +974,25 @@ export default function Conversa({
     } finally {
       setCreantNota(false);
     }
+  };
+  /* O4-CLAUDE-3 (D-18 a) · La tria d'una conversa xifrada espera la confirmació:
+     null (l'avís no s'ha obert mai), false (tancat, però muntat perquè el focus
+     torne on era) o la llista de missatges triats (obert). */
+  const [retallPendent, setRetallPendent] = useState(null);
+  const enviaAlBloc = async () => {
+    if (creantNota) return;
+    const tria = messages.filter((m, i) => triats.has(clauDe(m, i)));
+    if (tria.length === 0) return;
+    if (E2EE_ACTIU_PER_DEFECTE && xifratge.estat === 'xifrat') {
+      setRetallPendent(tria);
+      return;
+    }
+    await enviaTriaAlBloc(tria);
+  };
+  const confirmaRetall = async () => {
+    if (creantNota || !Array.isArray(retallPendent)) return;
+    await enviaTriaAlBloc(retallPendent);
+    setRetallPendent(false);
   };
 
   /* Files de la llista (conversa.js): separadors de dia, el de no llegits i
@@ -1196,6 +1216,17 @@ export default function Conversa({
             onObriNumero={xifratge.potVerificar ? () => setPanellXifratge(true) : null}
             onTancaSuau={canvisClau.tancaSuau}
             destiFocus={() => (estret ? llistaRef.current : campRef.current || llistaRef.current)}
+            t={t}
+          />
+        </Suspense>
+      ) : null}
+      {E2EE_ACTIU_PER_DEFECTE && AvisRetallXifrat && retallPendent !== null ? (
+        <Suspense fallback={null}>
+          <AvisRetallXifrat
+            obert={Array.isArray(retallPendent)}
+            onTanca={() => setRetallPendent(false)}
+            onConfirma={confirmaRetall}
+            carregant={creantNota}
             t={t}
           />
         </Suspense>

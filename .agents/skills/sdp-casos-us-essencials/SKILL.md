@@ -20,7 +20,7 @@ contracte.escriu:
 ---
 # 💡 Casos d'Ús Essencials i Funcionalitats Clau
 
-Aquesta "skill" actua com un repositori de memòria activa d'aquelles funcionalitats vitals, de gran impacte social al poble, que el Mestre ha ideat. Qualsevol IA o humà que desenvolupe l'esquema de base de dades, els menús de navegació o les "Cards" del Mur ha de tindre en compte aquests escenaris.
+Esta skill ajuda a convertir els casos rurals aprovats en contractes i proves reutilitzables. Els casos 1–3 expressen necessitats de producte; no acrediten que una categoria, un servei SMS o la seua infraestructura estiguen desplegats. Abans d'implementar, localitza el consumidor real i registra què funciona, què es prova amb fixtures i què és proposta.
 
 ## 1. 🍲 Menjar a Casa (Aprofitament Alimentari Solidari)
 
@@ -31,7 +31,7 @@ Aquesta "skill" actua com un repositori de memòria activa d'aquelles funcionali
 - **Acció a la Xarxa:** L'usuari que viu sol pot triar qualsevol dia veure què hi ha publicat sota l'etiqueta "Menjar a Casa" i anar al bar a arreplegar els tapers de menjar cassolà per a passar la setmana.
 - **Impacte:** Reducció del malbaratament alimentari (food waste) i suport social per a persones grans o que viuen soles.
 
-## 2. 👵 Cuidado de Mayores (Cuidadores i Suport Vital)
+## 2. 👵 Cures de majors i suport quotidià
 
 **El Problema:** Molts pares i mares d'edat avançada es queden al poble mentre els fills viuen a la ciutat (o altres regions), i necessiten suport diari. Tradicionalment aquest rol que no existia s'està professionalitzant, arribant a haver-hi desenes de cuidadores al poble.
 
@@ -53,7 +53,7 @@ Aquesta "skill" actua com un repositori de memòria activa d'aquelles funcionali
 **El Problema:** Quan s'organitza un esdeveniment al poble (com la desfilada de disfresses on hi ha 70 persones, entre pares i xiquets, apuntades per disfressar-se de romans), el grup de xat es converteix en un infern de notificacions inútils i soroll (més de 600 missatges per a posar-se d'acord o fer avisos tontos). Això genera fatiga als usuaris, que s'acaben silenciant o eixint dels grups.
 
 **El Cas d'Ús:** Tot el sistema ha d'estar dissenyat com un Gestor de Continguts silenciós. Qualsevol missatge clau dins d'un Xat (p. ex. les "mesures per a la tela de la disfressa" o l'"horari de l'assaig") pot ser extret fàcilment del xat.
-- **Funcionament:** L'usuari ha de poder prémer un missatge dins de qualsevol grup o xat i tindre l'opció directa d'"Enviar a Notes" o "Guardar". Aquest missatge desapareix del fluix sorollós i es desa com una nota tranquil·la a la seua safata, on l'usuari se la pot organitzar. 
+- **Funcionament:** L'usuari ha de poder prémer un missatge dins de qualsevol grup o xat i tindre l'opció directa d'"Enviar a Notes" o "Guardar". Es copia a la llibreta perquè l'usuari se l'organitze; el missatge original continua al fil. Desar un retall no autoritza esborrar missatges ni altera la seua entrega. 
 - **Impacte:** Aquest flux de treball busca deliberadament **reduir el soroll mòbil**. Quan construïm l'App nadiua (per a Apple Store i Google Play), l'enfocament serà minimitzar les notificacions absurdes i permetre a l'usuari extraure la informació valuosa dels grups caòtics directament a la seua llibreta personal.
 
 ***
@@ -61,7 +61,7 @@ Aquesta "skill" actua com un repositori de memòria activa d'aquelles funcionali
 ## 🛠️ Requisits per a la Implementació (Notes per al Desenvolupament)
 
 Quan arribe el moment d'implementar açò:
-- Tindre en compte les **"Cards" Específiques:** Aquests casos d'ús requeriran variacions de la `UniversalCard` (o plantilles pròpies) per mostrar camps com `preu per taper`, `disponibilitat horària`, etc.
+- Reutilitza `UniversalCard` i el contracte `PublicacioUniversal` quan la necessitat encaixe en un dels cinc àmbits. Els camps com preu o disponibilitat es modelen a la fitxa validada; una necessitat nova es proposa abans de crear una targeta, taula o port paral·lels.
 - **Connectors i Plantilles Internes:** Quan implementem aquestes opcions al Menú de l'aplicació, el "plugin" de *Restaurants* o d'*Ocupació* haurà de venir amb la seua pròpia plantilla de dades (igual que fa la Gestoria amb els documents base) per instanciar aquestes categories ràpidament.
 
 ***
@@ -69,6 +69,18 @@ Quan arribe el moment d'implementar açò:
 - Penja de: [[00_INDEX_SKILLS]]
 - Connectat amb: [[sdp-pedra-seca/SKILL]], [[core-identitat/SKILL]]
 
+
+## Patrons contrastables abans de crear un cas nou
+
+- **Una publicació, dues projeccions:** `src/utils/publicacioUniversal.js` fixa `mur`, `mercat`, `vehicle`, `treball` i `habitatge`, els estats i `SECTION_ID_PER_AMBIT`. `projeccioPayload` normalitza l'escriptura i `coaccionaAmbit(payload, sectionId)` valida la lectura. Vehicle, Treball i Habitatge s'emmagatzemen en la secció Mur; no es creen tres taules ni dues files per publicar. Les proves de contracte i `src/data/local/adaptadorLocal.publicacioUniversal.test.js` en fixen el comportament.
+- **Informació tranquil·la fora del soroll:** `src/sections/xat/retall.js` i `src/sections/notes/proposaCard.js` connecten retall i Notes. La prova ha de conservar el missatge i atribució originals i comprovar la nova nota; no s'assumeix enviament ni desament remot per un indicador visual.
+- **Targetes internes llegibles:** el cos de Legal es segmenta i pinta amb el mecanisme de targetes de `TextSection`; les proves de `TextSection.targetes.test.jsx` preserven també el text circumdant. Aplica [[sdp-universal-page/SKILL|sdp-universal-page]] per ampliar-lo. El slug `/page/privadesa` reutilitza `/legal` mitjançant l’àlies provat del router; no es crea una política duplicada. Cal certificar l’àlies en la versió que s’integra.
+- **Edició avançada compartida:** l'ordre Hero → Avatar/Logotip → «On es publica?» → classificació és el contracte aprovat d'Onada 4. Les suites de Notes i de la closca del carril Claude s’han contrastat en la instantània complementària d’Onada 4 (DOM i comportament local); usa [[sdp-universal-editor/SKILL|sdp-universal-editor]] per a les ranures i la verificació.
+- **Enllaç que arriba on diu:** primer `certifica-enllacos.mjs` contra arbre/router; després `--remot` per HTTP i tipus de contingut. El segell no prova permisos, resultat d'una acció ni render React: conserva eixos límits en el cas d'ús.
+
+## Calaix reutilitzable per a la identitat
+
+En la SPA, «Índex de continguts» i «Amb qui actues?» compartixen la geometria sota la barra negra descrita a [[sdp-universal-page/SKILL|sdp-universal-page]]. Reutilitza eixos tokens i `Dialeg` per a una necessitat semblant; conserva nom accessible, focus, retorn al botó i zona segura. Les proves de `Dialeg.test.jsx` i `CalaixIdentitats.test.jsx` acompanyen les regles CSS; la inspecció en mòbil acredita el resultat visual.
 
 ## Vincles
 - [[00_INDEX_SKILLS]]

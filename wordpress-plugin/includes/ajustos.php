@@ -23,6 +23,252 @@
 
 defined( 'ABSPATH' ) || exit;
 
+/** Còpies completes integrades: les variants de WordPress.org també les porten. */
+function socdepoble_enxufe_copies_ajustos() {
+	static $copies = array(
+		'va' => array(
+			'language' => 'Idioma dels ajustos',
+			'slogan' => 'Sóc de Poble. Portal de Pobles Connectats',
+			'intro' => 'Una <strong>xarxa cívica descentralitzada</strong>, nascuda a les <strong>muntanyes rurals d’Alacant</strong>, per a connectar <strong>veïnat</strong>, <strong>associacions</strong>, <strong>festes</strong>, <strong>comerç local</strong> i <strong>memòria col·lectiva</strong> sense dependència tecnològica.',
+			'roots' => 'L’arrel és <strong>Sóc de Poble</strong>: <strong>El Rentonar</strong> i <strong>30 anys d’activisme rural</strong>. El primer portal de poble actiu és <strong>La Torre de les Maçanes</strong> (<code>la-torre-de-les-macanes</code> · <strong>Gent de la Torre</strong>). Els altres pobles del catàleg podran activar <strong>el seu node</strong> quan ho demane la seua comunitat.',
+			'guide' => 'Com posar Sóc de Poble a la teua web en tres passos',
+			'step1_title' => 'Pas 1 · Identifica el teu poble',
+			'step1' => 'Escriu el <strong>nom públic</strong> del portal (per exemple, <strong>Gent de la Torre</strong>) i l’<strong>identificador del poble</strong> (<code>la-torre-de-les-macanes</code>). Revisa els <strong>dos camps</strong> de davall i prem <strong>Guardar els canvis</strong>. Esta identitat indica <strong>qui allotja l’app</strong>; no canvia les dades del servidor.',
+			'step2_title' => 'Pas 2 · Posa l’app en una pàgina',
+			'step2a' => '<strong>Opció A · Shortcode.</strong> Ves a <strong>Pàgines → Afegir nova pàgina</strong>, posa un <strong>títol</strong> i copia exactament <code>[socdepoble_app]</code> al <strong>cos</strong> de la pàgina. Prem <strong>Publicar</strong> i comprova que apareix <strong>Sóc de Poble</strong>.',
+			'step2b' => '<strong>Opció B · Bloc visual.</strong> Dins de l’<strong>editor de pàgines</strong>, prem el botó <strong>+</strong> per <strong>afegir un bloc</strong>, busca <strong>Sóc de Poble</strong> i selecciona’l. Les dues opcions mostren <strong>la mateixa app</strong>; tria’n una.',
+			'step3_title' => 'Pas 3 · Pantalla completa i pàgina d’inici',
+			'step3' => 'En l’editor, obri <strong>Plantilla</strong> i tria <strong>Sóc de Poble · full screen</strong>. Per fer-la <strong>pàgina d’inici</strong>, ves a <strong>Ajustos → Lectura</strong>, marca <strong>Una pàgina estàtica</strong> i selecciona-la en <strong>Pàgina d’inici</strong>.',
+			'host_title' => 'Identitat de l’amfitrió',
+			'host_intro' => 'Estos <strong>dos camps</strong> identifiquen l’<strong>amfitrió</strong> i el <strong>poble d’aterratge</strong>. Si els deixes <strong>buits</strong>, es mantenen els valors del <strong>banc de proves</strong>. El filtre <code>socdepoble_enxufe_config</code> té l’<strong>última paraula</strong>.',
+			'village_name' => 'Nom públic del portal',
+			'village_id' => 'Identificador del poble',
+			'name_help' => 'És el <strong>nom visible</strong> del servidor que <strong>allotja l’app</strong>, per exemple <strong>Gent de la Torre</strong>.',
+			'id_help' => 'És l’<strong>identificador</strong> de la secció <strong>Pobles</strong>: les visites aterren en la seua <strong>fitxa</strong>. No determina l’<strong>abast de dades</strong>.',
+			'save' => 'Guardar els canvis',
+			'translation_title' => 'Traducció, quan la necessites',
+			'translation_help' => 'La <strong>llengua d’esta guia</strong> no canvia la de <strong>WordPress</strong> ni la de l’<strong>app</strong>. El servei de <strong>traducció de textos</strong> és opcional: usa <strong>Apertium</strong> per defecte o <strong>DeepL</strong> si s’ha configurat al servidor. Les <strong>claus</strong> es queden sempre al servidor.',
+			'diagnosis' => 'Diagnosi tècnica i marcatge universal',
+			'package_title' => 'Paquet i node de dades',
+			'markup_title' => 'Marcatge per a un altre amfitrió',
+			'markup_help' => 'El connector envia <strong>tres peces</strong>: la <strong>configuració pública</strong>, l’<strong>element de l’app</strong> i el <strong>carregador</strong>. Un altre amfitrió, com <strong>Sollutia</strong>, usa el mateix marcatge amb la seua còpia de <code>dist/</code>. La caixa necessita <strong>altura</strong>.',
+			'development_warning' => 'Este paquet apunta a un <strong>servidor de desenvolupament</strong>. Les visites veuran l’app <strong>sense dades</strong>. Cal reconstruir-lo com a <strong>paquet de producció</strong> abans de publicar-lo.',
+			'manifest' => 'Manifest del paquet',
+			'missing' => 'Falta el manifest (dist/sdp-release.json). Reconstruïx el paquet amb npm run build:wp.',
+			'missing_bundle' => 'Falten el manifest i el carregador de l’app.',
+			'app_version' => 'Versió de l’app',
+			'bundle_sha' => 'SHA-256 del carregador',
+			'bundle_integrity' => 'Integritat del carregador',
+			'data_node' => 'Node de dades segellat',
+			'none' => 'cap',
+			'data_mode' => 'Mode de dades',
+			'package_kind' => 'Tipus de paquet',
+			'development' => 'Desenvolupament: només funciona al costat del seu servidor local.',
+			'release' => 'Producció: pot atendre visites reals ací o en un altre amfitrió.',
+			'environment' => 'Entorn del lloc',
+		),
+		'es' => array(
+			'language' => 'Idioma de los ajustes',
+			'slogan' => 'Sóc de Poble. Portal de Pobles Connectats',
+			'intro' => 'Una <strong>red cívica descentralizada</strong>, nacida en las <strong>montañas rurales de Alicante</strong>, para conectar <strong>vecindario</strong>, <strong>asociaciones</strong>, <strong>fiestas</strong>, <strong>comercio local</strong> y <strong>memoria colectiva</strong> sin dependencia tecnológica.',
+			'roots' => 'La raíz es <strong>Sóc de Poble</strong>: <strong>El Rentonar</strong> y <strong>30 años de activismo rural</strong>. El primer portal de pueblo activo es <strong>La Torre de les Maçanes</strong> (<code>la-torre-de-les-macanes</code> · <strong>Gent de la Torre</strong>). Los demás pueblos del catálogo podrán activar <strong>su propio nodo</strong> cuando lo pida su comunidad.',
+			'guide' => 'Cómo poner Sóc de Poble en tu web en tres pasos',
+			'step1_title' => 'Paso 1 · Identifica tu pueblo',
+			'step1' => 'Escribe el <strong>nombre público</strong> del portal (por ejemplo, <strong>Gent de la Torre</strong>) y el <strong>identificador del pueblo</strong> (<code>la-torre-de-les-macanes</code>). Revisa los <strong>dos campos</strong> de abajo y pulsa <strong>Guardar los cambios</strong>. Esta identidad indica <strong>quién aloja la app</strong>; no cambia los datos del servidor.',
+			'step2_title' => 'Paso 2 · Pon la app en una página',
+			'step2a' => '<strong>Opción A · Shortcode.</strong> Ve a <strong>Páginas → Añadir nueva página</strong>, pon un <strong>título</strong> y copia exactamente <code>[socdepoble_app]</code> en el <strong>cuerpo</strong> de la página. Pulsa <strong>Publicar</strong> y comprueba que aparece <strong>Sóc de Poble</strong>.',
+			'step2b' => '<strong>Opción B · Bloque visual.</strong> En el <strong>editor de páginas</strong>, pulsa el botón <strong>+</strong> para <strong>añadir un bloque</strong>, busca <strong>Sóc de Poble</strong> y selecciónalo. Las dos opciones muestran <strong>la misma app</strong>; elige una.',
+			'step3_title' => 'Paso 3 · Pantalla completa y página de inicio',
+			'step3' => 'En el editor, abre <strong>Plantilla</strong> y elige <strong>Sóc de Poble · full screen</strong>. Para convertirla en <strong>página de inicio</strong>, ve a <strong>Ajustes → Lectura</strong>, marca <strong>Una página estática</strong> y selecciónala en <strong>Página de inicio</strong>.',
+			'host_title' => 'Identidad del anfitrión',
+			'host_intro' => 'Estos <strong>dos campos</strong> identifican al <strong>anfitrión</strong> y al <strong>pueblo de destino</strong>. Si los dejas <strong>vacíos</strong>, se conservan los valores del <strong>banco de pruebas</strong>. El filtro <code>socdepoble_enxufe_config</code> tiene la <strong>última palabra</strong>.',
+			'village_name' => 'Nombre público del portal',
+			'village_id' => 'Identificador del pueblo',
+			'name_help' => 'Es el <strong>nombre visible</strong> del servidor que <strong>aloja la app</strong>, por ejemplo <strong>Gent de la Torre</strong>.',
+			'id_help' => 'Es el <strong>identificador</strong> de la sección <strong>Pueblos</strong>: las visitas llegan a su <strong>ficha</strong>. No determina el <strong>ámbito de datos</strong>.',
+			'save' => 'Guardar los cambios',
+			'translation_title' => 'Traducción, cuando la necesites',
+			'translation_help' => 'El <strong>idioma de esta guía</strong> no cambia el de <strong>WordPress</strong> ni el de la <strong>app</strong>. El servicio de <strong>traducción de textos</strong> es opcional: usa <strong>Apertium</strong> por defecto o <strong>DeepL</strong> si se ha configurado en el servidor. Las <strong>claves</strong> siempre se quedan en el servidor.',
+			'diagnosis' => 'Diagnóstico técnico y marcado universal',
+			'package_title' => 'Paquete y nodo de datos',
+			'markup_title' => 'Marcado para otro anfitrión',
+			'markup_help' => 'El conector envía <strong>tres piezas</strong>: la <strong>configuración pública</strong>, el <strong>elemento de la app</strong> y el <strong>cargador</strong>. Otro anfitrión, como <strong>Sollutia</strong>, usa el mismo marcado con su copia de <code>dist/</code>. La caja necesita <strong>altura</strong>.',
+			'development_warning' => 'Este paquete apunta a un <strong>servidor de desarrollo</strong>. Las visitas verán la app <strong>sin datos</strong>. Hay que reconstruirlo como <strong>paquete de producción</strong> antes de publicarlo.',
+			'manifest' => 'Manifiesto del paquete',
+			'missing' => 'Falta el manifiesto (dist/sdp-release.json). Reconstruye el paquete con npm run build:wp.',
+			'missing_bundle' => 'Faltan el manifiesto y el cargador de la app.',
+			'app_version' => 'Versión de la app',
+			'bundle_sha' => 'SHA-256 del cargador',
+			'bundle_integrity' => 'Integridad del cargador',
+			'data_node' => 'Nodo de datos sellado',
+			'none' => 'ninguno',
+			'data_mode' => 'Modo de datos',
+			'package_kind' => 'Tipo de paquete',
+			'development' => 'Desarrollo: solo funciona junto a su servidor local.',
+			'release' => 'Producción: puede atender visitas reales aquí o en otro anfitrión.',
+			'environment' => 'Entorno del sitio',
+		),
+		'en' => array(
+			'language' => 'Settings language',
+			'slogan' => 'Sóc de Poble. Portal of Connected Villages',
+			'intro' => 'A <strong>decentralized civic network</strong>, born in the <strong>rural mountains of Alicante</strong>, connecting <strong>neighbours</strong>, <strong>associations</strong>, <strong>local events</strong>, <strong>village shops</strong> and <strong>collective memory</strong> without technological dependence.',
+			'roots' => 'The root is <strong>Sóc de Poble</strong>: <strong>El Rentonar</strong> and <strong>30 years of rural activism</strong>. The first live village portal is <strong>La Torre de les Maçanes</strong> (<code>la-torre-de-les-macanes</code> · <strong>Gent de la Torre</strong>). Other villages in the catalogue can activate <strong>their own node</strong> when their community asks for it.',
+			'guide' => 'Put Sóc de Poble on your website in three steps',
+			'step1_title' => 'Step 1 · Identify your village',
+			'step1' => 'Enter the portal’s <strong>public name</strong> (for example, <strong>Gent de la Torre</strong>) and the <strong>village identifier</strong> (<code>la-torre-de-les-macanes</code>). Check the <strong>two fields</strong> below and press <strong>Save Changes</strong>. This identity says <strong>who hosts the app</strong>; it does not change server data.',
+			'step2_title' => 'Step 2 · Put the app on a page',
+			'step2a' => '<strong>Option A · Shortcode.</strong> Go to <strong>Pages → Add New Page</strong>, enter a <strong>title</strong> and paste exactly <code>[socdepoble_app]</code> into the page <strong>body</strong>. Press <strong>Publish</strong> and check that <strong>Sóc de Poble</strong> appears.',
+			'step2b' => '<strong>Option B · Visual block.</strong> In the <strong>page editor</strong>, press the <strong>+</strong> button to <strong>add a block</strong>, search for <strong>Sóc de Poble</strong> and select it. Both options show <strong>the same app</strong>; choose one.',
+			'step3_title' => 'Step 3 · Full screen and home page',
+			'step3' => 'In the editor, open <strong>Template</strong> and choose <strong>Sóc de Poble · full screen</strong>. To make it your <strong>home page</strong>, go to <strong>Settings → Reading</strong>, select <strong>A static page</strong> and choose it as <strong>Homepage</strong>.',
+			'host_title' => 'Host identity',
+			'host_intro' => 'These <strong>two fields</strong> identify the <strong>host</strong> and the <strong>landing village</strong>. Leave them <strong>empty</strong> to keep the <strong>test bench values</strong>. The <code>socdepoble_enxufe_config</code> filter has the <strong>last word</strong>.',
+			'village_name' => 'Public portal name',
+			'village_id' => 'Village identifier',
+			'name_help' => 'The <strong>visible name</strong> of the server that <strong>hosts the app</strong>, for example <strong>Gent de la Torre</strong>.',
+			'id_help' => 'The <strong>identifier</strong> in the <strong>Villages</strong> section: visitors land on its <strong>page</strong>. It is not a <strong>data scope</strong>.',
+			'save' => 'Save Changes',
+			'translation_title' => 'Translation, when you need it',
+			'translation_help' => 'This <strong>guide’s language</strong> does not change <strong>WordPress</strong> or the <strong>app</strong>. The optional <strong>text translation</strong> service uses <strong>Apertium</strong> by default, or <strong>DeepL</strong> when configured on the server. <strong>Keys</strong> always stay on the server.',
+			'diagnosis' => 'Technical diagnosis and universal host markup',
+			'package_title' => 'Package and data node',
+			'markup_title' => 'Markup for another host',
+			'markup_help' => 'The connector sends <strong>three pieces</strong>: <strong>public configuration</strong>, the <strong>app element</strong> and the <strong>loader</strong>. Another host, such as <strong>Sollutia</strong>, uses the same markup with its own copy of <code>dist/</code>. The container needs a <strong>height</strong>.',
+			'development_warning' => 'This package points to a <strong>development server</strong>. Visitors will see the app <strong>without data</strong>. Rebuild it as a <strong>production package</strong> before publishing.',
+			'manifest' => 'Package manifest',
+			'missing' => 'Missing (dist/sdp-release.json). Rebuild the package with npm run build:wp.',
+			'missing_bundle' => 'Missing, and the bundle is missing too.',
+			'app_version' => 'App version',
+			'bundle_sha' => 'Bundle SHA-256',
+			'bundle_integrity' => 'Bundle integrity',
+			'data_node' => 'Sealed data node',
+			'none' => 'none',
+			'data_mode' => 'Data mode',
+			'package_kind' => 'Package kind',
+			'development' => 'Development: it only works next to its local backend.',
+			'release' => 'Release: it can serve real visitors, here or in any other host.',
+			'environment' => 'Site environment',
+		),
+		'eu' => array(
+			'language' => 'Ezarpenen hizkuntza',
+			'slogan' => 'Sóc de Poble. Konektatutako Herrien Ataria',
+			'intro' => '<strong>Alacanteko landa-mendietan</strong> sortutako <strong>herritarren sare deszentralizatua</strong>, <strong>bizilagunak</strong>, <strong>elkarteak</strong>, <strong>jaiak</strong>, <strong>tokiko saltokiak</strong> eta <strong>memoria kolektiboa</strong> mendekotasun teknologikorik gabe lotzeko.',
+			'roots' => 'Sarearen sustraia <strong>Sóc de Poble</strong> da: <strong>El Rentonar</strong> eta <strong>30 urteko landa-aktibismoa</strong>. Martxan dagoen lehen herri-ataria <strong>La Torre de les Maçanes</strong> da (<code>la-torre-de-les-macanes</code> · <strong>Gent de la Torre</strong>). Katalogoko beste herriek <strong>beren nodoa</strong> aktibatu ahal izango dute komunitateak eskatzen duenean.',
+			'guide' => 'Jarri Sóc de Poble zure webgunean hiru urratsetan',
+			'step1_title' => '1. urratsa · Identifikatu zure herria',
+			'step1' => 'Idatzi atariaren <strong>izen publikoa</strong> (adibidez, <strong>Gent de la Torre</strong>) eta <strong>herriaren identifikatzailea</strong> (<code>la-torre-de-les-macanes</code>). Berrikusi beheko <strong>bi eremuak</strong> eta sakatu <strong>Gorde aldaketak</strong>. Identitate horrek <strong>aplikazioa nork ostatatzen duen</strong> adierazten du; ez ditu zerbitzariko datuak aldatzen.',
+			'step2_title' => '2. urratsa · Jarri aplikazioa orrialde batean',
+			'step2a' => '<strong>A aukera · Shortcode.</strong> Joan <strong>Orrialdeak → Gehitu orrialde berria</strong> atalera, idatzi <strong>izenburua</strong> eta itsatsi zehazki <code>[socdepoble_app]</code> orrialdearen <strong>gorputzean</strong>. Sakatu <strong>Argitaratu</strong> eta egiaztatu <strong>Sóc de Poble</strong> agertzen dela.',
+			'step2b' => '<strong>B aukera · Bloke bisuala.</strong> <strong>Orrialde-editorean</strong>, sakatu <strong>+</strong> botoia <strong>bloke bat gehitzeko</strong>, bilatu <strong>Sóc de Poble</strong> eta hautatu. Bi aukerek <strong>aplikazio bera</strong> erakusten dute; aukeratu bat.',
+			'step3_title' => '3. urratsa · Pantaila osoa eta hasiera-orria',
+			'step3' => 'Editorean, ireki <strong>Txantiloia</strong> eta aukeratu <strong>Sóc de Poble · full screen</strong>. <strong>Hasiera-orria</strong> izan dadin, joan <strong>Ezarpenak → Irakurketa</strong> atalera, markatu <strong>Orrialde estatiko bat</strong> eta hautatu <strong>Hasiera-orria</strong> eremuan.',
+			'host_title' => 'Ostalariaren identitatea',
+			'host_intro' => '<strong>Bi eremu</strong> hauek <strong>ostalaria</strong> eta <strong>helmugako herria</strong> identifikatzen dituzte. <strong>Hutsik</strong> uzten badituzu, <strong>proba-inguruneko balioak</strong> mantenduko dira. <code>socdepoble_enxufe_config</code> iragazkiak du <strong>azken hitza</strong>.',
+			'village_name' => 'Atariaren izen publikoa',
+			'village_id' => 'Herriaren identifikatzailea',
+			'name_help' => 'Aplikazioa <strong>ostatatzen duen zerbitzariaren</strong> <strong>izen ikusgaia</strong> da; adibidez, <strong>Gent de la Torre</strong>.',
+			'id_help' => '<strong>Herriak</strong> ataleko <strong>identifikatzailea</strong> da: bisitariak haren <strong>fitxara</strong> iristen dira. Ez du <strong>datuen esparrua</strong> zehazten.',
+			'save' => 'Gorde aldaketak',
+			'translation_title' => 'Itzulpena, behar duzunean',
+			'translation_help' => '<strong>Gida honen hizkuntzak</strong> ez du <strong>WordPress</strong> edo <strong>aplikazioaren</strong> hizkuntza aldatzen. Aukerako <strong>testu-itzulpeneko</strong> zerbitzuak <strong>Apertium</strong> erabiltzen du lehenespenez, edo <strong>DeepL</strong> zerbitzarian konfiguratuta badago. <strong>Gakoak</strong> beti zerbitzarian geratzen dira.',
+			'diagnosis' => 'Diagnostiko teknikoa eta markaketa unibertsala',
+			'package_title' => 'Paketea eta datu-nodoa',
+			'markup_title' => 'Beste ostalari baterako markaketa',
+			'markup_help' => 'Konektoreak <strong>hiru pieza</strong> bidaltzen ditu: <strong>konfigurazio publikoa</strong>, <strong>aplikazioaren elementua</strong> eta <strong>kargatzailea</strong>. <strong>Sollutia</strong> bezalako beste ostalari batek markaketa bera erabiltzen du bere <code>dist/</code> kopiarekin. Edukiontziak <strong>altuera</strong> behar du.',
+			'development_warning' => 'Pakete honek <strong>garapen-zerbitzari</strong> batera jotzen du. Bisitariek aplikazioa <strong>daturik gabe</strong> ikusiko dute. Argitaratu aurretik, berreraiki <strong>produkzio-pakete</strong> gisa.',
+			'manifest' => 'Paketearen manifestua',
+			'missing' => 'Manifestua falta da (dist/sdp-release.json). Berreraiki paketea npm run build:wp erabiliz.',
+			'missing_bundle' => 'Manifestua eta aplikazioaren kargatzailea falta dira.',
+			'app_version' => 'Aplikazioaren bertsioa',
+			'bundle_sha' => 'Kargatzailearen SHA-256',
+			'bundle_integrity' => 'Kargatzailearen osotasuna',
+			'data_node' => 'Zigilatutako datu-nodoa',
+			'none' => 'bat ere ez',
+			'data_mode' => 'Datu-modua',
+			'package_kind' => 'Pakete mota',
+			'development' => 'Garapena: bere tokiko zerbitzariaren ondoan bakarrik funtzionatzen du.',
+			'release' => 'Produkzioa: benetako bisitariak har ditzake hemen edo beste ostalari batean.',
+			'environment' => 'Gunearen ingurunea',
+		),
+		'gl' => array(
+			'language' => 'Idioma dos axustes',
+			'slogan' => 'Sóc de Poble. Portal de Pobos Conectados',
+			'intro' => 'Unha <strong>rede cívica descentralizada</strong>, nacida nas <strong>montañas rurais de Alacant</strong>, para conectar <strong>veciñanza</strong>, <strong>asociacións</strong>, <strong>festas</strong>, <strong>comercio local</strong> e <strong>memoria colectiva</strong> sen dependencia tecnolóxica.',
+			'roots' => 'A raíz é <strong>Sóc de Poble</strong>: <strong>El Rentonar</strong> e <strong>30 anos de activismo rural</strong>. O primeiro portal de pobo activo é <strong>La Torre de les Maçanes</strong> (<code>la-torre-de-les-macanes</code> · <strong>Gent de la Torre</strong>). Os demais pobos do catálogo poderán activar <strong>o seu propio nodo</strong> cando o pida a súa comunidade.',
+			'guide' => 'Como poñer Sóc de Poble na túa web en tres pasos',
+			'step1_title' => 'Paso 1 · Identifica o teu pobo',
+			'step1' => 'Escribe o <strong>nome público</strong> do portal (por exemplo, <strong>Gent de la Torre</strong>) e o <strong>identificador do pobo</strong> (<code>la-torre-de-les-macanes</code>). Revisa os <strong>dous campos</strong> de abaixo e preme <strong>Gardar os cambios</strong>. Esta identidade indica <strong>quen aloxa a app</strong>; non cambia os datos do servidor.',
+			'step2_title' => 'Paso 2 · Pon a app nunha páxina',
+			'step2a' => '<strong>Opción A · Shortcode.</strong> Vai a <strong>Páxinas → Engadir nova páxina</strong>, pon un <strong>título</strong> e copia exactamente <code>[socdepoble_app]</code> no <strong>corpo</strong> da páxina. Preme <strong>Publicar</strong> e comproba que aparece <strong>Sóc de Poble</strong>.',
+			'step2b' => '<strong>Opción B · Bloque visual.</strong> No <strong>editor de páxinas</strong>, preme o botón <strong>+</strong> para <strong>engadir un bloque</strong>, busca <strong>Sóc de Poble</strong> e selecciónao. As dúas opcións amosan <strong>a mesma app</strong>; escolle unha.',
+			'step3_title' => 'Paso 3 · Pantalla completa e páxina de inicio',
+			'step3' => 'No editor, abre <strong>Modelo</strong> e escolle <strong>Sóc de Poble · full screen</strong>. Para facela <strong>páxina de inicio</strong>, vai a <strong>Axustes → Lectura</strong>, marca <strong>Unha páxina estática</strong> e selecciónaa en <strong>Páxina de inicio</strong>.',
+			'host_title' => 'Identidade do anfitrión',
+			'host_intro' => 'Estes <strong>dous campos</strong> identifican o <strong>anfitrión</strong> e o <strong>pobo de destino</strong>. Se os deixas <strong>baleiros</strong>, consérvanse os valores do <strong>banco de probas</strong>. O filtro <code>socdepoble_enxufe_config</code> ten a <strong>última palabra</strong>.',
+			'village_name' => 'Nome público do portal',
+			'village_id' => 'Identificador do pobo',
+			'name_help' => 'É o <strong>nome visible</strong> do servidor que <strong>aloxa a app</strong>, por exemplo <strong>Gent de la Torre</strong>.',
+			'id_help' => 'É o <strong>identificador</strong> da sección <strong>Pobos</strong>: as visitas chegan á súa <strong>ficha</strong>. Non determina o <strong>ámbito de datos</strong>.',
+			'save' => 'Gardar os cambios',
+			'translation_title' => 'Tradución, cando a necesites',
+			'translation_help' => 'O <strong>idioma desta guía</strong> non cambia o de <strong>WordPress</strong> nin o da <strong>app</strong>. O servizo de <strong>tradución de textos</strong> é opcional: usa <strong>Apertium</strong> por defecto ou <strong>DeepL</strong> se está configurado no servidor. As <strong>claves</strong> quedan sempre no servidor.',
+			'diagnosis' => 'Diagnóstico técnico e marcado universal',
+			'package_title' => 'Paquete e nodo de datos',
+			'markup_title' => 'Marcado para outro anfitrión',
+			'markup_help' => 'O conector envía <strong>tres pezas</strong>: a <strong>configuración pública</strong>, o <strong>elemento da app</strong> e o <strong>cargador</strong>. Outro anfitrión, como <strong>Sollutia</strong>, usa o mesmo marcado coa súa copia de <code>dist/</code>. A caixa precisa <strong>altura</strong>.',
+			'development_warning' => 'Este paquete apunta a un <strong>servidor de desenvolvemento</strong>. As visitas verán a app <strong>sen datos</strong>. Cómpre reconstruílo como <strong>paquete de produción</strong> antes de publicalo.',
+			'manifest' => 'Manifesto do paquete',
+			'missing' => 'Falta o manifesto (dist/sdp-release.json). Reconstrúe o paquete con npm run build:wp.',
+			'missing_bundle' => 'Faltan o manifesto e o cargador da app.',
+			'app_version' => 'Versión da app',
+			'bundle_sha' => 'SHA-256 do cargador',
+			'bundle_integrity' => 'Integridade do cargador',
+			'data_node' => 'Nodo de datos selado',
+			'none' => 'ningún',
+			'data_mode' => 'Modo de datos',
+			'package_kind' => 'Tipo de paquete',
+			'development' => 'Desenvolvemento: só funciona xunto ao seu servidor local.',
+			'release' => 'Produción: pode atender visitas reais aquí ou noutro anfitrión.',
+			'environment' => 'Contorno do sitio',
+		),
+	);
+	return $copies;
+}
+
+/** Llengua dels ajustos, independent dels catàlegs de GlotPress. */
+function socdepoble_enxufe_llengua_ajustos( $locale = null ) {
+	if ( null === $locale ) {
+		$locale = function_exists( 'get_user_locale' ) ? get_user_locale() : '';
+		if ( ! is_string( $locale ) || '' === $locale ) {
+			$locale = function_exists( 'get_locale' ) ? get_locale() : '';
+		}
+	}
+	$locale = is_string( $locale ) ? strtolower( str_replace( '-', '_', $locale ) ) : '';
+	if ( preg_match( '/^(?:ca|va)(?:_|$)/', $locale ) ) {
+		return 'va';
+	}
+	foreach ( array( 'es', 'en', 'eu', 'gl' ) as $llengua ) {
+		if ( 0 === strpos( $locale, $llengua ) ) {
+			return $llengua;
+		}
+	}
+	return 'va';
+}
+
+/** Text propi de la guia, no canvia el locale de WordPress ni de l'app. */
+function socdepoble_enxufe_text_ajustos( $clau ) {
+	$copies = socdepoble_enxufe_copies_ajustos();
+	return $copies[ socdepoble_enxufe_llengua_ajustos() ][ $clau ] ?? '';
+}
+
+/** El marcatge admés és estàtic i se saneja abans del PHP i del JSON. */
+function socdepoble_enxufe_etiqueta_ajustos( $clau, $ric = false ) {
+	$text = socdepoble_enxufe_text_ajustos( $clau );
+	return '<span data-sdp-' . ( $ric ? 'html' : 'text' ) . '="' . esc_attr( $clau ) . '">'
+		. ( $ric ? wp_kses_post( $text ) : esc_html( $text ) ) . '</span>';
+}
+
+
 /**
  * Saneja l'opció desada: només nomPoble i poble, amb els mateixos criteris
  * que el marcatge. La resta de claus es descarta, també el tenantId que hi
@@ -84,14 +330,14 @@ function socdepoble_enxufe_registra_ajustos() {
 
 	add_settings_section(
 		'socdepoble_enxufe_amfitrio',
-		__( 'Host identity', 'socdepoble' ),
+		socdepoble_enxufe_etiqueta_ajustos( 'host_title' ),
 		'socdepoble_enxufe_seccio_amfitrio',
 		'socdepoble'
 	);
 
 	add_settings_field(
 		'socdepoble_enxufe_nompoble',
-		__( 'Village name', 'socdepoble' ),
+		socdepoble_enxufe_etiqueta_ajustos( 'village_name' ),
 		'socdepoble_enxufe_camp',
 		'socdepoble',
 		'socdepoble_enxufe_amfitrio',
@@ -104,7 +350,7 @@ function socdepoble_enxufe_registra_ajustos() {
 
 	add_settings_field(
 		'socdepoble_enxufe_poble',
-		__( 'Village id', 'socdepoble' ),
+		socdepoble_enxufe_etiqueta_ajustos( 'village_id' ),
 		'socdepoble_enxufe_camp',
 		'socdepoble',
 		'socdepoble_enxufe_amfitrio',
@@ -121,7 +367,7 @@ add_action( 'admin_init', 'socdepoble_enxufe_registra_ajustos' );
  * Text de la secció.
  */
 function socdepoble_enxufe_seccio_amfitrio() {
-	echo '<p>' . esc_html__( 'Empty fields keep the test bench values. The socdepoble_enxufe_config filter has the last word.', 'socdepoble' ) . '</p>';
+	echo '<p>' . socdepoble_enxufe_etiqueta_ajustos( 'host_intro', true ) . '</p>';
 }
 
 /**
@@ -131,7 +377,7 @@ function socdepoble_enxufe_seccio_amfitrio() {
  */
 function socdepoble_enxufe_camp( $args ) {
 	$opcio = get_option( SOCDEPOBLE_ENXUFE_OPCIO, array() );
-	$valor = is_array( $opcio ) && isset( $opcio[ $args['clau'] ] ) ? (string) $opcio[ $args['clau'] ] : '';
+	$valor = is_array( $opcio ) && isset( $opcio[ $args['clau'] ] ) && is_scalar( $opcio[ $args['clau'] ] ) ? (string) $opcio[ $args['clau'] ] : '';
 	printf(
 		'<input type="text" class="regular-text" id="%1$s" name="%2$s[%3$s]" value="%4$s" />',
 		esc_attr( $args['label_for'] ),
@@ -139,7 +385,7 @@ function socdepoble_enxufe_camp( $args ) {
 		esc_attr( $args['clau'] ),
 		esc_attr( $valor )
 	);
-	printf( '<p class="description">%s</p>', esc_html( $args['descripcio'] ) );
+	printf( '<p class="description">%s</p>', socdepoble_enxufe_etiqueta_ajustos( 'nomPoble' === $args['clau'] ? 'name_help' : 'id_help', true ) );
 }
 
 /**
@@ -555,131 +801,128 @@ function socdepoble_enxufe_diagnosi() {
  * [socdepoble_app]; [socdepoble] no existix i WordPress el deixava com a
  * text literal a la pàgina, sense l'App.
  */
+/** Identifica les etiquetes de diagnosi, també si WordPress ja les ha traduïdes. */
+function socdepoble_enxufe_clau_diagnosi_ajustos( $valor ) {
+	$copies = socdepoble_enxufe_copies_ajustos();
+	foreach ( array( 'manifest', 'missing', 'missing_bundle', 'app_version', 'bundle_sha', 'bundle_integrity', 'data_node', 'none', 'data_mode', 'package_kind', 'development', 'release', 'environment' ) as $clau ) {
+		$angles = $copies['en'][ $clau ];
+		if ( $valor === $angles || $valor === __( $angles, 'socdepoble' ) ) {
+			return $clau;
+		}
+	}
+	return false;
+}
+
+/** Ajustos traduïbles sense recarregar ni substituir el formulari. */
 function socdepoble_enxufe_pagina() {
 	if ( ! current_user_can( 'manage_options' ) ) {
 		return;
 	}
+	$llengua = socdepoble_enxufe_llengua_ajustos();
+	$idiomes = array( 'va' => 'Valencià · VA', 'es' => 'Castellano · ES', 'en' => 'English · EN', 'eu' => 'Euskara · EU', 'gl' => 'Galego · GL' );
+	$copies = array_map( static function ( $textos ) { return array_map( 'wp_kses_post', $textos ); }, socdepoble_enxufe_copies_ajustos() );
 	?>
-	<div class="wrap">
-		<h1><?php echo esc_html( get_admin_page_title() ); ?></h1>
-
-		<?php if ( socdepoble_enxufe_node_inadequat() ) : ?>
-			<div class="notice notice-error inline"><p><?php esc_html_e( 'This package points to a development backend. Visitors of this site will see the app without data. Rebuild it as a release with production values.', 'socdepoble' ); ?></p></div>
-		<?php endif; ?>
-
-		<div class="card" style="max-width:56rem;margin-top:1rem;padding:1.25rem 1.5rem;border-left:4px solid #f97316">
-			<h2 style="margin-top:0"><?php esc_html_e( 'Welcome to the Sóc de Poble Portal of Connected Villages', 'socdepoble' ); ?></h2>
-			<p><?php esc_html_e( 'Sóc de Poble is the decentralized civic network born in the rural mountains of Alicante to connect neighbours, local associations, traditional events, village markets and collective memory without technological dependence.', 'socdepoble' ); ?></p>
-			<p>
-				<?php
-				echo wp_kses_post(
-					sprintf(
-						/* translators: %1$s: village id of La Torre de les Maçanes, in code markup. */
-						esc_html__( 'The root of the network is Sóc de Poble itself (El Rentonar, 30 years of rural activism). The first village portal live in production is La Torre de les Maçanes (%1$s · Gent de la Torre). The other villages of the catalogue are ready to switch on their own node as soon as their community asks for it.', 'socdepoble' ),
-						'<code>la-torre-de-les-macanes</code>'
-					)
-				);
-				?>
-			</p>
-			<h3><?php esc_html_e( 'How to put Sóc de Poble on your website, in three steps', 'socdepoble' ); ?></h3>
-			<ol style="margin-bottom:0">
-				<li>
-					<strong><?php esc_html_e( 'Step 1 · Set up your village here below.', 'socdepoble' ); ?></strong>
-					<?php
-					echo wp_kses_post(
-						sprintf(
-							/* translators: %1$s: example portal name, %2$s: example village id, %3$s: the Save Changes button label, all in markup. */
-							esc_html__( 'Write the public name of your portal (for example %1$s) and the id of your village (%2$s), then press the blue button %3$s.', 'socdepoble' ),
-							'<code>Gent de la Torre</code>',
-							'<code>la-torre-de-les-macanes</code>',
-							'<strong>«' . esc_html__( 'Save Changes', 'socdepoble' ) . '»</strong>'
-						)
-					);
-					?>
-				</li>
-				<li>
-					<strong><?php esc_html_e( 'Step 2 · Put Sóc de Poble on a page of your website (choose one of the two options).', 'socdepoble' ); ?></strong>
-					<ul>
-						<li>
-							<?php
-							echo wp_kses_post(
-								sprintf(
-									/* translators: %1$s: the Pages ➔ Add New Page menu path, %2$s: the shortcode, %3$s: the Publish button label, all in markup. */
-									esc_html__( 'Easy option A (copying the code): in the left menu go to %1$s, give the page a title, type or paste exactly %2$s in the body of the page and press %3$s.', 'socdepoble' ),
-									'<strong>' . esc_html__( 'Pages ➔ Add New Page', 'socdepoble' ) . '</strong>',
-									'<code>[socdepoble_app]</code>',
-									'<strong>«' . esc_html__( 'Publish', 'socdepoble' ) . '»</strong>'
-								)
-							);
-							?>
-						</li>
-						<li>
-							<?php
-							echo wp_kses_post(
-								sprintf(
-									/* translators: %1$s: the + button, %2$s: the Add block label, %3$s: the block name, all in markup. */
-									esc_html__( 'Easy option B (with the visual block): inside the page editor press the %1$s button (%2$s), search for %3$s and click it.', 'socdepoble' ),
-									'<code>+</code>',
-									esc_html__( 'Add block', 'socdepoble' ),
-									'<strong>«Sóc de Poble»</strong>'
-								)
-							);
-							?>
-						</li>
-					</ul>
-				</li>
-				<li>
-					<strong><?php esc_html_e( 'Step 3 · Make it fill the whole screen and be the home page.', 'socdepoble' ); ?></strong>
-					<?php
-					echo wp_kses_post(
-						sprintf(
-							/* translators: %1$s: the Template panel name, %2$s: the full screen template name, %3$s: the Settings ➔ Reading menu path, %4$s: the A static page option, %5$s: the Homepage field, all in markup. */
-							esc_html__( 'In the right column of the page editor look for the %1$s panel and choose %2$s. If you want that page to be the main home page of your website, go to %3$s, tick %4$s and select it as %5$s.', 'socdepoble' ),
-							'<strong>«' . esc_html__( 'Template', 'socdepoble' ) . '»</strong>',
-							'<strong>«' . esc_html__( 'Sóc de Poble · full screen', 'socdepoble' ) . '»</strong>',
-							'<strong>' . esc_html__( 'Settings ➔ Reading', 'socdepoble' ) . '</strong>',
-							'<em>«' . esc_html__( 'A static page', 'socdepoble' ) . '»</em>',
-							'<strong>' . esc_html__( 'Homepage', 'socdepoble' ) . '</strong>'
-						)
-					);
-					?>
-				</li>
-			</ol>
+	<div class="wrap sdp-ajustos" data-sdp-language="<?php echo esc_attr( $llengua ); ?>" lang="<?php echo 'va' === $llengua ? 'ca-valencia' : esc_attr( $llengua ); ?>">
+		<style>
+			.sdp-ajustos{font-size:17px;line-height:1.65;color:#1d2327}
+			.sdp-ajustos p,.sdp-ajustos li,.sdp-ajustos .description,.sdp-ajustos td,.sdp-ajustos th{font-size:inherit;line-height:inherit}
+			.sdp-ajustos h1{font-size:30px;line-height:1.3}.sdp-ajustos h2{font-size:24px;line-height:1.35;margin-top:0}
+			.sdp-ajustos h3{font-size:20px;line-height:1.4}.sdp-ajustos .sdp-ajustos-card{background:#fff;border:1px solid #c3c4c7;padding:24px;margin:24px 0}
+			.sdp-ajustos .sdp-ajustos-tabs{display:flex;flex-wrap:wrap;gap:8px;margin:20px 0}
+			.sdp-ajustos [role=tab]{font:inherit;min-height:44px;padding:8px 16px;border:1px solid #8c8f94;border-radius:0;background:#fff;color:#1d2327;cursor:pointer}
+			.sdp-ajustos [role=tab][aria-selected=true]{background:#1d2327;color:#fff;border-color:#1d2327}
+			.sdp-ajustos [role=tab]:focus-visible{outline:3px solid #2271b1;outline-offset:3px}
+			.sdp-ajustos .form-table input{font:inherit;max-width:100%}.sdp-ajustos .form-table th{width:14rem}
+			.sdp-ajustos .button{font-size:16px;min-height:44px}.sdp-ajustos ol{margin-left:1.5em}.sdp-ajustos li+li{margin-top:24px}
+			.sdp-ajustos code{font-size:.95em}
+			.sdp-ajustos summary{cursor:pointer;font-weight:600}.sdp-ajustos pre,.sdp-ajustos td code{white-space:pre-wrap;overflow-wrap:anywhere}
+			@media(max-width:600px){.sdp-ajustos .sdp-ajustos-card{padding:16px}.sdp-ajustos .form-table th{width:auto}.sdp-ajustos [role=tab]{flex-grow:1}}
+		</style>
+		<h1>Sóc de Poble</h1>
+		<div class="sdp-ajustos-tabs" role="tablist" aria-label="<?php echo esc_attr( socdepoble_enxufe_text_ajustos( 'language' ) ); ?>" data-sdp-label="language">
+			<?php foreach ( $idiomes as $codi => $nom ) : ?>
+				<button type="button" role="tab" id="sdp-ajustos-tab-<?php echo esc_attr( $codi ); ?>" data-sdp-tab="<?php echo esc_attr( $codi ); ?>" aria-controls="sdp-ajustos-panel" aria-selected="<?php echo $llengua === $codi ? 'true' : 'false'; ?>" tabindex="<?php echo $llengua === $codi ? '0' : '-1'; ?>"><?php echo esc_html( $nom ); ?></button>
+			<?php endforeach; ?>
 		</div>
-
-		<form action="options.php" method="post">
-			<?php
-			settings_fields( 'socdepoble_enxufe' );
-			do_settings_sections( 'socdepoble' );
-			submit_button();
-			?>
-		</form>
-
-		<details style="max-width:56rem;margin-top:1.5rem;padding:0.75rem 1rem;background:#fff;border:1px solid #c3c4c7">
-			<summary style="cursor:pointer;font-weight:600"><?php esc_html_e( 'Technical diagnosis and universal host markup (for developers)', 'socdepoble' ); ?></summary>
-
-			<h2><?php esc_html_e( 'Package and data node', 'socdepoble' ); ?></h2>
-			<table class="widefat striped" role="presentation">
-				<tbody>
+		<div role="tabpanel" id="sdp-ajustos-panel" aria-labelledby="sdp-ajustos-tab-<?php echo esc_attr( $llengua ); ?>">
+			<?php if ( socdepoble_enxufe_node_inadequat() ) : ?>
+				<div class="notice notice-error inline"><p><?php echo socdepoble_enxufe_etiqueta_ajustos( 'development_warning', true ); ?></p></div>
+			<?php endif; ?>
+			<section class="sdp-ajustos-card">
+				<h2><?php echo socdepoble_enxufe_etiqueta_ajustos( 'slogan' ); ?></h2>
+				<p><?php echo socdepoble_enxufe_etiqueta_ajustos( 'intro', true ); ?></p>
+				<p><?php echo socdepoble_enxufe_etiqueta_ajustos( 'roots', true ); ?></p>
+				<h3><?php echo socdepoble_enxufe_etiqueta_ajustos( 'guide' ); ?></h3>
+				<ol>
+					<li><h3><?php echo socdepoble_enxufe_etiqueta_ajustos( 'step1_title' ); ?></h3><p><?php echo socdepoble_enxufe_etiqueta_ajustos( 'step1', true ); ?></p></li>
+					<li><h3><?php echo socdepoble_enxufe_etiqueta_ajustos( 'step2_title' ); ?></h3><p><?php echo socdepoble_enxufe_etiqueta_ajustos( 'step2a', true ); ?></p><p><?php echo socdepoble_enxufe_etiqueta_ajustos( 'step2b', true ); ?></p></li>
+					<li><h3><?php echo socdepoble_enxufe_etiqueta_ajustos( 'step3_title' ); ?></h3><p><?php echo socdepoble_enxufe_etiqueta_ajustos( 'step3', true ); ?></p></li>
+				</ol>
+			</section>
+			<form class="sdp-ajustos-card" action="options.php" method="post">
+				<?php settings_fields( 'socdepoble_enxufe' ); do_settings_sections( 'socdepoble' ); ?>
+				<p class="submit"><button type="submit" name="submit" id="submit" class="button button-primary"><?php echo socdepoble_enxufe_etiqueta_ajustos( 'save' ); ?></button></p>
+			</form>
+			<section class="sdp-ajustos-card"><h2><?php echo socdepoble_enxufe_etiqueta_ajustos( 'translation_title' ); ?></h2><p><?php echo socdepoble_enxufe_etiqueta_ajustos( 'translation_help', true ); ?></p></section>
+			<details class="sdp-ajustos-card">
+				<summary><?php echo socdepoble_enxufe_etiqueta_ajustos( 'diagnosis' ); ?></summary>
+				<h2><?php echo socdepoble_enxufe_etiqueta_ajustos( 'package_title' ); ?></h2>
+				<table class="widefat striped"><tbody>
 				<?php foreach ( socdepoble_enxufe_diagnosi() as $etiqueta => $valor ) : ?>
-					<tr>
-						<th scope="row"><?php echo esc_html( $etiqueta ); ?></th>
-						<td><code><?php echo esc_html( $valor ); ?></code></td>
-					</tr>
+					<tr><th scope="row"><?php $clau = socdepoble_enxufe_clau_diagnosi_ajustos( $etiqueta ); echo false === $clau ? esc_html( $etiqueta ) : socdepoble_enxufe_etiqueta_ajustos( $clau ); ?></th><td><code><?php $clau = socdepoble_enxufe_clau_diagnosi_ajustos( $valor ); echo false === $clau ? esc_html( $valor ) : socdepoble_enxufe_etiqueta_ajustos( $clau ); ?></code></td></tr>
 				<?php endforeach; ?>
-				</tbody>
-			</table>
-
-			<?php
-			if ( function_exists( 'socdepoble_enxufe_seccio_canal' ) ) {
-				socdepoble_enxufe_seccio_canal();
+				</tbody></table>
+				<?php if ( function_exists( 'socdepoble_enxufe_seccio_canal' ) ) { socdepoble_enxufe_seccio_canal(); } ?>
+				<h2><?php echo socdepoble_enxufe_etiqueta_ajustos( 'markup_title' ); ?></h2>
+				<p><?php echo socdepoble_enxufe_etiqueta_ajustos( 'markup_help', true ); ?></p>
+				<pre><code><?php echo esc_html( socdepoble_enxufe_marcatge_de_referencia() ); ?></code></pre>
+			</details>
+		</div>
+		<?php
+		$json = wp_json_encode( $copies, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT );
+		if ( function_exists( 'wp_print_inline_script_tag' ) ) {
+			wp_print_inline_script_tag( $json, array( 'type' => 'application/json', 'data-sdp-copies' => '' ) );
+		} else {
+			echo '<script type="application/json" data-sdp-copies>' . $json . '</script>';
+		}
+		ob_start();
+		?>
+		(() => {
+			const root = document.currentScript.closest('.sdp-ajustos');
+			const copies = JSON.parse(root.querySelector('[data-sdp-copies]').textContent);
+			const tabs = Array.from(root.querySelectorAll('[data-sdp-tab]'));
+			function select(code) {
+				if (!Object.prototype.hasOwnProperty.call(copies, code)) return;
+				const texts = copies[code];
+				root.querySelectorAll('[data-sdp-text]').forEach(node => { node.textContent = texts[node.dataset.sdpText]; });
+				root.querySelectorAll('[data-sdp-html]').forEach(node => { node.innerHTML = texts[node.dataset.sdpHtml]; });
+				root.querySelectorAll('[data-sdp-label]').forEach(node => { node.setAttribute('aria-label', texts[node.dataset.sdpLabel]); });
+				tabs.forEach(tab => { const active = tab.dataset.sdpTab === code; tab.setAttribute('aria-selected', String(active)); tab.tabIndex = active ? 0 : -1; });
+				root.dataset.sdpLanguage = code;
+				root.lang = code === 'va' ? 'ca-valencia' : code;
+				root.querySelector('[role=tabpanel]').setAttribute('aria-labelledby', 'sdp-ajustos-tab-' + code);
 			}
-			?>
-
-			<h2><?php esc_html_e( 'Universal markup', 'socdepoble' ); ?></h2>
-			<p><?php esc_html_e( 'The three pieces this plugin sends to the page (WordPress adds ?ver= to the script). Any other host (Sollutia, a static page) emits the same three pieces pointing to its own copy of dist/. The box that contains the element needs a height.', 'socdepoble' ); ?></p>
-			<pre style="white-space:pre-wrap;word-break:break-all"><code><?php echo esc_html( socdepoble_enxufe_marcatge_de_referencia() ); ?></code></pre>
-		</details>
+			tabs.forEach((tab, index) => {
+				tab.addEventListener('click', () => select(tab.dataset.sdpTab));
+				tab.addEventListener('keydown', event => {
+					let next;
+					if (event.key === 'ArrowRight') next = (index + 1) % tabs.length;
+					else if (event.key === 'ArrowLeft') next = (index + tabs.length - 1) % tabs.length;
+					else if (event.key === 'Home') next = 0;
+					else if (event.key === 'End') next = tabs.length - 1;
+					else return;
+					event.preventDefault(); tabs[next].focus(); select(tabs[next].dataset.sdpTab);
+				});
+			});
+		})();
+		<?php
+		$script = ob_get_clean();
+		if ( function_exists( 'wp_print_inline_script_tag' ) ) {
+			wp_print_inline_script_tag( $script );
+		} else {
+			echo '<script>' . $script . '</script>';
+		}
+		?>
 	</div>
 	<?php
 }

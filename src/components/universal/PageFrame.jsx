@@ -49,10 +49,16 @@ export function selectorIndex(nivellMax) {
    l'Índex i per a trobar la secció de la URL en carregar.
    Ordre del Mestre (261026_2126, §5) · Tampoc no hi entra el títol d'un
    <dialog> tancat del cos (a l'editor, «Vista prèvia d'impressió», dins del
-   selector de drets): no es pinta i l'entrada no portava enlloc. */
+   selector de drets): no es pinta i l'entrada no portava enlloc.
+   O4-CLAUDE-1 (ordre del Mestre, captura 261102_2121) · Ni res del que viu
+   dins de l'«Edició avançada» de l'editor (details.sdp-edicio-avancada),
+   plegada o oberta: hi ha eines de configuració, no seccions del document, i
+   la previsualització en línia de «On es publica?» hi pinta la targeta
+   pública amb el títol (h3) i el subtítol (h4) de la nota. */
 export function encapcalamentsIndex(container, selector) {
   const elements = Array.from(container?.querySelectorAll?.(selector) || [])
-    .filter((el) => !el.classList.contains('sr-only') && el.textContent.trim() !== '' && !dinsDUnDialegTancat(el, container));
+    .filter((el) => !el.classList.contains('sr-only') && el.textContent.trim() !== ''
+      && !dinsDUnDialegTancat(el, container) && !dinsDeLEdicioAvancada(el, container));
   const slugs = slugsDeSeccions(elements.map((el) => el.textContent));
   return elements.map((element, i) => ({ element, slug: slugs[i] }));
 }
@@ -60,6 +66,11 @@ export function encapcalamentsIndex(container, selector) {
 function dinsDUnDialegTancat(el, container) {
   const dialeg = el.closest('dialog');
   return Boolean(dialeg && !dialeg.hasAttribute('open') && container.contains(dialeg));
+}
+
+function dinsDeLEdicioAvancada(el, container) {
+  const desplegable = el.closest('details.sdp-edicio-avancada');
+  return Boolean(desplegable && container.contains(desplegable));
 }
 
 /* Fase D (261020, tasca 3.2) · L'àncora estable d'un encapçalament: data-sdp-ancora

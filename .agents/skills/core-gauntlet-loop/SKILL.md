@@ -31,9 +31,9 @@ Aquest procediment estableix l'estàndard d'execució d'alt rendiment per a evit
 Una sola IA treballant aïllada pateix d'un biaix cognitiu greu: dóna per bo el seu propi treball, retalla cantonades amb comentaris `// TODO` o simula funcionalitats que en realitat no ha acabat.
 
 El **Gauntlet Loop** trenca aquesta ceguesa mitjançant un arnés extern inexorable:
-1. **El Constructor (Builder - Claude Code):** Pica el codi, crea components, refactoritza i prepara la implementació seguint el Pla.
-2. **El Crític Implacable (Adversarial Critic - GPT Codex):** Amb un **context net i separat** (sense escoltar les excuses ni el xat del Constructor), avalua el resultat directament contra una **Barra de Qualitat real** i la llista de requeriments.
-3. **El Garant de Coherència (Gemini 4 Argon):** Verifica la puresa del model de dades, la Llei del Quadrat d'imatges i el reglament Pedra Seca.
+1. **Constructor:** prepara la implementació i les proves contra el pla i les rutes assignades.
+2. **Crític independent:** rep el resultat i els requisits amb el mínim context necessari per intentar refutar-los; no hereta com a fet la conclusió del constructor.
+3. **Verificador:** contrasta contracte de dades, disseny i aplicació del kit. Els agents i models de cada rol els fixa l'encàrrec vigent; no queden reservats a una marca.
 4. **El Bucle (Loop):** El Crític busca fallades sense pietat. Si troba una sola mancança, rebutja el lliurament. El Constructor torna a picar fins a assolir el 100% de verd.
 
 
@@ -53,7 +53,7 @@ Tota auditoria sobre un Pla d'Implementació ha d'incorporar obligatòriament la
 
 
 ## 3. Enginyeria Inversa amb REA (Reverse Engineer Anything)
-Abans de programar interfícies complexes o inventar rodes noves, qualsevol IA està obligada a consultar o disseccionar solucions líders ja consolidades al mercat mitjançant el patró **REA**:
+Quan l'encàrrec demana paritat amb una aplicació o un artefacte de referència, usa REA si està disponible i la lectura està autoritzada. L'anàlisi ordinària del repositori propi comença pel seu codi i proves, sense disseccionar una aplicació externa per inèrcia:
 
 1. **Àmbits d'aplicació canònics a Sóc de Poble:**
    - **Lector RSS (`/app/lector`):** Enginyeria inversa de **Feedly** (arbre de carpetes a l'esquerra, comptadors de no llegits, flux de lectura net a la dreta) muntat sobre `UniversalWorkspace`.

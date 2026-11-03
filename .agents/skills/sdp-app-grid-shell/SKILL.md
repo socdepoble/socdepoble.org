@@ -19,7 +19,7 @@ Aquesta skill documenta la lògica de disseny i comportament de la interfície p
 
 ## 1. La Jerarquia Visual (UniversalWorkspace vs UniversalPage)
 
-- **La `UniversalPage` només ha d'existir DINS de l'Editor.** L'espai de treball (`UniversalWorkspace`) no ha de ser embolicat per una `UniversalPage`. La Barra Blava (`bar-blue`) de la `UniversalPage` ha d'estar confinada exclusivament a la columna dreta (la de l'editor), ja que és on s'edita la targeta/pàgina, i mai no pot desbordar per damunt de les columnes de Carpetes i Notes.
+- **La `UniversalPage` no embolica tot el workspace.** Dins d'`UniversalWorkspace`, la pàgina i la seua Barra Blava pertanyen al detall de la columna dreta, tant si és lectura com edició. No desborden per damunt de Carpetes i Notes. Fora del workspace són legítimes les pàgines de sistema i les fitxes de lectura: `PoblesSection.jsx` ja munta `UniversalPage` sense editor. No crees un editor per satisfer esta regla.
 
 ## 2. Disseny de les Barres (Capçaleres de les columnes)
 
@@ -47,19 +47,11 @@ Quan l'usuari clica als icones d'ocultar les columnes (per amagar la barra later
 - **Estat d'arrencada:** les columnes arrenquen obertes a tots els espais, també al Bloc de Notes. Amb la finestra de 721 a 1023 px (entre `estret` i `compacte`), l'`UniversalWorkspace` arrenca amb la navegació plegada en rail (`navegacioPlegadaEnArrencar`); des de 1024 px, totes obertes. Només decidix la muntada: després mana la persona, i un `columnesInicials` explícit o el mode compacte manen sobre la franja.
 - **El separador del mig s'agafa sempre:** per davall de la capçalera, la seua franja queda per damunt de la barra taronja i de les eines de l'editor, i per davall de la barra blava.
 
-## 5. Llei de la Barra Negra Immutable i Safe-Area Natiu (Mòbil i Escriptori)
+## 4. Barra Negra i verificació
 
-- **Topologia de la Barra Negra (`header.bar-black`):** La Barra Negra de Sóc de Poble és el portal d'identitat institucional i arrel universal de navegació (logo Sóc de Poble, traductor, IAIA MarIA, cerca, mode dia/nit i accés d'usuari).
-- **Immutabilitat i Permanència Absoluta:** La Barra Negra **MAI es pot amagar ni fer desaparèixer** sota cap concepte (`display: none` està terminantment prohibit per a la barra negra global). És permanentment fixa (`position: sticky; top: 0;`), no s'amaga en fer scroll, ni en entrar al Xat (`/xat`), ni en cap vista mòbil.
-- **Respecte Estricte del Safe-Area Superior (Dynamic Island / Barra d'Estat iOS):**
-  - La Barra Negra MAI s'ha de dibuixar encavallada darrere de la barra d'estat del sistema (Dynamic Island, rellotge, wifi, bateria).
-  - Ha d'incorporar `padding-top: env(safe-area-inset-top, 0px);` i una alçada adaptativa `calc(var(--sdp-alt-negra) + env(safe-area-inset-top, 0px))` amb `box-sizing: border-box`.
-  - La barra d'estat nativa ocupa el coixí superior fosc, i el contingut de la Barra Negra (el logotip i els botons) se situa netament per davall de la Dynamic Island.
-- **Jerarquia Vertical d'App i Subcapçaleres:**
-  1. Dalt de tot: Barra d'estat del sistema / Dynamic Island (`safe-area-inset-top`).
-  2. Just a sota: **Barra Negra de Sóc de Poble** (`header.bar-black`) — FIXA i IMMUTABLE.
-  3. A sota de la Barra Negra: Les capçaleres de secció o subbarres (com la barra de `Converses` amb el commutador, menú i botó `+`).
-  4. La barra de `Converses` o subbarres podran en un futur adaptar-se o ocultar-se si faltés espai extrem, però la Barra Negra de Sóc de Poble mai.
+El contracte únic de permanència i safe-area de la Barra Negra és `sdp-pedra-seca` §13. La graella i totes les subcapçaleres queden per davall d'ella; no dupliques una segona definició d'alçada o d'offset en cada espai.
+
+Les suites `AppGridShell.columnesFixes.test.jsx`, `AppGridShell.rail.test.jsx` i les de `UniversalWorkspace` contrasten arrencada, focus i columnes. El motor de tall compartit és `src/components/layout/graella.js`. Les proves de capes no certifiquen el resultat en cada dispositiu: comprova també scroll, separadors, contrast i safe-area sobre la vista renderitzada afectada.
 
 ## Lliçons del Mestre
 

@@ -18,7 +18,7 @@ contracte.escriu:
 
 # Clonació Visual de Loiverse (El TPV Universal)
 
-Aquesta skill defineix l'estàndard visual i arquitectònic per a qualsevol interfície relacionada amb productes, venda, o inventari (ex: Bar de la Parròquia, Llista de la Compra, Rebost).
+Esta skill fixa el referent visual del TPV i dels modes Bar/Rebost/Llista de la Compra quan formen part d'eixe encàrrec. No convertix qualsevol fitxa de producte o publicació del Mercat en un TPV ni sobreescriu el contracte d'`UniversalPage`.
 
 ## 1. Calcar al mil·límetre
 La instrucció del Mestre és innegociable: **La interfície ha de ser un clon exacte de Loiverse.**
@@ -34,9 +34,13 @@ S'utilitzarà el component "TPV Loiverse" com a patró de disseny base, canviant
 ## 3. Filosofia de les Imatges i la Nano Banana
 Per al sistema en producció pública, no es poden utilitzar les imatges "robades" d'internet (amb drets d'autor) que hi ha al Loiverse original de la Parròquia.
 L'Estratègia és:
-1. Treballar el TPV en mode **privat** darrere de l'autenticació del Mestre (Javi/Sóc de Poble).
-2. La "Nano Banana" (o una IA equivalent) haurà de recrear cadascuna de les imatges del Loiverse original per a generar imatges pròpies, lliures de drets i estèticament coherents, perquè l'app puga ser pública.
-3. Els noms dels productes comercials (ex: Danone, Pa torrat Hacendado) sí que es mantenen exactes (ús nominatiu), només es canvien els logotips per icones genèriques nostres.
+1. El prototip restringit necessita autenticació i permisos de servidor/RLS comprovats. Un botó ocult o una ruta de UI no demostren privacitat; no afirmes que ja és privat sense comprovar la font de dades i els actius servits.
+2. Per a publicar imatges, usa recursos propis o amb una llicència adequada i conserva'n la procedència. La generació per IA no acredita per si sola que una recreació estiga lliure de drets; no copies automàticament logotips o fotografies de referència.
+3. Conserva els noms necessaris per identificar els productes segons l'encàrrec, sense presentar esta skill com una autorització jurídica d'ús comercial. Si hi ha drets sense aclarir, registra el pendent abans de publicar el recurs.
+
+## Cobertura i límits
+
+La captura autoritzada és el referent del layout, no un component executable. Inspecciona els mòduls existents abans d'afirmar que hi ha un únic TPV reutilitzable. `design_guard.mjs` i `tractor-tokens.mjs` contrasten regles parcials del disseny, no igualtat visual amb Loiverse, cobraments ni llicències d'imatges. Valida el flux implementat amb dades de prova i revisió visual.
 
 ## Obligació de l'Agent
 Qualsevol agent assignat a crear el mòdul de "Menjar i Beure", "Rebost" o "Llista de la Compra" ha de llegir obligatòriament aquesta skill i aplicar-la per a dissenyar el frontend en React. No inventes una UI nova; copia Loiverse.

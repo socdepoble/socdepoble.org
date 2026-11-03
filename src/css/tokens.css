@@ -259,6 +259,18 @@
   --sdp-alt-accio: 58px;
   --sdp-alt-barres: calc(var(--sdp-alt-negra) + var(--sdp-alt-accio) * 2);  /* 180px · pila sticky */
   --sdp-alt-nav-mobil: 72px;                 /* nav inferior plana d'extrem a extrem */
+  /* O4-CLAUDE-1b (IDEA-63, ordre del Mestre, captura 261102_2149) · Els
+     calaixos naixen davall de la barra negra (header.bar-black, layout.css):
+     el mateix calc que la seua alçada, var(--sdp-alt-negra) més la zona
+     segura de dalt, i fan d'alt la resta de la pantalla. Un sol càlcul per a
+     l'Índex de la Pàgina Universal (.toc-overlay, modules.css) i per a tots
+     els calaixos del Dialeg (.sdp-dialeg--calaix, components.css). Ací
+     l'alçada va en vh, la reserva de la Baseline 2022; el dvh viu al
+     @supports (height: 100dvh) de més avall: una segona declaració de la
+     mateixa custom property no fa de reserva (el var() seria invàlid en
+     Chrome 100 o Firefox 100 i el calaix perdria l'alçada). */
+  --sdp-calaix-dalt: calc(var(--sdp-alt-negra) + env(safe-area-inset-top, 0px));
+  --sdp-calaix-alt: calc(100vh - var(--sdp-calaix-dalt));
   --sdp-pad-contenidor: clamp(16px, 4vw, 40px);
   --sdp-fitxa-mida: 96px;                    /* LLEI DE LA FITXA · costat de la media = alçada mínima */
   /* Xat (pla 260927_0055 §4.D): fila de conversa i amplària màxima de la
@@ -606,6 +618,16 @@
     --sdp-fluid-h6:   clamp(1rem, 0.8295rem + 0.8523cqi, 1.375rem);
     --sdp-fluid-lead: clamp(1.125rem, 1.0114rem + 0.5682cqi, 1.375rem);
     --sdp-fluid-cos:  clamp(1rem, 0.8864rem + 0.5682cqi, 1.25rem);
+  }
+}
+
+/* O4-CLAUDE-1b (IDEA-63) · L'alçada dels calaixos en dvh, només on el
+   navegador l'entén (Safari 15.4, Chrome 108, Firefox 101): la barra del
+   navegador mòbil no els retalla el peu. Fora d'este @supports, el vh del
+   bloc de dalt continua manant (Baseline 2022), com la tipografia fluida. */
+@supports (height: 100dvh) {
+  :root, :host, .sdp-root {
+    --sdp-calaix-alt: calc(100dvh - var(--sdp-calaix-dalt));
   }
 }
 

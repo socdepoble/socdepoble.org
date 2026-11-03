@@ -25,7 +25,7 @@ Esta skill selecciona categoria, nom i ruta documental. Les fonts són `tooling/
 1. Identifica la categoria i la ruta del document en el catàleg vigent; no inventes categories.
 2. Aplica [[core-temps-termodinamic/SKILL|core-temps-termodinamic]] per al nom i [[wiki-documentacio-i-reflex/SKILL|wiki-documentacio-i-reflex]] per a `document.mjs context/create`. Llig íntegrament la plantilla que retorne el CLI.
 3. Conserva les seccions de la plantilla i aplica [[core-maquetacio-markdown/SKILL|core-maquetacio-markdown]] al contingut del fitxer. La pàgina pintada correspon a [[core-llegibilitat-text/SKILL|core-llegibilitat-text]].
-4. Executa `node tooling/wiki/document.mjs check --file CAMI` i la porta de taxonomia pertinent. Registra els errors reals; no afirmes que l'esquema prova comprensió ni que valida tota la prosa.
+4. Executa `node tooling/wiki/document.mjs check --file CAMI` i `node tooling/gates/porta-taxonomia.mjs --staged` per als documents nous preparats per a Git; usa `--fitxer CAMI` per a una comprovació puntual i `--paritat` per a contrastar el catàleg de categories. Registra els errors reals; no afirmes que l'esquema prova comprensió ni que valida tota la prosa.
 
 ## 3. Límits
 

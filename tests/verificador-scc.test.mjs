@@ -58,3 +58,14 @@ test('els derivats var de l’arrel no són documents; var dins de la Wiki conti
  assert.equal(result.valid,false);
  assert.ok(result.errors.some(e=>e.code==='ORPHAN_OPERATIVE' && e.affected_files.includes('_wiki_de_poble/var/document.md')));
 });
+
+test('OpenData del build natiu no és document operatiu; la mateixa carpeta dins de la Wiki sí que s’audita', async t => {
+ const {root,put}=setup(t);
+ put('dist-natiu/opendata/llicencies.md','# Llicències distribuïdes');
+ put('dist-natiu/opendata/memoria.md','# Memòria distribuïda');
+ assert.equal((await new VerificadorSCC(root).runAudits()).valid,true);
+ put('_wiki_de_poble/dist-natiu/document.md','# Document operatiu');
+ const r=await new VerificadorSCC(root).runAudits();
+ assert.equal(r.valid,false);
+ assert.ok(r.errors.some(e=>e.code==='ORPHAN_OPERATIVE'&&e.affected_files.includes('_wiki_de_poble/dist-natiu/document.md')));
+});

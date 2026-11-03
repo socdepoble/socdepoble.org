@@ -118,3 +118,32 @@ describe('amb document.body, el comportament de sempre (viewport)', () => {
     menu.onExit();
   });
 });
+
+/* O4-CLAUDE-2 · C2-07 (àrbitre) · Una ordre amb `tradueix(editor)` (la Subtargeta) porta el
+   títol i l'ajuda en la llengua de la interfície, llegits del magatzem de l'editor a cada pintat;
+   la cerca també casa amb el títol traduït. Les altres ordres, tal qual. */
+describe('el menú «/» tradueix les ordres que ho saben fer', () => {
+  const ordres = () => [
+    { id: 'divisor', titol: 'Divisor', ajuda: 'Una ratlla que separa', paraules: ['hr'] },
+    { id: 'subtargeta', titol: 'Subtargeta', ajuda: 'Una targeta dins del text: títol, context i cos', paraules: ['caixa'], tradueix: (editor) => editor?.storage?.textos ?? {} }
+  ];
+  const items = (llista, consulta, editor) => {
+    SlashMenu.config.addProseMirrorPlugins.call({ options: { ordres: llista, suggestion: { char: '/' } }, editor: { storage: { textos: { titol: 'Sub-card', ajuda: 'A card inside the text' } } } });
+    return captura.opcions.items({ query: consulta, editor });
+  };
+
+  test('amb l’editor de la consulta, el títol i l’ajuda traduïts; la resta, idèntica', () => {
+    const llista = ordres();
+    const editor = { storage: { textos: { titol: 'Azpitxartela', ajuda: 'Txartel bat testuaren barruan' } } };
+    const [divisor, sub] = items(llista, '', editor);
+    expect(divisor).toBe(llista[0]);
+    expect([sub.titol, sub.ajuda, sub.id]).toEqual(['Azpitxartela', 'Txartel bat testuaren barruan', 'subtargeta']);
+    expect(llista[1].titol).toBe('Subtargeta');
+    expect(items(ordres(), 'azpi', editor).map((o) => o.id)).toEqual(['subtargeta']);
+    expect(items(ordres(), 'caixa', editor).map((o) => o.id)).toEqual(['subtargeta']);
+  });
+
+  test('sense editor a la consulta, el de l’extensió', () => {
+    expect(items(ordres(), '', undefined)[1].titol).toBe('Sub-card');
+  });
+});

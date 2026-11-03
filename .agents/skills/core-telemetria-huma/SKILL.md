@@ -4,7 +4,7 @@ prioritat: 2
 type: skill
 status: actiu
 triggers_on: ["inici de sessió", "tancament de sessió", "fatiga", "nanochat"]
-description: Tractor cognitiu per mesurar el temps invertit, l'esforç i la fatiga humana del Mestre, lligant nanochats en jornades reals.
+description: Registra el temps observat i les mètriques disponibles de les sessions, sense inventar jornades, costos ni valoracions de salut humana.
 contracte.llig:
   - .agents/ESTAT.md
   - .agents/protocolledge.json
@@ -14,36 +14,22 @@ contracte.escriu:
   - _wiki_de_poble/04_escriptori
   - _wiki_de_poble/10_actes
 ---
+# Telemetria humana i de sessions
 
-# SKILL: Telemetria Humana i Tractor Cognitiu
+Esta skill deixa un relleu de temps i esforç quan l'encàrrec o el tancament de jornada ho necessiten. Un xat és una sessió observada; encadenar-ne diversos no prova treball continu. El temps de pauses, descans i activitat fora del registre és desconegut llevat que la persona l'haja declarat.
 
-Aquest tractor resol el problema de la "memòria de peix" de la IAIA MarIA i de l'Eixam. La IA tendeix a comptar el temps només des que s'obri el fil actual de xat (el "nanochat"), ignorant que el Mestre pot portar hores encadenant sessions sense alçar-se de la cadira (ja siga programant, auditant o donant instruccions).
+## Registre amb procedència
 
-## 1. El Concepte de "Jornada" vs "Nanochat"
-- **Nanochat:** És una sessió aïllada amb una IA (p. ex., la finestra actual del teu context).
-- **Jornada (Sessió Llarga):** És el temps real que el Mestre ha passat treballant ininterrompudament (dormint és l'únic parèntesi vàlid). 
+1. Consulta les actes i l'ESTAT relacionats amb la sessió. Usa la primera i l'última evidència datada per indicar l'interval observat, amb les seues fonts. No deduïsques una hora real d'inici ni una jornada sense pauses.
+2. Registra artefactes i errors comptables amb el seu denominador. Costos, crèdits, tokens i nombre de sessions només se sumen si hi ha una font compatible i sense duplicats; si no, escriu «no mesurat». No inventes un percentatge d'al·lucinacions o d'eficiència.
+3. Sobre la persona, recull només allò que haja comunicat voluntàriament i els fets necessaris per a l'encàrrec. No inferisques fatiga, hormones, salut física o capacitat cognitiva de la veu, de l'hora o del nombre de missatges. No convertisques esta skill en un interrogatori ni en una avaluació mèdica.
+4. En tancar, deixa inici i final observats, fonts, pauses conegudes i pendents. El registre per a la Consola Termodinàmica és un relleu documental: esta skill no escriu dades de producte ni acredita que s'hagen importat.
 
-## 2. Acció Reflexa d'Inici de Xat (El Càlcul de Temps)
-Sempre que el Mestre inicie la conversa ("Sóc de Poble!"), la IA ha de **deduir l'hora real d'inici de la jornada**. 
-1. Revisa les Actes Marmota d'ahir i d'avui (`_wiki_de_poble/10_actes/`).
-2. Revisa l'ESTAT (`.agents/ESTAT.md`) i el Registre Històric de Sessions.
-3. Calcula l'interval entre la primera evidència datada del dia (acta, ESTAT o rebut) i ara, i anota'l com a **temps observat**, no com a jornada certa: sense registre de pauses ni de descans, el temps continu és desconegut.
-4. No li preguntes l'hora d'inici si les evidències la donen; si falta i l'encàrrec la necessita, pregunta-la una vegada.
+## Cobertura
 
-## 3. Mètriques de Qualitat i Estat Cognitiu
-El "Carboni" (Mestre) i el "Silici" (IA) treballen junts. Com a IA, has d'avaluar l'estat d'ambdós:
-- **Estat del Silici (IA):** Quantitat d'artefactes generats, hores del nanochat actual, cost de crèdits, % de respostes ineficients (al·lucinacions, errors del hook).
-- **Estat del Carboni (Mestre):** No pressuposes fatiga només per les hores (les hormones humanes com la dopamina o la testosterona emmascaren el cansament). Separa l'avaluació en dos mètriques clares:
-  - *Salut Física*: Símptomes biològics (p. ex., gola seca en els àudios, xiulets, fatiga ocular).
-  - *Qualitat Cognitiva*: No disminueix necessàriament amb les hores si el Mestre té la visió clara. Descriu-la amb fets (quines decisions ha pres i amb quin resultat), mai amb un percentatge, i justifica-la sempre amb un "Motiu (El per què)". Quan tinguen dubtes sobre el seu estat, pregunta directament: "Com estàs hui, Javi?".
-- **Eficiència de l'Equip:** El treball conjunt estalvia tokens. El Mestre aporta intuïció, empatia i visió global (incalculable en tokens); la IA aporta càlcul brut. Quan en dones xifres, separa les mesurades (temps, cost) de les estimades i digues d'on ix cadascuna.
-
-## 4. Tancament de Jornada (No de nanochat)
-Quan el Mestre indique que se'n va a dormir:
-1. Registra a l'Acta Marmota el **temps observat** des de la primera evidència datada del dia (no la jornada certa), no només el d'aquest xat.
-2. Registra el nombre estimat de "nanochats" (peticions/sessions menors).
-3. Suma el cost total i afegeix notes sobre la qualitat cognitiva observada en l'equip.
-4. Deixa a l'acta el relleu per a la **Consola Termodinàmica**; el seu registre de dades no l'escriu esta skill.
+`tooling/wiki/document.mjs` i `tooling/gates/tancament.mjs` comproven estructura i continuïtat documental. No mesuren la jornada humana ni validen estimacions de salut o cost. La telemetria de producte de `src/data/telemetria.js` és una font distinta: no hi atribuïsques dades personals o sessions de xat que no recull.
 
 ## Vincles
+
 - [[00_INDEX_SKILLS]]
+- [[wiki-cicle-de-vida/SKILL]]

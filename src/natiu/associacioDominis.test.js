@@ -31,7 +31,27 @@ test('firebase.json: appAssociation NONE, i cap capçalera ni reescriptura per a
   const regles = [...hosting.rewrites, ...hosting.headers].map((r) => `${r.source ?? ''}${r.regex ?? ''}${r.destination ?? ''}`);
   expect(regles.filter((r) => /assetlinks|apple-app-site-association/.test(r))).toEqual([]);
   // La reescriptura de l'SPA no cobrix /.well-known/: sense fitxer del build, 404 (mai l'index.html).
-  expect(hosting.rewrites.at(-1).source).toBe('!/@(assets|fonts|ap|.well-known)/**');
+  /* O4-CLAUDE-3 · Es comprova pel glob, no per la cadena (la forma exacta de
+     la reescriptura la fixa src/config/firebaseHosting.test.js; O3-GEMINI-1 hi
+     va afegir /opendata/ i /nodeinfo/). Com allí, el «!» inicial s'inverteix ací
+     i les «regex» (RE2 a Firebase) s'avaluen amb RegExp. */
+  const casaGlob = (glob, cami) => {
+    let patro = glob;
+    let negat = false;
+    while (patro.startsWith('!')) { patro = patro.slice(1); negat = !negat; }
+    return path.matchesGlob(cami, patro) !== negat;
+  };
+  const casaRegla = (regla, cami) => (regla.regex ? new RegExp(regla.regex, 'u').test(cami) : casaGlob(regla.source, cami));
+  const spa = hosting.rewrites.at(-1);
+  expect(spa.destination).toBe('/index.html');
+  expect(casaGlob(spa.source, '/xat'), 'la reescriptura de l’SPA continua portant l’app a /index.html').toBe(true);
+  for (const cami of ['/.well-known/assetlinks.json', '/.well-known/apple-app-site-association']) {
+    // Cap reescriptura (ni la de l'SPA ni les de WebFinger) i, de capçaleres, com a molt les generals de tot el lloc
+    // («**» no casa amb un segment que comença per punt al minimatch de superstatic, sense «dot»).
+    expect(hosting.rewrites.filter((r) => casaRegla(r, cami)), cami).toEqual([]);
+    expect(hosting.headers.filter((r) => casaRegla(r, cami)).map((r) => r.source ?? r.regex)
+      .filter((font) => !['**', '!/@(assets|fonts)/**'].includes(font)), cami).toEqual([]);
+  }
 });
 
 test('cap fitxer d’associació estàtic: ni public/.well-known ni apple-app-site-association a public/', () => {

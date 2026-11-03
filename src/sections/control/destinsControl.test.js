@@ -118,24 +118,42 @@ const DATA_261004 = ['01:10', '04/10/26', '2026-10-04T01:10:00+02:00'];
 const dataDe = (id) => (Object.hasOwn(TEXTOS_261004, id) ? DATA_261004 : DATA_2245);
 
 /* El cos de cada pàgina: els H5 i les negretes, en ordre. */
+/* Onada 6 (261103, prompt 261102_1532; ordre del Mestre de les negretes
+   d'escaneig) · Cada paràgraf porta les negretes del contracte de densitat
+   (6–8 si té 40 paraules o més), en sintagmes curts. Només canvia la llista
+   de negretes de cada pàgina; els H5, els paràgrafs i el text, tal com eren. */
 const COS_2245 = {
   mur: [
     ['La plaça major en obert', 'Com publicar pas a pas, sense por', 'Exigència de respecte', 'Contingut persistent'],
     [
       'Mur principal',
       'plaça del poble',
+      'collita',
       'fotografia de la nevada',
       'donar els bons dies',
       'conversa oberta i propera',
+      'connectats cada dia',
+      'cap por',
       '«Publicar al Mur»',
       'estudi d\'escriptura',
-      'afegir fotos des del mòbil',
+      'lletra gran',
+      'afegir fotos',
       'desa l\'esborrany tot sol',
+      'quan ho confirmes',
+      'nom i cognoms',
       'to constructiu i respectuós',
-      'cara a cara a la porta del forn',
-      'l\'arxiu històric i la memòria viva',
+      'baralles tòxiques',
+      'xarxes socials corporatives',
+      'cara a cara',
+      'porta del forn',
+      'fora del mur',
+      'Pensa amb estima',
+      'l\'arxiu històric',
+      'memòria viva',
       'contingut de valor',
-      'històries xicotetes del dia a dia'
+      'receptes de les iaies',
+      'ajuda mútua',
+      'històries xicotetes'
     ]
   ],
   mercat: [
@@ -144,34 +162,55 @@ const COS_2245 = {
       'Mercat del poble',
       'donar una segona vida',
       'intercanviar eines',
-      'fruita i verdura de l\'horta',
+      'fruita i verdura',
       'mobles de segona mà',
+      'economia circular',
       'suport mutu entre veïns',
       'fotografia ben clara',
+      'títol senzill',
+      'quin estat',
       'vens, el canvies o el regales',
       'escriure\'t directament pel Xat',
+      'cap número de targeta',
+      'dada bancària',
+      'no trobaràs passarel·les',
       'cap comissió ni intermediari',
       'tauler d\'anuncis digital',
-      'prenent un café al bar',
-      'a la porta del Mas',
-      'descripcions honestes i tractes justos',
+      'proximitat',
+      'café al bar',
+      'porta del Mas',
+      'donant-vos la mà',
+      'descripcions honestes',
+      'tractes justos',
       'no fa d\'intermediària',
+      'cobraments',
       'trellat',
-      'bona fe de tot el veïnat'
+      'paraula donada',
+      'bona fe'
     ]
   ],
   calendari: [
     ['L\'agenda que ens unix', 'Visibilitat i difusió', 'Convocatòries legítimes'],
     [
+      'festa major',
       'comunitat de regants',
       'calendari comunitari',
-      'lletra clara i fàcil de consultar',
+      'pols del poble',
+      'lletra clara',
+      'ningú',
       'gent gran',
-      'dia, hora i lloc exacte',
-      'pública per a tota la xarxa',
-      'guardar-se la cita al mòbil',
-      'sense dependre dels cartells de paper',
+      'es quede fora',
+      'dia, hora i lloc',
+      'pública',
+      'tota la xarxa',
+      'apuntar-s\'hi',
+      'guardar-se la cita',
+      'sense dependre',
+      'cartells de paper',
+      'T\'agafem la paraula',
+      'informació és real',
       'tens l\'autoritat',
+      'avisaràs si canvia l\'hora',
       'neta d\'anuncis enganyosos',
       'fiar-se de les dates'
     ]
@@ -182,43 +221,78 @@ const COS_2245 = {
     ['Un espai per a situar-nos al territori', 'La privacitat sempre per davant', 'Visibilitat oberta'],
     [
       'mapa de la comarca',
-      'camins, fonts, assuts o llocs d\'interès',
-      'petjada digital sobre el terreny',
+      'camins, fonts, assuts',
+      'llocs d\'interès',
+      'camí tallat',
+      'troballa patrimonial',
+      'punt de trobada',
+      'petjada digital',
+      'informació sensible',
+      't\'ho diu',
       'les conserva dins de la foto',
+      'mapa del patrimoni',
+      'llevar d\'un sol toc',
       '«Conserva la ubicació i la data de la foto»',
-      'es netegen sempre de manera automàtica',
+      'dins del text es netegen sempre',
+      'fixar un punt',
       'visible i geolocalitzable',
-      'prudència i estima per la terra',
+      'altres pàgines connectades',
+      'prudència i estima',
+      'evitant',
+      'domicilis privats',
       'cuidar el nostre terme'
     ]
   ],
   vehicle: [
     ['Moviment eficient i solidari', 'Privacitat en les rutes', 'Sense intermediaris'],
     [
-      'metge, a l\'hospital o a fer encàrrecs',
+      'metge, a l\'hospital',
+      'no té cotxe',
       'oferir els seients buits',
-      'buscar algun veí de confiança',
-      'més companyia, més estalvi i menys fum',
+      'veí de confiança',
+      'més companyia',
+      'més estalvi',
+      'menys fum',
+      'mostrar públicament',
       'rutina de desplaçaments',
-      'poble d\'eixida, el destí i l\'hora aproximada',
-      'punt exacte de recollida per missatge privat',
+      'només el poble d\'eixida',
+      'destí',
+      'hora aproximada',
+      'punt exacte de recollida',
+      'missatge privat',
       'no cobrem cap taxa ni comissió',
+      'Repartir les despeses',
+      'convidar a un café',
       'acord privat',
-      'fer comboi i enfortir els llaços'
+      'fer comboi',
+      'enfortir els llaços'
     ]
   ],
   animalets: [
     ['Una xarxa de rescat i adopció', 'Avisos d\'emergència', 'Compromís amb la fauna'],
     [
       'benestar animal',
-      'un animalet desorientat pel camí',
-      'mobilitzar tota la comunitat ràpidament',
-      'foto clara i l\'últim lloc on s\'ha vist',
+      'ajuda ràpida',
+      'perdut el teu gos',
+      'animalet desorientat',
+      'ventrada en adopció',
+      'punt de trobada',
+      'mobilitzar tota la comunitat',
+      'el temps és or',
+      'crear una alerta',
+      'foto clara',
+      'últim lloc',
+      'de manera immediata',
       'telèfon o contacte',
+      'visible públicament',
       'Xat de Sóc de Poble',
+      'convivència respectuosa',
+      'éssers vius',
       'adopcions responsables',
+      'sense cap ànim de lucre',
+      'cura ètica',
       'respecte als animals',
-      'qualitat humana com a poble'
+      'qualitat humana'
     ]
   ]
 };
@@ -226,11 +300,26 @@ const COS_2245 = {
 const COS_261004 = {
   treball: [
     ['Connectem talent local'],
-    ['feina digna o professionals d\'ofici', 'obrer, electricista, fontaner o cuidadora', 'acord directe entre persones']
+    [
+      'feina digna',
+      'professionals d\'ofici',
+      'campanya agrícola',
+      'obrer, electricista, fontaner o cuidadora',
+      'sense eixir del poble',
+      'sense intermediaris',
+      'acord directe'
+    ]
   ],
   habitatge: [
     ['Obrir portes tancades'],
-    ['cases o pisos tancats', 'lloguer o compra directa al municipi', 'confiança veïnal i sense comissions']
+    [
+      'poble viu',
+      'propietaris',
+      'cases o pisos tancats',
+      'lloguer o compra directa',
+      'confiança veïnal',
+      'sense comissions'
+    ]
   ]
 };
 const COS = { ...COS_2245, ...COS_261004 };

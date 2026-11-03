@@ -55,6 +55,8 @@ export const CATALOG_DETAIL_LOADERS = {
   'formularis/drets-autor': lazyRoute(() => import('./detalls/EspecimenDretsAutor.jsx')),
   /* T52 (ordre del Mestre, 260928) · la botonera de davall del títol i els seus diàlegs. */
   'formularis/classificacio': lazyRoute(() => import('./detalls/EspecimenClassificacio.jsx')),
+  /* O4-CLAUDE-1 (ordre del Mestre, captura 261102_2121) · «On es publica?» en línia, dins de l'«Edició avançada». */
+  'formularis/ambit': lazyRoute(() => import('./detalls/EspecimenBlocAmbit.jsx')),
   'navegacio/pestanyes': lazyRoute(() => import('./detalls/EspecimenPestanyes.jsx')),
   'navegacio/molla': lazyRoute(() => import('./detalls/EspecimenMolla.jsx')),
   'navegacio/paginacio': lazyRoute(() => import('./detalls/EspecimenPaginacio.jsx')),

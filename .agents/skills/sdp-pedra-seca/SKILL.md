@@ -72,7 +72,7 @@ Nosaltres som de poble, som Pedra Seca. El *Glassmorphism*, els degradats comple
 
 ## 6. Accessibilitat i Motor Tàctil
 Sóc de Poble és Mobile/Tablet First tàctil.
-- **Àrea d'interacció matemàtica:** Cap element interactiu o botó baixarà de la variable `--sdp-touch` (44/48px d'altura/amplària clickejable). Mai ho sobreescriguis.
+- **Àrea d'interacció:** el sòl tàctil vigent és `--sdp-touch` (48px), coherent amb `--sdp-touch-min`; l'alçada d'acció és `--sdp-alt-accio` (58px), a `src/css/tokens.css`. Els botons d'àmbit de «On es publica?» exigixen 58px segons el contracte O4. Reutilitza el token corresponent: el mínim genèric de 48px no rebaixa un contracte específic de 58px.
 
 ## 7. Model d'Enxufabilitat Universal (Sense Deute Tècnic)
 - Tot component s'ha de dissenyar com un *plugin* que hereta els seus colors de les 3 capes esmentades dalt.
@@ -90,7 +90,7 @@ L'equivalent a l'Spec-driven per al disseny:
 - La pastilla de data és sempre present i plena. Lectura: data de creació o de l'última versió si és posterior. Edició: la data triada al calendari o, si no n'hi ha, la d'ara. Mai la data de l'última edició, mai guionets. Una font de només dia es pinta sense hora.
 - L'espai central és l'emoticona del document: en edició, sempre un botó (ploma blanca si no n'hi ha cap); en lectura o targeta, buit si no s'ha triat.
 - La ploma només vol dir «tria una emoticona». L'autodesament fa servir el núvol (`CloudUpload`).
-- **Selector d'Emojis (`PaginaEmojis` — Prohibit `<Dialeg>` Flotant):** En prémer el botó de l'emoticona o la ploma a la Barra Taronja, s'obri sempre la subvista integrada a columna completa **`PaginaEmojis`** (`src/components/universal/classificacio/PaginaEmojis.jsx` i `GraellaEmojis.jsx`) amb un botó prominent **«Tornar»** (mínim `44px` de diana tàctil) i graella categoritzada Unicode 18. Està terminantment prohibit obrir un `<Dialeg>` flotant per a triar emoticones.
+- **Selector d'Emojis (`PaginaEmojis` — Prohibit `<Dialeg>` Flotant):** En prémer el botó de l'emoticona o la ploma a la Barra Taronja, s'obri sempre la subvista integrada a columna completa **`PaginaEmojis`** (`src/components/universal/classificacio/PaginaEmojis.jsx` i `GraellaEmojis.jsx`) amb un botó prominent **«Tornar»** (com a mínim `--sdp-touch` de diana tàctil) i graella categoritzada Unicode 18. Està terminantment prohibit obrir un `<Dialeg>` flotant per a triar emoticones.
 - Totes les icones de la barra són blanques dins del cercle de vel fosc.
 - El component pare és `src/components/universal/barres/BarraTaronja.jsx`; PageFrame i els espècimens el munten.
 
@@ -102,13 +102,17 @@ L'equivalent a l'Spec-driven per al disseny:
 
 - En mòbil, els menús emergents i calaixos de navegació s'adapten al contingut i tenen un màxim de 300px d'amplària. Han de deixar visible espai tàctil de la vista anterior perquè es puga tancar el menú tocant fora.
 - Les etiquetes llargues usen `text-overflow: ellipsis`; el nom complet continua disponible com a nom accessible de l'acció. El truncament visual no elimina la identificació per a lectors de pantalla.
-- Este límit s'aplica a menús i calaixos. Una pantalla completa de treball, com l'editor, el visor o `PaginaEmojis`, és legítima quan conserva una eixida o tornada arrere («Tornar» >= `44px`) visible i accessible; no és una prohibició general d'ocupar el 100% de la columna.
+- Este límit s'aplica a menús i calaixos. Una pantalla completa de treball, com l'editor, el visor o `PaginaEmojis`, és legítima quan conserva una eixida o tornada arrere («Tornar» amb diana com a mínim `--sdp-touch`) visible i accessible; no és una prohibició general d'ocupar el 100% de la columna.
 
 ## 13. Llei de la Barra Negra Immutable i Safe-Area Natiu (Mobile First)
 
 - **Supremacia i Immutabilitat:** La Barra Negra (`header.bar-black`) és la capçalera suprema de la plataforma i conté la identitat de Sóc de Poble, l'accés d'usuari, la IAIA MarIA i les eines universals. **Està absolutament prohibit ocultar-la** (`display: none` prohibit) o fer que s'esvaïsca en fer scroll. És permanentment sticky/fixa a la part superior de la pantalla.
 - **Topologia Natiu i Dynamic Island:** Ha de respectar estrictament el `safe-area-inset-top` d'iOS i Android mitjançant `padding-top: env(safe-area-inset-top, 0px)` i alçada calculada `calc(var(--sdp-alt-negra) + env(safe-area-inset-top, 0px))` amb `box-sizing: border-box`. Els controls (logo, icones) mai xoquen ni queden ocults darrere de la Dynamic Island o la barra d'estat nativa.
 - **Jerarquia Vertical:** Totes les subcapçaleres de secció (com la barra de `Converses`, taulers o filtres) se situen necessàriament per davall de la Barra Negra de Sóc de Poble, mai per damunt ni al seu mateix nivell visual.
+
+## Cobertura mecànica i visual
+
+`node tooling/gates/design_guard.mjs` i `node tooling/gates/tractor-tokens.mjs` comproven patrons i tokens segons el seu abast. Les suites de capes i de components contrasten contractes concrets; no certifiquen per si soles la mida renderitzada, el contrast, el focus ni la safe-area en cada mòbil. Revisa també el flux afectat amb teclat i vista mòbil. Els literals d'exemple d'esta skill no autoritzen afegir valors fixos als components.
 
 ## Lliçons del Mestre
 

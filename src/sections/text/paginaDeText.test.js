@@ -192,8 +192,17 @@ describe('261007 · /page/drets-autor és «Drets d’autor»', () => {
     expect(targeta.firstElementChild.outerHTML).toBe('<a href="/legal" rel="noopener noreferrer nofollow">Legal i privacitat</a>');
     grup.remove();
     // Fora de la targeta, només etiquetes de prosa i l'enllaç de /legal.
+    /* Onada 6 (prompt 261102_1532, ordre del Mestre) · Les llistes d'«Etiqueta:
+       explicació» passen a H4 (o H5 dins d'un apartat H4) + paràgraf: l'H5 entra a
+       la prosa, però mai sense el seu H4 (cap salt de nivell), amb text i sense
+       punt final ni etiquetes dins. */
     const etiquetes = new Set([...cos.querySelectorAll('*')].map((element) => element.localName));
-    expect([...etiquetes].filter((e) => !['h3', 'h4', 'p', 'ul', 'li', 'strong', 'code', 'a'].includes(e))).toEqual([]);
+    expect([...etiquetes].filter((e) => !['h3', 'h4', 'h5', 'p', 'ul', 'li', 'strong', 'code', 'a'].includes(e))).toEqual([]);
+    const capcaleres = [...cos.querySelectorAll('h3, h4, h5')];
+    capcaleres.forEach((h, i) => {
+      if (i > 0) expect(Number(h.tagName[1]), `salt de nivell a «${h.textContent}»`).toBeLessThanOrEqual(Number(capcaleres[i - 1].tagName[1]) + 1);
+      expect([h.children.length, h.textContent.trim().endsWith('.'), h.textContent.trim().length > 0], h.textContent).toEqual([0, false, true]);
+    });
     expect([...cos.querySelectorAll('a')].map(atributs)).toEqual([{ href: '/legal' }]);
   });
 
@@ -227,7 +236,9 @@ describe('261007 · /page/drets-autor és «Drets d’autor»', () => {
      tornar a escriure. */
   test('Onada 8 · la Viquipèdia i Wikimedia Commons: el que diu la pàgina és el que fa el codi', () => {
     const viqui = textDe(html.slice(html.indexOf('<h3>La Viquipèdia'), html.indexOf('<h3>Per què triar')));
-    expect(viqui).toContain('es publica amb CC BY-SA 4.0');
+    // Onada 6 · «El text de la Viquipèdia» és un H4 i el seu paràgraf comença en majúscula.
+    expect(html).toContain('<h4>El text de la Viquipèdia</h4>');
+    expect(viqui).toContain('El text de la Viquipèdia Es publica amb CC BY-SA 4.0');
     expect(viqui).toContain(`«${COPYRIGHT_VIQUIPEDIA}»`);
     expect(viqui).toContain('«Publicat a la Viquipèdia»');
     expect(viqui).toContain(`«${DRETS_TEXT}»`);
@@ -259,7 +270,8 @@ describe('261007 · /page/drets-autor és «Drets d’autor»', () => {
     const viqui = textDe(html.slice(html.indexOf('<h3>La Viquipèdia'), html.indexOf('<h3>Per què triar')));
     const recte = (text) => text.replace(/’/g, "'");
     expect(viqui).not.toContain('Hui encara no està fet del tot');
-    expect(viqui).toContain('Què fa hui i què encara no:');
+    // Onada 6 · L'etiqueta en negreta del paràgraf ara és l'H4 de l'apartat, dins de la secció de la Viquipèdia.
+    expect(html.slice(html.indexOf('<h3>La Viquipèdia'), html.indexOf('<h3>Per què triar'))).toContain('<h5>Què fa hui i què encara no</h5>');
     expect(viqui).toContain(`el botó «${recte(TEXTOS_VIQUIPEDIA.porta[1])}»`);
     expect(viqui).toContain(`«${recte(TEXTOS_VIQUIPEDIA.creditsTitol[1])}»`);
     expect(viqui).toContain('passats 30 dies, t\'oferix tornar-les a portar');
@@ -279,15 +291,24 @@ describe('261007 · /page/drets-autor és «Drets d’autor»', () => {
   });
 
   test('les eixides privades: «Copyright (C)», tots els drets reservats, i el domini públic CC0', () => {
-    const privades = textDe(html.slice(html.indexOf('<h3>Per què triar'), html.indexOf('<h3>Les llicències')));
-    expect(privades).toContain('«Copyright (C)», tots els drets reservats:');
-    expect(privades).toContain('El domini públic, CC0:');
+    const seccio = html.slice(html.indexOf('<h3>Per què triar'), html.indexOf('<h3>Les llicències'));
+    const privades = textDe(seccio);
+    // Onada 6 · Cada eixida és un H4 seguit del seu paràgraf, en este ordre i cap més.
+    expect([...seccio.matchAll(/<h4>([^<]*)<\/h4>/g)].map(([, titol]) => titol)).toEqual(['«Copyright (C)», tots els drets reservats', 'El domini públic, CC0']);
+    expect(privades).toContain('«Copyright (C)», tots els drets reservats Quan no vols que ningú copie, canvie ni venga la teua obra sense demanar-te permís.');
+    expect(privades).toContain('El domini públic, CC0 Just al contrari.');
     expect(privades).toContain('renúncia irrevocable');
   });
 
   test('la llista de l’editor és el catàleg de llicencies.js: mateix ordre, mateixos noms i explicacions, cap invent', () => {
     const llista = html.slice(html.indexOf("<h3>Les llicències que pots triar a l'editor</h3>"));
-    const elements = [...llista.matchAll(/<li><strong>([^<]*):<\/strong> ([^<]*)<\/li>/g)].map(([, nom, explicacio]) => [nom, explicacio]);
+    /* Onada 6 · Cada llicència és un H5 (dins del seu H4 de grup) seguit d'un
+       paràgraf: el nom, literal, és l'H5; l'explicació, literal, és el text del
+       paràgraf (les negretes d'escaneig no en canvien cap lletra). Cap llista
+       queda a l'apartat. */
+    expect(llista).not.toMatch(/<li\b/);
+    const elements = [...llista.matchAll(/<h5>([^<]*)<\/h5>\s*<p>((?:(?!<\/p>)[\s\S])*)<\/p>/g)].map(([, nom, explicacio]) => [nom, textDe(explicacio)]);
+    expect(elements).toHaveLength((llista.match(/<h5>/g) || []).length);
     // El catàleg escriu l'apòstrof tipogràfic; PAGE_COPY, el recte.
     const recte = (text) => text.replace(/’/g, "'");
     expect(elements).toEqual(LLICENCIES.map((l) => [l.codi ? `${l.codi} · ${l.nom}` : l.nom, recte(l.explicacio)]));

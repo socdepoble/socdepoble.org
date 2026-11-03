@@ -22,6 +22,7 @@ import { extensionsRiques } from './richText/extensions';
    fàbriques tancades no les veuen. */
 import { DialegTriaTargeta } from './richText/extensions/targetes/DialegTriaTargeta.jsx';
 import { NOM_EXTENSIO_TARGETES, TargetesIncrustadesContext } from './richText/extensions/targetes/TargetesIncrustadesContext.js';
+import { NOM_SUBTARGETA } from './richText/extensions/subtargeta.js';
 import { attrsDeEntrada } from './richText/extensions/targetes/formaDelGrup.js';
 /* Correcció de la revisió (261016) · També pel seu camí: la plantilla verge
    s'esvaeix abans de qualsevol ordre que arriba de fora del cos. */
@@ -465,6 +466,24 @@ export function DocumentEditor({ adapter, onToast }) {
      un `t` nou a cada pintat, que reconstruiria TipTap a cada tecla). */
   const firmaGuia = guiaCos ? JSON.stringify(traduixGuia(guiaCos, t)) : null;
   const guiaDelCos = useMemo(() => (firmaGuia ? JSON.parse(firmaGuia) : null), [firmaGuia]);
+  /* O4-CLAUDE-2 (ordre del Mestre, 261102 21:38) · Els textos de mostra de la
+     subtargeta (el botó de la segona fila i l'ordre «/»), pel traductor. La
+     memòria va per la firma del text ja traduït (només canvia amb l'idioma)
+     i arriben a l'extensió pel seu magatzem (l'efecte de davall de
+     l'editor): les extensions no canvien i TipTap no es reconstruïx. */
+  const firmaSubtargeta = JSON.stringify([
+    t('section.notes.format.subtargetaTitol', 'Títol de la subtargeta'),
+    t('section.notes.format.subtargetaMeta', 'Una línia de context: data, lloc o autoria'),
+    t('section.notes.format.subtargetaCos', 'Escriu ací el contingut de la subtargeta: paràgrafs, llistes i enllaços.'),
+    /* C2-07 (àrbitre) · El títol i l'ajuda de l'ordre «/» Subtargeta, que el
+       menú llig del mateix magatzem en pintar-se. */
+    t('section.notes.format.subtargeta', 'Subtargeta'),
+    t('section.notes.format.subtargetaAjuda', 'Una targeta dins del text: títol, context i cos'),
+  ]);
+  const [textosSubtargeta, ordreSubtargeta] = useMemo(() => {
+    const [titol, meta, cos, titolOrdre, ajuda] = JSON.parse(firmaSubtargeta);
+    return [{ titol, meta, cos }, { titol: titolOrdre, ajuda }];
+  }, [firmaSubtargeta]);
   const extensions = useMemo(
     () => extensionsRiques({
       onImageUpload: uploadMedia, ambTargetes, onToast: avisaDelCos,
@@ -517,6 +536,20 @@ export function DocumentEditor({ adapter, onToast }) {
   });
 
   const { state, exec } = useTipTapToolbarAdapter(editor);
+
+  /* O4-CLAUDE-2 · Els textos de mostra traduïts, al magatzem de la subtargeta
+     (subtargeta.js): els llig l'ordre en inserir, i se'n van amb l'editor. I
+     el títol i l'ajuda de l'ordre «/», que el menú llig en pintar-se (C2-07). */
+  useEffect(() => {
+    const magatzem = editor && !editor.isDestroyed ? editor.storage?.[NOM_SUBTARGETA] : null;
+    if (!magatzem) return undefined;
+    magatzem.textos = textosSubtargeta;
+    magatzem.ordre = ordreSubtargeta;
+    return () => {
+      if (magatzem.textos === textosSubtargeta) magatzem.textos = null;
+      if (magatzem.ordre === ordreSubtargeta) magatzem.ordre = null;
+    };
+  }, [editor, textosSubtargeta, ordreSubtargeta]);
 
   /* T41 (ordre del Mestre, 260928) · PUBLICAR i la bola del món ja no canvien
      res en silenci: obrin el selector de visibilitat. L'estat guarda l'id del
@@ -615,6 +648,13 @@ export function DocumentEditor({ adapter, onToast }) {
     if (!magatzem) return undefined;
     const obre = () => setSelectorTargetaObert(true);
     magatzem.obreSelector = obre;
+    /* O4-CLAUDE-2 · La barra pinta ara «Targeta incrustada» (segona fila)
+       quan el motor en pot fer l'ordre, i això depén d'este selector. Una
+       transacció buida, sense historial ni desat, li fa tornar a llegir
+       l'estat ara (sense, el botó no eixia fins al primer focus del cos). */
+    try {
+      editor.view.dispatch(editor.state.tr.setMeta('addToHistory', false).setMeta('preventUpdate', true));
+    } catch { /* sense vista muntada: el primer focus ja la rellegirà */ }
     return () => {
       if (magatzem.obreSelector === obre) magatzem.obreSelector = null;
     };

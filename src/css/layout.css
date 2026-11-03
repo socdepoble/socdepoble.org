@@ -38,7 +38,14 @@
     flex-direction: column-reverse; padding-bottom: calc(var(--sdp-space-4) + env(safe-area-inset-bottom, 0px));
   }
   :host .sdp-root[data-sdp-estret] > .sdp-capa-modal .sdp-dialeg__peu .sdp-boto { width: 100%; }
-  :host .sdp-capa-modal--calaix { padding: 0; }
+  /* O4-CLAUDE-1b · B1b-03 · Com a la SPA (B1b-02): la capa cobrix tota la
+     caixa de l'App, transparent damunt de la barra negra i amb el vel de
+     sempre davall d'ella, on comença el calaix. modalLocal.js fa inert la
+     barra; un toc damunt d'ella cau a la capa i tanca amb 'vel'. */
+  :host .sdp-capa-modal--calaix {
+    padding: var(--sdp-calaix-dalt) 0 0;
+    background: linear-gradient(to bottom, transparent var(--sdp-calaix-dalt), var(--sdp-fons-vel) var(--sdp-calaix-dalt));
+  }
   :host .sdp-capa-modal > .sdp-dialeg--calaix { width: min(88%, 24rem); height: 100%; border-radius: 0; }
   :host .sdp-capa-modal > .sdp-dialeg--esquerra { margin-inline-end: auto; }
   :host .sdp-capa-modal > .sdp-dialeg--dreta { margin-inline-start: auto; }
@@ -60,7 +67,7 @@
      Ordre del Mestre (261026_2126, pla 261026_1615 §5) · Com a la SPA, naix
      davall de la barra negra de l'App, que és dalt de tot de la caixa: el
      mateix calc que la seua alçada. */
-  :host .toc-overlay { inset: calc(var(--sdp-alt-negra) + env(safe-area-inset-top, 0px)) 0 0; width: auto; height: auto; }
+  :host .toc-overlay { inset: var(--sdp-calaix-dalt) 0 0; width: auto; height: auto; }
 }
 
 @layer legacy {
@@ -753,6 +760,11 @@ nav.mobile-nav { display: none; }
      (modules.css) llevava el marge dret i el logotip tocava la vora. El marge
      de la regla de dalt torna a valdre també a la dreta. */
   :where(.sdp-root.is-compact) .brand.sdp-unstyled-btn { padding-inline-end: var(--sdp-space-4); }
+  /* O4-CLAUDE-1b · B1b-01 · El calaix del menú compacte ja naix davall de la
+     barra negra i de la zona segura (--sdp-calaix-dalt, components.css): la
+     seua marca no torna a sumar la zona segura de dalt. L'!important, com el
+     de .brand, i més específic per a guanyar-li dins de la mateixa capa. */
+  :where(.sdp-root.is-compact) .sdp-dialeg-sidebar .brand { height: var(--sdp-alt-negra); padding-top: 0 !important; }
 
 /* ══ TAULETA XICOTETA I MÒBIL · ≤720px ════════════════════════ */
 @container sdp-arrel (max-width: 720px) {

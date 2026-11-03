@@ -4,10 +4,10 @@
  *  Què protegix: que ningú modifique les regles d'amagat. Per tant el hash ha de
  *  cobrir les REGLES, no el que el sistema operatiu deixa caure dins de la
  *  carpeta. Un `.DS_Store` que el Finder escriu en obrir `.agents/skills/` no és
- *  una regla, i fins al 260923 trencava el segell i emmudia les 45 portes que
+ *  una regla, i fins al 260923 trencava el segell i emmudia les portes que
  *  venen darrere.
  *
- *  Superfície segellada: `.agents/skills/**\/*.md` (les 16 SKILL.md i
+ *  Superfície segellada: `.agents/skills/**\/*.md` (tots els SKILL.md i
  *  00_INDEX_SKILLS.md). Qualsevol altra extensió queda fora del hash i es
  *  reporta com a ignorada perquè l'exclusió siga visible, no silenciosa.
  *
@@ -16,7 +16,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import crypto from 'node:crypto';
-import { pathToFileURL } from 'node:url';
+import { esMain } from '../lib/arrel.mjs';
 
 const SEGELLABLE = /\.md$/i;
 
@@ -156,6 +156,6 @@ function main() {
 // fixture de proves a os.tmpdir()) no coincidixen, el mòdul es carrega en
 // silenci i la porta ix 0 sense comprovar res. Resoldre el symlink és el que
 // fa que la guarda parle sempre.
-if (process.argv[1] && import.meta.url === pathToFileURL(fs.realpathSync(process.argv[1])).href) {
+if (esMain(import.meta.url)) {
   try { main(); } catch(e) { console.error(e.message); process.exitCode=1; }
 }

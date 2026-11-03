@@ -17,15 +17,15 @@ Esta guia és consultiva i de només lectura. Els resultats els calcula el codi 
 | Camp | Valor |
 | --- | --- |
 | Identificador | sdp:torn_d19293b9-1bb0-4073-8218-3da898ce7533:49aa031e-79c2-4d1d-b966-f5feed2d84ad |
-| Versió del document | 1.5.0 |
+| Versió del document | 1.8.0 |
 | Entorn | entorn-dev-local |
 | Creació | 2026-11-02T15:44:12.894Z |
-| Modificació | 2026-11-02T20:00:00.000Z |
-| Propietari | Claude Fable 5.1 (relleus 1-5) · Claude Opus 5.5 (relleu 6) |
-| Aprovació humana | Ordre del Mestre al xat del 261102 (delegació autònoma, requires_human_decision: false); relleu 6: ordre del Mestre al xat de Claude del 261102 ~19:50 CET (Teler Invertit, Onada 3, regla estricta d'estalvi de quota) |
+| Modificació | 2026-11-03T04:55:00+01:00 |
+| Propietari | Claude Fable 5.1 (relleus 1-5) · Claude Opus 5.5 (relleus 6-10) |
+| Aprovació humana | Ordre del Mestre al xat del 261102 (delegació autònoma, requires_human_decision: false); relleu 6: ordre del Mestre al xat de Claude del 261102 ~19:50 CET (Teler Invertit, Onada 3, regla estricta d'estalvi de quota); relleu 8: ordre del Mestre al xat del 261102 21:38 (Onada 4, eixam complet); relleu 9: ordre del Mestre al xat del 261103 00:4x (Onada 5, carril 1); relleu 10: ordre del Mestre al xat del 261103 ~03:05 (Onada 6, carril 1: T1/O6-CLAUDE-1 i T2/O6-CLAUDE-2) |
 | Plantilla | _wiki_de_poble/02_saber/protocols_tecnics/auditoria_canonica.md (v2.0.0) |
-| Model IA | Relleus 1-5: Claude Fable 5.1 (claude-fable-5-1) · Claude Code amb Ultracode i eixam de subagents. Relleu 6: Claude Opus 5.5 (claude-opus-5-5) · Claude Code amb Ultracode, compte «Sóc de Poble · Ultra», Àrbitre Gauntlet i Materialitzador amb 1 sol subagent àrbitre de només lectura |
-| Tokens consumits | No exposats per l'arnés de Claude Code dins de la sessió; el reconeixement (8 lectors) ha consumit 2.600.505 tòkens de subagents segons el registre del workflow. Relleu 6: un sol subagent àrbitre, 189.417 tòkens (registre de l'arnés), cap workflow ni eixam |
+| Model IA | Relleus 1-5: Claude Fable 5.1 (claude-fable-5-1) · Claude Code amb Ultracode i eixam de subagents. Relleu 6: Claude Opus 5.5 (claude-opus-5-5) · Claude Code amb Ultracode, compte «Sóc de Poble · Ultra», Àrbitre Gauntlet i Materialitzador amb 1 sol subagent àrbitre de només lectura. Relleus 8-9: Claude Opus 5.5 (claude-opus-5-5) · Ultracode amb eixam complet (workflows `o4-eixam-construccio`, `o4-destrossa-ho-tot`, `o4-fusio-kit-gemini` i `o5-captures-app-store`). Relleu 10: Claude Opus 5.5 (claude-opus-5-5) · Ultracode, workflows `o6-eixam-editorial` (17 agents) i `o6-destrossa-ho-tot` (10 agents) |
+| Tokens consumits | No exposats per l'arnés de Claude Code dins de la sessió; el reconeixement (8 lectors) ha consumit 2.600.505 tòkens de subagents segons el registre del workflow. Relleu 6: un sol subagent àrbitre, 189.417 tòkens (registre de l'arnés), cap workflow ni eixam. Relleus 8-9 (registre dels workflows): 3.529.467 + 2.636.815 + 585.648 + 265.837 tòkens de subagents. Relleu 10 (registre dels workflows): 3.331.057 + 1.489.257 tòkens de subagents |
 
 <!-- SDP:SECTION auditoria.s2 -->
 ## Acte reflex
@@ -48,6 +48,61 @@ Plantilla entregada: _wiki_de_poble/02_saber/protocols_tecnics/auditoria_canonic
   - `_headers` i `_redirects` viatjaven al connector WordPress i a l'app nativa. Ara són a `PROPIS_DEL_LLOC`.
   
   Proves i portes en verd.
+- **2026-11-02 22:1x CET · relleu 8 (Onada 4 Nocturna, tancat a les 00:40: T-10).** Prompt `261102_2138` (amb `O4-CLAUDE-1b` afegit per MarIA) i Bloc T4 del pla `261102_1532`, llegits sencers. Ordre del Mestre al xat: s'alça la restricció d'Onada 3 i torna l'eixam complet. El reconeixement l'han fet 2 lectors en un workflow: mapes de l'Edició avançada i de les sub-targetes, pàgines i editor. Ha destapat premisses falses del prompt:
+  - **`/page/privadesa` i `/page/manifest` no existixen:** la privacitat és una secció de `/legal`, i el manifest de la IAIA és `/anima`.
+  - **`/legal` no té sub-targetes desplegables:** té una sola targeta incrustada, `data-sdp-targetes`, que apunta a Drets d'autor. Ho he comprovat al :3340.
+  - **El sanejador elimina `<details>`, `<summary>` i `<section>`.**
+  - **`src/locales/*.json` no existix:** els diccionaris són a `src/config/idiomes/*.js`.
+  - **`UniversalEditor.jsx` no existix:** l'editor és `UniversalEditorShell` + `richText/`.
+  - **No hi ha cap `FormularisFitxa`:** el formulari és `CampDeFitxa`, dins de `DialegAmbit`.
+  - **`/opendata/mercat.jsonld` i `llocs.geojson` no existixen.**
+
+  Línia base de la suite sencera (21:45): Vitest 31.284 en verd i 6 roges en 3 fitxers; `node --test` 2.104 de 2.109, amb 2 roges a `mapa-consola`; `certifica-enllacos` 31/31; `fronteres-skills` 0 violacions; `design_guard` PASSA; Olivera 0. Quatre de les roges de Vitest són de `firebase.json`, del kit d'opendata d'Onada 3: se'm van escapar en certificar-lo al relleu 7 perquè no vaig passar `src/config/firebaseHosting.test.js` ni `src/natiu/associacioDominis.test.js`. Les altres dues són `iaiaRebostRural`, per la retirada de les verticals de la barra lateral.
+
+  Eixam en marxa (workflow `o4-eixam-construccio`): 4 carrils amb propietat exclusiva de fitxers, cadascun amb Constructor, Àrbitre Adversarial, Corrector i Verificador:
+  - **A:** «On es publica?» integrat dins d'«Edició avançada».
+  - **B:** calaixos davall de la barra negra (IDEA-63).
+  - **C:** sub-targetes a pàgines i editor, i enllaços d'opendata.
+  - **D:** línia base en verd.
+
+  Els kits d'Onada 4 de Codex i Gemini encara no són al dipòsit.
+
+  **Progrés 23:30 (canal viu).**
+  - **Eixam acabat.** 16 agents, cap error, 4 carrils aprovats amb correccions. Carrils A, B i D: verificador en verd. Carril C: codi en verd, però la frontissa roja, perquè el classificador de permisos va denegar l'aprovació al subagent.
+  - **Una premissa falsa corregida.** Les dues roges d'`iaiaRebostRural` no venien de la barra lateral: les causava l'entrada `atles:treball` → `/treball` de cc3e443dc (IDEA-61). Ja eren roges a HEAD.
+  - **Frontissa (fil principal).** He revisat el diff: `projecte` i `descarregues` tenen el text idèntic i només guanyen l'embolcall; `fediversity` guanya una frase i 6 enllaços `/opendata/*`. Aprovada amb la CLI per l'ordre de la línia 146 del prompt, sense `--accepta-retall`. Ara és 16/16.
+  - **Kit Codex O4.** Les 70 rutes casaven per CAS i cap no es creua amb els carrils. Calia rebase de la precondició `.agents/contingut_estructural.json`, que l'aprovació acabava de canviar. El diff del registre només toca les 3 claus aprovades. L'he aplicat amb `kit-carril.mjs` des d'una còpia rebasada al scratchpad: 70/70 i frontissa 16/16.
+  - **Avís per al Mestre.** El kit reescriu lliçons de «## Lliçons del Mestre» (per exemple a `sdp-workflow` 260923 i 261007, i a `wiki-documentacio` 261002) i n'afebleix el sentit. No ho he desfet: es llista a Límits com a decisió vostra.
+  - **Peticions fora de carril, fetes.**
+    - B1b-01: la marca del menú compacte ja no suma la zona segura.
+    - B1b-03: la capa del calaix encastat és transparent damunt de la barra.
+    - B1b-05: `:host .toc-overlay` i `.sdp-ptr-indicator` passen al token `--sdp-calaix-dalt`.
+    - A1-05: fora les claus mortes `editor.ambit.desar` i `editor.ambit.cancelar` dels 5 diccionaris.
+    - Les dues proves `[DEFECTE]` passen a proves normals, i 83 fitxers i 1.853 proves queden en verd.
+  - **Navegador (:3340).**
+    - L'Índex i el menú compacte naixen a `top: 64`, davall de la barra.
+    - La subtargeta pinta amb vora, radi i coixí de tokens, i sense marge final.
+    - L'espècimen real de `BlocAmbit` pinta les 5 targetes i la fitxa amb errors en línia.
+    - Sense sessió, `/notes?ambit=` no prepara cap nota (`calEntrar`, comportament previ).
+  - **En marxa a les 23:30, acabats a les 00:40 (T-10).** La suite sencera (Vitest + `node --test`) i el Gauntlet «Destrossa-ho tot», 6 dimensions amb refutador i correctors de fitxers disjunts.
+- **2026-11-03 01:2x CET · relleu 9 (Onada 5 Nocturna, carril 1: O5-CLAUDE-1 i O5-CLAUDE-2, T-11 i T-12).**
+  - **Llegits sencers:** el Bloc T5 del pla `261102_1532` i el prompt `261102_1532_prompt_onada5_reconciliacio_botigues_i_tancament_10_de_10.md`.
+  - **Fet a l'arbre viu, sense commit:** `pageContent.js` reconciliat; frontissa 16/16 sense reaprovar; `TargetaDeLectura` protegida; `certifica-enllacos.mjs` fusionat; kit R2 aplicat; lliçons de 2 skills restaurades i segell reconciliat; IDEA-63..66 al Llibre Mestre.
+  - **Captures:** les 6 d'App Store, a `_builds_de_poble/apple_app_store_fitxa/`.
+  - **Proves i portes:**
+    - Vitest sencer: 31.458 en verd i 0 roges;
+    - `node --test`: 2.163 de 2.166 i 0 fallades;
+    - `npm run build`: exit 0;
+    - frontissa, certifica-enllacos, fronteres-skills, design_guard, segell, RLS i Olivera: exit 0.
+  - **`tancament --check`:** bloquejat només per la zona humana, 97 captures del Mestre a `01_produccio/`.
+- **2026-11-03 04:55 CET · relleu 10 (Onada 6, carril 1: O6-CLAUDE-1 i O6-CLAUDE-2, T-13).**
+  - **Llegits sencers:** el prompt `261102_1532_prompt_onada6_disseny_editorial_negrites_versions_1_1_0_i_tancament.md` i el Bloc T6 del pla `261102_1532`.
+  - **Fet:** salt a v1.1.0 a `package.json`, `android/app/build.gradle` (`versionName`; `versionCode 2` no canvia), els 4 `MARKETING_VERSION` d'iOS i `versio.test.js` (35 fitxers i 428 proves en verd).
+  - **Dos fets que contradiuen el prompt, comprovats a les 03:1x:**
+    - WordPress.org encara servix la 1.1.10: a l'SVN només hi ha l'etiqueta `1.1.10` i la `Stable tag` és 1.1.10. Per això la capçalera de `/versions` diu «Connector WordPress v1.1.10 a WordPress.org» i no la 1.1.11 que demanava el prompt.
+    - L'APK 1.0.0+2 és compilat a `_builds_de_poble/android/`, però el canal `apk-directe` continua tancat i `socdepoble.org/descarregues/…apk` torna la closca de l'app.
+  - **Fet a l'arbre viu, sense commit:** l'eixam `o6-eixam-editorial` (6 grups), el Gauntlet transversal `o6-destrossa-ho-tot` (36 troballes confirmades), el kit legal 2.4 de Codex integrat per CAS i la frontissa a 16/16. Detall a T-13; proves a Verificació; decisions O6-D1..D8 a Límits.
+  - **Com ha treballat l'eixam:** cada grup ha tingut un constructor, un àrbitre adversarial i, si calia, un corrector. Han escrit `pageContent.js` només a través d'un `splice` amb pany, i un verificador determinista ha comprovat que el text queda byte a byte i que la densitat de negretes per paràgraf és la del contracte.
 
 <!-- SDP:SECTION auditoria.s4 -->
 ## Troballes
@@ -181,6 +236,203 @@ Arquitectura (decisió de l'orquestradora, relleu 2): **una sola fila** a `secti
 - **Pendent:** les 3 proves que llegixen l'eixida real de `dist-natiu/` s'ometen elles soles fins a la pròxima compilació nativa («dist-natiu/ és anterior a public/_headers»).
 - **Sense canvi:** en el build web continuen eixint (`/_headers` i `/_redirects` es servixen com a fitxers a Firebase). No fan mal; si el Mestre ho vol, són dues entrades a `hosting.ignore` de `firebase.json`.
 
+### T-10 · Onada 4 · Eixam de construcció, kits i Gauntlet «Destrossa-ho tot» (relleu 8, 261102 21:38 – 261103 00:40)
+
+**Eixam de construcció** (workflow `o4-eixam-construccio`, 16 agents, cap error). Cada carril ha tingut constructor, àrbitre adversarial, corrector i verificador, amb propietat exclusiva dels seus fitxers.
+
+| Carril | Lliurament | Veredicte |
+| :--- | :--- | :--- |
+| A · O4-CLAUDE-1 | `ambits/BlocAmbit.jsx` i `carpetaAmbit.js`: «On es publica?» en línia dins d'«Edició avançada», amb l'ordre capçalera > logotip > àmbit > classificació; `DialegAmbit.jsx` retirat. `?ambit=` obri el `details` amb l'àmbit triat i la carpeta sincronitzada. Espècimen a `/disseny`. | Verd, amb 6 correccions de l'àrbitre aplicades (A1-01..06) |
+| B · O4-CLAUDE-1b (IDEA-63 del pla) | Tokens `--sdp-calaix-dalt` i `--sdp-calaix-alt` (`tokens.css`), compartits per `.toc-overlay` i tots els `.sdp-dialeg--calaix`: Índex, «Amb qui actues?», Crom del sistema i menú compacte. | Verd |
+| C · O4-CLAUDE-2 | Primitiva `.sdp-subtargeta` (node TipTap `subtargeta.js`, botó de barra i ordre «/»), aplicada a `projecte`, `descarregues` i `fediversity`, més 6 enllaços relatius d'`/opendata/*`. | Verd; la frontissa l'he aprovada jo (vegeu baix) |
+| D · línia base | `firebase.json` (només l'ordre de les regles); proves de `firebaseHosting`, `associacioDominis`, `iaiaRebostRural` i `mapa-consola`. | Verd |
+
+**Fil principal.**
+- **Frontissa:** l'he aprovada amb la CLI, per l'ordre de la línia 146 del prompt, després de comprovar el diff de text. `projecte` i `descarregues` han guanyat només l'embolcall, i `fediversity`, una frase i 6 enllaços.
+- **Kit Codex O4:** aplicat per CAS, 70/70, després d'un rebase de la precondició `.agents/contingut_estructural.json`. L'aplicador exigix la frontissa verda i, alhora, fixa l'empremta d'abans de l'aprovació.
+- **Peticions fora de carril:** fetes (B1b-01, B1b-03, B1b-05 i A1-05).
+
+**Gauntlet «Destrossa-ho tot»** (workflow `o4-destrossa-ho-tot`, 16 agents). Han passat 6 dimensions, cadascuna amb cercador i refutador: rutes i 404; publicació a les 5 verticals; xat, IAIA i E2EE; TPV, Calendari, ZIP i PWA; accessibilitat i Pedra Seca; seguretat i governança. **31 troballes confirmades, 0 refutades.**
+- **Corregides al codi viu (11), cadascuna amb una prova que fallava abans:**
+  - D1-01: els `/opendata` encastats a WordPress feien 404; ara es reescriuen a `dist/opendata/` (`assetResolver.js`).
+  - D3-01 i D3-02: les rutes de la IAIA ara porten a les llistes vives, i el destí explícit mana.
+  - D2-01, D2-02 i D2-05:
+    - la nota preparada ja no arrossega l'àmbit si canvieu de carpeta;
+    - una fitxa fora de rang ja no arriba a PUBLICAR;
+    - un `?ambit=` pendent no s'aplica a una altra nota.
+  - D4-01: el ZIP rebutja les entrades solapades.
+  - D5-01, D5-02 i D5-04: els apartats de dins de la caixa no passen del títol, la traducció conserva les caixes i el títol de la subtargeta pren el nivell del context.
+  - D3-03: avís abans d'enviar al Bloc una tria d'un fil xifrat; és latent.
+- **Decisions del Mestre (20):** a Límits.
+- **Kit R2 de Claude:** D6-05 ha generat el kit `261103_kit_claude_o4_rls_r2_rename`. En Onada 4 el vaig deixar al dipòsit sense aplicar (`tooling/` era del carril de Codex). L'Onada 5 passa `tooling/` al meu carril i el dona per integrat: aplicat per CAS a la 01:0x, `tests/tractor-rls-r2-ddl.test.mjs` 33/33 i `tractor-rls.mjs` sobre l'arbre real, 74 fitxers sense cap infracció.
+
+**Kit Gemini O4.** No era aplicable cru. Els payloads eren d'una còpia de les 21:5x, però les preimatges es van fixar a les 23:xx: el CAS passava i, en canvi, trepitjava els carrils C i D, el `certifica-enllacos.mjs` de Codex i la frontissa. L'he fusionat de manera selectiva (workflow `o4-fusio-kit-gemini`, integrador, àrbitre i corrector). Les targetes germanes d'eixa fusió les retira l'Onada 5 (T-11). El `certifica-enllacos.mjs` fusionat es queda, amb el delta de Gemini i les 3 correccions de l'àrbitre (ARB-G-02, -03 i -04):
+- `?item=` de la Wiki contra `wikiManifest.items`, amb `SPA_404_WIKI_ITEM`;
+- `href`, `data-ruta` i `data-autor-ruta` de totes les claus de PAGE_COPY;
+- `--arxiu`.
+
+### T-11 · Onada 5 · O5-CLAUDE-1, reconciliació de l'arbre viu (relleu 9, 261103 00:48 – )
+
+Ordre: prompt `261102_1532_prompt_onada5_reconciliacio_botigues_i_tancament_10_de_10.md` i Bloc T5 del pla `261102_1532`, llegits sencers.
+- **`pageContent.js`.** Torna a la còpia viva d'abans de la fusió (00:07, sha `4dee3cea…`), més un comentari reescrit perquè `certifica-enllacos --fitxer` no hi llija una ruta.
+  - **Fora:** els 4 blocs `data-sdp-targetes` de Gemini.
+  - **Es conserven:** les 7 subtargetes i els 6 enllaços d'`/opendata` de `fediversity`.
+  - **Frontissa:** 16/16 amb l'empremta que va aprovar el Mestre a les 23:2x. No ha calgut reaprovar-la.
+- **Proves.** Restaurades exactament a l'estat d'abans de la fusió, sense reescriure-les a mà:
+  - el pegat ARB-G-01, desfet amb `git apply -R`;
+  - `TextSection.targetes.test.jsx`, que torna a HEAD (era la seua preimatge);
+  - els 12 `Edit` de l'integrador, desfets en ordre invers des de la seua transcripció, deduplicats per `id`.
+- **`CosAmbTargetes.jsx`.** `TargetaDeLectura` llig la navegació amb tolerància (`useNavegacioOpcional`, el patró de `useUbicacioApp`).
+  - **Amb router:** la `UniversalCard` de sempre; el DOM no canvia.
+  - **Sense `RouterProvider`:** la reserva que ja porta l'HTML desat (un `<a>` amb el títol cap a la ruta, la mateixa ruta sanejada), segons l'ordre del Mestre del 261007 («la instantània és el que es veu quan el cos es llig fora de l'app»).
+  - **Per què no a `UniversalCard`:** endurir-la per dins no n'hi havia prou (`usePastillaCalendari` també navega) i obligava a reescriure les proves que simulen `Link: 'a'`.
+  - **Prova nova:** `CosAmbTargetes.senseRouter.test.jsx`. Amb el fitxer de HEAD fallen 2 de 3, i amb el nou passen totes.
+- **«## Lliçons del Mestre».** A `sdp-workflow` i `wiki-documentacio-i-reflex`, la secció s'ha restaurat byte a byte des de HEAD `cc3e443dc`; la resta de canvis de Codex en eixes skills es conserven.
+  - El diff del manifest del segell només tocava eixos dos fitxers.
+  - Segell reconciliat amb `segella.mjs --update` i un motiu (`c8213784…` → `e93f12df…`), amb transacció a `.agents/seal-transactions/`.
+  - `fronteres-skills` 0, i les proves de govern 29/29.
+- **Directori solt `./~/Downloads`.** Eren 84 MB, perfils Chrome «Default» i «def», de les 23:46-23:49, l'hora de les captures de `_builds_de_poble/google_play_fitxa/`. Ha desaparegut de l'arrel entre les 00:05 i la 01:01, i no ho he fet jo. Queda un altre directori solt més vell a la carpeta mare, `Som de Poble/~/Downloads` (17:26, 132 KB), fora del repo: per a MarIA.
+
+### T-12 · Onada 5 · O5-CLAUDE-2, captures d'App Store i Llibre Mestre (relleu 9)
+
+**Captures** a `_builds_de_poble/apple_app_store_fitxa/` (workflow `o5-captures-app-store`: constructor i àrbitre adversarial, APROVAT sense refer-ne cap).
+
+| Fitxer | Mida | Viewport |
+| :--- | :--- | :--- |
+| `01_iphone_mur_1290x2796.png` | 1290×2796 | 430×932 @3 |
+| `02_iphone_pobles_1290x2796.png` | 1290×2796 | 430×932 @3 |
+| `03_iphone_mercat_1290x2796.png` | 1290×2796 | 430×932 @3 |
+| `04_iphone_control_1290x2796.png` | 1290×2796 | 430×932 @3 |
+| `05_ipad_mur_2048x2732.png` | 2048×2732 | 1024×1366 @2, vertical |
+| `06_ipad_pobles_2048x2732.png` | 2048×2732 | 1024×1366 @2, vertical |
+
+- **Com s'han fet:**
+  - capturades nativament, sense cap reescalat: Chrome headless per CDP contra el :3340, amb perfil `mkdtemp` absolut i `--use-mock-keychain --password-store=basic`;
+  - RGB i sense alfa; mides verificades amb `sips`.
+- **Mode natiu:** s'ha injectat `window.Capacitor` abans de qualsevol script, i l'app es comporta com la d'iOS: 0 errors de consola, 0 excepcions i cap espera penjada.
+- **Guideline 2.3.10:** el text visible de les sis vistes no casa amb `Google Play|Android|Play Store|APK|F-Droid`. A la prova de control en mode web, `/mur` mostrava la targeta «Descàrregues i Aplicacions» amb «Android». Per això calia el mode natiu.
+- **Revisió visual:** el constructor, l'àrbitre i jo hem revisat les captures. Hi ha contingut real (la publicació NLnet, «Gent de La Torre», un producte del Mercat i el Panell de Control), sense calaixos superposats ni estats buits.
+- **Recepta i proves:** el `README.md` de la carpeta porta la recepta, i les proves estan al scratch.
+- **Per al Mestre:** una altra mà ha escrit a la mateixa carpeta durant el torn: `00_DOSSIER_APPLE_APP_STORE_DIRECTE_1_0_0.md`, `05/06_ipad_13_*_2048x2732.png` i `01..04_iphone_medium_*_1179x2556.png`. Cal triar un sol joc per mida abans de pujar res a App Store Connect.
+- **Directori solt:** l'altra mà ha tornat a deixar `./~/Downloads` (62 MB, 01:06) a l'arrel del repo. L'he mogut a `.sdp-paperera/quarantena-261103_*_cau-chrome-home-tilde_captures_botigues/`, amb `MOTIU.txt`. No s'ha esborrat res.
+
+**Llibre Mestre:** IDEA-63..66 al Banc d'Idees (T-11), amb font, estat `[PROPOSTA · 261103]` i dues rutes de la proposta corregides.
+
+### T-13 · Onada 6 · O6-CLAUDE-1 i O6-CLAUDE-2, disseny editorial i v1.1.0 (relleu 10, 261103 03:06 – 05:xx)
+
+**Salt a v1.1.0.**
+- **Fitxers:** `package.json`, `versionName` d'Android, els 4 `MARKETING_VERSION` d'iOS i `versio.test.js`.
+- **Número de build:** `versionCode 2` i `CURRENT_PROJECT_VERSION 2` no canvien. Abans de la pròxima pujada a Google Play caldrà el 3 o més, perquè la versió 2 (1.0.0) ja és a la consola.
+- **No tocat:** `package-lock.json` encara diu 1.0.0 a l'arrel. Cap prova no el compara, i no és del carril.
+
+**Dos fets del prompt que no eren certs (comprovats a les 03:1x):**
+- **WordPress.org servix la 1.1.10:** a l'SVN només hi ha `tags/1.1.10`, i la `Stable tag` és 1.1.10.
+  - La capçalera diu «Versió actual: v1.1.0 · Connector WordPress v1.1.10 a WordPress.org», i l'etiqueta, «v1.1.0 · WP v1.1.10».
+  - L'h3 de l'entrada nova diu «Connector WordPress v1.1.12 al repositori». La 1.1.12 és el connector que Codex ha pujat en esta onada, i la prova el deriva de la capçalera de `socdepoble-enxufe.php`.
+- **L'APK 1.0.0+2 no es pot baixar:** és compilat a `_builds_de_poble/android/`, però el canal `apk-directe` és tancat i socdepoble.org no el servix.
+
+**Eixam `o6-eixam-editorial` (17 agents, 3.331.057 tòkens de subagents).**
+- **Sis grups:**
+  - G1, `/versions`;
+  - G2, `roadmap`, `wikidepoble` i `notes_shared`;
+  - G3, `projecte`, `constitucio`, `anima`, `disseny`, `consola` i `cervell`;
+  - G4a, `fediversity` i `descarregues`;
+  - G4b, `drets-autor`, `xat` i `fedivers`;
+  - G5, les 8 pàgines de secció, els 4 plugins i la nota tutorial.
+- **Rols:** cada grup ha tingut un constructor, un àrbitre adversarial i, si calia, un corrector.
+- **Eines de l'scratchpad:**
+  - `splice.mjs`, que escriu una sola línia `html` de `PAGE_COPY` sota pany i restaura el fitxer si el mòdul no s'importa;
+  - `verifica.mjs`, que exigix el text byte a byte en el mode «negretes» i ensenya el diff de paraules en el mode «estructural»;
+  - `diagonal.mjs`, la Prova d'Or.
+- **Contracte de densitat:** ≥40 paraules, 6–8 `<strong>`; 25–39, 5–7; 12–24, 2–4; <12, 1–3; cap paràgraf pla. Les negretes són sintagmes curts.
+- **Incident:** a les 03:42:07 un agent va tornar a executar `extreu.mjs` i va sobreescriure les 29 referències originals amb el contingut nou.
+  - Durant 6 minuts, les verificacions comparaven el text nou amb ell mateix.
+  - Un corrector les va restaurar a les 03:48:53 des de la còpia de les 03:13.
+  - Jo les he comprovades una per una contra una importació independent de la còpia: 29 de 29 iguals.
+  - Tots els verificadors s'han tornat a executar després.
+
+**Resultat per clau** (`verifica.mjs` sobre l'arbre viu, contra els originals de les 03:13):
+
+| Clau | Mode | `<p>` | Mitjana `<strong>` | Plans | `<ul>`/`<li>` | `<h4>`/`<h5>` | Errors |
+| :--- | :--- | ---: | ---: | ---: | ---: | ---: | ---: |
+| `versions` | estructural | 88 | 5,67 | 0 | 0/0 | 79/0 | 0 |
+| `roadmap` | negretes | 46 | 7,17 | 0 | 0/0 | 45/0 | 0 |
+| `wikidepoble` | estructural | 4 | 7,5 | 0 | 0/0 | 3/0 | 0 |
+| `notes_shared` | negretes | 1 | 6 | 0 | 0/0 | 0/0 | 0 |
+| `projecte` | negretes | 20 | 6,1 | 0 | 0/0 | 0/0 | 0 |
+| `constitucio` | negretes | 16 | 7,63 | 0 | 0/0 | 4/15 | 0 |
+| `anima` | negretes | 26 | 6,27 | 0 | 0/0 | 8/0 | 0 |
+| `disseny` | negretes | 5 | 6,2 | 0 | 0/0 | 0/0 | 0 |
+| `consola` | negretes | 4 | 6,75 | 0 | 1/9 | 1/0 | 0 |
+| `cervell` | negretes | 6 | 7,17 | 0 | 0/0 | 2/0 | 0 |
+| `descarregues` | negretes | 16 | 5,44 | 0 | 2/5 | 9/2 | 0 |
+| `fediversity` | estructural | 20 | 5,35 | 0 | 12/51 | 9/12 | 0 |
+| `drets-autor` | estructural | 34 | 5,62 | 0 | 2/7 | 13/14 | 0 |
+| `xat` | estructural | 7 | 5,57 | 0 | 0/0 | 2/3 | 0 |
+| `fedivers` | estructural | 11 | 6,09 | 0 | 0/0 | 3/0 | 0 |
+| `publicar_mur` | negretes | 4 | 7 | 0 | 0/0 | 0/4 | 0 |
+| `publicar_mercat` | negretes | 4 | 7 | 0 | 0/0 | 0/4 | 0 |
+| `publicar_calendari` | negretes | 3 | 7 | 0 | 0/0 | 0/3 | 0 |
+| `publicar_mapa` | negretes | 3 | 7 | 0 | 0/0 | 0/3 | 0 |
+| `vehicle_compartit` | negretes | 3 | 6,67 | 0 | 0/0 | 0/3 | 0 |
+| `animalets` | negretes | 3 | 7,33 | 0 | 0/0 | 0/3 | 0 |
+| `treball` | negretes | 1 | 7 | 0 | 0/0 | 0/1 | 0 |
+| `habitatge` | negretes | 1 | 6 | 0 | 0/0 | 0/1 | 0 |
+| `legal` (kit de Codex) | estructural | 72 | 3,81 | 0 | 14/80 | 23/2 | 39 de densitat |
+
+**Altres superfícies:** els plugins `gestoria`, `rss`, `rebost` i `salut` i la nota tutorial (`NOTES_SEED[0]`, 6 `<h4>` i cap llista) donen 0 errors.
+
+**Llistes que es queden:** les 5 instruccions per navegador de Descàrregues, que vigilen proves d'altres carrils; les llistes curtes o d'enllaços de Fediversity; la llista de la Consola; i els passos de drets-autor, que són seqüencials (skill `core-llegibilitat-text` §3).
+
+**/versions:**
+- **Entrada nova:** «3 de novembre de 2026 · v1.1.0 (build pendent de desplegar) · Connector WordPress v1.1.12 al repositori», amb 12 apartats `<h4>`:
+  - l'app d'iPhone i iPad a revisió («Waiting for Review», tal com ho ha vist el Mestre);
+  - Google Play i l'APK, en un apartat propi que la xarxa de l'app nativa lleva sencer;
+  - «On es publica?», les subtargetes, les dades obertes dins de WordPress, els calaixos i la lectura d'un colp d'ull;
+  - les actualitzacions automàtiques a gentdelatorre.net, les proves i els enllaços.
+- **Numeració retrospectiva:** v1.0.1–v1.0.4, amb una nota que ho diu.
+- **Format:** cap `<ul>`; cada novetat té el seu «Novetat · …», «Millora · …» o «Correcció · …».
+
+**Integració meua, a més dels grups:**
+- **Proves fora de la llista del carril**, ajustades perquè el canvi és l'objecte mateix de l'ordre (clàusula de Riscos del prompt):
+  - `destinsControl.test.js` (les llistes de negretes de les 8 pàgines de secció);
+  - `perAppNativa.test.js` (Versions s'adapta i una prova fixa exactament el que es retira);
+  - les dues de la Consola (`ConsolaSection.empaquetats` i `EmpaquetatsConsola.jarvis`, que ara deriven la versió de `VERSIO_SISTEMA`);
+  - `NotesSection.tutorial.test.jsx` (compara el text del paràgraf sense etiquetes).
+- **Prova nova:** `src/data/appSeed.notaTutorial.test.js`, la guarda de la Card tutorial que demanava NOTA-01.
+- **Troballes P3 de l'àrbitre de G4b:** les 5, que no havien passat pel corrector.
+
+**Gauntlet transversal `o6-destrossa-ho-tot` (10 agents, 1.489.257 tòkens): 45 troballes, 36 confirmades pels refutadors.**
+- **Aplicades:**
+  - VER-01 («llevat de Legal», amb una prova que el lliga a les llistes de Legal);
+  - VER-02, VER-03 i C1I-04 (el connector del títol, derivat de la capçalera i amb «al repositori»; els canals d'Android, lligats a `canalsDeBotiga.js`);
+  - VER-05 («El build del web»);
+  - les negacions recuperades en negreta: C1-PO-01..04 a `/versions`, 06..08 a Descàrregues, 09, 10 i 15 a Projecte i 11 al Mercat, amb `destinsControl` al dia;
+  - C1-PO-12 i PLUG-01 (les negretes enganxades de l'RSS), PLUG-02 i PLUG-03;
+  - C1I-02 i C1I-03 (el parèntesi de Wikidata i el «Per això» sense antecedent a drets-autor);
+  - NOTA-01 i NOTA-05;
+  - O6-G1-C1-01, que ja estava aplicada, i O6-G1-C1-02, la frontissa.
+- **No aplicades (decisions del Mestre, a Límits):**
+  - VER-08 (l'app d'Android també lleva l'apartat de Google Play);
+  - O6-G1-C1-03 (l'extracte de la cerca ix amb espais solts: pegat preparat);
+  - O6-G1-C1-04 (la traducció perd negretes pel pressupost de caràcters);
+  - O6-G1-C1-06 (dos h4 «Millora · Bloc de Notes» en entregues diferents: no l'he aplicat, perquè l'Índex ja els separa pel seu h3);
+  - O6-G1-C1-07 (porta editorial: pegat preparat);
+  - NOTA-02 (la còpia local congela la Card vella);
+  - NOTA-03 (`supabase/seed.sql`, desfasat des del 23-10).
+- **Pegat:** `02_investigacio_ia/261102_1640_claude/o6_pegat_cerca_extracte_i_porta_editorial.patch`. No l'he aplicat. La porta proposada, provada en sec: `valid` i 321 de 366 paràgrafs llargs conformes, la major part dels que falten són de Legal.
+
+**Kit de Codex `261103_kit_codex_onada6_legal_i_tancament`, integrat per CAS (19 de 19).**
+- **Rebase:** només divergia el registre de la frontissa, per les meues 14 aprovacions. La seua preimatge era exactament el registre d'abans d'aprovar-les.
+- **Com l'he aplicat:**
+  - una còpia rebasada a l'scratchpad, amb el registre viu més l'entrada `legal` del kit i el `manifest.sha256` refet;
+  - `kit-carril.mjs check` i després `apply`: `valid`, `applied`, i el candidat amb la frontissa a 16/16.
+- **Legal 2.4:** fora de les negretes, només canvia la línia de versió («2.3 de l'1 de novembre» → «2.4 del 3 de novembre»).
+- **Migració `2611030330_politica_privacitat_2_4.sql`:** escrita i sense aplicar. Farà demanar un consentiment nou. L'ordre del kit és desplegar primer el web i el connector, i després la migració.
+- **Proves de l'aplicador del kit:** 7 de 9. Les 2 roges hi tornen a aplicar el kit original sobre una còpia de l'arbre viu, i ara el registre ja l'ha rebasat. És el comportament esperat després d'aplicar-lo.
+
+**Frontissa:** 14 empremtes noves i la de `legal`, aprovades amb la CLI per l'ordre T2.4 del prompt («re-segellant la Frontissa 16/16»). Resultat: 16/16.
+
 ### Coordinació a 4 bandes (per a Codex, Gemini i MarIA)
 
 - **Claude pren:** T0 (contracte + compositor + 3 seccions verticals + Mur + cerca), T1 (panell Jarvis i ranures de `/page/descarregues`), T2, T3, T4 (S2.A mesurada; guarda d'IDEA-62).
@@ -208,6 +460,14 @@ Arquitectura (decisió de l'orquestradora, relleu 2): **una sola fila** a `secti
 | Kits de Codex (i18n, Xat, higiene, documents, IDEA-48) | `[PARCIAL]` | T-04: higiene integrat (52/52); **i18n 29/29 a l'arbre viu** (els 16 restants per Gauntlet 17:33-17:53: 16/16 byte a byte contra el kit, 547.848 B; 26 fitxers de prova / 1196 verdes; l'única roja, `_fora` a `mapejadorSeccions.ambit.test.js:119`, és del carril L1 de T0); **Xat 18/18 a l'arbre viu** (Gauntlet 17:53-18:15: 17 fitxers byte a byte amb el payload rebasat de Codex i `iaiaLocal.js` = payload + bloc d'Atles de T0 amb els dos ancoratges del kit; 163 fitxers de prova / 3122 verdes; `useCapaEnrere` de T2b/T2c intacte als quatre fitxers); documents (tooling) i IDEA-48 (orfe) no aplicats | ARB-XAT-01 (P1): l'apartat 14 de `legalContent.js` és dins de la frontissa de contingut i el Mestre l'ha d'aprovar o revertir; K-01..K-07; dues proves col·laterals meues (`MercatSection.carregaMes.test.jsx`, `FullAjustos.revisio.test.jsx`) van al mateix commit |
 | O3-CLAUDE-1 · Gauntlet quirúrgic d'Onada 2 (O2-T1..T5) i kits F7/higiene | `[FET · 20:12]` | T-08: 1 àrbitre de només lectura; 2 P2 confirmades i materialitzades (AUD-01 amb el corrector CAS de Codex, AUD-O2-T4-01 a `SeccioVertical.jsx` + 3 proves); O2-T1, T2 i T3 nets; cap regressió entre O2-T1 i O2-T5; suites de l'Onada 2 i de tots els consumidors de l'espai de treball en verd (78 / 1104 i 478 / 6738 + 1); `design_guard` 3030/0/0; `porta-olivera` 0 | ARB-01 (P3) queda com a compromís de disseny; els kits F7 continuen en reserva fins que arribe el consumidor i el Mestre decidisca la migració `2611021810` |
 | O3-CLAUDE-2 · Materialització dels kits d'Onada 3 | `[FET · CERTIFICAT 20:57]` | T-09: quatre kits aplicats per MarIA i certificats; dos polits fets a l'arbre viu (Data Package complet amb paritat total, i `_headers`/`_redirects` a `PROPIS_DEL_LLOC`); `node --test` de 8 fitxers → 150 proves, 147 verdes, 3 omeses (`dist-natiu` ranci), 0 roges; Vitest 102 fitxers / 1920; `design_guard` PASSA; Olivera 0 | `recuperacio_consumidor_ui` en reserva amb la cadena F7 (decisió del Mestre); recompilar `dist-natiu` perquè les 3 proves omeses tornen a córrer |
+| O4-CLAUDE-1 · «On es publica?» en línia dins d'«Edició avançada» | `[FET AL CODI · VERIFICAT 261102 23:2x]` | T-10 carril A: verificador verd (341 fitxers / 5104), `BlocAmbit` vist a `/disseny` (:3340); correccions D2-01/02/05 del Gauntlet | camí amb sessió des de /control sense verificar al navegador; D2-03, D2-04, D2-06 i D5-03 per al Mestre |
+| O4-CLAUDE-1b · calaixos sota la barra negra (IDEA-63 del pla) | `[FET AL CODI · VERIFICAT 261102 23:2x]` | T-10 carril B + B1b-01/03/05 meus; Índex i menú compacte a `top: 64` al :3340 a 375 px | doble logotip (B1b-01) per al Mestre; cap dispositiu amb osca real |
+| O4-CLAUDE-2 · subtargetes a pàgines i editor, enllaços d'`/opendata` | `[FET · FRONTISSA 16/16 · RECONCILIAT EN O5]` | T-10 carril C, D1-01 (encastat), D5-01/02/04; T-11: sense les targetes duplicades de Gemini | C2-06 (text de mostra) per al Mestre |
+| O4-CLAUDE-3 · Gauntlet «Destrossa-ho tot» + integració CAS de kits | `[FET · 31 CONFIRMADES, 11 CORREGIDES · KITS INTEGRATS]` | T-10: kit Codex 70/70 per CAS; kit Gemini fusionat i reconciliat; kit R2 aplicat en O5 | 12 decisions obertes a Límits |
+| O5-CLAUDE-1 · reconciliació de l'arbre viu | `[FET · VERIFICAT 261103 01:2x]` | T-11: frontissa 16/16, Vitest 31.458/0, `node --test` 2.163/0, `npm run build` 0, `fronteres-skills` 0, segell `e93f12df` | `tancament --close` bloquejat per la zona humana (Mestre) |
+| O5-CLAUDE-2 · captures d'App Store i IDEA-63..66 | `[FET · ÀRBITRE APROVAT]` | T-12: 6 PNG natius a mida exacta, mode natiu injectat, 2.3.10 net; Llibre Mestre amb IDEA-63..66 | triar un sol joc de captures per mida (n'hi ha d'una altra mà a la mateixa carpeta) |
+| O6-CLAUDE-1 · salt a v1.1.0 i crònica de `/versions` amb `<h4>` + `<p>` | `[FET · VERIFICAT 261103]` | T-13: package/Android/iOS a 1.1.0, `versio.test.js`; entrada v1.1.0 amb 12 apartats, renumeració v1.0.1–v1.0.4, 0 `<ul>`, 88 `<p>` sense cap pla; `pageContent.versions.test.js` reescrita | capçalera «WP v1.1.10» i h3 «v1.1.12 al repositori» en lloc de la 1.1.11 del prompt: WordPress.org servix la 1.1.10 (SVN) |
+| O6-CLAUDE-2 · negretes d'escaneig i `<h4>` a tota la web, plugins i nota tutorial | `[FET · VERIFICAT 261103 · FRONTISSA 16/16]` | T-13: 23 claus de `PAGE_COPY` amb 0 errors al verificador, 4 plugins i `NOTES_SEED[0]`; Gauntlet transversal 36 confirmades i aplicades les del carril; kit legal de Codex integrat 19/19 | Legal 2.4 conserva llistes i 39 paràgrafs per davall del tram (text de Codex, lligat a la migració 2.4) |
 
 <!-- SDP:SECTION auditoria.s5 -->
 ## Verificació
@@ -258,6 +518,26 @@ Arquitectura (decisió de l'orquestradora, relleu 2): **una sola fila** a `secti
 - 20:56 CET · `curl` al :3340 (servidor del Mestre): `/opendata/manifest.json` 200 `application/json`, `/opendata/municipi.jsonld` i `/opendata/agenda.jsonld` 200 `application/ld+json`, `/opendata/llicencies.md` 200 `text/markdown`, cap HTML.
 - 20:57 CET · `design_guard` PASSA; `porta-olivera` exit 0.
 - Dipòsit de governança per a MarIA a `02_investigacio_ia/261102_1640_claude/governanca/`: `00_LLEGIM.txt` en versió de tancament (§0 estat del tancament, §1 ordre d'aplicació amb els set kits nous i el conflicte de `.gitignore`, §2 bloc ESTAT_ACTUAL, §3 LEDGER, §4 kits, §5 seguretat, §6 decisions i receptes, §7 lliçons, §9 fitxers de T0), `LLEGIM.txt` + `tooling/vite/consola-iaia.mjs` (T1a) i `LLEGIM_HIGIENE.txt` (IDEA-62).
+- 21:45 CET (261102) · Relleu 8, línia base: Vitest 31.284 en verd i 6 roges en 3 fitxers; `node --test` 2.104 de 2.109, 2 roges a `mapa-consola`.
+- 23:25-23:38 CET · Després de l'eixam, del kit Codex i de les peticions fora de carril: Vitest sencer, 1.762 fitxers i 31.422 proves en verd, 0 roges; `node --test` 2.153 de 2.156, 0 fallades (3 diagnòstics heretats). Frontissa 16/16, certifica-enllacos, fronteres-skills, design_guard i Olivera: exit 0.
+- 00:02-00:15 CET (261103) · Després del Gauntlet: Vitest 1.764 fitxers i 31.455 en verd, 0 roges; `node --test` 2.157 de 2.160, 0 fallades.
+- 00:41 CET · Després de la fusió de Gemini i del pegat ARB-G-01: `src/sections/text`, `src/config`, `src/sections/detail`, App.fediversity i richText → 145 fitxers, 2.995/2.995; certifica-enllacos exit 0 en els dos modes.
+- 00:5x CET · Relleu 9, reconciliació: frontissa 16/16 amb l'empremta de les 23:2x; targetes, PedraSeca, text, detall i configuració → 220 fitxers, 3.870/3.870; `CosAmbTargetes.senseRouter.test.jsx` 2 roges amb el fitxer de HEAD i 3/3 amb el nou; `fronteres-skills` 0; proves de govern 29/29; segell reconciliat.
+- 01:00-01:16 CET · Vitest sencer, 1.765 fitxers i 31.458 en verd, 0 roges; `node --test` 2.163 de 2.166, 0 fallades (3 diagnòstics heretats). Kit R2: `tests/tractor-rls-r2-ddl.test.mjs` 33/33.
+- 01:14-01:16 CET · Captures d'App Store: 6 PNG a mida exacta, comprovades amb `sips` i revisades visualment pel constructor, per l'àrbitre i per mi.
+- 01:1x CET · `npm run build`: exit 0, cap fitxer versionat modificat (comparació de hashos abans i després) i cap fitxer nou fora de `dist/`. Portes finals, totes exit 0: frontissa 16/16, certifica-enllacos, fronteres-skills, design_guard, Olivera, segell `e93f12df`, `tractor-rls` (74 fitxers) i `tractor-vocabulari`. `tancament.mjs --check`: tots els controls transversals en 0 i el torn bloquejat només per la zona humana (97 captures a `01_produccio/`) i per una escriptura concurrent aliena; el pla 1532, modificat amb el Bloc T5, l'he tornat a vincular.
+- 03:20 CET (relleu 10) · Salt a v1.1.0: `versio.test.js` i `src/sections/detail` → 35 fitxers, 428/428.
+- 04:01-04:03 CET · 8 pàgines de secció i `destinsControl` al dia: `src/sections/control` → 12 fitxers, 143/143. Correccions de G4b: 39 fitxers, 951/951. Versions amb Google Play i la nova guarda de `perAppNativa`: 70/70.
+- 04:05-04:20 CET · Vitest sencer (1a passada): 31.480 en verd i 6 roges. Eren 5 de la Consola, pel salt de versió, i 1 de la Card tutorial, per les negretes; totes arreglades (Consola 53 fitxers, 1.129 en verd; tutorial 33/33). A banda, `wordpress-plugin/tests/ajustos.test.mjs` (Codex).
+- 04:2x CET · `node --test` sencer: 2.182 proves, 2.177 en verd. Les 2 fallades són H4 i H7 d'higiene, per `wordpress-plugin/tests/` (Codex), i hi ha 3 diagnòstics heretats.
+- 04:3x CET · Després del Gauntlet transversal i del kit de Codex: 97 carpetes de proves afectades → 1.498/1.498; text, legal, Supabase legal, hosting i cerca → 42 fitxers, 681/681; `node --test` d'opendata-fediversity, documental, fortificació, public_exports i frontissa → 70/70. Kit de Codex: `kit-carril.mjs check` i `apply` valid, 19/19 hashos finals exactes; `aplicador.test.mjs` del kit 7/9 (les 2 roges hi tornen a aplicar el kit original, cosa esperada després d'aplicar-lo).
+- 04:3x CET · Portes, totes exit 0: frontissa 16/16, `certifica-enllacos`, `fronteres-skills` (42 skills, 0 violacions), `design_guard` (3.046 fitxers, 0 crítics), Olivera, `tractor-rls` (74 sql), `tractor-vocabulari`, segell (`262585b7`) i `porta-autoritat`.
+- 04:37-04:51 CET · Passada final:
+  - **Vitest sencer:** 1.778 fitxers; 31.499 en verd, 103 omeses i 1 roja, `catalegMigracions.readme.test.js`. El kit de Codex havia posat fora d'ordre la vinyeta de `2611030330` a `supabase/README.md`; l'he moguda al seu lloc, sense canviar cap paraula, i ara 4/4 i `src/data/supabase` 99 fitxers, 1.994/1.994. A banda, `wordpress-plugin/tests/ajustos.test.mjs` (Codex).
+  - **`node --test` sencer:** 2.189 proves, 2.184 en verd. Les 2 fallades són H4 i H7 (Codex), i hi ha 3 diagnòstics heretats.
+  - **`npm run build`:** exit 0. Regenera `public/rag-index.json` a partir de 4 documents de la Wiki d'altres mans; l'he tornat a l'estat d'abans del build.
+- 04:5x CET · Auditor de Gemini (`--json`, sense `--write-report`): versió 1.1.0 i /versions a punt. `PAGE_COPY`: 326 paràgrafs, mitjana de 6,19 `<strong>` i 0 plans. Legal: 0 plans i 37 per davall del seu tram. Plugins: 0 i 0. Nota: 0 plans.
+  - Marca `gd01` i `arbXat01LegalSeal` com a pendents, però no ho són: G-D-01 és a les tres configuracions (l'auditor demana a més el servidor de desenvolupament), i l'HTML viu de Legal té l'empremta `2956bc30…` que segella la migració 2.4 (`politicaPrivacitat24.migracio.test.js` 4/4).
 
 <!-- SDP:SECTION auditoria.s6 -->
 ## Límits
@@ -273,6 +553,38 @@ Arquitectura (decisió de l'orquestradora, relleu 2): **una sola fila** a `secti
   - els 8 recursos nous de `public/opendata/`.
   
   No he executat cap build web ni natiu: escriuria `dist/` o `dist-natiu/` a l'arbre del Mestre. El build web el va acreditar Codex en còpia, i les 3 proves de `dist-natiu` queden omeses fins a la pròxima compilació. Cap desplegament: els recursos d'`opendata` arriben a producció amb el pròxim deploy de Firebase.
+- Relleus 8 i 9 (Onades 4 i 5). Cap commit, push, desplegament, `npm install`, SQL remot ni lectura de fitxers d'entorn. Sessió arrancada a la carpeta mare: els hooks de `socdepoble.org/.claude/settings.json` no s'hi carreguen, i les fronteres les he complides jo.
+  - **Escriptures de governança, totes per ordre explícita:** la frontissa amb la CLI (O4-CLAUDE-2); el kit Codex per CAS; el kit R2 (Onada 5, `tooling/` al meu carril); i les dues seccions de lliçons més el segell reconciliat (O5-CLAUDE-1).
+  - **Sense verificar al navegador amb sessió:** el camí /control «Publicar» → `/notes?ambit=`. Sense sessió, `calEntrar` no prepara cap nota; l'àmbit s'ha verificat amb l'espècimen real de `/disseny`.
+  - **Altres límits:**
+    - el doble logotip i el vel dels calaixos, vistos només a 375 px;
+    - cap iPhone ni iPad físic;
+    - una fila remota de `pages` a Supabase per a `projecte`, `descarregues` o `fediversity` taparia PAGE_COPY en producció, i no ho he pogut comprovar.
+  - **Decisions del Mestre que queden obertes (Gauntlet O4 i carrils):**
+    - **D6-01 (P1):** la frase literal del cas 4 de `core-context-panic` i la seua prova.
+    - **D6-03 (P1):** la prohibició a MarIA de tocar `src/` i `tests/` durant les auditories (`core-secretaria-auditoria`).
+    - **D6-04, D6-06 i D6-11:** delegació de moviments i contracte d'escriptura de `core-higiene-escriptori`, la plantilla i la Regla d'Or de `core-context-panic`, i l'activació universal de `core-comprensio-reflexiva`. Són skills reescrites pel kit Codex que l'ordre d'Onada 5 no cobria: només en restaurava dues.
+    - **D1-02 (P2):** `/vehicle`, `/treball` i `/habitatge` no tenen entrada de navegació des que ixen de SECTION_ORDER.
+    - **D2-03 (P2):** una fitxa omplida abans del títol no crea la nota i es perd en eixir.
+    - **D2-04 i D2-06:** moure de carpeta una nota vertical amb dades, i un `?ambit=mur` per a «Publicar al Mur».
+    - **D5-03:** les fletxes del grup de ràdios escriuen la fitxa en explorar.
+    - **D1-03:** per a Codex, `certifica-enllacos` accepta `/legal/x` i rebutja `/events/x`.
+    - **B1b-01:** amagar la marca del calaix compacte (doble logotip) o conservar-la.
+    - **C2-06:** el text de mostra de la subtargeta es desa si no es canvia.
+    - **G-D-01:** el tipus `application/activity+json` d'`activitystreams.json` als tres fitxers de capçaleres. Relleu 10: resolt pel kit de Codex, integrat per CAS (`firebase.json`, `vercel.json` i `public/_headers`).
+- Relleu 10 (Onada 6). Cap commit, push, desplegament, `npm install`, SQL remot ni lectura de fitxers d'entorn.
+  - **Escriptures fora de la llista del carril:** les 5 proves de T-13, ajustades per la clàusula de Riscos del prompt; la prova nova `appSeed.notaTutorial.test.js`; i el kit de Codex, aplicat per CAS per l'ordre T2.4.
+  - **`public/rag-index.json`:** el build el regenera a partir de 4 documents de la Wiki que han tocat altres mans. L'he deixat com era abans del build.
+  - **Decisions del Mestre que queden obertes en esta onada:**
+    - **O6-D1 (WordPress.org):** quan l'SVN porte la 1.1.12 (o la 1.1.11), cal canviar la capçalera i l'etiqueta de `/versions`. Les proves ho exigiran.
+    - **O6-D2 (Legal):** Legal 2.4 encara té 26 `<li><strong>Etiqueta:</strong>` i 39 paràgrafs per davall del tram. Qualsevol canvi més canvia l'empremta que fixa la migració 2.4, i per això ha d'anar amb Codex abans de desplegar-la. Mentrestant, `/versions` diu «llevat de Legal».
+    - **O6-D3 (versionCode):** la 1.1.0 continua amb `versionCode 2`. Per a la pròxima pujada a Google Play cal el 3 o més.
+    - **O6-D4 (VER-08):** l'app d'Android també lleva l'apartat de Google Play de `/versions`, perquè `perAppNativa` no distingix plataformes.
+    - **O6-D5 (cerca i porta editorial):** el pegat de l'extracte de `/cerca` (espais solts al voltant de les negretes) i el de la porta `check-editorial-copy`, que compta paraules i no sintagmes. Tots dos són preparats i sense aplicar.
+    - **O6-D6 (traducció):** amb més negretes, el pressupost de 10.000 caràcters de la traducció passa menys blocs en HTML, i la vista traduïda perd negretes. Opció B al scratchpad del Gauntlet.
+    - **O6-D7 (Card tutorial):** la còpia local (`localNotes.js`) congela la Card vella per a qui ja havia escrit una nota, i `supabase/seed.sql` és del 23-10. Cal regenerar-lo, i pujar `APP_SEED_VERSION` si canvia.
+    - **O6-D8 (text):** la Constitució §5 diu «Sollutia (Supabase)», i `/projecte` diu que Sollutia no és Supabase. A més, `/page/xat` presenta com a futures les notes de veu i les imatges, que ja existixen.
+  - **Per a Codex:** `wordpress-plugin/tests/` encén les guardes H4 i H7 de `tests/higiene-estructural.test.mjs`. A més, Vitest arreplega `ajustos.test.mjs` i hi peta (vol una URL `file:`). Amb `node --test` passa 16 de 16.
 
 <!-- SDP:SECTION auditoria.s7 -->
 ## Vincles

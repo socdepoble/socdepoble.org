@@ -32,16 +32,19 @@ import {
   MOTIU_LLEST, MOTIU_SENSE_FONT, PASSOS_INICIALS, RUTA_PROGRES, RUTA_PUBLICA_TOT, TEXT_BOTO_JARVIS, TITOL_JARVIS
 } from './jarvis.js';
 import { nomenaPlataformaAliena } from '../text/perAppNativa.js';
+import { VERSIO_SISTEMA as VERSIO } from '../../config/versio.js';
 
+/* O6-CLAUDE-1 (Onada 6, 261103: salt a v1.1.0) · L'escenari «tot alineat» declara la Versió Canònica
+   del Sistema (package.json), i no una xifra fixa: un salt de versió no el desfà. */
 const BRUT = {
   schema: 'sdp.empaquetats.v1',
   generat: '2026-10-28T16:30:00.000Z',
-  canonica: '1.0.0',
+  canonica: VERSIO,
   carpeta: true,
   plataformes: {
-    android: { versions: ['1.0.0'], builds: ['1'], font: 'android/app/build.gradle', artefactes: ['261023_socdepoble_1.0.0+1.aab', 'socdepoble-beta.apk'] },
-    ios: { versions: ['1.0.0'], builds: ['1'], font: 'ios/App/App.xcodeproj/project.pbxproj', artefactes: ['261024_socdepoble_1.0.0+1.xcarchive'] },
-    pwa: { versions: ['1.0.0'], font: 'package.json', artefactes: [] },
+    android: { versions: [VERSIO], builds: ['1'], font: 'android/app/build.gradle', artefactes: [`261023_socdepoble_${VERSIO}+1.aab`, 'socdepoble-beta.apk'] },
+    ios: { versions: [VERSIO], builds: ['1'], font: 'ios/App/App.xcodeproj/project.pbxproj', artefactes: [`261024_socdepoble_${VERSIO}+1.xcarchive`] },
+    pwa: { versions: [VERSIO], font: 'package.json', artefactes: [] },
     wordpress: { versions: ['1.1.9'], estable: '1.1.9', font: 'wordpress-plugin/socdepoble-enxufe.php', artefactes: ['261021_2015_wordpress_enxufe_v1.1.9.zip'] }
   }
 };
@@ -118,10 +121,10 @@ describe('el panell a /consola/empaquetats', () => {
       'sdp-insignia sdp-insignia--neutre', 'sdp-insignia sdp-insignia--exit', 'sdp-insignia sdp-insignia--exit', 'sdp-insignia sdp-insignia--exit'
     ]);
     expect(files.map((li) => [...li.querySelectorAll('code.sdp-consola__mono')].map((c) => c.textContent))).toEqual([
-      ['1.0.0'],
+      [VERSIO],
       ['1.1.9', '261021_2015_wordpress_enxufe_v1.1.9.zip'],
-      ['1.0.0+1', '261023_socdepoble_1.0.0+1.aab'],
-      ['1.0.0+1', '261024_socdepoble_1.0.0+1.xcarchive']
+      [`${VERSIO}+1`, `261023_socdepoble_${VERSIO}+1.aab`],
+      [`${VERSIO}+1`, `261024_socdepoble_${VERSIO}+1.xcarchive`]
     ]);
     // El camp de notes, dins d'un Camp de Pedra Seca; cap estil en línia, cap formulari.
     const area = within(panell).getByLabelText(ETIQUETA_NOTES);
@@ -183,7 +186,7 @@ describe('el panell a /consola/empaquetats', () => {
   test('amb el mode privacitat, ni les versions ni l’ordre del terminal es veuen', async () => {
     pagina(FONT, true);
     const text = seccio().textContent;
-    for (const tros of ['1.1.9', '261023_socdepoble_1.0.0+1.aab', '261024_socdepoble_1.0.0+1.xcarchive']) expect(text).not.toContain(tros);
+    for (const tros of ['1.1.9', `261023_socdepoble_${VERSIO}+1.aab`, `261024_socdepoble_${VERSIO}+1.xcarchive`]) expect(text).not.toContain(tros);
     escriu(NOTES);
     await publica();
     await waitFor(() => expect(seccio().querySelector('pre')).not.toBeNull());
@@ -224,7 +227,7 @@ describe('el panell a /consola/empaquetats', () => {
 });
 
 describe('el corredor en marxa (SeccioJarvis amb interval curt)', () => {
-  const plataformes = plataformesEmpaquetades(VALOR, '1.0.0', { nativa: false });
+  const plataformes = plataformesEmpaquetades(VALOR, VERSIO, { nativa: false });
   const panell = (props = {}) => render(<SeccioJarvis font={FONT} plataformes={plataformes} interval={5} {...props} />);
   const passos = () => within(seccio()).getByRole('list', { name: ETIQUETA_PASSOS });
   const corredor = (progresos) => {

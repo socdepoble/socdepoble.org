@@ -16,6 +16,10 @@ contracte.llig:
   - .agents/skills/sdp-universal-page/SKILL.md
   - .agents/skills/sdp-pedra-seca/SKILL.md
   - AGENTS.md
+  - src/utils/publicacioUniversal.js
+  - tooling/gates/kit-carril.mjs
+  - tooling/gates/certifica-enllacos.mjs
+  - tooling/brain/fronteres-skills.mjs
 contracte.escriu:
   - _wiki_de_poble/04_escriptori
 ---
@@ -28,7 +32,7 @@ Abans de proposar una solució a un problema tècnic complex que no està explí
 - **Teniu l'obligació de consultar la `wiki-busca-skills`**: Has d'investigar com ho resol l'avantguarda de la IA o GitHub (p. ex: usant repositoris MCP, *Vertical Slices*, sistemes de disseny globals) a partir del catàleg viu `.agents/skills/00_INDEX_SKILLS.md`. L’arxiu històric queda fora de la descoberta automàtica (AGENTS §5). No reinventes la roda. Adapta les solucions globals al nostre *Trellat*.
 
 ## 1. Spec-Driven Development (Prototipatge Lògic)
-- **MAI Piquem Codi a Cegues:** Tens terminantment prohibit escriure codi de noves funcionalitats o redissenys sense haver generat prèviament un esborrany o PRD (Product Requirements Document) a la carpeta d'artefactes (com els documents de *Planificació* o `_wiki_de_poble/04_escriptori/00_index_escriptori.md` d'Antigravity).
+- **MAI Piquem Codi a Cegues:** Tens terminantment prohibit escriure codi de noves funcionalitats o redissenys sense haver generat prèviament un esborrany o PRD (Product Requirements Document) a l'Escriptori físic `_wiki_de_poble/04_escriptori/`, pel circuit documental vigent; l'índex només l'ancora i no substituïx el pla.
 - L’usuari ha d’aprovar aquest esborrany abans d’executar un redisseny. Una aprovació explícita ja donada a la sessió continua vigent i no es torna a demanar. Vincula el pla amb `document.mjs plan --turn-id ID --file CAMI`; el registre acredita el fitxer, no substitueix l’aprovació humana.
 
 ## 2. Desenvolupament Modular (Vertical Slices)
@@ -41,7 +45,7 @@ Quan l'usuari aprova el pla i comences a codificar:
 
 ## 4. Segellat i Tancament de Sessió
 - En cas d'haver afegit regles al cervell (la Wiki o `.agents`), s'ha d'executar qualsevol segellat pertinent i actualitzar els índexs com `00_INDEX_SKILLS`.
-- Finalment, es redacten els commits escaients usant Semantic Versioning.
+- El lliurament respecta el carril autoritzat. Si és un kit, genera preimatges i hashes amb `node tooling/gates/kit-carril.mjs`, prova'l en una altra còpia i deixa la integració a qui tinga la propietat d'escriptura. Un commit, una publicació o un canvi de versió s'executen només quan formen part de l'encàrrec; no són efectes automàtics de la skill.
 
 Aquesta pauta ens assegura que construïm "sobre ciments immobibles", per a poder escalar qualsevol quantitat de projectes sense col·lapse.
 
@@ -53,6 +57,20 @@ Aquesta pauta ens assegura que construïm "sobre ciments immobibles", per a pode
 - **260923 · L'abast es definix per superfície, no per patró.** Abans d'una escombrada (buscar i corregir totes les ocurrències d'un patró), declara sobre quins fitxers i quines superfícies s'aplica. Tot allò que casa amb el patró fora d'eixa llista es documenta com a pendent i es deixa intacte fins a tindre ordre.
 - **261007 · L'ordre explícita s'aplica sencera.** Quan el Mestre fixa el comportament d'un element («l'enllaç del copyright a totes les targetes»), s'aplica literal a tots els casos. Un risc s'exposa com a pregunta abans de picar codi. Abans de crear una pàgina o un component, es busca la maquinària que ja existix i s'hi integra (per a les pàgines, vegeu sdp-universal-page, lliçó 261007).
 - **261028 · Chrome headless aïllat.** Tota prova amb Chrome o Chromium headless arrenca amb un directori absolut creat amb `mkdtemp` dins de la carpeta temporal de la sessió, que és el `--user-data-dir`, el `--disk-cache-dir` i, quan cal un `HOME` temporal, també el `HOME`, sempre ja expandit; i porta sempre `--use-mock-keychain --password-store=basic`, perquè macOS no obri cap diàleg de clauer. Els encàrrecs als subagents copien esta regla, i abans de tancar l'arrel del repositori no té cap directori nou de proves.
+
+## Reutilitzar un patró i acreditar-lo
+
+Per a una pàgina de lectura amb targetes internes, contrasta `TextSection.jsx` i `TextSection.targetes.test.jsx`, segons [[sdp-universal-page/SKILL|sdp-universal-page]]. Per a Notes, reutilitza la closca d'[[sdp-universal-editor/SKILL|sdp-universal-editor]] i el contracte de cinc àmbits de `src/utils/publicacioUniversal.js`; no dupliques publicacions ni adaptadors.
+
+Un cas exemplar passa a «verificat» quan té font, prova executada i límit observat. L'ordre Hero → Avatar/Logotip → «On es publica?» → classificació és l'encàrrec d'Onada 4; el desplegable antic no prova eixa integració. Les suites d’edició avançada i dels calaixos del carril integrador s’han repetit en una instantània complementària (140 proves verdes); conserva el tall i el límit de cada resultat. Aplica [[core-tecniques-investigacio/SKILL|core-tecniques-investigacio]] per a no confondre contracte amb resultat.
+
+Abans de donar per bo un enllaç, executa `node tooling/gates/certifica-enllacos.mjs --url /page/legal --remot --json` amb la ruta que estàs documentant. L'arbre/router i HTTP són comprovacions diferents; ni el 200 de la closca SPA ni un segell local acrediten contingut privat, permisos o una acció completada.
+
+`node tooling/brain/fronteres-skills.mjs` comprova F1–F5 (contractes, ordres, escriptura recursiva i tokens), no la comprensió ni tota la semàntica de la skill. Per a cada regla, declara la porta o prova que l'acompanya i, si requerix revisió humana, el criteri observable que s'ha revisat. No presentes un cens de fitxers com cobertura funcional completa.
+
+## Patró de calaix abans de crear una finestra nova
+
+Per a una eina de capçalera, contrasta primer l’Índex de `PageFrame` i `CalaixIdentitats`: [[sdp-universal-page/SKILL|sdp-universal-page]] documenta els tokens compartits sota la barra negra de la SPA i l’excepció de la capa modal encastada. Reutilitza el mecanisme i executa les proves dels dos consumidors; comprova també l’encastat i el mòbil. Una suite de DOM o de text CSS no substituïx la inspecció de la geometria del navegador.
 
 ## Vincles
 - [[00_INDEX_SKILLS]]

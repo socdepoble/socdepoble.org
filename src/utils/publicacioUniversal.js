@@ -62,6 +62,7 @@ export const TO_PER_ESTAT = Object.freeze({ disponible: 'exit', reservat: 'avis'
    `origen` i `author_name`/`author_avatar` NO hi són: les escriu publishNote i
    el mapejador les reinterpreta (origenPublic, avatarDeLaPublicacio). */
 export const CLAUS_RESERVADES = Object.freeze([
+  '__proto__', 'constructor', 'prototype',
   'author_org_id', 'authorOrgId', 'author_entity_id', 'author_id', 'author_user_id',
   'owner_user_id', 'ownerUserId', 'author_agent_id', 'authorAgentId', 'isSystem', 'isAvis',
   'is_pinned', 'pinned_position', 'mainHref', 'slug', 'article', 'autor', 'source', 'srcDelPort'
@@ -186,12 +187,22 @@ const esObjecte = (valor) => valor !== null && typeof valor === 'object' && !Arr
 const esAmbit = (valor) => typeof valor === 'string' && AMBITS.includes(valor);
 const esTextOPrimitiu = (valor) => typeof valor === 'string' || (typeof valor === 'number' && Number.isFinite(valor));
 
-/* Un surrogat alt (0xD800..0xDBFF) solt a l'últim lloc: la meitat d'una
-   emoticona que el retall per unitats UTF-16 ha partit. PostgreSQL rebutja
-   un jsonb amb un surrogat desaparellat; ací no en pot eixir cap. */
-function senseSurrogatAltFinal(text) {
-  const ultim = text.charCodeAt(text.length - 1);
-  return ultim >= 0xd800 && ultim <= 0xdbff ? text.slice(0, -1) : text;
+/* PostgreSQL rebutja qualsevol surrogat desaparellat en JSONB, també dins
+   del text o un de baix. Conserva els parells (emoticones) i lleva només
+   unitats soltes en una passada lineal, després del retall UTF-16. */
+function senseSurrogatsSolts(text) {
+  let net = '';
+  let inici = 0;
+  for (let i = 0; i < text.length; i += 1) {
+    const codi = text.charCodeAt(i);
+    if (codi >= 0xd800 && codi <= 0xdbff) {
+      const seguent = text.charCodeAt(i + 1);
+      if (seguent >= 0xdc00 && seguent <= 0xdfff) { i += 1; continue; }
+    } else if (codi < 0xdc00 || codi > 0xdfff) continue;
+    net += text.slice(inici, i);
+    inici = i + 1;
+  }
+  return net + text.slice(inici);
 }
 
 /* Text net i retallat. El trim de després del retall fa el punt fix:
@@ -199,7 +210,7 @@ function senseSurrogatAltFinal(text) {
    quan cau la meitat solta d'una emoticona. */
 function textNet(valor, maxim) {
   if (!esTextOPrimitiu(valor)) return null;
-  const text = senseSurrogatAltFinal(netejaText(valor, maxim)).trim();
+  const text = senseSurrogatsSolts(netejaText(valor, maxim)).trim();
   return text === '' ? null : text;
 }
 
@@ -466,7 +477,8 @@ export function tipusDAmbit(ambit) {
 export function rutaDAmbit(ambit, id) {
   const base = esAmbit(ambit) ? ambit : 'mur';
   const clau = typeof id === 'string' || typeof id === 'number' ? String(id) : '';
-  return `/${base}/${encodeURIComponent(clau)}`;
+  try { return `/${base}/${encodeURIComponent(clau)}`; }
+  catch { return `/${base}/`; } // UTF-16 malmés: cap id representable ni URIError en pintar.
 }
 
 /** Una còpia del payload amb l'estat nou; un estat fora d'ESTATS no canvia res. */

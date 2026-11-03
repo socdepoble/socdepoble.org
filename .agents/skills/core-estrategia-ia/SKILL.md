@@ -18,8 +18,8 @@ Aquesta skill documenta la forma en què *el Mas* recopila, analitza i aplica l'
 
 ## 1. Interpretació de Captures i Informes
 S'ha detectat en el passat un greu error de comprensió (Fusible Rebentat) on es confonien els límits. Aquesta és la regla exacta de lectura:
-- **Claude (Opus/Fable):** Els percentatges de la seua gràfica o informe per consola indiquen el % **CONSUMIT** (Ex: "Semanal 6%" vol dir que queda un 94% lliure).
-- **Codex (Astra):** Els percentatges de la seua web/captures indiquen el % **RESTANT** (Ex: "15% restante" vol dir que s'ha consumit el 85%).
+- Llig l'etiqueta real: «consumit» i «restant» són mètriques diferents. Un 6% consumit equival a 94% lliure; un 15% restant equival a 85% consumit. No deduïsques el sentit només per la marca o el color de la gràfica.
+- Conserva data, compte, model, període, unitat i font; si una captura no diu la mètrica o la quota actual no és accessible, declara-ho. Una observació antiga al CSV no és telemetria viva.
 
 ## 2. Telemetria Persistent (NO sigues un Lloro Estocàstic)
 **OBLIGACIÓ:** Sempre que el Mestre envie informació, pantallassos o textos amb el consum de la sessió, **NO ho guardes en la teua memòria a curt termini.** Has d'invocar immediatament aquest script per registrar-ho al CSV:
@@ -32,9 +32,8 @@ node tooling/brain/tracker_consum.mjs <IA> <Model> <Limit> <Mètrica> <Valor%> "
 Les dades es guarden a `_wiki_de_poble/10_metriques/consum_ia.csv`.
 
 ## 3. Estratègia de Triatge
-- **Claude (Opus 5 Max / Fable Extra):** L'espina dorsal de l'Eixam. Fable Extra té potència per a assumir tant arquitectura com pic i pala (frontend/disseny) sempre que els límits no s'esgoten.
-- **Codex (GPT-6 Astra Ligero):** Agent extremadament bo però de baix límit ("15% restant"). Es reserva per a verificacions independents, autosanació cega o auditories curtes molt específiques.
-- L'arquitecta principal (MarIA) recomanarà el model adient per a la següent tasca calculant la quota lliure real (després de consultar el CSV) i avaluant l'esforç requerit.
+- L'assignació actual de rols i models la fixa l'encàrrec i la disponibilitat observada. Tria segons la feina, els límits confirmats i la revisió independent necessària; cap percentatge ni model d'una sessió històrica és una reserva permanent.
+- Registra el cost només si la font l'exposa o si l'estimació queda identificada com a tal. No declares un restabliment, compra o consum de crèdits no observat. Un tracker CSV no modifica la quota del proveïdor.
 
 ## Vincles
 - [[00_INDEX_SKILLS]]

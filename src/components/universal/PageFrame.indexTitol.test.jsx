@@ -187,6 +187,30 @@ test('§5 · el títol d’un <dialog> tancat del cos (la «Vista prèvia d’im
   expect(entrades().map(([, text]) => text)).toEqual(['Nota', 'Visible', 'Diàleg obert']);
 });
 
+/* O4-CLAUDE-1 (ordre del Mestre, captura 261102_2121) · Res del que viu dins
+   de l'«Edició avançada» de l'editor entra a l'Índex, plegada o oberta: la
+   previsualització en línia de «On es publica?» hi pinta la targeta pública
+   amb el títol (h3) i el subtítol (h4) de la nota. La resta del cos, com
+   sempre (també una targeta incrustada fora del desplegable). */
+test('O4-CLAUDE-1 · cap encapçalament de dins de details.sdp-edicio-avancada (la previsualització de la targeta) entra a l’Índex', () => {
+  render(
+    <PageFrame chrome="system" title="Nota">
+      <details className="sdp-edicio-avancada" open>
+        <summary>Edició avançada</summary>
+        <section><h3>Viatge a Alcoi</h3><h4>Dissabte de matí</h4></section>
+      </details>
+      <details className="sdp-edicio-avancada">
+        <summary>Plegada</summary>
+        <h5>Amagat</h5>
+      </details>
+      <details open><summary>Un altre desplegable</summary><h4>Del cos</h4></details>
+      {TARGETA}
+    </PageFrame>
+  );
+  obriIndex();
+  expect(entrades().map(([, text]) => text)).toEqual(['Nota', 'Del cos', 'Targeta', 'Apartat', '38 rebuts', 'Nota']);
+});
+
 test('§5 · sense títol (chrome="none" no pinta la capçalera) l’Índex és el del cos de sempre', () => {
   const { container } = render(<PageFrame chrome="none" title="Amagat"><h2>Primera</h2></PageFrame>);
   // Sense capçalera ni barra blava: cap H1 per a l'Índex i cap botó Índex;

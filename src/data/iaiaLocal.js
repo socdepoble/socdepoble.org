@@ -1267,7 +1267,7 @@ export const SUGGERIMENTS_RAPIDS_IAIA = Object.freeze([
     clau: 'section.xat.iaia.suggeriments.mercatCotxe',
     etiqueta: 'Com publique un producte al Mercat o un viatge per Compartir Cotxe?',
     pregunta: 'Com publique un producte al Mercat o un viatge per Compartir Cotxe?',
-    ruta: '/page/vehicle_compartit'
+    ruta: '/vehicle'
   }),
   Object.freeze({
     id: 'bandol-mur',

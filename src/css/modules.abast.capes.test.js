@@ -352,16 +352,22 @@ test('§5 · l’Índex: H1 --sdp-accio-text, H2 --sdp-accent-titol, H3 --sdp-te
 
 /* §5 (261026_2126) · El vel i el calaix naixen davall de la barra negra
    (header.bar-black, layout.css: var(--sdp-alt-negra) més la zona segura de
-   dalt), amb l'alçada de la resta de la pantalla (vh i, després, dvh), i el
-   calaix porta respiració de dalt. */
-test('§5 · el vel de l’Índex comença davall de la barra negra, vh abans de dvh, i el calaix respira de dalt', () => {
+   dalt), amb l'alçada de la resta de la pantalla (vh i, on existix, dvh), i
+   el calaix porta respiració de dalt.
+   O4-CLAUDE-1b (IDEA-63) · El càlcul viu als tokens compartits amb els
+   calaixos del Dialeg (tokens.css): el mateix valor, una sola alçada a la
+   regla i el dvh dins de @supports (height: 100dvh), perquè una segona
+   declaració amb var() no fa de reserva en Chrome 100 ni en Firefox 100. */
+test('§5 · el vel de l’Índex comença davall de la barra negra amb els tokens del calaix (vh, i dvh dins de @supports), i el calaix respira de dalt', () => {
   const BARRA = 'calc(var(--sdp-alt-negra) + env(safe-area-inset-top, 0px))';
-  expect(valorDe('.toc-overlay', 'top')).toBe(BARRA);
+  expect(valorDe('.toc-overlay', 'top')).toBe('var(--sdp-calaix-dalt)');
   const altures = DECLS.filter((d) => d.prelud === '.toc-overlay' && d.propietat === 'height').map((d) => d.valor);
-  expect(altures).toEqual([
-    'calc(100vh - var(--sdp-alt-negra) - env(safe-area-inset-top, 0px))',
-    'calc(100dvh - var(--sdp-alt-negra) - env(safe-area-inset-top, 0px))'
-  ]);
+  expect(altures).toEqual(['var(--sdp-calaix-alt)']);
+  expect(CLAR.get('--sdp-calaix-dalt')).toBe(BARRA);
+  expect(CLAR.get('--sdp-calaix-alt')).toBe('calc(100vh - var(--sdp-calaix-dalt))');
+  const dinamica = TOKENS.filter((r) => r.pares.includes('@supports (height: 100dvh)'))
+    .flatMap((r) => declaracions(r.cos)).filter(([nom]) => nom === '--sdp-calaix-alt').map(([, valor]) => valor);
+  expect(dinamica).toEqual(['calc(100dvh - var(--sdp-calaix-dalt))']);
   expect(valorDe('.toc-drawer', 'padding-block')).toBe('var(--sdp-space-2) env(safe-area-inset-bottom, 0px)');
 });
 

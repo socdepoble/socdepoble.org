@@ -35,6 +35,9 @@ const FITXERS = Object.freeze([
   `${DIR}/ordresIBarra.test.js`,
   `${DIR}/qualitat.test.js`,
   'src/components/universal/richText/extensions/index.js',
+  /* O4-CLAUDE-2 (261102) · La subtargeta, germana de les targetes. */
+  'src/components/universal/richText/extensions/subtargeta.js',
+  'src/components/universal/richText/extensions/subtargeta.test.js',
   'src/components/universal/richText/toolbarContract.js',
   'src/components/universal/richText/tiptapToolbarAdapter.js',
   'src/components/universal/DocumentEditor.jsx',

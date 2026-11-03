@@ -361,3 +361,149 @@ describe('GM2-03 · scroll-margin-block-start del cos del desplegable', () => {
     expect(senseComentaris(llig('src/css/modules.css'))).toContain(`${MARGE.replace('scroll-margin-block-start', 'scroll-margin-top')};`);
   });
 });
+
+/* O4-CLAUDE-1 (ordre del Mestre, captura 261102_2121: «On es publica?» dins
+   de l'«Edició avançada», sense finestra modal) · La ranura de l'àmbit
+   (`ambitEdicioAvancada`) entre el logotip i la classificació, i la petició
+   d'anar-hi (`peticioAmbit`): obri el desplegable, porta la ranura a la vista
+   (suau, o de colp amb prefers-reduced-motion) i, amb `enfoca`, posa el focus
+   al ràdio triat. Una sola vegada per petició, també sota StrictMode. jsdom
+   no implementa scrollIntoView: es registra. */
+describe('O4-CLAUDE-1 · la ranura «On es publica?» i la petició d’anar-hi', () => {
+  const BLOC = (
+    <fieldset data-testid="bloc-ambit">
+      <legend>Àmbit</legend>
+      <input type="radio" name="ambit-prova" aria-label="Mur" />
+      <input type="radio" name="ambit-prova" aria-label="Compartir cotxe" defaultChecked />
+    </fieldset>
+  );
+  const saltats = [];
+  const scrollAbans = Element.prototype.scrollIntoView;
+  const matchMediaAbans = window.matchMedia;
+  const registraSalts = () => {
+    saltats.length = 0;
+    Element.prototype.scrollIntoView = function scrollIntoView(opcions) { saltats.push([this, opcions]); };
+  };
+  afterEach(() => {
+    Element.prototype.scrollIntoView = scrollAbans;
+    window.matchMedia = matchMediaAbans;
+  });
+
+  test('ordre exacte dins del desplegable: capçalera > logotip > «On es publica?» > classificació', () => {
+    const { container } = closca({ edicioAvancada: true, ambitEdicioAvancada: BLOC });
+    const cos = container.querySelector('details.sdp-edicio-avancada > .sdp-edicio-avancada__cos');
+    expect(fillsAmbRanura(cos)).toEqual([
+      'sdp-edicio-avancada__imatge [capcalera]',
+      'sdp-edicio-avancada__imatge [logotip]',
+      'sdp-edicio-avancada__ambit [ambit]',
+      'page-title-classificacio'
+    ]);
+    expect(cos.querySelector('[data-sdp-ranura="ambit"] [data-testid="bloc-ambit"]')).not.toBeNull();
+    // Cap prop nova arriba al DOM ni a la UniversalPage (pitfall ...rest).
+    expect(container.querySelector('[ambitedicioavancada], [peticioambit], [onpeticioambitatesa]')).toBeNull();
+  });
+
+  test('amb identitat (el Perfil) i sense la ranura: l’ordre de sempre, sense cap ranura d’àmbit', () => {
+    const { container } = closca({ edicioAvancada: true, identitatEdicioAvancada: <p>Avatar</p>, peticioAmbit: { enfoca: true } });
+    const cos = container.querySelector('.sdp-edicio-avancada__cos');
+    expect(fillsAmbRanura(cos)).toEqual([
+      'sdp-edicio-avancada__imatge [capcalera]',
+      'sdp-edicio-avancada__identitat',
+      'sdp-edicio-avancada__imatge [logotip]',
+      'page-title-classificacio'
+    ]);
+    expect(container.querySelector('[data-sdp-ranura="ambit"]')).toBeNull();
+    // Sense ranura, la petició no obri res.
+    expect(container.querySelector('details.sdp-edicio-avancada').open).toBe(false);
+  });
+
+  test('sense edicioAvancada, la ranura no es pinta enlloc: el DOM de sempre', () => {
+    const sempre = closca().container.innerHTML;
+    cleanup();
+    expect(closca({ ambitEdicioAvancada: BLOC, peticioAmbit: { enfoca: true } }).container.innerHTML).toBe(sempre);
+  });
+
+  test('una petició (l’entrada ?ambit=) obri el desplegable i porta la ranura a la vista, suau, sense moure el focus', () => {
+    registraSalts();
+    const atesa = vi.fn();
+    const peticio = { enfoca: false };
+    const pinta = (props) => (
+      <UniversalEditorShell id="d1" titleHtml="" subtitleHtml="" leadHtml="" topBar={EINES} posicioEines="davall-entradilla"
+        classificacio={ranura()} edicioAvancada ambitEdicioAvancada={BLOC} onPeticioAmbitAtesa={atesa} {...props}>
+        <div className="ProseMirror" data-testid="cos" />
+      </UniversalEditorShell>
+    );
+    const vista = render(pinta({}));
+    const desplegable = vista.container.querySelector('details.sdp-edicio-avancada');
+    expect(desplegable.open).toBe(false);
+    expect(saltats).toEqual([]);
+    const actiu = document.activeElement;
+    vista.rerender(pinta({ peticioAmbit: peticio }));
+    expect(desplegable.open).toBe(true);
+    expect(saltats).toHaveLength(1);
+    expect(saltats[0][0]).toBe(vista.container.querySelector('[data-sdp-ranura="ambit"]'));
+    expect(saltats[0][1]).toEqual({ behavior: 'smooth', block: 'start' });
+    expect(document.activeElement).toBe(actiu);
+    expect(atesa).toHaveBeenCalledTimes(1);
+    expect(atesa).toHaveBeenCalledWith(peticio);
+    // La mateixa petició repintada no hi torna.
+    vista.rerender(pinta({ peticioAmbit: peticio, titleHtml: 'Títol' }));
+    expect(saltats).toHaveLength(1);
+    expect(atesa).toHaveBeenCalledTimes(1);
+  });
+
+  test('amb `enfoca` (el botó «Àmbit»), el focus va al ràdio de l’àmbit triat, sense un segon salt; amb prefers-reduced-motion, de colp', () => {
+    registraSalts();
+    window.matchMedia = (consulta) => ({ matches: consulta === '(prefers-reduced-motion: reduce)', media: consulta, addEventListener() {}, removeEventListener() {} });
+    const { container } = closca({ edicioAvancada: true, ambitEdicioAvancada: BLOC, peticioAmbit: { enfoca: true } });
+    expect(container.querySelector('details.sdp-edicio-avancada').open).toBe(true);
+    expect(document.activeElement).toBe(container.querySelector('[data-sdp-ranura="ambit"] input[aria-label="Compartir cotxe"]'));
+    expect(saltats).toHaveLength(1);
+    expect(saltats[0][1]).toEqual({ behavior: 'auto', block: 'start' });
+  });
+
+  test('sota StrictMode, una petició s’atén una sola vegada', () => {
+    registraSalts();
+    const atesa = vi.fn();
+    render(
+      <React.StrictMode>
+        <UniversalEditorShell id="d1" titleHtml="" subtitleHtml="" leadHtml="" topBar={EINES} posicioEines="davall-entradilla"
+          classificacio={ranura()} edicioAvancada ambitEdicioAvancada={BLOC} peticioAmbit={{ enfoca: false }} onPeticioAmbitAtesa={atesa}>
+          <div className="ProseMirror" data-testid="cos" />
+        </UniversalEditorShell>
+      </React.StrictMode>
+    );
+    expect(saltats).toHaveLength(1);
+    expect(atesa).toHaveBeenCalledTimes(1);
+  });
+
+  /* Correcció A1-01 de l'àrbitre (O4-CLAUDE-1) · Dins de WordPress l'App viu
+     en l'arrel ombra de <soc-de-poble> (PedraSecaEmbed): un scrollIntoView
+     mouria també la pàgina del tema de l'amfitrió. El salt passa per
+     desplacaASeccio (PageFrame), que només mou el desplaçador de l'app i,
+     encastat i sense desplaçador, no mou res. El desplegable s'obri igual. */
+  test('encastat a <soc-de-poble>, la petició obri el desplegable però no fa cap scrollIntoView (la pàgina de l’amfitrió no salta)', () => {
+    registraSalts();
+    const atesa = vi.fn();
+    const amfitrio = document.createElement('soc-de-poble');
+    document.body.append(amfitrio);
+    const dins = document.createElement('div');
+    amfitrio.attachShadow({ mode: 'open' }).append(dins);
+    try {
+      render(
+        <UniversalEditorShell id="d1" titleHtml="" subtitleHtml="" leadHtml="" topBar={EINES} posicioEines="davall-entradilla"
+          classificacio={ranura()} edicioAvancada ambitEdicioAvancada={BLOC} peticioAmbit={{ enfoca: true }} onPeticioAmbitAtesa={atesa}>
+          <div className="ProseMirror" data-testid="cos" />
+        </UniversalEditorShell>,
+        { container: dins }
+      );
+      expect(dins.querySelector('details.sdp-edicio-avancada').open).toBe(true);
+      expect(saltats).toEqual([]);
+      expect(dins.querySelector('[data-sdp-ranura="ambit"] input[aria-label="Compartir cotxe"]').matches(':focus')).toBe(true);
+      expect(atesa).toHaveBeenCalledTimes(1);
+    } finally {
+      cleanup();
+      amfitrio.remove();
+    }
+  });
+});

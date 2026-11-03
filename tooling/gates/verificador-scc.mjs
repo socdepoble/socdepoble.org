@@ -25,7 +25,7 @@ export class VerificadorSCC {
       for (const item of items) {
         // Excepte carpetes ocultes, de sistema i ignorades per SCC
         if (
-          item.startsWith('.') || (dirPath === this.wikiRoot && item === 'var') || 
+          item.startsWith('.') || (dirPath === this.wikiRoot && ['var', 'dist-natiu'].includes(item)) || 
           ['node_modules', 'dist', 'src', 'scratch', 'supabase', '_templates', 'scripts', 'public', '90_arxiu_historic', '90_arxiu_historic'].includes(item)
         ) continue;
         

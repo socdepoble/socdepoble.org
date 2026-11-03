@@ -7,11 +7,12 @@ import path from 'node:path';
  * Respecta '…', "…", $$…$$ / $tag$…$tag$ i els comentaris de bloc imbricats.
  * Sense això, `[\s\S]*?` travessa el `;` i acusa la taula equivocada.
  * ────────────────────────────────────────────────────────────────────────── */
-function sentencies(sql) {
+function segmentsSql(sql, separador = ';') {
   const fora = [];
   let buf = '';
   let i = 0;
   const n = sql.length;
+  let profunditat = 0;
 
   while (i < n) {
     const c = sql[i];
@@ -32,8 +33,12 @@ function sentencies(sql) {
       continue;
     }
     if (c === "'") {                              // cadena literal
+      const escapable = i > 0 && /[eE]/.test(sql[i - 1]) && (i < 2 || !/[a-zA-Z0-9_$]/.test(sql[i - 2]));
       buf += c; i++;
       while (i < n) {
+        // PostgreSQL E'…' permet \': no tanca la cadena ni fa executable
+        // un ALTER TABLE escrit dins del text literal.
+        if (escapable && sql[i] === '\\' && i + 1 < n) { buf += sql.slice(i, i + 2); i += 2; continue; }
         if (sql[i] === "'" && sql[i + 1] === "'") { buf += "''"; i += 2; continue; }
         buf += sql[i];
         if (sql[i] === "'") { i++; break; }
@@ -51,7 +56,7 @@ function sentencies(sql) {
       }
       continue;
     }
-    if (c === '$') {                              // cos $$ … $$ o $tag$ … $tag$
+    if (c === '$' && (i === 0 || !/[a-zA-Z0-9_$]/.test(sql[i - 1]))) { // mai dins d'un identificador
       const m = /^\$[a-zA-Z_][a-zA-Z0-9_]*\$|^\$\$/.exec(sql.slice(i));
       if (m) {
         const tanca = m[0];
@@ -62,7 +67,9 @@ function sentencies(sql) {
         continue;
       }
     }
-    if (c === ';') {                              // final de sentència
+    if (c === '(') profunditat++;
+    if (c === ')') profunditat = Math.max(0, profunditat - 1);
+    if (c === separador && profunditat === 0) {    // només separadors de nivell zero
       if (buf.trim()) fora.push(buf);
       buf = '';
       i++;
@@ -75,8 +82,10 @@ function sentencies(sql) {
   return fora;
 }
 
+const sentencies = sql => segmentsSql(sql);
+
 const SQL_IDENTIFIER = String.raw`(?:"(?:[^"]|"")+"|[a-zA-Z_][a-zA-Z0-9_$]*)`;
-const RE_SQL_RELATION = new RegExp(`^\\s*(${SQL_IDENTIFIER})(?:\\s*\\.\\s*(${SQL_IDENTIFIER}))?(?=\\s|\\(|$)`);
+const RE_SQL_RELATION = new RegExp(`^\\s*(${SQL_IDENTIFIER})(?:\\s*\\.\\s*(${SQL_IDENTIFIER}))?(?=\\s|\\(|[,*]|$)`);
 const sqlIdentifier = (raw) => raw.startsWith('"')
   ? raw.slice(1, -1).replace(/""/g, '"')
   : raw.toLowerCase();
@@ -92,21 +101,66 @@ function sqlRelation(text) {
   };
 }
 
-/* R2: només DDL de nivell superior acredita ENABLE. Comentaris, literals i
- * cossos dollar-quoted no són evidència. L'últim ENABLE/DISABLE del fitxer
- * per a la mateixa relació governa el control estàtic; no s'executa SQL.
+/* R2: DDL de nivell superior. La mateixa segmentació respecta literals,
+ * identificadors, dollar-quotes i parèntesis en sentències i llistes d'accions.
+ * No valida tota la gramàtica PostgreSQL ni interpreta SQL dinàmic.
  */
-function rlsActivat(statements,schema,table) {
-  let enabled=false;
-  for(const statement of statements) {
-    const prefix=/^\s*alter\s+table\s+(?:if\s+exists\s+)?(?:only\s+)?/i.exec(statement);
-    if(!prefix)continue;
-    const relation=sqlRelation(statement.slice(prefix[0].length));
-    if(!relation)continue;
-    const action=/^\s+(enable|disable)\s+row\s+level\s+security\s*$/i.exec(relation.rest);
-    if(action&&relation.schema===schema&&relation.table===table)enabled=action[1].toLowerCase()==='enable';
+function accionsRls(statement) {
+  const prefix=/^\s*alter\s+table\s+(?:if\s+exists\s+)?(?:only\s+)?/i.exec(statement);
+  if(!prefix)return [];
+  const relation=sqlRelation(statement.slice(prefix[0].length));
+  if(!relation)return [];
+  // PostgreSQL admet l'asterisc de descendència després de la relació.
+  const body=relation.rest.replace(/^\s*\*/, '');
+  return segmentsSql(body,',').flatMap(part=>{
+    const action=/^\s*(enable|disable)\s+row\s+level\s+security\s*$/i.exec(part);
+    return action ? [{schema:relation.schema,table:relation.table,enabled:action[1].toLowerCase()==='enable'}] : [];
+  });
+}
+
+function creacioTaula(statement) {
+  const prefix=/^\s*create\s+(?:unlogged\s+)?table\s+(if\s+not\s+exists\s+)?/i.exec(statement);
+  const relation=prefix&&sqlRelation(statement.slice(prefix[0].length));
+  return relation ? {...relation,ifNotExists:!!prefix[1]} : null;
+}
+
+function taulesRetirades(statement) {
+  const prefix=/^\s*drop\s+table\s+(?:if\s+exists\s+)?/i.exec(statement);
+  if(!prefix)return [];
+  const parts=segmentsSql(statement.slice(prefix[0].length),',');
+  const relations=parts.map(part=>sqlRelation(part));
+  // CASCADE/RESTRICT només pot tancar la llista, no és part d'un nom quoted.
+  if(relations.some((relation,i)=>!relation||!(i===parts.length-1
+    ? /^\s*(?:cascade|restrict)?\s*$/i : /^\s*$/).test(relation.rest)))return [];
+  return relations;
+}
+
+/* R2 · Una relació que canvia de nom o d'esquema s'endú el seu estat RLS (en
+ * PostgreSQL, ALTER TABLE … RENAME TO i SET SCHEMA conserven la RLS de la
+ * taula), i DROP SCHEMA retira totes les de l'esquema. Sense açò, un
+ * CREATE TABLE IF NOT EXISTS posterior amb el nom antic heretaria l'«activat»
+ * d'una taula que ja no és eixa (Gauntlet O4, D6-05). Un nom que no s'entén
+ * retira l'origen i deixa el destí desconegut: el CREATE torna a exigir ENABLE.
+ */
+function canvisDeRelacio(statement) {
+  const alter=/^\s*alter\s+table\s+(?:if\s+exists\s+)?(?:only\s+)?/i.exec(statement);
+  if(alter) {
+    const relation=sqlRelation(statement.slice(alter[0].length));
+    if(!relation)return [];
+    const body=relation.rest.replace(/^\s*\*/, '');
+    const rename=/^\s*rename\s+to\s+/i.exec(body);
+    const esquema=!rename&&/^\s*set\s+schema\s+/i.exec(body);
+    if(!rename&&!esquema)return [];
+    const nom=sqlRelation(body.slice((rename||esquema)[0].length));
+    const net=nom&&/^\s*$/.test(nom.rest)&&(esquema||nom.schema==='public'&&!/\./.test(body.slice(rename[0].length)));
+    const desti=!net ? null
+      : rename ? {schema:relation.schema,table:nom.table} : {schema:nom.table,table:relation.table};
+    return [{tipus:'mou',des:relation,a:desti}];
   }
-  return enabled;
+  const drop=/^\s*drop\s+schema\s+(?:if\s+exists\s+)?/i.exec(statement);
+  if(!drop)return [];
+  const parts=segmentsSql(statement.slice(drop[0].length),',');
+  return parts.map(part=>sqlRelation(part)).filter(Boolean).map(relation=>({tipus:'esquema',schema:relation.table}));
 }
 
 /* R3 · exempcions declarades. Contingut públic per disseny, no dades de persones. */
@@ -141,7 +195,11 @@ function scanFiles(dir) {
   return files;
 }
 
-const files = scanFiles(sqlDir);
+// Les migracions tenen prefix cronològic. La comprovació final és estable
+// encara que el sistema de fitxers enumere o cree els fitxers en altre ordre.
+const files = scanFiles(sqlDir).sort();
+const estatRlsFinal = new Map();
+const r2Reportades = new Set();
 
 for (const file of files) {
   const content = fs.readFileSync(file, 'utf8');
@@ -189,19 +247,54 @@ for (const file of files) {
     }
   }
 
-  // R2: RLS-ABSENT
+  // R2: RLS-ABSENT. CREATE normal reinicia l'estat; IF NOT EXISTS conserva
+  // l'existent conegut. DROP el retira i cada acció ALTER s'aplica en ordre.
   const statements=sentencies(content);
-  const createTableLines = statements.filter(s => /^\s*create\s+table\b/i.test(s));
-  for (const block of createTableLines) {
-    const prefix = /^\s*create\s+table\s+(?:if\s+not\s+exists\s+)?/i.exec(block);
-    const relation = prefix && sqlRelation(block.slice(prefix[0].length));
-    if (relation) {
-      const { schema, table } = relation;
-      if (schema === 'private' || schema === 'storage') continue;
-      const hasRLS = rlsActivat(statements,schema,table);
-      if (!hasRLS) {
-        falla('R2', file, `La taula ${schema}.${table} no té RLS activat.`);
+  const criadesAlFitxer=new Set();
+  for(const statement of statements) {
+    const created=creacioTaula(statement);
+    if(created) {
+      const key=JSON.stringify([created.schema,created.table]);
+      if(!created.ifNotExists||!estatRlsFinal.has(key)) {
+        estatRlsFinal.set(key,{schema:created.schema,table:created.table,enabled:false,lastAction:'create',file});
       }
+      criadesAlFitxer.add(key);
+    }
+    for(const action of accionsRls(statement)) {
+      estatRlsFinal.set(JSON.stringify([action.schema,action.table]),{
+        ...action,lastAction:action.enabled?'enable':'disable',file,
+      });
+    }
+    for(const removed of taulesRetirades(statement)) {
+      const key=JSON.stringify([removed.schema,removed.table]);
+      estatRlsFinal.delete(key);
+      criadesAlFitxer.delete(key);
+    }
+    for(const canvi of canvisDeRelacio(statement)) {
+      if(canvi.tipus==='esquema') {
+        for(const key of [...estatRlsFinal.keys()]) if(JSON.parse(key)[0]===canvi.schema) estatRlsFinal.delete(key);
+        for(const key of [...criadesAlFitxer]) if(JSON.parse(key)[0]===canvi.schema) criadesAlFitxer.delete(key);
+        continue;
+      }
+      const des=JSON.stringify([canvi.des.schema,canvi.des.table]);
+      const state=estatRlsFinal.get(des);
+      const creada=criadesAlFitxer.has(des);
+      estatRlsFinal.delete(des);
+      criadesAlFitxer.delete(des);
+      if(!canvi.a)continue;
+      const a=JSON.stringify([canvi.a.schema,canvi.a.table]);
+      if(state)estatRlsFinal.set(a,{...state,schema:canvi.a.schema,table:canvi.a.table,file});
+      else estatRlsFinal.delete(a);
+      if(creada)criadesAlFitxer.add(a);
+    }
+  }
+  // Manté el control de la migració creadora: una activació futura no valida
+  // retrospectivament un CREATE que acaba este fitxer sense RLS.
+  for(const key of criadesAlFitxer) {
+    const state=estatRlsFinal.get(key);
+    if(state&&!state.enabled&&state.schema!=='private'&&state.schema!=='storage') {
+      falla('R2',file,`La taula ${state.schema}.${state.table} no té RLS activat.`);
+      r2Reportades.add(JSON.stringify([file,state.schema,state.table]));
     }
   }
 
@@ -262,6 +355,18 @@ for (const file of files) {
   }
 }
 
+// Una migració posterior pot desactivar una taula creada i protegida en un
+// altre fitxer. Comprovar només CREATE dins de cada fitxer ho deixava passar.
+// És anàlisi de DDL de nivell superior, no execució de funcions o SQL dinàmic.
+for(const {schema,table,enabled,lastAction,file} of estatRlsFinal.values()) {
+  // storage és gestionat pel servei i manté l'exempció de CREATE. Això no
+  // autoritza desactivar explícitament la seua taula protegida d'objectes.
+  const protectedTable=schema!=='private'&&schema!=='storage';
+  const storageDisabled=schema==='storage'&&table==='objects'&&lastAction==='disable';
+  if(!enabled&&(protectedTable||storageDisabled)&&!r2Reportades.has(JSON.stringify([file,schema,table]))) {
+    falla('R2',file,`La taula ${schema}.${table} queda amb RLS desactivada al final de l’arbre SQL.`);
+  }
+}
 
 
 for (const g of grants) {
@@ -281,5 +386,5 @@ if (infr.length > 0) {
   }
   process.exit(1);
 } else {
-  console.log(`\n✅ [RLS] Zero fantasmes i zero forats (sobre ${files.length} fitxers sql).`);
+  console.log(`\n✅ [RLS] Cap infracció estàtica detectada (sobre ${files.length} fitxers sql; no executa SQL dinàmic ni comprova permisos remots).`);
 }

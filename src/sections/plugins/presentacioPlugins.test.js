@@ -256,3 +256,29 @@ describe('salut: el text no promet ni aconsella', () => {
     expect(senseMarques(PRESENTACIO_PLUGINS.rebost)).not.toMatch(/\d/);
   });
 });
+
+/* Onada 6 (261103, prompt 261102_1532; ordre del Mestre de les negretes
+   d'escaneig, core-llegibilitat-text) · Prova d'Or de Lectura Diagonal: cada
+   paràgraf porta les negretes del contracte de densitat segons la seua
+   llargària (40 paraules o més: 6–8; 25–39: 5–7; 12–24: 2–4; menys: 1–3), cap
+   paràgraf pla, i cada negreta és un sintagma curt (6 paraules com a màxim),
+   no una paraula buida, ni buida ni niuada. Les paraules es compten com a
+   tirades de lletres o xifres: «d’ací» en són dos (el verificador d'O6, amb Intl.Segmenter, en compta un, i diagonal.mjs compta per espais: este test és el més estricte). */
+describe('negretes d’escaneig de la presentació', () => {
+  const paraules = (text) => (text.match(/[\p{L}\p{N}]+/gu) ?? []).length;
+  const tram = (n) => (n >= 40 ? [6, 8] : n >= 25 ? [5, 7] : n >= 12 ? [2, 4] : [1, 3]);
+  const BUIDES = new Set(['i', 'o', 'de', 'del', 'la', 'el', 'els', 'les', 'a', 'al', 'en', 'amb', 'per', 'que', 'un', 'una', 'és']);
+
+  test.each(AMB_PRESENTACIO)('%s: cada paràgraf té les negretes que li toquen', (id) => {
+    for (const [index, paragraf] of paragrafs(presentacioDelPlugin(id)).entries()) {
+      const llarg = paraules(senseMarques(paragraf));
+      const negretes = [...paragraf.matchAll(/<strong>(.*?)<\/strong>/g)].map(([, dins]) => dins);
+      const [minim, maxim] = tram(llarg);
+      expect([index, llarg, negretes.length >= minim && negretes.length <= maxim]).toEqual([index, llarg, true]);
+      for (const negreta of negretes) {
+        expect([index, negreta, negreta.includes('<'), negreta.trim() === negreta, negreta.length > 0]).toEqual([index, negreta, false, true, true]);
+        expect([index, negreta, paraules(negreta) <= 6, BUIDES.has(negreta.toLowerCase())]).toEqual([index, negreta, true, false]);
+      }
+    }
+  });
+});

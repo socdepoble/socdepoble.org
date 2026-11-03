@@ -477,11 +477,12 @@ test('missatgeFatiga: capçalera, xifres reals, frase literal del cas 4 a N2 i N
   for (const x of ['500 passos', '95 pujades (70 captures, 25 notes de veu)', '12,3 MB', '4 resums automàtics', 'passos 500 ≥ 400 (N2)', 'pujades 95 ≥ 90 (N2)', 'MB 12,3 ≥ 10 (N1)', termo.RECONEIX]) {
     assert.ok(n2.includes(x), `falta «${x}»: ${n2}`);
   }
-  assert.doesNotMatch(n2.replace(termo.FRASE_CAS4, ''), /150/, 'fora de la frase literal, cap llindar fix');
+  assert.doesNotMatch(n2, /150[-–]180|150/, 'cap recompte fix, tampoc dins de la frase literal');
 
   const n3 = termo.missatgeFatiga(3, { ...m, crons: 85, programats: 1, ultimCron: 2888 }, ['passos 700 ≥ 600 (N3)'], ID);
   assert.ok(n3.startsWith('[FATIGA·N3 · conv aaaaaaaa]'));
   assert.ok(n3.includes(termo.FRASE_CAS4));
+  assert.doesNotMatch(n3, /150[-–]180|150/, 'N3 també usa només les mètriques de la mesura');
   assert.match(n3, /No comences cap tasca nova/);
   assert.match(n3, /Acta Marmota/);
   assert.match(n3, /\/schedule \(85 disparaments; l'últim, al pas 2888\)/);
@@ -493,49 +494,21 @@ test('missatgeFatiga: capçalera, xifres reals, frase literal del cas 4 a N2 i N
   assert.ok(!n1.includes(termo.FRASE_CAS4), 'N1 no atura la màquina');
 });
 
-test('la frase del cas 4 és literal a la skill, el frontmatter és el de la base (que ja porta prioritat: 1) i la resta de la skill no canvia', (t) => {
+// Onada 4 autoritza revisar tota la skill: la preservació byte a byte d'un commit
+// històric no pot congelar errors del procediment. Es conserven el contracte viu,
+// els identificadors públics del hook i la prioritat del fusible.
+test('el cas 4 viu acompanya la frase sense recomptes inventats i conserva el contracte del hook', (t) => {
   if (salta(t, { base: true })) return;
   const nova = fs.readFileSync(DE_BASE(SKILL_BASE), 'utf8');
   assert.ok(nova.includes(`*"${termo.FRASE_CAS4}"*`), 'frase literal, amb el mateix format');
-  // La regla dels /schedule és una decisió que el Mestre pot llevar abans d'aplicar: no es comprova ací.
-  for (const x of ['[FATIGA·N1', '[FATIGA·N3', 'sdp-fatiga', termo.RECONEIX, 'Acta Marmota', `cada ${termo.CADENCIA_VEU} torns`]) assert.ok(nova.includes(x), `falta «${x}»`);
-  const frontmatter = (x) => x.slice(0, x.indexOf('\n---\n', 4) + 5);
-  // La base ja porta `prioritat: 1`, afegida després del commit 62b623339 del paquet. És
-  // l'única diferència admesa al frontmatter, i la instal·lació l'ha de conservar.
-  const PRIORITAT = 'prioritat: 1';
-  const cas4 = (l) => l.startsWith('4. **Saturació') || l.startsWith('**NOU:**') || l === PRIORITAT;
-  if (INSTALLAT) {
-    // Instal·lada, la skill diu també la forma dictada que el termòmetre reconeix (261007).
-    assert.ok(nova.includes(termo.RECONEIX_VEU), `falta «${termo.RECONEIX_VEU}»`);
-    // Revisió adversarial R4 (261007): la instal·lació conserva la prioritat de la base.
-    assert.ok(frontmatter(nova).split('\n').includes(PRIORITAT), 'la skill instal·lada conserva prioritat: 1');
-    // Ordre del Mestre (261007, P5): fora del cas 4 i de la prioritat, l'original del commit
-    // base continua sencer i al mateix ordre, ara també amb els espais finals de la plantilla
-    // de pànic (cap eina d'escriptura no els ha perdut).
-    const original = deCommitBase(REL_SKILL);
-    if (original === null) { t.diagnostic(`el clon no porta el commit ${COMMIT_BASE}: la resta de la skill no s'ha contrastat`); return; }
-    assert.equal(frontmatter(nova).split('\n').filter((l) => l !== PRIORITAT).join('\n'), frontmatter(original));
-    const instal = nova.split('\n');
-    let j = 0;
-    for (const l of original.split('\n').filter((x) => !cas4(x))) {
-      while (j < instal.length && instal[j] !== l) j++;
-      assert.ok(j < instal.length, `línia original perduda o retocada: «${l}»`);
-      j++;
-    }
-    return;
+  for (const x of ['[FATIGA·N1', '[FATIGA·N3', 'sdp-fatiga', termo.RECONEIX, 'Acta Marmota', `cada ${termo.CADENCIA_VEU} torns`]) {
+    assert.ok(nova.includes(x), `falta «${x}»`);
   }
-  const real = fs.readFileSync(path.join(REPO, REL_SKILL), 'utf8');
-  assert.ok(frontmatter(real).split('\n').includes(PRIORITAT), 'la base porta prioritat: 1');
-  assert.ok(!frontmatter(nova).split('\n').includes(PRIORITAT), 'el laboratori és d’abans de la prioritat');
-  assert.equal(frontmatter(nova), frontmatter(real).split('\n').filter((l) => l !== PRIORITAT).join('\n'));
-  // Fora del cas 4 i de la prioritat de la base, cada línia de l'original continua al mateix
-  // ordre (l'eina d'escriptura perd l'espai final).
-  const noves = nova.split('\n').map((l) => l.trimEnd());
-  let i = 0;
-  for (const l of real.split('\n').map((x) => x.trimEnd()).filter((x) => !cas4(x))) {
-    while (i < noves.length && noves[i] !== l) i++;
-    assert.ok(i < noves.length, `línia original perduda: «${l}»`);
-    i++;
+  if (INSTALLAT) {
+    assert.ok(nova.includes(termo.RECONEIX_VEU));
+    const frontmatter = nova.slice(0, nova.indexOf('\n---\n', 4) + 5);
+    assert.match(frontmatter, /^prioritat: 1$/m, 'conserva prioritat: 1');
+    assert.match(frontmatter, /^name: core-context-panic$/m, 'identificador estable');
   }
 });
 

@@ -20,6 +20,7 @@ import { PublicarDeLaPagina } from '../control/PublicarDeLaPagina.jsx';
 import { DESTINS_CONTROL } from '../control/destinsControl.js';
 import { accioAlFinal, accioDeLaPagina } from '../../config/systemPages.js';
 import fontPagina from './PageDetailSection.jsx?raw';
+import { PAGE_COPY } from '../text/pageContent.js';
 
 afterEach(() => {
   cleanup();
@@ -35,6 +36,16 @@ const visita = (slug, core = {}) => {
 test('W01: un slug amb ruta pròpia redirigix a la ruta canònica', () => {
   visita('projecte');
   expect(screen.getByText('redirecció:/projecte')).toBeTruthy();
+});
+
+test('BOTIGUES · /page/privadesa és un àlies de la política i baixa existents, sense duplicar contingut', () => {
+  visita('privadesa');
+  expect(screen.getByText('redirecció:/legal')).toBeTruthy();
+  expect(PAGE_COPY.legal.html).toContain('id="esborra-compte"');
+  expect(Object.hasOwn(PAGE_COPY, 'privadesa')).toBe(false);
+  cleanup();
+  visita('privadesa-inexistent');
+  expect(screen.getByText('404')).toBeTruthy();
 });
 
 test('W01: una pàgina sense ruta pròpia es pinta, no salta al Mur', () => {

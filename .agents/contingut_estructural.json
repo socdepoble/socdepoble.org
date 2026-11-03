@@ -2,64 +2,64 @@
   "schema": "sdp.contingut.v1",
   "claus": {
     "anima": {
-      "sha256": "8bde895c8402c835d7ec5861a0d247b93d358e008f3eeee049746a921942db14",
-      "html": 9373,
-      "aprovat_per": "Mestre Javi Llinares",
-      "data": "2026-10-28"
+      "sha256": "2a046188a3810b3de256b3e08e03656caf7792868aa2c4dd6edc49fbcf5cd167",
+      "html": 11464,
+      "aprovat_per": "Mestre Javi Llinares (ordre O6-CLAUDE-1/2, prompt 261102_1532 Onada 6, T2.4: «re-segellant la Frontissa 16/16»; diff revisat per Claude amb verificador, àrbitres i Gauntlet: negretes d'escaneig, i h4+p a versions, drets-autor, fediversity, xat, fedivers i wikidepoble)",
+      "data": "2026-11-03"
     },
     "cervell": {
-      "sha256": "c17d818e1c8960e7ac23f878c1d13d949aa917bea7ffd7608463ec49aeda2ed1",
-      "html": 3297,
-      "aprovat_per": "javillinares",
-      "data": "2026-10-31"
+      "sha256": "4af4254b9e2dfd968d49d5e02043f0d890fff120396a94fd3041d04ce043066e",
+      "html": 3450,
+      "aprovat_per": "Mestre Javi Llinares (ordre O6-CLAUDE-1/2, prompt 261102_1532 Onada 6, T2.4: «re-segellant la Frontissa 16/16»; diff revisat per Claude amb verificador, àrbitres i Gauntlet: negretes d'escaneig, i h4+p a versions, drets-autor, fediversity, xat, fedivers i wikidepoble)",
+      "data": "2026-11-03"
     },
     "consola": {
-      "sha256": "8e2d5cc8fb3783fb0278d3c44e2b82a5bf6ddaf04f724d9f907eea264caa4d6c",
-      "html": 5290,
-      "aprovat_per": "javillinares",
-      "data": "2026-10-31"
+      "sha256": "4c86de4f109bc317cb44ee9b654e8f8efc59dbaaab6780f94549768435f1d7fb",
+      "html": 5358,
+      "aprovat_per": "Mestre Javi Llinares (ordre O6-CLAUDE-1/2, prompt 261102_1532 Onada 6, T2.4: «re-segellant la Frontissa 16/16»; diff revisat per Claude amb verificador, àrbitres i Gauntlet: negretes d'escaneig, i h4+p a versions, drets-autor, fediversity, xat, fedivers i wikidepoble)",
+      "data": "2026-11-03"
     },
     "constitucio": {
-      "sha256": "6941a40e0d2bcd5716580aeac3385740af5d7eb92b336062da3b0707257818b3",
-      "html": 10390,
-      "aprovat_per": "Mestre Javi Llinares",
-      "data": "2026-10-20"
+      "sha256": "e867ed4bf88a6421e3dea8001b093e4bda62f7d6a607bad5e9a55634b1a00654",
+      "html": 11495,
+      "aprovat_per": "Mestre Javi Llinares (ordre O6-CLAUDE-1/2, prompt 261102_1532 Onada 6, T2.4: «re-segellant la Frontissa 16/16»; diff revisat per Claude amb verificador, àrbitres i Gauntlet: negretes d'escaneig, i h4+p a versions, drets-autor, fediversity, xat, fedivers i wikidepoble)",
+      "data": "2026-11-03"
     },
     "descarregues": {
-      "sha256": "afdaa66eab3370c5508017f3c8dc4f18cb5802465d2520f675cca75c537ac85f",
-      "html": 6913,
-      "aprovat_per": "Mestre Javi Llinares (ordre al xat 261101, T1, executada per Claude)",
-      "data": "2026-11-01"
+      "sha256": "c2c0c7b98e54eadbffa0694af4956bb3ff19bec99002c2bef8c39c16e9055b3c",
+      "html": 8250,
+      "aprovat_per": "Mestre Javi Llinares (ordre O6-CLAUDE-1/2, prompt 261102_1532 Onada 6, T2.4: «re-segellant la Frontissa 16/16»; diff revisat per Claude amb verificador, àrbitres i Gauntlet: negretes d'escaneig, i h4+p a versions, drets-autor, fediversity, xat, fedivers i wikidepoble)",
+      "data": "2026-11-03"
     },
     "disseny": {
-      "sha256": "885021d3b6457430e7e24565b3f39b10516cb4bbd08243e922208a5960c1022f",
-      "html": 1920,
-      "aprovat_per": "Mestre Javi Llinares",
-      "data": "2026-10-28"
+      "sha256": "4fd94dc736383bb8d497d6ecafc99d08e4d913d714ed9626bf68ca3c16f98412",
+      "html": 2294,
+      "aprovat_per": "Mestre Javi Llinares (ordre O6-CLAUDE-1/2, prompt 261102_1532 Onada 6, T2.4: «re-segellant la Frontissa 16/16»; diff revisat per Claude amb verificador, àrbitres i Gauntlet: negretes d'escaneig, i h4+p a versions, drets-autor, fediversity, xat, fedivers i wikidepoble)",
+      "data": "2026-11-03"
     },
     "drets-autor": {
-      "sha256": "bd73473fb86799f1f8ac83639cc8567a29d6e88aa3a9089479b3b387dd64ee37",
-      "html": 11195,
-      "aprovat_per": "Mestre Javi Llinares (ordre al xat 261030, executada per Claude)",
-      "data": "2026-10-30"
+      "sha256": "bd3814e8d19f76bb7bcb337de5638f285100d3513c632c3d309f709b80552746",
+      "html": 14211,
+      "aprovat_per": "Mestre Javi Llinares (ordre O6-CLAUDE-1/2, prompt 261102_1532 Onada 6, T2.4: «re-segellant la Frontissa 16/16»; diff revisat per Claude amb verificador, àrbitres i Gauntlet: negretes d'escaneig, i h4+p a versions, drets-autor, fediversity, xat, fedivers i wikidepoble)",
+      "data": "2026-11-03"
     },
     "fedivers": {
-      "sha256": "80c79de9d4e7a5382d6fafd7027394b50ef3bc43187679c7eb62e52588f1014f",
-      "html": 3371,
-      "aprovat_per": "Mestre Javi Llinares (ordre al xat 261030, executada per Claude)",
-      "data": "2026-10-30"
+      "sha256": "87f97956a16d7553fabc0d472f4f7061a0858a1e4c2f1b33d3e5fd6f1eb93b06",
+      "html": 4395,
+      "aprovat_per": "Mestre Javi Llinares (ordre O6-CLAUDE-1/2, prompt 261102_1532 Onada 6, T2.4: «re-segellant la Frontissa 16/16»; diff revisat per Claude amb verificador, àrbitres i Gauntlet: negretes d'escaneig, i h4+p a versions, drets-autor, fediversity, xat, fedivers i wikidepoble)",
+      "data": "2026-11-03"
     },
     "fediversity": {
-      "sha256": "1ce8033293e6ce6d788f1333172db97056d7c41c69661a42081bdf921c795111",
-      "html": 22459,
-      "aprovat_per": "Mestre Javi Llinares (ordre B8 del xat 261101: capacitats avisosPush i silenciXat; executada per Claude al torn torn_3d9af83b)",
-      "data": "2026-11-02"
+      "sha256": "d5464e777ef419868a5344d991aab5b11a99cd27efb776e3a0a8d800bebc7d4f",
+      "html": 28734,
+      "aprovat_per": "Mestre Javi Llinares (ordre O6-CLAUDE-1/2, prompt 261102_1532 Onada 6, T2.4: «re-segellant la Frontissa 16/16»; diff revisat per Claude amb verificador, àrbitres i Gauntlet: negretes d'escaneig, i h4+p a versions, drets-autor, fediversity, xat, fedivers i wikidepoble)",
+      "data": "2026-11-03"
     },
     "legal": {
-      "sha256": "d4b6835c743c503e0d740a6fa0e02a7bee09b6f65a550c26b496a7ca7fd38311",
-      "html": 52392,
-      "aprovat_per": "Mestre Javi Llinares (ordre B10 del xat 261101: escombrada dels P1; P1-24, executada per Claude al torn torn_3d9af83b)",
-      "data": "2026-11-02"
+      "sha256": "0fce35ffeec3e42147a1ad2ab129908d16439c25d58c8f13e4b899c77ab89d04",
+      "html": 55706,
+      "aprovat_per": "Mestre Javi Llinares (ordre O6 T2.4: kit CAS de Codex 261103_kit_codex_onada6_legal_i_tancament integrat per Claude amb el registre rebasat; text legal 2.4, sense cap canvi de paraula fora de la línia de versió)",
+      "data": "2026-11-03"
     },
     "notes": {
       "sha256": "39cf0339b0694fc1ed39bdcac47064fadb725d844e6410753a9af90e1fc4e94c",
@@ -68,34 +68,34 @@
       "data": "2026-10-01"
     },
     "projecte": {
-      "sha256": "678e52f278bf042fe3af0056183da0b9a5c8ec5fc1a8b380918071b87590878b",
-      "html": 8529,
-      "aprovat_per": "Mestre Javi Llinares",
-      "data": "2026-10-28"
+      "sha256": "48afb2c04f6146bdd29f19ae42f2bdb7165443cd6b0b16fa07b83946281f4074",
+      "html": 10057,
+      "aprovat_per": "Mestre Javi Llinares (ordre O6-CLAUDE-1/2, prompt 261102_1532 Onada 6, T2.4: «re-segellant la Frontissa 16/16»; diff revisat per Claude amb verificador, àrbitres i Gauntlet: negretes d'escaneig, i h4+p a versions, drets-autor, fediversity, xat, fedivers i wikidepoble)",
+      "data": "2026-11-03"
     },
     "roadmap": {
-      "sha256": "7515e868b2da9dd12f97d0f840ce1b51ca426534336fe14bc4f6138264df39c5",
-      "html": 27424,
-      "aprovat_per": "Mestre Javi Llinares",
-      "data": "2026-10-17"
+      "sha256": "f8b8d18d80ff8e00ea53cdf7cbd4d7acca57eecbbc2c0a8d3a365993bf28f4d4",
+      "html": 33034,
+      "aprovat_per": "Mestre Javi Llinares (ordre O6-CLAUDE-1/2, prompt 261102_1532 Onada 6, T2.4: «re-segellant la Frontissa 16/16»; diff revisat per Claude amb verificador, àrbitres i Gauntlet: negretes d'escaneig, i h4+p a versions, drets-autor, fediversity, xat, fedivers i wikidepoble)",
+      "data": "2026-11-03"
     },
     "versions": {
-      "sha256": "427a198905822249629984423b8266c8954ce23797f030c6440428461e85e549",
-      "html": 25132,
-      "aprovat_per": "Mestre Javi Llinares (ordre al xat 261101 del commit 2, Onada 2; executada per Claude al torn torn_3f5652a2)",
-      "data": "2026-11-01"
+      "sha256": "d88bd1d6e45f0be017e8a3402525c7ab704453e3e19d99c4575e1ff7da32d7b9",
+      "html": 36185,
+      "aprovat_per": "Mestre Javi Llinares (ordre O6-CLAUDE-1/2, prompt 261102_1532 Onada 6, T2.4: «re-segellant la Frontissa 16/16»; diff revisat per Claude amb verificador, àrbitres i Gauntlet: negretes d'escaneig, i h4+p a versions, drets-autor, fediversity, xat, fedivers i wikidepoble)",
+      "data": "2026-11-03"
     },
     "wikidepoble": {
-      "sha256": "1c98790cc18d7d2d679ae2f0da114d90b38020d26500ad526cea88d261afb469",
-      "html": 1658,
-      "aprovat_per": "Mestre",
-      "data": "2026-10-01"
+      "sha256": "65e5ba9a390c90abae7dad2e755e700a6a340c65ff8154a5563ca7d2975a7ef8",
+      "html": 2283,
+      "aprovat_per": "Mestre Javi Llinares (ordre O6-CLAUDE-1/2, prompt 261102_1532 Onada 6, T2.4: «re-segellant la Frontissa 16/16»; diff revisat per Claude amb verificador, àrbitres i Gauntlet: negretes d'escaneig, i h4+p a versions, drets-autor, fediversity, xat, fedivers i wikidepoble)",
+      "data": "2026-11-03"
     },
     "xat": {
-      "sha256": "f84ca3ef7f219a38374a7510e71e1fa41f3136eb4d70f4d6ff272b9a2673d06d",
-      "html": 1779,
-      "aprovat_per": "Mestre Javi Llinares (migració WebP)",
-      "data": "2026-10-21"
+      "sha256": "402f12bbc1de95a1a97c044ed8f7b09e166892262791ec45d97447e5099b5d9d",
+      "html": 2364,
+      "aprovat_per": "Mestre Javi Llinares (ordre O6-CLAUDE-1/2, prompt 261102_1532 Onada 6, T2.4: «re-segellant la Frontissa 16/16»; diff revisat per Claude amb verificador, àrbitres i Gauntlet: negretes d'escaneig, i h4+p a versions, drets-autor, fediversity, xat, fedivers i wikidepoble)",
+      "data": "2026-11-03"
     }
   }
 }

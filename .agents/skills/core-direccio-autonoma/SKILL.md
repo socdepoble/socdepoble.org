@@ -28,7 +28,7 @@ MarIA coordina l'encàrrec aprovat. Els rols es consulten a [[core-consell-i-col
 
 ## 2. Guàrdia acotada
 
-Un encàrrec autònom no obliga a crear un cron. Si el Mestre demana vigilància recurrent, usa l'eina real del client i registra l'identificador, l'onada, el termini i com es cancel·la. Esta és la font única de la política de guàrdies: màxim sis execucions i sis hores; mai un dimoni indefinit.
+Un encàrrec autònom no obliga a crear un cron. Si el Mestre demana vigilància recurrent, usa l'eina real del client i registra l'identificador, l'onada, el termini i com es cancel·la. Esta és la font única de la política de guàrdies: màxim sis execucions i sis hores; mai un dimoni indefinit. `guarda-nocturna.mjs` limita el TTL a sis hores; el sostre d'execucions i la cancel·lació del schedule els ha de suportar i comprovar el client. Un registre de guàrdia no crea ni cancel·la per si sol una recurrència del client.
 
 1. Obri una guàrdia amb `node tooling/gates/guarda-nocturna.mjs --inici --onada NOM --max-hores 6 --mode-tancament desconvocatoria`, pel canal de governança autoritzat.
 2. Consulta `node tooling/gates/guarda-nocturna.mjs` al principi de cada execució. La lectura pot registrar la caducitat al runtime; respecta'n el canal d'escriptura.

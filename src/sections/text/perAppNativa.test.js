@@ -244,11 +244,28 @@ describe('el contingut real de PAGE_COPY', () => {
     expect(legal).toContain("a l'iPhone, a <strong>Configuració › el teu nom › Inici de sessió amb Apple</strong>");
   });
 
-  test('cap altra pàgina no canvia (Descàrregues, que no s’obri dins de l’app, a banda)', () => {
+  test('cap altra pàgina no canvia (Descàrregues, que no s’obri dins de l’app, i Versions a banda)', () => {
     for (const [clau, pagina] of Object.entries(PAGE_COPY)) {
-      if (['roadmap', 'legal', 'descarregues'].includes(clau)) continue;
+      if (['roadmap', 'legal', 'descarregues', 'versions'].includes(clau)) continue;
       expect(paginaPerAppNativa(pagina, { nativa: true }), clau).toBe(pagina);
     }
+  });
+
+  /* O6-CLAUDE-1 (ordre del Mestre, Onada 6, 261103) · L'entrada v1.1.0 de /versions conta la
+     revisió de Google Play i l'APK en un apartat propi. Dins de l'app nativa, la xarxa en lleva
+     exactament eixe h4 i eixe paràgraf, i el que diu de l'App Store i de l'iPhone es queda. */
+  test('la xarxa, sobre Versions: només se’n va l’apartat de Google Play i l’APK', () => {
+    const { html, retirats } = adaptaHtml(PAGE_COPY.versions.html);
+    /* El text retirat és el de llevaEtiquetes (cada etiqueta, un espai), i al títol l'adaptació
+       declarada ja s'ha emportat «per a Android» abans que la xarxa en lleve la resta. */
+    expect(retirats).toEqual([
+      "Novetat · L'app, a revisió a Google Play",
+      "A Google Play , la versió 2 (1.0.0) és «En revisió» , segons el que el Mestre ha vist a la consola, i l' APK signat 1.0.0 (build 2) ja és compilat . La descàrrega directa encara no és oberta ."
+    ]);
+    expect(html).not.toMatch(PROHIBIDES);
+    expect(lectures(html)).not.toMatch(PROHIBIDES);
+    expect(html).toContain("<h4>Novetat · L'app d'iPhone i iPad, a revisió</h4>");
+    expect(html).toContain('<strong>«Waiting for Review»</strong>');
   });
 
   test('la xarxa, sobre una pàgina de veres: Descàrregues queda sense cap menció', () => {

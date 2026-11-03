@@ -5,6 +5,8 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
+import {spawnSync} from 'node:child_process';
+import {pathToFileURL} from 'node:url';
 import { calculaSegell } from '../tooling/gates/segella.mjs';
 
 const ARREL = path.resolve(import.meta.dirname, '..');
@@ -19,4 +21,12 @@ test('segell de skills: divergències respecte del manifest segellat (diagnòsti
   console.log(`HASH_SEGELLAT=${segellat.hash}`);
   console.log(`DIVERGENTS=${JSON.stringify(divergents)}`);
   assert.equal(typeof actual.hash, 'string');
+});
+
+
+test('API del segell importable des de stdin sense executar la CLI ni llançar ENOENT', () => {
+  const url=pathToFileURL(path.join(ARREL,'tooling/gates/segella.mjs')).href;
+  const source=`import {calculaSegell} from ${JSON.stringify(url)}; process.stdout.write(typeof calculaSegell);`;
+  const r=spawnSync(process.execPath,['--input-type=module','-'],{cwd:ARREL,input:source,encoding:'utf8',timeout:10000});
+  assert.equal(r.status,0,r.stderr);assert.equal(r.stdout,'function');
 });

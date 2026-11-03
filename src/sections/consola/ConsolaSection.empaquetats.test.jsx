@@ -63,23 +63,25 @@ import { dataLocal } from './consolaContent.js';
 import {
   ETIQUETA_NAV_EMPAQUETATS, RUTA_EMPAQUETATS, TITOL_EMPAQUETATS, normalitzaEmpaquetats, paginaEmpaquetats
 } from './empaquetats.js';
-import { versioCanonica } from '../../config/versio.js';
+import { VERSIO_SISTEMA as VERSIO, versioCanonica } from '../../config/versio.js';
 import { TEXT_BOTO_JARVIS, TITOL_JARVIS } from './jarvis.js';
 
+/* O6-CLAUDE-1 (Onada 6, 261103: salt a v1.1.0) · L'escenari «tot alineat» declara la Versió Canònica
+   del Sistema (package.json), i no una xifra fixa: un salt de versió no el desfà. */
 const BRUT = {
   schema: 'sdp.empaquetats.v1',
   generat: '2026-10-28T16:30:00.000Z',
-  canonica: '1.0.0',
+  canonica: VERSIO,
   carpeta: true,
   plataformes: {
-    android: { versions: ['1.0.0'], builds: ['1'], font: 'android/app/build.gradle', artefactes: ['261023_socdepoble_1.0.0+1.aab', 'socdepoble-beta.apk'] },
-    ios: { versions: ['1.0.0'], builds: ['1'], font: 'ios/App/App.xcodeproj/project.pbxproj', artefactes: ['261024_socdepoble_1.0.0+1.xcarchive'] },
-    pwa: { versions: ['1.0.0'], font: 'package.json', artefactes: [] },
+    android: { versions: [VERSIO], builds: ['1'], font: 'android/app/build.gradle', artefactes: [`261023_socdepoble_${VERSIO}+1.aab`, 'socdepoble-beta.apk'] },
+    ios: { versions: [VERSIO], builds: ['1'], font: 'ios/App/App.xcodeproj/project.pbxproj', artefactes: [`261024_socdepoble_${VERSIO}+1.xcarchive`] },
+    pwa: { versions: [VERSIO], font: 'package.json', artefactes: [] },
     wordpress: { versions: ['1.1.9'], estable: '1.1.9', font: 'wordpress-plugin/socdepoble-enxufe.php', artefactes: ['261021_2015_wordpress_enxufe_v1.1.9.zip'] }
   }
 };
-const ORDRE_ANDROID = 'node scripts/botigues/puja-android.mjs --versio 1.0.0 --build 1 --confirma=1.0.0+1';
-const ORDRE_IOS = 'node scripts/botigues/puja-ios.mjs --versio 1.0.0 --build 1 --confirma=1.0.0+1';
+const ORDRE_ANDROID = `node scripts/botigues/puja-android.mjs --versio ${VERSIO} --build 1 --confirma=${VERSIO}+1`;
+const ORDRE_IOS = `node scripts/botigues/puja-ios.mjs --versio ${VERSIO} --build 1 --confirma=${VERSIO}+1`;
 
 let errors;
 beforeEach(() => {
@@ -131,7 +133,7 @@ describe('el tauler de /consola', () => {
     expect(t.querySelector('h3.sp-card-title').textContent).toBe(paginaEmpaquetats().title);
     expect(t.querySelector('h4.sp-card-subtitle').textContent).toMatch(/^Per a /);
     // La web és la font de la versió: no compta al recompte.
-    expect(t.querySelector('.sdp-consola__dada').textContent).toBe(`v1.0.0 · 3 de 3 al pas`);
+    expect(t.querySelector('.sdp-consola__dada').textContent).toBe(`v${VERSIO} · 3 de 3 al pas`);
     expect([...t.querySelectorAll('.sp-card-label')].map((l) => l.textContent)).toEqual(['En ordre']);
     expect([...nav.querySelectorAll('a.sp-card-link-overlay')].map((a) => a.getAttribute('href'))).toEqual([RUTA_EMPAQUETATS]);
     // La data de la pastilla: la de la instantània, més recent que la del copy.
@@ -167,8 +169,8 @@ describe('/consola/empaquetats', () => {
     expect(seccions.map((s) => s.querySelector('h3').textContent)).toEqual(['Android', 'iOS', 'Web (socdepoble.org)', 'Connector de WordPress']);
     const [android, ios, web, wordpress] = seccions;
     expect(android.querySelector('.sdp-insignia').textContent).toBe('Alineat');
-    expect(android.textContent).toContain('Versió declarada: 1.0.0+1 · Font: android/app/build.gradle');
-    expect([...android.querySelectorAll('ul > li')].map((li) => li.textContent)).toEqual(['261023_socdepoble_1.0.0+1.aab', 'socdepoble-beta.apk']);
+    expect(android.textContent).toContain(`Versió declarada: ${VERSIO}+1 · Font: android/app/build.gradle`);
+    expect([...android.querySelectorAll('ul > li')].map((li) => li.textContent)).toEqual([`261023_socdepoble_${VERSIO}+1.aab`, 'socdepoble-beta.apk']);
     expect(android.querySelector('pre').textContent).toBe(ORDRE_ANDROID);
     expect(ios.querySelector('pre').textContent).toBe(ORDRE_IOS);
     // Els artefactes són els de la carpeta de builds; l'ordre puja el fitxer dels scripts.
@@ -176,7 +178,7 @@ describe('/consola/empaquetats', () => {
     expect(android.querySelector('pre').nextElementSibling.textContent)
       .toBe('Puja android/app/build/outputs/bundle/release/app-release.aab, no cap artefacte de la carpeta de builds.');
     expect(ios.querySelector('pre').nextElementSibling.textContent)
-      .toBe('Puja <SDP_BUILDS_DIR>/sdp-ios-1.0.0-1/export/*.ipa, no cap artefacte de la carpeta de builds.');
+      .toBe(`Puja <SDP_BUILDS_DIR>/sdp-ios-${VERSIO}-1/export/*.ipa, no cap artefacte de la carpeta de builds.`);
     expect(web.querySelector('pre')).toBeNull();
     expect(web.querySelector('.sdp-insignia').textContent).toBe('Font canònica');
     expect(web.textContent).not.toContain('Alineat');
@@ -213,7 +215,7 @@ describe('/consola/empaquetats', () => {
     fonts.empaquetats = normalitzaEmpaquetats(BRUT);
     await obri(RUTA_EMPAQUETATS);
     const text = main().textContent;
-    for (const tros of [ORDRE_ANDROID, ORDRE_IOS, '261023_socdepoble_1.0.0+1.aab', 'android/app/build.gradle', 'npm run build:wp', 'app-release.aab', 'sdp-ios-1.0.0-1']) {
+    for (const tros of [ORDRE_ANDROID, ORDRE_IOS, `261023_socdepoble_${VERSIO}+1.aab`, 'android/app/build.gradle', 'npm run build:wp', 'app-release.aab', `sdp-ios-${VERSIO}-1`]) {
       expect(text, tros).not.toContain(tros);
     }
     expect(text).toContain('dada amagada pel mode privacitat');
@@ -311,8 +313,8 @@ test.each([
 test.each(['/consola/pols', RUTA_EMPAQUETATS])('%s: amb el build segellat, el peu i la pàgina diuen la versió amb el seu build', async (ruta) => {
   segell.build = '261028';
   await obri(ruta);
-  expect(versioCanonica()).toBe('v1.0.0 (build 261028)');
+  expect(versioCanonica()).toBe(`v${VERSIO} (build 261028)`);
   const versio = [...peu().querySelectorAll('p')].find((p) => p.textContent.startsWith('Versió del sistema: '));
-  expect(versio.textContent).toBe(`Versió del sistema: v1.0.0 (build 261028)${DESTI_VERSIONS}`);
-  if (ruta === RUTA_EMPAQUETATS) expect(main().textContent).toContain('Versió Canònica del Sistema: v1.0.0 (build 261028)');
+  expect(versio.textContent).toBe(`Versió del sistema: v${VERSIO} (build 261028)${DESTI_VERSIONS}`);
+  if (ruta === RUTA_EMPAQUETATS) expect(main().textContent).toContain(`Versió Canònica del Sistema: v${VERSIO} (build 261028)`);
 });

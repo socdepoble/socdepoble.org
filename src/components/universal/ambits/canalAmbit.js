@@ -5,8 +5,10 @@
  *
  * El valor del context: { pendent, consumix } o null fora del Bloc.
  *   · pendent: l'àmbit que la URL ha demanat i cap editor ha atés encara, o null;
- *   · consumix(): l'editor l'ha atés (la nota té fitxa i el diàleg «On es
- *     publica?» s'ha obert): la secció l'oblida i neteja la URL.
+ *   · consumix(): l'editor l'ha atés (la nota té fitxa i el bloc «On es
+ *     publica?» s'ha obert): la secció l'oblida i neteja la URL. O4-CLAUDE-1 ·
+ *     El bloc ja no és cap diàleg: viu en línia dins de l'«Edició avançada»,
+ *     que l'editor obri sola (BlocAmbit.jsx, UniversalEditorShell · peticioAmbit).
  * Universal: cap importació de seccions; el proveïdor el munta la secció.
  */
 import { createContext, useContext } from 'react';

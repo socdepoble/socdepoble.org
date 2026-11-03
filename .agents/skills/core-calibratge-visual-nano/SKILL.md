@@ -26,7 +26,7 @@ contracte.escriu:
 
 # Calibratge Visual i Enginyeria de Prompts del Nano
 
-Aquesta skill ensenya a les Intel·ligències Artificials com escriure prompts visuals consistents, memorables i amb vertader sentit de l'humor per a l'eina `generate_image` (el Nano).
+Aquesta skill ensenya a les Intel·ligències Artificials com escriure prompts visuals consistents, memorables i amb vertader sentit de l'humor amb l'eina d'imatge disponible en el client (el Nano quan hi estiga connectat). El nom d'una eina d'una altra sessió no acredita que el client actual la tinga.
 
 ## 1. La Llei Suprema de l'Humor i el Gag (Anti-Testimonis de Jehovà)
 
@@ -66,9 +66,9 @@ Sóc de Poble no utilitza un sol registre gràfic per a tot. Disposa de tres gra
 ## 3. Protocol de Calibratge i Feedback Humà (Escala 1 a 10)
 
 Per millorar contínuament la consistència dels prompts:
-1. Quan es genere una imatge nova, s'ofereix al Mestre perquè la qualifique de l'1 al 10.
+1. Entrega la imatge segons el brief; la qualificació és opcional i no bloqueja una generació ja autoritzada. Si el Mestre dona una puntuació o comentari, conserva l'evidència concreta.
 2. Si el Mestre indica punts de millora (ex: «massa idíl·lica», «manca d'humor», «el color és massa fosc»), la IA extreu el patró i n'actualitza aquesta skill i el Llibre Mestre.
-3. Mai s'esborra la imatge prèvia: es conserva la versió millorada a `public/assets/uploads/brain/` i es documenta el motiu de l'afinament.
+3. Conserva la traçabilitat de les versions al destí autoritzat. No publiques automàticament una prova dins de public/ ni substituïsques un recurs oficial; la incorporació al producte seguix el carril i l'ordre vigents.
 
 ### Cas d'Estudi Real: «La Caldera de Descàrregues»
 - **Error 1 (Falsa Felicitat Asèptica):** Un grup de gent somrient beatament com en un fullet religiós («estil Testimonis de Jehovà»). Rebutjat per manca d'humor i AI slop.
@@ -83,6 +83,12 @@ Per millorar contínuament la consistència dels prompts:
   - Actitud gamberra i canalla als personatges (ex: la IAIA amb ulleres negres gegants de soldador, l'apanyador amb una clau anglesa descomunal més gran que el seu tors) i horror vacui ciber-rural (gats ficats enmig dels engranatges, gossos rosegant microxips amb cables i potetes).
   - **Invariància de la bellesa de dibuix animat (zero cares desencaixades o lletges):** Les cares dels personatges mai es deformen fent-se lletges, grotesques, mellades o «descuajaringadas» (ni tan sols quan riuen, s'enfaden o se sorprenen). Queden prohibides al prompt paraules trampa com «inventora boja / mad scientist / manic grin» que deformen la boca. Els rostres mantenen sempre la mateixa bellesa gràfica, netedat de línia i simpatia de dibuix animat clàssic.
   - **Algorisme de la satisfacció naïf i despreocupada:** L'humor valencià i berlanguiano de Sóc de Poble naix del contrast entre una situació/màquina extremadament gamberra, caòtica i ciber-rural (plumilla brugueriana, «FUM-O-MÀTIC» apedaçat, gats als engranatges, gossos amb microxips) i uns personatges que viuen eixa situació des de dins amb una felicitat vivaç, naïf, amable i despreocupada (cara de satisfacció tranquil·la per la faena feta, sense adonar-se de l'absurd que els envolta i sense caure mai en la posa passiva o beatífica dels «Testimonis de Jehovà»).
+
+## Abast del calibratge
+
+Tria primer el registre A, B o C que demana el brief. «Zero text» és el valor inicial d'una il·lustració sense text demanat; les onomatopeies i cartells de la lliçó 261030 només s'apliquen quan eixe brief els requerix. Un mateix prompt no pot exigir zero text i cartells alhora.
+
+El criteri visual es revisa sobre la imatge retornada i el retall real. Els tractors d'actius i paquets poden comprovar referències, format i ubicació; no validen l'humor, la bellesa o l'aprovació del Mestre. Registra estos criteris com a revisió visual, sense atribuir-los un verd mecànic.
 
 ## Vincles
 - [[00_INDEX_SKILLS]]

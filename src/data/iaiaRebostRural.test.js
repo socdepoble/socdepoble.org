@@ -135,10 +135,20 @@ describe('el que el rebost no s’ha de quedar', () => {
   });
 
   /* Abans del rebost, la pàgina Treball responia les preguntes de feina:
-     les continua responent ella, no la càpsula dels oficis antics. */
+     les continua responent ella, no la càpsula dels oficis antics.
+     O4-CLAUDE-3 · Des d'IDEA-61 (Onades 1-3, cc3e443dc), Treball és la secció
+     vertical amb la llista viva de les ofertes (sections.js, /treball):
+     l'entrada atles:treball de l'Atles, que té prioritat, hi porta, i
+     /page/treball queda com el text de «Saber-ne més». La ruta ix de SECTIONS
+     (totes les seccions), no de SECTION_ORDER: la vertical fora de la barra
+     lateral (261102) continua sent una ruta interna vàlida. */
   test.each(["Hi ha treball d'ofici al poble?", "Ofertes de treball d'oficis"])('«%s» continua anant a la pàgina Treball', async (pregunta) => {
+    const treball = SECTIONS.find((seccio) => seccio.id === 'treball');
+    expect([treball.label, treball.path, treball.kind]).toEqual(['Treball', '/treball', 'vertical']);
+    expect(ATLES_OPERATIU.find((entrada) => entrada.id === 'atles:treball')).toMatchObject({ titol: treball.label, ruta: treball.path });
+    expect(RUTA_INTERNA.test(treball.path)).toBe(true);
     const resposta = await respostaDeLaIAIA(pregunta, { tempsMaxim: 60000 });
-    expect(liniesDeRuta(resposta)[0]).toBe('· Treball — /page/treball');
+    expect(liniesDeRuta(resposta)[0]).toBe(`· ${treball.label} — ${treball.path}`);
     expect(resposta).not.toContain(perId('rebost:oficis').titol);
   }, 60000);
 

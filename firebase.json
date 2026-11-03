@@ -145,23 +145,6 @@
         ]
       },
       {
-        "source": "/ap/**",
-        "headers": [
-          {
-            "key": "Content-Type",
-            "value": "application/activity+json; charset=utf-8"
-          },
-          {
-            "key": "Access-Control-Allow-Origin",
-            "value": "*"
-          },
-          {
-            "key": "Cache-Control",
-            "value": "public, max-age=300"
-          }
-        ]
-      },
-      {
         "source": "/opendata/*.jsonld",
         "headers": [
           {
@@ -184,6 +167,40 @@
           {
             "key": "Content-Type",
             "value": "application/json; charset=utf-8"
+          },
+          {
+            "key": "Access-Control-Allow-Origin",
+            "value": "*"
+          },
+          {
+            "key": "Cache-Control",
+            "value": "public, max-age=300"
+          }
+        ]
+      },
+      {
+        "source": "/opendata/activitystreams.json",
+        "headers": [
+          {
+            "key": "Content-Type",
+            "value": "application/activity+json; charset=utf-8"
+          },
+          {
+            "key": "Access-Control-Allow-Origin",
+            "value": "*"
+          },
+          {
+            "key": "Cache-Control",
+            "value": "public, max-age=300"
+          }
+        ]
+      },
+      {
+        "source": "/ap/**",
+        "headers": [
+          {
+            "key": "Content-Type",
+            "value": "application/activity+json; charset=utf-8"
           },
           {
             "key": "Access-Control-Allow-Origin",

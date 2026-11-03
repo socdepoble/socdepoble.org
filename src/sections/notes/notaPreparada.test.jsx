@@ -380,3 +380,43 @@ test('revisió · l’entrada de creaNota i l’eixida en vol passen pel sanejad
   expect(enviats.lead).toContain('De maig');
   expect(enviats.lead).not.toMatch(/onerror/i);
 });
+
+/* O4-CLAUDE-3 (D2-publicacio-5-verticals-01) · CREAR NOTA damunt d'una
+   preparada que encara no porta res escrit: l'entrada d'un ?ambit= consumit
+   (la fitxa i la carpeta de la secció) no tapa la base, i l'id no canvia. Amb
+   text, amb una fitxa que ja té dades o amb la creació en vol, no es buida res. */
+test('O4 · buidaEntrada conserva l’id i buida la fitxa i la carpeta d’una preparada sense res escrit', async () => {
+  const { result, amb, creaNota } = munta();
+  const { id } = result.current;
+  await act(async () => {
+    result.current.escriu(id, 'fitxa', { ambit: 'vehicle', estat: 'disponible', dades: {} });
+    result.current.escriu(id, 'folderId', 'f-mur');
+  });
+  // La persona ara és a una altra carpeta: la base hi canvia.
+  act(() => amb({ base: { ...BASE, folderId: 'f-receptes' } }));
+  expect(result.current.document).toMatchObject({ folderId: 'f-mur', fitxa: { ambit: 'vehicle' } });
+  act(() => { result.current.buidaEntrada(); });
+  expect(result.current.id).toBe(id);
+  expect(result.current.camps).toEqual({});
+  expect(result.current.document.folderId).toBe('f-receptes');
+  expect(result.current.document.fitxa).toBeUndefined();
+  await act(async () => { result.current.escriu(id, 'content', '<p>Coca de llanda</p>'); });
+  expect(creaNota).toHaveBeenCalledTimes(1);
+  const entrada = creaNota.mock.lastCall[0];
+  expect(entrada).toMatchObject({ id, folderId: 'f-receptes' });
+  expect(entrada.fitxa).toBeUndefined();
+});
+
+test('O4 · buidaEntrada no esborra res escrit: text, una fitxa amb dades o una creació en vol', async () => {
+  const { result } = munta({ creaNota: vi.fn(() => new Promise(() => {})) });
+  const { id } = result.current;
+  const fitxa = { ambit: 'vehicle', estat: 'disponible', dades: { origen: 'Alcoi' } };
+  await act(async () => { result.current.escriu(id, 'fitxa', fitxa); });
+  act(() => { result.current.buidaEntrada(); });
+  expect(result.current.camps).toEqual({ fitxa });
+  // Amb text la creació ja viatja: tampoc es buida.
+  await act(async () => { result.current.escriu(id, 'title', 'Viatge'); });
+  act(() => { result.current.buidaEntrada(); });
+  expect(result.current.id).toBe(id);
+  expect(result.current.camps).toEqual({ fitxa, title: 'Viatge' });
+});

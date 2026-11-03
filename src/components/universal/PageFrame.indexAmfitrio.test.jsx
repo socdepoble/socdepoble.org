@@ -255,7 +255,9 @@ const BARRA_NEGRA = 'calc(var(--sdp-alt-negra) + env(safe-area-inset-top, 0px))'
 
 test('encastat, el vel de l’Índex ocupa la caixa de l’App: :host .toc-overlay dins de @layer components de layout.css', () => {
   const layout = pla(llig('src/css/layout.css'));
-  expect(layout.match(/:host \.toc-overlay \{[^}]*\}/g)).toEqual([`:host .toc-overlay { inset: ${BARRA_NEGRA} 0 0; width: auto; height: auto; }`]);
+  // O4-CLAUDE-1b · B1b-05 · el mateix calc, ara pel token compartit --sdp-calaix-dalt (tokens.css), que val exactament BARRA_NEGRA.
+  expect(layout.match(/:host \.toc-overlay \{[^}]*\}/g)).toEqual([':host .toc-overlay { inset: var(--sdp-calaix-dalt) 0 0; width: auto; height: auto; }']);
+  expect(pla(llig('src/css/tokens.css'))).toContain(`--sdp-calaix-dalt: ${BARRA_NEGRA};`);
   // La barra negra fa exactament esta alçada: el vel comença on ella acaba.
   expect(layout).toContain(`header.bar-black { box-sizing: border-box; height: ${BARRA_NEGRA}; min-height: ${BARRA_NEGRA};`);
   // Dins del primer bloc @layer components, el de la Frontera C2 (abans del primer @layer legacy).
@@ -263,10 +265,12 @@ test('encastat, el vel de l’Índex ocupa la caixa de l’App: :host .toc-overl
   expect(posicio).toBeGreaterThan(layout.indexOf('@layer components {'));
   expect(posicio).toBeLessThan(layout.indexOf('@layer legacy {'));
   // La regla de sempre viu a la capa legacy de modules.css, i components hi guanya per l'ordre de capes.
+  // O4-CLAUDE-1b (IDEA-63) · A socdepoble.org, el mateix càlcul via els tokens compartits amb els calaixos
+  // del Dialeg (tokens.css): --sdp-calaix-dalt val l'alçada de la barra negra.
   const modules = pla(llig('src/css/modules.css'));
-  expect(modules).toContain(`.toc-overlay { position: fixed; top: ${BARRA_NEGRA}; left: 0; width: 100vw;`
-    + ' height: calc(100vh - var(--sdp-alt-negra) - env(safe-area-inset-top, 0px));'
-    + ' height: calc(100dvh - var(--sdp-alt-negra) - env(safe-area-inset-top, 0px));');
+  expect(modules).toContain('.toc-overlay { position: fixed; top: var(--sdp-calaix-dalt); left: 0; width: 100vw; height: var(--sdp-calaix-alt);');
+  const dalt = '--sdp-calaix-dalt';
+  expect(pla(llig('src/css/tokens.css'))).toContain(`${dalt}: ${BARRA_NEGRA};`);
   const posLegacy = modules.indexOf('@layer legacy {');
   const posBase = modules.indexOf('.toc-overlay { position: fixed;');
   expect(posBase).toBeGreaterThan(posLegacy);

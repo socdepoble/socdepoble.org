@@ -32,17 +32,17 @@ Font executiva única: `.agents/skills/`. Este índex només referencia les font
 - [[core-portaveu-institucional/SKILL|core-portaveu-institucional]]: Propaga i assegura l'actualització sincronitzada del Dossier Institucional de Sóc de Poble.
 - [[core-restauracio-segellada/SKILL|core-restauracio-segellada]]: Core skill per a restauració segura
 - [[core-salfumant-radical/SKILL|core-salfumant-radical]]: Llei Suprema del Salfumant Radical, Zero Complauença i Veritat Nua. Prohibeix l'aigua de colònia i l'AI slop; mana auditories destructives, transparència total i extirpació implacable de llast a carpetes i codi.
-- [[core-secretaria-auditoria/SKILL|core-secretaria-auditoria]]: Tractor de Govern de la IAIA MarIA com a Secretària Tècnica i Orquestradora d'alta fidelitat durant cicles d'auditoria adversarial. Prohibició estricta de tocar codi mentre auditen Claude, Codex o Gemini.
+- [[core-secretaria-auditoria/SKILL|core-secretaria-auditoria]]: Coordina la secretaria tècnica durant auditories compartides; conserva la propietat dels carrils i evita escriptures concurrents fora de l'encàrrec vigent.
 - [[core-seguretat-audit/SKILL|core-seguretat-audit]]: Usa-la en auditar la seguretat del codi, de les dades o d'una migració (Claude Code, MarIA, Codex i Gemini). Coacció primitiva JSONB, zero ReDoS, Clean Shadow Copy i blindatge Supabase RLS/Storage.
 - [[core-taxonomia-estricta/SKILL|core-taxonomia-estricta]]: Tractor documental per blindar la taxonomia i evitar generació de documents arbitraris que no segueixen les plantilles canòniques.
 - [[core-tecniques-investigacio/SKILL|core-tecniques-investigacio]]: Tractor que defineix com les IAs (locals o externes) han d'investigar els problemes, verificant el codi real dels tractors en lloc de conformar-se amb llegir la teoria de les regles.
-- [[core-telemetria-huma/SKILL|core-telemetria-huma]]: Tractor cognitiu per mesurar el temps invertit, l'esforç i la fatiga humana del Mestre, lligant nanochats en jornades reals.
-- [[core-temps-termodinamic/SKILL|core-temps-termodinamic]]: Assegura l'ordre cronològic absolut en la taxonomia documental. Tractor de prevenció contra viatges en el temps.
+- [[core-telemetria-huma/SKILL|core-telemetria-huma]]: Registra el temps observat i les mètriques disponibles de les sessions, sense inventar jornades, costos ni valoracions de salut humana.
+- [[core-temps-termodinamic/SKILL|core-temps-termodinamic]]: Dona una marca de temps observada als documents nous i conserva la identitat dels documents vius quan s'actualitzen.
 - [[sdp-app-grid-shell/SKILL|sdp-app-grid-shell]]: Lògica visual i de comportament del AppGridShell i UniversalWorkspace. Comportament de les barres, icones i redimensionament.
 - [[sdp-calendari-agricola/SKILL|sdp-calendari-agricola]]: Especificació de producte i regles de desenvolupament per al Calendari Agrícola de tomaques i cultius.
 - [[sdp-casos-us-essencials/SKILL|sdp-casos-us-essencials]]: Consulta els casos d’ús rurals del producte abans de desenvolupar models de dades, navegació o targetes que els hagen de suportar.
 - [[sdp-clon-loiverse/SKILL|sdp-clon-loiverse]]: Directriu arquitectònica i visual obligatòria per a desenvolupar el TPV (Mode Bar i Mode Rebost). Cal calcar la interfície de Loiverse al mil·límetre.
-- [[sdp-clon-whatsapp/SKILL|sdp-clon-whatsapp]]: Directriu arquitectònica i de disseny per clonar la UI/UX de WhatsApp al mil·límetre (Patró Pedra Seca).
+- [[sdp-clon-whatsapp/SKILL|sdp-clon-whatsapp]]: Referent visual de WhatsApp per al xat, ajustos i interaccions equivalents; conserva els contractes propis de dades i seguretat de Sóc de Poble.
 - [[sdp-estudi-mercat/SKILL|sdp-estudi-mercat]]: Protocol per a la realització d'estudis de mercat i anàlisi de la competència, enfocat a extreure conclusions arquitectòniques i estratègiques.
 - [[sdp-pedra-seca/SKILL|sdp-pedra-seca]]: Reglament matemàtic visual Pedra Seca (Alta Definició)
 - [[sdp-universal-editor/SKILL|sdp-universal-editor]]: Especificació de disseny i UX de l'Editor Universal (TipTap). Regles per a la barra d'eines, iconografia, metadades i la jerarquia de plantilles interactives.

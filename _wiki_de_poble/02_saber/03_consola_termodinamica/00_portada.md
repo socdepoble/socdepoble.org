@@ -20,9 +20,9 @@ La Consola és un contracte de mesura i decisió, no una pantalla màgica ni un 
 | Índex/ontologia derivats | Implementats | `compile-wiki-to-app.mjs`, `npm run rag:build` i `npm run slugs:build`; són memòria cau regenerable, no font de veritat. |
 | “IT” de tres components del CLI | Retirat com a porta | `sdp check` falla tancat perquè combinava proxies incomplets i podia donar puntuació a un corpus buit. El codi antic només és material d'estudi; no representa el [[index_trellat|marc humà complet]]. |
 | Accessibilitat i Web Vitals | Sense telemetria integrada | Necessiten navegador real, corpus de casos i resultats conservats. La doctrina del dispositiu de referència (A10) es va retirar amb l'[[ADR-2026-08-ONLINE-FIRST]]. |
-| Resiliència sense connexió | Fora d'abast | L'arquitectura és online-first: l'ADR-2026-08 retira la PWA i el mode offline. El comportament esperat és un error de xarxa honest, no un índex de resiliència. |
+| Resiliència sense connexió | Implementació parcial, sense mètrica global | Les dades compartides continuen online-first. El codi inclou dades del dispositiu (`src/utils/magatzemLocal.js`) i closca de `/app/*` (`src/pwa/registre.js`, `public/sw.js`). L'[[ADR-2026-10-APPS-DEL-DISPOSITIU]] en documenta la implementació parcial i una proposta d'abast pendent de signatura; això no acredita resiliència de tot el sistema ni convergència CRDT. |
 | Tombstones CRDT | No aplicable | No hi ha motor CRDT actiu ([[arquitectura_sistema_nervios]] el descriu com a visió futura); no s'inventa una càrrega percentual. |
-| Panell web de salut i ritual setmanal | Futur | No hi ha canonada que els alimente de manera verificable. |
+| Panell web de salut i ritual setmanal | Mapa i instantània implementats; ritual no acreditat | `tooling/brain/mapa-consola.mjs` genera el mapa. `tooling/vite/consola-iaia.mjs` el servix en viu al servidor local de desenvolupament i emet una instantània web sanejada de les quatre fonts a `__iaia/*.json`. `src/sections/consola/fontsConsola.js` distingix les dues lectures: la publicada no activa escriptures. La instantània no és telemetria en viu ni prova que el ritual setmanal s'execute. |
 
 ## Fonts de veritat
 
@@ -67,6 +67,7 @@ La Consola té dos funcions que es complementen: la **Salut**, que és este docu
 - [[00_arquitectura_tecnica_unificada]]
 - [[00_index_identitat]]
 - [[ADR-2026-08-ONLINE-FIRST]]
+- [[ADR-2026-10-APPS-DEL-DISPOSITIU]]
 - [[arquitectura_sistema_nervios]]
 - [[01_fluxos_skills]]
 - [[02_calendari]]

@@ -236,13 +236,98 @@ export function liniesDelPush(estat, { push = false, plataformes = [] } = {}) {
   return { linies, mal };
 }
 
-/* B9 · El targetSdk mínim de Google Play per a apps noves [NO VERIFICAT per a 2026: és el llindar
-   de 2025]. Si Play el puja, es puja ací; el preflight només n'avisa. */
-export const TARGET_SDK_PLAY_MINIM = 35;
+/* Google Play, termini 31-08-2026: API36 per a apps noves/actualitzacions.
+   Font contrastada per l'auditoria O4 (02-11-2026):
+   https://support.google.com/googleplay/android-developer/answer/11926878
+   És un mínim: una API superior no produïx un avís fals. */
+export const TARGET_SDK_PLAY_MINIM = 36;
+
+/* No executa Groovy. Amaga comentaris i cadenes (també triples), conservant
+   salts de línia perquè un exemple de target no compte com a declaració. */
+function codiGradle(text) {
+  const font=String(text??''), parts=[];
+  let i=0;
+  while(i<font.length) {
+    const inici=i;
+    if(font.startsWith('//',i)) {
+      while(i<font.length&&font[i]!=='\n')i++;
+    } else if(font.startsWith('/*',i)) {
+      const fi=font.indexOf('*/',i+2);i=fi<0?font.length:fi+2;
+    } else if(font[i]==="'"||font[i]==='"') {
+      const q=font[i],delimitador=font.startsWith(q.repeat(3),i)?q.repeat(3):q;
+      i+=delimitador.length;
+      while(i<font.length) {
+        if(font[i]==='\\') {i=Math.min(font.length,i+2);continue;}
+        if(font.startsWith(delimitador,i)) {i+=delimitador.length;break;}
+        i++;
+      }
+    } else if(font[i]==='/') {
+      // Slashy, dollar-slashy o divisió: fora del subset, no és evidència.
+      return null;
+    } else {parts.push(font[i++]);continue;}
+    parts.push(font.slice(inici,i).replace(/[^\n]/g,' '));
+  }
+  return parts.join('');
+}
+
+function blocGradle(codi,nom) {
+  if(typeof codi!=='string')return null;
+  const troballes=[...codi.matchAll(new RegExp(`\\b${nom}\\s*\\{`,'g'))];
+  if(troballes.length!==1)return null;
+  const inici=troballes[0].index+troballes[0][0].length;
+  let profunditat=1;
+  for(let i=inici;i<codi.length;i++) {
+    if(codi[i]==='{')profunditat++;
+    if(codi[i]==='}'&&--profunditat===0)return {codi:codi.slice(inici,i),inici:troballes[0].index,fi:i+1};
+  }
+  return null;
+}
+
+/* Subset explícit de la configuració usada pel projecte: un android/defaultConfig
+   i un target literal o rootProject.ext.<nom> numèric a variables.gradle.
+   Expressions, flavors i altres sobreescriptures requerixen el manifest final. */
+export function targetSdkAndroid(arrel) {
+  const app=codiGradle(lligDe(arrel,'android','app','build.gradle'));
+  if(app===null||/\b(?:productFlavors|applicationVariants|androidComponents|afterEvaluate)\b/.test(app))return null;
+  const android=blocGradle(app,'android');
+  if(android===null)return null;
+  const foraAndroid=app.slice(0,android.inici)+app.slice(android.fi);
+  if(/\b(?:android|defaultConfig|targetSdk(?:Version)?)\b/.test(foraAndroid))return null;
+  const config=blocGradle(android.codi,'defaultConfig');
+  if(config===null)return null;
+  const foraConfig=android.codi.slice(0,config.inici)+android.codi.slice(config.fi);
+  if(/\b(?:defaultConfig|targetSdk(?:Version)?)\b/.test(foraConfig))return null;
+  const objectius=[...config.codi.matchAll(/(?:^|[;\n])\s*targetSdk(?:Version)?\s*(?:=\s*)?([^;\n]+?)\s*(?=;|\n|$)/g)];
+  if(objectius.length!==1)return null;
+  const foraObjectiu=config.codi.slice(0,objectius[0].index)+config.codi.slice(objectius[0].index+objectius[0][0].length);
+  if(/\btargetSdk(?:Version)?\b/.test(foraObjectiu))return null;
+  const abans=config.codi.slice(0,objectius[0].index);
+  if((abans.match(/\{/g)||[]).length!==(abans.match(/\}/g)||[]).length)return null;
+  const expressio=objectius[0][1].trim().replace(/^\(\s*(.*?)\s*\)$/,'$1');
+  let valor=/^\d+$/.test(expressio)?expressio:null;
+  const referencia=/^rootProject\.ext\.([a-zA-Z_][a-zA-Z0-9_]*)$/.exec(expressio);
+  if(referencia) {
+    const variables=codiGradle(lligDe(arrel,'android','variables.gradle'));
+    const ext=blocGradle(variables,'ext');
+    if(ext===null)return null;
+    const foraExt=variables.slice(0,ext.inici)+variables.slice(ext.fi);
+    if(new RegExp(`\\b${referencia[1]}\\b`).test(foraExt))return null;
+    const valors=[...ext.codi.matchAll(new RegExp(`(?:^|[;\\n])\\s*${referencia[1]}\\s*=\\s*(\\d+)\\s*(?=;|\\n|$)`,'g'))];
+    if(valors.length!==1)return null;
+    const foraValor=ext.codi.slice(0,valors[0].index)+ext.codi.slice(valors[0].index+valors[0][0].length);
+    if(new RegExp(`\\b${referencia[1]}\\b`).test(foraValor))return null;
+    const abansValor=ext.codi.slice(0,valors[0].index);
+    if((abansValor.match(/\{/g)||[]).length!==(abansValor.match(/\}/g)||[]).length)return null;
+    valor=valors[0][1];
+  }
+  const api=valor===null?NaN:Number(valor);
+  return Number.isSafeInteger(api)&&api>0?api:null;
+}
 
 /**
  * Avisos de botiga per a --canal produccio. Només llig i no para res: cap llindar no s'ha verificat
- * aquesta nit contra les botigues (spec B9 §3.1.2). Cap valor de cap fitxer.
+ * contra les botigues en execució. El mínim API és el contrast documental O4,
+ * no una consulta al compte de Play ni una prova de l'AAB final.
  * @returns {string[]}
  */
 export function avisosDeProduccio(arrel, plataformes = []) {
@@ -261,9 +346,9 @@ export function avisosDeProduccio(arrel, plataformes = []) {
     avisos.push('enviar la versió a App Review i publicar-la és del Mestre a App Store Connect (RUNBOOK P9 i S6): el script només puja la build');
   }
   if (plataformes.includes('android')) {
-    const objectiu = /^[ \t]*targetSdkVersion[ \t]*=[ \t]*(\d+)/m.exec(String(lligDe(arrel, 'android', 'variables.gradle') ?? ''));
-    if (!objectiu) avisos.push('no es troba targetSdkVersion a android/variables.gradle');
-    else if (Number(objectiu[1]) < TARGET_SDK_PLAY_MINIM) avisos.push(`targetSdkVersion ${objectiu[1]} és més baix que ${TARGET_SDK_PLAY_MINIM} [NO VERIFICAT el llindar de Play per a 2026]: Play pot rebutjar l'AAB`);
+    const objectiu = targetSdkAndroid(arrel);
+    if (objectiu === null) avisos.push('no es pot resoldre el targetSdkVersion efectiu de android/app/build.gradle: cal contrastar la configuració i el manifest final de l’AAB');
+    else if (objectiu < TARGET_SDK_PLAY_MINIM) avisos.push(`targetSdkVersion ${objectiu} és més baix que ${TARGET_SDK_PLAY_MINIM}: Play pot rebutjar l'AAB`);
     avisos.push('un compte personal de Play Console només publica a producció després de la prova tancada (12 provadors durant 14 dies, P0-23) o amb un compte d\'organització (D-B9-2): sense eixe accés, --validate_only pararà amb l\'eixida 8 i no es pujarà res');
   }
   return avisos;
@@ -369,7 +454,7 @@ export function preflight({ arrel, plataformes, signa = false, env = process.env
   linies.push(...delPush.linies);
   if (delPush.mal.length) familia[EIXIDA.ARBRE] = true;
   if (produccio) {
-    linies.push('Producció (només avisos: cap llindar no s\'ha verificat contra les botigues)');
+    linies.push('Producció (només avisos; mínim API de Play contrastat en l’auditoria O4)');
     for (const text of avisosDeProduccio(arrel, plataformes)) avis(text);
   }
 

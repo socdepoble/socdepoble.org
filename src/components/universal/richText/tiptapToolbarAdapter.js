@@ -22,6 +22,11 @@ const TRADUCCIO = Object.freeze({
   ratllat:        { actiu: (e) => e.isActive('strike'),                ordena: (c) => c.toggleStrike() },
   citacio:        { actiu: (e) => e.isActive('blockquote'),            ordena: (c) => c.toggleBlockquote() },
   divisor:        { actiu: () => false,                                ordena: (c) => c.setHorizontalRule() },
+  /* O4-CLAUDE-2 · La subtargeta (extensions/subtargeta.js): inserix la caixa
+     de mostra amb els textos de l'extensió (els traduïts que li passa
+     DocumentEditor). Dins de can() no toca res (la guarda de dispatch és de
+     la comanda). */
+  subtargeta:     { actiu: (e) => e.isActive('sdpSubtargeta'),           ordena: (c) => c.inserirSubtargeta() },
   /* T7 · Obri el selector del consumidor. Sense l'extensió de targetes la
      comanda no existix i el try/catch de llegeixEstat la deixa apagada; amb
      ella, dins de can() no obri res (la guarda de dispatch és de la comanda). */

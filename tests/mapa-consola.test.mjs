@@ -9,8 +9,15 @@ import { execFileSync } from 'node:child_process';
 import { recullMapa, recullFonts, eixidaDePorta, llegeixPlist, compteLlicons, mencionsDeSkills, hooksGit, errorRecent } from '../tooling/brain/mapa-consola.mjs';
 import { SOURCES } from '../tooling/brain/context-local.mjs';
 import { normalitzaMapa } from '../src/sections/consola/mapa/mapaContent.js';
+import { seleccionaPassos } from '../tooling/gates/run-portes.mjs';
 
 const ARA = Date.parse('2026-09-24T12:00:00Z');
+/* O4-CLAUDE-3 · Els passos readOnly de run-portes.mjs --diagnostic, els que
+   compta la cadena-portes del Mapa (mapa-consola.mjs · cadenaPortes). La
+   llista de noms és explícita: qui afig o lleva una porta de diagnòstic ho
+   veu ací. Onades 1-3 (cc3e443dc) hi va afegir la Higiene de paquets, la
+   seté; abans el recompte (6) estava escrit a mà en dues proves. */
+const PASSOS_DIAGNOSTIC = seleccionaPassos({ diagnostic: true });
 
 function escriu(arrel, rel, text) {
   fs.mkdirSync(path.dirname(path.join(arrel, rel)), { recursive: true });
@@ -308,11 +315,14 @@ test('portes 261026: porta-documents i run-portes --diagnostic mesuren conformit
   const fonts = recullFonts(arrel, { home, plataforma: 'linux', ara: ARA });
   assert.deepEqual(fonts.portaDocuments, { valid: false, checked: 4, errors: ['_wiki_de_poble/04_escriptori/x.md: falta el rebut'] });
   assert.equal(fonts.cadenaPortes.failures, 2);
-  // Ronda 2 (IDEA-13) · el Tractor Vigilant és el sisé pas readOnly de run-portes.mjs.
-  assert.equal(fonts.cadenaPortes.total, 6, 'els passos readOnly de run-portes.mjs');
+  // Ronda 2 (IDEA-13) · el Tractor Vigilant és un pas readOnly de run-portes.mjs; Onades 1-3, la Higiene de paquets.
+  assert.deepEqual(PASSOS_DIAGNOSTIC.map((pas) => pas.nom), ['Contracte de plantilles', 'Autoritat i arrencada', 'Segell de skills',
+    'Integritat del LEDGER', 'Contracte documental', 'Higiene de paquets', 'Tractor Vigilant'], 'els passos readOnly de run-portes.mjs');
+  assert.equal(fonts.cadenaPortes.total, PASSOS_DIAGNOSTIC.length, 'els passos readOnly de run-portes.mjs');
   const mapa = recullMapa(arrel, { home, plataforma: 'linux', ara: ARA });
   assert.deepEqual([metrica(mapa, 'conformitat-documental').numerador, metrica(mapa, 'conformitat-documental').denominador], [3, 4]);
-  assert.deepEqual([metrica(mapa, 'cadena-portes').numerador, metrica(mapa, 'cadena-portes').denominador], [4, 6]);
+  assert.deepEqual([metrica(mapa, 'cadena-portes').numerador, metrica(mapa, 'cadena-portes').denominador],
+    [PASSOS_DIAGNOSTIC.length - 2, PASSOS_DIAGNOSTIC.length]);
   assert.doesNotThrow(() => normalitzaMapa(mapa));
 
   // Una porta que peta sense JSON (o que no és el diagnòstic) no és cap mesura.
@@ -341,8 +351,13 @@ test('portes: timeout amb stdout verd, senyal i exit incoherent mai acrediten un
 test('portes: recomptes i DTO incoherents queden N/A', () => {
   const arrel = mas(), home = fs.mkdtempSync(path.join(os.tmpdir(), 'home-'));
   escriu(arrel, 'tooling/gates/porta-documents.mjs', "console.log(JSON.stringify({valid:true,checked:-1,errors:[]}));");
-  // Més fallades que passos readOnly (6 des de la Ronda 2): incoherent.
-  escriu(arrel, 'tooling/gates/run-portes.mjs', "console.log(JSON.stringify({diagnostic:true,failures:7,valid:false})); process.exitCode=1;");
+  // Més fallades que passos readOnly (O4-CLAUDE-3: un més que els de run-portes.mjs, no un 7 fix): incoherent.
+  escriu(arrel, 'tooling/gates/run-portes.mjs',
+    `console.log(JSON.stringify({diagnostic:true,failures:${PASSOS_DIAGNOSTIC.length + 1},valid:false})); process.exitCode=1;`);
   const fonts = recullFonts(arrel, { home, plataforma: 'linux', ara: ARA });
   assert.deepEqual([fonts.portaDocuments, fonts.cadenaPortes], [null, null]);
+  // I el límit just (totes les portes roges) sí que és una mesura: el N/A és per la incoherència, no pel número.
+  escriu(arrel, 'tooling/gates/run-portes.mjs',
+    `console.log(JSON.stringify({diagnostic:true,failures:${PASSOS_DIAGNOSTIC.length},valid:false})); process.exitCode=1;`);
+  assert.equal(recullFonts(arrel, { home, plataforma: 'linux', ara: ARA }).cadenaPortes?.failures, PASSOS_DIAGNOSTIC.length);
 });

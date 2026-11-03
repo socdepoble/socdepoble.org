@@ -58,16 +58,23 @@ export const SlashMenu = Extension.create({
 
   addProseMirrorPlugins() {
     const ordres = this.options.ordres;
+    const editorDelMenu = this.editor;
+    /* O4-CLAUDE-2 · C2-07 (àrbitre) · Una ordre amb `tradueix(editor)` (la
+       Subtargeta) porta el títol i l'ajuda en la llengua de la interfície: es
+       lligen a cada pintat, perquè canviar d'idioma no reconstruïx l'editor.
+       La resta d'ordres, tal qual. */
+    const traduides = (editor) => ordres.map((o) => (typeof o.tradueix === 'function' ? { ...o, ...o.tradueix(editor) } : o));
 
     return [
       Suggestion({
         editor: this.editor,
         ...this.options.suggestion,
 
-        items: ({ query }) => {
+        items: ({ query, editor }) => {
           const q = (query || '').toLowerCase().trim();
-          if (!q) return ordres;
-          return ordres.filter((o) =>
+          const llista = traduides(editor || editorDelMenu);
+          if (!q) return llista;
+          return llista.filter((o) =>
             o.titol.toLowerCase().includes(q) ||
             (o.paraules || []).some((p) => p.toLowerCase().startsWith(q))
           );

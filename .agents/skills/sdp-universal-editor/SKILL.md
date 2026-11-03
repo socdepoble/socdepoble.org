@@ -14,6 +14,11 @@ triggers_on:
 contracte.llig:
   - .agents/skills/sdp-pedra-seca/SKILL.md
   - src/components/universal/UniversalEditorShell.jsx
+  - src/components/universal/richText/extensions/guiaCos.js
+  - src/sections/notes/llavorNota.js
+  - src/sections/notes/NotesEditor.jsx
+  - src/utils/publicacioUniversal.js
+  - src/components/universal/UniversalEditorShell.edicioAvancada.test.jsx
 contracte.escriu:
   - src/components/universal/UniversalEditorShell.jsx
 ---
@@ -33,8 +38,8 @@ L'editor prescindeix d'un botó clàssic de «Guardar», apostant per una experi
 
 Abans d'entrar al cos lliure del document, i acompanyant l'encapçalament i la Barra Taronja, l'editor ofereix accions clares per a classificar, il·lustrar amb una emoticona i datar la publicació:
 
-1. **Selector d'Emojis (`PaginaEmojis` — Prohibit `<Dialeg>` Flotant):** En prémer la Ploma (o l'emoji actual) a la Barra Taronja en mode edició, **MAI s'obri un modal flotant (`<Dialeg>`)**. S'obri la subvista integrada a columna completa **`PaginaEmojis`** (`src/components/universal/classificacio/PaginaEmojis.jsx` i `GraellaEmojis.jsx`) dins del mateix espai de treball, amb un botó prominent **«Tornar»** (`ArrowLeft`, diana tàctil mínima de `44px`) a la capçalera, cercador en viu i graella categoritzada d'acord amb l'estàndard Unicode 18 (`src/sections/notes/familiesEmojis.js`).
-2. **Selector d'Etiquetes i Categories:** Un botó explícit que, en ser clicat, obri la subvista de classificació dins de la mateixa columna d'edició (amb botó «Tornar» de `44px`) per triar quines etiquetes i categories s'aplicaran a l'element.
+1. **Selector d'Emojis (`PaginaEmojis` — Prohibit `<Dialeg>` Flotant):** En prémer la Ploma (o l'emoji actual) a la Barra Taronja en mode edició, **MAI s'obri un modal flotant (`<Dialeg>`)**. S'obri la subvista integrada a columna completa **`PaginaEmojis`** (`src/components/universal/classificacio/PaginaEmojis.jsx` i `GraellaEmojis.jsx`) dins del mateix espai de treball, amb un botó prominent **«Tornar»** (`ArrowLeft`, diana tàctil del token `var(--sdp-touch)`) a la capçalera, cercador en viu i graella categoritzada d'acord amb l'estàndard Unicode 18 (`src/sections/notes/familiesEmojis.js`).
+2. **Selector d'Etiquetes i Categories:** Un botó explícit que, en ser clicat, obri la subvista de classificació dins de la mateixa columna d'edició (amb botó «Tornar» amb el token `var(--sdp-touch)`) per triar quines etiquetes i categories s'aplicaran a l'element.
 3. **Selector de Drets d'Autor (Copyright):** La píndola i la línia de copyright sota el títol obrin el selector de llicències (`CC BY-NC-SA 4.0` de sèrie) fins que l'usuari prem «Desar autoria».
 4. **Data i Hora:** Comandament a la Barra Taronja per establir i visualitzar la data i l'hora de publicació, sincronitzada amb el calendari intern.
 
@@ -54,7 +59,9 @@ L'experiència d'edició de text ha de ser tan pura com la d'un processador de t
 
 ## 4. La Plantilla Interactiva (Cartell Guia Reversible)
 
-Quan el cos d'un document té 0 caràcters (per exemple, una nota nova), l'editor mai mostra un full en blanc total: pinta un **cartell guia** (`src/components/universal/richText/extensions/guiaCos.js`; el del Bloc, `GUIA_NOTA` de `src/sections/notes/llavorNota.js`) que demostra la jerarquia de l'eina. **No és contingut**: és una decoració que no es desa, no es publica ni arriba a la targeta; per al lector de pantalla és muda i el cos porta el seu `aria-placeholder`.
+Llig `src/components/universal/richText/extensions/guiaCos.js` i `GUIA_NOTA` de `src/sections/notes/llavorNota.js` per contrastar el cartell guia.
+
+Quan el cos d'un document té 0 caràcters (per exemple, una nota nova), l'editor pinta el **cartell guia**, que demostra la jerarquia de l'eina. **No és contingut**: és una decoració que no es desa, no es publica ni arriba a la targeta; per al lector de pantalla és muda i el cos porta el seu `aria-placeholder`.
 
 ### Estructura de la mostra inicial
 
@@ -72,6 +79,20 @@ Quan el cos d'un document té 0 caràcters (per exemple, una nota nova), l'edito
 - Si la persona **ix del cos sense haver escrit res**, el cartell **torna**.
 - Si en eixe document s'ha escrit **almenys un caràcter**, el cartell **ja no torna**, encara que s'esborre tot.
 - Les notes velles que encara porten la plantilla antiga desada com a contingut (la llavor) la buiden al primer focus; després s'hi aplica el cartell.
+
+## Patrons de publicació i edició avançada
+
+`UniversalEditorShell.jsx` és la closca compartida; `NotesEditor.jsx` hi connecta les dades de Notes i el contracte `edicioAvancada`. Reutilitza les ranures, el focus i `BotoneraClassificacio`, sense muntar una segona pàgina ni un segon editor. `UniversalEditorShell.edicioAvancada.test.jsx` és la prova del desplegable i dels destins de focus; `NotesSection.ambit.test.jsx` prova l'entrada per àmbit.
+
+L'ordre aprovat per a Notes a Onada 4 és Hero (`capcalera`) → Avatar/Logotip (`logotip`) → «On es publica?» integrat → classificació. Els cinc àmbits han de reutilitzar `PublicacioUniversal` i els seus formularis; l'entrada de Publicar ha d'obrir el desplegable i preseleccionar l'àmbit. Els botons d'eixe selector respecten l'altura d'acció de `var(--sdp-alt-accio)`; no es modifica per això el contracte dels controls compactes existents.
+
+La instantània complementària del carril Claude d’Onada 4 acredita este ordre del DOM, el selector en línia i l’entrada per àmbit amb les suites `UniversalEditorShell.edicioAvancada.test.jsx`, `NotesEditor.ambit.test.jsx` i `NotesSection.ambit.test.jsx`, repetides en còpia amb el conjunt d’exemplars (140 proves verdes). Per a replicar el patró, torna a provar que només hi haja un selector, l’obertura des de Publicar, el canvi d’àmbit sense pèrdua de camps i la persistència. La prova local no certifica el desament en un Supabase desplegat.
+
+Per inserir targetes al text, usa la prop `targetes` de `DocumentEditor` i l'extensió existent `targetesIncrustades.js`. La lectura institucional de Legal és l'exemple contrastat a [[sdp-universal-page/SKILL|sdp-universal-page]]; no copies HTML legal immutable ni autoritza una URL nova. Per a enllaços, aplica la doble comprovació del certificador descrita a [[core-tecniques-investigacio/SKILL|core-tecniques-investigacio]].
+
+## Calaix d’identitat i àmbit integrat
+
+En la SPA, «Amb qui actues?» reutilitza el calaix de capçalera de [[sdp-universal-page/SKILL|sdp-universal-page]], sota la barra negra, amb tokens compartits, cos desplaçable, focus i Escape de `Dialeg`. En l’encastat, la capa modal conserva el calaix al 100% de la caixa de l’App. L’àmbit de publicació viu en la ranura en línia d’«Edició avançada»: identitat i àmbit són decisions diferents i cadascuna conserva el seu consumidor existent.
 
 ## Vincles
 

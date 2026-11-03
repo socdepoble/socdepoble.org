@@ -24,6 +24,9 @@ export const FORMATS = Object.freeze({
   RATLLAT: 'ratllat',
   CITACIO: 'citacio',
   DIVISOR: 'divisor',
+  /* O4-CLAUDE-2 (ordre del Mestre, 261102 21:38) · La subtargeta: una targeta
+     interna amb títol, línia de context i cos (extensions/subtargeta.js). */
+  SUBTARGETA: 'subtargeta',
   TARGETA: 'targeta'
 });
 
@@ -34,8 +37,8 @@ export const FORMATS = Object.freeze({
  *
  * T7 (ordre del Mestre, 261004) · `nivell: 'avancat'` marca les files de la
  * barra desplegada (skill sdp-universal-editor §3): «Targeta» (inserir una
- * targeta incrustada) hi és, però UniversalToolbar no la pinta. Mentrestant,
- * l'ordre «/» del cos fa el mateix.
+ * targeta incrustada) hi és. Fins a O4-CLAUDE-2 UniversalToolbar no la
+ * pintava i només hi arribava l'ordre «/» del cos (vegeu baix).
  *
  * IDEA-59 / P1-72 (Mestre 261101) ·
  *   · `encapcalament` és el nivell de les files que viuen al desplegable
@@ -46,6 +49,13 @@ export const FORMATS = Object.freeze({
  *     és el subratllat, punt 3), la citació i el divisor, que fins ara
  *     esperaven lloc a la barra.
  *   · Cap fila de subratllat: Sóc de Poble no en fa servir (punt 3).
+ *
+ * O4-CLAUDE-2 (ordre del Mestre, 261102 21:38) · Dues eines d'INSERCIÓ a la
+ * segona fila, darrere del divisor: la «Subtargeta» (inserirSubtargeta) i la
+ * «Targeta» incrustada, que ja té ranura (obri el selector del consumidor;
+ * abans només hi arribava l'ordre «/»). UniversalToolbar només les pinta si
+ * el motor n'oferix l'acció (l'extensió hi és, i el selector, per a la
+ * targeta): un editor sense targetes no mostra cap botó apagat de més.
  */
 export const TOOLBAR_SCHEMA = Object.freeze([
   { id: FORMATS.SUBTITOL, clauI18n: 'editor.format.subtitol', etiqueta: 'Títol de secció (H3)', commutable: true, encapcalament: 3, slot: { estat: 'isSubheading', accio: 'toggleSubheading' } },
@@ -60,10 +70,12 @@ export const TOOLBAR_SCHEMA = Object.freeze([
   { id: FORMATS.RATLLAT,  clauI18n: 'editor.format.ratllat',  etiqueta: 'Ratllat',  commutable: true, fila: 'segona', slot: { estat: 'isStrike',  accio: 'toggleStrike' } },
   { id: FORMATS.CITACIO,  clauI18n: 'editor.format.citacio',  etiqueta: 'Citació',  commutable: true, fila: 'segona', slot: { estat: 'isCitacio', accio: 'toggleCitacio' } },
   { id: FORMATS.DIVISOR,  clauI18n: 'editor.format.divisor',  etiqueta: 'Divisor',  commutable: false, fila: 'segona', slot: { estat: 'isDivisor', accio: 'insertDivisor' } },
-  { id: FORMATS.TARGETA,  clauI18n: 'editor.inserir.targeta', etiqueta: 'Targeta',  commutable: false, slot: null, nivell: 'avancat' }
+  { id: FORMATS.SUBTARGETA, clauI18n: 'section.notes.format.subtargeta', etiqueta: 'Subtargeta', commutable: false, fila: 'segona', slot: { estat: 'isSubtargeta', accio: 'insertSubtargeta' } },
+  { id: FORMATS.TARGETA,  clauI18n: 'editor.inserir.targeta', etiqueta: 'Targeta',  commutable: false, fila: 'segona', slot: { estat: 'isTargeta', accio: 'insertTargeta' }, nivell: 'avancat' }
 ]);
 
-/** Els botons que UniversalToolbar sap pintar hui. */
+/** Els botons que UniversalToolbar sap pintar hui (O4-CLAUDE-2 · també la
+ *  subtargeta i la targeta). */
 export const SCHEMA_VISIBLE = Object.freeze(TOOLBAR_SCHEMA.filter((b) => b.slot));
 
 /** IDEA-59 / P1-72 (punt 2) · Els nivells del desplegable, en el seu ordre:

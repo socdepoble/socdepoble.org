@@ -233,7 +233,7 @@ test('manifest, RAG i slugs: cap camí d’usuari, ni a les etiquetes ni als JSO
 test('CLI --check --strict accepta privat existent i rebutja desaparegut sense escriure outputs', (t) => {
   const { root, write } = fixture(t);
   const repo = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
-  for (const rel of ['tooling/wiki/compile-wiki-to-app.mjs', 'tooling/wiki/lib/publication-policy.mjs',
+  for (const rel of ['tooling/wiki/compile-wiki-to-app.mjs','tooling/lib/markdown-prose.mjs', 'tooling/wiki/lib/publication-policy.mjs',
     'tooling/wiki/lib/frontmatter.mjs', 'tooling/lib/arrel.mjs', 'tooling/scripts/canonada.mjs']) {
     write(rel, fs.readFileSync(path.join(repo, rel), 'utf8'));
   }
@@ -249,4 +249,55 @@ test('CLI --check --strict accepta privat existent i rebutja desaparegut sense e
   assert.equal(invalid.status, 1, invalid.stderr);
   assert.match(invalid.stderr, /privat.*no existeix/);
   assert.equal(fs.existsSync(path.join(root, 'src/data/wikiManifest.js')), false);
+});
+
+
+test('WikiLinks només convertix prosa i conserva exemples literals byte a byte', (t) => {
+  const { root, write } = fixture(t);
+  const body = [
+    'Abans `[[forja_to_core]]` i [[public|Públic]].',
+    '`` un ` intern i [[literal-doble]] `` després [[public]].',
+    '\\[[literal-escapat]] i [[public]].',
+    '<!-- [[literal-comentari]] --> [[public]].',
+    '~~~md', '[[literal-tilde]]', '~~~',
+    '````md', '[[literal-fence-llarga]]', '```', '[[encara-literal]]', '````',
+    '   ```md', '   [[literal-indentat]]', '   ```',
+    'Final [[public]].',
+  ].join('\n');
+  write('_wiki_de_poble/00_index.md', doc('', body));
+  write('_wiki_de_poble/01_ser/public.md', doc());
+  const manifest = construeixManifest(root);
+  const output = manifest.items.find(item => item.id === '00_index').content;
+  assert.equal(output, body.replaceAll('[[public|Públic]]', '[Públic](?item=public)').replaceAll('[[public]]', '[public](?item=public)'));
+  assert.deepEqual(verificaEnllacos(root, manifest, { log: { log() {}, error() {} } }).trencats, []);
+});
+
+test('els ?item literals no són enllaços i un enllaç real desaparegut continua roig', (t) => {
+  const { root, write } = fixture(t);
+  write('_wiki_de_poble/00_index.md', doc('', [
+    '`[exemple](?item=literal-inline)`', '<!-- [exemple](?item=literal-comentari) -->',
+    '```md', '[exemple](?item=literal-bloc)', '```',
+    '[[desaparegut]]',
+  ].join('\n')));
+  const result = verificaEnllacos(root, construeixManifest(root), { log: { log() {}, error() {} } });
+  assert.deepEqual(result.trencats.map(link => link.target), ['desaparegut']);
+});
+
+test('la compilació conserva un marcador sense parella i convertix la prosa posterior', (t) => {
+  const { root, write } = fixture(t);
+  write('_wiki_de_poble/00_index.md', doc('', '` sense parella [[public]]\n\n[[public]]'));
+  write('_wiki_de_poble/01_ser/public.md', doc());
+  const output = construeixManifest(root).items.find(item => item.id === '00_index').content;
+  assert.equal(output, '` sense parella [public](?item=public)\n\n[public](?item=public)');
+});
+
+
+test('importar el compilador des de stdin no executa la CLI ni exigeix un argv físic', () => {
+  const moduleUrl = new URL('../tooling/wiki/compile-wiki-to-app.mjs', import.meta.url).href;
+  const result = spawnSync(process.execPath, ['--input-type=module', '-'], {
+    input: `import { construeixManifest } from ${JSON.stringify(moduleUrl)}; console.log(typeof construeixManifest);`,
+    encoding: 'utf8',
+  });
+  assert.equal(result.status, 0, result.stderr);
+  assert.equal(result.stdout.trim(), 'function');
 });

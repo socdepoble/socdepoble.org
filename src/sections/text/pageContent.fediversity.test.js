@@ -113,7 +113,10 @@ const copy = PAGE_COPY.fediversity;
 const doc = new DOMParser().parseFromString(copy.html, 'text/html');
 const text = doc.body.textContent.replace(/\s+/g, ' ');
 /* Les quatre partides (H4 «n · …») i el que hi ha davall de cadascuna fins al
-   pròxim H1-H4 o a la panoràmica: el cos és pla, tot germà del <body>. */
+   pròxim H1-H4 o a la panoràmica. O4-CLAUDE-2 (ordre del Mestre, 261102
+   21:38) · Cada partida és ara una Subtargeta (div.sdp-subtargeta): el seu H4
+   n'és el primer fill i la secció acaba amb la caixa. Fora de les partides,
+   el cos continua pla. */
 const partides = () => [...doc.querySelectorAll('h4')].filter((h4) => /^\d · /.test(h4.textContent));
 function seccio(inici) {
   const nodes = [];
@@ -145,6 +148,13 @@ const WORDPRESS = 'https://wordpress.org/plugins/socdepoble/';
    totes responien 200 el 01-11-2026 a les 04:05 CET (curl). La del pla,
    /ap/actors/la-torre-de-les-macanes/outbox.json, donava 404: no és cap
    ruta del codi i la pàgina no l'enllaça. */
+/* O4-CLAUDE-2 (ordre del Mestre, 261102 21:38) · El paquet de dades obertes estàtic de La Torre
+   (public/opendata/), enllaçat en relatiu a la verificació en viu. Ni mercat.jsonld ni
+   llocs.geojson: no existixen. */
+const OPENDATA = Object.freeze([
+  '/opendata/municipi.jsonld', '/opendata/manifest.json', '/opendata/llicencies.md',
+  '/opendata/noticies.jsonld', '/opendata/agenda.jsonld', '/opendata/memoria.md'
+]);
 const ENDPOINTS_FEDERACIO = () => {
   const actors = ['socdepoble', ...POBLES_FEDERATS].map((slug) => urlsDeMunicipi(slug, { origen: ORIGEN }));
   return [
@@ -216,9 +226,30 @@ describe('anatomia (skill sdp-universal-page)', () => {
     const nivells = [...doc.querySelectorAll('h3, h4, h5, h6')].map((h) => Number(h.tagName[1]));
     expect(nivells[0]).toBe(3);
     nivells.slice(1).forEach((nivell, i) => expect([i, nivell <= nivells[i] + 1]).toEqual([i, true]));
-    // Cap estil ni color nou: l'única classe és la del logotip (page-title-logo, layout.css).
+    /* Cap estil ni color nou: la classe del logotip (page-title-logo, layout.css) i, O4-CLAUDE-2
+       (prova posada al dia a propòsit), la de la primitiva Subtargeta, una per partida (bloc
+       .sdp-subtargeta de modules.css). */
     expect(copy.html).not.toMatch(/\sstyle=/);
-    expect([...copy.html.matchAll(/\sclass="([^"]*)"/g)].map((m) => m[1])).toEqual(['page-title-logo']);
+    expect([...copy.html.matchAll(/\sclass="([^"]*)"/g)].map((m) => m[1])).toEqual(['page-title-logo', ...Array(4).fill('sdp-subtargeta')]);
+  });
+
+  /* O4-CLAUDE-2 (ordre del Mestre, 261102 21:38) · Cada partida, una Subtargeta: el seu H4 és el
+     títol (el primer fill) i els tres H5 hi són dins. El total, la panoràmica i la resta del cos,
+     fora. Cap paraula canviada: el text de cada caixa és el de la seua partida. */
+  test('cada partida és una Subtargeta: el seu H4 com a títol i els seus tres H5 dins; cap més caixa', () => {
+    const caixes = [...doc.querySelectorAll('div.sdp-subtargeta')];
+    expect(caixes).toHaveLength(4);
+    expect(doc.querySelectorAll('[data-sdp-subtargeta]')).toHaveLength(4);
+    for (const [i, caixa] of caixes.entries()) {
+      expect([i, caixa.getAttribute('data-sdp-subtargeta'), caixa.parentElement === doc.body]).toEqual([i, '', true]);
+      expect(caixa.firstElementChild).toBe(partides()[i]);
+      expect([...caixa.querySelectorAll(':scope > h5')].map((h5) => h5.textContent)).toEqual(['Què diu la candidatura', 'Fet hui (verificable)', 'Pendent']);
+      expect(caixa.querySelectorAll('h3, h4')).toHaveLength(1);
+      expect(textDe([caixa])).toBe(`${partides()[i].textContent} ${partida(i)}`);
+    }
+    for (const fora of [doc.querySelector('blockquote'), doc.querySelector('img[src$="fediversity-maquinaria.webp"]'), ...doc.querySelectorAll('h3')]) {
+      expect(fora.closest('.sdp-subtargeta')).toBeNull();
+    }
   });
 
   test('el logotip d’NGI Fediversity: local, clicable cap a la convocatòria, amb mides i avís d’avaluació', () => {
@@ -233,6 +264,36 @@ describe('anatomia (skill sdp-universal-page)', () => {
     expect(svg).not.toMatch(/<script|\son[a-z]+\s*=|foreignObject|<!ENTITY|<!DOCTYPE|@import|javascript:|href="https?:/i);
     // Al costat, en text visible: en avaluació i sense cap finançament.
     expect(a.parentElement.nextElementSibling.textContent).toBe("El logotip porta a la pàgina oficial de la convocatòria. Sóc de Poble no rep cap finançament d'NGI Fediversity: la seua candidatura està en avaluació.");
+  });
+});
+
+/* O6-CLAUDE (ordre del Mestre, prompt 261102_1532, Onada 6) · «En lloc de llistes monòtones de
+   punts, subtítols <h4> seguits de paràgrafs narratius on les paraules principals vagen en negreta.»
+   Les tres raons ja no són una llista de «<strong>Etiqueta:</strong> …»: cada una és un H4 i un sol
+   paràgraf, amb el mateix text (l'etiqueta sense els dos punts i l'explicació en majúscula). I la
+   Prova d'Or de la lectura diagonal: cap paràgraf pla, i cap negreta dins d'un encapçalament. */
+describe('O6 · lectura diagonal: H4 + paràgraf, i cap paràgraf pla', () => {
+  test('les tres raons: un H4 i un paràgraf cadascuna, darrere de «tres raons», sense cap llista', () => {
+    const intro = [...doc.querySelectorAll('p')].find((p) => p.textContent === 'Sóc de Poble hi encaixa per tres raons:');
+    const raons = [];
+    for (let node = intro.nextElementSibling; node && node.textContent !== 'Els nodes actius del Fedivers de Sóc de Poble'; node = node.nextElementSibling) raons.push(node);
+    expect(raons.map((node) => node.tagName)).toEqual(['H4', 'P', 'H4', 'P', 'H4', 'P']);
+    expect(raons.filter((node) => node.tagName === 'H4').map((h4) => h4.textContent)).toEqual(['Dades separades de la interfície', 'Model B', 'Codi lliure']);
+    const [dades, modelB, codi] = raons.filter((node) => node.tagName === 'P').map((p) => p.textContent);
+    expect(dades).toBe("L'aplicació demana les dades a través d'un port neutral, src/data/backendPort.js, i un kit de conformitat comprova qualsevol adaptador abans d'enxufar-lo. Hui hi ha un sol servidor de dades, el Supabase de Sóc de Poble.");
+    expect(modelB).toBe("Una web amfitriona, com una de WordPress, pot allotjar l'aplicació com un component. Les dades del poble, però, viuen al servidor de Sóc de Poble, que és l'única font de veritat. Canviar de servidor és una decisió documentada, amb un adaptador que ha de passar el kit de conformitat.");
+    expect(codi).toBe('El fitxer LICENSE del projecte declara la llicència GNU AGPL, versió 3 o posterior (AGPL-3.0-or-later). Hi és des del 3 de setembre de 2026.');
+    expect(raons.map((node) => node.querySelector('code')?.textContent ?? null)).toEqual([null, 'src/data/backendPort.js', null, null, null, 'LICENSE']);
+    // Cap llista de «<strong>Etiqueta:</strong> …» a la pàgina.
+    expect([...doc.querySelectorAll('li')].filter((li) => /^<strong>[^<]*:<\/strong>/.test(li.innerHTML.trim()))).toEqual([]);
+  });
+
+  test('cap paràgraf pla: tot paràgraf amb text porta negreta, i cap encapçalament no en porta', () => {
+    const plans = [...doc.querySelectorAll('p')].filter((p) => p.textContent.trim() && !p.querySelector('strong')).map((p) => p.textContent.slice(0, 60));
+    expect(plans).toEqual([]);
+    expect([...doc.querySelectorAll('h1, h2, h3, h4, h5, h6')].filter((h) => h.querySelector('strong')).map((h) => h.textContent)).toEqual([]);
+    // Negretes ben formades: ni niuades, ni buides, ni dins del codi.
+    expect(doc.querySelectorAll('strong strong, code strong, strong:empty')).toHaveLength(0);
   });
 });
 
@@ -293,10 +354,16 @@ describe('honestedat: cada afirmació ancorada al codi', () => {
 
   test('els nodes actius: dos, clicables, i dues portes al mateix servei (Model B), sense ActivityPub encara', () => {
     const h4 = [...doc.querySelectorAll('h4')].filter((h) => !/^\d · /.test(h.textContent));
-    expect(h4.map((h) => h.textContent)).toEqual(['Els nodes actius del Fedivers de Sóc de Poble', 'La visió: nodes germans «Gent de…»']);
+    /* O6-CLAUDE (ordre del Mestre, prompt 261102_1532, Onada 6; prova posada al dia a propòsit) ·
+       Les tres raons, abans una llista «<strong>Etiqueta:</strong> …», són ara tres H4, davant dels
+       nodes actius i de la visió. Tot el primer H3, en H4: cap salt de nivell. */
+    expect(h4.map((h) => h.textContent)).toEqual([
+      'Dades separades de la interfície', 'Model B', 'Codi lliure',
+      'Els nodes actius del Fedivers de Sóc de Poble', 'La visió: nodes germans «Gent de…»'
+    ]);
     // Dins del primer H3: cap H4 salta de nivell.
     const capcaleres = [...doc.querySelectorAll('h3, h4')].map((h) => h.tagName);
-    expect(capcaleres.slice(0, 3)).toEqual(['H3', 'H4', 'H4']);
+    expect(capcaleres.slice(0, 7)).toEqual(['H3', 'H4', 'H4', 'H4', 'H4', 'H4', 'H3']);
     // Dins del seu H4 (gentdelatorre.net també ix a la partida 1 i a la verificació en viu).
     const h4Nodes = h4.find((h) => h.textContent === 'Els nodes actius del Fedivers de Sóc de Poble');
     const nodes = seccio(h4Nodes).flatMap((node) => [...node.querySelectorAll('a')]);
@@ -609,7 +676,9 @@ describe('honestedat: cada afirmació ancorada al codi', () => {
   test('cada enllaç és una ruta de l’app, i la Consola és oberta a tothom, com diu la pàgina', async () => {
     const rutesDeSeccio = new Set(SECTIONS.map((seccio) => seccio.path));
     const altres = new Set(['/page/consola', '/consola', '/traduccions', '/wikidepoble']);
-    const hrefs = [...doc.querySelectorAll('a')].map((a) => a.getAttribute('href')).filter((href) => !href.startsWith('https://'));
+    /* O4-CLAUDE-2 (prova posada al dia a propòsit) · Els fitxers del paquet de dades obertes
+       estàtic no són rutes de l'app: els vigila la prova de la verificació en viu, de davall. */
+    const hrefs = [...doc.querySelectorAll('a')].map((a) => a.getAttribute('href')).filter((href) => !href.startsWith('https://') && !OPENDATA.includes(href));
     /* 01-11-2026 (T2) · Un document de la Wiki de Poble, per l'id que porta el paquet de la Wiki (wikiManifest.js). */
     const manifest = llegix('src/data/wikiManifest.js');
     const delaWiki = (href) => /^\/wikidepoble\?item=[a-z0-9_]+$/.test(href) && manifest.includes(`"id": "${href.split('=')[1]}"`);
@@ -864,6 +933,44 @@ describe('01-11-2026 · fet hui, verificable, i enllaçat en un clic', () => {
     // I la descàrrega de les dades obertes, des de Pobles.
     expect(elementAmb('Des de la fitxa de cada poble es descarrega').querySelector('a').getAttribute('href')).toBe('/pobles');
   });
+
+  /* O4-CLAUDE-2 (ordre del Mestre, 261102 21:38) · Al final de la verificació en viu, els sis
+     fitxers del paquet de dades obertes estàtic, en relatiu i amb el mateix estil que les adreces
+     de federació (el camí com a text, en una pestanya nova), darrere d'una frase que diu què són.
+     Cada fitxer és al disc (public/) i, menys el manifest mateix, al manifest del paquet: la
+     mateixa regla que certifica-enllacos.mjs (OPENDATA_404 i OPENDATA_FORA_MANIFEST). */
+  test('verificació en viu: el paquet de dades obertes estàtic, sis fitxers que existixen, en relatiu', () => {
+    const [, , verificacio] = doc.querySelectorAll('h3');
+    const enllacos = [];
+    for (let node = verificacio.nextElementSibling; node; node = node.nextElementSibling) enllacos.push(...node.querySelectorAll('a[href^="/opendata/"]'));
+    expect(enllacos.map((a) => a.getAttribute('href'))).toEqual(OPENDATA);
+    expect([...doc.querySelectorAll('a[href*="opendata"]')]).toHaveLength(OPENDATA.length);
+    for (const a of enllacos) {
+      expect([a.textContent, a.getAttribute('target'), a.getAttribute('rel'), a.querySelector('code')]).toEqual([a.getAttribute('href'), '_blank', 'noopener noreferrer', null]);
+    }
+    const llista = enllacos[0].closest('ul');
+    expect(enllacos.every((a) => a.closest('ul') === llista)).toBe(true);
+    expect(llista.previousElementSibling.textContent).toBe('I estos obrin el paquet de dades obertes estàtic de La Torre de les Maçanes, els fitxers que el lloc web publica tal qual:');
+    // L'últim apartat de la pàgina, darrere de les adreces de federació i abans del tancament.
+    expect(llista.nextElementSibling.textContent).toMatch(/^Esta pàgina canvia quan canvia el codi\./);
+    const manifest = JSON.parse(llegix('public/opendata/manifest.json'));
+    const camins = new Set(manifest.resources.map((recurs) => recurs.path));
+    for (const href of OPENDATA) {
+      expect([href, existix(`public${href}`)]).toEqual([href, true]);
+      if (href !== '/opendata/manifest.json') expect([href, camins.has(href.replace('/opendata/', ''))]).toEqual([href, true]);
+    }
+    expect(copy.html).not.toMatch(/mercat\.jsonld|llocs\.geojson/);
+    /* C2-09 (àrbitre) · La frase segons el paquet de veres: amb les notícies i l'agenda a 0
+       (manifest.socdepoble.comptes, i la memòria diu «No s'exporta en esta versió»), la pàgina
+       diu que ixen buits; amb elements, ho hauria de dir al revés. */
+    const { noticies, agenda } = manifest.socdepoble.comptes;
+    const memoria = llegix('public/opendata/memoria.md');
+    const frase = elementAmb('/opendata/noticies.jsonld').textContent;
+    expect(frase).toContain("les notícies i els actes de l'agenda públics.");
+    expect(frase).not.toContain("quan n'hi ha");
+    expect(frase.includes('En esta versió del paquet estàtic, tots dos ixen buits: la memòria diu per què.')).toBe(noticies === 0 && agenda === 0);
+    expect([noticies, agenda].map((compte) => memoria.includes(`(${compte})\n\nNo s'exporta en esta versió`))).toEqual([noticies === 0, agenda === 0]);
+  });
 });
 
 /* Gauntlet 2 261101 (carril Y; correcció del crític) · El comentari de PAGE_COPY.fediversity deia que
@@ -889,6 +996,9 @@ describe('Gauntlet 2 · el comentari del desplegament i el registre de canvis', 
 
   test('«El registre de canvis és a Versions»: /versions porta l’entrega de l’1 de novembre, pendent de desplegar', () => {
     expect(textDe([doc.body])).toContain('El registre de canvis és a Versions');
-    expect(PAGE_COPY.versions.html).toContain('<h3>1 de novembre de 2026 · v1.0.0 (build pendent de desplegar) · Connector WordPress v1.1.10</h3>');
+    /* O6 (ordre del Mestre, prompt 261102_1532; prova posada al dia a propòsit) · L'entrega de l'1 de
+       novembre porta ara la seua numeració pròpia, v1.0.3 (abans, totes deien v1.0.0); continua
+       pendent de desplegar i amb el connector 1.1.10. */
+    expect(PAGE_COPY.versions.html).toContain('<h3>1 de novembre de 2026 · v1.0.3 (build pendent de desplegar) · Connector WordPress v1.1.10</h3>');
   });
 });

@@ -53,6 +53,12 @@ test('sense amfitrió (dev): el cos de /projecte és el sanejat de sempre i les 
   const { container } = render(<TextSection page={PAGE_COPY.projecte} pageKey="projecte" />);
   expect(cos(container).innerHTML).toBe(sanitizeHtml(PAGE_COPY.projecte.html));
   expect(srcs(container)).toEqual(INFOGRAFIES);
+  /* O4-CLAUDE-2 (ordre del Mestre, 261102 21:38) · «D’on venim» va dins d'una Subtargeta
+     (div.sdp-subtargeta, que el sanejador conserva). C2-04 (àrbitre) · Les infografies es queden
+     fora, com estaven: el seu primer paràgraf és cos, no cap metadada. Les rutes no canvien. */
+  const caixes = [...cos(container).querySelectorAll(':scope > div.sdp-subtargeta[data-sdp-subtargeta]')];
+  expect(caixes.map((caixa) => caixa.firstElementChild.textContent)).toEqual(['D’on venim']);
+  expect(caixes[0].querySelectorAll('img')).toHaveLength(0);
   expect(mocks.props.heroImage).toBe(PAGE_COPY.projecte.image);
 });
 

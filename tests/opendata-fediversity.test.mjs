@@ -223,3 +223,62 @@ test('encaminament i capçaleres estàtiques (firebase.json, vercel.json, public
   }
   assert.doesNotMatch(redirectsFile, /\/index\.html\s+200/, 'public/_redirects no força cap fallback indiscriminat abans de les rutes estàtiques');
 });
+
+/* O6 · G-D-01. Model HTTP local dels tres contractes estàtics: usa les
+   capçaleres dels fitxers reals i els bytes de public/, sense cap proveïdor
+   remot. L'ordre de les regles és explícit: la darrera clau que casa mana. */
+function capcaleresOpendata(font, pathname) {
+  const glob = (patro) => new RegExp('^' + patro.split('*').map(p => p.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('[^/]*') + '$');
+  let regles;
+  if (font === 'firebase.json') {
+    regles = JSON.parse(llig(font)).hosting.headers.filter(r => r.source?.startsWith('/opendata/'));
+    return Object.fromEntries(regles.filter(r => glob(r.source).test(pathname)).flatMap(r => r.headers.map(h => [h.key.toLowerCase(), h.value])));
+  }
+  if (font === 'vercel.json') {
+    regles = JSON.parse(llig(font)).headers.filter(r => r.source?.startsWith('/opendata/'));
+    return Object.fromEntries(regles.filter(r => new RegExp('^' + r.source + '$').test(pathname)).flatMap(r => r.headers.map(h => [h.key.toLowerCase(), h.value])));
+  }
+  regles = [];
+  for (const linia of llig(font).split('\n')) {
+    if (linia.startsWith('/')) regles.push({ source: linia, headers: [] });
+    else if (/^\s+\S/.test(linia) && regles.length) {
+      const m = linia.trim().match(/^([^:]+):\s*(.*)$/);
+      if (m) regles.at(-1).headers.push([m[1].toLowerCase(), m[2]]);
+    }
+  }
+  return Object.fromEntries(regles.filter(r => r.source.startsWith('/opendata/') && glob(r.source).test(pathname)).flatMap(r => r.headers));
+}
+
+for (const font of ['firebase.json', 'vercel.json', 'public/_headers']) {
+  test(`G-D-01 · ${font}: HTTP GET/HEAD servix el mediatype declarat, amb precedència sobre *.json`, async (t) => {
+    const { createServer } = await import('node:http');
+    const servidor = createServer((req, res) => {
+      const pathname = new URL(req.url, 'http://localhost').pathname;
+      const nom = pathname.split('/').pop();
+      if (!['activitystreams.json', 'manifest.json', 'municipi.jsonld'].includes(nom)) { res.writeHead(404); res.end(); return; }
+      const bytes = fs.readFileSync(path.join(ARREL, 'public', 'opendata', nom));
+      for (const [key, value] of Object.entries(capcaleresOpendata(font, pathname))) res.setHeader(key, value);
+      res.setHeader('Content-Length', bytes.length);
+      res.end(req.method === 'HEAD' ? undefined : bytes);
+    });
+    await new Promise((resolve, reject) => { servidor.once('error', reject); servidor.listen(0, '127.0.0.1', resolve); });
+    t.after(() => new Promise(resolve => servidor.close(resolve)));
+    const origen = `http://127.0.0.1:${servidor.address().port}`;
+    for (const [nom, tipus] of [
+      ['activitystreams.json', 'application/activity+json'],
+      ['manifest.json', 'application/json'],
+      ['municipi.jsonld', 'application/ld+json']
+    ]) {
+      const uri = `${origen}/opendata/${nom}?prova=1`;
+      for (const method of ['GET', 'HEAD']) {
+        const r = await fetch(uri, { method });
+        assert.equal(r.status, 200);
+        assert.equal(r.headers.get('content-type'), `${tipus}; charset=utf-8`);
+        assert.equal(r.headers.get('access-control-allow-origin'), '*');
+        const body = await r.text();
+        assert.equal(body, method === 'HEAD' ? '' : llig(`public/opendata/${nom}`));
+        if (method === 'GET') assert.doesNotThrow(() => JSON.parse(body));
+      }
+    }
+  });
+}

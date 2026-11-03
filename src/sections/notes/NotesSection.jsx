@@ -40,6 +40,7 @@ import {
   CanalEmojisContext, TEXTOS_EMOJIS, carregaCatalegEmojis, copiaAlPortaretalls, textCopiat, textEmojiNoReconegut, useCanalEmojisDelBloc
 } from './canalEmojis.js';
 import { CanalAmbitContext } from '../../components/universal/ambits/canalAmbit.js';
+import { carpetaDeLAmbit } from '../../components/universal/ambits/carpetaAmbit.js';
 import { AMBITS } from '../../utils/publicacioUniversal.js';
 
 /* Pell del Bloc de Notes: tot allò que el UniversalWorkspace no ha de saber.
@@ -74,7 +75,8 @@ const CLAUS_URL = CLAUS_BLOC;
 /* IDEA-61 (T0, prompt 261102_1532) · ?ambit=<mercat|vehicle|treball|habitatge>
    (mai 'mur'): l'entrada des d'una secció vertical («Publicar un viatge»). La
    nota oberta (o la preparada, si la URL no en porta cap) rep la fitxa de
-   l'àmbit i l'editor obri «On es publica?» (canalAmbit.js). */
+   l'àmbit i l'editor obri «On es publica?» (canalAmbit.js). O4-CLAUDE-1 · En
+   línia, dins de l'«Edició avançada» oberta, ja no en cap finestra modal. */
 const CLAU_AMBIT = 'ambit';
 const ambitDeLaUrl = (params) => {
   const valor = params.get(CLAU_AMBIT);
@@ -591,14 +593,25 @@ export default function NotesSection() {
      sèrie (LLICENCIA_PER_DEFECTE). Només en una nota nova del Bloc: no és
      retroactiva (una nota vella sense drets es pinta com sempre) i les notes
      de Connectar, del contingut de fora i del retall no la reben, perquè són
-     contingut d'altri. */
+     contingut d'altri.
+     O4-CLAUDE-1 (ordre del Mestre, captura 261102_2121) · Amb l'entrada
+     ?ambit= (ambitDEntrada), la preparada naix a la carpeta de la secció de
+     l'àmbit (carpetaAmbit.js): ?ambit=mercat, al Mercat; vehicle, treball i
+     habitatge, al Mur. Només la base: la carpeta oberta de l'espai de treball
+     no canvia i l'entrada no espera cap font (esperaCarpeta es deriva de la
+     carpeta d'entrada, i la preparada de l'àmbit ja hi va fixada). En
+     consumir el canal, l'editor li deixa la carpeta a les seues dades
+     (NotesEditor). */
+  const carpetaDeLAmbitDEntrada = ambitDEntrada ? carpetaDeLAmbit(ambitPendent, CARPETA_PER_SECCIO) : null;
+  const carpetaAmbitPreparada = carpetaDeLAmbitDEntrada && carpetes.some((carpeta) => String(carpeta.id) === carpetaDeLAmbitDEntrada)
+    ? carpetaDeLAmbitDEntrada : null;
   const basePreparada = useMemo(() => {
     const heretat = llicenciaDeLActor({ id: actor?.id, tipus: actor?.tipus, memberships });
     return {
-      ...entradaDeNotaNova(categoriaBase, grupDe(categoriaBase, allCategories, allTags)),
+      ...(carpetaAmbitPreparada ? { folderId: carpetaAmbitPreparada } : entradaDeNotaNova(categoriaBase, grupDe(categoriaBase, allCategories, allTags))),
       copyright: heretat || LLICENCIA_PER_DEFECTE
     };
-  }, [categoriaBase, allCategories, allTags, actor, memberships]);
+  }, [carpetaAmbitPreparada, categoriaBase, allCategories, allTags, actor, memberships]);
   /* Revisió de P4 · Un endoll que no respecta l'id del client crea la nota
      amb un altre: si la preparada era la triada, la selecció (la URL) passa a
      la nota creada. replace: és la mateixa nota, no una navegació. */
@@ -646,7 +659,7 @@ export default function NotesSection() {
     () => ({ escriu: preparada.escriu, desa: preparada.desa, creacio: preparada.creacio, reintenta: preparada.reintenta }),
     [preparada.escriu, preparada.desa, preparada.creacio, preparada.reintenta]
   );
-  /* IDEA-61 (T0) · Consumir l'àmbit: l'editor ja ha obert el diàleg. La URL
+  /* IDEA-61 (T0) · Consumir l'àmbit: l'editor ja ha obert «On es publica?» (O4-CLAUDE-1: en línia). La URL
      es queda neta (sense ?ambit=) i, si no portava cap nota, amb la preparada
      que l'ha rebuda, perquè la selecció no depenga d'un àmbit que ja no és
      pendent. Estable (refs als valors vius): l'efecte de l'editor que el
@@ -837,12 +850,17 @@ export default function NotesSection() {
      obri la nota preparada («Nota sense títol») on és la persona. Es crea
      amb la primera cosa que s'hi escriu, amb l'entrada i els drets de
      basePreparada (T39, D15). Així un clic no deixa cap nota buida. */
+  const { camps: campsPreparada, buidaEntrada: buidaPreparada } = preparada;
   const onCreate = useCallback(async ({ activeCategoryId } = {}) => {
     if (activeCategoryId != null) setCategoriaActiva(String(activeCategoryId));
+    /* O4-CLAUDE-3 (D2-publicacio-5-verticals-01) · Una preparada sense res
+       escrit perd l'entrada d'abans (la fitxa d'un ?ambit= consumit i la seua
+       carpeta): naix on és ara la persona, amb el mateix id. */
+    if (Object.keys(campsPreparada).length) buidaPreparada?.();
     // També amb la llista a mitges: demanar-la la fixa a la llista.
     if (itemPreparadaBase) setDemanada(itemPreparadaBase.id);
     return itemPreparadaBase;
-  }, [itemPreparadaBase]);
+  }, [itemPreparadaBase, campsPreparada, buidaPreparada]);
 
   /* ── Bloc 3.8 del Gauntlet (261016) · Emojis XL al Bloc ────────────────
      «Crear un accés directe a la capçalera de la columna NOTES (entre el

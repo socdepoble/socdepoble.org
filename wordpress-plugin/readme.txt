@@ -4,7 +4,7 @@ Tags: community, village, social network, embed, municipal
 Requires at least: 6.5
 Tested up to: 7.1
 Requires PHP: 7.4
-Stable tag: 1.1.11
+Stable tag: 1.1.12
 License: AGPL-3.0-or-later
 License URI: https://www.gnu.org/licenses/agpl-3.0.html
 
@@ -188,6 +188,9 @@ Si no queda cap altra còpia activa del connector, `uninstall.php` esborra els a
 
 == Changelog ==
 
+= 1.1.12 =
+Cinc idiomes integrats als ajustos, pestanyes accessibles, lletra de 17px i guia clara en tres passos. Canviar de llengua conserva els camps sense guardar. La marca i el lema castellà es mantenen en valencià.
+
 = 1.1.11 =
 * **«Mostra els detalls» com a WordPress.org:** la finestra de detalls del connector mostra la negreta i la cursiva del readme en lloc dels asteriscos, el codi literal, sense cursives ni enllaços a dins, i els tres passos de la instal·lació com una sola llista numerada, amb les seues subllistes.
 * **Textos al dia:** el visor diu que el connector oficial és públic al directori de WordPress.org, i el readme descriu els serveis de fora, les traduccions, les dades obertes i la federació tal com funcionen hui.
@@ -207,6 +210,9 @@ Si no queda cap altra còpia activa del connector, `uninstall.php` esborra els a
 * **Codi font i construcció documentats:** Instruccions reproduïbles pas a pas per generar el paquet `dist/` des del repositori públic.
 
 == Upgrade Notice ==
+
+= 1.1.12 =
+Cinc idiomes integrats, lletra gran i guia en tres passos; els camps es conserven en canviar de llengua.
 
 = 1.1.11 =
 «Mostra els detalls» com a WordPress.org, i el visor al dia: condicions 2.3 amb 16 anys, alertes municipals que caduquen, memòria oral amb poble i etiquetes, dades obertes 1.2.0 amb notícies i agenda, i Connectar, membres i enquadrament en cinc llengües.

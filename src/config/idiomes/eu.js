@@ -429,6 +429,13 @@ export default {
   'section.notes.format.mesEines': 'Tresna gehiago',
   'section.notes.format.citacio': 'Aipua',
   'section.notes.format.divisor': 'Bereizlea',
+  /* O4-CLAUDE-2 · La subtargeta i la targeta incrustada a la segona fila «⋯» de la barra, i els textos de mostra de la subtargeta. */
+  'section.notes.format.subtargeta': 'Azpitxartela',
+  'section.notes.format.targeta': 'Txartel txertatua',
+  'section.notes.format.subtargetaTitol': 'Azpitxartelaren izenburua',
+  'section.notes.format.subtargetaMeta': 'Testuinguru-lerro bat: data, lekua edo egiletza',
+  'section.notes.format.subtargetaCos': 'Idatzi hemen azpitxartelaren edukia: paragrafoak, zerrendak eta estekak.',
+  'section.notes.format.subtargetaAjuda': 'Txartel bat testuaren barruan: izenburua, testuingurua eta gorputza',
   /* Gauntlet 261101 · X-C-notes */
   'section.notes.cos.etiqueta': 'Oharraren gorputza',
   'section.notes.cos.guiaResum': 'Idatzi hemen zure oharra. Ikusten den formatu-txantiloia gida bat besterik ez da: ez da gordetzen ez argitaratzen.',
@@ -567,8 +574,6 @@ export default {
   'editor.ambit.boto': 'Esparrua',
   'editor.ambit.titol': 'Non argitaratzen da?',
   'editor.ambit.ajuda': 'Aukeratu Hormako argitalpena den ala Merkatua, Autoa partekatu, Lana edo Etxebizitza ataletarako fitxa bat.',
-  'editor.ambit.desar': 'Gorde esparrua',
-  'editor.ambit.cancelar': 'Utzi',
   'editor.ambit.obligatori': 'Nahitaezko eremu bat falta da: {camp}',
   'editor.ambit.previsualitzacio': 'Horrela ikusiko da Horman',
   'editor.ambit.completar': 'Osatu fitxa',
@@ -2584,6 +2589,9 @@ export default {
   'section.xat.xifratge.senseClauValida': "Baliozko segurtasun-gakorik gabe",
   'section.xat.xifratge.clauRetirada': "Gailu honek ez du aurkitzen {nom}(r)en baliozko segurtasun-gakorik, berresteko modukorik. Norbaitek gailua eta esaldia galtzen dituenean gertatzen da, edo norbait tartean sartu bada. Baliozko bat egon arte, ezin da idatzi. Hitz egin {nom}(r)ekin zer gertatu den jakiteko.",
   'section.xat.xifratge.clauPropiaRetirada': "Gailu honek ez du zure kontuko gako aktiborik aurkitzen: ez berea, ez beste bat. Baliteke norbait tartean sartu izana. Segurtasunagatik, ezin da idatzi. Zu izan ez bazara, jakinarazi iezaguzu.",
+  /* O4-CLAUDE-3 · D-18 (a): avís i confirmació del retall a Notes d’una conversa xifrada */
+  'section.xat.xifratge.retall.avis': "Oharra zerbitzarian gordeko da, muturretik muturrerako zifratzerik gabe.",
+  'section.xat.xifratge.retall.guarda': "Gorde",
   'section.perfil.privacitat.confianca.titol': "Konfiantzako pertsonak",
   'section.perfil.privacitat.confianca.explica': "Egunen batean gailu guztiak eta esaldia galtzen badituzu, konfiantzako zure pertsonetako hiruk elkarrekin txat pribatuak berreskuratzen lagunduko dizute. Nahi adina izan ditzakezu, gutxienez hiru, eta bakoitzarekin segurtasun-zenbakia egiaztatuta izan behar duzu.",
   'section.perfil.privacitat.confianca.pendent': "Konfiantzako pertsonen bidezko berreskurapena ez dago oraindik aktibatuta nodo honetan: oraingoz, inork ezin dizu lagundu txat pribatuak berreskuratzen.",

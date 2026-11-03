@@ -45,7 +45,7 @@ import { execFileSync } from 'node:child_process';
 import { arrelSegura, esMain } from '../lib/arrel.mjs';
 import {
   DESK, json, parseDocument, loadContract, readContract, resolveRoute,
-  validateSchema, sections, withoutCode, receiptPattern, relativePath
+  validateSchema, sections, sourceSections, withoutCode, receiptPattern, relativePath
 } from '../documental/core.mjs';
 import { validateDocument, protectedTurnFiles, isActiveReceipt } from '../documental/turns.mjs';
 
@@ -121,8 +121,9 @@ export function revisaEstructura({ nom, data, body, route, schema, registre = []
   if (comunes.join('\u0000') !== ordre.join('\u0000')) errors.push(`ordre de seccions: la plantilla diu ${esperades.join(' → ')}`);
 
   const contingut = sections(body);
+  const fixed = route.fixedBlocksFormat === 'markdown-v1' ? sourceSections(body) : contingut;
   for (const [s, esperat] of Object.entries(route.fixedBlocks || {})) {
-    if (contingut.has(s) && contingut.get(s) !== esperat) errors.push(`bloc normatiu alterat: «${s}» ha de ser còpia literal de la plantilla`);
+    if (fixed.has(s) && fixed.get(s) !== esperat) errors.push(`bloc normatiu alterat: «${s}» ha de ser còpia literal de la plantilla`);
   }
   const files = new Set([...(contingut.get('Registre') || '').matchAll(/^\|\s*([^|]+?)\s*\|/gm)].map((m) => m[1].trim()));
   for (const k of registre) if (!files.has(k)) errors.push(`Registre: falta la fila «${k}»`);

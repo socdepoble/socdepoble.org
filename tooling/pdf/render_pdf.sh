@@ -43,19 +43,37 @@ else
 fi
 [ -x "$CHROME" ] || { printf '%s\n' "CHROME_BIN no és executable: $CHROME" >&2; exit 2; }
 
-TEMP_PDF=$(mktemp "$OUTPUT_DIR/.${OUTPUT_NAME}.XXXXXX")
+TEMP_PDF=
+SDP_PDF_BROWSER_DIR=
 cleanup() {
-  if [ -e "$TEMP_PDF" ]; then
+  if [ -n "$TEMP_PDF" ] && [ -e "$TEMP_PDF" ]; then
     unlink "$TEMP_PDF"
   fi
+  if [ -n "$SDP_PDF_BROWSER_DIR" ]; then
+    rm -rf -- "$SDP_PDF_BROWSER_DIR"
+  fi
 }
-trap cleanup EXIT HUP INT TERM
+trap cleanup EXIT
+trap 'exit 129' HUP
+trap 'exit 130' INT
+trap 'exit 143' TERM
+
+TEMP_PDF=$(mktemp "$OUTPUT_DIR/.${OUTPUT_NAME}.XXXXXX")
+# Chrome no ha de llegir el perfil, la memòria cau ni el clauer de la sessió.
+# Canonicalitza també un TMPDIR relatiu: les dos banderes exigixen camins absoluts.
+SDP_PDF_TMP_DIR=$(CDPATH= cd -- "${TMPDIR:-/tmp}" && pwd -P)
+SDP_PDF_BROWSER_DIR=$(mktemp -d "$SDP_PDF_TMP_DIR/sdp-pdf.XXXXXX")
+mkdir "$SDP_PDF_BROWSER_DIR/profile" "$SDP_PDF_BROWSER_DIR/cache"
 
 INPUT_URI=$(python3 -c 'from pathlib import Path; import sys; print(Path(sys.argv[1]).resolve().as_uri())' "$INPUT_ABS")
 
 "$CHROME" \
   --headless \
   --disable-gpu \
+  "--user-data-dir=$SDP_PDF_BROWSER_DIR/profile" \
+  "--disk-cache-dir=$SDP_PDF_BROWSER_DIR/cache" \
+  --use-mock-keychain \
+  --password-store=basic \
   --no-pdf-header-footer \
   "--print-to-pdf=$TEMP_PDF" \
   "$INPUT_URI" >/dev/null 2>&1
@@ -73,5 +91,4 @@ if [ -e "$OUTPUT_ABS" ]; then
 fi
 
 mv -f "$TEMP_PDF" "$OUTPUT_ABS"
-trap - EXIT HUP INT TERM
 printf '%s\n' "PDF verificat: $OUTPUT_ABS ($PDF_BYTES bytes)"

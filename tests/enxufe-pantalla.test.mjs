@@ -275,7 +275,9 @@ test('readme: «Mostra els detalls» servix les seccions reals, escapades, i els
      llista i les preguntes són les publicades.
      T8 · D-11 (pla 261101_1246) · El registre comença per la 1.1.11, amb la negreta del readme
      ja feta etiqueta, i la 1.1.10 publicada continua darrere com a història. */
-  assert.ok(changelog.startsWith('<h4>1.1.11</h4><ul><li><strong>«Mostra els detalls» com a WordPress.org:</strong> la finestra'), 'cada versió, un títol i la seua llista');
+  // O6: entrega nova; les entrades1.1.11i1.1.10 es mantenen íntegres.
+  assert.ok(changelog.startsWith('<h4>1.1.12</h4><p>Cinc idiomes integrats als ajustos'), 'O6: nova entrega1.1.12 amb text editorial');
+  assert.ok(changelog.includes('<h4>1.1.11</h4><ul><li><strong>«Mostra els detalls» com a WordPress.org:</strong> la finestra'), 'la història1.1.11 i el seu format es conserven');
   assert.ok(changelog.includes('</ul><h4>1.1.10</h4><ul><li>'), 'la 1.1.10 publicada es queda al registre');
   assert.ok(!changelog.includes('No release notes published.'), 'el readme ja porta les notes');
   assert.ok(description.includes('<h4>External services</h4>'), 'les seccions desconegudes van a la descripció, com a WordPress.org');

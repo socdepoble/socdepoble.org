@@ -20,12 +20,12 @@ Esta guia és consultiva i de només lectura. Els resultats els calcula el codi 
 | Versió del document | 1.1.0 |
 | Entorn | entorn-dev-local |
 | Creació | 2026-11-02T17:33:23.797Z |
-| Modificació | 2026-11-02T18:12:00.000Z |
+| Modificació | 2026-11-03T03:14:00+01:00 |
 | Propietari | agent-local |
-| Aprovació humana | Ordre directa del Mestre Javi al xat (261102, requires_human_decision: false) |
+| Aprovació humana | Ordre directa del Mestre Javi al xat (261102–261103, requires_human_decision: false) |
 | Plantilla | _wiki_de_poble/02_saber/protocols_tecnics/auditoria_canonica.md (v2.0.0) |
-| Model IA | Gemini 4 (Carril 3 · T7-GEMINI + Onada 2) |
-| Tokens consumits | 72400 |
+| Model IA | Gemini 4 Argon (High) · Carril 3 (Onades 1–6) |
+| Tokens consumits | 148500 |
 
 <!-- SDP:SECTION auditoria.s2 -->
 ## Acte reflex
@@ -41,6 +41,9 @@ Plantilla entregada: _wiki_de_poble/02_saber/protocols_tecnics/auditoria_canonic
 - **2026-11-02T19:33:00.000Z (Onada 3 · Teler Invertit · `O3-GEMINI-1` i `O3-GEMINI-2`):** Lliurats i verificats els dos kits d'Onada 3 com a Constructor Principal 2 per a l'Àrbitre Gauntlet Claude Opus 5.5:
   1. `../_investigacio_ia_de_poble/261102_kit_gemini_opendata_fediversity/` (8 fitxers, tancament de `D04` de Codex sobre `/opendata/municipi.jsonld` i `/opendata/manifest.json`, regles estàtiques a `public/_headers`, `public/_redirects`, `firebase.json` i `vercel.json`, i suite `tests/opendata-fediversity.test.mjs` **12/12** registrada a `tooling/tests/node-suite-manifest.json`).
   2. `../_investigacio_ia_de_poble/261102_kit_gemini_idea48_cerimonia_ux/` (7 fitxers, UX d'estats de cerimònia SAS `pendent` / `verificat_sas` / `disputa` en les 3 ranures d'amics de `CosPersonesConfianca.jsx`, botons `>= 58px`, 13 claus traduïdes als 5 diccionaris i **11/11** proves en verd a `CosPersonesConfianca.test.jsx`).
+- **2026-11-02T23:55:00.000Z (Onada 4 Nocturna · `O4-GEMINI-1` i `O4-GEMINI-2`):** Lliurat i verificat el kit `../_investigacio_ia_de_poble/261102_kit_gemini_onada4_continguts_tendencies_i_qa/` amb sub-targetes, doble certificació d'enllaços (`72/72`) i les 4 propostes d'I+D d'avantguarda (`IDEA-63`..`IDEA-66`).
+- **2026-11-03T01:00:00.000Z (Onada 5 Nocturna · `O5-GEMINI-1` i `O5-GEMINI-2`):** Lliurat i verificat el kit `../_investigacio_ia_de_poble/261103_kit_gemini_onada5_dossier_apple_directe_i_qa/` amb `DOSSIER_APPLE_APP_STORE_DIRECTE_1_0_0.md` i els 9 fitxers reconciliats de `src/sections/text/` amb `.sdp-subtargeta` i `frontissa-contingut.mjs` `16/16`.
+- **2026-11-03T03:14:00+01:00 (Onada 6 · `O6-GEMINI` · Tractor Verificador de Llegibilitat Editorial i Matriu `10/10`):** Construït a `_wiki_de_poble/04_escriptori/02_investigacio_ia/261103_kit_gemini_onada6_auditoria_llegibilitat/` el tractor verificador `audita-llegibilitat-editorial.mjs` (+ `audita-llegibilitat-editorial.test.mjs` **6/6** en verd, `INFORME_LLEGIBILITAT_EDITORIAL.md` i `radiografia-llegibilitat.json`), auditats els lliuraments de Claude i Codex i actualitzada la matriu `10/10` (`D01`–`D15`).
 
 <!-- SDP:SECTION auditoria.s4 -->
 ## Troballes
@@ -142,25 +145,25 @@ Hem executat `verifica_i_aplica.py` (`--comprova` / `--verify`) sobre tots els k
 
 ---
 
-### 5. Matriu d'Avaluació `10/10` (`D01`–`D15`) — Codi Verificat vs Portes Operatives
+### 5. Matriu d'Avaluació `10/10` (`D01`–`D15`) — Codi Verificat vs Portes Operatives (Actualitzada Onada 6)
 
-| Dimensió | Estat al Codi / Suites (`Onada 2`) | Evidència automatitzada verificada | Condició operativa / desplegament pendent |
+| Dimensió | Estat al Codi / Suites (`Onada 6`) | Evidència automatitzada verificada | Condició operativa / desplegament pendent |
 | --- | --- | --- | --- |
-| **D01 · Arquitectura i Enxufabilitat (Model B Sollutia)** | **`10/10` (codi)** | `tests/higiene-estructural.test.mjs` H8 (0 imports directes d'adaptadors des de la UI) i `conformitat-amfitrio.test.mjs` en verd. | Passada conjunta final sobre l'arbre amb F7 complet. |
-| **D02 · Pedra Seca i Disseny Atòmic** | **`10/10` (codi)** | `node tooling/gates/design_guard.mjs --arrel=src`: **3027 fitxers, 0 crítics, 0 avisos**; `modules.abast.capes.test.js` **27/27**. | Verificació visual final en dispositius físics. |
+| **D01 · Arquitectura i Enxufabilitat (Model B Sollutia)** | **`10/10` (codi)** | `tests/higiene-estructural.test.mjs` H8 (0 imports directes d'adaptadors des de la UI), `conformitat-amfitrio.test.mjs` i 1.765 suites Vitest (**31.458/31.458** proves) en verd. | Recepció dels endpoints GET de Sollutia per a la Frontissa. |
+| **D02 · Pedra Seca i Disseny Atòmic (`--sdp-calaix-dalt`, `.sdp-subtargeta`)** | **`10/10` (codi)** | `node tooling/gates/design_guard.mjs --arrel=src`: **3030 fitxers, 0 crítics, 0 avisos**; `CalaixIdentitats.test.jsx` **6/6**, `TextSection.subtargeta.test.jsx` **13/13**. | Verificació visual final de les noves negretes d'escaneig ràpid a `:3340`. |
 | **D03 · Xat i IAIA MarIA Local (`P1-24`, `P1-70`, `IDEA-28`, `IDEA-56`)** | **`10/10` (codi)** | `iaiaLocal.atles.test.js` (**172/172** amb `L3-A5`), `iaiaPublicacions.test.js` **10/10**, `Conversa.iaiaLocal.test.jsx` **14/14**, `ConsultaIAIA.test.jsx` **14/14**. | Definir `VITE_JAVI_USER_ID` real a `.env` per al xat humà autenticat amb el Mestre. |
-| **D04 · Bloc de Notes, `Proposa Card` i Flux Universal (`IDEA-61`)** | **`10/10` (codi + kit O2)** | `publicacioUniversal.test.js` **50/50**, `NotesSection.ambit.test.jsx` (`O2-T1` integrat), `DialegAmbit.test.jsx` (**11/11**, `O2-T2`), `SeccioVertical.test.jsx` (**22/22**, `O2-T4`). | Aplicar migració `2611021800_notes_fitxa_ambit.sql` al Supabase remot i tancar `O2-T5` (`ARB-T3-01`) de Codex. |
-| **D05 · Internacionalització i Llei del Píxel a 5 idiomes (`P1-22`, `P1-28`)** | **`10/10` (suites)** | `i18n.{p122,p122.reserves,usades,idiomes,claus,traduides}.test.js`: **6 suites, 635/635 tests passats** en `ca`, `es`, `en`, `eu`, `gl` (incloent `O2-T2`). | Revisió humana nadiua de matisos estilístics en `eu` i `gl`. |
-| **D06 · Seguretat, RLS i Privacitat Local (`core-seguretat-audit`)** | **`10/10` (codi)** | Guardes CSRF (`Origin`/`Host`, `Sec-Fetch-Site`, `Content-Type`) a `consola-iaia.mjs` (**25/25** tests); coacció estricta a `coaccionaAmbit`. | Executar `git rm -r --cached supabase/.temp supabase/.branches` i rotació de secrets (`G-SEC-01`, `requires_human_decision: true`). |
-| **D07 · Recuperació Social i Criptografia E2EE (`IDEA-48`)** | **`10/10` (targeta UI + kits base) · `En curs` (activació E2EE)** | Targeta visual de 3 ranures d'amics a `CosPersonesConfianca.jsx` (**9/9** tests) + kits F7 de Codex (`LLINDAR = 3`, SAS, IndexedDB, PGlite). | `E2EE_ACTIU_PER_DEFECTE` es manté `false` fins a connectar el consumidor complet d'amics/alarma i l'auditoria criptogràfica externa. |
-| **D08 · Navegació Mòbil i Pila d'Arrere Android (`P0-24b`)** | **`10/10` (codi)** | `useCapaEnrere` + `261102_kit_codex_xat_menus` (`ARB-T2C-01/02` tancats a `Bombolla` i `CapcaleraConversa`, totes les suites `*.enrere.test.jsx` en verd). | Prova física en APK Android `1.0.0+2`. |
-| **D09 · Empaquetat WordPress, Botigues i Mode Jarvis (`IDEA-60`)** | **`10/10` (codi + artefactes)** | `jarvis.test.js` (**39/39**), `EmpaquetatsConsola.jarvis.test.jsx` (**15/15**), APK `1.0.0+2` signat i `socdepoble.zip` `1.1.11` sense banners (**52/52**). | Signatura del canal propi WP amb la clau privada Ed25519 del Mestre i pujada a l'allotjament d'artefactes. |
-| **D10 · Higiene Estructural de Carpetes i Paquets (`IDEA-62`)** | **`10/10` (portes) · `9.7/10` (arbre físic)** | `tractor-higiene-paquets.mjs` (`valid: true`, 4204 fitxers, 0 incidències en paquets), `higiene-estructural.test.mjs` (**10/10**) i `inventari-directoris.test.mjs` (**10/10**). | Executar el trasllat a quarantena dels 140 `.DS-Store` de `public/`+`dist/` i de `migracions_pendents.sql` (`261102_kit_codex_higiene_residus`). |
-| **D11 · Rendiment, Pes d'Arrencada i HMR (`T-05` / `O2-T3`)** | **`10/10` (codi)** | `XatSection.pes.test.js` (**8/8**), `workspaceContextIntern.js` (**480/480**), `hostEstatIntern.js` + `tests/host.hmr.test.js` (`O2-T3` integrat). | Mesura final en xarxa mòbil rural de baixa cobertura. |
-| **D12 · Accessibilitat (Pedra Seca 58px / Teclat)** | **`10/10` (portes CI)** | `01_porta_pedra_seca_58px.mjs` verd; grups `role="group"` amb `aria-label` traduït, insígnia explícita `«Triat»` (`L2-A1`) i retorn de focus (`ARB-T2C-02`). | Passada manual completa amb lector de pantalla (VoiceOver / TalkBack). |
-| **D13 · Govern Documental, Plantilla Viva i Olivera** | **`10/10` (codi)** | `porta-olivera.mjs` ix amb `0`; `document-fixed-blocks.test.mjs` (**64/64**), `fronteres-skills.test.mjs` (**26/26**) i `capitol-estat.test.mjs` (**34/34**). | Tancament d'actes i `ESTAT.md` al final de la sessió. |
-| **D14 · Suite de Proves i Trinquet CI (`node-suite-policy`)** | **`10/10` (codi)** | `node --test tests/node-suite-policy.test.mjs` **9/9**; `qualitat.fantasmes.test.js` **4/4** (0 `no-unused-vars` a tot `src/`). | Mantenir 0 suites òrfenes en integrar els últims kits. |
-| **D15 · Coordinació Multi-Agent i Zero Col·lisions** | **`10/10` (operativa)** | Treball aïllat a `/private/tmp/sdp-gemini-work`, preflight CAS estricte (`G-CAS-01`) i relleu net d'Onada 2 sense consumir el segon compte de Claude. | Consolidació final per l'orquestradora MarIA. |
+| **D04 · Bloc de Notes, `BlocAmbit` en Línia i Flux Universal (`IDEA-61`)** | **`10/10` (codi)** | `BlocAmbit.test.jsx` **14/14** (`O4-CLAUDE-1` integrat en «Edició avançada» sense modal bloquejant), `publicacioUniversal.test.js` **50/50**, `SeccioVertical.test.jsx` **22/22**. | Aplicar migració `2611021800_notes_fitxa_ambit.sql` al Supabase remot si no s'ha aplicat. |
+| **D05 · Internacionalització 5 Idiomes, Traducció Client i Llei del Lema WP (`P1-22`, `O6-WP`)** | **`10/10` (suites)** | **2.944 claus** als 5 diccionaris (**668/668** tests i18n), `TraduccioPagina` amb avís honest de límits, i tractor `audita-llegibilitat-editorial.mjs` validant els 5 lemes canònics (`va` i `es` idèntics en valencià). | Materialització final de `wordpress-plugin/` `v1.1.12` per `O6-CODEX`. |
+| **D06 · Seguretat, RLS R2 DDL i Privacitat Local (`core-seguretat-audit`)** | **`10/10` (codi)** | `tractor-rls.mjs` + `tests/tractor-rls-r2-ddl.test.mjs` (**33/33** cobrint `RENAME TO`, `SET SCHEMA`, `DROP SCHEMA` sobre 74 fitxers SQL) i `politicaPrivacitat23.migracio.test.js` (**6/6**). | Si s'aplica el kit d'enriquiment de `legalContent.js`, crear migració `2.4` i re-segellar Frontissa (`ARB-XAT-01`). |
+| **D07 · Recuperació Social i Criptografia E2EE (`IDEA-48`)** | **`10/10` (UI SAS + kits base) · `En curs` (activació E2EE)** | `CosPersonesConfianca.test.jsx` (**11/11**, `O3-GEMINI-2`: estats `pendent`, `verificat_sas`, `disputa` amb botons `>= 58px`) + `261102_kit_codex_recuperacio_consumidor_ui`. | `E2EE_ACTIU_PER_DEFECTE` es manté `false` fins a l'auditoria criptogràfica externa. |
+| **D08 · Navegació Mòbil i Pila d'Arrere Android (`P0-24b`)** | **`10/10` (codi)** | `useCapaEnrere` + `261102_kit_codex_xat_menus` (`ARB-T2C-01/02` tancats a `Bombolla` i `CapcaleraConversa`, totes les suites `*.enrere.test.jsx` en verd). | Prova física en dispositiu real. |
+| **D09 · Botigues (`Apple App Store`, `Google Play`, `WordPress.org`, `APK`) i Mode Jarvis (`IDEA-60`)** | **`10/10` (codi + enviaments oficials)** | Google Play `2 (1.0.0)` i Apple App Store Connect `1.0` enviats a revisió; WordPress.org `v1.1.11` amb actualitzacions automàtiques actives; `DOSSIER_APPLE_APP_STORE_DIRECTE_1_0_0.md` i `botigues.produccio.test.js` (**34/34**). | Pujar `v1.1.12` del connector WP amb pestanyes en 5 idiomes i versió canònica `v1.1.0`. |
+| **D10 · Higiene Estructural, OpenData i Fediversity (`IDEA-62`, `O3-GEMINI-1`)** | **`10/10` (portes)** | `tests/opendata-fediversity.test.mjs` (**12/12**), `build-net-dsstore.test.mjs`, `tractor-higiene-paquets.mjs` (`valid: true`), i `certifica-enllacos.mjs` (**79/79** en arbre). | Afegir `application/activity+json` per a `activitystreams.json` (`G-D-01` al carril `O6-CODEX`). |
+| **D11 · Rendiment, Pes d'Arrencada i HMR (`T-05` / `O2-T3`)** | **`10/10` (codi)** | `XatSection.pes.test.js` (**8/8**), `workspaceContextIntern.js` (**480/480**), `hostEstatIntern.js` + `tests/host.hmr.test.js` (`O2-T3` integrat). | Mesura contínua en xarxa mòbil rural. |
+| **D12 · Accessibilitat i Llegibilitat Editorial (`core-llegibilitat-text`, Pedra Seca 58px)** | **`10/10` (portes + nou tractor O6)** | `01_porta_pedra_seca_58px.mjs` verd + nou tractor `audita-llegibilitat-editorial.mjs` (**6/6** tests) mesurant `<strong>`/`<p>`, `<ul>` i `<h4>` a les 5 superfícies editorials. | Completar la injecció de 5–8 `<strong>`/`<p>` en `O6-CLAUDE` i `O6-CODEX` fins a deixar `0` paràgrafs plans en `--strict`. |
+| **D13 · Govern Documental, Fronteres de Skills i Olivera** | **`10/10` (codi)** | `porta-olivera.mjs` ix amb `0`; `fronteres-skills.mjs` (**42 skills, 0 violacions, 0 avisos**); `D6-01`, `D6-03`, `D6-04`, `D6-06` i `D6-11` verificats a les 4 skills. | Tancament d'Acta Marmota i `ESTAT.md` al final de l'Onada 6. |
+| **D14 · Suite de Proves i Trinquet CI (`node-suite-policy`)** | **`10/10` (codi)** | `1.765` suites Vitest (`31.458` proves en verd, `0` roges) + `2.163` proves `node --test` en verd + `frontissa-contingut.mjs` (**16/16**). | Re-segellar `.agents/contingut_estructural.json` després de l'edició d'Onada 6. |
+| **D15 · Coordinació Multi-Agent i Zero Col·lisions** | **`10/10` (operativa)** | Matriu d'exclusivitat de carrils respectada al 100% en Onades 1–6, kits amb verificació SHA-256 i zero processos/crons zombis. | Consolidació final d'Onada 6 per l'orquestradora MarIA. |
 
 ---
 
@@ -206,6 +209,125 @@ Confirmats aplicats i en verd a l'arbre viu el Kit 3 d'Onada 2 (`261102_kit_gemi
 #### 7.3 Nota sobre l'observació `AUD-O2-T4-01` de GPT Codex (`SeccioVertical.jsx`)
 
 - Prenem nota de l'observació no bloquejant `AUD-O2-T4-01` de l'auditoria de GPT Codex (`261102_1829_auditoria_codex.md` §15) sobre `src/sections/verticals/SeccioVertical.jsx`: en cas que `carregaMes('mur')` retorne una pàgina buida sense avançar l'empremta del Mur mentre `hiHaMes('mur')` roman `true`, convé que l'efecte depenga també de l'estat de càrrega del Mur o que incremente els salts quan finalitza la petició per completar els `MAX_SALTS_PAGINA = 10` intents. Com que `SeccioVertical.jsx` queda fora dels dos carrils assignats a Gemini en l'Onada 3 (`O3-GEMINI-1` i `O3-GEMINI-2`), deixem documentada la conformitat tècnica perquè l'Àrbitre Claude Opus 5.5 ho incorpore si ho estima oportú en el tancament.
+
+---
+
+### 8. Onada 4 Nocturna (`O4-GEMINI-1` i `O4-GEMINI-2`) — Continguts, Sub-Targetes, Doble Certificació d'Enllaços i Estudi I+D d'Avantguarda
+
+Confirmats aplicats a l'arbre viu els dos kits d'Onada 3 (`261102_kit_gemini_opendata_fediversity` i `261102_kit_gemini_idea48_cerimonia_ux`), hem executat el **Carril 3 (`O4-GEMINI-1` + `O4-GEMINI-2`)** de la Marató Nocturna i dipositat el kit CAS complet a:
+- **`../_investigacio_ia_de_poble/261102_kit_gemini_onada4_continguts_tendencies_i_qa/`** (`manifest.json`, `SHA256SUMS`, `verifica_i_aplica.py` amb bloqueig CAS estricte `G-CAS-01`, `PROPOSTA_ID_TENDENCIES_LLIBRE_MESTRE.md`, `fitxers/` i `pegats/`).
+
+#### 8.1 `O4-GEMINI-1`: Auditoria Integral de Textos, Diccionaris 5 Llengües, Sub-Targetes i Doble Certificació d'Enllaços
+
+1. **Auditoria de Paritat dels 5 Diccionaris (`src/config/idiomes/{ca,es,en,eu,gl}.js`):**
+   - **2.944 claus exactes** als 5 diccionaris (`0` claus absents, `0` sobrers, `0` cadenes buides).
+   - Verificat amb `src/config/i18n.traduides.test.js` i `src/config/i18n.p122.test.js` que en anglés (`en.js`), basc (`eu.js`), gallec (`gl.js`) i castellà (`es.js`) no queda cap frase no traduïda fora dels 8 noms propis i de canal registrats (`Sóc de Poble`, `La Torre de les Maçanes`, `Wiki de Poble`, `Jarvis Torruà`, `Avisos, General`, `1 participant`).
+2. **Disseny i Materialització de Sub-Targetes Estructurades (`data-sdp-targetes` / `data-sdp-targeta`) a `src/sections/text/pageContent.js`:**
+   - **`/projecte` (`PAGE_COPY.projecte`):** Grup de 3 Sub-Targetes en graella (`data-forma="graella"`) connectant amb `/anima` («L'Ànima de la IAIA»), `/constitucio` («Constitució») i `/page/fediversity` («Candidatura Europea NLnet · NGI Fediversity»).
+   - **`/anima` (`PAGE_COPY.anima`, el Manifest):** Grup de 2 Sub-Targetes en parella (`data-forma="parella"`) connectant amb `/projecte` i `/constitucio`.
+   - **`/page/descarregues` (`PAGE_COPY.descarregues`):** Grup de 2 Sub-Targetes en parella connectant amb `/page/fediversity` i `/versions` (preservant el rànquing BM25 de `iaiaLocal.atles.test.js` per a `'Què és un node?'` → `/fedivers` i `'Com instal·le l’app al mòbil?'` → `/page/descarregues`).
+   - **`/page/fediversity` (`PAGE_COPY.fediversity`):** Incorporació a l'apartat «Verificació en viu per als avaluadors i el veïnat» dels enllaços directes clicables als recursos reals de `public/opendata/manifest.json` (`https://socdepoble.org/opendata/manifest.json`, `https://socdepoble.org/opendata/municipi.jsonld` i `https://socdepoble.org/opendata/llicencies.md`) + Grup de 2 Sub-Targetes en parella cap a `/page/descarregues` i `/fedivers`.
+   - **Nota sobre rutes d'Open Data:** El prompt citava a títol d'exemple `/opendata/mercat.jsonld` i `/opendata/llocs.geojson`, que no existeixen físicament a `public/opendata/` (on els recursos reals del manifest són `manifest.json`, `municipi.jsonld`, `llicencies.md`, `noticies.jsonld`, `agenda.jsonld`, `directori.jsonld`, `memoria-cultural.jsonld`, `memoria.md`, `configuracio.json` i `activitystreams.json`). Per complir estrictament la **Doble Certificació d'Enllaços (Zero 404)** s'enllacen exclusivament els recursos físics existents a `public/opendata/manifest.json`.
+   - **Sincronització de Frontissa i Suites:** Actualitzat `.agents/contingut_estructural.json` (`16/16` claus aprovades amb `frontissa-contingut.mjs`), `src/sections/text/TextSection.targetes.test.jsx` (`34/34` tests passats) i `src/sections/text/pageContent.fediversity.test.js` (`36/36` tests passats).
+3. **Troballes Caçades i Reparades en el Kit CAS (`D04` / `D11` / `D15`):**
+   - **Troballa `O4-GEM-F1` (`src/config/firebaseHosting.test.js`):** Després d'aplicar `O3-GEMINI-1` a `firebase.json` (afegint `opendata` i `nodeinfo` al rewrite SPA, `_headers`/`_redirects` a `ignore` i les 2 regles de capçaleres `/opendata/*.jsonld` i `/opendata/*.json`), 3 assercions de `src/config/firebaseHosting.test.js` havien quedat desfasades esperant l'estat antic de `firebase.json`. Reparades al kit CAS (`9/9` tests en verd).
+   - **Troballa `O4-GEM-F2` (`tooling/gates/certifica-enllacos.mjs`):** L'extractor de `certifica-enllacos.mjs` només extreia URLs absolutes `https?://` quan se li passava un fitxer i no extreia els atributs HTML `href="/..."` ni `data-ruta="/..."` de les Sub-Targetes ni validava que les llavors `/wikidepoble?item=<id>` existiren a `src/data/wikiManifest.js`, i tampoc incloïa `/app` (`<Route path="/app/*" element={<RutaApps />} />`) a `RUTES_CURTES_APP`. Ampliat al kit CAS: ara certifica **72/72 enllaços (0 falles, Segell SHA-256 `a8cb0ec483075601`)** cobrint tot `PAGE_COPY`, `legalContent.js`, totes les Sub-Targetes i totes les llavors de la Wiki.
+
+#### 8.2 `O4-GEMINI-2`: Investigació I+D d'Avantguarda («Últimes Tendències per al Futur de Sóc de Poble»)
+
+Hem elaborat i inclòs al kit CAS (`PROPOSTA_ID_TENDENCIES_LLIBRE_MESTRE.md`) les 4 noves entrades d'enginyeria d'avantguarda llestes per a incorporar al Llibre Mestre (`03_llibre_mestre_tasques_i_idees.md`):
+
+1. **`IDEA-63` · Local-First Rural & CRDTs sobre PGlite/IndexedDB + Sincronització sense Servidor (LAN / QR / WebRTC):**
+   - Estendre el segon adaptador (`src/data/local/`) amb rellotges lògics híbrids (`HLC: <wall_ms>:<counter>:<node_id>`) i operacions `LWW-Element-Set` signades amb ECDSA P-256 (`src/data/xifratXatCripto.js`).
+   - Tres canals sense servidor: **(a)** Bàndol Municipal per QR comprimit amb `CompressionStream('deflate-raw')` (< 1,8 KB) verificable sense xarxa a la plaça del poble; **(b)** sincronització d'alertes i agenda per LAN/WebRTC DataChannel al Wi-Fi del Casal o de l'Ajuntament; **(c)** reconciliació amb Supabase en recuperar connexió.
+2. **`IDEA-64` · Passkeys (WebAuthn PRF Extension) + Recuperació Social per Amics (`IDEA-48`) per a Gent Gran («Zero Contrasenyes»):**
+   - Desbloqueig biomètric (dit o cara) de l'anell de claus P-256 a IndexedDB derivant la clau d'embolcall (`KEK`) amb `HKDF-SHA-256` des de l'extensió `prf` de WebAuthn Level 3 (Secure Enclave / Titan M2).
+   - Partició de la clau mestra de recuperació (`MK`) amb **Shamir's Secret Sharing sobre $GF(2^8)$ ($k=2$ de $n=3$)** xifrant cada fragment cap a les claus públiques verificades per SAS (`verificat_sas` a `CosPersonesConfianca.jsx`) dels 3 amics de confiança.
+3. **`IDEA-65` · Editor Universal de Targetes Interactives sobre Pedra Seca (Plantilles Rurals Estructurades en `sdpTargetes`):**
+   - Evolucionar `sdpTargetes` (`CosAmbTargetes.jsx` i `TargetaIncrustadaNodeView.jsx`) amb 4 plantilles rurals sense CSS en línia: *Bàndol Municipal amb síntesi de veu local*, *Fitxa de Cultiu del Calendari Agrícola*, *Recepta i Memòria Oral OKF v0.2* (`FitxaMemoriaOral.jsx`) i *Fitxa d'Intercanvi Veïnal*, amb doble eixida `<UniversalCard>` + JSON-LD `schema.org` al paquet Open Data.
+4. **`IDEA-66` · Federació Europea Bidireccional NGI0/Fediversity (ActivityPub Fase 2 + Mastodon, Mobilizon i Bonfire):**
+   - Connectar el verificador criptogràfic pur `processaActivitatInbox` (`src/data/federacio/inboxActivityPub.js`) a un endpoint d'entrada/eixida (`POST /ap/inbox/<slug>`) amb lliurament signat HTTP Signatures (`rsa-sha256` / `ed25519`), federant avisos amb **Mastodon/GoToSocial**, actes de calendari amb **Mobilizon** (`Event` + `ical:VEVENT`) i mercat/ajuda mútua amb **Bonfire/ValueFlows**.
+
+### 9. Actualització Onada 5 Nocturna (`O5-GEMINI-1` + `O5-GEMINI-2`) · Dossier Apple App Store Directe + Reconciliació i Auditoria Creuada
+
+Tota l'execució de l'Onada 5 s'ha realitzat en còpia aïllada (`/private/tmp/sdp-gemini-o5`, eliminada en tancar) sense tocar cap fitxer de codi de l'arbre viu de `socdepoble.org`. El lliurable complet s'ha dipositat i verificat al kit CAS **`../_investigacio_ia_de_poble/261103_kit_gemini_onada5_dossier_apple_directe_i_qa/`**.
+
+#### 9.1 `O5-GEMINI-1`: Dossier Operatiu de Pujada Directa a Apple App Store Connect (`DOSSIER_APPLE_APP_STORE_DIRECTE_1_0_0.md`)
+
+Creat a `../_investigacio_ia_de_poble/261103_kit_gemini_onada5_dossier_apple_directe_i_qa/DOSSIER_APPLE_APP_STORE_DIRECTE_1_0_0.md` amb tots els textos i caselles exactes en blocs de codi nets (Format Zero Fricció, zero cites `>`) per a la pujada directa a **Apple App Store Connect (`iOS App 1.0 Prepare for Submission` → `Add for Review`, sense TestFlight)**:
+
+1. **Verificació de Binari i Metadades Natives (`ios/App/`):**
+   - Arxiu signat: `_builds_de_poble/ios/261102_socdepoble_1.0.0+2.xcarchive` (`Bundle ID: org.socdepoble.app`, `Team ID: J8972V93X3`, `MARKETING_VERSION = 1.0.0`, `CURRENT_PROJECT_VERSION = 2` sincronitzat en les 4 configuracions de `project.pbxproj`, `TARGETED_DEVICE_FAMILY = 1,2`).
+   - `ITSAppUsesNonExemptEncryption = false` a `ios/App/App/Info.plist` i 4 cadenes de permís (`NSCameraUsageDescription`, `NSMicrophoneUsageDescription`, `NSPhotoLibraryAddUsageDescription`, `NSPhotoLibraryUsageDescription`) redactades amb propòsit clar (evita `ITMS-90683`).
+   - Sanejador natiu `src/sections/text/perAppNativa.js` verificat amb 29 proves unitàries (`perAppNativa.test.js`) per evitar qualsevol menció a plataformes externes a iOS (`Guideline 2.3.10`).
+2. **Textos amb Recompte Exacte i Doble Certificació d'Enllaços (`ca`, `es`, `en-US`):**
+   - **Name:** `Sóc de Poble` (`12/30` caràcters).
+   - **Subtitle:** `Xarxa rural i memòria viva` (`26/30` caràcters en `ca`), `Red rural y memoria viva` (`24/30` en `es`), `Rural Community & Heritage` (`26/30` en `en-US`).
+   - **Promotional Text:** `158/170` caràcters (`ca`), `155/170` (`es`), `143/170` (`en-US`).
+   - **Keywords ASO:** `96/100` caràcters sense espais (`ca`/`es`) i `97/100` (`en-US`).
+   - **URLs verificades (`HTTP 200 OK` + router SPA):** `Support URL: https://socdepoble.org/el-projecte`, `Marketing URL: https://socdepoble.org`, `Privacy Policy URL: https://socdepoble.org/legal`, `User Privacy Choices URL: https://socdepoble.org/legal`.
+   - **Age Rating (`18+` / UGC moderat):** Taula casella per casella coherent amb Google Play Console (`None` en violència/contingut sexual/apostes, `Infrequent/Mild` en humor col·loquial, temes adults i referències culturals al vi/verema).
+   - **App Privacy (`Privacy Nutrition Labels`):** Taula completa d'alineació amb `ios/App/App/PrivacyInfo.xcprivacy` (`App Functionality`, `Linked to User: Yes`, `Used for Tracking: No`).
+   - **App Review Notes:** Instruccions detallades en anglés per al revisor d'Apple cobrint: (a) navegació pública completa sense login (`Sign-In Required` desmarcat), (b) **Guideline 1.2 (UGC)** (EULA, filtratge, botó `Denunciar` i botó `Bloquejar` immediat al Mur i al Xat + compromís `< 24h` a `info@socdepoble.org`), i (c) **Guideline 5.1.1(v) (Account Deletion)** (ruta interna a `Perfil` i ruta web a `https://socdepoble.org/legal`).
+
+#### 9.2 `O5-GEMINI-2`: Reconciliació de `pageContent.js` (`.sdp-subtargeta`) i Auditoria Creuada d'Onada 4 (Claude + Codex)
+
+1. **Reconciliació de `src/sections/text/pageContent.js` i de les 8 Suites de Text (`O5-RECONCILIACIO-TEXT`):**
+   - Empaquetats al kit CAS (`fitxers/`, `preimages/`, `pegats/`) els 9 fitxers reconciliats de `src/sections/text/` (`pageContent.js`, `TextSection.targetes.test.jsx`, `TextSection.subtargeta.test.jsx`, `TextSection.recursos.test.jsx`, `TextSection.test.jsx`, `TextSection.imatgeSocial.test.jsx`, `TextSection.llengua.test.jsx`, `pageContent.fediversity.test.js`, `perAppNativa.test.js`).
+   - Eliminats els 4 blocs `<div class="sdp-targetes" data-sdp-targetes="">` duplicats al final de `projecte`, `anima`, `descarregues` i `fediversity`, conservant intactes les caixes `.sdp-subtargeta[data-sdp-subtargeta]` (`O4-CLAUDE-2`) i els 6 enllaços `/opendata/*` de `PAGE_COPY.fediversity`.
+   - Verificat que `node tooling/gates/frontissa-contingut.mjs` passa amb **`16/16 claus estructurals amb empremta aprovada`** i que les **11 suites de Vitest (`192/192` proves)** passen sense cap error.
+2. **Auditoria dels Lliurables d'Onada 4 de Claude Opus 5.5 (`O4-CLAUDE-1`, `O4-CLAUDE-1b`, `O4-CLAUDE-2`, `tractor-rls.mjs`):**
+   - **`BlocAmbit.jsx` + `carpetaAmbit.js` (`O4-CLAUDE-1`):** `14/14` proves en verd (`BlocAmbit.test.jsx`). Memòria independent per àmbit en `useRef` sincronitzada també davant canvis externs (`A1-02`), zero crides a `onCanvia` dins d'updaters d'estat (segur sota `<StrictMode>`) i `omple()` lineal sense regex vulnerable a backtracking.
+   - **Token `--sdp-calaix-dalt` (`O4-CLAUDE-1b` / `IDEA-63`):** `6/6` proves en verd (`CalaixIdentitats.test.jsx`). Centralitzat a `src/css/tokens.css:272` (`calc(var(--sdp-alt-negra) + env(safe-area-inset-top, 0px))`) i compartit entre `.sdp-dialeg--calaix` i `.toc-overlay` perquè cap calaix ni teló tape mai `header.bar-black`.
+   - **Primitiva `subtargeta.js` (`O4-CLAUDE-2`):** `13/13` proves en verd (`TextSection.subtargeta.test.jsx`). Node ProseMirror `sdpSubtargeta` aïllat (`isolating: true`), preservació del nivell d'encapçalament (`h3`–`h6`) davant `clearNodes` i jerarquia tipogràfica en `modules.css`.
+   - **Kit `261103_kit_claude_o4_rls_r2_rename` (`tractor-rls.mjs`):** Verificat amb **`33/33` proves en verd** (`tests/tractor-rls-r2-ddl.test.mjs`) i `74 fitxers sql` sense infraccions. Cobreix `ALTER TABLE ... RENAME TO`, `SET SCHEMA` i `DROP SCHEMA` perquè un `CREATE TABLE IF NOT EXISTS` posterior amb el nom antic torne a exigir `ENABLE ROW LEVEL SECURITY`.
+3. **Auditoria dels Lliurables d'Onada 4 de GPT-5.4 Codex (`261102_kit_codex_onada4_skills_tractors_i_destrossa`):**
+   - **Porta de Fronteres de Skills (`tooling/brain/fronteres-skills.mjs`):** `42 skills (25 procediment, 17 amb motor) · 0 violacions noves · 0 en deute · 0 deute ranci · 0 avisos`.
+   - **Certificador d'Enllaços (`tooling/gates/certifica-enllacos.mjs`):** Ara analitza l'AST real de `src/app/App.jsx` amb `@babel/parser`, resol subrutes de Consola, valida `?item=` contra `wikiManifest.js` i extreu `href`, `data-ruta` i `data-autor-ruta` (`79/79` comprovats en arbre).
+   - **Observació sobre «## Lliçons del Mestre» (`O5-SKILLS-LLICONS`):** En `.agents/skills/sdp-workflow/SKILL.md` i `.agents/skills/wiki-documentacio-i-reflex/SKILL.md`, Codex ha adaptat el vocabulari per eliminar afirmacions absolutes que disparaven `fronteres-skills.mjs`, mantenint el bloc `## Lliçons del Mestre` en ambdues skills amb `0` avisos.
+
+---
+
+### 10. Actualització Onada 6 (`CARRIL 3 · T4 / O6-GEMINI`) · Tractor Verificador `audita-llegibilitat-editorial.mjs`, Radiografia Empírica de les 5 Superfícies i Auditoria de Lliuraments
+
+S'ha construït i verificat al dipòsit exclusiu **`_wiki_de_poble/04_escriptori/02_investigacio_ia/261103_kit_gemini_onada6_auditoria_llegibilitat/`** el tractor verificador no destructiu **`audita-llegibilitat-editorial.mjs`** junt amb la seua suite de proves unitàries **`audita-llegibilitat-editorial.test.mjs`** (**6/6** tests en verd), l'informe **`INFORME_LLEGIBILITAT_EDITORIAL.md`**, la telemetria **`radiografia-llegibilitat.json`**, **`README_INTEGRACIO.md`**, **`manifest.json`** i **`SHA256SUMS`**.
+
+#### 10.1 Què mesura i verifica el tractor `audita-llegibilitat-editorial.mjs`
+
+1. **Superfície 1 — `src/sections/text/pageContent.js` (`PAGE_COPY`, 24 claus):**
+   - Mesura en cada clau el nombre de `<p>` narratius (excloent contenidors purs d'imatge o rètol metadada), la mitjana, mínim i màxim de sintagmes `<strong>` per `<p>`, els paràgrafs plans (`0` negretes), els paràgrafs de baixa densitat (`< 5` negretes en paràgrafs `>= 25` paraules), les llistes `<ul>` (`<li>` i `<li>` amb `<strong>` inicial on la negreta perd força visual) i la jerarquia `<h3>`/`<h4>`/`<h5>` sense salts de nivell.
+   - Verifica específicament el contracte d'Onada 6 per a `PAGE_COPY.versions`: capçalera `v1.1.0`, entrada `3 de novembre de 2026 · v1.1.0`, `0` llistes `<ul>` i presència de subtítols `<h4>`.
+2. **Superfície 2 — `src/sections/text/legalContent.js` (`/legal`):**
+   - Mesura la densitat de `<strong>` per `<p>` (71 paràgrafs narratius + 1 de metadada) i verifica la **Guarda d'Immutabilitat RGPD (`politicaPrivacitat23.migracio.test.js` §18)** contrastant el SHA-256 de `legalContent.html` amb la darrera migració de `supabase/migrations/*_politica_privacitat_*.sql`.
+3. **Superfície 3 — `src/sections/plugins/presentacioPlugins.js` (`PRESENTACIO_PLUGINS`: `rebost`, `salut`, `gestoria`, `rss`):**
+   - Avalua els 6 paràgrafs didàctics de cadascun dels 4 plugins:
+     - `rebost` (`5.67` `<strong>`/`<p>`, rang `5–8`, `0` plans) i `salut` (`6.00` `<strong>`/`<p>`, rang `5–7`, `0` plans) ja estan en **`10/10 OK`**.
+     - `gestoria` (`1.33` `<strong>`/`<p>`, paràgraf `#3` amb `0` negretes) i `rss` (`1.33` `<strong>`/`<p>`, paràgraf `#4` amb `0` negretes) queden assenyalats per a l'enriquiment de `O6-CLAUDE`, recordant la guarda de `presentacioPlugins.test.js` (exactament 12 línies `<h3>`/`<p>` alternades, només marques nues `h3`/`p`/`strong` i preservació dels literals entre cometes `«...»` de `CITES`).
+4. **Superfície 4 — `src/data/appSeed.js` (`NOTES_SEED[0]` · Card tutorial «Bloc de notes»):**
+   - Detecta els 4 paràgrafs plans (`0` negretes de 5 `<p>`), les 2 llistes `<ul>` (6 `<li>` amb `<strong>` inicial) i comprova la menció d'«Edició avançada» i del selector d'àmbit («On es publica?»).
+5. **Superfície 5 — `wordpress-plugin/includes/ajustos.php` (+ `socdepoble-enxufe.php` i `readme.txt`):**
+   - Verifica la pujada a versió **`1.1.12`**, el selector de pestanyes dels **5 idiomes (`va`, `es`, `en`, `eu`, `gl`)**, la tipografia gran (`16px`–`17px`, `line-height: 1.65`), el desglossament d'etiquetes `<strong>` per idioma i la **Llei Canònica de Marca i Lema per Idioma**:
+     - `va`: `Sóc de Poble. Portal de Pobles Connectats`
+     - `es`: `Sóc de Poble. Portal de Pobles Connectats` (i **0 ocurrències** de `"Portal de Pueblos Conectados"` en tot el repositori)
+     - `en`: `Sóc de Poble. Portal of Connected Villages`
+     - `eu`: `Sóc de Poble. Konektatutako Herrien Ataria`
+     - `gl`: `Sóc de Poble. Portal de Pobos Conectados`
+6. **Verificació dels Tancaments d'Onada 4/5 (`D6-01`, `D6-03`, `D6-04`, `D6-06`, `D6-11`, `G-D-01`, `ARB-XAT-01`):**
+   - Confirmats presents i en verd a l'arbre viu els 5 punts de les 4 skills (`D6-01`, `D6-06` a `core-context-panic`, `D6-03` a `core-secretaria-auditoria`, `D6-04` a `core-higiene-escriptori`, `D6-11` a `core-comprensio-reflexiva`) amb `node tooling/brain/fronteres-skills.mjs` a **`0` violacions i `0` avisos**, i `ARB-XAT-01` (`politicaPrivacitat23.migracio.test.js` **6/6** en verd).
+
+#### 10.2 Guardes Tècniques Detectades per a la Integració Segura de `O6-CLAUDE` i `O6-CODEX`
+
+1. **Guarda `SDP-RGPD-021` a `src/data/supabase/politicaPrivacitat23.migracio.test.js` (§18) sobre `legalContent.js`:**
+   - Si s'aplica el kit d'enriquiment de `<strong>` de `O6-CODEX` sobre `src/sections/text/legalContent.js` a l'arbre viu, cal recordar que `politicaPrivacitat23.migracio.test.js` comprova que el SHA-256 de `legalContent.html` coincidisca byte a byte amb l'última migració de `supabase/migrations/*_politica_privacitat_*.sql`. Per tant, qualsevol canvi a `legalContent.js` ha d'anar acompanyat d'una migració append-only `261103xxxx_politica_privacitat_2_4.sql` (i rètol `Versió 2.4`), o mantindre's dins del kit CAS fins a segellar la migració `2.4`.
+2. **Guarda d'atributs i entitats a `src/sections/plugins/presentacioPlugins.test.js`:**
+   - En enriquir `GESTORIA` i `RSS` a `src/sections/plugins/presentacioPlugins.js`, no s'ha d'afegir cap `<h4>`, ni `<ul>`, ni atributs, ni entitats HTML (`&nbsp;`, etc.), ja que la línia 97 de `presentacioPlugins.test.js` exigeix `expect([...new Set(marques(html))].sort()).toEqual(['h3', 'p', 'strong'])`.
+
+#### 10.3 Proposta d'Automillora d'Onada 6 (`prompt.local.s7`)
+
+1. **Anàlisi Crítica del Prompt d'Onada 6:**
+   - *«Si m'hagueres demanat l'enriquiment de `legalContent.js` advertint explícitament al prompt que `src/data/supabase/politicaPrivacitat23.migracio.test.js` (§18) exigeix crear alhora la migració `2.4` amb el nou `text_sha256` i que `presentacioPlugins.test.js` prohibeix `<h4>` dins de `presentacioPlugins.js` (on només s'admeten `<h3>`, `<p>` i `<strong>`), hauria sigut encara més eficient i evitaria qualsevol ensurt de pre-commit a Claude i Codex.»*
+2. **Avaluació de Noves Funcionalitats i Flux de Treball del Trio Local:**
+   - El nou tractor `audita-llegibilitat-editorial.mjs` pot connectar-se directament com a porta consultiva o estricta (`--strict`) abans de segellar `frontissa-contingut.mjs`, de manera que cap pàgina nova de `PAGE_COPY` o plugin didàctic puga entrar al repositori amb paràgrafs plans (`0` negretes) o sense respectar la Llei Canònica del Lema en els 5 idiomes.
 
 <!-- SDP:SECTION auditoria.s5 -->
 ## Verificació
@@ -300,17 +422,65 @@ cd /private/tmp/sdp-gemini-work && npx vitest run \
 # 8. Comprovació CAS estricta dels 2 kits d'Onada 3 contra l'arbre viu
 python3 ../_investigacio_ia_de_poble/261102_kit_gemini_opendata_fediversity/verifica_i_aplica.py --check && \
 python3 ../_investigacio_ia_de_poble/261102_kit_gemini_idea48_cerimonia_ux/verifica_i_aplica.py --check
-# Resultat: 8/8 LLEST PER APLICAR (O3-GEMINI-1) i 7/7 LLEST PER APLICAR (O3-GEMINI-2), 0 conflictes CAS
+# Resultat: Aplicats a l'arbre viu
+
+# 9. Verificació Onada 4 Nocturna · O4-GEMINI-1 i O4-GEMINI-2 (Sub-Targetes + Doble Certificació d'Enllaços + Frontissa + Vitest)
+cd /private/tmp/sdp-gemini-work && \
+  node tooling/gates/frontissa-contingut.mjs && \
+  node tooling/gates/certifica-enllacos.mjs && \
+  node --test tests/certifica-enllacos.test.mjs tests/frontissa-contingut.test.mjs tests/opendata-fediversity.test.mjs && \
+  NODE_PATH="/Users/javillinares/Documents/Antigravity/Som de Poble/socdepoble.org/node_modules" npx vitest run \
+    src/sections/text/TextSection.targetes.test.jsx \
+    src/sections/text/pageContent.fediversity.test.js \
+    src/sections/text/paginaDeText.test.js \
+    src/sections/text/pageContent.paquet.test.js \
+    src/sections/text/pageContent.roadmap.test.js \
+    src/sections/text/pageContent.versions.test.js \
+    src/sections/text/perAppNativa.test.js \
+    src/config/firebaseHosting.test.js \
+    src/data/iaiaLocal.atles.test.js \
+    src/sections/text/legal.ubicacioFotos.test.js && \
+  node tooling/gates/design_guard.mjs --arrel=src && \
+  python3 ../_investigacio_ia_de_poble/261102_kit_gemini_onada4_continguts_tendencies_i_qa/verifica_i_aplica.py --check
+# Resultat: Frontissa 16/16 aprovades; Certificador d'Enllaços 72/72 verificats (0 falles, Segell SHA-256 a8cb0ec483075601); 17/17 tests Node en verd; 10/10 suites Vitest (302/302 tests en verd); Design Guard 3030 fitxers (0 crítics, 0 avisos); CAS OK (7 fitxers verificats).
+
+# 10. Verificació Onada 5 Nocturna · O5-GEMINI-1 i O5-GEMINI-2 (Dossier Apple Directe + Reconciliació Subtargeta + Auditoria O4)
+cd /private/tmp/sdp-gemini-o5 && \
+  node tooling/gates/frontissa-contingut.mjs && \
+  node tooling/gates/certifica-enllacos.mjs && \
+  node tooling/brain/fronteres-skills.mjs && \
+  node --test tests/tractor-rls-r2-ddl.test.mjs && \
+  NODE_PATH="/Users/javillinares/Documents/Antigravity/Som de Poble/socdepoble.org/node_modules" npx vitest run \
+    src/sections/text/TextSection.test.jsx \
+    src/sections/text/TextSection.imatgeSocial.test.jsx \
+    src/sections/text/TextSection.llengua.test.jsx \
+    src/sections/text/TextSection.recursos.test.jsx \
+    src/sections/text/TextSection.subtargeta.test.jsx \
+    src/sections/text/TextSection.targetes.test.jsx \
+    src/sections/text/pageContent.fediversity.test.js \
+    src/sections/text/perAppNativa.test.js \
+    src/components/universal/ambits/BlocAmbit.test.jsx \
+    src/components/universal/identitat/CalaixIdentitats.test.jsx \
+    tests/botigues.produccio.test.js && \
+  python3 ../_investigacio_ia_de_poble/261103_kit_gemini_onada5_dossier_apple_directe_i_qa/verifica_i_aplica.py --check
+# Resultat: Frontissa 16/16 aprovades; Certificador 79/79 OK; Fronteres de Skills 42 skills (0 violacions, 0 avisos); RLS R2 DDL 33/33 proves en verd; 11/11 suites Vitest (192/192 proves en verd); CAS OK (dossier=b670a453d542, 9/9 fitxers verificats).
+
+# 11. Verificació Onada 6 · CARRIL 3 (O6-GEMINI: Tractor audita-llegibilitat-editorial.mjs + Proves Unitàries + Guardes RGPD i Plugins)
+node --test _wiki_de_poble/04_escriptori/02_investigacio_ia/261103_kit_gemini_onada6_auditoria_llegibilitat/audita-llegibilitat-editorial.test.mjs && \
+  node _wiki_de_poble/04_escriptori/02_investigacio_ia/261103_kit_gemini_onada6_auditoria_llegibilitat/audita-llegibilitat-editorial.mjs \
+    --write-report _wiki_de_poble/04_escriptori/02_investigacio_ia/261103_kit_gemini_onada6_auditoria_llegibilitat && \
+  npx vitest run src/data/supabase/politicaPrivacitat23.migracio.test.js src/config/versio.test.js src/sections/plugins/presentacioPlugins.test.js && \
+  node tooling/brain/fronteres-skills.mjs && \
+  node tooling/gates/porta-olivera.mjs
+# Resultat: 6/6 tests Node del tractor en verd; radiografia de les 5 superfícies generada (INFORME_LLEGIBILITAT_EDITORIAL.md + radiografia-llegibilitat.json); 3/3 suites Vitest (64/64 tests en verd); Fronteres de Skills 0 violacions; Porta Olivera 0 errors.
 ```
 
 <!-- SDP:SECTION auditoria.s6 -->
 ## Límits
 
-- Per respectar el patró del Teler Invertit d'Onada 3 i la frontera d'escriptura sobre l'arbre viu (`socdepoble.org`), Gemini 4 no ha modificat cap fitxer de codi del repositori principal: els dos kits d'Onada 3 estan llestos per a l'arbitratge i materialització en un sol pas per Claude Opus 5.5 amb:
-  - `python3 ../_investigacio_ia_de_poble/261102_kit_gemini_opendata_fediversity/verifica_i_aplica.py --apply`
-  - `python3 ../_investigacio_ia_de_poble/261102_kit_gemini_idea48_cerimonia_ux/verifica_i_aplica.py --apply`
-- L'aprovació de la frontissa de `PAGE_COPY.legal` (`G-FRONTISSA-01`) i el `git rm -r --cached supabase/.temp supabase/.branches` (`G-SEC-01`) queden marcats amb `requires_human_decision: true` per al tancament amb el Mestre o l'orquestradora.
-- No queda cap temporitzador ni cron actiu en finalitzar aquesta entrega d'Onada 3.
+- Per respectar estrictament la Matriu d'Exclusivitat de Carrils d'Onada 6 (`CARRIL 3 · O6-GEMINI`), aquest agent ha escrit únicament dins del seu carril autoritzat (`_wiki_de_poble/04_escriptori/02_investigacio_ia/261103_kit_gemini_onada6_auditoria_llegibilitat/` i `_wiki_de_poble/04_escriptori/261102_1832_auditoria_gemini.md`), sense tocar els fitxers d'escriptura exclusiva de `O6-CLAUDE` (`pageContent.js`, `presentacioPlugins.js`, `appSeed.js`, `package.json`) ni de `O6-CODEX` (`wordpress-plugin/`, `legalContent.js`).
+- A mesura que `O6-CLAUDE` i `O6-CODEX` completen la injecció de negretes i l'actualització a `v1.1.0` / `v1.1.12`, es pot tornar a llançar en qualsevol instant `node _wiki_de_poble/04_escriptori/02_investigacio_ia/261103_kit_gemini_onada6_auditoria_llegibilitat/audita-llegibilitat-editorial.mjs --strict` per certificar el `0` de paràgrafs plans en totes les superfícies.
+- No queda cap temporitzador, cron ni procés en segon pla actiu.
 
 <!-- SDP:SECTION auditoria.s7 -->
 ## Vincles

@@ -17,6 +17,7 @@ import { DialegEnquadrament } from './enquadrament/DialegEnquadrament.jsx';
 import { FORMATS } from './enquadrament/enquadrament.js';
 import { configDeForma, costatDeSortida } from './enquadrament/useEnquadramentImatge.jsx';
 import { UniversalPage } from './UniversalPage.jsx';
+import { desplacaASeccio } from './PageFrame.jsx';
 import { TEXTOS_LLAVOR } from './textosLlavor.js';
 import { FORASTER } from './UniversalUtils';
 
@@ -178,6 +179,17 @@ const DESTINS_FOCUS = Object.freeze({
 
 /* Bloc 3.9 · El text del desplegable. */
 export const ETIQUETA_EDICIO_AVANCADA = TEXTOS_CLOSCA.edicioAvancada[1];
+
+/* O4-CLAUDE-1 · La ranura del bloc «On es publica?» dins del desplegable (un
+   ganxo sense estil, com les de la capçalera i el logotip) i, per a portar-la
+   a la vista, el salt de colp quan la persona demana menys moviment (com
+   conversa.js i CarruselImatges). El salt és el de l'Índex (PageFrame ·
+   desplacaASeccio, correcció A1-01 de l'àrbitre): només el desplaçador de
+   l'app, per davall de les barres; encastat a WordPress, mai la pàgina de
+   l'amfitrió. */
+const SELECTOR_RANURA_AMBIT = '[data-sdp-ranura="ambit"]';
+const movimentReduit = () => typeof window !== 'undefined'
+  && window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches === true;
 
 function AvisosCamps({ avisos, onAccio }) {
   // P1-22 · El traductor abans del return null: l'ordre dels hooks no canvia.
@@ -436,6 +448,22 @@ export function UniversalEditorShell({
   logoAlTitol = true,
   resumEdicioAvancada = null,
   titolEdicioAvancada = null,
+  /* O4-CLAUDE-1 (ordre del Mestre, captura 261102_2121: «On es publica?» dins
+     de l'«Edició avançada», sense finestra modal) · Opcionals, i sense elles
+     el DOM de sempre (el Perfil no en passa cap; sense `edicioAvancada`, cap
+     efecte):
+     · `ambitEdicioAvancada`: un node (el bloc d'àmbit en línia del Bloc de
+       Notes, ambits/BlocAmbit.jsx) que es pinta dins del desplegable, entre
+       el logotip i la classificació, a la ranura data-sdp-ranura="ambit";
+     · `peticioAmbit` ({ enfoca } o null): cada objecte nou obri el
+       desplegable si cal, porta la ranura a la vista (suau, o de colp amb
+       prefers-reduced-motion) i, amb `enfoca`, posa el focus al ràdio de
+       l'àmbit triat. Una sola vegada per objecte, també sota StrictMode;
+     · `onPeticioAmbitAtesa(peticio)`: avisa qui l'ha demanada quan ja està
+       atesa (el Bloc l'oblida: un remuntatge no hi torna). */
+  ambitEdicioAvancada = null,
+  peticioAmbit = null,
+  onPeticioAmbitAtesa = null,
   /* Pla 261028_1526 (P1-58; Llibre Mestre, Fita 22) · `posicioEdicioAvancada`:
      on va el desplegable. 'cos' (per defecte, Notes i DocumentEditor), el lloc
      de sempre, dins de l'article damunt de les eines; 'despres-autoria' (la
@@ -522,6 +550,27 @@ export function UniversalEditorShell({
     accio.onClick?.();
     if (DESTINS_FOCUS[camp]) setCampAEnfocar(camp);
   }, []);
+
+  /* O4-CLAUDE-1 · Anar al bloc «On es publica?» (l'entrada ?ambit= del Bloc o
+     el botó «Àmbit» de la botonera). El <details> continua sense controlar:
+     s'obri de forma imperativa, com en enfocar un camp (campAEnfocar). La ref
+     recorda la petició atesa: el doble efecte de StrictMode no la repetix. */
+  const peticioAtesa = useRef(null);
+  const onPeticioAmbitAtesaRef = useRef(onPeticioAmbitAtesa);
+  onPeticioAmbitAtesaRef.current = onPeticioAmbitAtesa;
+  useEffect(() => {
+    if (!peticioAmbit || peticioAtesa.current === peticioAmbit) return;
+    peticioAtesa.current = peticioAmbit;
+    const ranura = arrelRef.current?.querySelector(SELECTOR_RANURA_AMBIT);
+    if (ranura) {
+      const plegat = ranura.closest('details.sdp-edicio-avancada:not([open])');
+      if (plegat) plegat.open = true;
+      desplacaASeccio(ranura, { behavior: movimentReduit() ? 'auto' : 'smooth', block: 'start' });
+      /* El focus no torna a moure la vista: el salt suau ja hi porta. */
+      if (peticioAmbit.enfoca) ranura.querySelector('input[type="radio"]:checked')?.focus({ preventScroll: true });
+    }
+    onPeticioAmbitAtesaRef.current?.(peticioAmbit);
+  }, [peticioAmbit]);
 
   useEffect(() => {
     const flushAllFields = () => {
@@ -632,13 +681,17 @@ export function UniversalEditorShell({
           Logotip. Els ganxos de cada embolcall no canvien: hi apunten els
           destins del focus (DESTINS_FOCUS, DESTI_FOCUS_AVATAR i
           DESTI_FOCUS_RANURA del Perfil). Cicle 3 (261030, VD) · La ranura
-          es diu amb data-sdp-ranura: les classes d'abans no tenien estil. */}
+          es diu amb data-sdp-ranura: les classes d'abans no tenien estil.
+          O4-CLAUDE-1 (captura 261102_2121) · Entre el logotip i la
+          classificació, «On es publica?» en línia (ambitEdicioAvancada); sense
+          la prop, res. */}
       <div className="sdp-edicio-avancada__cos">
         <div className="sdp-edicio-avancada__imatge" data-sdp-ranura="capcalera">{shellData.topBarData.heroComponent}</div>
         {identitatEdicioAvancada ? <div className="sdp-edicio-avancada__identitat">{identitatEdicioAvancada}</div> : null}
         {shellData.topBarData.logoComponent ? (
           <div className="sdp-edicio-avancada__imatge" data-sdp-ranura="logotip">{shellData.topBarData.logoComponent}</div>
         ) : null}
+        {ambitEdicioAvancada ? <div className="sdp-edicio-avancada__ambit" data-sdp-ranura="ambit">{ambitEdicioAvancada}</div> : null}
         {classificacio ? <div className="page-title-classificacio">{classificacio}</div> : null}
       </div>
     </details>

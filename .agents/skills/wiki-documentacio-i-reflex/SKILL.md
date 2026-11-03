@@ -14,11 +14,15 @@ triggers_on:
   - crear prompt
   - abans de començar
 contracte.llig:
+  - .agents/protocolledge.json
+  - tooling/wiki/taxonomia.json
   - _wiki_de_poble/00_index.md
   - _wiki_de_poble/02_saber/doc_governanca.md
   - _wiki_de_poble/03_actuar/plantilles/prompt_consell.md
   - _wiki_de_poble/03_actuar/plantilles/prompt_local.md
 contracte.escriu:
+  - .agents/protocolledge.json
+  - _wiki_de_poble/03_actuar/plantilles
   - _wiki_de_poble/04_escriptori
   - _wiki_de_poble/10_actes
 ---
@@ -50,11 +54,7 @@ La nomenclatura de l'Escriptori sempre estarà categoritzada:
 **Taxonomia Estricta per al Consell:**
 La paraula "Petorreta" és només una metàfora col·loquial entre nosaltres (la planta valenciana que espurneja al foc, símbol de la lucidesa rebuda). **NO** forma part de la taxonomia oficial de l'Escriptori. El procés correcte s'anomena **"Procés d'Auditories"** (llançar un prompt i rebre un informe d'auditoria).
 
-Les categories formals vàlides a la taxonomia són exclusivament:
-- `prompt`: la petició inicial.
-- `pla_implementacio`: el pla d'acció elaborat.
-- `auditoria`: l'informe generat com a resposta per la IA receptora.
-- `acta` (o acta_marmota): per registrar i tancar l'estat.
+Les categories vàlides són les del catàleg viu `tooling/wiki/taxonomia.json`; no les reduïsques a una llista de quatre ni n'inventes variants. En una convocatòria són habituals `prompt` (petició), `pla_implementacio` (pla), `auditoria` (resposta) i `acta` (tancament). `acta_marmota` és una denominació del procés, no una categoria nova del nom.
 
 Si s'envia a IAs Externes (limitades per context, necessiten partició): es crea un `bundle` i un `prompt`.
 Si s'envia a IAs Locals (Codex/Claude en IDE/Cowork, no tenen problemes de context perquè lligen l'arxiu sencer directament): **ÚNICAMENT** `prompt` (està prohibit usar bundles ací).

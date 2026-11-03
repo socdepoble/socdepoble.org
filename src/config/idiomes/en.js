@@ -418,6 +418,13 @@ export default {
   'section.notes.format.mesEines': 'More tools',
   'section.notes.format.citacio': 'Quote',
   'section.notes.format.divisor': 'Divider',
+  /* O4-CLAUDE-2 · La subtargeta i la targeta incrustada a la segona fila «⋯» de la barra, i els textos de mostra de la subtargeta. */
+  'section.notes.format.subtargeta': 'Sub-card',
+  'section.notes.format.targeta': 'Embedded card',
+  'section.notes.format.subtargetaTitol': 'Sub-card title',
+  'section.notes.format.subtargetaMeta': 'A line of context: date, place or authorship',
+  'section.notes.format.subtargetaCos': 'Write the sub-card content here: paragraphs, lists and links.',
+  'section.notes.format.subtargetaAjuda': 'A card inside the text: title, context and body',
   /* Gauntlet 261101 · X-C-notes */
   'section.notes.cos.etiqueta': 'Note body',
   'section.notes.cos.guiaResum': 'Write your note here. The formatting template you can see is only a guide: it is not saved or published.',
@@ -558,8 +565,6 @@ export default {
   'editor.ambit.boto': 'Scope',
   'editor.ambit.titol': 'Where is it published?',
   'editor.ambit.ajuda': 'Choose whether it is a Wall post or a listing for the Market, Car sharing, Work or Housing.',
-  'editor.ambit.desar': 'Save scope',
-  'editor.ambit.cancelar': 'Cancel',
   'editor.ambit.obligatori': 'A required field is missing: {camp}',
   'editor.ambit.previsualitzacio': 'This is how it will look on the Wall',
   'editor.ambit.completar': 'Complete the listing',
@@ -2567,6 +2572,9 @@ export default {
   'section.xat.xifratge.senseClauValida': "No valid security key",
   'section.xat.xifratge.clauRetirada': "This device cannot find any valid security key for {nom} that can be confirmed. This happens when someone loses their device and their phrase, or if someone has got in the middle. Until there is a valid one, you cannot write here. Talk to {nom} to find out what happened.",
   'section.xat.xifratge.clauPropiaRetirada': "This device cannot find any active key for your account: neither its own nor any other. Someone may have got in the middle. For your safety, you cannot write. If it was not you, let us know.",
+  /* O4-CLAUDE-3 · D-18 (a): avís i confirmació del retall a Notes d’una conversa xifrada */
+  'section.xat.xifratge.retall.avis': "The note will be saved on the server without end-to-end encryption.",
+  'section.xat.xifratge.retall.guarda': "Save",
   'section.perfil.privacitat.confianca.titol': "Trusted people",
   'section.perfil.privacitat.confianca.explica': "If you ever lose all your devices and your phrase, any three of your trusted people together will be able to help you recover your private chats. You can have as many as you like, at least three, and you must have verified the safety number with each of them.",
   'section.perfil.privacitat.confianca.pendent': "Recovery with trusted people is not turned on for this node yet: right now, nobody can help you recover your private chats.",

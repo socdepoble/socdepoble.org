@@ -292,10 +292,17 @@ export function resolveAsset(path, basePath = '/', pluginUrl = '', version = '')
    Píxel). Va ABANS de sanitizeHtml(), que continua sent l'última paraula
    sobre qualsevol HTML que entra a l'arbre. */
 const RE_SRC_RECURS = /(\ssrc\s*=\s*)(["'])(\/assets\/[^"'<>\s]*)\2/gi;
+/* O4 (C2-10) · Els href="/opendata/…" del cos (/page/fediversity) també
+   viatgen amb el paquet: porten target=_blank, l'interceptor de l'amfitrió no
+   els agafa i, sense reescriure'ls, obrien l'origen de l'amfitrió (404). El
+   paquet del connector porta dist/opendata/. */
+const RE_HREF_OPENDATA = /(\shref\s*=\s*)(["'])(\/opendata\/[^"'<>\s]*)\2/gi;
 
 export function resolRecursosDeHtml(html) {
   if ((!baseActual && !politicaActual) || typeof html !== 'string') return html;
-  return html.replace(RE_SRC_RECURS, (_, atribut, cometa, ruta) => `${atribut}${cometa}${resolveAsset(ruta)}${cometa}`);
+  return html
+    .replace(RE_SRC_RECURS, (_, atribut, cometa, ruta) => `${atribut}${cometa}${resolveAsset(ruta)}${cometa}`)
+    .replace(RE_HREF_OPENDATA, (_, atribut, cometa, ruta) => `${atribut}${cometa}${resolveAsset(ruta)}${cometa}`);
 }
 
 /* Un valor d'imatge en PINTAR-LO (Mercat, TargetaViva): només un recurs

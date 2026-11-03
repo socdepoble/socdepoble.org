@@ -25,7 +25,7 @@ contracte.escriu:
 2. Selecciona fonts concretes relacionades amb la tasca; no recórregues l’arxiu en RAG o bundles automàtics.
 3. Registra decisions vigents a l’ESTAT i evidència a l’acta; una data recent no crea autoritat.
 4. Arxiva només amb decisió explícita i relleu de rebut. No esborres de manera destructiva.
-5. **Destí Canònic Fora d'Obsidian (`_arxiu_wiki_de_poble`):** Tot document, paquet o llast històric que ja no s'haja de mantindre dins de la Wiki viva d'Obsidian (`_wiki_de_poble/`) però que calga conservar, es trasllada SEMPRE i ÚNICAMENT a la carpeta canònica existent fora d'Obsidian: `../_arxiu_wiki_de_poble/` (`/Users/javillinares/Documents/Antigravity/Som de Poble/_arxiu_wiki_de_poble/`). Està terminantment prohibit inventar carpetes noves a l'arrel de `Som de Poble/`.
+5. **Dos destins, dues operacions:** el relleu documental d'Olivera conserva l'arxiu local a `90_arxiu_historic/`, segons AGENTS §0.1 i `core-higiene-escriptori`. Una evacuació freda fora d'Obsidian usa el satèl·lit existent `../_arxiu_wiki_de_poble/` només si l'encàrrec ho inclou. No convertisques eixe satèl·lit en destí automàtic de qualsevol acta ni inventes carpetes d'arxiu a l'arrel.
 6. Tanca amb la skill `wiki-cicle-de-vida`; conserva la zona humana i els documents en revisió.
 
 ## Vincles

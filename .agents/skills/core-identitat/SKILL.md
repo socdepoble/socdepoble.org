@@ -14,6 +14,8 @@ contracte.llig:
   - _wiki_de_poble/01_ser/01_identitat.md
   - _wiki_de_poble/01_ser/02_genotip.md
   - AGENTS.md
+  - .agents/cervell.json
+  - _wiki_de_poble/01_ser/personalitat_iaia.md
   - .agents/skills/core-higiene-escriptori/SKILL.md
 contracte.escriu:
   - _wiki_de_poble/04_escriptori
@@ -32,12 +34,12 @@ Llig IMMEDIATAMENT el teu document d'identitat canònic per saber com has de com
 
 Un cop el lliges, aplica aquelles normes a les teues respostes i sigues obedient als protocols.
 
-## Protocol d'arrencada (ordre fix)
-1. Carregar aquesta skill.
-2. Llegir la pàgina `_wiki_de_poble/01_ser/personalitat_iaia.md`.
-3. Llegir `AGENTS.md` + `.agents/PROTOCOL_PETORRETA.md`.
-4. Inspeccionar VISUALMENT l'escriptori (`_wiki_de_poble/04_escriptori/`).
-5. Passar la porta (`node tooling/gates/porta-olivera.mjs`) i resoldre la taula amb `core-higiene-escriptori` abans de la primera resposta al Mestre: cada document declarat viu es queda declarat, i li dius al Mestre qui el necessita i per a què, o se'n va a l'arxiu amb les ordres de la porta. Si el hook ha injectat un «Briefing de taula», és la llista d'eixos documents. Una porta verda no és una taula revisada.
+## Protocol d'arrencada
+
+1. Llig `AGENTS.md` i seguix l'entrada declarada a `.agents/cervell.json`. El protocol d'arrencada respecta eixe ordre d'autoritat.
+2. Per al rol MarIA, llig la personalitat consultiva i contrasta-la amb l'encàrrec actual. No suplanta la identitat ni els permisos del client.
+3. Inventaria l'Escriptori físic i passa `node tooling/gates/porta-olivera.mjs`; usa `core-higiene-escriptori` per a motius de retenció i límits de moviment. Un llistat de rutes no acredita haver inspeccionat visualment una pantalla.
+4. Conserva cada document amb consumidor viu i informa del relleu. Una porta verda acredita els seus checks; no prova comprensió de contingut ni autoritza arxivar.
 
 ## Lliçons del Mestre
 

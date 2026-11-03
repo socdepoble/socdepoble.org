@@ -24,9 +24,13 @@ const PAGE_ROUTE_MAP = {
   anima: '/anima',
   ia: '/anima',
   legal: '/legal',
+  privadesa: '/legal',
+  privacitat: '/legal',
   versions: '/versions',
   /* T8 (261001) · la cerca i /page/fedivers van a la ruta canònica. */
-  fedivers: '/fedivers'
+  fedivers: '/fedivers',
+  /* Àlies defensiu cap a la candidatura NLnet Fediversity (/page/fediversity). */
+  'projecte-fediversity': '/page/fediversity'
 };
 const KNOWN_PAGE_SLUGS = new Set(Object.keys(PAGE_ROUTE_MAP));
 

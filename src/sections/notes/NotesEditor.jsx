@@ -15,8 +15,10 @@ import { BotoneraClassificacio } from '../../components/universal/classificacio/
 import { DialegCarpeta } from '../../components/universal/classificacio/DialegCarpeta.jsx';
 import { DialegValors } from '../../components/universal/classificacio/DialegValors.jsx';
 import { DialegEmoticona } from '../../components/universal/classificacio/DialegEmoticona.jsx';
-import { DialegAmbit } from '../../components/universal/ambits/DialegAmbit.jsx';
+import { BlocAmbit } from '../../components/universal/ambits/BlocAmbit.jsx';
 import { useCanalAmbit } from '../../components/universal/ambits/canalAmbit.js';
+import { ambitPerCanviDeCarpeta, carpetaDeLAmbit } from '../../components/universal/ambits/carpetaAmbit.js';
+import { CARPETA_PER_SECCIO } from './masDeLUsuari.js';
 import { ESTAT_PER_DEFECTE, coaccionaAmbit, esFitxaDAmbit, etiquetaDAmbit, validaFitxa } from '../../utils/publicacioUniversal.js';
 import { DialegEsborrarNota } from './DialegEsborrarNota.jsx';
 import { carregaCatalegEmojis, useCanalEmojis } from './canalEmojis.js';
@@ -351,8 +353,23 @@ export default function NotesEditor({ activeNote, onToast = null }) {
   /* Revisió L2-A4 (IDEA-61) · Una obra d'altri (connexió o contingut de fora)
      es compartix, mai es publica amb fitxa pròpia (NotesContext · publishNote
      la descarta): dins del Bloc no oferix el grup, com l'efecte del canal.
-     Amb una fitxa ja desada, sí: es pot vore i llevar. */
-  const ambAmbit = (Boolean(canalAmbit) && !citaOrigen) || fitxaDAmbit !== null;
+     Amb una fitxa ja desada, sí: es pot vore i llevar.
+     O4-CLAUDE-1 · Ni la còpia de prova del Foraster, que no ix del
+     dispositiu ni rep mai cap fitxa: sense bloc «On es publica?», sense botó.
+     La carpeta i l'àmbit només es sincronitzen en una nota pròpia.
+     Correcció A1-04 de l'àrbitre · Un cop el bloc s'ha mostrat per a una nota,
+     s'hi queda mentre eixa nota continua oberta: triar «Mur» (fitxa null) en
+     una obra d'altri amb fitxa, o fora del Bloc, ja no el desmunta amb el
+     focus a dins (cauria a <body> i el lector de pantalla perdria el lloc).
+     `blocVist` és l'id d'eixa nota; obrir-ne una altra sense bloc l'oblida.
+     Estat derivat en la pintada (com BlocAmbit · vist): cap efecte ni bucle. */
+  const ambAmbitPerLaNota = !esSandbox && ((Boolean(canalAmbit) && !citaOrigen) || fitxaDAmbit !== null);
+  const idDeLaNota = notaEnEdicio?.id ?? null;
+  const [blocVist, setBlocVist] = useState(null);
+  const blocVistAra = ambAmbitPerLaNota ? idDeLaNota : (blocVist === idDeLaNota ? blocVist : null);
+  if (blocVistAra !== blocVist) setBlocVist(blocVistAra);
+  const ambAmbit = ambAmbitPerLaNota || (blocVist !== null && blocVist === idDeLaNota);
+  const sincronitzaAmbit = !esSandbox && !citaOrigen;
 
   const idEnEdicio = notaEnEdicio?.id;
   const escriu = useCallback((operacions) => {
@@ -365,10 +382,22 @@ export default function NotesEditor({ activeNote, onToast = null }) {
     }
   }, [esSandbox, sandbox.id, actualitzaSandbox, esPreparada, idEnEdicio, escriuPreparada, setLocalNoteField]);
 
+  /* O4-CLAUDE-1 (ordre del Mestre, captura 261102_2121) · La carpeta mana
+     l'àmbit en dos casos (carpetaAmbit.js): moure la nota a la carpeta del
+     Mercat li posa l'àmbit Mercat, i traure-la'n cap a la del Mur amb l'àmbit
+     Mercat la torna al Mur (cap fitxa). En la mateixa escriptura. */
   const desaCarpeta = useCallback((id) => {
-    if (notaEnEdicio && id && id !== carpetaId) escriu([{ doc: notaEnEdicio, canvis: { folderId: id } }]);
+    if (notaEnEdicio && id && id !== carpetaId) {
+      const canvis = { folderId: id };
+      const ambitNou = sincronitzaAmbit ? ambitPerCanviDeCarpeta({
+        ambitActual: fitxaDAmbit?.ambit ?? 'mur', abans: carpetaId, despres: id, carpetaPerSeccio: CARPETA_PER_SECCIO
+      }) : null;
+      if (ambitNou === 'mur') canvis.fitxa = null;
+      else if (ambitNou) canvis.fitxa = { ambit: ambitNou, estat: ESTAT_PER_DEFECTE, dades: {} };
+      escriu([{ doc: notaEnEdicio, canvis }]);
+    }
     setDialeg(null);
-  }, [notaEnEdicio, carpetaId, escriu]);
+  }, [notaEnEdicio, carpetaId, escriu, sincronitzaAmbit, fitxaDAmbit]);
 
   const desaValors = useCallback((camp, valors) => {
     if (notaEnEdicio) {
@@ -386,42 +415,95 @@ export default function NotesEditor({ activeNote, onToast = null }) {
   }, [notaEnEdicio, escriu]);
 
   /* IDEA-61 (T0, prompt 261102_1532) · La fitxa d'àmbit és un camp més del
-     document (`fitxa`): pel canal de la classificació (nota, còpia de prova o
-     nota preparada), ja validada i normalitzada pel diàleg. `fitxaDelCanal`:
-     la fitxa acabada de demanar per la URL (vegeu l'efecte de davall). */
-  const [fitxaDelCanal, setFitxaDelCanal] = useState(null);
-  const desaAmbit = useCallback((fitxa) => {
+     document (`fitxa`): pel canal de la classificació (nota o nota
+     preparada), ja normalitzada pel bloc.
+     O4-CLAUDE-1 (ordre del Mestre, captura 261102_2121) · Sense finestra
+     modal ni «Desar l'àmbit»: el bloc «On es publica?» en línia (BlocAmbit,
+     dins de l'«Edició avançada») crida desaAmbit a cada canvi. Triar un àmbit
+     escriu de seguida la seua fitxa i, en una nota pròpia, la carpeta de la
+     seua secció (carpetaAmbit.js: el Mercat a la del Mercat; la resta, a la
+     del Mur); editar un camp o l'Estat escriu la fitxa normalitzada. Només
+     s'escriu el que canvia: cap tecla repetida no torna a la cua. La guarda
+     de PUBLICAR (visibilitat.onTria) continua igual.
+     `errorsAmbit`: la nota (l'id) on PUBLICAR s'ha aturat per la fitxa; el
+     bloc hi mostra els errors sense esperar cap tecla, fins que es tria un
+     altre àmbit. */
+  const [errorsAmbit, setErrorsAmbit] = useState(null);
+  /* Correcció D2-publicacio-5-verticals-02 · La fitxa que arriba ja és neta
+     (normalitzaDades descarta, per exemple, «60» habitacions), però el bloc
+     continua pintant el valor amb el seu error. `valida` (tercer argument de
+     BlocAmbit) diu si les dades que la persona veu passen el contracte; ací
+     es guarda amb la nota i la fitxa desada a què correspon, perquè PUBLICAR
+     no deixe eixir una fitxa que la pantalla dona per errònia. Obrir una
+     altra nota l'oblida: el bloc es remunta amb les dades desades, ja netes. */
+  const validesaLocal = useRef(null);
+  useEffect(() => { validesaLocal.current = null; }, [idEnEdicio]);
+  const desaAmbit = useCallback((fitxa, motiu, valida = true) => {
+    if (!notaEnEdicio) return;
     /* Triar «Mur» és la publicació de sempre: cap fitxa (null la lleva, com
        la desa el port), no una fitxa amb àmbit 'mur'. */
-    if (notaEnEdicio) escriu([{ doc: notaEnEdicio, canvis: { fitxa: esFitxaDAmbit(fitxa) ? fitxa : null } }]);
-    setFitxaDelCanal(null);
-    setDialeg(null);
-  }, [notaEnEdicio, escriu]);
+    const nova = esFitxaDAmbit(fitxa) ? fitxa : null;
+    validesaLocal.current = { id: notaEnEdicio.id, fitxa: JSON.stringify(nova), valida: valida !== false };
+    const canvis = {};
+    if (JSON.stringify(nova) !== JSON.stringify(notaEnEdicio.fitxa ?? null)) canvis.fitxa = nova;
+    if (motiu === 'ambit') {
+      setErrorsAmbit(null);
+      const desti = sincronitzaAmbit ? carpetaDeLAmbit(fitxa?.ambit, CARPETA_PER_SECCIO) : null;
+      if (desti && desti !== carpetaId && carpetes.some((carpeta) => carpeta.id === desti)) canvis.folderId = desti;
+    }
+    if (Object.keys(canvis).length) escriu([{ doc: notaEnEdicio, canvis }]);
+  }, [notaEnEdicio, escriu, sincronitzaAmbit, carpetaId, carpetes]);
+  /* O4-CLAUDE-1 · Anar al bloc «On es publica?» ({ nota, enfoca }): l'entrada
+     ?ambit= i el botó «Àmbit» de la botonera. La closca obri l'«Edició
+     avançada», hi porta la vista i, des del botó, el focus al ràdio triat; en
+     acabar ho diu (peticioAmbitAtesa) i la petició s'oblida, perquè un
+     remuntatge de l'editor no hi torne. Viu ací, no a la URL: consumir el
+     canal ja esborra ?ambit=. */
+  const [peticioAmbit, setPeticioAmbit] = useState(null);
+  const peticioAmbitAtesa = useCallback((atesa) => setPeticioAmbit((actual) => (actual === atesa ? null : actual)), []);
+  const obriClassificacio = useCallback((tipus) => {
+    if (tipus === 'ambit') {
+      if (idEnEdicio != null) setPeticioAmbit({ nota: idEnEdicio, enfoca: true });
+      return;
+    }
+    setDialeg(tipus);
+  }, [idEnEdicio]);
 
-  const tancaDialeg = useCallback(() => {
-    setFitxaDelCanal(null);
-    setDialeg(null);
-  }, []);
+  const tancaDialeg = useCallback(() => setDialeg(null), []);
   /* IDEA-61 · L'entrada des d'una secció (/notes?ambit=vehicle): la nota
      oberta queda amb la fitxa de l'àmbit demanat si encara no en té cap de
-     vertical, i el diàleg «On es publica?» s'obri sol, una vegada per demanda
-     (el canal es consumix; la ref evita repetir-ho si el canal no canvia).
-     `fitxaDelCanal` és la fitxa acabada de demanar, perquè el diàleg nasca
-     amb l'àmbit triat encara que la nota no l'haja rebuda en la mateixa
-     pintada. Mai sobre la còpia de prova ni sobre una obra d'altri. */
+     vertical, una vegada per demanda (el canal es consumix; la ref evita
+     repetir-ho si el canal no canvia, també sota StrictMode). Mai sobre la
+     còpia de prova ni sobre una obra d'altri.
+     O4-CLAUDE-1 · En lloc del diàleg, l'«Edició avançada» s'obri sola amb el
+     bloc «On es publica?» a la vista. Amb la fitxa nova, la carpeta de la
+     seua secció (vehicle, treball, habitatge: la del Mur; el Mercat, la
+     seua). La nota preparada la rep sempre a les seues dades, encara que ja
+     hi nasca (NotesSection · basePreparada): en consumir el canal la base
+     torna a ser la carpeta on és la persona. */
   const canalConsumit = useRef(null);
   useEffect(() => {
     const pendent = canalAmbit?.pendent;
-    if (!pendent || !notaEnEdicio || esSandbox || citaOrigen || canalConsumit.current === canalAmbit) return;
+    if (!pendent || !notaEnEdicio || esSandbox || canalConsumit.current === canalAmbit) return;
     canalConsumit.current = canalAmbit;
-    if (!esFitxaDAmbit(notaEnEdicio.fitxa)) {
-      const fitxa = { ambit: pendent, estat: ESTAT_PER_DEFECTE, dades: {} };
-      escriu([{ doc: notaEnEdicio, canvis: { fitxa } }]);
-      setFitxaDelCanal(fitxa);
+    /* Correcció D2-publicacio-5-verticals-05 · Amb una obra d'altri oberta
+       (la nota destinació, però no apta), el canal es consumix sense escriure
+       ni demanar el bloc: pendent, cauria damunt de la primera nota pròpia
+       que s'obriga després (fitxa i carpeta que ningú no ha demanat). La
+       còpia de prova i la nota nul·la el conserven (T-06). */
+    if (citaOrigen) {
+      canalAmbit.consumix?.();
+      return;
     }
-    setDialeg('ambit');
+    if (!esFitxaDAmbit(notaEnEdicio.fitxa)) {
+      const canvis = { fitxa: { ambit: pendent, estat: ESTAT_PER_DEFECTE, dades: {} } };
+      const desti = carpetaDeLAmbit(pendent, CARPETA_PER_SECCIO);
+      if (desti && (desti !== carpetaId || esPreparada) && carpetes.some((carpeta) => carpeta.id === desti)) canvis.folderId = desti;
+      escriu([{ doc: notaEnEdicio, canvis }]);
+    }
+    setPeticioAmbit({ nota: notaEnEdicio.id, enfoca: false });
     canalAmbit.consumix?.();
-  }, [canalAmbit, notaEnEdicio, esSandbox, citaOrigen, escriu]);
+  }, [canalAmbit, notaEnEdicio, esSandbox, citaOrigen, escriu, carpetaId, carpetes, esPreparada]);
   /* Gauntlet 261016 (Bloc 3.9; ordre del Mestre: «eliminar la ploma blanca
      central» de la barra taronja) · El DialegEmoticona (amb la graella del
      catàleg) només s'obri des del quart botó de la botonera, «Emojis XL»,
@@ -473,7 +555,7 @@ export default function NotesEditor({ activeNote, onToast = null }) {
     () => signaturaDeNota({ notaId: idSignatura, actor, actorId, agents, currentUser, dataMode }),
     [idSignatura, actor, actorId, agents, currentUser, dataMode]
   );
-  /* IDEA-61 (T0) · El que veu la previsualització del diàleg d'àmbit: els
+  /* IDEA-61 (T0) · El que veu la previsualització del bloc d'àmbit (O4-CLAUDE-1: en línia): els
      textos plans de la nota (el títol pot portar HTML) i la signatura de la
      barra taronja (mai «Sóc de Poble» per defecte). */
   const documentDePrevisualitzacio = useMemo(() => (notaEnEdicio ? {
@@ -520,7 +602,17 @@ export default function NotesEditor({ activeNote, onToast = null }) {
            incompleta no ix al Mur: el motiu, en línia, al selector
            (SelectorVisibilitat pinta el missatge de l'error que llança onTria). */
         const fitxa = doc?.fitxa;
-        if (esFitxaDAmbit(fitxa) && !validaFitxa(fitxa.ambit, fitxa.dades).ok) {
+        /* Correcció D2-publicacio-5-verticals-02 · També quan la fitxa desada
+           és neta però el bloc pinta un valor que el contracte no admet. */
+        const local = validesaLocal.current;
+        const invalidaEnElBloc = local !== null && local.id === doc?.id && local.fitxa === JSON.stringify(fitxa ?? null) && !local.valida;
+        if (esFitxaDAmbit(fitxa) && (!validaFitxa(fitxa.ambit, fitxa.dades).ok || invalidaEnElBloc)) {
+          /* O4-CLAUDE-1 · I el bloc «On es publica?» ja mostra què falta.
+             Correcció A1-03 de l'àrbitre · L'«Edició avançada» pot estar
+             plegada (un remuntatge no la recorda): la closca l'obri i hi porta
+             la vista, una sola vegada i sense robar el focus al selector. */
+          setErrorsAmbit(doc?.id ?? null);
+          if (doc?.id != null) setPeticioAmbit({ nota: doc.id, enfoca: false });
           throw new Error(omple(t('editor.ambit.errorPublicar', 'La fitxa de «{ambit}» no està completa.'), { ambit: etiquetaDAmbit(fitxa.ambit, t) }));
         }
         /* Fase D (261020, tasca 2; pla 261020_1300 · Google Play UGC) · Abans
@@ -609,9 +701,27 @@ export default function NotesEditor({ activeNote, onToast = null }) {
             valor: fitxaDAmbit ? etiquetaDAmbit(fitxaDAmbit.ambit, t) : '',
             nom: fitxaDAmbit ? omple(t('editor.ambit.actual', 'Àmbit: {ambit}'), { ambit: etiquetaDAmbit(fitxaDAmbit.ambit, t) }) : ''
           } : undefined}
-          onObri={setDialeg}
+          /* O4-CLAUDE-1 · «Àmbit» no obri cap diàleg: porta al bloc en línia. */
+          onObri={obriClassificacio}
         />
       ) : null,
+      /* O4-CLAUDE-1 (ordre del Mestre, captura 261102_2121) · «On es
+         publica?» en línia, dins de l'«Edició avançada», entre el logotip i
+         la classificació (la ranura de la closca): els mateixos casos que el
+         grup «Àmbit» de la botonera. La previsualització signa com la barra
+         taronja. La petició d'anar-hi, només per a la nota que l'ha feta. */
+      ambitEdicioAvancada: notaEnEdicio && classificacio && ambAmbit ? (
+        <BlocAmbit
+          key={`ambit:${notaEnEdicio.id}`}
+          valor={fitxaDAmbit}
+          document={documentDePrevisualitzacio}
+          onCanvia={desaAmbit}
+          mostraErrors={errorsAmbit != null && errorsAmbit === notaEnEdicio.id}
+          t={t}
+        />
+      ) : null,
+      peticioAmbit: notaEnEdicio && ambAmbit && peticioAmbit?.nota === notaEnEdicio.id ? peticioAmbit : null,
+      onPeticioAmbitAtesa: peticioAmbitAtesa,
       /* T51 (ordre del Mestre, 260928) · L'espai central de la barra taronja:
          el camp CRU de la nota (mai la 🪶 per defecte del model de vista de la
          llista, T34). La data de la còpia de prova del Foraster, que no en
@@ -668,7 +778,7 @@ export default function NotesEditor({ activeNote, onToast = null }) {
          l'ordre «/» Emoji. Totes dues funcions són estables (canalEmojis.js). */
       ...(canalEmojis ? { registraInsercio: canalEmojis.registra, obreEmojis: canalEmojis.obri } : {})
     };
-  }, [notaEnEdicio, documentPerAlEditor, esSandbox, esPreparada, creacioPreparada, escriuPreparada, desaPreparada, senseSessio, actor, actorId, autoria, memberships, actualitzaSandbox, setLocalNoteField, saveNoteField, publishNote, compartirNota, connexio, dretsReservats, dretsDeLOriginal, extern, citaOrigen, pucBorrar, obriBorrar, noteFolders, t, signatura, emptyDocument, config, classificacio, carpetes, carpetaId, estatDesament, dataNomesAlDispositiu, targetes, canalEmojis, asseguraNormes, memoriaOral, ambAmbit, fitxaDAmbit]);
+  }, [notaEnEdicio, documentPerAlEditor, esSandbox, esPreparada, creacioPreparada, escriuPreparada, desaPreparada, senseSessio, actor, actorId, autoria, memberships, actualitzaSandbox, setLocalNoteField, saveNoteField, publishNote, compartirNota, connexio, dretsReservats, dretsDeLOriginal, extern, citaOrigen, pucBorrar, obriBorrar, noteFolders, t, signatura, emptyDocument, config, classificacio, carpetes, carpetaId, estatDesament, dataNomesAlDispositiu, targetes, canalEmojis, asseguraNormes, memoriaOral, ambAmbit, fitxaDAmbit, obriClassificacio, documentDePrevisualitzacio, desaAmbit, errorsAmbit, peticioAmbit, peticioAmbitAtesa]);
 
   // Reanomenar i esborrar necessiten veure totes les notes: amb el llistat a
   // mitges, una nota no carregada es quedaria amb el nom vell.
@@ -771,20 +881,6 @@ export default function NotesEditor({ activeNote, onToast = null }) {
           actual={notaEnEdicio.icon || ''}
           onDesa={desaEmoticona}
           carregaCataleg={carregaCatalegEmojis}
-        />
-      ) : null}
-      {/* IDEA-61 (T0, prompt 261102_1532) · «On es publica?»: l'àmbit i la fitxa
-          guiada, desats pel canal de la classificació (desaAmbit); la
-          previsualització signa com la barra taronja. */}
-      {dialeg === 'ambit' && notaEnEdicio ? (
-        <DialegAmbit
-          key={`ambit:${notaEnEdicio.id}`}
-          obert
-          valor={fitxaDAmbit ?? fitxaDelCanal}
-          document={documentDePrevisualitzacio}
-          onDesa={desaAmbit}
-          onTanca={tancaDialeg}
-          t={t}
         />
       ) : null}
       {dialeg === 'esborrar' && pucBorrar && notaEnEdicio && aBorrar === notaEnEdicio.id ? (

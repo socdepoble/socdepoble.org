@@ -39,12 +39,14 @@ Un candat que viu dins d'un arnés només protegix del que passa per eixe arnés
 
 ## La frontissa de contingut
 
+**Nota de vigència (261103).** La frontissa ja està implementada a `tooling/gates/frontissa-contingut.mjs`: importa `PAGE_COPY`, deriva els consumidors i compara les empremtes del registre `.agents/contingut_estructural.json`, que en este tall declara 16 claus. El resultat de `node tooling/gates/frontissa-contingut.mjs --json` és el que acredita quantes són correctes en cada execució; la presència de l'instrument no equival a `16/16` en verd. Les descripcions d'actors i processos d'este estudi no certifiquen que cap llançador estiga actiu.
+
 Protegix les peces estructurals de la interfície: les pàgines de `PAGE_COPY` que pinten el Mur, la portada de la Wiki i les seccions de text. L'origen és l'incident del 24-09: un canvi de nom de clau va deixar sense contingut la targeta del Mur i la portada de la Wiki, i cap porta ho va dir.
 
 1. **Importa l'objecte real** (`import('src/sections/text/pageContent.js')`), no busca text. Un comentari que mencione la clau no la fa existir.
 2. **Deriva les claus obligatòries dels consumidors**, no d'una llista escrita a mà:
    - els `pageKey` de `src/config/sections.js`;
-   - la llista de pàgines de sistema del Mur, que caldrà moure del component a un mòdul de configuració perquè node la puga importar;
+   - les llistes `SYSTEM_PAGES` i `COVER_PAGE_KEYS` de `src/config/systemPages.js`, que Node importa directament;
    - la clau de la portada de la Wiki.
 
    Si un consumidor demana una clau que no existix, la porta falla.
@@ -79,7 +81,7 @@ La [[00_portada]] fixa el contracte de cada mètrica: fórmula, font, denominado
 | Mètrica | Numerador / denominador | Font | Estat |
 |---|---|---|---|
 | Conformitat documental de l'Escriptori | documents de l'Escriptori que passen `document.mjs check` / documents de l'Escriptori | `tooling/gates/porta-documents.mjs` | mesurable hui |
-| Integritat del contingut estructural | claus requerides presents amb empremta aprovada / claus requerides | frontissa de contingut | `N/A` fins que existisca |
+| Integritat del contingut estructural | claus amb empremta aprovada / unió de claus requerides i registrades | `tooling/gates/frontissa-contingut.mjs` | instrument disponible; valor del diagnòstic de cada execució |
 | Vigilants vius | llançadors amb script existent i activitat recent / llançadors declarats | [[02_calendari]] | `N/A` fins que existisca el registre ampliat |
 | Disparadors útils | skills amb disparador que no és el seu propi nom / skills del cens | `.agents/skills_index.json` | mesurable hui |
 | Cadena de portes amb notícies | portes que s'executen fins al final / portes declarades | `tooling/gates/run-portes.mjs` | mesurable hui |

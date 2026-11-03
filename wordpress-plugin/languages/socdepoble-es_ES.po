@@ -1,0 +1,15 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: Sóc de Poble 1.1.12\n"
+"Language: es_ES\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+# La marca i el lema es conserven en valencià també en castellà.
+msgid "Sóc de Poble. Portal de Pobles Connectats"
+msgstr "Sóc de Poble. Portal de Pobles Connectats"
+
+msgid "Welcome to the Sóc de Poble Portal of Connected Villages"
+msgstr "Sóc de Poble. Portal de Pobles Connectats"

@@ -312,10 +312,11 @@ describe('preflight: el context de producció i la família «Avisos push»', ()
     escriu(arrel, 'ios/App/App/Info.plist', '<plist><dict><!-- <key>ITSAppUsesNonExemptEncryption</key><false/> --></dict></plist>');
     escriu(arrel, 'ios/App/App.xcodeproj/project.pbxproj', 'TARGETED_DEVICE_FAMILY = 1;\n');
     escriu(arrel, 'android/variables.gradle', 'ext {\n    targetSdkVersion = 34\n}\n');
+    escriu(arrel, 'android/app/build.gradle', 'android { defaultConfig { targetSdkVersion rootProject.ext.targetSdkVersion } }');
     const ios = p.avisosDeProduccio(arrel, ['ios']).join('\n');
     expect(ios).toMatch(/no diu ITSAppUsesNonExemptEncryption = false/);
     expect(ios).not.toMatch(/iPad|googleusercontent/);
-    expect(p.avisosDeProduccio(arrel, ['android']).join('\n')).toMatch(/targetSdkVersion 34 és més baix que 35/);
+    expect(p.avisosDeProduccio(arrel, ['android']).join('\n')).toMatch(/targetSdkVersion 34 és més baix que 36/);
     /* ARB-N05-02 (A7) · Just al llindar no hi ha avís. */
     escriu(arrel, 'android/variables.gradle', `ext {\n    targetSdkVersion = ${p.TARGET_SDK_PLAY_MINIM}\n}\n`);
     expect(p.avisosDeProduccio(arrel, ['android']).join('\n')).not.toMatch(/targetSdkVersion/);
@@ -495,4 +496,86 @@ describe('el Team ID d’Apple, emmascarat arreu (G1-B-seg-02)', () => {
     expect(e.emmascara('--upload-app alias upload', { SDP_ANDROID_KEY_ALIAS: 'upload' })).toBe('--upload-app alias <SDP_ANDROID_KEY_ALIAS>');
     expect(e.emmascara('org.socdepoble.app org.socdepoble.app.debug', { SDP_APP_ID: 'org.socdepoble.app' })).toBe('<SDP_APP_ID> org.socdepoble.app.debug');
   });
+});
+
+describe('O4 · target Android efectiu per a l’avís de Play', () => {
+  const projecte = (app, variables = 'ext {\n targetSdkVersion = 36\n}\n') => {
+    const arrel = temporal('sdp-o4-target-');
+    escriu(arrel, 'android/app/build.gradle', app);
+    escriu(arrel, 'android/variables.gradle', variables);
+    return arrel;
+  };
+  const avisa = arrel => p.avisosDeProduccio(arrel, ['android']).join('\n');
+
+  test('35 ja és inferior al mínim36, encara que vinga de rootProject.ext', () => {
+    const arrel = projecte('android { defaultConfig { targetSdkVersion rootProject.ext.targetSdkVersion } }', 'ext {\n targetSdkVersion = 35\n}');
+    expect(avisa(arrel)).toMatch(/targetSdkVersion 35 és més baix que 36/);
+  });
+
+  test('la declaració literal de l’app preval sobre la variable global', () => {
+    expect(avisa(projecte('android { defaultConfig { targetSdkVersion 35 } }'))).toMatch(/targetSdkVersion 35 és més baix que 36/);
+    expect(avisa(projecte('android { defaultConfig { targetSdk = 37 } }', 'ext {\n targetSdkVersion = 34\n}'))).not.toMatch(/targetSdkVersion/);
+  });
+
+  test('36 i una versió superior resoltes de rootProject.ext no donen un avís fals', () => {
+    for (const version of [36, 37]) {
+      const arrel = projecte('android {\n defaultConfig {\n targetSdkVersion rootProject.ext.targetSdkVersion\n }\n}', `ext {\n targetSdkVersion = ${version}\n}`);
+      expect(avisa(arrel)).not.toMatch(/targetSdkVersion/);
+    }
+  });
+
+  test('comentaris i cadenes no poden substituir el target de defaultConfig', () => {
+    const app='def mostra = """\nandroid { defaultConfig { targetSdkVersion 37 } }\n"""\n'
+      +'// targetSdkVersion 37\nandroid { defaultConfig {\n/* targetSdkVersion 37 */\ntargetSdkVersion 35\n} }';
+    expect(avisa(projecte(app))).toMatch(/targetSdkVersion 35 és més baix que 36/);
+  });
+
+  test('una expressió desconeguda o un projecte absent no acrediten el target per la variable sola', () => {
+    const arrel = projecte('android { defaultConfig { targetSdkVersion calculaTarget() } }');
+    expect(avisa(arrel)).toMatch(/no es pot resoldre.*targetSdkVersion/);
+    fs.rmSync(path.join(arrel, 'android/app/build.gradle'));
+    expect(avisa(arrel)).toMatch(/no es pot resoldre.*targetSdkVersion/);
+  });
+});
+
+test('O4 · un flavor que pot rebaixar el target no s’acredita amb el defaultConfig', () => {
+  const arrel = temporal('sdp-o4-flavors-');
+  escriu(arrel, 'android/app/build.gradle', 'android { defaultConfig { targetSdkVersion 36 } productFlavors { demo { targetSdkVersion 35 } } }');
+  escriu(arrel, 'android/variables.gradle', 'ext { targetSdkVersion = 36 }');
+  expect(p.avisosDeProduccio(arrel, ['android']).join('\n')).toMatch(/no es pot resoldre.*targetSdkVersion/);
+});
+
+test('O4 · una sobreescriptura fora del bloc no queda tapada pel defaultConfig', () => {
+  const arrel = temporal('sdp-o4-post-target-');
+  escriu(arrel, 'android/app/build.gradle', 'android { defaultConfig { targetSdkVersion 36 } }\nandroid.defaultConfig.targetSdkVersion = 35\n');
+  escriu(arrel, 'android/variables.gradle', 'ext { targetSdkVersion = 36 }');
+  expect(p.targetSdkAndroid(arrel)).toBeNull();
+  expect(p.avisosDeProduccio(arrel, ['android']).join('\n')).toMatch(/no es pot resoldre.*targetSdkVersion/);
+});
+
+test('O4 · literals slashy i dollar-slashy no suportats donen UNKNOWN', () => {
+  for (const literal of ['/\n targetSdkVersion 36\n /', '$/\n targetSdkVersion 36\n /$']) {
+    const arrel = temporal('sdp-o4-slashy-');
+    escriu(arrel, 'android/app/build.gradle', `android { defaultConfig {\n def exemple = ${literal}\n} }`);
+    escriu(arrel, 'android/variables.gradle', 'ext { targetSdkVersion = 36 }');
+    expect(p.targetSdkAndroid(arrel)).toBeNull();
+    expect(p.avisosDeProduccio(arrel, ['android']).join('\n')).toMatch(/no es pot resoldre.*targetSdkVersion/);
+  }
+});
+
+test('O4 · una assignació dins d’un condicional no acredita el defaultConfig', () => {
+  const arrel = temporal('sdp-o4-target-condicional-');
+  escriu(arrel, 'android/app/build.gradle', 'android { defaultConfig {\n if (false) {\n targetSdkVersion 36\n }\n} }');
+  expect(p.targetSdkAndroid(arrel)).toBeNull();
+});
+
+for (const [nom, variables] of [
+  ['expressió posterior', 'ext {\n targetSdkVersion = 36\n targetSdkVersion = 35 + 0\n}'],
+  ['assignació condicional posterior', 'ext {\n targetSdkVersion = 36\n if (true) { targetSdkVersion = 35 }\n}']
+]) test(`O4 · ${nom} de la variable dona UNKNOWN`, () => {
+  const arrel = temporal('sdp-o4-target-variable-');
+  escriu(arrel, 'android/app/build.gradle', 'android { defaultConfig { targetSdkVersion rootProject.ext.targetSdkVersion } }');
+  escriu(arrel, 'android/variables.gradle', variables);
+  expect(p.targetSdkAndroid(arrel)).toBeNull();
+  expect(p.avisosDeProduccio(arrel, ['android']).join('\n')).toMatch(/no es pot resoldre.*targetSdkVersion/);
 });

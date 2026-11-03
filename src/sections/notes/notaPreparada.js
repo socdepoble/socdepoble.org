@@ -114,7 +114,7 @@ export const useNotaPreparadaDelBloc = () => useContext(NotaPreparadaContext);
  * @param {Function} [opcions.resolNota] resolveNote: si una creació incerta ha arribat.
  * @param {Function} [opcions.adopta]  (idPreparat, idDelServidor) quan l'endoll posa un altre id.
  * @returns {{ id: string, document: object, camps: object, creacio: object|null,
- *   escriu: Function, desa: Function, reintenta: Function }}
+ *   escriu: Function, desa: Function, reintenta: Function, buidaEntrada: Function }}
  */
 export function useNotaPreparada({
   clau = null, base = null, llavor = null, notes, creaNota, resolNota, setLocalNoteField, updateNote, informaError, adopta
@@ -275,9 +275,25 @@ export function useNotaPreparada({
     if (idNota !== id) vius.adopta?.(id, idNota);
   }, [materialitzada, renova]);
 
+  /* O4-CLAUDE-3 (D2-publicacio-5-verticals-01) · CREAR NOTA torna la mateixa
+     preparada. Si encara no porta res escrit de veres, l'entrada que s'hi ha
+     deixat (la fitxa d'un ?ambit= ja consumit i la seua carpeta, o una
+     classificació d'abans) no hi pot quedar: taparia la base, que és la
+     carpeta on és ara la persona. Es buida conservant el MATEIX id (l'item
+     que torna onCreate continua sent vàlid). Mai amb una creació en vol, ni
+     amb text o imatge, ni amb una fitxa que ja porta dades. */
+  const buidaEntrada = useCallback(() => {
+    const actual = estatRef.current;
+    if (creacioRef.current === actual.id || !Object.keys(actual.camps).length) return;
+    if (teContingut(actual.camps, viusRef.current?.llavor)) return;
+    const dades = actual.camps.fitxa?.dades;
+    if (dades && typeof dades === 'object' && Object.keys(dades).length) return;
+    renova({ ...actual, camps: {} });
+  }, [renova]);
+
   const document = useMemo(() => ({
     ...base, ...estat.camps, id: estat.id, isPublished: false, updatedAt: estat.ara, preparada: true
   }), [base, estat.camps, estat.id, estat.ara]);
 
-  return { id: estat.id, document, camps: estat.camps, creacio: estat.creacio, escriu, desa, reintenta };
+  return { id: estat.id, document, camps: estat.camps, creacio: estat.creacio, escriu, desa, reintenta, buidaEntrada };
 }

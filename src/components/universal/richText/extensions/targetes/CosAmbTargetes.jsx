@@ -25,8 +25,18 @@ import { useImatgeResolta } from '../../../../../hooks/useImatgeTargeta.js';
 import { propsDeTargetaIncrustada } from './formaDelGrup.js';
 import { useTargetaSincronitzada } from './TargetesSincronitzadesContext.js';
 
-function TargetaDeLectura({ attrs }) {
-  const navigate = useNavigate();
+/* O5-CLAUDE-1 (ordre del Mestre, Onada 5) · La navegació, si n'hi ha. La
+   forma `return useNavigate()` dins del try és la de useUbicacioApp
+   (useAccions.js): fora de RouterProvider, null. */
+function useNavegacioOpcional() {
+  try {
+    return useNavigate();
+  } catch {
+    return null;
+  }
+}
+
+function TargetaDeLaApp({ attrs, navigate }) {
   const props = useTargetaSincronitzada(attrs, propsDeTargetaIncrustada(attrs, { mode: 'lectura' }));
   const imatge = useImatgeResolta(props.imageUrl);
   const objecte = props.objecte;
@@ -39,6 +49,26 @@ function TargetaDeLectura({ attrs }) {
       />
     </div>
   );
+}
+
+/* O5-CLAUDE-1 · Fora de RouterProvider (una prova, una lectura fora de l'app)
+   la UniversalCard no es pot pintar: els seus enllaços i la pastilla del
+   calendari naveguen amb el router. Es pinta la reserva que ja porta l'HTML
+   desat (ordre del Mestre, 261007: la instantània és el que es veu quan «el
+   cos es llig fora de l'app»): un enllaç amb el títol cap a la ruta de
+   l'original, amb el mateix sanejament que la targeta de lectura. */
+function TargetaDeReserva({ attrs }) {
+  const { title, mainHref } = propsDeTargetaIncrustada(attrs, { mode: 'lectura' });
+  return (
+    <div className="sdp-targeta">
+      {mainHref ? <a href={mainHref}>{title}</a> : title}
+    </div>
+  );
+}
+
+function TargetaDeLectura({ attrs }) {
+  const navigate = useNavegacioOpcional();
+  return navigate ? <TargetaDeLaApp attrs={attrs} navigate={navigate} /> : <TargetaDeReserva attrs={attrs} />;
 }
 
 /* El className, literal (Pedra Seca): «detail-content» és l'article de

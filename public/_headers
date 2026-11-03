@@ -35,3 +35,9 @@
   Access-Control-Allow-Origin: *
   Cache-Control: public, max-age=300
   X-Content-Type-Options: nosniff
+
+/opendata/activitystreams.json
+  Content-Type: application/activity+json; charset=utf-8
+  Access-Control-Allow-Origin: *
+  Cache-Control: public, max-age=300
+  X-Content-Type-Options: nosniff

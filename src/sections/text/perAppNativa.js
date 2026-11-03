@@ -75,6 +75,34 @@ const PLATAFORMA_ALIENA_TOTES = new RegExp(PLATAFORMA_ALIENA.source, 'gi');
 /* El mateix en un nom de fitxer, un alt o un title (google-play-badge.png). */
 const IMATGE_ALIENA = /google[\s_-]*play|play[\s_-]*store|\bandroid\b|\bapks?\b|f-droid|appgallery|galaxy[\s_-]*store|harmonyos/i;
 const BOTIGA_ALIENA = /play\.google\.com|f-droid\.org|appgallery\.huawei\.com|galaxystore\.samsung\.com/i;
+const ATRIBUT_HTML = /([^\s="'<>`]+)(?:\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s"'=<>`]+)))?/g;
+
+/* Un text neutre («Ací») no fa visible l'extensió de l'instal·lador. L'HTML
+   encara no ha passat pel sanejador: desfem també les entitats del punt que
+   el navegador llegirà dins d'href, sense necessitar DOM en esta peça pura. */
+function enllacaApk(atributs) {
+  let href = null;
+  // Consumix el valor complet de cada atribut: un «href=» dins d'un title no és la destinació.
+  for (const atribut of atributs.matchAll(ATRIBUT_HTML)) {
+    if (atribut[1].toLowerCase() === 'href') {
+      href = atribut[2] ?? atribut[3] ?? atribut[4] ?? '';
+      break;
+    }
+  }
+  if (href === null) return false;
+  const valor = href
+    .replace(/&(period|tab|newline|colon|sol|amp);/gi, (_, nom) => ({ period: '.', tab: '\t', newline: '\n', colon: ':', sol: '/', amp: '&' })[nom.toLowerCase()])
+    .replace(/&#(x[0-9a-f]+|[0-9]+);?/gi, (original, codi) => {
+      const punt = codi[0].toLowerCase() === 'x' ? Number.parseInt(codi.slice(1), 16) : Number.parseInt(codi, 10);
+      return punt > 0 && punt <= 0x10ffff ? String.fromCodePoint(punt) : original;
+    });
+  try {
+    const cami = new URL(valor, 'https://socdepoble.invalid').pathname;
+    let llegible = cami;
+    try { llegible = decodeURIComponent(cami); } catch { /* un percentatge mal format conserva el camí */ }
+    return /\.apk$/i.test(llegible);
+  } catch { return false; }
+}
 
 /** Cert si el text (o l'HTML) nomena una altra plataforma mòbil o la seua botiga. */
 export function nomenaPlataformaAliena(text) {
@@ -124,7 +152,7 @@ const SEPARA = new RegExp(`^<\\/?(?:${TALLS}|img)\\b`, 'i');
 
 /* Els atributs que es lligen (un title, un alt) o se senten (aria-label). */
 const ETIQUETA_OBERTA = /<[a-z][^<>]*>/gi;
-const ATRIBUT_QUE_ES_LLIG = /\s(?:title|alt|aria-label|aria-description|aria-roledescription|placeholder|label|summary)\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s"'=<>`]+))/gi;
+const ATRIBUTS_QUE_ES_LLIGEN = new Set(['title', 'alt', 'aria-label', 'aria-description', 'aria-roledescription', 'placeholder', 'label', 'summary']);
 
 /* Un tros de text tal com es llig: l'espai dur, un espai; el guionet de
    partició (&shy;), res. */
@@ -167,15 +195,20 @@ function nomenaAlText(html) {
 }
 
 /* 2 · Fora els atributs que es lligen o se senten i en nomenen alguna. */
-const netejaAtributs = (html, retirats) => html.replace(ETIQUETA_OBERTA, (etiqueta) => etiqueta.replace(
-  ATRIBUT_QUE_ES_LLIG,
-  (atribut, doble, simple, solt) => {
-    const valor = doble ?? simple ?? solt ?? '';
-    if (!nomenaPlataformaAliena(valor)) return atribut;
+const netejaAtributs = (html, retirats) => html.replace(ETIQUETA_OBERTA, (etiqueta) => {
+  const lleva = [];
+  for (const atribut of etiqueta.matchAll(ATRIBUT_HTML)) {
+    if (!ATRIBUTS_QUE_ES_LLIGEN.has(atribut[1].toLowerCase())) continue;
+    const valor = atribut[2] ?? atribut[3] ?? atribut[4] ?? '';
+    if (!nomenaPlataformaAliena(valor)) continue;
     retirats.push(valor.trim());
-    return '';
+    const des = atribut.index > 0 && /\s/.test(etiqueta[atribut.index - 1]) ? atribut.index - 1 : atribut.index;
+    const fins = atribut.index + atribut[0].length;
+    const seguent = etiqueta[fins];
+    lleva.push({ des, fins, separador: seguent && !/[\s/>]/.test(seguent) ? ' ' : '' });
   }
-));
+  return lleva.reduceRight((net, { des, fins, separador }) => net.slice(0, des) + separador + net.slice(fins), etiqueta);
+});
 
 /* 4b · Un tros de línia sense el seu text: les etiquetes es queden (l'HTML
    continua ben tancat) i les que queden buides se'n van. */
@@ -221,7 +254,7 @@ export function adaptaHtml(html) {
   const retirats = [];
   let net = html
     .replace(/<!--[\s\S]*?(?:-->|$)/g, '')
-    .replace(/<a\b([^<>]*)>([\s\S]*?)<\/a\s*>/gi, (enllac, atributs, dins) => (BOTIGA_ALIENA.test(atributs) ? dins : enllac))
+    .replace(/<a\b((?:"[^"]*"|'[^']*'|[^<>"'])*)>([\s\S]*?)<\/a\s*>/gi, (enllac, atributs, dins) => (BOTIGA_ALIENA.test(atributs) || enllacaApk(atributs) ? dins : enllac))
     .replace(/<img\b[^<>]*>/gi, (imatge) => {
       if (!IMATGE_ALIENA.test(imatge)) return imatge;
       retirats.push(/\balt\s*=\s*["']([^"']*)["']/i.exec(imatge)?.[1] || imatge);

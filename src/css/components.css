@@ -356,27 +356,64 @@
   .sdp-dialeg__peu .sdp-boto--secundari:hover:not(:disabled) { background: var(--sdp-fons-subtil); }
   .sdp-dialeg__peu .sdp-boto--perill { background: var(--sdp-error); color: var(--sdp-sobre-color); border: 2px solid transparent; }
   .sdp-dialeg__peu .sdp-boto--perill:hover:not(:disabled) { background: var(--sdp-error-text); }
+  /* O4-CLAUDE-1b (IDEA-63, ordre del Mestre, captura 261102_2149) · Tot
+     calaix del Dialeg (costat esquerra o dreta: «Amb qui actues?», el Crom
+     del sistema, l'espècimen del catàleg i el menú compacte d'App.jsx) naix
+     davall de la barra negra, amb el mateix càlcul que l'Índex de la Pàgina
+     Universal (.toc-overlay, modules.css): els tokens --sdp-calaix-dalt i
+     --sdp-calaix-alt (tokens.css). La barra queda visible i sense vel, en
+     mòbil i en escriptori. El dalt i el baix són del calaix; el costat, de
+     --esquerra i --dreta (left i right, mai l'inset sencer, que els
+     tornaria a 0). L'alçada i el sostre, els del token: el max-height de
+     l'agent d'usuari (100% menys 2em) i el de .sdp-dialeg no el retallen; el
+     cos fa el seu scroll (.sdp-dialeg__cos) i el peu no s'encongix. En un
+     encastament, la capa modal de layout.css (:host .sdp-capa-modal >
+     .sdp-dialeg, inset: auto i height: 100%) hi guanya per especificitat, i
+     la capa encara vela la barra de l'App (B1b-03: petició per a layout.css,
+     prova [DEFECTE] a Dialeg.test.jsx). L'ordre compta: esta regla, darrere
+     de .sdp-dialeg (mateixa especificitat, el seu margin i el seu
+     max-height). */
   .sdp-dialeg--calaix {
-    margin: 0; width: min(88vw, 24rem); height: 100dvh; max-height: 100dvh; border-radius: 0; border-block: 0;
+    margin: 0; top: var(--sdp-calaix-dalt); bottom: 0; width: min(88vw, 24rem);
+    height: var(--sdp-calaix-alt); max-height: var(--sdp-calaix-alt); border-radius: 0; border-block: 0;
+  }
+  /* El vel no enfosquix la barra: transparent fins a --sdp-calaix-dalt i,
+     davall, el vel de sempre (--sdp-fons-vel), on comença el calaix.
+     O4-CLAUDE-1b · B1b-02 (corrector) · El vel ocupa tota la pantalla, com el
+     ::backdrop de l'agent d'usuari (fixed, inset: 0), i no hi posa cap top:
+     amb showModal() el document és inert, i un vel que començara davall de la
+     barra la deixaria visible però morta (ni el toc a l'avatar ni cap altre
+     arribaria enlloc). Així, un toc damunt de la barra cau al vel i tanca el
+     calaix amb el motiu 'vel', com abans. On ::backdrop encara no hereta les
+     custom properties (Safari < 17.4, Chrome < 122, Firefox < 120) el var()
+     no es resol i el vel queda transparent, com el de .sdp-dialeg::backdrop
+     de dalt: cobrix la pantalla igualment i un toc fora del calaix el tanca. */
+  .sdp-dialeg--calaix::backdrop {
+    background: linear-gradient(to bottom, transparent var(--sdp-calaix-dalt), var(--sdp-fons-vel) var(--sdp-calaix-dalt));
   }
   .sdp-dialeg--calaix .sdp-dialeg__marc { height: 100%; }
   .sdp-dialeg--calaix .sdp-dialeg__cos { flex: 1; }
+  /* El peu, sempre damunt de la zona segura de baix (la barra d'inici),
+     també per damunt de 720px (l'iPad apaïsat); sense zona segura, el mateix
+     var(--sdp-space-4) de sempre. */
   .sdp-dialeg--calaix .sdp-dialeg__peu {
     display: flex;
     flex-direction: column;
     align-items: stretch;
     justify-content: center;
     gap: var(--sdp-space-2);
+    padding-bottom: calc(var(--sdp-space-4) + env(safe-area-inset-bottom, 0px));
   }
   .sdp-dialeg--calaix .sdp-dialeg__peu .sdp-boto {
     width: 100%;
     justify-content: center;
     text-align: center;
   }
-  .sdp-dialeg--esquerra { inset: 0 auto 0 0; border-inline-start: 0; }
-  .sdp-dialeg--dreta { inset: 0 0 0 auto; border-inline-end: 0; }
-  /* Calaix de la barra lateral (App.jsx, mode compacte): negre de dalt a baix.
-     Sense açò, el <dialog> pintava --sdp-fons-targeta davall del menú. */
+  .sdp-dialeg--esquerra { left: 0; right: auto; border-inline-start: 0; }
+  .sdp-dialeg--dreta { left: auto; right: 0; border-inline-end: 0; }
+  /* Calaix de la barra lateral (App.jsx, mode compacte): negre de dalt a baix
+     del calaix, que des d'O4-CLAUDE-1b naix davall de la barra negra com la
+     resta. Sense açò, el <dialog> pintava --sdp-fons-targeta davall del menú. */
   .sdp-dialeg.sdp-dialeg-sidebar,
   :host .sdp-capa-modal > .sdp-dialeg.sdp-dialeg-sidebar {
     background: var(--sdp-crom-fons);
@@ -3091,6 +3128,29 @@ section.bar-orange > .sdp-emoticona-barra--boto:focus-visible { outline-color: v
     object-fit: contain;
   }
   .sdp-edicio-avancada .page-title-classificacio { margin-block: 0; }
+  /* O4-CLAUDE-1 (ordre del Mestre, captura 261102_2121) · «On es publica?» en
+     línia (BlocAmbit, a la ranura de l'àmbit), entre el logotip i la
+     classificació. Quan l'entrada ?ambit= o el botó «Àmbit» el porten a la
+     vista, s'atura davall de les dues barres sticky, amb el mateix marge que
+     el cos del desplegable (GM2-03). El títol i l'ajuda del bloc, com el títol
+     i el subtítol del resum; el grup d'àmbits (.sdp-grup), sense el seu marge
+     de formulari dins de la pila. */
+  .sdp-edicio-avancada__ambit {
+    min-inline-size: 0;
+    scroll-margin-block-start: calc(var(--sdp-alt-accio) * 2 + var(--sdp-space-4));
+  }
+  .sdp-bloc-ambit > .sdp-grup { margin: 0; }
+  .sdp-bloc-ambit__titol {
+    margin: 0;
+    color: var(--sdp-text-titol);
+    font-size: var(--sdp-text-h6);
+    font-weight: 700;
+  }
+  .sdp-bloc-ambit__ajuda {
+    margin: 0;
+    color: var(--sdp-text-suau);
+    font-size: var(--sdp-text-small);
+  }
 }
 
 /* ── Ordre del Mestre (261007) · CARRUSEL D'IMATGES ──────────────────────

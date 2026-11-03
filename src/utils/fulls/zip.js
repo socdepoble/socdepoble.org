@@ -27,6 +27,8 @@ const SIGNATURA_LOCALITZADOR_ZIP64 = 0x07064b50;
 const MIDA_LOCALITZADOR_ZIP64 = 20;
 const METODE_DEFLATE = 8;
 const BIT_XIFRAT = 0x0001;
+const BIT_DESCRIPTOR = 0x0008;
+const SIGNATURA_DESCRIPTOR = 0x08074b50;
 /* El comentari del registre final té com a molt 0xFFFF bytes. */
 const MAX_COMENTARI = 0xffff;
 /* Sostre per defecte de tot el que es descomprimix en una lectura (contra les bombes). */
@@ -222,7 +224,10 @@ function desinfla(crues, mida, nom) {
  * Llig un ZIP i en torna els fitxers, en l'ordre del directori central.
  * Admet STORE (mètode 0) i DEFLATE (mètode 8). Rebutja ZIP64, el xifrat, els
  * altres mètodes, els paquets de diversos discos i qualsevol CRC o mida que
- * no quadre (TypeError); si el que es descomprimiria passa de `maxEixida`,
+ * no quadre (TypeError). Les capçaleres local i central han de descriure la
+ * mateixa entrada; el bit 3 exigix un descriptor coherent, amb signatura o
+ * sense. El directori central queda fitat per la seua mida declarada.
+ * Si el que es descomprimiria passa de `maxEixida`,
  * RangeError.
  * @param {Uint8Array|ArrayBuffer} zip
  * @param {{ nomes?: (nom: string) => boolean, maxEixida?: number }} [opcions]
@@ -240,16 +245,23 @@ export function llegeixZip(zip, { nomes, maxEixida = LIMIT_EIXIDA } = {}) {
   const total = vista.getUint16(final + 10, true);
   const midaCentral = vista.getUint32(final + 12, true);
   let pos = vista.getUint32(final + 16, true);
+  const iniciCentral = pos;
+  const fiCentral = iniciCentral + midaCentral;
   const ambLocalitzador = final >= MIDA_LOCALITZADOR_ZIP64 && vista.getUint32(final - MIDA_LOCALITZADOR_ZIP64, true) === SIGNATURA_LOCALITZADOR_ZIP64;
   if (total === MAX_16 || midaCentral === MAX_32 || pos === MAX_32 || ambLocalitzador) throw new TypeError(ERROR_ZIP64);
   if (vista.getUint16(final + 4, true) !== 0 || vista.getUint16(final + 6, true) !== 0 || vista.getUint16(final + 8, true) !== total) {
     throw new TypeError('ZIP de diversos discos: no es pot llegir.');
   }
+  if (fiCentral > final) throw new TypeError('Directori central malmés.');
   const descodificador = new TextDecoder('utf-8', { fatal: true });
   const fitxers = [];
   let resta = Math.floor(maxEixida);
+  /* Cap byte comprimit no es llig dues vegades: N entrades centrals que
+     apunten a la mateixa capçalera local (mida 0, que no gasta maxEixida)
+     inflarien N vegades el mateix flux. La feina queda fitada pel fitxer. */
+  let crues = b.length;
   for (let i = 0; i < total; i += 1) {
-    if (pos + MIDA_CENTRAL > b.length || vista.getUint32(pos, true) !== SIGNATURA_CENTRAL) throw new TypeError('Directori central malmés.');
+    if (pos + MIDA_CENTRAL > fiCentral || vista.getUint32(pos, true) !== SIGNATURA_CENTRAL) throw new TypeError('Directori central malmés.');
     const flags = vista.getUint16(pos + 8, true);
     const metode = vista.getUint16(pos + 10, true);
     const crc = vista.getUint32(pos + 16, true);
@@ -259,21 +271,44 @@ export function llegeixZip(zip, { nomes, maxEixida = LIMIT_EIXIDA } = {}) {
     const llargExtra = vista.getUint16(pos + 30, true);
     const llargComentari = vista.getUint16(pos + 32, true);
     const local = vista.getUint32(pos + 42, true);
-    if (pos + MIDA_CENTRAL + llargNom > b.length) throw new TypeError('Directori central malmés.');
-    const nom = nomEntrada(b.subarray(pos + MIDA_CENTRAL, pos + MIDA_CENTRAL + llargNom), flags, descodificador);
+    if (pos + MIDA_CENTRAL + llargNom + llargExtra + llargComentari > fiCentral) throw new TypeError('Directori central malmés.');
+    const nomCentral = b.subarray(pos + MIDA_CENTRAL, pos + MIDA_CENTRAL + llargNom);
+    const nom = nomEntrada(nomCentral, flags, descodificador);
     pos += MIDA_CENTRAL + llargNom + llargExtra + llargComentari;
     if (nomes && !nomes(nom)) continue;
     if (comprimida === MAX_32 || mida === MAX_32 || local === MAX_32) throw new TypeError(ERROR_ZIP64);
     if ((flags & BIT_XIFRAT) !== 0) throw new TypeError(`Fitxer xifrat dins del ZIP (no es pot llegir sense la contrasenya): ${nom}`);
     if (metode !== METODE_STORE && metode !== METODE_DEFLATE) throw new TypeError(`Mètode de compressió ${metode} no admés: ${nom}`);
-    if (local + MIDA_LOCAL > b.length || vista.getUint32(local, true) !== SIGNATURA_LOCAL) throw new TypeError(`Capçalera local malmesa: ${nom}`);
-    const inici = local + MIDA_LOCAL + vista.getUint16(local + 26, true) + vista.getUint16(local + 28, true);
-    if (inici + comprimida > b.length) throw new TypeError(`Fitxer tallat dins del ZIP: ${nom}`);
+    if (local + MIDA_LOCAL > iniciCentral || vista.getUint32(local, true) !== SIGNATURA_LOCAL) throw new TypeError(`Capçalera local malmesa: ${nom}`);
+    const llargNomLocal = vista.getUint16(local + 26, true);
+    const inici = local + MIDA_LOCAL + llargNomLocal + vista.getUint16(local + 28, true);
+    if (inici + comprimida > iniciCentral) throw new TypeError(`Fitxer tallat dins del ZIP: ${nom}`);
+    if (llargNomLocal !== llargNom || vista.getUint16(local + 6, true) !== flags || vista.getUint16(local + 8, true) !== metode
+        || nomCentral.some((byte, i) => byte !== b[local + MIDA_LOCAL + i])) {
+      throw new TypeError(`Capçalera local incoherent amb el directori central: ${nom}`);
+    }
+    const ambDescriptor = (flags & BIT_DESCRIPTOR) !== 0;
+    for (const [offset, esperat] of [[14, crc], [18, comprimida], [22, mida]]) {
+      const valor = vista.getUint32(local + offset, true);
+      if (valor !== esperat && !(ambDescriptor && valor === 0)) throw new TypeError(`Capçalera local amb CRC o mida incoherent: ${nom}`);
+    }
+    if (ambDescriptor) {
+      const descriptor = inici + comprimida;
+      const quadra = (d) => d + 12 <= iniciCentral
+        && vista.getUint32(d, true) === crc && vista.getUint32(d + 4, true) === comprimida && vista.getUint32(d + 8, true) === mida;
+      // El CRC pot coincidir amb la signatura opcional: accepta només una
+      // de les dues formes si tots tres camps coincideixen amb el central.
+      const ambSignatura = descriptor + 4 <= iniciCentral && vista.getUint32(descriptor, true) === SIGNATURA_DESCRIPTOR;
+      if (!quadra(descriptor) && !(ambSignatura && quadra(descriptor + 4))) throw new TypeError(`Descriptor de dades incoherent: ${nom}`);
+    }
+    if (comprimida > crues) throw new TypeError(`Entrades solapades dins del ZIP: ${nom}`);
+    crues -= comprimida;
     if (mida > resta) throw new RangeError(`El ZIP descomprimit passaria de ${Math.floor(maxEixida)} bytes: ${nom}`);
     const dades = metode === METODE_STORE ? b.slice(inici, inici + comprimida) : desinfla(b.subarray(inici, inici + comprimida), mida, nom);
     if (dades.length !== mida || crc32(dades) !== crc) throw new TypeError(`CRC que no quadra: ${nom}`);
     resta -= mida;
     fitxers.push({ nom, dades });
   }
+  if (pos !== fiCentral) throw new TypeError('Directori central malmés.');
   return fitxers;
 }

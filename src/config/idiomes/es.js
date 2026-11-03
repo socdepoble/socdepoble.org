@@ -418,6 +418,13 @@ export default {
   'section.notes.format.mesEines': 'Más herramientas',
   'section.notes.format.citacio': 'Cita',
   'section.notes.format.divisor': 'Separador',
+  /* O4-CLAUDE-2 · La subtargeta i la targeta incrustada a la segona fila «⋯» de la barra, i els textos de mostra de la subtargeta. */
+  'section.notes.format.subtargeta': 'Subtarjeta',
+  'section.notes.format.targeta': 'Tarjeta incrustada',
+  'section.notes.format.subtargetaTitol': 'Título de la subtarjeta',
+  'section.notes.format.subtargetaMeta': 'Una línea de contexto: fecha, lugar o autoría',
+  'section.notes.format.subtargetaCos': 'Escribe aquí el contenido de la subtarjeta: párrafos, listas y enlaces.',
+  'section.notes.format.subtargetaAjuda': 'Una tarjeta dentro del texto: título, contexto y cuerpo',
   /* Gauntlet 261101 · X-C-notes */
   'section.notes.cos.etiqueta': 'Cuerpo de la nota',
   'section.notes.cos.guiaResum': 'Escribe aquí tu nota. La plantilla de formato que se ve es solo una guía: no se guarda ni se publica.',
@@ -555,8 +562,6 @@ export default {
   'editor.ambit.boto': 'Ámbito',
   'editor.ambit.titol': '¿Dónde se publica?',
   'editor.ambit.ajuda': 'Elige si es una publicación del Muro o una ficha para el Mercado, Compartir coche, Trabajo o Vivienda.',
-  'editor.ambit.desar': 'Guardar el ámbito',
-  'editor.ambit.cancelar': 'Cancelar',
   'editor.ambit.obligatori': 'Falta un campo obligatorio: {camp}',
   'editor.ambit.previsualitzacio': 'Así se verá en el Muro',
   'editor.ambit.completar': 'Completar la ficha',
@@ -2567,6 +2572,9 @@ export default {
   'section.xat.xifratge.senseClauValida': "Sin ninguna clave de seguridad válida",
   'section.xat.xifratge.clauRetirada': "Este dispositivo no encuentra ninguna clave de seguridad válida de {nom} que se pueda confirmar. Pasa cuando alguien pierde el dispositivo y la frase, o si alguien se ha metido por medio. Hasta que haya una válida, no se puede escribir. Habla con {nom} para saber qué ha pasado.",
   'section.xat.xifratge.clauPropiaRetirada': "Este dispositivo no encuentra ninguna clave activa de tu cuenta: ni la suya ni ninguna otra. Puede que alguien se haya metido por medio. Por seguridad, no se puede escribir. Si no has sido tú, avísanos.",
+  /* O4-CLAUDE-3 · D-18 (a): avís i confirmació del retall a Notes d’una conversa xifrada */
+  'section.xat.xifratge.retall.avis': "La nota se guardará en el servidor sin cifrado de extremo a extremo.",
+  'section.xat.xifratge.retall.guarda': "Guardar",
   'section.perfil.privacitat.confianca.titol': "Personas de confianza",
   'section.perfil.privacitat.confianca.explica': "Si un día pierdes todos los dispositivos y la frase, tres de tus personas de confianza, juntas, podrán ayudarte a recuperar los chats privados. Puedes tener tantas como quieras, como mínimo tres, y con cada una debes tener el número de seguridad verificado.",
   'section.perfil.privacitat.confianca.pendent': "La recuperación con personas de confianza todavía no está activa en este nodo: ahora mismo, nadie puede ayudarte a recuperar los chats privados.",

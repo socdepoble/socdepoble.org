@@ -26,15 +26,18 @@ contracte.llig:
   - _wiki_de_poble/00_index.md
   - _wiki_de_poble/04_escriptori/
   - src/data/backendPort.js
+  - src/config/publicCredentials.js
+  - tooling/gates/tractor-rls.mjs
   - supabase/migrations/
 contracte.escriu:
+  - tests/
   - _wiki_de_poble/04_escriptori/
   - _wiki_de_poble/10_actes/
 ---
 
 # Protocol Canònic de Ciberseguretat i Sentinella Permanent (Claude Security & Colmena)
 
-Aquest procediment estableix el filtre permanent de seguretat ofensiva i defensiva per a tot el repositori de **Sóc de Poble**. Garanteix que cap línia de codi, traductor de la Frontissa, migració de Supabase o paquet per a WordPress i les botigues d'aplicacions (App Store i Google Play) continga vulnerabilitats que puguen comprometre la privacitat dels veïns, la sobirania de les dades o la continuïtat del servei.
+Aquest procediment estableix el filtre permanent de seguretat ofensiva i defensiva per a tot el repositori de **Sóc de Poble**. Busca fallades reproduïbles al codi, a la Frontissa, a les migracions i als paquets. Cada conclusió declara superfície, prova i límits: cap porta estàtica ni auditoria pot garantir absència de vulnerabilitats en tot el sistema.
 
 Inspirat en el model d'enginyeria de **Claude Security** (Anthropic) i endurit amb les lliçons forenses del *Gauntlet* (`CLAUDE-SECURITY-20261018-220519`), aquest protocol és d'obligat compliment per a **totes** les entitats de la Colmena: **Claude Code**, **IAIA MarIA**, **GPT Codex** i **Gemini 4 Argon**.
 
@@ -42,7 +45,7 @@ Inspirat en el model d'enginyeria de **Claude Security** (Anthropic) i endurit a
 
 1. **Zero Confiança en el Client (Frontend no atorga poder):** Qualsevol verificació de rol (Veí, Editor de Poble, Administració d'Entitat, Superadministrador) ha d'estar validada al servidor (Supabase RLS, JWT, `auth.uid()` o sessió de l'amfitrió). La interfície només reflecteix permisos; mai els concedeix.
 2. **Privacitat per Defecte (Trellat del Poble):** Les dades personals dels veïns (telèfons, correus electrònics, DNI/NIE/NIF, ubicacions privades) són sagrades. Tot perfil nou o dada de contacte naix privada per defecte llevat d'expressa decisió de l'usuari, i cap funció SQL ni política de Storage pot permetre'n l'enumeració anònima.
-3. **Pegats Verificats per Tercers (Regla del Doble Parell i Test Previ):** Cap correcció de seguretat s'aplica a cegues. Primer s'escriu un test de regressió (`tests/*.seguretat.test.js`) que falle davant l'explotació i passe amb l'esmena; després un segon agent o subagent **Verificador Adversarial** independent audita el `.patch` buscant camins de bypass o regressions; i finalment s'aplica amb `git apply`.
+3. **Pegats Verificats per Tercers (Regla del Doble Parell i Test Previ):** Cap correcció de seguretat s'aplica a cegues. Primer s'escriu un test de regressió (`tests/*.seguretat.test.js`) que falle davant l'explotació i passe amb l'esmena; després un segon agent o subagent **Verificador Adversarial** independent audita el `.patch` buscant camins de bypass o regressions; i finalment s'aplica pel carril autoritzat, amb preimatges verificades (kit CAS o pegat comprovat).
 
 ## 2. Les 4 Capes de Defensa en Profunditat
 
@@ -55,7 +58,7 @@ Inspirat en el model d'enginyeria de **Claude Security** (Anthropic) i endurit a
 
 ## 3. Lleis Tècniques de Blindatge Obligatori (Codi i Supabase)
 
-Tota escriptura o revisió de codi en `src/`, `tooling/` o `supabase/migrations/` ha d'aplicar de manera mecànica aquestes quatre lleis:
+En l'àmbit afectat per l'encàrrec, contrasta les lleis següents amb el codi i les proves. `tooling/gates/tractor-rls.mjs` i les suites de seguretat donen comprovacions parcials; la lectura de polítiques i del flux de dades continua sent necessària:
 
 ### A. Llei de Coacció Primitiva de Payloads `JSONB` (Prevenció de DoS en React)
 
@@ -79,37 +82,25 @@ Tota escriptura o revisió de codi en `src/`, `tooling/` o `supabase/migrations/
 - **Prohibició de `SELECT` Obert sobre `storage.objects` en Buckets Públics:** En Supabase Storage, els fitxers d'un bucket amb `public = true` ja es serveixen per URL directa sense necessitat de cap política `SELECT` a `storage.objects`. Crear una política `FOR SELECT TO anon, authenticated USING (bucket_id = 'mitjans')` habilita l'endpoint `POST /storage/v1/object/list/mitjans` i permet enumerar totes les carpetes i fitxers de tots els pobles i usuaris. El `SELECT` sobre `storage.objects` s'ha de restringir a l'usuari autenticat sobre el seu propi prefix (`persones/<auth.uid()>/...`).
 - **Auditoria de Funcions `SECURITY DEFINER`:** Cap funció `SECURITY DEFINER` pot exposar `auth.users.email` a altres co-administradors d'una entitat si l'usuari no és el mateix `owner_user_id`.
 
-### E. Llei de Concessió Explícita de Privilegis (`GRANT` Obligatori en Noves Taules — Mandat Supabase 30-Oct-2026)
+### E. Concessions explícites de mínim privilegi
 
-- **Avís Oficial de Supabase:** A partir del 30 d'octubre de 2026, Supabase deixa d'atorgar accés automàtic de Data API a les noves taules de l'esquema `public`. Tota taula creada a partir d'aquesta data exigeix un `GRANT` explícit en la mateixa migració abans que `supabase-js`, PostgREST o GraphQL puguen accedir-hi (en cas contrari, PostgREST retorna `permission denied`).
-- **Plantilla de Concessió Canònica:** Tota creació de taula a `supabase/migrations/` ha d'incloure obligatòriament els `GRANT` pertinents:
-  ```sql
-  -- 1. Lectura anònima pública (només si la taula admet consulta per visitants no registrats)
-  grant select on public.<nom_taula> to anon;
+Cada migració declara els privilegis necessaris i les revocacions pertinents segons el flux real. No depengues dels privilegis per defecte d'un entorn ni dones accés als tres rols per plantilla. No atribuïsques esta política a una data o avís del proveïdor sense una font verificada.
 
-  -- 2. Lectura i escriptura per a usuaris autenticats (sempre governat per RLS)
-  grant select, insert, update, delete on public.<nom_taula> to authenticated;
+- `anon`: només les operacions i columnes públiques justificades; cap concessió anònima per a una taula privada.
+- `authenticated`: només les operacions que usa el client, amb polítiques RLS i atribució de servidor.
+- `service_role`: només per a processos de servidor justificats; la clau mai arriba al frontend i no substituïx les proves amb rols menys privilegiats.
+- Activa RLS i prova permisos i denegacions per a cada rol, incloses columnes privades, Storage i funcions `SECURITY DEFINER`. Un `GRANT` no acredita que la política siga correcta.
 
-  -- 3. Accés administratiu i processos en segon pla (servei intern)
-  grant select, insert, update, delete on public.<nom_taula> to service_role;
-  ```
-- **RLS és Innegociable:** Els `GRANT` només obrin el conducte de xarxa de l'API; `ALTER TABLE public.<nom_taula> ENABLE ROW LEVEL SECURITY;` i les polítiques `CREATE POLICY` continuen sent el sentinella obligatori que decideix fila per fila qui pot veure o modificar cada registre.
+## 4. Auditoria en còpia i ferramentes disponibles
 
-## 4. Execució de Claude Security i Protocol d'Arbre Brut (*Clean Shadow Copy*)
+Usa el plugin de seguretat si està disponible i l'encàrrec l'inclou; no l'instal·les ni declares haver-lo executat perquè el seu nom aparega ací. Si falta, continua amb els tractors i les proves locals aplicables i declara eixa cobertura.
 
-Per a l'agent de consola **Claude Code**, el procediment oficial s'executa amb el plugin `/claude-security`:
+Quan l'arbre viu tinga canvis, preserva'ls. Prepara una còpia aïllada de la instantània acordada, registra'n la base i els hashes i treballa-hi; no faces commit o stash del treball d'altres per desbloquejar una ferramenta. Enllaça dependències ja existents només si no les has de modificar.
 
-```text
-/plugin install claude-security@claude-plugins-official
-```
-
-- **Escaneig complet o de branca:** `/claude-security` -> **Scan codebase** o `/claude-security scan my branch`.
-- **Protocol de Còpia d'Ombra Neta (*Clean Shadow Copy*) quan `revision.dirty: true`:**
-  L'opció nativa `Suggest patches` de `/claude-security` es nega a córrer si el repositori té canvis sense cometre (`revision.dirty: true`), demanant `git commit` o `git stash` — accions prohibides pel BIOS sense lease. Quan l'arbre de treball tinga canvis en curs, l'agent ha d'aplicar obligatòriament aquest flux sense tocar l'índex Git del repositori:
-  1. **Materialització Aïllada:** Copiar l'arbre de treball a `/tmp/sdp-sec-audit-<timestamp>` (enllaçant `node_modules`) i inicialitzar-hi un repositori Git efímer i net.
-  2. **Test de Regressió Primer:** Escriure per a cada troballa el seu test a `tests/<modul>.seguretat.test.js` que demostre l'explotació abans del pegat i passe en verd després.
-  3. **Verificador Adversarial Independent:** Llançar un subagent revisor independent per a cada pegat que intente trencar l'esmena amb entrades límit (Unicode invisible, objectes amb prototip nul, longituds extremes).
-  4. **Generació i Comprovació del `.patch`:** Exportar els diffs a `pegats/F<n>.patch` i validar amb `git apply --check` que s'apliquen netament sobre l'arbre real de `socdepoble.org`.
+1. Reproduïx la fallada abans del corrector i conserva l'evidència roja.
+2. Aplica el corrector en còpia i executa el reproductor i la regressió pertinent.
+3. Demana contrast independent del paquet si el carril disposa d'àrbitre; si no hi ha revisió independent, declara-ho. El lliurable queda pendent d'eixa revisió abans de l'aplicació: no compta com a doble parell complet. No simules un segon dictamen.
+4. Entrega el kit CAS amb `preimage_sha256` i `sha256`, o el pegat amb la comprovació d'aplicació corresponent, sense sobreescriure una preimatge divergent.
 
 ## 5. Format dels Lliurables de Seguretat (Estàndard Colmena)
 
@@ -121,17 +112,17 @@ Tota sessió d'auditoria de seguretat ha de dipositar els resultats amb la segü
    - **Escenari d'explotació reproduïble:** Comanda o payload exacte que demostra la vulnerabilitat.
    - **Pegat i prova de regressió:** Ruta del `.patch` i del test que el certifica.
 2. **`pegats/F<n>.patch` i `CLAUDE-SECURITY-<data>/pegats/PEGATS.md`:** Fitxers diff estàndard de Git verificats amb `git apply --check` i índex d'ordre d'aplicació.
-3. **Evacuació posterior:** Un cop aplicats i comessos els pegats, la carpeta d'auditoria de laboratori s'evacua a la carpeta satèl·lit canònica `../_investigacio_ia_de_poble/`.
+3. **Dipòsit del laboratori:** entrega els artefactes al satèl·lit canònic `../_investigacio_ia_de_poble/` quan siga la destinació de l'encàrrec. No mou documents vius ni dona per fet cap commit o aplicació a producció.
 
 ## 6. Llista de Comprovació Pre-Release (Sentinella Obligatori)
 
 Abans de donar el vistiplau a qualsevol commit de funcionalitat, migració SQL, paquet mòbil (Capacitor 8) o release de WordPress:
 
-- [ ] **Cap clau mestra (`service_role`) al frontend:** Només es permet `SUPABASE_ANON_KEY`.
+- [ ] **Credencials públiques validades:** `src/config/publicCredentials.js` (`validatePublicCredentials`) governa els formats públics admesos. Cap clau `service_role`, secreta o amb rol privilegiat al frontend.
 - [ ] **Zero Spread JSONB sense Coacció Primitiva:** Tots els camps de `payload` o DTOs externs es coaccionen a tipus primitius (`string`, `number`, `boolean`) abans d'entrar a React.
 - [ ] **Zero Regex amb Backtracking sobre Entrades d'Usuari:** Tota neteja o extracció sobre HTML/text d'usuari usa escàners lineals $O(n)$.
 - [ ] **Polítiques RLS per Columna i Storage sense Llistat Anònim:** `Row Level Security` actiu a totes les taules, columnes privades revocades per a `anon` i cap política `SELECT` oberta a `anon` sobre `storage.objects`.
-- [ ] **`GRANT` Explícit en Tota Taula Nova de Supabase:** Cap taula nova es crea a `supabase/migrations/` sense concessions explícites a `anon`, `authenticated` i `service_role` (Mandat Supabase 30-Oct-2026).
+- [ ] **Concessions mínimes verificades:** cada taula nova explicita els privilegis necessaris; no hi ha `GRANT` genèric als tres rols. Les proves inclouen les denegacions que han de continuar vigents.
 - [ ] **Purga de Claus d'Autoritat i Rutes `sdp-media://` Validated:** Cap submission veïnal pot injectar `origen`/`autor`/`seller` i cap ruta d'Storage admet `..` ni caràcters de control.
 - [ ] **Frontissa Sollutia en Lectura Pura (GET):** Tota petició a l'amfitrió és estrictament `GET` amb traductor i fixture, sense executar codi arbitrari.
 

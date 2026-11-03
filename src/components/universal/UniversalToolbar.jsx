@@ -5,7 +5,8 @@ import { PUNTS_DE_TALL } from '../layout/graella.js';
 import { useMenuEmergent } from '../PedraSeca/hooks/useMenuEmergent.js';
 import { useCapaEnrere } from '../PedraSeca/hooks/useCapaEnrere.js';
 import {
-  IconaCitacio, IconaCursiva, IconaDesplega, IconaDivisor, IconaLlista, IconaLlistaNumerada, IconaMesEines, IconaNegreta, IconaRatllat
+  IconaCitacio, IconaCursiva, IconaDesplega, IconaDivisor, IconaLlista, IconaLlistaNumerada, IconaMesEines, IconaNegreta, IconaRatllat,
+  IconaSubtargeta, IconaTargeta
 } from './richText/iconesBarra.jsx';
 
 /* Ordre del Mestre (261026_2126, prompt Tasca 3 i pla 261026_1615 §6) · Una
@@ -36,7 +37,10 @@ const NIVELLS_ENCAPCALAMENT = Object.freeze([
    principals van a la primera fila mentre hi caben; les que no hi caben, i
    les secundàries, a la segona fila del botó «⋯» (just a sota). */
 const EINES_PRINCIPALS = Object.freeze(['encapcalament', 'negreta', 'cursiva', 'llista', 'llistaNumerada']);
-const EINES_SECUNDARIES = Object.freeze(['ratllat', 'citacio', 'divisor']);
+/* O4-CLAUDE-2 (ordre del Mestre, 261102 21:38) · Darrere del divisor, les dues
+   eines d'inserció de targetes: la Subtargeta i la Targeta incrustada. Només
+   es pinten si el motor n'oferix l'acció (vegeu `eina`). */
+const EINES_SECUNDARIES = Object.freeze(['ratllat', 'citacio', 'divisor', 'subtargeta', 'targeta']);
 
 /* T7 (P2) · El tall de la barra d'eines ve de la font única de la graella.
    IDEA-59 / P1-72 · També torna l'amplària mesurada: la barra ampla la fa
@@ -401,7 +405,8 @@ export default function UniversalToolbar({
     isList, isOrderedList, isBold, isItalic, isStrike, isCitacio
   } = formatState;
   const {
-    toggleList, toggleOrderedList, toggleBold, toggleItalic, toggleStrike, toggleCitacio, insertDivisor
+    toggleList, toggleOrderedList, toggleBold, toggleItalic, toggleStrike, toggleCitacio, insertDivisor,
+    insertSubtargeta, insertTargeta
   } = formatActions;
 
   /* Cada eina, per id (data-eina: la barra en mesura l'amplària). */
@@ -432,6 +437,20 @@ export default function UniversalToolbar({
       case 'divisor':
         return <BlocIcon key={id} data-eina={id} icon={IconaDivisor} active={undefined}
           label={t('section.notes.format.divisor', 'Divisor')} onClick={insertDivisor} disabled={!insertDivisor} />;
+      /* O4-CLAUDE-2 · Les eines d'inserció de targetes, com el divisor (cap
+         aria-pressed), però només quan el motor n'oferix l'acció: un editor
+         sense l'extensió o sense el selector de targetes no pinta cap botó
+         apagat que no podrà fer res mai. */
+      case 'subtargeta':
+        return typeof insertSubtargeta !== 'function' ? null : (
+          <BlocIcon key={id} data-eina={id} icon={IconaSubtargeta} active={undefined}
+            label={t('section.notes.format.subtargeta', 'Subtargeta')} onClick={insertSubtargeta} />
+        );
+      case 'targeta':
+        return typeof insertTargeta !== 'function' ? null : (
+          <BlocIcon key={id} data-eina={id} icon={IconaTargeta} active={undefined}
+            label={t('section.notes.format.targeta', 'Targeta incrustada')} onClick={insertTargeta} />
+        );
       default:
         return null;
     }

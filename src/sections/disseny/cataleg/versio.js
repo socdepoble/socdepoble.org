@@ -15,7 +15,15 @@
  * src/sections/disseny/cataleg/detalls`, sense comptar les proves ni este
  * fitxer). Una versió que no és la darrera és una data falsa a la pastilla.
  *
- * Darrera posada al dia: EspecimenEnquadrament.jsx, EspecimenXatSeguretat.jsx i manifest.js, 2026-11-02T04:12:00+01:00,
+ * Darrera posada al dia: EspecimenBlocAmbit.jsx, EspecimenClassificacio.jsx, manifest.js, registre.js i
+ * detailRegistry.jsx, 2026-11-02T22:50:06+01:00, Onada 4 nocturna (O4-CLAUDE-1, ordre del Mestre de la captura
+ * 261102_2121; correcció A1-06 de l'àrbitre): l'espècimen nou EspecimenBlocAmbit, el bloc «On es publica?» REAL
+ * en línia dins de l'«Edició avançada» (abans una finestra modal sense espècimen), amb una nota del Mur i una
+ * fitxa de Compartir cotxe incompleta després de PUBLICAR; registrat a registre.js (BlocAmbit, viu, fora), amb
+ * l'ítem formularis/ambit, l'emoji 📍 i el node bloc-ambit de l'arbre a manifest.js i el seu carregador a
+ * detailRegistry.jsx. A EspecimenClassificacio.jsx i a manifest.js, la classificació nomena el grup Àmbit, que
+ * ja no obri cap diàleg.
+ * Versió anterior: EspecimenEnquadrament.jsx, EspecimenXatSeguretat.jsx i manifest.js, 2026-11-02T04:12:00+01:00,
  * Gauntlet 261102 de la marató 261101_2143: M24-B7h (IDEA-42) afig a EspecimenEnquadrament.jsx la targeta 16:9
  * amb punt focal i el cartell sencer de l'Aplec; M02-B2b-UI afig a EspecimenXatSeguretat.jsx l'espècimen
  * AvisClauCanviada (canvi fort pendent, verificat i canviat, suau, alarma de la clau pròpia i bifurcació) i la
@@ -308,4 +316,4 @@
  * Quan el manifest porte `creat` i `modificat` per espècimen, manaran eixos
  * camps i esta constant només farà de versió del conjunt.
  */
-export const VERSIO_CATALEG = '2026-11-02T04:12:00+01:00';
+export const VERSIO_CATALEG = '2026-11-02T22:50:06+01:00';

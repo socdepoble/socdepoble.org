@@ -30,11 +30,11 @@ La característica fundacional de Sóc de Poble és que ha de ser **DIDÀCTICA a
 - **La Regla Didàctica d'Or:** *«Un paràgraf més mai està de més quan és didàctic.»* Si calen dos o tres paràgrafs per fer-ho entendre clarament a la gent del poble, s'escriuen amb naturalitat.
 
 ## 3. Jerarquia Editorial Canònica (H1 → H2 → Entradeta → H3 → Paràgraf)
-Tot document, pantalla o eina de Sóc de Poble segueix un patró editorial estricte sense excepcions ni estils inventats:
+El contingut editorial de pàgines i publicacions seguix este patró. Un control, una etiqueta, un diàleg curt o un estat buit reutilitzen el seu component; no cal inventar un H1/H2/entradeta en cada peça. Les plantilles documentals i el Markdown tenen el seu contracte específic:
 - **H1:** Títol principal noble, **sense majúscules cridaneres**. Les majúscules només es reserven per a sigles i acrònims estrictes.
 - **H2:** Títol de secció o de bloc funcional. **MAI un paràgraf dens ni un totxo de cinc línies**. L'H2 es queda exclusivament amb la primera frase contundent i breu.
 - **Entradeta (Lead explicativa):** Text destacat just davall de l'H2 que sintetitza el propòsit essencial del bloc i absorbeix la càrrega contextual densa. Mai s'encasta un H3 directament davall d'un H2 sense entradeta.
-- **H3 / H4 (Estructura de Secció vs Llistes Planes):** Quan es tracta d'errors, lliçons, passos o elements de contingut rellevants (com *«Els 18 errors...»*), **mai es deixen com a llista numerada plana de paràgrafs tous**. S'han de maquetar com a **encapçalaments H3** (i H4 si cal), garantint que s'integren al calaix de Taula de Continguts (`TOC`) i que aprofiten els estils visuals H1-H6 del sistema.
+- **H3 / H4:** reserva els encapçalaments per a seccions que tenen contingut propi i han d'entrar a la Taula de Continguts. Els passos seqüencials continuen sent una llista numerada accessible; no els convertisques en encapçalaments només perquè porten un número.
 - **Paràgraf normal:** Explicació didàctica desenvolupada.
 
 ## 4. Escanejabilitat Visual a Salts de Vista (6 a 8 Paraules en Negreta per Paràgraf)
@@ -44,6 +44,10 @@ Sóc de Poble està pensat per a lectors que busquen anar al gra mitjançant **l
 
 ## 5. Deure d'Avís i Auto-Correcció
 Si detectes text poc llegible, títols cridaners en majúscules o llistes llargues que haurien de ser H3, cita la superfície i el defecte. Corregix-lo quan entre en l'encàrrec autoritzat; fora d'abast, registra'l. Els canvis visuals respecten el pla aprovat i la Llei del Píxel de [[sdp-workflow/SKILL|sdp-workflow]].
+
+## Què acompanya cada comprovació
+
+`design_guard.mjs`, els components compartits i les seues suites comproven estructura i regressions concretes; no certifiquen llegibilitat didàctica o escaneig humà. La jerarquia del DOM, el focus i el text visible es contrasten amb la prova de la superfície; la lectura i el retall real necessiten inspecció visual. Declara estos resultats separadament.
 
 ## Vincles
 - [[00_INDEX_SKILLS]]

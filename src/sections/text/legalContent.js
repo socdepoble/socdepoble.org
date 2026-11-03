@@ -10,11 +10,11 @@ export const legalContent = {
     { "text": "RGPD i LSSI-CE", "className": "sdp-badge-category" }
   ],
   "html": `
-    <p><em>Versió 2.3 · En vigor des de l'1 de novembre de 2026. Substitueix qualsevol versió anterior d'aquest text.</em></p>
+    <p><em><strong>Versió 2.4</strong> · <strong>En vigor</strong> des del <strong>3 de novembre de 2026</strong>. <strong>Substitueix</strong> <strong>qualsevol versió anterior</strong> <strong>d'aquest text</strong>.</em></p>
 
     <h3>0. Com llegir aquest document</h3>
     <p>Ací dins hi ha quatre coses, en aquest ordre. Primer, <strong>l'avís legal</strong>: qui hi ha darrere d'aquesta web i de què respon. Segon, la <strong>política de privacitat</strong>: què fem amb les teues dades i quins drets tens. Tercer, l'<strong>emmagatzematge al teu dispositiu</strong>: què deixem al teu navegador i per què. I quart, els <strong>reconeixements</strong>: les fonts, comunitats i divulgadors dels quals ens nodrim i aprenem.</p>
-    <p>Hem intentat escriure-ho com si t'ho contàrem a la plaça. Quan hem hagut de posar un article de llei és perquè la llei ens obliga a citar-lo, no per fer-ho difícil.</p>
+    <p><strong>Hem intentat escriure-ho</strong> <strong>com si t'ho contàrem</strong> <strong>a la plaça</strong>. Quan hem hagut de posar <strong>un article de llei</strong> és perquè <strong>la llei ens obliga a citar-lo</strong>, <strong>no per fer-ho difícil</strong>.</p>
 
     <hr />
 
@@ -32,7 +32,7 @@ export const legalContent = {
       <strong>Activitat:</strong> Comunicació, tecnologia rural i vertebració etnogràfica.<br />
       <strong>Correu electrònic de contacte:</strong> <a href="mailto:socdepoble@socdepoble.org">socdepoble@socdepoble.org</a>
     </p>
-    <p>No s'ha designat Delegat de Protecció de Dades perquè aquest tractament no encaixa en cap dels tres supòsits de l'article 37.1 del RGPD. Per a qualsevol qüestió de dades, el contacte és el correu de dalt.</p>
+    <p><strong>No s'ha designat</strong> <strong>Delegat de Protecció de Dades</strong> perquè <strong>aquest tractament</strong> no encaixa en <strong>cap dels tres supòsits</strong> de <strong>l'article 37.1 del RGPD</strong>. Per a <strong>qualsevol qüestió de dades</strong>, el contacte és <strong>el correu de dalt</strong>.</p>
     <p><strong>Qui és «nosaltres».</strong> En aquest text, quan diem «nosaltres» o «el responsable», o parlem en primera persona del plural, ens referim a la persona titular que acabem d'identificar. «Sóc de Poble» és el nom del projecte i de l'aplicació: quan diem que Sóc de Poble fa alguna cosa o es compromet a fer-la, qui ho fa i qui en respon és aquesta mateixa persona.</p>
     <p><strong>Punt únic de contacte.</strong> Els articles 11 i 12 del Reglament (UE) 2022/2065, de Serveis Digitals, ens obliguen a tindre un punt únic de contacte. El nostre és el correu <a href="mailto:socdepoble@socdepoble.org">socdepoble@socdepoble.org</a>. Hi poden escriure les autoritats dels Estats membres, la Comissió Europea i la Junta Europea de Serveis Digitals, i també tu. Ens pots escriure en valencià, en castellà o en anglés. Aquest correu l'atén una persona: no depén només d'eines automàtiques.</p>
 
@@ -46,10 +46,10 @@ export const legalContent = {
     <p><strong>Cap on volem anar (i açò no és una promesa legal).</strong> L'horitzó del projecte és la sobirania tecnològica rural, amb arquitectures on cada poble controle la seua pròpia infraestructura. Hui no és així i no volem que cap frase bonica t'ho faça creure. Quan canvie, canviarem aquest text abans, no després.</p>
 
     <h4>3. Condicions d'ús</h4>
-    <p>Entrar i utilitzar Sóc de Poble et dona la condició d'Usuari i implica que acceptes aquest text sencer. Si no l'acceptes, no utilitzes l'aplicació.</p>
-    <p>La finalitat de la plataforma és servir d'espai de comunicació, intercanvi d'informació, preservació etnogràfica i cohesió per a les comunitats rurals. Et compromets a fer-la servir per a això i a no publicar continguts il·lícits, ofensius, ni dades personals d'altres persones sense el seu permís.</p>
+    <p><strong>Entrar i utilitzar Sóc de Poble</strong> et dona la <strong>condició d'Usuari</strong> i <strong>implica</strong> que <strong>acceptes aquest text sencer</strong>. <strong>Si no l'acceptes</strong>, <strong>no utilitzes l'aplicació</strong>.</p>
+    <p>La <strong>finalitat de la plataforma</strong> és servir d'espai de <strong>comunicació</strong>, <strong>intercanvi d'informació</strong>, <strong>preservació etnogràfica</strong> i <strong>cohesió</strong> per a les <strong>comunitats rurals</strong>. Et compromets a fer-la servir per a això i a <strong>no publicar continguts il·lícits, ofensius</strong>, ni <strong>dades personals d'altres persones sense el seu permís</strong>.</p>
     <p><strong>Edat mínima: 16 anys.</strong> Per a obrir un compte i fer servir Sóc de Poble has de tindre 16 anys o més. És la mateixa edat a la web i a l'aplicació per al mòbil, i no hi ha cap excepció amb el permís de la família. Si detectem un compte d'una persona menor de 16 anys, el donarem de baixa.</p>
-    <p>Si incompleixes aquestes condicions, retirarem sempre el contingut que les incompleix. Amb el teu compte, la mesura dependrà de la gravetat i de si es repeteix: un avís, una suspensió temporal o la baixa definitiva; si publiques contingut il·legal greu, et donarem de baixa a la primera. T'ho direm com a molt tard quan apliquem la mesura, com expliquem tot seguit a «Normes de convivència i moderació».</p>
+    <p><strong>Si incompleixes aquestes condicions</strong>, <strong>retirarem sempre el contingut</strong> que les incompleix. Amb el teu compte, la mesura dependrà de la <strong>gravetat</strong> i de <strong>si es repeteix</strong>: <strong>un avís, una suspensió temporal o la baixa definitiva</strong>; si publiques <strong>contingut il·legal greu</strong>, et donarem de baixa <strong>a la primera</strong>. T'ho direm <strong>com a molt tard quan apliquem la mesura</strong>, com expliquem tot seguit a «Normes de convivència i moderació».</p>
     <h5>Normes de convivència i moderació</h5>
     <p>Abans de publicar per primera vegada, et demanem que acceptes les <strong>normes de convivència del poble</strong>:</p>
     <ul>
@@ -58,7 +58,7 @@ export const legalContent = {
       <li>Res d'enganys: ni spam, ni estafes, ni suplantar ningú, ni escampar desinformació.</li>
       <li>Publica només el que és teu o tens permís per a compartir, i respecta la intimitat dels altres.</li>
     </ul>
-    <p>Així les fem complir, d'acord amb els articles 14, 16, 17 i 18 del Reglament (UE) 2022/2065, de Serveis Digitals:</p>
+    <p><strong>Així les fem complir</strong>, d'acord amb els <strong>articles 14</strong>, <strong>16</strong>, <strong>17</strong> i <strong>18</strong> del <strong>Reglament (UE) 2022/2065, de Serveis Digitals</strong>:</p>
     <ul>
       <li><strong>Denunciar dins de l'aplicació, també sense compte:</strong> toca el botó <strong>⋮</strong> d'una publicació del Mur, del Mercat o de l'Agenda, d'un missatge del xat o de la fitxa d'una persona o d'una entitat, i tria l'opció de denunciar. Després tria el motiu (contingut ofensiu, spam o frau, desinformació o un altre motiu) i, si vols, afegeix-hi un detall. No direm a qui l'ha publicat, ni a la persona denunciada, que la denúncia és teua, llevat que ens hi obligue la llei o un jutjat.</li>
       <li><strong>Denunciar per correu, també sense compte:</strong> escriu a <a href="mailto:socdepoble@socdepoble.org?subject=Den%C3%BAncia%20de%20contingut">socdepoble@socdepoble.org</a>. Posa-hi l'enllaç exacte del contingut, per què creus que és il·legal o que incompleix aquestes normes, el teu nom i el teu correu, i una frase que diga que creus de bona fe que el que ens expliques és exacte i complet. Si denuncies abús o explotació sexual de menors, no cal que t'identifiques. Si ens deixes el teu correu, et confirmarem que hem rebut la denúncia i, quan decidim, et direm què hem fet i com pots reclamar.</li>
@@ -71,24 +71,24 @@ export const legalContent = {
     <h4>4. Propietat intel·lectual i industrial</h4>
     <div data-sdp-targetes="" class="sdp-targetes" data-forma="sola" data-alineacio="dreta"><div data-sdp-targeta="pagina:drets-autor" class="sdp-targeta" data-ruta="/page/drets-autor" data-titol="Drets d'autor" data-subtitol="Totes les llicències, explicades amb paraules de poble" data-entradilla="Per què el que publiques naix amb CC BY-NC-SA 4.0, què vol dir cada llicència i quan convé triar-ne una altra." data-autor="Sóc de Poble" data-autor-ruta="/projecte"><a href="/page/drets-autor" rel="noopener noreferrer nofollow">Drets d'autor</a></div></div>
     <p>La infraestructura tecnològica de Sóc de Poble abraça la cultura del codi obert. En canvi, el disseny original, el concepte estètic <strong>"Pedra Seca"</strong>, els logotips, les il·lustracions i els textos generats sota la marca Sóc de Poble estan protegits per drets de propietat intel·lectual i industrial.</p>
-    <p>Queda prohibida la reproducció total o parcial del sistema de disseny visual i dels elements d'interfície amb finalitats comercials alienes al projecte sense consentiment exprés de Fco. Javier Llinares García.</p>
-    <p>El contingut que publiques tu continua sent teu. En publicar-lo dins de l'aplicació, ens dones permís per a mostrar-lo als altres membres del teu poble segons la visibilitat que hages triat, i només per a això.</p>
+    <p><strong>Queda prohibida</strong> la <strong>reproducció total o parcial</strong> del <strong>sistema de disseny visual</strong> i dels <strong>elements d'interfície</strong> amb <strong>finalitats comercials alienes al projecte</strong> <strong>sense consentiment exprés</strong> de <strong>Fco. Javier Llinares García</strong>.</p>
+    <p><strong>El contingut que publiques tu</strong> <strong>continua sent teu</strong>. <strong>En publicar-lo dins de l'aplicació</strong>, ens dones <strong>permís per a mostrar-lo</strong> <strong>als altres membres del teu poble</strong> <strong>segons la visibilitat que hages triat</strong>, i <strong>només per a això</strong>.</p>
 
     <h4>5. Exempció de responsabilitat: el Mercat entre veïns</h4>
     <p>El Mercat de Sóc de Poble és un <strong>tauler d'anuncis</strong>. L'aplicació <strong>no actua com a intermediària comercial, no rep comissions, no tramita pagaments i no participa en cap transacció</strong> entre usuaris.</p>
-    <p>Tota la responsabilitat sobre acords de compravenda, permutes o prestacions de serveis recau exclusivament en les persones que pacten el tracte. Sóc de Poble i el seu responsable queden eximits de qualsevol litigi derivat de l'incompliment de la paraula entre particulars.</p>
+    <p><strong>Tota la responsabilitat</strong> sobre <strong>acords de compravenda</strong>, <strong>permutes</strong> o <strong>prestacions de serveis</strong> recau exclusivament en les <strong>persones que pacten el tracte</strong>. <strong>Sóc de Poble i el seu responsable</strong> <strong>queden eximits</strong> de qualsevol litigi derivat de l'<strong>incompliment de la paraula entre particulars</strong>.</p>
 
     <h4>6. Exempció de responsabilitat: la IAIA MarIA</h4>
     <p>Els assistents automatitzats d'aquest ecosistema tenen caràcter divulgatiu. El responsable del portal <strong>no respon d'errades ni d'invencions</strong> ("al·lucinacions") de l'agent IAIA MarIA en matèria agrícola, legal, mèdica, fiscal o social.</p>
-    <p>La màquina suggereix; la decisió i la responsabilitat civil de l'acte són sempre de la persona. Això és el Trellat.</p>
+    <p><strong>La màquina</strong> <strong>suggereix</strong>; <strong>la decisió</strong> i <strong>la responsabilitat civil de l'acte</strong> són <strong>sempre de la persona</strong>. Això és <strong>el Trellat</strong>.</p>
 
     <hr />
 
     <h3>POLÍTICA DE PRIVACITAT I PROTECCIÓ DE DADES</h3>
-    <p>Tractem les teues dades d'acord amb el Reglament (UE) 2016/679 (RGPD) i la Llei Orgànica 3/2018 (LOPDGDD).</p>
+    <p><strong>Tractem les teues dades</strong> d'acord amb el <strong>Reglament (UE) 2016/679</strong> (<strong>RGPD</strong>) i la <strong>Llei Orgànica</strong> <strong>3/2018</strong> (<strong>LOPDGDD</strong>).</p>
 
     <h4>7. Responsable del tractament</h4>
-    <p>Fco. Javier Llinares García · NIF 21476359V · Carrer Sant Isidre Llaurador, 16, 03108 - La Torre de les Maçanes (Alacant) · <a href="mailto:socdepoble@socdepoble.org">socdepoble@socdepoble.org</a></p>
+    <p><strong>Fco. Javier Llinares García</strong> · <strong>NIF 21476359V</strong> · <strong>Carrer Sant Isidre Llaurador, 16</strong>, <strong>03108</strong> - <strong>La Torre de les Maçanes (Alacant)</strong> · <a href="mailto:socdepoble@socdepoble.org"><strong>socdepoble@socdepoble.org</strong></a></p>
 
     <h4>8. Quines dades tractem</h4>
     <ul>
@@ -104,7 +104,7 @@ export const legalContent = {
       <li><strong>Si et dones de baixa:</strong> el motiu, si en vols escriure un.</li>
       <li><strong>Consultes a la IAIA MarIA:</strong> el text que li escrius, si decideixes fer-la servir.</li>
     </ul>
-    <p>No demanem ni volem dades de categories especials (salut, ideologia, religió, orientació sexual, afiliació sindical). Si en publiques dins d'un contingut lliure, ho fas sota la teua responsabilitat.</p>
+    <p><strong>No demanem ni volem</strong> <strong>dades de categories especials</strong> (<strong>salut, ideologia, religió, orientació sexual, afiliació sindical</strong>). <strong>Si en publiques</strong> <strong>dins d'un contingut lliure</strong>, ho fas <strong>sota la teua responsabilitat</strong>.</p>
 
     <h4>9. Per a què les fem servir i amb quina base jurídica</h4>
     <ul>
@@ -136,13 +136,13 @@ export const legalContent = {
       <li><strong>Sollutia</strong> (C/ Vistabella, 22, 03802 Alcoi, Alacant) — empresa sòcia que allotja i integra l'aplicació dins de la seua plataforma.</li>
       <li><strong>Google Workspace</strong> — gestió del correu i enviament de les notificacions d'accés (socdepoble.org).</li>
     </ul>
-    <p>Fora d'aquesta llista, les teues dades no ixen d'ací, excepte el que el teu navegador envia, amb la teua adreça IP, als serveis de fora que tries fer servir amb un botó (apartat 21): el text de les pàgines que tries traduir amb el botó «Traduir», el nom del poble que completes amb «Porta-ho de la Viquipèdia» i la zona del mapa que mires amb «Vore mapa»; i excepte per obligació legal o requeriment formal d'un jutjat o de la policia.</p>
+    <p><strong>Fora d'aquesta llista</strong>, <strong>les teues dades no ixen d'ací</strong>, excepte el que el teu navegador envia, amb <strong>la teua adreça IP</strong>, als serveis de fora que <strong>tries fer servir amb un botó</strong> (apartat 21): el <strong>text de les pàgines que tries traduir</strong> amb el botó «Traduir», el <strong>nom del poble que completes</strong> amb «Porta-ho de la Viquipèdia» i la <strong>zona del mapa que mires</strong> amb «Vore mapa»; i excepte per <strong>obligació legal o requeriment formal d'un jutjat o de la policia</strong>.</p>
 
     <h4>12. Transferències internacionals</h4>
     <p>Els servidors principals estan allotjats a <strong>Europa (Sollutia a Alcoi i Supabase a la regió europea de Frankfurt)</strong>. Si algun dels encarregats de l'apartat 11 tracta dades fora de l'Espai Econòmic Europeu, aquesta transferència es cobreix amb les <strong>Clàusules Contractuals Tipus</strong> aprovades per la Comissió Europea o amb una decisió d'adequació vigent. Pots demanar-nos una còpia d'aquestes garanties escrivint-nos.</p>
 
     <h4>13. Qui pot veure el que publiques</h4>
-    <p>Perquè el poble puga parlar, cal que et veja. Concretament:</p>
+    <p><strong>Perquè</strong> <strong>el poble</strong> <strong>puga parlar</strong>, <strong>cal</strong> <strong>que et veja</strong>. <strong>Concretament</strong>:</p>
     <ul>
       <li>El teu <strong>nom o pseudònim</strong> i la teua <strong>imatge de perfil</strong> són visibles per a la resta de membres verificats del teu poble.</li>
       <li>El teu <strong>identificador</strong> (el nom amb una @ davant que es fa amb el teu nom i que pots canviar al teu perfil) <strong>només el veuen les altres persones si el teu perfil és públic</strong>. Mentre la baixa està en curs no es mostra enlloc, i el guardem perquè ningú no te'l prenga fins que s'esborra el compte.</li>
@@ -158,14 +158,14 @@ export const legalContent = {
     <p>La IAIA MarIA de l'aplicació <strong>no envia el que li escrius a cap empresa d'intel·ligència artificial</strong>. No fa servir cap model de llenguatge de fora: busca la resposta en textos de Sóc de Poble que l'aplicació ja porta (la Wiki pública, les pàgines del portal, les fitxes dels pobles i unes fitxes de cultura i d'ús del poble), i la busca al teu dispositiu.</p>
     <p><strong>On va el que escrius:</strong> si escrius a la IAIA sense compte, o amb les dades guardades al teu dispositiu, la pregunta no ix d'allí. Si li escrius al xat de la IAIA amb el teu compte, la pregunta es publica al xat públic de la pàgina de la IAIA del teu poble, com qualsevol altre missatge d'un xat públic (apartat 13), i es guarda als nostres servidors; la resposta de la IAIA només la veus tu i no es guarda. «Pregunta a la IAIA», dins d'una conversa, no publica res.</p>
     <p><strong>El que no podem garantir:</strong> la IAIA pot no trobar la resposta o donar-ne una que no et servisca; quan no en sap res, t'ho diu. Les seues respostes són suggeriments (apartats 6 i 15). I com que, amb compte, la pregunta queda al xat públic, la regla és senzilla: <em>no li contes a la IAIA res que no li contaries a un desconegut per telèfon</em>.</p>
-    <p>Si algun dia la IAIA parla per un altre canal (per exemple, WhatsApp) o fa servir un servei d'intel·ligència artificial de fora, ho posarem ací abans, amb el nom de cada empresa, i t'avisarem com diu l'apartat 18.</p>
-    <p>La IAIA no llig el teu Mur, ni les teues notes, ni els teus xats. Només veu allò que tu li escrius a ella.</p>
+    <p><strong>Si algun dia la IAIA</strong> parla per <strong>un altre canal</strong> (per exemple, <strong>WhatsApp</strong>) o fa servir un <strong>servei d'intel·ligència artificial de fora</strong>, <strong>ho posarem ací abans</strong>, amb el <strong>nom de cada empresa</strong>, i <strong>t'avisarem</strong> com diu <strong>l'apartat 18</strong>.</p>
+    <p><strong>La IAIA</strong> <strong>no llig</strong> <strong>el teu Mur</strong>, ni <strong>les teues notes</strong>, ni <strong>els teus xats</strong>. <strong>Només veu</strong> <strong>allò que tu li escrius a ella</strong>.</p>
 
     <h4>15. Decisions automatitzades i perfilat</h4>
-    <p>No prenem decisions automatitzades que produïsquen efectes jurídics sobre tu ni que t'afecten significativament. No fem perfilat comercial. Les respostes de la IAIA MarIA són suggeriments, no resolucions.</p>
+    <p><strong>No prenem decisions automatitzades</strong> que produïsquen <strong>efectes jurídics</strong> sobre tu ni que <strong>t'afecten significativament</strong>. <strong>No fem perfilat comercial</strong>. Les <strong>respostes de la IAIA MarIA</strong> són <strong>suggeriments, no resolucions</strong>.</p>
 
     <h4>16. Els teus drets</h4>
-    <p>Tens tots aquests drets, i exercir-los és gratuït:</p>
+    <p><strong>Tens</strong> <strong>tots</strong> <strong>aquests</strong> <strong>drets</strong>, i <strong>exercir-los</strong> és <strong>gratuït</strong>:</p>
     <ul>
       <li><strong>Accés</strong> (art. 15): saber quines dades tenim de tu i obtindre'n una còpia.</li>
       <li><strong>Rectificació</strong> (art. 16): corregir el que estiga malament o incomplet.</li>
@@ -191,27 +191,27 @@ export const legalContent = {
     <p><strong>Què es conserva, i per què:</strong> el que vas publicar en nom d'una entitat és de l'entitat i es queda amb ella, amb les fotos que hi fa servir. Si eres l'única persona que quedava en un grup, el grup desapareix amb tu i el que hi vas publicar s'esborra amb la resta. Els missatges que altres persones van escriure a la conversa d'una publicació teua es queden a la conversa, sense el títol de la publicació. Les còpies de seguretat ho perden en 30 dies més, els registres tècnics de seguretat es guarden 12 mesos, el registre dels teus consentiments es guarda bloquejat fins a 3 anys, només per si una autoritat ens el demana, i l'historial de moderació i la constància de la retirada del permís d'Apple es conserven com expliquem a l'apartat 10.</p>
 
     <h4>17. Seguretat i bretxes</h4>
-    <p>Apliquem mesures tècniques proporcionades: xifrat de les comunicacions (HTTPS/TLS), autenticació per testimoni de sessió, aïllament de dades per files al servidor perquè cadascú només veja el que li pertoca, i principi de mínim privilegi en els accessos.</p>
+    <p>Apliquem <strong>mesures tècniques proporcionades</strong>: <strong>xifrat de les comunicacions</strong> <strong>(HTTPS/TLS)</strong>, <strong>autenticació per testimoni de sessió</strong>, <strong>aïllament de dades per files al servidor</strong> perquè <strong>cadascú només veja el que li pertoca</strong>, i <strong>principi de mínim privilegi</strong> en els accessos.</p>
     <p>Cap sistema és invulnerable, i qui diga el contrari menteix. Si es produeix una bretxa de seguretat que puga suposar un risc per als teus drets, ho notificarem a l'Agència Espanyola de Protecció de Dades en un termini de 72 hores (art. 33) i <strong>t'avisarem a tu sense dilació indeguda</strong> (art. 34), contant-te què ha passat i què has de fer.</p>
 
     <h4>18. Canvis en aquesta política</h4>
-    <p>Si canviem alguna cosa rellevant d'aquest text, actualitzarem el número de versió i la data del principi, i t'avisarem dins de l'aplicació abans que el canvi tinga efecte. No modifiquem aquest document en silenci.</p>
+    <p><strong>Si canviem alguna cosa rellevant</strong> <strong>d'aquest text</strong>, actualitzarem el <strong>número de versió</strong> i la <strong>data del principi</strong>, i <strong>t'avisarem dins de l'aplicació</strong> <strong>abans que el canvi tinga efecte</strong>. <strong>No modifiquem aquest document en silenci</strong>.</p>
 
     <hr />
 
     <h3>EMMAGATZEMATGE AL TEU DISPOSITIU (POLÍTICA DE GALETES)</h3>
 
     <h4>19. Galetes i mètriques: el nucli i els portals amfitrions</h4>
-    <p>Sóc de Poble t'arriba per camins diferents, i no tots tenen les mateixes regles. T'ho expliquem per separat perquè no es confonguen.</p>
+    <p><strong>Sóc de Poble</strong> <strong>t'arriba</strong> per <strong>camins diferents</strong>, i <strong>no tots tenen les mateixes regles</strong>. <strong>T'ho expliquem per separat</strong> perquè <strong>no es confonguen</strong>.</p>
     <p><strong>Al nucli: socdepoble.org (allotjat a Sollutia) i l'aplicació nativa.</strong> Ací l'aplicació <strong>no instal·la galetes (cookies) al teu navegador</strong>: ni de publicitat, ni d'analítica, ni pròpies. No hi ha Píxel de Meta, no hi ha Google Analytics ni cap altra analítica comercial, i cap eina mesura quant de temps mires una pantalla per a vendre-ho després. L'únic recompte és el comptador de visites sense galetes que t'expliquem a l'apartat «Telemetria: què comptem i com ho pots comprovar», al final d'aquesta pàgina: respecta els senyals Do Not Track i Global Privacy Control, i el pots apagar quan vulgues.</p>
-    <p>Per això, al nucli no et fem passar per cap bàner d'acceptar galetes: no n'hi ha cap a acceptar. Si algun dia n'hi haguera, t'ho advertiríem abans i et demanaríem permís.</p>
+    <p>Per això, <strong>al nucli</strong> no et fem passar per <strong>cap bàner d'acceptar galetes</strong>: <strong>no n'hi ha cap a acceptar</strong>. <strong>Si algun dia n'hi haguera</strong>, <strong>t'ho advertiríem abans</strong> i <strong>et demanaríem permís</strong>.</p>
     <p><strong>Als portals amfitrions.</strong> Sóc de Poble també funciona dins de webs que no administrem nosaltres: portals de WordPress com <strong>gentdelatorre.net</strong>, els portals dels pobles que s'hi enxufen i la plataforma de <strong>Sollutia</strong> quan hi integra l'aplicació. Cada titular administra el seu portal pel seu compte, i el portal <strong>pot tindre les seues pròpies galetes i mètriques</strong>, com Google Analytics, Google Site Kit o un comptador propi. Quan accedeixes a Sóc de Poble a través d'un portal amfitrió, el teu navegador queda subjecte a <strong>la política de galetes i de privacitat d'eixe portal</strong>, i és el seu titular qui en respon.</p>
     <p><strong>Què compta Sóc de Poble dins d'un portal amfitrió.</strong> Dins d'un portal amfitrió, l'aplicació <strong>no envia cap visita ni cap acte al comptador de Sóc de Poble</strong>, llevat que el portal li cedisca la gestió de la capçalera de la pàgina (l'opció <code>manageDocumentHead</code>): en eixe cas, l'aplicació pot comptar com ho fa al nucli. Si el portal té el seu propi comptador Umami, l'aplicació li passa els actes de «Connectar» perquè els compte ell, amb les seues regles.</p>
     <p><strong>Què pot veure el portal de la teua navegació.</strong> Cada vegada que canvies de secció, l'aplicació avisa la pàgina amfitriona amb l'esdeveniment <code>sdp-navega</code>, que porta la secció, sense el text que cerques ni quina fitxa obris. A més, a WordPress (de manera predeterminada) i a qualsevol portal que ho active, la ruta sencera de l'aplicació, amb el text del cercador i els identificadors de les fitxes, s'escriu a l'adreça de la pàgina, al fragment <code>#sdp=</code>, i queda a l'historial del navegador. El fragment no arriba al servidor del portal, però els programes de la pàgina, com les seues eines de mètriques, el poden llegir; si el titular tria el paràmetre <code>?sdp=</code>, també arriba al seu servidor. Per tant, el portal pot veure per quines seccions de Sóc de Poble navegues.</p>
     <p><strong>Obligació dels portals amfitrions.</strong> Per la governança de Sóc de Poble, tot node o poble que s'hi enxufe ha de declarar amb transparència, a la seua pròpia web, quines galetes i quines mètriques fa servir amb les persones que el visiten. Si trobes un portal que no ho declara, escriu-nos a <a href="mailto:socdepoble@socdepoble.org">socdepoble@socdepoble.org</a>.</p>
 
     <h4>20. Què guardem al teu navegador, exactament</h4>
-    <p>El que sí que fem servir és l'<em>emmagatzematge web</em> del navegador, que és una tecnologia diferent de les galetes: no viatja a cap servidor en cada petició. Ací tens la llista completa, sense excepcions.</p>
+    <p>El que sí que fem servir és l'<em><strong>emmagatzematge web</strong></em> <strong>del navegador</strong>, que és una <strong>tecnologia diferent de les galetes</strong>: <strong>no viatja a cap servidor</strong> <strong>en cada petició</strong>. Ací tens la <strong>llista completa</strong>, <strong>sense excepcions</strong>.</p>
     <p><strong>Emmagatzematge de sessió</strong> (<em>sessionStorage</em>) — <strong>s'esborra sol quan tanques la pestanya</strong>:</p>
     <ul>
       <li><code>socdepoble-jwt</code> i <code>socdepoble-refresh-token</code> — els testimonis que mantenen la sessió oberta mentre navegues. <strong>No són anònims: t'identifiquen davant del servidor.</strong> Per això moren en tancar la pestanya i hauràs de tornar a entrar.</li>
@@ -236,7 +236,7 @@ export const legalContent = {
       <li><code>socdepoble_arxius_locals_v1</code> — les carpetes del teu dispositiu que vincules a <strong>Multimèdia</strong> (com a molt 12): el nom de cada carpeta, la referència que el navegador necessita per a tornar-la a obrir amb el teu permís i l'última vegada que l'has oberta. No hi guarda cap fitxer ni puja res al servidor. S'esborra quan prems «Oblidar» o quan ixes de la sessió.</li>
       <li><code>sdp-viquipedia</code> — les dades públiques de la Viquipèdia, Wikidata i Wikimedia Commons dels pobles que has completat amb «Porta-ho de la Viquipèdia» (apartat 21), perquè no s'hagen de tornar a demanar: com a molt 200 pobles, i passats 30 dies t'oferix tornar-les a portar. No hi ha cap dada teua, però sí que diu de quins pobles les has portades. «Deixa de portar-ho de la Viquipèdia» esborra les d'eixe poble.</li>
     </ul>
-    <p>Tot això és estrictament tècnic i necessari per a funcions que has demanat tu, així que està emparat per l'excepció de l'article 22.2 de la LSSI-CE i no requereix consentiment previ. Res d'ací dins serveix per a rastrejar-te ni s'envia a tercers.</p>
+    <p>Tot això és <strong>estrictament tècnic i necessari</strong> per a <strong>funcions que has demanat tu</strong>, així que està <strong>emparat per l'excepció</strong> de <strong>l'article 22.2 de la LSSI-CE</strong> i <strong>no requereix consentiment previ</strong>. <strong>Res d'ací dins serveix per a rastrejar-te</strong> <strong>ni s'envia a tercers</strong>.</p>
 
     <h4>21. Contingut incrustat d'altres llocs</h4>
     <p>Hi ha una excepció honesta que t'hem de contar: el <strong>fons detallat del mapa fotogràfic del Mur</strong> el serveix <strong>OpenStreetMap Foundation</strong>. El mapa pinta les fotos de les publicacions sobre un fons neutre i, mentre no prems <strong>«Vore mapa»</strong>, el teu navegador no es connecta a OpenStreetMap ni a cap altre tercer: només baixa de Sóc de Poble el codi del mapa i les miniatures de les fotos. Quan el prems, es connecta als servidors d'OpenStreetMap per a baixar les tessel·les (les peces del fons) i, com passa amb qualsevol connexió a internet, ells veuen la teua adreça IP i quina zona del mapa estàs mirant. És una fundació sense ànim de lucre i no fa publicitat, però és un tercer i te'n volem informar. La tria es queda al teu navegador (<code>sdp-mapa-fons</code>), igual que el lloc on deixes les targetes que mous (<code>sdp-mapa-posicions-v1</code>), i «Ocultar mapa» la desfà. Les coordenades de les fotos <strong>no s'envien mai a ningú per a posar nom als llocs</strong>: el nom de la zona es calcula al teu dispositiu amb la llista de pobles que porta l'aplicació. Si el mapa fotogràfic no es pot carregar, el mapa de sempre del territori, que també és d'OpenStreetMap, tampoc no es carrega fins que prems «Vore mapa». A l'aplicació nativa, de moment, el botó «Vore mapa» no hi és.</p>
@@ -245,7 +245,7 @@ export const legalContent = {
     <p>Per la resta, l'aplicació <strong>bloqueja activament les imatges externes</strong> dins dels continguts que escriuen els usuaris: si algú enganxa una imatge allotjada fora, no es carrega. Així ningú no pot posar una balisa de rastreig dins d'una publicació.</p>
 
     <h4>22. Com esborrar-ho tot</h4>
-    <p>Tanca la pestanya i l'emmagatzematge de sessió desapareix sol. Per a l'emmagatzematge local i la base de dades del navegador, buida les dades del lloc des dels ajustos del teu navegador, o desinstal·la l'aplicació de la pantalla d'inici si l'hi tens. Amb això, el teu dispositiu queda net.</p>
+    <p><strong>Tanca la pestanya</strong> i <strong>l'emmagatzematge de sessió desapareix sol</strong>. Per a <strong>l'emmagatzematge local i la base de dades del navegador</strong>, <strong>buida les dades del lloc</strong> des dels <strong>ajustos del teu navegador</strong>, o <strong>desinstal·la l'aplicació de la pantalla d'inici</strong> si l'hi tens. Amb això, <strong>el teu dispositiu queda net</strong>.</p>
     <p>Recorda que això <strong>només esborra el teu telèfon</strong>. Per a esborrar les dades del servidor, has de demanar la supressió tal com t'expliquem a l'apartat 16.</p>
 
     <hr />
@@ -253,7 +253,7 @@ export const legalContent = {
     <h3>RECONEIXEMENTS I FONTS D'INSPIRACIÓ</h3>
 
     <h4>23. Agraïments a la comunitat divulgadora i de codi obert</h4>
-    <p>A Sóc de Poble creiem en la generositat del coneixement compartit, en la cultura lliure i en el deure ètic de citar les fonts. Cap eina naix del no-res. Algunes de les nostres millores tecnològiques, fluxos de treball i components s'han nodrit directament del treball, el codi o les idees de divulgadors i creadors excepcionals que comparteixen solucions obertes amb la comunitat:</p>
+    <p>A Sóc de Poble creiem en la <strong>generositat del coneixement compartit</strong>, en la <strong>cultura lliure</strong> i en el <strong>deure ètic de citar les fonts</strong>. <strong>Cap eina naix del no-res</strong>. Algunes de les nostres <strong>millores tecnològiques, fluxos de treball i components</strong> s'han nodrit directament del <strong>treball, el codi o les idees</strong> de <strong>divulgadors i creadors excepcionals</strong> que <strong>comparteixen solucions obertes amb la comunitat</strong>:</p>
     <ul>
       <li><strong>Emowe (Marcos)</strong> (<a href="https://emowe.com" target="_blank" rel="noopener noreferrer">emowe.com</a> / <a href="https://emowe.com/blog" target="_blank" rel="noopener noreferrer">blog</a> / <a href="https://www.youtube.com/@emowe" target="_blank" rel="noopener noreferrer">YouTube @emowe</a>) — pel seu desenvolupament i codi de la plantilla del mapa fotogràfic interactiu («El mapa de tu viaje con IA»), font directa d'inspiració per al nostre visualitzador territorial de fotos i targetes geolocalitzades amb privacitat des del dispositiu, així com per la seua metodologia de <em>Cerebro Digital</em> i arquitectura d'agents d'IA (sandboxes, perímetres per escrit, arnesos, operació atòmica basada en fitxers i gestió termodinàmica de tokens), que tant han aportat a la governança del nostre Mas.</li>
       <li><strong>Xavier Mitjana</strong> (<a href="https://iaenaccion.com" target="_blank" rel="noopener noreferrer">iaenaccion.com</a> / <a href="https://www.youtube.com/@XavierMitjana" target="_blank" rel="noopener noreferrer">YouTube @XavierMitjana</a>) — pel seu projecte <em>IA en Acción</em> i la seua extraordinària tasca de formació i divulgació pràctica d'intel·ligència artificial, models de llenguatge i fluxos de treball, de la qual ens nodrim habitualment per a crear i millorar les eines d'aquest ecosistema.</li>
@@ -263,7 +263,7 @@ export const legalContent = {
       <li><strong>Fernando Tellado</strong> (<a href="https://ayudawp.com" target="_blank" rel="noopener noreferrer">ayudawp.com</a> / <a href="https://tellado.es" target="_blank" rel="noopener noreferrer">tellado.es</a> / <a href="https://github.com/fernandotellado/ai-skills" target="_blank" rel="noopener noreferrer">GitHub ai-skills</a>) — màxim referent de la comunitat WordPress en espanyol, mestre en optimització, seguretat i alletjament web (creador de <em>DietPress</em> i <em>Vigilante</em>), i pioner en la creació d'estàndards oberts de <em>skills</em> d'intel·ligència artificial (<code>agentskills.io</code>) per al desenvolupament segur i eficient.</li>
       <li><strong>Projectes i biblioteques de programari lliure</strong> — especialment el projecte <strong>Leaflet</strong> (<a href="https://leafletjs.com" target="_blank" rel="noopener noreferrer">leafletjs.com</a>) i la comunitat global d'<strong>OpenStreetMap</strong> (<a href="https://www.openstreetmap.org" target="_blank" rel="noopener noreferrer">openstreetmap.org</a>), pilars indispensables per a la sobirania cartogràfica sense dependre de monopolis privatius. També l'eina oberta <strong>REA</strong> (<a href="https://github.com/morluto/rea" target="_blank" rel="noopener noreferrer">github.com/morluto/rea</a>) de <em>morluto</em>, de deconstrucció d'interfícies web i enginyeria inversa a components de codi per a analitzar, calcar funcionalitats clau i aprendre de patrons d'experiència d'usuari i arquitectura lliure.</li>
     </ul>
-    <p>Reconéixer qui t'ha ensenyat el camí és una regla bàsica de poble. Des d'ací, el nostre agraïment sincer.</p>
+    <p><strong>Reconéixer</strong> <strong>qui t'ha ensenyat</strong> <strong>el camí</strong> és una <strong>regla bàsica de poble</strong>. Des d'ací, <strong>el nostre agraïment</strong> <strong>sincer</strong>.</p>
 
     <hr />
 

@@ -331,6 +331,9 @@ export function blocsTraduibles(arrel) {
   if (!arrel?.querySelectorAll) return [];
   const blocs = [];
   const llistes = new Map();
+  /* O4-CLAUDE-3 (D5-a11y-pedra-seca-02) · Les caixes de subtargeta, numerades
+     per ordre d'aparició (com les llistes). */
+  const caixes = new Map();
   /* C5 · Els <li> que són blocs (els de fora i els de les seues llistes
      niuades) i l'índex del bloc de cada un que s'ha emés. */
   const elementsLi = new Set();
@@ -367,10 +370,19 @@ export function blocsTraduibles(arrel) {
     /* Gauntlet 261030 (Fase 3, TC3.3; vista-traduida-perd-entradilla) · El
        rol a la capçalera: dins de .page-intro (el subtítol i l'entradilla de
        PageFrame) i l'entradilla mateixa (p.lead). CosTraduit la torna a pintar
-       amb la mateixa anatomia; mai cap classe de l'arbre fora d'estes dos. */
+       amb la mateixa anatomia; mai cap classe de l'arbre fora d'estes dos i
+       de la tercera, la marca de la subtargeta (O4-CLAUDE-3,
+       D5-a11y-pedra-seca-02): un bloc de dins d'una caixa
+       div[data-sdp-subtargeta] porta l'índex de la caixa (`subtargeta`), i la
+       vista traduïda la torna a pintar amb la vora i el títol. */
     const intro = element.closest('.page-intro');
     if (intro && arrel.contains(intro)) bloc.entrada = true;
     if (bloc.etiqueta === 'p' && element.matches('p.lead')) bloc.entradilla = true;
+    const caixa = element.closest('[data-sdp-subtargeta]');
+    if (caixa && caixa !== arrel && arrel.contains(caixa)) {
+      if (!caixes.has(caixa)) caixes.set(caixa, caixes.size);
+      bloc.subtargeta = caixes.get(caixa);
+    }
     if (noFidel) bloc.arbre = arbreDe(element, arrel);
     else if (peces.some(({ marques }) => marques.length)) bloc.peces = peces;
     blocs.push(bloc);

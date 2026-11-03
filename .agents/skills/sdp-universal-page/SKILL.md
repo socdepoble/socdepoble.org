@@ -11,8 +11,18 @@ triggers_on:
   - bar-blue
   - page-header
 contracte.llig:
+  - src/sections/detail/PageDetailSection.test.jsx
+  - src/components/PedraSeca/organismes/Dialeg.test.jsx
+  - src/components/universal/identitat/CalaixIdentitats.test.jsx
   - src/components/universal/UniversalPage.jsx
   - src/components/layout/AppGridShell.jsx
+  - src/components/universal/PageFrame.jsx
+  - src/sections/disseny/DesignSection.jsx
+  - src/sections/text/TextSection.jsx
+  - src/sections/text/TextSection.targetes.test.jsx
+  - src/config/systemPages.js
+  - src/components/universal/workspace/UniversalWorkspace.jsx
+  - src/sections/pobles/PoblesSection.jsx
 contracte.escriu:
   - src/components/universal/UniversalPage.jsx
 ---
@@ -23,7 +33,7 @@ Aquest manual defineix l'arquitectura i les regles inviolables de la `UniversalP
 
 > [!IMPORTANT]
 > **FONT DE VERITAT ÚNICA (Single Source of Truth):**
-> L'única referència vàlida i òptima per copiar i replicar el codi de la `UniversalPage` (amb tots els seus blocs, filtres, targetes i estructura) és la pàgina oficial de Disseny: `src/sections/disseny/DesignSection.jsx`. Qualsevol IA o agent ha de consultar exclusivament el codi d'aquesta pàgina per entendre i reproduir la implementació canònica de la `UniversalPage`. Cap altra secció o component s'ha d'utilitzar com a referència.
+> La font del contracte és `src/components/universal/UniversalPage.jsx` i el seu `PageFrame`; `src/sections/disseny/DesignSection.jsx` mostra espècimens. Per a pàgines de text i targetes internes, contrasta també `src/sections/text/TextSection.jsx` i les seues proves. Copia el mecanisme vigent de la superfície que estàs ampliant, sense crear una segona pàgina o closca.
 
 
 ## 1. Anatomia Estàndard (Els Blocs)
@@ -35,7 +45,7 @@ Una `UniversalPage` completa està formada pels següents blocs estratificats, q
 - **Esquerra (Navegació):** Un trio d'icones compost per "Tornar arrere", "Tornar avant" i l'**Índex**.
   - *Regla Sagrada de l'Índex:* Aquest botó és fonamental. Evita haver d'omplir la pàgina de múltiples etiquetes `<h1>` per a separar contingut, permetent navegar per tota la jerarquia de subseccions (des d'`<h2>` fins a `<h6>`). Això garanteix que **només hi haja un únic H1 per pàgina**, mantenint la puresa SEO i l'arquitectura d'informació.
 - **Centre (Interacció):** Un trio d'icones centrat compost per "Traductor", "Comentar (Xat)" i "Compartir".
-  - *Regla del Botó Comentar:* No obri cap fil de comentaris públics davall de la targeta. Funciona com un missatge directe: enllaça sempre al xat privat de l'autor o creador d'eixe contingut.
+  - *Regla del Botó Comentar:* reutilitza el menú de `PageFrame` i `useAccions`: «En privat» va al destinatari de l'objecte, i «En públic» al xat comú de l'objecte quan el contracte l'admet. No afegisques un fil davall de la targeta ni substituïsques el menú compartit per una via privada pròpia.
 - **Dreta (Acció Principal):** El botó "Connectar".
 
 > **Regles de disseny i densitat:** 
@@ -88,7 +98,7 @@ La `UniversalPage` està dissenyada per a ser incrustada (embedded) com si fóra
 - **Zero Doble Scroll i Barres no fixes:** A diferència de la pàgina completa (on les barres blava i taronja es queden fixes a dalt, sent *sticky*), en mode incrustat **la barra blava i la barra taronja s'han d'amagar de forma natural a través de l'scroll del propi document incrustat**. Quan l'usuari desplaça cap avall la nota, tant la barra blava com la taronja pugen i s'amaguen, alliberant tot l'espai vertical i fixant l'atenció exclusivament en l'edició del contingut. Aquesta és l'única excepció de comportament d'una UniversalPage incrustada respecte a la versió independent.
 
 ## 3. L'Entorn d'Edició (Foraster vs. Connectat)
-Quan un usuari ("Foraster") fa proves en un bloc de notes, està interactuant visualment amb una `UniversalPage`. Tot i que no estiga autenticat i la nota "desaparega" després, la UI ha de tindre una anatomia idèntica a la versió publicada per garantir consistència mental i anticipació del resultat.
+L'anatomia de lectura i edició es comparteix, però l'accés a Notes el governen `NotesSection` i la sessió o el mode pilot del node. No deduïsques que una persona anònima pot crear una nota efímera: comprova el camí real amb `NotesSection.ambit.test.jsx` i conserva la porta d'entrada autoritzada.
 
 ## 4. Sistema de Classificació (Carpetes, Categories i Etiquetes)
 Tota Targeta i Pàgina Universal (`UniversalPage`) exposa de manera prominent els seus metadades de classificació mitjançant píndoles (badges) sota el títol principal (H1). L'estructura semàntica i interactiva segueix sempre el següent patró estricte, renderitzant-se en aquest ordre:
@@ -111,10 +121,10 @@ Quan es construeix una aplicació o secció complexa que empra el sistema de gra
 
 - **El component `UniversalWorkspace` MAI pot estar envoltat per una `UniversalPage`.**
   - L'arrel del teu domini ha de retornar directament la graella (`AppGridShell` o `UniversalWorkspace`), la qual s'encarrega d'ocupar tota la pantalla i gestionar les 3 columnes.
-- **La `UniversalPage` NOMÉS ES CONSTRUEIX DINS DE L'EDITOR (Columna Dreta).**
-  - La `UniversalPage` és el llenç on es mostra o edita un element. Si envoltes tota la pantalla amb ella, la barra blava taparà les altres columnes (com les carpetes o la llista de notes).
-  - La barra blava (`bar-blue`) pertany a la `UniversalPage`, i per tant **només pot ser tan gran com l'editor**. Mai pot ser més gran que ell.
-  - Per aconseguir-ho, assegura't que el component que pases com a `renderEditor` al teu Workspace (per exemple, `UniversalEditorShell`) siga qui retorna la `<UniversalPage>`.
+- **Dins d'un `UniversalWorkspace`, la pàgina viu al detall de la columna dreta.**
+  - `renderDetail` rep l'element i la selecció, i retorna el seu editor o visor. No hi ha una prop pública `renderEditor`. La barra blava ocupa el detall i no tapa les carpetes o la llista.
+  - Una secció de lectura sense workspace pot tindre `UniversalPage` com a arrel, com fa `PoblesSection`. La prohibició és envoltar un workspace complet amb una pàgina, no usar una pàgina fora d'un editor.
+  - Contrasta `src/components/universal/workspace/UniversalWorkspace.jsx` i `src/sections/pobles/PoblesSection.jsx` abans de triar la closca.
 
 ## Lliçons del Mestre
 **261004** | **Tota targeta porta boina i tota pàgina (també les de sistema) porta barra taronja**: cada UniversalCard du la seua boina taronja amb l'autor real (per a les targetes de sistema, l'entitat Sóc de Poble enllaçada a /projecte), el cos sencer (títol, subtítol i entradeta que explica què és) i el peu canònic. Tota targeta té la seua pàgina pròpia, i tota pàgina la seua targeta; la imatge de la targeta és l'hero i la imatge SEO de la pàgina, amb el seu slug compartible.
@@ -124,6 +134,22 @@ A més, **tota pàgina, també les de sistema, porta la barra taronja amb el log
 **261030** | **Zero taules de prosa**: evitar les taules amb molta informació textual en format web (als mòbils es converteixen en una trampa de menejar dits i lletra menuda). Redactar sempre en mode editorial vertical emprant la jerarquia H3/H4/H5/H6, cites `<blockquote>`, paràgrafs `<p>` i llistes `<ul>` a mida de cos normal, facilitant l'scroll vertical amb el dit i la indexació automàtica a la Taula de Continguts de la Barra Blava.
 **261030** | **Hipervincles vius obligatoris**: sempre que en una pàgina o publicació es parle d'una entitat, subvenció, node, projecte o pàgina (interna o externa), cal posar-hi l'hipervincle actiu (i logotip clicable quan corresponga) perquè la gent sàpiga de què parlem i la informació no s'estanque mai.
 **261030** | **H3 just després de l'entradilla**: a les pàgines de contingut (`PAGE_COPY`), després de l'entradilla (lead) SEMPRE ha d'anar un `<h3>`, i després els paràgrafs, les subseccions `<h4>`, les llistes `<ul>` i els hipervincles vius a les seccions i pàgines que s'hi mencionen.
+
+## Exemplar reutilitzable: targetes dins del text
+
+El cas verificable és `CosDeLaPagina` de `TextSection.jsx`: saneja l'HTML, el segmenta amb `segmentsAmbTargetes` i pinta els grups `data-sdp-targetes` amb `CosAmbTargetes` i `ProveidorSincronitzacioTargetes`. Així la targeta interna és una `UniversalCard` sincronitzada, amb instantània de reserva; no és un segon `UniversalWorkspace` ni HTML cru injectat al cos.
+
+`src/sections/text/TextSection.targetes.test.jsx` prova la targeta de drets d'autor dins de Legal, el text que l'envolta i el camí sense targetes. L'editor reutilitza `targetesIncrustades.js` i el contracte `targetes` de `DocumentEditor`, amb proves a `DocumentEditor.targetes.test.jsx` i `NotesEditor.targetes.test.jsx`. Un grup de targetes i una secció desplegable són mecanismes diferents: no inventes un node TipTap nou només perquè una pàgina use `<details>`.
+
+`/page/privadesa` reutilitza la política i els camins de baixa de `/legal` com a àlies de `PAGE_ROUTE_MAP`/`resolvePageSlugPath`; no és una segona pàgina ni una política nova. `PageDetailSection.test.jsx` fixa la redirecció i conserva el 404 d’un slug desconegut. La ruta era absent en la instantània inicial d’Onada 4: el corrector de l’àlies ha de passar CAS i tornar-se a certificar abans de donar-lo per desplegat. La verificació d’«Edició avançada» i `PublicacioUniversal` es descriu a [[sdp-universal-editor/SKILL|sdp-universal-editor]] i [[sdp-casos-us-essencials/SKILL|sdp-casos-us-essencials]].
+
+Certifica la destinació de cada enllaç amb `node tooling/gates/certifica-enllacos.mjs --url /page/legal --remot --json`: arbre/router i resposta HTTP són evidències distintes. Un HTTP 200 de la closca SPA, per si sol, no acredita ni la ruta ni l'autorització del contingut.
+
+## Calaixos de capçalera compartits (IDEA-63)
+
+En la SPA, l’Índex de continguts de `PageFrame` i «Amb qui actues?» de `CalaixIdentitats` compartixen la geometria de `src/css/tokens.css`: `--sdp-calaix-dalt` és `calc(var(--sdp-alt-negra) + env(safe-area-inset-top, 0px))`; `--sdp-calaix-alt` resta eixe espai de la finestra, amb alternativa `vh` i `dvh` dins de `@supports`. `.toc-overlay`, `.sdp-dialeg--calaix` i el seu vel reutilitzen eixos tokens. En l’encastat es conserva la capa modal de `layout.css`, que dimensiona el calaix al 100% de la caixa de l’App; no s’hi imposa la geometria de la finestra de la SPA. `Dialeg.test.jsx` en fixa també esta excepció. Els costats de la SPA només determinen esquerra/dreta; no tornen a definir un altre `top: 0` ni una alçada completa. El cos desplaçable i el peu conserven la zona segura inferior. Reutilitza el patró per a qualsevol calaix de capçalera, amb el mateix nom accessible, focus, tancament i comportament encastat de `Dialeg`.
+
+`src/components/PedraSeca/organismes/Dialeg.test.jsx` i `src/components/universal/identitat/CalaixIdentitats.test.jsx` comproven classes, tokens, vel, costats i regressions de geometria CSS; `PageFrame.indexTitol.test.jsx` conserva el consumidor de l’Índex. S’han contrastat junt amb les suites d’edició avançada en la instantània complementària d’Onada 4 (140 proves verdes). Són comprovacions de DOM i regles CSS: abans de donar per feta la geometria real, revisa també el mòbil i les zones segures en navegador.
 
 ## Vincles
 - [[00_INDEX_SKILLS]]

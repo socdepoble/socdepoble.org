@@ -44,7 +44,9 @@ export const ICONES_ESPECIMENS = Object.freeze({
   formularis: Object.freeze({
     boto: '🆗', camp: '✏️', opcions: '☑️', pindola: '💊', cerca: '🔍',
     'formulari-complex': '📋', calendari: '📅', 'drets-autor': '©️', classificacio: '🔖',
-    rajola: '🀄', 'teclat-numeric': '🔢', 'afegit-rapid': '➕'
+    rajola: '🀄', 'teclat-numeric': '🔢', 'afegit-rapid': '➕',
+    /* O4-CLAUDE-1 (captura 261102_2121) · «On es publica?» en línia. */
+    ambit: '📍'
   }),
   navegacio: Object.freeze({
     pestanyes: '📑', molla: '🍞', paginacio: '⏭️', acordio: '🪗', 'nav-mobil': '📲',
@@ -230,8 +232,13 @@ const FORMULARIS = [
     'drets autor creative commons cc0 herencia perfil pantalla completa'),
   /* T52 (ordre del Mestre, 260928) · la botonera de davall del títol i els seus diàlegs. */
   especimen('formularis', 'classificacio', 'Classificació', 'BotoneraClassificacio · DialegCarpeta · DialegValors · DialegEmoticona', ['organisme', 'editor', 'classificacio'],
-    'La botonera de davall del títol en edició: Carpetes, Categories, Etiquetes i Emoticona. Cada botó obri el seu diàleg; la botonera no guarda estat i qui la munta decidix què s’obri.',
-    'carpeta categoria etiqueta emoticona emoji ploma'),
+    'La botonera de davall del títol en edició: Carpetes, Categories, Etiquetes, Àmbit i Emoticona. Cada botó obri el seu diàleg, menys Àmbit (O4-CLAUDE-1), que porta al bloc «On es publica?» en línia; la botonera no guarda estat i qui la munta decidix què s’obri.',
+    'carpeta categoria etiqueta ambit emoticona emoji ploma'),
+  /* O4-CLAUDE-1 (ordre del Mestre, captura 261102_2121; correcció A1-06 de l'àrbitre) ·
+     «On es publica?» en línia, dins de l'«Edició avançada», sense finestra modal. */
+  especimen('formularis', 'ambit', 'On es publica?', 'BlocAmbit (O4-CLAUDE-1)', ['organisme', 'editor', 'formulari'],
+    'L’àmbit de la publicació (Mur, Mercat, Compartir cotxe, Treball o Habitatge), els camps de la seua fitxa i la previsualització de la targeta, en línia dins de l’«Edició avançada». Cada canvi escriu la fitxa a la nota: cap finestra ni botó de desar.',
+    'on es publica ambit fitxa mur mercat compartir cotxe vehicle treball habitatge estat previsualitzacio edicio avancada'),
   /* Fase 0 de les apps El Bar i Salut (Pedra Seca §9) · la graella tàctil i el teclat d'imports. */
   especimen('formularis', 'rajola', 'Rajola', 'PedraSeca/molecules/Rajola.jsx', ['molecula', 'accio', 'graella'],
     'Botó quadrat (1:1) amb imatge o marcador, títol i línia secundària: la peça de les graelles tàctils, com els productes d’un bar o les categories.',
@@ -520,7 +527,11 @@ export const ARBRE_UNIVERSAL = Object.freeze([
   { id: 'visibilitat', nom: 'SelectorVisibilitat', fitxer: 'src/components/universal/SelectorVisibilitat.jsx', pare: 'editor', item: 'superposicions-visibilitat',
     rol: 'Pública o privada: la bola del món i PUBLICAR.', usa: ['dialeg', 'boto'] },
   { id: 'classificacio', nom: 'BotoneraClassificacio', fitxer: 'src/components/universal/classificacio/', pare: 'editor', item: 'formularis-classificacio',
-    rol: 'Carpetes, Categories, Etiquetes i Emoticona, davall del títol.', usa: ['dialeg', 'boto'] },
+    rol: 'Carpetes, Categories, Etiquetes, Àmbit i Emoticona, davall del títol. Àmbit no obri cap diàleg: porta al bloc «On es publica?».', usa: ['dialeg', 'boto'] },
+  /* O4-CLAUDE-1 (captura 261102_2121) · la ranura ambitEdicioAvancada de la closca. */
+  { id: 'bloc-ambit', nom: 'BlocAmbit', fitxer: 'src/components/universal/ambits/BlocAmbit.jsx', pare: 'editor', item: 'formularis-ambit',
+    rol: '«On es publica?» en línia, dins de l’«Edició avançada», entre el logotip i la classificació: l’àmbit, la seua fitxa i la previsualització.', usa: ['composicio'],
+    consumidors: ['el Bloc de Notes (NotesEditor)'] },
   { id: 'drets', nom: 'BotoDretsAutor → CopyrightPage', fitxer: 'src/components/universal/drets/CopyrightPage.jsx', pare: 'editor', item: 'formularis-drets-autor',
     rol: 'Els drets d’autor, a pantalla completa dins de la columna.', usa: ['boto'] },
   { id: 'impressio', nom: 'DocumentPrintPreview', fitxer: 'src/components/universal/DocumentPrintPreview.jsx', pare: 'editor', item: 'superposicions-impressio',

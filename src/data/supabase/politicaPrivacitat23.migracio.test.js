@@ -40,7 +40,7 @@ const INSERCIO_SEGELLADA = /insert\s+into\s+public\.politiques_privacitat\s*\([^
 
 /** La versió i la data (AAAA-MM-DD) del rètol d'un text de /legal: «Versió X · En vigor des de l'1 de novembre de 2026». */
 function rotulDe(html) {
-  const m = String(html).match(/<p><em>Versió (\S+) · En vigor des (?:de l'|del )(\d{1,2}) (?:de |d')([a-zç]+) de (\d{4})\./);
+  const m = String(html).replace(/<\/?strong>/g, '').match(/<p><em>Versió (\S+) · En vigor des (?:de l'|del )(\d{1,2}) (?:de |d')([a-zç]+) de (\d{4})\./);
   if (!m) return null;
   const mes = MESOS.indexOf(m[3]) + 1;
   return { versio: m[1], data: `${m[4]}-${String(mes).padStart(2, '0')}-${m[2].padStart(2, '0')}`, mesValid: mes > 0 };

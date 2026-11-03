@@ -12,6 +12,7 @@ contracte.llig:
   - _wiki_de_poble/02_saber/doc_governanca.md
   - _wiki_de_poble/04_escriptori
 contracte.escriu:
+  - .sdp-paperera
   - _wiki_de_poble/04_escriptori
 ---
 # Tractor de Neteja d'Arrels
@@ -37,7 +38,9 @@ Segons la filosofia de la **safata d'entrada** i el control de brossa, les accio
 
 - Quan la llista de fitxers de l'arrel és inusualment gran.
 - Si el Mestre indica que hi ha fitxers no desitjats.
-- Primer sempre en simulació. S'aplica quan la llista que mostra és la que toca.
+- Primer sempre en simulació. Aplica només els candidats i l'arrel inclosos en l'encàrrec de neteja; `--workspace` amplia l'arrel i no és una opció implícita.
+- Si Git no pot inventariar el repositori, el tractor es nega a moure fitxers. En l'arrel del workspace, que no és el repositori, este control no existix.
+- Els moviments són seqüencials: si un falla, el manifest conserva els que ja s'han fet, però no hi ha retorn automàtic. Revisa el manifest i diagnostica abans de repetir l'ordre. La quarantena no acredita que el contingut siga prescindible.
 
 ## Incident que ho motiva (260929)
 La primera versió treballava per llista blanca i movia tot allò que no hi constava. A les 18:50 va apartar `.claude`, `.codex`, `.sdp-reflex` i `.immunitari`. Això va deixar sense hooks Claude i Codex, va fer fallar Plaquetes i Time Machine i va apartar la clau dels rebuts. Si una carpeta desconeguda sembla sobrera, es consulta al Mestre.

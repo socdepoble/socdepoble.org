@@ -62,7 +62,7 @@ export const LIMIT_PARSE_BYTES = 20 * 1024 * 1024;
 /** Pressupost d'una avaluació: el hook té 5 s de timeout i n'ha de sobrar. */
 export const PRESSUPOST_MS = 2000;
 /** Frase literal del cas 4 de .agents/skills/core-context-panic/SKILL.md (una prova la contrasta). */
-export const FRASE_CAS4 = "¡Uy cuidado, Mestre, que estic saturada! He superat els 150-180 artefactes a la motxilla. Tranquil·la, anem a relaxar-nos i decidir. Què fem? Ens quedem ací tancant l'últim serrell o fem un Acta Marmota i ens n'anem a un altre xat fresc?";
+export const FRASE_CAS4 = "Mestre, el hook ha emés un avís de fatiga. Acabe el pas segur en curs i deixe el relleu per continuar amb context verificable.";
 /** Resultat d'`avaluaFatiga` quan el payload no porta cap conversa resoluble: no és un error del sensor. */
 export const SENSE_IDENTITAT = 'sense-identitat';
 

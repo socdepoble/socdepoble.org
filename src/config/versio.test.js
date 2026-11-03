@@ -40,8 +40,10 @@ describe('la versió canònica', () => {
     expect(VERSIO_SISTEMA).toBe(PAQUET.version);
     expect(BUILD_SISTEMA).toBeNull();
     expect(versioCanonica()).toBe(`v${PAQUET.version}`);
-    // Decisió 6 del Mestre (261028): v1.0.0 en este torn.
-    expect(versioCanonica()).toBe('v1.0.0');
+    /* Decisió 6 del Mestre (261028): v1.0.0. O6-CLAUDE-1 (ordre del Mestre,
+       Onada 6, 261103): salt a v1.1.0; el número de build (versionCode 2 i
+       CURRENT_PROJECT_VERSION 2) no canvia fins a la pròxima pujada a les botigues. */
+    expect(versioCanonica()).toBe('v1.1.0');
   });
 
   test('la forma: «vX.Y.Z» o «vX.Y.Z (build aammdd)»; un segell que no és aammdd no s’hi posa', () => {

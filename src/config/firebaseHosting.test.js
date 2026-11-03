@@ -31,7 +31,7 @@
        origen, i la política de capçalera només governa el nostre document i
        els iframes que ell incrusta. */
 import { expect, test } from 'vitest';
-import { readdirSync, readFileSync } from 'node:fs';
+import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 
 const hosting = JSON.parse(readFileSync(path.join(process.cwd(), 'firebase.json'), 'utf8')).hosting;
@@ -42,15 +42,23 @@ test('dist, sense barra final i sense URL netes', () => {
   expect(hosting.cleanUrls).toBe(false);
   expect(hosting.redirects).toBeUndefined();
   // Els fitxers amb punt no es despleguen (el prerender no n'escriu cap); .well-known/ sí (vegeu la prova de WebFinger).
-  expect(hosting.ignore).toEqual(['**/.*', '!.well-known', '**/node_modules/**']);
+  /* O4-CLAUDE-3 · O3-GEMINI-1 (261102) hi afig _headers i _redirects: són les
+     regles del domini per a Netlify i Cloudflare Pages (public/, Vite les copia
+     a dist/). Firebase no les llig: sense l'ignore es publicarien com a fitxers
+     solts a /_headers i /_redirects (prova d'ignore, més avall). */
+  expect(hosting.ignore).toEqual(['**/.*', '!.well-known', '**/node_modules/**', '_headers', '_redirects']);
 });
 
 /* P1-23 (ordre del Mestre del 30-10-2026) · Les reescriptures de WebFinger van
    davant de la de l'SPA (Firebase aplica la primera que casa), i la de l'SPA
    continua l'última i ara deixa fora també /.well-known/ (vegeu la prova de
-   WebFinger, més avall). */
-test('la reescriptura de l’SPA, l’última i sense assets, fonts, /ap/ ni /.well-known/; davant, les de WebFinger', () => {
-  expect(hosting.rewrites.at(-1)).toEqual({ source: '!/@(assets|fonts|ap|.well-known)/**', destination: '/index.html' });
+   WebFinger, més avall).
+   O4-CLAUDE-3 · O3-GEMINI-1 (261102) hi afig /opendata/ i /nodeinfo/: com a
+   /ap/, un fitxer que no és al build dona el 404 de Firebase, mai l'index.html
+   amb 200 etiquetat de JSON per les capçaleres d'eixos camins (prova de
+   /opendata/ i de /ap/, més avall). */
+test('la reescriptura de l’SPA, l’última i sense assets, fonts, /ap/, /opendata/, /nodeinfo/ ni /.well-known/; davant, les de WebFinger', () => {
+  expect(hosting.rewrites.at(-1)).toEqual({ source: '!/@(assets|fonts|ap|opendata|nodeinfo|.well-known)/**', destination: '/index.html' });
   /* Decisió del Mestre del 31-10-2026 (Ronda 2): només el projecte i La Torre
      (amb el seu àlies) es troben per WebFinger; cap poble de mostra. */
   expect(hosting.rewrites.slice(0, -1).map((r) => [Object.keys(r).sort(), r.destination])).toEqual([
@@ -185,9 +193,12 @@ test('P1-23 · /ap/**: application/activity+json, CORS i Cache-Control curt, l�
     ]
   });
   expect(hosting.headers.filter((r) => r.source === '/ap/**')).toHaveLength(1);
-  // Cap altra regla posa Content-Type fora de la federació: /ap/**, el host-meta, els JRD de WebFinger i NodeInfo.
+  // Cap altra regla posa Content-Type fora de la federació: /ap/**, el host-meta, els JRD de WebFinger i NodeInfo,
+  // i (O4-CLAUDE-3) les dades obertes, davant de /ap/** (prova de /opendata/, més avall). Inventari exacte a propòsit:
+  // G-D-01: la regla pròpia d'ActivityStreams és darrere de la de JSON.
   expect(hosting.headers.filter((r) => r.headers.some((h) => h.key === 'Content-Type')).map((r) => r.source ?? 'regex:webfinger'))
-    .toEqual(['/.well-known/host-meta', 'regex:webfinger', '/.well-known/nodeinfo', '/nodeinfo/2.1.json', '/ap/**']);
+    .toEqual(['/.well-known/host-meta', 'regex:webfinger', '/.well-known/nodeinfo', '/nodeinfo/2.1.json',
+      '/opendata/*.jsonld', '/opendata/*.json', '/opendata/activitystreams.json', '/ap/**']);
   // Cap redirecció, i cap camí de /ap/ no cau a cap reescriptura:
   // ni els que el build publica ni els que no hi són (Firebase hi torna el seu 404).
   expect(hosting.redirects).toBeUndefined();
@@ -205,6 +216,73 @@ test('P1-23 · /ap/**: application/activity+json, CORS i Cache-Control curt, l�
   for (const cami of ['/assets/index-abcdef12.js', '/fonts/x.woff2']) expect(reescritA(cami), cami).toBeUndefined();
   // I cap ruta del router no viu davall de /ap/: Firebase li tornaria 404.
   expect(readFileSync(path.join(process.cwd(), 'src/app/App.jsx'), 'utf8')).not.toMatch(/path="\/?ap(?:\/|")/);
+});
+
+/* O4-CLAUDE-3 · Les dades obertes del poble (O3-GEMINI-1, 261102: fitxers a
+   public/opendata/, exportador src/data/exportaMunicipiOpenData.js). El
+   JSON-LD ix com a application/ld+json i el JSON com a application/json, amb
+   CORS obert i la mateixa memòria cau curta que /ap/**. Com que Firebase
+   aplica, per a cada clau, la darrera regla que casa (prova de /ap/**), les
+   dues regles van darrere de «!/@(assets|fonts)/**», perquè el seu
+   Cache-Control mane sobre el no-cache, i davant de /ap/**, que continua sent
+   l'última (/ap/ i /opendata/ no es trepitgen: l'ordre entre elles no canvia
+   cap resposta). Els dos globs tampoc es trepitgen («*.json» no casa amb
+   «x.jsonld») i «*» no travessa «/»: per això public/opendata/ ha de ser pla.
+   Els .md (llicencies.md, memoria.md) no porten regla pròpia, només les
+   globals. Com a /ap/, un camí que no és al build dona el 404 de Firebase. */
+test('O4-CLAUDE-3 · /opendata/: JSON-LD i JSON amb tipus, CORS i memòria cau curta, darrere del no-cache i davant de /ap/**', () => {
+  const posicio = (font) => hosting.headers.findIndex((r) => r.source === font);
+  const DADES_OBERTES = { '/opendata/*.jsonld': 'application/ld+json; charset=utf-8', '/opendata/*.json': 'application/json; charset=utf-8' };
+  for (const [font, tipus] of Object.entries(DADES_OBERTES)) {
+    expect(hosting.headers.filter((r) => r.source === font), font).toEqual([{
+      source: font,
+      headers: [
+        { key: 'Content-Type', value: tipus },
+        { key: 'Access-Control-Allow-Origin', value: '*' },
+        { key: 'Cache-Control', value: 'public, max-age=300' }
+      ]
+    }]);
+    expect(posicio(font), font).toBeGreaterThan(posicio('!/@(assets|fonts)/**'));
+    expect(posicio(font), font).toBeLessThan(posicio('/ap/**'));
+  }
+  // Les capçaleres efectives, com les aplica Firebase: per a cada clau, la darrera regla que casa.
+  const efectives = (cami) => Object.fromEntries(hosting.headers.filter((r) => casaRegla(r, cami)).flatMap((r) => r.headers.map((h) => [h.key, h.value])));
+  const fitxers = readdirSync(path.join(process.cwd(), 'public', 'opendata'), { withFileTypes: true });
+  // Pla: cap subcarpeta, que els globs d'un sol nivell deixarien sense tipus ni CORS.
+  expect(fitxers.filter((f) => !f.isFile()).map((f) => f.name)).toEqual([]);
+  const ambRegla = fitxers.map((f) => f.name).filter((nom) => /\.json(?:ld)?$/.test(nom));
+  expect(ambRegla).toEqual(expect.arrayContaining(['municipi.jsonld', 'manifest.json']));
+  /* O6 · G-D-01 tancat: el tipus servit és exactament el mediatype declarat
+     al manifest, també per a ActivityStreams. La regla específica passa
+     després de la genèrica JSON i abans de /ap/**. */
+  expect(posicio('/opendata/activitystreams.json')).toBeGreaterThan(posicio('/opendata/*.json'));
+  expect(posicio('/opendata/activitystreams.json')).toBeLessThan(posicio('/ap/**'));
+  expect(hosting.headers.filter(r => r.source === '/opendata/activitystreams.json')).toHaveLength(1);
+  const manifest = JSON.parse(readFileSync(path.join(process.cwd(), 'public', 'opendata', 'manifest.json'), 'utf8'));
+  const declarats = Object.fromEntries(manifest.resources.map((recurs) => [recurs.path, `${recurs.mediatype}; charset=utf-8`]));
+  for (const nom of ambRegla) {
+    const cami = `/opendata/${nom}`;
+    const deLaRegla = DADES_OBERTES[nom.endsWith('.jsonld') ? '/opendata/*.jsonld' : '/opendata/*.json'];
+    const tipus = declarats[nom] ?? deLaRegla;
+    expect(efectives(cami), cami).toMatchObject({
+      'Access-Control-Allow-Origin': '*',
+      'Cache-Control': 'public, max-age=300'
+    });
+    expect(efectives(cami)['Content-Type'], cami).toBe(tipus);
+    // La CSP i les tres de conformitat de la regla global continuen.
+    expect(Object.keys(efectives(cami)), cami).toEqual(expect.arrayContaining(['Content-Security-Policy', ...Object.keys(CAPCALERES_GLOBALS)]));
+    // Una sola regla de dades obertes per camí.
+    expect(Object.keys(DADES_OBERTES).filter((font) => casaGlob(font, cami)), cami).toHaveLength(1);
+  }
+  // Cap camí de /opendata/ ni de /nodeinfo/ cau a l'SPA: el que no és al build, 404 de Firebase.
+  for (const cami of ['/opendata/', '/opendata/municipi.jsonld', '/opendata/manifest.json', '/opendata/no-existix.json',
+    '/opendata/no-existix.jsonld', '/opendata/llicencies.md', '/nodeinfo/2.1.json', '/nodeinfo/2.0.json']) {
+    expect(reescritA(cami), cami).toBeUndefined();
+  }
+  // Les rutes de l'app que només comencen igual continuen a l'SPA.
+  for (const cami of ['/opendatax', '/nodeinfox', '/descarregues', '/page/descarregues']) expect(reescritA(cami), cami).toBe('/index.html');
+  // I cap ruta del router no viu davall de /opendata/ ni de /nodeinfo/: Firebase li tornaria 404.
+  expect(readFileSync(path.join(process.cwd(), 'src/app/App.jsx'), 'utf8')).not.toMatch(/path="\/?(?:opendata|nodeinfo)(?:\/|")/);
 });
 
 /* P1-23 · WebFinger al lloc estàtic (ordre del Mestre del 30-10-2026:
@@ -301,10 +379,16 @@ test('P1-23 · WebFinger: /.well-known/webfinger torna 404 amb CORS, host-meta i
      listFiles de veres: .well-known/host-meta i els JRD hi són; .DS_Store no.
    · la de la documentació («same way that Git handles .gitignore»): «**\/.*»
      trauria el directori .well-known sencer, i «!.well-known», darrere, el
-     torna a incloure (l'últim patró que casa mana). */
-test('P1-23 · ignore: .well-known/ es desplega amb les dues lectures (glob de firebase-tools i .gitignore); la resta de fitxers amb punt, no', () => {
-  const publicats = ['.well-known/host-meta', '.well-known/webfinger/socdepoble.json', '.well-known/webfinger/la-torre-de-les-macanes.json', 'index.html', 'ap/actors/socdepoble.json'];
-  const amagats = ['.DS_Store', 'ap/.DS_Store', '.env'];
+     torna a incloure (l'últim patró que casa mana).
+   O4-CLAUDE-3 · I _headers i _redirects de l'arrel (O3-GEMINI-1), que són de
+   Netlify i Cloudflare Pages, tampoc: casen literalment amb les dues lectures.
+   Les dades obertes i NodeInfo sí que es publiquen. */
+test('P1-23 · ignore: .well-known/ es desplega amb les dues lectures (glob de firebase-tools i .gitignore); la resta de fitxers amb punt, _headers i _redirects, no', () => {
+  const publicats = ['.well-known/host-meta', '.well-known/webfinger/socdepoble.json', '.well-known/webfinger/la-torre-de-les-macanes.json', 'index.html', 'ap/actors/socdepoble.json',
+    'opendata/municipi.jsonld', 'opendata/manifest.json', 'nodeinfo/2.1.json'];
+  const amagats = ['.DS_Store', 'ap/.DS_Store', '.env', '_headers', '_redirects'];
+  // Les dues entrades no són mortes: public/ porta els dos fitxers i Vite els copia a dist/.
+  for (const fitxer of ['_headers', '_redirects']) expect(existsSync(path.join(process.cwd(), 'public', fitxer)), fitxer).toBe(true);
   // Lectura de glob (nonegate): un patró sense «!» que casa amb el camí; «**\/.*» exigix un punt a l'inici de l'últim segment.
   const ignoratGlob = (fitxer) => hosting.ignore.filter((p) => !p.startsWith('!')).some((p) => (p === '**/.*'
     ? fitxer.split('/').at(-1).startsWith('.') : path.matchesGlob(fitxer, p)));

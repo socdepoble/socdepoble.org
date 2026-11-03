@@ -88,6 +88,17 @@ test('/fediversity porta a /page/fediversity, amb l’anatomia de la UniversalPa
     expect(cos.querySelectorAll('table')).toHaveLength(0);
     expect([...cos.querySelectorAll('h4')].filter((h4) => /^\d · /.test(h4.textContent))).toHaveLength(4);
     expect(cos.querySelectorAll('h5')).toHaveLength(12);
+    /* O4-CLAUDE-2 (ordre del Mestre, 261102 21:38) · Prova posada al dia a propòsit: cada partida és
+       una Subtargeta (div.sdp-subtargeta, fill directe de l'article) que el sanejador conserva, amb el
+       seu H4 com a títol i els seus tres H5 dins. Els mateixos 3 H3, 4 partides i 12 H5 de dalt. */
+    const caixes = [...cos.querySelectorAll(':scope > div.sdp-subtargeta[data-sdp-subtargeta]')];
+    expect(caixes.map((caixa) => [caixa.firstElementChild.tagName, /^\d · /.test(caixa.firstElementChild.textContent), caixa.querySelectorAll('h5').length]))
+      .toEqual(Array(4).fill(['H4', true, 3]));
+    // I, a la verificació en viu, els sis fitxers del paquet de dades obertes estàtic, en relatiu.
+    expect([...cos.querySelectorAll('a[href^="/opendata/"]')].map((a) => [a.getAttribute('href'), a.getAttribute('target'), a.getAttribute('rel')])).toEqual([
+      '/opendata/municipi.jsonld', '/opendata/manifest.json', '/opendata/llicencies.md',
+      '/opendata/noticies.jsonld', '/opendata/agenda.jsonld', '/opendata/memoria.md'
+    ].map((href) => [href, '_blank', 'noopener noreferrer nofollow']));
     expect(cos.querySelector('blockquote').textContent).toContain('Total sol·licitat: 1.000 hores · 50.000 €');
     // Després del sanejador, els enllaços de fora conserven target i rel (amb el nofollow de sempre).
     const logotip = cos.querySelector('a[href="https://nlnet.nl/fediversity/"] img[src*="ngi-fediversity-tag.svg"]');

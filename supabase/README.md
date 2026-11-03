@@ -1363,6 +1363,24 @@ description: "Documentació canònica de Sóc de Poble."
   Idempotent i en una sola transacció; **NO aplicada: l'aplica el Mestre, mai
   un agent**.
 
+- `migrations/2611030330_politica_privacitat_2_4.sql`
+  Onada 6: presentació editorial de `/legal`, amb 6–8 negretes als 29
+  paràgrafs abans plans. Rètol 2.4 en vigor des del 3 de novembre de 2026;
+  la resta de paraules, dades, terminis i enllaços es conserva. La 2.3 i la
+  migració `2611012257` no es reescriuen (`SDP-RGPD-021`). Una sola inserció
+  idempotent, amb comprovació transaccional del conflicte: una 2.4 preexistent
+  amb altre hash, URL, data o sense text causa error i rollback, sense cap
+  UPDATE/DELETE de la 2.3. L'HTML exacte té SHA-256 `2956bc30112b2e8d097815d502f9cd711e9ee0c213c5c73634340d9657343ff3`.
+  Abans (lectura): comprovar les versions i que la 2.3 conserva l'empremta
+  `abd827d07af5aa30dc364f156a551deed4e9a43a830b9f57eca5a861ea4eadca`.
+  Després (lectura): comprovar l'empremta de la 2.4 i tornar a comprovar la 2.3.
+  Primer tornar a construir i desplegar web/connector amb el text 2.4 i
+  verificar-ne l'empremta; només després, la migració (pas 13 de l'ordre).
+  `estat_consentiment()` demanarà tornar a acceptar a qui tenia una versió
+  anterior. No s'executa SQL des del kit ni s'activen serveis nous.
+  Prova: `src/data/supabase/politicaPrivacitat24.migracio.test.js`.
+  **NO aplicada: l'aplica el Mestre, mai un agent**.
+
 - `seed.sql`
   Contingut inicial del portal.
 
@@ -1459,6 +1477,8 @@ verificador sense avisos.
   11. `2610311900` → `2611011800` (P2-09: només després de llegir les tres consultes «Abans» de la seua capçalera, i aplicada per la propietària de l'RPC; si mai es reaplica 2610311900, cal tornar a aplicar 2611011800).
   12. Primer el desplegament web amb el text final de `/legal`; després `2611012257` (T11-05: si s'aplica abans, el servidor demana acceptar la 2.3 mentre `/legal` encara mostra la 2.2; i només després de llegir la consulta «Abans» de la seua vinyeta). Abans de desplegar, cal tornar a construir el web i el connector (els `dist/` de l'1-11 a les 19:28 porten una altra «Versió 2.3», sense la ubicació de les fotos) i comprovar que el `/legal` desplegat té l'empremta de la migració.
 
+  13. Primer tornar a construir i desplegar web/connector amb `/legal` 2.4 i verificar-ne l'empremta; després `2611030330` (Onada 6; conserva la 2.3, demana nou consentiment; cap agent no l'aplica).
+
 ### Taula canònica ordenada: 60 fitxers de R1 + candidates 1500, 1800, 1900 i 2000 + assalt 2611011500, 2611011510 i 2611011800 + marató 2611012257 i 2611020106 + `seed.sql` + 2 snippets (`P0-05` / `DF-06`)
 
 | Ordre | Versió | Fitxer a `supabase/migrations/` | Estat declarat | Objectiu resumit |
@@ -1534,6 +1554,7 @@ verificador sense avisos.
 | 69 | `2611020106` | `2611020106_ap_inbox_persistencia_i_cua.sql` | **NO aplicada: l'aplica el Mestre** | persistència de la inbox ActivityPub i cua d'eixida (P1-23 fase 2) |
 | 70 | `2611020417` | `2611020417_xat_avisos_push.sql` | **NO aplicada: l'aplica el Mestre** | avisos push del Xat: aparells, silenci i cua (B8) |
 | 71 | `2611021800` | `2611021800_notes_fitxa_ambit.sql` | **NO aplicada: l'aplica el Mestre** | fitxa d'àmbit de les notes del Flux Universal de Publicació (IDEA-61, T0) |
+| 72 | `2611030330` | `2611030330_politica_privacitat_2_4.sql` | **NO aplicada: l'aplica el Mestre** | política 2.4: èmfasi editorial, 2.3 intacta (Onada 6) |
 
 | Artefacte complementari | Ruta dins de `supabase/` | Rol operatiu |
 | :--- | :--- | :--- |

@@ -26,6 +26,8 @@ vi.mock('../../components/universal/UniversalPage', () => ({
 }));
 import TextSection, { CosDeLaPagina } from './TextSection.jsx';
 import { PAGE_COPY } from './pageContent.js';
+import { adaptaHtml } from './perAppNativa.js';
+import { sanitizeHtml } from '../../utils/sanitize.js';
 
 /* La regla de la prova (T1-06). Les mencions d'Apple (App Store, iPhone, iOS)
    hi poden ser: la regla només parla de les ALTRES plataformes. També amb un
@@ -83,6 +85,51 @@ describe('dins de l’app nativa', () => {
     const { container } = render(<CosDeLaPagina html="<p>Hola.</p><p>Baixa-la de Google Play.</p><!-- Android -->" />);
     expect(container.innerHTML).toBe('<article class="cms-preview"><p>Hola.</p></article>');
   });
+
+  test.each([
+    '/descarregues/instal-lador.apk',
+    'https://fitxers.example/paquet.APK?versio=3#baixa',
+    '/descarregues/paquet%2eapk',
+    '/descarregues/paquet&#46;apk',
+    '/descarregues/paquet&period;apk',
+    '/descarregues/paquet.a&Tab;pk',
+    '/descarregues/paquet.apk?nota=>'
+  ])('CosDeLaPagina no deixa un instal·lador APK clicable encara que el text siga neutre: %s', (href) => {
+    const { container } = render(<CosDeLaPagina html={`<p><a href="${href}">Ací</a> i <a href="/legal">la política</a>.</p>`} />);
+    expect([...container.querySelectorAll('a')].map((a) => a.getAttribute('href'))).toEqual(['/legal']);
+    expect(container.textContent).toBe('Ací i la política.');
+  });
+
+  test('data-href no substituïx la destinació real de l’enllaç', () => {
+    const { container } = render(<CosDeLaPagina html={'<p><a data-href="/paquet.apk" href="/legal">La política</a></p>'} />);
+    expect(container.querySelector('a')?.getAttribute('href')).toBe('/legal');
+  });
+
+  test('un href dins del text d’un atribut no substituïx la destinació', () => {
+    const { container } = render(<CosDeLaPagina html={'<p><a title="Exemple href=/paquet.apk" href="/legal">La política</a></p>'} />);
+    expect(container.querySelector('a')?.getAttribute('href')).toBe('/legal');
+  });
+
+  test('el lector també lleva l’APK quan el navegador recupera atributs sense espai entre cometes i href', () => {
+    const html = '<p><a title="Exemple"href="/paquet.apk">Ací</a> i <a title="Exemple href=/paquet.apk"href="/legal">la política</a>.</p>';
+    const { container } = render(<CosDeLaPagina html={html} />);
+    expect([...container.querySelectorAll('a')].map((a) => a.getAttribute('href'))).toEqual(['/legal']);
+    expect(container.textContent).toBe('Ací i la política.');
+  });
+
+  test.each(['title', 'aria-label'])('el lector lleva %s adjacent amb una altra plataforma i conserva l’enllaç legítim', (atribut) => {
+    const html = `<p><a href="/legal"${atribut}="Android">La política</a></p>`;
+    expect(adaptaHtml(html).html).not.toContain('Android');
+    const nativa = render(<CosDeLaPagina html={html} />);
+    expect(nativa.container.querySelector('a')?.getAttribute('href')).toBe('/legal');
+    expect(nativa.container.querySelector('a')?.getAttribute(atribut)).toBeNull();
+    expect(nativa.container.textContent).toBe('La política');
+    cleanup();
+    delete window.Capacitor;
+    const web = render(<CosDeLaPagina html={html} />);
+    expect(web.container.innerHTML).toBe(`<article class="cms-preview">${sanitizeHtml(html)}</article>`);
+    expect(web.container.querySelector('a')?.getAttribute('href')).toBe('/legal');
+  });
 });
 
 describe('a la web (Llei del Píxel)', () => {
@@ -95,5 +142,12 @@ describe('a la web (Llei del Píxel)', () => {
   test('CosDeLaPagina deixa l’HTML com estava', () => {
     const { container } = render(<CosDeLaPagina html="<p>Baixa-la de Google Play.</p>" />);
     expect(container.innerHTML).toBe('<article class="cms-preview"><p>Baixa-la de Google Play.</p></article>');
+  });
+
+  test('la web conserva l’enllaç APK de sempre', () => {
+    const html = '<p><a href="/descarregues/instal-lador.apk">Ací</a>.</p>';
+    const { container } = render(<CosDeLaPagina html={html} />);
+    expect(container.querySelector('a')?.getAttribute('href')).toBe('/descarregues/instal-lador.apk');
+    expect(container.textContent).toBe('Ací.');
   });
 });

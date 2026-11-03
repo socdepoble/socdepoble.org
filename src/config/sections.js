@@ -10,11 +10,11 @@ import { RUTA_FITXA_IAIA, RUTES_CANONIQUES } from './navigation.js';
  * l'auditoria «Sol Muy Alto» com a /calendari i queda sense cap importador.
  */
 /* Disseny, Skills, IA i Realitat s'incorporen a la navegació pública a petició de l'usuari */
-/* IDEA-61 (T0, prompt 261102_1532) · Les tres seccions verticals (Compartir
-   cotxe, Treball, Habitatge) van darrere del Mercat. No entren a
-   SECCIONS_VISIBLES ni a la barra mòbil (App.jsx; decisió del Mestre): cauen al
-   desplegable «Sistema». */
-export const SECTION_ORDER = ['xat', 'mur', 'mercat', 'vehicle', 'treball', 'habitatge', 'pobles', 'calendari', 'multimedia', 'dispositius', 'disseny', 'wikidepoble', 'notes', 'projecte', 'constitucio', 'ia', 'roadmap', 'versions', 'legal'];
+/* IDEA-61 · Les tres seccions verticals (Compartir cotxe, Treball, Habitatge)
+   són a SECTIONS però FORA de SECTION_ORDER (ordre del Mestre, 261102): no
+   ixen a la barra lateral ni al desplegable «Sistema», sinó que s'hi accedix
+   des del Panell de Control (/control). */
+export const SECTION_ORDER = ['xat', 'mur', 'mercat', 'pobles', 'calendari', 'multimedia', 'dispositius', 'disseny', 'wikidepoble', 'notes', 'projecte', 'constitucio', 'ia', 'roadmap', 'versions', 'legal'];
 /* T27 (ordre del Mestre, 260927 nit) · `subrutes`: rutes que viuen dins de la
    jerarquia d'una secció sense penjar del seu path (App.jsx, ActorRoutes).
    La barra principal i la mòbil les encenen com a filles (NavLink matchPaths),

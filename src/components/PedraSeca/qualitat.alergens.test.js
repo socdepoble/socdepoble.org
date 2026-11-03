@@ -405,8 +405,9 @@ describe('les còpies dels SVG del Mestre (src/assets/alergens)', () => {
 /* Mentre els originals siguen a la zona humana (01_produccio), la còpia ha de ser l'original
    net, byte a byte. Si el Mestre els trasllada, este bloc es salta (i ho diu el resum de la
    prova): els colors de dalt continuen vigilant que cap fitxer canvie de lloc. */
-describe.runIf(existsSync(path.join(ARREL, ORIGENS)))('les còpies són fidels als originals del Mestre', () => {
-  const originals = readdirSync(path.join(ARREL, ORIGENS)).filter((f) => /\.svg$/i.test(f));
+const hiHaOriginals = existsSync(path.join(ARREL, ORIGENS));
+describe.runIf(hiHaOriginals)('les còpies són fidels als originals del Mestre', () => {
+  const originals = hiHaOriginals ? readdirSync(path.join(ARREL, ORIGENS)).filter((f) => /\.svg$/i.test(f)) : [];
 
   test('els 14 es casen pel nom, i els altres quatre no entren en l’encàrrec', () => {
     const casats = originals.map((f) => PER_NOM[nomDelFitxer(f)]).filter(Boolean);
