@@ -74,18 +74,18 @@ Plantilla entregada: _wiki_de_poble/03_actuar/plantilles/acta.md; SHA-256 4d4b9d
   - Producció web (`https://socdepoble.org`), `/page/fediversity`, `/page/descarregues`, Supabase (`70` migracions) i Avisos Push del Xat estan **100% en viu**.
   - `iOS 1.0.0 (2)` ja està pujat i processat a **App Store Connect / TestFlight** (`https://appstoreconnect.apple.com`).
   - `Android 2 (1.0.0)` (`261102_socdepoble_1.0.0+2.aab`, signat amb el keystore oficial del 24 d'octubre `AC:5F:98:33...` custodiat en Mode Jarvis) ja està **PUBLICADA EN VIU a Google Play Console (`Prova interna` · `19.486 dispositius Android compatibles`)**.
-  - A l'Escriptori ja queden creats, validats i ancorats el Pla d'Implementació [[../04_escriptori/261102_1532_pla_implementacio_mode_jarvis_idea60_fediversity_i_deute_llibre_mestre]] i el Prompt Local [[../90_arxiu_historic/261102_1532_prompt_mode_jarvis_idea60_fediversity_i_deute_llibre_mestre|../04_escriptori/261102_1532_prompt_mode_jarvis_idea60_fediversity_i_deute_llibre_mestre]] amb el **Protocol d'Estalvi Termodinàmic de Quota** (desactivar `Extra/Ultracode` i operar en fil únic sense subagents a Claude Code).
+  - A l'Escriptori ja queden creats, validats i ancorats el Pla d'Implementació [[../90_arxiu_historic/261102_1532_pla_implementacio_mode_jarvis_idea60_fediversity_i_deute_llibre_mestre|../04_escriptori/261102_1532_pla_implementacio_mode_jarvis_idea60_fediversity_i_deute_llibre_mestre]] i el Prompt Local [[../90_arxiu_historic/261102_1532_prompt_mode_jarvis_idea60_fediversity_i_deute_llibre_mestre|../04_escriptori/261102_1532_prompt_mode_jarvis_idea60_fediversity_i_deute_llibre_mestre]] amb el **Protocol d'Estalvi Termodinàmic de Quota** (desactivar `Extra/Ultracode` i operar en fil únic sense subagents a Claude Code).
 
 <!-- SDP:SECTION acta.s5 -->
 ## Pendents
 
 1. `[x]` **Pujar i publicar el fitxer `.aab` (`261102_socdepoble_1.0.0+2.aab`) a Google Play Console (`2 (1.0.0)` publicada per a `19.486` dispositius)** i deixar la versió `1.0.0 (2)` d'iOS processada a TestFlight.
-2. `[ ]` **Al nou xat (després de reiniciar el Mac):** Executar el Pla d'Implementació [[../04_escriptori/261102_1532_pla_implementacio_mode_jarvis_idea60_fediversity_i_deute_llibre_mestre]] i el Prompt Local [[../90_arxiu_historic/261102_1532_prompt_mode_jarvis_idea60_fediversity_i_deute_llibre_mestre|../04_escriptori/261102_1532_prompt_mode_jarvis_idea60_fediversity_i_deute_llibre_mestre]] per a completar **`IDEA-60` (Panell Mode Jarvis Omnicanal d'1 Clic + APK Directe)**, netejar els últims punts del Llibre Mestre (`P0-24b`, `P1-73`, `P1-22`, `P1-30`, `P2-15`, `P1-71`, WordPress `1.1.11`) i enviar el correu a **Fede (NLnet Fediversity)**.
+2. `[ ]` **Al nou xat (després de reiniciar el Mac):** Executar el Pla d'Implementació [[../90_arxiu_historic/261102_1532_pla_implementacio_mode_jarvis_idea60_fediversity_i_deute_llibre_mestre|../04_escriptori/261102_1532_pla_implementacio_mode_jarvis_idea60_fediversity_i_deute_llibre_mestre]] i el Prompt Local [[../90_arxiu_historic/261102_1532_prompt_mode_jarvis_idea60_fediversity_i_deute_llibre_mestre|../04_escriptori/261102_1532_prompt_mode_jarvis_idea60_fediversity_i_deute_llibre_mestre]] per a completar **`IDEA-60` (Panell Mode Jarvis Omnicanal d'1 Clic + APK Directe)**, netejar els últims punts del Llibre Mestre (`P0-24b`, `P1-73`, `P1-22`, `P1-30`, `P2-15`, `P1-71`, WordPress `1.1.11`) i enviar el correu a **Fede (NLnet Fediversity)**.
 
 <!-- SDP:SECTION acta.s6 -->
 ## Vincles
 
 - [[00_index]]
 - [[00_index_escriptori]]
-- [[../04_escriptori/261102_1532_pla_implementacio_mode_jarvis_idea60_fediversity_i_deute_llibre_mestre]]
+- [[../90_arxiu_historic/261102_1532_pla_implementacio_mode_jarvis_idea60_fediversity_i_deute_llibre_mestre|../04_escriptori/261102_1532_pla_implementacio_mode_jarvis_idea60_fediversity_i_deute_llibre_mestre]]
 - [[../90_arxiu_historic/261102_1532_prompt_mode_jarvis_idea60_fediversity_i_deute_llibre_mestre|../04_escriptori/261102_1532_prompt_mode_jarvis_idea60_fediversity_i_deute_llibre_mestre]]

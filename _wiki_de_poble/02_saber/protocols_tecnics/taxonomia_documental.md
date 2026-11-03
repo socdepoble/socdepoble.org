@@ -27,7 +27,7 @@ La porta `tooling/gates/porta-taxonomia.mjs` llig el mateix catàleg de `tooling
 
 Exemple complet: `260924_1410_auditoria_claude.md`.
 
-**L'ordre és any, mes, dia.** `260924` no és el 26 de setembre del 2024. Llegir `aammdd` com si fóra `ddmmaa` és un error que ja ha passat: la porta rebutja un fitxer nou amb una data de fa més de 30 dies, que és com es delata eixa inversió.
+**L'ordre és any, mes, dia.** `260924` no és el **26 de setembre del 2024**. Llegir `aammdd` com si fóra `ddmmaa` és un **error que ja ha passat**: la **porta rebutja** un fitxer nou amb una **data de fa més de 30 dies**, que és com es **delata eixa inversió**.
 
 **Dins dels documents, les dates van en `AAAA-MM-DD`** (`2026-09-24`). El format curt `aammdd` només viu al nom del fitxer i no es transcriu mai al text.
 
@@ -72,7 +72,7 @@ Cada categoria correspon a una ruta de `.agents/protocolledge.json`, que és qui
 | `tasques` | sense ruta | transitòria de torn (porta Olivera) |
 <!-- /SDP:TAXONOMIA:CATEGORIES -->
 
-Una categoria de document formal nova necessita primer una ruta a `.agents/protocolledge.json` (amb plantilla i seccions) i després una fila ací i a `tooling/wiki/taxonomia.json`. `solucio` i `tasques` són artefactes transitoris admesos per la porta Olivera, sense ruta formal; esta excepció no crea plantilles. `incidencia` no és al catàleg.
+Una **categoria de document formal nova** necessita **primer una ruta** a `.agents/protocolledge.json` (amb **plantilla i seccions**) i després una fila ací i a `tooling/wiki/taxonomia.json`. `solucio` i `tasques` són **artefactes transitoris** admesos per la porta Olivera, **sense ruta formal**; esta **excepció no crea plantilles**. `incidencia` no és al catàleg.
 
 ## Superfícies i excepcions
 

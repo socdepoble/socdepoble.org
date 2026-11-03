@@ -140,7 +140,7 @@ test.each([['amb', true], ['sense', false]])('/consola %s fonts: l’índex ve d
   const regio = index();
   expect(regio.tagName).toBe('SECTION');
   expect(regio.className).toBe('sdp-consola__index sdp-prose sdp-centre');
-  // Darrere d'«El Mas en xifres» (l'última graella del tauler) i de totes les targetes.
+  // Darrere de «Sóc de Poble en xifres» (l'última graella del tauler) i de totes les targetes.
   const mas = screen.getByRole('region', { name: TITOL_MAS });
   expect(Boolean(mas.compareDocumentPosition(regio) & Node.DOCUMENT_POSITION_FOLLOWING)).toBe(true);
   for (const t of document.querySelectorAll('article.sp-card')) {
@@ -295,10 +295,10 @@ test('navegar des de l’índex: una pàgina (H3), un panell del pols i una xifr
 });
 
 /* Ordre del Mestre, 13-10-2026 (pla 261013_1405, front F) · Darrere de
-   l'Índex ve el Diagnòstic del Mas, amb el seu H2 i cap altra capçalera.
+   l'Índex ve el Diagnòstic de Sóc de Poble, amb el seu H2 i cap altra capçalera.
    Derogat EN PART per l'ordre del Mestre del 13-10-2026 (front F): l'Índex
    «al final» de l'Índex de secció (Onada 11). */
-test('l’Índex de secció de la barra blava recull l’H2, els H3 i els H4 de l’índex, en ordre; i, al final, el Diagnòstic del Mas', async () => {
+test('l’Índex de secció de la barra blava recull l’H2, els H3 i els H4 de l’índex, en ordre; i, al final, el Diagnòstic de Sóc de Poble', async () => {
   ambFonts();
   await obri('/consola');
   fireEvent.click(screen.getByRole('button', { name: 'Índex de secció' }));

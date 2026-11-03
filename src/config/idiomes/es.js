@@ -242,6 +242,9 @@ export default {
   'editor.targetes.esquerra': 'Izquierda',
   'editor.targetes.dreta': 'Derecha',
   'editor.targetes.lleva': 'Quitar la tarjeta',
+  /* 261103 (Onada 7, T2.6) · El commutador «Enllaç ↔ Card»: el botó de la targeta triada i el del diàleg. */
+  'editor.targetes.aEnllac': 'Convertir en enlace',
+  'editor.targetes.dialeg.inserirEnllac': 'Insertar como enlace',
   'editor.targetes.avis.titol': 'Esta tarjeta es una vista previa',
   'editor.targetes.avis.descripcio': 'Esta tarjeta está incrustada en el documento que editas. Sus botones —conectar, traducir, comentar y compartir— solo funcionan cuando se lee el documento publicado.',
   'editor.targetes.avis.entesos': 'Entendido',
@@ -421,6 +424,8 @@ export default {
   /* O4-CLAUDE-2 · La subtargeta i la targeta incrustada a la segona fila «⋯» de la barra, i els textos de mostra de la subtargeta. */
   'section.notes.format.subtargeta': 'Subtarjeta',
   'section.notes.format.targeta': 'Tarjeta incrustada',
+  /* 261103 (Onada 7, T2.6) · El sentit Enllaç → Card a la segona fila, amb el cursor en un enllaç intern. */
+  'section.notes.format.enllacATargeta': 'Convertir en tarjeta',
   'section.notes.format.subtargetaTitol': 'Título de la subtarjeta',
   'section.notes.format.subtargetaMeta': 'Una línea de contexto: fecha, lugar o autoría',
   'section.notes.format.subtargetaCos': 'Escribe aquí el contenido de la subtarjeta: párrafos, listas y enlaces.',
@@ -564,7 +569,6 @@ export default {
   'editor.ambit.ajuda': 'Elige si es una publicación del Muro o una ficha para el Mercado, Compartir coche, Trabajo o Vivienda.',
   'editor.ambit.obligatori': 'Falta un campo obligatorio: {camp}',
   'editor.ambit.previsualitzacio': 'Así se verá en el Muro',
-  'editor.ambit.completar': 'Completar la ficha',
   'editor.ambit.errorPublicar': 'La ficha de «{ambit}» no está completa.',
   'editor.ambit.actual': 'Ámbito: {ambit}',
   'editor.ambit.triat': 'Elegido',

@@ -1,6 +1,6 @@
 import { gestionaTeclaGraella } from '../../components/universal/workspace/navegacioTeclat.js';
 /**
- * XifresMas.jsx — les targetes amb pàgina pròpia de la Consola: «El Mas en
+ * XifresMas.jsx — les targetes amb pàgina pròpia de la Consola: «Sóc de Poble en
  * xifres» del tauler, les xifres de dins de cada pàgina, les peces del Mapa
  * i la pàgina pròpia de cada una (/consola/xifres/<slug>).
  *
@@ -120,7 +120,7 @@ export function XifresMas({ mapa = null }) {
   const id = useId();
   return (
     <section aria-labelledby={id}>
-      <h2 id={id}>El Mas en xifres</h2>
+      <h2 id={id}>Sóc de Poble en xifres</h2>
       <GraellaXifres xifres={xifresDeLaGraella(mapa)} generat={mapa?.generat ?? null} />
     </section>
   );
@@ -252,8 +252,8 @@ export function PaginaXifra({ slug, xifra: donada, fonts, creat, privat = false,
     );
     if (llegint) {
       return (
-        <PaginaApp title="Llegint la xifra…" subtitle="El Mas en xifres"
-          lead="La Consola encara llig les seues fonts: el Mapa del Mas i consola.json."
+        <PaginaApp title="Llegint la xifra…" subtitle="Sóc de Poble en xifres"
+          lead="La Consola encara llig les seues fonts: el Mapa de Sóc de Poble i consola.json."
           author={AUTOR} {...dataHoraDeBarra({ creat, modificat: fontMapa.mapa?.generat })} onBack={tornar}>
           {molla('Llegint la xifra…')}
           <Carregant etiqueta="Llegint les fonts de la Consola…" />
@@ -261,12 +261,12 @@ export function PaginaXifra({ slug, xifra: donada, fonts, creat, privat = false,
       );
     }
     return (
-      <PaginaApp title="Xifra no trobada" subtitle="El Mas en xifres"
-        lead="Esta adreça no correspon a cap xifra ni a cap peça del Mas: les xifres vives són a les targetes de la Consola."
+      <PaginaApp title="Xifra no trobada" subtitle="Sóc de Poble en xifres"
+        lead="Esta adreça no correspon a cap xifra ni a cap peça de Sóc de Poble: les xifres vives són a les targetes de la Consola."
         author={AUTOR} {...dataHoraDeBarra({ creat, modificat: fontMapa.mapa?.generat })} onBack={tornar}>
         {molla('Xifra no trobada')}
         <EstatBuit icona={SearchX} titol="Cap xifra amb este nom">
-          <Link to={RUTA_CONSOLA}>Torna a la Consola</Link> per a vore les xifres del Mas.
+          <Link to={RUTA_CONSOLA}>Torna a la Consola</Link> per a vore les xifres de Sóc de Poble.
           {/* Correcció 261004 (verificador de la tercera passada, informatiu) · també les condicionals. */}
           {senseFont ? (
             <> Les peces del Mapa, els proveïdors de crèdits i les xifres que només existixen quan hi ha dades (les

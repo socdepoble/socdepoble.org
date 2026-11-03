@@ -5,7 +5,7 @@
  * Ordre del Mestre (Llibre Mestre, fila IDEA-60, 2026-11-02 14:46): superar
  * el model de «copiar ordres al terminal» amb un sol botó que actualitza la
  * web, el connector de WordPress, Google Play i l'App Store, per a
- * administradors sense coneixements informàtics. En local (el Mas) el botó
+ * administradors sense coneixements informàtics. En local (Sóc de Poble) el botó
  * crida l'endpoint del corredor (POST RUTA_PUBLICA_TOT, només des de
  * localhost i només en DEV: tooling/vite/consola-iaia.mjs); des de la web
  * pública, en el futur, un webhook, que hui no existix i el panell ho diu.
@@ -276,7 +276,7 @@ export function potPublicarDesDAci({ dev, fontViva } = {}) {
   return dev === true && fontViva === true;
 }
 
-export const MOTIU_FORA_DE_DEV = 'Des de la web pública la publicació automàtica encara no està connectada (webhook pendent): es fa des del servidor local del Mas.';
+export const MOTIU_FORA_DE_DEV = 'Des de la web pública la publicació automàtica encara no està connectada (webhook pendent): es fa des del servidor local de Sóc de Poble.';
 export const MOTIU_SENSE_FONT = 'Cal una lectura viva dels empaquetats (el servidor local de desenvolupament) per a publicar des d’ací.';
 export const MOTIU_LLEST = 'Publica a tots els canals alhora des d’este ordinador.';
 

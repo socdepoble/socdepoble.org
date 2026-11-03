@@ -1,11 +1,11 @@
 /**
- * diagnosiConsola.js — el «Diagnòstic del Mas» en text pla, sense React.
+ * diagnosiConsola.js — el «Diagnòstic de Sóc de Poble» en text pla, sense React.
  *
  * Ordre del Mestre, 13-10-2026 (pla 261013_1405, front F) · «Al final de la
  * pàgina, davall de les targetes, incorporar un índex de navegació ràpida a
  * cada card (El pols del cervell, Explorador, Fluxos de treball...) i un bloc
  * de text continu (estil terminal / <pre> amb tipografia monoespaiada i format
- * net) que mostre el diagnòstic complet del Mas d'un sol colp d'ull.»
+ * net) que mostre el diagnòstic complet de Sóc de Poble d'un sol colp d'ull.»
  *
  * Ací viuen les dues dades del bloc, perquè una prova les fixe sense muntar
  * res i la vista (DiagnosiConsola.jsx) només les pinte:
@@ -21,7 +21,7 @@
  * Els problemes de cada pàgina hi van sencers, sense retallar: la targeta en
  * pinta com a molt MAX_PROBLEMES_TARGETA, i este és el diagnòstic complet.
  * Ordre del Mestre, 261004 (xat: cap xifra solta) · El text pla repetix
- * xifres que ja tenen targeta: cada línia nomena la pàgina (o «El Mas en
+ * xifres que ja tenen targeta: cada línia nomena la pàgina (o «Sóc de Poble en
  * xifres») on viu la seua targeta, i l'accés ràpid hi porta.
  *
  * MODE PRIVACITAT. El <pre> és text pla i no passa per <Privat>: les rutes
@@ -44,7 +44,7 @@ import { TEXTOS_AVIS } from './mapa/grafMapa.js';
 import { versioCanonica } from '../../config/versio.js';
 
 /** El títol del bloc (l'H2) i el nom accessible de l'accés ràpid. */
-export const TITOL_DIAGNOSI = 'Diagnòstic del Mas';
+export const TITOL_DIAGNOSI = 'Diagnòstic de Sóc de Poble';
 export const ETIQUETA_ACCES = 'Accés ràpid a les pàgines de la Consola';
 /** El que diu una ruta o una evidència amb el mode privacitat: la mateixa marca que Privat (peces.jsx). */
 export const MASCARA = '••••••';
@@ -106,7 +106,7 @@ function pagina(p, fonts, ara, privat) {
   return linies;
 }
 
-/* Una xifra del Mas com la diu la seua targeta (TargetaXifra): títol i subtítol, la versió privada si cal. */
+/* Una xifra de Sóc de Poble com la diu la seua targeta (TargetaXifra): títol i subtítol, la versió privada si cal. */
 function xifra(x, privat) {
   const titol = privat && x.titolPrivat ? x.titolPrivat : x.titol;
   const subtitol = privat && x.subtitolPrivat ? x.subtitolPrivat : x.subtitol;
@@ -114,7 +114,7 @@ function xifra(x, privat) {
 }
 
 /**
- * El diagnòstic complet del Mas en text pla (línies unides amb '\n').
+ * El diagnòstic complet de Sóc de Poble en text pla (línies unides amb '\n').
  * `fonts` té la forma de fontsDe (ConsolaSection.jsx): { dades, estatDades,
  * mapa, estatMapa }, cap obligatòria. `ara` és el rellotge del tauler (el
  * mateix que passa a estatsPagina i etiquetesPagina); `privat`, el mode
@@ -127,7 +127,7 @@ function xifra(x, privat) {
 export function diagnosiTextual(fonts = {}, { ara = Date.now(), locale = 'ca-ES', privat = false, versio = versioCanonica() } = {}) {
   const f = normalitza(fonts);
   return [
-    `DIAGNÒSTIC DEL MAS · ${copyConsola().title}`,
+    `${TITOL_DIAGNOSI.toLocaleUpperCase('ca')} · ${copyConsola().title}`,
     instantania('del pols', f.dades?.generat, locale),
     instantania('del Mapa', f.mapa?.generat, locale),
     `${ETIQUETA_VERSIO}: ${versio}`,
@@ -137,7 +137,7 @@ export function diagnosiTextual(fonts = {}, { ara = Date.now(), locale = 'ca-ES'
     'PÀGINES',
     ...paginesConsola().flatMap((p) => pagina(p, f, ara, privat)),
     '',
-    'EL MAS EN XIFRES',
+    'SÓC DE POBLE EN XIFRES',
     ...xifresDeLaGraella(f.mapa).map((x) => xifra(x, privat))
   ].join('\n');
 }

@@ -42,7 +42,7 @@ export const FILTRES = Object.freeze([
 ]);
 /* Ordre del Mestre, 261004 · El filtre viu a la URL (?filtre=avisos|roig|
    ambre|verd|orfes|cens|sense-disparador|frontmatter|nucli), com el sentinella
-   triat de PanellSentinelles: una xifra d'«El Mas en xifres» hi porta, i el
+   triat de PanellSentinelles: una xifra d'«Sóc de Poble en xifres» hi porta, i el
    que es comparteix és el que es veu. «Totes» no escriu res. Sense un router
    llegible (un amfitrió o una prova sense RouterProvider), el filtre és estat
    local, com abans. La forma `return useSearchParams()` és la que

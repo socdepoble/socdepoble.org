@@ -85,9 +85,13 @@ describe('la lectura: dins de la carta, sense hidratació', () => {
     ]]
   ])('%s: les seues subtargetes arriben pintades, amb el títol com a primer fill', (clau, nivell, titols) => {
     const { container } = render(<TextSection page={PAGE_COPY[clau]} pageKey={clau} />);
-    const caixes = [...container.querySelectorAll('article.cms-preview > div.sdp-subtargeta[data-sdp-subtargeta]')];
+    /* Ordre 261103_0522, T2.6 (Gauntlet O7-9, ronda 2; PC-02) · projecte i fediversity porten una targeta
+       incrustada i el cos va per CosAmbTargetes: la caixa és filla d'un tros .sdp-cos-tros (display: contents),
+       mai del grup de targetes. descarregues continua pel camí de sempre. Prova posada al dia a propòsit. */
+    const caixes = [...container.querySelectorAll('article.cms-preview > div.sdp-subtargeta[data-sdp-subtargeta], article.cms-preview.sdp-amb-targetes > .sdp-cos-tros > div.sdp-subtargeta[data-sdp-subtargeta]')];
     expect(caixes.map((caixa) => [caixa.firstElementChild.tagName, caixa.firstElementChild.textContent])).toEqual(titols.map((titol) => [nivell, titol]));
     expect(container.querySelectorAll('.sdp-subtargeta .sdp-subtargeta')).toHaveLength(0);
+    expect(container.querySelectorAll('.sdp-targetes .sdp-subtargeta')).toHaveLength(0);
   });
 });
 

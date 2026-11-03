@@ -9,7 +9,7 @@ tags:
 ---
 # Consola Termodinàmica
 
-La Consola és un contracte de mesura i decisió, no una pantalla màgica ni un permís d'autocuració. Una mètrica només és operativa si té fórmula, font, denominador, abast, data i prova reproduïble. Si falta una peça, el valor correcte és `N/A`, no `100%` ni una estimació optimista.
+La Consola és un **contracte de mesura i decisió**, no una pantalla màgica ni un **permís d'autocuració**. Una **mètrica només és operativa** si té **fórmula, font, denominador**, **abast, data i prova reproduïble**. Si falta una peça, el **valor correcte és `N/A`**, no `100%` ni una estimació optimista.
 
 ## Estat verificat de la baseline
 
@@ -34,7 +34,7 @@ Les portes mecàniques vigents són:
 4. CI i protecció de branca quan s'hagen versionat i activat;
 5. decisió humana per a riscos, semàntica i canvis de governança.
 
-Els pressupostos de `tooling/wiki/rules/trellat-rules.json` (`itOptimal: 90`, `ramMbMaxBaseline: 1200`, `tombstonePercentMax: 70`) són hipòtesis de control sense instrument que les mesure. El fitxer continua viu perquè `npm run rag:build` en llig les paraules buides. Que un número aparega en una configuració no prova que existisca l'instrument que el mesura: cap llindar té valor de porta fins que una prova en documente l'origen i la validesa.
+Els **pressupostos** de `tooling/wiki/rules/trellat-rules.json` (`itOptimal: 90`, `ramMbMaxBaseline: 1200`, `tombstonePercentMax: 70`) són **hipòtesis de control** **sense instrument que les mesure**. El fitxer continua viu perquè `npm run rag:build` en llig les **paraules buides**. Que un número aparega en una configuració **no prova que existisca l'instrument** que el mesura: cap llindar té valor de porta fins que una prova en documente l'**origen i la validesa**.
 
 ## Contracte per promoure una mètrica
 

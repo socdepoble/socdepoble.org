@@ -33,9 +33,11 @@
  *   3. `mencionsDeSkills` ignora la secció «## Historial» d'una skill: les
  *      skills absorbides o fusionades que s'hi citen no són crides.
  *
- * Llig les fonts declarades del Mas, les passa al compilador pur
+ * Llig les fonts declarades de Sóc de Poble, les passa al compilador pur
  * src/sections/consola/mapa/construeixMapa.js i torna el JSON. És de només
- * lectura: no escriu cap fitxer ni llig `.sdp-reflex/`. Només executa `git`
+ * lectura, també la CLI (MAPA-O7-02: cap torn es tanca des d'ací; el sanejador
+ * canònic és tooling/session/saneja_torns_caducats.mjs, una ordre a part i
+ * explícita): no escriu cap fitxer ni llig `.sdp-reflex/`. Només executa `git`
  * (lectura) i, si existixen, la frontissa de contingut en mode --json i les
  * dues portes de només lectura que mesuren `conformitat-documental` i
  * `cadena-portes` (porta-documents.mjs i run-portes.mjs --diagnostic).
@@ -109,10 +111,12 @@ export function compteLlicons(cos) {
  * Mencions de skills a la prosa, fora de «## Historial»: una skill absorbida
  * o fusionada que s'hi cita és història, no una crida.
  */
+const FALSOS_POSITIUS_SKILL = new Set(['sdp-xat-v1']);
+
 export function mencionsDeSkills(cos) {
   const h = seccio(cos, HISTORIAL);
   const viu = h ? cos.slice(0, h.inici) + cos.slice(h.fi) : cos;
-  return [...new Set([...viu.matchAll(MENCIO_SKILL)].map((m) => m[1]))].sort();
+  return [...new Set([...viu.matchAll(MENCIO_SKILL)].map((m) => m[1]).filter((nom) => !FALSOS_POSITIUS_SKILL.has(nom)))].sort();
 }
 
 /**
@@ -173,6 +177,25 @@ export function errorRecent({ errors, eixida }) {
   return ERROR_DE_LOG.test(cua);
 }
 
+/** Estat del job carregat, no dels logs d'una instal·lació anterior. */
+export function llegeixEstatLaunchd(text) {
+  if (typeof text !== 'string') return null;
+  const runs = /^\s*runs = (\d+)\s*$/m.exec(text);
+  const estat = /^\s*state = ([^\n]+)$/m.exec(text)?.[1]?.trim();
+  const code = /^\s*last exit code = (-?\d+)(?::[^\n]*)?\s*$/m.exec(text);
+  if (!runs || !estat) return null;
+  return { carregat: true, execucions: Number(runs[1]), estat, ultimCodi: code ? Number(code[1]) : null };
+}
+
+function estatLaunchd(etiqueta, home) {
+  if (home !== os.homedir() || !/^[a-zA-Z0-9_.-]+$/.test(etiqueta) || typeof process.getuid !== 'function') return null;
+  try {
+    return llegeixEstatLaunchd(execFileSync('/bin/launchctl', ['print', `gui/${process.getuid()}/${etiqueta}`], {
+      encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'], timeout: 2000, maxBuffer: 1024 * 1024
+    }));
+  } catch { return null; }
+}
+
 function llancadors(arrel, home, plataforma) {
   if (plataforma !== 'darwin') return [];
   const dir = path.join(home, 'Library', 'LaunchAgents');
@@ -200,6 +223,7 @@ function llancadors(arrel, home, plataforma) {
     }
     resultat.push({
       etiqueta: p.etiqueta,
+      estatLaunchd: estatLaunchd(p.etiqueta, home),
       fitxer: privat(path.join(dir, nom)),
       script: absScript ? (dinsRepo ? path.relative(arrel, absScript).split(path.sep).join('/') : privat(absScript)) : null,
       scriptAbsolut: absScript,
@@ -299,6 +323,60 @@ function contextArrencada(arrel) {
   return { script: SCRIPT_CONTEXT_LOCAL, fonts: [...FONTS_CONTEXT_LOCAL] };
 }
 
+/* ── Arnesos observats (R3-A2, decisió de l'àrbitre, 261103) ──
+   Un candat d'Antigravity només s'acredita amb les traces que escriuen els
+   hooks de veres: una línia JSON {t, mode, decisio…} per invocació
+   (antigravity-hook.mjs i fatiga-hook.mjs). Una línia «ts event=…» no és cap
+   traça (cap hook escriu eixe format) i no compta. Codex no té cap traça
+   pròpia: continua per acreditar (null). Finestra de 24 h; una traça futura
+   no compta. */
+const FINESTRA_TRACA_MS = 24 * 60 * 60 * 1000;
+/** Cua dels logs dels hooks que es llig (els hooks hi afigen al final). */
+const CUA_TRACA_BYTES = 256 * 1024;
+const TRACA_ANTIGRAVITY = '.agents/runtime/antigravity-hook.log';
+const TRACA_FATIGA = '.agents/runtime/fatiga-hook.log';
+
+/** Última traça recent projectada: mai exposa payloads, ordres ni fitxers de l'usuari. */
+function ultimaTraca(arrel, rel, accepta, ara) {
+  let fd;
+  try {
+    fd = fs.openSync(path.join(arrel, rel), 'r');
+    const st = fs.fstatSync(fd);
+    if (!st.isFile()) return null;
+    const mida = Math.min(st.size, CUA_TRACA_BYTES), inici = st.size - mida;
+    const buf = Buffer.alloc(mida);
+    fs.readSync(fd, buf, 0, mida, inici);
+    const linies = buf.toString('utf8').split('\n');
+    if (inici) linies.shift();
+    for (const linia of linies.reverse()) {
+      let dada;
+      try { dada = JSON.parse(linia); } catch { continue; }
+      if (typeof dada?.t !== 'string') continue;
+      const t = Date.parse(dada.t);
+      if (!Number.isFinite(t) || t > ara || ara - t > FINESTRA_TRACA_MS || !accepta(dada)) continue;
+      return { font: rel, observat: dada.t, abast: 'traça local de dispatch; no acredita confinament extern' };
+    }
+  } catch { /* absent o il·legible: per acreditar */ }
+  finally { if (fd !== undefined) fs.closeSync(fd); }
+  return null;
+}
+
+/**
+ * Evidència de runtime dels candats d'Antigravity, per esdeveniment.
+ * PreInvocation el declaren sdp-olivera i sdp-fatiga: demana les dues traces;
+ * PreToolUse, la d'Olivera en mode pre-tool. Cada evidència només du
+ * { font, observat, abast }.
+ */
+export function arnesosObservats(arrel, { ara = Date.now() } = {}) {
+  const pre = ultimaTraca(arrel, TRACA_ANTIGRAVITY, d => d.mode === 'pre-invocation' && ['res', 'allow', 'deny', 'ask'].includes(d.decisio), ara);
+  const fatiga = ultimaTraca(arrel, TRACA_FATIGA, d => Number.isInteger(d.inv) && d.inv >= 0 && d.nivell !== 'error', ara);
+  const eina = ultimaTraca(arrel, TRACA_ANTIGRAVITY, d => d.mode === 'pre-tool' && typeof d.eina === 'string' && ['allow', 'deny', 'ask'].includes(d.decisio), ara);
+  return { antigravity: {
+    ...(pre && fatiga ? { PreInvocation: [pre, fatiga] } : {}),
+    ...(eina ? { PreToolUse: [eina] } : {})
+  } };
+}
+
 /**
  * Llig totes les fonts. Cap excepció: el que falta va a `absents` i el
  * compilador ho pinta com a avís i N/A.
@@ -367,6 +445,8 @@ export function recullFonts(arrel, { home = os.homedir(), plataforma = process.p
     hooksAntigravity: json('.agents/hooks.json'),
     // Format de hooks de Claude Code; obligatòria com .agents/hooks.json: si falta, avís alt i cap arnés Codex.
     hooksCodex: json('.codex/hooks.json'),
+    // Traces JSON genuïnes dels hooks d'Antigravity (24 h); Codex, cap.
+    arnesosObservats: arnesosObservats(arrel, { ara }),
     agentsMd: esFitxer('AGENTS.md'),
     contextArrencada: contextArrencada(arrel),
     packageJson: json('package.json'),
@@ -403,7 +483,14 @@ export function recullMapa(arrel = arrelSegura(), opcions = {}) {
 }
 
 function main() {
-  const mapa = recullMapa();
+  const args = process.argv.slice(2);
+  // MAPA-O7-02 · Sempre de lectura: --lectura s'accepta i no fa res de més; cap bandera tanca torns.
+  if (args.some(a => !['--json', '--lectura', '--help'].includes(a) && !a.startsWith('--arrel='))) throw new Error('Argument desconegut; usa --help');
+  if (args.includes('--help')) {
+    console.log('Ús: mapa-consola.mjs [--json] [--arrel=RUTA]\nNomés lectura: no escriu cap fitxer ni tanca cap torn (els caducats, amb tooling/session/saneja_torns_caducats.mjs).');
+    return;
+  }
+  const mapa = recullMapa(arrelSegura());
   if (process.argv.includes('--json')) {
     console.log(JSON.stringify(mapa, null, 2));
     return;

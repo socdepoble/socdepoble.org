@@ -3,7 +3,7 @@
   "turn_id": "torn_a1fd0148-ebd5-4317-91a9-733ba1511a91",
   "actor": "codex",
   "scope": "documents",
-  "state": "planned",
+  "state": "closed",
   "revision": 6,
   "createdAt": "2026-10-29T17:58:25.088Z",
   "updatedAt": "2026-10-29T22:19:11.109Z",
@@ -4055,5 +4055,6 @@
   "ownedPaths": [
     "_wiki_de_poble/04_escriptori/261029_1859_auditoria_codex.md",
     "_wiki_de_poble/04_escriptori/03_llibre_mestre_tasques_i_idees.md"
-  ]
+  ],
+  "closedAt": "2026-11-03T05:17:29.321Z"
 }

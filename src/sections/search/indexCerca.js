@@ -13,7 +13,7 @@
  * pel poble actiu i, després, per data i per ordre alfabètic.
  */
 import { isSafeAsset } from '../../components/universal/UniversalUtils.js';
-import { llevaEtiquetes, llevaScriptsIEstils, normalizeSearchText, stripMarkdownImages } from '../../config/contentHelpers.js';
+import { llevaScriptsIEstils, normalizeSearchText, stripMarkdownImages } from '../../config/contentHelpers.js';
 import {
   getSectionItemPath, resolveItemPath, resolvePageSlugPath, RUTA_FITXA_IAIA, RUTES_CANONIQUES, rutaDePerfil
 } from '../../config/navigation.js';
@@ -190,19 +190,39 @@ export function extracteAmbContext(text, llistaFitxes = [], max = 200) {
 
 const ENTITATS = Object.freeze({ '&nbsp;': ' ', '&amp;': '&', '&lt;': '<', '&gt;': '>', '&quot;': '"', '&#39;': "'", '&apos;': "'" });
 
+/* O7 · Una sola passada per etiqueta: retirar abans les inline podia convertir
+   «<<a >text» en «<text» i fabricar una etiqueta incompleta que el scanner
+   general ja no veia. La finestra és la mateixa de llevaEtiquetes; les inline
+   vàlides no separen paraules i les altres continuen separant-les. El patró
+   està ancorat i només recorre una finestra disjunta: el total és O(n).
+   El delimitador del nom és HTML ASCII, no \b (que també admetria <a-b>). */
+const ETIQUETA_EN_LINIA = /^<\/?(?:strong|b|em|i|code|span|mark|u|s|sub|sup|small|abbr|a)(?:[\t\n\f\r ][^<>]*|\/?)>$/i;
+function llevaEtiquetesDelCercador(text) {
+  const trossos = [];
+  let cursor = 0;
+  while (cursor < text.length) {
+    const inici = text.indexOf('<', cursor);
+    if (inici < 0) break;
+    const fi = text.indexOf('>', inici + 1);
+    if (fi < 0) break;
+    trossos.push(text.slice(cursor, inici));
+    trossos.push(ETIQUETA_EN_LINIA.test(text.slice(inici, fi + 1)) ? '' : ' ');
+    cursor = fi + 1;
+  }
+  trossos.push(text.slice(cursor));
+  return trossos.join('');
+}
+
 /** Text pla d'un camp que pot portar HTML o Markdown. Mai passa per innerHTML.
  *  Auditoria de seguretat 261019 (R1) · Els blocs <script> i <style> i les
- *  etiquetes, en temps lineal (contentHelpers.js · llevaScriptsIEstils i llevaEtiquetes), amb
- *  el mateix resultat que /<(script|style)[\s\S]*?<\/\1>/gi i /<[^>]*>/g.
+ *  etiquetes, en temps lineal (llevaScriptsIEstils i llevaEtiquetesDelCercador),
+ *  preservant l'extracció històrica excepte les etiquetes inline vàlides:
+ *  estes no afigen espais, com les pinta el navegador (ordre O6).
  *  Eren quadràtiques amb un cos de molts '<' o '<script' sense tancar, i /cerca
  *  les passa per a tothom sobre cada publicació i cada producte. */
 export function textPla(valor) {
   if (valor == null || typeof valor === 'object') return '';
-  /* Gauntlet O6 (O6-G1-C1-03) · Les etiquetes de línia (negreta, cursiva, enllaç…) es lleven sense
-     espai, com les pinta el navegador: «l'<strong>APK</strong>» es llig «l'APK», no «l' APK». Lineal:
-     [^<>]* s'atura al primer < o >. Els blocs, <br> i <img> continuen separant (llevaEtiquetes). */
-  return llevaEtiquetes(llevaScriptsIEstils(stripMarkdownImages(String(valor)))
-    .replace(/<\/?(?:strong|b|em|i|code|span|mark|u|s|sub|sup|small|abbr|a)\b[^<>]*>/gi, ''))
+  return llevaEtiquetesDelCercador(llevaScriptsIEstils(stripMarkdownImages(String(valor))))
     .replace(/&(nbsp|amp|lt|gt|quot|apos|#39);/g, (entitat) => ENTITATS[entitat] || ' ')
     .replace(/\s+/g, ' ')
     .trim();

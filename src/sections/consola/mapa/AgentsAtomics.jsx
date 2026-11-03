@@ -60,12 +60,12 @@ export function AgentsAtomics({ mapa }) {
       </p>
       {agents.length ? (
         <section>
-          <h3>Agents atòmics al Mas</h3>
+          <h3>Agents atòmics a Sóc de Poble</h3>
           <GraellaXifres xifres={[...recompte, ...agents]} generat={mapa.generat} />
         </section>
       ) : <>
         <GraellaXifres xifres={recompte} generat={mapa.generat} />
-        <EstatBuit icona={Bot} titol="Agents atòmics al Mas: cap">
+        <EstatBuit icona={Bot} titol="Agents atòmics a Sóc de Poble: cap">
           {xifres.agents ? <AgentsQueConversen n={xifres.agents} /> : 'El Mapa no troba cap agent.'}
           {' '}El compilador tampoc no llig encara cap perfil d’agent amb contracte.
         </EstatBuit>

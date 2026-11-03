@@ -3,7 +3,7 @@
   "turn_id": "torn_ae5b86cb-4310-4371-9b53-d3e72e4db719",
   "actor": "codex",
   "scope": "documents",
-  "state": "planned",
+  "state": "closed",
   "revision": 5,
   "createdAt": "2026-10-25T05:07:27.375Z",
   "updatedAt": "2026-10-25T15:53:12.317Z",
@@ -3783,5 +3783,6 @@
   ],
   "relocated": [
     "_wiki_de_poble/04_escriptori/261025_0607_auditoria_codex.md"
-  ]
+  ],
+  "closedAt": "2026-11-03T05:17:29.321Z"
 }

@@ -60,9 +60,9 @@ test('P1-11 · al peu de la fitxa d’una entitat, «El que publica …» amb le
   expect(document.querySelector('article.content-wrapper').textContent).not.toContain('Coca de llanda');
   expect(within(regio).getAllByRole('tab').map((p) => p.textContent)).toEqual(['Mur', 'Mercat', 'Agenda']);
   expect(within(regio).getByText('Coca de llanda')).toBeTruthy();
-  /* L'H2 de l'article continua sent la bio; el peu porta el seu h2, com el de PublicacioDetall. */
-  expect(screen.getAllByRole('heading', { level: 2 }).map((h) => h.textContent)).toEqual(['Forn de llenya', 'El que publica Forn de la Torre']);
-  expect(within(regio).getByRole('heading', { level: 2, name: 'El que publica Forn de la Torre' })).toBeTruthy();
+  /* L'H2 de l'article continua sent la bio; el peu ja porta aria-label a la regió i al tablist, sense h2 redundant. */
+  expect(screen.getAllByRole('heading', { level: 2 }).map((h) => h.textContent)).toEqual(['Forn de llenya']);
+  expect(within(regio).queryByRole('heading', { level: 2 })).toBeNull();
   /* Doctrina del Connectar: cap botó de seguir a la fitxa. */
   expect(document.body.textContent).not.toMatch(/Seguir|Seguidors/);
 });

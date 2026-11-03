@@ -9,7 +9,7 @@ tags:
 ---
 # Contracte de dades de la Consola
 
-La Consola React no llig prosa ni rastreja el disc: llig un únic JSON generat per un compilador determinista de node. Este document fixa eixe esquema, les fonts que el compilen i el camp `contracte` que necessiten les skills perquè el mapa no depenga de prosa.
+La **Consola React** **no llig prosa** ni rastreja el disc: llig un **únic JSON** generat per un **compilador determinista** de node. Este document fixa eixe esquema, les **fonts que el compilen** i el camp `contracte` que necessiten les skills perquè el mapa **no depenga de prosa**.
 
 És el mateix camí que ja seguix la Wiki: `tooling/wiki/compile-wiki-to-app.mjs` genera `src/data/wikiManifest.js`. El navegador no pot llegir els plist ni executar git, i un compilador es pot provar.
 
@@ -116,8 +116,8 @@ contracte:
 
 La interfície pinta la gravetat amb tres colors, i el compilador no fabrica cap verd. El codi és a `src/sections/consola/semafor.js` i `src/sections/consola/mapa/construeixMapa.js`.
 
-- **Semàfor.** Un avís `alta` és roig, i un `mitjana` o `baixa` és taronja. Sense cap avís, la targeta és verda i diu «En ordre». El que només informa (una relació inferida, una mètrica `N/A`, «Canvis nous») és neutre. Cap to de salut no és blau.
-- **Un sol criteri a tot arreu.** Un avís té el mateix color a totes les targetes. Per exemple, una skill òrfena (`orfe`, mitjana) és taronja a l'Explorador, a Avisos i salut, a l'Inventari i a la xifra «skills òrfenes». Cada enllaç trencat de la coberta de l'Explorador pren la gravetat dels seus avisos.
+- **Semàfor**. Un **avís `alta` és roig**, i un **`mitjana` o `baixa` és taronja**. Sense cap avís, la targeta és verda i diu «**En ordre**». El que només informa (una relació inferida, una **mètrica `N/A`**, «Canvis nous») és neutre. **Cap to de salut no és blau**.
+- **Un sol criteri a tot arreu**. Un avís té el **mateix color** a totes les targetes. Per exemple, una **skill òrfena** (`orfe`, mitjana) és **taronja** a l'Explorador, a Avisos i salut, a l'Inventari i a la xifra «**skills òrfenes**». Cada enllaç trencat de la coberta de l'Explorador pren la **gravetat dels seus avisos**.
 - **Etiquetes de les peces.** `VIU`, `ACTIU` i `EN MARXA` van en verd; `MORT` i `SENSE CONSUMIDOR`, en roig; la resta (`SENSE LLANÇADOR`, `PARCIAL`, `DESCONEGUT`, `FALTA`), en taronja.
 - **Inventari.** El semàfor d'una skill és el de l'avís més greu, no el del recompte. Un sol avís alt ja la fa roja.
 - **Verd amb base.** Una targeta només diu «En ordre» si la seua font es pot llegir i ho mesura tot:
@@ -131,8 +131,8 @@ La interfície pinta la gravetat amb tres colors, i el compilador no fabrica cap
   - Una que compta tasques pren el del pitjor estat: viva, verd; morta, roig; la resta, taronja; sense cap tasca, cap color.
   - Una que compta el que falta (llocs sense lector, candats per acreditar, skills fora del manifest) és taronja o roja si n'hi ha, i verda si no n'hi ha cap.
   - Les que només diuen una mida (nodes, arestes, rutes documentals, cadenes, suggeriments, punts de trobada, agents atòmics, registres de consum, skills del manifest i del nucli, rebuts de lectura, operacions immunitàries) informen i no porten cap etiqueta.
-- **Problemes a la vista.** Cada targeta diu quins problemes té: com a molt cinc, i «i N més». Ho fan les cobertes del tauler, els tres panells del pols, les xifres i les peces del Mapa (cada peça, els seus avisos). Cada problema porta davant una marca amb el color del semàfor: la severitat d'un avís, l'estat d'una tasca, el color d'una skill a l'Inventari o el que falta. Les rutes van en `<Mono>`, que el mode privacitat amaga. La targeta continua portant a la seua pàgina.
-- **Ordre de reparació.** El botó de l'Inventari i de l'Explorador només copia. Cada línia diu, en un comentari de shell, quin avís repara. El segell no es torna a segellar des d'ací: es copia el diagnòstic (`node tooling/gates/segella.mjs`, sense `--update`), i el segell nou passa per l'executor de mutacions amb una lease.
+- **Problemes a la vista**. Cada targeta diu quins problemes té: **com a molt cinc**, i «i N més». Ho fan les cobertes del tauler, els **tres panells del pols**, les xifres i les peces del Mapa (cada peça, els seus avisos). Cada problema porta davant una marca amb el **color del semàfor**: la severitat d'un avís, l'estat d'una tasca, el color d'una skill a l'Inventari o el que falta. Les **rutes van en `<Mono>`**, que el **mode privacitat amaga**. La targeta continua portant a la seua pàgina.
+- **Ordre de reparació**. El botó de l'Inventari i de l'Explorador **només copia**. Cada línia diu, en un comentari de shell, **quin avís repara**. El **segell no es torna a segellar** des d'ací: **es copia el diagnòstic** (`node tooling/gates/segella.mjs`, sense `--update`), i el segell nou passa per l'**executor de mutacions** amb una lease.
 
 Codis i fonts noves del compilador:
 
@@ -146,11 +146,11 @@ Codis i fonts noves del compilador:
 | `fonts.portaDocuments` | Rep l'eixida de `checkDocuments` (`{ valid, checked, errors }`) i mesura `conformitat-documental` com a documents sense cap error sobre els comprovats. Un error que no és de cap document compta com un document més que falla. Amb `checked: 0` és `N/A`: per defecte la porta només comprova els documents canviats, i amb l'arbre net no en comprova cap. |
 | `fonts.cadenaPortes` | Rep l'eixida de `run-portes.mjs --diagnostic` (`{ valid, failures, total? }`) i mesura `cadena-portes`. |
 
-Sense alguna d'estes dues fonts, la mètrica continua en `N/A`. Des del 2026-10-26, la closca (`tooling/brain/mapa-consola.mjs`) les passa: executa `porta-documents.mjs` i `run-portes.mjs --diagnostic` en un procés fill, amb temps límit, i només en llig el JSON de l'eixida estàndard. Sense script, sense JSON coherent, amb error de llançament, temps esgotat, senyal o límit de buffer, la mètrica continua en `N/A`. Una eixida 0 exigix `valid: true`; una eixida 1 exigix `valid: false`. El tancament per caducitat dels torns és una baixa administrativa i no crea ni recalcula verificacions de fitxers. Una porta roja és, a més, un avís alt: `porta-documents-roja`, un per document amb errors, i `cadena-portes-roja`, un per a la cadena.
+**Sense alguna d'estes dues fonts**, la mètrica continua en `N/A`. Des del 2026-10-26, la closca (`tooling/brain/mapa-consola.mjs`) les passa: **executa `porta-documents.mjs`** i **`run-portes.mjs --diagnostic`** en un procés fill, amb **temps límit**, i només en llig el JSON de l'eixida estàndard. Sense script, sense **JSON coherent**, amb error de llançament, temps esgotat, senyal o límit de buffer, la mètrica continua en `N/A`. Una eixida 0 exigix `valid: true`; una eixida 1 exigix `valid: false`. El tancament per caducitat dels torns és una **baixa administrativa** i **no crea ni recalcula verificacions de fitxers**. Una porta roja és, a més, un **avís alt**: `porta-documents-roja`, un per document amb errors, i `cadena-portes-roja`, un per a la cadena.
 
 ## On viu l'eixida
 
-**El fet, hui.** Al servidor de desenvolupament, el mapa i els JSON de dades de la Consola es compilen **en viu**, a cada petició, des de git i des de fitxers de l'ordinador on es treballa: els servix el middleware `tooling/vite/consola-iaia.mjs` (`vite serve`, només lectures i només des de localhost). La **web publicada** en porta la **instantània sanejada** de cada build (d'ací baix). Cap de les dues coses entra al manifest públic de la Wiki, a `public/rag-index.json`, al paquet de WordPress ni a l'app nativa.
+**El fet, hui**. Al servidor de desenvolupament, el mapa i els JSON de dades de la Consola es **compilen en viu**, a **cada petició**, des de git i des de **fitxers de l'ordinador** on es treballa: els servix el middleware `tooling/vite/consola-iaia.mjs` (`vite serve`, només lectures i només des de localhost). La **web publicada** en porta la **instantània sanejada** de cada build (d'ací baix). Cap de les dues coses entra al manifest públic de la Wiki, a `public/rag-index.json`, al paquet de WordPress ni a l'app nativa.
 
 **Decisió presa** (ordre del Mestre del 30-10-2026, prompt `261030_2208`, T2.2): la **interfície** de la Consola és **pública**, també en producció, sense compte ni rol. Queden derogades les dues opcions que hi havia en suspens: ni només en desenvolupament ni darrere del rol de superadministració.
 

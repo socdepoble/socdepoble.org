@@ -10,7 +10,7 @@ import { NOMS_TIPUS, TO_CONFIANCA, etiquetaNode } from './grafMapa.js';
 import { esSenseLector, fluxosDelMapa } from './fluxosMapa.js';
 
 /* Fluxos de treball (01_fluxos_skills.md): la pestanya «Flujos trabajo
-   skills» d'Emowe amb la regla del Mas. Només encadenen les relacions
+   skills» d'Emowe amb la regla de Sóc de Poble. Només encadenen les relacions
    declarades o derivades; la prosa queda com a suggeriment de «declara'm».
    Ordre del Mestre, 261004 (xat: cap xifra solta) · Les xifres són
    targetes senceres amb boina i pàgina pròpia (XifresMas.jsx). Derogat per

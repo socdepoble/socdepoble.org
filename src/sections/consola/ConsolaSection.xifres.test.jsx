@@ -4,7 +4,7 @@ import { act, cleanup, fireEvent, render, screen, waitFor, within } from '@testi
 
 /* Ordre del Mestre, 261004 (xat: tota targeta amb boina i pàgina pròpia) ·
    «Per a tindre pàgina pròpia has de ser una targeta (i viceversa).» Cada
-   xifra del Mas és una targeta amb boina i porta a la seua pàgina pròpia
+   xifra de Sóc de Poble és una targeta amb boina i porta a la seua pàgina pròpia
    (PaginaApp) a /consola/xifres/<slug>: el mateix títol, subtítol i
    entradeta, Sóc de Poble a la barra taronja, la dada viva detallada (les
    evidències en <Mono>, que el mode privacitat amaga) i la pàgina de la
@@ -95,7 +95,7 @@ const obri = async (ruta, espera = /^Instantània/) => {
 };
 const h1 = () => screen.getByRole('heading', { level: 1 }).textContent;
 const barraTaronja = () => document.querySelector('section.bar-orange');
-const xifresDelTauler = () => screen.getByRole('region', { name: 'El Mas en xifres' });
+const xifresDelTauler = () => screen.getByRole('region', { name: 'Sóc de Poble en xifres' });
 
 /* Correcció 261004 (verificador, punt 10) · el que la dada viva d'una xifra
    ha de pintar en <Mono>: les cel·les de ruta, ordre o empremta, la ruta de
@@ -123,7 +123,7 @@ test.each(SLUGS_XIFRES)('/consola/xifres/%s: H1 = títol de la targeta, Sóc de 
   window.history.replaceState(null, '', '/consola');
   render(<Aplicacio />);
   // Onada 11 (261010; prompt 261010_1730, tasca 5) · l'H2 de la secció i l'H3 de l'Índex de la Consola: dues aparicions.
-  await screen.findAllByText('El Mas en xifres');
+  await screen.findAllByText('Sóc de Poble en xifres');
   const targeta = [...xifresDelTauler().querySelectorAll('article.sp-card')]
     .find((t) => t.querySelector('a.sp-card-link-overlay').getAttribute('href') === rutaXifra(slug));
   const titol = targeta.querySelector('h3').textContent;
@@ -176,7 +176,7 @@ const esperaLogoSdp = () => {
   expect(logosDelTitol()[1].nextElementSibling.tagName).toBe('H1');
 };
 test('logotips · el tauler de la Consola i la pàgina d’una xifra porten el logotip de Sóc de Poble dalt de l’H1', async () => {
-  await obri('/consola', 'El Mas en xifres');
+  await obri('/consola', 'Sóc de Poble en xifres');
   esperaLogoSdp();
   cleanup();
   await obri('/consola/xifres/torns-caducats');
@@ -262,7 +262,7 @@ test('Connectar de la targeta porta a la pàgina de la xifra; Compartir comparte
   window.history.replaceState(null, '', '/consola');
   render(<Aplicacio />);
   // Onada 11 (261010; prompt 261010_1730, tasca 5) · l'H2 de la secció i l'H3 de l'Índex de la Consola: dues aparicions.
-  await screen.findAllByText('El Mas en xifres');
+  await screen.findAllByText('Sóc de Poble en xifres');
   await act(async () => {
     fireEvent.click(within(xifresDelTauler()).getByRole('button', { name: 'Compartir 1 torn caducat' }));
   });
@@ -300,7 +300,7 @@ test('el mode privacitat del peu amaga les evidències i els fitxers de la pàgi
    juntes, amb les targetes noves de cada pàgina, passaven del temps límit. */
 const h1Rapid = () => document.querySelector('h1')?.textContent;
 test('les rutes de la Consola continuen igual: el tauler', async () => {
-  await obri('/consola', 'El Mas en xifres');
+  await obri('/consola', 'Sóc de Poble en xifres');
   expect(h1Rapid()).toBe('Consola Termodinàmica');
 });
 

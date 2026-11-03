@@ -19,6 +19,14 @@
  * blockquote, a (ruta interna viva o https de fora amb target="_blank" i
  * rel="noopener noreferrer") i img locals (amb alt, mides que són les del
  * fitxer i loading="lazy"). Mai script, iframe, taula, style ni atributs on*.
+ * Onada 7 (T2.6) · L'única excepció és un grup de targetes de primer nivell
+ * (CosAmbTargetes): <div data-sdp-targetes class="sdp-targetes"
+ * data-forma="sola" data-alineacio="dreta"> amb una sola <div
+ * data-sdp-targeta class="sdp-targeta"> d'atributs de formaDelGrup, ruta
+ * viva coherent amb la clau, data-imatge local i, com a únic contingut,
+ * l'enllaç de reserva a la mateixa ruta. Un grup niat o qualsevol altra cosa
+ * dins del grup continua sent una infracció; i el cos pintat porta les
+ * mateixes targetes (nombre i ruta) que el text.
  * Escrit amb classes ([12], [1-6]): design_guard llig els literals de
  * capçalera de qualsevol .js.
  *
@@ -34,6 +42,7 @@ import { PAGE_COPY } from '../../src/sections/text/pageContent.js';
 import { SECTIONS } from '../../src/config/sections.js';
 import { pageKeyDeRuta } from '../../src/sections/text/paginaDeText.js';
 import { IDS_PAGINES, paginaConsola } from '../../src/sections/consola/consolaPagines.js';
+import { clauDeRutaInterna } from '../../src/components/universal/richText/extensions/targetes/formaDelGrup.js';
 
 export const ETIQUETES_T8 = new Set(['h3', 'h4', 'h5', 'h6', 'p', 'ul', 'ol', 'li', 'strong', 'em', 'code', 'blockquote', 'a', 'img']);
 const ATRIBUTS_T8 = { a: ['href', 'target', 'rel'], img: ['src', 'alt', 'width', 'height', 'loading', 'decoding'] };
@@ -59,13 +68,60 @@ export function midesWebp(cami) {
   }
   return null;
 }
-export const cosDe = (html) => new DOMParser().parseFromString(html, 'text/html').body;
+/* Un grup de targetes de PRIMER NIVELL (l'únic que CosAmbTargetes hidrata). */
+const esGrupDePrimerNivell = (node) => node.localName === 'div' && node.hasAttribute('data-sdp-targetes');
+export const cosDe = (html) => {
+  const body = new DOMParser().parseFromString(html, 'text/html').body;
+  [...body.children].filter(esGrupDePrimerNivell).forEach((grup) => grup.remove());
+  return body;
+};
+/* Les rutes de les targetes de primer nivell d'un HTML, en ordre. */
+const rutesDeTargetes = (html) => [...new DOMParser().parseFromString(html, 'text/html').body.children]
+  .filter(esGrupDePrimerNivell).map((grup) => grup.firstElementChild?.getAttribute('data-ruta') ?? '');
+const ATRIBUTS_GRUP_T8 = 'class,data-alineacio,data-forma,data-sdp-targetes';
+const ATRIBUTS_TARGETA_T8 = new Set(['data-sdp-targeta', 'class', 'data-ruta', 'data-titol', 'data-subtitol', 'data-entradilla', 'data-autor', 'data-autor-ruta', 'data-poble', 'data-imatge']);
+function validaGrupsTargetesT8(html, errors) {
+  const body = new DOMParser().parseFromString(html, 'text/html').body;
+  for (const grup of body.querySelectorAll('[data-sdp-targetes], [data-sdp-targeta]')) {
+    if (!grup.hasAttribute('data-sdp-targetes')) {
+      if (!grup.parentElement?.hasAttribute('data-sdp-targetes')) errors.push('targeta data-sdp-targeta fora d\'un grup');
+      continue;
+    }
+    if (grup.parentElement !== body || grup.localName !== 'div') errors.push('grup data-sdp-targetes niat (només s\'hidraten els de primer nivell)');
+    if (grup.getAttributeNames().sort().join() !== ATRIBUTS_GRUP_T8 || grup.getAttribute('class') !== 'sdp-targetes'
+      || grup.getAttribute('data-forma') !== 'sola' || grup.getAttribute('data-alineacio') !== 'dreta') {
+      errors.push('grup data-sdp-targetes fora del format sola/dreta');
+    }
+    if ([...grup.childNodes].some((node) => node.nodeType !== 1 && node.textContent.trim())) errors.push('text solt dins del grup data-sdp-targetes');
+    const targetes = [...grup.children];
+    if (targetes.length !== 1) errors.push('grup data-sdp-targetes sense una sola targeta');
+    for (const t of targetes) {
+      const ruta = t.getAttribute('data-ruta') ?? '';
+      const estranys = t.getAttributeNames().filter((nom) => !ATRIBUTS_TARGETA_T8.has(nom));
+      const imatge = t.getAttribute('data-imatge');
+      const autorRuta = t.getAttribute('data-autor-ruta');
+      if (t.localName !== 'div' || t.getAttribute('class') !== 'sdp-targeta' || !rutaViva(ruta)
+        || !t.getAttribute('data-sdp-targeta') || clauDeRutaInterna(ruta) !== t.getAttribute('data-sdp-targeta') || estranys.length
+        || (imatge !== null && (!/^\/assets\/[\w/.-]+\.webp$/.test(imatge) || !existsSync(resolve(process.cwd(), 'public', imatge.slice(1)))))
+        || (autorRuta !== null && !rutaViva(autorRuta))) {
+        errors.push(`targeta incrustada T8 invàlida: ${ruta}${estranys.length ? ` (atributs ${estranys.join(', ')})` : ''}`);
+      }
+      const [reserva, ...mes] = t.querySelectorAll('*');
+      if (mes.length || reserva?.localName !== 'a' || reserva.parentElement !== t || reserva.getAttribute('href') !== ruta
+        || reserva.getAttributeNames().some((nom) => !['href', 'rel'].includes(nom)) || !reserva.textContent.trim()
+        || [...t.childNodes].some((node) => node !== reserva && node.textContent.trim())) {
+        errors.push(`la targeta ${ruta} no porta com a únic contingut l'enllaç de reserva a la seua ruta`);
+      }
+    }
+  }
+}
 /** Les infraccions de la llei T8 d'un cos (una llista buida si no n'hi ha cap). */
 export function infraccionsT8(html) {
   const errors = [];
   if (!html.trim().startsWith('<h3>')) errors.push('el cos no comença en un H3 (entradilla → H3)');
   if (/<h[12]\b/i.test(html)) errors.push('H1 o H2 dins del cos');
   if (/<(?:script|iframe|object|embed|table|style|form)\b|\son[a-z]+\s*=|\sstyle\s*=|javascript:/i.test(html)) errors.push('script, iframe, taula, style o atribut on*');
+  validaGrupsTargetesT8(html, errors);
   const cos = cosDe(html);
   for (const element of cos.querySelectorAll('*')) {
     const nom = element.localName;
@@ -115,23 +171,39 @@ const igual = (a, b) => JSON.stringify(a) === JSON.stringify(b);
  * «noopener noreferrer»; i cada paràgraf té text i negretes (les negretes, només
  * als paràgrafs: un H3, un H4, una llista o una imatge no en porten).
  */
+function normalitzaCosPintat(cos, html, errors) {
+  const net = cos.cloneNode(true);
+  const grups = [...net.querySelectorAll(':scope > .sdp-targetes')];
+  const pintades = grups.map((grup) => {
+    const enllacos = [...grup.querySelectorAll(':scope > .sdp-targeta a')].map((a) => a.getAttribute('href') ?? a.getAttribute('to'));
+    return grup.querySelectorAll(':scope > .sdp-targeta').length === 1 ? (rutesDeTargetes(html).find((ruta) => enllacos.includes(ruta)) ?? enllacos[0] ?? '') : '';
+  });
+  if (!igual(pintades, rutesDeTargetes(html))) errors.push(`les targetes pintades (${pintades.join(' ')}) no són les del text (${rutesDeTargetes(html).join(' ')})`);
+  grups.forEach((grup) => grup.remove());
+  for (const tros of [...net.querySelectorAll(':scope > .sdp-cos-tros')]) {
+    while (tros.firstChild) net.insertBefore(tros.firstChild, tros);
+    tros.remove();
+  }
+  return net;
+}
 export function infraccionsDelCosPintat(cos, html) {
   if (!cos) return ['cap cos pintat'];
   const errors = [];
   const origen = cosDe(html);
-  if (cos.firstElementChild?.tagName !== 'H3') errors.push('el cos pintat no comença en un H3 (entradilla → H3)');
-  if (!igual(pecesDe(cos), pecesDe(origen))) errors.push(`les peces del cos pintat (${pecesDe(cos).join(' ')}) no són les del text (${pecesDe(origen).join(' ')})`);
-  for (const element of cos.querySelectorAll('*')) {
+  const net = normalitzaCosPintat(cos, html, errors);
+  if (net.firstElementChild?.tagName !== 'H3') errors.push('el cos pintat no comença en un H3 (entradilla → H3)');
+  if (!igual(pecesDe(net), pecesDe(origen))) errors.push(`les peces del cos pintat (${pecesDe(net).join(' ')}) no són les del text (${pecesDe(origen).join(' ')})`);
+  for (const element of net.querySelectorAll('*')) {
     if (!ETIQUETES_T8.has(element.localName)) errors.push(`etiqueta <${element.localName}> al cos pintat`);
     for (const { name } of element.attributes) if (/^on/i.test(name)) errors.push(`atribut ${name} a <${element.localName}> del cos pintat`);
   }
-  if (!igual(enllacosDe(cos), enllacosDe(origen))) errors.push(`els enllaços pintats no són els del text: ${enllacosDe(cos).join(' | ')}`);
-  for (const a of cos.querySelectorAll('a[target="_blank"]')) {
+  if (!igual(enllacosDe(net), enllacosDe(origen))) errors.push(`els enllaços pintats no són els del text: ${enllacosDe(net).join(' | ')}`);
+  for (const a of net.querySelectorAll('a[target="_blank"]')) {
     const rel = (a.getAttribute('rel') ?? '').split(/\s+/);
     if (!rel.includes('noopener') || !rel.includes('noreferrer')) errors.push(`${a.getAttribute('href')} s'obri a part sense rel="noopener noreferrer"`);
   }
-  if (!igual(imatgesDe(cos), imatgesDe(origen))) errors.push(`les imatges pintades no són les del text: ${imatgesDe(cos).join(' | ')}`);
-  for (const p of cos.querySelectorAll('p')) {
+  if (!igual(imatgesDe(net), imatgesDe(origen))) errors.push(`les imatges pintades no són les del text: ${imatgesDe(net).join(' | ')}`);
+  for (const p of net.querySelectorAll('p')) {
     if (!p.textContent.trim() || !p.querySelector('strong')) errors.push(`paràgraf buit o sense negretes: «${p.textContent.trim().slice(0, 60)}»`);
   }
   return errors;

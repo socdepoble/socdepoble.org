@@ -14,7 +14,7 @@ Esta ADR afig al contracte del port una capacitat opcional, `paginacioSeccions`,
 
 Pendent de signatura del Mestre.
 
-La Decisió 4 del Mestre (261007, confirmada) diu: «Tall de 50 publicacions: CARREGA PROGRESSIVA (LOAD MORE). Un límit inicial de 50 és sa, però s'ha d'implementar un botó de "Carregar-ne més" o infinite scroll per a no deixar l'usuari a mitges.» El codi s'hi aplica el 261008. Mentre no es signe, la capacitat és opcional: llevar `loadSeccioPage` de l'adaptador torna la interfície a l'estat d'abans, sense cap botó.
+La **Decisió 4 del Mestre** (261007, confirmada) diu: «**Tall de 50 publicacions**: **CARREGA PROGRESSIVA** (LOAD MORE). Un límit inicial de 50 és sa, però s'ha d'implementar un botó de "Carregar-ne més" o infinite scroll per a **no deixar l'usuari a mitges**.» El codi s'hi aplica el 261008. Mentre no es signe, la **capacitat és opcional**: llevar `loadSeccioPage` de l'adaptador torna la interfície a l'estat d'abans, **sense cap botó**.
 
 ## Context
 
@@ -35,7 +35,7 @@ La Decisió 4 del Mestre (261007, confirmada) diu: «Tall de 50 publicacions: CA
 
 ### La primera pàgina: un camp additiu i opcional de loadMur
 
-`loadMur` continua tornant `{ feedPosts[], events[], marketItems[] }`. Ara hi pot afegir `paginacio: { [seccio]: cursor }`, només per a les seccions que tenen més files. L'absència del camp, o de la clau d'una secció, vol dir que la secció és completa. Un backend d'abans de la capacitat no el porta, i el kit de conformitat l'accepta igual.
+`loadMur` **continua tornant** `{ feedPosts[], events[], marketItems[] }`. Ara hi pot afegir `paginacio: { [seccio]: cursor }`, **només per a les seccions** que **tenen més files**. **L'absència del camp**, o de la clau d'una secció, vol dir que la **secció és completa**. Un backend d'abans de la capacitat no el porta, i el **kit de conformitat** l'accepta igual.
 
 S'ha triat esta via, i no derivar el cursor a la interfície des de l'element més antic de la primera pàgina, per tres motius:
 

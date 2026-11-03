@@ -3,7 +3,7 @@
   "turn_id": "torn_cff80b84-d32d-4dae-96b5-633044564a8b",
   "actor": "agent-local",
   "scope": "code",
-  "state": "opened",
+  "state": "closed",
   "revision": 0,
   "createdAt": "2026-11-01T03:01:33.004Z",
   "updatedAt": "2026-11-01T03:01:33.004Z",
@@ -4199,7 +4199,13 @@
     "vite.config.js": "c756aced84a29b0e73ae1454afd0438a83f15e4e4da215927dda983994a91266",
     ".gitignore": "1710693d596fb70e8224bf1fd3c21711e591acdcbbc2ccba4702e329cafeb837"
   },
-  "receipts": {},
+  "receipts": {
+    "rebut_torn_cff80b84-d32d-4dae-96b5-633044564a8b": {
+      "id": "rebut_torn_cff80b84-d32d-4dae-96b5-633044564a8b",
+      "file": ".agents/ESTAT.md",
+      "createdAt": "2026-11-03T05:17:29.321Z"
+    }
+  },
   "plan": null,
   "verification": null,
   "history": [
@@ -4208,5 +4214,6 @@
       "action": "open",
       "at": "2026-11-01T03:01:33.004Z"
     }
-  ]
+  ],
+  "closedAt": "2026-11-03T05:17:29.321Z"
 }

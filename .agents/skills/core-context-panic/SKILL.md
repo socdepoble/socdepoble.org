@@ -32,6 +32,7 @@ Aquest protocol salta AUTOMÀTICAMENT i s'ha d'executar SENSE EXCEPCIÓ quan es 
 2. **Desconnexió del codi:** no pots identificar amb fiabilitat la font o la preimatge que estàs editant. Un canvi concurrent legítim es resol rellegint la font i comprovant CAS; no és, per si sol, una desconnexió del context.
 3. **El Parxe de la Complaença (Invenció sense Trellat):** Tens la temptació d'inventar una solució ràpida en 1 minut només per complaure o callar al Mestre, en lloc de detindre't 5 minuts a analitzar l'impacte estructural.
 4. **Saturació de Context (Fatiga de Memòria):** Reps un missatge efímer que comença per `[FATIGA·N1`, `[FATIGA·N2` o `[FATIGA·N3`. L'injecta el hook `sdp-fatiga` (`tooling/gates/fatiga-hook.mjs`, PreInvocation d'Antigravity) quan la conversa passa un llindar de passos, de pujades del Mestre (captures i notes de veu) o de MB, i porta les xifres reals. Eixe efímer és el disparador: no el substituïx cap intuïció ni cap recompte de memòria.
+5. **Ceguesa d'Adjunts o Pèrdua de Referència per Saturació (Cas d'Ús 03-11-2026 · Zero Complaença):** Quan el sistema omet una imatge o adjunt per saturació de context (`[file "..." could not be loaded and was omitted]`), o quan un agent neteja/arxiva `.user_uploaded` abans de llegir l'adjunt amb `read_file`, o simplement no veu/no sap una dada. **ESTÀ TERMINANTMENT PROHIBIT ENDEVINAR, DEDUIR O INVENTAR EL CONTINGUT PER COMPLAURE EL MESTRE.** Un company d'equip mai menteix ni fingeix que veu el que no veu.
 
 ## Què has de fer? (L'Aturada d'Emergència i la Pregunta Madurativa)
 Si s'activa el fusible pels casos 1 o 2 (bucle o desconnexió), **TENS PROHIBIT CONTINUAR TREBALLANT EN LA TASCA ACTUAL**. Explica l'error i la prova observada; no encadenes una tercera mutació a cegues. Conserva un relleu que permeta recuperar el punt de treball sense esborrar canvis aliens.
@@ -45,6 +46,10 @@ Si s'activa el cas 3, pausa l'edició i contrasta la causa, l'abast i el pla vig
 - **Reconeixement:** només el Mestre reconeix l'avís, escrivint `#fatiga-vista` en el xat o dictant «fatiga vista» (la forma transcrita, sense coixinet). Una nota de veu enviada com a àudio no deixa text a la transcripció i no el reconeix. Tu no el pots escriure per ell ni donar-lo per reconegut. Reconegut, l'avís de N2 calla; sense reconeixement, torna cada 10 torns del Mestre.
 - **N3 no es pot silenciar:** torna a cada torn del Mestre i a cada disparament del planificador. No comences cap tasca nova i proposa l'Acta Marmota per a continuar en un xat fresc.
 - **Planificador:** no programes cap `/schedule` periòdic dins de la mateixa conversa sense una ordre explícita del Mestre. Si n'hi ha un d'actiu quan arriba N3, proposa al Mestre cancel·lar-lo.
+- **Cas 5 (Ceguesa d'Adjunts / `could not be loaded and was omitted` o Desconeixement):**
+  1. Si el sistema mostra `[file "..." could not be loaded and was omitted]`, llig SEMPRE l'arxiu amb `read_file` **abans** d'executar qualsevol neteja de `.user_uploaded`.
+  2. Si ja s'havia arxivat/esborrat per error o no el pots obrir, digues immediatament la veritat com un company d'equip lleial: *"Mestre, estic saturada i he arxivat la captura abans de llegir-la (o el sistema l'ha omesa per excés de context); passa-me-la o enganxa'm el text i mai t'inventaré res."*
+  3. Recomana comprimir el context (`/compact`) o obrir un xat fresc amb Acta Marmota quan l'IDE ja no carregue els adjunts.
 
 ### Plantilla de Pànic (Només per als Casos 1 i 2)
 Comunica el bloqueig amb motiu i evidència; la plantilla següent és una guia, no obliga a diagnosticar fatiga sense dades ni substituïx AGENTS §10:

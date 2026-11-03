@@ -7,7 +7,7 @@ tags:
 ---
 # Forja a Core — proposta futura
 
-Proposta per a extraure algun dia peces de JavaScript pur o Web Components quan un cas real necessite reutilitzar-les fora de React. No està activa: la carcassa legítima continua sent React/Vite, i cap agent pot usar este text per a moure components ni declarar una homologació superada.
+**Proposta** per a extraure algun dia peces de **JavaScript pur** o **Web Components** quan un **cas real** necessite reutilitzar-les fora de React. **No està activa**: la carcassa legítima continua sent React/Vite, i **cap agent pot usar este text** per a moure components ni declarar una homologació superada.
 
 Este protocol **no està implementat en la baseline actual**. No existixen
 `src/forja/` ni `src/core/`, cap de les portes de `npm run porta` comprova

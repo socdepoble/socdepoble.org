@@ -1,7 +1,7 @@
 /**
  * fluxosMapa.js — fluxos de treball del Mapa (01_fluxos_skills.md), pur.
  *
- * És la pestanya «Flujos trabajo skills» d'Emowe amb la regla del Mas: una
+ * És la pestanya «Flujos trabajo skills» d'Emowe amb la regla de Sóc de Poble: una
  * cadena només es construïx amb arestes declarades o derivades. Dues peces
  * s'encadenen si el que deixa una és el que llig l'altra (el mateix camí o
  * una carpeta que conté l'altre) o si una crida l'altra. La prosa (inferit)

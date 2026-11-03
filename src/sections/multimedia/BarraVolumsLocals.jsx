@@ -68,8 +68,8 @@ export function BarraVolumsLocals({
       ) : null}
 
       <div className="sdp-arxiu-local__fila">
-        <Boto varietat="primari" icona={FolderPlus} onClick={onVincula} disabled={ocupat} data-accio="vincula">
-          {tr(T.vincula)}
+        <Boto varietat="primari" icona={FolderPlus} aria-label={tr(T.vincula)} onClick={onVincula} disabled={ocupat} data-accio="vincula">
+          {tr(T.vincula).split(' ')[0]}
         </Boto>
         {obert ? (
           <>

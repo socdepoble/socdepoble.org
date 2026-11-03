@@ -132,7 +132,7 @@ Sollutia és soci, i punt.
 
 Actualment som socis i estem estudiant la viabilitat del projecte **Sóc de Poble** des del punt de vista tècnic, finalitzant els serveis emparats sota el Kit Digital del govern. 
 
-En la pròxima fase (prevista en unes setmanes), començarem a treballar conjuntament des del punt de vista de comunicació i màrqueting per a cercar solucions econòmiques i subvencions que facen aquest projecte viable a llarg termini. El que vinga després, com avançarà la relació societària, està encara per definir.
+En la **pròxima fase** (prevista en unes setmanes), començarem a **treballar conjuntament** des del punt de vista de **comunicació i màrqueting** per a cercar **solucions econòmiques i subvencions** que facen aquest projecte **viable a llarg termini**. El que vinga després, com avançarà la relació societària, està **encara per definir**.
 
 El Mestre Javi conserva veto final sobre:
 - identitat de marca real (Sóc de Poble)
@@ -167,7 +167,7 @@ La decisió final ha de quedar registrada si afecta arquitectura troncal.
 
 La col·laboració amb Sollutia no anul·la Pedra Seca.
 
-React i Vite ja són la base productiva del nostre frontend (la «carcassa productiva» de [[doc_governanca]], que no és la carcassa d'infraestructura de Sollutia del punt 4); el que no hi entra és Tailwind ni cap sistema d'estils aliè als tokens `--sdp-*`. Si una peça ve de fora, s’aplica el criteri canònic (la Forja és només una proposta futura: [[forja_to_core]]):
+**React i Vite** ja són la **base productiva** del nostre frontend (la «carcassa productiva» de [[doc_governanca]], que no és la carcassa d'infraestructura de Sollutia del punt 4); el que **no hi entra és Tailwind** ni cap sistema d'estils aliè als **tokens `--sdp-*`**. Si una peça ve de fora, s’aplica el **criteri canònic** (la Forja és només una **proposta futura**: [[forja_to_core]]):
 
 - pot provar-se en Playground
 - pot integrar-se si aporta valor real
@@ -204,7 +204,7 @@ La paraula correcta és **soci**.
 
 Com a part del Pacte de la Carcassa, Sollutia aporta un conjunt de **referències tècniques de vendor**. Són material de consulta, no Skills executables instal·lades ni autoritat normativa.
 
-El seu coneixement pot orientar el COM instrumental quan siga compatible amb el codi real i amb les eines disponibles. L’ordre d’autoritat és `AGENTS.md` → `.agents/` → codi i proves → Wiki canònica → vendor. Una referència de Sollutia no s’activa pel simple fet d’estar dins del vault.
+El seu coneixement pot orientar el **COM instrumental** quan siga **compatible amb el codi real** i amb les **eines disponibles**. L’**ordre d’autoritat** és `AGENTS.md` → `.agents/` → codi i proves → **Wiki canònica** → vendor. Una referència de Sollutia **no s’activa pel simple fet d’estar dins del vault**.
 
 **MARCA DE JURISDICCIÓ:** Sollutia mana en el COM instrumental; `AGENTS.md` i les normes de governança manen en el QUÈ s'homologa.
 

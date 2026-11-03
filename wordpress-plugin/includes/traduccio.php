@@ -388,7 +388,7 @@ function socdepoble_enxufe_traduccio_reserva( $caracters ) {
 	$mes = gmdate( 'Y-m' );
 	$diari = ( $estat['dia'] ?? '' ) === $dia ? (int) ( $estat['diari'] ?? 0 ) : 0;
 	$mensual = ( $estat['mes'] ?? '' ) === $mes ? (int) ( $estat['mensual'] ?? 0 ) : 0;
-	if ( $diari + $caracters > socdepoble_enxufe_traduccio_limit( 'SDP_TRADUCCIO_LIMIT_DIARI', 10000 ) || $mensual + $caracters > socdepoble_enxufe_traduccio_limit( 'SDP_TRADUCCIO_LIMIT_MENSUAL', 100000 ) ) {
+	if ( $diari + $caracters > socdepoble_enxufe_traduccio_limit( 'SDP_TRADUCCIO_LIMIT_DIARI', 100000 ) || $mensual + $caracters > socdepoble_enxufe_traduccio_limit( 'SDP_TRADUCCIO_LIMIT_MENSUAL', 1000000 ) ) {
 		return socdepoble_enxufe_traduccio_error( 'limit', 429 );
 	}
 	$nou = wp_json_encode( array( 'dia' => $dia, 'mes' => $mes, 'diari' => $diari + $caracters, 'mensual' => $mensual + $caracters ) );

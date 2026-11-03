@@ -122,7 +122,7 @@ describe('el tauler de /consola', () => {
     expect(seccio.tagName).toBe('SECTION');
     expect([...seccio.querySelectorAll('h2')].map((h) => h.textContent)).toEqual([TITOL_EMPAQUETATS]);
     const despres = (a, b) => Boolean(a.compareDocumentPosition(b) & Node.DOCUMENT_POSITION_FOLLOWING);
-    expect(despres(screen.getByRole('region', { name: 'El Mas en xifres' }), seccio)).toBe(true);
+    expect(despres(screen.getByRole('region', { name: 'Sóc de Poble en xifres' }), seccio)).toBe(true);
     expect(despres(seccio, screen.getByRole('region', { name: 'Índex de la Consola' }))).toBe(true);
     const nav = within(seccio).getByRole('navigation', { name: ETIQUETA_NAV_EMPAQUETATS });
     expect(nav.className).toBe('sdp-card-grid sdp-consola__graella');

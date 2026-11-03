@@ -7,7 +7,7 @@ tags:
 ---
 # Visió arquitectònica: el perfil com a Pàgina Universal
 
-El perfil deixa de ser un formulari estàtic d'ajustos i passa a ser una instància nativa de la **Pàgina Universal**, amb la mateixa anatomia que el Bloc de Notes i l'edició de notícies. Este document recull la visió de producte que el Mestre va fixar per a la secció «El meu perfil».
+El perfil deixa de ser un **formulari estàtic d'ajustos** i passa a ser una **instància nativa** de la **Pàgina Universal**, amb la **mateixa anatomia** que el **Bloc de Notes** i l'edició de notícies. Este document recull la **visió de producte** que el Mestre va fixar per a la secció «El meu perfil».
 
 ## 1. El paral·lelisme (Notes i Perfil)
 
@@ -21,7 +21,7 @@ L'arquitectura visual i d'interacció ha de ser idèntica a la d'un editor de co
 
 ## 2. La barra taronja en l'edició del perfil
 
-Quan un usuari edita la seua foto de perfil o qualsevol altre atribut, el component que visualitzarà aquest canvi de forma nativa és la **Barra Taronja** (part superior de la Universal Page), ja que actua com a editor de la pròpia "Card Universal del Perfil".
+Quan un usuari edita la seua **foto de perfil** o **qualsevol altre atribut**, el component que **visualitzarà aquest canvi** de forma nativa és la **Barra Taronja** (**part superior** de la Universal Page), ja que actua com a **editor de la pròpia** "Card Universal del Perfil".
 
 La targeta resultant (el perfil públic) no és més que una "Universal Card" generada a partir d'aquesta "Universal Page".
 
@@ -29,7 +29,7 @@ La targeta resultant (el perfil públic) no és més que una "Universal Card" ge
 
 Com que el perfil és una Pàgina Universal, es materialitza cap a l'exterior com una **Targeta Universal** estàndard, complint tota la seua anatomia: foto, **boina taronja** (autoria/creació), títol, subtítol, presentació, i **peu blau** (accions).
 
-Aquesta targeta és el que es mostrarà en la resta de l'aplicació. Per exemple, **al Cercador**: en buscar "Javi Llinares", el sistema no ha de retornar una llisteta simple amb un nom, sinó que ha de renderitzar la Targeta Universal completa de Javi Llinares, i en fer-hi clic, eixa targeta et portarà a la seua Pàgina Universal. Un comportament pur i fractal.
+Aquesta targeta és el que es mostrarà en la **resta de l'aplicació**. Per exemple, **al Cercador**: en buscar "Javi Llinares", el sistema no ha de retornar una **llisteta simple** amb un nom, sinó que ha de renderitzar la **Targeta Universal completa** de Javi Llinares, i **en fer-hi clic**, eixa targeta et portarà a la seua **Pàgina Universal**. Un comportament pur i fractal.
 
 ## 4. Pròxims passos (quan el Mestre done llum verda)
 

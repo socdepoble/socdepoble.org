@@ -3,7 +3,7 @@
   "turn_id": "torn_bbd0c797-e682-45b7-a5b7-1078fa6a1b83",
   "actor": "Codex",
   "scope": "documents",
-  "state": "planned",
+  "state": "closed",
   "revision": 5,
   "createdAt": "2026-10-27T08:16:59.648Z",
   "updatedAt": "2026-10-27T08:34:42.564Z",
@@ -3812,5 +3812,6 @@
     "_wiki_de_poble/04_escriptori/03_llibre_mestre_tasques_i_idees.md",
     ".agents/ESTAT.md",
     ".agents/LEDGER.md"
-  ]
+  ],
+  "closedAt": "2026-11-03T05:17:29.321Z"
 }

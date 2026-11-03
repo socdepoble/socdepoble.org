@@ -35,14 +35,14 @@ Abans de promoure esta visió a `canonic` i “implementat” cal:
 6. pressupost de memòria, tombstones i migració/marxa arrere;
 7. observabilitat i procediment de recuperació reproduïble.
 
-Fins aleshores, la realitat verificable és la descrita en
-[[00_arquitectura_tecnica_unificada]]: React/Vite i una arquitectura online-first
-amb el Supabase de Sóc de Poble com a font de veritat ([[ADR-2026-08-ONLINE-FIRST]]),
-integrat amb Sollutia pel Model B ([[ADR-2026-09-SOLLUTIA-MODEL-B]]). Dexie es va
-retirar. El codi torna a incloure PWA, IndexedDB per a dades del dispositiu i
+Fins aleshores, la **realitat verificable** és la descrita en
+[[00_arquitectura_tecnica_unificada]]: **React/Vite** i una arquitectura online-first
+amb el Supabase de Sóc de Poble com a **font de veritat** ([[ADR-2026-08-ONLINE-FIRST]]),
+integrat amb Sollutia pel **Model B** ([[ADR-2026-09-SOLLUTIA-MODEL-B]]). Dexie es va
+retirar. El codi torna a incloure PWA, IndexedDB per a **dades del dispositiu** i
 una closca de `/app/*` sense xarxa. L'[[ADR-2026-10-APPS-DEL-DISPOSITIU]] en
-documenta la implementació parcial i la proposta d'abast, encara pendent de
-signatura. Estes excepcions no implementen reconciliació de dades compartides,
+documenta la implementació parcial i la proposta d'abast, encara **pendent de
+signatura**. Estes excepcions **no implementen reconciliació de dades compartides**,
 sincronització en segon pla ni CRDT.
 
 ## Vincles

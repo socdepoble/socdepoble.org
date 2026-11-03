@@ -3,7 +3,7 @@
   "turn_id": "torn_74bad4b9-c817-4dca-96b8-eb6ff86a0da4",
   "actor": "claude",
   "scope": "code",
-  "state": "planned",
+  "state": "closed",
   "revision": 242,
   "createdAt": "2026-10-28T15:09:12.430Z",
   "updatedAt": "2026-10-29T12:04:06.302Z",
@@ -5817,5 +5817,6 @@
     "_wiki_de_poble/04_escriptori/261028_1620_auditoria_claude.md",
     "_wiki_de_poble/04_escriptori/261028_2020_auditoria_claude.md",
     "_wiki_de_poble/04_escriptori/261029_0350_auditoria_claude.md"
-  ]
+  ],
+  "closedAt": "2026-11-03T05:17:29.321Z"
 }

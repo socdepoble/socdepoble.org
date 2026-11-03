@@ -3,7 +3,7 @@
   "turn_id": "torn_e0efc471-0e4c-4cd5-ae53-7d949c249453",
   "actor": "MarIA",
   "scope": "documents",
-  "state": "context_loaded",
+  "state": "closed",
   "revision": 3,
   "createdAt": "2026-10-26T20:10:06.387Z",
   "updatedAt": "2026-10-26T20:10:28.776Z",
@@ -3765,5 +3765,6 @@
       "at": "2026-10-26T20:10:28.776Z",
       "hash": "829e488b3f1805e424642ec7723e93e3835bce3930f9fb0080240c54b07d819f"
     }
-  ]
+  ],
+  "closedAt": "2026-11-03T05:17:29.321Z"
 }

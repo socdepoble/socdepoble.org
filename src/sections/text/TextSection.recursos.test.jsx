@@ -29,6 +29,7 @@ import TextSection from './TextSection.jsx';
 import { PAGE_COPY } from './pageContent.js';
 import { fixaBaseRecursos } from '../../config/assetResolver.js';
 import { permetOrigenMitjans, sanitizeHtml } from '../../utils/sanitize.js';
+import { segmentsAmbTargetes } from '../../components/universal/richText/extensions/targetes/formaDelGrup.js';
 
 const PAQUET = 'https://amfitrio.example/wp-content/plugins/socdepoble-enxufe/dist';
 const HERO_RESERVA = '/assets/uploads/brain/hero_panoramic_rural_view_1774720664221.png';
@@ -51,12 +52,17 @@ afterEach(() => {
 
 test('sense amfitrió (dev): el cos de /projecte és el sanejat de sempre i les rutes no canvien', () => {
   const { container } = render(<TextSection page={PAGE_COPY.projecte} pageKey="projecte" />);
-  expect(cos(container).innerHTML).toBe(sanitizeHtml(PAGE_COPY.projecte.html));
+  /* Ordre 261103_0522, T2.6 (Gauntlet O7-9, ronda 2; PC-02) · /projecte porta la targeta de /anima i el
+     cos va per CosAmbTargetes: tros a tros, byte a byte, cada .sdp-cos-tros és el segment sanejat, i el
+     grup és el del text. Prova posada al dia a propòsit. */
+  expect([...cos(container).children].map((fill) => (fill.classList.contains('sdp-cos-tros') ? ['html', fill.innerHTML] : ['targetes', fill.className])))
+    .toEqual(segmentsAmbTargetes(sanitizeHtml(PAGE_COPY.projecte.html)).map((segment) => (segment.tipus === 'html' ? ['html', sanitizeHtml(segment.html)] : ['targetes', 'sdp-targetes'])));
+  expect([...cos(container).querySelectorAll(':scope > .sdp-targetes .sdp-targeta a')].map((a) => a.getAttribute('href'))).toEqual(['/anima']);
   expect(srcs(container)).toEqual(INFOGRAFIES);
   /* O4-CLAUDE-2 (ordre del Mestre, 261102 21:38) · «D’on venim» va dins d'una Subtargeta
      (div.sdp-subtargeta, que el sanejador conserva). C2-04 (àrbitre) · Les infografies es queden
      fora, com estaven: el seu primer paràgraf és cos, no cap metadada. Les rutes no canvien. */
-  const caixes = [...cos(container).querySelectorAll(':scope > div.sdp-subtargeta[data-sdp-subtargeta]')];
+  const caixes = [...cos(container).querySelectorAll(':scope > .sdp-cos-tros > div.sdp-subtargeta[data-sdp-subtargeta]')];
   expect(caixes.map((caixa) => caixa.firstElementChild.textContent)).toEqual(['D’on venim']);
   expect(caixes[0].querySelectorAll('img')).toHaveLength(0);
   expect(mocks.props.heroImage).toBe(PAGE_COPY.projecte.image);

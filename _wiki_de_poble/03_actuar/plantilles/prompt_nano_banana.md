@@ -9,7 +9,7 @@ tags:
 
 # Plantilla: Prompt Visual de Sóc de Poble (Nano Banana · v2.1.0 · ADN Ibáñez / TBO Valencià Artesanal)
 
-Aquesta plantilla s'ha d'utilitzar SEMPRE que es demane una nova vinyeta o il·lustració per a una pàgina, eina o secció de **Sóc de Poble**. L'objectiu és mantindre una **coherència gràfica d'estil TBO / Francisco Ibáñez (*Mortadelo i Filemón*, *13 Rue del Percebe*, *Pepe Gotera i Otilio*) traslladat a un poble valencià**, fugint de la perfecció digital estèril per recuperar el **traç humà, espontani i lleugerament imperfecte del tebeo clàssic en paper**, amb format quadrat i estrictament **a sang (zero marcs blancs)**.
+Aquesta plantilla s'ha d'utilitzar SEMPRE que es demane una **nova vinyeta o il·lustració** per a una pàgina, eina o secció de **Sóc de Poble**. L'objectiu és mantindre una **coherència gràfica** d'estil TBO / Francisco Ibáñez (*Mortadelo i Filemón*, *13 Rue del Percebe*, *Pepe Gotera i Otilio*) traslladat a un **poble valencià**, fugint de la perfecció digital estèril per recuperar el **traç humà, espontani** i lleugerament imperfecte del tebeo clàssic en paper, amb **format quadrat** i estrictament **a sang (zero marcs blancs)**.
 
 ## 1. Anatomia de l'Estil Visual (ADN Ibáñez + Poble Valencià + Imperfecció de Tebeo)
 

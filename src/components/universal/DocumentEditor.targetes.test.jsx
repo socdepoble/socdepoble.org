@@ -49,9 +49,10 @@ const dialegDe = (titol) => screen.queryByRole('heading', { name: titol, hidden:
 const senseIds = (html) => html.replace(/:r[0-9a-z]+:/g, ':id:');
 
 function editorFals() {
-  const cadena = { focus: vi.fn(), inserirTargeta: vi.fn(), run: vi.fn(() => true) };
+  const cadena = { focus: vi.fn(), inserirTargeta: vi.fn(), inserirEnllacDeTargeta: vi.fn(), run: vi.fn(() => true) };
   cadena.focus.mockReturnValue(cadena);
   cadena.inserirTargeta.mockReturnValue(cadena);
+  cadena.inserirEnllacDeTargeta.mockReturnValue(cadena);
   return { isDestroyed: false, storage: { [NOM_EXTENSIO_TARGETES]: { obreSelector: null } }, chain: vi.fn(() => cadena), cadena };
 }
 
@@ -105,6 +106,20 @@ test('l’ordre de l’editor obri el selector pel magatzem, i la tria s’inser
   // En desmuntar-se, el magatzem es queda sense selector (l'ordre ix apagada).
   unmount();
   expect(magatzem.obreSelector).toBeNull();
+});
+
+test('des del selector, «Inserir com a enllaç» escriu l’enllaç intern al cos', () => {
+  mocks.editor = editorFals();
+  const cerca = vi.fn(() => [ENTRADA]);
+  editor({ targetes: { cerca } });
+  act(() => mocks.editor.storage[NOM_EXTENSIO_TARGETES].obreSelector());
+  const selector = screen.getByRole('dialog', { name: 'Inserir una targeta' });
+  fireEvent.change(within(selector).getByRole('searchbox', { name: 'Busca' }), { target: { value: 'festa' } });
+  fireEvent.click(within(selector).getByRole('radio'));
+  fireEvent.click(within(selector).getByRole('button', { name: 'Inserir com a enllaç' }));
+  expect(mocks.editor.cadena.inserirEnllacDeTargeta).toHaveBeenCalledWith(expect.objectContaining({ clau: 'publicacio:1', ruta: '/mur/1', titol: 'La festa' }));
+  expect(mocks.editor.cadena.run).toHaveBeenCalled();
+  expect(dialegDe('Inserir una targeta').open).toBe(false);
 });
 
 test('una acció de la targeta en edició obri l’avís únic de previsualització', () => {

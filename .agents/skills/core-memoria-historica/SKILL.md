@@ -15,6 +15,7 @@ contracte.llig:
   - _wiki_de_poble/02_saber/memoria_aprenentatges.md
   - .agents/skills/wiki-cicle-de-vida/SKILL.md
   - _wiki_de_poble/10_actes
+  - _wiki_de_poble
 contracte.escriu:
   - _wiki_de_poble/02_saber/memoria_aprenentatges.md
   - _wiki_de_poble/10_actes

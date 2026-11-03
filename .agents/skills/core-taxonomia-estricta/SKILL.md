@@ -8,6 +8,7 @@ triggers_on: [prompt_generation, planning, documentation]
 contracte.llig:
   - _wiki_de_poble/02_saber/doc_governanca.md
   - tooling/wiki/schema.json
+  - _wiki_de_poble/03_actuar/plantilles
 contracte.escriu:
   - _wiki_de_poble/02_saber/doc_governanca.md
 ---

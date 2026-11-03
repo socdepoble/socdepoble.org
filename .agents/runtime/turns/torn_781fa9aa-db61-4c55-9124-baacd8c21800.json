@@ -3,7 +3,7 @@
   "turn_id": "torn_781fa9aa-db61-4c55-9124-baacd8c21800",
   "actor": "mestre",
   "scope": "documents",
-  "state": "context_loaded",
+  "state": "closed",
   "revision": 9,
   "createdAt": "2026-10-26T00:56:06.273Z",
   "updatedAt": "2026-10-26T01:06:27.596Z",
@@ -3855,5 +3855,6 @@
       "at": "2026-10-26T01:06:27.596Z",
       "hash": "608a4e9cfe7106ad77d9d8628d2ef8a81d6146b108ba3b343fa7afb9afe9fd76"
     }
-  ]
+  ],
+  "closedAt": "2026-11-03T05:17:29.321Z"
 }

@@ -3,7 +3,7 @@
   "turn_id": "torn_9dd9290e-06b7-4a4c-b099-a6713ad2f10c",
   "actor": "codex",
   "scope": "documents",
-  "state": "context_loaded",
+  "state": "closed",
   "revision": 3,
   "createdAt": "2026-10-27T04:47:22.160Z",
   "updatedAt": "2026-10-27T04:48:50.382Z",
@@ -3783,5 +3783,6 @@
       "at": "2026-10-27T04:48:50.382Z",
       "hash": "a5f0f6c2b035cc48a82db789044795711612688ccee0417b649139d6324dae69"
     }
-  ]
+  ],
+  "closedAt": "2026-11-03T05:17:29.321Z"
 }

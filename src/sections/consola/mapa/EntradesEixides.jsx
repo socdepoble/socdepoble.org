@@ -7,7 +7,7 @@ import { TO_CONFIANCA, etiquetaNode, filesEntradesEixides } from './grafMapa.js'
 /* Entrades i eixides (la pestanya «Entradas y salidas» d'Emowe): per a cada
    skill i cada ruta, què llig, què escriu, qui la crida i a qui crida.
    Ordre del Mestre, 261004 (xat: cap xifra solta) · Les dues xifres són les
-   targetes del Mas (skills del cens i skills opaques), amb boina i pàgina
+   targetes de Sóc de Poble (skills del cens i skills opaques), amb boina i pàgina
    pròpia: compten tot el Mapa, no la cerca, perquè una pàgina pròpia no pot
    dependre d'un filtre que no viatja amb l'adreça. La taula sí que filtra.
    Derogat per l'ordre del Mestre del 261004 (xat: cap xifra solta): les

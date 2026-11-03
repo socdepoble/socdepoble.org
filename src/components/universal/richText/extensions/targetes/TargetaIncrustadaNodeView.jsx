@@ -24,7 +24,7 @@
  */
 import { useCallback } from 'react';
 import { NodeViewWrapper } from '@tiptap/react';
-import { AlignLeft, AlignRight, Trash2 } from 'lucide-react';
+import { AlignLeft, AlignRight, Link2, Trash2 } from 'lucide-react';
 /* Directes, no pel barril de PedraSeca: el mòdul d'extensions el carrega
    l'editor, i el barril arrossegaria tot el sistema de disseny. */
 import { UniversalCard } from '../../../../PedraSeca/organismes/UniversalCard.jsx';
@@ -72,6 +72,10 @@ export default function TargetaIncrustadaNodeView({ node, editor, getPos, select
     const pos = typeof getPos === 'function' ? getPos() : null;
     if (typeof pos === 'number') editor.chain().focus().alineaTargetes(alineacio, pos).run();
   };
+  const converteixEnEnllac = () => {
+    const pos = typeof getPos === 'function' ? getPos() : null;
+    if (typeof pos === 'number') editor.chain().focus().convertirTargetaEnEnllac(pos).run();
+  };
 
   return (
     <NodeViewWrapper data-drag-handle="" onClickCapture={paraEnllac}>
@@ -88,6 +92,9 @@ export default function TargetaIncrustadaNodeView({ node, editor, getPos, select
               </Boto>
             </>
           ) : null}
+          <Boto icona={Link2} onClick={converteixEnEnllac}>
+            {t('editor.targetes.aEnllac', 'Convertir en enllaç')}
+          </Boto>
           <Boto varietat="fantasma" icona={Trash2} onClick={() => deleteNode?.()}>
             {t('editor.targetes.lleva', 'Llevar la targeta')}
           </Boto>

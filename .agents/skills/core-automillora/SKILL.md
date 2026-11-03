@@ -7,6 +7,7 @@ description: Protocol d'Automillora Contínua, Mimetisme Empàtic i l'Olivera (C
 contracte.llig:
   - AGENTS.md
   - _wiki_de_poble/02_saber/memoria_aprenentatges.md
+  - .agents/skills
 contracte.escriu:
   - _wiki_de_poble/02_saber/memoria_aprenentatges.md
 ---

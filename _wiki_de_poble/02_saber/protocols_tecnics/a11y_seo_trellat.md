@@ -34,7 +34,7 @@ Guia de qualitat per a l’accessibilitat, el SEO tècnic i el rendiment de les 
 
 ## Rendiment
 
-Els navegadors del Baseline 2022 són el tribunal pràctic. La doctrina d’un dispositiu de referència únic (l’A10) es va retirar amb l’[[ADR-2026-08-ONLINE-FIRST]], i per això cada mesura declara el perfil de dispositiu on s’ha pres. LCP, INP, CLS, pes transferit i memòria són mètriques a mesurar, no garanties documentals. Qualsevol llindar de release ha de declarar dispositiu o perfil, xarxa, nombre de mostres i ferramenta; no es pot convertir una estimació puntual en una promesa universal.
+Els navegadors del **Baseline 2022** són el **tribunal pràctic**. La doctrina d’un dispositiu de referència únic (l’A10) **es va retirar** amb l’[[ADR-2026-08-ONLINE-FIRST]], i per això cada mesura declara el **perfil de dispositiu** on s’ha pres. LCP, INP, CLS, pes transferit i memòria són **mètriques a mesurar**, no garanties documentals. Qualsevol llindar de release ha de declarar dispositiu o perfil, xarxa, **nombre de mostres** i ferramenta; no es pot convertir una estimació puntual en una **promesa universal**.
 
 ## Evidència mínima d’homologació
 

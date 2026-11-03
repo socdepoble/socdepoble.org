@@ -556,17 +556,19 @@ for (const llei of LLEIS) {
     }
   }
 }
+/* Onada 7 · El veredicte posa process.exitCode i el procés acaba sol. Amb --json, un
+   process.exit() tallava el JSON als 64 KiB quan stdout és una canonada (a macOS és
+   asíncron), i self-describe-coherencia en rebia mig. */
+const pujat = LLEIS.filter((k) => compte[k] > (max[k] ?? 0));
 if (tocatAmbDeute) {
   console.error('   Saneja el frontmatter abans de fer commit d\'aquest fitxer.');
-  process.exit(1);
-}
-
-const pujat = LLEIS.filter((k) => compte[k] > (max[k] ?? 0));
-if (pujat.length) {
+  process.exitCode = 1;
+} else if (pujat.length) {
   console.error(`\n❌ [FRONTMATTER] El deute ha pujat: ${pujat.map((k) => `${k} ${max[k] ?? 0}→${compte[k]}`).join(', ')}`);
   console.error('   Arregla-ho: node tooling/wiki/codemod_frontmatter.mjs --escriu');
-  process.exit(1);
+  process.exitCode = 1;
+} else {
+  // Amb --json, stdout és només el JSON (el llegixen proves i eines): el veredicte verd va a stderr, com els rojos.
+  (JSON_OUT ? console.error : console.log)(`\n✅ [FRONTMATTER] Esquema respectat. Deute no ha pujat.${ESTRICTE ? ' (estricte)' : ''}`);
+  process.exitCode = 0;
 }
-// Amb --json, stdout és només el JSON (el llegixen proves i eines): el veredicte verd va a stderr, com els rojos.
-(JSON_OUT ? console.error : console.log)(`\n✅ [FRONTMATTER] Esquema respectat. Deute no ha pujat.${ESTRICTE ? ' (estricte)' : ''}`);
-process.exit(0);

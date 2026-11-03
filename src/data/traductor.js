@@ -76,7 +76,7 @@ export function sanejaDestinsDeclarats(valor) {
    traduïx a mitges ni s'emporta el pressupost de tot el poble (ronda C9-2:
    4 lots de 5000 en permetien 20000, el doble del que el servidor dona). */
 export const LIMITS_TRADUCCIO = Object.freeze({
-  textos: 50, caracters: 5000, bytes: 20000, json: 32000, lots: 4, caractersPagina: 10000
+  textos: 50, caracters: 5000, bytes: 20000, json: 32000, lots: 24, caractersPagina: 60000
 });
 
 const FORMATS = new Set(['text', 'html']);

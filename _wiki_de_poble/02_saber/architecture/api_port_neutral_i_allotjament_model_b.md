@@ -100,10 +100,10 @@ un camp `capacitats` obligatori a l'adaptador ni `capacitatsDisponibles()`.
 La validació prepara els mètodes i només després substituïx el port, rebutja
 getters i capacitats parcials. No és una prova funcional d'un servidor remot.
 
-`src/data/conformitat/kit.js` exporta `CASOS`, `contextDeConformitat`,
-`executaCas` i `metodesSenseCas`. Els casos tornen `ok`, `falla` o `omés`.
-Les omissions i `metodesSenseCas()` fan visible la cobertura pendent; no es
-pot dir que les 118 operacions tinguen comportament certificat. Les proves
+`src/data/conformitat/kit.js` **exporta** `CASOS`, `contextDeConformitat`,
+`executaCas` i `metodesSenseCas`. **Els casos tornen** `ok`, `falla` o `omés`.
+**Les omissions** i `metodesSenseCas()` fan visible la **cobertura pendent**; no es
+pot dir que les 118 operacions tinguen **comportament certificat**. **Les proves**
 són `src/data/conformitat/kit.test.js` i `qualitat.test.js` en eixa carpeta.
 No hi ha les API `verificaContracteBackend` o `executaKitDeConformitat`.
 
@@ -113,11 +113,11 @@ No hi ha les API `verificaContracteBackend` o `executaKitDeConformitat`.
 `allowedOrigins: []` i `resources: {}`. `ESCRIPTURES_PERMESES` és buit.
 `llig` no té recursos activats sense una captura versionada.
 
-`src/data/adaptadors/sollutia/creaFrontissa.js` exporta `creaFrontissa` i
-`ErrorDades`. Valida HTTPS, origen admés, rutes, paràmetres i captures;
+`src/data/adaptadors/sollutia/creaFrontissa.js` **exporta** `creaFrontissa` i
+`ErrorDades`. **Valida HTTPS**, **origen admés**, **rutes, paràmetres i captures**;
 usa GET, credentials omit, redirect error i Accept application/json.
-Cada recurs aporta `timeoutMs`, `maxBytes` i `decode`, que valida el DTO.
-Els codis literals inclouen `INVALID_ORIGIN`, `INVALID_RESOURCE`,
+Cada recurs aporta `timeoutMs`, `maxBytes` i `decode`, que **valida el DTO**.
+Els **codis literals** inclouen `INVALID_ORIGIN`, `INVALID_RESOURCE`,
 `UNKNOWN_RESOURCE`, `INVALID_QUERY`, `CANCELLED`, `TIMEOUT`,
 `PAYLOAD_TOO_LARGE`, `INVALID_PAYLOAD`, `UNAUTHENTICATED`, `FORBIDDEN`
 i `UNAVAILABLE`. No són codis FRONTISSA_*.
@@ -141,11 +141,11 @@ de dades. Les dades del poble continuen darrere del port de Sóc de Poble.
   `tooling/instalador/inicia-node-germa.mjs` prepara fitxers locals. Les proves
   Node no substituïxen executar Nix ni acrediten infraestructura desplegada.
 
-Cal configurar domini HTTPS, origen del backend, clau pública del navegador
-i municipi abans de construir/servir la web. Cap clau service_role o secret
+Cal configurar **domini HTTPS**, **origen del backend**, **clau pública del navegador**
+i **municipi** abans de construir/servir la web. **Cap clau service_role o secret**
 entra al frontend. No es fixen costos, RAM, proveïdors alternatius ni recursos
-mínims sense mesurar-los. Qualsevol canvi de backend requerix adaptador,
-conformitat, cobertura declarada i la decisió documentada del projecte.
+mínims **sense mesurar-los**. Qualsevol canvi de backend requerix adaptador,
+conformitat, **cobertura declarada** i la decisió documentada del projecte.
 
 ## Vincles
 

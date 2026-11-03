@@ -37,7 +37,7 @@ Plantilla entregada: _wiki_de_poble/03_actuar/plantilles/acta.md; SHA-256 4d4b9d
 <!-- SDP:SECTION acta.s3 -->
 ## Historial
 
-- **2026-11-03 03:28 CET (v1.0.0):** Tancament complet de la tramesa a les 4 botigues/canals de distribució, de les Onades 3, 4 i 5 a l'arbre viu (`31.458` proves Vitest + `2.163` proves Node verdes), purga de 164 captures efímeres de `01_produccio/` (L'Oblit Saludable) i preparació del relleu en fresc (post-reinici del Mac i de totes les IAs) per a la **Marató Nocturna de l'Onada 6** ([`261102_1532_prompt_onada6_disseny_editorial_negrites_versions_1_1_0_i_tancament.md`](../04_escriptori/261102_1532_prompt_onada6_disseny_editorial_negrites_versions_1_1_0_i_tancament.md)).
+- **2026-11-03 03:28 CET (v1.0.0):** Tancament complet de la tramesa a les 4 botigues/canals de distribució, de les Onades 3, 4 i 5 a l'arbre viu (`31.458` proves Vitest + `2.163` proves Node verdes), purga de 164 captures efímeres de `01_produccio/` (L'Oblit Saludable) i preparació del relleu en fresc (post-reinici del Mac i de totes les IAs) per a la **Marató Nocturna de l'Onada 6** ([`261102_1532_prompt_onada6_disseny_editorial_negrites_versions_1_1_0_i_tancament.md`](../90_arxiu_historic/261102_1532_prompt_onada6_disseny_editorial_negrites_versions_1_1_0_i_tancament.md)).
 
 <!-- SDP:SECTION acta.s4 -->
 ## Resultats
@@ -80,5 +80,5 @@ El Mac té `16,07 GB` lliures de `32 GB` (`35%` de pressió de memòria), per la
 
 - [[00_index]]
 - [[00_index_escriptori]]
-- [[../04_escriptori/261102_1532_pla_implementacio_mode_jarvis_idea60_fediversity_i_deute_llibre_mestre|261102_1532_pla_implementacio_mode_jarvis_idea60_fediversity_i_deute_llibre_mestre]]
-- [[../04_escriptori/261102_1532_prompt_onada6_disseny_editorial_negrites_versions_1_1_0_i_tancament|261102_1532_prompt_onada6_disseny_editorial_negrites_versions_1_1_0_i_tancament]]
+- [[../90_arxiu_historic/261102_1532_pla_implementacio_mode_jarvis_idea60_fediversity_i_deute_llibre_mestre|261102_1532_pla_implementacio_mode_jarvis_idea60_fediversity_i_deute_llibre_mestre]]
+- [[../90_arxiu_historic/261102_1532_prompt_onada6_disseny_editorial_negrites_versions_1_1_0_i_tancament|261102_1532_prompt_onada6_disseny_editorial_negrites_versions_1_1_0_i_tancament]]

@@ -3,7 +3,7 @@
   "turn_id": "torn_ff3c4daf-d7fa-4faf-88fb-8ab7d3dbfb11",
   "actor": "codex",
   "scope": "documents",
-  "state": "planned",
+  "state": "closed",
   "revision": 6,
   "createdAt": "2026-10-30T20:13:52.289Z",
   "updatedAt": "2026-10-31T03:06:42.206Z",
@@ -4238,5 +4238,6 @@
   ],
   "relocated": [
     "_wiki_de_poble/04_escriptori/261030_2114_auditoria_vespertina_codex.md"
-  ]
+  ],
+  "closedAt": "2026-11-03T05:17:29.321Z"
 }

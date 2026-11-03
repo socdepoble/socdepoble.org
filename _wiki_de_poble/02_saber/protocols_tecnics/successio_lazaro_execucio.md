@@ -91,9 +91,9 @@ L'eixida descriu observacions i propostes; mai prova que una mutació estiga aut
 
 ## Assaig de relleu
 
-En un clon temporal: `npm ci`; llegir les entrades de `.agents/cervell.json`; comprovar `git config core.hooksPath`; obrir torn (`npm run torn:obrir`); crear el prompt amb `node tooling/wiki/document.mjs --help`; completar camps; validar; vincular el pla aprovat; actualitzar ESTAT i LEDGER; tancar amb `node tooling/gates/tancament.mjs --close --turn-id ID`; preparar documents, rebuts i snapshots conjuntament; commit amb els hooks activats. Si una passa falla, registrar-ne la comanda i l’error, sense saltar el hook.
+En un **clon temporal**: `npm ci`; llegir les entrades de `.agents/cervell.json`; comprovar `git config core.hooksPath`; obrir torn (`npm run torn:obrir`); crear el prompt amb `node tooling/wiki/document.mjs --help`; completar camps; validar; vincular el **pla aprovat**; **actualitzar ESTAT i LEDGER**; tancar amb `node tooling/gates/tancament.mjs --close --turn-id ID`; preparar documents, **rebuts i snapshots conjuntament**; commit amb els **hooks activats**. **Si una passa falla**, registrar-ne la comanda i l’error, **sense saltar el hook**.
 
-El rol mantenidor custodia el repositori; el rol operador del backend gestiona Supabase; el Mestre decideix producte i accés. Els titulars i la recuperació dels comptes s’han de verificar amb l’humà: este document no inventa credencials, propietaris ni accessos provats. El recorregut documental no necessita secrets; integració i desplegament sí que necessiten els accessos del seu entorn.
+El **rol mantenidor** custodia el repositori; el **rol operador del backend** gestiona Supabase; el **Mestre decideix producte i accés**. Els titulars i la **recuperació dels comptes** s’han de verificar amb l’humà: este document **no inventa credencials**, propietaris ni accessos provats. El recorregut documental **no necessita secrets**; integració i desplegament sí que necessiten els **accessos del seu entorn**.
 
 ## Annex històric resolt
 

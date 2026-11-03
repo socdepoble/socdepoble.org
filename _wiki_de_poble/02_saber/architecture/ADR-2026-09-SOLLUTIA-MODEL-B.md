@@ -7,7 +7,7 @@ tags:
 ---
 # ADR-2026-09 — Integració amb Sollutia: Model B
 
-**Model B:** Sollutia és l'amfitrió i el soci d'infraestructura de Sóc de Poble: allotja el Web Component, ens pot passar la sessió i ens obri la seua API només en lectura (GET a través de la Frontissa), sense injectar cap backend ni interferir en l'arquitectura o el disseny. Les dades del poble viuen al Supabase de Sóc de Poble, única font de veritat, darrere d'un port neutral (`src/data/backendPort.js`): el frontend, 100% modular, s'enxufa a qualsevol amfitrió (Sollutia, WordPress o Joomla), canviar de backend és una decisió de Sóc de Poble amb una ADR i el kit de conformitat, i sempre podem traure-ho «tot fora». No hi ha escriptures creuades.
+**Model B:** Sollutia és l'**amfitrió i el soci d'infraestructura** de Sóc de Poble: allotja el Web Component, ens pot passar la sessió i ens obri la seua API **només en lectura** (GET a través de la Frontissa), **sense injectar cap backend** ni interferir en l'arquitectura o el disseny. Les dades del poble viuen al Supabase de Sóc de Poble, **única font de veritat**, darrere d'un **port neutral** (`src/data/backendPort.js`): el frontend, 100% modular, s'enxufa a qualsevol amfitrió (Sollutia, WordPress o Joomla), canviar de backend és una decisió de Sóc de Poble amb una ADR i el **kit de conformitat**, i sempre podem traure-ho «tot fora». **No hi ha escriptures creuades**.
 
 ## Estat
 

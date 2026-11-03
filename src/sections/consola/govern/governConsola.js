@@ -10,7 +10,7 @@
  * consolaPagines.js), amb la mateixa maquinària de subpàgines que el pols
  * (polsConsola.js): un id per pàgina, la seua ruta i el seu copy. El grup no
  * entra a IDS_PAGINES, i per això ni l'Índex de la Consola ni el Diagnòstic
- * del Mas ni la Consola incrustada de la Wiki canvien.
+ * de Sóc de Poble ni la Consola incrustada de la Wiki canvien.
  * Pla 261027_0845 (Guarda Nocturna), §3 · El grup continua fora
  * d'IDS_PAGINES, i l'Índex i el Diagnòstic continuen igual; la Consola
  * incrustada de la Wiki, no: ara pinta la secció del govern pel mateix cap

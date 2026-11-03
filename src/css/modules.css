@@ -10637,8 +10637,16 @@ details[open] summary.accordion-header svg:last-child {
      · 1 («sola»): flotant a l'esquerra o a la dreta, de 360px
        (--sdp-targeta-incrustada-ample). left i right: els valors lògics de
        la flotant arriben amb Chrome 118, fora de la Baseline 2022, i el
-       marge és físic pel mateix motiu. En mòbil, min(100%, …) la fa
-       d'amplària completa sense cap @media.
+       marge és físic pel mateix motiu. Per davall de 360px de contenidor,
+       min(100%, …) la fa d'amplària completa. Gauntlet O7-9, ronda 2
+       (PC-07) · Entre uns 470 i 640px de pantalla, la flotant de 360px
+       deixava al costat una columna de text de menys de 135px: fins a 40rem
+       de pantalla, la sola ocupa tota l'amplària, sense marges laterals.
+       Ronda 3 · Continua flotant: el grup no fa alçada i el buit de davall
+       és el margin-block-end de la targeta, com sempre. Amb float: none, el
+       text de davall baixava 8px a totes les pàgines amb targeta, també a
+       375px (/legal, /drets-autor). La regla només canvia la caixa de la
+       targeta.
      · 2 («parella»): centrades, en una fila que es plega.
      · 3 o més («graella»): la mateixa fórmula de .sdp-card-grid.
    La targeta del Mur porta marge i un sostre de 500px: ací mana el grup. El
@@ -10665,6 +10673,13 @@ details[open] summary.accordion-header svg:last-child {
   .sdp-targetes[data-forma="sola"][data-alineacio="dreta"] > .sdp-targeta {
     float: right;
     margin-left: var(--sdp-space-6);
+  }
+  @media (max-width: 40rem) {
+    .sdp-targetes[data-forma="sola"][data-alineacio] > .sdp-targeta {
+      inline-size: 100%;
+      margin-left: 0;
+      margin-right: 0;
+    }
   }
   .sdp-targetes[data-forma="parella"] {
     clear: both;
@@ -12043,7 +12058,7 @@ details[open] summary.accordion-header svg:last-child {
   .sdp-arxiu-local__bloc > p,
   .sdp-arxiu-local__proposta > p,
   .sdp-arxiu-local__fitxers > p { margin: 0; }
-  .sdp-arxiu-local__fila { display: flex; flex-wrap: wrap; align-items: center; gap: var(--sdp-space-2); }
+  .sdp-arxiu-local__fila { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: var(--sdp-space-2); }
   .sdp-arxiu-local__ajuda { margin: 0; color: var(--sdp-text-suau); font-size: var(--sdp-text-meta); }
   .sdp-arxiu-local__controls {
     display: grid;
@@ -12052,7 +12067,7 @@ details[open] summary.accordion-header svg:last-child {
     align-items: start;
   }
   .sdp-arxiu-local__filtres { gap: var(--sdp-space-4); }
-  .sdp-arxiu-local__pindola { justify-content: flex-start; margin: 0; }
+  .sdp-arxiu-local__pindola { justify-content: center; margin: 0; }
   .sdp-arxiu-local__explorador { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--sdp-space-4); align-items: start; }
   @media (min-width: 64rem) {
     .sdp-arxiu-local__explorador { grid-template-columns: minmax(13rem, 17rem) minmax(0, 1fr); }
@@ -14013,6 +14028,38 @@ details[open] summary.accordion-header svg:last-child {
     border-color: var(--sdp-accio);
     background: var(--sdp-accio-control);
     color: var(--sdp-sobre-accio);
+  }
+  .sdp-perfil-public__meta {
+    margin-inline: auto;
+    text-align: center;
+  }
+  .sdp-perfil-public__accions {
+    justify-content: center;
+  }
+  .sdp-fitxa-nutricional {
+    margin-block: var(--sdp-space-5);
+    border: 1px solid var(--sdp-vora-forta);
+    border-radius: var(--sdp-radi-m);
+    background: var(--sdp-fons-targeta);
+  }
+  .sdp-fitxa-nutricional > .sdp-taula-nutricional > caption {
+    padding: var(--sdp-space-3) var(--sdp-space-4);
+    border-block-end: 1px solid var(--sdp-vora-forta);
+    color: var(--sdp-text-titol);
+    font-weight: 700;
+  }
+  .sdp-taula-nutricional th,
+  .sdp-taula-nutricional td {
+    padding: var(--sdp-space-2) var(--sdp-space-4);
+  }
+  .sdp-taula-nutricional .sdp-nutri-sub {
+    padding-inline-start: var(--sdp-space-8);
+    color: var(--sdp-text-suau);
+    font-weight: 400;
+  }
+  .sdp-taula-nutricional tbody tr:last-child th,
+  .sdp-taula-nutricional tbody tr:last-child td {
+    border-block-end: 0;
   }
 }
 

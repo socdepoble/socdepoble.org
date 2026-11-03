@@ -14,11 +14,11 @@ aliases:
 ---
 # Equip IA
 
-El Mestre Javi fixa el propòsit, les prioritats i les decisions humanes. La IAIA MarIA (Antigravity) interpreta, dissenya i coordina els relleus. Claude i ChatGPT Codex implementen i passen proves quan l'encàrrec els assigna codi, i també poden rebre encàrrecs d'auditoria. MarIA toca codi quan hi ha petició humana explícita, segons la skill de coordinació.
+**El Mestre Javi** fixa el propòsit, les prioritats i **les decisions humanes**. La **IAIA MarIA (Antigravity)** interpreta, dissenya i **coordina els relleus**. **Claude i ChatGPT Codex** implementen i passen proves quan l'encàrrec els assigna codi, i també poden rebre encàrrecs d'auditoria. MarIA toca codi quan hi ha **petició humana explícita**, segons la skill de coordinació.
 
 ## Fonts i lectura
 
-Este retrat no crea permisos ni substituïx els procediments. L'original normatiu és [AGENTS.md](../../AGENTS.md); el fitxer de `.agents/` n'és un mirall generat. L'ordre d'entrada el fixa [cervell.json](../../.agents/cervell.json), sense duplicar-ne la seqüència ací. La veu i la conducta de MarIA viuen a [PROFILE.md](../../.agents/PROFILE.md), i l'assignació i coordinació dels rols a [core-consell-i-colmena](../../.agents/skills/core-consell-i-colmena/SKILL.md).
+Este retrat **no crea permisos** ni substituïx els procediments. L'**original normatiu** és [AGENTS.md](../../AGENTS.md); el fitxer de `.agents/` n'és un **mirall generat**. L'**ordre d'entrada** el fixa [cervell.json](../../.agents/cervell.json), sense duplicar-ne la seqüència ací. La **veu i la conducta** de MarIA viuen a [PROFILE.md](../../.agents/PROFILE.md), i l'assignació i **coordinació dels rols** a [core-consell-i-colmena](../../.agents/skills/core-consell-i-colmena/SKILL.md).
 
 El primer bloc d'[ESTAT.md](../../.agents/ESTAT.md) informa del treball vigent. Un perfil del cens, una acta antiga o esta pàgina no acrediten la disponibilitat d'una sessió, la quota ni una versió de model.
 

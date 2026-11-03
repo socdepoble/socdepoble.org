@@ -23,7 +23,7 @@ El sistema visual respon a 4 elements inalterables inspirats en el paisatge medi
 - **Negre Fons (Nit):** La sobrietat, l'escriptura sòlida.
 - **Blanc Paper (Llum):** La calç de la paret, el llenç immaculat.
 
-A la interfície, el taronja canònic (`#FF7300`) i el blau canònic (`#0984E3`) naixen a `src/config/design-tokens.json` i els components només els usen a través de tokens semàntics: el blau és el color de l'acció (`--sdp-accio`) i el taronja el de la identitat de marca (`--sdp-accent`). El reglament exacte és a la skill `sdp-pedra-seca`.
+A la interfície, el **taronja canònic** (`#FF7300`) i el **blau canònic** (`#0984E3`) naixen a `src/config/design-tokens.json` i els components només els usen a través de **tokens semàntics**: el blau és el **color de l'acció** (`--sdp-accio`) i el taronja el de la **identitat de marca** (`--sdp-accent`). El **reglament exacte** és a la skill `sdp-pedra-seca`.
 
 > [!IMPORTANT]
 > És una regla biològica de la marca l'ús exclusiu d'aquests colors en la major i estricta densitat. "No mesclem ciment amb taronges". Alt contrast, contorns evidents, formes robustes.
@@ -33,7 +33,7 @@ A la interfície, el taronja canònic (`#FF7300`) i el blau canònic (`#0984E3`)
 - Mai s'ha d'amagar o fer minúscul per motius d'estètica "minimalista" o "molt neta" (Clean Design extrem). Sentim orgull i ho mostrem en targetes principals, peus de document i capçaleres d'activació.
 
 ## 4. Tipografia de Front
-Utilitzarem **Noto Sans** universalment. Va ser dissenyada per abraçar milers de caràcters de tota la humanitat, igual que l'aplicació pretén abastar les veus del camp. És un caràcter segur, gruixut a peses 700 i estable ('olivera fortificada') per a títols, i àgil a 400 per al text rutinari. Les serifs estan rebutjades fora del logotip primari de "cartell antic".
+Utilitzarem **Noto Sans universalment**. Va ser dissenyada per abraçar **milers de caràcters** de tota la humanitat, igual que l'aplicació pretén abastar les **veus del camp**. És un caràcter segur, **gruixut a peses 700** i estable ('olivera fortificada') per a títols, i **àgil a 400** per al text rutinari. Les **serifs estan rebutjades** fora del logotip primari de "cartell antic".
 
 ## 5. Il·lustració i Composició (Estil NANO / Bruguera)
 Aquesta secció governa la creació d'il·lustracions al·legòriques de sistema. La base referencial és l'Estil "Escola Bruguera" (Ibáñez/Vázquez) combinat amb l'absurd costumista ("Berlanga").

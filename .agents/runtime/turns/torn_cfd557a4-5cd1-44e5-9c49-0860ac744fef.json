@@ -3,7 +3,7 @@
   "turn_id": "torn_cfd557a4-5cd1-44e5-9c49-0860ac744fef",
   "actor": "codex",
   "scope": "code",
-  "state": "planned",
+  "state": "closed",
   "revision": 16,
   "createdAt": "2026-10-25T06:12:17.349Z",
   "updatedAt": "2026-10-25T08:06:59.992Z",
@@ -3854,5 +3854,6 @@
     "src/sections/text/TaulerTelemetria.jsx",
     "src/data/supabase/xat.cur06.seguretat.test.js",
     "src/data/supabase/xat.baixa.realtimejs.test.js"
-  ]
+  ],
+  "closedAt": "2026-11-03T05:17:29.321Z"
 }

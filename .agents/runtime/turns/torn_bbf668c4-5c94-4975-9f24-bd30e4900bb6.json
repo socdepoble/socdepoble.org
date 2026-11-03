@@ -3,7 +3,7 @@
   "turn_id": "torn_bbf668c4-5c94-4975-9f24-bd30e4900bb6",
   "actor": "iaia-maria",
   "scope": "documents",
-  "state": "context_loaded",
+  "state": "closed",
   "revision": 3,
   "createdAt": "2026-10-25T15:02:33.561Z",
   "updatedAt": "2026-10-25T15:03:47.872Z",
@@ -3765,5 +3765,6 @@
       "at": "2026-10-25T15:03:47.872Z",
       "hash": "70a8732cfa6f12248b82fe69d9b0033f80f2c8da21325659a24b4930002c619d"
     }
-  ]
+  ],
+  "closedAt": "2026-11-03T05:17:29.321Z"
 }

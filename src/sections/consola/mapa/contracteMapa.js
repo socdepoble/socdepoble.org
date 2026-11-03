@@ -11,7 +11,7 @@ export const TIPUS_NODE = Object.freeze(['skill', 'plantilla', 'ruta', 'script',
 export const TIPUS_ARESTA = Object.freeze(['crida', 'llig', 'escriu', 'dispara', 'encamina', 'carrega', 'governa']);
 export const CONFIANCES = Object.freeze(['declarat', 'derivat', 'inferit']);
 export const SEVERITATS = Object.freeze(['alta', 'mitjana', 'baixa']);
-export const ESTATS_TASCA = Object.freeze(['viu', 'mort', 'declarat-sense-llancador', 'llancador-sense-declaracio', 'desconegut']);
+export const ESTATS_TASCA = Object.freeze(['viu', 'programat', 'mort', 'declarat-sense-llancador', 'llancador-sense-declaracio', 'desconegut']);
 
 /**
  * Correcció 261004 (verificador de la tercera passada, punt 1) · Les unitats

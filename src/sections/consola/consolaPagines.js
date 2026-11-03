@@ -53,7 +53,7 @@ const COPY_PROVISIONAL = Object.freeze({
     lead: 'Perfils amb contracte que treballen sols, i les quatre peces que ho fan possible, mesurades amb el Mapa d’avui.'
   }),
   actors: Object.freeze({
-    title: 'Actors del Mas',
+    title: 'Actors de Sóc de Poble',
     lead: 'Qui conversa, què es carrega en arrencar, quins candats hi ha, què corre sol i sobre quin sòl treballen, capa per capa.'
   })
 });

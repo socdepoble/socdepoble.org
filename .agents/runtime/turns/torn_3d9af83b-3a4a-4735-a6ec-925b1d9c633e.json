@@ -3,7 +3,7 @@
   "turn_id": "torn_3d9af83b-3a4a-4735-a6ec-925b1d9c633e",
   "actor": "claude",
   "scope": "code",
-  "state": "planned",
+  "state": "closed",
   "revision": 5,
   "createdAt": "2026-11-01T20:43:26.479Z",
   "updatedAt": "2026-11-02T13:56:32.797Z",
@@ -4462,5 +4462,6 @@
     "_wiki_de_poble/04_escriptori/261101_1355_auditoria_claude.md",
     "_wiki_de_poble/04_escriptori/261101_2059_pla_implementacio_marato_nocturna_extirpacio_total_deute_llibre_mestre.md",
     "_wiki_de_poble/04_escriptori/261101_2059_prompt_marato_nocturna_extirpacio_total_deute_llibre_mestre.md"
-  ]
+  ],
+  "closedAt": "2026-11-03T05:17:29.321Z"
 }

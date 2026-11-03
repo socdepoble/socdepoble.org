@@ -9,9 +9,9 @@ tags:
 ---
 # Registre d'Automillora (El Diari de la Màquina)
 
-Aquest és el registre quirúrgic dels canvis de comportament. 
-NO S'ADMET YAPPING. NOMÉS ENTRADES BINÀRIES I PATRONS QUAN HI HA UN CANVI REAL, EXECUAT I COMPROVAT (Res d'entrades especulatives o futures).
-S'HA D'INCLOURE sempre el temps de sessió aproximat (Hores) per a avaluar la fatiga de la IA i l'humà.
+Aquest és el **registre quirúrgic** dels **canvis de comportament**. 
+**NO S'ADMET YAPPING**. NOMÉS ENTRADES BINÀRIES I PATRONS QUAN HI HA UN **CANVI REAL, EXECUAT I COMPROVAT** (Res d'entrades especulatives o futures).
+S'HA D'INCLOURE sempre el **temps de sessió aproximat** (Hores) per a avaluar la **fatiga de la IA i l'humà**.
 
 > [!CAUTION] Este registre és històric i està arxivat. Percentatges i afirmacions de files antigues descriuen el que es va declarar en aquell moment; no certifiquen l’estat actual. La salut vigent només la determina l’Autoneteja v2 amb recompte, zones i hashes reproduïbles.
 

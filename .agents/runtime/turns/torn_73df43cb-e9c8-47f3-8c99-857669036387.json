@@ -4,9 +4,9 @@
   "actor": "Codex",
   "scope": "code",
   "state": "planned",
-  "revision": 4,
+  "revision": 6,
   "createdAt": "2026-11-03T02:19:50.555Z",
-  "updatedAt": "2026-11-03T03:13:57.455Z",
+  "updatedAt": "2026-11-03T13:12:02.623Z",
   "expiresAt": "2026-11-04T02:19:50.556Z",
   "contractHash": "1839756fa153a68d945b48956d870a4a082ab80adcf874a04dd10fc1327d8c45",
   "humanInventoryVersion": 1,
@@ -4553,6 +4553,52 @@
       "from": "documents",
       "to": "code",
       "reason": "Correcció administrativa de l’abast: el Mestre ha autoritzat explícitament O6-CODEX T3 de codi i documentació. Es conserven inventari inicial, rebuts i totes les comprovacions; no amplia els carrils ni autoritza serveis reals."
+    },
+    {
+      "action": "archive-links",
+      "at": "2026-11-03T04:39:13.760Z",
+      "by": "torn_21332b6e-7cf1-4102-bf01-e034959810f3",
+      "relocated": [
+        {
+          "from": "_wiki_de_poble/04_escriptori/261102_1532_prompt_onada6_disseny_editorial_negrites_versions_1_1_0_i_tancament.md",
+          "to": "_wiki_de_poble/90_arxiu_historic/261102_1532_prompt_onada6_disseny_editorial_negrites_versions_1_1_0_i_tancament.md"
+        }
+      ]
+    },
+    {
+      "action": "archive-links",
+      "at": "2026-11-03T13:12:02.623Z",
+      "by": "torn_10f0e355-fa6b-41fb-98f9-6a4478f38c1d",
+      "relocated": [
+        {
+          "from": "_wiki_de_poble/04_escriptori/261102_1532_pla_implementacio_mode_jarvis_idea60_fediversity_i_deute_llibre_mestre.md",
+          "to": "_wiki_de_poble/90_arxiu_historic/261102_1532_pla_implementacio_mode_jarvis_idea60_fediversity_i_deute_llibre_mestre.md"
+        },
+        {
+          "from": "_wiki_de_poble/04_escriptori/261102_1638_auditoria_codex.md",
+          "to": "_wiki_de_poble/90_arxiu_historic/261102_1638_auditoria_codex.md"
+        },
+        {
+          "from": "_wiki_de_poble/04_escriptori/261102_1640_auditoria_claude.md",
+          "to": "_wiki_de_poble/90_arxiu_historic/261102_1640_auditoria_claude.md"
+        },
+        {
+          "from": "_wiki_de_poble/04_escriptori/261102_1832_auditoria_gemini.md",
+          "to": "_wiki_de_poble/90_arxiu_historic/261102_1832_auditoria_gemini.md"
+        },
+        {
+          "from": "_wiki_de_poble/04_escriptori/261102_1836_auditoria_maria.md",
+          "to": "_wiki_de_poble/90_arxiu_historic/261102_1836_auditoria_maria.md"
+        }
+      ]
     }
+  ],
+  "relocated": [
+    "_wiki_de_poble/04_escriptori/261102_1532_prompt_onada6_disseny_editorial_negrites_versions_1_1_0_i_tancament.md",
+    "_wiki_de_poble/04_escriptori/261102_1532_pla_implementacio_mode_jarvis_idea60_fediversity_i_deute_llibre_mestre.md",
+    "_wiki_de_poble/04_escriptori/261102_1638_auditoria_codex.md",
+    "_wiki_de_poble/04_escriptori/261102_1640_auditoria_claude.md",
+    "_wiki_de_poble/04_escriptori/261102_1832_auditoria_gemini.md",
+    "_wiki_de_poble/04_escriptori/261102_1836_auditoria_maria.md"
   ]
 }

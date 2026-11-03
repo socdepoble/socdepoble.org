@@ -1,11 +1,11 @@
 /**
- * DiagnosiConsola.jsx — el «Diagnòstic del Mas», al peu del tauler (/consola).
+ * DiagnosiConsola.jsx — el «Diagnòstic de Sóc de Poble», al peu del tauler (/consola).
  *
  * Ordre del Mestre, 13-10-2026 (pla 261013_1405, front F) · «Al final de la
  * pàgina, davall de les targetes, incorporar un índex de navegació ràpida a
  * cada card [...] i un bloc de text continu (estil terminal / <pre> amb
  * tipografia monoespaiada i format net) que mostre el diagnòstic complet del
- * Mas d'un sol colp d'ull.»
+ * sistema d'un sol colp d'ull.»
  *
  * Darrere de l'Índex de la Consola (IndexConsola.jsx), que ja enllaça cada
  * pàgina i cada targeta en text pur: ací, una secció amb el seu H2, l'accés
@@ -25,7 +25,9 @@
  * la Wiki (ConsolaIncrustada) no el pinta.
  * Pla 261027_0845 (Guarda Nocturna), §3 · Derogat: «conserva els seus
  * píxels». La Consola incrustada ja pinta el Govern (TaulerAmbGovern); el
- * Diagnòstic, l'Índex i les il·lustracions continuen només a /consola.
+ * Diagnòstic i l'Índex continuen només a /consola. Ordre del Mestre 261103
+ * (T2) · les il·lustracions, a tots dos. Derogat: «… i les il·lustracions
+ * continuen només a /consola».
  */
 import { useContext, useId } from 'react';
 import { Link } from '../../app/contexts/RouterContext';

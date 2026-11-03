@@ -9,7 +9,7 @@ tags:
 ---
 # Fluxos de treball de les skills
 
-Esta peça de la Consola respon a una pregunta: **per quin camí passa la faena**. Quina skill, plantilla o script en crida una altra, què deixa escrit cadascuna i qui ho llig després; és la Funció de Mapa, i la [[00_portada|Funció de Salut]] diu si eixe camí funciona.
+Esta **peça de la Consola** respon a una pregunta: **per quin camí passa la faena**. Quina **skill, plantilla o script** en crida una altra, **què deixa escrit** cadascuna i **qui ho llig després**; és la **Funció de Mapa**, i la [[00_portada|Funció de Salut]] diu si eixe camí funciona.
 
 ## Com ho fa Emowe
 
@@ -27,13 +27,13 @@ Font estudiada: `mapa_agentes.py` v0.1 (1.341 línies), a `04_escriptori/02_inve
    - **inferit**: hi ha una ruta sense verb, o una URL;
    - **supòsit**: la skill no diu res i es dedueix pel seu tipus (una skill de «resum» llig un text).
 
-   Una skill amb tot en *supòsit* és una **caixa opaca**: ningú sap què hi entra ni què n'ix. També reconeix claus explícites de frontmatter: `entrada`, `input`, `fuente`, `source` i `defecto` per a les entrades, i `salida`, `output`, `destino`, `target` i `patron_fichero` per a les eixides.
-3. **Cadenes possibles** (`encaja` i `inferir_flujos`). Dues skills s'encadenen si el que deixa una és el que llig l'altra (mateixa ruta, una carpeta que conté l'altra o el mateix fitxer), o si una crida l'altra de veres. Construïx cadenes de 2 a 5 passos, una per cada origen (la més llarga), descarta les que ja estan contingudes en una altra i en pinta com a màxim 12, marcades «inferit, no declarat». Els supòsits no encadenen mai.
+   Una skill amb tot en *supòsit* és una **caixa opaca**: **ningú sap què hi entra** ni què n'ix. També reconeix **claus explícites de frontmatter**: **`entrada`, `input`**, `fuente`, `source` i `defecto` **per a les entrades**, i `salida`, `output`, `destino`, `target` i `patron_fichero` **per a les eixides**.
+3. **Cadenes possibles** (`encaja` i `inferir_flujos`). **Dues skills s'encadenen** si el que deixa una és el que llig l'altra (**mateixa ruta**, una carpeta que conté l'altra o el mateix fitxer), o si una **crida l'altra de veres**. Construïx **cadenes de 2 a 5 passos**, una per cada origen (la més llarga), descarta les que ja estan contingudes en una altra i en pinta com a màxim 12, marcades «inferit, no declarat». Els **supòsits no encadenen mai**.
 4. **Fluxos declarats** (`leer_flujos_yml`). Si troba un `flujos.yml` amb `nombre`, `resumen`, `estado`, `director`, `sirve_a`, `programada` i `pasos` (cadascun amb `perfil`, `nota` i `falta`), el pinta com un flux de veres, amb director i obrers.
 
 ## Per què no ho podem copiar tal qual
 
-- **L'idioma.** Els verbs de les regex són en castellà i en anglés, i les nostres skills estan escrites en valencià. «Llig», «escriu», «desa», «crida», «executa» o «carrega» no hi casen. Només casen per coincidència «usa», «aplica», «invoca» o «consulta». Un exemple: `core-memoria-historica` diu «Tanca amb la skill `wiki-cicle-de-vida`», i Emowe ho classificaria com a menció, no com a crida.
+- **L'idioma**. Els verbs de les regex són en **castellà i en anglés**, i les nostres **skills estan escrites en valencià**. «Llig», «escriu», «desa», «crida», «executa» o «carrega» **no hi casen**. **Només casen per coincidència** «usa», «aplica», «invoca» o «consulta». Un exemple: `core-memoria-historica` diu «Tanca amb la skill `wiki-cicle-de-vida`», i Emowe ho classificaria com a **menció, no com a crida**.
 - **Subcadenes sense frontera de paraula.** `V_ESC` acaba en `…|hacia|en)` i es busca sense `\b`. La síl·laba «en» apareix en quasi qualsevol línia («entrada», «document», «pendent»…), així que moltes rutes es classificarien com a eixides només pel soroll.
 - **Els nostres cridadors no són skills.** Per a Emowe és orfe tota skill que cap altra skill crida. Les nostres les activen canals declaratius:
   - els `@`-imports de `CLAUDE.md`;

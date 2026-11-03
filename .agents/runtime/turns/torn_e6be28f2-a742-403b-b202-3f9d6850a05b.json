@@ -3,7 +3,7 @@
   "turn_id": "torn_e6be28f2-a742-403b-b202-3f9d6850a05b",
   "actor": "claude",
   "scope": "code",
-  "state": "planned",
+  "state": "closed",
   "revision": 4,
   "createdAt": "2026-10-26T16:20:50.126Z",
   "updatedAt": "2026-10-26T18:09:25.909Z",
@@ -3750,5 +3750,6 @@
       "action": "bind-plan",
       "at": "2026-10-26T18:09:25.908Z"
     }
-  ]
+  ],
+  "closedAt": "2026-11-03T05:17:29.321Z"
 }

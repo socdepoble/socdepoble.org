@@ -21,7 +21,7 @@ const avis = (node, codi, severitat) => ({ node, codi, severitat, evidencia: 'x'
 const skill = (nom) => ({ id: `skill:${nom}`, tipus: 'skill', font: null, atributs: {} });
 const launchd = (id, estat, cadencia) => ({ id, estat, llancador: { tipus: 'launchd', etiqueta: id }, cadencia, script: null, font: null });
 
-/* Un Mas on cada mètrica i cada estat de les cobertes té alguna cosa a dir. */
+/* Un sistema on cada mètrica i cada estat de les cobertes té alguna cosa a dir. */
 const MAPA = {
   schema: 'sdp.mapa.v1', generat: '2026-10-04T08:00:00.000Z', tall: null,
   nodes: [
@@ -116,16 +116,16 @@ describe('cap xifra destacada sense targeta', () => {
   test.each(IDS_PAGINES)('la coberta de «%s»: cada estat té la seua targeta, i la prova els exercita tots', (id) => {
     const estats = estatsPagina(id, FONTS, ARA);
     const mapa = XIFRES_DELS_ESTATS[id] ?? {};
-    // El Mas de la prova fa saltar tots els estats que el registre nomena, i cap més.
+    // Sóc de Poble de la prova fa saltar tots els estats que el registre nomena, i cap més.
     expect(estats.map((e) => e.clau).sort(), id).toEqual(Object.keys(mapa).sort());
     for (const e of estats) comprova(e.text, [mapa[e.clau]], `${id} · ${e.clau}`);
   });
 
-  /* Un Mas tranquil: cap tasca morta, cap avís, cap candat ni lloc. Les
+  /* Un sistema tranquil: cap tasca morta, cap avís, cap candat ni lloc. Les
      mètriques de coberta diuen zeros, que són mesures, i el zero també ha de
      ser a la seua targeta (amb les dades reals, «0 mortes» del Calendari no
      hi era). */
-  test.each(IDS_PAGINES)('amb un Mas tranquil, la coberta de «%s» també: cada zero és a la seua targeta', (id) => {
+  test.each(IDS_PAGINES)('amb un sistema tranquil, la coberta de «%s» també: cada zero és a la seua targeta', (id) => {
     const tranquil = { ...MAPA, tasques: [MAPA.tasques[0]], avisos: [], arestes: [], salut: [] };
     const totes = targetesDeLaConsola(tranquil, CONSOLA);
     const mesures = mesuresPagina(id, { ...FONTS, mapa: tranquil });

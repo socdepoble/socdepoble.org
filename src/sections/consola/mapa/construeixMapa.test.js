@@ -9,7 +9,7 @@ import { UNITATS_METRICA } from './contracteMapa.js';
 const ARA = Date.parse('2026-09-24T12:00:00Z');
 const existeix = (ruta) => ruta !== 'tooling/wiki/core/reflex_daemon.mjs';
 
-/* Un Mas en miniatura amb cada cas que la Consola ha de saber pintar. */
+/* Un sistema en miniatura amb cada cas que la Consola ha de saber pintar. */
 function fontsBase() {
   return {
     generat: '2026-09-24T12:00:00.000Z',
@@ -686,6 +686,13 @@ describe('construeixMapa · vigilància (fonts noves de la closca)', () => {
     // Cap torn tancat encara: un 0 mesurat, no un N/A que trauria «Avisos i salut» del verd.
     const capTancat = construeixMapa({ ...fontsBase(), torns: [torn('b', 'context_loaded', null)] }, { existeix, ara: ARA });
     expect(metrica(capTancat, 'torns-tancats-sense-rebut')).toMatchObject({ numerador: 0, denominador: 1, valor: 0, prova: PROVA_MAPA });
+    // MAPA-O7-03 · Criteri uniforme: el mateix fet compta igual el tanque qui el tanque.
+    const perEina = construeixMapa({ ...fontsBase(), torns: [
+      torn('saneja', 'closed', null),
+      { ...torn('admin', 'closed', null), tancamentAdministratiu: true }
+    ] }, { existeix, ara: ARA });
+    expect(metrica(perEina, 'torns-tancats-sense-rebut')).toMatchObject({ numerador: 2, denominador: 2, valor: 1 });
+    expect(perEina.avisos.find((x) => x.codi === 'torns-tancats-sense-rebut').evidencia).toBe('2 de 2 torns tancats sense cap rebut');
   });
 
   it('Escriptori: ancoratge, rebut i safata; un avís baix per document sense àncora', () => {
@@ -1024,5 +1031,76 @@ describe('construeixMapa · Onada 6, honestedat dels avisos', () => {
     expect(m.avisos.find((x) => x.codi === 'ledger-invalid').evidencia).toBe(
       'signatura del LEDGER no vàlida · el cos no quadra amb el seu segell: editat sense tornar-lo a segellar, o sense segell · 0 segells fòssils · 0 línies mal formades · node tooling/verify-ledger.mjs'
     );
+  });
+});
+
+
+describe('O7: evidència actual de launchd i arnesos', () => {
+  it('un job nou sense cap registre espera el primer horari; un error després d’executar continua roig', () => {
+    const fonts = fontsBase();
+    fonts.registreTasques = { tasques: [{ id: 'diaria', script: 'tooling/a.mjs', llancador: { tipus: 'launchd', etiqueta: 'org.socdepoble.diaria' } }] };
+    const job = { etiqueta: 'org.socdepoble.diaria', script: 'tooling/a.mjs', interval: 86400,
+      activitat: null, ultimaLiniaError: false,
+      estatLaunchd: { carregat: true, execucions: 0, estat: 'not running', ultimCodi: null } };
+    fonts.llancadors = [job];
+    const mapa = construeixMapa(fonts, { existeix: () => true, ara: ARA });
+    expect(mapa.tasques.find(t => t.id === 'diaria').estat).toBe('programat');
+    expect(mapa.avisos.filter(a => a.node === 'tasca:diaria')).toEqual([]);
+    expect(() => normalitzaMapa(mapa)).not.toThrow();
+    job.estatLaunchd = { carregat: true, execucions: 1, estat: 'not running', ultimCodi: 78 };
+    expect(construeixMapa(fonts, { existeix: () => true, ara: ARA }).tasques.find(t => t.id === 'diaria').estat).toBe('mort');
+  });
+  /* MAPA-O7-01 / GOV-O7-02 / CONS-04 · runs=0 també torna després de cada
+     reinici o recàrrega, amb el mateix plist (auditories 261027): amb logs
+     vells o una traça d'error, el job continua roig fins que corre bé. */
+  it('runs=0 després d’un reinici no amaga logs vells ni una traça d’error', () => {
+    const fonts = fontsBase();
+    fonts.registreTasques = { tasques: [{ id: 'diaria', script: 'tooling/a.mjs', llancador: { tipus: 'launchd', etiqueta: 'org.socdepoble.diaria' } }] };
+    const job = { etiqueta: 'org.socdepoble.diaria', script: 'tooling/a.mjs', interval: 86400,
+      activitat: '2026-08-01T00:00:00Z', ultimaLiniaError: true,
+      estatLaunchd: { carregat: true, execucions: 0, estat: 'not running', ultimCodi: null } };
+    fonts.llancadors = [job];
+    const estat = () => construeixMapa(fonts, { existeix: () => true, ara: ARA }).tasques.find(t => t.id === 'diaria').estat;
+    expect(estat()).toBe('mort');
+    expect(construeixMapa(fonts, { existeix: () => true, ara: ARA }).avisos
+      .filter(a => a.node === 'tasca:diaria').map(a => `${a.codi}/${a.severitat}`)).toEqual(['tasca-morta/alta']);
+    job.ultimaLiniaError = false;
+    expect(estat()).toBe('mort');
+    job.activitat = new Date(ARA - 3600e3).toISOString();
+    expect(estat()).toBe('viu');
+    job.ultimaLiniaError = true;
+    expect(estat()).toBe('mort');
+  });
+  /* R3-A2 (decisió de l'àrbitre, 261103) · Una sola implementació
+     d'arnesosObservats, el lector de traces JSON genuïnes de mapa-consola.mjs:
+     per esdeveniment, una llista de { font, observat, abast }. Codex no en té
+     cap lector: una evidència de Codex, encara que arribe, no l'acredita. */
+  it('Antigravity observat acredita el seu event i Codex continua per acreditar', () => {
+    const fonts = fontsBase();
+    fonts.hooksAntigravity = { 'sdp-olivera': { PreToolUse: [{ command: 'node tooling/gates/antigravity-hook.mjs pre-tool' }] } };
+    fonts.hooksCodex = { hooks: { PreToolUse: [{ hooks: [{ command: 'node tooling/gates/hooks-local.mjs' }] }] } };
+    const traca = (ms, font = '.agents/runtime/antigravity-hook.log') => ({ font, observat: new Date(ms).toISOString(), abast: 'traça local de dispatch; no acredita confinament extern' });
+    const hook = (id) => construeixMapa(fonts, { existeix: () => true, ara: ARA }).nodes.find(n => n.id === id).atributs;
+    fonts.arnesosObservats = { antigravity: { PreToolUse: [traca(ARA)] } };
+    const mapa = construeixMapa(fonts, { existeix: () => true, ara: ARA });
+    expect(mapa.nodes.find(n => n.id === 'hook:antigravity:PreToolUse').atributs).toEqual({
+      arnes: 'Antigravity', esdeveniment: 'PreToolUse', hook: 'sdp-olivera', consumidor_acreditat: true, evidencia_consumidor: [traca(ARA)]
+    });
+    expect(mapa.nodes.find(n => n.id === 'hook:codex:PreToolUse').atributs).toEqual({ arnes: 'Codex', esdeveniment: 'PreToolUse', consumidor_acreditat: null });
+    expect(() => normalitzaMapa(mapa)).not.toThrow();
+    fonts.arnesosObservats.codex = { PreToolUse: [traca(ARA, '.agents/runtime/codex-hook.log')] };
+    expect(hook('hook:codex:PreToolUse').consumidor_acreditat).toBe(null);
+    // Una traça futura o de fa més de 24 h no acredita, ni una sense font.
+    for (const dolenta of [traca(ARA + 1), traca(ARA - 86400001), { observat: new Date(ARA).toISOString() }, { font: 'x', observat: 'ahir' }]) {
+      fonts.arnesosObservats = { antigravity: { PreToolUse: [dolenta] } };
+      expect(hook('hook:antigravity:PreToolUse')).toEqual({ arnes: 'Antigravity', esdeveniment: 'PreToolUse', hook: 'sdp-olivera', consumidor_acreditat: null });
+    }
+    // Totes les traces d'un esdeveniment han de valdre (PreInvocation: Olivera i Fatiga).
+    fonts.arnesosObservats = { antigravity: { PreToolUse: [traca(ARA), traca(ARA + 1)] } };
+    expect(hook('hook:antigravity:PreToolUse').consumidor_acreditat).toBe(null);
+    fonts.arnesosObservats = { antigravity: { PreToolUse: [] } };
+    expect(hook('hook:antigravity:PreToolUse').consumidor_acreditat).toBe(null);
+    delete fonts.arnesosObservats;
+    expect(hook('hook:antigravity:PreToolUse').consumidor_acreditat).toBe(null);
   });
 });

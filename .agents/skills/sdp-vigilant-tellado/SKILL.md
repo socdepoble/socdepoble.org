@@ -34,6 +34,7 @@ contracte.llig:
   - tooling/gates/
   - tooling/higiene/
   - tooling/lib/dist-secrets.mjs
+  - wordpress-plugin/builds
 contracte.escriu:
   - _wiki_de_poble/04_escriptori
 ---

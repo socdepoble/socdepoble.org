@@ -3618,7 +3618,13 @@
     "vite.config.js": "4015f5d903b9b01cf40e82b5ba4590ef3169b4496a3f57c92cd573a5b466e5bd",
     ".gitignore": "80dffabd80d02447844eef1a859e68496fd71ba70c9618406554eccb684eb826"
   },
-  "receipts": {},
+  "receipts": {
+    "rebut_torn_650ea60f-6f05-4738-991a-b1c8b4b86361": {
+      "id": "rebut_torn_650ea60f-6f05-4738-991a-b1c8b4b86361",
+      "file": ".agents/ESTAT.md",
+      "createdAt": "2026-10-22T20:11:04.404Z"
+    }
+  },
   "plan": null,
   "verification": null,
   "history": [

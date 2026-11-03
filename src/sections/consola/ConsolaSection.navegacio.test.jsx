@@ -116,7 +116,7 @@ test.each(paginesConsola().map((p) => [p.id, p]))('la targeta del tauler obri /c
 });
 
 /* Ordre del Mestre, 261004 (xat: tota targeta amb boina i pàgina pròpia) ·
-   Cada xifra del Mas porta a la seua pàgina pròpia (/consola/xifres/<slug>),
+   Cada xifra de Sóc de Poble porta a la seua pàgina pròpia (/consola/xifres/<slug>),
    i d'allí, la pàgina de la Consola que la tracta, amb el filtre de
    l'Inventari a la URL. Derogat per l'ordre del Mestre del 261004 (xat: tota
    targeta amb boina i pàgina pròpia): la xifra que portava directament a la
@@ -125,11 +125,11 @@ test.each(paginesConsola().map((p) => [p.id, p]))('la targeta del tauler obri /c
    atòmics també porten a la seua pàgina pròpia. Derogat per l'ordre del
    Mestre del 261004 (xat: cap xifra solta): «les peces d'Agents atòmics
    continuen sent dades: clicar-les no porta enlloc». */
-test('cada xifra del Mas porta a la seua pàgina pròpia, i d’allí a la de la Consola; les peces dels agents també', async () => {
+test('cada xifra de Sóc de Poble porta a la seua pàgina pròpia, i d’allí a la de la Consola; les peces dels agents també', async () => {
   render(<Aplicacio />);
   await esperaElTauler();
 
-  const xifres = () => screen.getByRole('region', { name: 'El Mas en xifres' });
+  const xifres = () => screen.getByRole('region', { name: 'Sóc de Poble en xifres' });
   fireEvent.click(within(xifres()).getByRole('link', { name: '1 skill opaca' }));
   expect(window.location.pathname).toBe('/consola/xifres/skills-opaques');
   expect(h1()).toBe('1 skill opaca');
@@ -166,7 +166,7 @@ test('cada xifra del Mas porta a la seua pàgina pròpia, i d’allí a la de la
 });
 
 /* Derogat per l'ordre del Mestre del 261004 (prompt 261004_0515): «una sola
-   porta per pàgina» ja no val per a les xifres del Mas, que porten al seu
+   porta per pàgina» ja no val per a les xifres de Sóc de Poble, que porten al seu
    detall. Continua valent per al tauler: una targeta per pàgina.
    Ordre del Mestre, 261004 (xat: tota targeta amb boina i pàgina pròpia) ·
    El detall de cada xifra és la seua pàgina pròpia, /consola/xifres/<slug>.
@@ -186,7 +186,7 @@ test('al tauler de /consola, cada pàgina té exactament una targeta, i cada xif
   const recompte = cap('/consola', tauler()).reduce((acc, h) => ({ ...acc, [h]: (acc[h] || 0) + 1 }), {});
   expect(recompte).toEqual(Object.fromEntries(paginesConsola().map((p) => [p.ruta, 1])));
   // Fora del tauler, les úniques portes són les de les xifres, una per xifra, cap a la seua pàgina pròpia.
-  const xifres = cap('/consola', screen.getByRole('region', { name: 'El Mas en xifres' }));
+  const xifres = cap('/consola', screen.getByRole('region', { name: 'Sóc de Poble en xifres' }));
   expect(xifres).toEqual(SLUGS_XIFRES.map(rutaXifra));
   /* Onada 11 (261010; prompt 261010_1730, tasca 5) · I, al peu, l'Índex de la
      Consola enllaça en text pur cada pàgina i cada targeta: les seues portes
@@ -195,7 +195,7 @@ test('al tauler de /consola, cada pàgina té exactament una targeta, i cada xif
   const delIndex = cap('/consola', screen.getByRole('region', { name: 'Índex de la Consola' }));
   expect(delIndex.length).toBeGreaterThan(paginesConsola().length + xifres.length);
   /* Ordre del Mestre, 13-10-2026 (pla 261013_1405, front F) · I, darrere de
-     l'Índex, l'accés ràpid del Diagnòstic del Mas: una porta per pàgina, en
+     l'Índex, l'accés ràpid del Diagnòstic de Sóc de Poble: una porta per pàgina, en
      l'ordre del tauler, i cap altra (el <pre> és text pla, sense enllaços). */
   const delAcces = cap('/consola', screen.getByRole('navigation', { name: ETIQUETA_ACCES }));
   expect(delAcces).toEqual(paginesConsola().map((p) => p.ruta));
@@ -218,7 +218,7 @@ test('al tauler de /consola, cada pàgina té exactament una targeta, i cada xif
    targetes del tauler (correcció 261004, verificador, punt 4): el tauler
    sencer es torna a pintar a cada volta. */
 const enllacDeLAcces = (ruta) => document.querySelector(`nav[aria-label="${ETIQUETA_ACCES}"] a[href="${ruta}"]`);
-test.each(paginesConsola().map((p) => [p.id, p]))('l’accés ràpid del Diagnòstic del Mas obri /consola/%s, i la molla de pa torna al tauler', async (_id, p) => {
+test.each(paginesConsola().map((p) => [p.id, p]))('l’accés ràpid del Diagnòstic de Sóc de Poble obri /consola/%s, i la molla de pa torna al tauler', async (_id, p) => {
   render(<Aplicacio />);
   await esperaElTauler();
   expect(enllacDeLAcces(p.ruta).textContent).toBe(p.title);
@@ -320,8 +320,8 @@ test('canviar de pàgina torna al cim del contenidor de scroll', async () => {
   await esperaElTauler();
 
   contenidor.scrollTop = 900;                       // el Mestre ha baixat fins al peu del tauler
-  fireEvent.click(within(tauler()).getByRole('link', { name: 'Actors del Mas' }));
-  expect(h1()).toBe('Actors del Mas');
+  fireEvent.click(within(tauler()).getByRole('link', { name: 'Actors de Sóc de Poble' }));
+  expect(h1()).toBe('Actors de Sóc de Poble');
   expect(contenidor.scrollTop).toBe(0);
 
   contenidor.scrollTop = 450;

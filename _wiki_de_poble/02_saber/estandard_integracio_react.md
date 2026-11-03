@@ -8,11 +8,11 @@ tags:
 ---
 # Lleis de pas: integració de Pedra Seca a l'amfitrió
 
-Pedra Seca s'entrega com un Web Component autònom, l'etiqueta soc-de-poble, que porta dins del Shadow DOM el seu React, el seu enrutador i els seus estils. Sollutia l'allotja i li passa configuració i sessió; el backend el tria i el segella Sóc de Poble (Model B).
+Pedra Seca s'entrega com un **Web Component autònom**, l'etiqueta **soc-de-poble**, que porta dins del **Shadow DOM** el seu **React**, el seu enrutador i els seus estils. Sollutia l'allotja i li passa **configuració i sessió**; el backend el tria i el segella **Sóc de Poble (Model B)**.
 
 **Document vinculant per a l'equip de Sollutia i per a qualsevol amfitrió que allotge el mòdul Pedra Seca.**
 
-Aquest document estableix el contracte d'integració definitiu. Pedra Seca ja no es lliura com a "plantilles HTML/CSS per muntar", sinó com un component autònom, empaquetat i aïllat. L'equip de Sollutia actua com a amfitrió: carrega l'script, proveïx la configuració i, si cal, entrega la sessió de la persona usuària. No injecta backend ni reescriu el frontend: la font de veritat és el Supabase de Sóc de Poble, i SdP només llig de Sollutia per GET a través de la Frontissa ([[ADR-2026-09-SOLLUTIA-MODEL-B]]).
+Aquest document estableix el **contracte d'integració definitiu**. Pedra Seca ja no es lliura com a "plantilles HTML/CSS per muntar", sinó com un **component autònom**, **empaquetat i aïllat**. L'equip de **Sollutia actua com a amfitrió**: carrega l'script, proveïx la configuració i, si cal, entrega la sessió de la persona usuària. No injecta backend ni reescriu el frontend: la **font de veritat** és el Supabase de Sóc de Poble, i SdP només llig de Sollutia per **GET a través de la Frontissa** ([[ADR-2026-09-SOLLUTIA-MODEL-B]]).
 
 El contracte és agnòstic: no sap quin amfitrió té davant. Sollutia, WordPress (que només és banc de proves), MediaWiki o una pàgina estàtica l'allotgen amb el mateix marcatge, i totes reben l'App completa.
 
@@ -73,11 +73,11 @@ De menys a més prioritat; cada capa trepitja les anteriors (`composaCapes()`, `
 6. Els atributs de l'etiqueta (`nom-poble`, `poble`, `ruta-inicial`, `base-path`, `plugin-url`, `fonts-href`…).
 7. La propietat JS `element.config`.
 
-Tot passa per `sanejaConfig()` (`src/PedraSecaEmbed.jsx`), que descarta claus desconegudes i tipa cada valor: `nomPoble` com a etiqueta, `poble` com a identificador, `rutaInicial` com a ruta interna, `basename` normalitzat (una base invàlida val com a absent), `routerType` només `'browser'` o `'memory'` i `manageDocumentHead` només booleà. Les URL de backend passen una llista d'orígens permesos, on sempre hi ha l'origen del `VITE_SUPABASE_URL` de compilació. `fonts-href` només s'accepta del mateix origen que la pàgina, de Google Fonts (`https://fonts.googleapis.com`), de Bunny Fonts (`https://fonts.bunny.net`) o de l'origen des d'on s'ha carregat el paquet (`ORIGEN_DEL_PAQUET`). Eixe origen és el de l'script del bundle, capturat una sola vegada en avaluar-se, abans que cap element fixe el seu `plugin-url`: el `plugin-url` viu de l'etiqueta no hi compta, perquè un atribut no pot declarar-se de confiança a si mateix. Si el paquet no sap on viu (carregat com a mòdul ES, com en desenvolupament), eixe origen és buit i no admet res.
+Tot passa per **`sanejaConfig()`** (`src/PedraSecaEmbed.jsx`), que **descarta claus desconegudes** i tipa cada valor: `nomPoble` com a etiqueta, `poble` com a identificador, `rutaInicial` com a ruta interna, `basename` normalitzat (una base invàlida val com a absent), `routerType` només `'browser'` o `'memory'` i `manageDocumentHead` només booleà. Les **URL de backend** passen una **llista d'orígens permesos**, on sempre hi ha l'origen del `VITE_SUPABASE_URL` de compilació. **`fonts-href`** només s'accepta del mateix origen que la pàgina, de Google Fonts (`https://fonts.googleapis.com`), de Bunny Fonts (`https://fonts.bunny.net`) o de l'origen des d'on s'ha carregat el paquet (`ORIGEN_DEL_PAQUET`). Eixe origen és el de l'**script del bundle**, capturat una sola vegada en avaluar-se, abans que cap element fixe el seu `plugin-url`: el `plugin-url` viu de l'etiqueta no hi compta, perquè un atribut **no pot declarar-se de confiança a si mateix**. Si el paquet no sap on viu (carregat com a mòdul ES, com en desenvolupament), eixe origen és buit i **no admet res**.
 
 ### Backend segellat al paquet (Model B)
 
-Sóc de Poble tria i segella el backend; l'amfitrió no el declara mai. Amb només les tres peces del marcatge universal, l'element pren l'endpoint de la capa 1, els defectes del paquet: el mateix backend de compilació que `src/embed.jsx` dona al `#root` del standalone. Cap capa de més amunt no ha de repetir-lo. Verificat per lectura del codi i per les proves de `src/PedraSecaEmbed.config.test.jsx`, no en un amfitrió real.
+Sóc de Poble **tria i segella el backend**; l'**amfitrió no el declara mai**. Amb només les **tres peces del marcatge universal**, l'element pren l'endpoint de la capa 1, els defectes del paquet: el mateix **backend de compilació** que `src/embed.jsx` dona al `#root` del standalone. Cap capa de més amunt no ha de repetir-lo. Verificat per **lectura del codi** i per les proves de `src/PedraSecaEmbed.config.test.jsx`, **no en un amfitrió real**.
 
 * `configura()` passa sempre per `normalizeBackendConfig()` (`src/config/backendConfig.js`), que deixa a la seua capa `backendId` i `dataMode` (per defecte `'remote'`): un amfitrió que la crida només per a `auth` fixa el mode remot encara que el paquet s'haja compilat amb un altre `VITE_DATA_MODE`. Verificat per lectura del codi.
 * **Higiene de compilació.** Els defectes del paquet són les variables de la màquina que executa `npm run build:wp` (`vite build -c vite.standalone.config.js`, mode `production`). Vite hi llig `.env`, `.env.local`, `.env.production` i `.env.production.local`, i les variables que ja porta el procés guanyen a tots els fitxers. Un `.env.local` de desenvolupament (un Supabase local, per exemple) acaba segellat dins del paquet, i la llista d'orígens permesos l'admet perquè és el de compilació. Un paquet per a un amfitrió de producció s'ha de compilar amb les `VITE_*` de producció (al procés o a `.env.production.local`), i l'endpoint es comprova dins del paquet generat (`wordpress-plugin/dist/soc-de-poble.standalone.js`), no al servidor de desenvolupament.
@@ -98,7 +98,7 @@ La regla és una sola i no sap quin amfitrió té davant (`src/app/contexts/poli
 
 ### Capçalera i telemetria
 
-Pedra Seca només escriu al `<head>` del document (`<title>`, descripció, canònica, `og:image`, JSON-LD) i només registra visites de ruta quan la configuració diu `manageDocumentHead: true`. No s'inferix mai del DOM: penjar de `#root` no és cap declaració. Dins d'un iframe o fora de la base tampoc no s'hi toca. socdepoble.org ho declara a `src/main.jsx`; un amfitrió només ho declara si cedix la seua capçalera a l'App.
+Pedra Seca només escriu al **`<head>` del document** (`<title>`, descripció, canònica, `og:image`, JSON-LD) i només **registra visites de ruta** quan la configuració diu **`manageDocumentHead: true`**. **No s'inferix mai del DOM**: penjar de `#root` no és cap declaració. **Dins d'un iframe** o fora de la base tampoc no s'hi toca. socdepoble.org ho declara a `src/main.jsx`; un amfitrió només ho declara si **cedix la seua capçalera** a l'App.
 
 ### Sessió (opcional, fora del marcatge)
 
@@ -150,7 +150,7 @@ Els tokens de Pedra Seca garantixen un contrast mínim de 4.5:1 (WCAG AA) tant e
 
 ## LLEI 5: Aïllament Estricte de Rutes Absolutes
 
-Dins del mòdul Pedra Seca no existixen referències forçades a l'arrel del domini de l'amfitrió. Els recursos que importa el codi (per exemple, `import logo from './assets/img/logo.svg'`) els resol Vite dins del paquet. Els de `public/` (`/assets/…`) es resolen contra la **base de recursos** (`src/config/assetResolver.js`):
+Dins del mòdul Pedra Seca no existixen **referències forçades** a l'**arrel del domini** de l'amfitrió. Els **recursos que importa el codi** (per exemple, `import logo from './assets/img/logo.svg'`) els **resol Vite** **dins del paquet**. Els de `public/` (`/assets/…`) es resolen contra la **base de recursos** (`src/config/assetResolver.js`):
 
 * La base és `plugin-url` quan es declara i no és `/`; si no, el directori de l'script del bundle (`document.currentScript`: per això el bundle va en un script clàssic amb `src`).
 * Sense base, tot resol com sempre: socdepoble.org no canvia ni un píxel.
@@ -158,7 +158,7 @@ Dins del mòdul Pedra Seca no existixen referències forçades a l'arrel del dom
 * Si la base és d'un altre origen, el nucli l'afig als orígens d'imatge que admet el sanejador.
 * La base és presentació: no és cap origen de dades ni cap permís.
 
-**Què viatja.** L'artefacte incrustable porta tot `public/` excepte el que és propi del servidor de socdepoble.org (`PROPIS_DEL_LLOC` a `vite.standalone.config.js`): qualsevol fitxer o carpeta que comence per `.` (`.htaccess`, `.DS_Store`) i, a l'arrel, `robots.txt`, `sitemap.xml` i `auth/` (el relé OAuth només es servix des d'`auth.socdepoble.org`). Per decisió del Mestre (transparència radical), la Wiki de Poble (el manifest compilat dins del bundle), l'índex del RAG (`rag-index.json`, `slugIndex.json`) i la Consola viatgen amb l'App i s'obrin des del menú lateral, com a socdepoble.org.
+**Què viatja**. L'**artefacte incrustable** porta tot `public/` excepte el que és **propi del servidor** de socdepoble.org (`PROPIS_DEL_LLOC` a `vite.standalone.config.js`): qualsevol fitxer o carpeta que comence per `.` (`.htaccess`, `.DS_Store`) i, a l'arrel, `robots.txt`, `sitemap.xml` i `auth/` (el **relé OAuth** només es servix des d'`auth.socdepoble.org`). Per decisió del Mestre (**transparència radical**), la **Wiki de Poble** (el manifest compilat dins del bundle), l'**índex del RAG** (`rag-index.json`, `slugIndex.json`) i la **Consola** viatgen amb l'App i s'obrin des del menú lateral, com a socdepoble.org.
 
 ***Aquesta normativa invalida protocols antics on es requeria que Sollutia convertira HTML a JSX. Avui, la integració és Plug & Play.***
 

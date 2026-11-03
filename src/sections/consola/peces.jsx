@@ -114,8 +114,10 @@ export { nomCurt, resumDeProblemes } from './resumProblemes.js';
       (ordre del 260926) per a les nou targetes del tauler de /consola, que
       porten la il·lustració de la seua pàgina (imatgesConsola.js). La
       portada de la pàgina encara no: la imatge només n'és la del SEO
-      (ConsolaSection.jsx · seoDe). Les xifres, els panells del pols i la
-      Consola incrustada de la Wiki continuen amb la icona.
+      (ConsolaSection.jsx · seoDe). Les xifres i els panells del pols
+      continuen amb la icona. Ordre del Mestre 261103 (T2) · la Consola
+      incrustada de la Wiki porta les il·lustracions. Derogat: «… i la
+      Consola incrustada de la Wiki continuen amb la icona».
     · TOTA CLICABLE. `a` la fa enllaç cap a la seua pàgina; `onObri`, botó.
       Sense cap dels dos és només explicació: sense peu i sense aparença de
       clicable (no hi ha peus buits). Ordre del Mestre, 261004 (xat: cap xifra

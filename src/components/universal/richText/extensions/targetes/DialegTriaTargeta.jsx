@@ -51,7 +51,7 @@ function opcionsDe(entrades) {
   return opcions;
 }
 
-export function DialegTriaTargeta({ obert, onTanca, cerca, onTria, t = senseTraductor }) {
+export function DialegTriaTargeta({ obert, onTanca, cerca, onTria, onTriaEnllac = null, t = senseTraductor }) {
   const [consulta, setConsulta] = useState('');
   const [triada, setTriada] = useState(null);
   const zonaCerca = useRef(null);
@@ -85,6 +85,13 @@ export function DialegTriaTargeta({ obert, onTanca, cerca, onTria, t = senseTrad
     onTria?.(triadaViva.entrada);
   };
 
+  const insereixEnllac = () => {
+    if (!triadaViva) return;
+    oblida();
+    if (typeof onTriaEnllac === 'function') onTriaEnllac(triadaViva.entrada);
+    else onTria?.(triadaViva.entrada, { comAEnllac: true });
+  };
+
   const enfocaCerca = useCallback(() => {
     zonaCerca.current?.querySelector('input')?.focus();
   }, []);
@@ -112,6 +119,7 @@ export function DialegTriaTargeta({ obert, onTanca, cerca, onTria, t = senseTrad
       accions={(
         <>
           <Boto varietat="secundari" onClick={() => tanca('boto')}>{t('common.cancela', 'Cancel·lar')}</Boto>
+          <Boto varietat="secundari" disabled={!triadaViva} onClick={insereixEnllac}>{t('editor.targetes.dialeg.inserirEnllac', 'Inserir com a enllaç')}</Boto>
           <Boto varietat="primari" disabled={!triadaViva} onClick={insereix}>{t('editor.targetes.dialeg.inserir', 'Inserir')}</Boto>
         </>
       )}

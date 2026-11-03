@@ -331,6 +331,9 @@ describe('la candidatura NLnet a l’Atles (30-10-2026)', () => {
     expect(carrega).not.toHaveBeenCalled();
     expect(text).toContain('gentdelatorre.net');
     expect(text).toContain('socdepoble.org');
+    /* 03-11-2026 (arbitratge 12:22) · socdepoble.cat no és cap node actiu: hui n'hi ha dos. */
+    expect(text).toContain("L'altre node actiu és socdepoble.org, el portal matriu. Tots dos són portes al mateix servei, amb les mateixes dades.");
+    expect(text).not.toMatch(/socdepoble\.cat|tres nodes|Tots tres/);
     expect(liniesDeRuta(text)[0]).toBe('· Gent de la Torre — /page/fediversity');
   });
 
@@ -340,6 +343,7 @@ describe('la candidatura NLnet a l’Atles (30-10-2026)', () => {
     expect(liniesDeRuta(text)[0]).toBe(`· ${PAGE_COPY.fedivers.title} — /fedivers`);
     expect(text).toContain('socdepoble.org');
     expect(text).toContain('gentdelatorre.net');
+    expect(text).not.toMatch(/tres d’actius|tres nodes/);
   });
 
   test('la visió «Gent de…», sense cap node inventat ni cap descàrrega que no és pública', () => {

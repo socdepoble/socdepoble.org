@@ -57,7 +57,8 @@ export function CalendariMapa({ mapa, locale }) {
       <p>
         Ací només ixen les tasques que tenen alguna programació. Cada tasca porta
         el seu estat: <strong>viu</strong> si el llançador existix i ha treballat dins
-        de dos cicles, <strong>mort</strong> si l'script no existix o l'última línia
+        de dos cicles, <strong>programat</strong> si el job està carregat i espera
+        la primera execució d'una instal·lació nova (encara sense cap registre), <strong>mort</strong> si l'script no existix o l'última línia
         del registre és un error, <strong>sense llançador</strong> si el registre la
         declara i ningú la llança, i <strong>sense declaració</strong> si un llançador
         la llança i el registre no la coneix. Una cadència en segons de setmanes o

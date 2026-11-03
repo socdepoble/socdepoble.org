@@ -50,8 +50,16 @@ test('/page/consola amb la interfície en anglés: el botó del final no és val
   expect(langDe(document.querySelector('header.page-title h1'))).toBe('ca');
   expect(article().hasAttribute('lang')).toBe(false);
   expect(langDe(article().querySelector('.page-intro .lead'))).toBe('ca');
-  const cos = article().querySelector(':scope > article.cms-preview');
-  expect(cos.getAttribute('lang')).toBe('ca');
+  /* Ordre 261103_0522, T2.6 (Gauntlet O7-9, ronda 2; PC-02) · /page/consola porta la targeta del Cervell:
+     el cos va per CosAmbTargetes i el contracte és el de «Legal i privacitat» (ací baix): cada tros de
+     text porta «ca»; l'article i la targeta, no. Prova posada al dia a propòsit. */
+  const cos = article().querySelector(':scope > article.cms-preview.sdp-amb-targetes');
+  expect(cos.hasAttribute('lang')).toBe(false);
+  const trossos = [...cos.querySelectorAll(':scope > .sdp-cos-tros')];
+  expect(trossos.length).toBeGreaterThan(1);
+  expect(trossos.map((tros) => tros.getAttribute('lang'))).toEqual(trossos.map(() => 'ca'));
+  expect([...cos.children].every((fill) => fill.matches('.sdp-cos-tros, .sdp-targetes'))).toBe(true);
+  expect(langDe(cos.querySelector('.sdp-targetes'))).toBeNull();
   // El botó repetit al final (AccioDeLaPagina, lloc «baix») és de la interfície.
   const baix = article().querySelector(':scope > .sdp-pagina-accio > a');
   expect(baix).toBeTruthy();

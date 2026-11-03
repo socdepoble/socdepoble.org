@@ -30,7 +30,11 @@ const TRADUCCIO = Object.freeze({
   /* T7 · Obri el selector del consumidor. Sense l'extensió de targetes la
      comanda no existix i el try/catch de llegeixEstat la deixa apagada; amb
      ella, dins de can() no obri res (la guarda de dispatch és de la comanda). */
-  targeta:        { actiu: (e) => e.isActive('sdpTargeta'),             ordena: (c) => c.obreSelectorDeTargeta() }
+  targeta:        { actiu: (e) => e.isActive('sdpTargeta'),             ordena: (c) => c.obreSelectorDeTargeta() },
+  /* T26-01 (Gauntlet O7 · T2.6) · Enllaç → Card d'1 clic: l'enllaç intern
+     sota el cursor passa a Card. Fora d'un enllaç que es pot commutar, o
+     sense l'extensió, can() torna fals i la barra no pinta el botó. */
+  enllacATargeta: { actiu: () => false,                                ordena: (c) => c.convertirEnllacEnTargeta() }
 });
 
 /**

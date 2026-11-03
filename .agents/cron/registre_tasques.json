@@ -79,7 +79,7 @@
       "arguments": ["--aplica"],
       "llig": ["."],
       "escriu": [".immunitari/higiene/", ".sdp-paperera/", ".agents/runtime/"],
-      "registre": ".immunitari/higiene-cron.out",
+      "registre": "~/Library/Logs/socdepoble-higiene.out.log",
       "nivell": "L1"
     },
     {

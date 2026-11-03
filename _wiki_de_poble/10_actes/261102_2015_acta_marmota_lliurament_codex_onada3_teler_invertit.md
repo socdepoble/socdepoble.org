@@ -79,6 +79,6 @@ El manifest Node és una ruta compartida entre constructors: cal ordre d’aplic
 
 - [[00_index]]
 - [[00_index_escriptori]]
-- [[261102_1638_auditoria_codex]]
+- [[../90_arxiu_historic/261102_1638_auditoria_codex|261102_1638_auditoria_codex]]
 - [[03_llibre_mestre_tasques_i_idees]]
 - [[../90_arxiu_historic/261102_1918_prompt_teler_invertit_onada3_codex_gemini_constructors_claude_arbitre|261102_1918_prompt_teler_invertit_onada3_codex_gemini_constructors_claude_arbitre]]

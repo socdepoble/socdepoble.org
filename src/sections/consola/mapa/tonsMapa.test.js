@@ -21,10 +21,12 @@ const ABANS = Object.freeze({
   confianca: { declarat: 'neutre', derivat: 'neutre', inferit: 'avis' },
   severitat: { alta: 'error', mitjana: 'avis', baixa: 'avis' },
   estat: {
+    programat: 'neutre',
     viu: 'exit', mort: 'error', 'declarat-sense-llancador': 'avis',
     'llancador-sense-declaracio': 'avis', desconegut: 'avis'
   },
   text: {
+    programat: 'programat · pendent de primera execució',
     viu: 'viu', mort: 'mort', 'declarat-sense-llancador': 'sense llançador',
     'llancador-sense-declaracio': 'sense declaració', desconegut: 'desconegut'
   }

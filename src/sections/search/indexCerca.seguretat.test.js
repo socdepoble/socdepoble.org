@@ -1,19 +1,28 @@
 /**
  * Auditoria de seguretat 261019 (R1) · textPla (indexCerca.js), que /cerca
  * passa per a tothom sobre el cos de cada publicació i cada producte, torna
- * exactament el mateix que amb les expressions d'abans, i en temps lineal: un
+ * el contracte històric amb inline sense espai (ordre O6), en temps lineal: un
  * cos amb molts '<', '<script' o '![' i cap tancament ja no congela la cerca.
  */
 import { describe, expect, test } from 'vitest';
 import { cercaEntrades, deProducte, dePublicacio, textPla } from './indexCerca.js';
 
-/* El textPla d'abans, només com a oracle de la prova. */
+/* Oracle independent de la prova (només entrades curtes). Del legacy només
+   canvia la substitució d'una etiqueta inline vàlida per buit (ordre O6),
+   decidida sobre la mateixa finestra sencera, no en dues passades. */
 const ENTITATS = { '&nbsp;': ' ', '&amp;': '&', '&lt;': '<', '&gt;': '>', '&quot;': '"', '&#39;': "'", '&apos;': "'" };
 const textPlaDAbans = (valor) => {
   if (valor == null || typeof valor === 'object') return '';
   return String(valor).replace(/!\[[^\]]*\]\([^)]+\)/g, '')
     .replace(/<(script|style)[\s\S]*?<\/\1>/gi, ' ')
-    .replace(/<[^>]*>/g, ' ')
+    .replace(/<[^>]*>/g, (tag) => {
+      const match = /^<\/?([a-z]+)/i.exec(tag);
+      const name = match?.[1]?.toLowerCase();
+      const inline = ['strong', 'b', 'em', 'i', 'code', 'span', 'mark', 'u', 's', 'sub', 'sup', 'small', 'abbr', 'a'].includes(name);
+      const suffix = match ? tag.slice(match[0].length, -1) : null;
+      const valid = suffix === '' || suffix === '/' || /^[\t\n\f\r ]/.test(suffix ?? '');
+      return inline && valid && !tag.slice(1).includes('<') ? '' : ' ';
+    })
     .replace(/&(nbsp|amp|lt|gt|quot|apos|#39);/g, (entitat) => ENTITATS[entitat] || ' ')
     .replace(/\s+/g, ' ')
     .trim();
@@ -47,12 +56,29 @@ describe('textPla', () => {
     expect(textPla({ html: '<p>x</p>' })).toBe('');
   });
 
-  test('torna el mateix que l’expressió d’abans en milers de textos aleatoris', () => {
+  test('conserva el contracte històric i les inline d’O6 en milers de textos aleatoris', () => {
     const trossos = ['<', '>', '<p>', '</p>', '<script', '</script>', '<STYLE', '</style>', '![', ']', '(', ')', '](',
       '&nbsp;', '&amp;', '&#39;', '&apos', 'a', ' ', '\n', ' '];
     for (const text of textsAleatoris(trossos, 6000, 30, 20261019)) {
-      expect(textPla(text)).toBe(textPlaDAbans(text));
+      expect(textPla(text), JSON.stringify(text)).toBe(textPlaDAbans(text));
     }
+  });
+
+  test('O7 · retirar la inline d’un doble < no fabrica una etiqueta incompleta nova', () => {
+    const text = '</p><<a >a&nbsp;<STYLE &apos))<scripta</style>](\n<STYLE';
+    expect(textPla(text)).toBe('a ]( <STYLE');
+    expect(textPla(text)).toBe(textPlaDAbans(text));
+    expect(textPla('ab<<a >cd')).toBe('ab cd');
+  });
+
+  test('O6 · inline vàlida no separa; blocs, tags amb nom distint i fragments incomplets conserven el seu contracte', () => {
+    expect(textPla("l'<strong>APK</strong> i <em>l'app</em>")).toBe("l'APK i l'app");
+    expect(textPla('ab<a href="/notes">cd</a>ef')).toBe('abcdef');
+    expect(textPla('ab<p>cd</p>ef')).toBe('ab cd ef');
+    expect(textPla('ab<a-b>cd</a-b>ef')).toBe('ab cd ef');
+    expect(textPla('ab<a////>cd')).toBe('ab cd');
+    expect(textPla('ab<a >cd')).toBe('ab cd');
+    expect(textPla('ab<strong')).toBe('ab<strong');
   });
 
   test('un cos de molts <, <script o ![ sense tancar es resol en temps lineal', () => {

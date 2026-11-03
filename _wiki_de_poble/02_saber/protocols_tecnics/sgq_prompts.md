@@ -9,7 +9,7 @@ L’SGQ-PP és l’estàndard intern de rigor que complix tota petorreta, audito
 
 ## D’on ve el nom (abans, «ISO»)
 
-Antigament s’emprava el terme «ISO» (com a `00_PLANTILLA_PROMPT_ISO.md`). Eixa nomenclatura s’ha substituït pel **Sistema de Gestió de Qualitat de Prompts i Petorretes de Sóc de Poble (SGQ-PP)**. Les plantilles ja no tenen un nom fix que calga recordar: `.agents/protocolledge.json` diu quina correspon a cada ruta. Per als prompts a IAs externes és [[prompt_consell]] (ruta `prompt.consell`) i per a les IAs locals, [[prompt_local]] (ruta `prompt.local`).
+**Antigament** s’emprava el terme «ISO» (com a `00_PLANTILLA_PROMPT_ISO.md`). Eixa **nomenclatura s’ha substituït** pel **Sistema de Gestió de Qualitat de Prompts i Petorretes de Sóc de Poble (SGQ-PP)**. Les **plantilles ja no tenen un nom fix** que calga recordar: `.agents/protocolledge.json` diu quina correspon a cada ruta. Per als prompts a **IAs externes** és [[prompt_consell]] (ruta `prompt.consell`) i per a les **IAs locals**, [[prompt_local]] (ruta `prompt.local`).
 
 ## Què garantix
 

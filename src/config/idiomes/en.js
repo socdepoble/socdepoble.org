@@ -242,6 +242,9 @@ export default {
   'editor.targetes.esquerra': 'Left',
   'editor.targetes.dreta': 'Right',
   'editor.targetes.lleva': 'Remove the card',
+  /* 261103 (Onada 7, T2.6) · El commutador «Enllaç ↔ Card»: el botó de la targeta triada i el del diàleg. */
+  'editor.targetes.aEnllac': 'Convert to link',
+  'editor.targetes.dialeg.inserirEnllac': 'Insert as link',
   'editor.targetes.avis.titol': 'This card is a preview',
   'editor.targetes.avis.descripcio': 'This card is embedded in the document you are editing. Its buttons —connect, translate, comment and share— only work when reading the published document.',
   'editor.targetes.avis.entesos': 'Got it',
@@ -421,6 +424,8 @@ export default {
   /* O4-CLAUDE-2 · La subtargeta i la targeta incrustada a la segona fila «⋯» de la barra, i els textos de mostra de la subtargeta. */
   'section.notes.format.subtargeta': 'Sub-card',
   'section.notes.format.targeta': 'Embedded card',
+  /* 261103 (Onada 7, T2.6) · El sentit Enllaç → Card a la segona fila, amb el cursor en un enllaç intern. */
+  'section.notes.format.enllacATargeta': 'Convert to card',
   'section.notes.format.subtargetaTitol': 'Sub-card title',
   'section.notes.format.subtargetaMeta': 'A line of context: date, place or authorship',
   'section.notes.format.subtargetaCos': 'Write the sub-card content here: paragraphs, lists and links.',
@@ -567,7 +572,6 @@ export default {
   'editor.ambit.ajuda': 'Choose whether it is a Wall post or a listing for the Market, Car sharing, Work or Housing.',
   'editor.ambit.obligatori': 'A required field is missing: {camp}',
   'editor.ambit.previsualitzacio': 'This is how it will look on the Wall',
-  'editor.ambit.completar': 'Complete the listing',
   'editor.ambit.errorPublicar': 'The «{ambit}» listing is not complete.',
   'editor.ambit.actual': 'Scope: {ambit}',
   'editor.ambit.triat': 'Selected',

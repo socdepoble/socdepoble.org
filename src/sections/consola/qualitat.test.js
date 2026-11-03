@@ -19,7 +19,7 @@ const CODI = [
   'src/sections/consola/ConsolaSection.jsx',
   'src/sections/consola/peces.jsx',
   'src/sections/consola/consolaPagines.js',
-  // Ordre del Mestre, 261004 (xat: tota targeta amb boina i pàgina pròpia) · El Mas en xifres.
+  // Ordre del Mestre, 261004 (xat: tota targeta amb boina i pàgina pròpia) · Sóc de Poble en xifres.
   'src/sections/consola/XifresMas.jsx',
   'src/sections/consola/xifresMas.js',
   // Ordre del Mestre, 261004 (xat: cap xifra solta) · totes les xifres i les peces, i el pols.
@@ -49,7 +49,7 @@ const CODI = [
   'src/components/PedraSeca/organismes/formulari.jsx',
   'src/sections/disseny/cataleg/detalls/EspecimenCamp.jsx',
   /* Ordre del Mestre, 13-10-2026 (pla 261013_1405, front F) · les il·lustracions
-     de les targetes i el Diagnòstic del Mas. IndexConsola.jsx no hi entra: només
+     de les targetes i el Diagnòstic de Sóc de Poble. IndexConsola.jsx no hi entra: només
      n'ha canviat el comentari, i la seua entradeta porta la classe global
      `lead` de base.css (deute anterior, fora de la regla de prefix). */
   'src/sections/consola/imatgesConsola.js',
@@ -141,7 +141,7 @@ describe('Pedra Seca al JSX tocat', () => {
   test('les classes noves porten prefix i tenen regla al full', () => {
     const NOVES = ['sdp-camp-fitxer', 'sdp-camp-fitxer__boto', 'sdp-camp-fitxer__estat',
       'sdp-consola__avis', 'sdp-consola__evidencies',
-      // Ordre del Mestre, 13-10-2026 (pla 261013_1405, front F) · el Diagnòstic del Mas.
+      // Ordre del Mestre, 13-10-2026 (pla 261013_1405, front F) · el Diagnòstic de Sóc de Poble.
       'sdp-consola__diagnosi', 'sdp-consola__acces', 'sdp-consola__diagnosi-text',
       // Pla 261016_1530, Onada 0.5 · la pastilla d'estat d'una fila del Govern del Mestre.
       'sdp-consola__estat-fila'];

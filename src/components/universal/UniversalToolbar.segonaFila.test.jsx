@@ -15,6 +15,12 @@ import { resolve } from 'node:path';
 import { act, cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 import { afterEach, expect, test, vi } from 'vitest';
 import UniversalToolbar from './UniversalToolbar.jsx';
+import { Editor } from '@tiptap/core';
+import StarterKit from '@tiptap/starter-kit';
+import { NodeSelection } from '@tiptap/pm/state';
+import { UniversalRichTextToolbar } from './richText/UniversalRichTextToolbar.jsx';
+import { executa, llegeixEstat } from './richText/tiptapToolbarAdapter.js';
+import { extensionsRiques } from './richText/extensions/index.js';
 
 const ACCIONS = {
   toggleSubheading: () => {}, toggleH4: () => {}, toggleH5: () => {}, toggleH6: () => {}, toggleHeading: () => {},
@@ -245,4 +251,39 @@ test('subtargeta i targeta: glif propi de la barra (24 px, currentColor, data-ic
     const colors = [...svg.querySelectorAll('[fill], [stroke]')].flatMap((el) => [el.getAttribute('fill'), el.getAttribute('stroke')]).filter(Boolean);
     expect(colors.every((c) => c === 'currentColor' || c === 'none'), nom).toBe(true);
   }
+});
+
+/* T26-01 (Gauntlet O7 · T2.6, «Enllaç ↔ Card» d'1 clic) · El sentit Enllaç →
+   Card: «Convertir en targeta» és a la segona fila, darrere de la «Targeta»,
+   només quan el motor el pot fer (el cursor en un enllaç intern que es
+   commuta); en qualsevol altre punt, cap botó ni cap píxel de més. Amb un
+   TipTap de veres i la barra de veres: el clic fa la Card, i el botó
+   «Convertir en enllaç» de la targeta (convertirTargetaEnEnllac) la torna. */
+test('«Convertir en targeta»: només amb el cursor en un enllaç intern, i el clic real fa la Card', () => {
+  amplada(900);
+  const element = document.createElement('div');
+  document.body.appendChild(element);
+  const editor = new Editor({ element, extensions: [StarterKit, ...extensionsRiques({ ambTargetes: true })], content: '<p>Abans</p><p><a href="/anima">L’Ànima</a></p>' });
+  restauracions.push(() => { editor.destroy(); element.remove(); });
+  const barraDe = () => <UniversalRichTextToolbar state={llegeixEstat(editor)} exec={(id) => executa(editor, id)} onPublish={() => {}} />;
+  editor.commands.setTextSelection(2);
+  const vista = render(barraDe());
+  fireEvent.click(within(barra()).getByRole('button', { name: 'Més eines' }));
+  expect(within(segona()).queryByRole('button', { name: 'Convertir en targeta' })).toBeNull();
+  editor.commands.setTextSelection(11);
+  const abans = editor.getHTML();
+  vista.rerender(barraDe());
+  expect(einesDe(segona()).slice(-2)).toEqual(['subtargeta', 'enllacATargeta']);
+  const boto = within(segona()).getByRole('button', { name: 'Convertir en targeta' });
+  expect([boto.hasAttribute('aria-pressed'), boto.querySelector('svg').getAttribute('data-icona')]).toEqual([false, 'targeta']);
+  fireEvent.click(boto);
+  expect(editor.getHTML()).toContain('data-alineacio="dreta"><div data-sdp-targeta="pagina:anima"');
+  let pos = null;
+  editor.state.doc.descendants((node, p) => { if (node.type.name === 'sdpTargeta') pos = p; });
+  editor.view.dispatch(editor.state.tr.setSelection(NodeSelection.create(editor.state.doc, pos)));
+  vista.rerender(barraDe());
+  expect(within(segona()).queryByRole('button', { name: 'Convertir en targeta' })).toBeNull();
+  expect(editor.commands.convertirTargetaEnEnllac(pos)).toBe(true);
+  // L'enllaç torna tal com era; darrere, el paràgraf on continuar escrivint (cursorDarrere).
+  expect(editor.getHTML()).toBe(`${abans}<p></p>`);
 });

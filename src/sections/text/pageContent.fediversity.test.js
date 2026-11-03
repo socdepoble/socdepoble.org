@@ -108,7 +108,7 @@ function midesWebp(bytes) {
   return null;
 }
 
-const ARREL = process.cwd();
+const ARREL = path.resolve(import.meta.dirname, '../../..');
 const copy = PAGE_COPY.fediversity;
 const doc = new DOMParser().parseFromString(copy.html, 'text/html');
 const text = doc.body.textContent.replace(/\s+/g, ' ');
@@ -230,7 +230,12 @@ describe('anatomia (skill sdp-universal-page)', () => {
        (prova posada al dia a propòsit), la de la primitiva Subtargeta, una per partida (bloc
        .sdp-subtargeta de modules.css). */
     expect(copy.html).not.toMatch(/\sstyle=/);
-    expect([...copy.html.matchAll(/\sclass="([^"]*)"/g)].map((m) => m[1])).toEqual(['page-title-logo', ...Array(4).fill('sdp-subtargeta')]);
+    expect([...copy.html.matchAll(/\sclass="([^"]*)"/g)].map((m) => m[1])).toEqual([
+      'page-title-logo',
+      'sdp-targetes',
+      'sdp-targeta',
+      ...Array(4).fill('sdp-subtargeta')
+    ]);
   });
 
   /* O4-CLAUDE-2 (ordre del Mestre, 261102 21:38) · Cada partida, una Subtargeta: el seu H4 és el
@@ -280,9 +285,12 @@ describe('O6 · lectura diagonal: H4 + paràgraf, i cap paràgraf pla', () => {
     expect(raons.map((node) => node.tagName)).toEqual(['H4', 'P', 'H4', 'P', 'H4', 'P']);
     expect(raons.filter((node) => node.tagName === 'H4').map((h4) => h4.textContent)).toEqual(['Dades separades de la interfície', 'Model B', 'Codi lliure']);
     const [dades, modelB, codi] = raons.filter((node) => node.tagName === 'P').map((p) => p.textContent);
-    expect(dades).toBe("L'aplicació demana les dades a través d'un port neutral, src/data/backendPort.js, i un kit de conformitat comprova qualsevol adaptador abans d'enxufar-lo. Hui hi ha un sol servidor de dades, el Supabase de Sóc de Poble.");
-    expect(modelB).toBe("Una web amfitriona, com una de WordPress, pot allotjar l'aplicació com un component. Les dades del poble, però, viuen al servidor de Sóc de Poble, que és l'única font de veritat. Canviar de servidor és una decisió documentada, amb un adaptador que ha de passar el kit de conformitat.");
-    expect(codi).toBe('El fitxer LICENSE del projecte declara la llicència GNU AGPL, versió 3 o posterior (AGPL-3.0-or-later). Hi és des del 3 de setembre de 2026.');
+    /* 03-11-2026 (arbitratge 12:22; prova posada al dia a propòsit) · Cada raó porta ara al final
+       l'«Exemple pràctic» de MarIA (10:50). La comparació continua exacta (toBe): qualsevol frase
+       nova o canviada en estos tres paràgrafs fa caure la prova i s'ha de tornar a mirar. */
+    expect(dades).toBe("L'aplicació demana les dades a través d'un port neutral, src/data/backendPort.js, i un kit de conformitat comprova qualsevol adaptador abans d'enxufar-lo. Hui hi ha un sol servidor de dades, el Supabase de Sóc de Poble. Exemple pràctic: és com l'aigua del poble; les canonades i l'aixeta de casa són sempre les mateixes, tant si hui l'aigua ve d'un depòsit compartit com si demà l'ajuntament connecta el seu propi pou municipal sense picar cap paret.");
+    expect(modelB).toBe("Una web amfitriona, com una de WordPress, pot allotjar l'aplicació com un component. Les dades del poble, però, viuen al servidor de Sóc de Poble, que és l'única font de veritat. Canviar de servidor és una decisió documentada, amb un adaptador que ha de passar el kit de conformitat. Exemple pràctic: l'associació Gent de la Torre ja tenia la seua web en WordPress; amb el nostre connector hi ha incrustat l'aplicació sencera en dos minuts, sense perdre el seu disseny ni haver de mantindre cap servidor propi.");
+    expect(codi).toBe('El fitxer LICENSE del projecte declara la llicència GNU AGPL, versió 3 o posterior (AGPL-3.0-or-later). Hi és des del 3 de setembre de 2026. Exemple pràctic: cap empresa pot tancar el servei ni cobrar un peatge als veïns demà passat; qualsevol ajuntament o cooperativa pot descarregar el codi, auditar-lo i posar-lo a rodar en un ordinador propi.');
     expect(raons.map((node) => node.querySelector('code')?.textContent ?? null)).toEqual([null, 'src/data/backendPort.js', null, null, null, 'LICENSE']);
     // Cap llista de «<strong>Etiqueta:</strong> …» a la pàgina.
     expect([...doc.querySelectorAll('li')].filter((li) => /^<strong>[^<]*:<\/strong>/.test(li.innerHTML.trim()))).toEqual([]);
@@ -368,9 +376,12 @@ describe('honestedat: cada afirmació ancorada al codi', () => {
     const h4Nodes = h4.find((h) => h.textContent === 'Els nodes actius del Fedivers de Sóc de Poble');
     const nodes = seccio(h4Nodes).flatMap((node) => [...node.querySelectorAll('a')]);
     expect(nodes.map((a) => [a.getAttribute('href'), a.textContent, a.getAttribute('target'), a.getAttribute('rel')])).toEqual([
+      ['/fedivers', 'Nodes i Fedivers', null, 'noopener noreferrer nofollow'],
       ['https://socdepoble.org', 'socdepoble.org', '_blank', 'noopener noreferrer'],
-      ['https://gentdelatorre.net', 'gentdelatorre.net', '_blank', 'noopener noreferrer']
+      ['https://gentdelatorre.net', 'gentdelatorre.net', '_blank', 'noopener noreferrer'],
+      ['/fedivers', 'nodes del nostre Fedivers rural', null, null]
     ]);
+    expect(text).toContain('Hui hi ha dos nodes actius, i es poden visitar:');
     expect(text).toContain('hui són dues portes al mateix servei: la mateixa aplicació i el mateix servidor de dades de Sóc de Poble, segons el Model B');
     expect(text).toContain('Encara no parlen ActivityPub entre ells');
   });
@@ -379,19 +390,30 @@ describe('honestedat: cada afirmació ancorada al codi', () => {
     for (const poble of ['Gent de Xixona', 'Gent de Relleu', 'Gent de Tibi', "Gent d'Alcoleja", 'Gent de Penàguila']) expect([poble, text.includes(poble)]).toEqual([poble, true]);
     expect(text).toContain('Gent de la Torre ja és actiu');
     expect(text).toContain('Hui encara no tenen node propi');
-    expect(copy.html).not.toMatch(/gentde(?!latorre)[a-z]+\.|\.(?:cat|es|eu|com)\b/i);
+    /* 03-11-2026 (arbitratge 12:22) · socdepoble.cat és un domini del Mestre, però no és cap node
+       actiu: el DNS és a l'aparcament del registrador, http fa 302 a un túnel ràpid de Cloudflare que
+       ja no resol i https rebutja la connexió. La pàgina el nomena una sola vegada, sense enllaç, com a
+       domini en preparació del pilot «Node 0»; la guarda n'exclou exactament eixa frase, i res més. */
+    const catEnPreparacio = "El domini socdepoble.cat està en preparació per a este pilot: encara no servix l'App i no és un node actiu.";
+    expect(copy.html.split(catEnPreparacio)).toHaveLength(2);
+    expect(copy.html.replace(catEnPreparacio, '')).not.toMatch(/gentde(?!latorre)[a-z]+\.|\.(?:cat|es|eu|com)\b/i);
     /* 01-11-2026 (T2) · DEROGA l'«aprovat, s'obri amb la primera versió» del
        31-10-2026: el connector socdepoble 1.1.10 és públic al directori
        (fitxa i api.wordpress.org, 200; Stable tag 1.1.10; el readme publicat
        porta 10 captures, i l'API en llista 10). La xifra de captures és la del
-       readme del connector d'este repositori, el que es publica. */
+       readme del connector d'este repositori, el que es publica.
+       03-11-2026 (ordre 261103_0522; Gauntlet O7-9, ronda 2, PC-04) · La
+       versió citada passa a 1.1.12: comprovat en lectura a l'SVN oficial a
+       les 07:45 CET (tags/ porta 1.1.10 i 1.1.12; Stable tag 1.1.12 a
+       trunk/readme.txt; trunk r3781090, tags/1.1.12 r3781091, assets
+       r3781093). No s'ha consultat api.wordpress.org. */
     const visio = textDe(seccio([...doc.querySelectorAll('h4')].find((h) => h.textContent === 'La visió: nodes germans «Gent de…»')));
-    expect(visio).toContain('el connector oficial de Sóc de Poble ja està publicat i actiu al directori de WordPress.org, amb el nom socdepoble i la versió 1.1.10');
+    expect(visio).toContain('el connector oficial de Sóc de Poble ja està publicat i actiu al directori de WordPress.org, amb el nom socdepoble i la versió 1.1.12');
     expect(visio).toContain("la seua fitxa, wordpress.org/plugins/socdepoble, porta la guia d'instal·lació i 10 captures de pantalla");
     const readme = llegix('wordpress-plugin/readme.txt');
     const captures = (readme.split(/^== Screenshots ==$/m)[1] ?? '').split(/^== /m)[0].match(/^\d+\. /gm) ?? [];
     expect(captures).toHaveLength(10);
-    expect(readme).toMatch(/^= 1\.1\.10 =$/m);
+    expect(readme).toMatch(/^= 1\.1\.12 =$/m);
     expect(readme).toMatch(/^== Installation ==$/m);
     expect(text).not.toMatch(/s'obri a tothom amb la primera versió|ha aprovat el connector|encara no és al directori/);
     expect(canalsOberts().map((canal) => canal.url)).toContain(WORDPRESS);
@@ -401,7 +423,7 @@ describe('honestedat: cada afirmació ancorada al codi', () => {
 
   test('alineada amb PAGE_COPY.fedivers: els mateixos dos nodes i la mateixa visió, i el Fedivers continua sense fer', () => {
     const fedivers = PAGE_COPY.fedivers.html;
-    for (const tros of ['<strong>socdepoble.org</strong>', '<strong>gentdelatorre.net</strong>', 'Gent de Xixona', 'Gent de Relleu', 'Gent de Tibi', 'Gent d’Alcoleja', 'Gent de Penàguila', 'Hui encara no està fet']) {
+    for (const tros of ['<strong>dos d’actius</strong>', '<strong>socdepoble.org</strong>', '<strong>gentdelatorre.net</strong>', 'Gent de Xixona', 'Gent de Relleu', 'Gent de Tibi', 'Gent d’Alcoleja', 'Gent de Penàguila', 'Hui encara no està fet']) {
       expect([tros, fedivers.includes(tros)]).toEqual([tros, true]);
     }
   });
@@ -675,7 +697,7 @@ describe('honestedat: cada afirmació ancorada al codi', () => {
      Mestre, 31-10-2026). Ni guarda ni literal d'App.jsx (correcció 31-10-2026). */
   test('cada enllaç és una ruta de l’app, i la Consola és oberta a tothom, com diu la pàgina', async () => {
     const rutesDeSeccio = new Set(SECTIONS.map((seccio) => seccio.path));
-    const altres = new Set(['/page/consola', '/consola', '/traduccions', '/wikidepoble']);
+    const altres = new Set(['/page/consola', '/consola', '/traduccions', '/wikidepoble', '/fedivers']);
     /* O4-CLAUDE-2 (prova posada al dia a propòsit) · Els fitxers del paquet de dades obertes
        estàtic no són rutes de l'app: els vigila la prova de la verificació en viu, de davall. */
     const hrefs = [...doc.querySelectorAll('a')].map((a) => a.getAttribute('href')).filter((href) => !href.startsWith('https://') && !OPENDATA.includes(href));
@@ -777,13 +799,17 @@ test('Lot5 · el document enumera exactament els noms reals del nucli i les capa
 describe('01-11-2026 · fet hui, verificable, i enllaçat en un clic', () => {
   test('partida 1: el connector de WordPress.org i el node viu que el fa servir', () => {
     const fet1 = apartat(0, 'Fet hui (verificable)');
-    expect(fet1).toContain('El connector oficial per a WordPress, publicat i actiu al directori de WordPress.org en la versió 1.1.10 (wordpress.org/plugins/socdepoble), i un node viu que el fa servir, gentdelatorre.net, el de Gent de la Torre: la mateixa aplicació en una web de WordPress, amb el mateix servidor de dades (Model B).');
+    expect(fet1).toContain('El connector oficial per a WordPress, publicat i actiu al directori de WordPress.org en la versió 1.1.12 (wordpress.org/plugins/socdepoble), i un node viu que el fa servir, gentdelatorre.net, el de Gent de la Torre: la mateixa aplicació en una web de WordPress, amb el mateix servidor de dades (Model B).');
     const li = elementAmb('El connector oficial per a WordPress');
     expect([...li.querySelectorAll('a')].map((a) => [a.getAttribute('href'), a.getAttribute('target'), a.getAttribute('rel')]))
       .toEqual([[WORDPRESS, '_blank', 'noopener noreferrer'], ['https://gentdelatorre.net', '_blank', 'noopener noreferrer']]);
     expect(canalsOberts().map((canal) => canal.url)).toContain(WORDPRESS);
     // El que no està fet es queda a «Pendent»: cap instal·lació administra més d'un poble.
     expect(apartat(0, 'Pendent')).toContain("Administrar més d'un poble des de la mateixa instal·lació: hui cada instal·lació es configura per a un sol poble.");
+    expect(apartat(0, 'Pendent')).toContain("Evolucionar l'adaptador local, src/data/local/, com a compromís estratègic de la beca NLnet, cap a una arquitectura 100% fora de línia i local primer per al món rural. Guardarà les dades al dispositiu amb IndexedDB i SQLite, amb una cua d'operacions encadenades amb SHA-256 fora de línia i sincronització determinista per a pobles de muntanya sense cobertura.");
+    /* Ordre 261103_0522 (Gauntlet O7-9, ronda 3; P3-CUA-08) · La cua de src/data/local/ encadena
+       hashos SHA-256 sense cap clau: integritat, no autenticitat. Res de «signades». */
+    expect(PAGE_COPY.fediversity.html).not.toMatch(/operacions signad/);
   });
 
   test('partida 2: les comprovacions automàtiques d’accessibilitat són les que hi ha al repositori', () => {
@@ -837,7 +863,7 @@ describe('01-11-2026 · fet hui, verificable, i enllaçat en un clic', () => {
     expect(VERSIO_FORMAT).toBe('1.2.0');
     const opendata = llegix('src/data/exportaMunicipiOpenData.js');
     for (const peca of ["'@type': 'NewsArticle'", "'@type': 'Event'", "'@type': 'CreativeWork'", "'BEGIN:VCALENDAR'", "mediatype: 'text/calendar'"]) expect([peca, opendata.includes(peca)]).toEqual([peca, true]);
-    expect(apartat(2, 'Pendent')).toContain("Exportar també la memòria cultural i les fitxes de memòria oral revisades de cada poble: el format del paquet ja les sap escriure (memòria CreativeWork i fitxes en Open Knowledge Format v0.2), però el Mas no té cap mòdul de memòria cultural i el servidor de dades encara no desa cap fitxa de memòria oral revisada. Tornar a carregar un paquet en el servidor de dades de producció també és pendent: hui només el restaura, a les proves, l'adaptador local.");
+    expect(apartat(2, 'Pendent')).toContain("Exportar també la memòria cultural i les fitxes de memòria oral revisades de cada poble: el format del paquet ja les sap escriure (memòria CreativeWork i fitxes en Open Knowledge Format v0.2), però Sóc de Poble no té cap mòdul de memòria cultural i el servidor de dades encara no desa cap fitxa de memòria oral revisada. Tornar a carregar un paquet en el servidor de dades de producció també és pendent: hui només el restaura, a les proves, l'adaptador local.");
     for (const peca of ["nom: 'memoria-oral.jsonld'", 'markdownOkf(', "nom: 'okf/index.md'"]) expect([peca, opendata.includes(peca)]).toEqual([peca, true]);
     // Els motius, els mateixos que el paquet escriu a la seua memòria.
     expect(opendata).toContain("encara no hi ha cap lectura pública garantida d'estes dades");
@@ -1000,5 +1026,46 @@ describe('Gauntlet 2 · el comentari del desplegament i el registre de canvis', 
        novembre porta ara la seua numeració pròpia, v1.0.3 (abans, totes deien v1.0.0); continua
        pendent de desplegar i amb el connector 1.1.10. */
     expect(PAGE_COPY.versions.html).toContain('<h3>1 de novembre de 2026 · v1.0.3 (build pendent de desplegar) · Connector WordPress v1.1.10</h3>');
+  });
+
+  /* Gauntlet O7-9, ronda 2 (PC-03, O8-PORT-03, O89-RURAL-12; ordre del Mestre 261103_0522) · El pilot
+     «Node 0 La Torre de les Maçanes» està en preparació amb el maquinari que ja és al poble: la pàgina en
+     diu l'arquitectura prevista, sense cap xifra que no estiga mesurada (el «4 W en repòs») ni cap «ja
+     operatiu». Cada camí del repositori que cita la pàgina existix (la versió anterior en citava set que
+     no). Els mòduls que cap pantalla no importa no ixen a «Fet hui», com el xifratge («codi i proves,
+     apagat»), i la signatura no hi ix com a FEP-8b32 mentre codifique la prova en base64url: si una
+     pantalla els importa, si desapareixen o si el motor canvia de format, la prova cau i el text s'ha
+     de tornar a escriure. */
+  test('Node 0: pilot en preparació, sense xifres sense mesura; a «Fet hui» només el que l’app fa servir i existix', () => {
+    const visio = textDe(seccio([...doc.querySelectorAll('h4')].find((h) => h.textContent === 'La visió: nodes germans «Gent de…»')));
+    expect(visio).toContain('pilot comunitari «Node 0 La Torre de les Maçanes», que està en preparació amb el maquinari disponible al poble: un Mac Mini amb processador Apple M4 i 24 GB de memòria unificada.');
+    expect(visio).toContain('Mentre el pilot no estiga en servei, esta pàgina no en dona cap xifra de consum ni de càrrega: encara no hi ha cap mesura.');
+    expect(apartat(0, 'Pendent')).toContain('Posar en servei el pilot «Node 0 La Torre de les Maçanes», el primer node independent, en el Mac Mini que ja és al poble');
+    expect(text).not.toMatch(/\d\s?W\b|en repòs|ja (?:és|està) operatiu|NVMe/);
+    // Cada camí del repositori que cita la pàgina existix.
+    const camins = [...doc.querySelectorAll('code')].map((code) => code.textContent).filter((cami) => /^(?:src|tests|tooling|wordpress-plugin|public)\//.test(cami));
+    expect(camins.length).toBeGreaterThan(5);
+    expect(camins.filter((cami) => !existix(cami))).toEqual([]);
+    // Els tres mòduls de les Onades 7-9: cap fitxer de src/ de fora de la família els importa.
+    const familia = {
+      portabilitatFediversity: 'src/data/federacio/portabilitatFediversity.js',
+      pontEmergenciaRural: 'src/data/local/pontEmergenciaRural.js',
+      sincronitzadorCarpetaLocal: 'src/data/local/sincronitzadorCarpetaLocal.js'
+    };
+    const src = path.join(ARREL, 'src');
+    const fonts = readdirSync(src, { recursive: true }).map((fitxer) => String(fitxer).split(path.sep).join('/'))
+      .filter((fitxer) => /\.(?:js|jsx)$/.test(fitxer) && !/\.test\.(?:js|jsx)$/.test(fitxer) && !Object.values(familia).includes(`src/${fitxer}`));
+    const connectats = Object.keys(familia).filter((nom) => fonts.some((fitxer) => importaElModul(readFileSync(path.join(src, fitxer), 'utf8'), nom, fitxer)));
+    expect(connectats).toEqual([]);
+    for (const [nom, rel] of Object.entries(familia)) {
+      expect([rel, existix(rel)]).toEqual([rel, true]);
+      for (const i of [0, 1, 2, 3]) expect([nom, i, apartat(i, 'Fet hui (verificable)').includes(rel)]).toEqual([nom, i, false]);
+      expect([nom, apartat(0, 'Pendent').includes(rel)]).toEqual([nom, true]);
+    }
+    expect(apartat(0, 'Pendent')).toContain("el codi i les seues proves per a intercanviar alertes i notes amb empremta SHA-256 són al repositori, però cap pantalla de l'aplicació no els fa servir encara.");
+    // FEP-8b32 (eddsa-jcs-2022) mana base58-btc («z…»): mentre el motor codifique la prova en base64url («u…»), no la complix.
+    expect(/const proofValue = `u\$\{codificaBase64Url\(/.test(senseComentaris(llegix(familia.portabilitatFediversity)))).toBe(true);
+    for (const i of [0, 1, 2, 3]) expect([i, apartat(i, 'Fet hui (verificable)').includes('FEP-8b32')]).toEqual([i, false]);
+    expect(apartat(0, 'Pendent')).toContain("la signatura encara no passa els vectors oficials del W3C: codifica la prova en base64url, i l'especificació mana base58-btc.");
   });
 });

@@ -20,6 +20,7 @@ contracte.llig:
   - _wiki_de_poble/02_saber/doc_governanca.md
   - _wiki_de_poble/03_actuar/plantilles/prompt_consell.md
   - _wiki_de_poble/03_actuar/plantilles/prompt_local.md
+  - .agents/runtime/turns
 contracte.escriu:
   - .agents/protocolledge.json
   - _wiki_de_poble/03_actuar/plantilles

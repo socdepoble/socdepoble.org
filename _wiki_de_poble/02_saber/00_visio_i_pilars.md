@@ -7,11 +7,11 @@ tags:
 ---
 # 🏡 Visió i pilars de Sóc de Poble
 
-Sóc de Poble vol connectar les persones i els recursos dels pobles amb trellat, en programari lliure i pensant primer en la gent gran. Esta és la font única de veritat de la direcció del projecte: d'on venim, què volem construir i sobre quins quatre pilars.
+Sóc de Poble vol **connectar les persones** i els **recursos dels pobles** **amb trellat**, en **programari lliure** i pensant primer en la **gent gran**. Esta és la **font única de veritat** de la direcció del projecte: d'on venim, què volem construir i sobre quins quatre pilars.
 
 ## 🌱 Llinatge històric
 
-Som hereus de més de 30 anys d'activisme rural i de lluita pel nostre entorn natural i patrimonial. El llegat digital va nàixer a [rentonar.blogspot.com](https://rentonar.blogspot.com) (anys 2000), va créixer a la plataforma fundacional [socdepoble.net](https://socdepoble.net) (anys 2010), amb l'esperit innegociable del *[Manifest de Poble](https://drive.google.com/file/d/17H8EY4LTWlImwiusvuXlhv9ScpG3iE9M/view?usp=sharing)*, i hui es construïx a [socdepoble.org](https://socdepoble.org), el **Mas Electrònic** (anys 2020).
+Som hereus de més de **30 anys d'activisme rural** i de lluita pel nostre **entorn natural i patrimonial**. El **llegat digital** va nàixer a [rentonar.blogspot.com](https://rentonar.blogspot.com) (anys 2000), va créixer a la **plataforma fundacional** [socdepoble.net](https://socdepoble.net) (anys 2010), amb l'**esperit innegociable** del *[Manifest de Poble](https://drive.google.com/file/d/17H8EY4LTWlImwiusvuXlhv9ScpG3iE9M/view?usp=sharing)*, i hui es construïx a [socdepoble.org](https://socdepoble.org), el **Mas Electrònic** (anys 2020).
 
 ## 📖 Conceptes centrals del projecte
 

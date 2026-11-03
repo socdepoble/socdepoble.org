@@ -9,7 +9,7 @@ tags:
 ---
 # Guia de publicació a l'App Store i a Google Play
 
-Esta guia reunix el que cal copiar i enganxar per a pujar l'App de Sóc de Poble a les dues botigues, en valencià, castellà i anglés. Cada resposta de privacitat cita el fitxer que la justifica, i el que no s'ha verificat diu «No verificat». Els blocs per a copiar només porten el que s'ha verificat; el que encara s'ha de provar va apart, sota «Per verificar abans d'enviar». És un dossier intern i no es publica a la Wiki de l'App. La fa servir el Mestre en publicar, i qui toque dades o permisos de l'App.
+Esta guia reunix el que cal **copiar i enganxar** per a pujar l'App de Sóc de Poble a les **dues botigues**, en valencià, castellà i anglés. Cada **resposta de privacitat** cita el fitxer que la justifica, i el que no s'ha verificat diu «**No verificat**». Els blocs per a copiar només porten el que s'ha verificat; el que encara s'ha de provar va apart, sota «**Per verificar abans d'enviar**». És un **dossier intern** i **no es publica** a la Wiki de l'App. La fa servir el Mestre en publicar, i qui toque dades o permisos de l'App.
 
 ## 1. Estat verificat i abast
 
@@ -194,7 +194,7 @@ neighbours,village,chat,wall,market,events,rural,town,council,community,local ne
 
 ### 3.4 Per verificar abans d'enviar
 
-Els blocs de dalt només diuen el que el codi demostra. La lectura sense compte no hi va: depén del servidor de producció i no s'ha provat en un dispositiu (secció 9). Si una prova amb el build que s'envia confirma que el Mur, els Pobles i el Calendari es lligen sense entrar, es pot posar esta frase al començament del paràgraf «Per a publicar…» de cada descripció:
+Els blocs de dalt només diuen **el que el codi demostra**. La **lectura sense compte** no hi va: depén del **servidor de producció** i **no s'ha provat en un dispositiu** (secció 9). Si una prova amb el **build que s'envia** confirma que el Mur, els Pobles i el Calendari **es lligen sense entrar**, es pot posar esta frase al començament del paràgraf «Per a publicar…» de cada descripció:
 
 ```text
 Pots llegir el contingut públic sense crear cap compte.
@@ -314,7 +314,7 @@ Les definicions són les de Google: «recollir» és transmetre dades fora del d
 
 ### 6.2 Tipus de dades recollides
 
-Cap tipus es compartix: Supabase, Sollutia i Google Workspace són encarregats del tractament per contracte (`legalContent.js:132-138`), i la IAIA MarIA de l'aplicació no envia el que li escrius a cap proveïdor d'intel·ligència artificial: respon al dispositiu (`legalContent.js:157-162`; `src/data/iaiaLocal.js:43-44`; la guarda és `src/sections/text/legal.iaia.test.js`). Amb compte, la pregunta al xat de la IAIA es publica al xat públic de la seua pàgina (fila «Activitat › Altre contingut generat»). A l'App nativa no hi ha «Vore mapa» i no es connecta a OpenStreetMap (`legalContent.js:242`; `src/sections/mur/MapaFotografic.jsx:842`). Només l'historial de cerques podria marcar-se com a processat de manera efímera, i només amb la comprovació de la secció 14.1.
+**Cap tipus es compartix**: Supabase, Sollutia i Google Workspace són **encarregats del tractament per contracte** (`legalContent.js:132-138`), i la IAIA MarIA de l'aplicació no envia el que li escrius a cap proveïdor d'intel·ligència artificial: **respon al dispositiu** (`legalContent.js:157-162`; `src/data/iaiaLocal.js:43-44`; la guarda és `src/sections/text/legal.iaia.test.js`). Amb compte, la pregunta al xat de la IAIA es publica al **xat públic** de la seua pàgina (fila «Activitat › Altre contingut generat»). A l'App nativa no hi ha «Vore mapa» i **no es connecta a OpenStreetMap** (`legalContent.js:242`; `src/sections/mur/MapaFotografic.jsx:842`). Només l'historial de cerques podria marcar-se com a **processat de manera efímera**, i només amb la **comprovació de la secció 14.1**.
 
 | Categoria › tipus | Obligatori o opcional | Finalitats | Evidència |
 | --- | --- | --- | --- |
@@ -473,7 +473,7 @@ sips -g pixelWidth -g pixelHeight -g hasAlpha ~/Desktop/sdp-iphone-gran-01-mur.p
 xcrun simctl shutdown booted
 ```
 
-L'UDID és propi de cada Mac: la segona línia el trau de la llista de simuladors instal·lats, perquè `simctl boot` demana l'UDID, i la resta de comandes usen `booted`. Repetix el mateix canviant el nom del `grep -m1` per «iPhone 18 Pro (» (pantalla mitjana) i per «iPad Pro 13-inch (M5) (». Si una captura no ix exactament a una mida acceptada, ajusta-la i lleva-li l'alfa:
+L'**UDID és propi de cada Mac**: la segona línia el trau de la **llista de simuladors instal·lats**, perquè `simctl boot` demana l'UDID, i la resta de comandes usen `booted`. Repetix el mateix canviant el nom del `grep -m1` per «iPhone 18 Pro (» (**pantalla mitjana**) i per «iPad Pro 13-inch (M5) (». Si una **captura no ix exactament** a una **mida acceptada**, ajusta-la i **lleva-li l'alfa**:
 
 ```bash
 sips -z 2868 1320 ~/Desktop/sdp-iphone-gran-01-mur.png --out ~/Desktop/sdp-iphone-gran-01-mur-1320x2868.png
@@ -481,7 +481,7 @@ sips -z 2622 1206 ~/Desktop/sdp-iphone-mitja-01-mur.png --out ~/Desktop/sdp-ipho
 sips -s format jpeg -s formatOptions 92 ~/Desktop/sdp-iphone-gran-01-mur-1320x2868.png --out ~/Desktop/sdp-appstore-iphone-gran-01-mur.jpg
 ```
 
-Per a Google, la captura de l'iPhone és massa llarga (2868 / 1320 passa del doble). Es reescala a 1080 d'ample i es retalla des de dalt a 1920 d'alt. El retall el fa Python, com la icona de més avall: `sips -c` amb `--cropOffset 0 0` retalla pel centre i perd la capçalera de l'App, i amb un altre desplaçament perd una fila o una columna.
+Per a Google, la **captura de l'iPhone és massa llarga** (2868 / 1320 passa del doble). Es reescala a **1080 d'ample** i es **retalla des de dalt** a **1920 d'alt**. El **retall el fa Python**, com la icona de més avall: `sips -c` amb `--cropOffset 0 0` retalla pel centre i **perd la capçalera de l'App**, i amb un altre desplaçament perd una fila o una columna.
 
 ```bash
 sips --resampleWidth 1080 ~/Desktop/sdp-iphone-gran-01-mur.png --out ~/Desktop/sdp-play-tmp.png
@@ -599,13 +599,13 @@ Esta nit no s'ha instal·lat res (D-B8C-3). L'App ja porta l'adaptador, darrere 
    - **iOS:** activar «Push Notifications» a l'App ID del portal d'Apple, fer un perfil nou, posar `aps-environment` = `production` a `ios/App/App/App.entitlements` i afegir a `AppDelegate.swift` els dos delegats que demana el connector (`didRegisterForRemoteNotificationsWithDeviceToken` i `didFailToRegisterForRemoteNotificationsWithError`). La clau `.p8` d'APNs va als secrets de la funció (`supabase/README.md`, secció «Funció `notifica-xat`»).
 3. **Bandera:** `src/config/avisosPushXat.js` → `export const AVISOS_PUSH_XAT_ACTIUS = true;` (el mateix pas que encén la web). Després, el build natiu.
 4. **Preflight de B9:** amb el connector, ha d'exigir `aps-environment = production`, `google-services.json` present (sense mostrar-ne el contingut) i els delegats d'APNs.
-5. **Privacitat a les botigues (abans d'enviar):** el testimoni de push és un identificador del dispositiu. Cal canviar §6.3 i §7.1 d'esta guia (Data Safety: «Identificadors del dispositiu: Sí, per a la funcionalitat de l'App, no es compartix per a publicitat»; etiqueta d'Apple: «Device ID», vinculat, sense rastreig, `AppFunctionality`) i el `PrivacyInfo.xcprivacy`.
+5. **Privacitat a les botigues (abans d'enviar):** el **testimoni de push** és un **identificador del dispositiu**. **Cal canviar §6.3 i §7.1** d'esta guia (Data Safety: «Identificadors del dispositiu: Sí, per a la funcionalitat de l'App, no es compartix per a publicitat»; **etiqueta d'Apple**: «Device ID», vinculat, **sense rastreig**, `AppFunctionality`) i el `PrivacyInfo.xcprivacy`.
 6. **Prova en un aparell de veres:**
    - activar des d'Ajustos del Xat → Notificacions;
    - rebre l'avís cec;
    - tocar-lo amb l'App tancada: ha d'obrir `/xat` i, si hi ha un sol fil no llegit, el fil. Este cas depén que el connector lliure el toc a l'oient que es registra en arrencar, i cal comprovar-ho al dispositiu;
    - tancar la sessió: l'aparell deixa de rebre avisos.
-7. **Decisió pendent (R12 de l'especificació B8-SERVIDOR de la marató 261101_2143):** sense gest, l'App no torna a desar el testimoni (D-B8C-12). Per això, al cap de 60 dies sense que la persona torne a tocar l'interruptor, el servidor el considera vell i els avisos natius s'aturen. Per a renovar-lo sense inscriure ningú de nou cal la petició P-B8C→B8S-1: una renovació sense reclam, que només actualitza una fila que ja és de la persona i mai n'insereix cap.
+7. **Decisió pendent (R12 de l'especificació B8-SERVIDOR de la marató 261101_2143):** sense gest, l'App **no torna a desar el testimoni** (D-B8C-12). Per això, al cap de **60 dies** sense que la persona torne a tocar l'interruptor, el servidor el considera vell i **els avisos natius s'aturen**. Per a renovar-lo sense inscriure ningú de nou cal la petició P-B8C→B8S-1: una **renovació sense reclam**, que **només actualitza una fila** que ja és de la persona i **mai n'insereix cap**.
 
 ## 15. Fonts oficials consultades
 

@@ -200,7 +200,7 @@ describe('parseMarkdown · llistes (agrupació i autonumeració)', () => {
     expect(html).not.toMatch(/data-llista|<li class=/);
     const font = readFileSync(resolve(process.cwd(), 'src/sections/wiki-de-poble/parseMarkdown.js'), 'utf8');
     expect(font).not.toMatch(/<li class=/);
-    expect(font).toMatch(/<li data-llista="ul">/);
+    expect(font).not.toMatch(/<li data-llista=/); // O7: arbres de blocs; ja no cal marca provisional.
   });
 });
 

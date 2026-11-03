@@ -5,10 +5,11 @@
    parsejar. */
 import { Editor } from '@tiptap/core';
 import StarterKit from '@tiptap/starter-kit';
-import { NodeSelection } from '@tiptap/pm/state';
+import { AllSelection, NodeSelection, TextSelection } from '@tiptap/pm/state';
+import { closeHistory } from '@tiptap/pm/history';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import { sanitizeHtml } from '../../../../../utils/sanitize.js';
-import { TargetesIncrustades, esDeLaTargeta, teclesDeLaPlataforma } from './targetesIncrustades.js';
+import { TargetesIncrustades, clauDeRutaInterna, esDeLaTargeta, rutaDeClau, teclesDeLaPlataforma } from './targetesIncrustades.js';
 import { NOM_EXTENSIO_TARGETES } from './TargetesIncrustadesContext.js';
 
 const T = (id, extra = {}) => ({ clau: `publicacio:${id}`, ruta: `/mur/${id}`, titol: `Targeta ${id}`, entradilla: 'Una entradilla', ...extra });
@@ -33,6 +34,18 @@ afterEach(() => {
 
 const grups = (doc) => doc.querySelectorAll('div[data-sdp-targetes]');
 const desat = () => new DOMParser().parseFromString(editor.getHTML(), 'text/html').body;
+/* T2.6 · La posició del primer node que compleix `prova`, o null; la d'una
+   targeta (per clau); i el cursor dos caràcters dins del text que conté `text`. */
+const posDe = (prova) => {
+  let trobada = null;
+  editor.state.doc.descendants((node, p) => {
+    if (trobada === null && prova(node)) trobada = p;
+  });
+  return trobada;
+};
+const posTargeta = (clau = null) => posDe((node) => node.type.name === 'sdpTargeta' && (!clau || node.attrs.clau === clau));
+const cursorA = (text) => editor.commands.setTextSelection(posDe((node) => node.isText && node.text.includes(text)) + 2);
+const triaTargeta = (clau) => editor.view.dispatch(editor.state.tr.setSelection(NodeSelection.create(editor.state.doc, posTargeta(clau))));
 
 describe('les regles del Mestre: 1 sola, 2 parella, 3 o més graella', () => {
   test('una targeta: un grup «sola», alineat a l’esquerra, amb l’enllaç de reserva', () => {
@@ -386,5 +399,343 @@ describe('les comandes', () => {
     expect(editor.commands.alineaTargetes('dreta', posTargeta)).toBe(true);
     expect(grups(desat())[0].getAttribute('data-alineacio')).toBe('dreta');
     expect(editor.commands.alineaTargetes('centre', posTargeta)).toBe(false);
+  });
+
+  test('clauDeRutaInterna i rutaDeClau resolen les rutes internes de Sóc de Poble i rebutgen les externes', () => {
+    expect(clauDeRutaInterna('/mur/1')).toBe('publicacio:1');
+    expect(clauDeRutaInterna('/events/7')).toBe('esdeveniment:7');
+    expect(clauDeRutaInterna('/agenda/7')).toBe('esdeveniment:7');
+    expect(clauDeRutaInterna('/mercat/9')).toBe('producte:9');
+    expect(clauDeRutaInterna('/pobles/la-torre')).toBe('poble:la-torre');
+    expect(clauDeRutaInterna('/page/drets-autor')).toBe('pagina:drets-autor');
+    expect(clauDeRutaInterna('/projecte')).toBe('pagina:projecte');
+    expect(clauDeRutaInterna('/anima')).toBe('pagina:anima');
+    /* T26-06 (Gauntlet O7) · Prova posada al dia a propòsit: /iaia és la
+       fitxa pública de la IAIA MarIA (RUTA_FITXA_IAIA), un perfil, que no
+       s'incrusta; només /ia porta al manifest. /page/iaia és el slug «iaia»,
+       com a paginaDeText.clauDeRuta. */
+    expect(clauDeRutaInterna('/iaia')).toBe('');
+    expect(clauDeRutaInterna('/ia')).toBe('pagina:anima');
+    expect(clauDeRutaInterna('/page/iaia')).toBe('pagina:iaia');
+    expect(clauDeRutaInterna('/fedivers')).toBe('pagina:fedivers');
+    expect(clauDeRutaInterna('/page/fediversity')).toBe('pagina:fediversity');
+    expect(clauDeRutaInterna('/consola')).toBe('pagina:consola');
+    expect(clauDeRutaInterna('/page/cervell')).toBe('pagina:cervell');
+    expect(clauDeRutaInterna('/wikidepoble')).toBe('pagina:wikidepoble');
+    expect(clauDeRutaInterna('/disseny')).toBe('pagina:disseny');
+    expect(clauDeRutaInterna('https://fora.example/mur/1')).toBe('');
+    expect(clauDeRutaInterna('/notes?nota=n1')).toBe('');
+    expect(rutaDeClau('publicacio:1')).toBe('/mur/1');
+    expect(rutaDeClau('pagina:projecte')).toBe('/projecte');
+    expect(rutaDeClau('pagina:fediversity')).toBe('/page/fediversity');
+  });
+
+  /* T26-03 (Gauntlet O7) · Prova posada al dia a propòsit: abans només
+     comprovava la clau, la ruta i el títol, i la Card tornava sense
+     instantània ni autor (la boina signava «Sóc de Poble») i a la dreta.
+     Ara l'anada i tornada és exacta: el mateix HTML. */
+  test('commutador bidireccional «Enllaç ↔ Card»: Card → Enllaç → Card torna la Card sencera (instantània, autor i alineació)', () => {
+    creaEditor('<p>Abans</p>');
+    expect(editor.commands.inserirTargeta(T(1, { subtitol: 'Sub', autor: 'Pepa', autorRuta: '/gent/pepa', poble: 'La Torre' }))).toBe(true);
+    const abans = editor.getHTML();
+    expect(grups(desat())[0].getAttribute('data-alineacio')).toBe('esquerra');
+    expect(editor.commands.convertirTargetaEnEnllac(posTargeta())).toBe(true);
+    expect(grups(desat())).toHaveLength(0);
+    const enllac = desat().querySelector('p a[href="/mur/1"]');
+    expect(enllac).not.toBeNull();
+    expect(enllac.textContent).toBe('Targeta 1');
+    expect(sanitizeHtml(editor.getHTML())).toBe(editor.getHTML());
+
+    /* Ara el cursor és a l'enllaç: commutar-lo torna la mateixa Card. */
+    cursorA('Targeta 1');
+    expect(editor.can().commutarEnllacTargeta()).toBe(true);
+    expect(editor.commands.commutarEnllacTargeta()).toBe(true);
+    expect(editor.getHTML()).toBe(abans);
+    const targeta = desat().querySelector('div[data-sdp-targeta="publicacio:1"]');
+    expect([targeta.getAttribute('data-entradilla'), targeta.getAttribute('data-autor'), targeta.getAttribute('data-autor-ruta'), targeta.getAttribute('data-poble')])
+      .toEqual(['Una entradilla', 'Pepa', '/gent/pepa', 'La Torre']);
+  });
+
+  test('T26-03 · en un grup de tres, Card → Enllaç → Card torna la targeta al seu lloc del grup', () => {
+    creaEditor();
+    for (const id of [1, 2, 3]) editor.commands.inserirTargeta(T(id));
+    const abans = editor.getHTML();
+    expect(editor.commands.convertirTargetaEnEnllac(posTargeta('publicacio:2'))).toBe(true);
+    expect(grups(desat())[0].getAttribute('data-forma')).toBe('parella');
+    cursorA('Targeta 2');
+    expect(editor.commands.commutarEnllacTargeta()).toBe(true);
+    expect(editor.getHTML()).toBe(abans);
+    expect([...grups(desat())[0].children].map((fill) => fill.getAttribute('data-sdp-targeta'))).toEqual(['publicacio:1', 'publicacio:2', 'publicacio:3']);
+  });
+
+  test('T26-03 · Desfer no buida la memòria: l’enllaç que torna encara es fa la mateixa Card', () => {
+    creaEditor('<p>Abans</p>');
+    editor.commands.inserirTargeta(T(1, { autor: 'Pepa', autorRuta: '/gent/pepa' }));
+    editor.commands.convertirTargetaEnEnllac(posTargeta());
+    editor.view.dispatch(closeHistory(editor.state.tr));
+    const enllac = editor.getHTML();
+    cursorA('Targeta 1');
+    expect(editor.commands.commutarEnllacTargeta()).toBe(true);
+    expect(editor.commands.undo()).toBe(true);
+    expect(editor.getHTML()).toBe(enllac);
+    cursorA('Targeta 1');
+    expect(editor.commands.commutarEnllacTargeta()).toBe(true);
+    expect(desat().querySelector('div[data-sdp-targeta="publicacio:1"]').getAttribute('data-autor')).toBe('Pepa');
+  });
+
+  test('T26-03 · Desfer en un grup de tres: l’enllaç que torna encara va al seu lloc del grup', () => {
+    creaEditor();
+    for (const id of [1, 2, 3]) editor.commands.inserirTargeta(T(id));
+    const abans = editor.getHTML();
+    editor.commands.convertirTargetaEnEnllac(posTargeta('publicacio:2'));
+    editor.view.dispatch(closeHistory(editor.state.tr));
+    const enllac = editor.getHTML();
+    cursorA('Targeta 2');
+    expect(editor.commands.commutarEnllacTargeta()).toBe(true);
+    expect(editor.commands.undo()).toBe(true);
+    expect(editor.getHTML()).toBe(enllac);
+    cursorA('Targeta 2');
+    expect(editor.commands.commutarEnllacTargeta()).toBe(true);
+    expect(editor.getHTML()).toBe(abans);
+  });
+
+  /* Verificador A4 (ronda 2) · La memòria va lligada al node concret que
+     ha escrit cada commutació, no a la ruta. ADV-1: una altra Card de la
+     mateixa pàgina (la del selector) torna amb el seu títol, sense les
+     marques ni el text de l'enllaç d'una altra; la que venia de l'enllaç
+     torna el seu bloc, també després de canviar-li l'alineació. */
+  test('ADV-1 · una altra Card de la mateixa ruta no hereta el bloc d’un altre enllaç', () => {
+    creaEditor('<p><a href="/anima"><strong>Text privat de la nota</strong></a></p><p>Mig</p>');
+    cursorA('privat');
+    expect(editor.commands.commutarEnllacTargeta()).toBe(true);
+    editor.commands.setTextSelection(editor.state.doc.content.size - 1);
+    expect(editor.commands.inserirTargeta({ clau: 'pagina:anima', ruta: '/anima', titol: 'L’Ànima de la IAIA' })).toBe(true);
+    let ultima = null;
+    editor.state.doc.descendants((node, p) => {
+      if (node.type.name === 'sdpTargeta') ultima = p;
+    });
+    expect(editor.commands.convertirTargetaEnEnllac(ultima)).toBe(true);
+    expect([...desat().querySelectorAll('p a[href="/anima"]')].map((a) => a.innerHTML)).toEqual(['L’Ànima de la IAIA']);
+    expect(editor.commands.alineaTargetes('esquerra', posTargeta())).toBe(true);
+    expect(editor.commands.convertirTargetaEnEnllac(posTargeta())).toBe(true);
+    expect([...desat().querySelectorAll('p a[href="/anima"]')].map((a) => a.innerHTML))
+      .toEqual(['<strong>Text privat de la nota</strong>', 'L’Ànima de la IAIA']);
+  });
+
+  /* Verificador A4 (ronda 2, P3) · Un altre enllaç a la mateixa ruta, just
+     darrere d'un altre grup, és un enllaç nou: ni el lloc recordat (l'índex)
+     ni la instantània de la Card d'un altre. L'enllaç concret sí que torna
+     al seu lloc, amb la seua instantània. */
+  test('ADV · un altre enllaç a la mateixa ruta, darrere d’un altre grup, no hereta el lloc ni la instantània', () => {
+    const targeta = (clau, titol, extra = '') => `<div data-sdp-targeta="${clau}" data-titol="${titol}"${extra}></div>`;
+    creaEditor(`<div data-sdp-targetes="" data-alineacio="esquerra">${targeta('pagina:projecte', 'El projecte')}`
+      + `${targeta('pagina:anima', 'L’Ànima de la IAIA', ' data-ruta="/anima" data-subtitol="Sub"')}${targeta('pagina:consola', 'La Consola')}</div>`
+      + `<p>Mig</p><div data-sdp-targetes="" data-alineacio="esquerra">${targeta('pagina:disseny', 'Disseny')}${targeta('pagina:fedivers', 'Fedivers')}</div>`
+      + '<p><a href="/anima">Una altra Ànima</a></p>');
+    expect(editor.commands.convertirTargetaEnEnllac(posTargeta('pagina:anima'))).toBe(true);
+    cursorA('altra');
+    expect(editor.commands.commutarEnllacTargeta()).toBe(true);
+    const fills = (grup) => [...grup.children].map((fill) => [fill.getAttribute('data-sdp-targeta'), fill.getAttribute('data-titol'), fill.getAttribute('data-subtitol')]);
+    expect(fills(grups(desat())[1])).toEqual([['pagina:disseny', 'Disseny', null], ['pagina:fedivers', 'Fedivers', null], ['pagina:anima', 'Una altra Ànima', null]]);
+    cursorA('IAIA');
+    expect(editor.commands.commutarEnllacTargeta()).toBe(true);
+    expect(fills(grups(desat())[0])).toEqual([['pagina:projecte', 'El projecte', null], ['pagina:anima', 'L’Ànima de la IAIA', 'Sub'], ['pagina:consola', 'La Consola', null]]);
+  });
+
+  test('ADV · un paràgraf idèntic a l’enllaç commutat, però que no n’és, no recupera la Card; el concret, sí', () => {
+    creaEditor('<p>Abans</p>');
+    editor.commands.inserirTargeta({ clau: 'pagina:anima', ruta: '/anima', titol: 'L’Ànima de la IAIA', subtitol: 'Sub' });
+    expect(editor.commands.convertirTargetaEnEnllac(posTargeta())).toBe(true);
+    const concret = editor.state.doc.nodeAt(posDe((node) => node.type.name === 'paragraph' && node.textContent === 'L’Ànima de la IAIA'));
+    const copia = editor.schema.nodeFromJSON(concret.toJSON());
+    expect([copia === concret, copia.eq(concret)]).toEqual([false, true]);
+    editor.view.dispatch(editor.state.tr.insert(0, copia));
+    cursorA('IAIA');
+    expect(editor.commands.commutarEnllacTargeta()).toBe(true);
+    const alCos = () => [...grups(desat())].map((grup) => [grup.getAttribute('data-alineacio'), grup.firstElementChild.getAttribute('data-subtitol')]);
+    expect(alCos()).toEqual([['dreta', null]]);
+    cursorA('IAIA');
+    expect(editor.commands.commutarEnllacTargeta()).toBe(true);
+    expect(alCos()).toEqual([['dreta', null], ['esquerra', 'Sub']]);
+  });
+
+  /* Un arrossegament amb còpia posa el mateix node dues voltes: cap de les
+     dues Cards no és «la» que va eixir de l'enllaç, i cap no en torna el
+     bloc. La que queda, ja única, sí. */
+  test('ADV · una Card que hi és dues voltes (arrossegada amb còpia) no torna el bloc de l’enllaç', () => {
+    creaEditor('<p><a href="/anima"><strong>Text privat de la nota</strong></a></p><p>Mig</p>');
+    cursorA('privat');
+    expect(editor.commands.commutarEnllacTargeta()).toBe(true);
+    const grup = editor.state.doc.nodeAt(posDe((node) => node.type.name === 'sdpTargetes'));
+    editor.view.dispatch(editor.state.tr.insert(editor.state.doc.content.size, grup.type.create({ alineacio: 'esquerra' }, grup.firstChild)));
+    expect(grups(desat())).toHaveLength(2);
+    let ultima = null;
+    editor.state.doc.descendants((node, p) => {
+      if (node.type.name === 'sdpTargeta') ultima = p;
+    });
+    expect(editor.commands.convertirTargetaEnEnllac(ultima)).toBe(true);
+    expect(desat().querySelector('strong')).toBeNull();
+    expect(desat().querySelector('p a[href="/anima"]').textContent).toBe('Text privat de la nota');
+    expect(editor.commands.convertirTargetaEnEnllac(posTargeta())).toBe(true);
+    expect([...desat().querySelectorAll('p a[href="/anima"]')].map((a) => a.innerHTML))
+      .toEqual(['<strong>Text privat de la nota</strong>', 'Text privat de la nota']);
+  });
+
+  /* L'índex recordat és el del grup d'on va eixir: l'enllaç concret, mogut
+     (arrossegat) darrere d'un altre grup, torna Card amb la seua instantània,
+     però al final d'eixe grup, com una Card nova (el normalitzador). */
+  test('ADV · l’enllaç concret mogut darrere d’un altre grup no s’hi encaixa a l’índex recordat', () => {
+    const targeta = (clau, titol) => `<div data-sdp-targeta="${clau}" data-titol="${titol}"></div>`;
+    creaEditor(`<div data-sdp-targetes="" data-alineacio="esquerra">${targeta('pagina:projecte', 'El projecte')}${targeta('pagina:anima', 'L’Ànima')}${targeta('pagina:consola', 'La Consola')}</div>`
+      + `<p>Mig</p><div data-sdp-targetes="" data-alineacio="esquerra">${targeta('pagina:disseny', 'Disseny')}${targeta('pagina:fedivers', 'Fedivers')}</div><p>Fi</p>`);
+    expect(editor.commands.convertirTargetaEnEnllac(posTargeta('pagina:anima'))).toBe(true);
+    const posEnllac = posDe((node) => node.type.name === 'paragraph' && node.textContent === 'L’Ànima');
+    const enllac = editor.state.doc.nodeAt(posEnllac);
+    const tr = editor.state.tr.delete(posEnllac, posEnllac + enllac.nodeSize);
+    let posFi = null;
+    tr.doc.descendants((node, p) => {
+      if (posFi === null && node.type.name === 'paragraph' && node.textContent === 'Fi') posFi = p;
+    });
+    editor.view.dispatch(tr.insert(posFi, enllac));
+    cursorA('L’Ànima');
+    expect(editor.commands.commutarEnllacTargeta()).toBe(true);
+    const claus = (grup) => [...grup.children].map((fill) => fill.getAttribute('data-sdp-targeta'));
+    expect(grups(desat())).toHaveLength(2);
+    expect(claus(grups(desat())[0])).toEqual(['pagina:projecte', 'pagina:consola']);
+    expect(claus(grups(desat())[1])).toEqual(['pagina:disseny', 'pagina:fedivers', 'pagina:anima']);
+  });
+
+  test('T26-04 · Enllaç → Card → Enllaç torna el paràgraf tal com era: marques, target i text', () => {
+    creaEditor('<p>Abans</p><p><a href="/anima" target="_blank"><strong>L’Ànima</strong> de la IAIA</a></p><p>Després</p>');
+    const abans = editor.getHTML();
+    cursorA('de la IAIA');
+    expect(editor.commands.commutarEnllacTargeta()).toBe(true);
+    const grup = grups(desat())[0];
+    expect(grup.getAttribute('data-alineacio')).toBe('dreta');
+    expect(grup.querySelector('div[data-sdp-targeta="pagina:anima"]').getAttribute('data-titol')).toBe('L’Ànima de la IAIA');
+    expect(editor.commands.commutarEnllacTargeta(posTargeta())).toBe(true);
+    expect(editor.getHTML()).toBe(abans);
+  });
+
+  test('T26-04 · no commuta a Card el que no podria tornar: un títol, un enllaç enmig del text o dins d’una llista', () => {
+    for (const html of ['<h2><a href="/anima">L’Ànima</a></h2>', '<p>Llegiu <a href="/anima">l’Ànima</a> ara</p>', '<ul><li><p><a href="/anima">L’Ànima</a></p></li></ul>']) {
+      editor?.destroy();
+      creaEditor(html);
+      cursorA('Ànima');
+      const abans = editor.getHTML();
+      expect([html, editor.can().commutarEnllacTargeta()]).toEqual([html, false]);
+      expect(editor.commands.commutarEnllacTargeta()).toBe(false);
+      expect(editor.getHTML()).toBe(abans);
+    }
+  });
+
+  test('T26-03 · Regla d’or 1: un enllaç nu a una publicació no es fa Card sense la seua instantània; amb els atributs de la cerca, sí', () => {
+    creaEditor('<p><a href="/mur/42">La festa</a></p>');
+    cursorA('La festa');
+    const abans = editor.getHTML();
+    expect(editor.can().convertirEnllacEnTargeta()).toBe(false);
+    expect(editor.commands.commutarEnllacTargeta()).toBe(false);
+    expect(editor.getHTML()).toBe(abans);
+    expect(editor.commands.commutarEnllacTargeta(T(42, { titol: 'La festa', autor: 'Pepa', autorRuta: '/gent/pepa' }))).toBe(true);
+    const targeta = desat().querySelector('div[data-sdp-targeta="publicacio:42"]');
+    expect([targeta.getAttribute('data-autor'), targeta.getAttribute('data-entradilla')]).toEqual(['Pepa', 'Una entradilla']);
+  });
+
+  /* Límit (T26-03 / T26-04): la memòria de la commutació és de l'editor obert
+     i no es desa. Un enllaç desat és un hiperenllaç de text normal, sense
+     instantània: en tornar a obrir el document, el d'una pàgina es fa Card
+     amb el text de l'enllaç i a la dreta (T2.6), i el d'una publicació no
+     (Regla d'or 1). */
+  test('límit · en tornar a obrir el document, l’enllaç ja no recorda la Card', () => {
+    creaEditor('<p>Abans</p>');
+    editor.commands.inserirTargeta(T(7, { autor: 'Pepa', autorRuta: '/gent/pepa' }));
+    editor.commands.convertirTargetaEnEnllac(posTargeta());
+    editor.commands.setTextSelection(1);
+    editor.commands.inserirTargeta({ clau: 'pagina:anima', ruta: '/anima', titol: 'L’Ànima de la IAIA' });
+    editor.commands.convertirTargetaEnEnllac(posTargeta());
+    const desatHtml = editor.getHTML();
+    editor.destroy();
+    creaEditor(desatHtml);
+    cursorA('Targeta 7');
+    expect(editor.commands.commutarEnllacTargeta()).toBe(false);
+    cursorA('Ànima');
+    expect(editor.commands.commutarEnllacTargeta()).toBe(true);
+    const grup = grups(desat())[0];
+    expect(grup.getAttribute('data-alineacio')).toBe('dreta');
+    expect(grup.querySelector('div[data-sdp-targeta="pagina:anima"]').getAttribute('data-titol')).toBe('L’Ànima de la IAIA');
+  });
+
+  test('T26-06 · un enllaç a /iaia (la fitxa de la IAIA MarIA) no es fa Card de la pàgina «anima»', () => {
+    creaEditor('<p><a href="/iaia">La IAIA MarIA</a></p>');
+    cursorA('IAIA');
+    const abans = editor.getHTML();
+    expect(editor.commands.commutarEnllacTargeta()).toBe(false);
+    expect(editor.getHTML()).toBe(abans);
+  });
+
+  test('en un grup de dues targetes, commutar-ne una a enllaç deixa l’altra al grup i escriu l’enllaç darrere', () => {
+    creaEditor();
+    editor.commands.inserirTargeta(T(1));
+    editor.commands.inserirTargeta(T(2));
+    let posSegona = null;
+    editor.state.doc.descendants((node, p) => {
+      if (node.type.name === 'sdpTargeta' && node.attrs.clau === 'publicacio:2') posSegona = p;
+    });
+    expect(editor.commands.convertirTargetaEnEnllac(posSegona)).toBe(true);
+    const cos = desat();
+    expect(grups(cos)).toHaveLength(1);
+    expect(grups(cos)[0].getAttribute('data-forma')).toBe('sola');
+    expect(cos.querySelector('div[data-sdp-targeta="publicacio:1"]')).not.toBeNull();
+    expect(cos.querySelector('p a[href="/mur/2"]').textContent).toBe('Targeta 2');
+  });
+
+  /* T26-04 (Gauntlet O7) · Prova posada al dia a propòsit: enmig del text la
+     Card s'afegia darrere del bloc i l'enllaç es quedava, i en tornar n'hi
+     havia dos. Ara enmig del text no es commuta. */
+  test('inserirEnllacDeTargeta escriu l’enllaç intern al cursor; enmig del text, convertirEnllacEnTargeta no hi fa res', () => {
+    creaEditor('<p>Llegiu més:</p>');
+    editor.commands.setTextSelection(editor.state.doc.content.size - 1);
+    expect(editor.commands.inserirEnllacDeTargeta({ clau: 'pagina:anima', ruta: '/anima', titol: 'L’Ànima de la IAIA' })).toBe(true);
+    expect(desat().querySelector('p a[href="/anima"]').textContent).toBe('L’Ànima de la IAIA');
+    const abans = editor.getHTML();
+    expect(editor.commands.convertirEnllacEnTargeta()).toBe(false);
+    expect(editor.getHTML()).toBe(abans);
+    expect(desat().querySelector('div[data-sdp-targeta]')).toBeNull();
+  });
+
+  test('T26-05 · «Inserir com a enllaç» amb una Card triada la conserva i escriu l’enllaç darrere del grup', () => {
+    creaEditor('<p>Intro</p><p>Final</p>');
+    editor.commands.setTextSelection(6);
+    editor.commands.inserirTargeta(T(1));
+    triaTargeta('publicacio:1');
+    expect(editor.isActive('sdpTargeta')).toBe(true);
+    expect(editor.commands.inserirEnllacDeTargeta({ clau: 'pagina:anima', ruta: '/anima', titol: 'L’Ànima' })).toBe(true);
+    let cos = desat();
+    expect(grups(cos)).toHaveLength(1);
+    expect(cos.querySelector('div[data-sdp-targeta="publicacio:1"]')).not.toBeNull();
+    expect(cos.querySelector('div[data-sdp-targetes] + p a[href="/anima"]').textContent).toBe('L’Ànima');
+    // En una parella, la Card triada tampoc ix del grup.
+    triaTargeta('publicacio:1');
+    editor.commands.inserirTargeta(T(2));
+    triaTargeta('publicacio:2');
+    expect(editor.commands.inserirEnllacDeTargeta({ clau: 'pagina:projecte', ruta: '/projecte', titol: 'El projecte' })).toBe(true);
+    cos = desat();
+    expect(grups(cos)[0].getAttribute('data-forma')).toBe('parella');
+    expect(cos.querySelector('div[data-sdp-targetes] + p a[href="/projecte"]').textContent).toBe('El projecte');
+    expect(cos.textContent).toContain('Intro');
+    expect(cos.textContent).toContain('Final');
+  });
+
+  test('T26-05 · amb text triat, el text de la persona es conserva i es fa l’enllaç; una tria de més d’un bloc no s’esborra', () => {
+    creaEditor('<p>Vegeu aquí la festa</p>');
+    editor.view.dispatch(editor.state.tr.setSelection(TextSelection.create(editor.state.doc, 7, 11)));
+    expect(editor.commands.inserirEnllacDeTargeta({ clau: 'publicacio:9', ruta: '/mur/9', titol: 'La festa' })).toBe(true);
+    expect(desat().querySelector('p').textContent).toBe('Vegeu aquí la festa');
+    expect(desat().querySelector('p a[href="/mur/9"]').textContent).toBe('aquí');
+    editor.commands.setContent('<p>Un</p><p>Dos</p>');
+    editor.view.dispatch(editor.state.tr.setSelection(new AllSelection(editor.state.doc)));
+    expect(editor.commands.inserirEnllacDeTargeta({ clau: 'pagina:anima', ruta: '/anima', titol: 'L’Ànima' })).toBe(true);
+    const paragrafs = [...desat().querySelectorAll('p')].map((p) => p.textContent);
+    expect(paragrafs).toEqual(['Un', 'DosL’Ànima']);
   });
 });

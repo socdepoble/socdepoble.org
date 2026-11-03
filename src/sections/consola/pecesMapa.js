@@ -51,6 +51,7 @@ const peca = (id) => ({ node: id });
 
 export const ESTAT_TASCA = Object.freeze({
   viu: etiquetaDEstat('VIU'),
+  programat: etiquetaDEstat('PROGRAMAT'),
   mort: etiquetaDEstat('MORT'),
   'declarat-sense-llancador': etiquetaDEstat('SENSE LLANÇADOR'),
   'llancador-sense-declaracio': etiquetaDEstat('SENSE DECLARACIÓ'),
@@ -106,7 +107,7 @@ function candatsDe(mapa, id) {
    el subtítol porten una ruta. */
 export const FAMILIES = Object.freeze([
   {
-    id: 'arnes', prefix: 'arnes-', pagina: 'actors', icona: 'bot', nom: 'Arnés del Mas',
+    id: 'arnes', prefix: 'arnes-', pagina: 'actors', icona: 'bot', nom: 'Arnés de Sóc de Poble',
     subtitolSenseFont: 'Candats i memòria d’arrencada',
     entradeta: [
       'Un arnés és l’eina amb què el Mestre parla amb un agent: dispara els seus candats (hooks) i carrega la memòria d’arrencada.',

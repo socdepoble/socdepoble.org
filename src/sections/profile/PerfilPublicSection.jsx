@@ -831,16 +831,16 @@ export function FitxaPublica({ perfil, ambEdita = true, ambXat = true, chrome = 
           {avisDIA}
         </Alerta>
       ) : null}
-      {actuaComEsta ? <p role="status">{omple(t('section.perfil.public.actuaComEsta', 'Ara actues com a {nom}.'), { nom: perfil.nom })}</p> : null}
+      {actuaComEsta ? <p role="status" className="sdp-perfil-public__meta">{omple(t('section.perfil.public.actuaComEsta', 'Ara actues com a {nom}.'), { nom: perfil.nom })}</p> : null}
       {mailto ? (
-        <p>
+        <p className="sdp-perfil-public__meta">
           {t('section.perfil.public.correuEtiqueta', 'Correu: ')}
           <a href={mailto}>{correuPublic}</a>
         </p>
       ) : null}
       {/* P1-59 (b) i IDEA-25 · La targeta de contacte (.vcf), al costat del correu públic d'una organització (el d'una persona no ix mai). */}
       {vcard ? (
-        <div className="sdp-alerta__accions">
+        <div className="sdp-alerta__accions sdp-perfil-public__accions">
           <Boto varietat="secundari" icona={Contact} onClick={() => desaVcard(vcard, nomFitxerVcard(perfil.nom))}>
             {t('section.perfil.public.vcard', 'Descarrega el contacte (vCard)')}
           </Boto>

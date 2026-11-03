@@ -8,7 +8,7 @@ tags:
 ---
 # ADR-2026-12 — Mòduls opcionals i nucli ultralleuger
 
-Esta ADR fixa com una app de la Plataforma d'Apps Enxufables viu fora del paquet del nucli: es compila a banda, l'amfitrió la registra i la plataforma en carrega el codi quan algú l'obri. La Gestoria és el primer mòdul. La recepta és la mateixa per al Rebost (la Nevera), el TPV (el Bar), Salut i l'RSS (el Lector). Amb el nucli 1.0.0, el cos d'eixes quatre no passava les guardes del build: l'esquelet comú demana `useRouter`, i les vistes, 21 peces de Pedra Seca que el nucli no exposava. Amb l'1.1.0 sí, i ho proven builds reals (Onada 7, més avall).
+Esta ADR fixa com una app de la Plataforma d'Apps Enxufables viu **fora del paquet del nucli**: **es compila a banda**, **l'amfitrió la registra** i la plataforma en **carrega el codi** quan algú l'obri. La Gestoria és el **primer mòdul**. La recepta és la mateixa per al Rebost (la Nevera), el TPV (el Bar), Salut i l'RSS (el Lector). Amb el nucli 1.0.0, el cos d'eixes quatre no passava les guardes del build: l'esquelet comú demana `useRouter`, i les vistes, **21 peces de Pedra Seca** que el nucli no exposava. Amb l'1.1.0 sí, i ho proven **builds reals** (Onada 7, més avall).
 
 ## Estat
 
@@ -90,7 +90,7 @@ Quan algú obri `/app/<id>/…` d'un mòdul, el registre en fa el component amb 
 
 Si el fitxer no baixa o no casa amb la integritat (`error`), si s'executa sense lliurar res (`load`), si no arriba en 120 s o si la fàbrica falla, ix un `LazyRouteError`: la ruta ho explica (`RouteErrorBoundary`) i no es recarrega res.
 
-El temps límit només ha de tallar un fitxer penjat: `error` i `load` ja diuen quan una baixada falla. Un `<script>` no avisa del progrés, i el temps compta també mentre baixa; per això és de dos minuts, perquè una baixada lenta però bona, amb la xarxa d'un poble, no caiga.
+El **temps límit** només ha de tallar un **fitxer penjat**: `error` i `load` ja diuen **quan una baixada falla**. Un `<script>` no avisa del progrés, i el temps compta també **mentre baixa**; per això és de **dos minuts**, perquè una **baixada lenta però bona**, amb la **xarxa d'un poble**, no caiga.
 
 Com tota ruta lazy (`lazyRoute.js`), una fallada es queda fins que es recarrega la pàgina, o fins que l'amfitrió retira el mòdul i el torna a registrar (`retiraAppExterna` n'oblida el cos).
 
@@ -114,9 +114,9 @@ Les versions:
 - 1.0.0 (Onada 6): la Gestoria i els Tractors.
 - 1.1.0 (Onada 7): `useRouter` i la Pedra Seca de les quatre apps de la recepta. Només s'afig.
 
-`useRouter` torna el valor del router de la pàgina: el camí i la consulta de l'app, `navigate`, la base dels href, si el router és en memòria i l'estat de l'entrada. És el que ja donen `useLocation`, `useNavigate` i `Link`, que pinta la base a cada href. Cap dada del backend, de la sessió ni de l'amfitrió fora de la ruta. Les peces noves de Pedra Seca pinten o són funcions pures; cap no toca el backend ni un context de la pàgina.
+`useRouter` torna el **valor del router de la pàgina**: el **camí i la consulta** de l'app, `navigate`, la **base dels href**, si el **router és en memòria** i l'estat de l'entrada. És el que ja donen `useLocation`, `useNavigate` i `Link`, que pinta la base a cada href. **Cap dada del backend**, de la sessió ni de l'amfitrió fora de la ruta. Les peces noves de Pedra Seca pinten o són **funcions pures**; **cap no toca el backend** ni un context de la pàgina.
 
-`src/apps/plataforma/guardesDelModul.test.js` contrasta esta llista amb l'arbre de veritat: un import nou de Pedra Seca o del router a la Gestoria, als Tractors o, des de l'1.1.0, a les quatre apps i a l'esquelet comú, que no siga del nucli, el posa en roig abans que el build del mòdul s'ature.
+`src/apps/plataforma/guardesDelModul.test.js` contrasta esta llista amb l'**arbre de veritat**: un **import nou de Pedra Seca** o del router **a la Gestoria**, als Tractors o, des de l'1.1.0, a les **quatre apps** i a l'**esquelet comú**, que no siga del nucli, el posa en roig **abans que el build del mòdul s'ature**.
 
 Mai hi ha el port del backend, `SessionContext` ni `IdentitatContext`.
 
@@ -151,11 +151,11 @@ Les guardes del text viuen a `src/apps/plataforma/guardesDelModul.js`, un fitxer
 - **La xarxa** es veta sempre, per a tots els mòduls.
 - **Les adreces que són dada** (el text de l'URL de cotejo de l'AEAT dins del QR, l'adreça de redacció de Gmail que obri la persona, els espais de noms d'OOXML) valen només per al mòdul que les declara, host per host. Ningú s'hi connecta. Els espais de noms del W3C valen per a tots.
 
-La Gestoria declara els hosts de la llista blanca de `src/sections/gestoria/privacitat.test.js`, aprovada pel Mestre, i `localhost:3340`. Este últim surt de la fitxa signada del tractor `gestoria.factures`, que diu a la persona que òbriga la Wiki ací per a signar amb WebAuthn. La Gestoria només declara IndexedDB.
+La Gestoria declara els **hosts de la llista blanca** de `src/sections/gestoria/privacitat.test.js`, **aprovada pel Mestre**, i `localhost:3340`. Este últim surt de la **fitxa signada del tractor** `gestoria.factures`, que diu a la persona que **òbriga la Wiki** ací per a **signar amb WebAuthn**. La Gestoria **només declara IndexedDB**.
 
 `guardesDelModul.test.js` comprova que la declaració és exactament eixa llista més les adreces de les fitxes. També passa totes les guardes a la clausura del pont, amb les quatre vistes, des del codi font i sense compilar.
 
-Des de l'Onada 7, el Bar i Salut declaren `schemas.openxmlformats.org`, i la Nevera i el Lector, cap adreça. Les quatre declaren només IndexedDB. Cada declaració és exactament el que porta la clausura del cos, i el build real ho torna a comprovar. Com la de la Gestoria, són pendents de la signatura del Mestre.
+**Des de l'Onada 7**, el **Bar i Salut** declaren `schemas.openxmlformats.org`, i la **Nevera i el Lector**, cap adreça. Les quatre declaren **només IndexedDB**. Cada declaració és exactament el que porta la **clausura del cos**, i el **build real** ho torna a comprovar. Com la de la Gestoria, són **pendents de la signatura del Mestre**.
 
 Cap `VITE_*` del projecte entra al cos (`envPrefix` sense cap variable).
 
@@ -165,7 +165,7 @@ Cap `VITE_*` del projecte entra al cos (`envPrefix` sense cap variable).
 
 La Gestoria no s'obri mai dins d'un WordPress ni de l'iframe d'un tercer, ni encara que l'amfitrió la declare a `apps`: allà l'IndexedDB és de l'origen de l'amfitrió i la poden llegir tots els seus connectors i scripts.
 
-El `dadesPersonals` d'un mòdul o d'una app externa el posa l'amfitrió que el registra, i res no el lliga amb el cos signat. Per això els ids amb dades sensibles queden reservats (`DADES_RESERVADES` de `registreApps.js`): `gestoria` ha de declarar `'financeres'` i `salut`, `'salut'`. Si no, el registre no l'admet, tampoc com a app externa. La reserva es conserva encara que la Gestoria isca de les apps internes a la fase 2. Una verificació del manifest contra la fitxa signada (`sdp-modul.json`) és part del punt 5 de la fase 2.
+El `dadesPersonals` d'un **mòdul o d'una app externa** el posa **l'amfitrió que el registra**, i **res no el lliga amb el cos signat**. Per això els ids amb **dades sensibles queden reservats** (`DADES_RESERVADES` de `registreApps.js`): `gestoria` ha de declarar `'financeres'` i `salut`, `'salut'`. Si no, el **registre no l'admet**, tampoc com a app externa. La reserva es conserva encara que la Gestoria isca de les apps internes a la fase 2. Una **verificació del manifest** contra la **fitxa signada** (`sdp-modul.json`) és part del punt 5 de la fase 2.
 
 ### 7 · El pressupost de pes (`src/apps/plataforma/pesDelNucli.test.js`)
 
@@ -177,7 +177,7 @@ Un trinquet sobre el paquet ja construït (`wordpress-plugin/dist`) que comprova
 
 Té dues proves `[DEFECTE]` que reproduïxen el deute i s'han de girar a la fase 2: el CSS de la Gestoria dins del tros d'entrada i els seus mitjans dins del paquet.
 
-El títol de la prova diu de quan és el build que mesura (`generat` de `sdp-release.json`). El dist no es reconstruïx sol, i hui és el del 261008 a les 22:01: passa perquè el sostre és la seua mida, no perquè l'arbre d'ara hi càpia. Sense build, les proves del dist se salten i vitest les compta com a saltades, mai com a verdes.
+El **títol de la prova** diu de quan és el **build que mesura** (`generat` de `sdp-release.json`). El dist **no es reconstruïx sol**, i hui és el del 261008 a les 22:01: passa perquè el **sostre és la seua mida**, no perquè l'arbre d'ara hi càpia. **Sense build**, les proves del dist se salten i vitest les **compta com a saltades**, **mai com a verdes**.
 
 ### 8 · Els tres registres no s'unifiquen esta nit
 

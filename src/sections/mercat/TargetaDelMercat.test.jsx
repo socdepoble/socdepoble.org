@@ -99,6 +99,22 @@ describe('TargetaDelMercat', () => {
     const fora = render(<TargetaDelMercat item={samarreta} />).container.innerHTML;
     expect(senseIds(fora)).toBe(senseIds(dins));
   });
+
+  test('quan el producte porta lead (Oli de La Torre), la Card mostra només la primera frase i no el cos amb la taula nutricional', () => {
+    const primeraFrase = 'Oli d’oliva de categoria superior, obtingut directament d’olives, només per procediments mecànics i de la primera extracció en fred.';
+    const oli = {
+      id: 'oli-de-la-torre-verge-extra-250-ml-botella-de-vidre',
+      title: 'Oli de La Torre · Verge Extra (250 ml · Botella de vidre)',
+      subtitle: 'Oli d’oliva verge extra de primera extracció en fred · 7,00 €',
+      lead: primeraFrase,
+      description: `<p>${primeraFrase}</p><table><tbody><tr><td>Energia</td><td>3700 kJ / 900 kcal</td></tr></tbody></table>`,
+      seller: 'Oli de La Torre',
+      created_at: '2026-11-03T11:35:00.000Z',
+    };
+    const { container } = render(<TargetaDelMercat item={oli} />);
+    expect(container.textContent).toContain(primeraFrase);
+    expect(container.textContent).not.toContain('3700 kJ / 900 kcal');
+  });
 });
 
 describe('Decisió 3 · imatges de tercers i pròpies a la targeta del producte', () => {

@@ -6,7 +6,8 @@ import os from 'node:os';
 import path from 'node:path';
 import crypto from 'node:crypto';
 import { execFileSync } from 'node:child_process';
-import { recullMapa, recullFonts, eixidaDePorta, llegeixPlist, compteLlicons, mencionsDeSkills, hooksGit, errorRecent } from '../tooling/brain/mapa-consola.mjs';
+import { fileURLToPath } from 'node:url';
+import { recullMapa, recullFonts, eixidaDePorta, llegeixPlist, compteLlicons, mencionsDeSkills, hooksGit, errorRecent, llegeixEstatLaunchd, arnesosObservats } from '../tooling/brain/mapa-consola.mjs';
 import { SOURCES } from '../tooling/brain/context-local.mjs';
 import { normalitzaMapa } from '../src/sections/consola/mapa/mapaContent.js';
 import { seleccionaPassos } from '../tooling/gates/run-portes.mjs';
@@ -360,4 +361,131 @@ test('portes: recomptes i DTO incoherents queden N/A', () => {
   escriu(arrel, 'tooling/gates/run-portes.mjs',
     `console.log(JSON.stringify({diagnostic:true,failures:${PASSOS_DIAGNOSTIC.length},valid:false})); process.exitCode=1;`);
   assert.equal(recullFonts(arrel, { home, plataforma: 'linux', ara: ARA }).cadenaPortes?.failures, PASSOS_DIAGNOSTIC.length);
+});
+
+
+/* MAPA-O7-01 · El recollidor només llig launchctl: runs=0 torna a cada reinici,
+   i és el compilador qui decidix (construeixMapa.js · estatDeLlancador). */
+test('O7: llegeixEstatLaunchd llig runs, estat i l’últim codi d’eixida, sense jutjar-los', () => {
+  assert.deepEqual(llegeixEstatLaunchd('state = not running\n runs = 0\n last exit code = (never exited)\n'),
+    { carregat: true, execucions: 0, estat: 'not running', ultimCodi: null });
+  assert.deepEqual(llegeixEstatLaunchd('state = waiting\n runs = 3\n last exit code = 2\n'),
+    { carregat: true, execucions: 3, estat: 'waiting', ultimCodi: 2 });
+  assert.equal(llegeixEstatLaunchd('state = not running\n runs = 1\n last exit code = 78: EX_CONFIG\n').ultimCodi, 78);
+  assert.equal(llegeixEstatLaunchd('no loaded job'), null);
+  assert.deepEqual(mencionsDeSkills('protocol `sdp-xat-v1`; crida sdp-clon-whatsapp i wiki-orfe'), ['sdp-clon-whatsapp', 'wiki-orfe']);
+});
+
+
+test('O7: el plist d’higiene usa logs fora de Documents, sense horaris ni timers nous', () => {
+  const file = new URL('../scripts/immunitari/org.socdepoble.higiene.plist', import.meta.url);
+  const xml = fs.readFileSync(file, 'utf8'), job = llegeixPlist(xml);
+  assert.equal(job.etiqueta, 'org.socdepoble.higiene');
+  assert.equal(job.interval, 86400);
+  assert.equal(job.enArrencar, false);
+  assert.equal(job.keepAlive, false);
+  assert.match(job.eixida, /\/Library\/Logs\/socdepoble-higiene\.out\.log$/);
+  assert.match(job.errors, /\/Library\/Logs\/socdepoble-higiene\.err\.log$/);
+  assert.ok(!job.eixida.includes('/Documents/'));
+});
+
+
+/* MAPA-O7-02 / GOV-O7-03 · La CLI és de lectura per defecte i sempre: ni la
+   prova que ensenya la Consola (PROVA_MAPA, --json), ni el resum sense
+   banderes, ni --lectura, ni --help, ni un argument desconegut toquen cap torn.
+   El sanejador canònic és tooling/session/saneja_torns_caducats.mjs. */
+test('O7: la CLI del Mapa mai tanca torns: --json, resum, --lectura, --help i arguments desconeguts', t => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'sdp-cli-expira-'));
+  t.after(() => fs.rmSync(root, { recursive: true, force: true }));
+  escriu(root, '.agents/AGENTS.md', '# BIOS');
+  const id = 'torn_11111111-0000-4000-8000-000000000000';
+  const raw = JSON.stringify({ schema: 'sdp.turn.v1', turn_id: id, scope: 'documents', state: 'opened', revision: 0,
+    createdAt: '2026-01-01T00:00:00Z', expiresAt: '2026-01-02T00:00:00Z', initial: {}, receipts: {}, verification: null, history: [] });
+  const rel = `.agents/runtime/turns/${id}.json`;
+  escriu(root, rel, raw);
+  // Camí de fitxer, no URL.pathname: amb «Som de Poble» el pathname du %20 i node no troba el mòdul.
+  const script = fileURLToPath(new URL('../tooling/brain/mapa-consola.mjs', import.meta.url));
+  const options = { cwd: root, env: { ...process.env, SDP_ARREL: root }, encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] };
+  const dir = path.join(root, '.agents/runtime/turns');
+  const abans = fs.readdirSync(dir).map((n) => [n, fs.statSync(path.join(dir, n)).mtimeMs]);
+  assert.match(execFileSync(process.execPath, [script, '--help'], options), /Només lectura/);
+  assert.throws(() => execFileSync(process.execPath, [script, '--desconegut'], options), e => e.status === 1 && /Argument desconegut/.test(e.stderr));
+  const mapa = JSON.parse(execFileSync(process.execPath, [script, '--json'], options));
+  assert.equal(mapa.schema, 'sdp.mapa.v1');
+  assert.equal(Object.hasOwn(mapa, 'tancamentAdministratiu'), false);
+  execFileSync(process.execPath, [script], options);
+  execFileSync(process.execPath, [script, '--lectura', '--json'], options);
+  assert.equal(fs.readFileSync(path.join(root, rel), 'utf8'), raw);
+  assert.deepEqual(fs.readdirSync(dir).map((n) => [n, fs.statSync(path.join(dir, n)).mtimeMs]), abans);
+});
+
+/* R3-A2 (decisió de l'àrbitre, 261103) · Una sola implementació d'arnesosObservats:
+   el lector de traces JSON genuïnes dels hooks d'Antigravity ({t, mode, decisio…},
+   antigravity-hook.mjs i fatiga-hook.mjs). Les línies «ts event=…» que cap hook
+   escriu no acrediten res; tampoc una traça futura ni una de fa més de 24 h. Codex
+   no té cap traça: continua per acreditar. L'evidència no publica ordres, fitxers
+   ni payloads. */
+test('R3-A2: només les traces JSON genuïnes recents acrediten Antigravity; «ts event=», futur i caducitat mai, i Codex tampoc', t => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'sdp-arnes-'));
+  t.after(() => fs.rmSync(root, { recursive: true, force: true }));
+  const AG = '.agents/runtime/antigravity-hook.log', FATIGA = '.agents/runtime/fatiga-hook.log', CODEX = '.agents/runtime/codex-hook.log';
+  const linies = (...xs) => xs.map((x) => (typeof x === 'string' ? x : JSON.stringify(x))).join('\n') + '\n';
+  const ts = (ms) => new Date(ms).toISOString();
+  // Sense cap log: res acreditat.
+  assert.deepEqual(arnesosObservats(root, { ara: ARA }), { antigravity: {} });
+  // El format sintètic de l'arbre viu (una sola marca per a tots els esdeveniments), recent: no acredita.
+  escriu(root, AG, linies(`${ts(ARA)} event=PreInvocation tool=Edit decision=allow`, `${ts(ARA)} event=PreToolUse tool=Edit decision=allow`));
+  escriu(root, FATIGA, linies(`${ts(ARA)} event=PreInvocation tool=Edit status=ok`));
+  escriu(root, CODEX, linies(...['SessionStart', 'PreToolUse', 'PostToolUse'].map((e) => `${ts(ARA)} event=${e} arnes=codex status=ok`)));
+  assert.deepEqual(arnesosObservats(root, { ara: ARA }), { antigravity: {} });
+  // Traces futures, caducades o d'error: tampoc.
+  escriu(root, AG, linies(
+    { t: ts(ARA + 1), mode: 'pre-tool', eina: 'read_file', fitxer: null, decisio: 'allow' },
+    { t: ts(ARA - 86400001), mode: 'pre-invocation', eina: null, fitxer: null, decisio: 'res' },
+    { t: ts(ARA), mode: 'pre-tool', eina: 'read_file', decisio: 'injecta' }));
+  escriu(root, FATIGA, linies({ t: ts(ARA), conv: 'c', inv: 2, nivell: 'error', motiu: 'x' }, { t: ts(ARA), conv: 'c', inv: null, nivell: 0 }));
+  assert.deepEqual(arnesosObservats(root, { ara: ARA }), { antigravity: {} });
+  // Traces genuïnes recents: PreToolUse amb Olivera; PreInvocation, només amb Olivera i Fatiga alhora.
+  escriu(root, AG, linies(
+    { t: ts(ARA - 60000), mode: 'pre-tool', eina: 'run_command', fitxer: 'privat/NO_PUBLICAR.md', ordre: 'node /tmp/NO_PUBLICAR.mjs', decisio: 'allow' },
+    { t: ts(ARA - 30000), mode: 'pre-invocation', eina: null, fitxer: null, decisio: 'res' },
+    `${ts(ARA)} event=PreToolUse tool=Edit decision=allow`));
+  assert.deepEqual(Object.keys(arnesosObservats(root, { ara: ARA }).antigravity), ['PreToolUse']);
+  escriu(root, FATIGA, linies({ t: ts(ARA - 20000), conv: 'c', inv: 3, passosPayload: 9, claus: ['lastUserInput'], nivell: 0, avis: false, ms: 30 }));
+  const evidencia = arnesosObservats(root, { ara: ARA });
+  assert.deepEqual(evidencia, { antigravity: {
+    PreInvocation: [
+      { font: AG, observat: ts(ARA - 30000), abast: 'traça local de dispatch; no acredita confinament extern' },
+      { font: FATIGA, observat: ts(ARA - 20000), abast: 'traça local de dispatch; no acredita confinament extern' }],
+    PreToolUse: [{ font: AG, observat: ts(ARA - 60000), abast: 'traça local de dispatch; no acredita confinament extern' }]
+  } });
+  assert.ok(!/NO_PUBLICAR|run_command|lastUserInput|event=/.test(JSON.stringify(evidencia)));
+  // Passades 24 h, caduca cada traça per la seua hora: primer la de pre-tool, després totes.
+  assert.deepEqual(Object.keys(arnesosObservats(root, { ara: ARA - 60000 + 86400001 }).antigravity), ['PreInvocation']);
+  assert.deepEqual(arnesosObservats(root, { ara: ARA - 20000 + 86400001 }), { antigravity: {} });
+
+  // Pel recollidor i el compilador: Antigravity acreditat amb l'evidència; Codex, per acreditar.
+  escriu(root, '.agents/AGENTS.md', '# BIOS');
+  escriu(root, '.agents/hooks.json', JSON.stringify({
+    'sdp-olivera': { PreInvocation: [{ type: 'command', command: 'cd .. && node tooling/gates/antigravity-hook.mjs pre-invocation' }],
+      PreToolUse: [{ matcher: '*', hooks: [{ type: 'command', command: 'cd .. && node tooling/gates/antigravity-hook.mjs pre-tool' }] }] },
+    'sdp-fatiga': { PreInvocation: [{ type: 'command', command: 'cd .. && node tooling/gates/fatiga-hook.mjs' }] }
+  }));
+  escriu(root, '.codex/hooks.json', JSON.stringify(HOOKS_CODEX));
+  const home = fs.mkdtempSync(path.join(os.tmpdir(), 'home-'));
+  t.after(() => fs.rmSync(home, { recursive: true, force: true }));
+  assert.deepEqual(recullFonts(root, { home, plataforma: 'linux', ara: ARA }).arnesosObservats, evidencia);
+  const hook = (mapa, id) => mapa.nodes.find((n) => n.id === id)?.atributs;
+  const mapa = recullMapa(root, { home, plataforma: 'linux', ara: ARA });
+  assert.doesNotThrow(() => normalitzaMapa(mapa));
+  assert.equal(hook(mapa, 'hook:antigravity:PreToolUse').consumidor_acreditat, true);
+  assert.deepEqual(hook(mapa, 'hook:antigravity:PreInvocation').evidencia_consumidor, evidencia.antigravity.PreInvocation);
+  for (const e of ['SessionStart', 'PreToolUse', 'PostToolUse']) assert.equal(hook(mapa, `hook:codex:${e}`).consumidor_acreditat, null, e);
+  // Sense cap traça genuïna, tornen a per acreditar, encara que el format sintètic hi siga.
+  escriu(root, AG, linies(`${ts(ARA)} event=PreToolUse tool=Edit decision=allow`));
+  const sense = recullMapa(root, { home, plataforma: 'linux', ara: ARA });
+  for (const e of ['PreInvocation', 'PreToolUse']) {
+    assert.equal(hook(sense, `hook:antigravity:${e}`).consumidor_acreditat, null, e);
+    assert.equal(Object.hasOwn(hook(sense, `hook:antigravity:${e}`), 'evidencia_consumidor'), false, e);
+  }
 });

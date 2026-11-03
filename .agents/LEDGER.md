@@ -1233,5 +1233,8 @@ Informe: 261101_2143_auditoria_claude.
 261103 | frontissa | contingut_estructural | 15 empremtes aprovades per l'ordre O6 T2.4 (Onada 6), 16/16
 261103 | torn | torn_73df43cb-e9c8-47f3-8c99-857669036387 | GPT Codex · Onada 6 Carril 2: WordPress v1.1.12 5 idiomes, 4 skills resegellades i kit CAS legal 2.4 + MIME + compilador Wiki
 261103 | deploy | torn_f69976f9-6724-431f-b2f1-02efeedf6406 | IAIA MarIA · Mode Jarvis: tests/fixtures/ajustos.suite.mjs (H4/H7 verd), build + deploy Firebase Hosting v1.1.0 i Git commit/push
+261103 | torn | torn_5d5a6b5d-3473-409d-9fc6-221d10f16b66 | GPT Codex · Onades 7–9: dos kits CAS amb Llibre154/359cites, Wiki/Consola/Versions/cerca, NixOS i motor rural opt-in; 113 Node +1 omissió Nix, navegador7/7 transport simulat; integració de Claude i portes externes pendents
+261103 | torn | torn_143934c3-bf7c-4add-8962-fe44659a388a | IAIA MarIA · Exportació dels 7 productes d'Oli de La Torre a Supabase, Node 0 (socdepoble.cat) actiu, IDEA-68 anotada, neteja del kit duplicat a 02_investigacio_ia i Acta Marmota 261103_1228 de relleu fresc
+261103 | torn | torn_5d5a6b5d-3473-409d-9fc6-221d10f16b66 | GPT Codex · Onades10–21:12cicles i6hores superades; kitNode0R2 CAS79/40 dipositat4377883a; IAIA/RAG80k2,29GB verificat,417PASS/2SKIPNix,8TCP+15Nodebind+4telemetria; globals31515PASS/1FAIL/110SKIP preservats; paquet natiu copiat init/check0. Constructor sense desplegament; rebase/porteshumanes/externes pendents
 
-<!-- HASH: 05c98e4f2099d7341244bb85394ce155db3c09eea95353bb2f8d4978a388149a -->
+<!-- HASH: 19f4af8b93565f4c362db962ac88227f5284d6cf5e1ae51591c48f5692309201 -->

@@ -8,7 +8,7 @@ tags:
 ---
 # ADR-2026-13 — Xifrat local BYOP: un cofre compartit per a les apps amb dades sensibles
 
-Esta ADR respon a l'encàrrec del Mestre del 261010 (`261010_1148_prompt_claude_investigacio_seguretat`, §Instrucció del torn, línies 61-65): que la Gestoria i Salut es puguen obrir des de qualsevol amfitrió (Sollutia, un WordPress de tercers, el Fedivers) sense el «robatori d'independència» de la guarda financera, amb una segona contrasenya (BYOP) que xifre les dades privades a IndexedDB. No inventa cap criptografia: generalitza el cofre que la Gestoria ja té des de l'Onada 6 (`src/sections/gestoria/cofre/`) i el posa davall del motor d'IndexedDB que compartixen el Bar, la Nevera, Salut i el Lector (`creaMagatzemIdb`, `src/utils/magatzemLocal.js:90`). Document només: cap codi de producció canvia amb esta ADR.
+Esta ADR respon a l'encàrrec del Mestre del 261010 (`261010_1148_prompt_claude_investigacio_seguretat`, §Instrucció del torn, línies 61-65): que la **Gestoria i Salut** es puguen obrir des de **qualsevol amfitrió** (Sollutia, un WordPress de tercers, el Fedivers) sense el «robatori d'independència» de la guarda financera, amb una **segona contrasenya** (BYOP) que **xifre les dades privades** a IndexedDB. **No inventa cap criptografia**: generalitza el cofre que la Gestoria ja té des de l'Onada 6 (`src/sections/gestoria/cofre/`) i el posa davall del **motor d'IndexedDB** que compartixen el Bar, la Nevera, Salut i el Lector (`creaMagatzemIdb`, `src/utils/magatzemLocal.js:90`). Document només: **cap codi de producció canvia** amb esta ADR.
 
 ## Estat
 
@@ -22,14 +22,14 @@ Esborrany, pendent de signatura del Mestre (Onada 11, 261010, tasca 4). Cap fase
 
 Continuen obertes les preguntes 1, 4, 6, 7 i 8. La 1 (quina app entra primer) bloqueja la fase 3.
 
-**El que és decisió i el que és proposta.** La resta de l'ADR s'ha ajustat a eixes tres frases, i en fer-ho Claude ha anat més enllà de l'ordre en quatre punts. Cap dels quatre està decidit; tots porten la marca «proposta de Claude, pendent del Mestre» allà on apareixen:
+**El que és decisió i el que és proposta.** La resta de l'ADR s'ha ajustat a eixes **tres frases**, i en fer-ho Claude ha anat **més enllà de l'ordre** en **quatre punts**. **Cap dels quatre està decidit**; tots porten la marca «proposta de Claude, **pendent del Mestre**» allà on apareixen:
 
 1. Retirar la fase 4 per a QUALSEVOL amfitrió. L'ordre només parla de WordPress; Sollutia, l'iframe d'un tercer i el Fedivers no hi són (fase 4).
 2. La fase 3b sencera: com es fan opaques les claus de Salut (identificador aleatori, migració en dos temps).
 3. Descartar les claus derivades amb HMAC (§Alternatives).
 4. Llegir la pregunta 4 com si D-16 ja l'haguera estreta (una sola política d'autobloqueig).
 
-**El que canvia en l'abast.** L'encàrrec demanava obrir la Gestoria i Salut des de qualsevol amfitrió. Amb D-17 això no passa a WordPress: el cofre protegix les dades en repòs al lloc propi i deixa el terreny preparat, però dins d'un WordPress estes dues apps continuen dient «només s'obri a la pàgina pròpia» (`PortalApps.jsx:36-37`). Per a la resta d'amfitrions l'ordre no diu res, i el codi d'hui tampoc els obri: la guarda no distingix WordPress de cap altre document que no siga el propi (`interruptors.js:80-82`).
+**El que canvia en l'abast.** L'encàrrec demanava obrir la Gestoria i Salut des de **qualsevol amfitrió**. Amb D-17 **això no passa a WordPress**: el cofre protegix les **dades en repòs al lloc propi** i deixa el **terreny preparat**, però dins d'un WordPress estes dues apps continuen dient «**només s'obri a la pàgina pròpia**» (`PortalApps.jsx:36-37`). Per a la resta d'amfitrions l'ordre no diu res, i el codi d'hui tampoc els obri: **la guarda no distingix WordPress** de cap altre document que no siga el propi (`interruptors.js:80-82`).
 
 ## Context
 
@@ -51,20 +51,20 @@ Continuen obertes les preguntes 1, 4, 6, 7 i 8. La 1 (quina app entra primer) bl
 - Les exportacions XLSX es fan en memòria amb `creaXlsx` (`src/utils/fulls/xlsx.js:1-24`), JS pur, a partir d'un model: Salut amb `exporta()` (`src/apps/salut/nucli/exportacio.js:28-32`), l'Històric amb `creaLlibreGestora` (`llibreGestora.js:266`, cridat des de `Historic.jsx:408`).
 - Tot cap dins del Baseline Canònic 2022 (Safari/iOS 16, Chrome 100, Firefox 100) sense cap polyfill: PBKDF2, AES-KW i AES-GCM de WebCrypto són a Safari des de l'11; els Web Locks del motor d'IndexedDB (`magatzemLocal.js:520-568`), des de Safari 15.4; `crypto.randomUUID` (Safari 15.4) té reserva amb `getRandomValues` a `cripto.js:319-326`.
 
-**El que demana el Mestre** (prompt, §Tasques i §Riscos, línies 70-81): derivació AES-GCM/PBKDF2 d'una segona contrasenya; intercepció de lectura/escriptura a IndexedDB per a xifrar els camps sensibles al vol; clau només en memòria i destruïda en tancar; viabilitat de l'XLSX; riscos de keylogger, DOM compromés, pèrdua de clau i pes.
+**El que demana el Mestre** (prompt, §Tasques i §Riscos, línies 70-81): **derivació AES-GCM/PBKDF2** d'una **segona contrasenya**; intercepció de lectura/escriptura a IndexedDB per a **xifrar els camps sensibles al vol**; **clau només en memòria** i destruïda en tancar; **viabilitat de l'XLSX**; riscos de keylogger, DOM compromés, **pèrdua de clau i pes**.
 
 ## Decisió
 
 ### 1 · El cofre ix de la Gestoria: `src/utils/cofre/`
 
-Els quatre fitxers del cofre (`nucli/cripto.js`, `cofre.js`, `magatzemCofre.js`, `autobloqueig.js`) es mouen a `src/utils/cofre/` sense canviar cap paràmetre criptogràfic: les constants de `cripto.js:30-44` són les del nucli compartit. Dues coses deixen de ser literals de la Gestoria i passen a ser un argument `espai` de `creaCofreLocal`:
+Els **quatre fitxers del cofre** (`nucli/cripto.js`, `cofre.js`, `magatzemCofre.js`, `autobloqueig.js`) es mouen a `src/utils/cofre/` **sense canviar cap paràmetre criptogràfic**: les **constants de** `cripto.js:30-44` són les del **nucli compartit**. Dues coses deixen de ser **literals de la Gestoria** i passen a ser un **argument** `espai` de `creaCofreLocal`:
 
 - el prefix de l'AAD, `PREFIX_AAD = 'sdp.gestoria.cofre.v1'` (`cripto.js:44`), que passa a `sdp.<espai>.cofre.v1`;
 - els formats `FORMAT_COFRE`, `FORMAT_COPIA` i `FORMAT_CLAR` (`cofre.js:48-50`) i el nom de la base `NOM_BD_COFRE` (`magatzemCofre.js:28`), que passen a `sdp.<espai>.cofre[.copia|.clar]` i `sdp-<espai>-cofre`.
 
 Amb `espai = 'gestoria'` tot és byte a byte el d'ara: els cofres creats a l'Onada 6 continuen obrint-se.
 
-**Un sol cofre (decisió 261011, D-16).** La plataforma crea UNA instància de `creaCofreLocal`, i totes les apps que hi entren la compartixen: la mateixa frase, el mateix codi de recuperació, la mateixa DEK, la mateixa sessió i el mateix autobloqueig. `espai` es queda com a argument del nucli, amb un sol valor en ús. Les apps no se separen per clau sinó per l'AAD de cada sobre (`<base>|<store>|<clau>`, §Decisió, 2): un sobre de Salut no s'obri com si fora de la Gestoria, però qui té la sessió oberta ho pot obrir tot. Proposta d'aplicació, no ordenada: que eixa instància única siga la que ja existix (base `sdp-gestoria-cofre`, AAD `sdp.gestoria.cofre.v1`), perquè donar-li un nom neutre obligaria a migrar els cofres de l'Onada 6; el nom «gestoria» quedaria com a nom històric de la base. Si el Mestre vol un nom de plataforma, és una migració a banda amb la seua prova. «De moment» vol dir que un cofre per app continua sent possible més avant sense tocar la criptografia: seria un segon valor d'`espai`. `src/sections/gestoria/cofre/` queda com a reexportació (`cofreDeLaGestoria`, `persistenciaDelCofre`, `PortaCofre.jsx`, `useCofre.js`), i `PortaCofre` és la porta universal: crear, obrir, recuperar, canviar, còpia i exportació en clar. El cofre guanya dos mètodes, `xifra(lloc, valor)` i `desxifra(lloc, sobre)`, que usen la DEK de la sessió sense traure-la de la clausura (`COFRE_BLOQUEJAT` si no hi ha sessió, com `desa`/`llig`, `cofre.js:472-493`).
+**Un sol cofre (decisió 261011, D-16).** La plataforma crea **UNA instància** de `creaCofreLocal`, i totes les apps que hi entren la compartixen: la mateixa frase, el mateix codi de recuperació, la **mateixa DEK**, la mateixa sessió i el **mateix autobloqueig**. `espai` es queda com a argument del nucli, amb un sol valor en ús. Les apps **no se separen per clau** sinó per l'AAD de cada sobre (`<base>|<store>|<clau>`, §Decisió, 2): un sobre de Salut no s'obri com si fora de la Gestoria, però qui té la sessió oberta ho pot obrir tot. **Proposta d'aplicació, no ordenada**: que eixa instància única siga la que ja existix (base `sdp-gestoria-cofre`, AAD `sdp.gestoria.cofre.v1`), perquè donar-li un nom neutre obligaria a migrar els cofres de l'Onada 6; el nom «gestoria» quedaria com a nom històric de la base. Si el Mestre vol un nom de plataforma, és una **migració a banda** amb la seua prova. «De moment» vol dir que un cofre per app continua sent possible més avant sense tocar la criptografia: seria un segon valor d'`espai`. `src/sections/gestoria/cofre/` queda com a reexportació (`cofreDeLaGestoria`, `persistenciaDelCofre`, `PortaCofre.jsx`, `useCofre.js`), i `PortaCofre` és la porta universal: crear, obrir, recuperar, canviar, còpia i exportació en clar. El cofre guanya dos mètodes, `xifra(lloc, valor)` i `desxifra(lloc, sobre)`, que usen la DEK de la sessió **sense traure-la de la clausura** (`COFRE_BLOQUEJAT` si no hi ha sessió, com `desa`/`llig`, `cofre.js:472-493`).
 
 ### 2 · El magatzem xifrat: `creaMagatzemXifrat` damunt de `creaMagatzemIdb`
 
@@ -112,7 +112,7 @@ export function creaMagatzemXifrat({ cofre, xifrats, ...definicio }) {
 }
 ```
 
-El que es desa al disc de l'amfitrió, per registre: la clau en clar, els índexs en clar i un sobre `_x` `{ v, iv, xifrat }` en base64, com les files del cofre d'ara (`magatzemCofre.js:50`). El store i la clau són etiquetes, no dades, com ja diu `magatzemCofre.js:23-24`: per això una app que entre al cofre ha de tindre claus que no diguen res (§Límits coneguts, 2). L'AAD lliga cada sobre a la base, al store i a la clau: un sobre copiat a un altre lloc no s'obri. Un store sense camps a `xifrats` passa per `creaMagatzemIdb` tal qual: mateixos bytes, mateix DOM (Llei del Píxel). En un store amb `xifrats`, una fila sense sobre `_x` no es servix mai en clar: `REGISTRE_MANIPULAT`, com un sobre tocat; les files que hui ja són en clar hi entren per la migració de la fase 2b, no per esta porta. En bloquejar, el cofre avisa els subscriptors (`cofre.js:142`) i l'app buida el que tenia desxifrat, com fa `useHistoric.js:173`.
+El que es desa al disc de l'amfitrió, per registre: la **clau en clar**, els **índexs en clar** i un sobre `_x` `{ v, iv, xifrat }` en base64, com les files del cofre d'ara (`magatzemCofre.js:50`). El store i la clau són etiquetes, no dades, com ja diu `magatzemCofre.js:23-24`: per això una app que entre al cofre ha de tindre **claus que no diguen res** (§Límits coneguts, 2). L'**AAD lliga cada sobre** a la base, al store i a la clau: un sobre copiat a un altre lloc no s'obri. Un store sense camps a `xifrats` passa per `creaMagatzemIdb` tal qual: mateixos bytes, mateix DOM (Llei del Píxel). En un store amb `xifrats`, una fila sense sobre `_x` **no es servix mai en clar**: `REGISTRE_MANIPULAT`, com un sobre tocat; les files que hui ja són en clar hi entren per la **migració de la fase 2b**, no per esta porta. En bloquejar, el cofre avisa els subscriptors (`cofre.js:142`) i l'app **buida el que tenia desxifrat**, com fa `useHistoric.js:173`.
 
 ### 3 · La clau de sessió: en una clausura, mai en cap magatzem
 

@@ -10,12 +10,12 @@
  *
  * Llei del Píxel · Només el tauler de /consola guanya la secció (damunt de
  * les nou targetes de la maquinària). La Consola incrustada de la Wiki
- * (ConsolaIncrustada), l'Índex de la Consola i el Diagnòstic del Mas no la
+ * (ConsolaIncrustada), l'Índex de la Consola i el Diagnòstic de Sóc de Poble no la
  * pinten: conserven els seus píxels.
  * Pla 261027_0845 (Guarda Nocturna), §3 · La Consola incrustada de la Wiki
  * també pinta la secció (SeccioGovern), amb el mateix cap de tauler que
  * /consola (TaulerAmbGovern, ConsolaSection.jsx): les quatre targetes porten
- * a /consola/govern/<id>. L'Índex de la Consola i el Diagnòstic del Mas
+ * a /consola/govern/<id>. L'Índex de la Consola i el Diagnòstic de Sóc de Poble
  * continuen sense pintar-la, i la Wiki no en porta cap dels dos. Derogat:
  * «La Consola incrustada de la Wiki (ConsolaIncrustada) […] no la pinten».
  *
@@ -138,11 +138,13 @@ function cobertaDe(id, govern, { vista, balanc, comparacio, resums }) {
  * amb un separador: la sala de màquines porta el seu H2
  * (TITOL_SALA_MAQUINES), que pinta ConsolaSection darrere d'esta secció.
  * Derogat: el Divisor «La sala de màquines de la Consola».
- * Ordre del Mestre del 30-10-2026 (B1) · Amb `ambImatges` (només el tauler
- * de /consola, des de TaulerAmbGovern, com les nou targetes de la sala de
- * màquines), cada targeta porta la portada de la seua pàgina
- * (imatgesConsola.js, la miniatura .webp) en lloc de la icona. La Consola
- * incrustada de la Wiki no la passa i conserva la icona.
+ * Ordre del Mestre del 30-10-2026 (B1) · Amb `ambImatges` (des de
+ * TaulerAmbGovern, com les nou targetes de la sala de màquines), cada targeta
+ * porta la portada de la seua pàgina (imatgesConsola.js, la miniatura .webp)
+ * en lloc de la icona. Sense la prop, la icona.
+ * Ordre del Mestre 261103 (T2) · La Consola incrustada de la Wiki també la
+ * passa. Derogat: «només el tauler de /consola … La Consola incrustada de la
+ * Wiki no la passa i conserva la icona».
  */
 export function SeccioGovern({ govern, ara = Date.now(), ambImatges = false }) {
   const id = useId();

@@ -56,6 +56,16 @@ test('triar i Inserir: onTria rep l’entrada sencera, i la tria s’oblida', ()
   expect(within(dialeg()).getByRole('searchbox', { name: 'Busca' }).value).toBe('');
 });
 
+test('triar i Inserir com a enllaç: onTriaEnllac rep l’entrada triada i la tria s’oblida', () => {
+  const onTriaEnllac = vi.fn();
+  munta({ onTriaEnllac });
+  busca('festa');
+  fireEvent.click(within(dialeg()).getAllByRole('radio')[0]);
+  fireEvent.click(within(dialeg()).getByRole('button', { name: 'Inserir com a enllaç' }));
+  expect(onTriaEnllac).toHaveBeenCalledWith(ENTRADES[0]);
+  expect(within(dialeg()).getByRole('searchbox', { name: 'Busca' }).value).toBe('');
+});
+
 test('sense coincidències ho diu; i una font que peta no tomba el diàleg', () => {
   munta({ cerca: () => [] });
   busca('res');

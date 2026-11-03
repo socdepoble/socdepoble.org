@@ -1,5 +1,5 @@
 /**
- * actorsMapa.js — els actors del Mas (05_actors_i_salut.md) i les xifres de
+ * actorsMapa.js — els actors de Sóc de Poble (05_actors_i_salut.md) i les xifres de
  * la capçalera d'Emowe, pur.
  *
  * La pestanya «Actores» d'Emowe pinta per capes el que envolta els agents:
@@ -47,7 +47,7 @@ export function capesActors(mapa) {
       nom: node.atributs?.arnes ?? etiquetaNode(node),
       candats: hooks.length,
       acreditats: hooks.filter((h) => h.atributs?.consumidor_acreditat === true).length,
-      // Ni acreditat ni desmentit: el client el pot consumir, però el Mas no en té
+      // Ni acreditat ni desmentit: el client el pot consumir, però Sóc de Poble no en té
       // evidència (Codex). T10 (ordre del Mestre, 260930).
       desconeguts: hooks.filter((h) => typeof h.atributs?.consumidor_acreditat !== 'boolean').length,
       arrencada: carregaTransitiva(mapa, node.id, nodes)
@@ -151,7 +151,7 @@ export function xifresDelMas(mapa) {
 
 /**
  * Ordre del Mestre, 261004 (prompt 261004_0515, §6: cap anomalia del cervell
- * sense mostrar) · Les anomalies que «El Mas en xifres» diu al tauler,
+ * sense mostrar) · Les anomalies que «Sóc de Poble en xifres» diu al tauler,
  * comptades sobre el Mapa. Una mètrica N/A és null (sense mesura), mai zero.
  *  · alts: avisos de severitat alta.
  *  · fossils, malFormades: les mètriques ledger-fossils i ledger-mal-formades.
@@ -210,10 +210,15 @@ export function pecesAgents(mapa) {
   const desti = punts.filter((p) => p.escriuen.length)
     .sort((x, y) => y.escriuen.length - x.escriuen.length || x.node.id.localeCompare(y.node.id))[0] ?? null;
   const vigilants = mapa.salut.find((m) => m.metrica === 'vigilants-vius') ?? null;
+  /* CONS-03 · Una PROGRAMAT (job nou que espera la primera execució) és
+     neutra, com a semafor.js (colorDeTasques) i «Coses que corren soles»: ni
+     viva ni pendent, fora del denominador. Si totes ho són, SENSE MESURA; sense
+     cap tasca, FALTA (res no arranca sol). */
+  const senseExecutar = mapa.tasques.filter((t) => correSola(t) && t.estat === 'programat').length;
   return {
     fluxos: { estat: cadenes.length ? 'EN MARXA' : 'FALTA', cadenes: cadenes.length, suggeriments: suggeriments.length },
     tauler: { estat: !desti ? 'FALTA' : desti.lligen.length ? 'EN MARXA' : 'SENSE LECTOR', desti },
-    sols: { estat: programades ? estatFraccio(vives, programades) : 'FALTA', programades, vives },
+    sols: { estat: programades ? estatFraccio(vives, programades - senseExecutar) : 'FALTA', programades, vives },
     vigilants: {
       estat: vigilants && vigilants.valor !== 'N/A' ? estatFraccio(vigilants.numerador, vigilants.denominador) : 'SENSE MESURA',
       metrica: vigilants

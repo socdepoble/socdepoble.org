@@ -244,6 +244,9 @@ export default {
   'editor.targetes.esquerra': 'Esquerra',
   'editor.targetes.dreta': 'Dreta',
   'editor.targetes.lleva': 'Llevar la targeta',
+  /* 261103 (Onada 7, T2.6) · El commutador «Enllaç ↔ Card»: el botó de la targeta triada i el del diàleg. */
+  'editor.targetes.aEnllac': 'Convertir en enllaç',
+  'editor.targetes.dialeg.inserirEnllac': 'Inserir com a enllaç',
   /* Pla 261028_1526 (P1-22, TE-02) · L’avís d’una targeta incrustada a l’editor (DocumentEditor.jsx). */
   'editor.targetes.avis.titol': 'Esta targeta és una previsualització',
   'editor.targetes.avis.descripcio': 'Esta targeta està incrustada al document que edites. Els seus botons —connectar, traduir, comentar i compartir— només funcionen quan es llig el document publicat.',
@@ -424,6 +427,8 @@ export default {
   /* O4-CLAUDE-2 · La subtargeta i la targeta incrustada a la segona fila «⋯» de la barra, i els textos de mostra de la subtargeta. */
   'section.notes.format.subtargeta': 'Subtargeta',
   'section.notes.format.targeta': 'Targeta incrustada',
+  /* 261103 (Onada 7, T2.6) · El sentit Enllaç → Card a la segona fila, amb el cursor en un enllaç intern. */
+  'section.notes.format.enllacATargeta': 'Convertir en targeta',
   'section.notes.format.subtargetaTitol': 'Títol de la subtargeta',
   'section.notes.format.subtargetaMeta': 'Una línia de context: data, lloc o autoria',
   'section.notes.format.subtargetaCos': 'Escriu ací el contingut de la subtargeta: paràgrafs, llistes i enllaços.',
@@ -568,7 +573,6 @@ export default {
   'editor.ambit.ajuda': 'Tria si és una publicació del Mur o una fitxa per al Mercat, Compartir cotxe, Treball o Habitatge.',
   'editor.ambit.obligatori': 'Falta un camp obligatori: {camp}',
   'editor.ambit.previsualitzacio': 'Així es veurà al Mur',
-  'editor.ambit.completar': 'Completar la fitxa',
   'editor.ambit.errorPublicar': 'La fitxa de «{ambit}» no està completa.',
   'editor.ambit.actual': 'Àmbit: {ambit}',
   'editor.ambit.triat': 'Triat',

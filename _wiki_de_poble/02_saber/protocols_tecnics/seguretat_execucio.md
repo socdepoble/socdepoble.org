@@ -13,7 +13,7 @@ Fitxa consultiva que separa la seguretat del producte (claus, integritat, errors
 
 ## Naturalesa i autoritat
 
-Esta pàgina és una **fitxa consultiva** de `02_saber`. No és una skill instal·lada ni una font de permisos. L’autoritat executiva viu a `AGENTS.md` i `.agents/` (skills i `PROTOCOL_PETORRETA.md`), i la privacitat a [[llei_05_privacitat]]. `04_escriptori`, `10_actes` i `90_arxiu_historic` són zones de cicle de vida, no fonts d’autoritat.
+Esta pàgina és una **fitxa consultiva** de `02_saber`. **No és una skill instal·lada** ni una **font de permisos**. L’**autoritat executiva** viu a `AGENTS.md` i `.agents/` (skills i `PROTOCOL_PETORRETA.md`), i **la privacitat** a [[llei_05_privacitat]]. `04_escriptori`, `10_actes` i `90_arxiu_historic` són **zones de cicle de vida**, no fonts d’autoritat.
 
 ## Dos plans de seguretat
 
@@ -26,7 +26,7 @@ Un control d'un pla no substituïx l'altre.
 
 ## Xifratge local i claus
 
-L’arquitectura és online-first ([[ADR-2026-08-ONLINE-FIRST]]): les dades compartides i privades viuen al Supabase de Sóc de Poble, protegides per autenticació de servidor i RLS, i la memòria cau del navegador és opcional i no autoritativa. Si alguna vegada cal guardar al navegador una dada sensible, s'ha de protegir amb primitives de Web Crypto adequades al model d'amenaça.
+L’arquitectura és **online-first** ([[ADR-2026-08-ONLINE-FIRST]]): les **dades compartides i privades** viuen al **Supabase de Sóc de Poble**, protegides per **autenticació de servidor i RLS**, i la memòria cau del navegador és **opcional i no autoritativa**. Si alguna vegada cal guardar al navegador una **dada sensible**, s'ha de protegir amb primitives de Web Crypto adequades al **model d'amenaça**.
 
 - Deriva claus de contrasenya o PIN amb sal aleatòria, paràmetres versionats i un KDF disponible i revisat; `PBKDF2` és un mínim de compatibilitat, no una garantia universal.
 - Usa xifratge autenticat, com AES-GCM, amb un nonce únic per operació.
@@ -38,7 +38,7 @@ L’arquitectura és online-first ([[ADR-2026-08-ONLINE-FIRST]]): les dades comp
 
 Per ordre del Mestre del 261009, la Gestoria té un cofre xifrat al navegador, sense xarxa (`src/sections/gestoria/cofre/`), amb WebCrypto natiu i cap dependència.
 
-**Estat a 261009 (integració de l'Onada 6): el cofre està endollat a l'Històric.** La vista `/app/gestoria/historic` es pinta sencera darrere del cofre i hi desa, xifrada a la col·lecció `historic`, la configuració de la persona: les classificacions manuals, les regles, els paràmetres i escenaris de simulació i les suposicions. Els moviments del banc no es desen: es lligen en memòria i es tornen a llegir dels extractes. En bloquejar-se el cofre (el botó, l'autobloqueig, una altra pestanya o eixir de la vista), l'Històric buida de la memòria la configuració desxifrada i la lectura del banc. L'app té un sol cofre (`cofreDeLaGestoria`). El llibre de factures Veri*Factu (`sdp-facturacio`) i el perfil fiscal (`sdp-gestoria-perfil`, amb el NIF i els comptes) continuen **en clar** a IndexedDB: queden per a una fase 2, que necessita índexs HMAC per a les claus úniques del port. Fins aleshores, no es pot dir que les factures o el perfil fiscal estiguen xifrats. El disseny és este:
+**Estat a 261009 (integració de l'Onada 6): el cofre està endollat a l'Històric.** La vista `/app/gestoria/historic` es pinta sencera **darrere del cofre** i hi desa, xifrada a la col·lecció `historic`, la configuració de la persona: les classificacions manuals, les regles, els paràmetres i escenaris de simulació i les suposicions. Els **moviments del banc no es desen**: es lligen en memòria i es tornen a llegir dels extractes. En bloquejar-se el cofre (el botó, l'autobloqueig, una altra pestanya o eixir de la vista), l'Històric buida de la memòria la **configuració desxifrada** i la lectura del banc. L'app té **un sol cofre** (`cofreDeLaGestoria`). El llibre de factures Veri*Factu (`sdp-facturacio`) i el perfil fiscal (`sdp-gestoria-perfil`, amb el NIF i els comptes) continuen **en clar** a IndexedDB: queden per a una **fase 2**, que necessita índexs HMAC per a les claus úniques del port. Fins aleshores, **no es pot dir que les factures o el perfil fiscal estiguen xifrats**. El disseny és este:
 
 - **KDF:** PBKDF2-HMAC-SHA-256 de 600.000 iteracions, sal aleatòria de 16 B i paràmetres versionats `{ v: 1, kdf, iter, sal }`. La frase es normalitza en NFC. Argon2id o WebAuthn PRF serien una v2 dins del mateix camp de versió.
 - **Claus:** una DEK AES-GCM-256 aleatòria, embolcallada amb AES-KW dues vegades: per la KEK de la frase de pas i per la KEK d'un codi de recuperació de 128 bits. La DEK de treball es desembolcalla no extraïble i viu només en memòria. Cap clau no s'exporta en clar.
@@ -98,7 +98,7 @@ Una còpia no és un backup fins que la restauració s'ha comprovat.
 
 ## Reflex per a efectes laterals
 
-Cap agent escriu, mou, elimina, sincronitza, restaura o commita perquè esta fitxa ho recomane. Tot efecte lateral seguix el Reflex de Petorreta (`open → Petorreta i manifest selectiu → seal → rebut verificat i consumit`), l’autoritat del qual és `.agents/PROTOCOL_PETORRETA.md`; la seua expressió cognitiva és la llei 3 del [[02_genotip]].
+**Cap agent** **escriu, mou, elimina**, sincronitza, restaura o commita perquè esta fitxa ho recomane. Tot **efecte lateral** seguix el **Reflex de Petorreta** (`open → Petorreta i manifest selectiu → seal → rebut verificat i consumit`), l’**autoritat** del qual és `.agents/PROTOCOL_PETORRETA.md`; la seua **expressió cognitiva** és la llei 3 del [[02_genotip]].
 
 Canvis de seguretat, privacitat, esquema, restauració o més de cinc fitxers són risc alt i requerixen decisió humana explícita.
 

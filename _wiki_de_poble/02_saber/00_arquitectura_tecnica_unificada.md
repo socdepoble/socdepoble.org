@@ -19,7 +19,7 @@ Este document explica, no autoritza cap execució. Quan discrepe amb el reposito
 
 ## 1. Arquitectura implementada
 
-La base actual de `socdepoble.org` és una aplicació web React 18 construïda amb Vite. Les dependències de producció declarades a `package.json` són React, TipTap, Supabase JS, DOMPurify i Lucide. La capa `src/data/` exposa un port de backend (`src/data/backendPort.js`) que valida el contracte i es pot segellar, i una Frontissa (`src/data/adaptadors/sollutia/client.js`) que només llig de Sollutia per `GET`. Cada garantia concreta s'ha de demostrar amb una prova.
+La base actual de `socdepoble.org` és una **aplicació web React 18** **construïda amb Vite**. Les **dependències de producció** declarades a `package.json` són React, TipTap, Supabase JS, DOMPurify i Lucide. La capa `src/data/` exposa un **port de backend** (`src/data/backendPort.js`) que valida el contracte i es pot segellar, i una Frontissa (`src/data/adaptadors/sollutia/client.js`) que **només llig de Sollutia** per `GET`. Cada garantia concreta s'ha de **demostrar amb una prova**.
 
 ```mermaid
 flowchart LR

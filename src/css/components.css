@@ -1375,6 +1375,10 @@
   display: block;
 }
 
+.sp-card-media[src*="aplec_2023_cartell"] {
+  object-position: 50% 0%;
+}
+
 /* IDEA-42 (B7h, marató 261101_2143; spec B7-PEDRA §2.9c) · La targeta 16:9
    d'una publicació amb enquadrament (UniversalCard · MitjaEnquadrada):
    excepció a la Pedra Seca §8 (1:1) validada per la directiva IDEA-42 del

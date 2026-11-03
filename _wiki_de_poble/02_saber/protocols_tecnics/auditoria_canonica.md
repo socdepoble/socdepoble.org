@@ -52,7 +52,7 @@ AGENTS.md governa l’operació. .agents/protocolledge.json declara rutes, versi
 
 ### Abast obligatori
 
-Inventariar les carpetes reals de la Wiki i distingir contingut operatiu, 04_escriptori i 90_arxiu_historic. No deduir salut d’una taxonomia històrica. Els camps obligatoris i opcionals són exclusivament els de schema.json, inclosos tags, visibility i reflex; revisat no està admés mentre no forme part de l’esquema.
+Inventariar les **carpetes reals de la Wiki** i distingir **contingut operatiu**, 04_escriptori i 90_arxiu_historic. No deduir salut d’una **taxonomia històrica**. Els **camps obligatoris i opcionals** són **exclusivament els de schema.json**, inclosos tags, visibility i reflex; revisat **no està admés** mentre no forme part de l’esquema.
 
 ### Graf
 

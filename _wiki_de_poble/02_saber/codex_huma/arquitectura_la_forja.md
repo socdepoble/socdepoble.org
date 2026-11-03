@@ -27,10 +27,10 @@ Són els motors de construcció actuals. Vite empaqueta els arxius i React perme
 La direcció visual busca calidesa, llegibilitat i espai. Tailwind existix a la pila com a bastida condicionada; segons ESTANDARD_Pedra_Seca, no és la marca ni la font de veritat visual, que continua en tokens i CSS revisables.
 
 ### 3. Les Llavors de les Dades: estat verificable
-El codi declara Dexie i modes `seed`, `local`, `hybrid` i Supabase. Això aporta adaptadors i fallback, però no prova que totes les operacions productives persistisquen primer en IndexedDB. Cada flux ha d'indicar quin backend usa, què ocorre sense xarxa i com recupera les dades abans de promocionar-lo a Online-First.
+**El codi declara** Dexie i modes `seed`, `local`, `hybrid` i Supabase. Això aporta **adaptadors i fallback**, però **no prova** que totes les operacions productives **persistisquen primer en IndexedDB**. Cada flux ha d'indicar **quin backend usa**, què ocorre sense xarxa i **com recupera les dades** abans de promocionar-lo a Online-First.
 
 ## L'Instint de Supervivència (Service Workers)
-La configuració PWA pot emmagatzemar l'esquelet estàtic mitjançant un Service Worker. Això no garantix per si sol que missatges, publicacions o accions dinàmiques funcionen offline. El veredicte per flux només pot passar de «preparat» a «verificat» amb proves d'arrancada sense xarxa, lectura, escriptura, cua, reconnexió i recuperació en els dispositius suportats.
+La **configuració PWA** pot emmagatzemar l'**esquelet estàtic** mitjançant un Service Worker. Això **no garantix per si sol** que missatges, publicacions o accions dinàmiques funcionen offline. El **veredicte per flux** només pot passar de «preparat» a «verificat» amb **proves d'arrancada sense xarxa**, lectura, escriptura, cua, reconnexió i recuperació en els **dispositius suportats**.
 
 ---
 

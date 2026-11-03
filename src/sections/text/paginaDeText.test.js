@@ -77,17 +77,39 @@ test('/fedivers es resol per la ruta i per /page/fedivers, i el cos comença en 
   expect(infraccionsT8(html)).toEqual([]);
   expect(title.trim().endsWith('.')).toBe(false);
   // Els dos nodes actius, clicables (ordre del Mestre); la negreta es queda.
+  /* Ordre 261103_0522, T2.6 (Gauntlet O7-9, ronda 2; CONS-IL-01) · I l'enllaç contextual fedivers ↔
+     fediversity, «horitzó» cap a /page/fediversity: prova posada al dia a propòsit. */
   const enllacos = [...cosDe(html).querySelectorAll('a')].map((a) => [a.getAttribute('href'), a.textContent]);
   expect(enllacos).toEqual([
     ['https://socdepoble.org', 'socdepoble.org'], ['https://gentdelatorre.net', 'gentdelatorre.net'],
-    ['/perfil', 'perfil'], ['/mur', 'Mur'], ['/roadmap', 'full de ruta']
+    ['/perfil', 'perfil'], ['/mur', 'Mur'], ['/page/fediversity', 'horitzó'], ['/roadmap', 'full de ruta'],
+    ['/page/node-zero', 'Node 0 · Mac mini M4']
   ]);
   expect(html).toContain('<strong>socdepoble.org</strong></a>');
+  expect(html).toContain('Hui n’hi ha <strong>dos d’actius</strong>');
+  expect(PAGE_COPY.fedivers.lead).toContain('hui n’hi ha dos d’actius: socdepoble.org i gentdelatorre.net.');
+  /* 03-11-2026 (arbitratge 12:22) · socdepoble.cat no és cap node actiu (DNS a l'aparcament del
+     registrador, http en 302 a un túnel ràpid de Cloudflare que ja no resol, https sense connexió):
+     la pàgina el nomena una sola vegada, sense enllaç ni negreta, com a domini en preparació. */
+  expect(html.split('socdepoble.cat')).toHaveLength(2);
+  expect(html).toContain('El domini socdepoble.cat està en preparació per al pilot «Node 0»: encara no servix l’App i no és un node actiu.');
   // El Fedivers és horitzó, no funció: la pàgina ho diu.
   expect(html).toContain('Hui encara no està fet');
   // La franja només ix amb poc espai (isCompact a App.jsx); amb més, la barra negra només diu el nom.
   expect(html).toContain('si té poc espai, com al mòbil, una franja davall de la barra negra');
   expect(html).toContain('si en té més, la barra negra només en diu el nom');
+});
+
+test('/page/node-zero és la pàgina didàctica del servidor local de l’habitació i s’enllaça bidireccionalment amb /fedivers', () => {
+  expect(pageKeyDeRuta('/page/node-zero')).toBe('node-zero');
+  expect(paginaDeRuta('/page/node-zero')).toEqual({ pageKey: 'node-zero', page: PAGE_COPY['node-zero'] });
+  const { title, html } = PAGE_COPY['node-zero'];
+  expect(title).toBe("Node 0 · Mac mini M4: el servidor de l'habitació");
+  expect(infraccionsT8(html)).toEqual([]);
+  expect(html).toContain('data-sdp-targeta="pagina:fedivers"');
+  expect(html).toContain('<a href="/fedivers"><strong>Nodes i Fedivers</strong></a>');
+  expect(PAGE_COPY.fedivers.html).toContain('data-sdp-targeta="pagina:node-zero"');
+  expect(PAGE_COPY.fedivers.html).toContain('<a href="/page/node-zero"><strong>Node 0 · Mac mini M4</strong></a>');
 });
 
 /* Ordre del Mestre (261007) · «El Xat» viu a /page/xat (PageDetailSection),
@@ -430,6 +452,23 @@ describe('Onada 10 i cicle 2 · /page/consola i /page/cervell: anatomia editoria
     ]);
   });
 
+  /* Gauntlet O7-9, ronda 2 (LR-G09, PC-05; ordre 261103) · La targeta pinta l'entradeta viva de l'original
+     i, si no el resol, la instantània: totes dues són la mateixa, i cap diu «el Mas». */
+  test.each([['consola', 'cervell'], ['cervell', 'consola']])('la targeta de /page/%s cap a /page/%s porta la instantània de l’original i cap «el Mas»', (pagina, desti) => {
+    const targeta = PAGE_COPY[pagina].html.match(new RegExp(`<div data-sdp-targeta="pagina:${desti}"[^>]*>`))?.[0] ?? '';
+    const atribut = (nom) => targeta.match(new RegExp(`${nom}="([^"]*)"`))?.[1]?.replaceAll('&#39;', "'");
+    expect([atribut('data-titol'), atribut('data-subtitol'), atribut('data-entradilla')]).toEqual([PAGE_COPY[desti].title, PAGE_COPY[desti].subtitle, PAGE_COPY[desti].lead]);
+    expect(`${PAGE_COPY[desti].title} ${PAGE_COPY[desti].subtitle} ${PAGE_COPY[desti].lead}`).not.toMatch(/\b(?:el|del|al) Mas\b/);
+  });
+
+  /* Gauntlet O7-9, ronda 3 (ordre 261103) · Tota la família Consola ↔ Cervell parla de Sóc de Poble:
+     cap «el Mas» visible, tampoc al cos (abans, a /page/cervell: «mantindre el Mas», «maquinària
+     interna del Mas»). El «mas de pedra» de l'alt de la il·lustració és un mas de veres, no la plataforma. */
+  test.each(['consola', 'cervell'])('/page/%s: cap «el Mas» visible, ni a la capçalera ni al cos', (clau) => {
+    const { title, subtitle, lead, html } = PAGE_COPY[clau];
+    expect(textDe(`${title} ${subtitle} ${lead} ${html}`)).not.toMatch(/\b(?:el|del|al|pel) Mas\b/i);
+  });
+
   test('consola: «nou targetes» són les nou pàgines de la Consola, i cada títol és el que pinta el tauler', () => {
     const text = textDe(PAGE_COPY.consola.html);
     expect(IDS_PAGINES).toHaveLength(9);
@@ -439,12 +478,12 @@ describe('Onada 10 i cicle 2 · /page/consola i /page/cervell: anatomia editoria
     for (const titol of titols) expect([titol, text.includes(`«${titol}»`)]).toEqual([titol, true]);
   });
 
-  test('consola: el semàfor, «El Mas en xifres» i el botó són els de l’app', () => {
+  test('consola: el semàfor, «Sóc de Poble en xifres» i el botó són els de l’app', () => {
     const text = textDe(PAGE_COPY.consola.html);
     expect([ETIQUETES.reparar.to, ETIQUETES.important.to, ETIQUETES.enOrdre.to]).toEqual([toDeColor('roig'), toDeColor('taronja'), toDeColor('verd')]);
     expect(text).toContain(`«${ETIQUETES.reparar.text}» en roig, «${ETIQUETES.important.text}» en taronja o «${ETIQUETES.enOrdre.text}» en verd`);
-    expect(llig('src/sections/consola/XifresMas.jsx')).toContain('>El Mas en xifres<');
-    expect(text).toContain('«El Mas en xifres»');
+    expect(llig('src/sections/consola/XifresMas.jsx')).toContain('>Sóc de Poble en xifres<');
+    expect(text).toContain('«Sóc de Poble en xifres»');
     expect(text).toContain(`el botó «${accioDeLaPagina('consola').verb}»`);
   });
 
@@ -478,7 +517,7 @@ describe('Onada 10 i cicle 2 · /page/consola i /page/cervell: anatomia editoria
     expect(compilador).toContain("path.join(home, 'Library', 'LaunchAgents')");
     expect(text).not.toContain('no executa res');
     expect(text).toContain('no arregla, no esborra i no executa cap reparació');
-    expect(text).toContain('dins del projecte, l’estat de git i les tasques programades del Mas a l’ordinador on es treballa');
+    expect(text).toContain('dins del projecte, l’estat de git i les tasques programades de Sóc de Poble a l’ordinador on es treballa');
   });
 
   /* El paràgraf 6 de cada pàgina: qui hi entra i què hi veu.

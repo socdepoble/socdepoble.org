@@ -257,7 +257,8 @@ test('encastat, el vel de l’Índex ocupa la caixa de l’App: :host .toc-overl
   const layout = pla(llig('src/css/layout.css'));
   // O4-CLAUDE-1b · B1b-05 · el mateix calc, ara pel token compartit --sdp-calaix-dalt (tokens.css), que val exactament BARRA_NEGRA.
   expect(layout.match(/:host \.toc-overlay \{[^}]*\}/g)).toEqual([':host .toc-overlay { inset: var(--sdp-calaix-dalt) 0 0; width: auto; height: auto; }']);
-  expect(pla(llig('src/css/tokens.css'))).toContain(`--sdp-calaix-dalt: ${BARRA_NEGRA};`);
+  // «\s*:» i no «: »: la prova llig el token, no el declara (tractor-tokens T3).
+  expect(pla(llig('src/css/tokens.css'))).toMatch(new RegExp(`--sdp-calaix-dalt\\s*: ${BARRA_NEGRA.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')};`));
   // La barra negra fa exactament esta alçada: el vel comença on ella acaba.
   expect(layout).toContain(`header.bar-black { box-sizing: border-box; height: ${BARRA_NEGRA}; min-height: ${BARRA_NEGRA};`);
   // Dins del primer bloc @layer components, el de la Frontera C2 (abans del primer @layer legacy).

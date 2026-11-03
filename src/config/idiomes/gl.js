@@ -242,6 +242,9 @@ export default {
   'editor.targetes.esquerra': 'Esquerda',
   'editor.targetes.dreta': 'Dereita',
   'editor.targetes.lleva': 'Quitar a tarxeta',
+  /* 261103 (Onada 7, T2.6) · El commutador «Enllaç ↔ Card»: el botó de la targeta triada i el del diàleg. Pendent de revisió nadiua. */
+  'editor.targetes.aEnllac': 'Converter en ligazón',
+  'editor.targetes.dialeg.inserirEnllac': 'Inserir como ligazón',
   /* Pla 261028_1526 (P1-22, TE-02) · L’avís d’una targeta incrustada a l’editor (DocumentEditor.jsx). Pendent de revisió nadiua. */
   'editor.targetes.avis.titol': 'Esta tarxeta é unha vista previa',
   'editor.targetes.avis.descripcio': 'Esta tarxeta está incrustada no documento que editas. Os seus botóns —conectar, traducir, comentar e compartir— só funcionan cando se le o documento publicado.',
@@ -425,6 +428,8 @@ export default {
   /* O4-CLAUDE-2 · La subtargeta i la targeta incrustada a la segona fila «⋯» de la barra, i els textos de mostra de la subtargeta. */
   'section.notes.format.subtargeta': 'Subtarxeta',
   'section.notes.format.targeta': 'Tarxeta incrustada',
+  /* 261103 (Onada 7, T2.6) · El sentit Enllaç → Card a la segona fila, amb el cursor en un enllaç intern. Pendent de revisió nadiua. */
+  'section.notes.format.enllacATargeta': 'Converter en tarxeta',
   'section.notes.format.subtargetaTitol': 'Título da subtarxeta',
   'section.notes.format.subtargetaMeta': 'Unha liña de contexto: data, lugar ou autoría',
   'section.notes.format.subtargetaCos': 'Escribe aquí o contido da subtarxeta: parágrafos, listas e ligazóns.',
@@ -569,7 +574,6 @@ export default {
   'editor.ambit.ajuda': 'Escolle se é unha publicación do Muro ou unha ficha para o Mercado, Compartir coche, Traballo ou Vivenda.',
   'editor.ambit.obligatori': 'Falta un campo obrigatorio: {camp}',
   'editor.ambit.previsualitzacio': 'Así se verá no Muro',
-  'editor.ambit.completar': 'Completar a ficha',
   'editor.ambit.errorPublicar': 'A ficha de «{ambit}» non está completa.',
   'editor.ambit.actual': 'Ámbito: {ambit}',
   'editor.ambit.triat': 'Escollido',

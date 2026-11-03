@@ -31,6 +31,7 @@ import {
   TOWN_FALLBACK_IMAGES
 } from './assetResolver.js';
 import { sanitizeHtml } from '../utils/sanitize.js';
+import { segmentsAmbTargetes } from '../components/universal/richText/extensions/targetes/formaDelGrup.js';
 import { DEFAULT_AUTHOR } from '../components/universal/UniversalUtils.js';
 import * as pecesConsola from '../sections/consola/peces.jsx';
 import { MemoryRouter } from '../app/contexts/RouterContext';
@@ -501,7 +502,13 @@ test('TextSection (/projecte): sense base, el cos és idèntic; amb base, les in
   const pagina = PAGE_COPY.projecte;
   const cos = (container) => container.querySelector('article.cms-preview');
   const sense = render(React.createElement(TextSection, { page: pagina, pageKey: 'projecte' }));
-  expect(cos(sense.container).innerHTML).toBe(sanitizeHtml(pagina.html));
+  /* Ordre 261103_0522, T2.6 (Gauntlet O7-9, ronda 3; LR-G01) · /projecte porta la targeta de /anima i el
+     cos va per CosAmbTargetes: tros a tros, byte a byte, cada .sdp-cos-tros és el segment sanejat, i el
+     grup és el del text, amb la targeta cap a /anima. Com a TextSection.recursos.test.jsx. Prova posada
+     al dia a propòsit. */
+  expect([...cos(sense.container).children].map((fill) => (fill.classList.contains('sdp-cos-tros') ? ['html', fill.innerHTML] : ['targetes', fill.className])))
+    .toEqual(segmentsAmbTargetes(sanitizeHtml(pagina.html)).map((segment) => (segment.tipus === 'html' ? ['html', sanitizeHtml(segment.html)] : ['targetes', 'sdp-targetes'])));
+  expect([...cos(sense.container).querySelectorAll(':scope > .sdp-targetes .sdp-targeta a')].map((a) => a.getAttribute('href'))).toEqual(['/anima']);
   cleanup();
   /* Mateix origen que la pàgina: el sanejador només deixa passar imatges del
      nostre origen o dels orígens de mitjans permesos. */

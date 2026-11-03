@@ -311,6 +311,16 @@ export function construeixMapa(fonts = {}, { existeix = null, ara = null } = {})
        Format antic ({description, hooks:[{event, command}]}): l'IDE no el llig,
        i per això el consumidor és fals i hi ha avís. */
   const hooksAg = fonts.hooksAntigravity;
+  /* R3-A2 (decisió de l'àrbitre, 261103) · L'evidència de runtime d'un
+     esdeveniment són les traces JSON genuïnes que projecta la closca
+     (mapa-consola.mjs · arnesosObservats): totes amb font i hora, cap futura
+     ni de fa més de 24 h. Si no, null. Només Antigravity en té. */
+  const observat = (prefix, esdeveniment) => {
+    const traces = fonts.arnesosObservats?.[prefix]?.[esdeveniment];
+    return Array.isArray(traces) && traces.length && traces.every((t) => typeof t?.font === 'string'
+      && Number.isFinite(Date.parse(t.observat)) && Date.parse(t.observat) <= ara && ara - Date.parse(t.observat) <= DIA_MS)
+      ? traces : null;
+  };
   const hooksAgNomenats = hooksAg && typeof hooksAg === 'object' && !Array.isArray(hooksAg) && !Array.isArray(hooksAg.hooks)
     ? Object.entries(hooksAg).filter(([, esdeveniments]) => esdeveniments && typeof esdeveniments === 'object' && !Array.isArray(esdeveniments))
     : [];
@@ -322,15 +332,20 @@ export function construeixMapa(fonts = {}, { existeix = null, ara = null } = {})
     /* T13-T14 (ordre del Mestre, 260930) · Format que documenta Antigravity
        IDE: cada clau de primer nivell és el nom d'un hook, i dins, cada
        esdeveniment porta entrades directes ({command}) o grups ({matcher,
-       hooks:[{command}]}). Ara el format és el que llig l'IDE, però cap
-       evidència del Mas acredita encara que el dispare: per acreditar (null),
-       com Codex, i sense l'avís del format antic. */
+       hooks:[{command}]}). El format és el que llig l'IDE: amb traces
+       genuïnes recents de l'esdeveniment (observat), el candat queda
+       acreditat (true) i en du l'evidència; sense, per acreditar (null), com
+       Codex, i sense l'avís del format antic. */
     node('agent:antigravity', 'agent', '.agents/hooks.json', { arnes: 'Antigravity' });
     for (const [nom, esdeveniments] of hooksAgNomenats) {
       for (const [esdeveniment, entrades] of Object.entries(esdeveniments)) {
         if (!Array.isArray(entrades)) continue;
         const idHook = `hook:antigravity:${esdeveniment}`;
-        node(idHook, 'hook', '.agents/hooks.json', { arnes: 'Antigravity', esdeveniment, hook: nom, consumidor_acreditat: null });
+        const evidencia = observat('antigravity', esdeveniment);
+        node(idHook, 'hook', '.agents/hooks.json', {
+          arnes: 'Antigravity', esdeveniment, hook: nom, consumidor_acreditat: evidencia ? true : null,
+          ...(evidencia ? { evidencia_consumidor: evidencia } : {})
+        });
         aresta('agent:antigravity', idHook, 'dispara', 'declarat', '.agents/hooks.json');
         const ordres = entrades.flatMap((e) => (Array.isArray(e?.hooks) ? e.hooks : [e])).map((h) => h?.command);
         for (const script of ordres.flatMap((ordre) => scriptsDeOrdre(ordre))) {
@@ -357,10 +372,12 @@ export function construeixMapa(fonts = {}, { existeix = null, ara = null } = {})
   }
 
   /* ── Codex (.codex/hooks.json): mateix format que Claude Code. El hook local
-       sap llegir el dialecte de Codex, però cap evidència del Mas acredita que
-       el client els dispare: consumidor per acreditar (null), ni true com Claude
-       ni false com Antigravity. Codex llig AGENTS.md de l'arrel per convenció
-       del client, com Claude Code llig CLAUDE.md. T10 (ordre del Mestre, 260930). ── */
+       sap llegir el dialecte de Codex, però cap traça de Sóc de Poble acredita
+       que el client els dispare (cap hook de Codex escriu cap traça):
+       consumidor per acreditar (null), ni true com Claude ni false com el
+       format antic d'Antigravity. Codex llig AGENTS.md de l'arrel per
+       convenció del client, com Claude Code llig CLAUDE.md. T10 (ordre del
+       Mestre, 260930). ── */
   const hooksCodex = fonts.hooksCodex?.hooks;
   if (hooksCodex && typeof hooksCodex === 'object' && !Array.isArray(hooksCodex)) {
     node('agent:codex', 'agent', '.codex/hooks.json', { arnes: 'Codex' });
@@ -543,7 +560,13 @@ export function construeixMapa(fonts = {}, { existeix = null, ara = null } = {})
   };
   const estatDeLlancador = (l) => {
     if (l.script && existeix && !existeix(l.script)) return 'mort';
+    if (Number.isInteger(l.estatLaunchd?.ultimCodi) && l.estatLaunchd.ultimCodi !== 0) return 'mort';
     if (l.ultimaLiniaError) return 'mort';
+    /* MAPA-O7-01 · runs=0 torna a cada reinici o recàrrega del domini gui, amb
+       el mateix plist: no prova cap instal·lació nova. Només és «programat» un
+       job carregat sense cap registre (ni log ni traça d'error); amb logs, manen
+       els logs (edat i errors), i un job trencat no s'amaga fins al seu horari. */
+    if (l.estatLaunchd?.carregat === true && l.estatLaunchd.execucions === 0 && !l.activitat) return 'programat';
     const interval = Number.isFinite(l.interval) && l.interval > 0 ? l.interval : null;
     if (interval && Number.isFinite(ara) && l.activitat) {
       const edat = (ara - Date.parse(l.activitat)) / 1000;
@@ -627,7 +650,8 @@ export function construeixMapa(fonts = {}, { existeix = null, ara = null } = {})
       aresta(`hook:antigravity:${esdeveniment}`, id, 'dispara', 'derivat', '.agents/hooks.json');
     }
     if (estat === 'declarat-sense-llancador') avis(id, 'tasca-sense-llancador', 'mitjana', '.agents/cron/registre_tasques.json');
-    if (estat === 'mort') avis(id, 'tasca-morta', 'alta', l?.fitxer || (deAntigravity ? '.agents/hooks.json' : null)
+    if (estat === 'mort') avis(id, 'tasca-morta', 'alta', l?.estatLaunchd?.ultimCodi
+      ? `${l.fitxer} · launchctl: ${l.estatLaunchd.execucions} execució(ns), exit ${l.estatLaunchd.ultimCodi}` : l?.fitxer || (deAntigravity ? '.agents/hooks.json' : null)
       || (esdeveniment ? `.husky/${esdeveniment}` : null) || t.script || '.agents/cron/registre_tasques.json');
     tasques.push({
       id: t.id,
@@ -802,6 +826,9 @@ export function construeixMapa(fonts = {}, { existeix = null, ara = null } = {})
      decidir el Mestre, sobre tots els torns com les altres dues: sense torns,
      N/A, i amb torns però cap de tancat, un 0 mesurat, mai un N/A nou. */
   const tancats = torns ? torns.filter((t) => t?.state === 'closed') : [];
+  /* MAPA-O7-03 · Criteri uniforme: un torn tancat sense cap rebut compta igual
+     el tanque qui el tanque (expire-close antic, saneja_torns_caducats o una
+     altra eina). Excloure les caducitats és una decisió del Mestre pendent. */
   const senseRebut = tancats.filter((t) => t?.rebuts === 0);
   salut.push(metrica('torns-tancats-sense-rebut', torns
     ? { numerador: senseRebut.length, denominador: torns.length, font: FONT_TORNS, prova: PROVA_MAPA }

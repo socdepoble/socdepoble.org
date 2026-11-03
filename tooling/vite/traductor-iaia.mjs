@@ -62,7 +62,7 @@ export const DESTINS_TRADUCCIO = Object.freeze(['ES', 'EN-GB', 'FR', 'DE', 'GL',
 export const CODIS_LLIURE = Object.freeze({ ES: 'es', 'EN-GB': 'en', FR: 'fr', DE: 'de', GL: 'gl', EU: 'eu' });
 export const LIMITS = Object.freeze({
   cos: 32768, textos: 50, caracters: 5000, bytes: 20000, resposta: 131072,
-  peticions: 30, finestra: 10 * 60 * 1000, diari: 10000, mensual: 100000,
+  peticions: 30, finestra: 10 * 60 * 1000, diari: 100000, mensual: 1000000,
   crida: 12000, total: 30000, pausa: 60 * 1000, cau: 2000, vidaCau: 7 * 24 * 60 * 60 * 1000
 });
 

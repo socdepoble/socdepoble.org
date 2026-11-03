@@ -231,7 +231,7 @@ export function paginaDElement(section, item) {
        hi posa el seu text (content, el de la Viquipèdia) quan no en porta:
        el content d'una publicació, d'una nota o d'un acte és el cos HTML, que
        ja es pinta davall. */
-    lead: esPoble ? (item.entradilla || item.content) : item.entradilla,
+    lead: esPoble ? (item.entradilla || item.content) : (item.entradilla || item.lead),
     heroImage: imatgePropiaDelDetall(section, section.getImage(item)),
     heroAlt: titol,
     /* Onada 5 (ordre del Mestre, 261008) · Un poble es classifica per la

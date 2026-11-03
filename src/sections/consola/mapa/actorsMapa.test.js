@@ -6,7 +6,7 @@ import {
 const n = (id, tipus, atributs = {}, font = null) => ({ id, tipus, font, atributs });
 const a = (de, cap, tipus, confianca = 'declarat') => ({ de, a: cap, tipus, confianca, evidencia: null });
 
-/* Un Mas en miniatura amb la forma del Mapa real: dos arnesos, candats amb i
+/* Un sistema en miniatura amb la forma del Mapa real: dos arnesos, candats amb i
    sense consumidor, la cadena d'arrencada i tres tasques. */
 const MAPA = Object.freeze({
   nodes: [
@@ -142,7 +142,7 @@ describe('capesActors · un arnés que carrega per script d’arrencada', () => 
   });
 });
 
-describe('agents atòmics i xifres del Mas', () => {
+describe('agents atòmics i xifres de Sóc de Poble', () => {
   test('un arnés sense contracte no és un agent atòmic', () => {
     expect(agentsAtomics(MAPA)).toEqual([]);
     const ambContracte = { ...MAPA, arestes: [...MAPA.arestes, a('agent:antigravity', 'document:_wiki/10_actes', 'escriu')] };
@@ -183,7 +183,7 @@ describe('les quatre peces que fan possible un agent atòmic', () => {
     expect(Object.isFrozen(TITOLS_PECES_AGENTS)).toBe(true);
   });
 
-  test('pecesAgents: l’estat de cada peça amb el Mas en miniatura', () => {
+  test('pecesAgents: l’estat de cada peça amb Sóc de Poble en miniatura', () => {
     const peces = pecesAgents(MAPA);
     expect(Object.keys(peces)).toEqual(Object.keys(TITOLS_PECES_AGENTS));
     expect(Object.fromEntries(Object.entries(peces).map(([id, p]) => [id, p.estat]))).toEqual({

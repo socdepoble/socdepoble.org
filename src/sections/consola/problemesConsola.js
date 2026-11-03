@@ -68,7 +68,7 @@ export const problemaTasca = (t, clau = t?.id) => problemaText(clau, t?.id ?? ''
 
 /** Les tasques que no consten vives, la morta primer; a igualtat, per id. */
 export function problemesDeTasques(tasques) {
-  return (tasques ?? []).filter((t) => t?.estat !== 'viu')
+  return (tasques ?? []).filter((t) => t?.estat !== 'viu' && t?.estat !== 'programat')
     .sort((x, y) => (PES_ESTAT_TASCA[x.estat] ?? 9) - (PES_ESTAT_TASCA[y.estat] ?? 9) || String(x.id).localeCompare(String(y.id)))
     .map((t) => problemaTasca(t));
 }

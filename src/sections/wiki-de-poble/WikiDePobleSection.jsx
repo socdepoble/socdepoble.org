@@ -362,7 +362,7 @@ export function dataDeDocumentWiki(item) {
    src/sections/gestoria/qualitat.test.js: cap classe passada en variable). */
 function ProsaDeLaWiki({ encoixinada = false, html }) {
   const lang = useLlenguaDelContingut();
-  return <div className={encoixinada ? 'sdp-prose sdp-prose--encoixinada' : 'sdp-prose'} lang={lang} dangerouslySetInnerHTML={{ __html: sanitizeHtml(resolRecursosDeHtml(html)) }} />;
+  return <div className={encoixinada ? 'sdp-prose sdp-prose--encoixinada' : 'sdp-prose'} lang={lang} dangerouslySetInnerHTML={{ __html: sanitizeHtml(resolRecursosDeHtml(html), { llistesNumerades: true }) }} />;
 }
 
 /* El Quadre ISO d'un document: etiquetes i valors en valencià, escrits ací. */
@@ -515,6 +515,9 @@ function WikiDetail({ item }) {
               fila (scope="row"). Cap selector en depén: 0 px. El nom va en
               aria-label i no en un id de l'h4: l'Índex de la pàgina posa el
               seu id als encapçalaments que no en tenen. */}
+          {/* O7 · Gauntlet WC-05 · Continua sent h4: PageFrame pren el nivell
+              de l'Índex del tag, i un h3 hi pujava l'entrada (sense sagnat,
+              pes 600, color de títol). Canviar-lo és decisió del Mestre. */}
           <h4>Quadre de Comandament ISO</h4>
           <table aria-label="Quadre de Comandament ISO">
             <tbody>

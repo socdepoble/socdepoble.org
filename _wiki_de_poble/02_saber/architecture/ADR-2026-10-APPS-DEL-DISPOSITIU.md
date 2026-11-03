@@ -8,7 +8,7 @@ tags:
 ---
 # ADR-2026-10 — Apps del dispositiu i closca sense xarxa
 
-Esta ADR esmena l'[[ADR-2026-08-ONLINE-FIRST]] sense substituir-la: les dades compartides del poble continuen online-first i s'hi afig una categoria nova, les dades del dispositiu, per a les apps locals de la Plataforma d'Apps Enxufables. També fixa què pot fer el service worker del lloc propi perquè una app ja visitada arrenque sense xarxa.
+Esta ADR esmena l'[[ADR-2026-08-ONLINE-FIRST]] **sense substituir-la**: les **dades compartides del poble** continuen **online-first** i s'hi afig una categoria nova, les **dades del dispositiu**, per a les apps locals de la **Plataforma d'Apps Enxufables**. També fixa què pot fer el **service worker** del lloc propi perquè una app ja visitada **arrenque sense xarxa**.
 
 ## Estat
 
@@ -31,7 +31,7 @@ L'ESTAT ja tenia pendent l'«ADR offline del service worker». L'esborrany `ADR_
 
 ### Dades compartides: online-first, sense canvis
 
-Les línies 28-31 de l'ADR-2026-08 continuen intactes. Supabase és la font de veritat de les dades compartides, amb autenticació i autorització de servidor. La memòria cau local és opcional i no autoritativa. No hi ha reconciliació sense xarxa, ni sincronització en segon pla, ni CRDT.
+Les línies 28-31 de l'ADR-2026-08 **continuen intactes**. Supabase és la **font de veritat** de les dades compartides, amb **autenticació i autorització de servidor**. La **memòria cau local** és **opcional i no autoritativa**. No hi ha **reconciliació sense xarxa**, ni **sincronització en segon pla**, ni CRDT.
 
 ### Una categoria nova: les dades del dispositiu
 
@@ -75,7 +75,7 @@ Ratifica l'esborrany `ADR_PWA_ESMENA.txt` amb una sola esmena: «cap HTML» pass
 4. El missatge porta els recursos amb empremta que la pàgina ha carregat i la ruta de l'app. Fora de /app/\* no s'envia res.
 5. El worker ho torna a validar tot, escalfa els recursos que falten amb els mateixos sostres i confirma la closca de l'app de la pàgina. Si un dels recursos no s'ha pogut desar, no confirma res. Només demana l'HTML a la xarxa si la closca desada no és del build de la pàgina.
 
-El component no parla mai amb el worker. Dins d'un amfitrió hi pot haver el worker d'un altre (un connector PWA de WordPress), i el paquet no ha de dependre de la pàgina que l'acull. Cap app ni la Gestoria toquen el worker: la guarda de la Gestoria (`src/sections/gestoria/privacitat.test.js`) veta l'API del worker del navegador.
+El component **no parla mai amb el worker**. Dins d'un amfitrió hi pot haver el **worker d'un altre** (un connector PWA de WordPress), i el paquet **no ha de dependre** de la **pàgina que l'acull**. **Cap app ni la Gestoria** toquen el worker: la guarda de la Gestoria (`src/sections/gestoria/privacitat.test.js`) veta l'**API del worker del navegador**.
 
 ### Cap dada del dispositiu puja al servidor sense una ADR pròpia
 

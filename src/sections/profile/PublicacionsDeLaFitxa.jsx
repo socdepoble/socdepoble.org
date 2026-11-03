@@ -148,24 +148,21 @@ export const useHiHaMur = () => typeof useMur()?.refresh === 'function';
  * `peuDePagina` de PageFrame (FitxaPublica), FORA de l'article: l'Índex, la
  * traducció i el Lector no recullen els títols de les targetes, també les de
  * les pestanyes amagades. La regió amb nom (section.sdp-pagina-peu,
- * etiquetaPeuDePagina) és la del peu; ací només el títol (h2, com el peu de
- * PublicacioDetall) i les pestanyes. Qui munta el peu pregunta abans amb
- * useHiHaMur i teAparador: sense aparador, cap regió buida.
+ * etiquetaPeuDePagina) és la del peu; ací van directament les pestanyes
+ * (amb aria-label={textos.regio}), sense h2 redundant. Qui munta el peu
+ * pregunta abans amb useHiHaMur i teAparador: sense aparador, cap regió buida.
  */
 export function PublicacionsDeLaFitxa({ perfil, t = senseTraduccio, connectats = null }) {
   const hiHaMur = useHiHaMur();
   if (!hiHaMur || !teAparador(perfil)) return null;
   const textos = textosDeLAparador(perfil.nom || '', t);
   return (
-    <>
-      <h2>{textos.regio}</h2>
-      <SlotErrorBoundary
-        resetKey={`${perfil.tipus}:${perfil.id}`}
-        fallback={({ reinicia }) => <FalladaDeLHistoric t={t} textos={textos.fallada} reinicia={reinicia} nivell="h3" />}
-      >
-        <AparadorAmbDades perfil={perfil} textos={textos} connectats={connectats} />
-      </SlotErrorBoundary>
-    </>
+    <SlotErrorBoundary
+      resetKey={`${perfil.tipus}:${perfil.id}`}
+      fallback={({ reinicia }) => <FalladaDeLHistoric t={t} textos={textos.fallada} reinicia={reinicia} nivell="h3" />}
+    >
+      <AparadorAmbDades perfil={perfil} textos={textos} connectats={connectats} />
+    </SlotErrorBoundary>
   );
 }
 

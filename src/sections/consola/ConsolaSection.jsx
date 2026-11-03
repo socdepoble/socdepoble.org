@@ -89,7 +89,7 @@ const ICONES = Object.freeze({
 /* Ordre del Mestre, 261004 (xat: tota targeta amb boina i pàgina pròpia) ·
    Les targetes de la Consola porten la boina de Sóc de Poble i la data a la
    seua pastilla (TargetaConsola, peces.jsx). La font («Font: consola.json»,
-   «Font: el Mapa del Mas») continua sense pintar-se.
+   «Font: el Mapa de Sóc de Poble») continua sense pintar-se.
    T51 · Cap targeta sense data (regla del Mestre). Les targetes són
    fragments de la pàgina Consola i porten la data de versió del copy
    d'eixa pàgina (PAGE_COPY.consola.date, un dia sense hora), no una data
@@ -210,17 +210,20 @@ const fontsDe = (consola, mapa) => ({
  * reals o diu per què no n'hi ha, desglossa a la coberta el que la pàgina
  * marca per dins (T3) i du les etiquetes d'un colp d'ull (consolaPagines.js).
  * El record de visites es llig en muntar el tauler: tornar-hi des d'una
- * pàgina el refresca. Davall, «El Mas en xifres», també sense Mapa.
+ * pàgina el refresca. Davall, «Sóc de Poble en xifres», també sense Mapa.
  * Ordre del Mestre, 13-10-2026 (pla 261013_1405, front F) · «Col·locar a les
  * capçaleres de les targetes de la Consola Termodinàmica les il·lustracions
  * artístiques de Pedra Seca existents.» Amb `ambImatges`, cada targeta porta
  * la il·lustració de la seua pàgina (imatgesConsola.js) al mitjà, quadrada i
  * centrada (Llei Visual del quadrat), i la icona d'ICONES deixa de pintar-se
- * (TargetaConsola: «la imatge o la icona»). Només el tauler de /consola en
- * porta: la Consola incrustada de la Wiki (ConsolaIncrustada) no passa
- * `ambImatges`, i les seues nou targetes continuen amb la icona (des del pla
- * 261027_0845, §3, la resta del seu tauler sí que canvia: TaulerAmbGovern,
- * avall). Derogat EN PART per l'ordre del
+ * (TargetaConsola: «la imatge o la icona»). Sense la prop, la icona: qui
+ * munta el tauler la passa explícitament.
+ * Ordre del Mestre 261103 (T2) · La Consola incrustada de la Wiki
+ * (ConsolaIncrustada) també passa `ambImatges` (per TaulerAmbGovern), i les
+ * seues nou targetes porten la il·lustració, com a /consola. Derogat: «Només
+ * el tauler de /consola en porta: la Consola incrustada de la Wiki no passa
+ * `ambImatges`, i les seues nou targetes continuen amb la icona».
+ * Derogat EN PART per l'ordre del
  * Mestre del 13-10-2026 (pla 261013_1405, front F): l'Onada 12 (261011;
  * ordres 261011_0130, punt 2), «fora de l'índex, el tauler no guanya cap
  * imatge de contingut», i l'ordre del 260926 «la icona de la part en el lloc
@@ -228,7 +231,7 @@ const fontsDe = (consola, mapa) => ({
  * seua icona).
  * `ara` és el rellotge de la pintada: la coberta i l'etiqueta del pols diuen
  * el mateix dels rebuts, i el tauler de /consola el comparteix amb el
- * Diagnòstic del Mas (DiagnosiConsola.jsx). Sense, el d'ara.
+ * Diagnòstic de Sóc de Poble (DiagnosiConsola.jsx). Sense, el d'ara.
  * Revisió adversarial del carril F1 (problema 10) · Amb `alertaFora`, el
  * tauler no pinta l'alerta de vigilància: la pinta qui el munta, dalt de tot
  * (a /consola, damunt del Govern del Mestre). Sense la prop, el DOM de sempre.
@@ -290,9 +293,11 @@ function AvisInstantania({ consola, mapa, govern, locale }) {
  * divergir: l'alerta de vigilància al cim, el Govern del Mestre (SeccioGovern:
  * el seu H2 i quatre targetes que porten a /consola/govern/<id>), l'H2 de la
  * sala de màquines (TITOL_SALA_MAQUINES) i les nou targetes, que ja no pinten
- * l'alerta (alertaFora). `ara` és el rellotge de tota la pintada. Les
- * il·lustracions (ambImatges) continuen sent només del tauler de /consola, i
- * l'Índex i el Diagnòstic, que van darrere, també.
+ * l'alerta (alertaFora). `ara` és el rellotge de tota la pintada. L'Índex i
+ * el Diagnòstic, que van darrere, continuen sent només del tauler de /consola.
+ * Ordre del Mestre 261103 (T2) · Les il·lustracions (ambImatges, explícit) les
+ * passen tots dos: /consola i la Consola incrustada de la Wiki. Derogat: «Les
+ * il·lustracions (ambImatges) continuen sent només del tauler de /consola».
  * Ordre del Mestre del 30-10-2026 (B1) · Les quatre targetes del Govern també
  * porten la seua portada amb `ambImatges` (SeccioGovern).
  */
@@ -327,7 +332,7 @@ export function ConsolaIncrustada() {
   const [privat] = useState(() => llegixPrivacitat());
   return (
     <PrivacitatConsola.Provider value={privat}>
-      <TaulerAmbGovern consola={consola} mapa={mapa} govern={govern} ara={Date.now()} />
+      <TaulerAmbGovern consola={consola} mapa={mapa} govern={govern} ara={Date.now()} ambImatges />
     </PrivacitatConsola.Provider>
   );
 }
@@ -358,7 +363,7 @@ function ControlsConsola({ pagina, consola, mapa, empaquetats, privat, onPrivat,
         {instantania || 'Instantània encara no disponible.'}
       </p>
       {/* P1-35 (pla 261028_1526 §3.5.2) · La Versió Canònica del Sistema, la
-          mateixa del Diagnòstic del Mas. Sense role=status: no canvia mai
+          mateixa del Diagnòstic de Sóc de Poble. Sense role=status: no canvia mai
           mentre es mira, i el peu té una sola regió viva (la instantània).
           IDEA-50 (pàgina de versions; pla 261029_1605, Bloc G) · El número
           porta a /versions amb un enllaç de prosa: cap modal, cap classe nova.
@@ -404,8 +409,8 @@ function ContingutPagina({ id, consola, mapa, locale }) {
 function seoDe({ copy, pagina, slugXifra, xifra, llegint, idPanell, panell, idGovern, paginaDeGovern, deEmpaquetats, privat }) {
   if (slugXifra !== null) {
     // Mentre les fonts es lligen no se sap si la xifra existix (PaginaXifra espera).
-    if (!xifra && llegint) return { title: `El Mas en xifres · ${copy.title}`, description: copy.lead };
-    if (!xifra) return { title: `Xifra no trobada · ${copy.title}`, description: 'Esta adreça no correspon a cap xifra del Mas.', index: false };
+    if (!xifra && llegint) return { title: `Sóc de Poble en xifres · ${copy.title}`, description: copy.lead };
+    if (!xifra) return { title: `Xifra no trobada · ${copy.title}`, description: 'Esta adreça no correspon a cap xifra de Sóc de Poble.', index: false };
     const titol = privat && xifra.titolPrivat ? xifra.titolPrivat : xifra.titol;
     return { title: `${titol} · ${copy.title}`, description: xifra.entradeta, image: xifra.imatge || undefined };
   }
@@ -505,7 +510,7 @@ export default function ConsolaSection() {
   if (id === null) return <Navigate to={RUTA_CONSOLA} replace />;
 
   if (!pagina) {
-    // Un sol rellotge per a les targetes i el Diagnòstic del Mas: el text diu el mateix dels rebuts.
+    // Un sol rellotge per a les targetes i el Diagnòstic de Sóc de Poble: el text diu el mateix dels rebuts.
     const ara = Date.now();
     return (
       /* T2 (ordre del Mestre, 260930) · l'Índex de la Consola arriba a h6: hi entren les mètriques (h5).
@@ -519,7 +524,7 @@ export default function ConsolaSection() {
          de privacitat: les entradetes porten rutes en <Mono>.
          Ordre del Mestre, 13-10-2026 (pla 261013_1405, front F) · Les targetes del tauler porten
          la il·lustració de la seua pàgina (ambImatges), i darrere de l'Índex, tancant el tauler,
-         el Diagnòstic del Mas (DiagnosiConsola.jsx): l'accés ràpid a les nou pàgines i el
+         el Diagnòstic de Sóc de Poble (DiagnosiConsola.jsx): l'accés ràpid a les nou pàgines i el
          diagnòstic sencer en un <pre>, amb les mateixes fonts i el mateix rellotge que les
          targetes. Derogat EN PART per l'ordre del Mestre del 13-10-2026 (pla 261013_1405,
          front F): l'Índex de la Consola com a últim bloc del tauler (Onada 11). Tampoc a la
@@ -534,8 +539,8 @@ export default function ConsolaSection() {
          Derogat EN PART: el separador (Divisor) entre el govern i la sala de màquines, i
          l'alerta just davant de les nou targetes.
          Pla 261027_0845 (Guarda Nocturna), §3 · Eixe cap (alerta, govern, H2 de la sala i nou
-         targetes) és TaulerAmbGovern, el mateix de la Consola incrustada de la Wiki; ací, amb
-         les il·lustracions. El DOM de /consola no canvia. Derogat de l'Onada 0.5: «Fora de
+         targetes) és TaulerAmbGovern, el mateix de la Consola incrustada de la Wiki; tots
+         dos, amb les il·lustracions (ordre del Mestre 261103, T2). El DOM de /consola no canvia. Derogat de l'Onada 0.5: «Fora de
          ConsolaTauler: la Consola incrustada de la Wiki conserva els seus píxels».
          P1-35 (pla 261028_1526 §3.5.2) · Darrere de les xifres i abans de l'Índex, la secció
          dels empaquetats (EmpaquetatsConsola.jsx): el seu H2 i una targeta que porta a

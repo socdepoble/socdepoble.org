@@ -667,6 +667,14 @@ export function DocumentEditor({ adapter, onToast }) {
     buidaLlavorVerge(editor);
     editor.chain().focus().inserirTargeta(attrs).run();
   }, [editor]);
+  const triaEnllacTargeta = useCallback((entrada) => {
+    setSelectorTargetaObert(false);
+    const attrs = attrsDeEntrada(entrada);
+    if (!attrs || !editor || editor.isDestroyed) return;
+    buidaLlavorVerge(editor);
+    const cadena = editor.chain().focus();
+    if (typeof cadena.inserirEnllacDeTargeta === 'function') cadena.inserirEnllacDeTargeta(attrs).run();
+  }, [editor]);
   const avisaTargeta = useCallback(() => setAvisTargetaObert(true), []);
   const tancaAvisTargeta = useCallback(() => setAvisTargetaObert(false), []);
   const contextTargetes = useMemo(
@@ -1106,6 +1114,7 @@ export function DocumentEditor({ adapter, onToast }) {
             onTanca={tancaSelectorTargeta}
             cerca={targetes?.cerca}
             onTria={triaTargeta}
+            onTriaEnllac={triaEnllacTargeta}
             t={t}
           />
           <Dialeg

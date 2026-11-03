@@ -9,7 +9,7 @@ tags:
 ---
 # Connectors MCP de disseny
 
-Especificació futura de com podrien treballar Affinity, Stitch i Figma amb el sistema de disseny de Sóc de Poble. Cap connector, UUID ni nom d'eina d'esta pàgina es dona per disponible fins que el runtime el descobrisca i la documentació oficial en confirme el contracte.
+**Especificació futura** de com podrien treballar **Affinity, Stitch i Figma** amb el **sistema de disseny** de Sóc de Poble. **Cap connector**, UUID ni nom d'eina d'esta pàgina es dona per disponible fins que el **runtime el descobrisca** i la **documentació oficial** en confirme el contracte.
 
 Si discovery no mostra un connector, l'agent s'atura i no inventa la crida.
 

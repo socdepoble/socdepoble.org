@@ -92,12 +92,15 @@ describe('la barra: fila «targeta» de nivell avançat', () => {
      O4-CLAUDE-2 (ordre del Mestre, 261102 21:38) · Prova posada al dia a
      propòsit: darrere del divisor, la subtargeta i la targeta, que ja té
      ranura (insertTargeta). UniversalToolbar només pinta eixes dues si el
-     motor n'oferix l'acció (UniversalToolbar.segonaFila.test.jsx). */
+     motor n'oferix l'acció (UniversalToolbar.segonaFila.test.jsx).
+     T26-01 (Gauntlet O7 · T2.6) · Prova posada al dia a propòsit: darrere de
+     la targeta, «Convertir en targeta» (Enllaç → Card d'1 clic). */
   test('és al contracte amb ranura a la segona fila: la barra pinta els encapçalaments, el format, la segona fila, la subtargeta i la targeta', () => {
     const fila = TOOLBAR_SCHEMA.find((boto) => boto.id === FORMATS.TARGETA);
     expect(fila).toEqual({ id: 'targeta', clauI18n: 'editor.inserir.targeta', etiqueta: 'Targeta', commutable: false, fila: 'segona', slot: { estat: 'isTargeta', accio: 'insertTargeta' }, nivell: 'avancat' });
     expect(TOOLBAR_SCHEMA.find((boto) => boto.id === FORMATS.SUBTARGETA)).toEqual({ id: 'subtargeta', clauI18n: 'section.notes.format.subtargeta', etiqueta: 'Subtargeta', commutable: false, fila: 'segona', slot: { estat: 'isSubtargeta', accio: 'insertSubtargeta' } });
-    expect(SCHEMA_VISIBLE.map((boto) => boto.id)).toEqual(['subtitol', 'h4', 'h5', 'h6', 'titol', 'negreta', 'cursiva', 'llista', 'llistaNumerada', 'ratllat', 'citacio', 'divisor', 'subtargeta', 'targeta']);
+    expect(TOOLBAR_SCHEMA.find((boto) => boto.id === FORMATS.ENLLAC_A_TARGETA)).toEqual({ id: 'enllacATargeta', clauI18n: 'section.notes.format.enllacATargeta', etiqueta: 'Convertir en targeta', commutable: false, fila: 'segona', slot: { estat: 'isEnllacATargeta', accio: 'convertLinkToCard' }, nivell: 'avancat' });
+    expect(SCHEMA_VISIBLE.map((boto) => boto.id)).toEqual(['subtitol', 'h4', 'h5', 'h6', 'titol', 'negreta', 'cursiva', 'llista', 'llistaNumerada', 'ratllat', 'citacio', 'divisor', 'subtargeta', 'targeta', 'enllacATargeta']);
   });
 
   test('sense l’extensió, la fila ix apagada i no peta', () => {
@@ -117,5 +120,29 @@ describe('la barra: fila «targeta» de nivell avançat', () => {
     expect(obre).not.toHaveBeenCalled();
     expect(executa(editor, 'targeta')).toBe(true);
     expect(obre).toHaveBeenCalledTimes(1);
+  });
+
+  /* T26-01 (Gauntlet O7 · T2.6, «Enllaç ↔ Card» d'1 clic) · La fila només es
+     pot fer amb el cursor en un enllaç intern que es commuta; llegir l'estat
+     no toca el document, i executar-la el passa a Card sense obrir el selector. */
+  test('«Convertir en targeta»: només en un enllaç intern; llegir l’estat no commuta res i executar-la, sí', () => {
+    creaEditor(false);
+    expect(llegeixEstat(editor).pot.enllacATargeta).toBe(false);
+    editor.destroy();
+    creaEditor(true);
+    const obre = vi.fn();
+    editor.storage[NOM_EXTENSIO_TARGETES].obreSelector = obre;
+    editor.commands.setContent('<p>Abans</p><p><a href="/anima">L’Ànima</a></p>');
+    editor.commands.setTextSelection(2);
+    expect(llegeixEstat(editor).pot.enllacATargeta).toBe(false);
+    expect(executa(editor, 'enllacATargeta')).toBe(false);
+    editor.commands.setTextSelection(11);
+    const abans = editor.getHTML();
+    for (let i = 0; i < 3; i += 1) expect(llegeixEstat(editor).pot.enllacATargeta).toBe(true);
+    expect(editor.getHTML()).toBe(abans);
+    expect(executa(editor, 'enllacATargeta')).toBe(true);
+    expect(obre).not.toHaveBeenCalled();
+    expect(editor.getHTML()).toContain('data-sdp-targeta="pagina:anima"');
+    expect(editor.getHTML()).toContain('data-alineacio="dreta"');
   });
 });

@@ -140,6 +140,20 @@ function formatEnLinia(html) {
     .replace(/\[([^\]]+)\]\(([^)]+)\)/gim, '<a href="$2">$1</a>');
 }
 
+/* O7 · Els salts tous no trenquen strong ni em, però només dins d'un paràgraf
+   pla, abans d'ajuntar-ne les línies (Gauntlet WC-04): al pas global, un «*»
+   en dues files de taula o en dues línies de cita s'aparellava i fusionava les
+   files. Cap parella travessa una etiqueta de bloc (un <hr /> o una taula
+   enganxats al paràgraf). Regles lineals: cap parella creua un altre «**». */
+const ETIQUETA_BLOC = /<\/?(?:p|div|table|thead|tbody|tr|t[dh]|blockquote|hr|ul|ol|li|h[1-6]|pre)\b/i;
+const parellaSaltTou = (parella, text, etiqueta) => (ETIQUETA_BLOC.test(text) ? parella : `<${etiqueta}>${text.replace(/\n/g, ' ')}</${etiqueta}>`);
+function formatSaltTou(text) {
+  if (!text.includes('\n')) return text;
+  return text
+    .replace(/\*\*([^\s*](?:(?:(?!\*\*)[\s\S])*?[^\s*])?)\*\*/g, (parella, t) => parellaSaltTou(parella, t, 'strong'))
+    .replace(/\*([^\s*](?:[^*]*?[^\s*])?)\*/g, (parella, t) => parellaSaltTou(parella, t, 'em'));
+}
+
 /* Marca el primer paràgraf pla que seguix el primer «# ». */
 function marcaEntradilla(md) {
   const linies = md.split('\n');
@@ -152,23 +166,185 @@ function marcaEntradilla(md) {
   return linies.join('\n');
 }
 
-export function parseMarkdown(md, { entradilla = true, etiquetaTaula = null } = {}) {
+/* O7 · La llista és un bloc amb ítems, no una successió de regex sobre <li>.
+   El sagnat del contingut manté paràgrafs, subllistes i codi dins de l'ítem.
+   Les llistes separades conserven start; repetir «1.» continua numerant com a
+   Markdown. La recursió és limitada i mai s'interpreten tanques de codi.
+   WC-01 · ([^\n]*)$ i no (.*)$: el «.» s'atura davant de \r, U+2028 i U+2029,
+   «$» sense /m només casa al final i la tirada d'espais es repartia entre
+   [ \t]+ i (.*) en O(k²). Les línies ja no porten \n: «$» casa al primer intent. */
+const MARCA_LLISTA = /^([ \t]*)([-+*]|\d{1,9}[.)])[ \t]+([^\n]*)$/;
+const amplariaSagnat = text => text.replace(/\t/g, '    ').length;
+
+/* WC-03 · Una sola regla de tanca, la de l'antic pas 1a: extreuLlistes aparta
+   el codi amb la MATEIXA regex i en un sol pas. Una tanca sense parella no és
+   codi, i el codi que s'obri dins d'un ítem hi continua fins a la seua parella.
+   fi[n]: l'última línia del bloc que obri la línia n (o -1).
+   Ronda 3 · Amb /m, «^» i «$» casen també a \r, U+2028 i U+2029, que no
+   parteixen les línies de split('\n'): un bloc pot obrir o tancar a mitja
+   línia, i dos blocs poden compartir-ne una. tros[n] alterna el text de fora i
+   les captures, de la línia n a la fi[n], com el replace de l'antic pas 1a:
+   no es perd res de davant, d'entremig ni de darrere. Lineal. */
+const BLOC_CODI = /^[ \t]*(`{3,}|~{3,})[ \t]*([\w+-]*)[^\n]*\n([\s\S]*?)^[ \t]*\1[ \t]*$/gm;
+function blocsDeCodi(md, total) {
+  const fi = new Array(total).fill(-1);
+  const tros = [];
+  const finalDeLinia = desDe => {
+    const salt = md.indexOf('\n', desDe);
+    return salt === -1 ? md.length : salt;
+  };
+  let linia = 0;
+  let pos = 0; // la fi de l'última captura
+  let iniciLinia = 0;
+  let obri = -1;
+  for (const m of md.matchAll(BLOC_CODI)) {
+    const salt = finalDeLinia(pos);
+    if (obri >= 0 && salt > m.index) {
+      tros[obri].push(md.slice(pos, m.index), m); // a la línia on tanca l'anterior
+    } else {
+      if (obri >= 0) tros[obri].push(md.slice(pos, salt));
+      for (; pos < m.index; pos += 1) if (md.charCodeAt(pos) === 10) { linia += 1; iniciLinia = pos + 1; }
+      obri = linia;
+      tros[obri] = [md.slice(iniciLinia, m.index), m];
+    }
+    for (pos = m.index; pos < m.index + m[0].length; pos += 1) if (md.charCodeAt(pos) === 10) { linia += 1; iniciLinia = pos + 1; }
+    fi[obri] = linia;
+  }
+  if (obri >= 0) tros[obri].push(md.slice(pos, finalDeLinia(pos)));
+  return { fi, tros };
+}
+
+// 1a · Un bloc de codi tancat. Envoltat de línies buides perquè el pas de
+//      paràgrafs el tracte com a bloc propi i no el fique dins d'un <p>.
+function apartaCodi([, , llengua, codi], blocs) {
+  const lang = llengua ? llengua.toLowerCase().trim() : '';
+  if (lang === 'mermaid') {
+    blocs.push(`<div class="sdp-diagrama-card"><div class="sdp-diagrama-capcalera"><span>📐</span> Diagrama d’arquitectura</div><pre class="sdp-diagrama-cos"><code class="language-mermaid">${escapaHtml(codi.replace(/\n$/, ''))}</code></pre></div>`);
+  } else {
+    const classe = llengua ? ` class="language-${llengua}"` : '';
+    blocs.push(`<pre><code${classe}>${escapaHtml(codi.replace(/\n$/, ''))}</code></pre>`);
+  }
+  return `\n\n${marcador('BLOC', blocs.length - 1)}\n\n`;
+}
+
+// El codi de dins d'un ítem perd el sagnat de l'ítem, mai cap caràcter.
+const desindenta = (linia, columna) => {
+  const ampla = linia.replace(/\t/g, '    ');
+  return ampla.slice(Math.min(columna, /^ */.exec(ampla)[0].length));
+};
+
+/* WC-02 · Si cada línia COMENÇA dins d'un comentari HTML, segons les
+   anteriors (també les que una llista es menja): un «<!-- … -->» al final del
+   primer ítem no el trau de la llista, i un «<!--» de dins de codi (un bloc o
+   `en línia`, la regla del pas 1b) és text. Mana l'últim delimitador de la
+   línia; lineal (lastIndexOf). Ronda 3 · Del codi, compta el text de fora. */
+function iniciEnComentari(linies, fiCodi, trosCodi) {
+  const dins = new Array(linies.length);
+  let comentari = false;
+  const llig = (linia) => {
+    const text = linia.replace(/`[^`\n]+`/g, '');
+    const obri = text.lastIndexOf('<!--');
+    const tanca = text.lastIndexOf('-->');
+    if (obri > tanca) comentari = true;
+    else if (tanca !== -1) comentari = false;
+  };
+  for (let n = 0; n < linies.length; n += 1) {
+    if (fiCodi[n] >= 0) {
+      dins.fill(comentari, n, fiCodi[n] + 1);
+      llig(trosCodi[n].filter((_t, k) => k % 2 === 0).join('\n'));
+      n = fiCodi[n];
+      continue;
+    }
+    dins[n] = comentari;
+    llig(linies[n]);
+  }
+  return dins;
+}
+
+function extreuLlistes(md, blocs, opcions) {
+  const linies = md.split('\n');
+  const { fi: fiCodi, tros: trosCodi } = blocsDeCodi(md, linies.length);
+  const enComentari = iniciEnComentari(linies, fiCodi, trosCodi);
+  const resultat = [];
+  let i = 0;
+  while (i < linies.length) {
+    const linia = linies[i];
+    if (fiCodi[i] >= 0) {
+      // El text de davant d'un bloc que obri a mitja línia és una línia més:
+      // «- ítem<U+2028>```» continua sent un ítem, com al pas 1a d'abans.
+      const [abans, ...resta] = trosCodi[i];
+      resultat.push((abans && !enComentari[i] ? extreuLlistes(abans, blocs, opcions) : abans)
+        + resta.map((t, k) => (k % 2 ? t : apartaCodi(t, blocs))).join(''));
+      i = fiCodi[i] + 1; continue;
+    }
+    const primer = !enComentari[i] && MARCA_LLISTA.exec(linia);
+    if (!primer || opcions.nivellLlista >= 32) {
+      resultat.push(linia); i += 1; continue;
+    }
+    const sagnat = amplariaSagnat(primer[1]);
+    const tipus = /^\d/.test(primer[2]) ? 'ol' : 'ul';
+    const inici = tipus === 'ol' ? Number.parseInt(primer[2], 10) : 1;
+    const items = [];
+    let esSolta = false;
+    while (i < linies.length) {
+      const cap = MARCA_LLISTA.exec(linies[i]);
+      if (!cap || amplariaSagnat(cap[1]) !== sagnat || (/^\d/.test(cap[2]) ? 'ol' : 'ul') !== tipus) break;
+      const columna = amplariaSagnat(cap[0].slice(0, cap[0].length - cap[3].length));
+      const contingut = [cap[3]];
+      i += 1;
+      let buit = false;
+      let fiCodiItem = -1; // WC-03 · el codi obert dins de l'ítem hi continua fins a la parella
+      while (i < linies.length) {
+        const seguent = linies[i];
+        const dinsCodi = i <= fiCodiItem;
+        if (!seguent.trim()) {
+          let n = i + 1;
+          while (n < linies.length && !linies[n].trim()) n += 1;
+          const proxim = n > fiCodiItem && MARCA_LLISTA.exec(linies[n] || '');
+          const mateixNivell = proxim && amplariaSagnat(proxim[1]) === sagnat
+            && (/^\d/.test(proxim[2]) ? 'ol' : 'ul') === tipus;
+          const continua = n < linies.length
+            && (n <= fiCodiItem || amplariaSagnat(/^[ \t]*/.exec(linies[n])[0]) >= columna);
+          if (!mateixNivell && !continua) break;
+          esSolta = true;
+          if (mateixNivell) { i = n; break; }
+          contingut.push(''); i = n; buit = true; continue;
+        }
+        const marca = !dinsCodi && MARCA_LLISTA.exec(seguent);
+        const marge = amplariaSagnat(/^[ \t]*/.exec(seguent)[0]);
+        if (marca && amplariaSagnat(marca[1]) <= sagnat) break;
+        if (marge >= columna) {
+          if (!dinsCodi && fiCodi[i] >= 0) fiCodiItem = fiCodi[i];
+          contingut.push(seguent.replace(/\t/g, '    ').slice(columna));
+        } else if (dinsCodi) {
+          contingut.push(desindenta(seguent, columna)); // tanca o codi a la columna 0
+        } else if (!buit && esLiniaDeParagraf(seguent)) {
+          contingut.push(seguent.trimStart()); // continuació de la mateixa frase
+        } else break;
+        buit = false;
+        i += 1;
+      }
+      items.push(contingut.join('\n'));
+    }
+    const cos = items.map(item => {
+      let contingut = parseMarkdown(item, { ...opcions, entradilla: false, nivellLlista: opcions.nivellLlista + 1 });
+      if (!esSolta) contingut = contingut.replace(/^<p>([\s\S]*?)<\/p>(?=\s*(?:<(?:ul|ol|pre|div|h[1-6])\b|$))/, '$1');
+      return `<li>${contingut}</li>`;
+    }).join('');
+    blocs.push(`<${tipus}${tipus === 'ol' && inici !== 1 ? ` start="${inici}"` : ''}>${cos}</${tipus}>`);
+    resultat.push('', marcador('BLOC', blocs.length - 1), '');
+  }
+  return resultat.join('\n');
+}
+
+export function parseMarkdown(md, { entradilla = true, etiquetaTaula = null, nivellLlista = 0 } = {}) {
   if (!md) return '';
   let html = md.replace(/\r\n/g, '\n').replace(/\u0000/g, '');
 
-  // 1a · Blocs de codi tancats. Envoltats de línies buides perquè el pas de
-  //      paràgrafs els tracte com a bloc propi i no els fique dins d'un <p>.
+  // 1a · Blocs de codi tancats i llistes, en un sol pas (extreuLlistes,
+  //      WC-03): la mateixa regla de tanca per a tots dos.
   const blocs = [];
-  html = html.replace(/^[ \t]*(`{3,}|~{3,})[ \t]*([\w+-]*)[^\n]*\n([\s\S]*?)^[ \t]*\1[ \t]*$/gm, (_m, _tanca, llengua, codi) => {
-    const lang = llengua ? llengua.toLowerCase().trim() : '';
-    if (lang === 'mermaid') {
-      blocs.push(`<div class="sdp-diagrama-card"><div class="sdp-diagrama-capcalera"><span>📐</span> Diagrama d’arquitectura</div><pre class="sdp-diagrama-cos"><code class="language-mermaid">${escapaHtml(codi.replace(/\n$/, ''))}</code></pre></div>`);
-    } else {
-      const classe = llengua ? ` class="language-${llengua}"` : '';
-      blocs.push(`<pre><code${classe}>${escapaHtml(codi.replace(/\n$/, ''))}</code></pre>`);
-    }
-    return `\n\n${marcador('BLOC', blocs.length - 1)}\n\n`;
-  });
+  html = extreuLlistes(html, blocs, { etiquetaTaula, nivellLlista });
 
   // 1b · Codi en línia.
   const enLinia = [];
@@ -205,25 +381,6 @@ export function parseMarkdown(md, { entradilla = true, etiquetaTaula = null } = 
   // Negreta, cursiva i enllaços.
   html = formatEnLinia(html);
 
-  // Lists
-  // Decisió del Mestre (30-10-2026) · La marca provisional del tipus de llista
-  // és un atribut data-, no una classe: no ix mai a l'HTML i cap full l'estila.
-  // Unordered Lists (-, *, +)
-  html = html.replace(/^[ \t]*[-*+][ \t]+(.*)$/gim, '<li data-llista="ul">$1</li>');
-  // Ordered Lists (1., 2., etc)
-  html = html.replace(/^[ \t]*\d+\.[ \t]+(.*)$/gim, '<li data-llista="ol">$1</li>');
-
-  // Join consecutive li tags of the same type
-  html = html.replace(/<\/li>\n<li data-llista="ul">/gim, '</li><li data-llista="ul">');
-  html = html.replace(/<\/li>\n<li data-llista="ol">/gim, '</li><li data-llista="ol">');
-
-  // Wrap entire sequences of consecutive li tags into a single ul or ol
-  html = html.replace(/((?:<li data-llista="ul">[\s\S]*?<\/li>)+)/gi, '<ul>$1</ul>');
-  html = html.replace(/((?:<li data-llista="ol">[\s\S]*?<\/li>)+)/gi, '<ol>$1</ol>');
-
-  // Lleva les marques provisionals dels <li>
-  html = html.replace(/<li data-llista="[uo]l">/g, '<li>');
-
   // Tables
   let taules = 0;
   html = html.replace(/^\|(.+)\|[ \t]*\n\|([-: |]+)\|[ \t]*\n((\|.*\|[ \t]*(?:\n|$))+)/gm, (match, head, sep, body) => {
@@ -250,14 +407,15 @@ export function parseMarkdown(md, { entradilla = true, etiquetaTaula = null } = 
   html = blocks.map(block => {
     const net = block.trim();
     if (net === '') return '';
-    if (net.startsWith(ENTRADILLA)) return `<p class="lead">${net.slice(ENTRADILLA.length).replace(/\n/g, ' ')}</p>`;
+    if (net.startsWith(ENTRADILLA)) return `<p class="lead">${formatSaltTou(net.slice(ENTRADILLA.length)).replace(/\n/g, ' ')}</p>`;
     // Un comentari HTML no és contingut: si davant d'un bloc només hi ha
     // comentaris, mana el que ve darrere. Ara que el títol és un bloc propi
     // (6), «### X\n<!-- nota -->\n- a» deixava un <p> buit davant de la llista.
     const senseComentaris = net.replace(/^(?:<!--[\s\S]*?-->\s*)+/, '');
-    if (senseComentaris === '' || senseComentaris.match(/^(<h|<u|<o|<l|<a|<hr|<div|<blockquote|\u0000BLOC)/)) return block;
-    // Text net: ajuntem les línies amb un espai
-    return `<p>${net.replace(/\n/g, ' ')}</p>`;
+    if (senseComentaris === '' || senseComentaris.match(/^(<(?:h[1-6]|ul|ol|li|hr|div|blockquote|pre|table)(?:[\s>])|\u0000BLOC)/)) return block;
+    // Text net: ajuntem les línies amb un espai (abans, la negreta i la
+    // cursiva partides per un salt tou: WC-04).
+    return `<p>${formatSaltTou(net).replace(/\n/g, ' ')}</p>`;
   }).join('\n\n');
 
   return html

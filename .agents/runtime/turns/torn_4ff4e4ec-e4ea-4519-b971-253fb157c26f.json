@@ -3,7 +3,7 @@
   "turn_id": "torn_4ff4e4ec-e4ea-4519-b971-253fb157c26f",
   "actor": "gemini-4-argon",
   "scope": "documents",
-  "state": "planned",
+  "state": "closed",
   "revision": 8,
   "createdAt": "2026-10-25T20:19:53.376Z",
   "updatedAt": "2026-10-25T20:30:21.705Z",
@@ -3834,5 +3834,6 @@
       "action": "bind-plan",
       "at": "2026-10-25T20:30:21.704Z"
     }
-  ]
+  ],
+  "closedAt": "2026-11-03T05:17:29.321Z"
 }

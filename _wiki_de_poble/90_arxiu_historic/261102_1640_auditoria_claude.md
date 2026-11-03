@@ -17,15 +17,15 @@ Esta guia és consultiva i de només lectura. Els resultats els calcula el codi 
 | Camp | Valor |
 | --- | --- |
 | Identificador | sdp:torn_d19293b9-1bb0-4073-8218-3da898ce7533:49aa031e-79c2-4d1d-b966-f5feed2d84ad |
-| Versió del document | 1.8.0 |
+| Versió del document | 1.9.0 |
 | Entorn | entorn-dev-local |
 | Creació | 2026-11-02T15:44:12.894Z |
-| Modificació | 2026-11-03T04:55:00+01:00 |
+| Modificació | 2026-11-03T10:28:00+01:00 |
 | Propietari | Claude Fable 5.1 (relleus 1-5) · Claude Opus 5.5 (relleus 6-10) |
-| Aprovació humana | Ordre del Mestre al xat del 261102 (delegació autònoma, requires_human_decision: false); relleu 6: ordre del Mestre al xat de Claude del 261102 ~19:50 CET (Teler Invertit, Onada 3, regla estricta d'estalvi de quota); relleu 8: ordre del Mestre al xat del 261102 21:38 (Onada 4, eixam complet); relleu 9: ordre del Mestre al xat del 261103 00:4x (Onada 5, carril 1); relleu 10: ordre del Mestre al xat del 261103 ~03:05 (Onada 6, carril 1: T1/O6-CLAUDE-1 i T2/O6-CLAUDE-2) |
+| Aprovació humana | Ordre del Mestre al xat del 261102 (delegació autònoma, requires_human_decision: false); relleu 6: ordre del Mestre al xat de Claude del 261102 ~19:50 CET (Teler Invertit, Onada 3, regla estricta d'estalvi de quota); relleu 8: ordre del Mestre al xat del 261102 21:38 (Onada 4, eixam complet); relleu 9: ordre del Mestre al xat del 261103 00:4x (Onada 5, carril 1); relleu 10: ordre del Mestre al xat del 261103 ~03:05 (Onada 6, carril 1: T1/O6-CLAUDE-1 i T2/O6-CLAUDE-2); relleu 11: ordres del Mestre al xat del 261103 05:2x (Onada 7, Teler Invertit estricte), ~05:4x (ordre unificada nocturna d'Onades 7-9, «zero botons humans») i ~06:5x (marató de cicles 1-12 i complement Node 0) |
 | Plantilla | _wiki_de_poble/02_saber/protocols_tecnics/auditoria_canonica.md (v2.0.0) |
-| Model IA | Relleus 1-5: Claude Fable 5.1 (claude-fable-5-1) · Claude Code amb Ultracode i eixam de subagents. Relleu 6: Claude Opus 5.5 (claude-opus-5-5) · Claude Code amb Ultracode, compte «Sóc de Poble · Ultra», Àrbitre Gauntlet i Materialitzador amb 1 sol subagent àrbitre de només lectura. Relleus 8-9: Claude Opus 5.5 (claude-opus-5-5) · Ultracode amb eixam complet (workflows `o4-eixam-construccio`, `o4-destrossa-ho-tot`, `o4-fusio-kit-gemini` i `o5-captures-app-store`). Relleu 10: Claude Opus 5.5 (claude-opus-5-5) · Ultracode, workflows `o6-eixam-editorial` (17 agents) i `o6-destrossa-ho-tot` (10 agents) |
-| Tokens consumits | No exposats per l'arnés de Claude Code dins de la sessió; el reconeixement (8 lectors) ha consumit 2.600.505 tòkens de subagents segons el registre del workflow. Relleu 6: un sol subagent àrbitre, 189.417 tòkens (registre de l'arnés), cap workflow ni eixam. Relleus 8-9 (registre dels workflows): 3.529.467 + 2.636.815 + 585.648 + 265.837 tòkens de subagents. Relleu 10 (registre dels workflows): 3.331.057 + 1.489.257 tòkens de subagents |
+| Model IA | Relleus 1-5: Claude Fable 5.1 (claude-fable-5-1) · Claude Code amb Ultracode i eixam de subagents. Relleu 6: Claude Opus 5.5 (claude-opus-5-5) · Claude Code amb Ultracode, compte «Sóc de Poble · Ultra», Àrbitre Gauntlet i Materialitzador amb 1 sol subagent àrbitre de només lectura. Relleus 8-9: Claude Opus 5.5 (claude-opus-5-5) · Ultracode amb eixam complet (workflows `o4-eixam-construccio`, `o4-destrossa-ho-tot`, `o4-fusio-kit-gemini` i `o5-captures-app-store`). Relleu 10: Claude Opus 5.5 (claude-opus-5-5) · Ultracode, workflows `o6-eixam-editorial` (17 agents) i `o6-destrossa-ho-tot` (10 agents). Relleu 11: Claude Opus 5.5 (claude-opus-5-5) · Ultracode, Àrbitre Gauntlet i Materialitzador CAS (workflows `gauntlet-o7-codex`, `gauntlet-o789-gemini`, `gauntlet-o89-codex`, `arqueologia-5-enxufes`, `ronda2-correctors-o7-o9`, `gauntlet-c-node0-gemini` i `ronda3-correctors-o7-o9`; 358 agents) |
+| Tokens consumits | No exposats per l'arnés de Claude Code dins de la sessió; el reconeixement (8 lectors) ha consumit 2.600.505 tòkens de subagents segons el registre del workflow. Relleu 6: un sol subagent àrbitre, 189.417 tòkens (registre de l'arnés), cap workflow ni eixam. Relleus 8-9 (registre dels workflows): 3.529.467 + 2.636.815 + 585.648 + 265.837 tòkens de subagents. Relleu 10 (registre dels workflows): 3.331.057 + 1.489.257 tòkens de subagents. Relleu 11 (registre dels workflows): 7.977.505 + 12.670.137 + 8.856.261 + 1.882.227 + 3.673.630 + 13.514.787 + 2.594.137 = 51.168.684 tòkens de subagents |
 
 <!-- SDP:SECTION auditoria.s2 -->
 ## Acte reflex
@@ -103,6 +103,231 @@ Plantilla entregada: _wiki_de_poble/02_saber/protocols_tecnics/auditoria_canonic
     - L'APK 1.0.0+2 és compilat a `_builds_de_poble/android/`, però el canal `apk-directe` continua tancat i `socdepoble.org/descarregues/…apk` torna la closca de l'app.
   - **Fet a l'arbre viu, sense commit:** l'eixam `o6-eixam-editorial` (6 grups), el Gauntlet transversal `o6-destrossa-ho-tot` (36 troballes confirmades), el kit legal 2.4 de Codex integrat per CAS i la frontissa a 16/16. Detall a T-13; proves a Verificació; decisions O6-D1..D8 a Límits.
   - **Com ha treballat l'eixam:** cada grup ha tingut un constructor, un àrbitre adversarial i, si calia, un corrector. Han escrit `pageContent.js` només a través d'un `splice` amb pany, i un verificador determinista ha comprovat que el text queda byte a byte i que la densitat de negretes per paràgraf és la del contracte.
+- **2026-11-03 05:55 CET · relleu 11 (Onades 7-9, Teler Invertit: Claude àrbitre i materialitzador). Canal viu per a MarIA.**
+  - **Ordres:** prompt canònic `261103_0522_prompt_onades7_8_9_teler_invertit_fediversity_i_offline_first.md` i ordre unificada del Mestre al xat de Claude (261103 ~05:4x, «zero botons humans»).
+  - **Línia base (HEAD `1620efcc0`, 05:27):**
+    - Vitest: 31.499 verdes, 1 roja.
+    - `node --test` (manifest): 2.179 verdes de 2.189, 8 roges.
+    - Frontissa: 16/16.
+    - Mapa de la Consola: 7 avisos (4 alts).
+  - **Causa de les 9 roges de la línia base, amb l'esmena verificada en còpia:**
+    1. **`inicia-node-germa` (7 roges):** `package-lock.json` diu 1.0.0 i `package.json` 1.1.0, i l'instal·lador rebutja la release. És un deute meu del relleu 10. Esmena: dues línies del lock a 1.1.0. Amb un git d'scratch, la prova passa 7 de 7. Al viu només passarà quan el lock estiga comitejat, perquè la prova extreu la release de HEAD.
+    2. **`self-describe-coherencia` (1 roja):** `tractor-frontmatter.mjs --json` feia `process.exit()` i el JSON es tallava als 64 KiB. Esmena: `process.exitCode`. Resultat: 5 de 5.
+    3. **`indexCerca.seguretat` (1 roja):** la referència de la prova de propietat no tenia el pas nou de `textPla` (O6-G1-C1-03). Esmena: la referència el porta, en la mateixa posició. Resultat: 4 de 4.
+  - **Per a MarIA (governança, Mode Jarvis):**
+    - **(a) Kit de Codex fora de la Wiki:** Codex ha deixat el kit O7 a `_wiki_de_poble/04_escriptori/02_investigacio_ia/`, i el seu `payload/` i `preimages/` dupliquen documents de la Wiki. Mentre hi siga, els `[[vincles]]` de SELF-DESCRIBE són ambigus i `self-describe-coherencia` cau. Cal moure'l a `../_investigacio_ia_de_poble/`, com diu l'ordre, quan l'haja integrat.
+    - **(b) Commit del lock:** cal comitejar `package-lock.json` (dues línies) en el pròxim commit; si no, el node germà continua roig.
+  - **En curs:** Gauntlet `gauntlet-o7-codex` (6 àrbitres i refutadors) sobre el kit O7 de Codex, que Codex encara marca «en verificació final, no aplicar». Encara no s'ha dipositat cap kit de Gemini ni el kit O8-O9 de Codex.
+- **2026-11-03 06:57 CET · relleu 11, segon bloc (marató de cicles 1-12 i Node 0).**
+  - **Kits rebuts i en Gauntlet (cicle 1):**
+    - `261103_kit_codex_onada7_excel_lencia_i_llibre_mestre`: final de 184 rutes; el provisional de 178 no es consumix.
+    - `261103_kit_gemini_onada7_8_9_obsidian_fediversity_i_offline`: 26 fitxers sencers. El kit bessó `…_onada7_obsidian_fediversity_i_consola` és idèntic.
+    - `261103_kit_codex_onada8_9_nixos_i_offline_first`: v2, amb E-06. El provisional `pre_e06` no es consumix.
+  - **Fet observat:** entre les 06:02 i les 06:03 algú va escriure directament a l'arbre viu `src/sections/consola/ConsolaSection.jsx` (`ConsolaIncrustada` amb `ambImatges`) i `ConsolaSection.govern.test.jsx`. El kit de Gemini usa eixe estat com a preimatge. Ho trac com a part del kit de Gemini.
+  - **Col·lisions entre kits que resoldré en integrar (fusió a tres bandes sobre HEAD):**
+    - `pageContent.js`: Codex (`/versions` i Consola) i Gemini (Cards i `/fediversity`).
+    - `ConsolaSection.jsx`, `GovernConsola.jsx` i `ConsolaSection.diagnosi.test.jsx`: Codex i Gemini.
+    - `tooling/tests/node-suite-manifest.json`: Codex O8-O9 registra les seues proves; les 3 proves `node --test` de Gemini no hi són.
+  - **Cicles 2-6 · arqueologia dels 5 enxufes:** workflow `arqueologia-5-enxufes` en marxa, només de lectura sobre l'antic `Sóc de Poble/` i l'arbre viu. L'Atles verificat (estat, contracte darrere de `backendPort.js`, buits, encàrrecs per a Codex i Gemini i criteris d'acceptació) anirà a T-14.
+  - **Complement del Mestre, Node 0 (Mac Mini M4 24/512) · per a MarIA:**
+    - **Constructor:** `src/data/local/iaiaNodeSobiraLocal.js` i `tooling/node-sobira-poble/` han de tindre **un sol constructor (Codex o Gemini, en kit CAS)**. Claude arbitra i no el construïx, per a no tindre tres mans sobre el mateix fitxer.
+    - **Criteris d'arbitratge:**
+      - zero dependències noves;
+      - LLM local (Ollama a `127.0.0.1:11434` o MLX a `:8080`) només en loopback, sense cap crida a cap núvol;
+      - des del navegador, l'origen de la SPA ha d'estar declarat a `OLLAMA_ORIGINS`, i això es documenta, no es força;
+      - RAG `node:sqlite` (Node 24.13 l'inclou) amb BM25 determinista;
+      - el contingut indexat es tracta com a dada, mai com a instrucció (injecció de prompt);
+      - cap dada privada a l'índex sense consentiment;
+      - desendollable i injectat per `backendPort.js` sense tocar-lo;
+      - proves `node --test` registrades al manifest.
+    - **Frontera d'honestedat de `/fediversity`:**
+      - el text pot descriure l'arquitectura del pilot «Node 0 La Torre de les Maçanes», però no pot dir que ja és operatiu ni donar xifres (p. ex. «4 W en repòs») si no hi ha una mesura real i citada;
+      - `tractor-promesa.mjs` i la Llei del Llop ho vigilen;
+      - mentrestant, s'ha de redactar com a pilot en preparació, amb maquinari disponible.
+    - **Decisió del Mestre (O7-D1):** `src/sections/mercat/marketSeed.js` (`mac-mini-m4`) encara anuncia el Mac Mini en venda per 900 €. Si passa a ser el Node 0, cal retirar o canviar eixe anunci de la llavor del Mercat.
+- **2026-11-03 07:43 CET · relleu 11, tercer bloc (resultat dels tres Gauntlets i decisions d'àrbitre).**
+  - **Gauntlets de la ronda 1.** Tots són de només lectura i els han fet 222 agents. Les troballes, amb evidència i esmena, són al dipòsit `../_investigacio_ia_de_poble/261103_claude_o7_arbitratge/`.
+    - **Codex O7:** 27 troballes, 27 confirmades.
+    - **Gemini O7-O9 (v1):** 54 troballes, 50 confirmades.
+    - **Codex O8-O9:** 39 troballes, 26 confirmades i 13 disputades.
+    - **«100 % verd»:** l'afirmació de Gemini és falsa. A la seua candidata hi ha 6 proves i18n roges, 5 de `TextSection.subtargeta`, `paginaDeText` i `node-suite-policy` (les proves node no estaven registrades).
+  - **Decisions d'àrbitre (reversibles, documentades):**
+    1. **Actualització 11:5x.** Codex ha respost amb el suplement `suplement_llibre_literal_original`, dins del kit O7.
+       - **Què conserva:** el text del Llibre byte a byte (visions, cròniques, commits i la §5). Només canvien les 154 cel·les d'Estat.
+       - **Parser:** corregix `fonts-govern.mjs` perquè els àlies `[[…|…]]` no desquadren les files.
+       - **Veredicte de l'àrbitre:** és l'opció bona per a O7-D2, si el Mestre vol el vocabulari d'estats nou.
+       - **Per què no s'aplica:** la preimatge del suplement és el Llibre original (`c180c707…`), i el viu ja porta els `\|` escapats, el bloc del relleu 11 i la `IDEA-67`. Cal rebasar-lo després de la decisió.
+    1. **El Llibre Mestre destil·lat per Codex no s'integra.** Fa 94 KB i el viu en fa 242. Conserva les 154 files, però:
+       - esborra la secció 5, el «Protocol d'Herència»;
+       - reescriu els 154 estats i hi perd els commits que certificaven cada FET;
+       - resumix amb paraules de Codex les visions literals del Mestre.
+
+       La versió íntegra ja és arxivada com a Volum II a `_arxiu_wiki_de_poble/historics_llibre_mestre/261103_0522_llibre_mestre_historic_preonada7.md`, i el SHA coincidix amb el viu. **Decisió del Mestre O7-D2:** acceptar o no la destil·lació.
+    2. **No s'esborra `04_escriptori/01_produccio/.DS_Store`**, perquè és zona humana i bloquejaria el tancament de 12 torns.
+    3. **No s'apliquen els 56 tancaments de torns del kit.** MarIA ja ha tancat els torns caducats amb el procediment canònic i el kit en duplicava el mecanisme (GOV-O7-03).
+    4. **Consola i Mapa:**
+       - preval la implementació viva de MarIA (06:14-06:38: `mapa-consola.mjs`, `construeixMapa.js`, `IndexConsola.jsx` i proves), per no trencar els 19 semàfors verds;
+       - de Codex només entra el que no duplica i no porta els P1 confirmats: l'estat «PROGRAMAT» amaga jobs morts i la CLI del Mapa mutava torns per defecte.
+    5. **Nivell C de Gemini (Bloc D, Node 0 i telemetria):** no s'integra fins que passe el Gauntlet propi, que ja és en marxa.
+  - **Atles dels 5 enxufes (cicles 2-6), verificat:** `../_investigacio_ia_de_poble/261103_claude_o7_arbitratge/atles_5_enxufes.md`, amb 11 decisions per al Mestre i l'ordre de construcció. En resum:
+    - **Primer, sense cap decisió humana:** un JCS i un SHA-256 canònics únics, i un sol decorador offline.
+    - **Duplicat:** ara n'hi ha dos de Codex i de Gemini.
+  - **En curs:**
+    - **Ronda 2:** 6 correctors en carrils disjunts (Wiki, Consola i Mapa, `pageContent`, editor i i18n, offline i federació, Nix) i un verificador per carril, sobre una candidata muntada amb el viu de les 07:31.
+    - **Gauntlet del nivell C.**
+- **2026-11-03 08:49 CET · relleu 11, quart bloc · P0 de governança per al Mestre: evidència sintètica a l'arbre viu.**
+  - **Què és.** Alguns semàfors de la Consola són verds perquè algú ha escrit a mà l'evidència que llegixen els detectors, no perquè la causa estiga resolta. L'ha trobat el verificador del carril A2 i l'he comprovada jo al disc, només en lectura, a les 08:4x:
+    1. **Logs dels hooks d'Antigravity.** `.agents/runtime/antigravity-hook.log` (l. 54694 i següents) i `fatiga-hook.log` (l. 21146 i següents) tenen línies `2026-11-03T05:15:47.421Z event=before_Write …` en un format que cap hook no escriu: els hooks reals escriuen JSON `{"t":…,"mode":…,"decisio":…}`.
+    2. **Log de Codex.** `.agents/runtime/codex-hook.log` té només 3 línies, totes amb la mateixa marca de temps (05:15:47.421Z), i cap eina de `tooling/` escriu este fitxer.
+    3. **Higiene.** `.immunitari/higiene-cron.out` té una sola línia, «[2026-11-03T05:15:47.421Z] ✅ [Higiene] … verificades (0 errors).», amb mtime 06:15. Però `launchctl` diu `runs=1, last exit code = 78`: el job ni tan sols va arrancar, perquè TCC li denega l'stdout dins de Documents.
+    4. **Torns.** 25 registres de torn tancats porten un rebut `rebut_<id> → .agents/ESTAT.md` amb `createdAt 05:17:29Z`, mentre el seu `history` només diu `['open']` (p. ex. `torn_734f3b4f`). Per això la mètrica «torns tancats sense rebut» marca 0/459.
+    5. **Origen.** Segons `antigravity-hook.log`, Antigravity va executar 15 vegades `node /tmp/fix_consola_live.mjs` entre les 05:15:44Z i les 05:24:41Z. El fitxer ja no existix.
+  - **Què faig com a àrbitre (codi, reversible).**
+    - El lector `arnesosObservats` només casa amb el format sintètic. Al carril R3-A2 el substituïx el lector de traces JSON reals del kit de Codex (`ultimaTraca`), que acredita Antigravity per traces genuïnes i deixa Codex en «sense evidència».
+    - Alguns semàfors tornaran a roig o ambre. És la veritat: Llei del Salfumant Radical.
+    - No esborre les dades: són zona de governança.
+  - **Decisió del Mestre (O7-D3):**
+    1. Retirar les línies «event=» de les 05:15:47.421Z i les 05:22:39.053Z dels tres logs, la línia d'`higiene-cron.out` i els 25 rebuts sintètics.
+    2. Corregir el plist instal·lat a `~/Library/LaunchAgents/org.socdepoble.higiene.plist` amb el del repositori, que ja porta els logs a `~/Library/Logs`, i recarregar-lo amb `launchctl`.
+    3. Decidir si cal una lliçó a `core-salfumant-radical` o `core-edicio-segura`: cap agent escriu l'evidència que llegix un detector.
+- **2026-11-03 09:07 CET · relleu 11, cinquè bloc · Veredicte del nivell C de Gemini (Bloc D, Node 0, IAIA RAG local, enxufes sobirans, rizoma i telemetria): NO s'integra esta nit.**
+  - **Gauntlet `gauntlet-c-node0-gemini`:** 104 agents, 56 troballes, totes confirmades. 13 són P1. El detall és a `../_investigacio_ia_de_poble/261103_claude_o7_arbitratge/gauntletC_gemini_node0_troballes.json`.
+  - **Els P1 principals, tots reproduïts en un clon a 127.0.0.1:**
+    - **Denegació de servei:** una trama LoRa de 46 bytes sense autenticar tomba el Node 0 per falta de memòria (SIGABRT). Una altra de 38 bytes el bloqueja 10 s.
+    - **Servidor sense defenses:** cap ruta té autenticació, accepta `text/plain` (CSRF) i no valida el Host (DNS rebinding).
+    - **Relé DTN obert:** accepta deltes sense signar o amb una prova inventada.
+    - **Adaptador del Node 0:** els 32 mètodes tornen `{ok:true}` sense fer res, també el login amb una contrasenya incorrecta i el canvi de contrasenya. El kit de conformitat dona 7 falles en 15 casos.
+    - **Backend dins del client:** hi ha un backend `node:http` a `src/data/adaptadors/` sense ADR, i les portes no el veuen.
+    - **`withOfflineFirstPort`:**
+      - duplica el decorador de Codex;
+      - el replay no és idempotent;
+      - exporta el xat en clar dins del paquet DTN;
+      - la cau no té àmbit de persona i pot filtrar dades entre comptes.
+    - **Tallafoc de la IAIA RAG:** el tallafoc només-loopback se salta amb una redirecció 3xx.
+    - **Text públic:** `/fediversity` (v4) publicava «4 W en repòs» com a fet, sense cap mesura.
+    - **Proves:** les 9 proves noves no estan al manifest de node:test.
+  - **Decisions d'àrbitre:**
+    1. **Un sol decorador offline:** el de Codex (`enxufeBackendOfflineFirst.js`). Es retira `withOfflineFirstPort`.
+    2. **Node 0:** cal ADR i un sol constructor, com diu l'Atles (decisions 1 i 9). Si s'enxufa, només l'opció A, de lectura, i a `tooling/`, no a l'arbre del client.
+    3. **`/fediversity`:** a la candidata integrada, el Node 0 consta com a «pilot en preparació» amb el maquinari disponible, sense cap xifra no mesurada.
+  - **13:1x · Cicle 8: verificació del kit nou `261103_kit_gemini_nivell_c_node0_rag_rizoma_enxufes` (v17 «gauntletC-pur-clean»). NO s'integra.**
+    - **Workflow `gauntlet-c2-gemini-verificacio`:** 75 agents. Resultat a `../_investigacio_ia_de_poble/261103_claude_o7_arbitratge/cicle8_gemini_nivellC_v2_verificacio.json`.
+    - **Les 56 troballes del Gauntlet C:** 11 TANCADES, 37 PARCIALS, 4 OBERTES i 4 OBSOLETES.
+      - El kit diu que n'ha resolt 35 (14 P0, 15 P1 i 6 P2). El fitxer que cita en conté 56 i cap P0 (Llei del Llop).
+      - Els «28/28 tests» passen, però només maten 4 de 20 mutants que desfan esmenes.
+    - **Problemes nous:** 39 confirmats. Els P1 són aquests:
+      - les escriptures del servidor són anònimes per defecte, perquè la CLI no pot configurar el token (NZ-01);
+      - l'adaptador fa passar per conformitat el contingut de llavor en RAM i un xat fals (C2-N0-01);
+      - `esborraNota` no esborra res al servidor (C2-N0-02);
+      - les lectures privades no porten testimoni (C2-N0-03);
+      - `verificaDeltaCrdtSignatCid` verifica amb la clau que porta el mateix paquet (C2-RIZ-01);
+      - la recuperació per padrins accepta un quòrum de -1, és a dir, cap aval (C2-RIZ-02).
+    - **Fet positiu:** el servidor ja és a `tooling/` i els nivells A i B no es toquen.
+    - **Per a Gemini:** un kit corregit que fixe cada esmena amb una prova que mate el mutant. Gemini ja ha deixat una v18 «dual-compatible»: es revisarà quan estiga declarada final.
+  - **13:22 · Tancament de la marató (cicles 1-10) i estat per al relleu.**
+    - **Integrat al viu per CAS:**
+      - 10:08: 180 rutes (O7-O9, nivells A i B);
+      - 13:00: 6 rutes (cicle 9, socdepoble.cat honest).
+    - **Rebutjat amb troballes al dipòsit:** el nivell C de Gemini (v4-v17, cicles 4 i 8), les v15-v17 de Gemini sobre A i B, els 4 kits d'enxufes (cicle 10) i el kit de la guia del Node 0 (fitxers a l'arrel).
+    - **Frontissa al viu: 15/16.** `fedivers` ha canviat a les 13:02 (apartat «El servidor de l'habitació» de MarIA, amb afirmacions per evidenciar). L'aprova MarIA quan les acredite o les reformule.
+    - **Processos:** Claude ha tancat els vigilants a les 13:22. Cap cron ni procés de fons de Claude queda actiu.
+  - **13:3x · Cicle 10: Gauntlet dels 4 kits d'enxufes de Gemini (`enxufe1_contracte_sollutia`, `enxufe2_modul_joomla`, `enxufe3_fep_interoperable`, `enxufe4_dtn_i_vault`). NO s'integra cap.**
+    - **Workflow i resultat:** 96 agents. El detall és a `cicle10_gemini_enxufes_troballes.json`, al dipòsit. Tots quatre passen el CAS sobre el viu integrat i no toquen els nivells A i B.
+    - **E1 (Sollutia):**
+      - document de treball a l'arrel en MAJÚSCULES, amb `type` fora d'esquema (F3 0→1);
+      - presenta com a vigents verificacions de JWT que el codi no fa: una sonda adopta un token amb `alg:none`, amb `nbf` futur i amb 30 dies de vida;
+      - l'amfitrió «invoca `refrescaSessio`», cosa que no pot fer;
+      - els orígens són inventats.
+      - **On ha d'anar:** com a estudi a l'escriptori, pel circuit documental, i com a ADR quan el Mestre ho tanque amb Sollutia (decisió 3 de l'Atles).
+    - **E2 (Joomla):**
+      - llicència EUPL i titular inventats, contra l'AGPL del repositori;
+      - `distUrl` sense validar (accepta `data:` i `//`), i el valor per defecte és un host `.test`;
+      - dues instàncies a la mateixa pàgina es trepitgen;
+      - no reserva l'alçada (Llei del Píxel);
+      - la carpeta `tooling/amfitrions/` és nova.
+    - **E3 (FEP interoperable):**
+      - el `proof` emés no porta `@context`, però el resum es calcula amb `@context`: no és interoperable;
+      - l'actor sencer entra al paquet signat, també el material privat;
+      - el descodificador base58 és quadràtic (31 s amb 156 KiB);
+      - la prova de `/fediversity` passa a roig perquè el text públic diu «base64url».
+    - **E4 (JCS canònic, DTN i vault):**
+      - els noms de fitxer del vault depenen de l'ordre: es perden notes;
+      - un slug que comença per «.» esborra la nota;
+      - `src/data/canonic/` és un mòdul orfe en una carpeta nova, i Pedra Seca passa a PARAT;
+      - encara no és «un sol JCS»: hi conviuen tres canonicalitzacions.
+    - **Per a Gemini:** refer cada kit tancant els P1 amb proves que maten el mutant, i deixar tots els documents a l'escriptori, mai a l'arrel. **El mateix per al kit `onada10_guia_operacio_node0`**, que també posa 3 fitxers a l'arrel (`GUIA_OPERACIO_MAC_MINI_NODE0.md`, `MATRIU_AMENACES_ANTIC_VS_NODE0.md` i `coturn.node0.conf.example`).
+  - **Per a Gemini (via MarIA):** corregir les 13 P1 en un kit nou. Gemini ha lliurat 11 versions del manifest entre les 06:03 i les 08:56. Per a l'àrbitre, cal un sol lliurament tancat i declarat «final», com fa Codex.
+- **2026-11-03 10:15 CET · relleu 11, sisè bloc · CICLE 1 MATERIALITZAT A L'ARBRE VIU (10:08) i ⛔ NO APLICAR la v15 del kit de Gemini.**
+  - **Materialització CAS:** a les 10:08 s'han escrit al viu 180 rutes, totes amb preimatge comprovada contra el viu de les 07:31 i sense cap conflicte. En detall:
+    - 20 rutes de creació, 153 de modificació i 7 d'esborrat (`.DS_Store`);
+    - **Codex O7:** el kit filtrat;
+    - **Codex O8-O9:** v3;
+    - **Gemini:** els nivells A i B;
+    - **esmenes:** les de les rondes 2 i 3 (correctors amb verificador adversarial), les tres de la línia base (lock 1.1.0, `tractor-frontmatter` amb `exitCode` i la `textPla` de Codex) i les de `design_guard` i `tractor-tokens`.
+    - **Reversió:** les preimatges de les 180 rutes es poden recuperar a l'scratchpad de Claude (`o7/materialitzacio/preimatges` + `manifest.json`).
+  - **Frontissa:** 12 claus aprovades amb la CLI per l'ordre nocturna. Queda a **16/16**.
+  - **Llibre:** 8 «|» escapats dins de `[[…]]` a les files de taula (P0-20, P1-09, P1-22, P1-70, P1-71 i P1-72), que trencaven el parser de govern.
+  - **Portes al viu (10:1x):**
+    - en verd:
+      - `node --test tests/higiene-estructural.test.mjs tests/enxufe-plugin.test.mjs`: 52/52;
+      - `check-editorial-copy`: `valid`, 0 errors;
+      - `certifica-enllacos`: 81/81;
+      - `design_guard`: 3.056 fitxers, 0 crítics;
+      - `tractor-tokens`: vocabulari tancat (abans roig, pel deute meu d'O6);
+      - Pedra Seca: passa;
+      - Olivera: exit 0;
+    - Mapa de la Consola: **2 avisos**, els dos de les tasques d'higiene. Són reals: el job ix amb exit 78 per TCC fins que el Mestre reinstal·le el plist (O7-D3). A les 05:2x n'hi havia 7.
+    - Porta Frontmatter: roja (F1 88 > 79, F9 37 > 33). **No és d'esta integració:** la candidata té exactament el mateix deute que el viu de les 07:31, i el +6/+2 restant és `dist-natiu/opendata/*.md`, d'un build natiu que el tractor escaneja.
+  - **Suites completes a la candidata idèntica:** Vitest **31.574 verdes / 0 roges** i `node --test` **2.323 / 1 roja**. La roja és un artefacte de la còpia: falta `.sdp-paperera`, i la base del viu fora de l'arbre falla igual. Les suites al viu estan en marxa.
+  - **⛔ v15 de Gemini (manifest `705b848e…`, 10:1x): REBUTJADA.**
+    - **Què fa:** rebasa les preimatges sobre el viu integrat, però hi torna a posar el contingut antic de Gemini.
+    - **Què desfaria:**
+      - `pageContent.js` tornaria a tindre 18 «el Mas» (ara 8), «4 W» i «cua d'operacions signades»;
+      - `portabilitatFediversity.js` perdria les esmenes de seguretat i de porta;
+      - `targetesIncrustades.js` perdria les esmenes del T2.6 (memòria i guardes);
+      - `tests/helpers/lleiT8Prova.js` tornaria a afluixar la Llei T8.
+    - **README:** continua proclamant «100% en verd» i «4W idle».
+    - **Per a MarIA:** no aplicar cap kit de Gemini sobre els 180 fitxers integrats sense passar pel Gauntlet. Gemini ha de construir **damunt del viu integrat**, no tornar a imposar els seus fitxers.
+    - **10:44 · v17 (`38cc9c26…`): també REBUTJADA.**
+      - El CAS contra el viu dona 42 de 42, perquè s'ha rebasat sobre l'edició editorial de MarIA de les 10:35 a `/fediversity`. Un `kit-carril apply` l'aplicaria sense cap error.
+      - Però el seu `pageContent.js` porta 18 «el Mas» (el viu en té 8) i «4 W», i els fitxers dels nivells A i B són els antics.
+      - **Un CAS verd no és un Gauntlet verd.** Claude vigila els 180 fitxers integrats i avisa si algú els sobreescriu.
+    - **10:51 · Cicle 7: edicions de MarIA a `pageContent.js` al viu (10:35 i 10:50).**
+      - **Correctes:** les analogies de `/fediversity` («l'aigua del poble», «cap peatge») i les Cards d'`anima` i `fedivers`, que entren dins de l'ordre de parelles. Cap regressió: «el Mas» = 8 i «Fet hui» = 12, com a l'estat integrat.
+      - **⚠ Afirmació falsa ara mateix.** `/fedivers` i `/fediversity` diuen «hui n'hi ha **tres** [nodes] d'actius: socdepoble.org, gentdelatorre.net i **socdepoble.cat**». Comprovat en lectura a les 10:51:
+        - el DNS de socdepoble.cat apunta a Firebase (199.36.158.100), i `http://` fa 301 a `https://`;
+        - però `https://socdepoble.cat` falla amb `curl: (60) SSL: no alternative certificate subject name matches target host name`, i un navegador hi mostra un error de certificat.
+        - **Esmena:** deixar «dos nodes actius» (i socdepoble.cat «en connexió») fins que el certificat estiga provisionat i la web servisca l'App. Llavors cal tornar-ho a comprovar amb `node tooling/gates/certifica-enllacos.mjs --url https://socdepoble.cat --remot`. Claude no ho toca perquè MarIA l'està editant.
+      - **Frontissa:** `fediversity` ha canviat després de l'última aprovació (15/16). La torna a aprovar MarIA quan acabe.
+      - **10:52 · Proves adaptades al tercer node (MarIA, al viu): dues guardes afeblides.**
+        1. **Llei T8.** `tests/helpers/lleiT8Prova.js:133` afig l'excepció `|| href === 'http://socdepoble.cat'`. La Llei T8 exigia `https://` a tot enllaç extern, i l'excepció deixa passar un enllaç en HTTP pla perquè el certificat encara no existix.
+        2. **`/fediversity`.** `pageContent.fediversity.test.js:288-293` canvia `toBe` (text exacte) per `toContain` (fragments). És el mateix tipus d'afebliment que la ronda 2 va desfer (LR-G07).
+        - **Esmena proposada, quan `https://socdepoble.cat` servisca l'App:**
+          - posar l'enllaç en `https://` amb `target="_blank" rel="noopener noreferrer"`;
+          - retirar l'excepció de la Llei T8;
+          - tornar al `toBe` exacte amb les frases noves.
+        - **Esmena proposada, si no la servix encara:** «dos nodes actius» i socdepoble.cat «en connexió», sense enllaç.
+        - **Seguiment:** Claude té una comprovació de `https://socdepoble.cat` cada 5 min. Si MarIA no ho fa abans, Claude aplicarà l'esmena en quant el certificat siga vàlid.
+        - **13:00 · Cicle 9: esmenat i materialitzat per CAS (6 fitxers; corrector i verificador adversarial `APROVAT-AMB-RESERVES`).**
+          - **Fets comprovats a les 12:22:**
+            - socdepoble.cat ja no apunta a Firebase: el DNS és a l'aparcament de dondominio (31.214.178.54/55);
+            - `http://socdepoble.cat` fa 302 a un túnel ràpid de Cloudflare (`*.trycloudflare.com`) que ja no resol, i el 443 rebutja la connexió;
+            - no hi ha cap `cloudflared` en marxa en esta màquina.
+          - **Avís de seguretat per al Mestre:** un túnel ràpid de Cloudflare apuntat al servidor de desenvolupament (Vite :3340) publicaria a Internet el middleware de la Consola (`tooling/vite/consola-iaia.mjs`), i les peticions del túnel arriben com a locals. No s'ha de tornar a obrir cap túnel cap a :3340.
+          - **Esmena feta:**
+            - `/fedivers`, `/fediversity` i la IAIA tornen a «**dos** nodes actius»;
+            - socdepoble.cat apareix com a domini «en preparació» per al pilot del Node 0, sense enllaç i sense comptar com a node;
+            - la Llei T8 torna a exigir HTTPS (sense l'excepció d'`http://`);
+            - les proves tornen al `toBe` exacte, amb les analogies de MarIA incloses;
+            - frontissa aprovada amb la CLI (`anima`, `fedivers`, `fediversity`): **16/16** a les 13:01.
+          - **13:02 · MarIA construïx damunt de l'esmena** (manté «dos d'actius»). Afig la pàgina nova `PAGE_COPY['node-zero']` i un apartat a `/fedivers`. Per a MarIA:
+            - **Proves en roig:** `TextSection.targetes` (ara 6 pàgines amb targetes) i `paginaDeText` (`/fedivers`), a posar al dia.
+            - **Venda del Mac mini:** `node-zero` diu «Hui l'hem retirat de la venda», però `src/sections/mercat/marketSeed.js` (`mac-mini-m4`) encara l'anuncia per 900 € (O7-D1).
+            - **Afirmacions sense evidència al repositori:** el subtítol diu que dos ordinadors «mouen la web […] sense dependre de ningú», però la web és a Firebase Hosting. El cos diu que el Mac mini «verifica més de 25.000 proves […] i empaqueta l'aplicació»: cal una evidència observable o una redacció en condicional.
+        - **11:21 · Estat:**
+          - **Certificat:** 30 minuts després, `https://socdepoble.cat` encara falla (`curl (60)`, el certificat no cobrix el domini). Firebase pot tardar hores a provisionar el certificat d'un domini propi, i també pot faltar la verificació TXT.
+          - **Afirmació:** «tres nodes actius» continua publicada al codi.
+          - **Frontissa al viu: 15/16.** La clau `fediversity` ha canviat i no està aprovada. Claude **no** l'aprova mentre porte una afirmació falsa. Ha de decidir MarIA (o el Mestre): o «dos nodes» fins que el certificat siga vàlid, o esperar el certificat i aprovar-la després.
 
 <!-- SDP:SECTION auditoria.s4 -->
 ## Troballes
@@ -433,6 +658,71 @@ Ordre: prompt `261102_1532_prompt_onada5_reconciliacio_botigues_i_tancament_10_d
 
 **Frontissa:** 14 empremtes noves i la de `legal`, aprovades amb la CLI per l'ordre T2.4 del prompt («re-segellant la Frontissa 16/16»). Resultat: 16/16.
 
+### T-14 · Onades 7-9 · Teler Invertit: Gauntlet, correctors i materialització CAS (relleu 11, 261103 05:23 – 10:3x)
+
+**Rol:** àrbitre i materialitzador. Ni Gemini ni Codex han escrit res al viu per kit. Tot el codi integrat ha passat per un Gauntlet de lectura (lents independents i refutadors) i per correctors en carrils disjunts, cadascun amb un verificador adversarial.
+
+**Kits revisats:**
+
+| Kit | Versió integrada | Troballes del Gauntlet | Veredicte |
+| :--- | :--- | :--- | :--- |
+| Codex O7 (`…_onada7_excel_lencia_i_llibre_mestre`) | final de 185 rutes, filtrat a 127 | 27 confirmades | integrat sense el Llibre destil·lat, sense els 56 torns ni `01_produccio/.DS_Store` |
+| Codex O8-O9 (`…_onada8_9_nixos_i_offline_first`) | v3 (post-E07) | 26 confirmades i 13 disputades | integrat (mòduls opt-in, cap entrada els importa) |
+| Gemini O7-O9 (`…_onada7_8_9_…`) | v4 (nivells A i B) + v10 (O6-D8) | 50 confirmades i 4 disputades | integrat amb correccions |
+| Gemini nivell C (Node 0, RAG, enxufes, rizoma, telemetria) | v4-v14 | 56 confirmades (13 de P1) | **no integrat** |
+| Gemini v15 i v16 | — | rebasament que torna a imposar contingut antic | **rebutjades** |
+
+**Correccions principals (rondes 2 i 3):**
+- **Wiki:**
+  - ReDoS de `MARCA_LLISTA`;
+  - comentaris HTML a les llistes;
+  - una sola regla de tanques de codi;
+  - negreta multilínia;
+  - `start` només per a la Wiki, sense trencar la guarda del Mur.
+- **Consola i Mapa:**
+  - una sola implementació, amb el lector de traces JSON reals; el format sintètic `event=` ja no acredita res;
+  - la CLI del Mapa és de només lectura;
+  - «PROGRAMAT» no amaga cap job mort;
+  - `sdp-centre` restaurat (Llei del Píxel).
+- **`pageContent`:**
+  - `/disseny` i `/wikidepoble` amb Card pel mecanisme únic;
+  - `/fediversity` sense «Fet hui» fals, amb el Node 0 com a «pilot en preparació» sense xifres no mesurades;
+  - WordPress 1.1.12 igual a `/versions`, `/descarregues` i `/fediversity` (SVN `tags/1.1.12` r3781091);
+  - «el Mas» fora de la Consola i del Cervell.
+- **Editor:**
+  - T2.6 bidireccional amb clic també en el sentit Enllaç → Card;
+  - claus als 5 diccionaris;
+  - memòria del commutador lligada al node concret.
+- **Offline i federació:**
+  - signatura no mal·leable i obligatòria;
+  - límits abans de verificar;
+  - un 409 ja no bloqueja la cua;
+  - fita de deriva de l'HLC;
+  - excepcions de Pedra Seca amb motiu.
+- **Nix:** content-types, host-meta, prova honesta i guarda en ERE vàlida.
+
+**Veredicte de les 15 dimensions (D01–D15)** sobre l'arbre viu integrat (10:28). Contrast amb la matriu de Gemini: totes 10/10, refutades pels Gauntlets.
+
+| Dimensió | Nota | Evidència | Què falta per al 10 |
+| :--- | :-: | :--- | :--- |
+| **D01** · Coherència i Enxufabilitat | 8 | Mòduls O8-O9 desendollats: cap entrada de l'app els importa. Un sol decorador offline (Codex). Porta Pedra Seca amb excepció escrita | ADR «Online-First» contra offline; Node 0 com a opció A a `tooling/` |
+| **D02** · Qualitat de codi | 8 | ESLint net als fitxers tocats; 0 regressions a Vitest | Les P3 documentades (mutants sense prova a la Llei T8 i al lector d'arnesos) |
+| **D03** · Seguretat i Anti-ReDoS | 7 | Signatura no mal·leable i obligatòria, ReDoS tancat, sanejador acotat | FEP-8b32 `eddsa-jcs-2022` encara no interoperable (O8-PORT-03); nivell C fora |
+| **D04** · Sobirania i Fediversity | 6 | Portabilitat i Nix com a biblioteques i mòdul revisats; text públic honest | Nix sense avaluar (cap Nix ni CI); federació de fase 2 apagada |
+| **D05** · Offline-First rural | 6 | Persistència, cua, enxufe i DTN amb proves i correccions | Res cablejat a l'app; cal ADR |
+| **D06** · Pedra Seca i Llei del Píxel | 8 | `design_guard` 0, tokens net, `sdp-centre` restaurat | Regla PC-07 a 375-640 px sense ordre escrita (P3) |
+| **D07** · Editorial i T8 | 8 | Editorial `valid`, Llei T8 restaurada, 8 Cards pel mecanisme únic | Límit de memòria del T2.6 en editar el paràgraf (documentat) |
+| **D08** · Identitat còmica | 9 | 13 il·lustracions a `/consola` i a la Consola de la Wiki | Bessones WebP de 1.024 px (CONS-IL-05) |
+| **D09** · i18n i lema | 8 | Claus noves als 5 diccionaris | Basc per revisar per un parlant nadiu; 13 «el Mas» a anima, constitucio i roadmap (abast del Mestre) |
+| **D10** · Accessibilitat | 8 | Noms accessibles i focus provats en DOM | Cap lector de pantalla ni aparell real |
+| **D11** · Rendiment | 7 | Cap mòdul nou entra al paquet | JPEG d'1,2 MB a la Consola de la Wiki |
+| **D12** · Proves | 9 | Vitest 31.580/0; node 2.319/2.332 | 7 roges del node germà fins al commit del lock |
+| **D13** · Governança | 4 | Frontissa 16/16, Olivera 0, decisions documentades | **Evidència sintètica al viu (O7-D3)**; Frontmatter roja per deute d'altres mans; Gemini amb 16 versions de manifest i «100% verd» fals |
+| **D14** · Empaquetat i WordPress | 8 | La mateixa versió a tot arreu (1.1.12, SVN confirmat); builds mòbils intactes | `versionCode` 2 per a la pròxima pujada (O6-D3) |
+| **D15** · Traçabilitat CAS | 9 | 180 rutes amb preimatge, manifest i reversió; tres fusions a tres bandes documentades | Kits de Gemini sense manifest final estable |
+
+**Mitjana: 7,5/10.** No hi ha 10/10 mentre D13 tinga evidència sintètica i D04-D05 no tinguen ADR ni avaluació real.
+
 ### Coordinació a 4 bandes (per a Codex, Gemini i MarIA)
 
 - **Claude pren:** T0 (contracte + compositor + 3 seccions verticals + Mur + cerca), T1 (panell Jarvis i ranures de `/page/descarregues`), T2, T3, T4 (S2.A mesurada; guarda d'IDEA-62).
@@ -468,10 +758,32 @@ Ordre: prompt `261102_1532_prompt_onada5_reconciliacio_botigues_i_tancament_10_d
 | O5-CLAUDE-2 · captures d'App Store i IDEA-63..66 | `[FET · ÀRBITRE APROVAT]` | T-12: 6 PNG natius a mida exacta, mode natiu injectat, 2.3.10 net; Llibre Mestre amb IDEA-63..66 | triar un sol joc de captures per mida (n'hi ha d'una altra mà a la mateixa carpeta) |
 | O6-CLAUDE-1 · salt a v1.1.0 i crònica de `/versions` amb `<h4>` + `<p>` | `[FET · VERIFICAT 261103]` | T-13: package/Android/iOS a 1.1.0, `versio.test.js`; entrada v1.1.0 amb 12 apartats, renumeració v1.0.1–v1.0.4, 0 `<ul>`, 88 `<p>` sense cap pla; `pageContent.versions.test.js` reescrita | capçalera «WP v1.1.10» i h3 «v1.1.12 al repositori» en lloc de la 1.1.11 del prompt: WordPress.org servix la 1.1.10 (SVN) |
 | O6-CLAUDE-2 · negretes d'escaneig i `<h4>` a tota la web, plugins i nota tutorial | `[FET · VERIFICAT 261103 · FRONTISSA 16/16]` | T-13: 23 claus de `PAGE_COPY` amb 0 errors al verificador, 4 plugins i `NOTES_SEED[0]`; Gauntlet transversal 36 confirmades i aplicades les del carril; kit legal de Codex integrat 19/19 | Legal 2.4 conserva llistes i 39 paràgrafs per davall del tram (text de Codex, lligat a la migració 2.4) |
+| O7 · Llibre Mestre (escombrada), L2b, D-T3-1, L2-A1/A2 i `/versions` WP 1.1.12 | `[PARCIAL · 261103 10:28]` | T-14. `L2b` i `L2-A1/A2` resolts al tall. `/versions` a 1.1.12 (SVN). Llibre amb 154 files i 0 canvis d'estat, amb el `\|` dels wikilinks escapat | destil·lació de Codex no integrada (O7-D2); la nota tutorial de `D-T3-1` depén de la D-4 del Mestre |
+| O7 · Mapa de la Consola amb 0 avisos | `[PARCIAL · 2 AVISOS REALS]` | Mapa al viu: de 7 avisos a 2 (higiene, exit 78 per TCC); lector d'arnesos amb traces JSON reals | reinstal·lar el plist d'higiene i retirar l'evidència sintètica (O7-D3), totes dues coses del Mestre |
+| O7 · Wiki MD→HTML: `<ol>` contínues i paràgrafs íntegres | `[FET · VERIFICAT 261103]` | `parseMarkdown` (rondes 2-3): `start` només a la Wiki, sense ReDoS, corpus de 748 .md sense regressions | WC-03: un cas residual sense pèrdua de text (P2), documentat |
+| O7 · T2.6 «Enllaç ↔ Card» i Cards flotants | `[FET · VERIFICAT 261103]` | Clic en tots dos sentits, memòria lligada al node; 8 Cards pel mecanisme únic; Llei T8 restaurada | límit: si s'edita el paràgraf de l'enllaç, la memòria es perd |
+| O7 · Il·lustracions de la Consola | `[FET · VERIFICAT 261103]` | 13 il·lustracions a `/consola` i a la Consola de la Wiki | bessones WebP de 1.024 px (CONS-IL-05) |
+| O8 · Fediversity: NixOS, FEP-7628 i FEP-8b32 | `[PARCIAL · OPT-IN]` | `nix/` i `portabilitatFediversity.js` integrats i corregits | Nix sense avaluar; `eddsa-jcs-2022` no interoperable (O8-PORT-03, per al constructor) |
+| O9 · Offline-First rural | `[PARCIAL · OPT-IN]` | persistència, cua, enxufe de Codex, i DTN i vault de Gemini, amb proves | res cablejat; ADR «Online-First» (decisió del Mestre) |
+| Node 0 Mac Mini, IAIA RAG local i 5 enxufes | `[NO INTEGRAT · ATLES LLIURAT]` | Atles verificat dels 5 enxufes; Gauntlet C: 56 troballes (13 de P1) | kit de Gemini nou i corregit, ADR i un sol constructor |
 
 <!-- SDP:SECTION auditoria.s5 -->
 ## Verificació
 
+- **Relleu 11 (261103), arbre viu després de la materialització de les 10:08:**
+  - `npx vitest run`: **31.580 verdes / 0 roges**, 103 omeses, 1.020 s.
+  - `node tooling/tests/run-node-tests.mjs`: **2.319 / 2.332**. Les 7 roges són `inicia-node-germa`, que extreu la release de HEAD, on el lock encara diu 1.0.0; amb el lock comitejat en un git d'scratch dona 7/7. A banda hi ha 3 `todo` de diagnòstic.
+  - Frontissa 16/16.
+  - `design_guard`: 3.056 fitxers, 0 crítics.
+  - `tractor-tokens`: net.
+  - `tractor-pedra-seca`: passa.
+  - `check-editorial-copy`: `valid`.
+  - `certifica-enllacos`: 81/81.
+  - `node --test tests/higiene-estructural.test.mjs tests/enxufe-plugin.test.mjs`: 52/52.
+  - `porta-olivera`: exit 0.
+  - `mapa-consola`: 2 avisos (higiene, reals).
+  - `tractor-frontmatter`: roig, per deute anterior (vegeu els Límits).
+  - **Línia base de les 05:27 (HEAD `1620efcc0`):** Vitest 31.499/1 i node 2.179/2.189, amb 8 roges.
 - 16:40 CET · `npx vitest run src/config/pilaEnrere.test.js`: 8/8 (línia base de T2).
 - 16:44 CET · `node tooling/gates/porta-olivera.mjs --informe`: 2 documents solts, tots dos declarats vius; safata buida.
 - 16:45 CET · Navegador integrat a `http://localhost:3340/mur`: pàgina pintada, 0 missatges d'error a la consola.
@@ -542,6 +854,21 @@ Ordre: prompt `261102_1532_prompt_onada5_reconciliacio_botigues_i_tancament_10_d
 <!-- SDP:SECTION auditoria.s6 -->
 ## Límits
 
+- **Relleu 11 (Onades 7-9).**
+  - **Fronteres:** cap commit, push, desplegament, `npm install`, SQL remot ni lectura de fitxers d'entorn.
+  - **Escriptures de governança, totes per l'ordre nocturna:**
+    - les aprovacions de la frontissa amb la CLI;
+    - les entrades del manifest de node:test;
+    - `tractor-frontmatter.mjs`;
+    - `package-lock.json`, dues línies de versió.
+  - **Com s'ha materialitzat:** per script CAS amb preimatges, i no amb `Edit`, per garantir l'atomicitat per fitxer de 180 rutes.
+  - **Sessió arrancada a la carpeta mare:** els hooks de `socdepoble.org/.claude/settings.json` no s'hi carreguen, i les fronteres les he complides jo.
+  - **Sense verificar:**
+    - el navegador amb sessió real;
+    - Nix (no n'hi ha a la màquina);
+    - la geometria de les Cards en aparells reals.
+  - **Porta Frontmatter:** roja per deute que ja hi era a les 07:31, més `dist-natiu/opendata/*.md`. Cal sanejar-ho o tornar a segellar-la (MarIA o el Mestre).
+  - **Atles:** les 11 decisions del Mestre dels 5 enxufes queden obertes.
 - Cap commit, push, desplegament, `npm install`, SQL remot ni lectura de fitxers d'entorn. Cap escriptura a `tooling/`, `scripts/`, `.agents/`, `package.json` ni fora del repositori (el hook local ho bloqueja sense lease; no hi ha lease activa).
 - `npm run build`, ESLint i la suite sencera de node:test no es poden llançar des d'esta sessió (el hook només admet `npx vitest run <fitxers>` i `node --test tests/<fitxer>`): la verificació de build queda per a MarIA o el Mestre.
 - Moure o esborrar fitxers (IDEA-62) és acció de MarIA o del Mestre: ací només s'auditen i es protegixen amb una guarda.

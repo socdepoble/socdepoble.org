@@ -119,6 +119,7 @@ const ORIGEN_TASQUES = 'Ix de `mapa.json`, que creua el registre `.agents/cron/r
 /* L'estat d'una tasca dit amb el seu recompte, concordat: «1 viva», «2 mortes». */
 const ESTATS_TASCA = Object.freeze({
   viu: ['viva', 'vives'],
+  programat: ['programada, pendent de primera execució', 'programades, pendents de primera execució'],
   mort: ['morta', 'mortes'],
   'declarat-sense-llancador': ['sense llançador', 'sense llançador'],
   'llancador-sense-declaracio': ['sense declaració', 'sense declaració'],
@@ -237,7 +238,7 @@ const SALUT = [
     ].join(' · '),
     subtitolSenseFont: 'Alts, mitjans i baixos',
     entradeta: [
-      'Compta tots els avisos que el Mapa fa de les peces del Mas, de qualsevol severitat.',
+      'Compta tots els avisos que el Mapa fa de les peces de Sóc de Poble, de qualsevol severitat.',
       'Ix dels avisos de `mapa.json`, que escriu `tooling/brain/mapa-consola.mjs` en compilar el Mapa.',
       'Cada avís és una peça que, tal com està, pot fallar, no carregar-se o no deixar rastre.'
     ],
@@ -305,7 +306,7 @@ const EXPLORADOR = [
     titol: ({ resum }) => plural(resum.nodes, 'node', 'nodes'),
     subtitol: () => 'Peces del Mapa, de tots els tipus',
     entradeta: [
-      'Compta les peces del Mapa del Mas: skills, rutes, plantilles, scripts, hooks, tasques, agents, documents i portes.',
+      'Compta les peces del Mapa de Sóc de Poble: skills, rutes, plantilles, scripts, hooks, tasques, agents, documents i portes.',
       'Ix dels nodes de `mapa.json`, que `tooling/brain/mapa-consola.mjs` llig del disc i dels contractes.',
       'És la mida del cervell que la Consola vigila: el que no és node no té ni avisos ni relacions.'
     ],
@@ -401,7 +402,7 @@ const ENTRADES = [
     titol: ({ mapa }) => plural(rutesDe(mapa).length, 'ruta documental', 'rutes documentals'),
     subtitol: () => 'Cada tipus de document, amb la seua plantilla',
     entradeta: [
-      'Compta les rutes documentals: cada tipus de document que el Mas sap fer (un prompt, un pla, una auditoria, una acta…) amb la plantilla que l’encamina, la skill que el governa, què llig i on el deixa.',
+      'Compta les rutes documentals: cada tipus de document que Sóc de Poble sap fer (un prompt, un pla, una auditoria, una acta…) amb la plantilla que l’encamina, la skill que el governa, què llig i on el deixa.',
       'Ix dels nodes de tipus ruta de `mapa.json`, que `tooling/brain/mapa-consola.mjs` llig de `.agents/protocolledge.json`.',
       'Un document sense ruta naix sense plantilla i sense contracte: ningú no sap on va ni qui el llig.'
     ],
@@ -565,7 +566,7 @@ const PECES = [
     etiquetes: ({ peces }) => etiquetaDePeca(peces.vigilants.estat),
     problemes: ({ mapa }) => problemesDAvisos(mapa.avisos.filter((a) => a.severitat === 'alta')),
     entradeta: [
-      'Diu si els vigilants del Mas són vius i quants avisos alts hi ha.',
+      'Diu si els vigilants de Sóc de Poble són vius i quants avisos alts hi ha.',
       'Ix de la mètrica vigilants-vius i dels avisos de severitat alta de `mapa.json`.',
       'Sense vigilants vius, una fallada no avisa ningú.'
     ],
@@ -699,14 +700,14 @@ const RECOMPTES = [
       capes.candats.some((c) => c.acreditat === false), capes.candats.some((c) => c.acreditat === null))),
     problemes: ({ capes }) => problemesDeCandats(capes.candats),
     entradeta: [
-      'Compta els candats (hooks) del Mas, els que disparen els arnesos i els hooks de git del registre de tasques, i diu quants tenen el consumidor acreditat.',
+      'Compta els candats (hooks) de Sóc de Poble, els que disparen els arnesos i els hooks de git del registre de tasques, i diu quants tenen el consumidor acreditat.',
       'Ix dels nodes de tipus hook de `mapa.json` i dels hooks de git de `.agents/cron/registre_tasques.json`.',
       'Un candat sense consumidor acreditat és una promesa: està declarat, però ningú no demostra que salte.'
     ],
     font: `${FONT_MAPA} · nodes de tipus hook`,
     detall: (_mapa, { capes }) => ({
       taules: [{
-        titol: 'Candats del Mas',
+        titol: 'Candats de Sóc de Poble',
         columnes: ['Candat', 'Arnés', 'Consumidor acreditat', 'Scripts que dispara'],
         files: capes.candats.map((c) => ({
           clau: c.id, celes: [text(c.esdeveniment), text(c.arnes), text(textAcreditat(c.acreditat)), mono(c.scripts.join(', '))]

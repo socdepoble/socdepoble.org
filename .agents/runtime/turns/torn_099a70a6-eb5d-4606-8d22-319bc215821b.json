@@ -4,9 +4,9 @@
   "actor": "codex",
   "scope": "documents",
   "state": "planned",
-  "revision": 8,
+  "revision": 9,
   "createdAt": "2026-11-02T15:38:23.476Z",
-  "updatedAt": "2026-11-02T19:02:13.077Z",
+  "updatedAt": "2026-11-03T13:12:02.623Z",
   "expiresAt": "2026-11-03T15:38:23.476Z",
   "contractHash": "1839756fa153a68d945b48956d870a4a082ab80adcf874a04dd10fc1327d8c45",
   "humanInventoryVersion": 1,
@@ -4610,9 +4610,21 @@
           "to": "_wiki_de_poble/90_arxiu_historic/261102_1532_prompt_mode_jarvis_idea60_fediversity_i_deute_llibre_mestre.md"
         }
       ]
+    },
+    {
+      "action": "archive-links",
+      "at": "2026-11-03T13:12:02.623Z",
+      "by": "torn_10f0e355-fa6b-41fb-98f9-6a4478f38c1d",
+      "relocated": [
+        {
+          "from": "_wiki_de_poble/04_escriptori/261102_1532_pla_implementacio_mode_jarvis_idea60_fediversity_i_deute_llibre_mestre.md",
+          "to": "_wiki_de_poble/90_arxiu_historic/261102_1532_pla_implementacio_mode_jarvis_idea60_fediversity_i_deute_llibre_mestre.md"
+        }
+      ]
     }
   ],
   "relocated": [
-    "_wiki_de_poble/04_escriptori/261102_1532_prompt_mode_jarvis_idea60_fediversity_i_deute_llibre_mestre.md"
+    "_wiki_de_poble/04_escriptori/261102_1532_prompt_mode_jarvis_idea60_fediversity_i_deute_llibre_mestre.md",
+    "_wiki_de_poble/04_escriptori/261102_1532_pla_implementacio_mode_jarvis_idea60_fediversity_i_deute_llibre_mestre.md"
   ]
 }

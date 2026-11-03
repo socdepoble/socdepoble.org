@@ -29,6 +29,7 @@ eines_obligatories: tooling/brain/desenterrar.mjs
 contracte.llig:
   - AGENTS.md
   - .agents/protocolledge.json
+  - .sdp-paperera
 contracte.escriu:
   - .sdp-paperera
   - _wiki_de_poble/04_escriptori

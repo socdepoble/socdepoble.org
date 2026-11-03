@@ -40,7 +40,9 @@ const EINES_PRINCIPALS = Object.freeze(['encapcalament', 'negreta', 'cursiva', '
 /* O4-CLAUDE-2 (ordre del Mestre, 261102 21:38) · Darrere del divisor, les dues
    eines d'inserció de targetes: la Subtargeta i la Targeta incrustada. Només
    es pinten si el motor n'oferix l'acció (vegeu `eina`). */
-const EINES_SECUNDARIES = Object.freeze(['ratllat', 'citacio', 'divisor', 'subtargeta', 'targeta']);
+/* T26-01 (Gauntlet O7 · T2.6) · I darrere, «Convertir en targeta», només amb
+   el cursor en un enllaç intern que es pot commutar. */
+const EINES_SECUNDARIES = Object.freeze(['ratllat', 'citacio', 'divisor', 'subtargeta', 'targeta', 'enllacATargeta']);
 
 /* T7 (P2) · El tall de la barra d'eines ve de la font única de la graella.
    IDEA-59 / P1-72 · També torna l'amplària mesurada: la barra ampla la fa
@@ -406,7 +408,7 @@ export default function UniversalToolbar({
   } = formatState;
   const {
     toggleList, toggleOrderedList, toggleBold, toggleItalic, toggleStrike, toggleCitacio, insertDivisor,
-    insertSubtargeta, insertTargeta
+    insertSubtargeta, insertTargeta, convertLinkToCard
   } = formatActions;
 
   /* Cada eina, per id (data-eina: la barra en mesura l'amplària). */
@@ -450,6 +452,11 @@ export default function UniversalToolbar({
         return typeof insertTargeta !== 'function' ? null : (
           <BlocIcon key={id} data-eina={id} icon={IconaTargeta} active={undefined}
             label={t('section.notes.format.targeta', 'Targeta incrustada')} onClick={insertTargeta} />
+        );
+      case 'enllacATargeta':
+        return typeof convertLinkToCard !== 'function' ? null : (
+          <BlocIcon key={id} data-eina={id} icon={IconaTargeta} active={undefined}
+            label={t('section.notes.format.enllacATargeta', 'Convertir en targeta')} onClick={convertLinkToCard} />
         );
       default:
         return null;

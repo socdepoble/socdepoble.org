@@ -28,6 +28,7 @@ async function configDeMain() {
 }
 
 afterEach(() => {
+  delete globalThis.SocDePobleConfig;
   vi.unstubAllEnvs();
   vi.clearAllMocks();
   document.body.replaceChildren();
@@ -89,4 +90,23 @@ test('TC3.1 · els destins del servidor de desenvolupament van amb el seu traduc
   vi.stubEnv('VITE_TRADUCTOR_URL', '');
   vi.stubEnv('SDP_TRADUCTOR_DEV', '');
   expect((await configDeMain()).config).not.toHaveProperty('traductorLlengues');
+});
+
+test('Node 0 / lloc municipal · quan window.SocDePobleConfig declara poble i nomPoble, main.jsx els passa a la closca', async () => {
+  vi.stubEnv('VITE_TRADUCTOR_URL', '');
+  vi.stubEnv('SDP_TRADUCTOR_DEV', '');
+  globalThis.SocDePobleConfig = {
+    poble: 'la-torre-de-les-macanes',
+    nomPoble: 'Node 0 · La Torre (Mac Mini M4, 24GB)'
+  };
+  const { config, pintat } = await configDeMain();
+  expect(config).toEqual({
+    poble: 'la-torre-de-les-macanes',
+    nomPoble: 'Node 0 · La Torre (Mac Mini M4, 24GB)',
+    pluginUrl: '/',
+    manageDocumentHead: true,
+    routerType: 'browser'
+  });
+  expect(pintat.nomPoble).toBe('Node 0 · La Torre (Mac Mini M4, 24GB)');
+  expect(pintat.poble).toBe('la-torre-de-les-macanes');
 });

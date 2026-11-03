@@ -6,7 +6,7 @@ import {
   XIFRA_DE_CODI, detallXifra, rutaXifra, segmentXifra, targetesDeLaConsola, vistaDe, xifraDelMas,
   xifresDeFamilia, xifresDeGrup, xifresDeLaGraella, xifresDeVista
 } from './xifresMas.js';
-import { CODIS_VIGILANCIA, IDS_PAGINES, segmentPagina } from './consolaPagines.js';
+import { CODIS_VIGILANCIA, IDS_PAGINES, estatsPagina, segmentPagina } from './consolaPagines.js';
 import { IDS_PANELLS } from './polsConsola.js';
 import { normalitzaSlug, trossosEntradeta } from './xifresComu.js';
 import { ICONES_XIFRES } from './XifresMas.jsx';
@@ -576,7 +576,7 @@ describe('una mesura absent no es compta com a 0', () => {
 /* Onada 6 (requisits 8 i 9) · Les deu xifres del tauler porten el semàfor
    segons el seu valor (Cal reparar en roig, Important en taronja, En ordre en
    verd; sense mesura, cap) i diuen a la vista quins són els seus problemes. */
-describe('Onada 6 · el semàfor i els problemes d’«El Mas en xifres»', () => {
+describe('Onada 6 · el semàfor i els problemes d’«Sóc de Poble en xifres»', () => {
   const etiqueta = (x) => (x.etiquetes ? x.etiquetes.map((e) => `${e.text}:${e.to}`) : null);
   /* Correcció de l'Onada 6 (revisió adversarial) · cada problema porta la seua
      marca amb el to del semàfor: «[marca:to] text|ruta». */
@@ -651,6 +651,30 @@ describe('Onada 6 · el semàfor i els problemes d’«El Mas en xifres»', () =
     expect(etiqueta(x)).toEqual(['Cal reparar:error']);
     expect(problemes(x)).toEqual(['[alta:error] ledger-invalid|.agents/LEDGER.md']);
     expect(XIFRA_DE_CODI['ledger-invalid']).toBe('linies-ledger');
+  });
+
+  /* CONS-03 · Una tasca PROGRAMAT no tenyix «coses que corren soles», com
+     tasques-del-mapa, colorDeTasques i les cobertes; la resta de regles no canvia. */
+  test('una tasca PROGRAMAT no tenyix «coses que corren soles»', () => {
+    const launchd = (id, estat) => ({ id, estat, llancador: { tipus: 'launchd', etiqueta: id }, cadencia: null, script: null, font: null });
+    const soles = (tasques) => perSlug({ ...MAPA, tasques })['coses-que-corren-soles'];
+    expect(soles([launchd('a', 'viu'), launchd('b', 'programat')])).toEqual([['En ordre:exit'], []]);
+    expect(soles([launchd('b', 'programat')])).toEqual([null, []]);
+    expect(soles([])[0]).toEqual(['Important:avis']);
+    expect(soles([launchd('a', 'viu'), launchd('c', 'desconegut')])[0]).toEqual(['Important:avis']);
+    expect(soles([launchd('b', 'programat'), launchd('d', 'mort')])[0]).toEqual(['Cal reparar:error']);
+    /* R3-A2 · La peça «Agents que treballen sols» i la coberta d'Agents, igual:
+       una PROGRAMAT queda fora del denominador; si totes ho són, SENSE MESURA. */
+    const sols = (tasques) => {
+      const mapa = { ...MAPA, tasques };
+      return [etiqueta(xifraDelMas('peca-agents-sols', mapa)),
+        estatsPagina('agents', { mapa, estatMapa: 'ready' }).filter((e) => e.clau === 'sols').map((e) => `${e.text}:${e.to}`)];
+    };
+    expect(sols([launchd('a', 'viu'), launchd('b', 'programat')])).toEqual([['EN MARXA:exit'], []]);
+    expect(sols([launchd('b', 'programat')])).toEqual([['SENSE MESURA:neutre'], ['Agents que treballen sols: sense mesura:neutre']]);
+    expect(sols([])).toEqual([['FALTA:avis'], ['Agents que treballen sols: falta:avis']]);
+    expect(sols([launchd('a', 'viu'), launchd('c', 'desconegut')])).toEqual([['PARCIAL:avis'], ['Agents que treballen sols: parcial:avis']]);
+    expect(sols([launchd('b', 'programat'), launchd('d', 'mort')])).toEqual([['FALTA:avis'], ['Agents que treballen sols: falta:avis']]);
   });
 
   test('sense Mapa, cap color i cap problema', () => {

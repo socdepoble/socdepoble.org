@@ -219,6 +219,21 @@ describe('sanitize.js', () => {
       expect(sanitizeHtml(img(GOOGLE))).toContain(`src="${GOOGLE}"`);
     });
 
+    /* O7 · WC-06 (ronda 3) · Les dues marques, cadascuna amb el seu finally:
+       si el sanejador falla a mitja crida, cap no queda armada per al ganxo,
+       que és global (posaGanxos) i també el veu qui crida DOMPurify directament. */
+    it('si la crida falla, ni el mode estricte ni el start de la Wiki queden armats', () => {
+      const ol = '<ol start="5"><li>a</li></ol>';
+      const espia = vi.spyOn(DOMPurify, 'sanitize').mockImplementationOnce(() => { throw new Error('falla'); });
+      try {
+        expect(() => sanitizeHtml(img(GOOGLE) + ol, { imatgesPropies: true, llistesNumerades: true })).toThrow('falla');
+      } finally {
+        espia.mockRestore();
+      }
+      expect(DOMPurify.sanitize(img(GOOGLE))).toContain(`src="${GOOGLE}"`);
+      expect(DOMPurify.sanitize(ol)).toBe('<ol><li>a</li></ol>');
+    });
+
     it('sense opcions, o amb qualsevol valor que no siga true, l’eixida de sempre', () => {
       const html = `<h2>Títol</h2>${img(GOOGLE)}${img('https://rastreig.example/p.gif')}<a href="/mur/1" target="_blank">x</a>`;
       const deSempre = sanitizeHtml(html);

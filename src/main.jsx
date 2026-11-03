@@ -12,6 +12,7 @@ import { AVISOS_PUSH_XAT_ACTIUS, registraAvisosPush } from './config/avisosPushX
 import { capturaInstalacio } from './pwa/instalacio.js';
 import { pintaAmbDiccionari } from './config/i18n.js';
 import { instalaFallbackDeBessones } from './config/fallbackBessones.js';
+import { llegeixConfigAmfitrio } from './config/configAmfitrio.js';
 import { fixaCarregadorLliure, fixaTraductorLliure } from './data/traductorDelLloc.js';
 
 const init = () => {
@@ -59,6 +60,7 @@ const init = () => {
     const traductorLlengues = !import.meta.env.VITE_TRADUCTOR_URL && import.meta.env.SDP_TRADUCTOR_DEV
       ? (import.meta.env.SDP_TRADUCTOR_DEV_LLENGUES || '') : '';
     const delLloc = {
+      ...llegeixConfigAmfitrio(),
       pluginUrl: '/',
       manageDocumentHead: true,
       routerType: 'browser',

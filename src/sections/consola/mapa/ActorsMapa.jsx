@@ -7,7 +7,7 @@ import { xifresDeFamilia, xifresDeGrup } from '../xifresMas.js';
 import { etiquetaNode } from './grafMapa.js';
 import { capesActors } from './actorsMapa.js';
 
-/* Actors del Mas (05_actors_i_salut.md): la pestanya «Actores» d'Emowe, capa
+/* Actors de Sóc de Poble (05_actors_i_salut.md): la pestanya «Actores» d'Emowe, capa
    per capa. Cada capa ix del Mapa; la relació amb la capa del costat va
    escrita en la targeta (qui dispara quin candat, qui carrega què), perquè es
    puga llegir també sense vore cap línia.
@@ -61,7 +61,7 @@ export function ActorsMapa({ mapa }) {
           {/* T10 (ordre del Mestre, 260930): l'absència de Codex es diu mentre dure. */}
           {senseCodex ? <> Codex tampoc: al Mapa no ha arribat cap <Mono>.codex/hooks.json</Mono>.</> : null}
         </p>
-        <p>SENSE CONSUMIDOR significa que els candats (hooks) existeixen al repositori, però la telemetria visual no pot acreditar quin agent els dispara. Pot faltar una configuració, com <Mono>CLAUDE.md</Mono>, que declare qui els consumix; l'etiqueta no prova que no s'executen. DESCONEGUT vol dir que els candats estan declarats per a un client que els pot consumir, però el Mas encara no té cap evidència que salten.</p>
+        <p>SENSE CONSUMIDOR significa que els candats (hooks) existeixen al repositori, però la telemetria visual no pot acreditar quin agent els dispara. Pot faltar una configuració, com <Mono>CLAUDE.md</Mono>, que declare qui els consumix; l'etiqueta no prova que no s'executen. DESCONEGUT vol dir que els candats estan declarats per a un client que els pot consumir, però Sóc de Poble encara no té cap evidència que salten.</p>
         <GraellaXifres xifres={[...peces.recompte, ...peces.arnesos]} generat={mapa.generat} />
         {peces.arnesos.length ? null : <EstatBuit icona={Bot} titol="Cap arnés al Mapa" />}
       </section>

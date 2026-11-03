@@ -13,9 +13,9 @@
     <key>WorkingDirectory</key>
     <string>/Users/javillinares/Documents/Antigravity/Som de Poble/socdepoble.org</string>
     <key>StandardOutPath</key>
-    <string>/Users/javillinares/Documents/Antigravity/Som de Poble/socdepoble.org/.immunitari/higiene-cron.out</string>
+    <string>/Users/javillinares/Library/Logs/socdepoble-higiene.out.log</string>
     <key>StandardErrorPath</key>
-    <string>/Users/javillinares/Documents/Antigravity/Som de Poble/socdepoble.org/.immunitari/higiene-cron.err</string>
+    <string>/Users/javillinares/Library/Logs/socdepoble-higiene.err.log</string>
     <key>StartCalendarInterval</key>
     <dict>
         <key>Hour</key>

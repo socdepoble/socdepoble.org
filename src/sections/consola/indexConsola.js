@@ -14,13 +14,13 @@
  *  · nivell 2: l'arrel, «Índex de la Consola», sense ruta.
  *  · nivell 3: cada una de les nou pàgines (IDS_PAGINES, consolaPagines.js),
  *    amb el títol, la ruta de la pàgina, el «per a què» (`subtitol`) i
- *    l'entradeta del copy (`text`); i, al final, «El Mas en xifres», que no
+ *    l'entradeta del copy (`text`); i, al final, «Sóc de Poble en xifres», que no
  *    té pàgina pròpia (és una secció del tauler): sense ruta.
  *  · nivell 4: cada targeta de dins de cada pàgina, amb la seua pàgina
  *    pròpia: al pols, els tres panells (/consola/pols/<id>, polsConsola.js)
  *    i després les xifres de la seua vista; a la resta, les targetes que la
  *    vista pinta amb les fonts d'ara (VISTES_XIFRES · xifresDeVista,
- *    xifresMas.js: /consola/xifres/<slug>); davall d'«El Mas en xifres», les
+ *    xifresMas.js: /consola/xifres/<slug>); davall d'«Sóc de Poble en xifres», les
  *    deu xifres del tauler (xifresDeLaGraella). `text` és l'entradeta de la
  *    xifra o l'entradilla del panell, marcada: els noms de fitxer van entre
  *    accents greus i la vista els pinta en <Mono>, que el mode privacitat
@@ -66,7 +66,7 @@
  *  · Hi entren tots els blocs del tauler, en el seu ordre: «Com es llig la
  *    Consola» (l'H3 just darrere de l'entradeta, lliçó 261030 de
  *    sdp-universal-page), el Govern del Mestre, les nou pàgines de la sala
- *    de màquines, El Mas en xifres i Empaquetats i llançament.
+ *    de màquines, Sóc de Poble en xifres i Empaquetats i llançament.
  *  · Un paràgraf és una llista de trossos sense React: { text }, { fort }
  *    (negreta), { mono } (un fitxer o una ruta, que el mode privacitat
  *    amaga) i { enllac, ruta }; `privat`, si el porta, és el que es llig amb
@@ -85,7 +85,7 @@
  *    cobertaEmpaquetats): «Cal reparar» quan l'última lectura ha fallat,
  *    «Sense font» quan no n'hi ha i cap verd ni cap «sense semàfor» inventat.
  *    El motiu és una frase sencera (perQueNoHiHa): «l’última lectura del Mapa
- *    del Mas (mapa.json) ha fallat», «consola.json encara s’està carregant».
+ *    de Sóc de Poble (mapa.json) ha fallat», «consola.json encara s’està carregant».
  *  · Res de paràgrafs plantilla: les peces d'una família (llocs del sòl,
  *    candats, arnesos, carregadors, tasques, agents atòmics) ja no són un H4
  *    cada una amb la mateixa entradeta. La família es definix una vegada, a
@@ -93,11 +93,11 @@
  *    les peces que marquen alguna cosa van en una llista, cada una amb el seu
  *    enllaç, el seu estat dit en paraules (SIGNIFICAT_ESTAT) i els seus
  *    problemes, nomenats amb les línies de la seua coberta
- *    (resumProblemes.js). Una xifra que torna a eixir (El Mas en xifres, o
+ *    (resumProblemes.js). Una xifra que torna a eixir (Sóc de Poble en xifres, o
  *    «skills» a Entrades) remet al bloc que ja l'ha explicada.
  *  · Hipervincles vius (lliçó 261030 de sdp-universal-page): les pàgines que
  *    nomena la prosa (el pols, els empaquetats, les quatre peces dels agents,
- *    les anomalies del Mas) porten el seu enllaç ([text](clau),
+ *    les anomalies de Sóc de Poble) porten el seu enllaç ([text](clau),
  *    ambEnllacos), i els H4 de les plataformes porten a la pàgina dels
  *    empaquetats. L'alerta de vigilància diu quin avís és i enllaça la seua
  *    xifra, com AlertaVigilancia.
@@ -148,10 +148,10 @@ export const TEXT_INDEX = 'Una guia per a llegir la Consola de dalt a baix: què
 /** «Com es llig la Consola»: l'H3 que obri l'article, sense pàgina pròpia. */
 export const TITOL_INTRO = 'Com es llig la Consola';
 export const ID_INTRO = 'com-es-llig';
-/** «El Mas en xifres»: la secció del tauler, com a H3 de l'índex, sense pàgina pròpia. */
-export const TITOL_MAS = 'El Mas en xifres';
+/** «Sóc de Poble en xifres»: la secció del tauler, com a H3 de l'índex, sense pàgina pròpia. */
+export const TITOL_MAS = 'Sóc de Poble en xifres';
 export const ID_MAS = 'mas';
-export const TEXT_MAS = 'Les deu xifres de capçalera del Mas, cada una amb la seua pàgina: el resum d’un colp d’ull de com està l’eixam.';
+export const TEXT_MAS = 'Les deu xifres de capçalera de Sóc de Poble, cada una amb la seua pàgina: el resum d’un colp d’ull de com està l’eixam.';
 /** Els ids dels H3 del Govern del Mestre i dels empaquetats (els títols són els de les seues seccions del tauler). */
 export const ID_GOVERN = 'govern';
 export const ID_EMPAQUETATS = 'empaquetats';
@@ -215,10 +215,10 @@ const esGreu = (to) => to === 'error' || to === 'avis';
 
 /* ── Les fonts, dites en paraules ────────────────────────────────────────── */
 
-const FONT_MAPA = [f('el Mapa del Mas'), t(' ('), m('mapa.json'), t(')')];
+const FONT_MAPA = [f('el Mapa de Sóc de Poble'), t(' ('), m('mapa.json'), t(')')];
 const FONT_CONSOLA = [m('consola.json')];
-/* La mateixa font darrere de «de»: «del Mapa del Mas (mapa.json)», «de consola.json». */
-const DE_FONT_MAPA = [t('del '), f('Mapa del Mas'), t(' ('), m('mapa.json'), t(')')];
+/* La mateixa font darrere de «de»: «del Mapa de Sóc de Poble (mapa.json)», «de consola.json». */
+const DE_FONT_MAPA = [t('del '), f('Mapa de Sóc de Poble'), t(' ('), m('mapa.json'), t(')')];
 const DE_FONT_CONSOLA = [t('de '), m('consola.json')];
 const fontDe = (id) => (id === 'pols' ? FONT_CONSOLA : FONT_MAPA);
 const deFontDe = (id) => (id === 'pols' ? DE_FONT_CONSOLA : DE_FONT_MAPA);
@@ -227,7 +227,7 @@ const quan = (iso, locale) => dataLocal(iso, locale);
 
 /* Per què no hi ha dades d'una font: l'estat de la lectura (useFontDev) en
    una frase sencera. La font és el subjecte («consola.json encara s’està
-   carregant») o el complement («l’última lectura del Mapa del Mas ha
+   carregant») o el complement («l’última lectura del Mapa de Sóc de Poble ha
    fallat»): `font` i `deFont` són les dues formes. Gauntlet 261030 (cicle 4) ·
    Derogat: MOTIU_SENSE_FONT, que penjava el predicat darrere del nom de la
    font («consola.json l’última lectura ha fallat»). */
@@ -259,6 +259,7 @@ function quiHoVeu(estat, que) {
  */
 export const SIGNIFICAT_ESTAT = Object.freeze({
   VIU: 'corre quan li toca',
+  PROGRAMAT: 'el job està carregat i espera la primera execució d’una instal·lació nova (encara sense cap registre)',
   ACTIU: 'funciona, i un consumidor acreditat ho demostra',
   'EN MARXA': 'ja funciona',
   MORT: 'havia de córrer i no corre',
@@ -295,7 +296,7 @@ const estatDit = (e) => (SIGNIFICAT_ESTAT[e.text]
 
 const PLA = Object.freeze({
   pols: 'Com el pols d’una persona, esta pàgina diu si **l’eixam respira bé**: **quant gasta** en tòkens i crèdits, **què llig** (el rebut que deixa un agent quan llig sencer un protocol) i **quantes skills** hi ha al disc comparades amb el manifest. Servix per a preparar l’Acta Marmota **amb proves i no amb impressions**.',
-  explorador: 'Imagina el Mas com un poble: cada skill, script, document o agent és **una casa**, i cada relació, **un camí**. L’Explorador és **el plànol del poble**: servix per a saber, **abans de tocar una peça, qui en depén**, i on hi ha camins que porten a cases que ja no hi són.',
+  explorador: 'Imagina Sóc de Poble com un poble: cada skill, script, document o agent és **una casa**, i cada relació, **un camí**. L’Explorador és **el plànol del poble**: servix per a saber, **abans de tocar una peça, qui en depén**, i on hi ha camins que porten a cases que ja no hi són.',
   fluxos: 'Un flux de treball és **una cadena de faena**: una peça deixa un document i la següent el llig. Ací només compten les cadenes **declarades als contractes**; el que la prosa insinua es queda en **suggeriment**. Servix per a trobar **els llocs on algú deixa faena i ningú no la recull**.',
   calendari: 'Hi ha faenes que **corren soles**, sense ningú davant: tasques de launchd, hooks de git i rutines programades. El Calendari diu **quines estan vives, quines han mort** i quines estan declarades **sense llançador**, perquè cap vigilància no caiga en silenci.',
   inventari: 'És **l’inventari del magatzem de procediments**: cada skill amb el seu **semàfor** (verd, ambre o roig) segons els avisos que porta. Servix per a decidir **quina skill cal cuidar primer**.',
@@ -309,7 +310,7 @@ const PLA = Object.freeze({
    (consolaPagines.js · MESURES), dit sense cap número. */
 const QUE_HI_VEURIES = Object.freeze({
   pols: 'quants registres de consum i rebuts de lectura hi ha, i quantes skills té el manifest',
-  explorador: 'quants nodes i quantes arestes té el graf del Mas',
+  explorador: 'quants nodes i quantes arestes té el graf de Sóc de Poble',
   fluxos: 'quantes cadenes de faena hi ha declarades i quants suggeriments de la prosa',
   calendari: 'quantes tasques hi ha, quantes estan vives i quantes mortes',
   inventari: 'quantes skills hi ha al Mapa i el semàfor de cada una',
@@ -423,7 +424,7 @@ function diuSenseFont(estat, x) {
 }
 
 /* Una targeta amb pàgina pròpia (una xifra) com a H4. La primera vegada que
-   ix a l'article porta la seua entradeta; si torna a eixir (El Mas en
+   ix a l'article porta la seua entradeta; si torna a eixir (Sóc de Poble en
    xifres, «skills» a Entrades), remet al bloc que ja l'ha explicada. */
 function deXifra(x, ctx, bloc) {
   const { fonts } = ctx;
@@ -457,7 +458,7 @@ function dePanell(p, dades, estat, ara) {
 
 /* El nom de cada família en singular i en plural, per a comptar-ne les peces. */
 const NOMS_FAMILIA = Object.freeze({
-  arnes: ['arnés del Mas', 'arnesos del Mas'],
+  arnes: ['arnés de Sóc de Poble', 'arnesos de Sóc de Poble'],
   carregador: ['carregador d’arrencada', 'carregadors d’arrencada'],
   candat: ['candat', 'candats'],
   tasca: ['tasca que corre sola', 'tasques que corren soles'],
@@ -556,10 +557,10 @@ function fillsDePagina(p, ctx) {
 
 /* ── «Com es llig la Consola» (el primer H3) ─────────────────────────────── */
 
-const INTRO = 'La Consola Termodinàmica és el **tauler de manteniment** de l’eixam d’IA que cuida el Mas. **No mana res ni toca cap fitxer**: llig les fonts del repositori i les ensenya en targetes, perquè el Mestre i les IAs vegen d’un colp d’ull **què funciona, què falla i què queda per fer**.';
-const INTRO_FONTS = 'Cada bloc viu d’una font: el **Govern del Mestre**, de la **matriu de requeriments**; la **sala de màquines** i **El Mas en xifres**, del **Mapa del Mas** (`mapa.json`, que compila `tooling/brain/mapa-consola.mjs`), llevat del [pols](pols), que llig `consola.json`; i els [empaquetats](empaquetats), de la **carpeta de builds**. Totes se servixen només al **servidor local de desenvolupament**: fora d’ell, la Consola **no té dades i no n’inventa cap**.';
+const INTRO = 'La Consola Termodinàmica és el **tauler de manteniment** de l’eixam d’IA que cuida Sóc de Poble. **No mana res ni toca cap fitxer**: llig les fonts del repositori i les ensenya en targetes, perquè el Mestre i les IAs vegen d’un colp d’ull **què funciona, què falla i què queda per fer**.';
+const INTRO_FONTS = 'Cada bloc viu d’una font: el **Govern del Mestre**, de la **matriu de requeriments**; la **sala de màquines** i **Sóc de Poble en xifres**, del **Mapa de Sóc de Poble** (`mapa.json`, que compila `tooling/brain/mapa-consola.mjs`), llevat del [pols](pols), que llig `consola.json`; i els [empaquetats](empaquetats), de la **carpeta de builds**. Totes se servixen només al **servidor local de desenvolupament**: fora d’ell, la Consola **no té dades i no n’inventa cap**.';
 /* Decisió del Mestre (31-10-2026) · Gauntlet f9 (F3) · La mateixa entradeta a la web publicada. */
-const INTRO_FONTS_PUBLICADA = 'Cada bloc viu d’una font: el **Govern del Mestre**, de la **matriu de requeriments**; la **sala de màquines** i **El Mas en xifres**, del **Mapa del Mas** (`mapa.json`, que compila `tooling/brain/mapa-consola.mjs`), llevat del [pols](pols), que llig `consola.json`; i els [empaquetats](empaquetats), de la **carpeta de builds**. A la **web publicada**, com ara, totes ixen de la **instantània sanejada** que es fa en cada publicació, i cada pàgina diu de quan és; en viu només es compilen a l’**ordinador de desenvolupament**. Si una font no ha arribat a la instantània, la Consola **no n’inventa cap dada**.';
+const INTRO_FONTS_PUBLICADA = 'Cada bloc viu d’una font: el **Govern del Mestre**, de la **matriu de requeriments**; la **sala de màquines** i **Sóc de Poble en xifres**, del **Mapa de Sóc de Poble** (`mapa.json`, que compila `tooling/brain/mapa-consola.mjs`), llevat del [pols](pols), que llig `consola.json`; i els [empaquetats](empaquetats), de la **carpeta de builds**. A la **web publicada**, com ara, totes ixen de la **instantània sanejada** que es fa en cada publicació, i cada pàgina diu de quan és; en viu només es compilen a l’**ordinador de desenvolupament**. Si una font no ha arribat a la instantània, la Consola **no n’inventa cap dada**.';
 
 /* Gauntlet 261030 (cicle 4) · Els estats de les peces, una sola vegada i
    agrupats pel seu color (semafor.js · COLOR_D_ESTAT): cada estat amb el que
@@ -584,7 +585,7 @@ function nodeIntro({ fonts, vista, govern, empaquetats, locale, ara }) {
   ].filter(Boolean);
   /* Gauntlet 261030 (cicle 4) · Cada font que no hi és diu per què (encara
      es carrega o l'última lectura ha fallat), i sense cap font només callen
-     les targetes de la sala de màquines i del Mas en xifres: la certificació
+     les targetes de la sala de màquines i de Sóc de Poble en xifres: la certificació
      del Mestre viu en este navegador i sempre compta. Derogat: «Per això cap
      targeta porta números». */
   const COM_FALTA = { loading: ' (encara es carrega)', error: ' (l’última lectura ha fallat)' };
@@ -598,7 +599,7 @@ function nodeIntro({ fonts, vista, govern, empaquetats, locale, ara }) {
     ? [f('Ara mateix'), t(', en este entorn, la Consola llig '), ...enumera(llegides, (trossos) => trossos),
       ...(absents.length ? [t('; no té '), ...enumera(absents, (x) => t(x))] : []), t('.')]
     : [f('Ara mateix, en este entorn, la Consola no llig cap font'), t(': no té '), ...enumera(absents, (x) => t(x)),
-      t('. Per això les targetes de la sala de màquines i del Mas en xifres no porten números'),
+      t('. Per això les targetes de la sala de màquines i de Sóc de Poble en xifres no porten números'),
       t(publicada()
         ? (algunaFallada ? ': la pàgina de cada bloc diu l’error, i la instantània es torna a fer en cada publicació de la web.'
           : ': esta publicació de la web no porta la instantània de les seues fonts.')
@@ -851,9 +852,9 @@ function nodeEmpaquetats(empaquetats) {
   };
 }
 
-/* ── El Mas en xifres ────────────────────────────────────────────────────── */
+/* ── Sóc de Poble en xifres ────────────────────────────────────────────────────── */
 
-const PLA_MAS = 'Són **deu números que resumixen tot el tauler**: quantes skills, agents i coses que corren soles hi ha, i quantes **anomalies** ([avisos alts](avisos-alts), [el LEDGER](linies-ledger), [els torns caducats](torns-caducats), [el segell de les skills](skills-fora-del-segell)…). Totes ixen del **Mapa del Mas**, i cada una porta a **la pàgina on es tracta**.';
+const PLA_MAS = 'Són **deu números que resumixen tot el tauler**: quantes skills, agents i coses que corren soles hi ha, i quantes **anomalies** ([avisos alts](avisos-alts), [el LEDGER](linies-ledger), [els torns caducats](torns-caducats), [el segell de les skills](skills-fora-del-segell)…). Totes ixen del **Mapa de Sóc de Poble**, i cada una porta a **la pàgina on es tracta**.';
 
 function nodeMas(ctx) {
   const { fonts, locale } = ctx;
@@ -888,7 +889,7 @@ function nodeMas(ctx) {
 /**
  * La jerarquia de l'índex amb les fonts d'ara: un sol node arrel (nivell 2)
  * amb «Com es llig la Consola», el Govern del Mestre, les nou pàgines, «El
- * Mas en xifres» i els empaquetats (nivell 3), i dins de cada un les seues
+ * sistema en xifres» i els empaquetats (nivell 3), i dins de cada un les seues
  * targetes (nivell 4). `extres` porta l'estat de les lectures (estatMapa,
  * estatDades), la font del govern (useGovern), la dels empaquetats
  * (useFontDev) i el rellotge de la pintada (`ara`), el mateix de les

@@ -3,7 +3,7 @@
   "turn_id": "torn_32274f5e-443f-44ef-ac0b-800844573d5c",
   "actor": "Maria",
   "scope": "documents",
-  "state": "context_loaded",
+  "state": "closed",
   "revision": 5,
   "createdAt": "2026-10-27T04:35:15.032Z",
   "updatedAt": "2026-10-27T04:38:01.644Z",
@@ -3809,5 +3809,6 @@
       "at": "2026-10-27T04:38:01.644Z",
       "hash": "fcca5093fb6a0b048a4a2f5ec720fae8fe741ecc37aeba3f1adfb59b0b60fc1b"
     }
-  ]
+  ],
+  "closedAt": "2026-11-03T05:17:29.321Z"
 }

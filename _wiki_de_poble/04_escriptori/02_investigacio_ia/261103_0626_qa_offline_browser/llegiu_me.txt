@@ -1,0 +1,1 @@
+Harness de QA local de Codex; no forma part del producte ni del compilador públic. Set proves IndexedDB Chrome156 PASS, transport simulat. Fonts, hashes i resultat al kit final ../_investigacio_ia_de_poble/261103_kit_codex_onada8_9_nixos_i_offline_first/evidencia/. La ruta de Wiki està protegida deliberadament per Vite; no s’ha alterat la frontera.

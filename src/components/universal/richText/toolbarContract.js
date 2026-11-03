@@ -27,7 +27,10 @@ export const FORMATS = Object.freeze({
   /* O4-CLAUDE-2 (ordre del Mestre, 261102 21:38) · La subtargeta: una targeta
      interna amb títol, línia de context i cos (extensions/subtargeta.js). */
   SUBTARGETA: 'subtargeta',
-  TARGETA: 'targeta'
+  TARGETA: 'targeta',
+  /* T26-01 (Gauntlet O7 · T2.6, «Enllaç ↔ Card» d'1 clic) · El sentit
+     Enllaç → Card: l'altre és el botó «Convertir en enllaç» de la targeta. */
+  ENLLAC_A_TARGETA: 'enllacATargeta'
 });
 
 /**
@@ -56,6 +59,10 @@ export const FORMATS = Object.freeze({
  * abans només hi arribava l'ordre «/»). UniversalToolbar només les pinta si
  * el motor n'oferix l'acció (l'extensió hi és, i el selector, per a la
  * targeta): un editor sense targetes no mostra cap botó apagat de més.
+ *
+ * T26-01 (Gauntlet O7 · T2.6) · Darrere de la «Targeta», «Convertir en
+ * targeta»: només hi és amb el cursor en un enllaç intern que es pot
+ * commutar (convertirEnllacEnTargeta); en qualsevol altre punt, cap botó.
  */
 export const TOOLBAR_SCHEMA = Object.freeze([
   { id: FORMATS.SUBTITOL, clauI18n: 'editor.format.subtitol', etiqueta: 'Títol de secció (H3)', commutable: true, encapcalament: 3, slot: { estat: 'isSubheading', accio: 'toggleSubheading' } },
@@ -71,7 +78,8 @@ export const TOOLBAR_SCHEMA = Object.freeze([
   { id: FORMATS.CITACIO,  clauI18n: 'editor.format.citacio',  etiqueta: 'Citació',  commutable: true, fila: 'segona', slot: { estat: 'isCitacio', accio: 'toggleCitacio' } },
   { id: FORMATS.DIVISOR,  clauI18n: 'editor.format.divisor',  etiqueta: 'Divisor',  commutable: false, fila: 'segona', slot: { estat: 'isDivisor', accio: 'insertDivisor' } },
   { id: FORMATS.SUBTARGETA, clauI18n: 'section.notes.format.subtargeta', etiqueta: 'Subtargeta', commutable: false, fila: 'segona', slot: { estat: 'isSubtargeta', accio: 'insertSubtargeta' } },
-  { id: FORMATS.TARGETA,  clauI18n: 'editor.inserir.targeta', etiqueta: 'Targeta',  commutable: false, fila: 'segona', slot: { estat: 'isTargeta', accio: 'insertTargeta' }, nivell: 'avancat' }
+  { id: FORMATS.TARGETA,  clauI18n: 'editor.inserir.targeta', etiqueta: 'Targeta',  commutable: false, fila: 'segona', slot: { estat: 'isTargeta', accio: 'insertTargeta' }, nivell: 'avancat' },
+  { id: FORMATS.ENLLAC_A_TARGETA, clauI18n: 'section.notes.format.enllacATargeta', etiqueta: 'Convertir en targeta', commutable: false, fila: 'segona', slot: { estat: 'isEnllacATargeta', accio: 'convertLinkToCard' }, nivell: 'avancat' }
 ]);
 
 /** Els botons que UniversalToolbar sap pintar hui (O4-CLAUDE-2 · també la

@@ -32,7 +32,7 @@ contracte.llig:
 contracte.escriu:
   - tests/
   - _wiki_de_poble/04_escriptori/
-  - _wiki_de_poble/10_actes/
+  - _wiki_de_poble/10_actes
 ---
 
 # Protocol Canònic de Ciberseguretat i Sentinella Permanent (Claude Security & Colmena)

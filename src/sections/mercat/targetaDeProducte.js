@@ -57,7 +57,7 @@ export function propsDeTargetaDeProducte(item, t = senseTraduccio) {
        sp-card-avatar--fallback; autoriaNota.js). L'entitat ja porta el seu
        logo explícit (autoriaSeed). */
     avatarUrl: resolRecursPropi(signatura.avatar),
-    body: item.description || '',
+    body: item.lead || item.entradilla || item.description || '',
     /* T39 · els drets triats al producte; sense, el text de sèrie
        (COPYRIGHT_SDP), el mateix que la seua targeta al Mur i la seua pàgina.
        Abans, un literal que no llegia item.copyright (revisió del 261007,

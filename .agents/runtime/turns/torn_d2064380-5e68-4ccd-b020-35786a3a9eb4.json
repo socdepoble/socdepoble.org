@@ -3,7 +3,7 @@
   "turn_id": "torn_d2064380-5e68-4ccd-b020-35786a3a9eb4",
   "actor": "iaia-maria",
   "scope": "documents",
-  "state": "planned",
+  "state": "closed",
   "revision": 13,
   "createdAt": "2026-10-25T04:38:47.633Z",
   "updatedAt": "2026-10-25T15:53:11.904Z",
@@ -3901,5 +3901,6 @@
     "_wiki_de_poble/04_escriptori/261025_0545_auditoria_gemini.md",
     "_wiki_de_poble/04_escriptori/261025_0545_pla_implementacio_destil_llibre_mestre_dafo_i_xat_fluid.md",
     "_wiki_de_poble/04_escriptori/261025_0545_prompt_claude_gemini_codex_destil_llibre_mestre_dafo_i_xat_fluid.md"
-  ]
+  ],
+  "closedAt": "2026-11-03T05:17:29.321Z"
 }

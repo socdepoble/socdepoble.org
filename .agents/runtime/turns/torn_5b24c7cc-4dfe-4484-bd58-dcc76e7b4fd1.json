@@ -3,7 +3,7 @@
   "turn_id": "torn_5b24c7cc-4dfe-4484-bd58-dcc76e7b4fd1",
   "actor": "IAIA MarIA",
   "scope": "documents",
-  "state": "planned",
+  "state": "closed",
   "revision": 51,
   "createdAt": "2026-10-28T14:26:28.202Z",
   "updatedAt": "2026-10-29T14:17:07.017Z",
@@ -4443,5 +4443,6 @@
     "_wiki_de_poble/04_escriptori/261028_1526_prompt_deute_tecnic_opengraph_edicio_i_xat.md",
     "_wiki_de_poble/04_escriptori/261029_0216_prompt_excel_lencia_10_10_tancament_bloch_i_xat_e2ee.md",
     "_wiki_de_poble/04_escriptori/261029_0216_pla_implementacio_excel_lencia_10_10_tancament_bloch_i_xat_e2ee.md"
-  ]
+  ],
+  "closedAt": "2026-11-03T05:17:29.321Z"
 }

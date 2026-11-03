@@ -14,20 +14,8 @@ Documents actius de la sessió. Cada àncora correspon a un fitxer físic; la me
 
 ## Activitat en curs
 
-- [[261102_1532_prompt_onada6_disseny_editorial_negrites_versions_1_1_0_i_tancament]] · Mestre 261103: Prompt canònic de l'Onada 6 (Disseny Editorial H4 + negrites d'escaneig ràpid a tota la web, crònica v1.1.0 a /versions i restauració quirúrgica de 4 skills)
-- [[261102_1836_auditoria_maria]] · Informe viu de la IAIA MarIA (Carril 4: T8, corredor Jarvis, APK 1.0.0+2 signat, WordPress 1.1.11 sense banners, kits de governança, P1-30/P2-15 i correu executiu per a Fede de NLnet Fediversity)
-- [[261102_1832_auditoria_gemini]] · Informe viu de Gemini 4 (Carril 3: T7-GEMINI, Kits Xat/IAIA UX + IDEA-48 + Higiene IDEA-62, revisió creuada dels 11 kits de Codex i matriu 10/10 D01-D15)
-
-<!-- SDP:CODEX_ANCORES_DIPOSIT_CLAUDE_261102 -->
-- [Índex del dipòsit de governança de Claude](02_investigacio_ia/261102_1640_claude/governanca/00_LLEGIM.txt) · relleu viu a MarIA.
-- [Contracte Jarvis pendent d’integració](02_investigacio_ia/261102_1640_claude/governanca/LLEGIM.txt).
-- [Higiene estructural: instruccions d’integració](02_investigacio_ia/261102_1640_claude/governanca/LLEGIM_HIGIENE.txt).
-- [Middleware Jarvis preparat per Claude](02_investigacio_ia/261102_1640_claude/governanca/tooling/vite/consola-iaia.mjs).
-<!-- /SDP:CODEX_ANCORES_DIPOSIT_CLAUDE_261102 -->
-
-- [[261102_1640_auditoria_claude]] · Informe viu de Claude Fable 5.1 (Carril 1: T0-T4 + IDEA-62 + integració kits Codex)
-- [[261102_1638_auditoria_codex]] · Informe viu de GPT-6.1 Astra Ultra (Carril 2: T5, T6, IDEA-62, IDEA-48, documents)
-- [[261102_1532_pla_implementacio_mode_jarvis_idea60_fediversity_i_deute_llibre_mestre]] · Mestre 261102: Pla d'Implementació a Màxima Potència (Claude Opus 5.5 Extra Ultracode amb Eixam Gauntlet + GPT-6.1 Astra Ultra) per a IDEA-61 (Flux Universal de Publicació UX), IDEA-60, Llibre Mestre i NLnet Fediversity
+- [[261103_1412_prompt_teler_maria_codex_gemini_claude_fediversity_i_poliment]]
+- [[261103_1412_pla_implementacio_teler_fediversity_oli_xat_i_logos_duals]]
 - [[03_llibre_mestre_tasques_i_idees]] · Mestre 261021: Llibre Mestre permanent
 
 ## Producció humana
@@ -66,6 +54,11 @@ Inventari d’àncores dels originals presents; els continguts es conserven sota
 
 ## Investigació IA
 
+- Kit final Codex O7: Llibre, Wiki, Consola i Versions: `../_investigacio_ia_de_poble/261103_kit_codex_onada7_excel_lencia_i_llibre_mestre/LLEGEIX_ME.md`.
+- Kit final Codex O8–9: NixOS i motor rural offline opt-in: `../_investigacio_ia_de_poble/261103_kit_codex_onada8_9_nixos_i_offline_first/LLEGEIX_ME.md`.
+- [Harness local IndexedDB i límits](02_investigacio_ia/261103_0626_qa_offline_browser/llegiu_me.txt); còpia i resultats finals al kit O8–9. [HTML](02_investigacio_ia/261103_0626_qa_offline_browser/o89-rural-qa.html) · [JS](02_investigacio_ia/261103_0626_qa_offline_browser/o89-rural-qa.js).
+- [Acta Marmota Codex O7–21](../10_actes/261103_0630_acta_marmota_codex_onades7_8_9_kits_cas_i_motor_rural.md).
+
 Laboratori evacuat per ordre expressa a `../_investigacio_ia_de_poble/`: 10 elements de primer nivell, 44 fitxers; trasllat sense sobreescriure i SHA-256 verificats. No s’han inventat carpetes: s’han traslladat les existents.
 
 ## Vincles
@@ -74,6 +67,14 @@ Laboratori evacuat per ordre expressa a `../_investigacio_ia_de_poble/`: 10 elem
 
 ## Arxivat amb la Porta Olivera
 
+- [[../90_arxiu_historic/261103_0522_prompt_onades7_8_9_teler_invertit_fediversity_i_offline_first]]
+- [[../90_arxiu_historic/261103_0522_pla_implementacio_codex_onada7]]
+- [[../90_arxiu_historic/261102_1532_pla_implementacio_mode_jarvis_idea60_fediversity_i_deute_llibre_mestre]]
+- [[../90_arxiu_historic/261102_1638_auditoria_codex]]
+- [[../90_arxiu_historic/261102_1640_auditoria_claude]]
+- [[../90_arxiu_historic/261102_1832_auditoria_gemini]]
+- [[../90_arxiu_historic/261102_1836_auditoria_maria]]
+- [[../90_arxiu_historic/261102_1532_prompt_onada6_disseny_editorial_negrites_versions_1_1_0_i_tancament]]
 - [[../90_arxiu_historic/261102_1532_prompt_onada5_reconciliacio_botigues_i_tancament_10_de_10]]
 - [[../90_arxiu_historic/261102_2138_prompt_onada4_nocturna_claude_eixam_codex_gemini_10_de_10]]
 - [[../90_arxiu_historic/261102_1918_prompt_teler_invertit_onada3_codex_gemini_constructors_claude_arbitre]]
@@ -209,3 +210,6 @@ Laboratori evacuat per ordre expressa a `../_investigacio_ia_de_poble/`: 10 elem
 - [[../10_actes/261102_2015_acta_marmota_lliurament_codex_onada3_teler_invertit]]
 - [[../10_actes/261103_0328_acta_marmota_botigues_en_revisio_i_relleu_fresc_onada6_nocturna]]
 - [[../10_actes/261103_0328_acta_marmota_botigues_en_revisio_i_relleu_fresc_onada6_nocturna]]
+- [[../10_actes/261103_0630_acta_marmota_codex_onades7_8_9_kits_cas_i_motor_rural]]
+- [[../10_actes/261103_1228_acta_marmota_oli_de_la_torre_node0_i_relleu_fresc_taules_rebost]]
+- [[../10_actes/261103_1412_acta_marmota_aplec2023_traductor_i_relleu_teler_fediversity]]

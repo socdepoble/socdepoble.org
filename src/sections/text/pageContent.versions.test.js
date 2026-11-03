@@ -71,7 +71,7 @@ const rutaExistix = (href) => {
 };
 const interns = (fragment) => [...fragment.matchAll(/href="(\/[^"]*)"/g)].map((m) => m[1]);
 
-const TITOL_110 = `3 de novembre de 2026 · v1.1.0 (build pendent de desplegar) · Connector WordPress v${CONNECTOR} al repositori`;
+const TITOL_110 = `3 de novembre de 2026 · v1.1.0 (build pendent de desplegar) · Connector WordPress v${CONNECTOR} a WordPress.org`;
 const entrega110 = blocDe('3 de novembre de 2026 · v');
 const entregaAssalt = blocDe('1 de novembre de 2026, tarda');
 const entrega261101 = blocDe('1 de novembre de 2026 · v');
@@ -200,7 +200,7 @@ describe('Onada 6 · l’entrada de la 1.1.0, la primera i honesta', () => {
     expect(TITOL_110).toContain(`· v${PAQUET.version} (`);
     /* Gauntlet O6 (VER-02/VER-03) · El connector del títol és el del repositori (la capçalera del
        connector), amb «al repositori» com a la v1.0.4: no es publica fins que l'SVN el porte. */
-    expect(TITOL_110.match(/Connector WordPress v(\d+\.\d+\.\d+) al repositori$/)?.[1]).toBe(CONNECTOR);
+    expect(TITOL_110.match(/Connector WordPress v(\d+\.\d+\.\d+) a WordPress\.org$/)?.[1]).toBe(CONNECTOR);
   });
 
   test('pendent de desplegar: cap frase no diu que siga desplegat, en viu o en producció', () => {
@@ -279,18 +279,20 @@ describe('Onada 6 · l’entrada de la 1.1.0, la primera i honesta', () => {
   });
 
   test('els calaixos naixen davall de la barra negra: un sol càlcul per a l’Índex i per als calaixos', () => {
-    expect(llegix('src/css/tokens.css')).toMatch(/--sdp-calaix-dalt: calc\(var\(--sdp-alt-negra\)/);
+    // «\s*:» i no «: »: la prova llig el token, no el declara (tractor-tokens T3).
+    expect(llegix('src/css/tokens.css')).toMatch(/--sdp-calaix-dalt\s*: calc\(var\(--sdp-alt-negra\)/);
     expect(llegix('src/css/modules.css')).toMatch(/\.toc-overlay \{[^}]*top: var\(--sdp-calaix-dalt\)/);
     expect(llegix('src/css/components.css')).toMatch(/\.sdp-dialeg--calaix \{[^}]*top: var\(--sdp-calaix-dalt\)/);
     expect(llegix('src/components/universal/PanellCrom.jsx')).toMatch(/titol="Crom del sistema" costat=/);
     expect(llegix('src/components/universal/identitat/CalaixIdentitats.jsx')).toContain('titol="Amb qui actues?"');
   });
 
-  test('el connector: el del repositori, pendent de publicar; WordPress.org servix la de la capçalera', () => {
+  test('O7 · connector 1.1.12 publicat: la capçalera i el text actual concorden', () => {
     const publicada = PAGE_COPY.versions.subtitle.match(/Connector WordPress v(\d+\.\d+\.\d+) a WordPress\.org$/)?.[1];
     const cos = text(apartat(entrega110, 'Millora · Actualitzacions automàtiques').cos);
-    expect(cos).toContain(`El connector ${CONNECTOR} és al repositori i està pendent de publicar a WordPress.org, que encara servix la ${publicada}.`);
-    expect(noMesNova(publicada, CONNECTOR) && publicada !== CONNECTOR).toBe(true);
+    expect(cos).toContain(`El connector ${CONNECTOR} ja està publicat a WordPress.org`);
+    expect(publicada).toBe('1.1.12');
+    expect(publicada).toBe(CONNECTOR);
     /* La capçalera llig la versió publicada d'una altra entrada (T8 · D-12). */
     expect(entrega110).not.toContain('en la versió');
   });
@@ -406,7 +408,7 @@ describe('T8 · D-12 · capçalera estàtica i entrada de les Rondes 1, 2 i 3', 
     /* La publicada és la que diu l'entrada més recent que nomena una versió a WordPress.org (el
        registre va de la més nova a la més vella): les entrades velles són història i no es
        reescriuen quan es publica una versió nova. No pot ser més nova que la del connector. */
-    const darreraPublicada = html.match(/<code>socdepoble<\/code>, en la versió (\d+\.\d+\.\d+)/)?.[1];
+    const darreraPublicada = entrega110.match(/Connector WordPress v(\d+\.\d+\.\d+) a WordPress\.org<\/h3>/)?.[1];
     expect(publicada).toBe(darreraPublicada);
     expect(noMesNova(publicada, CONNECTOR), `${publicada} ≤ ${CONNECTOR}`).toBe(true);
   });

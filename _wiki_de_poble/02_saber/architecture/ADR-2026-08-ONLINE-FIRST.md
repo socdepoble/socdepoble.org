@@ -7,11 +7,11 @@ tags:
 ---
 # ADR-2026-08 — Online-first i navegadors moderns
 
-Sóc de Poble abandona la doctrina offline total i el suport específic per a l'A10: el servidor és la font de veritat de les dades compartides i la memòria cau local només és una ajuda opcional. Esta decisió retira la PWA, Dexie i la sincronització parcial, i deixa escrit el compromís extern que cal resoldre.
+Sóc de Poble abandona la **doctrina offline total** i el **suport específic per a l'A10**: el servidor és la **font de veritat** de les dades compartides i la **memòria cau local** només és una **ajuda opcional**. Esta decisió retira la PWA, Dexie i la sincronització parcial, i deixa escrit el **compromís extern** que cal resoldre.
 
 ## Nota de vigència (261029)
 
-Esta ADR es conserva com a registre històric i el seu nucli continua vigent (el servidor com a font de veritat de les dades compartides, l'autenticació de servidor per a tota dada privada i cap garantia de CRDT), però tres punts han quedat superats per decisions posteriors:
+Esta ADR es conserva com a **registre històric** i el seu **nucli continua vigent** (el servidor com a **font de veritat** de les **dades compartides**, l'**autenticació de servidor** per a tota dada privada i **cap garantia de CRDT**), però tres punts han quedat superats per **decisions posteriors**:
 
 - **PWA.** La retirada de la PWA (secció Conseqüències) queda esmenada per la closca sense xarxa de l'[[ADR-2026-10-APPS-DEL-DISPOSITIU]] i per la instal·lació de l'App des de `/descarregues` (`P1-69`, commit `e36606db2`).
 - **IndexedDB.** La migració de tota dada fora d'IndexedDB queda esmenada per les dades del dispositiu de la mateixa ADR-2026-10 i pel cofre xifrat local de l'[[ADR-2026-13-BYOP-XIFRAT-LOCAL]] damunt de `creaMagatzemIdb`.
@@ -25,10 +25,10 @@ retirar treball compromés externament.
 
 ## Context
 
-El projecte ja no necessita suport específic per a dispositius antics com l'A10 ni
-funcionament 100% offline. La pila pensada per a treballar sense connexió afegia Dexie, instantànies,
-camins de reserva, service worker i sincronització parcial sense aportar un CRDT
-real ni una experiència fiable.
+El projecte ja no necessita suport específic per a **dispositius antics** com l'A10 ni
+**funcionament 100% offline**. La pila pensada per a treballar **sense connexió** afegia Dexie, instantànies,
+camins de reserva, service worker i **sincronització parcial** sense aportar un **CRDT
+real** ni una **experiència fiable**.
 
 ## Decisió
 
@@ -57,10 +57,10 @@ La sincronització CRDT/P2P queda com a visió futura a [[arquitectura_sistema_n
 
 ## Compromís extern a resoldre
 
-Revisar l'acta de sessió de l'enviament a NLnet (`260801_1900_ACTA_SESSIO_Enviament_NLnet.md`,
-desada a l'antiga carpeta d'Escriptori `05_Escriptori_Soc_de_Poble/`, que ja no forma
-part de l'estructura vigent de la Wiki) i deixar per escrit una de tres decisions:
-mantindre CRDT/NixOS en un subprojecte, comunicar el canvi d'abast o retirar la proposta.
+**Revisar l'acta de sessió** de l'**enviament a NLnet** (`260801_1900_ACTA_SESSIO_Enviament_NLnet.md`,
+desada a l'**antiga carpeta d'Escriptori** `05_Escriptori_Soc_de_Poble/`, que ja no forma
+part de l'**estructura vigent de la Wiki**) i **deixar per escrit** una de tres decisions:
+**mantindre CRDT/NixOS** en un subprojecte, comunicar el **canvi d'abast** o **retirar la proposta**.
 
 ## Vincles
 

@@ -279,11 +279,11 @@ test('una llista niuada traduïda dins d’un <li> que torna en l’original por
 });
 
 /* Una pàgina llarga amb enllaços i negretes: amb les etiquetes passaria dels
-   10000 caràcters del pressupost; va per segments i es traduïx igual. */
+   60000 caràcters del pressupost; va per segments i es traduïx igual. */
 const PaginaLlarga = () => (
   <UniversalPage chrome="context" title="Llarga">
     <section>
-      {Array.from({ length: 60 }, (_, i) => (
+      {Array.from({ length: 360 }, (_, i) => (
         <p key={i}>Paràgraf {i} de la pàgina, amb <a href="/mur">el Mur</a> i <strong>una negreta</strong> per a omplir-la bé de text, amb unes quantes paraules més de farciment.</p>
       ))}
     </section>
@@ -298,18 +298,18 @@ test('pàgina llarga amb marques: no passa a «massa llarga» per les etiquetes;
   const { container } = render(<PaginaLlarga />);
   const text = container.querySelector('article.content-wrapper').textContent.length;
   // Sense les etiquetes hi cap; amb les etiquetes (uns 50 caràcters per paràgraf), no.
-  expect(text).toBeLessThan(10000);
-  expect(text + 60 * 50).toBeGreaterThan(10000);
+  expect(text).toBeLessThan(60000);
+  expect(text + 360 * 50).toBeGreaterThan(60000);
   await tria(container, 'Anglés');
   expect(mocks.toast).not.toHaveBeenCalled();
   const enviats = fetch.mock.calls.map(([, { body }]) => JSON.parse(body));
-  expect(enviats.reduce((suma, { textos }) => suma + textos.join('').length, 0)).toBeLessThanOrEqual(10000);
+  expect(enviats.reduce((suma, { textos }) => suma + textos.join('').length, 0)).toBeLessThanOrEqual(60000);
   expect(new Set(enviats.map(({ format }) => format))).toEqual(new Set(['text', 'html']));
   const cos = traduit(container);
-  expect([...cos.querySelectorAll('a')].map((a) => a.getAttribute('href'))).toEqual(Array.from({ length: 60 }, () => '/mur'));
+  expect([...cos.querySelectorAll('a')].map((a) => a.getAttribute('href'))).toEqual(Array.from({ length: 360 }, () => '/mur'));
   // Els primers paràgrafs conserven la negreta; els últims, per segments, no.
-  expect(cos.querySelectorAll('strong').length).toBeGreaterThan(30);
-  expect(cos.querySelectorAll('strong').length).toBeLessThan(60);
+  expect(cos.querySelectorAll('strong').length).toBeGreaterThan(180);
+  expect(cos.querySelectorAll('strong').length).toBeLessThan(360);
 });
 
 /* Decisions 261030 §7 (les pàgines amb contingut privat porten

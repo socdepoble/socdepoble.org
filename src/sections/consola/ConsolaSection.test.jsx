@@ -68,7 +68,7 @@ const MAPA = {
 };
 
 /* Una sola recepta de targeta, cap d'inventada: TargetaConsola (tauler, pols,
-   les xifres del Mas, les de dins de les pàgines i les peces del Mapa), la
+   les xifres de Sóc de Poble, les de dins de les pàgines i les peces del Mapa), la
    UniversalCard sencera del Mur, amb la boina de Sóc de Poble (l'autor porta
    al seu perfil; Onada 8, 261009: abans, a /projecte) i la data a la seua
    pastilla, icona a la insígnia lateral,
@@ -154,27 +154,27 @@ test('/consola: el tauler són nou targetes universals que expliquen cada pàgin
   await screen.findByText('Dades no disponibles en este entorn');
 
   expect(screen.getAllByRole('heading', { level: 1 }).map((h) => h.textContent)).toEqual(['Consola Termodinàmica']);
-  /* Correcció 261004 (verificador, punt 9) · sense Mapa, «El Mas en xifres»
+  /* Correcció 261004 (verificador, punt 9) · sense Mapa, «Sóc de Poble en xifres»
      també es pinta (cap pàgina sense targeta): el seu h2 ve darrere del de
      la introducció.
      Onada 11 (261010; prompt 261010_1730, tasca 5) · I l'H2 de l'Índex de
      la Consola (IndexConsola.jsx), també sense cap font.
      Ordre del Mestre, 13-10-2026 (pla 261013_1405, front F) · I, tancant el
-     tauler, el del Diagnòstic del Mas (DiagnosiConsola.jsx). Derogat EN PART:
+     tauler, el del Diagnòstic de Sóc de Poble (DiagnosiConsola.jsx). Derogat EN PART:
      l'Índex com a últim H2.
      Pla 261016_1530, Onada 0.5 (Mandat Suprem) · I, damunt de les nou
      targetes, el del Govern del Mestre (govern/GovernConsola.jsx), amb les
-     seues quatre targetes. Derogat EN PART: l'H2 d'«El Mas en xifres» com el
+     seues quatre targetes. Derogat EN PART: l'H2 d'«Sóc de Poble en xifres» com el
      primer darrere del de la introducció.
      Revisió adversarial del carril F1 (problemes 2 i 9) · I, darrere del
      govern, el de la sala de màquines, damunt de les nou targetes: no pengen
-     de l'H2 del govern. Derogat EN PART: «El Mas en xifres» just darrere del
+     de l'H2 del govern. Derogat EN PART: «Sóc de Poble en xifres» just darrere del
      Govern del Mestre.
      P1-35 (pla 261028_1526 §3.5.2) · I, darrere de les xifres, el dels
      empaquetats (EmpaquetatsConsola.jsx), amb la seua targeta. Expectativa
-     actualitzada a propòsit: «El Mas en xifres» just davant de l'Índex. */
+     actualitzada a propòsit: «Sóc de Poble en xifres» just davant de l'Índex. */
   expect(screen.getAllByRole('heading', { level: 2 }).map((h) => h.textContent))
-    .toEqual(['Manteniment de la IAIA', 'Govern del Mestre', 'La sala de màquines de la Consola', 'El Mas en xifres', 'Empaquetats i llançament', 'Índex de la Consola', 'Diagnòstic del Mas']);
+    .toEqual(['Manteniment de la IAIA', 'Govern del Mestre', 'La sala de màquines de la Consola', 'Sóc de Poble en xifres', 'Empaquetats i llançament', 'Índex de la Consola', 'Diagnòstic de Sóc de Poble']);
   expect(document.querySelector('.page-intro h2 + p.lead')).not.toBeNull();
   expect(screen.queryByRole('tablist')).toBeNull();
 
@@ -207,8 +207,8 @@ test('/consola: el tauler són nou targetes universals que expliquen cada pàgin
   // T3 · sense font no hi ha res de dins que desglossar.
   expect(nav.querySelector('.sdp-consola__estats')).toBeNull();
   // Correcció 261004 (verificador, punt 9) · sense Mapa, les deu xifres del
-  // Mas continuen sent targetes, amb el seu nom i cap número inventat.
-  const xifres = screen.getByRole('region', { name: 'El Mas en xifres' });
+  // sistema continuen sent targetes, amb el seu nom i cap número inventat.
+  const xifres = screen.getByRole('region', { name: 'Sóc de Poble en xifres' });
   expect(targetesExplicatives(xifres, { perA: false })).toHaveLength(10);
   expect([...xifres.querySelectorAll('h3')].map((h) => h.textContent).join(' ')).not.toMatch(/\d/);
   expect([...xifres.querySelectorAll('a.sp-card-link-overlay')].map((a) => a.getAttribute('href'))).toEqual(SLUGS.map((s) => `/consola/xifres/${s}`));
@@ -258,7 +258,7 @@ test('/consola amb Mapa: etiquetes d’un colp d’ull calculades amb les dades,
     'Inventari de skills': ['Important:avis'],
     'Entrades i eixides': ['Important:avis'],
     'Agents atòmics': ['Important:avis'],
-    'Actors del Mas': ['En ordre:exit'],
+    'Actors de Sóc de Poble': ['En ordre:exit'],
     'Avisos i salut': ['Important:avis']
   });
 });
@@ -287,7 +287,7 @@ test('T3 · /consola amb Mapa: cada coberta desglossa la seua pàgina, el més g
     'Entrades i eixides': ['2 skills opaques:avis'],
     // Onada 6 · FALTA, taronja com l'etiqueta de la peça; SENSE MESURA, neutre.
     'Agents atòmics': ['Fluxos de treball: falta:avis', 'Tauler: falta:avis', 'Qui avisa quan algo es trenca: sense mesura:neutre'],
-    'Actors del Mas': null,
+    'Actors de Sóc de Poble': null,
     'Avisos i salut': ['1 avís mitjà:avis']
   });
   // Darrere de les mètriques, dins del cos; mai com a capçalera ni com a etiqueta de la targeta.
@@ -323,7 +323,7 @@ test('Onada 6 · /consola amb Mapa: cada targeta diu quins problemes té, a la v
     'Inventari de skills': ['ambre core-identitat · orfe'],
     'Entrades i eixides': ['opaca core-identitat', 'opaca sdp-workflow'],
     'Agents atòmics': null,
-    'Actors del Mas': null,
+    'Actors de Sóc de Poble': null,
     'Avisos i salut': ['mitjana core-identitat · orfe']
   });
   const marques = (contenidor) => [...contenidor.querySelectorAll('.sdp-consola__problemes li > .sdp-insignia')]
@@ -338,8 +338,8 @@ test('Onada 6 · /consola amb Mapa: cada targeta diu quins problemes té, a la v
   }
   // Totes continuen portant a la seua pàgina.
   expect([...nav.querySelectorAll('article.sp-card')].every(esClicable)).toBe(true);
-  // I «El Mas en xifres» també: la xifra de les òrfenes diu quina.
-  const xifres = screen.getByRole('heading', { level: 2, name: 'El Mas en xifres' }).closest('section');
+  // I «Sóc de Poble en xifres» també: la xifra de les òrfenes diu quina.
+  const xifres = screen.getByRole('heading', { level: 2, name: 'Sóc de Poble en xifres' }).closest('section');
   expect(problemesPerTargeta(xifres)['1 skill òrfena']).toEqual(['mitjana core-identitat · orfe']);
 });
 
@@ -438,12 +438,12 @@ test.each(PAGINES)('/consola/%s: H1, H2 d’introducció sense punt final i entr
 const SLUGS = ['skills', 'agents', 'skills-opaques', 'coses-que-corren-soles', 'skills-amb-avisos', 'avisos-alts',
   'linies-ledger', 'torns-caducats', 'skills-fora-del-segell', 'skills-orfenes'];
 
-test('/consola amb Mapa: cada xifra del Mas és una targeta pura amb boina, cos i peu, que porta a la seua pàgina', async () => {
+test('/consola amb Mapa: cada xifra de Sóc de Poble és una targeta pura amb boina, cos i peu, que porta a la seua pàgina', async () => {
   fonts.mapa = MAPA;
   render(<ConsolaSection />);
   await screen.findByText('Dades no disponibles en este entorn');
 
-  const xifres = screen.getByRole('region', { name: 'El Mas en xifres' });
+  const xifres = screen.getByRole('region', { name: 'Sóc de Poble en xifres' });
   // Cap targeta compacta del Control: les deu són explicatives, amb boina.
   capXifraSolta(xifres);
   const targetes = targetesExplicatives(xifres, { perA: false });
@@ -452,7 +452,7 @@ test('/consola amb Mapa: cada xifra del Mas és una targeta pura amb boina, cos 
   // El títol porta la xifra i el que compta; una mesura absent (el Mapa de la
   // prova no porta salut) ho diu, mai és un zero.
   expect(targetes.map((t) => [t.querySelector('h3').textContent, t.querySelector('h4').textContent])).toEqual([
-    ['2 skills', 'Al cens del Mapa del Mas'],
+    ['2 skills', 'Al cens del Mapa de Sóc de Poble'],
     ['1 agent', 'Arnesos que conversen amb el Mestre'],
     ['2 skills opaques', 'Sense entrades ni eixides declarades'],
     ['1 cosa que corre sola', 'Tasques que llança launchd · 1 viva'],
@@ -488,7 +488,7 @@ test('/consola amb Mapa: cada xifra del Mas és una targeta pura amb boina, cos 
   expect([...document.querySelectorAll('main article.sp-card')].filter((t) => !t.querySelector(':scope > .sp-card-header'))).toEqual([]);
 });
 
-test('261004 · El Mas en xifres: les anomalies del Mapa amb mesura (LEDGER, torns, segell, alts, fantasmes)', async () => {
+test('261004 · Sóc de Poble en xifres: les anomalies del Mapa amb mesura (LEDGER, torns, segell, alts, fantasmes)', async () => {
   const metrica = (nom, extra) => ({ metrica: nom, unitat: 'fraccio', numerador: null, denominador: null, font: 'x', prova: 'p', ...extra });
   fonts.mapa = {
     ...MAPA,
@@ -505,7 +505,7 @@ test('261004 · El Mas en xifres: les anomalies del Mapa amb mesura (LEDGER, tor
   };
   render(<ConsolaSection />);
   await screen.findByText('Dades no disponibles en este entorn');
-  const xifres = screen.getByRole('region', { name: 'El Mas en xifres' });
+  const xifres = screen.getByRole('region', { name: 'Sóc de Poble en xifres' });
   const perTitol = Object.fromEntries([...xifres.querySelectorAll('article')].map((t) => [
     t.querySelector('h3').textContent, t.querySelector('h4').textContent]));
   expect(perTitol).toMatchObject({
@@ -934,8 +934,8 @@ test('Consola incrustada (Wiki): també respecta la privacitat recordada', async
 
 test.each([
   ['fluxos', 'Fluxos de treball', 'Cap cadena declarada', ['Cadenes declarades', 'Suggeriments de la prosa', 'Punts de trobada']],
-  ['agents', 'Agents atòmics', 'Agents atòmics al Mas: cap', ['Les quatre peces que ho fan possible']],
-  ['actors', 'Actors del Mas', 'Els que conversen', ['Els que conversen', 'La memòria d’arrencada', 'Els candats', 'El que corre sol', 'El sòl']]
+  ['agents', 'Agents atòmics', 'Agents atòmics a Sóc de Poble: cap', ['Les quatre peces que ho fan possible']],
+  ['actors', 'Actors de Sóc de Poble', 'Els que conversen', ['Els que conversen', 'La memòria d’arrencada', 'Els candats', 'El que corre sol', 'El sòl']]
 ])('/consola/%s: vista nova del Mapa, amb el cos en H3', async (id, titol, text, seccions) => {
   ruta.comodi = id;
   fonts.mapa = MAPA;

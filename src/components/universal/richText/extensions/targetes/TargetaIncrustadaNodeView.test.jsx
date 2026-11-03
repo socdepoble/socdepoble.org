@@ -164,13 +164,13 @@ for (const nom of [/Compartir La festa/, /Connectar amb La festa/, /Comentar La 
   });
 }
 
-test('sense triar-la, cap eina; triada i sola, Esquerra (premuda), Dreta i Llevar', async () => {
+test('sense triar-la, cap eina; triada i sola, Esquerra (premuda), Dreta, Convertir en enllaç i Llevar', async () => {
   const { container } = await munta();
   expect(container.querySelector('.sdp-targeta-incrustada__eines')).toBeNull();
   await tria('publicacio:1');
   const eines = container.querySelector('.sdp-targeta-incrustada__eines');
   const botons = within(eines).getAllByRole('button');
-  expect(botons.map((boto) => boto.textContent)).toEqual(['Esquerra', 'Dreta', 'Llevar la targeta']);
+  expect(botons.map((boto) => boto.textContent)).toEqual(['Esquerra', 'Dreta', 'Convertir en enllaç', 'Llevar la targeta']);
   expect(botons[0].getAttribute('aria-pressed')).toBe('true');
   expect(botons[1].getAttribute('aria-pressed')).toBe('false');
 });
@@ -189,11 +189,21 @@ test('Dreta canvia l’alineació del grup, i Llevar se’n du la targeta i el g
   expect(mocks.editor.getHTML()).toBe('<p>Intro</p><p>Text</p>');
 });
 
-test('en una parella no hi ha Esquerra ni Dreta: només Llevar', async () => {
+test('Convertir en enllaç substitueix la Card per un hiperenllaç de text normal (<a href="...">)', async () => {
+  const { container } = await munta();
+  await tria('publicacio:1');
+  await act(async () => {
+    fireEvent.click(within(container.querySelector('.sdp-targeta-incrustada__eines')).getByRole('button', { name: 'Convertir en enllaç' }));
+  });
+  expect(mocks.editor.getHTML()).toContain('<a rel="noopener noreferrer nofollow" href="/mur/1">La festa</a>');
+  expect(mocks.editor.getHTML()).not.toContain('data-sdp-targeta');
+});
+
+test('en una parella no hi ha Esquerra ni Dreta: només Convertir en enllaç i Llevar', async () => {
   const dues = '<p>Intro</p><div data-sdp-targetes=""><div data-sdp-targeta="poble:1" data-titol="Poble 1"></div><div data-sdp-targeta="poble:2" data-titol="Poble 2"></div></div><p></p>';
   const { container } = await munta(dues);
   await waitFor(() => expect(container.querySelectorAll('.sdp-targeta .sp-card')).toHaveLength(2));
   await tria('poble:2');
   const eines = container.querySelector('.sdp-targeta-incrustada__eines');
-  expect(within(eines).getAllByRole('button').map((boto) => boto.textContent)).toEqual(['Llevar la targeta']);
+  expect(within(eines).getAllByRole('button').map((boto) => boto.textContent)).toEqual(['Convertir en enllaç', 'Llevar la targeta']);
 });

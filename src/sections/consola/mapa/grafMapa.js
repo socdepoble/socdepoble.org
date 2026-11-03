@@ -49,7 +49,7 @@ export const FORCES = Object.freeze({
    BrainGraph (inspector={false}) i pinta el seu detall (DetallPeca.jsx):
    del canvas només queda el nom accessible. */
 export const TEXTOS_EXPLORADOR = Object.freeze({
-  canvas: 'Graf dels agents del Mas. Per a triar una peça amb el teclat, usa «Tria una peça» del detall.'
+  canvas: 'Graf dels agents de Sóc de Poble. Per a triar una peça amb el teclat, usa «Tria una peça» del detall.'
 });
 
 export function filtresInicials() {
@@ -172,10 +172,12 @@ export const TO_SEVERITAT = Object.freeze(Object.fromEntries(
    VIU verd; MORT roig; sense llançador, sense declaració i desconegut, taronja:
    el que no consta que corra no es pot dir bo (Onada 6). */
 export const TO_ESTAT = Object.freeze({
+  programat: 'neutre',
   viu: 'exit', mort: 'error', 'declarat-sense-llancador': 'avis',
   'llancador-sense-declaracio': 'avis', desconegut: 'avis'
 });
 export const TEXT_ESTAT = Object.freeze({
+  programat: 'programat · pendent de primera execució',
   viu: 'viu', mort: 'mort', 'declarat-sense-llancador': 'sense llançador',
   'llancador-sense-declaracio': 'sense declaració', desconegut: 'desconegut'
 });
@@ -188,7 +190,7 @@ export const QUE_ES = Object.freeze({
   script: 'Script del repositori. El Mapa sap qui el crida, però no analitza què llig ni què escriu.',
   hook: 'Hook: una ordre que l’arnés d’un agent executa sola quan passa un esdeveniment.',
   tasca: 'Tasca programada: una faena que un llançador (launchd, un hook de git o una altra tasca) executa sense ningú davant.',
-  agent: 'Agent: l’arnés d’una IA que treballa al Mas; carrega documents i dispara hooks.',
+  agent: 'Agent: l’arnés d’una IA que treballa a Sóc de Poble; carrega documents i dispara hooks.',
   document: 'Document o carpeta del repositori: no actua; el lligen, l’escriuen o el carreguen altres peces.',
   porta: 'Porta de qualitat: una comprovació que para la cadena si falla.'
 });
@@ -271,6 +273,8 @@ export const ETIQUETES_ATRIBUT = Object.freeze({
   arnes: { etiqueta: 'Arnés' },
   esdeveniment: { etiqueta: 'Esdeveniment' },
   consumidor_acreditat: { etiqueta: 'Consumidor acreditat', boolea: true },
+  // R3-A2 · Les traces que l'acrediten (font, hora i abast): text de màquina.
+  evidencia_consumidor: { etiqueta: 'Evidència del consumidor', mono: true },
   ordre: { etiqueta: 'Ordre', mono: true },
   rol: { etiqueta: 'Rol' },
   tipus_document: { etiqueta: 'Tipus de document' },

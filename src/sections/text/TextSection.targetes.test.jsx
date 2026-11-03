@@ -60,6 +60,11 @@ describe('«Legal i privacitat»: la targeta de «Drets d’autor» incrustada a
     const moduls = readFileSync(resolve(process.cwd(), 'src/css/modules.css'), 'utf8');
     expect(moduls).toMatch(/\.sdp-targetes\[data-forma="sola"\]\[data-alineacio="dreta"\] > \.sdp-targeta \{\s*float: right;/);
     expect(moduls).toMatch(/\.sdp-amb-targetes::after \{\s*content: '';\s*display: block;\s*clear: both;/);
+    /* Gauntlet O7-9, ronda 3 (PC-07) · Fins a 40rem de pantalla, la sola ocupa tota l'amplària i cap
+       columna de text no li queda al costat; però continua flotant: amb float: none el grup prenia
+       alçada i el text de davall baixava 8px, també a 375px (Llei del Píxel). */
+    expect(moduls).toMatch(/@media \(max-width: 40rem\) \{\s*\.sdp-targetes\[data-forma="sola"\]\[data-alineacio\] > \.sdp-targeta \{\s*inline-size: 100%;\s*margin-left: 0;\s*margin-right: 0;\s*\}\s*\}/);
+    expect(moduls).not.toMatch(/\[data-forma="sola"\][^{]*> \.sdp-targeta \{[^}]*float: none/);
   });
 
   test('la targeta és la UniversalCard de /page/drets-autor, signada per Sóc de Poble', () => {
@@ -105,9 +110,55 @@ describe('«Legal i privacitat»: la targeta de «Drets d’autor» incrustada a
 describe('Llei del Píxel: una pàgina sense targetes, byte a byte el camí de sempre', () => {
   const senseTargetes = Object.entries(PAGE_COPY).filter(([, pagina]) => typeof pagina?.html === 'string' && !pagina.html.includes(MARCA_GRUP));
 
-  test('totes les pàgines del copy amb cos, menys «legal» i «drets-autor», van pel camí de sempre', () => {
+  test('totes les pàgines del copy amb cos, menys les que porten targetes incrustades, van pel camí de sempre', () => {
+    /* Gauntlet O7-9, ronda 2 (LR-G07) · El llindar de sempre: en queden 16, i el canvi no demanava baixar-lo. */
     expect(senseTargetes.length).toBeGreaterThan(10);
-    expect(Object.entries(PAGE_COPY).filter(([, pagina]) => pagina?.html?.includes(MARCA_GRUP)).map(([clau]) => clau)).toEqual(['legal', 'drets-autor']);
+    expect(Object.entries(PAGE_COPY).filter(([, pagina]) => pagina?.html?.includes(MARCA_GRUP)).map(([clau]) => clau)).toEqual([
+      'projecte',
+      'legal',
+      'anima',
+      'fedivers',
+      'consola',
+      'cervell',
+      'drets-autor',
+      'fediversity',
+      'node-zero',
+    ]);
+  });
+
+  /* Gauntlet O7-9, ronda 2 (PC-01) · /disseny (DesignSection) i /wikidepoble (WikiDePobleSection) pinten
+     la portada amb l'HTML cru, sense CosAmbTargetes: un grup hi seria un enllaç nu flotant, no una Card.
+     La parella es queda amb els enllaços contextuals d'anada i tornada. Si una de les dues portades
+     arriba a pintar el cos amb targetes, la prova cau i la Card hi pot tornar. */
+  test('parella wikidepoble <-> disseny: enllaços contextuals d’anada i tornada, sense grup de targetes', () => {
+    for (const fitxer of ['src/sections/disseny/DesignSection.jsx', 'src/sections/wiki-de-poble/WikiDePobleSection.jsx']) {
+      expect([fitxer, /^import[^;]*\b(?:CosAmbTargetes|CosDeLaPagina)\b/m.test(readFileSync(resolve(process.cwd(), fitxer), 'utf8'))]).toEqual([fitxer, false]);
+    }
+    expect(PAGE_COPY.disseny.html).not.toContain(MARCA_GRUP);
+    expect(PAGE_COPY.wikidepoble.html).not.toContain(MARCA_GRUP);
+    expect(PAGE_COPY.disseny.html).toContain('<a href="/wikidepoble"><strong>regles</strong></a>');
+    expect(PAGE_COPY.wikidepoble.html).toContain('<a href="/disseny"><strong>pedra seca</strong></a>');
+  });
+
+  test.each([
+    ['projecte', 'pagina:anima', '/anima', 'anima', 'pagina:projecte', '/projecte'],
+    ['fedivers', 'pagina:fediversity', '/page/fediversity', 'fediversity', 'pagina:fedivers', '/fedivers'],
+    ['consola', 'pagina:cervell', '/page/cervell', 'cervell', 'pagina:consola', '/page/consola'],
+  ])('parella germana %s <-> %s: targeta viva flotant a la dreta i enllaç contextual d’anada i tornada', (clauA, idB, rutaB, clauB, idA, rutaA) => {
+    expect(PAGE_COPY[clauA].html).toContain(`data-sdp-targeta="${idB}"`);
+    expect(PAGE_COPY[clauB].html).toContain(`data-sdp-targeta="${idA}"`);
+    const cosA = cosDe(render(<TextSection page={PAGE_COPY[clauA]} pageKey={clauA} />).container);
+    const grupA = cosA.querySelector('.sdp-targetes');
+    expect([grupA?.getAttribute('data-forma'), grupA?.getAttribute('data-alineacio')]).toEqual(['sola', 'dreta']);
+    expect(grupA?.querySelector('.sdp-targeta a.sp-card-link-overlay')?.getAttribute('to')).toBe(rutaB);
+    expect(cosA.querySelector(`.sdp-cos-tros a[href="${rutaB}"]`)).not.toBeNull();
+    cleanup();
+
+    const cosB = cosDe(render(<TextSection page={PAGE_COPY[clauB]} pageKey={clauB} />).container);
+    const grupB = cosB.querySelector('.sdp-targetes');
+    expect([grupB?.getAttribute('data-forma'), grupB?.getAttribute('data-alineacio')]).toEqual(['sola', 'dreta']);
+    expect(grupB?.querySelector('.sdp-targeta a.sp-card-link-overlay')?.getAttribute('to')).toBe(rutaA);
+    expect(cosB.querySelector(`.sdp-cos-tros a[href="${rutaA}"]`)).not.toBeNull();
   });
 
   test.each(senseTargetes)('%s: el mateix <article class="cms-preview"> d’abans', (clau, pagina) => {

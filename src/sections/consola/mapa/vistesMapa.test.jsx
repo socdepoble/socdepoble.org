@@ -151,7 +151,7 @@ describe('Agents atòmics', () => {
   test('cap agent atòmic, i les quatre peces mesurades amb el Mapa', () => {
     render(<AgentsAtomics mapa={MAPA} />);
     totesAmbBoina();
-    expect(screen.getByText('Agents atòmics al Mas: cap')).toBeTruthy();
+    expect(screen.getByText('Agents atòmics a Sóc de Poble: cap')).toBeTruthy();
     /* Correcció 261004 (verificador de la tercera passada, punt 5) · davant,
        la targeta del recompte («0 agents atòmics»), que la coberta destacava
        sense targeta. */
@@ -173,7 +173,7 @@ describe('Agents atòmics', () => {
     expect(document.body.textContent).not.toMatch(/ejemplo|exemple/i);
     /* Correcció 261004 (verificador de la segona passada, punts 2 i 3) · el
        recompte dels agents enllaça amb la seua targeta, i concorda. */
-    const buit = screen.getByText('Agents atòmics al Mas: cap').closest('.sdp-buit');
+    const buit = screen.getByText('Agents atòmics a Sóc de Poble: cap').closest('.sdp-buit');
     expect([...buit.querySelectorAll('a')].map((a) => [a.textContent, a.getAttribute('href')]))
       .toEqual([['Els 2 agents', '/consola/xifres/agents']]);
     expect(buit.textContent).toContain('Els 2 agents que troba el Mapa són arnesos que conversen amb el Mestre');
@@ -182,7 +182,7 @@ describe('Agents atòmics', () => {
   test('amb un sol agent, la frase concorda: mai «Els 1 agents»', () => {
     const un = { ...MAPA, nodes: MAPA.nodes.filter((x) => x.id !== 'agent:antigravity') };
     render(<AgentsAtomics mapa={un} />);
-    const buit = screen.getByText('Agents atòmics al Mas: cap').closest('.sdp-buit');
+    const buit = screen.getByText('Agents atòmics a Sóc de Poble: cap').closest('.sdp-buit');
     expect(buit.textContent).not.toContain('Els 1 agents');
     expect(buit.textContent).toContain('L’únic agent que troba el Mapa és un arnés que conversa amb el Mestre (pàgina Actors): no declara què llig ni què deixa, així que tot el que fa passa per la conversa.');
     expect(buit.querySelector('a').getAttribute('href')).toBe('/consola/xifres/agents');
@@ -350,7 +350,7 @@ describe('Llei del Píxel · les vistes no canvien quan els seus càlculs ixen a
        que la coberta destaca tenen targeta: quantes en roig i en ambre, i les
        skills sense disparador útil. Derogat «Semàfor ambre o roig a l’Inventari». */
     expect(titolsIDescripcions()).toEqual([
-      ['2 skills', 'Al cens del Mapa del Mas'],
+      ['2 skills', 'Al cens del Mapa de Sóc de Poble'],
       ['1 skill sense cap avís', 'De 2 skills al cens: semàfor verd a l’Inventari'],
       ['1 skill amb avisos', '0 en roig · 1 en ambre a l’Inventari'],
       ['1 skill òrfena', '0 skills fantasma: nomenades i sense carpeta al disc'],

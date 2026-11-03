@@ -40,7 +40,7 @@ aplica <id> --plan PLA.json --receipt REBUT.json
               diagnostic --porta     porter: eixida 1 si hi ha més ferides que al segell
 ```
 
-Si la recepta s'edita a mà després de l'aprovació, el hash divergix i el pla es nega: cal tornar a aprovar. Si un fitxer muta entre diagnòstic i aplicació, el hash de la font no quadra i el pla sencer es rebutja (mai escriptura a cegues). El commit el fa el circuit Git del Reflex, no l'script.
+Si la **recepta s'edita a mà** després de l'aprovació, el **hash divergix** i el pla es nega: **cal tornar a aprovar**. Si un fitxer muta entre diagnòstic i aplicació, el hash de la font no quadra i el **pla sencer es rebutja** (**mai escriptura a cegues**). El commit el fa el **circuit Git del Reflex**, no l'script.
 
 ## Les cinc línies roges (executables, no declarades)
 
@@ -70,7 +70,7 @@ Requerix haver executat `segella` (i versionar `.immunitari/baseline.json`). La 
 
 ## Limitacions honestes de v1.1
 
-La detecció de fantasmes compara noms base en minúscules (o una ruta existent des de l'arrel), sense resoldre àlies: un nom base repetit en dos carpetes compta com a resolt, amb el mateix criteri laxista que Obsidian. Els incrustats (enllaços precedits de `!`) compten com un enllaç més, i LAPIDA també els reescriu. Un enllaç fantasma amb fragment, o amb àlies fora d'un índex, es diagnostica però LAPIDA no el reescriu: continua trencat fins que un humà el corregix. El lexer compartit `markdownProse` emmascara fences de backticks o tildes, spans en línia de qualsevol longitud, comentaris HTML i escapaments literals; `extreuFantasmes` reutilitza `extractDocumentLinks` de `tooling/lib/document-links.mjs`. L’aprovació per hash acredita la coincidència de la recepta aprovada amb els bytes proposats; no prova comprensió ni identitat. La lease del Reflex i la cadena Git mantenen els seus controls propis.
+La **detecció de fantasmes** compara noms base en minúscules (o una ruta existent des de l'arrel), **sense resoldre àlies**: un nom base repetit en dos carpetes compta com a resolt, amb el mateix **criteri laxista** que Obsidian. Els incrustats (enllaços precedits de `!`) compten com un enllaç més, i LAPIDA també els reescriu. Un enllaç fantasma amb fragment, o amb àlies fora d'un índex, es diagnostica però LAPIDA **no el reescriu**: **continua trencat** fins que un humà el corregix. El **lexer compartit** `markdownProse` emmascara fences de backticks o tildes, spans en línia de qualsevol longitud, comentaris HTML i escapaments literals; `extreuFantasmes` reutilitza `extractDocumentLinks` de `tooling/lib/document-links.mjs`. L’aprovació per hash acredita la coincidència de la recepta aprovada amb els bytes proposats; **no prova comprensió ni identitat**. La lease del Reflex i la cadena Git mantenen els seus **controls propis**.
 
 ## Vincles
 

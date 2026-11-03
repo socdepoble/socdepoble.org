@@ -83,15 +83,27 @@ test('/fediversity porta a /page/fediversity, amb l’anatomia de la UniversalPa
     expect([...document.querySelectorAll('h2')].map((h2) => h2.textContent)).toContain(PAGE_COPY.fediversity.subtitle);
     expect(document.querySelector('p.lead')?.textContent).toBe(PAGE_COPY.fediversity.lead);
     const cos = document.querySelector('article.cms-preview');
-    expect(cos.querySelectorAll('h3')).toHaveLength(3);
+    /* Ordre 261103_0522, T2.6 (Gauntlet O7-9, ronda 3; LR-G01, LR-G04) · /page/fediversity porta la
+       targeta de /fedivers: el cos va per CosAmbTargetes (trossos .sdp-cos-tros i un sol grup) i la
+       targeta, la UniversalCard del Mur, porta el seu H3 i el seu H4. Els H3 del text es compten fora
+       de .sdp-targetes, com a TextSection.subtargeta. Prova posada al dia a propòsit. */
+    expect(cos.className).toBe('cms-preview sdp-amb-targetes');
+    expect([...cos.children].map((fill) => fill.className)).toEqual(['sdp-cos-tros', 'sdp-targetes', 'sdp-cos-tros']);
+    const grup = cos.querySelector(':scope > .sdp-targetes');
+    expect([grup.dataset.forma, grup.dataset.alineacio, grup.querySelectorAll(':scope > .sdp-targeta').length]).toEqual(['sola', 'dreta', 1]);
+    expect(grup.querySelector('a.sp-card-link-overlay')?.getAttribute('href')).toBe('/fedivers');
+    expect([...grup.querySelectorAll('h3, h4, h5')].map((titol) => titol.tagName)).toEqual(['H3', 'H4']);
+    expect([...cos.querySelectorAll('h3')].filter((h3) => !h3.closest('.sdp-targetes'))).toHaveLength(3);
     // Ordre definitiva del Mestre (~01:00): cap taula; les quatre partides en H4, amb els seus H5.
     expect(cos.querySelectorAll('table')).toHaveLength(0);
     expect([...cos.querySelectorAll('h4')].filter((h4) => /^\d · /.test(h4.textContent))).toHaveLength(4);
     expect(cos.querySelectorAll('h5')).toHaveLength(12);
     /* O4-CLAUDE-2 (ordre del Mestre, 261102 21:38) · Prova posada al dia a propòsit: cada partida és
-       una Subtargeta (div.sdp-subtargeta, fill directe de l'article) que el sanejador conserva, amb el
-       seu H4 com a títol i els seus tres H5 dins. Els mateixos 3 H3, 4 partides i 12 H5 de dalt. */
-    const caixes = [...cos.querySelectorAll(':scope > div.sdp-subtargeta[data-sdp-subtargeta]')];
+       una Subtargeta (div.sdp-subtargeta, que el sanejador conserva), amb el seu H4 com a títol i els
+       seus tres H5 dins. Els mateixos 3 H3, 4 partides i 12 H5 de dalt. Amb la targeta (T2.6), la
+       caixa és filla d'un tros .sdp-cos-tros (display: contents), mai del grup de targetes. */
+    expect(cos.querySelectorAll('.sdp-targetes .sdp-subtargeta')).toHaveLength(0);
+    const caixes = [...cos.querySelectorAll(':scope > .sdp-cos-tros > div.sdp-subtargeta[data-sdp-subtargeta]')];
     expect(caixes.map((caixa) => [caixa.firstElementChild.tagName, /^\d · /.test(caixa.firstElementChild.textContent), caixa.querySelectorAll('h5').length]))
       .toEqual(Array(4).fill(['H4', true, 3]));
     // I, a la verificació en viu, els sis fitxers del paquet de dades obertes estàtic, en relatiu.

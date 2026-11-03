@@ -74,8 +74,8 @@ export const CENS_IMATGES = Object.freeze([
   e('/assets/soc_de_poble_ibanez.webp', 'Sóc de Poble a l’estil Ibáñez', 'contingut', 'ia'),
 
   e('/assets/events/aplec_2023_cartell.jpg', 'Cartell del 2n Aplec pel Territori', 'contingut', 'foto'),
-  e('/assets/events/aplec_2023_ponents.png', 'Captura: la targeta de l’Aplec al catàleg', 'contingut', 'sistema'),
-  e('/assets/events/aplec_2023_reunio.webp', 'Captura: la pàgina de l’Aplec', 'contingut', 'sistema'),
+  e('/assets/events/aplec_2023_ponents.png', 'Cartell de ponents del 2n Aplec pel Territori', 'contingut', 'foto'),
+  e('/assets/events/aplec_2023_reunio.webp', 'Reunió preparatòria del 2n Aplec pel Territori als pobles', 'contingut', 'foto'),
   e('/assets/events/nano_sessio_treball.png', 'Sessió de treball', 'contingut', 'ia'),
 
   e('/assets/fotos/carla-soriano.png', 'Carla Soriano', 'ia', 'ia'),

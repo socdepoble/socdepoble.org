@@ -15,7 +15,7 @@ Esta peça de la Consola respon a una pregunta: **què corre sol, quan, qui ho l
 
 - Llig `crontab -l` i traduïx cada expressió de cinc camps a diària, setmanal, mensual o «altra» (funció `regla_cron`).
 - Llig els `~/Library/LaunchAgents/*.plist` que mencionen agents, skills, Claude, Python i paraules semblants. N'extrau `Hour`, `Minute`, `Weekday` i `StartInterval`; si no n'hi ha cap, la tasca queda com a «en arrancar». A Windows fa el mateix amb `schtasks`.
-- Busca horaris escrits dins de les skills, però només si la cadència i l'hora van a la mateixa frase («cada día a las 02:30», «daily at 07:00»). Salta les línies d'historial: el 16-09 la paraula «diari» a soles va omplir el calendari de punts falsos.
+- **Busca horaris escrits** **dins de les skills**, però només si la **cadència i l'hora** van a la **mateixa frase** («cada día a las 02:30», «daily at 07:00»). **Salta les línies d'historial**: el 16-09 la paraula «diari» a soles va omplir el calendari de **punts falsos**.
 - Pinta tres estats:
   - **real**, en color;
   - **declarat però sense ningú que el llance**, buit;
@@ -45,7 +45,7 @@ El registre `.agents/cron/registre_tasques.json` declara cinc tasques de Plaquet
 
 Cap d'elles porta **cadència ni llançador**: la cadència viu al plist, fora de git.
 
-**Revisió del 26-09-2026** (pla `260926_1200_pla_implementacio_infraestructura_fons`): el Reflex daemon es desinstal·la (l'script no ha existit mai, ni a l'índex de git; «reiniciar-lo» només reinicia el bucle); Time Machine no tenia plist instal·lat i s'instal·la amb `--llancador`; les cinc tasques de Plaquetes es declaren subtasques de `plaquetes-diagnostic` (vegeu el model de dades); i els hooks de git estan instal·lats via Husky, no a `.git/hooks`.
+**Revisió del 26-09-2026** (pla `260926_1200_pla_implementacio_infraestructura_fons`): el **Reflex daemon es desinstal·la** (l'**script no ha existit mai**, ni a l'índex de git; «reiniciar-lo» només reinicia el bucle); **Time Machine** no tenia plist instal·lat i s'instal·la amb `--llancador`; les **cinc tasques de Plaquetes** es declaren subtasques de `plaquetes-diagnostic` (vegeu el model de dades); i els **hooks de git** estan instal·lats via Husky, no a `.git/hooks`.
 
 ## Els dos forats que Emowe ens ensenya a vore
 

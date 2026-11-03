@@ -3,7 +3,7 @@
   "turn_id": "torn_ad474f16-037e-4f4f-8fda-c1eed34168a8",
   "actor": "MarIA",
   "scope": "documents",
-  "state": "planned",
+  "state": "closed",
   "revision": 5,
   "createdAt": "2026-10-26T00:24:20.819Z",
   "updatedAt": "2026-10-26T00:41:42.414Z",
@@ -3796,5 +3796,6 @@
       "action": "bind-plan",
       "at": "2026-10-26T00:41:42.413Z"
     }
-  ]
+  ],
+  "closedAt": "2026-11-03T05:17:29.321Z"
 }

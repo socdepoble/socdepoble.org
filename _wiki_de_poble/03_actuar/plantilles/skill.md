@@ -58,8 +58,8 @@ Els únics logos vàlids per al projecte s'ubiquen a `public/assets/system/ui/`.
 - **Rectangular Estàndard:** `/assets/system/ui/logo-socdepoble-rect.svg`
 
 ### MISSIÓ DEL PROTOCOL
-Estandarditzar com es construeixen i es documenten les noves "Skills" (protocols automatitzats). Totes les skills han de reflectir la realitat actual i la **VISIÓ MESTRA** del projecte: 
-Les dades compartides tenen el Supabase de Sóc de Poble com a font de veritat. Sollutia és un amfitrió del Model B, amb frontissa GET de lectura; no és un backend d'escriptura. El codi inclou dades locals del dispositiu i una closca sense xarxa de `/app/*`; l'[[ADR-2026-10-APPS-DEL-DISPOSITIU]] en documenta la implementació parcial i la proposta d'abast, encara pendent de signatura. La resta continua online-first. L'usuari decidix què publica. Ja hi ha projecció pública estàtica ActivityPub (actors, outbox i NodeInfo); la federació interactiva en producció continua pendent d'activació real, tot i existir-ne la biblioteca d'inbox/Follow. La sincronització CRDT continua sent visió futura.
+Estandarditzar com es construeixen i es documenten les noves "Skills" (protocols automatitzats). Totes les skills han de reflectir la **realitat actual** i la **VISIÓ MESTRA** del projecte: 
+Les dades compartides tenen el Supabase de Sóc de Poble com a **font de veritat**. Sollutia és un amfitrió del **Model B**, amb frontissa GET de lectura; no és un backend d'escriptura. El codi inclou dades locals del dispositiu i una closca sense xarxa de `/app/*`; l'[[ADR-2026-10-APPS-DEL-DISPOSITIU]] en documenta la implementació parcial i la proposta d'abast, encara **pendent de signatura**. La resta continua online-first. **L'usuari decidix què publica**. Ja hi ha projecció pública estàtica ActivityPub (actors, outbox i NodeInfo); la federació interactiva en producció continua **pendent d'activació real**, tot i existir-ne la biblioteca d'inbox/Follow. La **sincronització CRDT continua sent visió futura**.
 
 ### 1. ESTRUCTURA DE FITXERS
 Tota skill del sistema ha de viure a la carpeta corresponent en `.agents/skills/<nom_skill>/`.

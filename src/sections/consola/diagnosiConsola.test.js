@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, test, vi } from 'vitest';
 
 /* Ordre del Mestre, 13-10-2026 (pla 261013_1405, front F) · El «Diagnòstic
-   del Mas» és dada abans que vista: el text del <pre> ix de les mateixes
+   de Sóc de Poble» és dada abans que vista: el text del <pre> ix de les mateixes
    funcions pures que pinten les targetes (paritat), no inventa cap número,
    diu el mateix amb les mateixes fonts i el mateix rellotge, porta tots els
    problemes sense retallar i, amb el mode privacitat, amaga el que amaguen
@@ -85,7 +85,7 @@ describe('l’accés ràpid', () => {
   });
 
   test('els textos fixos del bloc', () => {
-    expect(TITOL_DIAGNOSI).toBe('Diagnòstic del Mas');
+    expect(TITOL_DIAGNOSI).toBe('Diagnòstic de Sóc de Poble');
     expect(ETIQUETA_ACCES).toBe('Accés ràpid a les pàgines de la Consola');
     // La mateixa marca que <Privat> (peces.jsx).
     expect(MASCARA).toBe('••••••');
@@ -97,7 +97,7 @@ describe('sense cap font', () => {
 
   test('la capçalera nomena la Consola i diu que no hi ha cap instantània', () => {
     expect(linies(text).slice(0, 3)).toEqual([
-      `DIAGNÒSTIC DEL MAS · ${copyConsola().title}`,
+      `DIAGNÒSTIC DE SÓC DE POBLE · ${copyConsola().title}`,
       'Instantània del pols: encara no disponible',
       'Instantània del Mapa: encara no disponible'
     ]);
@@ -145,8 +145,8 @@ describe('sense cap font', () => {
     for (const p of panellsPols()) expect(linies(text)).toContain(`    ${p.titol}: ${cobertes[p.id].senseMesura}`);
   });
 
-  test('«El Mas en xifres»: les deu xifres pel nom, en l’ordre de la graella', () => {
-    const inici = linies(text).indexOf('EL MAS EN XIFRES');
+  test('«Sóc de Poble en xifres»: les deu xifres pel nom, en l’ordre de la graella', () => {
+    const inici = linies(text).indexOf('SÓC DE POBLE EN XIFRES');
     expect(inici).toBeGreaterThan(0);
     expect(linies(text).slice(inici + 1)).toEqual(xifresDeLaGraella().map((x) => `- ${x.titol} · ${x.subtitol}`));
     expect(linies(text).slice(inici + 1)).toHaveLength(10);
@@ -201,7 +201,7 @@ describe('amb el Mapa i consola.json de prova: paritat amb les targetes', () => 
     const totes = linies(text);
     for (const [i, id] of IDS_PAGINES.entries()) {
       const des = totes.indexOf(liniaDe(text, id));
-      const fins = i + 1 < IDS_PAGINES.length ? totes.indexOf(liniaDe(text, IDS_PAGINES[i + 1])) : totes.indexOf('EL MAS EN XIFRES');
+      const fins = i + 1 < IDS_PAGINES.length ? totes.indexOf(liniaDe(text, IDS_PAGINES[i + 1])) : totes.indexOf('SÓC DE POBLE EN XIFRES');
       const bloc = totes.slice(des + 1, fins);
       for (const e of estatsPagina(id, AMB, ARA) ?? []) expect(bloc, id).toContain(`    estat: ${e.text}`);
       for (const p of problemesPagina(id, AMB) ?? []) {
@@ -230,8 +230,8 @@ describe('amb el Mapa i consola.json de prova: paritat amb les targetes', () => 
     expect(totes[vigilancia + 2]).toBe(`El detall i què cal reparar són a la pàgina ${paginaConsola('salut').title}.`);
   });
 
-  test('«El Mas en xifres»: el títol i el subtítol de cada targeta de la graella', () => {
-    const inici = linies(text).indexOf('EL MAS EN XIFRES');
+  test('«Sóc de Poble en xifres»: el títol i el subtítol de cada targeta de la graella', () => {
+    const inici = linies(text).indexOf('SÓC DE POBLE EN XIFRES');
     expect(linies(text).slice(inici + 1)).toEqual(xifresDeLaGraella(MAPA).map((x) => `- ${x.titol} · ${x.subtitol}`));
   });
 
@@ -323,10 +323,22 @@ describe('mode privacitat', () => {
     for (const id of IDS_PAGINES) expect(liniaDe(privat, id)).toBe(liniaDe(obert, id));
   });
 
-  test('les xifres del Mas diuen el títol i el subtítol que la seua targeta diu amb el mode privacitat', () => {
+  test('les xifres de Sóc de Poble diuen el títol i el subtítol que la seua targeta diu amb el mode privacitat', () => {
     // La regla de TargetaXifra (XifresMas.jsx · textos): la versió privada si la xifra en porta.
-    const inici = linies(privat).indexOf('EL MAS EN XIFRES');
+    const inici = linies(privat).indexOf('SÓC DE POBLE EN XIFRES');
     expect(linies(privat).slice(inici + 1)).toEqual(xifresDeLaGraella(MAPA).map((x) => (
       `- ${x.titolPrivat || x.titol} · ${x.subtitolPrivat || x.subtitol}`)));
+  });
+});
+
+/* CONS-02 (ordre del Mestre 261103) · A la superfície visible, «el Mas» → «Sóc
+   de Poble»: el <pre> no ho diu en cap caixa, ni amb fonts, ni sense, ni en mode
+   privacitat. Patró lineal: una paraula «mas» sencera, amb accents fora. */
+describe('vocabulari', () => {
+  test('el diagnòstic no diu «Mas» en cap caixa', () => {
+    for (const text of [diagnosiTextual(SENSE, { ara: ARA }), diagnosiTextual(AMB, { ara: ARA }), diagnosiTextual(AMB, { ara: ARA, privat: true })]) {
+      expect(text).not.toMatch(/(^|[^\p{L}])mas([^\p{L}]|$)/iu);
+      expect(text.split('\n')[0]).toBe(`DIAGNÒSTIC DE SÓC DE POBLE · ${copyConsola().title}`);
+    }
   });
 });

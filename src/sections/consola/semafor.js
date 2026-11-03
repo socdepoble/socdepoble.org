@@ -60,7 +60,8 @@ export const COLOR_D_ESTAT = Object.freeze({
   PARCIAL: 'taronja',
   DESCONEGUT: 'taronja',
   FALTA: 'taronja',
-  'SENSE MESURA': null
+  'SENSE MESURA': null,
+  PROGRAMAT: null
 });
 
 /** El to d'Insignia d'un text d'estat (COLOR_D_ESTAT). */
@@ -80,13 +81,15 @@ export const COLOR_D_ESTAT_TASCA = Object.freeze({
   mort: 'roig',
   'declarat-sense-llancador': 'taronja',
   'llancador-sense-declaracio': 'taronja',
+  programat: null,
   desconegut: 'taronja'
 });
 
 /** El semàfor d'unes tasques pel seu pitjor estat; sense cap tasca, null: no hi ha res a jutjar (mai un verd). */
 export function colorDeTasques(tasques) {
   const llista = Array.isArray(tasques) ? tasques : [];
-  return llista.length ? pitjor(llista.map((t) => COLOR_D_ESTAT_TASCA[t?.estat] ?? 'taronja')) : null;
+  const colors = llista.filter(t => t?.estat !== 'programat').map((t) => COLOR_D_ESTAT_TASCA[t?.estat] ?? 'taronja');
+  return colors.length ? pitjor(colors) : null;
 }
 
 /** Una etiqueta de targeta amb el seu to: el vocabulari de les UniversalCard de la Consola (peces.jsx · aEtiqueta). */

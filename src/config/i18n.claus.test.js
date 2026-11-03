@@ -363,6 +363,14 @@ const CLAUS = {
   'editor.targetes.lleva': {
     ca: 'Llevar la targeta', es: 'Quitar la tarjeta', en: 'Remove the card', eu: 'Kendu txartela', gl: 'Quitar a tarxeta'
   },
+  /* 261103 (Onada 7, T2.6) · El commutador «Enllaç ↔ Card»: el botó de la
+     targeta triada (Card → Enllaç) i el del diàleg (inserir-la com a enllaç). */
+  'editor.targetes.aEnllac': {
+    ca: 'Convertir en enllaç', es: 'Convertir en enlace', en: 'Convert to link', eu: 'Bihurtu esteka', gl: 'Converter en ligazón'
+  },
+  'editor.targetes.dialeg.inserirEnllac': {
+    ca: 'Inserir com a enllaç', es: 'Insertar como enlace', en: 'Insert as link', eu: 'Txertatu esteka gisa', gl: 'Inserir como ligazón'
+  },
   /* Revisió del 261007 (M9, M2-01) · Els textos per al lector del carrusel de
      la portada (CarruselImatges, traduïts a portadaDElement de
      detailSectionMeta.jsx des de l'Esmena 3 del pla 261007_1645). Les d'eu i gl

@@ -201,7 +201,7 @@ const PAGINES = Object.freeze([
   { nom: 'els empaquetats', ruta: RUTA_EMPAQUETATS },
   { nom: 'una pàgina del govern que no existix', ruta: '/consola/govern/no-existix' },
   { nom: 'un panell del pols', ruta: `${RUTA_POLS}/rebuts` },
-  { nom: 'una xifra del Mas', ruta: rutaXifra(SLUGS_XIFRES[0]) }
+  { nom: 'una xifra de Sóc de Poble', ruta: rutaXifra(SLUGS_XIFRES[0]) }
 ]);
 
 describe.each(TRANSPORTS)('ALT-C1 · amb el Traductor Sobirà disponible per $nom', ({ llengua, prepara }) => {

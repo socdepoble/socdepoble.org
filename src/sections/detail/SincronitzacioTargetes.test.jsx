@@ -113,6 +113,21 @@ describe('useDadesDeLOriginal: una pàgina, la miniatura de la seua UniversalPag
     // Sense proveïdor del Mur, la font encara carrega: cap invent.
     expect(sincronitzada({ clau: 'publicacio:p1', ruta: '/mur/p1', titol: 'Festa' })).toBeNull();
   });
+
+  /* Gauntlet O7-9, ronda 2 (PC-06) · L'original d'una pàgina es resol per la seua ruta (paginaDeRuta), mai
+     per la clau sola contra PAGE_COPY: així no se salten la porta nomesWeb de l'app nativa (ordre del
+     Mestre 261027, «ni la targeta ni la pàgina») ni la precedència del contingut core. */
+  test('dins de l’app nativa, Descàrregues no es resol; i una clau que no quadra amb la ruta, tampoc: null', () => {
+    expect(sincronitzada({ clau: 'pagina:legal', ruta: '/page/no-hi-es', titol: 'Legal' })).toBeNull();
+    expect(sincronitzada({ clau: 'pagina:descarregues', ruta: '/page/descarregues', titol: 'Descàrregues' })?.title).toBe(PAGE_COPY.descarregues.title);
+    const abans = window.Capacitor;
+    window.Capacitor = { isNativePlatform: () => true };
+    try {
+      expect(sincronitzada({ clau: 'pagina:descarregues', ruta: '/page/descarregues', titol: 'Descàrregues' })).toBeNull();
+    } finally {
+      window.Capacitor = abans;
+    }
+  });
 });
 
 describe('propsDeLOriginal: un element d’una secció, la miniatura de la seua pàgina de detall', () => {

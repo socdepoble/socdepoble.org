@@ -10,6 +10,7 @@ contracte.llig:
   - .agents/protocolledge.json
   - _wiki_de_poble/04_escriptori
   - _wiki_de_poble/10_actes
+  - _wiki_de_poble/10_metriques/consum_ia.csv
 contracte.escriu:
   - _wiki_de_poble/04_escriptori
   - _wiki_de_poble/10_actes

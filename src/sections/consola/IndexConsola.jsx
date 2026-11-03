@@ -16,7 +16,7 @@
  * privacitat s'amaguen; el títol d'una peça que porta una ruta diu la seua
  * versió privada (titolPrivat), com la seua targeta.
  *
- * Només al tauler de /consola (ConsolaSection.jsx), darrere de «El Mas en
+ * Només al tauler de /consola (ConsolaSection.jsx), darrere de «Sóc de Poble en
  * xifres»: no a la Consola incrustada de la Wiki (ConsolaIncrustada), que
  * conserva els seus píxels. L'Índex de secció de la barra blava
  * (nivellMaxIndex={6}) recull estos h2, h3 i h4 com qualsevol altre.
@@ -36,7 +36,7 @@
  * H3 torna a ser el de l'Onada 11. Esta vista no canvia: pinta el que diu la
  * dada (indexConsola.js).
  * Ordre del Mestre, 13-10-2026 (pla 261013_1405, front F) · L'Índex ja no és
- * l'últim bloc del tauler: darrere ve el «Diagnòstic del Mas»
+ * l'últim bloc del tauler: darrere ve el «Diagnòstic de Sóc de Poble»
  * (DiagnosiConsola.jsx), amb l'accés ràpid i el text pla.
  *
  * Ordre del Mestre, 30-10-2026 (xat, ~14:15, punts 2.1, 2.2 i 2.3) ·

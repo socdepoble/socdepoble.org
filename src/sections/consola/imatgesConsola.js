@@ -47,7 +47,7 @@
  *  · actors · mapa_vinyeta: la imatge de Publicar al Mapa («sobre quin sòl
  *    treballen»). ESBORRANY; l'alternativa és mur_nano_card.
  *  · salut · salut_vinyeta: la il·lustració del plugin Salut (el quadern de
- *    cures), com a metàfora de la salut del Mas. ESBORRANY ja des del 261011.
+ *    cures), com a metàfora de la salut de Sóc de Poble. ESBORRANY ja des del 261011.
  *  · requeriments, balanc, certificacio i comunicacio · govern_<id>_nano_card:
  *    les quatre portades del Govern del Mestre (ordre del Mestre del
  *    30-10-2026, B1), dibuixades per a eixes quatre pàgines. Fort.
@@ -85,7 +85,9 @@ export const IMATGES_CONSOLA = Object.freeze({
      Mestre») · Les quatre targetes del Govern (SeccioGovern, GovernConsola.jsx)
      porten la seua il·lustració, en l'ordre d'IDS_GOVERN (governConsola.js):
      quatre originals de 1024×1024 copiats a nano_cards (JPEG q85 i la bessona
-     .webp, com les vinyetes de la Consola). Cap altra pantalla no les pinta: el
+     .webp, com les vinyetes de la Consola). Només les pinta el tauler (a
+     /consola i, per l'ordre del Mestre 261103, T2, també a la Consola
+     incrustada de la Wiki; derogat «cap altra pantalla no les pinta»): el
      text alternatiu és nou, escrit davant de cada imatge, i descriu el dibuix
      sense interpretar-lo. */
   requeriments: il(`${NANO_CARDS}/govern_requeriments_nano_card.jpg`,

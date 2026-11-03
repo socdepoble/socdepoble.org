@@ -366,7 +366,7 @@ describe('lots dins dels límits del servidor', () => {
 
   test('més lots dels permesos: MASSA_LLARGA sense cap petició', async () => {
     const fetch = vi.fn();
-    const textos = Array.from({ length: 5 }, () => 'x'.repeat(4000));
+    const textos = Array.from({ length: LIMITS_TRADUCCIO.lots + 1 }, () => 'x'.repeat(4000));
     const error = await errorDe(tradueixTot(creaTraductor({ url: URL_SERVEI, fetch }), textos, 'ES'));
     expect(error.codi).toBe(CODI_TRADUCCIO.MASSA_LLARGA);
     expect(fetch).not.toHaveBeenCalled();

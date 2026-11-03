@@ -8,7 +8,7 @@ tags:
 ---
 # Directori de connectors d'Obsidian
 
-Recull de 52 connectors del directori comunitari d'Obsidian, copiat quan el directori en tenia 5.946, amb una línia sobre què fa cadascun. És una llista de referència per a treballar la Wiki des d'Obsidian, no un inventari dels connectors instal·lats ni cap dependència de l'app.
+Recull de **52 connectors** del **directori comunitari d'Obsidian**, copiat quan el directori en tenia **5.946**, amb una línia sobre què fa cadascun. És una **llista de referència** per a treballar la Wiki des d'Obsidian, **no un inventari dels connectors instal·lats** ni **cap dependència de l'app**.
 
 ## [Notebook Navigator](https://community.obsidian.md/plugins/notebook-navigator)
 

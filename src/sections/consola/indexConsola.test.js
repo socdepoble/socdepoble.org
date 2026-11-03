@@ -100,10 +100,10 @@ describe('la jerarquia', () => {
 
   /* Ordre del Mestre, 30-10-2026 (/consola, punt 2.3) · L'article recorre el
      tauler sencer, en el seu ordre: «Com es llig la Consola» (l'H3 just
-     darrere de l'entradeta), el Govern del Mestre, les nou pàgines, El Mas en
-     xifres i els empaquetats. Derogat EN PART: «les nou pàgines i El Mas en
+     darrere de l'entradeta), el Govern del Mestre, les nou pàgines, Sóc de Poble en
+     xifres i els empaquetats. Derogat EN PART: «les nou pàgines i Sóc de Poble en
      xifres tancant» (Onada 11). */
-  test('els H3: «Com es llig la Consola», el Govern del Mestre, les nou pàgines en l’ordre d’IDS_PAGINES, «El Mas en xifres» i els empaquetats', () => {
+  test('els H3: «Com es llig la Consola», el Govern del Mestre, les nou pàgines en l’ordre d’IDS_PAGINES, «Sóc de Poble en xifres» i els empaquetats', () => {
     const a = arrel();
     expect(ids(a.fills)).toEqual([ID_INTRO, ID_GOVERN, ...IDS_PAGINES, ID_MAS, ID_EMPAQUETATS]);
     expect(a.fills.every((f) => f.nivell === 3)).toBe(true);
@@ -182,7 +182,7 @@ describe('sense Mapa ni consola.json', () => {
     expect(ids(pagina(a, 'calendari').fills)).toEqual(['coses-que-corren-soles']);
   });
 
-  test('«El Mas en xifres»: les deu xifres del tauler pel nom, en l’ordre de la graella, cada una amb la seua pàgina', () => {
+  test('«Sóc de Poble en xifres»: les deu xifres del tauler pel nom, en l’ordre de la graella, cada una amb la seua pàgina', () => {
     const mas = pagina(arrel(), ID_MAS);
     expect(ids(mas.fills)).toEqual(SLUGS_XIFRES);
     expect(mas.fills.map((x) => x.titol)).toEqual(xifresDeLaGraella().map((x) => x.titol));
@@ -659,9 +659,9 @@ describe('una font que falla o es carrega diu el mateix que la seua targeta (tro
   test('el motiu és una frase sencera: «l’última lectura de <font> ha fallat», «<font> encara s’està carregant»', () => {
     const error = indexConsola(null, null, 'ca-ES', AMB_ERROR)[0];
     expect(pla(pagina(error, 'pols').diu)).toContain('Ara mateix no hi ha dades: l’última lectura de consola.json ha fallat.');
-    expect(pla(pagina(error, 'explorador').diu)).toContain('l’última lectura del Mapa del Mas (mapa.json) ha fallat.');
+    expect(pla(pagina(error, 'explorador').diu)).toContain('l’última lectura del Mapa de Sóc de Poble (mapa.json) ha fallat.');
     expect(pla(pagina(error, ID_EMPAQUETATS).diu)).toContain('l’última lectura de /__iaia/empaquetats.json ha fallat.');
-    expect(pla(pagina(error, ID_MAS).diu)).toBe('Ara mateix no hi ha Mapa: l’última lectura del Mapa del Mas (mapa.json) ha fallat. Les deu targetes només porten el seu nom; amb el Mapa, cada una hi porta el seu recompte i el seu semàfor.');
+    expect(pla(pagina(error, ID_MAS).diu)).toBe('Ara mateix no hi ha Mapa: l’última lectura del Mapa de Sóc de Poble (mapa.json) ha fallat. Les deu targetes només porten el seu nom; amb el Mapa, cada una hi porta el seu recompte i el seu semàfor.');
     const text = tots([error]).map(pla).join('\n');
     expect(text).not.toMatch(/json\)? l’última lectura/);
     expect(text).not.toContain('Qui obri la Consola al servidor local');
@@ -701,10 +701,10 @@ describe('cada moviment diu el fet, una sola vegada (troballes «moviment-diu-bu
     expect(pla(ledger.queda)).not.toMatch(/casos? per resoldre/);
   });
 
-  test('sense fonts, només callen les targetes de la sala de màquines i del Mas en xifres; la certificació compta', () => {
+  test('sense fonts, només callen les targetes de la sala de màquines i de Sóc de Poble en xifres; la certificació compta', () => {
     const diu = pla(pagina(arrel(), ID_INTRO).diu);
     expect(diu).not.toContain('cap targeta porta números');
-    expect(diu).toContain('les targetes de la sala de màquines i del Mas en xifres no porten números');
+    expect(diu).toContain('les targetes de la sala de màquines i de Sóc de Poble en xifres no porten números');
   });
 });
 
@@ -714,7 +714,7 @@ describe('hipervincles vius i cap paràgraf plantilla (troballes «hipervincles-
     expect(TEXT_INDEX).toContain('Cada títol amb enllaç');
   });
 
-  test('la prosa que nomena una pàgina hi porta: el pols, els empaquetats, les quatre peces dels agents i les anomalies del Mas', () => {
+  test('la prosa que nomena una pàgina hi porta: el pols, els empaquetats, les quatre peces dels agents i les anomalies de Sóc de Poble', () => {
     const a = ambTot()[0];
     const rutes = (n) => n.explica.flat().filter((s) => s.enllac).map((s) => s.ruta);
     expect(rutes(pagina(a, ID_INTRO))).toEqual([paginaConsola('pols').ruta, RUTA_EMPAQUETATS]);
@@ -726,7 +726,7 @@ describe('hipervincles vius i cap paràgraf plantilla (troballes «hipervincles-
   });
 
   /* Una pàgina que parla de si mateixa («Al voltant dels agents hi ha
-     **actors**», davall de l'H3 Actors del Mas, que ja hi porta) no compta,
+     **actors**», davall de l'H3 Actors de Sóc de Poble, que ja hi porta) no compta,
      ni una mesura amb el seu número («**1 registre de consum**»): és la dada,
      no el nom de la pàgina. */
   test('cap negreta nomena una altra pàgina que té ruta (pel seu id o pel seu títol): eixa menció porta l’enllaç', () => {

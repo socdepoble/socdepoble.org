@@ -8,7 +8,7 @@ tags:
 ---
 # Homepage, connector d'Obsidian
 
-Fitxa de consulta del connector comunitari Homepage, que obri una nota, un llenç, una base o un espai de treball en arrencar Obsidian i el deixa a mà per a tornar-hi. És una referència d'eines per a treballar la Wiki des d'Obsidian, no cap dependència de l'app.
+Fitxa de consulta del **connector comunitari Homepage**, que **obri una nota**, un llenç, una base o un espai de treball **en arrencar Obsidian** i el deixa a mà per a **tornar-hi**. És una **referència d'eines** per a treballar la Wiki des d'Obsidian, **no cap dependència de l'app**.
 
 ## Com s'usa
 

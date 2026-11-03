@@ -99,7 +99,7 @@ test('Xifra és una targeta de Control amb la xifra de títol i l’etiqueta de 
    «Compartir + Obrir». */
 test('TargetaConsola amb destí: boina de Sóc de Poble amb la data, tota clicable i el peu de la barra blava', () => {
   render(<TargetaConsola icona={Puzzle} titol="Inventari de skills" subtitol="Per a saber quines skills cal cuidar"
-    entradilla="Semàfor de cada skill segons els avisos que en fa el Mapa del Mas." dada="22 skills al Mapa"
+    entradilla="Semàfor de cada skill segons els avisos que en fa el Mapa de Sóc de Poble." dada="22 skills al Mapa"
     generat="2026-09-25T13:12:23.715Z" a="/consola/inventari"
     etiquetes={[{ text: 'Important', to: 'avis' }]} />);
   const article = screen.getByRole('article');
@@ -128,7 +128,7 @@ test('TargetaConsola amb destí: boina de Sóc de Poble amb la data, tota clicab
   expect(article.querySelector('h4.sp-card-subtitle').textContent).toBe('Per a saber quines skills cal cuidar');
   // El cos ja no porta cap línia de data: només l'entradilla i la dada viva.
   expect([...article.querySelectorAll('.sp-card-text > p')].map((p) => [p.className, p.textContent])).toEqual([
-    ['', 'Semàfor de cada skill segons els avisos que en fa el Mapa del Mas.'],
+    ['', 'Semàfor de cada skill segons els avisos que en fa el Mapa de Sóc de Poble.'],
     ['sdp-consola__dada', '22 skills al Mapa']
   ]);
   expect(article.querySelector('.sp-card-text time, .sdp-consola__data')).toBeNull();
@@ -156,7 +156,7 @@ test('TargetaConsola amb destí: boina de Sóc de Poble amb la data, tota clicab
    el lloc de la insígnia lateral; la resta de la targeta, igual. */
 test('TargetaConsola amb imatge: el mitjà en lloc de la insígnia lateral, i la resta de la targeta igual', () => {
   render(<TargetaConsola icona={Puzzle} titol="Inventari de skills" subtitol="Per a saber quines skills cal cuidar"
-    entradilla="Semàfor de cada skill segons els avisos que en fa el Mapa del Mas." dada="22 skills al Mapa"
+    entradilla="Semàfor de cada skill segons els avisos que en fa el Mapa de Sóc de Poble." dada="22 skills al Mapa"
     generat="2026-09-25T13:12:23.715Z" a="/consola/inventari"
     imatge="/assets/nano_cards/lector_rss_nano_card.jpg" imatgeAlt="Un iaio amb ulleres llig un rotllo de paper llarguíssim" />);
   const article = screen.getByRole('article');
@@ -184,8 +184,8 @@ test('TargetaConsola amb imatge: el mitjà en lloc de la insígnia lateral, i la
    la insígnia flotant. Els missatges d'estat no són mètriques: paràgraf. */
 test('T2 · TargetaConsola amb mètriques: un h5 per mètrica, en ordre, i cap paràgraf de dada', () => {
   render(<TargetaConsola icona={Puzzle} titol="Calendari de processos" subtitol="Per a vigilar el que corre sense ningú davant"
-    entradilla="Què corre sol al Mas, quan, qui ho llança i si continua viu." dada="10 tasques · 2 vives · 1 mortes"
-    metriques={['10 tasques', '2 vives', '1 mortes']} font="Font: el Mapa del Mas" a="/consola/calendari" />);
+    entradilla="Què corre sol a Sóc de Poble, quan, qui ho llança i si continua viu." dada="10 tasques · 2 vives · 1 mortes"
+    metriques={['10 tasques', '2 vives', '1 mortes']} font="Font: el Mapa de Sóc de Poble" a="/consola/calendari" />);
   const text = document.querySelector('.sp-card-text');
   expect([...text.children].map((el) => `${el.tagName}.${el.className}`)).toEqual(['P.', 'DIV.sdp-consola__metriques']);
   const metriques = [...text.querySelectorAll('.sdp-consola__metriques > *')];
@@ -223,8 +223,8 @@ const ESTATS = [
 
 test('T3 · TargetaConsola amb estats: una llista d’insígnies darrere de les mètriques, en ordre', () => {
   render(<TargetaConsola icona={Puzzle} titol="Calendari de processos" subtitol="Per a vigilar el que corre sense ningú davant"
-    entradilla="Què corre sol al Mas, quan, qui ho llança i si continua viu." dada="10 tasques · 2 vives · 1 mortes"
-    metriques={['10 tasques', '2 vives', '1 mortes']} estats={ESTATS} font="Font: el Mapa del Mas" a="/consola/calendari"
+    entradilla="Què corre sol a Sóc de Poble, quan, qui ho llança i si continua viu." dada="10 tasques · 2 vives · 1 mortes"
+    metriques={['10 tasques', '2 vives', '1 mortes']} estats={ESTATS} font="Font: el Mapa de Sóc de Poble" a="/consola/calendari"
     etiquetes={[{ text: 'Cal reparar', to: 'error' }]} />);
   const text = document.querySelector('.sp-card-text');
   expect([...text.children].map((el) => `${el.tagName}.${el.className}`))
@@ -246,8 +246,8 @@ test('T3 · TargetaConsola amb estats: una llista d’insígnies darrere de les 
 test('T3 · TargetaConsola sense estats (sense prop, null o llista buida): el cos de sempre, sense llista', () => {
   const targeta = (estats) => (
     <TargetaConsola icona={Puzzle} titol="Explorador del cervell" subtitol="Per a vore qui es relaciona amb qui"
-      entradilla="El graf del Mas: peces, relacions i confiança." dada="3 nodes · 0 arestes"
-      metriques={['3 nodes', '0 arestes']} estats={estats} font="Font: el Mapa del Mas" a="/consola/explorador" />
+      entradilla="El graf de Sóc de Poble: peces, relacions i confiança." dada="3 nodes · 0 arestes"
+      metriques={['3 nodes', '0 arestes']} estats={estats} font="Font: el Mapa de Sóc de Poble" a="/consola/explorador" />
   );
   for (const estats of [undefined, null, []]) {
     const { unmount } = render(targeta(estats));

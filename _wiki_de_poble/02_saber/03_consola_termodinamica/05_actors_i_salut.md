@@ -13,7 +13,7 @@ Qui mana, qui conversa, qui vigila i quins candats hi ha al Mas, llegit amb la p
 
 ## Els actors del Mas
 
-La pestanya «Actores» d'Emowe dibuixa el que hi ha al voltant dels agents: qui mana, per on es parla, qui treballa sol, qui reparteix la faena, qui vigila, quins candats hi ha i sobre quin sòl treballen. Ho detecta per presència de fitxers i binaris, sense llegir contingut privat. El que existix ho pinta amb traç ple i el que falta, amb traç discontinu. Així la mateixa fila és inventari i full de ruta alhora.
+La pestanya «Actores» d'Emowe dibuixa el que hi ha **al voltant dels agents**: **qui mana**, **per on es parla**, qui treballa sol, qui reparteix la faena, qui vigila, quins candats hi ha i sobre quin sòl treballen. Ho detecta per **presència de fitxers i binaris**, **sense llegir contingut privat**. El que existix ho pinta amb traç ple i el que falta, amb traç discontinu. Així la mateixa fila és **inventari i full de ruta** alhora.
 
 | Capa (Emowe) | Al Mas | Font |
 |---|---|---|
@@ -39,9 +39,9 @@ Un candat que viu dins d'un arnés només protegix del que passa per eixe arnés
 
 ## La frontissa de contingut
 
-**Nota de vigència (261103).** La frontissa ja està implementada a `tooling/gates/frontissa-contingut.mjs`: importa `PAGE_COPY`, deriva els consumidors i compara les empremtes del registre `.agents/contingut_estructural.json`, que en este tall declara 16 claus. El resultat de `node tooling/gates/frontissa-contingut.mjs --json` és el que acredita quantes són correctes en cada execució; la presència de l'instrument no equival a `16/16` en verd. Les descripcions d'actors i processos d'este estudi no certifiquen que cap llançador estiga actiu.
+**Nota de vigència** (261103). La **frontissa ja està implementada** a `tooling/gates/frontissa-contingut.mjs`: importa `PAGE_COPY`, **deriva els consumidors** i **compara les empremtes** del registre `.agents/contingut_estructural.json`, que en este tall declara 16 claus. El resultat de `node tooling/gates/frontissa-contingut.mjs --json` és el que acredita quantes són correctes en cada execució; la presència de l'instrument **no equival a `16/16` en verd**. Les descripcions d'actors i processos d'este estudi **no certifiquen que cap llançador estiga actiu**.
 
-Protegix les peces estructurals de la interfície: les pàgines de `PAGE_COPY` que pinten el Mur, la portada de la Wiki i les seccions de text. L'origen és l'incident del 24-09: un canvi de nom de clau va deixar sense contingut la targeta del Mur i la portada de la Wiki, i cap porta ho va dir.
+Protegix les **peces estructurals de la interfície**: les **pàgines de `PAGE_COPY`** que **pinten el Mur, la portada de la Wiki** i les seccions de text. L'origen és l'**incident del 24-09**: un canvi de nom de clau va deixar **sense contingut** la targeta del Mur i la portada de la Wiki, i **cap porta ho va dir**.
 
 1. **Importa l'objecte real** (`import('src/sections/text/pageContent.js')`), no busca text. Un comentari que mencione la clau no la fa existir.
 2. **Deriva les claus obligatòries dels consumidors**, no d'una llista escrita a mà:
@@ -50,7 +50,7 @@ Protegix les peces estructurals de la interfície: les pàgines de `PAGE_COPY` q
    - la clau de la portada de la Wiki.
 
    Si un consumidor demana una clau que no existix, la porta falla.
-3. **Registra una empremta per clau** (SHA-256 del valor serialitzat i longitud de l'HTML) en un registre declaratiu. Qualsevol canvi d'empremta necessita una aprovació lligada exactament a l'empremta nova. Una reducció de més del 30% de l'HTML, o una clau que desapareix, no passa mai sense aprovació.
+3. **Registra una empremta per clau** (**SHA-256** del valor serialitzat i longitud de l'HTML) en un **registre declaratiu**. Qualsevol canvi d'empremta necessita una **aprovació lligada exactament** a l'empremta nova. Una **reducció de més del 30%** de l'HTML, o una clau que desapareix, **no passa mai sense aprovació**.
 4. **S'executa en tres llocs:**
    - com a primer pas del pre-commit, abans i fora de la cadena de portes;
    - al CI;

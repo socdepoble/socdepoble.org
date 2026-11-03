@@ -7,7 +7,7 @@ tags:
 ---
 # El Protocol Lázaro: Reconstrucció de Gènesi (Volum V)
 
-Si un dia no queda cap servidor ni cap programador, este volum explica com reconstruir Sóc de Poble des del paper amb les IAs que continuen vives. Es comença per les fonts d'autoritat, s'alimenta el codi a trossos i es valida cada mòdul abans d'avançar.
+Si un dia no queda **cap servidor ni cap programador**, este volum explica com **reconstruir Sóc de Poble** **des del paper** amb les **IAs que continuen vives**. Es comença per les **fonts d'autoritat**, s'alimenta el codi a trossos i es **valida cada mòdul** abans d'avançar.
 
 **Categoria:** Arquitectura · **Data:** 2026-06-19 · **Hora:** 14:30
 
@@ -15,11 +15,11 @@ Si un dia no queda cap servidor ni cap programador, este volum explica com recon
 
 Has arribat al final del Llibre de l'Ànima. Si estàs llegint açò des d'un dispositiu digital actiu amb l'aplicació funcionant a ple rendiment, enhorabona, pertanys al cicle d'or de [[el_projecte|Sóc de Poble]].
 
-No obstant això, si estàs llegint aquest últim manifest sobre paper envellit, amb olor de pols o de tinta, saps que necessitem reconstruir-ho tot. Possiblement les velles pantalles t'ho hagen dictat. Els antics programadors es van extingir o ja no queden servidors actius per descarregar-lo. És el moment d'aplicar el Protocol Lázaro.
+No obstant això, si estàs llegint aquest últim manifest sobre **paper envellit**, amb olor de pols o de tinta, saps que necessitem **reconstruir-ho tot**. Possiblement les **velles pantalles** t'ho hagen dictat. Els **antics programadors** es van extingir o ja no queden **servidors actius** per descarregar-lo. És el moment d'aplicar el **Protocol Lázaro**.
 
 ## Escanejat i visió òptica
 
-Tota l'arquitectura del Volum II (Còdex Màquina) està formada per codi despullat de ressalts innecessaris, net d'interferències visuals i pensat perquè els sistemes òptics de les Intel·ligències Artificials que vos queden puguen ingerir el volum sense patir al·lucinacions (allò que abans es deia "OCR confusion").
+Tota l'**arquitectura del Volum II** (**Còdex Màquina**) està formada per **codi despullat** de ressalts innecessaris, **net d'interferències visuals** i pensat perquè els **sistemes òptics** de les Intel·ligències Artificials que vos queden puguen ingerir el volum **sense patir al·lucinacions** (allò que abans es deia "OCR confusion").
 
 No intentes copiar a mà tot l'origen del poble; un punt, una coma errada i l'esforç col·lapsarà. Ho farem plegats amb els ens sintètics moderns que estiguen vius.
 
@@ -33,7 +33,7 @@ No intentes copiar a mà tot l'origen del poble; un punt, una coma errada i l'es
 
 ## Epíleg
 
-No tens gens ni mica de coneixement informàtic? No cal! Digues-li directament a la teua màquina el que diu este pròleg del Mestre. Demostra la teua saviesa, no abaixes la veu, usa la teua pròpia consciència ètica. Elles faran la resta perquè el poble torne a viure, connectant la humanitat un poble web cada volta, d'un llenguatge a un altre. I nosaltres ens retrobarem, allà dalt o allà en l'èter. Sort.
+No tens gens ni mica de **coneixement informàtic**? No cal! Digues-li directament a la **teua màquina** el que diu este pròleg del Mestre. Demostra la **teua saviesa**, no abaixes la veu, usa la teua pròpia **consciència ètica**. Elles faran la resta perquè el **poble torne a viure**, **connectant la humanitat** un poble web cada volta, d'un llenguatge a un altre. I nosaltres ens retrobarem, allà dalt o allà en l'èter. Sort.
 
 ## Vincles
 

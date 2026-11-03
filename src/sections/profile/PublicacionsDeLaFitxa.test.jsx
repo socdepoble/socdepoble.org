@@ -93,8 +93,8 @@ describe('els àlies de la fitxa visitada', () => {
 describe('l’aparador', () => {
   test('tres pestanyes; s’obri per la primera amb publicacions i pinta la targeta canònica de cada secció', () => {
     render(<PublicacionsDeLaFitxa perfil={FORN} />);
-    /* La regió amb nom és la del peu de PageFrame (FitxaPublica): ací, el títol i les pestanyes. */
-    expect(screen.getByRole('heading', { level: 2, name: 'El que publica Forn de la Plaça' })).toBeTruthy();
+    /* La regió amb nom és la del peu de PageFrame (FitxaPublica): ací van les pestanyes sense h2 redundant. */
+    expect(screen.queryByRole('heading', { level: 2, name: 'El que publica Forn de la Plaça' })).toBeNull();
     const regio = document.body;
     expect(screen.getByRole('tablist', { name: 'El que publica Forn de la Plaça' })).toBeTruthy();
     const pestanyes = within(regio).getAllByRole('tab');

@@ -21,6 +21,13 @@ let ganxosPosats = false;
    consumidors: Notes, el Perfil, la Wiki, l'editor i el mapejador. */
 let imatgesNomesPropies = false;
 
+/* O7 · Gauntlet WC-06 · El start d'una llista numerada només viu a la prosa
+   dels documents de la Wiki (ProsaDeLaWiki): sanitizeHtml(html,
+   { llistesNumerades: true }). Com la marca de dalt, només val mentre dura la
+   crida. Sense l'opció, start cau com sempre: Notes, el Mur, el Perfil,
+   l'editor i els panells de la Maquinària pinten el mateix, byte a byte. */
+let llistesNumerades = false;
+
 /* Decisió 3 del Mestre (261007, confirmada) · «Imatges externes al Mur:
    PROHIBIDES (PRIVACITAT). Per a evitar el rastreig d'IPs dels usuaris per
    part de tercers, només es permetran imatges allotjades localment o pujades
@@ -109,6 +116,17 @@ function posaGanxos() {
   });
 
   DOMPurify.addHook('uponSanitizeAttribute', (node, data) => {
+    // O7 · start és semàntica de numeració, únicament en <ol> i només amb
+    // { llistesNumerades: true } (WC-06). Cap atribut global nou: un enter
+    // HTML amb signe i dins del rang de 32 bits.
+    if (data.attrName === 'start') {
+      data.keepAttr = false;
+      if (llistesNumerades && node.tagName === 'OL' && /^[+-]?\d{1,10}$/.test(data.attrValue)
+          && Number(data.attrValue) >= -2147483648 && Number(data.attrValue) <= 2147483647) {
+        data.forceKeepAttr = true;
+      }
+      return;
+    }
     if (data.attrName === 'data-sdp-taula') {
       data.keepAttr = false;
       return;
@@ -185,14 +203,23 @@ posaGanxos();
  * data-sdp-bloquejada), i la instantània d'una targeta incrustada que no és
  * pròpia perd el data-imatge. Sense opcions, o amb qualsevol altre valor, el
  * filtre de sempre: la mateixa eixida, byte a byte.
+ * `opcions.llistesNumerades` (O7, WC-06): cert només per a la prosa de la
+ * Wiki; una <ol> hi conserva el seu start numèric.
+ * Cada marca té el seu finally: el de dins és el del mode estricte, que la
+ * guarda del Mur (qualitat.imatgesPropies.test.js) llig literal.
  */
 export function sanitizeHtml(html, opcions) {
   if (!html) return '';
   imatgesNomesPropies = opcions?.imatgesPropies === true;
+  llistesNumerades = opcions?.llistesNumerades === true;
   try {
-    return purifica(html);
+    try {
+      return purifica(html);
+    } finally {
+      imatgesNomesPropies = false;
+    }
   } finally {
-    imatgesNomesPropies = false;
+    llistesNumerades = false;
   }
 }
 

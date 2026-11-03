@@ -127,6 +127,104 @@ export function llegeixClau(clau) {
 /* Una ruta de l'app que el sanejador no tocarà (ni cometes ni angles). */
 const rutaNeta = (ruta) => (esRutaInterna(ruta) && !/[<>"]/.test(ruta) ? ruta : '');
 
+/* Les rutes de primer nivell de les pàgines del sistema i els àlies de slug.
+   T26-06 (Gauntlet O7) · '/iaia' no hi és: és la fitxa pública de la IAIA
+   MarIA (RUTA_FITXA_IAIA, navigation.js), un perfil, i un perfil no
+   s'incrusta. Només '/ia' porta al manifest (/anima, App.jsx). */
+const PAGINES_PRIMER_NIVELL = Object.freeze({
+  '/projecte': 'projecte',
+  '/anima': 'anima',
+  '/ia': 'anima',
+  '/constitucio': 'constitucio',
+  '/roadmap': 'roadmap',
+  '/versions': 'versions',
+  '/legal': 'legal',
+  '/fedivers': 'fedivers',
+  '/fediversity': 'fediversity',
+  '/descarregues': 'descarregues',
+  '/disseny': 'disseny',
+  '/wikidepoble': 'wikidepoble',
+  '/consola': 'consola',
+  '/cervell': 'cervell',
+  '/skills': 'skills'
+});
+
+const ALIES_DE_SLUG_PAGINA = Object.freeze({
+  'el-projecte': 'projecte',
+  ia: 'anima',
+  ruta: 'roadmap',
+  privadesa: 'legal',
+  privacitat: 'legal',
+  'projecte-fediversity': 'fediversity'
+});
+
+const RUTA_CANONICA_DE_PAGINA = Object.freeze({
+  projecte: '/projecte',
+  anima: '/anima',
+  constitucio: '/constitucio',
+  roadmap: '/roadmap',
+  versions: '/versions',
+  legal: '/legal',
+  fedivers: '/fedivers',
+  descarregues: '/descarregues',
+  disseny: '/disseny',
+  wikidepoble: '/wikidepoble',
+  consola: '/consola',
+  skills: '/skills'
+});
+
+function descodificaSegment(segment) {
+  try {
+    return decodeURIComponent(segment);
+  } catch {
+    return '';
+  }
+}
+
+/**
+ * T2.6 (Onada 7) · La clau d'objecte incrustable («tipus:id») que correspon a
+ * una ruta interna de Sóc de Poble, o '' si la ruta no apunta a cap objecte
+ * públic incrustable. Permet commutar qualsevol hiperenllaç intern en Card.
+ */
+export function clauDeRutaInterna(ruta) {
+  const neta = rutaNeta(ruta);
+  if (!neta) return '';
+  const cami = neta.split(/[?#]/)[0].replace(/\/+$/, '') || '/';
+  if (Object.hasOwn(PAGINES_PRIMER_NIVELL, cami)) {
+    return clauDe('pagina', PAGINES_PRIMER_NIVELL[cami]);
+  }
+  const seccio = /^\/(mur|events|esdeveniments|agenda|mercat|pobles|page)\/([^/]+)$/.exec(cami);
+  if (!seccio) return '';
+  const prefix = seccio[1];
+  const segment = descodificaSegment(seccio[2]);
+  if (!segment) return '';
+  if (prefix === 'mur') return clauDe('publicacio', segment);
+  if (prefix === 'events' || prefix === 'esdeveniments' || prefix === 'agenda') return clauDe('esdeveniment', segment);
+  if (prefix === 'mercat') return clauDe('producte', segment);
+  if (prefix === 'pobles') return clauDe('poble', segment);
+  const slug = Object.hasOwn(ALIES_DE_SLUG_PAGINA, segment) ? ALIES_DE_SLUG_PAGINA[segment] : segment;
+  return clauDe('pagina', slug);
+}
+
+/**
+ * T2.6 (Onada 7) · La ruta interna de reserva d'una clau «tipus:id» quan la
+ * targeta incrustada no porta `data-ruta` explícita.
+ */
+export function rutaDeClau(clau) {
+  const llegida = llegeixClau(clau);
+  if (!llegida) return '';
+  const { tipus, id } = llegida;
+  const codificat = encodeURIComponent(id);
+  if (tipus === 'publicacio') return `/mur/${codificat}`;
+  if (tipus === 'esdeveniment') return `/events/${codificat}`;
+  if (tipus === 'producte') return `/mercat/${codificat}`;
+  if (tipus === 'poble') return `/pobles/${codificat}`;
+  if (tipus === 'pagina') {
+    return Object.hasOwn(RUTA_CANONICA_DE_PAGINA, id) ? RUTA_CANONICA_DE_PAGINA[id] : `/page/${codificat}`;
+  }
+  return '';
+}
+
 /* Una imatge que el sanejador pintaria (el mateix origen, data:image o un
    origen de mitjans admès, que sí que pot ser de tercers i es demana sense
    referent; vegeu la capçalera) i que no és cap mitjà privat. Cap altre

@@ -40,7 +40,7 @@ export const AVIS_NOMES_EN_LOCAL = Object.freeze({
 
 const TRACTORS = `## Per què hi ha una porta
 
-Cap automatisme del Mas no corre a cegues. Cada tractor porta un manifest i una fitxa que diuen, en paraules planes, què fa, què llig, què escriu, si es connecta a la xarxa i si toca dades personals. El Mestre els llig a la porta i aprova la versió exacta que vol que corra: tot tractor nou s’aprova de manera explícita des de la Wiki abans de fer res (lliçó del Mestre, 261002).
+Cap automatisme de Sóc de Poble no corre a cegues. Cada tractor porta un manifest i una fitxa que diuen, en paraules planes, què fa, què llig, què escriu, si es connecta a la xarxa i si toca dades personals. El Mestre els llig a la porta i aprova la versió exacta que vol que corra: tot tractor nou s’aprova de manera explícita des de la Wiki abans de fer res (lliçó del Mestre, 261002).
 
 ## Què fa cada tractor
 

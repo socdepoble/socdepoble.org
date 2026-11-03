@@ -1,5 +1,5 @@
 /**
- * xifresMas.js — «El Mas en xifres» i el registre de totes les targetes amb
+ * xifresMas.js — «Sóc de Poble en xifres» i el registre de totes les targetes amb
  * pàgina pròpia de la Consola (/consola/xifres/<slug>).
  *
  * Ordre del Mestre, 261004 (xat: cap xifra solta) · «TOT han de ser
@@ -112,9 +112,9 @@ const XIFRES_MAS = Object.freeze([
   {
     slug: 'skills', origen: 'mapa', pagina: 'inventari', icona: 'puzzle', nom: 'Skills del cens',
     titol: ({ x }) => plural(x.skills, 'skill', 'skills'),
-    subtitol: () => 'Al cens del Mapa del Mas',
+    subtitol: () => 'Al cens del Mapa de Sóc de Poble',
     entradeta: [
-      'Compta les skills del cens del Mapa del Mas: els procediments de `.agents/skills/` que un agent carrega quan la tasca els demana, també els que algú nomena i no són al disc.',
+      'Compta les skills del cens del Mapa de Sóc de Poble: els procediments de `.agents/skills/` que un agent carrega quan la tasca els demana, també els que algú nomena i no són al disc.',
       'Ix dels nodes de tipus skill de `mapa.json`, que compila `tooling/brain/mapa-consola.mjs`.',
       'És la base de totes les altres xifres: el que no és al cens no ho vigila ningú.'
     ],
@@ -143,7 +143,7 @@ const XIFRES_MAS = Object.freeze([
     titol: ({ x }) => plural(x.agents, 'agent', 'agents'),
     subtitol: () => 'Arnesos que conversen amb el Mestre',
     entradeta: [
-      'Compta els arnesos d’IA que treballen al Mas i conversen amb el Mestre: els nodes de tipus agent del Mapa.',
+      'Compta els arnesos d’IA que treballen a Sóc de Poble i conversen amb el Mestre: els nodes de tipus agent del Mapa.',
       'Ix de `mapa.json`, on `tooling/brain/mapa-consola.mjs` els deriva dels fitxers d’arrencada de cada arnés.',
       'Cada arnés carrega la seua memòria i dispara els seus candats: un que no hi és no està vigilat.'
     ],
@@ -155,7 +155,7 @@ const XIFRES_MAS = Object.freeze([
       .map((a) => problemaText(a.node.id, a.nom, textEstatArnes(a).toLocaleLowerCase('ca'), toDEstat(textEstatArnes(a)))),
     detall: (mapa) => ({
       taules: [{
-        titol: 'Arnesos del Mas',
+        titol: 'Arnesos de Sóc de Poble',
         columnes: ['Agent', 'Arnés', 'Font'],
         files: mapa.nodes.filter((n) => n.tipus === 'agent').sort(perId).map((n) => ({
           clau: n.id, celes: [text(etiquetaNode(n)), text(n.atributs?.arnes ?? '—'), mono(n.font)]
@@ -206,9 +206,15 @@ const XIFRES_MAS = Object.freeze([
     ],
     font: `${FONT_MAPA} · tasques`,
     // Una morta, roig; una que no consta viva (o cap tasca: ningú vigila sol), taronja.
-    etiquetes: ({ capes }) => etiquetaDeColor(colorDe(true,
-      capes.programades.some((t) => t.estat === 'mort'),
-      !capes.programades.length || capes.programades.some((t) => t.estat !== 'viu'))),
+    /* CONS-03 · Una PROGRAMAT (job nou que espera la primera execució) és
+       neutra, com a semafor.js (colorDeTasques) i problemesConsola.js: no
+       tenyix la xifra; si totes ho són, cap color. */
+    etiquetes: ({ capes }) => {
+      const jutjables = capes.programades.filter((t) => t.estat !== 'programat');
+      return etiquetaDeColor(colorDe(!capes.programades.length || jutjables.length > 0,
+        jutjables.some((t) => t.estat === 'mort'),
+        !jutjables.length || jutjables.some((t) => t.estat !== 'viu')));
+    },
     problemes: ({ capes }) => problemesDeTasques(capes.programades),
     detall: (mapa, { capes }) => ({
       taules: [{

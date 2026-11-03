@@ -58,7 +58,7 @@ Usa el mapa anterior i el router documental; mantín identificador, procedència
 
 ## Estat mecànic
 
-L’estat del graf no es manté en una llista manual: el calculen les portes del teixit (`npm run porta:llaurador`, `npm run porta:teixit`, `npm run porta:scc` i `npm run porta:orfandat`). El criteri de salut és zero orfes, zero enllaços penjats i zero ambigüitats dins de les àrees operatives; l'arxiu, els mirrors i els vendors es reporten per separat.
+**L’estat del graf** no es manté en una llista manual: el calculen les **portes del teixit** (`npm run porta:llaurador`, `npm run porta:teixit`, `npm run porta:scc` i `npm run porta:orfandat`). El **criteri de salut** és **zero orfes**, **zero enllaços penjats** i **zero ambigüitats** dins de les àrees operatives; l'arxiu, els mirrors i els vendors es reporten per separat.
 
 ## Vincles
 

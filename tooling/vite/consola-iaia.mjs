@@ -130,6 +130,14 @@ export function recullConsola() {
   const immunitariData = parseJsonl(llig(path.join(PROJECT_DIR, '.immunitari', 'journal.ndjson')));
   const immunitari = immunitariData.items;
 
+  let artefactesActius = 0;
+  try {
+    const dirEsc = path.join(PROJECT_DIR, '_wiki_de_poble/04_escriptori');
+    artefactesActius = fs.readdirSync(dirEsc, { withFileTypes: true })
+      .filter((e) => e.isFile() && !e.name.startsWith('.') && !e.name.startsWith('00_'))
+      .length;
+  } catch { artefactesActius = 0; }
+
   return {
     generat: new Date().toISOString(),
     rebuts,
@@ -138,6 +146,7 @@ export function recullConsola() {
     estrategia_consum,
     skills,
     segell,
+    termometria: { artefactesActius, abast: '04_escriptori' },
     immunitari: { operacions: immunitari.length, ultima: immunitari.at(-1) ?? null },
     fonts: { diari: diariData.font, immunitari: immunitariData.font }
   };

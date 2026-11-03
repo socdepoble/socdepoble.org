@@ -3,7 +3,7 @@
   "turn_id": "torn_7440474f-5096-456d-b1aa-b1f97b21c348",
   "actor": "IAIA MarIA",
   "scope": "documents",
-  "state": "planned",
+  "state": "closed",
   "revision": 6,
   "createdAt": "2026-10-29T17:58:16.558Z",
   "updatedAt": "2026-10-29T17:58:55.257Z",
@@ -4046,5 +4046,6 @@
   "ownedPaths": [
     "_wiki_de_poble/04_escriptori/03_llibre_mestre_tasques_i_idees.md",
     "_wiki_de_poble/04_escriptori/00_index_escriptori.md"
-  ]
+  ],
+  "closedAt": "2026-11-03T05:17:29.321Z"
 }

@@ -9,13 +9,13 @@ tags:
 ---
 # El projecte
 
-**Sóc de Poble és un portal de pobles connectats**: **programari lliure per a unir persones i recursos del món rural**, fet amb trellat i ajudat per la IA. Si un agent o una persona col·laboradora es perd en tecnicismes, **ací trobarà per a què servix tot el codi del Mas**.
+**Sóc de Poble** és un **portal de pobles connectats**: **programari lliure** per a unir **persones i recursos del món rural**, fet amb trellat i **ajudat per la IA**. Si un agent o una persona col·laboradora es perd en tecnicismes, ací trobarà **per a què servix tot el codi** del Mas.
 
 [**🌐 Veure la presentació oficial i transmèdia del Projecte a /projecte**](https://socdepoble.org/projecte)
 
 ## La nostra visió
 
-El **llinatge històric** (de Rentonar a `socdepoble.net` i `socdepoble.org`), la **visió d'una xarxa social de programari lliure** i els **quatre pilars fundacionals** (Xarxa Social de Productivitat, Mapeig Col·lectiu de Recursos, Revista Digital i Viver d'Emprenedors) viuen a [[00_visio_i_pilars]], que n'és la **font única de veritat**. En una frase: **som hereus de més de 30 anys d'activisme rural i volem demostrar que els pobles són llocs de vida i de treball immillorables**.
+El **llinatge històric** (de Rentonar a `socdepoble.net` i `socdepoble.org`), la visió d'una **xarxa social de programari lliure** i els **quatre pilars fundacionals** (Xarxa Social de Productivitat, Mapeig Col·lectiu de Recursos, Revista Digital i Viver d'Emprenedors) viuen a [[00_visio_i_pilars]], que n'és la **font única de veritat**. En una frase: som hereus de més de **30 anys d'activisme rural** i volem demostrar que els pobles són **llocs de vida i de treball immillorables**.
 
 ## L'evolució tecnològica (de la web clàssica a l'arquitectura d'ara)
 
@@ -34,7 +34,7 @@ La **missió necessita un cervell incansable que l'execute: la IAIA MarIA**, que
 
 Ajudats per la intel·ligència col·lectiva, construïm un **mas electrònic on la IA desenvolupa la seua capacitat per ajudar les persones**. La **baseline actual és online i enxufable**; la **independència tecnològica és la direcció del projecte**, no un resultat que es puga donar per acabat.
 
-Hem traslladat la **història d'activisme i les idees fundacionals a una base de programari lliure en construcció**. **«Lliure, eficient i robust» és el criteri que hem de demostrar amb codi, llicència, proves i operació real**; no una garantia que una nota puga donar per complida.
+Hem traslladat la **història d'activisme** i les **idees fundacionals** a una base de **programari lliure en construcció**. «**Lliure, eficient i robust**» és el criteri que hem de demostrar amb **codi, llicència, proves i operació real**; **no una garantia** que una nota puga donar per complida.
 
 *(A la Ment Colmena: **l'objectiu original i l'actual són el mateix, el Mas**. Només han canviat les eines per fer-ho realitat amb **Pedra Seca i la IA**.)*
 

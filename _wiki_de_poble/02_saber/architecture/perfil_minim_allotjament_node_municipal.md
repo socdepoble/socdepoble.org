@@ -8,7 +8,7 @@ tags:
 ---
 # Perfil mínim d'allotjament d'un node municipal
 
-Un node municipal és la instal·lació del Mas electrònic que servix un poble: la seua web, les seues dades i la seua federació, amb el contracte del port neutral que descriu [[api_port_neutral_i_allotjament_model_b]]. Este document recull què necessita un node municipal del Mas: web estàtica, base de dades, Storage, funcions i federació. Servix a qui haja de triar entre un allotjament gestionat i un d'autoallotjat. Les xifres del repositori es van mesurar en esta màquina el 2026-11-01, i els preus es van consultar el mateix dia a les pàgines oficials.
+**Un node municipal** és la instal·lació del Mas electrònic que **servix un poble**: la seua web, les **seues dades** i la **seua federació**, amb el **contracte del port neutral** que descriu [[api_port_neutral_i_allotjament_model_b]]. Este document recull què necessita un node municipal del Mas: web estàtica, base de dades, Storage, funcions i federació. Servix a qui haja de triar entre un **allotjament gestionat** i un d'autoallotjat. Les **xifres del repositori** es van mesurar en esta màquina el 2026-11-01, i els preus es van consultar el mateix dia a les **pàgines oficials**.
 
 ## 1. Tall i mètode
 
@@ -35,9 +35,9 @@ El Mas es publica com una web estàtica (`dist/`) i qualsevol amfitrió que repr
 | Fonts (dos `.woff2`) | 95.756 bytes |
 | Rutes amb La Torre de les Maçanes | 52 fitxers, 24.458.025 bytes |
 
-El recompte de 1.021 fitxers publicables coincidix amb el desplegament a Firebase Hosting que cita el prompt de la marató nocturna, però `dist/` no és el build desplegat: producció servix el de les 01:39 CET (`last-modified` 00:39:59 GMT), amb l'entrada `index-DeBPBAUV.js`, de la mateixa mida que l'entrada local `index-BoNloTr2.js` (1.461.491 bytes) i amb bytes diferents.
+El recompte de **1.021 fitxers publicables** coincidix amb el **desplegament a Firebase Hosting** que cita el prompt de la marató nocturna, però `dist/` **no és el build desplegat**: **producció servix** el de les 01:39 CET (`last-modified` 00:39:59 GMT), amb l'entrada `index-DeBPBAUV.js`, de la **mateixa mida** que l'entrada local `index-BoNloTr2.js` (1.461.491 bytes) i amb **bytes diferents**.
 
-L'ocupació en disc no és a la taula: depén del sistema de fitxers, i el mateix dia `du -sk` en va donar xifres diferents per als mateixos 1.100 fitxers i els mateixos bytes (de 143.416 a 164.028 KiB). Per a l'allotjament compta la suma de bytes.
+**L'ocupació en disc** no és a la taula: depén del **sistema de fitxers**, i el mateix dia `du -sk` en va donar **xifres diferents** per als **mateixos 1.100 fitxers** i els **mateixos bytes** (de 143.416 a 164.028 KiB). Per a l'allotjament compta la **suma de bytes**.
 
 ### 2.1 Recursos principals comprimits
 
@@ -84,7 +84,7 @@ Font: `firebase.json` del repositori. Un altre amfitrió estàtic necessita l'eq
 
 ## 4. Base de dades, Storage i funcions
 
-El node en mode `remote` necessita un projecte Supabase amb les migracions de la mateixa versió aplicades i el seu `tenantId`. Les migracions i les funcions no viatgen amb la release (secció 3): l'administrador les pren del repositori. En mode `seed` no en necessita cap: és una demostració.
+El node en **mode `remote`** necessita un **projecte Supabase** amb les **migracions de la mateixa versió aplicades** i el seu `tenantId`. Les migracions i les funcions **no viatgen amb la release** (secció 3): **l'administrador** les pren del repositori. En **mode `seed`** no en necessita cap: és una **demostració**.
 
 - **Migracions:** 64 fitxers SQL, de `2609080000_initial_schema.sql` a `2610312000_e2ee_lot3_validadors_service_role.sql`.
 - **Esquema:** 48 taules creades, en els esquemes `public` i `private`, i 101 sentències `create policy` al llarg de les migracions (el text apareix 102 voltes; una és dins d'un comentari).

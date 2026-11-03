@@ -56,7 +56,7 @@ Estos intervals no activen automàticament `SDP-LOCK`. Les portes efectives són
 
 ## Taxonomia
 
-L’IT no crea etiquetes de frontmatter. L’esquema canònic (`tooling/wiki/schema.json`) exigix `type`, `status` i `description`, i les etiquetes opcionals només poden prendre valors del vocabulari tancat de `tags`. La classificació principal prové de la carpeta (les sis vigents: `01_ser`, `02_saber`, `03_actuar`, `04_escriptori`, `10_actes` i `90_arxiu_historic`), el `type` i els enllaços.
+L’IT **no crea etiquetes de frontmatter**. L’**esquema canònic** (`tooling/wiki/schema.json`) exigix `type`, `status` i `description`, i les **etiquetes opcionals** només poden prendre valors del **vocabulari tancat** de `tags`. La **classificació principal** prové de la carpeta (les **sis vigents**: `01_ser`, `02_saber`, `03_actuar`, `04_escriptori`, `10_actes` i `90_arxiu_historic`), el `type` i els enllaços.
 
 ## Vincles
 

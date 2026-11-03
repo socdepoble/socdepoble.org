@@ -17,9 +17,10 @@ contracte.llig:
   - AGENTS.md
   - _wiki_de_poble/00_index.md
   - _wiki_de_poble/04_escriptori/
+  - tests/
 contracte.escriu:
   - _wiki_de_poble/04_escriptori/
-  - _wiki_de_poble/10_actes/
+  - _wiki_de_poble/10_actes
 ---
 
 # Protocol Gauntlet Loop i Enginyeria Inversa REA

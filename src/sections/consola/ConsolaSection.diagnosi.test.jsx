@@ -4,10 +4,11 @@ import { act, cleanup, render, screen, waitFor } from '@testing-library/react';
 
 /* Ordre del Mestre, 13-10-2026 (pla 261013_1405, front F) · Les
    il·lustracions a les capçaleres de les targetes del tauler i el Diagnòstic
-   del Mas al peu de /consola, amb el router de veres, la UniversalPage i les
+   de Sóc de Poble al peu de /consola, amb el router de veres, la UniversalPage i les
    targetes de veres (el patró de ConsolaSection.index.test.jsx):
     · cada targeta del tauler porta la il·lustració de la seua pàgina, sense
-      la insígnia lateral; les xifres, la icona; la Wiki, cap imatge;
+      la insígnia lateral; les xifres, la icona; la Wiki, les mateixes
+      il·lustracions (ordre del Mestre 261103, T2; derogat «la Wiki, cap imatge»);
     · el Diagnòstic ve darrere de l'Índex i de totes les targetes, amb l'accés
       ràpid i un sol <pre> d'un sol node de text, que diu exactament el que
       diu la dada (diagnosiConsola.js) amb les fonts de la secció;
@@ -131,14 +132,14 @@ test.each([['amb', true], ['sense', false]])('/consola %s fonts: cada targeta de
     expect(t.querySelector(':scope > .sp-card-header'), id).not.toBeNull();
     expect(t.querySelector('.sp-card-footer .sp-card-connect'), id).not.toBeNull();
   }
-  // «El Mas en xifres» conserva la icona a la insígnia lateral i cap mitjà.
+  // «Sóc de Poble en xifres» conserva la icona a la insígnia lateral i cap mitjà.
   const xifres = screen.getByRole('region', { name: TITOL_MAS });
   expect(xifres.querySelector('img.sp-card-media, .sp-card-media-container')).toBeNull();
   expect(xifres.querySelectorAll('.sp-card-calendar-badge svg').length).toBe(xifres.querySelectorAll('article.sp-card').length);
   expect(errors).not.toHaveBeenCalled();
 });
 
-test.each([['amb', true], ['sense', false]])('/consola %s fonts: el Diagnòstic del Mas tanca el tauler, amb l’accés ràpid i un sol <pre> que diu el que diu la dada', async (_nom, amb) => {
+test.each([['amb', true], ['sense', false]])('/consola %s fonts: el Diagnòstic de Sóc de Poble tanca el tauler, amb l’accés ràpid i un sol <pre> que diu el que diu la dada', async (_nom, amb) => {
   if (amb) ambFonts();
   await obri('/consola');
   const regio = diagnosi();
@@ -165,7 +166,7 @@ test.each([['amb', true], ['sense', false]])('/consola %s fonts: el Diagnòstic 
   expect(pre.childNodes).toHaveLength(1);
   expect(pre.firstChild.nodeType).toBe(Node.TEXT_NODE);
   expect(pre.textContent).toBe(diagnosiTextual(fontsDeLaSeccio(), { locale: 'ca-ES', privat: false }));
-  expect(pre.textContent).toMatch(/^DIAGNÒSTIC DEL MAS · Consola Termodinàmica\n/);
+  expect(pre.textContent).toMatch(/^DIAGNÒSTIC DE SÓC DE POBLE · Consola Termodinàmica\n/);
   if (amb) {
     expect(pre.textContent).toContain('VIGILÀNCIA TRENCADA');
     expect(pre.textContent).toContain('.agents/LEDGER.md');
@@ -194,7 +195,7 @@ test('el mode privacitat recordat arriba al <pre>: cap ruta ni evidència, la ma
   expect(errors).not.toHaveBeenCalled();
 });
 
-test('la Consola incrustada de la Wiki no pinta ni les il·lustracions ni el Diagnòstic: conserva els seus píxels', async () => {
+test('la Consola incrustada de la Wiki pinta les il·lustracions còmiques de totes les targetes i omet el Diagnòstic', async () => {
   ambFonts();
   render(<RouterProvider><ConsolaIncrustada /></RouterProvider>);
   await act(async () => {});
@@ -203,11 +204,27 @@ test('la Consola incrustada de la Wiki no pinta ni les il·lustracions ni el Dia
   expect(screen.queryByRole('region', { name: TITOL_DIAGNOSI })).toBeNull();
   expect(screen.queryByRole('navigation', { name: ETIQUETA_ACCES })).toBeNull();
   expect(document.querySelector('.sdp-consola__diagnosi, pre')).toBeNull();
-  expect(document.querySelectorAll('img.sp-card-media')).toHaveLength(0);
-  // Les nou targetes amb la icona a la insígnia lateral, com abans.
+  // 13 en total: les 4 portades del Govern i les nou targetes de la sala de màquines.
+  expect(document.querySelectorAll('img.sp-card-media')).toHaveLength(4 + IDS_PAGINES.length);
   const tauler = screen.getByRole('navigation', { name: 'Pàgines de la Consola' });
-  expect(tauler.querySelectorAll('.sp-card-calendar-badge svg')).toHaveLength(IDS_PAGINES.length);
+  expect(tauler.querySelectorAll('img.sp-card-media')).toHaveLength(IDS_PAGINES.length);
+  expect(tauler.querySelectorAll('.sp-card-calendar-badge svg')).toHaveLength(0);
   expect(errors).not.toHaveBeenCalled();
+});
+
+/* CONS-02 (ordre del Mestre 261103) · Cap «Mas» visible a /consola ni a la
+   Consola incrustada de la Wiki; els identificadors interns (xifresMas, ID_MAS…)
+   no es pinten. Patró lineal: una paraula «mas» sencera, en qualsevol caixa. */
+test.each([['amb', true], ['sense', false]])('/consola i la Consola de la Wiki %s fonts: cap «Mas» a la superfície', async (_nom, amb) => {
+  if (amb) ambFonts();
+  const senseMas = () => expect(document.body.textContent).not.toMatch(/(^|[^\p{L}])mas([^\p{L}]|$)/iu);
+  await obri('/consola');
+  senseMas();
+  cleanup();
+  render(<RouterProvider><ConsolaIncrustada /></RouterProvider>);
+  await act(async () => {});
+  await waitFor(() => expect(document.body.textContent).not.toMatch(/Llegint/));
+  senseMas();
 });
 
 /* Ordre del Mestre (30-10-2026, prompt 2208, T2.1) · Expectatives actualitzades a

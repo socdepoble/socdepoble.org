@@ -80,7 +80,8 @@ describe.each(PAGINES)('Onada 10 · /page/%s', (clau, verb, desti) => {
     expect([baix[0].className, baix[0].getAttribute('href'), baix[0].textContent]).toEqual([CLASSE, desti, verb]);
     const caixa = baix[0].parentElement;
     expect(article().lastElementChild).toBe(caixa);
-    expect(caixa.previousElementSibling.className).toBe('cms-preview');
+    // CONS-IL-06 · Igualtat exacta: el cos porta ara el grup de targetes (CosAmbTargetes).
+    expect(caixa.previousElementSibling.className).toBe('cms-preview sdp-amb-targetes');
     // Dos controls amb el mateix nom que porten al mateix lloc, i cap més.
     expect(screen.getAllByRole('link', { name: verb })).toHaveLength(2);
     expect(document.querySelectorAll('.sdp-boto--gran')).toHaveLength(2);
@@ -108,7 +109,9 @@ describe.each(PAGINES)('Onada 10 · /page/%s', (clau, verb, desti) => {
     // Cap article buit: subapartats (H4), més d'un H3 i paràgrafs llargs.
     expect(cos.querySelectorAll('h3').length).toBeGreaterThanOrEqual(3);
     expect(cos.querySelectorAll('h4').length).toBeGreaterThanOrEqual(1);
-    for (const paragraf of cos.querySelectorAll('p')) expect(paragraf.textContent.trim().length).toBeGreaterThan(80);
+    for (const paragraf of [...cos.querySelectorAll('p')].filter((p) => !p.closest('.sdp-targetes, [data-sdp-targetes]'))) {
+      expect(paragraf.textContent.trim().length).toBeGreaterThan(80);
+    }
     // A la Consola, la caldera de coure és dins del cos, i la portada és una altra (lliçó 261010).
     const caldera = cos.querySelector('img[src="/assets/uploads/consola-caldera.webp"]');
     expect([clau, Boolean(caldera)]).toEqual([clau, clau === 'consola']);

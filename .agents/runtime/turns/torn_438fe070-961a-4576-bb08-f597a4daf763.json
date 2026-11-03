@@ -3,7 +3,7 @@
   "turn_id": "torn_438fe070-961a-4576-bb08-f597a4daf763",
   "actor": "claude",
   "scope": "code",
-  "state": "context_loaded",
+  "state": "closed",
   "revision": 4,
   "createdAt": "2026-10-29T15:32:42.322Z",
   "updatedAt": "2026-10-29T16:23:05.731Z",
@@ -3995,5 +3995,6 @@
       "at": "2026-10-29T16:23:05.731Z",
       "hash": "6f9d2009c60b0b9109dc418368b4849ff152642889dba7c93f59f64481fd83e4"
     }
-  ]
+  ],
+  "closedAt": "2026-11-03T05:17:29.321Z"
 }

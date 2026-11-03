@@ -3,7 +3,7 @@
   "turn_id": "torn_b65d699d-9390-455d-9904-1d80121da006",
   "actor": "codex",
   "scope": "documents",
-  "state": "planned",
+  "state": "closed",
   "revision": 6,
   "createdAt": "2026-10-26T18:41:48.798Z",
   "updatedAt": "2026-10-26T18:47:25.817Z",
@@ -3788,5 +3788,6 @@
   "ownedPaths": [
     "_wiki_de_poble/04_escriptori/03_llibre_mestre_tasques_i_idees.md",
     ".agents/ESTAT.md"
-  ]
+  ],
+  "closedAt": "2026-11-03T05:17:29.321Z"
 }

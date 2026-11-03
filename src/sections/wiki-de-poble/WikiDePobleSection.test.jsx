@@ -1,6 +1,6 @@
 import React from 'react';
 import { afterEach, expect, test, vi } from 'vitest';
-import { cleanup, render, screen } from '@testing-library/react';
+import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 const fixture = vi.hoisted(() => ({
   content: Array.from({ length: 6 }, (_, i) => `${'#'.repeat(i + 1)} Nivell ${i + 1}`).join('\n\n'),
   search: '?item=00_index',
@@ -80,6 +80,40 @@ test('capçalera editorial: H1 i H2 sense punt, entradilla extreta i la prosa no
   expect(prosa.querySelector('h3.h2').textContent).toBe('Primera secció');
   // La descripció ja és l'H2: el quadre ISO no la repetix.
   expect([...arrel.querySelectorAll('.sdp-wiki-iso th')].map(th => th.textContent)).not.toContain('Descripció');
+});
+
+/* O7 · Gauntlet WC-05 · El kit passava el Quadre ISO a h3: el títol conservava
+   la pell, però l'Índex (PageFrame pren el nivell del tag) en pujava l'entrada
+   a toc-level-3. Cap ordre del Mestre ho demana (Llei del Píxel): continua
+   sent l'h4 de sempre, amb l'entrada de l'Índex a toc-level-4. */
+test('O7 · el Quadre ISO continua sent h4 i l’Índex el manté a toc-level-4', () => {
+  const root = obri('doc_llarg');
+  const iso = screen.getByRole('heading', { name: 'Quadre de Comandament ISO', level: 4 });
+  expect(iso.className).toBe('');
+  const headings = [...root.querySelectorAll('h1,h2,h3,h4,h5,h6')];
+  expect(headings.map(h => [h.tagName, h.textContent])).toEqual([
+    ['H1', 'Arquitectura tècnica unificada'], ['H2', 'Descripció del document'],
+    ['H4', 'Quadre de Comandament ISO'], ['H3', 'Primera secció']
+  ]);
+  fireEvent.click(root.querySelector('button[aria-label="Índex de secció"]'));
+  expect([...document.querySelectorAll('.toc-nav li')].map(li => [li.className, li.textContent])).toEqual([
+    ['toc-item toc-level-1', 'Arquitectura tècnica unificada'],
+    ['toc-item toc-level-2', 'Descripció del document'],
+    ['toc-item toc-level-4', 'Quadre de Comandament ISO'],
+    ['toc-item toc-level-3', 'Primera secció']
+  ]);
+});
+
+/* O7 · Gauntlet WC-06 · start només viu a la prosa de la Wiki: ProsaDeLaWiki
+   passa { llistesNumerades: true } al sanejador, que fora d'ací el lleva. */
+test('O7 · la prosa de la Wiki conserva el número inicial de les llistes separades', () => {
+  fixture.content = '## Passos\n\n4. Quart.\n5. Cinqué.\n\nText fora de la llista.\n\n9. Nové.';
+  try {
+    render(<WikiDePobleSection />);
+    expect([...document.querySelectorAll('.sdp-prose ol')].map(ol => ol.getAttribute('start'))).toEqual(['4', '9']);
+  } finally {
+    fixture.content = Array.from({ length: 6 }, (_, i) => `${'#'.repeat(i + 1)} Nivell ${i + 1}`).join('\n\n');
+  }
 });
 
 test('píndoles: carpeta, «En curs» i etiquetes, sense duplicats; logo i copyright compartit', () => {

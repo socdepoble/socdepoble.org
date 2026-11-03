@@ -14,7 +14,7 @@ import {
   filtresInicials, grafDelMapa
 } from './grafMapa.js';
 
-/* L'Explorador del cervell: el graf d'Obsidian aplicat als agents del Mas.
+/* L'Explorador del cervell: el graf d'Obsidian aplicat als agents de Sóc de Poble.
    T3 (ordre del Mestre, 260930) · el graf va al final de la pàgina: damunt
    del canvas la rodeta fa zoom, i al començament era una trampa que no
    deixava baixar. Primer la llegenda, la cerca i els filtres (tres
@@ -125,7 +125,7 @@ export function ExploradorMapa({ mapa }) {
     <section className="sdp-explorador">
       <GraellaXifres xifres={xifres} generat={mapa.generat ?? null} />
       <p className="sdp-explorador__llegenda">
-        Cada punt és una peça del Mas i cada línia, una relació del contracte
+        Cada punt és una peça de Sóc de Poble i cada línia, una relació del contracte
         (crida, llig, escriu, dispara, encamina, carrega o governa). Una línia
         discontínua ix de la prosa i no val igual que una declarada. El graf és
         al final de la pàgina: fes clic en un punt i el detall et dirà què és,

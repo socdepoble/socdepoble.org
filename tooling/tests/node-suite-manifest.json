@@ -11,11 +11,13 @@
     "tests/antigravity-hook.test.mjs",
     "tests/backend_consolidacio.test.mjs",
     "tests/build-net-dsstore.test.mjs",
+    "tests/certifica-enllacos.adversarial.test.mjs",
     "tests/certifica-enllacos.test.mjs",
     "tests/cognitive-document-handoff.test.mjs",
     "tests/cognitive-hook-safety.test.mjs",
     "tests/cognitive-preflight.test.mjs",
     "tests/conformitat-amfitrio.test.mjs",
+    "tests/cua-operacions-offline.test.mjs",
     "tests/destins-canonics.test.mjs",
     "tests/destins-hook.test.mjs",
     "tests/dist-secrets.test.mjs",
@@ -23,14 +25,17 @@
     "tests/document-links-prose.test.mjs",
     "tests/documental.test.mjs",
     "tests/draft-attachment-anchoring.test.mjs",
+    "tests/enxufe-backend-offline-first.test.mjs",
     "tests/enxufe-empaqueta.test.mjs",
     "tests/enxufe-pantalla.test.mjs",
     "tests/enxufe-plugin.test.mjs",
     "tests/enxufe-runtime.test.mjs",
     "tests/enxufe-traduccio.test.mjs",
+    "tests/fediversity-nixos-module.test.mjs",
     "tests/fonts-vigilancia.test.mjs",
     "tests/fortificacio.test.mjs",
     "tests/git-hooks.test.mjs",
+    "tests/governanca-260930-segell.test.mjs",
     "tests/higiene-estructural.test.mjs",
     "tests/higiene-paquets.test.mjs",
     "tests/hooks-local.test.mjs",
@@ -42,12 +47,17 @@
     "tests/migracio-xat-de-pagina.test.mjs",
     "tests/node-suite-policy.test.mjs",
     "tests/opendata-fediversity.test.mjs",
+    "tests/persistencia-local-rural.test.mjs",
     "tests/plantilla-viva-escriptori.test.mjs",
+    "tests/pont-emergencia-rural.test.mjs",
     "tests/porta-olivera-v3.test.mjs",
     "tests/porta-reflex.test.mjs",
+    "tests/portabilitat-fediversity.test.mjs",
     "tests/public_exports.test.mjs",
+    "tests/render-pdf.test.mjs",
     "tests/search-cli-wire.test.mjs",
     "tests/security-chain.test.mjs",
+    "tests/sincronitzador-carpeta-local.test.mjs",
     "tests/sistema_nervios.test.mjs",
     "tests/standalone-build.test.mjs",
     "tests/t11-arxiu-fossils-bundle.test.mjs",
@@ -67,10 +77,7 @@
     "tooling/gates/guarda-nocturna.test.mjs",
     "tooling/seo/projeccio-publica.test.mjs",
     "tooling/wiki/tests/contract_consistency.test.mjs",
-    "tooling/wiki/tests/contradiction_engine.t11.test.mjs",
-    "tests/certifica-enllacos.adversarial.test.mjs",
-    "tests/render-pdf.test.mjs",
-    "tests/governanca-260930-segell.test.mjs"
+    "tooling/wiki/tests/contradiction_engine.t11.test.mjs"
   ],
   "files": [
     {
@@ -972,6 +979,41 @@
       "path": "tests/render-pdf.test.mjs",
       "suite": "primary",
       "reason": "O4-CODEX-1: perfil i memòria cau del navegador aïllats i netejats, opcions vigents; prova amb navegador simulat."
+    },
+    {
+      "path": "tests/fediversity-nixos-module.test.mjs",
+      "suite": "primary",
+      "reason": "O8/O9: mòdul NixOS declaratiu, endpoints federats, preparació OpenData verificada i límit explícit de Nix no instal·lat."
+    },
+    {
+      "path": "tests/persistencia-local-rural.test.mjs",
+      "suite": "primary",
+      "reason": "O8/O9: persistència rural atòmica, àmbits, esquema JSON estricte, instantànies SHA-256, quota i cancel·lació."
+    },
+    {
+      "path": "tests/cua-operacions-offline.test.mjs",
+      "suite": "primary",
+      "reason": "O8/O9: cua durable SHA-256, HLC/LWW amb còpia de conflicte, CAS i ACK idempotent sense autoritat de client."
+    },
+    {
+      "path": "tests/enxufe-backend-offline-first.test.mjs",
+      "suite": "primary",
+      "reason": "O8/O9: enxufe reversible del backend, selectors, cau i escriptures idempotents, identitat, reconnect i coherència entre connexions."
+    },
+    {
+      "path": "tests/portabilitat-fediversity.test.mjs",
+      "suite": "primary",
+      "reason": "O8 (Gemini): portabilitat FEP-7628 Move amb alsoKnownAs bidireccional i proves FEP-8b32 Ed25519/JCS; mòdul desacoblat sota src/data/federacio."
+    },
+    {
+      "path": "tests/pont-emergencia-rural.test.mjs",
+      "suite": "primary",
+      "reason": "O8/O9 (Gemini): pont d'emergència rural (Sneakernet JSON-LD signat) desacoblat sota src/data/local."
+    },
+    {
+      "path": "tests/sincronitzador-carpeta-local.test.mjs",
+      "suite": "primary",
+      "reason": "O9 (Gemini): vault local Markdown + JSON-LD amb reconciliació SHA-256 i degradació sense File System Access API."
     }
   ]
 }

@@ -10,7 +10,7 @@ tags:
 
 Cinc fases per a construir Sóc de Poble sense tornar a caure en la sobreenginyeria: delegar la infraestructura, no reinventar components, tancar les IAs dins de les seues lleis, migrar per substitució gradual i deixar que les portes mecàniques guarden el disseny.
 
-Aquest document és el monument de la **Segona Oportunitat**. S'escriu per a evitar repetir "els sis mesos de plorar per desesperació" que vàrem passar creant un sistema que treia un 10 a les auditories però que era impossible de mantindre i d'escalar en el món real.
+Aquest document és el **monument** de la **Segona Oportunitat**. S'escriu per a **evitar repetir** "els **sis mesos de plorar per desesperació**" que vàrem passar creant un sistema que treia un **10 a les auditories** però que era impossible de **mantindre i d'escalar** en el món real.
 
 Aquesta és la metodologia estricta per a muntar un "[[el_projecte|Sóc de Poble]]" des de zero sense entropessar amb la sobreenginyeria casolana.
 

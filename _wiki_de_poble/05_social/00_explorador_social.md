@@ -10,7 +10,7 @@ visibility: private
 
 L'Explorador Social és la sala de comandament del "Cervell Social" de Sóc de Poble.
 
-Mentres que el **Cervell Tècnic** s'encarrega d'organitzar els agents (MarIA, Claude, Fable) i les decisions d'arquitectura de programari (la Pedra Seca), aquest Explorador Social permetrà a l'usuari amb rol de *Superadministrador* tindre una visió d'ocell sobre totes les relacions humanes que s'estan donant a la plataforma.
+Mentres que el **Cervell Tècnic** s'encarrega d'**organitzar els agents** (MarIA, Claude, Fable) i les **decisions d'arquitectura de programari** (la Pedra Seca), aquest **Explorador Social** permetrà a l'usuari amb rol de ***Superadministrador*** tindre una visió d'ocell sobre totes les **relacions humanes** que s'estan donant a la plataforma.
 
 ## Què hi haurà en aquest panell?
 

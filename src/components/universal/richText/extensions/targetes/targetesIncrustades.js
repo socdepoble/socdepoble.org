@@ -22,15 +22,17 @@
  * les prova dins de can() a cada transacció.
  */
 import { Extension, Node, isMacOS, isiOS } from '@tiptap/core';
-import { NodeSelection, Plugin, PluginKey, TextSelection } from '@tiptap/pm/state';
+import { NodeSelection, Plugin, PluginKey, Selection, TextSelection } from '@tiptap/pm/state';
 import { Decoration, DecorationSet } from '@tiptap/pm/view';
 import { ReactNodeViewRenderer } from '@tiptap/react';
 import TargetaIncrustadaNodeView from './TargetaIncrustadaNodeView.jsx';
 import { NOM_EXTENSIO_TARGETES } from './TargetesIncrustadesContext.js';
 import {
   ALINEACIONS, ALINEACIO_PER_DEFECTE, CLASSE_AMB_TARGETES, MARCA_GRUP, MARCA_TARGETA, NOM_GRUP, NOM_TARGETA,
-  alineacioValida, esTargetaValida, formaDe, netejaAtributs, teAutoriaCompleta
+  alineacioValida, clauDeRutaInterna, esTargetaValida, formaDe, llegeixClau, netejaAtributs, rutaDeClau, teAutoriaCompleta
 } from './formaDelGrup.js';
+
+export { clauDeRutaInterna, rutaDeClau };
 
 /* Cada atribut de la targeta i el seu data-* a l'HTML, en l'ordre en què
    s'escriuen. La clau és la marca mateixa del node. */
@@ -233,6 +235,71 @@ function grupAl($pos) {
   return null;
 }
 
+/* T2.6 (Onada 7) · L'enllaç (<a href="...">) continu que conté el cursor dins
+   del bloc de text actual, o null si no n'hi ha cap. */
+function enllacAlCursor(state) {
+  const { selection } = state;
+  const { $from } = selection;
+  const tipusLink = state.schema.marks.link;
+  if (!tipusLink || !$from.parent.isTextblock || $from.depth < 1) return null;
+  const iniciContingut = $from.start($from.depth);
+  const trams = [];
+  $from.parent.forEach((fill, desplacament) => {
+    if (!fill.isText) return;
+    const marca = fill.marks.find((m) => m.type === tipusLink && typeof m.attrs?.href === 'string');
+    if (!marca) return;
+    const inici = iniciContingut + desplacament;
+    const fi = inici + fill.nodeSize;
+    const ultim = trams[trams.length - 1];
+    if (ultim && ultim.fi === inici && ultim.href === marca.attrs.href) {
+      ultim.fi = fi;
+      ultim.titol += fill.text || '';
+    } else {
+      trams.push({ inici, fi, href: marca.attrs.href, titol: fill.text || '' });
+    }
+  });
+  const actiu = trams.find((tram) => tram.inici <= selection.from && selection.from <= tram.fi);
+  if (!actiu) return null;
+  return {
+    ...actiu,
+    bloc: $from.parent,
+    depth: $from.depth,
+    iniciBloc: $from.before(1),
+    fiBloc: $from.after(1)
+  };
+}
+
+/* T26-03 / T26-04 (Gauntlet O7) · La memòria de la commutació d'este editor
+   (addStorage): el que hi havia a l'altre costat de l'última commutació. Un
+   enllaç només porta ruta i text, i una Card no porta marques ni el bloc
+   d'on venia; per a tornar sense pèrdua, cada sentit la deixa al node que
+   escriu: al paràgraf de l'enllaç, { targeta, alineacio, index, grup }, i a
+   la Card, { bloc }. Verificador A4 (ronda 2) · La clau és el node concret
+   (WeakMap), no la ruta: abans, qualsevol altra Card o altre enllaç de la
+   mateixa ruta heretava el bloc, la instantània o el lloc d'un altre.
+   ProseMirror conserva el node mentre no canvia i el Desfer el torna (la
+   memòria no es buida); una altra Card o un altre enllaç, encara que siguen
+   idèntics, no hi són. No es desa ni s'escriu (ni HTML ni JSON): en tornar a
+   obrir el document, un enllaç és un enllaç (límit fixat a
+   targetesIncrustades.test.js), i el paràgraf que la persona edita ja és un
+   enllaç nou. Sense, null. */
+function memoriaDe(editor) {
+  const memoria = editor?.storage?.[NOM_EXTENSIO_TARGETES]?.commutacions;
+  return memoria instanceof WeakMap ? memoria : null;
+}
+
+/* Si `node` (el mateix objecte) és una sola volta a `doc`. Un arrossegament
+   amb còpia hi pot posar el mateix node dues voltes, i cap de les dues no és
+   la que es va commutar. */
+function hiEsUnaVolta(doc, node) {
+  let voltes = 0;
+  doc.descendants((fill) => {
+    if (fill === node) voltes += 1;
+    return voltes < 2 && !fill.isTextblock && !fill.isAtom;
+  });
+  return voltes === 1;
+}
+
 /* ── Retrocés i Supr al costat d'un grup ───────────────────────────────── */
 
 /**
@@ -319,9 +386,10 @@ export const TargetesIncrustades = Extension.create({
   name: NOM_EXTENSIO_TARGETES,
 
   /* obreSelector el posa qui munta l'editor (DocumentEditor) i el lleva en
-     desmuntar-se. Sense, l'ordre de la barra ix apagada. */
+     desmuntar-se. Sense, l'ordre de la barra ix apagada. T26-03 / T26-04 ·
+     commutacions, la memòria del commutador «Enllaç ↔ Card» (memoriaDe). */
   addStorage() {
-    return { obreSelector: null };
+    return { obreSelector: null, commutacions: new WeakMap() };
   },
 
   addExtensions() {
@@ -378,6 +446,179 @@ export const TargetesIncrustades = Extension.create({
           tr.setNodeMarkup(grup.pos, undefined, { ...grup.node.attrs, alineacio });
         }
         return true;
+      },
+
+      /* T2.6 (Onada 7) · Insereix al cursor un hiperenllaç de text normal
+         (<a href="...">Títol</a>) a partir dels atributs d'una targeta.
+         T26-05 (Gauntlet O7) · Inserir no esborra, com inserirTargeta: amb
+         una Card triada (la barra hi pinta «Targeta»), l'enllaç va en un
+         paràgraf darrere del seu grup i la Card es queda; amb text triat dins
+         d'un bloc, el text de la persona es fa l'enllaç; amb qualsevol altra
+         tria, l'enllaç va darrere de la tria. */
+      inserirEnllacDeTargeta: (atributs) => ({ tr, state, dispatch }) => {
+        const net = netejaAtributs(atributs);
+        const ruta = net.ruta || rutaDeClau(net.clau);
+        const titol = net.titol || ruta;
+        const tipusLink = state.schema.marks.link;
+        if (!esTargetaValida(net) || !ruta || !titol || !tipusLink) return false;
+        if (!dispatch) return true;
+        const marca = tipusLink.create({ href: ruta, target: null, rel: 'noopener noreferrer nofollow' });
+        const nodeText = state.schema.text(titol, [marca]);
+        const { selection } = tr;
+        const tipusParagraf = state.schema.nodes.paragraph;
+        const grup = selection.node?.type.name === NOM_TARGETA ? grupAl(tr.doc.resolve(selection.from)) : null;
+        if (grup && tipusParagraf) {
+          const fi = grup.pos + grup.node.nodeSize;
+          const paragraf = tipusParagraf.create(null, nodeText);
+          tr.insert(fi, paragraf);
+          tr.setSelection(TextSelection.create(tr.doc, fi + paragraf.nodeSize - 1));
+        } else if (selection instanceof TextSelection && !selection.empty && selection.$from.sameParent(selection.$to)
+          && selection.$from.parent.type.allowsMarkType(tipusLink)) {
+          tr.addMark(selection.from, selection.to, marca);
+          tr.setSelection(TextSelection.create(tr.doc, selection.to));
+        } else {
+          if (!selection.empty) {
+            const $fi = tr.doc.resolve(selection.to);
+            const cursor = Selection.findFrom($fi, -1, true) || Selection.findFrom($fi, 1, true);
+            if (cursor) tr.setSelection(TextSelection.create(tr.doc, cursor.head));
+          }
+          tr.replaceSelectionWith(nodeText, false);
+        }
+        tr.scrollIntoView();
+        return true;
+      },
+
+      /* T2.6 (Onada 7) · Commuta una Card incrustada (sdpTargeta) a un
+         hiperenllaç de text normal (<a href="...">Títol</a>). Si era l'única
+         targeta del grup, el paràgraf amb l'enllaç ocupa el lloc del grup; si
+         el grup tenia més targetes, la targeta surt del grup i l'enllaç es
+         escriu en un paràgraf just darrere del grup.
+         T26-03 / T26-04 (Gauntlet O7) · Si la Card venia d'un enllaç (la
+         memòria de la commutació d'esta Card, no d'una altra de la mateixa
+         ruta), torna el seu paràgraf tal com era: les marques, el target i
+         el text. I la Card sencera (la instantània amb l'autor, l'alineació
+         del grup i el seu lloc) es queda a la memòria del paràgraf escrit
+         per a tornar-hi (convertirEnllacEnTargeta). */
+      convertirTargetaEnEnllac: (posTargeta = null) => ({ tr, state, dispatch, editor }) => {
+        const pos = typeof posTargeta === 'number'
+          ? posTargeta
+          : (tr.selection.node?.type.name === NOM_TARGETA ? tr.selection.from : null);
+        if (typeof pos !== 'number' || pos < 0 || pos >= tr.doc.content.size) return false;
+        const targeta = tr.doc.nodeAt(pos);
+        if (targeta?.type.name !== NOM_TARGETA) return false;
+        const grup = grupAl(tr.doc.resolve(pos));
+        const tipusLink = state.schema.marks.link;
+        const tipusParagraf = state.schema.nodes.paragraph;
+        const ruta = targeta.attrs.ruta || rutaDeClau(targeta.attrs.clau);
+        const titol = targeta.attrs.titol || ruta;
+        if (!grup || !tipusLink || !tipusParagraf || !ruta || !titol) return false;
+        if (!dispatch) return true;
+        const memoria = memoriaDe(editor);
+        const previ = memoria?.get(targeta);
+        const marca = tipusLink.create({ href: ruta, target: null, rel: 'noopener noreferrer nofollow' });
+        const paragraf = previ?.bloc && hiEsUnaVolta(tr.doc, targeta)
+          ? previ.bloc
+          : tipusParagraf.create(null, state.schema.text(titol, [marca]));
+        const index = grup.node.childCount > 1 ? tr.doc.resolve(pos).index() : null;
+        let posParagraf = grup.pos;
+        if (grup.node.childCount === 1) {
+          tr.replaceWith(grup.pos, grup.pos + grup.node.nodeSize, paragraf);
+          tr.setSelection(TextSelection.near(tr.doc.resolve(grup.pos + paragraf.nodeSize - 1)));
+        } else {
+          tr.delete(pos, pos + targeta.nodeSize);
+          posParagraf = tr.mapping.map(grup.pos + grup.node.nodeSize);
+          tr.insert(posParagraf, paragraf);
+          tr.setSelection(TextSelection.near(tr.doc.resolve(posParagraf + paragraf.nodeSize - 1)));
+        }
+        /* El grup que deixa (si en queda) va amb l'índex: només s'hi torna
+           si l'enllaç encara el té just davant, sense canvis. */
+        const escrit = tr.doc.nodeAt(posParagraf);
+        if (escrit) {
+          memoria?.set(escrit, {
+            targeta: { ...targeta.attrs },
+            alineacio: grup.node.attrs.alineacio,
+            index,
+            grup: index === null ? null : tr.doc.nodeAt(grup.pos)
+          });
+        }
+        tr.scrollIntoView();
+        return true;
+      },
+
+      /* T2.6 (Onada 7) · Commuta l'enllaç intern (<a href="...">) sota el
+         cursor en una Card incrustada completa (sdpTargetes + sdpTargeta): el
+         grup amb la Card substitueix el paràgraf.
+         T26-04 (Gauntlet O7) · Només es commuta el que pot tornar: un
+         paràgraf de primer nivell que és sols l'enllaç. Un títol, un enllaç
+         enmig del text o dins d'una llista no (la Card no hi cap, i abans es
+         perdia el títol o l'enllaç quedava duplicat en tornar).
+         T26-03 · Regla d'or 1 (formaDelGrup.js): un enllaç només porta ruta i
+         text. Sense la instantània (els atributs de la cerca o la memòria
+         d'una Card que ja ho era), una publicació, un acte o un producte no
+         es fabrica, perquè signaria «Sóc de Poble»; les pàgines i els pobles,
+         que ja signa el Sistema, sí. Amb la memòria (la d'este paràgraf, no
+         la d'un altre enllaç de la mateixa ruta), la Card torna sencera: la
+         instantània, l'autor, l'alineació i el seu lloc al grup. */
+      convertirEnllacEnTargeta: (atributs = {}) => ({ tr, state, dispatch, editor }) => {
+        const enllac = enllacAlCursor(state);
+        if (!enllac) return false;
+        if (enllac.depth !== 1 || enllac.bloc.type.name !== 'paragraph'
+          || enllac.bloc.textContent.trim() !== enllac.titol.trim()) return false;
+        const memoria = memoriaDe(editor);
+        const desada = memoria?.get(enllac.bloc);
+        const previ = desada?.targeta && (!atributs?.clau || atributs.clau === desada.targeta.clau)
+          && hiEsUnaVolta(tr.doc, enllac.bloc) ? desada : null;
+        const base = previ?.targeta || {};
+        const clau = atributs?.clau || base.clau || clauDeRutaInterna(enllac.href);
+        const tipus = llegeixClau(clau)?.tipus;
+        if (!atributs?.clau && !previ && tipus !== 'poble' && tipus !== 'pagina') return false;
+        const net = netejaAtributs({
+          ...base,
+          ...atributs,
+          clau,
+          ruta: atributs?.ruta || base.ruta || enllac.href,
+          titol: atributs?.titol || base.titol || enllac.titol
+        });
+        const tipusGrup = state.schema.nodes[NOM_GRUP];
+        const tipusTargeta = state.schema.nodes[NOM_TARGETA];
+        if (!esTargetaValida(net) || !net.titol || !teAutoriaCompleta(net) || !tipusGrup || !tipusTargeta) return false;
+        if (!dispatch) return true;
+        const desitjada = atributs?.alineacio || previ?.alineacio;
+        const alineacio = desitjada ? alineacioValida(desitjada) : 'dreta';
+        const targeta = tipusTargeta.create(net);
+        /* Si eixia d'un grup de més targetes, l'enllaç és just darrere: hi
+           torna al seu lloc (el normalitzador l'afegiria al final). Només
+           si davant hi ha el mateix grup que va deixar (les mateixes
+           targetes): darrere d'un altre, va al final, com una Card nova. */
+        const anterior = tr.doc.resolve(enllac.iniciBloc).nodeBefore;
+        let posNova = enllac.iniciBloc + 1;
+        if (Number.isInteger(previ?.index) && anterior?.type === tipusGrup && previ.grup?.content.eq(anterior.content)) {
+          const iniciGrup = enllac.iniciBloc - anterior.nodeSize;
+          let lloc = iniciGrup + 1;
+          for (let i = 0; i < Math.min(previ.index, anterior.childCount); i += 1) lloc += anterior.child(i).nodeSize;
+          tr.delete(enllac.iniciBloc, enllac.fiBloc);
+          tr.insert(lloc, targeta);
+          posNova = lloc;
+          cursorDarrere(tr, iniciGrup + anterior.nodeSize + targeta.nodeSize);
+        } else {
+          const grup = tipusGrup.create({ alineacio }, targeta);
+          tr.replaceWith(enllac.iniciBloc, enllac.fiBloc, grup);
+          cursorDarrere(tr, enllac.iniciBloc + grup.nodeSize);
+        }
+        const escrita = tr.doc.nodeAt(posNova);
+        if (escrita?.type === tipusTargeta) memoria?.set(escrita, { bloc: enllac.bloc });
+        tr.scrollIntoView();
+        return true;
+      },
+
+      /* T2.6 (Onada 7) · Commutador bidireccional d'1 clic («Enllaç ↔ Card»):
+         si la selecció és en una Card incrustada la passa a enllaç de text, i
+         si és en un enllaç intern de Sóc de Poble el passa a Card incrustada. */
+      commutarEnllacTargeta: (posOAtributs = null) => ({ commands, state }) => {
+        if (typeof posOAtributs === 'number' || state.selection.node?.type.name === NOM_TARGETA) {
+          return commands.convertirTargetaEnEnllac(typeof posOAtributs === 'number' ? posOAtributs : null);
+        }
+        return commands.convertirEnllacEnTargeta(posOAtributs && typeof posOAtributs === 'object' ? posOAtributs : {});
       }
     };
   },

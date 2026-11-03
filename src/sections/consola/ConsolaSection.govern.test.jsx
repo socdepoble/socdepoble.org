@@ -279,13 +279,13 @@ describe('el tauler de /consola', () => {
       t.querySelector('h3').textContent, metriques(t), t.querySelector('a.sp-card-link-overlay').getAttribute('href')
     ])).toEqual(deLaConsola);
     expect(targetes.map((t) => t.querySelector('a.sp-card-link-overlay').getAttribute('href'))).toEqual(paginesGovern().map((p) => p.ruta));
-    // Darrere, l'H2 de la sala de màquines i les nou targetes, com a /consola; sense il·lustracions.
+    // Darrere, l'H2 de la sala de màquines i les nou targetes, com a /consola, amb les 13 il·lustracions (4 govern + 9 sala de màquines).
     const maquinaria = screen.getByRole('navigation', { name: 'Pàgines de la Consola' });
     expect(s.nextElementSibling.tagName).toBe('H2');
     expect(s.nextElementSibling.textContent).toBe(TITOL_SALA_MAQUINES);
     expect(s.nextElementSibling.nextElementSibling).toBe(maquinaria);
     expect(s.contains(maquinaria)).toBe(false);
-    expect(document.querySelectorAll('img.sp-card-media')).toHaveLength(0);
+    expect(document.querySelectorAll('img.sp-card-media')).toHaveLength(4 + 9);
     // Una sola lectura per a tota la fitxa: tornar a pintar no torna a llegir.
     expect(carregaGovern.crides).toBe(1);
     vista.rerender(<RouterProvider><ConsolaIncrustada /></RouterProvider>);

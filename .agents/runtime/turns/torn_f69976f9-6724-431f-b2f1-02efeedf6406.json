@@ -4,9 +4,9 @@
   "actor": "maria",
   "scope": "documents",
   "state": "planned",
-  "revision": 50,
+  "revision": 52,
   "createdAt": "2026-11-02T17:21:54.622Z",
-  "updatedAt": "2026-11-03T02:28:54.755Z",
+  "updatedAt": "2026-11-03T13:12:02.623Z",
   "expiresAt": "2026-11-03T17:21:54.623Z",
   "contractHash": "1839756fa153a68d945b48956d870a4a082ab80adcf874a04dd10fc1327d8c45",
   "humanInventoryVersion": 1,
@@ -4875,37 +4875,79 @@
       "id": "2615634c-9b08-4112-b840-6877ea8b79cc",
       "route": "prompt.local",
       "routeVersion": "3.11.0",
-      "file": "_wiki_de_poble/04_escriptori/261102_1532_prompt_onada6_disseny_editorial_negrites_versions_1_1_0_i_tancament.md",
+      "file": "_wiki_de_poble/90_arxiu_historic/261102_1532_prompt_onada6_disseny_editorial_negrites_versions_1_1_0_i_tancament.md",
       "contractSnapshot": "7c2ae1e44975784cd341e0d4dec3249dceeddc6e653fbc09c140f3cb6debe9ad",
       "template": "_wiki_de_poble/03_actuar/plantilles/prompt_local.md",
       "templateHash": "edf7daf4d81ab3640d195369807d5ab047bbc60027abd2663f86de3b076d992a",
-      "issuedAt": "2026-11-03T01:39:26.898Z"
+      "issuedAt": "2026-11-03T01:39:26.898Z",
+      "moves": [
+        {
+          "from": "_wiki_de_poble/04_escriptori/261102_1532_prompt_onada6_disseny_editorial_negrites_versions_1_1_0_i_tancament.md",
+          "to": "_wiki_de_poble/90_arxiu_historic/261102_1532_prompt_onada6_disseny_editorial_negrites_versions_1_1_0_i_tancament.md",
+          "hash": "f0378ba68daa8a59cea37b7056c2a33c280da16c1b9c40dbf5279f8b865bf165",
+          "at": "2026-11-03T04:39:22.165Z",
+          "receiptIds": [
+            "2615634c-9b08-4112-b840-6877ea8b79cc",
+            "9db5093a-2f1a-4d17-9cab-cb65c1876502",
+            "55e2c4bd-38f8-4bcf-856d-1ac4a18e91a3",
+            "022484a9-857e-48d7-9da6-947f946d2f01"
+          ]
+        }
+      ]
     },
     "9db5093a-2f1a-4d17-9cab-cb65c1876502": {
       "id": "9db5093a-2f1a-4d17-9cab-cb65c1876502",
       "route": "prompt.local",
       "routeVersion": "3.11.0",
-      "file": "_wiki_de_poble/04_escriptori/261102_1532_prompt_onada6_disseny_editorial_negrites_versions_1_1_0_i_tancament.md",
+      "file": "_wiki_de_poble/90_arxiu_historic/261102_1532_prompt_onada6_disseny_editorial_negrites_versions_1_1_0_i_tancament.md",
       "contractSnapshot": "7c2ae1e44975784cd341e0d4dec3249dceeddc6e653fbc09c140f3cb6debe9ad",
       "template": "_wiki_de_poble/03_actuar/plantilles/prompt_local.md",
       "templateHash": "edf7daf4d81ab3640d195369807d5ab047bbc60027abd2663f86de3b076d992a",
-      "issuedAt": "2026-11-03T01:39:48.685Z"
+      "issuedAt": "2026-11-03T01:39:48.685Z",
+      "moves": [
+        {
+          "from": "_wiki_de_poble/04_escriptori/261102_1532_prompt_onada6_disseny_editorial_negrites_versions_1_1_0_i_tancament.md",
+          "to": "_wiki_de_poble/90_arxiu_historic/261102_1532_prompt_onada6_disseny_editorial_negrites_versions_1_1_0_i_tancament.md",
+          "hash": "f0378ba68daa8a59cea37b7056c2a33c280da16c1b9c40dbf5279f8b865bf165",
+          "at": "2026-11-03T04:39:22.166Z",
+          "receiptIds": [
+            "2615634c-9b08-4112-b840-6877ea8b79cc",
+            "9db5093a-2f1a-4d17-9cab-cb65c1876502",
+            "55e2c4bd-38f8-4bcf-856d-1ac4a18e91a3",
+            "022484a9-857e-48d7-9da6-947f946d2f01"
+          ]
+        }
+      ]
     },
     "55e2c4bd-38f8-4bcf-856d-1ac4a18e91a3": {
       "id": "55e2c4bd-38f8-4bcf-856d-1ac4a18e91a3",
       "route": "prompt.local",
       "routeVersion": "3.11.0",
-      "file": "_wiki_de_poble/04_escriptori/261102_1532_prompt_onada6_disseny_editorial_negrites_versions_1_1_0_i_tancament.md",
+      "file": "_wiki_de_poble/90_arxiu_historic/261102_1532_prompt_onada6_disseny_editorial_negrites_versions_1_1_0_i_tancament.md",
       "contractSnapshot": "7c2ae1e44975784cd341e0d4dec3249dceeddc6e653fbc09c140f3cb6debe9ad",
       "template": "_wiki_de_poble/03_actuar/plantilles/prompt_local.md",
       "templateHash": "edf7daf4d81ab3640d195369807d5ab047bbc60027abd2663f86de3b076d992a",
-      "issuedAt": "2026-11-03T01:40:19.501Z"
+      "issuedAt": "2026-11-03T01:40:19.501Z",
+      "moves": [
+        {
+          "from": "_wiki_de_poble/04_escriptori/261102_1532_prompt_onada6_disseny_editorial_negrites_versions_1_1_0_i_tancament.md",
+          "to": "_wiki_de_poble/90_arxiu_historic/261102_1532_prompt_onada6_disseny_editorial_negrites_versions_1_1_0_i_tancament.md",
+          "hash": "f0378ba68daa8a59cea37b7056c2a33c280da16c1b9c40dbf5279f8b865bf165",
+          "at": "2026-11-03T04:39:22.166Z",
+          "receiptIds": [
+            "2615634c-9b08-4112-b840-6877ea8b79cc",
+            "9db5093a-2f1a-4d17-9cab-cb65c1876502",
+            "55e2c4bd-38f8-4bcf-856d-1ac4a18e91a3",
+            "022484a9-857e-48d7-9da6-947f946d2f01"
+          ]
+        }
+      ]
     },
     "022484a9-857e-48d7-9da6-947f946d2f01": {
       "id": "022484a9-857e-48d7-9da6-947f946d2f01",
       "route": "prompt.local",
       "routeVersion": "3.11.0",
-      "file": "_wiki_de_poble/04_escriptori/261102_1532_prompt_onada6_disseny_editorial_negrites_versions_1_1_0_i_tancament.md",
+      "file": "_wiki_de_poble/90_arxiu_historic/261102_1532_prompt_onada6_disseny_editorial_negrites_versions_1_1_0_i_tancament.md",
       "contractSnapshot": "7c2ae1e44975784cd341e0d4dec3249dceeddc6e653fbc09c140f3cb6debe9ad",
       "template": "_wiki_de_poble/03_actuar/plantilles/prompt_local.md",
       "templateHash": "edf7daf4d81ab3640d195369807d5ab047bbc60027abd2663f86de3b076d992a",
@@ -4915,7 +4957,21 @@
         "preparedAt": "2026-11-03T01:40:19.593Z",
         "committedAt": "2026-11-03T01:40:19.646Z",
         "documentHash": "fc8a8f6fa2b7283d6378dde86105985ec2596de87174feb8c5df1279ba0d2027"
-      }
+      },
+      "moves": [
+        {
+          "from": "_wiki_de_poble/04_escriptori/261102_1532_prompt_onada6_disseny_editorial_negrites_versions_1_1_0_i_tancament.md",
+          "to": "_wiki_de_poble/90_arxiu_historic/261102_1532_prompt_onada6_disseny_editorial_negrites_versions_1_1_0_i_tancament.md",
+          "hash": "f0378ba68daa8a59cea37b7056c2a33c280da16c1b9c40dbf5279f8b865bf165",
+          "at": "2026-11-03T04:39:22.166Z",
+          "receiptIds": [
+            "2615634c-9b08-4112-b840-6877ea8b79cc",
+            "9db5093a-2f1a-4d17-9cab-cb65c1876502",
+            "55e2c4bd-38f8-4bcf-856d-1ac4a18e91a3",
+            "022484a9-857e-48d7-9da6-947f946d2f01"
+          ]
+        }
+      ]
     },
     "813d2c7c-2f33-4af2-8d6c-df9df7f2c403": {
       "id": "813d2c7c-2f33-4af2-8d6c-df9df7f2c403",
@@ -5353,6 +5409,30 @@
       "file": "_wiki_de_poble/10_actes/261103_0328_acta_marmota_botigues_en_revisio_i_relleu_fresc_onada6_nocturna.md",
       "at": "2026-11-03T02:28:54.755Z",
       "hash": "62c7a3b100d6f5663f9c55df42021724be9c57b3ce21868215e4c173a172336e"
+    },
+    {
+      "state": "planned",
+      "action": "handoff",
+      "at": "2026-11-03T04:39:22.166Z"
+    },
+    {
+      "action": "archive-links",
+      "at": "2026-11-03T13:12:02.623Z",
+      "by": "torn_10f0e355-fa6b-41fb-98f9-6a4478f38c1d",
+      "relocated": [
+        {
+          "from": "_wiki_de_poble/04_escriptori/261102_1532_pla_implementacio_mode_jarvis_idea60_fediversity_i_deute_llibre_mestre.md",
+          "to": "_wiki_de_poble/90_arxiu_historic/261102_1532_pla_implementacio_mode_jarvis_idea60_fediversity_i_deute_llibre_mestre.md"
+        },
+        {
+          "from": "_wiki_de_poble/04_escriptori/261102_1638_auditoria_codex.md",
+          "to": "_wiki_de_poble/90_arxiu_historic/261102_1638_auditoria_codex.md"
+        },
+        {
+          "from": "_wiki_de_poble/04_escriptori/261102_1640_auditoria_claude.md",
+          "to": "_wiki_de_poble/90_arxiu_historic/261102_1640_auditoria_claude.md"
+        }
+      ]
     }
   ],
   "relocated": [
@@ -5360,11 +5440,16 @@
     "_wiki_de_poble/04_escriptori/261102_1647_prompt_gemini_revisio_codex.md",
     "_wiki_de_poble/04_escriptori/261102_1918_prompt_teler_invertit_onada3_codex_gemini_constructors_claude_arbitre.md",
     "_wiki_de_poble/04_escriptori/261102_2138_prompt_onada4_nocturna_claude_eixam_codex_gemini_10_de_10.md",
-    "_wiki_de_poble/04_escriptori/261102_1532_prompt_onada5_reconciliacio_botigues_i_tancament_10_de_10.md"
+    "_wiki_de_poble/04_escriptori/261102_1532_prompt_onada5_reconciliacio_botigues_i_tancament_10_de_10.md",
+    "_wiki_de_poble/04_escriptori/261102_1532_prompt_onada6_disseny_editorial_negrites_versions_1_1_0_i_tancament.md",
+    "_wiki_de_poble/04_escriptori/261102_1532_pla_implementacio_mode_jarvis_idea60_fediversity_i_deute_llibre_mestre.md",
+    "_wiki_de_poble/04_escriptori/261102_1638_auditoria_codex.md",
+    "_wiki_de_poble/04_escriptori/261102_1640_auditoria_claude.md"
   ],
   "ownedPaths": [
     "_wiki_de_poble/90_arxiu_historic/261102_1918_prompt_teler_invertit_onada3_codex_gemini_constructors_claude_arbitre.md",
     "_wiki_de_poble/90_arxiu_historic/261102_2138_prompt_onada4_nocturna_claude_eixam_codex_gemini_10_de_10.md",
-    "_wiki_de_poble/90_arxiu_historic/261102_1532_prompt_onada5_reconciliacio_botigues_i_tancament_10_de_10.md"
+    "_wiki_de_poble/90_arxiu_historic/261102_1532_prompt_onada5_reconciliacio_botigues_i_tancament_10_de_10.md",
+    "_wiki_de_poble/90_arxiu_historic/261102_1532_prompt_onada6_disseny_editorial_negrites_versions_1_1_0_i_tancament.md"
   ]
 }

@@ -242,6 +242,9 @@ export default {
   'editor.targetes.esquerra': 'Ezkerra',
   'editor.targetes.dreta': 'Eskuina',
   'editor.targetes.lleva': 'Kendu txartela',
+  /* 261103 (Onada 7, T2.6) · El commutador «Enllaç ↔ Card»: el botó de la targeta triada i el del diàleg. Pendent de revisió nadiua. Ronda 3 · per a aEnllac es proposa «Esteka bihurtu» (com 'Txartel bihurtu'), que s'ha de canviar alhora a la taula CLAUS d'i18n.claus.test.js. */
+  'editor.targetes.aEnllac': 'Bihurtu esteka',
+  'editor.targetes.dialeg.inserirEnllac': 'Txertatu esteka gisa',
   /* Pla 261028_1526 (P1-22, TE-02) · L’avís d’una targeta incrustada a l’editor (DocumentEditor.jsx). Pendent de revisió nadiua. */
   'editor.targetes.avis.titol': 'Txartel hau aurrebista bat da',
   'editor.targetes.avis.descripcio': 'Txartel hau editatzen ari zaren dokumentuan txertatuta dago. Bere botoiek —konektatu, itzuli, iruzkindu eta partekatu— argitaratutako dokumentua irakurtzean bakarrik funtzionatzen dute.',
@@ -432,6 +435,8 @@ export default {
   /* O4-CLAUDE-2 · La subtargeta i la targeta incrustada a la segona fila «⋯» de la barra, i els textos de mostra de la subtargeta. */
   'section.notes.format.subtargeta': 'Azpitxartela',
   'section.notes.format.targeta': 'Txartel txertatua',
+  /* 261103 (Onada 7, T2.6) · El sentit Enllaç → Card a la segona fila, amb el cursor en un enllaç intern. Ronda 3 · el resultat davant del verb, com 'Kide arrunt bihurtu' (abans «Bihurtu txartel»). Pendent de revisió nadiua. */
+  'section.notes.format.enllacATargeta': 'Txartel bihurtu',
   'section.notes.format.subtargetaTitol': 'Azpitxartelaren izenburua',
   'section.notes.format.subtargetaMeta': 'Testuinguru-lerro bat: data, lekua edo egiletza',
   'section.notes.format.subtargetaCos': 'Idatzi hemen azpitxartelaren edukia: paragrafoak, zerrendak eta estekak.',
@@ -576,7 +581,6 @@ export default {
   'editor.ambit.ajuda': 'Aukeratu Hormako argitalpena den ala Merkatua, Autoa partekatu, Lana edo Etxebizitza ataletarako fitxa bat.',
   'editor.ambit.obligatori': 'Nahitaezko eremu bat falta da: {camp}',
   'editor.ambit.previsualitzacio': 'Horrela ikusiko da Horman',
-  'editor.ambit.completar': 'Osatu fitxa',
   'editor.ambit.errorPublicar': '«{ambit}» fitxa ez dago osatuta.',
   'editor.ambit.actual': 'Esparrua: {ambit}',
   'editor.ambit.triat': 'Hautatuta',

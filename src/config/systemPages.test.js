@@ -290,12 +290,16 @@ describe('261026_2126 · Descàrregues i Aplicacions', () => {
      (verificat en viu el 01-11-2026: la fitxa i api.wordpress.org, 200;
      Stable tag 1.1.10). El cos ho diu amb l'enllaç a la fitxa, i el codi curt
      i la plantilla que nomena són els del connector d'este repositori: si el
-     connector els canvia, esta prova cau i el text s'ha de tornar a escriure. */
+     connector els canvia, esta prova cau i el text s'ha de tornar a escriure.
+     03-11-2026 (ordre 261103_0522; Gauntlet O7-9, ronda 2, PC-04) · SVN oficial
+     comprovat en lectura: tags/1.1.12 r3781091, Stable tag 1.1.12 a
+     trunk/readme.txt (r3781090), assets r3781093. Una sola veritat amb
+     /versions i /fediversity: la versió publicada és la 1.1.12. */
   test('honestedat: de WordPress.org, la fitxa pública i com s’activa, ancorats al connector', () => {
     const { html } = PAGE_COPY.descarregues;
     const doc = new DOMParser().parseFromString(html, 'text/html');
     const text = doc.body.textContent.replace(/\s+/g, ' ');
-    expect(text).toContain('El connector oficial de Sóc de Poble, amb el nom «socdepoble», ja és públic al directori oficial de WordPress.org, en la versió 1.1.10: wordpress.org/plugins/socdepoble.');
+    expect(text).toContain('El connector oficial de Sóc de Poble, amb el nom «socdepoble», ja és públic al directori oficial de WordPress.org, en la versió 1.1.12: wordpress.org/plugins/socdepoble.');
     expect(text).toContain('el pot buscar, instal·lar i activar des del tauler del seu WordPress');
     const fitxa = doc.querySelector('a[href="https://wordpress.org/plugins/socdepoble/"]');
     expect(fitxa?.textContent).toBe('wordpress.org/plugins/socdepoble');
@@ -309,7 +313,7 @@ describe('261026_2126 · Descàrregues i Aplicacions', () => {
     expect([...doc.querySelectorAll('code')].map((codi) => codi.textContent)).toEqual(['[socdepoble_app poble="la-torre-de-les-macanes"]']);
     expect(text).toContain('i amb la plantilla «Sóc de Poble · full screen», que es tria al quadre Plantilla de la pàgina. És el que ja fa gentdelatorre.net, la web de Gent de la Torre.');
     // La versió és una de les publicades pel connector (el registre de canvis del readme la porta).
-    expect(readFileSync(path.join(process.cwd(), 'wordpress-plugin/readme.txt'), 'utf8')).toMatch(/^= 1\.1\.10 =$/m);
+    expect(readFileSync(path.join(process.cwd(), 'wordpress-plugin/readme.txt'), 'utf8')).toMatch(/^= 1\.1\.12 =$/m);
     // Res de les fases anteriors: ni «aprovat» a soles, ni la fitxa que «s'obri» més avant.
     expect(text).not.toMatch(/s'obri amb la primera versió|ha aprovat el connector/);
   });
