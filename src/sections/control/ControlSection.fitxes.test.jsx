@@ -152,6 +152,17 @@ test.each(FITXES)('control-03 · «$boto» obri la fitxa des de dalt amb el focu
   }
 });
 
+/* Retirada del panell Node 0 i Mastodon (decisió de l'àrbitre, fusió del kit
+   v3.0.0; Gauntlet G3: G3-posse-privacitat-01) · ?fitxa=node0-mastodon ja no
+   és cap fitxa: com qualsevol valor que no n'és cap, pinta el Panell, sense
+   text d'espera, i cap botó d'acció no hi porta. */
+test('retirada del Node 0 · /control?fitxa=node0-mastodon pinta el Panell i cap botó porta a la fitxa retirada', () => {
+  pinta('/control?fitxa=node0-mastodon');
+  expect(document.querySelector('[data-titol="pagina"]').textContent).toBe('Panell de Control');
+  expect(document.querySelector('p[role="status"]')).toBeNull();
+  expect(screen.queryByRole('button', { name: /node 0|mastodon/i })).toBeNull();
+});
+
 test('control-03 · en entrar directament a una fitxa diferida no es mou res', async () => {
   const { desplacador, treu } = pintaDinsDeLApp({ ruta: '/control?fitxa=mode-rural', posicio: 700 });
   try {

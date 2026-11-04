@@ -3,7 +3,8 @@
      · la ranura que compon (la botonera del consumidor, els drets i les
        vistes A4 / portada) va dins de l'«Edició avançada», plegada, i no
        davall del títol; la línia del copyright no es pinta entre l'H1 i el
-       Subtítol (decisió de direcció);
+       Subtítol (decisió de direcció); des d'AH-03, el desplegable va davall
+       de la barra taronja i damunt de l'H1;
      · el placeholder de l'H1 i el títol de reserva de la Vista A4 / PDF són el
        de l'adaptador («Nota sense títol» al Bloc);
      · sense les claus, el DOM de sempre i cap clau al DOM. */
@@ -49,7 +50,13 @@ test('amb edicioAvancada: la botonera, els drets i les vistes, dins del desplega
   const { container } = pinta({ edicioAvancada: true, placeholderTitol: 'Nota sense títol', labels: [] });
   const capcalera = container.querySelector('header.page-title');
   expect([...capcalera.children].map((e) => e.tagName)).toEqual(['H1']);
-  const desplegable = container.querySelector('article.content-wrapper > details.sdp-edicio-avancada');
+  /* AH-03 (ordre del Mestre, 261104; kit v3.0.0 de Gemini) · Per defecte
+     ('despres-autoria'), el desplegable ja no és dins de l'article: viu a la
+     ranura de PageFrame, davall de la barra taronja i damunt de l'H1. */
+  expect(container.querySelector('article.content-wrapper details.sdp-edicio-avancada')).toBeNull();
+  expect(container.querySelectorAll('details.sdp-edicio-avancada')).toHaveLength(1);
+  const desplegable = container.querySelector('.sdp-pagina-despres-autoria > details.sdp-edicio-avancada');
+  expect(desplegable.compareDocumentPosition(capcalera.querySelector('h1')) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
   expect(desplegable.open).toBe(false);
   const ranura = desplegable.querySelector('.page-title-classificacio');
   expect(ranura.querySelector('[data-testid="botonera"]')).not.toBeNull();

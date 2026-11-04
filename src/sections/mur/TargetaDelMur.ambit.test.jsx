@@ -72,6 +72,46 @@ describe('una fitxa d’àmbit', () => {
     expect(subtitol(habitatge)).toBe('Lloguer · 350 € · 80 m²');
   });
 
+  test('AH-02 · calendari, mapa i animalets: ruta canònica, insígnia d’àmbit i estat, i resum de la fitxa', () => {
+    const acte = fitxa('calendari', 'c1', 'disponible', {
+      data_inici: '2026-11-20',
+      hora_inici: '18:30',
+      data_fi: '2026-11-22',
+      hora_fi: '20:00',
+      lloc: 'Plaça de l’Església',
+      municipi: 'La Torre'
+    });
+    const artCalendari = pinta(acte);
+    expect(overlay(artCalendari)).toBe('/calendari/c1');
+    expect(etiquetes(artCalendari).slice(0, 2)).toEqual([['Calendari', 'sdp-badge-system'], ['Disponible', 'sdp-insignia sdp-insignia--exit']]);
+    expect(subtitol(artCalendari)).toBe('2026-11-20 18:30 · 2026-11-22 20:00 · Plaça de l’Església · La Torre');
+    cleanup();
+
+    const puntMapa = fitxa('mapa', 'mp1', 'disponible', {
+      modalitat: 'patrimoni',
+      lloc: 'Pou de Neu del Rentonar',
+      municipi: 'La Torre de les Maçanes',
+      coordenades: '38.641, -0.412'
+    });
+    const artMapa = pinta(puntMapa);
+    expect(overlay(artMapa)).toBe('/mapa/mp1');
+    expect(etiquetes(artMapa).slice(0, 2)).toEqual([['Mapa', 'sdp-badge-system'], ['Disponible', 'sdp-insignia sdp-insignia--exit']]);
+    expect(subtitol(artMapa)).toBe('Patrimoni i memòria · Pou de Neu del Rentonar · La Torre de les Maçanes · 38.641, -0.412');
+    cleanup();
+
+    const animalet = fitxa('animalets', 'a1', 'reservat', {
+      modalitat: 'adopcio',
+      especie: 'Gos',
+      municipi: 'Ibi',
+      contacte: '600 123 456'
+    });
+    const artAnimalet = pinta(animalet);
+    expect(overlay(artAnimalet)).toBe('/animalets/a1');
+    expect(etiquetes(artAnimalet).slice(0, 2)).toEqual([['Animalets', 'sdp-badge-system'], ['Reservat', 'sdp-insignia sdp-insignia--avis']]);
+    expect(subtitol(artAnimalet)).toBe('En adopció · Gos · Ibi');
+    expect(artAnimalet.textContent).not.toContain('600 123 456');
+  });
+
   test('un estat tancat o desconegut: «Tancat» en to d’error, o «Disponible» de sèrie', () => {
     expect(etiquetes(pinta({ ...VIATGE, estat: 'tancat' }))[1]).toEqual(['Tancat', 'sdp-insignia sdp-insignia--error']);
     cleanup();

@@ -62,8 +62,8 @@ test('el cos és exactament la columna amb el seu CHECK i el comentari, en una t
   expect(CODI).toMatch(/jsonb_typeof\(fitxa\) = 'object'/);
 });
 
-test('el comentari de la columna diu el vocabulari del contracte: els àmbits verticals i els estats', () => {
-  const ambits = llistaDelContracte('AMBITS').filter((ambit) => ambit !== 'mur');
+test('el comentari de la columna diu el vocabulari inicial del contracte: els àmbits verticals i els estats', () => {
+  const ambits = llistaDelContracte('AMBITS').filter((ambit) => ['mercat', 'vehicle', 'treball', 'habitatge'].includes(ambit));
   const estats = llistaDelContracte('ESTATS');
   expect(ambits).toEqual(['mercat', 'vehicle', 'treball', 'habitatge']);
   expect(estats).toEqual(['disponible', 'reservat', 'complet', 'tancat']);

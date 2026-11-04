@@ -2,9 +2,10 @@
  * BlocAmbit.jsx — «On es publica?» en línia · IDEA-61 (T0, prompt 261102_1532)
  * i O4-CLAUDE-1 (ordre del Mestre, captura 261102_2121: fora la finestra
  * modal, dins de l'«Edició avançada») · El compositor del Flux Universal de
- * Publicació: el selector d'àmbit (Mur, Mercat, Compartir cotxe, Treball o
- * Habitatge), el formulari guiat que naix del contracte pur
- * (utils/publicacioUniversal.js · CAMPS) just davall de l'àmbit triat, l'Estat
+ * Publicació: el selector d'àmbit (els huit d'AMBITS: Mur, Mercat, Calendari,
+ * Mapa, Compartir cotxe, Animalets, Treball i Habitatge), el formulari guiat
+ * que naix del contracte pur (utils/publicacioUniversal.js · CAMPS) just
+ * davall de l'àmbit triat, l'Estat
  * (només als àmbits verticals) i la previsualització de la targeta pública.
  *
  * Universal: no importa cap secció. Qui el munta (el Bloc de Notes, dins de
@@ -29,12 +30,13 @@
  * primer canvi d'un camp, o quan `mostraErrors` diu que PUBLICAR s'ha aturat
  * per la fitxa; llavors també un avís curt, no viu (el selector de
  * visibilitat ja l'anuncia). Cap classe de formulari nova: Camp, CampText,
- * AreaText, Selector, GrupOpcions (amb el desplegable de l'opció triada),
+ * AreaText, Selector (AH-04: «On es publica?» és un desplegable, seguit dels
+ * camps de l'àmbit triat),
  * Alerta, Pila i Superficie de Pedra Seca, i la UniversalCard de la pàgina
  * (targetaDeLaPagina.js). Només el títol i l'ajuda del bloc porten la seua.
  */
 import { useId, useRef, useState } from 'react';
-import { Alerta, AreaText, Camp, CampText, GrupOpcions, Pila, Selector, Superficie, UniversalCard } from '../../PedraSeca/index.js';
+import { Alerta, AreaText, Camp, CampText, Pila, Selector, Superficie, UniversalCard } from '../../PedraSeca/index.js';
 import { propsDeTargetaDeLaPagina } from '../targetaDeLaPagina.js';
 import {
   AMBITS, CAMPS, ESTATS, etiquetaDAmbit, etiquetaDEstat, etiquetaDOpcio, etiquetaDeCamp, etiquetesDAmbit,
@@ -57,7 +59,10 @@ const TEXT_PER_CODI = Object.freeze({
   format: Object.freeze(['editor.ambit.error.format', 'El valor de «{camp}» no té la forma esperada.']),
   rang: Object.freeze(['editor.ambit.error.rang', 'El valor de «{camp}» és fora del rang permés.']),
   enum: Object.freeze(['editor.ambit.error.enum', 'Tria una opció de la llista per a «{camp}».']),
-  llargaria: Object.freeze(['editor.ambit.error.llargaria', 'El text de «{camp}» és massa llarg.'])
+  llargaria: Object.freeze(['editor.ambit.error.llargaria', 'El text de «{camp}» és massa llarg.']),
+  /* G3-g2-matriu-05 · La fi d'un interval (el dia o l'hora de finalització
+     del Calendari), anterior a l'inici (validaFitxa · INTERVALS). */
+  ordre: Object.freeze(['editor.ambit.error.ordre', 'El valor de «{camp}» no pot ser anterior a l’inici.'])
 });
 
 function textDError(codi, nomDelCamp, t) {
@@ -65,14 +70,11 @@ function textDError(codi, nomDelCamp, t) {
   return omple(t(parell[0], parell[1]), { camp: nomDelCamp });
 }
 
-/* Revisió L2-A1 (IDEA-61) · La insígnia de l'opció d'àmbit marcada (GrupOpcions
-   en mode controlat), traduïda als cinc diccionaris. */
-const TEXT_TRIAT = Object.freeze(['editor.ambit.triat', 'Triat']);
-
 /* idea61-05 (Gauntlet T7a, 261104) · Un camp `privat` del contracte (el
-   contacte de Treball) no ix a la targeta ni a la cerca, però la fitxa del
-   detall el mostra a la gent registrada del poble: el camp ho diu, perquè la
-   previsualització l'amaga a posta. Cap altre camp porta ajuda. */
+   contacte de Treball i, des d'AH-04, el d'Animalets) no ix a la targeta ni a
+   la cerca, però la fitxa del detall el mostra a la gent registrada del poble:
+   el camp ho diu, perquè la previsualització l'amaga a posta. Cap altre camp
+   porta ajuda. */
 const TEXT_CAMP_VISIBLE = Object.freeze(['editor.ambit.contacteVisible', 'Ho veurà la gent registrada del poble en obrir la fitxa; no ix a la targeta ni a la cerca.']);
 
 /* El tipus de l'<input> per a cada tipus del contracte. */
@@ -191,8 +193,8 @@ export function BlocAmbit({ valor = null, document = null, onCanvia, mostraError
   const pagina = propsDeTargetaDeLaPagina(base) ?? propsDeTargetaDeLaPagina({ ...base, title: nomDAmbit });
   const resum = resumDeFitxa(fitxaViva, tr);
 
-  /* Els camps de la fitxa i l'Estat, just davall de la targeta de l'àmbit
-     triat (el desplegable de GrupOpcions). El Mur no en porta. */
+  /* Els camps de la fitxa i l'Estat, just davall del Selector de l'àmbit
+     triat (AH-04; abans, el desplegable de GrupOpcions). El Mur no en porta. */
   const formulari = vertical ? (
     <Pila gap={4}>
       {CAMPS[ambit].map((campDef) => (
@@ -212,12 +214,20 @@ export function BlocAmbit({ valor = null, document = null, onCanvia, mostraError
       <Pila gap={1}>
         <p id={idTitol} className="sdp-bloc-ambit__titol">{tr('editor.ambit.titol', 'On es publica?')}</p>
         <p id={idAjuda} className="sdp-bloc-ambit__ajuda">
-          {tr('editor.ambit.ajuda', 'Tria si és una publicació del Mur o una fitxa per al Mercat, Compartir cotxe, Treball o Habitatge.')}
+          {tr('editor.ambit.ajuda', 'Tria si és una publicació del Mur o una fitxa per al Mercat, Calendari, Mapa, Compartir cotxe, Animalets, Treball o Habitatge.')}
         </p>
       </Pila>
-      <GrupOpcions aspecte="targetes" llegenda={tr('editor.ambit.boto', 'Àmbit')} valor={ambit} onCanvi={canviaAmbit}
-        textTriada={tr(TEXT_TRIAT[0], TEXT_TRIAT[1])}
-        opcions={AMBITS.map((id) => ({ valor: id, etiqueta: etiquetaDAmbit(id, tr), ...(id === ambit && formulari ? { desplegable: formulari } : null) }))} />
+      {/* G3-pedra-seca-i18n-13 (Pedra Seca §6, contracte O4) · El control de
+          l'àmbit fa l'alçada d'acció (--sdp-alt-accio, 58 px), no el sòl de 48 px. */}
+      <Camp etiqueta={tr('editor.ambit.boto', 'Àmbit')}>
+        <Selector
+          className="sdp-bloc-ambit__selector"
+          value={ambit}
+          onChange={(event) => canviaAmbit(event.target.value)}
+          opcions={AMBITS.map((id) => ({ valor: id, etiqueta: etiquetaDAmbit(id, tr) }))}
+        />
+      </Camp>
+      {formulari}
       {mostraErrors && vertical && !validacio.ok ? (
         <Alerta to="error" viva={false}>{omple(tr('editor.ambit.errorPublicar', 'La fitxa de «{ambit}» no està completa.'), { ambit: nomDAmbit })}</Alerta>
       ) : null}

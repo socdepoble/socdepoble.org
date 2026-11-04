@@ -743,10 +743,13 @@ export function PageFrame({
      contenidor que fa scroll. Com `peuDePagina`, queda fora de la capçalera
      (capcaleraRef) i de l'article (containerRef): l'Índex, la traducció i el
      Lector no el recullen. No depén de la barra ni de la capçalera. Hui el
-     passa l'editor de la fitxa (UniversalEditorShell, posicioEdicioAvancada
-     'despres-autoria'): «Edició avançada de la fitxa». UniversalPage el pren
-     només de les seues props, mai del config. Sense la prop, el DOM de
-     sempre. */
+     passa la closca de l'editor (UniversalEditorShell) amb
+     posicioEdicioAvancada 'despres-autoria', el valor per defecte des d'AH-03
+     (ordre del Mestre, 261104 17:05): l'«Edició avançada» del Bloc de Notes i
+     la de la fitxa del Perfil, just davall de la barra taronja i damunt de
+     l'H1. 'cos' (dins de l'article, damunt de les eines) només és una opció
+     explícita (G3-g2-matriu-08). UniversalPage el pren només de les seues
+     props, mai del config. Sense la prop, el DOM de sempre. */
   despresAutoria = null,
   /* Decisió del Mestre (261008, drets d'autor dins de l'editor) ·
      `onCanviaCopyright`: només el passa l'editor (DocumentEditor, quan la

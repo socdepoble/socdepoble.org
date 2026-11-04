@@ -108,7 +108,17 @@ function BlocAmbAmbit({ pendent, consumit, children }) {
 
 const botonera = () => within(screen.getByTestId('classificacio')).getAllByRole('button');
 const bloc = () => within(screen.getByTestId('ranura-ambit')).queryByRole('group', { name: TITOL });
-const radio = (nom) => within(bloc()).getByRole('radio', { name: nom });
+const selectorAmbit = () => within(bloc()).getByLabelText('Àmbit');
+const ambitTriat = (nom) => {
+  const sel = selectorAmbit();
+  const opcio = [...sel.options].find((o) => o.textContent === nom || o.value === nom);
+  return sel.value === (opcio ? opcio.value : nom);
+};
+const triaAmbit = (nom) => {
+  const sel = selectorAmbit();
+  const opcio = [...sel.options].find((o) => o.textContent === nom || o.value === nom);
+  fireEvent.change(sel, { target: { value: opcio ? opcio.value : nom } });
+};
 const escriuAlBloc = (retol, value) => fireEvent.change(within(bloc()).getByLabelText(new RegExp(`^${retol}( \\(obligatori\\))?$`)), { target: { value } });
 const escriptures = () => mocks.setLocal.mock.calls.map(([id, camp, valor]) => [id, camp, valor]);
 
@@ -140,7 +150,7 @@ test('dins del Bloc, «Àmbit (—)» entre Etiquetes i Emojis XL, sense aria-ha
   expect(ambFitxa[3].getAttribute('title')).toBe('Àmbit: Compartir cotxe');
   expect(ambFitxa[3].hasAttribute('aria-haspopup')).toBe(false);
   expect(ambFitxa[3].querySelector('.sp-card-label').className).toBe('sp-card-label sdp-badge-system');
-  expect(radio('Compartir cotxe').checked).toBe(true);
+  expect(ambitTriat('Compartir cotxe')).toBe(true);
 });
 
 test('el botó «Àmbit» no obri cap diàleg: demana anar al bloc amb el focus, una petició per clic, que s’oblida un cop atesa', () => {
@@ -165,12 +175,12 @@ test('triar Treball escriu de seguida la fitxa i la carpeta del Mur; cada camp e
   expect(within(bloc()).getByRole('heading', { name: 'Viatge a Alcoi' })).toBeTruthy();
   expect(bloc().querySelector('.sp-card-author-name').textContent).toBe('Pepa');
   expect(bloc().querySelector('.sp-card-author-location').textContent).toBe('La Torre');
-  fireEvent.click(radio('Treball'));
+  triaAmbit('Treball');
   expect(escriptures()).toEqual([
     ['p', 'fitxa', { ambit: 'treball', estat: 'disponible', dades: {} }],
     ['p', 'folderId', 'f-mur']
   ]);
-  expect(radio('Treball').checked).toBe(true);
+  expect(ambitTriat('Treball')).toBe(true);
   escriuAlBloc('Modalitat', 'oferta_feina');
   escriuAlBloc('Ofici o sector', '  Forner ');
   expect(escriptures().slice(2)).toEqual([
@@ -185,18 +195,18 @@ test('triar Treball escriu de seguida la fitxa i la carpeta del Mur; cada camp e
 
 test('triar Mur escriu fitxa null (la publicació de sempre); el Mercat porta la nota a la seua carpeta i el Mur la torna', () => {
   render(<NotaViva inicial={{ ...NOTA, fitxa: FITXA_PLENA }} canal={CANAL_BUIT} />);
-  fireEvent.click(radio('Mur'));
+  triaAmbit('Mur');
   // Ja era al Mur: només la fitxa.
   expect(escriptures()).toEqual([['p', 'fitxa', null]]);
-  fireEvent.click(radio('Mercat'));
+  triaAmbit('Mercat');
   expect(escriptures().slice(1)).toEqual([
     ['p', 'fitxa', { ambit: 'mercat', estat: 'disponible', dades: {} }],
     ['p', 'folderId', 'f-mercat']
   ]);
-  fireEvent.click(radio('Mur'));
+  triaAmbit('Mur');
   expect(escriptures().slice(3)).toEqual([['p', 'fitxa', null], ['p', 'folderId', 'f-mur']]);
   // I tornar a Compartir cotxe recupera les dades d'abans, i les torna a escriure.
-  fireEvent.click(radio('Compartir cotxe'));
+  triaAmbit('Compartir cotxe');
   expect(escriptures().at(-1)).toEqual(['p', 'fitxa', FITXA_PLENA]);
   expect(within(bloc()).getByLabelText(/^Lloc d’eixida/).value).toBe('La Torre');
 });
@@ -211,10 +221,10 @@ test('moure la nota a la carpeta del Mercat (Carpeta del document) li posa l’�
   };
   mou('Mercat');
   expect(escriptures()).toEqual([['p', 'folderId', 'f-mercat'], ['p', 'fitxa', { ambit: 'mercat', estat: 'disponible', dades: {} }]]);
-  expect(radio('Mercat').checked).toBe(true);
+  expect(ambitTriat('Mercat')).toBe(true);
   mou('Mur');
   expect(escriptures().slice(2)).toEqual([['p', 'folderId', 'f-mur'], ['p', 'fitxa', null]]);
-  expect(radio('Mur').checked).toBe(true);
+  expect(ambitTriat('Mur')).toBe(true);
   // Cap altre moviment toca la fitxa.
   mou('Altres notes');
   expect(escriptures().slice(4)).toEqual([['p', 'folderId', 'f-notes']]);
@@ -263,7 +273,7 @@ test('?ambit=vehicle: la nota rep la fitxa i la carpeta del Mur en una sola escr
     ['p', 'folderId', 'f-mur']
   ]);
   expect(mocks.adapter.peticioAmbit).toEqual({ nota: 'p', enfoca: false });
-  expect(radio('Compartir cotxe').checked).toBe(true);
+  expect(ambitTriat('Compartir cotxe')).toBe(true);
   expect(within(bloc()).getByLabelText('Lloc d’eixida (obligatori)')).toBeTruthy();
   expect(consumit).toHaveBeenCalledTimes(1);
   expect(screen.queryByRole('dialog')).toBeNull();
@@ -280,7 +290,7 @@ test('?ambit=mercat: la fitxa del Mercat i la carpeta del Mercat', () => {
     ['p', 'fitxa', { ambit: 'mercat', estat: 'disponible', dades: {} }],
     ['p', 'folderId', 'f-mercat']
   ]);
-  expect(radio('Mercat').checked).toBe(true);
+  expect(ambitTriat('Mercat')).toBe(true);
 });
 
 test('una nota que ja és d’un altre àmbit conserva la seua fitxa i la seua carpeta: el canal només obri el bloc', () => {
@@ -288,7 +298,7 @@ test('una nota que ja és d’un altre àmbit conserva la seua fitxa i la seua c
   const deTreball = { ...NOTA, folderId: 'f-notes', fitxa: { ambit: 'treball', estat: 'reservat', dades: { modalitat: 'oferisc_ofici', ofici: 'Forner' } } };
   render(<BlocAmbAmbit pendent="vehicle" consumit={consumit}><NotaViva inicial={deTreball} /></BlocAmbAmbit>);
   expect(mocks.setLocal).not.toHaveBeenCalled();
-  expect(radio('Treball').checked).toBe(true);
+  expect(ambitTriat('Treball')).toBe(true);
   expect(mocks.adapter.peticioAmbit).toEqual({ nota: 'p', enfoca: false });
   expect(consumit).toHaveBeenCalledTimes(1);
 });
@@ -310,7 +320,7 @@ test('la nota preparada rep la fitxa i la carpeta pel seu canal (escriu), no per
     [PREPARADA.id, 'folderId', 'f-mur']
   ]);
   expect(mocks.setLocal).not.toHaveBeenCalled();
-  expect(radio('Treball').checked).toBe(true);
+  expect(ambitTriat('Treball')).toBe(true);
   escriuAlBloc('Modalitat', 'jornal_agricola');
   escriuAlBloc('Ofici o sector', 'Collir olives');
   expect(escriu).toHaveBeenLastCalledWith(PREPARADA.id, 'fitxa', { ambit: 'treball', estat: 'disponible', dades: { modalitat: 'jornal_agricola', ofici: 'Collir olives' } });
@@ -356,14 +366,14 @@ test('dins del Bloc, una connexió o un contingut de fora no porten el grup «À
   cleanup();
   render(<NotaViva inicial={{ ...connexio, fitxa: FITXA_PLENA }} canal={CANAL_BUIT} />);
   expect(botonera().map((b) => b.textContent)).toEqual(['Safata d’Entrada', 'Sistema', 'Etiquetes (0)', 'Compartir cotxe', 'Emojis XL (—)']);
-  /* Correcció A1-04 de l'àrbitre · Amb el teclat al ràdio «Mur», llevar la
+  /* Correcció A1-04 de l'àrbitre · Amb el teclat al selector «Àmbit», llevar la
      fitxa no desmunta el bloc: el focus no cau a <body>. */
-  radio('Mur').focus();
-  fireEvent.click(radio('Mur'));
+  selectorAmbit().focus();
+  triaAmbit('Mur');
   expect(escriptures()).toEqual([['c', 'fitxa', null]]);
   expect(bloc()).toBeTruthy();
-  expect(document.activeElement).toBe(radio('Mur'));
-  expect(radio('Mur').checked).toBe(true);
+  expect(document.activeElement).toBe(selectorAmbit());
+  expect(ambitTriat('Mur')).toBe(true);
 });
 
 /* Correcció A1-04 de l'àrbitre (O4-CLAUDE-1) · Fora del Bloc (sense canal),
@@ -372,11 +382,11 @@ test('dins del Bloc, una connexió o un contingut de fora no porten el grup «À
    nota sense fitxa no l'hereta. */
 test('fora del Bloc, triar «Mur» en una nota amb fitxa no desmunta el bloc amb el focus a dins; una altra nota sense fitxa no l’hereta', () => {
   render(<NotaViva inicial={{ ...NOTA, fitxa: FITXA_PLENA }} />);
-  radio('Mur').focus();
-  fireEvent.click(radio('Mur'));
+  selectorAmbit().focus();
+  triaAmbit('Mur');
   expect(escriptures()).toEqual([['p', 'fitxa', null]]);
   expect(bloc()).toBeTruthy();
-  expect(document.activeElement).toBe(radio('Mur'));
+  expect(document.activeElement).toBe(selectorAmbit());
   // El botó «Àmbit» continua portant-hi.
   expect(botonera().map((b) => b.textContent)).toEqual(['Mur', 'Sistema', 'Etiquetes (0)', 'Àmbit (—)', 'Emojis XL (—)']);
   // Una altra nota (sense fitxa) no porta el bloc; tornar a la primera, ja sense fitxa, tampoc.
@@ -398,8 +408,8 @@ test('sota StrictMode, l’entrada ?ambit= escriu i consumix una sola vegada, i 
     ['p', 'folderId', 'f-mur']
   ]);
   expect(consumit).toHaveBeenCalledTimes(1);
-  expect(radio('Habitatge').checked).toBe(true);
-  fireEvent.click(radio('Mercat'));
+  expect(ambitTriat('Habitatge')).toBe(true);
+  triaAmbit('Mercat');
   expect(escriptures().slice(2)).toEqual([
     ['p', 'fitxa', { ambit: 'mercat', estat: 'disponible', dades: {} }],
     ['p', 'folderId', 'f-mercat']

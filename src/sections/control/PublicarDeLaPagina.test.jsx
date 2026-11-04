@@ -103,31 +103,34 @@ describe('P6 · les sis pàgines de la doble acció', () => {
       }
       cleanup();
     }
-    /* IDEA-61 (T0, prompt 261102_1532) · Mercat, Vehicle, Treball i Habitatge publiquen pel
-       Bloc amb l'àmbit (/notes?ambit=…); Calendari, Mapa i Animalets continuen en obres. */
+    /* IDEA-61 i AH-04 · Tots els huit destins publiquen pel Bloc (/notes o /notes?ambit=…). */
     expect(DESTINS_CONTROL.filter((desti) => portesDe(desti, reserva)[0].desti).map((desti) => desti.id))
-      .toEqual(['mur', 'mercat', 'vehicle', 'treball', 'habitatge']);
+      .toEqual(['mur', 'mercat', 'calendari', 'mapa', 'vehicle', 'animalets', 'treball', 'habitatge']);
   });
 
   /* T8 · Amb el de dalt, el nom «Publicar al Mur» és de dos enllaços iguals. */
-  test('Mur: «Publicar al Mur» obri el Bloc (/notes) amb el router, també amb la base de l’amfitrió', () => {
+  test('Mur: «Publicar al Mur» obri el Bloc (/notes?ambit=mur) amb el router, també amb la base de l’amfitrió', () => {
     for (const basename of ['', '/comunitat']) {
       visita('publicar_mur', { basename });
       const enllacos = screen.getAllByRole('link', { name: 'Publicar al Mur' });
       expect(enllacos).toHaveLength(2);
-      for (const enllac of enllacos) expect(enllac.getAttribute('href'), basename).toBe(`${basename}/notes`);
+      for (const enllac of enllacos) expect(enllac.getAttribute('href'), basename).toBe(`${basename}/notes?ambit=mur`);
       expect(fireEvent.click(enllacos[1])).toBe(false);
-      expect(ubicacio(), basename).toBe('/notes');
+      expect(ubicacio(), basename).toBe('/notes?ambit=mur');
       cleanup();
     }
   });
 
-  /* IDEA-61 (T0, prompt 261102_1532) · Les quatre verticals del flux universal
-     publiquen pel Bloc amb l'àmbit ja triat: dos enllaços iguals, dalt i baix. */
-  test('Mercat, Vehicle, Treball i Habitatge: «Publicar…» obri el Bloc amb ?ambit=, dalt i baix', () => {
+  /* IDEA-61 i AH-04 · Els set àmbits del flux universal publiquen pel Bloc amb l'àmbit ja triat: dos enllaços iguals, dalt i baix. */
+  test('Mercat, Calendari, Mapa, Vehicle, Animalets, Treball i Habitatge: «Publicar…» obri el Bloc amb ?ambit=, dalt i baix', () => {
     const obertes = [
-      ['publicar_mercat', 'Publicar al Mercat', 'mercat'], ['vehicle_compartit', 'Publicar: Vehicle Compartit', 'vehicle'],
-      ['treball', 'Publicar: Treball', 'treball'], ['habitatge', 'Publicar: Habitatge', 'habitatge']
+      ['publicar_mercat', 'Publicar al Mercat', 'mercat'],
+      ['publicar_calendari', 'Publicar al Calendari', 'calendari'],
+      ['publicar_mapa', 'Publicar al Mapa', 'mapa'],
+      ['vehicle_compartit', 'Publicar: Vehicle Compartit', 'vehicle'],
+      ['animalets', 'Publicar: Animalets', 'animalets'],
+      ['treball', 'Publicar: Treball', 'treball'],
+      ['habitatge', 'Publicar: Habitatge', 'habitatge']
     ];
     for (const [clau, nom, ambit] of obertes) {
       visita(clau);
@@ -140,42 +143,21 @@ describe('P6 · les sis pàgines de la doble acció', () => {
     }
   });
 
-  /* W4-08 · Calendari, Mapa i Animalets continuen inertes. T8 · Els dos botons
-     de cada pàgina diuen el mateix i avisen igual. */
-  test('les altres tres: inerts, «(en obres)» al nom, avisen amb el toast i no naveguen, dalt i baix', () => {
-    const inertes = [
-      ['publicar_calendari', 'Publicar al Calendari'], ['publicar_mapa', 'Publicar al Mapa'], ['animalets', 'Publicar: Animalets']
-    ];
-    for (const [clau, nom] of inertes) {
-      visita(clau);
-      const inerts = screen.getAllByRole('button', { name: `${nom} (en obres)` });
-      expect([clau, inerts.length]).toEqual([clau, 2]);
-      for (const inert of inerts) {
-        expect([clau, inert.getAttribute('aria-disabled'), inert.matches(':disabled')]).toEqual([clau, 'true', false]);
-        estat.toast.mockClear();
-        fireEvent.click(inert);
-        expect(estat.toast).toHaveBeenLastCalledWith(`“${nom}” encara està en obres.`);
-        expect(ubicacio(), clau).toBe(`/page/${clau}`);
-      }
-      cleanup();
-    }
-  });
-
   test('en anglés, els dos botons es tradueixen com la porta i porten al mateix lloc', () => {
     estat.traductor = createTranslator('en');
     visita('publicar_mur');
     const enllacos = screen.getAllByRole('link', { name: 'Publish on the Wall' });
     expect(enllacos).toHaveLength(2);
     fireEvent.click(enllacos[0]);
-    expect(ubicacio()).toBe('/notes');
+    expect(ubicacio()).toBe('/notes?ambit=mur');
     cleanup();
     visita('vehicle_compartit');
     const vehicle = screen.getAllByRole('link', { name: 'Publish: Shared Vehicle' });
     expect(vehicle.map((enllac) => enllac.getAttribute('href'))).toEqual(['/notes?ambit=vehicle', '/notes?ambit=vehicle']);
     cleanup();
     visita('animalets');
-    const inerts = screen.getAllByRole('button', { name: 'Publish: Animals (under construction)' });
-    expect(inerts.map((inert) => inert.getAttribute('aria-disabled'))).toEqual(['true', 'true']);
+    const animals = screen.getAllByRole('link', { name: 'Publish: Animals' });
+    expect(animals.map((enllac) => enllac.getAttribute('href'))).toEqual(['/notes?ambit=animalets', '/notes?ambit=animalets']);
   });
 });
 

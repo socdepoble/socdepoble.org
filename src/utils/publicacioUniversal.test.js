@@ -36,19 +36,28 @@ const acabaEnSurrogatAlt = (text) => {
 };
 /* Un traductor que marca cada crida: la clau i la reserva que ha rebut. */
 const marca = (clau, reserva) => `[${clau}] ${reserva}`;
-const VERTICALS = ['mercat', 'vehicle', 'treball', 'habitatge'];
+const VERTICALS = ['mercat', 'calendari', 'mapa', 'vehicle', 'animalets', 'treball', 'habitatge'];
 const SECRET = 'SECRET-CONTACTE-613';
 
 /* La TAULA DE CLAUS del prompt (ca.js), copiada literalment. */
 const TAULA = {
-  'ambit.mur': 'Mur', 'ambit.mercat': 'Mercat', 'ambit.vehicle': 'Compartir cotxe', 'ambit.treball': 'Treball', 'ambit.habitatge': 'Habitatge',
+  'ambit.mur': 'Mur', 'ambit.mercat': 'Mercat', 'ambit.calendari': 'Calendari', 'ambit.mapa': 'Mapa',
+  'ambit.vehicle': 'Compartir cotxe', 'ambit.animalets': 'Animalets', 'ambit.treball': 'Treball', 'ambit.habitatge': 'Habitatge',
   'ambit.estat.disponible': 'Disponible', 'ambit.estat.reservat': 'Reservat', 'ambit.estat.complet': 'Complet', 'ambit.estat.tancat': 'Tancat',
+  'ambit.modalitat.punt_interes': 'Punt d’interès', 'ambit.modalitat.incidencia': 'Incidència al terme',
+  'ambit.modalitat.patrimoni': 'Patrimoni i memòria', 'ambit.modalitat.ruta': 'Camí o ruta',
   'ambit.modalitat.oferisc_places': 'Oferisc places', 'ambit.modalitat.busque_lloc': 'Busque lloc', 'ambit.modalitat.recarrec_comunitari': 'Recàrrec comunitari',
+  'ambit.modalitat.adopcio': 'En adopció', 'ambit.modalitat.perdut': 'Animal perdut',
+  'ambit.modalitat.trobat': 'Animal trobat', 'ambit.modalitat.cura': 'Cura o ajuda',
   'ambit.modalitat.oferta_feina': 'Oferta de feina', 'ambit.modalitat.oferisc_ofici': 'Oferisc el meu ofici', 'ambit.modalitat.jornal_agricola': 'Jornal agrícola',
   'ambit.modalitat.relleu_generacional': 'Relleu generacional', 'ambit.modalitat.lloguer': 'Lloguer', 'ambit.modalitat.venda': 'Venda',
   'ambit.modalitat.compartir_casa': 'Compartir casa', 'ambit.modalitat.masoveria_urbana': 'Masoveria urbana',
   'ambit.estatImmoble.llest_per_entrar': 'Llest per a entrar', 'ambit.estatImmoble.a_reformar': 'Per a reformar',
-  'ambit.camp.modalitat': 'Modalitat', 'ambit.camp.estat': 'Estat', 'ambit.camp.lloc_eixida': 'Lloc d’eixida', 'ambit.camp.lloc_arribada': 'Lloc d’arribada',
+  'ambit.camp.modalitat': 'Modalitat', 'ambit.camp.estat': 'Estat',
+  'ambit.camp.data_inici': 'Dia d’inici', 'ambit.camp.hora_inici': 'Hora d’inici',
+  'ambit.camp.data_fi': 'Dia de finalització', 'ambit.camp.hora_fi': 'Hora de finalització',
+  'ambit.camp.lloc': 'Lloc o adreça', 'ambit.camp.coordenades': 'Coordenades o referència', 'ambit.camp.especie': 'Animal o espècie',
+  'ambit.camp.lloc_eixida': 'Lloc d’eixida', 'ambit.camp.lloc_arribada': 'Lloc d’arribada',
   'ambit.camp.data_eixida': 'Dia d’eixida', 'ambit.camp.hora_eixida': 'Hora d’eixida', 'ambit.camp.data_tornada': 'Dia de tornada',
   'ambit.camp.hora_tornada': 'Hora de tornada', 'ambit.camp.places': 'Places disponibles', 'ambit.camp.aportacio': 'Aportació per plaça',
   'ambit.camp.punt_trobada': 'Punt de trobada', 'ambit.camp.preu': 'Preu', 'ambit.camp.unitat': 'Unitat', 'ambit.camp.categoria': 'Categoria',
@@ -58,14 +67,17 @@ const TAULA = {
 };
 
 /* Fitxes de mostra, una per àmbit vertical. */
+const acte = () => ({ data_inici: '2026-11-20', hora_inici: '10:00', data_fi: '2026-11-22', hora_fi: '19:00', lloc: 'El Rentonar', municipi: 'La Torre' });
+const puntMapa = () => ({ modalitat: 'patrimoni', lloc: 'Assut del riu', municipi: 'La Torre', coordenades: '38.627, -0.419' });
 const viatge = () => ({
   modalitat: 'oferisc_places', lloc_eixida: 'La Torre', lloc_arribada: 'Alcoi', data_eixida: '2026-11-15', hora_eixida: '08:30',
   places: 3, aportacio: '5 €', punt_trobada: 'La plaça'
 });
+const animal = () => ({ modalitat: 'adopcio', especie: 'Gos pastor', municipi: 'La Torre', contacte: SECRET });
 const oferta = () => ({ modalitat: 'oferta_feina', ofici: 'Pastor', municipi: 'La Torre', dedicacio: 'Mitja jornada', remuneracio: '900 €/mes', contacte: SECRET });
 const casa = () => ({ modalitat: 'lloguer', preu: '450 €/mes', superficie_m2: 80, habitacions: 3, estat_immoble: 'a_reformar', municipi: 'La Torre', condicions: 'Sense animals' });
 const producte = () => ({ preu: '3 €', unitat: 'kg', categoria: 'Verdura d’horta', estoc: 'Poc' });
-const FITXES = { mercat: producte, vehicle: viatge, treball: oferta, habitatge: casa };
+const FITXES = { mercat: producte, calendari: acte, mapa: puntMapa, vehicle: viatge, animalets: animal, treball: oferta, habitatge: casa };
 
 /* El payload d'una publicació del Mur de sempre (publishNote, NotesContext.jsx). */
 const publicacioDelMur = () => ({
@@ -76,18 +88,23 @@ const publicacioDelMur = () => ({
 
 describe('vocabulari tancat', () => {
   test('àmbits, estats, tipus, modalitats i tons, exactes i congelats', () => {
-    expect(AMBITS).toEqual(['mur', 'mercat', 'vehicle', 'treball', 'habitatge']);
+    expect(AMBITS).toEqual(['mur', 'mercat', 'calendari', 'mapa', 'vehicle', 'animalets', 'treball', 'habitatge']);
     expect(ESTATS).toEqual(['disponible', 'reservat', 'complet', 'tancat']);
     expect(ESTAT_PER_DEFECTE).toBe('disponible');
-    expect(TYPE_PER_AMBIT).toEqual({ mur: 'feed', mercat: 'product', vehicle: 'vehicle', treball: 'treball', habitatge: 'habitatge' });
+    expect(TYPE_PER_AMBIT).toEqual({
+      mur: 'feed', mercat: 'product', calendari: 'calendari', mapa: 'mapa',
+      vehicle: 'vehicle', animalets: 'animalets', treball: 'treball', habitatge: 'habitatge'
+    });
     expect(MODALITATS).toEqual({
+      mapa: ['punt_interes', 'incidencia', 'patrimoni', 'ruta'],
       vehicle: ['oferisc_places', 'busque_lloc', 'recarrec_comunitari'],
+      animalets: ['adopcio', 'perdut', 'trobat', 'cura'],
       treball: ['oferta_feina', 'oferisc_ofici', 'jornal_agricola', 'relleu_generacional'],
       habitatge: ['lloguer', 'venda', 'compartir_casa', 'masoveria_urbana']
     });
     expect(ESTATS_IMMOBLE).toEqual(['llest_per_entrar', 'a_reformar']);
     expect(TO_PER_ESTAT).toEqual({ disponible: 'exit', reservat: 'avis', complet: 'neutre', tancat: 'error' });
-    for (const valor of [AMBITS, ESTATS, TYPE_PER_AMBIT, MODALITATS, MODALITATS.vehicle, MODALITATS.treball, MODALITATS.habitatge, ESTATS_IMMOBLE, TO_PER_ESTAT, CLAUS_RESERVADES, SECTION_ID_PER_AMBIT, RESERVES_I18N, CAMPS]) {
+    for (const valor of [AMBITS, ESTATS, TYPE_PER_AMBIT, MODALITATS, MODALITATS.mapa, MODALITATS.vehicle, MODALITATS.animalets, MODALITATS.treball, MODALITATS.habitatge, ESTATS_IMMOBLE, TO_PER_ESTAT, CLAUS_RESERVADES, SECTION_ID_PER_AMBIT, RESERVES_I18N, CAMPS]) {
       expect(Object.isFrozen(valor)).toBe(true);
     }
   });
@@ -98,7 +115,10 @@ describe('vocabulari tancat', () => {
 
   test('SECTION_ID_PER_AMBIT només emet mur o mercat, els literals de la RLS d’insert i d’update del SQL', () => {
     expect(Object.keys(SECTION_ID_PER_AMBIT)).toEqual([...AMBITS]);
-    expect(SECTION_ID_PER_AMBIT).toEqual({ mur: 'mur', mercat: 'mercat', vehicle: 'mur', treball: 'mur', habitatge: 'mur' });
+    expect(SECTION_ID_PER_AMBIT).toEqual({
+      mur: 'mur', mercat: 'mercat', calendari: 'mur', mapa: 'mur',
+      vehicle: 'mur', animalets: 'mur', treball: 'mur', habitatge: 'mur'
+    });
     const sql = llig('supabase/migrations/2609080000_initial_schema.sql');
     const politica = (nom) => {
       const inici = sql.indexOf(`create policy "${nom}" on public.section_submissions`);
@@ -162,7 +182,10 @@ describe('CAMPS', () => {
   test('els camps de cada àmbit, en ordre; mur no en té cap', () => {
     expect(ids('mur')).toEqual([]);
     expect(ids('mercat')).toEqual(['preu', 'unitat', 'categoria', 'estoc']);
+    expect(ids('calendari')).toEqual(['data_inici', 'hora_inici', 'data_fi', 'hora_fi', 'lloc', 'municipi']);
+    expect(ids('mapa')).toEqual(['modalitat', 'lloc', 'municipi', 'coordenades']);
     expect(ids('vehicle')).toEqual(['modalitat', 'lloc_eixida', 'lloc_arribada', 'data_eixida', 'hora_eixida', 'data_tornada', 'hora_tornada', 'places', 'aportacio', 'punt_trobada']);
+    expect(ids('animalets')).toEqual(['modalitat', 'especie', 'municipi', 'contacte']);
     expect(ids('treball')).toEqual(['modalitat', 'ofici', 'municipi', 'dedicacio', 'remuneracio', 'contacte']);
     expect(ids('habitatge')).toEqual(['modalitat', 'preu', 'superficie_m2', 'habitacions', 'estat_immoble', 'municipi', 'condicions']);
     for (const ambit of AMBITS) expect(new Set(ids(ambit)).size).toBe(ids(ambit).length);
@@ -171,24 +194,33 @@ describe('CAMPS', () => {
   test('tipus, obligatoris, rangs, llargàries i privadesa, com el contracte', () => {
     const tipus = (ambit) => Object.fromEntries(CAMPS[ambit].map((c) => [c.id, c.tipus]));
     expect(tipus('mercat')).toEqual({ preu: 'preu', unitat: 'text', categoria: 'text', estoc: 'text' });
+    expect(tipus('calendari')).toEqual({ data_inici: 'data', hora_inici: 'hora', data_fi: 'data', hora_fi: 'hora', lloc: 'text', municipi: 'text' });
+    expect(tipus('mapa')).toEqual({ modalitat: 'enum', lloc: 'text', municipi: 'text', coordenades: 'text' });
     expect(tipus('vehicle')).toEqual({
       modalitat: 'enum', lloc_eixida: 'text', lloc_arribada: 'text', data_eixida: 'data', hora_eixida: 'hora', data_tornada: 'data',
       hora_tornada: 'hora', places: 'enter', aportacio: 'preu', punt_trobada: 'text'
     });
+    expect(tipus('animalets')).toEqual({ modalitat: 'enum', especie: 'text', municipi: 'text', contacte: 'text' });
     expect(tipus('treball')).toEqual({ modalitat: 'enum', ofici: 'text', municipi: 'text', dedicacio: 'text', remuneracio: 'text', contacte: 'text' });
     expect(tipus('habitatge')).toEqual({ modalitat: 'enum', preu: 'preu', superficie_m2: 'enter', habitacions: 'enter', estat_immoble: 'enum', municipi: 'text', condicions: 'text' });
     const obligatoris = (ambit) => CAMPS[ambit].filter((c) => c.obligatori).map((c) => c.id);
     expect(obligatoris('mercat')).toEqual(['preu']);
+    expect(obligatoris('calendari')).toEqual(['data_inici', 'lloc']);
+    expect(obligatoris('mapa')).toEqual(['modalitat', 'lloc']);
     expect(obligatoris('vehicle')).toEqual(['modalitat', 'lloc_eixida', 'lloc_arribada', 'data_eixida']);
+    expect(obligatoris('animalets')).toEqual(['modalitat', 'especie', 'municipi']);
     expect(obligatoris('treball')).toEqual(['modalitat', 'ofici']);
     expect(obligatoris('habitatge')).toEqual(['modalitat', 'preu']);
     expect(campDe('vehicle', 'places')).toMatchObject({ min: 1, max: 9, obligatoriSi: { camp: 'modalitat', valor: 'oferisc_places' }, obligatori: false });
     expect(campDe('habitatge', 'superficie_m2')).toMatchObject({ min: 1, max: 100000 });
     expect(campDe('habitatge', 'habitacions')).toMatchObject({ min: 0, max: 50 });
+    expect(campDe('mapa', 'modalitat').opcions).toBe(MODALITATS.mapa);
     expect(campDe('vehicle', 'modalitat').opcions).toBe(MODALITATS.vehicle);
+    expect(campDe('animalets', 'modalitat').opcions).toBe(MODALITATS.animalets);
     expect(campDe('treball', 'modalitat').opcions).toBe(MODALITATS.treball);
     expect(campDe('habitatge', 'modalitat').opcions).toBe(MODALITATS.habitatge);
     expect(campDe('habitatge', 'estat_immoble')).toMatchObject({ opcions: ESTATS_IMMOBLE, clauOpcions: 'ambit.estatImmoble', obligatori: false });
+    expect(campDe('animalets', 'contacte').privat).toBe(true);
     expect(campDe('treball', 'contacte').privat).toBe(true);
     for (const ambit of VERTICALS) {
       for (const campDef of CAMPS[ambit]) {
@@ -352,6 +384,34 @@ describe('validaFitxa', () => {
     expect(errorsDe('treball', { ...oferta(), dedicacio: 'a'.repeat(501) })).toEqual([{ camp: 'dedicacio', codi: 'llargaria' }]);
     expect(errorsDe('habitatge', { ...casa(), condicions: 'c'.repeat(501) })).toEqual([{ camp: 'condicions', codi: 'llargaria' }]);
     expect(errorsDe('mercat', { ...producte(), preu: 'p'.repeat(121) })).toEqual([{ camp: 'preu', codi: 'llargaria' }]);
+  });
+
+  /* G3-g2-matriu-05 (AH-04.3: calendari multi-dia) · El contracte comprovava
+     els camps un a un: una fi anterior a l'inici passava (ok) i el Calendari
+     (agendaMur.js · acteAEsdeveniment) la descartava en silenci, i l'acte es
+     pintava un sol dia. Ara és l'error 'ordre' del camp de la fi: el dia, o
+     l'hora quan l'acte acaba el mateix dia (sense dia de fi, l'acte acaba el
+     dia d'inici). Una fi igual a l'inici és vàlida (l'acte d'un instant). */
+  test('calendari: una fi anterior a l’inici és l’error «ordre» del camp de la fi', () => {
+    const base = { data_inici: '2026-11-22', lloc: 'Bancals' };
+    expect(validaFitxa('calendari', { ...base, data_fi: '2026-11-20' })).toEqual({ ok: false, errors: [{ camp: 'data_fi', codi: 'ordre' }] });
+    expect(errorsDe('calendari', { ...base, data_fi: '2026-11-21', hora_inici: '10:00', hora_fi: '19:00' })).toEqual([{ camp: 'data_fi', codi: 'ordre' }]);
+    expect(errorsDe('calendari', { ...base, hora_inici: '18:00', hora_fi: '10:00' })).toEqual([{ camp: 'hora_fi', codi: 'ordre' }]);
+    expect(errorsDe('calendari', { ...base, data_fi: '2026-11-22', hora_inici: '18:00', hora_fi: '10:00' })).toEqual([{ camp: 'hora_fi', codi: 'ordre' }]);
+    // Bons: l'interval de diversos dies (l'hora de fi pot ser anterior a la d'inici), el mateix dia i el mateix instant.
+    for (const bo of [
+      { data_fi: '2026-11-24', hora_inici: '18:00', hora_fi: '10:00' },
+      { data_fi: '2026-11-22' },
+      { hora_inici: '10:00', hora_fi: '10:00' },
+      { hora_inici: '10:00', hora_fi: '19:00' },
+      { hora_fi: '08:00' },
+      { data_fi: '2026-12-01' }
+    ]) expect(errorsDe('calendari', { ...base, ...bo }), JSON.stringify(bo)).toEqual([]);
+    // Un camp mal format ja porta el seu error ('format'): l'ordre no es mira.
+    expect(errorsDe('calendari', { ...base, data_fi: '2026-02-30' })).toEqual([{ camp: 'data_fi', codi: 'format' }]);
+    expect(errorsDe('calendari', { ...base, data_inici: 'demà', data_fi: '2026-11-20' })).toEqual([{ camp: 'data_inici', codi: 'format' }]);
+    // Els altres àmbits no canvien (la tornada d'un viatge no té cap regla d'ordre al contracte).
+    expect(errorsDe('vehicle', { ...viatge(), data_eixida: '2026-11-22', data_tornada: '2026-11-20' })).toEqual([]);
   });
 
   test('els errors s’acumulen en l’ordre dels camps', () => {
@@ -580,6 +640,9 @@ describe('resumDeFitxa i textCercable', () => {
   test('una línia curta per àmbit, amb les reserves o el traductor; res per a mur', () => {
     expect(resumDeFitxa({ ambit: 'vehicle', dades: viatge() })).toBe('Oferisc places · La Torre → Alcoi · 2026-11-15 08:30 · Places disponibles: 3 · 5 €');
     expect(resumDeFitxa({ ambit: 'vehicle', dades: { modalitat: 'busque_lloc', lloc_eixida: 'Alcoi', data_eixida: '2026-12-01' } })).toBe('Busque lloc · Alcoi · 2026-12-01');
+    expect(resumDeFitxa({ ambit: 'calendari', dades: acte() })).toBe('2026-11-20 10:00 · 2026-11-22 19:00 · El Rentonar · La Torre');
+    expect(resumDeFitxa({ ambit: 'mapa', dades: puntMapa() })).toBe('Patrimoni i memòria · Assut del riu · La Torre · 38.627, -0.419');
+    expect(resumDeFitxa({ ambit: 'animalets', dades: animal() })).toBe('En adopció · Gos pastor · La Torre');
     expect(resumDeFitxa({ ambit: 'treball', dades: oferta() })).toBe('Oferta de feina · Pastor · La Torre · 900 €/mes');
     expect(resumDeFitxa({ ambit: 'habitatge', dades: casa() })).toBe('Lloguer · 450 €/mes · 80 m² · Habitacions: 3 · Per a reformar · La Torre');
     expect(resumDeFitxa({ ambit: 'mercat', dades: producte() })).toBe('3 € · kg · Verdura d’horta · Poc');
@@ -653,7 +716,7 @@ describe('fuzz determinista: res no llança, res desconegut passa, tot és idemp
       for (const { id } of campsDe) if (atzar() < 0.8) dades[id] = tria(BRUTS);
       for (const extra of EXTRES) if (atzar() < 0.3) dades[extra] = tria(BRUTS);
       /* El secret només viu al camp privat: cap altre camp el porta. */
-      if (ambit === 'treball') dades.contacte = SECRET;
+      if (ambit === 'treball' || ambit === 'animalets') dades.contacte = SECRET;
       const estat = tria([...ESTATS, 'volant', null, 3]);
       const entrada = { ...publicacioDelMur(), ambit, estat, dades, isSystem: true, author_org_id: 'org' };
 
@@ -669,7 +732,7 @@ describe('fuzz determinista: res no llança, res desconegut passa, tot és idemp
       const resultat = validaFitxa(ambit, dades);
       expect(typeof resultat.ok).toBe('boolean');
       expect(Array.isArray(resultat.errors)).toBe(true);
-      for (const error of resultat.errors) expect(['obligatori', 'format', 'rang', 'enum', 'llargaria'], `${ambit} #${i}`).toContain(error.codi);
+      for (const error of resultat.errors) expect(['obligatori', 'format', 'rang', 'enum', 'llargaria', 'ordre'], `${ambit} #${i}`).toContain(error.codi);
       expect(resultat.ok, `${ambit} #${i}`).toBe(resultat.errors.length === 0);
 
       const payload = projeccioPayload(entrada);
@@ -686,7 +749,7 @@ describe('fuzz determinista: res no llança, res desconegut passa, tot és idemp
         expect(typeof resum).toBe('string');
         expect(typeof cercable).toBe('string');
         expect(acabaEnSurrogatAlt(resum.replace(/…/g, '')), `${ambit} #${i}`).toBe(false);
-        if (ambit === 'treball') {
+        if (ambit === 'treball' || ambit === 'animalets') {
           expect(resum, `${ambit} #${i}`).not.toContain(SECRET);
           expect(cercable, `${ambit} #${i}`).not.toContain(SECRET);
         }

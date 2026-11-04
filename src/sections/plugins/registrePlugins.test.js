@@ -31,6 +31,7 @@ import { dataHoraDeBarra } from '../../components/universal/editorial.js';
 import { PRESSUPOST_PUJADA } from '../../utils/pujadaImatge.js';
 import { segmentPagina } from '../consola/consolaPagines.js';
 import { DESTINS_CONTROL } from '../control/destinsControl.js';
+import { CAMPS } from '../../utils/publicacioUniversal.js';
 import {
   ESPAIS_PLUGINS, IDS_PLUGINS, IMATGES_PLUGINS, PLUGINS, appDelPlugin, clauPortadaDelPlugin, pluginPerId, pluginsDeLEspai,
   rutaDelPlugin
@@ -172,12 +173,15 @@ describe('registre de plugins', () => {
 
   test('on porta cada «Obrir»: l’app o la secció de veres, o null (en obres)', () => {
     expect(Object.fromEntries(PLUGINS.map((p) => [p.id, p.obrir]))).toEqual({
-      mapa: null,
+      /* Fusió del kit v3.0.0 (AH-04) · El Panell publica al Mapa i a
+         Animalets i App.jsx en servix les seccions (SeccioVertical): com
+         Vehicle, deixen d'estar en obres. Abans: null. */
+      mapa: '/mapa',
       /* llibre-deutes-02 (261104) · IDEA-61 ja servix la secció /vehicle
          (App.jsx, SeccioVertical): Vehicle Compartit deixa d'estar en obres.
          Abans: null. */
       vehicle: '/vehicle',
-      animalets: null,
+      animalets: '/animalets',
       /* Ordre del Mestre, 261004 («contaminació crítica de rutes/estats
          entre Gestoria i Wiki») · la seua app, només en desenvolupament
          (vegeu la prova d'entorn). Ja no és cap ítem de la Wiki. */
@@ -201,7 +205,10 @@ describe('registre de plugins', () => {
     // Sonda: la guarda no és buida (Mapa, Vehicle Compartit i Animalets hi són als dos llocs).
     expect(comuns.map((desti) => desti.id)).toEqual(['mapa', 'vehicle', 'animalets']);
     const oberts = comuns.filter((desti) => desti.publicar !== null);
-    expect(oberts.map((desti) => desti.id)).toEqual(['vehicle']);
+    /* Fusió del kit v3.0.0 (AH-04) · Gemini va obrir al Panell les portes de
+       Mapa i Animalets; la guarda les va trobar «en obres» al registre, i el
+       registre ara diu el mateix que el Panell. Abans: ['vehicle']. */
+    expect(oberts.map((desti) => desti.id)).toEqual(['mapa', 'vehicle', 'animalets']);
     for (const desti of oberts) {
       const plugin = pluginPerId(desti.id);
       expect([desti.id, plugin.obrir]).toEqual([desti.id, desti.seccio]);
@@ -209,10 +216,11 @@ describe('registre de plugins', () => {
     }
     // L'avís de privacitat del trajecte no se'n va amb l'«en obres».
     expect(pluginPerId('vehicle').entradilla).toContain('Un trajecte publicat diu a tothom el teu horari i el teu camí; les despeses les acordeu entre vosaltres, fora de l’app.');
-    // Mapa i Animalets continuen en obres als dos llocs.
-    for (const id of ['mapa', 'animalets']) {
-      expect([id, pluginPerId(id).obrir, /en obres/i.test(pluginPerId(id).entradilla)]).toEqual([id, null, true]);
-    }
+    // Els avisos de privacitat del Mapa i d'Animalets tampoc se'n van amb l'«en obres».
+    expect(pluginPerId('mapa').entradilla).toContain('Un punt publicat al mapa serà públic i el podrà localitzar qualsevol, també des d’altres pobles.');
+    expect(pluginPerId('animalets').entradilla).toContain('El contacte que poses en una fitxa el veurà la gent registrada del poble en obrir-la; no ix a la targeta ni a la cerca.');
+    // I l'avís d'Animalets diu el que fa el contracte: el contacte és privat (fora de la targeta i de la cerca).
+    expect(CAMPS.animalets.filter((campDef) => campDef.privat).map((campDef) => campDef.id)).toEqual(['contacte']);
   });
 
   /* Onada 8 (261009) · Derogada «la Consola i el Cervell porten a la ruta de

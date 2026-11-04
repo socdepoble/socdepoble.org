@@ -32,6 +32,21 @@ import {
 const DIA = /^(\d{4})-(\d{2})-(\d{2})$/;
 /* Fins on busca el Calendari la primera ocurrència del mes d'obertura (calendari-3). */
 const HORITZO_MESOS = 24;
+const textNet = (valor) => (typeof valor === 'string' && valor.trim() ? valor.trim() : null);
+
+function diaSeguent(clau) {
+  const m = DIA.exec(typeof clau === 'string' ? clau.trim() : '');
+  if (!m) return null;
+  const d = new Date(Date.UTC(Number(m[1]), Number(m[2]) - 1, Number(m[3]) + 1));
+  return clauDia(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate());
+}
+
+/** Si l'element és un acte o una publicació de l'àmbit Calendari (AH-04). */
+export function esActeDelCalendari(item) {
+  return Boolean(item && typeof item === 'object' && (
+    item.type === 'event' || item.type === 'calendari' || item.ambit === 'calendari'
+  ));
+}
 
 /* Un moment del payload: l'objecte del model tal qual, o una cadena (un dia
    'AAAA-MM-DD' o una dataHora). creaEsdeveniment el valida.
@@ -45,26 +60,47 @@ export function momentDe(valor, zona) {
 }
 
 /**
- * Un acte del Mur com a esdeveniment, o null si no se'n pot fer cap (sense
- * títol o sense un dia que existisca). L'inici és el del payload o, si no en
- * porta, el dia i l'hora de l'acte (diaAmbHora): amb hora, un acte amb hora;
- * sense, de tot el dia.
+ * Un acte del Mur (o una fitxa d'àmbit 'calendari', AH-04) com a esdeveniment,
+ * o null si no se'n pot fer cap (sense títol o sense un dia que existisca).
+ * L'inici és el del payload o, si no en porta, el dia i l'hora de l'acte
+ * (diaAmbHora): amb hora, un acte amb hora; sense, de tot el dia. Quan porta
+ * data_fi (i hora_fi opcional), l'interval multi-dia cobreix tots els dies des
+ * de data_inici fins a data_fi inclòs.
  */
 export function acteAEsdeveniment(item) {
   if (!item || typeof item !== 'object') return null;
   const zona = item.zona ?? undefined;
-  return creaEsdeveniment({
+  const dades = item.dades && typeof item.dades === 'object' ? item.dades : null;
+  const dataInici = textNet(item.date) ?? textNet(dades?.data_inici);
+  const horaInici = textNet(item.time) ?? textNet(dades?.hora_inici);
+  const dataFi = textNet(item.endDate) ?? textNet(dades?.data_fi);
+  const horaFi = textNet(item.endTime) ?? textNet(dades?.hora_fi);
+  const inici = momentDe(item.inici, zona) ?? momentDe(diaAmbHora(dataInici, horaInici), zona);
+  let fi = momentDe(item.fi, zona);
+  if (!fi && inici && (dataFi || horaFi)) {
+    const diaFinal = dataFi ?? dataInici;
+    if ('data' in inici) {
+      const exclusiu = diaSeguent(diaFinal);
+      if (exclusiu && exclusiu > inici.data) fi = { data: exclusiu };
+    } else if (diaFinal) {
+      fi = momentDe(diaAmbHora(diaFinal, horaFi ?? (dataFi ? '23:59' : null)), zona);
+    }
+  }
+  const llocDades = [textNet(dades?.lloc), textNet(dades?.municipi)].filter(Boolean).join(' · ') || null;
+  const lloc = textNet(item.location) ?? llocDades;
+  const seccioRuta = item.ambit === 'calendari' || item.type === 'calendari' ? 'calendari' : 'events';
+  const base = {
     id: item.id,
     uid: item.uid,
     titol: item.title || item.name,
     descripcio: extractPlainText(item.entradilla || item.summary || item.description || '', Infinity),
-    lloc: item.location,
-    inici: momentDe(item.inici, zona) ?? momentDe(diaAmbHora(item.date, item.time), zona),
-    fi: momentDe(item.fi, zona),
+    lloc: lloc ?? item.location,
+    inici,
     recurrencia: item.recurrencia ?? null,
-    font: { tipus: 'mur', id: item.id, ruta: getSectionItemPath('events', item.id) },
+    font: { tipus: 'mur', id: item.id, ruta: getSectionItemPath(seccioRuta, item.id) },
     actualitzat: dataIsoONull(item.updated_at)
-  });
+  };
+  return creaEsdeveniment({ ...base, fi }) ?? (fi ? creaEsdeveniment({ ...base, fi: null }) : null);
 }
 
 /* El dia (clau 'AAAA-MM-DD') d'un moment del model, al calendari de qui mira. */

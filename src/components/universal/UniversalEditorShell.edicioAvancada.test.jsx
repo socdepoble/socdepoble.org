@@ -72,27 +72,26 @@ test('sense la prop: el DOM de sempre (la ranura davall del títol, el copyright
   expect(container.querySelector('.editor-title-input').dataset.placeholder).toBe(TEXTOS_LLAVOR.titol);
 });
 
-test('amb edicioAvancada: plegat, el flux bàsic Títol → Subtítol → Entradilla → eines → text, i res entre l’H1 i el Subtítol', () => {
+test('amb edicioAvancada: plegat (per defecte davall de la barra taronja), el flux bàsic Títol → Subtítol → Entradilla → eines → text, i res entre l’H1 i el Subtítol', () => {
   // Una nota nova: cap categoria ni etiqueta assignada.
   const { container } = closca({ edicioAvancada: true, labels: [] });
-  // Cap caixa de capçalera entre la barra blava i la taronja.
+  // AH-03: per defecte ('despres-autoria'), el desplegable viu davall de la barra taronja i damunt de l'H1.
   const pagina = container.querySelector('.sdp-universal-page-container');
-  expect(fills(pagina).slice(0, 3)).toEqual(['bar-blue', 'bar-orange', 'page-title']);
+  expect(fills(pagina).slice(0, 4)).toEqual(['bar-blue', 'bar-orange', 'sdp-pagina-despres-autoria', 'page-title']);
   expect(container.querySelector('.hero-image')).toBeNull();
   // A la capçalera només l'H1: ni ranura, ni copyright, ni píndoles, ni uploader de logotip.
   const capcalera = container.querySelector('header.page-title');
   expect([...capcalera.children].map((e) => e.tagName)).toEqual(['H1']);
   expect(capcalera.querySelector('.editor-title-input')).not.toBeNull();
-  // A l'article: el Subtítol i l'Entradilla, el desplegable, les eines i el cos.
+  // A l'article: el Subtítol i l'Entradilla, les eines i el cos.
   const article = container.querySelector('article.content-wrapper');
-  expect(fills(article)).toEqual(['page-intro', 'sdp-edicio-avancada', 'sdp-editor-eines', 'ProseMirror']);
+  expect(fills(article)).toEqual(['page-intro', 'sdp-editor-eines', 'ProseMirror']);
   const intro = article.querySelector('.page-intro');
   expect(intro.querySelector('.editor-subtitle-input')).not.toBeNull();
   expect(intro.querySelector('.editor-lead-input')).not.toBeNull();
-  const desplegable = article.querySelector('details.sdp-edicio-avancada');
+  const desplegable = pagina.querySelector('.sdp-pagina-despres-autoria > details.sdp-edicio-avancada');
   expect(desplegable.open).toBe(false);
   expect(desplegable.querySelector('summary').textContent).toBe('Edició avançada');
-  expect(desplegable.nextElementSibling.className).toBe('sdp-editor-eines');
 });
 
 /* Correcció de la revisió adversarial (261016) · Abans, amb el desplegable, la
@@ -115,13 +114,15 @@ test('amb edicioAvancada: les categories i etiquetes assignades es veuen al seu 
   expect(capcalera.querySelector('p.page-title-copyright')).toBeNull();
 });
 
-test('dins del desplegable: Editar capçalera, Editar logotip, la botonera (amb «Emojis XL») i els drets', () => {
+test('dins del desplegable: Editar capçalera, Editar logotip, la botonera (amb «Emojis XL»), els drets i el botó de tancament (AH-03)', () => {
   const { container } = closca({ edicioAvancada: true });
-  const cos = container.querySelector('details.sdp-edicio-avancada > .sdp-edicio-avancada__cos');
+  const desplegable = container.querySelector('details.sdp-edicio-avancada');
+  const cos = desplegable.querySelector('.sdp-edicio-avancada__cos');
   expect(fillsAmbRanura(cos)).toEqual([
     'sdp-edicio-avancada__imatge [capcalera]',
     'sdp-edicio-avancada__imatge [logotip]',
-    'page-title-classificacio'
+    'page-title-classificacio',
+    'sdp-boto sdp-boto--secundari sdp-edicio-avancada__boto-tancar'
   ]);
   expect(cos.querySelector('[data-sdp-ranura="capcalera"] button').textContent).toContain('Editar capçalera');
   expect(cos.querySelector('[data-sdp-ranura="logotip"] button').textContent).toContain('Editar logotip');
@@ -130,32 +131,43 @@ test('dins del desplegable: Editar capçalera, Editar logotip, la botonera (amb 
   expect(cos.querySelector('.sdp-copyright-control button[data-sdp-drets]')).not.toBeNull();
   // El disparador dels drets només viu ací: la línia de la capçalera no es pinta.
   expect(container.querySelectorAll('[data-sdp-drets]')).toHaveLength(1);
+  // AH-03 · El botó gran de tancament al final del panell desplegat plega el <details>, fa scrollIntoView al <summary> i hi retorna el focus.
+  desplegable.open = true;
+  const resum = desplegable.querySelector('summary.sdp-edicio-avancada__resum');
+  resum.scrollIntoView = vi.fn();
+  const botoTancar = cos.querySelector('button.sdp-edicio-avancada__boto-tancar');
+  expect(botoTancar.textContent).toContain('Tancar l’edició avançada');
+  fireEvent.click(botoTancar);
+  expect(desplegable.open).toBe(false);
+  expect(resum.scrollIntoView).toHaveBeenCalledWith({ block: 'nearest' });
+  expect(document.activeElement).toBe(resum);
 });
 
 /* P1-58 · L'ordre de lectura de la fitxa: la capçalera primer, després la
-   identitat (l'avatar redó del Perfil), el logotip i la classificació. */
-test('dins del desplegable, amb identitat: Capçalera → Avatar → Logotip → classificació', () => {
+   identitat (l'avatar redó del Perfil), el logotip, la classificació i el botó de tancament. */
+test('dins del desplegable, amb identitat: Capçalera → Avatar → Logotip → classificació → tancar', () => {
   const { container } = closca({ edicioAvancada: true, identitatEdicioAvancada: <p data-testid="avatar">Avatar</p> });
   const cos = container.querySelector('details.sdp-edicio-avancada > .sdp-edicio-avancada__cos');
   expect(fillsAmbRanura(cos)).toEqual([
     'sdp-edicio-avancada__imatge [capcalera]',
     'sdp-edicio-avancada__identitat',
     'sdp-edicio-avancada__imatge [logotip]',
-    'page-title-classificacio'
+    'page-title-classificacio',
+    'sdp-boto sdp-boto--secundari sdp-edicio-avancada__boto-tancar'
   ]);
   expect(cos.querySelector('.sdp-edicio-avancada__identitat [data-testid="avatar"]')).not.toBeNull();
 });
 
 describe('posicioEdicioAvancada', () => {
-  test('per defecte (\'cos\'): el desplegable continua dins de l’article, damunt de les eines, i cap ranura dalt', () => {
-    const { container } = closca({ edicioAvancada: true });
+  test('amb \'cos\': el desplegable es pinta dins de l’article, damunt de les eines, i cap ranura dalt', () => {
+    const { container } = closca({ edicioAvancada: true, posicioEdicioAvancada: 'cos' });
     expect(fills(container.querySelector('article.content-wrapper'))).toEqual(['page-intro', 'sdp-edicio-avancada', 'sdp-editor-eines', 'ProseMirror']);
     expect(container.querySelector('.sdp-pagina-despres-autoria')).toBeNull();
     expect(container.querySelector('[posicioedicioavancada]')).toBeNull();
   });
 
-  test('\'despres-autoria\': un sol desplegable, davall de la barra taronja i damunt de l’H1, fora de l’article', () => {
-    const { container } = closca({ edicioAvancada: true, posicioEdicioAvancada: 'despres-autoria' });
+  test('per defecte (\'despres-autoria\'): un sol desplegable, davall de la barra taronja i damunt de l’H1, fora de l’article', () => {
+    const { container } = closca({ edicioAvancada: true });
     expect(fills(container.querySelector('article.content-wrapper'))).toEqual(['page-intro', 'sdp-editor-eines', 'ProseMirror']);
     expect(container.querySelectorAll('details.sdp-edicio-avancada')).toHaveLength(1);
     const desplegable = container.querySelector('details.sdp-edicio-avancada');
@@ -168,12 +180,13 @@ describe('posicioEdicioAvancada', () => {
     const barra = container.querySelector('section.bar-orange');
     expect(barra.compareDocumentPosition(desplegable) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
     expect(desplegable.compareDocumentPosition(h1) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
-    // El contingut, el de sempre: plegat, amb la capçalera, el logotip, la botonera i els drets.
+    // El contingut, el de sempre: plegat, amb la capçalera, el logotip, la botonera, els drets i el botó de tancament.
     expect(desplegable.open).toBe(false);
     expect(fillsAmbRanura(desplegable.querySelector('.sdp-edicio-avancada__cos'))).toEqual([
       'sdp-edicio-avancada__imatge [capcalera]',
       'sdp-edicio-avancada__imatge [logotip]',
-      'page-title-classificacio'
+      'page-title-classificacio',
+      'sdp-boto sdp-boto--secundari sdp-edicio-avancada__boto-tancar'
     ]);
     expect(container.querySelectorAll('[data-sdp-drets]')).toHaveLength(1);
   });
@@ -216,23 +229,27 @@ describe('posicioEdicioAvancada', () => {
     expect(vista.container.querySelectorAll('details.sdp-edicio-avancada')).toHaveLength(1);
   });
 
-  /* Revisió adversarial P1-58 · Només la fitxa del Perfil ho demana: Notes i
-     el DocumentEditor es queden en 'cos' (el defecte). Per text, com les
-     proves de qualitat: una opció nova ha d'entrar en esta llista. */
-  test('només el Perfil passa \'despres-autoria\'; Notes es queda en el cos', () => {
+  /* AH-03 · UniversalEditorShell té 'despres-autoria' com a valor per defecte,
+     així com Notes i la fitxa del Perfil. */
+  test('AH-03 · UniversalEditorShell, Notes i el Perfil usen \'despres-autoria\'', () => {
     const arrel = resolve(process.cwd(), 'src');
     const demanen = readdirSync(arrel, { recursive: true })
       .filter((f) => /\.jsx?$/.test(f) && !/\.test\.jsx?$/.test(f))
       .filter((f) => /posicioEdicioAvancada\s*[:=]\s*\{?\s*['"]despres-autoria['"]/.test(readFileSync(resolve(arrel, f), 'utf8')))
-      .map((f) => f.split('\\').join('/'));
-    expect(demanen).toEqual(['sections/profile/PerfilEditor.jsx']);
+      .map((f) => f.split('\\').join('/'))
+      .sort();
+    expect(demanen).toEqual([
+      'components/universal/UniversalEditorShell.jsx',
+      'sections/notes/NotesEditor.jsx',
+      'sections/profile/PerfilEditor.jsx'
+    ]);
   });
 });
 
-test('el que es configura es veu al seu lloc real: la capçalera desada dalt i el logotip desat damunt de l’H1', () => {
+  test('el que es configura es veu al seu lloc real: la capçalera desada dalt i el logotip desat damunt de l’H1', () => {
   const { container } = closca({ edicioAvancada: true, heroImage: '/assets/hort.webp', logoImage: '/assets/logo-hort.png' });
   const pagina = container.querySelector('.sdp-universal-page-container');
-  expect(fills(pagina).slice(0, 4)).toEqual(['bar-blue', 'hero-image', 'bar-orange', 'page-title']);
+  expect(fills(pagina).slice(0, 5)).toEqual(['bar-blue', 'hero-image', 'bar-orange', 'sdp-pagina-despres-autoria', 'page-title']);
   const portada = pagina.querySelector('.hero-image > img');
   expect(portada.getAttribute('src')).toBe('/assets/hort.webp');
   expect(portada.hasAttribute('role')).toBe(false);
@@ -389,14 +406,15 @@ describe('O4-CLAUDE-1 · la ranura «On es publica?» i la petició d’anar-hi'
     window.matchMedia = matchMediaAbans;
   });
 
-  test('ordre exacte dins del desplegable: capçalera > logotip > «On es publica?» > classificació', () => {
+  test('ordre exacte dins del desplegable: capçalera > logotip > «On es publica?» > classificació > tancar', () => {
     const { container } = closca({ edicioAvancada: true, ambitEdicioAvancada: BLOC });
     const cos = container.querySelector('details.sdp-edicio-avancada > .sdp-edicio-avancada__cos');
     expect(fillsAmbRanura(cos)).toEqual([
       'sdp-edicio-avancada__imatge [capcalera]',
       'sdp-edicio-avancada__imatge [logotip]',
       'sdp-edicio-avancada__ambit [ambit]',
-      'page-title-classificacio'
+      'page-title-classificacio',
+      'sdp-boto sdp-boto--secundari sdp-edicio-avancada__boto-tancar'
     ]);
     expect(cos.querySelector('[data-sdp-ranura="ambit"] [data-testid="bloc-ambit"]')).not.toBeNull();
     // Cap prop nova arriba al DOM ni a la UniversalPage (pitfall ...rest).
@@ -410,7 +428,8 @@ describe('O4-CLAUDE-1 · la ranura «On es publica?» i la petició d’anar-hi'
       'sdp-edicio-avancada__imatge [capcalera]',
       'sdp-edicio-avancada__identitat',
       'sdp-edicio-avancada__imatge [logotip]',
-      'page-title-classificacio'
+      'page-title-classificacio',
+      'sdp-boto sdp-boto--secundari sdp-edicio-avancada__boto-tancar'
     ]);
     expect(container.querySelector('[data-sdp-ranura="ambit"]')).toBeNull();
     // Sense ranura, la petició no obri res.

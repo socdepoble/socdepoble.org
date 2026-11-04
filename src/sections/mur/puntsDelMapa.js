@@ -43,7 +43,7 @@ import {
 } from './mapaFotografic.js';
 
 /** Les menes d'element del Mur que poden portar fotos al mapa. */
-export const TIPUS_DEL_MAPA = Object.freeze(['feed', 'post', 'publicacio', 'event', 'patrimoni']);
+export const TIPUS_DEL_MAPA = Object.freeze(['feed', 'post', 'publicacio', 'event', 'patrimoni', 'mapa']);
 /** La foto principal i les 24 de fotos_geo, com a molt. */
 export const MAX_FOTOS_PER_PUBLICACIO = 25;
 /** Una foto a més d'esta distància de la primera de la parada en fa una de nova. */
@@ -79,11 +79,22 @@ function precisioDe(camps) {
   return { precisio, precisio_m: metres !== null && metres >= 0 ? metres : (precisio ? PRECISIO_EN_METRES[precisio] : null) };
 }
 
-/** Si un element del Mur pot portar fotos al mapa (TIPUS_DEL_MAPA, amb id; mai sistema ni àmbit de persona). */
+/* Les coordenades escrites per l'autor a dades.coordenades («38.5919, -0.4184»). */
+function coordenadesDeText(valor) {
+  const brut = textDe(valor);
+  const m = /^(-?\d+(?:\.\d+)?)\s*[,;\s]\s*(-?\d+(?:\.\d+)?)$/.exec(brut);
+  if (!m) return null;
+  const lat = Number(m[1]);
+  const lng = Number(m[2]);
+  return esPuntValid({ lat, lng }) ? { lat, lng, origen: 'manual', precisio: 'exacta', precisio_m: 10 } : null;
+}
+
+/** Si un element del Mur pot portar fotos al mapa (TIPUS_DEL_MAPA o àmbit mapa, amb id; mai sistema ni àmbit de persona). */
 export function esPublicacioDelMapa(item) {
   if (!esObjecte(item) || item.id == null || item.isSystem === true) return false;
-  if (textDe(item.ambit) === 'persona') return false;
-  return TIPUS_DEL_MAPA.includes(textDe(item.type));
+  const ambit = textDe(item.ambit);
+  if (ambit === 'persona') return false;
+  return TIPUS_DEL_MAPA.includes(textDe(item.type)) || ambit === 'mapa';
 }
 
 /**
@@ -143,8 +154,13 @@ export function fotosDeLaPublicacio(item, publicacio = `${textDe(item?.type)}:${
       principal
     });
   };
-  const geo = esObjecte(item.geolocalitzacio) ? item.geolocalitzacio : null;
-  afig(primeraFont(item.image_url) || primeraFont(item.image), { ...(geo || {}), dataCaptura: item.dataCaptura }, true);
+  const geo = esObjecte(item.geolocalitzacio)
+    ? item.geolocalitzacio
+    : coordenadesDeText(item.dades?.coordenades);
+  const esMapa = textDe(item.type) === 'mapa' || textDe(item.ambit) === 'mapa';
+  const fontPrincipal = primeraFont(item.image_url) || primeraFont(item.image)
+    || (esMapa ? '/assets/ui/plugins/mapa_vinyeta.webp' : '');
+  afig(fontPrincipal, { ...(geo || {}), dataCaptura: item.dataCaptura }, true);
   for (const foto of Array.isArray(item.fotos_geo) ? item.fotos_geo : CAP) {
     if (esObjecte(foto)) afig(textDe(foto.src), foto, false);
   }
@@ -199,12 +215,13 @@ export function puntsDelMapa(items, { pobles = null } = {}) {
   const pendents = [];
   for (const item of Array.isArray(items) ? items : CAP) {
     if (!esPublicacioDelMapa(item)) continue;
-    const publicacio = `${textDe(item.type)}:${item.id}`;
+    const publicacio = `${textDe(item.type) || textDe(item.ambit)}:${item.id}`;
     const fotos = fotosDeLaPublicacio(item, publicacio);
     if (!fotos.length) continue;
-    const poble = coordenadesDelPoble(item.poble_id, pobles);
+    const refPoble = textDe(item.poble_id) || textDe(item.dades?.municipi) || textDe(item.town_name);
+    const poble = coordenadesDelPoble(refPoble, pobles);
     const titol = textDe(item.title) || textDe(item.name);
-    const comunes = { publicacio, titol, poble_id: poble ? slugDelPoble(textDe(item.poble_id)) : null };
+    const comunes = { publicacio, titol, poble_id: poble ? slugDelPoble(textDe(item.poble_id) || poble.title || refPoble) : null };
     const estimades = estimaUbicacions(fotos, { centreDelPoble: poble }).map((foto) => ({ ...foto, ...comunes }));
     for (const foto of estimades) {
       if (foto.estat === 'pendent') pendents.push(foto);

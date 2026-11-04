@@ -40,8 +40,9 @@ export function objecteDePagina({ titol = '', ruta = '', id = '' } = {}) {
 const TIPUS_DE_SECCIO = Object.freeze({
   mur: 'publicacio', mercat: 'producte', events: 'esdeveniment',
   pobles: 'poble', multimedia: 'multimedia', notes: 'nota',
-  /* IDEA-61 (T0, prompt 261102_1532) · Una fitxa vertical és una publicació del Mur. */
-  vehicle: 'publicacio', treball: 'publicacio', habitatge: 'publicacio'
+  /* IDEA-61 i AH-04 · Una fitxa d'àmbit és una publicació del Mur. */
+  calendari: 'publicacio', mapa: 'publicacio', vehicle: 'publicacio',
+  animalets: 'publicacio', treball: 'publicacio', habitatge: 'publicacio'
 });
 
 /** El tipus d'objecte d'una secció, o null si no és cap secció d'elements. */

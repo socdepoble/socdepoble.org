@@ -37,9 +37,11 @@ const D = {
 };
 
 describe('quins elements entren', () => {
-  test('només publicacions, actes i patrimoni; mai perfil, avatar, xat, persona, sistema ni Mercat', () => {
-    expect(TIPUS_DEL_MAPA).toEqual(['feed', 'post', 'publicacio', 'event', 'patrimoni']);
-    for (const item of [A, B, C, D, { id: 1, type: 'post' }]) expect(esPublicacioDelMapa(item)).toBe(true);
+  test('només publicacions, actes, patrimoni i punts del mapa; mai perfil, avatar, xat, persona, sistema ni Mercat', () => {
+    expect(TIPUS_DEL_MAPA).toEqual(['feed', 'post', 'publicacio', 'event', 'patrimoni', 'mapa']);
+    for (const item of [A, B, C, D, { id: 1, type: 'post' }, { id: 2, type: 'mapa' }, { id: 3, ambit: 'mapa' }]) {
+      expect(esPublicacioDelMapa(item)).toBe(true);
+    }
     const fora = [
       { id: 'p', type: 'persona', image_url: FOTO('p'), geolocalitzacio: GPS(38.59, -0.41) },
       { id: 'v', type: 'avatar', image_url: FOTO('v'), geolocalitzacio: GPS(38.59, -0.41) },
@@ -199,6 +201,31 @@ describe('els punts del mapa', () => {
     expect(coordenadesDelPoble('no-existix')).toBeNull();
     expect(coordenadesDelPoble('<script>')).toBeNull();
     expect(coordenadesDelPoble(null)).toBeNull();
+  });
+
+  test('AH-04 (P1-1) · una publicació amb ambit === "mapa" apareix al Mapa amb coordenades de dades.coordenades o dades.municipi fins i tot sense foto adjunta', () => {
+    const puntMapa = {
+      id: 'font-rentonar',
+      type: 'feed',
+      ambit: 'mapa',
+      title: 'Font del Rentonar',
+      dades: {
+        modalitat: 'patrimoni',
+        lloc: 'Barranc del Rentonar',
+        municipi: 'La Torre de les Maçanes',
+        coordenades: '38.6051, -0.4192'
+      }
+    };
+    const resultat = puntsDelMapa([puntMapa]);
+    expect(resultat.fotos).toHaveLength(1);
+    expect(resultat.fotos[0]).toMatchObject({
+      titol: 'Font del Rentonar',
+      estat: 'indicada',
+      lat: 38.6051,
+      lng: -0.4192,
+      src: '/assets/ui/plugins/mapa_vinyeta.webp'
+    });
+    expect(resultat.parades).toHaveLength(1);
   });
 });
 

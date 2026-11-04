@@ -1,4 +1,4 @@
-import { BrainCircuit, Briefcase, Car, FileText, GalleryVerticalEnd, House, LandPlot, Newspaper, NotebookPen, Palette, Route, ShieldCheck, ShoppingCart, Waves, MessageSquare, Wifi, Settings, UserRound, CalendarDays, Network } from 'lucide-react';
+import { BrainCircuit, Briefcase, Car, FileText, GalleryVerticalEnd, House, LandPlot, MapPin, Newspaper, NotebookPen, Palette, PawPrint, Route, ShieldCheck, ShoppingCart, Waves, MessageSquare, Wifi, Settings, UserRound, CalendarDays, Network } from 'lucide-react';
 import { RUTA_FITXA_IAIA, RUTES_CANONIQUES } from './navigation.js';
 
 /*
@@ -45,10 +45,12 @@ export const SECTIONS = [
   { id: 'xat', path: '/xat', label: 'Xat', shortLabel: 'Xat', icon: MessageSquare, kind: 'xat', subrutes: ['/control-xat'] },
   { id: 'mur', path: '/mur', label: 'Mur', shortLabel: 'Mur', icon: Newspaper, kind: 'mur' },
   { id: 'mercat', path: '/mercat', label: 'Mercat', shortLabel: 'Mercat', icon: ShoppingCart, kind: 'market' },
-  /* IDEA-61 (T0, prompt 261102_1532) · Verticals del Flux Universal de
-     Publicació: una llista del Mur filtrada per àmbit (sections/verticals/
-     SeccioVertical.jsx), amb el detall a /<ambit>/:id. */
+  /* IDEA-61 i AH-04 · Verticals del Flux Universal de Publicació: una llista
+     del Mur filtrada per àmbit (sections/verticals/SeccioVertical.jsx), amb el
+     detall a /<ambit>/:id. */
+  { id: 'mapa', path: '/mapa', label: 'Mapa', shortLabel: 'Mapa', icon: MapPin, kind: 'vertical' },
   { id: 'vehicle', path: '/vehicle', label: 'Compartir cotxe', shortLabel: 'Cotxe', icon: Car, kind: 'vertical' },
+  { id: 'animalets', path: '/animalets', label: 'Animalets', shortLabel: 'Animals', icon: PawPrint, kind: 'vertical' },
   { id: 'treball', path: '/treball', label: 'Treball', shortLabel: 'Treball', icon: Briefcase, kind: 'vertical' },
   { id: 'habitatge', path: '/habitatge', label: 'Habitatge', shortLabel: 'Habitatge', icon: House, kind: 'vertical' },
   { id: 'pobles', path: '/pobles', label: 'Pobles', shortLabel: 'Pobles', icon: LandPlot, kind: 'pobles', subrutes: ['/poblacio', '/perfil', '/gent', '/empresa', '/ajuntament', '/grup', ...Object.values(RUTES_CANONIQUES), RUTA_FITXA_IAIA] },

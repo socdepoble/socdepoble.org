@@ -15,9 +15,24 @@
     <changefreq>daily</changefreq>
     <priority>0.8</priority>
   </url>
-  <!-- IDEA-61 (T0, prompt 261102_1532): les tres seccions verticals del Flux Universal de Publicació (src/config/sections.js). -->
+  <!-- IDEA-61 i AH-04: les sis verticals del Flux Universal de Publicació (src/config/sections.js). -->
+  <url>
+    <loc>https://socdepoble.org/calendari</loc>
+    <changefreq>daily</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://socdepoble.org/mapa</loc>
+    <changefreq>daily</changefreq>
+    <priority>0.7</priority>
+  </url>
   <url>
     <loc>https://socdepoble.org/vehicle</loc>
+    <changefreq>daily</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://socdepoble.org/animalets</loc>
     <changefreq>daily</changefreq>
     <priority>0.7</priority>
   </url>

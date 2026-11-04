@@ -659,8 +659,11 @@ export default function NotesEditor({ activeNote, onToast = null }) {
          és exactament el títol de la targeta: «Nota sense títol». */
       placeholderTitol: TITOL_NOTA_PREPARADA,
       /* Bloc 3.9 · Les metadades (capçalera, logotip, botonera, drets i
-         vistes) van a l'«Edició avançada», plegada, just damunt de les eines. */
+         vistes) van a l'«Edició avançada», plegada.
+         AH-03 · Situada just davall de la Barra Taronja ('despres-autoria'),
+         deixant net el flux d'escriptura H1 → H2 → Lead → Eines → Cos. */
       edicioAvancada: true,
+      posicioEdicioAvancada: 'despres-autoria',
       showDarkLogoUpload: true,
       /* P1-64 (pla 261028_1526 §3.1.1; Mestre 261028, decisió 8) · El cos d'una
          publicació: l'ordre «/» Imatge pregunta si es conserven la ubicació i la

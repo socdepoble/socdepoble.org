@@ -118,9 +118,11 @@ const FONAMENTS = [
        amb l'ESMENA 261003 22:34: la targeta estàndard amb la boina de socdepoble. */
     "targeta plana pla emoticona ancorar pin avis portes porta doble accio publicar saber mes control obres socdepoble xat PedraSeca/organismes/UniversalCard.jsx"),
   /* T50 (decisió del Mestre, 260928: «Llista + dreta si hi cap») · la targeta del document que s'escriu.
-     Bloc 3.4 del Gauntlet (261016) · Sense l'aside de la dreta de l'editor ni el seu xip: cap editor els munta. */
+     Bloc 3.4 del Gauntlet (261016) · Sense l'aside de la dreta de l'editor ni el seu xip: cap editor els munta.
+     AH-02 (ordre del Mestre, captura de /notes de les 17:02; G3-g2-matriu-09) · Ni la llista: la fila activa
+     de Notes i de Perfil és la fitxa compacta. Només «Les vistes» del Perfil i este catàleg la munten. */
   especimen('fonaments', 'targeta-viva', 'Targeta viva', 'TargetaViva · BotoTargetaViva (T50)', ['organisme', 'targeta', 'editor'],
-    'La targeta del document mentre s’escriu, amb la mateixa anatomia que tindrà publicada: la fitxa activa de la llista i, al Perfil, també en línia a l’apartat «Les vistes». Cap editor la munta al costat: l’aside de la dreta i el xip «Vista targeta» s’han retirat. Els botons no fan res: ho diu un avís.',
+    'La targeta del document mentre s’escriu, amb la mateixa anatomia que tindrà publicada: al Perfil, en línia a l’apartat «Les vistes». La llista de Notes i de Perfil ja no la munta (AH-02): la fila activa és la fitxa compacta, i la previsualització de la publicació del Bloc de Notes viu a l’«Edició avançada» («Així es veurà al Mur»). Cap editor la munta al costat: l’aside de la dreta i el xip «Vista targeta» s’han retirat. Els botons no fan res: ho diu un avís.',
     'previsualitzacio vista targeta xip aside llista dreta notes perfil vistes'),
   /* Ordre del Mestre, 13-10-2026 (pla 261013_1405, front B) · s'hi afig RellotgeViu, la data i
      l'hora d'ara, vives, a la dreta de la barra taronja de les apps que la demanen. */
@@ -236,9 +238,10 @@ const FORMULARIS = [
     'carpeta categoria etiqueta ambit emoticona emoji ploma'),
   /* O4-CLAUDE-1 (ordre del Mestre, captura 261102_2121; correcció A1-06 de l'àrbitre) ·
      «On es publica?» en línia, dins de l'«Edició avançada», sense finestra modal. */
+  /* AH-04.4 (G3-pedra-seca-i18n-11) · Un Selector amb els huit àmbits, no la graella de targetes de ràdio. */
   especimen('formularis', 'ambit', 'On es publica?', 'BlocAmbit (O4-CLAUDE-1)', ['organisme', 'editor', 'formulari'],
-    'L’àmbit de la publicació (Mur, Mercat, Compartir cotxe, Treball o Habitatge), els camps de la seua fitxa i la previsualització de la targeta, en línia dins de l’«Edició avançada». Cada canvi escriu la fitxa a la nota: cap finestra ni botó de desar.',
-    'on es publica ambit fitxa mur mercat compartir cotxe vehicle treball habitatge estat previsualitzacio edicio avancada'),
+    'L’àmbit de la publicació, triat en un Selector (Mur, Mercat, Calendari, Mapa, Compartir cotxe, Animalets, Treball o Habitatge), els camps de la seua fitxa i la previsualització de la targeta, en línia dins de l’«Edició avançada». Cada canvi escriu la fitxa a la nota: cap finestra ni botó de desar.',
+    'on es publica ambit selector desplegable fitxa mur mercat calendari mapa compartir cotxe vehicle animalets treball habitatge estat previsualitzacio edicio avancada'),
   /* Fase 0 de les apps El Bar i Salut (Pedra Seca §9) · la graella tàctil i el teclat d'imports. */
   especimen('formularis', 'rajola', 'Rajola', 'PedraSeca/molecules/Rajola.jsx', ['molecula', 'accio', 'graella'],
     'Botó quadrat (1:1) amb imatge o marcador, títol i línia secundària: la peça de les graelles tàctils, com els productes d’un bar o les categories.',
@@ -513,9 +516,10 @@ export const ARBRE_UNIVERSAL = Object.freeze([
       'EventCard (el Mur)', 'SectionItemCard (ProfileSection)', 'la Consola (TargetaConsola i TargetaResum)',
       'l’acollida (OnboardingSteps)', 'Control (ControlSection)', 'Traduccions (TranslationsSection)'
     ] },
+  /* AH-02 (G3-g2-matriu-09) · NotaFitxa i PerfilShell ja no la munten: la fila activa és la compacta. */
   { id: 'targeta-viva', nom: 'TargetaViva', fitxer: 'src/components/universal/TargetaViva.jsx', pare: 'card', relacio: 'instancia', item: 'fonaments-targeta-viva',
-    rol: 'La UniversalCard (variant pla) del document que s’escriu: la fitxa activa del llistat i la targeta en línia de «Les vistes». El diàleg del xip «Vista targeta» només el munta el catàleg.',
-    consumidors: ['NotaFitxa (Notes)', 'PerfilShell (Perfil)', 'DetallVistes (Perfil, «Les vistes»)'] },
+    rol: 'La UniversalCard (variant pla) del document que s’escriu: la targeta en línia de «Les vistes» del Perfil. Mai a la llista (AH-02): la fila activa de Notes i de Perfil és la fitxa compacta. El diàleg del xip «Vista targeta» només el munta el catàleg.',
+    consumidors: ['DetallVistes (Perfil, «Les vistes»)'] },
   { id: 'editor', nom: 'DocumentEditor → UniversalEditorShell', fitxer: 'src/components/universal/DocumentEditor.jsx', pare: 'page', relacio: 'instancia', item: null,
     rol: 'PageFrame en edició: la closca de l’editor pinta una UniversalPage amb ranures.' },
   { id: 'barra-eines', nom: 'UniversalToolbar', fitxer: 'src/components/universal/UniversalToolbar.jsx', pare: 'editor', item: 'estructura-barra-eines',

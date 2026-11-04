@@ -141,8 +141,13 @@ describe('/legal · ubicació, data i càmera de les fotos (T11-05)', () => {
   test('el mapa fotogràfic del Mur només pinta publicacions, i el text ho diu així', () => {
     expect(vinyeta()).toContain('la foto d\'una publicació pot eixir al mapa fotogràfic del Mur en eixe punt');
     // Publicacions, actes i patrimoni: cap perfil, cap xat, cap nota privada.
-    expect(TIPUS_DEL_MAPA).toEqual(['feed', 'post', 'publicacio', 'event', 'patrimoni']);
+    /* Fusió del kit v3.0.0 (AH-04 · P1-1, ordre del Mestre del 261104) · Una
+       publicació de l'àmbit 'mapa' (TYPE_PER_AMBIT: type 'mapa') també és una
+       publicació del Mur, i ha d'eixir al Mapa. Continua sense perfils, xats
+       ni notes privades, ni l'àmbit 'persona'. */
+    expect(TIPUS_DEL_MAPA).toEqual(['feed', 'post', 'publicacio', 'event', 'patrimoni', 'mapa']);
     expect([esPublicacioDelMapa({ id: 'p1', type: 'post' }), esPublicacioDelMapa({ id: 'u1', type: 'profile' }), esPublicacioDelMapa({ id: 'n1', type: 'nota' })]).toEqual([true, false, false]);
+    expect([esPublicacioDelMapa({ id: 'm1', type: 'mapa' }), esPublicacioDelMapa({ id: 'm2', ambit: 'mapa' }), esPublicacioDelMapa({ id: 'u2', type: 'mapa', ambit: 'persona' })]).toEqual([true, true, false]);
   });
 
   test('«No llegim mai la ubicació del teu dispositiu»: ni el web ni les apps natives la demanen', () => {

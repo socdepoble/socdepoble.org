@@ -30,15 +30,31 @@ import { TargetaDelMur } from '../mur/TargetaDelMur.jsx';
 import { totsPublics } from '../../components/universal/traduccio/visibilitatTraduible.js';
 import { esVisibleALaLlista, perAmbit } from '../../utils/publicacioUniversal.js';
 
-/** Els tres àmbits amb secció pròpia (sections.js: vehicle, treball, habitatge). */
-export const AMBITS_VERTICALS = Object.freeze(['vehicle', 'treball', 'habitatge']);
+/** Els cinc àmbits amb secció vertical pròpia (sections.js: mapa, vehicle, animalets, treball, habitatge). */
+export const AMBITS_VERTICALS = Object.freeze(['mapa', 'vehicle', 'animalets', 'treball', 'habitatge']);
 
 /** On porta «+ Publicar»: l'editor del Bloc amb l'àmbit fixat. */
 export const rutaDePublicar = (ambit) => `/notes?ambit=${ambit}`;
 
 /* Els textos de cada vertical, en parells [clau, reserva]: la reserva és el
-   valor de ca.js, caràcter a caràcter. */
-const TEXTOS = Object.freeze({
+   valor de ca.js, caràcter a caràcter (SeccioVertical.test.jsx ho compara
+   amb ca.js per a tots els parells; G3-regressio-01: Mapa i Animalets en
+   portaven 7 de diferents).
+   G3-pedra-seca-i18n-15 · /mapa és una llista de targetes, no cap mapa:
+   l'entradilla diu el que s'hi publica (les modalitats del contracte: punt
+   d'interès, camí o ruta, patrimoni i incidència al terme) amb la clau
+   section.mapa.lead. section.mapa.subtitle («Vista geogràfica del
+   projecte…») queda per al connector del Mapa, que la fa servir encara. */
+export const TEXTOS_VERTICALS = Object.freeze({
+  mapa: Object.freeze({
+    kicker: ['section.mapa.kicker', 'Mapa'],
+    title: ['section.mapa.title', 'Mapa del territori'],
+    subtitle: ['section.mapa.lead', 'Punts d’interès, camins, patrimoni i incidències del terme que publica la gent del poble.'],
+    buit: ['section.mapa.buit', 'Encara no hi ha cap punt del mapa publicat en este poble.'],
+    error: ['section.mapa.error', 'No s’ha pogut carregar el Mapa'],
+    carregant: ['section.mapa.carregant', 'Carregant els punts del mapa…'],
+    publicar: ['section.mapa.publicar', 'Publicar un punt al mapa']
+  }),
   vehicle: Object.freeze({
     kicker: ['section.vehicle.kicker', 'Compartir cotxe'],
     title: ['section.vehicle.title', 'Viatges per compartir'],
@@ -47,6 +63,15 @@ const TEXTOS = Object.freeze({
     error: ['section.vehicle.error', 'No s’ha pogut carregar Compartir cotxe'],
     carregant: ['section.vehicle.carregant', 'Carregant els viatges…'],
     publicar: ['section.vehicle.publicar', 'Publicar un viatge']
+  }),
+  animalets: Object.freeze({
+    kicker: ['section.animalets.kicker', 'Animalets'],
+    title: ['section.animalets.title', 'Animals del poble'],
+    subtitle: ['section.animalets.subtitle', 'Adopció, animals perduts, trobats i cura comunitària al poble.'],
+    buit: ['section.animalets.buit', 'Encara no hi ha cap fitxa d’animalets publicada en este poble.'],
+    error: ['section.animalets.error', 'No s’ha pogut carregar Animalets'],
+    carregant: ['section.animalets.carregant', 'Carregant les fitxes d’animalets…'],
+    publicar: ['section.animalets.publicar', 'Publicar una fitxa d’animalets']
   }),
   treball: Object.freeze({
     kicker: ['section.treball.kicker', 'Treball'],
@@ -89,7 +114,7 @@ export default function SeccioVertical({ ambit }) {
     carregaMes = SENSE_CARREGA, hiHaMes = SENSE_MES, carregantMes = SENSE_MES, errorMes = SENSE_ERROR
   } = useMur();
   const { t } = useUIActions();
-  const textos = Object.hasOwn(TEXTOS, ambit) ? TEXTOS[ambit] : null;
+  const textos = Object.hasOwn(TEXTOS_VERTICALS, ambit) ? TEXTOS_VERTICALS[ambit] : null;
   const tr = (parell) => (parell ? t(parell[0], parell[1]) : '');
   /* Només les fitxes d'este àmbit que es poden llistar (mai una 'tancada'). */
   const items = useMemo(() => perAmbit(sortedFeedPosts, ambit).filter(esVisibleALaLlista), [sortedFeedPosts, ambit]);

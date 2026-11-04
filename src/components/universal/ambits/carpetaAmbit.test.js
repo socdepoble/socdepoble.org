@@ -9,9 +9,9 @@ import { CARPETA_PER_SECCIO } from '../../../sections/notes/masDeLUsuari.js';
 import { AMBITS } from '../../../utils/publicacioUniversal.js';
 
 describe('carpetaDeLAmbit', () => {
-  test('el Mercat va a la carpeta del Mercat; Mur, Compartir cotxe, Treball i Habitatge, a la del Mur', () => {
+  test('el Mercat va a la carpeta del Mercat; la resta d’àmbits, a la del Mur', () => {
     expect(Object.fromEntries(AMBITS.map((ambit) => [ambit, carpetaDeLAmbit(ambit, CARPETA_PER_SECCIO)]))).toEqual({
-      mur: 'f-mur', mercat: 'f-mercat', vehicle: 'f-mur', treball: 'f-mur', habitatge: 'f-mur'
+      mur: 'f-mur', mercat: 'f-mercat', calendari: 'f-mur', mapa: 'f-mur', vehicle: 'f-mur', animalets: 'f-mur', treball: 'f-mur', habitatge: 'f-mur'
     });
   });
 

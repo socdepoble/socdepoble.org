@@ -114,7 +114,8 @@ test('la foto d’un article fa entrada i diu de quin article és (fotoDe); un m
   expect([foto.clau, foto.tipus, foto.fotoDe, foto.imatge.src]).toEqual(['multimedia:market-0', 'multimedia', 'mercat:mac', '/assets/mac.jpg']);
   expect(deMedia({ id: 't', title: 'Tibi', article: { sectionId: 'pobles', id: 'tibi' } }).fotoDe).toBe('pobles:tibi');
   expect(deMedia({ id: 'f', title: 'Fira', article: { sectionId: 'mur', id: 'p1' } }).fotoDe).toBe('publicacions:p1');
-  expect(deMedia({ id: 'a', title: 'Aplec', article: { sectionId: 'events', id: 'e1' } }).fotoDe).toBe('agenda:e1');
+  /* G3-pedra-seca-i18n-16 · Un acte és del Calendari (TIPUS_CERCA). */
+  expect(deMedia({ id: 'a', title: 'Aplec', article: { sectionId: 'events', id: 'e1' } }).fotoDe).toBe('calendari:e1');
   /* Una secció desconeguda o un article sense id no casen amb cap resultat. */
   expect(deMedia({ id: 'x', title: 'X', article: { sectionId: 'altres', id: '1' } }).fotoDe).toBeNull();
   expect(deMedia({ id: 'y', title: 'Y', article: { sectionId: 'mercat' } }).fotoDe).toBeNull();

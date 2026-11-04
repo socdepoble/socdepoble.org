@@ -131,7 +131,7 @@ export const DESTINS_CONTROL = Object.freeze([
   desti({
     id: 'mur',
     pagina: 'publicar_mur',
-    publicar: getSectionListPath('notes'),
+    publicar: rutaDePublicarAmbit('mur'),
     seccio: getSectionListPath('mur'),
     nomPublicar: 'Publicar al Mur',
     nomSaber: 'Saber-ne més sobre el Mur'
@@ -148,6 +148,7 @@ export const DESTINS_CONTROL = Object.freeze([
   desti({
     id: 'calendari',
     pagina: 'publicar_calendari',
+    publicar: rutaDePublicarAmbit('calendari'),
     seccio: getSectionListPath('calendari'),
     nomPublicar: 'Publicar al Calendari',
     nomSaber: 'Saber-ne més sobre el Calendari'
@@ -155,6 +156,8 @@ export const DESTINS_CONTROL = Object.freeze([
   desti({
     id: 'mapa',
     pagina: 'publicar_mapa',
+    publicar: rutaDePublicarAmbit('mapa'),
+    seccio: getSectionListPath('mapa'),
     nomPublicar: 'Publicar al Mapa',
     nomSaber: 'Saber-ne més sobre el Mapa'
   }),
@@ -170,6 +173,8 @@ export const DESTINS_CONTROL = Object.freeze([
   desti({
     id: 'animalets',
     pagina: 'animalets',
+    publicar: rutaDePublicarAmbit('animalets'),
+    seccio: getSectionListPath('animalets'),
     nomPublicar: 'Publicar: Animalets',
     nomSaber: 'Saber-ne més: Animalets'
   }),

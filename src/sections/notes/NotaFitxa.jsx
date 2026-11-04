@@ -1,97 +1,66 @@
-import { ItemMedia } from '../../components/universal/workspace/ItemMedia.jsx';
-import { useIdentitatOReserva } from "../../app/contexts/useIdentitatOReserva.js";
-import { useCoreContent } from "../../app/contexts/CoreContentContext.jsx";
-import { useSession } from "../../app/contexts/SessionContext.jsx";
 import { useMemo } from 'react';
+import { ItemMedia } from '../../components/universal/workspace/ItemMedia.jsx';
 import { TEXTOS_LLAVOR } from '../../components/universal/textosLlavor.js';
-import { AVISOS_TARGETA_VIVA, TargetaViva } from '../../components/universal/TargetaViva.jsx';
-import { modeDeDadesResolt, signaturaDeNota } from './autoriaNota.js';
+import { textPla } from '../../components/universal/targetaViva.js';
 import { TITOL_NOTA_PREPARADA } from './notaPreparada.js';
-import { useNotesData } from './NotesDataContext.jsx';
-
-const EMPTY_AGENTS = Object.freeze([]);
-const CAP = Object.freeze([]);
 
 /**
- * Targeta rica de nota per al llistat del Bloc de Notes.
+ * Fitxa compacta de nota per al llistat de la columna NOTES.
  * S'injecta al UniversalWorkspace via `renderItem`; el nucli no la coneix.
- * Quan està activa es converteix en la targeta viva (TargetaViva, T50): la
- * mateixa UniversalCard de la publicació, alimentada pel document cru de la
- * nota (item.data), que ja porta les tecles que s'escriuen (NotesContext).
- *   · D1 · títol, subtítol i entradilla en text pla, no l'HTML de l'editor;
- *   · D2 · signa qui signa la barra taronja de l'editor (autoriaNota.js);
- *   · D3 · la data de publicació triada (T40), si n'hi ha;
- *   · D4 · només l'emoticona triada (item.data.icon), mai la 🪶 de la llista.
- * Poliment T50 · l'avís parla de la publicació al Mur (AVISOS_TARGETA_VIVA)
- * i la targeta exposa que és la fitxa triada (aria-current), com la compacta.
- * Onada 8 (261009) · La boina porta a la pàgina de qui signa, la mateixa de
- * la barra taronja (signaturaDeNota: { nom, avatar, poble, ruta }).
- * Gauntlet 261016 (Bloc 3.9) · La signatura porta el mode de dades del Bloc
- * (sense sessió en seed o local, Javi Llinares: mai el Foraster), i el títol
- * de reserva és el de l'H1, «Nota sense títol» (TITOL_NOTA_PREPARADA).
+ * AH-02 · Totes les notes de la columna de llista (actives o no) es mostren
+ * sempre com a fitxa compacta normal (`button.sdp-gestor-fitxa` amb
+ * `is-active` i `aria-current="true"`), amb la seua icona/miniatura, títol viu
+ * en text pla, data i subtítol/entradilla.
  */
 export function NotaFitxa({ item, active, onSelect }) {
-  // D-7 · Fora d'IdentitatProvider, la reserva anònima de només lectura (useIdentitatOReserva.js).
-  const identitatCtx = useIdentitatOReserva();
-  const actorId = identitatCtx ? identitatCtx.actorId : null;
-  const actor = identitatCtx ? identitatCtx.actor : null;
-
-  const coreCtx = useCoreContent();
-  const agents = coreCtx?.agents || EMPTY_AGENTS;
-
-  const sessionCtx = useSession();
-  const currentUser = sessionCtx ? sessionCtx.currentUser : null;
-  /* Correcció de la revisió (261016) · El mode RESOLT, com la barra taronja
-     (NotesEditor): un paquet seed que ja ha triat l'entrada real és remot. */
-  const configBloc = useNotesData()?.config;
-  const dataMode = useMemo(() => modeDeDadesResolt(configBloc), [configBloc]);
-
-  const autor = useMemo(
-    () => signaturaDeNota({ notaId: item?.id, actor, actorId, agents, currentUser, dataMode }),
-    [item?.id, actor, actorId, agents, currentUser, dataMode]
+  const titolViu = useMemo(
+    () => textPla(item?.data?.title || item?.title || '').trim() || TITOL_NOTA_PREPARADA,
+    [item?.data?.title, item?.title]
   );
 
-  /* La nota crua, amb la reserva del model de vista de la llista per al títol
-     i la imatge (toWorkspaceNote ja els ha resolt: coverImage || heroImage).
-     Bloc 3.9 · `||`: un títol buit (la persona l'ha esborrat) també pren la
-     reserva, «Nota sense títol»; abans `??` deixava passar la cadena buida. */
-  const notaViva = useMemo(() => ({
-    ...item?.data,
-    title: item?.data?.title || item?.title || TITOL_NOTA_PREPARADA,
-    heroImage: item?.data?.heroImage || item?.image || undefined
-  }), [item?.data, item?.title, item?.image]);
+  /* G3-g2-matriu-25 · El subtítol primer i, sense, l'entradilla: el mateix
+     ordre del model de la llista (NotesSection · excerpt) i de ConnexioFitxa.
+     Cada font es mira en text pla: un subtítol buit en HTML no l'amaga. */
+  const subtitolViu = useMemo(() => {
+    for (const font of [item?.data?.subtitle, item?.data?.lead, item?.excerpt]) {
+      const text = textPla(font || '').trim();
+      if (text) return text;
+    }
+    return TEXTOS_LLAVOR.entradilla;
+  }, [item?.data?.subtitle, item?.data?.lead, item?.excerpt]);
 
-  if (active) {
-    return (
-      <TargetaViva
-        className="sdp-nota-fitxa-viva"
-        document={notaViva}
-        autor={autor}
-        etiquetes={item.labels || item.tags || CAP}
-        onMainClick={onSelect}
-        avis={AVISOS_TARGETA_VIVA.notes}
-        actual
-      />
-    );
-  }
+  const itemMedia = useMemo(() => {
+    const image = item?.data?.heroImage || item?.image || undefined;
+    const icon = item?.data?.icon || item?.icon || undefined;
+    if (image === item?.image && icon === item?.icon && titolViu === item?.title) {
+      return item;
+    }
+    return {
+      ...item,
+      title: titolViu,
+      image,
+      icon
+    };
+  }, [item, titolViu]);
 
   return (
     <button
       type="button"
-      className="sdp-gestor-fitxa"
+      className={`sdp-gestor-fitxa ${active ? 'is-active' : ''}`.trim()}
+      aria-current={active ? 'true' : undefined}
       onClick={onSelect}
     >
-      <ItemMedia item={item} titleFallback={TITOL_NOTA_PREPARADA} />
+      <ItemMedia item={itemMedia} titleFallback={TITOL_NOTA_PREPARADA} />
       <span className="sdp-gestor-fitxa__text">
         <span className="sdp-nota-fitxa__capcalera">
-          <span className="sdp-gestor-fitxa__titol">{item.title || TITOL_NOTA_PREPARADA}</span>
-          {item.subtitle ? (
+          <span className="sdp-gestor-fitxa__titol">{titolViu}</span>
+          {item?.subtitle ? (
             <time className="sdp-nota-fitxa__data" dateTime={item.updatedAt || undefined}>
               {item.subtitle}
             </time>
           ) : null}
         </span>
-        <span className="sdp-gestor-fitxa__subtitol">{item.excerpt || TEXTOS_LLAVOR.entradilla}</span>
+        <span className="sdp-gestor-fitxa__subtitol">{subtitolViu}</span>
       </span>
     </button>
   );

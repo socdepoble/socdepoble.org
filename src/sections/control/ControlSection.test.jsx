@@ -205,8 +205,8 @@ test('D3 · cap targeta ni botó del Panell navega a una ruta que no és a la ta
      Vehicle Compartit, Treball i Habitatge), cadascun a l'editor amb el seu
      àmbit (/notes?ambit=…): 13 portes obertes, totes distintes. */
   const deLesPortes = destins.filter(([esPorta]) => esPorta).map(([, desti]) => desti);
-  expect(deLesPortes).toHaveLength(DESTINS_CONTROL.length + 5);
-  expect(deLesPortes).toHaveLength(13);
+  expect(deLesPortes).toHaveLength(DESTINS_CONTROL.length * 2);
+  expect(deLesPortes).toHaveLength(16);
   expect(new Set(deLesPortes).size).toBe(deLesPortes.length);
   expect(destins.map(([, desti]) => desti).filter((desti) => !esDestiDeLApp(desti))).toEqual([]);
   expect(destins.map(([, desti]) => desti)).not.toContain('/gestoria');
@@ -244,22 +244,25 @@ test('D3 · les huit targetes de publicació enllacen les seues pàgines en ordr
 /* IDEA-61 (T0, prompt 261102_1532) · Mercat, Vehicle Compartit, Treball i
    Habitatge ja publiquen: l'editor del Bloc amb l'àmbit (/notes?ambit=…).
    Només Calendari, Mapa i Animalets conserven l'avís d'obres. */
-test('P5 · Publicar al Mur obri el Bloc; Mercat, Vehicle, Treball i Habitatge obrin l’editor amb l’àmbit (IDEA-61); la resta conserva l’avís d’obres', () => {
+test('P5 · Publicar al Mur i els altres set àmbits obrin l’editor amb ?ambit= (IDEA-61 i AH-04); cap porta resta en obres', () => {
   pinta();
   const publicar = screen.getByRole('link', { name: 'Publicar al Mur' });
-  expect(publicar.getAttribute('href')).toBe('/notes');
+  expect(publicar.getAttribute('href')).toBe('/notes?ambit=mur');
   fireEvent.click(publicar);
-  expect(ubicacio()).toBe('/notes');
-  for (const [nom, ambit] of [['Publicar al Mercat', 'mercat'], ['Publicar: Vehicle Compartit', 'vehicle'], ['Publicar: Treball', 'treball'], ['Publicar: Habitatge', 'habitatge']]) {
+  expect(ubicacio()).toBe('/notes?ambit=mur');
+  for (const [nom, ambit] of [
+    ['Publicar al Mercat', 'mercat'],
+    ['Publicar al Calendari', 'calendari'],
+    ['Publicar al Mapa', 'mapa'],
+    ['Publicar: Vehicle Compartit', 'vehicle'],
+    ['Publicar: Animalets', 'animalets'],
+    ['Publicar: Treball', 'treball'],
+    ['Publicar: Habitatge', 'habitatge']
+  ]) {
     expect(screen.getByRole('link', { name: nom }).getAttribute('href'), nom).toBe(`/notes?ambit=${ambit}`);
   }
   const inertes = [...document.querySelectorAll('button.sp-card-porta[aria-disabled="true"]')];
-  expect(inertes).toHaveLength(3);
-  const noms = ['Publicar al Calendari (en obres)', 'Publicar al Mapa (en obres)', 'Publicar: Animalets (en obres)'];
-  for (const [i, boto] of inertes.entries()) expect(screen.getByRole('button', { name: noms[i] })).toBe(boto);
-  fireEvent.click(inertes[0]);
-  expect(ubicacio()).toBe('/notes');
-  expect(estat.toast).toHaveBeenCalledWith('“Publicar al Calendari” encara està en obres.');
+  expect(inertes).toHaveLength(0);
 });
 
 test('P5 · en anglés, les dues portes es tradueixen i Publicar al Mur continua obrint el Bloc', () => {
@@ -271,7 +274,7 @@ test('P5 · en anglés, les dues portes es tradueixen i Publicar al Mur continua
   expect(within(targeta).queryByText('Publicar')).toBeNull();
   expect(within(targeta).queryByText('Saber-ne més')).toBeNull();
   fireEvent.click(within(targeta).getByRole('link', { name: 'Publish on the Wall' }));
-  expect(ubicacio()).toBe('/notes');
+  expect(ubicacio()).toBe('/notes?ambit=mur');
 });
 
 /* P7-B · La Gestoria ja no és la targeta «EN OBRES» sense clic: és una de les
@@ -901,12 +904,12 @@ test('T8 · D-B · cada targeta de dalt: boina → imatge → cos → peu', () =
    seua porta Publicar és un enllaç a l'editor amb l'àmbit (/notes?ambit=
    vehicle). Mapa i Animalets conserven la porta inerta. Posicions, títols
    literals i «Saber-ne més» no canvien. */
-test('W4-04 · Mapa, Vehicle Compartit i Animalets: posicions 4, 5 i 6, text literal, cap etiqueta; Mapa i Animalets amb Publicar inert, Vehicle amb l’editor (IDEA-61)', () => {
+test('W4-04 · Mapa, Vehicle Compartit i Animalets: posicions 4, 5 i 6, text literal, cap etiqueta i Publicar cap a l’editor amb l’àmbit (IDEA-61 i AH-04)', () => {
   pinta();
   const esperades = [
-    [3, 'Publicar al Mapa', 'Si tens coses que vols geolocalitzar, este és el lloc', 'Publicar al Mapa', 'Saber-ne més sobre el Mapa', '/page/publicar_mapa', null],
+    [3, 'Publicar al Mapa', 'Si tens coses que vols geolocalitzar, este és el lloc', 'Publicar al Mapa', 'Saber-ne més sobre el Mapa', '/page/publicar_mapa', '/notes?ambit=mapa'],
     [4, 'Vehicle Compartit', 'Aprofita els seients buits i estalvia en els trajectes', 'Publicar: Vehicle Compartit', 'Saber-ne més: Vehicle Compartit', '/page/vehicle_compartit', '/notes?ambit=vehicle'],
-    [5, 'Animalets', 'Troba, adopta o avisa sobre els animals del poble', 'Publicar: Animalets', 'Saber-ne més: Animalets', '/page/animalets', null]
+    [5, 'Animalets', 'Troba, adopta o avisa sobre els animals del poble', 'Publicar: Animalets', 'Saber-ne més: Animalets', '/page/animalets', '/notes?ambit=animalets']
   ];
   for (const [posicio, titol, subtitol, nomPublicar, nomSaber, pagina, editor] of esperades) {
     const targeta = targetesDeDalt()[posicio];
@@ -914,25 +917,23 @@ test('W4-04 · Mapa, Vehicle Compartit i Animalets: posicions 4, 5 i 6, text lit
     expect(targeta.querySelector('.sp-card-subtitle').textContent).toBe(subtitol);
     expect(targeta.querySelector('.sp-card-labels')).toBeNull();
     expect(within(targeta).queryByText('EN OBRES')).toBeNull();
-    if (editor) {
-      /* IDEA-61 · La porta oberta: un enllaç amb el nom sencer i sense «(en obres)». */
-      const publicar = within(targeta).getByRole('link', { name: nomPublicar });
-      expect(publicar.getAttribute('href'), titol).toBe(editor);
-      expect(within(targeta).queryByRole('button', { name: `${nomPublicar} (en obres)` }), titol).toBeNull();
-      for (const zona of [targeta.querySelector('.sp-card-body'), targeta.querySelector('.sp-card-media-container')].filter(Boolean)) {
-        fireEvent.click(zona);
-        expect(ubicacio(), titol).toBe('/control');
-      }
-    } else {
-      const publicar = within(targeta).getByRole('button', { name: `${nomPublicar} (en obres)` });
-      expect(publicar.getAttribute('aria-disabled')).toBe('true');
-      for (const zona of [publicar, targeta.querySelector('.sp-card-body'), targeta.querySelector('.sp-card-media-container')].filter(Boolean)) {
-        fireEvent.click(zona);
-        expect(ubicacio(), titol).toBe('/control');
-      }
-      expect(estat.toast).toHaveBeenLastCalledWith(`“${nomPublicar}” encara està en obres.`);
+    const publicar = within(targeta).getByRole('link', { name: nomPublicar });
+    expect(publicar.getAttribute('href'), titol).toBe(editor);
+    expect(within(targeta).queryByRole('button', { name: `${nomPublicar} (en obres)` }), titol).toBeNull();
+    for (const zona of [targeta.querySelector('.sp-card-body'), targeta.querySelector('.sp-card-media-container')].filter(Boolean)) {
+      cleanup();
+      pinta();
+      const targetaActual = targetesDeDalt()[posicio];
+      const zonaActual = zona.classList.contains('sp-card-body')
+        ? targetaActual.querySelector('.sp-card-body')
+        : targetaActual.querySelector('.sp-card-media-container');
+      fireEvent.click(zonaActual);
+      expect(ubicacio(), titol).toBe(pagina);
     }
-    expect(within(targeta).getByRole('link', { name: nomSaber }).getAttribute('href')).toBe(pagina);
+    cleanup();
+    pinta();
+    const targetaNova = targetesDeDalt()[posicio];
+    expect(within(targetaNova).getByRole('link', { name: nomSaber }).getAttribute('href')).toBe(pagina);
   }
   for (const targeta of targetesDeDalt().slice(0, 3)) expect(targeta.querySelector('.sp-card-labels'), titolDe(targeta)).toBeNull();
   /* «Saber-ne més» del Mapa obri la seua pàgina. */
@@ -945,19 +946,20 @@ test('W4-04 · Mapa, Vehicle Compartit i Animalets: posicions 4, 5 i 6, text lit
   expect(ubicacio()).toBe('/notes?ambit=vehicle');
 });
 
-/* IDEA-61 (T0, prompt 261102_1532) · Quatre portes Publicar més s'obrin
-   (Mercat, Vehicle Compartit, Treball i Habitatge), cap a l'editor amb
-   l'àmbit; només Calendari, Mapa i Animalets continuen inertes. */
-test('P5 · les portes obertes: Publicar al Mur → /notes, Publicar amb àmbit → /notes?ambit=… (IDEA-61) i cada Saber-ne més → la UniversalPage de la targeta', () => {
+/* IDEA-61 i AH-04 · Les huit portes Publicar s'obrin cap a l'editor (/notes?ambit=…). */
+test('P5 · les portes obertes: Publicar amb àmbit → /notes?ambit=… (IDEA-61 i AH-04) i cada Saber-ne més → la UniversalPage de la targeta', () => {
   const esperades = [
-    ['Publicar al Mur', '/notes'],
+    ['Publicar al Mur', '/notes?ambit=mur'],
     ['Saber-ne més sobre el Mur', '/page/publicar_mur'],
     ['Publicar al Mercat', '/notes?ambit=mercat'],
     ['Saber-ne més sobre el Mercat', '/page/publicar_mercat'],
+    ['Publicar al Calendari', '/notes?ambit=calendari'],
     ['Saber-ne més sobre el Calendari', '/page/publicar_calendari'],
+    ['Publicar al Mapa', '/notes?ambit=mapa'],
     ['Saber-ne més sobre el Mapa', '/page/publicar_mapa'],
     ['Publicar: Vehicle Compartit', '/notes?ambit=vehicle'],
     ['Saber-ne més: Vehicle Compartit', '/page/vehicle_compartit'],
+    ['Publicar: Animalets', '/notes?ambit=animalets'],
     ['Saber-ne més: Animalets', '/page/animalets'],
     /* W4-08 · Treball i Habitatge (MarIA, 261004). */
     ['Publicar: Treball', '/notes?ambit=treball'],
@@ -970,10 +972,7 @@ test('P5 · les portes obertes: Publicar al Mur → /notes, Publicar amb àmbit 
   expect([...document.querySelectorAll('a.sp-card-porta')].map((enllac) => enllac.getAttribute('href')))
     .toEqual(esperades.map(([, desti]) => desti));
   for (const [nom, desti] of esperades) expect(screen.getByRole('link', { name: nom }).getAttribute('href'), nom).toBe(desti);
-  for (const nom of ['Publicar al Calendari', 'Publicar al Mapa', 'Publicar: Animalets']) {
-    expect(screen.getByRole('button', { name: `${nom} (en obres)` }).getAttribute('aria-disabled')).toBe('true');
-  }
-  expect(document.querySelectorAll('button.sp-card-porta[aria-disabled="true"]')).toHaveLength(3);
+  expect(document.querySelectorAll('button.sp-card-porta[aria-disabled="true"]')).toHaveLength(0);
   for (const [nom, desti] of esperades) {
     cleanup();
     pinta();
@@ -981,11 +980,11 @@ test('P5 · les portes obertes: Publicar al Mur → /notes, Publicar amb àmbit 
     expect(ubicacio(), nom).toBe(desti);
     expect(esDestiDeLApp(desti), nom).toBe(true);
   }
-  /* Tocar la imatge no fa res: només l'autor, la data i les portes són interactius. */
+  /* AH-04 · Tocar la imatge o el títol d'una targeta obri la seua pàgina explicativa (/page/<pagina>). */
   cleanup();
   pinta();
   fireEvent.click(targetesDeDalt()[0].querySelector('.sp-card-media-container'));
-  expect(ubicacio()).toBe('/control');
+  expect(ubicacio()).toBe('/page/publicar_mur');
 });
 
 /* El títol, el subtítol i l'entradilla són els textos del Mestre (2245), els
@@ -996,16 +995,16 @@ test('P5 · en anglés, les portes es tradueixen i porten al mateix lloc; el con
   pinta();
   expect(screen.getByRole('heading', { level: 2, name: 'Post to the village' })).toBeTruthy();
   expect(targetesDeDalt().map(titolDe)).toEqual(TITOLS_DALT);
-  /* IDEA-61 (T0, prompt 261102_1532) · Vehicle Compartit i Treball ja publiquen: enllaços traduïts cap a l'editor amb l'àmbit. */
+  /* IDEA-61 i AH-04 · Tots els destins publiquen: enllaços traduïts cap a l'editor amb l'àmbit. */
   expect(screen.getByRole('link', { name: 'Publish: Shared Vehicle' }).getAttribute('href')).toBe('/notes?ambit=vehicle');
-  expect(screen.getByRole('button', { name: 'Publish: Animals (under construction)' })).toBeTruthy();
+  expect(screen.getByRole('link', { name: 'Publish: Animals' }).getAttribute('href')).toBe('/notes?ambit=animalets');
   expect(screen.getByRole('link', { name: 'Learn more: Animals' }).getAttribute('href')).toBe('/page/animalets');
   /* W4-08 · Les claus noves de Treball i Habitatge, traduïdes. */
   expect(screen.getByRole('link', { name: 'Publish: Jobs' }).getAttribute('href')).toBe('/notes?ambit=treball');
   expect(screen.getByRole('link', { name: 'Learn more: Housing' }).getAttribute('href')).toBe('/page/habitatge');
   expect(screen.queryByText('Saber-ne més')).toBeNull();
   fireEvent.click(screen.getByRole('link', { name: 'Publish on the Wall' }));
-  expect(ubicacio()).toBe('/notes');
+  expect(ubicacio()).toBe('/notes?ambit=mur');
 });
 
 /* ═══ P6 · Directriu 261003_2325 del Mestre i notes de Codex (W4-08) ═══

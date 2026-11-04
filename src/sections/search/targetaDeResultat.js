@@ -31,7 +31,7 @@
  */
 
 /** Els tipus del filtre que ofereixen la vista de targetes. */
-export const TIPUS_AMB_TARGETES = Object.freeze(['persones', 'entitats', 'pobles', 'mercat', 'vehicle', 'treball', 'habitatge']);
+export const TIPUS_AMB_TARGETES = Object.freeze(['persones', 'entitats', 'pobles', 'mercat', 'calendari', 'mapa', 'vehicle', 'animalets', 'treball', 'habitatge']);
 
 /** Les vistes d'un ?vista=: 'llista' (per defecte) o 'graella' (les targetes). */
 export const VISTES_CERCA = Object.freeze(['llista', 'graella']);

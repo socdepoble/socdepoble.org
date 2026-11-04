@@ -543,8 +543,29 @@ describe('EspecimenTargetaViva', () => {
     expect(arrel.textContent).not.toMatch(/l’aside i el xip[^.]{0,80}reserva/);
     const consumidors = nodeUniversal('targeta-viva').consumidors.join(' · ');
     expect(consumidors).not.toContain('DocumentEditor');
-    for (const nom of ['NotaFitxa', 'PerfilShell', 'DetallVistes']) expect(consumidors).toContain(nom);
+    expect(consumidors).toContain('DetallVistes');
     expect(nodeUniversal('targeta-viva').rol).not.toContain('l’aside de l’editor');
+  });
+
+  /* G3-g2-matriu-09, G3-ah-conformitat-08 i G3-pedra-seca-i18n-11 (AH-02 i
+     AH-08.1: «actualitzar l'espècimen del catàleg de disseny») · La fila activa
+     de la llista de Notes i de Perfil és la fitxa compacta (NotaFitxa i
+     PerfilShell · DefaultItemCard), mai la targeta viva: el catàleg, el «Fes /
+     No facis» que consulten les IA i el Mestre, ja no la dona per consumidora
+     de la llista, i «No facis» ho prohibix. Només «Les vistes» del Perfil
+     (DetallVistes) i el catàleg la munten. */
+  it('AH-02: la llista de Notes i de Perfil ja no és consumidora; «No facis» prohibix tornar-la a la fila activa', () => {
+    const node = nodeUniversal('targeta-viva');
+    const consumidors = node.consumidors.join(' · ');
+    for (const nom of ['NotaFitxa', 'PerfilShell']) expect(consumidors).not.toContain(nom);
+    expect(node.rol).not.toMatch(/fitxa activa del llistat/);
+    const item = CATALOG_ITEMS.find((i) => i.id === 'fonaments-targeta-viva');
+    expect(item.lead).not.toMatch(/fitxa activa de la llista/);
+    expect(item.lead).toContain('«Les vistes»');
+    const text = pinta(EspecimenTargetaViva).textContent;
+    expect(text).not.toContain('la fitxa activa de la llista és la targeta viva');
+    expect(text).not.toContain('A la llista, la fitxa triada porta aria-current');
+    expect(text).toContain('Tornar a convertir la fila activa de la llista de Notes o de Perfil en targeta viva');
   });
 
   it('en edició, sense data triada la targeta viva diu la data d’ara i, amb data triada, la triada', () => {

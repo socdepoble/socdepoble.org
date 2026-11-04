@@ -13,7 +13,7 @@ import {
   ESTATS_FACETA, GRUPS_FACETES, TRAMS_DATA, ambEtiquetes, facetesDeLEntrada, grupsDeFacetes, idDeFaceta, itemsDeLEspai, tramsDeData
 } from './facetesCerca.js';
 import {
-  TIPUS_CERCA, deActe, deAgent, deNota, dePagina, dePoble, deProducte, dePublicacio, esCorreu, marcaTemps, plega
+  TIPUS_CERCA, deActe, deActeDelCalendari, deAgent, deNota, dePagina, dePoble, deProducte, dePublicacio, esCorreu, marcaTemps, plega
 } from './indexCerca.js';
 
 const DIA = 86_400_000;
@@ -184,7 +184,8 @@ describe('tramsDeData', () => {
 
 const P1 = dePublicacio({ id: 'p1', title: 'Festa de la Cirera', town_name: TORRE, date: iso(local(2026, 11, 1, 10)) });
 const P2 = dePublicacio({ id: 'p2', title: 'Obres a la plaça', town_name: 'la torre de les maçanes', date: iso(local(2026, 10, 29, 10)) });
-const A1 = deActe({ id: 'a1', title: 'Concert al llavador', date: iso(local(2026, 11, 3, 19)) });
+/* G3-pedra-seca-i18n-16 · Un acte de /cerca (useCercaGlobal · deActeDelCalendari), del Calendari. */
+const A1 = deActeDelCalendari({ id: 'a1', title: 'Concert al llavador', date: iso(local(2026, 11, 3, 19)) });
 const M1 = deProducte({ id: 'm1', title: 'Mel de romer', population: 'Benifallim', created_at: iso(local(2026, 9, 22, 9)) });
 const V1 = dePoble({ id: 'benifallim', title: 'Benifallim', comarca: "l'Alcoià", created_at: iso(local(2024, 5, 2, 9)) });
 const N1 = deNota({ id: 'n1', title: 'Llista del forn', updatedAt: iso(local(2026, 11, 1, 9)) });
@@ -196,7 +197,7 @@ describe('facetesDeLEntrada', () => {
     expect(facetesDeLEntrada(P1, OPCIONS)).toEqual([
       'tipus:publicacions', 'poble:la-torre-de-les-macanes', 'data:hui', 'data:setmana', 'data:mes', 'data:any'
     ]);
-    expect(facetesDeLEntrada(A1, OPCIONS)).toEqual(['tipus:agenda', 'data:futur']);
+    expect(facetesDeLEntrada(A1, OPCIONS)).toEqual(['tipus:calendari', 'data:futur']);
     expect(facetesDeLEntrada(E1, OPCIONS)).toEqual(['tipus:persones', 'poble:benifallim']);
   });
 
@@ -229,7 +230,7 @@ describe('facetesDeLEntrada', () => {
   });
 
   test('idDeFaceta compon grup i valor', () => {
-    expect(idDeFaceta('tipus', 'agenda')).toBe('tipus:agenda');
+    expect(idDeFaceta('tipus', 'calendari')).toBe('tipus:calendari');
     expect(idDeFaceta('poble', 'la-torre-de-les-macanes')).toBe('poble:la-torre-de-les-macanes');
   });
 });
@@ -244,11 +245,12 @@ describe('grupsDeFacetes', () => {
   test('Tipus: en l’ordre de TIPUS_CERCA, sense «tot» i només els que tenen recompte', () => {
     const [tipus] = grupsDeFacetes(ENTRADES, OPCIONS);
     expect(tipus.options.map((o) => [o.id, o.count])).toEqual([
-      ['tipus:persones', 1], ['tipus:pobles', 1], ['tipus:publicacions', 2], ['tipus:agenda', 1], ['tipus:mercat', 1], ['tipus:notes', 1]
+      ['tipus:persones', 1], ['tipus:pobles', 1], ['tipus:publicacions', 2], ['tipus:mercat', 1], ['tipus:calendari', 1], ['tipus:notes', 1]
     ]);
-    const agenda = tipus.options.find((o) => o.id === 'tipus:agenda');
-    const deLaCerca = TIPUS_CERCA.find((t) => t.id === 'agenda');
-    expect(agenda).toEqual({ id: 'tipus:agenda', clau: deLaCerca.clau, text: deLaCerca.text, count: 1 });
+    /* G3-pedra-seca-i18n-16 · Els actes de l'agenda són del Calendari, darrere del Mercat. */
+    const calendari = tipus.options.find((o) => o.id === 'tipus:calendari');
+    const deLaCerca = TIPUS_CERCA.find((t) => t.id === 'calendari');
+    expect(calendari).toEqual({ id: 'tipus:calendari', clau: deLaCerca.clau, text: deLaCerca.text, count: 1 });
   });
 
   test('Pobles: una sola opció per poble plegat, amb la primera grafia, de més a menys recompte', () => {
@@ -384,11 +386,11 @@ describe('itemsDeLEspai', () => {
 
 describe('ambEtiquetes', () => {
   test('tradueix les opcions amb clau i deixa el nom del poble tal qual', () => {
-    const t = vi.fn((clau, reserva) => (clau === 'section.search.tipus.agenda' ? 'Agenda (es)' : `${reserva}*`));
+    const t = vi.fn((clau, reserva) => (clau === 'section.search.tipus.calendari' ? 'Calendario (es)' : `${reserva}*`));
     const grups = grupsDeFacetes(ENTRADES, OPCIONS);
     const amb = ambEtiquetes(grups, t);
     expect(amb[0].label).toBe('Tipus*');
-    expect(amb[0].options.find((o) => o.id === 'tipus:agenda').label).toBe('Agenda (es)');
+    expect(amb[0].options.find((o) => o.id === 'tipus:calendari').label).toBe('Calendario (es)');
     expect(amb[1].options.map((o) => o.label)).toEqual(['Benifallim', TORRE]);
     expect(t.mock.calls.every(([clau]) => typeof clau === 'string' && clau.startsWith('section.search.'))).toBe(true);
     /* Els grups d'entrada no es toquen. */
@@ -471,7 +473,7 @@ describe('IDEA-61 · la faceta Estat de les fitxes d’àmbit', () => {
     ]);
     /* La faceta de tipus naix sola de TIPUS_CERCA: les tres verticals, al seu lloc, darrere del Mercat. */
     expect(grups[0].options.map((o) => o.id)).toEqual([
-      'tipus:persones', 'tipus:pobles', 'tipus:publicacions', 'tipus:agenda', 'tipus:mercat', 'tipus:vehicle', 'tipus:treball', 'tipus:habitatge', 'tipus:notes'
+      'tipus:persones', 'tipus:pobles', 'tipus:publicacions', 'tipus:mercat', 'tipus:calendari', 'tipus:vehicle', 'tipus:treball', 'tipus:habitatge', 'tipus:notes'
     ]);
     expect(grups[0].options.find((o) => o.id === 'tipus:vehicle')).toEqual({ id: 'tipus:vehicle', clau: 'section.search.tipus.vehicle', text: 'Compartir cotxe', count: 2 });
     /* Un sol estat per element, i el recompte quadra. */

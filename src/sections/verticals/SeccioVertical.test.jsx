@@ -26,13 +26,16 @@ vi.mock('../../app/contexts/UIContext', () => ({
 vi.mock('../../hooks/useSEO', () => ({ useSEO: (...args) => estat.seo(...args) }));
 vi.mock('../mur/MurContext', () => ({ useMur: () => estat.mur }));
 
-import SeccioVertical, { AMBITS_VERTICALS, rutaDePublicar } from './SeccioVertical.jsx';
+import SeccioVertical, { AMBITS_VERTICALS, TEXTOS_VERTICALS, rutaDePublicar } from './SeccioVertical.jsx';
+import CA from '../../config/idiomes/ca.js';
 
 const CREAT = '2026-11-02T10:00:00.000Z';
 const fitxa = (ambit, id, extra = {}) => ({
   id, type: ambit, title: `Fitxa ${id}`, ambit, estat: 'disponible', created_at: CREAT, dades: {}, ...extra
 });
+const puntMapa = (id, extra) => fitxa('mapa', id, { dades: { modalitat: 'patrimoni', lloc: 'Assut del riu', municipi: 'La Torre' }, ...extra });
 const viatge = (id, extra) => fitxa('vehicle', id, { dades: { modalitat: 'oferisc_places', lloc_eixida: 'La Torre', lloc_arribada: 'Alcoi', data_eixida: '2026-11-15', places: 3 }, ...extra });
+const animal = (id, extra) => fitxa('animalets', id, { dades: { modalitat: 'adopcio', especie: 'Gos pastor', municipi: 'La Torre' }, ...extra });
 const oferta = (id, extra) => fitxa('treball', id, { dades: { modalitat: 'oferta_feina', ofici: 'Forn' }, ...extra });
 const casa = (id, extra) => fitxa('habitatge', id, { dades: { modalitat: 'lloguer', preu: '350 €' }, ...extra });
 const deSempre = (id) => ({ id, type: 'feed', title: `Publicació ${id}`, created_at: CREAT });
@@ -49,19 +52,47 @@ const enllacos = () => targetes().map((article) => article.querySelector('a.sp-c
 const titol = () => document.querySelector('header.page-title h1')?.textContent;
 
 const TEXTOS = {
+  mapa: { kicker: 'Mapa', buit: 'Encara no hi ha cap punt del mapa publicat en este poble.', error: 'No s’ha pogut carregar el Mapa', carregant: 'Carregant els punts del mapa…', publicar: 'Publicar un punt al mapa' },
   vehicle: { kicker: 'Compartir cotxe', buit: 'Encara no hi ha cap viatge publicat en este poble.', error: 'No s’ha pogut carregar Compartir cotxe', carregant: 'Carregant els viatges…', publicar: 'Publicar un viatge' },
+  animalets: { kicker: 'Animalets', buit: 'Encara no hi ha cap fitxa d’animalets publicada en este poble.', error: 'No s’ha pogut carregar Animalets', carregant: 'Carregant les fitxes d’animalets…', publicar: 'Publicar una fitxa d’animalets' },
   treball: { kicker: 'Treball', buit: 'Encara no hi ha cap oferta publicada en este poble.', error: 'No s’ha pogut carregar Treball', carregant: 'Carregant les ofertes…', publicar: 'Publicar una oferta' },
   habitatge: { kicker: 'Habitatge', buit: 'Encara no hi ha cap habitatge publicat en este poble.', error: 'No s’ha pogut carregar Habitatge', carregant: 'Carregant els habitatges…', publicar: 'Publicar un habitatge' }
 };
-const TOTES = [viatge('v1'), viatge('v2', { estat: 'tancat' }), oferta('t1'), oferta('t2', { estat: 'reservat' }), casa('h1'), casa('h2', { estat: 'complet' }), deSempre('p1')];
-const ESPERADES = { vehicle: ['/vehicle/v1'], treball: ['/treball/t1', '/treball/t2'], habitatge: ['/habitatge/h1', '/habitatge/h2'] };
+const TOTES = [puntMapa('m1'), puntMapa('m2', { estat: 'tancat' }), viatge('v1'), viatge('v2', { estat: 'tancat' }), animal('a1'), animal('a2', { estat: 'tancat' }), oferta('t1'), oferta('t2', { estat: 'reservat' }), casa('h1'), casa('h2', { estat: 'complet' }), deSempre('p1')];
+const ESPERADES = { mapa: ['/mapa/m1'], vehicle: ['/vehicle/v1'], animalets: ['/animalets/a1'], treball: ['/treball/t1', '/treball/t2'], habitatge: ['/habitatge/h1', '/habitatge/h2'] };
 
 beforeEach(() => { vi.clearAllMocks(); estat.mur = mur([]); });
 afterEach(cleanup);
 
+/* G3-regressio-01 i G3-pedra-seca-i18n-10 · El contracte del fitxer («la
+   reserva és el valor de ca.js, caràcter a caràcter») es complia per a
+   vehicle, treball i habitatge, però no per a Mapa ni Animalets (7 reserves
+   diferents). La prova en fixava les reserves amb un t que les torna: ara
+   cada parell [clau, reserva] es compara amb ca.js, també els que vinguen.
+   G3-pedra-seca-i18n-15 · /mapa és una llista de targetes: l'entradilla no
+   promet cap «vista geogràfica del projecte» (la clau section.mapa.subtitle,
+   que encara fa servir el connector del Mapa), sinó el que s'hi publica. */
+describe('els textos: la reserva és la de ca.js, caràcter a caràcter', () => {
+  test.each(AMBITS_VERTICALS)('%s: cada [clau, reserva] és el valor de ca.js', (ambit) => {
+    const parells = Object.values(TEXTOS_VERTICALS[ambit]);
+    expect(parells.length).toBe(7);
+    for (const [clau, reserva] of parells) expect([clau, reserva]).toEqual([clau, CA[clau]]);
+  });
+
+  test('/mapa: l’entradilla diu el que hi ha (punts, camins, patrimoni i incidències), mai una «vista geogràfica»', () => {
+    expect(TEXTOS_VERTICALS.mapa.subtitle[0]).toBe('section.mapa.lead');
+    pinta('mapa');
+    const entradilla = TEXTOS_VERTICALS.mapa.subtitle[1];
+    expect(entradilla).toBe('Punts d’interès, camins, patrimoni i incidències del terme que publica la gent del poble.');
+    expect(document.body.textContent).toContain(entradilla);
+    expect(document.body.textContent).not.toMatch(/geogr[aà]fica/i);
+    expect(estat.seo).toHaveBeenCalledWith(expect.objectContaining({ description: entradilla }));
+  });
+});
+
 describe('la llista: les fitxes de l’àmbit que es poden llistar, amb la targeta del Mur', () => {
-  test('tres àmbits amb secció', () => {
-    expect(AMBITS_VERTICALS).toEqual(['vehicle', 'treball', 'habitatge']);
+  test('cinc àmbits amb secció', () => {
+    expect(AMBITS_VERTICALS).toEqual(['mapa', 'vehicle', 'animalets', 'treball', 'habitatge']);
     expect(rutaDePublicar('vehicle')).toBe('/notes?ambit=vehicle');
   });
 

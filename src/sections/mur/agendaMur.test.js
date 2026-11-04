@@ -173,6 +173,30 @@ describe('acteOcorreElDia', () => {
   test('sense acte al model, null: qui filtra fa servir la pastilla', () => {
     expect(acteOcorreElDia(acte({ date: undefined, created_at: '2026-09-20T08:15:00+00:00' }), '2026-09-20')).toBeNull();
   });
+
+  test('AH-04 (P1-2) · un acte publicat amb ambit === "calendari" i interval multi-dia (data_inici + data_fi) ocorre tots els dies de l’interval i navega a /calendari/<id>', () => {
+    const cursPedraSeca = {
+      id: 'curs-pedra-seca',
+      type: 'calendari',
+      ambit: 'calendari',
+      title: 'Cursos de Pedra en Sec',
+      dades: {
+        data_inici: '2026-11-10',
+        data_fi: '2026-11-12',
+        lloc: 'Bancals del Rentonar',
+        municipi: 'La Torre de les Maçanes'
+      }
+    };
+    const esd = acteAEsdeveniment(cursPedraSeca);
+    expect(esd).not.toBeNull();
+    expect(esd.font.ruta).toBe('/calendari/curs-pedra-seca');
+    expect(esd.lloc).toBe('Bancals del Rentonar · La Torre de les Maçanes');
+    expect(
+      ['2026-11-09', '2026-11-10', '2026-11-11', '2026-11-12', '2026-11-13'].map((dia) =>
+        acteOcorreElDia(cursPedraSeca, dia, esd)
+      )
+    ).toEqual([false, true, true, true, false]);
+  });
 });
 
 /* calendari-7 · Les proves corren amb una zona fixada (vite.config.js). Amb la

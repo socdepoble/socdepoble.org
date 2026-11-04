@@ -67,7 +67,8 @@ vi.mock('../../utils/imageUtils.js', () => ({ compressImage: dobles.compressImag
 
 import { PerfilEditor, avisDeImatgeNoDesada } from './PerfilEditor.jsx';
 import { AVIS_IMATGE_PUJANT } from './useImatgeDeFitxa.jsx';
-import { AVISOS_TARGETA_VIVA, TargetaViva, useDocumentViu } from '../../components/universal/TargetaViva.jsx';
+import { useDocumentViu } from '../../components/universal/TargetaViva.jsx';
+import { DefaultItemCard } from '../../components/universal/workspace';
 import { DEFAULT_AUTHOR } from '../../components/universal/UniversalUtils.js';
 import { AJUDA_FOTO } from '../../components/universal/enquadrament/useEnquadramentImatge.jsx';
 import { AJUDA_IMATGE_PUJANT } from '../../components/universal/UniversalEditorShell.jsx';
@@ -811,9 +812,10 @@ describe('el check del desat després d’un reintent', () => {
    un 403/42501 injectat al desat, l'editor ensenyava la foto nova i la
    targeta viva la vella, el retallador es tancava com si haguera desat i
    useImatgeDeFitxa no propagava el false de saveRemote. Ací, el mateix
-   muntatge (editor, handler, cua i TargetaViva de veres; backend, pujada i
-   Canvas simulats), amb la conducta correcta per a Javi Llinares, Sóc de
-   Poble i El Rentonar.
+   muntatge (editor, handler i cua de veres; backend, pujada i Canvas
+   simulats), amb la conducta correcta per a Javi Llinares, Sóc de Poble i El
+   Rentonar. AH-02 · La fila de la llista ja no és la TargetaViva sinó la
+   fitxa compacta (DefaultItemCard), que llig el mateix document viu.
    ═══════════════════════════════════════════════════════════════════ */
 describe('Bloc 3.5.4 · un 403 al desat d’una imatge (P2 de Codex)', () => {
   const VELLA = '/assets/a.webp';
@@ -839,24 +841,32 @@ describe('Bloc 3.5.4 · un 403 al desat d’una imatge (P2 de Codex)', () => {
   };
   const refDe = (id, entitat) => ({ ambit: m.perfil.autodesament.ambit, context: CONFIG, entitat, id });
 
-  /* La fitxa de la llista de PerfilShell (FitxaDePerfil): la targeta viva que publica l'editor. */
-  function FitxaDeLaLlista({ clau }) {
+  /* AH-02 (ordre del Mestre; G3-g2-matriu-26) · La fila «La fitxa» de la llista
+     de PerfilShell (FitxaDePerfil, que no s'exporta) ja no és la targeta viva:
+     és la fitxa compacta de veres (DefaultItemCard · button.sdp-gestor-fitxa).
+     El doble en reproduïx la regla de la imatge, la capçalera del document viu
+     i, sense, l'avatar de l'autoria, sobre la mateixa instància que publica
+     l'editor (useDocumentViu). PerfilShell.avatarFontUnica.test.jsx i
+     PerfilShell.targetaViva.test.jsx la proven dins del PerfilShell real. */
+  function FilaDeLaLlista({ clau }) {
     const viu = useDocumentViu(clau);
-    return viu ? <TargetaViva {...viu} avis={AVISOS_TARGETA_VIVA.perfil} actual /> : null;
+    if (!viu) return null;
+    const image = viu.document?.heroImage || viu.autor?.avatar || undefined;
+    return <DefaultItemCard item={{ id: clau, title: viu.autor?.nom || '', image, icon: viu.document?.icon }} active onSelect={() => {}} />;
   }
-  const munta = (identitat) => render(<><PerfilEditor identitat={identitat} /><FitxaDeLaLlista clau={identitat.id} /></>);
+  const munta = (identitat) => render(<><PerfilEditor identitat={identitat} /><FilaDeLaLlista clau={identitat.id} /></>);
 
   const srcDe = (img) => img?.getAttribute('src') ?? null;
-  const targeta = () => document.querySelector('article.sdp-targeta-viva-carta');
-  const barraDeLEditor = () => [...document.querySelectorAll('section.bar-orange')].find((s) => !s.closest('.sdp-targeta-viva-carta'));
-  /* La imatge pròpia a les tres superfícies: l'avatar redó (o la ranura del
-     logotip), la barra taronja de l'editor i la targeta viva.
+  const fila = () => document.querySelector('button.sdp-gestor-fitxa');
+  const imatgeDeLaFila = () => srcDe(fila()?.querySelector('img.sdp-gestor-fitxa__imatge'));
+  const barraDeLEditor = () => document.querySelector('section.bar-orange');
+  /* L'avatar propi a les dues superfícies de l'editor: l'avatar redó (o la
+     ranura del logotip) i la barra taronja.
      Encàrrec d'harmonització (261018) · L'avatar redó i la ranura ja no són
      damunt de l'H1: el control de l'editor viu dins d'«Edició avançada». */
   const imatgesPropies = () => ({
     editor: srcDe(desplegable()?.querySelector('.sdp-edicio-avancada__identitat button.page-title-avatar--canvia img, [data-sdp-ranura="logotip"] img[role="button"]')),
     barra: srcDe(barraDeLEditor()?.querySelector('img.sp-card-avatar')),
-    targeta: srcDe(targeta()?.querySelector('img.sp-card-avatar')),
   });
   /* Encàrrec d'harmonització (261018) · El que es configura es veu al seu lloc
      real: el logotip desat d'una organització, damunt de l'H1 (logoEntitat);
@@ -864,13 +874,14 @@ describe('Bloc 3.5.4 · un 403 al desat d’una imatge (P2 de Codex)', () => {
   const logoDelTitol = () => srcDe(capcalera().querySelector('img.page-title-logo'));
   /* Encàrrec d'harmonització (261018) · El control «Capçalera» (img.sdp-hero__imatge)
      viu dins d'«Edició avançada»; la capçalera desada es pinta, a més, dalt de
-     la pàgina (.hero-image). Les tres, la mateixa imatge. */
+     la pàgina (.hero-image) i, amb capçalera, és la miniatura de la fila
+     compacta. Les tres, la mateixa imatge. */
   const capcaleres = () => ({
     editor: srcDe(desplegable()?.querySelector('[data-sdp-ranura="capcalera"] img.sdp-hero__imatge')),
     pagina: srcDe(document.querySelector('.sdp-editor-document .hero-image img')),
-    targeta: srcDe(targeta()?.querySelector('img.sp-card-media')),
+    fila: imatgeDeLaFila(),
   });
-  const totes = (src) => ({ editor: src, barra: src, targeta: src });
+  const totes = (src) => ({ editor: src, barra: src });
 
   async function triaIGuardaSenseTancar(camp, finestra) {
     await act(async () => { fireEvent.change(selector(camp), { target: { files: [new File(['x'], 'foto.png', { type: 'image/png' })] } }); });
@@ -881,10 +892,14 @@ describe('Bloc 3.5.4 · un 403 al desat d’una imatge (P2 de Codex)', () => {
   }
   const avisDeLaFinestra = (finestra) => within(screen.getByRole('dialog', { name: finestra })).queryByRole('alert')?.textContent ?? null;
 
-  test('Javi Llinares · avatar: després del 403 la finestra continua oberta amb el motiu, la cua guarda la foto, i editor, barra i targeta viva porten la mateixa', async () => {
+  test('Javi Llinares · avatar: després del 403 la finestra continua oberta amb el motiu, la cua guarda la foto, i editor i barra porten la mateixa; la fila compacta, la capçalera', async () => {
     m.updateProfile = vi.fn(async () => { throw error403('profiles'); });
     munta(javi);
     expect(imatgesPropies()).toEqual(totes(VELLA));
+    // AH-02 · La fila de la llista és la compacta, amb la capçalera de la fitxa (la regla de FitxaDePerfil).
+    expect(fila().getAttribute('aria-current')).toBe('true');
+    expect(document.querySelector('article.sdp-targeta-viva-carta')).toBeNull();
+    expect(imatgeDeLaFila()).toBe(CAPCALERA_VELLA);
     // Encàrrec d'harmonització (261018) · Damunt de l'H1 de la persona, res: l'avatar és a la barra i dins d'«Edició avançada».
     expect(logoDelTitol()).toBeNull();
     capcaleraNeta();
@@ -906,6 +921,7 @@ describe('Bloc 3.5.4 · un 403 al desat d’una imatge (P2 de Codex)', () => {
     expect(m.updateProfile).toHaveBeenCalledWith({ avatar_url: NOVA }, CONFIG);
     expect(cuaDesament.llig(refDe('jo', 'perfil')).camps).toEqual({});
     expect(imatgesPropies()).toEqual(totes(NOVA));
+    expect(imatgeDeLaFila()).toBe(CAPCALERA_VELLA);
   });
 
   test('Javi Llinares · avatar: Cancel·lar després del 403 no perd res; l’avís en línia ho diu i «Tornar a provar» envia el valor de la cua', async () => {
@@ -928,16 +944,16 @@ describe('Bloc 3.5.4 · un 403 al desat d’una imatge (P2 de Codex)', () => {
     expect(imatgesPropies()).toEqual(totes(NOVA));
   });
 
-  test('Javi Llinares · capçalera: les mateixes regles; el quadrat de l’editor i el de la targeta viva són la mateixa imatge', async () => {
+  test('Javi Llinares · capçalera: les mateixes regles; el quadrat de l’editor i la miniatura de la fila compacta són la mateixa imatge', async () => {
     m.updateProfile = vi.fn(async () => { throw error403('profiles'); });
     munta(javi);
     // Encàrrec d'harmonització (261018) · També la capçalera de dalt de la pàgina (pagina), la mateixa imatge.
-    expect(capcaleres()).toEqual({ editor: CAPCALERA_VELLA, pagina: CAPCALERA_VELLA, targeta: CAPCALERA_VELLA });
+    expect(capcaleres()).toEqual({ editor: CAPCALERA_VELLA, pagina: CAPCALERA_VELLA, fila: CAPCALERA_VELLA });
     obriEdicioAvancada();
     fireEvent.click(screen.getByRole('button', { name: 'Capçalera' }));
     await triaIGuardaSenseTancar('heroImage', 'Retalla la capçalera');
     await waitFor(() => expect(avisDeLaFinestra('Retalla la capçalera')).toBe(AVIS_403));
-    expect(capcaleres()).toEqual({ editor: NOVA, pagina: NOVA, targeta: NOVA });
+    expect(capcaleres()).toEqual({ editor: NOVA, pagina: NOVA, fila: NOVA });
     expect(cuaDesament.llig(refDe('jo', 'perfil')).camps.heroImage).toBe(NOVA);
     // L'avatar no s'ha mogut de cap banda.
     expect(imatgesPropies()).toEqual(totes(VELLA));
@@ -947,6 +963,8 @@ describe('Bloc 3.5.4 · un 403 al desat d’una imatge (P2 de Codex)', () => {
     m.updateOrganization = vi.fn(async () => { throw error403('organizations'); });
     munta(rentonar);
     expect(imatgesPropies()).toEqual(totes('/assets/rentonar.webp'));
+    // Sense capçalera, la miniatura de la fila compacta és el logotip, la mateixa instància.
+    expect(imatgeDeLaFila()).toBe('/assets/rentonar.webp');
     // Encàrrec d'harmonització (261018) · La ranura, dins d'«Edició avançada»; el logotip desat, també damunt de l'H1.
     expect(logoDelTitol()).toBe('/assets/rentonar.webp');
     fireEvent.click(within(obriEdicioAvancada().querySelector('[data-sdp-ranura="logotip"]')).getByRole('button', { name: 'Logotip' }));
@@ -954,16 +972,18 @@ describe('Bloc 3.5.4 · un 403 al desat d’una imatge (P2 de Codex)', () => {
     await waitFor(() => expect(avisDeLaFinestra('Retalla el logotip')).toBe(AVIS_403));
     expect(m.updateOrganization.mock.calls).toEqual([['R', { logo_url: NOVA }, CONFIG]]);
     expect(imatgesPropies()).toEqual(totes(NOVA));
+    expect(imatgeDeLaFila()).toBe(NOVA);
     expect(logoDelTitol()).toBe(NOVA);
     await act(async () => { fireEvent.click(within(screen.getByRole('dialog', { name: 'Retalla el logotip' })).getByRole('button', { name: 'Cancel·lar' })); });
     const avis = document.querySelector('.sdp-avisos-camps');
     await act(async () => { fireEvent.click(within(avis).getByRole('button', { name: 'Tornar al que hi ha desat' })); });
     expect(cuaDesament.llig(refDe('R', 'organitzacio')).camps).toEqual({});
     expect(imatgesPropies()).toEqual(totes('/assets/rentonar.webp'));
+    expect(imatgeDeLaFila()).toBe('/assets/rentonar.webp');
     expect(logoDelTitol()).toBe('/assets/rentonar.webp');
   });
 
-  test('Sóc de Poble · capçalera: 403, la finestra oberta; la barra i la targeta viva continuen amb el logotip oficial', async () => {
+  test('Sóc de Poble · capçalera: 403, la finestra oberta; la fila compacta porta la capçalera nova i la barra continua amb el logotip oficial', async () => {
     m.updateOrganization = vi.fn(async () => { throw error403('organizations'); });
     munta(socDePoble);
     obriEdicioAvancada();
@@ -971,9 +991,8 @@ describe('Bloc 3.5.4 · un 403 al desat d’una imatge (P2 de Codex)', () => {
     await triaIGuardaSenseTancar('heroImage', 'Retalla la capçalera');
     await waitFor(() => expect(avisDeLaFinestra('Retalla la capçalera')).toBe(AVIS_403));
     // Encàrrec d'harmonització (261018) · També la capçalera de dalt de la pàgina (pagina).
-    expect(capcaleres()).toEqual({ editor: NOVA, pagina: NOVA, targeta: NOVA });
-    const { barra, targeta: deLaTargeta } = imatgesPropies();
-    expect([barra, deLaTargeta]).toEqual([DEFAULT_AUTHOR.avatarUrl, DEFAULT_AUTHOR.avatarUrl]);
+    expect(capcaleres()).toEqual({ editor: NOVA, pagina: NOVA, fila: NOVA });
+    expect(imatgesPropies().barra).toBe(DEFAULT_AUTHOR.avatarUrl);
   });
 
   test('Escape a mitja pujada i després un 403: l’avís honest va fora (toast) i res no es dona per desat', async () => {

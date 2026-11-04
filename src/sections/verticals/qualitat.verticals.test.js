@@ -25,38 +25,43 @@ import GL from '../../config/idiomes/gl.js';
 const ARREL = process.cwd();
 const llig = (rel) => readFileSync(path.join(ARREL, rel), 'utf8');
 const DICCIONARIS = { ca: CA, es: ES, en: EN, eu: EU, gl: GL };
-/* Els àmbits del contracte que viuen a 'mur' sense ser el Mur: els que tenen secció pròpia. */
+/* Els àmbits del contracte que viuen a 'mur' sense ser el Mur: els que tenen detall propi; i les cinc verticals amb SeccioVertical. */
 const VERTICALS = AMBITS.filter((ambit) => ambit !== 'mur' && SECTION_ID_PER_AMBIT[ambit] === 'mur');
+const SECCIONS_VERTICALS = VERTICALS.filter((ambit) => ambit !== 'calendari');
 const CLAUS_DE_SECCIO = ['kicker', 'title', 'subtitle', 'buit', 'error', 'carregant', 'publicar'];
 const SECCIONS_DE_L_ADAPTADOR = "const SECCIONS = new Set(['mur', 'mercat', 'events', 'multimedia', 'notes']);";
 const SECCIONS_DE_LA_RLS = "section_id in ('mur', 'mercat', 'events', 'multimedia', 'notes')";
 
-describe('les tres verticals, cablejades a tot arreu', () => {
-  test('són vehicle, treball i habitatge', () => {
-    expect(VERTICALS).toEqual(['vehicle', 'treball', 'habitatge']);
+describe('els sis àmbits del Mur i les cinc seccions verticals, cablejats a tot arreu', () => {
+  test('són calendari, mapa, vehicle, animalets, treball i habitatge', () => {
+    expect(VERTICALS).toEqual(['calendari', 'mapa', 'vehicle', 'animalets', 'treball', 'habitatge']);
+    expect(SECCIONS_VERTICALS).toEqual(['mapa', 'vehicle', 'animalets', 'treball', 'habitatge']);
   });
 
-  test('sections.js: una entrada per àmbit, amb path /<ambit> i kind vertical, fora de SECTION_ORDER (no ixen a la barra lateral)', () => {
-    for (const ambit of VERTICALS) {
+  test('sections.js: una entrada per secció vertical, amb path /<ambit> i kind vertical, fora de SECTION_ORDER (no ixen a la barra lateral)', () => {
+    for (const ambit of SECCIONS_VERTICALS) {
       expect(SECTIONS.find((seccio) => seccio.id === ambit), ambit).toMatchObject({ id: ambit, path: `/${ambit}`, kind: 'vertical' });
       expect(SECTION_ORDER).not.toContain(ambit);
     }
+    expect(SECTIONS.find((seccio) => seccio.id === 'calendari')).toMatchObject({ id: 'calendari', path: '/calendari' });
   });
 
   test.each(Object.keys(DICCIONARIS))('%s: nav.<ambit> i section.<ambit>.* amb text propi, i la clau del Publicar del Mercat', (codi) => {
     const dic = DICCIONARIS[codi];
     for (const ambit of VERTICALS) {
       expect([ambit, typeof dic[`nav.${ambit}`]]).toEqual([ambit, 'string']);
+    }
+    for (const ambit of SECCIONS_VERTICALS) {
       for (const clau of CLAUS_DE_SECCIO) expect([ambit, clau, (dic[`section.${ambit}.${clau}`] || '').trim() !== '']).toEqual([ambit, clau, true]);
     }
     expect((dic['section.mercat.publicar'] || '').trim() !== '').toBe(true);
   });
 
-  test('App.jsx: un <Route> per àmbit amb SeccioVertical i el seu àmbit, abans del comodí :sectionId/:itemId', () => {
+  test('App.jsx: un <Route> per secció vertical amb SeccioVertical i el seu àmbit, abans del comodí :sectionId/:itemId', () => {
     const app = llig('src/app/App.jsx');
     const comodi = app.indexOf('<Route path=":sectionId/:itemId"');
     expect(comodi).toBeGreaterThan(0);
-    for (const ambit of VERTICALS) {
+    for (const ambit of SECCIONS_VERTICALS) {
       const ruta = app.indexOf(`<Route path="${ambit}" element={<SeccioVertical ambit="${ambit}" />} />`);
       expect([ambit, ruta > 0, ruta < comodi]).toEqual([ambit, true, true]);
     }

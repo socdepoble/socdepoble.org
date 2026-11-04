@@ -54,9 +54,9 @@ test('Publicar al Mur: el botó és dins del bloc del títol, davall de l’H1 i
   const copyright = fills.indexOf('P.sp-card-copyright');
   expect([h1 >= 0, accio > h1, copyright > accio]).toEqual([true, true, true]);
   const dalt = capcalera().querySelector('.page-title-accio > a');
-  expect([dalt.className, dalt.getAttribute('href')]).toEqual([CLASSE, '/notes']);
+  expect([dalt.className, dalt.getAttribute('href')]).toEqual([CLASSE, '/notes?ambit=mur']);
   const baix = document.querySelector('article.content-wrapper .sdp-pagina-accio > a');
-  expect([baix.className, baix.getAttribute('href')]).toEqual([CLASSE, '/notes']);
+  expect([baix.className, baix.getAttribute('href')]).toEqual([CLASSE, '/notes?ambit=mur']);
   expect(screen.getAllByRole('link', { name: 'Publicar al Mur' })).toHaveLength(2);
   fireEvent.click(dalt);
   expect(screen.getByTestId('ubicacio').textContent).toBe('/notes');

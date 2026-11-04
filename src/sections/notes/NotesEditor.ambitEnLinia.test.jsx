@@ -85,17 +85,18 @@ const fillsAmbRanura = (el) => [...el.children].map((e) => (e.dataset.sdpRanura 
 const desplegable = (container) => container.querySelector('details.sdp-edicio-avancada');
 const ranuraAmbit = (container) => container.querySelector('[data-sdp-ranura="ambit"]');
 
-test('dins de l’«Edició avançada», l’ordre exacte: capçalera > logotip > «On es publica?» > classificació', () => {
+test('dins de l’«Edició avançada», l’ordre exacte: capçalera > logotip > «On es publica?» > classificació > botó tancar', () => {
   const { container } = render(<CanalAmbitContext.Provider value={CANAL_BUIT}><NotaViva inicial={NOTA} /></CanalAmbitContext.Provider>);
   const cos = desplegable(container).querySelector(':scope > .sdp-edicio-avancada__cos');
   expect(fillsAmbRanura(cos)).toEqual([
     'sdp-edicio-avancada__imatge [capcalera]',
     'sdp-edicio-avancada__imatge [logotip]',
     'sdp-edicio-avancada__ambit [ambit]',
-    'page-title-classificacio'
+    'page-title-classificacio',
+    'sdp-boto sdp-boto--secundari sdp-edicio-avancada__boto-tancar'
   ]);
   const bloc = within(ranuraAmbit(container)).getByRole('group', { name: 'On es publica?' });
-  expect(within(bloc).getAllByRole('radio')).toHaveLength(5);
+  expect(within(bloc).getByLabelText('Àmbit').options).toHaveLength(8);
   // Plegat, com sempre: cap diàleg, cap salt.
   expect(desplegable(container).open).toBe(false);
   expect(screen.queryByRole('dialog')).toBeNull();
@@ -107,7 +108,7 @@ test('?ambit=vehicle obri l’«Edició avançada» amb Compartir cotxe actiu i 
   const { container } = render(<BlocAmbAmbit pendent="vehicle" consumit={consumit}><NotaViva inicial={NOTA} /></BlocAmbAmbit>);
   expect(desplegable(container).open).toBe(true);
   const ranura = ranuraAmbit(container);
-  expect(within(ranura).getByRole('radio', { name: 'Compartir cotxe' }).checked).toBe(true);
+  expect(within(ranura).getByLabelText('Àmbit').value).toBe('vehicle');
   expect(within(ranura).getByLabelText('Lloc d’eixida (obligatori)')).toBeTruthy();
   expect(saltats).toEqual([[ranura, { behavior: 'smooth', block: 'start' }]]);
   // L'entrada no roba el focus: la vista hi va, la persona tria on escriure.
@@ -128,7 +129,7 @@ test('?ambit=vehicle obri l’«Edició avançada» amb Compartir cotxe actiu i 
 test('?ambit=mercat: la carpeta del Mercat i el Mercat actiu', () => {
   const { container } = render(<BlocAmbAmbit pendent="mercat"><NotaViva inicial={NOTA} /></BlocAmbAmbit>);
   expect(desplegable(container).open).toBe(true);
-  expect(within(ranuraAmbit(container)).getByRole('radio', { name: 'Mercat' }).checked).toBe(true);
+  expect(within(ranuraAmbit(container)).getByLabelText('Àmbit').value).toBe('mercat');
   expect(mocks.setLocal.mock.calls).toEqual([
     ['p', 'fitxa', { ambit: 'mercat', estat: 'disponible', dades: {} }],
     ['p', 'folderId', 'f-mercat']
@@ -143,7 +144,7 @@ test('sota StrictMode, l’entrada ?ambit= escriu, consumix i porta la vista una
     </StrictMode>
   );
   expect(desplegable(container).open).toBe(true);
-  expect(within(ranuraAmbit(container)).getByRole('radio', { name: 'Treball' }).checked).toBe(true);
+  expect(within(ranuraAmbit(container)).getByLabelText('Àmbit').value).toBe('treball');
   expect(mocks.setLocal.mock.calls).toEqual([
     ['p', 'fitxa', { ambit: 'treball', estat: 'disponible', dades: {} }],
     ['p', 'folderId', 'f-mur']
@@ -152,7 +153,7 @@ test('sota StrictMode, l’entrada ?ambit= escriu, consumix i porta la vista una
   expect(saltats).toHaveLength(1);
 });
 
-test('el botó «Àmbit» de la botonera porta al bloc en línia: vista i focus al ràdio de l’àmbit triat, sense cap diàleg', () => {
+test('el botó «Àmbit» de la botonera porta al bloc en línia: vista i focus al selector de l’àmbit, sense cap diàleg', () => {
   const { container } = render(
     <CanalAmbitContext.Provider value={CANAL_BUIT}>
       <NotaViva inicial={{ ...NOTA, fitxa: { ambit: 'habitatge', estat: 'disponible', dades: {} } }} />
@@ -166,12 +167,12 @@ test('el botó «Àmbit» de la botonera porta al bloc en línia: vista i focus 
   expect(screen.queryByRole('dialog')).toBeNull();
   const ranura = ranuraAmbit(container);
   expect(saltats).toEqual([[ranura, { behavior: 'smooth', block: 'start' }]]);
-  expect(document.activeElement).toBe(within(ranura).getByRole('radio', { name: 'Habitatge' }));
+  expect(document.activeElement).toBe(within(ranura).getByLabelText('Àmbit'));
   // Cada clic hi torna.
   boto.focus();
   fireEvent.click(boto);
   expect(saltats).toHaveLength(2);
-  expect(document.activeElement).toBe(within(ranura).getByRole('radio', { name: 'Habitatge' }));
+  expect(document.activeElement).toBe(within(ranura).getByLabelText('Àmbit'));
   expect(mocks.setLocal).not.toHaveBeenCalled();
 });
 
@@ -211,7 +212,7 @@ test('PUBLICAR amb un valor fora de rang al bloc (Habitacions «60») s’atura 
   const { container } = render(<CanalAmbitContext.Provider value={CANAL_BUIT}><NotaViva inicial={NOTA} /></CanalAmbitContext.Provider>);
   act(() => { desplegable(container).open = true; });
   const ranura = ranuraAmbit(container);
-  fireEvent.click(within(ranura).getByRole('radio', { name: 'Habitatge' }));
+  fireEvent.change(within(ranura).getByLabelText('Àmbit'), { target: { value: 'habitatge' } });
   fireEvent.change(within(ranura).getByLabelText('Modalitat (obligatori)'), { target: { value: 'lloguer' } });
   fireEvent.change(within(ranura).getByLabelText('Preu (obligatori)'), { target: { value: '450 €/mes' } });
   fireEvent.change(within(ranura).getByLabelText('Habitacions'), { target: { value: '60' } });
@@ -225,4 +226,21 @@ test('PUBLICAR amb un valor fora de rang al bloc (Habitacions «60») s’atura 
   // Corregit el valor, la guarda ja no la para per la fitxa.
   fireEvent.change(within(ranura).getByLabelText('Habitacions'), { target: { value: '3' } });
   expect(mocks.setLocal).toHaveBeenLastCalledWith('p', 'fitxa', { ambit: 'habitatge', estat: 'disponible', dades: { modalitat: 'lloguer', preu: '450 €/mes', habitacions: 3 } });
+});
+
+test('AH-03 / AH-06 · el botó inferior «Tancar l’edició avançada» plega el desplegable i retorna el focus al <summary> (mai a document.body)', () => {
+  const { container } = render(
+    <CanalAmbitContext.Provider value={CANAL_BUIT}>
+      <NotaViva inicial={NOTA} />
+    </CanalAmbitContext.Provider>
+  );
+  const details = desplegable(container);
+  act(() => { details.open = true; });
+  const botoTancar = details.querySelector('button.sdp-edicio-avancada__boto-tancar');
+  expect(botoTancar).not.toBeNull();
+  botoTancar.focus();
+  fireEvent.click(botoTancar);
+  expect(details.open).toBe(false);
+  expect(document.activeElement).not.toBe(document.body);
+  expect(document.activeElement).toBe(details.querySelector('summary.sdp-edicio-avancada__resum'));
 });

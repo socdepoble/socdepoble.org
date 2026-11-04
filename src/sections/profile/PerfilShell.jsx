@@ -8,7 +8,7 @@ import { Link, useLocation, useSearchParams } from '../../app/contexts/RouterCon
 import { rutaCanonicaDePerfil } from '../../config/navigation.js';
 import { Boto } from '../../components/PedraSeca/index.js';
 import { DefaultItemCard, UniversalWorkspace } from '../../components/universal/workspace';
-import { AVISOS_TARGETA_VIVA, TargetaViva, useDocumentViu } from '../../components/universal/TargetaViva.jsx';
+import { useDocumentViu } from '../../components/universal/TargetaViva.jsx';
 import { useToast } from '@/components/universal/NotificationContext.jsx';
 import { teCapacitat } from '../../data/backendPort.js';
 import { normalizeBackendConfig } from '../../config/backendConfig.js';
@@ -57,22 +57,15 @@ const ETIQUETES = {
 };
 const ICONES = { categories: UserRound, items: SlidersHorizontal };
 
-/* T50 (decisió del Mestre, 260928: «Llista + dreta si hi cap») · A la columna
-   central, la fitxa activa és la targeta viva: el document que PerfilEditor
-   publica mentre s'escriu (documentViu, per l'id de la identitat). Sense
-   entrada (un altre apartat, o abans que l'editor es munte), la fitxa compacta
-   de sempre: la targeta per defecte del Workspace (DefaultItemCard), no una
-   còpia del seu DOM. L'avís de la targeta no promet cap publicació
-   (AVISOS_TARGETA_VIVA.perfil) i la targeta diu que és la fitxa triada
-   (aria-current), com la compacta.
+/* AH-02 · A la columna central d'APARTATS del Perfil, totes les files (actives
+   o no) es mostren sempre com a fitxa compacta normal (`DefaultItemCard` ·
+   `button.sdp-gestor-fitxa` amb `is-active` i `aria-current="true"`), mai com
+   a `TargetaViva` desplegada (la Card es previsualitza dins de «Les vistes»).
    Gauntlet 261016 (encàrrec D; pla, Onada 1.1.4: «han de beure exactament de
    la mateixa instància de dades») · La compacta de «La fitxa» porta la imatge
-   de la fitxa amb l'esborrany de la cua (avatarDeLaFitxa, fitxaDePerfil.js),
-   la mateixa que l'editor, «Les vistes» i «El compte»: abans, item.image
-   (identitat.avatar, el del servidor), i després d'un avatar rebutjat (403),
-   una foto al centre i una altra a la dreta. La clau de la cua és la de
-   l'editor i la de «Les vistes»: sense àmbit o en lectura, cap. Ni desa ni
-   toca la cua: només la llig. La resta d'apartats, tal qual. */
+   de la fitxa amb l'esborrany de la cua (avatarDeLaFitxa, fitxaDePerfil.js) i
+   el document viu de l'editor, la mateixa que l'editor, «Les vistes» i
+   «El compte». */
 function FitxaDePerfil({ item, active, onSelect }) {
   const esFitxa = item?.data?.vista === 'fitxa';
   const clau = active && esFitxa ? item.data.identitatId : null;
@@ -88,11 +81,11 @@ function FitxaDePerfil({ item, active, onSelect }) {
   const esborrany = useAutodesament(ref).camps;
   const compacta = useMemo(() => {
     if (!identitat) return item;
-    const doc = documentDeFitxa(identitat, esborrany);
-    const image = doc.heroImage || avatarDeLaFitxa(doc, esborrany, identitat) || undefined;
-    return image === item.image ? item : { ...item, image };
-  }, [item, identitat, esborrany]);
-  if (viu) return <TargetaViva {...viu} onMainClick={onSelect} avis={AVISOS_TARGETA_VIVA.perfil} actual />;
+    const doc = viu?.document || documentDeFitxa(identitat, esborrany);
+    const image = doc.heroImage || viu?.autor?.avatar || avatarDeLaFitxa(doc, esborrany, identitat) || undefined;
+    const icon = doc.icon || item.icon;
+    return image === item.image && icon === item.icon ? item : { ...item, image, icon };
+  }, [item, identitat, esborrany, viu]);
   return <DefaultItemCard item={compacta} active={active} onSelect={onSelect} />;
 }
 

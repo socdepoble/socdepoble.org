@@ -10,7 +10,10 @@ import { Llinatge } from '../Llinatge.jsx';
    Cada canvi torna la fitxa normalitzada (onCanvia) i l'espècimen la guarda
    en un estat local, com la nota. Dos casos: una nota del Mur (sense fitxa) i
    una fitxa de Compartir cotxe incompleta després que PUBLICAR s'haja aturat
-   (mostraErrors). Dades inventades; cap context ni xarxa. */
+   (mostraErrors). Dades inventades; cap context ni xarxa.
+   AH-04.4 (G3-pedra-seca-i18n-11) · L'àmbit es tria en un Selector amb els
+   huit àmbits d'AMBITS, no en la graella de targetes de ràdio d'abans: la
+   descripció, el contracte i l'accessibilitat ho diuen així. */
 
 const DOCUMENT = Object.freeze({
   title: 'Viatge a Alcoi', subtitle: 'Dissabte de matí', lead: 'Isc de la Torre a les huit.',
@@ -31,7 +34,7 @@ export default function EspecimenBlocAmbit() {
     <>
       <Llinatge id="bloc-ambit" />
       <Especimen id="bloc-ambit" nom="BlocAmbit · On es publica?" fitxer="src/components/universal/ambits/BlocAmbit.jsx"
-        descripcio="On viurà la publicació, dit en línia dins de l’«Edició avançada» del Bloc de Notes, entre el logotip i la classificació: Mur, Mercat, Compartir cotxe, Treball o Habitatge com a targetes de ràdio; davall de l’àmbit triat, els camps de la seua fitxa (generats del contracte, utils/publicacioUniversal.js · CAMPS) i l’Estat (només als àmbits verticals); al final, la previsualització de la targeta pública. Sense finestra modal ni botó de desar: cada canvi escriu la fitxa a la nota. El botó «Àmbit» de la botonera de classificació i l’entrada ?ambit= del Bloc no obrin cap diàleg: obrin l’«Edició avançada» i hi porten la vista."
+        descripcio="On viurà la publicació, dit en línia dins de l’«Edició avançada» del Bloc de Notes, entre el logotip i la classificació: un Selector «Àmbit» (un desplegable, a l’alçada d’acció de 58 px) amb Mur, Mercat, Calendari, Mapa, Compartir cotxe, Animalets, Treball o Habitatge; davall de l’àmbit triat, els camps de la seua fitxa (generats del contracte, utils/publicacioUniversal.js · CAMPS) i l’Estat (només als àmbits verticals); al final, la previsualització de la targeta pública. Sense finestra modal ni botó de desar: cada canvi escriu la fitxa a la nota. El botó «Àmbit» de la botonera de classificació i l’entrada ?ambit= del Bloc no obrin cap diàleg: obrin l’«Edició avançada» i hi porten la vista."
         contracte={[
           ['valor', '{ ambit, estat, dades } | null', 'null', 'La fitxa de la nota. null és el Mur. Si l’àmbit canvia des de fora (moure la nota a la carpeta del Mercat, l’entrada ?ambit=), el bloc el pren amb les seues dades.'],
           ['document', '{ title, subtitle, lead, heroImage?, authorName?, … } | null', 'null', 'El que llig la previsualització (targetaDeLaPagina.js). Sense títol, la targeta es titula com l’àmbit.'],
@@ -39,11 +42,11 @@ export default function EspecimenBlocAmbit() {
           ['mostraErrors', 'boolean', 'false', 'PUBLICAR s’ha aturat per esta fitxa: els errors es veuen sense esperar cap tecla, amb un avís curt no viu.'],
           ['t', '(clau, reserva) => string', 'la reserva', 'El traductor. Els textos són els d’editor.ambit.* i ambit.* dels cinc diccionaris.'],
           ['ambitEdicioAvancada (UniversalEditorShell)', 'node | null', 'null', 'La ranura de la closca on es munta, entre el logotip i la classificació. Sense ella, el DOM de sempre (el Perfil).'],
-          ['peticioAmbit (UniversalEditorShell)', '{ enfoca } | null', 'null', 'Cada objecte nou obri l’«Edició avançada», porta la ranura a la vista amb el salt de l’Índex (desplacaASeccio) i, amb enfoca, posa el focus al ràdio triat. Una vegada per objecte.'],
+          ['peticioAmbit (UniversalEditorShell)', '{ enfoca } | null', 'null', 'Cada objecte nou obri l’«Edició avançada», porta la ranura a la vista amb el salt de l’Índex (desplacaASeccio) i, amb enfoca, posa el focus al Selector «Àmbit». Una vegada per objecte. L’entrada ?ambit= del Bloc (també ?ambit=mur, «Publicar al Mur» de /control) la demana sense enfoca.'],
         ]}
         a11y={[
-          'El bloc és un grup amb nom (el títol visible) i descripció (l’ajuda); els àmbits, un fieldset de ràdios amb llegenda.',
-          'La targeta triada porta la insígnia «Triat» en text, mai només color.',
+          'El bloc és un grup amb nom (el títol visible) i descripció (l’ajuda); l’àmbit, un Selector natiu amb la seua etiqueta visible «Àmbit» (Camp), que el teclat i el lector de pantalla recorren sense res propi.',
+          'L’àmbit triat és el valor del Selector, en text: mai només color.',
           'Els errors van a cada camp (aria-invalid i el missatge lligat) després del primer canvi, o de colp quan PUBLICAR s’ha aturat.',
           'Triar «Mur» no desmunta el bloc mentre la nota continua oberta: el focus no cau a la pàgina.'
         ]}

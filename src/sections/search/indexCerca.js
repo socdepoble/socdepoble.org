@@ -22,23 +22,31 @@ import {
   ENTITAT_PILOT_SLUG, PERSONA_PILOT, POBLE_FUNDACIONAL, clauFundacional, entitatSeed, esIAIA, fundacionalDeLaClau
 } from '../../data/identitatsSeed.js';
 import { fotoDelBucketPublic } from '../../utils/mitjaOpac.js';
-import { esFitxaDAmbit, normalitzaEstat, rutaDAmbit, textCercable } from '../../utils/publicacioUniversal.js';
+import { AMBITS, esFitxaDAmbit, normalitzaEstat, rutaDAmbit, textCercable } from '../../utils/publicacioUniversal.js';
 import { imatgesDeProducte } from '../mercat/imatgesDeProducte.js';
 
 /* Els tipus de la cerca, en l'ordre en què es pinten els grups i els filtres.
    `text` és el valor per defecte de la clau d'i18n `clau`.
    IDEA-61 (T0, prompt 261102_1532) · Les tres verticals del flux universal
    de publicació (Compartir cotxe, Treball i Habitatge), darrere del Mercat i
-   amb el seu mateix patró. */
+   amb el seu mateix patró.
+   G3-pedra-seca-i18n-16 · Un sol «Calendari», com la píndola del Mur
+   (MurSection, agendaMur.js · esActeDelCalendari): els actes de l'agenda
+   (deActeDelCalendari) i les fitxes d'àmbit 'calendari' (dePublicacio), com el Mercat
+   porta els productes de sempre i les fitxes 'mercat'. El xip «Agenda» (els
+   actes sols) s'ha retirat: la mateixa paraula ja no tria coses diferents al
+   Mur i a la cerca. Un ?tipus=agenda d'abans porta al Calendari (ALIES_TIPUS). */
 export const TIPUS_CERCA = Object.freeze([
   Object.freeze({ id: 'tot', clau: 'section.search.tipus.tot', text: 'Tot' }),
   Object.freeze({ id: 'persones', clau: 'section.search.tipus.persones', text: 'Persones' }),
   Object.freeze({ id: 'entitats', clau: 'section.search.tipus.entitats', text: 'Entitats' }),
   Object.freeze({ id: 'pobles', clau: 'section.search.tipus.pobles', text: 'Pobles' }),
   Object.freeze({ id: 'publicacions', clau: 'section.search.tipus.publicacions', text: 'Publicacions' }),
-  Object.freeze({ id: 'agenda', clau: 'section.search.tipus.agenda', text: 'Agenda' }),
   Object.freeze({ id: 'mercat', clau: 'section.search.tipus.mercat', text: 'Mercat' }),
+  Object.freeze({ id: 'calendari', clau: 'section.search.tipus.calendari', text: 'Calendari' }),
+  Object.freeze({ id: 'mapa', clau: 'section.search.tipus.mapa', text: 'Mapa' }),
   Object.freeze({ id: 'vehicle', clau: 'section.search.tipus.vehicle', text: 'Compartir cotxe' }),
+  Object.freeze({ id: 'animalets', clau: 'section.search.tipus.animalets', text: 'Animalets' }),
   Object.freeze({ id: 'treball', clau: 'section.search.tipus.treball', text: 'Treball' }),
   Object.freeze({ id: 'habitatge', clau: 'section.search.tipus.habitatge', text: 'Habitatge' }),
   Object.freeze({ id: 'multimedia', clau: 'section.search.tipus.multimedia', text: 'Multimèdia' }),
@@ -48,8 +56,25 @@ export const TIPUS_CERCA = Object.freeze([
 ]);
 export const IDS_TIPUS = Object.freeze(TIPUS_CERCA.map((tipus) => tipus.id));
 
-/** Un `?tipus=` desconegut (o absent) és «tot». */
-export const tipusValid = (valor) => (IDS_TIPUS.includes(valor) ? valor : 'tot');
+/* Els ?tipus= retirats que encara poden arribar per un enllaç d'abans. */
+const ALIES_TIPUS = Object.freeze({ agenda: 'calendari' });
+
+/** Un `?tipus=` desconegut (o absent) és «tot»; un de retirat, el que el substituïx. */
+export const tipusValid = (valor) => {
+  if (IDS_TIPUS.includes(valor)) return valor;
+  return typeof valor === 'string' && Object.hasOwn(ALIES_TIPUS, valor) ? ALIES_TIPUS[valor] : 'tot';
+};
+
+/**
+ * G3-g2-matriu-06 i G3-ah-conformitat-07 (ARB-L4-01; AH-08.3: «actualitzar
+ * tots els consumidors d'AMBITS») · Els tipus que naixen de la font del Mur
+ * (useCercaGlobal: mur.feedPosts, mur.events i mur.marketItems): les
+ * publicacions de sempre i cada àmbit del contracte, Calendari (els actes
+ * inclosos) i Mercat (els productes inclosos). Derivats d'AMBITS: un àmbit nou
+ * hi entra sol, i amb el seu filtre el Mur carregant o caigut es veu com a
+ * esquelet o avís, mai com un buit fals.
+ */
+export const TIPUS_DE_LA_FONT_MUR = Object.freeze(['publicacions', ...AMBITS.filter((ambit) => ambit !== 'mur')]);
 
 /* ── Plegat ─────────────────────────────────────────────────────────────── */
 
@@ -662,9 +687,10 @@ export function dePublicacio(post, opcions = {}) {
   });
 }
 
-export function deActe(acte, opcions = {}) {
+/* Un acte de l'agenda com a entrada de l'índex, amb el tipus de qui el demana. */
+function entradaDActe(acte, opcions, tipus) {
   return entrada({
-    tipus: 'agenda',
+    tipus,
     id: acte?.id,
     titol: acte?.title,
     meta: [formataData(acte?.date, opcions.locale), acte?.time, acte?.author_name],
@@ -676,6 +702,25 @@ export function deActe(acte, opcions = {}) {
     href: resolveItemPath({ ...acte, sectionId: acte?.sectionId || 'events' }),
     data: acte?.date || acte?.created_at
   });
+}
+
+/**
+ * Un acte per a la tria de targetes de l'editor (NotesEditor ·
+ * entradesDeTargetes): el tipus 'agenda', que la tria du a l'objecte
+ * 'esdeveniment' (richText/extensions/targetes/formaDelGrup.js · TIPUS_DE_CERCA).
+ * No és cap filtre de /cerca: allà, deActeDelCalendari.
+ */
+export function deActe(acte, opcions = {}) {
+  return entradaDActe(acte, opcions, 'agenda');
+}
+
+/**
+ * G3-pedra-seca-i18n-16 · Un acte de l'agenda a /cerca (useCercaGlobal): del
+ * Calendari, amb les fitxes d'àmbit 'calendari' (TIPUS_CERCA), com la píndola
+ * del Mur. La clau és calendari:<id>, la de la foto del seu article (deMedia).
+ */
+export function deActeDelCalendari(acte, opcions = {}) {
+  return entradaDActe(acte, opcions, 'calendari');
 }
 
 export function deProducte(producte) {
@@ -718,7 +763,9 @@ export function deProducte(producte) {
    IDEA-61 (T0, prompt 261102_1532) · Les tres verticals, pel seu sectionId
    o, com que la fila viu a 'mur', per l'àmbit explícit de l'article. */
 const TIPUS_DE_SECCIO = Object.freeze({
-  mur: 'publicacions', mercat: 'mercat', events: 'agenda', pobles: 'pobles', vehicle: 'vehicle', treball: 'treball', habitatge: 'habitatge'
+  mur: 'publicacions', mercat: 'mercat', events: 'calendari', pobles: 'pobles',
+  calendari: 'calendari', mapa: 'mapa', vehicle: 'vehicle',
+  animalets: 'animalets', treball: 'treball', habitatge: 'habitatge'
 });
 
 function clauDeLArticle(article) {

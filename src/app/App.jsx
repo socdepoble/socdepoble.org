@@ -1088,9 +1088,11 @@ function ActorRoutes({ agents }) {
       <Route path="chat/:threadId" element={<RedireccioXat />} />
       <Route path="mur" element={<MurSection />} />
       <Route path="mercat" element={<MercatSection />} />
-      {/* IDEA-61 (T0, prompt 261102_1532) · Les tres seccions verticals, cadascuna
+      {/* IDEA-61 i AH-04 · Les cinc seccions verticals, cadascuna
           amb identitat pròpia per al tractor de rutes (W7). */}
+      <Route path="mapa" element={<SeccioVertical ambit="mapa" />} />
       <Route path="vehicle" element={<SeccioVertical ambit="vehicle" />} />
+      <Route path="animalets" element={<SeccioVertical ambit="animalets" />} />
       <Route path="treball" element={<SeccioVertical ambit="treball" />} />
       <Route path="habitatge" element={<SeccioVertical ambit="habitatge" />} />
       <Route path="calendari" element={<CalendariSection />} />

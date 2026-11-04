@@ -105,8 +105,9 @@ export { imatgesDeProducte };
    elementDeSeccio.js ja importava este mòdul: cap cicle nou. */
 const LLISTA_DE_SECCIO_DEL_MUR = new Map([
   ['mur', '/mur'], ['mercat', '/mercat'], ['events', '/calendari'],
-  /* IDEA-61 (T0, prompt 261102_1532) · Les verticals són del Mur: el mateix mode estricte d'imatges. */
-  ['vehicle', '/vehicle'], ['treball', '/treball'], ['habitatge', '/habitatge']
+  /* IDEA-61 i AH-04 · Les verticals i el calendari són del Mur: el mateix mode estricte d'imatges. */
+  ['calendari', '/calendari'], ['mapa', '/mapa'], ['vehicle', '/vehicle'],
+  ['animalets', '/animalets'], ['treball', '/treball'], ['habitatge', '/habitatge']
 ]);
 const LLISTES_DEL_MUR = new Set(LLISTA_DE_SECCIO_DEL_MUR.values());
 
@@ -209,7 +210,16 @@ export function cosAmbImatgesPropies(text) {
  * VisorDePublicacio.jsx), amb les fotos del cos com a galeria, a part de la
  * portada. El cos no canvia ni un byte: les marca CosAmbVisor al DOM.
  */
-const SECCIO_DE_LA_LLISTA = new Map([...LLISTA_DE_SECCIO_DEL_MUR].map(([seccio, llista]) => [llista, seccio]));
+/* Fusió del kit v3.0.0 (AH-04) · '/calendari' és la llista de l'Agenda
+   ('events') i, des d'AH-04, també la de l'àmbit 'calendari'. La primera
+   secció declarada es queda el camí, com abans: un acte continua dient
+   «Publicat a: Agenda · …» i porta a /events/<id>. La meta de l'àmbit diu la
+   seua secció (seccioDeLArticle, buildVerticalDetailSectionMeta): una fitxa
+   de l'àmbit 'calendari' no es fa passar per un acte de l'Agenda. */
+const SECCIO_DE_LA_LLISTA = new Map();
+for (const [seccio, llista] of LLISTA_DE_SECCIO_DEL_MUR) {
+  if (!SECCIO_DE_LA_LLISTA.has(llista)) SECCIO_DE_LA_LLISTA.set(llista, seccio);
+}
 
 /* Les dades declarades de la publicació per al panell del visor
    (VisorDePublicacio.jsx · fotosDeLaPublicacio): mai cap d'inventada. */
@@ -218,7 +228,7 @@ const dadesDeLaPublicacio = (section, item, pagina) => ({
   autor: pagina.authorName ?? null,
   drets: item.copyright ?? null,
   poble: item.town_name || item.population || null,
-  article: { sectionId: SECCIO_DE_LA_LLISTA.get(section.listPath), id: item.id }
+  article: { sectionId: section.seccioDeLArticle ?? SECCIO_DE_LA_LLISTA.get(section.listPath), id: item.id }
 });
 
 export function portadaDElement(section, item, pagina, t) {
@@ -845,6 +855,9 @@ export function buildVerticalDetailSectionMeta(ambit, { feedPosts = [], t }) {
     title: etiquetaDAmbit(ambit, t),
     label: etiquetaDAmbit(ambit, t),
     listPath: `/${ambit}`,
+    /* Fusió del kit v3.0.0 · La secció de l'article del visor (dadesDeLaPublicacio):
+       la de l'àmbit, també quan la llista és compartida (/calendari). */
+    seccioDeLArticle: ambit,
     items: perAmbit(feedPosts, ambit)
   };
 }
@@ -930,8 +943,11 @@ export function buildDetailSectionMeta({ events, feedPosts, marketItems, mediaIt
     pobles: buildPoblesDetailSectionMeta({ towns, t, publicacions: { feedPosts, marketItems, events } }),
     multimedia: buildMultimediaDetailSectionMeta({ mediaItems, t, rol }),
     notes: buildNotesDetailSectionMeta({ notes, t }),
-    /* IDEA-61 (T0, prompt 261102_1532) · Les tres verticals, de les publicacions del Mur. */
+    /* IDEA-61 i AH-04 · Els sis àmbits del Mur amb detall propi, de les publicacions del Mur. */
+    calendari: buildVerticalDetailSectionMeta('calendari', { feedPosts, t }),
+    mapa: buildVerticalDetailSectionMeta('mapa', { feedPosts, t }),
     vehicle: buildVerticalDetailSectionMeta('vehicle', { feedPosts, t }),
+    animalets: buildVerticalDetailSectionMeta('animalets', { feedPosts, t }),
     treball: buildVerticalDetailSectionMeta('treball', { feedPosts, t }),
     habitatge: buildVerticalDetailSectionMeta('habitatge', { feedPosts, t })
   };

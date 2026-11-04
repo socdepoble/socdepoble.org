@@ -30,8 +30,16 @@ test('totsPublics: una sola llista dolenta o un sol element no públic ho apaga 
 });
 
 test('elementTraduible: només les seccions que poden tindre contingut públic; notes i desconegudes, mai', () => {
-  /* IDEA-61 (T0, prompt 261102_1532) · Les tres verticals, com el Mur. */
-  expect([...SECCIONS_AMB_CONTINGUT_PUBLIC]).toEqual(['mur', 'mercat', 'events', 'pobles', 'multimedia', 'vehicle', 'treball', 'habitatge']);
+  /* IDEA-61 (T0, prompt 261102_1532) · Les tres verticals, com el Mur.
+     Fusió del kit v3.0.0 (AH-04) · I els tres àmbits nous amb detall propi
+     (calendari, mapa i animalets), que també són publicacions del Mur: la
+     regla de visibilitat (cap marca de persona, `visibility` pública) els
+     val igual. Notes, xat i perfils continuen fora. */
+  expect([...SECCIONS_AMB_CONTINGUT_PUBLIC]).toEqual(['mur', 'mercat', 'events', 'pobles', 'multimedia', 'calendari', 'mapa', 'vehicle', 'animalets', 'treball', 'habitatge']);
+  for (const seccio of ['calendari', 'mapa', 'animalets']) {
+    expect(elementTraduible(seccio, { id: 'a', visibility: 'private' }), seccio).toBe(false);
+    expect(elementTraduible(seccio, { id: 'a', ownerUserId: 'u1' }), seccio).toBe(false);
+  }
   for (const seccio of SECCIONS_AMB_CONTINGUT_PUBLIC) expect(elementTraduible(seccio, { id: 'a' }), seccio).toBe(true);
   for (const seccio of ['notes', 'xat', 'perfil', '', undefined, 'MUR']) expect(elementTraduible(seccio, { id: 'a' }), String(seccio)).toBe(false);
   expect(elementTraduible('mur', { id: 'a', ownerUserId: null })).toBe(false);

@@ -1,4 +1,4 @@
-import { Image as ImageIcon, Crop, SlidersHorizontal } from 'lucide-react';
+import { Image as ImageIcon, Crop, SlidersHorizontal, ChevronUp } from 'lucide-react';
 import { DateTimeControl, Alerta, Boto, SelectorDataHora } from '../PedraSeca/index.js';
 import { BotoVisibilitat } from './barres/BotoVisibilitat.jsx';
 import { ETIQUETA_RESERVA_ARA, dataHoraEdicio } from './barres/dataHoraBarra.js';
@@ -45,6 +45,7 @@ export const TEXTOS_CLOSCA = Object.freeze({
   campEmoticona: parellCloscaEditor('camp.emoticona', 'Emoticona'),
   comptador: parellCloscaEditor('comptador', '{camp}: {llargaria} de {maxim} caràcters'),
   edicioAvancada: parellCloscaEditor('edicioAvancada', 'Edició avançada'),
+  tancaEdicioAvancada: parellCloscaEditor('tancaEdicioAvancada', 'Tancar l’edició avançada'),
   imatgeAjuda: parellCloscaEditor('imatge.ajuda', "Pots pujar qualsevol tipus d'imatge o arxiu multimèdia."),
   imatgePujant: parellCloscaEditor('imatge.pujant', 'Encara s’està desant la imatge. Quan acabe, la podràs tornar a canviar.'),
   imatgeErrorDesar: parellCloscaEditor('imatge.errorDesar', "No s'ha pogut desar la imatge."),
@@ -471,15 +472,14 @@ export function UniversalEditorShell({
   ambitEdicioAvancada = null,
   peticioAmbit = null,
   onPeticioAmbitAtesa = null,
-  /* Pla 261028_1526 (P1-58; Llibre Mestre, Fita 22) · `posicioEdicioAvancada`:
-     on va el desplegable. 'cos' (per defecte, Notes i DocumentEditor), el lloc
-     de sempre, dins de l'article damunt de les eines; 'despres-autoria' (la
-     fitxa del Perfil), la ranura despresAutoria de PageFrame, davall de la
-     barra taronja i damunt de l'H1, fora de l'article (l'Índex no el llig).
-     Un sol node i una sola posició per muntatge: mai dos desplegables, i el
-     cos (TipTap) no es remunta. Dins, l'ordre de lectura: Capçalera →
-     identitat (l'avatar) → Logotip → classificació. */
-  posicioEdicioAvancada = 'cos',
+  /* Pla 261028_1526 (P1-58; Llibre Mestre, Fita 22) i AH-03 · `posicioEdicioAvancada`:
+     on va el desplegable. 'despres-autoria' (per defecte), la ranura
+     despresAutoria de PageFrame, davall de la barra taronja i damunt de l'H1,
+     fora de l'article (l'Índex no el llig); 'cos', dins de l'article damunt de
+     les eines. Un sol node i una sola posició per muntatge: mai dos
+     desplegables, i el cos (TipTap) no es remunta. Dins, l'ordre de lectura:
+     Capçalera → identitat (l'avatar) → Logotip → àmbit → classificació → tancar. */
+  posicioEdicioAvancada = 'despres-autoria',
   classificacio,
   copyright,
   onCanviaCopyright,
@@ -574,7 +574,7 @@ export function UniversalEditorShell({
       if (plegat) plegat.open = true;
       desplacaASeccio(ranura, { behavior: movimentReduit() ? 'auto' : 'smooth', block: 'start' });
       /* El focus no torna a moure la vista: el salt suau ja hi porta. */
-      if (peticioAmbit.enfoca) ranura.querySelector('input[type="radio"]:checked')?.focus({ preventScroll: true });
+      if (peticioAmbit.enfoca) ranura.querySelector('select, input[type="radio"]:checked')?.focus({ preventScroll: true });
     }
     onPeticioAmbitAtesaRef.current?.(peticioAmbit);
   }, [peticioAmbit]);
@@ -669,11 +669,24 @@ export function UniversalEditorShell({
     ...(copyright !== undefined ? { copyright } : null),
     ...(onCanviaCopyright !== undefined ? { onCanviaCopyright } : null),
   };
-  const desplegableDalt = edicioAvancada && posicioEdicioAvancada === 'despres-autoria';
+  const desplegableDalt = edicioAvancada && posicioEdicioAvancada !== 'cos';
+  const desplegableRef = useRef(null);
+  const resumDesplegableRef = useRef(null);
   const etiquetaEdicioAvancada = tradueix(t, TEXTOS_CLOSCA.edicioAvancada);
+  const etiquetaTancaEdicioAvancada = tradueix(t, TEXTOS_CLOSCA.tancaEdicioAvancada);
+  const tancaEdicioAvancada = useCallback(() => {
+    if (desplegableRef.current) desplegableRef.current.open = false;
+    const resum = resumDesplegableRef.current;
+    if (resum) {
+      if (typeof resum.scrollIntoView === 'function') {
+        resum.scrollIntoView({ block: 'nearest' });
+      }
+      resum.focus({ preventScroll: true });
+    }
+  }, []);
   const desplegable = edicioAvancada ? (
-    <details className="sdp-edicio-avancada">
-      <summary className="sdp-edicio-avancada__resum">
+    <details ref={desplegableRef} className="sdp-edicio-avancada">
+      <summary ref={resumDesplegableRef} className="sdp-edicio-avancada__resum">
         {resumEdicioAvancada || titolEdicioAvancada ? (
           <>
             <span className="sdp-edicio-avancada__icona" aria-hidden="true">
@@ -693,7 +706,8 @@ export function UniversalEditorShell({
           es diu amb data-sdp-ranura: les classes d'abans no tenien estil.
           O4-CLAUDE-1 (captura 261102_2121) · Entre el logotip i la
           classificació, «On es publica?» en línia (ambitEdicioAvancada); sense
-          la prop, res. */}
+          la prop, res.
+          AH-03 · Botó gran de tancament al final del panell desplegat. */}
       <div className="sdp-edicio-avancada__cos">
         <div className="sdp-edicio-avancada__imatge" data-sdp-ranura="capcalera">{shellData.topBarData.heroComponent}</div>
         {identitatEdicioAvancada ? <div className="sdp-edicio-avancada__identitat">{identitatEdicioAvancada}</div> : null}
@@ -702,6 +716,14 @@ export function UniversalEditorShell({
         ) : null}
         {ambitEdicioAvancada ? <div className="sdp-edicio-avancada__ambit" data-sdp-ranura="ambit">{ambitEdicioAvancada}</div> : null}
         {classificacio ? <div className="page-title-classificacio">{classificacio}</div> : null}
+        <button
+          type="button"
+          className="sdp-boto sdp-boto--secundari sdp-edicio-avancada__boto-tancar"
+          onClick={tancaEdicioAvancada}
+        >
+          <ChevronUp size={18} aria-hidden="true" focusable="false" />
+          <span>{etiquetaTancaEdicioAvancada}</span>
+        </button>
       </div>
     </details>
   ) : null;

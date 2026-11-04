@@ -3201,13 +3201,19 @@ section.bar-orange > .sdp-emoticona-barra--boto:focus-visible { outline-color: v
      classificació. Quan l'entrada ?ambit= o el botó «Àmbit» el porten a la
      vista, s'atura davall de les dues barres sticky, amb el mateix marge que
      el cos del desplegable (GM2-03). El títol i l'ajuda del bloc, com el títol
-     i el subtítol del resum; el grup d'àmbits (.sdp-grup), sense el seu marge
-     de formulari dins de la pila. */
+     i el subtítol del resum.
+     G3-pedra-seca-i18n-12 (AH-04: el Selector en lloc de GrupOpcions) · Els
+     Camps del bloc (el de l'àmbit i els de la fitxa) sense el seu marge de
+     formulari: dins de les piles, l'espai el dona només el gap (abans, 16 +
+     20 = 36 px davall de cada Camp).
+     G3-pedra-seca-i18n-13 (Pedra Seca §6, contracte O4) · El Selector de
+     l'àmbit fa l'alçada d'acció, 58 px: el sòl genèric de 48 px no el rebaixa. */
   .sdp-edicio-avancada__ambit {
     min-inline-size: 0;
     scroll-margin-block-start: calc(var(--sdp-alt-accio) * 2 + var(--sdp-space-4));
   }
-  .sdp-bloc-ambit > .sdp-grup { margin: 0; }
+  .sdp-bloc-ambit .sdp-camp { margin: 0; }
+  .sdp-bloc-ambit__selector { min-block-size: var(--sdp-alt-accio); }
   .sdp-bloc-ambit__titol {
     margin: 0;
     color: var(--sdp-text-titol);
@@ -3218,6 +3224,14 @@ section.bar-orange > .sdp-emoticona-barra--boto:focus-visible { outline-color: v
     margin: 0;
     color: var(--sdp-text-suau);
     font-size: var(--sdp-text-small);
+  }
+  /* AH-03 · Botó gran de tancament al final del panell desplegat d'Edició avançada */
+  .sdp-edicio-avancada__boto-tancar {
+    inline-size: 100%;
+    min-block-size: var(--sdp-touch);
+    justify-content: center;
+    margin-block-start: var(--sdp-space-2);
+    font-weight: 700;
   }
 }
 

@@ -108,8 +108,13 @@
  *             useDestiDelPlugin deixa el botó inert («(no disponible ací)»)
  *             i la pàgina diu que està en obres. Cap consulta ni dada a la
  *             ruta (MAPA §2.2, R4).
- *   mapa, animalets → null. Mapa i Animalets no tenen secció
- *     (control/destinsControl.js:29-31).
+ *   mapa → /mapa, animalets → /animalets · Fusió del kit v3.0.0 de Gemini
+ *             (AH-04, ordre del Mestre del 261104: «Calendari, Mapa i
+ *             Animalets encara ixen desactivats amb la icona d'obres») · El
+ *             Panell ja hi publica (/notes?ambit=mapa|animalets) i App.jsx
+ *             en servix la secció (<Route path="mapa|animalets"> amb
+ *             SeccioVertical): la guarda de llibre-deutes-02 demana que el
+ *             registre diga el mateix. Abans: null («en obres»).
  *   vehicle → /vehicle · llibre-deutes-02 (261104) · IDEA-61 (T0, prompt
  *             261102_1532) li va donar secció: App.jsx, <Route
  *             path="vehicle"> amb SeccioVertical (ActorRoutes), la mateixa
@@ -244,8 +249,14 @@ export const PLUGINS = Object.freeze([
     id: 'mapa',
     titol: 'Mapa',
     subtitol: 'Els llocs del poble, damunt del mapa',
-    entradilla: 'Eina en obres: encara no es pot marcar cap lloc. Un punt publicat al mapa serà públic i el podrà localitzar qualsevol, també des d’altres pobles.',
+    /* Fusió del kit v3.0.0 (AH-04) · Ja no està en obres: el Panell hi
+       publica (/notes?ambit=mapa) i la secció és /mapa. Com Vehicle
+       (llibre-deutes-02), la primera frase és el subtítol de la secció
+       (section.mapa.subtitle) i l'avís de privacitat es queda literal.
+       Abans: «Eina en obres: encara no es pot marcar cap lloc.» */
+    entradilla: 'Vista geogràfica del projecte i dels seus punts destacats. Un punt publicat al mapa serà públic i el podrà localitzar qualsevol, també des d’altres pobles.',
     imatgeAlt: 'Veïns i veïnes claven una agulla de mapa roja i gegant enmig dels tarongers',
+    obrir: '/mapa',
     etiquetaObrir: 'Obrir el Mapa',
     /* Mòdul B (261021) · L'original .jpg ix de public/: la vinyeta és la WebP. */
     extensioImatge: 'webp'
@@ -271,8 +282,18 @@ export const PLUGINS = Object.freeze([
     id: 'animalets',
     titol: 'Animalets',
     subtitol: 'Animals perduts, trobats i en adopció',
-    entradilla: 'Eina en obres: encara no es pot publicar cap avís. El telèfon o el contacte que poses en un avís el veurà tothom.',
+    /* Fusió del kit v3.0.0 (AH-04) · Ja no està en obres: el Panell hi
+       publica (/notes?ambit=animalets) i la secció és /animalets. La primera
+       frase és el subtítol de la secció (section.animalets.subtitle). L'avís
+       de privacitat diu ara el que fa el contracte: el camp «Com contactar»
+       d'Animalets és `privat` (publicacioUniversal.js), com el de Treball, i
+       el formulari ja ho diu amb les mateixes paraules (idea61-05,
+       editor.ambit.contacteVisible). Abans: «Eina en obres: encara no es pot
+       publicar cap avís. El telèfon o el contacte que poses en un avís el
+       veurà tothom.» */
+    entradilla: 'Adopció, animals perduts, trobats i cura comunitària al poble. El contacte que poses en una fitxa el veurà la gent registrada del poble en obrir-la; no ix a la targeta ni a la cerca.',
     imatgeAlt: 'Una iaia baixa un gatet d’una olivera amb l’ajuda d’un veí, entre gossos, gallines i un ase',
+    obrir: '/animalets',
     etiquetaObrir: 'Obrir Animalets',
     /* Mòdul B (261021) · L'original .jpg ix de public/: la vinyeta és la WebP. */
     extensioImatge: 'webp'

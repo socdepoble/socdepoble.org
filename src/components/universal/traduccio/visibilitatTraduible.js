@@ -30,8 +30,8 @@ const MARQUES_DE_PERSONA = Object.freeze(['ownerUserId', 'owner_user_id', 'autho
 /* Les seccions on un element PODRIA ser públic. Notes, apps i qualsevol
    secció desconeguda, mai (fallada tancada). */
 export const SECCIONS_AMB_CONTINGUT_PUBLIC = Object.freeze(['mur', 'mercat', 'events', 'pobles', 'multimedia',
-  /* IDEA-61 (T0, prompt 261102_1532) · Les verticals, com el Mur. */
-  'vehicle', 'treball', 'habitatge']);
+  /* IDEA-61 i AH-04 · Els sis àmbits del Mur amb detall propi, com el Mur. */
+  'calendari', 'mapa', 'vehicle', 'animalets', 'treball', 'habitatge']);
 
 /** Un element que es pot enviar al traductor: objecte, sense marca de
  *  persona i amb `visibility` absent o 'public'. */

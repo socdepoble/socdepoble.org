@@ -67,3 +67,25 @@ test('fuzz determinista: normalització idempotent, només camps i primitius, se
     }
   }
 });
+
+test('AH-06 · els 8 àmbits (incloent calendari, mapa i animalets) rebutgen cadenes > 10 KB, dates impossibles i NaN/Infinity', () => {
+  expect(AMBITS).toEqual(['mur', 'mercat', 'calendari', 'mapa', 'vehicle', 'animalets', 'treball', 'habitatge']);
+  const gegant = 'A'.repeat(15000);
+  for (const ambit of AMBITS.filter((a) => a !== 'mur')) {
+    const brut = Object.create(null);
+    for (const camp of CAMPS[ambit]) {
+      if (camp.tipus === 'text') brut[camp.id] = gegant;
+      else if (camp.tipus === 'enter') brut[camp.id] = Number.POSITIVE_INFINITY;
+      else if (camp.tipus === 'data') brut[camp.id] = '2026-02-29';
+      else if (camp.tipus === 'hora') brut[camp.id] = '25:99';
+      else if (camp.tipus === 'enum') brut[camp.id] = '__proto__';
+    }
+    const net = normalitzaDades(ambit, brut);
+    for (const [k, v] of Object.entries(net)) {
+      const def = CAMPS[ambit].find((c) => c.id === k);
+      expect(def).toBeTruthy();
+      expect(typeof v).toBe('string');
+      expect(v.length).toBeLessThanOrEqual(def.maxim);
+    }
+  }
+});

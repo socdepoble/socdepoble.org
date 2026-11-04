@@ -730,8 +730,8 @@ function primerDe(valor, nivell) {
  *  'notes' hi és per a dir-ho: una nota és privada i no té mai imatge social.
  *  OG-6 · Cap 'wiki' encara: els documents de la Wiki continuen genèrics. */
 export const TIPUS_DE_PAGINA = Object.freeze(['mercat', 'mur', 'events', 'pobles', 'pagina', 'notes',
-  /* IDEA-61 (T0, prompt 261102_1532) · Les verticals: les mateixes candidates que el Mur. */
-  'vehicle', 'treball', 'habitatge']);
+  /* IDEA-61 i AH-04 · Els sis àmbits del Mur amb detall propi: les mateixes candidates que el Mur. */
+  'calendari', 'mapa', 'vehicle', 'animalets', 'treball', 'habitatge']);
 
 const llistaDe = (valor) => (Array.isArray(valor) ? valor.map(primerValor) : []);
 
@@ -769,9 +769,12 @@ function candidatesDe(tipus, item) {
       const galeria = galeriaPresent ? llistaDe(item.images) : [item.image_url, item.image, item.imageSrc].map(primerValor);
       return [...galeria, ...srcsDeLesImg(item.description)];
     }
-    /* IDEA-61 (T0, prompt 261102_1532) · Una vertical és una publicació del Mur. */
+    /* IDEA-61 i AH-04 · Una fitxa d'àmbit és una publicació del Mur. */
     case 'mur':
+    case 'calendari':
+    case 'mapa':
     case 'vehicle':
+    case 'animalets':
     case 'treball':
     case 'habitatge': {
       /* La portada del detall (detailSectionMeta.jsx · getImage del Mur):

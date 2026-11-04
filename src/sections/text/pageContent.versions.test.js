@@ -252,7 +252,11 @@ describe('Onada 6 · l’entrada de la 1.1.0, la primera i honesta', () => {
     const posicions = ['data-sdp-ranura="capcalera"', 'data-sdp-ranura="logotip"', 'data-sdp-ranura="ambit"', 'page-title-classificacio'].map((m) => desplegable.indexOf(m));
     expect(posicions.every((p) => p >= 0)).toBe(true);
     expect([...posicions].sort((a, b) => a - b)).toEqual(posicions);
-    expect(cos).toContain(`(${AMBITS.map((a) => RESERVES_I18N[`ambit.${a}`]).join(', ').replace(/, ([^,]+)$/, ' o $1')})`);
+    const ambits110 = ['mur', 'mercat', 'vehicle', 'treball', 'habitatge'];
+    for (const a of ambits110) expect(AMBITS).toContain(a);
+    const llista110 = `(${ambits110.map((a) => RESERVES_I18N[`ambit.${a}`]).join(', ').replace(/, ([^,]+)$/, ' o $1')})`;
+    const llistaVigent = `(${AMBITS.map((a) => RESERVES_I18N[`ambit.${a}`]).join(', ').replace(/, ([^,]+)$/, ' o $1')})`;
+    expect(cos.includes(llista110) || cos.includes(llistaVigent)).toBe(true);
     expect(llegix('src/sections/notes/NotesSection.jsx')).toContain("const CLAU_AMBIT = 'ambit';");
     expect(llegix('src/sections/disseny/cataleg/manifest.js')).toContain("item: 'formularis-ambit'");
     expect(entrega110).toContain('<a href="/disseny?categoria=formularis&amp;item=formularis-ambit">');

@@ -38,21 +38,29 @@ import { netejaText } from './sanitize.js';
 
 /* ── Vocabulari tancat ─────────────────────────────────────────────── */
 
-export const AMBITS = Object.freeze(['mur', 'mercat', 'vehicle', 'treball', 'habitatge']);
+export const AMBITS = Object.freeze(['mur', 'mercat', 'calendari', 'mapa', 'vehicle', 'animalets', 'treball', 'habitatge']);
 export const ESTATS = Object.freeze(['disponible', 'reservat', 'complet', 'tancat']);
 export const ESTAT_PER_DEFECTE = 'disponible';
 
-/* IDEA-61 · Cap migració: vehicle/treball/habitatge viuen a la secció 'mur'
+/* IDEA-61 · Cap migració: les verticals viuen a la secció 'mur'
    amb l'àmbit al payload; el mercat, a la seua. Només 'mur' i 'mercat'. */
-export const SECTION_ID_PER_AMBIT = Object.freeze({ mur: 'mur', mercat: 'mercat', vehicle: 'mur', treball: 'mur', habitatge: 'mur' });
+export const SECTION_ID_PER_AMBIT = Object.freeze({
+  mur: 'mur', mercat: 'mercat', calendari: 'mur', mapa: 'mur',
+  vehicle: 'mur', animalets: 'mur', treball: 'mur', habitatge: 'mur'
+});
 
 /* El `type` del payload que decidix la targeta del Mur (TargetaDelMur.jsx:
    'product' és Mercat). 'feed' és el de publishNote: per a 'mur' no
    s'escriu mai (Llei del Píxel), només es documenta. */
-export const TYPE_PER_AMBIT = Object.freeze({ mur: 'feed', mercat: 'product', vehicle: 'vehicle', treball: 'treball', habitatge: 'habitatge' });
+export const TYPE_PER_AMBIT = Object.freeze({
+  mur: 'feed', mercat: 'product', calendari: 'calendari', mapa: 'mapa',
+  vehicle: 'vehicle', animalets: 'animalets', treball: 'treball', habitatge: 'habitatge'
+});
 
 export const MODALITATS = Object.freeze({
+  mapa: Object.freeze(['punt_interes', 'incidencia', 'patrimoni', 'ruta']),
   vehicle: Object.freeze(['oferisc_places', 'busque_lloc', 'recarrec_comunitari']),
+  animalets: Object.freeze(['adopcio', 'perdut', 'trobat', 'cura']),
   treball: Object.freeze(['oferta_feina', 'oferisc_ofici', 'jornal_agricola', 'relleu_generacional']),
   habitatge: Object.freeze(['lloguer', 'venda', 'compartir_casa', 'masoveria_urbana'])
 });
@@ -77,16 +85,27 @@ export const CLAUS_RESERVADES = Object.freeze([
 export const RESERVES_I18N = Object.freeze({
   'ambit.mur': 'Mur',
   'ambit.mercat': 'Mercat',
+  'ambit.calendari': 'Calendari',
+  'ambit.mapa': 'Mapa',
   'ambit.vehicle': 'Compartir cotxe',
+  'ambit.animalets': 'Animalets',
   'ambit.treball': 'Treball',
   'ambit.habitatge': 'Habitatge',
   'ambit.estat.disponible': 'Disponible',
   'ambit.estat.reservat': 'Reservat',
   'ambit.estat.complet': 'Complet',
   'ambit.estat.tancat': 'Tancat',
+  'ambit.modalitat.punt_interes': 'Punt d’interès',
+  'ambit.modalitat.incidencia': 'Incidència al terme',
+  'ambit.modalitat.patrimoni': 'Patrimoni i memòria',
+  'ambit.modalitat.ruta': 'Camí o ruta',
   'ambit.modalitat.oferisc_places': 'Oferisc places',
   'ambit.modalitat.busque_lloc': 'Busque lloc',
   'ambit.modalitat.recarrec_comunitari': 'Recàrrec comunitari',
+  'ambit.modalitat.adopcio': 'En adopció',
+  'ambit.modalitat.perdut': 'Animal perdut',
+  'ambit.modalitat.trobat': 'Animal trobat',
+  'ambit.modalitat.cura': 'Cura o ajuda',
   'ambit.modalitat.oferta_feina': 'Oferta de feina',
   'ambit.modalitat.oferisc_ofici': 'Oferisc el meu ofici',
   'ambit.modalitat.jornal_agricola': 'Jornal agrícola',
@@ -99,6 +118,13 @@ export const RESERVES_I18N = Object.freeze({
   'ambit.estatImmoble.a_reformar': 'Per a reformar',
   'ambit.camp.modalitat': 'Modalitat',
   'ambit.camp.estat': 'Estat',
+  'ambit.camp.data_inici': 'Dia d’inici',
+  'ambit.camp.hora_inici': 'Hora d’inici',
+  'ambit.camp.data_fi': 'Dia de finalització',
+  'ambit.camp.hora_fi': 'Hora de finalització',
+  'ambit.camp.lloc': 'Lloc o adreça',
+  'ambit.camp.coordenades': 'Coordenades o referència',
+  'ambit.camp.especie': 'Animal o espècie',
   'ambit.camp.lloc_eixida': 'Lloc d’eixida',
   'ambit.camp.lloc_arribada': 'Lloc d’arribada',
   'ambit.camp.data_eixida': 'Dia d’eixida',
@@ -155,6 +181,20 @@ export const CAMPS = Object.freeze({
     camp('categoria', 'text'),
     camp('estoc', 'text')
   ]),
+  calendari: Object.freeze([
+    camp('data_inici', 'data', { obligatori: true }),
+    camp('hora_inici', 'hora'),
+    camp('data_fi', 'data'),
+    camp('hora_fi', 'hora'),
+    camp('lloc', 'text', { obligatori: true }),
+    camp('municipi', 'text')
+  ]),
+  mapa: Object.freeze([
+    camp('modalitat', 'enum', { obligatori: true, opcions: MODALITATS.mapa, clauOpcions: 'ambit.modalitat' }),
+    camp('lloc', 'text', { obligatori: true }),
+    camp('municipi', 'text'),
+    camp('coordenades', 'text')
+  ]),
   vehicle: Object.freeze([
     camp('modalitat', 'enum', { obligatori: true, opcions: MODALITATS.vehicle, clauOpcions: 'ambit.modalitat' }),
     camp('lloc_eixida', 'text', { obligatori: true }),
@@ -166,6 +206,12 @@ export const CAMPS = Object.freeze({
     camp('places', 'enter', { min: 1, max: 9, obligatoriSi: { camp: 'modalitat', valor: 'oferisc_places' } }),
     camp('aportacio', 'preu'),
     camp('punt_trobada', 'text')
+  ]),
+  animalets: Object.freeze([
+    camp('modalitat', 'enum', { obligatori: true, opcions: MODALITATS.animalets, clauOpcions: 'ambit.modalitat' }),
+    camp('especie', 'text', { obligatori: true }),
+    camp('municipi', 'text', { obligatori: true }),
+    camp('contacte', 'text', { privat: true })
   ]),
   treball: Object.freeze([
     camp('modalitat', 'enum', { obligatori: true, opcions: MODALITATS.treball, clauOpcions: 'ambit.modalitat' }),
@@ -381,9 +427,36 @@ export function campDe(ambit, id) {
 
 /* ── Validació i normalització ─────────────────────────────────────── */
 
+/* G3-g2-matriu-05 (AH-04.3: calendari multi-dia) · Les regles entre camps:
+   la fi d'un interval no pot ser anterior a l'inici. Sense dia de fi l'acte
+   acaba el dia d'inici (agendaMur.js · acteAEsdeveniment), i llavors mana
+   l'hora. Una fi igual a l'inici és vàlida. Les dates (aaaa-mm-dd) i les hores
+   (HH:MM) netes es comparen com a text: cap Date. */
+const INTERVALS = Object.freeze({
+  calendari: Object.freeze({ dataInici: 'data_inici', horaInici: 'hora_inici', dataFi: 'data_fi', horaFi: 'hora_fi' })
+});
+
+/* L'error 'ordre' del camp de la fi, o null. Un camp que ja porta el seu
+   error (format), o buit, no entra en la comparació. */
+function errorDOrdre(ambit, font, errors) {
+  const interval = Object.hasOwn(INTERVALS, ambit) ? INTERVALS[ambit] : null;
+  if (!interval) return null;
+  const ambError = new Set(errors.map((error) => error.camp));
+  if (ambError.has(interval.dataInici) || ambError.has(interval.dataFi)) return null;
+  const llig = (id, neta) => (Object.hasOwn(font, id) && !ambError.has(id) ? neta(font[id]) : null);
+  const dataInici = llig(interval.dataInici, dataNeta);
+  if (dataInici === null) return null;
+  const dataFi = llig(interval.dataFi, dataNeta);
+  if (dataFi !== null && dataFi !== dataInici) return dataFi < dataInici ? { camp: interval.dataFi, codi: 'ordre' } : null;
+  const horaInici = llig(interval.horaInici, horaNeta);
+  const horaFi = llig(interval.horaFi, horaNeta);
+  return horaInici !== null && horaFi !== null && horaFi < horaInici ? { camp: interval.horaFi, codi: 'ordre' } : null;
+}
+
 /**
  * { ok, errors: [{ camp, codi }] } amb codi ∈ obligatori | format | rang |
- * enum | llargaria. Un àmbit desconegut: { camp: 'ambit', codi: 'enum' }.
+ * enum | llargaria | ordre ('ordre': la fi d'un interval, anterior a
+ * l'inici; vegeu INTERVALS). Un àmbit desconegut: { camp: 'ambit', codi: 'enum' }.
  */
 export function validaFitxa(ambit, dades) {
   if (!esAmbit(ambit)) return { ok: false, errors: [{ camp: 'ambit', codi: 'enum' }] };
@@ -401,6 +474,8 @@ export function validaFitxa(ambit, dades) {
     const codi = codiDError(campDef, valor);
     if (codi) errors.push({ camp: campDef.id, codi });
   }
+  const ordre = errorDOrdre(ambit, font, errors);
+  if (ordre) errors.push(ordre);
   return { ok: errors.length === 0, errors };
 }
 
@@ -576,6 +651,17 @@ export function resumDeFitxa(item, t) {
       tros('places'),
       tros('aportacio')
     ];
+  } else if (ambit === 'calendari') {
+    parts = [
+      [tros('data_inici'), tros('hora_inici')].filter(Boolean).join(' '),
+      [tros('data_fi'), tros('hora_fi')].filter(Boolean).join(' '),
+      tros('lloc'),
+      tros('municipi')
+    ];
+  } else if (ambit === 'mapa') {
+    parts = [tros('modalitat'), tros('lloc'), tros('municipi'), tros('coordenades')];
+  } else if (ambit === 'animalets') {
+    parts = [tros('modalitat'), tros('especie'), tros('municipi')];
   } else if (ambit === 'treball') {
     parts = [tros('modalitat'), tros('ofici'), tros('municipi'), tros('remuneracio')];
   } else if (ambit === 'habitatge') {

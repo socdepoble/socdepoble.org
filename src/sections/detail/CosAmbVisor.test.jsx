@@ -499,6 +499,12 @@ describe('visorDelCosDElement', () => {
     });
     expect(visorDelCosDElement(metes.mercat, { id: 'mel' }, pagina, mocks.t).dades.article).toEqual({ sectionId: 'mercat', id: 'mel' });
     expect(visorDelCosDElement(metes.events, { id: 'fira' }, pagina, mocks.t).dades.article).toEqual({ sectionId: 'events', id: 'fira' });
+    /* Fusió del kit v3.0.0 (AH-04) · L'àmbit 'calendari' comparteix la llista
+       /calendari amb l'Agenda: l'acte continua sent de l'Agenda, i la fitxa de
+       l'àmbit és seua, com la de qualsevol altra vertical. */
+    expect(metes.calendari.listPath).toBe(metes.events.listPath);
+    expect(visorDelCosDElement(metes.calendari, { id: 'curs' }, pagina, mocks.t).dades.article).toEqual({ sectionId: 'calendari', id: 'curs' });
+    expect(visorDelCosDElement(metes.vehicle, { id: 'v1' }, pagina, mocks.t).dades.article).toEqual({ sectionId: 'vehicle', id: 'v1' });
     expect(visorDelCosDElement(metes.notes, { id: 'n1' }, pagina, mocks.t).ometFiles).toEqual(['publicat']);
     expect(visorDelCosDElement(metes.pobles, { id: 'tibi' }, pagina, mocks.t)).toBeNull();
     expect(visorDelCosDElement(metes.multimedia, { id: 'era' }, pagina, mocks.t)).toBeNull();

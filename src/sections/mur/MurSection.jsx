@@ -20,7 +20,7 @@ import { dataDElement } from '../../components/universal/editorial.js';
 import { CalendariDelMur } from './CalendariDelMur.jsx';
 import { TargetaDelMur } from './TargetaDelMur.jsx';
 import { momentDeLaTargeta, perMomentDescendent, targetesDeSistema } from './targetesMur.js';
-import { acteAEsdeveniment, acteOcorreElDia } from './agendaMur.js';
+import { acteAEsdeveniment, acteOcorreElDia, esActeDelCalendari } from './agendaMur.js';
 // T2 · L'estat d'error de les dades, compartit amb el Mercat.
 import { EstatErrorDades } from './EstatErrorDades.jsx';
 import { lazyRoute } from '../../apps/plataforma/lazyRoute.js';
@@ -158,7 +158,7 @@ export default function MurSection() {
      llista: el lligen l'ordre, el filtre ?date= i la targeta. */
   const models = useMemo(() => new Map(
     [...(sortedEvents || []), ...(sortedFeedPosts || []), ...(sortedMarketItems || [])]
-      .filter((item) => item?.type === 'event')
+      .filter(esActeDelCalendari)
       .map((item) => [item, acteAEsdeveniment(item)])
   ), [sortedEvents, sortedFeedPosts, sortedMarketItems]);
 
@@ -198,7 +198,7 @@ export default function MurSection() {
     const ara = Date.now();
     const esAlertaVigent = ({ item, moment }) => alertes.has(item) && esVigent(moment, ara);
     const entrades = vigentsDalt(combined
-      .map((item) => ({ item, moment: momentDeLaTargeta(item, item.type === 'event' ? modelDe(models, item) : null) }))
+      .map((item) => ({ item, moment: momentDeLaTargeta(item, esActeDelCalendari(item) ? modelDe(models, item) : null) }))
       .sort(perMomentDescendent), esAlertaVigent);
     const vigents = entrades.filter(esAlertaVigent).map(({ item, moment }) => ({ item, tipus: alertes.get(item), caducaAl: caducaAl(moment) }));
     return {
@@ -211,7 +211,7 @@ export default function MurSection() {
 
   const displayedItems = useMemo(() => {
     let items = allItems;
-    if (filterType === 'events') items = items.filter(i => i.type === 'event');
+    if (filterType === 'events') items = items.filter(esActeDelCalendari);
     if (filterType === 'sistema') items = items.filter(i => i.type === 'sistema');
     if (filterType === 'mercat') items = items.filter(i => i.type === 'market' || i.type === 'product');
     if (filterType === 'sdp') items = items.filter(i => i.author?.nom === 'Sóc de Poble' || i.author?.name === 'Sóc de Poble' || i.organization?.nom === 'Sóc de Poble' || i.organization?.name === 'Sóc de Poble' || i.autoria?.nom === 'Sóc de Poble' || i.isSystem);
@@ -226,7 +226,7 @@ export default function MurSection() {
          existix no en troba cap (D5). Sense acte vàlid, com la resta: pel dia
          de la seua pastilla. */
       items = items.filter(i => {
-        const acte = i.type === 'event' ? acteOcorreElDia(i, dateFilter, modelDe(models, i)) : null;
+        const acte = esActeDelCalendari(i) ? acteOcorreElDia(i, dateFilter, modelDe(models, i)) : null;
         if (acte !== null) return acte;
         return String(dataDElement(i)?.dateTime || '').slice(0, 10) === dateFilter;
       });
@@ -239,7 +239,7 @@ export default function MurSection() {
      el ?category=, com la graella), sense el filtre ?date=: el dia triat el
      filtra el mateix calendari, amb la mateixa regla (acteOcorreElDia). */
   const actesDelCalendari = useMemo(
-    () => perCategoria(allItems.filter((i) => i.type === 'event'), categoryFilter),
+    () => perCategoria(allItems.filter(esActeDelCalendari), categoryFilter),
     [allItems, categoryFilter]
   );
 

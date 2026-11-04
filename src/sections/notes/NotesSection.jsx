@@ -72,15 +72,21 @@ const CAP = Object.freeze([]);
 /* T7 (P9) · A la URL del Bloc l'element es diu «nota» (?carpeta=&nota=&seccio=).
    T7C · La clau viu a modeDesa.js: el Snippet Curador l'escriu en eixir. */
 const CLAUS_URL = CLAUS_BLOC;
-/* IDEA-61 (T0, prompt 261102_1532) · ?ambit=<mercat|vehicle|treball|habitatge>
-   (mai 'mur'): l'entrada des d'una secció vertical («Publicar un viatge»). La
+/* IDEA-61 (T0, prompt 261102_1532) · ?ambit=<àmbit d'AMBITS>: l'entrada des
+   d'una secció vertical («Publicar un viatge») o d'una targeta de /control. La
    nota oberta (o la preparada, si la URL no en porta cap) rep la fitxa de
    l'àmbit i l'editor obri «On es publica?» (canalAmbit.js). O4-CLAUDE-1 · En
-   línia, dins de l'«Edició avançada» oberta, ja no en cap finestra modal. */
+   línia, dins de l'«Edició avançada» oberta, ja no en cap finestra modal.
+   AH-04.3 (ordre del Mestre, captura de /control 261104 17:10; G3-ah-conformitat-02)
+   · També 'mur': «Publicar al Mur» porta a /notes?ambit=mur i ha d'obrir el
+   Bloc amb l'«Edició avançada» oberta, igual que Mercat. El Mur és la
+   publicació de sempre: cap fitxa arriba al desat (netejaCamp i
+   NotesContext · fitxaDeNota la deixen en null, com desaAmbit), només la
+   carpeta del Mur per a la preparada (carpetaAmbit.js) i el bloc a la vista. */
 const CLAU_AMBIT = 'ambit';
 const ambitDeLaUrl = (params) => {
   const valor = params.get(CLAU_AMBIT);
-  return typeof valor === 'string' && valor !== 'mur' && AMBITS.includes(valor) ? valor : null;
+  return typeof valor === 'string' && AMBITS.includes(valor) ? valor : null;
 };
 /* Ordre del Mestre (30-10-2026) · CARPETES arrenca oberta, com a la resta
    d'espais de treball: el Bloc no força cap columna plegada. En la franja

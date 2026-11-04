@@ -40,7 +40,8 @@ import { esRutaInterna, getSectionItemPath, tipusDeSeccio } from '../../config/n
 import { cursorDe, dosDigits } from '../../utils/calendari.js';
 import { clauDia, creaEsdeveniment, llegixDataHora } from '../../utils/esdeveniment.js';
 import { clauDeData, sumaDies } from '../../utils/periodes.js';
-import { acteAEsdeveniment, acteOcorreElDia, cursorDeClau, momentDe } from '../mur/agendaMur.js';
+import { ambitDe } from '../../utils/publicacioUniversal.js';
+import { acteAEsdeveniment, acteOcorreElDia, cursorDeClau, esActeDelCalendari, momentDe } from '../mur/agendaMur.js';
 import { momentDeLaTargeta, perMomentDescendent } from '../mur/targetesMur.js';
 
 const DIA = /^\d{4}-\d{2}-\d{2}$/;
@@ -55,7 +56,7 @@ export function seccioDeLaTargeta(item) {
   if (item?.type === 'event') return 'events';
   if (esProducte(item)) return 'mercat';
   if (item?.type === 'poble') return 'pobles';
-  return 'mur';
+  return ambitDe(item);
 }
 
 /** On porta la targeta: la ruta d'una pàgina del sistema o la de l'element. */
@@ -116,7 +117,7 @@ export function targetaAEsdeveniment(item) {
  * esdeveniment, cap dia: no ix a cap de les dues, i la pàgina ho diu.
  */
 export function entradaDeLaTargeta(item) {
-  const acte = item?.type === 'event' ? acteAEsdeveniment(item) : null;
+  const acte = esActeDelCalendari(item) ? acteAEsdeveniment(item) : null;
   const dateTime = acte ? '' : dataDElement(item).dateTime;
   const esdeveniment = acte ?? esdevenimentDeLaPastilla(item, dateTime);
   return Object.freeze({

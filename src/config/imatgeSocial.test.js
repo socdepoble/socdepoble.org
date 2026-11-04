@@ -636,8 +636,8 @@ describe('imatgesDeLaPagina · Mur, Agenda, Pobles, Pàgines i Notes', () => {
     expect(imatgesDeLaPagina('perfil', { hero: FOTO })).toEqual([]);
     expect(imatgesDeLaPagina('mercat', null)).toEqual([]);
     expect(imatgesDeLaPagina('mercat', 'text')).toEqual([]);
-    /* IDEA-61 (T0, prompt 261102_1532) · Les tres verticals, amb les mateixes candidates que el Mur. */
-    expect(TIPUS_DE_PAGINA).toEqual(['mercat', 'mur', 'events', 'pobles', 'pagina', 'notes', 'vehicle', 'treball', 'habitatge']);
+    /* IDEA-61 i AH-04 · Els sis àmbits del Mur amb detall propi, amb les mateixes candidates que el Mur. */
+    expect(TIPUS_DE_PAGINA).toEqual(['mercat', 'mur', 'events', 'pobles', 'pagina', 'notes', 'calendari', 'mapa', 'vehicle', 'animalets', 'treball', 'habitatge']);
     expect(Object.isFrozen(TIPUS_DE_PAGINA)).toBe(true);
   });
 });

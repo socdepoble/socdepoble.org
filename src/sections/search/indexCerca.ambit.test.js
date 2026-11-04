@@ -9,8 +9,10 @@
  */
 import { describe, expect, test } from 'vitest';
 import { resolveItemPath } from '../../config/navigation.js';
-import { AMBITS } from '../../utils/publicacioUniversal.js';
-import { IDS_TIPUS, TIPUS_CERCA, cercaEntrades, deMedia, deProducte, dePublicacio, tipusValid } from './indexCerca.js';
+import { AMBITS, RESERVES_I18N } from '../../utils/publicacioUniversal.js';
+import {
+  IDS_TIPUS, TIPUS_CERCA, TIPUS_DE_LA_FONT_MUR, cercaEntrades, deActe, deActeDelCalendari, deMedia, deProducte, dePublicacio, tipusValid
+} from './indexCerca.js';
 
 const TORRE = 'La Torre de les Maçanes';
 const VEHICLE = Object.freeze({
@@ -29,20 +31,65 @@ const HABITATGE = Object.freeze({
 });
 const DE_SEMPRE = Object.freeze({ id: 'p1', title: 'Festa de la Cirera', town_name: TORRE, created_at: '2026-06-01T10:00:00.000Z', summary: 'Programa.' });
 
+/* G3-g2-matriu-06 (part 2) · La llista dels àmbits ja no s'escriu a mà: es
+   deriva d'AMBITS (el contracte), i un àmbit nou sense el seu tipus de cerca
+   fa caure la prova. La clau és section.search.tipus.<àmbit> i la reserva, la
+   de l'àmbit (ambit.<àmbit>). */
+const AMBITS_DE_CERCA = AMBITS.filter((ambit) => ambit !== 'mur');
+
 describe('TIPUS_CERCA', () => {
-  test('les tres verticals, darrere del Mercat, amb la clau i la reserva de la taula d’i18n', () => {
+  test('cada àmbit del contracte (menys el Mur) és un tipus, darrere de Publicacions i en l’ordre d’AMBITS, amb la clau i la reserva de l’àmbit', () => {
     const ids = TIPUS_CERCA.map((tipus) => tipus.id);
-    const mercat = ids.indexOf('mercat');
-    expect(ids.slice(mercat, mercat + 4)).toEqual(['mercat', 'vehicle', 'treball', 'habitatge']);
-    expect(TIPUS_CERCA.filter((tipus) => ['vehicle', 'treball', 'habitatge'].includes(tipus.id)).map((tipus) => [tipus.clau, tipus.text])).toEqual([
-      ['section.search.tipus.vehicle', 'Compartir cotxe'],
-      ['section.search.tipus.treball', 'Treball'],
-      ['section.search.tipus.habitatge', 'Habitatge']
-    ]);
-    for (const ambit of AMBITS.filter((candidat) => candidat !== 'mur')) expect(IDS_TIPUS, ambit).toContain(ambit);
-    expect(tipusValid('vehicle')).toBe('vehicle');
-    expect(tipusValid('habitatge')).toBe('habitatge');
+    const primer = ids.indexOf(AMBITS_DE_CERCA[0]);
+    expect(ids[primer - 1]).toBe('publicacions');
+    expect(ids.slice(primer, primer + AMBITS_DE_CERCA.length)).toEqual(AMBITS_DE_CERCA);
+    expect(TIPUS_CERCA.filter((tipus) => AMBITS_DE_CERCA.includes(tipus.id)).map((tipus) => [tipus.clau, tipus.text])).toEqual(
+      AMBITS_DE_CERCA.map((ambit) => [`section.search.tipus.${ambit}`, RESERVES_I18N[`ambit.${ambit}`]])
+    );
+    for (const ambit of AMBITS_DE_CERCA) {
+      expect(IDS_TIPUS, ambit).toContain(ambit);
+      expect(tipusValid(ambit), ambit).toBe(ambit);
+    }
     expect(tipusValid('mur')).toBe('tot');
+  });
+
+  /* G3-pedra-seca-i18n-16 · «Calendari» volia dir una cosa al Mur (la píndola
+     ho porta tot: els actes i les fitxes d'àmbit 'calendari', agendaMur.js ·
+     esActeDelCalendari) i una altra a la cerca (dos xips: «Agenda», els actes;
+     «Calendari», només les fitxes). Ara és un sol tipus amb el nom de la
+     píndola, com Mercat (els productes de sempre i les fitxes 'mercat'), i un
+     ?tipus=agenda d'abans porta al Calendari. */
+  test('Calendari és un sol tipus: els actes de l’agenda i les fitxes «calendari»; ?tipus=agenda d’abans hi porta', () => {
+    expect(IDS_TIPUS).not.toContain('agenda');
+    expect(tipusValid('agenda')).toBe('calendari');
+    const acte = deActeDelCalendari({ id: 'e1', title: 'Curs de pedra en sec a Fageca', date: '2026-11-21' });
+    const fitxa = dePublicacio({ id: 'c1', title: 'Curs de pedra en sec a Alcosser', ambit: 'calendari', estat: 'disponible', dades: { data_inici: '2026-11-28', lloc: 'Alcosser' } });
+    expect([acte.tipus, acte.clau, fitxa.tipus, fitxa.clau]).toEqual(['calendari', 'calendari:e1', 'calendari', 'calendari:c1']);
+    const { llista, perTipus } = cercaEntrades([acte, fitxa], 'pedra', 'calendari');
+    expect(llista.map((e) => e.id).sort()).toEqual(['c1', 'e1']);
+    expect(perTipus.calendari).toBe(2);
+    expect(deMedia({ id: 'f', title: 'Foto', article: { sectionId: 'events', id: 'e1' } }).fotoDe).toBe('calendari:e1');
+    /* La tria de targetes de l'editor (NotesEditor) continua amb deActe: el
+       tipus 'agenda', que formaDelGrup.js du a l'objecte 'esdeveniment'. */
+    const perALEditor = deActe({ id: 'e1', title: 'Curs de pedra en sec a Fageca', date: '2026-11-21' });
+    expect([perALEditor.tipus, perALEditor.clau]).toEqual(['agenda', 'agenda:e1']);
+    expect({ ...perALEditor, tipus: 'calendari', clau: 'calendari:e1' }).toEqual(acte);
+  });
+
+  /* G3-g2-matriu-06 i G3-ah-conformitat-07 (ARB-L4-01) · La font del Mur de
+     /cerca (useCercaGlobal) declara els tipus que en naixen: es deriven
+     d'AMBITS. Abans, Calendari, Mapa i Animalets no hi eren i, amb el Mur
+     carregant o caigut, el filtre deia «Cap resultat». */
+  test('TIPUS_DE_LA_FONT_MUR: tots els tipus que naixen del Mur (publicacions, actes, productes i cada fitxa d’àmbit)', () => {
+    expect(TIPUS_DE_LA_FONT_MUR).toEqual(['publicacions', ...AMBITS_DE_CERCA]);
+    const nascuts = [
+      dePublicacio(DE_SEMPRE).tipus, deActeDelCalendari({ id: 'e1', title: 'Aplec' }).tipus, deProducte({ id: 'm1', title: 'Mel' }).tipus,
+      ...AMBITS_DE_CERCA.map((ambit) => (ambit === 'mercat' ? deProducte({ id: 'mp', title: 'x', ambit }) : dePublicacio({ id: ambit, title: 'x', ambit })).tipus)
+    ];
+    for (const tipus of nascuts) {
+      expect(TIPUS_DE_LA_FONT_MUR, tipus).toContain(tipus);
+      expect(IDS_TIPUS, tipus).toContain(tipus);
+    }
   });
 });
 

@@ -7,8 +7,11 @@ import { RUTA_PERFIL_PROJECTE } from '../../../../config/navigation.js';
    viva REAL (TargetaViva i el xip BotoTargetaViva), amb els textos d'avís de
    cada consumidor (AVISOS_TARGETA_VIVA: el Bloc de Notes promet la publicació
    al Mur; el Perfil no en promet cap). Cada lloc diu el text del seu
-   consumidor: la fitxa de la llista (NotaFitxa, PerfilShell) i «Les vistes»
-   del Perfil (DetallVistes). Bloc 3.4 del Gauntlet (261016) · Cap editor
+   consumidor: hui només «Les vistes» del Perfil (DetallVistes) i este
+   catàleg. AH-02 (ordre del Mestre, captura de /notes de les 17:02;
+   G3-g2-matriu-09) · La llista de Notes i de Perfil ja no la munta: la fila
+   activa és la fitxa compacta (NotaFitxa i PerfilShell · DefaultItemCard), i
+   «No facis» ho prohibix. Bloc 3.4 del Gauntlet (261016) · Cap editor
    munta ja l'aside de la dreta ni el xip «Vista targeta»: Notes els va
    llevar a P4, el Perfil al pla 261015, i DocumentEditor ha perdut les claus
    targetaViva i avisTargetaViva. El xip només es veu ací. Documents de
@@ -58,29 +61,30 @@ export default function EspecimenTargetaViva() {
           ['document', '{ title, subtitle, lead, heroImage, icon, copyright, publishDate, … }', '—', 'El de l’editor: els camps de text són HTML sanejat i es pinten en text pla; un camp buit diu el text de llavor.'],
           ['autor / etiquetes', '{ nom, avatar, poble, ruta } / labels', 'null / []', 'La mateixa autoria de la barra taronja de l’editor i les píndoles del document. Amb ruta (Onada 8), la boina enllaça al perfil de qui signa i navega, com l’enllaç dels drets; sense, text.'],
           ['avis', '{ titol, descripcio, vista }', 'la reserva', 'El text de cada consumidor: AVISOS_TARGETA_VIVA.notes o .perfil. Sense, la reserva (AVIS_PREVISUALITZACIO), que no promet cap publicació.'],
-          ['onMainClick / actual', 'fn / boolean', '— / false', 'A la llista, tornar a triar la fitxa i marcar-la com a triada (aria-current).'],
+          ['onMainClick / actual', 'fn / boolean', '— / false', 'Una targeta clicable i marcada com a triada (aria-current). Cap pantalla les passa des d’AH-02: la llista de Notes i de Perfil ja no munta la targeta viva.'],
           ['BotoTargetaViva', '{ document, autor, etiquetes, avis }', '—', 'El xip «Vista targeta» i el seu diàleg (descripció: avis.vista). La targeta només es munta amb el diàleg obert. Hui només el munta este catàleg: cap editor el pinta des que DocumentEditor va perdre la clau targetaViva (Bloc 3.4, 261016).'],
           ['propsDeTargetaViva', '(document, { autor, etiquetes, ara }) => props', '—', 'Funció pura (targetaViva.js): el document dit com a props de UniversalCard, una sola traducció per a tots els llocs on es veu.'],
-          ['useDocumentViu', 'hook (documentViu.js)', '—', 'La llista llig el document viu per clau; l’editor el publica amb usePublicaDocumentViu (el Perfil ho fa així).'],
+          ['useDocumentViu', 'hook (documentViu.js)', '—', 'La fitxa compacta del Perfil (PerfilShell · FitxaDePerfil) llig el document viu per clau per a la imatge de la fila; l’editor el publica amb usePublicaDocumentViu.'],
           ['DetallVistes (Perfil)', '{ identitat }', '—', 'Ordre del Mestre (261008) · L’apartat «Les vistes»: la targeta en línia amb AVISOS_TARGETA_VIVA.perfil. L’editor ja no hi és muntat: el document es refà amb documentDeFitxa, la fitxa del servidor i l’esborrany que encara guarda la cua (useAutodesament).'],
         ]}
         a11y={[
           'El xip anuncia que obri una finestra (aria-haspopup="dialog").',
           'Els botons de la targeta conserven el seu nom («Comentar {títol}»…); en clicar-los, el diàleg del sistema explica per què no fan res, amb Escape i trampa de focus.',
-          'A la llista, la fitxa triada porta aria-current="true", com la compacta.'
+          'A «Les vistes» és una previsualització, no cap element triable: a la llista, la fila triada és la compacta, amb aria-current="true".'
         ]}
         fes={[
-          'Llista + dreta si hi cap (decisió del Mestre, 260928): la fitxa activa de la llista és la targeta viva. La dreta de l’editor s’ha retirat: cap editor munta l’aside fix ni el xip «Vista targeta» davall del títol (el Bloc de Notes els va llevar a P4; el Perfil, al pla 261015). Al Perfil, la targeta es veu també en línia a «Les vistes».',
-          'Passar a cada consumidor el seu text amb avis, allà on es pinta la targeta (la fitxa de la llista i «Les vistes»): el Bloc de Notes parla de la publicació al Mur; el Perfil, de la fitxa en format targeta.',
+          'Llista + dreta si hi cap (decisió del Mestre, 260928) ja no es munta enlloc. La dreta de l’editor s’ha retirat: cap editor munta l’aside fix ni el xip «Vista targeta» davall del títol (el Bloc de Notes els va llevar a P4; el Perfil, al pla 261015). I la llista tampoc, des d’AH-02: la fila activa de Notes i de Perfil és la fitxa compacta. Al Perfil, la targeta es veu en línia a «Les vistes».',
+          'Passar a cada consumidor el seu text amb avis, allà on es pinta la targeta («Les vistes» i este catàleg): el Bloc de Notes parla de la publicació al Mur; el Perfil, de la fitxa en format targeta.',
           'Al Perfil, «Vista A4 / PDF», «Crear portada» i «Vista targeta» viuen a l’apartat «Les vistes» (ordre del Mestre, 261008), fora de l’espai d’edició; al Bloc de Notes, «Vista A4 / PDF» i «Crear portada» continuen davall del títol.'
         ]}
         noFacis={[
           'Tornar a muntar la targeta viva al costat de l’editor (l’aside de la dreta o el xip davall del títol): es va retirar a P4 i al pla 261015.',
+          'Tornar a convertir la fila activa de la llista de Notes o de Perfil en targeta viva (AH-02): la llista salta en obrir-se i tancar-se, i repetix la previsualització de l’«Edició avançada».',
           'Prometre al Perfil una targeta publicada que no existix.',
           'Posar la ploma de la llista a la caputxa: la caputxa només porta l’emoticona triada.',
           'Fer que els botons de la previsualització naveguen o publiquen.'
         ]}>
-        <h4>Bloc de Notes: sense emoticona i amb emoticona</h4>
+        <h4>Amb l’avís del Bloc de Notes (només al catàleg): sense emoticona i amb emoticona</h4>
         <div className="sdp-especimen__targetes">
           <Mostra peu="Sense emoticona ni data triada: la caputxa no té centre i la data és la d’ara.">
             <TargetaViva document={NOTA_SENSE} autor={AUTORIA} etiquetes={ETIQUETES} avis={AVISOS_TARGETA_VIVA.notes} />

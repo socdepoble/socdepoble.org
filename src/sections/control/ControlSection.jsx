@@ -443,6 +443,23 @@ function PanellControl({ vistaRef, abansDeLaFitxa }) {
   const xatSocDePoble = useXatSocDePobleResolt();
   const senseXatSocDePoble = xatSocDePoble.estat === 'absent' || xatSocDePoble.estat === 'error';
 
+  /* AH-04 · Fer clic sobre el cos, la imatge o el títol d'una targeta de
+     publicació (fora de la boina, les portes i el peu) obri la seua pàgina
+     explicativa (/page/<pagina>), igual que la porta «Saber-ne més». */
+  const obriPaginaDeTargeta = useCallback((event) => {
+    const objectiu = event.target instanceof Element ? event.target : null;
+    if (!objectiu) return;
+    if (objectiu.closest('a, button, input, select, textarea, [role="button"], [role="menuitem"], .sp-card-header, .sp-card-portes, .sp-card-footer')) {
+      return;
+    }
+    const targeta = objectiu.closest('article.sp-card');
+    if (!targeta) return;
+    const graella = event.currentTarget;
+    const index = [...graella.querySelectorAll(':scope > article.sp-card')].indexOf(targeta);
+    const desti = DESTINS_CONTROL[index];
+    if (desti?.saberMes) navigate(desti.saberMes);
+  }, [navigate]);
+
   return (
     <UniversalPage
       title={t('section.control.title', 'Panell de Control')}
@@ -461,7 +478,7 @@ function PanellControl({ vistaRef, abansDeLaFitxa }) {
           <h2 id={idDestins} className="sdp-sr-only">{t(...TEXTOS_PORTES.titol)}</h2>
           {/* P5 · Les targetes de doble acció, en la graella de sempre (destinsControl.js):
               les sis de 2245 i, des del 261004, Treball i Habitatge. */}
-          <div className="sdp-card-grid">
+          <div className="sdp-card-grid" onClick={obriPaginaDeTargeta}>
             {DESTINS_CONTROL.map((desti) => (
               <TargetaDeDesti key={desti.id} desti={desti} t={t} />
             ))}

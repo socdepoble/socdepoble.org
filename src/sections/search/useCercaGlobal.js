@@ -57,8 +57,8 @@ import { useNotes } from '../notes/NotesContext';
 import { paginaPerAppNativa } from '../text/perAppNativa.js';
 import { useXat } from '../xat/XatContext';
 import {
-  ambLaIdentitatPropia, cercaEntrades, deActe, deAgent, deConversa, deIdentitat, deMedia, deMembre, deNota,
-  deOrganitzacio, dePagina, dePoble, deProducte, dePublicacio, tipusValid
+  ambLaIdentitatPropia, cercaEntrades, deActeDelCalendari, deAgent, deConversa, deIdentitat, deMedia, deMembre, deNota,
+  deOrganitzacio, dePagina, dePoble, deProducte, dePublicacio, tipusValid, TIPUS_DE_LA_FONT_MUR
 } from './indexCerca.js';
 
 const CAP = Object.freeze([]);
@@ -357,7 +357,8 @@ export function useCercaGlobal({ q = '', tipus = 'tot' } = {}) {
     );
   }, [core.pages, opcions]);
   const dePublicacions = useMemo(() => mapa(mur.feedPosts, dePublicacio, opcions), [mur.feedPosts, opcions]);
-  const deActes = useMemo(() => mapa(mur.events, deActe, opcions), [mur.events, opcions]);
+  /* G3-pedra-seca-i18n-16 · Els actes són del Calendari, amb les fitxes 'calendari'. */
+  const deActes = useMemo(() => mapa(mur.events, deActeDelCalendari, opcions), [mur.events, opcions]);
   const deProductes = useMemo(() => mapa(mur.marketItems, deProducte, opcions), [mur.marketItems, opcions]);
   const deMedies = useMemo(() => mapa(media.mediaItems, deMedia, opcions), [media.mediaItems, opcions]);
   const deNotes = useMemo(() => mapa(notes.notes, deNota, opcions), [notes.notes, opcions]);
@@ -422,9 +423,12 @@ export function useCercaGlobal({ q = '', tipus = 'tot' } = {}) {
         ['persones', 'entitats', 'pobles', 'pagines']),
       /* IDEA-61 (T0, prompt 261102_1532; ARB-L4-01) · Les fitxes de vehicle, treball i
          habitatge viuen a la font del Mur: amb eixos filtres, el Mur carregant o en
-         error ha de comptar com a rellevant (esquelet i avís, no un buit fals). */
+         error ha de comptar com a rellevant (esquelet i avís, no un buit fals).
+         G3-g2-matriu-06 i G3-ah-conformitat-07 · Els tipus es deriven d'AMBITS
+         (indexCerca · TIPUS_DE_LA_FONT_MUR): Calendari, Mapa i Animalets, que AH-04
+         hi va afegir, no hi eren. */
       font('mur', t('section.search.font.mur', "el Mur, l'agenda i el mercat"), mur.status, mur.error, mur.refresh,
-        ['publicacions', 'agenda', 'mercat', 'vehicle', 'treball', 'habitatge']),
+        TIPUS_DE_LA_FONT_MUR),
       font('multimedia', t('section.search.font.multimedia', 'la multimèdia'), media.status, media.error, media.refresh, ['multimedia']),
       font('notes', t('section.search.font.notes', 'les teues notes'), notes.status, notes.error, notes.refresh, ['notes']),
       font('converses', t('section.search.font.converses', 'les teues converses'), xat.status, null, xat.recarrega, ['converses']),

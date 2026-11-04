@@ -13,8 +13,8 @@ test('?vista=: només «graella» obri les targetes; qualsevol altre valor (o ca
   for (const valor of [null, undefined, '', 'llista', 'targetes', 'GRAELLA', '<script>']) expect([valor, vistaValida(valor)]).toEqual([valor, 'llista']);
 });
 
-test('Persones, Entitats, Pobles, Mercat i les tres verticals (IDEA-61) ofereixen les targetes; Tot i la resta, no', () => {
-  const amb = ['persones', 'entitats', 'pobles', 'mercat', 'vehicle', 'treball', 'habitatge'];
+test('Persones, Entitats, Pobles, Mercat i els sis àmbits del Mur (IDEA-61 i AH-04) ofereixen les targetes; Tot i la resta, no', () => {
+  const amb = ['persones', 'entitats', 'pobles', 'mercat', 'calendari', 'mapa', 'vehicle', 'animalets', 'treball', 'habitatge'];
   expect(TIPUS_AMB_TARGETES).toEqual(amb);
   expect(TIPUS_AMB_TARGETES.every((tipus) => IDS_TIPUS.includes(tipus))).toBe(true);
   expect(IDS_TIPUS.filter(teVistaDeTargetes)).toEqual(amb);

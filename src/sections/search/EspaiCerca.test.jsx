@@ -11,7 +11,7 @@ import { afterEach, beforeAll, beforeEach, describe, expect, test, vi } from 'vi
 import { createTranslator } from '../../config/i18n.js';
 import EspaiCerca from './EspaiCerca.jsx';
 import SearchSection from './SearchSection.jsx';
-import { cercaEntrades, deActe, deAgent, deMembre, deNota, dePoble, dePublicacio } from './indexCerca.js';
+import { cercaEntrades, deActeDelCalendari, deAgent, deMembre, deNota, dePoble, dePublicacio } from './indexCerca.js';
 import { useCercaGlobal } from './useCercaGlobal.js';
 
 const estat = vi.hoisted(() => ({
@@ -84,7 +84,8 @@ vi.mock('../../components/universal/UniversalPage', async () => {
 const ARA = new Date().toISOString();
 const P1 = dePublicacio({ id: 'p1', title: 'Festa major de Benifallim', town_name: 'Benifallim', created_at: ARA, summary: 'Programa de la festa major del poble.' });
 const P2 = dePublicacio({ id: 'p2', title: 'Festa de la pilota', town_name: 'La Torre de les Maçanes', created_at: '2020-03-01', summary: 'Partida de pilota valenciana.' });
-const A1 = deActe({ id: 'a1', title: 'Concert de festa', date: '2099-06-01', summary: 'Concert a la plaça.' });
+/* G3-pedra-seca-i18n-16 · Un acte de /cerca (useCercaGlobal · deActeDelCalendari), del Calendari. */
+const A1 = deActeDelCalendari({ id: 'a1', title: 'Concert de festa', date: '2099-06-01', summary: 'Concert a la plaça.' });
 const U9 = deAgent({ id: 'u9', name: 'Pepa Festa', type: 'PERSON', town_name: 'Benifallim' });
 const N1 = deNota({ id: 'n1', title: 'Llista de la festa', lead: 'Coses per a la festa.', updatedAt: '2020-02-02' });
 const POBLE = dePoble({ id: 'benifallim', title: 'Benifallim', comarca: "L'Alcoià" });
@@ -157,7 +158,7 @@ describe('les tres columnes', () => {
     expect(vi.mocked(useCercaGlobal)).toHaveBeenLastCalledWith({ q: 'festa', tipus: 'tot' });
     const nav = within(criteris());
     for (const grup of ['Tipus', 'Pobles', 'Data']) expect(nav.getByRole('button', { name: grup }).getAttribute('aria-expanded')).toBe('true');
-    for (const opcio of ['Publicacions 2 resultats', 'Agenda 1 resultats', 'Notes 1 resultats', 'Persones 1 resultats',
+    for (const opcio of ['Publicacions 2 resultats', 'Calendari 1 resultats', 'Notes 1 resultats', 'Persones 1 resultats',
       'Benifallim 2 resultats', 'La Torre de les Maçanes 1 resultats',
       'Pròximament 1 resultats', 'Hui 1 resultats', 'Esta setmana 1 resultats', 'Este mes 1 resultats', 'Este any 1 resultats', 'Abans 2 resultats']) {
       expect(nav.getByRole('button', { name: opcio })).toBeTruthy();
@@ -296,10 +297,10 @@ describe('la consulta i l’URL', () => {
 describe('els criteris', () => {
   test('un criteri filtra la llista i fa push de ?faceta=; «Tots els resultats» el lleva', () => {
     pinta('mode=espai&q=festa');
-    const agenda = within(criteris()).getByRole('button', { name: 'Agenda 1 resultats' });
+    const agenda = within(criteris()).getByRole('button', { name: 'Calendari 1 resultats' });
     fireEvent.click(agenda);
     expect(titols()).toEqual(['Concert de festa']);
-    expect(url().get('faceta')).toBe('tipus:agenda');
+    expect(url().get('faceta')).toBe('tipus:calendari');
     expect(estat.historial).toHaveLength(2);
     expect(agenda.getAttribute('aria-current')).toBe('page');
     /* Triar un criteri no obri cap resultat per la persona. */
@@ -318,7 +319,7 @@ describe('els criteris', () => {
 
   test('l’Arrere després de triar un criteri torna a «Tots els resultats» i a la llista sencera', async () => {
     pinta('mode=espai&q=festa');
-    fireEvent.click(within(criteris()).getByRole('button', { name: 'Agenda 1 resultats' }));
+    fireEvent.click(within(criteris()).getByRole('button', { name: 'Calendari 1 resultats' }));
     expect(titols()).toEqual(['Concert de festa']);
     await enrere();
     expect(url().has('faceta')).toBe(false);
@@ -347,7 +348,7 @@ describe('els criteris', () => {
     expect(escripturesDe('faceta')).toEqual([]);
     const benifallim = within(criteris()).getByRole('button', { name: 'Benifallim' });
     expect(benifallim.getAttribute('aria-current')).toBe('page');
-    expect(within(criteris()).getByRole('button', { name: 'Agenda 1 resultats' }).getAttribute('aria-current')).toBeNull();
+    expect(within(criteris()).getByRole('button', { name: 'Calendari 1 resultats' }).getAttribute('aria-current')).toBeNull();
     expect(titols()).toEqual([]);
     expect(within(screen.getByRole('complementary', { name: 'RESULTATS' })).getByText('Cap resultat per a «concert»')).toBeTruthy();
   });
@@ -363,9 +364,9 @@ describe('els criteris', () => {
     expect(within(criteris()).getByRole('button', { name: 'Tots els resultats' }).getAttribute('aria-pressed')).toBe('false');
     altra.unmount();
     pinta('mode=espai&q=festa&faceta=tipus%3Amercat');
-    /* Al seu lloc de TIPUS_CERCA: entre l'Agenda i les Notes. */
+    /* Al seu lloc de TIPUS_CERCA: entre les Publicacions i el Calendari (G3-pedra-seca-i18n-16: els actes són del Calendari, darrere del Mercat). */
     const noms = [...criteris().querySelectorAll('.sdp-workspace-nav-item__label')].map((node) => node.textContent);
-    expect(noms.slice(noms.indexOf('Tipus') + 1, noms.indexOf('Pobles'))).toEqual(['Persones', 'Publicacions', 'Agenda', 'Mercat', 'Notes']);
+    expect(noms.slice(noms.indexOf('Tipus') + 1, noms.indexOf('Pobles'))).toEqual(['Persones', 'Publicacions', 'Mercat', 'Calendari', 'Notes']);
     expect(within(criteris()).getByRole('button', { name: 'Mercat' }).getAttribute('aria-current')).toBe('page');
     expect(titols()).toEqual([]);
   });

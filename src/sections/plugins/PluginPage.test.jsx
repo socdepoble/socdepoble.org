@@ -13,8 +13,10 @@
  * cap «Obrir…» (ni dalt ni baix). Baix hi ha el camí que li queda a la
  * persona (cap instal·lació: no n'hi ha cap mecanisme) i «Desactiva esta
  * eina», que només escriu la preferència del Panell. Els textos, en les cinc
- * llengües. Les eines en obres (Mapa i Animalets; Vehicle ja no, des de
- * llibre-deutes-02, 261104) conserven el botó inert.
+ * llengües. Les eines en obres conserven el botó inert. Vehicle ja no ho
+ * està des de llibre-deutes-02 (261104), ni Mapa ni Animalets des de la fusió
+ * del kit v3.0.0 de Gemini (AH-04): el registre ja no en té cap, i el camí
+ * «sense destí» el prova una eina de prova (EINA_DE_PROVA, davall).
  *
  * Onada 10 (261010; pla 261010_1121; decisió del Mestre del 261010) ·
  *   · M4 · La pàgina diu el mateix que la targeta canònica: si el plugin
@@ -54,6 +56,22 @@ import PluginPage, { TEXTOS_EINA } from './PluginPage.jsx';
 import { PRESENTACIO_PLUGINS, presentacioDelPlugin } from './presentacioPlugins.js';
 import { PLUGINS, pluginPerId } from './registrePlugins.js';
 import { portaDelPlugin } from './useDestiDelPlugin.js';
+
+/* Fusió del kit v3.0.0 (AH-04, ordre del Mestre del 261104) · Mapa i
+   Animalets ja no estan en obres: el Panell hi publica i App.jsx en servix
+   les seccions. El registre no té cap eina en obres, però el camí «sense
+   destí» de la pàgina continua existint per a la pròxima: el proven ací amb
+   una eina de prova, un clon d'Animalets sense destí que només coneix este
+   fitxer. PLUGINS no canvia: cap cens ni graella la veu. */
+const EINA_DE_PROVA = Object.freeze({ id: 'eina-de-prova', nom: 'Obrir l’eina de prova' });
+vi.mock('./registrePlugins.js', async (importOriginal) => {
+  const real = await importOriginal();
+  const prova = Object.freeze({
+    ...real.pluginPerId('animalets'),
+    id: 'eina-de-prova', titol: 'Eina de prova', obrir: null, etiquetaObrir: 'Obrir l’eina de prova'
+  });
+  return { ...real, pluginPerId: (id) => (id === 'eina-de-prova' ? prova : real.pluginPerId(id)) };
+});
 
 /* Un node on tot el que és compilat està encés (com el servidor de dev). */
 const ENTORN_OBERT = Object.freeze({ produccio: false, teDret: () => true, teCapacitat: () => true, amaDelDocument: true });
@@ -442,18 +460,20 @@ describe('el botó Obrir', () => {
   /* Onada 2 de la Gestoria (261004) · La Gestoria ja té destí (la seua app,
      només en desenvolupament).
      Ordre del Mestre (261007) · Bàscula descartada per ara: l'exemple de
-     «sense destí» és ara Animalets, que tampoc té secció
-     (control/destinsControl.js). */
+     «sense destí» va ser Animalets, que tampoc tenia secció
+     (control/destinsControl.js). Fusió del kit v3.0.0 (AH-04) · Animalets
+     ja en té: l'exemple és l'eina de prova (EINA_DE_PROVA). */
   test('sense destí (en obres): botó inert, avís en text i toast, i no navega', () => {
-    const { container } = munta('/plugin/animalets');
-    expect(screen.queryByRole('link', { name: /Obrir Animalets/ })).toBeNull();
-    const boto = screen.getByRole('button', { name: 'Obrir Animalets (en obres)' });
+    const { container } = munta(`/plugin/${EINA_DE_PROVA.id}`);
+    expect(pluginPerId(EINA_DE_PROVA.id).obrir).toBeNull();
+    expect(screen.queryByRole('link', { name: /Obrir l’eina de prova/ })).toBeNull();
+    const boto = screen.getByRole('button', { name: `${EINA_DE_PROVA.nom} (en obres)` });
     expect(boto.getAttribute('aria-disabled')).toBe('true');
     expect(boto.getAttribute('type')).toBe('button');
     expect(within(accio(container).parentElement).getByText('Esta eina encara està en obres.')).toBeTruthy();
     fireEvent.click(boto);
-    expect(ubicacio()).toBe('/plugin/animalets');
-    expect(screen.getByText('“Obrir Animalets” encara està en obres.')).toBeTruthy();
+    expect(ubicacio()).toBe(`/plugin/${EINA_DE_PROVA.id}`);
+    expect(screen.getByText(`“${EINA_DE_PROVA.nom}” encara està en obres.`)).toBeTruthy();
   });
 
   /* Ordre del Mestre, 261004 («contaminació crítica de rutes/estats entre
@@ -491,12 +511,21 @@ describe('el botó Obrir', () => {
   /* Ordre del Mestre (261007) · Bàscula descartada per ara: fora d'esta llista.
      llibre-deutes-02 (261104) · Vehicle Compartit tampoc: IDEA-61 li va
      donar la secció /vehicle, i el seu enllaç el prova
-     PluginPage.vehicle.test.jsx. */
-  test.each([['mapa', 'Obrir el Mapa'], ['animalets', 'Obrir Animalets']])(
-    '%s: en obres, inert', (id, nom) => {
-      munta(`/plugin/${id}`);
-      expect(screen.getByRole('button', { name: `${nom} (en obres)` }).getAttribute('aria-disabled')).toBe('true');
-      expect(screen.queryByRole('link', { name: new RegExp(nom) })).toBeNull();
+     PluginPage.vehicle.test.jsx.
+     Fusió del kit v3.0.0 (AH-04) · Mapa i Animalets, com Vehicle: abans,
+     «en obres, inert»; ara, un sol enllaç a la seua secció, sense botó inert
+     ni avís d'obres, i l'entradilla ja no diu «en obres». */
+  test.each([['mapa', 'Obrir el Mapa', '/mapa'], ['animalets', 'Obrir Animalets', '/animalets']])(
+    '%s: oberta (AH-04), un enllaç a la seua secció i cap botó inert', (id, nom, ruta) => {
+      const { container } = munta(`/plugin/${id}`);
+      expect(screen.queryByRole('button', { name: `${nom} (en obres)` })).toBeNull();
+      expect(screen.queryByText('Esta eina encara està en obres.')).toBeNull();
+      expect(container.querySelector('.page-intro .lead').textContent).toBe(pluginPerId(id).entradilla);
+      expect(pluginPerId(id).entradilla).not.toMatch(/en obres/i);
+      const enllac = screen.getByRole('link', { name: nom });
+      expect(enllac.getAttribute('href')).toBe(ruta);
+      fireEvent.click(enllac);
+      expect(ubicacio()).toBe(ruta);
     }
   );
 
@@ -711,14 +740,15 @@ describe('textos nous de la UI en les cinc llengües', () => {
     for (const [, reserva] of Object.values(TEXTOS_EINA)) expect(accio(container).textContent).not.toContain(reserva);
   });
 
-  /* Ordre del Mestre (261007) · Bàscula descartada per ara: el plugin en obres d'esta prova és Animalets. */
+  /* Ordre del Mestre (261007) · Bàscula descartada per ara: el plugin en obres d'esta prova era Animalets.
+     Fusió del kit v3.0.0 (AH-04) · Animalets ja no hi està: l'eina de prova (EINA_DE_PROVA). */
   test('amb l’amfitrió en castellà, la portada i l’avís d’obres parlen castellà', () => {
     const es = createTranslator('es');
-    munta('/plugin/animalets', { externalConfig: { language: 'es' } });
-    expect(pluginPerId('animalets')).not.toBeNull();
+    munta(`/plugin/${EINA_DE_PROVA.id}`, { externalConfig: { language: 'es' } });
+    expect(pluginPerId(EINA_DE_PROVA.id)).not.toBeNull();
     expect(screen.getByRole('button', { name: es('pagina.portada.amaga') })).toBeTruthy();
     expect(screen.getByText(es('section.plugin.enObres'))).toBeTruthy();
-    expect(screen.getByRole('button', { name: `Obrir Animalets ${es('section.control.porta.enObres')}` })).toBeTruthy();
+    expect(screen.getByRole('button', { name: `${EINA_DE_PROVA.nom} ${es('section.control.porta.enObres')}` })).toBeTruthy();
   });
 });
 

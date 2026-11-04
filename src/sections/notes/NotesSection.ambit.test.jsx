@@ -124,12 +124,29 @@ test('?ambit=treball amb una nota a la URL: s’obri eixa nota amb l’àmbit pe
   expect(detall().textContent).toBe('a1');
 });
 
-test('?ambit=mur o un valor estrany no fan res: l’entrada de sempre (la Card tutorial) i cap àmbit pendent', () => {
+/* G3-ah-conformitat-02 / G3-g2-matriu-03 (AH-04.3, ordre del Mestre: «perquè
+   òbriga el Bloc de Notes amb l'"Edició avançada" oberta igual que Mercat") ·
+   «Publicar al Mur» de /control porta a /notes?ambit=mur: com Mercat, s'obri
+   la «Nota sense títol» a la carpeta del Mur amb 'mur' pendent al canal (l'editor
+   hi obri l'«Edició avançada»). Abans 'mur' es descartava i ixia la Card tutorial. */
+test('?ambit=mur sense nota obri la «Nota sense títol» a la carpeta del Mur amb «mur» pendent, com Mercat; consumir neteja la URL', () => {
   munta('/notes?ambit=mur');
-  expect(detall().textContent).toBe('cap');
+  const id = detall().textContent;
+  expect(id).toMatch(UUID_V4);
+  expect(detall().dataset.preparada).toBe('si');
+  expect(detall().dataset.carpeta).toBe('f-mur');
+  expect(pendent()).toBe('mur');
+  expect(within(columnaNotes()).getByRole('button', { name: 'Nota sense títol' }).getAttribute('aria-current')).toBe('true');
+  consumix();
   expect(pendent()).toBe('');
-  expect(screen.queryByRole('button', { name: 'Nota sense títol' })?.getAttribute('aria-current') ?? null).toBeNull();
-  cleanup();
+  expect(url()).not.toContain('ambit=');
+  expect(url()).toContain(`nota=${id}`);
+  // Cap fitxa ni cap nota creada: el Mur és la publicació de sempre.
+  expect(detall().dataset.fitxa).toBe('');
+  expect(dades.creaNota).not.toHaveBeenCalled();
+});
+
+test('un valor estrany o en majúscules no fa res: l’entrada de sempre (la Card tutorial) i cap àmbit pendent', () => {
   munta('/notes?ambit=tramvia');
   expect(detall().textContent).toBe('cap');
   expect(pendent()).toBe('');
@@ -189,6 +206,7 @@ test.each(['mercat', 'vehicle', 'treball', 'habitatge'])('sense sessió, l’àm
    no espera la font del Mercat (pitfall esperaCarpeta): la preparada de
    l'àmbit hi va fixada, també amb el Mur carregant. */
 test.each([
+  ['mur', 'f-mur'],
   ['mercat', 'f-mercat'],
   ['vehicle', 'f-mur'],
   ['treball', 'f-mur'],

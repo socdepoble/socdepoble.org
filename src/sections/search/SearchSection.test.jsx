@@ -623,3 +623,25 @@ test('ARB-L4-01 (corregit) · amb ?tipus=treball i el Mur en error, l’avís de
   expect(screen.getByText("No s'ha pogut buscar en el Mur, l'agenda i el mercat")).toBeTruthy();
   expect(screen.getByRole('button', { name: 'Torna-ho a provar' })).toBeTruthy();
 });
+
+/* G3-g2-matriu-06 i G3-ah-conformitat-07 (ARB-L4-01, AH-08.3) · Les verticals
+   d'AH-04 (Calendari, Mapa, Animalets) també viuen a la font del Mur: la font
+   declara els tipus derivats d'AMBITS (indexCerca · TIPUS_DE_LA_FONT_MUR).
+   Abans, amb eixos filtres, el Mur carregant deia «Cap resultat» i el Mur
+   caigut no deia res. ?tipus=agenda d'abans és el Calendari. */
+test.each(['calendari', 'mapa', 'animalets', 'agenda'])('ARB-L4-01 · amb ?tipus=%s i el Mur carregant, «Buscant…» i mai «Cap resultat»', async (tipus) => {
+  mocks.mur = { ...mocks.mur, status: 'loading' };
+  mocks.url = `?q=cotxe&tipus=${tipus}`;
+  await pinta();
+  expect(screen.queryByText('Cap resultat per a «cotxe»')).toBeNull();
+  expect(document.querySelector('.sdp-esquelet')).not.toBeNull();
+  expect(estat().textContent).toBe('Buscant…');
+});
+
+test.each(['calendari', 'mapa', 'animalets'])('ARB-L4-01 · amb ?tipus=%s i el Mur en error, l’avís de la font amb «Torna-ho a provar»', async (tipus) => {
+  mocks.mur = { ...mocks.mur, status: 'error', error: new Error('No ha respost a temps.') };
+  mocks.url = `?q=cotxe&tipus=${tipus}`;
+  await pinta();
+  expect(screen.getByText("No s'ha pogut buscar en el Mur, l'agenda i el mercat")).toBeTruthy();
+  expect(screen.getByRole('button', { name: 'Torna-ho a provar' })).toBeTruthy();
+});
