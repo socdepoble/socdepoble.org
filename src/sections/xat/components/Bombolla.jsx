@@ -118,20 +118,45 @@ function AutorDeLaBombolla({ missatge, esGrup, triable, t }) {
    /wikidepoble?item=<slug> que cita la IAIA local és un enllaç intern de
    l'app, amb la classe dels enllaços del xat. Sense la prop, els segments i el
    DOM són els de sempre. */
-function pintaSegment(segment, clau, t) {
+function pintaSegment(segment, clau, t, interactiu = true) {
   if (segment.tipus === 'ruta') return <Link key={clau} className="sdp-xat-enllac" to={segment.ruta}>{segment.text}</Link>;
   if (segment.tipus !== 'enllac') return <span key={clau}>{segment.text}</span>;
+  if (!interactiu) return <EnllacQuiet key={clau} segment={segment} t={t} />;
   return <EnllacSegur key={clau} segment={segment} t={t} />;
 }
 
+/* xat-ux-a11y-07 (T7a, 261104) · En el mode de selecció la bombolla és una
+   casella i dins no hi ha cap control (l'autor, la cita, l'adjunt i la llista
+   ja ho complien). L'enllaç extern era l'excepció: un <a target="_blank">
+   enfocable dins de la casella, on el Tab s'aturava i un toc obria la web i
+   marcava el missatge alhora. Ací és el seu text, amb la mateixa classe (el
+   color i el subratllat de sempre) i l'avís de domini enganyós (XAT-B05) tal
+   com el pinta EnllacSegur: <span><span class="sdp-xat-enllac">…</span>[avís]</span>.
+   Fora de la selecció, EnllacSegur i el DOM de sempre. */
+function EnllacQuiet({ segment, t }) {
+  return (
+    <span>
+      <span className="sdp-xat-enllac">{segment.text}</span>
+      {segment.sospitos ? (
+        <span className="sdp-xat-enllac__avis" role="note">
+          <AlertTriangle size={14} aria-hidden="true" focusable="false" />
+          {t('section.xat.enllac.avis', 'Este enllaç porta a un domini amb caràcters enganyosos ({host}).').replace('{host}', () => segment.host)}
+        </span>
+      ) : null}
+    </span>
+  );
+}
+
 /* IDEA-53 · Els trams en negreta (negreta.js) van dins d'un <strong> de
-   React, enllaços inclosos; la resta, el DOM de sempre. */
-function TextAmbEnllacos({ text, t, rutesDeLaWiki = false }) {
+   React, enllaços inclosos; la resta, el DOM de sempre.
+   xat-ux-a11y-07 (261104) · `interactiu` (fals en el mode de selecció)
+   baixa fins a cada segment, també dins del <strong>. */
+function TextAmbEnllacos({ text, t, rutesDeLaWiki = false, interactiu = true }) {
   const enllacos = segmentaEnllacos(text);
   const segments = rutesDeLaWiki ? segmentaRutesDeLaWiki(enllacos) : enllacos;
   return segmentaNegreta(segments).flatMap((tram, i) => (tram.negreta
-    ? [<strong key={`n${i}`}>{tram.segments.map((segment, j) => pintaSegment(segment, j, t))}</strong>]
-    : tram.segments.map((segment, j) => pintaSegment(segment, `${i}-${j}`, t))));
+    ? [<strong key={`n${i}`}>{tram.segments.map((segment, j) => pintaSegment(segment, j, t, interactiu))}</strong>]
+    : tram.segments.map((segment, j) => pintaSegment(segment, `${i}-${j}`, t, interactiu))));
 }
 
 function textDeSistema(missatge, t) {
@@ -319,13 +344,13 @@ function Bombolla({
                   l'estat d'abans («Pausa») i sense font. La seua URL es demana
                   en prémer, mai en muntar, i el play següent la torna a signar. */}
               <AdjuntXat key={missatge.tipus === 'veu' && triable ? 'veu-quieta' : 'adjunt'} adjunt={missatge.metadades.adjunt} tipus={missatge.tipus} externalConfig={configAdjunts} usuariId={usuariAdjunts} locale={locale} t={t} interactiu={!triable} />
-              {String(text ?? '').trim() ? <p className="sdp-xat-bombolla__text" dir="auto"><TextAmbEnllacos text={text} t={t} rutesDeLaWiki={rutesDeLaWiki} /></p> : null}
+              {String(text ?? '').trim() ? <p className="sdp-xat-bombolla__text" dir="auto"><TextAmbEnllacos text={text} t={t} rutesDeLaWiki={rutesDeLaWiki} interactiu={!triable} /></p> : null}
             </>
           ) : (
             /* Gauntlet 261025_0545 (XU-14) · dir="auto": el text de la gent pren
                la seua direcció (l'àrab, de dreta a esquerra, amb la puntuació
                i els números al seu lloc); la làpida és text de la interfície. */
-            <p className="sdp-xat-bombolla__text" dir="auto"><TextAmbEnllacos text={text} t={t} rutesDeLaWiki={rutesDeLaWiki} /></p>
+            <p className="sdp-xat-bombolla__text" dir="auto"><TextAmbEnllacos text={text} t={t} rutesDeLaWiki={rutesDeLaWiki} interactiu={!triable} /></p>
           )}
           <span className="sdp-xat-bombolla__meta">
             {hora ? <time dateTime={missatge.creatAl || undefined}>{hora}</time> : null}

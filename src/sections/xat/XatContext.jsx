@@ -1944,7 +1944,12 @@ export function XatProvider({ children, config }) {
         }
       }
       if (vigent(op)) {
-        await carregaFils();
+        /* xat-flux-02 (T7a, 261104) · Una càrrega superada (null: el tic de
+           25 s, el desperta, una altra recàrrega o el silenci) no ha aplicat
+           la llista i XatSection pintaria el 404 de /xat/<filId>. Un sol
+           reintent, que supera la que vola; esperar-la no cobriria el
+           silenci, que només avança la generació. */
+        if ((await carregaFils()) === null && vigent(op)) await carregaFils();
         if (vigent(op)) return filId;
       }
     } catch (error) {

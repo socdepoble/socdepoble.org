@@ -182,6 +182,17 @@ function botoDeLaFila(columna, clau) {
   return fila?.querySelector('button') || null;
 }
 
+/* xat-ux-a11y-03 (T7a, 261104) · El focus és lliure per al Xat si s'ha
+   perdut (focusPerdut) o si és al main#main-content que conté la columna: el
+   destí d'App en canviar de ruta. És la regla de focusLliure del Lector
+   (ordre del Mestre del 261004). focusPerdut no canvia: els seus efectes
+   (selecció, fitxa, poble, lupa, filtre) i «Tornar a dalt» es queden igual. */
+function focusLliureDelXat(columna) {
+  if (focusPerdut(columna)) return true;
+  const actiu = columna?.getRootNode?.()?.activeElement;
+  return Boolean(actiu) && actiu.id === 'main-content' && actiu.contains(columna);
+}
+
 /* Revisió adversarial 260930 (P2, «Escape al full Ajustos») · Un Escape amb
    un diàleg obert és del diàleg. A la SPA el Dialeg obri amb showModal() i
    només escolta `cancel`, que el navegador dispara DESPRÉS del keydown: el
@@ -557,6 +568,10 @@ function XatWorkspace({ origen = null }) {
     : null;
   const trobat = trobatViu || conservat;
   const filALaLlista = Boolean(trobatViu);
+  /* xat-flux-01 (T7a, 261104) · Ja se sap qui hi ha: o hi ha `joId` o ja és
+     `senseSessio`. En remot, mentre la sessió es comprova, cap de les dues: la
+     llista buida encara no diu res d'un fil ni d'una comunitat demanats. */
+  const sessioResolta = Boolean(joId) || senseSessio;
   const trobatEsComunitat = esComunitat(trobat);
   /* Ordre del Mestre (261007) · Una fila d'ajuda per defecte (perDefecte,
      data/xatsPerDefecte.js) no és cap conversa: ni es munta Conversa ni es
@@ -709,9 +724,20 @@ function XatWorkspace({ origen = null }) {
       .then(() => creaFil(amb, null))
       .then((filId) => { if (vigent() && filId) navigate(`/xat/${enc(filId)}`, { replace: true }); })
       .catch((error) => {
-        if (vigent()) showToast(textDeFalladaDirecte(error, t), 'error');
+        if (!vigent()) return;
+        /* xat-flux-03 (T7a, 261104) · Sense sessió, el xat de mostra només
+           obri entitats: amb una persona («En privat» del Mur o del Mercat)
+           rebutja amb DESTINATARI_INVALID. No és cap fallada (el toast deia
+           que el destinatari no existix i ?amb= amagava l'accés): a entrar,
+           amb la forma única de T4 i la tornada a esta consulta, com ?sobre=.
+           La resta d'errors (la xarxa), el toast de sempre. */
+        if (senseSessio && error?.code === 'DESTINATARI_INVALID') {
+          navigate(rutaDEntrada({ tornar: rutaAmbConsulta('/xat', params) }), { replace: true });
+          return;
+        }
+        showToast(textDeFalladaDirecte(error, t), 'error');
       });
-  }, [amb, threadId, status, creaFil, navigate, showToast, t]);
+  }, [amb, threadId, status, creaFil, navigate, showToast, t, senseSessio, params]);
 
   /* ?sobre=<tipus>:<id>&titol=…&ruta=… (T63.2): el xat comú de la pàgina. La
      regla de qui en té és subjecteDeXat (contracte.js). Sense xat o sense la
@@ -1151,8 +1177,13 @@ function XatWorkspace({ origen = null }) {
      conserva mentre la llista no està al dia (`trobat`). */
   /* Gauntlet 261016_1530 (Bloc 3.6) · Ni l'URL d'una fila sintètica que
      s'encamina per la seua clau (`clauDeLaRuta`): el 404 es pintava un
-     commit abans que l'efecte navegara (el parpelleig de l'MCR). */
-  if (threadId && !trobat && status === 'ready' && llistaFresca && !reobrint && !dinsDeLaIAIA && !clauDeLaRuta) {
+     commit abans que l'efecte navegara (el parpelleig de l'MCR).
+     xat-flux-01 (T7a, 261104; P1) · Ni mentre la sessió es comprova: en
+     remot, recarregar /xat/<fil>, un enllaç compartit o la pestanya
+     restaurada arrenquen amb joId null, status 'ready' i encara no
+     senseSessio, i el 404 tapava la closca fins que la sessió arribava. La
+     guarda de ?sobre= i de la ruta per defecte (`!joId && !senseSessio`). */
+  if (threadId && !trobat && status === 'ready' && llistaFresca && sessioResolta && !reobrint && !dinsDeLaIAIA && !clauDeLaRuta) {
     return <NotFoundPage />;
   }
 
@@ -1486,7 +1517,8 @@ function XatWorkspace({ origen = null }) {
       />
     ) : (
       <p className="sdp-workspace-state" role="status">
-        {status !== 'ready'
+        {/* xat-flux-01 (T7a, 261104) · Ni abans de saber qui hi ha. */}
+        {status !== 'ready' || !sessioResolta
           ? t('section.xat.carregant', 'Carregant…')
           : t('section.xat.comunitat.noTrobada', 'Esta comunitat no és a la teua llista de converses.')}
       </p>
@@ -1736,6 +1768,8 @@ function XatWorkspace({ origen = null }) {
           cap conversa: en estret es queda la llista (amb l'avís, si el xat
           encara s'ha de resoldre) fins que arriba el xat real. */}
       <PanellInicialMobil llistaPrimer={!threadId || trobatEsComunitat || idPerDefecte} />
+      {/* xat-ux-a11y-03 (T7a, 261104) · El focus en obrir i tancar una conversa. */}
+      <FocusDeLaConversa threadId={threadId} conversaId={filActiuId} columnaRef={columnaRef} botoNovaRef={botoNovaRef} tornaFitxaRef={tornaFitxaRef} ambComunitat={Boolean(comunitatId)} />
       <EntradaDelPoble poble={poble} comunitat={comunitatDelPoble} aLaLlista={!threadId && pathname === '/xat' && !params.toString()} onEntra={entraALaComunitat} />
       {activeThread ? <ConversaAPantallaCompleta /> : null}
       {activeThread ? (
@@ -1788,7 +1822,7 @@ function XatWorkspace({ origen = null }) {
             {t('section.xat.missatge.reintenta', 'Torna-ho a provar')}
           </button>
         </div>
-      ) : comunitatId && !threadId && (comunitatOberta || status !== 'ready') ? (
+      ) : comunitatId && !threadId && (comunitatOberta || status !== 'ready' || !sessioResolta) ? (
         /* Pla 261027_0845 (Guarda Nocturna), P1-55 · Amb una comunitat
            oberta i cap conversa (ni demanada: /xat/<fil> encara per resoldre
            no hi mostra la comunitat entremig), la pàgina viva de la
@@ -1798,7 +1832,8 @@ function XatWorkspace({ origen = null }) {
            enllaç fred amb sessió en remot), la comunitat no s'ha resolt i la
            columna espera en blanc, la mateixa regla que «Carregant…» de la
            columna de llista: ni el document genèric ni el tros de TextSection
-           abans de la pàgina viva. */
+           abans de la pàgina viva. xat-flux-01 (T7a, 261104) · També mentre
+           la sessió remota es comprova (`sessioResolta`). */
         <ColumnaDretaDeLaComunitat comunitat={comunitatOberta} t={t} seo={seoXat} />
       ) : (
         <ColumnaDretaBuida t={t} seo={seoXat} />
@@ -2003,6 +2038,58 @@ function AccesAlXat({ t, tornar, navigate }) {
 function ConversaAPantallaCompleta() {
   const { mida, panellObert } = useAppGrid();
   useModeImmersiu(mida === 'estret' && panellObert === null);
+  return null;
+}
+
+/* xat-ux-a11y-03 (T7a, 261104) · Obrir o tancar una conversa canvia el
+   pathname (/xat ↔ /xat/<fil>, el mateix XatSection) i App enfoca <main> a
+   cada canvi (App.jsx, «Restaurar el focus a main»). El seu efecte passiu
+   corre DESPRÉS dels del Xat: la col·locació es diferix un fotograma (el
+   precedent és App.jsx, requestAnimationFrame(recoloca)). App no es toca:
+   passar-lo a useLayoutEffect o comptar <main> a focusPerdut canviaria el
+   focus de totes les rutes i de «Tornar a dalt».
+     · En obrir-ne una (o passar a una altra): a la llista de missatges
+       (ol.sdp-xat-missatges, tabIndex -1), quan la conversa ja és a la
+       columna dreta. El contorn només ix amb :focus-visible: cap píxel nou
+       per al ratolí ni el dit, i en estret el teclat del mòbil no s'obri
+       (decisió #6). Portar-lo al compositor en ample és decisió del Mestre.
+     · En tancar-la: al botó de la fila del fil tancat (botoDeLaFila) o, si
+       el filtre no la pinta, al «+» (o a la fletxa de la fitxa d'una
+       comunitat). En estret, quan la llista ja és el panell obert
+       (PanellInicialMobil).
+     · Mai al muntatge (un enllaç directe: el focus d'App es queda) ni si la
+       persona ja és en un altre control quan arriba el fotograma. Viu dins
+       de la closca per a llegir-ne la mida i el panell (useAppGrid). */
+function FocusDeLaConversa({ threadId, conversaId, columnaRef, botoNovaRef, tornaFitxaRef, ambComunitat }) {
+  const { mida, panellObert } = useAppGrid();
+  const filPrevi = useRef(threadId || null);
+  const pendent = useRef(null);
+  useEffect(() => {
+    const actual = threadId || null;
+    if (filPrevi.current !== actual) {
+      const previ = filPrevi.current;
+      filPrevi.current = actual;
+      if (actual) pendent.current = { obri: String(actual) };
+      else pendent.current = previ ? { torna: String(previ) } : null;
+    }
+    const tasca = pendent.current;
+    if (!tasca) return undefined;
+    /* La conversa encara no és a la columna (la llista arriba, una fila de pas). */
+    if (tasca.obri && String(conversaId ?? '') !== tasca.obri) return undefined;
+    if (tasca.torna && mida === 'estret' && panellObert !== 'middle') return undefined;
+    const fotograma = requestAnimationFrame(() => {
+      if (pendent.current !== tasca) return;
+      pendent.current = null;
+      const columna = columnaRef.current;
+      if (!columna || !focusLliureDelXat(columna)) return;
+      if (tasca.obri) {
+        columna.closest('.app-grid-shell')?.querySelector('.app-grid-column--right .sdp-xat-missatges')?.focus({ preventScroll: true });
+        return;
+      }
+      (botoDeLaFila(columna, tasca.torna) || (ambComunitat ? tornaFitxaRef : botoNovaRef).current)?.focus();
+    });
+    return () => cancelAnimationFrame(fotograma);
+  }, [threadId, conversaId, mida, panellObert, columnaRef, botoNovaRef, tornaFitxaRef, ambComunitat]);
   return null;
 }
 

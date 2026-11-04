@@ -12,7 +12,8 @@
  *   · Una IA es diu: etiqueta i avís visibles, sempre.
  *   · Accions honestes: «Escriu-li» obri el xat amb eixa identitat (?amb=id)
  *     (fora de la fitxa del paquet de la persona pilot: on va la seua fila
- *     del Xat, Gauntlet 261022_0225, P4b-3)
+ *     del Xat, Gauntlet 261022_0225, P4b-3; i mai a la fitxa pròpia ni a la
+ *     d'una entitat que administres, xat-flux-04, 261104)
  *     i «Edita la fitxa» només si la fitxa és de qui mira. Per a la IAIA,
  *     «Parla amb la IAIA» va on va la seua fila de la llista del Xat
  *     (rutaDelXatDeLaIAIA, sections/xat/useObriXatPerDefecte.js).
@@ -64,8 +65,8 @@ import { useResolvedAsset } from '../../hooks/useResolvedAsset.js';
 import { useEntitatDelProjecte } from '../../hooks/useEntitatDelProjecte.js';
 import { resolveAsset } from '../../config/assetResolver.js';
 import {
-  ENTITAT_PILOT_SLUG, PERSONA_PILOT, POBLE_FUNDACIONAL, agentIASeed, clauFundacional, entitatSeed, esIAIA,
-  fundacionalDeLaClau
+  ENTITAT_PILOT_SLUG, PERSONA_PILOT, POBLE_FUNDACIONAL, agentIASeed, clauFundacional, entitatSeed, esComptePersonaPilot,
+  esIAIA, fundacionalDeLaClau
 } from '../../data/identitatsSeed.js';
 /* Onada 11 (261010; refutació del front C, D12) · El destí del xat de la IAIA
    és el mateix que el de la seua fila de la llista i el del botó de /iaia. */
@@ -706,7 +707,21 @@ export function FitxaPublica({ perfil, ambEdita = true, ambXat = true, chrome = 
      Pla 261027_0845 (Guarda Nocturna), P1-55 · Amb `ambXat` false (la pàgina
      viva d'una comunitat dins del Xat), cap botó de xat: ja s'és al Xat. */
   const esLaPilotDelPaquet = perfil.tipus === 'persona' && esLaPersonaDeContacte(perfil);
-  const rutaDelXat = !ambXat ? null : esIAIA(perfil.id)
+  /* xat-flux-04 (Gauntlet T7a, 261104) · Cap directe amb un mateix ni amb una
+     entitat que representes: crea_fil_directe (2610081543) ho rebutja amb
+     SDP-XAT-002 (p_altre_usuari = auth.uid(), o can_manage_organization:
+     owner o admin, com `administra`) i localXat, «tu mateix»; el Xat en feia
+     un toast i la persona es quedava a /xat?amb=… sense cap fil. Com «En
+     privat» (esDeQuiMira), la fitxa pròpia (`propietari`) o la d'una entitat
+     que administres no pinta «Escriu-li al xat»: la fila es queda amb «Edita
+     la fitxa» (REV-PERF-7) i el xat comú, a Comentar → «En públic» (T63.2).
+     Es queden «Parla amb…» d'una IA (en llavor, qui té sessió mana a Sóc de
+     Poble i és propietari de la IAIA) i la persona pilot pel seu id (el del
+     padró o l'UUID declarat): XatContext.creaFil la porta al servei tècnic
+     (P1-70), també per id i mai pel slug. */
+  const directeAmbUnMateix = !perfil.esIA && !esLaPilotDelPaquet && !esComptePersonaPilot({ id: perfil.id })
+    && (perfil.propietari === true || administra);
+  const rutaDelXat = (!ambXat || directeAmbUnMateix) ? null : esIAIA(perfil.id)
     ? rutaDelXatDeLaIAIA(modeDades, senseSessio)
     : esLaPilotDelPaquet
       ? (senseSessio ? `/xat/${ID_FIL_DE_MOSTRA_DE_JAVI}` : rutaDelXatDeJavi(modeDades))
@@ -796,7 +811,8 @@ export function FitxaPublica({ perfil, ambEdita = true, ambXat = true, chrome = 
          és el missatge directe de sempre (/xat?amb=); d'una entitat o d'un
          grup, el xat comú de la seua pàgina (la Comunitat). «Escriu-li al xat»
          continua sent el directe per a tothom (llevat de la fitxa del paquet
-         de la persona pilot, P4b-3). */
+         de la persona pilot, P4b-3, i de la fitxa pròpia o d'una entitat que
+         administres, on no es pinta: xat-flux-04, 261104). */
       objecte={objecte}
       /* P1-11 (pla 261024_2230, T5B-02; ordre del Mestre 261024 18:21) · Al
          peu, fora de l'article (revisió adversarial 261024), l'aparador de la

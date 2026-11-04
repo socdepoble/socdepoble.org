@@ -1109,6 +1109,13 @@ function ActorRoutes({ agents }) {
       <Route path="perfil/:agentId" element={<PerfilPublicSection agents={agents} />} />
       <Route path="gent/:agentId" element={<PerfilPublicSection agents={agents} />} />
       <Route path="empresa/:agentId" element={<PerfilPublicSection agents={agents} />} />
+      {/* consola-p016-02 (T7a, 261104; UI23-01, pla 261103_1412) · Les connexions
+          públiques d'una entitat emeten /entitats/<id> (rutaDeConnexio,
+          Seguidors, filaConnexions, localPerfils i la migració 2611032100):
+          àlies de /empresa/:agentId, abans del comodí ':sectionId/:itemId',
+          que en feia un «Element no trobat». Els emissors no canvien; la
+          canònica continua eixint de rutaCanonicaDePerfil. */}
+      <Route path="entitats/:agentId" element={<PerfilPublicSection agents={agents} />} />
       <Route path="ajuntament/:agentId" element={<PerfilPublicSection agents={agents} />} />
       <Route path="grup/:agentId" element={<PerfilPublicSection agents={agents} />} />
       {/* Gauntlet 261016 (Bloc 3.5.1; ordre del Mestre) · Les tres rutes

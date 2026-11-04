@@ -175,6 +175,13 @@ export function idConvidat() {
   }
 }
 
+/* consola-p016-03 (261104) · Cap codi viu escriu ja estes galetes: n'hi ha prou
+   amb mirar-les una volta per document. Cada lectura de document.cookie és un
+   PerformanceIssue «DocumentCookie» a DevTools, i usuariDeSessio() es crida a
+   cada render que consulta la sessió (entre 9 i 25 per càrrega). La purga de
+   l'emmagatzematge local de davall continua a cada crida. */
+let galetesLlegatRevisades = false;
+
 /**
  * Purga el `user` que va quedar a emmagatzematge local abans d'aquesta correcció.
  *
@@ -185,9 +192,12 @@ export function idConvidat() {
  * emmagatzematge local. S'esborra la primera volta que algú òbriga l'app.
  */
 function purgaLlegat() {
-  if (typeof document !== 'undefined' && /(?:^|; )(?:socdepoble-|sdp:oauth:)/.test(document.cookie)) {
-    for (const k of ['socdepoble-jwt','socdepoble-refresh-token','socdepoble-user', 'sdp:oauth:verificador','sdp:oauth:state','sdp:oauth:cb'])
-      document.cookie = `${k}=; path=/; max-age=0; SameSite=Lax`;
+  if (!galetesLlegatRevisades && typeof document !== 'undefined') {
+    galetesLlegatRevisades = true;
+    if (/(?:^|; )(?:socdepoble-|sdp:oauth:)/.test(document.cookie)) {
+      for (const k of ['socdepoble-jwt','socdepoble-refresh-token','socdepoble-user', 'sdp:oauth:verificador','sdp:oauth:state','sdp:oauth:cb'])
+        document.cookie = `${k}=; path=/; max-age=0; SameSite=Lax`;
+    }
   }
   if (typeof window === 'undefined') return;
   try {

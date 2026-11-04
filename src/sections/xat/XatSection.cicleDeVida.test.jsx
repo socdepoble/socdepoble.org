@@ -22,6 +22,8 @@ const mocks = vi.hoisted(() => ({
   threadId: null,
   params: new URLSearchParams(),
   showToast: vi.fn(),
+  /* xat-flux-01 (T7a, 261104) · Quantes vegades s'ha pintat el 404: cap «entremig». */
+  pintades404: 0,
   session: { currentUser: { id: 'A' }, generacio: 1, estat: 'dins' },
   actorKey: 'persona::A',
   port: {
@@ -44,7 +46,7 @@ vi.mock('../../app/contexts/RouterContext', async () => {
 /* Una marca visible: les proves han de poder dir que el 404 NO hi és. */
 vi.mock('../../pages/NotFoundPage', async () => {
   const { createElement } = await import('react');
-  return { default: () => createElement('p', { 'data-testid': 'pagina-no-trobada' }, 'No trobada') };
+  return { default: () => { mocks.pintades404 += 1; return createElement('p', { 'data-testid': 'pagina-no-trobada' }, 'No trobada'); } };
 });
 vi.mock('../text/TextSection', async () => {
   const { createElement } = await import('react');
@@ -98,6 +100,7 @@ beforeEach(() => {
   vi.stubGlobal('ResizeObserver', class { observe() {} unobserve() {} disconnect() {} });
   mocks.threadId = null;
   mocks.params = new URLSearchParams();
+  mocks.pintades404 = 0;
   mocks.session = { currentUser: { id: 'A' }, generacio: 1, estat: 'dins' };
   mocks.port.loadFils.mockResolvedValue([]);
   mocks.port.loadMissatges.mockImplementation(async (filId) => [missatge(filId, filId === 'g-ia' ? 'Hola des de la IAIA' : 'Bon dia')]);
@@ -335,5 +338,74 @@ describe('B04 · la conversa oberta no es convertix en un 404', () => {
     expect(screen.getByRole('list', { name: 'Converses' })).toBeTruthy();
     expect(noTrobada()).toBeNull();
     expect(screen.getByText('Bon dia')).toBeTruthy();
+  });
+});
+
+/* xat-flux-01 (T7a, 261104; P1) · En remot, recarregar /xat/<fil>, obrir un
+   enllaç compartit o restaurar la pestanya arrenca amb la sessió en
+   'comprovant' (sessionService.js): el context dona joId null, status
+   'ready', llistaFresca i encara no senseSessio. La guarda del 404 no mirava
+   la sessió (les germanes, ?sobre= i la ruta per defecte, sí): «Ací no hi ha
+   res · Error 404» fins que la sessió arribava i l'espai es tornava a muntar.
+   Amb ?comunitat=, «Esta comunitat no és a la teua llista» i, a la dreta, el
+   document genèric (contra P1-55). */
+describe('xat-flux-01 · mentre la sessió remota es comprova, cap 404 ni «comunitat no trobada»', () => {
+  const comprovant = () => { mocks.session = { currentUser: null, generacio: 1, estat: 'comprovant' }; };
+  const dins = () => { mocks.session = { currentUser: { id: 'A' }, generacio: 1, estat: 'dins' }; };
+  /* El tros diferit del document té temps d'arribar (si algú el demana). */
+  const assenta = () => act(async () => { await new Promise((r) => { setTimeout(r, 30); }); });
+
+  it('/xat/<fil> no pinta el 404 ni demana la llista; en entrar, la conversa sense cap 404 entremig', async () => {
+    comprovant();
+    mocks.port.loadFils.mockResolvedValue([FIL_A]);
+    vesA('/xat/fil-A');
+    const vista = render(arbre());
+    await assenta();
+    expect(noTrobada()).toBeNull();
+    expect(mocks.port.loadFils).not.toHaveBeenCalled();
+    /* La closca del Xat es queda: la llista de converses és a la vista. */
+    expect(screen.getByRole('list', { name: 'Converses' })).toBeTruthy();
+    dins();
+    vista.rerender(arbre());
+    await waitFor(() => expect(screen.getAllByText('Bon dia').length).toBeGreaterThan(0));
+    expect(mocks.pintades404).toBe(0);
+    expect(noTrobada()).toBeNull();
+  });
+
+  it('un fil que no existix: cap 404 mentre es comprova, i el 404 de sempre quan la llista al dia no el porta', async () => {
+    comprovant();
+    mocks.port.loadFils.mockResolvedValue([FIL_A]);
+    vesA('/xat/fil-Z');
+    const vista = render(arbre());
+    await assenta();
+    expect(noTrobada()).toBeNull();
+    dins();
+    vista.rerender(arbre());
+    await waitFor(() => expect(noTrobada()).not.toBeNull());
+    expect(mocks.port.loadFils).toHaveBeenCalled();
+  });
+
+  it('/xat?comunitat=<id> diu «Carregant…» i la columna dreta espera, sense el document genèric', async () => {
+    comprovant();
+    mocks.params = new URLSearchParams({ comunitat: 'c-1' });
+    render(arbre());
+    await assenta();
+    expect(screen.queryByText('Esta comunitat no és a la teua llista de converses.')).toBeNull();
+    expect(screen.getByText('Carregant…')).toBeTruthy();
+    expect(screen.queryByTestId('document-per-defecte')).toBeNull();
+    expect(document.querySelector('.sdp-xat-buit[aria-busy="true"]')).not.toBeNull();
+  });
+
+  it('contraprova · amb la sessió ja resolta i una llista al dia, la comunitat que no hi és ho diu, com sempre', async () => {
+    mocks.params = new URLSearchParams({ comunitat: 'c-1' });
+    render(arbre());
+    await waitFor(() => expect(screen.getByText('Esta comunitat no és a la teua llista de converses.')).toBeTruthy());
+  });
+
+  it('contraprova · en remot sense sessió (\'fora\'), un fil que no existix és el 404 de sempre', async () => {
+    mocks.session = { currentUser: null, generacio: 1, estat: 'fora' };
+    vesA('/xat/fil-Z');
+    render(arbre());
+    await waitFor(() => expect(noTrobada()).not.toBeNull());
   });
 });

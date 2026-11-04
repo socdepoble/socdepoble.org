@@ -18,6 +18,7 @@ import { oblidaEntitatDelProjecte, RUTES_CANONIQUES } from '../config/navigation
 import { createLocalPerfilsAdapter } from '../data/localPerfils.js';
 import { AGENTS_MAP } from '../data/agentsSeed.js';
 import { ENTITAT_PILOT_ID, ENTITAT_PILOT_SLUG, ENTITAT_RENTONAR_SLUG, PERSONA_PILOT, POBLE_FUNDACIONAL } from '../data/identitatsSeed.js';
+import { rutaDeConnexio } from '../sections/profile/ConnexionsPubliques.jsx';
 
 vi.mock('../host.js', () => ({ quanLlest: async () => undefined }));
 vi.mock('../sections/notes/GlobalSaveManager.js', async importOriginal => ({
@@ -113,4 +114,28 @@ test('una ruta de primer nivell que no és cap identitat continua sent la pàgin
     expect(await screen.findByText('Ací no hi ha res', {}, { timeout: 4000 })).toBeTruthy();
     expect(loadPerfilPublic).not.toHaveBeenCalled();
   });
+});
+
+/* consola-p016-02 (T7a, 261104; UI23-01) · Les connexions públiques d'una
+   entitat (rutaDeConnexio, Seguidors, filaConnexions, localPerfils i la
+   migració 2611032100) emeten /entitats/<id>, i ActorRoutes no en tenia cap
+   ruta: queia al comodí :sectionId/:itemId, «Element no trobat». Un àlies
+   de /empresa/:agentId obri la mateixa fitxa única; els emissors no canvien. */
+test.each([
+  /* En llavor, l'id de l'entitat pilot és el seu slug (ENTITAT_PILOT_ID). */
+  [`/entitats/${ENTITAT_PILOT_ID}`, AGENTS_MAP.SOCDEPOBLE.name, ENTITAT_PILOT_ID],
+  ['/entitats/rentonar', 'Rentonar', ENTITAT_RENTONAR_SLUG]
+])('l’enllaç de connexió %s obri la fitxa única de %s, no «Element no trobat»', async (ruta, nom, id) => {
+  await munta(ruta, async ({ loadPerfilPublic }) => {
+    expect(await screen.findByRole('heading', { level: 1, name: nom }, { timeout: 4000 })).toBeTruthy();
+    expect((await loadPerfilPublic.mock.results.at(-1).value).id).toBe(id);
+    expect(screen.queryByText('Element no trobat')).toBeNull();
+    expect(screen.queryByText('Ací no hi ha res')).toBeNull();
+  });
+});
+
+/* La forma que emeten les connexions d'una entitat és la que ací s'obri. */
+test('rutaDeConnexio d’una entitat emet /entitats/<id>, el prefix de l’àlies', () => {
+  expect(rutaDeConnexio({ tipus: 'entitat', id: ENTITAT_PILOT_ID })).toBe(`/entitats/${ENTITAT_PILOT_ID}`);
+  expect(rutaDeConnexio({ tipus: 'persona', id: 'javi' })).toBe('/gent/javi');
 });

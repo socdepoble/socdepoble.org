@@ -11,10 +11,19 @@ import { AJUDA_PER_CLAU } from '../../data/xatsPerDefecte.js';
 import { IAIA_ID, BENVINGUDA_IAIA, RESPOSTA_IAIA } from '../../data/identitatsSeed.js';
 import { respostaDeLaIAIA } from '../../data/iaiaLocal.js';
 import { ID_FIL_LOCAL_IAIA } from './useObriXatPerDefecte.js';
+import { esContacteDeLaIAIA } from './contactesAjuda.js';
 
 export const MAXIM_MISSATGES_IAIA_LOCAL = 100;
 const esLocal = (id) => id === ID_FIL_LOCAL_IAIA;
 const noFaRes = () => {};
+/* xat-flux-05 (T7a, 261104) · La IAIA al padró de «Nova conversa»: el remot
+   (membres_del_poble) no porta cap contacte de tipus 'ia', i contactesDAjuda
+   la pintava «No disponible» mentre el seu xat local era a la llista. Amb el
+   fil local, obriConversaAmb hi navega sense crear res al servidor; el
+   precedent és el padró del xat de mostra (FakeChatOnboarding). */
+const CONTACTE_IAIA_LOCAL = Object.freeze({
+  usuari_id: IAIA_ID, nom: AJUDA_PER_CLAU.iaia.nom, tipus: 'ia', avatar_url: AJUDA_PER_CLAU.iaia.avatar, fil_id: ID_FIL_LOCAL_IAIA
+});
 
 export default function IAIALocalProvider({ children, respostaIAIA = respostaDeLaIAIA, t = createTranslator('ca') }) {
   const original = useXat();
@@ -58,6 +67,17 @@ export default function IAIALocalProvider({ children, respostaIAIA = respostaDeL
     });
     return [pregunta];
   }, [respostaIAIA]);
+  /* xat-flux-05 · Estable (fora del useMemo del valor, que canvia a cada
+     missatge): el diàleg i la cerca del Xat tornen a demanar el padró quan
+     canvia la funció. Sense try/catch: l'error del port arriba al diàleg. */
+  const cercaOriginal = original.cercaMembres;
+  const iaiaApagada = Boolean(original.iaiaApagada);
+  const cercaMembres = useCallback(async (...args) => {
+    const llista = await cercaOriginal(...args);
+    const membres = Array.isArray(llista) ? llista : [];
+    if (iaiaApagada || membres.some(esContacteDeLaIAIA)) return llista;
+    return [...membres, CONTACTE_IAIA_LOCAL];
+  }, [cercaOriginal, iaiaApagada]);
   const value = useMemo(() => ({
     ...original,
     // Les fallades del servidor continuen visibles sense tapar l'ajuda local.
@@ -70,6 +90,7 @@ export default function IAIALocalProvider({ children, respostaIAIA = respostaDeL
     ],
     getThreadMessages: (id) => esLocal(id) ? (!muntat.current || original.iaiaApagada ? [] : missatges) : original.getThreadMessages(id),
     sendChatMessage,
+    cercaMembres: typeof cercaOriginal === 'function' ? cercaMembres : cercaOriginal,
     obriFil: (id) => original.obriFil?.(esLocal(id) ? null : id),
     filCarregat: (id) => esLocal(id) || (original.filCarregat?.(id) ?? true),
     avisFil: (id) => esLocal(id) ? null : original.avisFil?.(id),
@@ -82,6 +103,6 @@ export default function IAIALocalProvider({ children, respostaIAIA = respostaDeL
     potSilenciarFil: (f) => esLocal(f?.id ?? f) ? false : original.potSilenciarFil?.(f),
     esFilAmagat: (id) => esLocal(id) ? Boolean(original.iaiaApagada) : original.esFilAmagat?.(id),
     recarregaFil: (id) => esLocal(id) ? noFaRes() : original.recarregaFil?.(id)
-  }), [original, fil, missatges, sendChatMessage, nomPublic]);
+  }), [original, fil, missatges, sendChatMessage, nomPublic, cercaOriginal, cercaMembres]);
   return <XatContext.Provider value={value}>{children}</XatContext.Provider>;
 }

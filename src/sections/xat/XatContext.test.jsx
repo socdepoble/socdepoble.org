@@ -1810,3 +1810,63 @@ describe('robustesa del xat (auditoria 261007 B)', () => {
     expect(mock.loadMissatges.mock.calls.length).toBe(carregues);
   });
 });
+
+/* xat-flux-02 (T7a, 261104) · creaFil tornava el fil nou encara que la seua
+   recàrrega de la llista l'haguera superada una altra (el tic de 25 s, el
+   desperta de visibilitychange o d'online, o el silenci): carregaFils torna
+   null sense aplicar res, XatSection navegava a /xat/<fil> amb status
+   'ready' i llistaFresca, i el fil encara no hi era: el 404. */
+describe('xat-flux-02 · creaFil no torna un fil que la llista encara no porta', () => {
+  const CONFIG_REMOT = { backendId: 'supabase', tenantId: '00000000-0000-0000-0000-00000000000a' };
+  const ids = () => value.chatThreads.map((f) => f.id);
+  /* clearAllMocks no buida les respostes «Once» que una prova no ha gastat. */
+  beforeEach(() => {
+    mock.loadFils.mockReset();
+    mock.loadFils.mockResolvedValue([fil()]);
+    mock.creaFilDirecte.mockReset();
+  });
+
+  it('si un sondeig supera la recàrrega de creaFil, en demana una de nova abans de tornar; el sondeig vell no l’amaga', async () => {
+    render(tree(CONFIG_REMOT));
+    await waitFor(() => expect(value.status).toBe('ready'));
+    const propia = deferred();
+    const sondeig = deferred();
+    const reintent = deferred();
+    mock.creaFilDirecte.mockResolvedValueOnce('fil-nou');
+    mock.loadFils.mockReturnValueOnce(propia.promise).mockReturnValueOnce(sondeig.promise).mockReturnValueOnce(reintent.promise);
+    const crides = mock.loadFils.mock.calls.length;
+    let promesa;
+    let tornat = false;
+    act(() => { promesa = value.creaFil('B'); promesa.then(() => { tornat = true; }); });
+    await waitFor(() => expect(mock.loadFils.mock.calls.length).toBe(crides + 1));
+    /* El sondeig arrenca ara, amb la recàrrega de creaFil en vol. */
+    act(() => { value.recarrega(); });
+    await waitFor(() => expect(mock.loadFils.mock.calls.length).toBe(crides + 2));
+    /* La de creaFil torna primer: superada, no s'aplica. */
+    await act(async () => { propia.resolve([fil(), fil({ id: 'fil-nou', titol: 'B' })]); });
+    await waitFor(() => expect(mock.loadFils.mock.calls.length).toBe(crides + 3));
+    expect(tornat).toBe(false);
+    await act(async () => { reintent.resolve([fil(), fil({ id: 'fil-nou', titol: 'B' })]); });
+    let filId;
+    await act(async () => { filId = await promesa; });
+    expect(filId).toBe('fil-nou');
+    /* Quan torna, la llista ja el porta: XatSection no pinta cap 404. */
+    expect(ids()).toContain('fil-nou');
+    expect(value.status).toBe('ready');
+    /* El sondeig vell (superat pel reintent) torna sense el fil: no s'aplica. */
+    await act(async () => { sondeig.resolve([fil()]); });
+    expect(ids()).toContain('fil-nou');
+    expect(mock.loadFils.mock.calls.length).toBe(crides + 3);
+  });
+
+  it('sense cap càrrega que la supere, una sola recàrrega, com sempre', async () => {
+    render(tree(CONFIG_REMOT));
+    await waitFor(() => expect(value.status).toBe('ready'));
+    mock.creaFilDirecte.mockResolvedValueOnce('fil-nou');
+    mock.loadFils.mockResolvedValue([fil(), fil({ id: 'fil-nou', titol: 'B' })]);
+    const crides = mock.loadFils.mock.calls.length;
+    await act(async () => { expect(await value.creaFil('B')).toBe('fil-nou'); });
+    expect(mock.loadFils.mock.calls.length).toBe(crides + 1);
+    expect(ids()).toContain('fil-nou');
+  });
+});

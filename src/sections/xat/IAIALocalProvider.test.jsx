@@ -5,6 +5,9 @@ import IAIALocalProvider from './IAIALocalProvider.jsx';
 import { ID_FIL_LOCAL_IAIA, RUTA_XAT_DE_LA_IAIA, RUTA_XAT_LOCAL_IAIA, rutaDelXatDeLaIAIA } from './useObriXatPerDefecte.js';
 import { BENVINGUDA_IAIA, RESPOSTA_IAIA } from '../../data/identitatsSeed.js';
 import { respostaDeLaIAIA } from '../../data/iaiaLocal.js';
+import { IAIA_ID } from '../../data/identitatsSeed.js';
+import { AJUDA_PER_CLAU } from '../../data/xatsPerDefecte.js';
+import { contactesDAjuda } from './contactesAjuda.js';
 
 afterEach(cleanup);
 const base = () => ({
@@ -93,5 +96,53 @@ describe('IAIA local amb sessió Supabase', () => {
     await act(async () => { resol('Secret de A'); });
     expect(missatges(result)).toHaveLength(1);
     expect(JSON.stringify(missatges(result))).not.toContain('Secret de A');
+  });
+});
+
+/* xat-flux-05 (T7a, 261104) · El padró remot (membres_del_poble) no porta cap
+   contacte de tipus 'ia': «Nova conversa» (contactesDAjuda) pintava «IAIA
+   MarIA · No disponible» mentre el seu xat local era a la llista i /iaia
+   l'obria. El proveïdor l'afig al padró amb el fil local (obriConversaAmb hi
+   navega pel fil_id), com fa el xat de mostra (FakeChatOnboarding). */
+describe('xat-flux-05 · la IAIA local és al padró de «Nova conversa»', () => {
+  const JOSE = { usuari_id: 'u-jose', nom: 'José', tipus: 'persona' };
+  const ambPadro = (padro, extra = {}) => ({ ...base(), cercaMembres: vi.fn(async () => padro), ...extra });
+
+  it('afig la IAIA (tipus ia, amb el fil local) al padró del port, i contactesDAjuda ja no la dona per no disponible', async () => {
+    const { result, original } = setup(ambPadro([JOSE]));
+    let membres;
+    await act(async () => { membres = await result.current.cercaMembres(null); });
+    expect(original.cercaMembres).toHaveBeenCalledWith(null);
+    expect(membres.map((m) => m.usuari_id)).toEqual(['u-jose', IAIA_ID]);
+    const iaia = membres.at(-1);
+    expect(iaia).toMatchObject({ tipus: 'ia', fil_id: ID_FIL_LOCAL_IAIA, nom: AJUDA_PER_CLAU.iaia.nom, avatar_url: AJUDA_PER_CLAU.iaia.avatar });
+    const ajuda = contactesDAjuda(membres).find((m) => m.tipus === 'ia');
+    expect(ajuda.noDisponible).toBeUndefined();
+    expect(ajuda.fil_id).toBe(ID_FIL_LOCAL_IAIA);
+  });
+
+  it('la referència es manté entre renders (el diàleg i la cerca no tornen a demanar el padró a cada missatge)', async () => {
+    const { result, rerender } = setup(ambPadro([JOSE]));
+    const primera = result.current.cercaMembres;
+    await act(async () => { await result.current.sendChatMessage(fil(result), 'Hola'); });
+    rerender();
+    expect(result.current.cercaMembres).toBe(primera);
+  });
+
+  it('amb la IAIA apagada no hi és; si el port ja la porta, no es duplica', async () => {
+    const apagada = setup(ambPadro([JOSE], { iaiaApagada: true }));
+    await act(async () => { expect(await apagada.result.current.cercaMembres(null)).toEqual([JOSE]); });
+    cleanup();
+    const delPort = { usuari_id: IAIA_ID, nom: 'IAIA MarIA', tipus: 'ia' };
+    const ambElPort = setup(ambPadro([JOSE, delPort]));
+    let membres;
+    await act(async () => { membres = await ambElPort.result.current.cercaMembres('ia'); });
+    expect(membres).toEqual([JOSE, delPort]);
+  });
+
+  it('un error del port arriba al diàleg', async () => {
+    const error = new Error('Sense padró');
+    const { result } = setup({ ...base(), cercaMembres: vi.fn(async () => { throw error; }) });
+    await act(async () => { await expect(result.current.cercaMembres(null)).rejects.toBe(error); });
   });
 });

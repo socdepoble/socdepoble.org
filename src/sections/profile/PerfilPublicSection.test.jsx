@@ -78,8 +78,9 @@ test('la fitxa pròpia d’una entitat s’edita des del Workspace i no porta av
   expect(screen.getByText('La teua fitxa', { selector: '.sp-card-label' })).toBeTruthy();
   fireEvent.click(screen.getByRole('button', { name: 'Edita la fitxa' }));
   expect(mocks.navigate).toHaveBeenCalledWith('/el-meu-perfil');
-  fireEvent.click(screen.getByRole('button', { name: 'Escriu-li al xat' }));
-  expect(mocks.navigate).toHaveBeenCalledWith('/xat?amb=socdepoble');
+  /* Expectativa actualitzada a propòsit (xat-flux-04, 261104): cap directe amb
+     una entitat que representes (SDP-XAT-002); PerfilPublicSection.xatAmbUnMateix.test.jsx. */
+  expect(screen.queryByRole('button', { name: 'Escriu-li al xat' })).toBeNull();
 });
 
 test('sense la capacitat del port cau al catàleg d’agents; sense ningú, «Perfil no trobat»', async () => {
@@ -315,7 +316,8 @@ test('Onada 8 · la boina de la fitxa porta a la fitxa mateixa, per la seua ruta
 
 test('T63.2 · «En públic» d’una entitat obri el xat comú de la seua pàgina; «Escriu-li al xat» continua sent el directe', async () => {
   mocks.id = 'socdepoble';
-  mocks.load.mockResolvedValue(ENTITAT);
+  /* xat-flux-04 (261104) · Mirada per qui no la representa: la pròpia no porta el directe. */
+  mocks.load.mockResolvedValue({ ...ENTITAT, propietari: false });
   const { container } = render(<PerfilPublicSection agents={mocks.agents} />);
   await screen.findByRole('heading', { level: 1, name: 'Sóc de Poble' });
   fireEvent.click(via(container, PUBLIC));
