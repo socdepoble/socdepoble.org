@@ -38,9 +38,8 @@
 {
   description = "Sóc de Poble (el Mas): frontal web reproduïble i mòdul NixOS amb nginx";
 
-  # nixos-26.05 és la branca estable vigent el 30-10-2026 (verificada a GitHub);
-  # flake.lock en fixa la revisió exacta.
-  inputs.nixpkgs.url = "github:NixOS/nixpkgs/nixos-26.05";
+  # La mateixa revisió immutable de nix/flake.nix; el lock real continua pendent de Nix.
+  inputs.nixpkgs.url = "github:NixOS/nixpkgs/7dcdd87373d72e7a2173e4db02e20d3d7f495cfd";
 
   outputs =
     { self, nixpkgs }:
@@ -80,6 +79,7 @@
           ./index.html
           ./firebase.json
           ./vite.config.js
+          ./scripts/botigues/associacio-apps.json
           ./AGENTS.md
           ./.agents/AGENTS.md
           ./src
@@ -118,6 +118,7 @@
           pname = "socdepoble-web";
           version = "${paquetNpm.version}+${self.shortRev or self.dirtyShortRev or "sense-git"}";
           src = font;
+          outputs = [ "out" "integritat" ];
 
           # engines de package.json: ^22.20.0 || ^24.12.0 || >=25 (nixos-26.05 porta 24.22.1).
           nodejs = pkgs.nodejs_24;
@@ -180,8 +181,17 @@
           # de servidor de la federació (Firebase ignora els que comencen per punt).
           installPhase = ''
             runHook preInstall
+            # Empremta capturada abans de copiar. La sortida d’integritat és externa
+            # a dist: cap fitxer queda exclòs per evitar una autoreferència.
+            sdp_inventari="$TMPDIR/inventari-dist.json"
+            sdp_sha256_confiat="$(node tooling/instalador/inventari-estatic.mjs crea --dist dist --manifest "$sdp_inventari")"
+            node tooling/instalador/inventari-estatic.mjs verifica --dist dist --manifest "$sdp_inventari" --sha256-confiat "$sdp_sha256_confiat"
             cp -R dist "$out"
             runHook postInstall
+            node tooling/instalador/inventari-estatic.mjs verifica --dist "$out" --manifest "$sdp_inventari" --sha256-confiat "$sdp_sha256_confiat"
+            mkdir -p "$integritat"
+            cp "$sdp_inventari" "$integritat/inventari-dist.json"
+            printf '%s\n' "$sdp_sha256_confiat" > "$integritat/sha256-confiat"
           '';
           # Cap retoc posterior (patchShebangs, strip…): els bytes de $out són
           # els del build, els que compara el comprovador.
@@ -581,6 +591,11 @@
         {
           # nix build .#checks.<sistema>.web --rebuild: la reproductibilitat a Linux.
           web = self.packages.${sistema}.web;
+          integritat-estatica = pkgs.runCommand "socdepoble-integritat-estatica" { nativeBuildInputs = [ pkgs.nodejs_24 ]; } ''
+            SDP_FLAKE_FONT=${./flake.nix} SDP_MUNICIPAL_FLAKE=${./nix/flake.nix} node --test ${font}/tooling/instalador/inventari-estatic.test.mjs
+            node ${font}/tooling/instalador/inventari-estatic.mjs verifica --dist ${self.packages.${sistema}.web} --manifest ${self.packages.${sistema}.web.integritat}/inventari-dist.json --sha256-confiat "$(cat ${self.packages.${sistema}.web.integritat}/sha256-confiat)"
+            touch "$out"
+          '';
           # El mòdul en una VM: rutes, codis i capçaleres de nginx.
           modul-nixos = pkgs.testers.runNixOSTest {
             name = "socdepoble-modul-nixos";

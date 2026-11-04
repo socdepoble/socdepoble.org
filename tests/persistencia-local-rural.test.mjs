@@ -198,3 +198,205 @@ test('E07: la còpia genèrica rebutja __proto__ normalitzat sense dependre d’
   assert.equal(Object.getPrototypeOf(value.nested[0]), Object.prototype);
   assert.equal({}.role, undefined);
 });
+
+const DISPOSITIU = 'mode-rural:dispositiu';
+const LOT = [DISPOSITIU, 'colleccions', 'cua'];
+const colsDeProva = () => Object.fromEntries(COLLECCIONS_RURALS.map(clau => [clau, clau === 'notes' ? [{ id: 'privada', text: 'només local' }] : []]));
+for (const tipus of ['memoria', 'indexeddb']) {
+  test(`${tipus}: lot coherent, esborrat físic i canvi de generació deixen un altre tenant intacte`, async t => {
+    const { opcions, memoria, idb } = setup(tipus);
+    const inicial = creaMagatzemAtomicRural(opcions);
+    const persistencia = creaPersistenciaLocalRural(opcions);
+    const altre = creaMagatzemAtomicRural({ ...opcions, abast: { ...abast, tenant: 'poble-B' } });
+    const a = creaMagatzemAtomicRural({ ...opcions, generacio: { clau: DISPOSITIU, id: 'generacio-A' } });
+    t.after(() => { inicial.close(); persistencia.tanca(); altre.close(); a.close(); });
+    await altre.compareAndSwap('cua', 0, { revision: 1, text: 'intacte' });
+    const state = persistencia.estatAmbColleccions(null, colsDeProva());
+    assert.equal(await inicial.actualitzaLot(LOT, actual => {
+      assert.deepEqual({ ...actual }, { [DISPOSITIU]: null, colleccions: null, cua: null });
+      return { next: { [DISPOSITIU]: { revision: 1, id: 'generacio-A' }, colleccions: state, cua: { revision: 1, text: 'pendent' } }, value: true };
+    }), true);
+    const midaAbans = tipus === 'memoria' ? memoria.size : idb.files('sdp-rural-v1', 'estat').length;
+    const resultat = await a.actualitzaLot(LOT, actual => {
+      assert.equal(actual[DISPOSITIU].id, 'generacio-A');
+      assert.equal(actual.colleccions.revision, 1);
+      assert.equal(actual.cua.revision, 1);
+      return { next: { [DISPOSITIU]: { revision: 2, id: 'generacio-B' }, colleccions: null, cua: null }, value: { purgat: true } };
+    });
+    assert.deepEqual(resultat, { purgat: true });
+    const midaDespres = tipus === 'memoria' ? memoria.size : idb.files('sdp-rural-v1', 'estat').length;
+    assert.equal(midaDespres, midaAbans - 2);
+    assert.equal((await inicial.read(DISPOSITIU)).id, 'generacio-B');
+    assert.equal(await inicial.read('cua'), null);
+    assert.equal(await inicial.read('colleccions'), null);
+    assert.equal((await altre.read('cua')).text, 'intacte');
+  });
+
+  test(`${tipus}: tot next i value es validen abans de qualsevol escriptura del lot`, async t => {
+    const { opcions } = setup(tipus, { limitBytes: 1024 });
+    const a = creaMagatzemAtomicRural(opcions); t.after(() => a.close());
+    await a.actualitzaLot(['a', 'b'], () => ({ next: { a: { revision: 1, text: 'A' }, b: { revision: 1, text: 'B' } }, value: true }));
+    let accessos = 0;
+    const accessor = { a: null, get b() { accessos += 1; return null; } };
+    const canvisInvalids = [
+      () => ({ next: { a: null, b: { revision: 2, text: 'x'.repeat(2000) } }, value: true }),
+      () => ({ next: { a: null, b: null }, value: undefined }),
+      () => ({ next: { a: null, b: null }, value: { secret: 'NO-SECRET' } }),
+      () => ({ next: { a: null, fora: { revision: 1 } }, value: true }),
+      () => ({ next: { a: null, b: undefined }, value: true }),
+      () => ({ next: accessor, value: true }),
+      async () => ({ next: { a: null, b: null }, value: true })
+    ];
+    for (const transforma of canvisInvalids) {
+      await assert.rejects(a.actualitzaLot(['a', 'b'], transforma), falla('SDP-RURAL-INVALID'));
+      assert.equal((await a.read('a')).text, 'A');
+      assert.equal((await a.read('b')).text, 'B');
+    }
+    assert.equal(accessos, 0);
+    for (const claus of [[], ['a', 'a'], Array.from({ length: 9 }, (_, i) => String(i)), ['a', ' x'], ['a', 'x'.repeat(513)]]) {
+      await assert.rejects(a.actualitzaLot(claus, () => ({ next: {}, value: true })), falla('SDP-RURAL-INVALID'));
+    }
+    assert.equal(await a.actualitzaLot(['a', 'b'], () => ({ next: {}, value: false })), false);
+    assert.equal((await a.read('a')).text, 'A');
+  });
+
+  test(`${tipus}: avortar o tancar dins del transformador desfà el lot sencer`, async t => {
+    const { opcions } = setup(tipus);
+    const a = creaMagatzemAtomicRural(opcions); const b = creaMagatzemAtomicRural(opcions);
+    t.after(() => { a.close(); b.close(); });
+    await a.actualitzaLot(['a', 'b'], () => ({ next: { a: { revision: 1 }, b: { revision: 1 } }, value: true }));
+    const controller = new AbortController();
+    await assert.rejects(a.actualitzaLot(['a', 'b'], () => {
+      controller.abort(); return { next: { a: null, b: { revision: 2 } }, value: true };
+    }, { signal: controller.signal }), e => e.name === 'AbortError');
+    assert.equal((await b.read('a')).revision, 1); assert.equal((await b.read('b')).revision, 1);
+    await assert.rejects(a.actualitzaLot(['a', 'b'], () => {
+      a.close(); return { next: { a: null, b: null }, value: true };
+    }), e => ['SDP-RURAL-TANCAT', 'SDP-RURAL-CANCEL'].includes(e.code));
+    assert.equal((await b.read('a')).revision, 1); assert.equal((await b.read('b')).revision, 1);
+  });
+
+  test(`${tipus}: una generació caducada bloqueja lectura, CAS diferit i restauració que esperava WebCrypto`, async t => {
+    let desbloqueja, dinsDigest;
+    const gate = new Promise(resolve => { desbloqueja = resolve; });
+    const dins = new Promise(resolve => { dinsDigest = resolve; });
+    let pausar = false;
+    const crypto = { subtle: { digest: async (...args) => {
+      if (pausar) { dinsDigest(); await gate; }
+      return webcrypto.subtle.digest(...args);
+    } } };
+    const { opcions, idb } = setup(tipus, { crypto });
+    const inicial = creaMagatzemAtomicRural(opcions);
+    await inicial.actualitzaLot(LOT, () => ({ next: { [DISPOSITIU]: { revision: 1, id: 'A' }, cua: { revision: 1 } }, value: true }));
+    const guard = { clau: DISPOSITIU, id: 'A' };
+    const a = creaMagatzemAtomicRural({ ...opcions, generacio: guard });
+    const p = creaPersistenciaLocalRural({ ...opcions, generacio: guard });
+    const b = creaMagatzemAtomicRural({ ...opcions, generacio: guard,
+      ...(tipus === 'indexeddb' ? { indexedDB: idb.pestanya() } : {}) });
+    t.after(() => { desbloqueja(); inicial.close(); a.close(); b.close(); p.tanca(); });
+    await p.desa('notes', [{ id: 'abans' }]);
+    const snap = await p.exportaInstantaniaLocal();
+    const revision = (await b.read('cua')).revision;
+    pausar = true;
+    const restauracio = p.restauraInstantaniaLocal(snap);
+    await dins;
+    const casDiferit = gate.then(() => b.compareAndSwap('cua', revision, { revision: revision + 1, text: 'ressurrecció' }));
+    const rebutjos = Promise.all([
+      assert.rejects(restauracio, falla('SDP-RURAL-GENERACIO')),
+      assert.rejects(casDiferit, falla('SDP-RURAL-GENERACIO'))
+    ]);
+    await a.actualitzaLot(LOT, () => ({ next: { [DISPOSITIU]: { revision: 2, id: 'B' }, colleccions: null, cua: null }, value: true }));
+    desbloqueja();
+    await rebutjos;
+    await assert.rejects(b.read('cua'), falla('SDP-RURAL-GENERACIO'));
+    await assert.rejects(p.llegix('notes'), falla('SDP-RURAL-GENERACIO'));
+    let executat = false;
+    await assert.rejects(b.actualitzaLot(LOT, () => { executat = true; return { next: {}, value: true }; }), falla('SDP-RURAL-GENERACIO'));
+    assert.equal(executat, false);
+    assert.equal(await inicial.read('colleccions'), null); assert.equal(await inicial.read('cua'), null);
+    const nou = creaMagatzemAtomicRural({ ...opcions, generacio: { clau: DISPOSITIU, id: 'B' } });
+    t.after(() => nou.close()); assert.equal(await nou.read('colleccions'), null);
+  });
+
+  test(`${tipus}: metadata absent i generació aliena deneguen abans de transformar`, async t => {
+    const { opcions } = setup(tipus);
+    const a = creaMagatzemAtomicRural({ ...opcions, generacio: { clau: DISPOSITIU, id: 'A' } });
+    t.after(() => a.close());
+    let crides = 0;
+    await assert.rejects(a.actualitzaLot(LOT, () => { crides += 1; return { next: {}, value: true }; }), falla('SDP-RURAL-GENERACIO'));
+    assert.equal(crides, 0);
+    for (const generacio of [false, {}, { clau: DISPOSITIU, id: '' }, { clau: DISPOSITIU, id: 'A', extra: true }]) {
+      assert.throws(() => creaMagatzemAtomicRural({ ...opcions, generacio }), falla('SDP-RURAL-INVALID'));
+    }
+  });
+
+  test(`${tipus}: una exportació que esperava SHA no lliura dades privades després d’una purga aliena`, async t => {
+    let desbloqueja, entra;
+    const gate = new Promise(resolve => { desbloqueja = resolve; });
+    const iniciat = new Promise(resolve => { entra = resolve; });
+    const crypto = { subtle: { digest: async (...args) => {
+      entra(); await gate; return webcrypto.subtle.digest(...args);
+    } } };
+    const { opcions } = setup(tipus, { crypto });
+    const a = creaMagatzemAtomicRural(opcions);
+    const p = creaPersistenciaLocalRural({ ...opcions, generacio: { clau: DISPOSITIU, id: 'A' } });
+    t.after(() => { desbloqueja(); a.close(); p.tanca(); });
+    await a.compareAndSwap(DISPOSITIU, 0, { revision: 1, id: 'A' });
+    await p.desa('notes', [{ id: 'privada' }]);
+    const exportacio = p.exportaInstantaniaLocal();
+    const rebutjada = assert.rejects(exportacio, falla('SDP-RURAL-GENERACIO'));
+    await iniciat;
+    await a.actualitzaLot(LOT, () => ({ next: { [DISPOSITIU]: { revision: 2, id: 'B' }, colleccions: null, cua: null }, value: true }));
+    desbloqueja(); await rebutjada;
+    assert.equal(await a.read('colleccions'), null);
+  });
+}
+
+test('IndexedDB: quota al commit del lot restaura també les claus esborrades i l’epoch', async t => {
+  const { opcions, idb } = setup('indexeddb');
+  const a = creaMagatzemAtomicRural(opcions); t.after(() => a.close());
+  await a.actualitzaLot(LOT, () => ({ next: { [DISPOSITIU]: { revision: 1, id: 'A' }, colleccions: { revision: 1 }, cua: { revision: 1 } }, value: true }));
+  idb.omplit = true;
+  await assert.rejects(a.actualitzaLot(LOT, () => ({ next: { [DISPOSITIU]: { revision: 2, id: 'B' }, colleccions: null, cua: null }, value: true })), falla('SDP-RURAL-QUOTA'));
+  idb.omplit = false;
+  assert.equal((await a.read(DISPOSITIU)).id, 'A');
+  assert.equal((await a.read('colleccions')).revision, 1); assert.equal((await a.read('cua')).revision, 1);
+});
+
+test('les projeccions pures validen l’estat original i no creen cap registre ni compartixen referències', async t => {
+  const { opcions, memoria } = setup('memoria');
+  const p = creaPersistenciaLocalRural(opcions); t.after(() => p.tanca());
+  const cols = colsDeProva(); const a = p.estatAmbColleccions(null, cols);
+  assert.equal(a.revision, 1); assert.deepEqual(p.colleccionsDe(null), Object.fromEntries(COLLECCIONS_RURALS.map(c => [c, []])));
+  cols.notes[0].text = 'mutada';
+  const copia = p.colleccionsDe(a); copia.notes[0].text = 'altra';
+  assert.equal(p.colleccionsDe(a).notes[0].text, 'només local');
+  assert.equal(p.estatAmbColleccions(a, p.colleccionsDe(a)).revision, 2);
+  assert.equal(memoria.size, 0);
+  for (const mal of [{ revision: 1, schema: 'inventat', collections: colsDeProva() }, { revision: 0, schema: a.schema, collections: colsDeProva() }, { ...a, extra: true }]) {
+    assert.throws(() => p.colleccionsDe(mal), falla('SDP-RURAL-INVALID'));
+    assert.throws(() => p.estatAmbColleccions(mal, colsDeProva()), falla('SDP-RURAL-INVALID'));
+  }
+  await assert.rejects(p.llegix('cap'), falla('SDP-RURAL-INVALID'));
+});
+
+test('memòria: la reentrada entre instàncies no confirma un CAS que el lot exterior trepitjaria', async t => {
+  const { opcions } = setup('memoria');
+  const a = creaMagatzemAtomicRural(opcions), b = creaMagatzemAtomicRural(opcions);
+  const altre = creaMagatzemAtomicRural({ ...opcions, abast: { ...abast, tenant: 'poble-B' } });
+  t.after(() => { a.close(); b.close(); altre.close(); });
+  await a.compareAndSwap('a', 0, { revision: 1 });
+  let interiorRebutjat, altreTenant;
+  assert.equal(await a.actualitzaLot(['a'], actual => {
+    interiorRebutjat = assert.rejects(b.compareAndSwap('a', 1, { revision: 2, text: 'interior' }), falla('SDP-RURAL-CONFLICTE'));
+    altreTenant = altre.compareAndSwap('a', 0, { revision: 1, text: 'altre poble' });
+    return { next: { a: { revision: actual.a.revision + 1, text: 'exterior' } }, value: actual.a.revision };
+  }), 1);
+  await interiorRebutjat;
+  assert.equal(await altreTenant, true);
+  assert.equal((await a.read('a')).text, 'exterior');
+  assert.equal((await altre.read('a')).text, 'altre poble');
+  // El pany també s’allibera després d’un error, no queda cap procés esperant.
+  await assert.rejects(a.actualitzaLot(['a'], () => { throw new Error('fixture'); }), /fixture/);
+  assert.equal(await b.compareAndSwap('a', 2, { revision: 3 }), true);
+});

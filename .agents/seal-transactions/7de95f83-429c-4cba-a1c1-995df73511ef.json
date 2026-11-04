@@ -1,0 +1,77 @@
+{
+  "id": "7de95f83-429c-4cba-a1c1-995df73511ef",
+  "session": "74c0983e-4114-4dc4-b199-ba0b759faa7c",
+  "operationId": "onada2-fedi16-local-38-atac-creuat",
+  "claim": "74c0983e-4114-4dc4-b199-ba0b759faa7c:governance-write",
+  "planHash": "b20aaad618aec57733e20707241c97d1931bcacf107085c28ae2b2123a12a3a0",
+  "beforeSeal": "95662a387d0a142f58f458d7de95b802455ccfd2749d933cefc501cf00e65fc3",
+  "files": [
+    {
+      "path": "src/data/local/adaptadorLocal.js",
+      "before": "df76641ea1c7c37e026f3e20720eab2b222e63d457dbe7b1113d9cba22c4344e",
+      "after": "15e56fc6effbba3c19993ffbe6040436524450e7b3dcaaf91fc07aaec7699bd1"
+    },
+    {
+      "path": "src/data/local/contingutLocal.js",
+      "before": "7be61e0b211d19666cf17dd4ae53395dadc0dfcf063b25c0e1a6b3f56bfd1fad",
+      "after": "1fa3d6c7caf3e7096b619261ec83c83def4b57bd5a76d2812edb1818bc2f4078"
+    },
+    {
+      "path": "src/data/local/compteLocal.js",
+      "before": "431283747a7bfc6ceb2867a0c7826418e556cac211c955b3880ffb1ca8aba5f5",
+      "after": "dc2c7582d6bc34367956dad688d5564f38d04c5a8f1af41b3eed419b50b7a738"
+    },
+    {
+      "path": "src/data/local/adaptadorLocal.conformitat.test.js",
+      "before": "2a32fdbab3a958ded88ea9c52f1d57262c4db923932c92ddb79a39694466ef47",
+      "after": "d1f59cc589416bd7664fa94dd86436676cf6d223f06fc8e82f4d4382c107495b"
+    },
+    {
+      "path": "src/data/local/adaptadorLocal.test.js",
+      "before": "667f2989764da80a0acb966085ca1ac9025f7ee68ed9c3488be72be24bdd391a",
+      "after": "a50d5667e66c29206c1803afcbe607c717dd439917844d7c723a68ddeef877d9"
+    },
+    {
+      "path": "src/data/local/adaptadorLocal.multipoble.test.js",
+      "before": null,
+      "after": "e4fc35b54105bed464a6e711092125a8f5b6cf2ee1c658ea5c5394d6d290a2c8"
+    },
+    {
+      "path": "src/data/local/README.md",
+      "before": "6472a8555adfe6b8a8a14b78270d05f2e6c0376e24d296357a085c5cdab94229",
+      "after": "380010f21c0e64919feb1dfc983be3c7488f646ab37289b3b8b2de06dfb82885"
+    },
+    {
+      "path": "src/data/localXat.silenci.test.js",
+      "before": "b69e374da365e441b01850448f2ace96a006a08a152b8f5cf7d6e5064289a2b8",
+      "after": "8216ba78331d416e668b96e51c62e2e3c49c40d75fbac7fb37fe440225f3ffbe"
+    },
+    {
+      "path": "src/sections/text/pageContent.versions.test.js",
+      "before": "b424c48c28629131c659ef353d13aad575e8a069a10fd9c30026af546a0ae7ce",
+      "after": "a0abe0cb469a4e4e89e67ce272453b9976ace08c46b597e7b1c006136088a868"
+    },
+    {
+      "path": "tests/administracio-multipoble-postgres.test.mjs",
+      "before": "1705222813869e59ea943b6ce007450ba96910f069c432b78b8c166693a9c18f",
+      "after": "e379f90b31e8b73486a58c3247bbcde640d7a7c4ef0c5f4f77560318513b9b3b"
+    },
+    {
+      "path": "supabase/migrations/README.md",
+      "before": null,
+      "after": "d1966d4627283c570b74fa3b9b8da6127ba75f1dc6d9b578f7639d988b782301"
+    },
+    {
+      "path": "_wiki_de_poble/02_saber/architecture/api_port_neutral_i_allotjament_model_b.md",
+      "before": "5abfe6f9eeee4bb20c2541bbc47a94b4194735f8c4d0a6adbb0a15a50e6cb94d",
+      "after": "01fec96a20439a2aa76cea50279c9ed5fe41f67bf78ac162031b9e5eb0dc3372"
+    },
+    {
+      "path": "src/data/wikiManifest.js",
+      "before": "a5b3a04ff630853fd4273a24185e815a4b75932d3493df6f6646ff058a30c1b4",
+      "after": "8ea05a4dbd959132b4c23bdb0cb53b8a8ec6653988a8bec58bfe55f854c50d51"
+    }
+  ],
+  "state": "accepted",
+  "afterSeal": "8d057b5d8220f5cadefa19a60ba97674665b8a1bdbc23fb556b4a00941673e25"
+}

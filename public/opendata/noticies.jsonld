@@ -1,4 +1,22 @@
 {
   "@context": "https://schema.org",
-  "@graph": []
+  "@graph": [
+    {
+      "@id": "noticies.jsonld#node-zero-mac-mini-m4",
+      "@type": "NewsArticle",
+      "abstract": "Observació del 3 de novembre de 2026: dos punts d’accés públic, socdepoble.org i gentdelatorre.net, i un pilot físic en preparació a La Torre de les Maçanes. El Node 0 · Mac mini M4 encara no té servei públic acreditat.",
+      "alternativeHeadline": "Dos punts d’accés públic i un pilot físic en preparació",
+      "articleBody": "Resum editorial de la notícia pública del 29 d’octubre de 2026, revisat el 3 de novembre de 2026. El Node 0 · Mac mini M4 és el pilot físic previst a La Torre de les Maçanes; este paquet no acredita que preste servei públic.\n\nEn els GET anònims del 3 de novembre de 2026 a les 17:23 UTC, https://socdepoble.org/ i https://gentdelatorre.net/ van respondre HTTP 200. Són els dos punts d’accés públic comprovats en eixa observació.\n\nLa consulta a http://socdepoble.cat/ va respondre HTTP 302 cap a https://clinic-especially-molecular-attitudes.trycloudflare.com/. El destí no resolia DNS (ENOTFOUND). El pilot queda en preparació fins a acreditar un servei públic operatiu. Esta observació és històrica i no és un monitor de disponibilitat actual.\n\nFont pública original: https://socdepoble.org/mur/node-zero-mac-mini-m4",
+      "author": {
+        "@id": "directori.jsonld#socdepoble",
+        "@type": "Organization",
+        "identifier": "socdepoble",
+        "name": "Sóc de Poble"
+      },
+      "datePublished": "2026-10-29T11:00:00Z",
+      "headline": "Node 0 · Mac mini M4: el servidor de l’habitació",
+      "identifier": "node-zero-mac-mini-m4",
+      "image": "https://socdepoble.org/assets/uploads/brain/mac_mini_m4_1787721966622.jpg"
+    }
+  ]
 }

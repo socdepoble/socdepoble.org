@@ -78,7 +78,9 @@ describe('opcions de la factoria', () => {
   test('les capacitats no declarades són exactament les que el contracte té i este node deixa a posta', () => {
     const a = creaAdaptadorLocal();
     const absents = Object.keys(CAPACITATS).filter((cap) => CAPACITATS[cap].every((m) => typeof a[m] !== 'function'));
-    expect(absents.every((cap) => CAPACITATS_NO_DECLARADES.includes(cap))).toBe(true);
+    expect(Object.keys(CAPACITATS)).toHaveLength(39);
+    expect(CAPACITATS_NO_DECLARADES).toEqual([]);
+    expect(absents).toEqual([]);
     const deContracte = CONTRACTE_BACKEND.filter((m) => !absents.some((cap) => CAPACITATS[cap].includes(m)));
     expect(deContracte.filter((m) => typeof a[m] !== 'function')).toEqual([]);
   });

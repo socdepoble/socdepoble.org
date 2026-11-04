@@ -8,6 +8,7 @@ import { SECCIONS_PAGINABLES } from '../contracte.js';
    mode seed les porta (les pàgines de sistema es servixen igual en remot,
    amb la seua data de creació). */
 import { llavorAmbDatesDeProva } from '../../sections/mur/datesDeProvaMur.js';
+import { CURSOS_PEDRA_EN_SEC_2026_EVENT } from '../../sections/mur/eventsSeed.js';
 /* Onada 11 (261010; prompt 261010_1730, tasca 2) · La personalització del
    poble (taxonomia i estil) viatja dins de loadCoreContent com a camp
    ADDITIU i opcional: en remot, de les files d'app_content; en seed o local,
@@ -182,10 +183,16 @@ async function loadSections(ownerUserId, config, sections, { ambPaginacio = fals
      objecte on toca una llista es pren buida, en lloc de rebutjar la càrrega
      sencera del Mur ([...primary] de mergeById); les publicacions dels veïns
      es pinten igual. */
-  const llistes = Object.fromEntries(sections.map(([key], index) => [key, mergeById(
-    llistaDe(rows.find(row => row.key === key)?.payload, key),
-    submissions[index].map((row) => elementDeFila(row, sections[index][1]))
-  )]));
+  const llistes = Object.fromEntries(sections.map(([key], index) => {
+    const baseAppContent = llistaDe(rows.find(row => row.key === key)?.payload, key);
+    const ambActePedraSeca = key === 'events' && baseAppContent.some((item) => item?.id === 'aplec-2023')
+      ? mergeById([CURSOS_PEDRA_EN_SEC_2026_EVENT], baseAppContent)
+      : baseAppContent;
+    return [key, mergeById(
+      ambActePedraSeca,
+      submissions[index].map((row) => elementDeFila(row, sections[index][1]))
+    )];
+  }));
   if (!ambPaginacio) return llistes;
   /* Decisió 4 · El cursor de cada secció ix de l'última fila de
      section_submissions de la primera pàgina (mai d'app_content).

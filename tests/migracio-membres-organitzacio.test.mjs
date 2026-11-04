@@ -19,6 +19,7 @@ const MEMBRES_CONCURRENTS = '2610281730_membres_concurrents_i_correu_public.sql'
    desa_membre_organitzacio i lleva_membre_organitzacio només per a afegir-hi el
    pany sdp-orgowner: abans de llegir autoritat. Les branques d'organitzacions no canvien. */
 const COMMUTACIO = '2610311500_commutacio_grup_empresa_i_transferencia_propietat.sql';
+const CONNEXIONS_PUBLIQUES = '2611032100_connexions_publiques_i_membres.sql';
 const MIGRACIONS = path.join(ARREL, 'supabase/migrations');
 const SQL = fs.readFileSync(path.join(MIGRACIONS, NOM), 'utf8');
 const CLIENT = fs.readFileSync(path.join(ARREL, 'src/data/supabase/organizations.js'), 'utf8');
@@ -104,7 +105,7 @@ test('taula: RLS activa, revoke all i només SELECT per a qui administra alguna 
   assert.doesNotMatch(CODI, /using\s*\(\s*true\s*\)/i);
 });
 
-test('cap permís s’hereta: només les tres RPC accedixen a la taula, també en la consolidació posterior', () => {
+test('cap permís s’hereta: escriptures originals i només dues lectures noves amb ACL explícita', () => {
   assert.equal(FUNCIONS.length, 3);
   assert.ok(FUNCIONS.every((f) => f.esquema === 'public'), 'cap funció de private (permisos) es toca');
   for (const permis of ['can_manage_organization', 'is_organization_member', 'can_create_group', 'pot_signar_com_organitzacio']) {
@@ -146,6 +147,47 @@ test('cap permís s’hereta: només les tres RPC accedixen a la taula, també e
       assert.ok(insercio(DESA.cos) && esborrat(LLEVA.cos), 'falten la inserció o l’esborrat de l’original');
       assert.equal(insercio(desa.cos), insercio(DESA.cos), `${fitxer}: la inserció d’organitzacions no canvia`);
       assert.equal(esborrat(lleva.cos), esborrat(LLEVA.cos), `${fitxer}: l’esborrat d’organitzacions no canvia`);
+    } else if (fitxer === CONNEXIONS_PUBLIQUES) {
+      // FEDI23 afegix dues lectures; no obri la taula ni hereta autoritat.
+      const noves = funcions(codi);
+      const lectores = noves.filter(f => /organization_member_organizations/i.test(f.cos));
+      assert.deepEqual(lectores.map(f => `${f.esquema}.${f.nom}`).sort(), [
+        'private.connexions_pertinences', 'public.membres_i_entitats_connectades_de'
+      ], `${fitxer}: només les dues lectores aprovades`);
+      assert.equal((codi.match(/organization_member_organizations/gi) || []).length, 2,
+        `${fitxer}: cap referència fora dels dos SELECT, ni DML, DDL o grant de taula`);
+      for (const f of lectores) {
+        assert.doesNotMatch(f.cos, /\b(?:insert|update|delete|merge|truncate|alter|drop|create|grant|revoke)\b/i, `${f.nom}: només lectura, sense DML/DDL o ACL`);
+        assert.equal((f.cos.match(/\bfrom\s+public\.organization_member_organizations\b/gi) || []).length, 1, f.nom);
+        assert.match(f.capcalera, /\bstable\b[\s\S]*\bsecurity\s+definer\b/i, f.nom);
+        assert.match(f.capcalera, /set\s+search_path\s*=\s*''/i, f.nom);
+      }
+      assert.equal(lectores.find(f => f.esquema === 'private').params, 'p_tipus text,p_id uuid');
+      assert.equal(lectores.find(f => f.esquema === 'public').params, 'p_tipus text,p_id text');
+      for (const nom of ['can_manage_organization', 'is_organization_member', 'can_create_group', 'pot_signar_com_organitzacio']) {
+        assert.ok(!noves.some(f => f.nom === nom), `${fitxer}: no redefinix autoritat ${nom}`);
+      }
+      const acl = codi.split(';').map(SENSE_ESPAIS).filter(s => /^(?:grant|revoke)\b/.test(s));
+      const aclDe = sig => acl.filter(s => s.includes(sig));
+      assert.deepEqual(acl.filter(s => /^grant\b/.test(s)), [
+        'grant execute on function public.preferencies_connexions(text,text),public.desa_visibilitat_connexions(text,text,text,text,text),public.connexions_publiques_de(text,text),public.membres_i_entitats_connectades_de(text,text),public.inclou_persona_en_entitat(uuid,uuid,text),public.solicita_unir_se_a_entitat(uuid,text) to authenticated',
+        'grant execute on function public.connexions_publiques_de(text,text),public.membres_i_entitats_connectades_de(text,text) to anon'
+      ], 'només les dues concessions explícites, sense ALL FUNCTIONS ni helpers privats');
+      assert.doesNotMatch(codi, /\balter\s+default\s+privileges\b/i, 'no modifica permisos per defecte');
+      const privada = aclDe('private.connexions_pertinences(text,uuid)');
+      assert.equal(privada.length, 1, 'helper privat sense cap concessió executable');
+      assert.match(privada[0], /^revoke all on function .* from public,anon,authenticated,service_role$/);
+      const publica = aclDe('public.membres_i_entitats_connectades_de(text,text)');
+      assert.equal(publica.length, 3, 'revoke global i només els dos grants públics aprovats');
+      assert.match(publica[0], /^revoke all on function .* from public,anon,authenticated,service_role$/);
+      assert.match(publica[1], /^grant execute on function .* to authenticated$/);
+      assert.match(publica[2], /^grant execute on function .* to anon$/);
+      // El selector públic conserva consentiment dels dos extrems i bloquejos.
+      const publicCos = lectores.find(f => f.esquema === 'public').cos;
+      assert.match(publicCos, /private\.connexions_global\(p_tipus,v\)/);
+      assert.match(publicCos, /private\.connexions_vincle\(c\.tipus,c\.id,'entitat',v\)/);
+      assert.match(publicCos, /private\.connexions_vincle\('entitat',v,c\.tipus,c\.id\)/);
+      assert.match(publicCos, /not private\.connexions_bloqueig\(c\.tipus,c\.id,'entitat',v\)/);
     } else {
       assert.doesNotMatch(codi, /organization_member_organizations/i, fitxer);
     }

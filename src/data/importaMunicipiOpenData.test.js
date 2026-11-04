@@ -110,7 +110,11 @@ function refa(zip, canvia, { refaDatapackage = true } = {}) {
     dp.resources = dp.resources.filter((r) => fitxers.has(`data/${r.path}`)).map((r) => ({ ...r, ...recurs(`data/${r.path}`) }));
     for (const cami of fitxers.keys()) {
       if (cami.startsWith('data/') && cami !== 'data/datapackage.json' && !dp.resources.some((r) => `data/${r.path}` === cami)) {
-        dp.resources.push({ name: cami.slice(5).replace(/[^a-z0-9._-]/g, '-'), path: cami.slice(5), title: 'x', format: 'json', mediatype: 'application/json', encoding: 'utf-8', ...recurs(cami) });
+        // La fixture respecta el tipus del fitxer per arribar a la porta
+        // profunda de noms/versions que cada prova vol refutar.
+        const format = cami.slice(cami.lastIndexOf('.') + 1);
+        const mediatype = { json: 'application/json', jsonld: 'application/ld+json', md: 'text/markdown', ics: 'text/calendar' }[format];
+        dp.resources.push({ name: cami.slice(5).replace(/[^a-z0-9._-]/g, '-'), path: cami.slice(5), title: 'x', format, mediatype, encoding: 'utf-8', ...recurs(cami) });
       }
     }
     fitxers.set('data/datapackage.json', jsonCanonic(dp));

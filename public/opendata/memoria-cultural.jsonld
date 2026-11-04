@@ -1,4 +1,18 @@
 {
   "@context": "https://schema.org",
-  "@graph": []
+  "@graph": [
+    {
+      "@id": "memoria-cultural.jsonld#rentonar-solidaritat-refugiats-2016",
+      "@type": "CreativeWork",
+      "author": {
+        "@id": "directori.jsonld#rentonar",
+        "@type": "Organization",
+        "identifier": "rentonar",
+        "name": "Associació El Rentonar"
+      },
+      "identifier": "rentonar-solidaritat-refugiats-2016",
+      "name": "Memòria de la campanya solidària del Rentonar de 2016",
+      "text": "Resum documental d’una publicació del Rentonar del 12 d’abril de 2016. L’associació de La Torre de les Maçanes va coordinar una recollida d’ajuda per a persones refugiades, amb punts al poble i a Xixona. El material es va transportar en set vehicles fins als voluntaris de SOS Refugiats d’Onil. És memòria documental pública de l’activitat associativa; no és una entrevista ni una fitxa oral revisada. Font original: https://rentonar.blogspot.com/2016/04/campanya-dajuda-als-refugiats-de-guerra.html"
+    }
+  ]
 }

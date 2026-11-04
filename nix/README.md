@@ -5,9 +5,9 @@ description: "Façana municipal Fediversity per a NixOS: importació del mòdul,
 ---
 # Node municipal de Sóc de Poble per a NixOS
 
-Esta façana reutilitza el `lib.mkWeb` del flake arrel: `package-lock.json`, `importNpmLock`, Node 24, recepta web i la llista pública de fonts, amb una excepció declarada. `nixpkgs` està fixat a la revisió immutable **7dcdd87373d72e7a2173e4db02e20d3d7f495cfd**, observada el 3-11-2026. No hi ha cap hash fictici.
+Esta façana reutilitza el `lib.mkWeb` del flake arrel: `package-lock.json`, `importNpmLock`, Node 24, recepta web i la mateixa llista pública de fonts. `nixpkgs` està fixat a la revisió immutable **7dcdd87373d72e7a2173e4db02e20d3d7f495cfd**, observada el 3-11-2026. No hi ha cap hash fictici.
 
-**Defecte heretat del flake arrel:** el connector Vite `sdp:associacio-apps` exigix `scripts/botigues/associacio-apps.json`, però la font de `flake.nix` arrel (marques `sdp:font-inici`/`sdp:font-fi`) no l'inclou. Per això `nix build .#web`, `checks.web` i `checks.modul-nixos` de l'arrel, i el comprovador de reproductibilitat que construïx des de la mateixa llista, fallen en `vite build`. Esta façana copia el fitxer en el `postPatch` de `nix/flake.nix` com a pegat temporal: és configuració pública (empremtes i orígens), sense cap secret. L'esmena de fons (afegir-lo a la font arrel i retirar el pegat) és decisió del Mestre.
+**Fonts alineades (FEDI-05):** `flake.nix` inclou explícitament `scripts/botigues/associacio-apps.json`, configuració pública que exigix Vite. La façana ja no necessita copiar-la en `postPatch`; el comprovador de reproductibilitat usa la mateixa llista. No s'hi incorpora la resta de `scripts/` ni cap credencial.
 
 **Límit de verificació:** l'amfitrió de construcció no té Nix. Les proves Node i els dos builds de la recepta equivalent sí que s'han executat; `nix eval`, `nix build`, la VM NixOS/Nginx i la generació real de `flake.lock` continuen pendents. No és una release amb lock certificat. En un entorn Nix cal generar i versionar el lock, i després executar els checks sense actualitzar-lo.
 
@@ -60,6 +60,25 @@ Els interruptors són independents. Desactivats, les seues rutes tornen 404, tam
 `public/opendata` és el paquet 1.2.0 de **La Torre de les Maçanes**, amb les seues dades, llicències, URLs d'origen i hashes. Per a un altre municipi, aporteu `openDataSource = ./paquet-public;`, amb un paquet complet coherent, o desactiveu `enableOpenData`. Ha de ser un path Nix (sense cometes) o una derivació: es copia al magatzem i el build en depén. Una ruta absoluta en text (`"/srv/…"`) no la veu el sandbox i falla en avaluar. El build rebutja un slug/nom alié, un recurs absent, un symlink, traversal, una mida o SHA-256 divergent.
 
 El paquet es conserva **byte a byte**: servir-lo en un altre domini no canvia la seua autoria, llicència ni procedència i no el convertix en dades noves. Les URLs internes de la instantània de La Torre continuen apuntant a `socdepoble.org`; no es reetiqueten ni es recalculen hashes per a simular una nova publicació. Les identitats ActivityPub del node es generen per al domini nou, però una migració federada real d'identitat i seguidors requerix el protocol `Move` separat; esta façana no la declara feta.
+
+## Inventari verificat de tot el paquet estàtic
+
+`lib.mkWeb` i la façana municipal heretada generen un inventari determinista **després del `postBuild` municipal i abans de copiar `dist`**. Inclou SHA-256 i bytes de cada fitxer regular, també `.well-known/host-meta`, els dos documents NodeInfo, el `manifest.webmanifest` real, Open Data, assets i fitxers ocults admesos. La llista explícita d’arrels i segments rebutja camins desconeguts o ambigus, symlinks i entrades especials; la verificació exigix cobertura exacta, sense omissions, extres ni directoris afegits. Una segona verificació comprova els bytes copiats.
+
+`out` continua sent només el web estàtic. La sortida Nix separada `integritat` conté `inventari-dist.json` i `sha256-confiat`; així cap fitxer de `dist` queda exclòs per autoreferència. Amb l’instal·lador `--build`, l’inventari queda fora de `dist`, a l’arrel del node, i el rebut `node-germa.json` porta `compilacio.inventari`, `sha256Confiat`, nombre de fitxers i bytes. L’inventari inicial de fonts del mateix rebut es conserva separat dels artefactes compilats.
+
+El verificador requerix una empremta de confiança externa explícita; no calcula un hash del manifest rebut i el considera automàticament fiable:
+
+```sh
+node tooling/instalador/inventari-estatic.mjs verifica \
+  --dist /ruta/al/web \
+  --manifest /ruta/al/inventari-dist.json \
+  --sha256-confiat DIGEST_REBUT_PER_UN_CANAL_DE_CONFIANCA
+```
+
+Conserveu i distribuïu el digest del rebut de construcció per un canal fiable independent del paquet que verifiqueu. Recalcular manifest i hash després d’alterar el web només crea un inventari diferent: no acredita autoria ni autenticitat. El check del flake usa l’anchor de la seua construcció per comprovar consistència, i la confiança en la release/derivació ha de vindre del canal de distribució de l’operador. Este inventari SHA-256 **no és** la firma pública del manifest del Node 0 i no la substituïx; si n’hi ha una dins `dist`, també queda inventariada com qualsevol altre fitxer. No es llig cap clau privada ni es posa cap secret al magatzem de Nix.
+
+Les proves Node alteren, lleven i afigen artefactes de totes les categories, rebutgen un manifest recalculat amb l’anchor original i executen el fragment d’instal·lació real en shell, amb una còpia alterada entre controls. El productor es contrasta amb dos entorns i rutes diferents. `checks.integritat-estatica` de l’arrel i el check de l’instal·lador incorporen estos controls. El límit indicat al principi continua vigent: no s’ha executat Nix en este amfitrió.
 
 ## Verificació
 

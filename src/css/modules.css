@@ -504,6 +504,7 @@ aside.sdp-workspace-column > .app-grid-col-header--dark:nth-of-type(2) {
 :where(.sdp-root.is-compact) .sdp-workspace--universal > .app-grid-shell > .app-grid-content > .app-grid-column > .sdp-workspace-column > .sdp-workspace-column__body,
 :where(.sdp-root.is-compact) .sdp-workspace--universal > .app-grid-shell > .app-grid-content > .app-grid-column--right > .sdp-workspace-detail {
   padding-bottom: calc(var(--sdp-alt-nav-mobil) + env(safe-area-inset-bottom, 0px));
+  scroll-padding-bottom: calc(var(--sdp-alt-nav-mobil) + env(safe-area-inset-bottom, 0px) + var(--sdp-space-4));
 }
 /* Llei de la Roda Dentada (ordre del Mestre, 261007) · La configuració de
    l'espai de treball (WorkspaceSettingsDialog): «Amplada de les columnes» i
@@ -999,6 +1000,10 @@ aside.sdp-workspace-column > .app-grid-col-header--dark:nth-of-type(2) {
 }
 .sdp-brain-graph-canvas--grab { cursor: grab; }
 .sdp-brain-graph-canvas--grabbing { cursor: grabbing; }
+.sdp-brain-graph-canvas:focus-visible {
+  outline: var(--sdp-focus-gruix) solid var(--sdp-focus);
+  outline-offset: calc(var(--sdp-focus-gruix) * -1);
+}
 
 .sdp-brain-graph-controls {
   position: absolute;
@@ -8624,7 +8629,6 @@ details[open] summary.accordion-header svg:last-child {
      mateixa etiqueta .sdp-connectar__tipus de l'objecte), a prop del que
      encapçala; dins d'un camí, els blocs guarden l'espai de la vista. */
   .sdp-connectar > .sdp-divisor { margin: 0; }
-  .sdp-connectar__cami { display: flex; flex-direction: column; gap: var(--sdp-space-8); }
   .sdp-connectar__cami-cap {
     display: flex;
     flex-direction: column;
@@ -8640,6 +8644,217 @@ details[open] summary.accordion-header svg:last-child {
     border-radius: var(--sdp-radi-s);
     background: var(--sdp-fons-subtil);
     overflow-wrap: anywhere;
+  }
+
+  /* FEDI-22 (ordre del Mestre, 261103; captura 261103_2055) · /connectar a
+     tota l'amplària útil: una graella de targetes on el primer que es veu és
+     CONNECTAR. Només classes i modificadors nous: cap regla .sdp-connectar*
+     de dalt canvia (Notes les reutilitza: SnippetCurador i
+     PrevisualitzacioExtern, que continua estreta). En un perfil, la targeta
+     de la connexió directa (centrada, amb la fitxa compacta i el primari
+     gran) i, davall, la d'incloure o formar part (una al costat de l'altra
+     només si caben 36rem cadascuna), i «Guardar a les teues notes» plegat al
+     final, a tota l'amplària; en un element, l'objecte i les notes a la
+     principal, i la relació i formar part a la columna lateral, quan la
+     pàgina (.sdp-universal-page-container, contenidor inline-size) arriba al
+     tall de 64rem; sense @container, la xarxa de 90rem (Baseline 2022). Res
+     de sticky ni d'`order`: el focus seguix el DOM.
+     Revisió 261104 (RA-01 i RA-03) · El primari de T1 dins de la pantalla a
+     1280×800: dins de T1 (contenidor sdp-connectar-directa), des de 36rem,
+     dues columnes, qui i amb quin barret a l'esquerra i l'avís i el primari
+     a la dreta; la píndola triada de «Connectar com a» ja no és blau ple (es
+     confonia amb el primari): vora d'acció, fons subtil i una marca.
+     El logotip de la capçalera, al mínim de la norma 261004 (260px), només
+     ací: el Mestre es queixava del cartell gegant que espentava els botons
+     fora de pantalla. Es desfà esborrant este bloc i les classes. */
+  .sdp-connectar-pagina .page-title-logo { width: min(100%, 260px); }
+  .sdp-connectar--graella { max-width: none; }
+  .sdp-connectar__principal,
+  .sdp-connectar__lateral { display: flex; flex-direction: column; gap: var(--sdp-space-8); min-width: 0; }
+  .sdp-connectar__principal--targetes {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 36rem), 1fr));
+    align-items: start;
+  }
+  .sdp-connectar__targeta {
+    display: flex;
+    flex-direction: column;
+    gap: var(--sdp-space-4);
+    min-width: 0;
+    padding: var(--sdp-space-6);
+    border: 1px solid var(--sdp-vora);
+    border-radius: var(--sdp-radi-g);
+    background: var(--sdp-fons-targeta);
+  }
+  .sdp-connectar__targeta > p { margin: 0; }
+  /* C8 · La llegenda d'un fieldset no es centra amb text-align, i les
+     píndoles van sempre des del centre (lliçó 261103 de Pedra Seca). */
+  .sdp-connectar__targeta .sdp-variants__llegenda { margin-inline: auto; }
+  .sdp-connectar__targeta .sdp-variants__pindoles { justify-content: center; }
+  .sdp-connectar__targeta--directa { container: sdp-connectar-directa / inline-size; align-items: center; text-align: center; }
+  /* C8 · Cap línia centrada més llarga que la mesura de lectura. */
+  .sdp-connectar__targeta--directa p { max-inline-size: var(--sdp-measure); }
+  .sdp-connectar__targeta--directa .sdp-connectar__seccio { align-items: center; }
+  .sdp-connectar__targeta--directa .sdp-boto--primari { min-inline-size: min(100%, 20rem); }
+  .sdp-connectar__targeta--directa .sdp-alerta { align-self: stretch; text-align: start; }
+  /* RA-01 · Dins de T1: qui (la fitxa i «Connectar com a») i la relació (l'avís i
+     el primari). Una columna fins a 36rem; des d'ací, dues, i el primari puja. */
+  .sdp-connectar__directa,
+  .sdp-connectar__qui,
+  .sdp-connectar__relacio {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--sdp-space-4);
+    align-self: stretch;
+    min-inline-size: 0;
+  }
+  @container sdp-connectar-directa (min-width: 36rem) {
+    .sdp-connectar__directa--dues {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: var(--sdp-space-8);
+      align-items: start;
+    }
+  }
+  /* RA-03 · La píndola triada de les targetes: vora del blau d'acció fort
+     (9,21:1 en clar; en fosc, el blau clar d'--sdp-accio-text: el blau de
+     control feia 1,95:1 sobre la targeta fosca), fons subtil i una marca (una
+     vora girada, sense text ni icona nova), mai el blau ple del primari. En
+     colors forçats, la selecció del sistema. */
+  .sdp-connectar__targeta .sdp-variant__control:checked + .sdp-variant__pindola {
+    border-color: var(--sdp-accio-forta);
+    background: var(--sdp-accio-subtil);
+    color: var(--sdp-text-titol);
+  }
+  .sdp-connectar__targeta .sdp-variant__control:checked + .sdp-variant__pindola::before {
+    content: '';
+    flex: none;
+    inline-size: var(--sdp-space-2);
+    block-size: var(--sdp-space-3);
+    margin-block-start: calc(var(--sdp-space-1) * -1);
+    border-inline-end: 2px solid currentColor;
+    border-block-end: 2px solid currentColor;
+    transform: rotate(45deg);
+  }
+  @media (forced-colors: active) {
+    .sdp-connectar__targeta .sdp-variant__control:checked + .sdp-variant__pindola {
+      border-color: Highlight;
+      background: Highlight;
+      color: HighlightText;
+    }
+  }
+  /* RA-01 · En un mòbil (la pàgina fins a 30rem), T1 més compacta: el coixí i
+     els espais d'un pas menys. */
+  @container (max-width: 30rem) {
+    .sdp-connectar__targeta--directa { gap: var(--sdp-space-3); padding: var(--sdp-space-4); }
+    .sdp-connectar__directa,
+    .sdp-connectar__qui,
+    .sdp-connectar__relacio { gap: var(--sdp-space-3); }
+  }
+  /* C-02 · L'avís d'error que rep el focus quan una acció falla: a tota
+     l'amplària, i el contorn del focus s'ajusta a l'Alerta (sense el seu marge). */
+  .sdp-connectar__error { align-self: stretch; }
+  .sdp-connectar__error > .sdp-alerta { margin-block: 0; }
+  /* C7 · La fitxa compacta: l'avatar (lg, 56px) en fila amb el nom i el tipus. */
+  .sdp-connectar__fitxa {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: var(--sdp-space-3);
+  }
+  .sdp-connectar__fitxa-text { display: flex; flex-direction: column; gap: var(--sdp-space-1); min-inline-size: 0; text-align: start; }
+  .sdp-connectar__fitxa-nom {
+    margin: 0;
+    font-size: var(--sdp-text-h5);
+    font-weight: 700;
+    line-height: 1.2;
+    color: var(--sdp-text-titol);
+    overflow-wrap: anywhere;
+  }
+  .sdp-connectar__accions { display: flex; flex-wrap: wrap; justify-content: center; gap: var(--sdp-space-2); }
+  /* Targeta 3 · «Guardar a les teues notes», un <details>: el resum és una
+     diana tàctil sencera (48 + 16) i la fletxa és una vora girada (sense
+     icona ni color nou). */
+  .sdp-connectar__notes {
+    min-width: 0;
+    border: 1px solid var(--sdp-vora);
+    border-radius: var(--sdp-radi-g);
+    background: var(--sdp-fons-targeta);
+  }
+  .sdp-connectar__notes-resum {
+    display: flex;
+    align-items: center;
+    gap: var(--sdp-space-3);
+    min-block-size: calc(var(--sdp-touch) + var(--sdp-space-4));
+    padding: var(--sdp-space-3) var(--sdp-space-4);
+    border-radius: var(--sdp-radi-g);
+    color: var(--sdp-text-titol);
+    font-weight: 700;
+    cursor: pointer;
+    list-style: none;
+  }
+  .sdp-connectar__notes-resum::-webkit-details-marker { display: none; }
+  .sdp-connectar__notes-resum::after {
+    content: '';
+    flex: none;
+    margin-inline-start: auto;
+    inline-size: var(--sdp-space-2);
+    block-size: var(--sdp-space-2);
+    border-inline-end: 2px solid currentColor;
+    border-block-end: 2px solid currentColor;
+    transform: rotate(-45deg);
+    transition: transform var(--sdp-t);
+  }
+  .sdp-connectar__notes[open] > .sdp-connectar__notes-resum::after { transform: rotate(45deg); }
+  @media (hover: hover) and (pointer: fine) {
+    .sdp-connectar__notes-resum:hover { background: var(--sdp-fons-hover-subtil); }
+  }
+  .sdp-connectar__notes-resum:focus-visible { outline: var(--sdp-focus-gruix) solid var(--sdp-focus); outline-offset: var(--sdp-space-1); }
+  .sdp-connectar__notes-icona {
+    display: inline-flex;
+    flex: none;
+    align-items: center;
+    justify-content: center;
+    inline-size: var(--sdp-space-10);
+    block-size: var(--sdp-space-10);
+    border-radius: var(--sdp-radi-s);
+    background: var(--sdp-accent-subtil);
+    color: var(--sdp-accent-titol);
+  }
+  .sdp-connectar__notes-rotul { display: flex; flex-direction: column; gap: var(--sdp-space-1); min-inline-size: 0; }
+  .sdp-connectar__notes-titol { font-size: var(--sdp-text-h6); line-height: 1.2; }
+  .sdp-connectar__notes-cos {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 24rem), 1fr));
+    gap: var(--sdp-space-8);
+    align-items: start;
+    padding: var(--sdp-space-4) var(--sdp-space-6) var(--sdp-space-6);
+  }
+  .sdp-connectar__notes-cos > .sdp-connectar__identitat,
+  .sdp-connectar__notes-cos > .sdp-connectar__ajuda,
+  .sdp-connectar__notes-cos > .sdp-connectar__peu { grid-column: 1 / -1; }
+  .sdp-connectar__notes-cos > .sdp-connectar__peu { justify-self: center; inline-size: min(100%, var(--sdp-measure)); }
+  @container (min-width: 64rem) {
+    .sdp-connectar--amb-lateral {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(18rem, 24rem);
+      gap: var(--sdp-space-8);
+      align-items: start;
+    }
+    .sdp-connectar--amb-lateral > .sdp-alerta { grid-column: 1 / -1; }
+  }
+  @supports not (container-type: inline-size) {
+    @media (min-width: 90rem) {
+      .sdp-connectar--amb-lateral {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) minmax(18rem, 24rem);
+        gap: var(--sdp-space-8);
+        align-items: start;
+      }
+      .sdp-connectar--amb-lateral > .sdp-alerta { grid-column: 1 / -1; }
+    }
   }
 
   /* Resum per destinatari (ResumConnexio): l'estat es llig en text; la
@@ -14051,11 +14266,6 @@ details[open] summary.accordion-header svg:last-child {
   .sdp-taula-nutricional th,
   .sdp-taula-nutricional td {
     padding: var(--sdp-space-2) var(--sdp-space-4);
-  }
-  .sdp-taula-nutricional .sdp-nutri-sub {
-    padding-inline-start: var(--sdp-space-8);
-    color: var(--sdp-text-suau);
-    font-weight: 400;
   }
   .sdp-taula-nutricional tbody tr:last-child th,
   .sdp-taula-nutricional tbody tr:last-child td {

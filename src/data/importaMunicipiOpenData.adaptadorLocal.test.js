@@ -149,6 +149,7 @@ test('D-01 (sonda2) · seed: un lot de Benillup no es queda l’entitat del padr
 test('D-01 (sonda3) · seed: el slug de La Torre amb un altre nom, o el nom de La Torre amb un altre slug, no entra', async () => {
   const A = creaAdaptadorLocal({ mode: 'seed', restauracioOberta: true });
   const pobles = (await A.loadCoreContent()).towns;
+  const directoriInicial = await A.listPublicOrganizations({ poble: TORRE.nom });
   const entitat = (nom) => ({ id: 'ent-x', name: 'Entitat X', town_name: nom, visibility: 'public' });
   const noticia = (slug) => ({ id: 'n-x', title: 'Notícia X', author_org_id: 'ent-x', poble_id: slug, visibility: 'public' });
   for (const municipi of [{ slug: TORRE.slug, nom: 'Torre Falsa' }, { slug: 'torre-falsa', nom: TORRE.nom }]) {
@@ -157,7 +158,7 @@ test('D-01 (sonda3) · seed: el slug de La Torre amb un altre nom, o el nom de L
   }
   expect((await A.loadCoreContent()).towns).toEqual(pobles);
   expect((await A.llegixDadesObertes({ poble: TORRE })).noticies.map((n) => n.id)).not.toContain('n-x');
-  expect((await A.listPublicOrganizations({ poble: TORRE.nom })).map((o) => o.id)).toEqual(['rentonar', 'socdepoble']);
+  expect(await A.listPublicOrganizations({ poble: TORRE.nom })).toEqual(directoriInicial);
   await A.destroy();
 });
 

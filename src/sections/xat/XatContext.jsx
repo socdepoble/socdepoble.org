@@ -190,6 +190,7 @@ import {
   publicaAdjuntXat,
   marcaLlegit,
   creaFilDirecte,
+  loadPerfilPublic,
   carregaMembres,
   subscribeToXat,
   unsubscribeFromXat,
@@ -1924,7 +1925,24 @@ export function XatProvider({ children, config }) {
        directe amb un mateix (SDP-XAT-002) ni cap DESTINATARI_INVALID. */
     if (filServeiTecnic && esComptePersonaPilot({ id: altreUsuariId })) return ID_FIL_DE_MOSTRA_DE_JAVI;
     try {
-      const filId = await creaFilDirecte(altreUsuariId, titol, { ...config, signal: op.controller.signal });
+      const opcions = { ...config, signal: op.controller.signal };
+      let filId;
+      try {
+        filId = await creaFilDirecte(altreUsuariId, titol, opcions);
+      } catch (error) {
+        /* El proveïdor decidix el format dels ids. Si rebutja el de la URL,
+           un slug d'organització es resol al directori del mateix port i
+           poble; mai es canvia el destinatari per la comunitat del projecte.
+           La resolució conserva el senyal i les guardes de sessió/relleu. */
+        const rebutjaLaClau = error?.code === 'DESTINATARI_INVALID'
+          || (modeDades !== 'remote' && error?.code === 'SDP-XAT-004');
+        if (!vigent(op) || !rebutjaLaClau || !teCapacitat('directori')) throw error;
+        const perfil = await loadPerfilPublic(altreUsuariId, opcions);
+        if (vigent(op)) {
+          if (!['entitat', 'grup'].includes(perfil?.tipus) || !perfil.id || perfil.id === altreUsuariId) throw error;
+          filId = await creaFilDirecte(perfil.id, titol, opcions);
+        }
+      }
       if (vigent(op)) {
         await carregaFils();
         if (vigent(op)) return filId;
@@ -1933,7 +1951,7 @@ export function XatProvider({ children, config }) {
       if (vigent(op)) throw error;
     }
     return despresDelRelleu(op, accionsRef, 'creaFil', [altreUsuariId, titol]);
-  }, [joId, filServeiTecnic, config, captura, vigent, accioVigent, carregaFils]);
+  }, [joId, filServeiTecnic, modeDades, config, captura, vigent, accioVigent, carregaFils]);
 
   /* ── T63.2 i T67 · El xat comú d'una Pàgina Universal ──
      Null si el subjecte no en té; 'sense-capacitat' si el backend no el sap

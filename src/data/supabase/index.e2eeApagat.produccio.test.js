@@ -42,6 +42,7 @@ const APP = 'src/main.jsx';
 const HOST = 'src/host.js';
 const TRANSPORT = /[\\/]data[\\/]supabase[\\/]xatXifrat\.js$/;
 const ES_HOST = /[\\/]src[\\/]host\.js$/;
+const LABORATORI_UI = /[\\/]profile[\\/]ProvaXifratXat\.jsx$/;
 const BANDERA = /[\\/]config[\\/]xifratXat\.js$/;
 const APAGADA = 'export const E2EE_ACTIU_PER_DEFECTE = false;';
 /* La UI, fora només al control positiu del graf de host.js. */
@@ -173,6 +174,8 @@ describe('el paquet de producció, amb la bandera apagada, no porta el motor ni 
 
   test('graf de producció (main.jsx): només les peces neutrals del xifratge hi deixen codi; cap màgia ni rastre', async () => {
     const { codi, moduls, exportsPrimitives } = await compila({ entrada: APP });
+    /* La prova local de FEDI-07 és DEV: ni tan sols la seua UI entra al paquet. */
+    expect(ambCodi(moduls, LABORATORI_UI)).toEqual([]);
     expect(ambCodi(moduls, XIFRATGE).filter((id) => !PERMESOS_APP.test(id))).toEqual([]);
     expect(fora(exportsPrimitives, PRIMITIVES_PERMESES)).toEqual([]);
     expect(magies(codi)).toEqual([]);

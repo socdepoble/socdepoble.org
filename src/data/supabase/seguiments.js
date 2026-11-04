@@ -30,9 +30,10 @@
    una configuració sense mode és remota. El `signal` de la configuració
    arriba sempre a fetch (rpc() el pren de les opcions, el 4t argument). */
 import { getCurrentUser, getResolvedConfig, rpc } from './runtime.js';
-import { getDefaultUserId } from '../identitat.js';
+import { capturaSessio, getDefaultUserId } from '../identitat.js';
 import { MISSATGES_SEGUIMENTS, TIPUS_SEGUIT, comDelContracte, errorDeSeguiment, seguitDelContracte } from '../contracte.js';
-import { llistaBloquejos } from './moderacio.js';
+import { bloqueigLocalEntre, llistaBloquejos } from './moderacio.js';
+import { errorDeConnexions, errorDeMembre, subjecteConnexionsDelContracte, visibilitatConnexionsDelContracte, inclusioPersonaDelContracte, sollicitudEntitatDelContracte } from '../contracte.js';
 
 const MODES_LOCALS = new Set(['seed', 'local']);
 const esModeLocal = (config) => MODES_LOCALS.has(getResolvedConfig(config).runtimeDataMode);
@@ -50,7 +51,9 @@ async function seguimentsLocals() {
 async function contextLocal(config) {
   const usuari = getCurrentUser();
   const bloquejos = await llistaBloquejos(config).catch(() => []);
-  return { usuari, qui: usuari?.id || getDefaultUserId(), bloquejos: Array.isArray(bloquejos) ? bloquejos : [] };
+  const { localPerfils } = await import('../localPerfils.js');
+  return { usuari, qui: usuari?.id || getDefaultUserId(), bloquejos: Array.isArray(bloquejos) ? bloquejos : [],
+    bloqueigEntre: (a, b) => bloqueigLocalEntre(a, b, (orgId, personaId) => localPerfils.listMyOrganizations({ id: personaId }).some(o => String(o.id) === String(orgId))) };
 }
 
 /* El cos JSON de «Supabase NNN: {…}» (runtime.request), o null: PostgREST hi
@@ -181,4 +184,119 @@ export async function quiEmSegueix(opcions = {}, config = {}) {
     .map((fila) => ({ fila, tipus: fila?.seguidor_tipus ?? 'persona' }))
     .filter(({ fila, tipus }) => fila?.id && TIPUS_SEGUIT.includes(tipus))
     .map(({ fila, tipus }) => ({ tipus, id: String(fila.id), nom: textONull(fila.nom), creatAl: fila.creat_al ?? null }));
+}
+
+/* FEDI23 · Les sis operacions noves comparteixen el servidor local en seed;
+   en remot només RPC amb atribució i control SQL, mai taules directes. */
+const CODIS_CONNEXIONS = new Set(['SDP-CONN-000', 'SDP-CONN-001', 'SDP-CONN-002', 'SDP-CONN-003', 'NO-DISPONIBLE', 'DESCONEGUT']);
+const AVORTAT_NATIU = Object.getOwnPropertyDescriptor(AbortSignal.prototype, 'aborted').get;
+function configConnexions(config) {
+  if (!config || typeof config !== 'object' || Array.isArray(config)) throw errorDeConnexions('SDP-CONN-001');
+  const net = {};
+  for (const key of Object.keys(config)) {
+    const d = Object.getOwnPropertyDescriptor(config, key);
+    if (!d || !Object.hasOwn(d, 'value')) throw errorDeConnexions('SDP-CONN-001');
+    if (key === 'signal' && d.value != null) {
+      try { AVORTAT_NATIU.call(d.value); if (Object.hasOwn(d.value, 'aborted')) throw new TypeError('signal'); }
+      catch { throw errorDeConnexions('SDP-CONN-001'); }
+      net.signal = d.value;
+    } else if (d.value == null || ['string', 'boolean', 'number'].includes(typeof d.value)) net[key] = d.value;
+    else throw errorDeConnexions('SDP-CONN-001');
+  }
+  return Object.freeze(net);
+}
+function contextConnexions(config, privat) {
+  const sessio = capturaSessio(), persona = getCurrentUser()?.id ?? null;
+  const net = configConnexions(config);
+  const comprova = () => { sessio(); if ((getCurrentUser()?.id ?? null) !== persona || (net.signal && AVORTAT_NATIU.call(net.signal))) throw new DOMException('Operació cancel·lada.', 'AbortError'); };
+  comprova();
+  const local = esModeLocal(net);
+  if (privat && !persona) throw errorDeConnexions('SDP-CONN-000');
+  if (!local && !getResolvedConfig(net).hasSupabaseConfig) throw errorDeConnexions('NO-DISPONIBLE');
+  return { config: net, persona, local, comprova };
+}
+function validaCridaConnexions(validador, dades, config, privat) {
+  const sessio = capturaSessio(), persona = getCurrentUser()?.id ?? null;
+  const net = validador(dades);
+  sessio();
+  if ((getCurrentUser()?.id ?? null) !== persona) throw new DOMException('La sessió ha canviat.', 'AbortError');
+  return { net, ctx: contextConnexions(config, privat) };
+}
+function subjecteRemotConnexions(subjecte) {
+  if (subjecte.tipus !== 'poble' && !RE_UUID.test(subjecte.id)) throw errorDeConnexions('SDP-CONN-001');
+  if (subjecte.tipus === 'poble' && !RE_UUID.test(subjecte.id) && !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(subjecte.id)) throw errorDeConnexions('SDP-CONN-001');
+  return { ...subjecte, id: RE_UUID.test(subjecte.id) ? subjecte.id.toLowerCase() : subjecte.id };
+}
+function errorConnexionsRpc(error) {
+  if (error?.name === 'AbortError' || error?.name === 'TimeoutError' || CODIS_CONNEXIONS.has(error?.code)) return error;
+  const cos = cosDePostgrest(error), missatge = typeof cos?.message === 'string' ? cos.message : typeof error?.message === 'string' ? error.message : '';
+  const membre = /SDP-ORGMEM-\d{3}/.exec(missatge)?.[0];
+  if (membre) return errorDeMembre(membre, error);
+  const codi = /SDP-CONN-\d{3}/.exec(missatge)?.[0];
+  return errorDeConnexions(CODIS_CONNEXIONS.has(codi) ? codi : error?.status === 404 ? 'NO-DISPONIBLE' : error?.status === 401 ? 'SDP-CONN-000' : 'DESCONEGUT', error);
+}
+async function executaConnexions(ctx, metode, dades, nomRpc, body) {
+  ctx.comprova();
+  try {
+    let resultat;
+    if (ctx.local) {
+      const servidor = await seguimentsLocals(), context = await contextLocal(ctx.config);
+      ctx.comprova(); resultat = await servidor[metode](dades, context);
+    } else resultat = await rpc(nomRpc, body, ctx.config, { signal: ctx.config.signal });
+    ctx.comprova(); return resultat;
+  } catch (error) { ctx.comprova(); throw errorConnexionsRpc(error); }
+}
+function filaConnexions(fila) {
+  if (!fila || !['persona', 'entitat'].includes(fila.tipus) || typeof fila.id !== 'string' || !RE_UUID.test(fila.id)
+    || typeof fila.ruta !== 'string' || fila.ruta !== `/${fila.tipus === 'persona' ? 'gent' : 'entitats'}/${fila.id}`
+    || typeof fila.creatAl !== 'string' || !Number.isFinite(Date.parse(fila.creatAl)) || !['sortint', 'entrant', 'mutua', 'membre', 'poble'].includes(fila.direccio)) throw errorDeConnexions('DESCONEGUT');
+  return { tipus: fila.tipus, id: fila.id, nom: typeof fila.nom === 'string' ? fila.nom : '', avatar: typeof fila.avatar === 'string' ? fila.avatar : '', ruta: fila.ruta, creatAl: fila.creatAl, direccio: fila.direccio,
+    ...(['administrador', 'treballador', 'usuari'].includes(fila.rol) ? { rol: fila.rol } : {}),
+    ...(['publica', 'privada'].includes(fila.visibilitatConnexions) ? { visibilitatConnexions: fila.visibilitatConnexions } : {}) };
+}
+function llistaConnexions(resposta) {
+  if (!Array.isArray(resposta)) throw errorDeConnexions('DESCONEGUT');
+  return resposta.map(filaConnexions);
+}
+function preferenciesRemotes(resposta, subjecte) {
+  if (!resposta || resposta.tipus !== subjecte.tipus || typeof resposta.id !== 'string' || !RE_UUID.test(resposta.id)
+    || ((subjecte.tipus !== 'poble' || RE_UUID.test(subjecte.id)) && resposta.id !== subjecte.id) || !['publica', 'privada'].includes(resposta.visibilitatConnexions)) throw errorDeConnexions('DESCONEGUT');
+  return { tipus: resposta.tipus, id: resposta.id, visibilitatConnexions: resposta.visibilitatConnexions, connexions: llistaConnexions(resposta.connexions) };
+}
+export async function preferenciesConnexions(dades, config = {}) {
+  const { ctx, net } = validaCridaConnexions(subjecteConnexionsDelContracte, dades, config, true), subjecte = ctx.local ? net : subjecteRemotConnexions(net);
+  const r = await executaConnexions(ctx, 'preferenciesConnexions', net, 'preferencies_connexions', { p_tipus: subjecte.tipus, p_id: subjecte.id });
+  return ctx.local ? r : preferenciesRemotes(r, subjecte);
+}
+export async function desaVisibilitatConnexions(dades, config = {}) {
+  const { ctx, net } = validaCridaConnexions(visibilitatConnexionsDelContracte, dades, config, true), subjecte = ctx.local ? net : subjecteRemotConnexions(net);
+  const altre = net.connexio && (ctx.local ? net.connexio : subjecteRemotConnexions(net.connexio));
+  const r = await executaConnexions(ctx, 'desaVisibilitatConnexions', net, 'desa_visibilitat_connexions', { p_tipus: subjecte.tipus, p_id: subjecte.id, p_visibilitat: net.visibilitatConnexions, p_connexio_tipus: altre?.tipus ?? null, p_connexio_id: altre?.id ?? null });
+  return ctx.local ? r : preferenciesRemotes(r, subjecte);
+}
+export async function connexionsPubliquesDe(dades, config = {}) {
+  const { ctx, net } = validaCridaConnexions(subjecteConnexionsDelContracte, dades, config, false), subjecte = ctx.local ? net : subjecteRemotConnexions(net);
+  const r = await executaConnexions(ctx, 'connexionsPubliquesDe', net, 'connexions_publiques_de', { p_tipus: subjecte.tipus, p_id: subjecte.id });
+  return ctx.local ? r : llistaConnexions(r);
+}
+export async function membresIEntitatsConnectadesDe(dades, config = {}) {
+  const { ctx, net } = validaCridaConnexions(subjecteConnexionsDelContracte, dades, config, false);
+  if (!['entitat', 'poble'].includes(net.tipus)) throw errorDeConnexions('SDP-CONN-001');
+  const subjecte = ctx.local ? net : subjecteRemotConnexions(net);
+  const r = await executaConnexions(ctx, 'membresIEntitatsConnectadesDe', net, 'membres_i_entitats_connectades_de', { p_tipus: subjecte.tipus, p_id: subjecte.id });
+  return ctx.local ? r : llistaConnexions(r);
+}
+export async function inclouPersonaEnEntitat(dades, config = {}) {
+  const { ctx, net } = validaCridaConnexions(inclusioPersonaDelContracte, dades, config, true);
+  if (!ctx.local && (![net.orgId, net.personaId].every(id => RE_UUID.test(id)))) throw errorDeConnexions('SDP-CONN-001');
+  const r = await executaConnexions(ctx, 'inclouPersonaEnEntitat', net, 'inclou_persona_en_entitat', { p_org_id: net.orgId, p_persona_id: net.personaId, p_rol: net.rol });
+  if (!r || r.orgId !== net.orgId || r.personaId !== net.personaId || r.rol !== net.rol) throw errorDeConnexions('DESCONEGUT');
+  return { orgId: r.orgId, personaId: r.personaId, rol: r.rol };
+}
+export async function solicitaUnirSeAEntitat(dades, config = {}) {
+  const { ctx, net } = validaCridaConnexions(sollicitudEntitatDelContracte, dades, config, true);
+  if (!ctx.local && !RE_UUID.test(net.orgId)) throw errorDeConnexions('SDP-CONN-001');
+  const r = await executaConnexions(ctx, 'solicitaUnirSeAEntitat', net, 'solicita_unir_se_a_entitat', { p_org_id: net.orgId, p_rol: net.rol });
+  if (!r || r.orgId !== net.orgId || r.personaId !== ctx.persona || r.rol !== net.rol || r.estat !== 'pendent') throw errorDeConnexions('DESCONEGUT');
+  return { orgId: r.orgId, personaId: r.personaId, rol: r.rol, estat: 'pendent' };
 }

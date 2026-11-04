@@ -358,6 +358,6 @@ export function main(argv = process.argv.slice(2)) {
   return result;
 }
 
-if (process.argv[1] && pathToFileURL(fs.realpathSync(path.resolve(process.argv[1]))).href === import.meta.url) {
+if (process.argv[1] && import.meta.url === pathToFileURL(fs.realpathSync(path.resolve(process.argv[1]))).href) {
   try { main(); } catch (error) { process.stderr.write(`${error.message}\n`); process.exitCode = 1; }
 }

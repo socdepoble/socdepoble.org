@@ -187,10 +187,18 @@ test('en mode de proves, el Mercat no fa cap petició de xarxa pel seu compte', 
   const fetch = vi.fn(() => { throw new Error('Xarxa inesperada en mode de proves'); });
   vi.stubGlobal('fetch', fetch);
   const errors = vi.spyOn(console, 'error');
-  mocks.load.mockResolvedValue({ feedPosts: APP_SEED.feedPosts, events: APP_SEED.events, marketItems: APP_SEED.marketItems });
+  // Dos productes independents: els formats d’una família es mostren en una sola targeta.
+  // Esta prova vigila la xarxa, no el nombre de variants de la llavor global.
+  const productes = [
+    { id: 'prova-pa', type: 'market', title: 'Pa de prova', price: '2 €', created_at: '2026-09-30T10:00:00.000Z' },
+    { id: 'prova-mel', type: 'market', title: 'Mel de prova', price: '4 €', created_at: '2026-09-30T10:00:00.000Z' }
+  ];
+  mocks.load.mockResolvedValue({ feedPosts: APP_SEED.feedPosts, events: APP_SEED.events, marketItems: productes });
   pinta(CONFIG_SEED);
-  await waitFor(() => expect(targetes()).toHaveLength(APP_SEED.marketItems.length));
-  expect(APP_SEED.marketItems.length).toBeGreaterThan(0);
+  await waitFor(() => expect(targetes()).toHaveLength(productes.length));
+  expect(screen.getByText('Pa de prova')).toBeTruthy();
+  expect(screen.getByText('Mel de prova')).toBeTruthy();
+  expect(productes.length).toBeGreaterThan(0);
   expect(mocks.load).toHaveBeenCalledWith('A', expect.objectContaining({ dataMode: 'seed' }));
   expect(screen.queryByRole('alert')).toBeNull();
   expect(fetch).not.toHaveBeenCalled();

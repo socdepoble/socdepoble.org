@@ -388,7 +388,7 @@ function socdepoble_enxufe_traduccio_reserva( $caracters ) {
 	$mes = gmdate( 'Y-m' );
 	$diari = ( $estat['dia'] ?? '' ) === $dia ? (int) ( $estat['diari'] ?? 0 ) : 0;
 	$mensual = ( $estat['mes'] ?? '' ) === $mes ? (int) ( $estat['mensual'] ?? 0 ) : 0;
-	if ( $diari + $caracters > socdepoble_enxufe_traduccio_limit( 'SDP_TRADUCCIO_LIMIT_DIARI', 100000 ) || $mensual + $caracters > socdepoble_enxufe_traduccio_limit( 'SDP_TRADUCCIO_LIMIT_MENSUAL', 1000000 ) ) {
+	if ( $diari + $caracters > socdepoble_enxufe_traduccio_limit( 'SDP_TRADUCCIO_LIMIT_DIARI', 10000 ) || $mensual + $caracters > socdepoble_enxufe_traduccio_limit( 'SDP_TRADUCCIO_LIMIT_MENSUAL', 100000 ) ) {
 		return socdepoble_enxufe_traduccio_error( 'limit', 429 );
 	}
 	$nou = wp_json_encode( array( 'dia' => $dia, 'mes' => $mes, 'diari' => $diari + $caracters, 'mensual' => $mensual + $caracters ) );
@@ -477,8 +477,10 @@ function socdepoble_enxufe_traduir( $request ) {
 	$locks = array();
 	$pressupost = false;
 	try {
-		// Pany per text: lots diferents poden traduir en paral·lel. Les parts
-		// compartides no es facturen dues vegades. Mai esperem amb panys presos.
+		// Pany per text (sdp_tr_lock_<hash>): lots diferents poden traduir en
+		// paral·lel mentre els textos encavalcats no es facturen dues vegades;
+		// el pany global de pressupost ($pressupost) s'allibera abans de les
+		// crides HTTP al proveïdor. Mai esperem amb panys presos.
 		ksort( $pendents );
 		foreach ( array_keys( $pendents ) as $id ) {
 			$nom = 'sdp_tr_lock_' . substr( $id, 7 );
@@ -497,6 +499,10 @@ function socdepoble_enxufe_traduir( $request ) {
 		if ( false === $pressupost ) {
 			return socdepoble_enxufe_traduccio_error( 'ocupada', 503 );
 		}
+		$facturables = 0;
+		foreach ( $pendents as $text ) {
+			$facturables += preg_match_all( '/./us', $text );
+		}
 		// REMOTE_ADDR; no confiar en X-Forwarded-For enviat pel visitant.
 		$adreca = isset( $_SERVER['REMOTE_ADDR'] ) && is_string( $_SERVER['REMOTE_ADDR'] )
 			? filter_var( wp_unslash( $_SERVER['REMOTE_ADDR'] ), FILTER_VALIDATE_IP ) : false;
@@ -504,18 +510,16 @@ function socdepoble_enxufe_traduir( $request ) {
 		$client = 'sdp_tr_ip_' . hash_hmac( 'sha256', false === $adreca ? 'unknown' : $adreca, wp_salt( 'auth' ) );
 		$ritme = get_transient( $client );
 		if ( ! is_array( $ritme ) || ( $ritme['fins'] ?? 0 ) <= time() ) {
-			$ritme = array( 'fins' => time() + 600, 'peticions' => 0 );
+			$ritme = array( 'fins' => time() + 600, 'peticions' => 0, 'caracters' => 0 );
 		}
-		if ( $ritme['peticions'] >= 30 ) {
+		$caracters_ip = (int) ( $ritme['caracters'] ?? 0 );
+		if ( $ritme['peticions'] >= 30 || $caracters_ip + $facturables > socdepoble_enxufe_traduccio_limit( 'SDP_TRADUCCIO_LIMIT_IP_CARACTERS', 10000 ) ) {
 			return socdepoble_enxufe_traduccio_error( 'limit', 429 );
 		}
 		++$ritme['peticions'];
+		$ritme['caracters'] = $caracters_ip + $facturables;
 		if ( ! set_transient( $client, $ritme, max( 1, $ritme['fins'] - time() ) ) ) {
 			return socdepoble_enxufe_traduccio_error( 'pressupost', 503 );
-		}
-		$facturables = 0;
-		foreach ( $pendents as $text ) {
-			$facturables += preg_match_all( '/./us', $text );
 		}
 		$reserva = socdepoble_enxufe_traduccio_reserva( $facturables );
 		socdepoble_enxufe_traduccio_allibera( $pressupost );

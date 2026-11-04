@@ -56,21 +56,27 @@ export function useMissatgeAlXat(contacte) {
   const xatSocDePoble = useXatSocDePoble();
   /* asseguraNormes és estable (ModeracioContext): no refà `envia`. */
   const asseguraNormes = useModeracio()?.asseguraNormes ?? null;
-  return useCallback(async (text) => {
+  return useCallback(async (text, { comprovaAbast } = {}) => {
+    comprovaAbast?.();
     const cos = String(text ?? '').trim();
     const amb = cos ? await ambQui(contacte, xatSocDePoble) : null;
+    comprovaAbast?.();
     if (!amb || typeof creaFil !== 'function' || typeof sendChatMessage !== 'function') {
       return { enviat: false, filId: null, ruta: null };
     }
-    if (typeof asseguraNormes === 'function' && !(await asseguraNormes())) {
-      return { enviat: false, filId: null, ruta: null, motiu: 'normes' };
+    if (typeof asseguraNormes === 'function') {
+      const acceptades = await asseguraNormes();
+      comprovaAbast?.();
+      if (!acceptades) return { enviat: false, filId: null, ruta: null, motiu: 'normes' };
     }
     const filId = await creaFil(amb, null);
+    comprovaAbast?.();
     if (!filId) return { enviat: false, filId: null, ruta: null };
     /* Gauntlet 261025_0545 (D2) · Qui ho demana espera la resposta (el botó
        ocupat): sense xarxa, els reintents de sempre i enviat: false, no
        l'espera de la xarxa de la conversa oberta (XC-03). */
     const enviats = await sendChatMessage({ id: filId }, cos, { esperaLaXarxa: false });
+    comprovaAbast?.();
     return {
       enviat: Array.isArray(enviats) && enviats.length > 0,
       filId,

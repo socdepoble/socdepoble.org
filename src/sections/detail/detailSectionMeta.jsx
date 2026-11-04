@@ -10,7 +10,7 @@ import { signaturaDeQuiSigna } from '../../data/identitatsSeed.js';
 import { portadaDeLaPublicacio } from '../../data/mapejadorSeccions.js';
 import { imatgesDeProducte } from '../mercat/imatgesDeProducte.js';
 import { nomDeLaGent } from '../pobles/nomsDelPoble.js';
-import { esFontImatgePropia, sanitizeHtml } from '../../utils/sanitize.js';
+import { esFontImatgePropia, fontVideoPropia, sanitizeHtml } from '../../utils/sanitize.js';
 import { MARCA_GRUP } from '../../components/universal/richText/extensions/targetes/formaDelGrup.js';
 /* Esmena 3 del pla 261007_1645 · Pel camí directe, mai per la façana de
    PedraSeca: este mòdul el llegixen elementDeSeccio.js, el diàleg Connectar i
@@ -228,6 +228,28 @@ export function portadaDElement(section, item, pagina, t) {
   const ambVisor = delMur && item?.id != null && String(item.id) !== '';
   const clau = String(item.id ?? '');
   const obri = t('section.multimedia.visor.obri', 'Veure la imatge a pantalla completa');
+  const videoPropi = typeof item?.video_url === 'string' ? fontVideoPropia(item.video_url) : null;
+  if (videoPropi) {
+    const poster = typeof pagina?.heroImage === 'string' && pagina.heroImage.trim() !== ''
+      ? resolveAsset(pagina.heroImage)
+      : undefined;
+    return {
+      topBarData: {
+        heroComponent: (
+          <div key={`video-${clau}`} className="sdp-hero-video">
+            <video
+              className="sdp-hero-video__player"
+              src={resolveAsset(videoPropi)}
+              poster={poster}
+              controls
+              playsInline
+              preload="metadata"
+            />
+          </div>
+        )
+      }
+    };
+  }
   if (!Array.isArray(fotos) || fotos.length < 2) {
     const portada = pagina?.heroImage;
     if (!ambVisor || typeof portada !== 'string' || portada.trim() === '') return null;
@@ -873,8 +895,8 @@ export function buildEventsDetailSectionMeta({ events = [], t }) {
     renderBody: (item) => (
       <>
         <div className="badge-row">
-          <span className="pill"><CalendarDays size={14} /> {item.date || ''}</span>
-          <span className="pill">{item.type || t('section.detail.events.typeFallback', 'Agenda')}</span>
+          <span className="pill"><CalendarDays size={14} /> {item.date_label || item.date || ''}</span>
+          <span className="pill">{item.type_label || item.type || t('section.detail.events.typeFallback', 'Agenda')}</span>
           <span className="pill"><UserRound size={14} /> {item.author_name || t('section.detail.events.organisation', 'Organització')}</span>
           {item.file ? <span className="pill">{item.file}</span> : null}
         </div>

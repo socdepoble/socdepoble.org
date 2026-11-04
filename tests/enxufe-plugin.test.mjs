@@ -959,9 +959,9 @@ test('readme 1.1.10: el text valencià publicat a WordPress.org, sense cap afirm
   // G2-R06 · El readme parla de tu (ves, prem, mira), i el connector es diu connector, com a Complements.
   assert.doesNotMatch(readme, /\bvegeu\b/i);
   assert.doesNotMatch(readme, /\bextensió/i);
-  // Crític G2 · La candidatura a NGI Fediversity està en avaluació: cap frase no suggerix diners rebuts.
-  assert.doesNotMatch(readme, /cistell de fons|fons per a la sobirania|finançat per|subvencionat|beca concedida/i);
-  if (/NLnet|NGI Fediversity/.test(readme)) assert.match(seccio('Screenshots'), /La candidatura està en avaluació: Sóc de Poble no rep cap finançament d'NGI Fediversity\./);
+  // Crític G2 · La sol·licitud d'agost 2026-08-1a6 no va passar la primera selecció: cap frase no suggerix diners rebuts ni estat «en avaluació».
+  assert.doesNotMatch(readme, /cistell de fons|fons per a la sobirania|finançat per|subvencionat|beca concedida|està en avaluació/i);
+  if (/NLnet|NGI Fediversity/.test(readme)) assert.match(seccio('Screenshots'), /La sol·licitud d'agost 2026-08-1a6 no va passar la primera selecció: Sóc de Poble no rep cap finançament d'NGI Fediversity\./);
   /* El paquet de dades obertes encara no porta notícies, agenda ni memòria cultural
      (recullDadesPubliquesDelMunicipi les deixa pendents): el readme no les promet. */
   if (/coleccio: 'noticies', motiu:/.test(exportador)) {

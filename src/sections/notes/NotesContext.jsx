@@ -35,6 +35,18 @@ import { setVal } from '../../config/storage.js';
 /* IDEA-61 (T0, prompt 261102_1532) · El contracte pur del Flux Universal de
    Publicació: la fitxa d'àmbit d'una nota es projecta al payload amb ell. */
 import { ESTATS, canviaEstat, coaccionaAmbit, esFitxaDAmbit, projeccioPayload, seccioDAmbit } from '../../utils/publicacioUniversal.js';
+import { marcaPublicacioEsborrada } from '../../data/publicacionsEsborrades.js';
+
+function retiraPublicacionsDeLaNota(note) {
+  if (!note?.id) return;
+  const ids = new Set([String(note.id)]);
+  if (note.publishedSubmissionId) ids.add(String(note.publishedSubmissionId));
+  for (const id of ids) {
+    marcaPublicacioEsborrada('mur', id);
+    marcaPublicacioEsborrada('mercat', id);
+    marcaPublicacioEsborrada('events', id);
+  }
+}
 
 /**
  * IDEA-61 (T0, prompt 261102_1532) · La fitxa d'àmbit d'una nota (note.fitxa =
@@ -311,7 +323,7 @@ export function NotesProvider({ children }) {
        copyright que li pinta l'editor és el de l'original (NotesEditor), i
        desar-lo ací l'escriuria a la nota. */
     /* IDEA-61 · També la fitxa d'àmbit (`fitxa`): sense ella (undefined) no es desa res. */
-    for (const field of ['title', 'subtitle', 'lead', 'content', 'heroImage', 'logoImage', 'folderId', 'categories', 'tags', 'copyright', 'icon', 'publishDate', 'fitxa']) {
+    for (const field of ['title', 'subtitle', 'lead', 'content', 'heroImage', 'logoImage', 'logoImageDark', 'folderId', 'categories', 'tags', 'copyright', 'icon', 'publishDate', 'fitxa']) {
       if (field === 'copyright' && esConnexio(activeNote)) continue;
       if (activeNote[field] !== undefined) void saveNoteField(activeNote.id, field, activeNote[field]);
     }
@@ -337,6 +349,7 @@ export function NotesProvider({ children }) {
          damunt de l'H1 (elementDeSeccio.js · logoEntitatDElement). Net pel
          mateix sanejador del canal; sense reserva: sense logotip, cap clau. */
       let finalLogo = netejaCamp('logoImage', activeNote.logoImage);
+      let finalLogoDark = netejaCamp('logoImageDark', activeNote.logoImageDark);
       /* D4 (excepció del Mestre, 260930; desfà T54) · Una connexió és una
          còpia editable: ix el cos EDITAT, sense els paràgrafs fixos que el
          sistema li escriu a qui la té, i la presentació de l'original (enllaç
@@ -375,6 +388,9 @@ export function NotesProvider({ children }) {
            el poble i un mitjà privat no s'hi veuria. */
         if (finalLogo.startsWith('sdp-media://mitjans_privats/')) {
           finalLogo = (await promoteToPublic(finalLogo, config)) || finalLogo;
+        }
+        if (finalLogoDark.startsWith('sdp-media://mitjans_privats/')) {
+          finalLogoDark = (await promoteToPublic(finalLogoDark, config)) || finalLogoDark;
         }
 
         const imgRegex = /sdp-media:\/\/mitjans_privats\/[^\s"']+/g;
@@ -489,6 +505,7 @@ export function NotesProvider({ children }) {
       /* Ordre E (261007) · Com l'emoticona: sense logotip no s'envia la clau,
          i llevar-lo i republicar el lleva també de la pàgina publicada. */
       ...(finalLogo ? { logo_image: finalLogo } : {}),
+      ...(finalLogoDark ? { logo_image_dark: finalLogoDark } : {}),
       /* P1-64 · Com la data: sense ubicació no s'envia la clau (l'upsert
          reemplaça el payload: llevar-la i republicar la lleva també del Mapa). */
       ...(fotosGeo.length ? { fotos_geo: fotosGeo } : {}),
@@ -694,6 +711,7 @@ export function NotesProvider({ children }) {
          (recordaRetiradaDeLaN1, dalt): abans de cap espera, perquè el Bloc ja
          la trobe en pintar la llista sense la n1. */
       recordaRetiradaDeLaN1(note, config, scopeKey);
+      if (estat === 'paperera') retiraPublicacionsDeLaNota(note);
       /* T47b (ordre del Mestre, 260928) · retira i no oblida: el que el servidor
          no ha pogut guardar (l'emoticona en quarantena) es queda al dispositiu. */
       await bgSaveManager.retira(scopeKey, note.id).catch(() => {});
@@ -724,6 +742,7 @@ export function NotesProvider({ children }) {
     }
     // T11-03 (D-M1) · Com a mouNota: abans de cap espera.
     recordaRetiradaDeLaN1(note, config, scopeKey);
+    retiraPublicacionsDeLaNota(note);
     await bgSaveManager.oblida(scopeKey, note.id).catch(() => {});
     oblidaOverlay(note.id);
     showToast('Nota borrada definitivament.', 'success');

@@ -82,5 +82,13 @@ Quan arribe el moment d'implementar açò:
 
 En la SPA, «Índex de continguts» i «Amb qui actues?» compartixen la geometria sota la barra negra descrita a [[sdp-universal-page/SKILL|sdp-universal-page]]. Reutilitza eixos tokens i `Dialeg` per a una necessitat semblant; conserva nom accessible, focus, retorn al botó i zona segura. Les proves de `Dialeg.test.jsx` i `CalaixIdentitats.test.jsx` acompanyen les regles CSS; la inspecció en mòbil acredita el resultat visual.
 
+## 5. 📰 Importació i Transformació Editorial (WordPress, Blogger i Webs Municipals)
+
+**El Problema:** El patrimoni històric de Sóc de Poble (`socdepoble.net`), d'El Rentonar (`elrentonar.blogspot.com`), d'Oli de La Torre, de la Coordinadora d'Estudis Eòlics del Comtat, del Blogger de Pep Cascant (*L'Èxit de l'Olivera*, *El Blat* i *El Raïm*) i les convocatòries d'ajuntaments veïns (com l'Ajuntament de Muro) viuen en formats dispars (WordPress, Blogger, PDFs solts, vídeos pesants) que no tenen l'estructura didàctica de Pedra Seca.
+
+**El Cas d'Ús:** Recuperar cada article o convocatòria i transformar-lo en una peça més atractiva i didàctica que l'original, seguint el tractor [[sdp-importacio-editorial/SKILL|sdp-importacio-editorial]]:
+- **Funcionament:** Es preserva el timestamp original de publicació (`created_at` / `publish_date`), s'assigna l'autoria temàtica (`El Rentonar` per a contingut social/territorial, `Sóc de Poble` per a contingut tecnològic), es converteixen els PDFs en cartells `.webp` registrats a `censImatges.js`, s'allotgen els vídeos pesants al servidor sobirà del Node 0 (`https://socdepoble.cat/media/`), s'adapta el quadrat negre (`calendar_badge`) si és un curs o esdeveniment multi-dia, i es cita sempre amb enllaç directe la font original i els drets.
+
 ## Vincles
 - [[00_INDEX_SKILLS]]
+- [[sdp-importacio-editorial/SKILL]]

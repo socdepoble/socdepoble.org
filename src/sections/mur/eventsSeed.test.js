@@ -9,12 +9,17 @@
    Funcions pures, sense React (l'entorn és el de DOM perquè navigation.js
    arrossega el sanejador, que necessita DOMPurify). */
 import { describe, expect, test } from 'vitest';
-import { CALENDAR_EVENTS } from './eventsSeed.js';
+import { CALENDAR_EVENTS, CURSOS_PEDRA_EN_SEC_2026_EVENT } from './eventsSeed.js';
 import { EVENTS } from './eventsContent.js';
 import { MOCK_MARKET_ITEMS } from '../mercat/marketSeed.js';
 import { autorDe, objecteDe, rutaConnectarObjecte, rutaDePerfilDAutor, RUTA_PERFIL_PROJECTE } from '../../config/navigation.js';
 import { CARPETA_PER_SECCIO, itemsPublicatsDe, pertanyALActor } from '../notes/masDeLUsuari.js';
-import { ENTITAT_PILOT_ID, ENTITAT_PILOT_SLUG, PERSONA_PILOT, aliesDeLActor, autoriaSeed } from '../../data/identitatsSeed.js';
+import { ENTITAT_PILOT_ID, ENTITAT_PILOT_SLUG, ENTITAT_RENTONAR_SLUG, PERSONA_PILOT, aliesDeLActor, autoriaSeed } from '../../data/identitatsSeed.js';
+import { dataDElement } from '../../components/universal/editorial.js';
+import { acteAEsdeveniment } from './agendaMur.js';
+import { momentDeLaTargeta } from './targetesMur.js';
+import { PAGE_COPY } from '../text/pageContent.js';
+import { esFontVideoPropia } from '../../utils/sanitize.js';
 
 const APLEC = CALENDAR_EVENTS.find((acte) => acte.id === 'aplec-2023');
 const SAMARRETA = MOCK_MARKET_ITEMS.find((item) => item.id === 'samarreta-socdepoble');
@@ -71,5 +76,35 @@ describe('efectes declarats', () => {
     expect(consulta.get('autorTipus')).toBe('entitat');
     expect(consulta.get('author')).toBe('Sóc de Poble');
     expect(consulta.get('item_id')).toBe(APLEC.id);
+  });
+});
+
+describe('Cursos de pedra en sec a Fageca i Alcosser (El Rentonar · vídeo protagonista i esdeveniment multi-dia)', () => {
+  test('signa El Rentonar amb la data exacta de l’Ajuntament de Muro, quadrat multi-dia i vídeo sobirà', () => {
+    expect(CURSOS_PEDRA_EN_SEC_2026_EVENT.author_entity_id).toBe(ENTITAT_RENTONAR_SLUG);
+    expect(CURSOS_PEDRA_EN_SEC_2026_EVENT.author_name).toBe('El Rentonar');
+    expect(autorDe(CURSOS_PEDRA_EN_SEC_2026_EVENT)).toEqual({ tipus: 'entitat', id: ENTITAT_RENTONAR_SLUG });
+    expect(esFontVideoPropia(CURSOS_PEDRA_EN_SEC_2026_EVENT.video_url)).toBe(true);
+    expect(CURSOS_PEDRA_EN_SEC_2026_EVENT.calendar_badge).toMatchObject({
+      dia: '23–14',
+      mes: 'OCT–NOV',
+      any: '2026'
+    });
+    expect(CURSOS_PEDRA_EN_SEC_2026_EVENT.description).toContain('https://www.vilademuro.net/cursos-de-pedra-en-sec-a-celebrar-en-fageca-i-alcosser/');
+
+    const dataPublicacio = dataDElement(CURSOS_PEDRA_EN_SEC_2026_EVENT);
+    expect(dataPublicacio).toEqual({
+      time: '13:32',
+      date: '18/09/26',
+      dateTime: '2026-09-18T13:32:23+02:00'
+    });
+
+    const esdeveniment = acteAEsdeveniment(CURSOS_PEDRA_EN_SEC_2026_EVENT);
+    expect(esdeveniment).not.toBeNull();
+    const momentCursos = momentDeLaTargeta(CURSOS_PEDRA_EN_SEC_2026_EVENT, esdeveniment);
+    const momentDisseny = new Date(PAGE_COPY.disseny.date).getTime();
+    const momentDescarregues = new Date(PAGE_COPY.descarregues.date).getTime();
+    expect(momentCursos).toBeGreaterThan(momentDisseny);
+    expect(momentDisseny).toBeGreaterThan(momentDescarregues);
   });
 });

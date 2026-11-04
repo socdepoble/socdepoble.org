@@ -9,6 +9,7 @@ const m = vi.hoisted(() => ({ navigate: vi.fn(), logout: vi.fn(), preparaEixida:
 vi.mock('../../app/contexts/RouterContext', () => ({ useNavigate: () => m.navigate }));
 vi.mock('../../app/contexts/SessionContext.jsx', () => ({
   useSession: () => ({ logout: m.logout, preparaEixida: m.preparaEixida }),
+  useSessioOpcional: () => null,
 }));
 /* Onada 11 (261010) · El segon factor té proves pròpies (admin/SegonFactor.test.jsx). */
 vi.mock('../admin/SegonFactor.jsx', () => ({ SegonFactor: () => <p>el segon factor, en línia</p> }));

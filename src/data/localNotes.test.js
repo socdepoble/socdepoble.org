@@ -15,6 +15,17 @@ function memoryDisk() {
   };
 }
 const config = { dataMode: 'local', tenantId: '00000000-0000-4000-8000-000000000000' };
+test('IDEA-70 · els dos logotips persistixen i llevar el de nit conserva el de dia', async () => {
+  const storage = memoryDisk();
+  const adapter = createLocalNotesAdapter(storage);
+  const note = await adapter.create({ title: 'Forn', logoImage: '/assets/dia.png', logoImageDark: '/assets/nit.png' }, config);
+  const restored = (await createLocalNotesAdapter(storage).load(getDefaultUserId(), config)).notes.find(n => n.id === note.id);
+  expect(restored).toMatchObject({ logoImage: '/assets/dia.png', logoImageDark: '/assets/nit.png' });
+  const removed = await adapter.update(note.id, { logoImageDark: '' }, 0, config);
+  expect(removed).toMatchObject({ logoImage: '/assets/dia.png', logoImageDark: '' });
+  expect(await adapter.update(note.id, { logoImageDark: 'javascript:alert(1)' }, 1, config))
+    .toMatchObject({ logoImage: '/assets/dia.png', logoImageDark: '' });
+});
 test('a new adapter restores notes and copyright without a server or session', async () => {
   const storage = memoryDisk();
   const adapter = createLocalNotesAdapter(storage);

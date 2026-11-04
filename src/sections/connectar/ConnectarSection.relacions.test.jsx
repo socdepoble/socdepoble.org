@@ -14,7 +14,10 @@ import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
      · «Formar part»: la sol·licitud estructurada al xat privat de l'entitat,
        amb confirmació i després a la conversa;
      · «A les teues notes» (abans «Al teu MAS»; 261024 correccions, Gemini
-       G2-02): la connexió de sempre, l'únic botó primari.
+       G2-02): la connexió de sempre. Actualitzada a posta (FEDI-22, ordre del
+       Mestre, 261103): ara «Guardar a les teues notes», i un primari per
+       vista: connectar-hi en un perfil (el de la relació) i guardar-ho en un
+       element (el del peu de les notes).
    Actualitzada a posta (IDEA-22, pla 261025_0045 T5; Directiva del Mestre
    261025): el camí de la relació es diu «Connexió directa», i una entitat
    sense xat privat on arribar ja no és un carreró: el botó porta al xat de
@@ -69,6 +72,7 @@ import ConnectarSection, {
 } from './ConnectarSection.jsx';
 import { XAT_SOCDEPOBLE_DE_LLAVOR, XatSocDePobleContext } from '../../components/PedraSeca/hooks/xatSocDePoble.js';
 import { directeDeLlavor } from '../control/xatCorporatiu.js';
+import { configuraBackendSessio, desaSessio } from '../../data/identitat.js';
 import { ambDeLEnllac } from './missatgeAlXat.js';
 import { BlocRelacio } from './BlocRelacio.jsx';
 import { MISSATGES_SEGUIMENTS, errorDeSeguiment } from '../../data/contracte.js';
@@ -148,6 +152,23 @@ beforeEach(() => {
 });
 
 describe('Entre persones · des d’un perfil', () => {
+  test('R2C2X-02 · Oli amb l’UUID real del directori manté Connexió directa i obri el seu destinatari', async () => {
+    const oli = { tipus: 'entitat', id: '3073b933-69fc-4c3e-80dc-b0df9c6b8391', slug: 'olidelatorre', nom: 'Oli de La Torre' };
+    m.params = new URLSearchParams({ item_id: oli.id, sectionId: 'perfil', objecte: 'entitat', ruta: `/empresa/${oli.id}` });
+    m.perfil.mockResolvedValue(oli);
+    render(ambXat());
+    await screen.findByRole('heading', { name: 'Connectar amb Oli de La Torre' });
+    const relacio = cami('Connexió directa');
+    expect(relacio).toBeTruthy();
+    expect(m.estat).toHaveBeenCalledWith({ tipus: 'entitat', id: oli.id }, {});
+    fireEvent.click(within(relacio).getByRole('button', { name: 'Escriu-li a Oli de La Torre' }));
+    expect(m.navigate).toHaveBeenLastCalledWith(`/xat?amb=${oli.id}`);
+    expect(m.crea).not.toHaveBeenCalled();
+    expect(m.segueix).not.toHaveBeenCalled();
+    expect(m.xat.creaFil).not.toHaveBeenCalled();
+    expect(m.xat.sendChatMessage).not.toHaveBeenCalled();
+  });
+
   test('el nom és el de la fitxa pública, mai el de l’URL; escriure-li obri el seu xat i no connecta res al MAS', async () => {
     render(ambXat());
     expect(await screen.findByRole('heading', { name: 'Connectar amb Pepa Soler' })).toBeTruthy();
@@ -180,8 +201,9 @@ describe('Entre persones · des d’un perfil', () => {
     expect(fil).toEqual({ id: `f-${UUID_PEPA}` });
     expect(text).toBe('Connexió nova: m’he connectat amb tu a Sóc de Poble.');
     expect(screen.getByRole('status').textContent).toBe('T’has connectat amb Pepa Soler. Li hem enviat un missatge al xat.');
-    /* Correcció C17 · el botó premut se n'ha anat: el focus és al títol del bloc. */
-    expect(document.activeElement).toBe(screen.getByRole('heading', { name: 'Connectar amb Pepa Soler' }));
+    /* Correcció C17 · el botó premut se n'ha anat: el focus és al títol del bloc. Actualitzada a posta
+       (revisió 261104, RA-03): en un perfil, l'h3 només és per al lector de pantalla i el focus va al resultat. */
+    expect(document.activeElement).toBe(screen.getByRole('status'));
     expect(m.crea).not.toHaveBeenCalled();
     expect(m.navigate).not.toHaveBeenCalled();
 
@@ -415,7 +437,8 @@ describe('Entre persones · des d’un perfil', () => {
       expect(within(relacio).queryByRole('button', { name: /^Escriu-li/ })).toBeNull();
       expect(relacio.textContent).not.toMatch(/conversa privada/);
       fireEvent.click(within(selector()).getByRole('radio', { name: 'El Rentonar (entitat)' }));
-      const connecta = await within(relacio).findByRole('button', { name: 'Connectar amb Pepa Soler' });
+      /* Actualitzada a posta (FEDI-22) · Amb el barret d'una entitat, el botó diu qui es connecta. */
+      const connecta = await within(relacio).findByRole('button', { name: 'Connectar El Rentonar amb Pepa Soler' });
       await act(async () => { fireEvent.click(connecta); });
       expect(m.segueix).toHaveBeenCalledWith({ tipus: 'persona', id: UUID_PEPA, com: UUID_ORG }, {});
       expect(m.segueix).not.toHaveBeenCalledWith({ tipus: 'persona', id: UUID_PEPA }, {});
@@ -446,7 +469,8 @@ describe('Entre persones · des d’un perfil', () => {
       expect(within(relacio).getByRole('heading', { name: 'Connectar amb El Rentonar' })).toBeTruthy();
       expect(opcions(['Forn de la Torre (empresa)'])).toEqual([['Forn de la Torre (empresa)', true]]);
       expect(within(relacio).queryByRole('button', { name: /^Escriu-li/ })).toBeNull();
-      const connecta = await within(relacio).findByRole('button', { name: 'Connectar amb El Rentonar' });
+      /* Actualitzada a posta (FEDI-22) · Amb el barret d'una entitat, el botó diu qui es connecta. */
+      const connecta = await within(relacio).findByRole('button', { name: 'Connectar Forn de la Torre amb El Rentonar' });
       await act(async () => { fireEvent.click(connecta); });
       expect(m.segueix).toHaveBeenCalledTimes(1);
       expect(m.segueix).toHaveBeenCalledWith({ tipus: 'entitat', id: UUID_ORG, com: UUID_A }, {});
@@ -577,11 +601,13 @@ describe('Formar part de l’entitat', () => {
   test('els tres camins en ordre, i una sola fitxa per a la relació i per a formar-ne part', async () => {
     const { container } = render(ambXat());
     expect(await screen.findByRole('heading', { name: 'Connectar amb El Rentonar' })).toBeTruthy();
-    const capçaleres = [...container.querySelectorAll('.sdp-connectar__cami-cap .sdp-connectar__tipus')].map((p) => p.textContent);
+    /* Actualitzada a posta (FEDI-22, ordre del Mestre, 261103): les capçaleres dels camins són els kickers de les
+       targetes i el títol del plegable de les notes; en un perfil, l'entradeta de la vista social (sense barrets, C5). */
+    const capçaleres = [...container.querySelectorAll('.sdp-connectar__targeta > .sdp-connectar__tipus, .sdp-connectar__notes-titol')].map((p) => p.textContent);
     /* Actualitzada a posta (261024 correccions): directiva del Mestre 15:05 (Gemini G2-02), cap «MAS»; R3-05, l'entradeta
        i l'ajuda del camí diuen el mateix que «Qui ho pot vore?» (en privat no avisa ningú; persones o grups reben l'enllaç). */
-    expect(capçaleres).toEqual(['Connexió directa', 'Formar part', 'A les teues notes']);
-    expect(screen.getByText('Cada camí té el seu botó: connectar amb algú o escriure-li no et fa membre de res. Si guardes l’element a les teues notes en privat, no avisa ningú; si tries persones o grups de xat, els enviarem l’enllaç.')).toBeTruthy();
+    expect(capçaleres).toEqual(['Connexió directa', 'Formar part', 'Guardar a les teues notes']);
+    expect(screen.getByText('Connectar-te no et fa membre de res.')).toBeTruthy();
     expect(screen.getByText(/^Una còpia al teu Bloc per a llegir-la després/).textContent)
       .toBe('Una còpia al teu Bloc per a llegir-la després, que no et fa membre de res. Tu tries qui ho pot vore: en privat no avisa ningú; a persones o grups de xat els enviarem l’enllaç per xat, i a tot el poble la compartiràs tu al Mur.');
     expect(m.perfil).toHaveBeenCalledTimes(1);
@@ -590,9 +616,10 @@ describe('Formar part de l’entitat', () => {
     /* Actualitzada a posta (IDEA-22, T5): el bloc d'administrar ja no es munta a /connectar (el simulacre es queda de guarda). */
     expect(formarPart.querySelector('[data-bloc-administrar]')).toBeNull();
     expect(formarPart.textContent).not.toContain('Impostora');
-    /* D1 · l'únic primari de la vista és el del MAS (el de la confirmació viu dins del <dialog>, tancat). */
+    /* Actualitzada a posta (FEDI-22, ordre del Mestre, 261103) · Un primari per vista: connectar-hi en un perfil,
+       guardar-ho en un element (el de la confirmació viu dins del <dialog>, tancat). */
     const primaris = [...container.querySelectorAll('.sdp-boto--primari')].filter((boto) => !boto.closest('dialog'));
-    expect(primaris.map((boto) => boto.textContent)).toEqual([CONNECTA]);
+    expect(primaris.map((boto) => boto.textContent)).toEqual(['Connectar amb El Rentonar']);
   });
 
   test('la sol·licitud: confirmació amb el text que s’enviarà, l’afegit opcional, el xat de l’entitat i després la conversa', async () => {
@@ -608,7 +635,8 @@ describe('Formar part de l’entitat', () => {
     expect(m.xat.sendChatMessage).toHaveBeenCalledTimes(1);
     const [fil, text] = m.xat.sendChatMessage.mock.calls[0];
     expect(fil).toEqual({ id: `f-${UUID_ORG}` });
-    expect(text).toBe('Sol·licitud per a formar part de El Rentonar.\n\nToque la dolçaina.');
+    /* Actualitzada a posta (FEDI-22) · La segona línia diu el rol que es demana (per defecte, «Usuari / Membre»). */
+    expect(text).toBe('Sol·licitud per a formar part de El Rentonar.\nRol que demane: Usuari / Membre.\n\nToque la dolçaina.');
     expect(m.navigate).toHaveBeenLastCalledWith(`/xat/f-${UUID_ORG}`);
     expect(m.crea).not.toHaveBeenCalled();
     /* Cap seguiment de passada: formar part no és seguir. */
@@ -689,7 +717,7 @@ describe('Formar part de l’entitat', () => {
     expect(m.xat.creaFil).toHaveBeenCalledTimes(1);
     vista.unmount();
     await act(async () => { obri(`f-${UUID_ORG}`); });
-    expect(m.xat.sendChatMessage).toHaveBeenCalledTimes(1);
+    expect(m.xat.sendChatMessage).not.toHaveBeenCalled();
     expect(m.navigate).not.toHaveBeenCalled();
   });
 
@@ -703,6 +731,7 @@ describe('Formar part de l’entitat', () => {
       await act(async () => { fireEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Enviar la sol·licitud' })); });
       window.history.pushState({}, '', '/mur');
       await act(async () => { obri(`f-${UUID_ORG}`); });
+      expect(m.xat.sendChatMessage).not.toHaveBeenCalled();
       expect(m.navigate).not.toHaveBeenCalled();
       expect(screen.queryByRole('alert')).toBeNull();
       expect(screen.queryByRole('dialog')).toBeNull();
@@ -770,9 +799,18 @@ describe('Formar part de l’entitat', () => {
   test('el MAS continua sent el seu camí: el botó gran connecta la nota i no va a cap xat', async () => {
     render(ambXat());
     await screen.findByRole('heading', { name: 'Connectar amb El Rentonar' });
-    await act(async () => { fireEvent.click(screen.getByRole('button', { name: CONNECTA })); });
+    /* Actualitzada a posta (FEDI-22) · En un perfil, «Guardar a les teues notes» va plegat i el seu botó és
+       secundari; la nota es desa amb el nom de la fitxa (C11), mai amb el title de l'URL. */
+    const plegable = document.querySelector('details.sdp-connectar__notes');
+    expect(plegable.open).toBe(false);
+    fireEvent.click(screen.getByText('Guardar a les teues notes').closest('summary'));
+    expect(plegable.open).toBe(true);
+    const boto = screen.getByRole('button', { name: CONNECTA });
+    expect(boto.classList.contains('sdp-boto--secundari')).toBe(true);
+    await act(async () => { fireEvent.click(boto); });
     expect(m.crea).toHaveBeenCalledTimes(1);
-    expect(m.crea.mock.calls[0][0].origen).toMatchObject({ objecte: 'entitat', ruta: `/empresa/${UUID_ORG}` });
+    expect(m.crea.mock.calls[0][0].title).toBe('El Rentonar');
+    expect(m.crea.mock.calls[0][0].origen).toMatchObject({ objecte: 'entitat', ruta: `/empresa/${UUID_ORG}`, titol: 'El Rentonar' });
     expect(m.navigate).toHaveBeenCalledWith('/notes?nota=n-9', { replace: true });
     expect(m.xat.sendChatMessage).not.toHaveBeenCalled();
     expect(m.segueix).not.toHaveBeenCalled();
@@ -884,7 +922,8 @@ describe('IDEA-22 · connectar com a persona o com a entitat', () => {
     expect(screen.getByText('Una relació directa entre Forn de la Torre i Pepa Soler, sense algoritmes ni intermediaris. No fa ningú membre de res.')).toBeTruthy();
     expect(await screen.findByText('Com a Forn de la Torre, no li enviarem cap missatge al xat: Pepa Soler ho veurà a la llista del veïnat connectat.')).toBeTruthy();
     expect(screen.queryByText(AVIS_REMOT('Pepa Soler'))).toBeNull();
-    await act(async () => { fireEvent.click(screen.getByRole('button', { name: 'Connectar amb Pepa Soler' })); });
+    /* Actualitzada a posta (FEDI-22) · Amb el barret d'una entitat, el botó diu qui es connecta. */
+    await act(async () => { fireEvent.click(screen.getByRole('button', { name: 'Connectar Forn de la Torre amb Pepa Soler' })); });
     expect(m.segueix).toHaveBeenCalledWith({ tipus: 'persona', id: UUID_PEPA, com: 'org-forn' }, {});
     expect(m.xat.creaFil).not.toHaveBeenCalled();
     expect(m.xat.sendChatMessage).not.toHaveBeenCalled();
@@ -903,12 +942,13 @@ describe('IDEA-22 · connectar com a persona o com a entitat', () => {
     expect(m.segueix).toHaveBeenCalledWith({ tipus: 'persona', id: UUID_PEPA }, {});
     fireEvent.click(within(grup).getByRole('radio', { name: 'Forn de la Torre (empresa)' }));
     await waitFor(() => expect(m.estat).toHaveBeenLastCalledWith({ tipus: 'persona', id: UUID_PEPA, com: 'org-forn' }, {}));
-    expect(await screen.findByRole('button', { name: 'Connectar amb Pepa Soler' })).toBeTruthy();
+    /* Actualitzada a posta (FEDI-22) · Amb el barret d'una entitat, el botó diu qui es connecta. */
+    expect(await screen.findByRole('button', { name: 'Connectar Forn de la Torre amb Pepa Soler' })).toBeTruthy();
     await act(async () => { acaba({ seguint: true, creatAl: '2026-10-25T00:00:00Z', nou: true, primer: true }); });
     /* La connexió del clic era personal: el seu missatge, el personal. */
     expect(m.xat.sendChatMessage.mock.calls.at(-1)[1]).toBe('Connexió nova: m’he connectat amb tu a Sóc de Poble.');
     /* El barret nou no s'ha quedat en «Comprovant…» ni diu cap resultat del vell. */
-    expect(screen.getByRole('button', { name: 'Connectar amb Pepa Soler' })).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Connectar Forn de la Torre amb Pepa Soler' })).toBeTruthy();
     expect(screen.queryByText(/Li hem enviat un missatge al xat/)).toBeNull();
     expect(screen.queryByText(/^Comprovant la connexió/)).toBeNull();
   });
@@ -922,7 +962,8 @@ describe('IDEA-22 · connectar com a persona o com a entitat', () => {
     expect(within(grup).getByRole('radio', { name: 'Forn de la Torre (empresa)' }).checked).toBe(true);
     expect(await screen.findByText('Les persones que administren El Rentonar voran Forn de la Torre a la llista del veïnat connectat amb l’entitat, sense cap missatge al xat.')).toBeTruthy();
     expect(screen.queryByText(AVIS_REMOT('El Rentonar'))).toBeNull();
-    await act(async () => { fireEvent.click(screen.getByRole('button', { name: 'Connectar amb El Rentonar' })); });
+    /* Actualitzada a posta (FEDI-22) · Amb el barret d'una entitat, el botó diu qui es connecta. */
+    await act(async () => { fireEvent.click(screen.getByRole('button', { name: 'Connectar Forn de la Torre amb El Rentonar' })); });
     expect(m.segueix).toHaveBeenCalledWith({ tipus: 'entitat', id: UUID_ORG, com: 'org-forn' }, {});
     expect(m.xat.sendChatMessage).not.toHaveBeenCalled();
   });
@@ -1023,10 +1064,12 @@ describe('IDEA-22 · la titular d’una entitat, si ella ho ha triat', () => {
     expect(titols).toEqual(['Connectar amb El Rentonar', 'Connectar amb Pepa Soler']);
     expect(within(relacio).getByRole('heading', { name: 'Connectar amb El Rentonar' })
       .compareDocumentPosition(intro) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
-    const capçaleres = [...container.querySelectorAll('.sdp-connectar__cami-cap .sdp-connectar__tipus')].map((p) => p.textContent);
-    expect(capçaleres).toEqual(['Connexió directa', 'Formar part', 'A les teues notes']);
+    /* Actualitzada a posta (FEDI-22, ordre del Mestre, 261103): els kickers de les targetes i el plegable de les
+       notes; un primari per vista, el de la relació amb l'entitat (mai el de la titular). */
+    const capçaleres = [...container.querySelectorAll('.sdp-connectar__targeta > .sdp-connectar__tipus, .sdp-connectar__notes-titol')].map((p) => p.textContent);
+    expect(capçaleres).toEqual(['Connexió directa', 'Formar part', 'Guardar a les teues notes']);
     const primaris = [...container.querySelectorAll('.sdp-boto--primari')].filter((boto) => !boto.closest('dialog'));
-    expect(primaris.map((boto) => boto.textContent)).toEqual([CONNECTA]);
+    expect(primaris.map((boto) => boto.textContent)).toEqual(['Connectar amb El Rentonar']);
     /* Una sola fitxa de perfil: la titular arriba de la seua lectura, no d'un altre loadPerfilPublic. */
     expect(m.perfil).toHaveBeenCalledTimes(1);
     const connecta = await within(relacio).findByRole('button', { name: 'Connectar amb Pepa Soler' });
@@ -1126,7 +1169,20 @@ const CLAUS_AMB_NOM = [
   /* C0200-02 · «Escriu-li a {nom} com a {persona}» i la nota del xat personal ({persona} i {entitat} a banda). */
   'section.connectar.autor.botoCom', 'section.connectar.autor.textCom',
   /* IDEA-22, punt 2 · la titular que ha triat mostrar-se ({entitat} a banda). */
-  'section.connectar.titular.intro'
+  'section.connectar.titular.intro',
+  /* FEDI-22 (ordre del Mestre, 261103) · el botó amb barret, i incloure algú en una entitat teua ({entitat} a banda). */
+  'section.connectar.seguir.botoCom',
+  'section.connectar.incloure.titol', 'section.connectar.incloure.boto',
+  /* Revisió 261104 · C-01 (les conseqüències abans del botó) i RA-05 (un altre poble a la fitxa). */
+  'section.connectar.incloure.avis', 'section.connectar.incloure.altrePoble',
+  'section.connectar.incloure.botoAdmin', 'section.connectar.incloure.botoAscens',
+  'section.connectar.incloure.dialegTitol', 'section.connectar.incloure.comprovant', 'section.connectar.incloure.errorLectura',
+  'section.connectar.incloure.jaMembre', 'section.connectar.incloure.jaAdmin', 'section.connectar.incloure.jaPropietaria',
+  'section.connectar.incloure.fetMembre', 'section.connectar.incloure.fetAdmin',
+  /* Integració 261104 amb FEDI-23 · el servidor desa «Treballador / Soci». */
+  'section.connectar.incloure.avisConnexions', 'section.connectar.incloure.fetTreballador',
+  /* FEDI-23 · l'interruptor de la connexió, a /connectar ({entitat} a banda). */
+  'section.connectar.visibilitat.interruptor', 'section.connectar.visibilitat.interruptorCom', 'section.connectar.visibilitat.ajuda'
 ];
 const CLAUS_SENSE_NOM = [
   'section.connectar.lead', 'section.connectar.leadCamins', 'section.connectar.camins.relacio',
@@ -1137,7 +1193,21 @@ const CLAUS_SENSE_NOM = [
   'section.connectar.formarPart.cancela', 'section.connectar.formarPart.entra', 'section.connectar.formarPart.senseSessio',
   'section.connectar.formarPart.jaEnFormesText', 'section.connectar.formarPart.comprovant',
   'section.connectar.connectada', 'section.connectar.com.llegenda', 'section.connectar.formarPart.onSAdministra',
-  'section.connectar.formarPart.senseXatSenseNom', 'section.connectar.formarPart.obriXatSenseNom'
+  'section.connectar.formarPart.senseXatSenseNom', 'section.connectar.formarPart.obriXatSenseNom',
+  /* FEDI-22 (ordre del Mestre, 261103) · la vista social, la fitxa, les notes, els rols i la sol·licitud amb rol. */
+  'section.connectar.subtitolSocial', 'section.connectar.leadSocial', 'section.connectar.leadSocialCom',
+  'section.connectar.fitxa.carregant', 'section.connectar.fitxa.meta',
+  'section.connectar.notes.titol', 'section.connectar.notes.subtitol',
+  'section.connectar.rol.admin', 'section.connectar.rol.treballador', 'section.connectar.rol.membre',
+  'section.connectar.rol.adminAjuda', 'section.connectar.rol.adminNomesPropietaria', 'section.connectar.rol.membreAjuda',
+  'section.connectar.rol.treballadorPendent', 'section.connectar.rol.treballadorDemana', 'section.connectar.rol.treballadorAjuda',
+  'section.connectar.visibilitat.globalPrivada', 'section.connectar.visibilitat.globalPrivadaCom', 'section.connectar.visibilitat.errorLectura',
+  'section.connectar.visibilitat.error', 'section.connectar.visibilitat.publica', 'section.connectar.visibilitat.privada',
+  'section.connectar.incloure.entitat', 'section.connectar.incloure.rol', 'section.connectar.incloure.dialegText',
+  'section.connectar.incloure.dialegConfirma',
+  'section.connectar.formarPart.rolLlegenda', 'section.connectar.formarPart.rolDemanat',
+  /* Revisió 261104 · RA-03 (el rètol de T2 d'una persona) i RA-05 (l'ajuda d'incloure, ara sense {nom}). */
+  'section.connectar.camins.incloure', 'section.connectar.incloure.ajuda'
 ];
 
 describe('CA-6 · els textos nous de Connectar', () => {
@@ -1158,8 +1228,9 @@ describe('CA-6 · els textos nous de Connectar', () => {
     render(ambXat());
     expect(await screen.findByRole('heading', { name: 'Conectar con Pepa Soler' })).toBeTruthy();
     expect(screen.getByRole('group', { name: 'Conexión directa' })).toBeTruthy();
-    /* Actualitzada a posta (261024 correccions): «En tus notas», sense «MAS» (Gemini G2-02). */
-    expect(screen.getByText('En tus notas')).toBeTruthy();
+    /* Actualitzada a posta (261024 correccions): «En tus notas», sense «MAS» (Gemini G2-02). Actualitzada a posta
+       (FEDI-22): el plegable de les notes, «Guardar en tus notas». */
+    expect(screen.getByText('Guardar en tus notas')).toBeTruthy();
     expect(await screen.findByText('Pepa Soler recibirá un mensaje en el chat diciendo que has conectado.')).toBeTruthy();
     await act(async () => { fireEvent.click(screen.getByRole('button', { name: 'Conectar con Pepa Soler' })); });
     expect(m.xat.sendChatMessage.mock.calls[0][1]).toBe('Conexión nueva: he conectado contigo en Sóc de Poble.');
@@ -1181,4 +1252,20 @@ describe('G2-02 · /connectar no parla del «MAS»', () => {
       expect(createTranslator(code)(clau, ''), `${code} ${clau}`).not.toMatch(/\bMAS/);
     }
   });
+});
+
+/* Una sol·licitud autoritzada per una entrada no pot continuar amb la següent. */
+test('Formar part: una reentrada durant les normes no obri ni envia ni navega amb la sessió posterior', async () => {
+  m.params = new URLSearchParams(PERFIL_RENTONAR);
+  configuraBackendSessio({ mode: 'local', tenantId: '11111111-1111-4111-8111-111111111111' });
+  desaSessio({ access_token: 'synthetic-original-token', user: { id: 'U' } });
+  let accepta; const asseguraNormes = vi.fn(() => new Promise(r => { accepta = r; }));
+  const v = render(ambNormes(asseguraNormes));
+  fireEvent.click(await screen.findByRole('button', { name: 'Demanar formar part de El Rentonar' }));
+  fireEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Enviar la sol·licitud' }));
+  await waitFor(() => expect(asseguraNormes).toHaveBeenCalledTimes(1));
+  desaSessio({ access_token: 'synthetic-new-token', user: { id: 'U' } }); m.user = { id: 'U' }; v.rerender(ambNormes(asseguraNormes));
+  await act(async () => accepta(true));
+  expect(m.xat.creaFil).not.toHaveBeenCalled(); expect(m.xat.sendChatMessage).not.toHaveBeenCalled();
+  expect(m.navigate).not.toHaveBeenCalled(); expect(screen.queryByRole('alert')).toBeNull(); expect(screen.queryByRole('dialog')).toBeNull();
 });

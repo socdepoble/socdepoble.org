@@ -168,13 +168,34 @@ test('una lectura antiga no sobreescriu l’escriptura confirmada durant l’esp
   f.online(false); assert.equal((await f.backend.loadNotes('anna')).notes[0].title, 'Confirmada'); f.close();
 });
 
-test('respostes remotes fora d’ordre no reescriuen la cau amb l’antiga', async () => {
-  const a = defer(), b = defer(); let n = 0;
-  const f = fixture({ port: { loadNotes: () => ++n === 1 ? a.promise : b.promise } });
-  const one = f.backend.loadNotes('anna'), two = f.backend.loadNotes('anna'); await tick();
-  b.resolve({ notes: [{ id: 'b' }], noteFolders: [] }); await two;
-  a.resolve({ notes: [{ id: 'a' }], noteFolders: [] }); await one;
-  f.online(false); assert.equal((await f.backend.loadNotes('anna')).notes[0].id, 'b'); f.close();
+test('respostes remotes fora d’ordre no reescriuen la cau amb l’antiga', async t => {
+  const a = defer(), b = defer(), dispatchA = defer(), dispatchB = defer();
+  let n = 0, primeraAcabada = false;
+  const f = fixture({ port: { loadNotes: (owner, config) => {
+    assert.equal(owner, 'anna');
+    assert.equal(config.signal.aborted, false);
+    n += 1;
+    if (n === 1) { dispatchA.resolve(); return a.promise; }
+    assert.equal(n, 2, 'Només es despatxen les dues lectures declarades.');
+    dispatchB.resolve(); return b.promise;
+  } } });
+  t.after(() => f.close());
+  /* Abans del port hi ha persistència i SHA-256 asíncron: un tick no fixa
+     quin dels dos callers arriba primer. Les portes acrediten les dues
+     peticions reals A→B; només invertim l'ordre de les seues respostes. */
+  const one = f.backend.loadNotes('anna').then(value => { primeraAcabada = true; return value; });
+  await dispatchA.promise;
+  const two = f.backend.loadNotes('anna');
+  await dispatchB.promise;
+  assert.equal(n, 2);
+  b.resolve({ notes: [{ id: 'b' }], noteFolders: [] });
+  assert.equal((await two).notes[0].id, 'b');
+  assert.equal(primeraAcabada, false, 'A continua en vol quan B ja s’ha lliurat.');
+  a.resolve({ notes: [{ id: 'a' }], noteFolders: [] });
+  assert.equal((await one).notes[0].id, 'a');
+  f.online(false);
+  assert.equal((await f.backend.loadNotes('anna')).notes[0].id, 'b');
+  assert.equal(n, 2, 'La comprovació offline no fa cap altra lectura remota.');
 });
 
 test('quota fallida de la cau no transforma un èxit remot en reintent d’escriptura', async () => {
@@ -205,12 +226,25 @@ test('el projector no inserix una creació B dins del detall A i resol una creac
   assert.equal(projectaNotesOffline({ notes: [], complete: false }, op).notes.length, 0);
 });
 
-test('temporitzador acotat cancel·la el signal del port i destroy avorta lectures en curs', async () => {
+test('temporitzador acotat cancel·la el signal del port i destroy avorta lectures en curs', async t => {
+  // El timeout també cobrix el SHA-256 previ al port. El rellotge controlat
+  // avança només quan el port ha rebut el signal: no depén de la càrrega CPU.
+  t.mock.timers.enable({ apis: ['setTimeout'] });
   let signal;
-  const f = fixture({ port: { loadNotes: (_u, config) => { signal = config.signal; return new Promise(() => {}); } }, enxufe: { timeoutMs: 10 } });
-  await assert.rejects(f.backend.loadNotes('anna'), { code: 'SDP-OFFLINE-TIMEOUT' }); assert.equal(signal.aborted, true); f.close();
-  const g = fixture({ port: { loadNotes: () => new Promise(() => {}) } }); const p = g.backend.loadNotes('anna'); await tick();
-  g.handle.destroy(); await assert.rejects(p, { name: 'AbortError' }); g.close();
+  const dispatchF = defer();
+  const f = fixture({ port: { loadNotes: (_u, config) => { signal = config.signal; dispatchF.resolve(); return new Promise(() => {}); } }, enxufe: { timeoutMs: 10 } });
+  t.after(f.close);
+  const timed = assert.rejects(f.backend.loadNotes('anna'), { code: 'SDP-OFFLINE-TIMEOUT' });
+  await dispatchF.promise; assert.equal(signal.aborted, false);
+  t.mock.timers.tick(10);
+  await timed; assert.equal(signal.aborted, true); f.close();
+  let signalG;
+  const dispatchG = defer();
+  const g = fixture({ port: { loadNotes: (_u, config) => { signalG = config.signal; dispatchG.resolve(); return new Promise(() => {}); } } });
+  t.after(g.close);
+  const aborted = assert.rejects(g.backend.loadNotes('anna'), { name: 'AbortError' });
+  await dispatchG.promise; assert.equal(signalG.aborted, false);
+  g.handle.destroy(); await aborted; assert.equal(signalG.aborted, true); g.close();
 });
 
 test('fallback no s’activa per TypeError genèric, codi d’auth ni AbortError disfressat', () => {

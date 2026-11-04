@@ -1,0 +1,17 @@
+{
+  "id": "5da094d8-2049-491d-8f16-cdb74e520aa0",
+  "session": "d45d49de-9ebb-4177-bdfb-c15cb7ae1cec",
+  "operationId": "final-observed-wiki-baseline",
+  "claim": "d45d49de-9ebb-4177-bdfb-c15cb7ae1cec:governance-write",
+  "planHash": "4a8f59ea6b7d969e2bef6d69ec726a50d92a18c0b882b34a434126ac371b2ef0",
+  "beforeSeal": "cf83e6325dbc767b4011155b533eca23887931f56c0d1ffe26bc31ee444db1e0",
+  "files": [
+    {
+      "path": "tooling/wiki/wiki-baseline.lock.json",
+      "before": "400a03ddbee52bf56b47fd24cb85dc47d47589e5afbf3e5bd9bb0ee854a2999b",
+      "after": "a4e4cacbec9713ee96921e68067ad9694d5ffa7bb35c6f74fe0a033fd53ee81c"
+    }
+  ],
+  "state": "accepted",
+  "afterSeal": "5dba4ddc7b60e87f720d2433a0cd610b6f50be95ed7a62cba37db77c3fd23f27"
+}

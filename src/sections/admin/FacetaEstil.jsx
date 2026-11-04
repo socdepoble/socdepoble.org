@@ -21,7 +21,7 @@
    · AdminSection.jsx no es toca ací: FACETA_ESTIL és el que necessita qui
      munta el menú del Tauler per a afegir-hi esta faceta.
    Textos en valencià, literals: només els veu el superadmin (com el Tauler). */
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useId, useMemo, useRef, useState } from 'react';
 import { Palette } from 'lucide-react';
 import { Alerta, Boto, Camp, CampText, Carregant, EstatBuit, GrupCamps, Selector } from '../../components/PedraSeca/index.js';
 import { useCoreContent } from '../../app/contexts/CoreContentContext.jsx';
@@ -29,10 +29,10 @@ import { useSessioOpcional } from '../../app/contexts/SessionContext.jsx';
 import { adminDesaPersonalitzacio, adminHistorialPersonalitzacio, teCapacitat } from '../../data/backendPort.js';
 import { MISSATGE_PERSONALITZACIO } from '../../data/errorsBackend.js';
 import {
-  CANON, CANON_RADIS, CONTRAST_MINIM, ESCALA_RADIS, TOKENS_EDITABLES, ambCrom, contrastosDe, normalitzaTo, validaEstil, valorValid
+  CANON, CANON_RADIS, CONTRAST_MINIM, ESCALA_RADIS, TOKENS_EDITABLES, ambCrom, contrastosDe, cssDePersonalitzacio, normalitzaTo, validaEstil, valorValid
 } from '../../config/estil.js';
 import { aplicaEstil, llevaEstil } from '../../config/aplicaEstil.js';
-import { CANON_BLAU, base, deltaDe, giraTo } from '../../config/crom.js';
+import { CANON_BLAU, aplica, base, deltaDe, giraTo, restaura as restauraCrom } from '../../config/crom.js';
 
 export const FACETA_ESTIL = Object.freeze({ id: 'estil', titol: 'Estil del poble', icona: Palette });
 
@@ -122,8 +122,12 @@ function Historial({ entrades, onRestaura }) {
   );
 }
 
-export function FacetaEstil() {
-  const { personalitzacio, refresh } = useCoreContent();
+export function FacetaEstil({ ambit = null }) {
+  const ambPoble = Boolean(ambit);
+  const identificador = useId().replace(/[^a-zA-Z0-9_-]/g, '');
+  const [previsualitzacio, setPrevisualitzacio] = useState(null);
+  const global = useCoreContent();
+  const { personalitzacio, refresh } = ambit?.contingut ?? global;
   const sessio = useSessioOpcional();
   const desat = personalitzacio?.estil ?? null;
   /* La identitat de `personalitzacio` canvia amb cada revalidació del contingut:
@@ -159,8 +163,8 @@ export function FacetaEstil() {
 
   /* L'arrel de la instància, com el PanellCrom (node.closest('.sdp-root')); fora d'una instància, el propi node. */
   const setNode = useCallback((node) => {
-    if (node) setArrel((actual) => actual || node.closest('.sdp-root') || node);
-  }, []);
+    if (node) setArrel((actual) => actual || (ambPoble ? node : node.closest('.sdp-root') || node));
+  }, [ambPoble]);
 
   /* Els valors vigents es lligen una vegada, abans de cap previsualització. */
   useEffect(() => {
@@ -171,10 +175,11 @@ export function FacetaEstil() {
   useEffect(() => {
     if (!arrel) return undefined;
     return () => {
+      if (ambPoble) { restauraCrom(arrel); return; }
       const d = desatRef.current;
       if (d?.payload) aplicaEstil(arrel, d.payload); else llevaEstil(arrel);
     };
-  }, [arrel]);
+  }, [arrel, ambPoble]);
 
   const payload = useMemo(() => ambCrom({ tokens }, to), [tokens, to]);
   const desatTokens = desat?.payload?.tokens ?? {};
@@ -213,14 +218,20 @@ export function FacetaEstil() {
     setTo(arrel ? normalitzaTo(deltaDe(arrel, hex)) : 0);
   };
 
-  const previsualitza = () => { if (arrel) aplicaEstil(arrel, payload); };
+  const aplicaPrevisualitzacio = valor => {
+    if (!arrel) return;
+    if (!ambPoble) { if (valor) aplicaEstil(arrel, valor); else llevaEstil(arrel); return; }
+    setPrevisualitzacio(valor);
+    if (valor?.crom?.to) aplica(arrel, valor.crom.to); else restauraCrom(arrel);
+  };
+  const previsualitza = () => aplicaPrevisualitzacio(payload);
   const tornaAlDesat = () => {
     setTokens(tokensDe(desat));
     setTo(normalitzaTo(desat?.payload?.crom?.to ?? 0));
     setColorCrom(null);
     setAvis(null);
     if (!arrel) return;
-    if (desat?.payload) aplicaEstil(arrel, desat.payload); else llevaEstil(arrel);
+    aplicaPrevisualitzacio(desat?.payload ?? null);
   };
 
   /* Promise.resolve().then: el port llança de manera síncrona si el mètode no hi és, i això també acaba a l'avís. */
@@ -229,12 +240,12 @@ export function FacetaEstil() {
     setDesant(true);
     setAvis(null);
     Promise.resolve()
-      .then(() => adminDesaPersonalitzacio({ clau: 'estil', payload, versio }))
+      .then(() => { if (viu.current) return adminDesaPersonalitzacio({ clau: 'estil', payload, versio }, ...(ambit ? [ambit.configCrida] : [])); })
       .then((resultat) => {
         if (!viu.current) return;
         setVersio(resultat?.versio ?? null);
         setAvis({ to: 'exit', text: `Estil desat per a tot el poble (versió ${resultat?.versio ?? '?'}).` });
-        if (arrel) aplicaEstil(arrel, payload);
+        aplicaPrevisualitzacio(payload);
         refresh?.();
       })
       .catch((err) => { if (viu.current) setAvis({ to: 'error', text: textDError(err) }); })
@@ -245,7 +256,7 @@ export function FacetaEstil() {
     if (historial !== null) { setHistorial(null); return; }
     setHistorial('carregant');
     Promise.resolve()
-      .then(() => adminHistorialPersonalitzacio('estil'))
+      .then(() => { if (viu.current) return adminHistorialPersonalitzacio('estil', ...(ambit ? [ambit.configCrida] : [])); })
       .then((llista) => { if (viu.current) setHistorial(Array.isArray(llista) ? llista : []); })
       .catch((err) => {
         if (!viu.current) return;
@@ -283,9 +294,12 @@ export function FacetaEstil() {
       </EstatBuit>
     );
   }
+  if (ambit && !ambit.preparada) return ambit.selector;
 
   return (
-    <section ref={setNode} className="sdp-estil" aria-label="Estil del poble">
+    <section ref={setNode} className="sdp-estil" aria-label="Estil del poble" data-sdp-estil-admin={ambPoble ? identificador : undefined}>
+      {ambPoble && previsualitzacio ? <style data-sdp-estil-admin-full="">{cssDePersonalitzacio(previsualitzacio).replace(/^[^\n{]+\{/gm, `[data-sdp-estil-admin="${identificador}"] {`)}</style> : null}
+      {ambit?.selector}
       {sessio?.calSegonFactor ? (
         <Alerta to="avis" viva={false} titol={MISSATGE_PERSONALITZACIO['cal-segon-factor']}>
           Pots previsualitzar, però el servidor no desarà res fins que confirmes el segon factor a «El compte».

@@ -1,0 +1,27 @@
+{
+  "id": "37857c9d-d263-4591-9f0b-11829346d648",
+  "session": "30c80340-c60d-45e5-8bbd-0120f81e25ad",
+  "operationId": "FEDI23-restore-pending-request-ui-final",
+  "claim": "30c80340-c60d-45e5-8bbd-0120f81e25ad:governance-write",
+  "planHash": "7ba8a5395de17f65e8a8554760884d17283b0dd6de8126db524f9950f88eb97e",
+  "beforeSeal": "3608e6a7cd0d2a639d0e0998ad3f29b2cedd6a00c48c449c18887819191b5d29",
+  "files": [
+    {
+      "path": "src/sections/connectar/organitzacio/BlocFormarPart.jsx",
+      "before": "bb3e8f3bf20670278af18a72262abae6859c900da14f40ef5c87493f3b78c539",
+      "after": "4a956fd1420c61343b664ce90acee6528740c05c31641b0256fbf1b904195668"
+    },
+    {
+      "path": "src/sections/connectar/organitzacio/BlocFormarPart.pendent.test.jsx",
+      "before": null,
+      "after": "e3286ec39be1747c3cedad9d813e9cabe1229bb8fe6f1143bc6cedc7609675b2"
+    },
+    {
+      "path": "src/sections/connectar/ConnectarSection.fedi22.test.jsx",
+      "before": "004d20350ef063f38b99fbcc6a8d753a54d8ac9ab8ea7afb89b3a2743be4cbc1",
+      "after": "dcac69dec4be5e57cd5272ccdb5e40245fdc0782dfc44f540339ba0b32de6eff"
+    }
+  ],
+  "state": "accepted",
+  "afterSeal": "5dba4ddc7b60e87f720d2433a0cd610b6f50be95ed7a62cba37db77c3fd23f27"
+}

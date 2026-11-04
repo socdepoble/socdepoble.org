@@ -53,6 +53,21 @@ Tota auditoria sobre un Pla d'Implementació ha d'incorporar obligatòriament la
 - El que està `[PARCIAL]` o `[NO FET]` **es trasllada automàticament i de forma visible al següent Pla d'Implementació**. Prohibit esborrar-ho, amagar-ho o oblidar-ho.
 
 
+### Evidència reproduïble i crítica de fronteres
+
+- Congela els fitxers del lliurament abans d'una suite global; registra la instantània o hashes i diferencia l'execució inicial de la verificació final després de corregir-la. Una suite feta mentre altres agents escriuen no certifica el seu resultat posterior.
+- Contrasta el comportament observable amb la promesa: comprova bytes, tipus i dimensions de les imatges; en un paquet públic, refuta la projecció amb camps privats i desconeguts; una consola silenciosa no prova que el recurs siga correcte.
+- En persistència i criptografia prova reinici, concurrència, importació després de canvis locals i tancament o canvi de persona/tenant durant una operació. El crític ha de verificar que una cua antiga no trepitja la fusió i que l'empremta exportada correspon a la clau que realment firma.
+- Separa prova local, capacitat anunciada i desplegament remot. Un mock, un ZIP generat o una resposta HTTP no acrediten per si sols una restauració de base de dades, una federació desplegada o una certificació global d'accessibilitat.
+
+### Retenció, capacitat i identitat del dispositiu
+
+- Prova la purga amb dues sessions obertes sobre la mateixa persistència: una esborra i l'altra intenta llegir, escriure i acabar una exportació ja iniciada. La invalidació s'ha de comprovar dins de la mateixa transacció que escriu; un avís entre pestanyes només accelera la UI.
+- Ompli el diari fins al límit per l'API pública. La consolidació local ha de conservar notes i conflictes, permetre continuar després d'un reinici i explicar que no és un ACK remot. Refuta també quota, cancel·lació i canvi concurrent durant el càlcul d'empremtes.
+- Exporta una còpia creada pel producte i restaura-la: prova els límits combinats de col·lecció, fitxers i bytes, inclosa una nota més després de consolidar. No alimentes l'assaig només amb estat intern injectat.
+- Deriva l'identificador públic de la clau que firma i contrasta multicodec, empremta i JWK. Refuta la filtració de l'UUID intern del compte i la invenció d'un actor institucional no desplegat. El text escrit per la persona continua requerint revisió abans de compartir-lo.
+- En mode local o de llavor, usa un transport sentinella per provar que consentiment, baixa i exportació de compte no refresquen sessió ni contacten producció. Retorna un estat no disponible explícit: no fabriques un consentiment remot buit.
+
 ## 3. Enginyeria Inversa amb REA (Reverse Engineer Anything)
 Quan l'encàrrec demana paritat amb una aplicació o un artefacte de referència, usa REA si està disponible i la lectura està autoritzada. L'anàlisi ordinària del repositori propi comença pel seu codi i proves, sense disseccionar una aplicació externa per inèrcia:
 

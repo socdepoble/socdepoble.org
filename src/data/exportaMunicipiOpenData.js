@@ -138,6 +138,12 @@ export const FORMAT_DADES_OBERTES = 'socdepoble.dadesobertes.v1';
    el restaurador (importaMunicipiOpenData.js) també. */
 export const VERSIO_FORMAT = '1.2.0';
 export const ESQUEMA_DATAPACKAGE = 'https://datapackage.org/profiles/2.0/datapackage.json';
+/* Perfil municipal de Data Package v2: la bossa conserva els drets de cada
+ * element. El descriptor no pot atribuir una llicència nova al conjunt. */
+export const LLICENCIES_DATAPACKAGE = Object.freeze([Object.freeze({
+  path: 'llicencies.md',
+  title: 'Cada element porta la seua llicència; sense llicència declarada no hi ha cap dret de reutilització'
+})]);
 /* Les llicències que permeten reutilitzar sense demanar permís ni limitar
    l'ús comercial (disseny B §4.4). NC, ND i © no ho són. */
 export const LLICENCIES_OBERTES = Object.freeze(['CC0-1.0', 'CC-BY-4.0', 'CC-BY-SA-4.0']);
@@ -1401,7 +1407,7 @@ export async function exportaMunicipiOpenData(entrada, opcions = {}) {
         : 'Sense dades de persones. ')
       + "La llicència de cada element és a llicencies.md: el conjunt no n'atorga cap de nova.",
     created: preparat.ara,
-    licenses: [{ path: 'llicencies.md', title: 'Cada element porta la seua llicència; sense llicència declarada no hi ha cap dret de reutilització' }],
+    licenses: LLICENCIES_DATAPACKAGE.map(llicencia => ({ ...llicencia })),
     sources: [{ title: 'Sóc de Poble (el Mas)', path: preparat.origen }],
     keywords: ['dades obertes', 'municipi', preparat.slug],
     resources: dades.map((fitxer) => ({
@@ -1554,7 +1560,36 @@ export async function verificaPaquetOpenData(zip, { subtle = globalThis.crypto?.
   }
   const deDades = carrega.filter((cami) => cami !== 'data/datapackage.json');
   if (camins.size !== deDades.length || deDades.some((cami) => !camins.has(cami))) throw new TypeError('datapackage.json no descriu tots els fitxers de dades.');
+  validaDescriptorMunicipal(datapackage);
   return { slug: arrel.slice('dades-obertes-'.length), arrel, fitxers: fitxers.size, recursos: datapackage.resources.length };
+}
+
+/* Validem el perfil tancat que produïx este exportador, no qualsevol extensió
+ * arbitrària del general DataPackagev2. No es carrega cap esquema ni llicència
+ * per xarxa. SHA/BagIt prova integritat; este pas comprova les declaracions.
+ * https://datapackage.org/standard/data-package/ */
+function validaDescriptorMunicipal(descriptor) {
+  const falla = motiu => { throw new TypeError(`Data Package municipal invàlid: ${motiu}.`); };
+  if (descriptor.$schema !== ESQUEMA_DATAPACKAGE) falla('perfil DataPackagev2 no admés');
+  const llicencia = Array.isArray(descriptor.licenses) && descriptor.licenses.length === 1 ? descriptor.licenses[0] : null;
+  if (!esObjecte(llicencia) || Object.keys(llicencia).sort().join(',') !== 'path,title'
+    || llicencia.path !== LLICENCIES_DATAPACKAGE[0].path || llicencia.title !== LLICENCIES_DATAPACKAGE[0].title) falla('llicències diferents de la política per element');
+  if (!descriptor.resources.length) falla('cap recurs');
+  for (const clau of ['name', 'title', 'description', 'created']) {
+    if (typeof descriptor[clau] !== 'string' || !descriptor[clau].trim() || descriptor[clau].length > 4096) falla(`camp ${clau}`);
+  }
+  if (dataIso(descriptor.created) !== descriptor.created) falla('data de creació');
+  const camps = new Set(['name', 'path', 'title', 'format', 'mediatype', 'encoding', 'bytes', 'hash']);
+  const tipus = { json: 'application/json', jsonld: 'application/ld+json', md: 'text/markdown', ics: 'text/calendar' };
+  for (const recurs of descriptor.resources) {
+    if (!esObjecte(recurs) || Object.keys(recurs).some(clau => !camps.has(clau)) || Object.keys(recurs).length !== camps.size) falla('camps del recurs');
+    if (typeof recurs.title !== 'string' || !recurs.title.trim() || recurs.title.length > 4096) falla('títol del recurs');
+    const formatEsperat = recurs.path.slice(recurs.path.lastIndexOf('.') + 1);
+    const mediatype = recurs.path === 'activitystreams.json' ? 'application/activity+json' : tipus[formatEsperat];
+    if (!Object.hasOwn(tipus, formatEsperat) || recurs.format !== formatEsperat || mediatype !== recurs.mediatype
+      || recurs.encoding !== 'utf-8') falla('tipus o codificació del recurs');
+    if (!Number.isSafeInteger(recurs.bytes) || recurs.bytes < 0 || recurs.bytes > MAXIM_PAQUET || typeof recurs.hash !== 'string' || !/^sha256:[a-f0-9]{64}$/.test(recurs.hash)) falla('mida o hash del recurs');
+  }
 }
 
 /* ── Recollida des del port neutral ─────────────────────────────────────── */

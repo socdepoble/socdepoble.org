@@ -74,6 +74,10 @@
     overflow-y: auto;
     overflow-x: hidden;
     overscroll-behavior: contain;
+    /* El contained fa scroll ell mateix: no hereta el scroll-padding del
+       visor. En compacte el seu viewport ja acaba damunt de la barra mòbil. */
+    scroll-padding-top: calc(var(--sdp-alt-accio) * 2 + var(--sdp-space-4));
+    scroll-padding-bottom: var(--sdp-space-4);
   }
   .sdp-universal-page-container--contained > .content-wrapper {
     flex: 1 0 auto;

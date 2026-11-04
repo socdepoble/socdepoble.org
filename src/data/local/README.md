@@ -139,7 +139,41 @@ Només s'admet JSON pla i finit: es rebutgen getters, `toJSON`, cicles, prototip
 
 L'aïllament per àmbit separa namespaces, però no xifra dades ni protegeix davant JavaScript amb accés al mateix origen. La cadena SHA-256 és un encadenament sense clau, no una signatura: la cua és **encadenada**, no signada. Detecta l'alteració, el reordenament o l'eliminació incoherent d'entrades respecte de l'àncora `ack` desada, però no autentica l'autor. `ack`, `nextSeq`, `clock`, `context`, `inflight`, `blocked` i `resolved` no entren en cap hash. Qui puga escriure el magatzem pot, sense calcular cap hash nou, retirar el cap avançant `ack`, truncar o buidar la cua recalculant les metadades derivables, o recular `ack` i reinjectar una operació ja confirmada; en tots tres casos `verifyOfflineQueueChain` torna `valid: true`. Tampoc no detecta una reescriptura completa amb hashos nous. Detectar-ho requerix un checkpoint extern de confiança, com ara l'últim `ack` confirmat pel servidor; davant la reinjecció, la defensa és la idempotència remota per `opId`. Els logs de notificació de l'enxufe només porten codi i mètode. No es restauren sessions ni s'atorga autoritat de servidor des d'una instantània o operació local.
 
-Les proves dirigides són `tests/persistencia-local-rural.test.mjs`, `tests/cua-operacions-offline.test.mjs` i `tests/enxufe-backend-offline-first.test.mjs`. Cobrixen transaccions, CAS, reinici, àmbits, JSON hostil, quotes, ACK, idempotència, causalitat i respostes tardanes. La comprovació en Chrome amb IndexedDB nativa cobrix reobertura, concurrència, instantànies alterades, identitat, reinici de cua i reconnexió. El transport d'estes proves és simulat: no certifica un backend real amb deduplicació remota, autorització, migracions o conflictes distribuïts. La integració amb eixe servei i la política de retenció/revisió continuen sent responsabilitat del consumidor.
+Les proves dirigides són `tests/persistencia-local-rural.test.mjs`, `tests/cua-operacions-offline.test.mjs` i `tests/enxufe-backend-offline-first.test.mjs` <!-- tractor-psicopatia: allow ZOMBIE-OFFLINE-FIRST -- nom literal del fitxer de test -->. Cobrixen transaccions, CAS, reinici, àmbits, JSON hostil, quotes, ACK, idempotència, causalitat i respostes tardanes. La comprovació en Chrome amb IndexedDB nativa cobrix reobertura, concurrència, instantànies alterades, identitat, reinici de cua i reconnexió. El transport d'estes proves és simulat: no certifica un backend real amb deduplicació remota, autorització, migracions o conflictes distribuïts. La integració amb eixe servei i la política de retenció/revisió continuen sent responsabilitat del consumidor.
+
+## Adaptador local: 39 capacitats i administració multipoble
+
+`creaAdaptadorLocal` implementa les 39 capacitats completes del contracte. `versioMinimaClient` torna sempre `null`, incloses iOS i Android: este procés local no publica cap mínim de botiga ni usa un servidor encara que la config de crida ho demane.
+
+L'administració multipoble està denegada per defecte (`no-disponible`). L'amfitrió pot injectar una autoritat **exclusivament local** en construir l'adaptador. És una dependència de composició, mai un rol de la sessió o una bandera enviada en una crida. No concedix permisos sobre un servidor ni protegix davant scripts amb accés al mateix procés/origen.
+
+```js
+const backend = creaAdaptadorLocal({
+  mode: 'local', tenantId: tenantInicial,
+  administracioLocal: {
+    pobles: catalogLocalAutoritzat, // [{ id: UUID, slug, nom }]
+    autoritza: async ({ personaId, operacio, tenantId }) =>
+      politicaDelProces.autoritza(personaId, operacio, tenantId)
+  }
+});
+const pobles = await backend.adminLlistaPobles();
+// tenantTriatExplicitament és la tria de la persona, aportada pel consumidor.
+const config = { tenantId: tenantTriatExplicitament };
+const actual = await backend.adminLligPersonalitzacio(config);
+await backend.adminDesaPersonalitzacio({
+  clau: 'taxonomia', payload: { categories: [] },
+  versio: actual.taxonomia?.versio ?? 0
+}, config);
+const historial = await backend.adminHistorialPersonalitzacio('taxonomia', config);
+```
+
+El catàleg es valida, copia i congela a la construcció (màxim 1.000 pobles; UUID i slug únics, nom de fins a 200 caràcters). No prové de `dades.towns`, del directori públic ni d'una restauració. La política rep un objecte congelat només amb `personaId`, `operacio` (nom del mètode) i `tenantId`; en llistar, `tenantId` és `null` i l'autorització correspon al catàleg injectat sencer. Només el booleà `true` autoritza. Pot esperar i revocar mitjançant la seua pròpia dependència; els errors es propaguen. Sense sessió hi ha `sense-sessio`; un resultat diferent de `true`, un tenant alié al catàleg o un intent de desar en un altre tenant sense esta autoritat dona `sense-permis`. Cap `role`, `aal`, metadada o `personalitzacioOberta` substituïx esta política.
+
+`adminLligPersonalitzacio` exigix tenant explícit. Amb autoritat multipoble activa, també l'exigixen escriptura i historial: `tenantId` o `tenant_id` UUID, normalitzat a minúscules. Si hi són els dos han de coincidir. Absència, null, valor malformat o contradicció rebutgen amb `abast-invalid`; mai reserven al tenant inicial. `adminLlistaPobles` permet absència de selector, però rebutja un selector malformat. Les crides no alteren configuració, sessió ni poble global. `loadCoreContent` sempre llig la personalització del tenant inicial. Sense autoritat multipoble, el ganxo antic `personalitzacioOberta` només pot operar sobre eixe tenant.
+
+El magatzem de personalitzacions és per tenant i clau (`taxonomia`/`estil`); versions i historial no es barregen. `versio: null` o `0` només servix abans de la primera versió, i una versió obsoleta dona `conflicte-versio`. El payload ha de ser JSON finit i pla, sense getters, prototips especials, cicles, valors indefinits ni claus de prototip, fins a 65.536 bytes comptant espais estructurals JSONB; profunditat màxima 32 i 10.000 nodes. Les entrades es copien síncronament abans de la microtasca i abans de consultar la política; només el senyal d'avortament es conserva viu. Ha de ser un `AbortSignal` genuí: es valida i es llig amb l'intrínsec per a no executar getters d'una entrada malformada. Un canvi de sessió (també en el mateix tic), la destrucció o un avortament durant l'autorització impedeixen lliurar dades o iniciar la mutació. Les eixides són còpies. El magatzem és només memòria i es buida amb `destroy()`.
+
+Les proves són `adaptadorLocal.multipoble.test.js`, la conformitat completa amb els 178 casos del kit i les regressions existents d'adaptador, àmbit, host, publicació i transferència. El transport es veta en proves: esta cobertura local no certifica permisos remots, MFA ni Supabase.
 
 ## Vincles
 

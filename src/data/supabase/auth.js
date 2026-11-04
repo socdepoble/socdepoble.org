@@ -543,8 +543,13 @@ export async function registerWithPassword(email, password, metadata = {}, confi
   } finally { attempt.finish(); }
 }
 
-export const registraConsentiment = (tipus, versio, config = {}) =>
-  rpc('registra_consentiment', { p_tipus: tipus, p_versio: versio }, config);
+export const registraConsentiment = async (tipus, versio, config = {}) => {
+  /* R2CF-01 · La mostra local no registra consentiments al compte remot. */
+  if (esModeLocal(config)) {
+    throw ambCodi(new Error('El consentiment del compte necessita una sessió real al servidor; el mode de proves no envia dades.'), CODI_ENTRADA.MODE_LOCAL);
+  }
+  return rpc('registra_consentiment', { p_tipus: tipus, p_versio: versio }, config);
+};
 
 /* T2 i T4 (ordre del Mestre, 260930) · Capacitat 'salut'. /registre la
    pregunta ABANS de desar l'elecció remota: també en seed o local sonda la URL

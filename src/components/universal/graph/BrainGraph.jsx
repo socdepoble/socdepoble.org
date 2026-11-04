@@ -1,6 +1,11 @@
 import { useRef, useEffect, useState, useMemo, useId } from 'react';
 import useForceLayout from './useForceLayout';
 import { Play, Pause, ZoomIn, ZoomOut, Maximize, X } from 'lucide-react';
+import { tradueix, useTraductorOpcional } from '../../PedraSeca/hooks/useTraductorOpcional.js';
+
+export const TEXTOS_TECLAT_GRAF = Object.freeze({
+  ajuda: Object.freeze(['graf.teclat.ajuda', 'Amb el focus al graf, usa les fletxes per desplaçar la vista. Els botons permeten apropar, allunyar, centrar i pausar. Tab continua al control següent.'])
+});
 
 const NODE_RADIUS = {
   document: 8,
@@ -57,6 +62,10 @@ const SALT_MAXIM = 0.25;         // ln del salt màxim per esdeveniment (≈ 28 
 const PX_PER_LINIA = 16;         // deltaMode 1: Firefox compta la rodeta en línies
 const LLINDAR_CLIC = 5;          // px: menys recorregut que açò és un clic, no un arrossegament
 const DURADA_ENQUADRAMENT = 450; // ms
+const PAS_TECLAT = 40;          // px de pantalla, independent del zoom
+const DESPLACAMENT_TECLAT = Object.freeze({
+  ArrowLeft: [-1, 0], ArrowRight: [1, 0], ArrowUp: [0, -1], ArrowDown: [0, 1]
+});
 
 const limita = (valor, min, max) => Math.min(max, Math.max(min, valor));
 
@@ -257,7 +266,9 @@ export default function BrainGraph({
   onNodeClick, className = '', graf, estil = ESTIL_WIKI, forces, fletxes = false, textos = TEXTOS_WIKI,
   enquadra = false, seleccio, onSeleccio, inspector = true
 }) {
+  const t = useTraductorOpcional();
   const nodeSelectId = useId();
+  const ajudaTeclatId = useId();
   const canvasRef = useRef(null);
   const containerRef = useRef(null);
   const [dimensions, setDimensions] = useState({ width: 800, height: 600 });
@@ -601,11 +612,30 @@ export default function BrainGraph({
     if (desti) vista.anima(desti);
   };
 
+  /* FEDI-09 · Equivalent del desplaçament amb el punter, també sense
+     inspector (la Consola té el seu propi selector de peces). No depén de
+     mantindre cap tecla ni d'una cadència; Tab i les dreceres del navegador
+     passen. La selecció continua al selector natiu o al detall del pare. */
+  const handleKeyDown = (event) => {
+    if (!nodes.length || event.target !== event.currentTarget || event.defaultPrevented
+      || event.altKey || event.ctrlKey || event.metaKey || event.shiftKey
+      || event.isComposing || event.nativeEvent?.isComposing || event.keyCode === 229) return;
+    const pas = DESPLACAMENT_TECLAT[event.key];
+    if (!pas) return;
+    event.preventDefault();
+    vista.atura();
+    vista.t = { ...vista.t, x: vista.t.x + pas[0] * PAS_TECLAT, y: vista.t.y + pas[1] * PAS_TECLAT };
+    vista.demana();
+  };
+
   return (
     <div ref={containerRef} className={`sdp-brain-graph-wrapper ${className}`}>
       <canvas
         ref={canvasRef}
         aria-label={textos.canvas}
+        aria-describedby={ajudaTeclatId}
+        aria-keyshortcuts={nodes.length ? 'ArrowLeft ArrowRight ArrowUp ArrowDown' : undefined}
+        tabIndex={nodes.length ? 0 : -1}
         width={dimensions.width}
         height={dimensions.height}
         className="sdp-brain-graph-canvas sdp-brain-graph-canvas--grab"
@@ -613,7 +643,9 @@ export default function BrainGraph({
         onPointerMove={handlePointerMove}
         onPointerUp={handlePointerUp}
         onPointerCancel={handlePointerUp}
+        onKeyDown={handleKeyDown}
       />
+      <p id={ajudaTeclatId} className="sr-only">{tradueix(t, TEXTOS_TECLAT_GRAF.ajuda)}</p>
       {inspector && <aside className="sdp-brain-graph-inspector" aria-label={textos.inspector}>
         <h3>{textos.titol}</h3>
         <label htmlFor={nodeSelectId}>{textos.selector}</label>

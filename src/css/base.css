@@ -245,6 +245,16 @@ p:last-child, .lead:last-child,
 ul:last-child, ol:last-child,
 blockquote:last-child { margin-bottom: 0; }
 
+/* ── RITME VERTICAL DINS DE CONTENIDORS NUS DE PROSA (FEDI-21, Mestre 261103) ──
+   Si l'HTML editorial agrupa blocs dins de <div> sense classe, :first-child i
+   :last-child no poden anul·lar la separació entre un paràgraf i el títol següent. */
+:where(article.content-wrapper, .sdp-prose) :is(p, ul, ol, blockquote, div:not([class])) + div:not([class]) > h2:first-child { margin-top: var(--sdp-mt-h2); }
+:where(article.content-wrapper, .sdp-prose) :is(p, ul, ol, blockquote, div:not([class])) + div:not([class]) > h3:first-child { margin-top: var(--sdp-mt-h3); }
+:where(article.content-wrapper, .sdp-prose) :is(p, ul, ol, blockquote, div:not([class])) + div:not([class]) > h4:first-child,
+:where(article.content-wrapper, .sdp-prose) :is(p, ul, ol, blockquote) + div:not([class]) > div:not([class]):first-child > h4:first-child { margin-top: var(--sdp-mt-h4); }
+:where(article.content-wrapper, .sdp-prose) :is(p, ul, ol, blockquote, div:not([class])) + div:not([class]) > h5:first-child { margin-top: var(--sdp-mt-h5); }
+:where(article.content-wrapper, .sdp-prose) :is(p, ul, ol, blockquote, div:not([class])) + div:not([class]) > h6:first-child { margin-top: var(--sdp-mt-h6); }
+
 
 /* ── LLEI DE VIDA · cap control per davall de --sdp-touch ── */
 button, .btn, .nav-item, .sp-card-action, .page-btn,

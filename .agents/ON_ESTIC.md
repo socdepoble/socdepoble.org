@@ -6,7 +6,7 @@ description: Punter d'arrencada de sessió generat per despertar.mjs
 # ON_ESTIC.md (Punter de Sessió)
 
 > [!IMPORTANT]
-> **GENERAT:** 2026-11-02T17:30:33.232Z
+> **GENERAT:** 2026-11-04T06:43:52.135Z
 > Aquest document l'`@`-importa `CLAUDE.md`, i eixa importació es resol ABANS
 > que el hook l'escriga: la còpia que tens al context és la de la sessió
 > anterior. Per això **ací no hi ha cap llista de l'Escriptori**: la d'ahir
@@ -14,7 +14,7 @@ description: Punter d'arrencada de sessió generat per despertar.mjs
 > llegir eixa carpeta en procediments automàtics.
 
 **Branca Git:** backup-notes-publish
-**Commit:** 4ee8d78c4
+**Commit:** bae4d717e
 
 ## 1. Contingut de l'Escriptori (Taula de Treball)
 
@@ -27,23 +27,18 @@ Si no tens cap de les dues, llista `_wiki_de_poble/04_escriptori/` amb una eina 
 
 ## 2. Resum de l'ESTAT recent
 
-> [!WARNING]
-> ESTAT RANCI: l'últim relleu és de 261102_1538 i `_wiki_de_poble/04_escriptori/03_llibre_mestre_tasques_i_idees.md` s'ha tocat 3 h després. Hi ha faena feta que ningú ha anotat a `.agents/ESTAT.md`.
-
 Últim relleu anotat a `.agents/ESTAT.md` (primera capçalera del fitxer):
 
-## ESTAT_ACTUAL · 2026-11-02T15:38:00+01:00 · MarIA · Desplegament a Producció de la Marató Nocturna (70 Migracions Supabase, socdepoble.org amb Avisos Push del Xat actius, 7 Skills Resegellades, Botigues iOS i Android 1.0.0+2 PUBLICADES en Mode Jarvis) i Pla/Prompt 261102_1532 llestos amb Estalvi de Quota
+## ESTAT_ACTUAL · 2026-11-04T06:43:52.135Z · Codex · torn_ec49ea3a-80a1-4cb4-a5b9-928e250f6d6a · Verificació final de D executada; dossier, deute laboratori i checkpoint pendents
 
-- **Torn i ordre:** `torn_fad962dd-2cbf-457d-98d7-ee28c04f647f` (documents). Acta Marmota de tancament: [261102_1456_acta_marmota_produccio_b1_b12_avisos_xat_botigues_1_0_0_2_i_idea60](../_wiki_de_poble/10_actes/261102_1456_acta_marmota_produccio_b1_b12_avisos_xat_botigues_1_0_0_2_i_idea60.md).
-- **Fet en Producció i Mode Jarvis (Blocs B1..B12 en viu):**
-  1. **Supabase Producció (`70/70 migracions`):** Aplicades i verificades les 6 migracions SQL noves (`2611011500` → `2611020417`) amb `node tooling/gates/verifica-migracions-supabase.mjs` (`0 violacions`).
-  2. **Avisos Push del Xat (`B8` en viu):** Generat parell de claus VAPID, configurats secrets a Supabase, desplegada l'Edge Function `notifica-xat` (`ACTIVE`), activat `push_xat_actiu = 'si'` a `private.ajustos`, compilada i desplegada `https://socdepoble.org` a Firebase Hosting i verificats els avisos push entre Chrome i Safari.
-  3. **Skills Segellades (`42/42`):** Resegellades les 7 skills pendents a `.agents/SKILLS_SEAL.json` (`0 violacions`).
-  4. **Botigues iOS i Android `1.0.0 (2)` (`1.0.0+2`) PUBLICADES:**
-     - **🍏 iOS (`1.0.0 (2)`):** Compilat `../_builds_de_poble/ios/261102_socdepoble_1.0.0+2.xcarchive` i pujat i processat a **App Store Connect / TestFlight** (`Uploaded App · ** EXPORT SUCCEEDED **`).
-     - **🤖 Android (`2 (1.0.0)` PUBLICADA A GOOGLE PLAY):** Desbloquejat el keystore oficial del 24 d'octubre `_oficina_de_poble/claus/upload-socdepoble.jks` (`SHA1: AC:5F:98:33:45:2A:C2:B3:30:E6:A4:8E:D4:1D:AA:C3:9D:E2:CC:6B`), custodiat a `.env.botigues.local`, re-signat `../_builds_de_poble/android/261102_socdepoble_1.0.0+2.aab` (`jar verified`) i **publicat en viu a Google Play Console (`Prova interna` · `19.486 dispositius Android compatibles`)** ([261102_1521_google_play_versio_2_publicada.png](../_wiki_de_poble/04_escriptori/01_produccio/261102_1521_google_play_versio_2_publicada.png)).
-  5. **Pla i Prompt `261102_1532` preparats a l'Escriptori amb Protocol d'Estalvi Termodinàmic de Quota:**
-     - Creats, validats i ancorats [261102_1532_pla_implementacio_mode_jarvis_idea60_fediversity_i_deute_llibre_mestre](../_wiki_de_poble/90_arxiu_historic/261102_1532_pla_implementacio_mode_jarvis_idea60_fediversity_i_deute_llibre_mestre.md) i [261102_1532_prompt_mode_jarvis_idea60_fediversity_i_deute_llibre_mestre](../_wiki_de_poble/90_arxiu_historic/261102_1532_prompt_mode_jarvis_idea60_fediversity_i_deute_llibre_mestre.md) per a la següent sessió (post-reinici del Mac), amb Claude en fil únic sense `Extra/Ultracode` ni subagents ([261102_1531_consum_claude_opus_ultracode_59_per_cent.png](../_wiki_de_poble/04_escriptori/01_produccio/261102_1531_consum_claude_opus_ultracode_59_per_cent.png)).
+- **Torn documental actual:** `torn_ec49ea3a-80a1-4cb4-a5b9-928e250f6d6a`, contextos nous i own2 dels mateixos [report1604 v1.10](../_wiki_de_poble/04_escriptori/261103_1604_auditoria_codex_gauntlet_fediversity.md) i [pla2350 v1.3](../_wiki_de_poble/04_escriptori/261103_2350_pla_tancament_verificat_codex_fediversity.md), plantilles llegides; encara sense bind/close. Torn5e896 i69 tancats9/9 reals, històries i rebuts intactes. CAS6c698/lease762 consumits.
+- **MCR local:** FEDI23→15(CRDT/OPFS)→18(restauració)→19(empaquetat) [FET] en l’abast natiu; no totFEDI/repo100%. FEDI26/defaultpúblic i Ronda7 paral·lels preservats fora d’esta validació; sense nova política.
+- **Índex i font:** D real6899/treeb68f; rootproof8f5642 contrasta4167/4167/90exec, digest1a2aad/flake8c0. Independent923c contrasta6899modes/OID, no segon rehash4167. Mateixa font dels buildsR3/installed1088/148647215B pind10bf, sense HEADnou comés encara.
+- **Passades finals:** Vitest1815fitxers/32644tests=32535pass/0fail/109skip exit0(606.316s); Nodeprimari2440=2428pass/0fail/9skip/3TODO, manifest174/199. Rebut tècnicdc3df05c i JSONfd13bdee. Omissions/TODO no són passades.
+- **Roig preservat i següent pla:** laboratori176=26pass/13fail/137skip exit1, prototips/plantilles/Olivera/O13 antics segons manifest; sense baseline repetida, no afirmació d’absència de regressió. Cal seguiment causal dels13casos, sense recategoritzar/relaxar per verd.
+- **Sessió:** primera48=10pass/1fail/37skip exit1 per derivatSEOabsent; build:seo nomésignoredTEMP11703Bcc19ad, i només fitxerfallit1/1pass exit0(60.6s), suplement5fdcd909. No tot el grup repetit ni declaratexit0; huit snapshots6899bytes/modes idèntics i realGitstable.
+- **Pendent real:** CAS6 final dels documents, bind+close, índex final amb doc5/SEAL/records i Bookpartial+mateixnou bullet, cinc passos canònics i commit normal amb leasefresca. No més sourceedits ni noubuild/global perquè14roots1a2aad no canvien; preflight haurà de validar metadades noves. Actac57/baselinea4 fixes.
+- **Preservació i límits:** tot relleu antic íntegre; Bookworking complet i parcial compartixen la nova nota, no stagedwholeBook. Restaging82 només després commit/Capturefresh i revisió, sense recuperar targetvell que lleve la nota; cap cos humà, efecte remot, clau, Nix/freshnpmci, correu, CG/Antigravity o recurrent propi.
 
 ## 3. Què has de fer ara?
 

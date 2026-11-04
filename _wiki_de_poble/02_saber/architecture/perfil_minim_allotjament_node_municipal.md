@@ -1,14 +1,14 @@
 ---
 type: document
 status: esborrany
-description: Xifres mesurades el 261101 i preus oficials citats per a allotjar un node municipal, amb tres escenaris de cost mensual per a un ajuntament menut.
+description: Mesures del Node 0 del 2026-11-03, compilació municipal comprovada i tall històric de mides i preus del 2026-11-01, amb els límits encara no mesurats.
 tags:
   - arquitectura
   - maquina
 ---
 # Perfil mínim d'allotjament d'un node municipal
 
-**Un node municipal** és la instal·lació del Mas electrònic que **servix un poble**: la seua web, les **seues dades** i la **seua federació**, amb el **contracte del port neutral** que descriu [[api_port_neutral_i_allotjament_model_b]]. Este document recull què necessita un node municipal del Mas: web estàtica, base de dades, Storage, funcions i federació. Servix a qui haja de triar entre un **allotjament gestionat** i un d'autoallotjat. Les **xifres del repositori** es van mesurar en esta màquina el 2026-11-01, i els preus es van consultar el mateix dia a les **pàgines oficials**.
+**Un node municipal** és la instal·lació del Mas electrònic que **servix un poble**: la seua web, les **seues dades** i la **seua federació**, amb el **contracte del port neutral** que descriu [[api_port_neutral_i_allotjament_model_b]]. Este document recull què necessita un node municipal del Mas: web estàtica, base de dades, Storage, funcions i federació. Servix a qui haja de triar entre un **allotjament gestionat** i un d'autoallotjat. Les taules de mides i costos conserven el **tall històric del 2026-11-01**; els preus no s'han revalidat després d'eixe dia. La secció 1.1 incorpora una **mesura directa del Node 0 del 2026-11-03** i les seccions 3 i 5, les proves noves de l'instal·lador.
 
 ## 1. Tall i mètode
 
@@ -18,6 +18,25 @@ tags:
 - **Producció:** `curl` a `https://socdepoble.org` amb `Accept-Encoding` `br`, `gzip` i `identity`.
 - **Base de dades:** recompte sobre `supabase/migrations/*.sql` i `supabase/functions/`; no s'ha consultat cap projecte remot.
 - **Instal·lador:** `tests/inicia-node-germa.test.mjs` executa `tooling/instalador/inicia-node-germa.mjs` per a Xixona en un directori temporal. A les 04:38 la font era l'arbre de treball; des del Gauntlet del 261101 és la release de HEAD extreta amb `git archive` (secció 3).
+
+### 1.1 Mesura directa del Node 0 · 2026-11-03
+
+**Lectura** per l'**accés SSH ja configurat** `macmini` (`192.168.0.23`), amb `BatchMode=yes`, `ConnectTimeout=5` i `StrictHostKeyChecking=yes`. **No s'ha modificat cap servei**, **instal·lat cap paquet** ni **llegit cap credencial**. **Comandes executades:** `date -u`, `uname -srm`, `sw_vers`, `sysctl hw.model hw.memsize hw.physicalcpu hw.logicalcpu machdep.cpu.brand_string`, `vm_stat`, `top -l 1 -n 0`, `df -k /`, `df -k /System/Volumes/Data` i `sysctl vm.swapusage`.
+
+| Mesura | Resultat observat | Tall UTC |
+| --- | --- | --- |
+| Maquinari | Mac16,10, Apple M4, arm64, 10 nuclis físics i lògics | 2026-11-03T15:23:43Z |
+| RAM física | 25.769.803.776 bytes = 24 GiB | 2026-11-03T15:23:43Z |
+| Sistema | macOS 27.2, build 26B123; Darwin 27.2.0 | 2026-11-03T15:23:43Z |
+| CPU, una instantània de tot l'amfitrió | 1,11 % usuari, 10,00 % sistema, 88,88 % inactiva | 2026-11-03T15:23:43Z |
+| Càrrega mitjana a 1, 5 i 15 minuts | 1,14 / 1,19 / 1,43 | 2026-11-03T15:23:43Z |
+| Memòria de tot l'amfitrió, eixida de `top` | 23G usada, amb 1950M wired i 278M de compressor; 668M sense usar | 2026-11-03T15:23:43Z |
+| Intercanvi de memòria | `vm.swapusage`: total, usada i lliure 0,00M | 2026-11-03T15:24:45Z |
+| Volum APFS de dades | 482.797.652 KiB totals; 99.964.356 KiB usats (95,33 GiB); 358.070.968 KiB disponibles compartits (341,48 GiB); 22 % segons `df` | 2026-11-03T15:24:45Z |
+
+`vm_stat` declara pàgines de 16.384 bytes: 679.909 actives, 673.898 inactives, 124.774 wired, 17.801 ocupades pel compressor i 36.257 lliures. Les unitats `G` i `M` de la fila de `top` es conserven com les va imprimir l'eina. La memòria usada inclou macOS, altres processos i memòria cau: **no és la RAM que necessita el servei de Sóc de Poble**. CPU i càrrega són una instantània de la màquina, no una prova de concurrència ni un mínim d'allotjament. En APFS els volums compartixen espai; les xifres de `/` i `/System/Volumes/Data` no se sumen.
+
+**Encara no mesurat:** **consum elèctric en watts o kWh** i **mida real de la base de dades de producció**. En este carril no s'ha disposat d'una **sessió SQL no interactiva ja establerta** amb què consultar-la; **no s'han llegit `.env`**, desbloquejat el clauer ni iniciat sessions noves. **No hi ha Nix**, `nix-instantiate` ni `nix-store` en el PATH consultat del Mac de treball ni del Node 0. Docker existix al Mac de treball, però el seu **daemon no està disponible**; **no s'ha arrancat**.
 
 ## 2. Web estàtica
 
@@ -75,22 +94,24 @@ Font: `firebase.json` del repositori. Un altre amfitrió estàtic necessita l'eq
 
 ## 3. Release que copia l'instal·lador
 
-- **Contingut:** `src`, `public`, `tooling`, `scripts` i els fitxers d'arrel `package.json`, `package-lock.json`, `index.html`, `vite.config.js`, `firebase.json`, `flake.nix` i `LICENSE`.
+- **Contingut (FEDI-05, 2026-11-03):** `src`, `public`, `tooling`, `scripts`, i, si hi són a la release, `nix` i les tres carpetes públiques de Wiki (`01_ser`, `02_saber`, `03_actuar`). També `package.json`, `package-lock.json`, `index.html`, `vite.config.js`, `firebase.json`, `flake.nix`, `LICENSE`, `AGENTS.md` i el marcador `.agents/AGENTS.md`; `flake.lock` només si la release el porta. No es copia la resta de `.agents` ni la Wiki privada, l'Escriptori o l'arxiu.
 - **Fora de la release:** l'instal·lador no copia `supabase/` (migracions i funcions). Per al mode `remote`, l'administrador les pren del repositori a la mateixa versió.
 - **Mida mesurada a l'arbre de treball:** 3.628 fitxers i 176.131.477 bytes a les 04:38. A les 04:27 eren 3.623 fitxers: l'arbre canvia mentre altres agents hi treballen, i per això la prova pren la release de HEAD amb `git archive`, que no canvia.
 - **Còpia:** l'instal·lador va copiar la release sencera de l'arbre de treball en 0,64 segons en esta màquina.
 - **Construcció:** `npm ci` i `npm run build:web` són opcionals (`--build`). Les dependències d'este repositori ocupen 320.944 KiB a `node_modules`, amb 378 entrades de primer nivell; uns 39 MB d'eixa xifra són memòries cau de Vite i Vitest (`.vite` i `.vitest-cache`) i restes d'una instal·lació a mitges (`.acorn-*`, `.aria-query-*`…), que un `npm ci` net no tindria. `npm ci` necessita accés al registre de npm.
-- **Prova:** `tests/inicia-node-germa.test.mjs` és una prova d'integració de la CLI de l'instal·lador (còpia i federació). Comprova la identitat de Xixona, que cada fitxer de la release de HEAD arriba al node amb el seu SHA-256, que cap secret de la configuració viatja i que quatre fitxers vigilats del repositori viu no canvien. No executa `npm ci` ni el build, i no servix cap web: la construcció d'un node no està provada.
+- **Prova (FEDI-05, 2026-11-03):** `SDP_NODE_GERMA_BUILD_REAL=1 node --test --test-concurrency=1 tests/inicia-node-germa.test.mjs` passa 8/8. Instal·la una release de HEAD per a Xixona en un temporal i executa `npm run build:web` real (5,8 s en este tall), amb les dependències locals contrastades amb `package-lock.json`: 529 versions coincidents, cap divergent ni necessària absent. No executa una instal·lació nova amb `npm ci` ni desplega o servix el node. Comprova els documents compilats d'actor, JRD, NodeInfo i host-meta amb la identitat de Xixona.
+- **Integritat:** `node-germa.json` registra el SHA-256 de cada fitxer instal·lat. Per a `firebase.json`, que s'adapta al node nou, conserva també `sha256Font`, l'empremta dels bytes originals. La font no es modifica. El node no hereta `site` ni `target` de Firebase: l'operador ha de triar explícitament el seu projecte i lloc abans de desplegar.
+- **Recepta del flake executada sense Nix (FEDI-05):** `node tooling/seo/comprova-reproductibilitat.mjs --treball /private/tmp --recepta flake --json` ha construït dues còpies de la mateixa instantània pública, amb UTC/C i Europe/Madrid/ca_ES.UTF-8. Les dues produïxen 1.070 fitxers idèntics byte a byte, digest `9042da05b6b8e92b80b583a6bc7ae97403845ed33d40d7cc09330159783146c4` (7,9 s i 7,5 s). El flake arrel inclou `scripts/botigues/associacio-apps.json` i compartix la revisió immutable de nixpkgs amb `nix/flake.nix`, sense el pegat redundant. Açò prova la recepta amb Node, **no** `nix eval`, `nix build`, la VM NixOS/Nginx ni un `flake.lock` generat per Nix.
 
 ## 4. Base de dades, Storage i funcions
 
 El node en **mode `remote`** necessita un **projecte Supabase** amb les **migracions de la mateixa versió aplicades** i el seu `tenantId`. Les migracions i les funcions **no viatgen amb la release** (secció 3): **l'administrador** les pren del repositori. En **mode `seed`** no en necessita cap: és una **demostració**.
 
-- **Migracions:** 64 fitxers SQL, de `2609080000_initial_schema.sql` a `2610312000_e2ee_lot3_validadors_service_role.sql`.
+- **Migracions, inventari històric del 2026-11-01:** 64 fitxers SQL, de `2609080000_initial_schema.sql` a `2610312000_e2ee_lot3_validadors_service_role.sql`. Les noves migracions posteriors no formen part d'este recompte; les files següents d'esquema i funcions també corresponen a eixe tall, sense verificació del remot.
 - **Esquema:** 48 taules creades, en els esquemes `public` i `private`, i 101 sentències `create policy` al llarg de les migracions (el text apareix 102 voltes; una és dins d'un comentari).
 - **Extensions:** `pgcrypto`, que una migració crea. `pg_cron` és opcional: quatre tasques es programen només si ja està activa (`sdp-purga-baixes`, `sdp-purga-paperera-notes`, `sdp-neteja-xat-adjunts` i `sdp-purga-altes-seguiments`). `pg_net` només hi apareix per a dir que no s'usa.
 - **Realtime:** la publicació `supabase_realtime` inclou `public.xat_missatges`.
-- **Funcions:** tres funcions a `supabase/functions/` (`compte-apple`, `noticies` i `purga-fitxers`) i el codi compartit de `_shared`. `purga-fitxers` llig la clau de servei i `SDP_CRON_SECRET` de l'entorn de la funció (`Deno.env`); `compte-apple` llig la clau de servei, els cinc secrets d'Apple (els identificadors d'equip, de clau i de client, la clau privada i la clau dels testimonis; els noms exactes són al codi de la funció, perquè el client web no els ha de nomenar mai) i `SDP_CRON_SECRET`.
+- **Funcions, tall actual del 2026-11-03:** cinc entrades `index.ts` a `supabase/functions/`: `compte-apple`, `noticies`, `purga-fitxers`, `ap-inbox-verifica` i `notifica-xat`; més el codi compartit de `_shared`. És un inventari de fonts, no de funcions desplegades. `purga-fitxers` llig la clau de servei i `SDP_CRON_SECRET` de l'entorn de la funció (`Deno.env`); `compte-apple` llig la clau de servei, els cinc secrets d'Apple (els identificadors d'equip, de clau i de client, la clau privada i la clau dels testimonis; els noms exactes són al codi de la funció, perquè el client web no els ha de nomenar mai) i `SDP_CRON_SECRET`.
 - **No mesurat:** la mida de la base de dades de producció. Cal consultar-la al projecte abans de fixar el disc d'un node gran.
 
 | Bucket | Públic | Límit per fitxer (bytes) | Tipus admesos |
@@ -99,20 +120,27 @@ El node en **mode `remote`** necessita un **projecte Supabase** amb les **migrac
 | `mitjans_privats` | no | 25.242.880 | WebP, JPEG, PNG, AVIF i PDF |
 | `xat_adjunts` | no | 20.000.000 | WebP, JPEG, MP4, WebM, QuickTime, àudio WebM, MP4 i Ogg, i `application/octet-stream` per als adjunts xifrats (E2EE) |
 
+### 4.1 Administració multipoble · assaig SQL local del 2026-11-03
+
+- **PostgreSQL 17.5 en memòria**, mitjançant **PGlite 0.3.16** ja disponible: s'han aplicat les **74 migracions reals** fins a la 1700. **18 casos passen**; les fonts SQL conserven les mateixes empremtes.
+- **Helper real** de superadmin i **aal2**, permisos d'execució, aïllament entre pobles, claus privades ocultes, versions i historial. **Auth, Storage i Realtime** tenen infraestructura de prova explícita.
+- **Reproducció opcional:** `SDP_PGLITE_MODULE` indica un mòdul local existent a `tests/administracio-multipoble-postgres.test.mjs`. Sense mòdul, la suite declara una **omissió**, no una prova SQL superada.
+- **Límit:** no s'han validat GoTrue, PostgREST ni un servidor Supabase; **no s'ha aplicat cap migració remota**. Esta prova tampoc mesura la mida de la base de dades de producció.
+
 ## 5. Federació d'un node germà
 
 La prova de l'instal·lador genera la federació del node de Xixona des de la còpia instal·lada, amb la mateixa ordre que el mòdul NixOS.
 
 - **Coherent:** NodeInfo 2.1, `host-meta`, WebFinger i les regles d'nginx usen l'origen del node, i cap fitxer publicat conté `socdepoble.org`.
-- **Residu:** el node publicaria l'actor `la-torre-de-les-macanes` i el del projecte, i cap actor de Xixona. `POBLES_FEDERATS` (`src/data/activitypub.js`) i `ACTORS_WEBFINGER_ESTATIC` (`tooling/seo/genera-federacio.mjs`) són constants de la release.
-- **Reescriptures:** el `firebase.json` copiat porta les de WebFinger lligades a `socdepoble.org`.
+- **Identitat municipal comprovada:** el generador llig `node-germa.json` i publica un sol actor, Xixona, amb la seua outbox; cap actor de La Torre ni del projecte. La prova D-13 i el build real de FEDI-05 ho comproven.
+- **Reescriptures (FEDI-05):** l'instal·lador reutilitza `reglesFirebaseWebFinger` del generador per a adaptar reescriptures i capçaleres al domini i poble nous. Conserva les altres regles de la release i rebutja una compilació sense la identitat esperada.
 - **Llavor:** la release copia les fotos i les pàgines de La Torre de la demostració.
-- **Estat:** la prova ho declara com a `[DEFECTE]`; el canvi és una decisió pendent del Mestre.
+- **Límit:** la còpia, la federació generada i el build web de Xixona estan comprovats en local; el desplegament d'eixa còpia i la federació interactiva amb una instància externa no s'han executat en estes proves.
 
 ## 6. RAM i CPU d'un servidor autoallotjat
 
 - **Supabase autoallotjat amb Docker:** mínim de 4 GB de RAM, 2 nuclis i 40 GB de SSD; recomanat 8 GB o més, 4 nuclis o més i 80 GB o més de SSD. Font: [Supabase, Self-Hosting with Docker](https://supabase.com/docs/guides/self-hosting/docker), consultada el 2026-11-01. La pàgina afig que activar els registres i l'analítica augmenta els requisits.
-- **Web estàtica sola:** són 0,14 GB de fitxers servits per nginx. No s'ha mesurat cap càrrega de servidor; el pla més menut de la secció 7 hi té espai de sobra.
+- **Web estàtica sola:** el tall del 2026-11-01 suma 0,14 GB de fitxers. La instantània del Node 0 de la secció 1.1 no aïlla nginx ni altres serveis; no determina capacitat de concurrència ni requisits mínims de CPU/RAM.
 - **Construcció:** no cal fer-la al servidor; amb Node 24 i les dependències de la secció 3 es pot construir en una altra màquina i copiar `dist/`.
 
 ## 7. Preus oficials consultats
@@ -150,8 +178,8 @@ Supòsit comú, no mesurat: una visita nova transferix uns 2 MB. La closca compr
 
 - Les xifres de `dist/` valen per al build de les 04:07; un build nou les canvia.
 - Les mesures de producció són d'un sol mòdul i d'una sola hora.
-- La mida de la base de dades i la càrrega real d'un servidor no s'han mesurat.
-- La construcció d'un node (`npm ci` i `npm run build:web`) no s'ha provat.
+- La mida de la base de dades, el consum elèctric i la càrrega per servei no s'han mesurat. La secció 1.1 és una instantània de tot el Node 0.
+- El build web de Xixona està provat amb dependències locals iguals al lock; falta una instal·lació nova amb `npm ci` i la validació real de Nix, lock i VM NixOS.
 - Els escenaris sumen preus publicats amb un supòsit de trànsit; no són pressupostos.
 
 ## Vincles

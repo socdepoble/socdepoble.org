@@ -1,4 +1,34 @@
 {
   "@context": "https://schema.org",
-  "@graph": []
+  "@graph": [
+    {
+      "@id": "directori.jsonld#ajuntament-la-torre-de-les-macanes",
+      "@type": "Organization",
+      "identifier": "ajuntament-la-torre-de-les-macanes",
+      "location": {
+        "@id": "municipi.jsonld#la-torre-de-les-macanes"
+      },
+      "name": "Ajuntament de La Torre de les Maçanes"
+    },
+    {
+      "@id": "directori.jsonld#rentonar",
+      "@type": "Organization",
+      "alternateName": "rentonar",
+      "identifier": "rentonar",
+      "location": {
+        "@id": "municipi.jsonld#la-torre-de-les-macanes"
+      },
+      "name": "Associació El Rentonar"
+    },
+    {
+      "@id": "directori.jsonld#socdepoble",
+      "@type": "Organization",
+      "alternateName": "socdepoble",
+      "identifier": "socdepoble",
+      "location": {
+        "@id": "municipi.jsonld#la-torre-de-les-macanes"
+      },
+      "name": "Sóc de Poble"
+    }
+  ]
 }

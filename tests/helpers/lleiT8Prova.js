@@ -130,7 +130,7 @@ export function infraccionsT8(html) {
   }
   for (const a of cos.querySelectorAll('a')) {
     const href = a.getAttribute('href') ?? '';
-    if (href.startsWith('https://') || href === 'http://socdepoble.cat') {
+    if (href.startsWith('https://')) {
       if (a.getAttribute('target') !== '_blank' || a.getAttribute('rel') !== 'noopener noreferrer') errors.push(`${href} sense target="_blank" i rel="noopener noreferrer"`);
     } else if (!href.startsWith('/') || href.startsWith('//') || a.hasAttribute('target') || !rutaViva(href)) {
       errors.push(`enllaç que no porta a cap ruta viva: ${href}`);

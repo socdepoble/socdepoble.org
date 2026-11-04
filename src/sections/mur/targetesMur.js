@@ -57,7 +57,7 @@ export function targetesDeSistema(pageCopy, { quanFalta, nativa = esAppNativa() 
  * data real: no se n'inventa cap per a ordenar.
  */
 export function momentDeLaTargeta(item, esdeveniment) {
-  if (!esdeveniment) return momentDElement(item);
+  if (!esdeveniment || item?.boinaDataPublicacio === true) return momentDElement(item);
   return dataDeDocument(fontsDeLActe(esdeveniment))?.instant.getTime() ?? null;
 }
 

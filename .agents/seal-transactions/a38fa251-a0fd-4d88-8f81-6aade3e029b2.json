@@ -1,0 +1,42 @@
+{
+  "id": "a38fa251-a0fd-4d88-8f81-6aade3e029b2",
+  "session": "16615799-ff72-4963-9c57-ddae8c5b0470",
+  "operationId": "FEDI23-connectar-async-family-final",
+  "claim": "16615799-ff72-4963-9c57-ddae8c5b0470:governance-write",
+  "planHash": "c6e8df83c10bf4194b14e06e651003e65ed6d3cbc8374309ee35265139df4523",
+  "beforeSeal": "72783f5b41bdfc77f64627af5214fe20d1a2cf87b2f104b6200dfcc68d6add70",
+  "files": [
+    {
+      "path": "src/sections/connectar/organitzacio/useIncloureEnEntitat.js",
+      "before": "9e29a1eb61e3fcb767497656b20e79212976f3adb4c73c7fd5453335d72e95ec",
+      "after": "812304dac3ca17943baea9568876836c0a12d5f84d035da450fbb10b2b8b3c9f"
+    },
+    {
+      "path": "src/sections/connectar/organitzacio/BlocIncloureEnEntitat.test.jsx",
+      "before": "965f4ef5e25af4068a3e273bf31e37c11fccf41255a7832488332c49e3b36164",
+      "after": "6c38934fdeeb85f8a51217c55f0d0d1eb4a165dbb032c4ca381af57cfe0b9085"
+    },
+    {
+      "path": "src/sections/connectar/organitzacio/BlocFormarPart.jsx",
+      "before": "890907c4a8d949b8e1d82fbb508010ef498fbcbb583a72bfbbf0caf697c1aaa6",
+      "after": "bb3e8f3bf20670278af18a72262abae6859c900da14f40ef5c87493f3b78c539"
+    },
+    {
+      "path": "src/sections/connectar/missatgeAlXat.js",
+      "before": "5fa81818485752d3c5026e4dd02ac4c66d48f996dbd91c239ea5646067216474",
+      "after": "3d9fd9a4f6984f14b30ebc534801be9ae37b97a6ea69174baaea2df98d8cad54"
+    },
+    {
+      "path": "src/sections/connectar/ConnectarSection.jsx",
+      "before": "7ff5f9e7f7b6b2911906a51d76b146532f78fc0bd0d1bf2009bfae273722b2ef",
+      "after": "ba5cd198e5e27e25a93488f631b38830954832d818773b0e976ffe7ab724c07a"
+    },
+    {
+      "path": "src/sections/connectar/ConnectarSection.relacions.test.jsx",
+      "before": "5e53fb5a1f9b18a2017ab6458bb27a8a85bc2946aea7174872027a1632b6d4a5",
+      "after": "df856ddaf1f96eb4cd0bf80686262d705b9656dabe7ad9ca44bbf87eeccb3eef"
+    }
+  ],
+  "state": "accepted",
+  "afterSeal": "5dba4ddc7b60e87f720d2433a0cd610b6f50be95ed7a62cba37db77c3fd23f27"
+}

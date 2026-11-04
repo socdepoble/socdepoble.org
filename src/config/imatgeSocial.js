@@ -241,6 +241,8 @@ export const VARIANTS_SOCIALS = Object.freeze({
      d'una publicació remota de producció: la seua bessona .webp arribava al
      <head>. */
   '/assets/events/aplec_2023_cartell.jpg': '/assets/events/aplec_2023_cartell-social-1200x630.jpg',
+  '/assets/events/cartell_pedra_en_sec_fageca_2026.webp': '/assets/events/cartell_pedra_en_sec_fageca_2026-social-1200x630.jpg',
+  '/assets/events/cartell_pedra_en_sec_alcosser_2026.webp': '/assets/events/cartell_pedra_en_sec_alcosser_2026-social-1200x630.jpg',
   /* OG-02 (pla 261029_1305, Bloc B, M1.1) · Les sis imatges de llavor que no
      feien 1200x630: les dos vinyetes de les pàgines del Cervell i de la Consola
      (480x480) i quatre portades de pobles. Mateixa convenció que la resta:
@@ -767,8 +769,8 @@ function candidatesDe(tipus, item) {
       const galeria = galeriaPresent ? llistaDe(item.images) : [item.image_url, item.image, item.imageSrc].map(primerValor);
       return [...galeria, ...srcsDeLesImg(item.description)];
     }
-    case 'mur':
     /* IDEA-61 (T0, prompt 261102_1532) · Una vertical és una publicació del Mur. */
+    case 'mur':
     case 'vehicle':
     case 'treball':
     case 'habitatge': {

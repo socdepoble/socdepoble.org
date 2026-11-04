@@ -23,11 +23,13 @@ export function tempsDelPas(clau, env = process.env) {
    T4 (261024_1800, P1-10): run-portes --nomes-portes executa les portes i el linter, però no les seues
    bateries de proves (documental, node i el Vitest sencer d'uns 9 min). Ací les substituïx la suite
    ràpida (vitest.precommit.config.js més les proves de node de seguretat, migracions i documental).
+   El contracte de teclat per superfícies corre separat, també sobre este arbre preparat.
    La suite sencera continua per Onada. P0-22 (261101): cap pas comparteix ja l'antic tall únic de 120 s. */
 export const PASSOS_HOOK = Object.freeze([
   {cmd:process.execPath, args:['tooling/gates/porta-documents.mjs','--staged'], pas:'defecte'},
   {cmd:process.execPath, args:['tooling/gates/tancament.mjs','--check'], pas:'defecte'},
   {cmd:process.execPath, args:['tooling/gates/run-portes.mjs','--nomes-portes'], pas:'portes'},
+  {cmd:process.execPath, args:['tooling/gates/teclat-superficies.mjs'], pas:'proves'},
   {cmd:'npm', args:['run','test:precommit'], pas:'proves'},
 ].map(pas => Object.freeze({...pas, args:Object.freeze(pas.args)})));
 /* Sense pas explícit («verify --staged», plumbing de Git) també val tempsDelPas: així
@@ -59,6 +61,8 @@ export function enllacaDependencies(origen, desti) {
     (P0-22). Reutilitza les dependències instal·lades: el hook mai instal·la ni executa scripts de cicle
     de vida. El hook usa els valors per defecte; les proves injecten `run` i `origen`. */
 export function executaValidadors(dir, env, {run = runChecked, origen = path.join(PROJECT_DIR,'node_modules')} = {}) {
+  // Runtime canònic buit per a Fronteres; mai es copia la paperera privada de l’arbre viu.
+  fs.mkdirSync(path.join(dir,'.sdp-paperera'), {mode:0o700});
   enllacaDependencies(origen, path.join(dir,'node_modules'));
   for (const {cmd,args,pas} of PASSOS_HOOK) run(cmd,args,dir,env,tempsDelPas(pas,env));
 }

@@ -94,6 +94,7 @@ export const passos = [
   { nom: 'Porta RLS', cmd: 'node', args: ['tooling/gates/tractor-rls.mjs'], script: 'porta:rls' },
   { nom: 'Porta Catàleg', cmd: 'node', args: ['tooling/gates/tractor-cataleg.mjs'], script: 'porta:cataleg' },
 
+  { nom: 'Contracte de teclat per superfícies', cmd: 'node', args: ['tooling/gates/teclat-superficies.mjs'], prova: true },
   { nom: 'Proves NodeJS', cmd: 'npm', args: ['run', 'test:node'], prova: true },
   { nom: 'Proves', cmd: 'npm', args: ['run', 'test', '--', '--run'], prova: true }
 ];

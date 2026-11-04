@@ -1,4 +1,24 @@
 {
   "@context": "https://schema.org",
-  "@graph": []
+  "@graph": [
+    {
+      "@id": "agenda.jsonld#casa-alta-exposicio-2023-11-26",
+      "@type": "Event",
+      "description": "Acte històric de l’agenda municipal: exposició a la Casa Alta el 26 de novembre de 2023, de 10.30 a 13.30 h. Font pública municipal: https://www.torremanzanas.es/eventos/etiqueta/casa-alta/mes/",
+      "endDate": "2023-11-26T13:30:00+01:00",
+      "identifier": "casa-alta-exposicio-2023-11-26",
+      "location": {
+        "@type": "Place",
+        "name": "La Torre de les Maçanes · Casa Alta, carrer del Castell, s/n"
+      },
+      "name": "Exposició Casa Alta",
+      "organizer": {
+        "@id": "directori.jsonld#ajuntament-la-torre-de-les-macanes",
+        "@type": "Organization",
+        "identifier": "ajuntament-la-torre-de-les-macanes",
+        "name": "Ajuntament de La Torre de les Maçanes"
+      },
+      "startDate": "2023-11-26T10:30:00+01:00"
+    }
+  ]
 }

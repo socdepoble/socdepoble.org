@@ -24,6 +24,7 @@
  * porta de la purga). És un deure del node Supabase: cap mètode nou al port.
  */
 import { capturaSessio, jwtPerBackend } from '../identitat.js';
+import { CODI_ENTRADA, ambCodi } from '../errorsBackend.js';
 import { getResolvedConfig, request, rpc } from './runtime.js';
 import { asseguraUsuari, logout } from './auth.js';
 import { aplicaContracteExportacioFederacio } from './contracteExportacioFederacio.js';
@@ -31,6 +32,7 @@ import { aplicaContracteExportacioFederacio } from './contracteExportacioFederac
 const FORMAT_EXPORTACIO = 'socdepoble.exportacio.v1';
 /* L'exportació arreplega tot el compte d'una volta: els 12 s de request() no basten. */
 const TEMPS_EXPORTACIO_MS = 60_000;
+const MODES_LOCALS = new Set(['seed', 'local']);
 
 const esObjecte = (valor) => !!valor && typeof valor === 'object' && !Array.isArray(valor);
 /* PostgREST torna el jsonb tal qual; una funció `returns table` el tornaria en
@@ -48,7 +50,14 @@ const formatInesperat = (que) => new Error(`${que}: el servidor ha respost amb u
  * canviar d'A a B: qui crida torna a cridar current() ABANS de cap efecte.
  */
 async function sessioDelCompte(config) {
-  if (!getResolvedConfig(config).hasSupabaseConfig) throw new Error('El compte necessita connexió amb el servidor.');
+  const resolved = getResolvedConfig(config);
+  /* R2CF-01 · El compte d’este adaptador és remot. En seed/local no es
+     consulta ni es modifica l’estat de producció, tampoc renovant la sessió.
+     No hi ha cap estat local ací que permeta afirmar una baixa o consentiment. */
+  if (MODES_LOCALS.has(resolved.runtimeDataMode)) {
+    throw ambCodi(new Error('Esta operació de compte necessita una sessió real al servidor; el mode de proves no envia dades.'), CODI_ENTRADA.MODE_LOCAL);
+  }
+  if (!resolved.hasSupabaseConfig) throw new Error('El compte necessita connexió amb el servidor.');
   const current = capturaSessio();
   const usuari = await asseguraUsuari(config, current);
   current();

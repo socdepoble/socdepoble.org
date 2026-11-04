@@ -1,0 +1,47 @@
+{
+  "id": "70b785d1-7f93-4c91-90e5-d1e008209fb3",
+  "session": "7c9cd5b4-8cd9-4eeb-966c-311c8200a401",
+  "operationId": "FEDI23-connectar-final-scope-and-copy",
+  "claim": "7c9cd5b4-8cd9-4eeb-966c-311c8200a401:governance-write",
+  "planHash": "6359c7fa085d73d595285ff394febdb2c61d70c94e33bb6c97237f5eea3d3223",
+  "beforeSeal": "a77b19450315e0369b3f59dde2b1509f55424073b5f9a7040e8eb683cf596ba2",
+  "files": [
+    {
+      "path": "src/sections/connectar/VisibilitatDeLaConnexio.jsx",
+      "before": "05248653085c7f0baa35779371efec0c2072b883c9ee13a4461744ae264a11f4",
+      "after": "99af862d63ae0e1c4605cec6c2f378c2f5eba611286b2e568e3c06711b91c5ec"
+    },
+    {
+      "path": "src/sections/connectar/VisibilitatDeLaConnexio.test.jsx",
+      "before": "5a3ed0e87f330f6759075fc28f43b0f70ac11793c8efd9fd870c963a0ee0daf4",
+      "after": "684fc57229e104e3f4930ff5a237bc1d7abc1fd0e78f645ad1d2ce07d5c95818"
+    },
+    {
+      "path": "src/config/idiomes/ca.js",
+      "before": "385755ea372a3c24bd6bd3fa104ddaa88ffb88808eac8f3553baf05ea75f345f",
+      "after": "001a4211a63c8d91ac04106de1236e05d2f67610b0dac150147b4720534e4007"
+    },
+    {
+      "path": "src/config/idiomes/es.js",
+      "before": "7321a3d5782f3411b2628c69837fcb1acfaee9c71c62964c3fe1dc1a45fe2ba2",
+      "after": "b9a2ca23eca7f930df23b4ebce96fe8e53cddd2b3316e0f4b911a0b82c748b46"
+    },
+    {
+      "path": "src/config/idiomes/en.js",
+      "before": "cf11adefda11b4453a4bdf60ad598300a6505d7900f6a1937396c0bde43a5ac6",
+      "after": "16f15280c9136bba1b398512e55ce09188eaefe0deb46288291ad6ff2f26ebba"
+    },
+    {
+      "path": "src/config/idiomes/eu.js",
+      "before": "430471bc9028c80d403a93d5abc24740ad2fe90f40a3dcf4617d7aeef512bc37",
+      "after": "7c1c06335beadced490fb5b2a5781ce636e43a44ed77c496d7072ee0ba163952"
+    },
+    {
+      "path": "src/config/idiomes/gl.js",
+      "before": "2a9c2f04dcdea8f4f0a7c9dd392926276204f8bc3fb67eec4f019bae7faafbf9",
+      "after": "8632a6170114812a70bada326cb69ffa2b01edccac21fe674308a623a76e6dd3"
+    }
+  ],
+  "state": "accepted",
+  "afterSeal": "5dba4ddc7b60e87f720d2433a0cd610b6f50be95ed7a62cba37db77c3fd23f27"
+}

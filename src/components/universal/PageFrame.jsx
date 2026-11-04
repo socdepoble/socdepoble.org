@@ -179,9 +179,12 @@ function destiDelSalt(element) {
   if (!desplacador) return null;
   const estil = estilDe(element);
   const barres = reservaDeLesBarres(element, desplacador);
-  const marge = Math.max(px(estil.scrollMarginTop), barres > 0 ? barres + px(estil.getPropertyValue('--sdp-space-4')) : 0);
+  // Les tres reserves descriuen la mateixa zona tapada. El CSS del focus
+  // i els scroll-margin de la Consola ja inclouen les barres: no se sumen.
+  const reserva = Math.max(px(estilDe(desplacador).scrollPaddingTop), px(estil.scrollMarginTop),
+    barres > 0 ? barres + px(estil.getPropertyValue('--sdp-space-4')) : 0);
   const top = desplacador.scrollTop + element.getBoundingClientRect().top - desplacador.getBoundingClientRect().top
-    - desplacador.clientTop - px(estilDe(desplacador).scrollPaddingTop) - marge;
+    - desplacador.clientTop - reserva;
   return { desplacador, top };
 }
 
@@ -1330,8 +1333,8 @@ function LogoDeCapcalera({ clar, fosc, alt }) {
     const mida = midaNaturalDelLogo(srcClar, srcFosc);
     return (
       <>
-        <img alt={alt} className="page-title-logo light-only" src={srcClar} width={mida?.width} height={mida?.height} />
-        <img alt={alt} className="page-title-logo dark-only" src={srcFosc} width={mida?.width} height={mida?.height} />
+        <img alt={alt} className={mida ? 'page-title-logo light-only' : 'page-title-logo page-title-logo--entitat light-only'} src={srcClar} width={mida?.width} height={mida?.height} referrerPolicy={mida ? undefined : 'no-referrer'} />
+        <img alt={alt} className={mida ? 'page-title-logo dark-only' : 'page-title-logo page-title-logo--entitat dark-only'} src={srcFosc} width={mida?.width} height={mida?.height} referrerPolicy={mida ? undefined : 'no-referrer'} />
       </>
     );
   }

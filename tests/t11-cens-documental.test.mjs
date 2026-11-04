@@ -27,7 +27,7 @@ function auditCensus(content){
 test('quatre documents preserven el contracte de frontmatter vigent',()=>{
  const schema=JSON.parse(read('tooling/wiki/schema.json'));for(const file of FILES)assert.deepEqual(validateSchema(parseDocument(read(file)).data,schema),[],file);
 });
-test('cens vigent compara sis mesures contra les42skills reals, distingint marca i prefix',()=>{
+test('cens vigent compara sis mesures contra les skills reals, distingint marca i prefix',()=>{
  const r=auditCensus(read(CENS));assert.equal(r.status,'no-explicit-disagreements');assert.equal(r.coverage.catalog.comparedIds,6);assert.equal(r.coverage.catalog.activeClaims,6);
  assert.notEqual(canonical().get('marca core: true'),canonical().get('prefix core-'));
 });

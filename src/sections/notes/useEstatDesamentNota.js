@@ -28,6 +28,7 @@ const NOMS_CAMPS = Object.freeze({
   copyright: 'els drets d’autor',
   heroImage: 'la imatge de capçalera',
   logoImage: 'la imatge del títol',
+  logoImageDark: 'el logotip de mode nit',
   folderId: 'la carpeta',
   categories: 'les categories',
   tags: 'les etiquetes',

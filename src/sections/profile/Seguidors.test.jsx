@@ -14,7 +14,8 @@ import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 const m = vi.hoisted(() => ({ caps: new Set(['seguiments']), qui: vi.fn() }));
 vi.mock('../../data/backendPort.js', () => ({
   teCapacitat: (cap) => m.caps.has(cap),
-  quiEmSegueix: (...args) => m.qui(...args)
+  quiEmSegueix: (...args) => m.qui(...args),
+  elsMeusSeguiments: async () => []
 }));
 import { GentQueEtSegueix, QuiSegueixOrganitzacio, dataDelSeguiment, textDErrorDeSeguidors } from './Seguidors.jsx';
 import { GestioMembres } from './GestioMembres.jsx';
@@ -49,12 +50,12 @@ describe('GentQueEtSegueix · a la fitxa pròpia', () => {
 
   test('demana el veïnat connectat amb tu (sense entitat) amb la configuració i el senyal, i pinta la llista en l’ordre del port', async () => {
     render(<GentQueEtSegueix config={{ dataMode: 'seed' }} />);
-    const seccio = screen.getByRole('region', { name: 'Veïnat connectat amb tu' });
+    const seccio = screen.getByRole('region', { name: 'Veïnat i amistats connectades' });
     expect(within(seccio).getByText('Carregant el veïnat connectat amb tu…')).toBeTruthy();
     await waitFor(() => expect(m.qui).toHaveBeenCalledWith({}, expect.objectContaining({ dataMode: 'seed', signal: expect.any(AbortSignal) })));
-    const llista = await within(seccio).findByRole('list', { name: 'Veïnat connectat amb tu' });
+    const llista = await within(seccio).findByRole('list', { name: 'Veïnat i amistats connectades' });
     const files = within(llista).getAllByRole('listitem').map((li) => li.textContent);
-    expect(files).toEqual([`Pepa Garcia · ${dataDelSeguiment('2026-10-24T09:00:00Z')}`, 'Sense nom']);
+    expect(files).toEqual([`Pepa Garcia · Connectat amb tu · ${dataDelSeguiment('2026-10-24T09:00:00Z')}`, 'Sense nom · Connectat amb tu']);
     expect(llista.querySelector('time').getAttribute('datetime')).toBe('2026-10-24T09:00:00Z');
     expect(within(seccio).getByText(/cap algoritme no hi decidix res/)).toBeTruthy();
     /* Cap regió viva: és una lectura, no la resposta a cap acció. */
@@ -64,12 +65,12 @@ describe('GentQueEtSegueix · a la fitxa pròpia', () => {
   test('IDEA-22 · una entitat connectada es diu entitat, en la llengua de la fitxa', async () => {
     m.qui.mockResolvedValue(AMB_ENTITAT);
     render(<GentQueEtSegueix t={(_clau, reserva) => reserva} />);
-    const llista = await screen.findByRole('list', { name: 'Veïnat connectat amb tu' });
+    const llista = await screen.findByRole('list', { name: 'Veïnat i amistats connectades' });
     expect(within(llista).getAllByRole('listitem').map((li) => li.textContent)).toEqual([
-      `Forn de la Torre (entitat) · ${dataDelSeguiment('2026-10-25T08:00:00Z')}`,
-      `Toni Ferrer · ${dataDelSeguiment('2026-10-24T09:00:00Z')}`
+      `Forn de la Torre · Connectat amb tu (entitat) · ${dataDelSeguiment('2026-10-25T08:00:00Z')}`,
+      `Toni Ferrer · Connectat amb tu · ${dataDelSeguiment('2026-10-24T09:00:00Z')}`
     ]);
-    expect(screen.getByText(/^Cada persona o entitat d’esta llista/)).toBeTruthy();
+    expect(screen.getByText(/^La llista unix les persones i entitats/)).toBeTruthy();
   });
 
   test('el buit, el servidor sense l’esquema i una fallada qualsevol', async () => {
@@ -97,7 +98,7 @@ describe('GentQueEtSegueix · a la fitxa pròpia', () => {
     render(<GentQueEtSegueix t={t} locale="en-GB" />);
     expect(screen.getByRole('heading', { level: 3, name: 'Neighbours connected with you' })).toBeTruthy();
     await screen.findByRole('list');
-    expect(screen.getByText(/Pepa Garcia/).textContent).toBe(`Pepa Garcia · ${dataDelSeguiment('2026-10-24T09:00:00Z', 'en-GB')}`);
+    expect(screen.getByRole('link', { name: 'Pepa Garcia' }).closest('li').textContent).toBe(`Pepa Garcia · Connectat amb tu · ${dataDelSeguiment('2026-10-24T09:00:00Z', 'en-GB')}`);
     expect(t).toHaveBeenCalledWith('section.perfil.seguidors.ajuda', expect.any(String));
   });
 

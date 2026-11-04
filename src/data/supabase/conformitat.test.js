@@ -51,8 +51,14 @@ afterAll(() => {
    port rebutja els accessors (index.test.js). */
 const adaptador = { ...supabase };
 /* En llavor, salut i xatDePagina només en validen la forma: el config va sense URL a posta (cap sonda). */
-const ctx = contextDeConformitat({ config: { dataMode: 'seed' }, escriptures: true });
+const ctx = contextDeConformitat({ config: { dataMode: 'seed' }, escriptures: true, escenaris: { compteModeProva: true } });
 const resultats = new Map();
+const invocatsSeed = new Set();
+const omissionsFedi17 = context => CASOS.slice(99).flatMap(c => {
+  if (c.capacitat && typeof adaptador[c.metode] !== 'function') return [`${c.metode}: capacitat ${c.capacitat} absent`];
+  const buides = c.requerix.filter(k => !context[k]);
+  return buides.length ? [`${c.metode}: sense ${buides.join(', ')} (un cas anterior no l'ha deixat)`] : [];
+});
 
 describe('conformitat del port · Supabase en mode seed', () => {
   test('el port l’accepta: nucli sencer i cap capacitat a mitges', () => {
@@ -62,24 +68,40 @@ describe('conformitat del port · Supabase en mode seed', () => {
   /* En ordre: cada cas pot deixar al context el que necessita el següent. */
   for (const [index, c] of CASOS.entries()) {
     test(`${index + 1}. ${c.titol}`, async () => {
-      const resultat = await executaCas(c, adaptador, ctx);
+      let crides = 0;
+      const instrumentat = { ...adaptador };
+      if (typeof adaptador[c.metode] === 'function') instrumentat[c.metode] = (...args) => { crides++; invocatsSeed.add(c.metode); return adaptador[c.metode](...args); };
+      const resultat = await executaCas(c, instrumentat, ctx);
+      expect(crides).toBe(resultat.estat === 'omés' ? 0 : 1);
+      if (c.metode === 'demanaBaixa' && c.requerix.includes('compteOperatiu') && resultat.estat === 'ok') expect(adaptador.getCurrentUser()).toBeNull();
       resultats.set(index, resultat);
       expect(resultat.falles, resultat.falles.join(' · ')).toEqual([]);
       expect(resultat.estat).not.toBe('falla');
     });
   }
 
-  test('només s’ometen les capacitats que Supabase no té', () => {
+  test('només s’ometen la capacitat absent i les lectures administratives sense opt-in', () => {
     const omesos = CASOS.map((c, index) => [c, resultats.get(index)])
       .filter(([, resultat]) => resultat?.estat === 'omés')
       .map(([c, resultat]) => `${c.metode}: ${resultat.motiu}`);
     /* T2 · D04/D10 (D-3) · Supabase llig les dades obertes però no les restaura: els dos casos del kit
        (el lot invàlid i, Gauntlet D-01, el conflicte d'identificador) s'ometen per la capacitat. */
-    expect(omesos).toEqual(Array(2).fill('restauraDadesObertes: capacitat restauracioDadesObertes absent'));
+    expect(omesos).toEqual([
+      ...Array(2).fill('restauraDadesObertes: capacitat restauracioDadesObertes absent'),
+      "adminLlistaPobles: sense adminMultipobleAutoritzat (un cas anterior no l'ha deixat)",
+      "adminLligPersonalitzacio: sense adminMultipobleAutoritzat, tenantAdministrat (un cas anterior no l'ha deixat)",
+      ...omissionsFedi17(ctx)
+    ]);
     expect(resultats.size).toBe(CASOS.length);
   });
 
-  test('cap petició de xarxa en tota la passada', () => {
+  test('cens d’invocacions reals i omissions seed', () => {
+    const omesos = [...resultats.values()].filter(r => r.estat === 'omés').length;
+    console.info('FEDI17_CENS', JSON.stringify({ passada: 'Supabase seed', casos: CASOS.length, correctes: CASOS.length - omesos, omesos, invocats: [...invocatsSeed].sort() }));
+    expect(adaptador.getCurrentUser()).toBeNull();
+  });
+
+  test('cap petició de xarxa en tota la passada' , () => {
     expect(xarxaSeed).not.toHaveBeenCalled();
   });
 });
@@ -128,6 +150,8 @@ function estatDelServidor() {
     autoritzacions: new Set(),
     anonimes: [],
     notes: new Map(),
+    consentiments: [],
+    identitatXifrada: null, fraseXifrada: null, llibretaXifrada: null,
     missatges: [missatgeDelServidor(1, VEINA, 'Bon dia!'), missatgeDelServidor(2, PERSONA, 'Hola, veïna')],
     marca: { rebut: 2, llegit: 1 },
     canalsTancats: [],
@@ -162,6 +186,7 @@ const errorUuid = (valor) => ({
 
 const RPC_DEL_XAT = {
   xat_fils_meus: () => [filDelServidor()],
+  crea_fil_directe: () => FIL,
   xat_historial: ({ p_abans_de_seq: abans, p_limit: limit }) => estat.missatges
     .filter((m) => abans === null || m.seq < abans).slice(-limit).reverse(),
   xat_nous: ({ p_despres_de_seq: despres }) => estat.missatges.filter((m) => m.seq > despres),
@@ -193,6 +218,7 @@ function clientFals() {
     rpc(nom, parametres = {}) {
       const dolent = PARAMETRES_UUID.find((clau) => parametres[clau] != null && !RE_UUID.test(String(parametres[clau])));
       if (dolent) return consulta(errorUuid(parametres[dolent]));
+      if (nom === 'crea_fil_directe') expect(parametres).toEqual({ p_tenant_id: POBLE, p_altre_usuari: VEINA, p_titol: 'Conformitat directa' });
       const respon = RPC_DEL_XAT[nom];
       if (!respon) {
         estat.rutesDesconegudes.push(`rpc ${nom}`);
@@ -278,6 +304,11 @@ const SUBMISSIO_DEL_MUR = {
 const TALL_DE_CLAUS = /^\(created_at\.lt\."([^"]+)",and\(created_at\.eq\."([^"]+)",id\.lt\."([^"]+)"\)\)$/;
 function rutaDePublicacions(url, opcions) {
   const p = url.searchParams;
+  if (opcions.method === 'POST') {
+    const files = JSON.parse(opcions.body);
+    estat.publicacioDesada = structuredClone(files[0]);
+    return resposta(files);
+  }
   const publicacions = estat.publicacions || { mur: [SUBMISSIO_DEL_MUR] };
   let files = [...(publicacions[eq(p.get('section_id'))] || [])];
   if (p.has('or')) {
@@ -329,6 +360,19 @@ function fetchDelServidor(entrada, opcions = {}) {
     estat.anonimes.push(`${metode} ${url.pathname}?key=${url.searchParams.get('key')}&tenant_id=${url.searchParams.get('tenant_id')}`);
   } else estat.autoritzacions.add(opcions.headers?.Authorization ?? null);
   const p = url.searchParams;
+  const parametresFedi17 = {
+    xat_publica_identitat: { p_kid_anterior: null, p_declaracio: { kid: 'kid-opac' }, p_autofirma: 'firma-opaca', p_firma_continuitat: null },
+    xat_la_meua_identitat: {}, xat_desa_frase: { p_kid: 'kid-opac', p_frase: 'frase-xifrada-opaca' },
+    xat_desa_llibreta: { p_comptador: 0, p_llibreta: { iv: 'iv-opac', ct: 'ct-opac', firma: 'firma-opaca' } },
+    xat_la_meua_llibreta: {}, xat_estat_xifrat: { p_fils: [FIL] }, xat_epoques_del_fil: { p_fil_id: FIL, p_des_de: 0 },
+    xat_meus_sobres: { p_fil_id: FIL, p_epoques: [1] },
+    xat_envia_xifrat: { p_id: ctxRemot.idXifrat, p_fil_id: FIL, p_resposta_a: null, p_xifrat: { ct: 'ct-opac' }, p_epoca_nova: null },
+    estat_baixa: {}, cancela_baixa: {}, demana_baixa: { p_motiu: 'conformitat' }, estat_consentiment: {},
+    registra_consentiment: { p_tipus: 'analitica', p_versio: 'conformitat-v1' }, revoca_consentiment: { p_tipus: 'analitica' }, exporta_les_meues_dades: {}
+  };
+  const nomRpc = url.pathname.replace('/rest/v1/rpc/', '');
+  if (Object.hasOwn(parametresFedi17, nomRpc)) { expect(metode).toBe('POST'); expect(cos).toEqual(parametresFedi17[nomRpc]); }
+  if (url.pathname === '/auth/v1/user' && metode === 'PUT') expect(cos).toEqual({ password: 'Prova-no-real-120!' });
   /* Onada 11 (261010; prompt 261010_1730, tasca 2) · L'API MFA de GoTrue, com
      la documenta Supabase: un factor que no existix és 404 mfa_factor_not_found
      (repte, verify i retirada). */
@@ -338,6 +382,24 @@ function fetchDelServidor(entrada, opcions = {}) {
     /* Onada 11 · El compte de conformitat no té cap factor inscrit; este node
        no té el TOTP habilitat, i una inscripció es rebutja com fa GoTrue. */
     '/auth/v1/user': () => resposta({ id: PERSONA, email: 'conformitat@poble.invalid', factors: [] }),
+    '/auth/v1/logout': () => resposta(null, { status: 204 }),
+    '/rest/v1/rpc/xat_publica_identitat': () => { estat.identitatXifrada = { usuari_id: PERSONA, kid: cos.p_declaracio.kid, sig_pub: 'sig-opaca', dh_pub: 'dh-opaca', declaracio: cos.p_declaracio, autofirma: cos.p_autofirma }; return resposta([{ kid: estat.identitatXifrada.kid }]); },
+    '/rest/v1/rpc/xat_la_meua_identitat': () => resposta([estat.identitatXifrada]),
+    '/rest/v1/rpc/xat_desa_frase': () => { estat.fraseXifrada = cos.p_frase; return resposta(true); },
+    '/rest/v1/rpc/xat_desa_llibreta': () => { estat.llibretaXifrada = { ...cos.p_llibreta, kid: 'kid-opac', comptador: cos.p_comptador + 1 }; return resposta(estat.llibretaXifrada.comptador); },
+    '/rest/v1/rpc/xat_la_meua_llibreta': () => resposta(estat.llibretaXifrada),
+    '/rest/v1/rpc/xat_estat_xifrat': () => resposta(cos.p_fils.map(fil_id => ({ fil_id, epoca: '1', e2ee_des_de_seq: '3' }))),
+    '/rest/v1/rpc/xat_epoques_del_fil': () => resposta([{ epoca: '1', autor_id: PERSONA, declaracio: { opac: true }, firma: 'firma-opaca' }]),
+    '/rest/v1/rpc/xat_meus_sobres': () => resposta(cos.p_epoques.map(epoca => ({ epoca, receptor: PERSONA, kid_receptor: 'kid-opac', enc: 'enc-opac', ct: 'ct-opac' }))),
+    '/rest/v1/xat_reembolcalls': () => resposta([]),
+    '/rest/v1/rpc/xat_envia_xifrat': () => resposta({ id: cos.p_id, fil_id: cos.p_fil_id, seq: '50', cos: null, usuari_id: PERSONA, xifrat: cos.p_xifrat, creat_al: ARA }),
+    '/rest/v1/rpc/estat_baixa': () => resposta({ demanada: false, demanada_al: null, purga_prevista_al: null }),
+    '/rest/v1/rpc/cancela_baixa': () => resposta({ cancelada: true }),
+    '/rest/v1/rpc/demana_baixa': () => resposta({ demanada_al: ARA, purga_prevista_al: '2026-11-06T10:00:00Z' }),
+    '/rest/v1/rpc/estat_consentiment': () => resposta({ versio_vigent: 'conformitat-v1', url: null, text_sha256: null, consentiments: [...new Map(estat.consentiments.map(a => [a.tipus, a])).values()], cal_reconsentir: true }),
+    '/rest/v1/rpc/registra_consentiment': () => { estat.consentiments.push({ tipus: cos.p_tipus, versio: cos.p_versio, accio: 'accepta', al: ARA }); return resposta(null, { status: 204 }); },
+    '/rest/v1/rpc/revoca_consentiment': () => { estat.consentiments.push({ tipus: cos.p_tipus, versio: null, accio: 'revoca', al: ARA }); return resposta(null, { status: 204 }); },
+    '/rest/v1/rpc/exporta_les_meues_dades': () => resposta({ format: 'socdepoble.exportacio.v1', perfil: { id: PERSONA }, generat_al: ARA, notes: [], consentiments: estat.consentiments.map(a => ({ tipus: a.tipus, accio: a.accio, versio_politica: a.versio, al: a.al })), baixa: null }),
     '/auth/v1/factors': () => resposta({ code: 422, error_code: 'mfa_totp_enroll_not_enabled', msg: 'MFA enroll is disabled for TOTP' }, { status: 422 }),
     /* Onada 11 · Les RPC del Tauler darrere de private.es_superadmin() (aal2):
        la sessió de conformitat no té el segon factor i PostgREST torna el 42501. */
@@ -395,8 +457,9 @@ function fetchDelServidor(entrada, opcions = {}) {
   return Promise.resolve(ruta());
 }
 
-const ctxRemot = contextDeConformitat({ config: CONFIG_REMOT, escriptures: true });
+const ctxRemot = contextDeConformitat({ config: CONFIG_REMOT, escriptures: true, escenaris: { compteOperatiu: true, publicacioOperativa: true, credencialsDeProva: true, destinatariDirecte: VEINA, transportXifrat: true } });
 const resultatsRemots = new Map();
+const invocatsRemots = new Set();
 
 describe('conformitat del port · Supabase en mode remote (Auditoria 261007 B)', () => {
   beforeAll(() => {
@@ -412,22 +475,39 @@ describe('conformitat del port · Supabase en mode remote (Auditoria 261007 B)',
 
   for (const [index, c] of CASOS.entries()) {
     test(`${index + 1}. ${c.titol}`, async () => {
-      const resultat = await executaCas(c, adaptador, ctxRemot);
+      let crides = 0;
+      const instrumentat = { ...adaptador };
+      if (typeof adaptador[c.metode] === 'function') instrumentat[c.metode] = (...args) => { crides++; invocatsRemots.add(c.metode); return adaptador[c.metode](...args); };
+      const resultat = await executaCas(c, instrumentat, ctxRemot);
+      expect(crides).toBe(resultat.estat === 'omés' ? 0 : 1);
+      if (c.metode === 'demanaBaixa' && c.requerix.includes('compteOperatiu') && resultat.estat === 'ok') expect(adaptador.getCurrentUser()).toBeNull();
       resultatsRemots.set(index, resultat);
       expect(resultat.falles, resultat.falles.join(' · ')).toEqual([]);
       expect(resultat.estat).not.toBe('falla');
     });
   }
 
-  test('cap cas omés: el remot té totes les capacitats i el kit ha trobat el fil real', () => {
+  test('només s’ometen la capacitat absent i les lectures administratives sense opt-in; el fil és real', () => {
     const omesos = CASOS.map((c, index) => [c, resultatsRemots.get(index)])
       .filter(([, resultat]) => resultat?.estat === 'omés')
       .map(([c, resultat]) => `${c.metode}: ${resultat.motiu}`);
-    /* T2 · D04/D10 (D-3) · L'única que no té: la restauració de les dades obertes (els seus dos casos, Gauntlet D-01). */
-    expect(omesos).toEqual(Array(2).fill('restauraDadesObertes: capacitat restauracioDadesObertes absent'));
+    /* La sessió d'esta passada no té aal2: no activa les lectures privades del kit.
+       Els rebutjos d'abast invàlid sí que s'executen, abans del transport. */
+    expect(omesos).toEqual([
+      ...Array(2).fill('restauraDadesObertes: capacitat restauracioDadesObertes absent'),
+      "adminLlistaPobles: sense adminMultipobleAutoritzat (un cas anterior no l'ha deixat)",
+      "adminLligPersonalitzacio: sense adminMultipobleAutoritzat, tenantAdministrat (un cas anterior no l'ha deixat)",
+      ...omissionsFedi17(ctxRemot),
+    ]);
     expect(resultatsRemots.size).toBe(CASOS.length);
     expect(ctxRemot.filId).toBe(FIL);
     expect(ctxRemot.filEscrivible).toBe(FIL);
+  });
+
+  test('cens d’invocacions reals i omissions remote', () => {
+    const omesos = [...resultatsRemots.values()].filter(r => r.estat === 'omés').length;
+    console.info('FEDI17_CENS', JSON.stringify({ passada: 'Supabase remote doble', casos: CASOS.length, correctes: CASOS.length - omesos, omesos, invocats: [...invocatsRemots].sort() }));
+    expect(adaptador.getCurrentUser()).toBeNull();
   });
 
   test('el doble ha vist el que esperava: rutes conegudes, la sessió i el canal tancat', () => {
@@ -441,9 +521,15 @@ describe('conformitat del port · Supabase en mode remote (Auditoria 261007 B)',
     // P1-27 · El cicle de la nota del kit ha acabat de veres: el DELETE l'ha llevada del servidor.
     expect(ctxRemot.notaId).toMatch(RE_UUID);
     expect(estat.notes.has(ctxRemot.notaId)).toBe(false);
+    expect(estat.publicacioDesada).toMatchObject({ id: ctxRemot.idPublicacio, tenant_id: POBLE, owner_user_id: PERSONA, section_id: 'mur', author_org_id: null });
+    expect(estat.fraseXifrada).toBe('frase-xifrada-opaca');
+    expect(estat.llibretaXifrada).toMatchObject({ comptador: 1, iv: 'iv-opac', ct: 'ct-opac', firma: 'firma-opaca' });
+    expect(estat.consentiments.map(a => a.accio)).toEqual(['accepta', 'revoca']);
   });
 
   test('loadFils en remot porta les files d’ajuda a la cua, però el kit no les tria', async () => {
+    configuraBackendSessio(CONFIG_REMOT);
+    expect(desaSessio({ access_token: JWT, user: { id: PERSONA, email: 'conformitat@poble.invalid' } })).toBe(true);
     const fils = await adaptador.loadFils(CONFIG_REMOT);
     expect(fils[0].id).toBe(FIL);
     expect(fils.slice(1).every((fil) => fil.perDefecte)).toBe(true);
@@ -506,4 +592,19 @@ describe('conformitat del port · Supabase en mode remote (Auditoria 261007 B)',
       servidor.fetch = fetchOriginal;
     }
   });
+
+  test('logout remot amb sessió activa l’esborra; el mutant no-op queda refutat', async () => {
+    const c = CASOS.find(cas => cas.metode === 'logout');
+    const prova = async candidat => {
+      configuraBackendSessio(CONFIG_REMOT);
+      expect(desaSessio({ access_token: JWT, user: { id: PERSONA } })).toBe(true);
+      expect(adaptador.getCurrentUser()?.id).toBe(PERSONA);
+      const resultat = await executaCas(c, candidat, contextDeConformitat({ config: CONFIG_REMOT, escriptures: true }));
+      return resultat.estat === 'ok' && adaptador.getCurrentUser() === null;
+    };
+    expect(await prova({ ...adaptador, logout: async () => {} })).toBe(false);
+    expect(await prova(adaptador)).toBe(true);
+    expect(estat.rutesDesconegudes).toEqual([]);
+  });
+
 });

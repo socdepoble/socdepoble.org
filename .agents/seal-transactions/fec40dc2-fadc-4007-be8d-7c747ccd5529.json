@@ -1,0 +1,22 @@
+{
+  "id": "fec40dc2-fadc-4007-be8d-7c747ccd5529",
+  "session": "94afd0ca-35ec-486b-aa00-a4ca6d640d6d",
+  "operationId": "FEDI23-historical-fixture-proper-layer",
+  "claim": "94afd0ca-35ec-486b-aa00-a4ca6d640d6d:governance-write",
+  "planHash": "ca8f4785b8ec0658053dd651028245f5ac290e499ecba77547dff356e292c4f6",
+  "beforeSeal": "9af7c2fef0db3bc47ea77010a0f2936414ebdbc59bb9c61c96c9c3134576d07f",
+  "files": [
+    {
+      "path": "tests/helpers/vinculacioEntitatLegacy.jsx",
+      "before": "25c3bced272ac22085a6370f85be672a5d8794f62e0905d188fb658c477b4705",
+      "after": "2fde795fd7d003a3da448e805ca5fb94e3d3e325ba261aae800f5d5c158852a2"
+    },
+    {
+      "path": "src/sections/profile/ConnexionsPubliques.test.jsx",
+      "before": "e8e3330469f68fcba06bcad4072961902de3a01220ff76c1c149dab778097641",
+      "after": "6b1f178c94f6fb4d8ffa7a31f4c111bda28abaea1da55e67e9b135a0a23a8795"
+    }
+  ],
+  "state": "accepted",
+  "afterSeal": "5dba4ddc7b60e87f720d2433a0cd610b6f50be95ed7a62cba37db77c3fd23f27"
+}

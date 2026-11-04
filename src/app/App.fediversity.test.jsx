@@ -88,11 +88,19 @@ test('/fediversity porta a /page/fediversity, amb l’anatomia de la UniversalPa
        targeta, la UniversalCard del Mur, porta el seu H3 i el seu H4. Els H3 del text es compten fora
        de .sdp-targetes, com a TextSection.subtargeta. Prova posada al dia a propòsit. */
     expect(cos.className).toBe('cms-preview sdp-amb-targetes');
-    expect([...cos.children].map((fill) => fill.className)).toEqual(['sdp-cos-tros', 'sdp-targetes', 'sdp-cos-tros']);
-    const grup = cos.querySelector(':scope > .sdp-targetes');
-    expect([grup.dataset.forma, grup.dataset.alineacio, grup.querySelectorAll(':scope > .sdp-targeta').length]).toEqual(['sola', 'dreta', 1]);
-    expect(grup.querySelector('a.sp-card-link-overlay')?.getAttribute('href')).toBe('/fedivers');
-    expect([...grup.querySelectorAll('h3, h4, h5')].map((titol) => titol.tagName)).toEqual(['H3', 'H4']);
+    expect([...cos.children].map((fill) => fill.className)).toEqual([
+      'sdp-cos-tros', 'sdp-targetes', 'sdp-cos-tros', 'sdp-targetes', 'sdp-cos-tros'
+    ]);
+    const grups = [...cos.querySelectorAll(':scope > .sdp-targetes')];
+    expect(grups).toHaveLength(2);
+    for (const grup of grups) {
+      expect([grup.dataset.forma, grup.dataset.alineacio, grup.querySelectorAll(':scope > .sdp-targeta').length]).toEqual(['sola', 'dreta', 1]);
+      expect([...grup.querySelectorAll('h3, h4, h5')].map((titol) => titol.tagName)).toEqual(['H3', 'H4']);
+    }
+    expect(grups.map((grup) => grup.querySelector('a.sp-card-link-overlay')?.getAttribute('href'))).toEqual([
+      '/page/node-zero',
+      '/fedivers'
+    ]);
     expect([...cos.querySelectorAll('h3')].filter((h3) => !h3.closest('.sdp-targetes'))).toHaveLength(3);
     // Ordre definitiva del Mestre (~01:00): cap taula; les quatre partides en H4, amb els seus H5.
     expect(cos.querySelectorAll('table')).toHaveLength(0);
@@ -106,11 +114,16 @@ test('/fediversity porta a /page/fediversity, amb l’anatomia de la UniversalPa
     const caixes = [...cos.querySelectorAll(':scope > .sdp-cos-tros > div.sdp-subtargeta[data-sdp-subtargeta]')];
     expect(caixes.map((caixa) => [caixa.firstElementChild.tagName, /^\d · /.test(caixa.firstElementChild.textContent), caixa.querySelectorAll('h5').length]))
       .toEqual(Array(4).fill(['H4', true, 3]));
-    // I, a la verificació en viu, els sis fitxers del paquet de dades obertes estàtic, en relatiu.
-    expect([...cos.querySelectorAll('a[href^="/opendata/"]')].map((a) => [a.getAttribute('href'), a.getAttribute('target'), a.getAttribute('rel')])).toEqual([
-      '/opendata/municipi.jsonld', '/opendata/manifest.json', '/opendata/llicencies.md',
-      '/opendata/noticies.jsonld', '/opendata/agenda.jsonld', '/opendata/memoria.md'
-    ].map((href) => [href, '_blank', 'noopener noreferrer nofollow']));
+    // El sanejador conserva els recursos enllaçats per la font; no una xifra històrica fixa.
+    const font = new DOMParser().parseFromString(PAGE_COPY.fediversity.html, 'text/html');
+    const fonts = [...font.querySelectorAll('a[href^="/opendata/"]')];
+    const enllacos = [...cos.querySelectorAll('a[href^="/opendata/"]')];
+    expect(enllacos.map(a => a.getAttribute('href'))).toEqual(fonts.map(a => a.getAttribute('href')));
+    expect(enllacos.length).toBeGreaterThan(0);
+    for (const [index, a] of enllacos.entries()) {
+      expect(a.getAttribute('target')).toBe(fonts[index].getAttribute('target'));
+      expect(a.getAttribute('rel')).toBe('noopener noreferrer nofollow');
+    }
     expect(cos.querySelector('blockquote').textContent).toContain('Total sol·licitat: 1.000 hores · 50.000 €');
     // Després del sanejador, els enllaços de fora conserven target i rel (amb el nofollow de sempre).
     const logotip = cos.querySelector('a[href="https://nlnet.nl/fediversity/"] img[src*="ngi-fediversity-tag.svg"]');

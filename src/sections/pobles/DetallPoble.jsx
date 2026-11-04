@@ -10,6 +10,8 @@ import { useEffect, useRef, useState } from 'react';
 import { Boto } from '../../components/PedraSeca/atoms/Boto.jsx';
 import { esPobleFederat, esSlugFederat, urlsDeMunicipi } from '../../data/activitypub.js';
 import { ORIGEN_PUBLIC_PER_DEFECTE, esAppNativa } from '../../config/origenPublic.js';
+import { ConnexionsPubliques, VisibilitatConnexions } from '../profile/ConnexionsPubliques.jsx';
+import { useConfigDeLApp } from './useEntitatsDelPoble.js';
 import { omple } from '../../config/moderacio.js';
 
 const senseTraductor = (_clau, reserva) => reserva;
@@ -53,7 +55,10 @@ export function descarregaPaquet(paquet) {
   try { a.click(); } finally { setTimeout(() => URL.revokeObjectURL(url), 1000); }
 }
 
-export default function DetallPoble({ poble, t = senseTraductor, exporta = exportaMunicipiOpenData, descarrega = descarregaPaquet }) {
+export default function DetallPoble({ poble, t = senseTraductor, exporta = exportaMunicipiOpenData, descarrega = descarregaPaquet, config = null }) {
+  const [revisioConnexions, setRevisioConnexions] = useState(0);
+  const configApp = useConfigDeLApp();
+  const configActual = config || configApp || {};
   const slug = String(poble?.slug || poble?.id || '');
   const [ocupat, setOcupat] = useState(false);
   const [missatge, setMissatge] = useState('');
@@ -61,7 +66,9 @@ export default function DetallPoble({ poble, t = senseTraductor, exporta = expor
   const bloquejat = useRef(false);
   useEffect(() => { versio.current += 1; bloquejat.current = false; setOcupat(false); setMissatge('');
     return () => { versio.current += 1; }; }, [slug]);
-  if (!esSlugFederat(slug)) return null;
+  const connexions = <><ConnexionsPubliques revisio={revisioConnexions} tipus="poble" id={String(poble?.id || slug)} config={configActual} t={t} />
+    {poble?.administrable === true ? <VisibilitatConnexions onCanvi={() => setRevisioConnexions(n => n + 1)} tipus="poble" id={String(poble?.id || slug)} config={configActual} t={t} /> : null}</>;
+  if (!esSlugFederat(slug)) return connexions;
   const federat = esPobleFederat(slug);
   const natiu = esAppNativa();
   const urls = urlsDeMunicipi(slug, { origen: ORIGEN_PUBLIC_PER_DEFECTE });
@@ -89,6 +96,8 @@ export default function DetallPoble({ poble, t = senseTraductor, exporta = expor
     catch { if (actual === versio.current) setMissatge(omple(t('section.detail.pobles.opendata.copiaAMa', 'Copia l’identificador: {identificador}'), { identificador })); }
   };
   return (
+    <>
+    {connexions}
     <section aria-label={federat ? t('section.detail.pobles.opendata.regio.federat', 'Dades obertes i identitat federada') : t('section.detail.pobles.opendata.regio', 'Dades obertes del poble')}>
       {natiu
         ? <p>{t('section.detail.pobles.opendata.natiu', 'Dins de l’app el paquet no es pot desar a les descàrregues: descarrega’l des de socdepoble.org.')}</p>
@@ -104,5 +113,6 @@ export default function DetallPoble({ poble, t = senseTraductor, exporta = expor
       ) : null}
       <p role="status" aria-live="polite">{missatge}</p>
     </section>
+    </>
   );
 }

@@ -198,11 +198,16 @@ describe('c) logoEntitat: el logotip de l’entitat que signa', () => {
     expect(logo.getAttribute('referrerpolicy')).toBe('no-referrer');
   });
 
-  test('amb fosc: una imatge per tema, amb les classes de sempre', () => {
+  test('amb fosc: una imatge per tema, totes dues limitades com a entitat i sense Referer', () => {
     const { container } = render(<PageFrame chrome="full" title="Cooperativa"
       logoEntitat={{ clar: '/assets/coop-negre.svg', fosc: '/assets/coop-blanc.svg', alt: 'Logotip Cooperativa' }} />);
-    expect(fills(capcalera(container))).toEqual([...DOS_LOGOS_SDP, 'H1.']);
+    expect(fills(capcalera(container))).toEqual(['IMG.page-title-logo page-title-logo--entitat light-only', 'IMG.page-title-logo page-title-logo--entitat dark-only', 'H1.']);
     expect(logos(container).map((img) => img.getAttribute('src'))).toEqual(['/assets/coop-negre.svg', '/assets/coop-blanc.svg']);
+    for (const img of logos(container)) {
+      expect(img.getAttribute('referrerpolicy')).toBe('no-referrer');
+      expect(img.getAttribute('width')).toBeNull();
+      expect(img.getAttribute('height')).toBeNull();
+    }
   });
 
   test('DEFAULT_AUTHOR.logo com a logoEntitat dona el mateix marcatge que la signatura de Sóc de Poble', () => {

@@ -1,20 +1,32 @@
 /* Torn 260930 · El Xat de mostra sense sessió: la comunitat del poble de
    l'amfitrió (T1) i la cita de les respostes (auditoria de Codex 2150, C6-X2). */
-import { act, cleanup, render } from '@testing-library/react';
+import { act, cleanup, render, screen } from '@testing-library/react';
 import { afterEach, beforeEach, expect, test, vi } from 'vitest';
 import { useContext } from 'react';
 import FakeChatOnboarding from './FakeChatOnboarding.jsx';
 import { XatContext } from '../XatContext.jsx';
+import { RouteParamsContext } from '../../../app/contexts/objectesDeContext.js';
+import { MemoryRouter, useLocation } from '../../../app/contexts/RouterContext.jsx';
+import Compositor from './Compositor.jsx';
+import { IAIA_ID } from '../../../data/identitatsSeed.js';
+import { oblidaEntitatDelProjecte, registraEntitatDelProjecte } from '../../../config/navigation.js';
 
-const mocks = vi.hoisted(() => ({ externalConfig: {} }));
+const mocks = vi.hoisted(() => ({ externalConfig: {}, core: {}, directori: false, perfil: vi.fn() }));
+vi.mock('../../../data/backendPort.js', () => ({
+  teCapacitat: () => mocks.directori,
+  loadPerfilPublic: (...args) => mocks.perfil(...args)
+}));
+vi.mock('../../../app/contexts/CoreContentContext', () => ({ useCoreContent: () => ({ towns: [], ...mocks.core }) }));
 vi.mock('../../../app/contexts/UIContext.jsx', () => ({
   useUIActions: () => ({ t: (_, alternativa) => alternativa }),
   useUIState: () => ({ externalConfig: mocks.externalConfig })
 }));
 
 let xat = null;
+let pintats = [];
 function Espia() {
   xat = useContext(XatContext);
+  pintats.push({ status: xat.status, fils: xat.chatThreads.map((f) => f.id) });
   return null;
 }
 /* IDEA-56 (pla 261029_1605, Bloc F.2) · `props` passa al component (per
@@ -24,8 +36,13 @@ const buidaMicrotasques = () => act(async () => { for (let i = 0; i < 5; i += 1)
 
 beforeEach(() => {
   vi.useFakeTimers();
-  mocks.externalConfig = {};
+  mocks.externalConfig = { dataMode: 'seed' };
+  mocks.core = {};
+  mocks.directori = false;
+  mocks.perfil.mockReset();
+  oblidaEntitatDelProjecte();
   xat = null;
+  pintats = [];
 });
 afterEach(() => {
   cleanup();
@@ -112,13 +129,266 @@ test('Javi Llinares: el missatge automàtic literal, de només lectura, i cap en
    altre destinatari, al de sempre; mai pel nom.
    Gauntlet 261016_1530 · «La resta» és ara la comunitat de Sóc de Poble
    ('fake-sdp', que XatSection obri com a fitxa), no cap directe de mostra. */
-test('creaFil: Javi (per id o àlies) obri el seu xat de només lectura; la IAIA, el seu; la resta, la comunitat de Sóc de Poble', async () => {
+test('creaFil: cada ajuda obri el seu xat; un destinatari desconegut mai obri Sóc de Poble', async () => {
   munta();
   for (const id of ['javillinares', '0001', 'javi', 'javi-llinares']) expect(await xat.creaFil(id)).toBe('fake-javi');
   expect(await xat.creaFil('ajuda:ia')).toBe('fake-iaia');
   expect(await xat.creaFil('ajuda:entitat')).toBe('fake-sdp');
-  expect(await xat.creaFil('5a5a5a5a-0000-4000-8000-00000000000a')).toBe('fake-sdp');
-  expect(await xat.creaFil('Javi Llinares')).toBe('fake-sdp');
+  for (const id of ['socdepoble', 'soc-de-poble_official']) expect(await xat.creaFil(id)).toBe('fake-sdp');
+  for (const id of ['5a5a5a5a-0000-4000-8000-00000000000a', 'Javi Llinares', '']) {
+    await expect(xat.creaFil(id)).rejects.toMatchObject({ code: 'DESTINATARI_INVALID' });
+  }
+});
+
+test('Oli de La Torre per slug i UUID obri un sol directe amb el seu nom i logotip', async () => {
+  munta();
+  const id = 'fake-entitat:3073b933-69fc-4c3e-80dc-b0df9c6b8391';
+  await act(async () => {
+    expect(await xat.creaFil('olidelatorre')).toBe(id);
+    expect(await xat.creaFil('3073b933-69fc-4c3e-80dc-b0df9c6b8391')).toBe(id);
+  });
+  expect(xat.chatThreads.filter((fil) => fil.id === id)).toHaveLength(1);
+  expect(xat.chatThreads.find((fil) => fil.id === id)).toMatchObject({
+    tipus: 'directe', name: 'Oli de La Torre', avatar_url: '/assets/uploads/brain/oli_de_la_torre_logo.webp'
+  });
+  expect(xat.comunitats.map((c) => c.fil.id)).not.toContain(id);
+  expect(xat.getThreadMessages(id)).toEqual([]);
+  expect(xat.filCarregat(id)).toBe(true);
+  expect(xat.hiHaMesAntics(id)).toBe(false);
+  expect(mocks.perfil).not.toHaveBeenCalled();
+});
+
+const remot = () => { mocks.externalConfig = { dataMode: 'remote', backendUrl: 'https://node.example' }; mocks.directori = true; };
+const RENTONAR = 'b2c87505-5555-4555-8555-555555555555';
+
+test('R2C2X-01 · l’UUID remot del projecte declarat pel backend obri la comunitat sense duplicar Sóc de Poble', async () => {
+  remot();
+  const perfil = { id: 'a240e870-5555-4555-8555-555555555555', slug: 'socdepoble', tipus: 'entitat', nom: 'Sóc de Poble', avatar: '/socdepoble-remot.webp' };
+  expect(registraEntitatDelProjecte(perfil)).toBe(true);
+  mocks.perfil.mockResolvedValue(perfil);
+  munta();
+  await act(async () => { expect(await xat.creaFil(perfil.id)).toBe('fake-sdp'); });
+  expect(mocks.perfil).toHaveBeenCalledWith(perfil.id, expect.objectContaining({ signal: expect.any(AbortSignal) }));
+  expect(xat.chatThreads.filter(f => f.name === 'Sóc de Poble')).toMatchObject([{ id: 'fake-sdp', tipus: 'comunitat' }]);
+  expect(xat.chatThreads.some(f => f.id.startsWith('fake-entitat:'))).toBe(false);
+});
+
+test.each(['seed', 'remote'])('R2C2X-03 · «En privat» de la IAIA per l’id del padró obri el seu únic fil en %s', async dataMode => {
+  mocks.externalConfig = { dataMode };
+  mocks.directori = true;
+  munta();
+  expect(await xat.creaFil(IAIA_ID)).toBe('fake-iaia');
+  expect(xat.chatThreads.filter(f => f.id === 'fake-iaia')).toHaveLength(1);
+  expect(xat.chatThreads.some(f => f.id.startsWith('fake-entitat:'))).toBe(false);
+  expect(mocks.perfil).not.toHaveBeenCalled();
+});
+
+test('C2X-03/04 · Rentonar per slug i UUID usa el mateix DTO públic del port, nom i avatar; la llavor no el suplix', async () => {
+  remot();
+  // Contracte loadPerfilPublic: nom/avatar i tipus neutres; cap fila vendor.
+  const perfil = { id: RENTONAR, slug: 'rentonar', tipus: 'grup', nom: 'El Rentonar públic', avatar: '/rentonar-remot.webp', publicat: true, propietari: false };
+  mocks.perfil.mockImplementation(async clau => ['rentonar', RENTONAR].includes(clau) ? perfil : null);
+  munta();
+  await act(async () => {
+    expect(await xat.creaFil('rentonar')).toBe(`fake-entitat:${RENTONAR}`);
+    expect(await xat.creaFil(RENTONAR)).toBe(`fake-entitat:${RENTONAR}`);
+  });
+  expect(mocks.perfil.mock.calls.map(([clau]) => clau)).toEqual(['rentonar', RENTONAR]);
+  expect(xat.chatThreads.filter(f => f.id.startsWith('fake-entitat:'))).toMatchObject([
+    { id: `fake-entitat:${RENTONAR}`, name: 'El Rentonar públic', avatar_url: '/rentonar-remot.webp', potEscriure: false }
+  ]);
+  await expect(xat.creaFil('El Rentonar públic')).rejects.toMatchObject({ code: 'DESTINATARI_INVALID' });
+});
+
+test('C2X-03 · un perfil remot absent, erroni o d’una persona no cau mai a l’entitat del padró', async () => {
+  remot();
+  mocks.perfil.mockResolvedValueOnce(null).mockResolvedValueOnce({ tipus: 'persona', id: 'persona', nom: 'Oli de La Torre' }).mockRejectedValueOnce(new Error('Sense connexió'));
+  munta();
+  await expect(xat.creaFil('rentonar')).rejects.toMatchObject({ code: 'DESTINATARI_INVALID' });
+  await expect(xat.creaFil('olidelatorre')).rejects.toMatchObject({ code: 'DESTINATARI_INVALID' });
+  await expect(xat.creaFil('rentonar')).rejects.toThrow('Sense connexió');
+  expect(xat.chatThreads.some(f => f.id.startsWith('fake-entitat:'))).toBe(false);
+});
+
+test('C2X-03 · sense directori remot no publica una empresa del padró com si fora del servidor', async () => {
+  mocks.externalConfig = { dataMode: 'remote' };
+  munta();
+  await expect(xat.creaFil('olidelatorre')).rejects.toMatchObject({ code: 'DESTINATARI_INVALID' });
+  expect(mocks.perfil).not.toHaveBeenCalled();
+});
+
+test('una altra entitat es resol pel port del directori sense crear cap fil remot', async () => {
+  remot();
+  mocks.perfil.mockResolvedValue({ id: 'org-ajuntament', slug: 'ajuntament', tipus: 'entitat', nom: 'Ajuntament de la Torre', avatar: '/ajuntament.png' });
+  munta();
+  await act(async () => { expect(await xat.creaFil('ajuntament')).toBe('fake-entitat:org-ajuntament'); });
+  expect(mocks.perfil).toHaveBeenCalledWith('ajuntament', expect.objectContaining({ signal: expect.any(AbortSignal) }));
+  expect(xat.chatThreads.at(-1)).toMatchObject({ name: 'Ajuntament de la Torre', avatar_url: '/ajuntament.png' });
+  expect(xat.chatThreads.at(-1).subjecte).toBeUndefined();
+});
+
+test('la persona homònima i els errors de directori mai es convertixen en Sóc de Poble', async () => {
+  remot();
+  mocks.perfil.mockResolvedValueOnce({ id: 'persona', tipus: 'persona', nom: 'Sóc de Poble' }).mockRejectedValueOnce(new Error('Sense xarxa'));
+  munta();
+  await expect(xat.creaFil('persona')).rejects.toMatchObject({ code: 'DESTINATARI_INVALID' });
+  await expect(xat.creaFil('desconeguda')).rejects.toThrow('Sense xarxa');
+  expect(xat.chatThreads.filter((fil) => fil.id.startsWith('fake-entitat:'))).toEqual([]);
+});
+
+test('un altre id amb el slug socdepoble conserva el destinatari explícit de la URL', async () => {
+  remot();
+  mocks.perfil.mockResolvedValue({ id: 'org-altre-poble', slug: 'socdepoble', tipus: 'entitat', nom: 'Una altra entitat' });
+  munta();
+  await act(async () => { expect(await xat.creaFil('org-altre-poble')).toBe('fake-entitat:org-altre-poble'); });
+  expect(xat.chatThreads.at(-1)).toMatchObject({ name: 'Una altra entitat', tipus: 'directe' });
+});
+
+test('desmuntar avorta la consulta del directori i no crea un fil tardà', async () => {
+  remot();
+  let resol;
+  mocks.perfil.mockImplementation(() => new Promise((r) => { resol = r; }));
+  const { unmount } = munta();
+  const pendent = xat.creaFil('festes');
+  const { signal } = mocks.perfil.mock.calls[0][1];
+  unmount();
+  expect(signal.aborted).toBe(true);
+  resol({ id: 'festes', tipus: 'grup', nom: 'Festes' });
+  expect(await pendent).toBeNull();
+});
+
+test('canviar de backend avorta la lectura anterior i buida els directes de mostra', async () => {
+  remot();
+  let resol;
+  mocks.perfil.mockResolvedValueOnce({ id: 'org-oli', slug: 'olidelatorre', tipus: 'entitat', nom: 'Oli de La Torre', avatar: '/oli-remot.webp' })
+    .mockImplementationOnce(() => new Promise((r) => { resol = r; }));
+  const { rerender } = munta();
+  await act(async () => { await xat.creaFil('olidelatorre'); });
+  const pendent = xat.creaFil('festes');
+  const { signal } = mocks.perfil.mock.calls[1][1];
+  mocks.externalConfig = { backendUrl: 'https://altre-node.example' };
+  rerender(<FakeChatOnboarding originalContext={{ senseSessio: true }}><Espia /></FakeChatOnboarding>);
+  expect(signal.aborted).toBe(true);
+  resol({ id: 'festes', tipus: 'grup', nom: 'Festes de l’altre poble' });
+  expect(await pendent).toBeNull();
+  expect(xat.chatThreads.some((fil) => fil.id.startsWith('fake-entitat:'))).toBe(false);
+});
+
+const mostraDeRuta = (threadId) => (
+  <RouteParamsContext.Provider value={{ threadId }}>
+    <FakeChatOnboarding originalContext={{ senseSessio: true }}><Espia /></FakeChatOnboarding>
+  </RouteParamsContext.Provider>
+);
+
+test('recarregar la URL d’Oli de La Torre reconstruïx el destinatari de només lectura, sense missatges inventats', async () => {
+  const id = 'fake-entitat:3073b933-69fc-4c3e-80dc-b0df9c6b8391';
+  const anterior = munta();
+  await act(async () => { await xat.creaFil('olidelatorre'); });
+  await act(async () => { await xat.sendChatMessage(xat.chatThreads.find((f) => f.id === id), 'Només d’esta mostra'); });
+  expect(xat.getThreadMessages(id)).toEqual([]);
+  anterior.unmount();
+  pintats = [];
+  render(mostraDeRuta(id));
+  await buidaMicrotasques();
+  expect(pintats[0].status).toBe('loading');
+  expect(xat.status).toBe('ready');
+  expect(xat.chatThreads.find((f) => f.id === id)).toMatchObject({ name: 'Oli de La Torre', avatar_url: '/assets/uploads/brain/oli_de_la_torre_logo.webp' });
+  expect(xat.getThreadMessages(id)).toEqual([]);
+  expect(mocks.perfil).not.toHaveBeenCalled();
+  expect(vi.getTimerCount()).toBe(0);
+});
+
+test('la URL d’una altra entitat espera la mateixa resolució pública del directori', async () => {
+  const id = 'fake-entitat:org-festes';
+  remot();
+  let resol;
+  mocks.perfil.mockImplementation(() => new Promise((r) => { resol = r; }));
+  render(mostraDeRuta(id));
+  expect(xat.status).toBe('loading');
+  expect(xat.llistaFresca).toBe(false);
+  expect(mocks.perfil).toHaveBeenCalledWith('org-festes', expect.objectContaining({ signal: expect.any(AbortSignal) }));
+  await act(async () => { resol({ id: 'org-festes', tipus: 'grup', nom: 'Comissió de Festes', avatar: '/festes.png' }); });
+  expect(xat.status).toBe('ready');
+  expect(xat.llistaFresca).toBe(true);
+  expect(xat.chatThreads.find((f) => f.id === id)).toMatchObject({ name: 'Comissió de Festes', avatar_url: '/festes.png' });
+  expect(xat.getThreadMessages(id)).toEqual([]);
+});
+
+test('una fallada de xarxa en restaurar la URL queda com a avís; no com un 404 ni una càrrega eterna', async () => {
+  remot();
+  mocks.perfil.mockRejectedValue(new Error('Directori sense connexió'));
+  render(mostraDeRuta('fake-entitat:org-festes'));
+  await buidaMicrotasques();
+  expect(xat.status).toBe('ready');
+  expect(xat.llistaFresca).toBe(false);
+  expect(xat.avisLlista).toBe('Directori sense connexió');
+  expect(xat.chatThreads.some((fil) => fil.id === 'fake-entitat:org-festes')).toBe(false);
+});
+
+test('una URL desconeguda no inventa cap identitat ni resta restaurant per sempre', async () => {
+  render(mostraDeRuta('fake-entitat:desconeguda'));
+  await buidaMicrotasques();
+  expect(xat.status).toBe('ready');
+  expect(xat.llistaFresca).toBe(true);
+  expect(xat.avisLlista).toBeNull();
+  expect(xat.chatThreads.some((fil) => fil.id === 'fake-entitat:desconeguda')).toBe(false);
+});
+
+test('canviar d’amfitrió oblida els textos locals i restaura l’entitat de només lectura', async () => {
+  const id = 'fake-entitat:3073b933-69fc-4c3e-80dc-b0df9c6b8391';
+  const { rerender } = render(mostraDeRuta(id));
+  await buidaMicrotasques();
+  await act(async () => { await xat.sendChatMessage(xat.chatThreads.find((f) => f.id === 'fake-poble-general'), 'Text de l’altre amfitrió'); });
+  expect(xat.getThreadMessages('fake-poble-general')).toHaveLength(1);
+  mocks.externalConfig = { dataMode: 'seed', backendUrl: 'https://altre-node.example' };
+  rerender(mostraDeRuta(id));
+  await buidaMicrotasques();
+  expect(xat.chatThreads.find((f) => f.id === id)).toMatchObject({ name: 'Oli de La Torre' });
+  expect(xat.getThreadMessages(id)).toEqual([]);
+  expect(xat.getThreadMessages('fake-poble-general')).toEqual([]);
+  expect(vi.getTimerCount()).toBe(0);
+});
+
+test('C2X-06 · la UI de l’entitat conserva el nom i mostra l’avís d’entrar; cap compositor, enviament ni resposta amb nom d’empresa', async () => {
+  remot();
+  mocks.perfil.mockResolvedValue({ id: 'org-oli', slug: 'olidelatorre', tipus: 'entitat', nom: 'Oli de La Torre', avatar: '/oli.webp' });
+  const enviaRemot = vi.fn(), creaRemot = vi.fn();
+  function Pantalla() {
+    const context = useContext(XatContext);
+    xat = context;
+    const fil = context.chatThreads.find(f => f.id === 'fake-entitat:org-oli');
+    return fil ? <><h2>{fil.name}</h2><Compositor fil={fil} valor="" t={(_, reserva) => reserva} /></> : null;
+  }
+  render(<FakeChatOnboarding originalContext={{ senseSessio: true, sendChatMessage: enviaRemot, creaFil: creaRemot }}><Pantalla /></FakeChatOnboarding>);
+  await act(async () => { await xat.creaFil('olidelatorre'); });
+  expect(screen.getByRole('heading', { name: 'Oli de La Torre' })).toBeTruthy();
+  expect(screen.getByRole('status').textContent).toContain("registra't per a entrar al xat de veritat");
+  expect(screen.queryByRole('textbox')).toBeNull();
+  const fil = xat.chatThreads.find(f => f.id === 'fake-entitat:org-oli');
+  await act(async () => {
+    expect(await xat.sendChatMessage(fil, 'Hola')).toEqual([]);
+    expect(await xat.sendChatMessage({ ...fil, potEscriure: true }, 'No es pot forçar')).toEqual([]);
+    vi.runAllTimers();
+  });
+  expect(xat.getThreadMessages(fil.id)).toEqual([]);
+  expect(enviaRemot).not.toHaveBeenCalled(); expect(creaRemot).not.toHaveBeenCalled();
+  expect(vi.getTimerCount()).toBe(0);
+});
+
+test('C2X-03 · una URL antiga amb slug es canonitza al fil remot únic després de resoldre el DTO', async () => {
+  remot();
+  mocks.perfil.mockResolvedValue({ id: RENTONAR, slug: 'rentonar', tipus: 'grup', nom: 'El Rentonar públic', avatar: '/rentonar.webp' });
+  let ruta;
+  function Ubicacio() { ruta = useLocation().pathname; return <Espia />; }
+  render(<MemoryRouter initialEntries={['/xat/fake-entitat%3Arentonar']}>
+    <RouteParamsContext.Provider value={{ threadId: 'fake-entitat:rentonar' }}>
+      <FakeChatOnboarding originalContext={{ senseSessio: true }}><Ubicacio /></FakeChatOnboarding>
+    </RouteParamsContext.Provider>
+  </MemoryRouter>);
+  await buidaMicrotasques();
+  expect(ruta).toBe(`/xat/${encodeURIComponent(`fake-entitat:${RENTONAR}`)}`);
+  expect(xat.chatThreads.filter(f => f.id.startsWith('fake-entitat:'))).toHaveLength(1);
+  expect(xat.chatThreads.at(-1).name).toBe('El Rentonar públic');
 });
 
 test('amb poble, la comunitat del poble amb Avisos (només lectura, amb la benvinguda) i General', () => {

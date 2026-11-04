@@ -106,6 +106,9 @@ main.app-main {
   overscroll-behavior-y: auto;
   overscroll-behavior-x: contain;
   -webkit-overflow-scrolling: touch;
+  /* R3-FT-01 · Zona visible del focus, també en salts natius: la barra
+     negra és fora del visor; la blava i la taronja poden tapar-ne el cim. */
+  scroll-padding-top: calc(var(--sdp-alt-accio) * 2 + var(--sdp-space-4));
 }
 
 /* ── 3. COLUMNA 1 · SIDEBAR ────────────────────────────────────── */
@@ -597,7 +600,10 @@ nav.mobile-nav { display: none; }
   :where(.sdp-root.is-compact) .mobile-logo-wrapper { display: flex; align-items: center; justify-content: flex-start; padding-left: var(--sdp-space-4) !important; }
 
   /* El visor deixa espai per a la barra inferior fixa (a l'interior del scroll) */
-  :where(.sdp-root.is-compact) .app-main__content { padding-bottom: calc(var(--sdp-alt-nav-mobil) + env(safe-area-inset-bottom, 0px)); }
+  :where(.sdp-root.is-compact) .app-main__content {
+    padding-bottom: calc(var(--sdp-alt-nav-mobil) + env(safe-area-inset-bottom, 0px));
+    scroll-padding-bottom: calc(var(--sdp-alt-nav-mobil) + env(safe-area-inset-bottom, 0px) + var(--sdp-space-4));
+  }
 
   /* ── MODE IMMERSIU (ordre del Mestre, 261007) ──
      Una vista demana la pantalla sencera (ModeImmersiuContext; la closca només

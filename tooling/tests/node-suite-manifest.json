@@ -8,6 +8,7 @@
     "health": "Verd primari i CI no certifiquen verd de laboratori/sessió. npm run test:node:all conserva la visibilitat del deute complet; cap prova ni asserció es retira."
   },
   "requiredPrimary": [
+    "tests/administracio-multipoble-postgres.test.mjs",
     "tests/antigravity-hook.test.mjs",
     "tests/backend_consolidacio.test.mjs",
     "tests/build-net-dsstore.test.mjs",
@@ -17,7 +18,10 @@
     "tests/cognitive-hook-safety.test.mjs",
     "tests/cognitive-preflight.test.mjs",
     "tests/conformitat-amfitrio.test.mjs",
+    "tests/connexions-publiques-postgres.test.mjs",
+    "tests/crdt-rural.test.mjs",
     "tests/cua-operacions-offline.test.mjs",
+    "tests/datapackage-public-corpus.test.mjs",
     "tests/destins-canonics.test.mjs",
     "tests/destins-hook.test.mjs",
     "tests/dist-secrets.test.mjs",
@@ -47,6 +51,7 @@
     "tests/migracio-xat-de-pagina.test.mjs",
     "tests/node-suite-policy.test.mjs",
     "tests/opendata-fediversity.test.mjs",
+    "tests/opfs-rural.test.mjs",
     "tests/persistencia-local-rural.test.mjs",
     "tests/plantilla-viva-escriptori.test.mjs",
     "tests/pont-emergencia-rural.test.mjs",
@@ -57,7 +62,10 @@
     "tests/render-pdf.test.mjs",
     "tests/search-cli-wire.test.mjs",
     "tests/security-chain.test.mjs",
+    "tests/sessio-rural-crdt-opfs.test.mjs",
+    "tests/sessio-rural-privadesa.test.mjs",
     "tests/sincronitzador-carpeta-local.test.mjs",
+    "tests/sincronitzador-crdt-vault.test.mjs",
     "tests/sistema_nervios.test.mjs",
     "tests/standalone-build.test.mjs",
     "tests/t11-arxiu-fossils-bundle.test.mjs",
@@ -75,7 +83,11 @@
     "tests/vite-empremta-dev.test.mjs",
     "tests/wiki-backlinks-readonly.test.mjs",
     "tooling/gates/guarda-nocturna.test.mjs",
+    "tooling/gates/teclat-superficies.test.mjs",
+    "tooling/instalador/inventari-estatic.test.mjs",
+    "tooling/seo/genera-opendata.test.mjs",
     "tooling/seo/projeccio-publica.test.mjs",
+    "tooling/vite/opendata-publica.test.mjs",
     "tooling/wiki/tests/contract_consistency.test.mjs",
     "tooling/wiki/tests/contradiction_engine.t11.test.mjs"
   ],
@@ -84,6 +96,11 @@
       "path": "tests/action-contrast.test.mjs",
       "suite": "primary",
       "reason": "Regressió portable del producte o d’una eina permanent; s’executa a la cadena primària, també quan està roja."
+    },
+    {
+      "path": "tests/administracio-multipoble-postgres.test.mjs",
+      "suite": "primary",
+      "reason": "FEDI-04: migracions reals i aïllament multipoble sobre PostgreSQL WASM amb PGlite local explícit; sense mòdul declara omissió, no SQL certificat."
     },
     {
       "path": "tests/anticipacio-261003.test.mjs",
@@ -136,6 +153,11 @@
       "reason": "Corredor de cerca ad hoc: PATRONS i DIRS es canvien segons el torn; no és una prova de regressió de producte."
     },
     {
+      "path": "tests/certifica-enllacos.adversarial.test.mjs",
+      "suite": "primary",
+      "reason": "O4-CODEX-2: rutes SPA acreditades, rutes pendents, URL i HTTP local efímer, MIME/JSON, fallback200, límits i fuzz determinista."
+    },
+    {
       "path": "tests/certifica-enllacos.test.mjs",
       "suite": "primary",
       "reason": "Porta de doble certificació d'enllaços (Anti-404 SPA): valida contra el router React (PAGE_COPY, PAGE_ROUTE_MAP, SECTIONS) i contra el manifest d'opendata/federació que cap URL apunte a un 404 intern o a un fallback HTML."
@@ -171,6 +193,11 @@
       "reason": "Regressió portable del producte o d’una eina permanent; s’executa a la cadena primària, també quan està roja."
     },
     {
+      "path": "tests/connexions-publiques-postgres.test.mjs",
+      "suite": "primary",
+      "reason": "FEDI-23: migracions, RLS i RPC reals de connexions públiques amb autoritat, consentiment i bloquejos sobre PGlite local explícit; sense el mòdul declara omissió, no SQL certificat."
+    },
+    {
       "path": "tests/consell-l8-precommit.test.mjs",
       "suite": "primary",
       "reason": "B1 (261101, D5): Consell L8 i la taula de rutes SEO; a l'arbre preparat del hook prova el productor en sec, fora l'absència és infracció. Fixtures portables i processos reals."
@@ -199,6 +226,21 @@
       "path": "tests/corpus-scope.test.mjs",
       "suite": "primary",
       "reason": "Regressió portable del producte o d’una eina permanent; s’executa a la cadena primària, també quan està roja."
+    },
+    {
+      "path": "tests/crdt-rural.test.mjs",
+      "suite": "primary",
+      "reason": "FEDI-15: CRDT propi RGA/MV amb DAG causal explícit, convergència commutativa/associativa/idempotent, orfes, Unicode, tombstones i rebuig d’equivocació de DOT; fixtures portables sense xarxa."
+    },
+    {
+      "path": "tests/cua-operacions-offline.test.mjs",
+      "suite": "primary",
+      "reason": "O8/O9: cua durable SHA-256, HLC/LWW amb còpia de conflicte, CAS i ACK idempotent sense autoritat de client."
+    },
+    {
+      "path": "tests/datapackage-public-corpus.test.mjs",
+      "suite": "primary",
+      "reason": "Contracte portable de dades públiques i frontera del corpus autoral amb negatius de hash i manifest."
     },
     {
       "path": "tests/design-contracts.test.mjs",
@@ -271,6 +313,11 @@
       "reason": "Audita git diff HEAD de la sessió; un checkout net de CI no té els canvis locals que esta prova avalua. Manté corredor explícit i no s’amaga el deute de la sessió."
     },
     {
+      "path": "tests/enxufe-backend-offline-first.test.mjs",
+      "suite": "primary",
+      "reason": "O8/O9: enxufe reversible del backend, selectors, cau i escriptures idempotents, identitat, reconnect i coherència entre connexions."
+    },
+    {
       "path": "tests/enxufe-empaqueta.test.mjs",
       "suite": "primary",
       "reason": "Regressió portable del producte o d’una eina permanent; s’executa a la cadena primària, també quan està roja."
@@ -299,6 +346,11 @@
       "path": "tests/fatiga-261002.test.mjs",
       "suite": "laboratory",
       "reason": "Assaig de lease del paquet 261002: contrasta les bases congelades del pegat contra el disc viu. El CAS roig no és una regressió del producte instal·lat."
+    },
+    {
+      "path": "tests/fediversity-nixos-module.test.mjs",
+      "suite": "primary",
+      "reason": "O8/O9: mòdul NixOS declaratiu, endpoints federats, preparació OpenData verificada i límit explícit de Nix no instal·lat."
     },
     {
       "path": "tests/fonts-vigilancia.test.mjs",
@@ -426,27 +478,17 @@
       "reason": "O3-CODEX-1 · kits CAS: generació/aplicació amb staging, rollback, paths/symlinks i Frontissa real sobre candidat; fixtures portables, sense xarxa ni temporitzadors."
     },
     {
-      "path": "tests/lint-sessio.test.mjs",
-      "suite": "session",
-      "reason": "FITXERS és una selecció temporal del torn per a lectura engabiada. ESLint complet continua al workflow i a npm run lint."
-    },
-    {
-      "path": "tests/lint-torn-261002.test.mjs",
-      "suite": "session",
-      "reason": "Corredor de lots declarats per la sessió 261002; exclou deliberadament part del producte. ESLint complet continua al workflow."
-    },
-    {
-      "path": "tests/lint_calendari.test.mjs",
-      "suite": "primary",
-      "reason": "Regressió portable del producte o d’una eina permanent; s’executa a la cadena primària, també quan està roja."
-    },
-    {
       "path": "tests/lint_calendari_fonts.test.mjs",
       "suite": "primary",
       "reason": "Regressió portable del producte o d’una eina permanent; s’executa a la cadena primària, també quan està roja."
     },
     {
       "path": "tests/lint_calendari_mes.test.mjs",
+      "suite": "primary",
+      "reason": "Regressió portable del producte o d’una eina permanent; s’executa a la cadena primària, també quan està roja."
+    },
+    {
+      "path": "tests/lint_calendari.test.mjs",
       "suite": "primary",
       "reason": "Regressió portable del producte o d’una eina permanent; s’executa a la cadena primària, també quan està roja."
     },
@@ -469,6 +511,16 @@
       "path": "tests/lint_xat.test.mjs",
       "suite": "primary",
       "reason": "Regressió portable del producte o d’una eina permanent; s’executa a la cadena primària, també quan està roja."
+    },
+    {
+      "path": "tests/lint-sessio.test.mjs",
+      "suite": "session",
+      "reason": "FITXERS és una selecció temporal del torn per a lectura engabiada. ESLint complet continua al workflow i a npm run lint."
+    },
+    {
+      "path": "tests/lint-torn-261002.test.mjs",
+      "suite": "session",
+      "reason": "Corredor de lots declarats per la sessió 261002; exclou deliberadament part del producte. ESLint complet continua al workflow."
     },
     {
       "path": "tests/llaurador-managed-region.test.mjs",
@@ -566,6 +618,11 @@
       "reason": "O3-GEMINI-1 (D04): existència, esquema JSON/JSON-LD/XRD, absència d'HTML i regles d'encaminament/capçaleres estàtiques dels 7 recursos de federació i dades obertes."
     },
     {
+      "path": "tests/opfs-rural.test.mjs",
+      "suite": "primary",
+      "reason": "FEDI-15: persistència OPFS opt-in, Web Locks obligatoris, CAS i lots atòmics, rollback de quota/cancel·lació, generació i reobertura; handles i panys dobles de prova, sense certificar navegador natiu."
+    },
+    {
       "path": "tests/pedra-debt.test.mjs",
       "suite": "primary",
       "reason": "Regressió portable del producte o d’una eina permanent; s’executa a la cadena primària, també quan està roja."
@@ -574,6 +631,11 @@
       "path": "tests/pedra-seca-afinada.test.mjs",
       "suite": "primary",
       "reason": "Decisió del Mestre 30-10-2026 (deute CSS, la part segura) · tractor-pedra-seca afinat sense afluixar: L01 i L06 lligen el codi sense comentaris amb els límits de l'analitzador (un text JSX amb apòstrofs i «/x/*» no amaga codi), L02 compta les propietats --x que el JSX fixa (usePropietatsCss, setProperty, style) i cap altra cadena, només en fitxers que pengen d'una entrada (mai un mòdul orfe ni una fixture), L08 eximix només la fixture de __fixtures__/ que una prova importa, i el codi sense comentaris conserva llargària i línies (l'informe --detall dona la línia de veres); arbres sintètics a mkdtemp, cap xarxa."
+    },
+    {
+      "path": "tests/persistencia-local-rural.test.mjs",
+      "suite": "primary",
+      "reason": "O8/O9: persistència rural atòmica, àmbits, esquema JSON estricte, instantànies SHA-256, quota i cancel·lació."
     },
     {
       "path": "tests/petorreta-generador.test.mjs",
@@ -589,6 +651,11 @@
       "path": "tests/plantilla-viva-installacio.test.mjs",
       "suite": "laboratory",
       "reason": "Assaig de pegats d’instal·lació del laboratori 260924; construeix preimatges antigues de Context i hooks. Les proves permanents de documental/hooks corren a primary."
+    },
+    {
+      "path": "tests/pont-emergencia-rural.test.mjs",
+      "suite": "primary",
+      "reason": "O8/O9 (Gemini): pont d'emergència rural (Sneakernet JSON-LD signat) desacoblat sota src/data/local."
     },
     {
       "path": "tests/porta-olivera-diagnosi.test.mjs",
@@ -621,6 +688,11 @@
       "reason": "Regressió portable del producte o d’una eina permanent; s’executa a la cadena primària, també quan està roja."
     },
     {
+      "path": "tests/portabilitat-fediversity.test.mjs",
+      "suite": "primary",
+      "reason": "O8 (Gemini): portabilitat FEP-7628 Move amb alsoKnownAs bidireccional i proves FEP-8b32 Ed25519/JCS; mòdul desacoblat sota src/data/federacio."
+    },
+    {
       "path": "tests/portes-sessio.test.mjs",
       "suite": "session",
       "reason": "Diagnostica tota la cadena local amb una baseline de portes heretades de 260925. El workflow executa la cadena real directament amb npm run gate."
@@ -634,6 +706,11 @@
       "path": "tests/reflex-doctor-index.test.mjs",
       "suite": "primary",
       "reason": "Regressió portable de la Porta Reflex al pre-commit (P0-22, B1.3 261101): a l'arbre preparat el doctor certifica l'índex i fora continua estricte contra HEAD."
+    },
+    {
+      "path": "tests/render-pdf.test.mjs",
+      "suite": "primary",
+      "reason": "O4-CODEX-1: perfil i memòria cau del navegador aïllats i netejats, opcions vigents; prova amb navegador simulat."
     },
     {
       "path": "tests/run-portes-cens.test.mjs",
@@ -664,6 +741,26 @@
       "path": "tests/self-describe-coherencia.test.mjs",
       "suite": "primary",
       "reason": "B1.3-c 261101 (D6): src/data/SELF-DESCRIBE.md sense camins absents (Doctrina) ni deute de frontmatter, i tres afirmacions lligades al codi en els dos sentits (mode per defecte, entrades sense injectaBackendDelPaquet, cua de les Notes). Les portes s'executen en mode de només lectura."
+    },
+    {
+      "path": "tests/sessio-rural-crdt-opfs.test.mjs",
+      "suite": "primary",
+      "reason": "FEDI-15: integració real del servei rural, deltes CRDT en cua, dues sessions/dispositius, còpia i carpeta, captura d’abast, purga i metadades multivalor; infraestructura OPFS de prova explícita."
+    },
+    {
+      "path": "tests/sessio-rural-privadesa.test.mjs",
+      "suite": "primary",
+      "reason": "FEDI-02: privadesa del dispositiu rural, purga atòmica amb invalidació de sessions, checkpoint local i restauració de còpies pròpies."
+    },
+    {
+      "path": "tests/sincronitzador-carpeta-local.test.mjs",
+      "suite": "primary",
+      "reason": "O9 (Gemini): vault local Markdown + JSON-LD amb reconciliació SHA-256 i degradació sense File System Access API."
+    },
+    {
+      "path": "tests/sincronitzador-crdt-vault.test.mjs",
+      "suite": "primary",
+      "reason": "FEDI-15: intercanvi de batches CRDT i Markdown amb base causal, versions immutables, Unicode i preservació del batch confirmat per un writer concurrent quan un altre falla."
     },
     {
       "path": "tests/sistema_nervios.test.mjs",
@@ -856,6 +953,11 @@
       "reason": "P1-20 · D15 (T4a, 261101) · Regressió portable de la porta del pressupost del tros d'entrada (tooling/gates/pressupost-paquet.mjs), sobre dist/ fingits en un mkdtemp: l'entrada i els modulepreload que pren de l'HTML, el gzip -9 de zlib que mesura, el sostre de 250.000 B, el sostre opcional de l'arrencada i els codis 0/1/2 (un error de lectura és 2, mai 1), també executada com a ordre; cap build ni xarxa."
     },
     {
+      "path": "tooling/gates/teclat-superficies.test.mjs",
+      "suite": "primary",
+      "reason": "Arnès de teclat instal·lat: cobertura explícita i fallada tancada."
+    },
+    {
       "path": "tooling/gates/tractor-psicopatia.test.mjs",
       "suite": "primary",
       "reason": "Regressió portable del producte o d’una eina permanent; s’executa a la cadena primària, també quan està roja."
@@ -864,6 +966,11 @@
       "path": "tooling/instalador/inicia-node-germa.test.mjs",
       "suite": "primary",
       "reason": "Ronda 2: regressió determinista del codi instal·lat amb fixtures temporals."
+    },
+    {
+      "path": "tooling/instalador/inventari-estatic.test.mjs",
+      "suite": "primary",
+      "reason": "FEDI-19: inventari estàtic amb cobertura i SHA-256 exactes, anchor extern de confiança, rebuig d’alteracions, extres, secrets i symlinks; fixtures portables sense xarxa ni desplegament."
     },
     {
       "path": "tooling/media/cens_imatges.test.mjs",
@@ -899,6 +1006,11 @@
       "path": "tooling/seo/genera-federacio.test.mjs",
       "suite": "primary",
       "reason": "P1-23 · generador estàtic de la federació ActivityPub (fase 1, lectura): fonts públiques del repositori amb la frontera de publication-policy, seed de mostra sense dades, origen del build, determinisme, escriptura sense restes ni enllaços i CLI sobre un mkdtemp; cap xarxa."
+    },
+    {
+      "path": "tooling/seo/genera-opendata.test.mjs",
+      "suite": "primary",
+      "reason": "Generador públic reproduïble i rebuig de camps no publicables."
     },
     {
       "path": "tooling/seo/prerender-social.test.mjs",
@@ -951,6 +1063,11 @@
       "reason": "Decisió del Mestre 31-10-2026 · instantània sanejada de la Consola al build web (dist/__iaia/): la real d'este arbre, amb els mateixos productors del middleware, ix neta segons un escàner independent o atura el build sense mostrar el valor (una font aturada per l'usuari del sistema s'escaneja igualment sense eixa guarda, i la porta de publicabilitat ho diu com a diagnòstic); fixtures de camins, correus (només les adreces de WebFinger del domini propi), telèfons, NIF/NIE/DNI, IBAN, CCC, targetes Luhn i IP privades (emmascarats) i JWT, sb_, Bearer, PEM, VAPID, URL amb credencials, tokens o signatures, tokens de proveïdors (GitHub, sk-, Google, AWS, Slack, Stripe, Matrix, GitLab), assignacions i camps amb nom de secret, valors de tots els .env* i nom d'usuari (fail-closed); el camí de l'error amb la clau emmascarada; el ganxo generateBundle del connector, la bandera SDP_CONSOLA_INSTANTANIA, SOURCE_DATE_EPOCH (amb la matriu fixada al rellotge) i el sobre d'error. Cap xarxa; els valors de l'entorn no s'imprimixen."
     },
     {
+      "path": "tooling/vite/opendata-publica.test.mjs",
+      "suite": "primary",
+      "reason": "Emissió del paquet públic en build i contracte HTTP del middleware."
+    },
+    {
       "path": "tooling/vite/traductor-contracte.test.mjs",
       "suite": "primary",
       "reason": "IDEA-31 (cicle 2 del Gauntlet, 261030) · contracte del Traductor Sobirà: MOTORS_TRADUCCIO del navegador contra el servidor de dev i el connector WordPress (llegit com a text i executat amb la fixture de PHP): mateixos parells i extrems en ordre, GL només a la beta, llista tancada del menú i target del proveïdor lliure; cap xarxa real."
@@ -969,51 +1086,6 @@
       "path": "tooling/wiki/tests/contradiction_engine.t11.test.mjs",
       "suite": "primary",
       "reason": "Regressió portable T11: coherència, catàlegs, ancoratge compartit i consulta documental sense efectes laterals."
-    },
-    {
-      "path": "tests/certifica-enllacos.adversarial.test.mjs",
-      "suite": "primary",
-      "reason": "O4-CODEX-2: rutes SPA acreditades, rutes pendents, URL i HTTP local efímer, MIME/JSON, fallback200, límits i fuzz determinista."
-    },
-    {
-      "path": "tests/render-pdf.test.mjs",
-      "suite": "primary",
-      "reason": "O4-CODEX-1: perfil i memòria cau del navegador aïllats i netejats, opcions vigents; prova amb navegador simulat."
-    },
-    {
-      "path": "tests/fediversity-nixos-module.test.mjs",
-      "suite": "primary",
-      "reason": "O8/O9: mòdul NixOS declaratiu, endpoints federats, preparació OpenData verificada i límit explícit de Nix no instal·lat."
-    },
-    {
-      "path": "tests/persistencia-local-rural.test.mjs",
-      "suite": "primary",
-      "reason": "O8/O9: persistència rural atòmica, àmbits, esquema JSON estricte, instantànies SHA-256, quota i cancel·lació."
-    },
-    {
-      "path": "tests/cua-operacions-offline.test.mjs",
-      "suite": "primary",
-      "reason": "O8/O9: cua durable SHA-256, HLC/LWW amb còpia de conflicte, CAS i ACK idempotent sense autoritat de client."
-    },
-    {
-      "path": "tests/enxufe-backend-offline-first.test.mjs",
-      "suite": "primary",
-      "reason": "O8/O9: enxufe reversible del backend, selectors, cau i escriptures idempotents, identitat, reconnect i coherència entre connexions."
-    },
-    {
-      "path": "tests/portabilitat-fediversity.test.mjs",
-      "suite": "primary",
-      "reason": "O8 (Gemini): portabilitat FEP-7628 Move amb alsoKnownAs bidireccional i proves FEP-8b32 Ed25519/JCS; mòdul desacoblat sota src/data/federacio."
-    },
-    {
-      "path": "tests/pont-emergencia-rural.test.mjs",
-      "suite": "primary",
-      "reason": "O8/O9 (Gemini): pont d'emergència rural (Sneakernet JSON-LD signat) desacoblat sota src/data/local."
-    },
-    {
-      "path": "tests/sincronitzador-carpeta-local.test.mjs",
-      "suite": "primary",
-      "reason": "O9 (Gemini): vault local Markdown + JSON-LD amb reconciliació SHA-256 i degradació sense File System Access API."
     }
   ]
 }

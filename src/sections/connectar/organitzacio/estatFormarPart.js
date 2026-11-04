@@ -44,9 +44,13 @@ export const LIMIT_AFEGIT = 500;
  * per una línia en blanc. El xat del client no porta metadades (XatContext
  * les envia buides i xat_envia les ignora des de 2610081543): l'estructura
  * és el text.
+ * FEDI-22 (ordre del Mestre, 261103) · `liniaRol` (opcional, ja traduïda):
+ * el rol que es demana, en una segona línia just davall de la fixa. Ningú del
+ * servidor la valida: ho decidix qui administra l'entitat. Sense, el text de
+ * sempre.
  */
-export function textDeLaSollicitud(capcalera, afegit = '') {
-  const cap = String(capcalera ?? '').trim();
+export function textDeLaSollicitud(capcalera, afegit = '', liniaRol = '') {
+  const cap = [String(capcalera ?? '').trim(), String(liniaRol ?? '').trim()].filter(Boolean).join('\n');
   const mes = String(afegit ?? '').trim().slice(0, LIMIT_AFEGIT);
   return mes ? `${cap}\n\n${mes}` : cap;
 }

@@ -46,6 +46,18 @@ const IMATGES = { heroImage: '/assets/h.webp', logoImage: '/assets/l.webp' };
 const closca = (props = {}, fills = <div />) => render(
   <UniversalEditorShell id="d1" titleHtml="Títol" subtitleHtml="" leadHtml="" {...props}>{fills}</UniversalEditorShell>
 );
+
+test('IDEA-70 · el control i les accions del logotip de nit seguixen la llengua de la interfície', () => {
+  enAngles();
+  const { container, getByText } = closca({ showDarkLogoUpload: true });
+  const fosc = container.querySelector('[data-sdp-ranura="logotip-fosc"]');
+  expect(within(fosc).getByRole('button', { name: E('edita.logotipFosc') })).toBeTruthy();
+  expect(getByText(E('ajuda.logotipFosc'))).toBeTruthy();
+  cleanup();
+  const ambImatge = closca({ showDarkLogoUpload: true, logoImageDark: '/assets/nit.png' });
+  fireEvent.click(ambImatge.getByRole('button', { name: E('edita.logotipFosc') }));
+  expect(ambImatge.getByRole('button', { name: E('lleva.logotipFosc') })).toBeTruthy();
+});
 const imatgeCapcalera = (container) => container.querySelector('img.sdp-hero__imatge');
 const imatgeLogotip = (container) => container.querySelector('img.sdp-logo-personalitzat');
 const foto = () => new File(['x'], 'foto.jpg', { type: 'image/jpeg' });
@@ -83,10 +95,10 @@ afterEach(() => {
 });
 
 describe('les reserves són el valencià del diccionari', () => {
-  test('els 35 parells de TEXTOS_CLOSCA: clau editor.closca.*, reserva = ca i traducció pròpia en anglés', () => {
+  test('els 39 parells de TEXTOS_CLOSCA: clau editor.closca.*, reserva = ca i traducció pròpia en anglés', () => {
     const parells = Object.values(TEXTOS_CLOSCA);
-    expect(parells).toHaveLength(35);
-    expect(new Set(parells.map(([clau]) => clau)).size).toBe(35);
+    expect(parells).toHaveLength(39);
+    expect(new Set(parells.map(([clau]) => clau)).size).toBe(39);
     for (const [clau, reserva] of parells) {
       expect(clau).toMatch(/^editor\.closca\.[\w.]+$/);
       expect([clau, CA[clau]]).toEqual([clau, reserva]);

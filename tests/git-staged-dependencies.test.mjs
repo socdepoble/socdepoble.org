@@ -8,6 +8,7 @@ import os from 'node:os';
 import path from 'node:path';
 import {createRequire, syncBuiltinESMExports} from 'node:module';
 import {parse} from 'acorn';
+import {auditaSkills} from '../tooling/brain/fronteres-skills.mjs';
 import {enllacaDependencies, executaValidadors, PASSOS_HOOK, runChecked, tempsDelPas, TEMPS_PAS_MS} from '../tooling/gates/git-staged.mjs';
 
 function temporal(t, prefix = 'sdp deps ') {
@@ -139,6 +140,7 @@ test('cada validador del hook té el seu pas de temps, per damunt del que s’ha
     ['node', 'tooling/gates/porta-documents.mjs --staged', 120_000],
     ['node', 'tooling/gates/tancament.mjs --check', 120_000],
     ['node', 'tooling/gates/run-portes.mjs --nomes-portes', 600_000],
+    ['node', 'tooling/gates/teclat-superficies.mjs', 300_000],
     ['npm', 'run test:precommit', 300_000],
   ]);
   assert.ok(Object.isFrozen(PASSOS_HOOK) && PASSOS_HOOK.every((pas) => Object.isFrozen(pas) && Object.isFrozen(pas.args)));
@@ -163,6 +165,7 @@ test('executaValidadors: dependències per paquet abans del primer validador i e
     ['node', 'tooling/gates/porta-documents.mjs --staged', dir, '1', 120_000, true],
     ['node', 'tooling/gates/tancament.mjs --check', dir, '1', 120_000, true],
     ['node', 'tooling/gates/run-portes.mjs --nomes-portes', dir, '1', 600_000, true],
+    ['node', 'tooling/gates/teclat-superficies.mjs', dir, '1', 300_000, true],
     ['npm', 'run test:precommit', dir, '1', 300_000, true],
   ]);
   assert.equal(fs.readlinkSync(path.join(dir, 'node_modules/@b/c')), path.join(origen, '@b/c'));
@@ -172,7 +175,7 @@ test('executaValidadors: dependències per paquet abans del primer validador i e
   fs.mkdirSync(llarg, {mode: 0o700});
   crides.length = 0;
   executaValidadors(llarg, {SDP_PRE_COMMIT: '1', SDP_HOOK_TEMPS_PAS_S: '400'}, {run, origen});
-  assert.deepEqual(crides.map((c) => c[4]), [400_000, 400_000, 600_000, 400_000]);
+  assert.deepEqual(crides.map((c) => c[4]), [400_000, 400_000, 600_000, 400_000, 400_000]);
 
   // Un validador roig atura la cadena: els següents no s'executen.
   const roig = path.join(base, 'sdp-index-roig');
@@ -185,6 +188,20 @@ test('executaValidadors: dependències per paquet abans del primer validador i e
   };
   assert.throws(() => executaValidadors(roig, {SDP_PRE_COMMIT: '1'}, {run: falla, origen}), /tancament roig/);
   assert.deepEqual(crides.map((c) => c[1]), ['tooling/gates/porta-documents.mjs --staged', 'tooling/gates/tancament.mjs --check']);
+
+  // Una barrera de teclat també frena test:precommit; no és un registre ornamental.
+  const teclatRoig = path.join(base, 'sdp-index-teclat-roig');
+  fs.mkdirSync(teclatRoig, {mode: 0o700});
+  crides.length = 0;
+  const fallaTeclat = (cmd, args, ...resta) => {
+    run(cmd, args, ...resta);
+    if (args[0] === 'tooling/gates/teclat-superficies.mjs') throw new Error('teclat roig');
+    return '';
+  };
+  assert.throws(() => executaValidadors(teclatRoig, {SDP_PRE_COMMIT: '1'}, {run: fallaTeclat, origen}), /teclat roig/);
+  assert.equal(crides.at(-1)[1], 'tooling/gates/teclat-superficies.mjs');
+  assert.ok(!crides.some(c => c[1] === 'run test:precommit'));
+
 });
 
 /* verifyPreparedTree necessita un lease i un rebut reals, i les portes senceres no caben en una prova
@@ -209,4 +226,69 @@ test('verifyPreparedTree delega en executaValidadors i no té cap camí propi ca
   for (const prohibit of ['symlinkSync', 'enllacaDependencies', 'PASSOS_HOOK', 'tempsDelPas']) {
     assert.ok(!noms.includes(prohibit), `${prohibit} no pot aparéixer dins de verifyPreparedTree`);
   }
+});
+
+/* Runtime exclòs del Git: només l'arrel canònica buida, mai els cossos de paperera o credencials. */
+function skillsDePaperera(dir) {
+  fs.mkdirSync(path.join(dir, '.agents/skills'), {recursive: true});
+  for (const file of ['PROFILE.md', 'AGENTS.md', 'BASELINE.md', 'consell.json']) {
+    fs.writeFileSync(path.join(dir, '.agents', file), file === 'consell.json' ? '{}' : '# fixture\n');
+  }
+  fs.writeFileSync(path.join(dir, 'package.json'), '{"scripts":{}}');
+  for (const [id, llig] of [['core-neteja-brossa', '.agents/AGENTS.md'], ['core-restauracio-segellada', '.sdp-paperera']]) {
+    const lloc = path.join(dir, '.agents/skills', id); fs.mkdirSync(lloc);
+    fs.writeFileSync(path.join(lloc, 'SKILL.md'), [
+      '---', `name: ${id}`, 'type: skill', 'status: canonic', 'description: Fixture de contracte runtime.',
+      'triggers_on:', '  - prova', 'contracte.llig:', `  - ${llig}`, 'contracte.escriu:', '  - .sdp-paperera',
+      '---', '# Runtime canònic', ''
+    ].join('\n'));
+  }
+}
+
+test('arbre preparat: Fronteres real passa amb la paperera canònica buida abans del primer validador, sense copiar runtime privat', t => {
+  const base = temporal(t); const font = path.join(base, 'origen'); fs.mkdirSync(font);
+  const origen = origenSintetic(font);
+  fs.mkdirSync(path.join(font, '.sdp-paperera'));
+  fs.writeFileSync(path.join(font, '.sdp-paperera', 'cos-privat.txt'), 'synthetic-private-trash');
+  fs.writeFileSync(path.join(font, 'credencial-sintetica.secret'), 'synthetic-private-credential');
+  const dir = path.join(base, 'preparat'); fs.mkdirSync(dir); skillsDePaperera(dir);
+  const abans = auditaSkills(dir);
+  assert.equal(abans.valid, false);
+  assert.deepEqual(abans.noves.map(v => [v.skill, v.regla, v.detall]), [
+    ['core-neteja-brossa', 'F1', 'contracte.escriu: absent .sdp-paperera'],
+    ['core-restauracio-segellada', 'F1', 'contracte.llig: absent .sdp-paperera'],
+    ['core-restauracio-segellada', 'F1', 'contracte.escriu: absent .sdp-paperera']
+  ]);
+  const crides = [];
+  executaValidadors(dir, {}, {origen, run: (_cmd, args) => {
+    crides.push(args.join(' '));
+    const real = auditaSkills(dir);
+    assert.deepEqual(real.noves, [], 'la porta real de Fronteres continua sense cap exempció');
+    assert.equal(real.valid, true);
+    const runtime = path.join(dir, '.sdp-paperera');
+    const stat = fs.lstatSync(runtime);
+    assert.ok(stat.isDirectory() && !stat.isSymbolicLink()); assert.equal(stat.mode & 0o777, 0o700);
+    assert.deepEqual(fs.readdirSync(runtime), []);
+    assert.equal(fs.existsSync(path.join(dir, 'credencial-sintetica.secret')), false);
+    return '';
+  }});
+  assert.deepEqual(crides, PASSOS_HOOK.map(p => p.args.join(' ')));
+  assert.deepEqual(fs.readdirSync(dir).sort(), ['.agents', '.sdp-paperera', 'node_modules', 'package.json']);
+  assert.equal(fs.readFileSync(path.join(font, '.sdp-paperera/cos-privat.txt'), 'utf8'), 'synthetic-private-trash');
+  assert.equal(fs.readFileSync(path.join(font, 'credencial-sintetica.secret'), 'utf8'), 'synthetic-private-credential');
+});
+
+test('arbre preparat: una ruta arbitrària absent del contracte continua roja i no es materialitza', t => {
+  const base = temporal(t); const origen = origenSintetic(base); const dir = path.join(base, 'preparat'); fs.mkdirSync(dir); skillsDePaperera(dir);
+  const skill = path.join(dir, '.agents/skills/core-neteja-brossa/SKILL.md');
+  fs.writeFileSync(skill, fs.readFileSync(skill, 'utf8').replace('  - .agents/AGENTS.md', '  - tooling/absent-del-contracte.mjs'));
+  let resultat;
+  assert.throws(() => executaValidadors(dir, {}, {origen, run: () => {
+    resultat = auditaSkills(dir);
+    assert.equal(resultat.valid, false);
+    assert.deepEqual(resultat.noves.map(v => [v.regla, v.detall]), [['F1', 'contracte.llig: absent tooling/absent-del-contracte.mjs']]);
+    throw new Error('Fronteres continua roja');
+  }}), /Fronteres continua roja/);
+  assert.equal(fs.existsSync(path.join(dir, 'tooling')), false);
+  assert.deepEqual(fs.readdirSync(path.join(dir, '.sdp-paperera')), []);
 });

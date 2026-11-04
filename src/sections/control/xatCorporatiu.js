@@ -77,6 +77,7 @@ import { ESPERA_DESPRES_DE_FALLADA_MS } from '../../config/navigation.js';
 import { loadPerfilPublic, teCapacitat } from '../../data/backendPort.js';
 import { AGENTS_MAP } from '../../data/agentsSeed.js';
 import { ENTITAT_PILOT_ID, ENTITAT_PILOT_SLUG, IAIA_ID, PERSONA_PILOT, aliesDeLActor } from '../../data/identitatsSeed.js';
+import { entitatDeMostraDe } from '../../data/xatsPerDefecte.js';
 
 const MODES_LOCALS = new Set(['seed', 'local']);
 
@@ -98,10 +99,16 @@ const PADRO_DEL_XAT_DE_LLAVOR = Object.freeze([ID_PERSONA_PILOT, ENTITAT_PILOT_I
  * privat» va al xat amb Sóc de Poble, com abans de l'Onada 8, i no a un error.
  * Una persona que signa amb un àlies de la persona pilot (el Mac Mini de
  * 'javillinares': PERSONA_PILOT.alies) és el seu usuariId del padró. En remot
- * no es fa servir: qui decidix és crea_fil_directe.
+ * no es fa servir: qui decidix és crea_fil_directe. Les entitats del padró
+ * conserven el seu id propi; la resta d'entitats també conserven l'id
+ * demanat perquè el backend el valide, sense substituir-lo per Sóc de Poble.
  */
 export function directeDeLlavor(interlocutor) {
   const id = String(interlocutor?.id ?? '');
+  if (interlocutor?.tipus === 'entitat' || interlocutor?.tipus === 'grup') {
+    const entitat = entitatDeMostraDe(id);
+    return entitat?.id ?? (esIdDeConsulta(id) ? id : null);
+  }
   const delPadro = interlocutor?.tipus === 'persona' && PERSONA_PILOT.alies.includes(id) ? ID_PERSONA_PILOT : id;
   return PADRO_DEL_XAT_DE_LLAVOR.includes(delPadro) ? delPadro : null;
 }
@@ -274,8 +281,8 @@ function avisTraduit({ estat, href }, t) {
  * Onada 8 (261009) · «En privat» obri el xat amb l'autor, i este és el xat
  * de quan l'autor és qui mira (useAccions): el valor hi afig esDeQuiMira(id)
  * quan coneix la identitat de l'app (idsDeQuiMira). Sense, cap camp nou.
- * En LLAVOR hi afig també directeAmb (directeDeLlavor): el xat local només
- * obri directes amb el seu padró, i la resta d'autors van a este xat.
+ * En LLAVOR hi afig també directeAmb (directeDeLlavor), sense deduir cap
+ * directori privat del contingut públic ni fer consultes addicionals.
  */
 export function ProveidorXatSocDePoble({ children }) {
   const app = useEstatDeLApp();

@@ -1,6 +1,8 @@
 import { useEffect, useId, useRef, useState } from 'react';
+import { useSessioOpcional } from '../../app/contexts/SessionContext.jsx';
+import { entradaSessio } from '../../data/identitat.js';
 import { Taula } from '../../components/PedraSeca';
-import { quiEmSegueix, teCapacitat } from '../../data/backendPort.js';
+import * as port from '../../data/backendPort.js';
 /* L'abast del backend (endpoint, poble i mode): una configuració nova amb el
    mateix abast no torna a llegir la llista. Gauntlet 2 · 261101 (G2-B3-04,
    Pedra Seca) · Una sola còpia, la de useEntitatsDelPoble.js. */
@@ -38,7 +40,7 @@ import { abastDe } from '../pobles/useEntitatsDelPoble.js';
 
 /* teCapacitat sense llançar, com useAdministrarOrganitzacio.js. */
 const teSeguiments = () => {
-  try { return teCapacitat('seguiments') === true; } catch { return false; }
+  try { return port.teCapacitat('seguiments') === true; } catch { return false; }
 };
 const esCancel = (error) => error?.name === 'AbortError';
 const clauDeFila = (seguidor) => `${seguidor.tipus === 'entitat' ? 'entitat' : 'persona'}:${seguidor.id}`;
@@ -61,6 +63,7 @@ export function dataDelSeguiment(iso, locale = 'ca-ES') {
  */
 export function useSeguidors({ orgId = null, config = null, visor = null } = {}) {
   const configActual = config || {};
+  const sessio = useSessioOpcional();
   /* La configuració canvia d'identitat a cada render del pare: es llig d'un ref. */
   const configRef = useRef(configActual);
   configRef.current = configActual;
@@ -69,17 +72,37 @@ export function useSeguidors({ orgId = null, config = null, visor = null } = {})
      sessió: qui mira entra a la clau. Si canvia (eixida, renovació fallida,
      una altra persona), la llista d'abans se'n va en el mateix pintat i una
      resposta tardana no es pinta (porta la clau vella). */
-  const clau = teSeguiments() ? JSON.stringify([entitat, abastDe(configActual), visor ?? null]) : null;
+  const clau = teSeguiments() ? JSON.stringify([entitat, abastDe(configActual), visor ?? null, sessio?.currentUser?.id ?? null, entradaSessio()]) : null;
   const [estat, setEstat] = useState({ clau: null, estat: 'carregant', seguidors: [], error: null });
 
   useEffect(() => {
     if (!clau) return undefined;
     const control = new AbortController();
-    /* Dins del then: un port sense el mètode llança de manera síncrona. */
-    Promise.resolve()
-      .then(() => quiEmSegueix(entitat ? { orgId: entitat } : {}, { ...configRef.current, signal: control.signal }))
-      .then((llista) => {
-        if (!control.signal.aborted) setEstat({ clau, estat: 'llest', seguidors: Array.isArray(llista) ? llista : [], error: null });
+    const opcio = { ...configRef.current, signal: control.signal };
+    /* Dins del then: un port sense el mètode llança de manera síncrona.
+       FEDI-23 (Mestre 261103) · En la fitxa personal (sense entitat), unix també
+       elsMeusSeguiments() perquè es vegen tant les persones/entitats que s'han
+       connectat amb tu com aquelles amb qui tu t'has connectat. */
+    Promise.all([
+      Promise.resolve().then(() => port.quiEmSegueix(entitat ? { orgId: entitat } : {}, opcio)),
+      !entitat ? Promise.resolve().then(() => port.elsMeusSeguiments(opcio)) : Promise.resolve([])
+    ])
+      .then(([entrants, eixints]) => {
+        if (control.signal.aborted) return;
+        const llistaEntrants = Array.isArray(entrants) ? entrants : [];
+        const llistaEixints = Array.isArray(eixints) ? eixints : [];
+        const combinats = [];
+        const perClau = new Map();
+        for (const [llista, direccio] of [[llistaEntrants, 'entrant'], [llistaEixints, 'sortint']]) {
+          for (const item of llista) {
+            if (!item?.id) continue;
+            const k = clauDeFila(item);
+            const existent = perClau.get(k);
+            if (existent) { if (existent.direccio !== direccio) existent.direccio = 'mutua'; }
+            else { const fila = { ...item, direccio }; perClau.set(k, fila); combinats.push(fila); }
+          }
+        }
+        setEstat({ clau, estat: 'llest', seguidors: combinats, error: null });
       })
       .catch((error) => {
         if (control.signal.aborted || esCancel(error)) return;
@@ -119,7 +142,12 @@ export function GentQueEtSegueix({ config = null, t: traductor = null, locale: l
       <ul aria-labelledby={titolId}>
         {seguidors.map((seguidor) => (
           <li key={clauDeFila(seguidor)}>
-            {seguidor.nom || t('section.perfil.seguidors.senseNom', 'Sense nom')}
+            <a href={`/${seguidor.tipus === 'entitat' ? 'entitats' : 'gent'}/${encodeURIComponent(seguidor.id)}`}>{seguidor.nom || t('section.perfil.seguidors.senseNom', 'Sense nom')}</a>
+            {' · '}<span>{seguidor.direccio === 'mutua'
+              ? t('section.perfil.connexions.mutua', 'Connexió mútua')
+              : seguidor.direccio === 'sortint'
+                ? t('section.perfil.connexions.sortint', 'T’hi has connectat')
+                : t('section.perfil.connexions.entrant', 'Connectat amb tu')}</span>
             {seguidor.tipus === 'entitat' ? ` (${t('section.perfil.seguidors.entitat', 'entitat')})` : null}
             {seguidor.creatAl ? (
               <>
@@ -136,9 +164,9 @@ export function GentQueEtSegueix({ config = null, t: traductor = null, locale: l
   }
   return (
     <section aria-labelledby={titolId}>
-      <h3 id={titolId}>{t('section.perfil.seguidors.titol', 'Veïnat connectat amb tu')}</h3>
+      <h3 id={titolId}>{t('section.perfil.seguidors.titol', 'Veïnat i amistats connectades')}</h3>
       <p className="sdp-camp__ajuda">
-        {t('section.perfil.seguidors.ajuda', 'Cada persona o entitat d’esta llista ha triat connectar amb tu: cap algoritme no hi decidix res. Esta llista només la veus tu.')}
+        {t('section.perfil.seguidors.ajuda', 'La llista unix les persones i entitats amb qui t’has connectat i qui s’ha connectat amb tu: cap algoritme no hi decidix res. Esta llista només la veus tu.')}
       </p>
       {cos}
     </section>
@@ -163,8 +191,8 @@ export function textDErrorDeSeguidors(error, nomOrg) {
 }
 
 /** «Veïnat connectat amb {nom}», a la gestió dels membres, per a qui administra l'organització. */
-export function QuiSegueixOrganitzacio({ orgId, nom = '', config = null }) {
-  const { estat, seguidors, error } = useSeguidors({ orgId, config });
+export function QuiSegueixOrganitzacio({ orgId, nom = '', config = null, visor = null }) {
+  const { estat, seguidors, error } = useSeguidors({ orgId, config, visor });
   if (estat === 'inactiu' || orgId === null || orgId === undefined || orgId === '') return null;
   const nomOrg = nom || 'esta organització';
   const titol = `Veïnat connectat amb ${nomOrg}`;

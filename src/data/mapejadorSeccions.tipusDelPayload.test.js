@@ -27,7 +27,7 @@ const CLAUS_DE_TEXT = [
 ];
 /* Llibre Mestre, P1-61 · og_image i featured_image (la imatge que l'autor tria
    per a xarxes, config/imatgeSocial.js) són claus d'imatge com les altres. */
-const CLAUS_D_IMATGE = ['image', 'image_url', 'imageSrc', 'images', 'src', 'avatar_url', 'author_avatar', 'logo_image',
+const CLAUS_D_IMATGE = ['image', 'image_url', 'imageSrc', 'images', 'src', 'avatar_url', 'author_avatar', 'logo_image', 'logo_image_dark',
   'og_image', 'featured_image'];
 
 const fila = (payload) => elementDeFilaPublicada({
@@ -67,6 +67,14 @@ describe('elementDeFilaPublicada · els tipus del payload', () => {
     const element = fila(payloadHostil());
     for (const clau of CLAUS_D_IMATGE) expect(element[clau], clau).toEqual([null, '/assets/a.png']);
     expect(fila({ image: textHostil() })).not.toHaveProperty('image');
+  });
+
+  test('IDEA-70 · el logotip de nit té la mateixa guarda de tipus que el de dia en lectures remotes', () => {
+    for (const valor of [textHostil(), { src: '/assets/nit.png' }, [textHostil(), '/assets/nit.png']]) {
+      const element = fila({ logo_image: valor, logo_image_dark: valor });
+      expect(element.logo_image_dark).toEqual(element.logo_image);
+      expect(senseValorsHostils(element)).toBe(true);
+    }
   });
 
   test('revisió · un número es queda com el seu text, un booleà no viatja, el preu i la revisió', () => {
@@ -130,7 +138,7 @@ describe('elementDeFilaPublicada · els tipus del payload', () => {
       sectionId: 'mur', type: 'compartit', origen, title: 'La fira', subtitle: 'Diumenge', description: 'Entradeta',
       content: '<p>Cos</p>', copyright: '© Maria', image: '/assets/fira.png', labels: [{ text: 'Fira', className: 'sdp-badge-tag' }],
       author_name: 'Maria', author: 'Maria', author_avatar: 'sdp-media://mitjans/p/u/avatars/a.png', author_location: 'Sella',
-      poble_id: 'sella', publish_date: '2026-10-07T10:00:00.000Z', icon: '🎉', logo_image: '/assets/logo.png',
+      poble_id: 'sella', publish_date: '2026-10-07T10:00:00.000Z', icon: '🎉', logo_image: '/assets/logo.png', logo_image_dark: '/assets/logo-nit.png',
       image_url: ['/assets/fira.png'], price: 12, tags: ['fira'], geolocalitzacio: { lat: 38.6, lng: -0.3, altitud: 400 },
       variations: [{ id: 'gris', name: 'Gris', price: '15€' }], searchText: 'la fira'
     };

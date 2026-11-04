@@ -76,6 +76,7 @@ const valorDe = (llista, selector, propietat) => cosDe(llista, selector)
 const LAYOUT = regles(llig('src/css/layout.css'));
 const COMPONENTS = regles(llig('src/css/components.css'));
 const MODULES = regles(llig('src/css/modules.css'));
+const UTILITATS = regles(llig('src/css/utilities.css'));
 /* El compacte, la tauleta tàctil o la caixa baixa: la mateixa especificitat
    que .sdp-root.is-compact (un :is() val el seu argument més específic). */
 const AMPLI = `.sdp-root:is(.is-compact, [${ATRIBUT_TACTIL}], [${ATRIBUT_CURTA}])`;
@@ -86,6 +87,21 @@ const RESERVA = 'calc(var(--sdp-alt-nav-mobil) + env(safe-area-inset-bottom, 0px
 const senseWhere = (s) => s.replace(/^:where\(([^)]*)\)/, '$1');
 /* Les peces de la barra inferior i de la seua reserva: només del compacte. */
 const DEL_COMPACTE = /nav\.mobile-nav|--contained|sdp-tornar-dalt|app-main__content/;
+
+test('focus natiu: visor i contained reserven les dues barres sense augmentar la caixa física', () => {
+  const reserva = 'calc(var(--sdp-alt-accio) * 2 + var(--sdp-space-4))';
+  expect(valorDe(LAYOUT, '.app-main__content', 'scroll-padding-top')).toBe(reserva);
+  expect(valorDe(UTILITATS, '.sdp-universal-page-container--contained', 'scroll-padding-top')).toBe(reserva);
+  expect(valorDe(LAYOUT, '.app-main__content', 'padding-top')).toBeUndefined();
+  expect(valorDe(UTILITATS, '.sdp-universal-page-container--contained', 'padding-top')).toBeUndefined();
+});
+
+test('focus en compacte: el visor evita la barra inferior; el contained ja acaba damunt de la reserva', () => {
+  const selector = ':where(.sdp-root.is-compact) .app-main__content';
+  expect(valorDe(LAYOUT, selector, 'padding-bottom')).toBe(RESERVA);
+  expect(valorDe(LAYOUT, selector, 'scroll-padding-bottom')).toBe('calc(var(--sdp-alt-nav-mobil) + env(safe-area-inset-bottom, 0px) + var(--sdp-space-4))');
+  expect(valorDe(UTILITATS, '.sdp-universal-page-container--contained', 'scroll-padding-bottom')).toBe('var(--sdp-space-4)');
+});
 
 describe('barres que acompanyen el scroll · layout.css', () => {
   test('els estats amagats només penjen de l’arrel marcada amb l’atribut i viuen a @layer components, sense @media', () => {
@@ -271,5 +287,13 @@ describe('la closca de la Gestoria (modules.css)', () => {
     // Cap regla de la closca sense l'abast d'escriptori torna a fer-les static.
     const sense = MODULES.filter((r) => r.selectors.some((s) => s.startsWith('.sdp-gestoria-closca .sdp-universal-page-container')));
     expect(sense).toEqual([]);
+  });
+
+  test('WCAG 2.4.11 Focus Not Obscured · els quatre scrollers de .sdp-workspace--universal tenen scroll-padding-bottom per a nav.mobile-nav (R4CT-01)', () => {
+    const regla = MODULES.find((r) => r.selectors.some((s) => s.endsWith('> .sdp-workspace-detail') && s.startsWith(':where(.sdp-root.is-compact) .sdp-workspace--universal')));
+    expect(regla).toBeDefined();
+    expect(regla.selectors).toHaveLength(4);
+    expect(regla.cos).toContain('padding-bottom: calc(var(--sdp-alt-nav-mobil) + env(safe-area-inset-bottom, 0px));');
+    expect(regla.cos).toContain('scroll-padding-bottom: calc(var(--sdp-alt-nav-mobil) + env(safe-area-inset-bottom, 0px) + var(--sdp-space-4));');
   });
 });

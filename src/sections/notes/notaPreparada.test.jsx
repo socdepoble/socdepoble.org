@@ -80,6 +80,7 @@ test('teContingut: text o imatge; la llavor, un cos buit i la classificació no 
   expect(teContingut({ title: 'Hort' }, LLAVOR)).toBe(true);
   expect(teContingut({ lead: '<p>Entradilla</p>' }, LLAVOR)).toBe(true);
   expect(teContingut({ heroImage: 'sdp-media://mitjans_privats/a.webp' }, LLAVOR)).toBe(true);
+  expect(teContingut({ logoImageDark: 'sdp-media://mitjans_privats/nit.webp' }, LLAVOR)).toBe(true);
   expect(teContingut({ content: '<p><img src="sdp-media://mitjans_privats/a.webp"></p>' }, LLAVOR)).toBe(true);
 });
 

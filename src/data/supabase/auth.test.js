@@ -29,7 +29,7 @@ vi.mock('./runtime.js', () => ({ configuraRefrescSessio: vi.fn(), getCurrentUser
   getResolvedConfig: config => ({ supabaseUrl: 'https://example.test', supabaseAnonKey: 'public', runtimeDataMode: config.dataMode || 'remote', ...config }), request: m.request, rpc: vi.fn() }));
 vi.mock('./realtime.js', () => ({ tancaRealtime: m.realtime }));
 vi.mock('./config.js', () => ({ resetClient: vi.fn() }));
-import { refreshSession, logout, loginWithPassword, updateProfile, updateUserPassword, registerWithPassword, loginWithGoogle, recullTornadaOAuth, getProfile, comprovaServidor } from './auth.js';
+import { refreshSession, logout, loginWithPassword, updateProfile, updateUserPassword, registerWithPassword, loginWithGoogle, recullTornadaOAuth, getProfile, comprovaServidor, registraConsentiment } from './auth.js';
 import { rpc } from './runtime.js';
 import { entraAmbGoogle, exigeixSenseMarcAlie, gestionaTornada, urlDeTornadaAlta } from '../oauthRelay.js';
 import { configuraBackendSessio } from '../identitat.js';
@@ -650,4 +650,27 @@ test('logout(config, { scope }) revoca amb keepalive i el JWT capturat abans de 
   expect(m.epoch).toBeGreaterThan(before);
   expect(fetch).toHaveBeenCalledWith('https://backend.example.test/auth/v1/logout?scope=global',
     expect.objectContaining({ method: 'POST', keepalive: true, headers: expect.objectContaining({ Authorization: 'Bearer synthetic-refresh' }) }));
+});
+
+/* R2CF-01 · La crida directa també ha d’estar aïllada del compte de producció. */
+test.each(['seed','local'])('registraConsentiment en %s no envia dades ni renova la sessió', async dataMode => {
+  rpc.mockReset(); m.request.mockReset(); m.exp = Date.now() - 1000;
+  const honeypot = () => { throw new Error('XARXA PROHIBIDA'); };
+  rpc.mockImplementationOnce(honeypot); m.request.mockImplementationOnce(honeypot);
+  const fetch = vi.fn(honeypot); vi.stubGlobal('fetch', fetch);
+  const gen = m.epoch;
+  await expect(registraConsentiment('rgpd_acepta','v1',{ dataMode })).rejects.toMatchObject({ code: CODI_ENTRADA.MODE_LOCAL });
+  expect(rpc).not.toHaveBeenCalled(); expect(m.request).not.toHaveBeenCalled(); expect(fetch).not.toHaveBeenCalled(); expect(m.epoch).toBe(gen);
+  rpc.mockReset(); m.request.mockReset();
+});
+test('registraConsentiment remot conserva RPC, arguments i rebuig original', async () => {
+  rpc.mockReset(); m.request.mockReset();
+  const config = { dataMode:'remote', tenantId:'00000000-0000-4000-8000-000000000001' }, resultat = { tipus:'rgpd_acepta', accio:'atorga' };
+  rpc.mockResolvedValueOnce(resultat);
+  await expect(registraConsentiment('rgpd_acepta','v1',config)).resolves.toBe(resultat);
+  expect(rpc).toHaveBeenCalledExactlyOnceWith('registra_consentiment',{p_tipus:'rgpd_acepta',p_versio:'v1'},config);
+  rpc.mockReset();const error = Object.assign(new Error('Consenteniment rebutjat'),{status:401});rpc.mockRejectedValueOnce(error);
+  await expect(registraConsentiment('rgpd_acepta','v1',config)).rejects.toBe(error);
+  expect(rpc).toHaveBeenCalledTimes(1);expect(m.request).not.toHaveBeenCalled();
+  rpc.mockReset();
 });

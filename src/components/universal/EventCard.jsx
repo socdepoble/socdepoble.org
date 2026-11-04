@@ -3,7 +3,7 @@ import { resolveAsset } from '../../config/assetResolver';
 import { COPYRIGHT_SDP, RUTA_CALENDARI, dataDElement, dataHoraDeBarra, rutaCalendariDeLaData } from './editorial.js';
 import { DEFAULT_AUTHOR } from './UniversalUtils.js';
 import { esRutaInterna } from '../../config/objecteConnectable.js';
-import { fontImatgePropia } from '../../utils/sanitize.js';
+import { fontImatgePropia, fontVideoPropia } from '../../utils/sanitize.js';
 
 /**
  * T5 (ordre del Mestre, 260930) · Les fonts de la pastilla d'un acte del
@@ -28,17 +28,31 @@ function horaEscrita(esdeveniment, item) {
    publicació, mai com a dia de l'acte. Cap toISOString ni new
    Date('AAAA-MM-DD'), que es lligen en UTC. */
 function dataDeLActe(esdeveniment, item) {
-  if (!esdeveniment) return dataDElement(item);
+  if (!esdeveniment || item?.boinaDataPublicacio === true) return dataDElement(item);
   const data = dataHoraDeBarra(fontsDeLActe(esdeveniment));
   return { ...data, time: data.time || horaEscrita(esdeveniment, item) };
 }
 
 /* La insígnia només diu el dia en què passa l'acte: sense acte, cap. El dia
    és el de la pastilla (el seu dateTime local) i el nom del mes, el d'eixe dia
-   al calendari local. */
-function insigniaDeCalendari(esdeveniment, dateTime) {
+   al calendari local. Quan l'acte és multi-dia i porta `calendar_badge` o
+   quan la boina mostra la data de publicació (`boinaDataPublicacio`), el
+   quadrat negre reflectix el rang de dates del curs o l'inici de l'acte. */
+function insigniaDeCalendari(esdeveniment, dateTime, item = null) {
+  if (!esdeveniment && !item?.calendar_badge) return null;
+  const iniciClau = (esdeveniment?.inici?.data || esdeveniment?.inici?.dataHora || dateTime || '').slice(0, 10);
+  if (item?.calendar_badge && typeof item.calendar_badge === 'object') {
+    const cb = item.calendar_badge;
+    return {
+      dia: String(cb.dia || ''),
+      mes: String(cb.mes || ''),
+      any: String(cb.any || iniciClau.slice(0, 4)),
+      dateTime: cb.dateTime || iniciClau,
+      ...(cb.label ? { label: cb.label } : {})
+    };
+  }
   if (!esdeveniment || !dateTime) return null;
-  const clau = dateTime.slice(0, 10);
+  const clau = item?.boinaDataPublicacio ? iniciClau : dateTime.slice(0, 10);
   const [any, mes, dia] = clau.split('-').map(Number);
   return {
     dia: String(dia),
@@ -114,10 +128,12 @@ export function rutaDeLaBoinaDeLActe(item, deQuiSigna) {
    opcions» a la caputxa (UniversalCard). Sense, el DOM de sempre. */
 export function EventCard({ item, esdeveniment = null, onConnect, objecte, authorHref, authorName, authorAvatar, ambModeracio = false, enquadramentTargeta = null }) {
   const data = dataDeLActe(esdeveniment, item);
-  const insignia = insigniaDeCalendari(esdeveniment, data.dateTime);
+  const insignia = insigniaDeCalendari(esdeveniment, data.dateTime, item);
 
-  // Use entradilla if available, then lead, then description
-  const bodyContent = item.entradilla || item.lead || (item.description ? <p className="sp-card-text">{item.description}</p> : null);
+  // Use entradilla if available, then lead, then description (unless omitted for protagonist video cards)
+  const bodyContent = item.ometEntradillaTargeta === true
+    ? null
+    : (item.entradilla || item.lead || (item.description ? <p className="sp-card-text">{item.description}</p> : null));
 
   // Custom badges for event
   /* Onada 6 · «Agenda» porta al dia de l'acte al Calendari (el de la insígnia). */
@@ -133,6 +149,7 @@ export function EventCard({ item, esdeveniment = null, onConnect, objecte, autho
       body={bodyContent}
       imageUrl={fontImatgePropia(resolveAsset((typeof item.image_url === 'string' ? item.image_url : null) || (typeof item.image === 'string' ? item.image : null) || ''))}
       imageAlt={item.imageAlt || item.title || item.name || ''}
+      videoUrl={typeof item.video_url === 'string' && item.video_url.trim() ? fontVideoPropia(resolveAsset(item.video_url)) : undefined}
       imatgePrivada
       /* IDEA-42 (B7h, marató 261101_2143) · La targeta 16:9 amb el punt focal
          de l’autor: l’enquadrament ja net que passa TargetaDelMur

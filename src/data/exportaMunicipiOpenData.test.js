@@ -430,7 +430,7 @@ describe('JSON-LD (schema.org), Data Package v2 i manifest SHA-256', () => {
       name: '2n Aplec pel Territori',
       /* Sense fitxa pública al directori de l'entrada: només l'id, mai l'author_name del text. */
       organizer: { '@type': 'Organization', identifier: 'socdepoble' },
-      startDate: '2023-01-29T10:00:00+01:00'
+      startDate: '2023-01-29T10:30:00+01:00'
     });
     const estiu = { id: 'festes', title: 'Festes', author_entity_id: 'socdepoble', poble_id: TORRE.slug, date: '2026-07-15', time: '19:30', fi: '2026-07-15T23:00', location: 'Plaça Major' };
     const actes = grafDe(prepara({ agenda: [estiu, { ...estiu, id: 'tot-el-dia', time: undefined, fi: undefined }] }), 'agenda.jsonld');

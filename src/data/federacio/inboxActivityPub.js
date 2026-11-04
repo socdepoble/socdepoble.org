@@ -28,11 +28,11 @@
  *   · les IP privades es bloquegen DESPRÉS de resoldre el DNS (urlRemota és
  *     només lèxica).
  *
- * Perfil de signatures: draft-cavage-http-signatures-12 tal com el fa servir
- * Mastodon (app/controllers/concerns/signature_verification.rb): rsa-sha256,
- * hs2019 (RSA o Ed25519) i ed25519; (request-target), host i Digest signats
+ * Perfil propi de signatures draft-cavage-http-signatures-12: rsa-sha256
+ * (RSA), hs2019 (RSA o Ed25519) i ed25519; (request-target), host i Digest signats
  * en un POST; finestra de 5 min sense expires, mai més de 12 h, i 1 h de marge
  * de rellotge. No és RFC 9421 (Signature-Input és un altre format).
+ * La interoperabilitat remota amb Mastodon no està acreditada.
  */
 import {
   CONTEXT_AS, PUBLIC, TIPUS_JRD, analitzaRecursWebFinger, construeixWebFinger, dataIso, esSlugFederat, normalitzaOrigen,
@@ -161,14 +161,14 @@ export function resolveWebFingerAcct(consulta, { origen, municipis = [] } = {}) 
   return jrd ? { status: 200, capcaleres, cos: jrd } : { status: 404, capcaleres, cos: { error: 'not_found' } };
 }
 
-/* ── Signatures HTTP (draft-cavage-12, el perfil de Mastodon) ───────── */
+/* ── Signatures HTTP (draft-cavage-12, perfil acceptat per este motor) ── */
 
 /**
  * Els paràmetres de la capçalera Signature ({keyId, algorithm, headers[],
  * signature, created, expires}), o null si és malformada: paràmetre repetit o
  * desconegut de forma, més de 8, valors sense separador, base64 invàlid.
  * Lineal (indexOf; cap regex que puga recular). Sense `algorithm`, hs2019; sense
- * `headers`, '(created)' en hs2019 i 'date' en la resta (com Mastodon).
+ * `headers`, '(created)' en hs2019 i 'date' en la resta, en este perfil.
  */
 export function analitzaCapcaleraSignatura(valor) {
   if (typeof valor !== 'string' || !valor || valor.length > LIMITS_SIGNATURA.capcalera) return null;

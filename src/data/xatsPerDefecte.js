@@ -46,7 +46,38 @@
  */
 import { AGENTS_MAP } from './agentsSeed.js';
 import { PAGINES_AMB_XAT } from './contracte.js';
-import { AGENTS_IA_SEED, ENTITAT_PILOT_ID, ENTITAT_PILOT_SLUG, PERSONA_PILOT, esIAIA } from './identitatsSeed.js';
+import { AGENTS_IA_SEED, ENTITATS_SEED, ENTITAT_PILOT_ID, ENTITAT_PILOT_SLUG, PERSONA_PILOT, esIAIA } from './identitatsSeed.js';
+
+/** Una entitat del padró local, per identificador declarat; mai pel nom.
+ * No resol identitats remotes: les ha de declarar loadPerfilPublic. */
+export function entitatDeMostraDe(clau) {
+  const id = String(clau ?? '').trim();
+  if (!id) return null;
+  const trobada = ENTITATS_SEED.find((e) => e && (e.id || e.usuari_id) && [e.id, e.usuari_id, e.slug, ...(Array.isArray(e.alies) ? e.alies : [])]
+    .some((alias) => alias != null && String(alias) === id)) || null;
+  return trobada ? { ...trobada, id: trobada.id || trobada.usuari_id } : null;
+}
+
+/** Fil directe de mostra per a l'entitat demanada: local, sense subjecte de
+ * comunitat ni cap id que puga confondre's amb un fil del servidor. */
+export function filDeMostraDEntitat(entitat, ultimAl = null, avis = null) {
+  const nom = entitat.name || entitat.nom || entitat.titol || entitat.id;
+  return {
+    id: `fake-entitat:${entitat.id}`,
+    name: nom,
+    title: nom,
+    avatar_url: entitat.avatar_url || entitat.avatar || entitat.logo_url || null,
+    tipus: 'directe',
+    potEscriure: false,
+    avisNomesLectura: avis,
+    participants: [{ id: entitat.id, nom, tipus: entitat.kind === 'group' || entitat.tipus === 'grup' ? 'grup' : 'entitat' }],
+    ultimAl,
+    noLlegits: 0,
+    ultimSeq: 0,
+    llegitFinsSeq: 0,
+    ultimText: null
+  };
+}
 
 /** El prefix dels ids sintètics: mai cap id de fil del servidor. */
 export const PREFIX_PER_DEFECTE = 'sdp-per-defecte:';

@@ -82,20 +82,21 @@ test('/fedivers es resol per la ruta i per /page/fedivers, i el cos comença en 
   const enllacos = [...cosDe(html).querySelectorAll('a')].map((a) => [a.getAttribute('href'), a.textContent]);
   expect(enllacos).toEqual([
     ['https://socdepoble.org', 'socdepoble.org'], ['https://gentdelatorre.net', 'gentdelatorre.net'],
-    ['http://socdepoble.cat', 'socdepoble.cat'], ['/page/node-zero', 'Node 0 · Mac mini M4'],
+    ['https://socdepoble.cat', 'socdepoble.cat'], ['/page/node-zero', 'Node 0 · Mac mini M4'],
     ['/perfil', 'perfil'], ['/mur', 'Mur'], ['/page/fediversity', 'horitzó'], ['/roadmap', 'full de ruta'],
     ['/page/node-zero', 'Node 0 · Mac mini M4']
   ]);
   expect(html).toContain('<strong>socdepoble.org</strong></a>');
-  expect(html).toContain('Hui n’hi ha <strong>tres d’actius</strong>');
-  expect(PAGE_COPY.fedivers.lead).toContain('hui n’hi ha tres d’actius: socdepoble.org, gentdelatorre.net i socdepoble.cat.');
-  expect(html.split('socdepoble.cat')).toHaveLength(3);
-  expect(html).toContain('<a href="http://socdepoble.cat" target="_blank" rel="noopener noreferrer"><strong>socdepoble.cat</strong></a>');
+  expect(cosDe(html).textContent).toContain('dos accessos públics consolidats');
+  expect(cosDe(html).textContent).toContain('sense garantia de disponibilitat ni base de dades independent encara');
+  expect(PAGE_COPY.fedivers.lead).toContain('dos punts d’accés consolidats');
+  expect(PAGE_COPY.fedivers.lead).toContain('sense garantia de disponibilitat ni base de dades pròpia encara');
+  expect(html).toContain('<a href="https://socdepoble.cat" target="_blank" rel="noopener noreferrer"><strong>socdepoble.cat</strong></a>');
   // El Fedivers és horitzó, no funció: la pàgina ho diu.
   expect(html).toContain('Hui encara no està fet');
   // La franja només ix amb poc espai (isCompact a App.jsx); amb més, la barra negra només diu el nom.
-  expect(html).toContain('si té poc espai, com al mòbil, una franja davall de la barra negra');
-  expect(html).toContain('si en té més, la barra negra només en diu el nom');
+  expect(cosDe(html).textContent).toContain('si té poc espai, com al mòbil, una franja davall de la barra negra');
+  expect(cosDe(html).textContent).toContain('si en té més, la barra negra només en diu el nom');
 });
 
 test('/page/node-zero és la pàgina didàctica del servidor local de l’habitació i s’enllaça bidireccionalment amb /fedivers', () => {
@@ -123,8 +124,8 @@ test('261007 · /page/xat és «El Xat»; /xat no és cap pàgina; l’Ànima co
   expect(paginaDeRuta('/iaia')).toEqual({ pageKey: 'anima', page: PAGE_COPY.anima });
   const { title, html, image, imageWidth, imageHeight, imageFetchPriority, date } = PAGE_COPY.xat;
   expect([title, image, imageWidth, imageHeight, imageFetchPriority]).toEqual(['El Xat', '/assets/uploads/brain/xat_portada.webp', 1024, 1024, 'high']);
-  // La data que fixa el Mestre: 01:30 hora local del 07-10-2026 (capçalera de pageContent.js).
-  expect(date).toBe('2026-10-07T01:30:00+02:00');
+  // La data que fixa el Mestre: 01:30 hora local del 27-10-2026 perquè vaja darrere de Node 0 (29-10) i davant de Descàrregues (26-10).
+  expect(date).toBe('2026-10-27T01:30:00+01:00');
   // Escrit com a classe [12]: design_guard llig els literals de capçalera de qualsevol .js.
   expect(html).not.toMatch(/<h[12]\b/i);
   expect(html.trim()).toMatch(/^<h3>/);
@@ -685,4 +686,36 @@ test('261027 · dins de l’app nativa, /page/descarregues no es resol; /page/xa
   } finally {
     delete window.Capacitor;
   }
+});
+
+/* Regressió de veritat editorial (31-10 i 03-11): ni els leads ni les metadades
+   de les Cards poden tornar a convertir la candidatura o el pilot en serveis acreditats. */
+test('FEDI · els tres textos i les seues Cards no recuperen les afirmacions refutades', () => {
+  const falses = /hui (?:n[’']hi ha|hi ha) tres (?:nodes )?actius|candidatura està en avaluació|candidatura en fase d[’']avaluació|verifica més de 25\.000|alimenta les publicacions que es veuen als tres nodes|ja tenim en marxa|ja encamina cap a este servidor físic|amb clau Ed25519 pròpia i resposta dinàmica/i;
+  for (const key of ['fediversity','fedivers','node-zero']) {
+    const page=PAGE_COPY[key],doc=cosDe(page.html);
+    const claus = ['data-titol','data-subtitol','data-entradilla','alt'];
+    const textComplet = document => [page.title,page.lead,page.subtitle,document.textContent,
+      ...[...document.querySelectorAll('[data-titol],[data-subtitol],[data-entradilla],img[alt]')]
+        .flatMap(node=>claus.map(atribut=>node.getAttribute(atribut)||''))].join(' ').replace(/\s+/g,' ');
+    expect(textComplet(doc),key).not.toMatch(falses);
+    for (const card of doc.querySelectorAll('[data-sdp-targeta^="pagina:"]')) {
+      const desti = card.getAttribute('data-sdp-targeta').slice('pagina:'.length), esperada = PAGE_COPY[desti];
+      expect(esperada,desti).toBeTruthy();
+      expect(['data-titol','data-subtitol','data-entradilla'].map(atribut=>card.getAttribute(atribut)),key+' → '+desti)
+        .toEqual([esperada.title,esperada.subtitle,esperada.lead]);
+      // Refutacions del guard: cada atribut descriptiu s’inspecciona encara que els altres siguen correctes.
+      for (const atribut of ['data-titol','data-subtitol','data-entradilla']) {
+        const mutant = doc.cloneNode(true);
+        mutant.querySelector('[data-sdp-targeta="pagina:'+desti+'"]').setAttribute(atribut,'La candidatura està en avaluació');
+        expect(textComplet(mutant),key+' '+atribut).toMatch(falses);
+      }
+    }
+  }
+  expect(PAGE_COPY.fediversity.lead).toContain('no va passar la primera selecció');
+  expect(PAGE_COPY.fediversity.lead).toContain('31 d’octubre de 2026');
+  expect(PAGE_COPY.fediversity.lead).toContain('No s’ha concedit finançament');
+  const node=cosDe(PAGE_COPY['node-zero'].html).textContent;
+  expect(node).toContain('s’hi han executat les proves i els builds');
+  expect(node).toContain('no acredita que este haja executat les suites del portàtil');
 });

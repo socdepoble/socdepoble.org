@@ -14,7 +14,7 @@ import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
    Els mateixos dobles que PerfilPublicSection.seguidors.test.jsx, més la
    sessió de React (useSessioOpcional) i el comptador d'entrades. */
 const mocks = vi.hoisted(() => ({
-  id: 'pepa', navigate: vi.fn(), load: vi.fn(), qui: vi.fn(), seo: vi.fn(), toast: vi.fn(),
+  id: 'pepa', navigate: vi.fn(), load: vi.fn(), qui: vi.fn(), meus: vi.fn(), seo: vi.fn(), toast: vi.fn(),
   config: { dataMode: 'seed' }, t: (_, alternativa) => alternativa, resolveAsset: (v) => v, agents: [],
   capacitats: new Set(['directori', 'seguiments']),
   identitat: { memberships: [], actor: null, setActor: vi.fn() },
@@ -47,7 +47,8 @@ vi.mock('../../hooks/useSEO', () => ({ useSEO: (opcions) => mocks.seo(opcions) }
 vi.mock('../../data/backendPort.js', () => ({
   teCapacitat: (capacitat) => mocks.capacitats.has(capacitat),
   loadPerfilPublic: mocks.load,
-  quiEmSegueix: (...args) => mocks.qui(...args)
+  quiEmSegueix: (...args) => mocks.qui(...args),
+  elsMeusSeguiments: (...args) => mocks.meus(...args)
 }));
 vi.mock('../../host.js', () => ({ quanLlest: async () => {} }));
 import PerfilPublicSection, { FitxaPublica } from './PerfilPublicSection.jsx';
@@ -59,9 +60,10 @@ const PEPA = {
 };
 const DE_PEPA = Object.freeze({ ...PEPA, propietari: true });
 const sessioDe = (id) => ({ currentUser: id ? { id, email: `${id}@poble.test` } : null, estat: id ? 'dins' : 'fora' });
-const titol = () => screen.queryByRole('heading', { level: 3, name: 'Veïnat connectat amb tu' });
+const titol = () => screen.queryByRole('heading', { level: 3, name: 'Veïnat i amistats connectades' });
 const insignia = () => screen.queryByText('La teua fitxa');
 const llistaPrivada = () => screen.queryByText(/Rosa Pérez/);
+const llistaEixintPrivada = () => screen.queryByText(/Toni Connexió Privada/);
 const diferida = () => {
   let resol;
   const promesa = new Promise((r) => { resol = r; });
@@ -74,9 +76,11 @@ async function pintaLaDePepa() {
   mocks.load.mockResolvedValueOnce(DE_PEPA);
   const vista = render(<PerfilPublicSection agents={mocks.agents} />);
   expect(await screen.findByText(/Rosa Pérez/)).toBeTruthy();
+  expect(screen.getByText(/Toni Connexió Privada/)).toBeTruthy();
   expect(insignia()).toBeTruthy();
   expect(mocks.load).toHaveBeenCalledTimes(1);
   expect(mocks.qui).toHaveBeenCalledTimes(1);
+  expect(mocks.meus).toHaveBeenCalledTimes(1);
   return vista;
 }
 
@@ -87,6 +91,7 @@ beforeEach(() => {
   mocks.id = 'pepa';
   mocks.capacitats = new Set(['directori', 'seguiments']);
   mocks.qui.mockResolvedValue([{ id: 'u-rosa', nom: 'Rosa Pérez', creatAl: '2026-10-24T09:00:00Z' }]);
+  mocks.meus.mockResolvedValue([{ id: 'u-toni', nom: 'Toni Connexió Privada', creatAl: '2026-10-26T09:00:00Z' }]);
   mocks.identitat = { memberships: [], actor: null, setActor: vi.fn(() => true) };
   mocks.xat = { senseSessio: false };
   mocks.sessio = sessioDe('pepa');
@@ -106,16 +111,19 @@ describe('CUR-01 · la fitxa pública és de qui mira', () => {
     vista.rerender(<PerfilPublicSection agents={mocks.agents} />);
     /* En el mateix pintat: res de Pepa a la pantalla mentre es torna a llegir. */
     expect(llistaPrivada()).toBeNull();
+    expect(llistaEixintPrivada()).toBeNull();
     expect(titol()).toBeNull();
     expect(insignia()).toBeNull();
     await waitFor(() => expect(mocks.load).toHaveBeenCalledTimes(2));
     await act(async () => { sense.resol(PEPA); });
     expect(await screen.findByRole('heading', { level: 1, name: 'Pepa Garcia' })).toBeTruthy();
     expect(llistaPrivada()).toBeNull();
+    expect(llistaEixintPrivada()).toBeNull();
     expect(titol()).toBeNull();
     expect(insignia()).toBeNull();
     /* Cap relectura de quiEmSegueix sense sessió. */
     expect(mocks.qui).toHaveBeenCalledTimes(1);
+    expect(mocks.meus).toHaveBeenCalledTimes(1);
   });
 
   test('la sessió passa de Pepa a Biel: Biel no veu la llista de Pepa ni «La teua fitxa»', async () => {
@@ -126,15 +134,18 @@ describe('CUR-01 · la fitxa pública és de qui mira', () => {
     mocks.entrada = 2;
     vista.rerender(<PerfilPublicSection agents={mocks.agents} />);
     expect(llistaPrivada()).toBeNull();
+    expect(llistaEixintPrivada()).toBeNull();
     expect(insignia()).toBeNull();
     expect(await screen.findByRole('heading', { level: 1, name: 'Pepa Garcia' })).toBeTruthy();
     await espera();
     expect(mocks.load).toHaveBeenCalledTimes(2);
     expect(llistaPrivada()).toBeNull();
+    expect(llistaEixintPrivada()).toBeNull();
     expect(screen.queryByText(/Toni de Biel/)).toBeNull();
     expect(titol()).toBeNull();
     expect(insignia()).toBeNull();
     expect(mocks.qui).toHaveBeenCalledTimes(1);
+    expect(mocks.meus).toHaveBeenCalledTimes(1);
   });
 
   test('una resposta tardana de la identitat d’abans es descarta: mana la de qui mira ara', async () => {
@@ -153,11 +164,13 @@ describe('CUR-01 · la fitxa pública és de qui mira', () => {
     expect(insignia()).toBeNull();
     expect(titol()).toBeNull();
     expect(mocks.qui).not.toHaveBeenCalled();
+    expect(mocks.meus).not.toHaveBeenCalled();
     await act(async () => { deBiel.resol(PEPA); });
     expect(await screen.findByRole('heading', { level: 1, name: 'Pepa Garcia' })).toBeTruthy();
     expect(insignia()).toBeNull();
     expect(titol()).toBeNull();
     expect(mocks.qui).not.toHaveBeenCalled();
+    expect(mocks.meus).not.toHaveBeenCalled();
   });
 
   test('tornar a entrar (la mateixa persona, entrada nova) també torna a llegir la fitxa', async () => {
@@ -168,7 +181,9 @@ describe('CUR-01 · la fitxa pública és de qui mira', () => {
     vista.rerender(<PerfilPublicSection agents={mocks.agents} />);
     await waitFor(() => expect(mocks.load).toHaveBeenCalledTimes(2));
     expect(await screen.findByText(/Rosa Pérez/)).toBeTruthy();
+    expect(screen.getByText(/Toni Connexió Privada/)).toBeTruthy();
     expect(mocks.qui).toHaveBeenCalledTimes(2);
+    expect(mocks.meus).toHaveBeenCalledTimes(2);
   });
 
   test('T9-1 · la mateixa persona i la mateixa entrada (la renovació del JWT, un objecte nou) no tornen a llegir res', async () => {
@@ -176,10 +191,13 @@ describe('CUR-01 · la fitxa pública és de qui mira', () => {
     mocks.sessio = { ...sessioDe('pepa'), currentUser: { id: 'pepa', email: 'pepa@poble.test', nom: 'Pepa' } };
     vista.rerender(<PerfilPublicSection agents={mocks.agents} />);
     expect(llistaPrivada()).toBeTruthy();
+    expect(llistaEixintPrivada()).toBeTruthy();
     await espera();
     expect(mocks.load).toHaveBeenCalledTimes(1);
     expect(mocks.qui).toHaveBeenCalledTimes(1);
+    expect(mocks.meus).toHaveBeenCalledTimes(1);
     expect(llistaPrivada()).toBeTruthy();
+    expect(llistaEixintPrivada()).toBeTruthy();
     expect(insignia()).toBeTruthy();
   });
 
@@ -188,8 +206,36 @@ describe('CUR-01 · la fitxa pública és de qui mira', () => {
     mocks.load.mockResolvedValueOnce(DE_PEPA);
     render(<PerfilPublicSection agents={mocks.agents} />);
     expect(await screen.findByText(/Rosa Pérez/)).toBeTruthy();
+    expect(screen.getByText(/Toni Connexió Privada/)).toBeTruthy();
     expect(titol()).toBeTruthy();
     expect(mocks.load).toHaveBeenCalledTimes(1);
+  });
+
+  test('FEDI23 · A→B→A: una resposta eixint de la primera entrada no substituïx la unió privada de l’entrada nova', async () => {
+    const antiga = diferida();
+    mocks.qui.mockResolvedValueOnce([{ id: 'rosa-antiga', nom: 'Rosa de la primera entrada' }]);
+    mocks.meus.mockReturnValueOnce(antiga.promesa);
+    const vista = render(<FitxaPublica perfil={DE_PEPA} />);
+    await waitFor(() => {
+      expect(mocks.qui).toHaveBeenCalledTimes(1);
+      expect(mocks.meus).toHaveBeenCalledTimes(1);
+    });
+    const primerSenyal = mocks.meus.mock.calls[0][0].signal;
+    mocks.sessio = sessioDe('biel');
+    mocks.entrada = 2;
+    await act(async () => { vista.rerender(<FitxaPublica perfil={{ ...DE_PEPA, id: 'biel', nom: 'Biel Garcia' }} />); });
+    expect(primerSenyal.aborted).toBe(true);
+    mocks.sessio = sessioDe('pepa');
+    mocks.entrada = 3;
+    await act(async () => { vista.rerender(<FitxaPublica perfil={DE_PEPA} />); });
+    expect(await screen.findByText(/Rosa Pérez/)).toBeTruthy();
+    expect(llistaEixintPrivada()).toBeTruthy();
+    expect(mocks.meus).toHaveBeenCalledTimes(3);
+    await act(async () => { antiga.resol([{ id: 'toni-antic', nom: 'Connexió de la primera entrada' }]); });
+    expect(screen.queryByText(/Rosa de la primera entrada|Connexió de la primera entrada/)).toBeNull();
+    expect(llistaPrivada()).toBeTruthy();
+    expect(llistaEixintPrivada()).toBeTruthy();
+    expect(mocks.meus.mock.calls[2][0].signal.aborted).toBe(false);
   });
 });
 
@@ -200,6 +246,7 @@ describe('CUR-01 · FitxaPublica només pinta la llista privada per a la persona
     await espera();
     expect(titol()).toBeNull();
     expect(mocks.qui).not.toHaveBeenCalled();
+    expect(mocks.meus).not.toHaveBeenCalled();
   });
 
   test('sense sessió, tampoc', async () => {
@@ -208,11 +255,14 @@ describe('CUR-01 · FitxaPublica només pinta la llista privada per a la persona
     await espera();
     expect(titol()).toBeNull();
     expect(mocks.qui).not.toHaveBeenCalled();
+    expect(mocks.meus).not.toHaveBeenCalled();
   });
 
   test('la de Pepa amb la sessió de Pepa, sí', async () => {
     render(<FitxaPublica perfil={DE_PEPA} />);
     expect(await screen.findByText(/Rosa Pérez/)).toBeTruthy();
+    expect(screen.getByText(/Toni Connexió Privada/)).toBeTruthy();
     expect(mocks.qui).toHaveBeenCalledTimes(1);
+    expect(mocks.meus).toHaveBeenCalledTimes(1);
   });
 });

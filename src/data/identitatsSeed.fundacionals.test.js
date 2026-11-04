@@ -20,7 +20,7 @@ describe('el poble és innegociable', () => {
   test('les tres identitats són de La Torre de les Maçanes, al catàleg i al padró', () => {
     expect(POBLE_FUNDACIONAL).toBe('La Torre de les Maçanes');
     expect([AGENTS_MAP.SOCDEPOBLE.town_name, AGENTS_MAP.JAVI.town_name]).toEqual([POBLE_FUNDACIONAL, POBLE_FUNDACIONAL]);
-    expect(ENTITATS_SEED.map((entitat) => [entitat.id, entitat.town_name]))
+    expect(ENTITATS_SEED.filter((entitat) => CLAUS_FUNDACIONALS.includes(entitat.slug)).map((entitat) => [entitat.id, entitat.town_name]))
       .toEqual([[ENTITAT_PILOT_ID, POBLE_FUNDACIONAL], [ENTITAT_RENTONAR_SLUG, POBLE_FUNDACIONAL]]);
   });
 
@@ -93,6 +93,14 @@ describe('un sol perfil per identitat', () => {
    llavor i, en remot, per l'id del servidor que la llavor declara
    (IDS_REMOTS_FUNDACIONALS). */
 describe('clauFundacional, estricta: només identificadors declarats', () => {
+  test('Oli és al padró públic però no es convertix en una identitat fundacional', () => {
+    const oli = entitatSeed('olidelatorre');
+    expect(oli).toMatchObject({ id: '3073b933-69fc-4c3e-80dc-b0df9c6b8391', name: 'Oli de La Torre' });
+    for (const id of oli.alies) {
+      expect(fundacionalDeLaClau(id)).toBeNull();
+      expect(clauFundacional({ tipus: 'entitat', id, slug: oli.slug })).toBeNull();
+    }
+  });
   const UUID_ALTRE_POBLE = '0c1d2e3f-4051-4a62-8b73-94a5b6c7d8e9';
   const UUID_SDP = '6c1d2e3f-4051-4b62-8c73-8d94ea5fb607';
   const UUID_RENTONAR = '7d2e3f40-5162-4c73-8d84-9ea5fb607182';

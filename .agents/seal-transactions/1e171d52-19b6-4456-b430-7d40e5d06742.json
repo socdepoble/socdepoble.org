@@ -1,0 +1,57 @@
+{
+  "id": "1e171d52-19b6-4456-b430-7d40e5d06742",
+  "session": "35ce8430-d7e5-4872-8a8e-71499962651b",
+  "operationId": "fedi-r3-relleu-c4-factual-focus",
+  "claim": "35ce8430-d7e5-4872-8a8e-71499962651b:governance-write",
+  "planHash": "03f957fee175aa1ed4136a67a8f18fdb7861bbc6d1e39549fa5251253919ba25",
+  "beforeSeal": "7bb741f67e53c76b6a05f9ac72f568f98ac6bbd4c43ab7d46dbef5228d92eae5",
+  "files": [
+    {
+      "path": "src/sections/text/pageContent.js",
+      "before": "22c2e65ea6ec458ff737385e5835ae979bb16e87d3c91b42fd1b3d5934bc4731",
+      "after": "8c9c2fbed304eca7726d50726afe845b38189c7bca7ef3671bc7bc3c103bc85b"
+    },
+    {
+      "path": "src/sections/text/pageContent.fediversity.test.js",
+      "before": "10ba4f6dd4bfbee14323c9c4c3353b120602992d14076ee79852b7d0b21eb4cd",
+      "after": "88d8b9de0d36cdbf539849c8bdc9dbb6f81311faf137479152a53e13adfeca2c"
+    },
+    {
+      "path": "src/sections/text/paginaDeText.test.js",
+      "before": "d05e72d08df365b6fcdc73ee1ab348ff213e8f5bd333e570c8945c71ca36f0ae",
+      "after": "e393e78d195b54e381e2b3b8a4192b1fc34ec8b680145705189dac0e4ce5e0a3"
+    },
+    {
+      "path": "src/css/layout.css",
+      "before": "4051bdde684a3b5308e747b7647760379597f30bd915db9d108086d42c2a394d",
+      "after": "e28301183dcf14600bbd1974b534e13c1f53b756bf96136afaa05bc361a7f1b5"
+    },
+    {
+      "path": "src/css/utilities.css",
+      "before": "1a130ff5db7ae673e617a69ffab2a562f5db512a91f7f4b9933cd90bcc77db51",
+      "after": "18496b89e26476b3e15c7249d2dbc5a9c76489bced606588e608e16c7b089139"
+    },
+    {
+      "path": "src/components/universal/PageFrame.jsx",
+      "before": "49b616984b6beeaba557ef4ad02ce2349afa32b7e80df742da4b0cbbfc3fe675",
+      "after": "a37ec63fc585a5e86d353fd02d175b9cb3045454755cb344df3c00660b10ca3f"
+    },
+    {
+      "path": "src/components/universal/PageFrame.indexAmfitrio.test.jsx",
+      "before": "137aa558a4dc5541fe322a61dd85e6ef0490ffdfe75b468eea22f3cd175459d7",
+      "after": "c7cadfacd85dfea96ae8fc781de82581224b0c11f6966b17f81205dd0d4b6323"
+    },
+    {
+      "path": "src/css/barresScroll.capes.test.js",
+      "before": "5a2f1ed6c0269c73081e0bb5918d80c84413e82bd5b27bd27b8bf0e49c4c75a5",
+      "after": "d418acd983d97fd196bc799ac08b8de4f5238962dc6b9e665c7cecdc47e7f800"
+    },
+    {
+      "path": ".agents/contingut_estructural.json",
+      "before": "e813dc9b3303249ccd0ef1504b18dea5ef1d5362c314de595d1b2db08a3b4e39",
+      "after": "6fa5e63c3c268d474df86fda31ce3b29bc1c392765eba8294e64ddd454be1c36"
+    }
+  ],
+  "state": "accepted",
+  "afterSeal": "8d057b5d8220f5cadefa19a60ba97674665b8a1bdbc23fb556b4a00941673e25"
+}

@@ -63,6 +63,15 @@ test('seleccionaPassos({ cens }): totes les portes, cap bateria de proves, i les
   assert.deepEqual(seleccionaPassos({ nomesPortes: true }), passos.filter(pas => !pas.prova));
 });
 
+test('el contracte de teclat està cablejat a la cadena completa; el cens i nomes-portes conserven l’exclusió de bateries', () => {
+  const teclat = passos.filter(pas => pas.args?.includes('tooling/gates/teclat-superficies.mjs'));
+  assert.equal(teclat.length, 1, 'un únic recorregut del contracte a la cadena completa');
+  assert.equal(teclat[0].prova, true);
+  assert.ok(seleccionaPassos().includes(teclat[0]));
+  assert.ok(!seleccionaPassos({ nomesPortes: true }).includes(teclat[0]));
+  assert.ok(!seleccionaPassos({ cens: true }).includes(teclat[0]));
+});
+
 test('censDePortes: les roges no paren la resta, el temps per pas talla, l’omesa no corre i l’inventari delata qui escriu', async t => {
   const arrel = fs.mkdtempSync(path.join(os.tmpdir(), 'sdp-cens-portes-'));
   t.after(() => fs.rmSync(arrel, { recursive: true, force: true }));

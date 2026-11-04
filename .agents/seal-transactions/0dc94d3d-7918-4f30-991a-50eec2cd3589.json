@@ -1,0 +1,122 @@
+{
+  "id": "0dc94d3d-7918-4f30-991a-50eec2cd3589",
+  "session": "51dee93c-8cef-444d-9e18-11785a7f4366",
+  "operationId": "fedi-r3-opendata-teclat-propostes",
+  "claim": "51dee93c-8cef-444d-9e18-11785a7f4366:governance-write",
+  "planHash": "841602087e80d395f75c05089a0188b7e99c127634be60584d1d0542bc0fda61",
+  "beforeSeal": "e13641f83284d9bf50bd4b799bc05869c6e84ed3afc1edd64722be27bd20b398",
+  "files": [
+    {
+      "path": "tooling/seo/snapshot-opendata-public.mjs",
+      "before": "bc38f17a72f9058f6d4a2e922cbc87899310789a1fdaa6212ba3cb270c9de163",
+      "after": "0bc2e33303ab143b75a82ffb224a755936d0cd2e5c431811d1114d17d5bd2c80"
+    },
+    {
+      "path": "tooling/seo/genera-opendata.mjs",
+      "before": "495e11b94ef3199e68422256c4924bfba4d6f42b7b92860a0890f3ae94326b93",
+      "after": "fe8ca173564eaaf6147bcadf1e84be1634f8ab4fd6f4ad25c9b2b638e659bbe1"
+    },
+    {
+      "path": "tooling/seo/genera-opendata.test.mjs",
+      "before": "3ca295c3f60e29f1c9e680c328c488900b7f77afbbcf71d0a656400a94aded98",
+      "after": "4a94a84962f5b5eb79e7fa160ce6c1109f4575f2fc96ddd080dab4e555218932"
+    },
+    {
+      "path": "src/data/snapshotOpenDataPublic.test.js",
+      "before": "904bf2bf9eee0626cd8d21005058208806ac047f27bd149af54ecc27c6b45a9b",
+      "after": "27880a2860bd3053fb53b7ef899f5040108fe711940bd8749669d7529c7675f5"
+    },
+    {
+      "path": "public/opendata/agenda.ics",
+      "before": "f72631156055b8ccbc89a4d3b391a91f4fce31c1e0fe29940feca3ae58ac6218",
+      "after": "acb73f5e472b77dd07477437deef0d1d76eb1e007c51229a0f2d51aed81ca7b2"
+    },
+    {
+      "path": "public/opendata/dades-obertes-la-torre-de-les-macanes-20261103.zip.sha256",
+      "before": "5f916bf49e0695c44cd0b0338847a1b907c9a2996c2a1c4ed1d54efd09715bf7",
+      "after": "937d79a236a48ce9c678da3712bb2958de1e831a53bada8ef20997e2ac86f348"
+    },
+    {
+      "path": "public/opendata/manifest.json",
+      "before": "e6aee2f453f966831409d61b33df3d410589f371d5aec982b69db29da020ad0e",
+      "after": "e7a48ffe2dbd88cf790d4f01fa3cd5a068e40b597d0a8e2b4b5413eb4c18cd59"
+    },
+    {
+      "path": "public/opendata/memoria.md",
+      "before": "d67e74bc40f66fb6e5c08b5f7e2ddf57b0568cb2d3347107d008c9e7fd64c39b",
+      "after": "9764e9c5ce147015c0008460a49ff6c4cc070c09027a118037f1c96db6c41a54"
+    },
+    {
+      "path": "public/opendata/noticies.jsonld",
+      "before": "23816fdfe7423d1e802f5205652f348fd385d5905e7b3f4f44a8cd049f5b190b",
+      "after": "db319feefa689917266489b4368d931ae4b500859e16e3455a86b15ff7ec39fb"
+    },
+    {
+      "path": "public/opendata/snapshot-public.json",
+      "before": "cd2a78fedabf671fcfd00a90d956eb3d76e1543e7b035bf92ff84ecca9185eb3",
+      "after": "48716205451305b472d54697260dda9bf532547948f1f84a7e443bcb1e95a144"
+    },
+    {
+      "path": "src/components/universal/identitat/CalaixIdentitats.teclat.test.jsx",
+      "before": null,
+      "after": "5e176179443a8937bc249f339d196e27eb9877e38681247be384fd88d5538255"
+    },
+    {
+      "path": "tooling/gates/teclat-superficies.mjs",
+      "before": "aafe0e53721794b08c6cf4de49dfa4b1010a0135bad2c35cf883d829d841008a",
+      "after": "8162e9d0d6c6d1f6035e2fcaf84192c9f2777981eb6fc0f1df33c8fc88267ab3"
+    },
+    {
+      "path": "tooling/gates/teclat-superficies.test.mjs",
+      "before": "f6a04e8256be588eb5cb2bfa16db1ed91ee4c43987690c7a9bdaeb936f7d633b",
+      "after": "e1ec232e41d055cdf863899821168b8661571ca9aaf76cfe74b318edd421b85c"
+    },
+    {
+      "path": "tooling/gates/run-portes.mjs",
+      "before": "772a37083e5cf159430670cbd075dc96da33ec45ee3342434c9ff497aba9390f",
+      "after": "03c13968a5eb8b33d38d603962f158110422c3414b13b2901ae0a4484ba1de3c"
+    },
+    {
+      "path": "tooling/gates/git-staged.mjs",
+      "before": "fce1f05af7581e17a55338bf5e3641174f1fc420cbc93831e9c27c70a1d5fdd8",
+      "after": "45bf799507022da8f9ce1acde1ba64fdadbc3b64e78d113efd3d2379a9530304"
+    },
+    {
+      "path": "tests/run-portes-cens.test.mjs",
+      "before": "ba796f2284fd9a8d261942303969f8a6c469dfb5c1e37ddc3d15f1560b46ea3e",
+      "after": "5e45f446756c7fb17a494b8044909d5a343bc6efabfab3a7e523c581a6d422e9"
+    },
+    {
+      "path": "tests/git-staged-dependencies.test.mjs",
+      "before": "99d5360bb873974a995cc0fa10587e865a52c02886fdd572f0f85775ea62745d",
+      "after": "681f347b6a9a7a285dcba814c36df4fe5fa03be28a11f87d0367c3ed634a2136"
+    },
+    {
+      "path": "supabase/README.md",
+      "before": "bf664d153d42d65cfc84c71156d68b9cdab6f258073056ec8b03004af948919d",
+      "after": "9099b93721b0195da51b305e17e9c1a67eb228d8a3bd22b9deab2952ce462e75"
+    },
+    {
+      "path": "_wiki_de_poble/04_escriptori/261103_1840_solucio_codex_copy_fediversity_v3.patch",
+      "before": null,
+      "after": "b97247f5d794f7a4adf90b917e891343a17e3246713748d6424226c8c5264d5d"
+    },
+    {
+      "path": "_wiki_de_poble/04_escriptori/261103_1840_solucio_codex_css_nutricio.patch",
+      "before": null,
+      "after": "5352f867627d52723bf098d353c3b75733fc932e2f0c82e90ebab9e51f9ae795"
+    },
+    {
+      "path": "_wiki_de_poble/04_escriptori/00_index_escriptori.md",
+      "before": "e08cd822e9764f7b55c4a5df14cb871709a2a2bcb19029513ebd12c505515ef2",
+      "after": "b1aec7ea2e320a70a8ef3d4deb811cf9ec5288e1bbd40aecdba42bb12896e32f"
+    },
+    {
+      "path": "_wiki_de_poble/04_escriptori/261103_1604_auditoria_codex_gauntlet_fediversity.md",
+      "before": "bbe35d47afcc64bf5d03dbbedad60ff837f724cdcb8669c8a7433c0e01e49c9f",
+      "after": "d2ae3b64cc8178890e52edc78551a08e4b0bfbd34c09ce3c81581da3978be0d5"
+    }
+  ],
+  "state": "accepted",
+  "afterSeal": "6359078575541e84bf5c18a4cf6e674580a54ea6aaa2f2d5853e4ad7da61d78b"
+}

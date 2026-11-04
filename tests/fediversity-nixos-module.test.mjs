@@ -322,7 +322,19 @@ test('Pilar1: lliurament byte a byte estable i CLI real sobre dist separat', asy
 test('Pilar1: CLI amb --open-data-source: paquet aportat, camí absent o d’un altre municipi', async t => {
   const config = path.join(temp(t), 'config.json');
   const font = path.join(temp(t), 'paquet-public');
-  fs.cpSync(path.join(ROOT, 'public/opendata'), font, { recursive: true });
+  // El directori font conté els recursos del Data Package, no els annexos
+  // locals ignorats per git. Els extraiem del ZIP real del snapshot immutable.
+  const { generaOpenData } = await import('../tooling/seo/genera-opendata.mjs');
+  const { llegeixZip } = await import('../src/utils/fulls/zip.js');
+  const snapshot = JSON.parse(read('public/opendata/snapshot-public.json'));
+  const { paquet } = await generaOpenData({ snapshot, escriu: false, fetchImpl: () => { throw new Error('Xarxa prohibida en la fixture.'); } });
+  fs.mkdirSync(font);
+  const prefix = `${paquet.arrel}/data/`;
+  for (const fitxer of llegeixZip(paquet.zip).filter(f => f.nom.startsWith(prefix))) {
+    const nom = fitxer.nom.slice(prefix.length);
+    assert.ok(nom && !nom.includes('/'), 'La fixture municipal no crea subcarpetes.');
+    fs.writeFileSync(path.join(font, nom === 'datapackage.json' ? 'manifest.json' : nom), fitxer.dades);
+  }
   const cli = (dist, origen, settings) => {
     fs.writeFileSync(config, JSON.stringify(settings));
     return spawnSync(process.execPath, [path.join(ROOT, 'nix/prepare-public.mjs'), '--root', ROOT, '--dist', dist,
@@ -426,7 +438,10 @@ test('Pilar1: text estructural dels .nix (equilibri, interruptors, MIME i guarde
   // Documentació dels límits que el codi no pot tancar dins de nix/.
   const readme = read('nix/README.md');
   assert.match(readme, /no l'importeu també a part/);
-  if (flake.includes('scripts/botigues/associacio-apps.json')) assert.match(readme, /Defecte heretat del flake arrel/);
+  assert.match(arrel, /\.\/scripts\/botigues\/associacio-apps\.json/);
+  assert.doesNotMatch(flake, /cp .*associacio-apps\.json/);
+  assert.equal(arrel.match(/inputs\.nixpkgs\.url = "([^"]+)"/)[1], flake.match(/inputs\.nixpkgs\.url = "([^"]+)"/)[1]);
+  assert.match(readme, /Fonts alineades/);
   assert.match(readme, /No avalua Nix ni nginx/);
   for (const name of ['enable', 'domain', 'municipality', 'enableActivityPub', 'enableOpenData']) assert.match(module, new RegExp(`\\b${name}\\s*=`));
   for (const route of ['/ap/actor.json', '/.well-known/webfinger', '/.well-known/nodeinfo', '/nodeinfo/2.1.json', '/opendata/']) assert.ok(module.includes(route), route);

@@ -1,7 +1,7 @@
 import { cleanup, render, screen, waitFor } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 
-/* Gauntlet 261025_0545 (CUR-01) · «Veïnat connectat amb tu» és la llista de
+/* Gauntlet 261025_0545 (CUR-01) · «Veïnat i amistats connectades» és la llista de
    la persona que té la sessió (quiEmSegueix sense entitat): la clau de la
    lectura porta qui mira (`visor`, per props: Seguidors no llig cap context).
    Si canvia, la llista d'abans se'n va en el mateix pintat i es torna a
@@ -10,7 +10,8 @@ import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 const m = vi.hoisted(() => ({ caps: new Set(['seguiments']), qui: vi.fn() }));
 vi.mock('../../data/backendPort.js', () => ({
   teCapacitat: (cap) => m.caps.has(cap),
-  quiEmSegueix: (...args) => m.qui(...args)
+  quiEmSegueix: (...args) => m.qui(...args),
+  elsMeusSeguiments: async () => []
 }));
 import { GentQueEtSegueix } from './Seguidors.jsx';
 

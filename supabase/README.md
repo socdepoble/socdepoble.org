@@ -1381,6 +1381,43 @@ description: "Documentació canònica de Sóc de Poble."
   Prova: `src/data/supabase/politicaPrivacitat24.migracio.test.js`.
   **NO aplicada: l'aplica el Mestre, mai un agent**.
 
+- `migrations/2611031500_notes_logo_mode_nit.sql`
+  IDEA-70: afig `notes.logo_image_dark` (`text`, opcional) per al logotip de
+  capçalera en mode nit. `logo_image` conserva el mode dia. Idempotent i en
+  una sola transacció, sense canvis de RLS ni backfill. El client conserva
+  el camp en quarantena al dispositiu si la columna encara no existix i ho
+  mostra a l'estat de desament; els resums no la demanen. Proves:
+  `src/data/supabase/notes.logoDark.test.js`. Verificació posterior (lectura):
+  `select column_name from information_schema.columns where table_schema = 'public' and table_name = 'notes' and column_name = 'logo_image_dark';`.
+  Per a desfer-la: `alter table public.notes drop column if exists logo_image_dark;`.
+  **NO aplicada en este carril: pendent d'aplicació i verificació remota**.
+
+- `migrations/2611031700_administracio_multipoble.sql`
+  FEDI-04: afig les RPC `admin_llista_pobles()` i
+  `admin_llegix_personalitzacio(uuid)` per a seleccionar un tenant real de
+  `public.towns` i llegir-ne només `taxonomia` i `estil`, amb les versions.
+  Les dues comproven `private.es_superadmin()` abans de qualsevol lectura:
+  exigixen rol superadmin i JWT `aal2`; ser admin a `town_memberships` no
+  atorga este permís. `SECURITY DEFINER`, `search_path = ''`, EXECUTE revocat
+  a `PUBLIC` i `anon` i concedit només a `authenticated`, darrere de la
+  mateixa guarda. Additiva i idempotent, en una transacció; no canvia RLS,
+  dades ni permisos de mutació. Depén de `2610061448_superadmin_aal2.sql` i
+  de les taules existents `towns` i `app_content`. El client envia el tenant
+  seleccionat explícitament; no modifica la sessió ni el tenant global.
+  Prova estàtica: `src/data/supabase/admin.multipoble.test.js`.
+  Verificació posterior (lectura):
+  `select to_regprocedure('public.admin_llista_pobles()'), to_regprocedure('public.admin_llegix_personalitzacio(uuid)');`.
+  Les proves de rol, segon factor i tenant contra PostgreSQL continuen
+  pendents. **NO aplicada: l'aplica el Mestre, mai un agent**.
+
+- `migrations/2611032100_connexions_publiques_i_membres.sql`
+  FEDI23: connexions públiques només amb consentiment global i per vincle,
+  membres públics consentits i peticions de pertinença només pendents.
+  Requerix 2610250100, 2610281730, 2610282100 i el catàleg fins a 2611031700.
+  Quatre taules privades amb RLS sense permisos client/service_role; sis RPC
+  amb ACL mínimes i auth.uid/rol vigent. Vegeu «FEDI23» al final.
+  **NO aplicada: l'aplica el Mestre, mai un agent**.
+
 - `seed.sql`
   Contingut inicial del portal.
 
@@ -1555,12 +1592,16 @@ verificador sense avisos.
 | 70 | `2611020417` | `2611020417_xat_avisos_push.sql` | **NO aplicada: l'aplica el Mestre** | avisos push del Xat: aparells, silenci i cua (B8) |
 | 71 | `2611021800` | `2611021800_notes_fitxa_ambit.sql` | **NO aplicada: l'aplica el Mestre** | fitxa d'àmbit de les notes del Flux Universal de Publicació (IDEA-61, T0) |
 | 72 | `2611030330` | `2611030330_politica_privacitat_2_4.sql` | **NO aplicada: l'aplica el Mestre** | política 2.4: èmfasi editorial, 2.3 intacta (Onada 6) |
+| 73 | `2611031500` | `2611031500_notes_logo_mode_nit.sql` | **NO aplicada** | logotip de capçalera de Notes per al mode nit (IDEA-70) |
+| 74 | `2611031700` | `2611031700_administracio_multipoble.sql` | **NO aplicada: l'aplica el Mestre** | selecció de tenants i personalització per poble amb superadmin + aal2 (FEDI-04) |
+| 75 | `2611032100` | `2611032100_connexions_publiques_i_membres.sql` | **NO aplicada: l'aplica el Mestre** | connexions consentides, membres públics i sol·licituds només pendents (FEDI23) |
 
 | Artefacte complementari | Ruta dins de `supabase/` | Rol operatiu |
 | :--- | :--- | :--- |
 | Llavor opcional | `seed.sql` | Contingut inicial de demostració del portal |
 | Snippet manual 1 | `snippets/2610181800_alinea_perfil_javi_llinares.sql` | Alineació puntual del perfil de la persona pilot (ús manual del Mestre) |
 | Snippet manual 2 | `snippets/2610181800_publica_perfil_javi_llinares.sql` | Publicació puntual del perfil de la persona pilot (ús manual del Mestre) |
+| Snippet manual 3 | `snippets/2611031750_oli_de_la_torre_preus_i_taula_mobil.sql` | Correccions F1/F4 als set productes d’Oli de La Torre: preu de la taula i cel·les llargues en mòbil; preparat, aplicació remota no acreditada |
 
 ### Contracte explícit d'exportació RGPD per a les taules de federació (`P2-09` · `D06/D07`)
 
@@ -2618,3 +2659,21 @@ les dades dels seguidors remots està pendent (D-5). La interoperabilitat real
 amb Mastodon no s'ha provat: no hi ha desplegament ni endpoint públic. El
 residu de DNS rebinding és el mateix de `noticies`: cal un egrés aïllat abans
 d'encendre-ho.
+
+## FEDI23 · Connexions públiques i pertinences consentides
+
+`migrations/2611032100_connexions_publiques_i_membres.sql` és candidata local, pendent d'aplicació remota. Requerix el catàleg anterior: especialment `2610250100` (seguiments d'entitat), `2610281730` (membres concurrents), `2610282100` (poble canònic) i `2611031700`. L'ordre executable viu a `ordre_desplegament.json`: la 2100 va després de 1700; la restricció 1800→2000→1900 es conserva. El client no inventa resultats públics quan falta l'RPC: rep `NO-DISPONIBLE`.
+
+Quatre taules `private.connexions_*`, totes amb RLS i sense concessions a PUBLIC, anon, authenticated o service_role, guarden preferències, excepcions per vincle, rol funcional i sol·licituds pendents. Les referències de persona/entitat/poble es purguen en cascada. El rol funcional treballador/usuari només té sentit sobre una pertinença viva; el rol owner/admin real preval, i una promoció/degradació antiga neteja etiquetes anteriors.
+
+Les sis RPC són `SECURITY DEFINER` amb search_path buit i revocacions explícites. Només `connexions_publiques_de(text,text)` i `membres_i_entitats_connectades_de(text,text)` tenen EXECUTE per anon i authenticated. Preferències, escriptura, inclusió i sol·licitud només per authenticated; cap concessió nova a service_role. L'autoritat prové d'auth.uid i pertinences vigents: persona pròpia, owner/admin d'entitat o admin municipal. El poble es resol explícitament per UUID o slug en towns; no s'inferix de la configuració global.
+
+Global privada per defecte; el vincle té reserva pública només darrere del global. Una excepció privada de qualsevol extrem domina. Les arestes entrants privades no es publiquen ni convertixen una sortint en mútua. Perfils privats, baixes i bloquejos d'extrems o del visor s'ometen sense revelar el motiu. El selector públic manté eixes regles també quan qui mira és la propietària. Les arestes d’entitat també respecten els bloquejos de la persona representant de l’alta o represa davant del destí i del visor; no es publica eixa persona ni cal que tinga perfil públic. Les preferències autoritzades del poble permeten configurar el seu propi vincle encara amb global o excepció pròpia privada, sense ignorar mai el consentiment de residents o entitats. Els DTO només tenen camps públics d'identitat, ruta relativa, data, direcció i rol funcional quan pertoca: cap correu ni id de qui administra en privat una entitat.
+
+`inclou_persona_en_entitat` delega en la RPC real concurrent de membres: només owner pot nomenar administradores, i treballador/usuari no adquirixen eixe poder. `solicita_unir_se_a_entitat` només crea o actualitza una petició pendent, atribuïda al mateix auth.uid; no crea pertinença. És idempotent per persona/entitat i admet 20 pendents per persona.
+
+Proves locals: `src/data/supabase/connexionsPubliques.test.js`, `src/data/supabase/connexionsPubliques.migracio.test.js` i `tests/connexions-publiques-postgres.test.mjs`. L'assaig PostgreSQL aplica totes les migracions reals en ordre canònic, amb rols anon/authenticated/service_role i proves de denegació; només Auth/Storage/Realtime són fixtures. Usa el mateix opt-in `SDP_PGLITE_MODULE` existent, sense instal·lar ni contactar servidors. Un verd local no acredita permisos de GoTrue/PostgREST reals, desplegament o aplicació remota.
+
+Les preferències pròpies de persona i les administratives d'entitat també inclouen pertinences vives sense seguiment, amb el flag propi de vincle real. Es poden configurar amb global privat, sense publicar-les: el selector públic continua requerint consentiment independent dels extrems. Seguiment i pertinença de la mateixa parella es dedupliquen; el rol visible prové sempre de la pertinença actual. Un UUID explícit de poble també s'ha de confirmar exactament en la resposta del client; només un slug pot resoldre's a un UUID nou.
+
+Les preferències autoritzades inclouen també les pertinences vives entre entitats, als dos extrems del vincle, sense exigir un seguiment. La mateixa fitxa pública segura i els bloquejos continuen filtrant cada fila; la publicació manté les regles de consentiment globals i individuals.

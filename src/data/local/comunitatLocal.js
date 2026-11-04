@@ -17,7 +17,7 @@
 import {
   CODI_MODERACIO, LIMIT_DIRECTORI_ENTITATS, VERSIO_NORMES_CONVIVENCIA, autorDelContracte, comDelContracte,
   denunciaDelContracte, destinatariaDeTransferencia, errorDeMembre, errorDeModeracio, errorDeTitular, membreDOrganitzacio,
-  seguitDelContracte, titularDelContracte
+  errorDeConnexions, subjecteConnexionsDelContracte, seguitDelContracte, titularDelContracte
 } from '../contracte.js';
 import { CODI_ENTRADA, ambCodi } from '../errorsBackend.js';
 import { normalitzaCorreu, validaCorreu } from '../correuOrganitzacio.js';
@@ -66,7 +66,53 @@ export function creaComunitatLocal(e) {
     return moderacio.bloquejos.get(persona);
   };
 
+  /* FEDI23 · El poble només el governa l'autoritat explícita injectada.
+     Els selectors de poble es resolen per id o slug, mai pel tenant de reserva. */
+  const contextConnexions = async (operacio, dades, config = {}, gestio = false) => {
+    const subjecte = subjecteConnexionsDelContracte(dades);
+    const context = e.contextSeguiments();
+    if (subjecte.tipus !== 'poble') return context;
+    const declarats = e.opcions.administracioLocal?.pobles ?? [];
+    const candidats = [...declarats, ...e.coleccio('towns').map(p => ({ id: String(p.id ?? ''), slug: p.slug, nom: p.nom ?? p.title ?? p.name }))];
+    const poble = candidats.find(p => p.id === subjecte.id || p.slug === subjecte.id) ?? null;
+    if (!poble) { if (gestio) throw errorDeConnexions('SDP-CONN-003'); return { ...context, poble: null }; }
+    if (!gestio) return { ...context, poble };
+    if (!context.usuari?.id) throw errorDeConnexions('SDP-CONN-000');
+    const autoritat = e.opcions.administracioLocal;
+    if (!autoritat || !declarats.some(p => p.id === poble.id)) throw errorDeConnexions('SDP-CONN-002');
+    const comprova = e.abast();
+    const permís = await autoritat.autoritza(Object.freeze({ personaId: String(context.usuari.id), operacio, tenantId: poble.id }));
+    comprova();
+    if (config.signal?.aborted) throw new DOMException('Operació cancel·lada.', 'AbortError');
+    if (permís !== true) throw errorDeConnexions('SDP-CONN-002');
+    return { ...context, poble, gestionaPoble: true };
+  };
+
+  const ambContextConnexions = async (operacio, subjecte, config, gestio, executa) => {
+    const comprova = e.abast();
+    const context = await contextConnexions(operacio, subjecte, config, gestio);
+    // També per als contextos personals síncrons: await cedix una microtasca.
+    // Una cancel·lació/canvi de sessió ha d'aturar-se abans de tocar el magatzem.
+    comprova();
+    if (config.signal?.aborted) throw new DOMException('Operació cancel·lada.', 'AbortError');
+    return e.copia(executa(context));
+  };
+
   return {
+    async preferenciesConnexions(dades, config = {}) {
+      return ambContextConnexions('preferenciesConnexions', dades, config, true, context => seguiments.preferenciesConnexions(dades, context));
+    },
+    async desaVisibilitatConnexions(dades, config = {}) {
+      return ambContextConnexions('desaVisibilitatConnexions', { tipus: dades.tipus, id: dades.id }, config, true, context => seguiments.desaVisibilitatConnexions(dades, context));
+    },
+    async connexionsPubliquesDe(dades, config = {}) {
+      return ambContextConnexions('connexionsPubliquesDe', dades, config, false, context => seguiments.connexionsPubliquesDe(dades, context));
+    },
+    async membresIEntitatsConnectadesDe(dades, config = {}) {
+      return ambContextConnexions('membresIEntitatsConnectadesDe', dades, config, false, context => seguiments.membresIEntitatsConnectadesDe(dades, context));
+    },
+    async inclouPersonaEnEntitat(dades) { return e.copia(seguiments.inclouPersonaEnEntitat(dades, e.contextSeguiments())); },
+    async solicitaUnirSeAEntitat(dades) { return e.copia(seguiments.solicitaUnirSeAEntitat(dades, e.contextSeguiments())); },
     /* ── Organitzacions ── */
     async listMyOrganizations() {
       const usuari = e.usuari();

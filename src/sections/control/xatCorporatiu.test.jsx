@@ -551,22 +551,53 @@ describe('Onada 8 · el proveïdor de veres: qui mira i el padró de la llavor',
     expect('esDeQuiMira' in sense.result.current).toBe(false);
   });
 
-  test('directeDeLlavor: el padró de XAT_SEED_MEMBRES; els àlies de la persona pilot, al seu usuariId; la resta, cap', () => {
+  test('directeDeLlavor: el padró del xat i les entitats conegudes; els àlies de la persona pilot, al seu usuariId; la resta, cap', () => {
     for (const membre of XAT_SEED_MEMBRES) {
       expect([membre.usuariId, directeDeLlavor({ tipus: membre.tipus, id: membre.usuariId })]).toEqual([membre.usuariId, membre.usuariId]);
     }
     for (const alies of PERSONA_PILOT.alies) expect([alies, directeDeLlavor({ tipus: 'persona', id: alies })]).toEqual([alies, XAT_SEED_IDS.javi]);
     expect(FORA_DEL_PADRO).toBeTruthy();
     expect(directeDeLlavor({ tipus: 'persona', id: FORA_DEL_PADRO.id })).toBeNull();
-    /* Un àlies de persona en una entitat no és la persona; res inventat. */
-    for (const qui of [{ tipus: 'entitat', id: 'javillinares' }, { tipus: 'persona', id: 'u-1' }, {}, null]) {
+    /* Les entitats mantenen el destinatari; la validació és del backend. */
+    expect(directeDeLlavor({ tipus: 'entitat', id: 'javillinares' })).toBe('javillinares');
+    for (const qui of [{ tipus: 'entitat', id: '' }, { tipus: 'grup', id: 'id amb espais' }, { tipus: 'persona', id: 'u-1' }, {}, null]) {
       expect([qui, directeDeLlavor(qui)]).toEqual([qui, null]);
     }
   });
 
+  test('«En privat» d’Oli de La Torre i Rentonar conserva l’entitat en lloc del xat de Sóc de Poble', () => {
+    estat.ui = SEED;
+    render(
+      <ProveidorXatSocDePoble>
+        <UniversalCard title="Oli verge extra" hasFooter objecte={objecteDe({ id: 'oli', title: 'Oli verge extra', author_entity_id: 'olidelatorre', seller: 'Oli de La Torre' }, 'mercat')} />
+        <UniversalCard title="Rentonar" hasFooter objecte={objecteDePerfil({ tipus: 'grup', id: 'rentonar', nom: 'Rentonar' })} />
+      </ProveidorXatSocDePoble>
+    );
+    for (const [nom, id] of [['Oli verge extra', '3073b933-69fc-4c3e-80dc-b0df9c6b8391'], ['Rentonar', 'rentonar']]) {
+      fireEvent.click(screen.getByRole('button', { name: `Comentar ${nom}` }));
+      const fila = within(screen.getByRole('menu')).getByRole('menuitem', { name: TEXTOS_COMENTAR.privat[1] });
+      fireEvent.click(fila);
+      expect(estat.navigate).toHaveBeenLastCalledWith(`/xat?amb=${id}`);
+    }
+    expect(estat.load).not.toHaveBeenCalled();
+  });
+
+  test.each(['entitat', 'grup'])('«En privat» d’una %s fora del padró conserva l’id, sense fingir un directori a CoreContent', (tipus) => {
+    estat.ui = SEED;
+    render(
+      <ProveidorXatSocDePoble>
+        <UniversalCard title="La Cooperativa" hasFooter objecte={objecteDePerfil({ tipus, id: 'org-coop', nom: 'La Cooperativa' })} />
+      </ProveidorXatSocDePoble>
+    );
+    fireEvent.click(screen.getByRole('button', { name: 'Comentar La Cooperativa' }));
+    fireEvent.click(within(screen.getByRole('menu')).getByRole('menuitem', { name: TEXTOS_COMENTAR.privat[1] }));
+    expect(estat.navigate).toHaveBeenLastCalledWith('/xat?amb=org-coop');
+    expect(estat.load).not.toHaveBeenCalled();
+  });
+
   test('directeDeLlavor i el localXat de veres: el que torna, s’obri; el que rebutja, el xat local també', async () => {
     const config = { dataMode: 'seed' };
-    for (const qui of [{ tipus: 'persona', id: 'javillinares' }, { tipus: 'ia', id: IAIA_ID }, { tipus: 'persona', id: XAT_SEED_IDS.javi }]) {
+    for (const qui of [{ tipus: 'persona', id: 'javillinares' }, { tipus: 'ia', id: IAIA_ID }, { tipus: 'persona', id: XAT_SEED_IDS.javi }, { tipus: 'entitat', id: 'olidelatorre' }, { tipus: 'entitat', id: '3073b933-69fc-4c3e-80dc-b0df9c6b8391' }, { tipus: 'grup', id: 'rentonar' }]) {
       await expect(localXat.creaFilDirecte(directeDeLlavor(qui), null, config)).resolves.toEqual(expect.any(String));
     }
     /* Onada 10 (261010; pla 261010_1121; decisió del Mestre del 261010) · El

@@ -8,6 +8,7 @@ import { cleanup, render } from '@testing-library/react';
 import { afterEach, describe, expect, test } from 'vitest';
 import { legalContent } from './legalContent.js';
 import { CosDeLaPagina } from './TextSection.jsx';
+import { sanitizeHtml } from '../../utils/sanitize.js';
 
 const SHA_23 = 'abd827d07af5aa30dc364f156a551deed4e9a43a830b9f57eca5a861ea4eadca';
 const paragrafs = html => [...html.matchAll(/<p>[\s\S]*?<\/p>/g)].map(m => m[0]);
@@ -44,7 +45,7 @@ describe('font històrica 2.3 intacta i font editorial 2.4 de /legal', () => {
   test('la 2.4 afegix només strong i el rètol nou: cap altre canvi de text, atribut, enllaç, dada o èmfasi anterior', () => {
     const lectura = lectura24;
     expect(problemesDeProjeccio(cosComparat, lectura)).toEqual([]);
-    const doc = document.createElement('div'); doc.innerHTML = lectura;
+    const doc = document.createElement('div'); doc.innerHTML = sanitizeHtml(lectura);
     const p = [...doc.querySelectorAll('p')];
     for (const i of plans) {
       const marques = [...p[i].querySelectorAll('strong')];
@@ -77,7 +78,7 @@ describe('font històrica 2.3 intacta i font editorial 2.4 de /legal', () => {
     const { container } = render(<CosDeLaPagina html={html} />);
     const p = [...container.querySelectorAll('article.cms-preview > p')];
     expect(p).toHaveLength(29);
-    const textAbans = document.createElement('div'); textAbans.innerHTML = html;
+    const textAbans = document.createElement('div'); textAbans.innerHTML = sanitizeHtml(html);
     expect(container.textContent).toBe(textAbans.textContent);
     for (const node of p) {
       expect(node.querySelectorAll('strong').length).toBeGreaterThanOrEqual(6);

@@ -18,6 +18,7 @@ const regles = (css) => [...css.matchAll(/([^{}]+)\{([^{}]*)\}/g)]
   .map(([, selector, cos]) => ({ selectors: selector.trim().split(',').map((s) => s.trim()), cos: cos.trim() }));
 
 const RESERVA = 'calc(var(--sdp-alt-nav-mobil) + env(safe-area-inset-bottom, 0px))';
+const RESERVA_FOCUS = 'calc(var(--sdp-alt-nav-mobil) + env(safe-area-inset-bottom, 0px) + var(--sdp-space-4))';
 const ABAST = ':where(.sdp-root.is-compact) .sdp-workspace--universal';
 const SCROLLERS = ['.sdp-workspace-rail', '.sdp-workspace-column__body', '.sdp-workspace-detail'];
 /* Correcció dels verificadors (261004) · L'abast és l'estructura pròpia de
@@ -40,7 +41,7 @@ describe('la reserva de la barra mòbil als scrollers del Workspace', () => {
     const regla = regles(modules).find((r) => r.selectors.some((s) => s.startsWith(ABAST)));
     expect(regla).toBeTruthy();
     expect(regla.selectors).toEqual(SELECTORS);
-    expect(regla.cos).toBe(`padding-bottom: ${RESERVA};`);
+    expect(regla.cos).toBe(`padding-bottom: ${RESERVA}; scroll-padding-bottom: ${RESERVA_FOCUS};`);
   });
 
   test('cap selector de la reserva no baixa per un descendent qualsevol: només combinadors de fill després de l’abast', () => {

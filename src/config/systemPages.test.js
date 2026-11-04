@@ -222,7 +222,7 @@ describe('261026_2126 · Descàrregues i Aplicacions', () => {
   test('el copy: títol del Mestre, data de l’ordre, la imatge sense text (no la «gamberro») i les tres etiquetes', () => {
     const copy = PAGE_COPY.descarregues;
     expect(copy).toMatchObject({
-      date: '2026-10-26T22:07:00+01:00',
+      date: '2026-09-09T22:07:00+02:00',
       title: 'Descàrregues i Aplicacions',
       image: '/assets/uploads/brain/nano_descarregues_app.webp',
       imageWidth: 1024,

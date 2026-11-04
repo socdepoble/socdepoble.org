@@ -84,13 +84,19 @@ test('CI executa Node i Vitest run, també amb Node roig, i qualsevol fallada co
 
 test('el mode de CI manté totes les portes i elimina només les bateries ja executades', () => {
   const proves = new Set(['test:documental', 'test:node', 'test']);
-  const esBateria = pas => pas.cmd === 'npm' && pas.args[0] === 'run' && proves.has(pas.args[1]);
+  const esBateriaNpm = pas => pas.cmd === 'npm' && pas.args[0] === 'run' && proves.has(pas.args[1]);
+  const esBateriaTeclat = pas => pas.cmd === 'node' && pas.args.length === 1 && pas.args[0] === 'tooling/gates/teclat-superficies.mjs';
+  const esBateria = pas => esBateriaNpm(pas) || esBateriaTeclat(pas);
   const bateries = passos.filter(esBateria);
-  assert.deepEqual(bateries.map(pas => pas.args[1]).sort(), [...proves].sort());
+  assert.deepEqual(bateries.filter(esBateriaNpm).map(pas => pas.args[1]).sort(), [...proves].sort());
+  assert.deepEqual(bateries.filter(esBateriaTeclat), [{
+    nom: 'Contracte de teclat per superfícies', cmd: 'node', args: ['tooling/gates/teclat-superficies.mjs'], prova: true
+  }], 'el quart pas executa el contracte de teclat complet, sense --list ni selecció parcial');
+  assert.deepEqual(passos.filter(pas => pas.prova), bateries, 'cap porta es pot ocultar marcant-la com una bateria desconeguda');
   assert.deepEqual(seleccionaPassos(), passos, 'el mode complet conserva totes les bateries');
   const portes = seleccionaPassos({ nomesPortes: true });
   assert.deepEqual(portes, passos.filter(pas => !esBateria(pas)), 'només es lleva la bateria duplicada; cap porta');
-  assert.equal(portes.length, passos.length - 3);
+  assert.equal(portes.length, passos.length - 4);
   for (const nom of ['Porta Build', 'Porta Reflex', 'Segell de skills', 'Tractor Cognitiu', 'Porta RLS', 'Linter']) {
     assert.ok(portes.some(pas => pas.nom === nom), `${nom}: porta perduda`);
   }

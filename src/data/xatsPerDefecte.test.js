@@ -5,7 +5,7 @@ import { describe, expect, test, vi } from 'vitest';
 import {
   ACTORS_PERMANENTS, AJUDA, AJUDA_PER_CLAU, CARA_DE_LA_IAIA, CONTACTE_HUMA, ID_FIL_DE_MOSTRA_DE_JAVI, MISSATGE_AUTOMATIC_DE_JAVI, PREFIX_PER_DEFECTE,
   ambXatsPerDefecte, caraDeLaIAIA, clauPerDefecteDe, conversaPerDefecteDe, esIdPerDefecte, esLaIdentitatDAjuda, esLaPersonaDeContacte,
-  esXatDeLaIAIA, filDeMostraDeJavi, gestionaLEntitatPilot, jaTeElXat, missatgesDeMostraDeJavi, senseLaIAIA, senseXatPerDefecte, vestixLaIAIA
+  esXatDeLaIAIA, entitatDeMostraDe, filDeMostraDEntitat, filDeMostraDeJavi, gestionaLEntitatPilot, jaTeElXat, missatgesDeMostraDeJavi, senseLaIAIA, senseXatPerDefecte, vestixLaIAIA
 } from './xatsPerDefecte.js';
 import { AGENTS_IA_SEED, ENTITAT_PILOT_ID, IAIA_ID, PERSONA_PILOT } from './identitatsSeed.js';
 import { AGENTS_MAP } from './agentsSeed.js';
@@ -20,6 +20,16 @@ const UUID_ENTITAT = '7d1e5c2a-0000-4000-8000-0000000000aa';
 
 const real = (extra = {}) => ({ id: 'f-real', tipus: 'directe', altres: [], subjecte: null, entitatId: null, ultimSeq: 3, ...extra });
 const claus = (llista) => llista.map((c) => c.perDefecte ?? c.id);
+
+test('C2X-06 · una entitat de mostra és de només lectura, conserva nom/avatar i no inventa missatges', () => {
+  const oli = entitatDeMostraDe('olidelatorre');
+  expect(entitatDeMostraDe(oli.id)).toEqual(oli);
+  expect(entitatDeMostraDe('Oli de La Torre')).toBeNull();
+  expect(filDeMostraDEntitat(oli, 'ara', 'Cal entrar al xat.')).toMatchObject({
+    id: `fake-entitat:${oli.id}`, name: oli.name, avatar_url: oli.logo_url,
+    potEscriure: false, avisNomesLectura: 'Cal entrar al xat.', ultimSeq: 0, ultimText: null
+  });
+});
 
 describe('AJUDA, la font única dels dos contactes', () => {
   test('Sóc de Poble porta el logo quadrat que ha fixat el Mestre; la IAIA, la cara del padró', () => {

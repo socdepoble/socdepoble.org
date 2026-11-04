@@ -55,7 +55,7 @@
  */
 import { PERSONA_PILOT } from './identitatsSeed.js';
 import { PERSONES_SEED, localPerfils } from './localPerfils.js';
-import { comDelContracte, errorDeSeguiment, seguitDelContracte } from './contracte.js';
+import { comDelContracte, errorDeConnexions, errorDeSeguiment, subjecteConnexionsDelContracte, seguitDelContracte } from './contracte.js';
 
 /* Els sostres de public.segueix (2610241430). 30 altes o represes per hora: Gauntlet 261024_1945
    (Codex G-01, Gemini G1945-02). */
@@ -142,7 +142,67 @@ export function createLocalSeguimentsAdapter({ perfils = localPerfils, persones 
     return magatzem.get(clau);
   };
 
+  /* FEDI23 · El graf només ix per DTOs públics; mai actor, metadata ni correu. */
+  const mateixa = (a, b) => a.tipus === b.tipus && a.id === b.id;
+  const bloqueigEntre = (a, b, context) => {
+    const de = subjecte => subjecte.tipus === 'persona' && typeof context.bloquejosDe === 'function' ? context.bloquejosDe(subjecte.id) : [];
+    return esBloquejat(a, context.bloquejos) || esBloquejat(b, context.bloquejos)
+      || esBloquejat(b, de(a)) || esBloquejat(a, de(b)) || context.bloqueigEntre?.(a, b) === true;
+  };
+  const grafDe = (dades, context = {}, publicSol = true) => {
+    const subjecte = perfils.identitatConnexions(subjecteConnexionsDelContracte(dades), context);
+    if (publicSol && (!perfils.fitxaConnexioPublica(subjecte, context) || !perfils.connexioEsPublica(subjecte, null, context))) return [];
+    const unit = new Map();
+    const afig = (origen, desti, fila) => {
+      if (!viva(fila) || bloqueigEntre(origen, desti, context)
+        || (origen.tipus === 'entitat' && fila.actor && bloqueigEntre({ tipus: 'persona', id: fila.actor }, desti, context))) return;
+      const sortint = mateixa(origen, subjecte), entrant = mateixa(desti, subjecte);
+      if (!sortint && !entrant) return;
+      if (publicSol && (!perfils.connexioEsPublica(origen, desti, context)
+        || perfils.visibilitatVincleConnexions(desti, origen) !== 'publica'
+        || perfils.visibilitatVincleConnexions(subjecte, sortint ? desti : origen) !== 'publica')) return;
+      const altre = sortint ? desti : origen, dto = perfils.fitxaConnexioPublica(altre, context);
+      if (!dto) return;
+      const key = clauDe(altre), actual = unit.get(key);
+      const direccio = sortint ? 'sortint' : 'entrant';
+      const visibilitatConnexions = perfils.visibilitatVincleConnexions(subjecte, altre);
+      if (actual) {
+        if (actual.direccio !== direccio) actual.direccio = 'mutua';
+        if (desDe(fila) > actual.creatAl) actual.creatAl = desDe(fila);
+      } else unit.set(key, { ...dto, creatAl: desDe(fila), direccio, visibilitatConnexions });
+    };
+    for (const [id, relacions] of files) for (const fila of relacions.values()) afig({ tipus: 'persona', id }, { tipus: fila.tipus, id: fila.id }, fila);
+    for (const [id, relacions] of filesDEntitats) for (const fila of relacions.values()) afig({ tipus: 'entitat', id }, { tipus: fila.tipus, id: fila.id }, fila);
+    return [...unit.values()].sort(perData);
+  };
+  const preferenciesDe = (dades, context = {}) => {
+    const prefs = perfils.preferenciesConnexions(dades, context);
+    const subjecte = { tipus: prefs.tipus, id: prefs.id };
+    const conjunt = new Map(grafDe(subjecte, context, false).map(row => [clauDe(row), row]));
+    for (const row of perfils.vinculacionsConnexions(subjecte, context)) {
+      if (!bloqueigEntre(subjecte, row, context)) conjunt.set(clauDe(row), { ...(conjunt.get(clauDe(row)) ?? row), rol: row.rol });
+    }
+    return { ...prefs, connexions: [...conjunt.values()].sort(perData) };
+  };
+
   return {
+    preferenciesConnexions: preferenciesDe,
+    desaVisibilitatConnexions(dades, context = {}) {
+      const resultat = perfils.desaVisibilitatConnexions(dades, context);
+      return preferenciesDe({ tipus: resultat.tipus, id: resultat.id }, context);
+    },
+    connexionsPubliquesDe(dades, context = {}) { return grafDe(dades, context); },
+    membresIEntitatsConnectadesDe(dades, context = {}) {
+      const subjecte = subjecteConnexionsDelContracte(dades);
+      if (subjecte.tipus === 'persona') throw errorDeConnexions('SDP-CONN-001');
+      const resultat = new Map(grafDe(subjecte, context).map(row => [clauDe(row), row]));
+      for (const row of perfils.membresIEntitatsConnectadesDe(subjecte, context)) {
+        if (!bloqueigEntre(subjecte, row, context)) resultat.set(clauDe(row), row);
+      }
+      return [...resultat.values()].sort((a, b) => a.nom.localeCompare(b.nom, 'ca') || a.id.localeCompare(b.id));
+    },
+    inclouPersonaEnEntitat(dades, context = {}) { return perfils.inclouPersonaEnEntitat(dades, context); },
+    solicitaUnirSeAEntitat(dades, context = {}) { return perfils.solicitaUnirSeAEntitat(dades, context); },
     /**
      * Seguix una persona o una entitat. Idempotent: `nou` i `primer` false si
      * ja la seguia. Una fila deixada es reprén (també amb `primer` false):
@@ -208,7 +268,8 @@ export function createLocalSeguimentsAdapter({ perfils = localPerfils, persones 
       if (!qui) return [];
       return [...(files.get(String(qui))?.values() || [])]
         .filter((fila) => viva(fila) && !esBloquejat(fila, bloquejos))
-        .map((fila) => ({ tipus: fila.tipus, id: fila.id, nom: fila.nom, creatAl: desDe(fila) }))
+        .map((fila) => ({ tipus: fila.tipus, id: fila.id, nom: fila.nom, creatAl: desDe(fila),
+          ...(typeof perfils.visibilitatVincleConnexions === 'function' ? { visibilitatConnexions: perfils.visibilitatVincleConnexions({ tipus: 'persona', id: String(qui) }, { tipus: fila.tipus, id: fila.id }) } : {}) }))
         .sort(perData);
     },
 

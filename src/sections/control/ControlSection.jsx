@@ -148,7 +148,7 @@ import {
   LogOut,
   MessageSquare
 } from 'lucide-react';
-import { useCallback, useEffect, useId, useLayoutEffect, useRef, useState } from 'react';
+import { Suspense, lazy, useCallback, useEffect, useId, useLayoutEffect, useRef, useState } from 'react';
 import { useLocation, useNavigate, useSearchParams } from '../../app/contexts/RouterContext';
 import { useEixidaSegura } from '../../components/universal/EixidaSegura.jsx';
 import { UniversalPage } from '../../components/universal/UniversalPage';
@@ -163,6 +163,10 @@ import { posicioDeLaVista, recolocaLaVista } from './vistaDeLaFitxa.js';
 import { AUTORIA_SOCDEPOBLE, DESTINS_CONTROL, TEXTOS_PORTES, contingutDe, portesDe } from './destinsControl.js';
 import { AVISOS_XAT_CORPORATIU } from './xatCorporatiu.js';
 import { ESPAIS_PLUGINS, PLUGINS, pluginsDeLEspai, rutaDelPlugin } from '../plugins/registrePlugins.js';
+import { TEXTOS_MODE_RURAL } from './textosModeRural.js';
+import { TEXTOS_RESTAURADOR } from '../pobles/RestauradorOpenData.jsx';
+const ModeRural = lazy(() => import('./ModeRural.jsx'));
+const FitxaOpenData = lazy(() => import('./FitxaOpenData.jsx'));
 
 /* P5 · Una targeta de doble acció: la UniversalCard de sempre amb el
    contingut de la seua pàgina i les dues portes. Sense il·lustració, la
@@ -356,6 +360,7 @@ function utilitatsAmagades(preferencia) {
 
 export default function ControlSection() {
   const [params] = useSearchParams();
+  const navigate = useNavigate();
   const esFitxa = params.get(CLAU_FITXA) === FITXA_SNIPPET;
   /* El cos de la vista pintada (el .content-wrapper del Panell o de la fitxa). */
   const vistaRef = useRef(null);
@@ -371,6 +376,8 @@ export default function ControlSection() {
   const recordaLaPosicio = useCallback(() => {
     posicioDelPanell.current = posicioDeLaVista(vistaRef.current);
   }, []);
+  if (params.get(CLAU_FITXA) === 'mode-rural') return <Suspense fallback={<p role="status">{TEXTOS_MODE_RURAL.titol[1]}</p>}><ModeRural onBack={() => navigate('/control')} /></Suspense>;
+  if (params.get(CLAU_FITXA) === 'opendata') return <Suspense fallback={<p role="status">{TEXTOS_RESTAURADOR.titol[1]}</p>}><FitxaOpenData onBack={() => navigate('/control')} /></Suspense>;
   return esFitxa
     ? <FitxaSnippet vistaRef={vistaRef} />
     : <PanellControl vistaRef={vistaRef} abansDeLaFitxa={recordaLaPosicio} />;
@@ -519,6 +526,12 @@ function PanellControl({ vistaRef, abansDeLaFitxa }) {
         </section>
 
         <div className="sdp-control-actions">
+          <UniversalButton onClick={() => navigate('/control?fitxa=mode-rural')} variant="secondary" className="sdp-btn-ample">
+            {t(...TEXTOS_MODE_RURAL.titol)}
+          </UniversalButton>
+          <UniversalButton onClick={() => navigate('/control?fitxa=opendata')} variant="secondary" className="sdp-btn-ample">
+            {t(...TEXTOS_RESTAURADOR.titol)}
+          </UniversalButton>
           {/* D3 · El fil '0001' no existix (els id són UUID): obri el Xat. */}
           <UniversalButton
             onClick={() => navigate('/xat')}

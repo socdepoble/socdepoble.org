@@ -1,0 +1,47 @@
+{
+  "id": "b689d9dc-8cd2-4c78-a62e-9038be48ea68",
+  "session": "49cf32b5-a67c-4bf7-a3dc-0f7714d4167f",
+  "operationId": "ronda3-revalidacio-documental-intermedia",
+  "claim": "49cf32b5-a67c-4bf7-a3dc-0f7714d4167f:governance-write",
+  "planHash": "389d4739cca5d325c43c039b3b5ee14a190f5123540caaf98ada1a2bf0ebf59a",
+  "beforeSeal": "6eff2442f2f02ca4f8435dd7b2fce0274d683859556b387f8a41e2cd28247e2d",
+  "files": [
+    {
+      "path": "_wiki_de_poble/04_escriptori/261103_1604_auditoria_codex_gauntlet_fediversity.md",
+      "before": "5f5635a16437c026324ef54b3fc65e73bfd483515c1ee7cdb94f0b05d9853f77",
+      "after": "197f344277b5280bd10b38307e989b4eedc081cac2b0a17fa05ead57725ff304"
+    },
+    {
+      "path": "_wiki_de_poble/10_actes/261103_1724_acta_marmota_codex_gauntlet_fediversity_i_pendents_verificats.md",
+      "before": "a76b564ecee9a5cf48869655b0a922ca1f0d642fd984390d8af42f64c1c75644",
+      "after": "221ee4ce9d0fc4cd83bcf56e077a39ac64ed53d6b761cb77274df9c8fca8400a"
+    },
+    {
+      "path": "_wiki_de_poble/04_escriptori/261103_2350_pla_tancament_verificat_codex_fediversity.md",
+      "before": "bbe30fceb82dc408bd4fadea5d2251fbb2b8267fdf6ed18cca76a7f724c921ca",
+      "after": "7aace99beb37cb170287437d13458b96554c1f5daecb62adcee6749a27e96cf6"
+    },
+    {
+      "path": "_wiki_de_poble/04_escriptori/03_llibre_mestre_tasques_i_idees.md",
+      "before": "824dbbdd229abef4f200ee1cf324203c9c0d725a008d576af761133e43246174",
+      "after": "18d09411472588522eb44740e1b22c8a94131be7aab1121c4e95dbae2138fd3c"
+    },
+    {
+      "path": ".agents/ESTAT.md",
+      "before": "a54836d2b3b8c041ccdd61f59053b28df7eeb471105a731c44eaefcdf19bbb4c",
+      "after": "3a10babb8c43aed2e6d15a1066e59c2318bc099318d9cdacb9c540a8d92e4acc"
+    },
+    {
+      "path": ".agents/ON_ESTIC.md",
+      "before": "2d766452728e928253ec7809aad46beea0779e628153b3c56760f413ae6fa148",
+      "after": "4c88240bf4a6710b2661099530d467180ad150fbd0d172a07f50cee942290526"
+    },
+    {
+      "path": ".agents/LEDGER.md",
+      "before": "d58ed15aacec5cd71ca87fdc162b1c17664e1012423985492fe9af110bc30180",
+      "after": "cfb57746787652e4784e1aba5d7c7d623bb9353f96716b26afc373e428c319f4"
+    }
+  ],
+  "state": "accepted",
+  "afterSeal": "43c26e1bbdd8413e71395811417d325c077986c6e65d65a9a74f2fcbf19fc2d1"
+}

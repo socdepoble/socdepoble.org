@@ -1,0 +1,27 @@
+{
+  "id": "b6e63020-4b1f-49c6-8e05-f4e4d37149ea",
+  "session": "a216e3dc-3bb3-4975-ba13-25eafcab1ac3",
+  "operationId": "ronda3-cens-skills-factual",
+  "claim": "a216e3dc-3bb3-4975-ba13-25eafcab1ac3:governance-write",
+  "planHash": "51c49726db381ca4d505fb4a0d9bc01ff82dcaca14f1566e34c817fea3fc4494",
+  "beforeSeal": "9e1df017d5aba063fb524a45d413b83b65c6ab86bcb9178e828b42258374dd25",
+  "files": [
+    {
+      "path": "_wiki_de_poble/02_saber/03_consola_termodinamica/03_inventari_skills.md",
+      "before": "a70c6e6d9f09f5ed36dc00df5c386f399c1fe575cc5b720d8ea36d1930dddb32",
+      "after": "e937b2508fea034db058c1e4c2713a45385c5ea63b832889458dfdaffc8481b3"
+    },
+    {
+      "path": "src/data/wikiManifest.js",
+      "before": "b23061ca4335e715b3fb639fdd9f1919f95f02973dc6c38ac0c54fcb483c9e99",
+      "after": "1c26ef96b34c5e67456d0579ecbf607cffc4409e0c718c3498d10e4ee50f2780"
+    },
+    {
+      "path": "tests/t11-cens-documental.test.mjs",
+      "before": "950ccbb947e9008d90f10ed887304325f30bd16eb9600c487db0d5f7616ae637",
+      "after": "3dfadecf53b4da0324b2ca5cc1f64f202ad2f824649a7ce26d5d5e79c17590b9"
+    }
+  ],
+  "state": "accepted",
+  "afterSeal": "43c26e1bbdd8413e71395811417d325c077986c6e65d65a9a74f2fcbf19fc2d1"
+}

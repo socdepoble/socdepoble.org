@@ -1,0 +1,102 @@
+{
+  "id": "dd3405d8-8053-4446-84c4-e55d7b93a2c7",
+  "session": "ac228ae3-2c91-4ccb-b940-a663b6a60b25",
+  "operationId": "ronda3-fedi15-crdt-opfs",
+  "claim": "ac228ae3-2c91-4ccb-b940-a663b6a60b25:governance-write",
+  "planHash": "83033b6fbc3e222defcef3b587bb6cb333f68a04ddeb41cd55dae10b053eeabc",
+  "beforeSeal": "62e532ae85889eda727e3266ef1a0907bfc8141f0a6dcec4c50aa341e41c1f44",
+  "files": [
+    {
+      "path": "src/data/crdtRural.js",
+      "before": null,
+      "after": "b05bed98f137b4adbea74f3e1b2929caf458fbea79ec95ac2584a3eb3efcbeb5"
+    },
+    {
+      "path": "src/data/persistenciaLocalRural.js",
+      "before": "8e5930861d9def90b248eaeb57a9edc68ef20053646c427d6ed8976b4dbec309",
+      "after": "c253155dc10406df72f3481dffbf96898932261d178a9df6a23b50c96c8b326a"
+    },
+    {
+      "path": "src/data/cuaOperacionsOffline.js",
+      "before": "9126826e5cf8777a91459d3f1246092294fa7cb682dd50a49f6ae95ec5996725",
+      "after": "afea96a37e63932885bba4b1b9e6bc8d3fc8708e58be8e52da2c047ac04b214f"
+    },
+    {
+      "path": "src/data/sessioRural.js",
+      "before": "16d77f910c6779b9aba8b9addb40d4690dbe6b9f8cd0220fc1dc24ac29f2fb64",
+      "after": "55c3638ff1dc0c339e89756cf0734177bc8d276c9deaeaed6799f60a07991849"
+    },
+    {
+      "path": "src/data/sincronitzadorCarpetaLocal.js",
+      "before": "2a98f458ec8da3fb264964bbf0e415b642e22e0618cd1fdf7d58515fb12c89de",
+      "after": "9de1f7c4c75eae6ae3373da524861dbf9b998a6624dd479998940f8317d0609f"
+    },
+    {
+      "path": "src/sections/control/ModeRural.jsx",
+      "before": "f8eba634142303e3cc5e7d4d1f1ee45e543a38996d9500155ccf25544bd178db",
+      "after": "c7a0c679923ccb2feb392b8c64c83cd88558c9e2d34b81640a48a359d554a778"
+    },
+    {
+      "path": "src/sections/control/textosModeRural.js",
+      "before": "d1785225718e5e45c8c403d2079bce9caf1150b855ee8d82ab6186470ac23e26",
+      "after": "d6437b0cef25270254e78c104f0e05b30f874d1c61a54912b5be24190f0941bc"
+    },
+    {
+      "path": "src/sections/control/ModeRural.test.jsx",
+      "before": "12ba89a1493446e671e61acb661d51d732ece451b330818727f20ad869bbe1b2",
+      "after": "4e3deb39e0b8cbb91747d34519d6166de25432de07579cde2d87b80c8050472f"
+    },
+    {
+      "path": "tests/crdt-rural.test.mjs",
+      "before": null,
+      "after": "a6a62ee7b490b4f9210f536e7e81ff3dde031109bcd580fb396cce60389ee539"
+    },
+    {
+      "path": "tests/opfs-rural.test.mjs",
+      "before": null,
+      "after": "19b76d95543817a6bc85193056ed8731481f60170821287a6ccef95d28c3db28"
+    },
+    {
+      "path": "tests/sessio-rural-crdt-opfs.test.mjs",
+      "before": null,
+      "after": "97030fb317d5516a0115be1bd5f7c1208a8c200526065c65b70c2ac0415a9422"
+    },
+    {
+      "path": "tests/sincronitzador-crdt-vault.test.mjs",
+      "before": null,
+      "after": "5de757349e751678975b28dbb1a4ef78df051cef93815a9df48c4a0c5ab5d6d7"
+    },
+    {
+      "path": "tests/helpers/bloquejosOpfsFalsos.js",
+      "before": null,
+      "after": "a51c3e3fb26c52d27910d8ff22ed7cb9cc51a300daa7742ce6a9118531567958"
+    },
+    {
+      "path": "src/config/idiomes/ca.js",
+      "before": "9b5c66fe3ae140209723c2c95069281ec00e0dca262643cf82de0885bc758184",
+      "after": "1e5e4ff660a568b5dc64a065aff2418d75183cb3f709f3571bc0cc1ce9f8a39f"
+    },
+    {
+      "path": "src/config/idiomes/es.js",
+      "before": "c69853671ecb283cf9bd1b40e07f3352a32d9c2537050fd7a9583631be15f538",
+      "after": "c6ea82306a4cc458648db5168b5e2e02ceca1c21902f82fc95167485b5728766"
+    },
+    {
+      "path": "src/config/idiomes/en.js",
+      "before": "f0d248e22bb23566a7fa42fafeb00ff2aff439ccd6ff1a75afda890b2fd25eda",
+      "after": "0c96521199712b4836ab5754c5d90c63b395eff7dea7066ab3e0948f03da0419"
+    },
+    {
+      "path": "src/config/idiomes/eu.js",
+      "before": "ac29c8faf613ced9b7e296f12157ffa671bf5e8be4cbc7e3485ce1ff21428d94",
+      "after": "a25540bbab5acfab264eef69b297396df91d93d67927689d8f1c961758d3b761"
+    },
+    {
+      "path": "src/config/idiomes/gl.js",
+      "before": "48a34e08b3c621ef2745b20ea666e5c11c344c357fefb513bd6346f92ba7d498",
+      "after": "7fbc566b74073862d249c6ec2b22052ad0add49af48cddea4529d5f6f1eca6b8"
+    }
+  ],
+  "state": "accepted",
+  "afterSeal": "8a8f5d40a1675942e28c20bbc03462150b2b1bd821eb30162283b650ff0f86be"
+}

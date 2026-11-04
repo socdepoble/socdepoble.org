@@ -455,6 +455,17 @@ export const CAPACITATS = Object.freeze({
     'adminDesaPersonalitzacio',
     'adminHistorialPersonalitzacio'
   ]),
+  /* FEDI-04 · Administració de tenants reals, mai deduïda del directori públic.
+     Opcional: adminLlistaPobles(config) → [{ id, slug, nom }];
+     adminLligPersonalitzacio({ tenantId, ...config }) → { taxonomia, estil },
+     cadascuna { payload, versio } o null. Superadmin amb aal2 al servidor.
+     Les mutacions i l'historial usen la capacitat personalitzacio amb eixa
+     mateixa config explícita; no canvien la sessió ni el poble global.
+     Un tenant malformat rebutja abans de transport amb code 'abast-invalid'. */
+  administracioMultipoble: Object.freeze([
+    'adminLlistaPobles',
+    'adminLligPersonalitzacio'
+  ]),
   /* Fase D (261020, tasca 2; pla 261020_1300 · App Store 1.2 i Google Play
      UGC) · La moderació del contingut dels veïns: denunciar i bloquejar.
      Opcional a posta: un node sense ella continua sent vàlid i cap targeta
@@ -676,7 +687,29 @@ export const CAPACITATS = Object.freeze({
      rellotge del servidor; en llavor i en local, finsAlDelSilenci (davall). */
   silenciXat: Object.freeze([
     'silenciaFil'
-  ])
+  ]),
+  /* FEDI23 · Opcional i completa; config sempre l'últim argument.
+     preferenciesConnexions({tipus,id}, config) i desaVisibilitatConnexions(
+       {tipus,id,visibilitatConnexions:'publica'|'privada',connexio?:{tipus,id}}, config)
+       → {tipus,id,visibilitatConnexions,connexions:DTO[]} només per a la persona
+       pròpia, owner/admin d'entitat o autoritat explícita de poble. Les files
+       pròpies inclouen connexions privades d'entitat i pertinences vives.
+     connexionsPubliquesDe({tipus,id}, config) i membresIEntitatsConnectadesDe(
+       {tipus:'entitat'|'poble',id}, config) → DTO[], sense bypass de propietari.
+       DTO:{tipus,id,nom,avatar,ruta,creatAl,direccio,rol?,visibilitatConnexions?};
+       direccio:sortint|entrant|mutua|membre|poble. Només perfils públics,
+       sense baixa/bloqueig i amb consentiment. Global privada per defecte
+       domina el vincle (publica per defecte); exclusions privades dels dos
+       extrems oculten la relació. Una inversa privada no es revela com a mútua.
+     inclouPersonaEnEntitat({orgId,personaId,rol}, config) → {orgId,personaId,rol};
+       administrador|treballador|usuari; treballador és funció sense autoritat,
+       només owner nomena administradors i mai es crea owner per esta via.
+     solicitaUnirSeAEntitat({orgId,rol}, config) → {orgId,personaId,rol,estat:'pendent'};
+       idempotent per org/persona, màxim 20 pendents; mai atorga cap rol.
+     Els membres públics requerixen pertinença viva i consentiment de persona
+     i entitat; cap gestor pot publicar les preferències d'una altra persona. */
+  connexionsPubliques: Object.freeze(['preferenciesConnexions', 'desaVisibilitatConnexions', 'connexionsPubliquesDe',
+    'membresIEntitatsConnectadesDe', 'inclouPersonaEnEntitat', 'solicitaUnirSeAEntitat'])
 });
 
 /* Pla 261022_1955 (T1) · El sostre de listPublicOrganizations: una sola font per
@@ -1072,4 +1105,55 @@ export function finsAlDelSilenci(durada, ara = Date.now()) {
   const fi = typeof inici === 'number' ? inici + MS_DEL_SILENCI[durada] : Number.NaN;
   if (!Number.isFinite(fi) || fi < -8.64e15 || fi > Date.parse(SILENCI_SEMPRE)) throw errorDeSilenci('El rellotge de l’aparell no dona una data de fi vàlida.');
   return new Date(fi).toISOString();
+}
+
+/* FEDI23 · Entrades primitives compartides; cap conversió d'objectes ni getter. */
+export const MISSATGES_CONNEXIONS = Object.freeze({
+  'SDP-CONN-000': 'Cal iniciar sessió.',
+  'SDP-CONN-001': 'Les dades de connexió no són vàlides.',
+  'SDP-CONN-002': 'No pots gestionar les connexions d’este perfil.',
+  'SDP-CONN-003': 'Este perfil no està disponible.',
+  'NO-DISPONIBLE': 'El servidor encara no té esta capacitat.',
+  DESCONEGUT: 'No s’ha pogut completar la connexió.'
+});
+export function errorDeConnexions(code, cause) {
+  const clau = Object.hasOwn(MISSATGES_CONNEXIONS, code) ? code : 'DESCONEGUT';
+  return Object.assign(new Error(MISSATGES_CONNEXIONS[clau]), { code: clau, ...(cause ? { cause } : {}) });
+}
+function campsConnexions(dades, admesos) {
+  if (!dades || typeof dades !== 'object' || Array.isArray(dades)
+    || ![Object.prototype, null].includes(Object.getPrototypeOf(dades))) throw errorDeConnexions('SDP-CONN-001');
+  const resultat = {};
+  for (const clau of Reflect.ownKeys(dades)) {
+    const descriptor = Object.getOwnPropertyDescriptor(dades, clau);
+    if (typeof clau !== 'string' || !admesos.includes(clau) || !descriptor || !Object.hasOwn(descriptor, 'value') || !descriptor.enumerable) throw errorDeConnexions('SDP-CONN-001');
+    resultat[clau] = descriptor.value;
+  }
+  return resultat;
+}
+function idConnexions(valor) {
+  if (typeof valor !== 'string' || !RE_ID_SEGUIT.test(valor.trim())) throw errorDeConnexions('SDP-CONN-001');
+  return valor.trim();
+}
+export function subjecteConnexionsDelContracte(dades, { ambPoble = true } = {}) {
+  const { tipus, id } = campsConnexions(dades, ['tipus', 'id']);
+  if (!['persona', 'entitat', ...(ambPoble ? ['poble'] : [])].includes(tipus)) throw errorDeConnexions('SDP-CONN-001');
+  return { tipus, id: idConnexions(id) };
+}
+export function visibilitatConnexionsDelContracte(dades) {
+  const entrada = campsConnexions(dades, ['tipus', 'id', 'visibilitatConnexions', 'connexio']);
+  const subjecte = subjecteConnexionsDelContracte({ tipus: entrada.tipus, id: entrada.id });
+  if (!['publica', 'privada'].includes(entrada.visibilitatConnexions)) throw errorDeConnexions('SDP-CONN-001');
+  return { ...subjecte, visibilitatConnexions: entrada.visibilitatConnexions,
+    ...(entrada.connexio !== undefined ? { connexio: subjecteConnexionsDelContracte(entrada.connexio) } : {}) };
+}
+export function inclusioPersonaDelContracte(dades) {
+  const { orgId, personaId, rol } = campsConnexions(dades, ['orgId', 'personaId', 'rol']);
+  if (!['administrador', 'treballador', 'usuari'].includes(rol)) throw errorDeConnexions('SDP-CONN-001');
+  return { orgId: idConnexions(orgId), personaId: idConnexions(personaId), rol };
+}
+export function sollicitudEntitatDelContracte(dades) {
+  const { orgId, rol } = campsConnexions(dades, ['orgId', 'rol']);
+  if (!['administrador', 'treballador', 'usuari'].includes(rol)) throw errorDeConnexions('SDP-CONN-001');
+  return { orgId: idConnexions(orgId), rol };
 }

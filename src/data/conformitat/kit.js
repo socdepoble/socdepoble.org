@@ -183,6 +183,199 @@ const ESCRIVIBLE = (fil) => !['comunitat', 'canal'].includes(fil?.tipus);
  */
 const cas = (definicio) => Object.freeze({ capacitat: null, escriu: false, espera: 'resol', requerix: [], ...definicio });
 
+
+/* FEDI-17 · Casos additius. Les precondicions són del corredor, mai una
+   detecció del proveïdor: compte operatiu, compte en mode de prova o sense
+   sessió són escenaris diferents. El kit no adopta credencials ni activa
+   transports privats per defecte. Les guardes amb dataMode seed ho diuen
+   al títol; no acrediten cap petició remota. */
+const esInstant = v => typeof v === 'string' && Number.isFinite(Date.parse(v));
+const rebuigAmbMissatge = missatge => e => e instanceof Error && e.message === missatge
+  ? [] : [`havia de rebutjar amb el missatge de domini: ${missatge}`];
+const senseSessio = e => e instanceof Error && /^Cal iniciar sessió[. ]/.test(e.message)
+  ? [] : ['havia de rebutjar per falta de sessió'];
+const fallesBaixa = demanada => v => !esObjecte(v) ? ['la baixa havia de ser un objecte'] : [
+  ...(v.demanada === demanada ? [] : ['estat de baixa incorrecte']),
+  ...(demanada ? (esInstant(v.demanadaAl) && esInstant(v.purgaPrevistaAl)
+    && Date.parse(v.purgaPrevistaAl) > Date.parse(v.demanadaAl) ? [] : ['dates de quarantena invàlides'])
+    : (v.demanadaAl === null && v.purgaPrevistaAl === null ? [] : ['una baixa no demanada havia de tindre dates null']))
+];
+const argumentsCompte = (metode, ctx) => metode === 'registraConsentiment' ? ['analitica', 'conformitat-v1', ctx.config]
+  : metode === 'revocaConsentiment' ? ['analitica', ctx.config]
+    : metode === 'demanaBaixa' ? [{ motiu: 'conformitat' }, ctx.config] : [ctx.config];
+const casosCompte = (metode, comprova, escriu = false) => [
+  cas({ metode, capacitat: CAPACITATS.compte.includes(metode) ? 'compte' : 'consentiment', escriu,
+    requerix: ['compteOperatiu'], titol: `${metode}: compte operatiu de prova, resultat del contracte`,
+    arguments: ctx => argumentsCompte(metode, ctx), comprova }),
+  cas({ metode, capacitat: CAPACITATS.compte.includes(metode) ? 'compte' : 'consentiment', espera: 'rebutja',
+    requerix: ['compteModeProva'], titol: `${metode}: compte remot en mode seed rebutja mode-local sense transport`,
+    arguments: ctx => argumentsCompte(metode, ctx), comprova: rebuigAmbCodi('mode-local') }),
+  cas({ metode, capacitat: CAPACITATS.compte.includes(metode) ? 'compte' : 'consentiment', espera: 'rebutja',
+    requerix: ['compteSenseSessio'], titol: `${metode}: compte local sense sessió rebutja sense canviar dades`,
+    arguments: ctx => argumentsCompte(metode, ctx), comprova: senseSessio })
+];
+
+function casosFedi17() {
+  return [
+    cas({ metode: 'appendChatMessages', escriu: true, requerix: ['filEscrivible'],
+      titol: 'appendChatMessages: dos textos confirmats en ordre i en el mateix fil',
+      arguments: ctx => [[{ filId: ctx.filEscrivible, text: 'Conformitat lot 1' }, { threadId: ctx.filEscrivible, text: 'Conformitat lot 2' }], ctx.config],
+      comprova: (v, ctx) => !Array.isArray(v) || v.length !== 2 ? ['el lot havia de confirmar dos missatges'] : [
+        ...v.flatMap(m => fallesDeMissatge(m, ctx.filEscrivible)),
+        ...(v[0]?.text === 'Conformitat lot 1' && v[1]?.text === 'Conformitat lot 2' ? [] : ['textos del lot alterats o desordenats']),
+        ...(v[0]?.seq < v[1]?.seq ? [] : ['seq del lot no ascendent'])
+      ] }),
+    cas({ metode: 'creaFilDirecte', escriu: true, requerix: ['destinatariDirecte'],
+      titol: 'creaFilDirecte: destinatari explícit de prova, identificador de fil no buit',
+      arguments: ctx => [ctx.destinatariDirecte, 'Conformitat directa', ctx.config],
+      comprova: v => esTextNoBuit(v) ? [] : ['el fil directe no té identificador'], desa: (v, ctx) => { ctx.filDirecte = v; } }),
+    cas({ metode: 'loadFils', escriu: true, requerix: ['filDirecte'],
+      titol: 'loadFils: el fil directe creat es retroba amb el destinatari demanat', arguments: ctx => [ctx.config],
+      comprova: (v, ctx) => Array.isArray(v) && v.some(f => f.id === ctx.filDirecte && f.tipus === 'directe' && f.altres?.some(a => a.id === ctx.destinatariDirecte))
+        ? [] : ['el fil directe no es retroba amb el destinatari demanat'] }),
+    cas({ metode: 'appendSectionSubmissionNetworkOnly', escriu: true, requerix: ['publicacioOperativa'],
+      titol: 'appendSectionSubmissionNetworkOnly: conserva id, autora, secció i text publicat',
+      arguments: ctx => [{ id: ctx.idPublicacio, sectionId: 'mur', title: 'Publicació de conformitat', description: 'Text del contracte', actor: { tipus: 'persona', id: ctx.ownerUserId } }, ctx.config],
+      comprova: (v, ctx) => !esObjecte(v) ? ['la publicació no és un objecte'] : [
+        ...(v.id === ctx.idPublicacio && v.ownerUserId === ctx.ownerUserId && v.sectionId === 'mur' && v.authorOrgId === null ? [] : ['identitat o autoria de la publicació alterada']),
+        ...(v.title === 'Publicació de conformitat' && v.description === 'Text del contracte' && esObjecte(v.payload) ? [] : ['contingut publicat alterat'])
+      ] }),
+    cas({ metode: 'appendSectionSubmissionNetworkOnly', espera: 'rebutja', requerix: ['compteModeProva'],
+      titol: 'appendSectionSubmissionNetworkOnly: mode seed remot rebutja mode-local sense publicar',
+      arguments: ctx => [{ sectionId: 'mur', title: 'No es publica' }, ctx.config], comprova: rebuigAmbCodi('mode-local') }),
+    cas({ metode: 'appendSectionSubmissionNetworkOnly', espera: 'rebutja', requerix: ['compteSenseSessio'],
+      titol: 'appendSectionSubmissionNetworkOnly: sense sessió local no publica',
+      arguments: ctx => [{ sectionId: 'mur' }, ctx.config], comprova: senseSessio }),
+    cas({ metode: 'loginWithMagicLink', espera: 'rebutja',
+      titol: 'loginWithMagicLink: servei desactivat o mode-local, mai èxit de sessió',
+      arguments: ctx => ['conformitat@poble.invalid', { ...ctx.config, dataMode: 'seed' }],
+      comprova: e => e?.code === 'mode-local' ? rebuigAmbCodi('mode-local')(e)
+        : rebuigAmbMissatge("L'entrada per Magic Link està temporalment desactivada per seguretat (manca PKCE). Utilitza l'entrada amb Google.")(e) }),
+    ...['registerWithPassword', 'loginWithPassword', 'loginWithGoogle', 'recullTornadaOAuth', 'definixContrasenyaNova'].map(metode => cas({
+      metode, capacitat: metode === 'definixContrasenyaNova' ? 'recuperacioContrasenya' : null, espera: 'rebutja',
+      titol: `${metode}: guarda explícita de mode seed, rebuig mode-local sense credencials reals`,
+      arguments: ctx => {
+        const config = { ...ctx.config, dataMode: 'seed' };
+        return metode === 'registerWithPassword' ? ['conformitat@poble.invalid', 'Prova-no-real-120!', {}, config]
+          : metode === 'loginWithPassword' ? ['conformitat@poble.invalid', 'Prova-no-real-120!', config]
+            : metode === 'definixContrasenyaNova' ? ['Prova-no-real-120!', config] : [config];
+      }, comprova: rebuigAmbCodi('mode-local')
+    })),
+    cas({ metode: 'createOrganization', espera: 'rebutja',
+      titol: 'createOrganization: mode seed no crea cap organització remota',
+      arguments: ctx => [{ kind: 'company', name: 'Conformitat', slug: 'conformitat', town_name: 'Poble de conformitat' }, { ...ctx.config, dataMode: 'seed' }],
+      comprova: e => e?.code === 'mode-local' ? rebuigAmbCodi('mode-local')(e)
+        : rebuigAmbMissatge('Inicia sessió des del formulari d’entrada abans de crear una organització al servidor.')(e) }),
+    cas({ metode: 'updateOrganization', espera: 'rebutja',
+      titol: 'updateOrganization: cap camp admés rebutja abans de cap escriptura',
+      arguments: ctx => [ID_ENTITAT_DE_CONFORMITAT, { campAli: 'no es desa' }, ctx.config],
+      comprova: rebuigAmbMissatge('Cap camp de l’organització per desar.') }),
+    cas({ metode: 'updateProfile', espera: 'rebutja',
+      titol: 'updateProfile: username invàlid rebutja SDP-USER-001 abans de desar',
+      arguments: ctx => [{ username: '!' }, ctx.config], comprova: rebuigAmbCodi('SDP-USER-001') }),
+    cas({ metode: 'updateUserPassword', espera: 'rebutja', requerix: ['contrasenyaLocal'],
+      titol: 'updateUserPassword: adaptador sense servei de credencials rebutja mode-local',
+      arguments: ctx => ['Prova-no-real-120!', ctx.config], comprova: rebuigAmbCodi('mode-local') }),
+    cas({ metode: 'updateUserPassword', escriu: true, requerix: ['credencialsDeProva'],
+      titol: 'updateUserPassword: canvi explícit de credencials al servidor de prova confirma true',
+      arguments: ctx => ['Prova-no-real-120!', ctx.config], comprova: v => v === true ? [] : ['el canvi de contrasenya no està confirmat'] }),
+    cas({ metode: 'adoptaSessioExterna', capacitat: 'sessioExterna',
+      titol: 'adoptaSessioExterna: null no és sessió i retorna false', arguments: ctx => [null, ctx.config],
+      comprova: v => v === false ? [] : ['una sessió externa nul·la ha sigut acceptada'] }),
+    cas({ metode: 'refrescaSessio', capacitat: 'sessio',
+      titol: 'refrescaSessio: retorna boolean sense inventar cap sessió', arguments: ctx => [ctx.config],
+      comprova: v => typeof v === 'boolean' ? [] : ['la renovació havia de tornar boolean'] }),
+    cas({ metode: 'loadActesAgenda', capacitat: 'agenda',
+      titol: 'loadActesAgenda: rang semiobert, actes amb inici i fi compatibles',
+      arguments: ctx => [{ desde: '2026-01-01T00:00:00Z', fins: '2027-01-01T00:00:00Z' }, ctx.config],
+      comprova: v => !Array.isArray(v) ? ['l’agenda havia de ser una llista'] : v.flatMap(a => [
+        ...(teId(a) && esInstant(a.inici) && (a.fi === null || a.fi === undefined || esInstant(a.fi)) ? [] : ['acte sense id o dates vàlides']),
+        ...(Date.parse(a?.inici) < Date.parse('2027-01-01T00:00:00Z') && Date.parse(a?.fi ?? a?.inici) >= Date.parse('2026-01-01T00:00:00Z') ? [] : ['acte fora del rang semiobert'])
+      ]) }),
+    cas({ metode: 'updateAgent', capacitat: 'agents', espera: 'rebutja',
+      titol: 'updateAgent: agent inexistent o servei remot absent, mai una fila inventada',
+      arguments: ctx => ['conformitat-agent-inexistent', { name: 'No es desa' }, ctx.config],
+      comprova: e => e instanceof Error && (e.status === 403 || e.message === "No s'ha pogut actualitzar l'agent."
+        || e.message === 'Els agents IA encara no tenen contracte de dades al servidor.') ? [] : ['rebuig de l’agent alié o servei absent incorrecte'] }),
+    cas({ metode: 'reclamaOrganitzacio', capacitat: 'reclamacions', espera: 'rebutja',
+      titol: 'reclamaOrganitzacio: organització absent rebutja un codi de reclamació',
+      arguments: ctx => ['', { justificacio: 'Conformitat sense objectiu' }, ctx.config],
+      comprova: e => [...rebuigAmbCode(e), ...(['SDP-CLAIM-000', 'SDP-CLAIM-001'].includes(e?.code) ? [] : ['codi de reclamació incorrecte'])] }),
+    ...Object.entries({
+      publicaIdentitatXat: ctx => [{ declaracio: {}, autofirma: 'opaca' }, ctx.config],
+      laMevaIdentitatXat: ctx => [ctx.config],
+      desaFraseXat: ctx => [{ kid: 'opac', frase: 'opaca' }, ctx.config],
+      desaLlibretaXat: ctx => [{ comptador: 0, llibreta: { iv: 'opac', ct: 'opac', firma: 'opaca' } }, ctx.config],
+      laMevaLlibretaXat: ctx => [ctx.config],
+      estatXifratXat: ctx => [[ctx.filId ?? ID_SEGUIT_DE_CONFORMITAT], ctx.config],
+      epoquesDelFilXat: ctx => [ctx.filId ?? ID_SEGUIT_DE_CONFORMITAT, 0, ctx.config],
+      sobresMeusXat: ctx => [ctx.filId ?? ID_SEGUIT_DE_CONFORMITAT, [1], ctx.config],
+      obriEpocaXat: ctx => [ctx.filId ?? ID_SEGUIT_DE_CONFORMITAT, { declaracio: {}, firma: 'opaca' }, ctx.config],
+      enviaXifratXat: ctx => [ctx.filId ?? ID_SEGUIT_DE_CONFORMITAT, { id: ctx.idMissatge, text: null, xifrat: { opac: true } }, ctx.config],
+      reembolcallaXat: ctx => [ctx.filId ?? ID_SEGUIT_DE_CONFORMITAT, [{ epoca: 1, receptor: ID_SEGUIT_DE_CONFORMITAT, enc: 'opac', ct: 'opac' }], ctx.config],
+      demanaXifratXat: ctx => [ctx.filId ?? ID_SEGUIT_DE_CONFORMITAT, ctx.config],
+      publicaAdjuntXifratXat: ctx => [ctx.filId ?? ID_SEGUIT_DE_CONFORMITAT, { id: ctx.idMissatge, blob: new Uint8Array(64), mida: 64, xifrat: { opac: true } }, ctx.config],
+      bytesAdjuntXat: ctx => [ctx.idMissatge, ctx.config]
+    }).map(([metode, argumentsDelCas]) => cas({ metode,
+      capacitat: CAPACITATS.clausXat.includes(metode) ? 'clausXat' : 'xatMultimediaXifrat', espera: 'rebutja',
+      titol: `${metode}: guarda explícita de mode seed rebutja sense-capacitat, sense claus ni bytes simulats`,
+      arguments: ctx => argumentsDelCas({ ...ctx, config: { ...ctx.config, dataMode: 'seed' } }),
+      comprova: rebuigAmbCodi('sense-capacitat') })),
+    ...[
+      ['publicaIdentitatXat', ctx => [{ declaracio: { kid: 'kid-opac' }, autofirma: 'firma-opaca' }, ctx.config], v => v === 'kid-opac' ? [] : ['kid confirmat incorrecte']],
+      ['laMevaIdentitatXat', ctx => [ctx.config], (v, ctx) => Array.isArray(v) && v.length === 1 && v[0].usuariId === ctx.ownerUserId && v[0].kid === 'kid-opac'
+        && v[0].sigPub === 'sig-opaca' && v[0].dhPub === 'dh-opaca' && esObjecte(v[0].declaracio) && v[0].autofirma === 'firma-opaca' ? [] : ['identitat xifrada mal mapada']],
+      ['desaFraseXat', ctx => [{ kid: 'kid-opac', frase: 'frase-xifrada-opaca' }, ctx.config], v => v === true ? [] : ['frase no confirmada']],
+      ['desaLlibretaXat', ctx => [{ comptador: 0, llibreta: { iv: 'iv-opac', ct: 'ct-opac', firma: 'firma-opaca' } }, ctx.config], v => v === 1 ? [] : ['comptador de llibreta no incrementat']],
+      ['laMevaLlibretaXat', ctx => [ctx.config], v => esObjecte(v) && v.kid === 'kid-opac' && v.comptador === 1 && v.iv === 'iv-opac' && v.ct === 'ct-opac' && v.firma === 'firma-opaca' ? [] : ['llibreta xifrada alterada']],
+      ['estatXifratXat', ctx => [[ctx.filId], ctx.config], (v, ctx) => Array.isArray(v) && v.length === 1 && v[0].filId === ctx.filId && v[0].epoca === 1 && v[0].e2eeDesDeSeq === 3 ? [] : ['estat de xifrat mal mapat']],
+      ['epoquesDelFilXat', ctx => [ctx.filId, 0, ctx.config], (v, ctx) => Array.isArray(v) && v.length === 1 && v[0].epoca === 1 && v[0].autorId === ctx.ownerUserId && esObjecte(v[0].declaracio) && v[0].firma === 'firma-opaca' ? [] : ['època xifrada mal mapada']],
+      ['sobresMeusXat', ctx => [ctx.filId, [1], ctx.config], (v, ctx) => Array.isArray(v) && v.length === 1 && v[0].epoca === 1 && v[0].receptor === ctx.ownerUserId && v[0].kidReceptor === 'kid-opac' && v[0].enc === 'enc-opac' && v[0].ct === 'ct-opac' ? [] : ['sobre opac alterat']],
+      ['enviaXifratXat', ctx => [ctx.filId, { id: ctx.idXifrat, text: null, xifrat: { ct: 'ct-opac' } }, ctx.config], (v, ctx) => [
+        ...fallesDeMissatge(v, ctx.filId), ...(v?.id === ctx.idXifrat && v?.text === null && v?.xifrat?.ct === 'ct-opac' ? [] : ['el missatge xifrat no conserva id, text null i sobre opac'])
+      ]]
+    ].map(([metode, argumentsDelCas, comprova]) => cas({ metode, capacitat: 'clausXat', escriu: true, requerix: ['transportXifrat', 'filId'],
+      titol: `${metode}: transport opac de prova amb confirmació i mapatge del DTO`, arguments: argumentsDelCas, comprova })),
+    ...['inscriuFactor', 'reptaFactor', 'verificaFactor', 'retiraFactor'].map(metode => cas({ metode, capacitat: 'segonFactor', espera: 'rebutja',
+      titol: `${metode}: guarda explícita de mode seed rebutja no-disponible sense MFA simulat`,
+      arguments: ctx => [metode === 'verificaFactor' ? { factorId: 'conformitat-sense-factor', repteId: 'conformitat-sense-repte', codi: '000000' } : 'conformitat-sense-factor', { ...ctx.config, dataMode: 'seed' }],
+      comprova: rebuigAmbCodi('no-disponible') })),
+    ...casosCompte('estatBaixa', fallesBaixa(false)),
+    ...casosCompte('estatConsentiment', v => !esObjecte(v) ? ['el consentiment havia de ser un objecte'] : [
+      ...['versioVigent', 'url', 'textSha256'].flatMap(k => v[k] === null || esTextNoBuit(v[k]) ? [] : [`${k} havia de ser text o null`]),
+      ...(Array.isArray(v.consentiments) && v.consentiments.every(a => esTextNoBuit(a?.tipus) && ['accepta', 'revoca'].includes(a?.accio)
+        && (a.versio === null || esTextNoBuit(a.versio)) && esInstant(a.al)) ? [] : ['actes de consentiment malformats']),
+      ...(typeof v.calReconsentir === 'boolean' ? [] : ['calReconsentir havia de ser boolean'])
+    ]),
+    ...casosCompte('registraConsentiment', v => {
+      /* El port històric no fixa el retorn de registraConsentiment: Supabase
+         pot tornar void. La lectura posterior acredita la mutació. */
+      return v === undefined || v === null || (esObjecte(v) && v.tipus === 'analitica' && v.accio === 'accepta' && v.versio === 'conformitat-v1' && esInstant(v.al))
+        ? [] : ['confirmació de consentiment invàlida'];
+    }, true),
+    cas({ metode: 'estatConsentiment', capacitat: 'consentiment', escriu: true, requerix: ['compteOperatiu'],
+      titol: 'estatConsentiment: el registre analitica es llig com a últim acte accepta', arguments: ctx => [ctx.config],
+      comprova: v => Array.isArray(v?.consentiments) && v.consentiments.filter(a => a.tipus === 'analitica').length === 1 && v.consentiments.some(a => a.tipus === 'analitica' && a.accio === 'accepta' && a.versio === 'conformitat-v1' && esInstant(a.al)) ? [] : ['el consentiment registrat no es retroba'] }),
+    ...casosCompte('revocaConsentiment', v => v === undefined ? [] : ['revocar havia de resoldre sense valor'], true),
+    cas({ metode: 'estatConsentiment', capacitat: 'consentiment', escriu: true, requerix: ['compteOperatiu'],
+      titol: 'estatConsentiment: revocar conserva un últim acte revoca', arguments: ctx => [ctx.config],
+      comprova: v => Array.isArray(v?.consentiments) && v.consentiments.filter(a => a.tipus === 'analitica').length === 1 && v.consentiments.some(a => a.tipus === 'analitica' && a.accio === 'revoca' && a.versio === null && esInstant(a.al)) ? [] : ['el consentiment revocat no es retroba'] }),
+    ...casosCompte('cancelaBaixa', fallesBaixa(false), true),
+    ...casosCompte('exportaLesMeuesDades', (v, ctx) => !esObjecte(v) ? ['l’exportació havia de ser un objecte'] : [
+      ...(v.format === 'socdepoble.exportacio.v1' ? [] : ['format d’exportació incorrecte']),
+      ...(teId(v.perfil) && v.perfil.id === ctx.ownerUserId ? [] : ['l’exportació no pertany a la persona de la sessió']),
+      ...['notes', 'consentiments'].flatMap(k => Array.isArray(v[k]) ? [] : [`l’exportació no porta ${k}[]`]),
+      ...['seguiments', 'bloquejos'].flatMap(k => v[k] === undefined || Array.isArray(v[k]) ? [] : [`l’exportació porta ${k} malformat`]),
+      ...(Array.isArray(v.consentiments) && ['accepta', 'revoca'].every(accio => v.consentiments.some(a => a.tipus === 'analitica' && a.accio === accio)) ? [] : ['l’exportació ha perdut l’historial del consentiment'])
+    ]),
+    /* La baixa tanca la sessió: cap cas següent necessita sessió ni escriu. */
+    ...casosCompte('demanaBaixa', fallesBaixa(true), true),
+    cas({ metode: 'logout', escriu: true, titol: 'logout: eixida de pestanya explícita, resol void i el corredor comprova sessió buida',
+      arguments: ctx => [ctx.config, { scope: 'local', abast: 'pestanya' }],
+      comprova: v => v === undefined ? [] : ['logout havia de resoldre sense valor'] })
+  ];
+}
+
 export const CASOS = Object.freeze([
   /* Lot 2 PN-01: casos comuns als transports seed i remote. */
   cas({ metode: 'resolveAsset', capacitat: 'mitjans', titol: 'resolveAsset preserva una URL pública sense consultar Storage', arguments: ctx => ['https://example.org/public.webp', ctx.config], comprova: v => v === 'https://example.org/public.webp' ? [] : ['URL pública alterada'] }),
@@ -716,6 +909,45 @@ export const CASOS = Object.freeze([
     arguments: (ctx) => ['taxonomia', ctx.config],
     comprova: rebuigSenseSegonFactor
   }),
+  /* FEDI-04 · Inputs invàlids: cap lectura privada ni efecte al servidor.
+     Els casos positius només s'activen amb un operador autoritzat explícit;
+     la bandera del corredor no substituïx l'autorització del servidor. */
+  cas({
+    metode: 'adminLlistaPobles', capacitat: 'administracioMultipoble', espera: 'rebutja',
+    titol: 'adminLlistaPobles(config) amb tenant malformat rebutja abast-invalid abans del transport',
+    arguments: ctx => [{ ...ctx.config, tenantId: 'conformitat-tenant-invalid' }],
+    comprova: rebuigAmbCodi('abast-invalid')
+  }),
+  cas({
+    metode: 'adminLligPersonalitzacio', capacitat: 'administracioMultipoble', espera: 'rebutja',
+    titol: 'adminLligPersonalitzacio(config) amb tenant malformat rebutja abast-invalid abans del transport',
+    arguments: ctx => [{ ...ctx.config, tenantId: 'conformitat-tenant-invalid' }],
+    comprova: rebuigAmbCodi('abast-invalid')
+  }),
+  cas({
+    metode: 'adminLlistaPobles', capacitat: 'administracioMultipoble', requerix: ['adminMultipobleAutoritzat'],
+    titol: 'adminLlistaPobles(config) autoritzat → llista mínima de tenants UUID únics, slug i nom',
+    arguments: ctx => [ctx.config],
+    comprova: valor => {
+      if (!Array.isArray(valor)) return ['els pobles administrats havien de ser una llista'];
+      const uuid = /^[0-9a-f]{8}-(?:[0-9a-f]{4}-){3}[0-9a-f]{12}$/i;
+      const malformat = valor.some(f => !esObjecte(f) || typeof f.id !== 'string' || !uuid.test(f.id) || typeof f.slug !== 'string' || !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(f.slug)
+        || !esTextNoBuit(f.nom) || Object.keys(f).some(k => !['id', 'slug', 'nom'].includes(k)));
+      return [
+        ...(malformat ? ['poble administrat sense UUID, slug o nom vàlids, o amb camps de més'] : []),
+        ...(new Set(valor.map(f => f?.id)).size !== valor.length ? ['tenants administrats repetits'] : [])
+      ];
+    }
+  }),
+  cas({
+    metode: 'adminLligPersonalitzacio', capacitat: 'administracioMultipoble', requerix: ['adminMultipobleAutoritzat', 'tenantAdministrat'],
+    titol: 'adminLligPersonalitzacio(config) autoritzat per tenant explícit → taxonomia i estil versionats',
+    arguments: ctx => [{ ...ctx.config, tenantId: ctx.tenantAdministrat }],
+    comprova: valor => !esObjecte(valor) ? ['la personalització administrada havia de ser un objecte'] : [
+      ...fallesDePersonalitzacio(valor),
+      ...(Object.keys(valor).some(k => !CLAUS_PERSONALITZACIO.includes(k)) ? ['personalització administrada amb camps de més'] : [])
+    ]
+  }),
   /* Pla 261018_1605 (Tasca 4, D8; correcció de la revisió) · La biblioteca de
      fotos del Perfil (capacitat 'mitjansPropis'). La llista és sempre una
      llista (buida en llavor, en local o sense sessió), i cada foto porta la
@@ -967,16 +1199,27 @@ export const CASOS = Object.freeze([
     titol: "retiraDispositiuAvisos({ plataforma: 'web', adreca: 'http://insegur' }, config) rebutja amb un code sense cap petició",
     arguments: (ctx) => [{ plataforma: 'web', adreca: 'http://insegur' }, ctx.config],
     comprova: rebuigAmbCode
-  })
+  }),
+  ...casosFedi17(),
+  /* FEDI23 · Els 172 casos previs conserven ordre i contracte. */
+  ...['preferenciesConnexions', 'desaVisibilitatConnexions', 'connexionsPubliquesDe',
+    'membresIEntitatsConnectadesDe', 'inclouPersonaEnEntitat', 'solicitaUnirSeAEntitat'].map(metode => cas({
+    metode, capacitat: 'connexionsPubliques', espera: 'rebutja',
+    titol: `${metode}: entrada buida rebutja SDP-CONN-001 abans de cap efecte`,
+    arguments: ctx => [{}, ctx.config], comprova: rebuigAmbCodi('SDP-CONN-001')
+  }))
 ]);
 
 /**
  * El context compartit d'una passada. `config` és el de l'adaptador (el mode
  * de dades, l'origen…); `escriptures` activa els casos que creen dades.
  */
-export function contextDeConformitat({ config = {}, escriptures = false } = {}) {
+export function contextDeConformitat({ config = {}, escriptures = false, adminMultipobleAutoritzat = false, tenantAdministrat = null, escenaris = {} } = {}) {
   return {
-    config, escriptures,
+    config, escriptures, adminMultipobleAutoritzat: adminMultipobleAutoritzat === true, tenantAdministrat,
+    ...Object.fromEntries(['compteOperatiu', 'compteModeProva', 'compteSenseSessio', 'publicacioOperativa', 'credencialsDeProva', 'contrasenyaLocal', 'transportXifrat'].map(k => [k, escenaris[k] === true])),
+    destinatariDirecte: typeof escenaris.destinatariDirecte === 'string' && escenaris.destinatariDirecte.trim() ? escenaris.destinatariDirecte : null,
+    idPublicacio: globalThis.crypto.randomUUID(), idXifrat: globalThis.crypto.randomUUID(),
     ownerUserId: null, filId: null, filEscrivible: null, subscripcio: null, subscrit: false, avisos: [],
     notaId: null, seqEnviat: null, orgPublica: null,
     /* Un id per passada: la idempotència es prova amb el MATEIX id dues voltes.

@@ -87,6 +87,17 @@ describe('paginaDElement: el logotip propi (logo_image), net i davant de la marc
     expect(logoEntitatDElement({ logo_image: ` ${PUBLIC} ` })).toEqual({ clar: PUBLIC, alt: '' });
   });
 
+  test('IDEA-70 · la variant de nit és opcional i passa el mateix filtre de privacitat', () => {
+    const fosc = '/assets/uploads/empresa/forn/logo-forn-blanc.png';
+    expect(logoEntitatDElement({ logo_image: LOGO, logo_image_dark: fosc }))
+      .toEqual({ clar: LOGO, fosc, alt: '' });
+    for (const dolent of ['https://rastreig.example/nit.png', 'javascript:alert(1)', LOGO_BLANC, '', null]) {
+      expect(logoEntitatDElement({ logo_image: LOGO, logo_image_dark: dolent }))
+        .toEqual({ clar: LOGO, alt: '' });
+    }
+    expect(logoEntitatDElement({ logo_image_dark: fosc })).toBeNull();
+  });
+
   test('Decisió 3 · un logotip d’un servidor de fora (també un avatar de Google) no es demana', () => {
     for (const deFora of ['https://rastreig.example/l.png', 'https://lh3.googleusercontent.com/a/x.png', '/\\rastreig.example/l.png',
       'data:image/svg+xml;base64,PHN2Zz4=']) {
@@ -119,6 +130,17 @@ describe('paginaDElement: el logotip propi (logo_image), net i davant de la marc
 /* Revisió adversarial del 261007 · El hook torna { logo, carregant }:
    `carregant` diu als lectors que el port encara resol el logotip. */
 describe('useLogoEntitatDElement: també el sdp-media://, resolt pel port', () => {
+  test('IDEA-70 · les dues variants del port es resolen i una substitució no reutilitza el fosc anterior', async () => {
+    mocks.capacitats = new Set(['mitjans']);
+    const fosc = PUBLIC.replace('logo.webp', 'logo-blanc.webp');
+    mocks.resol.mockImplementation(async (ref) => ref.includes('blanc') ? fosc : PUBLIC);
+    const { result, rerender } = renderHook(({ item }) => useLogoEntitatDElement(item), {
+      initialProps: { item: { logo_image: 'sdp-media://mitjans/forn/logo.webp', logo_image_dark: 'sdp-media://mitjans/forn/logo-blanc.webp' } }
+    });
+    await waitFor(() => expect(result.current).toEqual({ logo: { clar: PUBLIC, fosc, alt: '' }, carregant: false }));
+    rerender({ item: { logo_image: LOGO, logo_image_dark: 'https://rastreig.example/logo.png' } });
+    expect(result.current).toEqual({ logo: { clar: LOGO, alt: '' }, carregant: false });
+  });
   test('mentre es resol, cap logo i carregant; resolt, el logotip amb la URL del port', async () => {
     mocks.capacitats = new Set(['mitjans']);
     mocks.resol.mockResolvedValue(PUBLIC);

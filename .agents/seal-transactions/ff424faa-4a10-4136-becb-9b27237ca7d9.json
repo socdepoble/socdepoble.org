@@ -1,0 +1,27 @@
+{
+  "id": "ff424faa-4a10-4136-becb-9b27237ca7d9",
+  "session": "dcb3e9ef-715c-4a91-86ed-839ca2497578",
+  "operationId": "fedi-relleu-registre-proves",
+  "claim": "dcb3e9ef-715c-4a91-86ed-839ca2497578:governance-write",
+  "planHash": "e7465b4870c92d4ea18fcd126297e942424de5600a70deb5de989f355c42884b",
+  "beforeSeal": "1e825128e81fbb9508250bfc601ac9412ebea3eb5bec1bce9db8851963c107b0",
+  "files": [
+    {
+      "path": ".agents/ESTAT.md",
+      "before": "5809f22ccedba39c98e0efc04dc1ff23bd8ea3b9e2c0dc630a6e005ff8772cb4",
+      "after": "f90887847a8a50e2bd025f2c12c409f080d8895a91d25c01964b84c1d8568abb"
+    },
+    {
+      "path": ".agents/README.md",
+      "before": "ad65e1110411fbe1801ca19a03f6e5887b5e772f6a4aba0e96112ca8cc8e2a5e",
+      "after": "5ad86dbb136d61fef47d5b8014bbaad01bd2dda80bca0a5dba0a21b75e14064f"
+    },
+    {
+      "path": "tooling/tests/node-suite-manifest.json",
+      "before": "1da4e43bf96d79af08e9bb42eb45e76a0ac2ba48cafd9e124df00739663edbad",
+      "after": "53ae9dd629cadb741482e7a86fa227e0eb1125d6a537642f48a325e46b6ba51a"
+    }
+  ],
+  "state": "accepted",
+  "afterSeal": "fcfa9fc0cd67643f988cc298475eb1b70a5913e8c7bebdac0f6ad10989280603"
+}

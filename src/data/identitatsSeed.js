@@ -136,7 +136,7 @@ export const ENTITATS_SEED = Object.freeze([Object.freeze({
      Ordre del Mestre (261007) · Amb el slug declarat 'socdepoble', slug i id
      són el mateix text: el Set en deixa una sola entrada i no en perd cap si
      un dia tornen a ser distints. */
-  alies: Object.freeze([...new Set(['soc-de-poble_official', ENTITAT_PILOT_SLUG, ENTITAT_PILOT_ID])]),
+  alies: Object.freeze([...new Set(['soc-de-poble_official', ENTITAT_PILOT_SLUG, ENTITAT_PILOT_ID, 'a240e870-4aef-4d92-b138-e8b4e2f2123a'])]),
   /* Membres amb rol declarat. T63.1 (decisió del Mestre, 260928): cap persona
      inventada, de manera que la llavor no en declara cap i hi mana qui té
      sessió (regla del mode seed, `rolALEntitat`). */
@@ -167,7 +167,7 @@ export const ENTITATS_SEED = Object.freeze([Object.freeze({
   copyright: '',
   visibility: 'public',
   town_name: POBLE_FUNDACIONAL,
-  alies: Object.freeze([ENTITAT_RENTONAR_SLUG]),
+  alies: Object.freeze([ENTITAT_RENTONAR_SLUG, 'b2c87505-53b1-4108-902f-2313e77b9968']),
   /* Cap propietària implícita (regla del mode seed): qui té sessió no
      l'administra per tindre-la, i qualsevol altra persona només hi entra
      connectant-s'hi (localPerfils · reclamaOrganitzacio). El xat de la llavor
@@ -177,6 +177,18 @@ export const ENTITATS_SEED = Object.freeze([Object.freeze({
      (AGENTS_MAP.JAVI.id), i així el calaix «Amb qui actues?» del pilot porta
      les dues organitzacions fundacionals. */
   membres: Object.freeze([Object.freeze({ usuariId: AGENTS_MAP.JAVI.id, role: 'admin' })])
+}), Object.freeze({
+  /* Teler 2026-11-03 · Identitat pública declarada d'Oli de La Torre:
+     el mateix destinatari per slug i UUID, també en la mostra del xat. */
+  id: '3073b933-69fc-4c3e-80dc-b0df9c6b8391',
+  slug: 'olidelatorre',
+  kind: 'company',
+  name: 'Oli de La Torre',
+  logo_url: '/assets/uploads/brain/oli_de_la_torre_logo.webp',
+  visibility: 'public',
+  town_name: POBLE_FUNDACIONAL,
+  alies: Object.freeze(['olidelatorre', '3073b933-69fc-4c3e-80dc-b0df9c6b8391']),
+  membres: Object.freeze([])
 })]);
 
 export const AGENTS_IA_SEED = Object.freeze([Object.freeze({
@@ -217,7 +229,7 @@ export const BENVINGUDA_IAIA = SALUTACIO_TECNICA_IAIA;
 export const esIAIA = (id) => String(id ?? '') === IAIA_ID;
 export const entitatSeed = (id) => {
   const clau = String(id ?? '');
-  return ENTITATS_SEED.find((e) => e.id === clau || e.slug === clau) || null;
+  return ENTITATS_SEED.find((e) => e.id === clau || e.slug === clau || e.alies?.includes(clau)) || null;
 };
 export const agentIASeed = (id) => {
   const clau = String(id ?? '');
@@ -268,8 +280,8 @@ export function fundacionalDeLaClau(clau, { idsRemots = IDS_REMOTS_FUNDACIONALS 
   const text = String(clau ?? '').trim();
   if (!text) return null;
   if (PERSONA_PILOT.alies.includes(text) || esIdRemotDe(PERSONA_PILOT.slug, text, idsRemots)) return PERSONA_PILOT.slug;
-  const entitat = ENTITATS_SEED.find((e) => e.id === text || e.slug === text || e.alies.includes(text)
-    || esIdRemotDe(e.slug, text, idsRemots));
+  const entitat = ENTITATS_SEED.find((e) => CLAUS_FUNDACIONALS.includes(e.slug)
+    && (e.id === text || e.slug === text || e.alies.includes(text) || esIdRemotDe(e.slug, text, idsRemots)));
   return entitat ? entitat.slug : null;
 }
 
@@ -309,7 +321,8 @@ export function clauFundacional(perfil, { idsRemots = IDS_REMOTS_FUNDACIONALS } 
     return declarada ? PERSONA_PILOT.slug : null;
   }
   if (!id) return null;
-  const entitat = ENTITATS_SEED.find((e) => TIPUS_DE_KIND[e.kind] === perfil.tipus
+  const entitat = ENTITATS_SEED.find((e) => CLAUS_FUNDACIONALS.includes(e.slug)
+    && (TIPUS_DE_KIND[e.kind] === perfil.tipus || (e.slug === ENTITAT_RENTONAR_SLUG && perfil.tipus === 'entitat' && id !== e.id && e.alies.includes(id)))
     && (e.id === id || e.alies.includes(id) || esIdRemotDe(e.slug, id, idsRemots)));
   return entitat ? entitat.slug : null;
 }

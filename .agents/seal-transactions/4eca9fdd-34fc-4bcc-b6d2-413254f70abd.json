@@ -1,0 +1,22 @@
+{
+  "id": "4eca9fdd-34fc-4bcc-b6d2-413254f70abd",
+  "session": "3b05b729-e5a1-4937-a6b8-f0ca9c69f514",
+  "operationId": "onada2-fedi17-rebut-i-node0-public",
+  "claim": "3b05b729-e5a1-4937-a6b8-f0ca9c69f514:governance-write",
+  "planHash": "3d9916765b5f153fba0b21c27c070480c4ef0b9ba0bcb22bc822d0236da9d49f",
+  "beforeSeal": "98cd50d025b510296d0c086a15116d7811348e128c6b22f1d2a8c9c8f8a1689f",
+  "files": [
+    {
+      "path": "_wiki_de_poble/04_escriptori/261103_1604_auditoria_codex_gauntlet_fediversity.md",
+      "before": "5d24d82fb66e40bf1c7af47f25ec8787ef2bb8a5d0d9ea434617d658fa304d44",
+      "after": "b53576136d17c76825a9c559fcb9f184b740c647a5830794d1d62cb99fbc6e57"
+    },
+    {
+      "path": "_wiki_de_poble/04_escriptori/03_llibre_mestre_tasques_i_idees.md",
+      "before": "6939388f1c1a84bb06bcece052185692351271fcce6866f7f9c9448e58919f86",
+      "after": "8f08e9bec1aff6e809c642b816ec33617792ddcddfa4d9aed430600da10361cc"
+    }
+  ],
+  "state": "accepted",
+  "afterSeal": "8d057b5d8220f5cadefa19a60ba97674665b8a1bdbc23fb556b4a00941673e25"
+}

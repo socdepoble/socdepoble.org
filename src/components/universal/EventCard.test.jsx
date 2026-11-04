@@ -46,10 +46,10 @@ const pastilla = () => [...arrel.querySelectorAll('.btn-date-time span')].map((s
 const insignia = () => arrel.querySelector('.sp-card-calendar-badge');
 const pecesInsignia = () => ['dia', 'mes', 'any'].map((peca) => insignia().querySelector(`.sp-card-calendar-badge__${peca}`)?.textContent ?? null);
 
-test('Llei del Píxel · l’Aplec de la llavor es pinta com sempre: «10:00 29/01/23» i 29 / GENER / 2023', () => {
+test('Llei del Píxel · l’Aplec de la llavor es pinta com sempre: «10:30 29/01/23» i 29 / GENER / 2023', () => {
   vi.stubEnv('TZ', 'Europe/Madrid');
   pinta(CALENDAR_EVENTS[0]);
-  expect(pastilla()).toEqual(['10:00', '29/01/23']);
+  expect(pastilla()).toEqual(['10:30', '29/01/23']);
   expect(pecesInsignia()).toEqual(['29', 'GENER', '2023']);
   expect(insignia().getAttribute('aria-label')).toBe('29 GENER 2023');
   expect(insignia().getAttribute('datetime')).toBe('2023-01-29');
@@ -320,9 +320,9 @@ describe.each(Object.keys(DESFAS_GENER))('en hora local (%s)', (zona) => {
     expect(new Date(2026, 0, 15).getTimezoneOffset()).toBe(DESFAS_GENER[zona]);
   });
 
-  test('l’Aplec: «10:00 29/01/23» i 29 / GENER / 2023, el mateix dia que el calendari', () => {
+  test('l’Aplec: «10:30 29/01/23» i 29 / GENER / 2023, el mateix dia que el calendari', () => {
     pinta(CALENDAR_EVENTS[0]);
-    expect(pastilla()).toEqual(['10:00', '29/01/23']);
+    expect(pastilla()).toEqual(['10:30', '29/01/23']);
     expect(pecesInsignia()).toEqual(['29', 'GENER', '2023']);
     expect(ocorreElDia(acteAEsdeveniment(CALENDAR_EVENTS[0]), 2023, 0, 29)).toBe(true);
   });

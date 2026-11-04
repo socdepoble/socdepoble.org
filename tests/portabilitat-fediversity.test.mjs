@@ -6,8 +6,11 @@ import {
   CRYPTOSUITE_FEP8B32,
   ESQUEMA_PAQUET_SOBIRANIA,
   canonitzaJsonJcs,
+  calculaHashEntradaFep8b32,
+  codificaBase58Btc,
   codificaBase64Url,
   descodificaBase64Url,
+  descodificaBase58Btc,
   emetActivitatMoveActivityPub,
   exportaPaquetSobiraniaMunicipal,
   generaParellClausFediversityEd25519,
@@ -50,6 +53,93 @@ test('Base64URL codifica i descodifica sense pèrdua qualsevol longitud de bytes
   }
   assert.throws(() => descodificaBase64Url('abc='), TypeError);
   assert.throws(() => descodificaBase64Url('a'), TypeError);
+});
+
+test('FEDI-01 · Base58-btc conserva els zeros inicials i rebutja caràcters d’altres alfabets', () => {
+  // Casos propis de frontera; no són vectors W3C.
+  for (const [bytes, text] of [[[], ''], [[0], '1'], [[0, 0, 1], '112'], [[255], '5Q']]) {
+    assert.equal(codificaBase58Btc(new Uint8Array(bytes)), text);
+    assert.deepEqual(descodificaBase58Btc(text), new Uint8Array(bytes));
+  }
+  for (let len = 0; len <= 65; len += 1) {
+    const bytes = new Uint8Array(len).map((_, i) => (i * 37 + 13) & 255);
+    assert.deepEqual(descodificaBase58Btc(codificaBase58Btc(bytes)), bytes);
+  }
+  for (const text of ['0', 'O', 'I', 'l', '+', '/', 'abc=', ' ab', 'z\n']) {
+    assert.throws(() => descodificaBase58Btc(text), TypeError);
+  }
+});
+
+/* Vector OFICIAL W3C Recommendation, 2025-05-15, vc-di-eddsa B.3,
+   exemples 29–39. Les claus són exclusivament les claus públiques de prova
+   publicades en la norma; no són claus del projecte. Esperats copiats de la
+   font, no calculats pel nostre signador:
+   https://www.w3.org/TR/2025/REC-vc-di-eddsa-20250515/#representation-eddsa-jcs-2022 */
+const W3C_PUBLIC = 'z6MkrJVnaZkeFzdQyMZu1cgjg7k1pZZ6pvBQ7XJPt4swbTQ2';
+const W3C_SECRET = 'z3u2en7t5LR2WtQH5PfFqMqwVHBeXouLzo6haApm8XHqvjxq';
+const W3C_VM = `did:key:${W3C_PUBLIC}#${W3C_PUBLIC}`;
+const W3C_DOCUMENT = {
+  '@context': ['https://www.w3.org/ns/credentials/v2', 'https://www.w3.org/ns/credentials/examples/v2'],
+  id: 'urn:uuid:58172aac-d8ba-11ed-83dd-0b3aef56cc33',
+  type: ['VerifiableCredential', 'AlumniCredential'],
+  name: 'Alumni Credential',
+  description: 'A minimum viable example of an Alumni Credential.',
+  issuer: 'https://vc.example/issuers/5678',
+  validFrom: '2023-01-01T00:00:00Z',
+  credentialSubject: { id: 'did:example:abcdefgh', alumniOf: 'The School of Examples' },
+};
+const W3C_PROOF = {
+  type: 'DataIntegrityProof', cryptosuite: 'eddsa-jcs-2022', created: '2023-02-24T23:36:38Z',
+  verificationMethod: W3C_VM, proofPurpose: 'assertionMethod', '@context': W3C_DOCUMENT['@context'],
+};
+const W3C_VALUE = 'z2HnFSSPPBzR36zdDgK8PbEHeXbR56YF24jwMpt3R1eHXQzJDMWS93FCzpvJpwTWd3GAVFuUfjoJdcnTMuVor51aX';
+const W3C_SIGNATURE_HEX = '407cd12654b33d718ecbb99179a1506daaa849450bf3fc523cce3e1c96f8b80351da3f253d725c6f00b07c9e5448d50b3ef78012b9ab54255116d069c6dd2808';
+const hexDe = bytes => Buffer.from(bytes).toString('hex');
+const clausW3c = () => {
+  const publicBytes = descodificaBase58Btc(W3C_PUBLIC.slice(1));
+  const secretBytes = descodificaBase58Btc(W3C_SECRET.slice(1));
+  assert.equal(hexDe(publicBytes.slice(0, 2)), 'ed01');
+  assert.equal(hexDe(secretBytes.slice(0, 2)), '8026');
+  assert.equal(publicBytes.length, 34);
+  assert.equal(secretBytes.length, 34);
+  const publicKeyJwk = { kty: 'OKP', crv: 'Ed25519', x: codificaBase64Url(publicBytes.slice(2)) };
+  return { publicKeyJwk, privateKeyJwk: { ...publicKeyJwk, d: codificaBase64Url(secretBytes.slice(2)) } };
+};
+
+test('FEDI-01 · vector oficial W3C B.3: JCS, SHA-256, signatura Ed25519 i Multibase coincideixen bit a bit', async () => {
+  const hash = calculaHashEntradaFep8b32(W3C_DOCUMENT, W3C_PROOF);
+  assert.equal(hash.sha256Document, '59b7cb6251b8991add1ce0bc83107e3db9dbbab5bd2c28f687db1a03abc92f19');
+  assert.equal(hash.sha256ProofConfig, '66ab154f5c2890a140cb8388a22a160454f80575f6eae09e5a097cabe539a1db');
+  assert.equal(hexDe(hash.dadesASignar), hash.sha256ProofConfig + hash.sha256Document);
+  assert.equal(hexDe(descodificaBase58Btc(W3C_VALUE.slice(1))), W3C_SIGNATURE_HEX);
+  assert.equal(`z${codificaBase58Btc(new Uint8Array(Buffer.from(W3C_SIGNATURE_HEX, 'hex')))}`, W3C_VALUE);
+  const keys = clausW3c();
+  const signed = await signaObjecteFediversityFep8b32(W3C_DOCUMENT, {
+    privateKeyJwk: keys.privateKeyJwk, verificationMethod: W3C_VM, created: W3C_PROOF.created,
+  });
+  assert.deepEqual(signed.proof, { ...W3C_PROOF, proofValue: W3C_VALUE });
+  const verified = await verificaObjecteFediversityFep8b32({ ...W3C_DOCUMENT, proof: { ...W3C_PROOF, proofValue: W3C_VALUE } }, {
+    publicKeyJwk: keys.publicKeyJwk, verificationMethodEsperat: W3C_VM,
+  });
+  assert.equal(verified.valid, true);
+});
+
+test('FEDI-01 · negatives pròpies: prefix antic, alfabets corruptes, longitud, clau aliena i context alterat fallen tancats', async () => {
+  const { publicKeyJwk } = clausW3c();
+  const signed = { ...W3C_DOCUMENT, proof: { ...W3C_PROOF, proofValue: W3C_VALUE } };
+  const verify = document => verificaObjecteFediversityFep8b32(document, { publicKeyJwk, verificationMethodEsperat: W3C_VM });
+  for (const value of ['u' + codificaBase64Url(descodificaBase58Btc(W3C_VALUE.slice(1))), 'z0', 'z1', 'z' + '1'.repeat(90)]) {
+    assert.equal((await verify({ ...signed, proof: { ...signed.proof, proofValue: value } })).valid, false, value);
+  }
+  const aliena = await generaParellClausFediversityEd25519();
+  assert.equal((await verificaObjecteFediversityFep8b32(signed, { publicKeyJwk: aliena.publicKeyJwk })).valid, false);
+  assert.equal((await verify({ ...signed, '@context': [...W3C_DOCUMENT['@context']].reverse() })).motiu, 'CONTEXT_PROVA_INVALID');
+  // La norma permet ampliar el context del document conservant el prefix de la prova.
+  assert.equal((await verify({ ...signed, '@context': [...W3C_DOCUMENT['@context'], { added: 'https://example.org/added' }] })).valid, true);
+  assert.equal((await verify({ ...signed, name: 'Canviat' })).valid, false);
+  for (const created of ['2023-02-29T12:00:00Z', '2024-04-31T00:00:00Z', '2024-01-01T12:00:00+14:01', '2024-01-01T24:00:00.1Z']) {
+    assert.equal((await verify({ ...signed, proof: { ...signed.proof, created } })).motiu, 'CREATED_INVALID', created);
+  }
 });
 
 // O8-PORT-02: el títol deia «filtra prototips»; la JCS ja no en descarta cap (vegeu les proves del Gauntlet).
@@ -173,7 +263,7 @@ test('FEP-8b32: signa amb Ed25519 (eddsa-jcs-2022) un ban municipal, verifica la
 
   assert.equal(banSignat.proof.type, 'DataIntegrityProof');
   assert.equal(banSignat.proof.cryptosuite, 'eddsa-jcs-2022');
-  assert.ok(banSignat.proof.proofValue.startsWith('u'));
+  assert.ok(banSignat.proof.proofValue.startsWith('z'));
 
   // Reordenem les claus com passaria en travessar un altre servidor JSON-LD:
   const banReordenat = {
@@ -330,7 +420,7 @@ test('O8-PORT-04 · tot el proof entra a la signatura i proofPurpose ha de ser a
   for (const [canvi, motiu] of [
     [(p) => { p.expires = '2099-01-01T00:00:00Z'; }, 'SIGNATURA_INVALIDA'],
     [(p) => { p.domain = 'atacant.example'; }, 'SIGNATURA_INVALIDA'],
-    [(p) => { p['@context'] = 'https://w3id.org/security/v1'; }, 'SIGNATURA_INVALIDA'],
+    [(p) => { p['@context'] = 'https://w3id.org/security/v1'; }, 'CONTEXT_PROVA_INVALID'],
     [(p) => { delete p.created; }, 'SIGNATURA_INVALIDA'],
     [(p) => { delete p.proofPurpose; }, 'PROOF_PURPOSE_INVALID'],
     [(p) => { p.proofPurpose = 'authentication'; }, 'PROOF_PURPOSE_INVALID'],
@@ -379,4 +469,22 @@ test('O8-PORT-09 · un surrogat solitari o un esquema no primitiu a la importaci
     assert.equal(h.valid, false, camp); assert.equal(h.dadesRestaurades, null, camp);
     assert.ok(h.motius.some((m) => m.endsWith(': object.')), camp);
   }
+});
+
+
+test('R2F-06 · JCS, signador i verificador rebutgen arrays amb forats abans de signar', async () => {
+  const { privateKeyJwk, publicKeyJwk } = clausW3c();
+  const opcions = { privateKeyJwk, verificationMethod: W3C_VM, created: W3C_PROOF.created };
+  const mig = [1, 2, 3]; delete mig[1];
+  const heretat = new Array(1), prototip = Object.create(Array.prototype);
+  prototip[0] = 'valor heretat'; Object.setPrototypeOf(heretat, prototip);
+  for (const array of [new Array(1), new Array(2), mig, [new Array(1)], heretat]) {
+    assert.throws(() => canonitzaJsonJcs({ array }), /JCS no admet arrays amb forats/);
+    await assert.rejects(signaObjecteFediversityFep8b32({ ...W3C_DOCUMENT, array }, opcions), /JCS no admet arrays amb forats/);
+    const r = await verificaObjecteFediversityFep8b32({ ...W3C_DOCUMENT, array, proof: { ...W3C_PROOF, proofValue: W3C_VALUE } }, { publicKeyJwk, verificationMethodEsperat: W3C_VM });
+    assert.equal(r.valid, false);
+    assert.equal(r.motiu, 'DOCUMENT_NO_JSON');
+  }
+  // Un valor null explícit continua sent JSON vàlid i no es confon amb un forat.
+  assert.equal(canonitzaJsonJcs({ array: [null, 1] }), '{"array":[null,1]}');
 });

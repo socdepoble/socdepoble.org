@@ -1012,6 +1012,7 @@ export function DocumentEditor({ adapter, onToast }) {
       leadHtml={document.lead ?? ''}
       heroImage={document.heroImage}
       logoImage={document.logoImage}
+      logoImageDark={document.logoImageDark}
       isPublished={document.isPublished}
       formattedTime={document.formattedTime}
       formattedDate={document.formattedDate}

@@ -1,0 +1,57 @@
+{
+  "id": "1a3b224f-4e69-478f-abae-41b3543fa879",
+  "session": "00d2ccb9-ecf9-494b-be65-c216e2a89a65",
+  "operationId": "fedi-rural-dispositiu-neutral",
+  "claim": "00d2ccb9-ecf9-494b-be65-c216e2a89a65:governance-write",
+  "planHash": "8cc9623500ac4d0edd6d5451585254bf2b434350aecad551fe678cb7a47348ed",
+  "beforeSeal": "4a8b640d29fc044884937f69d0898b8d278b64b8334dd0fd959223a76fec2ee0",
+  "files": [
+    {
+      "path": "src/data/persistenciaLocalRural.js",
+      "before": null,
+      "after": "eacca6129fb0da3cfe3079b1883ab15971543ba8a64ed843f23212653bcbe08c"
+    },
+    {
+      "path": "src/data/local/persistenciaLocalRural.js",
+      "before": "eacca6129fb0da3cfe3079b1883ab15971543ba8a64ed843f23212653bcbe08c",
+      "after": "2b5f75d42136bf1a2e8fe8d1ca6df9210bb76f953d2a51e5ec55363a4309d6f0"
+    },
+    {
+      "path": "src/data/cuaOperacionsOffline.js",
+      "before": null,
+      "after": "9126826e5cf8777a91459d3f1246092294fa7cb682dd50a49f6ae95ec5996725"
+    },
+    {
+      "path": "src/data/local/cuaOperacionsOffline.js",
+      "before": "9126826e5cf8777a91459d3f1246092294fa7cb682dd50a49f6ae95ec5996725",
+      "after": "2560b92f73f92dd8a4af33b2064102246b165301db42039be35c0c2d19a229d1"
+    },
+    {
+      "path": "src/data/pontEmergenciaRural.js",
+      "before": null,
+      "after": "9a0949bfbe20476dfcacc3bb134a3626a93e7ce4278b34bb2b40411be83f5632"
+    },
+    {
+      "path": "src/data/local/pontEmergenciaRural.js",
+      "before": "eddcc4b1fd5890d0da2605fc19411911e3c51d3623731e0b8005f61fd30c13a0",
+      "after": "f1894e9c71a7225552f6d5f95d6d700096e1d76c9603b07629d71c8ae290b694"
+    },
+    {
+      "path": "src/data/sincronitzadorCarpetaLocal.js",
+      "before": null,
+      "after": "2a98f458ec8da3fb264964bbf0e415b642e22e0618cd1fdf7d58515fb12c89de"
+    },
+    {
+      "path": "src/data/local/sincronitzadorCarpetaLocal.js",
+      "before": "d857dacb73b8942b85ad9c777ef50a6c1585855835687f9895e697e386416710",
+      "after": "2c5b2dba4fa18ef802275db112deffc009e98e355e64ffcdc8862bcabe2c240f"
+    },
+    {
+      "path": "src/data/sessioRural.js",
+      "before": "13a872921ff563905022ae2cf69c0ba69827c55abe25450a6ac083ec6e147e64",
+      "after": "f6e9d8bc876b15dde43d0fd55eae87a196a65955c005da7a6ef40bc8d56e0ae1"
+    }
+  ],
+  "state": "accepted",
+  "afterSeal": "fcfa9fc0cd67643f988cc298475eb1b70a5913e8c7bebdac0f6ad10989280603"
+}

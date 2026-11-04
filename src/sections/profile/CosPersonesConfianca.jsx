@@ -10,6 +10,8 @@
  * mostra el recompte pur previ a F7 sense cap botó. Amb `ranures`, visualitza
  * les 3 ranures d'amics de confiança amb insígnia textual accessible, estat
  * de disputa i botons d'acció de mida gran (>= 58px, `--sdp-alt-accio`).
+ * `textosMostra`, exclusiu del laboratori, substituïx els missatges de compte
+ * i recuperació per estat de mostra; el comportament real per defecte es conserva.
  */
 import { ShieldAlert, ShieldCheck, UserCheck, UserRound } from 'lucide-react';
 import { Alerta, Boto, Insignia } from '../../components/PedraSeca/index.js';
@@ -79,7 +81,8 @@ export default function CosPersonesConfianca({
   teRecuperacio = false,
   ranures = null,
   onAccioRanura = null,
-  onDisputa = null
+  onDisputa = null,
+  textosMostra = null
 }) {
   const t = useTraductorOpcional();
   const tr = (parell, valors = {}) => omple(tradueix(t, parell), valors);
@@ -95,7 +98,7 @@ export default function CosPersonesConfianca({
     : false;
 
   let recompte = null;
-  if (estat) {
+  if (estat && !textosMostra) {
     const quants = estat.verificats === 0
       ? tr(TEXTOS_CONFIANCA.verificatsCap)
       : estat.verificats === 1
@@ -108,6 +111,8 @@ export default function CosPersonesConfianca({
     }
     recompte = segueix ? `${quants} ${segueix}` : quants;
   }
+
+  if (estat && textosMostra) recompte = tr(textosMostra.recompte, { n: String(estat.verificats) });
 
   const coberts = estat ? Math.min(estat.verificats, LLINDAR_CONFIANCA) : 0;
 
@@ -149,20 +154,20 @@ export default function CosPersonesConfianca({
           ) : null}
         </div>
       ) : null}
-      <p className="perfil-compte__text">{tr(TEXTOS_CONFIANCA.explica)}</p>
-      {teRecuperacio === true ? null : <p className="perfil-compte__text">{tr(TEXTOS_CONFIANCA.pendent)}</p>}
+      {!textosMostra ? <p className="perfil-compte__text">{tr(TEXTOS_CONFIANCA.explica)}</p> : null}
+      {teRecuperacio === true || textosMostra ? null : <p className="perfil-compte__text">{tr(TEXTOS_CONFIANCA.pendent)}</p>}
       {error ? <Alerta to="error">{tr(TEXTOS_CONFIANCA.error)}</Alerta> : null}
-      {enDisputa ? <Alerta to="error">{tr(TEXTOS_CERIMONIA_SAS.alertaDisputa)}</Alerta> : null}
+      {enDisputa ? <Alerta to="error">{tr(textosMostra?.alertaDisputa ?? TEXTOS_CERIMONIA_SAS.alertaDisputa)}</Alerta> : null}
       {recompte ? <p className="perfil-compte__text">{recompte}</p> : null}
       {ranuresNormalitzades ? (
-        <ul className="perfil-compte__llista" aria-label={tr(TEXTOS_CERIMONIA_SAS.llista)}>
+        <ul className="perfil-compte__llista" aria-label={tr(textosMostra?.llista ?? TEXTOS_CERIMONIA_SAS.llista)}>
           {ranuresNormalitzades.map((ranura, idx) => {
             const etiquetaAmic = ranura.nom || String(ranura.numero);
             const titolRanura = ranura.nom
               ? tr(TEXTOS_CERIMONIA_SAS.ranura, { n: String(ranura.numero), nom: ranura.nom })
               : tr(TEXTOS_CERIMONIA_SAS.ranuraSenseNom, { n: String(ranura.numero) });
             const textEstat = tr(TEXTOS_CERIMONIA_SAS.estat[ranura.estat]);
-            const textDetall = tr(TEXTOS_CERIMONIA_SAS.detall[ranura.estat]);
+            const textDetall = tr(textosMostra?.detall?.[ranura.estat] ?? TEXTOS_CERIMONIA_SAS.detall[ranura.estat]);
             const accioCallback = ranura.onAccio
               ?? (typeof onAccioRanura === 'function' ? () => onAccioRanura(idx, ranura) : null);
             const etiquetaBoto = ranura.estat === ESTATS_CERIMONIA_SAS.verificatSas
@@ -197,11 +202,11 @@ export default function CosPersonesConfianca({
       {typeof onDisputa === 'function' ? (
         <div className="sdp-alerta__accions perfil-compte__accions">
           <Boto mida="gran" varietat="perill" disabled={enDisputa} onClick={onDisputa}>
-            {tr(TEXTOS_CERIMONIA_SAS.accio.disputa)}
+            {tr(textosMostra?.accioDisputa ?? TEXTOS_CERIMONIA_SAS.accio.disputa)}
           </Boto>
         </div>
       ) : null}
-      <p className="perfil-compte__text">{tr(TEXTOS_CONFIANCA.risc)}</p>
+      {!textosMostra ? <p className="perfil-compte__text">{tr(TEXTOS_CONFIANCA.risc)}</p> : null}
     </div>
   );
 }

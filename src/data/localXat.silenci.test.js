@@ -134,8 +134,9 @@ describe('l’adaptador local (conversesLocal)', () => {
       setBackendImplementation(a);
       expect(teCapacitat('avisosPush')).toBe(true);
       expect(teCapacitat('silenciXat')).toBe(true);
-      // El text públic de /page/versions continua cert: només la versió mínima no es declara.
-      expect(CAPACITATS_NO_DECLARADES).toEqual(['versioClient']);
+      // FEDI-16: el node local declara totes les 38 capacitats.
+      expect(CAPACITATS_NO_DECLARADES).toEqual([]);
+      expect(Object.keys(CAPACITATS)).toHaveLength(39);
     } finally {
       await a.destroy();
     }

@@ -31,18 +31,23 @@ const noDeclarades = (adaptador) => Object.keys(CAPACITATS)
   .filter((capacitat) => CAPACITATS[capacitat].every((metode) => typeof adaptador[metode] !== 'function'));
 /* Els casos que depenen d'un fil real del Xat (un cas anterior deixa filId, filEscrivible o la subscripció). */
 const CLAUS_DEL_XAT = new Set(['filId', 'filEscrivible', 'subscrit', 'seqEnviat']);
+const OPT_INS = new Set(['compteOperatiu', 'compteModeProva', 'compteSenseSessio', 'publicacioOperativa', 'credencialsDeProva', 'contrasenyaLocal', 'destinatariDirecte', 'transportXifrat', 'filDirecte', 'adminMultipobleAutoritzat', 'tenantAdministrat']);
 const casosDelXat = () => CASOS.filter((c) => c.requerix.some((clau) => CLAUS_DEL_XAT.has(clau)));
 
 /**
  * Una passada del kit sencer amb `prepara` (la sessió) abans i, en acabar,
  * les omissions per a la comprovació de cada describe.
  */
-function passada(nom, { crea, prepara = () => {}, omissionsAdmeses }) {
+function passada(nom, { crea, prepara = () => {}, omissionsAdmeses, ambSessio = false }) {
   describe(`conformitat del port · adaptador local · ${nom}`, () => {
     const adaptador = crea();
-    const ctx = contextDeConformitat({ config: {}, escriptures: true });
+    const ctx = contextDeConformitat({ config: {}, escriptures: true, escenaris: { contrasenyaLocal: true, compteOperatiu: ambSessio, compteSenseSessio: !ambSessio, publicacioOperativa: ambSessio, destinatariDirecte: ambSessio ? '2e3f4051-6b7c-4d8e-9fa0-b1c2d3e4f5a6' : null } });
     const resultats = new Map();
-    beforeAll(() => prepara(adaptador));
+    const invocats = new Set();
+    beforeAll(async () => {
+      prepara(adaptador);
+      if (ambSessio) ctx.destinatariDirecte = (await adaptador.carregaMembres('', {})).find(m => m.tipus === 'persona' && m.usuari_id !== adaptador.getCurrentUser()?.id)?.usuari_id ?? null;
+    });
     afterAll(() => adaptador.destroy());
 
     test('el port l’accepta: nucli sencer, cap capacitat a mitges i només les no declarades a posta', () => {
@@ -53,12 +58,19 @@ function passada(nom, { crea, prepara = () => {}, omissionsAdmeses }) {
         return presents > 0 && presents < metodes.length;
       });
       expect(parcials).toEqual([]);
-      expect(noDeclarades(adaptador).filter((capacitat) => !CAPACITATS_NO_DECLARADES.includes(capacitat))).toEqual([]);
+      expect(Object.keys(CAPACITATS)).toHaveLength(39);
+      expect(CAPACITATS_NO_DECLARADES).toEqual([]);
+      expect(noDeclarades(adaptador)).toEqual([]);
     });
 
     for (const [index, c] of CASOS.entries()) {
       test(`${index + 1}. ${c.titol}`, async () => {
-        const resultat = await executaCas(c, adaptador, ctx);
+        let crides = 0;
+        const instrumentat = { ...adaptador };
+        if (typeof adaptador[c.metode] === 'function') instrumentat[c.metode] = (...args) => { crides++; invocats.add(c.metode); return adaptador[c.metode](...args); };
+        const resultat = await executaCas(c, instrumentat, ctx);
+        expect(crides).toBe(resultat.estat === 'omés' ? 0 : 1);
+        if (c.metode === 'demanaBaixa' && c.requerix.includes('compteOperatiu') && resultat.estat === 'ok') expect(adaptador.getCurrentUser()).toBeNull();
         resultats.set(index, resultat);
         expect(resultat.falles, resultat.falles.join(' · ')).toEqual([]);
         expect(resultat.estat).not.toBe('falla');
@@ -72,11 +84,18 @@ function passada(nom, { crea, prepara = () => {}, omissionsAdmeses }) {
       /* Una capacitat no declarada a posta: el kit l'omet amb el seu motiu, i res més. */
       const perCapacitat = omesos.filter(([c, r]) => c.capacitat && absents.includes(c.capacitat) && r.motiu === `capacitat ${c.capacitat} absent`);
       const resta = omesos.filter((omes) => !perCapacitat.includes(omes)).map(([c]) => c);
-      expect(resta.map((c) => c.metode)).toEqual(omissionsAdmeses().map((c) => c.metode));
-      expect(resta).toEqual(omissionsAdmeses());
+      const esperades = CASOS.filter(c => omissionsAdmeses().includes(c) || c.requerix.some(k => OPT_INS.has(k) && !ctx[k]));
+      expect(resta).toEqual(esperades);
+      expect(adaptador.getCurrentUser()).toBeNull();
     });
 
-    test('cap petició de xarxa en tota la passada', () => {
+    test('cens d’invocacions reals i omissions de la passada', () => {
+      const omesos = [...resultats.values()].filter(r => r.estat === 'omés').length;
+      console.info('FEDI17_CENS', JSON.stringify({ passada: `local ${nom}`, casos: CASOS.length, correctes: CASOS.length - omesos, omesos, invocats: [...invocats].sort() }));
+      expect(invocats).toEqual(new Set(CASOS.filter((c, i) => resultats.get(i)?.estat === 'ok').map(c => c.metode)));
+    });
+
+    test('cap petició de xarxa en tota la passada' , () => {
       expect(xarxa).not.toHaveBeenCalled();
     });
 
@@ -100,6 +119,7 @@ passada('seed sense sessió', {
 
 const PERSONA = '1d2e3f40-5a6b-4c7d-8e9f-a0b1c2d3e4f5';
 passada('seed amb sessió', {
+  ambSessio: true,
   crea: () => creaAdaptadorLocal({ mode: 'seed' }),
   prepara(adaptador) {
     configuraBackendSessio(adaptador.configuracio);
@@ -114,4 +134,25 @@ passada('local sense llavor', {
   crea: () => creaAdaptadorLocal({ mode: 'local' }),
   prepara: () => { esborraSessio({ abast: 'tot' }); },
   omissionsAdmeses: casosDelXat
+});
+
+/* FEDI-17 · La baixa del cicle també tanca sessió. Esta passada aïllada
+   comença amb sessió viva perquè un logout que no fera res no passe. */
+test('logout local amb sessió activa l’esborra; el mutant no-op queda refutat', async () => {
+  const adaptador = creaAdaptadorLocal({ mode: 'local' });
+  const c = CASOS.find(cas => cas.metode === 'logout');
+  const prova = async candidat => {
+    configuraBackendSessio(adaptador.configuracio);
+    expect(desaSessio({ access_token: 'logout-opac-local', user: { id: PERSONA } })).toBe(true);
+    expect(adaptador.getCurrentUser()?.id).toBe(PERSONA);
+    const resultat = await executaCas(c, candidat, contextDeConformitat({ config: adaptador.configuracio, escriptures: true }));
+    return resultat.estat === 'ok' && adaptador.getCurrentUser() === null;
+  };
+  try {
+    expect(await prova({ ...adaptador, logout: async () => {} })).toBe(false);
+    expect(await prova(adaptador)).toBe(true);
+  } finally {
+    esborraSessio({ abast: 'tot' });
+    await adaptador.destroy();
+  }
 });

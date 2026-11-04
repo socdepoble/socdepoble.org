@@ -1,0 +1,32 @@
+{
+  "id": "27d5fc8e-722d-4d4c-a932-89394474340d",
+  "session": "38d4de12-082f-4050-8990-735144cc2a3d",
+  "operationId": "r2cf01-compte-consentiment-modes",
+  "claim": "38d4de12-082f-4050-8990-735144cc2a3d:governance-write",
+  "planHash": "dbccd6992e09efd49d050a7b1bb64c560c1f1f9209d9df2f059b1be98ea08c7d",
+  "beforeSeal": "8b2830e947c34c3d9f866b66e5b758a28cc0dcf34d229470ce337317d2d090c6",
+  "files": [
+    {
+      "path": "src/data/supabase/compte.js",
+      "before": "2ef208c1d337644d58feab0154dfdfc6c9fcc8c04efce762cc9a9039f4bfaac8",
+      "after": "f79d7e3965fdded27b97c2140e27a6de8f94d9c79125c3c766905120f59c265d"
+    },
+    {
+      "path": "src/data/supabase/compte.test.js",
+      "before": "8a6ecd4f590aa3597432812b509d71d4ac6f6f9ef3c64aeb4aec407525c62fdc",
+      "after": "5d66e462805a66f0dca90331b45c1618fac1aa41593a9a63ba17bd7115438880"
+    },
+    {
+      "path": "src/data/supabase/auth.js",
+      "before": "511320ce00767328f1d4b6ed6d9c924612d9eb6f25a1aa030fc205392595f3b2",
+      "after": "74df44569db845861e79724a507a4c59fe1ab4cd971557b8fd3826f64c27dcc9"
+    },
+    {
+      "path": "src/data/supabase/auth.test.js",
+      "before": "3fca1ee007cb75e8febae9678e80d6ac5386ff262e4e1eb8032640788b852113",
+      "after": "f8d1896b62c15164df5e3a3450c507f2eb14fc527f603085c650d4895dab9a3c"
+    }
+  ],
+  "state": "accepted",
+  "afterSeal": "fcfa9fc0cd67643f988cc298475eb1b70a5913e8c7bebdac0f6ad10989280603"
+}

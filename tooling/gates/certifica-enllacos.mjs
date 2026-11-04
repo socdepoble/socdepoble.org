@@ -158,9 +158,17 @@ async function carregaContextArbre(arrel) {
   await buildPlugin.generateBundle.call({
     emitFile: (fitxer) => federacioFitxers.set(fitxer.fileName, String(fitxer.source))
   });
+  const { default: opendataPublica } = await import(
+    pathToFileURL(path.join(arrel, 'tooling/vite/opendata-publica.mjs')).href
+  );
+  const opendataPlugin = opendataPublica({ arrel });
+  const opendataEmesos = new Set();
+  await opendataPlugin.generateBundle.call({
+    emitFile: (fitxer) => opendataEmesos.add(String(fitxer.fileName).replace(/^opendata\//, ''))
+  });
   const firebase = JSON.parse(fs.readFileSync(path.join(arrel, 'firebase.json'), 'utf8'));
   const manifestOpendata = JSON.parse(fs.readFileSync(path.join(arrel, 'public/opendata/manifest.json'), 'utf8'));
-  const recursosOpendata = new Set(['manifest.json', ...(manifestOpendata.resources ?? []).map((r) => r.path)]);
+  const recursosOpendata = new Set(['manifest.json', ...opendataEmesos, ...(manifestOpendata.resources ?? []).map((r) => r.path)]);
   const rewritesFirebase = (firebase.hosting?.rewrites ?? [])
     .filter((r) => r.destination && r.destination !== '/index.html')
     .map((r) => ({

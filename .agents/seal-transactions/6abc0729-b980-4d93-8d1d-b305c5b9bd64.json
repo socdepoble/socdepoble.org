@@ -1,0 +1,22 @@
+{
+  "id": "6abc0729-b980-4d93-8d1d-b305c5b9bd64",
+  "session": "9adc8051-b050-4597-878c-dbe36b65faf8",
+  "operationId": "rural-lot-generacio-p02",
+  "claim": "9adc8051-b050-4597-878c-dbe36b65faf8:governance-write",
+  "planHash": "337eb0285f7c49f39a92463b605132519cd44223aaa928f6d4d8cf07bf2bc5cc",
+  "beforeSeal": "f04751bb5b12076ce59d164daf81a54e28b4fc0323683455784a74f87a66cb7a",
+  "files": [
+    {
+      "path": "src/data/persistenciaLocalRural.js",
+      "before": "eacca6129fb0da3cfe3079b1883ab15971543ba8a64ed843f23212653bcbe08c",
+      "after": "8e5930861d9def90b248eaeb57a9edc68ef20053646c427d6ed8976b4dbec309"
+    },
+    {
+      "path": "tests/persistencia-local-rural.test.mjs",
+      "before": "0da04d6c7640ec9bc008cd7a845c63fd06190974e5ce3392369f888fad8358d4",
+      "after": "4acf6f00df691af8d0792b29740dffb77d6d8dca98439ead345f9c77c86e94a9"
+    }
+  ],
+  "state": "accepted",
+  "afterSeal": "fcfa9fc0cd67643f988cc298475eb1b70a5913e8c7bebdac0f6ad10989280603"
+}

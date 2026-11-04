@@ -103,22 +103,30 @@ const textNet = (valor) => (typeof valor === 'string' ? valor.trim() : '');
    (null i la capçalera de sempre), i un sdp-media:// el continua resolent el
    port (useLogoEntitatDElement). Ho hereten paginaDElement i
    useLogoEntitatDElement, perquè els dos passen per ací. */
-function logoDeSrc(valor) {
+function srcDeLogo(valor) {
   const src = textNet(valor);
   if (!src || esMarcaDeLEntitat(src)) return null;
   const resolt = resolveAsset(src);
   if (!esAvatarSegur(src) || !esFontImatgePropia(src) || !esFontImatgePropia(resolt)) return null;
-  return { clar: resolt, alt: '' };
+  return resolt;
 }
 
-/** El logotip propi d'un element (logo_image) com a logoEntitat de PageFrame
- *  ({ clar, alt }), o null. Un sdp-media:// no es pot pintar sense el port:
+function logoDeSrc(clar, fosc) {
+  const resoltClar = srcDeLogo(clar);
+  if (!resoltClar) return null;
+  const resoltFosc = srcDeLogo(fosc);
+  return { clar: resoltClar, ...(resoltFosc ? { fosc: resoltFosc } : {}), alt: '' };
+}
+
+/** El logotip propi (logo_image i, opcionalment, logo_image_dark) com a
+ *  logoEntitat de PageFrame ({ clar, fosc?, alt }), o null. Les dues variants
+ *  passen la mateixa guarda de privacitat. Un sdp-media:// no es pot pintar sense el port:
  *  ací torna null i el resol useLogoEntitatDElement. */
 export function logoEntitatDElement(item) {
-  return logoDeSrc(item?.logo_image);
+  return logoDeSrc(item?.logo_image, item?.logo_image_dark);
 }
 
-/** logoEntitatDElement, també per a un logo_image sdp-media:// (el resol el
+/** logoEntitatDElement, també per als logotips sdp-media:// (els resol el
  *  port, useResolvedAssetState, i la URL resolta passa pel mateix filtre):
  *  { logo, carregant }. `logo`, el descriptor o null: mentre es resol, o si
  *  no es pot resoldre, null i la capçalera de sempre. `carregant`, cert només
@@ -132,7 +140,13 @@ export function useLogoEntitatDElement(item) {
   const valor = textNet(item?.logo_image);
   const delPort = valor.startsWith(DEL_PORT);
   const { url, isLoading } = useResolvedAssetState(delPort ? valor : '');
-  return { logo: logoDeSrc(delPort ? url : valor), carregant: delPort && isLoading };
+  const valorFosc = textNet(item?.logo_image_dark);
+  const foscDelPort = valorFosc.startsWith(DEL_PORT);
+  const { url: urlFosc, isLoading: carregaFosc } = useResolvedAssetState(foscDelPort ? valorFosc : '');
+  return {
+    logo: logoDeSrc(delPort ? url : valor, foscDelPort ? urlFosc : valorFosc),
+    carregant: (delPort && isLoading) || (foscDelPort && carregaFosc)
+  };
 }
 
 /* Decisió 3 del Mestre (261007, confirmada) · «Imatges externes al Mur:
@@ -243,10 +257,15 @@ export function paginaDElement(section, item) {
         { text: textNet(item.provincia), className: 'sdp-badge-category' },
         { text: textNet(item.comarca), className: 'sdp-badge-tag' }
       ].filter((label) => label.text)
-      : [
-        etiquetaDeLaSeccio(section, item),
-        { text: item.id, className: 'sdp-badge-category' }
-      ],
+      : (section?.listPath === RUTA_CALENDARI && Array.isArray(item.labels) && item.labels.length > 0)
+        ? [
+          etiquetaDeLaSeccio(section, item),
+          ...item.labels.filter((l) => (typeof l === 'string' ? l : l?.text) !== section.label)
+        ]
+        : [
+          etiquetaDeLaSeccio(section, item),
+          { text: item.id, className: 'sdp-badge-category' }
+        ],
     /* T39 · els drets triats a la publicació; el text de sèrie, només si no en porta.
        Onada 5 · El d'un poble és el de la Viquipèdia (CC BY-SA), el de la seua targeta. */
     copyright: item.copyright || (esPoble ? COPYRIGHT_VIQUIPEDIA : COPYRIGHT_SDP),

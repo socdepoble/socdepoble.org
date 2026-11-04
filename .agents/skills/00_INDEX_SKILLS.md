@@ -44,6 +44,7 @@ Font executiva única: `.agents/skills/`. Este índex només referencia les font
 - [[sdp-clon-loiverse/SKILL|sdp-clon-loiverse]]: Directriu arquitectònica i visual obligatòria per a desenvolupar el TPV (Mode Bar i Mode Rebost). Cal calcar la interfície de Loiverse al mil·límetre.
 - [[sdp-clon-whatsapp/SKILL|sdp-clon-whatsapp]]: Referent visual de WhatsApp per al xat, ajustos i interaccions equivalents; conserva els contractes propis de dades i seguretat de Sóc de Poble.
 - [[sdp-estudi-mercat/SKILL|sdp-estudi-mercat]]: Protocol per a la realització d'estudis de mercat i anàlisi de la competència, enfocat a extreure conclusions arquitectòniques i estratègiques.
+- [[sdp-importacio-editorial/SKILL|sdp-importacio-editorial]]: Tractor cognitiu per a importar, transformar i millorar notícies, esdeveniments, cursos i cròniques des de WordPress, Blogger i webs municipals cap a la maquetació Pedra Seca (UniversalCard + UniversalPage).
 - [[sdp-pedra-seca/SKILL|sdp-pedra-seca]]: Reglament matemàtic visual Pedra Seca (Alta Definició)
 - [[sdp-universal-editor/SKILL|sdp-universal-editor]]: Especificació de disseny i UX de l'Editor Universal (TipTap). Regles per a la barra d'eines, iconografia, metadades i la jerarquia de plantilles interactives.
 - [[sdp-universal-page/SKILL|sdp-universal-page]]: Estàndard d'arquitectura, anatomia i configuració de la UniversalPage de Sóc de Poble. Defineix l'estructura visual, el comportament del scroll i els blocs que la formen.

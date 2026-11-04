@@ -46,6 +46,20 @@ export function reiniciaModeracioLocal() {
   magatzem.normes.clear();
 }
 
+/* FEDI23 · Consulta interna booleana: no exposa ni enumera el magatzem.
+   La pertinença d'una entitat es consulta al servidor local real injectat. */
+export function bloqueigLocalEntre(a, b, administra = () => false) {
+  const te = (origen, desti) => {
+    if (!origen || !desti || !['persona', 'entitat'].includes(desti.tipus)) return false;
+    const clauDesti = `${desti.tipus}:${desti.id}`;
+    if (origen.tipus === 'persona') return magatzem.bloquejos.get(origen.id)?.has(clauDesti) === true;
+    if (origen.tipus !== 'entitat') return false;
+    for (const [persona, files] of magatzem.bloquejos) if (files.has(clauDesti) && administra(origen.id, persona) === true) return true;
+    return false;
+  };
+  return te(a, b) || te(b, a);
+}
+
 /* Qui denuncia o bloqueja en seed i local: la sessió o el convidat. */
 const propietariLocal = () => getCurrentUser()?.id || getDefaultUserId();
 const clau = ({ tipus, id }) => `${tipus}:${id}`;

@@ -176,12 +176,12 @@ test('261007 · El Xat: les props de la seua UniversalPage', () => {
       { text: 'Eina', className: 'sdp-badge-category', lang: 'ca' }
     ],
     copyright: COPYRIGHT_SDP,
-    ...dataHoraDeBarra({ creat: '2026-10-07T01:30:00+02:00' }),
+    ...dataHoraDeBarra({ creat: '2026-10-27T01:30:00+01:00' }),
     chrome: 'full',
     topBarData: { showPin: false },
     llenguaDelContingut: 'ca'
   });
-  expect([mocks.props.time, mocks.props.date]).toEqual(['01:30', '07/10/26']);
+  expect([mocks.props.time, mocks.props.date]).toEqual(['01:30', '27/10/26']);
   const cos = container.querySelector('[data-pagina] > article.cms-preview');
   expect(cos.querySelector('h3').textContent).toBe('Com a casa, sense res nou que aprendre');
   expect(cos.querySelector('h1, h2')).toBeNull();

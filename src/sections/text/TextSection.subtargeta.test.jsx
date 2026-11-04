@@ -81,7 +81,7 @@ describe('la lectura: dins de la carta, sense hidratació', () => {
       '1 · Arquitectura Model B (160 h · 8.000 €)',
       '2 · UX/WCAG AAA + Fletxes IDEA-58 + Traductor Apertium IDEA-31 (240 h · 12.000 €)',
       '3 · Mòduls Cívics + Karpathy + Open Data Municipal + ActivityPub (440 h · 22.000 €)',
-      '4 · >25.000 proves + flake.nix reproduïble (160 h · 8.000 €)'
+      '4 · Proves, seguretat i empaquetat reproduïble (160 h · 8.000 €)'
     ]]
   ])('%s: les seues subtargetes arriben pintades, amb el títol com a primer fill', (clau, nivell, titols) => {
     const { container } = render(<TextSection page={PAGE_COPY[clau]} pageKey={clau} />);

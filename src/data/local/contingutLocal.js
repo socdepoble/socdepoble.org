@@ -37,10 +37,62 @@ function instantDe(valor) {
   return Number.isNaN(ms) ? null : ms;
 }
 
+/* JSON finit i sense accessors, capturat abans d'esperar. El sostre de
+   65536 bytes també compta espais estructurals com jsonb::text al servidor.
+   Profunditat/nodes limiten el treball abans de serialitzar. */
+export function capturaPayloadPersonalitzacioLocal(payload) {
+  const invalid = () => { throw errorDePersonalitzacio(CODI_PERSONALITZACIO.DESCONEGUT); };
+  const vistos = new Set(); let nodes = 0, espais = 0, expansioNumerica = 0;
+  const copia = (valor, nivell) => {
+    if (++nodes > 10000 || nivell > 32) invalid();
+    if (valor === null || typeof valor === 'boolean') return valor;
+    if (typeof valor === 'string') {
+      if (valor.length > 65536 || valor.includes('\u0000')) invalid();
+      for (let i = 0; i < valor.length; i++) {
+        const n = valor.charCodeAt(i);
+        if (n >= 0xd800 && n <= 0xdbff) { const seguent = valor.charCodeAt(++i); if (!(seguent >= 0xdc00 && seguent <= 0xdfff)) invalid(); }
+        else if (n >= 0xdc00 && n <= 0xdfff) invalid();
+      }
+      return valor;
+    }
+    if (typeof valor === 'number') {
+      if (!Number.isFinite(valor)) invalid();
+      const text = String(valor), exp = /e([+-]?\d+)$/i.exec(text);
+      if (exp) { const decimals = text.indexOf('.') < 0 ? 0 : text.indexOf('e') - text.indexOf('.') - 1;
+        const e = Number(exp[1]), digits = text.slice(0, text.indexOf('e')).replace(/[-.]/g, '').length;
+        const llarga = (valor < 0 ? 1 : 0) + (e >= decimals ? digits + e - decimals : e < 0 ? 2 - e - 1 + digits : digits + 1);
+        expansioNumerica += Math.max(0, llarga - text.length);
+      }
+      return valor;
+    }
+    if (!valor || typeof valor !== 'object' || vistos.has(valor) || Object.getOwnPropertySymbols(valor).length) invalid();
+    const array = Array.isArray(valor), proto = Object.getPrototypeOf(valor);
+    if (array ? proto !== Array.prototype : proto !== Object.prototype && proto !== null) invalid();
+    vistos.add(valor);
+    const descriptors = Object.getOwnPropertyDescriptors(valor), claus = Object.keys(descriptors).filter(k => !(array && k === 'length'));
+    if (array && (claus.length !== valor.length || claus.some((k, i) => k !== String(i)))) invalid();
+    espais += Math.max(0, claus.length - 1) + (array ? 0 : claus.length);
+    const resultat = array ? [] : {};
+    for (const clau of claus) {
+      const d = descriptors[clau];
+      if (!Object.hasOwn(d, 'value') || !d.enumerable || ['__proto__', 'constructor', 'prototype'].includes(clau)) invalid();
+      copia(clau, nivell + 1);
+      Object.defineProperty(resultat, clau, { value: copia(d.value, nivell + 1), enumerable: true, writable: true, configurable: true });
+    }
+    vistos.delete(valor); return resultat;
+  };
+  if (!esObjectePla(payload) || Array.isArray(payload)) invalid();
+  const resultat = copia(payload, 0);
+  if (new TextEncoder().encode(JSON.stringify(resultat)).length + espais + expansioNumerica > 65536) invalid();
+  return resultat;
+}
+const RE_TENANT_LOCAL = /^[0-9a-f]{8}-(?:[0-9a-f]{4}-){3}[0-9a-f]{12}$/i;
+const errorAdministracioLocal = (code) => Object.assign(new Error(code === 'no-disponible' ? 'Cal injectar autoritat local explícita.' : code === 'sense-sessio' ? 'Cal iniciar sessió.' : code === 'abast-invalid' ? 'Cal un tenant explícit i coherent.' : 'L’autoritat local no autoritza esta operació.'), { code });
+
 export function creaContingutLocal(e) {
   /* id → { id, sectionId, ownerUserId, authorOrgId, title, description, createdAt, updatedAt, payload } */
   const publicacions = new Map();
-  /* clau → { actual: { payload, versio }, historial: [{ versio, payload, creat, autor }] } */
+  /* tenantId → Map(clau → { actual: { payload, versio }, historial: [{ versio, payload, creat, autor }] }) */
   const personalitzacions = new Map();
   e.alTancar(() => { publicacions.clear(); personalitzacions.clear(); });
 
@@ -53,8 +105,9 @@ export function creaContingutLocal(e) {
     return acte;
   });
 
-  const personalitzacio = () => Object.fromEntries(CLAUS_PERSONALITZACIO.map((clau) => {
-    const actual = personalitzacions.get(clau)?.actual;
+  const magatzemDe = tenantId => personalitzacions.get(tenantId);
+  const personalitzacio = (tenantId = e.configuracio.tenantId) => Object.fromEntries(CLAUS_PERSONALITZACIO.map((clau) => {
+    const actual = magatzemDe(tenantId)?.get(clau)?.actual;
     return [clau, actual ? { payload: e.copia(actual.payload), versio: actual.versio } : null];
   }));
 
@@ -98,6 +151,39 @@ export function creaContingutLocal(e) {
      amb ell, i el magatzem obert és una tria explícita de qui el crea. */
   const exigixSegonFactor = () => {
     if (!e.opcions.personalitzacioOberta) throw errorDePersonalitzacio(CODI_PERSONALITZACIO.CAL_SEGON_FACTOR);
+  };
+
+  /* Cap selecció administrativa passa per ci(): no es reserva al tenant
+     propi davant d'un selector absent, contradictori o desconegut. */
+  const tenantSeleccionat = (config = {}, obligatori = true) => {
+    const presents = ['tenantId', 'tenant_id'].filter(k => Object.hasOwn(config, k) && config[k] !== undefined);
+    if (!presents.length) { if (obligatori) throw errorAdministracioLocal('abast-invalid'); return e.configuracio.tenantId; }
+    if (presents.some(k => typeof config[k] !== 'string' || !RE_TENANT_LOCAL.test(config[k]))) throw errorAdministracioLocal('abast-invalid');
+    const id = config[presents[0]].toLowerCase();
+    if (presents.some(k => config[k].toLowerCase() !== id)) throw errorAdministracioLocal('abast-invalid');
+    return id;
+  };
+  const comprova = (abast, config) => { abast(); if (config.signal?.aborted) throw new DOMException('Operació cancel·lada.', 'AbortError'); };
+  const autoritzaLocal = async (operacio, tenantId, config) => {
+    const abast = e.abast(); comprova(abast, config);
+    const autoritat = e.opcions.administracioLocal;
+    if (!autoritat) throw errorAdministracioLocal('no-disponible');
+    const personaId = e.usuari()?.id;
+    if (!personaId) throw errorAdministracioLocal('sense-sessio');
+    if (tenantId !== null && !autoritat.pobles.some(p => p.id === tenantId)) throw errorAdministracioLocal('sense-permis');
+    const resultat = await autoritat.autoritza(Object.freeze({ personaId, operacio, tenantId }));
+    comprova(abast, config);
+    if (resultat !== true) throw errorAdministracioLocal('sense-permis');
+    return { personaId, comprova: () => comprova(abast, config) };
+  };
+  const preparaPersonalitzacio = async (operacio, config) => {
+    const tenantId = tenantSeleccionat(config, e.opcions.administracioLocal !== null);
+    if (e.opcions.administracioLocal) return { tenantId, ...await autoritzaLocal(operacio, tenantId, config) };
+    /* El ganxo antic obert només afecta el tenant propi; mai autoritza B. */
+    if (tenantId !== e.configuracio.tenantId) throw errorAdministracioLocal('sense-permis');
+    const usuari = usuariDeLaSessio(); exigixSegonFactor();
+    const abast = e.abast();
+    return { tenantId, personaId: usuari.id, comprova: () => comprova(abast, config) };
   };
 
   return {
@@ -169,28 +255,44 @@ export function creaContingutLocal(e) {
       return e.copia(stored);
     },
 
-    /* supabase/personalitzacio.js, branca local, amb la porta del segon factor. */
-    async adminDesaPersonalitzacio({ clau, payload, versio } = {}) {
-      const nom = clauValida(clau);
-      const usuari = usuariDeLaSessio();
-      if (!esObjectePla(payload)) throw errorDePersonalitzacio(CODI_PERSONALITZACIO.DESCONEGUT);
-      exigixSegonFactor();
-      const entrada = personalitzacions.get(nom) || { actual: null, historial: [] };
-      const actual = entrada.actual?.versio ?? 0;
-      const esperada = versio === null || versio === undefined ? null : Number(versio);
-      if (esperada !== null && esperada !== actual) throw errorDePersonalitzacio(CODI_PERSONALITZACIO.CONFLICTE_VERSIO);
-      const nova = { payload: e.copia(payload), versio: actual + 1 };
-      entrada.actual = nova;
-      entrada.historial.push({ versio: nova.versio, payload: e.copia(payload), creat: e.ara().toISOString(), autor: String(usuari.id) });
-      personalitzacions.set(nom, entrada);
-      return { clau: nom, payload: e.copia(nova.payload), versio: nova.versio };
+    /* FEDI-16 · Només el catàleg injectat és administrable; no són els
+       pobles públics de loadCoreContent ni els d'una restauració oberta. */
+    async adminLlistaPobles(config = {}) {
+      tenantSeleccionat(config, false);
+      const autoritat = await autoritzaLocal('adminLlistaPobles', null, config);
+      autoritat.comprova();
+      return e.opcions.administracioLocal.pobles.map(poble => ({ ...poble }));
+    },
+    async adminLligPersonalitzacio(config = {}) {
+      const tenantId = tenantSeleccionat(config);
+      const autoritat = await autoritzaLocal('adminLligPersonalitzacio', tenantId, config);
+      autoritat.comprova(); return personalitzacio(tenantId);
     },
 
-    async adminHistorialPersonalitzacio(clau) {
+    async adminDesaPersonalitzacio({ clau, payload, versio } = {}, config = {}) {
       const nom = clauValida(clau);
-      usuariDeLaSessio();
-      exigixSegonFactor();
-      return [...(personalitzacions.get(nom)?.historial ?? [])].reverse().map((registre) => e.copia(registre));
+      const net = capturaPayloadPersonalitzacioLocal(payload);
+      const esperada = versio == null ? 0 : versio;
+      if (!Number.isSafeInteger(esperada) || esperada < 0) throw errorDePersonalitzacio(CODI_PERSONALITZACIO.DESCONEGUT);
+      const autoritat = await preparaPersonalitzacio('adminDesaPersonalitzacio', config);
+      autoritat.comprova();
+      const magatzem = magatzemDe(autoritat.tenantId) ?? new Map();
+      const entrada = magatzem.get(nom) ?? { actual: null, historial: [] };
+      const actual = entrada.actual?.versio ?? 0;
+      if (esperada !== actual) throw errorDePersonalitzacio(CODI_PERSONALITZACIO.CONFLICTE_VERSIO);
+      const nova = { payload: net, versio: actual + 1 };
+      const registre = { versio: nova.versio, payload: e.copia(net), creat: e.ara().toISOString(), autor: String(autoritat.personaId) };
+      autoritat.comprova();
+      entrada.actual = nova; entrada.historial.push(registre);
+      magatzem.set(nom, entrada); personalitzacions.set(autoritat.tenantId, magatzem);
+      return { clau: nom, payload: e.copia(net), versio: nova.versio };
+    },
+
+    async adminHistorialPersonalitzacio(clau, config = {}) {
+      const nom = clauValida(clau);
+      const autoritat = await preparaPersonalitzacio('adminHistorialPersonalitzacio', config);
+      autoritat.comprova();
+      return [...(magatzemDe(autoritat.tenantId)?.get(nom)?.historial ?? [])].reverse().map(registre => e.copia(registre));
     }
   };
 }

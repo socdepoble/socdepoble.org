@@ -1,6 +1,6 @@
 import { backendScope } from '../../config/backendConfig.js';
 import { useScopedResource } from '../../app/contexts/useScopedResource.js';
-import { useCallback, useContext, useMemo, useLayoutEffect, useRef, useState } from 'react';
+import { useCallback, useContext, useMemo, useLayoutEffect, useRef, useState, useSyncExternalStore } from 'react';
 /* P1-71 (Gauntlet 261029) · L'objecte de context viu a objectesDeContext.js,
    que no importa res del projecte. */
 import { MurContext } from './objectesDeContext.js';
@@ -12,6 +12,13 @@ import { ErrorIdentitatDeLectura, esIdentitatDeLectura } from '../../app/context
 import { useRecarregaExterna } from '../../app/contexts/useRecarregaExterna.jsx';
 import { useModeracio } from '../../components/PedraSeca/hooks/moderacioDePoble.js';
 import { filtraElementsBloquejats } from '../../config/moderacio.js';
+import {
+  filtraPublicacionsEsborrades,
+  marcaPublicacioEsborrada,
+  restauraPublicacioEsborrada,
+  subscriuPublicacionsEsborrades,
+  versioPublicacionsEsborrades
+} from '../../data/publicacionsEsborrades.js';
 
 import { useSession } from '../../app/contexts/SessionContext.jsx';
 
@@ -157,9 +164,22 @@ export function MurProvider({ children, config }) {
     assertCurrent();
     const saved = await appendSectionSubmissionNetworkOnly({ ...sub, actor: autoria }, config);
     assertCurrent();
+    restauraPublicacioEsborrada(sub?.sectionId || 'mur', saved?.id ?? sub?.id);
     refresh();
     return saved;
   }, [nomesLectura, operation, config, autoria, refresh]);
+
+  const versioEsborrades = useSyncExternalStore(
+    subscriuPublicacionsEsborrades,
+    versioPublicacionsEsborrades,
+    versioPublicacionsEsborrades
+  );
+
+  const esborraPublicacio = useCallback(async (seccio, id) => {
+    if (nomesLectura) throw new ErrorIdentitatDeLectura();
+    if (!seccio || !id) return false;
+    return marcaPublicacioEsborrada(seccio, id);
+  }, [nomesLectura]);
 
   /* Decisió 4 · L'àmbit d'AÏLLAMENT de les pàgines extres: el mateix que
      buida useScopedResource (la clau d'àmbit, la configuració i l'actor de la
@@ -257,10 +277,11 @@ export function MurProvider({ children, config }) {
   const errorMes = useCallback((seccio) => seccions[seccio]?.error ?? null, [seccions]);
 
   const value = useMemo(() => {
+    void versioEsborrades;
     const { mur, events, mercat } = seccions;
-    const feedPosts = filtraElementsBloquejats(mur.elements, esElementBloquejat);
-    const elsEvents = filtraElementsBloquejats(events.elements, esElementBloquejat);
-    const marketItems = filtraElementsBloquejats(mercat.elements, esElementBloquejat);
+    const feedPosts = filtraElementsBloquejats(filtraPublicacionsEsborrades(mur.elements, 'mur'), esElementBloquejat);
+    const elsEvents = filtraElementsBloquejats(filtraPublicacionsEsborrades(events.elements, 'events'), esElementBloquejat);
+    const marketItems = filtraElementsBloquejats(filtraPublicacionsEsborrades(mercat.elements, 'mercat'), esElementBloquejat);
     return {
       status,
       error,
@@ -272,13 +293,14 @@ export function MurProvider({ children, config }) {
       sortedEvents: sortPinnedContent(elsEvents),
       sortedMarketItems: sortPinnedContent(marketItems),
       sendSectionSubmission,
+      esborraPublicacio,
       refresh,
       carregaMes,
       hiHaMes,
       carregantMes,
       errorMes
     };
-  }, [status, error, errorRevalidacio, seccions, esElementBloquejat, sendSectionSubmission, refresh, carregaMes, hiHaMes, carregantMes, errorMes]);
+  }, [status, error, errorRevalidacio, seccions, esElementBloquejat, versioEsborrades, sendSectionSubmission, esborraPublicacio, refresh, carregaMes, hiHaMes, carregantMes, errorMes]);
 
   useRecarregaExterna(refresh);
 
@@ -289,6 +311,7 @@ export function useMur() {
   return useContext(MurContext) || {
     status: 'loading', feedPosts: [], events: [], marketItems: [], sortedFeedPosts: [], sortedEvents: [], sortedMarketItems: [],
     sendSectionSubmission: async () => { throw new Error('El Mur no està llest o no té dades disponibles.'); },
+    esborraPublicacio: async () => false,
     carregaMes: async () => false, hiHaMes: () => false, carregantMes: () => false, errorMes: () => null
   };
 }

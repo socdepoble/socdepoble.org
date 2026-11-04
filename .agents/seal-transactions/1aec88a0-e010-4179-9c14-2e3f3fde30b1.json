@@ -1,0 +1,42 @@
+{
+  "id": "1aec88a0-e010-4179-9c14-2e3f3fde30b1",
+  "session": "84dc40a6-e264-48cf-aff6-adde32fbd7c0",
+  "operationId": "FEDI23-15-18-19-final-docs-and-handover",
+  "claim": "84dc40a6-e264-48cf-aff6-adde32fbd7c0:governance-write",
+  "planHash": "c71a00b94b39d4e48c8fecd10c9138bbebb3ddb13b80f1dd781cb37f53af8eb9",
+  "beforeSeal": "5a0d407514947bd153da0ed57b4cd64fc1e97d58368b8c311d9961920cc6d20e",
+  "files": [
+    {
+      "path": "_wiki_de_poble/04_escriptori/261103_1604_auditoria_codex_gauntlet_fediversity.md",
+      "before": "197f344277b5280bd10b38307e989b4eedc081cac2b0a17fa05ead57725ff304",
+      "after": "ee9bffdc4c6d05f18f978d6b6f3ea20dd35b57e452b8daa7cffce610a3faec5f"
+    },
+    {
+      "path": "_wiki_de_poble/04_escriptori/261103_2350_pla_tancament_verificat_codex_fediversity.md",
+      "before": "7aace99beb37cb170287437d13458b96554c1f5daecb62adcee6749a27e96cf6",
+      "after": "41db3481f34bafeb7f06599c8d5b8afb7b244690d11c5ae1d29e1e739e695dac"
+    },
+    {
+      "path": ".agents/ESTAT.md",
+      "before": "3a10babb8c43aed2e6d15a1066e59c2318bc099318d9cdacb9c540a8d92e4acc",
+      "after": "ab54893284aa4b3d1a977693e02cad28b02693b9f498ea76b217d49502179866"
+    },
+    {
+      "path": ".agents/ON_ESTIC.md",
+      "before": "4c88240bf4a6710b2661099530d467180ad150fbd0d172a07f50cee942290526",
+      "after": "522499997d50b0845bc9f0d0f41fda72ba04ffb37b48f2b70e5df426636904d7"
+    },
+    {
+      "path": ".agents/LEDGER.md",
+      "before": "cfb57746787652e4784e1aba5d7c7d623bb9353f96716b26afc373e428c319f4",
+      "after": "a3a52d9235ad6e5b5e0aeb0d5285eba281beb3749f520fa49523ef3c3ff41d58"
+    },
+    {
+      "path": "_wiki_de_poble/04_escriptori/03_llibre_mestre_tasques_i_idees.md",
+      "before": "5714d707b663a86c50a08af66210040ea1c26d59d49e463c7b2dd3da1244ba83",
+      "after": "43a30140b8bce2d22ef7ccafc7e40020153dc1d47460af5db9754fd9ba9b1089"
+    }
+  ],
+  "state": "accepted",
+  "afterSeal": "5dba4ddc7b60e87f720d2433a0cd610b6f50be95ed7a62cba37db77c3fd23f27"
+}

@@ -10,7 +10,8 @@
      Retry-After (429/503) n'és el mínim; mai més d'un dia; 10 intents com a
      molt (unes 16 h). L'atzar s'injecta (proves deterministes).
    · Cada enviament: DNS després del filtre lèxic (una sola adreça no pública
-     veta; sense resoledor, no s'envia), signatura draft-cavage-12 (rsa-sha256)
+     veta; sense resoledor, no s'envia), signatura draft-cavage-12
+     (RSA/rsa-sha256 o Ed25519/hs2019)
      amb la clau de l'actor local, redirect 'manual' (un 3xx és fallada),
      topall de 10 s i el cos de la resposta cancel·lat sense llegir-lo.
    Cap secret ix d'ací: ni la clau ni el cos van al registre; el motiu d'una
@@ -76,7 +77,7 @@ export async function xarxaDe(host, { resolDns = null, senyal = undefined } = {}
   return respostes.some((r) => r.status === 'rejected') || adreces.length === 0 ? 'desconeguda' : 'publica';
 }
 
-/** La clau privada RSA d'un actor (PKCS#8 PEM, 2048–8192 bits) per a signar, o null. */
+/** La clau privada d'un actor (PKCS#8 PEM, RSA de 2048–8192 bits o Ed25519), o null. */
 export async function importaClauPrivada(pem, { subtle = globalThis.crypto?.subtle } = {}) {
   try {
     if (typeof pem !== 'string' || pem.length > 16384) return null;
@@ -84,9 +85,15 @@ export async function importaClauPrivada(pem, { subtle = globalThis.crypto?.subt
     if (!net.includes('-----BEGIN PRIVATE KEY-----') || !net.includes('-----END PRIVATE KEY-----')) return null;
     const cos = net.replace('-----BEGIN PRIVATE KEY-----', '').replace('-----END PRIVATE KEY-----', '').replace(/\s+/g, '');
     const der = Uint8Array.from(atob(cos), (c) => c.charCodeAt(0));
-    const clau = await subtle.importKey('pkcs8', der, { name: 'RSASSA-PKCS1-v1_5', hash: 'SHA-256' }, false, ['sign']);
-    const bits = clau.algorithm?.modulusLength;
-    return bits >= 2048 && bits <= 8192 ? clau : null;
+    try {
+      const clau = await subtle.importKey('pkcs8', der, { name: 'RSASSA-PKCS1-v1_5', hash: 'SHA-256' }, false, ['sign']);
+      const bits = clau.algorithm?.modulusLength;
+      return bits >= 2048 && bits <= 8192 ? clau : null;
+    } catch {
+      /* WebCrypto valida l'OID i l'estructura PKCS#8: una clau EC, X25519 o
+         malformada no es convertix en Ed25519. No s'exporta mai el secret. */
+      return await subtle.importKey('pkcs8', der, { name: 'Ed25519' }, false, ['sign']);
+    }
   } catch { return null; }
 }
 
@@ -138,7 +145,7 @@ function retryAfterDe(valor, ara) {
 }
 
 /**
- * Signa (signaPeticioHttpActivityPub, rsa-sha256) i envia UNA fila
+ * Signa (RSA/rsa-sha256 o Ed25519/hs2019) i envia UNA fila
  * {id, slug, inbox, activitat_id, cos, intents}. keyId =
  * `${urlsDeMunicipi(slug, {origen}).actor}#main-key`. `claus`: Map slug →
  * CryptoKey privada. El cos que es signa és JSON.stringify(fila.cos) i el

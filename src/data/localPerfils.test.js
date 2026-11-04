@@ -329,7 +329,8 @@ test('grup C · una organització membre: l’afig qui administra totes dues, ma
 const BIO_RENTONAR = 'Grup de treball de l’Associació ecologista El Rentonar.';
 
 test('Front 3 · la pilot continua sent la primera del padró i Rentonar, un grup fill seu, la segona', () => {
-  expect(ENTITATS_SEED.map((entitat) => entitat.id)).toEqual([ENTITAT_PILOT_ID, ENTITAT_RENTONAR_SLUG]);
+  expect(ENTITATS_SEED.slice(0, 2).map((entitat) => entitat.id)).toEqual([ENTITAT_PILOT_ID, ENTITAT_RENTONAR_SLUG]);
+  expect(entitatSeed('olidelatorre')).toMatchObject({ id: '3073b933-69fc-4c3e-80dc-b0df9c6b8391', name: 'Oli de La Torre' });
   expect(entitatSeed(ENTITAT_RENTONAR_SLUG)).toMatchObject({
     id: 'rentonar', slug: 'rentonar', kind: 'group', name: 'Rentonar', lema: 'Natura i Patrimoni',
     description: BIO_RENTONAR, parent_organization_id: ENTITAT_PILOT_ID, visibility: 'public',

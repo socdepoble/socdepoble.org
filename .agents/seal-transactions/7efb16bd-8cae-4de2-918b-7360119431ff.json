@@ -1,0 +1,62 @@
+{
+  "id": "7efb16bd-8cae-4de2-918b-7360119431ff",
+  "session": "968cf6c7-d7de-4b2f-a2ec-25cc217250a4",
+  "operationId": "ronda3-fedi18-restauracio-verificada",
+  "claim": "968cf6c7-d7de-4b2f-a2ec-25cc217250a4:governance-write",
+  "planHash": "04d33184332febf765b80e480681013988816f463420c94009bae906650b738f",
+  "beforeSeal": "af5b198bfe1d16dc6fb9f489f9c7bc6e34c4a9c3c55303dd10d1768ab79c56f5",
+  "files": [
+    {
+      "path": "src/data/exportaMunicipiOpenData.js",
+      "before": "7109a08318d92d95d3a2ff3ff2bd66edee8b843a4eeadfa0a5d854b8ee0ab9a1",
+      "after": "9c14fcd4babd95358d2bd1603bbc07acd656679059a699d017b3327b40d3d979"
+    },
+    {
+      "path": "src/sections/pobles/RestauradorOpenData.jsx",
+      "before": "1bf3e17227f37091b1b8f60ad0c0275838e081cfd69d9d9e8981042a9282d461",
+      "after": "6315f1b9db3904987fad7ed910d0ddcaab08f9f21809e2a6baaf6a4e8636477d"
+    },
+    {
+      "path": "src/sections/pobles/RestauradorOpenData.test.jsx",
+      "before": "1f6b96ba3e4c5a227254489ed1d9922f49dfd0b5abcce0241399bd9c50d2aeab",
+      "after": "dadc48c44d6ea25a5e114079cddf845505c15d6cc932ad7764b3e829d6ed1194"
+    },
+    {
+      "path": "src/config/idiomes/ca.js",
+      "before": "c89c6b01d8975107f89cd9e39c03993a6ca8458a789d7b0bc6d79ea15660920f",
+      "after": "9b5c66fe3ae140209723c2c95069281ec00e0dca262643cf82de0885bc758184"
+    },
+    {
+      "path": "src/config/idiomes/es.js",
+      "before": "2d06663c461ecd02f4199df3eb2d6351019351680efca112967b469f835fc883",
+      "after": "c69853671ecb283cf9bd1b40e07f3352a32d9c2537050fd7a9583631be15f538"
+    },
+    {
+      "path": "src/config/idiomes/en.js",
+      "before": "7df06fe98cf9c82b873f086ba4b2bb37fc704cee00e1076dc2cb410503dc1f28",
+      "after": "f0d248e22bb23566a7fa42fafeb00ff2aff439ccd6ff1a75afda890b2fd25eda"
+    },
+    {
+      "path": "src/config/idiomes/eu.js",
+      "before": "7b26ff1d91d020b9e6922f1b5562aace5dbfea32e04d749399fc7ed1773df20b",
+      "after": "ac29c8faf613ced9b7e296f12157ffa671bf5e8be4cbc7e3485ce1ff21428d94"
+    },
+    {
+      "path": "src/config/idiomes/gl.js",
+      "before": "b0fc6f6d3362191743f2cd8cb91c361d9a8f7da9428f4b69df325f285b758631",
+      "after": "48a34e08b3c621ef2745b20ea666e5c11c344c357fefb513bd6346f92ba7d498"
+    },
+    {
+      "path": "src/data/importaMunicipiOpenData.descriptor.test.js",
+      "before": null,
+      "after": "ac21725622799f62d2d616eddb17abbafa50df7fbdd1445e497c96af9aeaa4d6"
+    },
+    {
+      "path": "src/data/importaMunicipiOpenData.test.js",
+      "before": "a1a143fe9869739458e4c2e6f4e6f164a2ee29c8b42bd6da6fae98a3c852dd27",
+      "after": "38a30c992ba1233cb301abcec7cad4154c47706ae53ae5b9493cf724e8d002de"
+    }
+  ],
+  "state": "accepted",
+  "afterSeal": "8d057b5d8220f5cadefa19a60ba97674665b8a1bdbc23fb556b4a00941673e25"
+}

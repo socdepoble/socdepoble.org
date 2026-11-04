@@ -53,6 +53,10 @@ export const TEXTOS_CLOSCA = Object.freeze({
   enquadramentDescripcio: parellCloscaEditor('enquadrament.descripcio', 'Tria la forma, mou la foto i amplia-la fins que el que importa quede dins del marc. Només es guarda el que hi ha dins.'),
   editaCapcalera: parellCloscaEditor('edita.capcalera', 'Editar capçalera'),
   editaLogotip: parellCloscaEditor('edita.logotip', 'Editar logotip'),
+  editaLogotipFosc: parellCloscaEditor('edita.logotipFosc', 'Editar logotip de mode nit'),
+  ajudaLogotipFosc: parellCloscaEditor('ajuda.logotipFosc', 'Variant per al fons fosc. Sense esta imatge, es mostra el logotip de mode dia.'),
+  altLogotipFosc: parellCloscaEditor('alt.logotipFosc', 'Logotip de mode nit'),
+  llevaLogotipFosc: parellCloscaEditor('lleva.logotipFosc', 'Esborrar logotip de mode nit'),
   altCapcalera: parellCloscaEditor('alt.capcalera', 'Capçalera'),
   altLogotip: parellCloscaEditor('alt.logotip', 'Logotip'),
   opcionsCapcalera: parellCloscaEditor('opcions.capcalera', 'Opcions de la capçalera'),
@@ -138,7 +142,7 @@ function valorDelCamp(html) {
    Perfil: un rebuig del servidor (sense columna, validació) també es veu. */
 const PARELLS_CAMP = Object.freeze({
   title: TEXTOS_CLOSCA.campTitol, subtitle: TEXTOS_CLOSCA.campSubtitol, lead: TEXTOS_CLOSCA.campEntradilla, content: TEXTOS_CLOSCA.campCos,
-  heroImage: TEXTOS_CLOSCA.campCapcalera, logoImage: TEXTOS_CLOSCA.campAvatar, copyright: TEXTOS_CLOSCA.campDrets, icon: TEXTOS_CLOSCA.campEmoticona,
+  heroImage: TEXTOS_CLOSCA.campCapcalera, logoImage: TEXTOS_CLOSCA.campAvatar, logoImageDark: TEXTOS_CLOSCA.altLogotipFosc, copyright: TEXTOS_CLOSCA.campDrets, icon: TEXTOS_CLOSCA.campEmoticona,
 });
 const CAMPS_AMB_AVIS = Object.keys(PARELLS_CAMP);
 
@@ -173,6 +177,7 @@ const DESTINS_FOCUS = Object.freeze({
   /* Encàrrec d'harmonització (261018) · L'avatar redó del Perfil també viu dins
      del desplegable (.sdp-edicio-avancada__identitat). */
   logoImage: '.page-title-logo-personalitzat [role="button"], .page-title-logo-personalitzat button:not(:disabled), .page-title .page-title-avatar--canvia, .sdp-edicio-avancada__identitat .page-title-avatar--canvia, [data-sdp-ranura="logotip"] [role="button"], [data-sdp-ranura="logotip"] button:not(:disabled)',
+  logoImageDark: '[data-sdp-ranura="logotip-fosc"] button:not(:disabled), [data-sdp-ranura="logotip-fosc"] [role="button"]',
   copyright: '[data-sdp-drets]',
   icon: '.bar-orange > button.sdp-emoticona-barra--boto, .sdp-edicio-avancada .sdp-classificacio-botonera > button:last-child',
 });
@@ -311,6 +316,7 @@ export function UniversalEditorShell({
   onLocalChange,
   heroImage,
   logoImage,
+  logoImageDark,
   topBar,
   /* D13 · On va la barra d'eines. 'dalt' (per defecte): la fila d'eines
      damunt del document, com sempre. 'davall-entradilla': dins de l'article,
@@ -333,6 +339,7 @@ export function UniversalEditorShell({
   barAuthorHref = null,
   showStatusToggle = true,
   showLogoUpload = true,
+  showDarkLogoUpload = false,
   /* T35 · Punt d'extensió genèric: amb `onHeroEdit`, el botó de la capçalera
      crida el pare ({ acaba }) en lloc d'obrir el selector de fitxers. Només
      el Perfil el passa (PerfilEditor); la resta de seccions no canvien.
@@ -593,11 +600,13 @@ export function UniversalEditorShell({
     onImageUpload,
     heroImage,
     logoImage,
+    logoImageDark,
     isPublished,
     formattedTime,
     formattedDate,
     showStatusToggle,
     showLogoUpload,
+    showDarkLogoUpload,
     heroEditLabel,
     heroEditHelp,
     onHeroEdit,
@@ -848,12 +857,13 @@ function ImageUploaderUI({
   image, handler, resolvedImage, isLogo,
   editLabel, editHelp, imgRef, potEnquadrar,
   triaFitxer, pujant = false, fontExistent, obriEnquadrament, onEdit,
-  ajudaAmbImatge = null, ajudaNomesEnPujada = false, botoRef = null
+  ajudaAmbImatge = null, ajudaNomesEnPujada = false, botoRef = null,
+  imageLabel = null, deleteLabel = null
 }) {
   const idBase = useId();
   // P1-22 · Els textos de la ranura, en la llengua de la interfície.
   const t = useTraductorOpcional();
-  const altText = tradueix(t, isLogo ? TEXTOS_CLOSCA.altLogotip : TEXTOS_CLOSCA.altCapcalera);
+  const altText = imageLabel ?? tradueix(t, isLogo ? TEXTOS_CLOSCA.altLogotip : TEXTOS_CLOSCA.altCapcalera);
   const nomDeLaImatge = onEdit ? tradueix(t, isLogo ? TEXTOS_CLOSCA.opcionsLogotip : TEXTOS_CLOSCA.opcionsCapcalera) : undefined;
   const cssImgClass = isLogo ? "sdp-logo-personalitzat sdp-logo-personalitzat--editable" : "sdp-hero__imatge";
   const titleText = tradueix(t, isLogo ? TEXTOS_CLOSCA.clicaLogotip : TEXTOS_CLOSCA.clicaImatge);
@@ -923,7 +933,7 @@ function ImageUploaderUI({
           ) : null}
           <button type="button" className="sdp-boto sdp-boto--fantasma" onClick={handler.cancelEdit}>{tradueix(t, TEXTOS_CLOSCA.botoEnrere)}</button>
           {/* Esborrar mentre puja: la foto que arribara després la tornaria a posar. */}
-          <button type="button" className="sdp-boto sdp-boto--perill" disabled={pujant} onClick={handler.handleDelete}>{tradueix(t, TEXTOS_CLOSCA.botoEsborra)}</button>
+          <button type="button" className="sdp-boto sdp-boto--perill" aria-label={deleteLabel || undefined} disabled={pujant} onClick={handler.handleDelete}>{tradueix(t, TEXTOS_CLOSCA.botoEsborra)}</button>
         </div>
       )}
     </div>
@@ -961,11 +971,13 @@ function useEditorShell({
   onImageUpload = null,
   heroImage,
   logoImage,
+  logoImageDark,
   isPublished,
   formattedTime,
   formattedDate,
   showStatusToggle = true,
   showLogoUpload = true,
+  showDarkLogoUpload = false,
   heroEditLabel = null,
   heroEditHelp = null,
   onHeroEdit = null,
@@ -1020,6 +1032,16 @@ function useEditorShell({
       return true;
     }
   });
+  const logoDarkHandler = useHeroImageHandler({
+    onSaveField,
+    fieldName: 'logoImageDark',
+    onImageUpload,
+    onError: (msg) => onToast(msg, 'error'),
+    onConfirmDelete: () => {
+      onToast(tradueix(t, TEXTOS_CLOSCA.avisLogotipEsborrat), 'success');
+      return true;
+    }
+  });
 
   /* T5 · La URL resolta arriba en un efecte: el primer render pinta la
      reserva, i el navegador ja la demana. Un '/assets/…' hi passa per la base
@@ -1027,6 +1049,7 @@ function useEditorShell({
      domini. Sense base, la reserva de sempre. */
   const resolvedHeroImage = useResolvedAsset(heroImage);
   const resolvedLogoImage = useResolvedAsset(logoImage);
+  const resolvedLogoImageDark = useResolvedAsset(logoImageDark);
 
   /* T46 (ordre del Mestre, 260928) · Re-enquadrament de la capçalera (la
      mateixa heroImage que pinten ItemMedia i la targeta del Mur). Una foto
@@ -1133,7 +1156,12 @@ function useEditorShell({
   const srcLogoDeLectura = logoImage
     ? (resolvedLogoImage || (logoImage.startsWith('sdp-media://') ? '' : logoImage))
     : '';
-  const logoDeLectura = srcLogoDeLectura ? { clar: srcLogoDeLectura, alt: tradueix(t, TEXTOS_CLOSCA.altLogotip) } : null;
+  const srcLogoFoscDeLectura = logoImageDark
+    ? (resolvedLogoImageDark || (logoImageDark.startsWith('sdp-media://') ? '' : logoImageDark))
+    : '';
+  const logoDeLectura = srcLogoDeLectura
+    ? { clar: srcLogoDeLectura, ...(srcLogoFoscDeLectura ? { fosc: srcLogoFoscDeLectura } : {}), alt: tradueix(t, TEXTOS_CLOSCA.altLogotip) }
+    : null;
   /* P1-22 · Les ajudes de les formes i la descripció del diàleg, en la llengua
      de la interfície. Sense traductor, FORMATS_CAPCALERA de sempre (la mateixa
      identitat); amb, una llista nova només quan canvia el traductor. */
@@ -1153,12 +1181,18 @@ function useEditorShell({
          capçalera: cada control només es bloqueja mentre puja la seua imatge.
          Línia I1 (pla 261008_1201) · `logoPujant` hi suma la pujada del
          consumidor, i `logoEditHelp` en dona l'ajuda (la de sempre per defecte). */
-      logoComponent: showLogoUpload ? <ImageUploaderUI
+      logoComponent: showLogoUpload ? <><ImageUploaderUI
         image={logoImage} handler={logoHandler} resolvedImage={resolvedLogoImage}
         isLogo={true} editLabel={etiquetaLogotip} editHelp={ajudaLogotip}
         pujant={logoHandler.isUploading || Boolean(logoPujant)} onEdit={onLogoEdit}
         ajudaAmbImatge={ajudaAmbImatge} ajudaNomesEnPujada={ajudaNomesEnPujada} botoRef={logoBotoRef}
-      /> : null,
+      />{showDarkLogoUpload ? <div data-sdp-ranura="logotip-fosc">
+        <ImageUploaderUI image={logoImageDark} handler={logoDarkHandler} resolvedImage={resolvedLogoImageDark}
+          isLogo={true} editLabel={tradueix(t, TEXTOS_CLOSCA.editaLogotipFosc)}
+          editHelp={tradueix(t, TEXTOS_CLOSCA.ajudaLogotipFosc)}
+          imageLabel={tradueix(t, TEXTOS_CLOSCA.altLogotipFosc)} deleteLabel={tradueix(t, TEXTOS_CLOSCA.llevaLogotipFosc)}
+          pujant={logoDarkHandler.isUploading} />
+      </div> : null}</> : null,
       heroComponent: <ImageUploaderUI
         image={heroImage} handler={heroHandler} resolvedImage={resolvedHeroImage}
         isLogo={false} editLabel={etiquetaCapcalera} editHelp={ajudaCapcalera} imgRef={heroImgRef}

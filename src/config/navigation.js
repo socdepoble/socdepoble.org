@@ -338,6 +338,17 @@ const text = (valor) => (valor == null ? '' : String(valor));
    registrat. Només hi és quan és cert: la resta de descriptors no canvien.
    Pedra Seca ho llig sense importar la llavor. */
 const marcaDelProjecte = (identitat) => (esAutorDelProjecte(identitat) ? { projecte: true } : null);
+const MARQUES_DE_PERSONA = ['ownerUserId', 'owner_user_id', 'author_user_id'];
+const marcaDeVisibilitat = (item) => {
+  if (!item || typeof item !== 'object') return null;
+  if (Object.hasOwn(item, 'visibility') && item.visibility !== 'public') {
+    return { visibility: String(item.visibility || 'members') };
+  }
+  if (MARQUES_DE_PERSONA.some((clau) => Object.hasOwn(item, clau))) {
+    return { visibility: 'members' };
+  }
+  return null;
+};
 
 /** Descriptor d'un element d'una secció. Una secció desconeguda és una 'pagina'. */
 export function objecteDe(item, seccio) {
@@ -352,7 +363,8 @@ export function objecteDe(item, seccio) {
     titol: text(item.title || item.name),
     seccio: seccio ? String(seccio) : '',
     ruta: esRutaInterna(ruta) ? ruta : '',
-    autor: autor || nom ? { tipus: autor?.tipus || '', id: autor?.id || '', nom, ...marcaDelProjecte(autor) } : null
+    autor: autor || nom ? { tipus: autor?.tipus || '', id: autor?.id || '', nom, ...marcaDelProjecte(autor) } : null,
+    ...marcaDeVisibilitat(item)
   };
 }
 

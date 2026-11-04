@@ -32,15 +32,35 @@
  *     motiu d'un error del contracte es diu en la llengua de qui mira
  *     (TEXTOS_ERROR_SEGUIMENT). R4-01: tornar-se a connectar no avisa
  *     ('represa'), i es diu.
+ *   · FEDI-22 (ordre del Mestre, 261103; captura 261103_2055) · `principal`:
+ *     el bloc és la targeta de la connexió directa d'un perfil, i el botó que
+ *     diu botoPrincipalDeLaRelacio és el primari gran de la vista (un per
+ *     vista): «Connectar amb {nom}» abans, «Escriu-li a {nom}» després, i
+ *     «Entra per a connectar-hi» sense sessió (C3). La resta, secundaris, i
+ *     «Deixar» fantasma, al final. Sense `principal` (un element, la
+ *     titular), tot secundari com sempre. Amb el barret d'una entitat el botó
+ *     diu qui es connecta («Connectar {entitat} amb {nom}»). L'avís continua
+ *     ABANS del botó (Directiva 261024), i aria-describedby només apunta a
+ *     les línies d'avís pintades (C9). L'ajuda de la relació baixa davall de
+ *     l'estat.
+ *   · Revisió 261104 · RA-03: amb `principal`, l'h3 «Connectar amb {nom}» no
+ *     es pinta (.sdp-sr-only: el grup ja té el rètol de la targeta i el botó
+ *     diu el mateix), però continua sent el títol del cos. C17 sense títol
+ *     visible: quan l'acció va bé, el focus va al resultat (role=status, amb
+ *     tabIndex -1); sense `principal`, a l'h3 com sempre. C-02: quan falla,
+ *     el focus va a l'avís d'error (abans queia al <body>: el botó premut es
+ *     desactiva mentre treballa).
  * Tots els textos passen per t() (CA-6): section.connectar.*.
  */
-import { useId, useRef } from 'react';
-import { UserPlus } from 'lucide-react';
+import { useEffect, useId, useRef, useState } from 'react';
+import { MessageCircle, UserPlus } from 'lucide-react';
 import { useUIActions } from '../../app/contexts/UIContext';
 import { Alerta, Boto, Carregant } from '../../components/PedraSeca/index.js';
 import { useComentaEnPrivat } from '../../components/PedraSeca/hooks/useAccions.js';
 import { omple } from '../../config/moderacio.js';
 import { TEXTOS_ERROR_SEGUIMENT, useSeguiment } from './useSeguiment.js';
+import { botoPrincipalDeLaRelacio } from './modeDeConnectar.js';
+import { VisibilitatDeLaConnexio } from './VisibilitatDeLaConnexio.jsx';
 
 /* IDEA-22 (pla 261025_0045, T5; Directiva del Mestre 261025) · `com` i
    `nomCom`: l'entitat que la persona administra i amb la qual es connecta
@@ -57,7 +77,7 @@ import { TEXTOS_ERROR_SEGUIMENT, useSeguiment } from './useSeguiment.js';
    C0200-06 · Un contacte que és de qui mira (`propia`) no té xat: mai un
    directe amb tu mateixa. I sense `com` no es connecta: persona → ella
    mateixa o → una entitat que administra no val (SDP-SEG-003). */
-export function BlocRelacio({ contacte = null, deFitxa = false, calEntrar = false, onEntra, dataMode = 'remote', config = {}, com = null, nomCom = '', nomPersona = '' }) {
+export function BlocRelacio({ contacte = null, deFitxa = false, calEntrar = false, onEntra, dataMode = 'remote', config = {}, com = null, nomCom = '', nomPersona = '', principal = false }) {
   const id = useId();
   const { t } = useUIActions();
   const obriXat = useComentaEnPrivat(contacte?.interlocutor ?? null);
@@ -69,7 +89,22 @@ export function BlocRelacio({ contacte = null, deFitxa = false, calEntrar = fals
     missatgeAvis: t('section.connectar.seguir.missatge', 'Connexió nova: m’he connectat amb tu a Sóc de Poble.')
   });
   const titolRef = useRef(null);
-  const enfocaTitol = () => { if (titolRef.current?.isConnected) titolRef.current.focus(); };
+  const resultatRef = useRef(null);
+  const errorRef = useRef(null);
+  /* C17 i C-02 · On va el focus després d'una acció ('titol', 'resultat' o
+     'error'): s'enfoca després de pintar, quan el resultat o l'error ja hi són.
+     Si el destí no s'ha pintat (una clau que ha canviat), el títol. */
+  const [focusA, setFocusA] = useState(null);
+  useEffect(() => {
+    if (!focusA) return;
+    const desti = { resultat: resultatRef, error: errorRef }[focusA]?.current;
+    const objectiu = desti?.isConnected ? desti : titolRef.current;
+    if (objectiu?.isConnected) objectiu.focus();
+    setFocusA(null);
+  }, [focusA]);
+  /* FEDI-22 · Quin botó és el primari gran (només amb `principal`): 'entra', 'connecta', 'escriu' o cap. */
+  const primari = principal ? botoPrincipalDeLaRelacio({ teContacte: Boolean(contacte), estat: seguiment.estat, propi }) : null;
+  const varietatDe = (boto) => (primari === boto ? { varietat: 'primari', mida: 'gran' } : { varietat: 'secundari' });
 
   if (!contacte) {
     return (
@@ -80,7 +115,7 @@ export function BlocRelacio({ contacte = null, deFitxa = false, calEntrar = fals
         <p className="sdp-connectar__ajuda">
           {t('section.connectar.persona.ajudaSenseNom', 'Entra amb el teu compte per a vore qui és, connectar-t’hi o escriure-li.')}
         </p>
-        <Boto varietat="secundari" onClick={() => onEntra?.()}>
+        <Boto {...varietatDe('entra')} onClick={() => onEntra?.()}>
           {t('section.connectar.persona.entraSenseNom', 'Entra per a connectar-hi')}
         </Boto>
       </section>
@@ -94,8 +129,9 @@ export function BlocRelacio({ contacte = null, deFitxa = false, calEntrar = fals
     ? ambNom('section.connectar.persona.titol', 'Connectar amb {nom}')
     : t('section.connectar.autor.titol', 'Connectar amb l’autor');
 
-  const segueix = async () => { if (await seguiment.segueix()) enfocaTitol(); };
-  const deixa = async () => { if (await seguiment.deixa()) enfocaTitol(); };
+  const despresDe = (fet) => setFocusA(fet ? (principal ? 'resultat' : 'titol') : 'error');
+  const segueix = async () => despresDe(await seguiment.segueix());
+  const deixa = async () => despresDe(await seguiment.deixa());
 
   /* R3-11 · En llavor i en local el xat és d'este dispositiu: ningú no rep res. */
   const remot = dataMode === 'remote';
@@ -135,20 +171,24 @@ export function BlocRelacio({ contacte = null, deFitxa = false, calEntrar = fals
       );
       break;
     case 'sense-sessio':
-      seguir = <p className="sdp-connectar__ajuda">{ambNom('section.connectar.seguir.senseSessio', 'Per a connectar amb {nom} has d’entrar amb el teu compte.')}</p>;
+      seguir = (
+        <>
+          <p className="sdp-connectar__ajuda">{ambNom('section.connectar.seguir.senseSessio', 'Per a connectar amb {nom} has d’entrar amb el teu compte.')}</p>
+          {/* FEDI-22 (C3) · A la targeta principal, el primari és entrar per a CONNECTAR, no per a escriure. */}
+          {primari === 'entra' ? (
+            <Boto {...varietatDe('entra')} onClick={() => onEntra?.()}>
+              {t('section.connectar.persona.entraSenseNom', 'Entra per a connectar-hi')}
+            </Boto>
+          ) : null}
+        </>
+      );
       break;
     case 'comprovant':
       seguir = <Carregant etiqueta={ambNom('section.connectar.seguir.comprovant', 'Comprovant la connexió amb {nom}…')} />;
       break;
     case 'segueix':
-      seguir = (
-        <>
-          {resultat ? null : <p>{ambNom('section.connectar.seguir.jaSegueixes', 'Connectat amb {nom}.')}</p>}
-          <Boto varietat="fantasma" onClick={deixa} carregant={seguiment.ocupat === 'deixa'}>
-            {ambNom('section.connectar.seguir.deixa', 'Deixar la connexió amb {nom}')}
-          </Boto>
-        </>
-      );
+      /* FEDI-22 · «Deixar la connexió» baixa al final del bloc (davall d'«Escriu-li»). */
+      seguir = resultat ? null : <p>{ambNom('section.connectar.seguir.jaSegueixes', 'Connectat amb {nom}.')}</p>;
       break;
     case 'no-segueix':
       seguir = (
@@ -159,7 +199,7 @@ export function BlocRelacio({ contacte = null, deFitxa = false, calEntrar = fals
           {/* Directiva del Mestre (261024) · l'avís a l'altra banda es diu ABANS del clic. */}
           {/* IDEA-22 · Com a entitat, cap missatge al xat: ho diu la línia de l'entitat (davall) o esta. */}
           {ambEntitat && seguitEntitat ? null : (
-            <p className="sdp-connectar__ajuda">{ambEntitat
+            <p id={`${id}-avis`} className="sdp-connectar__ajuda">{ambEntitat
               ? omple(t('section.connectar.seguir.avisCom', 'Com a {entitat}, no li enviarem cap missatge al xat: {nom} ho veurà a la llista del veïnat connectat.'), { nom, entitat: nomCom })
               : remot
                 ? ambNom('section.connectar.seguir.avis', '{nom} rebrà un missatge al xat per a dir-li que t’hi has connectat.')
@@ -168,15 +208,20 @@ export function BlocRelacio({ contacte = null, deFitxa = false, calEntrar = fals
           {/* Integració 261024 (T6b · qui_em_segueix amb orgId) · qui administra
               l'entitat veu el nom del veïnat connectat: es diu abans del clic. */}
           {seguitEntitat ? (
-            <p className="sdp-connectar__ajuda">
+            <p id={`${id}-avis-entitat`} className="sdp-connectar__ajuda">
               {/* IDEA-22 (T5) · connectant com a entitat, a la llista hi ix l'entitat, no la persona. */}
               {ambEntitat
                 ? omple(t('section.connectar.seguir.avisEntitatCom', 'Les persones que administren {nom} voran {entitat} a la llista del veïnat connectat amb l’entitat, sense cap missatge al xat.'), { nom, entitat: nomCom })
                 : ambNom('section.connectar.seguir.avisEntitat', 'Les persones que administren {nom} voran el teu nom a la llista del veïnat connectat amb l’entitat.')}
             </p>
           ) : null}
-          <Boto varietat="secundari" icona={UserPlus} onClick={segueix} carregant={seguiment.ocupat === 'segueix'}>
-            {ambNom('section.connectar.seguir.boto', 'Connectar amb {nom}')}
+          {/* FEDI-22 (C9) · El botó es descriu amb les línies d'avís que s'han pintat, i cap més. Amb el barret
+              d'una entitat, el nom diu qui es connecta. */}
+          <Boto {...varietatDe('connecta')} icona={UserPlus} onClick={segueix} carregant={seguiment.ocupat === 'segueix'}
+            aria-describedby={[!(ambEntitat && seguitEntitat) && `${id}-avis`, seguitEntitat && `${id}-avis-entitat`].filter(Boolean).join(' ') || undefined}>
+            {ambEntitat
+              ? omple(t('section.connectar.seguir.botoCom', 'Connectar {entitat} amb {nom}'), { nom, entitat: nomCom })
+              : ambNom('section.connectar.seguir.boto', 'Connectar amb {nom}')}
           </Boto>
         </>
       );
@@ -188,17 +233,20 @@ export function BlocRelacio({ contacte = null, deFitxa = false, calEntrar = fals
 
   return (
     <section className="sdp-connectar__seccio" aria-labelledby={`${id}-relacio`}>
-      <h3 ref={titolRef} tabIndex={-1} id={`${id}-relacio`} className="sdp-connectar__titol-seccio">{titol}</h3>
+      {/* RA-03 · Amb `principal`, el títol només per al lector de pantalla. */}
+      <h3 ref={titolRef} tabIndex={-1} id={`${id}-relacio`} className={principal ? 'sdp-sr-only' : 'sdp-connectar__titol-seccio'}>{titol}</h3>
+      {seguir}
+      {resultat ? <p ref={resultatRef} tabIndex={-1} role="status">{resultat}</p> : null}
+      {/* El motiu del contracte per a un codi conegut (SDP-SEG-*: el bloqueig, el
+          poble, el límit…); si no n'hi ha, el text de sempre. Mai el del servidor.
+          C-02 · Enfocable (tabIndex -1): hi va el focus quan l'acció falla. */}
+      {textError ? <div ref={errorRef} tabIndex={-1} className="sdp-connectar__error"><Alerta to="error">{textError}</Alerta></div> : null}
+      {/* FEDI-22 · L'ajuda de la relació, davall de l'estat i del botó de connectar. */}
       <p className="sdp-connectar__ajuda">
         {ambEntitat
           ? omple(t('section.connectar.relacio.ajudaEntitat', 'Una relació directa entre {entitat} i {nom}, sense algoritmes ni intermediaris. No fa ningú membre de res.'), { nom, entitat: nomCom })
           : ambNom('section.connectar.relacio.ajuda', 'Una relació directa entre tu i {nom}, sense algoritmes ni intermediaris. No et fa membre de res.')}
       </p>
-      {seguir}
-      {resultat ? <p role="status">{resultat}</p> : null}
-      {/* El motiu del contracte per a un codi conegut (SDP-SEG-*: el bloqueig, el
-          poble, el límit…); si no n'hi ha, el text de sempre. Mai el del servidor. */}
-      {textError ? <Alerta to="error">{textError}</Alerta> : null}
       {/* Gauntlet 261022_0225 · CA-4: en remot, obrir el xat ja crea la
           conversa, i l'autor la veu a la seua llista abans de cap missatge;
           en llavor (CN-R4) la conversa és d'este dispositiu i l'autor no la
@@ -214,7 +262,7 @@ export function BlocRelacio({ contacte = null, deFitxa = false, calEntrar = fals
           {xatComPersona && remot ? (
             <p>{omple(t('section.connectar.autor.textCom', 'El xat és personal: {nom} veurà que li escriu {persona}, no {entitat}, que ací no té xat propi.'), { nom, persona: nomPersona, entitat: nomCom })}</p>
           ) : null}
-          <Boto varietat="secundari" onClick={() => (calEntrar ? onEntra?.() : obriXat())}>
+          <Boto {...varietatDe('escriu')} icona={MessageCircle} onClick={() => (calEntrar ? onEntra?.() : obriXat())}>
             {calEntrar
               ? ambNom('section.connectar.autor.entra', 'Entra per a escriure-li a {nom}')
               : xatComPersona
@@ -223,6 +271,15 @@ export function BlocRelacio({ contacte = null, deFitxa = false, calEntrar = fals
           </Boto>
         </>
       )}
+      {/* FEDI-23 (ordre del Mestre, 261103) · Connectat: si esta connexió es mostra a la fitxa pública. */}
+      {seguiment.estat === 'segueix' && !propi ? (
+        <VisibilitatDeLaConnexio com={ambEntitat ? com : null} nomCom={nomCom} connexio={contacte.seguiment} nom={nom} config={config} />
+      ) : null}
+      {seguiment.estat === 'segueix' ? (
+        <Boto varietat="fantasma" onClick={deixa} carregant={seguiment.ocupat === 'deixa'}>
+          {ambNom('section.connectar.seguir.deixa', 'Deixar la connexió amb {nom}')}
+        </Boto>
+      ) : null}
     </section>
   );
 }

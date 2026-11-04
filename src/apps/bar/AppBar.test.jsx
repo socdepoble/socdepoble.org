@@ -75,6 +75,7 @@ const ves = (url) => act(async () => {
 });
 const ambAmplada = (amplada) => vi.spyOn(HTMLElement.prototype, 'clientWidth', 'get').mockReturnValue(amplada);
 const producte = (nom) => columna('app-grid-main').getByRole('button', { name: new RegExp(`^${nom} `) });
+const esperaProductes = (nom) => screen.findByRole('button', { name: new RegExp(`^${nom} `) });
 const tecleja = (teclat, xifres) => {
   for (const xifra of xifres) fireEvent.click(within(teclat).getByRole('button', { name: xifra }));
 };
@@ -113,7 +114,7 @@ describe('la comanda ràpida (§A.6, flux 1)', () => {
   test('«dos cafès i una torrada»: tocar, el diàleg menut del pa, cobrar exacte i la nota al client', async () => {
     const magatzem = await magatzemDeProva();
     munta('/app/bar/caixa', magatzem);
-    await screen.findByRole('region', { name: 'Productes' });
+    await esperaProductes('Cafè sol');
     fireEvent.click(producte('Cafè sol'));
     await waitFor(() => expect(columna('app-grid-list').getByText('Cafè sol')).toBeTruthy());
     fireEvent.click(producte('Cafè sol'));
@@ -146,7 +147,7 @@ describe('la comanda ràpida (§A.6, flux 1)', () => {
   test('tres tocs seguits, sense esperar, fan una sola comanda (la cua d’operacions)', async () => {
     const magatzem = await magatzemDeProva();
     munta('/app/bar/caixa', magatzem);
-    await screen.findByRole('region', { name: 'Productes' });
+    await esperaProductes('Tallat');
     fireEvent.click(producte('Tallat'));
     fireEvent.click(producte('Tallat'));
     fireEvent.click(producte('Infusió'));
@@ -159,7 +160,7 @@ describe('la comanda ràpida (§A.6, flux 1)', () => {
   test('una línia marxada no es lleva: s’obri l’editor per a anul·lar-la amb motiu', async () => {
     const magatzem = await magatzemDeProva();
     munta('/app/bar/caixa', magatzem);
-    await screen.findByRole('region', { name: 'Productes' });
+    await esperaProductes('Olives');
     fireEvent.click(producte('Olives'));
     await waitFor(() => expect(columna('app-grid-list').getByText('Olives')).toBeTruthy());
     fireEvent.click(columna('app-grid-list').getByRole('button', { name: 'Marxa' }));
@@ -975,5 +976,31 @@ describe('l’avís de la sessió dins del marc de cada columna (correcció F3)'
     await waitFor(() => expect(columna('app-grid-list').getByText(PROVES)).toBeTruthy());
     comprovaMarcs('/app/bar/caixa/colleccio');
     expect(avisos().map((alerta) => alerta.closest('.app-grid-column').id).sort()).toEqual(['app-grid-list', 'app-grid-main', 'app-grid-sidebar']);
+  });
+});
+
+/* La regió Productes també existix mentre el proveïdor llig el magatzem.
+   Una barrera controlada reproduïx el disc pendent sense cap pausa artificial. */
+describe('el catàleg encara no està preparat quan només existix la regió', () => {
+  test.each(['Cafè sol', 'Tallat', 'Olives'])('espera el botó real abans de tocar %s', async (nom) => {
+    const magatzem = await magatzemDeProva();
+    const dades = await magatzem.carrega();
+    let allibera;
+    const carregaPendent = new Promise((resolve) => { allibera = resolve; });
+    vi.spyOn(magatzem, 'carrega').mockReturnValue(carregaPendent);
+    munta('/app/bar/caixa', magatzem);
+    await screen.findByRole('region', { name: 'Productes' });
+    const resultat = (async () => {
+      await esperaProductes(nom);
+      fireEvent.click(producte(nom));
+    })().then(() => null, (error) => error);
+    await screen.findAllByText('Carregant el bar…');
+    await act(async () => { allibera(dades); });
+    expect(await resultat).toBeNull();
+    await waitFor(async () => {
+      const comandes = await magatzem.base.totes('comandes');
+      expect(comandes).toHaveLength(1);
+      expect(comandes[0].linies.map((linia) => [linia.nomCongelat, linia.quantitat])).toEqual([[nom, 1]]);
+    });
   });
 });

@@ -64,14 +64,19 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { XatContext } from '../XatContext.jsx';
 import { agrupaComunitats, aplicaMarcaLocal, sumaNoLlegits } from '../missatges.js';
-import { useUIActions } from '../../../app/contexts/UIContext.jsx';
+import { useUIActions, useUIState } from '../../../app/contexts/UIContext.jsx';
+import { useNavigate, useParams } from '../../../app/contexts/RouterContext.jsx';
 import { useCoreContent } from '../../../app/contexts/CoreContentContext';
 import {
-  AJUDA, AJUDA_PER_CLAU, ID_FIL_DE_MOSTRA_DE_JAVI, esLaPersonaDeContacte, filDeMostraDeJavi, missatgesDeMostraDeJavi
+  AJUDA, AJUDA_PER_CLAU, ID_FIL_DE_MOSTRA_DE_JAVI, esLaPersonaDeContacte, filDeMostraDeJavi, missatgesDeMostraDeJavi,
+  entitatDeMostraDe, filDeMostraDEntitat
 } from '../../../data/xatsPerDefecte.js';
 import usePobleAmfitrio from '../usePobleAmfitrio.js';
 import { avatarDelPoble, nomDelPoble, objecteDelPoble, pobleDelXat } from '../pobleAmfitrio.js';
-import { BENVINGUDA_IAIA, ENTITAT_PILOT_ID, IAIA_ID, RESPOSTA_IAIA } from '../../../data/identitatsSeed.js';
+import { BENVINGUDA_IAIA, ENTITAT_PILOT_ID, ENTITAT_PILOT_SLUG, IAIA_ID, RESPOSTA_IAIA, esIAIA } from '../../../data/identitatsSeed.js';
+import { loadPerfilPublic, teCapacitat } from '../../../data/backendPort.js';
+import { backendScope, normalizeBackendConfig } from '../../../config/backendConfig.js';
+import { esEntitatDelProjecte } from '../../../config/navigation.js';
 import { respostaDeLaIAIA } from '../../../data/iaiaLocal.js';
 import { RUTA_DE_SOC_DE_POBLE } from '../actorsDelXat.js';
 
@@ -86,6 +91,12 @@ const SOC_DE_POBLE = AJUDA_PER_CLAU.socdepoble;
    mateix de la llavor (xatSeed.js), un nom propi que no es traduïx. */
 const ID_COMUNITAT_SDP = 'fake-sdp';
 const NOM_BETA_TESTERS = 'Beta Testers';
+const MODES_LOCALS = new Set(['seed', 'local']);
+
+// El component també es munta sol al catàleg i en proves sense router.
+function useNavegaOpcional() {
+  try { return useNavigate(); } catch { return null; }
+}
 
 function filsDeSocDePoble(t, ara) {
   const subjecte = { tipus: 'entitat', id: ENTITAT_PILOT_ID, ruta: RUTA_DE_SOC_DE_POBLE, titol: SOC_DE_POBLE.nom };
@@ -120,10 +131,24 @@ function filsDelPoble(poble, t, ara, avatar, nom) {
   ];
 }
 
-export default function FakeChatOnboarding({ originalContext, children, respostaIAIA = respostaDeLaIAIA }) {
+export default function FakeChatOnboarding(props) {
+  const { externalConfig } = useUIState();
+  /* Una altra font de dades és una mostra nova: ni fils, ni textos locals
+     ni respostes pendents de l'amfitrió anterior passen al següent. */
+  return <MostraDelXat key={backendScope(externalConfig || {})} {...props} />;
+}
+
+function MostraDelXat({ originalContext, children, respostaIAIA = respostaDeLaIAIA }) {
   const { t } = useUIActions();
+  const { externalConfig } = useUIState();
+  const navigate = useNavegaOpcional();
+  const avisLectura = t('section.xat.fake.iaia2', "Si t'agrada el que veus, registra't per a entrar al xat de veritat!");
+  const { threadId } = useParams();
+  const destinatariDeRuta = typeof threadId === 'string' && threadId.startsWith('fake-entitat:')
+    ? threadId.slice('fake-entitat:'.length) : '';
   const poble = pobleDelXat(usePobleAmfitrio());
   const { towns } = useCoreContent();
+  const local = MODES_LOCALS.has(normalizeBackendConfig(externalConfig || {}).dataMode);
   const avatarPoble = useMemo(() => avatarDelPoble(poble, towns), [poble, towns]);
   const [ara] = useState(() => new Date().toISOString());
   const [messages, setMessages] = useState(() => ({
@@ -147,15 +172,19 @@ export default function FakeChatOnboarding({ originalContext, children, resposta
      si encara es pot pintar (en l'efecte, resistent a StrictMode), i la cua
      manté l'ordre de les respostes com el de les preguntes. */
   const temporitzadors = useRef(new Set());
+  const consultes = useRef(new Set());
   const muntatRef = useRef(false);
   const cuaIAIA = useRef(Promise.resolve());
   useEffect(() => {
     muntatRef.current = true;
     const pendents = temporitzadors.current;
+    const lectures = consultes.current;
     return () => {
       muntatRef.current = false;
       pendents.forEach(clearTimeout);
       pendents.clear();
+      lectures.forEach((controller) => controller.abort());
+      lectures.clear();
     };
   }, []);
 
@@ -195,9 +224,10 @@ export default function FakeChatOnboarding({ originalContext, children, resposta
      «Marcar com a llegides» (marcaLlegides) fa la mateixa marca per a la
      selecció i torna quantes, com el de veres. */
   const [llegitsMostra, setLlegitsMostra] = useState(() => ({}));
+  const [directesDEntitats, setDirectesDEntitats] = useState(() => ({}));
   const fakeThreads = useMemo(
-    () => filsDeMostra.map((f) => (llegitsMostra[f.id] ? aplicaMarcaLocal(f, llegitsMostra[f.id]) : f)),
-    [filsDeMostra, llegitsMostra]
+    () => [...filsDeMostra, ...Object.values(directesDEntitats)].map((f) => (llegitsMostra[f.id] ? aplicaMarcaLocal(f, llegitsMostra[f.id]) : f)),
+    [filsDeMostra, directesDEntitats, llegitsMostra]
   );
   const marcaVist = useCallback((filId, seq) => {
     const s = Number(seq) || 0;
@@ -236,7 +266,7 @@ export default function FakeChatOnboarding({ originalContext, children, resposta
   const sendChatMessage = useCallback(async (fil, text, opcions = {}) => {
     /* Gauntlet 261016 (Bloc 3.6.1) · Com el de veres (XatContext): a un fil de
        només lectura no s'envia res. El de Javi, a més, no respon mai sol. */
-    if (fil?.potEscriure === false) return [];
+    if (fil?.potEscriure === false || String(fil?.id ?? '').startsWith('fake-entitat:')) return [];
     /* IDEA-56 (Bloc F.2) · Amb la IAIA apagada (nivell d'IA 0) el seu fil
        no hi és: si algú hi arriba, ni s'envia ni respon ningú. */
     if (iaiaApagada && fil?.id === 'fake-iaia') return [];
@@ -294,13 +324,83 @@ export default function FakeChatOnboarding({ originalContext, children, resposta
     return [myMsg];
   }, [t, seguentSeq, respostaIAIA, iaiaApagada]);
 
+  const creaFil = useCallback(async (altreUsuariId) => {
+    if ((altreUsuariId === 'ajuda:ia' || esIAIA(altreUsuariId)) && !iaiaApagada) return 'fake-iaia';
+    if (esLaPersonaDeContacte({ id: altreUsuariId })) return ID_FIL_DE_MOSTRA_DE_JAVI;
+    /* Només el destinatari explícit de Sóc de Poble obri la seua comunitat. */
+    if (['ajuda:entitat', ENTITAT_PILOT_ID, ENTITAT_PILOT_SLUG, 'soc-de-poble_official'].includes(altreUsuariId)) return ID_COMUNITAT_SDP;
+    /* C2X-03/04 · El directori remot és autoritatiu. Rentonar per slug o
+       UUID ha de tornar el mateix id remot, nom i avatar. Un null, error o
+       perfil d'una altra mena no es pot substituir per una empresa seed. */
+    let entitat = local ? entitatDeMostraDe(altreUsuariId) : null;
+    if (!local && teCapacitat('directori')) {
+      const controller = new AbortController();
+      consultes.current.add(controller);
+      try {
+        const perfil = await loadPerfilPublic(altreUsuariId, { ...externalConfig, signal: controller.signal });
+        if (controller.signal.aborted || !muntatRef.current) return null;
+        if (['entitat', 'grup'].includes(perfil?.tipus) && typeof perfil.id === 'string'
+          && perfil.id.length > 0 && perfil.id.length <= 200 && !/[\s\u0000-\u001f\u007f]/.test(perfil.id)) {
+          /* R2C2X-01 · L'UUID del projecte, ja declarat pel backend,
+             obri la mateixa comunitat que el seu àlies; mai pel nom o slug. */
+          if (esEntitatDelProjecte(perfil)) return ID_COMUNITAT_SDP;
+          entitat = { ...perfil, name: perfil.nom, avatar_url: perfil.avatar };
+        }
+      } finally {
+        consultes.current.delete(controller);
+      }
+    }
+    if (!entitat) throw Object.assign(new Error('No s’ha trobat el destinatari del xat.'), { code: 'DESTINATARI_INVALID' });
+    const fil = filDeMostraDEntitat(entitat, ara, avisLectura);
+    setDirectesDEntitats((previs) => previs[fil.id] ? previs : { ...previs, [fil.id]: fil });
+    return fil.id;
+  }, [iaiaApagada, local, externalConfig, ara, avisLectura]);
+
+  /* La URL d'un directe de mostra conserva només l'id públic de l'entitat.
+     Després d'una recàrrega es torna a resoldre amb el mateix camí que
+     ?amb=; no es guarda cap missatge ni fitxa en emmagatzematge persistent.
+     Mentre respon el directori no es declara un 404 prematur. */
+  const [restauracio, setRestauracio] = useState(null);
+  const faltaElFilDeRuta = Boolean(destinatariDeRuta) && !directesDEntitats[threadId];
+  const restauracioVigent = restauracio && restauracio.id === threadId && restauracio.resol === creaFil ? restauracio : null;
+  const restaurant = faltaElFilDeRuta && !restauracioVigent?.feta;
+  const errorDeRestauracio = faltaElFilDeRuta && restauracioVigent?.error?.code !== 'DESTINATARI_INVALID'
+    ? restauracioVigent?.error : null;
+  useEffect(() => {
+    if (!faltaElFilDeRuta) return undefined;
+    let viu = true;
+    setRestauracio({ id: threadId, resol: creaFil, feta: false });
+    creaFil(destinatariDeRuta).then(
+      (filId) => {
+        if (!viu) return;
+        if (filId && filId !== threadId) navigate?.(`/xat/${encodeURIComponent(filId)}`, { replace: true });
+        setRestauracio({ id: threadId, resol: creaFil, feta: true });
+      },
+      (error) => { if (viu) setRestauracio({ id: threadId, resol: creaFil, feta: true, error }); }
+    );
+    return () => { viu = false; };
+  }, [threadId, destinatariDeRuta, faltaElFilDeRuta, creaFil, navigate]);
+
   const fakeContext = useMemo(() => ({
     ...originalContext,
-    status: 'ready',
+    status: restaurant ? 'loading' : 'ready',
+    llistaFresca: !restaurant && !errorDeRestauracio,
+    avisLlista: errorDeRestauracio?.message || null,
     chatThreads: fakeThreads,
     comunitats,
     getThreadMessages,
     sendChatMessage,
+    /* Els fils de mostra ja són locals i complets, inclosos els buits.
+       Cap id fake es passa al lector o al sondeig del servidor. */
+    filCarregat: () => true,
+    obriFil: () => {},
+    hiHaMesAntics: () => false,
+    carregantAntics: () => false,
+    carregaMesAntics: async () => false,
+    avisFil: () => null,
+    tipusAvisFil: () => null,
+    llegintFil: () => false,
+    recarregaFil: () => {},
     /* Gauntlet 261030 (cicle 2, G2) · La lectura de la mostra, en local. */
     marcaVist,
     marcaLlegides,
@@ -311,16 +411,9 @@ export default function FakeChatOnboarding({ originalContext, children, resposta
     cercaMembres: async () => AJUDA.filter(({ clau }) => !(iaiaApagada && clau === 'iaia')).map(({ nom, tipus, avatar }) => ({
       nom, tipus, usuari_id: `ajuda:${tipus}`, avatar_url: avatar || null, noDisponible: false
     })),
-    creaFil: async (altreUsuariId) => {
-      if (altreUsuariId === 'ajuda:ia' && !iaiaApagada) return 'fake-iaia';
-      /* Auditoria adversarial 261016 · Javi, per id o àlies (mai pel nom): el
-         seu xat de només lectura, no el de l'entitat. */
-      if (esLaPersonaDeContacte({ id: altreUsuariId })) return ID_FIL_DE_MOSTRA_DE_JAVI;
-      /* Gauntlet 261016_1530 · La comunitat de Sóc de Poble (XatSection n'obri la fitxa): cap directe de mostra. */
-      return ID_COMUNITAT_SDP;
-    },
+    creaFil,
     esFilAmagat: (filId) => iaiaApagada && filId === 'fake-iaia'
-  }), [originalContext, fakeThreads, comunitats, getThreadMessages, sendChatMessage, marcaVist, marcaLlegides, iaiaApagada]);
+  }), [originalContext, fakeThreads, comunitats, getThreadMessages, sendChatMessage, marcaVist, marcaLlegides, creaFil, iaiaApagada, restaurant, errorDeRestauracio]);
 
   return <XatContext.Provider value={fakeContext}>{children}</XatContext.Provider>;
 }

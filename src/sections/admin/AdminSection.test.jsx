@@ -15,7 +15,7 @@ import AppGridColumn from '../../components/layout/AppGridColumn';
 const m = vi.hoisted(() => ({
   usuaris: vi.fn(), entitats: vi.fn(), caps: ['admin'],
   llista: vi.fn(), inscriu: vi.fn(), repta: vi.fn(), verifica: vi.fn(), retira: vi.fn(),
-  desa: vi.fn(), historial: vi.fn(), refresh: vi.fn(),
+  desa: vi.fn(), historial: vi.fn(), refresh: vi.fn(), pobles: vi.fn(), lligPoble: vi.fn(),
   sessio: { esSuperadmin: true, nivell: 'aal2', calSegonFactor: false },
   core: { status: 'ready', pageCopy: {}, personalitzacio: null, refresh: null }
 }));
@@ -29,7 +29,9 @@ vi.mock('../../data/backendPort.js', () => ({
   verificaFactor: (...args) => m.verifica(...args),
   retiraFactor: (...args) => m.retira(...args),
   adminDesaPersonalitzacio: (...args) => m.desa(...args),
-  adminHistorialPersonalitzacio: (...args) => m.historial(...args)
+  adminHistorialPersonalitzacio: (...args) => m.historial(...args),
+  adminLlistaPobles: (...args) => m.pobles(...args),
+  adminLligPersonalitzacio: (...args) => m.lligPoble(...args)
 }));
 vi.mock('../../app/contexts/SessionContext.jsx', () => ({ useSession: () => m.sessio, useSessioOpcional: () => m.sessio }));
 vi.mock('../../app/contexts/CoreContentContext.jsx', () => ({ useCoreContent: () => m.core }));
@@ -84,8 +86,28 @@ beforeEach(() => {
   m.llista.mockReset().mockResolvedValue([]);
   m.historial.mockReset().mockResolvedValue([]);
   for (const f of [m.inscriu, m.repta, m.verifica, m.retira, m.desa, m.refresh]) f.mockReset();
+  m.pobles.mockReset(); m.lligPoble.mockReset();
 });
 afterEach(() => { cleanup(); vi.restoreAllMocks(); });
+
+test('FEDI-04 · les facetes reals del Tauler reben la selecció de poble i carreguen només eixe tenant', async () => {
+  const id = '11111111-1111-4111-8111-111111111111';
+  m.caps = ['admin', 'personalitzacio', 'administracioMultipoble'];
+  m.pobles.mockResolvedValue([{ id, slug: 'sella', nom: 'Sella' }]);
+  m.lligPoble.mockResolvedValue({ taxonomia: null, estil: null });
+  render(<AdminSection />);
+  expect(m.pobles).not.toHaveBeenCalled();
+  fireEvent.click(screen.getByRole('button', { name: 'Etiquetes i categories' }));
+  const selector = await screen.findByLabelText('Poble que administres');
+  // Sense tenant configurat coincident, ni tan sols una única fila és una tria.
+  expect(selector.value).toBe('');
+  expect(m.lligPoble).not.toHaveBeenCalled();
+  expect(screen.queryByRole('button', { name: 'Desar' })).toBeNull();
+  fireEvent.change(selector, { target: { value: id } });
+  await act(async () => {});
+  expect(m.lligPoble).toHaveBeenCalledWith(expect.objectContaining({ tenantId: id }));
+  expect(screen.getByRole('button', { name: 'Desar' })).toBeTruthy();
+});
 
 test('la columna del mig: només el benvingut d’abans, idèntic', () => {
   const { container } = render(<AdminSection />);

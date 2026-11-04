@@ -1,0 +1,17 @@
+{
+  "id": "cedcdb0f-038f-4901-abbc-9ef18b9393d1",
+  "session": "ec4eb900-3c20-4ba6-83ae-0d07c0161e85",
+  "operationId": "fedi-r3-ci-quatre-bateries",
+  "claim": "ec4eb900-3c20-4ba6-83ae-0d07c0161e85:governance-write",
+  "planHash": "8cd6c3005f3d1a35b3f4104233a455ba5f0914b28c63f82156547fa316177a08",
+  "beforeSeal": "570ea49524a6daa2f79e3d1e71b013a5e24d326eb62b6cb1fd2886204e684e6e",
+  "files": [
+    {
+      "path": "tests/node-suite-policy.test.mjs",
+      "before": "b7983e01039ca777ba67dbd251465df91619e8f86729b176c438478be2005d77",
+      "after": "1239287e6489ac88bba22bf8e7727a5e9c0e7303844eceab113ec601b675cc23"
+    }
+  ],
+  "state": "accepted",
+  "afterSeal": "8d057b5d8220f5cadefa19a60ba97674665b8a1bdbc23fb556b4a00941673e25"
+}

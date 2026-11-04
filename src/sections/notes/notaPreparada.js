@@ -43,7 +43,7 @@ export function detallDeCreacioFallida(motiu = '') {
 export const DETALL_CREACIO_PENDENT = 'La nota encara no s’ha creat al servidor: es tornarà a provar quan hi tornes a escriure.';
 
 const CAMPS_DE_TEXT = new Set(['title', 'subtitle', 'lead', 'content']);
-const CAMPS_D_IMATGE = new Set(['heroImage', 'logoImage']);
+const CAMPS_D_IMATGE = new Set(['heroImage', 'logoImage', 'logoImageDark']);
 
 /** Un UUID v4. `randomUUID` només existix en context segur: un amfitrió
  *  servit per http té `getRandomValues`, que basta. */

@@ -1,12 +1,13 @@
 import { CODI_BACKEND_INABASTABLE } from './errorsBackend.js';
 import { heretaServeiXifratXat } from './xifratXatServei.js';
 import { CONTRACTE_BACKEND, CONTRACTE_NUCLI, CAPACITATS } from './contracte.js';
+/* P0-16 (consola del Mestre, 261103) · L'adaptador, el segell, el desmuntatge
+   i les lectures en vol no viuen ací sinó a backendPortEstat.js, un per
+   document: una instància nova d'este mòdul (el ?t= de l'HMR) veu el mateix
+   backend segellat que la vella, en compte de nàixer buida. */
+import { estatPort } from './backendPortEstat.js';
 
-let currentImpl = null;
-let isLocked = false;
-let dispose = null;
-const lecturesEnVol = new Set();
-const avortaLectures = () => { for (const control of lecturesEnVol) control.abort(); lecturesEnVol.clear(); };
+const avortaLectures = () => { for (const control of estatPort.lecturesEnVol) control.abort(); estatPort.lecturesEnVol.clear(); };
 const FORMES_LECTURA = Object.freeze({ loadCoreContent: ['towns', 'pages', 'agents'], loadMur: ['feedPosts', 'events', 'marketItems'], loadMultimedia: ['mediaItems'], loadNotes: ['notes', 'noteFolders'], loadNotesPage: ['notes'] });
 const esFila = v => v !== null && typeof v === 'object' && !Array.isArray(v);
 /* Una clau que no és una llista rebutja la lectura sencera. Un forat dins d'una
@@ -30,7 +31,7 @@ function lligAmbGuardes(nom, args, backend) {
   const senyals = [...new Set([config.signal, ...(nom === 'loadNotesPage' ? [args[0]?.signal] : [])].filter(Boolean))];
   if (senyals.some(s => s.aborted)) return Promise.reject(new DOMException('Operació cancel·lada.', 'AbortError'));
   for (const signal of senyals) signal.addEventListener('abort', avorta, { once: true });
-  lecturesEnVol.add(control);
+  estatPort.lecturesEnVol.add(control);
   let rebutja;
   const interrompuda = new Promise((_resol, reject) => { rebutja = reject; });
   const talla = () => rebutja(control.signal.reason ?? new DOMException('Operació cancel·lada.', 'AbortError'));
@@ -40,11 +41,11 @@ function lligAmbGuardes(nom, args, backend) {
     if (control.signal.aborted) throw control.signal.reason;
     return backend[nom](nom === 'loadNotesPage' ? { ...args[0], signal: control.signal } : args[0], { ...config, signal: control.signal });
   }).then(valor => {
-    if (control.signal.aborted || currentImpl !== backend) throw new DOMException('Operació cancel·lada.', 'AbortError');
+    if (control.signal.aborted || estatPort.currentImpl !== backend) throw new DOMException('Operació cancel·lada.', 'AbortError');
     return validaLectura(nom, valor);
   });
   return Promise.race([feina, interrompuda]).finally(() => {
-    clearTimeout(rellotge); for (const signal of senyals) signal.removeEventListener('abort', avorta); control.signal.removeEventListener('abort', talla); lecturesEnVol.delete(control);
+    clearTimeout(rellotge); for (const signal of senyals) signal.removeEventListener('abort', avorta); control.signal.removeEventListener('abort', talla); estatPort.lecturesEnVol.delete(control);
   });
 }
 const EMPTY = Object.freeze(Object.create(null));
@@ -52,13 +53,13 @@ const EMPTY = Object.freeze(Object.create(null));
 export function setBackendImplementation(impl, force = false) {
   const isDev = import.meta.env?.DEV === true ||
     (typeof process !== 'undefined' && process.env.NODE_ENV === 'development');
-  if (isLocked && !(force && isDev)) throw new Error('[backendPort] Backend bloquejat');
+  if (estatPort.isLocked && !(force && isDev)) throw new Error('[backendPort] Backend bloquejat');
   if (!impl || typeof impl !== 'object') throw new TypeError('[backendPort] Implementació invàlida');
   const prepared = validaBackendImplementation(impl);
   // Commit després de validar-ho tot; cap mètode de la implementació vella sobreviu.
   avortaLectures();
-  currentImpl = prepared.candidate;
-  dispose = prepared.dispose;
+  estatPort.currentImpl = prepared.candidate;
+  estatPort.dispose = prepared.dispose;
 }
 export function validaBackendImplementation(impl) {
   if (!impl || typeof impl !== 'object') throw new TypeError('[backendPort] Implementació invàlida');
@@ -95,21 +96,22 @@ export function validaBackendImplementation(impl) {
   heretaServeiXifratXat(impl, candidate);
   return { candidate, dispose: teardown ? teardown.value.bind(impl) : null };
 }
-export function getBackendImplementation() { return currentImpl || EMPTY; }
+export function getBackendImplementation() { return estatPort.currentImpl || EMPTY; }
 export function freezeImplementation() {
-  if (!currentImpl) throw new Error('[backendPort] No hi ha backend per segellar');
-  isLocked = true;
+  if (!estatPort.currentImpl) throw new Error('[backendPort] No hi ha backend per segellar');
+  estatPort.isLocked = true;
 }
-export function destroy() { avortaLectures(); const fn = dispose; dispose = null; return fn?.(); }
+export function destroy() { avortaLectures(); const fn = estatPort.dispose; estatPort.dispose = null; return fn?.(); }
 export function teCapacitat(cap) {
-  return Object.hasOwn(CAPACITATS, cap) && !!currentImpl && CAPACITATS[cap].every(name => typeof currentImpl[name] === 'function');
+  const impl = estatPort.currentImpl;
+  return Object.hasOwn(CAPACITATS, cap) && !!impl && CAPACITATS[cap].every(name => typeof impl[name] === 'function');
 }
 
 const asseguraMetode = (nom) => (...args) => {
-  if (!currentImpl || typeof currentImpl[nom] !== 'function') {
+  const backend = estatPort.currentImpl;
+  if (!backend || typeof backend[nom] !== 'function') {
     throw new Error(`[backendPort] El mètode "${nom}" no està implementat al backend actual.`);
   }
-  const backend = currentImpl;
   return Object.hasOwn(FORMES_LECTURA, nom) ? lligAmbGuardes(nom, args, backend) : backend[nom](...args);
 };
 
@@ -143,10 +145,11 @@ export const updateUserPassword = asseguraMetode('updateUserPassword');
 export const getProfile = asseguraMetode('getProfile');
 export const recullTornadaOAuth = async (...args) => {
   await import('../host.js').then(m => m.quanLlest());
-  if (!currentImpl || typeof currentImpl['recullTornadaOAuth'] !== 'function') {
+  const backend = estatPort.currentImpl;
+  if (!backend || typeof backend['recullTornadaOAuth'] !== 'function') {
     return Promise.reject(new Error(`[backendPort] El mètode "recullTornadaOAuth" no està implementat al backend actual.`));
   }
-  return currentImpl['recullTornadaOAuth'](...args);
+  return backend['recullTornadaOAuth'](...args);
 };
 export const logout = asseguraMetode('logout');
 export const getCurrentUser = asseguraMetode('getCurrentUser');
@@ -175,10 +178,11 @@ export const adminListOrganizations = asseguraMetode('adminListOrganizations');
    es queden amb el comportament d'abans. */
 export const uploadToStorage = async (...args) => {
   await import('../host.js').then(m => m.quanLlest());
-  if (!currentImpl || typeof currentImpl['uploadToStorage'] !== 'function') {
+  const backend = estatPort.currentImpl;
+  if (!backend || typeof backend['uploadToStorage'] !== 'function') {
     throw new Error(`[backendPort] El mètode "uploadToStorage" no està implementat al backend actual.`);
   }
-  return currentImpl['uploadToStorage'](...args);
+  return backend['uploadToStorage'](...args);
 };
 export const getPublicUrl = asseguraMetode('getPublicUrl');
 export const resolveAsset = asseguraMetode('resolveAsset');
@@ -310,6 +314,8 @@ export const retiraFactor = asseguraMetode('retiraFactor');
    loadCoreContent (camp additiu `personalitzacio`). */
 export const adminDesaPersonalitzacio = asseguraMetode('adminDesaPersonalitzacio');
 export const adminHistorialPersonalitzacio = asseguraMetode('adminHistorialPersonalitzacio');
+export const adminLlistaPobles = asseguraMetode('adminLlistaPobles');
+export const adminLligPersonalitzacio = asseguraMetode('adminLligPersonalitzacio');
 
 /* Fase D (261020, tasca 2; pla 261020_1300) · La moderació (capacitat
    'moderacio') i les normes de convivència ('normesConvivencia'). Cap és
@@ -348,3 +354,11 @@ export const marcaTitularPublic = asseguraMetode('marcaTitularPublic');
 export const desaDispositiuAvisos = asseguraMetode('desaDispositiuAvisos');
 export const retiraDispositiuAvisos = asseguraMetode('retiraDispositiuAvisos');
 export const silenciaFil = asseguraMetode('silenciaFil');
+
+/* FEDI23 · capacitat opcional completa, sense fallback que publique privats. */
+export const preferenciesConnexions = asseguraMetode('preferenciesConnexions');
+export const desaVisibilitatConnexions = asseguraMetode('desaVisibilitatConnexions');
+export const connexionsPubliquesDe = asseguraMetode('connexionsPubliquesDe');
+export const membresIEntitatsConnectadesDe = asseguraMetode('membresIEntitatsConnectadesDe');
+export const inclouPersonaEnEntitat = asseguraMetode('inclouPersonaEnEntitat');
+export const solicitaUnirSeAEntitat = asseguraMetode('solicitaUnirSeAEntitat');

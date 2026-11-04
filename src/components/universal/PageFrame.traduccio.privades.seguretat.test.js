@@ -96,7 +96,14 @@ test('la fitxa pròpia amb el veïnat connectat apaga Traduir amb la mateixa con
      de la fitxa, que ara també exigix una fitxa pública (`publicat`). */
   expect(codi).toContain('const fitxaTraduible = perfil.publicat === true && !ambVeinatConnectat;');
   expect(codi).toContain('traduccio={fitxaTraduible}');
-  expect(codi).toContain('{ambVeinatConnectat ? <GentQueEtSegueix');
+  const iniciPrivat = codi.indexOf('{ambVeinatConnectat ? <>');
+  const fiPrivat = codi.indexOf('</> : null}', iniciPrivat);
+  expect(iniciPrivat).toBeGreaterThan(-1);
+  expect(fiPrivat).toBeGreaterThan(iniciPrivat);
+  const blocPrivat = codi.slice(iniciPrivat, fiPrivat);
+  expect((codi.match(/<GentQueEtSegueix\b/g) || [])).toHaveLength(1);
+  expect(blocPrivat).toContain('<GentQueEtSegueix config={externalConfig} t={t} locale={locale} visor={visor} />');
+  expect(blocPrivat).toContain('<VisibilitatConnexions tipus="persona"');
 });
 
 /* Gauntlet 261030 (cicle 3, traduir-perfil-lectura-fitxa-no-publica; TC3.2) ·

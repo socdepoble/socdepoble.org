@@ -80,10 +80,26 @@
  *   · P1-15 (assalt 261101, T5b) · Els resultats del padró s'anuncien en una
  *     regió viva (sense rol: l'únic status és el del resum) i les carpetes
  *     són un grup amb el nom de «On arriba».
+ *   · FEDI-22 (ordre del Mestre, 261103; captura 261103_2055) · /connectar a
+ *     tota l'amplària, en una graella de targetes (modeDeConnectar.js). En el
+ *     PERFIL d'una persona, una entitat o un grup amb relació ('social'), el
+ *     primer que es veu és CONNECTAR: la targeta de la connexió directa
+ *     (fitxa compacta i «Connectar com a» a l'esquerra; l'avís i el primari
+ *     gran de BlocRelacio a la dreta) i, davall, la d'incloure la persona en
+ *     una entitat teua (BlocIncloureEnEntitat) o la de formar-ne part amb un
+ *     rol (BlocFormarPart); «Guardar a les teues notes» va plegat al final, a
+ *     tota l'amplària (revisió 261104, RA-01: el primari dins de la pantalla
+ *     a 1280×800). En un ELEMENT ('element'), l'objecte i les notes, obertes i
+ *     primàries, i la relació i formar part a la lateral. DEROGAT de D1
+ *     «l'únic primari és el del MAS»: un primari per vista, connectar en un
+ *     perfil i guardar en un element. El logotip de la capçalera, compacte
+ *     (queixa del Mestre: espentava els botons fora de pantalla; regla
+ *     .sdp-connectar-pagina de modules.css). El contingut de FORA no canvia de
+ *     .sdp-connectar cap avall (la guarda de Notes, PrevisualitzacioExtern).
  */
 import { useEffect, useId, useMemo, useRef, useState } from 'react';
 import { useNavigate, useSearchParams } from '../../app/contexts/RouterContext';
-import { Check, Globe, Layers, X } from 'lucide-react';
+import { Check, Globe, Layers, NotebookPen, X } from 'lucide-react';
 import { useToast } from '@/components/universal/NotificationContext.jsx';
 import { useUIActions } from '../../app/contexts/UIContext';
 import { useSession } from '../../app/contexts/SessionContext';
@@ -93,11 +109,12 @@ import { useXat } from '../xat/XatContext.jsx';
 import { CARPETA_CONNECTATS, NOM_CARPETA_CONNECTATS, carpetesDelBloc, iconaDeCarpeta, nomDeCarpeta } from '../notes/carpetes.js';
 import { autorDe, esRutaInterna, getSectionItemPath, objecteDe, objecteDePerfil, tipusDeSeccio, TIPUS_OBJECTE } from '../../config/navigation.js';
 import { rutaDEntrada } from '../../config/rutaEntrada.js';
-import { ENTITATS_SEED, IAIA_ID, PERSONA_PILOT, aliesDeLActor, esComptePersonaPilot } from '../../data/identitatsSeed.js';
+import { CLAUS_FUNDACIONALS, ENTITATS_SEED, IAIA_ID, PERSONA_PILOT, aliesDeLActor, esComptePersonaPilot } from '../../data/identitatsSeed.js';
 import { normalizeBackendConfig } from '../../config/backendConfig.js';
 import { esBackendInabastable } from '../../data/errorsBackend.js';
 import { UniversalPage } from '../../components/universal/UniversalPage';
-import { Alerta, Boto, Camp, CampText, Carregant, Casella, Divisor, GrupCamps, GrupOpcions, UniversalCard } from '../../components/PedraSeca/index.js';
+import { Alerta, Boto, Camp, CampText, Carregant, Casella, GrupCamps, GrupOpcions, UniversalCard } from '../../components/PedraSeca/index.js';
+import { AvatarResolt } from '../../components/universal/identitat/AvatarResolt.jsx';
 import { interlocutorDelPrivat, urlPerCompartir, useUbicacioApp } from '../../components/PedraSeca/hooks/useAccions.js';
 import { useXatSocDePoble } from '../../components/PedraSeca/hooks/xatSocDePoble.js';
 import { netejaDrets, normalitzaAbast, teDretsReservats } from '../../data/origenNota.js';
@@ -127,6 +144,10 @@ import { useFitxaDeConnexio } from './useFitxaDeConnexio.js';
 /* IDEA-22 (punt 2) · La titular que ha triat mostrar-se (capacitat 'titularPublic'). */
 import { useTitularDeConnexio } from './useTitularDeConnexio.js';
 import { teSeguiments } from './useSeguiment.js';
+/* FEDI-22 (ordre del Mestre, 261103) · La disposició de la vista i la targeta d'incloure en una entitat teua. */
+import { disposicioDeLaVista, entitatsPerIncloure, esPerfilSocial } from './modeDeConnectar.js';
+import { BlocIncloureEnEntitat } from './organitzacio/BlocIncloureEnEntitat.jsx';
+import { teMembresOrganitzacio } from './organitzacio/useIncloureEnEntitat.js';
 
 /* P1-22 · Parells [clau, reserva]: l'etiqueta es desa en la llengua de qui connecta. */
 const SUGGESTED_TAGS = Object.freeze([
@@ -335,7 +356,7 @@ export function actorsPerAlDesti(actors = [], propia = null) {
 }
 
 /* Gauntlet 261022_0225 (CA-1) · En remot, un id de la llavor (un àlies de la
-   persona pilot, una entitat del padró) no és l'id de cap persona ni entitat
+   persona pilot, una entitat fundacional del padró) no és l'id de cap persona ni entitat
    del servidor (W4-09): crea_fil_directe no hi pot obrir cap xat. El format
    de l'id és cosa del proveïdor (W4-10): ací no se'n comprova cap.
    Revisió (CN-R2) · Sense mirar el tipus declarat: un àlies de l'entitat
@@ -343,7 +364,10 @@ export function actorsPerAlDesti(actors = [], propia = null) {
    o la IAIA (en remot, el seu xat és el públic de /iaia) tampoc no en tenen. */
 const IDS_DE_LA_LLAVOR = new Set([
   ...PERSONA_PILOT.alies,
-  ...ENTITATS_SEED.flatMap((entitat) => [entitat.id, entitat.slug, ...entitat.alies]),
+  /* R2C2X-02 · La resta del padró pot declarar UUID reals del directori:
+     Oli de La Torre conserva el contacte i no rep tracte fundacional. */
+  ...ENTITATS_SEED.filter((entitat) => CLAUS_FUNDACIONALS.includes(entitat.slug))
+    .flatMap((entitat) => [entitat.id, entitat.slug, ...entitat.alies]),
   IAIA_ID
 ].map(String));
 const esIdDeLaLlavor = ({ id }) => IDS_DE_LA_LLAVOR.has(String(id));
@@ -522,6 +546,28 @@ function ConnectarElementIntern() {
     : null;
   const ambRelacio = Boolean(contacte) || personaSenseNom;
   const ambCamins = ambRelacio || Boolean(orgId);
+  /* FEDI-22 (ordre del Mestre, 261103; captura 261103_2055) · 'social' (un
+     perfil amb relació, o amb la fitxa encara carregant) o 'element'. C1 ·
+     sense dependre d'orgId: un perfil sense relació torna a 'element'. Un
+     primari per vista: el de la relació en 'social'; el de les notes en
+     'element'. */
+  const esPerfil = esPerfilSocial(origenDeLURL);
+  const carregantFitxa = esPerfil && fitxaDelPerfil.estat === 'carregant' && !contacte;
+  const social = disposicioDeLaVista({ esPerfil, ambRelacio, carregantFitxa }) === 'social';
+  const notesPrimari = !social;
+  /* «Guardar a les teues notes» és un <details>: obert en 'element', plegat en
+     'social', i s'obri si la vista passa a 'element' (la fitxa arriba sense relació). */
+  const [notesObertes, setNotesObertes] = useState(() => !esPerfil);
+  useEffect(() => { if (notesPrimari) setNotesObertes(true); }, [notesPrimari]);
+  /* FEDI-22 · Targeta 2 d'una PERSONA: incloure-la en una entitat que administres
+     (C2: la mateixa font que «Connectar com a»), amb la capacitat de membres. */
+  const entitatsIncloure = useMemo(() => entitatsPerIncloure(actorsConnectar, identitats), [actorsConnectar, identitats]);
+  const ambIncloure = social && teSessio && origenDeLURL.objecte === 'persona' && Boolean(contacte) && !contacte.propia
+    && contacte.seguiment?.tipus === 'persona' && entitatsIncloure.length > 0 && teMembresOrganitzacio();
+  /* FEDI-22 (C11) · En 'social' no hi ha mini-card: la nota es desa amb el nom de
+     la fitxa de confiança (T43b-3), mai amb el title de l'URL que ningú ha vist. */
+  const nomDeLaFitxa = social && fitxaDelPerfil.estat === 'llest' ? String(fitxaDelPerfil.perfil?.nom || '').trim() : '';
+  const origenAConnectar = nomDeLaFitxa ? { ...origen, titol: nomDeLaFitxa } : origen;
   /* D1 (ordre del Mestre, 260930) · Sense sessió, en seed i local el Bloc és
      del dispositiu: es connecta igual. En remot cal entrar (calEntrar): cap
      simulació. Amb el Bloc encara carregant (canCreate exigix 'ready'), el
@@ -691,14 +737,14 @@ function ConnectarElementIntern() {
     setError(null);
     setIsSaving(true);
     try {
-      const origenDesat = { ...origen, abast: normalitzaAbast(tria) };
+      const origenDesat = { ...origenAConnectar, abast: normalitzaAbast(tria) };
       const nota = await creaNota({
-        title: aHtml(contextTitle),
+        title: aHtml(origenAConnectar.titol),
         /* D4 · còpia editable: el subtítol i l'entradeta de l'original resolt
            (mai de l'URL), escapats com a HTML del document. */
         ...(original?.subtitol ? { subtitle: aHtml(original.subtitol) } : {}),
         ...(original?.entradilla ? { lead: aHtml(original.entradilla) } : {}),
-        content: contingutDeLaConnexio(origen),
+        content: contingutDeLaConnexio(origenAConnectar),
         folderId: selectedFolder,
         tags: customTags,
         categories,
@@ -713,7 +759,7 @@ function ConnectarElementIntern() {
         return;
       }
       /* P1-22 · El missatge ix en la llengua de qui connecta. */
-      const missatge = missatgeDeConnexio(origen, origen.ruta ? urlPerCompartir(origen.ruta, router) : '', t);
+      const missatge = missatgeDeConnexio(origenAConnectar, origenAConnectar.ruta ? urlPerCompartir(origenAConnectar.ruta, router) : '', t);
       const { resultats } = await aplica({ nota, origen: origenDesat, abast: tria, missatge });
       setResum({
         ruta: rutaNota,
@@ -745,118 +791,112 @@ function ConnectarElementIntern() {
   /* D1 · Sense sessió en remot, a entrar; en tornar, esta mateixa consulta. */
   const entra = () => navigate(rutaPerAEntrar(params));
 
-  return (
-    <UniversalPage
-      /* Decisions 261030 §7 · Les carpetes i les notes del teu Bloc: Traduir no envia res fora. */
-      traduccio={false}
-      chrome="system"
-      title={t('section.connectar.kicker', 'Connectar')}
-      subtitle={t('section.connectar.where', 'On vols connectar-ho?')}
-      lead={/* IDEA-14 · Amb més d'un camí, l'entradeta diu que són accions distintes.
-             261024 correccions (R3-05) · i diu el mateix que «Qui ho pot vore?»: en
-             privat no avisa ningú; a persones o grups de xat els arriba l'enllaç.
-             P1-11 (pla 261024_2230; G1945-04 de Gemini, ordre del Mestre) · «connectar
-             amb algú», no «seguir»: a Sóc de Poble no se seguix, es connecta. */ ambCamins
-        ? t('section.connectar.leadCamins', 'Cada camí té el seu botó: connectar amb algú o escriure-li no et fa membre de res. Si guardes l’element a les teues notes en privat, no avisa ningú; si tries persones o grups de xat, els enviarem l’enllaç.')
-        : t('section.connectar.lead', 'Tria on arriba (per defecte, a la Safata d’Entrada), qui ho pot vore i com ho trobaràs després.')}
-      onConnect={false}
-    >
-      <div className="sdp-connectar">
-        {/* D1 · sense promeses: en seed i local no hi ha cap traspàs al compte en
-            entrar, i les carpetes no es poden crear. */}
-        {isGuest && (
-          <Alerta to="avis" titol={t('section.connectar.foraster.titol', 'Mode Foraster actiu')}>
-            {calEntrar
-              ? t('section.connectar.foraster.calEntrar', 'Per a connectar cal entrar al teu compte.')
-              : t('section.connectar.foraster.local', 'Sense sessió, el que connectes es queda només en este dispositiu.')}
-          </Alerta>
-        )}
-
-        <section className="sdp-connectar__objecte" aria-labelledby={`${id}-objecte`}>
-          <p className="sdp-connectar__tipus">{etiquetaObjecte(origen.objecte, t)}</p>
-          {/* T54 · mini-card de lectura: foto i títol, sense peu ni data
-              clicable. Sense foto (perfil, pàgina o element que no és ací), la
-              icona de capes ocupa el lloc de la icona del títol perquè la
-              targeta no quede en una línia de text nua. */}
-          <div id={`${id}-objecte`} className="sdp-connectar__previsualitzacio">
-            <UniversalCard
-              title={titolDeLaTargeta}
-              imageUrl={imatgeOriginal || undefined}
-              imageAlt=""
-              icon={imatgeOriginal ? undefined : <Layers size={32} aria-hidden="true" focusable="false" />}
-              hasFooter={false}
-              onDateTime={false}
-              showDateTime={false}
-            />
-          </div>
-          {autorVisible ? <p className="sdp-connectar__autor">{omple(t('section.connectar.de', 'De {nom}'), { nom: autorVisible })}</p> : null}
-          {persona ? <p className="sdp-connectar__identitat">{omple(t('section.connectar.esConnectaA', 'Es connecta a {nom}.'), { nom: persona })}</p> : null}
-          {/* D4 (ordre del Mestre, 260930) · els drets de l'original resolt,
-              amb les mateixes claus que l'avís de l'editor (NotesEditor). */}
-          {dretsReservats ? (
-            <Alerta to="avis" titol={t('section.notes.drets.titol', TITOL_DRETS_RESERVATS)}>
-              {t('section.notes.drets.text', TEXT_DRETS_RESERVATS)}
-            </Alerta>
+  /* FEDI-22 · Les peces de la graella. */
+  const idRelacio = `${id}-cami-relacio`;
+  /* La fitxa compacta (C7): només en 'social' i amb el contacte de la fitxa de confiança, mai l'URL. */
+  const perfilDeLaFitxa = social && contacte?.deFitxa ? fitxaDelPerfil.perfil : null;
+  const pobleDeLaFitxa = typeof perfilDeLaFitxa?.poble === 'string' ? perfilDeLaFitxa.poble.trim() : '';
+  const tipusDeLaFitxa = etiquetaObjecte(origenDeLURL.objecte, t);
+  /* FEDI-22 · Qui (la fitxa compacta) i amb quin barret: en 'social' van junts a
+     la columna de l'esquerra de T1, i la relació (l'avís i el primari) a la de la
+     dreta (RA-01, revisió 261104: el primari dins de la pantalla a 1280×800). */
+  const fitxaCompacta = perfilDeLaFitxa ? (
+    <div className="sdp-connectar__fitxa">
+      <AvatarResolt mida="lg" alt="" nom={perfilDeLaFitxa.nom} llavor={perfilDeLaFitxa.id} src={perfilDeLaFitxa.avatar || null} />
+      <div className="sdp-connectar__fitxa-text">
+        <p className="sdp-connectar__fitxa-nom">{String(perfilDeLaFitxa.nom).trim()}</p>
+        <p className="sdp-connectar__ajuda">{pobleDeLaFitxa
+          ? omple(t('section.connectar.fitxa.meta', '{tipus} · {poble}'), { tipus: tipusDeLaFitxa, poble: pobleDeLaFitxa })
+          : tipusDeLaFitxa}</p>
+      </div>
+    </div>
+  ) : null;
+  /* IDEA-22 (T5) · Amb quin barret et connectes, només si administres alguna organització.
+     C0200-06 · Les opcions, només les legítimes per a este destí (per a un de teu, també una sola). */
+  const selectorCom = actorsConnectar.length > 1 && !calEntrar ? (
+    <SelectorDeVariacions llegenda={t('section.connectar.com.llegenda', 'Connectar com a')}
+      opcions={actorsDelDesti} valor={comValor} onCanvi={setComTriat} />
+  ) : null;
+  const relacio = (
+    <>
+      {/* FEDI-22 · En 'social', el primari gran de la vista és el d'esta relació. */}
+      <BlocRelacio contacte={contacte} deFitxa={contacte?.deFitxa === true} calEntrar={calEntrar} onEntra={entra}
+        dataMode={dataMode} config={config} com={comEntitat?.valor ?? null} nomCom={comEntitat?.nom ?? ''} nomPersona={nomPersona}
+        principal={social} />
+      {/* IDEA-22 (punt 2) · La titular que ho ha triat, al mateix grup i amb el mateix barret:
+          cap capçalera de camí nova ni cap botó primari. */}
+      {contacteTitular ? (
+        <>
+          <p>{omple(t('section.connectar.titular.intro', '{nom} és titular de {entitat} i ha triat que es veja ací.'), { nom: contacteTitular.nom, entitat: contacte.nom })}</p>
+          <BlocRelacio contacte={contacteTitular} deFitxa calEntrar={calEntrar} onEntra={entra}
+            dataMode={dataMode} config={config} com={comEntitat?.valor ?? null} nomCom={comEntitat?.nom ?? ''} nomPersona={nomPersona} />
+        </>
+      ) : null}
+    </>
+  );
+  /* Dues columnes dins de T1 només si hi ha qui i barret a l'esquerra (si no, una sola). */
+  const ambQui = Boolean(fitxaCompacta) || Boolean(selectorCom);
+  const targetaDirecta = ambRelacio || carregantFitxa ? (
+    <section className={social ? 'sdp-connectar__targeta sdp-connectar__targeta--directa' : 'sdp-connectar__targeta'}
+      role="group" aria-labelledby={idRelacio} aria-busy={carregantFitxa ? 'true' : undefined}>
+      <p id={idRelacio} className="sdp-connectar__tipus">{t('section.connectar.camins.relacio', 'Connexió directa')}</p>
+      {/* Mentre arriba la fitxa, un esquelet de text (sense status): la graella no salta. */}
+      {carregantFitxa ? (
+        <p className="sdp-connectar__ajuda">{t('section.connectar.fitxa.carregant', 'Carregant la fitxa…')}</p>
+      ) : social ? (
+        <div className={ambQui ? 'sdp-connectar__directa sdp-connectar__directa--dues' : 'sdp-connectar__directa'}>
+          {ambQui ? (
+            <div className="sdp-connectar__qui">
+              {fitxaCompacta}
+              {selectorCom}
+            </div>
           ) : null}
-        </section>
-        {/* IDEA-14 (Directiva del Mestre, 261024; auditoria Gemini G-04) · Tres
-            camins, cadascun amb el seu botó: «Entre persones» (seguir i
-            escriure a l'autor o al perfil), «Formar part» (la sol·licitud al
-            xat de l'entitat i, a banda, administrar-la) i «A les teues notes»
-            (la còpia al Bloc, el botó gran del peu, l'únic primari, D1). Els dos
-            primers només hi són quan toca. */}
-        {ambRelacio ? (
-          <>
-            <Divisor />
-            <div className="sdp-connectar__cami" role="group" aria-labelledby={`${id}-cami-relacio`}>
-              <div className="sdp-connectar__cami-cap">
-                <p id={`${id}-cami-relacio`} className="sdp-connectar__tipus">{t('section.connectar.camins.relacio', 'Connexió directa')}</p>
-              </div>
-              {/* IDEA-22 (T5) · Amb quin barret et connectes, només si administres alguna organització.
-                  C0200-06 · Les opcions, només les legítimes per a este destí (per a un de teu, també una sola). */}
-              {actorsConnectar.length > 1 && !calEntrar ? (
-                <SelectorDeVariacions llegenda={t('section.connectar.com.llegenda', 'Connectar com a')}
-                  opcions={actorsDelDesti} valor={comValor} onCanvi={setComTriat} />
-              ) : null}
-              <BlocRelacio contacte={contacte} deFitxa={contacte?.deFitxa === true} calEntrar={calEntrar} onEntra={entra}
-                dataMode={dataMode} config={config} com={comEntitat?.valor ?? null} nomCom={comEntitat?.nom ?? ''} nomPersona={nomPersona} />
-              {/* IDEA-22 (punt 2) · La titular que ho ha triat, al mateix grup i amb el mateix barret:
-                  cap capçalera de camí nova ni cap botó primari. */}
-              {contacteTitular ? (
-                <>
-                  <p>{omple(t('section.connectar.titular.intro', '{nom} és titular de {entitat} i ha triat que es veja ací.'), { nom: contacteTitular.nom, entitat: contacte.nom })}</p>
-                  <BlocRelacio contacte={contacteTitular} deFitxa calEntrar={calEntrar} onEntra={entra}
-                    dataMode={dataMode} config={config} com={comEntitat?.valor ?? null} nomCom={comEntitat?.nom ?? ''} nomPersona={nomPersona} />
-                </>
-              ) : null}
-            </div>
-          </>
-        ) : null}
-        {orgId ? (
-          <>
-            <Divisor />
-            <div className="sdp-connectar__cami" role="group" aria-labelledby={`${id}-cami-formar-part`}>
-              <div className="sdp-connectar__cami-cap">
-                <p id={`${id}-cami-formar-part`} className="sdp-connectar__tipus">{t('section.connectar.camins.formarPart', 'Formar part')}</p>
-              </div>
-              {/* IDEA-22 (T5) · Administrar l'organització ja no viu ací: és del Perfil («Membres i connexions»). */}
-              <BlocFormarPart orgId={orgId} contacte={contacteOrg} nom={fitxaOrg?.perfil?.nom || null}
-                tipusOrg={fitxaOrg?.perfil?.tipus || 'entitat'} carregant={fitxaOrg?.estat === 'carregant'} onEntra={entra} />
-            </div>
-          </>
-        ) : null}
-        {ambCamins ? (
-          <>
-            <Divisor />
-            <div className="sdp-connectar__cami-cap">
-              {/* 261024 correccions (G2-02 i R3-05) · «A les teues notes», i l'ajuda diu el
-                  que fan les opcions de davall: només la privada no avisa ningú. */}
-              <p className="sdp-connectar__tipus">{t('section.connectar.camins.mas', 'A les teues notes')}</p>
-              <p className="sdp-connectar__ajuda">
-                {t('section.connectar.mas.ajuda', 'Una còpia al teu Bloc per a llegir-la després, que no et fa membre de res. Tu tries qui ho pot vore: en privat no avisa ningú; a persones o grups de xat els enviarem l’enllaç per xat, i a tot el poble la compartiràs tu al Mur.')}
-              </p>
-            </div>
-          </>
+          <div className="sdp-connectar__relacio">{relacio}</div>
+        </div>
+      ) : (
+        <>
+          {selectorCom}
+          {relacio}
+        </>
+      )}
+    </section>
+  ) : null;
+  /* FEDI-22 · Targeta 2 d'una persona: incloure-la en una entitat teua amb el seu rol.
+     RA-03 (revisió 261104) · El rètol diu el que fa: «Incloure en la teua entitat», no
+     «Formar part». RA-05 · El poble de la fitxa de confiança, per a avisar abans del clic. */
+  const targetaIncloure = ambIncloure ? (
+    <section className="sdp-connectar__targeta" role="group" aria-labelledby={`${id}-cami-incloure`}>
+      <p id={`${id}-cami-incloure`} className="sdp-connectar__tipus">{t('section.connectar.camins.incloure', 'Incloure en la teua entitat')}</p>
+      <BlocIncloureEnEntitat entitats={entitatsIncloure} persona={{ id: contacte.seguiment.id, nom: contacte.nom, poble: pobleDeLaFitxa }}
+        config={config} usuariId={usuariId} />
+    </section>
+  ) : null;
+  /* IDEA-22 (T5) · Administrar l'organització ja no viu ací: és del Perfil («Membres i connexions»). */
+  const targetaFormarPart = orgId ? (
+    <section className="sdp-connectar__targeta" role="group" aria-labelledby={`${id}-cami-formar-part`}>
+      <p id={`${id}-cami-formar-part`} className="sdp-connectar__tipus">{t('section.connectar.camins.formarPart', 'Formar part')}</p>
+      <BlocFormarPart orgId={orgId} contacte={contacteOrg} config={config} nom={fitxaOrg?.perfil?.nom || null}
+        tipusOrg={fitxaOrg?.perfil?.tipus || 'entitat'} carregant={fitxaOrg?.estat === 'carregant'} onEntra={entra} />
+    </section>
+  ) : null;
+  /* FEDI-22 · Targeta 3 · «Guardar a les teues notes»: la connexió de sempre (una
+     còpia al Bloc), amb el seu estat, les refs C16, l'ordre i els textos. */
+  const notesDelBloc = (
+    <details className="sdp-connectar__notes" open={notesObertes} onToggle={(e) => setNotesObertes(e.currentTarget.open)}>
+      <summary className="sdp-connectar__notes-resum">
+        <span className="sdp-connectar__notes-icona" aria-hidden="true"><NotebookPen size={24} aria-hidden="true" focusable="false" /></span>
+        <span className="sdp-connectar__notes-rotul">
+          <span className="sdp-connectar__notes-titol">{t('section.connectar.notes.titol', 'Guardar a les teues notes')}</span>
+          <span className="sdp-connectar__ajuda">{t('section.connectar.notes.subtitol', 'Una còpia al teu Bloc. En privat, no avisa ningú.')}</span>
+        </span>
+      </summary>
+      <div className="sdp-connectar__notes-cos">
+        {social && persona ? <p className="sdp-connectar__identitat">{omple(t('section.connectar.esConnectaA', 'Es connecta a {nom}.'), { nom: persona })}</p> : null}
+        {/* 261024 correccions (G2-02 i R3-05) · L'ajuda diu el que fan les opcions de davall: només la privada no avisa ningú. */}
+        {social || ambCamins ? (
+          <p className="sdp-connectar__ajuda">
+            {t('section.connectar.mas.ajuda', 'Una còpia al teu Bloc per a llegir-la després, que no et fa membre de res. Tu tries qui ho pot vore: en privat no avisa ningú; a persones o grups de xat els enviarem l’enllaç per xat, i a tot el poble la compartiràs tu al Mur.')}
+          </p>
         ) : null}
 
         <section className="sdp-connectar__seccio" aria-labelledby={`${id}-privacitat`}>
@@ -1041,7 +1081,7 @@ function ConnectarElementIntern() {
               <ResumConnexio
                 resultats={resum.resultats}
                 accions={(
-                  <Boto varietat="primari" onClick={() => navigate(resum.ruta, { replace: true })}>
+                  <Boto varietat={notesPrimari ? 'primari' : 'secundari'} onClick={() => navigate(resum.ruta, { replace: true })}>
                     {t('section.connectar.resum.obri', 'Obrir la connexió a les teues notes')}
                   </Boto>
                 )}
@@ -1049,7 +1089,8 @@ function ConnectarElementIntern() {
             </div>
           ) : (
             <>
-              <Boto varietat="primari" mida="gran" ple onClick={handleConnect} carregant={isSaving}
+              {/* FEDI-22 · Primari en 'element' (guardar és l'acció), secundari en 'social' (connectar ho és). */}
+              <Boto varietat={notesPrimari ? 'primari' : 'secundari'} mida="gran" ple onClick={handleConnect} carregant={isSaving}
                 disabled={!calEntrar && (!potConnectar || esperantOriginal || !selectedFolder || faltenDestins)}>
                 {etiquetaConnectar}
               </Boto>
@@ -1065,6 +1106,103 @@ function ConnectarElementIntern() {
             </>
           )}
         </div>
+      </div>
+    </details>
+  );
+  /* RA-01 (revisió 261104) · En 'social' no hi ha columna lateral: les notes,
+     plegades, van davall de les targetes, a tota l'amplària, i T1 no perd els
+     24rem d'una columna gairebé buida. La lateral és només d'un element. */
+  const ambLateral = !social && (Boolean(targetaDirecta) || Boolean(targetaFormarPart));
+
+  return (
+    <UniversalPage
+      /* Decisions 261030 §7 · Les carpetes i les notes del teu Bloc: Traduir no envia res fora. */
+      traduccio={false}
+      chrome="system"
+      /* FEDI-22 · El logotip compacte de la capçalera (regla .sdp-connectar-pagina, modules.css). */
+      className="sdp-connectar-pagina"
+      title={t('section.connectar.kicker', 'Connectar')}
+      subtitle={social
+        ? t('section.connectar.subtitolSocial', 'Connecta’t i escriu-li')
+        : t('section.connectar.where', 'On vols connectar-ho?')}
+      lead={/* IDEA-14 · Amb més d'un camí, l'entradeta diu que són accions distintes.
+             261024 correccions (R3-05) · i diu el mateix que «Qui ho pot vore?»: en
+             privat no avisa ningú; a persones o grups de xat els arriba l'enllaç.
+             P1-11 (pla 261024_2230; G1945-04 de Gemini, ordre del Mestre) · «connectar
+             amb algú», no «seguir»: a Sóc de Poble no se seguix, es connecta.
+             FEDI-22 (C5) · En 'social', l'entradeta només parla d'entitats a qui en administra.
+             RA-01 (revisió 261104) · i és d'una línia: les notes ja diuen que són a banda. */ social
+        ? (actorsConnectar.length > 1 && !calEntrar
+          ? t('section.connectar.leadSocialCom', 'Com a tu o en nom d’una entitat que administres.')
+          : t('section.connectar.leadSocial', 'Connectar-te no et fa membre de res.'))
+        : ambCamins
+          ? t('section.connectar.leadCamins', 'Cada camí té el seu botó: connectar amb algú o escriure-li no et fa membre de res. Si guardes l’element a les teues notes en privat, no avisa ningú; si tries persones o grups de xat, els enviarem l’enllaç.')
+          : t('section.connectar.lead', 'Tria on arriba (per defecte, a la Safata d’Entrada), qui ho pot vore i com ho trobaràs després.')}
+      onConnect={false}
+    >
+      <div className={['sdp-connectar', 'sdp-connectar--graella', ambLateral && 'sdp-connectar--amb-lateral'].filter(Boolean).join(' ')}>
+        {/* D1 · sense promeses: en seed i local no hi ha cap traspàs al compte en
+            entrar, i les carpetes no es poden crear. */}
+        {isGuest && (
+          <Alerta to="avis" titol={t('section.connectar.foraster.titol', 'Mode Foraster actiu')}>
+            {calEntrar
+              ? t('section.connectar.foraster.calEntrar', 'Per a connectar cal entrar al teu compte.')
+              : t('section.connectar.foraster.local', 'Sense sessió, el que connectes es queda només en este dispositiu.')}
+          </Alerta>
+        )}
+
+        {/* FEDI-22 (ordre del Mestre, 261103) · IDEA-14 continua: cada camí té el
+            seu botó. En 'social', la connexió directa i formar part a la graella
+            de targetes i, davall, les notes plegades (RA-01, revisió 261104); en
+            'element', l'objecte i les notes a la principal, i la relació i
+            formar part a la lateral. */}
+        {social ? (
+          <>
+            <div className="sdp-connectar__principal sdp-connectar__principal--targetes">
+              {targetaDirecta}
+              {targetaIncloure}
+              {targetaFormarPart}
+            </div>
+            {notesDelBloc}
+          </>
+        ) : (
+          <div className="sdp-connectar__principal">
+          <section className="sdp-connectar__objecte" aria-labelledby={`${id}-objecte`}>
+            <p className="sdp-connectar__tipus">{etiquetaObjecte(origen.objecte, t)}</p>
+            {/* T54 · mini-card de lectura: foto i títol, sense peu ni data
+                clicable. Sense foto (perfil, pàgina o element que no és ací), la
+                icona de capes ocupa el lloc de la icona del títol perquè la
+                targeta no quede en una línia de text nua. */}
+            <div id={`${id}-objecte`} className="sdp-connectar__previsualitzacio">
+              <UniversalCard
+                title={titolDeLaTargeta}
+                imageUrl={imatgeOriginal || undefined}
+                imageAlt=""
+                icon={imatgeOriginal ? undefined : <Layers size={32} aria-hidden="true" focusable="false" />}
+                hasFooter={false}
+                onDateTime={false}
+                showDateTime={false}
+              />
+            </div>
+            {autorVisible ? <p className="sdp-connectar__autor">{omple(t('section.connectar.de', 'De {nom}'), { nom: autorVisible })}</p> : null}
+            {persona ? <p className="sdp-connectar__identitat">{omple(t('section.connectar.esConnectaA', 'Es connecta a {nom}.'), { nom: persona })}</p> : null}
+            {/* D4 (ordre del Mestre, 260930) · els drets de l'original resolt,
+                amb les mateixes claus que l'avís de l'editor (NotesEditor). */}
+            {dretsReservats ? (
+              <Alerta to="avis" titol={t('section.notes.drets.titol', TITOL_DRETS_RESERVATS)}>
+                {t('section.notes.drets.text', TEXT_DRETS_RESERVATS)}
+              </Alerta>
+            ) : null}
+          </section>
+            {notesDelBloc}
+          </div>
+        )}
+        {ambLateral ? (
+          <div className="sdp-connectar__lateral">
+            {targetaDirecta}
+            {targetaFormarPart}
+          </div>
+        ) : null}
       </div>
     </UniversalPage>
   );
@@ -1129,6 +1267,8 @@ function ConnectarContingutExtern({ params }) {
     <UniversalPage
       traduccio={false}
       chrome="system"
+      /* FEDI-22 · Només el logotip compacte: de .sdp-connectar cap avall, la vista de sempre (PrevisualitzacioExtern). */
+      className="sdp-connectar-pagina"
       title={t('section.connectar.kicker', 'Connectar')}
       subtitle={t('section.connectar.where', 'On vols connectar-ho?')}
       lead={t('section.connectar.extern.lead', 'Un enllaç de fora de Sóc de Poble arriba com una nota teua, que podràs editar.')}

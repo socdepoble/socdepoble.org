@@ -155,15 +155,24 @@
  * un 'SDP-MEDIA://…' anava al resolutor de camins, tornava '/SDP-MEDIA://…' i
  * el filtre el deixava passar com un camí del mateix origen.
  */
-import { useId, useRef, useState } from 'react';
+import { useCallback, useEffect, useId, useMemo, useRef, useState } from 'react';
 import { flushSync } from 'react-dom';
 import { Link } from '../../../app/contexts/RouterContext';
+import { useUIState } from '../../../app/contexts/UIContext';
+import { useToast } from '@/components/universal/NotificationContext.jsx';
 import { resolRecursPropi } from '../../../config/assetResolver.js';
+import { esPrivat } from '../../../config/objecteConnectable.js';
 import { RUTA_DRETS_AUTOR } from '../../../config/systemPages.js';
+import {
+  CODI_TRADUCCIO, LLENGUES_TRADUCCIO, creaTraductor, llenguaDeTraduccio, sanejaDestinsDeclarats, tradueixTot
+} from '../../../data/traductor.js';
+import { carregaTraductorLliure } from '../../../data/traductorDelLloc.js';
 import { usePropietatsCss } from '../../../hooks/usePropietatsCss.js';
 import { useResolvedAsset } from '../../../hooks/useResolvedAsset.js';
 import { posicioDeRetall } from '../../universal/enquadrament/enquadrament.js';
+import { MenuTraduir } from '../../universal/traduccio/MenuTraduir.jsx';
 import { esMitjaOpac } from '../../../utils/mitjaOpac.js';
+import { fontVideoPropia } from '../../../utils/sanitize.js';
 import { isSafeAsset, isSafeUrl, rutaDAutorSegura } from '../../universal/UniversalUtils';
 import { llevaPuntFinal } from '../../universal/editorial.js';
 import { EmoticonaBarra } from '../../universal/EmoticonaBarra.jsx';
@@ -175,12 +184,33 @@ import { emoticonaDeBarra } from '../../../utils/emoji.js';
 import { ActionControl, IconButton, DateTimeControl } from '../atoms/controls.jsx';
 import { PinIcon, TranslateIcon, ShareIcon } from '../atoms/icones.jsx';
 import { useAccions, useUbicacioApp } from '../hooks/useAccions.js';
+import { PARELLS_AVIS_TRADUCCIO, parellDError, traduccioDePaginesDisponible } from '../hooks/useTraduccioPagina.js';
 import { tradueix, useTraductorOpcional } from '../hooks/useTraductorOpcional.js';
 import { PortesTargeta, normalitzaPortes } from './PortesTargeta.jsx';
 import { fontSegura } from './marca.jsx';
 import { usePulsacioLlarga } from './pulsacioLlarga.js';
 
+function useEstatUIOpcional() {
+  try {
+    return useUIState();
+  } catch {
+    return null;
+  }
+}
+
+function useToastOpcional() {
+  try {
+    return useToast();
+  } catch {
+    return null;
+  }
+}
+
 const TITOLS = new Set(['h2', 'h3', 'h4', 'h5', 'h6']);
+const PARELL_SENSE_TRADUCCIO = Object.freeze([
+  'pagina.senseTraduccio',
+  'Esta pàgina no es traduïx: el que mostra no ix d’este dispositiu.'
+]);
 
 /* Ordre del Mestre, 261004 · `imatgePrivada`: el filtre de les peces de les
    apps, el mateix (fontSegura de marca.jsx: resolRecursPropi i
@@ -251,10 +281,12 @@ function SquareBadge({ badge }) {
   const etiqueta = badge.label || (isCalendar
     ? [badge.dia, badge.mes, badge.any].filter(Boolean).join(' ')
     : isPrice ? `Preu: ${badge.value}` : 'Insígnia');
+  const diaText = String(badge.dia ?? '').trim();
+  const midaDia = isCalendar && Array.from(diaText).length > 2 ? midaDelPreu(diaText) : undefined;
 
   const contingut = isCalendar ? (
     <>
-      <span className="sp-card-calendar-badge__dia">{badge.dia}</span>
+      <span className="sp-card-calendar-badge__dia" data-mida={midaDia}>{badge.dia}</span>
       <span className="sp-card-calendar-badge__mes">{badge.mes}</span>
       {badge.any && <span className="sp-card-calendar-badge__any">{badge.any}</span>}
     </>
@@ -389,11 +421,22 @@ function MitjaEnquadrada({ imatge, imageAlt, privada, posicio }) {
   );
 }
 
-function CardBody({ imatge, imageAlt, calendarBadge, squareBadge, price, icon, title, TitleTag, subtitle, body, etiquetes, copyright, portes = null, privada = false, accio = null, etiquetesAmbAccio = false, formaMitja, posicioMitja }) {
+function CardBody({ imatge, imageAlt, video, calendarBadge, squareBadge, price, icon, title, TitleTag, subtitle, body, etiquetes, copyright, portes = null, privada = false, accio = null, etiquetesAmbAccio = false, formaMitja, posicioMitja, langTitle, langSubtitle, langBody }) {
   const activeBadge = squareBadge || (price ? { type: 'price', value: price } : null) || calendarBadge;
   return (
     <>
-      {imatge && formaMitja === FORMA_MITJA_16_9 ? (
+      {video ? (
+        <div className="sp-card-media-container sp-card-media-container--video">
+          <video
+            className="sp-card-media sp-card-media--video"
+            src={video}
+            poster={imatge || undefined}
+            controls
+            playsInline
+            preload="metadata"
+          />
+        </div>
+      ) : imatge && formaMitja === FORMA_MITJA_16_9 ? (
         <MitjaEnquadrada imatge={imatge} imageAlt={imageAlt} privada={privada} posicio={posicioMitja} />
       ) : imatge && (
         <div className="sp-card-media-container">
@@ -412,15 +455,15 @@ function CardBody({ imatge, imageAlt, calendarBadge, squareBadge, price, icon, t
         {title && icon ? (
           <div className="sp-card-heading-with-icon">
             <span className="sp-card-title-icon">{icon}</span>
-            <TitleTag className="sp-card-title">{title}</TitleTag>
+            <TitleTag className="sp-card-title" lang={langTitle || undefined}>{title}</TitleTag>
           </div>
         ) : title ? (
-          <TitleTag className="sp-card-title">{title}</TitleTag>
+          <TitleTag className="sp-card-title" lang={langTitle || undefined}>{title}</TitleTag>
         ) : null}
-        {subtitle && <h4 className="sp-card-subtitle">{subtitle}</h4>}
+        {subtitle && <h4 className="sp-card-subtitle" lang={langSubtitle || undefined}>{subtitle}</h4>}
         {body && (typeof body === 'string'
-          ? <p className="sp-card-text">{body}</p>
-          : <div className="sp-card-text">{body}</div>)}
+          ? <p className="sp-card-text" lang={langBody || undefined}>{body}</p>
+          : <div className="sp-card-text" lang={langBody || undefined}>{body}</div>)}
         {(!accio || etiquetesAmbAccio) && etiquetes.length > 0 && <LlistaEtiquetes etiquetes={etiquetes} />}
         {accio ? <div className="sp-card-accio">{accio}</div> : null}
         {copyright && (
@@ -464,6 +507,7 @@ export function UniversalCard({
   avatarAlt = '',
   imageUrl,
   imageAlt = '',
+  videoUrl,
   price,
   labels = [],
   mainHref,
@@ -541,7 +585,8 @@ export function UniversalCard({
      el mitjà en 16:9 amb el punt focal de l'autor (MitjaEnquadrada, dalt).
      Sense `formaMitja` o amb un altre valor, el DOM de sempre, byte a byte. */
   formaMitja,
-  posicioMitja
+  posicioMitja,
+  traduccio: ambTraduccio
 }) {
   const idDescripcio = useId();
   const safeMainHref = mainHref && isSafeUrl(mainHref) ? mainHref : null;
@@ -553,6 +598,7 @@ export function UniversalCard({
   const avatarDelPort = useResolvedAsset(refDelPort(avatarUrl));
   const safeImageUrl = fontDeLaTargeta(esMitjaOpac(imageUrl) ? imatgeDelPort : imageUrl, imatgePrivada);
   const safeAvatarUrl = fontDeLaTargeta(esMitjaOpac(avatarUrl) ? avatarDelPort : avatarUrl, imatgePrivada);
+  const safeVideoUrl = typeof videoUrl === 'string' && videoUrl.trim() ? fontVideoPropia(resolRecursPropi(videoUrl)) : null;
   const TitleTag = TITOLS.has(headingLevel) ? headingLevel : 'h3';
   /* Directiva de Dignitat Humana (pla 261015_1900, Onada 1.1) · La targeta
      d'una PERSONA (el descriptor de l'element, objecteDePerfil: tipus
@@ -659,11 +705,148 @@ export function UniversalCard({
   const centre = emoticonaDeBarra({ mode: 'lectura', icon: emoticona }).mostra === 'glif'
     && <EmoticonaBarra emoticona={emoticona} />;
 
+  /* FEDI-11 (ordre del Mestre, 261103) · Traducció instantània a les targetes:
+     quan el Traductor Sobirà o el transport lliure d'Apertium està actiu i la
+     targeta no porta un onTranslate propi, el clic a Traduir obri el menú
+     flotant MenuTraduir (com a les pàgines) i traduïx al vol title, subtitle i
+     body en el mateix lloc, amb opció de tornar a «Original (valencià)». Sense
+     servei (entorns de prova sense fixaTraductorLliure ni traductorUrl), es
+     conserva la navegació a /traduccions i el DOM tancat byte a byte. */
+  const ui = useEstatUIOpcional();
+  const toast = useToastOpcional();
+  const urlTraductor = typeof ui?.externalConfig?.traductorUrl === 'string' ? ui.externalConfig.traductorUrl : '';
+  const servidorTraductor = useMemo(() => creaTraductor({ url: urlTraductor }), [urlTraductor]);
+  const destinsCrus = ui?.externalConfig?.traductorLlengues;
+  const clauDestins = Array.isArray(destinsCrus) ? destinsCrus.join(' ') : (typeof destinsCrus === 'string' ? destinsCrus : '');
+  const destinsDelServei = useMemo(
+    () => (servidorTraductor.disponible ? sanejaDestinsDeclarats(clauDestins) ?? null : null),
+    [servidorTraductor, clauDestins]
+  );
+  const esTargetaDApp = idElement != null
+    || typeof premuda === 'boolean'
+    || typeof onAccioSecundaria === 'function'
+    || telemetria?.comptar === false;
+  const esObjecteNoPublic = esPrivat(objecte)
+    || Boolean(objecte && Object.hasOwn(objecte, 'visibility') && objecte.visibility !== 'public');
+  const bloquejadaPerPrivacitat = ambTraduccio === false
+    || esObjecteNoPublic
+    || (esTargetaDApp && ambTraduccio !== true);
+  const traduccioDisponible = !onTranslate && !bloquejadaPerPrivacitat && traduccioDePaginesDisponible(urlTraductor);
+  const botoTraduirRef = useRef(null);
+  const [menuTraduirObert, setMenuTraduirObert] = useState(false);
+  const [traduccioCard, setTraduccioCard] = useState(null);
+  const vidaTraduccioRef = useRef({ peticio: 0, control: null });
+
+  const textCosCard = typeof body === 'string'
+    ? body
+    : (typeof body?.props?.children === 'string' ? body.props.children : '');
+
+  const clauContingutCard = JSON.stringify([
+    typeof title === 'string' ? title : '',
+    typeof subtitle === 'string' ? subtitle : '',
+    textCosCard
+  ]);
+
+  useEffect(() => {
+    const vida = vidaTraduccioRef.current;
+    setTraduccioCard((abans) => (abans && abans.clau === clauContingutCard ? abans : null));
+    setMenuTraduirObert(false);
+    return () => {
+      vida.peticio += 1;
+      vida.control?.abort();
+      vida.control = null;
+    };
+  }, [clauContingutCard]);
+
+  const traduccioVigent = traduccioCard?.clau === clauContingutCard ? traduccioCard : null;
+
+  const avisaTraduccio = useCallback((parell) => {
+    toast?.showToast?.(tradueix(t, parell));
+  }, [toast, t]);
+
+  const triaLlenguaCard = useCallback(async (codi) => {
+    setMenuTraduirObert(false);
+    if (codi && codi === traduccioVigent?.llengua) return;
+    if (codi != null && destinsDelServei && llenguaDeTraduccio(codi) && !destinsDelServei.includes(codi)) {
+      avisaTraduccio(PARELLS_AVIS_TRADUCCIO.senseTraductor);
+      return;
+    }
+    const vida = vidaTraduccioRef.current;
+    vida.peticio += 1;
+    vida.control?.abort();
+    vida.control = null;
+    if (codi == null) {
+      setTraduccioCard(null);
+      return;
+    }
+    if (!llenguaDeTraduccio(codi)) return;
+    if (!traduccioDisponible) {
+      avisaTraduccio(PARELLS_AVIS_TRADUCCIO.senseTraductor);
+      return;
+    }
+    let motor = servidorTraductor;
+    if (!servidorTraductor.disponible) {
+      const torn = vida.peticio;
+      try {
+        motor = (await carregaTraductorLliure())?.creaTraductorApertium?.() ?? null;
+      } catch {
+        motor = null;
+      }
+      if (torn !== vida.peticio) return;
+      if (!motor?.disponible) {
+        avisaTraduccio(PARELLS_AVIS_TRADUCCIO.senseConnexio);
+        return;
+      }
+    }
+    const camps = [];
+    if (typeof title === 'string' && title.trim()) camps.push(['title', title.trim()]);
+    if (typeof subtitle === 'string' && subtitle.trim()) camps.push(['subtitle', subtitle.trim()]);
+    if (textCosCard.trim()) camps.push(['body', textCosCard.trim()]);
+    if (!camps.length) {
+      avisaTraduccio(PARELLS_AVIS_TRADUCCIO.senseText);
+      return;
+    }
+    const id = vida.peticio;
+    const control = typeof AbortController === 'function' ? new AbortController() : null;
+    vida.control = control;
+    try {
+      const originals = new Set();
+      const traduccions = await tradueixTot(motor, camps.map(([, valor]) => valor), codi, {
+        signal: control?.signal,
+        enOriginal: (index) => originals.add(index)
+      });
+      if (id !== vida.peticio) return;
+      vida.control = null;
+      const seg = { clau: clauContingutCard, llengua: codi };
+      camps.forEach(([camp], index) => {
+        if (traduccions[index] && !originals.has(index)) seg[camp] = traduccions[index];
+      });
+      setTraduccioCard(seg);
+    } catch (error) {
+      if (id !== vida.peticio || error?.codi === CODI_TRADUCCIO.CANCELLADA) return;
+      vida.control = null;
+      avisaTraduccio(parellDError(error));
+    }
+  }, [avisaTraduccio, clauContingutCard, destinsDelServei, servidorTraductor, subtitle, textCosCard, title, traduccioDisponible, traduccioVigent?.llengua]);
+
+  const onClicTraduir = !onTranslate && bloquejadaPerPrivacitat
+    ? () => avisaTraduccio(PARELL_SENSE_TRADUCCIO)
+    : traduccioDisponible
+      ? () => setMenuTraduirObert((obert) => !obert)
+      : handleTranslate;
+  const langTraduccio = llenguaDeTraduccio(traduccioVigent?.llengua)?.lang;
+
   const accions = [
     traduirVisible && (
-      <IconButton key="traduir" label={ambTitol('traduir')} onClick={handleTranslate}>
+      <IconButton key="traduir" label={ambTitol('traduir')} onClick={onClicTraduir} refBoto={botoTraduirRef}
+        ariaHaspopup={menuTraduirObert ? 'menu' : undefined}
+        ariaExpanded={menuTraduirObert ? true : undefined}>
         <TranslateIcon className="icon" />
       </IconButton>
+    ),
+    traduirVisible && traduccioDisponible && menuTraduirObert && (
+      <MenuTraduir key="menu-traduir" opcions={LLENGUES_TRADUCCIO} actual={traduccioVigent?.llengua ?? null}
+        onTria={triaLlenguaCard} onTanca={() => setMenuTraduirObert(false)} botoRef={botoTraduirRef} />
     ),
     /* Ordre del Mestre (261007) · el menú de les dues vies, el de la barra.
        Onada 8 (261009) · «En privat» diu amb qui (l'autor, comentarPrivatAmb). */
@@ -771,14 +954,15 @@ export function UniversalCard({
       <CardBody
         imatge={safeImageUrl}
         imageAlt={imageAlt}
+        video={safeVideoUrl}
         calendarBadge={calendarBadge}
         squareBadge={squareBadge}
         price={price}
         icon={icon}
-        title={llevaPuntFinal(title)}
+        title={llevaPuntFinal(traduccioVigent?.title ?? title)}
         TitleTag={TitleTag}
-        subtitle={llevaPuntFinal(subtitle)}
-        body={body}
+        subtitle={llevaPuntFinal(traduccioVigent?.subtitle ?? subtitle)}
+        body={traduccioVigent?.body ?? body}
         etiquetes={etiquetes}
         copyright={drets}
         portes={ambPortes ? <PortesTargeta portes={portesNetes} /> : null}
@@ -787,6 +971,9 @@ export function UniversalCard({
         etiquetesAmbAccio={etiquetesAmbAccio === true}
         formaMitja={formaMitja}
         posicioMitja={posicioMitja}
+        langTitle={traduccioVigent?.title ? langTraduccio : undefined}
+        langSubtitle={traduccioVigent?.subtitle ? langTraduccio : undefined}
+        langBody={traduccioVigent?.body ? langTraduccio : undefined}
       />
 
       {/* P6 (directriu 2325, confirmació 2) · El peu es pinta amb portes o sense. */}

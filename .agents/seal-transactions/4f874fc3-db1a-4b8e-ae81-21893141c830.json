@@ -1,0 +1,22 @@
+{
+  "id": "4f874fc3-db1a-4b8e-ae81-21893141c830",
+  "session": "9d942a0a-1963-4c0d-8650-51b322c4c5f7",
+  "operationId": "fedi-tall-final-relleu",
+  "claim": "9d942a0a-1963-4c0d-8650-51b322c4c5f7:governance-write",
+  "planHash": "ada4587e829f67677385316aadc9630293cb2642160fa2e15e0cc6bb557fb287",
+  "beforeSeal": "e74a403e8e97ff581c090c46a4d7e008f8e0830c86d861d091ab7e7625d3c3f6",
+  "files": [
+    {
+      "path": ".agents/ESTAT.md",
+      "before": "f90887847a8a50e2bd025f2c12c409f080d8895a91d25c01964b84c1d8568abb",
+      "after": "c112e68a1d138524d5b5429ea9061d34de51495ab04e60148d0e4e2370b56d75"
+    },
+    {
+      "path": ".agents/LEDGER.md",
+      "before": "a2dbb3dadaad33bad5bae8ac9ba4f46ebfe2ccec2ace538c8b6fa4bcf357bd58",
+      "after": "a66dfaab8c17c470b413c14c056fe1eb4c701a1c96e3e2feb104ff16685d90b9"
+    }
+  ],
+  "state": "accepted",
+  "afterSeal": "fcfa9fc0cd67643f988cc298475eb1b70a5913e8c7bebdac0f6ad10989280603"
+}

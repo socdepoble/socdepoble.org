@@ -24,7 +24,7 @@ Aquest tractor defineix el flux de treball, l'estil i l'arquitectura necessària
 ## 1. El motor de renderitzat
 Per als informes HTML/CSS del projecte, usa el renderer existent amb Chrome/Chromium headless. `pdftoppm` és una eina de rasterització per a inspeccionar un PDF existent, no un motor de generació HTML; es pot usar en el QA visual. La comanda del renderer és:
 `sh tooling/pdf/render_pdf.sh [entrada.html] [eixida.pdf]`
-L'API és `[--replace] entrada.html eixida.pdf`. Sense --replace rebutja un destí existent; amb la bandera conserva una còpia .bak abans de publicar el PDF nou. Comprova capçalera i mida mínima de l'eixida; no valida tipografia, salts ni el contingut del document.
+L'API és `[--replace] [entrada.html] [eixida.pdf]`. Sense --replace rebutja un destí existent; amb la bandera conserva una còpia .bak abans de publicar el PDF nou. Comprova capçalera i mida mínima de l'eixida; no valida tipografia, salts ni el contingut del document.
 
 ## 2. Tipografia i Maquetació (Estil de Llibre)
 1. **Mida i Font (Estalvi i Llegibilitat):** El text base ha de tindre una mida de **14pt o 15pt**, i s'utilitzarà obligatòriament la família tipogràfica **Noto Sans SemiCondensed** (semi-condensada) per encabir més text sense sacrificar la lectura ni malgastar paper.

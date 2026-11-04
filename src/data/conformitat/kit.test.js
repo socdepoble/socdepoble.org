@@ -9,6 +9,62 @@ import { ambXatsPerDefecte } from '../xatsPerDefecte.js';
    adaptador real: els dobles d'ací són mínims a posta. */
 const cas = (metode, titol) => CASOS.find((c) => c.metode === metode && (!titol || c.titol.includes(titol)));
 
+describe('FEDI-04 · administració multipoble neutral, opcional i sense lectures privilegiades per defecte', () => {
+  const tenantId = '11111111-1111-4111-8111-111111111111';
+  test('inputs invàlids rebutgen amb abast-invalid; ni una resolució ni un error sense codi passen', async () => {
+    const config = { backendUrl: 'https://backend.example', tenantId };
+    const ctx = contextDeConformitat({ config });
+    for (const metode of CAPACITATS.administracioMultipoble) {
+      const c = cas(metode, 'malformat');
+      expect(c).toMatchObject({ espera: 'rebutja', escriu: false, capacitat: 'administracioMultipoble' });
+      let argumentsRebuts;
+      const adaptador = { [metode]: async (...args) => { argumentsRebuts = args; throw Object.assign(new TypeError('Àmbit no vàlid'), { code: 'abast-invalid' }); } };
+      expect(await executaCas(c, adaptador, ctx)).toMatchObject({ estat: 'ok', falles: [] });
+      expect(argumentsRebuts).toEqual([{ ...config, tenantId: 'conformitat-tenant-invalid' }]);
+      expect(config.tenantId).toBe(tenantId);
+      expect(await executaCas(c, { [metode]: async () => [] }, ctx)).toMatchObject({ estat: 'falla' });
+      expect(await executaCas(c, { [metode]: async () => { throw new TypeError('sense codi'); } }, ctx)).toMatchObject({ estat: 'falla' });
+      expect(await executaCas(c, { [metode]: async () => { throw Object.assign(new Error(), { code: 'no-disponible' }); } }, ctx)).toMatchObject({ estat: 'falla' });
+      expect(await executaCas(c, {}, ctx)).toMatchObject({ estat: 'omés', motiu: 'capacitat administracioMultipoble absent' });
+      expect(metodesSenseCas()).not.toContain(metode);
+    }
+  });
+  test('les lectures privilegiades són omeses sense una habilitació explícita del corredor', async () => {
+    for (const metode of CAPACITATS.administracioMultipoble) {
+      let crides = 0;
+      const c = cas(metode, 'autoritzat');
+      const adaptador = { [metode]: async () => { crides++; return []; } };
+      expect(await executaCas(c, adaptador, contextDeConformitat())).toMatchObject({ estat: 'omés' });
+      expect(crides).toBe(0);
+    }
+    const c = cas('adminLligPersonalitzacio', 'autoritzat');
+    expect(await executaCas(c, { adminLligPersonalitzacio: async () => ({}) }, contextDeConformitat({ adminMultipobleAutoritzat: true }))).toMatchObject({ estat: 'omés', motiu: expect.stringContaining('tenantAdministrat') });
+  });
+  test('llista mínima ben formada; rebutja resposta trencada, tenant duplicat o camps aliens', async () => {
+    const c = cas('adminLlistaPobles', 'autoritzat');
+    const ctx = contextDeConformitat({ config: { dataMode: 'remote' }, adminMultipobleAutoritzat: true });
+    for (const valor of [[], [{ id: tenantId, slug: 'sella', nom: 'Sella' }]]) {
+      expect(await executaCas(c, { adminLlistaPobles: async (...args) => { expect(args).toEqual([ctx.config]); return valor; } }, ctx)).toMatchObject({ estat: 'ok' });
+    }
+    for (const valor of [null, {}, [null], [{ id: 'inventat', slug: 'sella', nom: 'Sella' }], [{ id: tenantId, slug: 7, nom: 'Sella' }],
+      [{ id: tenantId, slug: 'sella', nom: ' ' }], [{ id: tenantId, slug: 'sella', nom: 'Sella', correu: 'privat' }],
+      [{ id: tenantId, slug: 'sella', nom: 'Sella' }, { id: tenantId, slug: 'xixona', nom: 'Xixona' }]]) {
+      expect(await executaCas(c, { adminLlistaPobles: async () => valor }, ctx), JSON.stringify(valor)).toMatchObject({ estat: 'falla' });
+    }
+  });
+  test('personalització explícita del tenant: versions/JSON vàlids; cap dada global ni camp extra en reserva', async () => {
+    const c = cas('adminLligPersonalitzacio', 'autoritzat');
+    const ctx = contextDeConformitat({ config: { tenantId: 'global-que-no-es-fa-servir' }, adminMultipobleAutoritzat: true, tenantAdministrat: tenantId });
+    const bona = { taxonomia: { payload: { categories: ['Sella'] }, versio: 7 }, estil: null };
+    expect(await executaCas(c, { adminLligPersonalitzacio: async (...args) => { expect(args).toEqual([{ tenantId }]); return bona; } }, ctx)).toMatchObject({ estat: 'ok' });
+    for (const valor of [undefined, [], {}, { taxonomia: null, estil: 4 }, { ...bona, altre: 'fora' },
+      { taxonomia: { payload: [], versio: 7 }, estil: null }, { taxonomia: { payload: {}, versio: '7' }, estil: null }]) {
+      expect(await executaCas(c, { adminLligPersonalitzacio: async () => valor }, ctx)).toMatchObject({ estat: 'falla' });
+    }
+    expect(ctx.config.tenantId).toBe('global-que-no-es-fa-servir');
+  });
+});
+
 /* Tots els especificadors estàtics d'un font: els que porten from i els nus
    (import 'x';), que acoblarien el kit a un mòdul sense importar-ne cap nom. */
 const importsDe = (font) => [
@@ -40,7 +96,7 @@ describe('el kit és pur i parla del contracte', () => {
   test('el deute del kit és a la vista i no inclou cap mètode provat', () => {
     const sense = metodesSenseCas();
     for (const c of CASOS) expect(sense).not.toContain(c.metode);
-    expect(sense).toContain('loginWithPassword');
+    expect(sense).toEqual([]);
   });
 });
 
@@ -705,4 +761,149 @@ describe('IDEA-24 · els casos de la transferència de la propietat', () => {
       expect(await executaCas(c, {}, ctx())).toMatchObject({ estat: 'omés', motiu: 'capacitat transferenciaPropietat absent' });
     }
   });
+});
+
+/* FEDI-17 · Cada cas additiu s'executa de veritat. Els mutants han de caure
+   pel domini o DTO; no basta haver afegit el nom al cens. */
+describe('FEDI-17 · 120 operacions i refutacions semàntiques', () => {
+  const nous = CASOS.slice(99, 172);
+  const context = () => Object.assign(contextDeConformitat({
+    config: Object.freeze({ dataMode: 'remote', tenantId: 'tenant-de-prova' }), escriptures: true,
+    escenaris: { compteOperatiu: true, compteModeProva: true, compteSenseSessio: true, publicacioOperativa: true,
+      credencialsDeProva: true, contrasenyaLocal: true, transportXifrat: true, destinatariDirecte: 'veina' }
+  }), { ownerUserId: 'persona', filId: 'fil', filEscrivible: 'fil', filDirecte: 'directe' });
+  const instant = '2026-10-07T10:00:00Z';
+  const acte = accio => ({ tipus: 'analitica', accio, versio: accio === 'accepta' ? 'conformitat-v1' : null, al: instant });
+  const missatge = (id, seq, text) => ({ id, seq, filId: 'fil', text, tipus: 'text' });
+  const baixa = { demanada: false, demanadaAl: null, purgaPrevistaAl: null };
+  function valorBo(c, ctx) {
+    if (c.espera === 'rebutja') {
+      if (c.requerix.includes('compteSenseSessio')) return new Error('Cal iniciar sessió.');
+      const code = c.metode === 'updateProfile' ? 'SDP-USER-001' : c.metode === 'reclamaOrganitzacio' ? 'SDP-CLAIM-001'
+        : c.capacitat === 'segonFactor' ? 'no-disponible' : ['clausXat', 'xatMultimediaXifrat'].includes(c.capacitat) ? 'sense-capacitat' : 'mode-local';
+      if (c.metode === 'updateOrganization') return new Error('Cap camp de l’organització per desar.');
+      if (c.metode === 'updateAgent') return Object.assign(new Error('Sense permís'), { status: 403 });
+      return Object.assign(new Error('Rebuig de domini'), { code });
+    }
+    if (c.titol.includes('transport opac')) {
+      const valors = {
+        publicaIdentitatXat: 'kid-opac',
+        laMevaIdentitatXat: [{ usuariId: 'persona', kid: 'kid-opac', sigPub: 'sig-opaca', dhPub: 'dh-opaca', declaracio: {}, autofirma: 'firma-opaca' }],
+        desaFraseXat: true, desaLlibretaXat: 1,
+        laMevaLlibretaXat: { kid: 'kid-opac', comptador: 1, iv: 'iv-opac', ct: 'ct-opac', firma: 'firma-opaca' },
+        estatXifratXat: [{ filId: 'fil', epoca: 1, e2eeDesDeSeq: 3 }],
+        epoquesDelFilXat: [{ epoca: 1, autorId: 'persona', declaracio: {}, firma: 'firma-opaca' }],
+        sobresMeusXat: [{ epoca: 1, receptor: 'persona', kidReceptor: 'kid-opac', enc: 'enc-opac', ct: 'ct-opac' }],
+        enviaXifratXat: { ...missatge(ctx.idXifrat, 50, null), xifrat: { ct: 'ct-opac' } }
+      };
+      return valors[c.metode];
+    }
+    if (c.metode === 'estatConsentiment') return { versioVigent: 'conformitat-v1', url: null, textSha256: null, calReconsentir: true,
+      consentiments: c.titol.includes('revocar') ? [acte('revoca')] : c.titol.includes('registre') ? [acte('accepta')] : [] };
+    const valors = {
+      appendChatMessages: [missatge('a', 1, 'Conformitat lot 1'), missatge('b', 2, 'Conformitat lot 2')],
+      creaFilDirecte: 'directe', loadFils: [{ id: 'directe', tipus: 'directe', altres: [{ id: 'veina' }] }],
+      appendSectionSubmissionNetworkOnly: { id: ctx.idPublicacio, ownerUserId: 'persona', authorOrgId: null, sectionId: 'mur', title: 'Publicació de conformitat', description: 'Text del contracte', payload: {} },
+      updateUserPassword: true, adoptaSessioExterna: false, refrescaSessio: false,
+      loadActesAgenda: [{ id: 'acte', inici: instant, fi: null }], estatBaixa: baixa,
+      registraConsentiment: acte('accepta'), revocaConsentiment: undefined, cancelaBaixa: baixa,
+      exportaLesMeuesDades: { format: 'socdepoble.exportacio.v1', perfil: { id: 'persona' }, notes: [], consentiments: [acte('accepta'), acte('revoca')] },
+      demanaBaixa: { demanada: true, demanadaAl: instant, purgaPrevistaAl: '2026-11-06T10:00:00Z' }, logout: undefined
+    };
+    return valors[c.metode];
+  }
+
+  test('cens exacte del contracte, 32 obligatòries i 94 opcionals; cap nom sense cas', () => {
+    expect(CONTRACTE_NUCLI).toHaveLength(32);
+    expect(Object.keys(CAPACITATS)).toHaveLength(39);
+    expect(Object.values(CAPACITATS).flat()).toHaveLength(94);
+    expect(new Set(CASOS.map(c => c.metode))).toEqual(new Set([...CONTRACTE_NUCLI, ...Object.values(CAPACITATS).flat()]));
+    expect(metodesSenseCas()).toEqual([]);
+  });
+
+  test('els escenaris no poden canviar destinació, escriptures, permisos administratius ni IDs de la passada', () => {
+    const config = { dataMode: 'seed' };
+    const ctx = contextDeConformitat({ config, escriptures: false, escenaris: {
+      config: { dataMode: 'remote' }, escriptures: true, adminMultipobleAutoritzat: true, tenantAdministrat: 'alié',
+      ownerUserId: 'intrús', idMissatge: 'fix', compteOperatiu: 'sí', contrasenyaLocal: true
+    } });
+    expect(ctx.config).toBe(config);
+    expect(ctx.escriptures).toBe(false);
+    expect(ctx.adminMultipobleAutoritzat).toBe(false);
+    expect(ctx.tenantAdministrat).toBeNull();
+    expect(ctx.ownerUserId).toBeNull();
+    expect(ctx.idMissatge).not.toBe('fix');
+    expect(ctx.compteOperatiu).toBe(false);
+    expect(ctx.contrasenyaLocal).toBe(true);
+  });
+
+  test.each(nous.map((c, i) => [i + 100, c]))('%i · invocació, arguments i mutants de %s', async (_index, c) => {
+    const ctx = context();
+    const configAbans = structuredClone(ctx.config);
+    const esperats = c.arguments(ctx);
+    const bo = valorBo(c, ctx);
+    const crides = [];
+    const adaptador = { [c.metode]: async (...args) => { crides.push(args); if (c.espera === 'rebutja') throw bo; return structuredClone(bo); } };
+    expect(await executaCas(c, adaptador, ctx), c.titol).toMatchObject({ estat: 'ok', falles: [] });
+    expect(crides).toHaveLength(1);
+    expect(crides[0]).toEqual(esperats);
+    expect(ctx.config).toEqual(configAbans);
+    if (c.metode === 'logout') expect(crides[0]).toEqual([ctx.config, { scope: 'local', abast: 'pestanya' }]);
+    else expect(crides[0].at(-1)).toEqual(c.titol.includes('guarda explícita de mode seed') || ['loginWithMagicLink', 'createOrganization'].includes(c.metode)
+      ? { ...ctx.config, dataMode: 'seed' } : ctx.config);
+    expect((await executaCas(c, {}, context())).estat).toBe(c.capacitat ? 'omés' : 'falla');
+    if (c.escriu) {
+      const senseOptIn = context(); senseOptIn.escriptures = false;
+      expect(await executaCas(c, adaptador, senseOptIn)).toMatchObject({ estat: 'omés', motiu: 'escriptura no demanada' });
+      expect(crides).toHaveLength(1);
+    }
+    if (c.espera === 'rebutja') {
+      for (const resolt of [undefined, null, {}, [], true]) {
+        expect(await executaCas(c, { [c.metode]: async () => resolt }, context()), c.titol).toMatchObject({ estat: 'falla' });
+      }
+      for (const error of [new Error('genèric'), Object.assign(new Error('ruta desconeguda'), { code: 'HTTP_404', status: 404 })]) {
+        expect(await executaCas(c, { [c.metode]: async () => { throw error; } }, context()), c.titol).toMatchObject({ estat: 'falla' });
+      }
+    } else {
+      let refutats = 0;
+      for (const valor of [undefined, null, {}, [], true, 'valor-incorrecte']) {
+        if (c.comprova(valor, context()).length === 0) continue;
+        expect(await executaCas(c, { [c.metode]: async () => valor }, context()), c.titol).toMatchObject({ estat: 'falla' });
+        refutats++;
+      }
+      expect(refutats, c.titol).toBeGreaterThan(0);
+      expect(await executaCas(c, { [c.metode]: async () => { throw new Error('xarxa'); } }, context())).toMatchObject({ estat: 'falla' });
+    }
+  });
+
+  test('read-after-write detecta no-op de fil, registre i revocació; cap acte duplicat o versió aliena', async () => {
+    const ctx = context();
+    const fil = nous.find(c => c.metode === 'loadFils');
+    expect(await executaCas(fil, { loadFils: async () => [{ id: 'directe', tipus: 'directe', altres: [{ id: 'altra' }] }] }, ctx)).toMatchObject({ estat: 'falla' });
+    for (const text of ['registre', 'revocar']) {
+      const lectura = nous.find(c => c.metode === 'estatConsentiment' && c.titol.includes(text));
+      for (const actes of [[], [acte('accepta'), acte('revoca')], [{ ...acte(text === 'registre' ? 'accepta' : 'revoca'), versio: 'aliena' }]]) {
+        expect(await executaCas(lectura, { estatConsentiment: async () => ({ consentiments: actes }) }, ctx)).toMatchObject({ estat: 'falla' });
+      }
+    }
+    const exportacio = nous.find(c => c.metode === 'exportaLesMeuesDades' && c.requerix.includes('compteOperatiu'));
+    const bo = valorBo(exportacio, ctx);
+    expect(await executaCas(exportacio, { exportaLesMeuesDades: async () => ({ ...bo, perfil: { id: 'altra-persona' } }) }, ctx)).toMatchObject({ estat: 'falla' });
+    expect(await executaCas(exportacio, { exportaLesMeuesDades: async () => ({ ...bo, consentiments: [acte('revoca')] }) }, ctx)).toMatchObject({ estat: 'falla' });
+  });
+});
+
+
+test('FEDI23 · sis casos nous rebutgen resolucions, errors sense codi i codis aliens', async () => {
+  const nous = CASOS.slice(172);
+  expect(nous).toHaveLength(6);
+  expect(nous.map(c => c.metode)).toEqual(CAPACITATS.connexionsPubliques);
+  for (const c of nous) {
+    const ctx = contextDeConformitat();
+    const bo = { [c.metode]: async () => { throw Object.assign(new Error('Invàlid'), { code: 'SDP-CONN-001' }); } };
+    expect(await executaCas(c, bo, ctx)).toMatchObject({ estat: 'ok' });
+    for (const mutant of [async () => [], async () => { throw new Error('Sense codi'); }, async () => { throw Object.assign(new Error('Alié'), { code: 'SDP-CONN-002' }); }]) {
+      expect(await executaCas(c, { [c.metode]: mutant }, ctx)).toMatchObject({ estat: 'falla' });
+    }
+  }
 });

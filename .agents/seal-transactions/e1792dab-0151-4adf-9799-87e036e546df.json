@@ -1,0 +1,27 @@
+{
+  "id": "e1792dab-0151-4adf-9799-87e036e546df",
+  "session": "393a59f6-8219-4667-b13c-049b5f524c55",
+  "operationId": "ronda3-cataleg-i-registre-node",
+  "claim": "393a59f6-8219-4667-b13c-049b5f524c55:governance-write",
+  "planHash": "83df5a8766c88abf9802bf4aaa0d2c53d8c29c65f0d85e35cc63d2b0cd69a4ec",
+  "beforeSeal": "50810511d2ebad1adfa46994d9a5a5183f0c6d823387f8ae575702f58a7db430",
+  "files": [
+    {
+      "path": ".agents/manifest.yaml",
+      "before": "aaf89991bb755358f0a13ae42a6008bd626b03dd7f21b170807ce1ebb61ff097",
+      "after": "b7b3a00f3a3e6f511bddfc16ee46f01334c9d55ddbc37b9327808d1d4cb7a65c"
+    },
+    {
+      "path": ".agents/skills/00_INDEX_SKILLS.md",
+      "before": "9e882a2ed17b5b046421a50bfb4dcdd631698e33d56cd0045bbed927e503cf63",
+      "after": "b439baf81efaa56f2fa581b54a9950c4d855ac1de158c5342616792441f2e5d0"
+    },
+    {
+      "path": "tooling/tests/node-suite-manifest.json",
+      "before": "89cb94220dbdfb41bd8629a39c0e01143e373a8291bf8dc1f9e329a56335bda3",
+      "after": "1f9b745cc22953e9c15e2c471b4efe924e2ef0531825adb933baa8a0810f720b"
+    }
+  ],
+  "state": "accepted",
+  "afterSeal": "e78719a201d1c5a9c135a95106dbe7c1c100621b13ccf312d2286156f6a3dc01"
+}

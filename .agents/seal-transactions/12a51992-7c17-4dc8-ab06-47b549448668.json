@@ -1,0 +1,42 @@
+{
+  "id": "12a51992-7c17-4dc8-ab06-47b549448668",
+  "session": "3f625be9-56b8-4309-a08d-b0706e16a068",
+  "operationId": "fedi-final-evidence-documents-six-ec49",
+  "claim": "3f625be9-56b8-4309-a08d-b0706e16a068:governance-write",
+  "planHash": "322646e85843f3e189fcd8c0153f9857a3441686a3ecff8d8db1a161301f1ff0",
+  "beforeSeal": "0c1d4c210f4546c0961640c64f69b9150b2f2104c8824df34266d6cd1a8f4250",
+  "files": [
+    {
+      "path": "_wiki_de_poble/04_escriptori/261103_1604_auditoria_codex_gauntlet_fediversity.md",
+      "before": "fef1cb47478c0b733598ed4fcbeeae6143bef0de5015e0c43fa623cba0a4f782",
+      "after": "4bed4264c4ef5f87698948b849b1f01fa71ef7d5c60d2802d47d5533a1369a12"
+    },
+    {
+      "path": "_wiki_de_poble/04_escriptori/261103_2350_pla_tancament_verificat_codex_fediversity.md",
+      "before": "687e3492f2bc673132a5ba854af223c15cd7390b45fe456e86831299561d5557",
+      "after": "81d34a892a71b8c3295ef91592f9b240f1cd9e6d003c1e24b4b80682949a9c57"
+    },
+    {
+      "path": ".agents/ESTAT.md",
+      "before": "23c563454215d814624ae52a525db4444121a57d4e37bbd4f6d4e66dc4124906",
+      "after": "0e6d5dbcc31eec43f4ca6770ff2ed605160c55ba46e64245d829e24b09847c5c"
+    },
+    {
+      "path": ".agents/ON_ESTIC.md",
+      "before": "81c73659717389ad43c8571918b687563fde6ef176db780e2bab05cecf006c48",
+      "after": "318401cf3bb4ed9283305af83e5b666e5476091a82255cf9fab9238e96e6cca6"
+    },
+    {
+      "path": ".agents/LEDGER.md",
+      "before": "ee85a850c5541ad471f708e957c4ba06effb79c633ab97603000ee8786e0a6d6",
+      "after": "03676cba18eb3f1cef20588d5cb007002bb254d4f66d0ee2a2aea3835f42e932"
+    },
+    {
+      "path": "_wiki_de_poble/04_escriptori/03_llibre_mestre_tasques_i_idees.md",
+      "before": "1624bb7dce737b58d6537ffd01a081f24dfebf7aa6c4ca542ca41a80373cb464",
+      "after": "3f0d8ee7ef1f537b7de8b6a1cdffe5150686111704a41a0fa164641a7193486f"
+    }
+  ],
+  "state": "accepted",
+  "afterSeal": "5dba4ddc7b60e87f720d2433a0cd610b6f50be95ed7a62cba37db77c3fd23f27"
+}

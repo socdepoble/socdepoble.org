@@ -16,7 +16,7 @@ import { coaccionaAmbit, esFitxaDAmbit } from '../../utils/publicacioUniversal.j
    migració, la data es guarda al dispositiu i publishNote l'aplica igual.
    IDEA-61 (T0, prompt 261102_1532) · `fitxa`, la fitxa d'àmbit del Flux
    Universal de Publicació (jsonb, migració 2611021800). Mateixa quarantena. */
-const opcionalsNotes = creaColumnesOpcionals('notes', { icon: 'icon', publishDate: 'publish_date', fitxa: 'fitxa' });
+const opcionalsNotes = creaColumnesOpcionals('notes', { icon: 'icon', publishDate: 'publish_date', fitxa: 'fitxa', logoImageDark: 'logo_image_dark' });
 
 /* IDEA-61 (T0, prompt 261102_1532) · La fitxa d'àmbit d'una nota, un sol
    objecte { ambit, estat, dades } coaccionat pel contracte en escriure i en
@@ -35,6 +35,9 @@ function validateScope(tenantId) {
 const nota = (row) => ({ id: row.id, folderId: row.folder_id, title: row.title, subtitle: row.subtitle,
   lead: row.lead, content: row.content, copyright: row.copyright, categories: row.categories, tags: row.tags,
   heroImage: row.hero_image, logoImage: row.logo_image, isPublished: row.is_published,
+  /* IDEA-70 · Opcional fins a aplicar la migració: un resum d'un servidor
+     antic no ha de tapar la variant conservada a l'esborrany del dispositiu. */
+  ...(row.logo_image_dark !== undefined ? { logoImageDark: row.logo_image_dark ?? '' } : {}),
   publishedSubmissionId: row.published_submission_id, revision: row.revision,
   estat: row.status ?? 'activa', enPapereraAl: row.trashed_at ?? null,
   /* T5 · d'on ve una nota connectada. Només arriba amb `select=*` (detall per
@@ -198,7 +201,8 @@ export async function createNote(input, config = {}) {
     /* T40 · la data de publicació, si ve: ISO o null. */
     ...(input.publishDate !== undefined ? { publish_date: dataIsoONull(input.publishDate) } : {}),
     /* IDEA-61 · la fitxa d'àmbit, si ve: neta pel contracte o null. */
-    ...(input.fitxa !== undefined ? { fitxa: fitxaDeNota(input.fitxa) } : {}) };
+    ...(input.fitxa !== undefined ? { fitxa: fitxaDeNota(input.fitxa) } : {}),
+    ...(input.logoImageDark !== undefined ? { logo_image_dark: input.logoImageDark } : {}) };
   const { resultat: rows, descartats } = await opcionalsNotes.envia(body, (cos) => request('/rest/v1/notes', config, {
     method: 'POST', headers: { Prefer: 'return=representation' }, body: cos
   }));
@@ -218,7 +222,7 @@ export async function updateNote(id, updates, expectedRevision, config = {}) {
   if (!Number.isSafeInteger(expectedRevision) || expectedRevision < 0) throw new Error('ATURADOR CRÍTIC: expectedRevision és obligatori.');
   const payload = { folder_id: updates.folderId, title: updates.title, subtitle: updates.subtitle,
     lead: updates.lead, content: updates.content, copyright: updates.copyright === undefined ? undefined : String(updates.copyright).slice(0, 256), categories: updates.categories, tags: updates.tags,
-    hero_image: updates.heroImage, logo_image: updates.logoImage, is_published: updates.isPublished,
+    hero_image: updates.heroImage, logo_image: updates.logoImage, logo_image_dark: updates.logoImageDark, is_published: updates.isPublished,
     published_submission_id: updates.publishedSubmissionId,
     origen: updates.origen === undefined ? undefined : normalitzaOrigen(updates.origen),
     /* T47b · l'emoticona (T23). Abans no es mapejava i es perdia en remot. */

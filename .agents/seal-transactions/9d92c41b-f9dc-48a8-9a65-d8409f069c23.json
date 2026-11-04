@@ -1,0 +1,247 @@
+{
+  "id": "9d92c41b-f9dc-48a8-9a65-d8409f069c23",
+  "session": "0efb18e1-1eb0-4751-a850-ae4c455cabe9",
+  "operationId": "ronda3-carrilb-fedi23-connexions-privacitat",
+  "claim": "0efb18e1-1eb0-4751-a850-ae4c455cabe9:governance-write",
+  "planHash": "ec847dbf6d71e45779eb3900b46e87552f3defa140eaed7518038f32a3afb266",
+  "beforeSeal": "47cf6a4028b95458421c66f77b5d1da06dcb41e6955d048c4e24b1686aa5c0ef",
+  "files": [
+    {
+      "path": "src/sections/profile/Seguidors.jsx",
+      "before": "7e0d9fb2f83609c36fe1b35486f1547b237ef99c05d13875327d1da86c35f764",
+      "after": "609401c186e30db1dc38c1b8207d4068238f5d3396979a914504b30a4c0bdf47"
+    },
+    {
+      "path": "src/sections/profile/Seguidors.test.jsx",
+      "before": "593835bb5c5c4ea55a8aa05ae7015efec6274d72e8cb800d1322bc93a7d5c50e",
+      "after": "c3c9e5dfd25ccd370ff5f37108585c5f3ef6bb6ff893daf24763f4e16a6e7000"
+    },
+    {
+      "path": "src/sections/profile/PerfilPublicSection.jsx",
+      "before": "1bbbf1c453c625abbc590c58546f107bf791219b4a8ed70add5cc1009c7fc8d0",
+      "after": "9f77f89d70970673b7a06ae50d96e00f244ecad794cfc51f9c4eb16e0084e7b1"
+    },
+    {
+      "path": "src/sections/profile/DetallPrivacitat.jsx",
+      "before": "e8816d2464aca975cf9a187bfb4c75dfddace1608167326de6edf4923471c0b5",
+      "after": "dd3f522e3a54cdcb53908e273e51c3c3f9a58567bc73c58adce603d40b8adc5a"
+    },
+    {
+      "path": "src/sections/pobles/DetallPoble.jsx",
+      "before": "f1b62168eaefe04fc10a89e1cb7d188a0801a85764054529f3a8963dc02e3d5a",
+      "after": "08a6e754fddebbfbabf862a088ad4f9cc4a90ad080976fc8bdd214a69fdb41d2"
+    },
+    {
+      "path": "src/sections/connectar/ConnectarSection.jsx",
+      "before": "9b0ab2b11c6e706cfb82b8e5dd8a8703aa5a977942c403f62a96a5dc5b3cfc18",
+      "after": "c0a8e79f42ff02e852ad47fc18b5c5c908d6a93aa95a83cc7aaa4cc04bc7628f"
+    },
+    {
+      "path": "src/config/idiomes/ca.js",
+      "before": "aa94df1afc941934a8a1aef1a2a23d447f59333da7ea9052962ff468daa79e00",
+      "after": "c89c6b01d8975107f89cd9e39c03993a6ca8458a789d7b0bc6d79ea15660920f"
+    },
+    {
+      "path": "src/config/idiomes/es.js",
+      "before": "232744b432e8624dc223363feb6a5f86c3b022f39480b7db5ddbddfac60c58d6",
+      "after": "2d06663c461ecd02f4199df3eb2d6351019351680efca112967b469f835fc883"
+    },
+    {
+      "path": "src/config/idiomes/en.js",
+      "before": "8c5b7f37df1650da51ea65b85978a5609981ba719a428694b5736d8265d1870a",
+      "after": "7df06fe98cf9c82b873f086ba4b2bb37fc704cee00e1076dc2cb410503dc1f28"
+    },
+    {
+      "path": "src/config/idiomes/eu.js",
+      "before": "f02365bd0787fd4d63599d8c7c9ef634fed3abe6ef9bbf09b7e29c09e4b1b3a6",
+      "after": "7b26ff1d91d020b9e6922f1b5562aace5dbfea32e04d749399fc7ed1773df20b"
+    },
+    {
+      "path": "src/config/idiomes/gl.js",
+      "before": "bddd323453b6284d31a18924513f9796d06ca869b5c2203f5341469422bad2f8",
+      "after": "b0fc6f6d3362191743f2cd8cb91c361d9a8f7da9428f4b69df325f285b758631"
+    },
+    {
+      "path": "src/sections/profile/Seguidors.visor.test.jsx",
+      "before": "8557c5bb21cac2cba2de121700a60930c9dd8c2ba1086ed84d235ff64a6818fa",
+      "after": "6285bbd11291eec256cb6775aac57a13ae5f6ee8d864f516613572cde854b95f"
+    },
+    {
+      "path": "src/sections/profile/ConnexionsPubliques.jsx",
+      "before": null,
+      "after": "deef81a0f8b10813ce0ae401d55f852d638a5cf28d8d9464874b1a82e1057271"
+    },
+    {
+      "path": "src/sections/profile/ConnexionsPubliques.test.jsx",
+      "before": null,
+      "after": "e8e3330469f68fcba06bcad4072961902de3a01220ff76c1c149dab778097641"
+    },
+    {
+      "path": "src/sections/profile/Seguidors.connexions.test.jsx",
+      "before": null,
+      "after": "59376783f1916ef4faa87f3271396f350010900594ed619d95d9f483b19e288f"
+    },
+    {
+      "path": "src/sections/connectar/VinculacioEntitat.jsx",
+      "before": null,
+      "after": "25c3bced272ac22085a6370f85be672a5d8794f62e0905d188fb658c477b4705"
+    },
+    {
+      "path": "src/data/contracte.js",
+      "before": "5d10ec952b99c6e759f26bb6bfd26b216264cb8185edf5c4ab24488720d6ea56",
+      "after": "d6229505f6aa4f0c09783e01f27dfc338b8f44b998ae3cdb81886f0b34171b5f"
+    },
+    {
+      "path": "src/data/backendPort.js",
+      "before": "fa74e4680131ca668cce0336de2101ee2a4c78d3f012aec5ebcc25841de7ba17",
+      "after": "ef244b423076fc32f80d0730b89184ed3c0387bb6e9fd963f213f31fb601955c"
+    },
+    {
+      "path": "src/data/localSeguiments.js",
+      "before": "398d9ca2d510bd561d51e0f325c911bb0f1ca38bbdfffc271966cbc0f1463e3f",
+      "after": "99e08bc597c019f9a599f5dfcc651dd40dfcee2ca6b2107416a27a12c83d5a24"
+    },
+    {
+      "path": "src/data/local/comunitatLocal.js",
+      "before": "1b950295245418b0b390795363ce9ac801e2f7e76ca51609292553924e1806ad",
+      "after": "3822d40939fa0d9dccd28ea62ec2e58f76b5c95071f4a8d9e1b5272ce54e2d46"
+    },
+    {
+      "path": "src/data/local/adaptadorLocal.js",
+      "before": "15e56fc6effbba3c19993ffbe6040436524450e7b3dcaaf91fc07aaec7699bd1",
+      "after": "b4d5b5b27c12c74755797bdbf862ab83d6ff732a88141b045723b957a906a0a5"
+    },
+    {
+      "path": "src/data/localPerfils.js",
+      "before": "7b2b89b996a60b53c626e3190d27a9e7c0ec72ff67a6badee052a55d0bc363b6",
+      "after": "3b76b07752779225e36a4fb3bdabfb98a1477959c1f1ba3dd180199a4925d6dd"
+    },
+    {
+      "path": "src/data/conformitat/kit.js",
+      "before": "0ef0d2d944e1f50db1911acfb3c6466c5ac7b1a929b762d63f3dc0c03b88a366",
+      "after": "bc19591210599295764814bff64c5b7332f95967bdf09c1bf5c9ed242de3f1f8"
+    },
+    {
+      "path": "src/data/local/adaptadorLocal.test.js",
+      "before": "a50d5667e66c29206c1803afcbe607c717dd439917844d7c723a68ddeef877d9",
+      "after": "c34021663a8ea49c62e90ca7ea53d19de4df7208e92a1e94a5568b4e9f003c3f"
+    },
+    {
+      "path": "src/data/local/adaptadorLocal.conformitat.test.js",
+      "before": "d1f59cc589416bd7664fa94dd86436676cf6d223f06fc8e82f4d4382c107495b",
+      "after": "09ba0a3dff4131fa4c18f26c3fc86ba4c79a6da94437473a5d9b2875189c612b"
+    },
+    {
+      "path": "src/data/conformitat/kit.test.js",
+      "before": "2b83e06a4b7bfad810ba751ec7c6df4a6f893e451acb66a26553218ef52b0e29",
+      "after": "cea16683c3a1e4c419c8beb685268563105e5b16bc226857aca7c97664caf671"
+    },
+    {
+      "path": "src/data/local/adaptadorLocal.multipoble.test.js",
+      "before": "d21d7c1968eba43746b82229ad68a83d09a14a933c656cd4ae9224e8b6c995c7",
+      "after": "c555a7125200573f7cee47d78362f98bfe05523df57cc68812306bda237a07c3"
+    },
+    {
+      "path": "src/data/contracte.connexions.test.js",
+      "before": null,
+      "after": "9ff5483b8ef86b775e8dcf6c7e744745e7f1ed7b04e77c457d8b86ea511f63d5"
+    },
+    {
+      "path": "src/data/local/adaptadorLocal.connexions.test.js",
+      "before": null,
+      "after": "de540ea0dc71089be76dfa3de2f5cd287786c5e03eeb2d41109ef4e15e3d53c0"
+    },
+    {
+      "path": "src/data/supabase/seguiments.js",
+      "before": "bed9f4830ddbfab0b6ce8e6337e451bed66f021dde30e875d97669cd08828ffc",
+      "after": "bbb4b66dcd4f4af6182b597117528946e841dc54bef0c935f36605999ff27c45"
+    },
+    {
+      "path": "src/data/supabase/index.js",
+      "before": "bcf8eacb4295cd47bb9b3bb72c6ffabe95da18cb72d69fb36a05ba4ca8bdd177",
+      "after": "f67f34d107024ee68d62ec04fe41621ba9861e0649460600845a5b54d4b02a52"
+    },
+    {
+      "path": "src/data/supabase/connexionsPubliques.test.js",
+      "before": null,
+      "after": "670bcfbc2775d150688e9afa559ace863892013f4efb108c8738417827b1bc5c"
+    },
+    {
+      "path": "src/data/supabase/connexionsPubliques.migracio.test.js",
+      "before": null,
+      "after": "b50b00f90aa06e0a64d6826898e869593abda47131f1d130b10dec33b8ae4e14"
+    },
+    {
+      "path": "supabase/migrations/2611032100_connexions_publiques_i_membres.sql",
+      "before": null,
+      "after": "960234f4786a6fcf4c570b83d7160654d5aaa9abdfab646c9cae5a0efb04f582"
+    },
+    {
+      "path": "supabase/ordre_desplegament.json",
+      "before": "50bc6396d05da90a60b48d31b178d9ad7b9cffe346c55168f4804d30cb0f56b8",
+      "after": "9ec2ef2724d6a7532cf0c5bdf77b6d6824cc6c9b5bb354a6e9e1e8f1ba7eb566"
+    },
+    {
+      "path": "supabase/README.md",
+      "before": "9099b93721b0195da51b305e17e9c1a67eb228d8a3bd22b9deab2952ce462e75",
+      "after": "4d111911a2810f48b0d2f2599114a77576d8e83e46f46b221e3503ccdd6e3a10"
+    },
+    {
+      "path": "supabase/migrations/README.md",
+      "before": "d1966d4627283c570b74fa3b9b8da6127ba75f1dc6d9b578f7639d988b782301",
+      "after": "77edf66222cfa91b3efbdd99b5cdbaf916997de50fe53cd7e23249250fbc3bc2"
+    },
+    {
+      "path": "tests/connexions-publiques-postgres.test.mjs",
+      "before": null,
+      "after": "ffe1b2c9913fe971a804247f0b72c1a4047efb885260b216d940b319e717012f"
+    },
+    {
+      "path": "src/data/supabase/moderacio.js",
+      "before": "022200c40ce585be5193d35fd1c2d310423fe84ce8faa4cfd1d8a65a80ce6f82",
+      "after": "47075fa5a7e1bed10810815cca1e0cb0bc8d60caf84ee77ac96c2ffd5c861155"
+    },
+    {
+      "path": "src/data/supabase/seguiments.test.js",
+      "before": "3852e53ee41f9c5b194efaf039914311a5995f91448da597e6ae29c188b16b93",
+      "after": "ff0f34b41615a4512339352fe276914bac8f65b9c21b1d6cf909212d46470c79"
+    },
+    {
+      "path": "src/data/supabase/connexionsPubliques.seed.test.js",
+      "before": null,
+      "after": "1b3c7c8fd1bdc8f6ed59f54f39419b0afd42857c589102f91621dc21da564c8c"
+    },
+    {
+      "path": "_wiki_de_poble/02_saber/architecture/api_port_neutral_i_allotjament_model_b.md",
+      "before": "a8872e9fc7475dceb68c52b55baaafbf7e77bb397189f73d07589db4b0ebb1db",
+      "after": "95972428f16d24366180cd598989c878e970a09712d86c34a4018f0ff421c886"
+    },
+    {
+      "path": "_wiki_de_poble/02_saber/00_index_maquina.md",
+      "before": "9efad95c3e6009070e55346a5509848740a842a356973d1dd4fa169ce28fae23",
+      "after": "abc0e45361c851a3eb1df6940948b31f75ccc82829d2dccb61f96f6c2934842f"
+    },
+    {
+      "path": "src/data/local/README.md",
+      "before": "380010f21c0e64919feb1dfc983be3c7488f646ab37289b3b8b2de06dfb82885",
+      "after": "92589e2298db16fc9ec61f0c296698f20a4983dcddfdfa14f4f811a88520f2eb"
+    },
+    {
+      "path": "src/data/localXat.silenci.test.js",
+      "before": "8216ba78331d416e668b96e51c62e2e3c49c40d75fbac7fb37fe440225f3ffbe",
+      "after": "0183f7d42ec3dccb4d879764174113bda7d835e8627ec37eda6e55d0c5cc5b34"
+    },
+    {
+      "path": "tests/administracio-multipoble-postgres.test.mjs",
+      "before": "e379f90b31e8b73486a58c3247bbcde640d7a7c4ef0c5f4f77560318513b9b3b",
+      "after": "8bc38d4708f3b1aba9781fb274b435df12b6f6616eb4ec1299eb736204edf3fe"
+    },
+    {
+      "path": "src/data/wikiManifest.js",
+      "before": "b74048583fedf67f5390d86a7cd0196ed9f04cafd26208f00f9667c4182b2880",
+      "after": "749f638ef4edc413d106ade35d99f643de1af57c2d12f9970ea891200a34dad1"
+    }
+  ],
+  "state": "accepted",
+  "afterSeal": "8d057b5d8220f5cadefa19a60ba97674665b8a1bdbc23fb556b4a00941673e25"
+}

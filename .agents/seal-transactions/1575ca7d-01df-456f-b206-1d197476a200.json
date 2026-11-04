@@ -1,0 +1,22 @@
+{
+  "id": "1575ca7d-01df-456f-b206-1d197476a200",
+  "session": "698860a8-86e5-4997-90a2-9a8a4f52bb22",
+  "operationId": "fedi-opendata-gauntlet",
+  "claim": "698860a8-86e5-4997-90a2-9a8a4f52bb22:governance-write",
+  "planHash": "f1c6b238a36adf80dbfcf7e371702693b33a5bd640054001c96472e0b371d4c0",
+  "beforeSeal": "b5872f93b2108cd5d074a6c7d6940713d638b3331766b21638e8d4bb5baaeac7",
+  "files": [
+    {
+      "path": "vite.config.js",
+      "before": "a7894d0195584d24dee63df2842bf24142b7b2a58ffa6e3df29a6785be3e1498",
+      "after": "f9ae0aa801fe5e1d73a126c93c744147cfa1441ed86d17c3c945302bcfef22d4"
+    },
+    {
+      "path": ".agents/skills/core-gauntlet-loop/SKILL.md",
+      "before": "3aa5702df83b878f2429c49243c4bfd29263affde2a28b3cf054c1b5e904b83d",
+      "after": "0dd7f87d5e767aae187f7163d18ba45b21a51a8c6edb641cc35e6d444aeb96a1"
+    }
+  ],
+  "state": "accepted",
+  "afterSeal": "fcfa9fc0cd67643f988cc298475eb1b70a5913e8c7bebdac0f6ad10989280603"
+}

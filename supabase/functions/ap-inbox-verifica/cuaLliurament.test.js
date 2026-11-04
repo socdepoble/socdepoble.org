@@ -103,6 +103,18 @@ describe('xarxaDe i importaClauPrivada', () => {
       expect(await importaClauPrivada(dolenta, { subtle })).toBe(null);
     }
   });
+
+  test('Ed25519 PKCS#8 signa i es verifica; ECDSA i X25519 continuen fora del perfil', async () => {
+    const ed = await subtle.generateKey('Ed25519', true, ['sign', 'verify']);
+    const importada = await importaClauPrivada(pem('PRIVATE KEY', await subtle.exportKey('pkcs8', ed.privateKey)), { subtle });
+    expect(importada).toMatchObject({ type: 'private', extractable: false, algorithm: { name: 'Ed25519' }, usages: ['sign'] });
+    const bytes = new TextEncoder().encode('ActivityPub Ed25519');
+    expect(await subtle.verify('Ed25519', ed.publicKey, await subtle.sign('Ed25519', importada, bytes), bytes)).toBe(true);
+    for (const [algorisme, usos] of [[{ name: 'ECDSA', namedCurve: 'P-256' }, ['sign', 'verify']], ['X25519', ['deriveBits']]]) {
+      const parell = await subtle.generateKey(algorisme, true, usos);
+      expect(await importaClauPrivada(pem('PRIVATE KEY', await subtle.exportKey('pkcs8', parell.privateKey)), { subtle })).toBeNull();
+    }
+  });
 });
 
 describe('lliura: una fila signada, i res quan no toca', () => {

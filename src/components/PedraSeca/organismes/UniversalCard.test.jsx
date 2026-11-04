@@ -494,3 +494,162 @@ describe('la referència opaca d’una pujada es resol pel port', () => {
     expect(isSafeAsset(' sdp-media://mitjans/x.webp')).toBe(true);
   });
 });
+
+describe('FEDI-11 · traducció instantània al peu de la targeta amb MenuTraduir', () => {
+  afterEach(async () => {
+    const { fixaTraductorLliure, fixaCarregadorLliure } = await import('../../../data/traductorDelLloc.js');
+    fixaTraductorLliure(null);
+    fixaCarregadorLliure(null);
+  });
+
+  test('quan el traductor lliure està actiu, Traduir obri el menú flotant i traduïx title, subtitle i body al vol sense navegar', async () => {
+    const { fixaTraductorLliure, fixaCarregadorLliure } = await import('../../../data/traductorDelLloc.js');
+    fixaTraductorLliure('apertium');
+    fixaCarregadorLliure(async () => ({
+      creaTraductorApertium: () => ({
+        disponible: true,
+        tradueix: async (textos, desti) => ({
+          traduccions: textos.map((txt) => `[${desti}] ${txt}`),
+          desti,
+          cache: false
+        })
+      })
+    }));
+
+    pinta({
+      title: 'Fira de l’Oli',
+      subtitle: 'Tast popular a la cooperativa',
+      body: 'Diumenge al matí es presenta la campanya nova.',
+      labels: ['Cultura'],
+      hasFooter: true
+    });
+
+    act(() => {
+      troba('[aria-label="Traduir Fira de l’Oli"]').click();
+    });
+    expect(mocks.navigate).not.toHaveBeenCalled();
+    const opcioCastella = [...arrel.querySelectorAll('[role="menuitemradio"]')].find((el) => el.textContent.includes('Castellà'));
+    expect(opcioCastella).toBeTruthy();
+
+    await act(async () => {
+      opcioCastella.click();
+    });
+
+    await waitFor(() => {
+      expect(troba('.sp-card-title')?.textContent).toBe('[ES] Fira de l’Oli');
+      expect(troba('.sp-card-subtitle')?.textContent).toBe('[ES] Tast popular a la cooperativa');
+      expect(troba('.sp-card-text')?.textContent).toBe('[ES] Diumenge al matí es presenta la campanya nova.');
+      expect(troba('.sp-card-title')?.getAttribute('lang')).toBe('es');
+      expect(troba('.sp-card-subtitle')?.getAttribute('lang')).toBe('es');
+      expect(troba('.sp-card-text')?.getAttribute('lang')).toBe('es');
+      expect(troba('.sp-card-body')?.hasAttribute('lang')).toBe(false);
+      expect(troba('.sp-card-labels')?.closest('[lang]')).toBeNull();
+    });
+
+    /* Tornar a l'original en valencià */
+    act(() => {
+      troba('[aria-label="Traduir Fira de l’Oli"]').click();
+    });
+    const opcioOriginal = [...arrel.querySelectorAll('[role="menuitemradio"]')].find((el) => el.textContent.includes('Original'));
+    expect(opcioOriginal).toBeTruthy();
+    await act(async () => {
+      opcioOriginal.click();
+    });
+    expect(troba('.sp-card-title')?.textContent).toBe('Fira de l’Oli');
+    expect(troba('.sp-card-subtitle')?.textContent).toBe('Tast popular a la cooperativa');
+    expect(troba('.sp-card-text')?.textContent).toBe('Diumenge al matí es presenta la campanya nova.');
+    expect(troba('.sp-card-title')?.hasAttribute('lang')).toBe(false);
+    expect(troba('.sp-card-subtitle')?.hasAttribute('lang')).toBe(false);
+    expect(troba('.sp-card-text')?.hasAttribute('lang')).toBe(false);
+    expect(troba('.sp-card-body')?.hasAttribute('lang')).toBe(false);
+  });
+
+  test('F11-01 i F11-02 · una publicació de membres (objecteDe amb ownerUserId) o una targeta d’app local (idElement / telemetria.comptar=false) bloqueja la traducció externa i avisa amb el toast de privacitat', async () => {
+    const { fixaTraductorLliure, fixaCarregadorLliure } = await import('../../../data/traductorDelLloc.js');
+    const { objecteDe } = await import('../../../config/navigation.js');
+    const espiaMotor = vi.fn();
+    fixaTraductorLliure('apertium');
+    fixaCarregadorLliure(async () => {
+      espiaMotor();
+      return { creaTraductorApertium: () => ({ disponible: true, tradueix: vi.fn() }) };
+    });
+
+    /* 1) Publicació de membres pel descriptor canònic objecteDe */
+    const descriptorMembre = objecteDe({ id: 'post-membre-1', title: 'Secret de la colla', ownerUserId: 'u-123' }, 'mur');
+    expect(descriptorMembre.visibility).toBe('members');
+    pinta({
+      title: 'Secret de la colla',
+      body: 'No ha d’eixir a Apertium ni MyMemory.',
+      objecte: descriptorMembre,
+      hasFooter: true
+    });
+    act(() => {
+      troba('[aria-label="Traduir Secret de la colla"]').click();
+    });
+    expect(troba('[role="menu"]')).toBeNull();
+    expect(espiaMotor).not.toHaveBeenCalled();
+    expect(mocks.navigate).not.toHaveBeenCalled();
+    expect(mocks.toast).toHaveBeenCalledWith('Esta pàgina no es traduïx: el que mostra no ix d’este dispositiu.');
+
+    /* 2) Targeta d'app local (La Nevera: idElement i telemetria.comptar=false) */
+    cleanup();
+    arrel = document.createElement('div');
+    mocks.toast.mockClear();
+    pinta({
+      title: 'Llet d’ametla',
+      subtitle: '1 l · al prestatge de dalt',
+      idElement: 'item-nevera-1',
+      telemetria: { comptar: false },
+      hasFooter: true
+    });
+    act(() => {
+      troba('[aria-label="Traduir Llet d’ametla"]').click();
+    });
+    expect(troba('[role="menu"]')).toBeNull();
+    expect(espiaMotor).not.toHaveBeenCalled();
+    expect(mocks.navigate).not.toHaveBeenCalled();
+    expect(mocks.toast).toHaveBeenCalledWith('Esta pàgina no es traduïx: el que mostra no ix d’este dispositiu.');
+  });
+
+  test('F11-04 · traduïx també quan body és un paràgraf JSX i no posa lang als camps que han quedat en l’original', async () => {
+    const { fixaTraductorLliure, fixaCarregadorLliure } = await import('../../../data/traductorDelLloc.js');
+    fixaTraductorLliure('apertium');
+    fixaCarregadorLliure(async () => ({
+      creaTraductorApertium: () => ({
+        disponible: true,
+        tradueix: async (textos, desti) => ({
+          traduccions: textos.map((txt, idx) => (idx === 1 ? txt : `[${desti}] ${txt}`)),
+          originals: [1],
+          desti,
+          cache: false
+        })
+      })
+    }));
+
+    pinta({
+      title: 'Bàndol municipal',
+      subtitle: 'Ajuntament de La Torre',
+      body: <p className="sp-card-text">Es talla el carrer Major demà a les huit.</p>,
+      hasFooter: true
+    });
+
+    act(() => {
+      troba('[aria-label="Traduir Bàndol municipal"]').click();
+    });
+    const opcioCastella = [...arrel.querySelectorAll('[role="menuitemradio"]')].find((el) => el.textContent.includes('Castellà'));
+    await act(async () => {
+      opcioCastella.click();
+    });
+
+    await waitFor(() => {
+      expect(troba('.sp-card-title')?.textContent).toBe('[ES] Bàndol municipal');
+      expect(troba('.sp-card-title')?.getAttribute('lang')).toBe('es');
+      /* El subtítol ha tornat com a original (índex 1): no porta lang="es" */
+      expect(troba('.sp-card-subtitle')?.textContent).toBe('Ajuntament de La Torre');
+      expect(troba('.sp-card-subtitle')?.hasAttribute('lang')).toBe(false);
+      /* El cos JSX s'ha extret i traduït amb lang="es" */
+      expect(troba('.sp-card-text')?.textContent).toBe('[ES] Es talla el carrer Major demà a les huit.');
+      expect(troba('.sp-card-text')?.getAttribute('lang')).toBe('es');
+    });
+  });
+});

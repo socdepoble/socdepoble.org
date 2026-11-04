@@ -49,7 +49,7 @@
  */
 
 import fs from 'node:fs';
-import { isDocumentArchive } from '../lib/document-corpus.mjs';
+import { isDocumentArchive, isVerifiedPublicApiResource } from '../lib/document-corpus.mjs';
 import path from 'node:path';
 import crypto from 'node:crypto';
 import { execSync } from 'node:child_process';
@@ -251,7 +251,7 @@ function recorre(rel, acc) {
     if (isDocumentArchive(r) || EXCLOU.some((re) => re.test(r))) continue;
     if (e.isSymbolicLink()) continue;
     if (e.isDirectory()) recorre(r, acc);
-    else if (e.name.toLowerCase().endsWith('.md')) acc.push(r);
+    else if (e.name.toLowerCase().endsWith('.md') && !isVerifiedPublicApiResource(ARREL, r)) acc.push(r);
   }
   return acc;
 }

@@ -67,6 +67,18 @@ function esIriHttpsValid(valor) {
   }
 }
 
+/* FEP-8b32 permet HTTP(S) i DID URL per al mètode de verificació. Açò
+   valida la forma; la confiança en la clau continua sent del cridador.
+   https://fediverse.codeberg.page/fep/fep/8b32/#proof-generation */
+function esIriMetodeValid(valor) {
+  if (typeof valor !== 'string' || !valor || /\s/.test(valor)) return false;
+  if (/^did:[a-z0-9]+:[^/?#]+(?:[/?#].*)?$/.test(valor)) return true;
+  try {
+    const url = new URL(valor);
+    return ['https:', 'http:'].includes(url.protocol) && Boolean(url.hostname) && !url.username && !url.password;
+  } catch { return false; }
+}
+
 /* ── SHA-256 FIPS 180-4 pur i isomòrfic (zero dependències externes) ───── */
 
 const K_SHA256 = new Uint32Array([
@@ -256,6 +268,47 @@ export function descodificaBase64Url(text) {
   return resultat;
 }
 
+/* ── Base58-btc / Multibase `z` (W3C vc-di-eddsa §2.2.1) ──────────────
+   Cap enter amb precisió limitada: la conversió treballa amb dígits petits
+   i conserva els zeros inicials. La signatura Ed25519 sempre té 64 bytes. */
+const ALFABET_BASE58_BTC = '123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz';
+
+export function codificaBase58Btc(bytes) {
+  if (!(bytes instanceof Uint8Array)) throw new TypeError('Base58-btc necessita Uint8Array.');
+  let zeros = 0;
+  while (zeros < bytes.length && bytes[zeros] === 0) zeros += 1;
+  const digits = [];
+  for (let i = zeros; i < bytes.length; i += 1) {
+    let carry = bytes[i];
+    for (let j = 0; j < digits.length; j += 1) {
+      carry += digits[j] * 256;
+      digits[j] = carry % 58;
+      carry = Math.floor(carry / 58);
+    }
+    while (carry) { digits.push(carry % 58); carry = Math.floor(carry / 58); }
+  }
+  return '1'.repeat(zeros) + digits.reverse().map(digit => ALFABET_BASE58_BTC[digit]).join('');
+}
+
+export function descodificaBase58Btc(text) {
+  if (typeof text !== 'string' || /[^1-9A-HJ-NP-Za-km-z]/.test(text)) {
+    throw new TypeError('Cadena Base58-btc invàlida.');
+  }
+  let zeros = 0;
+  while (zeros < text.length && text[zeros] === '1') zeros += 1;
+  const bytes = [];
+  for (let i = zeros; i < text.length; i += 1) {
+    let carry = ALFABET_BASE58_BTC.indexOf(text[i]);
+    for (let j = 0; j < bytes.length; j += 1) {
+      carry += bytes[j] * 58;
+      bytes[j] = carry & 255;
+      carry = Math.floor(carry / 256);
+    }
+    while (carry) { bytes.push(carry & 255); carry = Math.floor(carry / 256); }
+  }
+  return new Uint8Array([...new Array(zeros).fill(0), ...bytes.reverse()]);
+}
+
 /* ── Canonització JSON determinista RFC 8785 (JCS) per a FEP-8b32 ──────── */
 
 // En mode `u` un parell vàlid és un sol punt de codi astral: la classe només
@@ -268,6 +321,16 @@ function cadenaJcs(cadena) {
     throw new TypeError('[portabilitatFediversity] JCS no admet surrogats UTF-16 solitaris (RFC 8785 §3.2.2.2).');
   }
   return JSON.stringify(cadena);
+}
+
+/** Un array JSON té un valor propi en cada índex. map() omet els forats
+ * i podia produir «[,]» o confondre [<forat>] amb []. Mai es normalitza eixa
+ * estructura abans de signar; es rebutja també amb valors heretats al prototip.
+ */
+function exigixArrayDens(array) {
+  for (let i = 0; i < array.length; i += 1) {
+    if (!Object.hasOwn(array, i)) throw new TypeError('[portabilitatFediversity] JCS no admet arrays amb forats.');
+  }
 }
 
 /**
@@ -292,6 +355,7 @@ export function canonitzaJsonJcs(valor) {
     return cadenaJcs(valor);
   }
   if (Array.isArray(valor)) {
+    exigixArrayDens(valor);
     const items = valor.map((element) => (element === undefined ? 'null' : canonitzaJsonJcs(element)));
     return `[${items.join(',')}]`;
   }
@@ -312,7 +376,10 @@ export function canonitzaJsonJcs(valor) {
  */
 function clonaSenseClausProhibides(valor) {
   if (valor === null || typeof valor !== 'object') return valor;
-  if (Array.isArray(valor)) return valor.map(clonaSenseClausProhibides);
+  if (Array.isArray(valor)) {
+    exigixArrayDens(valor);
+    return valor.map(clonaSenseClausProhibides);
+  }
   if (!esObjectePla(valor)) {
     throw new TypeError('[portabilitatFediversity] Es requereix un objecte pla JSON-LD.');
   }
@@ -518,12 +585,22 @@ export function verificaMigracioActorFep7628({ activitatMove, actorOrigen, actor
 
 /* ── 2 · FEP-8b32: Object Integrity Proofs (`eddsa-jcs-2022`) ─────────── */
 
-// dateTime XSD amb zona obligatòria: ancorada, sense quantificadors niats (zero ReDoS).
-const PATRO_DATETIME_XSD = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{1,9})?(?:Z|[+-]\d{2}:\d{2})$/;
+// Perfil dateTime amb any de quatre xifres i zona obligatòria. XSD 1.1
+// §3.3.7.2: Date.parse sol accepta dies impossibles i offsets >14 hores.
+const PATRO_DATETIME_XSD = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})(?:\.(\d{1,9}))?(?:Z|[+-](\d{2}):(\d{2}))$/;
 
 function esDateTimeXsd(valor) {
-  return typeof valor === 'string' && valor.length <= 40 && PATRO_DATETIME_XSD.test(valor)
-    && !Number.isNaN(Date.parse(valor));
+  if (typeof valor !== 'string' || valor.length > 40) return false;
+  const parts = PATRO_DATETIME_XSD.exec(valor);
+  if (!parts) return false;
+  const [, any, mes, dia, hora, minut, segon, fraccio = '', zonaH = '0', zonaM = '0'] = parts;
+  const y = Number(any), m = Number(mes), d = Number(dia), h = Number(hora);
+  const bisiest = y % 4 === 0 && (y % 100 !== 0 || y % 400 === 0);
+  const dies = [31, bisiest ? 29 : 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+  return m >= 1 && m <= 12 && d >= 1 && d <= dies[m - 1]
+    && Number(minut) < 60 && Number(segon) < 60
+    && (h < 24 || (h === 24 && Number(minut) === 0 && Number(segon) === 0 && !/[1-9]/.test(fraccio)))
+    && Number(zonaM) < 60 && (Number(zonaH) < 14 || (Number(zonaH) === 14 && Number(zonaM) === 0));
 }
 
 function obteSubtleCrypto() {
@@ -604,8 +681,8 @@ export async function signaObjecteFediversityFep8b32(
   if (!esObjectePla(privateKeyJwk) || privateKeyJwk.kty !== 'OKP' || privateKeyJwk.crv !== 'Ed25519' || !privateKeyJwk.d) {
     throw new TypeError('[portabilitatFediversity] `privateKeyJwk` ha de ser una clau privada JWK Ed25519 vàlida.');
   }
-  if (!esIriHttpsValid(verificationMethod)) {
-    throw new TypeError('[portabilitatFediversity] `verificationMethod` ha de ser un IRI HTTPS vàlid.');
+  if (!esIriMetodeValid(verificationMethod)) {
+    throw new TypeError('[portabilitatFediversity] `verificationMethod` ha de ser un IRI HTTP(S) o DID URL vàlid.');
   }
   if (proofPurpose !== 'assertionMethod') {
     throw new TypeError('[portabilitatFediversity] FEP-8b32 exigeix `proofPurpose` = `assertionMethod`.');
@@ -618,7 +695,7 @@ export async function signaObjecteFediversityFep8b32(
   delete docSenseProof.proof;
 
   const proofConfig = {
-    '@context': [CONTEXT_ACTIVITYSTREAMS, CONTEXT_DATA_INTEGRITY_V2],
+    ...(Object.hasOwn(docSenseProof, '@context') ? { '@context': docSenseProof['@context'] } : {}),
     type: 'DataIntegrityProof',
     cryptosuite: CRYPTOSUITE_FEP8B32,
     verificationMethod,
@@ -636,18 +713,11 @@ export async function signaObjecteFediversityFep8b32(
     ['sign'],
   );
   const signaturaBuffer = await subtle.sign({ name: 'Ed25519' }, clauPrivada, dadesASignar);
-  const proofValue = `u${codificaBase64Url(new Uint8Array(signaturaBuffer))}`;
+  const proofValue = `z${codificaBase58Btc(new Uint8Array(signaturaBuffer))}`;
 
   return congelaProfund({
     ...docSenseProof,
-    proof: {
-      type: 'DataIntegrityProof',
-      cryptosuite: CRYPTOSUITE_FEP8B32,
-      verificationMethod,
-      proofPurpose,
-      created: String(created),
-      proofValue,
-    },
+    proof: { ...proofConfig, proofValue },
   });
 }
 
@@ -684,8 +754,8 @@ export async function verificaObjecteFediversityFep8b32(
     proof.type !== 'DataIntegrityProof' ||
     proof.cryptosuite !== CRYPTOSUITE_FEP8B32 ||
     typeof proof.proofValue !== 'string' ||
-    !proof.proofValue.startsWith('u') ||
-    !esIriHttpsValid(proof.verificationMethod)
+    !proof.proofValue.startsWith('z') ||
+    !esIriMetodeValid(proof.verificationMethod)
   ) {
     return congelaProfund({
       valid: false,
@@ -723,7 +793,9 @@ export async function verificaObjecteFediversityFep8b32(
 
   let signaturaBytes;
   try {
-    signaturaBytes = descodificaBase64Url(proof.proofValue.slice(1));
+    // Base58 de 64 bytes: màxim 88 caràcters més el prefix Multibase.
+    if (proof.proofValue.length > 89) throw new TypeError('Signatura massa llarga.');
+    signaturaBytes = descodificaBase58Btc(proof.proofValue.slice(1));
   } catch {
     return congelaProfund({
       valid: false,
@@ -751,10 +823,19 @@ export async function verificaObjecteFediversityFep8b32(
     // `proofValue`; cap camp afegit o llevat (expires, domain, created…) queda fora.
     const opcionsProva = clonaSenseClausProhibides(proof);
     delete opcionsProva.proofValue;
-    const proofConfig = {
-      '@context': [CONTEXT_ACTIVITYSTREAMS, CONTEXT_DATA_INTEGRITY_V2],
-      ...opcionsProva,
-    };
+    /* W3C vc-di-eddsa §3.3.2, passos 4–7. El context de la prova ha de ser
+       un prefix ordenat del document i és el context que entra al resum.
+       Cap context ActivityStreams fix: trencaria els vectors oficials. */
+    if (Object.hasOwn(opcionsProva, '@context')) {
+      const deProva = Array.isArray(opcionsProva['@context']) ? opcionsProva['@context'] : [opcionsProva['@context']];
+      const deDocument = Object.hasOwn(docSenseProof, '@context')
+        ? (Array.isArray(docSenseProof['@context']) ? docSenseProof['@context'] : [docSenseProof['@context']]) : [];
+      if (deProva.length > deDocument.length || deProva.some((valor, index) => canonitzaJsonJcs(valor) !== canonitzaJsonJcs(deDocument[index]))) {
+        return congelaProfund({ valid: false, motiu: 'CONTEXT_PROVA_INVALID', verificationMethod: proof.verificationMethod, sha256Document: null });
+      }
+      docSenseProof['@context'] = opcionsProva['@context'];
+    }
+    const proofConfig = opcionsProva;
     ({ dadesASignar, sha256Document } = calculaHashEntradaFep8b32(docSenseProof, proofConfig));
   } catch (err) {
     // Falla en tancat: una clau prohibida o un valor no JSON mai es verifica.

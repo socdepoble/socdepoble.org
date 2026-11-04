@@ -27,7 +27,7 @@ export function netejaCamp(field, value) {
      buida per a llevar-la; qualsevol altra cosa es descarta. */
   if (field === 'icon') return emojiSol(value) || '';
   if (CAMPS_HTML.has(field)) return sanitizeHtml(value);
-  if (field === 'heroImage' || field === 'logoImage') return esFontImatgeSegura(value) ? String(value).trim() : '';
+  if (field === 'heroImage' || field === 'logoImage' || field === 'logoImageDark') return esFontImatgeSegura(value) ? String(value).trim() : '';
   if (typeof value === 'boolean') return value;
   // If we start saving categories and tags, they are arrays
   if (Array.isArray(value)) return value.map(v => netejaText(v)).filter(Boolean);

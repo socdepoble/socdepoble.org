@@ -134,6 +134,8 @@ export function creaCompteLocal(e) {
 
     /* ── Salut i administració: cap servidor ni cap superadmin local ── */
     async comprovaServidor() { return { ok: false }; },
+    /* FEDI-16 · Un node local no publica cap mínim de botiga ni fa transport. */
+    async versioMinimaClient() { return null; },
     async adminListUsers() { return []; },
     async adminListOrganizations() { return []; },
 

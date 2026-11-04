@@ -310,14 +310,15 @@ describe('la candidatura NLnet a l’Atles (30-10-2026)', () => {
     expect(text.split('\n').slice(0, 3)).toEqual([ENCAPCALAMENT_DE_SOC_DE_POBLE, candidatura(), '· Candidatura NLnet · NGI Fediversity — /page/fediversity']);
   });
 
-  test('diu el que diu la pàgina: en avaluació, sense diners rebuts, i les xifres del formulari', () => {
-    expect(candidatura()).toContain('en avaluació');
+  test('diu el que diu la pàgina: no va passar la primera selecció, sense diners rebuts, i les xifres del formulari', () => {
+    expect(candidatura()).toContain('no va passar la primera selecció');
     expect(candidatura()).toContain("encara no s'ha concedit cap diner");
     expect(candidatura()).toContain('50.000 €');
     expect(candidatura()).toContain('1.000 hores');
-    expect(PAGE_COPY.fediversity.lead).toContain("encara no s'ha concedit cap diner");
+    expect(PAGE_COPY.fediversity.lead).toContain('no va passar la primera selecció');
+    expect(PAGE_COPY.fediversity.lead).toContain('No s’ha concedit finançament');
     expect(RUTA_INTERNA.test('/page/fediversity')).toBe(true);
-    expect(plega(candidatura())).not.toMatch(/concedida|hem rebut|financat per/);
+    expect(plega(candidatura())).not.toMatch(/concedida|hem rebut|financat per|en avaluacio/);
   });
 
   /* Ordre del Mestre (30-10-2026, ~00:50) · Els nodes actius i la visió

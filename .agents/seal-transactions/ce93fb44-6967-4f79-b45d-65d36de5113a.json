@@ -1,0 +1,17 @@
+{
+  "id": "ce93fb44-6967-4f79-b45d-65d36de5113a",
+  "session": "625a8d02-d178-49ee-9397-59af7e86ecb8",
+  "operationId": "fedi-ledger-relleu",
+  "claim": "625a8d02-d178-49ee-9397-59af7e86ecb8:governance-write",
+  "planHash": "18d29f2ffd82de0a02582daa509d287c00bf94e4091692c4e171ddd30c50f5d7",
+  "beforeSeal": "d5956a4bc2cad7cd93bef847c6212983c526f88f61b67b7f3562d81b50ad0af4",
+  "files": [
+    {
+      "path": ".agents/LEDGER.md",
+      "before": "15e70fc671556d1821448a0d001db9b7a2bec9a2545118c8e112d71b091726b4",
+      "after": "a2dbb3dadaad33bad5bae8ac9ba4f46ebfe2ccec2ace538c8b6fa4bcf357bd58"
+    }
+  ],
+  "state": "accepted",
+  "afterSeal": "fcfa9fc0cd67643f988cc298475eb1b70a5913e8c7bebdac0f6ad10989280603"
+}

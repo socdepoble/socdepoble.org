@@ -1,0 +1,17 @@
+{
+  "id": "0b0fdb32-7882-429e-b7fa-51ab3209d646",
+  "session": "bfba635e-d942-4c22-83c1-2b3d75014048",
+  "operationId": "final-acta-code-tests-phase",
+  "claim": "bfba635e-d942-4c22-83c1-2b3d75014048:governance-write",
+  "planHash": "fc4f825c48e562233e7423a3a0d6e96bb5fc73051d6dfcff03e928cd439cbf0c",
+  "beforeSeal": "6fccc0b0b1bc92722582d37ebd21dbdf86520cc9db380e551ea3cd941783637b",
+  "files": [
+    {
+      "path": "_wiki_de_poble/10_actes/261103_1724_acta_marmota_codex_gauntlet_fediversity_i_pendents_verificats.md",
+      "before": "221ee4ce9d0fc4cd83bcf56e077a39ac64ed53d6b761cb77274df9c8fca8400a",
+      "after": "c57b6fd3910dff0f454dd101999521c089bd2c538ba4ba5f761b7cd7af7ecf49"
+    }
+  ],
+  "state": "accepted",
+  "afterSeal": "5dba4ddc7b60e87f720d2433a0cd610b6f50be95ed7a62cba37db77c3fd23f27"
+}

@@ -96,6 +96,7 @@ export const FONTS_CONSOLA = Object.freeze(['src/sections/consola/seoConsola.js'
 export const LLAVORS = Object.freeze([
   ['mercat', 'src/sections/mercat/marketSeed.js', 'MOCK_MARKET_ITEMS'],
   ['events', 'src/sections/mur/eventsSeed.js', 'CALENDAR_EVENTS'],
+  ['events', 'src/sections/mur/eventsSeed.js', 'FEATURED_EVENTS'],
   ['pobles', 'src/sections/pobles/townsSeed.js', 'MOCK_TOWNS']
 ].map(entrada => Object.freeze(entrada)));
 

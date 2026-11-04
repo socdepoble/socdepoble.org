@@ -1,0 +1,22 @@
+{
+  "id": "9aa2a69c-281d-418e-98bf-7d7000e3785c",
+  "session": "6588dd8a-da19-4e98-abe2-eeb3ba5c138c",
+  "operationId": "ronda3-carrilb-fedi23-checkpoint",
+  "claim": "6588dd8a-da19-4e98-abe2-eeb3ba5c138c:governance-write",
+  "planHash": "d77ebeb52359b3d8aaada32c797ba978085219870927e5d2d1563963c5259326",
+  "beforeSeal": "c7d2826ef6078a64aacd9cf8fbc50a07f6412c5c9bb246dd39bf54026a41b29e",
+  "files": [
+    {
+      "path": "_wiki_de_poble/04_escriptori/261103_1604_auditoria_codex_gauntlet_fediversity.md",
+      "before": "f7432201e5181f190bdded353e2d48151b293d111471119150029cb01060b648",
+      "after": "bb85e59f2c4fc57416f35f44d3eaed8e6c70b4fba17325d062369faadbe2a639"
+    },
+    {
+      "path": "_wiki_de_poble/04_escriptori/03_llibre_mestre_tasques_i_idees.md",
+      "before": "65742a5c3dd86a649a3b0222a5e4fb84aa7464b6f39e204b92a8eefb25579622",
+      "after": "31d9622f83244d66e18f53e61e91f7d2dce1dca9628c9988bf8a25a86ce82ddd"
+    }
+  ],
+  "state": "accepted",
+  "afterSeal": "8d057b5d8220f5cadefa19a60ba97674665b8a1bdbc23fb556b4a00941673e25"
+}

@@ -242,6 +242,73 @@ test('sense barres enganxades, el marge és només el scroll-margin-top de l’e
   expect(dins.moviments).toEqual([{ top: 1050 - 40, behavior: 'smooth' }]);
 });
 
+/* R3-FT-01 · El CSS del focus i el salt de l’Índex reserven la mateixa
+   zona. Geometria explícita de DOM: jsdom no implementa maquetació ni el
+   desplaçament natiu del focus. Les expectatives són la zona visible final,
+   no una repetició de la fórmula interna. */
+test.each([
+  ['dues barres i padding equivalent', 132, 0, true, 132],
+  ['padding més gran que les barres', 168, 0, true, 168],
+  ['marge propi més gran', 132, 174, true, 174],
+  ['barres encara sense CSS de focus', 0, 0, true, 132],
+  ['sense barres, marge propi', 16, 40, false, 40],
+  ['sense cap reserva', 0, 0, false, 0],
+])('la zona reservada es compta una vegada: %s', (_cas, padding, marge, enganxades, esperat) => {
+  const { dins, fora } = muntaAmbDesplacadors(pagina());
+  dins.style.scrollPaddingTop = `${padding}px`;
+  Object.defineProperty(dins, 'clientTop', { configurable: true, value: 5 });
+  if (enganxades) {
+    for (const [selector, top] of [['header.bar-blue', 0], ['section.bar-orange', 58]]) {
+      const barra = dins.querySelector(selector);
+      Object.assign(barra.style, { position: 'sticky', top: `${top}px` });
+      Object.defineProperty(barra, 'offsetHeight', { configurable: true, value: 58 });
+    }
+  }
+  const titol = dins.querySelector('article.content-wrapper h3');
+  titol.style.setProperty('--sdp-space-4', '16px');
+  titol.style.scrollMarginTop = `${marge}px`;
+  titol.getBoundingClientRect = () => ({ top: 900 - (dins.scrollTop - 200) });
+  dins.scrollTo = function scrollTo(opcions) { this.moviments.push(opcions); this.scrollTop = opcions.top; };
+  fireEvent.click(botoIndex()); fireEvent.click(entrada('Segona secció'));
+  expect(titol.getBoundingClientRect().top - dins.getBoundingClientRect().top - dins.clientTop).toBe(esperat);
+  expect(dins.moviments).toHaveLength(1); expect(fora.moviments).toEqual([]);
+});
+
+test('contained és el desplaçador real: no suma la reserva del visor exterior ni mou l’amfitrió', () => {
+  const { dins, fora } = muntaAmbDesplacadors(pagina({ layout: 'contained' }));
+  dins.style.scrollPaddingTop = '132px';
+  const paginaDins = dins.querySelector('.sdp-universal-page-container--contained');
+  const propi = fesDesplacador(paginaDins, { top: 100, scrollTop: 50 });
+  propi.style.scrollPaddingTop = '132px';
+  for (const [selector, top] of [['header.bar-blue', 0], ['section.bar-orange', 58]]) {
+    const barra = propi.querySelector(selector);
+    Object.assign(barra.style, { position: 'sticky', top: `${top}px` });
+    Object.defineProperty(barra, 'offsetHeight', { configurable: true, value: 58 });
+  }
+  const titol = propi.querySelector('article.content-wrapper h3');
+  titol.style.setProperty('--sdp-space-4', '16px'); titol.getBoundingClientRect = () => ({ top: 900 });
+  fireEvent.click(botoIndex()); fireEvent.click(entrada('Segona secció'));
+  expect(propi.moviments).toEqual([{ top: 718, behavior: 'smooth' }]);
+  expect(dins.moviments).toEqual([]); expect(fora.moviments).toEqual([]);
+});
+
+test('un bloc amb scroll propi només usa les seues reserves; les barres de la pàgina són fora del seu viewport', () => {
+  const { dins } = muntaAmbDesplacadors(<PageFrame chrome="system" title="Document"><div data-testid="bloc-intern"><h3>Destí intern</h3></div></PageFrame>);
+  dins.style.scrollPaddingTop = '132px';
+  const propi = fesDesplacador(dins.querySelector('[data-testid="bloc-intern"]'), { top: 200, scrollTop: 10 });
+  propi.style.scrollPaddingTop = '20px';
+  for (const [selector, top] of [['header.bar-blue', 0], ['section.bar-orange', 58]]) {
+    const barra = dins.querySelector(selector);
+    Object.assign(barra.style, { position: 'sticky', top: `${top}px` });
+    Object.defineProperty(barra, 'offsetHeight', { configurable: true, value: 58 });
+  }
+  const titol = propi.querySelector('h3');
+  titol.style.scrollMarginTop = '30px'; titol.getBoundingClientRect = () => ({ top: 800 });
+  fireEvent.click(botoIndex()); fireEvent.click(entrada('Destí intern'));
+  expect(propi.moviments).toEqual([{ top: 580, behavior: 'smooth' }]);
+  expect(dins.moviments).toEqual([]);
+});
+
 /* La pell de l'encastat (jsdom no resol la cascada: es llig el full, com
    src/css/pantallaCompleta.capes.test.js). Dins de .sdp-root, el vel de
    l'Índex ocupa la caixa de l'App i no 100vw x 100vh de la pàgina de

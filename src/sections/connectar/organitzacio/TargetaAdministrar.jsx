@@ -10,9 +10,12 @@
  * IDEA-14 (Directiva del Mestre, 261024; G-04) · Administrar no és connectar:
  * el botó diu «Demanar administrar-la» (amb revisió) o «Administrar-la ara»
  * (poble de proves), i l'explicació, «Si l'administres…». Formar-ne part és
- * el bloc germà (BlocFormarPart). Cap botó d'ací és primari: a Connectar,
- * l'únic primari és el del MAS (D1, «una per vista» de Pedra Seca), i
- * demanar l'administració és una acció secundària (G-04).
+ * el bloc germà (BlocFormarPart). Cap botó d'ací és primari («una per
+ * vista» de Pedra Seca): demanar l'administració és una acció secundària
+ * (G-04). FEDI-22 (ordre del Mestre, 261103) · DEROGAT «a Connectar, l'únic
+ * primari és el del MAS» (D1): el primari és el de connectar-hi en un perfil
+ * i el de guardar-ho a les notes en un element. Esta targeta no es munta a
+ * /connectar.
  */
 import { useState } from 'react';
 import { Alerta, AreaText, Boto, Camp, Carregant } from '../../../components/PedraSeca/index.js';

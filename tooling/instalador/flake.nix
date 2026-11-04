@@ -23,7 +23,7 @@
       checks = each (system:
         let pkgs = nixpkgs.legacyPackages.${system}; in {
           instalador = pkgs.runCommand "proves-instalador" { nativeBuildInputs = [ pkgs.nodejs_24 ]; } ''
-            node --test ${socdepoble}/tooling/instalador/inicia-node-germa.test.mjs
+            node --test ${socdepoble}/tooling/instalador/inicia-node-germa.test.mjs ${socdepoble}/tooling/instalador/inventari-estatic.test.mjs
             touch "$out"
           '';
         });

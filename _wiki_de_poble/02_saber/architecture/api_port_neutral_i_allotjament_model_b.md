@@ -5,10 +5,11 @@ description: Inventari verificable del port i requisits d'allotjament Model B
 ---
 # API del port neutral i allotjament Model B
 
-Contrast: arbre de l'assalt 261101_1246 (torn_3f5652a2; el hash del commit es posa
-en fer-lo), 01-11-2026. Esborrany. Inventari de codi; no acredita
-cap nou desplegament ni l'aprovació d'una ADR. Les signatures i DTO són a
-`src/data/contracte.js` i a les implementacions; la llista següent enumera noms.
+**Contrast inicial:** arbre de l'assalt 261101_1246, 2026-11-01. **Recompte actualitzat**
+des de `src/data/contracte.js` el 2026-11-03 (FEDI-16/17/23, arbre de treball, sense commit).
+**Esborrany. Inventari de codi**; **no acredita cap nou desplegament** ni l'aprovació d'una ADR.
+Les **signatures i DTO** són a `src/data/contracte.js` i a les **implementacions**;
+la **llista següent** enumera noms.
 
 ## 32 operacions obligatòries del Nucli (`CONTRACTE_NUCLI`)
 
@@ -47,11 +48,13 @@ Font: `src/data/contracte.js`. Una implementació vàlida les oferix totes:
 - `subscribeToXat`
 - `unsubscribeFromXat`
 
-## 37 capacitats atòmiques opcionals (`CAPACITATS`)
+## 39 capacitats atòmiques opcionals (`CAPACITATS`)
 
-86 mètodes addicionals; 118 mètodes en `CONTRACTE_BACKEND`. Una capacitat
-està disponible només si el port disposa de tots els seus mètodes. No hi ha
-un camp `capacitats` obligatori a l'adaptador ni `capacitatsDisponibles()`.
+**94 mètodes addicionals**; **126 mètodes** en `CONTRACTE_BACKEND`. **Recompte obtingut**
+amb `Object.keys(CAPACITATS).length`, `CONTRACTE_NUCLI.length` i
+`CONTRACTE_BACKEND.length` del **mòdul executable**, no per recompte manual. Una capacitat
+està disponible només si el port disposa de **tots els seus mètodes**. **No hi ha**
+un camp `capacitats` **obligatori** a l'adaptador ni `capacitatsDisponibles()`.
 
 | Capacitat | Mètodes literals |
 | --- | --- |
@@ -83,9 +86,11 @@ un camp `capacitats` obligatori a l'adaptador ni `capacitatsDisponibles()`.
 | `transferenciaPropietat` | `transfereixPropietatOrganitzacio` |
 | `segonFactor` | `llistaFactors`, `inscriuFactor`, `reptaFactor`, `verificaFactor`, `retiraFactor` |
 | `personalitzacio` | `adminDesaPersonalitzacio`, `adminHistorialPersonalitzacio` |
+| `administracioMultipoble` | `adminLlistaPobles`, `adminLligPersonalitzacio` |
 | `moderacio` | `denunciaContingut`, `llistaBloquejos`, `bloquejaAutor`, `desbloquejaAutor` |
 | `normesConvivencia` | `estatNormes`, `acceptaNormes` |
 | `seguiments` | `segueix`, `deixaDeSeguir`, `estatSeguiment`, `elsMeusSeguiments`, `quiEmSegueix` |
+| `connexionsPubliques` | `preferenciesConnexions`, `desaVisibilitatConnexions`, `connexionsPubliquesDe`, `membresIEntitatsConnectadesDe`, `inclouPersonaEnEntitat`, `solicitaUnirSeAEntitat` |
 | `titularPublic` | `loadTitularPublic` |
 | `consentimentTitular` | `estatTitularPublic`, `marcaTitularPublic` |
 | `dadesObertes` | `llegixDadesObertes` |
@@ -102,10 +107,75 @@ getters i capacitats parcials. No és una prova funcional d'un servidor remot.
 
 `src/data/conformitat/kit.js` **exporta** `CASOS`, `contextDeConformitat`,
 `executaCas` i `metodesSenseCas`. **Els casos tornen** `ok`, `falla` o `omés`.
-**Les omissions** i `metodesSenseCas()` fan visible la **cobertura pendent**; no es
-pot dir que les 118 operacions tinguen **comportament certificat**. **Les proves**
-són `src/data/conformitat/kit.test.js` i `qualitat.test.js` en eixa carpeta.
-No hi ha les API `verificaContracteBackend` o `executaKitDeConformitat`.
+El tall FEDI-17 del 03-11-2026 té **172 casos sobre els 120 mètodes** i
+`metodesSenseCas()` torna una llista buida. Els 99 casos originals es conserven;
+les cinc passades han registrat una unió de **120 invocacions reals**. **Les omissions**
+per capacitat, dades o autorització continuen separades dels casos superats.
+Les proves són `src/data/conformitat/kit.test.js` i `qualitat.test.js`, amb corredors
+locals i de Supabase seed/remot amb doble de transport explícit. Les sondes i
+els mutants independents detecten crides absents, DTO incorrectes i operacions
+inoperants. No hi ha les API `verificaContracteBackend` o `executaKitDeConformitat`.
+Esta cobertura contractual local **no acredita 120 èxits de servidor remot**,
+ni totes les branques possibles de cada mètode.
+
+### Connexions i pertinença (FEDI-23)
+
+La **capacitat opcional** `connexionsPubliques` amplia el contracte a **126 mètodes**, amb **178 casos** al kit i `metodesSenseCas()` buit. Els 172 casos previs es conserven en ordre; els **sis casos nous** comproven rebuig estructural abans d’efectes. Els camins positius, la privacitat, els permisos i les carreres es proven separadament amb els **adaptadors reals** locals, els wrappers remots i PostgreSQL. Esta combinació **no acredita** 126 èxits en un servidor remot.
+
+La preferència `visibilitatConnexions` és **privada per defecte**. El perfil pot habilitar la **lectura pública** i ocultar vincles individuals. Una **excepció privada** a qualsevol extrem domina; els **perfils privats**, els bloquejos i el representant bloquejat d’una entitat no es projecten. La **consulta pública** és la mateixa per a visitants i propietàries. Les preferències amb vincles editables són una **lectura autoritzada** separada, també a empresa, entitat i poble. El poble es resol explícitament per **id o slug**, sense reservar al tenant actiu.
+
+`inclouPersonaEnEntitat({orgId,personaId,rol})` requerix **autoritat de l’entitat**; només qui ja podia **nomenar administradores** pot assignar `administrador`. `treballador` i `usuari` són **papers funcionals** separats dels permisos de propietat. `solicitaUnirSeAEntitat({orgId,rol})` només registra una **petició pendent**: no crea pertinença ni concedix cap permís. Les comprovacions de servidor usen la **identitat autenticada** i els rols persistits. La **política injectada** del magatzem local només és autoritat local.
+
+La Frontissa Sollutia conserva el seu límit GET i el mateix port neutral. La migració de connexions es prepara i assaja localment; la seua disponibilitat remota s’ha de comprovar separadament.
+### Administració multipoble (FEDI-04)
+
+La capacitat nova és **opcional** i separada del **llistat públic de pobles**.
+`adminLlistaPobles(config)` crida `admin_llista_pobles` i torna només
+**`[{ id, slug, nom }]`** de `public.towns`. `adminLligPersonalitzacio(config)`
+exigix el **`tenantId` explícit** i crida `admin_llegix_personalitzacio` per a
+eixe tenant: torna `taxonomia` i `estil`, amb payload i versió o null. **Les dues
+RPC** requerixen `private.es_superadmin()`, que exigix rol **superadmin** i JWT
+**`aal2`**; ser administrador a `town_memberships` no hi atorga accés.
+
+Les **facetes existents del Tauler** fan lectures, desats i historial amb la
+**config del poble triat**. **No canvien la sessió**, el tenant global ni el contingut
+global. La selecció torna a validar-se quan canvia la sessió i les **lectures
+velles** **s'avorten i s'ignoren**. La **previsualització de l'estil** es limita a la
+faceta. Les mutacions reutilitzen `adminDesaPersonalitzacio` i
+`adminHistorialPersonalitzacio`, amb la **mateixa autoritat de servidor**.
+
+**Límit de desplegament:** `2611031700_administracio_multipoble.sql` és additiva
+i la seua aplicació remota **no queda acreditada** per les proves locals.
+L'adaptador remot oferix el contracte al codi; la disponibilitat efectiva del
+servidor es comprova separadament. Els errors **no es convertixen en llistes
+buides** ni en pobles de mostra. `tests/administracio-multipoble-postgres.test.mjs`
+ha aplicat **74 migracions reals** a PostgreSQL17.5 WASM (PGlite0.3.16), en l'ordre
+canònic de desplegament: **40/40 proves** i mutants d'autoritat/historial refutats,
+més un mutant independent de filtre tenant. Auth/Storage/Realtime tenen
+infraestructura de fixture; no és un desplegament ni una prova de GoTrue o PostgREST.
+El registre de dependències és `supabase/migrations/README.md` i el catàleg
+complet, `supabase/README.md`; l'**ordre executable** és `supabase/ordre_desplegament.json`.
+
+Els dos mètodes tenen **quatre casos** al kit neutral: dos comproven el **rebuig**
+`abast-invalid` d'un tenant malformat **abans del transport**, i dos validen la
+forma de les **lectures autoritzades**. Els positius **s'ometen per defecte**:
+requerixen `adminMultipobleAutoritzat: true` i, per a la lectura, un
+`tenantAdministrat` explícit al context de prova. Eixa opció del corredor
+**no atorga permisos** al servidor. Les proves passen també amb l'adaptador remot
+real i un **doble de RPC**; **no acrediten una sessió privilegiada en PostgreSQL**.
+
+L'adaptador local implementa les **39 capacitats**; `CAPACITATS_NO_DECLARADES`
+és buit. `versioMinimaClient` torna honestament `null`, sense transport.
+L'administració multipoble està **denegada per defecte**: requerix el catàleg i
+la política `administracioLocal` injectats en construir la instància. La política
+només autoritza amb `true`, i **no deriva permisos** de rols o MFA del client.
+Lectura, escriptura i historial administratius usen el **tenant explícit**; dades,
+versions i historial se separen per tenant i clau. La lectura general continua
+en el poble propi. Les entrades i l'actor es capturen abans d'esperar, i canvis
+de sessió, avortament o destrucció **impedixen mutacions no iniciades**.
+Esta autoritat és **només del magatzem local**: no concedix permisos a Supabase
+ni protegix davant scripts amb accés al mateix origen. El contracte de composició
+i els límits figuren a `src/data/local/README.md`.
 
 ## Frontissa de lectura i sessió
 

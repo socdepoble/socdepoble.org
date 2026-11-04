@@ -43,7 +43,7 @@ vi.mock('../../../app/contexts/RouterContext', () => ({
   useLocation: () => ({ pathname: '/', search: '', state: null, hash: '' }),
   Link: ({ to, children }) => <a href={to}>{children}</a>
 }));
-vi.mock('../../../app/contexts/UIContext', () => ({ useUI: () => ({ externalConfig: {} }) }));
+vi.mock('../../../app/contexts/UIContext', () => ({ useUI: () => ({ externalConfig: {} }), useUIStateOpcional: () => null }));
 vi.mock('../ContentProvider', () => ({ useContent: () => null }));
 vi.mock('../NotificationContext.jsx', () => ({ useToast: () => ({ showToast: vi.fn() }) }));
 vi.mock('../../../data/backendPort.js', () => ({

@@ -10,7 +10,7 @@ const mock = vi.hoisted(() => ({
   session: { currentUser: { id: 'A' }, generacio: 1 }, actorKey: 'persona::A', pathname: '/xat', showToast: vi.fn(),
   loadFils: vi.fn(), loadMissatges: vi.fn(), enviaMissatge: vi.fn(), marcaLlegit: vi.fn(),
   creaFilDirecte: vi.fn(), carregaMembres: vi.fn(), subscribeToXat: vi.fn(), unsubscribeFromXat: vi.fn(),
-  obriFilDePagina: vi.fn(), teCapacitat: vi.fn()
+  obriFilDePagina: vi.fn(), teCapacitat: vi.fn(), loadPerfilPublic: vi.fn()
 }));
 vi.mock('../../app/contexts/SessionContext', () => ({ useSession: () => mock.session }));
 /* Pla 261014_1450 (front C) · `actor` és el d'IdentitatContext que pinta la
@@ -47,8 +47,106 @@ beforeEach(() => {
   mock.subscribeToXat.mockResolvedValue({ subscription: 'sub-A', error: null });
   mock.unsubscribeFromXat.mockResolvedValue(null);
   mock.teCapacitat.mockReturnValue(true);
+  mock.loadPerfilPublic.mockResolvedValue(null);
 });
 afterEach(() => { cleanup(); vi.useRealTimers(); });
+
+describe('xat privat amb una organització del directori', () => {
+  const OLI = '3073b933-69fc-4c3e-80dc-b0df9c6b8391';
+  const invalid = () => Object.assign(new Error('El destinatari necessita l’id del servidor.'), { code: 'DESTINATARI_INVALID', retriable: false });
+
+  it('resol el slug rebutjat pel proveïdor i obri el directe amb l’id real d’Oli de La Torre', async () => {
+    await open();
+    mock.creaFilDirecte.mockRejectedValueOnce(invalid()).mockResolvedValueOnce('fil-oli');
+    mock.loadPerfilPublic.mockResolvedValue({ tipus: 'entitat', id: OLI, slug: 'olidelatorre', nom: 'Oli de La Torre' });
+    let filId;
+    await act(async () => { filId = await value.creaFil('olidelatorre'); });
+    expect(filId).toBe('fil-oli');
+    const opcions = mock.creaFilDirecte.mock.calls[0][2];
+    expect(mock.loadPerfilPublic).toHaveBeenCalledWith('olidelatorre', opcions);
+    expect(mock.creaFilDirecte.mock.calls.map((c) => c.slice(0, 2))).toEqual([['olidelatorre', null], [OLI, null]]);
+    expect(mock.creaFilDirecte.mock.calls[1][2]).toBe(opcions);
+  });
+
+  it.each([OLI, 'wp:organization:42'])('conserva l’id %s que el proveïdor ja accepta, sense consultar el directori', async (id) => {
+    await open();
+    mock.creaFilDirecte.mockResolvedValueOnce('fil-entitat');
+    await act(async () => { expect(await value.creaFil(id)).toBe('fil-entitat'); });
+    expect(mock.creaFilDirecte).toHaveBeenCalledTimes(1);
+    expect(mock.creaFilDirecte.mock.calls[0][0]).toBe(id);
+    expect(mock.loadPerfilPublic).not.toHaveBeenCalled();
+  });
+
+  it.each(['seed', 'local'])('en mode %s resol també el slug que el padró local no usa com a id', async (dataMode) => {
+    await open({ dataMode });
+    mock.creaFilDirecte.mockRejectedValueOnce(Object.assign(new Error('Fora del padró'), { code: 'SDP-XAT-004' })).mockResolvedValueOnce('fil-oli');
+    mock.loadPerfilPublic.mockResolvedValueOnce({ tipus: 'entitat', id: OLI });
+    await act(async () => { expect(await value.creaFil('olidelatorre')).toBe('fil-oli'); });
+    expect(mock.creaFilDirecte.mock.calls.map((c) => c[0])).toEqual(['olidelatorre', OLI]);
+  });
+
+  it('en remot un rebuig de disponibilitat o permisos no es torna a provar pel directori', async () => {
+    await open({ dataMode: 'remote', supabaseUrl: 'https://test.invalid', supabaseAnonKey: 'clau-publica', tenantId: '00000000-0000-4000-8000-000000000000' });
+    const error = Object.assign(new Error('Destinatari no disponible'), { code: 'SDP-XAT-004' });
+    mock.creaFilDirecte.mockRejectedValueOnce(error);
+    await act(async () => { await expect(value.creaFil(OLI)).rejects.toBe(error); });
+    expect(mock.loadPerfilPublic).not.toHaveBeenCalled();
+  });
+
+  it.each([null, { tipus: 'persona', id: OLI }, { tipus: 'entitat', id: 'olidelatorre' }])('sense organització resolta no substituïx el destinatari ni inventa cap conversa (%j)', async (perfil) => {
+    await open();
+    const error = invalid();
+    mock.creaFilDirecte.mockRejectedValueOnce(error);
+    mock.loadPerfilPublic.mockResolvedValueOnce(perfil);
+    await act(async () => { await expect(value.creaFil('olidelatorre')).rejects.toBe(error); });
+    expect(mock.creaFilDirecte).toHaveBeenCalledTimes(1);
+  });
+
+  it('una fallada del directori es propaga i no obri cap altre xat', async () => {
+    await open();
+    const error = new Error('Directori sense connexió');
+    mock.creaFilDirecte.mockRejectedValueOnce(invalid());
+    mock.loadPerfilPublic.mockRejectedValueOnce(error);
+    await act(async () => { await expect(value.creaFil('olidelatorre')).rejects.toBe(error); });
+    expect(mock.creaFilDirecte).toHaveBeenCalledTimes(1);
+  });
+
+  it('un perfil que arriba després d’eixir no obri el directe amb la sessió següent', async () => {
+    const view = await open();
+    const perfil = deferred();
+    mock.creaFilDirecte.mockRejectedValueOnce(invalid());
+    mock.loadPerfilPublic.mockReturnValueOnce(perfil.promise);
+    let promesa;
+    act(() => { promesa = value.creaFil('olidelatorre'); });
+    await waitFor(() => expect(mock.loadPerfilPublic).toHaveBeenCalledTimes(1));
+    const senyal = mock.loadPerfilPublic.mock.calls[0][1].signal;
+    mock.session = { currentUser: { id: 'B' }, generacio: 2 }; mock.actorKey = 'persona::B';
+    view.rerender(tree(view.config));
+    expect(senyal.aborted).toBe(true);
+    await act(async () => { perfil.resolve({ tipus: 'entitat', id: OLI }); });
+    await act(async () => { expect(await promesa).toBeNull(); });
+    expect(mock.creaFilDirecte).toHaveBeenCalledTimes(1);
+  });
+
+  it('renovar el token mentre es resol el slug repetix la resolució amb l’operació vigent', async () => {
+    const view = await open();
+    const perfil = deferred();
+    mock.creaFilDirecte.mockRejectedValueOnce(invalid()).mockRejectedValueOnce(invalid()).mockResolvedValueOnce('fil-oli');
+    mock.loadPerfilPublic.mockReturnValueOnce(perfil.promise).mockResolvedValueOnce({ tipus: 'entitat', id: OLI });
+    let promesa;
+    act(() => { promesa = value.creaFil('olidelatorre'); });
+    await waitFor(() => expect(mock.loadPerfilPublic).toHaveBeenCalledTimes(1));
+    mock.session = { ...mock.session, generacio: 2 };
+    view.rerender(tree(view.config));
+    await act(async () => { perfil.resolve({ tipus: 'entitat', id: OLI }); });
+    await act(async () => { expect(await promesa).toBe('fil-oli'); });
+    expect(mock.creaFilDirecte.mock.calls.map((c) => c[0])).toEqual(['olidelatorre', 'olidelatorre', OLI]);
+    const [antiga, nova] = mock.loadPerfilPublic.mock.calls;
+    expect(antiga[1].signal.aborted).toBe(true);
+    expect(nova[1].signal.aborted).toBe(false);
+    expect(nova[1].signal).not.toBe(antiga[1].signal);
+  });
+});
 
 describe('confidencialitat del scope del Xat', () => {
   it('captura un rebuig tardà de la baixa després de desmuntar', async () => {

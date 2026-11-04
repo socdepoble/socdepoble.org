@@ -74,6 +74,62 @@ test('explora metadades dels tres tipus amb teclat', () => {
   }
 });
 
+test.each([true, false])('FEDI-09 · el pan amb les quatre fletxes mou el canvas amb inspector=%s, sense canviar focus ni selecció', inspector => {
+  const onSeleccio = vi.fn();
+  const { container } = render(<BrainGraph graf={GRAF} inspector={inspector} seleccio="cat" onSeleccio={onSeleccio} />);
+  const canvas = container.querySelector('canvas');
+  expect(canvas.tabIndex).toBe(0);
+  expect(canvas.getAttribute('aria-keyshortcuts')).toContain('ArrowLeft');
+  expect(container.querySelector(`[id="${canvas.getAttribute('aria-describedby')}"]`).textContent).toContain('Tab continua');
+  canvas.focus();
+  for (const [key, x, y] of [['ArrowRight', 40, 0], ['ArrowDown', 40, 40], ['ArrowLeft', 0, 40], ['ArrowUp', 0, 0]]) {
+    expect(fireEvent.keyDown(canvas, { key })).toBe(false);
+    buida();
+    expect(vista()).toEqual({ x, y, k: 1 });
+    expect(document.activeElement).toBe(canvas);
+  }
+  fireEvent.click(screen.getByTitle('Apropar'));
+  buida();
+  const ampliada = vista();
+  fireEvent.keyDown(canvas, { key: 'ArrowRight' });
+  buida();
+  expect(vista()).toEqual({ ...ampliada, x: ampliada.x + 40 });
+  expect(onSeleccio).not.toHaveBeenCalled();
+});
+
+test('FEDI-09 · Tab, Maj+Tab, composició i dreceres del navegador passen; el graf no crea cap trampa', () => {
+  const { container } = render(<BrainGraph graf={GRAF} />);
+  const canvas = container.querySelector('canvas');
+  const abans = vista();
+  for (const init of [{ key: 'Tab' }, { key: 'Tab', shiftKey: true }, { key: 'Escape' }, { key: 'Enter' },
+    { key: 'ArrowLeft', altKey: true }, { key: 'ArrowRight', ctrlKey: true },
+    { key: 'ArrowUp', metaKey: true }, { key: 'ArrowDown', shiftKey: true },
+    { key: 'ArrowRight', isComposing: true }, { key: 'ArrowRight', keyCode: 229 }]) {
+    const event = new KeyboardEvent('keydown', { bubbles: true, cancelable: true, ...init });
+    fireEvent(canvas, event);
+    expect(event.defaultPrevented, JSON.stringify(init)).toBe(false);
+  }
+  const atesa = new KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true, cancelable: true });
+  atesa.preventDefault();
+  fireEvent(canvas, atesa);
+  buida();
+  expect(vista()).toEqual(abans);
+  // El selector de nodes conserva les fletxes natives: no reben el pan.
+  expect(fireEvent.keyDown(screen.getByRole('combobox'), { key: 'ArrowDown' })).toBe(true);
+  buida();
+  expect(vista()).toEqual(abans);
+});
+
+test('FEDI-09 · el graf buit no afegix una parada de Tab ni captura les fletxes', () => {
+  const { container } = render(<BrainGraph graf={{ nodes: [], links: [] }} />);
+  const canvas = container.querySelector('canvas');
+  expect(canvas.tabIndex).toBe(-1);
+  expect(canvas.hasAttribute('aria-keyshortcuts')).toBe(false);
+  expect(fireEvent.keyDown(canvas, { key: 'ArrowRight' })).toBe(true);
+  buida();
+  expect(vista()).toEqual({ x: 0, y: 0, k: 1 });
+});
+
 test('la rodeta sense tecla fa zoom centrat en el punter, i no desplaça la pàgina', () => {
   const { container } = render(<BrainGraph graf={GRAF} />);
   const canvas = container.querySelector('canvas');

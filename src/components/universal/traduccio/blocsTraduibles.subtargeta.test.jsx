@@ -14,7 +14,7 @@ import { PAGE_COPY } from '../../../sections/text/pageContent.js';
 
 afterEach(() => {
   cleanup();
-  document.body.innerHTML = '';
+  document.body.replaceChildren();
 });
 
 function arrelDe(html) {

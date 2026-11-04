@@ -13,6 +13,7 @@ vi.mock('../../../app/contexts/CoreContentContext', () => ({ useCoreContent: () 
 
 import FakeChatOnboarding from './FakeChatOnboarding.jsx';
 import { XatContext } from '../XatContext.jsx';
+import { IAIA_ID } from '../../../data/identitatsSeed.js';
 
 let valor;
 function Sonda() {
@@ -53,6 +54,8 @@ test('apagada: només Sóc de Poble, dos no llegits (els Avisos), i la IAIA no e
   expect(valor.totalNoLlegits).toBe(sumaDelsFils());
   expect(valor.totalNoLlegits).toBe(2);
   expect((await valor.cercaMembres()).map((m) => m.nom)).toEqual(['Sóc de Poble']);
-  expect(await valor.creaFil('ajuda:ia')).toBe('fake-sdp');
+  /* Teler: un destinatari no disponible no es convertix en Sóc de Poble. */
+  await expect(valor.creaFil('ajuda:ia')).rejects.toMatchObject({ code: 'DESTINATARI_INVALID' });
+  await expect(valor.creaFil(IAIA_ID)).rejects.toMatchObject({ code: 'DESTINATARI_INVALID' });
   expect(valor.esFilAmagat('fake-iaia')).toBe(true);
 });

@@ -1,0 +1,32 @@
+{
+  "id": "c0231ef3-68cd-4867-867b-2bf38b8f75d7",
+  "session": "25930b24-8576-4e3b-bd97-f679134c50b1",
+  "operationId": "ronda3-classificacio-fisica-seo",
+  "claim": "25930b24-8576-4e3b-bd97-f679134c50b1:governance-write",
+  "planHash": "99a7304f4fbc44cb7d820d2edc5badb5ccc8d967f4248f3e65cae7a08c6e4493",
+  "beforeSeal": "aba16a53f2b6287e31cf785a10d9dfd34cf31f5ae9624944f323ad97c875c3c0",
+  "files": [
+    {
+      "path": "tooling/seo/triaImatgeSeo.js",
+      "before": "41f47b42f7fc70ee0fb01a5bd3ef648bb3ed5b9774ea26d17200ee361af90f27",
+      "after": "41f47b42f7fc70ee0fb01a5bd3ef648bb3ed5b9774ea26d17200ee361af90f27"
+    },
+    {
+      "path": "tooling/seo/tria-imatge-seo.mjs",
+      "before": "58bf19cbffd656eabbfb175370696230e8b54efd437835d76fb95f5c44007619",
+      "after": "e2603e81f40eeaaa5407e34b58b6bafc744511771f6e48e627d0033670841ea6"
+    },
+    {
+      "path": "src/utils/triaImatgeSeo.test.js",
+      "before": "61bc2de9c85e789efe8db98da4f253702647d8da8156ef189fda3793f7d835a9",
+      "after": "177eda3a0980801beb69b71ac846200394a2223ed0afa30a585913045cd60c21"
+    },
+    {
+      "path": ".agents/skills/sdp-importacio-editorial/SKILL.md",
+      "before": "d1a1995d3f139f4bbf7e691d2bfed0b4674ebff9da9b2676b586e6b31008b3cd",
+      "after": "d995b9a166b44f8d2fd47679506e5d415bdd74e133fb624be68c39603710ccfb"
+    }
+  ],
+  "state": "accepted",
+  "afterSeal": "5dba4ddc7b60e87f720d2433a0cd610b6f50be95ed7a62cba37db77c3fd23f27"
+}

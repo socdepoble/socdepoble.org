@@ -1,0 +1,47 @@
+{
+  "id": "c1e98c93-8bf9-462a-9550-65cb77819ae9",
+  "session": "b42e0a8a-c319-4c28-a111-4720f3a2916b",
+  "operationId": "ronda3-fedi19-inventari-estatic-reproduible",
+  "claim": "b42e0a8a-c319-4c28-a111-4720f3a2916b:governance-write",
+  "planHash": "17feaa4882288b4ff5759d147173426e39566015619f4ad11c56e96f62b9a3d9",
+  "beforeSeal": "9cf7539dc371be2449fb3ae11cc53b9d5c27e71fd0866f8ca546a0a43d63e859",
+  "files": [
+    {
+      "path": "tooling/instalador/inventari-estatic.mjs",
+      "before": null,
+      "after": "20faed3eea45bb04662fa0eca5c4d69aef43c0b8bdc399ee6d681d20bfeef43e"
+    },
+    {
+      "path": "tooling/instalador/inventari-estatic.test.mjs",
+      "before": null,
+      "after": "0ab30d00505f190bf54b8a64acdc5bf1f52d986a7254070ef0b78717b9680a0f"
+    },
+    {
+      "path": "tooling/instalador/inicia-node-germa.mjs",
+      "before": "fe36c0f9944ac1b16d7dacb35d0257b205b4ec7a0b9d08319709a6c0c4637c6e",
+      "after": "3a6c73a742f0e0ea9cdb0f2dddacc63f18919e1c58ab882cd9f212ca7fcc2b04"
+    },
+    {
+      "path": "tooling/instalador/inicia-node-germa.test.mjs",
+      "before": "27e2740b077dfbbe50c244924850ae60851fd6527740444fd681401ecf3ada85",
+      "after": "66ecaee5e7c28d4a3f24754a743834587917cb1926908f2a0f005a42317a4bff"
+    },
+    {
+      "path": "flake.nix",
+      "before": "839c6d8c5a40b8700a1179fe0dd6ad95e2e9eeae81adeebba3b35097d931b087",
+      "after": "8c0bb49e8c31eeabaf838489fe49577b24486fa41f4268b2d82ff0deb00086e0"
+    },
+    {
+      "path": "tooling/instalador/flake.nix",
+      "before": "5dceef315729923de66b73a26fbe565d1e1df6000df19b4a960ee826743dc4c0",
+      "after": "700f4f92580ee162f86cfe176b90be5e27d3d15f4dfd355f271a9adbc47319b5"
+    },
+    {
+      "path": "nix/README.md",
+      "before": "7ff704cd9d56c11c6b995d925c8241dc33da106fda04895bf5264d67ff883805",
+      "after": "eb9dc5cad1e1df2becf9bc6e3984315aa5a277c40fe547082ff2bf5fb01bb4c4"
+    }
+  ],
+  "state": "accepted",
+  "afterSeal": "8d057b5d8220f5cadefa19a60ba97674665b8a1bdbc23fb556b4a00941673e25"
+}

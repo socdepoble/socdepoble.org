@@ -1,0 +1,42 @@
+{
+  "id": "b793619e-1653-49f0-b591-82cb9cb595b1",
+  "session": "22472b11-10f1-4aaa-afc8-b950570b2cab",
+  "operationId": "fedi-rural-retencio-checkpoint-v2",
+  "claim": "22472b11-10f1-4aaa-afc8-b950570b2cab:governance-write",
+  "planHash": "a294cf52302f1799190f320317ba0b4afcd0063b6122c590137cea7df0e3c050",
+  "beforeSeal": "dd3aebbc6016bda57a21ba894aa2bee24d4c5493ea5ffe675bfb2c8c86aaeba9",
+  "files": [
+    {
+      "path": "src/data/sessioRural.js",
+      "before": "f6e9d8bc876b15dde43d0fd55eae87a196a65955c005da7a6ef40bc8d56e0ae1",
+      "after": "16d77f910c6779b9aba8b9addb40d4690dbe6b9f8cd0220fc1dc24ac29f2fb64"
+    },
+    {
+      "path": "src/sections/control/ModeRural.jsx",
+      "before": "f2efe82a0c52e70f3496e24b5ef788aadb9fb04880bd0926fb0b740eeb1c24fd",
+      "after": "f8eba634142303e3cc5e7d4d1f1ee45e543a38996d9500155ccf25544bd178db"
+    },
+    {
+      "path": "src/sections/control/textosModeRural.js",
+      "before": "2fbb6ee1c8eddd99dbc89bf63f1799bd7baba80113385033c69722cc54870d85",
+      "after": "d1785225718e5e45c8c403d2079bce9caf1150b855ee8d82ab6186470ac23e26"
+    },
+    {
+      "path": "src/sections/control/ModeRural.test.jsx",
+      "before": "789246a3a059c35e9416fe3c80e89f5be712079fc4e9667b8bfc8dcbdbedd3ef",
+      "after": "12ba89a1493446e671e61acb661d51d732ece451b330818727f20ad869bbe1b2"
+    },
+    {
+      "path": "tests/sessio-rural-privadesa.test.mjs",
+      "before": null,
+      "after": "c0fa14df6ae92b4d19e6b9f1c434fb9a3ddb685d506d73ed818066391945bcbc"
+    },
+    {
+      "path": "tooling/tests/node-suite-manifest.json",
+      "before": "53ae9dd629cadb741482e7a86fa227e0eb1125d6a537642f48a325e46b6ba51a",
+      "after": "8195f0af1131c2b83d25dd90b9354e5656113108a856ff37adc0193baecd7bbb"
+    }
+  ],
+  "state": "accepted",
+  "afterSeal": "fcfa9fc0cd67643f988cc298475eb1b70a5913e8c7bebdac0f6ad10989280603"
+}

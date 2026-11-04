@@ -71,27 +71,19 @@ test('public/opendata/municipi.jsonld i manifest.json: existència, esquema Sche
   assert.equal(recursMunicipi.hash, `sha256:${sha256(textMunicipi)}`);
 
   // Paritat amb preparaDadesObertesMunicipi de src/data/exportaMunicipiOpenData.js
-  const { preparaDadesObertesMunicipi, recullDadesPubliquesDelMunicipi } = await import(
+  const { preparaDadesObertesMunicipi } = await import(
     pathToFileURL(path.join(ARREL, 'src/data/exportaMunicipiOpenData.js')).href
   );
-  const { preparaFederacio } = await import(
-    pathToFileURL(path.join(ARREL, 'tooling/seo/genera-federacio.mjs')).href
-  );
-  const fed = await preparaFederacio({ arrel: ARREL, origen: ORIGEN });
-  const outbox = fed.fitxers.get(`ap/outbox/${TORRE}.json`);
-  const dades = await recullDadesPubliquesDelMunicipi(
-    { teCapacitat: () => false },
-    { slug: TORRE, nom: 'La Torre de les Maçanes' }
-  );
-  const preparat = preparaDadesObertesMunicipi({
-    municipi: { slug: TORRE, nom: 'La Torre de les Maçanes' },
-    ara: manifest.created,
-    origen: ORIGEN,
-    actorsPublicats: [TORRE],
-    entitats: dades.entitats ?? undefined,
-    pendents: dades.pendents,
-    activityStreams: outbox
-  });
+  const snapshot = JSON.parse(llig('public/opendata/snapshot-public.json'));
+  assert.equal(snapshot.format, 'socdepoble.snapshot-public.opendata.v1');
+  assert.equal(snapshot.entrada.ara, manifest.created);
+  const preparat = preparaDadesObertesMunicipi(snapshot.entrada);
+  assert.deepEqual(preparat.comptes, { noticies: 1, agenda: 1, directori: 3, memoria: 1, memoriaOral: 0 });
+  for (const [coleccio, nom] of [['noticies', 'noticies.jsonld'], ['agenda', 'agenda.jsonld'], ['memoria', 'memoria-cultural.jsonld']]) {
+    assert.ok(JSON.parse(llig(`public/opendata/${nom}`))['@graph'].length > 0, `${coleccio}: dades reals no buides`);
+    assert.ok(snapshot.provinencia.some(f => f.coleccio === coleccio && f.url.startsWith('https://')), `${coleccio}: font pública`);
+  }
+  assert.equal(snapshot.entrada.memoriaOral.length, 0, 'cap revisió oral humana inventada');
   const municipiGenerat = preparat.fitxers.find((f) => f.nom === 'municipi.jsonld');
   assert.equal(textMunicipi, municipiGenerat.text);
 

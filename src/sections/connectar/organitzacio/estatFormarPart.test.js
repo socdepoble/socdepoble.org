@@ -46,3 +46,15 @@ test('textDeLaSollicitud: la línia fixa i, separat per una línia en blanc, el 
   const llarg = textDeLaSollicitud('Sol·licitud.', 'x'.repeat(LIMIT_AFEGIT + 50));
   expect(llarg).toBe(`Sol·licitud.\n\n${'x'.repeat(LIMIT_AFEGIT)}`);
 });
+
+/* FEDI-22 (ordre del Mestre, 261103) · El rol que es demana viatja com a segona línia, just davall de la fixa. */
+test('textDeLaSollicitud amb la línia del rol: la fixa, el rol i, separat per una línia en blanc, l’afegit', () => {
+  const cap = 'Sol·licitud per a formar part de El Rentonar.';
+  expect(textDeLaSollicitud(cap, 'Toque la dolçaina.', 'Rol que demane: Usuari / Membre.'))
+    .toBe('Sol·licitud per a formar part de El Rentonar.\nRol que demane: Usuari / Membre.\n\nToque la dolçaina.');
+  expect(textDeLaSollicitud(cap, '', ' Rol que demane: Administrador. ')).toBe(`${cap}\nRol que demane: Administrador.`);
+  /* Sense el tercer argument (o buit), idèntic al d'abans. */
+  expect(textDeLaSollicitud(cap, 'Toque la dolçaina.')).toBe(`${cap}\n\nToque la dolçaina.`);
+  expect(textDeLaSollicitud(cap, 'Toque la dolçaina.', '   ')).toBe(`${cap}\n\nToque la dolçaina.`);
+  expect(textDeLaSollicitud(cap, '', undefined)).toBe(cap);
+});

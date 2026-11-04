@@ -401,8 +401,9 @@ test('Onada 11 · personalitzacio és una capacitat opcional de dos mètodes, fo
     expect(CAPACITATS.admin).not.toContain(nom);
     expect(CONTRACTE_BACKEND).toContain(nom);
   }
-  /* La lectura no és cap mètode nou: viatja dins de loadCoreContent. */
-  expect(CONTRACTE_BACKEND.filter((nom) => /personalitzacio/i.test(nom))).toEqual(CAPACITATS.personalitzacio);
+  /* La lectura pública continua dins de loadCoreContent. FEDI-04 afig la lectura
+     protegida d'un tenant triat en la capacitat opcional multipoble. */
+  expect(CONTRACTE_BACKEND.filter((nom) => /personalitzacio/i.test(nom))).toEqual([...CAPACITATS.personalitzacio, 'adminLligPersonalitzacio']);
   expect(() => port.validaBackendImplementation({ ...nucli(), ...capacitat('personalitzacio', 1) }))
     .toThrow('Capacitat parcial: personalitzacio');
 });

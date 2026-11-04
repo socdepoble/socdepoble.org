@@ -139,6 +139,17 @@ test('el registre de llavors per defecte; pàgina pròpia només on n’hi ha un
   expect(ancoresComentades().map((ancora) => ancora.getAttribute('href'))).toEqual(Array(COMENTADES).fill(REGISTRE_DE_LLAVORS));
 });
 
+test('FEDI-21 · ritme vertical tipogràfic: cap <div> embolcall nu fora dels comentaris anul·la els marges entre <p> i <h4>', () => {
+  const pintat = parseja(sanitizeHtml(resolRecursosDeHtml(PAGE_COPY.roadmap.html)));
+  expect(pintat.querySelectorAll('div:not([class])')).toHaveLength(0);
+  const h4s = [...pintat.querySelectorAll('h4')];
+  expect(h4s.length).toBeGreaterThanOrEqual(ACTIVES);
+  for (const h4 of h4s) {
+    expect(h4.parentElement).toBe(pintat);
+    expect(h4.nextElementSibling?.tagName).toBe('P');
+  }
+});
+
 /* ── De punta a punta, amb l'app real ─────────────────────────────────────
    Cada destí distint, amb l'encapçalament que en justifica l'elecció (§2 del
    F2_LLAVORS.txt): el registre de llavors, la secció «3. Llei de l'Orgull

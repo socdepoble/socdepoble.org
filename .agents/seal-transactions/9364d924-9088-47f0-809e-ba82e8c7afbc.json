@@ -1,0 +1,52 @@
+{
+  "id": "9364d924-9088-47f0-809e-ba82e8c7afbc",
+  "session": "0b052bb8-b0c5-42b3-9bea-a87763adcade",
+  "operationId": "ronda3-privacitat-traduccio-connexions",
+  "claim": "0b052bb8-b0c5-42b3-9bea-a87763adcade:governance-write",
+  "planHash": "7ee0fab1087781cff28af5be916d87acb5701a6b05ce8c2404d5c8e2106bae17",
+  "beforeSeal": "d636988364c28e5e1d1bbe0fd48a20c405bdf5693683e7b7a6a5b3b9121e81c8",
+  "files": [
+    {
+      "path": "src/sections/profile/ConnexionsPubliques.jsx",
+      "before": "deef81a0f8b10813ce0ae401d55f852d638a5cf28d8d9464874b1a82e1057271",
+      "after": "d815d5aee81f34f2e2e35a6b45552c21b7ae061dade73c52699a03c9cd5c1659"
+    },
+    {
+      "path": "src/sections/profile/ConnexionsPubliques.traduccio.test.jsx",
+      "before": null,
+      "after": "e8282f339dfbcb0950453b84ea353538c615923c5e39c9c226797d6b263033ac"
+    },
+    {
+      "path": "src/sections/detail/ItemDetailSection.connexionsTraduccio.test.jsx",
+      "before": null,
+      "after": "0a9bb45d0dfea6c781dae472781fc18f39d746bdf15038db4d68a10cb4035ebb"
+    },
+    {
+      "path": "src/sections/profile/DetallAjust.test.jsx",
+      "before": "992e521c810203748ab4ce1d43c748017778394c45189437b176ae2d6fa3c2fa",
+      "after": "b4c5d18e52d327bed95f7c0c9f950da19430586f43f699e73cd5327659501022"
+    },
+    {
+      "path": "src/sections/profile/PerfilPublicSection.seguidors.test.jsx",
+      "before": "968dff2f64501b920a38c4a4eaeb6c1eaa4729b5fe8b01526ac995a564f68dd6",
+      "after": "e6da5a964768f79c70ce77b6b0386a380b6d6c577c7bacbb101289a64085e614"
+    },
+    {
+      "path": "src/sections/profile/PerfilPublicSection.traduccio.test.jsx",
+      "before": "039cf5690969b07e8c0090e2f8e7de37f945b828e81e23b4e27a3ef4f60e463c",
+      "after": "e9f84e376fc4b07ab6a016f3cfdbce78d70aba7bdec7f152187dd355efc6e059"
+    },
+    {
+      "path": "src/sections/profile/PerfilPublicSection.visor.test.jsx",
+      "before": "ae52606ead0db378a2a0f9f13f7ff50769cd1f5ca1b8e275e2bbe729c5b14379",
+      "after": "02a88bcca81b24f04c719da85d59dc8ff27c594b3dd14051931cc908016f4ec1"
+    },
+    {
+      "path": "src/components/universal/PageFrame.traduccio.privades.seguretat.test.js",
+      "before": "fdab122c28ea281863479f1fc90eadd105e87376f2b6f91194b398f8add431e4",
+      "after": "bf49a73deb6cc41c2e0c22bef46568027654bef43587fb3746e6742fc1d75969"
+    }
+  ],
+  "state": "accepted",
+  "afterSeal": "5dba4ddc7b60e87f720d2433a0cd610b6f50be95ed7a62cba37db77c3fd23f27"
+}

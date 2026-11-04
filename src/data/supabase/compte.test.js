@@ -1,6 +1,6 @@
 import { beforeEach, expect, test, vi } from 'vitest';
 const m = vi.hoisted(() => ({ gen: 0, user: { id: 'A' }, jwt: 'jwt.A', hasConfig: true, ordre: [], rpc: vi.fn(), logout: vi.fn(), request: vi.fn(),
-  jwtPerBackend: vi.fn() }));
+  jwtPerBackend: vi.fn(), asseguraUsuari: vi.fn() }));
 /* capturaSessio sintètic: qualsevol salt de generació (logout, B, reentrada d'A) invalida la captura.
    Actualitzada a posta (261024 correccions): compte.js llig el testimoni de la sessió capturada amb
    jwtPerBackend (Codex D-01 / Gemini G2-04); el doble torna el JWT viu de la persona sintètica. */
@@ -8,9 +8,9 @@ vi.mock('../identitat.js', () => ({ capturaSessio: () => { const g = m.gen;
   return () => { if (g !== m.gen) throw new DOMException('La sessió ha canviat.', 'AbortError'); }; },
   jwtPerBackend: m.jwtPerBackend }));
 /* Actualitzada a posta (261024 T1): compte.js també crida request() (la funció compte-apple) i getCurrentUser(). */
-vi.mock('./runtime.js', () => ({ getResolvedConfig: () => ({ hasSupabaseConfig: m.hasConfig }), rpc: m.rpc, request: m.request,
+vi.mock('./runtime.js', () => ({ getResolvedConfig: (cfg) => ({ hasSupabaseConfig: m.hasConfig, runtimeDataMode: ['seed', 'local'].includes(cfg?.dataMode) ? cfg.dataMode : 'remote' }), rpc: m.rpc, request: m.request,
   getCurrentUser: () => m.user }));
-vi.mock('./auth.js', () => ({ asseguraUsuari: async (_config, current) => { current(); return m.user; }, logout: m.logout }));
+vi.mock('./auth.js', () => ({ asseguraUsuari: m.asseguraUsuari, logout: m.logout }));
 import { cancelaBaixa, demanaBaixa, estatBaixa, estatConsentiment, exportaLesMeuesDades, revocaConsentiment } from './compte.js';
 
 const deferred = () => { let resolve; const promise = new Promise(r => { resolve = r; }); return { promise, resolve }; };
@@ -20,6 +20,7 @@ const EXPORTACIO = { format: 'socdepoble.exportacio.v1', perfil: { id: 'A' } };
 beforeEach(() => {
   m.gen = 0; m.user = { id: 'A' }; m.jwt = 'jwt.A'; m.hasConfig = true; m.ordre = [];
   m.jwtPerBackend.mockReset(); m.jwtPerBackend.mockImplementation(() => m.jwt);
+  m.asseguraUsuari.mockReset(); m.asseguraUsuari.mockImplementation(async (_config, current) => { current(); return m.user; });
   m.rpc.mockReset(); m.rpc.mockImplementation(async (nom) => { m.ordre.push(`rpc ${nom}`); return null; });
   m.logout.mockReset(); m.logout.mockImplementation(async () => { m.ordre.push('logout'); });
   m.request.mockReset(); m.request.mockImplementation(async (ruta) => { m.ordre.push(`request ${ruta}`); return { ok: true, resultat: 'revocat' }; });
@@ -276,3 +277,48 @@ test('revocaConsentiment sense tipus rebutja sense cridar cap RPC', async () => 
   await expect(revocaConsentiment()).rejects.toThrow('quin consentiment');
   expect(m.rpc).not.toHaveBeenCalled();
 });
+
+/* R2CF-01 · dataMode és l’entrada real de getResolvedConfig; no el camp derivat runtimeDataMode. */
+const OPERACIONS_COMPTE = [
+  ['exportaLesMeuesDades', config => exportaLesMeuesDades(config), 'exporta_les_meues_dades', {}, EXPORTACIO],
+  ['estatBaixa', config => estatBaixa(config), 'estat_baixa', {}, { demanada: false }],
+  ['demanaBaixa', config => demanaBaixa({ motiu: ' prova ' }, config), 'demana_baixa', { p_motiu: 'prova' }, BAIXA],
+  ['cancelaBaixa', config => cancelaBaixa(config), 'cancela_baixa', {}, { cancelada: true }],
+  ['estatConsentiment', config => estatConsentiment(config), 'estat_consentiment', {}, { cal_reconsentir: false }],
+  ['revocaConsentiment', config => revocaConsentiment(' analitica ', config), 'revoca_consentiment', { p_tipus: 'analitica' }, null]
+];
+for (const dataMode of ['seed', 'local']) {
+  for (const [nom, crida] of OPERACIONS_COMPTE) {
+    test('[REGRESSIO R2CF-01] '+nom+' en '+dataMode+' rebutja abans d’autenticació, RPC o Apple, sense inventar estat', async () => {
+      m.user = { id: 'A', app_metadata: { providers: ['apple'] } };
+      const honeypot = () => { throw new Error('XARXA PROHIBIDA'); };
+      m.rpc.mockImplementation(honeypot); m.request.mockImplementation(honeypot); m.asseguraUsuari.mockImplementation(honeypot);
+      const config = { dataMode, supabaseUrl: 'https://backend.example.test', supabaseAnonKey: 'public-test' };
+      await expect(crida(config)).rejects.toMatchObject({ code: 'mode-local', message: expect.stringContaining('no envia dades') });
+      expect(m.asseguraUsuari).not.toHaveBeenCalled(); expect(m.rpc).not.toHaveBeenCalled(); expect(m.request).not.toHaveBeenCalled();
+      expect(m.logout).not.toHaveBeenCalled(); expect(m.jwtPerBackend).not.toHaveBeenCalled();
+    });
+  }
+  test('[REGRESSIO R2CF-01] '+dataMode+' sense servidor ni usuari no afirma cap estat remot', async () => {
+    m.hasConfig = false; m.user = null;
+    await expect(estatBaixa({ dataMode })).rejects.toMatchObject({ code: 'mode-local' });
+    await expect(estatConsentiment({ dataMode })).rejects.toMatchObject({ code: 'mode-local' });
+    expect(m.asseguraUsuari).not.toHaveBeenCalled(); expect(m.rpc).not.toHaveBeenCalled();
+  });
+}
+for (const [nom, crida, rpcNom, cos, resposta] of OPERACIONS_COMPTE) {
+  test('[REGRESSIO R2CF-01] '+nom+' remot conserva exactament l’RPC i els arguments', async () => {
+    const controller = new AbortController(), config = { dataMode: 'remote', tenantId: '00000000-0000-4000-8000-000000000001', signal: controller.signal };
+    m.rpc.mockResolvedValueOnce(resposta);
+    await crida(config);
+    expect(m.rpc).toHaveBeenCalledTimes(1);
+    expect(m.rpc.mock.calls[0].slice(0,3)).toEqual([rpcNom, cos, config]);
+    if (['estatBaixa','estatConsentiment'].includes(nom)) expect(m.rpc.mock.calls[0][3]).toEqual({ signal: controller.signal });
+  });
+  test('[REGRESSIO R2CF-01] '+nom+' remot no amaga un error real del servidor', async () => {
+    const error = Object.assign(new Error('Supabase rebutja la sessió'), { status: 401 });
+    m.rpc.mockRejectedValueOnce(error);
+    await expect(crida({ dataMode: 'remote' })).rejects.toBe(error);
+    expect(m.rpc).toHaveBeenCalledTimes(1); expect(m.logout).not.toHaveBeenCalled();
+  });
+}

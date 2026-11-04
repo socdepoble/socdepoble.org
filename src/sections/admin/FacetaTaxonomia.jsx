@@ -176,9 +176,10 @@ function LlistaDeSerie({ nom, singular, fixes, valors, onAfig, onLleva, ocupat }
   );
 }
 
-export function FacetaTaxonomia({ onBack = null }) {
+export function FacetaTaxonomia({ onBack = null, ambit = null }) {
   const [ambCapacitat] = useState(ambCapacitatPersonalitzacio);
-  const { status, pageCopy, personalitzacio, refresh } = useCoreContent();
+  const global = useCoreContent();
+  const { status, pageCopy, personalitzacio, refresh } = ambit?.contingut ?? global;
   const taxonomia = personalitzacio?.taxonomia?.payload;
   const versioDelServidor = personalitzacio?.taxonomia?.versio ?? 0;
 
@@ -234,7 +235,7 @@ export function FacetaTaxonomia({ onBack = null }) {
     setOcupat(clauOcupat);
     setMissatge(null);
     try {
-      const resultat = await adminDesaPersonalitzacio({ clau: CLAU, payload, versio: versio || 0 });
+      const resultat = await adminDesaPersonalitzacio({ clau: CLAU, payload, versio: versio || 0 }, ...(ambit ? [ambit.configCrida] : []));
       if (!viu.current) return;
       setVersio(resultat.versio);
       setMissatge({ to: 'exit', text: `Desat com a versió ${resultat.versio}. Les etiquetes noves es veuen a tota l’app en tornar a llegir el contingut.` });
@@ -258,7 +259,7 @@ export function FacetaTaxonomia({ onBack = null }) {
   async function obriHistorial() {
     setHistorial({ carregant: true, files: [], error: null });
     try {
-      const files = await adminHistorialPersonalitzacio(CLAU);
+      const files = await adminHistorialPersonalitzacio(CLAU, ...(ambit ? [ambit.configCrida] : []));
       if (viu.current) setHistorial({ carregant: false, files: Array.isArray(files) ? files : [], error: null });
     } catch (error) {
       if (viu.current && !esCancel(error)) setHistorial({ carregant: false, files: [], error: textDError(error, 'No s’ha pogut llegir l’historial.') });
@@ -300,10 +301,12 @@ export function FacetaTaxonomia({ onBack = null }) {
   }
 
   const treballant = Boolean(ocupat);
+  if (ambit && !ambit.preparada) return <UniversalPage chrome="context" layout="contained" title={FACETA_TAXONOMIA.titol} onBack={tornada} traduccio={false}>{ambit.selector}</UniversalPage>;
   return (
     <UniversalPage chrome="context" layout="contained" title={FACETA_TAXONOMIA.titol} lead={LEAD} onBack={tornada}
       traduccio={false}>
       <div className="sdp-superadmin-taxonomia">
+        {ambit?.selector}
         {missatge ? (
           <Alerta to={missatge.to} titol={missatge.titol} onTanca={() => setMissatge(null)}
             accions={missatge.recarrega ? <Boto varietat="secundari" icona={RotateCcw} onClick={recarrega}>Recarregar</Boto> : null}>

@@ -856,6 +856,17 @@ test.each([
   expect(mocks.xat.sendChatMessage).not.toHaveBeenCalled();
 });
 
+test('R2C2X-02 · l’autoria d’Oli amb l’UUID remot oferix el seu xat sense tractar-la com a identitat fundacional', () => {
+  const id = '3073b933-69fc-4c3e-80dc-b0df9c6b8391';
+  mocks.mur = MERCAT_AMB({ author_org_id: id, author_name: 'Oli de La Torre' });
+  render(ambXat(XAT_REMOT));
+  fireEvent.click(screen.getByRole('button', { name: 'Escriu-li a Oli de La Torre' }));
+  expect(mocks.navigate).toHaveBeenLastCalledWith(`/xat?amb=${id}`);
+  expect(mocks.crea).not.toHaveBeenCalled();
+  expect(mocks.xat.creaFil).not.toHaveBeenCalled();
+  expect(mocks.xat.sendChatMessage).not.toHaveBeenCalled();
+});
+
 test('CA-1 · remot · la Samarreta (entitat pilot) obri el xat de Sóc de Poble que ha resolt el port, mai /xat?amb=socdepoble', () => {
   mocks.mur = MERCAT_AMB(SAMARRETA);
   render(ambXat(XAT_REMOT));
@@ -1063,7 +1074,9 @@ const VALENCIA_DE_LA_VISTA = [
   'Privacitat de la connexió', 'Qui ho pot vore?', 'Persones concretes', 'Tot el poble', 'On arriba',
   'Per defecte, tota connexió', 'Opcional: la connexió', 'Categoria nova', 'Afegir categoria',
   'Assistent de context', 'La IAIA et suggereix', 'Etiqueta lliure', 'Història local', 'Gent del Poble',
-  'A les teues notes la llegiràs', 'Es connecta a', 'Producte del Mercat', 'Triada'
+  'A les teues notes la llegiràs', 'Es connecta a', 'Producte del Mercat', 'Triada',
+  /* FEDI-22 (ordre del Mestre, 261103) · el plegable «Guardar a les teues notes», obert en un element. */
+  'Guardar a les teues notes', 'Una còpia al teu Bloc'
 ];
 
 describe('P1-22 · Connectar en cinc llengües', () => {

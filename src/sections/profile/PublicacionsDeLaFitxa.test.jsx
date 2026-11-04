@@ -25,7 +25,8 @@ vi.mock('../../app/contexts/RouterContext', () => ({
 }));
 vi.mock('../../components/universal/NotificationContext.jsx', () => ({ useToast: () => ({ showToast: vi.fn() }) }));
 
-import { ENTITAT_PILOT_ID, ENTITAT_PILOT_SLUG, PERSONA_PILOT } from '../../data/identitatsSeed.js';
+import { ENTITAT_PILOT_ID, ENTITAT_PILOT_SLUG, ENTITAT_RENTONAR_SLUG, PERSONA_PILOT } from '../../data/identitatsSeed.js';
+import { CURSOS_PEDRA_EN_SEC_2026_EVENT } from '../mur/eventsSeed.js';
 import { oblidaEntitatDelProjecte, registraEntitatDelProjecte } from '../../config/navigation.js';
 import { PublicacionsDeLaFitxa, textosDeLAparador } from './PublicacionsDeLaFitxa.jsx';
 import { aliesDeLaFitxa, teAparador, tipusAutorDeLaFitxa } from './usePublicacionsDeLaFitxa.js';
@@ -61,12 +62,39 @@ describe('els àlies de la fitxa visitada', () => {
     expect([...aliesDeLaFitxa({ tipus: 'persona', id: 'u-altra', slug: PERSONA_PILOT.slug })]).toEqual(['u-altra']);
   });
 
-  test('les identitats del Mestre, pel seu id: els àlies que declara la llavor', () => {
+  test('les identitats del Mestre, pel seu id o UUID remot d’organization_directory: els àlies que declara la llavor', () => {
     const projecte = aliesDeLaFitxa({ tipus: 'entitat', id: ENTITAT_PILOT_ID });
     expect(projecte.has(ENTITAT_PILOT_SLUG)).toBe(true);
     expect(projecte.has('soc-de-poble_official')).toBe(true);
+    const rentonarRemot = aliesDeLaFitxa({ tipus: 'entitat', id: 'b2c87505-53b1-4108-902f-2313e77b9968', slug: ENTITAT_RENTONAR_SLUG });
+    expect(rentonarRemot.has(ENTITAT_RENTONAR_SLUG)).toBe(true);
+    expect(rentonarRemot.has('b2c87505-53b1-4108-902f-2313e77b9968')).toBe(true);
     const javi = aliesDeLaFitxa({ tipus: 'persona', id: PERSONA_PILOT.id });
     for (const alies of PERSONA_PILOT.alies) expect(javi.has(alies)).toBe(true);
+  });
+
+  test('la fitxa remota d’El Rentonar (/empresa/rentonar) obri per Agenda i pinta l’esdeveniment de Pedra en Sec', () => {
+    mocks.mur = {
+      status: 'ready',
+      error: null,
+      refresh: vi.fn(),
+      sortedFeedPosts: [],
+      sortedMarketItems: [],
+      sortedEvents: [CURSOS_PEDRA_EN_SEC_2026_EVENT]
+    };
+    render(
+      <PublicacionsDeLaFitxa
+        perfil={{
+          tipus: 'entitat',
+          id: 'b2c87505-53b1-4108-902f-2313e77b9968',
+          slug: ENTITAT_RENTONAR_SLUG,
+          nom: 'El Rentonar'
+        }}
+      />
+    );
+    const pestanyes = screen.getAllByRole('tab');
+    expect(pestanyes[2].getAttribute('aria-selected')).toBe('true');
+    expect(screen.getByText('Cursos de pedra en sec a Fageca i Alcosser')).toBeTruthy();
   });
 
   test('en remot, l’UUID registrat del projecte porta els àlies del projecte (i les pàgines del sistema); un UUID qualsevol, no', () => {

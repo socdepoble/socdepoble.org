@@ -255,7 +255,7 @@ describe.each(['seed', 'local'])('mode %s · localSeguiments fa de servidor, sen
     /* Actualitzada a posta (261024 correccions): motiu, la forma porta `primer` (R4-01). */
     expect(await segueix({ tipus: 'entitat', id: 'rentonar' }, config)).toEqual({ seguint: true, creatAl: primer.creatAl, nou: false, primer: false });
     expect(await estatSeguiment({ tipus: 'entitat', id: 'rentonar' }, config)).toEqual({ seguint: true, creatAl: primer.creatAl });
-    expect(await elsMeusSeguiments(config)).toEqual([{ tipus: 'entitat', id: 'rentonar', nom: expect.any(String), creatAl: primer.creatAl }]);
+    expect(await elsMeusSeguiments(config)).toEqual([{ tipus: 'entitat', id: 'rentonar', nom: expect.any(String), creatAl: primer.creatAl, visibilitatConnexions: 'publica' }]);
     expect(await deixaDeSeguir({ tipus: 'entitat', id: 'rentonar' }, config)).toEqual({ seguint: false });
     expect(await deixaDeSeguir({ tipus: 'entitat', id: 'rentonar' }, config)).toEqual({ seguint: false });
     expect(await estatSeguiment({ tipus: 'entitat', id: 'rentonar' }, config)).toEqual({ seguint: false, creatAl: null });

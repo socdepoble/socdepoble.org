@@ -80,7 +80,7 @@ import {
   AGENTS_IA_SEED, ENTITATS_SEED, PERSONA_PILOT, agentIASeed, entitatSeed, esIAIA, rolALEntitat
 } from './identitatsSeed.js';
 import { normalitzaCorreu, validaCorreu } from './correuOrganitzacio.js';
-import { TIPUS_TRANSFERIBLES, errorDeMembre, errorDeTitular, membreDOrganitzacio } from './contracte.js';
+import { errorDeConnexions, inclusioPersonaDelContracte, sollicitudEntitatDelContracte, subjecteConnexionsDelContracte, visibilitatConnexionsDelContracte, TIPUS_TRANSFERIBLES, errorDeMembre, errorDeTitular, membreDOrganitzacio } from './contracte.js';
 import { esDelPobleDelFiltre, pobleDelFiltre } from './pobleOrganitzacio.js';
 import { emojiSol } from '../utils/emoji.js';
 import {
@@ -152,6 +152,7 @@ function creaMagatzem(entitats, naixement) {
        mostrar-se, o null si ha dit que no (mana sobre la marca de la llavor). */
     titulars: new Map(),
     /* P1-68 · Les proves de desaElMeuUsername: { id, al } (ms), la darrera hora. */
+    preferenciesConnexions: new Map(), rolsFuncionals: new Map(), sollicitudsEntitat: new Map(),
     intentsUsername: []
   };
 }
@@ -357,7 +358,155 @@ export function createLocalPerfilsAdapter({ entitats = ENTITATS_SEED, persones =
     };
   };
 
+  /* FEDI23 · preferències pròpies i projeccions mínimes, independents de la sessió observadora. */
+  const textPublic = v => typeof v === 'string' ? v : '';
+  const clauConn = s => `${s.tipus}:${s.id}`;
+  const identitatConn = (dades, context = {}) => {
+    const subjecte = subjecteConnexionsDelContracte(dades);
+    if (subjecte.tipus === 'entitat') return { ...subjecte, id: String(trobaOrg(subjecte.id)?.id ?? subjecte.id) };
+    if (subjecte.tipus === 'poble') {
+      const poble = [context.poble, ...(context.pobles ?? [])].find(p => p && (p.id === subjecte.id || p.slug === subjecte.id));
+      return { ...subjecte, id: String(poble?.id ?? subjecte.id) };
+    }
+    return subjecte;
+  };
+  const prefsDe = subjecte => estat.preferenciesConnexions.get(clauConn(subjecte));
+  const globalDe = subjecte => prefsDe(subjecte)?.visibilitatConnexions ?? 'privada';
+  const visibilitatVincle = (subjecte, connexio) => prefsDe(subjecte)?.connexions.get(clauConn(connexio)) ?? 'publica';
+  const esPublica = (subjecte, connexio = null) => globalDe(subjecte) === 'publica' && (!connexio || visibilitatVincle(subjecte, connexio) === 'publica');
+  const controlaConnexions = (dades, context = {}) => {
+    const { usuari } = context;
+    if (!usuari?.id) throw errorDeConnexions('SDP-CONN-000');
+    const subjecte = identitatConn(dades, context);
+    const autoritzat = subjecte.tipus === 'persona' ? subjecte.id === String(usuari.id)
+      : subjecte.tipus === 'entitat' ? ROLS_QUE_MANEN.has(rolDe(subjecte.id, usuari))
+        : context.gestionaPoble === true && context.poble?.id === subjecte.id;
+    if (!autoritzat) throw errorDeConnexions('SDP-CONN-002');
+    if (subjecte.tipus === 'persona') perfilDe(usuari);
+    if (subjecte.tipus === 'entitat' && !trobaOrg(subjecte.id)) throw errorDeConnexions('SDP-CONN-003');
+    return subjecte;
+  };
+  const dtoPublic = (dades, context = {}) => {
+    const subjecte = identitatConn(dades, context);
+    if (subjecte.tipus === 'persona') {
+      const perfil = estat.perfils.get(subjecte.id);
+      const persona = delPadro(subjecte.id);
+      if (perfil ? perfil.is_public !== true || Boolean(perfil.baixa_demanada_at) : persona?.publica !== true) return null;
+      return { ...subjecte, nom: textPublic(perfil ? perfil.full_name : persona.nom), avatar: textPublic(perfil ? perfil.avatar_url : persona.avatar), ruta: `/gent/${encodeURIComponent(subjecte.id)}` };
+    }
+    if (subjecte.tipus === 'entitat') {
+      const org = trobaOrg(subjecte.id);
+      if (!org || org.visibility !== 'public') return null;
+      return { ...subjecte, nom: textPublic(org.name), avatar: textPublic(org.logo_url), ruta: `/entitats/${encodeURIComponent(subjecte.id)}` };
+    }
+    return context.poble?.id === subjecte.id ? { ...subjecte, nom: textPublic(context.poble.nom), avatar: '', ruta: `/pobles/${encodeURIComponent(context.poble.slug || subjecte.id)}` } : null;
+  };
+  const membresPublics = (dades, context = {}, { gestio = false } = {}) => {
+    const subjecte = identitatConn(dades, context);
+    if (!dtoPublic(subjecte, context) || (!gestio && !esPublica(subjecte))) return [];
+    if (subjecte.tipus === 'poble') {
+      const candidats = [...new Set([...estat.perfils.keys(), ...persones.map(p => String(p.id))])].map(id => ({ tipus: 'persona', id }))
+        .concat([...estat.organitzacions.keys()].map(id => ({ tipus: 'entitat', id: String(id) })));
+      return candidats.filter(c => {
+        const fitxa = c.tipus === 'persona' ? estat.perfils.get(c.id) || delPadro(c.id) : trobaOrg(c.id);
+        const nomPoble = fitxa?.town_name ?? fitxa?.poble;
+        return nomPoble === context.poble?.nom && esPublica(c, subjecte) && (gestio || esPublica(subjecte, c));
+      }).map(c => dtoPublic(c, context)).filter(Boolean).map(c => ({ ...c, creatAl: null, direccio: 'poble',
+        visibilitatConnexions: gestio ? visibilitatVincle(subjecte, c) : 'publica' }));
+    }
+    if (subjecte.tipus !== 'entitat') return [];
+    const ids = new Set([...declaratsDe(subjecte.id).map(m => String(m.usuariId)), ...(estat.connexions.get(subjecte.id)?.keys() ?? [])]);
+    const resultat = [];
+    for (const id of ids) {
+      const persona = { tipus: 'persona', id }, dto = dtoPublic(persona);
+      const rol = connexio(subjecte.id, id)?.rol ?? declaratsDe(subjecte.id).find(m => String(m.usuariId) === id)?.role;
+      if (!dto || !rol || !esPublica(persona, subjecte) || !esPublica(subjecte, persona)) continue;
+      const funcional = rol === 'owner' || rol === 'admin' ? 'administrador' : estat.rolsFuncionals.get(`${subjecte.id}:${id}`) ?? 'usuari';
+      resultat.push({ ...dto, creatAl: connexio(subjecte.id, id)?.desDe ?? null, direccio: 'membre', rol: funcional, visibilitatConnexions: 'publica' });
+    }
+    for (const [id, desDe] of estat.organitzacionsMembre.get(subjecte.id) ?? []) {
+      const org = { tipus: 'entitat', id: String(id) }, dto = dtoPublic(org);
+      if (dto && esPublica(org, subjecte) && esPublica(subjecte, org)) resultat.push({ ...dto, creatAl: desDe, direccio: 'membre', rol: 'usuari', visibilitatConnexions: 'publica' });
+    }
+    return resultat;
+  };
+
   return {
+    identitatConnexions: identitatConn,
+    fitxaConnexioPublica: dtoPublic,
+    connexioEsPublica(dades, vincle = null, context = {}) {
+      const subjecte = identitatConn(dades, context);
+      return esPublica(subjecte, vincle ? identitatConn(vincle, context) : null);
+    },
+    visibilitatVincleConnexions(dades, vincle) { return visibilitatVincle(identitatConn(dades), identitatConn(vincle)); },
+    preferenciesConnexions(dades, context = {}) {
+      const subjecte = controlaConnexions(dades, context);
+      return { ...subjecte, visibilitatConnexions: globalDe(subjecte), connexions: [] };
+    },
+    desaVisibilitatConnexions(dades, context = {}) {
+      const entrada = visibilitatConnexionsDelContracte(dades);
+      const subjecte = controlaConnexions({ tipus: entrada.tipus, id: entrada.id }, context);
+      const prefs = prefsDe(subjecte) ?? { visibilitatConnexions: 'privada', connexions: new Map() };
+      if (entrada.connexio) {
+        const clau = clauConn(identitatConn(entrada.connexio, context));
+        if (!prefs.connexions.has(clau) && prefs.connexions.size >= 1000) throw errorDeConnexions('SDP-CONN-001');
+        prefs.connexions.set(clau, entrada.visibilitatConnexions);
+      }
+      else prefs.visibilitatConnexions = entrada.visibilitatConnexions;
+      estat.preferenciesConnexions.set(clauConn(subjecte), prefs);
+      return { ...subjecte, visibilitatConnexions: globalDe(subjecte), connexions: [] };
+    },
+    vinculacionsConnexions(dades, context = {}) {
+      const subjecte = controlaConnexions(dades, context), resultat = [];
+      // Gestió de poble: només dades consentides de l'altra part; la tria
+      // pròpia no les oculta, perquè cal poder tornar a activar el vincle.
+      if (subjecte.tipus === 'poble') return membresPublics(subjecte, context, { gestio: true });
+      for (const org of estat.organitzacions.values()) {
+        if (subjecte.tipus === 'entitat' && String(org.id) !== subjecte.id) continue;
+        if (subjecte.tipus === 'poble') continue;
+        const ids = subjecte.tipus === 'persona' ? [subjecte.id]
+          : [...new Set([...declaratsDe(org.id).map(m => String(m.usuariId)), ...(estat.connexions.get(String(org.id))?.keys() ?? [])])];
+        for (const id of ids) {
+          const membre = connexio(org.id, id), declarat = declaratsDe(org.id).find(m => String(m.usuariId) === id);
+          const rol = membre?.rol ?? declarat?.role;
+          if (!rol) continue;
+          const altre = subjecte.tipus === 'persona' ? { tipus: 'entitat', id: String(org.id) } : { tipus: 'persona', id };
+          const dto = dtoPublic(altre, context);
+          if (!dto) continue;
+          resultat.push({ ...dto, creatAl: membre?.desDe ?? null, direccio: 'membre',
+            rol: rol === 'owner' || rol === 'admin' ? 'administrador' : estat.rolsFuncionals.get(`${org.id}:${id}`) ?? 'usuari',
+            visibilitatConnexions: visibilitatVincle(subjecte, altre) });
+        }
+      }
+      if (subjecte.tipus === 'entitat') for (const [parentId, membres] of estat.organitzacionsMembre) {
+        for (const [membreId, desDe] of membres) {
+          const altreId = String(parentId) === subjecte.id ? String(membreId) : String(membreId) === subjecte.id ? String(parentId) : null;
+          if (!altreId) continue;
+          const altre = { tipus: 'entitat', id: altreId }, dto = dtoPublic(altre, context);
+          if (dto) resultat.push({ ...dto, creatAl: desDe, direccio: 'membre', rol: 'usuari', visibilitatConnexions: visibilitatVincle(subjecte, altre) });
+        }
+      }
+      return resultat;
+    },
+    membresIEntitatsConnectadesDe: membresPublics,
+    inclouPersonaEnEntitat(dades, context = {}) {
+      const entrada = inclusioPersonaDelContracte(dades);
+      const { usuari } = context;
+      const desat = this.desaMembreOrganitzacio(entrada.orgId, { tipus: 'persona', id: entrada.personaId, rol: entrada.rol === 'administrador' ? 'admin' : 'member' }, usuari);
+      const orgId = String(trobaOrg(entrada.orgId).id);
+      estat.rolsFuncionals.set(`${orgId}:${desat.id}`, entrada.rol);
+      return { orgId, personaId: desat.id, rol: entrada.rol };
+    },
+    solicitaUnirSeAEntitat(dades, context = {}) {
+      const entrada = sollicitudEntitatDelContracte(dades), { usuari } = context;
+      if (!usuari?.id) throw errorDeConnexions('SDP-CONN-000');
+      const org = trobaOrg(entrada.orgId);
+      if (!org || org.visibility !== 'public') throw errorDeConnexions('SDP-CONN-003');
+      const clau = `${org.id}:${usuari.id}`;
+      if (!estat.sollicitudsEntitat.has(clau) && [...estat.sollicitudsEntitat.values()].filter(s => s.personaId === String(usuari.id)).length >= 20) throw errorDeConnexions('SDP-CONN-001');
+      estat.sollicitudsEntitat.set(clau, { orgId: String(org.id), personaId: String(usuari.id), rol: entrada.rol, estat: 'pendent' });
+      return { ...estat.sollicitudsEntitat.get(clau) };
+    },
     getProfile(usuari) {
       const perfil = perfilDe(usuari);
       return perfil ? { ...perfil } : null;
@@ -577,6 +726,7 @@ export function createLocalPerfilsAdapter({ entitats = ENTITATS_SEED, persones =
           connexionsDe(org.id).set(membre.id, { rol: membre.rol, desDe: actual?.desDe || moment() });
         }
         const desat = connexio(org.id, membre.id);
+        estat.rolsFuncionals.delete(`${org.id}:${membre.id}`);
         return membreDePersona(membre.id, desat.rol, desat.desDe, usuari);
       }
       const membreOrg = trobaOrg(membre.id);
@@ -599,6 +749,7 @@ export function createLocalPerfilsAdapter({ entitats = ENTITATS_SEED, persones =
         const actual = org ? rolDe(org.id, usuari) : null;
         if (!actual) return { llevat: false };
         if (actual === 'owner') throw errorDeMembre('SDP-ORGMEM-005');
+        estat.rolsFuncionals.delete(`${org.id}:${membre.id}`);
         return { llevat: estat.connexions.get(String(org.id))?.delete(membre.id) === true };
       }
       const org = orgQueGestiona(orgId, usuari);
@@ -607,6 +758,7 @@ export function createLocalPerfilsAdapter({ entitats = ENTITATS_SEED, persones =
         if (!actual) return { llevat: false };
         if (actual.rol === 'owner') throw errorDeMembre('SDP-ORGMEM-005');
         if (actual.rol === 'admin' && rolDe(org.id, usuari) !== 'owner') throw errorDeMembre('SDP-ORGMEM-006');
+        estat.rolsFuncionals.delete(`${org.id}:${membre.id}`);
         return { llevat: estat.connexions.get(String(org.id)).delete(membre.id) };
       }
       const membreOrg = trobaOrg(membre.id);

@@ -76,6 +76,9 @@ export const CENS_IMATGES = Object.freeze([
   e('/assets/events/aplec_2023_cartell.jpg', 'Cartell del 2n Aplec pel Territori', 'contingut', 'foto'),
   e('/assets/events/aplec_2023_ponents.png', 'Cartell de ponents del 2n Aplec pel Territori', 'contingut', 'foto'),
   e('/assets/events/aplec_2023_reunio.webp', 'Reunió preparatòria del 2n Aplec pel Territori als pobles', 'contingut', 'foto'),
+  e('/assets/events/cartell_pedra_en_sec_alcosser_2026.webp', 'Cartell del curs de pedra en sec a Alcosser (novembre 2026)', 'contingut', 'foto'),
+  e('/assets/events/cartell_pedra_en_sec_fageca_2026.webp', 'Cartell del curs de pedra en sec a Fageca (octubre 2026)', 'contingut', 'foto'),
+  e('/assets/events/cursos_pedra_en_sec_2026_poster.webp', 'Taller de pedra en sec al Comtat amb Ivana Ponsoda Revert', 'contingut', 'foto'),
   e('/assets/events/nano_sessio_treball.png', 'Sessió de treball', 'contingut', 'ia'),
 
   e('/assets/fotos/carla-soriano.png', 'Carla Soriano', 'ia', 'ia'),
@@ -254,6 +257,7 @@ const COPIES_IA = [
 /** Les imatges ràster de public/assets que NO entren al cens, amb el motiu. Tot
  *  /assets/system/ (la interfície) i els SVG en queden fora sense nomenar-los. */
 export const EXCLOSES = Object.freeze({
+  '/assets/uploads/brain/oli_de_la_torre_logo.webp': 'logotip públic d’Oli de La Torre (còpia portable del perfil, Teler 2026-11-03)',
   /* R-01: derivades socials explícites del mapa canònic, una sola foto a l’Arxiu. */
   ...Object.fromEntries(Object.entries(VARIANTS_SOCIALS).map(([original, social]) => [social, `targeta social dedicada de ${original}: no és cap foto nova de l’Arxiu`])),
   '/assets/ui/plugins/tpv_vinyeta.jpg': 'la mateixa vinyeta en JPEG; el codi només nomena la WebP (registrePlugins.js)',

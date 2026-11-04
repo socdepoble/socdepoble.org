@@ -855,7 +855,7 @@ export const ATLES_OPERATIU = Object.freeze([
     id: 'atles:fediversity', titol: 'Candidatura NLnet · NGI Fediversity', ruta: '/page/fediversity',
     claus: ['fediversity', 'nlnet', 'ngi', 'candidatura', 'subvenció', 'convocatòria'],
     paragrafs: [
-      "NGI Fediversity és una convocatòria de la fundació NLnet, dins del programa Next Generation Internet de la Comissió Europea i amb fons d'Horizon Europe. La candidatura de Sóc de Poble demana una subvenció de 50.000 € per a 1.000 hores de treball. Està en avaluació: encara no s'ha concedit cap diner.",
+      "NGI Fediversity és una convocatòria de la fundació NLnet, dins del programa Next Generation Internet de la Comissió Europea i amb fons d'Horizon Europe. La candidatura de Sóc de Poble demana una subvenció de 50.000 € per a 1.000 hores de treball: no va passar la primera selecció del 31 d'octubre de 2026 i encara no s'ha concedit cap diner.",
       'La seua pàgina diu, partida per partida, què es pot comprovar hui i què queda pendent.'
     ]
     /* [PAGE_COPY.fediversity (pageContent.js: lead i taula); nlnet.nl/fediversity, consultat el 30-10-2026] */
@@ -872,7 +872,7 @@ export const ATLES_OPERATIU = Object.freeze([
     id: 'atles:gentdelatorre', titol: 'Gent de la Torre', ruta: '/page/fediversity',
     claus: ['gentdelatorre', 'gent de la torre', 'obrir', 'germà'],
     paragrafs: [
-      "Gent de la Torre és el node viu de Sóc de Poble a gentdelatorre.net: una web de WordPress que porta la mateixa App amb el connector de Sóc de Poble. Els altres dos nodes actius són socdepoble.org, el portal matriu, i socdepoble.cat, el pilot comunitari del servidor físic Node 0 · Mac mini M4. Tots tres són portes al mateix servei, amb les mateixes dades.",
+      "Gent de la Torre és el node viu de Sóc de Poble a gentdelatorre.net: una web de WordPress amb el connector de Sóc de Poble. L'altre accés consolidat és socdepoble.org, i socdepoble.cat és el node pilot operatiu servit des del Node 0 via Cloudflare (NodeInfo 2.1, Ed25519 i streaming multimèdia), sense garantia de disponibilitat.",
       "La intenció és que la gent d'altres pobles puga obrir el node del seu poble, un node germà «Gent de…», com Gent de Xixona o Gent de Relleu. Hui encara no n'hi ha cap més. El connector ja és públic al directori de connectors de WordPress.org, amb el nom socdepoble."
     ]
     /* [PAGE_COPY.fediversity i PAGE_COPY.fedivers (pageContent.js); gentdelatorre.net i socdepoble.org responen 200 (30-10-2026);

@@ -10,11 +10,13 @@
    nostres, dins del mateix procés. La interoperabilitat externa queda sense provar (cap desplegament,
    cap operació remota). */
 import { describe, expect, test } from 'vitest';
-import { generateKeyPairSync, webcrypto } from 'node:crypto';
+import { generateKeyPairSync, verify, webcrypto } from 'node:crypto';
+import { createServer, request as requestHttp } from 'node:http';
+import { Readable } from 'node:stream';
 import { AP, creaGestor } from './gestor.js';
 import { creaCuaEnMemoria, importaClauPrivada } from './cuaLliurament.js';
 import { construeixActor } from '../../../src/data/activitypub.js';
-import { creaMagatzemInboxEnMemoria, signaPeticioHttpActivityPub } from '../../../src/data/federacio/inboxActivityPub.js';
+import { analitzaCapcaleraSignatura, creaMagatzemInboxEnMemoria, digestSha256, signaPeticioHttpActivityPub } from '../../../src/data/federacio/inboxActivityPub.js';
 
 const subtle = webcrypto.subtle;
 const PUBLIC = 'https://www.w3.org/ns/activitystreams#Public';
@@ -150,4 +152,133 @@ describe('encaixada entre dos nodes de Sóc de Poble (signatures reals, mateix p
       .toMatchObject({ status: 404 });
     expect(torre.magatzem.instantania()).toMatchObject({ activitats: [], seguidors: [] });
   });
+});
+
+/* FEDI-06 · Transport HTTP real en dos sockets loopback. Els ids públics de
+   fixture continuen sent https; només este transport injectat els resol a
+   127.0.0.1. No s'afluixa urlRemota, DNS ni TLS en producte, i no s'afirma
+   interoperabilitat remota o persistència de PostgreSQL amb esta prova. */
+test('FEDI-06 · dos servidors HTTP: Ed25519 Follow → Accept i Create(Note), integritat, repetició i reinici del gestor', async () => {
+  let t = Date.UTC(2026, 10, 3, 15, 0, 0);
+  const nodes = new Map();
+  const transit = [];
+  const transport = async (url, init = {}) => {
+    const u = new URL(url);
+    const node = nodes.get(u.origin);
+    if (!node) throw new TypeError('Origen fora de la xarxa HTTP de prova.');
+    const headers = new Headers(init.headers);
+    headers.set('host', u.host);
+    /* node:http conserva el Host de la destinació pública sobre el socket
+       loopback; fetch/undici el pot reconstruir amb 127.0.0.1:port. */
+    return new Promise((resol, rebutja) => {
+      const req = requestHttp(`${node.loopback}${u.pathname}${u.search}`, {
+        method: init.method ?? 'GET', headers: Object.fromEntries(headers), signal: init.signal
+      }, (r) => resol(new Response(Readable.toWeb(r), { status: r.statusCode, headers: r.headers })));
+      req.once('error', rebutja);
+      req.end(init.body);
+    });
+  };
+  const servidors = [];
+  const creaNodeHttp = async ({ origen, slug, confianca }) => {
+    const parell = generateKeyPairSync('ed25519');
+    const publicaPem = parell.publicKey.export({ type: 'spki', format: 'pem' });
+    const privadaPem = parell.privateKey.export({ type: 'pkcs8', format: 'pem' });
+    const actor = construeixActor({ slug, nom: slug, clauPublicaPem: publicaPem }, { origen });
+    const privada = await importaClauPrivada(privadaPem, { subtle });
+    expect(privada?.algorithm.name).toBe('Ed25519');
+    const magatzem = creaMagatzemInboxEnMemoria();
+    const cua = creaCuaEnMemoria({ ara: () => t });
+    const env = {
+      SDP_AP_ACTIVA: '1', SDP_AP_ORIGEN: origen, SDP_AP_CLAUS_PRIVADES: JSON.stringify({ [slug]: privadaPem }),
+      SDP_AP_NODES_CONFIANCA: confianca, SDP_CRON_SECRET: SECRET,
+      SUPABASE_URL: 'https://fedi-fixture.supabase.co', SUPABASE_SERVICE_ROLE_KEY: 'prova-no-es-cap-secret'
+    };
+    let gestor;
+    const reinicia = () => { gestor = creaGestor({ env, fetch: transport, resolDns: publica, ara: () => t, subtle, magatzem, cua, registre: silenci }); };
+    reinicia();
+    const servidor = createServer(async (req, res) => {
+      try {
+        const url = new URL(req.url, origen);
+        if (req.method === 'GET' && url.href === actor.id) {
+          transit.push({ metode: 'GET', origen, cami: req.url, host: req.headers.host });
+          res.writeHead(200, { 'content-type': 'application/activity+json' });
+          res.end(JSON.stringify(actor));
+          return;
+        }
+        const peticio = new Request(url, { method: req.method, headers: req.headers, body: Readable.toWeb(req), duplex: 'half' });
+        const bytes = await peticio.clone().arrayBuffer();
+        const r = await gestor(peticio);
+        transit.push({ metode: req.method, origen, cami: req.url, host: req.headers.host, headers: req.headers, bytes: Buffer.from(bytes), status: r.status });
+        res.writeHead(r.status, Object.fromEntries(r.headers));
+        res.end(Buffer.from(await r.arrayBuffer()));
+      } catch {
+        res.writeHead(500); res.end('error de la infraestructura de prova');
+      }
+    });
+    await new Promise((resol, rebutja) => {
+      servidor.once('error', rebutja);
+      servidor.listen(0, '127.0.0.1', resol);
+    });
+    servidors.push(servidor);
+    const loopback = `http://127.0.0.1:${servidor.address().port}`;
+    nodes.set(origen, { loopback });
+    const envia = async (activitat, inbox) => {
+      const cos = JSON.stringify(activitat);
+      const headers = await signaPeticioHttpActivityPub({ url: inbox, cos, keyId: `${actor.id}#main-key`, clauPrivada: privada, ara: t, subtle });
+      const fes = async ({ body = cos, capcaleres = headers, url = inbox } = {}) => {
+        const r = await transport(url, { method: 'POST', headers: { ...capcaleres, 'content-type': 'application/activity+json' }, body });
+        return { status: r.status, cos: await r.json() };
+      };
+      return { ...(await fes()), reenvia: fes, cosEnviat: cos, headers };
+    };
+    const passaCua = async () => {
+      const r = await transport(`${origen}/ap-inbox-verifica/cua`, { method: 'POST', headers: { [AP.CAPCALERA_CRON]: SECRET } });
+      return { status: r.status, cos: await r.json() };
+    };
+    return { actor, publicaPem, envia, passaCua, magatzem, cua, reinicia };
+  };
+  try {
+    const torre = await creaNodeHttp({ origen: 'https://torre.example', slug: 'la-torre-de-les-macanes', confianca: 'https://xixona.example' });
+    const germa = await creaNodeHttp({ origen: 'https://xixona.example', slug: 'socdepoble', confianca: 'https://torre.example' });
+    const follow = { id: `${germa.actor.id}#follow-http-ed`, type: 'Follow', actor: germa.actor.id, object: torre.actor.id };
+    const r1 = await germa.envia(follow, `${torre.actor.inbox}?lliurament=ed25519`);
+    expect(r1).toMatchObject({ status: 202, cos: { estat: 'processada' } });
+    expect(torre.magatzem.instantania().seguidors).toMatchObject([{ actor: germa.actor.id, followId: follow.id }]);
+    expect(await torre.passaCua()).toMatchObject({ status: 200, cos: { fets: 1, fallits: 0, reintents: 0 } });
+    const rebut = transit.find((r) => r.origen === 'https://xixona.example' && r.metode === 'POST' && r.cami === '/ap/inbox/socdepoble');
+    expect(rebut?.status).toBe(202);
+    expect(rebut.host).toBe('xixona.example');
+    const accept = JSON.parse(rebut.bytes.toString());
+    expect(accept).toMatchObject({ type: 'Accept', actor: torre.actor.id, to: [germa.actor.id], object: follow });
+    const signatura = analitzaCapcaleraSignatura(rebut.headers.signature);
+    expect(signatura).toMatchObject({ algorithm: 'hs2019', keyId: `${torre.actor.id}#main-key`, headers: ['(request-target)', 'host', 'date', 'digest'] });
+    /* Segona API criptogràfica: verifica els bytes rebuts, sense el
+       verificador ni el constructor de cadena de la biblioteca de producte. */
+    const cadena = `(request-target): post ${rebut.cami}\nhost: ${rebut.host}\ndate: ${rebut.headers.date}\ndigest: ${rebut.headers.digest}`;
+    expect(verify(null, Buffer.from(cadena), torre.publicaPem, Buffer.from(signatura.signature, 'base64'))).toBe(true);
+    expect(rebut.headers.digest).toBe(await digestSha256(rebut.bytes, { subtle }));
+    expect(transit.filter((r) => r.metode === 'GET').map((r) => r.origen)).toEqual(expect.arrayContaining(['https://torre.example', 'https://xixona.example']));
+    expect(await r1.reenvia()).toMatchObject({ status: 202, cos: { estat: 'duplicada' } });
+    expect(torre.cua.instantania()).toHaveLength(1);
+    expect(await r1.reenvia({ url: `${torre.actor.inbox}?lliurament=alterat` })).toEqual({ status: 401, cos: { error: 'signature_invalid' } });
+
+    const nota = { id: 'https://xixona.example/n/alerta-http', type: 'Note', attributedTo: germa.actor.id, to: [PUBLIC], published: new Date(t).toISOString(), content: '<p>Tall de la <b>CV-800</b> per pluges</p>', tag: [{ type: 'Hashtag', name: '#AlertaMunicipal' }] };
+    const create = { id: `${nota.id}#create`, type: 'Create', actor: germa.actor.id, to: [PUBLIC], object: nota };
+    const r2 = await germa.envia(create, torre.actor.inbox);
+    expect(r2).toMatchObject({ status: 202, cos: { estat: 'processada' } });
+    expect(await torre.magatzem.llistaAlertesVigents(t)).toMatchObject([{ id: nota.id, text: 'Tall de la CV-800 per pluges', actor: germa.actor.id }]);
+    expect(await r2.reenvia({ body: r2.cosEnviat.replace('pluges', 'obres') })).toEqual({ status: 401, cos: { error: 'digest_mismatch' } });
+    const alterat = r2.cosEnviat.replace('pluges', 'obres');
+    expect(await r2.reenvia({ body: alterat, capcaleres: { ...r2.headers, digest: await digestSha256(alterat, { subtle }) } })).toEqual({ status: 401, cos: { error: 'signature_invalid' } });
+    // Un gestor nou conserva idempotència i alertes en el magatzem injectat;
+    // no equival a provar la durabilitat d'una base de dades de producció.
+    torre.reinicia();
+    expect(await r2.reenvia()).toMatchObject({ status: 202, cos: { estat: 'duplicada' } });
+    expect(await torre.magatzem.llistaAlertesVigents(t)).toHaveLength(1);
+    t += 2 * HORA;
+    expect(await r2.reenvia()).toEqual({ status: 401, cos: { error: 'date_out_of_window' } });
+    expect(await torre.magatzem.llistaAlertesVigents(t)).toHaveLength(1);
+  } finally {
+    await Promise.all(servidors.map((s) => new Promise((resol) => { s.closeAllConnections(); s.close(resol); })));
+  }
 });

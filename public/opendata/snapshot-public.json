@@ -1,0 +1,181 @@
+{
+  "entrada": {
+    "activityStreams": {
+      "@context": "https://www.w3.org/ns/activitystreams",
+      "id": "https://socdepoble.org/ap/outbox/la-torre-de-les-macanes.json",
+      "orderedItems": [
+        {
+          "actor": "https://socdepoble.org/ap/actors/la-torre-de-les-macanes.json",
+          "cc": [
+            "https://socdepoble.org/ap/followers/la-torre-de-les-macanes.json"
+          ],
+          "id": "https://socdepoble.org/ap/objectes/la-torre-de-les-macanes/pagina-del-poble.json#create",
+          "object": {
+            "attributedTo": "https://socdepoble.org/ap/actors/la-torre-de-les-macanes.json",
+            "cc": [
+              "https://socdepoble.org/ap/followers/la-torre-de-les-macanes.json"
+            ],
+            "id": "https://socdepoble.org/ap/objectes/la-torre-de-les-macanes/pagina-del-poble.json",
+            "name": "La Torre de les Maçanes a Sóc de Poble",
+            "summary": "<p>Pàgina pública de La Torre de les Maçanes a Sóc de Poble. No és el compte oficial de l’Ajuntament.</p>",
+            "summaryMap": {
+              "ca": "<p>Pàgina pública de La Torre de les Maçanes a Sóc de Poble. No és el compte oficial de l’Ajuntament.</p>"
+            },
+            "to": [
+              "https://www.w3.org/ns/activitystreams#Public"
+            ],
+            "type": "Article",
+            "url": "https://socdepoble.org/pobles/la-torre-de-les-macanes"
+          },
+          "to": [
+            "https://www.w3.org/ns/activitystreams#Public"
+          ],
+          "type": "Create"
+        }
+      ],
+      "totalItems": 1,
+      "type": "OrderedCollection"
+    },
+    "actorsPublicats": [
+      "la-torre-de-les-macanes"
+    ],
+    "agenda": [
+      {
+        "author_entity_id": "ajuntament-la-torre-de-les-macanes",
+        "entradilla": "Acte històric de l’agenda municipal: exposició a la Casa Alta el 26 de novembre de 2023, de 10.30 a 13.30 h. Font pública municipal: https://www.torremanzanas.es/eventos/etiqueta/casa-alta/mes/",
+        "fi": "2023-11-26T13:30:00+01:00",
+        "id": "casa-alta-exposicio-2023-11-26",
+        "inici": "2023-11-26T10:30:00+01:00",
+        "location": "La Torre de les Maçanes · Casa Alta, carrer del Castell, s/n",
+        "poble_id": "la-torre-de-les-macanes",
+        "title": "Exposició Casa Alta",
+        "visibility": "public"
+      }
+    ],
+    "ara": "2026-11-03T17:29:24.547Z",
+    "entitats": [
+      {
+        "id": "socdepoble",
+        "kind": "entity",
+        "name": "Sóc de Poble",
+        "slug": "socdepoble",
+        "town_name": "La Torre de les Maçanes",
+        "visibility": "public"
+      },
+      {
+        "id": "ajuntament-la-torre-de-les-macanes",
+        "kind": "entity",
+        "name": "Ajuntament de La Torre de les Maçanes",
+        "town_name": "La Torre de les Maçanes",
+        "visibility": "public"
+      },
+      {
+        "id": "rentonar",
+        "kind": "entity",
+        "name": "Associació El Rentonar",
+        "slug": "rentonar",
+        "town_name": "La Torre de les Maçanes",
+        "visibility": "public"
+      }
+    ],
+    "memoria": [
+      {
+        "author_entity_id": "rentonar",
+        "id": "rentonar-solidaritat-refugiats-2016",
+        "poble_id": "la-torre-de-les-macanes",
+        "text": "Resum documental d’una publicació del Rentonar del 12 d’abril de 2016. L’associació de La Torre de les Maçanes va coordinar una recollida d’ajuda per a persones refugiades, amb punts al poble i a Xixona. El material es va transportar en set vehicles fins als voluntaris de SOS Refugiats d’Onil. És memòria documental pública de l’activitat associativa; no és una entrevista ni una fitxa oral revisada. Font original: https://rentonar.blogspot.com/2016/04/campanya-dajuda-als-refugiats-de-guerra.html",
+        "title": "Memòria de la campanya solidària del Rentonar de 2016",
+        "visibility": "public"
+      }
+    ],
+    "memoriaOral": [],
+    "municipi": {
+      "nom": "La Torre de les Maçanes",
+      "slug": "la-torre-de-les-macanes"
+    },
+    "noticies": [
+      {
+        "author_entity_id": "socdepoble",
+        "body": "Resum editorial de la notícia pública del 29 d’octubre de 2026, revisat el 3 de novembre de 2026. El Node 0 · Mac mini M4 és el pilot físic previst a La Torre de les Maçanes; este paquet no acredita que preste servei públic.\n\nEn els GET anònims del 3 de novembre de 2026 a les 17:23 UTC, https://socdepoble.org/ i https://gentdelatorre.net/ van respondre HTTP 200. Són els dos punts d’accés públic comprovats en eixa observació.\n\nLa consulta a http://socdepoble.cat/ va respondre HTTP 302 cap a https://clinic-especially-molecular-attitudes.trycloudflare.com/. El destí no resolia DNS (ENOTFOUND). El pilot queda en preparació fins a acreditar un servei públic operatiu. Esta observació és històrica i no és un monitor de disponibilitat actual.\n\nFont pública original: https://socdepoble.org/mur/node-zero-mac-mini-m4",
+        "created_at": "2026-10-29T12:00:00+01:00",
+        "entradilla": "Observació del 3 de novembre de 2026: dos punts d’accés públic, socdepoble.org i gentdelatorre.net, i un pilot físic en preparació a La Torre de les Maçanes. El Node 0 · Mac mini M4 encara no té servei públic acreditat.",
+        "id": "node-zero-mac-mini-m4",
+        "image_url": "/assets/uploads/brain/mac_mini_m4_1787721966622.jpg",
+        "lead": "Observació del 3 de novembre de 2026: dos punts d’accés públic, socdepoble.org i gentdelatorre.net, i un pilot físic en preparació a La Torre de les Maçanes. El Node 0 · Mac mini M4 encara no té servei públic acreditat.",
+        "poble_id": "la-torre-de-les-macanes",
+        "subtitle": "Dos punts d’accés públic i un pilot físic en preparació",
+        "title": "Node 0 · Mac mini M4: el servidor de l’habitació",
+        "visibility": "public"
+      }
+    ],
+    "origen": "https://socdepoble.org",
+    "pendents": [
+      {
+        "coleccio": "memoriaOral",
+        "motiu": "no hi ha cap fitxa pública amb revisió humana acreditada en les fonts consultades; cal aportar-ne una abans d’exportar-la"
+      },
+      {
+        "coleccio": "configuracio",
+        "motiu": "la configuració és del node i no del municipi"
+      }
+    ]
+  },
+  "format": "socdepoble.snapshot-public.opendata.v1",
+  "limits": [
+    "No és el cens complet del municipi.",
+    "No atorga llicències de reutilització que les fonts no declaren.",
+    "Les fonts externes es van contrastar el 2026-11-03; no es consulten en reproduir el snapshot.",
+    "Les curacions editorials declaren la font, les empremtes i les observacions datades. No són una comprovació contínua de disponibilitat ni modifiquen la publicació remota original."
+  ],
+  "provinencia": [
+    {
+      "coleccio": "noticies",
+      "curacio": {
+        "criteri": "Resum editorial del post públic del 29 d’octubre, capturat el 3 de novembre. Corregix les afirmacions de servei públic del Node 0 segons les observacions HTTP i DNS datades. No modifica el post remot ni afirma disponibilitat contínua.",
+        "elaboratEl": "2026-11-03T17:29:24.547Z",
+        "fontCapturadaEl": "2026-11-03T15:33:02Z",
+        "fontTextSha256": "f74194b67d434c7bd351730675216ee38c5d762647e3b2995530a9b95d217e53",
+        "observacions": [
+          {
+            "consultatEl": "2026-11-03T17:23:47.033Z",
+            "httpStatus": 200,
+            "url": "https://socdepoble.org/"
+          },
+          {
+            "consultatEl": "2026-11-03T17:23:47.033Z",
+            "httpStatus": 200,
+            "url": "https://gentdelatorre.net/"
+          },
+          {
+            "consultatEl": "2026-11-03T17:23:47.033Z",
+            "httpStatus": 302,
+            "redireccio": "https://clinic-especially-molecular-attitudes.trycloudflare.com/",
+            "url": "http://socdepoble.cat/"
+          },
+          {
+            "consultatEl": "2026-11-03T17:23:47.033Z",
+            "error": "ENOTFOUND",
+            "url": "https://clinic-especially-molecular-attitudes.trycloudflare.com/"
+          }
+        ],
+        "textCuratSha256": "3f2fc23af4c5cb1505b691944276f554ef0ad54adc736dc1604776d914a12045",
+        "tipus": "resum-editorial-contrastat"
+      },
+      "extraccio": "GET anònim d’app_content.feedPosts; municipi acreditat pel cos públic",
+      "id": "node-zero-mac-mini-m4",
+      "url": "https://socdepoble.org/mur/node-zero-mac-mini-m4"
+    },
+    {
+      "coleccio": "agenda",
+      "extraccio": "Metadades factuals de l’agenda municipal; acte passat, no convocatòria futura",
+      "id": "casa-alta-exposicio-2023-11-26",
+      "url": "https://www.torremanzanas.es/eventos/etiqueta/casa-alta/mes/"
+    },
+    {
+      "coleccio": "memoria",
+      "extraccio": "Resum documental de l’arxiu públic del Rentonar; cap transcripció oral ni revisió humana inventada",
+      "id": "rentonar-solidaritat-refugiats-2016",
+      "url": "https://rentonar.blogspot.com/2016/04/campanya-dajuda-als-refugiats-de-guerra.html"
+    }
+  ]
+}

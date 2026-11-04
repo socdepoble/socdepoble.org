@@ -1,0 +1,27 @@
+{
+  "id": "19127e7a-5362-4e82-ab0b-77d296e76700",
+  "session": "6a8f719e-3ba5-4fd4-b9cb-723d8c6a753a",
+  "operationId": "fedi-r4-exemple-agpl-factual",
+  "claim": "6a8f719e-3ba5-4fd4-b9cb-723d8c6a753a:governance-write",
+  "planHash": "e33d6d539bd365e5804f524b32ab471ae182755a8c2448668972837848ad93d8",
+  "beforeSeal": "71d6d814e7f8ef0116819e4c8c2f2f31413114114af599ac85afea456d816933",
+  "files": [
+    {
+      "path": "src/sections/text/pageContent.js",
+      "before": "8c9c2fbed304eca7726d50726afe845b38189c7bca7ef3671bc7bc3c103bc85b",
+      "after": "4c509f764166f24cfd9a842ba8d88fa04025c94b01bfb3917f60951e180a5a47"
+    },
+    {
+      "path": "src/sections/text/pageContent.fediversity.test.js",
+      "before": "88d8b9de0d36cdbf539849c8bdc9dbb6f81311faf137479152a53e13adfeca2c",
+      "after": "b9b7de229c71e6738db94a758240a7a540b7f2dd66fda9610da4760e09f99386"
+    },
+    {
+      "path": ".agents/contingut_estructural.json",
+      "before": "6fa5e63c3c268d474df86fda31ce3b29bc1c392765eba8294e64ddd454be1c36",
+      "after": "64d754999692d30e7ca9a86aafe66cd1c41309d3ba0ba0fa648b852d314624ac"
+    }
+  ],
+  "state": "accepted",
+  "afterSeal": "8d057b5d8220f5cadefa19a60ba97674665b8a1bdbc23fb556b4a00941673e25"
+}

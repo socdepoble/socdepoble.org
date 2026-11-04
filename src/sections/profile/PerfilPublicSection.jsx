@@ -76,6 +76,7 @@ import SelectorRealitat from '../realitat/SelectorRealitat.jsx';
 import { PAGE_COPY } from '../text/pageContent.js';
 /* T6b (IDEA-14; decisió del Mestre, 261024) · «Veïnat connectat amb tu» (abans «Gent que et seguix»; P1-11, G1945-04), a la fitxa pròpia d'una persona. */
 import { GentQueEtSegueix } from './Seguidors.jsx';
+import { ConnexionsPubliques, VisibilitatConnexions } from './ConnexionsPubliques.jsx';
 /* P1-11 (pla 261024_2230, T5B-02) · L'aparador de la fitxa (Mur, Mercat i Agenda). */
 import { PublicacionsDeLaFitxa, textosDeLAparador, useHiHaMur } from './PublicacionsDeLaFitxa.jsx';
 import { teAparador } from './usePublicacionsDeLaFitxa.js';
@@ -552,6 +553,7 @@ function PresentacioDeLaFitxa({ html }) {
  *     (FitxaVivaDeComunitat).
  */
 export function FitxaPublica({ perfil, ambEdita = true, ambXat = true, chrome = 'full' }) {
+  const [revisioConnexions, setRevisioConnexions] = useState(0);
   const { t } = useUIActions();
   /* T6b · `locale`: la data de «Veïnat connectat amb tu», en la llengua de la fitxa. */
   const { externalConfig, locale } = useUIState();
@@ -863,7 +865,14 @@ export function FitxaPublica({ perfil, ambEdita = true, ambXat = true, chrome = 
           (qui seguix una entitat ho veu qui l'administra, a «El compte»).
           Sense la capacitat 'seguiments', res.
           Gauntlet 261025_0545 (CUR-01) · I només per a qui mira ara, amb la seua clau. */}
-      {ambVeinatConnectat ? <GentQueEtSegueix config={externalConfig} t={t} locale={locale} visor={visor} /> : null}
+      {ambVeinatConnectat ? <>
+        <GentQueEtSegueix config={externalConfig} t={t} locale={locale} visor={visor} />
+        <VisibilitatConnexions tipus="persona" id={perfil.id} config={externalConfig} t={t} visor={visor} />
+      </> : null}
+      {['persona', 'entitat', 'grup'].includes(perfil.tipus) && !ambVeinatConnectat ? <>
+        <ConnexionsPubliques revisio={revisioConnexions} tipus={perfil.tipus === 'persona' ? 'persona' : 'entitat'} id={perfil.id} config={externalConfig} t={t} visor={visor} />
+        {administra ? <VisibilitatConnexions onCanvi={() => setRevisioConnexions(n => n + 1)} tipus="entitat" id={perfil.id} config={externalConfig} t={t} visor={visor} /> : null}
+      </> : null}
     </UniversalPage>
   );
 }

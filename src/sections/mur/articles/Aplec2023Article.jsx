@@ -19,7 +19,7 @@ export function Aplec2023Article() {
 
       <h3 className="detail-content__titol">Presentació i ponents del 2n Aplec pel Territori</h3>
       <div className="media-frame detail-content__figura">
-        <img src={resolveAsset('/assets/events/aplec_2023_ponents.png')} alt="Cartell Ponents Aplec" />
+        <img src={resolveAsset('/assets/events/aplec_2023_ponents.webp')} alt="Cartell Ponents Aplec" />
       </div>
 
       <p className="detail-content__paragraph">
@@ -44,13 +44,13 @@ export function Aplec2023Article() {
         <li><strong>Javier Navarro Adrián:</strong> Alcalde de Benillup.</li>
         <li><strong>Óscar Ponsoda Hernández:</strong> President de la Societat de Caçadors de Famorca i treballador forestal.</li>
         <li><strong>Mauro Ferrando Vilaplana:</strong> Jove agricultor en producció agroecològica i treballador de l’Almàssera d’oli de Millena.</li>
-        <li><strong>Artemi Cerdà Bolinches:</strong> Catedràtic de Geografia Física (UV), investigador en erosió del sòl i incendis, i llaurador.</li>
+        <li><strong>Artemi Cerdà Bolinches:</strong> Investigador en erosió del sòl i incendis, catedràtic i llaurador.</li>
         <li><strong>Isabel Sancho Carbonell:</strong> Regidora de Fageca, docent de Turisme Rural (UA) i tècnica de desenvolupament local.</li>
         <li><strong>Alejandro Molina Mollà:</strong> Llaurador ecològic i president de COARVAL i de la Cooperativa Cofrudeca de Bèlgida.</li>
         <li><strong>Adán Lloret Fernández:</strong> Bomber Forestal a la Font Roja i expert en incendis forestals.</li>
       </ul>
 
-      <h3 className="detail-content__titol">Per què vam convocar l’Aplec: l’incendi de la Vall d’Ebo i les Valls</h3>
+      <h3 className="detail-content__titol">Per què vam convocar l’Aplec</h3>
       <p className="detail-content__paragraph">
         En la segona quinzena d’agost del 2022 un <strong>gran incendi forestal</strong> originat en una tempesta seca va colpir el nostre territori calcinant més de <strong>12.000 hectàrees</strong> i <strong>100 km de perímetre</strong> des de la Vall d’Ebo i Pego fins a Benialfaquí. Diversos pobles van haver de ser desallotjats i moltes famílies vam viure amb l’ai al cor l’avanç de les flames.
       </p>

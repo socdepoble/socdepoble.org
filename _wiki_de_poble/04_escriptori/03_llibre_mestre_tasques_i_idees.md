@@ -321,3 +321,9 @@ Aquest és el dipòsit sagrat de les idees transmeses pel Mestre a través dels 
 
 - [[00_index_escriptori]]
 - [[../00_index]]
+
+## Incidència del checkpoint Fediversity · 261104
+
+- **Tall de preparació 2026-11-04T04:10:12Z.** **Deute obert · avortament canònic d’una lease Git:** l’intent normal de commit fallà amb tres F1 de `.sdp-paperera` absent al prepared tree, sense crear cap commit; no s’ha trobat una API canònica per avortar eixa lease sense falsificar-ne el consum. El preflight TEMP posterior trobà F9 per `## Vincles` absent al README de migracions. El global diagnòstic conservat és **1.815 fitxers / 32.644 proves: 32.534 passades, una fallada CSS i 109 omissions**; el focal de quatre postimatges dona **302/302 Vitest i 11/11 Node**, sense convertir aquell global en verd. Dos builds R3 candidats sobre 4.167 fonts produïxen 1.088 fitxers / 148.647.215 B idèntics, pin `d10bf94489ffe4c61e27648c49951f68ebe239837f5624a5861bed337a2a7d31` (freeze `4131d8091c125b7e40ec7df45476cf04df71ad68af405d1e07e90b1361d060cd`). Promoció exacta a l’índex/HEAD, preflight genuí i checkpoint encara pendents; no és Nix ni autorització per incloure staging humà/Ronda7. El disseny segur d’avortament Git queda pendent, sense implementar-lo ara; dossier canònic: [[261103_1604_auditoria_codex_gauntlet_fediversity]].
+
+- **Tall de verificació 2026-11-04T06:43:52.135Z.** ÍndexD real `b68fc19…` amb4167fonts/90executables/digest1a2aad, equivalent al buildR3pin d10bf. Vitest complet32535pass/32644,0fail/109omissions; Nodeprimari2428pass/2440,0fail/9omissions/3TODO. Laboratori26pass/13fail/137omissions, sense baselinecomparativa ni verd global del repositori. Sessióinitial10pass/1fail/37omissions; generat només el derivatSEOignoratenTEMP i repetit només el fitxer fallit1/1exit0. Rebuts dc3df05c i5fdcd909. Relleu documental, cinc passos finals i commit normal encara pendents; F26/R7paral·lel preservat. Cap Nix/freshnpmci/efecte remot acreditat.

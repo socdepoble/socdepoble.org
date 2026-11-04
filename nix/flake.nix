@@ -58,11 +58,6 @@
           postPatch = (old.postPatch or "") + ''
             cp ${identity} node-germa.json
             cp ${./prepare-public.mjs} sdp-prepare-public.mjs
-            # Pegat d'un defecte heretat i declarat al README: el connector de Vite exigix
-            # esta configuració pública, però la font del flake arrel no inclou scripts/.
-            # Només s'hi copia este fitxer públic: no hi entren claus privades.
-            mkdir -p scripts/botigues
-            cp ${../scripts/botigues/associacio-apps.json} scripts/botigues/associacio-apps.json
           '';
           postBuild = (old.postBuild or "") + ''
             node sdp-prepare-public.mjs --root . --dist dist --config ${configFile} ${lib.optionalString (openDataSrc != null) "--open-data-source ${lib.escapeShellArg openDataSrc}"}

@@ -93,6 +93,18 @@ test('sense capacitats, cap bloc ni cap crida al servidor, i ho diu', () => {
   expect(m.estatConsentiment).not.toHaveBeenCalled();
 });
 
+test('FEDI-07 · en desenvolupament la mostra local es pot obrir sense activar el xifratge dels xats', async () => {
+  expect(import.meta.env.DEV).toBe(true);
+  pinta();
+  const titol = await screen.findByRole('heading', { level: 2, name: 'Prova local de xifratge' });
+  const laboratori = within(titol.closest('section'));
+  expect(laboratori.getByRole('button', { name: 'Inicia la prova local' })).toBeTruthy();
+  expect(laboratori.getByText(/no envia res a ningú, no activa el xifratge dels xats/)).toBeTruthy();
+  expect(laboratori.queryByRole('textbox')).toBeNull();
+  expect(m.estatBaixa).not.toHaveBeenCalled();
+  expect(m.estatConsentiment).not.toHaveBeenCalled();
+});
+
 /* Ordre del Mestre (261007) · «Quan isquen, les barres taronges han de portar
    a la pàgina de l'autor que l'ha creada». La pàgina privada porta a la fitxa
    pública de la persona, per l'id de la seua fila. */
@@ -385,7 +397,7 @@ describe('TE-01 · en castellà', () => {
     pintaEnCastella();
     expect(screen.getByRole('heading', { level: 1, name: 'Privacidad y datos' })).toBeTruthy();
     expect(screen.queryByRole('heading', { level: 1, name: 'Privacitat i dades' })).toBeNull();
-    expect(screen.getAllByRole('heading', { level: 2 }).map((h) => h.textContent)).toEqual(['Mis datos', 'Consentimiento', 'Darse de baja']);
+    expect(screen.getAllByRole('heading', { level: 2 }).map((h) => h.textContent)).toEqual(['Mis datos', 'Consentimiento', 'Darse de baja', 'Portabilidad federada', 'Prueba local de cifrado']);
     await screen.findByRole('button', { name: 'Cancelar la baja' });
     const data = dataLlegible(pendent.purgaPrevistaAl, 'es-ES');
     expect(data).not.toBe(dataLlegible(pendent.purgaPrevistaAl));

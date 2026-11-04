@@ -26,9 +26,9 @@
       "data": "2026-11-03"
     },
     "descarregues": {
-      "sha256": "23e5d6142ee6cd790f04861ae90efa59214d707f74caca95056dba32e1f690ae",
+      "sha256": "e8f9085b1d0a593846f12f65c2e96821a50970f442d24d673c106947c8e9868a",
       "html": 8250,
-      "aprovat_per": "Mestre Javi Llinares (ordre unificada nocturna Onades 7-9, 261103 ~05:4x: «aprova'ls amb frontissa-contingut i verifica 16/16»); diff revisat per Claude: Gauntlets O7-O9 i rondes 2-3 de correctors i verificadors (Cards flotants, /versions WP 1.1.12, /fediversity honest, «el Mas» retirat a Consola i Cervell, O6-D8), 2026-11-03",
+      "aprovat_per": "MarIA, absent el Mestre",
       "data": "2026-11-03"
     },
     "disseny": {
@@ -44,16 +44,16 @@
       "data": "2026-11-03"
     },
     "fedivers": {
-      "sha256": "6ec4a00201774d12f9b2e9acffb476d6d969cb35a03453e75fc8f5ffebc14987",
-      "html": 7043,
-      "aprovat_per": "Mestre Javi Llinares (ordre unificada nocturna Onades 7-9 i marató cicles 1-12, 261103: «repara qualsevol defecte en les targetes i seccions»); cicle 9 de Claude: socdepoble.cat no és node actiu (DNS a aparcament, 302 a un túnel trycloudflare mort; comprovat 12:22) → dos nodes actius i socdepoble.cat «en preparació», sense enllaç http; analogies de MarIA conservades; corrector + verificador adversarial, 2026-11-03",
+      "sha256": "4158e48b4bc9e8514f94a3acf68854cd80a0108caabcdae6f871f0f3db43d7d8",
+      "html": 7741,
+      "aprovat_per": "Mestre Javi + MarIA",
       "data": "2026-11-03"
     },
     "fediversity": {
-      "sha256": "b5341e4f166b7c6e3f0f04cdc0e848a0beefdc0cdef34a30092c518458c6f414",
-      "html": 35544,
-      "aprovat_per": "Mestre Javi Llinares (ordre unificada nocturna Onades 7-9 i marató cicles 1-12, 261103: «repara qualsevol defecte en les targetes i seccions»); cicle 9 de Claude: socdepoble.cat no és node actiu (DNS a aparcament, 302 a un túnel trycloudflare mort; comprovat 12:22) → dos nodes actius i socdepoble.cat «en preparació», sense enllaç http; analogies de MarIA conservades; corrector + verificador adversarial, 2026-11-03",
-      "data": "2026-11-03"
+      "sha256": "667a3c059e4a752eeb2ef9875d7b9a28880f54713f46d3211b2a044fb824e4eb",
+      "html": 40475,
+      "aprovat_per": "Mestre Javi + MarIA",
+      "data": "2026-11-04"
     },
     "legal": {
       "sha256": "0fce35ffeec3e42147a1ad2ab129908d16439c25d58c8f13e4b899c77ab89d04",
@@ -74,15 +74,15 @@
       "data": "2026-11-03"
     },
     "roadmap": {
-      "sha256": "f8b8d18d80ff8e00ea53cdf7cbd4d7acca57eecbbc2c0a8d3a365993bf28f4d4",
-      "html": 33034,
-      "aprovat_per": "Mestre Javi Llinares (ordre O6-CLAUDE-1/2, prompt 261102_1532 Onada 6, T2.4: «re-segellant la Frontissa 16/16»; diff revisat per Claude amb verificador, àrbitres i Gauntlet: negretes d'escaneig, i h4+p a versions, drets-autor, fediversity, xat, fedivers i wikidepoble)",
+      "sha256": "17493bd6a910d2a331ee932002f97dc2b367940576381c41a40a47a6abed63f5",
+      "html": 31392,
+      "aprovat_per": "Mestre Javi Llinares (FEDI-21)",
       "data": "2026-11-03"
     },
     "versions": {
-      "sha256": "5aa50c9683238afda39d502896e8b90973d158c766bbcf535a7f7e7817d91e07",
-      "html": 36216,
-      "aprovat_per": "Mestre Javi Llinares (ordre unificada nocturna Onades 7-9, 261103 ~05:4x); /versions a «WP v1.1.12 a WordPress.org», confirmat a l'SVN (tags/1.1.12 r3781091, Stable tag 1.1.12); kit O7 de Codex revisat al Gauntlet, 2026-11-03",
+      "sha256": "b088a7f44c558ba51cd14864b12a63b6d498668383ebe05c30e51485c8ecca4a",
+      "html": 37497,
+      "aprovat_per": "Mestre Javi + MarIA",
       "data": "2026-11-03"
     },
     "wikidepoble": {
@@ -92,9 +92,9 @@
       "data": "2026-11-03"
     },
     "xat": {
-      "sha256": "737de63645305a7590225bb9fc46d4e90362c7044aea48dd5b982c0228a2ba5d",
+      "sha256": "630a9ce34351674f656527c291ae13829a2a7455cd897777204d8fe1bb3e5a30",
       "html": 2363,
-      "aprovat_per": "Mestre Javi Llinares (ordre unificada nocturna Onades 7-9, 261103 ~05:4x: «aprova'ls amb frontissa-contingut i verifica 16/16»); diff revisat per Claude: Gauntlets O7-O9 i rondes 2-3 de correctors i verificadors (Cards flotants, /versions WP 1.1.12, /fediversity honest, «el Mas» retirat a Consola i Cervell, O6-D8), 2026-11-03",
+      "aprovat_per": "Mestre Javi Llinares (Teler 261103)",
       "data": "2026-11-03"
     }
   }

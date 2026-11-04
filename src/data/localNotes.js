@@ -62,7 +62,7 @@ const persistence = {
 function clean(input) {
   const result = {};
   for (const field of ['title', 'subtitle', 'lead', 'content']) if (input[field] !== undefined) result[field] = sanitizeHtml(input[field]);
-  for (const field of ['heroImage', 'logoImage']) if (input[field] !== undefined) result[field] = esFontImatgeSegura(input[field]) ? input[field] : '';
+  for (const field of ['heroImage', 'logoImage', 'logoImageDark']) if (input[field] !== undefined) result[field] = esFontImatgeSegura(input[field]) ? input[field] : '';
   for (const field of ['categories', 'tags']) if (input[field] !== undefined) {
     if (!Array.isArray(input[field])) throw new Error('Classificació de nota invàlida.');
     result[field] = input[field].map(value => netejaText(value)).filter(Boolean);

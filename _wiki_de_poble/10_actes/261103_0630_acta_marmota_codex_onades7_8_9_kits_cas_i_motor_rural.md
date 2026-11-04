@@ -134,6 +134,12 @@ Revisió independent posterior PASS:515entrades exactes i rebut addicional esper
 5. **Govern del torn:** consultar el rebut final de tancament i el bloc ESTAT d’este ID. Els canvis de codi concurrents del viu no s’absorbixen al baseline documental de Codex ni s’oculten per tancar-lo.
 
 
+### Ubicació dels kits dipositats
+
+- Kit O7: `../_investigacio_ia_de_poble/261103_kit_codex_onada7_excel_lencia_i_llibre_mestre/LLEGEIX_ME.md` (des de l’arrel del repositori)
+- Kit O8–9: `../_investigacio_ia_de_poble/261103_kit_codex_onada8_9_nixos_i_offline_first/LLEGEIX_ME.md` (des de l’arrel del repositori)
+- Kit O10–21: `../_investigacio_ia_de_poble/261103_kit_codex_onada10_node_sobira_mac_mini_i_enxufe_total/LLEGEIX_ME.md` (des de l'arrel; el manifest437… i el rebut de publicació governen el lliurament)
+
 <!-- SDP:SECTION acta.s6 -->
 ## Vincles
 
@@ -142,6 +148,3 @@ Revisió independent posterior PASS:515entrades exactes i rebut addicional esper
 - [[../90_arxiu_historic/261102_1638_auditoria_codex|261102_1638_auditoria_codex]]
 - [[../90_arxiu_historic/261103_0522_pla_implementacio_codex_onada7|261103_0522_pla_implementacio_codex_onada7]]
 - [[../90_arxiu_historic/261103_0522_prompt_onades7_8_9_teler_invertit_fediversity_i_offline_first|261103_0522_prompt_onades7_8_9_teler_invertit_fediversity_i_offline_first]]
-- Kit O7: `../_investigacio_ia_de_poble/261103_kit_codex_onada7_excel_lencia_i_llibre_mestre/LLEGEIX_ME.md` (des de l’arrel del repositori)
-- Kit O8–9: `../_investigacio_ia_de_poble/261103_kit_codex_onada8_9_nixos_i_offline_first/LLEGEIX_ME.md` (des de l’arrel del repositori)
-- Kit O10–21: `../_investigacio_ia_de_poble/261103_kit_codex_onada10_node_sobira_mac_mini_i_enxufe_total/LLEGEIX_ME.md` (des de l'arrel; el manifest437… i el rebut de publicació governen el lliurament)

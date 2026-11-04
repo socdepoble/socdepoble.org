@@ -520,7 +520,7 @@ const CLAUS_DE_TEXT_DEL_PAYLOAD = Object.freeze([
    item.featured_image»: la imatge que l'autor tria per a xarxes
    (config/imatgeSocial.js) és una clau d'imatge més, amb la mateixa neteja. */
 const CLAUS_D_IMATGE_DEL_PAYLOAD = Object.freeze([
-  'image', 'image_url', 'imageSrc', 'images', 'src', 'avatar_url', 'author_avatar', 'logo_image',
+  'image', 'image_url', 'imageSrc', 'images', 'src', 'avatar_url', 'author_avatar', 'logo_image', 'logo_image_dark',
   'og_image', 'featured_image'
 ]);
 const CLAUS_DE_LLISTA_DEL_PAYLOAD = Object.freeze(['labels', 'variations', 'tags']);

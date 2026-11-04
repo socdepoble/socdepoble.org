@@ -139,9 +139,21 @@ test('petició simultània no duplica DeepL; finally allibera també en errors',
   assert.equal(r.nested.code, 'sdp_traduccio_ocupada'); assert.equal(r.calls.length, 1); assert.equal(r.lock, null);
   assert.equal(run({ steps: [{ transport: true }] }).lock, null);
 });
-test('ritme de client: petició31 limitada, X-Forwarded-For no la reinicia', options, () => {
+test('ritme de client: petició31 limitada, quota de caràcters per IP aplicada i X-Forwarded-For no la reinicia', options, () => {
   const r = run({ steps: Array.from({ length: 31 }, (_, i) => ({ body: body([`text${i}`]), headers: { 'x-forwarded-for': `192.0.2.${i}` } })) });
   assert.equal(r.calls.length, 30); assert.equal(r.responses[30].code, 'sdp_traduccio_limit');
+  const perCaractersIp = run({
+    constants: { SDP_TRADUCCIO_LIMIT_DIARI: 50000, SDP_TRADUCCIO_LIMIT_MENSUAL: 500000 },
+    steps: [
+      { remote_addr: '198.51.100.7', body: body(['a'.repeat(4000)]) },
+      { remote_addr: '198.51.100.7', body: body(['b'.repeat(4000)]) },
+      { remote_addr: '198.51.100.7', body: body(['c'.repeat(2500)]) },
+      { remote_addr: '198.51.100.8', body: body(['d'.repeat(2500)]) }
+    ]
+  });
+  assert.deepEqual(perCaractersIp.responses.map((x) => x.status ?? x.data.status), [200, 200, 429, 200]);
+  assert.equal(perCaractersIp.responses[2].code, 'sdp_traduccio_limit');
+  assert.equal(perCaractersIp.calls.length, 3);
 });
 for (const status of [302, 400, 403, 429, 456, 500, 504]) test(`DeepL ${status}: error controlat, sense cache ni clau`, options, () => {
   const r = run({ steps: [{ status, upstreamRaw: 'fixture-secret:fx' }] });

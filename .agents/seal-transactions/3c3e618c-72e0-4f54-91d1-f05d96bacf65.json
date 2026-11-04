@@ -1,0 +1,27 @@
+{
+  "id": "3c3e618c-72e0-4f54-91d1-f05d96bacf65",
+  "session": "1789db01-6393-49da-9c84-4be56feb51f5",
+  "operationId": "fedi-recovery-materialitzador-css-tres",
+  "claim": "1789db01-6393-49da-9c84-4be56feb51f5:governance-write",
+  "planHash": "0dfd919a5120dd69c39201b378a0bc4d2d1f98f76329ed9eb692cdc6d38672f9",
+  "beforeSeal": "4ad3041755fb42f21f866b4bbe9735f6af982b88c0f5d93d8cb074ec51fe532b",
+  "files": [
+    {
+      "path": "tooling/gates/git-staged.mjs",
+      "before": "45bf799507022da8f9ce1acde1ba64fdadbc3b64e78d113efd3d2379a9530304",
+      "after": "ac925fd79f850157121ba8ea86cba6fed99bfa558a06c0babe5f3b9e8523edde"
+    },
+    {
+      "path": "tests/git-staged-dependencies.test.mjs",
+      "before": "681f347b6a9a7a285dcba814c36df4fe5fa03be28a11f87d0367c3ed634a2136",
+      "after": "f58487322ccaa3b6993fd5bd5b9e3574b108a9ab5708f65180381b659d17fd05"
+    },
+    {
+      "path": "src/css/modules.css",
+      "before": "ade1eda2176af9af87eba5b42389ada2ec16e58e05f2f39f76a9e0d327e8a80e",
+      "after": "f027a610c73fe9acc982aa44b7405c24e36d4529e60453e3031e6942381e5787"
+    }
+  ],
+  "state": "accepted",
+  "afterSeal": "5dba4ddc7b60e87f720d2433a0cd610b6f50be95ed7a62cba37db77c3fd23f27"
+}

@@ -42,11 +42,12 @@
 import { createLocalNotesAdapter } from '../localNotes.js';
 import { PERSONES_SEED, createLocalPerfilsAdapter } from '../localPerfils.js';
 import { createLocalSeguimentsAdapter } from '../localSeguiments.js';
+import { errorDeConnexions, subjecteConnexionsDelContracte, visibilitatConnexionsDelContracte, inclusioPersonaDelContracte, sollicitudEntitatDelContracte } from '../contracte.js';
 import { ENTITATS_SEED } from '../identitatsSeed.js';
 import { APP_SEED } from '../appSeed.js';
 import { capturaSessio, getDefaultUserId, usuariDeSessio } from '../identitat.js';
 import { llavorAmbDatesDeProva } from '../../sections/mur/datesDeProvaMur.js';
-import { creaContingutLocal } from './contingutLocal.js';
+import { creaContingutLocal, capturaPayloadPersonalitzacioLocal } from './contingutLocal.js';
 import { creaNotesLocal } from './notesLocal.js';
 import { creaConversesLocal } from './conversesLocal.js';
 import { creaComunitatLocal } from './comunitatLocal.js';
@@ -57,14 +58,10 @@ import { estatBuitDeDadesObertes } from '../dadesObertesLot.js';
 
 export const BACKEND_ID_LOCAL = 'sdp-local';
 export const MODES_ADAPTADOR_LOCAL = Object.freeze(['seed', 'local']);
-/* Les capacitats del contracte que este node no declara, a posta i amb el seu
-   motiu. Una capacitat a mitges no existix: o tots els mètodes o cap
-   (backendPort.js). Qualsevol altra capacitat del contracte l'ha de servir
-   este adaptador; les proves de cobertura ho comproven contra CAPACITATS.
-     · versioClient: la versió mínima del client natiu (P0-23) és un deure
-       del node publicat davant de les botigues; un node local no en publica
-       cap, i sense la capacitat el client no bloqueja res. */
-export const CAPACITATS_NO_DECLARADES = Object.freeze(['versioClient']);
+/* FEDI-16 + FEDI23 · Les 39 capacitats són completes. La versió mínima local és
+   null; l'administració multipoble només opera amb autoritat LOCAL injectada.
+   Declarar mètodes no concedix autoritat ni permisos sobre cap servidor. */
+export const CAPACITATS_NO_DECLARADES = Object.freeze([]);
 
 /* Les claus d'abast de qui crida: l'adaptador és amo del seu backend (Model B)
    i mai no parla en nom d'un altre node. La resta (signal, limit, cursors del
@@ -84,6 +81,92 @@ const esObjectePla = (valor) => valor !== null && typeof valor === 'object' && !
 const senyalAvortat = (valor) => valor !== null && typeof valor === 'object' && valor.signal?.aborted === true;
 /* El text de backendPort.js: la interfície ja el coneix. */
 const cancelacio = () => new DOMException('Operació cancel·lada.', 'AbortError');
+
+/* La composició local és l'únic lloc on es pot injectar autoritat. No
+   s'inferix del directori, de metadades, de rol, d'aal ni de cap config client. */
+function administracioLocalValidada(entrada) {
+  if (entrada === null) return null;
+  const invalid = () => { throw new TypeError('[adaptadorLocal] administracioLocal requerix { pobles, autoritza }.'); };
+  if (!esObjectePla(entrada) || Object.keys(entrada).some(k => !['pobles', 'autoritza'].includes(k))
+    || typeof entrada.autoritza !== 'function' || !Array.isArray(entrada.pobles) || entrada.pobles.length > 1000) invalid();
+  const ids = new Set(), slugs = new Set();
+  const pobles = entrada.pobles.map(poble => {
+    if (!esObjectePla(poble) || typeof poble.id !== 'string' || !RE_UUID.test(poble.id)
+      || typeof poble.slug !== 'string' || !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(poble.slug)
+      || typeof poble.nom !== 'string' || !poble.nom.trim() || poble.nom.length > 200) invalid();
+    const id = poble.id.toLowerCase();
+    if (ids.has(id) || slugs.has(poble.slug)) invalid();
+    ids.add(id); slugs.add(poble.slug);
+    return Object.freeze({ id, slug: poble.slug, nom: poble.nom.trim() });
+  });
+  return Object.freeze({ pobles: Object.freeze(pobles), autoritza: entrada.autoritza });
+}
+const ADMINISTRATIUS = new Set(['adminLlistaPobles', 'adminLligPersonalitzacio', 'adminDesaPersonalitzacio', 'adminHistorialPersonalitzacio']);
+const lligAvortamentNatiu = Object.getOwnPropertyDescriptor(AbortSignal.prototype, 'aborted').get;
+const errorAbastAdmin = () => Object.assign(new TypeError('Cal un tenant explícit i coherent.'), { code: 'abast-invalid' });
+/* Captura síncrona abans de la microtasca de guardat(): només selectors
+   primitius i el senyal viu. Cap getter client es crida ni cap config es força
+   amb ci(). El payload queda separat abans que el consumidor el puga mutar. */
+function capturaArgumentsAdmin(nom, args) {
+  const indexConfig = nom === 'adminLlistaPobles' || nom === 'adminLligPersonalitzacio' ? 0 : 1;
+  const config = args[indexConfig] === undefined ? {} : args[indexConfig];
+  if (!esObjectePla(config)) throw errorAbastAdmin();
+  const selectors = {};
+  for (const clau of ['tenantId', 'tenant_id', 'signal']) {
+    const descriptor = Object.getOwnPropertyDescriptor(config, clau);
+    if (!descriptor) continue;
+    if (!Object.hasOwn(descriptor, 'value')) throw errorAbastAdmin();
+    const valor = descriptor.value;
+    if (clau !== 'signal' && valor !== undefined && valor !== null && typeof valor !== 'string') throw errorAbastAdmin();
+    if (clau === 'signal' && valor != null) {
+      /* Valida la marca i llig l'intrínsec, mai un getter `aborted` propi
+         d'un objecte client, ni tan sols d'un AbortSignal genuí alterat. */
+      try { lligAvortamentNatiu.call(valor); } catch { throw errorAbastAdmin(); }
+      selectors.signal = Object.freeze({ get aborted() { return lligAvortamentNatiu.call(valor); } });
+    } else selectors[clau] = valor;
+  }
+  if (senyalAvortat(selectors)) throw cancelacio();
+  if (nom === 'adminHistorialPersonalitzacio' && typeof args[0] !== 'string') {
+    throw Object.assign(new TypeError('La clau de personalització no és vàlida.'), { code: 'clau-invalida' });
+  }
+  const capturats = [...args];
+  capturats[indexConfig] = Object.freeze(selectors);
+  if (nom === 'adminDesaPersonalitzacio') {
+    const entrada = args[0] === undefined ? {} : args[0];
+    if (!esObjectePla(entrada)) throw new TypeError('Entrada de personalització invàlida.');
+    const camps = {};
+    for (const clau of ['clau', 'payload', 'versio']) {
+      const descriptor = Object.getOwnPropertyDescriptor(entrada, clau);
+      if (descriptor && !Object.hasOwn(descriptor, 'value')) throw new TypeError('Entrada de personalització invàlida.');
+      camps[clau] = descriptor?.value;
+    }
+    camps.payload = capturaPayloadPersonalitzacioLocal(camps.payload);
+    if (typeof camps.clau !== 'string' || (camps.versio != null && !Number.isSafeInteger(camps.versio))) throw new TypeError('Entrada de personalització invàlida.');
+    capturats[0] = Object.freeze(camps);
+  }
+  return capturats;
+}
+
+const METODES_CONNEXIONS = new Set(['preferenciesConnexions', 'desaVisibilitatConnexions', 'connexionsPubliquesDe', 'membresIEntitatsConnectadesDe', 'inclouPersonaEnEntitat', 'solicitaUnirSeAEntitat']);
+function capturaArgumentsConnexions(nom, args) {
+  const validador = nom === 'desaVisibilitatConnexions' ? visibilitatConnexionsDelContracte
+    : nom === 'inclouPersonaEnEntitat' ? inclusioPersonaDelContracte
+      : nom === 'solicitaUnirSeAEntitat' ? sollicitudEntitatDelContracte : subjecteConnexionsDelContracte;
+  const dades = validador(args[0]);
+  const config = args[1] === undefined ? {} : args[1];
+  if (!esObjectePla(config)) throw errorDeConnexions('SDP-CONN-001');
+  const capturada = {};
+  for (const clau of Reflect.ownKeys(config)) {
+    const descriptor = Object.getOwnPropertyDescriptor(config, clau);
+    if (typeof clau !== 'string' || !descriptor || !Object.hasOwn(descriptor, 'value')) throw errorDeConnexions('SDP-CONN-001');
+    if (clau === 'signal' && descriptor.value != null) {
+      const signal = descriptor.value;
+      try { lligAvortamentNatiu.call(signal); } catch { throw errorDeConnexions('SDP-CONN-001'); }
+      capturada.signal = Object.freeze({ get aborted() { return lligAvortamentNatiu.call(signal); } });
+    }
+  }
+  return [Object.freeze(dades), Object.freeze(capturada)];
+}
 
 /* Un magatzem de notes en memòria amb el contracte {read, mutate} de
    localNotes.js: una lectura i una escriptura no compartixen mai referències. */
@@ -140,13 +223,15 @@ function llavorDelMode(mode) {
  * @param {{read: Function, mutate: Function}|null} [opcions.magatzemNotes]
  * @param {boolean} [opcions.personalitzacioOberta=false] sense aal2 local, el Tauler només desa si es demana a posta.
  * @param {boolean} [opcions.restauracioOberta=false] sense cap rol d'administració local, restauraDadesObertes només escriu si es demana a posta (T2-G04).
+ * @param {{pobles: Array<{id: string, slug: string, nom: string}>, autoritza: Function}|null} [opcions.administracioLocal] autoritat explícita només d'este procés; pot ser asíncrona i ha de tornar true.
  * @param {{versio: string, url: string, textSha256: string}|null} [opcions.politica] la política vigent del consentiment.
  */
 export function creaAdaptadorLocal({
   mode = 'seed', tenantId = globalThis.crypto.randomUUID(), ara = () => new Date(), nouId = () => globalThis.crypto.randomUUID(),
-  dades = {}, persistenciaNotes = 'memoria', magatzemNotes = null, personalitzacioOberta = false, restauracioOberta = false, politica = null
+  dades = {}, persistenciaNotes = 'memoria', magatzemNotes = null, personalitzacioOberta = false, restauracioOberta = false, politica = null, administracioLocal = null
 } = {}) {
   validaOpcions({ mode, tenantId, ara, nouId, dades, persistenciaNotes, magatzemNotes, politica });
+  const autoritatLocal = administracioLocalValidada(administracioLocal);
   const configuracio = Object.freeze({ backendId: BACKEND_ID_LOCAL, tenantId: tenantId.toLowerCase(), dataMode: mode });
   /* backendUrl buit a posta: normalizeBackendConfig no hi barreja l'URL del
      paquet (la política de l'arrencada), i l'abast és sempre el d'este node. */
@@ -211,13 +296,13 @@ export function creaAdaptadorLocal({
     usuari, qui, bloquejosDe, tancaCanals, abast,
     opcions: Object.freeze({
       personalitzacioOberta: personalitzacioOberta === true, restauracioOberta: restauracioOberta === true,
-      politica: politica ? Object.freeze({ ...politica }) : null
+      politica: politica ? Object.freeze({ ...politica }) : null, administracioLocal: autoritatLocal
     }),
     /* Sense argument, el context de la sessió viva; amb un usuari capturat, el
        d'eixe usuari (PC155-01: l'exportació no torna a llegir la sessió). */
     contextSeguiments: (u = usuari()) => {
       const q = u?.id || getDefaultUserId();
-      return { usuari: u, qui: q, bloquejos: bloquejosDe(q) };
+      return { usuari: u, qui: q, bloquejos: bloquejosDe(q), bloquejosDe, pobles: [...(autoritatLocal?.pobles ?? []), ...coleccio('towns').map(p => ({ id: String(p.id ?? ''), slug: p.slug, nom: p.nom ?? p.title ?? p.name }))] };
     },
     alTancar: (fn) => { netejes.push(fn); }
   });
@@ -241,7 +326,7 @@ export function creaAdaptadorLocal({
      microtasca de la guarda, com l'adaptador Supabase (capturaSessio síncron a
      sessioDelCompte): un canvi de sessió en el mateix tic de la crida ja no
      entra al mètode. La resta de mètodes és l'opció C (seguiment de P2-08). */
-  const AMB_ABAST_EN_CRIDAR = new Set(['exportaLesMeuesDades']);
+  const AMB_ABAST_EN_CRIDAR = new Set(['exportaLesMeuesDades', ...ADMINISTRATIUS, ...METODES_CONNEXIONS]);
   /* La guarda transversal: un adaptador tancat no respon, i una crida
      síncrona que llança es torna un rebuig. El senyal i el tancament es miren
      en cridar i, de nou, just abans d'entrar al magatzem (la microtasca
@@ -251,17 +336,26 @@ export function creaAdaptadorLocal({
      alta de canal es desfà. El canvi de persona el mira el mètode que espera,
      amb e.abast() (PC155-01: l'exportació); els d'AMB_ABAST_EN_CRIDAR, a més,
      des de la crida i abans d'entrar (PC155-01-A1). */
-  const guardat = (nom, fn) => (...args) => {
-    const abastCrida = AMB_ABAST_EN_CRIDAR.has(nom) ? abast() : null;
+  const guardat = (nom, fn) => (...entrades) => {
+    let args, abastCrida;
+    try {
+      if (tancat) throw errorTancat();
+      abastCrida = AMB_ABAST_EN_CRIDAR.has(nom) ? abast() : null;
+      args = ADMINISTRATIUS.has(nom) ? capturaArgumentsAdmin(nom, entrades) : METODES_CONNEXIONS.has(nom) ? capturaArgumentsConnexions(nom, entrades) : entrades;
+    } catch (error) { return Promise.reject(error); }
+    const estaAvortat = () => ADMINISTRATIUS.has(nom)
+      ? senyalAvortat(args[nom === 'adminLlistaPobles' || nom === 'adminLligPersonalitzacio' ? 0 : 1])
+      : args.some(senyalAvortat);
     const comprova = () => {
       if (tancat) throw errorTancat();
-      if (args.some(senyalAvortat)) throw cancelacio();
+      if (estaAvortat()) throw cancelacio();
       abastCrida?.();
     };
     try { comprova(); } catch (error) { return Promise.reject(error); }
     const desfes = Object.hasOwn(DESFES_SI_ES_REBUTJA, nom) ? DESFES_SI_ES_REBUTJA[nom] : null;
     return Promise.resolve().then(() => { comprova(); return fn(...args); }).then(async (valor) => {
-      const avortat = args.some(senyalAvortat);
+      abastCrida?.();
+      const avortat = estaAvortat();
       /* PC155-01 · Tancat, cap resultat ix, tampoc el d'una lectura sense desfes. */
       if (!avortat && !tancat) return valor;
       if (desfes) await Promise.resolve().then(() => desfes(valor)).catch(() => {});

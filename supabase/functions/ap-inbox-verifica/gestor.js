@@ -23,7 +23,7 @@
      SDP_AP_ORIGEN            l'origen dels ids d'actor (per defecte https://socdepoble.org)
      SDP_AP_INBOX_PUBLICA     l'URL base on arriben els POST (per defecte, l'origen), p. ex.
                               https://<ref>.supabase.co/functions/v1/ap-inbox-verifica
-     SDP_AP_CLAUS_PRIVADES    JSON {"<slug>": "<PKCS#8 PEM RSA>"}; un slug és actor local
+     SDP_AP_CLAUS_PRIVADES    JSON {"<slug>": "<PKCS#8 PEM RSA o Ed25519>"}; un slug és actor local
                               només si té clau vàlida I és a ['socdepoble', ...POBLES_FEDERATS]
      SDP_AP_NODES_CONFIANCA   orígens https separats per comes (buit: cap alerta)
      SDP_CRON_SECRET, SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY */
@@ -278,7 +278,7 @@ export function creaGestor({
       for (const [slug, actor] of config.actors) {
         const clau = await importaClauPrivada(actor.clauPrivadaPem, { subtle });
         if (clau) mapa.set(slug, clau);
-        else registre.error(`[ap-inbox-verifica] La clau de ${slug} no és una RSA PKCS#8 vàlida.`);
+        else registre.error(`[ap-inbox-verifica] La clau de ${slug} no és una PKCS#8 RSA o Ed25519 vàlida.`);
       }
       return mapa;
     })();

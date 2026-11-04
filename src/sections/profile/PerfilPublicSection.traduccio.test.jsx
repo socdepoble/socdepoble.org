@@ -9,7 +9,7 @@ import { afterEach, beforeEach, expect, test, vi } from 'vitest';
    continua traduint. Els mateixos dobles que PerfilPublicSection.seguidors.test.jsx,
    amb el transport lliure fixat com fa main.jsx i un fetch fals. */
 const mocks = vi.hoisted(() => ({
-  id: 'pepa', navigate: vi.fn(), load: vi.fn(), qui: vi.fn(), seo: vi.fn(), toast: vi.fn(),
+  id: 'pepa', navigate: vi.fn(), load: vi.fn(), qui: vi.fn(), meus: vi.fn(), seo: vi.fn(), toast: vi.fn(),
   config: { dataMode: 'seed' }, t: (_, alternativa) => alternativa, resolveAsset: (v) => v, agents: [],
   capacitats: new Set(['directori', 'seguiments']),
   identitat: { memberships: [], actor: null, setActor: vi.fn() },
@@ -33,7 +33,8 @@ vi.mock('../../hooks/useSEO', () => ({ useSEO: (opcions) => mocks.seo(opcions) }
 vi.mock('../../data/backendPort.js', () => ({
   teCapacitat: (capacitat) => mocks.capacitats.has(capacitat),
   loadPerfilPublic: mocks.load,
-  quiEmSegueix: (...args) => mocks.qui(...args)
+  quiEmSegueix: (...args) => mocks.qui(...args),
+  elsMeusSeguiments: (...args) => mocks.meus(...args)
 }));
 vi.mock('../../host.js', () => ({ quanLlest: async () => {} }));
 import PerfilPublicSection from './PerfilPublicSection.jsx';
@@ -61,6 +62,7 @@ beforeEach(() => {
     { id: 'u-rosa', nom: 'Rosa Inventada Secreta', creatAl: '2026-10-24T09:00:00Z' },
     { id: 'e-forn', tipus: 'entitat', nom: 'Forn Inventat', creatAl: '2026-10-25T09:00:00Z' }
   ]);
+  mocks.meus.mockResolvedValue([{ id: 'u-toni', nom: 'Toni Inventat Secret', creatAl: '2026-10-26T09:00:00Z' }]);
   oblidaEntitatDelProjecte();
   buidaSessioLliure();
   buidaCauTraduccions();
@@ -76,6 +78,8 @@ test('la fitxa pròpia amb el veïnat connectat: Traduir avisa i no envia cap no
   mocks.load.mockResolvedValue(PEPA);
   const { container } = render(<PerfilPublicSection agents={mocks.agents} />);
   expect(await screen.findByText(/Rosa Inventada Secreta/)).toBeTruthy();
+  expect(screen.getByText(/Toni Inventat Secret/)).toBeTruthy();
+  expect(mocks.meus).toHaveBeenCalledWith(expect.objectContaining({ dataMode: 'seed', signal: expect.any(AbortSignal) }));
   const boto = traduir(container);
   expect(boto.hasAttribute('aria-haspopup')).toBe(false);
   await act(async () => { fireEvent.click(boto); });
@@ -89,6 +93,9 @@ test('la fitxa d’una persona que mira una altra: Traduir es continua traduint 
   const { container } = render(<PerfilPublicSection agents={mocks.agents} />);
   expect(await screen.findByRole('heading', { level: 1, name: 'Pepa Inventada' })).toBeTruthy();
   expect(screen.queryByText(/Rosa Inventada Secreta/)).toBeNull();
+  expect(screen.queryByText(/Toni Inventat Secret/)).toBeNull();
+  expect(mocks.qui).not.toHaveBeenCalled();
+  expect(mocks.meus).not.toHaveBeenCalled();
   const boto = traduir(container);
   expect(boto.getAttribute('aria-haspopup')).toBe('menu');
   fireEvent.click(boto);
@@ -97,7 +104,7 @@ test('la fitxa d’una persona que mira una altra: Traduir es continua traduint 
   });
   await act(async () => { await new Promise((resolve) => setTimeout(resolve, 0)); });
   expect(fetch).toHaveBeenCalled();
-  expect(fetch.mock.calls.some(([, { body }]) => /Rosa|Forn Inventat/.test(body.get('q')))).toBe(false);
+  expect(fetch.mock.calls.some(([, { body }]) => /Rosa|Forn Inventat|Toni Inventat Secret/.test(body.get('q')))).toBe(false);
 });
 
 /* Gauntlet 261030 (Fase 3, TC3.2; traduir-contingut-de-membres) · Només una

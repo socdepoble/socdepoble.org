@@ -98,7 +98,7 @@ describe('Model B i maquinària existent', () => {
     const mur = codiDe('src/sections/mur/TargetaDelMur.jsx');
     const acte = codiDe('src/components/universal/EventCard.jsx');
     for (const codi of [mur, acte]) {
-      expect(codi).toContain("import { fontImatgePropia } from '");
+      expect(codi).toMatch(/import\s*\{[^}]*\bfontImatgePropia\b[^}]*\}\s*from\s*['"]\.\.\/\.\.\/utils\/sanitize\.js['"]/);
       expect(codi.match(/fontImatgePropia\(resolveAsset\(/g)).toHaveLength(2);
       expect(codi).toMatch(/^\s*imatgePrivada$/m);
       expect(codi).not.toMatch(/new URL\(/);
@@ -118,7 +118,8 @@ describe('Model B i maquinària existent', () => {
      el lector del MAS i la seua fitxa. La targeta del Mercat, com la del Mur. */
   test('el detall i el lector del MAS usen la regla única del mode estricte; la targeta del Mercat, el de sanitize.js', () => {
     const meta = codiDe('src/sections/detail/detailSectionMeta.jsx');
-    expect(meta).toContain("import { esFontImatgePropia, sanitizeHtml } from '../../utils/sanitize.js';");
+    expect(meta).toMatch(/import\s*\{[^}]*\besFontImatgePropia\b[^}]*\}\s*from\s*['"]\.\.\/\.\.\/utils\/sanitize\.js['"]/);
+    expect(meta).toMatch(/import\s*\{[^}]*\bsanitizeHtml\b[^}]*\}\s*from\s*['"]\.\.\/\.\.\/utils\/sanitize\.js['"]/);
     expect(meta).toContain('export function imatgePropiaDelDetall(seccio, valor)');
     expect(meta).toContain('const src = imatgePropiaDelDetall(seccio, avatarDeLaIdentitat);');
     expect(meta).toContain('totes.filter(esImatgePropiaDelDetall)');

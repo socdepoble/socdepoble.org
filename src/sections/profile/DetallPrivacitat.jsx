@@ -8,6 +8,7 @@ import {
   teCapacitat, exportaLesMeuesDades, estatBaixa, demanaBaixa, cancelaBaixa,
   estatConsentiment, registraConsentiment, revocaConsentiment,
 } from '../../data/backendPort.js';
+import { VisibilitatConnexions } from './ConnexionsPubliques.jsx';
 import { BlocPerfil as Bloc } from './BlocPerfil.jsx';
 import { rutaDePerfil } from '../../config/navigation.js';
 import { pobleDeFitxa } from './fitxaDePerfil.js';
@@ -20,10 +21,15 @@ import { LlistaBloquejos } from '../../components/universal/LlistaBloquejos.jsx'
    l'entrada nativa registrada, com l'origen públic) i els textos amb {nom}. */
 import { esAppNativa } from '../../config/origenPublic.js';
 import { capturaSessio } from '../../data/identitat.js';
+import { backendScope } from '../../config/backendConfig.js';
 import { omple } from '../../config/moderacio.js';
 /* T7 · IDEA-48 (pla 261101_1246) · «Persones de confiança», darrere de la bandera E2EE: apagada, Rollup plega la constant i el bloc no entra al paquet. */
 import { E2EE_ACTIU_PER_DEFECTE } from '../../config/xifratXat.js';
 const BlocPersonesConfianca = E2EE_ACTIU_PER_DEFECTE ? lazy(() => import('./BlocPersonesConfianca.jsx')) : null;
+const PortabilitatFederada = lazy(() => import('./PortabilitatFederada.jsx'));
+/* FEDI-07 · Mostra efímera només en desenvolupament: la condició ha de
+   envoltar també l'import perquè el motor no entre al graf de producció. */
+const ProvaXifratXat = import.meta.env.DEV ? lazy(() => import('./ProvaXifratXat.jsx')) : null;
 
 /* ═══════════════════════════════════════════════════════════════════
    PRIVACITAT I DADES · els drets de la persona sobre el que guardem
@@ -742,6 +748,7 @@ export function DetallPrivacitat({
     >
       <div className="perfil-compte">
         {ambCompte ? <BlocDades config={config} /> : null}
+        <VisibilitatConnexions id={dades?.id || identitat.id} config={config} t={t || undefined} />
         {ambConsentiment ? <BlocConsentiment config={config} /> : null}
         {ambBloquejos ? (
           <Bloc titol={tradueix(t, TEXTOS_MODERACIO.bloquejosTitol)}>
@@ -752,6 +759,10 @@ export function DetallPrivacitat({
           <BlocBaixa config={config} onSessioTancada={tancaSessio} onPerfilCanviat={onPerfilCanviat} />
         ) : null}
         {BlocPersonesConfianca ? <Suspense fallback={null}><BlocPersonesConfianca /></Suspense> : null}
+        <Suspense fallback={null}>
+          <PortabilitatFederada scopeKey={`${backendScope(config)}::${identitat.id}`} />
+          {ProvaXifratXat ? <ProvaXifratXat key={`${backendScope(config)}::${identitat.id}`} /> : null}
+        </Suspense>
         {!ambCompte && !ambConsentiment && !ambBloquejos ? (
           <p className="perfil-compte__text">{tradueix(t, TEXTOS_PAGINA.buit)}</p>
         ) : null}

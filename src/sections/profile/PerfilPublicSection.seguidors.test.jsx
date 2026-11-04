@@ -10,7 +10,7 @@ import { afterEach, beforeEach, expect, test, vi } from 'vitest';
    Actualitzada a posta (P1-11, pla 261024_2230; G1945-04 de Gemini, ordre del
    Mestre): el títol nou del bloc. */
 const mocks = vi.hoisted(() => ({
-  id: 'pepa', navigate: vi.fn(), load: vi.fn(), qui: vi.fn(), seo: vi.fn(), toast: vi.fn(),
+  id: 'pepa', navigate: vi.fn(), load: vi.fn(), qui: vi.fn(), meus: vi.fn(), seo: vi.fn(), toast: vi.fn(),
   config: { dataMode: 'seed' }, t: (_, alternativa) => alternativa, resolveAsset: (v) => v, agents: [],
   capacitats: new Set(['directori', 'seguiments']),
   identitat: { memberships: [], actor: null, setActor: vi.fn() },
@@ -34,7 +34,8 @@ vi.mock('../../hooks/useSEO', () => ({ useSEO: (opcions) => mocks.seo(opcions) }
 vi.mock('../../data/backendPort.js', () => ({
   teCapacitat: (capacitat) => mocks.capacitats.has(capacitat),
   loadPerfilPublic: mocks.load,
-  quiEmSegueix: (...args) => mocks.qui(...args)
+  quiEmSegueix: (...args) => mocks.qui(...args),
+  elsMeusSeguiments: (...args) => mocks.meus(...args)
 }));
 vi.mock('../../host.js', () => ({ quanLlest: async () => {} }));
 import PerfilPublicSection from './PerfilPublicSection.jsx';
@@ -45,7 +46,7 @@ const PEPA = {
   presentacioHtml: '', poble: 'La Torre de les Maçanes', esIA: false, publicat: true, propietari: false, copyright: ''
 };
 const FORN = { ...PEPA, tipus: 'entitat', id: 'forn', slug: 'forn', nom: 'Forn de la Torre', propietari: true };
-const titol = () => screen.queryByRole('heading', { level: 3, name: 'Veïnat connectat amb tu' });
+const titol = () => screen.queryByRole('heading', { level: 3, name: 'Veïnat i amistats connectades' });
 
 afterEach(cleanup);
 beforeEach(() => {
@@ -53,6 +54,7 @@ beforeEach(() => {
   mocks.id = 'pepa';
   mocks.capacitats = new Set(['directori', 'seguiments']);
   mocks.qui.mockResolvedValue([{ id: 'u-rosa', nom: 'Rosa Pérez', creatAl: '2026-10-24T09:00:00Z' }]);
+  mocks.meus.mockResolvedValue([{ id: 'u-toni', nom: 'Toni Connexió Privada', creatAl: '2026-10-26T09:00:00Z' }]);
   mocks.identitat = { memberships: [], actor: null, setActor: vi.fn(() => true) };
   oblidaEntitatDelProjecte();
 });
@@ -63,7 +65,9 @@ test('la fitxa pròpia d’una persona porta «Veïnat connectat amb tu» amb la
   expect(await screen.findByRole('heading', { level: 1, name: 'Pepa Garcia' })).toBeTruthy();
   expect(titol()).toBeTruthy();
   expect(await screen.findByText(/Rosa Pérez/)).toBeTruthy();
+  expect(screen.getByText(/Toni Connexió Privada/)).toBeTruthy();
   expect(mocks.qui).toHaveBeenCalledWith({}, expect.objectContaining({ dataMode: 'seed', signal: expect.any(AbortSignal) }));
+  expect(mocks.meus).toHaveBeenCalledWith(expect.objectContaining({ dataMode: 'seed', signal: expect.any(AbortSignal) }));
   /* Al peu de la fitxa, dins del cos de la pàgina i no a la capçalera. */
   expect(titol().closest('header.page-title')).toBeNull();
 });
@@ -77,6 +81,7 @@ test('la fitxa d’una altra persona, la d’una entitat que administres i la d�
     cleanup();
   }
   expect(mocks.qui).not.toHaveBeenCalled();
+  expect(mocks.meus).not.toHaveBeenCalled();
 });
 
 test('sense la capacitat de seguiments, la fitxa pròpia de sempre', async () => {
@@ -87,4 +92,5 @@ test('sense la capacitat de seguiments, la fitxa pròpia de sempre', async () =>
   await waitFor(() => expect(mocks.load).toHaveBeenCalled());
   expect(titol()).toBeNull();
   expect(mocks.qui).not.toHaveBeenCalled();
+  expect(mocks.meus).not.toHaveBeenCalled();
 });

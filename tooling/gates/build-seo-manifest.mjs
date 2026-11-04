@@ -121,6 +121,7 @@ const SEEDS = [
   { fitxer: 'src/sections/pobles/townsSeed.js', exporta: 'MOCK_TOWNS', prefix: 'pobles', tipus: 'Place' },
   { fitxer: 'src/sections/mercat/marketSeed.js', exporta: 'MOCK_MARKET_ITEMS', prefix: 'mercat', tipus: 'Product' },
   { fitxer: 'src/sections/mur/eventsSeed.js', exporta: 'CALENDAR_EVENTS', prefix: 'events', tipus: 'Event' },
+  { fitxer: 'src/sections/mur/eventsSeed.js', exporta: 'FEATURED_EVENTS', prefix: 'events', tipus: 'Event' },
   { fitxer: 'src/sections/mur/feedSeed.js', exporta: 'MOCK_FEED', prefix: 'mur', tipus: 'Article' },
 ];
 

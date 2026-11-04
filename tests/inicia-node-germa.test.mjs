@@ -47,7 +47,10 @@ import path from 'node:path';
 import { createHash } from 'node:crypto';
 import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
-import { iniciaNodeGerma } from '../tooling/instalador/inicia-node-germa.mjs';
+import { iniciaNodeGerma, validaCompilacioNode } from '../tooling/instalador/inicia-node-germa.mjs';
+import { enllacaNodeModules, contrastaNodeModules } from '../tooling/seo/comprova-reproductibilitat.mjs';
+import * as activitypub from '../src/data/activitypub.js';
+import { reglesFirebaseWebFinger } from '../tooling/seo/genera-federacio.mjs';
 
 const ARREL = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const INSTALADOR = path.join(ARREL, 'tooling/instalador/inicia-node-germa.mjs');
@@ -60,8 +63,8 @@ const RESIDU_TORRE = /la[\s_-]*torre|ma[çc]anes|latorredelesmacanes|gentdelator
 const GENERATS = Object.freeze(['.env.local', 'INICIA_NODE.md', 'node-germa.json']);
 /* Mirall de DIRECTORIS i FITXERS de tooling/instalador/inicia-node-germa.mjs: si l'instal·lador
    en copia d'altres, esta prova ho ha de saber. */
-const DIRECTORIS = Object.freeze(['public', 'scripts', 'src', 'tooling']);
-const FITXERS = Object.freeze(['package.json', 'package-lock.json', 'index.html', 'vite.config.js', 'firebase.json', 'flake.nix', 'flake.lock', 'LICENSE']);
+const DIRECTORIS = Object.freeze(['public', 'scripts', 'src', 'tooling', 'nix', '_wiki_de_poble/01_ser', '_wiki_de_poble/02_saber', '_wiki_de_poble/03_actuar']);
+const FITXERS = Object.freeze(['package.json', 'package-lock.json', 'index.html', 'vite.config.js', 'firebase.json', 'flake.nix', 'flake.lock', 'LICENSE', 'AGENTS.md', '.agents/AGENTS.md']);
 const EXCLOSOS = new Set(['node_modules', 'dist', '90_arxiu_historic', '01_produccio', '02_investigacio_ia']);
 /* Quatre fitxers vius de governança (només canvien amb l'executor, no a mitja prova): sentinelles
    d'una escriptura per error al repositori. No en cobrixen la resta. */
@@ -203,23 +206,24 @@ test('node-germa.json, .env.local i INICIA_NODE.md porten la identitat de Xixona
 test('el manifest cobrix la release sencera: cada fitxer de la font arriba al node amb el seu SHA-256 i res de fora hi entra', () => {
   const { manifest } = estat;
   const arrelDeLaFont = FITXERS.filter((nom) => fs.existsSync(path.join(estat.font, nom)));
-  const esperats = new Set([...GENERATS, ...DIRECTORIS, ...arrelDeLaFont]);
+  const esperats = new Set([...GENERATS, ...DIRECTORIS, ...arrelDeLaFont].map(n => n.split('/')[0]));
   assert.deepEqual(new Set(fs.readdirSync(estat.desti)), esperats);
 
   const camins = manifest.fitxers.map(({ cami }) => cami);
   assert.deepEqual(camins, [...new Set(camins)].sort(), 'manifest ordenat i sense repeticions');
   // La release de la font amb les regles de l'instal·lador: cap tros que comence per punt ni cap directori exclòs.
   const release = [...arrelDeLaFont, ...DIRECTORIS.flatMap((dir) => fitxersDe(path.join(estat.font, dir), dir))]
-    .filter((rel) => !rel.split('/').some((tros) => tros.startsWith('.') || EXCLOSOS.has(tros)))
+    .filter((rel) => rel === '.agents/AGENTS.md' || !rel.split('/').some((tros) => tros.startsWith('.') || EXCLOSOS.has(tros)))
     .sort();
   assert.deepEqual(camins, release, 'el manifest és la release de la font, ni més ni menys');
   const copiats = fitxersDe(estat.desti).filter((rel) => !GENERATS.includes(rel)).sort();
   assert.deepEqual(copiats, release);
-  for (const { cami, sha256 } of manifest.fitxers) {
-    assert.equal(sha(fs.readFileSync(path.join(estat.font, cami))), sha256, `font · ${cami}`);
+  for (const { cami, sha256, sha256Font } of manifest.fitxers) {
+    assert.equal(sha(fs.readFileSync(path.join(estat.font, cami))), sha256Font ?? sha256, `font · ${cami}`);
     assert.equal(sha(fs.readFileSync(path.join(estat.desti, cami))), sha256, cami);
+    if (sha256Font) assert.equal(cami, 'firebase.json', 'només Firebase es transforma');
   }
-  for (const absent of ['.git', 'node_modules', 'dist', '_wiki_de_poble', 'tests', 'supabase', 'wordpress-plugin']) {
+  for (const absent of ['.git', 'node_modules', 'dist', '_wiki_de_poble/04_escriptori', '_wiki_de_poble/90_arxiu_historic', 'tests', 'supabase', 'wordpress-plugin']) {
     assert.equal(fs.existsSync(path.join(estat.desti, absent)), false, absent);
   }
 });
@@ -282,17 +286,30 @@ test('D-13 · la federació del node és la de Xixona: un sol actor, amb el seu 
   assert.ok(llig(path.join(estat.desti, 'INICIA_NODE.md')).includes('@xixona@gentdexixona.example'));
 });
 
-test('[DEFECTE] el firebase.json i la llavor de mostra de la release encara porten el Mas i La Torre', () => {
-  /* Deute residual declarat (D-T3-4, pla 261101_1246). Esta prova passa perquè reproduïx el residu.
-     El firebase.json copiat al node porta les reescriptures de WebFinger lligades a socdepoble.org
-     (la ruta suportada per a un node germà és el mòdul NixOS; regenerar-les per a l'origen del node
-     és d'una onada posterior). La llavor de demostració (mode seed) viatja sencera. Quan
-     l'instal·lador o la CLI regeneren firebase.json per al node, la primera meitat s'ha d'invertir. */
-  const firebase = llig(path.join(estat.desti, 'firebase.json'));
-  assert.match(firebase, RESIDU_TORRE);
-  assert.ok(firebase.includes('socdepoble\\\\.org'), 'les reescriptures de WebFinger són per a l’origen del Mas');
-  assert.ok(!firebase.includes('gentdexixona'));
+test('FEDI-05 · Firebase adapta WebFinger a Xixona amb les mateixes regles del generador; la llavor continua sent de mostra', () => {
+  const firebase = JSON.parse(llig(path.join(estat.desti, 'firebase.json')));
+  const regles = reglesFirebaseWebFinger({ap:activitypub,origen:ORIGEN,actors:[{slug:'xixona',perfil:'/'}],principals:['xixona']});
+  assert.deepEqual(firebase.hosting.rewrites.filter(r => r.destination?.startsWith('/.well-known/webfinger/')),regles.rewrites);
+  assert.deepEqual(firebase.hosting.headers.filter(r => r.source === '/.well-known/host-meta' || r.regex?.includes('webfinger')),regles.headers);
+  const webfinger=JSON.stringify(regles);
+  assert.doesNotMatch(webfinger,RESIDU_TORRE);
+  assert.ok(!webfinger.includes('socdepoble'));
+  assert.ok(webfinger.includes('gentdexixona'));
+  assert.equal(firebase.hosting.site,undefined);
+  assert.equal(firebase.hosting.target,undefined);
+  assert.equal(estat.manifest.fitxers.find(f => f.cami === 'firebase.json').sha256Font,sha(fs.readFileSync(path.join(estat.font,'firebase.json'))));
 
   // La llavor de demostració (mode seed) viatja sencera: fotos i pàgines de La Torre dins de public/ i src/.
   assert.ok(estat.manifest.fitxers.some(({ cami }) => cami.startsWith('public/') && RESIDU_TORRE.test(cami)));
+});
+
+test('FEDI-05 · compilació Vite real de la còpia instal·lada i validació de la identitat emesa', {skip:process.env.SDP_NODE_GERMA_BUILD_REAL !== '1'}, () => {
+  const dependencies=contrastaNodeModules(ARREL);
+  assert.equal(dependencies.absents,0, 'dependències locals exigides pel lock presents');
+  assert.deepEqual(dependencies.diferents,[],'versions de dependències iguals al lock');
+  enllacaNodeModules(path.join(ARREL,'node_modules'),path.join(estat.desti,'node_modules'));
+  const resultat=spawnSync('npm',['run','build:web'],{cwd:estat.desti,encoding:'utf8',timeout:180_000,maxBuffer:16*1024*1024,
+    env:{...entornSenseVite(),HUSKY:'0',SDP_SOCIAL_SENSE_REMOT:'1',SOURCE_DATE_EPOCH:'0'}});
+  assert.equal(resultat.status,0,resultat.stderr+'\n'+resultat.stdout.slice(-3000));
+  assert.equal(validaCompilacioNode(estat.desti,CONFIG).actor,`${ORIGEN}/ap/actors/xixona.json`);
 });

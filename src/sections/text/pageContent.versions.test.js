@@ -20,7 +20,8 @@
 import { describe, expect, test } from 'vitest';
 import { E2EE_ACTIU_PER_DEFECTE } from '../../config/xifratXat.js';
 import { CANALS_DE_BOTIGA } from '../../config/canalsDeBotiga.js';
-import { VERSIO_FORMAT } from '../../data/exportaMunicipiOpenData.js';
+import { VERSIO_FORMAT, exportaMunicipiOpenData } from '../../data/exportaMunicipiOpenData.js';
+import { webcrypto } from 'node:crypto';
 import { VIGENCIA_ALERTA_MS } from '../mur/alertesMunicipals.js';
 import { PAGE_COPY } from './pageContent.js';
 import { CAPACITATS_NO_DECLARADES } from '../../data/local/adaptadorLocal.js';
@@ -265,17 +266,23 @@ describe('Onada 6 · l’entrada de la 1.1.0, la primera i honesta', () => {
     expect(interns(cos)).toEqual(['/projecte', '/descarregues', '/page/fediversity']);
   });
 
-  test('les dades obertes: sis fitxers enllaçats, el manifest i els nou recursos del paquet, format 1.2.0', () => {
-    const enllacats = [...PAGE_COPY.fediversity.html.matchAll(/href="(\/opendata\/[^"]+)"/g)].map((m) => m[1]);
-    expect(enllacats).toHaveLength(6);
+  test('les dades obertes concorden amb el snapshot i el manifest real del format vigent', async () => {
+    const enllacats = [...PAGE_COPY.fediversity.html.matchAll(/href="(\/opendata\/[^"]+)"/g)].map(m => m[1]);
+    const snapshot = JSON.parse(llegix('public/opendata/snapshot-public.json'));
+    const paquet = await exportaMunicipiOpenData(snapshot.entrada, { subtle: webcrypto.subtle });
     const manifest = JSON.parse(llegix('public/opendata/manifest.json'));
-    expect(manifest.resources).toHaveLength(9);
+    expect(manifest).toEqual(paquet.datapackage);
     expect(manifest.socdepoble.schemaVersion).toBe(VERSIO_FORMAT);
+    const permesos = new Set(['/opendata/manifest.json', ...manifest.resources.map(r => '/opendata/' + r.path),
+      '/opendata/' + paquet.nomFitxer, '/opendata/' + paquet.nomFitxer + '.sha256']);
+    expect(enllacats).toEqual(expect.arrayContaining(['/opendata/manifest.json', '/opendata/noticies.jsonld', '/opendata/agenda.jsonld']));
+    expect(enllacats.filter(href => !permesos.has(href))).toEqual([]);
     expect(llegix('src/config/assetResolver.js')).toContain('RE_HREF_OPENDATA');
     const cos = text(apartat(entrega110, 'Novetat · Dades obertes').cos);
-    expect(cos).toContain('enllaça sis fitxers');
-    expect(cos).toContain('el manifest i els nou recursos que llista');
-    expect(cos).toContain(`en el format ${VERSIO_FORMAT}`);
+    expect(cos).toContain('El manifest descriu els recursos');
+    expect(cos).toContain('restauració local');
+    expect(cos).toContain('Supabase continua absent');
+    expect(cos).toContain('format ' + VERSIO_FORMAT);
   });
 
   test('els calaixos naixen davall de la barra negra: un sol càlcul per a l’Índex i per als calaixos', () => {
@@ -323,7 +330,7 @@ describe('Onada 6 · l’entrada de la 1.1.0, la primera i honesta', () => {
   });
 
   test('els enllaços interns porten a rutes de l’aplicació', () => {
-    expect(interns(entrega110)).toEqual(['/disseny?categoria=formularis&amp;item=formularis-ambit', '/projecte', '/descarregues', '/page/fediversity', '/page/fediversity']);
+    expect(interns(entrega110)).toEqual(["/disseny?categoria=formularis&amp;item=formularis-ambit","/projecte","/descarregues","/page/fediversity","/page/fediversity","/control?fitxa=opendata","/page/node-zero"]);
     for (const ruta of interns(entrega110)) expect(rutaExistix(ruta), ruta).toBe(true);
   });
 });
@@ -493,7 +500,7 @@ describe('Assalt 10/10 · /versions té l’entrada honesta de la tarda de l’1
   test('les peces que es poden derivar del codi', () => {
     expect(VERSIO_FORMAT).toBe('1.2.0');
     expect(titolsH4(entregaAssalt)).toContain('Novetat · Dades obertes 1.2.0 i restaurador');
-    expect(CAPACITATS_NO_DECLARADES).toEqual(['versioClient']);
+    expect(CAPACITATS_NO_DECLARADES).toEqual([]);
     expect(pla).toContain("llevat de la versió mínima de l'app");
     expect(entregaAssalt).toContain('<code>src/data/federacio/inboxActivityPub.js</code>');
   });

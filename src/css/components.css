@@ -1396,6 +1396,43 @@
   transform-origin: var(--targeta-mitja-x, 50%) var(--targeta-mitja-y, 50%);
 }
 
+/* Ordre del Mestre (03-11-2026) · Targeta i Hero amb vídeo protagonista
+   (Cursos de pedra en sec a Fageca i Alcosser). El reproductor de la targeta
+   puja damunt del vel (.sp-card-link-overlay, z-index 1) perquè els controls
+   de vídeo funcionen directament al Mur, i a la UniversalPage ocupa el Hero
+   amb proporció vertical adaptada. */
+.sp-card-media-container--video {
+  background: var(--sdp-fons-invers);
+  position: relative;
+  z-index: 2;
+}
+
+.sp-card-media--video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.sdp-hero-video {
+  width: 100%;
+  background: var(--sdp-fons-invers);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  overflow: hidden;
+  border-radius: var(--sdp-radi-m);
+}
+
+.sdp-hero-video__player {
+  width: 100%;
+  max-height: 78vh;
+  aspect-ratio: 9 / 16;
+  object-fit: contain;
+  display: block;
+  margin: 0 auto;
+}
+
 .sp-card-copyright {
   text-align: center;
 }
@@ -1751,6 +1788,7 @@ a.pill:active {
 
 .badge-row {
   display: flex;
+  justify-content: center;
   gap: var(--sdp-space-2);
   margin-bottom: var(--sdp-space-4);
   flex-wrap: wrap;
@@ -2243,6 +2281,15 @@ section.bar-orange > .sdp-emoticona-barra--boto:focus-visible { outline-color: v
     left: 50%;
     transform: translateX(-50%);
     z-index: 1;
+  }
+  .sp-card-footer .sdp-menu-traduir {
+    position: absolute;
+    bottom: 100%;
+    inset-inline-start: var(--sdp-space-2);
+    z-index: 1;
+    max-block-size: 13.5rem;
+    max-inline-size: min(var(--sdp-menu-ample-max), calc(100% - var(--sdp-space-4)));
+    overflow-y: auto;
   }
   .sdp-menu-traduir {
     inline-size: max-content;

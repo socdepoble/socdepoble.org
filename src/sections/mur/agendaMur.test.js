@@ -11,7 +11,7 @@ describe('acteAEsdeveniment', () => {
     const esd = acteAEsdeveniment(CALENDAR_EVENTS[0]);
     expect(esd).toMatchObject({
       uid: 'mur:aplec-2023@socdepoble.org', id: 'aplec-2023', titol: '2n Aplec pel Territori',
-      inici: { dataHora: '2023-01-29T10:00', zona: 'Europe/Madrid' }, fi: null, totElDia: false, lloc: null,
+      inici: { dataHora: '2023-01-29T10:30', zona: 'Europe/Madrid' }, fi: null, totElDia: false, lloc: null,
       font: { tipus: 'mur', id: 'aplec-2023', ruta: '/events/aplec-2023' }, recurrencia: null
     });
     expect(esd.descripcio).toBe(CALENDAR_EVENTS[0].entradilla);

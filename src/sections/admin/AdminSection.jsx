@@ -12,6 +12,7 @@ import { SegonFactor } from './SegonFactor.jsx';
 import { TEXT_CAL_SEGON_FACTOR, esRebuigDeSegonFactor } from './rebuigSegonFactor.js';
 import { FacetaTaxonomia, FACETA_TAXONOMIA } from './FacetaTaxonomia.jsx';
 import { FacetaEstil, FACETA_ESTIL } from './FacetaEstil.jsx';
+import { usePobleAdministrat } from './pobleAdministrat.jsx';
 
 /* MD (revisió) · La fletxa ← de la llista d'Usuaris i d'Entitats en estret. */
 const TORNAR_AL_TAULER = 'Tornar al Tauler';
@@ -360,6 +361,7 @@ function AdminCompaniesManager({ onBack }) {
 
 export default function AdminSection() {
   const [activeTab, setActiveTab] = useState('dashboard');
+  const ambit = usePobleAdministrat(activeTab === FACETA_TAXONOMIA.id || activeTab === FACETA_ESTIL.id);
   /* MD (revisió) · La tornada de la closca del Tauler per a la seua barra
      blava (PontDeTornada); null fora d'estret. */
   const [tornada, setTornada] = useState(null);
@@ -386,12 +388,12 @@ export default function AdminSection() {
      factor són seccions: van dins d'una pàgina del detall, amb la capçalera de
      columna i la fletxa ← «Tornar al Tauler». */
   if (activeTab === FACETA_TAXONOMIA.id) {
-    return <FacetaTaxonomia onBack={tornaAlTauler} />;
+    return <FacetaTaxonomia key={ambit?.clau} onBack={tornaAlTauler} ambit={ambit} />;
   }
   if (activeTab === FACETA_ESTIL.id) {
     return (
       <PaginaDelDetall titol={FACETA_ESTIL.titol} onBack={tornaAlTauler}>
-        <FacetaEstil />
+        <FacetaEstil key={ambit?.clau} ambit={ambit} />
       </PaginaDelDetall>
     );
   }

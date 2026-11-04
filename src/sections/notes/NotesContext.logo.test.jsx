@@ -55,6 +55,25 @@ test('publishNote envia al Mur el logotip de la nota com a logo_image', async ()
   expect(payloadEnviat().logo_image).toBe('/assets/uploads/forn/logo.png');
 });
 
+test('IDEA-70 · els dos logotips viatgen nets i la variant privada de nit es promou', async () => {
+  mocks.capacitats = new Set(['mitjans']);
+  await publica({ id: 'dual', title: 'Forn', content: '', revision: 1,
+    logoImage: ' /assets/uploads/forn/logo.png ', logoImageDark: PRIVAT });
+  expect(payloadEnviat()).toMatchObject({ logo_image: '/assets/uploads/forn/logo.png', logo_image_dark: PUBLIC });
+  expect(mocks.promou).toHaveBeenCalledWith(PRIVAT, expect.anything());
+});
+
+test('IDEA-70 · llevar la variant de nit conserva la de dia i no publica fonts insegures', async () => {
+  for (const logoImageDark of ['', 'javascript:alert(1)']) {
+    cleanup();
+    mocks.send.mockClear();
+    await publica({ id: `sense-nit-${logoImageDark}`, title: 'Forn', content: '', revision: 1,
+      logoImage: '/assets/uploads/forn/logo.png', logoImageDark });
+    expect(payloadEnviat().logo_image).toBe('/assets/uploads/forn/logo.png');
+    expect(payloadEnviat()).not.toHaveProperty('logo_image_dark');
+  }
+});
+
 test('un mitjà privat es promou al públic abans d’eixir, com la capçalera', async () => {
   mocks.capacitats = new Set(['mitjans']);
   await publica({ id: 'privat', title: 'Forn', content: '', revision: 1, logoImage: PRIVAT });

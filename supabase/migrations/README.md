@@ -1,0 +1,48 @@
+---
+type: document
+status: canonic
+description: Índex de dependències i comprovacions locals de les migracions, amb mínim privilegi i estat remot separat.
+---
+# Migracions SQL
+
+El catàleg complet i les notes d'aplicació viuen a [supabase/README.md](../README.md). Els fitxers d'esta carpeta són candidats de codi: la seua presència i les proves locals no acrediten aplicació al servidor remot. No executeu el directori a cegues per ordre alfabètic.
+
+## Registre FEDI-16 i dependències
+
+| Migració | Canvi i dependències | Privilegis i verificació |
+| --- | --- | --- |
+| [2610061448_superadmin_aal2.sql](2610061448_superadmin_aal2.sql) | `private.es_superadmin()` requerix rol de plataforma `superadmin` i claim de servidor `aal2`; depén del catàleg d'autoritat anterior. | Cap rol de l'UI, `user_metadata` ni pertinença municipal substituïxen esta comprovació. |
+| [2610101900_personalitzacio_superadmin.sql](2610101900_personalitzacio_superadmin.sql) | Lectura pública explícita de `taxonomia`/`estil`; historial i RPC d'escriptura amb versió optimista. Requerix `app_content`, `towns` i la funció d'autoritat amb `aal2`. | Historial amb RLS, sense escriptura directa; RPC `SECURITY DEFINER`, `search_path` buit, execució retirada a PUBLIC/anon i concedida a authenticated. La funció torna a comprovar autoritat. |
+| [2611031500_notes_logo_mode_nit.sql](2611031500_notes_logo_mode_nit.sql) | Afig `logo_image_dark` i amplia el netejador d'imatges. Depén de `2609140000_schema_notes.sql` i `2610072230_mur_imatges_propies.sql`. | No amplia RLS ni autoria; el netejador privat continua sense EXECUTE per PUBLIC/anon/authenticated. Preparada, aplicació remota no acreditada per este registre. |
+| [2611031700_administracio_multipoble.sql](2611031700_administracio_multipoble.sql) | `admin_llista_pobles()` i `admin_llegix_personalitzacio(uuid)`; requerix `towns`, `app_content`, `2610061448` i `2610101900`. | Només authenticated pot executar; l'RPC exigix superadmin+aal2 i llig únicament taxonomia/estil del tenant explícit. Cap concessió a anon o service_role. Preparada, aplicació remota no acreditada per este registre. |
+
+L'adaptador local té una política d'administració injectada pel consumidor de la instància. És autoritat del magatzem local, mai una sessió MFA remota ni una concessió de permisos a Supabase. Els dos límits es proven separadament.
+
+## Ordre i reaplicacions
+
+[ordre_desplegament.json](../ordre_desplegament.json) és el registre executable de restriccions. Entre altres, **2610311800 → 2610312000 → 2610311900**: la 2000 va immediatament després de la 1800. Les finestres de publicació del client, les Edge Functions i les reaplicacions es consulten allí i al catàleg complet; no són una ordre d'execució remota des d'este document.
+
+```sh
+node scripts/supabase/verifica-migracions.mjs
+```
+
+## Assaig PostgreSQL i atac creuat
+
+[administracio-multipoble-postgres.test.mjs](../../tests/administracio-multipoble-postgres.test.mjs) aplica el catàleg real fins a 2611031700 a PGlite i comprova les funcions, ACL, RLS i intents d'accés entre dos pobles. Usa un mòdul local existent, indicat explícitament; no instal·la paquets ni contacta un servidor.
+
+```sh
+SDP_PGLITE_MODULE=/ruta/local/pglite/dist/index.js node --test tests/administracio-multipoble-postgres.test.mjs
+```
+
+Sense eixa variable o amb un mòdul absent, el resultat és una omissió explícita: **cap migració SQL validada**. Auth/Storage/Realtime són infraestructura de fixture; `private.es_superadmin`, les taules de producte, les polítiques i les RPC provenen de les migracions reals. Les concessions ambientals de Supabase, GoTrue, PostgREST, el desplegament i les connexions simultànies d'un servidor complet necessiten verificació pròpia. Cap èxit de PGlite substituïx eixa verificació.
+
+## FEDI23 · Registre de connexions consentides
+
+[2611032100_connexions_publiques_i_membres.sql](2611032100_connexions_publiques_i_membres.sql): després del catàleg vigent fins a 2611031700; dependències de seguiments d'entitat 2610250100, membres concurrents 2610281730 i poble canònic 2610282100. Quatre taules privades amb RLS i sense grants als rols client ni service_role; sis RPC amb ACL mínimes. Les lectures públiques exigixen opt-in global, excepcions de vincle i perfils públics; rols funcionals no concedixen administració.
+
+El catàleg i l'ordre detallats continuen a [../README.md](../README.md) i [../ordre_desplegament.json](../ordre_desplegament.json), sense aplicar alfabèticament el directori. La nova suite [connexions-publiques-postgres.test.mjs](../../tests/connexions-publiques-postgres.test.mjs) executa tot el catàleg real en PGlite amb el mòdul local explícit. Aplicació remota no acreditada.
+
+## Vincles
+
+- [[00_index]]
+

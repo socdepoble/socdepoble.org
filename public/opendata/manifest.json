@@ -1,6 +1,6 @@
 {
   "$schema": "https://datapackage.org/profiles/2.0/datapackage.json",
-  "created": "2026-11-02T00:00:00Z",
+  "created": "2026-11-03T17:29:24.547Z",
   "description": "Contingut públic del municipi i de les seues entitats exportat pel Mas (Sóc de Poble). Sense dades de persones. La llicència de cada element és a llicencies.md: el conjunt no n'atorga cap de nova.",
   "keywords": [
     "dades obertes",
@@ -16,10 +16,20 @@
   "name": "dades-obertes-la-torre-de-les-macanes",
   "resources": [
     {
-      "bytes": 55,
+      "bytes": 739,
+      "encoding": "utf-8",
+      "format": "ics",
+      "hash": "sha256:acb73f5e472b77dd07477437deef0d1d76eb1e007c51229a0f2d51aed81ca7b2",
+      "mediatype": "text/calendar",
+      "name": "agenda-ics",
+      "path": "agenda.ics",
+      "title": "Agenda (iCalendar, RFC 5545)"
+    },
+    {
+      "bytes": 949,
       "encoding": "utf-8",
       "format": "jsonld",
-      "hash": "sha256:80384e322e8c8962b9b81a09b7a06d5231676c4530bd0e60fa1626dc81c5f3f9",
+      "hash": "sha256:dbe09644c009b33d66c02e56b4d7c11c2a216ed9786698f227203a7654792ad7",
       "mediatype": "application/ld+json",
       "name": "agenda",
       "path": "agenda.jsonld",
@@ -36,40 +46,40 @@
       "title": "Configuració del poble (taxonomia i estil)"
     },
     {
-      "bytes": 55,
+      "bytes": 922,
       "encoding": "utf-8",
       "format": "jsonld",
-      "hash": "sha256:80384e322e8c8962b9b81a09b7a06d5231676c4530bd0e60fa1626dc81c5f3f9",
+      "hash": "sha256:1dd893852bd3b5963dda8a8a1c0222a3551ff9807b5b48b938e2046f60056c13",
       "mediatype": "application/ld+json",
       "name": "directori",
       "path": "directori.jsonld",
       "title": "Directori d'entitats i comerços (schema.org)"
     },
     {
-      "bytes": 495,
+      "bytes": 847,
       "encoding": "utf-8",
       "format": "md",
-      "hash": "sha256:ecc13ef9fc54892d6522c293584ab12c9cfe9d593196c70bcddf0593bac897c7",
+      "hash": "sha256:19a7f439db6cf816d91de9a1f1ca3cd4112724e056732b6742a58e1e3ec1d509",
       "mediatype": "text/markdown",
       "name": "llicencies",
       "path": "llicencies.md",
       "title": "Llicència de cada element"
     },
     {
-      "bytes": 55,
+      "bytes": 1024,
       "encoding": "utf-8",
       "format": "jsonld",
-      "hash": "sha256:80384e322e8c8962b9b81a09b7a06d5231676c4530bd0e60fa1626dc81c5f3f9",
+      "hash": "sha256:9c527e7686cafafda96b786a07062b15bb2ee16d9f71dbc90a362c86aea2f56c",
       "mediatype": "application/ld+json",
       "name": "memoria-cultural",
       "path": "memoria-cultural.jsonld",
       "title": "Memòria cultural (schema.org CreativeWork)"
     },
     {
-      "bytes": 2966,
+      "bytes": 3532,
       "encoding": "utf-8",
       "format": "md",
-      "hash": "sha256:0b678d196bf8de38e680aebcc333b3f6e5d2da885fcf9767f089084e12f30a0c",
+      "hash": "sha256:9764e9c5ce147015c0008460a49ff6c4cc070c09027a118037f1c96db6c41a54",
       "mediatype": "text/markdown",
       "name": "memoria",
       "path": "memoria.md",
@@ -86,10 +96,10 @@
       "title": "El municipi (schema.org AdministrativeArea)"
     },
     {
-      "bytes": 55,
+      "bytes": 1803,
       "encoding": "utf-8",
       "format": "jsonld",
-      "hash": "sha256:80384e322e8c8962b9b81a09b7a06d5231676c4530bd0e60fa1626dc81c5f3f9",
+      "hash": "sha256:db319feefa689917266489b4368d931ae4b500859e16e3455a86b15ff7ec39fb",
       "mediatype": "application/ld+json",
       "name": "noticies",
       "path": "noticies.jsonld",
@@ -107,13 +117,17 @@
     }
   ],
   "socdepoble": {
-    "calendari": null,
+    "calendari": {
+      "actes": 1,
+      "foraDAbast": 0,
+      "senseInici": 0
+    },
     "comptes": {
-      "agenda": 0,
-      "directori": 0,
-      "memoria": 0,
+      "agenda": 1,
+      "directori": 3,
+      "memoria": 1,
       "memoriaOral": 0,
-      "noticies": 0
+      "noticies": 1
     },
     "format": "socdepoble.dadesobertes.v1",
     "municipi": "la-torre-de-les-macanes",
