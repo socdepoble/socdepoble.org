@@ -14,13 +14,7 @@ Documents actius de la sessió. Cada àncora correspon a un fitxer físic; la me
 
 ## Activitat en curs
 
-- [[261103_1412_prompt_teler_maria_codex_gemini_claude_fediversity_i_poliment]]
-- [[261103_1412_pla_implementacio_teler_fediversity_oli_xat_i_logos_duals]]
 - [[03_llibre_mestre_tasques_i_idees]] · Mestre 261021: Llibre Mestre permanent
-
-- [[261103_1604_auditoria_codex_gauntlet_fediversity]]
-- [[261103_2350_pla_tancament_verificat_codex_fediversity]]
-- [[../10_actes/261103_1724_acta_marmota_codex_gauntlet_fediversity_i_pendents_verificats]]
 
 ## Producció humana
 
@@ -217,3 +211,4 @@ Laboratori evacuat per ordre expressa a `../_investigacio_ia_de_poble/`: 10 elem
 - [[../10_actes/261103_0630_acta_marmota_codex_onades7_8_9_kits_cas_i_motor_rural]]
 - [[../10_actes/261103_1228_acta_marmota_oli_de_la_torre_node0_i_relleu_fresc_taules_rebost]]
 - [[../10_actes/261103_1412_acta_marmota_aplec2023_traductor_i_relleu_teler_fediversity]]
+- [[../10_actes/261103_1724_acta_marmota_codex_gauntlet_fediversity_i_pendents_verificats]]

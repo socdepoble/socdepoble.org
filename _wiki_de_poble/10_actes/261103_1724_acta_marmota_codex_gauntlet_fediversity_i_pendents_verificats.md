@@ -48,7 +48,7 @@ Plantilla entregada: _wiki_de_poble/03_actuar/plantilles/acta.md; SHA-256 a60864
 
 ### Tall verificat de codi i proves · 2026-11-04T00:16:28.526Z
 
-Esta acta fixa el tall verificat de codi i proves en esta hora. L’empaquetat reproduïble, els pins i el checkpoint Git posteriors es documenten amb data i rebuts a [[261103_1604_auditoria_codex_gauntlet_fediversity]]; esta acta no certifica resultats posteriors al tall. Després de fixar-la es calcularà la baseline real del corpus i no es tornaran a canviar estos bytes. Les seccions següents anteriors a este tall són història, amb els seus límits de data.
+Esta acta fixa el tall verificat de codi i proves en esta hora. L’empaquetat reproduïble, els pins i el checkpoint Git posteriors es documenten amb data i rebuts a [[../90_arxiu_historic/261103_1604_auditoria_codex_gauntlet_fediversity|261103_1604_auditoria_codex_gauntlet_fediversity]]; esta acta no certifica resultats posteriors al tall. Després de fixar-la es calcularà la baseline real del corpus i no es tornaran a canviar estos bytes. Les seccions següents anteriors a este tall són història, amb els seus límits de data.
 
 El goal vigent té quatre objectius locals: connexions públiques23 amb39capacitats/126mètodes i kit178, CRDT/OPFS15, restauració municipal18 i empaquetat19. Les quatre implementacions estan aplicades. La cobertura del kit no equival a126RPCremotes reeixides; la prova funcional inclou:1648/1648 focalitzades23 i PG60 amb75migracions locals,170 de restauració en crítica/164en viu,193Node+33Vitest de15 i prova nativa de dues pestanyes que convergixen aXbYc amb persistència i backup verificat. No s’han executat migracions remotes.
 
@@ -86,7 +86,7 @@ Lliçó de procés: una passada llarga sobre arbre compartit pot consumir versio
 
 El Mestre ha declarat que s’absentava durant hores i ha ordenat Mode Goal i Gauntlet autònoms. S’ha creat l’objectiu natiu, encara actiu, sense pressupost de tokens imposat ni preguntes de confirmació. S’han rellegit el Pla §5, Prompt §6, BIOS, genotip, taxonomia, Acta anterior i documents vius de l’Escriptori. Els subagents són de Codex: no es presenta la seua revisió com si foren Gemini o Claude. MarIA i Claude continuen tenint els seus carrils externs i els seus informes s’han llegit com a evidència, sense adoptar conclusions no refutades.
 
-Informe viu i MCR: [[261103_1604_auditoria_codex_gauntlet_fediversity]]. El Llibre Mestre i ESTAT conserven un relleu nou sense esborrar la història. La correcció editorial fora del carril s’ha dipositat com a pegat, sense aplicar-lo a `pageContent.js` ni a Supabase. El correu a Fede està preparat dins de l’informe i no s’ha enviat.
+Informe viu i MCR: [[../90_arxiu_historic/261103_1604_auditoria_codex_gauntlet_fediversity|261103_1604_auditoria_codex_gauntlet_fediversity]]. El Llibre Mestre i ESTAT conserven un relleu nou sense esborrar la història. La correcció editorial fora del carril s’ha dipositat com a pegat, sense aplicar-lo a `pageContent.js` ni a Supabase. El correu a Fede està preparat dins de l’informe i no s’ha enviat.
 
 ### Construcció local i modularitat
 
@@ -129,5 +129,5 @@ La plantilla és útil com a relleu, però convé distingir en camps estructurat
 
 - [[00_index]]
 - [[00_index_escriptori]]
-- [[261103_1604_auditoria_codex_gauntlet_fediversity]]
+- [[../90_arxiu_historic/261103_1604_auditoria_codex_gauntlet_fediversity|261103_1604_auditoria_codex_gauntlet_fediversity]]
 - [[03_llibre_mestre_tasques_i_idees]]

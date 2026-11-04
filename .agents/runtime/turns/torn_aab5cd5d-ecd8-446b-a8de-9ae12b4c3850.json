@@ -4,9 +4,9 @@
   "actor": "Codex",
   "scope": "code",
   "state": "context_loaded",
-  "revision": 8,
+  "revision": 9,
   "createdAt": "2026-11-03T22:49:12.983Z",
-  "updatedAt": "2026-11-03T22:50:00.604Z",
+  "updatedAt": "2026-11-04T15:25:15.831Z",
   "expiresAt": "2026-11-04T22:49:12.985Z",
   "contractHash": "991dd78cf520045e1a0a0144bc2a0efc35d43623f2ebc4d04bb99b623fdd45e5",
   "humanInventoryVersion": 1,
@@ -4766,11 +4766,55 @@
         "_wiki_de_poble/04_escriptori/261103_2350_pla_tancament_verificat_codex_fediversity.md"
       ],
       "at": "2026-11-03T22:50:00.603Z"
+    },
+    {
+      "action": "archive-links",
+      "at": "2026-11-04T15:25:15.831Z",
+      "by": "torn_c5d0707b-46f7-46dd-9747-2598a731a445",
+      "relocated": [
+        {
+          "from": "_wiki_de_poble/04_escriptori/261103_1412_pla_implementacio_teler_fediversity_oli_xat_i_logos_duals.md",
+          "to": "_wiki_de_poble/90_arxiu_historic/261103_1412_pla_implementacio_teler_fediversity_oli_xat_i_logos_duals.md"
+        },
+        {
+          "from": "_wiki_de_poble/04_escriptori/261103_1412_prompt_teler_maria_codex_gemini_claude_fediversity_i_poliment.md",
+          "to": "_wiki_de_poble/90_arxiu_historic/261103_1412_prompt_teler_maria_codex_gemini_claude_fediversity_i_poliment.md"
+        },
+        {
+          "from": "_wiki_de_poble/04_escriptori/261103_1531_auditoria_codex.md",
+          "to": "_wiki_de_poble/90_arxiu_historic/261103_1531_auditoria_codex.md"
+        },
+        {
+          "from": "_wiki_de_poble/04_escriptori/261103_1542_auditoria_maria.md",
+          "to": "_wiki_de_poble/90_arxiu_historic/261103_1542_auditoria_maria.md"
+        },
+        {
+          "from": "_wiki_de_poble/04_escriptori/261103_1604_auditoria_codex_gauntlet_fediversity.md",
+          "to": "_wiki_de_poble/90_arxiu_historic/261103_1604_auditoria_codex_gauntlet_fediversity.md"
+        },
+        {
+          "from": "_wiki_de_poble/04_escriptori/261103_1624_auditoria_claude.md",
+          "to": "_wiki_de_poble/90_arxiu_historic/261103_1624_auditoria_claude.md"
+        },
+        {
+          "from": "_wiki_de_poble/04_escriptori/261103_2350_pla_tancament_verificat_codex_fediversity.md",
+          "to": "_wiki_de_poble/90_arxiu_historic/261103_2350_pla_tancament_verificat_codex_fediversity.md"
+        }
+      ]
     }
   ],
   "ownedPaths": [
     "_wiki_de_poble/04_escriptori/261103_1604_auditoria_codex_gauntlet_fediversity.md",
     "_wiki_de_poble/10_actes/261103_1724_acta_marmota_codex_gauntlet_fediversity_i_pendents_verificats.md",
+    "_wiki_de_poble/04_escriptori/261103_2350_pla_tancament_verificat_codex_fediversity.md"
+  ],
+  "relocated": [
+    "_wiki_de_poble/04_escriptori/261103_1412_pla_implementacio_teler_fediversity_oli_xat_i_logos_duals.md",
+    "_wiki_de_poble/04_escriptori/261103_1412_prompt_teler_maria_codex_gemini_claude_fediversity_i_poliment.md",
+    "_wiki_de_poble/04_escriptori/261103_1531_auditoria_codex.md",
+    "_wiki_de_poble/04_escriptori/261103_1542_auditoria_maria.md",
+    "_wiki_de_poble/04_escriptori/261103_1604_auditoria_codex_gauntlet_fediversity.md",
+    "_wiki_de_poble/04_escriptori/261103_1624_auditoria_claude.md",
     "_wiki_de_poble/04_escriptori/261103_2350_pla_tancament_verificat_codex_fediversity.md"
   ]
 }

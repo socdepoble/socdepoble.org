@@ -4,9 +4,9 @@
   "actor": "Codex",
   "scope": "code",
   "state": "closed",
-  "revision": 8,
+  "revision": 9,
   "createdAt": "2026-11-04T00:14:58.512Z",
-  "updatedAt": "2026-11-04T01:35:28.201Z",
+  "updatedAt": "2026-11-04T15:25:15.831Z",
   "expiresAt": "2026-11-05T00:14:58.512Z",
   "contractHash": "991dd78cf520045e1a0a0144bc2a0efc35d43623f2ebc4d04bb99b623fdd45e5",
   "humanInventoryVersion": 1,
@@ -9400,7 +9400,7 @@
       "_wiki_de_poble/10_actes/261103_0630_acta_marmota_codex_onades7_8_9_kits_cas_i_motor_rural.md": "146b17695cbf7eabea806a84ba7994f102814a7a17745ba4d124fc06f1fa37ce",
       "_wiki_de_poble/10_actes/261103_1228_acta_marmota_oli_de_la_torre_node0_i_relleu_fresc_taules_rebost.md": "a0d60a6493f46cc8b2b6859cd54778a848c7816ee6d95cf4a0b139be49ed4c55",
       "_wiki_de_poble/10_actes/261103_1412_acta_marmota_aplec2023_traductor_i_relleu_teler_fediversity.md": "208081a941f3f844e1c4a8b69be6a6a75a9ee015b3ed5bf7c60a2a67c038507e",
-      "_wiki_de_poble/10_actes/261103_1724_acta_marmota_codex_gauntlet_fediversity_i_pendents_verificats.md": "c57b6fd3910dff0f454dd101999521c089bd2c538ba4ba5f761b7cd7af7ecf49",
+      "_wiki_de_poble/10_actes/261103_1724_acta_marmota_codex_gauntlet_fediversity_i_pendents_verificats.md": "7ebf4bb3d2271ab484e40e3bb3953fc0291f564dc1540aa6f24423ebe55bc035",
       "_wiki_de_poble/10_metriques/11_grafica_consum.md": "a8b56a5c88e76811c05c947b651be135b7ab2ae5b71182219e1219318076d6b4",
       "_wiki_de_poble/10_metriques/12_esforc_huma_sessions.md": "c2c952e776842b708a033eb6ce5b947d72c89b6bf1c7f519628d0733db3206b4",
       "_wiki_de_poble/10_metriques/consum_ia.csv": "c9d15eec490b7aa58ff5d4d4a7dd56cbf1f1d49fa1e4222818e78b097f53ac70",
@@ -9506,6 +9506,64 @@
       "state": "closed",
       "action": "close",
       "at": "2026-11-04T01:35:28.201Z"
+    },
+    {
+      "action": "archive-links",
+      "at": "2026-11-04T15:25:15.831Z",
+      "by": "torn_c5d0707b-46f7-46dd-9747-2598a731a445",
+      "file": "_wiki_de_poble/10_actes/261103_1724_acta_marmota_codex_gauntlet_fediversity_i_pendents_verificats.md",
+      "fromHash": "c57b6fd3910dff0f454dd101999521c089bd2c538ba4ba5f761b7cd7af7ecf49",
+      "toHash": "7ebf4bb3d2271ab484e40e3bb3953fc0291f564dc1540aa6f24423ebe55bc035",
+      "moves": [
+        {
+          "from": "_wiki_de_poble/04_escriptori/261103_1412_pla_implementacio_teler_fediversity_oli_xat_i_logos_duals.md",
+          "to": "_wiki_de_poble/90_arxiu_historic/261103_1412_pla_implementacio_teler_fediversity_oli_xat_i_logos_duals.md"
+        },
+        {
+          "from": "_wiki_de_poble/04_escriptori/261103_1412_prompt_teler_maria_codex_gemini_claude_fediversity_i_poliment.md",
+          "to": "_wiki_de_poble/90_arxiu_historic/261103_1412_prompt_teler_maria_codex_gemini_claude_fediversity_i_poliment.md"
+        },
+        {
+          "from": "_wiki_de_poble/04_escriptori/261103_1531_auditoria_codex.md",
+          "to": "_wiki_de_poble/90_arxiu_historic/261103_1531_auditoria_codex.md"
+        },
+        {
+          "from": "_wiki_de_poble/04_escriptori/261103_1542_auditoria_maria.md",
+          "to": "_wiki_de_poble/90_arxiu_historic/261103_1542_auditoria_maria.md"
+        },
+        {
+          "from": "_wiki_de_poble/04_escriptori/261103_1604_auditoria_codex_gauntlet_fediversity.md",
+          "to": "_wiki_de_poble/90_arxiu_historic/261103_1604_auditoria_codex_gauntlet_fediversity.md"
+        },
+        {
+          "from": "_wiki_de_poble/04_escriptori/261103_1624_auditoria_claude.md",
+          "to": "_wiki_de_poble/90_arxiu_historic/261103_1624_auditoria_claude.md"
+        },
+        {
+          "from": "_wiki_de_poble/04_escriptori/261103_2350_pla_tancament_verificat_codex_fediversity.md",
+          "to": "_wiki_de_poble/90_arxiu_historic/261103_2350_pla_tancament_verificat_codex_fediversity.md"
+        }
+      ],
+      "replacements": [
+        {
+          "inici": 3015,
+          "final": 3063,
+          "de": "261103_1604_auditoria_codex_gauntlet_fediversity",
+          "a": "../90_arxiu_historic/261103_1604_auditoria_codex_gauntlet_fediversity|261103_1604_auditoria_codex_gauntlet_fediversity"
+        },
+        {
+          "inici": 12285,
+          "final": 12333,
+          "de": "261103_1604_auditoria_codex_gauntlet_fediversity",
+          "a": "../90_arxiu_historic/261103_1604_auditoria_codex_gauntlet_fediversity|261103_1604_auditoria_codex_gauntlet_fediversity"
+        },
+        {
+          "inici": 18746,
+          "final": 18794,
+          "de": "261103_1604_auditoria_codex_gauntlet_fediversity",
+          "a": "../90_arxiu_historic/261103_1604_auditoria_codex_gauntlet_fediversity|261103_1604_auditoria_codex_gauntlet_fediversity"
+        }
+      ]
     }
   ],
   "ownedPaths": [

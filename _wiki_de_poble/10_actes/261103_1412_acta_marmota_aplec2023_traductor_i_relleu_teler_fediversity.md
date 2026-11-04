@@ -76,5 +76,5 @@ En tornar del reinici, llançar el Prompt de l'Escriptori (`261103_1412_prompt_t
 - [[00_index]]
 - [[00_index_escriptori]]
 - [[03_llibre_mestre_tasques_i_idees]]
-- [[261103_1412_pla_implementacio_teler_fediversity_oli_xat_i_logos_duals]]
+- [[../90_arxiu_historic/261103_1412_pla_implementacio_teler_fediversity_oli_xat_i_logos_duals|261103_1412_pla_implementacio_teler_fediversity_oli_xat_i_logos_duals]]
 - [[261103_1228_acta_marmota_oli_de_la_torre_node0_i_relleu_fresc_taules_rebost]]
