@@ -1283,7 +1283,7 @@ export default {
   'section.connectar.incloure.titol': 'Incloure {nom} en una entitat teua',
   'section.connectar.incloure.ajuda': 'Formar part és una pertinença formal, no una connexió. Només s’hi pot incloure veïnat del poble de l’entitat.',
   'section.connectar.incloure.avis': 'L’alta és directa i sense cap avís: parleu-ne abans. Ho veuran qui administra {entitat} i {nom}, al seu Perfil, d’on en podrà eixir quan vullga. De moment no es publica enlloc.',
-  'section.connectar.incloure.avisConnexions': 'L’alta és directa i sense cap avís: parleu-ne abans. Ho veuran qui administra {entitat} i {nom}, al seu Perfil, d’on en podrà eixir quan vullga. Només apareixerà a les fitxes públiques si les dues parts ho trien.',
+  'section.connectar.incloure.avisConnexions': 'L’alta és directa i sense cap avís: parleu-ne abans. Ho veuran qui administra {entitat} i {nom}, al seu Perfil, d’on en podrà eixir quan vullga. Si l’entitat i la persona tenen les connexions públiques, la pertinença, amb el rol, també eixirà a la fitxa pública de l’entitat, llevat que alguna de les dues l’amague.',
   'section.connectar.incloure.altrePoble': 'La fitxa de {nom} diu {poble}, i a {entitat} només s’hi pot incloure veïnat de {pobleEntitat}: si no hi consta, l’alta no es podrà fer.',
   'section.connectar.incloure.entitat': 'A quina entitat?',
   'section.connectar.incloure.rol': 'Amb quin rol?',

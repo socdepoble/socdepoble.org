@@ -45,6 +45,7 @@ import {
 import { backendScope } from '../../../config/backendConfig.js';
 import { capturaSessio, entradaSessio } from '../../../data/identitat.js';
 import { rolsQueEsPodenEscriure } from './rolsDInclusio.js';
+import { connexionsPotserDisponibles, recordaSiNoDisponibles } from '../sondaConnexions.js';
 
 /* Un port sense la capacitat (o un mock parcial) no ha de fer caure la vista. */
 export function teMembresOrganitzacio() {
@@ -119,11 +120,13 @@ export function useIncloureEnEntitat({ orgId = null, personaId = null, config = 
     const encara = () => viu.current && !controlador.signal.aborted
       && abastRef.current.clau === clau && abastRef.current.generacio === generacioLectura
       && entradaSessio() === entrada;
-    /* Només un sí o un no: la llista de connexions de l'entitat no es guarda. */
-    const funcions = teConnexionsPubliques()
+    /* Només un sí o un no: la llista de connexions de l'entitat no es guarda.
+       Ronda 7 (GLOBAL-06) · Un NO-DISPONIBLE es recorda per backend (sondaConnexions.js). */
+    const ambit = JSON.parse(clau)[0];
+    const funcions = teConnexionsPubliques() && connexionsPotserDisponibles(ambit)
       ? Promise.resolve()
         .then(() => encara() ? preferenciesConnexions({ tipus: 'entitat', id: org }, ambSenyal) : null)
-        .then(() => true, () => false)
+        .then(() => true, (e) => { recordaSiNoDisponibles(ambit, e); return false; })
       : Promise.resolve(false);
     Promise.all([Promise.resolve().then(() => encara() ? llistaMembresOrganitzacio(org, ambSenyal) : null), funcions])
       .then(([llista, ambFuncions]) => {

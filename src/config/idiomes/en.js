@@ -1265,7 +1265,7 @@ export default {
   'section.connectar.incloure.titol': 'Add {nom} to one of your organisations',
   'section.connectar.incloure.ajuda': 'Belonging is a formal membership, not a connection. Only neighbours of the organisation’s town can be added.',
   'section.connectar.incloure.avis': 'It takes effect at once and with no notice, so talk it over first. The people who manage {entitat} will see it, and so will {nom}, on their Profile, where they can leave whenever they like. For now it is not published anywhere.',
-  'section.connectar.incloure.avisConnexions': 'It takes effect at once and with no notice, so talk it over first. The people who manage {entitat} will see it, and so will {nom}, on their Profile, where they can leave whenever they like. It only appears on public profiles if both sides choose so.',
+  'section.connectar.incloure.avisConnexions': 'It takes effect at once and with no notice, so talk it over first. The people who manage {entitat} will see it, and so will {nom}, on their Profile, where they can leave whenever they like. If the organisation and the person both have public connections, the membership, with its role, will also appear on the organisation’s public profile, unless either of them hides it.',
   'section.connectar.incloure.altrePoble': 'The profile of {nom} says {poble}, and {entitat} can only add neighbours of {pobleEntitat}: if they are not registered there, it will not go through.',
   'section.connectar.incloure.entitat': 'Which organisation?',
   'section.connectar.incloure.rol': 'With which role?',

@@ -20,7 +20,7 @@ const m = vi.hoisted(() => ({
   xat: { chatThreads: [], cercaMembres: vi.fn(), creaFil: vi.fn(), sendChatMessage: vi.fn() },
   mur: null, core: { status: 'ready', towns: [] }, media: { status: 'ready', mediaItems: [] },
   capacitats: new Set(), perfil: vi.fn(), segueix: vi.fn(), deixa: vi.fn(), estat: vi.fn(), titular: vi.fn(),
-  llista: vi.fn(), desa: vi.fn(), solicita: vi.fn()
+  llista: vi.fn(), desa: vi.fn()
 }));
 vi.mock('../../app/contexts/RouterContext', () => ({
   useNavigate: () => m.navigate,
@@ -50,8 +50,7 @@ vi.mock('../../data/backendPort.js', async (importOriginal) => ({
   estatSeguiment: (...args) => m.estat(...args),
   loadTitularPublic: (...args) => m.titular(...args),
   llistaMembresOrganitzacio: (...args) => m.llista(...args),
-  desaMembreOrganitzacio: (...args) => m.desa(...args),
-  solicitaUnirSeAEntitat: (...args) => m.solicita(...args)
+  desaMembreOrganitzacio: (...args) => m.desa(...args)
 }));
 import ConnectarSection from './ConnectarSection.jsx';
 import { XatSocDePobleContext } from '../../components/PedraSeca/hooks/xatSocDePoble.js';
@@ -436,25 +435,4 @@ describe('FEDI-22 en cinc llengües', () => {
     expect(container.textContent).toContain(t('section.connectar.notes.titol', ''));
     for (const text of VALENCIA_DE_LA_VISTA) expect(container.textContent, `${code}: ${text}`).not.toContain(text);
   });
-});
-
-/* El camí pendent ha de ser accessible des de /connectar, no només des d’un component aïllat. */
-test('FEDI23 · /connectar d’una entitat confirma una petició pendent estructurada, sense xat ni alta', async () => {
-  m.params = new URLSearchParams(PERFIL_RENTONAR);
-  m.capacitats.add('connexionsPubliques');
-  m.solicita.mockResolvedValue({ orgId: UUID_ORG, personaId: 'U', rol: 'usuari', estat: 'pendent' });
-  render(vista());
-  const formarPart = await screen.findByRole('group', { name: 'Formar part' });
-  const ajuda = 'La sol·licitud queda pendent: no et dona cap rol ni permís fins que l’entitat l’aprove.';
-  expect(await within(formarPart).findByText(ajuda, { selector: 'p.sdp-connectar__ajuda' })).toBeTruthy();
-  expect(formarPart.textContent).not.toContain('La sol·licitud arribarà al xat privat');
-  fireEvent.click(within(formarPart).getByRole('button', { name: 'Demanar formar part de El Rentonar' }));
-  const dialeg = screen.getByRole('dialog', { name: 'Demanar formar part de El Rentonar' });
-  expect(within(dialeg).getByText(ajuda)).toBeTruthy();
-  await act(async () => { fireEvent.click(within(dialeg).getByRole('button', { name: 'Enviar la sol·licitud' })); });
-  expect(m.solicita).toHaveBeenCalledTimes(1);
-  expect(m.solicita.mock.calls[0][0]).toEqual({ orgId: UUID_ORG, rol: 'usuari' });
-  expect(screen.getByText('Sol·licitud guardada, pendent de revisió per l’entitat.')).toBeTruthy();
-  expect(m.xat.creaFil).not.toHaveBeenCalled(); expect(m.xat.sendChatMessage).not.toHaveBeenCalled();
-  expect(m.desa).not.toHaveBeenCalled(); expect(m.navigate).not.toHaveBeenCalled();
 });

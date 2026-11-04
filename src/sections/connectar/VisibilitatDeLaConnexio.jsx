@@ -30,6 +30,7 @@ import { omple } from '../../config/moderacio.js';
 import { entradaSessio } from '../../data/identitat.js';
 import { backendScope } from '../../config/backendConfig.js';
 import { desaVisibilitatConnexions, preferenciesConnexions, teCapacitat } from '../../data/backendPort.js';
+import { connexionsPotserDisponibles, recordaSiNoDisponibles } from './sondaConnexions.js';
 
 /* Un port sense la capacitat (o un mock parcial) no ha de fer caure la vista. */
 function teConnexionsPubliques() {
@@ -66,7 +67,8 @@ export function VisibilitatDeLaConnexio({ com = null, nomCom = '', connexio = nu
   const subjecte = com ? { tipus: 'entitat', id: String(com) } : usuariId != null ? { tipus: 'persona', id: String(usuariId) } : null;
   const desti = connexio && ['persona', 'entitat'].includes(connexio.tipus) && connexio.id != null ? { tipus: connexio.tipus, id: String(connexio.id) } : null;
   const entrada = entradaSessio();
-  const clau = teConnexionsPubliques() && subjecte && desti
+  /* Ronda 7 (GLOBAL-06) · Si este backend ja ha dit NO-DISPONIBLE, ni es pregunta (sondaConnexions.js). */
+  const clau = teConnexionsPubliques() && connexionsPotserDisponibles(ambitDelBackend(config)) && subjecte && desti
     ? JSON.stringify([ambitDelBackend(config), usuariId == null ? null : String(usuariId), subjecte.tipus, subjecte.id, desti.tipus, desti.id, entrada])
     : null;
   /* { clau, estat: 'llest' | 'error' | 'no-disponible', global, vincle } i { clau, ocupat, error }. */
@@ -107,6 +109,7 @@ export function VisibilitatDeLaConnexio({ com = null, nomCom = '', connexio = nu
         if (encara()) setLectura({ clau, generacio: generacioLectura, estat: 'llest', ...visibilitatDe(preferencies, { tipus: destiTipus, id: destiId }) });
       })
       .catch((e) => {
+        recordaSiNoDisponibles(JSON.parse(clau)[0], e);
         if (encara() && e?.name !== 'AbortError') setLectura({ clau, generacio: generacioLectura, estat: codiDe(e) === 'NO-DISPONIBLE' ? 'no-disponible' : 'error', global: null, vincle: null });
       });
     return () => controlador.abort();

@@ -362,12 +362,16 @@ export function actorsPerAlDesti(actors = [], propia = null) {
    Revisió (CN-R2) · Sense mirar el tipus declarat: un àlies de l'entitat
    pilot signat com a persona ('soc-de-poble_official' sense author_entity_id)
    o la IAIA (en remot, el seu xat és el públic de /iaia) tampoc no en tenen. */
+const UUID_REAL = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const IDS_DE_LA_LLAVOR = new Set([
   ...PERSONA_PILOT.alies,
   /* R2C2X-02 · La resta del padró pot declarar UUID reals del directori:
-     Oli de La Torre conserva el contacte i no rep tracte fundacional. */
+     Oli de La Torre conserva el contacte i no rep tracte fundacional.
+     FEDI-26 · Els àlies amb UUID real del servidor (Sóc de Poble i El Rentonar)
+     tampoc no són ids ficticis de la llavor i conserven la connexió en remot. */
   ...ENTITATS_SEED.filter((entitat) => CLAUS_FUNDACIONALS.includes(entitat.slug))
-    .flatMap((entitat) => [entitat.id, entitat.slug, ...entitat.alies]),
+    .flatMap((entitat) => [entitat.id, entitat.slug, ...entitat.alies])
+    .filter((id) => !UUID_REAL.test(String(id))),
   IAIA_ID
 ].map(String));
 const esIdDeLaLlavor = ({ id }) => IDS_DE_LA_LLAVOR.has(String(id));
@@ -556,9 +560,16 @@ function ConnectarElementIntern() {
   const social = disposicioDeLaVista({ esPerfil, ambRelacio, carregantFitxa }) === 'social';
   const notesPrimari = !social;
   /* «Guardar a les teues notes» és un <details>: obert en 'element', plegat en
-     'social', i s'obri si la vista passa a 'element' (la fitxa arriba sense relació). */
-  const [notesObertes, setNotesObertes] = useState(() => !esPerfil);
-  useEffect(() => { if (notesPrimari) setNotesObertes(true); }, [notesPrimari]);
+     'social', i s'obri si la vista passa a 'element' (la fitxa arriba sense relació).
+     Ronda 7 (GLOBAL-03) · L'obertura es fa en el mateix render que canvia la
+     vista (estat derivat del valor anterior), no en un efecte: cap commit pinta
+     la vista 'element' amb les notes plegades. */
+  const [notesObertes, setNotesObertes] = useState(() => !esPerfil || notesPrimari);
+  const [notesPrimariAbans, setNotesPrimariAbans] = useState(notesPrimari);
+  if (notesPrimari !== notesPrimariAbans) {
+    setNotesPrimariAbans(notesPrimari);
+    if (notesPrimari) setNotesObertes(true);
+  }
   /* FEDI-22 · Targeta 2 d'una PERSONA: incloure-la en una entitat que administres
      (C2: la mateixa font que «Connectar com a»), amb la capacitat de membres. */
   const entitatsIncloure = useMemo(() => entitatsPerIncloure(actorsConnectar, identitats), [actorsConnectar, identitats]);

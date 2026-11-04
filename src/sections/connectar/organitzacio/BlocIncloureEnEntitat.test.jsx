@@ -55,6 +55,7 @@ import { configuraBackendSessio, desaSessio, entradaSessio } from '../../../data
 import { rolDeLaPersona, useIncloureEnEntitat } from './useIncloureEnEntitat.js';
 import { XatSocDePobleContext } from '../../../components/PedraSeca/hooks/xatSocDePoble.js';
 import { ERRORS_MEMBRES, TEXTOS_MEMBRES } from '../../profile/GestioMembres.jsx';
+import { oblidaSondaConnexions } from '../sondaConnexions.js';
 
 const UUID_PEPA = '6f1c2a3b-4d5e-4f60-8a71-92b3c4d5e6f7';
 const UUID_ORG = '2b3c4d5e-6f70-4812-9a3b-4c5d6e7f8091';
@@ -78,6 +79,7 @@ const ambCodi = (code) => Object.assign(new Error('Supabase 400: cru'), code ? {
 
 afterEach(cleanup);
 beforeEach(() => {
+  oblidaSondaConnexions();
   vi.clearAllMocks();
   m.canCreate = true;
   m.user = { id: 'U' };
@@ -367,6 +369,30 @@ describe('amb les connexions de FEDI-23', () => {
   const NO_DISPONIBLE = () => Object.assign(new Error('Supabase 404'), { code: 'NO-DISPONIBLE' });
   const ambConnexions = () => { m.capacitats = new Set([...m.capacitats, 'connexionsPubliques']); };
 
+  test('ronda 7 (GLOBAL-06) · un NO-DISPONIBLE es recorda per backend: la visita següent ja no pregunta', async () => {
+    ambConnexions();
+    m.preferencies.mockRejectedValue(NO_DISPONIBLE());
+    const primera = render(bloc());
+    await screen.findByRole('button', { name: 'Incloure Pepa Soler a El Rentonar' });
+    expect(m.preferencies).toHaveBeenCalledTimes(1);
+    primera.unmount();
+    render(bloc());
+    await screen.findByRole('button', { name: 'Incloure Pepa Soler a El Rentonar' });
+    expect(m.preferencies).toHaveBeenCalledTimes(1);
+    expect((await screen.findByRole('radio', { name: /^Treballador \/ Soci/ })).disabled).toBe(true);
+  });
+
+  test('ronda 7 (GLOBAL-06) · un altre error no es recorda: la visita següent torna a preguntar', async () => {
+    ambConnexions();
+    m.preferencies.mockRejectedValue(Object.assign(new Error('xarxa'), { code: 'DESCONEGUT' }));
+    const primera = render(bloc());
+    await screen.findByRole('button', { name: 'Incloure Pepa Soler a El Rentonar' });
+    primera.unmount();
+    render(bloc());
+    await screen.findByRole('button', { name: 'Incloure Pepa Soler a El Rentonar' });
+    expect(m.preferencies).toHaveBeenCalledTimes(2);
+  });
+
   test('Treballador / Soci actiu: 1 clic, inclouPersonaEnEntitat amb el rol del contracte i cap altra escriptura', async () => {
     ambConnexions();
     m.preferencies.mockResolvedValue({ tipus: 'entitat', id: 'org-r', visibilitatConnexions: 'privada', connexions: [membre('member', 'secret')] });
@@ -376,7 +402,8 @@ describe('amb les connexions de FEDI-23', () => {
     expect(treballador.disabled).toBe(false);
     expect(treballador.closest('.sdp-casella').textContent).toContain('Hi treballa o n’és sòcia: consta a la llista de membres, sense cap permís de gestió.');
     expect(m.preferencies).toHaveBeenCalledWith({ tipus: 'entitat', id: 'org-r' }, expect.objectContaining({ signal: expect.any(AbortSignal) }));
-    expect(screen.getByText(/Només apareixerà a les fitxes públiques si les dues parts ho trien\./)).toBeTruthy();
+    /* Ronda 7 (SQL-03) · Diu el que fa el servidor: amb les dues globals públiques, la pertinença ix, amb el rol, a la fitxa de l'entitat. */
+    expect(screen.getByText(/Si l’entitat i la persona tenen les connexions públiques, la pertinença, amb el rol, també eixirà a la fitxa pública de l’entitat, llevat que alguna de les dues l’amague\./)).toBeTruthy();
     fireEvent.click(treballador);
     await act(async () => { fireEvent.click(screen.getByRole('button', { name: 'Incloure Pepa Soler a El Rentonar' })); });
     expect(m.inclouConnexions).toHaveBeenCalledTimes(1);

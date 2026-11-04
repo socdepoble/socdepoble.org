@@ -8668,6 +8668,12 @@ details[open] summary.accordion-header svg:last-child {
      ací: el Mestre es queixava del cartell gegant que espentava els botons
      fora de pantalla. Es desfà esborrant este bloc i les classes. */
   .sdp-connectar-pagina .page-title-logo { width: min(100%, 260px); }
+  /* Ronda 7 (GLOBAL-04) · La pàgina de /connectar (.sdp-universal-page-container,
+     que ja és contenidor inline-size a components.css) porta nom: el tall de mòbil
+     de T1 i dels seus fills es mesura sobre la pàgina, no cada u sobre el seu
+     contenidor. El tipus es repetix (el mateix valor) perquè la regla no depenga
+     d'un altre fitxer. */
+  .sdp-connectar-pagina { container: sdp-connectar-pagina / inline-size; }
   .sdp-connectar--graella { max-width: none; }
   .sdp-connectar__principal,
   .sdp-connectar__lateral { display: flex; flex-direction: column; gap: var(--sdp-space-8); min-width: 0; }
@@ -8745,8 +8751,10 @@ details[open] summary.accordion-header svg:last-child {
     }
   }
   /* RA-01 · En un mòbil (la pàgina fins a 30rem), T1 més compacta: el coixí i
-     els espais d'un pas menys. */
-  @container (max-width: 30rem) {
+     els espais d'un pas menys. Ronda 7 (GLOBAL-04) · Amb el nom de la pàgina:
+     sense nom, els fills de T1 es mesuraven contra T1, que també és contenidor,
+     i quedava una franja amb T1 mig compactada. */
+  @container sdp-connectar-pagina (max-width: 30rem) {
     .sdp-connectar__targeta--directa { gap: var(--sdp-space-3); padding: var(--sdp-space-4); }
     .sdp-connectar__directa,
     .sdp-connectar__qui,

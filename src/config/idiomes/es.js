@@ -1262,7 +1262,7 @@ export default {
   'section.connectar.incloure.titol': 'Incluir a {nom} en una entidad tuya',
   'section.connectar.incloure.ajuda': 'Formar parte es una pertenencia formal, no una conexión. Solo se puede incluir al vecindario del pueblo de la entidad.',
   'section.connectar.incloure.avis': 'El alta es directa y sin ningún aviso: habladlo antes. Lo verán quienes administran {entitat} y {nom}, en su Perfil, desde donde podrá salir cuando quiera. Por ahora no se publica en ningún sitio.',
-  'section.connectar.incloure.avisConnexions': 'El alta es directa y sin ningún aviso: habladlo antes. Lo verán quienes administran {entitat} y {nom}, en su Perfil, desde donde podrá salir cuando quiera. Solo aparecerá en las fichas públicas si ambas partes lo eligen.',
+  'section.connectar.incloure.avisConnexions': 'El alta es directa y sin ningún aviso: habladlo antes. Lo verán quienes administran {entitat} y {nom}, en su Perfil, desde donde podrá salir cuando quiera. Si la entidad y la persona tienen las conexiones públicas, la pertenencia, con el rol, también aparecerá en la ficha pública de la entidad, salvo que alguna de las dos la oculte.',
   'section.connectar.incloure.altrePoble': 'La ficha de {nom} dice {poble}, y en {entitat} solo se puede incluir al vecindario de {pobleEntitat}: si no consta allí, el alta no se podrá hacer.',
   'section.connectar.incloure.entitat': '¿A qué entidad?',
   'section.connectar.incloure.rol': '¿Con qué rol?',

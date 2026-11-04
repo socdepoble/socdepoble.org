@@ -167,7 +167,7 @@ export function BlocIncloureEnEntitat({ entitats = [], persona = null, config = 
             {/* C-01 · Les conseqüències, just abans del botó, i en la seua descripció. */}
             <p id={idAvis} className="sdp-connectar__ajuda">
               {ambNoms(ambFuncions
-                ? ['section.connectar.incloure.avisConnexions', 'L’alta és directa i sense cap avís: parleu-ne abans. Ho veuran qui administra {entitat} i {nom}, al seu Perfil, d’on en podrà eixir quan vullga. Només apareixerà a les fitxes públiques si les dues parts ho trien.']
+                ? ['section.connectar.incloure.avisConnexions', 'L’alta és directa i sense cap avís: parleu-ne abans. Ho veuran qui administra {entitat} i {nom}, al seu Perfil, d’on en podrà eixir quan vullga. Si l’entitat i la persona tenen les connexions públiques, la pertinença, amb el rol, també eixirà a la fitxa pública de l’entitat, llevat que alguna de les dues l’amague.']
                 : ['section.connectar.incloure.avis', 'L’alta és directa i sense cap avís: parleu-ne abans. Ho veuran qui administra {entitat} i {nom}, al seu Perfil, d’on en podrà eixir quan vullga. De moment no es publica enlloc.'])}
             </p>
             {/* RA-05 · Un altre poble a la fitxa: es diu abans del clic, sense desactivar res. */}

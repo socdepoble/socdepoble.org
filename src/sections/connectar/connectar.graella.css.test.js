@@ -118,9 +118,14 @@ describe('les regles noves', () => {
     expect(declaracions(dues.cos)).toEqual({
       display: 'grid', 'grid-template-columns': 'repeat(2, minmax(0, 1fr))', gap: 'var(--sdp-space-8)', 'align-items': 'start'
     });
-    const mobil = amb('.sdp-connectar__targeta--directa').filter((r) => r.pares.at(-1) === '@container (max-width: 30rem)');
+    /* Ronda 7 (GLOBAL-04) · El tall de mòbil, amb el nom de la pàgina: T1 i els seus fills al mateix tall. */
+    expect(declaracions(una('.sdp-connectar-pagina').cos)).toEqual({ container: 'sdp-connectar-pagina / inline-size' });
+    const mobil = amb('.sdp-connectar__targeta--directa').filter((r) => r.pares.at(-1) === '@container sdp-connectar-pagina (max-width: 30rem)');
     expect(mobil).toHaveLength(1);
     expect(declaracions(mobil[0].cos)).toEqual({ gap: 'var(--sdp-space-3)', padding: 'var(--sdp-space-4)' });
+    const fills = amb('.sdp-connectar__directa, .sdp-connectar__qui, .sdp-connectar__relacio').filter((r) => /max-width: 30rem/.test(r.pares.at(-1) ?? ''));
+    expect(fills.map((r) => r.pares.at(-1))).toEqual(['@container sdp-connectar-pagina (max-width: 30rem)']);
+    expect(amb('.sdp-connectar__targeta--directa').some((r) => r.pares.at(-1) === '@container (max-width: 30rem)')).toBe(false);
   });
 
   test('RA-03 · la píndola triada de les targetes no és el blau ple del primari, porta una marca i, en colors forçats, la selecció del sistema', () => {

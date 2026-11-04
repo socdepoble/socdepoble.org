@@ -1274,7 +1274,7 @@ export default {
   'section.connectar.incloure.titol': 'Sartu zure erakunde batean: {nom}',
   'section.connectar.incloure.ajuda': 'Kide izatea kidetasun formala da, ez konexio bat. Erakundearen herriko auzokideak bakarrik sar daitezke.',
   'section.connectar.incloure.avis': 'Alta zuzena da eta ez du abisurik jasoko, beraz, hitz egin lehenago. {entitat} kudeatzen dutenek eta berak ikusiko dute, bere Profilean, eta handik nahi duenean irten ahal izango da. Oraingoz ez da inon argitaratzen. Pertsona: {nom}.',
-  'section.connectar.incloure.avisConnexions': 'Alta zuzena da eta ez du abisurik jasoko, beraz, hitz egin lehenago. {entitat} kudeatzen dutenek eta berak ikusiko dute, bere Profilean, eta handik nahi duenean irten ahal izango da. Fitxa publikoetan bi aldeek hala aukeratzen badute bakarrik agertuko da. Pertsona: {nom}.',
+  'section.connectar.incloure.avisConnexions': 'Alta zuzena da eta ez du abisurik jasoko, beraz, hitz egin lehenago. {entitat} kudeatzen dutenek eta berak ikusiko dute, bere Profilean, eta handik nahi duenean irten ahal izango da. Erakundeak eta pertsonak konexio publikoak badituzte, kidetza, rolarekin, erakundearen fitxa publikoan ere agertuko da, bietako batek ezkutatzen ez badu. Pertsona: {nom}.',
   'section.connectar.incloure.altrePoble': 'Fitxaren arabera, {poble} herrikoa da, eta {entitat} erakundean {pobleEntitat} herriko auzokideak bakarrik sar daitezke: han erroldatuta ez badago, ezin izango da alta egin. Pertsona: {nom}.',
   'section.connectar.incloure.entitat': 'Zein erakundetan?',
   'section.connectar.incloure.rol': 'Zein rolekin?',

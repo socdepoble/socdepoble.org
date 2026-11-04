@@ -1269,7 +1269,7 @@ export default {
   'section.connectar.incloure.titol': 'Incluír a {nom} nunha entidade túa',
   'section.connectar.incloure.ajuda': 'Formar parte é unha pertenza formal, non unha conexión. Só se pode incluír a veciñanza do pobo da entidade.',
   'section.connectar.incloure.avis': 'A alta é directa e sen ningún aviso: faládeo antes. Quen administra {entitat} poderá velo, e tamén {nom}, no seu Perfil, desde onde poderá saír cando queira. Polo de agora non se publica en ningures.',
-  'section.connectar.incloure.avisConnexions': 'A alta é directa e sen ningún aviso: faládeo antes. Quen administra {entitat} poderá velo, e tamén {nom}, no seu Perfil, desde onde poderá saír cando queira. Só aparecerá nas fichas públicas se ambas as partes o escollen.',
+  'section.connectar.incloure.avisConnexions': 'A alta é directa e sen ningún aviso: faládeo antes. Quen administra {entitat} poderá velo, e tamén {nom}, no seu Perfil, desde onde poderá saír cando queira. Se a entidade e a persoa teñen as conexións públicas, a pertenza, co rol, tamén aparecerá na ficha pública da entidade, agás que algunha das dúas a oculte.',
   'section.connectar.incloure.altrePoble': 'A ficha de {nom} di {poble}, e en {entitat} só se pode incluír a veciñanza de {pobleEntitat}: se non consta alí, a alta non se poderá facer.',
   'section.connectar.incloure.entitat': 'A que entidade?',
   'section.connectar.incloure.rol': 'Con que rol?',

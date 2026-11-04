@@ -18,6 +18,7 @@ vi.mock('../../data/backendPort.js', async (importOriginal) => ({
 }));
 import { configuraBackendSessio, desaSessio, entradaSessio } from '../../data/identitat.js';
 import { VisibilitatDeLaConnexio, visibilitatDe } from './VisibilitatDeLaConnexio.jsx';
+import { oblidaSondaConnexions } from './sondaConnexions.js';
 
 const PEPA = Object.freeze({ tipus: 'persona', id: 'pepa' });
 const fila = (id, visibilitatConnexions, tipus = 'persona', nom = 'Algú') => ({ tipus, id, nom, avatar: '', ruta: `/gent/${id}`, creatAl: '2026-11-03T10:00:00Z', direccio: 'sortint', visibilitatConnexions });
@@ -28,6 +29,7 @@ const interruptor = () => screen.queryByRole('switch');
 
 afterEach(cleanup);
 beforeEach(() => {
+  oblidaSondaConnexions();
   vi.clearAllMocks();
   m.user = { id: 'U' };
   m.capacitats = new Set(['seguiments', 'connexionsPubliques']);
@@ -162,7 +164,7 @@ const pref = (vis = 'publica') => ({ tipus: 'persona', id: 'U', visibilitatConne
 const block = (config = A) => <VisibilitatDeLaConnexio connexio={target} nom="Synthetic peer" config={config} />;
 function deferred() { let resolve; const promise = new Promise(r => { resolve = r; }); return { promise, resolve }; }
 async function settle() { await act(async () => {}); }
-beforeEach(() => { m.preferencies.mockReset(); m.desa.mockReset(); m.user = { id: 'U' }; configuraBackendSessio(A); desaSessio({ access_token: 'synthetic-token', user: m.user }); m.preferencies.mockResolvedValue(pref()); m.desa.mockResolvedValue({}); });
+beforeEach(() => { oblidaSondaConnexions(); m.preferencies.mockReset(); m.desa.mockReset(); m.user = { id: 'U' }; configuraBackendSessio(A); desaSessio({ access_token: 'synthetic-token', user: m.user }); m.preferencies.mockResolvedValue(pref()); m.desa.mockResolvedValue({}); });
 
 test('una entrada nova del mateix usuari invalida la lectura anterior real', async () => {
  const old = deferred(); const fresh = deferred(); m.preferencies.mockImplementationOnce(() => old.promise).mockImplementationOnce(() => fresh.promise);

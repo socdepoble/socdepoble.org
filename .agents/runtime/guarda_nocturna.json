@@ -1,14 +1,15 @@
 {
   "activa": false,
-  "onada": "guarda-nocturna",
+  "onada": "marato-fediversity-zero-pendents",
   "objectiu": "",
-  "inici": "2026-10-26T01:30:54.096Z",
-  "expira": "2026-10-26T07:30:54.096Z",
+  "inici": "2026-11-03T17:42:18.743Z",
+  "expira": "2026-11-03T23:42:18.743Z",
   "maxHores": 6,
   "estat_claude": "pendent",
   "estat_auditoria": "pendent",
-  "ultim_check": "2026-10-26T01:30:54.096Z",
+  "ultim_check": "2026-11-03T17:42:18.743Z",
   "finalitzada": true,
-  "motiu_finalitzacio": "Desconvocatòria del sanejament nocturn: execució completada, proves passades i relleu final en preparació; sense recurrències pròpies pendents.",
-  "tancat_a": "2026-10-26T01:53:42.555Z"
+  "motiu_finalitzacio": "Desconvocatòria explícita de la guàrdia caducada; cap cron ni servidor propi. El treball local de tancament i checkpoint continua en primer pla.",
+  "modeTancament": "desconvocatoria",
+  "tancat_a": "2026-11-04T01:18:34.797Z"
 }

@@ -4,11 +4,8 @@
  * membre, soci o treballador.
  *
  *   · Formar part és una pertinença formal que dona qui l'administra, i
- *     abans hi ha una petició pendent, mai una alta des del client. Amb la
- *     capacitat connexionsPubliques i una fitxa pública de confiança, el
- *     mateix botó confirma solicitaUnirSeAEntitat i no crea ni envia xat.
- *     Sense eixa capacitat es conserva el camí legacy (261024): confirmació
- *     i conversa humana. El botó obri una confirmació (DialegConfirmacio) que
+ *     abans hi ha diàleg humà. Decisió del Mestre (261024): cap taula de
+ *     sol·licituds. El botó obri una confirmació (DialegConfirmacio) que
  *     ensenya el text que s'enviarà («Sol·licitud per a formar part de
  *     {nom}.» i, si vols, el que hi afiges) i, en confirmar, l'envia al xat
  *     privat de l'entitat (missatgeAlXat.js: creaFil + sendChatMessage, la
@@ -39,9 +36,9 @@
  *   · FEDI-22 (ordre del Mestre, 261103; captura 261103_2055) · Abans del
  *     botó es tria el rol que es demana («Administrador», «Treballador /
  *     Soci» o «Usuari / Membre», per defecte el darrer: rolsDInclusio.js). El
- *     rol es demana a l’API pendent quan està disponible; en el camí legacy
- *     només viatja com a segona línia del text («Rol que demane: …»).
- *     Cap camí dona rols: l’alta la decidix qui administra l’entitat.
+ *     rol només viatja com a segona línia del text («Rol que demane: …»),
+ *     a la confirmació i al xat; ningú del servidor el valida i el decidix
+ *     qui l'administra. Cap metadada ni cap crida de membres.
  * Tots els textos passen per t() (CA-6): section.connectar.formarPart.*.
  */
 import { useEffect, useId, useRef, useState } from 'react';
@@ -56,7 +53,6 @@ import { Alerta, AreaText, Boto, Camp, Carregant, DialegConfirmacio, GrupOpcions
 import { TEXTOS_MODERACIO } from '../../../components/PedraSeca/organismes/textosModeracio.js';
 import { backendScope } from '../../../config/backendConfig.js';
 import { capturaSessio, entradaSessio } from '../../../data/identitat.js';
-import * as port from '../../../data/backendPort.js';
 import { omple } from '../../../config/moderacio.js';
 import { useMissatgeAlXat } from '../missatgeAlXat.js';
 import { LIMIT_AFEGIT, estatDeFormarPart, pertinencaDe, textDeLaSollicitud } from './estatFormarPart.js';
@@ -74,30 +70,16 @@ function onEs(router) {
   return `${window.location.pathname}${window.location.search}`;
 }
 
-const ROLS_PENDENTS = Object.freeze({ admin: 'administrador', treballador: 'treballador', member: 'usuari' });
-function organitzacioPendent(contacte) {
-  if (contacte?.deFitxa !== true || contacte.propia || !['entitat', 'grup'].includes(contacte.tipus)
-    || contacte.seguiment?.tipus !== 'entitat') return null;
-  const id = contacte.seguiment.id;
-  return typeof id === 'string' && id.trim() ? id : null;
-}
-function tePeticions() {
-  try { return port.teCapacitat('connexionsPubliques') === true && typeof port.solicitaUnirSeAEntitat === 'function'; }
-  catch { return false; }
-}
-
 export function BlocFormarPart(props) {
   const { currentUser } = useSession();
   let backend;
   try { backend = backendScope(props.config ?? {}); } catch { backend = 'backend:invàlid'; }
-  const orgPendent = tePeticions() ? organitzacioPendent(props.contacte) : null;
-  const entradaDeVista = entradaSessio();
-  const clau = JSON.stringify([backend, currentUser?.id ?? null, entradaDeVista, props.orgId ?? null,
-    props.tipusOrg ?? 'entitat', props.contacte?.interlocutor?.id ?? null, orgPendent]);
-  return <FormulariFormarPart key={clau} {...props} orgPendent={orgPendent} abastBackend={backend} entradaDeVista={entradaDeVista} />;
+  const clau = JSON.stringify([backend, currentUser?.id ?? null, entradaSessio(), props.orgId ?? null,
+    props.tipusOrg ?? 'entitat', props.contacte?.interlocutor?.id ?? null]);
+  return <FormulariFormarPart key={clau} {...props} />;
 }
 
-function FormulariFormarPart({ orgId, contacte = null, nom = null, tipusOrg = 'entitat', carregant = false, onEntra, config = {}, orgPendent = null, abastBackend, entradaDeVista }) {
+function FormulariFormarPart({ orgId, contacte = null, nom = null, tipusOrg = 'entitat', carregant = false, onEntra }) {
   const id = useId();
   const { t } = useUIActions();
   const navigate = useNavigate();
@@ -121,7 +103,6 @@ function FormulariFormarPart({ orgId, contacte = null, nom = null, tipusOrg = 'e
   /* FEDI-22 · El rol que es demana (només text de la sol·licitud). */
   const [rolDemanat, setRolDemanat] = useState(ROL_PER_DEFECTE);
   const [enviant, setEnviant] = useState(false);
-  const [pendent, setPendent] = useState(false);
   const operacioRef = useRef(null);
   /* { text, ruta }: l'avís d'un enviament que no ha eixit, i la conversa si s'ha obert. */
   const [fallada, setFallada] = useState(null);
@@ -131,18 +112,14 @@ function FormulariFormarPart({ orgId, contacte = null, nom = null, tipusOrg = 'e
   const liniaRol = omple(t('section.connectar.formarPart.rolDemanat', 'Rol que demane: {rol}.'), { rol: etiquetaDeRol(rolDemanat, t) });
 
   const confirma = async () => {
-    if (operacioRef.current || !muntat.current || pendent) return;
-    const peticio = orgPendent ? Object.freeze({ orgId: orgPendent, rol: ROLS_PENDENTS[rolDemanat] }) : null;
-    const personaId = currentUser?.id;
-    const configCapturada = peticio ? Object.freeze({ ...config }) : null;
+    if (operacioRef.current || !muntat.current) return;
     const onEra = onEs(ubicacio.current);
     const sessio = capturaSessio();
     const operacio = {};
     operacioRef.current = operacio;
     const comprovaAbast = () => {
       sessio();
-      if (entradaSessio() !== entradaDeVista || !muntat.current || operacioRef.current !== operacio || onEs(ubicacio.current) !== onEra
-        || (peticio && (backendScope(config) !== abastBackend || backendScope(configCapturada) !== abastBackend))) {
+      if (!muntat.current || operacioRef.current !== operacio || onEs(ubicacio.current) !== onEra) {
         throw new DOMException('L’àmbit de la sol·licitud ha canviat.', 'AbortError');
       }
     };
@@ -152,15 +129,7 @@ function FormulariFormarPart({ orgId, contacte = null, nom = null, tipusOrg = 'e
     let error = null;
     try {
       comprovaAbast();
-      if (peticio) {
-        if (!peticio.rol || typeof personaId !== 'string' || !personaId) throw new Error('Petició no vàlida');
-        resultat = await port.solicitaUnirSeAEntitat(peticio, configCapturada);
-        comprovaAbast();
-        if (!resultat || resultat.orgId !== peticio.orgId || resultat.personaId !== personaId
-          || resultat.rol !== peticio.rol || resultat.estat !== 'pendent') throw new Error('Resposta no vàlida');
-      } else {
-        resultat = await envia(textDeLaSollicitud(capcalera, afegit, liniaRol), { comprovaAbast });
-      }
+      resultat = await envia(textDeLaSollicitud(capcalera, afegit, liniaRol), { comprovaAbast });
     } catch (e) {
       error = e;
     }
@@ -178,14 +147,6 @@ function FormulariFormarPart({ orgId, contacte = null, nom = null, tipusOrg = 'e
     /* Encara ací però en una altra ruta (un altre perfil, una altra consulta):
        ni s'hi porta ni es pinta un avís d'una entitat que ja no és la de la vista. */
     if (onEs(ubicacio.current) !== onEra) return;
-    if (peticio) {
-      if (error) {
-        setFallada({ text: t('section.perfil.connexions.errorVincle', 'No s’ha pogut guardar el vincle. Comprova els teus permisos i torna-ho a provar.'), ruta: null });
-      } else {
-        setPendent(true);
-      }
-      return;
-    }
     if (resultat?.enviat && resultat.ruta) {
       setAfegit('');
       navigate(resultat.ruta);
@@ -256,17 +217,11 @@ function FormulariFormarPart({ orgId, contacte = null, nom = null, tipusOrg = 'e
       break;
     }
     default:
-      if (pendent) {
-        cos = <Alerta to="exit">{t('section.perfil.connexions.pendent', 'Sol·licitud guardada, pendent de revisió per l’entitat.')}</Alerta>;
-        break;
-      }
       cos = (
         <>
           {/* P1-11 (pla 261024_2230; G1945-04 de Gemini, ordre del Mestre) · formar part no és connectar-s'hi. */}
           <p>{t('section.connectar.formarPart.que', 'Ser-ne membre, soci o treballador és una pertinença formal: t’hi dona d’alta qui l’administra, després de parlar-ho amb tu. No és el mateix que connectar-t’hi.')}</p>
-          <p className="sdp-connectar__ajuda">{orgPendent
-            ? t('section.perfil.connexions.pendentAjuda', 'La sol·licitud queda pendent: no et dona cap rol ni permís fins que l’entitat l’aprove.')
-            : ambNom('section.connectar.formarPart.onArriba', 'La sol·licitud arribarà al xat privat de {nom}, i en parlareu abans de cap alta.')}</p>
+          <p className="sdp-connectar__ajuda">{ambNom('section.connectar.formarPart.onArriba', 'La sol·licitud arribarà al xat privat de {nom}, i en parlareu abans de cap alta.')}</p>
           {/* FEDI-22 · El rol que es demana, abans del botó (C12: l'ajuda d'«Administrador» diu els poders i qui el dona). */}
           <GrupOpcions llegenda={t('section.connectar.formarPart.rolLlegenda', 'Amb quin rol ho demanes?')} nom={`${id}-rol`}
             opcions={opcionsDeRolDemanat(t)} valor={rolDemanat} onCanvi={setRolDemanat} disabled={enviant} />
@@ -293,27 +248,25 @@ function FormulariFormarPart({ orgId, contacte = null, nom = null, tipusOrg = 'e
           {fallada.text}
         </Alerta>
       ) : null}
-      {estat === 'pot-demanar' && !pendent ? (
+      {estat === 'pot-demanar' ? (
         <DialegConfirmacio
           obert={obert}
           onTanca={() => { if (!enviant) setObert(false); }}
           onConfirma={confirma}
           titol={ambNom('section.connectar.formarPart.boto', 'Demanar formar part de {nom}')}
-          descripcio={orgPendent
-            ? t('section.perfil.connexions.pendentAjuda', 'La sol·licitud queda pendent: no et dona cap rol ni permís fins que l’entitat l’aprove.')
-            : ambNom('section.connectar.formarPart.dialeg', 'Este és el missatge que rebrà {nom} al seu xat privat. Hi parlareu abans que t’hi donen d’alta.')}
+          descripcio={ambNom('section.connectar.formarPart.dialeg', 'Este és el missatge que rebrà {nom} al seu xat privat. Hi parlareu abans que t’hi donen d’alta.')}
           etiquetaConfirma={t('section.connectar.formarPart.envia', 'Enviar la sol·licitud')}
           etiquetaCancela={t('section.connectar.formarPart.cancela', 'Cancel·lar')}
           carregant={enviant}
         >
           {/* FEDI-22 · La capçalera i la línia del rol, tal com arribaran al xat. */}
           <p className="sdp-connectar__sollicitud"><span>{capcalera}</span><br /><span>{liniaRol}</span></p>
-          {!orgPendent ? <Camp
+          <Camp
             etiqueta={t('section.connectar.formarPart.afegit', 'Vols afegir-hi res?')}
             ajuda={ambNom('section.connectar.formarPart.afegitAjuda', 'Opcional. Ho llegirà qui administra {nom}.')}
           >
             <AreaText value={afegit} maxLength={LIMIT_AFEGIT} files={3} onChange={(e) => setAfegit(e.target.value)} />
-          </Camp> : null}
+          </Camp>
         </DialegConfirmacio>
       ) : null}
     </section>
