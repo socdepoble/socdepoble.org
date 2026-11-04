@@ -21,7 +21,8 @@ vi.mock('./NotificationContext.jsx', () => ({ useToast: () => ({ showToast: vi.f
 import { EventCard, etiquetaAgendaDelDia, rutaDeLaBoinaDeLActe } from './EventCard.jsx';
 import { DEFAULT_AUTHOR } from './UniversalUtils.js';
 import { acteAEsdeveniment } from '../../sections/mur/agendaMur.js';
-import { CALENDAR_EVENTS } from '../../sections/mur/eventsSeed.js';
+import { CALENDAR_EVENTS, CURSOS_PEDRA_EN_SEC_2026_EVENT } from '../../sections/mur/eventsSeed.js';
+import { elementDeFilaPublicada } from '../../data/mapejadorSeccions.js';
 import { ocorreElDia } from '../../utils/esdeveniment.js';
 import { permetOrigenMitjans } from '../../utils/sanitize.js';
 import { resolveAsset } from '../../config/assetResolver.js';
@@ -298,6 +299,66 @@ describe('ID1 · una persona sense foto no signa l’acte amb el logotip', () =>
   test('sense la prop, el logotip de reserva de sempre', () => {
     pintaAmb({ id: 'fira', title: 'Fira', date: '2026-11-14' }, {});
     expect(fonts()).toEqual([DEFAULT_AUTHOR.avatarUrl]);
+  });
+});
+
+/* seguretat-01 (261104) · La insígnia d'un acte multi-dia (`calendar_badge`)
+   només pinta peces de text. Un veí escriu el payload directament per l'API
+   (section_submissions, 'mur' o 'events'), i un objecte sense conversió a
+   primitiu ({"toString":0}) dins de `dia` tombava la targeta amb un TypeError
+   per damunt de la frontera d'error de la ruta: /mur i /calendari en blanc per
+   a tot el poble. La neteja és al traductor d'entrada (mapejadorSeccions.js);
+   ací es prova també la defensa de la vista per a les files que no hi passen
+   (la llavor, app_content). La targeta dels Cursos de pedra en sec, la mateixa
+   de sempre (Llei del Píxel). */
+describe('seguretat-01 · la insígnia d’un acte només pinta text', () => {
+  const HOSTIL = '{"toString":0}';
+  const insigniaHostil = () => JSON.parse(`{"dia":${HOSTIL},"mes":${HOSTIL},"any":${HOSTIL},"dateTime":${HOSTIL},"label":${HOSTIL}}`);
+
+  test('una insígnia hostil que no passa pel traductor (app_content) no tomba la targeta', () => {
+    vi.stubEnv('TZ', 'Europe/Madrid');
+    const item = { id: 'h', title: 'Hola', date: '2026-11-14', calendar_badge: insigniaHostil() };
+    expect(() => pinta(item)).not.toThrow();
+    expect(pecesInsignia()).toEqual(['', '', '2026']);
+    expect(insignia().getAttribute('datetime')).toBe('2026-11-14');
+    expect(insignia().getAttribute('aria-label')).toBe('2026');
+    expect(() => pinta(item, null)).not.toThrow();
+    expect(pecesInsignia()).toEqual(['', '', '2026']);
+  });
+
+  test('la publicació d’un veí al Mur (type event) amb la insígnia hostil es pinta', () => {
+    vi.stubEnv('TZ', 'Europe/Madrid');
+    for (const sectionId of ['mur', 'events']) {
+      const item = elementDeFilaPublicada({
+        id: `p-${sectionId}`, sectionId, titol: 'Veí', createdAt: '2026-11-04T10:00:00Z', ownerUserId: 'U',
+        payload: JSON.parse(`{"type":"event","title":"Hola","calendar_badge":{"dia":${HOSTIL},"label":${HOSTIL}}}`)
+      });
+      expect(() => pinta(item), sectionId).not.toThrow();
+      expect(arrel.querySelector('.sp-card-title')?.textContent, sectionId).toBe('Hola');
+    }
+  });
+
+  test('una peça numèrica es pinta com el seu text, com abans', () => {
+    vi.stubEnv('TZ', 'Europe/Madrid');
+    pinta({ id: 'n', title: 'Ball', date: '2026-11-14', calendar_badge: { dia: 23, mes: 'OCT', label: 5, dateTime: 20261114 } });
+    expect(pecesInsignia()).toEqual(['23', 'OCT', '2026']);
+    expect(insignia().getAttribute('aria-label')).toBe('5');
+    expect(insignia().getAttribute('datetime')).toBe('20261114');
+    pinta({ id: 'z', title: 'Ball', date: '2026-11-14', calendar_badge: { dia: 0, mes: '', any: 0 } });
+    expect(pecesInsignia()).toEqual(['', '', '2026']);
+  });
+
+  test('Llei del Píxel · la insígnia dels Cursos de pedra en sec, la de sempre', () => {
+    vi.stubEnv('TZ', 'Europe/Madrid');
+    for (const esdeveniment of [acteAEsdeveniment(CURSOS_PEDRA_EN_SEC_2026_EVENT), null]) {
+      pinta(CURSOS_PEDRA_EN_SEC_2026_EVENT, esdeveniment);
+      expect(insignia().outerHTML).toBe(
+        '<time class="sp-card-calendar-badge" aria-label="Del 23 d’octubre al 14 de novembre de 2026" datetime="2026-10-23">'
+        + '<span class="sp-card-calendar-badge__dia" data-mida="mitjana">23–14</span>'
+        + '<span class="sp-card-calendar-badge__mes">OCT–NOV</span>'
+        + '<span class="sp-card-calendar-badge__any">2026</span></time>'
+      );
+    }
   });
 });
 

@@ -217,15 +217,23 @@ test('un nom de grup amb «$&», «$$», «$`» o «$\'» arriba literal al nom 
   expect(boto.getAttribute('aria-label')).toBe(`Obri la conversa de ${nom} · Pepica ${hora}`);
 });
 
-test('Fitxers i Documents: F0 només envia text, i la vista ho diu; Enllaços buit, també', () => {
+/* xat-ux-a11y-06 (T7a, 261104) · Els adjunts F1 (fotos, vídeo i veu) ja
+   van: l'avís ja no diu que «només es pot enviar text». Diu el que és cert a
+   qualsevol node (si la conversa ho permet) i que els documents encara no. */
+const AVIS_ADJUNTS = 'Pel xat ja es poden enviar fotos, vídeos i missatges de veu, si la conversa ho permet. Els documents, encara no.';
+
+test('Fitxers i Documents buits: l’avís dels adjunts és cert (F1 ja envia fotos, vídeo i veu); Enllaços buit, també', () => {
   pinta({ missatgesPerFil: { 'f-festes': [{ id: 'x', seq: 1, text: 'Hola', creatAl: '2026-10-03T18:00:00Z' }] } });
   let targeta = screen.getByRole('region', { name: 'En construcció' });
   expect(targeta.textContent).toContain('les fotos i els vídeos');
-  expect(targeta.textContent).toContain('Els adjunts arriben amb la fase F1 del xat');
+  expect(targeta.querySelector('.sdp-xat-construccio__avis').textContent).toBe(AVIS_ADJUNTS);
+  expect(targeta.textContent).not.toContain('només es pot enviar text');
+  expect(targeta.textContent).not.toContain('F1');
   fireEvent.click(segment('Documents'));
   targeta = screen.getByRole('region', { name: 'En construcció' });
   expect(targeta.textContent).toContain('els documents');
-  expect(targeta.textContent).toContain('Els adjunts arriben amb la fase F1 del xat');
+  expect(targeta.querySelector('.sdp-xat-construccio__avis').textContent).toBe(AVIS_ADJUNTS);
+  expect(targeta.textContent).not.toContain('només es pot enviar text');
   fireEvent.click(segment('Enllaços'));
   expect(screen.queryByRole('region', { name: 'En construcció' })).toBeNull();
   expect(screen.getByRole('status').textContent).toBe("Encara no s'ha compartit cap enllaç en les converses obertes.");
@@ -270,5 +278,5 @@ test('tradueix amb la clau: el t de l’app rep les claus i18n', () => {
   render(<VistaMultimedia titol="Contingut multimèdia" fils={FILS} missatgesPerFil={MISSATGES} t={tr} />);
   expect(screen.getByRole('group', { name: '«section.xat.vista.multimedia.tipus»' })).toBeTruthy();
   expect(document.querySelector('.sdp-xat-resultats__avis').textContent).toBe('«section.xat.vista.multimedia.avisLocal»');
-  expect(screen.getByRole('region', { name: '«section.xat.construccio.titol»' }).textContent).toContain('«section.xat.vista.multimedia.adjunts»');
+  expect(screen.getByRole('region', { name: '«section.xat.construccio.titol»' }).textContent).toContain('«section.xat.vista.multimedia.avisAdjunts»');
 });

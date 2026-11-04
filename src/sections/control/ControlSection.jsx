@@ -16,6 +16,9 @@
  * quan ?fitxa canvia, la fitxa s'obri des de dalt i el Panell torna on era en
  * prémer la targeta, amb el focus a <main> com en una ruta nova
  * (vistaDeLaFitxa.js).
+ * control-03 (revisió del Panell, 261104) · El mateix per a les fitxes de
+ * «Mode rural» i «Restaurar dades obertes» (?fitxa=mode-rural|opendata), que
+ * s'obrien on era el Panell i amb el focus al <body>.
  *
  * P5 · Onada 4 (PRD «Control amb targetes il·lustrades de doble acció»,
  * aprovat pel Mestre el 261003, que alça el W4-04 per a la presentació
@@ -358,27 +361,44 @@ function utilitatsAmagades(preferencia) {
   return new Set(Object.keys(preferencia).filter((id) => preferencia[id] === false));
 }
 
+/* control-03 (revisió del Panell, 261104) · Les fitxes que s'obrin amb
+   ?fitxa sobre la mateixa ruta. Un valor que no n'és cap pinta el Panell. */
+const FITXA_MODE_RURAL = 'mode-rural';
+const FITXA_OPENDATA = 'opendata';
+const FITXES = new Set([FITXA_SNIPPET, FITXA_MODE_RURAL, FITXA_OPENDATA]);
+
 export default function ControlSection() {
   const [params] = useSearchParams();
   const navigate = useNavigate();
-  const esFitxa = params.get(CLAU_FITXA) === FITXA_SNIPPET;
-  /* El cos de la vista pintada (el .content-wrapper del Panell o de la fitxa). */
+  const { t } = useUIActions();
+  /* control-03 (261104) · La vista pintada: '' és el Panell. Abans només es
+     recolocava el Snippet (un booleà); ara, qualsevol fitxa. */
+  const demanada = params.get(CLAU_FITXA);
+  const fitxa = FITXES.has(demanada) ? demanada : '';
+  /* El cos de la vista pintada (el .content-wrapper del Panell o de la fitxa
+     o, mentre es carrega una fitxa diferida, el seu text d'espera). */
   const vistaRef = useRef(null);
-  /* On era el Panell quan es va prémer la targeta del Snippet. */
+  /* On era el Panell quan es va prémer la targeta del Snippet o un dels
+     botons de les fitxes. */
   const posicioDelPanell = useRef(0);
   /* La vista que ja s'ha col·locat: en muntar no es toca res (App ja ho fa). */
-  const vistaColocada = useRef(esFitxa);
+  const vistaColocada = useRef(fitxa);
   useLayoutEffect(() => {
-    if (vistaColocada.current === esFitxa) return;
-    vistaColocada.current = esFitxa;
-    recolocaLaVista(vistaRef.current, esFitxa ? 0 : posicioDelPanell.current);
-  }, [esFitxa]);
+    if (vistaColocada.current === fitxa) return;
+    vistaColocada.current = fitxa;
+    recolocaLaVista(vistaRef.current, fitxa ? 0 : posicioDelPanell.current);
+  }, [fitxa]);
   const recordaLaPosicio = useCallback(() => {
     posicioDelPanell.current = posicioDeLaVista(vistaRef.current);
   }, []);
-  if (params.get(CLAU_FITXA) === 'mode-rural') return <Suspense fallback={<p role="status">{TEXTOS_MODE_RURAL.titol[1]}</p>}><ModeRural onBack={() => navigate('/control')} /></Suspense>;
-  if (params.get(CLAU_FITXA) === 'opendata') return <Suspense fallback={<p role="status">{TEXTOS_RESTAURADOR.titol[1]}</p>}><FitxaOpenData onBack={() => navigate('/control')} /></Suspense>;
-  return esFitxa
+  /* control-03 (261104) · La primera vegada, el mòdul diferit encara no hi
+     és: el text d'espera porta el ref perquè la vista es col·loque ja (i el
+     focus vaja a <main>). La fitxa, quan arriba, el porta al seu cos.
+     control-06 (261104) · El text d'espera passa pel traductor, com el botó
+     que l'obri: abans pintava la reserva en valencià. */
+  if (fitxa === FITXA_MODE_RURAL) return <Suspense fallback={<p ref={vistaRef} role="status">{t(...TEXTOS_MODE_RURAL.titol)}</p>}><ModeRural vistaRef={vistaRef} onBack={() => navigate('/control')} /></Suspense>;
+  if (fitxa === FITXA_OPENDATA) return <Suspense fallback={<p ref={vistaRef} role="status">{t(...TEXTOS_RESTAURADOR.titol)}</p>}><FitxaOpenData vistaRef={vistaRef} onBack={() => navigate('/control')} /></Suspense>;
+  return fitxa === FITXA_SNIPPET
     ? <FitxaSnippet vistaRef={vistaRef} />
     : <PanellControl vistaRef={vistaRef} abansDeLaFitxa={recordaLaPosicio} />;
 }
@@ -457,12 +477,15 @@ function PanellControl({ vistaRef, abansDeLaFitxa }) {
           <EspaiDelPanell key={espai.id} espai={espai} visibles={visible(amagades)} />
         ))}
 
+        {/* control-06 (revisió del Panell, 261104) · Els h2 de baix, les seues
+            entradetes i els botons d'acció passen per t(), amb el text d'abans
+            de reserva, lletra a lletra: en valencià no canvia res. «L’empresa»
+            i «La llar» venen del registre de plugins (ESPAIS_PLUGINS). */}
         <section>
-          <h2>Utilitats i Connectors (Plugins)</h2>
+          <h2>{t('section.control.utilitats.titol', 'Utilitats i Connectors (Plugins)')}</h2>
 
           <p className="lead">
-            El sistema s'anirà enriquint amb aquest tipus d'utilitats (o plugins) que es poden activar si es necessiten.
-            Són independents del sistema base, cosa que permet endollar funcionalitats a mesura només per als usuaris o clients que les demanen.
+            {t('section.control.utilitats.lead', "El sistema s'anirà enriquint amb aquest tipus d'utilitats (o plugins) que es poden activar si es necessiten. Són independents del sistema base, cosa que permet endollar funcionalitats a mesura només per als usuaris o clients que les demanen.")}
           </p>
 
           <div className="sdp-card-grid">
@@ -496,13 +519,12 @@ function PanellControl({ vistaRef, abansDeLaFitxa }) {
         {/* W4-08 · La separació de les Utilitats la dona el full d'estils
             (.sdp-control-maquinaria, modules.css), sense estil en línia. */}
         <section className="sdp-control-maquinaria">
-          <h2>Maquinària i Sistema</h2>
+          <h2>{t('section.control.maquinaria.titol', 'Maquinària i Sistema')}</h2>
 
           {/* Onada 11 (261010; prompt 261010_1730, tasca 6, D6) · El lead perd
               «configuració de disseny»: Disseny ja no té cap targeta ací. */}
           <p className="lead">
-            Panells d'administració i eines internes de la plataforma.
-            Aquestes utilitats normalment s'activen només per a l'equip d'administració.
+            {t('section.control.maquinaria.lead', "Panells d'administració i eines internes de la plataforma. Aquestes utilitats normalment s'activen només per a l'equip d'administració.")}
           </p>
 
           <div className="sdp-card-grid">
@@ -526,10 +548,12 @@ function PanellControl({ vistaRef, abansDeLaFitxa }) {
         </section>
 
         <div className="sdp-control-actions">
-          <UniversalButton onClick={() => navigate('/control?fitxa=mode-rural')} variant="secondary" className="sdp-btn-ample">
+          {/* control-03 (261104) · Com la targeta del Snippet, els dos botons
+              recorden on era el Panell abans d'obrir la seua fitxa. */}
+          <UniversalButton onClick={() => { abansDeLaFitxa(); navigate('/control?fitxa=mode-rural'); }} variant="secondary" className="sdp-btn-ample">
             {t(...TEXTOS_MODE_RURAL.titol)}
           </UniversalButton>
-          <UniversalButton onClick={() => navigate('/control?fitxa=opendata')} variant="secondary" className="sdp-btn-ample">
+          <UniversalButton onClick={() => { abansDeLaFitxa(); navigate('/control?fitxa=opendata'); }} variant="secondary" className="sdp-btn-ample">
             {t(...TEXTOS_RESTAURADOR.titol)}
           </UniversalButton>
           {/* D3 · El fil '0001' no existix (els id són UUID): obri el Xat. */}
@@ -539,7 +563,7 @@ function PanellControl({ vistaRef, abansDeLaFitxa }) {
             icon={<MessageSquare size={18} />}
             className="sdp-btn-ample"
           >
-            Missatges per a dubtes
+            {t('section.control.dubtes', 'Missatges per a dubtes')}
           </UniversalButton>
 
           <UniversalButton
@@ -549,7 +573,7 @@ function PanellControl({ vistaRef, abansDeLaFitxa }) {
             disabled={eixida.ocupat || Boolean(eixida.avis)}
             className="sdp-btn-ample"
           >
-            Eixir del poble
+            {t('section.control.eixir', 'Eixir del poble')}
           </UniversalButton>
         </div>
         {eixida.avis}

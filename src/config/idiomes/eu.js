@@ -704,6 +704,8 @@ export default {
   'editor.ambit.error.rang': '«{camp}» eremuaren balioa baimendutako tartetik kanpo dago.',
   'editor.ambit.error.enum': 'Aukeratu zerrendako aukera bat «{camp}» eremurako.',
   'editor.ambit.error.llargaria': '«{camp}» eremuaren testua luzeegia da.',
+  /* idea61-05 (261104) · L'ajuda del camp «Com contactar» de la fitxa: diu qui el veu. */
+  'editor.ambit.contacteVisible': 'Herrian erregistratutako jendeak ikusiko du fitxa irekitzean; ez da ez txartelean ez bilaketan agertzen.',
   'section.search.tipus.vehicle': 'Autoa partekatu',
   'section.search.tipus.treball': 'Lana',
   'section.search.tipus.habitatge': 'Etxebizitza',
@@ -1448,6 +1450,10 @@ export default {
   'section.notes.visibilitat.errorPublicar': 'Ezin izan da Horman argitaratu. Saiatu berriro: dagoeneko iritsi bazen, argitalpen bera eguneratuko da, bikoizketarik gabe.',
   'section.notes.visibilitat.signantDesconegut': 'beste identitate bat',
   'section.notes.visibilitat.signaturaAliena': 'Argitalpen honen sinatzailea {qui} da: aldatu identitate horretara eguneratzeko.',
+  /* idea61-01 (261104) · Una publicació ja és al Mur o al Mercat i no pot canviar
+     de lloc: el motiu diu com actualitzar-la (visibilitatNota.js). */
+  'section.notes.visibilitat.seccioPublicada.mur': 'Argitalpen hau Horman dago jada, eta ezin da lekuz aldatu. Eguneratzeko, aukeratu berriro lehengo esparrua «Non argitaratzen da?» atalean; Merkatuan argitaratzeko, egin ohar berri bat.',
+  'section.notes.visibilitat.seccioPublicada.mercat': 'Argitalpen hau Merkatuan dago jada, eta ezin da lekuz aldatu. Eguneratzeko, aukeratu berriro Merkatua «Non argitaratzen da?» atalean; beste leku batean argitaratzeko, egin ohar berri bat.',
   'section.notes.visibilitat.desatPendentDetall': 'Ezin da argitaratu aldaketak gorde arte. {detall}',
   'section.notes.visibilitat.desatPendent': 'Ezin da argitaratu gordetzeke dauden aldaketak gorde arte. Saiatu berriro une batean.',
   'section.notes.visibilitat.extern.descripcio': 'Kanpoko eduki hau zure kopia bat da: edita dezakezu, eta partekatzean zure Hormara eramango da jatorria aipatuta.',
@@ -1608,6 +1614,11 @@ export default {
   'section.moderacio.bloquejos.error': 'Ezin izan dira blokeoak kargatu. Saiatu berriro.',
   'section.moderacio.bloquejos.nomesSessio': 'Blokeo hauek saio honetan bakarrik daude indarrean: zerbitzariak oraindik ez ditu gordetzen.',
   'section.moderacio.bloquejos.restaPendent': 'Jakinarazpenak isilaraztea eta muturretik muturrerako zifratzea ez daude oraindik erabilgarri: txataren hurrengo fasean eraikiko dira.',
+  /* control-01 (261104) · El silenci per conversa (B8C-5) ja funciona des del botó ⋮:
+     l'avís de «Privacitat i seguretat» diu on és i només dona per pendent el
+     xifratge (XatControlSection.jsx). La fase F2c del xifratge haurà de reescriure
+     esta clau, no restaPendent. */
+  'section.moderacio.bloquejos.silenciIXifratge': 'Elkarrizketa bat isilarazteko, ireki eta, ⋮ botoitik, aukeratu «Isilarazi jakinarazpenak». Muturretik muturrerako zifratzea ez dago oraindik erabilgarri: txataren hurrengo fasean eraikiko da.',
   'section.comu.regio': 'Zerrenda bizia: {titol}',
   'section.comu.filtra': 'Iragazi zerrenda',
   'section.comu.amplia': 'Zabaldu taula gisa',
@@ -1877,6 +1888,14 @@ export default {
   'section.control.treball.saberMes': 'Gehiago jakin: Lana',
   'section.control.habitatge.publicar': 'Argitaratu: Etxebizitza',
   'section.control.habitatge.saberMes': 'Gehiago jakin: Etxebizitza',
+  /* control-06 (revisió del Panell, 261104) · Els encapçalaments, les entradilles i
+     els dos botons de baix del Panell, abans escrits a mà (ControlSection.jsx). */
+  'section.control.utilitats.titol': 'Utilitateak eta Konektoreak (Pluginak)',
+  'section.control.utilitats.lead': 'Sistema mota honetako utilitateekin (edo pluginekin) aberastuz joango da, eta behar direnean aktiba daitezke. Oinarrizko sistemarekiko independenteak dira; horri esker, neurrira egindako funtzioak eskatzen dituzten erabiltzaile edo bezeroentzat soilik konekta daitezke.',
+  'section.control.maquinaria.titol': 'Makineria eta Sistema',
+  'section.control.maquinaria.lead': 'Plataformaren administrazio-panelak eta barne-tresnak. Utilitate hauek administrazio-taldearentzat soilik aktibatu ohi dira.',
+  'section.control.dubtes': 'Zalantzetarako mezuak',
+  'section.control.eixir': 'Irten herritik',
   'pagina.portada.amaga': 'Ezkutatu azaleko irudia',
   'pagina.portada.mostra': 'Erakutsi azaleko irudia',
   'section.plugin.enObres': 'Tresna hau lanetan dago oraindik.',
@@ -2160,6 +2179,9 @@ export default {
   'section.xat.vista.multimedia.enllacos.buit': 'Oraindik ez da estekarik partekatu irekitako elkarrizketetan.',
   'section.xat.vista.multimedia.documents.buit': 'Hemen egongo dira elkarrizketetan partekatutako dokumentuak.',
   'section.xat.vista.multimedia.adjunts': 'Eranskinak txataren F1 fasearekin iritsiko dira: oraingoz testua bakarrik bidal daiteke.',
+  /* xat-ux-a11y-06 (261104) · Els adjunts F1 (fotos, vídeo i veu) ja funcionen: la
+     vista pinta avisAdjunts en lloc d'adjunts (VistaMultimedia.jsx). */
+  'section.xat.vista.multimedia.avisAdjunts': 'Txatean argazkiak, bideoak eta ahots-mezuak bidal daitezke dagoeneko, elkarrizketak aukera ematen badu. Dokumentuak, oraindik ez.',
   'section.xat.vista.multimedia.avisLocal': 'Saio honetan irekitako elkarrizketetako edukia bakarrik ikusten da.',
   'section.xat.vista.multimedia.obri': 'Ireki {nom} elkarrizketa',
   'section.xat.vista.multimedia.senseData': 'Datarik gabe',
@@ -2439,6 +2461,8 @@ export default {
   'section.xat.control.temporals.text': 'Aktibatu mezuen autosuntsiketa elkarrizketa sentikorretarako.',
   'section.xat.control.privacitat.titol': 'Pribatutasuna eta segurtasuna',
   'section.xat.control.privacitat.text': 'Jakinarazpenak isilarazi, blokeatu, muturretik muturrerako zifratzea.',
+  /* control-01 (261104) · L'avís propi de «Privacitat i seguretat» sense moderació. */
+  'section.xat.control.privacitat.pendent': 'Elkarrizketa bat isilarazteko, ireki eta, ⋮ botoitik, aukeratu «Isilarazi jakinarazpenak». Aukera honen gainerakoa ez dago oraindik erabilgarri: txataren hurrengo fasean eraikiko da.',
   'section.xat.control.espai.titol': 'Zutabeen zabalera',
   'section.xat.control.espai.text': 'Aukeratu nabigazio eta zerrenda zutabeen zabalera, txatean ere.',
   'section.xat.control.espai.ara': 'Orain: nabigazioa {left} px · zerrenda {middle} px',
@@ -3273,4 +3297,6 @@ export default {
   'section.control.rural.crdtInvalid': "Ezin izan da CRDT aldaketa aplikatu. Egiaztatu datuak eta gorde kopia bat jarraitu aurretik.",
   'section.control.rural.crdtQuota': "Historia edo egunkaria mugara iritsi da. Prestatu kopia bat; egunkaria bateratzeak CRDT historia osoa gordetzen du.",
   'section.control.rural.crdtCommitDesconegut': "Nabigatzaileak ez du oraindik idazketa berretsi. Eguneratu oharrak egoera egiaztatzeko aldaketa errepikatu aurretik.",
+  /* control-06 (revisió del Panell, 261104) · Abans, un Error escrit a mà a ModeRural.jsx. */
+  'section.control.rural.fitxerGran': "Aukeratu gehienez 4 MB-ko JSON fitxategi bat.",
 };

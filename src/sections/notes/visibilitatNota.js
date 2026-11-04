@@ -57,6 +57,12 @@ export const TEXTOS_VISIBILITAT_NOTA = Object.freeze({
   signaturaAliena: parellVisibilitat('signaturaAliena', 'Esta publicació la signa {qui}: canvia a eixa identitat per a actualitzar-la.'),
   desatPendentDetall: parellVisibilitat('desatPendentDetall', 'No es pot publicar fins que es desen els canvis. {detall}'),
   desatPendent: parellVisibilitat('desatPendent', 'No es pot publicar fins que es desen els canvis pendents. Torna-ho a provar d’ací a un moment.'),
+  /* idea61-01 (Gauntlet T7a, 261104) · Una publicació no canvia mai de secció
+     (SDP-SEC-002, el trigger sdp_force_author): el motiu diu on viu i les dues
+     eixides de veres, mai «torna-ho a provar». Un parell per a cada secció on
+     escriu publishNote (seccioDAmbit: 'mur' o 'mercat'). */
+  seccioPublicadaMur: parellVisibilitat('seccioPublicada.mur', 'Esta publicació ja és al Mur i no pot canviar de lloc. Per a actualitzar-la, torna a triar a «On es publica?» l’àmbit que tenia; per a publicar-la al Mercat, fes-ne una nota nova.'),
+  seccioPublicadaMercat: parellVisibilitat('seccioPublicada.mercat', 'Esta publicació ja és al Mercat i no pot canviar de lloc. Per a actualitzar-la, torna a triar Mercat a «On es publica?»; per a publicar-la en un altre lloc, fes-ne una nota nova.'),
   /* T71b · Un contingut de fora (NotesEditor): els textos de compartir, però
      és una còpia de la persona, que l'edita: no es diu que siga d'altri. */
   externDescripcio: parellVisibilitat('extern.descripcio', 'Este contingut de fora és una còpia teua: el pots editar, i compartir-lo el porta al teu Mur citant-ne l’origen.'),
@@ -144,6 +150,33 @@ export const SIGNANT_DESCONEGUT = T.signantDesconegut[1];
 export function motiuSignaturaAliena(nom = '', t = null) {
   const qui = String(nom ?? '').trim() || text(t, T.signantDesconegut);
   return omple(text(t, T.signaturaAliena), { qui });
+}
+
+/** idea61-01 (Gauntlet T7a, 261104) · El motiu de no actualitzar una
+ * publicació que viu en una altra secció: `seccio` és la de la fila ('mercat';
+ * qualsevol altra cosa, el Mur). */
+export function motiuSeccioPublicada(seccio = 'mur', t = null) {
+  return text(t, seccio === 'mercat' ? T.seccioPublicadaMercat : T.seccioPublicadaMur);
+}
+
+/* idea61-01 (Gauntlet T7a, 261104) · El rebuig del servidor a un upsert que
+   canvia el section_id d'una fila (el trigger sdp_force_author, l'última
+   definició a 2609261500_identitat_perfil_f1.sql). Com SDP-MOD-428
+   (esRebuigDeNormes, data/errorsBackend.js), l'adaptador encara no el traduïx
+   a cap `code` propi: arriba al `code`, dins del missatge («Supabase 400:
+   {…"message":"SDP-SEC-002: section_id is immutable"}») o a una causa. Viu
+   ací, al costat del motiu, perquè errorsBackend.js és fora del lot de la
+   correcció: el seu lloc és al costat d'esRebuigDeNormes. */
+export const CODI_SECCIO_IMMUTABLE = 'SDP-SEC-002';
+
+/** idea61-01 · Cert si `error` (o una de les seues causes, com a molt quatre baules) és el rebuig per canvi de secció. Pura. */
+export function esRebuigDeSeccio(error) {
+  let baula = error;
+  for (let pas = 0; baula && typeof baula === 'object' && pas < 4; pas += 1) {
+    if (`${baula.code ?? ''} ${baula.message ?? ''}`.includes(CODI_SECCIO_IMMUTABLE)) return true;
+    baula = baula.cause;
+  }
+  return false;
 }
 
 /** El motiu de no publicar quan el desat previ no s'ha confirmat. `detall` és

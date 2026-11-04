@@ -5,7 +5,9 @@ const mocks = vi.hoisted(() => ({
   update: vi.fn(), send: vi.fn(), toast: vi.fn(), mou: vi.fn(), esborra: vi.fn(), notes: [],
   scopeKey: 'tenant-user', workspaceKey: 'session',
   /* Grup E (261008) · la guarda de re-signatura: l'actor actiu i les publicacions del Mur carregades. */
-  actor: null, feed: undefined
+  actor: null, feed: undefined,
+  /* idea61-02 (Gauntlet T7a, 261104) · i les del Mercat, on publishNote també escriu (IDEA-61). */
+  mercat: undefined
 }));
 vi.mock('./NotesDataContext', () => ({ useNotesData: () => ({
   notes: mocks.notes, noteFolders: [], scopeKey: mocks.scopeKey, workspaceKey: mocks.workspaceKey, config: { tenantId: 'tenant' },
@@ -16,7 +18,7 @@ vi.mock('../../app/contexts/UIContext', () => ({
   useUIActions: () => ({ normalizeSearchText: s => s, t: (_key, fallback) => fallback })
 }));
 vi.mock('@/components/universal/NotificationContext.jsx', () => ({ useToast: () => ({ showToast: mocks.toast }) }));
-vi.mock('../mur/MurContext', () => ({ useMur: () => ({ sendSectionSubmission: mocks.send, feedPosts: mocks.feed }) }));
+vi.mock('../mur/MurContext', () => ({ useMur: () => ({ sendSectionSubmission: mocks.send, feedPosts: mocks.feed, marketItems: mocks.mercat }) }));
 /* Poliment T41/T43 · qui signa: l'actor d'IdentitatContext (proves a NotesContext.dataPublicacio). */
 vi.mock('../../app/contexts/IdentitatContext.jsx', () => ({ useIdentitat: () => ({ actor: mocks.actor }) }));
 vi.mock('../../app/contexts/SessionContext.jsx', () => ({ useSession: () => ({ currentUser: null }) }));
@@ -244,6 +246,7 @@ describe('Grup E · la guarda de re-signatura de publishNote', () => {
   afterEach(() => {
     mocks.actor = null;
     mocks.feed = undefined;
+    mocks.mercat = undefined;
   });
 
   test('la signa l’entitat i l’actor és la persona: no s’envia res i el motiu diu qui la signa', async () => {
@@ -270,6 +273,24 @@ describe('Grup E · la guarda de re-signatura de publishNote', () => {
     await act(async () => { error = await result.current.publishNote(publicada('g-2')).catch((motiu) => motiu); });
     expect(error).toMatchObject({ name: 'ErrorPublicacio', message: motiuSignaturaAliena('Pep') });
     expect(mocks.send).not.toHaveBeenCalled();
+  });
+
+  /* idea61-02 (Gauntlet T7a, 261104) · Des d'IDEA-61 publishNote escriu també
+     al Mercat (seccioDAmbit): la guarda busca la fila a les dues seccions,
+     també quan la nota ja no porta la fitxa del Mercat (la fila no canvia d'id). */
+  test('idea61-02 · la fila és al Mercat, la signa l’entitat i l’actor és la persona: tampoc, amb fitxa o sense', async () => {
+    const producte = { ...delForn('g-8'), ambit: 'mercat', type: 'product' };
+    const fitxa = { ambit: 'mercat', estat: 'disponible', dades: { preu: '3 €' } };
+    for (const nota of [{ ...publicada('g-8'), fitxa }, publicada('g-8')]) {
+      Object.assign(mocks, { actor: PEP, feed: [], mercat: [producte] });
+      const { result, unmount } = renderHook(useNotes, { wrapper: NotesProvider });
+      let error;
+      await act(async () => { error = await result.current.publishNote(nota).catch((motiu) => motiu); });
+      expect(error, JSON.stringify(nota.fitxa)).toMatchObject({ name: 'ErrorPublicacio', message: motiuSignaturaAliena('Forn de la Torre') });
+      unmount();
+    }
+    expect(mocks.send).not.toHaveBeenCalled();
+    expect(mocks.update).not.toHaveBeenCalled();
   });
 
   test('la signa la mateixa identitat: s’actualitza com sempre (el mateix id)', async () => {

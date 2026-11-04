@@ -356,3 +356,145 @@ describe('Ordre 0 · el nom a 20px i l’avanç a 18px a la targeta de conversa'
     expect(auditaHerencia(be)).toEqual([]);
   });
 });
+
+/* xat-ux-a11y-01 (261104, Gauntlet T7a; App Store 1.2) · El menú «⋯» del
+   missatge eixia de la pantalla. Penjava del «⋯» (.sdp-xat-bombolla__accions,
+   position: relative), que no sap on acaba la bombolla: a 375px, amb una
+   aliena curta («Sí»), naixia a -96px i amagava «Respon» i «Denuncia el
+   missatge», i la meua curta eixia 100px per la dreta; a 768 i 1024px, amb
+   una bombolla ampla, eixia per la vora o quedava davall de la columna de
+   converses. Ara penja de la fila (.sdp-xat-bombolla-wrap), que toca la vora
+   de la llista del costat de l'autor: en ample naix en eixa vora i s'obri cap
+   a dins; en estret s'obri cap a la bombolla com a la Fase D, i un marge
+   negatiu l'atura a la vora quan la bombolla és més curta que el menú.
+   L'altura i l'amplada són les d'abans. jsdom no pinta: es comproven les
+   regles escrites i, amb els seus valors, la geometria del menú dins de la
+   llista; la mesura real es va fer en Chrome headless a 375, 768, 1024 i
+   1440px. */
+const ANCORA = '.sdp-xat-bombolla-wrap';
+const DISPARADOR = '.sdp-xat-bombolla__accions';
+const MENU_DE_LA_FILA = '.sdp-xat-bombolla-wrap > .sdp-xat-bombolla__accions > .sdp-xat-menu';
+const ALTURA_DEL_MENU = 'calc(var(--sdp-touch) + var(--sdp-space-1))';
+const MENU_ALIE = '.sdp-xat-item--altre .sdp-xat-menu';
+const ESTRET_ALIE = '.sdp-root[data-sdp-estret] .sdp-xat-item--altre .sdp-xat-menu';
+const ESTRET_MEU = '.sdp-root[data-sdp-estret] .sdp-xat-item--meu .sdp-xat-menu';
+const TOPALL_ALIE = '.sdp-root[data-sdp-estret] .sdp-xat-item--altre .sdp-xat-bombolla-wrap .sdp-xat-menu';
+const TOPALL_MEU = '.sdp-root[data-sdp-estret] .sdp-xat-item--meu .sdp-xat-bombolla-wrap .sdp-xat-menu';
+const CONEGUDES = new Set(['.sdp-xat-menu', MENU_DE_LA_FILA, MENU_ALIE, ESTRET_ALIE, ESTRET_MEU, TOPALL_ALIE, TOPALL_MEU]);
+const MOUEN = /^(left|right|inset(-inline)?(-start|-end)?|margin(-left|-right|-inline(-start|-end)?)?)$/;
+
+/** L'últim valor escrit per a la propietat en les regles que nomenen el selector sencer. */
+const ultimValor = (totes, selector, propietat) => totes
+  .filter((r) => r.selectors.includes(selector)).map((r) => valorDe(r, propietat)).filter((v) => v !== undefined).pop();
+/** El topall en estret, «min(0px, 100% - Nrem)», com a funció de l'amplada de la fila en px. */
+function topall(valor, minim) {
+  const m = /^min\(0px, 100% - ([\d.]+)rem\)$/.exec(valor || '');
+  return m && `${m[1]}rem` === minim ? (fila) => Math.min(0, fila - Number.parseFloat(m[1]) * 16) : null;
+}
+
+function auditaAncoraDelMenu(css) {
+  const fallades = [];
+  const totes = regles(css);
+  const de = (selector, propietat) => ultimValor(totes, selector, propietat);
+  const minim = de('.sdp-xat-menu', 'min-width');
+  if (de(ANCORA, 'position') !== 'relative') fallades.push(`${ANCORA}: position ${de(ANCORA, 'position')}, no és l’àncora`);
+  if (de(DISPARADOR, 'position') !== 'static') fallades.push(`${DISPARADOR}: position ${de(DISPARADOR, 'position')}, el menú penja del «⋯»`);
+  if (de(MENU_DE_LA_FILA, 'top') !== ALTURA_DEL_MENU) fallades.push(`${MENU_DE_LA_FILA}: top ${de(MENU_DE_LA_FILA, 'top')}, el menú cau al peu de la bombolla`);
+  if (de(MENU_DE_LA_FILA, 'width') !== 'min-content') fallades.push(`${MENU_DE_LA_FILA}: width ${de(MENU_DE_LA_FILA, 'width')}, el menú s’estira amb la fila`);
+  const costats = (selector, props) => props.map((p) => de(selector, p)).join(' | ');
+  if (costats(MENU_ALIE, ['left', 'right']) !== '0 | auto') fallades.push(`${MENU_ALIE}: ${costats(MENU_ALIE, ['left', 'right'])}`);
+  if (costats('.sdp-xat-menu', ['right']) !== '0') fallades.push(`.sdp-xat-menu: right ${de('.sdp-xat-menu', 'right')}`);
+  if (costats(ESTRET_ALIE, ['right', 'left']) !== '0 | auto') fallades.push(`${ESTRET_ALIE}: ${costats(ESTRET_ALIE, ['right', 'left'])}`);
+  if (costats(ESTRET_MEU, ['left', 'right']) !== '0 | auto') fallades.push(`${ESTRET_MEU}: ${costats(ESTRET_MEU, ['left', 'right'])}`);
+  if (!topall(de(TOPALL_ALIE, 'margin-right'), minim)) fallades.push(`${TOPALL_ALIE}: margin-right ${de(TOPALL_ALIE, 'margin-right')}, sense topall a la vora`);
+  if (!topall(de(TOPALL_MEU, 'margin-left'), minim)) fallades.push(`${TOPALL_MEU}: margin-left ${de(TOPALL_MEU, 'margin-left')}, sense topall a la vora`);
+  /* Cap altra regla no mou el menú d'una bombolla. */
+  for (const r of totes) {
+    for (const s of r.selectors) {
+      if (CONEGUDES.has(s) || !/\.sdp-xat-(item|bombolla)[\w-]*\b.*\s>?\s*\.sdp-xat-menu$/.test(s)) continue;
+      if (declaracions(r.cos).some(([p]) => MOUEN.test(p))) fallades.push(`${s}: torna a moure el menú del missatge`);
+    }
+  }
+  return fallades;
+}
+
+/* Còpia literal de les regles d'abans (modules.css, Fase D 261020). */
+const ANCORA_ABANS = `@layer components {
+  .sdp-xat-menu { position: absolute; top: calc(100% + var(--sdp-space-1)); right: 0; min-width: 14rem; transform-origin: top right; }
+  .sdp-xat-bombolla-wrap { position: relative; display: flex; align-items: flex-start; }
+  .sdp-xat-bombolla__accions { position: relative; flex: none; }
+  .sdp-xat-item--altre .sdp-xat-menu { right: auto; left: 0; transform-origin: top left; }
+  .sdp-root[data-sdp-estret] .sdp-xat-item--altre .sdp-xat-menu { right: 0; left: auto; transform-origin: top right; }
+  .sdp-root[data-sdp-estret] .sdp-xat-item--meu .sdp-xat-menu { right: auto; left: 0; transform-origin: top left; }
+}`;
+/* La primera proposta de la troballa, l'àncora a la fila i res més: top:
+   calc(100% + …) es calcula sobre tota la bombolla (el menú d'un missatge
+   llarg naixia uns 770px davall del «⋯»), «Bloqueja …» amb un nom llarg
+   l'estirava fins a 407px a 1440px i la bombolla curta en estret encara
+   l'empenyia fora. I un topall que l'empenyeria cap a fora. */
+const ANCORA_NOMES = ANCORA_ABANS.replace('.sdp-xat-bombolla__accions { position: relative;', '.sdp-xat-bombolla__accions { position: static;')
+  .replace(/\n}$/, `\n  ${TOPALL_ALIE} { margin-right: max(0px, 100% - 14rem); }\n  .sdp-xat-item--meu .sdp-xat-bombolla-wrap .sdp-xat-menu { margin-left: 0; }\n}`);
+
+describe('xat-ux-a11y-01 · el menú «⋯» del missatge penja de la fila i no ix de la llista', () => {
+  test('la guarda detecta les regles d’abans, l’àncora sense altura ni amplada, un topall al revés i una regla de més', () => {
+    expect(auditaAncoraDelMenu(ANCORA_ABANS)).toEqual([
+      `${DISPARADOR}: position relative, el menú penja del «⋯»`,
+      `${MENU_DE_LA_FILA}: top undefined, el menú cau al peu de la bombolla`,
+      `${MENU_DE_LA_FILA}: width undefined, el menú s’estira amb la fila`,
+      `${TOPALL_ALIE}: margin-right undefined, sense topall a la vora`,
+      `${TOPALL_MEU}: margin-left undefined, sense topall a la vora`
+    ]);
+    expect(auditaAncoraDelMenu(ANCORA_NOMES)).toEqual([
+      `${MENU_DE_LA_FILA}: top undefined, el menú cau al peu de la bombolla`,
+      `${MENU_DE_LA_FILA}: width undefined, el menú s’estira amb la fila`,
+      `${TOPALL_ALIE}: margin-right max(0px, 100% - 14rem), sense topall a la vora`,
+      `${TOPALL_MEU}: margin-left undefined, sense topall a la vora`,
+      '.sdp-xat-item--meu .sdp-xat-bombolla-wrap .sdp-xat-menu: torna a moure el menú del missatge'
+    ]);
+  });
+
+  test('cap fallada: àncora a la fila, altura i amplada de sempre, i topall a la vora en estret', () => {
+    expect(auditaAncoraDelMenu(MODULES)).toEqual([]);
+  });
+
+  test('la fila toca la vora de la llista del costat de l’autor', () => {
+    const totes = regles(MODULES);
+    const de = (selector, propietat) => ultimValor(totes, selector, propietat);
+    expect([de('.sdp-xat-missatges > li', 'display'), de('.sdp-xat-missatges > li', 'flex-direction')]).toEqual(['flex', 'column']);
+    expect(de('.sdp-xat-item--altre', 'align-items')).toBe('flex-start');
+    expect(de('.sdp-xat-item--meu', 'align-items')).toBe('flex-end');
+    expect(de('.sdp-xat-item--meu .sdp-xat-bombolla-wrap', 'flex-direction')).toBe('row-reverse');
+    expect(de(ANCORA, 'max-width')).toBe('var(--sdp-xat-bombolla-max)');
+    expect(token('--sdp-xat-bombolla-max')).toBe('75%');
+  });
+
+  test('amb els valors escrits, el menú cap dins de la llista a totes les amplàries, i en estret no es mou si la bombolla el passa', () => {
+    const totes = regles(MODULES);
+    const de = (selector, propietat) => ultimValor(totes, selector, propietat);
+    const menu = Number.parseFloat(de('.sdp-xat-menu', 'min-width')) * 16;
+    const alie = topall(de(TOPALL_ALIE, 'margin-right'), de('.sdp-xat-menu', 'min-width'));
+    const meu = topall(de(TOPALL_MEU, 'margin-left'), de('.sdp-xat-menu', 'min-width'));
+    expect([menu, typeof alie, typeof meu]).toEqual([224, 'function', 'function']);
+    const fora = [];
+    // Llista: [0, W] és la caixa de contingut, del mòbil de 320px (288) a l'escriptori. Fila: de 60px al 75%.
+    for (let llista = 320 - 2 * 16; llista <= 1400; llista += 4) {
+      for (let fila = 60; fila <= 0.75 * llista; fila += 1) {
+        const casos = {
+          // Estret, l'aliena: la fila a [0, fila]; right: 0 i el marge dret.
+          'estret aliena': [fila - alie(fila) - menu, fila - alie(fila)],
+          // Estret, la meua: la fila a [W - fila, W]; left: 0 i el marge esquerre.
+          'estret meua': [llista - fila + meu(fila), llista - fila + meu(fila) + menu],
+          // Ample, sense marge: l'aliena a l'esquerra de la fila i la meua a la dreta.
+          'ample aliena': [0, menu],
+          'ample meua': [llista - menu, llista]
+        };
+        for (const [cas, [esquerra, dreta]] of Object.entries(casos)) {
+          if (esquerra < 0 || dreta > llista) fora.push(`${cas}: llista ${llista}, fila ${fila} → ${esquerra}..${dreta}`);
+        }
+        // Llei del Píxel: en estret, amb la fila més ampla que el menú, el lloc de la Fase D.
+        if (fila >= menu && (alie(fila) !== 0 || meu(fila) !== 0)) fora.push(`estret: la fila ${fila} mou el menú`);
+      }
+    }
+    expect(fora.slice(0, 5)).toEqual([]);
+  });
+});

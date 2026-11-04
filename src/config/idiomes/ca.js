@@ -696,6 +696,8 @@ export default {
   'editor.ambit.error.rang': 'El valor de «{camp}» és fora del rang permés.',
   'editor.ambit.error.enum': 'Tria una opció de la llista per a «{camp}».',
   'editor.ambit.error.llargaria': 'El text de «{camp}» és massa llarg.',
+  /* idea61-05 (261104) · L'ajuda del camp «Com contactar» de la fitxa: diu qui el veu. */
+  'editor.ambit.contacteVisible': 'Ho veurà la gent registrada del poble en obrir la fitxa; no ix a la targeta ni a la cerca.',
   'section.search.tipus.vehicle': 'Compartir cotxe',
   'section.search.tipus.treball': 'Treball',
   'section.search.tipus.habitatge': 'Habitatge',
@@ -1457,6 +1459,10 @@ export default {
   'section.notes.visibilitat.errorPublicar': 'No s’ha pogut publicar al Mur. Torna-ho a provar: si ja havia arribat, s’actualitzarà la mateixa publicació, sense duplicats.',
   'section.notes.visibilitat.signantDesconegut': 'una altra identitat',
   'section.notes.visibilitat.signaturaAliena': 'Esta publicació la signa {qui}: canvia a eixa identitat per a actualitzar-la.',
+  /* idea61-01 (261104) · Una publicació ja és al Mur o al Mercat i no pot canviar
+     de lloc: el motiu diu com actualitzar-la (visibilitatNota.js). */
+  'section.notes.visibilitat.seccioPublicada.mur': 'Esta publicació ja és al Mur i no pot canviar de lloc. Per a actualitzar-la, torna a triar a «On es publica?» l’àmbit que tenia; per a publicar-la al Mercat, fes-ne una nota nova.',
+  'section.notes.visibilitat.seccioPublicada.mercat': 'Esta publicació ja és al Mercat i no pot canviar de lloc. Per a actualitzar-la, torna a triar Mercat a «On es publica?»; per a publicar-la en un altre lloc, fes-ne una nota nova.',
   'section.notes.visibilitat.desatPendentDetall': 'No es pot publicar fins que es desen els canvis. {detall}',
   'section.notes.visibilitat.desatPendent': 'No es pot publicar fins que es desen els canvis pendents. Torna-ho a provar d’ací a un moment.',
   'section.notes.visibilitat.extern.descripcio': 'Este contingut de fora és una còpia teua: el pots editar, i compartir-lo el porta al teu Mur citant-ne l’origen.',
@@ -1632,6 +1638,11 @@ export default {
   'section.moderacio.bloquejos.error': 'No s’han pogut carregar els bloquejos. Torna-ho a provar.',
   'section.moderacio.bloquejos.nomesSessio': 'Estos bloquejos només duren esta sessió: el servidor encara no els guarda.',
   'section.moderacio.bloquejos.restaPendent': 'Silenciar les notificacions i el xifratge extrem a extrem encara no estan disponibles: es construiran en la fase següent del xat.',
+  /* control-01 (261104) · El silenci per conversa (B8C-5) ja funciona des del botó ⋮:
+     l'avís de «Privacitat i seguretat» diu on és i només dona per pendent el
+     xifratge (XatControlSection.jsx). La fase F2c del xifratge haurà de reescriure
+     esta clau, no restaPendent. */
+  'section.moderacio.bloquejos.silenciIXifratge': 'Per a silenciar una conversa, obri-la i, des del botó ⋮, tria «Silencia les notificacions». El xifratge extrem a extrem encara no està disponible: es construirà en la fase següent del xat.',
   'section.comu.regio': 'Llista viva: {titol}',
   'section.comu.filtra': 'Filtra la llista',
   'section.comu.amplia': 'Amplia en taula',
@@ -1905,6 +1916,14 @@ export default {
   'section.control.treball.saberMes': 'Saber-ne més: Treball',
   'section.control.habitatge.publicar': 'Publicar: Habitatge',
   'section.control.habitatge.saberMes': 'Saber-ne més: Habitatge',
+  /* control-06 (revisió del Panell, 261104) · Els encapçalaments, les entradilles i
+     els dos botons de baix del Panell, abans escrits a mà (ControlSection.jsx). */
+  'section.control.utilitats.titol': 'Utilitats i Connectors (Plugins)',
+  'section.control.utilitats.lead': "El sistema s'anirà enriquint amb aquest tipus d'utilitats (o plugins) que es poden activar si es necessiten. Són independents del sistema base, cosa que permet endollar funcionalitats a mesura només per als usuaris o clients que les demanen.",
+  'section.control.maquinaria.titol': 'Maquinària i Sistema',
+  'section.control.maquinaria.lead': "Panells d'administració i eines internes de la plataforma. Aquestes utilitats normalment s'activen només per a l'equip d'administració.",
+  'section.control.dubtes': 'Missatges per a dubtes',
+  'section.control.eixir': 'Eixir del poble',
   /* P7-A · Onada 4 (261004) · la portada plegable de la Pàgina Universal i
      la pàgina de cada plugin (sections/plugins/PluginPage.jsx). */
   'pagina.portada.amaga': 'Amaga la portada',
@@ -2198,6 +2217,9 @@ export default {
   'section.xat.vista.multimedia.enllacos.buit': "Encara no s'ha compartit cap enllaç en les converses obertes.",
   'section.xat.vista.multimedia.documents.buit': "Ací hi haurà els documents que s'han compartit en les converses.",
   'section.xat.vista.multimedia.adjunts': 'Els adjunts arriben amb la fase F1 del xat: ara només es pot enviar text.',
+  /* xat-ux-a11y-06 (261104) · Els adjunts F1 (fotos, vídeo i veu) ja funcionen: la
+     vista pinta avisAdjunts en lloc d'adjunts (VistaMultimedia.jsx). */
+  'section.xat.vista.multimedia.avisAdjunts': 'Pel xat ja es poden enviar fotos, vídeos i missatges de veu, si la conversa ho permet. Els documents, encara no.',
   'section.xat.vista.multimedia.avisLocal': 'Només es veu el contingut de les converses obertes en esta sessió.',
   'section.xat.vista.multimedia.obri': 'Obri la conversa de {nom}',
   'section.xat.vista.multimedia.senseData': 'Sense data',
@@ -2481,6 +2503,8 @@ export default {
   'section.xat.control.temporals.text': "Activa l'autodestrucció de missatges per a converses sensibles.",
   'section.xat.control.privacitat.titol': 'Privacitat i seguretat',
   'section.xat.control.privacitat.text': 'Silenciar notificacions, bloquejar, xifratge extrem a extrem.',
+  /* control-01 (261104) · L'avís propi de «Privacitat i seguretat» sense moderació. */
+  'section.xat.control.privacitat.pendent': 'Per a silenciar una conversa, obri-la i, des del botó ⋮, tria «Silencia les notificacions». La resta d’esta opció encara no està disponible: es construirà en la fase següent del xat.',
   'section.xat.control.espai.titol': 'Amplària de les columnes',
   'section.xat.control.espai.text': "Tria com d'amples són les columnes de navegació i de llista, també al xat.",
   'section.xat.control.espai.ara': 'Ara: navegació {left} px · llista {middle} px',
@@ -3320,4 +3344,6 @@ export default {
   'section.control.rural.crdtInvalid': "No s’ha pogut aplicar el canvi CRDT. Comprova les dades i conserva una còpia abans de continuar.",
   'section.control.rural.crdtQuota': "L’historial o el diari han arribat al límit. Prepara una còpia; consolidar el diari conserva tota la història CRDT.",
   'section.control.rural.crdtCommitDesconegut': "El navegador encara no ha confirmat l’escriptura. Actualitza les notes per a comprovar l’estat abans de repetir el canvi.",
+  /* control-06 (revisió del Panell, 261104) · Abans, un Error escrit a mà a ModeRural.jsx. */
+  'section.control.rural.fitxerGran': "Tria un fitxer JSON de fins a 4 MB.",
 };

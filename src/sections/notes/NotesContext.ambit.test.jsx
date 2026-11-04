@@ -10,7 +10,9 @@ import { renderHook, act, cleanup } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 const mocks = vi.hoisted(() => ({
   update: vi.fn(), send: vi.fn(), toast: vi.fn(), resolve: vi.fn(), notes: [], scopeKey: 'tenant-user', workspaceKey: 'session',
-  actor: null, user: null, externalConfig: {}, memberships: [], config: { tenantId: 'tenant' }
+  actor: null, user: null, externalConfig: {}, memberships: [], config: { tenantId: 'tenant' },
+  /* idea61-01 (Gauntlet T7a, 261104) · Les files carregades del Mur i del Mercat. */
+  feed: [], mercat: []
 }));
 /* Correccions L1-A2 i L1-A4 (àrbitre, 261102) · resolveNote (el detall d'una
    nota resum) i config (el mode de dades, que fa rebutjar publishNote). */
@@ -23,7 +25,7 @@ vi.mock('../../app/contexts/UIContext', () => ({
   useUIActions: () => ({ normalizeSearchText: s => s, t: (_key, fallback) => fallback })
 }));
 vi.mock('@/components/universal/NotificationContext.jsx', () => ({ useToast: () => ({ showToast: mocks.toast }) }));
-vi.mock('../mur/MurContext', () => ({ useMur: () => ({ sendSectionSubmission: mocks.send, feedPosts: [] }) }));
+vi.mock('../mur/MurContext', () => ({ useMur: () => ({ sendSectionSubmission: mocks.send, feedPosts: mocks.feed, marketItems: mocks.mercat }) }));
 vi.mock('../../app/contexts/IdentitatContext.jsx', () => ({ useIdentitat: () => ({ actor: mocks.actor, memberships: mocks.memberships }) }));
 vi.mock('../../app/contexts/SessionContext.jsx', () => ({ useSession: () => ({ currentUser: mocks.user }) }));
 vi.mock('../../data/backendPort.js', () => ({ promoteToPublic: vi.fn(), teCapacitat: () => false }));
@@ -37,6 +39,7 @@ vi.mock('./GlobalSaveManager.js', async importOriginal => {
 import { NotesProvider, useNotes, fitxaDeNota } from './NotesContext';
 import { bgSaveManager } from './GlobalSaveManager.js';
 import { esFitxaDAmbit, perAmbit } from '../../utils/publicacioUniversal.js';
+import { motiuSeccioPublicada, publicaAmbMotiu } from './visibilitatNota.js';
 
 beforeEach(() => {
   mocks.toast.mockReset();
@@ -49,6 +52,8 @@ beforeEach(() => {
   mocks.externalConfig = {};
   mocks.memberships = [];
   mocks.config = { tenantId: 'tenant' };
+  mocks.feed = [];
+  mocks.mercat = [];
 });
 afterEach(cleanup);
 
@@ -140,6 +145,83 @@ describe('publishNote', () => {
     const publicada = nota('repub', { revision: 2, isPublished: true, publishedSubmissionId: 'repub', fitxa: { ...VIATGE(), estat: 'complet' } });
     await act(async () => { expect(await result.current.publishNote(publicada)).toBe(true); });
     expect(mocks.send.mock.calls.map(([s]) => [s.id, s.sectionId, s.payload.estat])).toEqual([['repub', 'mur', 'disponible'], ['repub', 'mur', 'complet']]);
+  });
+});
+
+/* idea61-01 (Gauntlet T7a, 261104) · Una publicació no canvia mai de secció:
+   el trigger sdp_force_author (2609261500_identitat_perfil_f1.sql) rebutja
+   l'upsert amb un section_id nou («SDP-SEC-002: section_id is immutable») i la
+   fila es queda on era. Moure entre el Mur i el Mercat una nota ja publicada
+   (l'àmbit, la carpeta o ?ambit=) feia fallar cada «Actualitzar al Mur» amb un
+   fals «torna-ho a provar». Ara publishNote no l'envia si la fila carregada és
+   d'una altra secció, i el rebuig del servidor (la fila de fora de la
+   finestra) es diu amb el motiu de veres, no amb «Reintenta-la». */
+describe('idea61-01 · una publicació no canvia de secció (SDP-SEC-002)', () => {
+  const PRODUCTE = Object.freeze({ ambit: 'mercat', estat: 'disponible', dades: { preu: '12 €' } });
+  const publicada = (id, extra = {}) => nota(id, { title: 'Oli verge', isPublished: true, publishedSubmissionId: id, revision: 2, ...extra });
+  const REBUIG_SECCIO = 'Supabase 400: {"code":"P0001","details":null,"hint":null,"message":"SDP-SEC-002: section_id is immutable"}';
+
+  test('la fila és al Mur i la nota porta ara la fitxa del Mercat: no s’envia res i el motiu diu on viu', async () => {
+    mocks.feed = [{ id: 'oli', title: 'Oli verge', ownerUserId: 'u-pep' }];
+    const { result } = renderHook(useNotes, { wrapper: NotesProvider });
+    let error;
+    await act(async () => { error = await result.current.publishNote(publicada('oli', { fitxa: PRODUCTE })).catch((motiu) => motiu); });
+    const motiu = motiuSeccioPublicada('mur');
+    expect(motiu).toMatch(/Mur/);
+    expect(error).toMatchObject({ name: 'ErrorPublicacio', message: motiu });
+    expect(mocks.send).not.toHaveBeenCalled();
+    expect(mocks.update.mock.calls.filter(([, canvis]) => canvis?.isPublished)).toEqual([]);
+    expect(mocks.toast).toHaveBeenCalledWith(motiu, 'info');
+    /* El selector (publicaAmbMotiu) diu el motiu en línia, no «torna-ho a provar». */
+    await act(async () => {
+      await expect(publicaAmbMotiu(() => result.current.publishNote(publicada('oli', { fitxa: PRODUCTE })))).rejects.toThrow(motiu);
+    });
+  });
+
+  test('la fila és al Mercat i la nota ja no hi porta fitxa (o en porta una de vertical): tampoc', async () => {
+    mocks.mercat = [{ id: 'oli', title: 'Oli verge', ownerUserId: 'u-pep', ambit: 'mercat', type: 'product' }];
+    const { result } = renderHook(useNotes, { wrapper: NotesProvider });
+    for (const fitxa of [null, VIATGE()]) {
+      let error;
+      await act(async () => { error = await result.current.publishNote(publicada('oli', { fitxa })).catch((motiu) => motiu); });
+      expect(error, JSON.stringify(fitxa)).toMatchObject({ name: 'ErrorPublicacio', message: motiuSeccioPublicada('mercat') });
+    }
+    expect(mocks.send).not.toHaveBeenCalled();
+  });
+
+  test('a la mateixa secció s’actualitza com sempre (el mateix id), i una fila d’una altra nota no compta', async () => {
+    mocks.feed = [{ id: 'viatge', title: 'Viatge' }];
+    mocks.mercat = [{ id: 'oli', title: 'Oli verge', ambit: 'mercat', type: 'product' }, { id: 'altra', title: 'Altra' }];
+    const { result } = renderHook(useNotes, { wrapper: NotesProvider });
+    await act(async () => { expect(await result.current.publishNote(publicada('oli', { fitxa: { ...PRODUCTE, estat: 'reservat' } }))).toBe(true); });
+    await act(async () => { expect(await result.current.publishNote(publicada('viatge', { fitxa: VIATGE() }))).toBe(true); });
+    await act(async () => { expect(await result.current.publishNote(nota('nova', { fitxa: PRODUCTE }))).toBe(true); });
+    expect(mocks.send.mock.calls.map(([s]) => [s.id, s.sectionId])).toEqual([['oli', 'mercat'], ['viatge', 'mur'], ['nova', 'mercat']]);
+  });
+
+  test('fora de la finestra carregada, el rebuig del servidor diu el motiu (mai «Reintenta-la») i rebutja amb ErrorPublicacio', async () => {
+    mocks.send.mockRejectedValue(new Error(REBUIG_SECCIO));
+    const { result } = renderHook(useNotes, { wrapper: NotesProvider });
+    let error;
+    await act(async () => { error = await result.current.publishNote(publicada('oli', { fitxa: PRODUCTE })).catch((motiu) => motiu); });
+    expect(error).toMatchObject({ name: 'ErrorPublicacio', message: motiuSeccioPublicada('mur') });
+    await act(async () => { error = await result.current.publishNote(publicada('oli', { fitxa: null })).catch((motiu) => motiu); });
+    expect(error).toMatchObject({ name: 'ErrorPublicacio', message: motiuSeccioPublicada('mercat') });
+    expect(mocks.toast.mock.calls.map(([text]) => text).filter((text) => /Reintenta-la/.test(text))).toEqual([]);
+    expect(mocks.update.mock.calls.filter(([, canvis]) => canvis?.isPublished)).toEqual([]);
+    /* Amb la causa (com l'error del xat) o el codi a part, el mateix. */
+    mocks.send.mockRejectedValueOnce(Object.assign(new Error('Abortada'), { cause: { code: 'P0001', message: 'SDP-SEC-002: section_id is immutable' } }));
+    await act(async () => { error = await result.current.publishNote(publicada('oli', { fitxa: PRODUCTE })).catch((motiu) => motiu); });
+    expect(error).toMatchObject({ name: 'ErrorPublicacio', message: motiuSeccioPublicada('mur') });
+  });
+
+  test('canviaEstatPublicacio sobre una nota moguda de secció: false sense enviar res (el toast ja diu el motiu)', async () => {
+    mocks.feed = [{ id: 'oli', title: 'Oli verge' }];
+    mocks.notes = [publicada('oli', { fitxa: PRODUCTE })];
+    const { result } = renderHook(useNotes, { wrapper: NotesProvider });
+    await act(async () => { expect(await result.current.canviaEstatPublicacio('oli', 'reservat')).toBe(false); });
+    expect(mocks.send).not.toHaveBeenCalled();
+    expect(mocks.toast).toHaveBeenCalledWith(motiuSeccioPublicada('mur'), 'info');
   });
 });
 

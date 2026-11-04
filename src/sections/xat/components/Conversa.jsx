@@ -97,6 +97,18 @@ const AvisRetallXifrat = E2EE_ACTIU_PER_DEFECTE ? lazy(() => import('./AvisRetal
    del padró (identitatsSeed.js), com a la capçalera i a les bombolles. */
 const NOM_IAIA = agentIASeed(IAIA_ID)?.name || 'IAIA MarIA';
 
+/* xat-ux-a11y-02 (T7a, 261104) · Un Escape amb un diàleg obert és del diàleg
+   (la guarda escapeDUnModal de XatSection): el Dialeg obri amb showModal() i
+   només escolta `cancel`, que arriba DESPRÉS del keydown, i els diàlegs de la
+   conversa (el retall xifrat, el silenci) hi arriben pel portal de React. El
+   camí de l'esdeveniment el dona composedPath(), també dins d'un shadow root. */
+const SELECTOR_MODAL_OBERT = 'dialog[open], .sdp-capa-modal:not([hidden])';
+function escapeDUnDialeg(e) {
+  const nadiu = e.nativeEvent ?? e;
+  const cami = typeof nadiu.composedPath === 'function' ? nadiu.composedPath() : [];
+  return (cami.length ? cami : [e.target]).some((node) => node?.nodeType === 1 && node.matches(SELECTOR_MODAL_OBERT));
+}
+
 /* IDEA-56 (pla 261029_1605, Bloc F.2) · Les respostes locals de la IAIA que
    es queden a la vista (les últimes). */
 const MAXIM_RESPOSTES_LOCALS = 20;
@@ -304,11 +316,15 @@ function estabilitza(rebuts, previ) {
    servidor, no porta `seq` (no marca res com a llegit) i es perd en canviar
    de fil o recarregar. Si l'enviament falla o la persona no accepta les
    normes, no hi ha resposta. */
+/* T7a (261104) · xat-ux-a11y-05: `senseSessio` (XatSection, el Xat de mostra)
+   amaga «Envia l’esborrany al Bloc de Notes» de la IAIA: sense sessió, crear
+   la nota falla sempre. Per defecte fals: el de sempre. */
 export default function Conversa({
   initialText = '', clauEsborrany = null, fil, messages: missatgesRebuts, onSendMessage, onSendMedia = null, configAdjunts, usuariAdjunts, onBack, onEnviaAlBloc, onCopia,
   hiHaMes, carregantMes, onCarregaMes, esperaAntics = null, onReintenta, onDescarta, onMarcaVist, locale, t,
   entitatActiva = null, moderacio = null, actorLlista = null, onMutaLlista = null, onTornaAOrigen = null, peu = null, cortesiaIAIA = false, consultaIAIA = false,
-  carregat = true, avisFil = null, onReintentaFil = null, tipusAvisFil = 'lectura', llegintFil = false, respostaLocalIAIA = respostaDeLaIAIA
+  carregat = true, avisFil = null, onReintentaFil = null, tipusAvisFil = 'lectura', llegintFil = false, respostaLocalIAIA = respostaDeLaIAIA,
+  senseSessio = false
 }) {
   /* REV-ESTRES-2 · La llista amb els objectes d'abans (estabilitza); la ref
      guarda la de l'últim render confirmat. */
@@ -963,6 +979,19 @@ export default function Conversa({
     setModeSeleccio(false);
     setTriats(new Set());
   };
+  /* xat-ux-a11y-02 (T7a, 261104) · La selecció de missatges és a la pila de
+     l'Arrere d'Android amb el camí de la creu (P0-24b ja la nomenava): l'Arrere
+     n'ix i no trau la persona de la conversa. Oberta després de la resposta,
+     el primer Arrere ix de la selecció i el segon cancel·la la resposta. */
+  useCapaEnrere(modeSeleccio, surtDeSeleccio);
+  /* xat-ux-a11y-02 · L'Escape dins de la conversa també n'ix, consumit: la
+     selecció de xats l'escolta a window, darrere, i un sol Escape tanca UNA
+     cosa. Ni el d'un diàleg obert ni el que un altre ja ha consumit. */
+  const alTeclatDeLaConversa = (e) => {
+    if (!modeSeleccio || e.key !== 'Escape' || e.defaultPrevented || escapeDUnDialeg(e)) return;
+    e.preventDefault();
+    surtDeSeleccio();
+  };
 
   const enviaTriaAlBloc = async (tria) => {
     setCreantNota(true);
@@ -1055,7 +1084,13 @@ export default function Conversa({
   const bombolles = useMemo(() => {
     const pintaAccionsIAIA = (preguntaText, respostaText) => {
       const accionsIAIA = extreuAccionsDeRespostaIAIA(respostaText);
-      const esborranyIAIA = typeof onEnviaAlBloc === 'function' ? esborranyDeRespostaIAIA(preguntaText, respostaText) : null;
+      /* xat-ux-a11y-05 (T7a, 261104) · L'esborrany, només darrere d'una pregunta
+         (davall de la salutació o de la crida a registrar-se no hi ha cap
+         resposta que guardar, i el botó la feia semblar una resposta: IA-07) i
+         només amb sessió (sense, crear la nota falla sempre). */
+      const esborranyIAIA = !senseSessio && typeof onEnviaAlBloc === 'function' && String(preguntaText ?? '').trim()
+        ? esborranyDeRespostaIAIA(preguntaText, respostaText)
+        : null;
       if (accionsIAIA.length === 0 && !esborranyIAIA) return null;
       return (
         <li className="sdp-xat-iaia-accions">
@@ -1147,7 +1182,7 @@ export default function Conversa({
   }, [
     files, moderacio, fil, accionsDe, configAdjunts, usuariAdjunts, esGrup, perId, vesAlMissatge, potRespondre, respon,
     ressalt, locale, t, modeSeleccio, seleccioDe, triats, onReintenta, onDescarta, onCopia, actorLlista, onMutaLlista,
-    cortesiaIAIA, consultaIAIA, onEnviaAlBloc, enviaEsborranyIAIA, creantNota
+    cortesiaIAIA, consultaIAIA, onEnviaAlBloc, enviaEsborranyIAIA, creantNota, senseSessio
   ]);
 
   /* Fase D (261020, tasca 2) · L'altra part d'un directe 1:1 amb una persona
@@ -1178,7 +1213,7 @@ export default function Conversa({
   revisaCanvisRef.current = E2EE_ACTIU_PER_DEFECTE ? canvisClau.revisaEnviament ?? null : null;
 
   return (
-    <div className="sdp-xat-conversa" ref={arrelRef}>
+    <div className="sdp-xat-conversa" ref={arrelRef} onKeyDown={alTeclatDeLaConversa}>
       <CapcaleraConversa
         fil={fil}
         onTorna={onBack}

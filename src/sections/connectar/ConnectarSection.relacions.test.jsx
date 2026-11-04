@@ -17,7 +17,9 @@ import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
        G2-02): la connexió de sempre. Actualitzada a posta (FEDI-22, ordre del
        Mestre, 261103): ara «Guardar a les teues notes», i un primari per
        vista: connectar-hi en un perfil (el de la relació) i guardar-ho en un
-       element (el del peu de les notes).
+       element (el del peu de les notes). Actualitzada a posta (FEDI-26, ordre
+       directa del Mestre, Regla 1; correcció connectar-03, 261104): les notes
+       només són d'un element; des d'un perfil no es munten ni es crea cap nota.
    Actualitzada a posta (IDEA-22, pla 261025_0045 T5; Directiva del Mestre
    261025): el camí de la relació es diu «Connexió directa», i una entitat
    sense xat privat on arribar ja no és un carreró: el botó porta al xat de
@@ -598,18 +600,18 @@ describe('Entre persones · l’autor d’un element', () => {
 describe('Formar part de l’entitat', () => {
   beforeEach(() => { m.params = new URLSearchParams(PERFIL_RENTONAR); });
 
-  test('els tres camins en ordre, i una sola fitxa per a la relació i per a formar-ne part', async () => {
-    const { container } = render(ambXat());
+  test('els camins en ordre, sense notes, i una sola fitxa per a la relació i per a formar-ne part', async () => {
+    const { container, unmount } = render(ambXat());
     expect(await screen.findByRole('heading', { name: 'Connectar amb El Rentonar' })).toBeTruthy();
     /* Actualitzada a posta (FEDI-22, ordre del Mestre, 261103): les capçaleres dels camins són els kickers de les
        targetes i el títol del plegable de les notes; en un perfil, l'entradeta de la vista social (sense barrets, C5). */
     const capçaleres = [...container.querySelectorAll('.sdp-connectar__targeta > .sdp-connectar__tipus, .sdp-connectar__notes-titol')].map((p) => p.textContent);
-    /* Actualitzada a posta (261024 correccions): directiva del Mestre 15:05 (Gemini G2-02), cap «MAS»; R3-05, l'entradeta
-       i l'ajuda del camí diuen el mateix que «Qui ho pot vore?» (en privat no avisa ningú; persones o grups reben l'enllaç). */
-    expect(capçaleres).toEqual(['Connexió directa', 'Formar part', 'Guardar a les teues notes']);
+    /* Actualitzada a posta (261024 correccions): directiva del Mestre 15:05 (Gemini G2-02), cap «MAS».
+       Actualitzada a posta (FEDI-26, Regla 1; correcció connectar-03, 261104): en un perfil, cap plegable de notes
+       ni la seua ajuda; l'ajuda de R3-05 es comprova ara en un element amb camins, al final. */
+    expect(capçaleres).toEqual(['Connexió directa', 'Formar part']);
     expect(screen.getByText('Connectar-te no et fa membre de res.')).toBeTruthy();
-    expect(screen.getByText(/^Una còpia al teu Bloc per a llegir-la després/).textContent)
-      .toBe('Una còpia al teu Bloc per a llegir-la després, que no et fa membre de res. Tu tries qui ho pot vore: en privat no avisa ningú; a persones o grups de xat els enviarem l’enllaç per xat, i a tot el poble la compartiràs tu al Mur.');
+    expect(screen.queryByText(/^Una còpia al teu Bloc per a llegir-la després/)).toBeNull();
     expect(m.perfil).toHaveBeenCalledTimes(1);
     const formarPart = cami('Formar part');
     expect(within(formarPart).getByRole('heading', { name: 'Formar part de l’entitat' })).toBeTruthy();
@@ -620,6 +622,14 @@ describe('Formar part de l’entitat', () => {
        guardar-ho en un element (el de la confirmació viu dins del <dialog>, tancat). */
     const primaris = [...container.querySelectorAll('.sdp-boto--primari')].filter((boto) => !boto.closest('dialog'));
     expect(primaris.map((boto) => boto.textContent)).toEqual(['Connectar amb El Rentonar']);
+    /* R3-05 · En un element amb camins, l'ajuda de les notes diu el mateix que «Qui ho pot vore?» (en privat no
+       avisa ningú; persones o grups reben l'enllaç). */
+    unmount();
+    m.params = new URLSearchParams(`${SAMARRETA}&organitzacio=${UUID_ORG}`);
+    render(ambXat());
+    await screen.findByRole('group', { name: 'Formar part' });
+    expect(screen.getByText(/^Una còpia al teu Bloc per a llegir-la després/).textContent)
+      .toBe('Una còpia al teu Bloc per a llegir-la després, que no et fa membre de res. Tu tries qui ho pot vore: en privat no avisa ningú; a persones o grups de xat els enviarem l’enllaç per xat, i a tot el poble la compartiràs tu al Mur.');
   });
 
   test('la sol·licitud: confirmació amb el text que s’enviarà, l’afegit opcional, el xat de l’entitat i després la conversa', async () => {
@@ -796,24 +806,18 @@ describe('Formar part de l’entitat', () => {
     expect(m.perfil).toHaveBeenCalledWith(UUID_ORG, expect.any(Object));
   });
 
-  test('el MAS continua sent el seu camí: el botó gran connecta la nota i no va a cap xat', async () => {
-    render(ambXat());
-    await screen.findByRole('heading', { name: 'Connectar amb El Rentonar' });
-    /* Actualitzada a posta (FEDI-22) · En un perfil, «Guardar a les teues notes» va plegat i el seu botó és
-       secundari; la nota es desa amb el nom de la fitxa (C11), mai amb el title de l'URL. */
-    const plegable = document.querySelector('details.sdp-connectar__notes');
-    expect(plegable.open).toBe(false);
-    fireEvent.click(screen.getByText('Guardar a les teues notes').closest('summary'));
-    expect(plegable.open).toBe(true);
-    const boto = screen.getByRole('button', { name: CONNECTA });
-    expect(boto.classList.contains('sdp-boto--secundari')).toBe(true);
-    await act(async () => { fireEvent.click(boto); });
-    expect(m.crea).toHaveBeenCalledTimes(1);
-    expect(m.crea.mock.calls[0][0].title).toBe('El Rentonar');
-    expect(m.crea.mock.calls[0][0].origen).toMatchObject({ objecte: 'entitat', ruta: `/empresa/${UUID_ORG}`, titol: 'El Rentonar' });
-    expect(m.navigate).toHaveBeenCalledWith('/notes?nota=n-9', { replace: true });
-    expect(m.xat.sendChatMessage).not.toHaveBeenCalled();
-    expect(m.segueix).not.toHaveBeenCalled();
+  /* Actualitzada a posta (FEDI-26, ordre directa del Mestre, Regla 1; correcció connectar-03, 261104) · Abans
+     «el MAS continua sent el seu camí» desava una nota «El Rentonar» des del perfil d'El Rentonar (FEDI-22, C11):
+     és el cas que l'ordre prohibix. Ara el perfil no oferix cap nota i connectar-hi no en crea cap. */
+  test('des del perfil d’una entitat no hi ha cap nota: connectar-hi és la relació, no el Bloc', async () => {
+    const { container } = render(ambXat());
+    const connecta = await screen.findByRole('button', { name: 'Connectar amb El Rentonar' });
+    expect(container.querySelector('details.sdp-connectar__notes')).toBeNull();
+    expect(screen.queryByText('Guardar a les teues notes')).toBeNull();
+    expect(screen.queryByRole('button', { name: CONNECTA })).toBeNull();
+    await act(async () => { fireEvent.click(connecta); });
+    expect(m.segueix).toHaveBeenCalledWith({ tipus: 'entitat', id: UUID_ORG }, {});
+    expect(m.crea).not.toHaveBeenCalled();
   });
 });
 
@@ -842,6 +846,26 @@ describe('peces pures', () => {
     expect(ambDeLEnllac(`/xat?amb=${UUID_SOCDEPOBLE}`)).toBe(UUID_SOCDEPOBLE);
     expect(ambDeLEnllac('/xat?sobre=entitat:x')).toBeNull();
     expect(ambDeLEnllac('https://fora.test/xat?amb=x')).toBeNull();
+  });
+
+  /* FEDI-26 (correcció connectar-06, 261104) · Els ids del servidor que la llavor
+     declara com a àlies d'El Rentonar i de Sóc de Poble conserven el contacte en
+     remot; els àlies de la llavor ('rentonar', 'socdepoble'), no. Els dos ids van
+     escrits a mà: són els que nomena la decisió, i la prova no mira el format
+     (W4-10). */
+  test('FEDI-26 · remot · els ids del servidor de la llavor conserven el contacte; els àlies de la llavor, no', () => {
+    const opcions = { currentUser: { id: 'U' }, dataMode: 'remote', xat: XAT_REMOT };
+    const UUID_RENTONAR_REAL = 'b2c87505-53b1-4108-902f-2313e77b9968';
+    const UUID_SOCDEPOBLE_REAL = 'a240e870-4aef-4d92-b138-e8b4e2f2123a';
+    expect(perfilPerConnectar({ tipus: 'entitat', id: UUID_RENTONAR_REAL, nom: 'El Rentonar' }, opcions)).toMatchObject({
+      interlocutor: { id: UUID_RENTONAR_REAL }, seguiment: { tipus: 'entitat', id: UUID_RENTONAR_REAL }
+    });
+    expect(perfilPerConnectar({ tipus: 'entitat', id: 'rentonar', nom: 'El Rentonar' }, opcions)).toBeNull();
+    /* El pilot va pel xat de Sóc de Poble (sense interlocutor); amb l'id del servidor, també es pot seguir. */
+    expect(perfilPerConnectar({ tipus: 'entitat', id: UUID_SOCDEPOBLE_REAL, nom: 'Sóc de Poble' }, opcions)).toMatchObject({
+      interlocutor: null, seguiment: { tipus: 'entitat', id: UUID_SOCDEPOBLE_REAL }
+    });
+    expect(perfilPerConnectar({ tipus: 'entitat', id: 'socdepoble', nom: 'Sóc de Poble' }, opcions).seguiment).toBeNull();
   });
 });
 
@@ -1064,10 +1088,11 @@ describe('IDEA-22 · la titular d’una entitat, si ella ho ha triat', () => {
     expect(titols).toEqual(['Connectar amb El Rentonar', 'Connectar amb Pepa Soler']);
     expect(within(relacio).getByRole('heading', { name: 'Connectar amb El Rentonar' })
       .compareDocumentPosition(intro) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
-    /* Actualitzada a posta (FEDI-22, ordre del Mestre, 261103): els kickers de les targetes i el plegable de les
-       notes; un primari per vista, el de la relació amb l'entitat (mai el de la titular). */
+    /* Actualitzada a posta (FEDI-22, ordre del Mestre, 261103): els kickers de les targetes; un primari per vista,
+       el de la relació amb l'entitat (mai el de la titular). Actualitzada a posta (FEDI-26, Regla 1; correcció
+       connectar-03, 261104): sense el plegable de les notes. */
     const capçaleres = [...container.querySelectorAll('.sdp-connectar__targeta > .sdp-connectar__tipus, .sdp-connectar__notes-titol')].map((p) => p.textContent);
-    expect(capçaleres).toEqual(['Connexió directa', 'Formar part', 'Guardar a les teues notes']);
+    expect(capçaleres).toEqual(['Connexió directa', 'Formar part']);
     const primaris = [...container.querySelectorAll('.sdp-boto--primari')].filter((boto) => !boto.closest('dialog'));
     expect(primaris.map((boto) => boto.textContent)).toEqual(['Connectar amb El Rentonar']);
     /* Una sola fitxa de perfil: la titular arriba de la seua lectura, no d'un altre loadPerfilPublic. */
@@ -1229,8 +1254,9 @@ describe('CA-6 · els textos nous de Connectar', () => {
     expect(await screen.findByRole('heading', { name: 'Conectar con Pepa Soler' })).toBeTruthy();
     expect(screen.getByRole('group', { name: 'Conexión directa' })).toBeTruthy();
     /* Actualitzada a posta (261024 correccions): «En tus notas», sense «MAS» (Gemini G2-02). Actualitzada a posta
-       (FEDI-22): el plegable de les notes, «Guardar en tus notas». */
-    expect(screen.getByText('Guardar en tus notas')).toBeTruthy();
+       (FEDI-22): el plegable de les notes, «Guardar en tus notas». Actualitzada a posta (FEDI-26, Regla 1; correcció
+       connectar-03, 261104): en un perfil no es munta. */
+    expect(screen.queryByText('Guardar en tus notas')).toBeNull();
     expect(await screen.findByText('Pepa Soler recibirá un mensaje en el chat diciendo que has conectado.')).toBeTruthy();
     await act(async () => { fireEvent.click(screen.getByRole('button', { name: 'Conectar con Pepa Soler' })); });
     expect(m.xat.sendChatMessage.mock.calls[0][1]).toBe('Conexión nueva: he conectado contigo en Sóc de Poble.');

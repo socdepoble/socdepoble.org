@@ -16,10 +16,14 @@
  *         nova, rel="noopener noreferrer" i l'avís de domini enganyós) i el
  *         botó que obri la conversa on es va compartir. Són dos controls
  *         GERMANS: un <a> no pot viure dins d'un <button>;
- *       - Fitxers i Documents: F0 només envia text (SDP-XAT-010). Sense cap
- *         element, la targeta «En construcció» diu què hi haurà i que els
- *         adjunts arriben amb F1. Si n'arriben (d'un altre client o del
- *         servidor), una fila per element amb la icona del tipus i sense
+ *       - Fitxers i Documents: sense cap element, la targeta «En construcció»
+ *         diu què hi haurà i què es pot enviar pel xat. T7a (261104,
+ *         xat-ux-a11y-06) · Abans deia que F0 només enviava text
+ *         (SDP-XAT-010), i F1 ja envia fotos, vídeo i missatges de veu: l'avís
+ *         (avisAdjunts) ho diu, amb «si la conversa ho permet» (un node o una
+ *         conversa sense la capacitat xatMultimedia no en mostra el +; este
+ *         component no llig cap context), i que els documents encara no. Si
+ *         n'arriben, una fila per element amb la icona del tipus i sense
  *         miniatura: encara no hi ha contracte d'URL;
  *   · sempre, l'avís local: només es veu el que s'ha carregat en esta sessió.
  * Cap previsualització d'enllaços: demanaria un servidor intermediari.
@@ -64,7 +68,12 @@ export const TEXTOS_MULTIMEDIA = Object.freeze({
     enllacos: Object.freeze(['section.xat.vista.multimedia.enllacos.buit', "Encara no s'ha compartit cap enllaç en les converses obertes."]),
     documents: Object.freeze(['section.xat.vista.multimedia.documents.buit', "Ací hi haurà els documents que s'han compartit en les converses."])
   }),
+  /* T7a (261104, xat-ux-a11y-06) · `adjunts` ja no es pinta: era fals des de
+     F1. Es conserva el parell perquè la clau continua als cinc diccionaris i
+     src/config/i18n.claus.test.js en fixa la reserva; retirar-la és feina de
+     qui toca els diccionaris. La vista pinta `avisAdjunts`, clau nova. */
   adjunts: Object.freeze(['section.xat.vista.multimedia.adjunts', 'Els adjunts arriben amb la fase F1 del xat: ara només es pot enviar text.']),
+  avisAdjunts: Object.freeze(['section.xat.vista.multimedia.avisAdjunts', 'Pel xat ja es poden enviar fotos, vídeos i missatges de veu, si la conversa ho permet. Els documents, encara no.']),
   avisLocal: Object.freeze(['section.xat.vista.multimedia.avisLocal', 'Només es veu el contingut de les converses obertes en esta sessió.']),
   obri: Object.freeze(['section.xat.vista.multimedia.obri', 'Obri la conversa de {nom}']),
   senseData: Object.freeze(['section.xat.vista.multimedia.senseData', 'Sense data'])
@@ -184,7 +193,8 @@ export default function VistaMultimedia({
   } else if (pestanya === 'enllacos') {
     cos = <p className="sdp-workspace-state" role="status">{tr(TEXTOS_MULTIMEDIA.buit.enllacos)}</p>;
   } else {
-    /* F0 només envia text: els adjunts encara no existixen, i es diu. */
+    /* Res compartit encara: què hi haurà i, cert des de F1 (xat-ux-a11y-06),
+       què es pot enviar pel xat. */
     cos = (
       <section className="sdp-xat-construccio" aria-labelledby={idBuit}>
         <span className="sdp-xat-construccio__icona" aria-hidden="true">
@@ -192,7 +202,7 @@ export default function VistaMultimedia({
         </span>
         <h3 id={idBuit} className="sdp-xat-construccio__titol">{t(...TEXTOS_CONSTRUCCIO.titol)}</h3>
         <p className="sdp-xat-construccio__text">{tr(TEXTOS_MULTIMEDIA.buit[pestanya])}</p>
-        <p className="sdp-xat-construccio__avis">{tr(TEXTOS_MULTIMEDIA.adjunts)}</p>
+        <p className="sdp-xat-construccio__avis">{tr(TEXTOS_MULTIMEDIA.avisAdjunts)}</p>
       </section>
     );
   }

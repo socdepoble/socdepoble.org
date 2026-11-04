@@ -13,8 +13,8 @@
  * cap «Obrir…» (ni dalt ni baix). Baix hi ha el camí que li queda a la
  * persona (cap instal·lació: no n'hi ha cap mecanisme) i «Desactiva esta
  * eina», que només escriu la preferència del Panell. Els textos, en les cinc
- * llengües. Les eines en obres (Mapa, Vehicle, Animalets) conserven el botó
- * inert.
+ * llengües. Les eines en obres (Mapa i Animalets; Vehicle ja no, des de
+ * llibre-deutes-02, 261104) conserven el botó inert.
  *
  * Onada 10 (261010; pla 261010_1121; decisió del Mestre del 261010) ·
  *   · M4 · La pàgina diu el mateix que la targeta canònica: si el plugin
@@ -488,8 +488,11 @@ describe('el botó Obrir', () => {
     expect(container.querySelector('.hero-image img').getAttribute('src')).toBe('/assets/ui/plugins/gestoria_vinyeta.jpg');
   });
 
-  /* Ordre del Mestre (261007) · Bàscula descartada per ara: fora d'esta llista. */
-  test.each([['mapa', 'Obrir el Mapa'], ['vehicle', 'Obrir Vehicle Compartit'], ['animalets', 'Obrir Animalets']])(
+  /* Ordre del Mestre (261007) · Bàscula descartada per ara: fora d'esta llista.
+     llibre-deutes-02 (261104) · Vehicle Compartit tampoc: IDEA-61 li va
+     donar la secció /vehicle, i el seu enllaç el prova
+     PluginPage.vehicle.test.jsx. */
+  test.each([['mapa', 'Obrir el Mapa'], ['animalets', 'Obrir Animalets']])(
     '%s: en obres, inert', (id, nom) => {
       munta(`/plugin/${id}`);
       expect(screen.getByRole('button', { name: `${nom} (en obres)` }).getAttribute('aria-disabled')).toBe('true');

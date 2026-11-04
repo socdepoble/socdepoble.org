@@ -3956,6 +3956,8 @@ details[open] summary.accordion-header svg:last-child {
   /* Entrada del menú (Kowalski, 261004): 180ms des de --sdp-escala-aparicio
      i l'opacitat, amb l'origen a la cantonada del disparador (dalt a la
      dreta; a l'esquerra en --esquerra i a les bombolles de l'altra part).
+     xat-ux-a11y-01 (261104) · Al missatge en pantalla ampla, la cantonada
+     de la fila del costat de l'autor, on naix el menú.
      El tancament és instantani: el menú es desmunta. */
   .sdp-xat-menu {
     position: absolute;
@@ -4196,9 +4198,10 @@ details[open] summary.accordion-header svg:last-child {
     font-size: var(--sdp-text-meta);
   }
   /* El «⋯» de la bombolla ix en passar per damunt o amb el focus; als
-     dispositius sense ratolí és sempre visible. */
+     dispositius sense ratolí és sempre visible. xat-ux-a11y-01 (261104) · No
+     posiciona: el seu menú penja de la fila (.sdp-xat-bombolla-wrap). */
   .sdp-xat-bombolla__accions {
-    position: relative;
+    position: static;
     flex: none;
     opacity: 0;
     transition: opacity var(--sdp-t);
@@ -4214,6 +4217,21 @@ details[open] summary.accordion-header svg:last-child {
     .sdp-xat-bombolla__accions .sdp-xat-icona:hover { background: var(--sdp-fons-subtil); }
   }
   .sdp-xat-bombolla__accions .sdp-xat-icona:focus-visible { outline-color: var(--sdp-focus); }
+  /* xat-ux-a11y-01 (261104, App Store 1.2) · El menú del missatge penja de
+     la fila (.sdp-xat-bombolla-wrap), no del «⋯»: penjat del «⋯» no sabia on
+     acabava la bombolla i eixia de la pantalla («Sí» a 375px; una aliena
+     ampla a 768 i 1024px), i amagava «Denuncia el missatge». L'altura i
+     l'amplada són les de sempre: just davall del «⋯», que va dalt de la fila
+     (top: 100% seria el peu de tota la bombolla), i 14rem, amb les etiquetes
+     llargues en dues línies (penjat de la fila, «Bloqueja …» amb un nom
+     llarg l'estiraria fins a l'amplada de la fila). */
+  .sdp-xat-bombolla-wrap > .sdp-xat-bombolla__accions > .sdp-xat-menu {
+    top: calc(var(--sdp-touch) + var(--sdp-space-1));
+    width: min-content;
+  }
+  /* En pantalla ampla naix a la vora de la llista del costat de l'autor, on
+     toca la fila, i s'obri cap a dins: l'aliena des de l'esquerra i la meua
+     des de la dreta (la regla base). */
   .sdp-xat-item--altre .sdp-xat-menu { right: auto; left: 0; transform-origin: top left; }
   /* Fase D (261020, revisió al navegador a 375px) · En pantalla estreta el
      menú del missatge s'obri cap a la bombolla, no cap a la vora: amb
@@ -4221,6 +4239,12 @@ details[open] summary.accordion-header svg:last-child {
      de la pantalla i amagava l'acció de denunciar (App Store 1.2). */
   .sdp-root[data-sdp-estret] .sdp-xat-item--altre .sdp-xat-menu { right: 0; left: auto; transform-origin: top right; }
   .sdp-root[data-sdp-estret] .sdp-xat-item--meu .sdp-xat-menu { right: auto; left: 0; transform-origin: top left; }
+  /* xat-ux-a11y-01 (261104) · I amb una bombolla més curta que el menú
+     («Sí», «Gràcies») s'atura a la vora de la llista: el marge negatiu (100%
+     és l'amplada de la fila) el torna cap a dins tot el que la fila no arriba
+     als 14rem. Si la fila n'arriba, el marge és 0 i el menú no es mou. */
+  .sdp-root[data-sdp-estret] .sdp-xat-item--altre .sdp-xat-bombolla-wrap .sdp-xat-menu { margin-right: min(0px, 100% - 14rem); }
+  .sdp-root[data-sdp-estret] .sdp-xat-item--meu .sdp-xat-bombolla-wrap .sdp-xat-menu { margin-left: min(0px, 100% - 14rem); }
 
   /* Grups (torn 260930, T1; Ronda 2, D1): entre dos files la llista posa
      només el gap (8px), perquè D1 lleva el marge editorial del li; dins d'una

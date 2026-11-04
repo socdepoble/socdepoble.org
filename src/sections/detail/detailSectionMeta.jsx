@@ -880,6 +880,15 @@ export function buildMultimediaDetailSectionMeta({ mediaItems = [], t }) {
   };
 }
 
+/* seguretat-01 (261104) · El text d'una píndola del detall d'un acte (el dia i
+   el tipus): una cadena, tal qual; un número finit, el seu text (React ja el
+   pintava igual); una buida (0, ''), cap, i passa la següent, com feia el ||;
+   qualsevol altra cosa, cap. El traductor d'entrada (mapejadorSeccions.js) ja
+   neteja date_label i type_label d'una publicació d'un veí, però la llavor i
+   app_content no hi passen: un objecte com a fill de React tombava la pàgina de
+   l'acte («Objects are not valid as a React child»). */
+const textDeLaPindola = (valor) => (valor && (typeof valor === 'string' || Number.isFinite(valor)) ? String(valor) : '');
+
 export function buildEventsDetailSectionMeta({ events = [], t }) {
   return {
     title: t('section.detail.events.title', 'Events'),
@@ -895,8 +904,8 @@ export function buildEventsDetailSectionMeta({ events = [], t }) {
     renderBody: (item) => (
       <>
         <div className="badge-row">
-          <span className="pill"><CalendarDays size={14} /> {item.date_label || item.date || ''}</span>
-          <span className="pill">{item.type_label || item.type || t('section.detail.events.typeFallback', 'Agenda')}</span>
+          <span className="pill"><CalendarDays size={14} /> {textDeLaPindola(item.date_label) || textDeLaPindola(item.date)}</span>
+          <span className="pill">{textDeLaPindola(item.type_label) || textDeLaPindola(item.type) || t('section.detail.events.typeFallback', 'Agenda')}</span>
           <span className="pill"><UserRound size={14} /> {item.author_name || t('section.detail.events.organisation', 'Organització')}</span>
           {item.file ? <span className="pill">{item.file}</span> : null}
         </div>

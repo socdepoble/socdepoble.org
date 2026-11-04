@@ -13,7 +13,7 @@ import { extractPlainText } from '../../utils/contentAdapter.js';
 import { promoteToPublic, teCapacitat } from '../../data/backendPort.js';
 import { dataIsoONull } from '../../utils/calendari.js';
 import { estatPerAlEditor } from './useEstatDesamentNota.js';
-import { ErrorPublicacio, motiuDesatPendent, motiuModeLocal, motiuSignaturaAliena } from './visibilitatNota.js';
+import { ErrorPublicacio, esRebuigDeSeccio, motiuDesatPendent, motiuModeLocal, motiuSeccioPublicada, motiuSignaturaAliena } from './visibilitatNota.js';
 import { autorDe } from '../../config/navigation.js';
 import { aliesDeLActor } from '../../data/identitatsSeed.js';
 import { pertanyALActor } from './masDeLUsuari.js';
@@ -116,7 +116,7 @@ export function NotesProvider({ children }) {
   const { locale, externalConfig } = useUIState();
   const { normalizeSearchText, t } = useUIActions();
   const { noteFolders, notes: rawNotes, creaNota, updateNote: updateNoteContext, mouNota: mouNotaContext, esborraNota: esborraNotaContext, status, error, scopeKey, workspaceKey, notesComplete, resolveNote, refresh, config, canCreate, nomesLectura = false } = useNotesData();
-  const { sendSectionSubmission, feedPosts } = useMur();
+  const { sendSectionSubmission, feedPosts, marketItems } = useMur();
   /* Poliment T41/T43 · Qui signa la publicació: l'actor que MurContext envia
      com a author_org_id, també al nom, la foto i el poble del payload. */
   const { actor, memberships } = useIdentitatOReserva();
@@ -129,9 +129,23 @@ export function NotesProvider({ children }) {
   /* Grup E (261008) · Les publicacions del Mur que ja hi ha carregades, per a
      la guarda de re-signatura de publishNote. En una referència: el Mur es
      refresca després de cada publicació i publishNote no ha de canviar per
-     això (el valor del context es tornaria a fer a cada refresc). */
-  const publicacionsDelMur = useRef(feedPosts);
-  useLayoutEffect(() => { publicacionsDelMur.current = feedPosts; }, [feedPosts]);
+     això (el valor del context es tornaria a fer a cada refresc).
+     idea61-02 (Gauntlet T7a, 261104) · I les del Mercat: des d'IDEA-61
+     publishNote també hi escriu (seccioDAmbit). Per secció (la de la consulta
+     que les ha portades), perquè la guarda de secció (idea61-01) sàpia on viu
+     cada fila. Un useMur sense alguna de les llistes (un doble de proves
+     d'abans) no en porta cap d'eixa secció. */
+  const publicacionsDelMur = useRef({ mur: feedPosts, mercat: marketItems });
+  useLayoutEffect(() => { publicacionsDelMur.current = { mur: feedPosts, mercat: marketItems }; }, [feedPosts, marketItems]);
+  /* La fila carregada amb eixe id i la secció on viu ({ element, seccio }), o null. */
+  const publicacioCarregada = useCallback((id) => {
+    const idPublicat = String(id);
+    for (const [seccio, llista] of Object.entries(publicacionsDelMur.current || {})) {
+      const element = (Array.isArray(llista) ? llista : []).find((fila) => fila && String(fila.id) === idPublicat);
+      if (element) return { element, seccio };
+    }
+    return null;
+  }, []);
 
   const parsedNotesCache = useRef(new Map());
 
@@ -294,9 +308,10 @@ export function NotesProvider({ children }) {
        comportament») · La guarda de re-signatura. Una nota ja publicada
        s'edita com a esborrany privat, i el Mur només canvia amb «Actualitzar
        al Mur», que fa un upsert amb el mateix id signat per l'actor actiu
-       (MurContext). Si la publicació (la del Mur amb publishedSubmissionId)
-       la signa una altra identitat, no s'envia res: el motiu va pel canal de
-       sempre (ErrorPublicacio, que el selector diu en línia). Si no és entre
+       (MurContext). Si la publicació (la del Mur o, idea61-02, la del Mercat
+       amb publishedSubmissionId) la signa una altra identitat, no s'envia
+       res: el motiu va pel canal de sempre (ErrorPublicacio, que el selector
+       diu en línia). Si no és entre
        les carregades (el port en porta una finestra), o no se sap qui la
        signa, o no hi ha actor, com abans.
        Revisió del Gauntlet 261017 (ID6) · Els àlies de l'actor, amb el mode
@@ -307,13 +322,28 @@ export function NotesProvider({ children }) {
        cap publicació d'avui, però la guarda no tornarà a obrir el forat el
        dia que la de dalt passe al mode resolt. */
     if (activeNote.isPublished && activeNote.publishedSubmissionId != null && actor?.id) {
-      const idPublicat = String(activeNote.publishedSubmissionId);
-      const publicada = (publicacionsDelMur.current || []).find((element) => element && String(element.id) === idPublicat);
+      /* idea61-02 · La del Mur o la del Mercat (publicacioCarregada). */
+      const publicada = publicacioCarregada(activeNote.publishedSubmissionId)?.element;
       if (publicada && autorDe(publicada) && !pertanyALActor(publicada, aliesDeLActor(actor, { dataMode: modeDeDadesResolt(config) }))) {
         const motiu = motiuSignaturaAliena(publicada.author_name || publicada.seller, t);
         showToast(motiu, 'info');
         return Promise.reject(new ErrorPublicacio(motiu));
       }
+    }
+    /* idea61-01 (Gauntlet T7a, 261104) · Una publicació no canvia mai de
+       secció: el trigger sdp_force_author rebutja l'upsert amb un section_id
+       nou (SDP-SEC-002) i la fila es queda on era. Si la fila carregada amb
+       l'id que s'enviarà (el de l'upsert de baix) viu en una altra secció que
+       la de l'àmbit de la fitxa (moure la nota entre el Mur i el Mercat amb
+       «On es publica?», la carpeta o ?ambit=), no s'envia res i el motiu diu
+       on viu i què es pot fer, pel canal de sempre (ErrorPublicacio). Fora de
+       la finestra carregada, el rebuig del servidor (al catch de baix). */
+    const seccioPrevista = seccioDAmbit((compartir ? null : fitxaDeNota(activeNote.fitxa))?.ambit);
+    const seccioDeLaFila = publicacioCarregada(activeNote.publishedSubmissionId || activeNote.id)?.seccio;
+    if (seccioDeLaFila && seccioDeLaFila !== seccioPrevista) {
+      const motiu = motiuSeccioPublicada(seccioDeLaFila, t);
+      showToast(motiu, 'info');
+      return Promise.reject(new ErrorPublicacio(motiu));
     }
     const key = `${workspaceKey}:${activeNote.id}`;
     if (publishing.current.has(key)) return publishing.current.get(key);
@@ -541,6 +571,15 @@ export function NotesProvider({ children }) {
        confirmar». L'error passa tal qual, sense toast: l'editor torna a obrir
        la porta i ho reintenta una vegada (visibilitatNota.js · publicaAmbMotiu). */
     if (operationRef.current === operation && esRebuigDeNormes(error)) throw error;
+    /* idea61-01 (Gauntlet T7a, 261104) · El servidor no deixa canviar la
+       secció d'una fila (SDP-SEC-002): reintentar-ho no servix mai. La fila
+       viu a l'altra secció de publishNote (seccioDAmbit només en torna dues),
+       i el motiu ho diu en lloc de «Reintenta-la». */
+    if (operationRef.current === operation && esRebuigDeSeccio(error)) {
+      const motiu = motiuSeccioPublicada(seccioPrevista === 'mercat' ? 'mur' : 'mercat', t);
+      showToast(motiu, 'info');
+      throw new ErrorPublicacio(motiu);
+    }
     if (operationRef.current === operation) {
       /* T2 · En mode de proves el port rebutja sense xarxa (code 'mode-local'):
          dir «pendent de confirmar» faria creure que s'ha enviat. */
@@ -555,6 +594,8 @@ export function NotesProvider({ children }) {
       if (error?.name === 'AbortError' || operationRef.current !== operation) return false;
       /* Integració 261024 · El rebuig per les normes ve de dins (vegeu dalt): passa tal qual. */
       if (esRebuigDeNormes(error)) throw error;
+      /* idea61-01 · El motiu de la secció també ve de dins, amb el seu toast fet. */
+      if (error instanceof ErrorPublicacio) throw error;
       /* T47 · El desat previ no s'ha confirmat: el motiu és el de la ploma
          (conflicte D01, validació, sense còpia al dispositiu…), no «torna-ho a provar». */
       const motiu = motiuDesatPendent(estatPerAlEditor(bgSaveManager.estat(scopeKey, activeNote.id)).detall, t);
@@ -563,7 +604,7 @@ export function NotesProvider({ children }) {
     }).finally(() => publishing.current.delete(key));
     publishing.current.set(key, result);
     return result;
-  }, [noteFolders, sendSectionSubmission, saveNoteField, externalConfig, autoria, actor, config, workspaceKey, scopeKey, operation, updateNoteContext, clearLocalNoteFields, showToast, nomesLectura, t]);
+  }, [noteFolders, sendSectionSubmission, saveNoteField, externalConfig, autoria, actor, config, workspaceKey, scopeKey, operation, updateNoteContext, clearLocalNoteFields, showToast, nomesLectura, t, publicacioCarregada]);
 
   const compartirNota = useCallback((note) => publishNote(note, { mode: 'compartir' }), [publishNote]);
 

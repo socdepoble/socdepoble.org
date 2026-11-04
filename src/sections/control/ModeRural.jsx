@@ -6,18 +6,44 @@ import { useSessioOpcional } from '../../app/contexts/SessionContext.jsx';
 import { useIdentitatOpcional } from '../../app/contexts/IdentitatContext.jsx';
 import { useCoreContent } from '../../app/contexts/CoreContentContext.jsx';
 import { normalizeBackendConfig } from '../../config/backendConfig.js';
+import { sanejaEtiqueta, sanejaIdentificador } from '../../config/configAmfitrio.js';
 import { tradueix, useTraductorOpcional } from '../../components/PedraSeca/hooks/useTraductorOpcional.js';
 import { capturaSessio, entradaSessio } from '../../data/identitat.js';
 import { creaSessioRural, lligJsonRural } from '../../data/sessioRural.js';
 import { TEXTOS_MODE_RURAL as TX } from './textosModeRural.js';
 
 const MAX_FITXER = 4 * 1024 * 1024;
+/* control-06 (revisió del Panell, 261104) · L'error porta un codi i executa()
+   el pinta traduït (TX.fitxerGran); el missatge és la reserva. */
 async function textDeFitxer(fitxer) {
-  if (!fitxer || fitxer.size > MAX_FITXER) throw new Error('Tria un fitxer JSON de fins a 4 MB.');
+  if (!fitxer || fitxer.size > MAX_FITXER) throw Object.assign(new Error(TX.fitxerGran[1]), { code: 'RURAL_FITXER_GRAN' });
   return fitxer.text();
 }
 
-export default function ModeRural({ onBack, fabrica = creaSessioRural }) {
+/* control-02 (revisió del Panell, 261104) · El poble del Mode rural.
+   `tenantId` és l'UUID de public.towns i les fitxes de `towns` (la llavor, el
+   local i l'app_content remot) porten l'id slug i el camp `title`
+   (configAmfitrio.js): `towns.find(p => p.id === tenantId)?.name` no casava
+   mai, i el text pendent, TRADUÏT a l'idioma de la interfície, es gravava com
+   a `municipi` de cada nota i del paquet d'emergència signat.
+   · El nom: el de la fitxa del tenant (`id` o, si el catàleg el declara,
+     `tenant_id`), amb `name` o `title` i les guardes de FitxaOpenData.jsx.
+   · La dada gravada: eixe nom; sense, el tenant (estable i sense idioma) i,
+     sense tenant (llavor), la reserva canònica. Mai el traductor ni la
+     configuració de l'amfitrió, un global que qualsevol script pot escriure.
+   · El text visible: el nom; sense, el de la fitxa del poble que declara
+     l'amfitrió (`poble`, per id o slug, com pobleAmfitrio.js) o el seu
+     `nomPoble`; si no, el text pendent traduït, com abans. Ja no es pinta el
+     slug cru ni `townName`, que no és cap clau del contracte d'amfitrió. */
+function nomDeLaFitxa(towns, casa) {
+  const fitxa = Array.isArray(towns) ? towns.find(town => town && casa(town)) : null;
+  const nom = typeof fitxa?.name === 'string' ? fitxa.name.trim() : typeof fitxa?.title === 'string' ? fitxa.title.trim() : '';
+  return nom && nom.length <= 120 && !/[<>\u0000-\u001f\u007f]/.test(nom) ? nom : '';
+}
+const esDelTenant = tenant => town => [town.id, town.tenant_id].some(valor => typeof valor === 'string' && valor.toLowerCase() === tenant);
+const esDelPoble = poble => town => String(town.id) === poble || (town.slug != null && String(town.slug) === poble);
+
+export default function ModeRural({ onBack, fabrica = creaSessioRural, vistaRef }) {
   const t = useTraductorOpcional();
   const sessio = useSessioOpcional();
   const identitat = useIdentitatOpcional();
@@ -25,11 +51,15 @@ export default function ModeRural({ onBack, fabrica = creaSessioRural }) {
   const { towns } = useCoreContent();
   const c = normalizeBackendConfig(externalConfig || {});
   const abast = { persona: `${sessio?.currentUser?.id || 'anon'}::${identitat?.actorKey || 'persona'}`, tenant: c.tenantId || 'local', endpoint: c.backendUrl || (c.dataMode === 'remote' ? '' : c.dataMode), mode: c.dataMode };
-  const municipi = towns?.find(p => p.id === c.tenantId)?.name || externalConfig?.townName || externalConfig?.poble || tradueix(t, TX.municipiPendent);
-  return <ModeRuralDins key={JSON.stringify([abast, entradaSessio(), sessio?.generacio ?? null])} abast={abast} municipi={municipi} potEntrar={Boolean(sessio?.currentUser?.id)} onBack={onBack} fabrica={fabrica} />;
+  const delTenant = c.tenantId ? nomDeLaFitxa(towns, esDelTenant(String(c.tenantId).toLowerCase())) : '';
+  const poble = sanejaIdentificador(externalConfig?.poble);
+  const delAmfitrio = poble ? nomDeLaFitxa(towns, esDelPoble(poble)) : '';
+  const municipi = delTenant || c.tenantId || TX.municipiPendent[1];
+  const nomVisible = delTenant || delAmfitrio || sanejaEtiqueta(externalConfig?.nomPoble) || tradueix(t, TX.municipiPendent);
+  return <ModeRuralDins key={JSON.stringify([abast, entradaSessio(), sessio?.generacio ?? null])} abast={abast} municipi={municipi} nomVisible={nomVisible} potEntrar={Boolean(sessio?.currentUser?.id)} onBack={onBack} fabrica={fabrica} vistaRef={vistaRef} />;
 }
 
-function ModeRuralDins({ abast, municipi, potEntrar, onBack, fabrica }) {
+function ModeRuralDins({ abast, municipi, nomVisible, potEntrar, onBack, fabrica, vistaRef }) {
   const t = useTraductorOpcional();
   const tr = clau => tradueix(t, TX[clau]);
   const motor = useRef(null);
@@ -50,6 +80,9 @@ function ModeRuralDins({ abast, municipi, potEntrar, onBack, fabrica }) {
   const [confirmaEsborrat, setConfirmaEsborrat] = useState(false);
   const [edicio, setEdicio] = useState(null);
   const [notaPerEsborrar, setNotaPerEsborrar] = useState(null);
+  /* control-04 (261104) · L'error ha nascut d'una confirmació: es pinta dins
+     del seu diàleg mentre és obert (vegeu els DialegConfirmacio de baix). */
+  const [errorDelDialeg, setErrorDelDialeg] = useState(false);
   const [avis, setAvis] = useState('');
   const opfsDisponible = typeof globalThis.navigator?.storage?.getDirectory === 'function' && typeof globalThis.navigator?.locks?.request === 'function';
   function netejaVista() {
@@ -58,16 +91,18 @@ function ModeRuralDins({ abast, municipi, potEntrar, onBack, fabrica }) {
   }
   useEffect(() => { viu.current = true; return () => { viu.current = false; motor.current?.close(); motor.current = null; }; }, []);
 
-  async function executa(accio) {
+  async function executa(accio, { desDelDialeg = false } = {}) {
     if (enVol.current) return;
-    enVol.current = true; setOcupat(true); setError('');
+    enVol.current = true; setOcupat(true); setError(''); setErrorDelDialeg(false);
     try { vigent(); await accio(); vigent(); }
     catch (e) {
       if (viu.current) {
         if (e.code === 'SDP-RURAL-GENERACIO' || e.name === 'AbortError') {
           motor.current?.close(); motor.current = null; netejaVista();
         }
+        setErrorDelDialeg(desDelDialeg);
         setError(e.name === 'AbortError' ? tr('sessioCanviada') : e.code === 'RURAL_DIARI_PLE' ? tr('diariPle') : e.code === 'SDP-RURAL-GENERACIO' ? tr('canviGeneracio')
+          : e.code === 'RURAL_FITXER_GRAN' ? tr('fitxerGran')
           : e.code === 'SDP-RURAL-OPFS-COMMIT-DESCONEGUT' ? tr('crdtCommitDesconegut') : typeof e.code === 'string' && e.code.includes('QUOTA') ? tr('crdtQuota')
             : e.message === e.code && typeof e.code === 'string' && e.code.startsWith('RURAL_CRDT_') ? tr('crdtInvalid') : e.message || String(e));
       }
@@ -127,9 +162,9 @@ function ModeRuralDins({ abast, municipi, potEntrar, onBack, fabrica }) {
     });
   }
   return <UniversalPage title={tr('titol')} subtitle={tr('subtitol')} lead={tr('lead')} onBack={onBack} chrome="system" traduccio={false}>
-    <div className="content-wrapper">
+    <div ref={vistaRef} className="content-wrapper">
       <h3>{tr('localTitol')}</h3>
-      <p>{municipi}</p>
+      <p>{nomVisible}</p>
       {!potEntrar ? <p>{tr('entra')}</p> : !estat ? <>
         <Boto carregant={ocupat} onClick={() => void executa(() => activa())}>{tr('activa')}</Boto>
         <Boto disabled={ocupat || !opfsDisponible} onClick={() => void executa(() => activa('opfs'))}>{tr('activaOpfs')}</Boto>
@@ -185,21 +220,31 @@ function ModeRuralDins({ abast, municipi, potEntrar, onBack, fabrica }) {
           <Boto disabled={ocupat} onClick={() => setConfirmaEsborrat(true)}>{tr('esborra')}</Boto>
         </section>
       </>}
+      {/* control-04 (revisió del Panell, 261104) · Amb un diàleg obert, el
+          fons és inert: l'error d'una confirmació fallida es pinta dins del
+          diàleg, com a DetallPrivacitat.jsx, i només allí. Abans es pintava
+          fora, darrere del vel, i el diàleg es quedava obert sense dir res.
+          En Cancel·lar, l'error torna a la pàgina. Un error d'abans d'obrir el
+          diàleg no hi entra: es queda on era. */}
       <DialegConfirmacio obert={confirmaEsborrat} onTanca={() => setConfirmaEsborrat(false)} destructiu carregant={ocupat}
         titol={tr('esborra')} descripcio={tr('esborraDescripcio')} etiquetaConfirma={tr('esborraConfirma')} etiquetaCancela={tr('cancela')}
         onConfirma={() => void executa(async () => {
           await motor.current.esborraTot();
           if (!viu.current) return;
           motor.current = null; netejaVista();
-        })} />
+        }, { desDelDialeg: true })}>
+        {confirmaEsborrat && errorDelDialeg && error ? <Alerta to="error">{error}</Alerta> : null}
+      </DialegConfirmacio>
       <DialegConfirmacio obert={Boolean(notaPerEsborrar)} onTanca={() => setNotaPerEsborrar(null)} destructiu carregant={ocupat}
         titol={tr('eliminaNota')} descripcio={tr('eliminaNotaAjuda')} etiquetaConfirma={tr('eliminaConfirma')} etiquetaCancela={tr('cancela')}
         onConfirma={() => void executa(async () => {
           await motor.current.eliminaNota({ id: notaPerEsborrar.nota.id, base: notaPerEsborrar.base });
           if (!viu.current) return; setNotaPerEsborrar(null); await actualitza();
-        })} />
+        }, { desDelDialeg: true })}>
+        {notaPerEsborrar && errorDelDialeg && error ? <Alerta to="error">{error}</Alerta> : null}
+      </DialegConfirmacio>
       {avis ? <Alerta>{avis}</Alerta> : null}
-      {error ? <Alerta to="error">{error}</Alerta> : null}
+      {error && !(errorDelDialeg && (confirmaEsborrat || notaPerEsborrar)) ? <Alerta to="error">{error}</Alerta> : null}
       {preparat ? <section aria-label={tr('preparat')}><h3>{tr('preparat')}: {preparat.nom}</h3><Camp etiqueta={tr('contingut')}><AreaText value={preparat.text} readOnly /></Camp><Boto onClick={descarrega}>{tr('descarrega')}</Boto></section> : null}
     </div>
   </UniversalPage>;

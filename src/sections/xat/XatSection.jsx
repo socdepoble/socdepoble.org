@@ -1278,6 +1278,14 @@ function XatWorkspace({ origen = null }) {
   };
 
   const enviaAlBloc = async (triats) => {
+    /* xat-ux-a11y-05 (T7a, 261104) · Sense sessió (el Xat de mostra), crear la
+       nota falla sempre (notes.js) i deixava un console.error (P0-16): el
+       retall de la selecció porta a entrar amb la forma única de T4
+       (rutaDEntrada, com ?sobre=), amb la tornada a esta conversa. */
+    if (senseSessio) {
+      navigate(rutaDEntrada({ tornar: rutaAmbConsulta(pathname, params) }));
+      return;
+    }
     const retall = construeixRetall({ fil: activeThread, missatges: triats, locale });
     try {
       const nota = await creaNota(retall);
@@ -1750,6 +1758,7 @@ function XatWorkspace({ origen = null }) {
           onBack={handleBackToList}
           onTornaAOrigen={tornaAOrigen}
           onEnviaAlBloc={enviaAlBloc}
+          senseSessio={senseSessio}
           onCopia={copiaText}
           hiHaMes={Boolean(hiHaMesAntics(activeThread.id))}
           carregantMes={Boolean(carregantAntics(activeThread.id))}

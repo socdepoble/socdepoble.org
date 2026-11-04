@@ -26,6 +26,10 @@
  * (projeccioPayload) i en llegir (coaccionaAmbit, des del mapejador). Cap
  * regex amb retrocés: anclades, sense quantificadors imbricats. El camp
  * `contacte` (treball) és privat: mai entra a textCercable ni a resumDeFitxa.
+ * idea61-05 (Gauntlet T7a, 261104) · `privat` vol dir fora de l'índex de cerca
+ * i del resum de la targeta, NO secret: la fitxa de lectura del detall el
+ * mostra a qui pot llegir la fila (la gent del poble, RLS is_town_member),
+ * perquè la fitxa és per a contactar, i el formulari (BlocAmbit) ho avisa.
  *
  * JS PUR: cap React, cap xarxa, cap rellotge. L'única importació és
  * netejaText (utils/sanitize.js). Cap funció llança: tornen valors.
@@ -125,7 +129,8 @@ const MAXIM_TEXT = 120;
 const MAXIM_TEXT_LLARG = 500;
 
 /* Un camp: { id, tipus, obligatori, clau, reserva, maxim, opcions?,
-   clauOpcions?, min?, max?, obligatoriSi?, privat? }. */
+   clauOpcions?, min?, max?, obligatoriSi?, privat? }. `privat`: fora de
+   textCercable i de resumDeFitxa, però visible al detall (idea61-05). */
 function camp(id, tipus, extra = {}) {
   const clau = `ambit.camp.${id}`;
   return Object.freeze({
@@ -357,7 +362,13 @@ export function perAmbit(items, ambit) {
   return Array.isArray(items) ? items.filter((item) => esDeLAmbit(item, ambit)) : [];
 }
 
-/** Ix a les llistes del Mur i de la vertical? Una fila 'tancada' no, però continua existint (el port no esborra). */
+/**
+ * Ix a la llista de la seua vertical i del Mercat? Una fila 'tancada' no, però
+ * continua existint (el port no esborra). idea61-04 (Gauntlet T7a, 261104) ·
+ * Ho apliquen SeccioVertical i MercatSection (només a les fitxes d'àmbit). El
+ * Mur i la cerca la pinten amb la insígnia «Tancat» (ARB-L4-02): si el Mur
+ * l'ha d'amagar, ho decidix el Mestre.
+ */
 export function esVisibleALaLlista(item) {
   return esObjecte(item) && normalitzaEstat(item.estat) !== 'tancat';
 }

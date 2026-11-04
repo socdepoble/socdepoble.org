@@ -71,4 +71,6 @@ export const TEXTOS_MODE_RURAL = Object.freeze({
   crdtInvalid: text("crdtInvalid", "No s’ha pogut aplicar el canvi CRDT. Comprova les dades i conserva una còpia abans de continuar."),
   crdtQuota: text("crdtQuota", "L’historial o el diari han arribat al límit. Prepara una còpia; consolidar el diari conserva tota la història CRDT."),
   crdtCommitDesconegut: text("crdtCommitDesconegut", "El navegador encara no ha confirmat l’escriptura. Actualitza les notes per a comprovar l’estat abans de repetir el canvi."),
+  /* control-06 (revisió del Panell, 261104) · Abans, un Error escrit a mà a ModeRural.jsx. */
+  fitxerGran: text("fitxerGran", "Tria un fitxer JSON de fins a 4 MB."),
 });

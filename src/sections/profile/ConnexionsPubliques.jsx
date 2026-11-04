@@ -4,9 +4,22 @@ import { useSessioOpcional } from '../../app/contexts/SessionContext.jsx';
 import { entradaSessio } from '../../data/identitat.js';
 import * as port from '../../data/backendPort.js';
 import { abastDe } from '../pobles/useEntitatsDelPoble.js';
+import { ambitDeConnexions, connexionsPotserDisponibles, recordaSiNoDisponibles } from '../connectar/sondaConnexions.js';
 
 const reserva = (_clau, text) => text;
-const disponible = () => { try { return port.teCapacitat('connexionsPubliques') === true; } catch { return false; } };
+/* llibre-deutes-01 i connectar-01 (261104, P0-16 · IDEA-73) · La capacitat del
+   port no diu si el servidor té la migració 2611032100: es consulta la sonda de
+   /connectar (sondaConnexions.js, GLOBAL-06). Si este backend ja ha dit
+   NO-DISPONIBLE, el bloc no es pinta ni es torna a preguntar. Mentre no
+   s'aplique la migració (D-10), queda una crida per document i backend, amb
+   el seu 404 a la consola del navegador (els límits de la sonda en dos
+   muntatges alhora són els de sondaConnexions.js). */
+const disponible = config => connexionsPotserDisponibles(ambitDeConnexions(config));
+/* A la fitxa pública no hi ha res a mostrar si el servidor no té les connexions
+   (NO-DISPONIBLE) o si el subjecte no existix per al remot (SDP-CONN-001: la
+   persona de reserva del paquet, sense UUID, ni arriba al transport).
+   Reintentar no ho arregla: el bloc calla. La resta d'errors manté l'avís. */
+const CALLA_LA_FITXA = new Set(['NO-DISPONIBLE', 'SDP-CONN-001']);
 const tipusValid = tipus => ['persona', 'entitat', 'poble'].includes(tipus);
 const clauDe = fila => `${fila.tipus}:${fila.id}`;
 export function rutaDeConnexio(fila) {
@@ -18,7 +31,7 @@ export function rutaDeConnexio(fila) {
  * La resposta pública mai reutilitza una lectura de preferències privades. */
 function useAbast({ tipus, id, config, visor }) {
   const sessio = useSessioOpcional();
-  return disponible() && tipusValid(tipus) && id != null && String(id).trim()
+  return disponible(config) && tipusValid(tipus) && id != null && String(id).trim()
     ? JSON.stringify([tipus, String(id), abastDe(config), sessio?.currentUser?.id ?? null, entradaSessio(), visor]) : null;
 }
 
@@ -31,15 +44,20 @@ export function ConnexionsPubliques({ tipus, id, config = {}, visor = null, revi
     if (!clau) return undefined;
     const controller = new AbortController();
     const opcio = { ...configRef.current, signal: controller.signal };
+    const ambit = ambitDeConnexions(configRef.current);
     Promise.resolve().then(() => tipus === 'persona'
       ? port.connexionsPubliquesDe({ tipus, id: String(id) }, opcio)
       : port.membresIEntitatsConnectadesDe({ tipus, id: String(id) }, opcio))
       .then(files => { if (!controller.signal.aborted) setResultat({ clau, estat: 'llest', files: Array.isArray(files) ? files : [] }); })
-      .catch(() => { if (!controller.signal.aborted) setResultat({ clau, estat: 'error', files: [] }); });
+      .catch(error => {
+        recordaSiNoDisponibles(ambit, error);
+        if (!controller.signal.aborted) setResultat({ clau, estat: CALLA_LA_FITXA.has(error?.code) ? 'callat' : 'error', files: [] });
+      });
     return () => controller.abort();
   }, [clau, tipus, id]);
   if (!clau) return null;
   const actual = resultat.clau === clau ? resultat : { estat: 'carregant', files: [] };
+  if (actual.estat === 'callat') return null;
   const files = [...new Map(actual.files.filter(fila => rutaDeConnexio(fila)).map(fila => [clauDe(fila), fila])).values()];
   return (
     <section aria-labelledby={titol}>
@@ -78,9 +96,18 @@ export function VisibilitatConnexions({ tipus = 'persona', id, config = {}, viso
     ocupat.current = null;
     if (!clau) return undefined;
     const controller = new AbortController();
+    const ambit = ambitDeConnexions(configRef.current);
     Promise.resolve().then(() => port.preferenciesConnexions({ tipus, id: String(id) }, { ...configRef.current, signal: controller.signal }))
       .then(preferencies => { if (!controller.signal.aborted) setResultat({ clau, estat: 'llest', preferencies, ocupat: false, error: false }); })
-      .catch(() => { if (!controller.signal.aborted) setResultat({ clau, estat: 'error', preferencies: null, ocupat: false, error: true }); });
+      /* llibre-deutes-01 (261104) · Sense la migració (NO-DISPONIBLE), ni avís ni
+         interruptor, com a /connectar. Qualsevol altre error de lectura, també
+         SDP-CONN-001, manté l'avís: qui administra ha de saber que falla. */
+      .catch(error => {
+        recordaSiNoDisponibles(ambit, error);
+        if (!controller.signal.aborted) setResultat(error?.code === 'NO-DISPONIBLE'
+          ? { clau, estat: 'callat', preferencies: null, ocupat: false, error: false }
+          : { clau, estat: 'error', preferencies: null, ocupat: false, error: true });
+      });
     return () => controller.abort();
   }, [clau, tipus, id]);
   useEffect(() => {
@@ -89,6 +116,7 @@ export function VisibilitatConnexions({ tipus = 'persona', id, config = {}, viso
   }, [clau]);
   if (!clau) return null;
   const actual = resultat.clau === clau ? resultat : { estat: 'carregant', preferencies: null, ocupat: false, error: false };
+  if (actual.estat === 'callat') return null;
   const canvia = async (actiu, connexio) => {
     if (ocupat.current || actual.estat !== 'llest') return;
     const generacio = vigent.current.generacio;

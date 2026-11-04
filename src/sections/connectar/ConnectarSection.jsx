@@ -87,10 +87,14 @@
  *     (fitxa compacta i «Connectar com a» a l'esquerra; l'avís i el primari
  *     gran de BlocRelacio a la dreta) i, davall, la d'incloure la persona en
  *     una entitat teua (BlocIncloureEnEntitat) o la de formar-ne part amb un
- *     rol (BlocFormarPart); «Guardar a les teues notes» va plegat al final, a
- *     tota l'amplària (revisió 261104, RA-01: el primari dins de la pantalla
- *     a 1280×800). En un ELEMENT ('element'), l'objecte i les notes, obertes i
- *     primàries, i la relació i formar part a la lateral. DEROGAT de D1
+ *     rol (BlocFormarPart), sense columna lateral (revisió 261104, RA-01: el
+ *     primari dins de la pantalla a 1280×800). En un ELEMENT ('element'),
+ *     l'objecte i les notes, obertes i primàries, i la relació i formar part a
+ *     la lateral. FEDI-26 (ordre directa del Mestre, 01:31 CET; Regla 1;
+ *     correcció connectar-03, 261104) · DEROGAT «Guardar a les teues notes»
+ *     plegat en 'social': connectar amb una persona, una entitat o un grup és
+ *     una connexió social i no porta mai al Bloc (cap nota amb el nom del
+ *     perfil). Les notes només es munten en 'element'. DEROGAT de D1
  *     «l'únic primari és el del MAS»: un primari per vista, connectar en un
  *     perfil i guardar en un element. El logotip de la capçalera, compacte
  *     (queixa del Mestre: espentava els botons fora de pantalla; regla
@@ -559,8 +563,8 @@ function ConnectarElementIntern() {
   const carregantFitxa = esPerfil && fitxaDelPerfil.estat === 'carregant' && !contacte;
   const social = disposicioDeLaVista({ esPerfil, ambRelacio, carregantFitxa }) === 'social';
   const notesPrimari = !social;
-  /* «Guardar a les teues notes» és un <details>: obert en 'element', plegat en
-     'social', i s'obri si la vista passa a 'element' (la fitxa arriba sense relació).
+  /* «Guardar a les teues notes» és un <details>, obert en 'element' (FEDI-26: en
+     'social' no es munta), i s'obri si la vista passa a 'element' (la fitxa arriba sense relació).
      Ronda 7 (GLOBAL-03) · L'obertura es fa en el mateix render que canvia la
      vista (estat derivat del valor anterior), no en un efecte: cap commit pinta
      la vista 'element' amb les notes plegades. */
@@ -575,10 +579,8 @@ function ConnectarElementIntern() {
   const entitatsIncloure = useMemo(() => entitatsPerIncloure(actorsConnectar, identitats), [actorsConnectar, identitats]);
   const ambIncloure = social && teSessio && origenDeLURL.objecte === 'persona' && Boolean(contacte) && !contacte.propia
     && contacte.seguiment?.tipus === 'persona' && entitatsIncloure.length > 0 && teMembresOrganitzacio();
-  /* FEDI-22 (C11) · En 'social' no hi ha mini-card: la nota es desa amb el nom de
-     la fitxa de confiança (T43b-3), mai amb el title de l'URL que ningú ha vist. */
-  const nomDeLaFitxa = social && fitxaDelPerfil.estat === 'llest' ? String(fitxaDelPerfil.perfil?.nom || '').trim() : '';
-  const origenAConnectar = nomDeLaFitxa ? { ...origen, titol: nomDeLaFitxa } : origen;
+  /* FEDI-26 (Regla 1; correcció connectar-03, 261104) · DEROGAT FEDI-22 (C11), la
+     nota d'un perfil amb el nom de la fitxa: en 'social' no hi ha notes. */
   /* D1 (ordre del Mestre, 260930) · Sense sessió, en seed i local el Bloc és
      del dispositiu: es connecta igual. En remot cal entrar (calEntrar): cap
      simulació. Amb el Bloc encara carregant (canCreate exigix 'ready'), el
@@ -748,14 +750,14 @@ function ConnectarElementIntern() {
     setError(null);
     setIsSaving(true);
     try {
-      const origenDesat = { ...origenAConnectar, abast: normalitzaAbast(tria) };
+      const origenDesat = { ...origen, abast: normalitzaAbast(tria) };
       const nota = await creaNota({
-        title: aHtml(origenAConnectar.titol),
+        title: aHtml(origen.titol),
         /* D4 · còpia editable: el subtítol i l'entradeta de l'original resolt
            (mai de l'URL), escapats com a HTML del document. */
         ...(original?.subtitol ? { subtitle: aHtml(original.subtitol) } : {}),
         ...(original?.entradilla ? { lead: aHtml(original.entradilla) } : {}),
-        content: contingutDeLaConnexio(origenAConnectar),
+        content: contingutDeLaConnexio(origen),
         folderId: selectedFolder,
         tags: customTags,
         categories,
@@ -770,7 +772,7 @@ function ConnectarElementIntern() {
         return;
       }
       /* P1-22 · El missatge ix en la llengua de qui connecta. */
-      const missatge = missatgeDeConnexio(origenAConnectar, origenAConnectar.ruta ? urlPerCompartir(origenAConnectar.ruta, router) : '', t);
+      const missatge = missatgeDeConnexio(origen, origen.ruta ? urlPerCompartir(origen.ruta, router) : '', t);
       const { resultats } = await aplica({ nota, origen: origenDesat, abast: tria, missatge });
       setResum({
         ruta: rutaNota,
@@ -891,7 +893,9 @@ function ConnectarElementIntern() {
     </section>
   ) : null;
   /* FEDI-22 · Targeta 3 · «Guardar a les teues notes»: la connexió de sempre (una
-     còpia al Bloc), amb el seu estat, les refs C16, l'ordre i els textos. */
+     còpia al Bloc), amb el seu estat, les refs C16, l'ordre i els textos.
+     FEDI-26 (Regla 1; correcció connectar-03, 261104) · Només d'un element: mai
+     en la vista 'social' d'un perfil. */
   const notesDelBloc = (
     <details className="sdp-connectar__notes" open={notesObertes} onToggle={(e) => setNotesObertes(e.currentTarget.open)}>
       <summary className="sdp-connectar__notes-resum">
@@ -902,9 +906,9 @@ function ConnectarElementIntern() {
         </span>
       </summary>
       <div className="sdp-connectar__notes-cos">
-        {social && persona ? <p className="sdp-connectar__identitat">{omple(t('section.connectar.esConnectaA', 'Es connecta a {nom}.'), { nom: persona })}</p> : null}
-        {/* 261024 correccions (G2-02 i R3-05) · L'ajuda diu el que fan les opcions de davall: només la privada no avisa ningú. */}
-        {social || ambCamins ? (
+        {/* 261024 correccions (G2-02 i R3-05) · L'ajuda diu el que fan les opcions de davall: només la privada no avisa ningú.
+            FEDI-26 (261104) · Les notes només es munten en 'element': cap branca d'açò depén ja de 'social'. */}
+        {ambCamins ? (
           <p className="sdp-connectar__ajuda">
             {t('section.connectar.mas.ajuda', 'Una còpia al teu Bloc per a llegir-la després, que no et fa membre de res. Tu tries qui ho pot vore: en privat no avisa ningú; a persones o grups de xat els enviarem l’enllaç per xat, i a tot el poble la compartiràs tu al Mur.')}
           </p>
@@ -1092,7 +1096,7 @@ function ConnectarElementIntern() {
               <ResumConnexio
                 resultats={resum.resultats}
                 accions={(
-                  <Boto varietat={notesPrimari ? 'primari' : 'secundari'} onClick={() => navigate(resum.ruta, { replace: true })}>
+                  <Boto varietat="primari" onClick={() => navigate(resum.ruta, { replace: true })}>
                     {t('section.connectar.resum.obri', 'Obrir la connexió a les teues notes')}
                   </Boto>
                 )}
@@ -1100,8 +1104,8 @@ function ConnectarElementIntern() {
             </div>
           ) : (
             <>
-              {/* FEDI-22 · Primari en 'element' (guardar és l'acció), secundari en 'social' (connectar ho és). */}
-              <Boto varietat={notesPrimari ? 'primari' : 'secundari'} mida="gran" ple onClick={handleConnect} carregant={isSaving}
+              {/* FEDI-22 · Primari en 'element' (guardar és l'acció). FEDI-26 (261104) · En 'social' les notes no es munten. */}
+              <Boto varietat="primari" mida="gran" ple onClick={handleConnect} carregant={isSaving}
                 disabled={!calEntrar && (!potConnectar || esperantOriginal || !selectedFolder || faltenDestins)}>
                 {etiquetaConnectar}
               </Boto>
@@ -1120,9 +1124,10 @@ function ConnectarElementIntern() {
       </div>
     </details>
   );
-  /* RA-01 (revisió 261104) · En 'social' no hi ha columna lateral: les notes,
-     plegades, van davall de les targetes, a tota l'amplària, i T1 no perd els
-     24rem d'una columna gairebé buida. La lateral és només d'un element. */
+  /* RA-01 (revisió 261104) · En 'social' no hi ha columna lateral: T1 no perd
+     els 24rem d'una columna gairebé buida. La lateral és només d'un element.
+     FEDI-26 (correcció connectar-03, 261104) · i davall de les targetes ja no
+     hi van les notes plegades. */
   const ambLateral = !social && (Boolean(targetaDirecta) || Boolean(targetaFormarPart));
 
   return (
@@ -1142,7 +1147,7 @@ function ConnectarElementIntern() {
              P1-11 (pla 261024_2230; G1945-04 de Gemini, ordre del Mestre) · «connectar
              amb algú», no «seguir»: a Sóc de Poble no se seguix, es connecta.
              FEDI-22 (C5) · En 'social', l'entradeta només parla d'entitats a qui en administra.
-             RA-01 (revisió 261104) · i és d'una línia: les notes ja diuen que són a banda. */ social
+             RA-01 (revisió 261104) · i és d'una línia. */ social
         ? (actorsConnectar.length > 1 && !calEntrar
           ? t('section.connectar.leadSocialCom', 'Com a tu o en nom d’una entitat que administres.')
           : t('section.connectar.leadSocial', 'Connectar-te no et fa membre de res.'))
@@ -1164,18 +1169,15 @@ function ConnectarElementIntern() {
 
         {/* FEDI-22 (ordre del Mestre, 261103) · IDEA-14 continua: cada camí té el
             seu botó. En 'social', la connexió directa i formar part a la graella
-            de targetes i, davall, les notes plegades (RA-01, revisió 261104); en
-            'element', l'objecte i les notes a la principal, i la relació i
-            formar part a la lateral. */}
+            de targetes, sense notes (FEDI-26, Regla 1; correcció connectar-03,
+            261104); en 'element', l'objecte i les notes a la principal, i la
+            relació i formar part a la lateral. */}
         {social ? (
-          <>
-            <div className="sdp-connectar__principal sdp-connectar__principal--targetes">
-              {targetaDirecta}
-              {targetaIncloure}
-              {targetaFormarPart}
-            </div>
-            {notesDelBloc}
-          </>
+          <div className="sdp-connectar__principal sdp-connectar__principal--targetes">
+            {targetaDirecta}
+            {targetaIncloure}
+            {targetaFormarPart}
+          </div>
         ) : (
           <div className="sdp-connectar__principal">
           <section className="sdp-connectar__objecte" aria-labelledby={`${id}-objecte`}>

@@ -31,6 +31,7 @@ import { autorDe, esRutaInterna, getSectionItemPath } from '../../config/navigat
 import { ENTITAT_PILOT_ID, ENTITAT_PILOT_SLUG } from '../../data/identitatsSeed.js';
 import { extractPlainText } from '../../utils/contentAdapter.js';
 import { fotoDeLaTargeta } from '../mercat/imatgesDeProducte.js';
+import { SECTION_ID_PER_AMBIT } from '../../utils/publicacioUniversal.js';
 
 /* La carpeta «Altres notes» del catàleg (appSeed.js · NOTE_FOLDERS_SEED). */
 export const CARPETA_ALTRES = 'f-notes';
@@ -41,6 +42,10 @@ export const ETIQUETA_SECCIO = Object.freeze({ mur: 'Mur', mercat: 'Mercat', eve
    l'etiqueta neutra. */
 export const ETIQUETA_NEUTRA = 'Publicació';
 export const etiquetaDeSeccio = (seccio) => ETIQUETA_SECCIO[seccio] || ETIQUETA_NEUTRA;
+/* idea61-03 (Gauntlet T7a, 261104) · Les seccions on publishNote escriu la
+   fila d'una nota: la de l'àmbit de la seua fitxa (IDEA-61 · seccioDAmbit),
+   el Mur o el Mercat. */
+const SECCIONS_DE_NOTES = new Set(Object.values(SECTION_ID_PER_AMBIT));
 
 /* F4 (bloquejant de Codex, relleus 16 i 21 de l'auditoria 261004_2240) · Qui
    llig la URL del Bloc ha de saber de quina font és una publicació triada, i
@@ -146,6 +151,8 @@ function rutaDeLaPublicacio(item, seccio) {
  * F4 (D2) · `opcions.publicadesDesDeNotes`, un Set d'ids: les publicacions del
  * Mur nascudes d'una nota pròpia (publishedSubmissionId) no s'emeten. La peça
  * és la nota editable, que el Bloc posa també a la carpeta «Mur».
+ * idea61-03 (Gauntlet T7a, 261104) · Ni les del Mercat: des d'IDEA-61 una nota
+ * amb la fitxa del Mercat es publica a 'mercat', i la nota ja és a «Mercat».
  * Grup E (261008) · Les pàgines del sistema ja no se salten: pertanyALActor
  * decidix de qui són (de l'entitat pilot i de ningú més).
  */
@@ -157,8 +164,9 @@ export function itemsPublicatsDe({ feedPosts = [], marketItems = [], events = []
     for (const item of llista || []) {
       if (!item || item.id == null) continue;
       if (!pertanyALActor(item, alies)) continue;
-      /* Publicar una nota només escriu al Mur (NotesContext · publishNote). */
-      if (seccio === 'mur' && publicadesDesDeNotes?.has(String(item.id))) continue;
+      /* Publicar una nota escriu a la secció del seu àmbit, el Mur o el
+         Mercat (NotesContext · publishNote; idea61-03): la peça és la nota. */
+      if (SECCIONS_DE_NOTES.has(seccio) && publicadesDesDeNotes?.has(String(item.id))) continue;
       items.push(publicacioComANota(item, seccio, format));
     }
   }

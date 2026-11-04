@@ -69,6 +69,12 @@ function textDError(codi, nomDelCamp, t) {
    en mode controlat), traduïda als cinc diccionaris. */
 const TEXT_TRIAT = Object.freeze(['editor.ambit.triat', 'Triat']);
 
+/* idea61-05 (Gauntlet T7a, 261104) · Un camp `privat` del contracte (el
+   contacte de Treball) no ix a la targeta ni a la cerca, però la fitxa del
+   detall el mostra a la gent registrada del poble: el camp ho diu, perquè la
+   previsualització l'amaga a posta. Cap altre camp porta ajuda. */
+const TEXT_CAMP_VISIBLE = Object.freeze(['editor.ambit.contacteVisible', 'Ho veurà la gent registrada del poble en obrir la fitxa; no ix a la targeta ni a la cerca.']);
+
 /* El tipus de l'<input> per a cada tipus del contracte. */
 const TIPUS_INPUT = Object.freeze({ text: 'text', preu: 'text', data: 'date', hora: 'time' });
 
@@ -105,7 +111,8 @@ function CampDeFitxa({ campDef, valor, obligatori, error, onCanvi, t }) {
         maxLength={ambLlargaria ? campDef.maxim : undefined} value={valorControl} onChange={canvia} />
     );
   }
-  return <Camp etiqueta={etiquetaDeCamp(campDef, t)} obligatori={obligatori} error={error}>{control}</Camp>;
+  const ajuda = campDef.privat ? t(TEXT_CAMP_VISIBLE[0], TEXT_CAMP_VISIBLE[1]) : undefined;
+  return <Camp etiqueta={etiquetaDeCamp(campDef, t)} ajuda={ajuda} obligatori={obligatori} error={error}>{control}</Camp>;
 }
 
 /**

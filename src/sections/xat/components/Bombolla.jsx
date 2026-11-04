@@ -78,6 +78,7 @@ import { rutaCanonicaDePerfil, rutaDePerfil } from '../../../config/navigation.j
 import { esIAIA } from '../../../data/identitatsSeed.js';
 import TargetaLlistaComu from './TargetaLlistaComu.jsx';
 import AdjuntXat from './AdjuntXat.jsx';
+import { mouFocusDelMenu } from './Compositor.jsx';
 import { llistaDeMissatge } from '../llistaComu.js';
 
 /**
@@ -223,6 +224,14 @@ function Bombolla({
      l'Arrere d'Android (config/pilaEnrere.js) amb el camí de l'Escape (ARB-T2B-04:
      damunt de la resposta o de la selecció, l'Arrere el tanca a ell primer). */
   useCapaEnrere(menuVisible, tancaMenu);
+  /* xat-ux-a11y-04 (T7a, 261104) · El menú diu role="menu": les fletxes, Inici
+     i Fi es mouen per les opcions (mouFocusDelMenu, el teclat del menú del +) i
+     Tab tanca el menú i seguix des del «⋯», sense consumir-lo. L'Escape és de
+     l'escolta de l'arrel, com fins ara. */
+  const alTeclatDelMenu = (e) => {
+    if (mouFocusDelMenu(e)) return;
+    if (e.key === 'Tab') tancaMenu();
+  };
 
   if (missatge.tipus === 'sistema') {
     return (
@@ -349,7 +358,7 @@ function Bombolla({
               <MoreVertical size={20} aria-hidden="true" focusable="false" />
             </button>
             {menuObert ? (
-              <div className="sdp-xat-menu" role="menu">
+              <div className="sdp-xat-menu" role="menu" onKeyDown={alTeclatDelMenu}>
                 {potRespondre ? (
                   <button
                     type="button"

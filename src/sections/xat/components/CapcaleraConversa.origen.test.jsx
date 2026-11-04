@@ -83,4 +83,18 @@ describe('amb origen: la fletxa torna a la pàgina d’on s’ha entrat', () => 
     expect(screen.queryByRole('button', { name: 'Torna a la pàgina anterior' })).toBeNull();
     expect(screen.getByRole('button', { name: 'Eixir de la selecció' })).toBeTruthy();
   });
+
+  test('T4 · un fil directe de mostra d’entitat (fake-entitat amb participants) enllaça el títol al perfil públic', () => {
+    const filEntitat = {
+      id: 'fake-entitat:3073b933-69fc-4c3e-80dc-b0df9c6b8391',
+      tipus: 'directe',
+      name: 'Oli de La Torre',
+      title: 'Oli de La Torre',
+      participants: [{ id: '3073b933-69fc-4c3e-80dc-b0df9c6b8391', nom: 'Oli de La Torre', tipus: 'entitat' }]
+    };
+    const { container } = render(<CapcaleraConversa fil={filEntitat} onTorna={() => {}} t={ca} />);
+    const enllac = container.querySelector('a.sdp-xat-capcalera__enllac');
+    expect(enllac).not.toBeNull();
+    expect(enllac.getAttribute('href')).toBe('/empresa/3073b933-69fc-4c3e-80dc-b0df9c6b8391');
+  });
 });

@@ -7,9 +7,10 @@ import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
      · 'social' (el perfil d'una persona, una entitat o un grup amb relació):
        T1 «Connexió directa» (fitxa compacta i «Connectar com a» a l'esquerra;
        l'avís i el primari gran a la dreta), T2 «Incloure en la teua entitat»
-       (una persona) o «Formar part» (demanar-ho amb rol, una entitat) i T3
-       «Guardar a les teues notes», plegat al final, a tota l'amplària
-       (revisió 261104, RA-01: cap columna lateral en 'social').
+       (una persona) o «Formar part» (demanar-ho amb rol, una entitat), sense
+       columna lateral (revisió 261104, RA-01). Actualitzada a posta (FEDI-26,
+       ordre directa del Mestre, Regla 1; correcció connectar-03, 261104): sense
+       T3 «Guardar a les teues notes», que en 'social' no es munta.
      · 'element': l'objecte i les notes, obertes i primàries; la relació i
        formar part a la lateral.
    Un primari per vista. El contingut de fora no canvia de .sdp-connectar cap
@@ -104,7 +105,7 @@ beforeEach(() => {
 });
 
 describe('social · el perfil d’una persona', () => {
-  test('la graella: T1 → T2 → el plegable de les notes, tancat; l’H2 i l’entradeta de la vista social', async () => {
+  test('la graella: T1 → T2, sense notes; l’H2 i l’entradeta de la vista social', async () => {
     m.identitat = { actor: TONI, identitats: [TONI, B_RENTONAR, OLI], memberships: [] };
     m.capacitats = new Set(['directori', 'seguiments', 'membresOrganitzacio']);
     const { container } = render(vista());
@@ -113,15 +114,14 @@ describe('social · el perfil d’una persona', () => {
     const incloure = await screen.findByRole('group', { name: 'Incloure en la teua entitat' });
     expect(screen.queryByRole('group', { name: 'Formar part' })).toBeNull();
     expect(arrel(container).classList.contains('sdp-connectar--graella')).toBe(true);
-    /* Actualitzada a posta (revisió 261104, RA-01): en 'social' no hi ha columna lateral; les notes, davall. */
+    /* Actualitzada a posta (revisió 261104, RA-01): en 'social' no hi ha columna lateral.
+       Actualitzada a posta (FEDI-26, Regla 1; correcció connectar-03, 261104): ni notes davall. */
     expect(arrel(container).classList.contains('sdp-connectar--amb-lateral')).toBe(false);
     expect(container.querySelector('.sdp-connectar__lateral')).toBeNull();
     expect(directa.classList.contains('sdp-connectar__targeta--directa')).toBe(true);
     expect(directa.closest('.sdp-connectar__principal--targetes')).toBeTruthy();
-    expect(notes().parentElement).toBe(arrel(container));
     expect(directa.compareDocumentPosition(incloure) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
-    expect(incloure.compareDocumentPosition(notes()) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
-    expect(notes().open).toBe(false);
+    expect(notes()).toBeNull();
     /* Un sol H1, i el header no porta cap altra capçalera. */
     expect(screen.getAllByRole('heading', { level: 1 })).toHaveLength(1);
     expect(container.querySelector('header.page-title').querySelectorAll('h2, h3')).toHaveLength(0);
@@ -216,7 +216,7 @@ describe('social · el perfil d’una persona', () => {
     await waitFor(() => expect(directa.querySelector('.sdp-connectar__fitxa-nom ~ .sdp-connectar__ajuda')?.textContent).toBe('Persona'));
   });
 
-  test('un sol primari: «Connectar amb {nom}», descrit pels avisos pintats (C9); després, «Escriu-li» i les notes en secundari', async () => {
+  test('un sol primari: «Connectar amb {nom}», descrit pels avisos pintats (C9); després, «Escriu-li»', async () => {
     const { container } = render(vista());
     const connecta = await screen.findByRole('button', { name: 'Connectar amb Pepa Soler' });
     expect(primaris(container).map((boto) => boto.textContent)).toEqual(['Connectar amb Pepa Soler']);
@@ -227,7 +227,8 @@ describe('social · el perfil d’una persona', () => {
     expect(document.getElementById(descrit[0]).textContent).toBe('Pepa Soler rebrà un missatge al xat per a dir-li que t’hi has connectat.');
     /* L'avís va abans del botó (Directiva 261024). */
     expect(document.getElementById(descrit[0]).compareDocumentPosition(connecta) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
-    expect(screen.getByRole('button', { name: CONNECTA }).classList.contains('sdp-boto--secundari')).toBe(true);
+    /* Actualitzada a posta (FEDI-26, Regla 1; correcció connectar-03, 261104): cap botó de les notes en 'social'. */
+    expect(screen.queryByRole('button', { name: CONNECTA })).toBeNull();
     await act(async () => { fireEvent.click(connecta); });
     expect(primaris(container).map((boto) => boto.textContent)).toEqual(['Escriu-li a Pepa Soler']);
     expect(screen.getByRole('button', { name: 'Deixar la connexió amb Pepa Soler' }).classList.contains('sdp-boto--fantasma')).toBe(true);
@@ -247,35 +248,24 @@ describe('social · el perfil d’una persona', () => {
     expect(m.segueix).toHaveBeenCalledWith({ tipus: 'persona', id: UUID_PEPA, com: UUID_ORG }, {});
   });
 
-  test('obrir el resum desplega les notes; mentre la fitxa carrega, T1 és un esquelet amb aria-busy i sense status', async () => {
-    const vista1 = render(vista());
-    await screen.findByRole('group', { name: 'Connexió directa' });
-    fireEvent.click(screen.getByText('Guardar a les teues notes').closest('summary'));
-    expect(notes().open).toBe(true);
-    vista1.unmount();
+  /* Actualitzada a posta (FEDI-26, Regla 1; correcció connectar-03, 261104): en 'social' no hi ha cap resum de
+     les notes per a desplegar; que tampoc n'hi ha mentre la fitxa carrega ho diu «FEDI-26 · Regla 1», al final. */
+  test('mentre la fitxa carrega, T1 és un esquelet amb aria-busy i sense status', () => {
     m.perfil.mockReturnValue(new Promise(() => {}));
     render(vista());
     const directa = screen.getByRole('group', { name: 'Connexió directa' });
     expect(directa.getAttribute('aria-busy')).toBe('true');
     expect(within(directa).getByText('Carregant la fitxa…')).toBeTruthy();
     expect(within(directa).queryByRole('status')).toBeNull();
-    expect(notes().open).toBe(false);
   });
 
-  test('C11 · amb les notes obertes, la nota d’un perfil porta el nom de la fitxa; la Samarreta, el seu', async () => {
-    const vista1 = render(vista());
-    await screen.findByRole('button', { name: 'Connectar amb Pepa Soler' });
-    fireEvent.click(screen.getByText('Guardar a les teues notes').closest('summary'));
-    await act(async () => { fireEvent.click(screen.getByRole('button', { name: CONNECTA })); });
-    expect(m.crea).toHaveBeenCalledTimes(1);
-    expect(m.crea.mock.calls[0][0].title).toBe('Pepa Soler');
-    expect(m.crea.mock.calls[0][0].origen.titol).toBe('Pepa Soler');
-    expect(JSON.stringify(m.crea.mock.calls[0][0])).not.toContain('Impostora');
-    vista1.unmount();
-    m.crea.mockClear();
+  /* Actualitzada a posta (FEDI-26, Regla 1; correcció connectar-03, 261104) · DEROGAT C11 (la nota d'un perfil
+     amb el nom de la fitxa): d'un perfil no es crea cap nota («FEDI-26 · Regla 1», al final). Un element, sí. */
+  test('la nota de la Samarreta porta el seu títol', async () => {
     m.params = new URLSearchParams(SAMARRETA);
     render(vista());
     await act(async () => { fireEvent.click(screen.getByRole('button', { name: CONNECTA })); });
+    expect(m.crea).toHaveBeenCalledTimes(1);
     expect(m.crea.mock.calls[0][0].title).toBe('Samarreta');
   });
 });
@@ -348,15 +338,14 @@ describe('C3 · sense sessió', () => {
     expect(screen.getByRole('button', { name: 'Entra per a demanar-ho' }).classList.contains('sdp-boto--secundari')).toBe(true);
   });
 
-  test('la persona en remot: sense fitxa, el primari porta a entrar i les notes, plegades, tenen el seu botó secundari', () => {
+  test('la persona en remot: sense fitxa, el primari porta a entrar', () => {
     m.user = null;
     const { container } = render(vista());
     expect(m.perfil).not.toHaveBeenCalled();
     const directa = screen.getByRole('group', { name: 'Connexió directa' });
     expect(within(directa).getByRole('heading', { name: 'Connectar amb esta persona' })).toBeTruthy();
     expect(primaris(container).map((boto) => boto.textContent)).toEqual(['Entra per a connectar-hi']);
-    expect(notes().open).toBe(false);
-    expect(screen.getByRole('button', { name: 'Entra per a connectar' }).classList.contains('sdp-boto--secundari')).toBe(true);
+    /* Actualitzada a posta (FEDI-26, Regla 1; correcció connectar-03, 261104): ni notes ni el seu botó («FEDI-26 · Regla 1»). */
     expect(screen.queryByRole('radiogroup', { name: 'Connectar com a' })).toBeNull();
   });
 
@@ -432,7 +421,89 @@ describe('FEDI-22 en cinc llengües', () => {
     await screen.findByRole('group', { name: t('section.connectar.camins.relacio', '') });
     await screen.findByRole('group', { name: t('section.connectar.incloure.rol', '') });
     expect(screen.getByRole('heading', { level: 2 }).textContent).toBe(t('section.connectar.subtitolSocial', ''));
-    expect(container.textContent).toContain(t('section.connectar.notes.titol', ''));
+    /* Actualitzada a posta (FEDI-26, Regla 1; correcció connectar-03, 261104): les notes no es munten en 'social'. */
+    expect(container.textContent).not.toContain(t('section.connectar.notes.titol', ''));
     for (const text of VALENCIA_DE_LA_VISTA) expect(container.textContent, `${code}: ${text}`).not.toContain(text);
+  });
+});
+
+/* FEDI-26 (ordre directa del Mestre, 01:31 CET; Regla 1; correcció connectar-03,
+   261104) · Connectar amb una persona, una entitat, una empresa o un grup és una
+   connexió social: en la vista 'social' no es munta mai «Guardar a les teues
+   notes» (notesDelBloc) ni es crea cap nota amb el nom del perfil. El Bloc és
+   dels elements: la Samarreta (més amunt) conserva les notes obertes i primàries. */
+describe('FEDI-26 · Regla 1 · cap nota des d’un perfil social', () => {
+  const senseNotes = (container) => {
+    expect(container.querySelector('details.sdp-connectar__notes')).toBeNull();
+    expect(container.textContent).not.toContain('Guardar a les teues notes');
+    expect(screen.queryByRole('button', { name: CONNECTA })).toBeNull();
+  };
+
+  test.each([
+    ['una persona', PERFIL_PEPA, 'Connectar amb Pepa Soler'],
+    ['una entitat', PERFIL_RENTONAR, 'Connectar amb El Rentonar']
+  ])('%s: la connexió directa sense cap plegable de notes, i connectar no crea cap nota', async (_, consulta, rotul) => {
+    m.params = new URLSearchParams(consulta);
+    const { container } = render(vista());
+    const connecta = await screen.findByRole('button', { name: rotul });
+    senseNotes(container);
+    await act(async () => { fireEvent.click(connecta); });
+    expect(m.segueix).toHaveBeenCalledTimes(1);
+    senseNotes(container);
+    expect(m.crea).not.toHaveBeenCalled();
+  });
+
+  test('mentre la fitxa carrega, tampoc', () => {
+    m.perfil.mockReturnValue(new Promise(() => {}));
+    const { container } = render(vista());
+    expect(screen.getByRole('group', { name: 'Connexió directa' }).getAttribute('aria-busy')).toBe('true');
+    senseNotes(container);
+  });
+
+  test('sense sessió en remot: el primari porta a entrar per a connectar-hi i no hi ha el botó de les notes', () => {
+    m.user = null;
+    const { container } = render(vista());
+    expect(primaris(container).map((boto) => boto.textContent)).toEqual(['Entra per a connectar-hi']);
+    expect(container.querySelector('details.sdp-connectar__notes')).toBeNull();
+    expect(screen.queryByRole('button', { name: 'Entra per a connectar' })).toBeNull();
+  });
+});
+
+/* FEDI-26 (correcció connectar-06, 261104) · Les entitats fundacionals amb l'id
+   del servidor (El Rentonar b2c87505-…, Sóc de Poble a240e870-…, declarats a
+   ENTITATS_SEED[].alies) no són ids de la llavor: en remot, el seu perfil
+   conserva la connexió directa i no cau a 'element'. L'àlies de la llavor
+   ('rentonar') continua sense contacte. La prova fixa els dos ids que nomena la
+   decisió, no el format de l'id (W4-10). */
+describe('FEDI-26 · entitats fundacionals amb l’id del servidor, en remot', () => {
+  const UUID_RENTONAR_REAL = 'b2c87505-53b1-4108-902f-2313e77b9968';
+  const UUID_SOCDEPOBLE_REAL = 'a240e870-4aef-4d92-b138-e8b4e2f2123a';
+  const perfilDe = (id) => `item_id=${id}&sectionId=perfil&objecte=entitat&ruta=%2Fempresa%2F${id}&organitzacio=${id}`;
+  const fitxes = {
+    [UUID_RENTONAR_REAL]: { ...RENTONAR, id: UUID_RENTONAR_REAL },
+    [UUID_SOCDEPOBLE_REAL]: { tipus: 'entitat', id: UUID_SOCDEPOBLE_REAL, nom: 'Sóc de Poble', poble: 'La Torre' },
+    rentonar: { ...RENTONAR, id: 'rentonar' }
+  };
+  beforeEach(() => { m.perfil.mockImplementation(async (id) => fitxes[id] ?? null); });
+
+  test.each([
+    ['El Rentonar', UUID_RENTONAR_REAL],
+    ['Sóc de Poble', UUID_SOCDEPOBLE_REAL]
+  ])('%s: «Connexió directa» i connectar-hi segueix l’id del servidor, sense mini-card', async (nom, uuid) => {
+    m.params = new URLSearchParams(perfilDe(uuid));
+    const { container } = render(vista());
+    const directa = await screen.findByRole('group', { name: 'Connexió directa' });
+    const connecta = await within(directa).findByRole('button', { name: `Connectar amb ${nom}` });
+    expect(container.querySelector('.sdp-connectar__previsualitzacio')).toBeNull();
+    await act(async () => { fireEvent.click(connecta); });
+    expect(m.segueix).toHaveBeenCalledWith({ tipus: 'entitat', id: uuid }, {});
+  });
+
+  test('l’àlies de la llavor «rentonar» continua sense contacte en remot', async () => {
+    m.params = new URLSearchParams(perfilDe('rentonar'));
+    const { container } = render(vista());
+    await waitFor(() => expect(container.querySelector('.sdp-connectar__previsualitzacio')).toBeTruthy());
+    expect(screen.queryByRole('group', { name: 'Connexió directa' })).toBeNull();
+    expect(screen.queryByRole('button', { name: 'Connectar amb El Rentonar' })).toBeNull();
   });
 });

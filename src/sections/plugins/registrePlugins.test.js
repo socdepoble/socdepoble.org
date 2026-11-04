@@ -30,6 +30,7 @@ import { rutaDeApp } from '../../apps/plataforma/manifestApp.js';
 import { dataHoraDeBarra } from '../../components/universal/editorial.js';
 import { PRESSUPOST_PUJADA } from '../../utils/pujadaImatge.js';
 import { segmentPagina } from '../consola/consolaPagines.js';
+import { DESTINS_CONTROL } from '../control/destinsControl.js';
 import {
   ESPAIS_PLUGINS, IDS_PLUGINS, IMATGES_PLUGINS, PLUGINS, appDelPlugin, clauPortadaDelPlugin, pluginPerId, pluginsDeLEspai,
   rutaDelPlugin
@@ -172,7 +173,10 @@ describe('registre de plugins', () => {
   test('on porta cada «Obrir»: l’app o la secció de veres, o null (en obres)', () => {
     expect(Object.fromEntries(PLUGINS.map((p) => [p.id, p.obrir]))).toEqual({
       mapa: null,
-      vehicle: null,
+      /* llibre-deutes-02 (261104) · IDEA-61 ja servix la secció /vehicle
+         (App.jsx, SeccioVertical): Vehicle Compartit deixa d'estar en obres.
+         Abans: null. */
+      vehicle: '/vehicle',
       animalets: null,
       /* Ordre del Mestre, 261004 («contaminació crítica de rutes/estats
          entre Gestoria i Wiki») · la seua app, només en desenvolupament
@@ -183,6 +187,32 @@ describe('registre de plugins', () => {
       rss: '/app/lector',
       tpv: '/app/bar'
     });
+  });
+
+  /* llibre-deutes-02 (261104) · El registre i el Panell no es poden
+     contradir. IDEA-61 va obrir les portes de Vehicle Compartit al Panell
+     (destinsControl.js: Publicar i secció /vehicle), però el plugin es va
+     quedar amb `obrir` null i una entradilla «Eina en obres», i
+     /plugin/vehicle (i la seua vista prèvia social) ho continuava dient.
+     Guarda: un plugin la porta del qual està oberta al Panell porta a la
+     mateixa secció i la seua entradilla no diu que està en obres. */
+  test('llibre-deutes-02 · un plugin amb la porta oberta al Panell no està en obres: porta a la seua secció', () => {
+    const comuns = DESTINS_CONTROL.filter((desti) => IDS_PLUGINS.includes(desti.id));
+    // Sonda: la guarda no és buida (Mapa, Vehicle Compartit i Animalets hi són als dos llocs).
+    expect(comuns.map((desti) => desti.id)).toEqual(['mapa', 'vehicle', 'animalets']);
+    const oberts = comuns.filter((desti) => desti.publicar !== null);
+    expect(oberts.map((desti) => desti.id)).toEqual(['vehicle']);
+    for (const desti of oberts) {
+      const plugin = pluginPerId(desti.id);
+      expect([desti.id, plugin.obrir]).toEqual([desti.id, desti.seccio]);
+      expect([desti.id, /en obres/i.test(plugin.entradilla)]).toEqual([desti.id, false]);
+    }
+    // L'avís de privacitat del trajecte no se'n va amb l'«en obres».
+    expect(pluginPerId('vehicle').entradilla).toContain('Un trajecte publicat diu a tothom el teu horari i el teu camí; les despeses les acordeu entre vosaltres, fora de l’app.');
+    // Mapa i Animalets continuen en obres als dos llocs.
+    for (const id of ['mapa', 'animalets']) {
+      expect([id, pluginPerId(id).obrir, /en obres/i.test(pluginPerId(id).entradilla)]).toEqual([id, null, true]);
+    }
   });
 
   /* Onada 8 (261009) · Derogada «la Consola i el Cervell porten a la ruta de

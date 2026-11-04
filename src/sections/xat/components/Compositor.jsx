@@ -120,6 +120,28 @@ const MARGE_DOBLE_TOC = 600;
    lector de pantalla només l'escolta en passar estos llindars. */
 const LLINDARS_AVIS_COMPTADOR = [LLINDAR_COMPTADOR, 4000, LIMIT_TEXT];
 
+/* xat-ux-a11y-04 (T7a, 261104) · El teclat d'un menú role="menu" del xat, el
+   patró de menú de l'APG: ArrowDown i ArrowUp porten el focus a l'opció
+   següent o a l'anterior, en cercle, i Inici i Fi a la primera i a l'última.
+   Torna cert si l'ha mogut (la tecla queda consumida). Una sola font per al
+   menú del + (alTeclatDelMenu, P1-66) i per als «⋯» de la bombolla i de la
+   capçalera. L'Escape i el Tab són de cada menú: Tab el tanca al keydown,
+   mai amb un focusout (a Safari i al WKWebView d'iOS el botó no pren el
+   focus en tocar-lo, i el menú es tancaria abans del clic). */
+export function mouFocusDelMenu(e) {
+  const opcions = [...e.currentTarget.querySelectorAll('[role="menuitem"]')];
+  const ara = opcions.indexOf(e.target);
+  let seguent = null;
+  if (e.key === 'ArrowDown') seguent = opcions[(ara + 1) % opcions.length];
+  else if (e.key === 'ArrowUp') seguent = opcions[(ara - 1 + opcions.length) % opcions.length];
+  else if (e.key === 'Home') seguent = opcions[0];
+  else if (e.key === 'End') seguent = opcions.at(-1);
+  if (!seguent) return false;
+  e.preventDefault();
+  seguent.focus();
+  return true;
+}
+
 /** Cert si al fil no s'hi pot escriure: potEscriure false o un canal sense permís explícit (D7). */
 export function esNomesLectura(fil) {
   if (!fil) return false;
@@ -403,27 +425,16 @@ function Formulari({ valor, onCanvia, onEnvia, t, desactivat, onEscapa, campRef,
     tancaMenu();
     opcio.onTria();
   };
-  /* Les fletxes, Inici i Fi es mouen per les opcions; Escape tanca (consumit:
-     la resposta espera el segon) i Tab tanca i seguix des del +. */
+  /* Les fletxes, Inici i Fi es mouen per les opcions (mouFocusDelMenu); Escape
+     tanca (consumit: la resposta espera el segon) i Tab tanca i seguix des del +. */
   const alTeclatDelMenu = (e) => {
-    const opcions = [...e.currentTarget.querySelectorAll('[role="menuitem"]')];
-    const ara = opcions.indexOf(e.target);
-    let seguent = null;
-    if (e.key === 'ArrowDown') seguent = opcions[(ara + 1) % opcions.length];
-    else if (e.key === 'ArrowUp') seguent = opcions[(ara - 1 + opcions.length) % opcions.length];
-    else if (e.key === 'Home') seguent = opcions[0];
-    else if (e.key === 'End') seguent = opcions.at(-1);
-    else if (e.key === 'Escape') {
+    if (mouFocusDelMenu(e)) return;
+    if (e.key === 'Escape') {
       e.preventDefault();
       tancaMenu();
-      return;
     } else if (e.key === 'Tab') {
       tancaMenu();
-      return;
     }
-    if (!seguent) return;
-    e.preventDefault();
-    seguent.focus();
   };
 
   /* El calaix no passa de l'espai entre el seu peu (la vora de dalt del

@@ -695,6 +695,8 @@ export default {
   'editor.ambit.error.rang': 'The value of «{camp}» is out of the allowed range.',
   'editor.ambit.error.enum': 'Choose an option from the list for «{camp}».',
   'editor.ambit.error.llargaria': 'The text of «{camp}» is too long.',
+  /* idea61-05 (261104) · L'ajuda del camp «Com contactar» de la fitxa: diu qui el veu. */
+  'editor.ambit.contacteVisible': 'The town’s registered people will see it when they open the listing; it does not appear on the card or in search.',
   'section.search.tipus.vehicle': 'Car sharing',
   'section.search.tipus.treball': 'Work',
   'section.search.tipus.habitatge': 'Housing',
@@ -1439,6 +1441,10 @@ export default {
   'section.notes.visibilitat.errorPublicar': 'Could not publish to the Wall. Try again: if it had already arrived, the same post will be updated, with no duplicates.',
   'section.notes.visibilitat.signantDesconegut': 'another identity',
   'section.notes.visibilitat.signaturaAliena': 'This post is signed by {qui}: switch to that identity to update it.',
+  /* idea61-01 (261104) · Una publicació ja és al Mur o al Mercat i no pot canviar
+     de lloc: el motiu diu com actualitzar-la (visibilitatNota.js). */
+  'section.notes.visibilitat.seccioPublicada.mur': 'This post is already on the Wall and cannot move elsewhere. To update it, choose its previous scope again under “Where is it published?”; to publish it on the Market, make a new note.',
+  'section.notes.visibilitat.seccioPublicada.mercat': 'This post is already on the Market and cannot move elsewhere. To update it, choose Market again under “Where is it published?”; to publish it somewhere else, make a new note.',
   'section.notes.visibilitat.desatPendentDetall': 'It cannot be published until the changes are saved. {detall}',
   'section.notes.visibilitat.desatPendent': 'It cannot be published until the pending changes are saved. Try again in a moment.',
   'section.notes.visibilitat.extern.descripcio': 'This outside content is your own copy: you can edit it, and sharing it takes it to your Wall citing its source.',
@@ -1596,6 +1602,11 @@ export default {
   'section.moderacio.bloquejos.error': 'Blocks could not be loaded. Try again.',
   'section.moderacio.bloquejos.nomesSessio': 'These blocks only last for this session: the server does not store them yet.',
   'section.moderacio.bloquejos.restaPendent': 'Muting notifications and end-to-end encryption are not available yet: they will be built in the next phase of the chat.',
+  /* control-01 (261104) · El silenci per conversa (B8C-5) ja funciona des del botó ⋮:
+     l'avís de «Privacitat i seguretat» diu on és i només dona per pendent el
+     xifratge (XatControlSection.jsx). La fase F2c del xifratge haurà de reescriure
+     esta clau, no restaPendent. */
+  'section.moderacio.bloquejos.silenciIXifratge': 'To mute a conversation, open it and, from the ⋮ button, choose “Mute notifications”. End-to-end encryption is not available yet: it will be built in the next phase of the chat.',
   'section.comu.regio': 'Live list: {titol}',
   'section.comu.filtra': 'Filter the list',
   'section.comu.amplia': 'Open as a table',
@@ -1864,6 +1875,14 @@ export default {
   'section.control.treball.saberMes': 'Learn more: Jobs',
   'section.control.habitatge.publicar': 'Publish: Housing',
   'section.control.habitatge.saberMes': 'Learn more: Housing',
+  /* control-06 (revisió del Panell, 261104) · Els encapçalaments, les entradilles i
+     els dos botons de baix del Panell, abans escrits a mà (ControlSection.jsx). */
+  'section.control.utilitats.titol': 'Utilities and Connectors (Plugins)',
+  'section.control.utilitats.lead': 'The system will grow with utilities (or plugins) like these, which can be switched on when needed. They are independent of the core system, so tailored features can be plugged in only for the users or clients who ask for them.',
+  'section.control.maquinaria.titol': 'Machinery and System',
+  'section.control.maquinaria.lead': 'Administration panels and internal platform tools. These utilities are usually enabled only for the administration team.',
+  'section.control.dubtes': 'Messages for questions',
+  'section.control.eixir': 'Leave the village',
   'pagina.portada.amaga': 'Hide the cover image',
   'pagina.portada.mostra': 'Show the cover image',
   'section.plugin.enObres': 'This tool is still under construction.',
@@ -2145,6 +2164,9 @@ export default {
   'section.xat.vista.multimedia.enllacos.buit': 'No links have been shared in the open conversations yet.',
   'section.xat.vista.multimedia.documents.buit': 'Documents shared in conversations will be here.',
   'section.xat.vista.multimedia.adjunts': 'Attachments arrive with phase F1 of the chat: for now only text can be sent.',
+  /* xat-ux-a11y-06 (261104) · Els adjunts F1 (fotos, vídeo i veu) ja funcionen: la
+     vista pinta avisAdjunts en lloc d'adjunts (VistaMultimedia.jsx). */
+  'section.xat.vista.multimedia.avisAdjunts': 'Photos, videos and voice messages can already be sent in the chat, if the conversation allows it. Documents, not yet.',
   'section.xat.vista.multimedia.avisLocal': 'Only content from the conversations opened in this session is shown.',
   'section.xat.vista.multimedia.obri': 'Open the conversation {nom}',
   'section.xat.vista.multimedia.senseData': 'No date',
@@ -2423,6 +2445,8 @@ export default {
   'section.xat.control.temporals.text': 'Turn on self-destructing messages for sensitive conversations.',
   'section.xat.control.privacitat.titol': 'Privacy and security',
   'section.xat.control.privacitat.text': 'Mute notifications, block, end-to-end encryption.',
+  /* control-01 (261104) · L'avís propi de «Privacitat i seguretat» sense moderació. */
+  'section.xat.control.privacitat.pendent': 'To mute a conversation, open it and, from the ⋮ button, choose “Mute notifications”. The rest of this option is not available yet: it will be built in the next phase of the chat.',
   'section.xat.control.espai.titol': 'Column width',
   'section.xat.control.espai.text': 'Choose how wide the navigation and list columns are, in the chat too.',
   'section.xat.control.espai.ara': 'Now: navigation {left} px · list {middle} px',
@@ -3256,4 +3280,6 @@ export default {
   'section.control.rural.crdtInvalid': "The CRDT change could not be applied. Check the data and keep a backup before continuing.",
   'section.control.rural.crdtQuota': "The history or journal has reached its limit. Prepare a backup; consolidating the journal preserves all CRDT history.",
   'section.control.rural.crdtCommitDesconegut': "The browser has not yet confirmed the write. Refresh the notes to check the state before repeating the change.",
+  /* control-06 (revisió del Panell, 261104) · Abans, un Error escrit a mà a ModeRural.jsx. */
+  'section.control.rural.fitxerGran': "Choose a JSON file of up to 4 MB.",
 };

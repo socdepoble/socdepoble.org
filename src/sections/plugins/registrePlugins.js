@@ -108,8 +108,14 @@
  *             useDestiDelPlugin deixa el botó inert («(no disponible ací)»)
  *             i la pàgina diu que està en obres. Cap consulta ni dada a la
  *             ruta (MAPA §2.2, R4).
- *   mapa, vehicle, animalets → null. Mapa, Vehicle Compartit i Animalets no
- *     tenen secció (control/destinsControl.js:29-31).
+ *   mapa, animalets → null. Mapa i Animalets no tenen secció
+ *     (control/destinsControl.js:29-31).
+ *   vehicle → /vehicle · llibre-deutes-02 (261104) · IDEA-61 (T0, prompt
+ *             261102_1532) li va donar secció: App.jsx, <Route
+ *             path="vehicle"> amb SeccioVertical (ActorRoutes), la mateixa
+ *             que el Panell (destinsControl.js, `seccio`). No és cap app de
+ *             la plataforma: cap interruptor, s'obri en qualsevol entorn.
+ *             Abans: null («en obres»), que IDEA-61 va deixar obsolet.
  *
  * Pur: sense React ni xarxa. Les rutes d'app es fan amb rutaDeApp (la mateixa
  * de la plataforma), que ja és al paquet principal (PlataformaContext).
@@ -248,8 +254,15 @@ export const PLUGINS = Object.freeze([
     id: 'vehicle',
     titol: 'Vehicle Compartit',
     subtitol: 'Seients buits per a pujar i baixar del poble',
-    entradilla: 'Eina en obres: encara no es pot publicar cap trajecte. Un trajecte publicat diu a tothom el teu horari i el teu camí; les despeses les acordeu entre vosaltres, fora de l’app.',
+    /* llibre-deutes-02 (261104) · Ja no està en obres: IDEA-61 publica els
+       trajectes (Publicar del Panell, /notes?ambit=vehicle) i els llista a
+       /vehicle. La primera frase és el subtítol de la secció
+       (section.vehicle.subtitle); l'avís de privacitat i de despeses es
+       queda literal. Abans: «Eina en obres: encara no es pot publicar cap
+       trajecte.» */
+    entradilla: 'Oferix o busca lloc al cotxe per a anar i tornar del poble. Un trajecte publicat diu a tothom el teu horari i el teu camí; les despeses les acordeu entre vosaltres, fora de l’app.',
     imatgeAlt: 'Una furgoneta plena de veïns, caixes de tomaques i un acordió baixa pel camí del poble',
+    obrir: '/vehicle',
     etiquetaObrir: 'Obrir Vehicle Compartit',
     /* Mòdul B (261021) · L'original .jpg ix de public/: la vinyeta és la WebP. */
     extensioImatge: 'webp'

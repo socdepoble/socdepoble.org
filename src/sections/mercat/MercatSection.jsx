@@ -20,6 +20,7 @@ import { totsPublics } from '../../components/universal/traduccio/visibilitatTra
    ranura accioPrincipal de la UniversalPage: la mateixa porta que
    /page/publicar_mur (PortaDePagina), cap a l'editor amb l'àmbit fixat. */
 import { PortaDePagina } from '../../components/PedraSeca/organismes/PortesTargeta.jsx';
+import { esFitxaDAmbit, esVisibleALaLlista } from '../../utils/publicacioUniversal.js';
 
 const RUTA_PUBLICAR_PRODUCTE = '/notes?ambit=mercat';
 
@@ -29,12 +30,21 @@ const SENSE_MES = () => false;
 const SENSE_ERROR = () => null;
 const SENSE_CARREGA = async () => false;
 
+/* idea61-04 (Gauntlet T7a, 261104) · Com SeccioVertical: una fitxa d'àmbit
+   'tancada' no ix a la llista (esVisibleALaLlista), i la targeta del Mercat no
+   pinta cap estat. Només les fitxes d'àmbit: un producte de sempre (sense
+   `ambit`) es pinta com abans, porte el que porte (Llei del Píxel). El detall
+   per enllaç continua obert. La traducció continua mirant tots els productes
+   carregats (totsPublics), també els amagats: més prudent, i com abans. */
+const esProducteVisible = (item) => !esFitxaDAmbit(item) || esVisibleALaLlista(item);
+
 export default function MercatSection() {
   const {
     sortedMarketItems, status, error, refresh,
     carregaMes = SENSE_CARREGA, hiHaMes = SENSE_MES, carregantMes = SENSE_MES, errorMes = SENSE_ERROR
   } = useMur();
   const { t } = useUIActions();
+  const productes = (sortedMarketItems || []).filter(esProducteVisible);
   /* Decisió 4 · Els productes de més enllà dels primers 50. hiHaMes ja inclou
      teCapacitat('paginacioSeccions'); si la càrrega falla, l'avís és el de
      sempre i «Torna-ho a provar» torna a demanar la mateixa pàgina. */
@@ -68,13 +78,13 @@ export default function MercatSection() {
         {status === 'error'
           ? <EstatErrorDades titol={t('section.mercat.error', 'No s’ha pogut carregar el Mercat')} error={error} onReintenta={refresh} />
           : null}
-        {status === 'ready' && !sortedMarketItems.length ? <p role="status">
+        {status === 'ready' && !productes.length ? <p role="status">
           {t('section.mercat.buit', 'Encara no hi ha productes publicats en este poble.')}
         </p> : null}
         <div className="sdp-card-grid">
           {/* Esmena 2 (261007_1645) · el descriptor, Connectar i el peu, a
               TargetaDelMercat: el JSX de sempre, píxel a píxel. */}
-          {sortedMarketItems.map((item) => <TargetaDelMercat key={item.id} item={item} />)}
+          {productes.map((item) => <TargetaDelMercat key={item.id} item={item} />)}
         </div>
         {/* Decisió 4 del Mestre (261007) · «Carregar-ne més», al final de la
             llista i només amb més pàgines. Sense, el DOM és el de sempre. */}

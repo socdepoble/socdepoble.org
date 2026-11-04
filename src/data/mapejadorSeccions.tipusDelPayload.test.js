@@ -42,7 +42,12 @@ const payloadHostil = () => ({
   variations: textHostil(),
   tags: [textHostil(), 'bona'],
   geolocalitzacio: { lat: textHostil(), lng: 1.5, altitud: [1] },
-  origen: { tipus: 'connexio', itemId: textHostil(), titol: 'Sella' }
+  origen: { tipus: 'connexio', itemId: textHostil(), titol: 'Sella' },
+  /* seguretat-01 (261104) · La insígnia d'un acte multi-dia i les dues
+     píndoles del seu detall (detailSectionMeta), que les vistes pinten. */
+  calendar_badge: { dia: textHostil(), mes: textHostil(), any: textHostil(), dateTime: [textHostil()], label: textHostil(), extra: textHostil() },
+  date_label: textHostil(),
+  type_label: [textHostil()]
 });
 
 /* Cap objecte del payload hostil no ha sobreviscut on les vistes llegixen text. */
@@ -129,6 +134,51 @@ describe('elementDeFilaPublicada · els tipus del payload', () => {
     expect(() => fotosDelMur([cru])).toThrow(TypeError);
     expect(() => String(propsDeTargetaDeProducte(cru).body)).toThrow(TypeError);
     expect(HOSTIL.toString).toBe(0);
+  });
+
+  /* seguretat-01 (261104) · La insígnia d'un acte multi-dia (EventCard ·
+     insigniaDeCalendari) fa String() de cada peça i passa l'etiqueta a un
+     aria-label: només en viatgen dia, mes, any, dateTime i label, com a text.
+     Una peça buida (0, '') tampoc, perquè la vista ja la pintava buida; una
+     insígnia que no és un objecte (un text, un número, un booleà) no viatja,
+     perquè la vista ja no la llegia. date_label i type_label (el detall de
+     l'acte) són text, i un de buit no viatja: la vista hi posava la reserva. */
+  test('seguretat-01 · calendar_badge només porta peces de text; date_label i type_label, text', () => {
+    const element = fila(payloadHostil());
+    expect(element.calendar_badge).toEqual({});
+    expect(element).not.toHaveProperty('date_label');
+    expect(element).not.toHaveProperty('type_label');
+    expect(senseValorsHostils(element)).toBe(true);
+    const cru = elementDeFilaPublicada({
+      id: 'p2', titol: 'Veí', ownerUserId: 'U', sectionId: 'mur',
+      payload: JSON.parse('{"type":"event","calendar_badge":{"dia":{"toString":0},"label":{"a":1},"mes":"OCT"},"date_label":{"a":1},"type_label":[1]}')
+    });
+    expect(cru.type).toBe('event');
+    expect(cru.calendar_badge).toEqual({ mes: 'OCT' });
+    expect(cru).not.toHaveProperty('date_label');
+    expect(cru).not.toHaveProperty('type_label');
+    expect(fila({ calendar_badge: { dia: 23, mes: 'OCT', any: 2026, dateTime: '2026-10-23', label: 7, altra: 'x' } }).calendar_badge)
+      .toEqual({ dia: '23', mes: 'OCT', any: '2026', dateTime: '2026-10-23', label: '7' });
+    expect(fila({ calendar_badge: { dia: 0, mes: '', any: true, label: null } }).calendar_badge).toEqual({});
+    for (const valor of ['text', 5, true]) expect(fila({ calendar_badge: valor }), String(valor)).not.toHaveProperty('calendar_badge');
+    expect(fila({ calendar_badge: ['a', 1] }).calendar_badge).toEqual({});
+    expect(fila({ date_label: 5, type_label: 'Curs' })).toMatchObject({ date_label: '5', type_label: 'Curs' });
+    const buides = fila({ date_label: 0, type_label: '' });
+    expect(buides).not.toHaveProperty('date_label');
+    expect(buides).not.toHaveProperty('type_label');
+  });
+
+  test('seguretat-01 · la insígnia dels Cursos de pedra en sec arriba igual', () => {
+    const insignia = {
+      dia: '23–14', mes: 'OCT–NOV', any: '2026', dateTime: '2026-10-23', label: 'Del 23 d’octubre al 14 de novembre de 2026'
+    };
+    const element = fila({
+      type: 'event', calendar_badge: insignia, type_label: 'Curs teoricopràctic',
+      date_label: '23, 24, 30 i 31 d’octubre (Fageca) · 6, 7 i 14 de novembre de 2026 (Alcosser)'
+    });
+    expect(element.calendar_badge).toEqual(insignia);
+    expect(element.type_label).toBe('Curs teoricopràctic');
+    expect(element.date_label).toBe('23, 24, 30 i 31 d’octubre (Fageca) · 6, 7 i 14 de novembre de 2026 (Alcosser)');
   });
 
   test('el contingut que escriu publishNote arriba igual que abans', () => {

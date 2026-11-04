@@ -697,6 +697,8 @@ export default {
   'editor.ambit.error.rang': 'O valor de «{camp}» está fóra do intervalo permitido.',
   'editor.ambit.error.enum': 'Escolle unha opción da lista para «{camp}».',
   'editor.ambit.error.llargaria': 'O texto de «{camp}» é longo de máis.',
+  /* idea61-05 (261104) · L'ajuda del camp «Com contactar» de la fitxa: diu qui el veu. */
+  'editor.ambit.contacteVisible': 'Verao a xente rexistrada do pobo ao abrir a ficha; non sae na tarxeta nin na busca.',
   'section.search.tipus.vehicle': 'Compartir coche',
   'section.search.tipus.treball': 'Traballo',
   'section.search.tipus.habitatge': 'Vivenda',
@@ -1443,6 +1445,10 @@ export default {
   'section.notes.visibilitat.errorPublicar': 'Non se puido publicar no Muro. Téntao de novo: se xa chegara, actualizarase a mesma publicación, sen duplicados.',
   'section.notes.visibilitat.signantDesconegut': 'outra identidade',
   'section.notes.visibilitat.signaturaAliena': 'Esta publicación asínaa {qui}: cambia a esa identidade para actualizala.',
+  /* idea61-01 (261104) · Una publicació ja és al Mur o al Mercat i no pot canviar
+     de lloc: el motiu diu com actualitzar-la (visibilitatNota.js). */
+  'section.notes.visibilitat.seccioPublicada.mur': 'Esta publicación xa está no Muro e non pode cambiar de lugar. Para actualizala, volve escoller en «Onde se publica?» o ámbito que tiña; para publicala no Mercado, fai unha nota nova.',
+  'section.notes.visibilitat.seccioPublicada.mercat': 'Esta publicación xa está no Mercado e non pode cambiar de lugar. Para actualizala, volve escoller Mercado en «Onde se publica?»; para publicala noutro lugar, fai unha nota nova.',
   'section.notes.visibilitat.desatPendentDetall': 'Non se pode publicar ata que se garden os cambios. {detall}',
   'section.notes.visibilitat.desatPendent': 'Non se pode publicar ata que se garden os cambios pendentes. Téntao de novo nun momento.',
   'section.notes.visibilitat.extern.descripcio': 'Este contido de fóra é unha copia túa: podes editalo, e compartilo lévao ao teu Muro citando a súa orixe.',
@@ -1606,6 +1612,11 @@ export default {
   'section.moderacio.bloquejos.error': 'Non se puideron cargar os bloqueos. Téntao de novo.',
   'section.moderacio.bloquejos.nomesSessio': 'Estes bloqueos só duran esta sesión: o servidor aínda non os garda.',
   'section.moderacio.bloquejos.restaPendent': 'Silenciar as notificacións e o cifrado de extremo a extremo aínda non están dispoñibles: construiranse na seguinte fase do chat.',
+  /* control-01 (261104) · El silenci per conversa (B8C-5) ja funciona des del botó ⋮:
+     l'avís de «Privacitat i seguretat» diu on és i només dona per pendent el
+     xifratge (XatControlSection.jsx). La fase F2c del xifratge haurà de reescriure
+     esta clau, no restaPendent. */
+  'section.moderacio.bloquejos.silenciIXifratge': 'Para silenciar unha conversa, ábrea e, desde o botón ⋮, escolle «Silenciar as notificacións». O cifrado de extremo a extremo aínda non está dispoñible: construirase na seguinte fase do chat.',
   'section.comu.regio': 'Lista viva: {titol}',
   'section.comu.filtra': 'Filtra a lista',
   'section.comu.amplia': 'Ampliar en táboa',
@@ -1875,6 +1886,14 @@ export default {
   'section.control.treball.saberMes': 'Saber máis: Traballo',
   'section.control.habitatge.publicar': 'Publicar: Vivenda',
   'section.control.habitatge.saberMes': 'Saber máis: Vivenda',
+  /* control-06 (revisió del Panell, 261104) · Els encapçalaments, les entradilles i
+     els dos botons de baix del Panell, abans escrits a mà (ControlSection.jsx). */
+  'section.control.utilitats.titol': 'Utilidades e Conectores (Plugins)',
+  'section.control.utilitats.lead': 'O sistema irase enriquecendo con este tipo de utilidades (ou plugins), que se poden activar se se precisan. Son independentes do sistema base, o que permite conectar funcionalidades á medida só para os usuarios ou clientes que as piden.',
+  'section.control.maquinaria.titol': 'Maquinaria e Sistema',
+  'section.control.maquinaria.lead': 'Paneis de administración e ferramentas internas da plataforma. Estas utilidades normalmente só se activan para o equipo de administración.',
+  'section.control.dubtes': 'Mensaxes para dúbidas',
+  'section.control.eixir': 'Saír do pobo',
   'pagina.portada.amaga': 'Oculta a portada',
   'pagina.portada.mostra': 'Amosa a portada',
   'section.plugin.enObres': 'Esta ferramenta aínda está en obras.',
@@ -2158,6 +2177,9 @@ export default {
   'section.xat.vista.multimedia.enllacos.buit': 'Aínda non se compartiu ningunha ligazón nas conversas abertas.',
   'section.xat.vista.multimedia.documents.buit': 'Aquí estarán os documentos compartidos nas conversas.',
   'section.xat.vista.multimedia.adjunts': 'Os anexos chegan coa fase F1 do chat: agora só se pode enviar texto.',
+  /* xat-ux-a11y-06 (261104) · Els adjunts F1 (fotos, vídeo i veu) ja funcionen: la
+     vista pinta avisAdjunts en lloc d'adjunts (VistaMultimedia.jsx). */
+  'section.xat.vista.multimedia.avisAdjunts': 'Polo chat xa se poden enviar fotos, vídeos e mensaxes de voz, se a conversa o permite. Os documentos, aínda non.',
   'section.xat.vista.multimedia.avisLocal': 'Só se ve o contido das conversas abertas nesta sesión.',
   'section.xat.vista.multimedia.obri': 'Abrir a conversa de {nom}',
   'section.xat.vista.multimedia.senseData': 'Sen data',
@@ -2437,6 +2459,8 @@ export default {
   'section.xat.control.temporals.text': 'Activa a autodestrución de mensaxes para conversas sensibles.',
   'section.xat.control.privacitat.titol': 'Privacidade e seguridade',
   'section.xat.control.privacitat.text': 'Silenciar notificacións, bloquear, cifrado de extremo a extremo.',
+  /* control-01 (261104) · L'avís propi de «Privacitat i seguretat» sense moderació. */
+  'section.xat.control.privacitat.pendent': 'Para silenciar unha conversa, ábrea e, desde o botón ⋮, escolle «Silenciar as notificacións». O resto desta opción aínda non está dispoñible: construirase na seguinte fase do chat.',
   'section.xat.control.espai.titol': 'Anchura das columnas',
   'section.xat.control.espai.text': 'Escolle o anchas que son as columnas de navegación e de lista, tamén no chat.',
   'section.xat.control.espai.ara': 'Agora: navegación {left} px · lista {middle} px',
@@ -3271,4 +3295,6 @@ export default {
   'section.control.rural.crdtInvalid': "Non se puido aplicar o cambio CRDT. Comproba os datos e conserva unha copia antes de continuar.",
   'section.control.rural.crdtQuota': "O historial ou o diario chegaron ao límite. Prepara unha copia; consolidar o diario conserva toda a historia CRDT.",
   'section.control.rural.crdtCommitDesconegut': "O navegador aínda non confirmou a escritura. Actualiza as notas para comprobar o estado antes de repetir o cambio.",
+  /* control-06 (revisió del Panell, 261104) · Abans, un Error escrit a mà a ModeRural.jsx. */
+  'section.control.rural.fitxerGran': "Escolle un ficheiro JSON de ata 4 MB.",
 };

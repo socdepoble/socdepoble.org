@@ -60,7 +60,8 @@ describe('Pedra Seca', () => {
 
   test('«Maquinària i Sistema» s’aparta amb la classe del full, dins de @layer components i només amb tokens', () => {
     const panell = llig(PANELL);
-    expect(panell).toMatch(/<section className="sdp-control-maquinaria">\s*<h2>Maquinària i Sistema<\/h2>/);
+    /* control-06 (revisió del Panell, 261104) · L'h2 passa per t(), amb el text d'abans de reserva. */
+    expect(panell).toMatch(/<section className="sdp-control-maquinaria">\s*<h2>\{t\('section\.control\.maquinaria\.titol', 'Maquinària i Sistema'\)\}<\/h2>/);
     const css = senseComentarisCss(llig('src/css/modules.css'));
     const regla = /\.sdp-control-maquinaria\s*\{([^}]*)\}/g;
     const regles = [...css.matchAll(regla)];

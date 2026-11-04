@@ -52,6 +52,14 @@
  * de l'entrada del xifratge i davant de la moderació, «Silencia les
  * notificacions» o «Deixa de silenciar» (useSilenciDelFil). Com les altres,
  * tanca el menú i torna el focus al «⋯». Sense, el menú de sempre, igual.
+ *
+ * T7a (261104) · xat-ux-a11y-04: el menú «⋯» té el teclat del patró de menú
+ * (mouFocusDelMenu, el del menú del + del Compositor): en obrir-lo, el focus
+ * entra a la primera opció; les fletxes, Inici i Fi s'hi mouen en cercle, i
+ * Tab el tanca i seguix des del «⋯». xat-ux-a11y-02: en entrar en la selecció
+ * de missatges, el focus perdut va a la creu «Eixir de la selecció» i, en
+ * eixir-ne, al «⋯» (les dues capçaleres porten `key`: React ja no reutilitza la
+ * creu com a fletxa «Torna a la llista»).
  */
 import { useCallback, useEffect, useId, useRef, useState } from 'react';
 import { ArrowLeft, MoreVertical, X } from 'lucide-react';
@@ -60,6 +68,7 @@ import { rutaDePerfil } from '../../../config/navigation.js';
 import { useCapaEnrere } from '../../../components/PedraSeca/hooks/useCapaEnrere.js';
 import { AvatarFil } from './FilaConversa.jsx';
 import { rutaCanonicaDelXat } from '../actorsDelXat.js';
+import { mouFocusDelMenu } from './Compositor.jsx';
 
 /* «{n} participants» (o «1 participant»); res si el backend no ho diu. */
 function participantsDe(n, t) {
@@ -72,6 +81,18 @@ function participantsDe(n, t) {
 /* Només les rutes internes de l'aplicació: mai un enllaç a fora des d'ací. */
 const esRutaInterna = (ruta) => typeof ruta === 'string' && ruta.startsWith('/') && !ruta.startsWith('//');
 
+/* xat-ux-a11y-02 (T7a, 261104) · El focus s'ha perdut: el control que el tenia
+   s'ha desmuntat (cau a <body>, o a res dins d'un shadow root). El mateix
+   criteri que la selecció de xats (XatSection, focusPerdut): mai no es roba a
+   qui és en una casella o en un altre lloc. */
+function focusPerdut(node) {
+  const arrel = node?.getRootNode?.() || (typeof document !== 'undefined' ? document : null);
+  if (!arrel) return false;
+  const actiu = arrel.activeElement;
+  return !actiu || actiu.isConnected === false || actiu === arrel.body
+    || (typeof document !== 'undefined' && actiu === document.body);
+}
+
 export default function CapcaleraConversa({
   fil, onTorna, onSeleccionar, seleccio = null, t,
   onDenunciaPersona = null, onBloqueja = null, onDesbloqueja = null, nomContrapart = '',
@@ -80,6 +101,7 @@ export default function CapcaleraConversa({
   const [menuObert, setMenuObert] = useState(false);
   const menuRef = useRef(null);
   const botoRef = useRef(null);
+  const creuRef = useRef(null);
   const idSub = useId();
   /* Fase D (261020, tasca 2) · Tanca el menú, torna el focus al «⋯» i li'l passa. */
   const triaDelMenu = (accio) => {
@@ -104,6 +126,9 @@ export default function CapcaleraConversa({
   useEffect(() => {
     if (!menuVisible) return undefined;
     const node = menuRef.current;
+    /* xat-ux-a11y-04 (T7a, 261104) · En obrir, el focus entra a la primera
+       opció, com al menú de la bombolla i al del +. */
+    node?.querySelector('[role="menuitem"]')?.focus();
     const arrel = node?.getRootNode?.() || document;
     const tancaFora = (e) => { if (node && !node.contains(e.target)) setMenuObert(false); };
     const tancaEsc = (e) => {
@@ -122,6 +147,26 @@ export default function CapcaleraConversa({
      l'Arrere d'Android (config/pilaEnrere.js) amb el camí de l'Escape (ARB-T2B-04:
      damunt de la selecció o de la resposta, l'Arrere el tanca a ell primer). */
   useCapaEnrere(menuVisible, tancaMenu);
+  /* xat-ux-a11y-04 (T7a, 261104) · Les fletxes, Inici i Fi es mouen per les
+     opcions; Tab tanca el menú i seguix des del «⋯», sense consumir-lo.
+     L'Escape és de l'escolta de l'arrel, com fins ara. */
+  const alTeclatDelMenu = (e) => {
+    if (mouFocusDelMenu(e)) return;
+    if (e.key === 'Tab') tancaMenu();
+  };
+
+  /* xat-ux-a11y-02 (T7a, 261104) · Focus coherent, com la selecció de xats
+     (XatSection, T68 i P1-36): en entrar en la selecció, a la creu «Eixir de
+     la selecció» (l'opció del menú s'ha desmuntat); en eixir-ne (la creu,
+     l'Escape o l'Arrere), al «⋯». Només si el focus s'ha perdut. */
+  const enSeleccio = Boolean(seleccio);
+  const seleccioPrevia = useRef(enSeleccio);
+  useEffect(() => {
+    if (seleccioPrevia.current === enSeleccio) return;
+    seleccioPrevia.current = enSeleccio;
+    const desti = (enSeleccio ? creuRef : botoRef).current;
+    if (desti && focusPerdut(desti)) desti.focus();
+  }, [enSeleccio]);
 
   if (seleccio) {
     const { quants, onEixir } = seleccio;
@@ -131,8 +176,8 @@ export default function CapcaleraConversa({
         ? t('section.xat.seleccio.triat', '1 triat')
         : t('section.xat.seleccio.triats', '{n} triats').replace('{n}', String(quants));
     return (
-      <header className="sdp-xat-capcalera sdp-xat-capcalera--seleccio">
-        <button type="button" className="sdp-xat-icona" onClick={onEixir} aria-label={t('section.xat.seleccio.eixir', 'Eixir de la selecció')}>
+      <header key="seleccio" className="sdp-xat-capcalera sdp-xat-capcalera--seleccio">
+        <button ref={creuRef} type="button" className="sdp-xat-icona" onClick={onEixir} aria-label={t('section.xat.seleccio.eixir', 'Eixir de la selecció')}>
           <X size={24} aria-hidden="true" focusable="false" />
         </button>
         <strong className="sdp-xat-capcalera__info" aria-live="polite">{recompte}</strong>
@@ -154,7 +199,10 @@ export default function CapcaleraConversa({
 
   /* L'altra part, amb id i tipus: només llavors hi ha perfil on anar. Un fil
      de pàgina no és de ningú: el seu enllaç va a la pàgina. */
-  const contrapart = !esGrup && !subjecte && Array.isArray(fil?.altres) && fil.altres.length === 1 ? fil.altres[0] : null;
+  const llistaContrapart = Array.isArray(fil?.altres) && fil.altres.length === 1
+    ? fil.altres
+    : (Array.isArray(fil?.participants) && fil.participants.length === 1 && fil?.tipus === 'directe' ? fil.participants : null);
+  const contrapart = !esGrup && !subjecte && llistaContrapart ? llistaContrapart[0] : null;
   const rutaCanonica = rutaCanonicaDelXat(fil);
   const rutaPerfil = subjecte ? null : rutaCanonica || (contrapart ? rutaDePerfil(contrapart.tipus, contrapart.id) : null);
 
@@ -218,7 +266,7 @@ export default function CapcaleraConversa({
   );
 
   return (
-    <header className="sdp-xat-capcalera">
+    <header key="conversa" className="sdp-xat-capcalera">
       {fletxa}
       {capIdentitat}
       <div className="sdp-xat-capcalera__menu" ref={menuRef}>
@@ -234,7 +282,7 @@ export default function CapcaleraConversa({
           <MoreVertical size={24} aria-hidden="true" focusable="false" />
         </button>
         {menuObert ? (
-          <div className="sdp-xat-menu" role="menu">
+          <div className="sdp-xat-menu" role="menu" onKeyDown={alTeclatDelMenu}>
             <button
               type="button"
               role="menuitem"

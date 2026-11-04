@@ -515,6 +515,14 @@ const CLAUS_DE_TEXT_DEL_PAYLOAD = Object.freeze([
   'copyright', 'source', 'autor', 'nomPoble', 'poble', 'poble_id', 'icon', 'imageAlt', 'type', 'kind',
   'date', 'time', 'publish_date', 'dataCaptura', 'searchText', 'comments', 'likes', 'file', 'sectionId'
 ]);
+/* seguretat-01 (261104) · Les claus de text que la vista llig amb un || (les
+   píndoles del detall d'un acte, detailSectionMeta): la regla de
+   CLAUS_DE_TEXT_DEL_PAYLOAD, però una de buida (0, '') no viatja, perquè la
+   vista hi posava la reserva i un '0' la taparia (Llei del Píxel). */
+const CLAUS_DE_TEXT_AMB_RESERVA = Object.freeze(['date_label', 'type_label']);
+/* seguretat-01 (261104) · Les peces de la insígnia d'un acte multi-dia
+   (`calendar_badge`, EventCard · insigniaDeCalendari), amb la mateixa regla. */
+const PECES_DE_LA_INSIGNIA = Object.freeze(['dia', 'mes', 'any', 'dateTime', 'label']);
 /* Llibre Mestre, P1-61 (àudio del Mestre del 27-10-2026 a les 12:08) · «el
    model de dades i la resolució d'imatge han de prioritzar item.og_image ||
    item.featured_image»: la imatge que l'autor tria per a xarxes
@@ -635,6 +643,35 @@ function textDelPayload(valor) {
   return esNumeroFinit(valor) ? String(valor) : null;
 }
 
+/* seguretat-01 (261104) · El text d'un valor que la vista llig amb un ||: el
+   de textDelPayload, i un de buit (0, ''), null. */
+const textPleDelPayload = (valor) => (valor ? textDelPayload(valor) : null);
+
+/* seguretat-01 (261104) · La insígnia d'un acte multi-dia, coaccionada: la
+   vista fa String() de cada peça i posa l'etiqueta en un aria-label, i un
+   {"toString":0} escrit per l'API dins de `dia` tombava el Mur i el Calendari
+   de tot el poble (TypeError per damunt de la frontera d'error de la ruta).
+   Un objecte (una llista també: la vista ja no hi llegia cap peça) es queda
+   amb les peces pròpies de PECES_DE_LA_INSIGNIA que són text
+   (textPleDelPayload); la resta de claus no viatja. Una peça buida (0, '')
+   tampoc: la vista ja la pintava buida. Sense cap peça, l'objecte buit, el
+   quadrat de sempre (Llei del Píxel). Una insígnia que no és un objecte, null:
+   la vista ja no la llegia. Com geolocalitzacioDelMapa, un valor que no es
+   deixa llegir, null. */
+function insigniaDeCalendariDelPayload(valor) {
+  if (!esObjecte(valor)) return null;
+  try {
+    const neta = {};
+    for (const peca of PECES_DE_LA_INSIGNIA) {
+      const text = Object.hasOwn(valor, peca) ? textPleDelPayload(valor[peca]) : null;
+      if (text !== null) neta[peca] = text;
+    }
+    return neta;
+  } catch {
+    return null;
+  }
+}
+
 function origenLlegible(origen) {
   try {
     return origenPublic(origen);
@@ -739,6 +776,12 @@ function netejaTipusDelPayload(dades) {
     if (text === null) delete dades[clau];
     else dades[clau] = text;
   }
+  for (const clau of CLAUS_DE_TEXT_AMB_RESERVA) {
+    if (!Object.hasOwn(dades, clau)) continue;
+    const text = textPleDelPayload(dades[clau]);
+    if (text === null) delete dades[clau];
+    else dades[clau] = text;
+  }
   if (Object.hasOwn(dades, 'revision') && !esNumeroFinit(dades.revision)) delete dades.revision;
   for (const clau of CLAUS_D_IMATGE_DEL_PAYLOAD) {
     const valor = dades[clau];
@@ -761,6 +804,12 @@ function netejaTipusDelPayload(dades) {
     else delete dades.geolocalitzacio;
   }
   if (Object.hasOwn(dades, 'dataCaptura') && dades.dataCaptura != null && !esDataCaptura(dades.dataCaptura)) delete dades.dataCaptura;
+  /* seguretat-01 (261104) · La insígnia d'un acte multi-dia, només amb peces de text. */
+  if (Object.hasOwn(dades, 'calendar_badge') && dades.calendar_badge != null) {
+    const insignia = insigniaDeCalendariDelPayload(dades.calendar_badge);
+    if (insignia) dades.calendar_badge = insignia;
+    else delete dades.calendar_badge;
+  }
   /* P1-64 · L'índex de les fotos del cos: si no és una llista, fora; dins, només
      les que complixen el contracte i són al cos (dades.content ja és text). */
   if (Object.hasOwn(dades, 'fotos_geo')) {

@@ -106,10 +106,11 @@ describe('a /connectar · quan es pinta i quan no', () => {
     const titolDeLaTargeta = await within(targeta).findByRole('heading', { name: 'Incloure Pepa Soler en una entitat teua' });
     /* RA-03 · L'h3, només per al lector de pantalla: el rètol ja es veu i el botó diu a qui i on. */
     expect(titolDeLaTargeta.classList.contains('sdp-sr-only')).toBe(true);
-    /* Ve després de la connexió directa i abans del plegable de les notes (ordre del DOM). */
+    /* Ve després de la connexió directa (ordre del DOM). Actualitzada a posta (FEDI-26, Regla 1; correcció
+       connectar-03, 261104): en el perfil d'una persona ja no hi ha cap plegable de les notes davall. */
     const directa = screen.getByRole('group', { name: 'Connexió directa' });
     expect(directa.compareDocumentPosition(targeta) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
-    expect(targeta.compareDocumentPosition(document.querySelector('details.sdp-connectar__notes')) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(document.querySelector('details.sdp-connectar__notes')).toBeNull();
     expect(targeta.textContent).not.toContain('Impostora');
   });
 

@@ -2167,6 +2167,48 @@ test('T4 · rutaAmbConsulta conserva la ruta i la consulta del Xat per a tornar 
   expect(new URLSearchParams(desti.split('?')[1]).get('tornar')).toBe('/xat?sobre=publicacio%3Ap-1&titol=Festa');
 });
 
+/* xat-ux-a11y-05 (T7a, 261104) · Sense sessió (el Xat de mostra), crear la
+   nota falla sempre: «Enviar al Bloc de Notes» de la selecció porta a entrar
+   amb la forma única de T4 (rutaDEntrada) i la tornada a la conversa, sense
+   cridar creaNota ni escriure cap console.error (P0-16). */
+test('xat-ux-a11y-05 · sense sessió, el retall de la selecció porta a entrar: cap nota ni cap console.error', async () => {
+  mocks.senseSessio = true;
+  mocks.joId = null;
+  const error = vi.spyOn(console, 'error');
+  try {
+    render(<XatSection />);
+    fireEvent.click(screen.getByRole('button', { name: 'Opcions de la conversa' }));
+    fireEvent.click(screen.getByRole('menuitem', { name: 'Seleccionar missatges' }));
+    fireEvent.click(screen.getAllByRole('checkbox')[0]);
+    await act(async () => { fireEvent.click(screen.getByRole('button', { name: /Enviar al Bloc de Notes/ })); });
+    expect(mocks.creaNota).not.toHaveBeenCalled();
+    expect(mocks.navigate).toHaveBeenCalledWith(rutaDEntrada({ tornar: '/xat/a' }));
+    expect(error.mock.calls.filter(([primer]) => String(primer).startsWith('[xat]'))).toEqual([]);
+  } finally {
+    error.mockRestore();
+  }
+});
+
+/* xat-ux-a11y-05 · Al fil de mostra de la IAIA sense sessió, cap «Envia
+   l’esborrany al Bloc de Notes»: ni davall de la salutació ni darrere d'una
+   pregunta. Els enllaços «Obri …» de la resposta continuen. */
+test('xat-ux-a11y-05 · sense sessió, cap esborrany de la IAIA al fil de mostra, tampoc darrere d’una pregunta', () => {
+  const ara = fa(0);
+  mocks.threadId = 'fake-iaia';
+  mocks.threads = [{ id: 'fake-iaia', tipus: 'ia', title: 'IAIA MarIA', name: 'IAIA MarIA', ultimText: 'Hola', ultimAl: ara, noLlegits: 0, altresNoms: ['IAIA MarIA'] }];
+  mocks.messages = [
+    { id: 'm1', seq: 1, text: 'Ara no estic pa tonteries.', sender: 'other', author: 'IAIA MarIA', is_ai: true, creatAl: ara },
+    { id: 'p1', seq: 2, text: 'Què és el Mercat?', sender: 'me', author: 'Jo', creatAl: ara, estatEnviament: 'enviat' },
+    { id: 'r1', seq: 3, text: 'El Mercat és un tauler d’anuncis.\n· El Mercat — /mercat', sender: 'other', author: 'IAIA MarIA', is_ai: true, creatAl: ara }
+  ];
+  const esborranys = () => screen.queryAllByRole('button', { name: 'Envia l’esborrany al Bloc de Notes' });
+  mocks.senseSessio = true;
+  mocks.joId = null;
+  render(<XatSection />);
+  expect(screen.getByRole('link', { name: 'Obri El Mercat' })).toBeTruthy();
+  expect(esborranys()).toHaveLength(0);
+});
+
 /* En remot, mentre la sessió es comprova, joId és null i encara no és
    senseSessio (XatContext): ?sobre= espera, sense cap avís fals ni perdre la
    URL, i s'obri quan arriba la sessió. */
@@ -2837,7 +2879,8 @@ test('3B · cada vista porta els controls de la seua captura', () => {
 /* Ordre del Mestre del 261004 (prompt 261004_0515, T5) · Contingut multimèdia
    operativa: els enllaços dels missatges carregats (getThreadMessages), el
    botó germà obri la conversa i conserva la vista, la fletxa hi torna, i
-   Fitxers diu que els adjunts arriben amb F1. La lupa, Ordena i Selecciona
+   Fitxers diu què es pot enviar pel xat (xat-ux-a11y-06, 261104: abans,
+   que els adjunts arribaven amb F1). La lupa, Ordena i Selecciona
    continuen dient «En construcció». */
 test('T5 · ?vista=multimedia: Enllaços amb dades reals, i el botó de la conversa conserva la vista', async () => {
   mocks.threadId = null;
@@ -2856,8 +2899,9 @@ test('T5 · ?vista=multimedia: Enllaços amb dades reals, i el botó de la conve
   expect(capcalera.querySelector('.app-grid-col-header__titol').textContent).toBe('Contingut multimèdia');
   expect(capcalera.querySelectorAll('.app-grid-col-header__plec svg.lucide-image')).toHaveLength(1);
   expect(capcalera.querySelector('.app-grid-col-header__accions svg.lucide-image')).toBeNull();
-  /* Fitxers, per defecte: F0 només envia text. */
-  expect(within(columna).getByRole('region', { name: 'En construcció' }).textContent).toContain('Els adjunts arriben amb la fase F1 del xat');
+  /* Fitxers, per defecte: l'avís cert dels adjunts F1 (xat-ux-a11y-06, 261104). */
+  expect(within(columna).getByRole('region', { name: 'En construcció' }).textContent)
+    .toContain('Pel xat ja es poden enviar fotos, vídeos i missatges de veu, si la conversa ho permet. Els documents, encara no.');
   expect(within(columna).getByText('Només es veu el contingut de les converses obertes en esta sessió.')).toBeTruthy();
 
   fireEvent.click(within(columna).getByRole('button', { name: 'Enllaços' }));

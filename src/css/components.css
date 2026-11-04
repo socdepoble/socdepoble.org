@@ -1432,6 +1432,24 @@
   margin: 0 auto;
 }
 
+/* AH-01 · En mòbil i mode compacte, el vídeo Hero prioritza 100% de l'amplària
+   sense bandes negres laterals. */
+:where(.sdp-root.is-compact) .sdp-hero-video__player {
+  width: 100%;
+  height: auto;
+  max-height: none;
+  object-fit: cover;
+}
+
+@media (max-width: 767px) {
+  .sdp-hero-video__player {
+    width: 100%;
+    height: auto;
+    max-height: none;
+    object-fit: cover;
+  }
+}
+
 .sp-card-copyright {
   text-align: center;
 }

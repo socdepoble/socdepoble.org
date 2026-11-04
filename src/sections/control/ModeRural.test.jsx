@@ -6,6 +6,7 @@ import { afterEach, beforeEach, expect, test, vi } from 'vitest';
 import ModeRural from './ModeRural.jsx';
 import { creaSessioRural } from '../../data/sessioRural.js';
 import { desaSessio, esborraSessio } from '../../data/identitat.js';
+import { TEXTOS_MODE_RURAL } from './textosModeRural.js';
 
 const m = vi.hoisted(() => ({ usuari: { id: 'persona-a' }, actorKey: 'persona:a', config: { dataMode: 'seed', backendUrl: '', tenantId: 'torre' } }));
 vi.mock('../../app/contexts/SessionContext.jsx', () => ({ useSessioOpcional: () => ({ currentUser: m.usuari }) }));
@@ -294,4 +295,60 @@ test('DOMException nativa de carpeta es mostra i allibera el control sense error
  vi.stubGlobal('showDirectoryPicker',async()=>{throw new DOMException('Permís de carpeta denegat.','NotAllowedError');});render(<ModeRural fabrica={fabrica} onBack={()=>{}}/>);await activa();
  fireEvent.click(screen.getByRole('button',{name:'Sincronitzar una carpeta'}));await screen.findByText('Permís de carpeta denegat.');
  expect(screen.getByRole('button',{name:'Sincronitzar una carpeta'}).disabled).toBe(false);
+});
+
+/* control-04 (revisió del Panell, 261104) · Amb un diàleg de confirmació
+   obert (showModal), la resta del document és inert sota el vel: l'error d'una
+   confirmació fallida pintat fora del <dialog> no es veu ni s'anuncia, i el
+   diàleg es queda obert sense dir res. Com a DetallPrivacitat.jsx, l'error es
+   pinta dins del diàleg obert, una sola vegada; en Cancel·lar, torna a la
+   pàgina. jsdom no modela inert: per això es mira on és l'alerta. */
+const errorAmbCodi = (code) => Object.assign(new Error(code), { code });
+
+test('control-04 · si «Esborra les dades locals» falla, l’error es pinta dins del diàleg obert, i en Cancel·lar torna a la pàgina', async () => {
+  const falla = vi.fn(async (opcions) => ({ ...await fabrica(opcions), esborraTot: async () => { throw errorAmbCodi('SDP-STORE-QUOTA'); } }));
+  render(<ModeRural fabrica={falla} onBack={() => {}} />);
+  await activa(); await desaNota('Conservar', 'No s’ha d’esborrar');
+  const dialeg = obriEsborrat();
+  /* Llei del Píxel · abans de confirmar, el diàleg no porta cap cos. */
+  expect(dialeg.querySelector('.sdp-dialeg__cos')).toBeNull();
+  fireEvent.click(within(dialeg).getByRole('button', { name: 'Esborra les dades locals' }));
+  const alerta = await within(dialeg).findByRole('alert');
+  expect(alerta.textContent).toBe(TEXTOS_MODE_RURAL.crdtQuota[1]);
+  expect(screen.getAllByRole('alert')).toEqual([alerta]);
+  expect(dialeg.open).toBe(true);
+  fireEvent.click(within(dialeg).getByRole('button', { name: 'Cancel·lar' }));
+  expect(screen.queryByRole('dialog')).toBeNull();
+  const [deLaPagina] = screen.getAllByRole('alert');
+  expect(screen.getAllByRole('alert')).toHaveLength(1);
+  expect(deLaPagina.closest('dialog')).toBeNull();
+  expect(deLaPagina.textContent).toBe(TEXTOS_MODE_RURAL.crdtQuota[1]);
+  pendents(1);
+});
+
+test('control-04 · si «Elimina aquesta nota» falla, l’error es pinta dins del seu diàleg obert', async () => {
+  const { fabrica: opfs } = fabricaOpfs();
+  const falla = vi.fn(async (opcions) => ({ ...await opfs(opcions), eliminaNota: async () => { throw errorAmbCodi('RURAL_DIARI_PLE'); } }));
+  render(<ModeRural fabrica={falla} onBack={() => {}} />);
+  await activaOpfs(); await desaNota('Plena', 'El diari és ple');
+  fireEvent.click(screen.getByRole('button', { name: 'Eliminar nota: Plena' }));
+  const dialeg = await screen.findByRole('dialog', { name: 'Eliminar nota' });
+  expect(dialeg.querySelector('.sdp-dialeg__cos')).toBeNull();
+  fireEvent.click(within(dialeg).getByRole('button', { name: 'Elimina aquesta nota' }));
+  const alerta = await within(dialeg).findByRole('alert');
+  expect(alerta.textContent).toBe(TEXTOS_MODE_RURAL.diariPle[1]);
+  expect(screen.getAllByRole('alert')).toEqual([alerta]);
+  expect(screen.getByText('El diari és ple', { selector: 'li p' })).toBeTruthy();
+});
+
+test('control-04 · un error anterior no entra a la confirmació d’esborrat: es queda on era', async () => {
+  render(<ModeRural fabrica={fabrica} onBack={() => {}} />);
+  await activa();
+  const gran = { name: 'notes.json', size: 4 * 1024 * 1024 + 1, text: async () => '{}' };
+  fireEvent.change(document.querySelector('input[type="file"]'), { target: { files: [gran] } });
+  const anterior = await screen.findByRole('alert');
+  const dialeg = obriEsborrat();
+  expect(dialeg.querySelector('.sdp-dialeg__cos')).toBeNull();
+  expect(within(dialeg).queryByRole('alert')).toBeNull();
+  expect(screen.getAllByRole('alert')).toEqual([anterior]);
 });

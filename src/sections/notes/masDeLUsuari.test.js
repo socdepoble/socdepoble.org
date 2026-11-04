@@ -190,13 +190,18 @@ test('F4 · un id amb el prefix publicacio:, ben format o no, és de publicació
     .map(esIdDePublicacio)).toEqual([false, false, false, false, false, false, false, false]);
 });
 
-test('F4 (D2) · la publicació del Mur nascuda d’una nota pròpia no s’emet: la peça és la nota', () => {
+test('F4 (D2) · la publicació del Mur o del Mercat nascuda d’una nota pròpia no s’emet: la peça és la nota', () => {
   const doMur = { id: 'p1', title: 'De la nota', ownerUserId: 'u-pep' };
   const altre = { id: 'p2', title: 'Directa', ownerUserId: 'u-pep' };
   const publicadesDesDeNotes = new Set(['p1']);
   expect(itemsPublicatsDe({ feedPosts: [doMur, altre] }, aliesDePep, { publicadesDesDeNotes }).map((i) => i.id)).toEqual(['publicacio:mur:p2']);
-  // Només el Mur: publicar una nota no escriu a cap altra secció.
-  expect(itemsPublicatsDe({ marketItems: [doMur] }, aliesDePep, { publicadesDesDeNotes }).map((i) => i.id)).toEqual(['publicacio:mercat:p1']);
+  /* idea61-03 (Gauntlet T7a, 261104) · Des d'IDEA-61 publishNote escriu la
+     fila a la secció de l'àmbit (seccioDAmbit): ni al Mercat ix la còpia de
+     lectura; la peça és la nota, que el Bloc ja posa a «Mercat». Una
+     publicació directa del Mercat (sense nota d'origen) sí. */
+  expect(itemsPublicatsDe({ marketItems: [doMur, altre] }, aliesDePep, { publicadesDesDeNotes }).map((i) => i.id)).toEqual(['publicacio:mercat:p2']);
+  // Les seccions on publishNote no escriu, com sempre.
+  expect(itemsPublicatsDe({ events: [doMur] }, aliesDePep, { publicadesDesDeNotes }).map((i) => i.id)).toEqual(['publicacio:events:p1']);
   // Sense l'opció, com sempre.
   expect(itemsPublicatsDe({ feedPosts: [doMur] }, aliesDePep)).toHaveLength(1);
 });
