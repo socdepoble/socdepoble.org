@@ -813,10 +813,10 @@ describe('FEDI-17 · 120 operacions i refutacions semàntiques', () => {
     return valors[c.metode];
   }
 
-  test('cens exacte del contracte, 32 obligatòries i 94 opcionals; cap nom sense cas', () => {
+  test('cens exacte del contracte, 32 obligatòries i 98 opcionals; cap nom sense cas', () => {
     expect(CONTRACTE_NUCLI).toHaveLength(32);
-    expect(Object.keys(CAPACITATS)).toHaveLength(39);
-    expect(Object.values(CAPACITATS).flat()).toHaveLength(94);
+    expect(Object.keys(CAPACITATS)).toHaveLength(41);
+    expect(Object.values(CAPACITATS).flat()).toHaveLength(98);
     expect(new Set(CASOS.map(c => c.metode))).toEqual(new Set([...CONTRACTE_NUCLI, ...Object.values(CAPACITATS).flat()]));
     expect(metodesSenseCas()).toEqual([]);
   });
@@ -895,7 +895,7 @@ describe('FEDI-17 · 120 operacions i refutacions semàntiques', () => {
 
 
 test('FEDI23 · sis casos nous rebutgen resolucions, errors sense codi i codis aliens', async () => {
-  const nous = CASOS.slice(172);
+  const nous = CASOS.slice(172,178);
   expect(nous).toHaveLength(6);
   expect(nous.map(c => c.metode)).toEqual(CAPACITATS.connexionsPubliques);
   for (const c of nous) {
@@ -905,5 +905,19 @@ test('FEDI23 · sis casos nous rebutgen resolucions, errors sense codi i codis a
     for (const mutant of [async () => [], async () => { throw new Error('Sense codi'); }, async () => { throw Object.assign(new Error('Alié'), { code: 'SDP-CONN-002' }); }]) {
       expect(await executaCas(c, { [c.metode]: mutant }, ctx)).toMatchObject({ estat: 'falla' });
     }
+  }
+});
+
+test('R6 · els quatre serveis opcionals de correu preserven els178 casos i refuten errors o èxits aliens', async () => {
+  const nous=CASOS.slice(178);
+  expect(nous).toHaveLength(4);
+  expect(nous.map(c=>c.metode)).toEqual([...CAPACITATS.verificacioCorreu,...CAPACITATS.recuperacioCorreu]);
+  for(const c of nous){
+    const ctx=contextDeConformitat({config:{backend:'proof-fixture'}}),args=c.arguments(ctx),calls=[];
+    expect(args.at(-1)).toBe(ctx.config);
+    const good=async(...received)=>{calls.push(received);throw Object.assign(Error('Invalid email proof'),{code:'SDP-CORREU-001'});};
+    expect(await executaCas(c,{[c.metode]:good},ctx)).toMatchObject({estat:'ok'});expect(calls).toEqual([args]);
+    for(const mutant of[async()=>true,async()=>{throw Error('network');},async()=>{throw Object.assign(Error('Other domain'),{code:'SDP-USER-001'});}])expect(await executaCas(c,{[c.metode]:mutant},ctx)).toMatchObject({estat:'falla'});
+    expect(await executaCas(c,{},ctx)).toMatchObject({estat:'omés',motiu:'capacitat '+c.capacitat+' absent'});
   }
 });

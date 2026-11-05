@@ -118,6 +118,10 @@ const asseguraMetode = (nom) => (...args) => {
 export const adoptaSessioExterna = asseguraMetode('adoptaSessioExterna');
 export const getDefaultUserId = asseguraMetode('getDefaultUserId');
 export const refrescaSessio = asseguraMetode('refrescaSessio');
+export const confirmaCorreu = asseguraMetode('confirmaCorreu');
+export const reenviaVerificacioCorreu = asseguraMetode('reenviaVerificacioCorreu');
+export const demanaRestablimentCorreu = asseguraMetode('demanaRestablimentCorreu');
+export const restablixContrasenyaAmbCorreu = asseguraMetode('restablixContrasenyaAmbCorreu');
 export const elMeuRol = asseguraMetode('elMeuRol');
 
 export const loadCoreContent = asseguraMetode('loadCoreContent');

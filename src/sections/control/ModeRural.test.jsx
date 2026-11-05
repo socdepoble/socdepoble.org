@@ -205,11 +205,15 @@ test('fàbrica tardana després de canviar actor es tanca sense substituir el mo
   await desaNota('Actor B', 'El motor nou continua disponible'); pendents(1);
 });
 
-test('si el tenant no identifica un poble, mostra el text pendent sense inventar La Torre', () => {
+test('si el tenant no identifica un poble, mostra el poble per defecte (La Torre de les Maçanes) i els 3 punts simples sense sigles obscures', () => {
   m.config = { dataMode: 'seed', backendUrl: '', tenantId: 'desconegut' };
   render(<ModeRural fabrica={fabrica} onBack={() => {}} />);
-  expect(screen.getByText('Poble pendent d’identificar')).toBeTruthy();
-  expect(screen.queryByText('La Torre de les Maçanes')).toBeNull();
+  expect(screen.getByText('La Torre de les Maçanes')).toBeTruthy();
+  expect(screen.queryByText('Poble pendent d’identificar')).toBeNull();
+  expect(screen.getByText('Per a què servix el Mode rural?')).toBeTruthy();
+  expect(screen.getByText(/^1\. Apuntar notes de camp/)).toBeTruthy();
+  expect(screen.getByText(/^2\. Guardar una còpia/)).toBeTruthy();
+  expect(screen.getByText(/^3\. Preparar i verificar paquets/)).toBeTruthy();
   expect(fabrica).not.toHaveBeenCalled();
 });
 
@@ -237,7 +241,7 @@ function fabricaOpfs() {
   const fabrica = vi.fn(async options => { const s = await creaSessioRural({ ...options, storage, locks, crypto: webcrypto, BroadcastChannel: null }); creades.push(s); return s; });
   return { fabrica, storage, locks };
 }
-const activaOpfs = async () => { fireEvent.click(screen.getByRole('button', { name: 'Activar edició compartida en OPFS' })); await screen.findByRole('textbox', { name: /^Títol de la nota/ }); };
+const activaOpfs = async () => { fireEvent.click(screen.getByRole('button', { name: 'Activar edició compartida entre finestres' })); await screen.findByRole('textbox', { name: /^Títol de la nota/ }); };
 
 test('FEDI15 · OPFS és opt-in explícit i edita amb base antiga mentre una altra sessió canvia la nota', async () => {
   const { fabrica } = fabricaOpfs(); render(<ModeRural fabrica={fabrica} onBack={() => {}} />);
@@ -268,8 +272,8 @@ test('FEDI15 · variants MV visibles i resolució explícita del títol, sense p
 
 test('FEDI15 · una fàbrica que torna memòria no pot anunciar OPFS actiu', async () => {
   fabricaOpfs(); render(<ModeRural fabrica={fabrica} onBack={() => {}} />); await activaOpfs().catch(() => {});
-  await screen.findByText('No s’ha pogut activar OPFS. Revisa la disponibilitat del navegador i torna-ho a provar.');
-  expect(screen.queryByText('Edició compartida CRDT activa en OPFS. Les versions concurrents es conserven en el mateix document.')).toBeNull();
+  await screen.findByText('No s’ha pogut activar l’edició compartida entre finestres. Revisa la disponibilitat del navegador i torna-ho a provar.');
+  expect(screen.queryByText('Edició compartida activa en este navegador. Les versions concurrents es conserven en el mateix document.')).toBeNull();
   expect(screen.queryByRole('textbox', { name: /^Títol de la nota/ })).toBeNull();
 });
 

@@ -5,15 +5,21 @@
  */
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { ancoraDelClic, desplacadorDelClic, fragmentDelDesti, hrefInternDeClic, preparaRecolocacio } from './enllacosInterns.js';
+import React from 'react';
+import { renderToStaticMarkup } from 'react-dom/server';
+import { Aplec2023Article } from '../sections/mur/articles/Aplec2023Article.jsx';
+import { ManifestDePobleArticle } from '../sections/mur/articles/ManifestDePobleArticle.jsx';
+import { MOCK_FEED } from '../sections/mur/feedSeed.js';
+import { CALENDAR_EVENTS } from '../sections/mur/eventsSeed.js';
+import { RUTES_CANONIQUES } from '../config/navigation.js';
+import { sanitizeHtml } from '../utils/sanitize.js';
 
 afterEach(() => { document.body.replaceChildren(); });
 
-/* Auditoria 261007 (B) · L'enllaç d'exemple és l'article de l'Aplec, una
-   ruta que existix ('aplec-2023', eventsSeed.js). Abans era
-   /events/manifest-de-poble, un acte que cap font no té: les proves
-   conservaven un enllaç mort com a exemple canònic. On viu el Manifest és
-   pregunta al Mestre. */
+/* AH-27 · Les dos rutes editorials tenen llavor real i s'enllacen en els
+   dos sentits. El Manifest és del Mur; l'Aplec és un esdeveniment. */
 const ACTE_DE_LA_LLAVOR = '/events/aplec-2023';
+const MANIFEST_DEL_MUR = '/mur/manifest-de-poble';
 
 function ancora(atributs = {}) {
   const a = document.createElement('a');
@@ -29,6 +35,7 @@ describe('hrefInternDeClic · quins href passen al router', () => {
     ['?item=x', '?item=x'],
     ['?vista=comunitats&x=1', '?vista=comunitats&x=1'],
     [ACTE_DE_LA_LLAVOR, ACTE_DE_LA_LLAVOR],
+    [MANIFEST_DEL_MUR, MANIFEST_DEL_MUR],
     ['/xat?vista=comunitats', '/xat?vista=comunitats'],
     ['/', '/'],
     ['/mercat/samarreta#preu', '/mercat/samarreta#preu']
@@ -106,6 +113,19 @@ describe('hrefInternDeClic · quins href passen al router', () => {
     expect(hrefInternDeClic(clic(), null)).toBeNull();
     expect(hrefInternDeClic(clic(), {})).toBeNull();
   });
+});
+
+it('AH-27 · els enllaços reals Aplec ↔ Manifest entren al router i apunten a les seues llavors', () => {
+  expect(CALENDAR_EVENTS.some(item => item.id === 'aplec-2023')).toBe(true);
+  expect(MOCK_FEED.some(item => item.id === 'manifest-de-poble')).toBe(true);
+  for (const [Component, desti] of [[Aplec2023Article, MANIFEST_DEL_MUR], [ManifestDePobleArticle, ACTE_DE_LA_LLAVOR]]) {
+    document.body.innerHTML = sanitizeHtml(renderToStaticMarkup(React.createElement(Component)));
+    const links = [...document.querySelectorAll(`a[href="${desti}"]`)];
+    expect(links.length).toBeGreaterThan(0);
+    for (const link of links) expect(hrefInternDeClic(clic(), link)).toBe(desti);
+  }
+  expect(RUTES_CANONIQUES.socdepoble).toBe('/socdepoble');
+  expect(RUTES_CANONIQUES.rentonar).toBe('/rentonar');
 });
 
 /* Amb base declarada (router de navegador sota '/comunitat'), el contingut

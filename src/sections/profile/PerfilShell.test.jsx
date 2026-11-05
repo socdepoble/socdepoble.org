@@ -88,12 +88,24 @@ beforeEach(() => {
 });
 afterEach(cleanup);
 
-test('primera columna: tres grups en ordre, la persona amb el seu nom, les organitzacions i les aplicacions', () => {
+test('primera columna: tres grups en ordre, la persona amb el seu nom i Administració del sistema, les organitzacions i les aplicacions', () => {
   render(<PerfilShell />);
   expect(grups().map((g) => g.id)).toEqual(['persona', 'organitzacions', 'aplicacions']);
   // Com les carpetes de Notes: el primer grup no porta etiqueta, el títol de la columna li fa de capçalera.
   expect(grups().map((g) => g.label)).toEqual([null, 'GRUPS I EMPRESES', 'APLICACIONS']);
-  expect(grups()[0].options.map((o) => [o.id, o.label])).toEqual([['jo', 'Pep']]);
+  expect(grups()[0].options.map((o) => [o.id, o.label])).toEqual([
+    ['jo', 'Pep'],
+    ['administracio-sistema', '🛡️ Administració del sistema'],
+  ]);
+  expect(m.workspace.amagaRodaAjustos).toBe(true);
+  expect(filsDe('administracio-sistema')).toEqual([
+    'admin-taxonomia',
+    'admin-importacio',
+    'admin-crom',
+    'admin-vistes-columnes',
+    'admin-nodes-fedivers',
+    'admin-empaquetats',
+  ]);
   expect(grups()[1].options.map((o) => [o.id, o.label])).toEqual([['O', 'Forn'], ['G', 'Colla']]);
   /* Gauntlet 261016 (Bloc 3.4; ordre del Mestre: «retirar definitivament la
      maquinària interna de desenvolupament de l'aside en pantalles d'usuari»)

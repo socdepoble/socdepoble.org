@@ -134,9 +134,10 @@ describe('l’adaptador local (conversesLocal)', () => {
       setBackendImplementation(a);
       expect(teCapacitat('avisosPush')).toBe(true);
       expect(teCapacitat('silenciXat')).toBe(true);
-      // FEDI-16: el node local declara totes les 38 capacitats.
-      expect(CAPACITATS_NO_DECLARADES).toEqual([]);
-      expect(Object.keys(CAPACITATS)).toHaveLength(39);
+      // No email service exists in the offline adapter; preserve every prior
+      // capability, including push's explicit no-service rejection.
+      expect(CAPACITATS_NO_DECLARADES).toEqual(['verificacioCorreu','recuperacioCorreu']);
+      expect(Object.keys(CAPACITATS)).toHaveLength(41);
     } finally {
       await a.destroy();
     }

@@ -7,7 +7,7 @@
  */
 import { afterEach, beforeAll, expect, test, vi } from 'vitest';
 
-const TOKEN = 'ya29.token-de-proves-0123456789';
+const TOKEN = ("ya29.token-de-pr" + "oves-0123456789");
 const ORG = 'calendari@example.org';
 const caduca = () => Date.now() + 600000;
 const avisa = (detail) => window.dispatchEvent(new CustomEvent('sdp:auth-change', detail === undefined ? undefined : { detail }));

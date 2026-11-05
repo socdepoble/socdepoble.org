@@ -13,7 +13,7 @@
  * llevar un sol `t` d'un consumidor passava en verd.
  */
 import { createElement } from 'react';
-import { act, cleanup, fireEvent, render, renderHook, screen, within } from '@testing-library/react';
+import { act, cleanup, fireEvent, render, renderHook, screen } from '@testing-library/react';
 import { afterEach, beforeAll, beforeEach, describe, expect, test, vi } from 'vitest';
 import { SUPPORTED_LANGUAGES, createTranslator } from '../../config/i18n.js';
 /* Sense els diccionaris carregats, createTranslator('en') tornaria el valencià i la prova passaria en buit. */
@@ -55,7 +55,7 @@ vi.mock('../detail/elementDeSeccio.js', () => ({ paginaDElement: () => ({}), use
 vi.mock('../../components/universal/UniversalPage', () => ({ UniversalPage: ({ children }) => createElement('div', null, children) }));
 vi.mock('../../components/universal/DocumentEditor', () => ({ DocumentEditor: ({ adapter }) => { mocks.adapter = adapter; return null; } }));
 vi.mock('../../components/universal/SelectorVisibilitat.jsx', () => ({ SelectorVisibilitat: (props) => { mocks.selector = props; return null; } }));
-vi.mock('../../components/universal/classificacio/DialegCarpeta.jsx', () => ({ DialegCarpeta: (props) => { mocks.carpeta = props; return null; } }));
+vi.mock('../../components/universal/classificacio/DialegCarpeta.jsx', async (importOriginal) => ({ ...(await importOriginal()), DialegCarpeta: (props) => { mocks.carpeta = props; return null; } }));
 
 import {
   AVIS_DRETS_RESERVATS, ErrorPublicacio, MOTIU_NORMES, avisDretsReservats, bloqueigDeNota, motiuDesatPendent, motiuModeLocal,
@@ -306,15 +306,14 @@ describe('NotesEditor · el selector, els motius i les carpetes en la llengua de
     publica.mockResolvedValueOnce(false);
     await expect(visibilitat.onTria(true, NOTA)).rejects.toThrow(EN_XARXA);
     expect(publica).toHaveBeenCalledTimes(2);
-    // La botonera pinta el nom de sèrie traduït i el diàleg el rep amb l'id de sempre (el que es desa).
+    // La classificació en línia (AH-16, r49) pinta el nom de sèrie traduït al selector de carpeta i hi desa l'id de sempre.
     const { container } = render(mocks.adapter.classificacio);
-    const carpeta = within(container).getAllByRole('button')[0];
-    expect(carpeta.textContent).toBe('Wall');
-    fireEvent.click(carpeta);
-    expect(mocks.carpeta.opcions).toEqual(expect.arrayContaining([
-      { id: 'f-mur', nom: 'Wall', parentId: null }, { id: 'f-connectats', nom: 'Safata d’Entrada', parentId: null }
-    ]));
-    expect(mocks.carpeta.seleccionada).toBe('f-mur');
+    const opcions = [...container.querySelectorAll('option')];
+    const carpeta = opcions.find((opcio) => opcio.textContent === 'Wall');
+    expect(carpeta, opcions.map((opcio) => `${opcio.value}=${opcio.textContent}`).join(' | ')).toBeDefined();
+    expect(carpeta.getAttribute('value')).toBe('f-mur');
+    expect(opcions.some((opcio) => opcio.getAttribute('value') === 'f-connectats' && opcio.textContent === 'Safata d’Entrada')).toBe(true);
+    expect(container.querySelector('select').value).toBe('f-mur');
   });
 
   test('els motius del bloqueig: en mode local i amb la nota ja publicada', () => {

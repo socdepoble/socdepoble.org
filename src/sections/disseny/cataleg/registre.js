@@ -63,6 +63,8 @@ export const REGISTRE = [
   // Fonaments (espècimens vius a detalls/EspecimenUniversalCard, EspecimenControlsBarra,
   // EspecimenAvatar, EspecimenBotonera, EspecimenTaula i EspecimenIndicador)
   { nom: 'UniversalCard', fitxer: 'PedraSeca/organismes/UniversalCard.jsx', pagina: 'fonaments', estat: 'viu' },
+  // AH-20 (IDEA-77, r49) · El quadrat negre del calendari (128×128): peça de la UniversalCard; sense espècimen propi encara.
+  { nom: 'SquareBadge', fitxer: 'PedraSeca/organismes/SquareBadge.jsx', pagina: 'fonaments', estat: 'maqueta' },
   { nom: 'UniversalIndicatorCard', fitxer: 'PedraSeca/organismes/UniversalIndicatorCard.jsx', pagina: 'fonaments', estat: 'viu' },
   { nom: 'ActionControl', fitxer: 'PedraSeca/atoms/controls.jsx', pagina: 'fonaments', estat: 'viu' },
   { nom: 'IconButton', fitxer: 'PedraSeca/atoms/controls.jsx', pagina: 'fonaments', estat: 'viu' },

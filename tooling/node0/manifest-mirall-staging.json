@@ -1,0 +1,141 @@
+{
+  "schema": "sdp.node0.mirror.deployment.v1",
+  "files": [
+    {
+      "path": "src/components/universal/drets/llicencies.js",
+      "sha256": "5c7bf12460a1d98e4e9e9d105f842a8e902a029be3d5d1487d60940247a4cd3b"
+    },
+    {
+      "path": "src/components/universal/workspace/seleccioUrl.js",
+      "sha256": "6fbb1872324262845553322d516e06043ca20d3a35765ad9b67f46ee21d5565e"
+    },
+    {
+      "path": "src/config/contrast.js",
+      "sha256": "d5264bf2ba3b62c82829ec8ba39ef85a2c9c2e96cf295eab2f77ea52a001174d"
+    },
+    {
+      "path": "src/config/estil.js",
+      "sha256": "4c8c6873a699a1561b8672f34d9a959108e386f7261cf0cc20f8e16fb4551840"
+    },
+    {
+      "path": "src/config/systemPages.js",
+      "sha256": "530f318538c05ca2145ef76dee0d0c49ba84e10da9bbff5092b5b7e331d63f16"
+    },
+    {
+      "path": "src/data/activitypub.js",
+      "sha256": "8a4cb1a677b71a89ffb85a542e68dab0df15bbaf0b0c6d6509db45ee6c057194"
+    },
+    {
+      "path": "src/data/contracte.js",
+      "sha256": "f637c918dfa6696da70e0f52f57845a758b24728983592a89d95af24dd8e2c91"
+    },
+    {
+      "path": "src/data/dadesObertesLot.js",
+      "sha256": "62b674b31141b6a6063f52e9f379efd3f866a86c7d6c41e115877029c60cf6fb"
+    },
+    {
+      "path": "src/data/exportaMunicipiOpenData.js",
+      "sha256": "9c14fcd4babd95358d2bd1603bbc07acd656679059a699d017b3327b40d3d979"
+    },
+    {
+      "path": "src/data/importaMunicipiOpenData.js",
+      "sha256": "30f42b929e05a43aa0a1b71404e76f59ae5bc35955ba4f181908cade78e45f41"
+    },
+    {
+      "path": "src/data/personalitzacio.js",
+      "sha256": "69f271ae90f119d37911cbbdc7800185d54785dac1db308063d50c9ddf1770f6"
+    },
+    {
+      "path": "src/sections/notes/llavorNota.js",
+      "sha256": "4b438ba26a2b47a6f1ac9cb787931aac5576b3b16e3e78a2b45be69bfc48f60e"
+    },
+    {
+      "path": "src/sections/notes/memoriaOral.js",
+      "sha256": "145a3e1779e4bf4aa9cf9de7653e9a78125f20c643b49b7ca899c86cb37a975b"
+    },
+    {
+      "path": "src/sections/pobles/aliesDePobles.js",
+      "sha256": "e21c924fa22b8545756ebb7a4bb2dd48e9d7633891e0637ae457b930e347901c"
+    },
+    {
+      "path": "src/sections/pobles/aliesDePoblesSeed.js",
+      "sha256": "ac5319e651767f2e83614c53ecfbfc34cb550bb19622f26736af791d83554cec"
+    },
+    {
+      "path": "src/sections/pobles/nomsDelPoble.js",
+      "sha256": "0238811e6f42e610048106cb5189b08b351c366f02de1264e74ad25dc8c45d93"
+    },
+    {
+      "path": "src/sections/pobles/townsSeed.js",
+      "sha256": "d976d46f5d71e7322474a5b46a3828f8392a21881c5027876c0fa3af2d53ec1b"
+    },
+    {
+      "path": "src/utils/calendari.js",
+      "sha256": "fc8218b5402f78fefc9f497eef0db9618c876d11a2abe40a998aaa2d19d1a523"
+    },
+    {
+      "path": "src/utils/esdeveniment.js",
+      "sha256": "207ba08e8b64d2099057b131586a6f0035bca8c582e0627e7f4db4378519d47a"
+    },
+    {
+      "path": "src/utils/fulls/inflate.js",
+      "sha256": "001384775f139fbc2b4827044728a1005b4ff8faa62bb3a15d9b808d0c5f117a"
+    },
+    {
+      "path": "src/utils/fulls/zip.js",
+      "sha256": "304b033d30c2991fb486afce86c17105b490c624a7ac454c98190f0db453a3ca"
+    },
+    {
+      "path": "src/utils/ics.js",
+      "sha256": "fce153bfa4287f5cce51b5b89206da936287cea46333c87dadbd5732bd22054c"
+    },
+    {
+      "path": "tooling/node0/autenticitat-mirall-node0.mjs",
+      "sha256": "9ccfec99e6df6ceeeea555f745495f64af4c3733c350161eb0b9c1f6dc4342b2"
+    },
+    {
+      "path": "tooling/node0/custodia-age-node0.mjs",
+      "sha256": "e43b5893a283a500272bfe7fdcf4952308a2c858eae8287ef47c6bd20bca809d"
+    },
+    {
+      "path": "tooling/node0/executa-mirall-staging-node0.mjs",
+      "sha256": "0c2bbf5a850b30d2981811e6bc9a12aae0a9cd9c30227ed1e07843737de41a7f"
+    },
+    {
+      "path": "tooling/node0/exporta-mirall-workspace-node0.mjs",
+      "sha256": "698026b85fb707f1336a38ecf3d4d2f14f2186b50774e4931ae3841c45bd1ce9"
+    },
+    {
+      "path": "tooling/node0/fitxers-mirall.py",
+      "sha256": "4ba94625e2737c209fe6cba1735908ec983c62007b022b41b1f7a016e7460191"
+    },
+    {
+      "path": "tooling/node0/fonts-publiques-mirall-node0.mjs",
+      "sha256": "329bb97636fe42ab9b37dc6419915c570d5cf07093365f34cbb141d8011ac9ae"
+    },
+    {
+      "path": "tooling/node0/identitat-age-pipe-node0.mjs",
+      "sha256": "820f6bf88bee1ef884afd9a3d833aadabb1e66e2898c792dcf02549be0b32f42"
+    },
+    {
+      "path": "tooling/node0/receptes-mirall/manifest-bundle-restauracio.json",
+      "sha256": "04166254f0de47218ad8892ed4ccf08cfbd9c42d8263d656ca0451a4815ff9bc"
+    },
+    {
+      "path": "tooling/node0/receptes-mirall/restaura-node0-bundle.mjs",
+      "sha256": "c57ded266b38146e95285dd55195414d082233f52d11db921a6d7fa18684aa01"
+    },
+    {
+      "path": "tooling/node0/receptes-mirall/restaura-node0-manual.mjs",
+      "sha256": "07e5f6483f6f9ab9905dc40aa283ba254b3bb93d1d62482328191d9aeee22728"
+    },
+    {
+      "path": "tooling/node0/receptes-mirall/rols-minims-node0.sql",
+      "sha256": "623c46bd194bc343986c327221659cb9b7b65e7b8e3b94f02d24910554633586"
+    },
+    {
+      "path": "tooling/node0/verifica-restauracio-node0.mjs",
+      "sha256": "3bebaca3cdf7cc0750eee616f9b95f5ae6678c42ea4a5c718b7fc74ba93c0f4b"
+    }
+  ]
+}

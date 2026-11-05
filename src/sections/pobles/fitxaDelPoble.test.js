@@ -5,7 +5,7 @@
 import { afterEach, describe, expect, test, vi } from 'vitest';
 import {
   CAMPS_DE_FITXA, VERSIO_ALGORITME, campsQueFalten, clauDeViquipedia, entradaAmbDades, esDelMateixPoble,
-  fitxaCompleta, fitxaOriginal, fusionaAmbViquipedia, miniaturaDeCommons, pobleHidratable
+  fitxaCompleta, fitxaOriginal, hidratacioRevisada, fusionaAmbViquipedia, miniaturaDeCommons, pobleHidratable
 } from './fitxaDelPoble.js';
 import { MOCK_TOWNS } from './townsSeed.js';
 import { TOWNS } from './townsContent.js';
@@ -19,7 +19,7 @@ const TORRE_GRAN = Object.freeze({
 const DTO = Object.freeze({
   estat: 'parcial', id: 'vilanova-de-prova', title: 'Vilanova de Prova', author: 'Gent de Vilanova de Prova',
   content: 'Vilanova de Prova és un municipi inventat per a les proves.', provincia: 'Alacant', comarca: 'L’Alcoià',
-  population: '120 hab', lat: 38.6, lng: -0.4, wikidata_id: 'Q1', wikipedia_title: 'Vilanova de Prova',
+  population: '120 hab', population_year: 2025, elevation: 400, area: 12, gentilici: 'vilanoví / vilanovina', shield_url: 'https://upload.wikimedia.org/shield.svg', image_url: TORRE_GRAN.src, avatar_url: TORRE_GRAN.src, lat: 38.6, lng: -0.4, wikidata_id: 'Q1', wikipedia_title: 'Vilanova de Prova',
   copyright: 'Text: Viquipèdia (CC BY-SA 4.0) · Imatges: Wikimedia Commons (vegeu els crèdits)',
   imatges: { hero: TORRE_GRAN, avatar: TORRE_GRAN, reserva: null }
 });
@@ -31,19 +31,21 @@ afterEach(() => {
 });
 
 describe('fitxa completa', () => {
-  test('els 9 pobles de la llavor són complets, crus i resolts', () => {
-    expect(MOCK_TOWNS).toHaveLength(9);
-    expect(MOCK_TOWNS.filter((town) => !fitxaCompleta(town)).map((town) => town.id)).toEqual([]);
-    expect(TOWNS.filter((town) => !fitxaCompleta(town)).map((town) => town.id)).toEqual([]);
+  test('la llavor revisada pot declarar absències reals sense fer-se passar per completa', () => {
+    const revisats = MOCK_TOWNS.filter(town => town.wikipedia_hydration);
+    expect(revisats.length).toBeGreaterThanOrEqual(21);
+    expect(revisats.every(town => hidratacioRevisada(town))).toBe(true);
+    expect(TOWNS.length).toBe(MOCK_TOWNS.length);
   });
-
-  test('falta el que no hi és o és buit; imageSrc i avatar_url no compten', () => {
-    expect(CAMPS_DE_FITXA).toEqual(['content', 'image_url', 'provincia', 'comarca']);
-    expect(campsQueFalten(INCOMPLET)).toEqual(['content', 'image_url', 'comarca']);
-    expect(campsQueFalten({ ...INCOMPLET, content: '   ', image_url: '', comarca: null, imageSrc: '/assets/x.jpg', avatar_url: '/a.jpg' }))
-      .toEqual(['content', 'image_url', 'comarca']);
+  test('la foto sola no fa completa una fitxa; el marcador genèric tampoc', () => {
+    expect(CAMPS_DE_FITXA).toEqual(expect.arrayContaining(['image_url', 'population_year', 'elevation', 'area', 'gentilici']));
+    expect(CAMPS_DE_FITXA).not.toContain('shield_url');
+    expect(campsQueFalten(INCOMPLET)).toEqual(CAMPS_DE_FITXA.filter(camp => camp !== 'provincia'));
+    const completa = { ...DTO, image_url: '/foto-aportada.jpg' };
+    expect(fitxaCompleta(completa)).toBe(true);
+    expect(campsQueFalten({ ...completa, image_url: '/hero_nanobanana.png' })).toEqual(['image_url']);
+    expect(campsQueFalten({ ...completa, area: null, imageSrc: '/foto.jpg' })).toEqual(['area']);
     expect(campsQueFalten(null)).toEqual(CAMPS_DE_FITXA);
-    expect(fitxaCompleta({ content: 'a', image_url: 'b', provincia: 'c', comarca: 'd' })).toBe(true);
   });
 });
 
@@ -72,34 +74,33 @@ describe('la fusió', () => {
     expect(hidratat).not.toBe(INCOMPLET);
     expect(hidratat).toMatchObject({
       id: 'vilanova-de-prova', title: 'Vilanova de Prova', author: 'Gent de Vilanova', provincia: 'Alacant',
-      content: DTO.content, comarca: DTO.comarca, population: '120 hab', lat: 38.6, lng: -0.4,
+      content: DTO.content, comarca: DTO.comarca, population: '120 hab', population_year: 2025, elevation: 400, area: 12, gentilici: 'vilanoví / vilanovina', lat: 38.6, lng: -0.4,
       wikipedia_title: 'Vilanova de Prova', wikidata_id: 'Q1'
     });
-    expect(hidratat.fontsDeViquipedia.omplits).toEqual(['content', 'comarca', 'population', 'lat', 'lng', 'wikipedia_title', 'wikidata_id']);
+    expect(hidratat.fontsDeViquipedia.omplits).toEqual(['content', 'comarca', 'population', 'lat', 'lng', 'wikipedia_title', 'wikidata_id', 'population_year', 'elevation', 'area', 'gentilici']);
     expect(hidratat.fontsDeViquipedia.original).toBe(INCOMPLET);
     expect(hidratat.fontsDeViquipedia.llegitEl).toBe(Date.UTC(2026, 9, 30));
     expect(fitxaOriginal(hidratat)).toBe(INCOMPLET);
     expect(fitxaOriginal(INCOMPLET)).toBe(INCOMPLET);
   });
 
-  test('cap foto de Commons a la capçalera ni a la targeta, ni els drets ni l’autor (D-3)', () => {
+  test('les fotos remotes només queden en el DTO del panell, i la foto real aportada es conserva', () => {
     const hidratat = fusionaAmbViquipedia(INCOMPLET, entrada());
-    expect(hidratat).not.toHaveProperty('image_url');
-    expect(hidratat).not.toHaveProperty('avatar_url');
-    expect(hidratat).not.toHaveProperty('imageSrc');
-    expect(hidratat).not.toHaveProperty('copyright');
-    expect(hidratat).not.toHaveProperty('chat');
-    expect(JSON.stringify({ ...hidratat, fontsDeViquipedia: null })).not.toContain('wikimedia.org');
+    expect(hidratat.image_url).toBeUndefined();expect(hidratat.avatar_url).toBeUndefined();expect(hidratat.shield_url).toBeUndefined();
+    expect(hidratat.fontsDeViquipedia.dto.imatges.hero).toBe(TORRE_GRAN);
+    const fotoLocal = fusionaAmbViquipedia({ ...INCOMPLET, image_url: '/aportada.jpg', avatar_url: '/avatar-aportat.jpg' }, entrada());
+    expect(fotoLocal.image_url).toBe('/aportada.jpg');expect(fotoLocal.avatar_url).toBe('/avatar-aportat.jpg');
+    expect(fotoLocal.fontsDeViquipedia.dto).toBe(DTO);
   });
 
   test('torna el MATEIX objecte si no ompli res', () => {
-    const complet = MOCK_TOWNS[0];
+    const complet = { ...DTO, image_url: '/aportada.jpg', avatar_url: '/avatar.jpg' };
     expect(fusionaAmbViquipedia(complet, entrada({ ...DTO, title: complet.title }))).toBe(complet);
     expect(fusionaAmbViquipedia(INCOMPLET, entrada({ ...DTO, estat: 'sense-article' }))).toBe(INCOMPLET);
     expect(fusionaAmbViquipedia(INCOMPLET, entrada({ ...DTO, estat: 'no-disponible' }))).toBe(INCOMPLET);
     expect(fusionaAmbViquipedia(INCOMPLET, entrada({ ...DTO, title: 'Vilanova del Bierzo' }))).toBe(INCOMPLET);
     expect(fusionaAmbViquipedia(INCOMPLET, null)).toBe(INCOMPLET);
-    expect(fusionaAmbViquipedia(INCOMPLET, entrada({ ...DTO, content: '', comarca: null, population: null, lat: null, lng: null, wikidata_id: null, wikipedia_title: null })))
+    expect(fusionaAmbViquipedia(INCOMPLET, entrada({ ...DTO, content: '', comarca: null, population: null, population_year: null, elevation: null, area: null, gentilici: null, shield_url: null, image_url: null, avatar_url: null, lat: null, lng: null, wikidata_id: null, wikipedia_title: null })))
       .toBe(INCOMPLET);
   });
 });
@@ -108,11 +109,13 @@ describe('quan la pàgina porta el panell', () => {
   test('fitxa incompleta o ja hidratada, sí; completa, no; a l’app nativa, mai', () => {
     expect(pobleHidratable(INCOMPLET)).toBe(true);
     expect(pobleHidratable(fusionaAmbViquipedia(INCOMPLET, entrada()))).toBe(true);
-    expect(MOCK_TOWNS.filter(pobleHidratable)).toEqual([]);
+    expect(pobleHidratable({ ...DTO, image_url: '/aportada.jpg' })).toBe(false);
+    expect(pobleHidratable({ ...DTO, wikipedia_provenance: { photo: TORRE_GRAN } })).toBe(true);
     expect(pobleHidratable({ content: '.' })).toBe(false);
     expect(pobleHidratable(null)).toBe(false);
     vi.stubGlobal('window', { Capacitor: { isNativePlatform: () => true } });
     expect(pobleHidratable(INCOMPLET)).toBe(false);
+    expect(pobleHidratable({ ...DTO, wikipedia_provenance: { photo: TORRE_GRAN } })).toBe(true);
   });
 });
 
@@ -128,4 +131,18 @@ describe('la miniatura de Commons', () => {
       null
     ]) expect(miniaturaDeCommons(tal)).toBe(tal);
   });
+});
+
+test('AH-27 · no associa la data d’un cens nou a una població antiga aportada', () => {
+  const town = { ...INCOMPLET, population: '99 hab' };
+  const hidratat = fusionaAmbViquipedia(town, entrada());
+  expect(hidratat.population).toBe('99 hab');expect(hidratat.population_year).toBeUndefined();
+});
+
+test('AH-27 · una revisió parcial caduca i no val amb fonts o camps inventats', () => {
+  const ara = Date.now();const marcador = { version: 2, checked_at: new Date(ara).toISOString(), missing: ['area'], source_url: 'https://www.wikidata.org/wiki/Q1', status: 'partial' };
+  expect(hidratacioRevisada({ wikipedia_hydration: marcador }, null, ara)).toBe(true);
+  expect(hidratacioRevisada({ wikipedia_hydration: marcador }, null, ara + 31 * 86400000)).toBe(false);
+  expect(hidratacioRevisada({ wikipedia_hydration: { ...marcador, source_url: 'https://example.org/wiki/Q1' } }, null, ara)).toBe(false);
+  expect(hidratacioRevisada({ wikipedia_hydration: { ...marcador, missing: ['inventat'] } }, null, ara)).toBe(false);
 });

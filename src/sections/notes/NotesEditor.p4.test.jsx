@@ -71,9 +71,10 @@ test('una nota pròpia: l’editor ocupa el detall sencer, sense la vista prèvi
   // Gauntlet 261016 (Bloc 3.9) · El seu lloc és ara l'«Edició avançada», i el quart es diu «Emojis XL».
   const avancada = container.querySelector('details.sdp-edicio-avancada');
   expect(avancada).not.toBeNull();
-  for (const nom of ['Carpetes: Mur', 'Categories: Sistema', /^Etiquetes/, /^Emojis XL/]) {
-    expect(avancada.contains(screen.getByRole('button', { name: nom }))).toBe(true);
+  for (const retol of ['Carpeta', 'Crear nova carpeta', 'Categories', 'Crear nova categoria', 'Etiquetes', 'Crear nova etiqueta']) {
+    expect(avancada.contains(screen.getByLabelText(retol))).toBe(true);
   }
+  expect(avancada.contains(screen.getByRole('button', { name: /^Emojis XL/ }))).toBe(true);
 });
 
 test('la nota preparada i la còpia de prova del Foraster tampoc no porten la vista prèvia', () => {

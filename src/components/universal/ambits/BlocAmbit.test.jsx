@@ -45,7 +45,7 @@ const etiquetesDeLaTargeta = (bloc) => {
   const llista = within(bloc).queryByRole('list', { name: 'Categories' });
   return llista ? [...llista.querySelectorAll('li')].map((li) => [li.textContent, li.className]) : [];
 };
-const previsualitzacio = (bloc) => within(bloc).getByText('Així es veurà al Mur').closest('section');
+const previsualitzacio = (bloc) => within(bloc).getByText('Vista en format Card').closest('section');
 const invalid = (bloc, retol) => camp(bloc, retol).getAttribute('aria-invalid');
 
 test('en línia, sense diàleg ni botons: el títol i l’ajuda visibles, el selector desplegable amb els huit àmbits i, sense fitxa, Mur triat i cap camp addicional', () => {

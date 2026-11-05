@@ -122,7 +122,7 @@ const FONAMENTS = [
      AH-02 (ordre del Mestre, captura de /notes de les 17:02; G3-g2-matriu-09) · Ni la llista: la fila activa
      de Notes i de Perfil és la fitxa compacta. Només «Les vistes» del Perfil i este catàleg la munten. */
   especimen('fonaments', 'targeta-viva', 'Targeta viva', 'TargetaViva · BotoTargetaViva (T50)', ['organisme', 'targeta', 'editor'],
-    'La targeta del document mentre s’escriu, amb la mateixa anatomia que tindrà publicada: al Perfil, en línia a l’apartat «Les vistes». La llista de Notes i de Perfil ja no la munta (AH-02): la fila activa és la fitxa compacta, i la previsualització de la publicació del Bloc de Notes viu a l’«Edició avançada» («Així es veurà al Mur»). Cap editor la munta al costat: l’aside de la dreta i el xip «Vista targeta» s’han retirat. Els botons no fan res: ho diu un avís.',
+    'La targeta del document mentre s’escriu, amb la mateixa anatomia que tindrà publicada: al Perfil, en línia a l’apartat «Les vistes». La llista de Notes i de Perfil ja no la munta (AH-02): la fila activa és la fitxa compacta, i la previsualització de la publicació del Bloc de Notes viu a l’«Edició avançada» («Vista en format Card»). Cap editor la munta al costat: l’aside de la dreta i el xip «Vista targeta» s’han retirat. Els botons no fan res: ho diu un avís.',
     'previsualitzacio vista targeta xip aside llista dreta notes perfil vistes'),
   /* Ordre del Mestre, 13-10-2026 (pla 261013_1405, front B) · s'hi afig RellotgeViu, la data i
      l'hora d'ara, vives, a la dreta de la barra taronja de les apps que la demanen. */

@@ -32,7 +32,9 @@ const TRADUIDES = {
 /* Noms propis, de canal o de persona: s'escriuen igual en anglés. */
 const NOMS_PROPIS = new Set([
   'nav.iaiaFitxa', 'nav.wikidepoble', 'section.detail.mur.author', 'section.detail.mur.town', 'section.gestoria.meta1',
-  'section.xat.avisNatiu.titol', 'section.xat.poble.previa', 'section.xat.pagina.participant'
+  'section.xat.avisNatiu.titol', 'section.xat.poble.previa', 'section.xat.pagina.participant',
+  /* AH-26 (r49) · El municipi per defecte del Mode Rural és un topònim. */
+  'section.control.rural.municipiPendent'
 ]);
 const paraules = (text) => String(text).replace(/\{\w+\}/g, ' ').split(/\s+/).filter((tros) => /\p{L}/u.test(tros)).length;
 

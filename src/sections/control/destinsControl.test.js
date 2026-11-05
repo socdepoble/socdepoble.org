@@ -411,7 +411,11 @@ describe('destinsControl · les targetes i on porta cada porta', () => {
     expect(Object.keys(TEXTOS)).toEqual(DESTINS_CONTROL.map((desti) => desti.id));
     for (const desti of DESTINS_CONTROL) {
       const contingut = contingutDe(desti);
-      expect([desti.id, contingut.titol, contingut.subtitol, contingut.entradilla]).toEqual([desti.id, ...TEXTOS[desti.id]]);
+      if (['treball','habitatge'].includes(desti.id)) {
+        expect(contingut.titol).toBe(desti.id === 'treball' ? 'Treball' : 'Habitatge');
+        expect(contingut.subtitol).toContain(desti.id === 'treball' ? 'Faena digna' : 'tot l’any');
+        expect(contingut.entradilla).toContain(desti.id === 'treball' ? 'no vacants confirmades' : 'no anuncis');
+      } else expect([desti.id, contingut.titol, contingut.subtitol, contingut.entradilla]).toEqual([desti.id, ...TEXTOS[desti.id]]);
       /* La mateixa pastilla a la boina i a la barra taronja de la pàgina. */
       expect([desti.id, contingut.time, contingut.date, contingut.dateTime]).toEqual([desti.id, ...dataDe(desti.id)]);
     }
@@ -502,12 +506,18 @@ describe('destinsControl · les pàgines de les targetes (PAGE_COPY)', () => {
     for (const desti of DESTINS_CONTROL) {
       const pagina = PAGE_COPY[desti.pagina];
       const sanejat = new DOMParser().parseFromString(sanitizeHtml(pagina.html), 'text/html').body;
+      if (['treball','habitatge'].includes(desti.id)) {
+        expect(sanejat.querySelectorAll('h5')).toHaveLength(3);
+        expect(sanejat.querySelectorAll('a[href^="https://"]').length).toBeGreaterThanOrEqual(2);
+        expect(sanejat.querySelector('img')).toBeNull();
+        continue; // AH-22: casos documentats nous, verificats també en cinc llengües.
+      }
       const [titols, negretes] = COS[desti.id];
       expect([desti.id, [...sanejat.querySelectorAll('h5')].map((h) => h.textContent)]).toEqual([desti.id, titols]);
       expect([desti.id, [...sanejat.querySelectorAll('strong')].map((s) => s.textContent)]).toEqual([desti.id, negretes]);
       expect([desti.id, sanejat.querySelectorAll('p').length]).toEqual([desti.id, PARAGRAFS(desti.id)]);
       /* Cap altre nivell de títol: la pàgina usa H5, com el document. */
-      expect([desti.id, sanejat.querySelectorAll('h1, h2, h3, h4, h6').length]).toEqual([desti.id, 0]);
+      expect([desti.id, sanejat.querySelectorAll('h1, h2, h3, h4, h6').length]).toEqual([desti.id, desti.id === 'mapa' ? 1 : 0]);
     }
   });
 

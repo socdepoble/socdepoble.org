@@ -37,7 +37,7 @@ vi.mock('./MurContext', () => ({ useMur: () => mocks.mur }));
 import MurSection from './MurSection.jsx';
 import { APP_SEED } from '../../data/appSeed.js';
 import { sortPinnedContent } from '../../config/contentHelpers.js';
-import { IMPORTANTS_DEL_MUR, TECNIQUES_DEL_MUR, llavorAmbDatesDeProva } from './datesDeProvaMur.js';
+import { IMPORTANTS_DEL_MUR, IMPORTANTS_HISTORIQUES_DEL_MUR, TECNIQUES_DEL_MUR, llavorAmbDatesDeProva } from './datesDeProvaMur.js';
 
 /* La llavor com la reben els contextos: CoreContentContext fa pageCopy de les
    pàgines i MurContext ordena cada llista amb sortPinnedContent. */
@@ -79,7 +79,7 @@ test.each([
   const importants = IMPORTANTS_DEL_MUR.map((fila) => titolDe(llavor, fila));
   const maquinaria = MAQUINARIA.map(([id]) => titolDe(llavor, ['pages', id]));
   const tecniques = TECNIQUES_DEL_MUR.map((fila) => titolDe(llavor, fila));
-  const avall = [titolDe(llavor, ['pages', 'drets-autor']), '2n Aplec pel Territori'];
+  const avall = [titolDe(llavor, ['pages', 'drets-autor']), ...IMPORTANTS_HISTORIQUES_DEL_MUR.map(fila => titolDe(llavor, fila)), '2n Aplec pel Territori'];
   expect(titols()).toEqual([...importants, ...maquinaria, ...tecniques, ...avall]);
   // Cada targeta amb data de prova pinta l'hora i el dia (la pastilla sencera).
   for (const targeta of targetes().slice(0, importants.length + maquinaria.length + tecniques.length)) {
@@ -87,6 +87,8 @@ test.each([
     expect(hora).toMatch(/^\d{2}:\d{2}$/);
     expect(dia).toMatch(/^\d{2}\/\d{2}\/\d{2}$/);
   }
+  const manifest = targetes().find(targeta => targeta.querySelector('.sp-card-title')?.textContent === 'Manifest de Poble');
+  expect(pastilla(manifest)).toEqual(['23:50', '17/11/22']);
 });
 
 /* Onada 8 (261009) · Abans, «les dues molt tècniques»: Disseny (14-09) i les

@@ -2,7 +2,7 @@ import { resolveAsset } from '../../config/assetResolver';
 import { useCallback, useEffect, useId, useLayoutEffect, useState, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { useRouter } from '../../app/contexts/RouterContext';
-import { Camera, LoaderCircle, Trash2 } from 'lucide-react';
+import { Camera, Image as ImageIcon, LoaderCircle, Trash2 } from 'lucide-react';
 import { isSafeAsset, isSafeUrl, DEFAULT_AUTHOR, MARQUES_SVG_ANTIGUES, PAGE_CHROME_MODES, esAvatarSegur, esMarcaDeLEntitat, esRutaDelProjecte } from './UniversalUtils';
 import { RUTA_DRETS_AUTOR } from '../../config/systemPages.js';
 import { useResolvedAssetState } from '../../hooks/useResolvedAsset.js';
@@ -15,6 +15,7 @@ import { BarraBlava } from './barres/BarraBlava.jsx';
 import { BarraTaronja } from './barres/BarraTaronja.jsx';
 import { TEXTOS_BARRA, TEXTOS_INDEX } from './barres/textosBarres.js';
 import { BotoModeracio } from '../PedraSeca/organismes/Moderacio.jsx';
+import { SquareBadge } from '../PedraSeca/organismes/SquareBadge.jsx';
 import { AvisTraduccio, CosTraduit } from './traduccio/TraduccioPagina.jsx';
 import { LlenguaDelContingut } from './traduccio/llenguaDelContingut.js';
 import { useToast } from './NotificationContext.jsx';
@@ -587,7 +588,7 @@ export function PageFrame({
   time, date, dateTime,
   dateTimeLabel,
   onBack, onForward, onIndex, onTranslate, onComment, onShare, onConnect, onDateTime,
-  connectLabel, price, layout = 'page',
+  connectLabel, price, calendarBadge = null, squareBadge = null, layout = 'page',
   /* T43 (ordre del Mestre, 260928, D1) · showConnect={false} amaga el botó
      CONNECTAR de la barra blava (UniversalPage el passa amb onConnect={false}).
      Sense la prop, el de sempre: visible. */
@@ -1039,7 +1040,15 @@ export function PageFrame({
      pot pintar, amb les claus per a canviar-la: les píndoles soles. */
   const accionsSenseAvatar = logoDeLaRanura || logoAutomatic || senseLogo === true || avatarDeCapcalera ? null : accionsDAvatarNoPintable(avatarAutor, tAvis);
   const ambLogo = Boolean(logoDeLaRanura || logoAutomatic || avatarDeCapcalera || accionsSenseAvatar);
-  const hasHeader = Boolean(showPageHeader && (ambLogo || titol || pageLabels.length || copyright || classificacio || accioPrincipal));
+  const activeBadge = squareBadge || (price ? { type: 'price', value: price } : null) || calendarBadge;
+  const classesTitol = [
+    'page-title',
+    price && 'has-price',
+    activeBadge && 'has-calendar-badge',
+    (price || activeBadge) && 'has-aside',
+    (price || activeBadge) && !ambLogo && 'has-aside--sense-logo'
+  ].filter(Boolean).join(' ');
+  const hasHeader = Boolean(showPageHeader && (ambLogo || titol || pageLabels.length || copyright || classificacio || accioPrincipal || activeBadge));
 
   return (
     <>
@@ -1086,7 +1095,8 @@ export function PageFrame({
               la pàgina (heroAlt, no el de topBarData) és text de la pàgina. */}
           <ImatgeDePortada alt={barHeroAlt} src={barHeroImage} width={midaHero?.width} height={midaHero?.height} fetchpriority={prioritatHero}
             lang={barHeroAlt && topBarData.heroAlt == null ? langDelContingut : undefined}
-            onLoad={onCarregaPortada} />
+            onLoad={onCarregaPortada}
+            onClick={typeof topBarData?.onHeroClick === 'function' ? topBarData.onHeroClick : undefined} />
         </div>
       ) : null}
 
@@ -1121,13 +1131,13 @@ export function PageFrame({
       {despresAutoria ? <div className="sdp-pagina-despres-autoria">{despresAutoria}</div> : null}
 
       {hasHeader && (
-        <header className="page-title" ref={capcaleraRef}>
+        <header className={classesTitol} ref={capcaleraRef}>
           {logoDeLaRanura ? (
             <div className="page-title-logo-personalitzat">
               {logoDeLaRanura}
             </div>
           ) : logoAutomatic ? (
-            <LogoDeCapcalera {...logoAutomatic} />
+            <LogoDeCapcalera {...logoAutomatic} onClick={typeof topBarData?.onLogoClick === 'function' ? topBarData.onLogoClick : undefined} />
           ) : avatarDeCapcalera ? (
             <AvatarDeCapcalera {...avatarDeCapcalera} />
           ) : accionsSenseAvatar}
@@ -1202,6 +1212,7 @@ export function PageFrame({
               )}
             </p>
           )}
+          {activeBadge ? <SquareBadge badge={activeBadge} /> : null}
         </header>
       )}
 
@@ -1321,19 +1332,19 @@ function midaNaturalDelLogo(clar, fosc) {
      cap Referer, com l'avatar de la boina (BarraTaronja).
    resolveAsset és idempotent sobre el que ja ha resolt: un src resolt
    (DEFAULT_AUTHOR.logo, useResolvedAsset) no canvia. */
-function LogoDeCapcalera({ clar, fosc, alt }) {
+function LogoDeCapcalera({ clar, fosc, alt, onClick }) {
   if (fosc) {
     const srcClar = resolveAsset(clar);
     const srcFosc = resolveAsset(fosc);
     const mida = midaNaturalDelLogo(srcClar, srcFosc);
     return (
       <>
-        <img alt={alt} className={mida ? 'page-title-logo light-only' : 'page-title-logo page-title-logo--entitat light-only'} src={srcClar} width={mida?.width} height={mida?.height} referrerPolicy={mida ? undefined : 'no-referrer'} />
-        <img alt={alt} className={mida ? 'page-title-logo dark-only' : 'page-title-logo page-title-logo--entitat dark-only'} src={srcFosc} width={mida?.width} height={mida?.height} referrerPolicy={mida ? undefined : 'no-referrer'} />
+        <img alt={alt} className={mida ? 'page-title-logo light-only' : 'page-title-logo page-title-logo--entitat light-only'} src={srcClar} width={mida?.width} height={mida?.height} referrerPolicy={mida ? undefined : 'no-referrer'} onClick={onClick} />
+        <img alt={alt} className={mida ? 'page-title-logo dark-only' : 'page-title-logo page-title-logo--entitat dark-only'} src={srcFosc} width={mida?.width} height={mida?.height} referrerPolicy={mida ? undefined : 'no-referrer'} onClick={onClick} />
       </>
     );
   }
-  return <img alt={alt} className="page-title-logo page-title-logo--entitat" src={resolveAsset(clar)} referrerPolicy="no-referrer" />;
+  return <img alt={alt} className="page-title-logo page-title-logo--entitat" src={resolveAsset(clar)} referrerPolicy="no-referrer" onClick={onClick} />;
 }
 
 /* Norma del Mestre, 261004 (prompt 261004_1108, línies 66-69 i T2) · Un
@@ -1418,7 +1429,7 @@ function filaDeLAvatar({ onCanvia = null, etiquetaCanvia = null, onLleva = null,
 
 export function AvatarDeCapcalera({
   src, alt, onCanvia, etiquetaCanvia = null, onLleva = null, etiquetaLleva = null, ajuda = null, pujant = false,
-  nomBoto = null, botoBuit = false, obriFinestra = false, ocupat = false, textOcupat = null,
+  nomBoto = null, etiquetaBoto = null, botoBuit = false, obriFinestra = false, ocupat = false, textOcupat = null,
 }) {
   const t = useTraductorOpcional();
   const idAjuda = `${useId()}-ajuda`;
@@ -1426,6 +1437,7 @@ export function AvatarDeCapcalera({
   const resolucio = useResolvedAssetState(delPort ? src : '');
   const url = delPort ? resolucio.url : resolveAsset(src);
   const textLleva = srcDeLogo(etiquetaLleva) || tradueix(t, PARELL_LLEVA_AVATAR);
+  const textBoto = srcDeLogo(etiquetaBoto);
   // Correcció dels verificadors (261004) · tampoc si el port resol la marca de l'entitat.
   const imatge = url && isSafeAsset(url) && !esMarcaDeLEntitat(url)
     ? <img className="page-title-avatar__imatge" src={url} alt={alt} decoding="async" referrerPolicy="no-referrer" />
@@ -1445,14 +1457,26 @@ export function AvatarDeCapcalera({
       </span>
     </button>
   ) : <div className="page-title-avatar">{imatge}</div>;
+  const botoImatgePerfil = onCanvia && textBoto ? (
+    <div className="sdp-alerta__accions sdp-camp sdp-camp--centrat">
+      <button type="button" className="sdp-boto sdp-boto--secundari"
+        aria-haspopup={obriFinestra === true ? 'dialog' : undefined}
+        disabled={ocupat === true || pujant}
+        aria-busy={ocupat === true ? 'true' : undefined}
+        onClick={onCanvia}>
+        <ImageIcon size={16} aria-hidden="true" focusable="false" /> {textBoto}
+      </button>
+    </div>
+  ) : null;
   const textDeLaPujada = onCanvia ? srcDeLogo(textOcupat) : '';
   const estat = textDeLaPujada
     ? <span className="sdp-sr-only" role="status">{ocupat === true ? textDeLaPujada : ''}</span>
     : null;
-  if (!accions && !estat) return avatar;
+  if (!botoImatgePerfil && !accions && !estat) return avatar;
   return (
     <>
       {avatar}
+      {botoImatgePerfil}
       {accions}
       {estat}
     </>

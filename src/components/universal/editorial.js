@@ -333,7 +333,11 @@ export function momentDElement(item) {
    a l'ordre. */
 function fontsDElement(item) {
   return {
-    publicat: [diaAmbHora(item?.date, item?.time), item?.publish_date],
+    // En actes amb la simetria editorial activada, date/time és la celebració;
+    // publish_date/created_at són l'única font de la barra taronja.
+    publicat: item?.boinaDataPublicacio === true
+      ? item?.publish_date
+      : [diaAmbHora(item?.date, item?.time), item?.publish_date],
     creat: item?.created_at,
     modificat: esEdicioReal(item?.created_at, item?.updated_at) ? item?.updated_at : null
   };
@@ -413,4 +417,37 @@ export function pindolesUniques(labels) {
     vistes.add(clau);
     return true;
   });
+}
+
+/* seguretat-01 (261104) i AH-20 (IDEA-77, 261105) · El text d'una peça de
+   `calendar_badge`: una cadena, tal qual; un número finit, el seu text; una
+   peça buida (0, ''), cap; qualsevol altra cosa (objecte, llista, booleà), cap.
+   Compartida entre EventCard i elementDeSeccio perquè la UniversalPage d'un
+   acte pinte la mateixa insígnia quadrada que la targeta sense arrossegar el
+   barril de Pedra Seca. */
+const pecaDeLaInsignia = (valor) => (valor && (typeof valor === 'string' || Number.isFinite(valor)) ? String(valor) : '');
+
+export function insigniaDeCalendari(esdeveniment, dateTime, item = null) {
+  if (!esdeveniment && !item?.calendar_badge) return null;
+  const iniciClau = (esdeveniment?.inici?.data || esdeveniment?.inici?.dataHora || dateTime || '').slice(0, 10);
+  if (item?.calendar_badge && typeof item.calendar_badge === 'object') {
+    const cb = item.calendar_badge;
+    const label = pecaDeLaInsignia(cb.label);
+    return {
+      dia: pecaDeLaInsignia(cb.dia),
+      mes: pecaDeLaInsignia(cb.mes),
+      any: pecaDeLaInsignia(cb.any) || iniciClau.slice(0, 4),
+      dateTime: pecaDeLaInsignia(cb.dateTime) || iniciClau,
+      ...(label ? { label } : {})
+    };
+  }
+  if (!esdeveniment || !dateTime) return null;
+  const clau = item?.boinaDataPublicacio ? iniciClau : dateTime.slice(0, 10);
+  const [any, mes, dia] = clau.split('-').map(Number);
+  return {
+    dia: String(dia),
+    mes: new Date(any, mes - 1, dia).toLocaleDateString('ca-ES', { month: 'long' }).toUpperCase(),
+    any: String(any),
+    dateTime: clau
+  };
 }

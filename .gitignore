@@ -99,3 +99,15 @@ keystore.properties
 *.mobileprovision
 google-services.json
 GoogleService-Info.plist
+
+# Registre local: mai dades de sessió al control de versions.
+/.agents/runtime/antigravity-hook.log
+
+# R10: version only direct lifecycle receipts; all other runtime is local.
+/.agents/runtime/*
+!/.agents/runtime/turns/
+!/.agents/runtime/contracts/
+/.agents/runtime/turns/*
+!/.agents/runtime/turns/*.json
+/.agents/runtime/contracts/*
+!/.agents/runtime/contracts/*.json

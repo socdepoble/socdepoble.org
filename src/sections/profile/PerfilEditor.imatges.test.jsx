@@ -130,7 +130,7 @@ const capcaleraNeta = () => {
 };
 const selector = (camp) => document.querySelector(`input[type="file"][data-imatge-de-fitxa="${camp}"]`);
 /* Els noms dels botons d'imatge de tota la fitxa, en l'ordre del document. */
-const NOMS_IMATGE = new Set(['Capçalera', 'Avatar', 'Logotip', 'Editar capçalera i avatar', 'Editar logotip']);
+const NOMS_IMATGE = new Set(['Capçalera', 'Imatge de Perfil', 'Avatar', 'Logotip', 'Editar capçalera i avatar', 'Editar logotip']);
 const botonsImatge = () => screen.queryAllByRole('button').map((b) => b.textContent.trim()).filter((nom) => NOMS_IMATGE.has(nom));
 /* Correcció de la revisió (261008) · L'ajuda que acompanya UN botó d'imatge:
    la línia .sdp-camp__ajuda del seu mateix camp, o null si no en té cap. */
@@ -172,7 +172,7 @@ describe('els botons', () => {
     render(<PerfilEditor identitat={jo} />);
     /* Encàrrec d'harmonització (261018) · El control de l'avatar viu dins d'«Edició avançada», no damunt de l'H1. */
     obriEdicioAvancada();
-    expect(botonsImatge()).toEqual(['Capçalera']);
+    expect(botonsImatge()).toEqual(['Capçalera', 'Imatge de Perfil']);
     expect(ranuraAvancada()).toBeNull();
     expect(cercle().getAttribute('aria-label')).toBe('Posa un avatar');
     expect(cercle().querySelector('img')).toBeNull();
@@ -201,11 +201,12 @@ describe('els botons', () => {
        redó viu dins d'«Edició avançada» i és l'únic de l'editor; damunt de
        l'H1 no queda res (ja va a la barra taronja). */
     obriEdicioAvancada();
-    expect(botonsImatge()).toEqual(['Capçalera']);
+    expect(botonsImatge()).toEqual(['Capçalera', 'Imatge de Perfil']);
     expect(ranuraAvancada()).toBeNull();
     capcaleraNeta();
     expect(document.querySelectorAll('.sdp-editor-document button.page-title-avatar--canvia')).toHaveLength(1);
-    expect(within(identitatAvancada()).getAllByRole('button')).toEqual([cercle()]);
+    const botoImatgePerfil = within(identitatAvancada()).getByRole('button', { name: 'Imatge de Perfil' });
+    expect(within(identitatAvancada()).getAllByRole('button')).toEqual([cercle(), botoImatgePerfil]);
     expect(identitatAvancada().querySelector('.page-title-avatar-accions, .sdp-camp__ajuda')).toBeNull();
     const obri = vi.spyOn(selector('logoImage'), 'click');
     await act(async () => { fireEvent.click(cercle()); });
@@ -213,6 +214,23 @@ describe('els botons', () => {
     const dialeg = screen.getByRole('dialog', { name: 'Retalla la foto' });
     expect(dobles.carregaImatge.mock.calls.map(([font]) => font)).toEqual(['/assets/a.webp']);
     expect(dialeg.querySelector('.sdp-enquadrament__visor-caixa--cercle canvas')).not.toBeNull();
+  });
+
+  test('AH-26 · clicar el botó «Imatge de Perfil» o qualsevol imatge existent obri directament DialegEnquadrament amb la imatge carregada', async () => {
+    render(<PerfilEditor identitat={{ ...ambAvatar, dades: { ...ambAvatar.dades, hero_url: '/assets/h.webp' } }} />);
+    obriEdicioAvancada();
+    const botoImatgePerfil = within(identitatAvancada()).getByRole('button', { name: 'Imatge de Perfil' });
+    await act(async () => { fireEvent.click(botoImatgePerfil); });
+    const dialegAvatar = screen.getByRole('dialog', { name: 'Retalla la foto' });
+    expect(dobles.carregaImatge).toHaveBeenLastCalledWith('/assets/a.webp', expect.any(Object));
+    await act(async () => { fireEvent.click(within(dialegAvatar).getByRole('button', { name: 'Cancel·lar' })); });
+
+    // Clicar la imatge Hero de la pròpia pàgina obri també DialegEnquadrament amb la capçalera carregada
+    const heroPagina = document.querySelector('.sdp-editor-document .hero-image img');
+    await act(async () => { fireEvent.click(heroPagina); });
+    const dialegCapcalera = screen.getByRole('dialog', { name: 'Retalla la capçalera' });
+    expect(dobles.carregaImatge).toHaveBeenLastCalledWith('/assets/h.webp', expect.any(Object));
+    expect(within(dialegCapcalera).getByRole('button', { name: 'Canviar foto', description: AJUDA_FOTO })).toBeTruthy();
   });
 
   /* Pla 2000 (punt 2) · Expectativa actualitzada a propòsit: «Llevar avatar»
@@ -240,7 +258,7 @@ describe('els botons', () => {
      el cercle buit en lloc de la ranura «Avatar». */
   test('agent IA sense avatar: «Capçalera» i el cercle buit', () => {
     render(<PerfilEditor identitat={agent} />);
-    expect(botonsImatge()).toEqual(['Capçalera']);
+    expect(botonsImatge()).toEqual(['Capçalera', 'Imatge de Perfil']);
     obriEdicioAvancada();
     expect(cercle().getAttribute('aria-label')).toBe('Posa un avatar');
   });

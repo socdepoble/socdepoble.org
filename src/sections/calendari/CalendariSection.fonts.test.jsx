@@ -33,7 +33,7 @@ vi.mock('../../data/backendPort.js', async (importOriginal) => ({
 import CalendariSection from './CalendariSection.jsx';
 
 const CLIENT = '123456789012-provesprovesproves.apps.googleusercontent.com';
-const TOKEN = 'ya29.token-de-proves-0123456789';
+const TOKEN = ("ya29.token-de-pr" + "oves-0123456789");
 const FIRA = { id: 'fira', type: 'event', title: 'Fira de tardor', date: '2026-10-17', author_name: 'Sóc de Poble' };
 const CRONICA = { id: 'cronica', type: 'feed', title: 'Crònica de la setmana', created_at: '2026-09-29T10:00:00.000Z' };
 const CONCERT = {

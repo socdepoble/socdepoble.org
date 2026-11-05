@@ -183,8 +183,10 @@ export const EQUIVALENCIES = Object.freeze({
 });
 
 /* IDEA-56 (Bloc F.2) · «Sóc de Poble» (o «soy de pueblo») és un sol terme:
-   si no, «sóc» és paraula buida i «poble» casa amb Pobles i amb cada fitxa. */
+   si no, «sóc» és paraula buida i «poble» casa amb Pobles i amb cada fitxa.
+   I «Muro d'Alcoi» és el municipi, no el Mur («muro» en castellà). */
 const FRASE_SOC_DE_POBLE = /\b(?:soc|soy) de (?:poble|pueblo)\b|\bsocdepoble\b/g;
+const FRASE_MURO_ALCOI = /\bmuro\s+d(?:['’\s]+|e\s+)alco[iy]\b/g;
 
 /* El nom de qui escriu no diu de què es parla: una pregunta que només porta
    estes paraules (a més de les buides) no busca res. */
@@ -247,10 +249,13 @@ const senseEnllacos = (text) => String(text ?? '').replace(/\]\([^)]*\)/g, ']').
  * @param {string} text
  * @returns {string[]}
  */
-export function tokenitza(text) {
-  return plega(senseEnllacos(text))
+const formesDelText = (text) => plega(senseEnllacos(text))
     .replace(FRASE_SOC_DE_POBLE, ' socdepoble ')
-    .split(/[^\p{L}\p{N}]+/u)
+    .replace(FRASE_MURO_ALCOI, ' murodalcoi ')
+    .split(/[^\p{L}\p{N}]+/u);
+
+export function tokenitza(text) {
+  return formesDelText(text)
     /* Object.hasOwn: «constructor» o «toString» són paraules, no claus heretades. */
     .map((paraula) => (Object.hasOwn(EQUIVALENCIES, paraula) ? EQUIVALENCIES[paraula] : paraula))
     .filter((paraula) => paraula.length >= LLARGARIA_MINIMA && /\p{L}/u.test(paraula) && !PARAULES_BUIDES.has(paraula));
@@ -560,6 +565,7 @@ export function construeixIndex(items = [], { curat = false } = {}) {
     documents.push({
       id: String(item.id), titol, ruta: font === 'wiki' ? null : rutaDe(item.ruta), font, maximFragment: maximDe(item.maximFragment),
       arrelsDelTitol: new Set(arrels(titol)), arrelsDeLesEtiquetes: new Set(arrels(etiquetes.join(' '))), freq, llargaria,
+      formesDAncoratge: new Set(formesDelText(`${titol} ${etiquetes.join(' ')}`)),
       /* El text del document (el mateix del manifest, sense copiar-lo): comptaParaulaComuna hi compta les paraules comunes. */
       fragments: fragmentsDe(item.content), contingut: item.content
     });
@@ -586,7 +592,7 @@ const arrelsDeLaPregunta = (pregunta) => [...new Set(termesDeLaPregunta(pregunta
 /* Tots els documents amb alguna paraula de la pregunta, de més a menys
    puntuació BM25, amb el fragment i les arrels de la pregunta que s'hi veuen
    (el títol i la prosa del fragment). Els empats es desfan per l'id. */
-function puntua(index, termes, exactes) {
+function puntua(index, termes, exactes, formesExactes = exactes) {
   const documents = index?.documents || [];
   if (!termes.length || !documents.length) return [];
   const n = documents.length;
@@ -608,6 +614,7 @@ function puntua(index, termes, exactes) {
       resultats.push({ id: document.id, titol: document.titol, ruta: document.ruta ?? null, font: document.font || 'wiki', puntuacio, fragment: text,
         vistos: termes.filter((terme) => visibles.has(terme)).length,
         comANom: exactes.filter((forma) => noms.has(forma)),
+        ancoratgeExacte: formesExactes.some((forma) => document.formesDAncoratge.has(forma)),
         alTitol: termes.some((terme) => document.arrelsDelTitol.has(terme)),
         alsTags: termes.some((terme) => document.arrelsDeLesEtiquetes?.has(terme)) });
     }
@@ -679,8 +686,17 @@ function passaElLlindar(resultat, termes, index, cercaGuiada = false) {
  */
 export function cercaRellevant(index, pregunta, limit = DOCUMENTS_PER_RESPOSTA, { cercaGuiada = false } = {}) {
   const termes = arrelsDeLaPregunta(pregunta);
-  return puntua(index, termes, termesDeLaPregunta(pregunta))
-    .filter((resultat) => passaElLlindar(resultat, termes, index, cercaGuiada === true))
+  const exactes = termesDeLaPregunta(pregunta);
+  const formesExactes = formesDelText(pregunta).filter((forma) => forma.length >= LLARGARIA_MINIMA && !PARAULES_BUIDES.has(forma) && !NOMS_DE_LA_IAIA.has(forma));
+  let resultats = puntua(index, termes, exactes, formesExactes)
+    .filter((resultat) => passaElLlindar(resultat, termes, index, cercaGuiada === true));
+  /* Una sola paraula amb una entrada curada exacta no necessita els falsos
+     amics de l'arrel: «Mur» és la secció; «Muro» és el poble. Si no hi ha
+     coincidència exacta es conserva la cerca flexionada de sempre. */
+  if (index?.curat && exactes.length === 1 && resultats.some((resultat) => resultat.ancoratgeExacte)) {
+    resultats = resultats.filter((resultat) => resultat.ancoratgeExacte);
+  }
+  return resultats
     .slice(0, Math.max(0, limit)).map(sensePuntsInterns);
 }
 
@@ -1119,13 +1135,23 @@ export function documentsDePageCopy(pageCopy) {
   for (const clau of PAGINES_PER_A_LA_IAIA) {
     const pagina = pageCopy && typeof pageCopy === 'object' && Object.hasOwn(pageCopy, clau) ? pageCopy[clau] : null;
     if (!pagina || typeof pagina !== 'object' || typeof pagina.title !== 'string' || !pagina.title.trim()) continue;
+    /* El corpus d'ajuda no replica identificadors amb forma de correu, ni
+       tan sols el compte federat públic del dossier. La pàgina publicada
+       conserva els seus enllaços; l'exclusió de Legal i de l'equip no canvia. */
+    const senseContactes = (text) => text.replace(/@?[\w.+-]+@[\w-]+(?:\.[\w-]+)+/gu, '[contacte omés]');
+    const titol = senseContactes(pagina.title);
     const etiquetes = (Array.isArray(pagina.labels) ? pagina.labels : [])
       .map((etiqueta) => (typeof etiqueta === 'string' ? etiqueta : etiqueta?.text))
-      .filter((text) => typeof text === 'string');
-    const entradeta = typeof pagina.lead === 'string' ? pagina.lead : '';
+      .filter((text) => typeof text === 'string').map(senseContactes);
+    const entradeta = typeof pagina.lead === 'string' ? senseContactes(pagina.lead) : '';
+    const blocs = textDeHtml(pagina.html).split('\n\n');
+    /* Nodes i Fedivers respon primer què és un node i quins accessos hi ha.
+       El balanç datat continua íntegre a continuació, copiat de la font. */
+    const definicio = clau === 'fedivers' ? blocs.findIndex((bloc) => /^Un node és\b/u.test(bloc)) : -1;
+    if (definicio > 0) blocs.unshift(...blocs.splice(definicio, 1));
     documents.push({
-      id: `pagina:${clau}`, title: pagina.title, subtitle: typeof pagina.subtitle === 'string' ? pagina.subtitle : '', tags: etiquetes,
-      ruta: rutaDePagina(clau), font: 'pagina', content: `# ${pagina.title}\n\n${entradeta}\n\n${textDeHtml(pagina.html)}`
+      id: `pagina:${clau}`, title: titol, subtitle: typeof pagina.subtitle === 'string' ? senseContactes(pagina.subtitle) : '', tags: etiquetes,
+      ruta: rutaDePagina(clau), font: 'pagina', content: `# ${titol}\n\n${entradeta}\n\n${senseContactes(blocs.join('\n\n'))}`
     });
   }
   return documents;

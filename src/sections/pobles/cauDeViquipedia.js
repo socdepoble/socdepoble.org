@@ -15,7 +15,8 @@
  *   · Fitada a 200 entrades: en desar se'n van les més velles.
  *
  * Diferit: només l'importen el panell (PanellDeViquipedia.jsx) i, quan hi ha
- * alguna fitxa incompleta, usePobleHidratat.js. Amb la llavor no s'obri mai.
+ * alguna fitxa incompleta, usePobleHidratat.js. Una llavor contrastada i
+ * revisada recentment no necessita obrir-la.
  */
 import { creaMagatzemIdb } from '../../utils/magatzemLocal.js';
 import { MAXIM_LEMA } from '../../data/limitsText.js';
@@ -109,6 +110,9 @@ export function netejaEntrada(registre) {
   const wikidata = text(dto.wikidata_id, 20, 'wikidata_id');
   if (wikidata !== null && !QID.test(wikidata)) falla('wikidata_id');
   const imatges = dto.imatges && typeof dto.imatges === 'object' ? dto.imatges : {};
+  const fotos = Object.freeze({ hero: imatge(imatges.hero, 'hero'), avatar: imatge(imatges.avatar, 'avatar'), reserva: imatge(imatges.reserva, 'reserva') });
+  const any = nombre(dto.population_year, [0, 9999], 'population_year');
+  if (any !== null && !Number.isInteger(any)) falla('population_year');
   return {
     clau,
     llegitEl,
@@ -121,16 +125,21 @@ export function netejaEntrada(registre) {
       provincia: text(dto.provincia, 120, 'provincia'),
       comarca: text(dto.comarca, 120, 'comarca'),
       population: text(dto.population, 40, 'population'),
+      population_year: any,
+      elevation: nombre(dto.elevation, [-500, 10000], 'elevation'),
+      area: nombre(dto.area, [0, 1000000000], 'area'),
+      gentilici: text(dto.gentilici, 200, 'gentilici'),
+      image_url: fotos.hero?.src ?? null,
+      avatar_url: fotos.avatar?.src ?? null,
+      shield_url: null,
+      shield: null,
+      hydration_version: dto.hydration_version === 2 ? 2 : null,
       lat: nombre(dto.lat, [-90, 90], 'lat'),
       lng: nombre(dto.lng, [-180, 180], 'lng'),
       wikidata_id: wikidata,
       wikipedia_title: text(dto.wikipedia_title, 255, 'wikipedia_title'),
       copyright: text(dto.copyright, 200, 'copyright'),
-      imatges: Object.freeze({
-        hero: imatge(imatges.hero, 'hero'),
-        avatar: imatge(imatges.avatar, 'avatar'),
-        reserva: imatge(imatges.reserva, 'reserva')
-      })
+      imatges: fotos
     })
   };
 }

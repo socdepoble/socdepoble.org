@@ -123,20 +123,25 @@ const BENILLUP = Object.freeze({ slug: 'benillup', nom: 'Benillup' });
 const SELLA = Object.freeze({ slug: 'sella', nom: 'Sella' });
 const conflicteDe = async (promesa) => promesa.then(() => null, (error) => error);
 
-test('D-01 (sonda2) · seed: un lot de Benillup no es queda l’entitat del padró ni l’acte de la llavor; el de La Torre sí que porta la seua', async () => {
+test('D-01 (sonda2) · seed: cada poble conserva les seues entitats i actes; Benillup pot restaurar el seu Aplec', async () => {
   const A = creaAdaptadorLocal({ mode: 'seed', restauracioOberta: true });
   const directori = await A.listPublicOrganizations({});
   const actes = (await A.loadMur()).events;
   expect(actes.map((a) => a.id)).toEqual(['aplec-2023']);
   const segrest = { id: 'rentonar', slug: 'rentonar', name: 'SEGREST', kind: 'entity', town_name: BENILLUP.nom, visibility: 'public' };
   const acte = { id: 'aplec-2023', title: 'ACTE SEGRESTAT', author_org_id: 'rentonar', poble_id: BENILLUP.slug, visibility: 'public' };
-  for (const colleccions of [{ entitats: [segrest], agenda: [acte] }, { entitats: [segrest] }, { agenda: [{ ...acte, author_org_id: 'org-benillup' }] }]) {
+  for (const colleccions of [{ entitats: [segrest], agenda: [acte] }, { entitats: [segrest] }]) {
     const error = await conflicteDe(A.restauraDadesObertes(LOT(BENILLUP, colleccions)));
     expect(error, JSON.stringify(Object.keys(colleccions))).toMatchObject({ code: 'conflicte-identificador' });
   }
+  expect(await conflicteDe(A.restauraDadesObertes(LOT(SELLA, { agenda: [{ ...acte, poble_id: SELLA.slug }] }))))
+    .toMatchObject({ code: 'conflicte-identificador' });
   expect(await A.listPublicOrganizations({})).toEqual(directori);
   expect((await A.loadMur()).events).toEqual(actes);
-  expect((await A.loadCoreContent()).towns.map((t) => t.id)).not.toContain(BENILLUP.slug);
+  expect((await A.loadCoreContent()).towns.map((t) => t.id)).toContain(BENILLUP.slug);
+  const benillup = await A.restauraDadesObertes(LOT(BENILLUP, { agenda: [{ ...acte, title: 'Aplec restaurat legítimament', author_org_id: 'socdepoble' }] }));
+  expect(benillup.creats.agenda).toBe(1);
+  expect((await A.loadMur()).events).toContainEqual(expect.objectContaining({ id: 'aplec-2023', title: 'Aplec restaurat legítimament', poble_id: BENILLUP.slug }));
   // El lot legítim de La Torre porta la seua entitat del padró (el mateix id i el mateix slug).
   const informe = await A.restauraDadesObertes(LOT(TORRE, { entitats: [{ id: 'rentonar', slug: 'rentonar', name: 'Rentonar', kind: 'entity', town_name: TORRE.nom, visibility: 'public' }] }));
   expect(informe.creats.entitats).toBe(1);

@@ -311,7 +311,8 @@ export function FitxaWeb({ espai, item }) {
             {files.map((fila) => (
               <div key={fila.clau} className="sdp-arxiu-local__dada">
                 <dt>{fila.etiqueta}</dt>
-                <dd>{fila.ruta ? <Link to={fila.ruta}>{fila.valor}</Link> : fila.valor}</dd>
+                <dd>{fila.href ? <a href={fila.href} target="_blank" rel="noopener noreferrer">{fila.valor}</a>
+                  : fila.ruta ? <Link to={fila.ruta}>{fila.valor}</Link> : fila.valor}</dd>
               </div>
             ))}
           </dl>

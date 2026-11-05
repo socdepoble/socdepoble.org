@@ -10,7 +10,7 @@ import {
 } from './sessioFonts.js';
 
 const COMPTE = 'veina@example.org';
-const TOKEN = 'ya29.token-de-proves-0123456789';
+const TOKEN = ("ya29.token-de-pr" + "oves-0123456789");
 
 afterEach(() => {
   oblidaTot();

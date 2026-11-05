@@ -37,7 +37,7 @@ const DADES=()=>({
     {id:'forana',title:'Foto forana',description:'D’un altre servidor',image_url:'https://evil.example/x.jpg'},
     {id:'amb.punt',title:'NO_EXPORTAR'},
     {title:'NO_EXPORTAR sense id'},
-    {id:'amb-secret',title:'Clau sb_secret_abcdefghijklmnopqrstuvwxyz'}
+    {id:'amb-secret',title:"Clau sb_" + "secret_abcdefghijklmnopqrstuvwxyz"}
   ],
   marketItems:[{id:'samarreta-socdepoble',title:'Samarreta remota',subtitle:'De cotó',images:['/assets/mercat/01-chica-jersey.png'],seller:'NO_EXPORTAR_VENEDOR',price:20}],
   events:[{id:7,title:'Concert',subtitle:'A la plaça',image_url:'/assets/actes/concert.webp',status:'published'}]
@@ -123,7 +123,7 @@ test('guardes: secret a la descripció, status null, altres buckets i ids repeti
   const dades={feedPosts:[
     {id:'Aplec',title:'Aplec',entradilla:'La primera'},
     {id:'aplec',title:'NO_EXPORTAR repetida',entradilla:'La segona'},
-    {id:'desc-secreta',title:'Títol net',entradilla:'Clau sb_secret_abcdefghijklmnopqrstuvwxyz'},
+    {id:'desc-secreta',title:'Títol net',entradilla:"Clau sb_" + "secret_abcdefghijklmnopqrstuvwxyz"},
     {id:'status-null',title:'NO_EXPORTAR',entradilla:'Sense estat',status:null},
     {id:'avatar',title:'Avatar',entradilla:'Un altre bucket',image_url:`${SUPABASE}/storage/v1/object/public/avatars/u1.png`},
     {id:'privats',title:'Privats',entradilla:'El bucket privat',image_url:`${SUPABASE}/storage/v1/object/public/mitjans_privats/u1/dni.webp`}

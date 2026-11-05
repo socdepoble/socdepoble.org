@@ -9,10 +9,11 @@
 import { act, cleanup, render } from '@testing-library/react';
 import { afterEach, expect, test, vi } from 'vitest';
 
+const mocks = vi.hoisted(() => ({ navigate: vi.fn() }));
 vi.mock('../../app/contexts/RouterContext', async () => {
   const { createElement: h } = await import('react');
   return {
-    useNavigate: () => vi.fn(),
+    useNavigate: () => mocks.navigate,
     Link: ({ to, children, ...resta }) => h('a', { href: to, ...resta }, children)
   };
 });
@@ -25,6 +26,7 @@ vi.mock('../../app/contexts/UIContext', () => ({ useUIActions: () => ({ t: (_, a
 import { paginaDElement } from './elementDeSeccio.js';
 import { buildEventsDetailSectionMeta, buildMurDetailSectionMeta } from './detailSectionMeta.jsx';
 import { EventCard } from '../../components/universal/EventCard.jsx';
+import { PageFrame } from '../../components/universal/PageFrame.jsx';
 import { acteAEsdeveniment } from '../mur/agendaMur.js';
 
 afterEach(() => { cleanup(); vi.unstubAllEnvs(); });
@@ -66,4 +68,40 @@ test('el detall i la targeta porten al mateix dia', () => {
     expect(paginaDElement(ACTES, item).labels[0].href, item.id).toBe(deLaTargeta);
     cleanup();
   }
+});
+
+test('AH-20 · el quadrat de 128×128 px d’un acte és clicable al mes de l’acte tant a la Card com a la Page, i sense logotip aplica has-aside--sense-logo', () => {
+  vi.stubEnv('TZ', 'Europe/Madrid');
+  mocks.navigate.mockClear();
+  const item = { id: 'fira', title: 'Fira de tardor', date: '2026-11-14' };
+  const pagina = paginaDElement(ACTES, item);
+  expect(pagina.calendarBadge).toEqual({
+    dia: '14',
+    mes: 'NOVEMBRE',
+    any: '2026',
+    dateTime: '2026-11-14'
+  });
+
+  const { container: cSenseLogo } = render(
+    <PageFrame {...pagina} senseLogo={true}>
+      <p>Cos</p>
+    </PageFrame>
+  );
+  const capSenseLogo = cSenseLogo.querySelector('header.page-title');
+  expect(capSenseLogo.classList.contains('has-aside')).toBe(true);
+  expect(capSenseLogo.classList.contains('has-aside--sense-logo')).toBe(true);
+  const quadratPagina = capSenseLogo.querySelector('.sp-card-calendar-badge');
+  expect(quadratPagina).toBeTruthy();
+  act(() => { quadratPagina.click(); });
+  expect(mocks.navigate).toHaveBeenCalledWith('/calendari?mes=2026-11');
+  cleanup();
+
+  const { container: cAmbLogo } = render(
+    <PageFrame {...pagina} showLogos={true}>
+      <p>Cos</p>
+    </PageFrame>
+  );
+  const capAmbLogo = cAmbLogo.querySelector('header.page-title');
+  expect(capAmbLogo.classList.contains('has-aside')).toBe(true);
+  expect(capAmbLogo.classList.contains('has-aside--sense-logo')).toBe(false);
 });

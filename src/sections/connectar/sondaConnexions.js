@@ -19,6 +19,28 @@ import { teCapacitat } from '../../data/backendPort.js';
 import { backendScope } from '../../config/backendConfig.js';
 
 const SENSE_CONNEXIONS = new Set();
+const CODIS_ESQUEMA_NO_DISPONIBLE = new Set([
+  'NO-DISPONIBLE',
+  'PGRST202',
+  'PGRST205',
+  '42883',
+  '42P01'
+]);
+
+/**
+ * Si un error indica que el servidor encara no té la migració o les RPC/taules
+ * de connexions públiques (tant si l'adaptador ja l'ha normalitzat a
+ * `NO-DISPONIBLE` com si arriba cru des de PostgREST/PostgreSQL).
+ */
+export function esErrorNoDisponibleConnexions(error) {
+  if (!error || typeof error !== 'object') return false;
+  const code = String(error.code ?? '').trim().toUpperCase();
+  if (CODIS_ESQUEMA_NO_DISPONIBLE.has(code)) return true;
+  const status = Number(error.status ?? error.statusCode ?? 0);
+  if (status === 404) return true;
+  const msg = String(error.message ?? error.details ?? error.hint ?? '');
+  return /could not find the function|does not exist in the schema cache|relation .* does not exist/i.test(msg);
+}
 
 /** La clau del backend; una configuració il·legible és un àmbit més. */
 export function ambitDeConnexions(config) {
@@ -32,9 +54,9 @@ export function connexionsPotserDisponibles(ambit) {
   } catch { return false; }
 }
 
-/** Recorda que el servidor d'este backend no té les connexions (només amb NO-DISPONIBLE). */
+/** Recorda que el servidor d'este backend no té les connexions (només amb NO-DISPONIBLE o esquema absent). */
 export function recordaSiNoDisponibles(ambit, error) {
-  if (error?.code === 'NO-DISPONIBLE') SENSE_CONNEXIONS.add(String(ambit));
+  if (esErrorNoDisponibleConnexions(error)) SENSE_CONNEXIONS.add(String(ambit));
 }
 
 /** Només per a les proves. */

@@ -592,7 +592,8 @@ export function UniversalWorkspace({
   tornaDeLaLlista = null,
   idEspai,
   accionsLlista = CAP,
-  peuNavegacio = null
+  peuNavegacio = null,
+  amagaRodaAjustos = false
   /* Decisió 4 del Mestre (30-10-2026 ~15:00) · obridorALaLlista ja no hi és:
      només llevava la carpeta de la capçalera de la llista en «mitja», on el
      rail fix de la navegació (railEsquerra) era una altra porta. Amb les
@@ -746,6 +747,7 @@ export function UniversalWorkspace({
         accionsLlista={accionsLlista}
         peuNavegacio={peuNavegacio}
         etiquetaEspai={etiquetaEspai}
+        amagaRodaAjustos={amagaRodaAjustos}
       />
     </WorkspaceProvider>
     </TextosDeLaColumna.Provider>
@@ -757,7 +759,7 @@ function WorkspaceFrame({
   labels, icons, tagFilter, collapsibleNavigation, sortable, canCreate, onRetry, listClassName, detailClassName, className,
   /* etiquetaEspai: sense valor per defecte (B3 · P1-22). L'únic que la crida,
      UniversalWorkspace, sempre li passa la traduïda de TEXT_ESPAI_DE_TREBALL. */
-  accionsLlista, etiquetaEspai, peuNavegacio = null
+  accionsLlista, etiquetaEspai, peuNavegacio = null, amagaRodaAjustos = false
 }) {
   const workspace = useWorkspace();
   const focusAfterLayout = useFocusAfterLayout();
@@ -848,6 +850,7 @@ function WorkspaceFrame({
           rootRef={navegacioRef}
           llistaRef={listFocusRef}
           peuNavegacio={peuNavegacio}
+          amagaRodaAjustos={amagaRodaAjustos}
         />
       }
       middleColumn={
@@ -907,7 +910,7 @@ function WorkspaceFrame({
 function CategoryColumn({
   compacte, espai, grups: groupsToRender, amagades, vigilaAmagada = false, mestreDetall = false, collapsibleNavigation, focusTarget,
   onManageCategories, labels, icon, collapseBtnRef, expandBtnRef, focusAfterLayout, rootRef = null, llistaRef = null,
-  peuNavegacio = null
+  peuNavegacio = null, amagaRodaAjustos = false
 }) {
   const { state, status, selectCategory, toggleColumn } = useWorkspace();
   const { mida, setPanellObert, tancaPanells } = useAppGrid();
@@ -1105,14 +1108,14 @@ function CategoryColumn({
       icona: SlidersHorizontal,
       onAcciona: onManageCategories
     }] : []),
-    {
+    ...(amagaRodaAjustos ? [] : [{
       id: 'settings',
       etiqueta: labels.settings,
       icona: Settings,
       onAcciona: () => setSettingsOpen(true)
-    }
+    }])
   ];
-  const settingsDialog = (
+  const settingsDialog = amagaRodaAjustos ? null : (
     <WorkspaceSettingsDialog
       obert={settingsOpen}
       onTanca={() => setSettingsOpen(false)}

@@ -1,0 +1,45 @@
+{
+  "schema": "sdp.node0.public-restore-bundle.v1",
+  "builder": "esbuild",
+  "builderVersion": "0.28.1",
+  "options": {
+    "entryPoints": [
+      "tooling/node0/verifica-restauracio-node0.mjs"
+    ],
+    "outfile": "public-bundle/restaura-node0-manual.mjs",
+    "bundle": true,
+    "platform": "node",
+    "format": "esm",
+    "target": "node22",
+    "minify": false,
+    "legalComments": "none"
+  },
+  "entryPoint": "tooling/node0/verifica-restauracio-node0.mjs",
+  "inputs": [
+    {
+      "path": "tooling/node0/custodia-age-node0.mjs",
+      "sha256": "e43b5893a283a500272bfe7fdcf4952308a2c858eae8287ef47c6bd20bca809d"
+    },
+    {
+      "path": "tooling/node0/identitat-age-pipe-node0.mjs",
+      "sha256": "820f6bf88bee1ef884afd9a3d833aadabb1e66e2898c792dcf02549be0b32f42"
+    },
+    {
+      "path": "tooling/node0/verifica-restauracio-node0.mjs",
+      "sha256": "3bebaca3cdf7cc0750eee616f9b95f5ae6678c42ea4a5c718b7fc74ba93c0f4b"
+    }
+  ],
+  "output": {
+    "path": "public-bundle/restaura-node0-manual.mjs",
+    "sha256": "c57ded266b38146e95285dd55195414d082233f52d11db921a6d7fa18684aa01"
+  },
+  "externalImports": [
+    "node:child_process",
+    "node:crypto",
+    "node:fs",
+    "node:os",
+    "node:path",
+    "node:url"
+  ],
+  "privateMaterialRead": false
+}

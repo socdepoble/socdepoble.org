@@ -27,18 +27,32 @@
  * El valor va en un element propi perquè un nom llarg s'escurce amb punts
  * suspensius en una columna estreta; el `title` el mostra sencer.
  */
+import { useState } from 'react';
 import { Feather, Folder, Layers, Shapes, Tags } from 'lucide-react';
+import { Camp, CampText, Selector } from '../../PedraSeca/index.js';
 import { tradueix, useTraductorOpcional } from '../../PedraSeca/hooks/useTraductorOpcional.js';
 import { omple } from '../../../config/moderacio.js';
+import { carpetesEnArbre } from './DialegCarpeta.jsx';
+import { CATEGORIA_GENERAL } from './model.js';
 
 
 const CAP = Object.freeze([]);
 const p = (nom, reserva) => Object.freeze([`universal.classificacio.botonera.${nom}`, reserva]);
 const TEXTOS_BOTONERA = Object.freeze({
   grup: p('grup', 'Classificació del document'),
+  carpeta: p('carpeta', 'Carpeta'),
   carpetes: p('carpetes', 'Carpetes'),
+  crearCarpeta: p('crearCarpeta', 'Crear nova carpeta'),
+  placeholderCarpeta: p('placeholderCarpeta', 'Nom de la carpeta…'),
   categories: p('categories', 'Categories'),
+  triaCategoria: p('triaCategoria', 'Tria una categoria…'),
+  crearCategoria: p('crearCategoria', 'Crear nova categoria'),
+  placeholderCategoria: p('placeholderCategoria', 'Nova categoria…'),
   etiquetes: p('etiquetes', 'Etiquetes'),
+  triaEtiqueta: p('triaEtiqueta', 'Tria una etiqueta…'),
+  crearEtiqueta: p('crearEtiqueta', 'Crear nova etiqueta'),
+  placeholderEtiqueta: p('placeholderEtiqueta', 'Nova etiqueta…'),
+  llevarValor: p('llevarValor', 'Llevar «{valor}»'),
   ambit: p('ambit', 'Àmbit'),
   emoticona: p('emoticona', 'Emoticona'),
   pindolaEtiqueta: p('pindolaEtiqueta', '{grup}: {valors}'),
@@ -114,12 +128,243 @@ function BotoResum({ tipus, icona: Icona, glif = null, text, resum, onObri }) {
    O4-CLAUDE-1 · El botó «Àmbit» no obri cap diàleg (sense aria-haspopup): qui
    munta la botonera hi porta, al bloc «On es publica?» en línia. Continua
    abans de l'emoticona, que ha de ser l'últim botó (DESTINS_FOCUS.icon). */
-export function BotoneraClassificacio({ carpeta, categories = CAP, etiquetes = CAP, emoticona = '', etiquetaEmoticona = null, ambit, onObri }) {
+function slugDeCarpeta(nom) {
+  const base = String(nom || '')
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '');
+  return `f-${base || 'carpeta'}`;
+}
+
+function ClassificacioEnLinia({ enLinia, categories, etiquetes, t }) {
+  const {
+    carpetaId = '',
+    carpetes = CAP,
+    onCanviaCarpeta,
+    catalegCategories = CAP,
+    onCanviaCategories,
+    categoriaGeneral = CATEGORIA_GENERAL,
+    catalegEtiquetes = CAP,
+    onCanviaEtiquetes,
+  } = enLinia;
+  const [novaCarpeta, setNovaCarpeta] = useState('');
+  const [carpetesExtra, setCarpetesExtra] = useState(CAP);
+  const [novaCategoria, setNovaCategoria] = useState('');
+  const [novaEtiqueta, setNovaEtiqueta] = useState('');
+
+  const totesCarpetes = [
+    ...carpetes,
+    ...carpetesExtra.filter((extra) => !carpetes.some((c) => c.id === extra.id)),
+  ];
+  const opcionsCarpetes = carpetesEnArbre(totesCarpetes).map((c) => ({
+    valor: c.id,
+    etiqueta: c.cami.length ? `${c.cami.join(' › ')} › ${c.nom}` : c.nom,
+  }));
+
+  const afigCarpeta = () => {
+    const net = novaCarpeta.trim();
+    if (!net) return;
+    const existent = totesCarpetes.find(
+      (c) => c.nom.toLowerCase() === net.toLowerCase() || c.id === net
+    );
+    const idDesti = existent ? existent.id : slugDeCarpeta(net);
+    if (!existent) {
+      setCarpetesExtra((prev) => [...prev, { id: idDesti, nom: net }]);
+    }
+    setNovaCarpeta('');
+    onCanviaCarpeta?.(idDesti, net);
+  };
+
+  const opcionsCategories = [
+    ...new Set([...catalegCategories, ...categories].filter(Boolean)),
+  ].map((c) => ({ valor: c, etiqueta: c }));
+
+  const afigCategoria = (valor) => {
+    const net = String(valor || '').trim();
+    if (!net) return false;
+    if (!categories.includes(net)) {
+      onCanviaCategories?.([...categories, net]);
+    }
+    return true;
+  };
+
+  const llevaCategoria = (valor) => {
+    const restants = categories.filter((c) => c !== valor);
+    onCanviaCategories?.(restants.length ? restants : [categoriaGeneral]);
+  };
+
+  const opcionsEtiquetes = [
+    ...new Set([...catalegEtiquetes, ...etiquetes].filter(Boolean)),
+  ].map((e) => ({ valor: e, etiqueta: e }));
+
+  const afigEtiqueta = (valor) => {
+    const net = String(valor || '').trim();
+    if (!net) return false;
+    if (!etiquetes.includes(net)) {
+      onCanviaEtiquetes?.([...etiquetes, net]);
+    }
+    return true;
+  };
+
+  const llevaEtiqueta = (valor) => {
+    onCanviaEtiquetes?.(etiquetes.filter((e) => e !== valor));
+  };
+
+  return (
+    <section className="sdp-classificacio-en-linia">
+      <div className="sdp-classificacio-en-linia__fila">
+        <Camp etiqueta={tradueix(t, TEXTOS_BOTONERA.carpeta)}>
+          <Selector
+            value={carpetaId}
+            onChange={(e) => onCanviaCarpeta?.(e.target.value)}
+            opcions={opcionsCarpetes}
+          />
+        </Camp>
+        <Camp etiqueta={tradueix(t, TEXTOS_BOTONERA.crearCarpeta)}>
+          <CampText
+            value={novaCarpeta}
+            onChange={(e) => setNovaCarpeta(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                e.preventDefault();
+                afigCarpeta();
+              }
+            }}
+            placeholder={tradueix(t, TEXTOS_BOTONERA.placeholderCarpeta)}
+          />
+        </Camp>
+      </div>
+
+      <div className="sdp-classificacio-en-linia__grup">
+        <div className="sdp-classificacio-en-linia__fila">
+          <Camp etiqueta={tradueix(t, TEXTOS_BOTONERA.categories)}>
+            <Selector
+              value=""
+              onChange={(e) => afigCategoria(e.target.value)}
+              opcions={[
+                { valor: '', etiqueta: tradueix(t, TEXTOS_BOTONERA.triaCategoria) },
+                ...opcionsCategories,
+              ]}
+            />
+          </Camp>
+          <Camp etiqueta={tradueix(t, TEXTOS_BOTONERA.crearCategoria)}>
+            <CampText
+              value={novaCategoria}
+              onChange={(e) => setNovaCategoria(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  e.preventDefault();
+                  if (afigCategoria(novaCategoria)) setNovaCategoria('');
+                }
+              }}
+              placeholder={tradueix(t, TEXTOS_BOTONERA.placeholderCategoria)}
+            />
+          </Camp>
+        </div>
+        {categories.length ? (
+          <div className="sdp-classificacio-en-linia__pindoles">
+            {categories.map((cat) => (
+              <span key={cat} className="sp-card-label sdp-badge-category">
+                <Shapes aria-hidden="true" focusable="false" />
+                <span className="sdp-classificacio-pindola__text">{cat}</span>
+                <button
+                  type="button"
+                  className="sdp-classificacio-en-linia__lleva"
+                  aria-label={omple(tradueix(t, TEXTOS_BOTONERA.llevarValor), { valor: cat })}
+                  disabled={categories.length === 1 && cat === categoriaGeneral}
+                  onClick={() => llevaCategoria(cat)}
+                >
+                  ×
+                </button>
+              </span>
+            ))}
+          </div>
+        ) : null}
+      </div>
+
+      <div className="sdp-classificacio-en-linia__grup">
+        <div className="sdp-classificacio-en-linia__fila">
+          <Camp etiqueta={tradueix(t, TEXTOS_BOTONERA.etiquetes)}>
+            <Selector
+              value=""
+              onChange={(e) => afigEtiqueta(e.target.value)}
+              opcions={[
+                { valor: '', etiqueta: tradueix(t, TEXTOS_BOTONERA.triaEtiqueta) },
+                ...opcionsEtiquetes,
+              ]}
+            />
+          </Camp>
+          <Camp etiqueta={tradueix(t, TEXTOS_BOTONERA.crearEtiqueta)}>
+            <CampText
+              value={novaEtiqueta}
+              onChange={(e) => setNovaEtiqueta(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  e.preventDefault();
+                  if (afigEtiqueta(novaEtiqueta)) setNovaEtiqueta('');
+                }
+              }}
+              placeholder={tradueix(t, TEXTOS_BOTONERA.placeholderEtiqueta)}
+            />
+          </Camp>
+        </div>
+        {etiquetes.length ? (
+          <div className="sdp-classificacio-en-linia__pindoles">
+            {etiquetes.map((tag) => (
+              <span key={tag} className="sp-card-label sdp-badge-tag">
+                <Tags aria-hidden="true" focusable="false" />
+                <span className="sdp-classificacio-pindola__text">{tag}</span>
+                <button
+                  type="button"
+                  className="sdp-classificacio-en-linia__lleva"
+                  aria-label={omple(tradueix(t, TEXTOS_BOTONERA.llevarValor), { valor: tag })}
+                  onClick={() => llevaEtiqueta(tag)}
+                >
+                  ×
+                </button>
+              </span>
+            ))}
+          </div>
+        ) : null}
+      </div>
+    </section>
+  );
+}
+
+export function BotoneraClassificacio({
+  carpeta,
+  categories = CAP,
+  etiquetes = CAP,
+  emoticona = '',
+  etiquetaEmoticona = null,
+  ambit,
+  enLinia = null,
+  onObri
+}) {
   const t = useTraductorOpcional();
   const textEmoticona = etiquetaEmoticona || tradueix(t, TEXTOS_BOTONERA.emoticona);
   const valorsDe = (llista) => llista.filter(Boolean);
   const triatsCategories = valorsDe(categories);
   const triatsEtiquetes = valorsDe(etiquetes);
+  if (enLinia) {
+    return (
+      <div className="sdp-classificacio-bloc" role="group" aria-label={tradueix(t, TEXTOS_BOTONERA.grup)}>
+        <ClassificacioEnLinia
+          enLinia={enLinia}
+          categories={triatsCategories}
+          etiquetes={triatsEtiquetes}
+          t={t}
+        />
+        <div className="sdp-classificacio-botonera">
+          {emoticona
+            ? <BotoResum tipus="emoticona" icona={null} glif={emoticona} text={textEmoticona} resum={null} onObri={onObri} />
+            : <BotoResum tipus="emoticona" icona={Feather} text={textEmoticona} resum="—" onObri={onObri} />}
+        </div>
+      </div>
+    );
+  }
   return (
     <div className="sdp-classificacio-botonera" role="group" aria-label={tradueix(t, TEXTOS_BOTONERA.grup)}>
       {carpeta

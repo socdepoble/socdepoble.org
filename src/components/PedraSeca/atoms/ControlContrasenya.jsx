@@ -29,27 +29,44 @@ export function ControlContrasenya({ id, etiquetaUll = 'Mostra la contrasenya', 
   useEffect(() => {
     const formulari = camp.current?.form;
     if (!formulari) return undefined;
-    const amaga = () => flushSync(() => setVisible(false));
+    const amaga = () => {
+      flushSync(() => setVisible(false));
+      const el = camp.current;
+      if (el) {
+        el.setAttribute('type', 'password');
+        el.setAttribute('data-visible', 'false');
+        el.setAttribute('data-contrasenya-visible', 'false');
+        if (el.style) el.style.webkitTextSecurity = '';
+      }
+    };
     formulari.addEventListener('submit', amaga);
     return () => formulari.removeEventListener('submit', amaga);
   }, []);
 
   /* IDEA-72 · Safari/iOS WebKit amb -webkit-autofill manté la màscara de punts
-     si només canvia la prop React `type`: forcem l'atribut i webkitTextSecurity
-     i un reflow suau preservant cursor i focus. */
-  const commutaVisibilitat = () => {
+     si només canvia la prop React `type`: forcem l'atribut, data-visible="true",
+     webkitTextSecurity="none" i un reflow suau (offsetWidth + offsetHeight)
+     preservant cursor i focus. */
+  const alternaVisibilitat = () => {
     const el = camp.current;
     const teniaFocus = Boolean(el && document.activeElement === el);
-    const inici = el?.selectionStart ?? null;
-    const fi = el?.selectionEnd ?? null;
+    let inici = null;
+    let fi = null;
+    try {
+      inici = el?.selectionStart ?? null;
+      fi = el?.selectionEnd ?? null;
+    } catch { /* Alguns motors restringeixen selectionStart abans de commutació */ }
     const seguent = !visible;
     flushSync(() => setVisible(seguent));
     if (!el) return;
     el.setAttribute('type', seguent ? 'text' : 'password');
+    el.setAttribute('data-visible', seguent ? 'true' : 'false');
+    el.setAttribute('data-contrasenya-visible', seguent ? 'true' : 'false');
     if (el.style) el.style.webkitTextSecurity = seguent ? 'none' : '';
     const actual = el.value;
     el.value = actual;
     void el.offsetWidth;
+    void el.offsetHeight;
     if (typeof inici === 'number' && typeof fi === 'number') {
       try { el.setSelectionRange(inici, fi); } catch { /* Safari pot ignorar-ho en estats transitoris */ }
     }
@@ -64,6 +81,7 @@ export function ControlContrasenya({ id, etiquetaUll = 'Mostra la contrasenya', 
         id={idControl}
         className={uneix('sdp-control', className)}
         type={visible ? 'text' : 'password'}
+        data-visible={visible ? 'true' : 'false'}
         data-contrasenya-visible={visible ? 'true' : 'false'}
         disabled={disabled}
         autoCapitalize="none"
@@ -78,7 +96,7 @@ export function ControlContrasenya({ id, etiquetaUll = 'Mostra la contrasenya', 
         aria-controls={idControl}
         disabled={disabled}
         onMouseDown={(event) => event.preventDefault()}
-        onClick={commutaVisibilitat}
+        onClick={alternaVisibilitat}
       >
         {visible
           ? <EyeOff size={20} aria-hidden="true" focusable="false" />

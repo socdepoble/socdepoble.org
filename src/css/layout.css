@@ -476,6 +476,16 @@ header.bar-blue > * { min-width: 0; }
    portadaSencera): la vertical sense límit d'alçada, a la mida natural i mai
    ampliada (max-width: 100% i width: auto de dalt). */
 .hero-image--sencera img { max-height: none; }
+/* AH-20 (IDEA-77, ordre del Mestre 261105) · Imatges i cartells a la Hero
+   sempre al 100% d'amplària de part a part (width: 100%; height: auto;
+   max-height: none;) sense bandes laterals. */
+.hero-image img,
+.hero-image--vertical img,
+.hero-image--sencera img {
+  width: 100%;
+  height: auto;
+  max-height: none;
+}
 
 /* Barra taronja (context: autor i poble) */
 section.bar-orange {
@@ -541,6 +551,29 @@ header.page-title .lead {
 .page-title-logo { display: block; width: 600px; max-width: 100%; height: auto; margin: 0 auto 16px; object-fit: contain; }
 .page-title-labels { margin-top: 32px; margin-bottom: 32px; display: flex; justify-content: center; flex-wrap: wrap; gap: 8px; }
 .page-title-copyright { margin-bottom: 0; text-align: center; color: var(--sdp-text-suau); font-size: var(--sdp-text-meta); letter-spacing: 0.05em; }
+/* AH-20 (IDEA-77, ordre del Mestre 261105) · SquareBadge (128×128 px) dalt a
+   la dreta de header.page-title i excepció d'alineació de l'H1 sense logotip:
+   quan porta logotip o avatar (ambLogo === true), l'H1 es manté centrat davall
+   del logotip; quan NO porta logotip ni avatar (has-aside--sense-logo) i porta
+   SquareBadge, NOMÉS l'H1 s'alinea a l'esquerra perquè no xoque amb el quadrat
+   de la dreta (la resta de la capçalera es manté centrada). */
+header.page-title.has-aside {
+  position: relative;
+  min-height: calc(128px + var(--sdp-space-6) * 2);
+}
+header.page-title.has-aside > .sp-card-calendar-badge {
+  position: absolute;
+  top: var(--sdp-space-6);
+  right: var(--sdp-space-6);
+  float: none;
+  margin: 0;
+}
+header.page-title.has-aside--sense-logo h1,
+header.page-title.has-aside--sense-logo .h1 {
+  text-align: left;
+  margin-left: 0;
+  padding-right: calc(128px + var(--sdp-space-4));
+}
 
 
 

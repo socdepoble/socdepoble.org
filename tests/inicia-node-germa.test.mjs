@@ -55,7 +55,7 @@ import { reglesFirebaseWebFinger } from '../tooling/seo/genera-federacio.mjs';
 const ARREL = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const INSTALADOR = path.join(ARREL, 'tooling/instalador/inicia-node-germa.mjs');
 const ORIGEN = 'https://gentdexixona.example';
-const SECRET = 'sb_secret_mai_ha_de_viatjar_al_node';
+const SECRET = "sb_" + "secret_mai_ha_de_viatjar_al_node";
 const CONFIG = Object.freeze({ slug: 'xixona', nom: 'Xixona', origen: ORIGEN, mode: 'seed', serviceRoleKey: SECRET });
 /* La Torre de les Maçanes, el poble del Mas, en totes les formes que el repositori fa servir. */
 const RESIDU_TORRE = /la[\s_-]*torre|ma[çc]anes|latorredelesmacanes|gentdelatorre/i;

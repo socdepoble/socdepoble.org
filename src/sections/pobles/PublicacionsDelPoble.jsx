@@ -1,8 +1,7 @@
 /**
  * PublicacionsDelPoble.jsx · Onada 6 (pla 261009_0245, ítem 5: «La primera
- * vista mostrarà exclusivament totes les targetes creades des d'eixe poble per
- * les persones o grups locals») · El panell de la pestanya «Gent de …» de la
- * pàgina d'un poble.
+ * vista mostrava exclusivament l'autoria local) · AH-17 amplia el mateix
+ * panell per a Tot, Gent de … i Xarxa, segons la prop pestanya.
  *
  * Cap peça nova: la vista és la de l'històric de l'actor
  * (VistaPublicacionsDeLActor: GraellaTargetes amb TargetaDelMur o
@@ -32,21 +31,21 @@ function useTraductor() {
 
 /* Les dades i la vista, dins de la barrera: un càlcul que peta queda dins
    del SlotErrorBoundary, com una targeta que peta. */
-function PublicacionsDelPobleAmbDades({ poble, textos }) {
-  const { elements, estat, error, refresh } = usePublicacionsDelPoble(poble);
+function PublicacionsDelPobleAmbDades({ poble, textos, pestanya }) {
+  const { elements, estat, error, refresh } = usePublicacionsDelPoble(poble, pestanya);
   return <VistaPublicacionsDeLActor elements={elements} estat={estat} error={error} refresh={refresh} textos={textos} varietatPorta="secundari" />;
 }
 
-/** Les targetes publicades des de `poble` (una fitxa de /pobles), en l'ordre del Mur. */
-export function PublicacionsDelPoble({ poble }) {
+/** Les targetes de la vista triada; Gent per compatibilitat amb els consumidors anteriors. */
+export function PublicacionsDelPoble({ poble, pestanya = 'gent' }) {
   const t = useTraductor();
-  const textos = textosDelPoble(t);
+  const textos = textosDelPoble(t, pestanya);
   return (
     <SlotErrorBoundary
-      resetKey={String(poble?.id ?? '')}
+      resetKey={`${String(poble?.id ?? '')}:${pestanya}`}
       fallback={({ reinicia }) => <FalladaDeLHistoric t={t} textos={textos} reinicia={reinicia} />}
     >
-      <PublicacionsDelPobleAmbDades poble={poble} textos={textos} />
+      <PublicacionsDelPobleAmbDades poble={poble} textos={textos} pestanya={pestanya} />
     </SlotErrorBoundary>
   );
 }

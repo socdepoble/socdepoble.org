@@ -174,10 +174,10 @@ test('ca: el valencià de sempre, lletra per lletra', () => {
 });
 
 describe('P1-22 · els textos de la fitxa (B3-I18N §3.C)', () => {
-  test('les 43 claus: la reserva és el valor valencià, hi són a les cinc llengües i l’anglés no és el valencià', () => {
+  test('les 44 claus: la reserva és el valor valencià, hi són a les cinc llengües i l’anglés no és el valencià', () => {
     const parells = [...Object.values(TEXTOS_EDITOR_FITXA), PARELL_ERROR_DESAT_IMATGE];
-    expect(parells).toHaveLength(43);
-    expect(new Set(parells.map(([clau]) => clau)).size).toBe(43);
+    expect(parells).toHaveLength(44);
+    expect(new Set(parells.map(([clau]) => clau)).size).toBe(44);
     for (const [clau, reserva] of parells) {
       expect(clau).toMatch(/^section\.perfil\.editor\./);
       expect([clau, CA[clau]]).toEqual([clau, reserva]);

@@ -160,14 +160,20 @@ const server = http.createServer((req, res) => {
         { "Allow": "POST, OPTIONS" }
       );
     }
-    return enviaJson(
-      res,
-      501,
-      {
-        error: "Inbox ActivityPub en fase 1 (descoberta signada): recepció remota d'activitats encara no activada en este node pilot."
-      },
-      "application/activity+json; charset=utf-8"
-    );
+    if (req.method === "POST") {
+      return enviaJson(
+        res,
+        503,
+        {
+          error: "La bústia federada està temporalment indisponible. Torna-ho a provar més tard.",
+          code: "node0_inbox_temporarily_unavailable"
+        },
+        "application/activity+json; charset=utf-8",
+        { "Retry-After": "60", "Cache-Control": "no-store", "Allow": "POST, OPTIONS" }
+      );
+    }
+    return enviaJson(res, 405, { error: "Mètode no permés", allow: ["POST", "OPTIONS"] },
+      "application/activity+json; charset=utf-8", { "Allow": "POST, OPTIONS" });
   }
 
   if (req.method === "OPTIONS") {

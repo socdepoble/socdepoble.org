@@ -6,7 +6,7 @@ description: Inventari verificable del port i requisits d'allotjament Model B
 # API del port neutral i allotjament Model B
 
 **Contrast inicial:** arbre de l'assalt 261101_1246, 2026-11-01. **Recompte actualitzat**
-des de `src/data/contracte.js` el 2026-11-03 (FEDI-16/17/23, arbre de treball, sense commit).
+des de `src/data/contracte.js` i `src/data/conformitat/kit.js` el 2026-11-04 (R6: grups opcionals de correu).
 **Esborrany. Inventari de codi**; **no acredita cap nou desplegament** ni l'aprovació d'una ADR.
 Les **signatures i DTO** són a `src/data/contracte.js` i a les **implementacions**;
 la **llista següent** enumera noms.
@@ -48,13 +48,13 @@ Font: `src/data/contracte.js`. Una implementació vàlida les oferix totes:
 - `subscribeToXat`
 - `unsubscribeFromXat`
 
-## 39 capacitats atòmiques opcionals (`CAPACITATS`)
+## 41 capacitats atòmiques opcionals (`CAPACITATS`)
 
-**94 mètodes addicionals**; **126 mètodes** en `CONTRACTE_BACKEND`. **Recompte obtingut**
+**98 mètodes addicionals**; **130 mètodes** en `CONTRACTE_BACKEND`. **Recompte obtingut**
 amb `Object.keys(CAPACITATS).length`, `CONTRACTE_NUCLI.length` i
 `CONTRACTE_BACKEND.length` del **mòdul executable**, no per recompte manual. Una capacitat
 està disponible només si el port disposa de **tots els seus mètodes**. **No hi ha**
-un camp `capacitats` **obligatori** a l'adaptador ni `capacitatsDisponibles()`.
+un camp `capacitats` **obligatori** a l'adaptador ni `capacitatsDisponibles()`. Les 41 són **grups declarats al contracte**, no 41 serveis implementats o desplegats per cada adaptador.
 
 | Capacitat | Mètodes literals |
 | --- | --- |
@@ -62,6 +62,8 @@ un camp `capacitats` **obligatori** a l'adaptador ni `capacitatsDisponibles()`.
 | `paginacioNotes` | `loadNotesPage` |
 | `paginacioSeccions` | `loadSeccioPage` |
 | `admin` | `adminListUsers`, `adminListOrganizations` |
+| `verificacioCorreu` | `confirmaCorreu`, `reenviaVerificacioCorreu` |
+| `recuperacioCorreu` | `demanaRestablimentCorreu`, `restablixContrasenyaAmbCorreu` |
 | `sessio` | `refrescaSessio`, `elMeuRol` |
 | `mitjans` | `uploadToStorage`, `getPublicUrl`, `resolveAsset`, `promoteToPublic` |
 | `mitjansPropis` | `llistaElsMeusMitjans`, `esborraElMeuMitja` |
@@ -118,9 +120,15 @@ inoperants. No hi ha les API `verificaContracteBackend` o `executaKitDeConformit
 Esta cobertura contractual local **no acredita 120 èxits de servidor remot**,
 ni totes les branques possibles de cada mètode.
 
+### Verificació i recuperació per correu (R6)
+
+El recompte actual és de **182 casos sobre 130 mètodes** i `metodesSenseCas()` buit. Les dues **capacitats opcionals** `verificacioCorreu` i `recuperacioCorreu` afigen **quatre mètodes** i **quatre casos de rebuig** d’entrada malformada al **tall històric** de **178 casos**. Un cas catalogat és cobertura del nom i del seu escenari; **no acredita un èxit funcional ni un servei de correu desplegat**. Els resultats `ok`, `falla` i `omés` continuen separats.
+
+L’adaptador local oferix **39 dels 41 grups declarats**. `CAPACITATS_NO_DECLARADES` conté exactament `verificacioCorreu` i `recuperacioCorreu`; els **quatre casos** d’estos grups s’ometen per **capacitat absent**. Les omissions per dades o autorització dels altres casos continuen sent **explícites**. Les **130 declaracions** del port **no són 130 operacions verificades en un servidor remot**.
+
 ### Connexions i pertinença (FEDI-23)
 
-La **capacitat opcional** `connexionsPubliques` amplia el contracte a **126 mètodes**, amb **178 casos** al kit i `metodesSenseCas()` buit. Els 172 casos previs es conserven en ordre; els **sis casos nous** comproven rebuig estructural abans d’efectes. Els camins positius, la privacitat, els permisos i les carreres es proven separadament amb els **adaptadors reals** locals, els wrappers remots i PostgreSQL. Esta combinació **no acredita** 126 èxits en un servidor remot.
+El tall FEDI-23 de la **capacitat opcional** `connexionsPubliques` ampliava el contracte a **126 mètodes**, amb **178 casos** al kit i `metodesSenseCas()` buit. Els 172 casos previs es conserven en ordre; els **sis casos nous** comproven rebuig estructural abans d’efectes. Els camins positius, la privacitat, els permisos i les carreres es proven separadament amb els **adaptadors reals** locals, els wrappers remots i PostgreSQL. Esta combinació **no acredita** 126 èxits en un servidor remot.
 
 La preferència `visibilitatConnexions` és **privada per defecte**. El perfil pot habilitar la **lectura pública** i ocultar vincles individuals. Una **excepció privada** a qualsevol extrem domina; els **perfils privats**, els bloquejos i el representant bloquejat d’una entitat no es projecten. La **consulta pública** és la mateixa per a visitants i propietàries. Les preferències amb vincles editables són una **lectura autoritzada** separada, també a empresa, entitat i poble. El poble es resol explícitament per **id o slug**, sense reservar al tenant actiu.
 
@@ -164,8 +172,8 @@ requerixen `adminMultipobleAutoritzat: true` i, per a la lectura, un
 **no atorga permisos** al servidor. Les proves passen també amb l'adaptador remot
 real i un **doble de RPC**; **no acrediten una sessió privilegiada en PostgreSQL**.
 
-L'adaptador local implementa les **39 capacitats**; `CAPACITATS_NO_DECLARADES`
-és buit. `versioMinimaClient` torna honestament `null`, sense transport.
+L'adaptador local oferix **39 dels 41 grups declarats**; `CAPACITATS_NO_DECLARADES`
+conté `verificacioCorreu` i `recuperacioCorreu`. `versioMinimaClient` torna honestament `null`, sense transport.
 L'administració multipoble està **denegada per defecte**: requerix el catàleg i
 la política `administracioLocal` injectats en construir la instància. La política
 només autoritza amb `true`, i **no deriva permisos** de rols o MFA del client.

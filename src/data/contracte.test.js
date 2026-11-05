@@ -33,6 +33,17 @@ test('el port delega exactament el contracte: ni un mètode de més ni un de men
   expect(delegats).toEqual([...CONTRACTE_BACKEND].sort());
 });
 
+test('R6 · verificació i recuperació per correu són parelles opcionals senceres, sense ampliar el nucli', () => {
+  expect(CAPACITATS.verificacioCorreu).toEqual(['confirmaCorreu','reenviaVerificacioCorreu']);
+  expect(CAPACITATS.recuperacioCorreu).toEqual(['demanaRestablimentCorreu','restablixContrasenyaAmbCorreu']);
+  for(const cap of['verificacioCorreu','recuperacioCorreu']){
+    expect(Object.isFrozen(CAPACITATS[cap])).toBe(true);
+    for(const method of CAPACITATS[cap])expect(CONTRACTE_NUCLI).not.toContain(method);
+    expect(()=>port.validaBackendImplementation({...nucli(),...capacitat(cap,1)})).toThrow('Capacitat parcial: '+cap);
+    expect(()=>port.validaBackendImplementation({...nucli(),...capacitat(cap)})).not.toThrow();
+  }
+});
+
 test('les capacitats compte i consentiment són les del contracte d’interfícies', () => {
   expect(CAPACITATS.compte).toEqual(['exportaLesMeuesDades', 'estatBaixa', 'demanaBaixa', 'cancelaBaixa']);
   expect(CAPACITATS.consentiment).toEqual(['estatConsentiment', 'registraConsentiment', 'revocaConsentiment']);

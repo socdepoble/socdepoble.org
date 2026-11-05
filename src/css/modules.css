@@ -816,7 +816,6 @@ aside.sdp-workspace-column > .app-grid-col-header--dark:nth-of-type(2) {
   border-radius: var(--sdp-radi-xl);
   overflow: hidden;
 }
-.detail-content__figura--final { margin-top: var(--sdp-space-6); margin-bottom: 0; }
 .detail-content__titol { margin: var(--sdp-space-8) 0 var(--sdp-space-4); }
 /* Ordre del Mestre (31-10-2026) · Llei de llistes (tokens.css, base.css):
    sense flex ni gap; entre ítems, només el marge del li (--sdp-li-gap). */
@@ -825,7 +824,6 @@ aside.sdp-workspace-column > .app-grid-col-header--dark:nth-of-type(2) {
   padding-left: var(--sdp-space-6);
   list-style-type: disc;
 }
-.detail-content__enllac { text-decoration: underline; }
 
 /* ── Fitxa de secció · SectionItemCard.jsx ───────────────────────── */
 .sdp-fitxa-seccio { display: flex; flex-direction: column; height: 100%; }
@@ -3242,6 +3240,69 @@ details[open] summary.accordion-header svg:last-child {
      (fins al tercer nivell, el màxim del Workspace). */
   .sdp-classificacio-carpeta--nivell-1 { padding-inline-start: var(--sdp-space-6); }
   .sdp-classificacio-carpeta--nivell-2 { padding-inline-start: var(--sdp-space-12); }
+
+  /* AH-24 (IDEA-81) · Graella en línia de 2 columnes (Desplegable + Crear nova)
+     per a Carpeta, Categories i Etiquetes dins d'Edició avançada. */
+  .sdp-classificacio-bloc {
+    display: flex;
+    flex-direction: column;
+    gap: var(--sdp-space-3);
+    inline-size: 100%;
+  }
+  .sdp-classificacio-en-linia {
+    display: flex;
+    flex-direction: column;
+    gap: var(--sdp-space-3);
+    inline-size: 100%;
+  }
+  .sdp-classificacio-en-linia .sdp-camp { margin: 0; }
+  .sdp-classificacio-en-linia__grup {
+    display: flex;
+    flex-direction: column;
+    gap: var(--sdp-space-2);
+  }
+  .sdp-classificacio-en-linia__fila {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: var(--sdp-space-3);
+    align-items: end;
+  }
+  @media (min-width: 640px) {
+    .sdp-classificacio-en-linia__fila {
+      grid-template-columns: 1fr 1fr;
+    }
+  }
+  .sdp-classificacio-en-linia__pindoles {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--sdp-space-2);
+    align-items: center;
+  }
+  .sdp-classificacio-en-linia__pindoles > .sp-card-label {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--sdp-space-1);
+  }
+  .sdp-classificacio-en-linia__pindoles > .sp-card-label > svg {
+    flex: none;
+    width: var(--sdp-icona-xs);
+    height: var(--sdp-icona-xs);
+  }
+  .sdp-classificacio-en-linia__lleva {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 var(--sdp-space-1);
+    margin: 0;
+    border: 0;
+    background: transparent;
+    color: inherit;
+    font: inherit;
+    cursor: pointer;
+  }
+  .sdp-classificacio-en-linia__lleva:disabled {
+    cursor: not-allowed;
+  }
   .sdp-bloc-icon,
   .sdp-bloc-action {
     display: inline-flex;
@@ -14339,4 +14400,100 @@ details[open] summary.accordion-header svg:last-child {
     .sdp-tpv__graella,
     .sdp-xat-missatges
   ) > li { margin-block: 0; }
+}
+
+/* ── Aplec2023Article (AH-18) · abans un full de secció; ara, bloc de modules.css (tractor-vocabulari, css-de-seccio) ── */
+@layer components {
+  .aplec-2023__video {
+    display: flex;
+    justify-content: center;
+    width: 100%;
+    overflow: hidden;
+    background: var(--sdp-crom-fons);
+  }
+
+  .aplec-2023__video iframe {
+    display: block;
+    width: 100%;
+    height: auto;
+    aspect-ratio: 16 / 9;
+    max-height: min(75vh, 720px);
+    border: 0;
+  }
+
+  .aplec-2023__galeria,
+  .aplec-2023__organitzadores {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 15rem), 1fr));
+    gap: var(--sdp-space-4);
+    margin-block: var(--sdp-space-4);
+  }
+
+  .aplec-2023__galeria figure,
+  .aplec-2023__organitzadores > div {
+    margin: 0;
+    min-width: 0;
+  }
+
+  .aplec-2023 img {
+    display: block;
+    max-width: 100%;
+    height: auto;
+    margin-inline: auto;
+  }
+
+  .aplec-2023__galeria img {
+    width: 100%;
+  }
+
+  .aplec-2023__figura {
+    margin: var(--sdp-space-6) 0;
+  }
+
+  .aplec-2023__complement summary {
+    min-height: var(--sdp-touch);
+    cursor: pointer;
+  }
+
+  .aplec-2023 figcaption,
+  .aplec-2023__peu {
+    color: var(--sdp-text-suau);
+    margin-top: var(--sdp-space-2);
+  }
+}
+
+/* ── ManifestDePobleArticle (AH-27) · abans un full de secció; ara, bloc de modules.css (tractor-vocabulari, css-de-seccio) ── */
+@layer components {
+  .manifest-de-poble figure {
+    margin: var(--sdp-space-6) 0;
+  }
+
+  .manifest-de-poble img {
+    display: block;
+    max-width: 100%;
+    height: auto;
+    margin-inline: auto;
+  }
+
+  .manifest-de-poble figcaption {
+    color: var(--sdp-text-suau);
+    margin-top: var(--sdp-space-2);
+  }
+
+  .manifest-de-poble__documents,
+  .manifest-de-poble__adhesio .sdp-accions {
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+
+  .manifest-de-poble__organitzadores {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 15rem), 1fr));
+    gap: var(--sdp-space-4);
+    margin-block: var(--sdp-space-6);
+  }
+
+  .manifest-de-poble__adhesio {
+    margin-block: var(--sdp-space-6);
+  }
 }

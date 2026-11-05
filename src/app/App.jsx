@@ -36,7 +36,6 @@ import { idDeDocumentWiki, RUTA_WIKI } from '../config/rutaSocial.js';
 import { accioDeLaPaginaDeText, accioDeTextAlFinal, objecteDeLaPaginaDeText } from '../sections/text/accionsDeText.js';
 import { AccioDeLaPaginaDeText } from '../sections/text/AccioDeLaPaginaDeText.jsx';
 import { ProveidorXatSocDePoble } from '../sections/control/xatCorporatiu.js';
-import { BotoCrom } from '../components/universal/PanellCrom.jsx';
 /* Onada 11 (261010; prompt 261010_1730, tasca 2) · L'estil desat del poble, aplicat a l'arrel de la instància. */
 import { EstilDelPoble } from './EstilDelPoble.jsx';
 /* T47 · Escriptors de l'autodesament des de l'arrencada (reprenen esborranys pendents). */
@@ -733,7 +732,9 @@ const TopBar = memo(function TopBar({ onToggleSidebar, menuObert = false, nomPob
       </button>
 
       <div className="right-icons">
-        <BotoCrom />
+        {/* AH-29 (IDEA-89) · La roda dentada del Crom del sistema ix de la barra
+            negra superior i s'integra dins de «🛡️ Administració del sistema»
+            a /el-meu-perfil («🎨 Colors i disseny (Crom del sistema)»). */}
         {/* Instal·lació PWA pausada durant la beta (pla 261021_2345 §1): ací anava
             <BotoInstalaApp /> (components/universal/BotoInstalaApp.jsx, ordre del
             Mestre 261021, prompt 261021_0015, tasca 3). Per a reactivar-la,

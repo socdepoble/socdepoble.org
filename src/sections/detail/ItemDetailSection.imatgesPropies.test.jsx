@@ -525,8 +525,12 @@ describe('Onada 5 · la pàgina d’un poble', () => {
     expect(boto.className).toBe('sdp-boto sdp-boto--primari sdp-boto--gran sdp-boto--ple');
     expect(boto.getAttribute('href')).toBe(XAT);
     expect(boto.textContent).toBe('Parlar amb la Gent de la Torre');
-    // El primer del cos, just després de l'entradilla.
-    expect(container.querySelector('.page-intro').nextElementSibling.firstElementChild.className).toBe('sdp-pagina-accio');
+    /* AH-17 (ordre del Mestre, 261104) · El primer del cos és l'arbre territorial
+       de quatre nivells (nav «Territori»); el botó blau el segueix. */
+    const cos = container.querySelector('.page-intro').nextElementSibling;
+    expect(cos.firstElementChild.tagName).toBe('NAV');
+    expect(cos.firstElementChild.getAttribute('aria-label')).toBe('Territori');
+    expect(cos.firstElementChild.nextElementSibling.className).toBe('sdp-pagina-accio');
     /* Expectativa actualitzada a propòsit: P1-11 (pla 261024_2230, T5B-01;
        ordre del Mestre 261024 18:21) · fora les píndoles HTML duplicades
        (.badge-row/.pill) de la població i del nom del poble. */
@@ -550,7 +554,7 @@ describe('Onada 5 · la pàgina d’un poble', () => {
     return render(<ItemDetailSection />).container;
   };
 
-  test('Onada 6 · la barra de pestanyes centrada, just després del botó blau, amb «Gent de la Torre» seleccionada i «Empreses i entitats» al costat', () => {
+  test('AH-17 · la barra de pestanyes centrada, just després del botó blau: «Tot» (per defecte), «Gent de la Torre», «Xarxa» i «Empreses i entitats»', () => {
     const container = pinta('pobles', POBLE);
     const barra = container.querySelector('.sdp-pestanyes');
     expect(barra.className).toBe('sdp-pestanyes sdp-pestanyes--centrades');
@@ -559,8 +563,8 @@ describe('Onada 5 · la pàgina d’un poble', () => {
     /* Expectativa actualitzada a propòsit: P1-11 (T5B-01) · la segona pestanya,
        «Empreses i entitats», i sense les píndoles la barra va just després del botó blau. */
     expect([...llista.querySelectorAll('[role="tab"]')].map((p) => [p.textContent, p.getAttribute('aria-selected')]))
-      .toEqual([['Gent de la Torre', 'true'], ['Empreses i entitats', 'false']]);
-    expect(container.querySelector('.page-intro').nextElementSibling.firstElementChild.className).toBe('sdp-pagina-accio');
+      .toEqual([['Tot', 'true'], ['Gent de la Torre', 'false'], ['Xarxa', 'false'], ['Empreses i entitats', 'false']]);
+    expect(container.querySelector('.page-intro').nextElementSibling.querySelector(':scope > .sdp-pagina-accio')).not.toBeNull();
     expect(container.querySelector('.content-wrapper > .sdp-pagina-accio').nextElementSibling).toBe(barra);
   });
 
@@ -589,7 +593,7 @@ describe('Onada 5 · la pàgina d’un poble', () => {
         { id: 't1', type: 'feed', title: 'De la Torre', author_location: 'La Torre de les Maçanes', created_at: '2026-09-03T10:00:00Z' }
       ]
     });
-    expect(container.querySelector('[role="tab"]').textContent).toBe('Gent del Campello');
+    expect([...container.querySelectorAll('[role="tab"]')].map((p) => p.textContent).slice(0, 3)).toEqual(['Tot', 'Gent del Campello', 'Xarxa']);
     const panell = container.querySelector('[role="tabpanel"]');
     await waitFor(() => expect(panell.querySelectorAll('article.sp-card')).toHaveLength(1));
     expect(panell.querySelector('.sp-card-title').textContent).toBe('Peix fresc');
@@ -599,7 +603,7 @@ describe('Onada 5 · la pàgina d’un poble', () => {
     const container = pintaAmbMur(POBLE, {});
     const panell = container.querySelector('[role="tabpanel"]');
     await waitFor(() => expect(panell.querySelector('p[role="status"]')).not.toBeNull());
-    expect(panell.querySelector('p[role="status"]').textContent).toBe('Encara no hi ha cap publicació des d’este poble.');
+    expect(panell.querySelector('p[role="status"]').textContent).toBe('Encara no hi ha publicacions d’este poble ni sobre ell.');
   });
 
   /* Requisit 15 de l'Onada 5 · La pastilla del poble és el seu naixement: si

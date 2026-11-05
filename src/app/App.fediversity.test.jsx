@@ -101,7 +101,7 @@ test('/fediversity porta a /page/fediversity, amb l’anatomia de la UniversalPa
       '/page/node-zero',
       '/fedivers'
     ]);
-    expect([...cos.querySelectorAll('h3')].filter((h3) => !h3.closest('.sdp-targetes'))).toHaveLength(3);
+    expect([...cos.querySelectorAll('h3')].filter((h3) => !h3.closest('.sdp-targetes'))).toHaveLength(8);
     // Ordre definitiva del Mestre (~01:00): cap taula; les quatre partides en H4, amb els seus H5.
     expect(cos.querySelectorAll('table')).toHaveLength(0);
     expect([...cos.querySelectorAll('h4')].filter((h4) => /^\d · /.test(h4.textContent))).toHaveLength(4);

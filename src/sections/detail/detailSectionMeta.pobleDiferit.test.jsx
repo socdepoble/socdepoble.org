@@ -73,7 +73,7 @@ describe('el panell diferit del poble', () => {
     // La barrera de la ruta no ha rebut res; la resta de la pàgina, sencera.
     expect(container.querySelector('[data-ruta="error"]')).toBeNull();
     expect(container.querySelector('.sdp-pagina-accio > a').textContent).toBe('Parlar amb la Gent de Vilanova de Prova SdP');
-    expect(container.querySelector('[role="tab"]').textContent).toBe('Gent de Vilanova de Prova SdP');
+    expect(container.querySelector('[role="tab"]').textContent).toBe('Tot');
   });
 
   test('la barrera només es queda la fallada d’un import: un altre error puja a la ruta', () => {

@@ -144,7 +144,7 @@ export function divisionsDe(etiquetes) {
    brasão, herb, heràldica, armoiries). El nom es mira amb espais en lloc de
    «_», perquè «\b» no veu cap frontera en «Poble_CoA». */
 const NOM_EXCLOS = /escut|escudo|coat[ _-]?of[ _-]?arms|\barms\b|blas[oó]|wappen|\bcoa\b|stemma|bras[aã]o|\bherb\b|her[aàá]ldi|heraldry|armoiries|bandera|\bflag|\bmapa|\bmap\b|locator|locali[tz]?zaci|situaci|\blogo|\bicon|pl[àa]nol|\bplano\b|emblem|disambig|confusion/i;
-const esNomExclos = (nom) => NOM_EXCLOS.test(String(nom ?? '').replace(/_/g, ' '));
+export const esNomExclos = (nom) => NOM_EXCLOS.test(String(nom ?? '').replace(/_/g, ' '));
 const EXTENSIO_RASTER = /\.(?:jpe?g|png|webp)$/i;
 const MIME_RASTER = Object.freeze(['image/jpeg', 'image/png', 'image/webp']);
 
@@ -245,7 +245,7 @@ const arrodonix = (valor) => (typeof valor === 'number' && Number.isFinite(valor
 
 function dtoDelPoble({
   estat, title, provincia = null, comarca = null, content = '', population = null, lat = null, lng = null,
-  wikidataId = null, wikipediaTitle = null, imatges = SENSE_IMATGES
+  wikidataId = null, wikipediaTitle = null, imatges = SENSE_IMATGES, elevation = null, area = null, populationYear = null, gentilici = null
 }) {
   const id = slugDelPoble(title);
   const drets = [content ? DRETS_TEXT : null, Object.values(imatges).some(Boolean) ? DRETS_IMATGES : null].filter(Boolean);
@@ -258,6 +258,15 @@ function dtoDelPoble({
     provincia,
     comarca,
     population,
+    population_year: populationYear,
+    elevation,
+    area,
+    gentilici,
+    shield_url: null,
+    shield: null,
+    image_url: imatges.hero?.src ?? null,
+    avatar_url: imatges.avatar?.src ?? null,
+    hydration_version: 2,
     lat: arrodonix(lat),
     lng: arrodonix(lng),
     wikidata_id: wikidataId,
@@ -293,7 +302,15 @@ async function opcional(fer, signal) {
   }
 }
 
-async function resolMunicipi(nom, provincia, llig, signal) {
+async function resolMunicipi(nom, provincia, llig, signal, { wikidataId, parentPobleId } = {}) {
+  // Una pedania conserva la seua pròpia identitat; mai no es consulta el
+  // municipi pare per omplir el seu cens o la seua superfície.
+  if (parentPobleId) {
+    if (!/^Q[1-9]\d*$/.test(wikidataId || '')) return null;
+    const entitats = llista(await llig('entitats', { ids: wikidataId }, { signal }));
+    const entitat = entitats.find(e => e.qid === wikidataId && senseArticle(e.etiqueta) === senseArticle(nom));
+    return entitat ? { entitat, article: null, esPedania: true } : null;
+  }
   const qids = llista(await llig('cercaMunicipi', { srsearch: `${nom} haswbstatement:P31=${MUNICIPI_D_ESPANYA}` }, { signal }));
   if (qids.length) {
     const entitats = llista(await llig('entitats', { ids: qids.slice(0, MAXIM_ENTITATS).join('|') }, { signal }));
@@ -311,7 +328,7 @@ async function resolMunicipi(nom, provincia, llig, signal) {
   return { entitat, article: entitat.titolCawiki === article.titol ? article : null };
 }
 
-async function completa({ entitat, article: articleLlegit }, provinciaDonada, llig, signal) {
+async function completa({ entitat, article: articleLlegit, esPedania = false }, provinciaDonada, llig, signal) {
   let article = articleLlegit;
   if (!article && entitat.titolCawiki) {
     const llegit = pagina(await llig('article', { titles: entitat.titolCawiki }, { signal }));
@@ -327,7 +344,8 @@ async function completa({ entitat, article: articleLlegit }, provinciaDonada, ll
     const llegits = await Promise.all(grups.map(async (titles) => llista(await llig('fitxers', { titles }, { signal }))));
     return llegits.flat();
   }, signal);
-  const { provincia: provinciaP131, comarca } = divisionsDe(divisions.valor);
+  const { provincia: provinciaP131, comarca: comarcaP131 } = divisionsDe(divisions.valor);
+  const comarca = esPedania ? null : comarcaP131;
   const content = article ? entradillaDe(article.extracte) : '';
   const imatges = triaImatges(fitxers.valor, { p18: entitat.p18, imatgePagina: article?.imatgePagina });
   const complet = Boolean(content) && teTresFotos(imatges) && divisions.ok && fitxers.ok;
@@ -337,7 +355,11 @@ async function completa({ entitat, article: articleLlegit }, provinciaDonada, ll
     provincia: provinciaDeIne(entitat.ine) || provinciaP131 || provinciaDonada,
     comarca,
     content,
-    population: entitat.poblacio === null ? null : `${entitat.poblacio} hab`,
+    population: entitat.poblacio == null ? null : `${entitat.poblacio} hab`,
+    populationYear: entitat.poblacioAny ?? null,
+    elevation: entitat.altitud ?? null,
+    area: entitat.superficie ?? null,
+    gentilici: entitat.gentilici ?? null,
     lat: entitat.lat ?? article?.lat,
     lng: entitat.lng ?? article?.lng,
     wikidataId: entitat.qid,
@@ -352,12 +374,12 @@ async function completa({ entitat, article: articleLlegit }, provinciaDonada, ll
  *   · llig: el lector de Wikimedia (client.js); les proves en passen un fals;
  *   · signal: per a cancel·lar-ho tot (torna 'no-disponible').
  */
-export async function pobleDeViquipedia(nom, { provincia = null, llig = lligViquipedia, signal } = {}) {
+export async function pobleDeViquipedia(nom, { provincia = null, llig = lligViquipedia, signal, wikidataId = null, parentPobleId = null } = {}) {
   const nomNet = netejaNom(nom);
   const provinciaDonada = netejaNom(provincia) || null;
   if (!slugDelPoble(nomNet)) return dtoDelPoble({ estat: 'sense-article', title: nomNet, provincia: provinciaDonada });
   try {
-    const resolt = await resolMunicipi(nomNet, provinciaDonada, llig, signal);
+    const resolt = await resolMunicipi(nomNet, provinciaDonada, llig, signal, { wikidataId, parentPobleId });
     if (!resolt) return dtoDelPoble({ estat: 'sense-article', title: nomNet, provincia: provinciaDonada });
     return await completa(resolt, provinciaDonada, llig, signal);
   } catch {

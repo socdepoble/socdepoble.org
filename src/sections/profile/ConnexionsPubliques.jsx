@@ -4,7 +4,7 @@ import { useSessioOpcional } from '../../app/contexts/SessionContext.jsx';
 import { entradaSessio } from '../../data/identitat.js';
 import * as port from '../../data/backendPort.js';
 import { abastDe } from '../pobles/useEntitatsDelPoble.js';
-import { ambitDeConnexions, connexionsPotserDisponibles, recordaSiNoDisponibles } from '../connectar/sondaConnexions.js';
+import { ambitDeConnexions, connexionsPotserDisponibles, esErrorNoDisponibleConnexions, recordaSiNoDisponibles } from '../connectar/sondaConnexions.js';
 
 const reserva = (_clau, text) => text;
 /* llibre-deutes-01 i connectar-01 (261104, P0-16 · IDEA-73) · La capacitat del
@@ -16,10 +16,32 @@ const reserva = (_clau, text) => text;
    muntatges alhora són els de sondaConnexions.js). */
 const disponible = config => connexionsPotserDisponibles(ambitDeConnexions(config));
 /* A la fitxa pública no hi ha res a mostrar si el servidor no té les connexions
-   (NO-DISPONIBLE) o si el subjecte no existix per al remot (SDP-CONN-001: la
-   persona de reserva del paquet, sense UUID, ni arriba al transport).
-   Reintentar no ho arregla: el bloc calla. La resta d'errors manté l'avís. */
-const CALLA_LA_FITXA = new Set(['NO-DISPONIBLE', 'SDP-CONN-001']);
+   (NO-DISPONIBLE / PostgREST 404 / PGRST202), si el subjecte no existix per al
+   remot (SDP-CONN-001: la persona de reserva del paquet, sense UUID, ni arriba
+   al transport), o si la consulta pública sense sessió rep una denegació de
+   permís anònim (401/403, PGRST301, 42501, SENSE-SESSIO, NO-AUTORITZAT,
+   PERMISSION_DENIED). Reintentar no ho arregla per al visitant: el bloc calla
+   amb elegància. La resta d'errors inesperats manté l'avís de lectura. */
+const CALLA_LA_FITXA = new Set([
+  'NO-DISPONIBLE',
+  'SDP-CONN-001',
+  'SENSE-SESSIO',
+  'NO-AUTORITZAT',
+  'PERMISSION_DENIED',
+  'PGRST301',
+  '42501'
+]);
+
+export function esErrorSilenciosConnexionsPubliques(error) {
+  if (esErrorNoDisponibleConnexions(error)) return true;
+  if (!error || typeof error !== 'object') return false;
+  const code = String(error.code ?? '').trim().toUpperCase();
+  if (CALLA_LA_FITXA.has(code)) return true;
+  const status = Number(error.status ?? error.statusCode ?? 0);
+  if (status === 401 || status === 403 || status === 404) return true;
+  const msg = String(error.message ?? error.details ?? '');
+  return /permission denied for (table|function|schema)|jwt expired|anonymous/i.test(msg);
+}
 const tipusValid = tipus => ['persona', 'entitat', 'poble'].includes(tipus);
 const clauDe = fila => `${fila.tipus}:${fila.id}`;
 export function rutaDeConnexio(fila) {
@@ -51,7 +73,7 @@ export function ConnexionsPubliques({ tipus, id, config = {}, visor = null, revi
       .then(files => { if (!controller.signal.aborted) setResultat({ clau, estat: 'llest', files: Array.isArray(files) ? files : [] }); })
       .catch(error => {
         recordaSiNoDisponibles(ambit, error);
-        if (!controller.signal.aborted) setResultat({ clau, estat: CALLA_LA_FITXA.has(error?.code) ? 'callat' : 'error', files: [] });
+        if (!controller.signal.aborted) setResultat({ clau, estat: esErrorSilenciosConnexionsPubliques(error) ? 'callat' : 'error', files: [] });
       });
     return () => controller.abort();
   }, [clau, tipus, id]);
@@ -104,7 +126,7 @@ export function VisibilitatConnexions({ tipus = 'persona', id, config = {}, viso
          SDP-CONN-001, manté l'avís: qui administra ha de saber que falla. */
       .catch(error => {
         recordaSiNoDisponibles(ambit, error);
-        if (!controller.signal.aborted) setResultat(error?.code === 'NO-DISPONIBLE'
+        if (!controller.signal.aborted) setResultat(esErrorNoDisponibleConnexions(error)
           ? { clau, estat: 'callat', preferencies: null, ocupat: false, error: false }
           : { clau, estat: 'error', preferencies: null, ocupat: false, error: true });
       });

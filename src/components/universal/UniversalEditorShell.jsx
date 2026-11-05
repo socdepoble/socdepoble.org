@@ -350,6 +350,7 @@ export function UniversalEditorShell({
   heroEditLabel = null,
   heroEditHelp = null,
   onHeroEdit = null,
+  onHeroImageClick = null,
   /* Esmena 1 del pla 261007_1645 i ordre del Mestre (261007, ordre E) · El
      mirall exacte d'onHeroEdit per al logotip damunt de l'H1: amb
      `onLogoEdit`, el botó de la ranura crida el pare ({ acaba }) en lloc
@@ -358,6 +359,7 @@ export function UniversalEditorShell({
      s'enquadra al diàleg); el Bloc de Notes continua amb «Editar logotip». */
   logoEditLabel = null,
   onLogoEdit = null,
+  onLogoImageClick = null,
   /* Línia I1 de l'Onada 4 (pla 261008_1201) · Props opcionals que demanen
      els consumidors (el Perfil, que puja les imatges pel seu camí,
      useImatgeDeFitxa). Cap té efecte quan falta: el DOM de sempre.
@@ -573,9 +575,18 @@ export function UniversalEditorShell({
     if (ranura) {
       const plegat = ranura.closest('details.sdp-edicio-avancada:not([open])');
       if (plegat) plegat.open = true;
-      desplacaASeccio(ranura, { behavior: movimentReduit() ? 'auto' : 'smooth', block: 'start' });
-      /* El focus no torna a moure la vista: el salt suau ja hi porta. */
-      if (peticioAmbit.enfoca) ranura.querySelector('select, input[type="radio"]:checked')?.focus({ preventScroll: true });
+      if (peticioAmbit.enfoca) {
+        desplacaASeccio(ranura, { behavior: movimentReduit() ? 'auto' : 'smooth', block: 'start' });
+        ranura.querySelector('select, input[type="radio"]:checked')?.focus({ preventScroll: true });
+      } else {
+        /* AH-23 (IDEA-80) · En entrar a publicar (?ambit=... amb enfoca: false),
+           mantenim la vista a dalt de tot (scrollTop = 0) perquè la barra
+           blava, la barra taronja, «Edició avançada», «Editar capçalera /
+           logotip», «On es publica?» i la previsualització es vegen d'un sol
+           colp d'ull des de dalt. */
+        const pagina = ranura.closest('.sdp-universal-page-container') || arrelRef.current;
+        if (pagina && 'scrollTop' in pagina) pagina.scrollTop = 0;
+      }
     }
     onPeticioAmbitAtesaRef.current?.(peticioAmbit);
   }, [peticioAmbit]);
@@ -611,13 +622,16 @@ export function UniversalEditorShell({
     heroEditLabel,
     heroEditHelp,
     onHeroEdit,
+    onHeroImageClick,
     logoEditLabel,
     onLogoEdit,
+    onLogoImageClick,
     logoPujant,
     heroPujant,
     logoEditHelp,
     ajudaAmbImatge,
     ajudaNomesEnPujada,
+    edicioAvancada,
     statusIcon,
     onObriVisibilitat,
     etiquetaVisibilitat,
@@ -755,7 +769,12 @@ export function UniversalEditorShell({
             avisAccions={null}
             topBarData={{
               ...(edicioAvancada
-                ? { heroImage: capcaleraDesada, heroAlt: tradueix(t, TEXTOS_CLOSCA.altCapcalera) }
+                ? {
+                  heroImage: capcaleraDesada,
+                  heroAlt: tradueix(t, TEXTOS_CLOSCA.altCapcalera),
+                  ...(shellData.onHeroPageClick ? { onHeroClick: shellData.onHeroPageClick } : null),
+                  ...(shellData.onLogoPageClick ? { onLogoClick: shellData.onLogoPageClick } : null),
+                }
                 : {
                   heroComponent: shellData.topBarData.heroComponent,
                   isEmptyHero: !heroImage && !shellData.heroImage,
@@ -880,7 +899,7 @@ export const NOM_OPCIONS_LOGOTIP = TEXTOS_CLOSCA.opcionsLogotip[1];
 function ImageUploaderUI({
   image, handler, resolvedImage, isLogo,
   editLabel, editHelp, imgRef, potEnquadrar,
-  triaFitxer, pujant = false, fontExistent, obriEnquadrament, onEdit,
+  triaFitxer, pujant = false, fontExistent, obriEnquadrament, onEdit, onImageClick = null,
   ajudaAmbImatge = null, ajudaNomesEnPujada = false, botoRef = null,
   imageLabel = null, deleteLabel = null
 }) {
@@ -911,6 +930,12 @@ function ImageUploaderUI({
     return handler.handleFileChange(e);
   };
   const changeHandler = !isLogo && potEnquadrar ? triaFitxer : triaSenseTrepitjar;
+  const clicaImatge = (e) => {
+    handler.startEdit();
+    if (!pujant && typeof onImageClick === 'function') {
+      onImageClick(e);
+    }
+  };
 
   if (image && !handler.isEditing) {
     return (
@@ -923,8 +948,8 @@ function ImageUploaderUI({
           className={cssImgClass}
           role="button"
           tabIndex="0"
-          onClick={handler.startEdit}
-          onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && (e.preventDefault(), handler.startEdit())}
+          onClick={clicaImatge}
+          onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && (e.preventDefault(), clicaImatge(e))}
           title={titleText}
         />
         <div className="sdp-alerta__accions sdp-camp sdp-camp--centrat">
@@ -1005,13 +1030,16 @@ function useEditorShell({
   heroEditLabel = null,
   heroEditHelp = null,
   onHeroEdit = null,
+  onHeroImageClick = null,
   logoEditLabel = null,
   onLogoEdit = null,
+  onLogoImageClick = null,
   logoPujant = false,
   heroPujant = false,
   logoEditHelp = null,
   ajudaAmbImatge = null,
   ajudaNomesEnPujada = false,
+  edicioAvancada = false,
   statusIcon = null,
   onObriVisibilitat = null,
   etiquetaVisibilitat = '',
@@ -1192,10 +1220,17 @@ function useEditorShell({
   const formatsDelDialeg = useMemo(() => (t ? formatsCapcalera(t) : FORMATS_CAPCALERA), [t]);
   const descripcioDelDialeg = tradueix(t, TEXTOS_CLOSCA.enquadramentDescripcio);
 
+  const clicaImatgeHero = typeof onHeroImageClick === 'function'
+    ? onHeroImageClick
+    : (edicioAvancada && potEnquadrar && fontExistent ? () => obriEnquadrament(fontExistent) : null);
+  const clicaImatgeLogo = typeof onLogoImageClick === 'function' ? onLogoImageClick : null;
+
   return {
     heroImage,
     logoImage,
     logoDeLectura,
+    onHeroPageClick: clicaImatgeHero,
+    onLogoPageClick: clicaImatgeLogo,
     isPublished,
     formattedTime,
     formattedDate,
@@ -1208,7 +1243,7 @@ function useEditorShell({
       logoComponent: showLogoUpload ? <><ImageUploaderUI
         image={logoImage} handler={logoHandler} resolvedImage={resolvedLogoImage}
         isLogo={true} editLabel={etiquetaLogotip} editHelp={ajudaLogotip}
-        pujant={logoHandler.isUploading || Boolean(logoPujant)} onEdit={onLogoEdit}
+        pujant={logoHandler.isUploading || Boolean(logoPujant)} onEdit={onLogoEdit} onImageClick={clicaImatgeLogo}
         ajudaAmbImatge={ajudaAmbImatge} ajudaNomesEnPujada={ajudaNomesEnPujada} botoRef={logoBotoRef}
       />{showDarkLogoUpload ? <div data-sdp-ranura="logotip-fosc">
         <ImageUploaderUI image={logoImageDark} handler={logoDarkHandler} resolvedImage={resolvedLogoImageDark}
@@ -1221,7 +1256,7 @@ function useEditorShell({
         image={heroImage} handler={heroHandler} resolvedImage={resolvedHeroImage}
         isLogo={false} editLabel={etiquetaCapcalera} editHelp={ajudaCapcalera} imgRef={heroImgRef}
         potEnquadrar={potEnquadrar} triaFitxer={triaHero} pujant={pujant}
-        fontExistent={fontExistent} obriEnquadrament={obriEnquadrament} onEdit={onHeroEdit}
+        fontExistent={fontExistent} obriEnquadrament={obriEnquadrament} onEdit={onHeroEdit} onImageClick={clicaImatgeHero}
         ajudaAmbImatge={ajudaAmbImatge} ajudaNomesEnPujada={ajudaNomesEnPujada} botoRef={heroBotoRef}
       />,
       barActions: (

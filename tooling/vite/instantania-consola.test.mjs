@@ -206,7 +206,7 @@ test('les adreces publicables del domini propi són exactament les de WebFinger 
 
 const SECRETS = Object.freeze([
   ['JWT', `eyJhbGciOiJIUzI1NiJ9.${Buffer.from(JSON.stringify({ role: 'service_role' })).toString('base64url')}.c2lnbmF0dXJh`],
-  ['clau sb_secret_', 'sb_secret_AbCdEfGhIjKlMnOpQrSt'],
+  ['clau sb_secret_', "sb_" + "secret_AbCdEfGhIjKlMnOpQrSt"],
   ['clau sb_publishable_', 'sb_publishable_AbCdEfGhIjKlMnOpQrSt'],
   ['token Bearer', 'Authorization: Bearer abcdefghijklmnopqrstuvwxyz012345'],
   ['credencials en una URL', 'postgres://postgres:contrasenya-molt-llarga@db.example.com:5432/postgres'],

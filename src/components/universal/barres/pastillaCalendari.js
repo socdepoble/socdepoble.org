@@ -56,11 +56,21 @@ export const DinsDelCalendari = createContext(false);
  * la mateixa pastilla que es pinta: `{ time, date, dateTime }`.
  */
 export function usePastillaCalendari({ time, date, dateTime } = {}) {
-  const navigate = useNavigate();
+  let navigate = null;
+  try {
+    /* useNavigate() llança fora d'un Router (EventCard dins de proves o d'amfitrions
+       sense router); el cas depén de l'arbre, no de l'estat, i l'ordre dels hooks
+       no canvia entre renders. */
+    // eslint-disable-next-line react-hooks/rules-of-hooks
+    navigate = useNavigate();
+  } catch {
+    navigate = null;
+  }
   const dinsDelCalendari = useContext(DinsDelCalendari);
   const onClick = (event) => {
     event?.preventDefault?.();
     event?.stopPropagation?.();
+    if (typeof navigate !== 'function') return;
     const mes = mesDeLaPastilla({ dateTime, date });
     const propia = typeof dinsDelCalendari === 'function' ? dinsDelCalendari(mes) : null;
     const ruta = typeof propia === 'string' && propia ? propia : rutaCalendariDelMes(mes);

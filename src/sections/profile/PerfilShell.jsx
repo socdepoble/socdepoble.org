@@ -25,8 +25,13 @@ import { DialegNovaOrganitzacio } from './DialegNovaOrganitzacio.jsx';
 import { APLICACIONS, aplicacionsValides } from './aplicacions.js';
 import { nodesDelPerfil } from './nodes.js';
 import {
-  PARAM_FITXA_ORGANITZACIO, TEXTOS_PRIVACITAT_LLISTA, itemsDAplicacions, itemsDePerfil, navegacioDePerfil, seleccioInicialDePerfil,
+  ID_ADMINISTRACIO_SISTEMA, PARAM_FITXA_ORGANITZACIO, TEXTOS_PRIVACITAT_LLISTA, itemsDAdministracioSistema, itemsDAplicacions, itemsDePerfil, navegacioDePerfil, seleccioInicialDePerfil,
 } from './perfilModel.js';
+import { LaboratoriTaxonomiaDoctoral } from './admin/LaboratoriTaxonomiaDoctoral.jsx';
+import { BancImportacioEditorial } from './admin/BancImportacioEditorial.jsx';
+import {
+  PanellAjustosVistesColumnes, PanellCromIntegrat, PanellEmpaquetatsDesplegament, PanellNodesFediversResiliencia,
+} from './admin/PanellsAdministracioSistema.jsx';
 import { tradueix, useTraductorOpcional } from '../../components/PedraSeca/hooks/useTraductorOpcional.js';
 import { omple } from '../../config/moderacio.js';
 import { useAutodesament } from '../../data/autodesament/useAutodesament.js';
@@ -37,7 +42,7 @@ import { textosDeFitxa } from './visibilitatFitxa.js';
 
 const PaginaDeLAgent = lazy(() => import('./PerfilPublicSection.jsx').then((modul) => ({ default: modul.PaginaDeLAgent })));
 
-export { itemsDePerfil };
+export { ID_ADMINISTRACIO_SISTEMA, itemsDAdministracioSistema, itemsDePerfil };
 
 const p = (nom, reserva) => Object.freeze([`section.perfil.shell.${nom}`, reserva]);
 export const TEXTOS_PERFIL_SHELL = Object.freeze({
@@ -210,23 +215,31 @@ function PerfilManagerInner({ config, aplicacions, preferides, recuperacio = nul
   const t = useTraductorOpcional();
 
   /* Tots els hooks ABANS de cap return condicional (regla de hooks). */
+  const grupsNavegacio = useMemo(() => navegacioDePerfil(identitats, aplicacions), [identitats, aplicacions]);
   const model = useMemo(() => ({
     status: 'ready',
     itemsComplete: true,
     workspaceKey,
-    navigationGroups: navegacioDePerfil(identitats, aplicacions),
+    navigationGroups: grupsNavegacio,
     items: [
       ...itemsDePerfil(identitats, { ambPrivacitat }).map((item) => (item.data?.vista === 'privacitat'
         ? ambTextosTraduits(item, tradueix(t, TEXTOS_PRIVACITAT_LLISTA.titol), tradueix(t, TEXTOS_PRIVACITAT_LLISTA.subtitol))
         : item)),
+      ...itemsDAdministracioSistema(),
       ...itemsDAplicacions(aplicacions),
     ],
-  }), [identitats, aplicacions, ambPrivacitat, workspaceKey, t]);
+  }), [identitats, aplicacions, ambPrivacitat, workspaceKey, grupsNavegacio, t]);
 
   /* Slot estable: depèn només de coses que ja són estables gràcies al
      context endurit. */
   const renderDetail = useCallback(({ item }) => {
     const vista = item?.data?.vista;
+    if (vista === 'admin-taxonomia') return <LaboratoriTaxonomiaDoctoral />;
+    if (vista === 'admin-importacio') return <BancImportacioEditorial />;
+    if (vista === 'admin-crom') return <PanellCromIntegrat />;
+    if (vista === 'admin-vistes-columnes') return <PanellAjustosVistesColumnes grupsNavegacio={grupsNavegacio} />;
+    if (vista === 'admin-nodes-fedivers') return <PanellNodesFediversResiliencia />;
+    if (vista === 'admin-empaquetats') return <PanellEmpaquetatsDesplegament />;
     if (vista === 'aplicacio') {
       const aplicacio = aplicacions.find((a) => a.id === item.data.aplicacioId);
       return aplicacio ? <DetallAplicacio key={aplicacio.id} aplicacio={aplicacio} /> : null;
@@ -291,7 +304,7 @@ function PerfilManagerInner({ config, aplicacions, preferides, recuperacio = nul
         ambMembres={gestionaMembres}
       />,
     );
-  }, [identitats, contactes, aplicacions, config, guardarAjust, pujaMitja, recarrega, connexio, gestionaMembres, etiquetaFitxaPublica]);
+  }, [identitats, contactes, aplicacions, config, guardarAjust, pujaMitja, recarrega, connexio, gestionaMembres, etiquetaFitxaPublica, grupsNavegacio]);
 
   const onCreate = useCallback(() => new Promise((resolve) => {
     setObertures((n) => n + 1);
@@ -362,6 +375,7 @@ function PerfilManagerInner({ config, aplicacions, preferides, recuperacio = nul
         icons={ICONES}
         tagFilter={false}
         collapsibleNavigation={false}
+        amagaRodaAjustos={true}
         onCreate={onCreate}
         renderItem={renderFitxa}
         renderDetail={renderDetail}

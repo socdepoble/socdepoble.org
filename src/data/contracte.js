@@ -109,6 +109,15 @@ export const CAPACITATS = Object.freeze({
     'adminListOrganizations'
   ]),
 
+  /* R6 proposal: proof is supplied only by the user's explicit email form.
+     No URL/storage reader or pre-registration password is accepted as proof.
+     confirmaCorreu(token,password,{accepta_rgpd,versio_politica},config)
+     reenviaVerificacioCorreu(email,config)
+     demanaRestablimentCorreu(email,config)
+     restablixContrasenyaAmbCorreu(token,password,metadata|null,config)
+     Optional groups preserve every legacy provider when absent. */
+  verificacioCorreu: Object.freeze(['confirmaCorreu','reenviaVerificacioCorreu']),
+  recuperacioCorreu: Object.freeze(['demanaRestablimentCorreu','restablixContrasenyaAmbCorreu']),
   sessio: Object.freeze([
     'refrescaSessio',
     'elMeuRol'

@@ -18,7 +18,7 @@ import { momentDeLaTargeta, perMomentDescendent } from '../mur/targetesMur.js';
 import { itemsDelPoble } from './clauDelPoble.js';
 
 export {
-  FONTS_DEL_POBLE, clausDelPoble, esDelPoble, itemsDelPoble, pobleDeLaPublicacio, poblesAmbNaixement
+  FONTS_DEL_POBLE, clausDelPoble, esDelPoble, parlaDelPoble, poblesEsmentatsDeLaPublicacio, corresponAPestanyaDelPoble, itemsDelPoble, pobleDeLaPublicacio, poblesAmbNaixement
 } from './clauDelPoble.js';
 
 const CAP = Object.freeze([]);
@@ -30,8 +30,8 @@ const CAP = Object.freeze([]);
  * demana), la secció (quina targeta canònica la pinta), l'element cru i, per
  * a un acte, el seu model. Sense cap, CAP (la mateixa constant buida).
  */
-export function publicacionsDelPoble(fonts, town) {
-  const trobats = itemsDelPoble(fonts, town);
+export function publicacionsDelPoble(fonts, town, pestanya = 'gent') {
+  const trobats = itemsDelPoble(fonts, town, pestanya);
   if (!trobats.length) return CAP;
   return trobats
     .map(({ seccio, item }) => {

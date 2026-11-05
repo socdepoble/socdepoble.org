@@ -241,6 +241,8 @@ export const VARIANTS_SOCIALS = Object.freeze({
      d'una publicació remota de producció: la seua bessona .webp arribava al
      <head>. */
   '/assets/events/aplec_2023_cartell.jpg': '/assets/events/aplec_2023_cartell-social-1200x630.jpg',
+  /* AH-18 (261104) · El cartell A4 de l'Aplec (1,3 MB) és el de la fitxa; WhatsApp en rep una variant social (còpia de la de sempre del mateix cartell, 1200×630, 261 KB). */
+  '/assets/events/aplec-2023/aplec-pel-territori-2023-A4-1900px-1.jpg': '/assets/events/aplec-2023/aplec-pel-territori-2023-A4-1900px-1-social-1200x630.jpg',
   '/assets/events/cartell_pedra_en_sec_fageca_2026.webp': '/assets/events/cartell_pedra_en_sec_fageca_2026-social-1200x630.jpg',
   '/assets/events/cartell_pedra_en_sec_alcosser_2026.webp': '/assets/events/cartell_pedra_en_sec_alcosser_2026-social-1200x630.jpg',
   /* OG-02 (pla 261029_1305, Bloc B, M1.1) · Les sis imatges de llavor que no

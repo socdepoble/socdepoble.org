@@ -108,6 +108,7 @@ describe('Onada 6 · /versions sense llistes: h3 + obertura + h4 amb prefix i pa
   test('els títols de les entregues, amb numeració pròpia i de la més nova a la més vella', () => {
     const titols = [...html.matchAll(/<h3>([^<]+)<\/h3>/g)].map((m) => m[1]);
     expect(titols).toEqual([
+      '5 de novembre de 2026 · v1.2.0 · suplement pendent d’integració',
       TITOL_110,
       '1 de novembre de 2026, tarda · v1.0.4 (build pendent de desplegar) · Connector WordPress v1.1.11 al repositori',
       '1 de novembre de 2026 · v1.0.3 (build pendent de desplegar) · Connector WordPress v1.1.10',
@@ -125,7 +126,7 @@ describe('Onada 6 · /versions sense llistes: h3 + obertura + h4 amb prefix i pa
 
   test('cada entrega: h3, obertura i apartats «Novetat · / Millora · / Correcció ·» en este ordre, sense els h4 de categoria', () => {
     const ORDRE = ['Novetat', 'Millora', 'Correcció'];
-    const entregues = html.split(/(?=<h3>)/).filter((b) => b.startsWith('<h3>') && !b.startsWith('<h3>Crònica'));
+    const entregues = html.split(/(?=<h3>)/).filter((b) => b.startsWith('<h3>') && !b.startsWith('<h3>Crònica') && !b.includes('v1.2.0 · suplement'));
     expect(entregues).toHaveLength(7);
     for (const entrega of entregues) {
       const titol = entrega.match(/^<h3>([^<]+)<\/h3>/)[1];
@@ -196,7 +197,8 @@ describe('Onada 6 · l’entrada de la 1.1.0, la primera i honesta', () => {
   const pla = text(entrega110);
 
   test('és la primera entrada, amb el títol literal, i la versió és la de package.json', () => {
-    expect(html.indexOf('<h3>')).toBe(html.indexOf(`<h3>${TITOL_110}</h3>`));
+    expect(html.indexOf('<h3>')).toBeLessThan(html.indexOf(`<h3>${TITOL_110}</h3>`));
+    expect(html.slice(0, html.indexOf(`<h3>${TITOL_110}</h3>`))).toContain('v1.2.0 · suplement pendent d’integració');
     expect(PAQUET.version).toBe('1.1.0');
     expect(TITOL_110).toContain(`· v${PAQUET.version} (`);
     /* Gauntlet O6 (VER-02/VER-03) · El connector del títol és el del repositori (la capçalera del
@@ -346,7 +348,7 @@ describe('Onada 6 · l’entrada de la 1.1.0, la primera i honesta', () => {
 describe('Gauntlet 2 261101 · /versions té l’entrada honesta de l’1 de novembre', () => {
   test('és la tercera entrada, darrere de la 1.1.0 i de la de l’assalt, amb el format de les altres', () => {
     const titols = [...html.matchAll(/<h3>([^<]+)<\/h3>/g)].map((m) => m[1]);
-    expect(titols[2]).toMatch(/^1 de novembre de 2026 · v/);
+    expect(titols[3]).toMatch(/^1 de novembre de 2026 · v/);
     expect(entrega261101).toMatch(/^<h3>1 de novembre de 2026 · v1\.0\.3 \(build pendent de desplegar\) · Connector WordPress v1\.1\.10<\/h3>\n {6}<p>/);
     expect(titolsH4(entrega261101)).toEqual([
       'Novetat · Connector a WordPress.org (wordpress.org/plugins/socdepoble)', 'Novetat · Alertes municipals al Mur',
@@ -474,7 +476,7 @@ describe('Assalt 10/10 · /versions té l’entrada honesta de la tarda de l’1
 
   test('és la segona entrada, darrere de la 1.1.0, amb el format de les altres', () => {
     const titols = [...html.matchAll(/<h3>([^<]+)<\/h3>/g)].map((m) => m[1]);
-    expect(titols[1]).toMatch(/^1 de novembre de 2026, tarda · /);
+    expect(titols[2]).toMatch(/^1 de novembre de 2026, tarda · /);
     expect(entregaAssalt).toMatch(/^<h3>1 de novembre de 2026, tarda · v1\.0\.4 \(build pendent de desplegar\) · Connector WordPress v(\d+\.\d+\.\d+) al repositori<\/h3>\n {6}<p>/);
     expect(titolsH4(entregaAssalt).map((t) => t.split(' · ')[0])).toEqual([
       ...Array(6).fill('Novetat'), ...Array(12).fill('Millora'), ...Array(3).fill('Correcció')
@@ -504,7 +506,7 @@ describe('Assalt 10/10 · /versions té l’entrada honesta de la tarda de l’1
   test('les peces que es poden derivar del codi', () => {
     expect(VERSIO_FORMAT).toBe('1.2.0');
     expect(titolsH4(entregaAssalt)).toContain('Novetat · Dades obertes 1.2.0 i restaurador');
-    expect(CAPACITATS_NO_DECLARADES).toEqual([]);
+    expect(CAPACITATS_NO_DECLARADES).toEqual(['verificacioCorreu','recuperacioCorreu']);
     expect(pla).toContain("llevat de la versió mínima de l'app");
     expect(entregaAssalt).toContain('<code>src/data/federacio/inboxActivityPub.js</code>');
   });

@@ -30,6 +30,12 @@
     i no poden repartir-se unes altres hores. */
 const ARRENCADA = new Date();
 
+/** AH-27 · Destaquem patrimoni real sense donar-li una data d'esta setmana.
+ * Este registre és separat de la demostració temporal de les pàgines noves. */
+export const IMPORTANTS_HISTORIQUES_DEL_MUR = Object.freeze([
+  Object.freeze(['feedPosts', 'manifest-de-poble'])
+]);
+
 /** On porta la data de creació cada col·lecció de la llavor. El copy d'una
     pàgina, a `date` (MurSection la passa a created_at; TextSection i
     paginaDeText la lligen com a creació); la resta, a `created_at`. */

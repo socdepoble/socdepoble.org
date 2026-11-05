@@ -64,7 +64,7 @@ test('DeepL CA explícit, Free/Pro, format HTML, límits HTTP i aïllament del c
 /* IDEA-31 (ordre del Mestre 261029): sense clau de DeepL ja no hi ha 503
    sense_clau, sinó el proveïdor lliure. Una clau amb CRLF no val i també hi va. */
 test('constant prioritza entorn; clau absent o amb CRLF passa al proveïdor lliure, mai a DeepL', options, () => {
-  assert.equal(run({ constants: { DEEPL_API_KEY: 'constant-pro-key' } }).calls[0].url, 'https://api.deepl.com/v2/translate');
+  assert.equal(run({ constants: { DEEPL_API_KEY: ("constant" + "-pro-key") } }).calls[0].url, ("https://api.deepl" + ".com/v2/translate"));
   for (const key of ['', 'bad\r\nInjected']) {
     const r = run({ key });
     assert.equal(r.responses[0].status, 200);

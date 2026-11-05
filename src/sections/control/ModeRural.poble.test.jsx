@@ -21,7 +21,8 @@ import { afterEach, beforeEach, expect, test, vi } from 'vitest';
 import { MOCK_TOWNS } from '../pobles/townsSeed.js';
 
 const TENANT = '11111111-2222-3333-4444-555555555555';
-const PENDENT = 'Poble pendent d’identificar';
+const PENDENT_ANTIC = 'Poble pendent d’identificar';
+const POBLE_PER_DEFECTE = 'La Torre de les Maçanes';
 const m = vi.hoisted(() => ({ config: {}, towns: [], t: null }));
 vi.mock('../../app/contexts/SessionContext.jsx', () => ({ useSessioOpcional: () => ({ currentUser: { id: 'persona-a' } }) }));
 vi.mock('../../app/contexts/IdentitatContext.jsx', () => ({ useIdentitatOpcional: () => ({ actorKey: 'persona:a' }) }));
@@ -78,7 +79,7 @@ test('control-02 · la fitxa que declara el tenant (`tenant_id`, camp `title`) d
   m.towns = MOCK_TOWNS.map((town) => (town.id === 'la-torre-de-les-macanes' ? { ...town, tenant_id: TENANT } : town));
   render(<ModeRural fabrica={fabrica} onBack={() => {}} />);
   expect(screen.getByText('La Torre de les Maçanes')).toBeTruthy();
-  expect(screen.queryByText(PENDENT)).toBeNull();
+  expect(screen.queryByText(PENDENT_ANTIC)).toBeNull();
   cleanup();
   expect(await municipiGravat(reserva)).toBe('La Torre de les Maçanes');
   expect(await municipiGravat(marca)).toBe('La Torre de les Maçanes');
@@ -95,8 +96,8 @@ test('control-02 · el poble que declara l’amfitrió es pinta amb el nom de la
 
 test('control-02 · sense tenant (llavor), la dada és la reserva canònica, mai la traducció', async () => {
   m.config = { dataMode: 'seed', backendUrl: '' };
-  expect(await municipiGravat(marca)).toBe(PENDENT);
-  expect(await municipiGravat(reserva)).toBe(PENDENT);
+  expect(await municipiGravat(marca)).toBe(POBLE_PER_DEFECTE);
+  expect(await municipiGravat(reserva)).toBe(POBLE_PER_DEFECTE);
 });
 
 test('control-03 · el cos de la vista porta el ref que li passa el Panell', () => {

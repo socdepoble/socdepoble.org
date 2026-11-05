@@ -232,7 +232,7 @@ function purifica(html) {
       'table', 'thead', 'tbody', 'tfoot', 'tr', 'th', 'td', 'caption'
     ],
     ALLOWED_ATTR: [
-      'href', 'target', 'rel', 'src', 'alt', 'class',
+      'href', 'target', 'rel', 'src', 'alt', 'class', 'lang',
       'width', 'height', 'loading', 'decoding', 'referrerpolicy',
       'data-sdp-bloquejada', 'colspan', 'rowspan', 'scope'
     ],

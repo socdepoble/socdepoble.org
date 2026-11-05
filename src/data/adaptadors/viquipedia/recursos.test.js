@@ -69,7 +69,8 @@ describe('entitats', () => {
       titolCawiki: 'La Torre de les Maçanes',
       esMunicipi: true,
       ine: '03132',
-      poblacio: 749,
+      poblacio: 749, poblacioAny: 2025, altitud: 788, superficie: 36.48, gentilici: 'torrudana / torrudà', descripcio: null,
+      p94: 'Escut de la Torre de les Maçanes.svg',
       p18: 'El riu251.jpg',
       insignies: ['Escut de la Torre de les Maçanes.svg'],
       p131: ['Q54936', 'Q2046431'],
@@ -243,5 +244,26 @@ describe('ajudants', () => {
     expect(nomDeFitxer('Fitxer:Torre Gran (Torremanzanas) 3.jpg', { ambPrefix: true })).toBe('Torre Gran (Torremanzanas) 3.jpg');
     expect(nomDeFitxer('Sense prefix.jpg', { ambPrefix: true })).toBeNull();
     expect(nomDeFitxer(42)).toBeNull();
+  });
+});
+
+describe('AH-27 · magnituds i cens contrastats', () => {
+  const declaracio = (value, rank = 'normal', qualifiers) => ({ rank, mainsnak: { snaktype: 'value', datavalue: { value } }, qualifiers });
+  test('convertix metres quadrats a km², conserva metres i només gentilici català', () => {
+    const [dto] = RECURSOS.entitats.traductor({ entities: { Q1: { id: 'Q1', labels: { ca: { value: 'Nucli' } }, claims: {
+      P2044: [declaracio({ amount: '+300', unit: 'http://www.wikidata.org/entity/Q11573' })],
+      P2046: [declaracio({ amount: '+12500000', unit: 'http://www.wikidata.org/entity/Q25343' })],
+      P1549: [declaracio({ language: 'es', text: 'gentilicio castellano' }), declaracio({ language: 'ca', text: 'gent del nucli' })],
+      P1082: [declaracio({ amount: '+42' }, 'normal', { P585: [{ datavalue: { value: { time: '+2009-01-01T00:00:00Z' } } }] })]
+    } } } });
+    expect(dto).toMatchObject({ altitud: 300, superficie: 12.5, gentilici: 'gent del nucli', poblacio: 42, poblacioAny: 2009 });
+  });
+  test('una unitat desconeguda i declaracions obsoletes romanen absents', () => {
+    const [dto] = RECURSOS.entitats.traductor({ entities: { Q1: { id: 'Q1', claims: {
+      P2044: [declaracio({ amount: '+1000', unit: 'http://www.wikidata.org/entity/Q3710' })],
+      P2046: [declaracio({ amount: '+20', unit: 'http://www.wikidata.org/entity/Q712226' }, 'deprecated')],
+      P1082: [declaracio({ amount: '-2' })]
+    } } } });
+    expect(dto).toMatchObject({ altitud: null, superficie: null, gentilici: null, poblacio: null, poblacioAny: null });
   });
 });

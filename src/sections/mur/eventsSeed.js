@@ -1,13 +1,31 @@
 // Dades de calendari recuperades de la versió original.
 export const CALENDAR_EVENTS = [{
   date: '2023-01-29',
+  created_at: '2022-11-17T21:03:41+01:00',
+  publish_date: '2022-11-17T21:03:41+01:00',
+  boinaDataPublicacio: true,
+  wp_id: 16880,
+  source_url: 'https://socdepoble.net/2022/11/17/aplec-pel-territori-2023/',
+  copyright: 'Arxiu del 2n Aplec pel Territori · Sóc de Poble · CC BY-NC-SA 4.0',
+  pobles_esmentats: [
+    'la-torre-de-les-macanes', 'balones', 'benialfaqui', 'benillup', 'benimassot',
+    'fageca', 'famorca', 'gorga', 'millena', 'muro-d-alcoi', 'planes', 'quatretondeta',
+    'tollos', 'beniaia', 'castell-de-castells', 'l-atzubia', 'la-vall-d-alcala',
+    'la-vall-de-gallinera', 'pego', 'tormos', 'callosa-d-en-sarria', 'la-vall-d-ebo'
+  ],
+  location: 'Balcó de Travadell · Benillup',
+  town_name: 'Benillup',
+  calendar_badge: {
+    dia: '29', mes: 'GEN', any: '2023', dateTime: '2023-01-29',
+    label: '29 de gener de 2023'
+  },
   time: '10:30',
   title: '2n Aplec pel Territori',
   type: 'event',
   id: 'aplec-2023',
   subtitle: "Nou Aplec, arrel de l'incendi d'aquest estiu",
   entradilla: "La Coordinadora d'Estudis Eòlics i l'Associació El Rentonar amb el Projecte Sóc de Poble hem organitzat a Benillup un nou Aplec pel Territori com a resposta a l'incendi que va assolar les nostres comarques en agost del 2022.",
-  image_url: '/assets/events/aplec_2023_cartell.jpg',
+  image_url: '/assets/events/aplec-2023/aplec-pel-territori-2023-A4-1900px-1.jpg',
   author_name: 'Sóc de Poble',
   /* T6 (261004) · Qui el signa, per identificador: l'entitat pilot
      (identitatsSeed.js · ENTITAT_PILOT_ID, com la samarreta de marketSeed.js).

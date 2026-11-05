@@ -442,7 +442,7 @@ describe('O4-CLAUDE-1 · la ranura «On es publica?» i la petició d’anar-hi'
     expect(closca({ ambitEdicioAvancada: BLOC, peticioAmbit: { enfoca: true } }).container.innerHTML).toBe(sempre);
   });
 
-  test('una petició (l’entrada ?ambit=) obri el desplegable i porta la ranura a la vista, suau, sense moure el focus', () => {
+  test('AH-23 (IDEA-80) · una petició sense `enfoca` (l’entrada ?ambit=) obri el desplegable però manté la vista a dalt de tot: cap salt, el focus on era', () => {
     registraSalts();
     const atesa = vi.fn();
     const peticio = { enfoca: false };
@@ -459,15 +459,13 @@ describe('O4-CLAUDE-1 · la ranura «On es publica?» i la petició d’anar-hi'
     const actiu = document.activeElement;
     vista.rerender(pinta({ peticioAmbit: peticio }));
     expect(desplegable.open).toBe(true);
-    expect(saltats).toHaveLength(1);
-    expect(saltats[0][0]).toBe(vista.container.querySelector('[data-sdp-ranura="ambit"]'));
-    expect(saltats[0][1]).toEqual({ behavior: 'smooth', block: 'start' });
+    expect(saltats).toEqual([]);
     expect(document.activeElement).toBe(actiu);
     expect(atesa).toHaveBeenCalledTimes(1);
     expect(atesa).toHaveBeenCalledWith(peticio);
     // La mateixa petició repintada no hi torna.
     vista.rerender(pinta({ peticioAmbit: peticio, titleHtml: 'Títol' }));
-    expect(saltats).toHaveLength(1);
+    expect(saltats).toEqual([]);
     expect(atesa).toHaveBeenCalledTimes(1);
   });
 
@@ -492,7 +490,7 @@ describe('O4-CLAUDE-1 · la ranura «On es publica?» i la petició d’anar-hi'
         </UniversalEditorShell>
       </React.StrictMode>
     );
-    expect(saltats).toHaveLength(1);
+    expect(saltats).toEqual([]);
     expect(atesa).toHaveBeenCalledTimes(1);
   });
 

@@ -122,49 +122,45 @@ const triaAmbit = (nom) => {
 const escriuAlBloc = (retol, value) => fireEvent.change(within(bloc()).getByLabelText(new RegExp(`^${retol}( \\(obligatori\\))?$`)), { target: { value } });
 const escriptures = () => mocks.setLocal.mock.calls.map(([id, camp, valor]) => [id, camp, valor]);
 
-test('sense canal ni fitxa (fora del Bloc), la botonera és la de sempre i cap bloc «On es publica?»', () => {
+test('sense canal ni fitxa (fora del Bloc), la classificació en línia mostra Carpeta, Categories, Etiquetes i Emojis XL, i cap bloc «On es publica?»', () => {
   render(<NotaViva inicial={NOTA} />);
-  expect(botonera().map((b) => b.textContent)).toEqual(['Mur', 'Sistema', 'Etiquetes (0)', 'Emojis XL (—)']);
+  const classif = within(screen.getByTestId('classificacio'));
+  expect(classif.getByLabelText('Carpeta').value).toBe('f-mur');
+  expect(classif.getByLabelText('Categories')).toBeTruthy();
+  expect(classif.getByLabelText('Etiquetes')).toBeTruthy();
+  expect(botonera().map((b) => b.textContent)).toEqual(['×', 'Emojis XL (—)']);
   expect(mocks.adapter.classificacio.props).not.toHaveProperty('ambit', expect.anything());
   expect(mocks.adapter.ambitEdicioAvancada).toBeNull();
   expect(mocks.adapter.peticioAmbit).toBeNull();
   expect(screen.queryByRole('dialog')).toBeNull();
 });
 
-test('dins del Bloc, «Àmbit (—)» entre Etiquetes i Emojis XL, sense aria-haspopup (la resta, sí); amb fitxa, la píndola diu l’àmbit', () => {
+test('dins del Bloc i amb fitxa, la classificació en línia no duplica cap xip «Àmbit» i el bloc «On es publica?» mostra l’àmbit triat', () => {
   render(<NotaViva inicial={NOTA} canal={CANAL_BUIT} />);
   const botons = botonera();
-  expect(botons.map((b) => b.textContent)).toEqual(['Mur', 'Sistema', 'Etiquetes (0)', 'Àmbit (—)', 'Emojis XL (—)']);
-  expect(botons.map((b) => b.getAttribute('aria-haspopup'))).toEqual(['dialog', 'dialog', 'dialog', null, 'dialog']);
-  expect(botons[3].querySelector('svg.lucide-layers')).toBeTruthy();
-  expect(botons[3].querySelector('.sp-card-label.sdp-badge-buit')).toBeTruthy();
-  // L'emoticona continua sent l'últim botó (DESTINS_FOCUS.icon).
+  expect(botons.map((b) => b.textContent)).toEqual(['×', 'Emojis XL (—)']);
   expect(botons.at(-1).textContent).toBe('Emojis XL (—)');
   expect(bloc()).toBeTruthy();
   cleanup();
-  // Amb fitxa, també fora del Bloc: la nota ja és d'un àmbit i es pot vore i canviar.
+  // Amb fitxa, també fora del Bloc: la nota ja és d'un àmbit i es pot vore i canviar al bloc «On es publica?».
   render(<NotaViva inicial={{ ...NOTA, fitxa: FITXA_PLENA }} />);
   const ambFitxa = botonera();
-  expect(ambFitxa.map((b) => b.textContent)).toEqual(['Mur', 'Sistema', 'Etiquetes (0)', 'Compartir cotxe', 'Emojis XL (—)']);
-  expect(ambFitxa[3].getAttribute('aria-label')).toBe('Àmbit: Compartir cotxe');
-  expect(ambFitxa[3].getAttribute('title')).toBe('Àmbit: Compartir cotxe');
-  expect(ambFitxa[3].hasAttribute('aria-haspopup')).toBe(false);
-  expect(ambFitxa[3].querySelector('.sp-card-label').className).toBe('sp-card-label sdp-badge-system');
+  expect(ambFitxa.map((b) => b.textContent)).toEqual(['×', 'Emojis XL (—)']);
   expect(ambitTriat('Compartir cotxe')).toBe(true);
 });
 
-test('el botó «Àmbit» no obri cap diàleg: demana anar al bloc amb el focus, una petició per clic, que s’oblida un cop atesa', () => {
+test('AH-24 · la classificació de NotesEditor usa enLinia (3 files de 2 columnes) sense cap botó modal de carpeta/categories/etiquetes ni d’àmbit', () => {
   render(<NotaViva inicial={NOTA} canal={CANAL_BUIT} />);
   expect(mocks.adapter.peticioAmbit).toBeNull();
-  fireEvent.click(botonera()[3]);
+  const classif = within(screen.getByTestId('classificacio'));
+  expect(classif.getByLabelText('Carpeta')).toBeTruthy();
+  expect(classif.getByLabelText('Crear nova carpeta')).toBeTruthy();
+  expect(classif.getByLabelText('Categories')).toBeTruthy();
+  expect(classif.getByLabelText('Crear nova categoria')).toBeTruthy();
+  expect(classif.getByLabelText('Etiquetes')).toBeTruthy();
+  expect(classif.getByLabelText('Crear nova etiqueta')).toBeTruthy();
+  expect(classif.queryByRole('button', { name: /Àmbit/i })).toBeNull();
   expect(screen.queryByRole('dialog')).toBeNull();
-  const peticio = mocks.adapter.peticioAmbit;
-  expect(peticio).toEqual({ nota: 'p', enfoca: true });
-  act(() => { mocks.adapter.onPeticioAmbitAtesa(peticio); });
-  expect(mocks.adapter.peticioAmbit).toBeNull();
-  fireEvent.click(botonera()[3]);
-  expect(mocks.adapter.peticioAmbit).toEqual({ nota: 'p', enfoca: true });
-  expect(mocks.adapter.peticioAmbit).not.toBe(peticio);
   expect(mocks.setLocal).not.toHaveBeenCalled();
 });
 
@@ -214,10 +210,9 @@ test('triar Mur escriu fitxa null (la publicació de sempre); el Mercat porta la
 test('moure la nota a la carpeta del Mercat (Carpeta del document) li posa l’àmbit Mercat; traure-la cap al Mur la torna al Mur', () => {
   render(<NotaViva inicial={NOTA} canal={CANAL_BUIT} />);
   const mou = (carpeta) => {
-    fireEvent.click(botonera()[0]);
-    const dialeg = screen.getByRole('dialog', { name: 'Carpeta del document' });
-    fireEvent.click(within(dialeg).getByRole('radio', { name: carpeta }));
-    fireEvent.click(within(dialeg).getByRole('button', { name: 'Desar' }));
+    const sel = within(screen.getByTestId('classificacio')).getByLabelText('Carpeta');
+    const opcio = [...sel.options].find((o) => o.textContent.trim() === carpeta || o.value === carpeta);
+    fireEvent.change(sel, { target: { value: opcio ? opcio.value : carpeta } });
   };
   mou('Mercat');
   expect(escriptures()).toEqual([['p', 'folderId', 'f-mercat'], ['p', 'fitxa', { ambit: 'mercat', estat: 'disponible', dades: {} }]]);
@@ -353,19 +348,22 @@ test('la còpia de prova (sense sessió) i una obra d’altri: cap bloc, cap fit
    fitxa: dins del Bloc, la botonera és la de sempre (cap «Àmbit» que convide a
    omplir una fitxa que mai eixiria). Amb una fitxa ja desada, el grup torna
    per a poder-la vore i llevar, sense tocar la carpeta (O4-CLAUDE-1). */
-test('dins del Bloc, una connexió o un contingut de fora no porten el grup «Àmbit»; amb fitxa desada, sí, i llevar-la no la mou de carpeta', () => {
+test('dins del Bloc, una connexió o un contingut de fora no porten el bloc «On es publica?»; amb fitxa desada, sí, i llevar-la no la mou de carpeta', () => {
   const connexio = { ...NOTA, id: 'c', folderId: 'f-connectats', origen: { tipus: 'connexio', itemId: 'x', autorNom: 'Pepa' } };
   render(<NotaViva inicial={connexio} canal={CANAL_BUIT} />);
-  expect(botonera().map((b) => b.textContent)).toEqual(['Safata d’Entrada', 'Sistema', 'Etiquetes (0)', 'Emojis XL (—)']);
+  expect(within(screen.getByTestId('classificacio')).getByLabelText('Carpeta').value).toBe('f-connectats');
+  expect(botonera().map((b) => b.textContent)).toEqual(['×', 'Emojis XL (—)']);
   expect(mocks.adapter.classificacio.props).not.toHaveProperty('ambit', expect.anything());
   expect(bloc()).toBeNull();
   cleanup();
   const extern = { ...NOTA, id: 'x', origen: { tipus: 'extern', lloc: 'example.org' } };
   render(<NotaViva inicial={extern} canal={CANAL_BUIT} />);
-  expect(botonera().map((b) => b.textContent)).toEqual(['Mur', 'Sistema', 'Etiquetes (0)', 'Emojis XL (—)']);
+  expect(within(screen.getByTestId('classificacio')).getByLabelText('Carpeta').value).toBe('f-mur');
+  expect(botonera().map((b) => b.textContent)).toEqual(['×', 'Emojis XL (—)']);
   cleanup();
   render(<NotaViva inicial={{ ...connexio, fitxa: FITXA_PLENA }} canal={CANAL_BUIT} />);
-  expect(botonera().map((b) => b.textContent)).toEqual(['Safata d’Entrada', 'Sistema', 'Etiquetes (0)', 'Compartir cotxe', 'Emojis XL (—)']);
+  expect(within(screen.getByTestId('classificacio')).getByLabelText('Carpeta').value).toBe('f-connectats');
+  expect(botonera().map((b) => b.textContent)).toEqual(['×', 'Emojis XL (—)']);
   /* Correcció A1-04 de l'àrbitre · Amb el teclat al selector «Àmbit», llevar la
      fitxa no desmunta el bloc: el focus no cau a <body>. */
   selectorAmbit().focus();
@@ -387,8 +385,7 @@ test('fora del Bloc, triar «Mur» en una nota amb fitxa no desmunta el bloc amb
   expect(escriptures()).toEqual([['p', 'fitxa', null]]);
   expect(bloc()).toBeTruthy();
   expect(document.activeElement).toBe(selectorAmbit());
-  // El botó «Àmbit» continua portant-hi.
-  expect(botonera().map((b) => b.textContent)).toEqual(['Mur', 'Sistema', 'Etiquetes (0)', 'Àmbit (—)', 'Emojis XL (—)']);
+  expect(botonera().map((b) => b.textContent)).toEqual(['×', 'Emojis XL (—)']);
   // Una altra nota (sense fitxa) no porta el bloc; tornar a la primera, ja sense fitxa, tampoc.
   act(() => { mocks.viva.set({ ...NOTA, id: 'q' }); });
   expect(bloc()).toBeNull();

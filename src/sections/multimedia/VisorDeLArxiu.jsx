@@ -7,8 +7,8 @@
  * src (resolRecursPropi: dins d'un amfitrió, el paquet), es llig l'EXIF de la
  * foto oberta (useMetadadesFoto, només d'imatges pròpies i sense el GPS d'una
  * persona) i es fan les files del panell (panellDeLaFoto.js), amb els
- * enllaços interns al poble i a l'article on s'ha publicat la foto. Cap salt
- * a una pàgina externa: els enllaços són de l'app (Link).
+ * enllaços interns al poble i a l'article on s'ha publicat la foto. Els
+ * crèdits concrets de Commons també enllacen la font i llicència externes.
  * L'estat (quina foto, obert o tancat) és de MultimediaSection, a ?foto=<id>.
  *
  * Gauntlet 261017 (C04 i C05 de Codex) · També el munten les publicacions del
@@ -218,6 +218,7 @@ export function VisorDeLArxiu({
   const omeses = Array.isArray(ometFiles) ? ometFiles : CAP;
   const pintaFila = (fila) => {
     if (fila.enllac) return { ...fila, valor: <EnllacCopiable url={fila.enllac} textos={textosEnllac} /> };
+    if (fila.href) return { ...fila, valor: <a href={fila.href} target="_blank" rel="noopener noreferrer">{fila.valor}</a> };
     return fila.ruta && fila.ruta !== pathname ? { ...fila, valor: <Link to={fila.ruta}>{fila.valor}</Link> } : fila;
   };
   const metadades = [

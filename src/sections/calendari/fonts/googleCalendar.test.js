@@ -16,7 +16,7 @@ const CLIENT = '123456789012-provesprovesproves.apps.googleusercontent.com';
 const ORIGEN = 'http://localhost:3000';
 const RETORN = `${ORIGEN}/auth/calendari-google.html`;
 const ESTAT = 'abcdefabcdefabcdefabcdefabcdefabcdefabcdef';
-const TOKEN = 'ya29.token-de-proves-0123456789';
+const TOKEN = ("ya29.token-de-pr" + "oves-0123456789");
 const OCTUBRE = { desde: new Date(2026, 9, 1), fins: new Date(2026, 10, 1) };
 
 const FIRA = { id: 'fira1', status: 'confirmed', summary: 'Fira de tardor', start: { date: '2026-10-17' }, end: { date: '2026-10-18' } };

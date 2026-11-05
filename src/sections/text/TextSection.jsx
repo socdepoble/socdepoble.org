@@ -10,6 +10,7 @@ import { ProveidorSincronitzacioTargetes } from '../detail/SincronitzacioTargete
 
 import { useMemo } from 'react';
 import { useUIActions } from '../../app/contexts/UIContext';
+import { localitzaPagina } from './pageContent.r10.js';
 import { useSEO } from '../../hooks/useSEO';
 import { resolveAsset, resolRecursosDeHtml } from '../../config/assetResolver.js';
 import { esAppNativa } from '../../config/origenPublic.js';
@@ -106,8 +107,9 @@ export function CosDeLaPagina({ html }) {
    que la torna amb el traductor d'ací (t). Com accioPrincipal, només es passa
    quan n'hi ha: sense, o si la funció torna null, les etiquetes de sempre. */
 export default function TextSection({ page: original, pageKey, accioPrincipal = null, onConnect = null, objecte = null, etiquetaFinal = null, children = null }) {
-  const page = useMemo(() => paginaPerAppNativa(original), [original]);
-  const { t } = useUIActions();
+  const { t, language = 'ca' } = useUIActions();
+  const page = useMemo(() => paginaPerAppNativa(localitzaPagina(original, language)), [original, language]);
+  const contentLanguage = page.contentLanguage || 'ca';
   const etiquetaExtra = typeof etiquetaFinal === 'function' ? etiquetaFinal(t) : etiquetaFinal;
   /* Pla 261027_1154 (P1-61), Fase 1 (ordre del Mestre, 261027) · Abans, la
      targeta genèrica sempre. Ara og:image és la imatge que l'autor ha triat
@@ -155,7 +157,7 @@ export default function TextSection({ page: original, pageKey, accioPrincipal = 
      ho declara i PageFrame en posa el lang amb la interfície en una altra
      llengua. Les de reserva (la clau i «Pàgina», amb t) i la pastilla final
      (etiquetaFinal, amb t) són de la interfície: tal qual. */
-  const etiquetes = Array.isArray(page.labels) ? propsDeText.labels.map(etiquetaEnValencia) : propsDeText.labels;
+  const etiquetes = Array.isArray(page.labels) ? propsDeText.labels.map(label => contentLanguage === 'ca' ? etiquetaEnValencia(label) : (typeof label === 'string' ? { text:label, lang:contentLanguage } : { ...label, lang:contentLanguage })) : propsDeText.labels;
   return (
     <UniversalPage
       {...propsDeText}
@@ -168,7 +170,7 @@ export default function TextSection({ page: original, pageKey, accioPrincipal = 
          la portada i el cos en porten el lang (PageFrame ·
          llenguaDelContingut); els fills d'ací baix (botons de la interfície),
          no (cicle 3). */
-      llenguaDelContingut="ca"
+      llenguaDelContingut={contentLanguage}
       {...(accioPrincipal ? { accioPrincipal } : null)}
       {...(onConnect ? { onConnect } : null)}
       {...(objecte ? { objecte } : null)}

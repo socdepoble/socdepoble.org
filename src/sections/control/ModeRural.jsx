@@ -52,10 +52,13 @@ export default function ModeRural({ onBack, fabrica = creaSessioRural, vistaRef 
   const c = normalizeBackendConfig(externalConfig || {});
   const abast = { persona: `${sessio?.currentUser?.id || 'anon'}::${identitat?.actorKey || 'persona'}`, tenant: c.tenantId || 'local', endpoint: c.backendUrl || (c.dataMode === 'remote' ? '' : c.dataMode), mode: c.dataMode };
   const delTenant = c.tenantId ? nomDeLaFitxa(towns, esDelTenant(String(c.tenantId).toLowerCase())) : '';
+  const poblePerfilCru = sessio?.currentUser?.town_name || sessio?.currentUser?.poble || sessio?.currentUser?.location || identitat?.activa?.poble || identitat?.usuari?.poble || '';
+  const poblePerfilId = sanejaIdentificador(poblePerfilCru);
+  const delPerfil = (poblePerfilId ? nomDeLaFitxa(towns, esDelPoble(poblePerfilId)) : '') || sanejaEtiqueta(poblePerfilCru);
   const poble = sanejaIdentificador(externalConfig?.poble);
   const delAmfitrio = poble ? nomDeLaFitxa(towns, esDelPoble(poble)) : '';
-  const municipi = delTenant || c.tenantId || TX.municipiPendent[1];
-  const nomVisible = delTenant || delAmfitrio || sanejaEtiqueta(externalConfig?.nomPoble) || tradueix(t, TX.municipiPendent);
+  const municipi = delTenant || delPerfil || c.tenantId || TX.municipiPendent[1];
+  const nomVisible = delTenant || delPerfil || delAmfitrio || sanejaEtiqueta(externalConfig?.nomPoble) || tradueix(t, TX.municipiPendent);
   return <ModeRuralDins key={JSON.stringify([abast, entradaSessio(), sessio?.generacio ?? null])} abast={abast} municipi={municipi} nomVisible={nomVisible} potEntrar={Boolean(sessio?.currentUser?.id)} onBack={onBack} fabrica={fabrica} vistaRef={vistaRef} />;
 }
 
@@ -165,6 +168,12 @@ function ModeRuralDins({ abast, municipi, nomVisible, potEntrar, onBack, fabrica
     <div ref={vistaRef} className="content-wrapper">
       <h3>{tr('localTitol')}</h3>
       <p>{nomVisible}</p>
+      <div className="sdp-mode-rural__punts">
+        <h4>{tr('perAQueTitol')}</h4>
+        <p>{tr('punt1')}</p>
+        <p>{tr('punt2')}</p>
+        <p>{tr('punt3')}</p>
+      </div>
       {!potEntrar ? <p>{tr('entra')}</p> : !estat ? <>
         <Boto carregant={ocupat} onClick={() => void executa(() => activa())}>{tr('activa')}</Boto>
         <Boto disabled={ocupat || !opfsDisponible} onClick={() => void executa(() => activa('opfs'))}>{tr('activaOpfs')}</Boto>

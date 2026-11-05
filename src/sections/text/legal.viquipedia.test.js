@@ -95,7 +95,7 @@ describe('Legal · apartat 21: «Porta-ho de la Viquipèdia»', () => {
     ]);
     // El que fa el codi: el que falta és el de CAMPS_DE_FITXA.
     expect(text).toContain("li falta l'entradilla, la foto, la província o la comarca");
-    expect(CAMPS_DE_FITXA).toEqual(['content', 'image_url', 'provincia', 'comarca']);
+    expect(CAMPS_DE_FITXA).toEqual(expect.arrayContaining(['content', 'image_url', 'provincia', 'comarca']));
   });
 
   test('el transport és el que diu: sense galetes ni referent, a l’API i a les fotos', () => {
@@ -105,7 +105,7 @@ describe('Legal · apartat 21: «Porta-ho de la Viquipèdia»', () => {
     expect(credits).toContain('crossOrigin="anonymous"');
     expect(credits).toContain('referrerPolicy="no-referrer"');
     // A l'app nativa el panell no es munta.
-    expect(llig('src/sections/pobles/fitxaDelPoble.js')).toMatch(/esAppNativa\(\)\) return false/);
+    expect(llig('src/sections/pobles/fitxaDelPoble.js')).toMatch(/if \(esAppNativa\(\)\) return false/);
   });
 });
 

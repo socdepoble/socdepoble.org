@@ -36,6 +36,8 @@ describe('trossDArrencada (vite.config.js)', () => {
     ['/x/node_modules/react-dom/test-utils.js', null],
     ['/x/src/css/index.css?inline', 'estils'],
     ['/x/src/config/idiomes/ca.js', 'ca'],
+    ['/x/src/sections/pobles/poblesAplecViquipedia.js', 'pobles-aplec'],
+    ['/x/src/sections/pobles/pobleDeViquipedia.js', null],
     ['/x/node_modules/lucide-react/dist/esm/icons/house.mjs', null],
     ['/x/node_modules/react-is/index.js', null],
     ['/x/node_modules/@tiptap/core/dist/index.js', null],
@@ -85,6 +87,7 @@ console.log(JSON.stringify({
      React i DOMPurify no depenen de cap paquet de fora del tros 'react'. */
   test('els trossos d’arrencada són fulles: no arrosseguen cap mòdul de fora', () => {
     expect(especificadors(path.join(ARREL, 'src/config/idiomes/ca.js'))).toEqual([]);
+    expect(especificadors(path.join(ARREL, 'src/sections/pobles/poblesAplecViquipedia.js'))).toEqual([]);
     const dependencies = (paquet) => Object.keys(JSON.parse(llig(`node_modules/${paquet}/package.json`)).dependencies ?? {})
       // loose-envify és una transformació de browserify: cap import en temps d'execució.
       .filter((nom) => nom !== 'loose-envify');

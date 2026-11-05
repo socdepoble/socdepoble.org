@@ -88,6 +88,7 @@ export const TEXTOS_EDITOR_FITXA = Object.freeze({
   resumAgent: parellEditor('edicioAvancada.resum.agent', 'Canvia l’avatar, afig la foto de capçalera i gestiona els drets i les dades'),
   etiquetaCapcalera: parellEditor('etiqueta.capcalera', 'Capçalera'),
   etiquetaAvatar: parellEditor('etiqueta.avatar', 'Avatar'),
+  etiquetaImatgePerfil: parellEditor('etiqueta.imatgePerfil', 'Imatge de Perfil'),
   etiquetaLogotip: parellEditor('etiqueta.logotip', 'Logotip'),
   etiquetaLlevaAvatar: parellEditor('etiqueta.llevaAvatar', 'Llevar l’avatar'),
   etiquetaAjustaAvatar: parellEditor('etiqueta.ajustaAvatar', 'Ajusta o canvia l’avatar'),
@@ -248,6 +249,7 @@ function useTancadaAMitjaPujada(pujant, obert, enAcabar) {
    botons d'imatge i del de llevar l'avatar. */
 export const ETIQUETA_CAPCALERA = T.etiquetaCapcalera[1];
 export const ETIQUETA_AVATAR = T.etiquetaAvatar[1];
+export const ETIQUETA_IMATGE_PERFIL = T.etiquetaImatgePerfil[1];
 export const ETIQUETA_LOGOTIP = T.etiquetaLogotip[1];
 export const ETIQUETA_LLEVA_AVATAR = T.etiquetaLlevaAvatar[1];
 
@@ -625,6 +627,8 @@ export function PerfilEditor({ identitat }) {
      marca de l'entitat: AvatarDeCapcalera). Mai l'esquema opac cru. Sense
      (cap avatar, o encara s'està resolent), el clic obri el selector. */
   const fontDelAvatar = avatarResolt && isSafeAsset(avatarResolt) && !esMarcaDeLEntitat(avatarResolt) ? avatarResolt : '';
+  const capcaleraResolta = useResolvedAsset(fitxa.heroImage || '');
+  const fontDeLaCapcalera = capcaleraResolta && isSafeAsset(capcaleraResolta) && !esMarcaDeLEntitat(capcaleraResolta) ? capcaleraResolta : '';
   /* La persona i l'agent porten l'avatar redó; l'organització, el logotip. */
   const ambAvatarRedo = mena !== 'organitzacio';
 
@@ -673,9 +677,12 @@ export function PerfilEditor({ identitat }) {
      d'una PERSONA és identitat: puja neta, sense casella, i amb l'avís si la
      foto portava GPS. La d'una organització o d'un agent conserva la casella.
      L'avatar (persona i agent) ja ho és per la forma (FORMES.avatar). */
+  const finestraCapcalera = useMemo(() => (fitxa.heroImage ? {
+    canviaFoto: true, ajudaFoto: AJUDA_FOTO,
+  } : null), [fitxa.heroImage]);
   const capcalera = useImatgeDeFitxa({
     camp: 'heroImage', forma: 'capcalera', onImageUpload: uploadMedia, onDesaCamp: desaImatgeDeLaFinestra, onError: avisImatge,
-    identitat: mena === 'persona',
+    identitat: mena === 'persona', finestra: finestraCapcalera,
   });
   /* Ordre del Mestre (18-10-2026, Pla 2000, punt 2) · La finestra de retall
      de l'avatar (persona i agent) agrupa el que abans eren les píndoles de
@@ -692,16 +699,20 @@ export function PerfilEditor({ identitat }) {
   const finestraAvatar = useMemo(() => (ambAvatarRedo ? {
     canviaFoto: true, ajudaFoto: AJUDA_FOTO, etiquetaDesa: tradueix(t, T.etiquetaGuardaEnquadre),
     ...(imatgeDeLaFitxa ? { onLleva: llevaDesDeLaFinestra, etiquetaLleva: tradueix(t, T.etiquetaLlevaAvatarFinestra) } : null),
-  } : null), [ambAvatarRedo, imatgeDeLaFitxa, llevaDesDeLaFinestra, t]);
+  } : (imatgeDeLaFitxa ? { canviaFoto: true, ajudaFoto: AJUDA_FOTO } : null)), [ambAvatarRedo, imatgeDeLaFitxa, llevaDesDeLaFinestra, t]);
   const imatgePropia = useImatgeDeFitxa({
     camp: 'logoImage', forma: mena === 'organitzacio' ? 'logotip' : 'avatar',
     onImageUpload: uploadMedia, onDesaCamp: desaImatgeDeLaFinestra, onError: avisImatge, onDesat: apuntaFocusAvatar,
     finestra: finestraAvatar,
   });
-  const { obri: obriCapcalera, pujant: capcaleraPujant } = capcalera;
+  const { obri: obriCapcalera, ajusta: ajustaFitxerCapcalera, pujant: capcaleraPujant } = capcalera;
   const {
     obri: obriFitxerPropi, ajusta: ajustaFitxerPropi, tanca: tancaImatgePropia, obert: imatgePropiaOberta, pujant: imatgePropiaPujant,
   } = imatgePropia;
+  const ajustaCapcalera = useCallback(() => {
+    if (!fontDeLaCapcalera) return;
+    ajustaFitxerCapcalera(fontDeLaCapcalera);
+  }, [fontDeLaCapcalera, ajustaFitxerCapcalera]);
   /* La ranura crida amb el control de la closca ({ acaba }); l'avatar redó
      (PageFrame), amb l'esdeveniment del clic, que dona l'arrel.
      Correcció de la revisió de la línia I2 · I el control mateix (l'avatar
@@ -736,6 +747,13 @@ export function PerfilEditor({ identitat }) {
     }
     ajustaFitxerPropi(fontDelAvatar);
   }, [fontDelAvatar, ajustaFitxerPropi, obriFitxerPropi]);
+  const ajustaLogotip = useCallback((e) => {
+    if (!fontDelAvatar) return;
+    const element = e?.currentTarget ?? null;
+    arrelImatgePropia.current = arrelDe(element);
+    controlImatgePropia.current = typeof element?.focus === 'function' ? element : null;
+    ajustaFitxerPropi(fontDelAvatar);
+  }, [fontDelAvatar, ajustaFitxerPropi]);
 
   /* «Llevar l'avatar» (CONTRACTE-1 de l'avatar redó): després de confirmar,
      el camp buit per la cua de la fitxa, com feia el diàleg intermedi.
@@ -987,6 +1005,7 @@ export function PerfilEditor({ identitat }) {
     alt: omple(tradueix(t, T.altAvatar), { nom: identitat.nom }),
     onCanvia: ajustaAvatar,
     nomBoto: tradueix(t, fontDelAvatar ? T.etiquetaAjustaAvatar : T.etiquetaPosaAvatar),
+    etiquetaBoto: tradueix(t, T.etiquetaImatgePerfil),
     botoBuit: true,
     obriFinestra: Boolean(fontDelAvatar),
     ocupat: imatgePropiaPujant,
@@ -1069,6 +1088,7 @@ export function PerfilEditor({ identitat }) {
       heroEditLabel: tradueix(t, T.etiquetaCapcalera),
       heroEditHelp: ajudaFotoTraduida,
       onHeroEdit: obriCapcalera,
+      onHeroImageClick: fontDeLaCapcalera ? ajustaCapcalera : null,
       heroPujant: capcaleraPujant,
       ajudaAmbImatge: ajudaFotoTraduida,
       /* Ordre del Mestre (18-10-2026, relleu del Pla 2000, punt 2: «lleva la
@@ -1084,7 +1104,11 @@ export function PerfilEditor({ identitat }) {
       ...(ambAvatarRedo ? { ajudaNomesEnPujada: true } : null),
       showLogoUpload: ranuraDelLogo,
       ...(ranuraDelLogo ? {
-        onLogoEdit: obriImatgePropia, logoEditLabel: etiquetaImatgePropia, logoEditHelp: ajudaFotoTraduida, logoPujant: imatgePropiaPujant,
+        onLogoEdit: obriImatgePropia,
+        onLogoImageClick: fontDelAvatar ? ajustaLogotip : null,
+        logoEditLabel: etiquetaImatgePropia,
+        logoEditHelp: ajudaFotoTraduida,
+        logoPujant: imatgePropiaPujant,
       } : null),
       /* Encàrrec d'harmonització (261018, ordre del Mestre: «fora l'avatar gegant
          del mig; la gestió d'imatges, dins d'Edició avançada») · En edició, la
@@ -1157,7 +1181,7 @@ export function PerfilEditor({ identitat }) {
       ...(identitatAlPoble ? { peuDePagina: identitatAlPoble, etiquetaPeuDePagina: TITOL_IDENTITAT_AL_POBLE } : null),
     };
   }, [mena, esAgent, ambAvatarRedo, esPilot, potEditar, fitxa, identitat, etiquetes, autorTargeta, rutaFitxa, updateLocal, saveRemote, visibilitat, uploadMedia,
-    obriCapcalera, capcaleraPujant, obriImatgePropia, imatgePropiaPujant, etiquetaImatgePropia, ranuraDelLogo, avatarDeCapcalera, avatarDeLEdicio,
+    obriCapcalera, ajustaCapcalera, fontDeLaCapcalera, capcaleraPujant, obriImatgePropia, ajustaLogotip, fontDelAvatar, imatgePropiaPujant, etiquetaImatgePropia, ranuraDelLogo, avatarDeCapcalera, avatarDeLEdicio,
     logoDeLectura, estatDesament, avisosCamps, dretsTriats, ambEmoticona, obriEmoticona, identitatAlPoble, ajudaFotoTraduida, t]);
 
   /* Només qui pot editar la fitxa té els selectors i les finestres de retall.

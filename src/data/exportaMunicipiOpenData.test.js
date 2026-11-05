@@ -280,12 +280,14 @@ describe('el poble de cada element (defecte 9: un element sense poble NO és del
     expect(aplec.entradilla).toContain('a Benillup');
     const torre = prepara({ agenda: CALENDAR_EVENTS });
     expect(torre.comptes.agenda).toBe(0);
-    expect(torre.omissions.agenda).toMatchObject({ sensePoble: 1 });
+    expect(torre.omissions.agenda).toMatchObject({ altresPobles: 1 });
     expect(fitxerDe(torre, 'agenda.jsonld')).not.toContain('aplec-2023');
-    /* Sense poble_id ni lloc, tampoc no s'afirma de Benillup: no es deduïx del text. */
+    /* La llavor restaurada declara Benillup pel lloc i town_name; no es
+       deduïx del text ni del poble de l'entitat que signa. */
+    expect(aplec.town_name).toBe('Benillup');
     const benillup = preparaDadesObertesMunicipi({ municipi: { nom: 'Benillup' }, ara: ARA, agenda: CALENDAR_EVENTS });
-    expect(benillup.comptes.agenda).toBe(0);
-    expect(benillup.omissions.agenda).toMatchObject({ sensePoble: 1 });
+    expect(benillup.comptes.agenda).toBe(1);
+    expect(grafDe(benillup, 'agenda.jsonld')[0].identifier).toBe('aplec-2023');
   });
 
   test('el directori: només el poble que declara town_name, només les públiques', () => {
@@ -416,21 +418,23 @@ describe('cap contingut inventat (defectes del codi de Gemini)', () => {
 
 describe('JSON-LD (schema.org), Data Package v2 i manifest SHA-256', () => {
   test('l’acte real de la llavor, amb el lloc que diu el seu text: Event amb el desfasament de Madrid i l’organitzadora', () => {
-    /* La llavor no porta lloc (vegeu «l’Aplec de la llavor…»): ací se li dona el del seu text. */
+    /* El lloc i les dates són els originals restaurats, sense completar la llavor. */
     const benillup = { nom: 'Benillup' };
-    const [acte] = grafDe(preparaDadesObertesMunicipi({ municipi: benillup, ara: ARA, origen: ORIGEN, agenda: [{ ...CALENDAR_EVENTS[0], location: 'Benillup' }] }), 'agenda.jsonld');
+    const [acte] = grafDe(preparaDadesObertesMunicipi({ municipi: benillup, ara: ARA, origen: ORIGEN, agenda: CALENDAR_EVENTS }), 'agenda.jsonld');
     expect(acte).toEqual({
       '@id': 'agenda.jsonld#aplec-2023',
       '@type': 'Event',
       description: CALENDAR_EVENTS[0].entradilla,
       disambiguatingDescription: CALENDAR_EVENTS[0].subtitle,
       identifier: 'aplec-2023',
-      image: 'https://socdepoble.org/assets/events/aplec_2023_cartell.jpg',
-      location: { '@type': 'Place', name: 'Benillup' },
+      image: new URL(CALENDAR_EVENTS[0].image_url, ORIGEN).href,
+      location: { '@type': 'Place', name: 'Balcó de Travadell · Benillup' },
       name: '2n Aplec pel Territori',
       /* Sense fitxa pública al directori de l'entrada: només l'id, mai l'author_name del text. */
       organizer: { '@type': 'Organization', identifier: 'socdepoble' },
-      startDate: '2023-01-29T10:30:00+01:00'
+      startDate: '2023-01-29T10:30:00+01:00',
+      subjectOf: { '@type': 'CreativeWork', datePublished: '2022-11-17T20:03:41Z',
+        copyrightNotice: 'Arxiu del 2n Aplec pel Territori · Sóc de Poble · CC BY-NC-SA 4.0' }
     });
     const estiu = { id: 'festes', title: 'Festes', author_entity_id: 'socdepoble', poble_id: TORRE.slug, date: '2026-07-15', time: '19:30', fi: '2026-07-15T23:00', location: 'Plaça Major' };
     const actes = grafDe(prepara({ agenda: [estiu, { ...estiu, id: 'tot-el-dia', time: undefined, fi: undefined }] }), 'agenda.jsonld');

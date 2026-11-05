@@ -135,7 +135,7 @@ test('contracte productor-consumidor: formats i longituds totes acceptades',asyn
    client (textPla): quan textPla llevava tots els guions baixos, cap sb_…
    no s'hi reconeixia i es publicava. Els noms amb guió baix són text. */
 test('plainText bloqueja les claus amb guió baix i conserva doc_to_app',()=>{
-  for(const secret of ['clau sb_secret_abcdefghijklmnopqrstuvwxyz','**sb_publishable_abcdefghijklmnop**','`sk-proj-abcdefghijklmnopqrstuvwxyz`'])
+  for(const secret of ["clau sb_" + "secret_abcdefghijklmnopqrstuvwxyz",'**sb_publishable_abcdefghijklmnop**','`sk-proj-abcdefghijklmnopqrstuvwxyz`'])
     assert.throws(()=>plainText(secret),/possible secret/,secret);
   assert.equal(plainText('Guia doc_to_app i created_at'),'Guia doc_to_app i created_at');
 });

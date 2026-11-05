@@ -31,6 +31,12 @@
   .sdp-graella { display: grid; }
   .sdp-costat { display: grid; }
   .sdp-centre { margin-inline: auto; max-width: var(--sdp-measure); box-sizing: content-box; }
+  .sdp-paragraf-centrat { text-align: center; }
+  .sdp-nota-suau { color: var(--sdp-text-suau); }
+  /* Separació vertical dels grups d'accions de l'administració (abans style en línia). */
+  .sdp-admin-actions-inline--separat { margin-top: 0.5rem; }
+  .sdp-admin-actions-inline--separat-ampli { margin-top: 1rem; }
+  .sdp-admin-accio-fitxer, .sdp-fila-seleccionable { cursor: pointer; }
   .sdp-superficie { background: var(--sdp-fons-superficie); }
   /* IDEA-26 i IDEA-27 (ordre del Mestre, 261025) · El bloc d'accions canònic
      (composicio · Accions): centrat i a 24px del text de dalt i del de baix.
@@ -218,7 +224,9 @@
   .sdp-contrasenya { position: relative; }
   .sdp-contrasenya > .sdp-control { padding-inline-end: calc(var(--sdp-touch-min) + var(--sdp-space-1)); }
   .sdp-contrasenya > .sdp-control[data-contrasenya-visible="true"],
-  .sdp-contrasenya > .sdp-control[data-contrasenya-visible="true"]:-webkit-autofill { -webkit-text-security: none; }
+  .sdp-contrasenya > .sdp-control[data-contrasenya-visible="true"]:-webkit-autofill,
+  input[type="text"][data-visible="true"],
+  input[type="text"][data-visible="true"]:-webkit-autofill { -webkit-text-security: none; }
   .sdp-contrasenya > .sdp-control::-ms-reveal { display: none; }
   .sdp-contrasenya__ull {
     position: absolute; inset-block: 0; inset-inline-end: 0;
@@ -1704,6 +1712,49 @@ button.sp-card-calendar-badge {
   margin-top: var(--sdp-space-1);
 }
 
+/* AH-20 (IDEA-77, ordre del Mestre 261105) · El quadrat de data d'esdeveniments
+   (isCalendar) va en taronja fosc amb text blanc (--sdp-accent-control,
+   --sdp-sobre-color) i és clicable cap al /calendari; el quadrat de preu del
+   Mercat (isPrice) va en blau Pedra Seca amb text blanc (--sdp-accio-control,
+   --sdp-sobre-color). Els quadrats personalitzats (emoji XL) conserven el fons
+   grafit de sempre. */
+time.sp-card-calendar-badge,
+.sp-card-calendar-badge[data-tipus="calendar"] {
+  position: relative;
+  z-index: 2;
+  cursor: pointer;
+  background-color: var(--sdp-accent-control);
+  color: var(--sdp-sobre-color);
+}
+time.sp-card-calendar-badge .sp-card-calendar-badge__mes,
+time.sp-card-calendar-badge .sp-card-calendar-badge__any,
+.sp-card-calendar-badge[data-tipus="calendar"] .sp-card-calendar-badge__mes,
+.sp-card-calendar-badge[data-tipus="calendar"] .sp-card-calendar-badge__any {
+  color: var(--sdp-sobre-color);
+}
+.sp-card-body.has-price > .sp-card-calendar-badge,
+.page-title.has-price > .sp-card-calendar-badge,
+.sp-card-calendar-badge[data-tipus="price"] {
+  background-color: var(--sdp-accio-control);
+  color: var(--sdp-sobre-color);
+}
+@media (hover: hover) and (pointer: fine) {
+  time.sp-card-calendar-badge:hover,
+  button.sp-card-calendar-badge[data-tipus="calendar"]:hover {
+    background-color: var(--sdp-accent-control-hover);
+  }
+  time.sp-card-calendar-badge:hover .sp-card-calendar-badge__any {
+    opacity: 1;
+  }
+}
+:root[data-contrast="bancal"] time.sp-card-calendar-badge .sp-card-calendar-badge__any,
+:host([data-contrast="bancal"]) time.sp-card-calendar-badge .sp-card-calendar-badge__any {
+  opacity: 1;
+}
+time.sp-card-calendar-badge:active {
+  transform: scale(var(--sdp-escala-premut));
+}
+
 /* Ordre del Mestre (261007) · L'emoji XL d'una part sense foto (Vehicle,
    Animalets, Consola, Mapa, Gestoria), en lloc de la icona lineal: 5,5rem
    (88px) amb línia 1, dins dels 124px interiors del quadrat. És decoratiu
@@ -1773,12 +1824,6 @@ button.sp-card-calendar-badge {
   border-color: var(--sdp-accio-control);
 }
 
-.pill--accent {
-  background: var(--sdp-accent);
-  color: var(--sdp-sobre-accent);
-  border-color: var(--sdp-accent);
-}
-
 /* Fase A i B (pla 261004_0050) · La transició nomena les propietats (cap
    `all`) i el hover només viu amb ratolí. Els hovers van junts darrere de
    les varietats: tenen més especificitat que elles, el resultat no canvia.
@@ -1791,10 +1836,6 @@ button.sp-card-calendar-badge {
 
   .pill--primary:hover {
     background: var(--sdp-accio-control-hover);
-  }
-
-  .pill--accent:hover {
-    filter: brightness(1.1);
   }
 }
 
@@ -3227,6 +3268,11 @@ section.bar-orange > .sdp-emoticona-barra--boto:focus-visible { outline-color: v
     color: var(--sdp-text-suau);
     font-size: var(--sdp-text-small);
   }
+  .sdp-bloc-ambit__previsualitzacio-titol {
+    margin: 0;
+    text-align: center;
+    font-weight: 600;
+  }
   /* AH-03 · Botó gran de tancament al final del panell desplegat d'Edició avançada */
   .sdp-edicio-avancada__boto-tancar {
     inline-size: 100%;
@@ -3726,6 +3772,24 @@ section.bar-orange > .sdp-emoticona-barra--boto:focus-visible { outline-color: v
      100% i width: auto de dalt). Un cartell A4 de 723×1024 es veu sencer a
      1280px; en mòbil ja omplia l'amplada i no canvia. */
   .hero-image .sdp-visor__obridor--sencer > img { max-height: none; }
+  /* AH-20 (IDEA-77, ordre del Mestre 261105) · Imatges i cartells a la Hero
+     sempre al 100% d'amplària de part a part; vídeos .sdp-hero-video amb alçada
+     limitada en escriptori sobre fons negre continu. */
+  .hero-image .sdp-visor__obridor > img,
+  .hero-image .sdp-visor__obridor--vertical > img,
+  .hero-image .sdp-visor__obridor--sencer > img {
+    width: 100%;
+    height: auto;
+    max-height: none;
+  }
+  .sdp-hero-video {
+    display: block;
+    width: 100%;
+    height: auto;
+    max-height: min(75vh, 720px);
+    margin-inline: auto;
+    background: var(--sdp-crom-fons);
+  }
 }
 
 /* ── Fase D (261020, tasca 2; pla 261020_1300) · MODERACIÓ: «Més opcions»

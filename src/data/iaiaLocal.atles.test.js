@@ -67,6 +67,12 @@ describe('la capa local respon sense cap càrrega', () => {
     expect(cercaRellevant(indexDeLaCapaLocal(), pregunta).map((resultat) => resultat.id)).toEqual([id]);
   });
 
+  test('Mur i Muro conserven les seues entrades exactes sense confondre l’arrel', () => {
+    const index = indexDeLaCapaLocal();
+    expect(cercaRellevant(index, 'Mur').map((resultat) => resultat.id)).toEqual(['atles:mur']);
+    expect(cercaRellevant(index, 'Muro d’Alcoi').map((resultat) => resultat.id)).toEqual(['poble:muro-d-alcoi']);
+  });
+
   /* P1-24 / IDEA-31 (Part 3) · Les 8 categories de cultura rural, vida de poble i ús pràctic (valencià i castellà). */
   test.each([
     ["Quan és la collita de l'oliva i l'oli a l'almàssera?", 'atles:oliva_oli'],
@@ -135,6 +141,19 @@ describe('privacitat', () => {
     expect(ambDadesPersonals(textDeHtml(legalContent.html))).toBe(true);
     /* Encara que algú li passe la pàgina legal sencera, no entra. */
     expect(documentsDePageCopy({ legal: legalContent })).toEqual([]);
+  });
+
+  test('el dossier continua indexat sense copiar correus ni identificadors federats públics', () => {
+    const documents = documentsDePageCopy(PAGE_COPY);
+    for (const clau of ['fedivers', 'versions']) {
+      expect(PAGE_COPY[clau].html).toContain('@depoble@mastodont.cat');
+      const document = documents.find((entrada) => entrada.id === `pagina:${clau}`);
+      expect(document).toBeDefined();
+      expect(ambDadesPersonals(`${document.title} ${document.subtitle} ${document.content}`)).toBe(false);
+      expect(document.content).toContain('PostgreSQL');
+    }
+    const [prova] = documentsDePageCopy({ fedivers: { title: 'Nodes', lead: 'Contacte privat@exemple.invalid', html: '<p>Compte @poble@exemple.invalid</p>' } });
+    expect(ambDadesPersonals(prova.content)).toBe(false);
   });
 });
 
@@ -224,7 +243,7 @@ describe('l’Atles Operatiu del Sistema', () => {
     const torre = MOCK_TOWNS.find((poble) => poble.id === 'la-torre-de-les-macanes');
     expect(documentDelPoble(torre)).toEqual({
       id: 'poble:la-torre-de-les-macanes', title: torre.title, tags: [torre.comarca], ruta: '/pobles/la-torre-de-les-macanes', font: 'poble',
-      content: `# ${torre.title}\n\n${torre.content} Al Xat, la seua comunitat es diu «Gent de la Torre».`
+      content: `# ${torre.title}\n\n${torre.content} Al Xat, la seua comunitat es diu «${torre.author}».`
     });
     expect(documentDelPoble(torre).content).not.toContain(torre.population);
     expect([documentDelPoble(null), documentDelPoble({ title: 'X' })]).toEqual([null, null]);

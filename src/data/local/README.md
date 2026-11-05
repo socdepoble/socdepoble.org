@@ -141,9 +141,9 @@ L'aïllament per àmbit separa namespaces, però no xifra dades ni protegeix dav
 
 Les proves dirigides són `tests/persistencia-local-rural.test.mjs`, `tests/cua-operacions-offline.test.mjs` i `tests/enxufe-backend-offline-first.test.mjs` <!-- tractor-psicopatia: allow ZOMBIE-OFFLINE-FIRST -- nom literal del fitxer de test -->. Cobrixen transaccions, CAS, reinici, àmbits, JSON hostil, quotes, ACK, idempotència, causalitat i respostes tardanes. La comprovació en Chrome amb IndexedDB nativa cobrix reobertura, concurrència, instantànies alterades, identitat, reinici de cua i reconnexió. El transport d'estes proves és simulat: no certifica un backend real amb deduplicació remota, autorització, migracions o conflictes distribuïts. La integració amb eixe servei i la política de retenció/revisió continuen sent responsabilitat del consumidor.
 
-## Adaptador local: 39 capacitats i administració multipoble
+## Adaptador local: 39 dels 41 grups declarats i administració multipoble
 
-`creaAdaptadorLocal` implementa les 39 capacitats completes del contracte. `versioMinimaClient` torna sempre `null`, incloses iOS i Android: este procés local no publica cap mínim de botiga ni usa un servidor encara que la config de crida ho demane.
+`creaAdaptadorLocal` oferix 39 dels 41 grups declarats al contracte. `CAPACITATS_NO_DECLARADES` conté `verificacioCorreu` i `recuperacioCorreu`: este adaptador no incorpora eixos serveis de correu. `versioMinimaClient` torna sempre `null`, incloses iOS i Android: este procés local no publica cap mínim de botiga ni usa un servidor encara que la config de crida ho demane.
 
 L'administració multipoble està denegada per defecte (`no-disponible`). L'amfitrió pot injectar una autoritat **exclusivament local** en construir l'adaptador. És una dependència de composició, mai un rol de la sessió o una bandera enviada en una crida. No concedix permisos sobre un servidor ni protegix davant scripts amb accés al mateix procés/origen.
 
@@ -173,7 +173,7 @@ El catàleg es valida, copia i congela a la construcció (màxim 1.000 pobles; U
 
 El magatzem de personalitzacions és per tenant i clau (`taxonomia`/`estil`); versions i historial no es barregen. `versio: null` o `0` només servix abans de la primera versió, i una versió obsoleta dona `conflicte-versio`. El payload ha de ser JSON finit i pla, sense getters, prototips especials, cicles, valors indefinits ni claus de prototip, fins a 65.536 bytes comptant espais estructurals JSONB; profunditat màxima 32 i 10.000 nodes. Les entrades es copien síncronament abans de la microtasca i abans de consultar la política; només el senyal d'avortament es conserva viu. Ha de ser un `AbortSignal` genuí: es valida i es llig amb l'intrínsec per a no executar getters d'una entrada malformada. Un canvi de sessió (també en el mateix tic), la destrucció o un avortament durant l'autorització impedeixen lliurar dades o iniciar la mutació. Les eixides són còpies. El magatzem és només memòria i es buida amb `destroy()`.
 
-Les proves són `adaptadorLocal.multipoble.test.js`, la conformitat completa amb els 178 casos del kit i les regressions existents d'adaptador, àmbit, host, publicació i transferència. El transport es veta en proves: esta cobertura local no certifica permisos remots, MFA ni Supabase.
+Les proves són `adaptadorLocal.multipoble.test.js`, el catàleg de 182 casos del kit (els quatre dels serveis de correu s’ometen per capacitat absent; les altres omissions per dades o autorització continuen explícites) i les regressions existents d'adaptador, àmbit, host, publicació i transferència. El transport es veta en proves: esta cobertura local no certifica permisos remots, MFA ni Supabase.
 
 ## Vincles
 

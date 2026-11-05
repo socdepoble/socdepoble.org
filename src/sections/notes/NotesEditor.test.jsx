@@ -490,12 +490,10 @@ test('P4 · la nota preparada escriu pel canal del Bloc, sense ploma, sense «Bo
   expect(mocks.adapter).not.toHaveProperty('estatDesament');
   expect(mocks.adapter.deleteDocument).toBeUndefined();
   expect(mocks.adapter.visibilitat.bloqueig).toEqual({ opcio: 'publica', motiu: MOTIU_PREPARADA });
-  // Els botons de classificació es conserven i hi escriuen pel mateix canal.
-  // Bloc 3.9 (261016) · El quart botó es diu «Emojis XL» (abans, «Emoticona»).
-  expect(botonera().map((b) => b.textContent)).toEqual(['Mur', 'Categories (0)', 'Etiquetes (0)', 'Emojis XL (—)']);
-  fireEvent.click(botonera()[0]);
-  fireEvent.click(screen.getByRole('radio', { name: 'Altres notes' }));
-  fireEvent.click(screen.getByRole('button', { name: 'Desar' }));
+  // Els controls de classificació en línia (AH-24) i el botó «Emojis XL» es conserven i hi escriuen pel mateix canal.
+  expect(botonera().map((b) => b.textContent)).toEqual(['Emojis XL (—)']);
+  expect(screen.getByLabelText('Carpeta').value).toBe('f-mur');
+  fireEvent.change(screen.getByLabelText('Carpeta'), { target: { value: 'f-notes' } });
   expect(escriu).toHaveBeenCalledWith(PREPARADA.id, 'folderId', 'f-notes');
   expect(mocks.setLocal).not.toHaveBeenCalled();
 });
@@ -747,11 +745,15 @@ test('T40 · el Bloc activa el calendari de publicació (també a la còpia de p
 
 /* T7 (P8, ordre del Mestre) · El que ja està triat (carpeta, categoria) es
    veu en píndoles; un grup buit (etiquetes) conserva el seu botó de resum. */
-test('E8 · la barra grisa no té interfície morta: l’adaptador porta la botonera, no metaActions', () => {
+test('E8 · la barra grisa no té interfície morta: l’adaptador porta la botonera en línia (AH-24), no metaActions', () => {
   render(<NotesEditor activeNote={{ id: 'personal', folderId: 'f-mur', categories: ['Sistema'], tags: [] }} />);
   expect(mocks.adapter).not.toHaveProperty('metaActions');
-  expect(botonera().map((b) => b.textContent)).toEqual(['Mur', 'Sistema', 'Etiquetes (0)', 'Emojis XL (—)']);
-  expect(botonera().map((b) => b.getAttribute('aria-label'))).toEqual(['Carpetes: Mur', 'Categories: Sistema', null, null]);
+  const botons = botonera();
+  expect(screen.getByLabelText('Carpeta').value).toBe('f-mur');
+  expect(screen.getByLabelText('Categories')).toBeTruthy();
+  expect(screen.getByLabelText('Etiquetes')).toBeTruthy();
+  expect(botons.map((b) => b.textContent)).toEqual(['×', 'Emojis XL (—)']);
+  expect(botons.map((b) => b.getAttribute('aria-label'))).toEqual(['Llevar «Sistema»', null]);
 });
 
 /* T51 (ordre del Mestre, 260928) · L'espai central de la barra taronja: el
@@ -770,8 +772,9 @@ test('Bloc 3.9 · l’adaptador passa l’emoticona crua sense obridor a la barr
   expect(mocks.adapter.onObriEmoticona).toBeNull();
   expect(screen.queryByRole('dialog')).toBeNull();
   // La botonera porta el botó «Emojis XL», l'últim, amb l'emoticona triada.
-  expect(botonera().map((b) => b.textContent)).toEqual(['Mur', 'Sistema', 'Etiquetes (0)', '🌿Emojis XL']);
-  fireEvent.click(botonera()[3]);
+  const botons = botonera();
+  expect(botons.map((b) => b.textContent)).toEqual(['×', '🌿Emojis XL']);
+  fireEvent.click(botons.at(-1));
   expect(screen.getByRole('dialog', { name: 'Emoticona del document' })).toBeTruthy();
 });
 
@@ -812,9 +815,8 @@ test('carpeta: se’n tria una i s’escriu el folderId de la nota', () => {
   const nota = { id: 'p', folderId: 'f-mur', categories: ['Sistema'], tags: [] };
   mocks.notes = [nota];
   render(<NotesEditor activeNote={nota} />);
-  fireEvent.click(botonera()[0]);
-  fireEvent.click(screen.getByRole('radio', { name: 'Altres notes' }));
-  fireEvent.click(screen.getByRole('button', { name: 'Desar' }));
+  botonera();
+  fireEvent.change(screen.getByLabelText('Carpeta'), { target: { value: 'f-notes' } });
   expect(escrits()).toEqual([['p', 'folderId', 'f-notes']]);
 });
 
@@ -822,9 +824,11 @@ test('E5 · el primer desat de la nota de benvinguda conserva totes les etiquete
   const n1 = { id: 'n1', folderId: 'f-mur', labels: ['Sistema', 'Productivitat', 'Tutorial', 'Sóc de Poble'], tags: ['Tutorial'] };
   mocks.notes = [n1];
   render(<NotesEditor activeNote={n1} />);
-  // T7B-V1 · Les quatre etiquetes, dins d'un sol botó (un objectiu per grup).
-  expect(botonera().map((b) => b.textContent)).toEqual(['Mur', 'Categories (0)', 'SistemaProductivitatTutorialSóc de Poble', 'Emojis XL (—)']);
-  fireEvent.click(botonera().find((b) => b.getAttribute('aria-label') === 'Etiquetes: Sistema, Productivitat, Tutorial, Sóc de Poble'));
+  const botons = botonera();
+  expect(botons.map((b) => b.getAttribute('aria-label') || b.textContent)).toEqual([
+    'Llevar «Sistema»', 'Llevar «Productivitat»', 'Llevar «Tutorial»', 'Llevar «Sóc de Poble»', 'Emojis XL (—)'
+  ]);
+  act(() => { mocks.adapter.classificacio.props.onObri('etiquetes'); });
   for (const nom of n1.labels) expect(screen.getByRole('checkbox', { name: nom }).checked).toBe(true);
   fireEvent.click(screen.getByRole('button', { name: 'Desar' }));
   expect(escrits()).toEqual([
@@ -840,7 +844,7 @@ test('reanomenar una categoria la canvia a totes les notes que la porten', () =>
     { id: 'c', folderId: 'f-mur', categories: ['Agenda'], tags: [] }
   ];
   render(<NotesEditor activeNote={mocks.notes[0]} />);
-  fireEvent.click(botonera()[1]);
+  act(() => { mocks.adapter.classificacio.props.onObri('categories'); });
   fireEvent.click(screen.getByRole('button', { name: 'Reanomenar «Receptes»' }));
   fireEvent.change(screen.getByRole('textbox', { name: 'Nou nom per a «Receptes»' }), { target: { value: 'Cuina' } });
   fireEvent.click(screen.getByRole('button', { name: 'Aplicar' }));
@@ -853,17 +857,20 @@ test('esborrar una categoria la lleva de totes les notes; qui es queda sense rep
     { id: 'b', folderId: 'f-mur', categories: ['Receptes'], tags: [] }
   ];
   render(<NotesEditor activeNote={mocks.notes[0]} />);
-  fireEvent.click(botonera()[1]);
+  act(() => { mocks.adapter.classificacio.props.onObri('categories'); });
   fireEvent.click(screen.getByRole('button', { name: 'Esborrar «Receptes»' }));
   fireEvent.click(screen.getByRole('button', { name: 'Confirmar: esborrar «Receptes»' }));
   expect(escrits()).toEqual([['a', 'categories', ['Hort']], ['b', 'categories', ['General']]]);
 });
 
-test('orfandat: la darrera categoria de la nota no es pot desmarcar', () => {
+test('orfandat: la darrera categoria de la nota es substituïx per «General» en línia i no es pot desmarcar al diàleg', () => {
   const nota = { id: 'a', folderId: 'f-mur', categories: ['Receptes'], tags: [] };
   mocks.notes = [nota];
   render(<NotesEditor activeNote={nota} />);
-  fireEvent.click(botonera()[1]);
+  botonera();
+  fireEvent.click(screen.getByRole('button', { name: 'Llevar «Receptes»' }));
+  expect(escrits()).toEqual([['a', 'categories', ['General']]]);
+  act(() => { mocks.adapter.classificacio.props.onObri('categories'); });
   expect(screen.getByRole('checkbox', { name: 'Receptes' }).disabled).toBe(true);
   expect(screen.getByText(/Cal almenys una categoria/)).toBeTruthy();
 });
@@ -1155,7 +1162,7 @@ test('T7 · el diàleg de categories de la superadministració porta l’avís i
   const nota = { id: 'a', folderId: 'f-mur', categories: ['Receptes', 'Hort'], tags: [] };
   mocks.notes = [nota];
   render(<NotesEditor activeNote={nota} />);
-  fireEvent.click(botonera().find((b) => b.getAttribute('aria-label') === 'Categories: Receptes, Hort'));
+  act(() => { mocks.adapter.classificacio.props.onObri('categories'); });
   const dialeg = screen.getByRole('dialog', { name: 'Categories de la nota' });
   expect(within(dialeg).getByText(/Les categories de sistema i de projecte encara no tenen model de dades/)).toBeTruthy();
   expect(within(dialeg).queryByRole('button', { name: 'Categories de sistema' })).toBeNull();
@@ -1164,9 +1171,9 @@ test('T7 · el diàleg de categories de la superadministració porta l’avís i
   expect(within(dialeg).queryByRole('button', { name: 'Reanomenar «Sistema»' })).toBeNull();
 });
 
-/* T7 (P5) · El contracte { id, nom, parentId } arriba al diàleg de carpeta:
+/* T7 (P5) · El contracte { id, nom, parentId } arriba al selector en línia i al diàleg de carpeta:
    amb carpetes niades, l'arbre amb el camí al nom accessible. */
-test('T7 · el diàleg de carpeta rep el parentId de les carpetes del Bloc', () => {
+test('T7 · el selector en línia i el diàleg de carpeta reben el parentId de les carpetes del Bloc', () => {
   mocks.noteFolders = [
     { id: 'f-tot', name: 'Tot', parentId: null },
     { id: 'tic', name: 'TIC', parentId: null },
@@ -1175,9 +1182,11 @@ test('T7 · el diàleg de carpeta rep el parentId de les carpetes del Bloc', () 
   const nota = { id: 'p', folderId: 'foto', categories: ['Sistema'], tags: [] };
   mocks.notes = [nota];
   render(<NotesEditor activeNote={nota} />);
-  const carpeta = botonera()[0];
-  expect(carpeta.getAttribute('aria-label')).toBe('Carpetes: Foto');
-  fireEvent.click(carpeta);
+  botonera();
+  const selectCarpeta = screen.getByLabelText('Carpeta');
+  expect(selectCarpeta.value).toBe('foto');
+  expect([...selectCarpeta.options].map((o) => o.textContent)).toContain('TIC › Foto');
+  act(() => { mocks.adapter.classificacio.props.onObri('carpeta'); });
   expect(screen.getByRole('radio', { name: 'TIC › Foto' }).checked).toBe(true);
   expect(screen.queryByRole('radio', { name: 'Tot' })).toBeNull();
   fireEvent.click(screen.getByRole('radio', { name: 'TIC' }));
@@ -1251,7 +1260,7 @@ test.each(['ca', 'es', 'en', 'eu', 'gl'])('%s: la portada i la classificació de
   const document = { id: 'n-traduccio', title: 'Títol de la persona', content: '<p>Text privat</p>', categories: ['General'], folderId: 'f-notes' };
   render(<NotesEditor activeNote={document} />);
   expect(mocks.adapter.emptyDocument.heroAlt).toBe(mocks.t('section.notes.editor.portadaAlt'));
-  expect(mocks.adapter.emptyDocument.copyright).toBe('© Sóc de Poble');
+  expect(mocks.adapter.emptyDocument.copyright).toBe('CC BY-NC-SA 4.0 Sóc de Poble / Fet per la IAIA i Nano Banana');
   expect(mocks.adapter.classificacio.props.etiquetaEmoticona).toBe(mocks.t('section.notes.editor.emojis'));
   expect(document.title).toBe('Títol de la persona');
   expect(document.content).toBe('<p>Text privat</p>');

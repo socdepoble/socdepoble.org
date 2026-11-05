@@ -71,9 +71,9 @@ describe('la llavor dels àlies', () => {
   });
 
   test('els municipis de referència: id, nom, comarca i província; l’id és el del nom; cap no és de la llavor', () => {
-    // Els set de sempre, primers i en el mateix ordre; darrere, els 46 de T11-04.
+    // Els set de sempre, primers i en el mateix ordre; darrere, els de T11-04 que no són a la llavor (AH-19, 261104: 12 han passat a la llavor, 53 - 12 = 41).
     expect(MUNICIPIS_DE_REFERENCIA.slice(0, 7).map((m) => m.title)).toEqual(['Ibi', 'Castalla', 'Onil', 'Biar', 'Alcoi', 'Alacant', 'València']);
-    expect(MUNICIPIS_DE_REFERENCIA).toHaveLength(53);
+    expect(MUNICIPIS_DE_REFERENCIA).toHaveLength(41);
     expect(new Set(MUNICIPIS_DE_REFERENCIA.map((m) => m.id)).size).toBe(MUNICIPIS_DE_REFERENCIA.length);
     expect(Object.isFrozen(MUNICIPIS_DE_REFERENCIA)).toBe(true);
     for (const m of MUNICIPIS_DE_REFERENCIA) {
@@ -127,7 +127,8 @@ describe('T11-04 · els municipis de referència de la Muntanya d’Alacant', ()
      Llei 2/2020 (https://pegv.gva.es/va/municipis) i AVL 23/04/2026
      (https://www.avl.gva.es/municipis/), contrastades el 261102 (IDEA-49): les quatre
      comarques fan 10, 8, 24 i 18, i la comarca de València és «València» (codi 06). */
-  const MIDA_DE_LA_COMARCA = { "L'Alacantí": 10, "L'Alcoià": 8, 'El Comtat': 24, 'La Marina Baixa': 18 };
+  /* El Comtat: 24 municipis i Benialfaquí, pedania de Famorca que la llavor d'AH-27 duu amb fitxa pròpia (261104). */
+  const MIDA_DE_LA_COMARCA = { "L'Alacantí": 10, "L'Alcoià": 8, 'El Comtat': 25, 'La Marina Baixa': 18 };
   const COMARQUES_ADMESES = [...Object.keys(MIDA_DE_LA_COMARCA), "L'Alt Vinalopó", 'València'].sort();
 
   test('cada comarca és d’una llista tancada, amb majúscula i apòstrof recte; la província, Alacant o València', () => {

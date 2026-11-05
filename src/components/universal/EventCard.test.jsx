@@ -43,22 +43,30 @@ const pinta = (item, esdeveniment = acteAEsdeveniment(item)) => {
   arrel = document.createElement('div');
   act(() => { render(<EventCard item={item} esdeveniment={esdeveniment} />, { container: arrel }); });
 };
+/* AH-18: l'Aplec ja no és CALENDAR_EVENTS[0] (hi ha el Manifest abans); es tria per id. */
+const APLEC = CALENDAR_EVENTS.find((acte) => acte.id === 'aplec-2023');
+/* Publicat el 17/11/2022 a les 21:03 (Europe/Madrid, UTC+1): la pastilla és la de publicació, en hora local. */
+const PASTILLA_APLEC = {
+  'Europe/Madrid': ['21:03', '17/11/22'],
+  'America/Los_Angeles': ['12:03', '17/11/22'],
+  'Pacific/Kiritimati': ['10:03', '18/11/22']
+};
 const pastilla = () => [...arrel.querySelectorAll('.btn-date-time span')].map((s) => s.textContent);
 const insignia = () => arrel.querySelector('.sp-card-calendar-badge');
 const pecesInsignia = () => ['dia', 'mes', 'any'].map((peca) => insignia().querySelector(`.sp-card-calendar-badge__${peca}`)?.textContent ?? null);
 
-test('Llei del Píxel · l’Aplec de la llavor es pinta com sempre: «10:30 29/01/23» i 29 / GENER / 2023', () => {
+test('AH-18 · l’Aplec de la llavor té dates simètriques: pastilla «21:03 17/11/22» (publicació) i insígnia 29 / GEN / 2023 (celebració)', () => {
   vi.stubEnv('TZ', 'Europe/Madrid');
-  pinta(CALENDAR_EVENTS[0]);
-  expect(pastilla()).toEqual(['10:30', '29/01/23']);
-  expect(pecesInsignia()).toEqual(['29', 'GENER', '2023']);
-  expect(insignia().getAttribute('aria-label')).toBe('29 GENER 2023');
+  pinta(APLEC);
+  expect(pastilla()).toEqual(['21:03', '17/11/22']);
+  expect(pecesInsignia()).toEqual(['29', 'GEN', '2023']);
+  expect(insignia().getAttribute('aria-label')).toBe('29 de gener de 2023');
   expect(insignia().getAttribute('datetime')).toBe('2023-01-29');
-  // El clic de la pastilla porta al Calendari en el mes de l'acte (ordre del
-  // Mestre, 261001, carril A; abans el filtre del Mur, '/mur?date=…', i
-  // després el dia, '/calendari?date=…').
+  // Ordre del Mestre (23:53, 261104, AH-19): la pastilla de la barra taronja
+  // porta al Calendari en el mes de la publicació; la insígnia, en el de la
+  // celebració (el clic de la insígnia el prova ocorreElDia més avall).
   act(() => { arrel.querySelector('.btn-date-time').click(); });
-  expect(mocks.navigate).toHaveBeenLastCalledWith('/calendari?mes=2023-01');
+  expect(mocks.navigate).toHaveBeenLastCalledWith('/calendari?mes=2022-11');
 });
 
 test('sense dia real no hi ha insígnia i la pastilla és la de publicació, en hora local', () => {
@@ -381,11 +389,11 @@ describe.each(Object.keys(DESFAS_GENER))('en hora local (%s)', (zona) => {
     expect(new Date(2026, 0, 15).getTimezoneOffset()).toBe(DESFAS_GENER[zona]);
   });
 
-  test('l’Aplec: «10:30 29/01/23» i 29 / GENER / 2023, el mateix dia que el calendari', () => {
-    pinta(CALENDAR_EVENTS[0]);
-    expect(pastilla()).toEqual(['10:30', '29/01/23']);
-    expect(pecesInsignia()).toEqual(['29', 'GENER', '2023']);
-    expect(ocorreElDia(acteAEsdeveniment(CALENDAR_EVENTS[0]), 2023, 0, 29)).toBe(true);
+  test('l’Aplec: pastilla de publicació en hora local i 29 / GEN / 2023, el mateix dia que el calendari', () => {
+    pinta(APLEC);
+    expect(pastilla()).toEqual(PASTILLA_APLEC[zona]);
+    expect(pecesInsignia()).toEqual(['29', 'GEN', '2023']);
+    expect(ocorreElDia(acteAEsdeveniment(APLEC), 2023, 0, 29)).toBe(true);
   });
 
   test('un acte de tot el dia no porta cap hora inventada ni recula de dia', () => {

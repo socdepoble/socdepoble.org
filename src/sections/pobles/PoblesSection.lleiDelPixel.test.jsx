@@ -29,7 +29,7 @@ vi.mock('./cauDeViquipedia.js', async (original) => {
 
 import PoblesSection from './PoblesSection.jsx';
 import { TOWNS } from './townsContent.js';
-import { clauDeViquipedia } from './fitxaDelPoble.js';
+import { clauDeViquipedia, fitxaCompleta } from './fitxaDelPoble.js';
 
 const llavor = (towns) => ({ status: 'ready', error: null, sortedTowns: towns });
 const targetes = (arrel) => [...arrel.querySelectorAll('article.sp-card')];
@@ -38,7 +38,7 @@ const titol = (targeta) => targeta.querySelector('.sp-card-title').textContent;
 let fetch;
 let obri;
 beforeEach(() => {
-  mocks.core = llavor(TOWNS);
+  mocks.core = llavor(TOWNS.filter(fitxaCompleta));
   mocks.mur = { status: 'ready', feedPosts: [], marketItems: [], events: [] };
   fetch = vi.fn(() => { throw new Error('cap petició'); });
   vi.stubGlobal('fetch', fetch);
@@ -57,19 +57,19 @@ test('la llavor (tot complet): cap petició, cap import de la cau, cap IndexedDB
   expect(obri).not.toHaveBeenCalled();
   expect(fetch).not.toHaveBeenCalled();
   const llista = targetes(container);
-  expect(llista).toHaveLength(TOWNS.length);
+  expect(llista).toHaveLength(mocks.core.sortedTowns.length);
   for (const targeta of llista) {
     const town = TOWNS.find((t) => t.title === titol(targeta));
     expect(targeta.querySelector('.sp-card-text p, p.sp-card-text').textContent).toBe(town.content);
   }
-  expect(container.innerHTML).not.toContain('wikimedia.org');
+  expect(llista.every(targeta => !targeta.querySelector('.sp-card-media').src.includes('hero_nanobanana'))).toBe(true);
 });
 
-test('una fitxa incompleta omple els buits amb la cau: cap petició i cap foto de Commons', async () => {
+test('AH-27: la fitxa revisada en cau completa dades, sense fotos remotes a la targeta', async () => {
   const incompleta = { id: 'vilanova-de-prova', title: 'Vilanova de Prova', provincia: 'Alacant', created_at: '2026-08-01T08:00:00.000Z' };
   const { cauDeViquipedia } = await import('./cauDeViquipedia.js');
   await cauDeViquipedia().desa(clauDeViquipedia(incompleta), {
-    estat: 'parcial', id: 'vilanova-de-prova', title: 'Vilanova de Prova', author: 'Gent de Vilanova de Prova',
+    estat: 'parcial', hydration_version: 2, id: 'vilanova-de-prova', title: 'Vilanova de Prova', author: 'Gent de Vilanova de Prova',
     content: 'Vilanova de Prova és un municipi inventat per a les proves.', provincia: 'Alacant', comarca: 'L’Alcoià',
     population: '120 hab', lat: 38.6, lng: -0.4, wikidata_id: 'Q1', wikipedia_title: 'Vilanova de Prova',
     copyright: 'Text: Viquipèdia (CC BY-SA 4.0)',

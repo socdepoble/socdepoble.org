@@ -31,11 +31,11 @@ function autoritatPendent() {
   return { inici, fi, autoritza: vi.fn(async () => { inici.resol(); return fi.promesa; }) };
 }
 
-test('el local implementa les 39 capacitats i el kit conserva el prefix de 172 casos', async () => {
+test('el local conserva les 39 capacitats, deixa absents els dos serveis de correu i preserva els casos històrics', async () => {
   const a = crea();
-  expect(Object.keys(CAPACITATS)).toHaveLength(39);
-  expect(Object.values(CAPACITATS).flat().filter(m => typeof a[m] !== 'function')).toEqual([]);
-  expect(CASOS).toHaveLength(178);
+  expect(Object.keys(CAPACITATS)).toHaveLength(41);
+  expect(Object.values(CAPACITATS).flat().filter(m => typeof a[m] !== 'function')).toEqual(['confirmaCorreu','reenviaVerificacioCorreu','demanaRestablimentCorreu','restablixContrasenyaAmbCorreu']);
+  expect(CASOS).toHaveLength(182);
   for (const plataforma of ['ios', 'android', 'web', '', null, {}]) expect(await a.versioMinimaClient(plataforma, { dataMode: 'remote', supabaseUrl: 'https://fora.invalid' })).toBeNull();
 });
 

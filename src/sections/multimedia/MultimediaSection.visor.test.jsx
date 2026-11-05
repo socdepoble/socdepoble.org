@@ -25,6 +25,8 @@ import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import { MemoryRouter, useLocation } from '../../app/contexts/RouterContext.jsx';
 import { COPYRIGHT_SDP, COPYRIGHT_VIQUIPEDIA } from '../../components/universal/editorial.js';
 import { gpsTorre, jpegAmbExif, orientacio, TIPUS } from '../../../tests/helpers/jpegProva.js';
+import { TOWNS } from '../pobles/townsContent.js';
+import { fotosDelsPobles } from './mediaContent.js';
 
 const mocks = vi.hoisted(() => ({ multimedia: null, cens: null, towns: [], locale: null }));
 vi.mock('../../components/universal/UniversalPage', () => ({ UniversalPage: ({ children }) => <main>{children}</main> }));
@@ -196,6 +198,29 @@ describe('obrir, passar i tancar', () => {
 describe('el panell', () => {
   const panell = () => visor().querySelector('aside.sdp-visor__panell');
   const fila = (etiqueta) => [...panell().querySelectorAll('.sdp-visor__fila')].find((f) => f.querySelector('dt').textContent === etiqueta)?.querySelector('dd');
+
+  test.each(['benimassot', 'planes', 'la-torre-de-les-macanes', 'l-atzubia'])('AH-27 · %s mostra atribució i enllaços de Commons a la fitxa i al visor', (id) => {
+    const town = TOWNS.find(item => item.id === id);
+    const [fotoCommons] = fotosDelsPobles([town]);
+    mocks.multimedia = { status: 'ready', mediaItems: [fotoCommons], mediaTimelineGroups: [] };
+    pinta(`/multimedia?foto=${fotoCommons.id}`);
+    const esperats = [
+      ['Autor', fotoCommons.creditCommons.autor, fotoCommons.creditCommons.fontUrl],
+      ['Drets d’ús', fotoCommons.creditCommons.llicencia, fotoCommons.creditCommons.llicenciaUrl || fotoCommons.creditCommons.fontUrl]
+    ];
+    const detall = document.querySelector('.sdp-arxiu-local__dades');
+    act(() => within(visor()).getByRole('button', { name: 'Informació de la imatge' }).click());
+    for (const [etiqueta, valor, href] of esperats) {
+      const filaDetall = [...detall.querySelectorAll('div')].find(node => node.querySelector('dt')?.textContent === etiqueta)?.querySelector('dd');
+      for (const node of [filaDetall, fila(etiqueta)]) {
+        expect(node.textContent).toBe(valor);
+        const a = node.querySelector('a');
+        expect(a.href).toBe(href);
+        expect(a.target).toBe('_blank');
+        expect(a.rel).toBe('noopener noreferrer');
+      }
+    }
+  });
 
   test('una foto de poble: els drets de la Viquipèdia, el poble i «Publicat a», amb enllaços interns', async () => {
     pinta('/multimedia?foto=town-tibi');

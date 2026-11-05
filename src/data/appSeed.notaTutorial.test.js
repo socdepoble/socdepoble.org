@@ -39,7 +39,7 @@ describe('NOTES_SEED[0] · la Card tutorial «Bloc de notes»', () => {
     for (const [nom, fitxer] of [
       ['Edició avançada', 'src/components/universal/UniversalEditorShell.jsx'],
       ['On es publica?', 'src/components/universal/ambits/BlocAmbit.jsx'],
-      ['Així es veurà al Mur', 'src/components/universal/ambits/BlocAmbit.jsx'],
+      ['Vista en format Card', 'src/components/universal/ambits/BlocAmbit.jsx'],
       ['CREAR NOTA', 'src/sections/notes/NotesSection.jsx'],
       ['Publicar', 'src/components/universal/UniversalToolbar.jsx']
     ]) {

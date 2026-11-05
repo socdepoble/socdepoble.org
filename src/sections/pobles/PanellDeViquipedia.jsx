@@ -2,7 +2,8 @@
  * PanellDeViquipedia.jsx · Fase 3a de l'eina de pobles nous (ordre nocturna
  * 261030_0252, Fase 3; disseny nit/viquipedia_disseny.md §4.4, §4.6 i §4.8) ·
  * A la pàgina d'un poble amb la fitxa incompleta, «Porta-ho de la
- * Viquipèdia». És l'ÚNIC lloc de l'app que crida pobleDeViquipedia(), i va en
+ * Viquipèdia». La consulta externa continua darrere del botó. AH-27
+ * completa les dades de la llavor i mostra la seua atribució local. Va en
  * un tros diferit (detailSectionMeta.jsx · renderBody, només si
  * pobleHidratable): el client de Wikimedia i l'algoritme no carreguen el tros
  * principal.
@@ -85,7 +86,7 @@ const enLinia = () => typeof navigator === 'undefined' || navigator.onLine !== f
  * passen un de fals); per defecte, el de client.js. `cau`, el mateix per a la
  * memòria cau (per defecte, la de l'app).
  */
-export default function PanellDeViquipedia({ poble, t, llig, cau: cauDonada }) {
+function PanellManualDeViquipedia({ poble, t, llig, cau: cauDonada }) {
   const tx = traductorDeViquipedia(t);
   const idTitol = useId();
   const crua = fitxaOriginal(poble);
@@ -249,4 +250,58 @@ export default function PanellDeViquipedia({ poble, t, llig, cau: cauDonada }) {
       </div>
     </section>
   );
+}
+
+
+const FONT_PRIMARIA = new Set(['ca.wikipedia.org', 'es.wikipedia.org', 'www.wikidata.org', 'wikidata.org', 'commons.wikimedia.org', 'creativecommons.org', 'www.creativecommons.org']);
+const urlDeFont = valor => {
+  try {
+    const url = new URL(valor);
+    return url.protocol === 'https:' && !url.username && !url.password && FONT_PRIMARIA.has(url.hostname) ? url.href : null;
+  } catch { return null; }
+};
+function Font({ url, children }) {
+  const href = urlDeFont(url);
+  return href ? <a href={href} target="_blank" rel="noopener noreferrer">{children}</a> : children;
+}
+
+/** AH-27 · dades i atribució accessibles també quan la foto real ja venia
+ * amb la llavor. Obrir els crèdits no fa cap petició Wikimedia. */
+export function FontsTerritorials({ poble }) {
+  const dto = poble.wikipedia_provenance ? poble : poble.fontsDeViquipedia?.dto || poble;
+  const imatges = dto.imatges || poble.imatgesViquipedia || {};
+  const vistes = new Set();
+  const fotos = [imatges.hero, imatges.avatar, imatges.reserva]
+    .filter(foto => foto?.fitxer && !vistes.has(foto.fitxer) && vistes.add(foto.fitxer));
+  const article = poble.wikipedia_url || (dto.wikipedia_title ? `https://ca.wikipedia.org/wiki/${encodeURIComponent(dto.wikipedia_title.replace(/ /g, '_'))}` : null);
+  const qid = dto.wikidata_id || poble.wikidata_id;
+  const any = poble.population_year ?? (poble.population == null || poble.population === dto.population ? dto.population_year : null);
+  const dades = [
+    ['Comarca', poble.comarca ?? dto.comarca], ['Província', poble.provincia ?? dto.provincia],
+    ['Població', (poble.population ?? dto.population) ? `${poble.population ?? dto.population}${any ? ` (${any})` : ''}` : null],
+    ['Altitud', Number.isFinite(poble.elevation ?? dto.elevation) ? `${poble.elevation ?? dto.elevation} m` : null],
+    ['Superfície', Number.isFinite(poble.area ?? dto.area) ? `${poble.area ?? dto.area} km²` : null],
+    ['Gentilici', poble.gentilici ?? dto.gentilici],
+    ['Coordenades', Number.isFinite(poble.lat ?? dto.lat) && Number.isFinite(poble.lng ?? dto.lng) ? `${poble.lat ?? dto.lat}, ${poble.lng ?? dto.lng}` : null]
+  ].filter(([, valor]) => valor != null);
+  const absents = poble.wikipedia_hydration?.missing || [];
+  return <details className="sdp-prose">
+    <summary>D’on ve esta fitxa</summary>
+    <dl>{dades.map(([nom, valor]) => <div key={nom}><dt>{nom}</dt><dd>{valor}</dd></div>)}</dl>
+    {poble.parent_poble_nom ? <p>Nucli de {poble.parent_poble_nom}. Les dades de població corresponen a este nucli.</p> : null}
+    <p>{article ? <><Font url={article}>Article de referència</Font> · text CC BY-SA 4.0. </> : null}
+      {qid ? <><Font url={`https://www.wikidata.org/wiki/${qid}`}>Wikidata {qid}</Font> · dades CC0.</> : null}</p>
+    <ul>{fotos.map(foto => <li key={foto.fitxer}>
+      <Font url={foto.fontUrl}>{foto.fitxer}</Font> · {foto.autor || 'Autoria a la pàgina del fitxer'}
+      {foto.llicencia ? <> · <Font url={foto.llicenciaUrl}>{foto.llicencia}</Font></> : null}
+    </li>)}</ul>
+    {absents.length ? <p>La font consultada no aporta totes les dades de la fitxa. Les dades absents es mantenen pendents.</p> : null}
+    {(poble.wikipedia_provenance?.exceptions || []).map((cas, i) => <p key={`${cas.field}-${i}`}>{cas.reason} {cas.source ? <Font url={cas.source}>Font</Font> : null}</p>)}
+  </details>;
+}
+
+export default function PanellDeViquipedia(props) {
+  const poble = props.poble;
+  return poble?.wikipedia_provenance
+    ? <FontsTerritorials poble={poble} /> : <PanellManualDeViquipedia {...props} />;
 }

@@ -213,6 +213,7 @@ export function UIProvider({ children, externalConfig = {} }) {
   }), [language, llenguaDelText, translator, locale, themeMode, themePreference, systemDark, contrastMode, contrastPreference, externalConfig, globalStatus]);
 
   const actionsValue = useMemo(() => ({
+    language,
     setLanguage: setLanguageFn,
     toggleTheme,
     setTheme,
@@ -221,7 +222,7 @@ export function UIProvider({ children, externalConfig = {} }) {
     resolveAsset,
     normalizeSearchText,
     setGlobalStatus
-  }), [setLanguageFn, toggleTheme, setTheme, setContrast, translator, setGlobalStatus]);
+  }), [language, setLanguageFn, toggleTheme, setTheme, setContrast, translator, setGlobalStatus]);
 
   return (
     <UIContext.Provider value={stateValue}>

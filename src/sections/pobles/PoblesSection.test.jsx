@@ -31,7 +31,9 @@ vi.mock('../../app/contexts/CoreContentContext', () => ({ useCoreContent: () => 
 vi.mock('../mur/MurContext', () => ({ useMur: () => mocks.mur }));
 
 import PoblesSection from './PoblesSection.jsx';
-import { TOWNS } from './townsContent.js';
+import { TOWNS as TOTS_ELS_POBLES } from './townsContent.js';
+// Regressió visual de les 9 fitxes completes anteriors a l'Aplec; el lot nou es prova a territori.r10.test.jsx.
+const TOWNS = TOTS_ELS_POBLES.filter((poble) => poble.created_at);
 import { COPYRIGHT_VIQUIPEDIA, dataDElement } from '../../components/universal/editorial.js';
 import { fixaBaseRecursos } from '../../config/assetResolver.js';
 import { rutaXatDePagina } from '../../config/navigation';
@@ -320,10 +322,10 @@ test('Onada 5 · un poble remot sense author rep nomDeLaGent del seu nom i obri 
   expect(autor(targetaCampello)).toBe('Gent del Campello');
 });
 
-/* Llei del Píxel · Els 9 pobles de la llavor porten author: la caputxa, la
-   Viquipèdia (amb les desambiguacions de Sella i Relleu) i els drets són
-   exactament els d'abans de la fase 3. */
-test('Onada 5 · la llavor es pinta idèntica: el seu author, el seu article de la Viquipèdia i els drets de sempre', () => {
+/* Llei del Píxel · Els 8 pobles sense enriquiment AH-27 conserven els drets
+   anteriors. La Torre conserva autor i article, amb la foto i el crèdit
+   Commons contrastats, sense atribuir-li una llicència CC que no té. */
+test('Onada 5 · la llavor conserva author i article; AH-27 acredita la foto real de La Torre', () => {
   const { container } = render(<PoblesSection />);
   const ARTICLES = {
     'la-torre-de-les-macanes': 'La_Torre_de_les_Ma%C3%A7anes',
@@ -341,7 +343,10 @@ test('Onada 5 · la llavor es pinta idèntica: el seu author, el seu article de 
     const targeta = targetaDe(container, town.title);
     expect(autor(targeta)).toBe(town.author);
     expect(viquipedia(targeta)).toBe(`https://ca.wikipedia.org/wiki/${ARTICLES[town.id]}`);
-    expect(drets(targeta)).toBe('© Viquipèdia / Wikimedia Commons (CC BY-SA)');
+    if (town.id === 'la-torre-de-les-macanes') {
+      expect(drets(targeta)).toBe('Text: Viquipèdia CC BY-SA 4.0 · Foto: Torre (Public domain)');
+      expect(town.wikipedia_provenance.photo).toMatchObject({ autor: 'Torre', llicencia: 'Public domain', fitxer: 'El riu251.jpg' });
+    } else expect(drets(targeta)).toBe('© Viquipèdia / Wikimedia Commons (CC BY-SA)');
   }
   expect(autor(targetaDe(container, 'La Torre de les Maçanes'))).toBe('Gent de la Torre');
 });
@@ -443,30 +448,31 @@ test('Onada 6 · un poble sense data a la fitxa naix amb la seua primera publica
   expect(pastilla(nomesText)).toBeNull();
 });
 
-/* Revisió adversarial de l'Onada 6 · Amb el Mur de la llavor, l'ordre i les
-   pastilles de /pobles són els d'abans: de la Torre (10:00 20/08/26) a
-   Benifallim. Amb les dates crues (les de supabase/seed.sql: el Mac Mini del
-   15-02-2026 i la samarreta del 15-08-2026 casen amb la Torre per
-   `population`) i amb les que servix el mode seed (llavorAmbDatesDeProva:
-   les d'esta setmana). */
+/* Revisió adversarial de l'Onada 6 · Els 8 pobles no modificats conserven
+   ordre i pastilles. El Manifest restaurat declara La Torre amb la seua
+   data històrica real, que és anterior a la creació de la fitxa de 2026:
+   la regla de la primera publicació la situa al final, també en mode seed. */
 test.each([
   ['dates crues de la llavor (supabase/seed.sql)', () => APP_SEED],
   ['dates del mode seed (llavorAmbDatesDeProva)', () => llavorAmbDatesDeProva(APP_SEED, new Date(2026, 9, 9, 4, 0))]
-])('Onada 6 · Llei del Píxel: amb el Mur de la llavor (%s), /pobles es pinta com abans', (_, llavorDelMur) => {
+])('Onada 6 · Llei del Píxel: els 8 pobles estables i el naixement històric de La Torre (%s)', (_, llavorDelMur) => {
   const { feedPosts, marketItems, events } = llavorDelMur();
   expect(marketItems.some((item) => item.population === 'La Torre de les Maçanes')).toBe(true);
   mocks.mur = { status: 'ready', feedPosts, marketItems, events };
   const { container } = render(<PoblesSection />);
   const llista = targetes(container);
   expect(llista.map(titol)).toEqual([
-    'La Torre de les Maçanes', 'Xixona', 'Tibi', 'Alcoleja', 'Relleu', 'Orxeta', 'Sella', 'Penàguila', 'Benifallim'
+    'Xixona', 'Tibi', 'Alcoleja', 'Relleu', 'Orxeta', 'Sella', 'Penàguila', 'Benifallim', 'La Torre de les Maçanes'
   ]);
   for (const targeta of llista) {
     const town = TOWNS.find((t) => t.title === titol(targeta));
-    const { time, date } = dataDElement(town);
-    expect(pastilla(targeta), town.id).toEqual([time, date]);
+    if (town.id === 'la-torre-de-les-macanes') expect(pastilla(targeta)).toEqual(['23:50', '17/11/22']);
+    else {
+      const { time, date } = dataDElement(town);
+      expect(pastilla(targeta), town.id).toEqual([time, date]);
+    }
   }
-  expect(pastilla(llista[0])).toEqual(['10:00', '20/08/26']);
+  expect(pastilla(llista.at(-1))).toEqual(['23:50', '17/11/22']);
 });
 
 test('Onada 6 · «Comentar · En públic» de la targeta porta al xat de la gent; Connectar, com sempre', () => {
@@ -493,7 +499,7 @@ test('Onada 5 · la targeta es classifica per província (categoria) i comarca (
     ['Pobles', 'sdp-badge-system'],
     ['Alacant', 'sdp-badge-category'],
     ['L\'Alacantí', 'sdp-badge-tag'],
-    ['700 hab', 'sdp-badge-accent'],
+    ['749 hab', 'sdp-badge-accent'],
     ['Enllaç a Wikipedia', 'sdp-badge-neutral']
   ]);
   expect(etiquetes(targetaDe(container, 'Remot'))).toEqual([

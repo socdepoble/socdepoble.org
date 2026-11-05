@@ -38,6 +38,7 @@ function wikimediaFals(serveix, com = {}) {
   const fetchImpl = vi.fn(async (url, init) => {
     peticions.push({ url, init });
     const resposta = perUrl.get(clauDUrl(url));
+    if (!resposta && new URL(url).searchParams.get('titles')?.startsWith('File:Escut')) return new Response(JSON.stringify({ query: { pages: [] } }), { status: 200, headers: { 'content-type': 'application/json' } });
     if (!resposta) {
       fora.push(url);
       return new Response('{}', { status: 404, headers: { 'content-type': 'application/json' } });
@@ -69,7 +70,8 @@ const DTO_TORRE = Object.freeze({
   content: 'La Torre de les Maçanes és una vila i municipi del País Valencià situat a la comarca de l\'Alacantí, a la comarca històrica de la Foia de Xixona.',
   provincia: 'Alacant',
   comarca: 'L\'Alacantí',
-  population: '749 hab',
+  population: '749 hab', population_year: 2025, elevation: 788, area: 36.48, gentilici: 'torrudana / torrudà',
+  shield_url: null, shield: null, image_url: TORRE_GRAN.src, avatar_url: TORRE_GRAN.src, hydration_version: 2,
   lat: 38.6067,
   lng: -0.4192,
   wikidata_id: 'Q1641908',
@@ -86,7 +88,7 @@ describe('pobleDeViquipedia · de cap a peus amb les captures', () => {
     const poble = await pobleDeViquipedia('La Torre de les Maçanes', { llig });
     expect(poble).toEqual(DTO_TORRE);
     expect(fora).toEqual([]);
-    expect(peticions.map(({ url }) => clauDUrl(url)).sort()).toEqual(TORRE.map((nom) => clauDUrl(captura(nom).url)).sort());
+    expect(peticions.filter(({url}) => !new URL(url).searchParams.get('titles')?.startsWith('File:Escut')).map(({ url }) => clauDUrl(url)).sort()).toEqual(TORRE.map((nom) => clauDUrl(captura(nom).url)).sort());
     expect(peticions.every(({ init }) => init.headers['Api-User-Agent'] === AGENT_USUARI)).toBe(true);
   });
 
@@ -101,11 +103,13 @@ describe('pobleDeViquipedia · de cap a peus amb les captures', () => {
     expect(poble.id).toBe(MOCK_TOWNS.find((town) => town.title === poble.title).id);
   });
 
-  test('la foto de Wikidata (P18) no hi entra si fa 600 px: la panoràmica és la Torre Gran, i l’escut mai es demana', async () => {
+  test('la foto de Wikidata (P18) no hi entra si fa 600 px: la panoràmica és la Torre Gran, i l’escut es consulta separat', async () => {
     const { llig, peticions } = wikimediaFals(TORRE);
     const poble = await pobleDeViquipedia('La Torre de les Maçanes', { llig });
     expect(poble.imatges.hero.fitxer).not.toBe('El riu251.jpg');
-    expect(peticions.some(({ url }) => decodeURIComponent(url).includes('Escut'))).toBe(false);
+    expect(peticions.filter(({ url }) => decodeURIComponent(url).includes('Escut'))).toHaveLength(0);
+    expect(poble.imatges.hero.fitxer).not.toMatch(/Escut/i);
+    expect(poble.shield_url).toBeNull();
   });
 
   test('Sella: tria el municipi de la Marina Baixa, no la pàgina de desambiguació', async () => {
@@ -145,7 +149,8 @@ describe('pobleDeViquipedia · de cap a peus amb les captures', () => {
       content: '',
       provincia: null,
       comarca: null,
-      population: null,
+      population: null, population_year: null, elevation: null, area: null, gentilici: null,
+      shield_url: null, shield: null, image_url: null, avatar_url: null, hydration_version: 2,
       lat: null,
       lng: null,
       wikidata_id: null,
@@ -435,4 +440,42 @@ describe('on és el poble', () => {
     expect(triaMunicipi([{ ...sella, esMunicipi: false }], 'Sella')).toBeNull();
     expect(triaMunicipi([sella], 'Relleu')).toBeNull();
   });
+});
+
+describe('AH-27 · pedanies i escut separat', () => {
+  const nucli = { qid: 'Q1', etiqueta: 'Nucli de Prova', titolCawiki: 'Nucli de Prova', esMunicipi: false, ine: null, p131: ['Q2'],
+    p18: null, p94: null, insignies: [], poblacio: 42, poblacioAny: 2009, lat: 38.2, lng: -0.3 };
+  test('el nucli usa el seu element propi i no el cens, superfície ni comarca del pare', async () => {
+    const llig = vi.fn(async (recurs, args) => {
+      if (recurs === 'entitats') { expect(args.ids).toBe('Q1');return [nucli]; }
+      if (recurs === 'article') return { titol: 'Nucli de Prova', qid: 'Q1', extracte: 'Un nucli del municipi veí.', fitxers: [] };
+      if (recurs === 'etiquetes') return [{ qid: 'Q2', etiqueta: 'Municipi Pare' }];
+      if (recurs === 'fitxers') return [];
+      throw new Error('No ha de buscar municipis ni consultar el pare');
+    });
+    const dto = await pobleDeViquipedia('Nucli de Prova', { llig, parentPobleId: 'municipi-pare', wikidataId: 'Q1', provincia: 'Alacant' });
+    expect(dto).toMatchObject({ population: '42 hab', population_year: 2009, area: null, elevation: null, comarca: null, lat: 38.2, lng: -0.3, wikidata_id: 'Q1' });
+    expect(llig.mock.calls.map(([recurs]) => recurs)).not.toContain('cercaMunicipi');
+    const altre = await pobleDeViquipedia('Un altre Nucli', { llig, parentPobleId: 'municipi-pare', wikidataId: 'Q1' });
+    expect(altre.estat).toBe('sense-article');expect(altre.population).toBeNull();
+  });
+  test('P94 és un camp d’escut amb llicència; mai entra en hero ni avatar', async () => {
+    const foto = RECURSOS.fitxers.traductor(captura('fitxers-la-torre-de-les-macanes').body).find(f => f.fitxer === TORRE_GRAN.fitxer);
+    const escut = { ...foto, fitxer: 'Escut de Prova.svg', mime: 'image/svg+xml', src: 'https://upload.wikimedia.org/wikipedia/commons/a/ab/Escut.svg' };
+    const llig = async (recurs, args) => {
+      if (recurs === 'entitats') return [{ ...nucli, p94: escut.fitxer, p18: foto.fitxer, insignies: [escut.fitxer] }];
+      if (recurs === 'article') return { titol: nucli.titolCawiki, qid: 'Q1', extracte: 'Un nucli.', fitxers: [foto.fitxer, escut.fitxer] };
+      if (recurs === 'etiquetes') return [];
+      if (recurs === 'fitxers') return args.titles === `File:${escut.fitxer}` ? [escut] : [foto];
+      return [];
+    };
+    const dto = await pobleDeViquipedia(nucli.etiqueta, { llig, parentPobleId: 'pare', wikidataId: 'Q1' });
+    expect(dto.shield_url).toBeNull();expect(dto.shield).toBeNull();
+    expect(dto.image_url).toBe(TORRE_GRAN.src);expect(dto.imatges.avatar.fitxer).toBe(TORRE_GRAN.fitxer);
+  });
+});
+
+test('AH-27: una pedania sense element propi contrastat no recorre a un municipi homònim', async () => {
+  const llig = vi.fn();const dto = await pobleDeViquipedia('Nucli Prova', { llig, parentPobleId: 'municipi-pare' });
+  expect(dto.estat).toBe('sense-article');expect(dto.population).toBeNull();expect(llig).not.toHaveBeenCalled();
 });

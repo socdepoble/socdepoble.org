@@ -233,7 +233,7 @@ export function BlocAmbit({ valor = null, document = null, onCanvia, mostraError
       ) : null}
       <Superficie as="section">
         <Pila gap={2}>
-          <p>{tr('editor.ambit.previsualitzacio', 'Així es veurà al Mur')}</p>
+          <p className="sdp-bloc-ambit__previsualitzacio-titol">{tr('editor.ambit.previsualitzacio', 'Vista en format Card')}</p>
           <UniversalCard {...pagina} labels={etiquetesDAmbit(fitxaViva, tr)} hasFooter={false} showDateTime={false} />
           {resum ? <p>{resum}</p> : null}
         </Pila>

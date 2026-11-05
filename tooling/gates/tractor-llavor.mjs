@@ -58,6 +58,9 @@ const NOMS_VIGILATS = ['Javi Llinares'];
 /** Domini propi del projecte (avís legal i adreces de contacte). */
 const DOMINIS_INSTITUCIONALS = ['socdepoble.org'];
 const DOMINIS_SINTETICS = ['example.com', 'example.net', 'example.org'];
+/** Comptes públics oficials del projecte al Fedivers (no són persones: són el seu compte institucional, que el Mestre declara
+ *  a l'encàrrec i que les pàgines del Fedivers citen amb el seu identificador complet). Adreça exacta, mai tot el domini. */
+const COMPTES_INSTITUCIONALS = new Set(['depoble@mastodont.cat']);
 const TLD_SINTETICS = ['example', 'test', 'invalid', 'localhost'];
 
 /* Detectors amb quantificadors fitats i frontera esquerra (cap ReDoS). */
@@ -158,7 +161,7 @@ for (const fitxer of FITXERS) {
     anota('P1 · nom de persona sense identitat fundacional declarada', fitxer, text, trobades);
   }
   anota('P2 · correu de tercers', fitxer, text, correus(text).filter((c) =>
-    !dominiSintetic(c.domini) && !dominiInstitucional(c.domini) && !fundador.correus.has(c.valor) && !legal.correus.has(c.valor)));
+    !dominiSintetic(c.domini) && !dominiInstitucional(c.domini) && !COMPTES_INSTITUCIONALS.has(String(c.valor).toLowerCase()) && !fundador.correus.has(c.valor) && !legal.correus.has(c.valor)));
   anota('P3 · telèfon', fitxer, text, telefons(text).filter((t) => !legal.telefons.has(t.valor)));
   anota('P4 · NIF/NIE', fitxer, text, nifs(text).filter((n) => !legal.nifs.has(n.valor)));
 }

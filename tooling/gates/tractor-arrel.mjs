@@ -233,7 +233,7 @@ const SALTA_A5 = /node_modules|package\.json|tsconfig|\$\{|\.\.\//;
 /** Artefactes que els builds generen: no han d'existir al repositori net. */
 const GENERAT_A5 = /(^|\/)(dist|build|coverage|\.sdp-[a-z]+)\//;
 // Marca transaccional creada per executor-mutacio: absència és l'estat saludable.
-const ESTAT_TRANSITORI_A5 = new Set(['.agents/runtime/mutation.pending.json']);
+const ESTAT_TRANSITORI_A5 = new Set(['.agents/runtime/mutation.pending.json', '.agents/runtime/guarda_nocturna.json']);
 
 /**
  * Lleva comentaris abans de buscar literals. Sense això, una porta que

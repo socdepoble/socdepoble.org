@@ -12,7 +12,7 @@ import { cleanup, render } from '@testing-library/react';
 import { afterEach, expect, test, vi } from 'vitest';
 
 /* TextSection, reduïda al seu cos: sense closca, sense capçalera. */
-vi.mock('../app/contexts/UIContext', () => ({ useUIActions: () => ({ t: (_, alternativa) => alternativa }) }));
+vi.mock('../app/contexts/UIContext', () => ({ useUIActions: () => ({ t: (_, alternativa) => alternativa }), useUIStateOpcional: () => null }));
 vi.mock('../hooks/useSEO', () => ({ useSEO: () => {} }));
 vi.mock('../components/universal/UniversalPage', () => ({
   UniversalPage: ({ children }) => React.createElement('div', { 'data-pagina': '' }, children)
@@ -180,6 +180,34 @@ function esImatgeSencera(fitxer) {
     return Boolean(mides && mides.amplada > 0 && mides.alcada > 0)
       && bytes[bytes.length - 2] === 0xff && bytes[bytes.length - 1] === 0xd9;
   }
+  // AH-27 · Commons es conserva com a WebP local. Comprovem el contenidor
+  // complet i les dimensions de la imatge, també per a WebP sense VP8X.
+  if (bytes.length >= 30 && bytes.toString('ascii', 0, 4) === 'RIFF'
+    && bytes.toString('ascii', 8, 12) === 'WEBP'
+    && bytes.readUInt32LE(4) + 8 === bytes.length) {
+    let offset = 12;
+    let imatge = false;
+    let dimensions = false;
+    while (offset + 8 <= bytes.length) {
+      const tipus = bytes.toString('ascii', offset, offset + 4);
+      const mida = bytes.readUInt32LE(offset + 4);
+      const inici = offset + 8;
+      const fi = inici + mida;
+      if (fi > bytes.length) return false;
+      if (tipus === 'VP8 ' && mida >= 10
+        && bytes.subarray(inici + 3, inici + 6).equals(Buffer.from([0x9d, 0x01, 0x2a]))) {
+        imatge = true;
+        dimensions = (bytes.readUInt16LE(inici + 6) & 0x3fff) > 0
+          && (bytes.readUInt16LE(inici + 8) & 0x3fff) > 0;
+      } else if (tipus === 'VP8L' && mida >= 5 && bytes[inici] === 0x2f) {
+        imatge = true;
+        const camps = bytes.readUInt32LE(inici + 1);
+        dimensions = (camps & 0x3fff) + 1 > 0 && ((camps >>> 14) & 0x3fff) + 1 > 0;
+      }
+      offset = fi + (mida % 2);
+    }
+    return offset === bytes.length && imatge && dimensions;
+  }
   return false;
 }
 
@@ -243,6 +271,12 @@ test('I34 · les fotos pròpies dels pobles queden intactes, existixen i són im
   expect(TOWNS).toHaveLength(MOCK_TOWNS.length);
   for (const [i, poble] of TOWNS.entries()) {
     const propia = MOCK_TOWNS[i].image_url;
+    // Les altes històriques sense fotografia usen la reserva; ací es prova la foto pròpia.
+    if (!propia) {
+      expect(TOWN_FALLBACK_IMAGES).toContain(poble.image_url);
+      expect(poble.imageSrc).toBe(poble.image_url);
+      continue;
+    }
     expect([poble.id, poble.image_url, poble.imageSrc]).toEqual([poble.id, propia, propia]);
     for (const ruta of [propia, MOCK_TOWNS[i].avatar_url].filter(Boolean)) {
       expect([ruta, esImatgeSencera(path.join(ARREL_PUBLIC, ruta))]).toEqual([ruta, true]);
@@ -489,13 +523,14 @@ test('la boina de les targetes de la Consola és la de Sóc de Poble, i el seu l
 test('l’article de l’Aplec pinta les seues imatges amb la base vigent', () => {
   const srcs = (container) => [...container.querySelectorAll('img')].map((img) => img.getAttribute('src'));
   const sense = render(React.createElement(Aplec2023Article));
-  expect(srcs(sense.container)).toEqual(['/assets/events/aplec_2023_ponents.webp', '/assets/events/aplec_2023_reunio.webp']);
+  const originals = srcs(sense.container);
+  expect(originals).toHaveLength(43);
+  expect(originals).toContain('/assets/events/aplec-2023/ponents-aplec-2023-1900px.jpg');
+  expect(originals.every((src) => src.startsWith('/assets/events/aplec-2023/'))).toBe(true);
   cleanup();
   fixaBaseRecursos(PAQUET);
   const amb = render(React.createElement(Aplec2023Article));
-  expect(srcs(amb.container)).toEqual([
-    `${PAQUET}/assets/events/aplec_2023_ponents.webp`, `${PAQUET}/assets/events/aplec_2023_reunio.webp`
-  ]);
+  expect(srcs(amb.container)).toEqual(originals.map((src) => `${PAQUET}${src}`));
 });
 
 test('TextSection (/projecte): sense base, el cos és idèntic; amb base, les infografies viatgen amb el paquet', () => {

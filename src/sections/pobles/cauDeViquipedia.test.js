@@ -356,3 +356,15 @@ describe('el sí de la persona', () => {
     desfes();
   });
 });
+
+test('AH-27 · desa les magnituds, l’any del cens i un escut separat amb atribució', async () => {
+  const cau = nova();const escut = { ...FOTO, fitxer: 'Escut.svg', src: 'https://upload.wikimedia.org/wikipedia/commons/a/ab/Escut.svg' };
+  await cau.desa(CLAU, { ...DTO, hydration_version: 2, elevation: 788, area: 36.48, population_year: 2025, gentilici: 'torrudà', shield: escut,
+    image_url: 'https://malicios.example/foto.jpg', shield_url: 'https://malicios.example/escut.svg' });
+  const { dto } = await cau.llig(CLAU);
+  expect(dto).toMatchObject({ elevation: 788, area: 36.48, population_year: 2025, gentilici: 'torrudà', hydration_version: 2 });
+  expect(dto.shield_url).toBeNull();expect(dto.shield).toBeNull();expect(dto.image_url).toBe(FOTO.src);expect(dto.avatar_url).toBe(FOTO.src);
+  expect(dto.imatges.hero.fitxer).toBe('A.jpg');
+  await expect(cau.desa(CLAU, { ...DTO, area: -1 })).rejects.toThrow(TypeError);
+  await expect(cau.desa(CLAU, { ...DTO, population_year: 2025.5 })).rejects.toThrow(TypeError);
+});

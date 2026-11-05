@@ -1,0 +1,21 @@
+import test from 'node:test';import assert from 'node:assert/strict';import {createHash} from 'node:crypto';
+import {main,creaCertificadorMirall} from '../tooling/node0/certifica-salut-mirall-workspace-node0.mjs';
+const RECIPIENT='age1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq5cu47z',DATE='2026-11-04T22:00:00.000Z',NOW=Date.parse(DATE),GEN='20261104T220000Z-0123456789abcdef',H='a'.repeat(64),sha=b=>createHash('sha256').update(b).digest('hex');
+function fixture({recipientHash=sha(RECIPIENT),replacePointer=false,corruptRead=false,writeFails=false,configured=true}={}){
+ const homeDir='/fixture-home',mirrorDir=homeDir+'/Library/CloudStorage/GoogleDrive-socdepoble@socdepoble.org/Mi unidad/Sóc de Poble · Mirall Sobirà Node 0',manifest=Buffer.from(JSON.stringify({schema:'sdp.node0.workspace-mirror.v1',generation:GEN,createdAt:DATE,snapshot:{recipientSha256:recipientHash}})),metadata={generation:GEN,lastSnapshotAt:DATE,manifestSha256:sha(manifest),sumsSha256:H},calls=[];let inspections=0,state=null;
+ const worker=async req=>{calls.push(req);if(req.action==='state-checkpoint')return{receiptSha256:null};if(req.action==='inspect'){inspections++;return{...metadata,...(replacePointer&&inspections===2?{generation:GEN.slice(0,-1)+'0'}:{})};}if(req.action==='verified-manifest'){const body=corruptRead?Buffer.from('not the pinned manifest'):manifest;return{data:body.toString('base64'),bytes:body.length};}if(req.action==='state'){if(writeFails)throw Error('fixture_write_failed');state=JSON.parse(Buffer.from(req.data,'base64'));return{written:true};}throw Error('unknown_fixture_action');};
+ const run=creaCertificadorMirall({homeDir,resolveTarget:async()=>({workspaceMirrorConfigured:configured,mirrorDir}),worker,now:()=>NOW,readBack:async()=>({configured:true,integrityOk:true,lastSnapshotAt:state.lastSnapshotAt,verifiedAt:state.verifiedAt})});
+ return{run:()=>run({mirrorDir,recipient:RECIPIENT}),calls,state:()=>state,mirrorDir,homeDir};
+}
+test('attestation CLI is inert by default and rejects secret/configuration arguments',async()=>{
+ assert.deepEqual(await main([]),{apply:false,action:'certify-existing-generation',privateMetadataOnly:true,newGeneration:false});
+ for(const args of[['--token','TEST_ONLY'],['--apply','--apply'],['--mirror-dir','/fixture']])await assert.rejects(main(args),/mirror_attestation_failed/);
+});
+test('operator protocol verifies the same pinned generation twice before writing only private metadata',async()=>{
+ const f=fixture(),value=await f.run();assert.deepEqual(f.calls.map(c=>c.action),['state-checkpoint','inspect','verified-manifest','inspect','state']);assert.equal(f.calls[4].root,f.homeDir+'/.config/socdepoble');assert.equal(f.state().schema,'sdp.node0.mirror.private-state.v3');assert.equal(f.state().recipientSha256,sha(RECIPIENT));assert.equal(value.receiptWritten,true);assert.equal(value.cloudUploadedVerified,false);assert.equal(value.newGeneration,false);assert.equal(value.privateKeyRead,false);assert.equal(value.environmentWritten,false);
+});
+test('an unverified institutional target never reaches the worker',async()=>{const f=fixture({configured:false});await assert.rejects(f.run(),/mirror_attestation_failed/);assert.deepEqual(f.calls,[]);});
+test('a generation encrypted to another public recipient cannot receive a healthy receipt',async()=>{const f=fixture({recipientHash:'b'.repeat(64)});await assert.rejects(f.run(),/mirror_attestation_failed/);assert.equal(f.calls.some(c=>c.action==='state'),false);});
+test('pointer drift between inspections prevents an outdated certification',async()=>{const f=fixture({replacePointer:true});await assert.rejects(f.run(),/mirror_attestation_failed/);assert.equal(f.calls.some(c=>c.action==='state'),false);});
+test('manifest-byte drift is rejected independently of JSON claims',async()=>{const f=fixture({corruptRead:true});await assert.rejects(f.run(),/mirror_attestation_failed/);assert.equal(f.calls.some(c=>c.action==='state'),false);});
+test('a failed receipt publication reports no success and leaves the backup untouched',async()=>{const f=fixture({writeFails:true});await assert.rejects(f.run());assert.equal(f.state(),null);assert.equal(f.calls.filter(c=>c.action==='state').length,1);assert.equal(f.calls.some(c=>c.action==='publish'),false);});

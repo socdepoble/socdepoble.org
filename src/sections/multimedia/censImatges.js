@@ -48,10 +48,17 @@
  */
 
 import { VARIANTS_SOCIALS } from '../../config/imatgeSocial.js';
+import { DADES_POBLES_APLEC_VIQUIPEDIA } from '../pobles/poblesAplecViquipedia.js';
+import { metadadesDeCommons } from './origenImatges.js';
 
 export const AMBITS = Object.freeze(['poble', 'persona', 'entitat', 'ia', 'contingut']);
 
-const e = (src, titol, ambit, origen, poble) => Object.freeze(poble ? { src, titol, ambit, origen, poble } : { src, titol, ambit, origen });
+const CREDITS_COMMONS_AH27 = new Map(Object.values(DADES_POBLES_APLEC_VIQUIPEDIA)
+  .map(poble => [poble.image_url, poble.wikipedia_provenance.photo]));
+const e = (src, titol, ambit, origen, poble) => Object.freeze({
+  src, titol, ambit, origen, ...(poble ? { poble } : {}),
+  ...metadadesDeCommons(CREDITS_COMMONS_AH27.get(src))
+});
 
 /* Les dues fotos de cada poble de la Viquipèdia (scripts/fetch_town_media.mjs). */
 const POBLES_VIQUIPEDIA = [
@@ -71,6 +78,63 @@ const VINYETES = [
 ];
 
 export const CENS_IMATGES = Object.freeze([
+  /* AH-27 · fotografies reals de l’arxiu WordPress 16880 i Commons.
+     Les tres còpies exactes es resolen amb àlies; escuts i documents queden fora. */
+  e("/assets/events/aplec-2023/WhatsApp-Image-2023-01-29-at-14.51.33-1-1024x769.jpeg", "2n Aplec pel Territori a Benillup · 1", 'contingut', 'foto'),
+  e("/assets/events/aplec-2023/WhatsApp-Image-2023-01-29-at-14.51.33-1024x769.jpeg", "2n Aplec pel Territori a Benillup · 2", 'contingut', 'foto'),
+  e("/assets/events/aplec-2023/WhatsApp-Image-2023-01-29-at-14.51.33-2-1024x769.jpeg", "2n Aplec pel Territori a Benillup · 3", 'contingut', 'foto'),
+  e("/assets/events/aplec-2023/WhatsApp-Image-2023-01-29-at-14.51.33-3-1024x769.jpeg", "2n Aplec pel Territori a Benillup · 4", 'contingut', 'foto'),
+  e("/assets/events/aplec-2023/WhatsApp-Image-2023-01-29-at-14.51.33-4-1024x769.jpeg", "2n Aplec pel Territori a Benillup · 5", 'contingut', 'foto'),
+  e("/assets/events/aplec-2023/WhatsApp-Image-2023-01-29-at-14.51.33-5-1024x769.jpeg", "2n Aplec pel Territori a Benillup · 6", 'contingut', 'foto'),
+  e("/assets/events/aplec-2023/WhatsApp-Image-2023-01-29-at-14.51.34-1-1024x769.jpeg", "2n Aplec pel Territori a Benillup · 7", 'contingut', 'foto'),
+  e("/assets/events/aplec-2023/WhatsApp-Image-2023-01-29-at-14.51.34-1024x769.jpeg", "2n Aplec pel Territori a Benillup · 8", 'contingut', 'foto'),
+  e("/assets/events/aplec-2023/WhatsApp-Image-2023-01-29-at-14.51.34-2-1024x769.jpeg", "2n Aplec pel Territori a Benillup · 9", 'contingut', 'foto'),
+  e("/assets/events/aplec-2023/WhatsApp-Image-2023-01-29-at-14.51.34-3-1024x769.jpeg", "2n Aplec pel Territori a Benillup · 10", 'contingut', 'foto'),
+  e("/assets/events/aplec-2023/WhatsApp-Image-2023-01-29-at-14.51.34-4-768x1024.jpeg", "2n Aplec pel Territori a Benillup · 11", 'contingut', 'foto'),
+  e("/assets/events/aplec-2023/WhatsApp-Image-2023-01-29-at-14.51.34-5-1024x769.jpeg", "2n Aplec pel Territori a Benillup · 12", 'contingut', 'foto'),
+  e("/assets/events/aplec-2023/WhatsApp-Image-2023-01-29-at-14.51.35-768x1024.jpeg", "2n Aplec pel Territori a Benillup · 13", 'contingut', 'foto'),
+  e("/assets/events/aplec-2023/WhatsApp-Image-2023-01-29-at-14.51.36-1024x766.jpeg", "2n Aplec pel Territori a Benillup · 14", 'contingut', 'foto'),
+  e("/assets/events/aplec-2023/WhatsApp-Image-2023-01-29-at-19.24.25-766x1024.jpeg", "2n Aplec pel Territori a Benillup · 15", 'contingut', 'foto'),
+  e("/assets/events/aplec-2023/WhatsApp-Image-2023-01-29-at-19.24.28-1-766x1024.jpeg", "2n Aplec pel Territori a Benillup · 16", 'contingut', 'foto'),
+  e("/assets/events/aplec-2023/WhatsApp-Image-2023-01-29-at-19.24.28-2-766x1024.jpeg", "2n Aplec pel Territori a Benillup · 17", 'contingut', 'foto'),
+  e("/assets/events/aplec-2023/WhatsApp-Image-2023-01-29-at-19.24.28-3-1024x766.jpeg", "2n Aplec pel Territori a Benillup · 18", 'contingut', 'foto'),
+  e("/assets/events/aplec-2023/WhatsApp-Image-2023-01-29-at-19.24.28-766x1024.jpeg", "2n Aplec pel Territori a Benillup · 19", 'contingut', 'foto'),
+  e("/assets/events/aplec-2023/WhatsApp-Image-2023-01-29-at-19.24.29-1-766x1024.jpeg", "2n Aplec pel Territori a Benillup · 20", 'contingut', 'foto'),
+  e("/assets/events/aplec-2023/WhatsApp-Image-2023-01-29-at-19.24.29-1024x766.jpeg", "2n Aplec pel Territori a Benillup · 21", 'contingut', 'foto'),
+  e("/assets/events/aplec-2023/WhatsApp-Image-2023-01-29-at-19.27.18-766x1024.jpeg", "2n Aplec pel Territori a Benillup · 22", 'contingut', 'foto'),
+  e("/assets/events/aplec-2023/WhatsApp-Image-2023-01-29-at-19.27.39-1024x766.jpeg", "2n Aplec pel Territori a Benillup · 23", 'contingut', 'foto'),
+  e("/assets/events/aplec-2023/WhatsApp-Image-2023-01-29-at-19.28.07-1024x769.jpeg", "2n Aplec pel Territori a Benillup · 24", 'contingut', 'foto'),
+  e("/assets/events/aplec-2023/WhatsApp-Image-2023-01-29-at-19.29.11-1024x769.jpeg", "2n Aplec pel Territori a Benillup · 25", 'contingut', 'foto'),
+  e("/assets/events/aplec-2023/WhatsApp-Image-2023-01-30-at-14.42.28-1-1024x682.jpeg", "2n Aplec pel Territori a Benillup · 26", 'contingut', 'foto'),
+  e("/assets/events/aplec-2023/WhatsApp-Image-2023-01-30-at-14.42.28-1024x682.jpeg", "2n Aplec pel Territori a Benillup · 27", 'contingut', 'foto'),
+  e("/assets/events/aplec-2023/WhatsApp-Image-2023-01-30-at-16.25.20-1-576x1024.jpeg", "2n Aplec pel Territori a Benillup · 28", 'contingut', 'foto'),
+  e("/assets/events/aplec-2023/WhatsApp-Image-2023-01-30-at-16.25.20-1024x576.jpeg", "2n Aplec pel Territori a Benillup · 29", 'contingut', 'foto'),
+  e("/assets/events/aplec-2023/aplec-pel-territori-reunions-als-pobles-1-1024x766.jpg", "Reunió preparatòria del 2n Aplec pel Territori", 'contingut', 'foto'),
+  e("/assets/events/aplec-2023/xphoto_2023-01-30-17.06.54-768x1024.jpeg", "2n Aplec pel Territori a Benillup · 31", 'contingut', 'foto'),
+  e("/assets/events/aplec-2023/xphoto_2023-01-30-17.06.56-768x1024.jpeg", "2n Aplec pel Territori a Benillup · 32", 'contingut', 'foto'),
+  e("/assets/towns/balones/commons-ah27.webp", "Balones · fotografia de Wikimedia Commons", 'poble', 'foto', "balones"),
+  e("/assets/towns/benialfaqui/commons-ah27.webp", "Benialfaquí · fotografia de Wikimedia Commons", 'poble', 'foto', "benialfaqui"),
+  e("/assets/towns/benillup/commons-ah27.webp", "Benillup · fotografia de Wikimedia Commons", 'poble', 'foto', "benillup"),
+  e("/assets/towns/benimassot/commons-ah27.webp", "Benimassot · fotografia de Wikimedia Commons", 'poble', 'foto', "benimassot"),
+  e("/assets/towns/fageca/commons-ah27.webp", "Fageca · fotografia de Wikimedia Commons", 'poble', 'foto', "fageca"),
+  e("/assets/towns/famorca/commons-ah27.webp", "Famorca · fotografia de Wikimedia Commons", 'poble', 'foto', "famorca"),
+  e("/assets/towns/gorga/commons-ah27.webp", "Gorga · fotografia de Wikimedia Commons", 'poble', 'foto', "gorga"),
+  e("/assets/towns/millena/commons-ah27.webp", "Millena · fotografia de Wikimedia Commons", 'poble', 'foto', "millena"),
+  e("/assets/towns/muro-d-alcoi/commons-ah27.webp", "Muro d'Alcoi · fotografia de Wikimedia Commons", 'poble', 'foto', "muro-d-alcoi"),
+  e("/assets/towns/planes/commons-ah27.webp", "Planes · fotografia de Wikimedia Commons", 'poble', 'foto', "planes"),
+  e("/assets/towns/quatretondeta/commons-ah27.webp", "Quatretondeta · fotografia de Wikimedia Commons", 'poble', 'foto', "quatretondeta"),
+  e("/assets/towns/tollos/commons-ah27.webp", "Tollos · fotografia de Wikimedia Commons", 'poble', 'foto', "tollos"),
+  e("/assets/towns/beniaia/commons-ah27.webp", "Beniaia · fotografia de Wikimedia Commons", 'poble', 'foto', "beniaia"),
+  e("/assets/towns/castell-de-castells/commons-ah27.webp", "Castell de Castells · fotografia de Wikimedia Commons", 'poble', 'foto', "castell-de-castells"),
+  e("/assets/towns/l-atzubia/commons-ah27.webp", "L'Atzúbia · fotografia de Wikimedia Commons", 'poble', 'foto', "l-atzubia"),
+  e("/assets/towns/la-vall-d-alcala/commons-ah27.webp", "La Vall d'Alcalà · fotografia de Wikimedia Commons", 'poble', 'foto', "la-vall-d-alcala"),
+  e("/assets/towns/la-vall-de-gallinera/commons-ah27.webp", "La Vall de Gallinera · fotografia de Wikimedia Commons", 'poble', 'foto', "la-vall-de-gallinera"),
+  e("/assets/towns/pego/commons-ah27.webp", "Pego · fotografia de Wikimedia Commons", 'poble', 'foto', "pego"),
+  e("/assets/towns/tormos/commons-ah27.webp", "Tormos · fotografia de Wikimedia Commons", 'poble', 'foto', "tormos"),
+  e("/assets/towns/callosa-d-en-sarria/commons-ah27.webp", "Callosa d'en Sarrià · fotografia de Wikimedia Commons", 'poble', 'foto', "callosa-d-en-sarria"),
+  e("/assets/towns/la-torre-de-les-macanes/commons-ah27.webp", "La Torre de les Maçanes · fotografia de Wikimedia Commons", 'poble', 'foto', "la-torre-de-les-macanes"),
+  e("/assets/towns/la-vall-d-ebo/commons-ah27.webp", "La Vall d'Ebo · fotografia de Wikimedia Commons", 'poble', 'foto', "la-vall-d-ebo"),
+
   e('/assets/soc_de_poble_ibanez.webp', 'Sóc de Poble a l’estil Ibáñez', 'contingut', 'ia'),
 
   e('/assets/events/aplec_2023_cartell.jpg', 'Cartell del 2n Aplec pel Territori', 'contingut', 'foto'),
@@ -257,6 +321,21 @@ const COPIES_IA = [
 /** Les imatges ràster de public/assets que NO entren al cens, amb el motiu. Tot
  *  /assets/system/ (la interfície) i els SVG en queden fora sense nomenar-los. */
 export const EXCLOSES = Object.freeze({
+  /* AH-27 · elements documentals i heràldics, més còpies verificades amb SHA-256. */
+  "/assets/events/aplec-2023/WhatsApp-Image-2023-01-29-at-21.04.50-1-1024x766.jpeg": "còpia de /assets/events/aplec-2023/WhatsApp-Image-2023-01-29-at-19.24.28-3-1024x766.jpeg",
+  "/assets/events/aplec-2023/WhatsApp-Image-2023-01-29-at-21.04.50-7-1024x766.jpeg": "còpia de /assets/events/aplec-2023/WhatsApp-Image-2023-01-29-at-19.27.39-1024x766.jpeg",
+  "/assets/events/aplec-2023/WhatsApp-Image-2023-01-29-at-21.04.50-8-1024x769.jpeg": "còpia de /assets/events/aplec-2023/WhatsApp-Image-2023-01-29-at-19.28.07-1024x769.jpeg",
+  "/assets/events/aplec-2023/aplec-pel-territori-2023-A4-1900px-1.jpg": "cartell documental de l’Aplec conservat íntegre a l’article; no és una fotografia",
+  "/assets/events/aplec-2023/facebook-aplec-pel-territori.jpg": "capçalera social de l’Aplec; no és una fotografia",
+  "/assets/events/aplec-2023/logo-coordinadora-circular-300x300.jpg": "logotip o insígnia de l’arxiu editorial de l’Aplec; no és una fotografia",
+  "/assets/events/aplec-2023/logo-manifest-de-poble-1024x891.png": "logotip o insígnia de l’arxiu editorial de l’Aplec; no és una fotografia",
+  "/assets/events/aplec-2023/logo-rentonar-300x300.png": "logotip o insígnia de l’arxiu editorial de l’Aplec; no és una fotografia",
+  "/assets/events/aplec-2023/logo-socdepoble-300x300.png": "logotip o insígnia de l’arxiu editorial de l’Aplec; no és una fotografia",
+  "/assets/events/aplec-2023/ponents-aplec-2023-1900px.jpg": "cartell documental de l’Aplec conservat íntegre a l’article; no és una fotografia",
+  "/assets/events/aplec-2023/socdepoble_facebook-128x128-1.png": "logotip o insígnia de l’arxiu editorial de l’Aplec; no és una fotografia",
+  "/assets/events/aplec-2023/telegram-manifest-de-poble.jpg": "captura documental del grup de Telegram del Manifest de Poble; no és una fotografia",
+  "/assets/mur/manifest-de-poble/Manifest_de_Poble_1.webp": "primera pàgina documental del Manifest de Poble, reproduïda íntegra a l’article; no és una fotografia",
+  "/assets/mur/manifest-de-poble/logo-manifest-de-poble-retallat.webp": "logotip del Manifest de Poble; no és una fotografia",
   '/assets/uploads/brain/oli_de_la_torre_logo.webp': 'logotip públic d’Oli de La Torre (còpia portable del perfil, Teler 2026-11-03)',
   /* R-01: derivades socials explícites del mapa canònic, una sola foto a l’Arxiu. */
   ...Object.fromEntries(Object.entries(VARIANTS_SOCIALS).map(([original, social]) => [social, `targeta social dedicada de ${original}: no és cap foto nova de l’Arxiu`])),
@@ -343,6 +422,7 @@ export function mitjansDelCens(cens = CENS_IMATGES) {
     origen: entrada.origen,
     ambit: entrada.ambit,
     ...(entrada.poble ? { poble: entrada.poble } : {}),
+    ...metadadesDeCommons(entrada.creditCommons),
     sectionId: 'multimedia'
   }));
 }

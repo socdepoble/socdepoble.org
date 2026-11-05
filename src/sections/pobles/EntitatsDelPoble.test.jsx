@@ -121,22 +121,22 @@ describe('EntitatsDelPoble · el panell', () => {
 });
 
 describe('la pàgina del poble', () => {
-  test('dues pestanyes; la de les entitats no pregunta res fins que s’obri, i llavors carrega el panell', async () => {
+  test('AH-17 · quatre pestanyes; la de les entitats no pregunta res fins que s’obri, i llavors carrega el panell', async () => {
     const meta = buildPoblesDetailSectionMeta({ t });
     const { container } = render(<>{meta.renderBody(POBLE, { detall: true })}</>);
     const pestanyes = screen.getAllByRole('tab');
-    expect(pestanyes.map((p) => p.textContent)).toEqual(['Gent de Vilanova de Prova SdP', 'Empreses i entitats']);
+    expect(pestanyes.map((p) => p.textContent)).toEqual(['Tot', 'Gent de Vilanova de Prova SdP', 'Xarxa', 'Empreses i entitats']);
     expect(pestanyes[0].getAttribute('aria-selected')).toBe('true');
     expect(m.llista).not.toHaveBeenCalled();
-    fireEvent.click(pestanyes[1]);
-    expect(pestanyes[1].getAttribute('aria-selected')).toBe('true');
+    fireEvent.click(pestanyes[3]);
+    expect(pestanyes[3].getAttribute('aria-selected')).toBe('true');
     expect(await screen.findByRole('heading', { name: 'Forn de la Plaça' })).toBeTruthy();
     expect(m.llista).toHaveBeenCalledTimes(1);
     /* Tornar a «Gent» no desmunta el panell (cap segona crida en tornar-hi). */
     fireEvent.click(pestanyes[0]);
-    fireEvent.click(pestanyes[1]);
+    fireEvent.click(pestanyes[3]);
     expect(m.llista).toHaveBeenCalledTimes(1);
-    expect(container.querySelectorAll('[role="tabpanel"]')).toHaveLength(2);
+    expect(container.querySelectorAll('[role="tabpanel"]')).toHaveLength(4);
   });
 
   test('sense les píndoles duplicades (.badge-row/.pill) de la població i del nom del poble', () => {

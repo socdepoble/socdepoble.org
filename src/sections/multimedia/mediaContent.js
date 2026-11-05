@@ -3,6 +3,7 @@ import { MARKET_ITEMS } from '../mercat/marketContent.js';
 import { FEED_POSTS } from '../mur/feedContent.js';
 import { TOWNS } from '../pobles/townsContent.js';
 import { LEGACY_MEDIA } from './legacyMedia.js';
+import { metadadesDeCommons } from './origenImatges.js';
 
 /* Onada 12 (261011; ordres 261011_0130, punt 1) · «Hi ha dos Mac Mini.» El
    segon eixia d'ací: cada producte del Mercat feia una entrada de Multimèdia
@@ -46,7 +47,8 @@ const fontDeclarada = (valor) => (typeof valor === 'string' && valor.trim() !== 
 export const fotosDelMur = (publicacions) => publicacions
   .map((item, index) => {
     const src = firstMediaSource(item.image_url || item.image);
-    if (!src) return null;
+    // El Manifest conserva el logotip a la targeta; no és una foto de l'Arxiu.
+    if (!src || /\/logo[-_][^/]+$/i.test(src)) return null;
     return {
       id: `feed-${idDeLArticle(item, index)}`,
       title: item.title || 'Mur',
@@ -110,6 +112,8 @@ export const fotosDelsPobles = (pobles) => pobles.map((town) => ({
   kind: 'image',
   tag: 'Poble',
   source: town.title,
+  // AH-27: l'autor i la llicència de la foto no són els del municipi o el text.
+  ...metadadesDeCommons(town.wikipedia_provenance?.photo),
   created_at: town.created_at,
   sectionId: 'multimedia',
   article: { sectionId: 'pobles', id: town.id },

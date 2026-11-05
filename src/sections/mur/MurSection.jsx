@@ -33,6 +33,12 @@ import { alertaMunicipalDe, caducaAl, candidatsAAlerta, esVigent, properaCaducit
 import { useAjuntamentsDelMur } from './useAjuntamentsDelMur.js';
 import { useRellotgeAlertes } from './useRellotgeAlertes.js';
 import { RegioAlertesVigents } from './AlertaMunicipal.jsx';
+import {
+  CASOS_US_EDITORIALS,
+  lligArticlesImportatsAmbRevisio,
+  desaRevisioArticleImportat,
+  estadistiquesRevisioImportacio,
+} from '../../utils/transformadorEditorialWpBlogger.js';
 
 /* P1-64 (pla 261028_1526 §3.7.1; decisions 1 i 9 del Mestre, 261028) · El
    Mapa Fotogràfic es carrega en diferit, només quan s'obri la pestanya
@@ -136,9 +142,27 @@ export default function MurSection() {
   const [searchParams, setSearchParams] = useSearchParams();
   const dateFilter = searchParams.get('date');
   const categoryFilter = searchParams.get('category');
+  const revisioParam = searchParams.get('revisio');
 
   const [filterType, setFilterType] = useState('all');
   const [isMapOpen, setIsMapOpen] = useState(false);
+  const [modeRevisioLocal, setModeRevisioLocal] = useState(false);
+  const [filtreCasUsWp, setFiltreCasUsWp] = useState('tots');
+  const [versioRevisioWp, setVersioRevisioWp] = useState(0);
+  const modeRevisioWp = revisioParam === 'wordpress' || modeRevisioLocal;
+
+  const dadesRevisioWp = useMemo(() => {
+    if (!modeRevisioWp) return { articles: [], stats: null };
+    const tots = lligArticlesImportatsAmbRevisio();
+    const filtrats = filtreCasUsWp === 'tots'
+      ? tots
+      : tots.filter((a) => Array.isArray(a.casos_us) && a.casos_us.includes(filtreCasUsWp));
+    return {
+      articles: filtrats.slice(0, 60),
+      totalFiltrats: filtrats.length,
+      stats: estadistiquesRevisioImportacio(),
+    };
+  }, [modeRevisioWp, filtreCasUsWp, versioRevisioWp]); // eslint-disable-line react-hooks/exhaustive-deps -- versioRevisioWp refresca l'estat localStorage
 
   useSEO({
     title: t('section.mur.kicker', 'Mur'),
@@ -326,6 +350,93 @@ export default function MurSection() {
               { valor: 'mapa', text: 'Mapa' },
             ]}
           />
+
+          <div className="sdp-mur-revisio-bar">
+            <Boto
+              className="sdp-mur-revisio-toggle"
+              aria-pressed={modeRevisioWp}
+              onClick={() => {
+                if (modeRevisioWp) {
+                  setModeRevisioLocal(false);
+                  if (revisioParam === 'wordpress') setSearchParams({ revisio: null });
+                } else {
+                  setModeRevisioLocal(true);
+                }
+              }}
+            >
+              🔍 Mode Revisió d&apos;Importació (Admin)
+            </Boto>
+          </div>
+
+          {modeRevisioWp && dadesRevisioWp.stats && (
+            <section className="sdp-mur-revisio-panel" aria-label="Mode Revisió d'Importació de WordPress" data-testid="mur-revisio-wordpress">
+              <header className="sdp-mur-revisio-panel__header">
+                <h3>🔍 Revisió d&apos;Importació de socdepoble.net ({dadesRevisioWp.stats.total} articles · {dadesRevisioWp.stats.aprovats} aprovats · {dadesRevisioWp.stats.pendents} pendents)</h3>
+                <div className="sdp-mur-revisio-panel__filtres" role="group" aria-label="Filtra per cas d'ús editorial">
+                  <Boto
+                    aria-pressed={filtreCasUsWp === 'tots'}
+                    onClick={() => setFiltreCasUsWp('tots')}
+                  >
+                    Tots ({dadesRevisioWp.stats.total})
+                  </Boto>
+                  {CASOS_US_EDITORIALS.map((cas) => (
+                    <Boto
+                      key={cas.id}
+                      type="button"
+                      aria-pressed={filtreCasUsWp === cas.id}
+                      onClick={() => setFiltreCasUsWp(cas.id)}
+                    >
+                      {cas.icona} {cas.titol} ({dadesRevisioWp.stats.perCasUs[cas.id] || 0})
+                    </Boto>
+                  ))}
+                </div>
+              </header>
+              <div className="sdp-mur-revisio-panel__llista">
+                {dadesRevisioWp.articles.map((art) => (
+                  <article key={art.wp_id} className="sdp-mur-revisio-card" data-wp-id={art.wp_id}>
+                    <div className="sdp-mur-revisio-card__top">
+                      <strong>{art.title}</strong>
+                      <span className="sdp-mur-revisio-card__estat" data-estat={art.estat_revisio}>
+                        {art.estat_revisio === 'aprovat' ? '✅ Aprovat' : art.estat_revisio === 'amb_observacions' ? '📝 Amb observacions' : '⏳ Pendent'}
+                      </span>
+                    </div>
+                    <div className="sdp-mur-revisio-card__meta">
+                      <span>Ruta Pedra Seca: <code>{art.ruta_canonica}</code></span>
+                      {' · '}
+                      <a href={art.source_url} target="_blank" rel="noopener noreferrer">
+                        Original socdepoble.net ↗
+                      </a>
+                    </div>
+                    {art.casos_us_meta.length > 0 && (
+                      <div className="sdp-mur-revisio-card__insignies">
+                        {art.casos_us_meta.map((c) => (
+                          <span key={c.id} className="sdp-mur-revisio-badge">{c.icona} {c.titol}</span>
+                        ))}
+                      </div>
+                    )}
+                    <div className="sdp-mur-revisio-card__accions">
+                      <Boto
+                        onClick={() => {
+                          desaRevisioArticleImportat(art.wp_id, { estat: 'aprovat' });
+                          setVersioRevisioWp((v) => v + 1);
+                        }}
+                      >
+                        ✅ Aprovar
+                      </Boto>
+                      <Boto
+                        onClick={() => {
+                          desaRevisioArticleImportat(art.wp_id, { estat: 'amb_observacions', nota: 'Revisar maquetació Pedra Seca' });
+                          setVersioRevisioWp((v) => v + 1);
+                        }}
+                      >
+                        📝 Anotar observació
+                      </Boto>
+                    </div>
+                  </article>
+                ))}
+              </div>
+            </section>
+          )}
 
           {/* P1-64 · El Mapa Fotogràfic de les publicacions que es veuen (els
               filtres ?date= i ?category= de la graella), amb les fitxes dels

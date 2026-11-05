@@ -14,8 +14,9 @@ import { pintaAmbDiccionari } from './config/i18n.js';
 import { instalaFallbackDeBessones } from './config/fallbackBessones.js';
 import { llegeixConfigAmfitrio } from './config/configAmfitrio.js';
 import { fixaCarregadorLliure, fixaTraductorLliure } from './data/traductorDelLloc.js';
+import { NODE_ZERO_HTTP_ACTIU } from './data/node0/arrencadaNodeZero.js';
 
-const init = () => {
+const init = async () => {
   const arrel = document.getElementById('root');
   if (arrel && (!arrel.hasChildNodes() || arrel.innerHTML.trim() === '')) {
 
@@ -31,12 +32,19 @@ const init = () => {
        dades del lloc propi entren per la capa del paquet, una via interna que
        cap amfitrió no abasta, amb les mateixes VITE_* de sempre. configura()
        només porta el que és del lloc (router i capçalera) i la sessió. */
-    fixaCapaDelPaquet({
-      supabaseUrl: import.meta.env.VITE_SUPABASE_URL,
-      supabaseAnonKey: import.meta.env.VITE_SUPABASE_ANON_KEY,
-      dataMode: import.meta.env.VITE_DATA_MODE,
-      tenantId: import.meta.env.VITE_TENANT_ID
-    });
+    if (NODE_ZERO_HTTP_ACTIU) {
+      /* Opt-in immutable del build propi: l'adaptador queda instal·lat abans
+         de configurar la sessió o pintar. Una fallada atura esta arrencada. */
+      const { preparaArrencadaNodeZero } = await import('./data/node0/arrencadaNodeZero.js');
+      await preparaArrencadaNodeZero();
+    } else {
+      fixaCapaDelPaquet({
+        supabaseUrl: import.meta.env.VITE_SUPABASE_URL,
+        supabaseAnonKey: import.meta.env.VITE_SUPABASE_ANON_KEY,
+        dataMode: import.meta.env.VITE_DATA_MODE,
+        tenantId: import.meta.env.VITE_TENANT_ID
+      });
+    }
     /* IDEA-31 (QA-R2-13) · El Traductor Sobirà del lloc propi. VITE_TRADUCTOR_URL
        declara un servei en qualsevol build; el servidor de desenvolupament
        (http://localhost:3340) servix /__iaia/traduir i ho diu amb
@@ -86,7 +94,8 @@ const init = () => {
     /* Onada 12 (261011; ordres 261011_0130, punt 7) · Una arrencada fallida
        (el tros de l'adaptador que no baixa) no queda com un rebuig sense amo:
        les vistes ja el reben per quanLlest(), que hi torna en el reintent. */
-    arrenca().catch((e) => console.error('[main] Arrencada fallida:', e));
+    if (NODE_ZERO_HTTP_ACTIU) await arrenca();
+    else arrenca().catch((e) => console.error('[main] Arrencada fallida:', e));
 
     const root = createRoot(arrel);
 
@@ -98,10 +107,11 @@ const init = () => {
   }
 };
 
+const inicia = () => { init().catch((e) => console.error('[main] Arrencada fallida:', e)); };
 if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', init);
+  document.addEventListener('DOMContentLoaded', inicia);
 } else {
-  init();
+  inicia();
 }
 
 /* Fase 0 de l'empaquetat mòbil (261003): la PWA és de l'entrada pròpia i de

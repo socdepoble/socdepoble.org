@@ -167,6 +167,8 @@
   --sdp-accent-text:       var(--sdp-primary-700);  /*  5,51:1 · AA  (interacció) */
   --sdp-accent-text-hover: var(--sdp-primary-800);  /*  7,97:1 · AAA */
   --sdp-accent-titol:      var(--sdp-primary-700);  /*  5,51:1 · AA (h2, h4) */
+  --sdp-accent-control:       var(--sdp-primary-700);
+  --sdp-accent-control-hover: var(--sdp-primary-800);
 
   /* Acció · blau */
   --sdp-accio:         var(--sdp-secondary-500);

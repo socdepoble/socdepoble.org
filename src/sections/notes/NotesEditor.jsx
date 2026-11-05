@@ -242,7 +242,7 @@ export default function NotesEditor({ activeNote, onToast = null }) {
     heroAlt: t("section.notes.editor.portadaAlt", "Una llibreta oberta amb algú escrivint"),
     content: NOTA_BENVINGUDA.content,
     labels: etiquetesDeNota(NOTA_BENVINGUDA, noteFolders, SENSE_PARAMS),
-    copyright: `© ${t('section.detail.mur.author', 'Sóc de Poble')}`,
+    copyright: NOTA_BENVINGUDA.copyright,
     /* Gauntlet 261030 (cicle 3, traduir-perfil-lectura-fitxa-no-publica) ·
        La nota de benvinguda és text del sistema, públic: Traduir hi continua
        actiu (DocumentEditor · EmptyDocumentPage només el deixa actiu amb la
@@ -337,13 +337,16 @@ export default function NotesEditor({ activeNote, onToast = null }) {
   const documents = useMemo(() => (esSandbox ? [sandbox, ...notes] : notes), [esSandbox, sandbox, notes]);
   /* T7 (P5/P8) · Contracte amb el Lot A: { id, nom, parentId }. Amb parentId,
      DialegCarpeta pinta l'arbre amb sagnat; la llavor és plana i es veu igual. */
+  const [carpetesLocals, setCarpetesLocals] = useState(CAP);
   const carpetes = useMemo(() => {
     const llista = noteFolders?.length ? noteFolders : NOTE_FOLDERS_SEED;
     /* P1-22 · El nom de sèrie en la llengua de l'app (nomDeCarpeta); l'id és el que es desa. */
-    return llista.filter((f) => String(f.id) !== 'f-tot').map((f) => ({
+    const base = llista.filter((f) => String(f.id) !== 'f-tot').map((f) => ({
       id: String(f.id), nom: nomDeCarpeta(f, t), parentId: f.parentId == null ? null : String(f.parentId)
     }));
-  }, [noteFolders, t]);
+    const extres = carpetesLocals.filter((extra) => !base.some((c) => c.id === extra.id));
+    return [...base, ...extres];
+  }, [noteFolders, t, carpetesLocals]);
   const classificacio = useMemo(() => (notaEnEdicio ? classificacioDe(notaEnEdicio) : null), [notaEnEdicio]);
   const carpetaId = String(notaEnEdicio?.folderId ?? CARPETA_PER_DEFECTE);
   /* IDEA-61 (T0) · La fitxa d'àmbit de la nota ({ ambit, estat, dades } net,
@@ -386,7 +389,10 @@ export default function NotesEditor({ activeNote, onToast = null }) {
      l'àmbit en dos casos (carpetaAmbit.js): moure la nota a la carpeta del
      Mercat li posa l'àmbit Mercat, i traure-la'n cap a la del Mur amb l'àmbit
      Mercat la torna al Mur (cap fitxa). En la mateixa escriptura. */
-  const desaCarpeta = useCallback((id) => {
+  const desaCarpeta = useCallback((id, nomNou = null) => {
+    if (nomNou) {
+      setCarpetesLocals((prev) => (prev.some((c) => c.id === id) ? prev : [...prev, { id: String(id), nom: nomNou, parentId: null }]));
+    }
     if (notaEnEdicio && id && id !== carpetaId) {
       const canvis = { folderId: id };
       const ambitNou = sincronitzaAmbit ? ambitPerCanviDeCarpeta({
@@ -701,13 +707,16 @@ export default function NotesEditor({ activeNote, onToast = null }) {
           etiquetes={classificacio.tags}
           emoticona={notaEnEdicio?.icon || ''}
           etiquetaEmoticona={t("section.notes.editor.emojis", "Emojis XL")}
-          /* IDEA-61 (T0) · El grup «Àmbit»: dins del Bloc (canal) o amb fitxa. */
-          ambit={ambAmbit ? {
-            text: t('editor.ambit.boto', 'Àmbit'),
-            valor: fitxaDAmbit ? etiquetaDAmbit(fitxaDAmbit.ambit, t) : '',
-            nom: fitxaDAmbit ? omple(t('editor.ambit.actual', 'Àmbit: {ambit}'), { ambit: etiquetaDAmbit(fitxaDAmbit.ambit, t) }) : ''
-          } : undefined}
-          /* O4-CLAUDE-1 · «Àmbit» no obri cap diàleg: porta al bloc en línia. */
+          enLinia={{
+            carpetaId,
+            carpetes,
+            onCanviaCarpeta: desaCarpeta,
+            catalegCategories: cataleg(documents, 'categories', CATEGORIES_BASE),
+            onCanviaCategories: (valors) => desaValors('categories', valors),
+            categoriaGeneral: CATEGORIA_GENERAL,
+            catalegEtiquetes: cataleg(documents, 'tags', ETIQUETES_BASE),
+            onCanviaEtiquetes: (valors) => desaValors('tags', valors),
+          }}
           onObri={obriClassificacio}
         />
       ) : null,
@@ -748,7 +757,7 @@ export default function NotesEditor({ activeNote, onToast = null }) {
       /* Ordre del Mestre (261007) · L'autoria de la barra taronja porta a la
          pàgina de qui signa, també a l'estat buit (la benvinguda). */
       barAuthorHref: signatura.ruta,
-      copyright: `© ${t('section.detail.mur.author', 'Sóc de Poble')}`,
+      copyright: NOTA_BENVINGUDA.copyright,
       posicioEines: 'davall-entradilla',
       /* T7 (ordre del Mestre, 261004) · Targetes incrustades al cos: l'ordre
          «/» «Targeta». Sempre present (constant): l'esquema no es reconstruïx. */
@@ -784,7 +793,7 @@ export default function NotesEditor({ activeNote, onToast = null }) {
          l'ordre «/» Emoji. Totes dues funcions són estables (canalEmojis.js). */
       ...(canalEmojis ? { registraInsercio: canalEmojis.registra, obreEmojis: canalEmojis.obri } : {})
     };
-  }, [notaEnEdicio, documentPerAlEditor, esSandbox, esPreparada, creacioPreparada, escriuPreparada, desaPreparada, senseSessio, actor, actorId, autoria, memberships, actualitzaSandbox, setLocalNoteField, saveNoteField, publishNote, compartirNota, connexio, dretsReservats, dretsDeLOriginal, extern, citaOrigen, pucBorrar, obriBorrar, noteFolders, t, signatura, emptyDocument, config, classificacio, carpetes, carpetaId, estatDesament, dataNomesAlDispositiu, targetes, canalEmojis, asseguraNormes, memoriaOral, ambAmbit, fitxaDAmbit, obriClassificacio, documentDePrevisualitzacio, desaAmbit, errorsAmbit, peticioAmbit, peticioAmbitAtesa]);
+  }, [notaEnEdicio, documentPerAlEditor, esSandbox, esPreparada, creacioPreparada, escriuPreparada, desaPreparada, senseSessio, actor, actorId, autoria, memberships, actualitzaSandbox, setLocalNoteField, saveNoteField, publishNote, compartirNota, connexio, dretsReservats, dretsDeLOriginal, extern, citaOrigen, pucBorrar, obriBorrar, noteFolders, t, signatura, emptyDocument, config, classificacio, carpetes, carpetaId, desaCarpeta, desaValors, documents, CATEGORIES_BASE, ETIQUETES_BASE, estatDesament, dataNomesAlDispositiu, targetes, canalEmojis, asseguraNormes, memoriaOral, ambAmbit, fitxaDAmbit, obriClassificacio, documentDePrevisualitzacio, desaAmbit, errorsAmbit, peticioAmbit, peticioAmbitAtesa]);
 
   // Reanomenar i esborrar necessiten veure totes les notes: amb el llistat a
   // mitges, una nota no carregada es quedaria amb el nom vell.

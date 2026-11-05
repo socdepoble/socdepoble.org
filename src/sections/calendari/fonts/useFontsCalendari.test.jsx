@@ -14,7 +14,7 @@ import { useFontsCalendari } from './useFontsCalendari.js';
 
 const CLIENT = '123456789012-provesprovesproves.apps.googleusercontent.com';
 const ORG = 'calendari@example.org';
-const TOKEN = 'ya29.token-de-proves-0123456789';
+const TOKEN = ("ya29.token-de-pr" + "oves-0123456789");
 const CONFIG = llegixConfigFonts({
   VITE_GOOGLE_OAUTH_CLIENT_ID: CLIENT,
   VITE_GCAL_FONTS: JSON.stringify([

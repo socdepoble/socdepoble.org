@@ -34,7 +34,7 @@ import { buildDetailSectionMeta, imatgePropiaDelDetall } from './detailSectionMe
 import { autorDe, rutaDePerfilDAutor } from '../../config/navigation.js';
 import { resolveAsset } from '../../config/assetResolver.js';
 import {
-  COPYRIGHT_SDP, COPYRIGHT_VIQUIPEDIA, RUTA_CALENDARI, dataDElement, dataHoraDeBarra, rutaCalendariDeLaData
+  COPYRIGHT_SDP, COPYRIGHT_VIQUIPEDIA, RUTA_CALENDARI, dataDElement, dataHoraDeBarra, insigniaDeCalendari, rutaCalendariDeLaData
 } from '../../components/universal/editorial.js';
 import { acteAEsdeveniment } from '../mur/agendaMur.js';
 import { DEFAULT_AUTHOR, esAvatarSegur, esMarcaDeLEntitat, esRutaDelProjecte } from '../../components/universal/UniversalUtils.js';
@@ -189,12 +189,26 @@ function etiquetaDeLaSeccio(section, item) {
   return ruta === RUTA_CALENDARI ? etiqueta : { ...etiqueta, className: 'sdp-badge-system sp-card-label--enllac', href: ruta };
 }
 
+/* AH-20 (IDEA-77, 261105) · El quadrat de 128×128 px d'un acte d'agenda
+   (SquareBadge) també es pinta dalt a la dreta de header.page-title a la
+   UniversalPage. Calcula exactament la mateixa insígnia que EventCard. */
+function insigniaDElement(section, item) {
+  const esActe = section?.listPath === RUTA_CALENDARI || item?.type === 'event' || Boolean(item?.calendar_badge);
+  if (!esActe) return null;
+  const esdeveniment = acteAEsdeveniment(item);
+  const { dateTime } = esdeveniment && item?.boinaDataPublicacio !== true
+    ? dataHoraDeBarra({ publicat: esdeveniment.totElDia ? esdeveniment.inici.data : esdeveniment.inici.dataHora })
+    : dataDElement(item);
+  return insigniaDeCalendari(esdeveniment, dateTime, item);
+}
+
 /** Les props de la UniversalPage d'un element: les de la pàgina de detall
  *  (ItemDetailSection), sense les accions ni chrome. L'autoria aporta el logotip. */
 export function paginaDElement(section, item) {
   const titol = section.getTitle(item);
   const rutaDAutoria = rutaDePerfilDAutor(item);
   const logoPropi = logoEntitatDElement(item);
+  const calendarBadge = insigniaDElement(section, item);
   /* Onada 5 (ordre del Mestre, 261008) · Les metes no porten id: un poble es
      reconeix per la seua llista (listPath), com esSeccioDelMur. Abans es
      mirava section.id === 'pobles', que no era cert mai, i la barra taronja
@@ -287,6 +301,7 @@ export function paginaDElement(section, item) {
     /* T4: l'autoria de la barra taronja enllaça al perfil públic de qui signa.
        Onada 8 (261009) · La d'un poble, a la seua fitxa (getAuthorHref). */
     authorHref: section.getAuthorHref ? section.getAuthorHref(item) : rutaDAutoria,
+    ...(calendarBadge ? { calendarBadge } : {}),
     /* T51 · la regla de data viu a editorial.js (pura, sense React). */
     ...dataDElement(item)
   };

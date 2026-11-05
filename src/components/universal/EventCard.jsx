@@ -1,9 +1,11 @@
 import { UniversalCard } from './../PedraSeca';
 import { resolveAsset } from '../../config/assetResolver';
-import { COPYRIGHT_SDP, RUTA_CALENDARI, dataDElement, dataHoraDeBarra, rutaCalendariDeLaData } from './editorial.js';
+import { COPYRIGHT_SDP, RUTA_CALENDARI, dataDElement, dataHoraDeBarra, insigniaDeCalendari, rutaCalendariDeLaData } from './editorial.js';
 import { DEFAULT_AUTHOR } from './UniversalUtils.js';
 import { esRutaInterna } from '../../config/objecteConnectable.js';
 import { fontImatgePropia, fontVideoPropia } from '../../utils/sanitize.js';
+
+export { insigniaDeCalendari };
 
 /**
  * T5 (ordre del Mestre, 260930) · Les fonts de la pastilla d'un acte del
@@ -31,47 +33,6 @@ function dataDeLActe(esdeveniment, item) {
   if (!esdeveniment || item?.boinaDataPublicacio === true) return dataDElement(item);
   const data = dataHoraDeBarra(fontsDeLActe(esdeveniment));
   return { ...data, time: data.time || horaEscrita(esdeveniment, item) };
-}
-
-/* seguretat-01 (261104) · El text d'una peça de `calendar_badge`: una cadena,
-   tal qual; un número finit, el seu text (com abans, amb String()); una peça
-   buida (0, ''), cap; qualsevol altra cosa (un objecte, una llista, un booleà),
-   cap, i la insígnia hi posa la reserva de quan falta. */
-const pecaDeLaInsignia = (valor) => (valor && (typeof valor === 'string' || Number.isFinite(valor)) ? String(valor) : '');
-
-/* La insígnia només diu el dia en què passa l'acte: sense acte, cap. El dia
-   és el de la pastilla (el seu dateTime local) i el nom del mes, el d'eixe dia
-   al calendari local. Quan l'acte és multi-dia i porta `calendar_badge` o
-   quan la boina mostra la data de publicació (`boinaDataPublicacio`), el
-   quadrat negre reflectix el rang de dates del curs o l'inici de l'acte.
-   seguretat-01 (261104) · Defensa en profunditat: el traductor d'entrada
-   (mapejadorSeccions.js) ja neteja la insígnia d'una publicació d'un veí, però
-   la llavor i app_content no hi passen. Cada peça es llig amb pecaDeLaInsignia
-   i mai es fa String() d'un objecte: un {"toString":0} dins de `dia` tombava
-   la targeta i, amb ella, el Mur i el Calendari sencers. */
-function insigniaDeCalendari(esdeveniment, dateTime, item = null) {
-  if (!esdeveniment && !item?.calendar_badge) return null;
-  const iniciClau = (esdeveniment?.inici?.data || esdeveniment?.inici?.dataHora || dateTime || '').slice(0, 10);
-  if (item?.calendar_badge && typeof item.calendar_badge === 'object') {
-    const cb = item.calendar_badge;
-    const label = pecaDeLaInsignia(cb.label);
-    return {
-      dia: pecaDeLaInsignia(cb.dia),
-      mes: pecaDeLaInsignia(cb.mes),
-      any: pecaDeLaInsignia(cb.any) || iniciClau.slice(0, 4),
-      dateTime: pecaDeLaInsignia(cb.dateTime) || iniciClau,
-      ...(label ? { label } : {})
-    };
-  }
-  if (!esdeveniment || !dateTime) return null;
-  const clau = item?.boinaDataPublicacio ? iniciClau : dateTime.slice(0, 10);
-  const [any, mes, dia] = clau.split('-').map(Number);
-  return {
-    dia: String(dia),
-    mes: new Date(any, mes - 1, dia).toLocaleDateString('ca-ES', { month: 'long' }).toUpperCase(),
-    any: String(any),
-    dateTime: clau
-  };
 }
 
 /* Onada 6 · La classe de l'etiqueta que porta a una pàgina: la píndola fa

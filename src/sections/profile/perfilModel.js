@@ -1,4 +1,4 @@
-import { Bot, Building2, UserRound, Users } from 'lucide-react';
+import { Bot, Building2, Shield, UserRound, Users } from 'lucide-react';
 import { ESTATS_APLICACIO } from './aplicacions.js';
 import { avatarDeLaFitxa, pobleDeFitxa, potEditarFitxa } from './fitxaDePerfil.js';
 import { documentDeFitxa } from './perfilCamps.js';
@@ -18,6 +18,9 @@ import { documentDeFitxa } from './perfilCamps.js';
 
 /** Opció i element de «GRUPS I EMPRESES» quan la persona no en té cap. */
 export const SENSE_ORGANITZACIONS = 'sense-organitzacions';
+
+/** AH-29 (IDEA-89) · Entrada «🛡️ Administració del sistema» davall de la persona a la Columna 1 (PERFIL). */
+export const ID_ADMINISTRACIO_SISTEMA = 'administracio-sistema';
 
 /** Id de categoria d'una aplicació: prefixat, perquè no xoque amb cap organització. */
 export const idAplicacio = (id) => `app-${id}`;
@@ -70,7 +73,8 @@ export { PARAM_FITXA_ORGANITZACIO, rutaFitxaOrganitzacio } from '../../config/na
 export function seleccioInicialDePerfil(identitats, preferides = []) {
   const seleccionables = identitats.filter((identitat) => !esPersona(identitat));
   const triada = preferides.find((id) => id != null && id !== ''
-    && seleccionables.some((identitat) => String(identitat.id) === String(id)));
+    && (String(id) === ID_ADMINISTRACIO_SISTEMA
+      || seleccionables.some((identitat) => String(identitat.id) === String(id))));
   return { categoryId: triada != null ? String(triada) : 'jo' };
 }
 
@@ -94,12 +98,25 @@ const opcioDe = (identitat, order) => ({
   order,
 });
 
-/** Primera columna: persona, GRUPS I EMPRESES i APLICACIONS, en este ordre. */
+/** Primera columna: persona (amb 🛡️ Administració del sistema davall), GRUPS I EMPRESES i APLICACIONS, en este ordre. */
 export function navegacioDePerfil(identitats, aplicacions = []) {
+  const persones = identitats.filter(esPersona).map(opcioDe);
   const organitzacions = identitats.filter(esOrganitzacio);
   const agents = identitats.filter(esAgent);
   const grups = [
-    { id: 'persona', label: null, options: identitats.filter(esPersona).map(opcioDe) },
+    {
+      id: 'persona',
+      label: null,
+      options: [
+        ...persones,
+        {
+          id: ID_ADMINISTRACIO_SISTEMA,
+          label: '🛡️ Administració del sistema',
+          icon: Shield,
+          order: persones.length,
+        },
+      ],
+    },
     {
       id: 'organitzacions',
       label: 'GRUPS I EMPRESES',
@@ -303,5 +320,79 @@ export function itemsDAplicacions(aplicacions = []) {
     data: { vista: 'aplicacio', aplicacioId: aplicacio.id },
   }));
 }
+
+export const ICONES_ADMINISTRACIO_SISTEMA = Object.freeze({
+  taxonomia: '\u{1F3F7}\u{FE0F}', // 🏷️
+  importacio: '\u{1F4E5}', // 📥
+  crom: '\u{1F3A8}', // 🎨
+  vistesColumnes: '\u{2699}\u{FE0F}', // ⚙️
+  nodesFedivers: '\u{1F310}', // 🌐
+  empaquetats: '\u{1F4E6}', // 📦
+});
+
+/**
+ * AH-29 (IDEA-89) · Els 6 apartats d'«🛡️ Administració del sistema» a la Columna 2 (APARTATS).
+ * El primer apartat per defecte és «🏷️ Taxonomia: Categories i Etiquetes» (Laboratori Doctoral).
+ */
+export function itemsDAdministracioSistema() {
+  const categoryIds = [ID_ADMINISTRACIO_SISTEMA];
+  return [
+    {
+      id: 'admin-taxonomia',
+      categoryIds,
+      title: '🏷️ Taxonomia: Categories i Etiquetes',
+      subtitle: 'Laboratori Doctoral de Biblioteconomia i Classificació · 114 categories i 105 etiquetes',
+      icon: ICONES_ADMINISTRACIO_SISTEMA.taxonomia,
+      searchText: 'taxonomia categories etiquetes biblioteconomia classificacio ranganathan skos tesaurus',
+      data: { vista: 'admin-taxonomia' },
+    },
+    {
+      id: 'admin-importacio',
+      categoryIds,
+      title: '📥 Importació i Revisió Editorial',
+      subtitle: 'Tauler de revisió d’administrador per als 425 articles i 18 pàgines de socdepoble.net i Blogger',
+      icon: ICONES_ADMINISTRACIO_SISTEMA.importacio,
+      searchText: 'importacio revisio editorial wordpress blogger 425 articles socdepoble.net',
+      data: { vista: 'admin-importacio' },
+    },
+    {
+      id: 'admin-crom',
+      categoryIds,
+      title: '🎨 Colors i disseny (Crom del sistema)',
+      subtitle: 'Color principal, Accent, Acció, Aplicar, Desar i Tornar al cànon',
+      icon: ICONES_ADMINISTRACIO_SISTEMA.crom,
+      searchText: 'colors disseny crom del sistema principal accent accio aplicar desar canon',
+      data: { vista: 'admin-crom' },
+    },
+    {
+      id: 'admin-vistes-columnes',
+      categoryIds,
+      title: '⚙️ Ajustos de vistes i columnes',
+      subtitle: 'Amplada de les columnes i carpetes visibles a la navegació',
+      icon: ICONES_ADMINISTRACIO_SISTEMA.vistesColumnes,
+      searchText: 'ajustos vistes columnes amplada carpetes visibles roda dentada',
+      data: { vista: 'admin-vistes-columnes' },
+    },
+    {
+      id: 'admin-nodes-fedivers',
+      categoryIds,
+      title: '🌐 Nodes, Fedivers i Resiliència 3-2-1',
+      subtitle: 'Estat de Node 0 PostgreSQL 17.11, pont ActivityPub @depoble@mastodont.cat i còpia 3-2-1 xifrada amb age',
+      icon: ICONES_ADMINISTRACIO_SISTEMA.nodesFedivers,
+      searchText: 'nodes fedivers resiliencia 3-2-1 node 0 postgresql activitypub mastodon age',
+      data: { vista: 'admin-nodes-fedivers' },
+    },
+    {
+      id: 'admin-empaquetats',
+      categoryIds,
+      title: '📦 Empaquetats i Desplegament (Mode Jarvis)',
+      subtitle: 'Connector WordPress .zip, PWA i estat de les portes de verificació',
+      icon: ICONES_ADMINISTRACIO_SISTEMA.empaquetats,
+      searchText: 'empaquetats desplegament mode jarvis wordpress zip pwa portes verificacio',
+      data: { vista: 'admin-empaquetats' },
+    },
+  ];
+}
+
 
 

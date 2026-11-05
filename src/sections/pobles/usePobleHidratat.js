@@ -6,12 +6,12 @@
  * este navegador (cauDeViquipedia.js). Només LLEGIXEN la cau: cap petició a
  * Wikimedia (això només ho fa el panell, després d'un clic), cap escriptura.
  *
- * Llei del Píxel: amb una fitxa completa (totes les de la llavor) es torna el
+ * Llei del Píxel: amb una fitxa completa o una llavor editorial revisada es torna el
  * MATEIX objecte (o la mateixa llista), no s'importa la cau i no s'obri cap
  * base IndexedDB.
  */
 import { useEffect, useMemo, useReducer } from 'react';
-import { clauDeViquipedia, fitxaCompleta, fusionaAmbViquipedia } from './fitxaDelPoble.js';
+import { clauDeViquipedia, fitxaCompleta, fusionaAmbViquipedia, fusionaAmbFitxaEditorial } from './fitxaDelPoble.js';
 
 let promesa = null;
 let cauCarregada = null;
@@ -65,19 +65,25 @@ const hidrata = (cau, town) => {
 
 /** La fitxa d'un poble amb els buits omplits per la cau, o la mateixa fitxa. */
 export function usePobleHidratat(item, actiu = true) {
-  const clau = actiu ? clauDe(item) : null;
+  const editorial = useMemo(() => actiu ? fusionaAmbFitxaEditorial(item) : item, [item, actiu]);
+  const clau = actiu ? clauDe(editorial) : null;
   const instantania = useCauDeLesClaus(clau ? [clau] : CAP);
-  return useMemo(() => (instantania.cau && clau ? hidrata(instantania.cau, item) : item), [instantania, clau, item]);
+  return useMemo(() => (instantania.cau && clau ? hidrata(instantania.cau, editorial) : editorial), [instantania, clau, editorial]);
 }
 
 /** La llista de /pobles amb els buits omplits; la mateixa llista si no cal. */
 export function usePoblesHidratats(llista) {
-  const claus = useMemo(() => (Array.isArray(llista) ? [...new Set(llista.map(clauDe).filter(Boolean))] : CAP), [llista]);
+  const editorials = useMemo(() => {
+    if (!Array.isArray(llista)) return llista;
+    const noves = llista.map(fusionaAmbFitxaEditorial);
+    return noves.some((town, i) => town !== llista[i]) ? noves : llista;
+  }, [llista]);
+  const claus = useMemo(() => (Array.isArray(editorials) ? [...new Set(editorials.map(clauDe).filter(Boolean))] : CAP), [editorials]);
   const instantania = useCauDeLesClaus(claus);
   return useMemo(() => {
     const { cau } = instantania;
-    if (!cau || !claus.length) return llista;
-    const resultat = llista.map((town) => hidrata(cau, town));
-    return resultat.some((town, i) => town !== llista[i]) ? resultat : llista;
-  }, [llista, instantania, claus]);
+    if (!cau || !claus.length) return editorials;
+    const resultat = editorials.map((town) => hidrata(cau, town));
+    return resultat.some((town, i) => town !== editorials[i]) ? resultat : editorials;
+  }, [editorials, instantania, claus]);
 }

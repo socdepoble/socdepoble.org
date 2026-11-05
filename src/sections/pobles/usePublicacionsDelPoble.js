@@ -2,7 +2,7 @@
  * usePublicacionsDelPoble.js · Onada 6 (pla 261009_0245, ítem 5; prompt
  * 261009_0230, punt 6) · Les targetes que la gent d'un poble ha publicat des
  * del poble (Mur, Agenda i Mercat), per a la pestanya «Gent de …» de la seua
- * pàgina.
+ * pàgina. AH-17 reutilitza el filtre amb la vista Tot / Gent / Xarxa.
  *
  * Cap petició nova i cap lògica de dades nova (lliçó 261007: es reutilitza la
  * maquinària que ja existix): les dades són les del Mur (useMur → MurContext
@@ -34,18 +34,22 @@ const senseTraduccio = (_clau, reserva) => reserva;
  * «Gent de …» ja nomena el panell (aria-labelledby) i, com mana el requisit,
  * la vista mostra només les targetes. Cap nom de poble ací.
  */
-export function textosDelPoble(t = senseTraduccio) {
+export function textosDelPoble(t = senseTraduccio, pestanya = 'gent') {
   const tradueix = typeof t === 'function' ? t : senseTraduccio;
   return {
     titol: '',
-    buit: tradueix('section.detail.pobles.gent.buit', 'Encara no hi ha cap publicació des d’este poble.'),
+    buit: pestanya === 'tot'
+      ? tradueix('section.detail.pobles.tot.buit', 'Encara no hi ha publicacions d’este poble ni sobre ell.')
+      : pestanya === 'xarxa'
+        ? tradueix('section.detail.pobles.xarxa.buit', 'Encara no hi ha publicacions de fora que parlen d’este poble.')
+        : tradueix('section.detail.pobles.gent.buit', 'Encara no hi ha cap publicació des d’este poble.'),
     carregant: tradueix('section.detail.pobles.gent.carregant', 'Carregant les publicacions del poble…'),
     error: tradueix('section.detail.pobles.gent.error', 'No s’han pogut carregar les publicacions del poble')
   };
 }
 
 /** Les publicacions del poble `poble` (una fitxa de /pobles), amb l'estat, l'error i el Reintentar del Mur. */
-export function usePublicacionsDelPoble(poble) {
+export function usePublicacionsDelPoble(poble, pestanya = 'gent') {
   const mur = useMur();
   const { targetes: sistema, carregant: paginesCarregant } = usePaginesDelSistema();
   const delMur = mur?.feedPosts || CAP;
@@ -60,8 +64,8 @@ export function usePublicacionsDelPoble(poble) {
   const slug = textDe(poble?.slug);
   const nom = textDe(poble?.title || poble?.name);
   const elements = useMemo(
-    () => publicacionsDelPoble({ feedPosts, marketItems, events }, { id, slug, title: nom }),
-    [feedPosts, marketItems, events, id, slug, nom]
+    () => publicacionsDelPoble({ feedPosts, marketItems, events }, { id, slug, title: nom }, pestanya),
+    [feedPosts, marketItems, events, id, slug, nom, pestanya]
   );
   const estat = estatDelMur === 'ready' && paginesCarregant ? 'loading' : estatDelMur;
   const error = mur?.error ?? null;

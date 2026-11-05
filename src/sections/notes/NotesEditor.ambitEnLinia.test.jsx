@@ -103,15 +103,17 @@ test('dins de l’«Edició avançada», l’ordre exacte: capçalera > logotip 
   expect(saltats).toEqual([]);
 });
 
-test('?ambit=vehicle obri l’«Edició avançada» amb Compartir cotxe actiu i el bloc a la vista, la carpeta del Mur i el canal consumit', () => {
+test('?ambit=vehicle obri l’«Edició avançada» amb Compartir cotxe actiu i manté l’scroll a dalt de tot (AH-23), la carpeta del Mur i el canal consumit', () => {
   const consumit = vi.fn();
   const { container } = render(<BlocAmbAmbit pendent="vehicle" consumit={consumit}><NotaViva inicial={NOTA} /></BlocAmbAmbit>);
   expect(desplegable(container).open).toBe(true);
   const ranura = ranuraAmbit(container);
   expect(within(ranura).getByLabelText('Àmbit').value).toBe('vehicle');
   expect(within(ranura).getByLabelText('Lloc d’eixida (obligatori)')).toBeTruthy();
-  expect(saltats).toEqual([[ranura, { behavior: 'smooth', block: 'start' }]]);
-  // L'entrada no roba el focus: la vista hi va, la persona tria on escriure.
+  // AH-23 · L'entrada ?ambit= NO baixa la vista fins a ranura: manté l'inici a dalt (scrollTop = 0).
+  expect(saltats).toEqual([]);
+  expect(container.querySelector('.sdp-universal-page-container')?.scrollTop).toBe(0);
+  // L'entrada no roba el focus: la vista és a dalt, la persona tria on escriure.
   expect(ranura.contains(document.activeElement)).toBe(false);
   expect(mocks.setLocal.mock.calls).toEqual([
     ['p', 'fitxa', { ambit: 'vehicle', estat: 'disponible', dades: {} }],
@@ -123,7 +125,7 @@ test('?ambit=vehicle obri l’«Edició avançada» amb Compartir cotxe actiu i 
   act(() => { desplegable(container).open = false; });
   fireEvent.change(within(ranura).getByLabelText('Lloc d’eixida (obligatori)'), { target: { value: 'La Torre' } });
   expect(desplegable(container).open).toBe(false);
-  expect(saltats).toHaveLength(1);
+  expect(saltats).toEqual([]);
 });
 
 test('?ambit=mercat: la carpeta del Mercat i el Mercat actiu', () => {
@@ -136,7 +138,7 @@ test('?ambit=mercat: la carpeta del Mercat i el Mercat actiu', () => {
   ]);
 });
 
-test('sota StrictMode, l’entrada ?ambit= escriu, consumix i porta la vista una sola vegada', () => {
+test('sota StrictMode, l’entrada ?ambit= escriu, consumix i manté la vista a dalt una sola vegada', () => {
   const consumit = vi.fn();
   const { container } = render(
     <StrictMode>
@@ -150,10 +152,10 @@ test('sota StrictMode, l’entrada ?ambit= escriu, consumix i porta la vista una
     ['p', 'folderId', 'f-mur']
   ]);
   expect(consumit).toHaveBeenCalledTimes(1);
-  expect(saltats).toHaveLength(1);
+  expect(saltats).toEqual([]);
 });
 
-test('el botó «Àmbit» de la botonera porta al bloc en línia: vista i focus al selector de l’àmbit, sense cap diàleg', () => {
+test('AH-24 · la classificació de l’«Edició avançada» mostra 3 files en línia de 2 columnes (Carpeta, Categories, Etiquetes) sense xip redundant «Àmbit»', () => {
   const { container } = render(
     <CanalAmbitContext.Provider value={CANAL_BUIT}>
       <NotaViva inicial={{ ...NOTA, fitxa: { ambit: 'habitatge', estat: 'disponible', dades: {} } }} />
@@ -161,19 +163,17 @@ test('el botó «Àmbit» de la botonera porta al bloc en línia: vista i focus 
   );
   const details = desplegable(container);
   act(() => { details.open = true; });
-  const boto = within(details).getByRole('button', { name: 'Àmbit: Habitatge' });
-  expect(boto.hasAttribute('aria-haspopup')).toBe(false);
-  fireEvent.click(boto);
+  const classif = details.querySelector('.page-title-classificacio');
+  expect(within(classif).queryByRole('button', { name: /Àmbit/i })).toBeNull();
+  expect(within(classif).getByLabelText('Carpeta').value).toBe('f-notes');
+  expect(within(classif).getByLabelText('Crear nova carpeta')).toBeTruthy();
+  expect(within(classif).getByLabelText('Categories')).toBeTruthy();
+  expect(within(classif).getByLabelText('Crear nova categoria')).toBeTruthy();
+  expect(within(classif).getByLabelText('Etiquetes')).toBeTruthy();
+  expect(within(classif).getByLabelText('Crear nova etiqueta')).toBeTruthy();
+  expect(within(classif).getByRole('button', { name: 'Llevar «Sistema»' })).toBeTruthy();
+  expect(within(classif).getByRole('button', { name: /Emojis XL/ })).toBeTruthy();
   expect(screen.queryByRole('dialog')).toBeNull();
-  const ranura = ranuraAmbit(container);
-  expect(saltats).toEqual([[ranura, { behavior: 'smooth', block: 'start' }]]);
-  expect(document.activeElement).toBe(within(ranura).getByLabelText('Àmbit'));
-  // Cada clic hi torna.
-  boto.focus();
-  fireEvent.click(boto);
-  expect(saltats).toHaveLength(2);
-  expect(document.activeElement).toBe(within(ranura).getByLabelText('Àmbit'));
-  expect(mocks.setLocal).not.toHaveBeenCalled();
 });
 
 test('la còpia de prova del Foraster i una obra d’altri: l’«Edició avançada» sense el bloc', () => {

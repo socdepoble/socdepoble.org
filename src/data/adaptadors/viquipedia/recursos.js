@@ -124,9 +124,23 @@ function poblacioDe(entitat) {
     }))
     .filter((d) => Number.isSafeInteger(d.valor) && d.valor >= 0);
   const preferent = amb.find((d) => d.rank === 'preferred');
-  if (preferent) return preferent.valor;
+  if (preferent) return preferent;
   const [mesRecent] = amb.sort((a, b) => (a.quan < b.quan ? 1 : a.quan > b.quan ? -1 : 0));
-  return mesRecent ? mesRecent.valor : null;
+  return mesRecent || null;
+}
+
+/* AH-27 · les magnituds conserven unitat: metres i km². Una unitat
+   desconeguda no es convertix per intuïció. */
+function quantitatDe(entitat, propietat, factors) {
+  const valors = declaracions(entitat, propietat).map(d => ({ rank: d.rank, valor: d.mainsnak.datavalue?.value }))
+    .filter(d => typeof d.valor?.amount === 'string' && Number.isFinite(Number(d.valor.amount)) && Object.hasOwn(factors, d.valor.unit));
+  const seleccionat = valors.find(d => d.rank === 'preferred') || valors[0];
+  return seleccionat ? Number(seleccionat.valor.amount) * factors[seleccionat.valor.unit] : null;
+}
+function gentiliciDe(entitat) {
+  const declarats = declaracions(entitat, 'P1549').map(d => d.mainsnak.datavalue?.value)
+    .filter(v => v?.language === 'ca' && typeof v.text === 'string' && v.text.trim());
+  return [...new Set(declarats.map(v => v.text.trim()))].slice(0, 4).join(' / ') || null;
 }
 
 function coordenadesDe(entitat) {
@@ -144,13 +158,21 @@ function entitatsDe(payload) {
 function traductorDEntitats(payload) {
   return congela(entitatsDe(payload).map((entitat) => {
     const ine = primerText(entitat, 'P772');
+    const poblacio = poblacioDe(entitat);
+    const anyPoblacio = /^\+(\d{4})-/.exec(poblacio?.quan || '');
     return congela({
       qid: entitat.id,
       etiqueta: text(entitat.labels?.ca?.value),
       titolCawiki: text(entitat.sitelinks?.cawiki?.title),
       esMunicipi: valorsItem(entitat, 'P31').includes(MUNICIPI_D_ESPANYA),
       ine: ine && CODI_INE.test(ine) ? ine : null,
-      poblacio: poblacioDe(entitat),
+      poblacio: poblacio?.valor ?? null,
+      poblacioAny: anyPoblacio ? Number(anyPoblacio[1]) : null,
+      altitud: quantitatDe(entitat, 'P2044', { 'http://www.wikidata.org/entity/Q11573': 1, 'https://www.wikidata.org/entity/Q11573': 1 }),
+      superficie: quantitatDe(entitat, 'P2046', { 'http://www.wikidata.org/entity/Q712226': 1, 'https://www.wikidata.org/entity/Q712226': 1, 'http://www.wikidata.org/entity/Q25343': 0.000001, 'https://www.wikidata.org/entity/Q25343': 0.000001 }),
+      gentilici: gentiliciDe(entitat),
+      p94: nomDeFitxer(primerText(entitat, 'P94')),
+      descripcio: text(entitat.descriptions?.ca?.value),
       p18: nomDeFitxer(primerText(entitat, 'P18')),
       insignies: insigniesDe(entitat),
       p131: congela(valorsItem(entitat, 'P131')),

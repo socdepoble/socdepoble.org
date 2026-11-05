@@ -116,6 +116,23 @@ describe('els àlies de la fitxa visitada', () => {
     expect([tipusAutorDeLaFitxa({ tipus: 'grup' }), tipusAutorDeLaFitxa({ tipus: 'persona' }), tipusAutorDeLaFitxa({ tipus: 'ia' })])
       .toEqual(['entitat', 'persona', null]);
   });
+
+  test('IDEA-73 · sincronitza username, handle i alies declarats de la fitxa sense permetre usurpar claus fundacionals (F6)', () => {
+    const entitatImportada = {
+      tipus: 'entitat',
+      id: 'org-import-1',
+      username: '@cooperativa_benimassot',
+      handle: 'coop-benimassot',
+      alies: ['wp-author-coop', ENTITAT_PILOT_SLUG]
+    };
+    const alies = aliesDeLaFitxa(entitatImportada);
+    expect(alies.has('org-import-1')).toBe(true);
+    expect(alies.has('cooperativa_benimassot')).toBe(true);
+    expect(alies.has('coop-benimassot')).toBe(true);
+    expect(alies.has('wp-author-coop')).toBe(true);
+    /* Invariant F6: cap entitat espuria s'emporta la clau fundacional socdepoble. */
+    expect(alies.has(ENTITAT_PILOT_SLUG)).toBe(false);
+  });
 });
 
 describe('l’aparador', () => {

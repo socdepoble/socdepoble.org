@@ -387,3 +387,51 @@ test('T7 · carpetes niades: arbre amb sagnat, camí al nom accessible i una sol
   fireEvent.click(screen.getByRole('button', { name: 'Desar' }));
   expect(onDesa).toHaveBeenCalledWith('antigravity');
 });
+
+test('AH-24 · BotoneraClassificacio amb enLinia: 3 files de 2 columnes (Carpeta, Categories, Etiquetes) amb creació en línia i píndoles amb ×', () => {
+  const onCanviaCarpeta = vi.fn();
+  const onCanviaCategories = vi.fn();
+  const onCanviaEtiquetes = vi.fn();
+  render(
+    <BotoneraClassificacio
+      carpeta="Mur"
+      categories={['Sistema', 'Hort']}
+      etiquetes={['Reg']}
+      emoticona="🌿"
+      etiquetaEmoticona="Emojis XL"
+      enLinia={{
+        carpetaId: 'f-mur',
+        carpetes: ARBRE,
+        onCanviaCarpeta,
+        catalegCategories: ['Sistema', 'Hort', 'Cuina'],
+        onCanviaCategories,
+        categoriaGeneral: 'General',
+        catalegEtiquetes: ['Reg', 'Oli'],
+        onCanviaEtiquetes,
+      }}
+      onObri={vi.fn()}
+    />
+  );
+  // 1) Carpeta: selector + crear nova carpeta
+  fireEvent.change(screen.getByLabelText('Carpeta'), { target: { value: 'foto' } });
+  expect(onCanviaCarpeta).toHaveBeenCalledWith('foto');
+  fireEvent.change(screen.getByLabelText('Crear nova carpeta'), { target: { value: 'Receptes familiars' } });
+  fireEvent.keyDown(screen.getByLabelText('Crear nova carpeta'), { key: 'Enter' });
+  expect(onCanviaCarpeta).toHaveBeenLastCalledWith('f-receptes-familiars', 'Receptes familiars');
+  // 2) Categories: selector + crear nova + llevar amb ×
+  fireEvent.change(screen.getByLabelText('Categories'), { target: { value: 'Cuina' } });
+  expect(onCanviaCategories).toHaveBeenCalledWith(['Sistema', 'Hort', 'Cuina']);
+  fireEvent.change(screen.getByLabelText('Crear nova categoria'), { target: { value: 'Forn' } });
+  fireEvent.keyDown(screen.getByLabelText('Crear nova categoria'), { key: 'Enter' });
+  expect(onCanviaCategories).toHaveBeenLastCalledWith(['Sistema', 'Hort', 'Forn']);
+  fireEvent.click(screen.getByRole('button', { name: 'Llevar «Hort»' }));
+  expect(onCanviaCategories).toHaveBeenLastCalledWith(['Sistema']);
+  // 3) Etiquetes: selector + crear nova + llevar amb ×
+  fireEvent.change(screen.getByLabelText('Etiquetes'), { target: { value: 'Oli' } });
+  expect(onCanviaEtiquetes).toHaveBeenCalledWith(['Reg', 'Oli']);
+  fireEvent.change(screen.getByLabelText('Crear nova etiqueta'), { target: { value: 'Collita' } });
+  fireEvent.keyDown(screen.getByLabelText('Crear nova etiqueta'), { key: 'Enter' });
+  expect(onCanviaEtiquetes).toHaveBeenLastCalledWith(['Reg', 'Collita']);
+  fireEvent.click(screen.getByRole('button', { name: 'Llevar «Reg»' }));
+  expect(onCanviaEtiquetes).toHaveBeenLastCalledWith([]);
+});

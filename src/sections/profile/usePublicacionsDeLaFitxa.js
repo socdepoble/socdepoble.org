@@ -28,12 +28,31 @@
 import { useMemo, useSyncExternalStore } from 'react';
 import { esEntitatDelProjecte, subscriuEntitatDelProjecte, versioEntitatDelProjecte } from '../../config/navigation.js';
 import {
-  ENTITAT_PILOT_ID, PERSONA_PILOT, clauFundacional, entitatSeed, fundacionalDeLaClau
+  ENTITAT_PILOT_ID, PERSONA_PILOT, clauFundacional, entitatSeed, esComptePersonaPilot, fundacionalDeLaClau
 } from '../../data/identitatsSeed.js';
 import { usePublicacionsDelsAlies } from '../mur/usePublicacionsDeLActor.js';
 
 const CAP_ALIES = Object.freeze(new Set());
 const textNet = (valor) => (valor == null ? '' : String(valor).trim());
+
+/**
+ * Afig un àlies explícit (username, handle o alies d'importació/padró) a la
+ * fitxa sempre que no usurpe cap clau fundacional aliena (invariant F6).
+ */
+function afegixAliesExplicits(alies, perfil, clauPropia = null) {
+  const candidats = [
+    perfil?.username,
+    perfil?.handle,
+    ...(Array.isArray(perfil?.alies) ? perfil.alies : [])
+  ];
+  for (const brut of candidats) {
+    const net = textNet(brut).replace(/^@+/, '');
+    if (!net) continue;
+    const fundacional = fundacionalDeLaClau(net);
+    if (fundacional && fundacional !== clauPropia) continue;
+    alies.add(net);
+  }
+}
 
 /** Les seccions de l'aparador, en l'ordre de les pestanyes. */
 export const SECCIONS_DE_LA_FITXA = Object.freeze(['mur', 'mercat', 'events']);
@@ -55,8 +74,13 @@ export function aliesDeLaFitxa(perfil) {
   if (!id || !teAparador(perfil)) return CAP_ALIES;
   const alies = new Set([id]);
   if (perfil.tipus === 'persona') {
-    /* Només per l'id (o l'id remot declarat), mai pel slug. */
-    if (fundacionalDeLaClau(id) === PERSONA_PILOT.slug) PERSONA_PILOT.alies.forEach((a) => alies.add(String(a)));
+    /* Només per l'id (o l'id remot declarat o correu acreditat), mai pel slug. */
+    const esPilot = fundacionalDeLaClau(id) === PERSONA_PILOT.slug
+      || esComptePersonaPilot({ ...perfil, slug: undefined });
+    if (esPilot) {
+      PERSONA_PILOT.alies.forEach((a) => alies.add(String(a)));
+    }
+    afegixAliesExplicits(alies, perfil, esPilot ? PERSONA_PILOT.slug : null);
     return alies;
   }
   const fundacional = clauFundacional({ tipus: perfil.tipus, id });
@@ -73,6 +97,7 @@ export function aliesDeLaFitxa(perfil) {
     if (llavor.slug) alies.add(String(llavor.slug));
     (llavor.alies || []).forEach((a) => alies.add(String(a)));
   }
+  afegixAliesExplicits(alies, perfil, llavor?.slug ?? fundacional ?? null);
   return alies;
 }
 
@@ -86,13 +111,22 @@ export function usePublicacionsDeLaFitxa(perfil) {
   const id = textNet(perfil?.id);
   const tipus = perfil?.tipus;
   const esIA = Boolean(perfil?.esIA);
+  const username = textNet(perfil?.username);
+  const handle = textNet(perfil?.handle);
+  const aliesPropis = Array.isArray(perfil?.alies) ? perfil.alies.map(textNet).filter(Boolean).join('|') : '';
   /* L'id remot del projecte pot arribar després (useEntitatDelProjecte): es torna a calcular. */
   const versioDelProjecte = useSyncExternalStore(subscriuEntitatDelProjecte, versioEntitatDelProjecte, versioEntitatDelProjecte);
-  /* Per la identitat de la fitxa (tipus, id), no per l'objecte: la fitxa
-     arriba com un objecte nou a cada càrrega. */
+  /* Per la identitat de la fitxa (tipus, id i àlies declarats), no per la referència de l'objecte. */
   const alies = useMemo(
-    () => aliesDeLaFitxa({ tipus, id, esIA }),
-    [tipus, id, esIA, versioDelProjecte] // eslint-disable-line react-hooks/exhaustive-deps
+    () => aliesDeLaFitxa({
+      tipus,
+      id,
+      esIA,
+      username,
+      handle,
+      alies: aliesPropis ? aliesPropis.split('|') : undefined
+    }),
+    [tipus, id, esIA, username, handle, aliesPropis, versioDelProjecte] // eslint-disable-line react-hooks/exhaustive-deps
   );
   const tipusAutor = tipusAutorDeLaFitxa({ tipus });
   const opcions = { actiu, tipusAutor };

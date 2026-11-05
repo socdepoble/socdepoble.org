@@ -14,7 +14,8 @@
  *     'ia'. La resta, 'foto': en el dubte, una foto real.
  *
  *   dretsDe · el text dels drets, o null («No declarats»), en este ordre: el
- *     copyright que declara l'element; el Copyright de l'EXIF de la foto; el
+ *     crèdit concret de Commons quan consta (AH-27); el copyright que
+ *     declara l'element; el Copyright de l'EXIF de la foto; el
  *     de la Viquipèdia per a les fotos dels pobles baixades de Wikimedia
  *     Commons (towns/, COPYRIGHT_VIQUIPEDIA); i el de Sóc de Poble («Fet per la
  *     IAIA i Nano Banana», COPYRIGHT_SDP) NOMÉS per a una il·lustració d'IA.
@@ -92,6 +93,38 @@ export function esDeLaViquipedia(src) {
 
 const textNet = (valor) => (typeof valor === 'string' && valor.trim() !== '' ? valor.trim() : null);
 
+const urlDeCommons = (valor, llicencia = false) => {
+  try {
+    const url = new URL(valor);
+    if (url.protocol !== 'https:' || url.username || url.password) return null;
+    return (llicencia ? url.hostname === 'creativecommons.org' : url.hostname === 'commons.wikimedia.org' && url.pathname.startsWith('/wiki/File:')) ? url.href : null;
+  } catch { return null; }
+};
+
+/** AH-27 · crèdit de la fotografia concreta, separat dels drets del text.
+ * Una aportació d'un veí conserva les regles d'autoria de sempre. */
+export function creditDeCommons(item) {
+  if (esDUnVei(item)) return null;
+  const foto = item?.creditCommons;
+  const fontUrl = urlDeCommons(foto?.fontUrl);
+  const llicencia = textNet(foto?.llicencia);
+  if (!fontUrl || !llicencia || llicencia.length > 200) return null;
+  return {
+    fitxer: textNet(foto.fitxer), autor: textNet(foto.autor), llicencia,
+    fontUrl, llicenciaUrl: urlDeCommons(foto.llicenciaUrl, true)
+  };
+}
+
+/** Metadades que acompanyen les fotos locals contrastades de Commons. */
+export function metadadesDeCommons(foto) {
+  const creditCommons = creditDeCommons({ creditCommons: foto });
+  return creditCommons ? {
+    creditCommons: Object.freeze(creditCommons),
+    autor: creditCommons.autor, source: creditCommons.autor,
+    copyright: creditCommons.llicencia
+  } : {};
+}
+
 /* El text de sèrie de les il·lustracions de la casa. En una imatge que no és
    d'IA no es creu mai, encara que vinga declarat: és l'etiqueta per defecte
    que la pàgina /multimedia/<id> posava a qualsevol foto (MCR 261016,
@@ -106,7 +139,8 @@ export function dretsDe(item, { origen = origenDe(item), copyrightExif = null } 
     const text = textNet(valor);
     return text && (origen === 'ia' || !nomenaLaIaia(text)) ? text : null;
   };
-  return creible(item?.copyright)
+  return creible(creditDeCommons(item)?.llicencia)
+    || creible(item?.copyright)
     || creible(copyrightExif)
     || (esDeLaViquipedia(srcDe(item)) ? COPYRIGHT_VIQUIPEDIA : null)
     || (origen === 'ia' ? COPYRIGHT_SDP : null);

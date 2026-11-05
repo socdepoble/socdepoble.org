@@ -5,7 +5,9 @@
  * Onada 0.3 (Gauntlet 261016, M06; pla 261016_1530: «panell lateral
  * desplegable de metadades EXIF (data i hora exactes, coordenades GPS,
  * càmera, autor, poble i drets d'ús)») · Cada fila és { clau, etiqueta,
- * valor, ruta? }: amb `ruta`, qui pinta en fa un enllaç intern. Llei de M06:
+ * valor, ruta?, href? }: amb `ruta`, qui pinta en fa un enllaç intern;
+ * `href` només porta les fonts HTTPS de Commons o Creative Commons
+ * validades pel crèdit concret (AH-27). Llei de M06:
  * el que no se sap es diu «Desconegut», mai s'inventa:
  *   · Data i hora de captura · la de l'element (dataCaptura, la de la
  *     pujada, ADR D6) o la de l'EXIF; la data de publicació no és la de la foto.
@@ -51,7 +53,7 @@
  */
 import { getSectionItemPath, objecteDe, rutaConnectarObjecte, rutaXatDePagina } from '../../config/navigation.js';
 import { esMitjaOpac } from '../../utils/mitjaOpac.js';
-import { dretsDe, origenDe } from './origenImatges.js';
+import { creditDeCommons, dretsDe, origenDe } from './origenImatges.js';
 
 const ISO = /^(\d{4})-(\d{2})-(\d{2})(?:[T ](\d{2}):(\d{2})(?::(\d{2}))?)?/;
 
@@ -222,7 +224,8 @@ export function filesDelPanell(item, {
   const data = formataDataHora(item.dataCaptura) || formataDataHora(exif?.dataCaptura);
   const geo = item.geolocalitzacio || exif?.gps || null;
   const origen = origenDe(item, cens);
-  const autor = textNet(exif?.autor) || autorDeclarat(item);
+  const commons = creditDeCommons(item);
+  const autor = commons?.autor || textNet(exif?.autor) || autorDeclarat(item);
   const slug = pobleDe(item);
   const nomPoble = slug ? (typeof nomDelPoble === 'function' && nomDelPoble(slug)) || (item.article?.sectionId === 'pobles' && item.title) || slug : textNet(item.nomPoble);
   const drets = dretsDe(item, { origen, copyrightExif: exif?.copyright });
@@ -262,14 +265,14 @@ export function filesDelPanell(item, {
     },
     { clau: 'camera', etiqueta: tr('section.multimedia.visor.camera', 'Càmera'), valor: delExif(formataCamera(exif?.camera)) },
     { clau: 'resolucio', etiqueta: tr('section.multimedia.visor.resolucio', 'Resolució'), valor: resolucio },
-    { clau: 'autor', etiqueta: tr('section.multimedia.visor.autor', 'Autor'), valor: delExif(autor) },
+    { clau: 'autor', etiqueta: tr('section.multimedia.visor.autor', 'Autor'), valor: delExif(autor), ...(commons ? { href: commons.fontUrl } : {}) },
     {
       clau: 'poble',
       etiqueta: tr('section.multimedia.visor.poble', 'Poble'),
       valor: nomPoble || desconegut,
       ...(slug ? { ruta: getSectionItemPath('pobles', slug) } : {})
     },
-    { clau: 'drets', etiqueta: tr('section.multimedia.visor.drets', 'Drets d’ús'), valor: drets || tr('section.multimedia.visor.dretsNoDeclarats', 'No declarats') },
+    { clau: 'drets', etiqueta: tr('section.multimedia.visor.drets', 'Drets d’ús'), valor: drets || tr('section.multimedia.visor.dretsNoDeclarats', 'No declarats'), ...(commons ? { href: commons.llicenciaUrl || commons.fontUrl } : {}) },
     { clau: 'origen', etiqueta: tr('section.multimedia.visor.origen', 'Origen'), valor: tradueix(ORIGENS[origen]) },
     article
       ? {

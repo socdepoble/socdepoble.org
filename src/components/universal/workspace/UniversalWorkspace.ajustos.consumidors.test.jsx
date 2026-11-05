@@ -13,7 +13,7 @@
 import React from 'react';
 import { act, cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 import { afterEach, beforeEach, expect, test, vi } from 'vitest';
-import { delVal, getVal, setVal } from '../../../config/storage.js';
+import { delVal, setVal } from '../../../config/storage.js';
 import { CLAU_CARPETES_VISIBLES, _reiniciaCarpetesVisibles } from './carpetesVisibles.js';
 
 const m = vi.hoisted(() => ({ perfil: null, usuaris: vi.fn() }));
@@ -104,23 +104,12 @@ const obriRoda = (c) => {
   return { roda, dialeg: within(screen.getByRole('dialog', { name: RODA })) };
 };
 
-test('Perfil · la roda obri l’amplada i les carpetes a la vista; amagar Forn la lleva de PERFIL i es desa a l’espai «perfil»', () => {
+test('AH-29 (IDEA-89) · Perfil · la roda dentada s’ha eliminat de la fila Tot de la Columna 1 i s’ha integrat a «🛡️ Administració del sistema»', () => {
   ambAmplada(1400);
   const { container } = render(<PerfilShell />);
   expect(within(navegacio(container)).getByRole('button', { name: 'Forn' })).toBeTruthy();
-  const { roda, dialeg } = obriRoda(container);
-  expect(dialeg.getByRole('heading', { level: 3, name: 'Amplada de les columnes' })).toBeTruthy();
-  expect(dialeg.getByRole('button', { name: 'Restablir l’amplada de les columnes' })).toBeTruthy();
-  expect(dialeg.getByRole('heading', { level: 3, name: 'Carpetes a la vista' })).toBeTruthy();
-  for (const nom of ['Javi Llinares', 'Forn', 'Gestoria de Poble']) {
-    expect(dialeg.getByRole('switch', { name: `Vull vore ${nom}` }).getAttribute('aria-checked')).toBe('true');
-  }
-  fireEvent.click(dialeg.getByRole('switch', { name: 'Vull vore Forn' }));
-  expect(within(navegacio(container)).queryByRole('button', { name: 'Forn' })).toBeNull();
-  expect(within(navegacio(container)).getByRole('button', { name: 'Javi Llinares' })).toBeTruthy();
-  expect(getVal(CLAU_CARPETES_VISIBLES, null)).toEqual({ v: 1, espais: { perfil: { O: false } } });
-  fireEvent.click(dialeg.getByRole('button', { name: 'Fet' }));
-  expect(document.activeElement).toBe(roda);
+  expect(within(navegacio(container)).getByRole('button', { name: '🛡️ Administració del sistema' })).toBeTruthy();
+  expect(within(navegacio(container)).queryByRole('button', { name: RODA })).toBeNull();
 });
 
 /* Correcció R1 del verificador · El Perfil entra a la persona (o a

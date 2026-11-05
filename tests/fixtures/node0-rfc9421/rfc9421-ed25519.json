@@ -1,0 +1,14 @@
+{
+  "source": "https://www.rfc-editor.org/rfc/rfc9421.html#appendix-B.1.4",
+  "vectorSource": "https://www.rfc-editor.org/rfc/rfc9421.html#appendix-B.2.6",
+  "notice": "PUBLIC RFC TEST KEY ONLY. Never deploy, never use as an account credential.",
+  "license": "IETF Trust Legal Provisions, Code Components under Revised BSD: https://trustee.ietf.org/license-info/",
+  "publicKeyPem": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAJrQLj5P/89iXES9+vFgrIy29clF9CC/oPPsw3c5D0bs=\n-----END PUBLIC KEY-----\n",
+  "privateKeyPkcs8Base64": "MC4CAQAwBQYDK2VwBCIEIJ+DYvh6SEqVTm50DFtMDoQikTmiCqirVv9mWG9qfSnF",
+  "created": 1618884473,
+  "keyId": "test-key-ed25519",
+  "label": "sig-b26",
+  "components": [["date","Tue, 20 Apr 2021 02:07:55 GMT"],["@method","POST"],["@path","/foo"],["@authority","example.com"],["content-type","application/json"],["content-length","18"]],
+  "signatureBase": "\"date\": Tue, 20 Apr 2021 02:07:55 GMT\n\"@method\": POST\n\"@path\": /foo\n\"@authority\": example.com\n\"content-type\": application/json\n\"content-length\": 18\n\"@signature-params\": (\"date\" \"@method\" \"@path\" \"@authority\" \"content-type\" \"content-length\");created=1618884473;keyid=\"test-key-ed25519\"",
+  "signatureBase64": "wqcAqbmYJ2ji2glfAMaRy4gruYYnx2nEFN2HN6jrnDnQCK1u02Gb04v9EDgwUPiu4A0w6vuQv5lIp5WPpBKRCw=="
+}

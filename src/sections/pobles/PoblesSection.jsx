@@ -4,7 +4,7 @@ import { UniversalPage } from '../../components/universal/UniversalPage';
 import { UniversalCard } from '../../components/universal/../PedraSeca';
 import { PortaDePagina } from '../../components/PedraSeca/organismes/PortesTargeta.jsx';
 import { getSectionItemPath, objecteDe, rutaConnectarObjecte, rutaXatDePagina } from '../../config/navigation';
-import { useNavigate } from '../../app/contexts/RouterContext';
+import { useNavigate, useSearchParams } from '../../app/contexts/RouterContext';
 import { useSEO } from '../../hooks/useSEO';
 import { useCoreContent } from '../../app/contexts/CoreContentContext';
 import { useUIActions } from '../../app/contexts/UIContext';
@@ -13,6 +13,8 @@ import { COPYRIGHT_VIQUIPEDIA, dataDElement, momentDElement } from '../../compon
 import { nomDeLaGent } from './nomsDelPoble.js';
 import { poblesAmbNaixement } from './clauDelPoble.js';
 import { objecteDelPobleXat } from './xatDelPoble.js';
+import { ArbreTerritorial } from './TerritoriDelPoble.jsx';
+import { filtraTerritori } from './territoriDelPoble.js';
 import { usePoblesHidratats } from './usePobleHidratat.js';
 
 export default function PoblesSection() {
@@ -20,6 +22,7 @@ export default function PoblesSection() {
   const { feedPosts, marketItems, events } = useMur();
   const { t } = useUIActions();
   const navigate = useNavigate();
+  const [cerca] = useSearchParams();
 
   /* T2 (prompt 1140, 261001) · La pastilla i l'ordre ixen de la mateixa data
      (editorial.js · dataDElement / momentDElement, la regla de Pedra Seca
@@ -63,6 +66,8 @@ export default function PoblesSection() {
      ni import de la cau ni base IndexedDB (PoblesSection.lleiDelPixel.test.jsx). */
   const poblesVisibles = usePoblesHidratats(sortedAndActiveTowns);
 
+  const poblesFiltrats = filtraTerritori(poblesVisibles, cerca.get('provincia'), cerca.get('comarca'));
+
   useSEO({
     title: t('section.pobles.kicker', 'Pobles'),
     description: t('section.pobles.subtitle', 'Explora els pobles i el seu context territorial.')
@@ -96,6 +101,7 @@ export default function PoblesSection() {
       chrome="system"
       showLogos={true}
     >
+      <ArbreTerritorial pobles={poblesVisibles} t={t} />
       <div className="sdp-card-grid" onKeyDown={gestionaTeclaGraella}>
         {status === 'loading' && (
           <div>
@@ -108,12 +114,12 @@ export default function PoblesSection() {
             <pre>{error?.message || String(error)}</pre>
           </div>
         )}
-        {status === 'ready' && poblesVisibles.length === 0 && (
+        {status === 'ready' && poblesFiltrats.length === 0 && (
           <div>
             {t('section.pobles.noResults', 'Cap poble trobat.')}
           </div>
         )}
-        {status === 'ready' && poblesVisibles.map((town) => {
+        {status === 'ready' && poblesFiltrats.map((town) => {
           /* T63.2 · el descriptor del poble ('poble', id i ruta): Connectar se
              l'emporta, com sempre. */
           const poble = objecteDe(town, 'pobles');

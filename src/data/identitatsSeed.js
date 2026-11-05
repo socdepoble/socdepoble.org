@@ -514,6 +514,14 @@ export function aliesDeLActor(actor, { dataMode = 'remote' } = {}) {
   alies.add(String(actor.id));
   if (actor.tipus === 'entitat' || actor.tipus === 'grup') {
     if (actor.slug) alies.add(String(actor.slug));
+    if (actor.username) alies.add(String(actor.username).trim().replace(/^@+/, ''));
+    if (actor.handle) alies.add(String(actor.handle).trim().replace(/^@+/, ''));
+    if (Array.isArray(actor.alies)) {
+      actor.alies.forEach((a) => {
+        const net = String(a ?? '').trim();
+        if (net) alies.add(net);
+      });
+    }
     const entitat = entitatSeed(actor.id) || entitatSeed(actor.slug);
     if (entitat) {
       alies.add(String(entitat.id));
@@ -522,9 +530,19 @@ export function aliesDeLActor(actor, { dataMode = 'remote' } = {}) {
     }
     return alies;
   }
-  if (dataMode !== 'seed') return alies;
   if (actor.tipus === 'persona' && actor.rol !== 'convidat') {
-    PERSONA_PILOT.alies.forEach((a) => alies.add(a));
+    const esPilotAcreditat = dataMode === 'seed'
+      || esComptePersonaPilot({ ...actor, slug: undefined });
+    if (esPilotAcreditat) {
+      PERSONA_PILOT.alies.forEach((a) => alies.add(a));
+    }
+    for (const candidat of [actor.username, actor.handle, ...(Array.isArray(actor.alies) ? actor.alies : [])]) {
+      const net = String(candidat ?? '').trim().replace(/^@+/, '');
+      if (!net) continue;
+      const fundacional = fundacionalDeLaClau(net);
+      if (fundacional && (!esPilotAcreditat || fundacional !== PERSONA_PILOT.slug)) continue;
+      alies.add(net);
+    }
   }
   return alies;
 }

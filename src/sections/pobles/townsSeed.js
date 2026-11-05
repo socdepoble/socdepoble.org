@@ -1,3 +1,6 @@
+import { nomDeLaGent, slugDelPoble } from './nomsDelPoble.js';
+import { DADES_POBLES_APLEC_VIQUIPEDIA } from './poblesAplecViquipedia.js';
+
 export const MOCK_TOWNS = [
   {
     "id": "la-torre-de-les-macanes",
@@ -149,3 +152,37 @@ export const MOCK_TOWNS = [
     "created_at": "2026-08-16T08:00:00.000Z"
   }
 ];
+
+// AH-19 · Categories territorials de WordPress 16880; sense cens ni fotos inventats.
+export const POBLES_APLEC_2023 = Object.freeze([
+  ['Balones', 'El Comtat'], ['Benialfaquí', 'El Comtat', 'Planes'],
+  ['Benillup', 'El Comtat'], ['Benimassot', 'El Comtat'], ['Fageca', 'El Comtat'],
+  ['Famorca', 'El Comtat'], ['Gorga', 'El Comtat'], ['Millena', 'El Comtat'],
+  ["Muro d'Alcoi", 'El Comtat'], ['Planes', 'El Comtat'], ['Quatretondeta', 'El Comtat'],
+  ['Tollos', 'El Comtat'], ['Beniaia', 'La Marina Alta', "La Vall d'Alcalà"],
+  ['Castell de Castells', 'La Marina Alta'], ["L'Atzúbia", 'La Marina Alta'],
+  ["La Vall d'Alcalà", 'La Marina Alta'], ['La Vall de Gallinera', 'La Marina Alta'],
+  ['Pego', 'La Marina Alta'], ['Tormos', 'La Marina Alta'], ["Callosa d'en Sarrià", 'La Marina Baixa'],
+  ['La Torre de les Maçanes', "L'Alacantí"]
+].map(([title, comarca, parent]) => Object.freeze({
+  id: slugDelPoble(title), type: 'town', title, author: nomDeLaGent(title), provincia: 'Alacant', comarca,
+  content: `${title} és ${parent ? `un nucli de ${parent}, a` : 'un poble de'} la comarca ${comarca}. Participa en la xarxa territorial del 2n Aplec pel Territori de 2023.`,
+  source_url: 'https://socdepoble.net/2022/11/17/aplec-pel-territori-2023/',
+  ...DADES_POBLES_APLEC_VIQUIPEDIA[slugDelPoble(title)],
+  ...(parent ? { parent_poble_id: slugDelPoble(parent), parent_poble_nom: parent } : {})
+})));
+for (const poble of POBLES_APLEC_2023) {
+  const existent = MOCK_TOWNS.findIndex((town) => town.id === poble.id);
+  if (existent < 0) MOCK_TOWNS.push(poble);
+  else {
+    const anterior = MOCK_TOWNS[existent];
+    // La hidratació aporta dades i crèdits; conserva la identitat editorial
+    // existent de la comunitat, com «Gent de la Torre», i la seua cronologia.
+    MOCK_TOWNS[existent] = { ...anterior, ...poble, author: anterior.author || poble.author };
+  }
+}
+// La Vall d'Ebo apareix al peu de foto, fora de les 21 categories de participants.
+MOCK_TOWNS.push({ id: 'la-vall-d-ebo', type: 'town', title: "La Vall d'Ebo", author: "Gent de la Vall d'Ebo",
+  provincia: 'Alacant', comarca: 'La Marina Alta', content: "La Vall d'Ebo és un municipi de la Marina Alta, esmentat al reportatge del 2n Aplec pel Territori de 2023.",
+  source_url: 'https://socdepoble.net/2022/11/17/aplec-pel-territori-2023/',
+  ...DADES_POBLES_APLEC_VIQUIPEDIA['la-vall-d-ebo'] });

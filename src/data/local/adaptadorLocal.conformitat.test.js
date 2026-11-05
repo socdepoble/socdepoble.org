@@ -58,9 +58,9 @@ function passada(nom, { crea, prepara = () => {}, omissionsAdmeses, ambSessio = 
         return presents > 0 && presents < metodes.length;
       });
       expect(parcials).toEqual([]);
-      expect(Object.keys(CAPACITATS)).toHaveLength(39);
-      expect(CAPACITATS_NO_DECLARADES).toEqual([]);
-      expect(noDeclarades(adaptador)).toEqual([]);
+      expect(Object.keys(CAPACITATS)).toHaveLength(41);
+      expect(CAPACITATS_NO_DECLARADES).toEqual(['verificacioCorreu','recuperacioCorreu']);
+      expect(noDeclarades(adaptador)).toEqual(CAPACITATS_NO_DECLARADES);
     });
 
     for (const [index, c] of CASOS.entries()) {

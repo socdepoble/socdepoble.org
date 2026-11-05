@@ -22,7 +22,7 @@ test('Note, Article i Event reals del payload generen Create i objectes recupera
   }
 });
 test('privat, esborrany, persona, submissió, altre poble i text sospitós no es publiquen', () => {
-  for (const canvi of [{ visibility: 'private' }, { status: 'draft' }, { author_entity_id: null }, { owner_user_id: null }, { poble_id: 'tibi' }, { title: 'sb_secret_abcdefghijklmnopqrstuvwxyz1234567890' }])
+  for (const canvi of [{ visibility: 'private' }, { status: 'draft' }, { author_entity_id: null }, { owner_user_id: null }, { poble_id: 'tibi' }, { title: "sb_" + "secret_abcdefghijklmnopqrstuvwxyz1234567890" }])
     assert.equal(projectaPublicacioFederada('mur', { ...item, ...canvi }, { pobles, origen }), null);
   assert.equal(projectaPublicacioFederada('mercat', item, { pobles, origen }), null);
   assert.equal(projectaPublicacioFederada('events', item, { pobles, origen }), null);

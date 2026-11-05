@@ -1,0 +1,17 @@
+# Import inside the EXISTING socdepoble.cat site block, before its SPA fallback.
+# Preserve the original signed path: use handle, never handle_path or uri strip_prefix.
+@node0Soberania path /api/v1/* /ap/inbox /ap/inbox/socdepoble /ap/actors/socdepoble /ap/actors/socdepoble.json /ap/outbox /ap/followers/socdepoble /ap/objects/*
+handle @node0Soberania {
+    reverse_proxy 127.0.0.1:4340 {
+        header_up Host socdepoble.cat
+    }
+}
+@node0Webfinger {
+    path /.well-known/webfinger
+    query resource=acct:socdepoble@socdepoble.cat
+}
+handle @node0Webfinger {
+    reverse_proxy 127.0.0.1:4340 {
+        header_up Host socdepoble.cat
+    }
+}

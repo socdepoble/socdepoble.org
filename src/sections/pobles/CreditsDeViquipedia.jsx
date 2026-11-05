@@ -96,9 +96,16 @@ export function CreditsDeViquipedia({ entrada, ambFotos = false, t, locale = LOC
   const tx = traductorDeViquipedia(t);
   const { dto, llegitEl } = entrada;
   const fotos = ambFotos ? fotosDe(dto.imatges) : [];
+  const dades = [
+    ['Població', dto.population ? `${dto.population}${dto.population_year ? ` (${dto.population_year})` : ''}` : null],
+    ['Altitud', Number.isFinite(dto.elevation) ? `${dto.elevation} m` : null],
+    ['Superfície', Number.isFinite(dto.area) ? `${dto.area} km²` : null], ['Gentilici', dto.gentilici],
+    ['Coordenades', Number.isFinite(dto.lat) && Number.isFinite(dto.lng) ? `${dto.lat}, ${dto.lng}` : null]
+  ].filter(([, valor]) => valor != null);
   return (
     <>
       <p>{tx('intro')}</p>
+      {dades.length ? <dl>{dades.map(([nom, valor]) => <div key={nom}><dt>{nom}</dt><dd>{valor}</dd></div>)}</dl> : null}
       <ul>
         {dto.content && dto.wikipedia_title ? (
           <li>

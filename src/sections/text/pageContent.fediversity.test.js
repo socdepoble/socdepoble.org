@@ -111,7 +111,11 @@ function midesWebp(bytes) {
 
 const ARREL = path.resolve(import.meta.dirname, '../../..');
 const copy = PAGE_COPY.fediversity;
-const doc = new DOMParser().parseFromString(copy.html, 'text/html');
+// AH-22: les proves del dossier detallat conserven el seu abast.
+// pageContent.r10.test.js contrasta separadament el balanç datat afegit al davant.
+const iniciDossier = copy.html.indexOf('<h3>Què és NGI Fediversity i per què Sóc de Poble hi encaixa</h3>');
+if (iniciDossier < 0) throw new Error('Falta el dossier detallat de Fediversity');
+const doc = new DOMParser().parseFromString(copy.html.slice(iniciDossier), 'text/html');
 const text = doc.body.textContent.replace(/\s+/g, ' ');
 /* Les quatre partides (H4 «n · …») i el que hi ha davall de cadascuna fins al
    pròxim H1-H4 o a la panoràmica. O4-CLAUDE-2 (ordre del Mestre, 261102
@@ -294,7 +298,7 @@ describe('O6 · lectura diagonal: H4 + paràgraf, i cap paràgraf pla', () => {
     /* 03-11-2026 (arbitratge 12:22; prova posada al dia a propòsit) · Cada raó porta ara al final
        l'«Exemple pràctic» de MarIA (10:50). La comparació continua exacta (toBe): qualsevol frase
        nova o canviada en estos tres paràgrafs fa caure la prova i s'ha de tornar a mirar. */
-    expect(dades).toBe("L'aplicació demana les dades a través d'un port neutral, src/data/backendPort.js, i un kit de conformitat comprova qualsevol adaptador abans d'enxufar-lo. Hui hi ha un sol servidor de dades, el Supabase de Sóc de Poble. Exemple pràctic: és com l'aigua del poble; les canonades i l'aixeta de casa són sempre les mateixes, tant si hui l'aigua ve d'un depòsit compartit com si demà l'ajuntament connecta el seu propi pou municipal sense picar cap paret.");
+    expect(dades).toBe("L'aplicació demana les dades a través d'un port neutral, src/data/backendPort.js, i un kit de conformitat comprova qualsevol adaptador abans d'enxufar-lo. La SPA usa el Supabase de Sóc de Poble; l’API pròpia del Node 0 ja té PostgreSQL 17.11, encara sense comptes ni escriptures de persones activats. Exemple pràctic: és com l'aigua del poble; les canonades i l'aixeta de casa són sempre les mateixes, tant si hui l'aigua ve d'un depòsit compartit com si demà l'ajuntament connecta el seu propi pou municipal sense picar cap paret.");
     expect(modelB).toBe("Una web amfitriona, com una de WordPress, pot allotjar l'aplicació com un component. Les dades del poble, però, viuen al servidor de Sóc de Poble, que és l'única font de veritat. Canviar de servidor és una decisió documentada, amb un adaptador que ha de passar el kit de conformitat. Exemple pràctic: l'associació Gent de la Torre ja tenia la seua web en WordPress; amb el nostre connector hi ha incrustat l'aplicació sencera en dos minuts, sense perdre el seu disseny ni haver de mantindre cap servidor propi.");
     expect(codi).toBe('El fitxer LICENSE del projecte declara la llicència GNU AGPL, versió 3 o posterior (AGPL-3.0-or-later). Hi és des del 3 de setembre de 2026. Exemple pràctic: qualsevol ajuntament o cooperativa pot obtindre el codi font, auditar-lo, copiar-lo i modificar-lo per a mantindre un servidor propi, complint els termes de l’AGPL.');
     expect(raons.map((node) => node.querySelector('code')?.textContent ?? null)).toEqual([null, 'src/data/backendPort.js', null, null, null, 'LICENSE']);
@@ -359,7 +363,7 @@ describe('honestedat: cada afirmació ancorada al codi', () => {
     expect(text).toContain('no es presenta com una tarifa imposada per NLnet');
     expect(text).toContain('no implica cap concessió');
     expect(copy.lead+' '+text).not.toMatch(/està en avaluació|fase d.avaluació|subvenció concedida|hem rebut|ens han concedit|finançat per la Unió|amb el finançament de/i);
-    const autoritzats=new Set(['https://nlnet.nl/fediversity/','https://nlnet.nl/','https://socdepoble.org','https://gentdelatorre.net','https://socdepoble.cat',WORDPRESS,...ENDPOINTS_FEDERACIO()]);
+    const autoritzats=new Set(['https://nlnet.nl/fediversity/','https://nlnet.nl/','https://socdepoble.org','https://gentdelatorre.net','https://socdepoble.cat','https://socdepoble.cat/api/v1/node0/status','https://mastodont.cat/@depoble',WORDPRESS,...ENDPOINTS_FEDERACIO()]);
     expect(new Set([...copy.html.matchAll(/https?:\/\/[^"'\s<]+/gi)].map(m=>m[0]))).toEqual(autoritzats);
     for(const a of doc.querySelectorAll('a[href^="http"]'))expect([a.getAttribute('target'),a.getAttribute('rel')]).toEqual(['_blank','noopener noreferrer']);
     expect([...doc.querySelectorAll('img')].filter(img=>/logo|tag|emblem|flag/i.test(img.getAttribute('src'))).map(img=>img.getAttribute('src'))).toEqual(['/assets/uploads/ngi-fediversity-tag.svg']);
@@ -394,7 +398,7 @@ describe('honestedat: cada afirmació ancorada al codi', () => {
     for (const poble of ['Gent de Xixona', 'Gent de Relleu', 'Gent de Tibi', "Gent d'Alcoleja", 'Gent de Penàguila']) expect([poble, text.includes(poble)]).toEqual([poble, true]);
     expect(text).toContain('Gent de la Torre ja és actiu');
     expect(text).toContain('Hui encara no tenen node propi');
-    expect(copy.html.replaceAll('socdepoble.cat', '')).not.toMatch(/gentde(?!latorre)[a-z]+\.|\.(?:cat|es|eu|com)\b/i);
+    expect(doc.body.innerHTML.replaceAll('socdepoble.cat', '')).not.toMatch(/gentde(?!latorre)[a-z]+\.|\.(?:cat|es|eu|com)\b/i);
     const visio = textDe(seccio([...doc.querySelectorAll('h4')].find((h) => h.textContent === 'La visió: nodes germans «Gent de…»')));
     expect(visio).toContain('el connector oficial de Sóc de Poble ja està publicat i actiu al directori de WordPress.org, amb el nom socdepoble i la versió 1.1.12');
     expect(visio).toContain("la seua fitxa, wordpress.org/plugins/socdepoble, porta la guia d'instal·lació i 10 captures de pantalla");
@@ -413,9 +417,9 @@ describe('honestedat: cada afirmació ancorada al codi', () => {
 
     const fedivers=new DOMParser().parseFromString(PAGE_COPY.fedivers.html,'text/html').body.textContent;
     for(const tros of ['socdepoble.org','gentdelatorre.net','socdepoble.cat','Gent de Xixona','Gent de Relleu','Gent de Tibi','Gent d’Alcoleja','Gent de Penàguila'])expect(fedivers).toContain(tros);
-    expect(PAGE_COPY.fedivers.lead).toContain('dos punts d’accés consolidats');
-    expect(fedivers).toContain('sense garantia de disponibilitat ni base de dades independent encara');
-    expect(fedivers).toContain('encara no acredita una base de dades independent fora del Supabase compartit');
+    expect(PAGE_COPY.fedivers.lead).toBe('Un balanç datat dels serveis del poble. Cada avanç distingix producció, proves locals i treball pendent.');
+    expect(fedivers).toContain('sense garantia de disponibilitat; PostgreSQL propi ja està instal·lat, mentre la SPA continua amb Supabase.');
+    expect(fedivers).toContain('ja té PostgreSQL propi per a l’API, amb la SPA encara connectada a Supabase');
     expect(PAGE_COPY.fedivers.lead).not.toContain('tres d’actius');
   });
 
@@ -654,19 +658,42 @@ describe('honestedat: cada afirmació ancorada al codi', () => {
      'restauracioDadesObertes' (T2) hi afigen tres capacitats.
      IDEA-24 (marató 261101_2143, B4) · 'transferenciaPropietat' n'afig una altra: 35 capacitats i 115 mètodes.
      B8C-2 (marató 261101_2143, B8) · 'avisosPush' i 'silenciXat' n'afigen dues més: 37 capacitats i 118 mètodes.
-     FEDI-04 (assalt 261103) · 'administracioMultipoble' n'afig una altra: 38 capacitats i 120 mètodes. */
+     FEDI-04 (assalt 261103) · 'administracioMultipoble' n'afig una altra: 38 capacitats i 120 mètodes.
+     R6 · El contracte declara també verificacioCorreu i recuperacioCorreu: són opcionals i absents en local. */
   test("F4 · recompte executable del contracte i documents amb mesures i preus datats", async () => {
 
     const nucli=CONTRACTE_NUCLI.length,capacitats=Object.keys(CAPACITATS).length,total=CONTRACTE_BACKEND.length,opcionals=total-nucli;
     const fet=apartat(0,'Fet hui (verificable)');
-    expect(fet).toContain(nucli+' mètodes obligatoris i '+capacitats+' capacitats opcionals');
+    expect(fet).toContain(nucli+' mètodes obligatoris i '+capacitats+' capacitats opcionals declarades');
     expect(fet).toContain(opcionals+' mètodes addicionals: '+total+' mètodes en total');
     const {CASOS,metodesSenseCas}=await import('../../data/conformitat/kit.js');
     expect(fet).toContain(CASOS.length+' casos sobre '+new Set(CASOS.map(c=>c.metode)).size+' mètodes');
     expect(metodesSenseCas()).toHaveLength(total-new Set(CASOS.map(c=>c.metode)).size);
+    expect(new Set(CASOS.map(c=>c.metode))).toEqual(new Set(CONTRACTE_BACKEND));
+    const {CAPACITATS_NO_DECLARADES,creaAdaptadorLocal}=await import('../../data/local/adaptadorLocal.js');
+    const local=creaAdaptadorLocal({mode:'local',tenantId:'11111111-1111-4111-8111-111111111111'});
+    try{
+      const oferides=Object.entries(CAPACITATS).filter(([,metodes])=>metodes.every(nom=>typeof local[nom]==='function')).map(([nom])=>nom);
+      const absents=Object.keys(CAPACITATS).filter(nom=>!oferides.includes(nom));
+      expect(absents).toEqual(CAPACITATS_NO_DECLARADES);
+      expect(absents).toEqual(['verificacioCorreu','recuperacioCorreu']);
+      expect(fet).toContain('l’adaptador local ofereix '+oferides.length+' d’estos '+capacitats+' grups');
+      expect(fet).toContain(absents.join(' i ')+' continuen absents');
+      expect(CASOS.filter(c=>absents.includes(c.capacitat))).toHaveLength(4);
+      expect(fet).toContain('els seus quatre casos s’ometen en local');
+    }finally{await local.destroy();}
+
     expect(fet).toContain('no certifica les '+total+' operacions contra un servidor remot');
     const model=llegix('_wiki_de_poble/02_saber/architecture/api_port_neutral_i_allotjament_model_b.md').replaceAll('**','');
     for(const frase of[nucli+' operacions obligatòries',capacitats+' capacitats atòmiques opcionals',opcionals+' mètodes addicionals',total+' mètodes'])expect(model).toContain(frase);
+    expect(model).toContain(CASOS.length+' casos sobre '+new Set(CASOS.map(c=>c.metode)).size+' mètodes');
+    expect(model).toContain((capacitats-CAPACITATS_NO_DECLARADES.length)+' dels '+capacitats+' grups declarats');
+    expect(model).toContain('no acredita un èxit funcional ni un servei de correu desplegat');
+    const {wikiManifest}=await import('../../data/wikiManifest.js');
+    const inventari=wikiManifest.items.find(item=>item.id==='api_port_neutral_i_allotjament_model_b');
+    expect(inventari.content.replaceAll('**','')).toContain(capacitats+' capacitats atòmiques opcionals');
+    expect(inventari.content.replaceAll('**','')).toContain(CASOS.length+' casos sobre '+total+' mètodes');
+
     const perfil=llegix('_wiki_de_poble/02_saber/architecture/perfil_minim_allotjament_node_municipal.md');
     expect(perfil).toMatch(/^status: esborrany$/m);
     expect(perfil).toContain('## 8. Tres escenaris de cost mensual');
@@ -916,7 +943,7 @@ describe('Gauntlet 2 · el comentari del desplegament i el registre de canvis', 
   test("Node 0: mètriques de màquina i funcions locals, amb límits explícits de producció", () => {
 
     const visio=textDe(seccio([...doc.querySelectorAll('h4')].find(h=>h.textContent==='La visió: nodes germans «Gent de…»')));
-    expect(visio).toContain('continua en evolució cap a un node independent');
+    expect(visio).toContain('ja disposa d’API amb PostgreSQL propi i continua en evolució cap a l’ús independent des de tota la SPA darrere del port neutral');
     expect(visio).toContain('Apple M4, 10 nuclis i 24 GiB de RAM');
     expect(visio).toContain('sessió SSH de només lectura');
     expect(visio).toContain('tota la màquina, no el mínim necessari per al servei');

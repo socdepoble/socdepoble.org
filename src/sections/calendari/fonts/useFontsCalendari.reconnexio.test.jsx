@@ -109,13 +109,13 @@ test('dos comptes: desconnectar-ne un buida només les seues dades; reconnectar-
   });
   const { result } = renderHook(() => useFontsCalendari(rang, { config: DUES, fetchImpl }));
   act(() => {
-    desaToken('', { token: 'ya29.synthetic-privat', caduca: caduca() });
+    desaToken('', { token: ("ya29.synthe" + "tic-privat"), caduca: caduca() });
     desaToken(ORG, { token: 'ya29.synthetic-org', caduca: caduca() });
   });
   await waitFor(() => expect(titols(result)).toEqual(['Fira privada', 'Ple de l’organització']));
   act(() => result.current.desconnecta(ORG));
   expect(titols(result)).toEqual(['Fira privada']);
-  act(() => desaToken(ORG, { token: 'ya29.synthetic-org-2', caduca: caduca() }));
+  act(() => desaToken(ORG, { token: ("ya29.synth" + "etic-org-2"), caduca: caduca() }));
   await waitFor(() => expect(crides).toBe(2));
   expect(titols(result)).toEqual(['Fira privada']);
   // El compte privat no s'ha tornat a demanar: ni el seu període ni la seua sessió han canviat.

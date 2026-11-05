@@ -66,8 +66,8 @@ export const NOTES_SEED = [
     /* IDEA-59 / P1-72 (Mestre 261101, punt 0) · Les etiquetes de la Card que
        es restituïx (captura 01_produccio/261101_0256_card_bloc_de_notes_ploma.jpg). */
     labels: ['General', 'Mur', 'Productivitat', 'Tutorial'],
-    copyright: '© Sóc de Poble / Fet per la IAIA i Nano Banana',
-    lead: 'Benvingut al teu nou espai editorial. Aquest és un espai on pots escriure, esborrar i organitzar-te com vulgues sense que ningú ho veja. A continuació t\'expliquem com funciona la màquina d\'escriure de Sóc de Poble.',
+    copyright: 'CC BY-NC-SA 4.0 Sóc de Poble / Fet per la IAIA i Nano Banana',
+    lead: 'Benvingut al teu nou espai editorial. Este és un espai on pots escriure, esborrar i organitzar-te com vulgues sense que ningú ho veja. A continuació t\'expliquem com funciona la màquina d\'escriure de Sóc de Poble.',
     folderId: 'f-mur',
     categoryId: 'c-sistema',
     type: 'rich-text',
@@ -87,7 +87,7 @@ export const NOTES_SEED = [
       <p>L'editor està dissenyat perquè allò que veus a la pantalla siga <strong>exactament allò que llegiran</strong> les usuàries quan ho publiques. <strong>Sense sorpreses</strong>. La <strong>imatge de capçalera</strong> s'estén d'extrem a extrem, just per damunt de la teua <strong>targeta d'autoria</strong>. L'estructura de l'article sempre comença amb un gran <strong>Títol (H1)</strong>, un <strong>subtítol (H2)</strong> que acompanya la lectura, i una <strong>entradilla o resum</strong> que convida a entrar en matèria.</p>
       
       <h3>2. Les Eines de Text (la barra d'eines)</h3>
-      <p>Davall de l'entradilla, just després del desplegable <strong>«Edició avançada»</strong>, tens la <strong>barra d'eines</strong> d'escriptura. Està pensada per a ser <strong>ràpida i intuïtiva</strong>:</p>
+      <p>Just davall de la <strong>barra d'autoria</strong> tens el desplegable <strong>«Edició avançada»</strong>, i davall de l'entradilla trobaràs la <strong>barra d'eines</strong> amb <strong>«🎴 Proposa Card»</strong>, pensada per a ser <strong>ràpida i intuïtiva</strong>:</p>
       <h4>Estructura</h4>
       <p>El <strong>desplegable d'encapçalaments</strong> (H3, H4, H5, H6 i H2) divideix el text en <strong>seccions</strong> i <strong>dona ritme</strong> a la lectura.</p>
       <h4>Llistes</h4>
@@ -101,13 +101,13 @@ export const NOTES_SEED = [
       <p>A l'esquerra tens el teu <strong>arxivador privat</strong>. Està dividit en <strong>diverses seccions</strong> perquè <strong>no et perdes</strong> mai:</p>
       <h4>Carpetes</h4>
       <p>Cada nota viu en una de les <strong>carpetes del Bloc</strong>. La <strong>tries</strong> a l'<strong>«Edició avançada»</strong> de la nota.</p>
-      <p>Allí mateix, en una <strong>nota teua</strong>, el selector <strong>«On es publica?»</strong> et deixa triar si és una <strong>publicació del Mur</strong> o una <strong>fitxa</strong> per al Mercat, Compartir cotxe, Treball o Habitatge, i <strong>la carpeta el seguix</strong>: el Mercat va a la <strong>carpeta del Mercat</strong>, i la resta, a la del Mur. També <strong>al revés</strong>: si mous la nota a la carpeta del Mercat, passa a ser una <strong>fitxa del Mercat</strong>.</p>
+      <p>Allí mateix, en una <strong>nota teua</strong>, el selector <strong>«On es publica?»</strong> et deixa triar si és una <strong>publicació del Mur</strong> o una <strong>fitxa</strong> per al Mercat, Calendari, Mapa, Compartir cotxe, Animalets, Treball o Habitatge, i <strong>la carpeta el seguix</strong>: el Mercat va a la <strong>carpeta del Mercat</strong>, i la resta, a la del Mur. També <strong>al revés</strong>: si mous la nota a la carpeta del Mercat, passa a ser una <strong>fitxa del Mercat</strong>.</p>
       <h4>Categories i Etiquetes</h4>
-      <p><strong>Abans de publicar</strong>, assegura't de <strong>classificar bé</strong> la teua nota. Aquestes etiquetes apareixeran tant ací a l'editor com en la <strong>publicació final</strong> al Mur.</p>
+      <p><strong>Abans de publicar</strong>, <strong>classifica la nota</strong> en línia o <strong>crea'n de noves</strong> al vol. <strong>Estes etiquetes</strong> es veuran a l'editor i a la <strong>publicació final</strong>.</p>
 
       <h3>4. El Procés de Publicació</h3>
       <p>Tot allò que escrius ací <strong>es guarda automàticament</strong> i és estrictament <strong>privat</strong>. <strong>Ningú ho pot veure</strong> fins que tu ho decidisques. Quan tingues un <strong>article polit</strong>, revisat i llest per vore la llum, simplement hauràs de fer servir el <strong>botó «Publicar»</strong> de la barra d'eines per a enviar-lo al <strong>Mur del teu poble</strong> o al teu <strong>grup de treball</strong>.</p>
-      <p>Si a <strong>«On es publica?»</strong> has triat una fitxa per al Mercat, Compartir cotxe, Treball o Habitatge, davall de l'opció triada t'apareixen els <strong>seus camps</strong> i el seu <strong>«Estat»</strong>, i la previsualització <strong>«Així es veurà al Mur»</strong> t'ensenya la targeta abans de publicar-la. Si a la fitxa li falta un <strong>camp obligatori</strong>, <strong>«Publicar» no la deixa eixir</strong>: t'obri l'«Edició avançada» i t'hi marca <strong>què falta</strong>.</p>
+      <p>Si a <strong>«On es publica?»</strong> has triat una fitxa per al Mercat, Calendari, Mapa, Compartir cotxe, Animalets, Treball o Habitatge, davall de l'opció triada t'apareixen els <strong>seus camps</strong> i el seu <strong>«Estat»</strong>, i la previsualització <strong>«Vista en format Card»</strong> t'ensenya la targeta abans de publicar-la. Si a la fitxa li falta un <strong>camp obligatori</strong>, <strong>«Publicar» no la deixa eixir</strong>: t'obri l'«Edició avançada» i t'hi marca <strong>què falta</strong>.</p>
 
       <p>Ara, prem <strong>«CREAR NOTA»</strong>, dalt de la columna de les notes, per a començar a escriure la teua <strong>pròpia història</strong> (si <strong>no hi veus el botó</strong>, <strong>primer entra</strong> amb el teu compte). <strong>El llenç és teu</strong>!</p>
     `,

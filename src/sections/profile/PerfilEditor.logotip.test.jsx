@@ -151,7 +151,10 @@ test('Onada 4 · una persona amb avatar: l’avatar redó amb la càmera, dins d
   expect(avatar.getAttribute('aria-haspopup')).toBe('dialog');
   expect(avatar.querySelector('img').getAttribute('src')).toBe('/assets/a.webp');
   // Neteja total davall del cercle: cap píndola ni cap línia d'ajuda.
-  expect(within(identitat).getAllByRole('button')).toEqual([avatar]);
+  /* AH-14 (r49) · Davall del cercle, només el botó «Imatge de Perfil» (obri el diàleg de la imatge). */
+  const botons = within(identitat).getAllByRole('button');
+  expect(botons[0]).toBe(avatar);
+  expect(botons.slice(1).map((boto) => boto.getAttribute('aria-haspopup'))).toEqual(['dialog']);
   expect(identitat.querySelector('.page-title-avatar-accions, .sdp-camp__ajuda')).toBeNull();
   expect(identitat.textContent).not.toContain('10 MB');
   // P1-58 · La capçalera és la primera del desplegable, l'avatar després; cap ranura.

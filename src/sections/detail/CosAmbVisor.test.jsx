@@ -58,6 +58,7 @@ vi.mock('../../app/contexts/SessionContext', () => ({
 vi.mock('../../hooks/useSEO.js', () => ({ useSEO: () => {} }));
 vi.mock('../../components/universal/NotificationContext.jsx', () => ({ useToast: () => ({ showToast: vi.fn() }) }));
 import ItemDetailSection from './ItemDetailSection.jsx';
+import { APLEC_GALLERY } from '../mur/articles/aplec2023Content.js';
 import { CosAmbVisor, MARCA_AMPLIABLE, esImatgeDelCos, imatgesDelCos } from './VisorDePublicacio.jsx';
 import { buildDetailSectionMeta, cosAmbImatgesPropies, visorDelCosDElement } from './detailSectionMeta.jsx';
 import { renderRichText } from './detailRichText.jsx';
@@ -263,14 +264,15 @@ describe('les fotos del cos, fora de l’Arxiu: la fila de l’enllaç només am
 });
 
 describe('l’Aplec 2023, el Mercat i una nota', () => {
-  test('l’Aplec 2023 (el cas de l’auditoria): les dues fotos de l’article obrin el visor', async () => {
+  /* AH-18 (261104) · L'article de l'Aplec duu la galeria íntegra de WordPress
+     (25 fotos principals i 9 de complementàries): totes obrin el visor, mai un
+     enllaç a una pestanya nova (un <a> al voltant les trauria del visor). */
+  test('l’Aplec 2023 (el cas de l’auditoria): les fotos de la galeria de l’article obrin el visor', async () => {
     const { container } = pinta({ id: 'aplec-2023', title: 'Aplec 2023', created_at: CREAT }, 'events');
-    expect(marcades(container).map((img) => img.getAttribute('aria-label'))).toEqual([
-      obriFoto('Cartell Ponents Aplec'), obriFoto('Reunió preparatòria Aplec')
-    ]);
+    expect(marcades(container).map((img) => img.getAttribute('aria-label'))).toEqual(APLEC_GALLERY.map((foto) => obriFoto(foto.alt)));
     await clica(marcades(container)[1]);
-    expect(fotoDelVisor().getAttribute('src')).toBe('/assets/events/aplec_2023_reunio.webp');
-    expect(comptador()).toBe('2 / 2Imatge 2 de 2');
+    expect(fotoDelVisor().getAttribute('src')).toBe(APLEC_GALLERY[1].src);
+    expect(comptador()).toBe(`2 / ${APLEC_GALLERY.length}Imatge 2 de ${APLEC_GALLERY.length}`);
     act(() => within(visor()).getByRole('button', { name: 'Informació de la imatge' }).click());
     expect(fila('Publicat a').textContent).toBe('Agenda · Aplec 2023');
   });

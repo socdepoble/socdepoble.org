@@ -47,6 +47,7 @@ function wikimediaFals(serveix, { penja = false, canvia = null } = {}) {
       });
     }
     const resposta = perUrl.get(clauDUrl(url));
+    if (!resposta && new URL(url).searchParams.get('titles')?.startsWith('File:Escut')) return new Response(JSON.stringify({ query: { pages: [] } }), { status: 200, headers: { 'content-type': 'application/json' } });
     if (!resposta) {
       fora.push(url);
       return new Response('{}', { status: 404, headers: { 'content-type': 'application/json' } });
@@ -109,7 +110,7 @@ describe('en prémer «Porta-ho de la Viquipèdia»', () => {
     await portaHo();
     await waitFor(() => expect(container.querySelector('h3').textContent).toBe(text('creditsTitol')));
     expect(fora).toEqual([]);
-    expect(peticions.map(({ url }) => clauDUrl(url)).sort()).toEqual(TORRE.map((nom) => clauDUrl(captura(nom).url)).sort());
+    expect(peticions.filter(({url}) => !new URL(url).searchParams.get('titles')?.startsWith('File:Escut')).map(({ url }) => clauDUrl(url)).sort()).toEqual(TORRE.map((nom) => clauDUrl(captura(nom).url)).sort());
     for (const { url, init } of peticions) {
       expect(['https://www.wikidata.org', 'https://ca.wikipedia.org', 'https://commons.wikimedia.org']).toContain(new URL(url).origin);
       expect(init).toMatchObject({ method: 'GET', credentials: 'omit', redirect: 'error', referrerPolicy: 'no-referrer' });
@@ -480,4 +481,42 @@ describe('c3 · la data dels crèdits en la llengua de la interfície (vq-data-c
     expect(consultat.textContent).toBe(`Consultat el ${formata(locale, llegitEl)}.`);
     expect(consultat.textContent).not.toContain(formata('es-ES', llegitEl));
   });
+});
+
+
+test('AH-27: una llavor parcial mostra crèdits de foto i escut separats, sense inventar cens municipal', () => {
+  const fetchImpl = vi.fn();vi.stubGlobal('fetch', fetchImpl);
+  const foto = { fitxer: 'Foto pròpia.jpg', autor: 'Autora real', fontUrl: 'https://commons.wikimedia.org/wiki/File:Foto.jpg', llicencia: 'CC BY-SA 4.0', llicenciaUrl: 'https://creativecommons.org/licenses/by-sa/4.0/' };
+  const town = { id: 'nucli-de-prova', title: 'Nucli de Prova', parent_poble_nom: 'Municipi de Prova', population: '31 hab', population_year: 2025,
+    imatges: { hero: foto }, shield: { ...foto, fitxer: 'Escut.svg', fontUrl: 'https://commons.wikimedia.org/wiki/File:Escut.svg' },
+    wikipedia_url: 'https://es.wikipedia.org/wiki/Nuclio', wikidata_id: 'Q1', wikipedia_hydration: { missing: ['area'] },
+    wikipedia_provenance: { exceptions: [{ field: 'area', reason: 'No hi ha superfície pròpia publicada.', source: 'https://www.wikidata.org/wiki/Q1' }] } };
+  const { container } = render(<PanellDeViquipedia poble={town} />);
+  expect(container.textContent).toContain('31 hab (2025)');expect(container.textContent).toContain('corresponen a este nucli');
+  expect(container.textContent).not.toContain('Superfície');expect(container.textContent).toContain('No hi ha superfície pròpia publicada.');
+  expect(container.querySelectorAll('li')).toHaveLength(1);expect(container.querySelector('img')).toBeNull();
+  expect([...container.querySelectorAll('a')].map(a => a.href)).not.toContain('https://commons.wikimedia.org/wiki/File:Escut.svg');
+  expect(fetchImpl).not.toHaveBeenCalled();
+});
+
+test('AH-27: els crèdits i l’escut local estan disponibles en l’app nativa sense API', () => {
+  vi.stubGlobal('Capacitor', { isNativePlatform: () => true });
+  const fetchImpl = vi.fn();vi.stubGlobal('fetch', fetchImpl);
+  const town = { id: 'poble-natiu', title: 'Poble Natiu', wikipedia_provenance: { scope: 'municipality' },
+    imatges: { hero: { fitxer: 'Foto.jpg', autor: 'Autoria', llicencia: 'CC BY-SA 4.0', llicenciaUrl: 'https://creativecommons.org/licenses/by-sa/4.0/', fontUrl: 'https://commons.wikimedia.org/wiki/File:Foto.jpg' } },
+    shield_url: null, shield: null };
+  const { container } = render(<PanellDeViquipedia poble={town} />);
+  expect(container.querySelector('summary').textContent).toBe('D’on ve esta fitxa');
+  expect(container.querySelector('img')).toBeNull();
+  expect(container.textContent).toContain('CC BY-SA 4.0');expect(fetchImpl).not.toHaveBeenCalled();
+});
+
+test('AH-27 · una font editorial local preval sobre un DTO antic de previsualització', () => {
+  const fetchImpl = vi.fn();vi.stubGlobal('fetch', fetchImpl);
+  const poble = { id: 'nucli-local', title: 'Nucli local', population: '31 hab', population_year: 2025,
+    wikipedia_provenance: { scope: 'settlement' }, shield_url: null, imatges: {},
+    fontsDeViquipedia: { dto: { population: '999 hab', shield: { src: 'https://upload.wikimedia.org/wikipedia/commons/a/ab/Escut.svg' } } } };
+  const { container } = render(<PanellDeViquipedia poble={poble} />);
+  expect(container.textContent).toContain('31 hab (2025)');expect(container.textContent).not.toContain('999');
+  expect(container.querySelector('img')).toBeNull();expect(fetchImpl).not.toHaveBeenCalled();
 });

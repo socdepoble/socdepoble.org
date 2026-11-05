@@ -130,12 +130,14 @@ async function obriElCercle() {
 }
 
 describe('davall del cercle, res', () => {
-  test('amb avatar: el cercle sol, «Ajusta o canvia l’avatar», amb la càmera; cap píndola ni cap text dels 10 MB', () => {
+  test('amb avatar: el cercle i el botó «Imatge de Perfil», «Ajusta o canvia l’avatar», amb la càmera; cap píndola ni cap text dels 10 MB', () => {
     render(<PerfilEditor identitat={ambAvatar} />);
     obriEdicioAvancada();
-    expect(within(identitat()).getAllByRole('button')).toEqual([cercle()]);
+    const botoImatgePerfil = within(identitat()).getByRole('button', { name: 'Imatge de Perfil' });
+    expect(within(identitat()).getAllByRole('button')).toEqual([cercle(), botoImatgePerfil]);
     expect(cercle().getAttribute('aria-label')).toBe(ETIQUETA_AJUSTA_AVATAR);
     expect(cercle().getAttribute('aria-haspopup')).toBe('dialog');
+    expect(botoImatgePerfil.getAttribute('aria-haspopup')).toBe('dialog');
     expect(cercle().querySelector('.page-title-avatar__marca')).not.toBeNull();
     // La imatge resolta pel port, mai l'esquema opac.
     expect(cercle().querySelector('img').getAttribute('src')).toBe(RESOLTA);

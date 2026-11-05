@@ -97,12 +97,38 @@ export function esDelPoble(item, town) {
   return clau !== null && clausDelPoble(town).includes(clau);
 }
 
+/** Pobles etiquetats explícitament: mai no es deduïx l'origen del lloc de l'acte.
+ * Els noms i slugs sencers casen per igualtat; «Torre» no casa per substring.
+ * Els labels de WordPress poden portar text, nom, slug o id. */
+export function poblesEsmentatsDeLaPublicacio(item) {
+  if (!item || typeof item !== 'object') return CAP;
+  const valors = [item.pobles_esmentats, item.poblesEsmentats, item.pobles_etiquetats, item.mentioned_towns, item.tags, item.labels];
+  const claus = valors.flatMap((valor) => Array.isArray(valor) ? valor : [])
+    .flatMap((valor) => valor && typeof valor === 'object'
+      ? [valor.id, valor.slug, valor.text, valor.name, valor.nom] : [valor])
+    .map((valor) => slugDelPoble(textDe(valor))).filter(Boolean);
+  return claus.length ? [...new Set(claus)] : CAP;
+}
+
+export function parlaDelPoble(item, town) {
+  const claus = clausDelPoble(town);
+  return poblesEsmentatsDeLaPublicacio(item).some((clau) => claus.includes(clau));
+}
+
+/** AH-17 · les tres vistes; «gent» conserva la semàntica històrica per als consumidors. */
+export function corresponAPestanyaDelPoble(item, town, pestanya = 'gent') {
+  const local = esDelPoble(item, town);
+  if (pestanya === 'tot') return local || parlaDelPoble(item, town);
+  if (pestanya === 'xarxa') return !local && parlaDelPoble(item, town);
+  return local;
+}
+
 /**
  * Les publicacions del poble `town` dins de `fonts` (el que dona useMur:
  * { feedPosts, marketItems, events }), sense ordenar: [{ seccio, item }],
  * sense repetits. Sense cap, CAP.
  */
-export function itemsDelPoble(fonts, town) {
+export function itemsDelPoble(fonts, town, pestanya = 'gent') {
   const claus = clausDelPoble(town);
   if (!claus.length || !fonts || typeof fonts !== 'object') return CAP;
   const vistos = new Set();
@@ -111,9 +137,8 @@ export function itemsDelPoble(fonts, town) {
     const llista = Array.isArray(fonts[font]) ? fonts[font] : CAP;
     for (const item of llista) {
       if (!item || typeof item !== 'object' || item.id == null) continue;
-      const clau = pobleDeLaPublicacio(item);
       const id = `${seccio}:${item.id}`;
-      if (clau === null || !claus.includes(clau) || vistos.has(id)) continue;
+      if (!corresponAPestanyaDelPoble(item, town, pestanya) || vistos.has(id)) continue;
       vistos.add(id);
       trobats.push({ seccio, item });
     }

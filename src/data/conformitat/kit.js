@@ -1207,7 +1207,16 @@ export const CASOS = Object.freeze([
     metode, capacitat: 'connexionsPubliques', espera: 'rebutja',
     titol: `${metode}: entrada buida rebutja SDP-CONN-001 abans de cap efecte`,
     arguments: ctx => [{}, ctx.config], comprova: rebuigAmbCodi('SDP-CONN-001')
-  }))
+  })),
+  // R6: append-only after the historical 178 cases. Email proof is a neutral
+  // optional capability; an adapter without an email service leaves it absent.
+  ...[
+    ['confirmaCorreu','verificacioCorreu',ctx=>['bad-token','explicit-test-password',{},ctx.config]],
+    ['reenviaVerificacioCorreu','verificacioCorreu',ctx=>[null,ctx.config]],
+    ['demanaRestablimentCorreu','recuperacioCorreu',ctx=>[null,ctx.config]],
+    ['restablixContrasenyaAmbCorreu','recuperacioCorreu',ctx=>['bad-token','explicit-test-password',null,ctx.config]]
+  ].map(([metode,capacitat,args])=>cas({metode,capacitat,espera:'rebutja',titol:metode+': entrada malformada no inicia prova ni recuperació',arguments:args,
+    comprova:rebuigAmbCodi('SDP-CORREU-001')}))
 ]);
 
 /**

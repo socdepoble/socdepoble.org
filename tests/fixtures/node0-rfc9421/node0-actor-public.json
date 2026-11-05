@@ -1,0 +1,21 @@
+{
+  "@context": [
+    "https://www.w3.org/ns/activitystreams",
+    "https://w3id.org/security/v1"
+  ],
+  "id": "https://socdepoble.cat/ap/actors/socdepoble",
+  "type": "Organization",
+  "preferredUsername": "socdepoble",
+  "name": "Sóc de Poble",
+  "url": "https://socdepoble.cat",
+  "summary": "<p>Xarxa comunitària de Sóc de Poble. Node 0 de La Torre de les Maçanes.</p>",
+  "inbox": "https://socdepoble.cat/ap/inbox",
+  "outbox": "https://socdepoble.cat/ap/outbox",
+  "followers": "https://socdepoble.cat/ap/followers/socdepoble",
+  "manuallyApprovesFollowers": false,
+  "publicKey": {
+    "id": "https://socdepoble.cat/ap/actors/socdepoble#ed25519",
+    "owner": "https://socdepoble.cat/ap/actors/socdepoble",
+    "publicKeyPem": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAfPLxmI2JFlRS0C2rshm27pKkAXMvUSPA4uofbWCe6ew=\n-----END PUBLIC KEY-----\n"
+  }
+}

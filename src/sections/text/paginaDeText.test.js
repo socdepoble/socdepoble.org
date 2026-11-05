@@ -82,15 +82,20 @@ test('/fedivers es resol per la ruta i per /page/fedivers, i el cos comença en 
   const enllacos = [...cosDe(html).querySelectorAll('a')].map((a) => [a.getAttribute('href'), a.textContent]);
   expect(enllacos).toEqual([
     ['https://socdepoble.org', 'socdepoble.org'], ['https://gentdelatorre.net', 'gentdelatorre.net'],
+    ['https://socdepoble.cat', 'socdepoble.cat'], ['https://socdepoble.cat/api/v1/node0/status', 'API pública d’estat'],
+    ['https://mastodont.cat/@depoble', '@depoble@mastodont.cat'], ['/notes', 'Bloc de Notes'],
+    ['/mur', 'Mur del Poble'], ['/mercat', 'Mercat Local'], ['/calendari', 'Calendari i Agenda'],
+    ['/mapa', 'Mapa del Territori'], ['/page/treball', 'Treball'], ['/page/habitatge', 'Habitatge'],
+    ['/pobles', 'Pobles'], ['/page/node-zero', 'Node 0 · Mac mini M4'], ['https://socdepoble.cat', 'socdepoble.cat'],
+    ['https://socdepoble.org', 'socdepoble.org'], ['https://gentdelatorre.net', 'gentdelatorre.net'],
     ['https://socdepoble.cat', 'socdepoble.cat'], ['/page/node-zero', 'Node 0 · Mac mini M4'],
     ['/perfil', 'perfil'], ['/mur', 'Mur'], ['/page/fediversity', 'horitzó'], ['/roadmap', 'full de ruta'],
     ['/page/node-zero', 'Node 0 · Mac mini M4']
   ]);
   expect(html).toContain('<strong>socdepoble.org</strong></a>');
   expect(cosDe(html).textContent).toContain('dos accessos públics consolidats');
-  expect(cosDe(html).textContent).toContain('sense garantia de disponibilitat ni base de dades independent encara');
-  expect(PAGE_COPY.fedivers.lead).toContain('dos punts d’accés consolidats');
-  expect(PAGE_COPY.fedivers.lead).toContain('sense garantia de disponibilitat ni base de dades pròpia encara');
+  expect(cosDe(html).textContent).toContain('sense garantia de disponibilitat; PostgreSQL propi ja està instal·lat, mentre la SPA continua amb Supabase.');
+  expect(PAGE_COPY.fedivers.lead).toBe('Un balanç datat dels serveis del poble. Cada avanç distingix producció, proves locals i treball pendent.');
   expect(html).toContain('<a href="https://socdepoble.cat" target="_blank" rel="noopener noreferrer"><strong>socdepoble.cat</strong></a>');
   // El Fedivers és horitzó, no funció: la pàgina ho diu.
   expect(html).toContain('Hui encara no està fet');
@@ -287,7 +292,7 @@ describe('261007 · /page/drets-autor és «Drets d’autor»', () => {
      els crèdits, les fotos només en eixe apartat) i el que encara no (l'alta
      i el servidor, Fase 3c). Si algú la crida des d'un altre lloc, o el codi
      deixa de dir el que diu la pàgina, esta prova cau. */
-  test('VQ · la pàgina diu que l’eina de pobles nous només treballa des del botó de la fitxa incompleta, i és veritat', () => {
+  test('VQ · AH-27: la pàgina distingix fotos editorials locals, hidratació de cau i consulta opcional', () => {
     const viqui = textDe(html.slice(html.indexOf('<h3>La Viquipèdia'), html.indexOf('<h3>Per què triar')));
     const recte = (text) => text.replace(/’/g, "'");
     expect(viqui).not.toContain('Hui encara no està fet del tot');
@@ -298,11 +303,15 @@ describe('261007 · /page/drets-autor és «Drets d’autor»', () => {
     expect(viqui).toContain('passats 30 dies, t\'oferix tornar-les a portar');
     expect(VIDA_MS.complet).toBe(30 * 24 * 60 * 60 * 1000);
     expect(viqui).toContain('sense canviar res del que la fitxa ja porta');
-    expect(viqui).toContain('Les fotos de Commons només es mostren en eixe apartat, no a la capçalera ni a la targeta.');
-    expect(viqui).toContain("Encara no s'activa sola quan algú s'apunta des d'un poble nou, no crea pobles nous i no guarda res al servidor");
+    expect(viqui).toContain('Les fotos remotes de Commons només es mostren en el panell de previsualització, no a la capçalera ni a la targeta.');
+    expect(viqui).toContain('Les dades ja guardades en este navegador completen els buits automàticament');
+    expect(viqui).toContain('fins que no el prems, el navegador no pregunta dades a Wikimedia');
+    expect(viqui).toContain('no crea pobles nous ni guarda res al servidor');
+    expect(viqui).toContain("no s'hi trasllada el cens del municipi pare");
     // Les dades que falten: les mateixes que fan incompleta una fitxa.
-    expect(viqui).toContain("li falta l'entradilla, la foto, la província o la comarca");
-    expect(CAMPS_DE_FITXA).toEqual(['content', 'image_url', 'provincia', 'comarca']);
+    expect(viqui).toContain("altitud, superfície, població amb l'any del cens i gentilici");
+    expect(CAMPS_DE_FITXA).toEqual(expect.arrayContaining(['content', 'image_url', 'population_year', 'elevation', 'area', 'gentilici']));
+    expect(CAMPS_DE_FITXA).not.toContain('shield_url');
     const arrel = resolve(process.cwd(), 'src');
     const fonts = readdirSync(arrel, { recursive: true }).map(String)
       .filter((fitxer) => /\.(?:js|jsx)$/.test(fitxer) && !/\.test\.(?:js|jsx)$/.test(fitxer));

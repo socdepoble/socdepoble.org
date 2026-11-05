@@ -4,6 +4,7 @@ import { CalendarDays, MapPin, UserRound, MessageCircle } from 'lucide-react';
 import { renderRichText, renderPostContent } from './detailRichText.jsx';
 import { getFirstImage, semblaHtml } from './detailHelpers.jsx';
 import { Aplec2023Article } from '../mur/articles/Aplec2023Article.jsx';
+import { ManifestDePobleArticle } from '../mur/articles/ManifestDePobleArticle.jsx';
 import { resolRecursPropi, resolRecursosDeHtml, resolveAsset } from '../../config/assetResolver.js';
 import { autorDe, objecteDe, rutaDePerfilPublicDAutor, rutaXatDePagina } from '../../config/navigation.js';
 import { signaturaDeQuiSigna } from '../../data/identitatsSeed.js';
@@ -35,6 +36,7 @@ import { Pestanyes } from '../../components/PedraSeca/organismes/Pestanyes.jsx';
 import { esErrorLazy, lazyRoute } from '../../apps/plataforma/lazyRoute.js';
 import { poblesAmbNaixement } from '../pobles/clauDelPoble.js';
 import { objecteDelPobleXat } from '../pobles/xatDelPoble.js';
+import { CamiTerritorial } from '../pobles/TerritoriDelPoble.jsx';
 /* VQ · Fase 3a de l'eina de pobles nous (261030): la regla pura de si la
    pàgina d'un poble porta el panell de la Viquipèdia (cap import del client). */
 import { pobleHidratable } from '../pobles/fitxaDelPoble.js';
@@ -585,28 +587,33 @@ export class BarreraDelPanellDelPoble extends React.Component {
   }
 }
 
-/* Onada 6 (pla 261009_0245, ítem 5; prompt 261009_0230, punt 6) · La barra
-   de pestanyes centrada de la pàgina d'un poble, davall del botó blau. La
-   primera, «Gent de …» (l'H1), amb totes les targetes publicades des del
-   poble (Mur, Agenda i Mercat), casades per dades: cap nom de poble al codi.
-   El panell es carrega en diferit; mentre arriba, el Carregant de Pedra Seca,
-   i si no arriba, l'avís dins de la pestanya (BarreraDelPanellDelPoble).
-   P1-11 (pla 261024_2230, T5B-01; ordre del Mestre 261024 18:21) · La
-   segona, «Empreses i entitats»: les organitzacions públiques que declaren el
-   poble (EntitatsDelPoble, el directori filtrat pel poble al servidor). Les
-   Pestanyes munten tots els panells; este només es munta quan la persona
-   l'obri (i es queda): cap petició al directori si ningú no el mira. */
+/* AH-17 · Tot obri per defecte; Gent conserva l'autoria local i Xarxa mostra
+   només les mencions externes. Cada vista publica reutilitza el mateix
+   panell diferit i la mateixa barrera d'errors. Empreses i entitats manté
+   la càrrega sota demanda i queda disponible com a quart accés. */
+const PESTANYA_DE_TOT = 'tot';
+const PESTANYA_DE_LA_XARXA = 'xarxa';
 const PESTANYA_DE_LA_GENT = 'gent';
 const PESTANYA_DE_LES_ENTITATS = 'entitats';
 
 function PestanyesDelPoble({ poble, gent, t }) {
-  const [activa, setActiva] = useState(PESTANYA_DE_LA_GENT);
+  const [activa, setActiva] = useState(PESTANYA_DE_TOT);
   const [entitatsObertes, setEntitatsObertes] = useState(false);
   const tria = (id) => {
     setActiva(id);
     if (id === PESTANYA_DE_LES_ENTITATS) setEntitatsObertes(true);
   };
   const fallada = t('section.notes.historic.fallada', 'La resta de la pàgina continua com sempre.');
+  const publicacions = (pestanya) => (
+    <BarreraDelPanellDelPoble
+      resetKey={`${String(poble?.id ?? '')}:${pestanya}`}
+      fallback={<Alerta to="error" titol={t('section.detail.pobles.gent.error', 'No s’han pogut carregar les publicacions del poble')}>{fallada}</Alerta>}
+    >
+      <React.Suspense fallback={<Carregant etiqueta={t('section.detail.pobles.gent.carregant', 'Carregant les publicacions del poble…')} />}>
+        <PublicacionsDelPoble poble={poble} pestanya={pestanya} />
+      </React.Suspense>
+    </BarreraDelPanellDelPoble>
+  );
   return (
     <Pestanyes
       centrades
@@ -614,22 +621,17 @@ function PestanyesDelPoble({ poble, gent, t }) {
       activa={activa}
       onCanvi={tria}
       pestanyes={[{
+        id: PESTANYA_DE_TOT,
+        etiqueta: t('section.detail.pobles.tot', 'Tot'),
+        contingut: activa === PESTANYA_DE_TOT ? publicacions(PESTANYA_DE_TOT) : null
+      }, {
         id: PESTANYA_DE_LA_GENT,
-        etiqueta: gent,
-        contingut: (
-          <BarreraDelPanellDelPoble
-            resetKey={String(poble?.id ?? '')}
-            fallback={(
-              <Alerta to="error" titol={t('section.detail.pobles.gent.error', 'No s’han pogut carregar les publicacions del poble')}>
-                {fallada}
-              </Alerta>
-            )}
-          >
-            <React.Suspense fallback={<Carregant etiqueta={t('section.detail.pobles.gent.carregant', 'Carregant les publicacions del poble…')} />}>
-              <PublicacionsDelPoble poble={poble} />
-            </React.Suspense>
-          </BarreraDelPanellDelPoble>
-        )
+        etiqueta: t('section.detail.pobles.gent.etiqueta', '{gent}').replace('{gent}', () => gent).replace('{poble}', () => poble.title || poble.name || ''),
+        contingut: activa === PESTANYA_DE_LA_GENT ? publicacions(PESTANYA_DE_LA_GENT) : null
+      }, {
+        id: PESTANYA_DE_LA_XARXA,
+        etiqueta: t('section.detail.pobles.xarxa', 'Xarxa'),
+        contingut: activa === PESTANYA_DE_LA_XARXA ? publicacions(PESTANYA_DE_LA_XARXA) : null
       }, {
         id: PESTANYA_DE_LES_ENTITATS,
         etiqueta: t('section.detail.pobles.entitats', 'Empreses i entitats'),
@@ -718,6 +720,7 @@ export function buildPoblesDetailSectionMeta({ towns = [], t, publicacions = nul
        dins del Xat (ItemDetailSection · VistaDelPoble). */
     renderBody: (item, { detall = false, senseXat = false } = {}) => (
       <>
+        {detall ? <CamiTerritorial poble={item} t={t} /> : null}
         {senseXat ? null : (
           <div className="sdp-pagina-accio">
             <PortaDePagina porta={{ id: 'xat-del-poble', verb: verbDelXat(item), desti: rutaXatDelPoble(item), varietat: 'primari' }} />
@@ -778,7 +781,8 @@ export function buildMurDetailSectionMeta({ feedPosts = [], t }) {
     items: feedPosts,
     getTitle: (item) => item.title || t('section.detail.mur.itemTitle', 'Publicació'),
     getSubtitle: (item) => item.post_subtitle || item.description || '',
-    getImage: (item) => item.imageSrc || getFirstImage(item.image_url || item.image) || null,
+    // AH-27: la figura inicial mostra el logo una sola vegada; la Card conserva image_url.
+    getImage: (item) => item.id === 'manifest-de-poble' ? null : item.imageSrc || getFirstImage(item.image_url || item.image) || null,
     renderBody: (item) => (
       <>
         {/* IDEA-61 (T0, prompt 261102_1532; correcció L3-A2) · Una fitxa d'àmbit
@@ -794,7 +798,9 @@ export function buildMurDetailSectionMeta({ feedPosts = [], t }) {
           <span className="pill">{item.likes || 0} {t('section.mur.likes', "m'agrada")}</span>
         </div>
         {/* Decisió 3 (261007) · Cap <img> de tercers al cos de la publicació. */}
-        {renderPostContent(cosAmbImatgesPropies(item.content || item.summary))}
+        {item.id === 'manifest-de-poble'
+          ? <ManifestDePobleArticle />
+          : renderPostContent(cosAmbImatgesPropies(item.content || item.summary))}
         {Array.isArray(item.tags) && item.tags.length > 0 ? (
           <div className="badge-row detail-tags">
             {item.tags.map((tag) => (

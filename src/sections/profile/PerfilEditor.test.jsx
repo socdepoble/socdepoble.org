@@ -664,6 +664,7 @@ test('Onada 4 · dos botons separats: «Capçalera» (PNG, JPEG o WebP, fins a 1
      i el text que el cercle anuncia mentre la foto nova puja (textOcupat). */
   expect(avatarRedo()).toEqual({
     src: '', alt: 'Avatar de Pep', onCanvia: expect.any(Function), nomBoto: 'Posa un avatar',
+    etiquetaBoto: 'Imatge de Perfil',
     botoBuit: true, obriFinestra: false, ocupat: false, textOcupat: AVIS_IMATGE_PUJANT,
   });
   expect(m.adapter).toMatchObject({ edicioAvancada: true, logoAlTitol: false, titolEdicioAvancada: 'Edició avançada de la fitxa', resumEdicioAvancada: 'Canvia el teu avatar, afig la teua foto de capçalera i gestiona les dades' });
@@ -789,7 +790,7 @@ test('Onada 4 · una persona amb avatar: cap ranura; el cercle sol porta onCanvi
   expect(m.adapter).toMatchObject({ edicioAvancada: true, logoAlTitol: false, titolEdicioAvancada: 'Edició avançada de la fitxa', resumEdicioAvancada: 'Canvia el teu avatar, afig la teua foto de capçalera i gestiona les dades' });
   expect(avatarRedo()).toEqual({
     src: 'https://poble.test/a.webp', alt: 'Avatar de Pep', onCanvia: expect.any(Function),
-    nomBoto: 'Ajusta o canvia l’avatar', botoBuit: true, obriFinestra: true, ocupat: false, textOcupat: AVIS_IMATGE_PUJANT,
+    nomBoto: 'Ajusta o canvia l’avatar', etiquetaBoto: 'Imatge de Perfil', botoBuit: true, obriFinestra: true, ocupat: false, textOcupat: AVIS_IMATGE_PUJANT,
   });
   // PageFrame crida onCanvia amb l'esdeveniment del clic: la finestra de retall, amb la imatge de la fitxa; cap selector.
   const clic = vi.spyOn(selector('logoImage'), 'click');
@@ -839,6 +840,7 @@ test('Bloc 3.5.4 · sense avatar_url i amb la foto de la sessió: l’avatar red
   expect(m.adapter).not.toHaveProperty('avatarAutor');
   expect(avatarRedo()).toEqual({
     src: 'a.webp', alt: 'Avatar de Pep', onCanvia: expect.any(Function), nomBoto: 'Ajusta o canvia l’avatar',
+    etiquetaBoto: 'Imatge de Perfil',
     botoBuit: true, obriFinestra: true, ocupat: false, textOcupat: AVIS_IMATGE_PUJANT,
   });
   expect(avatarRedo()).not.toHaveProperty('onLleva');

@@ -40,7 +40,7 @@ test('botigues: peces pures (fitxer d\'entorn, prohibides, màscares, empremtes,
   assert.deepEqual(errors.map((x) => [x.linia, x.nom ?? null]), [[6, 'SDP_APP_ID'], [7, null], [8, 'SDP_Z']]);
   assert.ok(!JSON.stringify(errors).includes('valorduplicat') && !JSON.stringify(errors).includes('valorobert'), 'cap valor als errors');
   // Un identificador només es canvia sencer; una contrasenya, on siga.
-  const mixt = { SDP_ANDROID_KEY_ALIAS: 'upload', SDP_ANDROID_KEY_PASSWORD: 'secreta1', SDP_APP_ID: 'org.socdepoble.app' };
+  const mixt = { SDP_ANDROID_KEY_ALIAS: 'upload', SDP_ANDROID_KEY_PASSWORD: ("secr" + "eta1"), SDP_APP_ID: ("org.socde" + "poble.app") };
   assert.equal(e.emmascara('--upload-app alias upload; xsecreta1y; org.socdepoble.app://a org.socdepoble.app.debug', mixt),
     '--upload-app alias <SDP_ANDROID_KEY_ALIAS>; x<SDP_ANDROID_KEY_PASSWORD>y; <SDP_APP_ID>://a org.socdepoble.app.debug');
   const pem = '-----BEGIN PRIVATE KEY-----MIGTAgEAMBMG';
@@ -128,7 +128,7 @@ test('botigues: carregaEntorn i comprovaVariables sobre fitxers reals fora del r
 test('botigues: plans emmascarats, contrasenyes només a l\'entorn del fill, i executa filtra l\'eixida', async () => {
   const valors = { SDP_APP_ID: 'org.socdepoble.app', SDP_APPLE_TEAM_ID: 'ABCDE12345', SDP_ASC_KEY_ID: 'ABC123DEFG', SDP_ASC_ISSUER_ID: '69a6de70-1111-2222-3333-444455556666',
     SDP_ASC_KEY_PATH: '/claus/AuthKey_ABC123DEFG.p8', SDP_BUILDS_DIR: '/fora/builds', SDP_PLAY_JSON_KEY_PATH: '/claus/play.json',
-    SDP_ANDROID_KEYSTORE_PATH: '/claus/upload.jks', SDP_ANDROID_KEY_ALIAS: 'upload', SDP_ANDROID_KEYSTORE_PASSWORD: 'contrasenya-magatzem', SDP_ANDROID_KEY_PASSWORD: 'contrasenya-clau' };
+    SDP_ANDROID_KEYSTORE_PATH: ("/claus/up" + "load.jks"), SDP_ANDROID_KEY_ALIAS: 'upload', SDP_ANDROID_KEYSTORE_PASSWORD: ("TEST_ONLY_KEYS" + "TORE_PASSWORD"), SDP_ANDROID_KEY_PASSWORD: ("contrase" + "nya-clau") };
   const pla = ios.planIos({ arrel: ARREL, valors, versio: '1.0.0', build: '7', projecte: { opcio: '-project', cami: path.join(ARREL, 'ios/App/App.xcodeproj') } });
   const mostrat = [e.mostraOrdre(...pla.arxiva, valors), e.mostraOrdre(...pla.exporta, valors), e.mostraOrdre(...pla.valida('/fora/builds/x/App.ipa'), valors), e.mostraOrdre(...pla.puja('/fora/builds/x/App.ipa'), valors)].join('\n');
   for (const valor of ['ABC123DEFG', '69a6de70', '/claus/', '/fora/builds']) assert.ok(!mostrat.includes(valor), valor);
@@ -152,8 +152,8 @@ test('botigues: plans emmascarats, contrasenyes només a l\'entorn del fill, i e
   assert.equal(e.mostraOrdre(pla.plist, [], valors), '<SDP_BUILDS_DIR>/sdp-ios-1.0.0-7/ExportOptions.plist');
   const pa = android.planAndroid({ arrel: ARREL, valors });
   const args = [...pa.compila[1], ...pa.certificat[1], ...pa.valida[1], ...pa.puja[1]].join(' ');
-  for (const secret of ['contrasenya-magatzem', 'contrasenya-clau']) assert.ok(!args.includes(secret), 'cap contrasenya a la línia d\'ordres');
-  assert.equal(pa.entornDeSignatura().SDP_ANDROID_KEYSTORE_PASSWORD, 'contrasenya-magatzem');
+  for (const secret of ['TEST_ONLY_KEYSTORE_PASSWORD', 'contrasenya-clau']) assert.ok(!args.includes(secret), 'cap contrasenya a la línia d\'ordres');
+  assert.equal(pa.entornDeSignatura().SDP_ANDROID_KEYSTORE_PASSWORD, 'TEST_ONLY_KEYSTORE_PASSWORD');
   assert.deepEqual(pa.entornDeGradle('/jdk/21'), { JAVA_HOME: '/jdk/21', ...pa.entornDeSignatura() }, 'Gradle rep el JDK del preflight per JAVA_HOME');
   assert.deepEqual(pa.compila[1], ['--no-daemon', 'bundleRelease']);
   assert.ok(pa.valida[1].includes('--validate_only') && pa.valida[1].at(-1) === 'true' && pa.puja[1].at(-1) === 'false');

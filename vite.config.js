@@ -88,6 +88,8 @@ export function trossDArrencada(id) {
   if (cami.includes('/node_modules/')) return undefined;
   if (cami.endsWith('/src/css/index.css?inline')) return 'estils';
   if (cami.endsWith('/src/config/idiomes/ca.js')) return 'ca';
+  // AH-27: snapshot editorial pur, cachejable a banda de la closca.
+  if (cami.endsWith('/src/sections/pobles/poblesAplecViquipedia.js')) return 'pobles-aplec';
   return undefined;
 }
 

@@ -628,6 +628,22 @@ const CLAUS = {
     eu: 'Oraindik ez dago herri honetako argitalpenik.',
     gl: 'Aínda non hai ningunha publicación dende este pobo.'
   },
+  /* AH-17 (261104) · Estats buits de les pestanyes «Tot» i «Xarxa». */
+  'section.detail.pobles.tot.buit': {
+    ca: 'Encara no hi ha publicacions d’este poble ni sobre ell.',
+    es: 'Todavía no hay publicaciones de este pueblo ni sobre él.',
+    en: 'There are no posts from or about this town yet.',
+    eu: 'Oraindik ez dago herri honetako edo herri honi buruzko argitalpenik.',
+    gl: 'Aínda non hai publicacións desta vila nin sobre ela.'
+  },
+  /* AH-17 (261104) · Estats buits de les pestanyes «Tot» i «Xarxa». */
+  'section.detail.pobles.xarxa.buit': {
+    ca: 'Encara no hi ha publicacions de fora que parlen d’este poble.',
+    es: 'Todavía no hay publicaciones de otros pueblos que hablen de este.',
+    en: 'There are no posts from elsewhere about this town yet.',
+    eu: 'Oraindik ez dago beste herrietatik herri honi buruzko argitalpenik.',
+    gl: 'Aínda non hai publicacións de fóra que falen desta vila.'
+  },
   'section.detail.pobles.gent.carregant': {
     ca: 'Carregant les publicacions del poble…',
     es: 'Cargando las publicaciones del pueblo…',
@@ -920,7 +936,7 @@ describe('claus i18n del torn T1–T4', () => {
   test('les reserves de les pestanyes del poble són els valors valencians', () => {
     const font = `${fontPortada}\n${fontTextosDelPoble}`;
     const deLaTaula = Object.keys(CLAUS).filter((clau) => clau.startsWith('section.detail.pobles.') && clau !== 'section.detail.pobles.parlarAmb');
-    expect(deLaTaula).toHaveLength(4);
+    expect(deLaTaula).toHaveLength(6);
     for (const clau of deLaTaula) {
       const reserva = CLAUS[clau].ca;
       const crida = font.includes(`t('${clau}', '${reserva}')`) || font.includes(`tradueix('${clau}', '${reserva}')`);
