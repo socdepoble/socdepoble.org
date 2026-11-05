@@ -89,6 +89,13 @@ function filaDeCua(f) {
 
 const boolea = (valor) => { if (typeof valor !== 'boolean') throw noDisponible(); return valor; };
 const unDe = (valor, valors) => { if (!valors.includes(valor)) throw noDisponible(); return valor; };
+/* P1-23 · ARB-M13-04 · Reclamació de tres estats ('nova' | 'en_curs' | 'feta') compatible amb retorn booleà. */
+const estatReclamacio = (valor, { tresEstats = false } = {}) => {
+  if (valor === 'en_curs') return 'en_curs';
+  if (valor === true || valor === 'nova') return tresEstats ? 'nova' : true;
+  if (valor === false || valor === 'feta' || valor === 'fet') return tresEstats ? 'feta' : false;
+  throw noDisponible();
+};
 
 /**
  * El magatzem i la cua sobre PostgREST. `base`: SUPABASE_URL; `clau`: la clau
@@ -137,11 +144,14 @@ export function creaMagatzemPostgrest({ base, clau, fetch = globalThis.fetch, to
 
   return Object.freeze({
     /* ── el port de la inbox ── */
-    async reclamaActivitat(id, { actor, tipus } = {}) {
-      return boolea(await rpc('ap_inbox_reclama', {
+    async reclamaActivitat(id, { actor, tipus, tresEstats = false } = {}) {
+      return estatReclamacio(await rpc('ap_inbox_reclama', {
         p_activitat_id: id, p_actor: actor, p_host: hostDeQuota(actor), p_tipus: tipus,
         p_retencio_s: RETENCIO_ACTIVITAT_MS / 1000, p_maxim_per_host: l.maximPerHost, p_maxim: l.maxim
-      }));
+      }), { tresEstats });
+    },
+    async reclamaEstatActivitat(id, opcions = {}) {
+      return this.reclamaActivitat(id, { ...opcions, tresEstats: true });
     },
     async alliberaActivitat(id) { return boolea(await rpc('ap_inbox_allibera', { p_activitat_id: id })); },
     async confirmaActivitat(id) { return boolea(await rpc('ap_inbox_confirma', { p_activitat_id: id })); },

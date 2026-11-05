@@ -44,6 +44,8 @@ import { useCapaEnrere } from '../hooks/useCapaEnrere.js';
 /* Gauntlet 261029 (cicle 1, i18n-a11y) · El nom de la X, en la llengua de
    la interfície; fora de l'app, la reserva de sempre. */
 const TANCA_DIALEG = Object.freeze(['common.tanca', 'Tancar']);
+const CONFIRMA_DIALEG = Object.freeze(['common.confirma', 'Confirmar']);
+const CANCELA_DIALEG = Object.freeze(['common.cancela', 'Cancel·lar']);
 
 export function Dialeg(props) {
   const origen = useRef(null);
@@ -230,15 +232,18 @@ function ContingutDialeg({
 
 export function DialegConfirmacio({
   obert, onTanca, onConfirma, titol, descripcio, children,
-  etiquetaConfirma = 'Confirmar', etiquetaCancela = 'Cancel·lar', destructiu = false, carregant = false,
+  etiquetaConfirma, etiquetaCancela, destructiu = false, carregant = false,
 }) {
+  const t = useTraductorOpcional();
+  const textCancela = etiquetaCancela ?? tradueix(t, CANCELA_DIALEG);
+  const textConfirma = etiquetaConfirma ?? tradueix(t, CONFIRMA_DIALEG);
   return (
     <Dialeg obert={obert} onTanca={onTanca} titol={titol} descripcio={descripcio} mida="s"
       tancaEnVel={!destructiu}
       accions={(
         <>
-          <Boto varietat="secundari" onClick={() => onTanca?.('boto')} autoFocus={destructiu} data-sdp-focus-inicial={destructiu || undefined}>{etiquetaCancela}</Boto>
-          <Boto varietat={destructiu ? 'perill' : 'primari'} onClick={onConfirma} carregant={carregant}>{etiquetaConfirma}</Boto>
+          <Boto varietat="secundari" onClick={() => onTanca?.('boto')} autoFocus={destructiu} data-sdp-focus-inicial={destructiu || undefined}>{textCancela}</Boto>
+          <Boto varietat={destructiu ? 'perill' : 'primari'} onClick={onConfirma} carregant={carregant}>{textConfirma}</Boto>
         </>
       )}>
       {children}

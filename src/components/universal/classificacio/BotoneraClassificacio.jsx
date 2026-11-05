@@ -28,9 +28,21 @@
  * suspensius en una columna estreta; el `title` el mostra sencer.
  */
 import { Feather, Folder, Layers, Shapes, Tags } from 'lucide-react';
+import { tradueix, useTraductorOpcional } from '../../PedraSeca/hooks/useTraductorOpcional.js';
+import { omple } from '../../../config/moderacio.js';
 
 
 const CAP = Object.freeze([]);
+const p = (nom, reserva) => Object.freeze([`universal.classificacio.botonera.${nom}`, reserva]);
+const TEXTOS_BOTONERA = Object.freeze({
+  grup: p('grup', 'Classificació del document'),
+  carpetes: p('carpetes', 'Carpetes'),
+  categories: p('categories', 'Categories'),
+  etiquetes: p('etiquetes', 'Etiquetes'),
+  ambit: p('ambit', 'Àmbit'),
+  emoticona: p('emoticona', 'Emoticona'),
+  pindolaEtiqueta: p('pindolaEtiqueta', '{grup}: {valors}'),
+});
 
 /* Classe de badge, nom i icona del grup (el text i la icona del botó de
    resum) quan ja està triat.
@@ -38,10 +50,10 @@ const CAP = Object.freeze([]);
    Compartir cotxe, Treball o Habitatge), amb la classe de l'àmbit a les
    targetes (etiquetesDAmbit · sdp-badge-system). */
 const PINDOLES = Object.freeze({
-  carpeta: Object.freeze({ badge: 'sdp-badge-system', nom: 'Carpetes', icona: Folder }),
-  categories: Object.freeze({ badge: 'sdp-badge-category', nom: 'Categories', icona: Shapes }),
-  etiquetes: Object.freeze({ badge: 'sdp-badge-tag', nom: 'Etiquetes', icona: Tags }),
-  ambit: Object.freeze({ badge: 'sdp-badge-system', nom: 'Àmbit', icona: Layers }),
+  carpeta: Object.freeze({ badge: 'sdp-badge-system', parellNom: TEXTOS_BOTONERA.carpetes, icona: Folder }),
+  categories: Object.freeze({ badge: 'sdp-badge-category', parellNom: TEXTOS_BOTONERA.categories, icona: Shapes }),
+  etiquetes: Object.freeze({ badge: 'sdp-badge-tag', parellNom: TEXTOS_BOTONERA.etiquetes, icona: Tags }),
+  ambit: Object.freeze({ badge: 'sdp-badge-system', parellNom: TEXTOS_BOTONERA.ambit, icona: Layers }),
 });
 
 /* O4-CLAUDE-1 (ordre del Mestre, captura 261102_2121) · Cada grup obri el seu
@@ -52,9 +64,12 @@ const popupDe = (tipus) => (tipus === 'ambit' ? undefined : 'dialog');
 
 /* Un botó per grup amb totes les píndoles del grup a dins (T7B-V1).
    IDEA-61 · `nom` (opcional): el nom accessible ja traduït; sense, el de sempre. */
-function Pindoles({ tipus, valors, onObri, nom: nomPropi }) {
-  const { badge, nom, icona: Icona } = PINDOLES[tipus];
-  const etiqueta = nomPropi || `${nom}: ${valors.join(', ')}`;
+function Pindoles({ tipus, valors, onObri, nom: nomPropi, t }) {
+  const { badge, parellNom, icona: Icona } = PINDOLES[tipus];
+  const etiqueta = nomPropi || omple(tradueix(t, TEXTOS_BOTONERA.pindolaEtiqueta), {
+    grup: tradueix(t, parellNom),
+    valors: valors.join(', '),
+  });
   return (
     <button type="button" className="sdp-classificacio-pindola" aria-haspopup={popupDe(tipus)}
       aria-label={etiqueta} title={etiqueta} onClick={() => onObri?.(tipus)}>
@@ -75,7 +90,7 @@ function BotoResum({ tipus, icona: Icona, glif = null, text, resum, onObri }) {
         {glif ? <span className="sdp-classificacio-botonera__glif" aria-hidden="true">{glif}</span> : Icona ? <Icona aria-hidden="true" focusable="false" /> : null}
         <span className="sdp-classificacio-pindola__text">
           {text}
-          {resum === null ? null : <span className="sdp-classificacio-botonera__resum"> ({resum})</span>}
+          {resum === null ? null : <span className="sdp-classificacio-botonera__resum">{` (${resum})`}</span>}
         </span>
       </span>
     </button>
@@ -99,27 +114,29 @@ function BotoResum({ tipus, icona: Icona, glif = null, text, resum, onObri }) {
    O4-CLAUDE-1 · El botó «Àmbit» no obri cap diàleg (sense aria-haspopup): qui
    munta la botonera hi porta, al bloc «On es publica?» en línia. Continua
    abans de l'emoticona, que ha de ser l'últim botó (DESTINS_FOCUS.icon). */
-export function BotoneraClassificacio({ carpeta, categories = CAP, etiquetes = CAP, emoticona = '', etiquetaEmoticona = 'Emoticona', ambit, onObri }) {
+export function BotoneraClassificacio({ carpeta, categories = CAP, etiquetes = CAP, emoticona = '', etiquetaEmoticona = null, ambit, onObri }) {
+  const t = useTraductorOpcional();
+  const textEmoticona = etiquetaEmoticona || tradueix(t, TEXTOS_BOTONERA.emoticona);
   const valorsDe = (llista) => llista.filter(Boolean);
   const triatsCategories = valorsDe(categories);
   const triatsEtiquetes = valorsDe(etiquetes);
   return (
-    <div className="sdp-classificacio-botonera" role="group" aria-label="Classificació del document">
+    <div className="sdp-classificacio-botonera" role="group" aria-label={tradueix(t, TEXTOS_BOTONERA.grup)}>
       {carpeta
-        ? <Pindoles tipus="carpeta" valors={[carpeta]} onObri={onObri} />
-        : <BotoResum tipus="carpeta" icona={Folder} text="Carpetes" resum="—" onObri={onObri} />}
+        ? <Pindoles tipus="carpeta" valors={[carpeta]} onObri={onObri} t={t} />
+        : <BotoResum tipus="carpeta" icona={Folder} text={tradueix(t, TEXTOS_BOTONERA.carpetes)} resum="—" onObri={onObri} />}
       {triatsCategories.length
-        ? <Pindoles tipus="categories" valors={triatsCategories} onObri={onObri} />
-        : <BotoResum tipus="categories" icona={Shapes} text="Categories" resum={0} onObri={onObri} />}
+        ? <Pindoles tipus="categories" valors={triatsCategories} onObri={onObri} t={t} />
+        : <BotoResum tipus="categories" icona={Shapes} text={tradueix(t, TEXTOS_BOTONERA.categories)} resum={0} onObri={onObri} />}
       {triatsEtiquetes.length
-        ? <Pindoles tipus="etiquetes" valors={triatsEtiquetes} onObri={onObri} />
-        : <BotoResum tipus="etiquetes" icona={Tags} text="Etiquetes" resum={0} onObri={onObri} />}
+        ? <Pindoles tipus="etiquetes" valors={triatsEtiquetes} onObri={onObri} t={t} />
+        : <BotoResum tipus="etiquetes" icona={Tags} text={tradueix(t, TEXTOS_BOTONERA.etiquetes)} resum={0} onObri={onObri} />}
       {ambit ? (ambit.valor
-        ? <Pindoles tipus="ambit" valors={[ambit.valor]} nom={ambit.nom} onObri={onObri} />
+        ? <Pindoles tipus="ambit" valors={[ambit.valor]} nom={ambit.nom} onObri={onObri} t={t} />
         : <BotoResum tipus="ambit" icona={Layers} text={ambit.text} resum="—" onObri={onObri} />) : null}
       {emoticona
-        ? <BotoResum tipus="emoticona" icona={null} glif={emoticona} text={etiquetaEmoticona} resum={null} onObri={onObri} />
-        : <BotoResum tipus="emoticona" icona={Feather} text={etiquetaEmoticona} resum="—" onObri={onObri} />}
+        ? <BotoResum tipus="emoticona" icona={null} glif={emoticona} text={textEmoticona} resum={null} onObri={onObri} />
+        : <BotoResum tipus="emoticona" icona={Feather} text={textEmoticona} resum="—" onObri={onObri} />}
     </div>
   );
 }

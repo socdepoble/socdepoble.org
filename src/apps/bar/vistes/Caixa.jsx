@@ -27,7 +27,7 @@ import {
 } from '../../../components/PedraSeca/index.js';
 import { ColumnaCataleg, ColumnaColleccio, ColumnaColleccions } from '../../comu/esquelet/index.js';
 import { esIdOpac, esSlug, useParametresConsulta } from '../../plataforma/index.js';
-import { NOMS_ALERGENS, resolModificadors } from '../nucli/cataleg.js';
+import { NOMS_ALERGENS, grupsDe, resolModificadors } from '../nucli/cataleg.js';
 import { totals } from '../nucli/comanda.js';
 import { potTancar } from '../nucli/cobrament.js';
 import { useBar } from '../estat/ProveidorBar.jsx';
@@ -129,9 +129,8 @@ function CatalegDelPunt({ params }) {
           variantsDe: (article) => opcionsDetall(perId.get(article.id), carta.grups),
           triaDirecta: (article) => necessitaTria(perId.get(article.id), carta.grups),
           etiquetaVariants: (article) => {
-            const producte = perId.get(article.id);
-            const grup = carta.grups.find((g) => producte.grupsModificadors.includes(g.id));
-            return grup ? grup.nom : 'Variant';
+            const delProducte = grupsDe(perId.get(article.id), carta.grups);
+            return delProducte.length ? delProducte.map((g) => g.nom).join(' · ') : 'Variant';
           },
           etiquetaNota: 'Nota per a la barra o la cuina',
           textAccepta: 'Afig',

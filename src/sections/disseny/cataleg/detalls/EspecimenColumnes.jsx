@@ -39,7 +39,7 @@ export default function EspecimenColumnes() {
           ['titol / icona', 'string / Component', '—', 'El nom de la columna i la seua icona.'],
           ['startActions / endActions', '{ id, etiqueta, label?, icona, variant?, onAcciona, desactivat?, pressed? }[]', '[]', "variant 'text' pinta icona i text; 'primary', el botó ple (Crear); sense variant, un botó d’icona de 44px. Sense onAcciona, desactivat, llevat de la variant 'text', que es queda activa (només desactivat la desactiva)."],
           ['accions', 'igual que endActions', '[]', 'Àlies antic d’endActions (només si endActions és buit).'],
-          ['onReplega / etiquetaReplega', '() => void / string', 'null', 'Afig el botó de replegar (només en escriptori) o, plegada, el d’expandir.'],
+          ['onReplega / etiquetaReplega', '() => void / string', 'null', 'Afig el botó de replegar (en escriptori i amb replegaCompacte en mòbil) o, plegada, el d’expandir (pla 261104_1636, AH-16).'],
           ['replegaTotaCapcalera', 'boolean', 'false', 'Si només hi ha l’acció de replegar, tota la fila és el botó. Només l’usa el Xat: als espais de treball pleguen la icona de l’esquerra i el [|<], el títol és fix i l’acordió porta la paraula i el chevron apegat (ordre d’usabilitat del Mestre, 30-10-2026).'],
           ['plegable / obert / onPlega', 'boolean / boolean / () => void', 'false / true / null', 'El títol és un botó que plega el grup de navegació (aria-expanded i fletxa).'],
           ['variant', "'collapsed' | 'accordion' | null", 'null', "'collapsed': el carril. 'accordion' només afig una classe i ara no la fa servir cap secció."],

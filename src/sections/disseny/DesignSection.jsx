@@ -21,6 +21,14 @@ import { useSEO } from '../../hooks/useSEO';
 /* Ordre del Mestre (30-10-2026, prompt 2208; SEO-CRIT-02) · Del mòdul pur de
    config/, no de TextSection.jsx: /disseny no carrega cap component de Text. */
 import { opcionsDeLaImatgeSocial } from '../../config/opcionsImatgeSocial.js';
+import { tradueix, useTraductorOpcional } from '../../components/PedraSeca/hooks/useTraductorOpcional.js';
+
+const pDisseny = (nom, reserva) => Object.freeze([`section.disseny.${nom}`, reserva]);
+export const TEXTOS_ESPAI_DISSENY = Object.freeze({
+  categories: pDisseny('categories', 'DISSENY'),
+  items: pDisseny('items', 'COMPONENTS'),
+  tria: pDisseny('tria', 'Tria un component del catàleg.'),
+});
 
 /* Família del catàleg on viu l'espècimen (la primera, si en té més d'una). */
 const etiquetaCategoria = (item) => (
@@ -147,6 +155,7 @@ function CatalogDetail({ item }) {
 }
 
 export default function DesignSection() {
+  const t = useTraductorOpcional();
   const [params, setParams] = useSearchParams();
   const categoryId = params.get('categoria') ?? 'fonaments';
   const itemId = params.get('item'); // If null, UniversalWorkspace won't auto-select the first item
@@ -201,7 +210,11 @@ export default function DesignSection() {
       initialSelection={{ categoryId, itemId }}
       selection={{ categoryId, itemId }}
       onSelectionChange={handleSelectionChange}
-      labels={{ categories: 'DISSENY', items: 'COMPONENTS', select: 'Tria un component del catàleg.' }}
+      labels={{
+        categories: tradueix(t, TEXTOS_ESPAI_DISSENY.categories),
+        items: tradueix(t, TEXTOS_ESPAI_DISSENY.items),
+        select: tradueix(t, TEXTOS_ESPAI_DISSENY.tria),
+      }}
       icons={{ categories: LayoutGrid, items: Component }}
 
       renderDetail={({ item }) => <CatalogDetail item={item} />}

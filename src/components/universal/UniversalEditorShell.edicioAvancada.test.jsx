@@ -525,4 +525,14 @@ describe('O4-CLAUDE-1 · la ranura «On es publica?» i la petició d’anar-hi'
       amfitrio.remove();
     }
   });
+
+  test('AH-15 · previsualitzacioTargeta es pinta dins de .sdp-edicio-avancada__cos amb data-sdp-ranura="targeta-viva"', () => {
+    const { container } = closca({
+      edicioAvancada: true,
+      previsualitzacioTargeta: <div data-testid="card-viva">Previsualització de la targeta</div>,
+    });
+    const ranura = container.querySelector('.sdp-edicio-avancada__cos [data-sdp-ranura="targeta-viva"]');
+    expect(ranura).not.toBeNull();
+    expect(ranura.textContent).toContain('Previsualització de la targeta');
+  });
 });

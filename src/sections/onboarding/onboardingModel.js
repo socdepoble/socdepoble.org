@@ -1,5 +1,10 @@
 import { CODI_ENTRADA, esBackendInabastable } from '../../data/errorsBackend.js';
 import { PERSONA_PILOT } from '../../data/identitatsSeed.js';
+export {
+  REMITENT_CORREU_CANONIC,
+  NOM_REMITENT_CANONIC,
+  generaCorreuBenvinguda,
+} from '../../data/plantillesCorreu/benvingudaVerificacio.js';
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const SLUG_PATTERN = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;

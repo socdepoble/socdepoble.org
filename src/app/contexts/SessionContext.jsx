@@ -4,6 +4,7 @@ import { useCallback, useContext, useEffect, useState, useMemo, useRef } from 'r
    que no importa res del projecte: una instància nova d'este mòdul (HMR) no
    en crea cap de nou. */
 import { SessionContext } from './objectesDeContext.js';
+import { EMPTY_SESSION_CONFIG, ESTAT_SESSIO } from './sessionContextIntern.js';
 import { teCapacitat, logout, loginWithGoogle, loginWithPassword, registerWithPassword, listMyOrganizations, comprovaServidor, demanaRecuperacioContrasenya, definixContrasenyaNova, entraAmbTokenDeProveidor, getCurrentUser } from '../../data/backendPort.js';
 import { getSessionState, subscribeSession, setSessionConfig, renovaAra } from '../../data/sessionService.js';
 import {
@@ -21,7 +22,7 @@ import {
   baixaAvisosPushEnEixir, baixaLocalAvisosPushEnEntrar, oblidaAvisosPushEnEixir, reprenAvisosPushTrasEixidaFallida
 } from '../../config/avisosPushXat.js';
 
-const EMPTY_CONFIG = Object.freeze({});
+const EMPTY_CONFIG = EMPTY_SESSION_CONFIG;
 
 /* Pla 261029_1605 (Sessió; IDEA-54/55) · Un ordinador compartit del poble: les
    carpetes locals recordades del Gestor d'arxius (handles a la base del
@@ -181,7 +182,7 @@ registraEixidaDeVeres(() => eixidaDeVeres({
 }));
 
 /** 'comprovant' → encara no se sap. 'dins' / 'fora' → resolt. */
-export const ESTAT = Object.freeze({ COMPROVANT: 'comprovant', DINS: 'dins', FORA: 'fora' });
+export const ESTAT = ESTAT_SESSIO;
 
 export function SessionProvider({ children, config = EMPTY_CONFIG }) {
   const owner = useRef(Symbol('SessionProvider'));

@@ -49,12 +49,12 @@ const ambText = (valor) => typeof valor === 'string' && valor.trim() !== '';
  * entrada). `meta` és la de la fila tal com la pinta la llista (amb «El teu
  * perfil» o «La gestiones tu» davant); sense, la de l'entrada.
  */
-export function propsDeTargetaDeResultat(entrada, { meta } = {}) {
+export function propsDeTargetaDeResultat(entrada, { meta, nomActual } = {}) {
   const dades = (Array.isArray(meta) ? meta : Array.isArray(entrada?.meta) ? entrada.meta : []).filter(ambText);
   const ambAvatar = Boolean(entrada?.avatar);
   const href = ambText(entrada?.href) ? entrada.href : undefined;
   return {
-    title: entrada?.titol || '',
+    title: ambText(nomActual) ? nomActual.trim() : (entrada?.titol || ''),
     mainHref: href,
     imageUrl: entrada?.imatge?.src || undefined,
     imageAlt: entrada?.imatge?.alt || '',

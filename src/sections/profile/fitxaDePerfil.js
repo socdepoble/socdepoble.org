@@ -2,6 +2,8 @@ import { RUTA_PERFIL_PROJECTE, rutaDAutoria, rutaDePerfil } from '../../config/n
 import { ENTITAT_PILOT_SLUG, POBLE_FUNDACIONAL, clauFundacional } from '../../data/identitatsSeed.js';
 import { DEFAULT_AUTHOR, esRutaDelProjecte } from '../../components/universal/UniversalUtils.js';
 import { esFontImatgePropia } from '../../utils/sanitize.js';
+import { tradueix } from '../../components/PedraSeca/hooks/useTraductorOpcional.js';
+import { omple } from '../../config/moderacio.js';
 import { menaDeFitxa } from './perfilCamps.js';
 import { formataPoble, llistaDePobles, poblePrincipal } from '../pobles/nomsDelPoble.js';
 
@@ -51,8 +53,17 @@ import { formataPoble, llistaDePobles, poblePrincipal } from '../pobles/nomsDelP
 /* Qui pot editar la fitxa d'una organització (la RLS ho torna a dir al servidor). */
 const ROLS_QUE_EDITEN = new Set(['owner', 'admin']);
 
+const p = (nom, reserva) => Object.freeze([`section.perfil.fitxa.${nom}`, reserva]);
+export const TEXTOS_FITXA_PERFIL = Object.freeze({
+  ia: p('ia', 'Intel·ligència artificial'),
+  baixaEnCurs: p('baixaEnCurs', 'Baixa en curs'),
+  senseConnexio: p('senseConnexio', 'Sense connexió'),
+  deApostrof: p('deApostrof', 'd’{nom}'),
+  dePreposicio: p('dePreposicio', 'de {nom}'),
+});
+
 /* Lògica d'Usuari (T4): la fitxa d'un agent IA es diu clarament el que és. */
-export const ETIQUETA_IA = 'Intel·ligència artificial';
+export const ETIQUETA_IA = TEXTOS_FITXA_PERFIL.ia[1];
 
 /**
  * El slug d'una organització que no és un grup (la fila de
@@ -231,11 +242,11 @@ export function pobleDeFitxa(identitat, identitats = []) {
  * l'estat que la fa de lectura («Baixa en curs», «Sense connexió»), que no és
  * cap categoria sinó un avís honest. L'organització i l'agent, com sempre.
  */
-export function etiquetesDeFitxa(identitat) {
+export function etiquetesDeFitxa(identitat, t = null) {
   const rol = menaDeFitxa(identitat) === 'persona' ? [] : [{ text: identitat?.rol }];
-  if (enBaixa(identitat)) return [...rol, { text: 'Baixa en curs' }];
-  if (deReserva(identitat)) return [...rol, { text: 'Sense connexió' }];
-  if (menaDeFitxa(identitat) === 'agent') return [...rol, { text: ETIQUETA_IA }];
+  if (enBaixa(identitat)) return [...rol, { text: tradueix(t, TEXTOS_FITXA_PERFIL.baixaEnCurs) }];
+  if (deReserva(identitat)) return [...rol, { text: tradueix(t, TEXTOS_FITXA_PERFIL.senseConnexio) }];
+  if (menaDeFitxa(identitat) === 'agent') return [...rol, { text: tradueix(t, TEXTOS_FITXA_PERFIL.ia) }];
   return rol;
 }
 
@@ -243,4 +254,8 @@ export function etiquetesDeFitxa(identitat) {
    davant d'una i o una u semiconsonants: «de IAIA MarIA»). P1-11 (revisió
    adversarial 261024) · Abans vivia a DetallMultimedia.jsx; ara el llig també
    «Membres i connexions» (DetallCompte.jsx). */
-export const deNom = (nom) => (/^h?(?![iu][aeiouàèéíòóú])[aeiouàèéíòóú]/i.test(nom) ? `d’${nom}` : `de ${nom}`);
+export const deNom = (nom, t = null) => (
+  /^h?(?![iu][aeiouàèéíòóú])[aeiouàèéíòóú]/i.test(nom)
+    ? omple(tradueix(t, TEXTOS_FITXA_PERFIL.deApostrof), { nom })
+    : omple(tradueix(t, TEXTOS_FITXA_PERFIL.dePreposicio), { nom })
+);

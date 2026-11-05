@@ -88,7 +88,7 @@ export function rutaDeLaBoinaDelMur(item) {
    alertaMunicipalDe, amb useAjuntamentsDelMur). La targeta no ho decidix: el
    MurSection és qui pregunta al directori. Sense la prop (el Calendari,
    l'històric de l'actor, el peu «Ja publicat»), el DOM de sempre. */
-export function TargetaDelMur({ item, esdeveniment = null, alertaMunicipal = null }) {
+export function TargetaDelMur({ item, esdeveniment = null, alertaMunicipal = null, varietatPorta = 'primari' }) {
   const { t } = useUIActions();
   const navigate = useNavigate();
   /* T6 en remot · l'id de servidor de l'entitat pilot: quan arriba, la boina
@@ -257,7 +257,7 @@ export function TargetaDelMur({ item, esdeveniment = null, alertaMunicipal = nul
          el sistema ja no porta a /pobles, sinó a la pàgina de qui signa. */
       authorHref={rutaDeLaBoinaDelMur(item)}
       objecte={objecte}
-      accio={porta ? <PortaDePagina porta={porta} /> : null}
+      accio={porta ? <PortaDePagina porta={porta} varietat={varietatPorta} /> : null}
       onConnect={() => navigate(rutaConnectarObjecte(objecte))}
       /* Decisió 3 (261007) · L'avatar declarat, si és propi. Un de fora (un
          avatar de Google) no cau al logotip de Sóc de Poble, que signaria la

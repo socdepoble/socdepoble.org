@@ -53,7 +53,7 @@ import { useState } from 'react';
 import { useNavigate } from '../../../app/contexts/RouterContext';
 import { UniversalTPV } from '../../../components/PedraSeca/index.js';
 import { esIdOpac, esSlug, useParametresConsulta, useSessioApp } from '../../plataforma/index.js';
-import { grupsDe, resolModificadors } from '../nucli/cataleg.js';
+import { resolModificadors } from '../nucli/cataleg.js';
 import { useBar } from '../estat/ProveidorBar.jsx';
 import { avisDeSessio } from '../estat/textos.js';
 import { DialegPreuObert } from './Caixa.jsx';
@@ -61,8 +61,8 @@ import { EditorLinia } from './EditorLinia.jsx';
 import { AvisBase, AvisOperacio, AvisSessio, NoTrobat, Preparat } from './comu.jsx';
 import { useFixaComanda, usePunt, useVes } from './punt.js';
 import {
-  TEXTOS_LINIES_BAR, articlesDelTpv, categoriesVestides, llegixOpcio, necessitaTria, nomOrigen, opcionsDetall, preuObertDeConsulta,
-  textLinies, tiquetDeComanda, tiquetsOberts, triaLaVariant
+  TEXTOS_LINIES_BAR, articlesDelTpv, categoriesVestides, descripcioTria, llegixOpcio, necessitaTria, nomOrigen, opcionsDetall,
+  preuObertDeConsulta, textLinies, tiquetDeComanda, tiquetsOberts, triaLaVariant
 } from './vestits.js';
 
 /* La consulta del TPV: només slugs, ids opacs i la bandera dels oberts. */
@@ -131,14 +131,13 @@ function TpvDelPunt({ params }) {
     else afig(producte);
   };
 
-  /* El diàleg menut (?tria=<producte>): les variants i les opcions del primer grup, amb el preu final. */
+  /* El diàleg menut (?tria=<producte>): les variants i les opcions dels grups de modificadors, amb el preu final. */
   const perTriar = ven && consulta.tria ? perId.get(consulta.tria) || null : null;
   const triable = perTriar && perTriar.actiu !== false && demanaTria(perTriar, carta.grups) ? perTriar : null;
-  const [grup] = triable ? grupsDe(triable, carta.grups) : [];
   const tria = {
     obert: Boolean(triable),
     titol: triable ? triable.nom : 'Tria',
-    descripcio: grup ? `Tria una opció de «${grup.nom}».` : 'Tria la variant.',
+    descripcio: triable ? descripcioTria(triable, carta.grups) : 'Tria la variant.',
     opcions: triable ? opcionsDetall(triable, carta.grups).map((o) => ({ id: o.valor, nom: o.etiqueta, valor: o.ajuda })) : [],
     onTria: (opcio) => {
       const { varianteId, opcions } = llegixOpcio(opcio.id);

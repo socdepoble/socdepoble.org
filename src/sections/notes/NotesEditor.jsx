@@ -664,6 +664,8 @@ export default function NotesEditor({ activeNote, onToast = null }) {
          deixant net el flux d'escriptura H1 → H2 → Lead → Eines → Cos. */
       edicioAvancada: true,
       posicioEdicioAvancada: 'despres-autoria',
+      titolEdicioAvancada: t('section.notes.editor.edicioAvancada.titol', 'Edició avançada de la nota'),
+      resumEdicioAvancada: t('section.notes.editor.edicioAvancada.resum', 'Afig la foto de capçalera, el logotip, l’àmbit de publicació, etiquetes i drets'),
       showDarkLogoUpload: true,
       /* P1-64 (pla 261028_1526 §3.1.1; Mestre 261028, decisió 8) · El cos d'una
          publicació: l'ordre «/» Imatge pregunta si es conserven la ubicació i la

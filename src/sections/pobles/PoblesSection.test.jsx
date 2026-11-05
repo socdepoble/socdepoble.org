@@ -41,6 +41,8 @@ import { APP_SEED } from '../../data/appSeed.js';
 import { llavorAmbDatesDeProva } from '../mur/datesDeProvaMur.js';
 import { PortaDePagina } from '../../components/PedraSeca/organismes/PortesTargeta.jsx';
 import { EntitatsDelPoble } from './EntitatsDelPoble.jsx';
+import PanellDeViquipedia from './PanellDeViquipedia.jsx';
+import { VistaPublicacionsDeLActor } from '../mur/PublicacionsDeLActor.jsx';
 
 const llavor = (towns) => ({ status: 'ready', error: null, sortedTowns: towns });
 const targetes = (arrel) => [...arrel.querySelectorAll('article.sp-card')];
@@ -256,6 +258,29 @@ test('PS-07 · a la graella d’entitats d’un poble, «Anar al xat» de cada e
   expect(botons.map((b) => b.className)).toEqual(Array(2).fill('sdp-boto sdp-boto--secundari sdp-boto--gran sdp-boto--ple'));
   expect(botons.every((b) => b.closest('.sp-card-accio') && b.getAttribute('href').startsWith('/xat?'))).toBe(true);
   expect(container.querySelectorAll('.sdp-boto--primari')).toHaveLength(0);
+});
+
+test('PS-07 · a /pobles/:id, «Porta-ho de la Viquipèdia» i les targetes amb porta dins de PublicacionsDelPoble són secundaris (cap primari extra)', () => {
+  const { container: vq } = render(
+    <PanellDeViquipedia poble={{ id: 'la-torre-de-les-macanes', title: 'La Torre de les Maçanes', provincia: 'Alacant' }} t={mocks.t} llig={vi.fn()} />
+  );
+  const botoPorta = vq.querySelector('[data-viquipedia="porta"]');
+  expect(botoPorta).not.toBeNull();
+  expect(botoPorta.className).toContain('sdp-boto--secundari');
+  expect(vq.querySelectorAll('.sdp-boto--primari')).toHaveLength(0);
+
+  const { container: pub } = render(
+    <VistaPublicacionsDeLActor
+      elements={[{ id: 'sys-xat', seccio: 'mur', item: { id: 'xat', type: 'sistema', isSystem: true, title: 'El Xat', mainHref: '/xat', description: '.' } }]}
+      estat="ready"
+      textos={{ titol: '', buit: 'Buit', carregant: 'Carregant', error: 'Error' }}
+      varietatPorta="secundari"
+    />
+  );
+  expect(pub.querySelectorAll('.sdp-boto--primari')).toHaveLength(0);
+  const accioXat = pub.querySelector('.sp-card-accio a');
+  expect(accioXat).not.toBeNull();
+  expect(accioXat.className).toBe('sdp-boto sdp-boto--secundari sdp-boto--gran sdp-boto--ple');
 });
 
 test('Onada 8 · cap boina de poble porta al xat: totes a la seua fitxa, i cada targeta porta el seu «Anar al xat»', () => {

@@ -291,3 +291,13 @@ test('Bloc 3.5.4 · després d’un 403 al desat de l’avatar, la miniatura de 
     await cuaDesament.reinicia();
   }
 });
+
+test('AH-15 · dins d’«Edició avançada de la fitxa» hi ha la previsualització viva de la Card (TargetaViva) reactiva als canvis de l’editor', () => {
+  const { container } = render(<PerfilShell />);
+  const ranuraTargeta = () => detall(container).querySelector('details.sdp-edicio-avancada [data-sdp-ranura="targeta-viva"] .sp-card');
+  expect(ranuraTargeta()).not.toBeNull();
+  expect(within(ranuraTargeta()).getByRole('heading', { level: 3, name: 'Javi Llinares' })).toBeTruthy();
+  act(() => { escriu(container, 'title', 'Mestre Javi'); });
+  expect(within(ranuraTargeta()).getByRole('heading', { level: 3, name: 'Mestre Javi' })).toBeTruthy();
+});
+

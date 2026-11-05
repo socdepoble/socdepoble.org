@@ -54,9 +54,9 @@ function useTraductor() {
    Onada 6 (pàgina del poble) · Una llista que barreja seccions (les targetes
    d'un poble: Mur, Agenda i Mercat) porta la secció a cada entrada, i mana
    sobre la de la regió. Sense, la de la regió, com sempre. */
-const targetaDe = (seccio) => ({ id, item, esdeveniment, seccio: propia }) => ((propia ?? seccio) === 'mercat'
+const targetaDe = (seccio, varietatPorta = 'primari') => ({ id, item, esdeveniment, seccio: propia }) => ((propia ?? seccio) === 'mercat'
   ? <TargetaDelMercat key={id} item={item} />
-  : <TargetaDelMur key={id} item={item} esdeveniment={esdeveniment} />);
+  : <TargetaDelMur key={id} item={item} esdeveniment={esdeveniment} varietatPorta={varietatPorta} />);
 
 /**
  * La vista, sense dades pròpies: el que pinta la regió per a una font
@@ -67,7 +67,7 @@ const targetaDe = (seccio) => ({ id, item, esdeveniment, seccio: propia }) => ((
  * font (les publicacions d'un poble, pobles/PublicacionsDelPoble.jsx).
  * Un `titol` buit no pinta cap capçalera. Sense `textos`, com sempre.
  */
-export function VistaPublicacionsDeLActor({ seccio, elements = CAP, estat = 'ready', error = null, refresh = null, nivell = 'h2', textos: textosPropis = null }) {
+export function VistaPublicacionsDeLActor({ seccio, elements = CAP, estat = 'ready', error = null, refresh = null, nivell = 'h2', textos: textosPropis = null, varietatPorta = 'primari' }) {
   const t = useTraductor();
   const textos = textosPropis || textosDeLHistoric(seccio, t);
   if (!textos) return null;
@@ -77,7 +77,7 @@ export function VistaPublicacionsDeLActor({ seccio, elements = CAP, estat = 'rea
   if (estat === 'error') cos = <EstatErrorDades titol={textos.error} error={error} onReintenta={refresh} />;
   else if (PENDENTS.has(estat) && !llista.length) cos = <Carregant etiqueta={textos.carregant} />;
   else if (!llista.length) cos = <p role="status">{textos.buit}</p>;
-  else cos = <GraellaTargetes elements={llista}>{targetaDe(seccio)}</GraellaTargetes>;
+  else cos = <GraellaTargetes elements={llista}>{targetaDe(seccio, varietatPorta)}</GraellaTargetes>;
   return (
     <>
       {textos.titol ? <Titol>{textos.titol}</Titol> : null}

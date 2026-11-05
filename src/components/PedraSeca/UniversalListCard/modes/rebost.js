@@ -97,6 +97,26 @@ function buidaCistell(llista) {
   return { ok: true, llista: { ...llista, elementsComu: llista.elementsComu.filter((e) => e.capaMode.estat !== 'comprat') } };
 }
 
+/** Configurar el viatge a la gran superfície (km, consumL100km i preuLitreCents): només qui governa la llista. */
+function configuraDesplacament(llista, accio, ctx) {
+  if (!esGestor(llista, ctx.actor)) return errorComu('no-autoritzat');
+  const neteja = Object.fromEntries(
+    Object.entries(llista.configMode ?? {}).filter(([clau]) => clau !== 'desplacament' && clau !== 'costDesplacamentCents')
+  );
+  if (accio?.desplacament === null) {
+    return { ok: true, llista: { ...llista, configMode: neteja } };
+  }
+  const d = accio?.desplacament;
+  if (costDesplacamentDe(d) === null) return errorComu('valor-invalid');
+  const net = {
+    km: d.km,
+    consumL100km: d.consumL100km,
+    preuLitreCents: d.preuLitreCents,
+    ...(d.anadaITornada === false ? { anadaITornada: false } : {})
+  };
+  return { ok: true, llista: { ...llista, configMode: { ...neteja, desplacament: net } } };
+}
+
 const potEliminar = (llista, element, actor) => esGestor(llista, actor)
   || (element.capaMode.demanatPer ?? []).some((p) => p.usuariId === actor?.id);
 
@@ -161,7 +181,7 @@ export const MODE_REBOST = Object.freeze({
   afegeix,
   potEliminar,
   accions: Object.freeze({ commuta, especifica }),
-  accionsDeLlista: Object.freeze({ buidaCistell }),
+  accionsDeLlista: Object.freeze({ buidaCistell, configuraDesplacament }),
   estatDe: (element) => element.capaMode.estat,
   filtres: Object.freeze([
     { valor: 'tots', estats: null },

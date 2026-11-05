@@ -221,6 +221,10 @@ describe('la frontera HTTP de la inbox', () => {
     const cua = creaCuaEnMemoria({ ara: () => ARA });
     expect((await munta({ magatzem: m, cua }).gestor(signada(follow()))).status).toBe(202);
     expect(cua.instantania()).toHaveLength(1);
+    // ARB-M13-04 · Reclamació en_curs respon 503 amb Retry-After perquè el remot reintente.
+    const enCurs = { ...base, reclamaActivitat: async () => 'en_curs' };
+    const rEnCurs = await munta({ magatzem: enCurs }).gestor(signada(follow()));
+    expect([rEnCurs.status, rEnCurs.headers.get('retry-after'), await cosDe(rEnCurs)]).toEqual([503, '60', { estat: 'en_curs', motiu: 'activity_in_progress' }]);
   });
 });
 

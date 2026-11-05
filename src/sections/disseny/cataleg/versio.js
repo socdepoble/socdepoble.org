@@ -15,7 +15,11 @@
  * src/sections/disseny/cataleg/detalls`, sense comptar les proves ni este
  * fitxer). Una versió que no és la darrera és una data falsa a la pastilla.
  *
- * Darrera posada al dia: EspecimenBlocAmbit.jsx, EspecimenClassificacio.jsx, manifest.js, registre.js i
+ * Darrera posada al dia: EspecimenUniversalWorkspace.jsx i EspecimenColumnes.jsx, 2026-11-04T23:55:00+01:00,
+ * pla 261104_1636 (AH-16, ordre directa del Mestre): unificació de collapsibleNavigation={false} a totes les pàgines
+ * UniversalWorkspace, caixa geomètrica uniforme de 48×48 px per a les icones de capçalera d'AppGridColumn i
+ * commutador dual simètric d'icones ([Icona Col 1] [Icona Col 2] + [|<]) en mòbil a les Columnes 1 i 2.
+ * Versió anterior: EspecimenBlocAmbit.jsx, EspecimenClassificacio.jsx, manifest.js, registre.js i
  * detailRegistry.jsx, 2026-11-02T22:50:06+01:00, Onada 4 nocturna (O4-CLAUDE-1, ordre del Mestre de la captura
  * 261102_2121; correcció A1-06 de l'àrbitre): l'espècimen nou EspecimenBlocAmbit, el bloc «On es publica?» REAL
  * en línia dins de l'«Edició avançada» (abans una finestra modal sense espècimen), amb una nota del Mur i una
@@ -316,4 +320,4 @@
  * Quan el manifest porte `creat` i `modificat` per espècimen, manaran eixos
  * camps i esta constant només farà de versió del conjunt.
  */
-export const VERSIO_CATALEG = '2026-11-02T22:50:06+01:00';
+export const VERSIO_CATALEG = '2026-11-04T23:55:00+01:00';

@@ -23,8 +23,27 @@
 import { useId } from 'react';
 import { Globe } from 'lucide-react';
 import { Alerta, Boto, UniversalCard } from '../../components/PedraSeca/index.js';
+import { tradueix, useTraductorOpcional } from '../../components/PedraSeca/hooks/useTraductorOpcional.js';
+import { omple } from '../../config/moderacio.js';
 
 const CAP = Object.freeze([]);
+const p = (nom, reserva) => Object.freeze([`section.notes.extern.${nom}`, reserva]);
+const TEXTOS_EXTERN = Object.freeze({
+  forasterTitol: p('foraster.titol', 'Mode Foraster actiu'),
+  forasterDispositiu: p('foraster.dispositiu', 'Sense sessió, l’enllaç es queda només en este dispositiu.'),
+  calEntrarDesar: p('calEntrar.desar', 'Per a {verb} cal entrar al teu compte.'),
+  calEntrarAfegir: p('calEntrar.afegir', 'Per a afegir cal entrar al teu compte.'),
+  tipus: p('tipus', 'Enllaç de fora de Sóc de Poble'),
+  autorDe: p('autorDe', 'De {lloc}'),
+  noEsPotDesar: p('noEsPot.desar', 'Este enllaç no es pot {verb}.'),
+  noEsPotAfegir: p('noEsPot.afegir', 'Este enllaç no es pot afegir.'),
+  capEnllacDesar: p('capEnllac.desar', 'No ha arribat cap enllaç per a {verb}.'),
+  capEnllacAfegir: p('capEnllac.afegir', 'No ha arribat cap enllaç per a afegir.'),
+  noValidTitolDesar: p('noValidTitol.desar', 'Este enllaç no es pot {verb}'),
+  noValidTitolAfegir: p('noValidTitol.afegir', 'Este enllaç no es pot afegir'),
+  noFetTitolDesar: p('noFetTitol.desar', 'L’enllaç no s’ha {participi}'),
+  noFetTitolAfegir: p('noFetTitol.afegir', 'L’enllaç no s’ha afegit'),
+});
 
 /**
  * `contingut`: el de contingutExternDeParams (null, { ok: false, errors } o
@@ -36,22 +55,40 @@ export function PrevisualitzacioExtern({
   boto = {}, nota, error = null, avisPeu = null, children = null
 }) {
   const id = useId();
+  const t = useTraductorOpcional();
+  const esAfegir = verb === 'afegir' || participi === 'afegit';
   const valor = contingut?.ok ? contingut.valor : null;
   const motius = contingut && !contingut.ok ? Object.values(contingut.errors) : CAP;
   const ambPeu = Boolean(valor || avisPeu || error);
 
+  const textCalEntrar = esAfegir
+    ? tradueix(t, TEXTOS_EXTERN.calEntrarAfegir)
+    : omple(tradueix(t, TEXTOS_EXTERN.calEntrarDesar), { verb });
+  const textNoEsPot = esAfegir
+    ? tradueix(t, TEXTOS_EXTERN.noEsPotAfegir)
+    : omple(tradueix(t, TEXTOS_EXTERN.noEsPotDesar), { verb });
+  const textCapEnllac = esAfegir
+    ? tradueix(t, TEXTOS_EXTERN.capEnllacAfegir)
+    : omple(tradueix(t, TEXTOS_EXTERN.capEnllacDesar), { verb });
+  const textNoValidTitol = esAfegir
+    ? tradueix(t, TEXTOS_EXTERN.noValidTitolAfegir)
+    : omple(tradueix(t, TEXTOS_EXTERN.noValidTitolDesar), { verb });
+  const textNoFetTitol = esAfegir
+    ? tradueix(t, TEXTOS_EXTERN.noFetTitolAfegir)
+    : omple(tradueix(t, TEXTOS_EXTERN.noFetTitolDesar), { participi });
+
   return (
     <div className="sdp-connectar">
       {!teSessio ? (
-        <Alerta to="avis" titol="Mode Foraster actiu">
+        <Alerta to="avis" titol={tradueix(t, TEXTOS_EXTERN.forasterTitol)}>
           {calEntrar
-            ? (avisEntrar || `Per a ${verb} cal entrar al teu compte.`)
-            : 'Sense sessió, l’enllaç es queda només en este dispositiu.'}
+            ? (avisEntrar || textCalEntrar)
+            : tradueix(t, TEXTOS_EXTERN.forasterDispositiu)}
         </Alerta>
       ) : null}
 
       <section className="sdp-connectar__objecte" aria-labelledby={`${id}-objecte`}>
-        <p className="sdp-connectar__tipus">Enllaç de fora de Sóc de Poble</p>
+        <p className="sdp-connectar__tipus">{tradueix(t, TEXTOS_EXTERN.tipus)}</p>
         {valor ? (
           <>
             <div id={`${id}-objecte`} className="sdp-connectar__previsualitzacio">
@@ -65,18 +102,18 @@ export function PrevisualitzacioExtern({
                 showDateTime={false}
               />
             </div>
-            <p className="sdp-connectar__autor">{`De ${valor.lloc}`}</p>
+            <p className="sdp-connectar__autor">{omple(tradueix(t, TEXTOS_EXTERN.autorDe), { lloc: valor.lloc })}</p>
             <p className="sdp-connectar__identitat">{valor.url}</p>
           </>
         ) : (
           <p id={`${id}-objecte`} className="sdp-connectar__autor">
-            {contingut ? `Este enllaç no es pot ${verb}.` : `No ha arribat cap enllaç per a ${verb}.`}
+            {contingut ? textNoEsPot : textCapEnllac}
           </p>
         )}
       </section>
 
       {motius.length ? (
-        <Alerta to="error" titol={`Este enllaç no es pot ${verb}`}>{motius.join(' ')}</Alerta>
+        <Alerta to="error" titol={textNoValidTitol}>{motius.join(' ')}</Alerta>
       ) : null}
 
       {valor ? children : null}
@@ -84,7 +121,7 @@ export function PrevisualitzacioExtern({
       {ambPeu ? (
         <div className="sdp-connectar__peu">
           {avisPeu}
-          {error ? <Alerta to="error" titol={`L’enllaç no s’ha ${participi}`}>{error}</Alerta> : null}
+          {error ? <Alerta to="error" titol={textNoFetTitol}>{error}</Alerta> : null}
           {valor ? (
             <>
               <Boto

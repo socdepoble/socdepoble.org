@@ -234,7 +234,7 @@ export default function PanellDeViquipedia({ poble, t, llig, cau: cauDonada }) {
       )}
       <div className="sdp-accions">
         {!ambFotos ? (
-          <Boto key="porta" data-viquipedia="porta" varietat="primari" carregant={portant} disabled={!connectat}
+          <Boto key="porta" data-viquipedia="porta" varietat="secundari" carregant={portant} disabled={!connectat}
             onClick={porta}>{tx('porta')}</Boto>
         ) : esCaducada(entrada) ? (
           <Boto key="torna" data-viquipedia="torna" varietat="secundari" carregant={portant} disabled={!connectat}

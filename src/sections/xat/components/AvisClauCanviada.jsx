@@ -36,9 +36,18 @@ const llista = (valor) => (Array.isArray(valor) ? valor : []);
 export const TEXTOS_SENSE_CLAU = Object.freeze({
   titol: Object.freeze(['section.xat.xifratge.senseClauValida', 'Sense cap clau de seguretat vàlida']),
   contacte: Object.freeze(['section.xat.xifratge.clauRetirada', 'Este aparell no troba cap clau de seguretat vàlida de {nom} que es puga confirmar. Passa quan algú perd l’aparell i la frase, o si algú s’ha posat pel mig. Fins que n’hi haja una de vàlida, no s’hi pot escriure. Parla amb {nom} per a saber què ha passat.']),
+  contacteSenseNom: Object.freeze(['section.xat.xifratge.clauRetiradaSenseNom', 'Este aparell no troba cap clau de seguretat vàlida d’este contacte que es puga confirmar. Passa quan algú perd l’aparell i la frase, o si algú s’ha posat pel mig. Fins que n’hi haja una de vàlida, no s’hi pot escriure. Parla amb esta persona per a saber què ha passat.']),
   /* ARB-E3-1 · Diu el que veu l'aparell, no que el compte no tinga cap clau: només s'hi arriba si
      el servidor n'amaga una (xat_publica_identitat retira i inserix en la mateixa transacció). */
   propia: Object.freeze(['section.xat.xifratge.clauPropiaRetirada', 'Este aparell no troba cap clau activa del teu compte: ni la seua ni cap altra. Pot ser que algú s’haja posat pel mig. Per seguretat, no s’hi pot escriure. Si no has sigut tu, avisa’ns.'])
+});
+/* D-M02-2 (P1-12) · Quan nomDe(usuari) torna buit (directori encara no carregat),
+   els textos amb {nom} usen una frase genèrica neta sense forats («amb : continua»). */
+export const TEXTOS_SENSE_NOM = Object.freeze({
+  continua: Object.freeze(['section.xat.xifratge.clauCanviadaContinuaSenseNom', 'He parlat amb esta persona: continua']),
+  verificat: Object.freeze(['section.xat.xifratge.verificatBloquejatSenseNom', 'Havies verificat este contacte i la seua clau ha canviat. Torna-la a verificar per a continuar.']),
+  forta: Object.freeze(['section.xat.xifratge.clauCanviadaFortaSenseNom', 'Este contacte té una clau de seguretat nova que la clau anterior no ha confirmat. Passa quan algú perd l’aparell i la frase, o si algú s’ha posat pel mig. Parla amb esta persona per a saber què ha passat.']),
+  suau: Object.freeze(['section.xat.xifratge.clauCanviadaSuauSenseNom', 'La clau de seguretat d’este contacte ha canviat i ho ha confirmat la seua clau anterior.']),
 });
 /* La clau nova d'un pendent, si es pot acceptar (la mateixa regla que teClauNova del hook). */
 const clauNovaAcceptable = (p) => typeof p?.kidNou === 'string' && p.kidNou !== '' && p.acceptable !== false;
@@ -86,13 +95,14 @@ export default function AvisClauCanviada({
       {manipulacio ? <Alerta to="error">{tr(TEXTOS_XIFRATGE.bifurcacio)}</Alerta> : null}
       {pendents.map((p) => {
         const nomPersona = nom(p.usuari);
+        const ambNom = nomPersona !== '';
         const clauNova = clauNovaAcceptable(p);
         const potAcceptar = typeof onAccepta === 'function' && clauNova;
         const accions = potAcceptar || typeof onObriNumero === 'function' ? (
           <>
             {potAcceptar ? (
               <Boto varietat="primari" carregant={ocupat === true} onClick={() => accepta(p.usuari, p.kidNou)}>
-                {tr(TEXTOS_XIFRATGE.clauCanviadaContinua, nomPersona)}
+                {ambNom ? tr(TEXTOS_XIFRATGE.clauCanviadaContinua, nomPersona) : tr(TEXTOS_SENSE_NOM.continua)}
               </Boto>
             ) : null}
             {typeof onObriNumero === 'function' ? (
@@ -101,8 +111,11 @@ export default function AvisClauCanviada({
           </>
         ) : null;
         /* E3 · G2-A-doctr-02 · Sense clau nova, ni el títol ni el text diuen que n'hi ha una. */
-        const cos = !clauNova ? TEXTOS_SENSE_CLAU.contacte
-          : (p.motiu === 'verificat' ? TEXTOS_XIFRATGE.verificatBloquejat : TEXTOS_XIFRATGE.clauCanviadaForta);
+        const cos = !clauNova
+          ? (ambNom ? TEXTOS_SENSE_CLAU.contacte : TEXTOS_SENSE_CLAU.contacteSenseNom)
+          : (p.motiu === 'verificat'
+            ? (ambNom ? TEXTOS_XIFRATGE.verificatBloquejat : TEXTOS_SENSE_NOM.verificat)
+            : (ambNom ? TEXTOS_XIFRATGE.clauCanviadaForta : TEXTOS_SENSE_NOM.forta));
         return (
           <Alerta key={`pendent-${p.usuari}`} to="avis" titol={tr(clauNova ? TEXTOS_XIFRATGE.clauNovaSenseConfirmar : TEXTOS_SENSE_CLAU.titol)} accions={accions}>
             {tr(cos, nomPersona)}
@@ -110,12 +123,15 @@ export default function AvisClauCanviada({
         );
       })}
       {errorAccepta ? <Alerta to="error">{tr(TEXTOS_XIFRATGE.errorAccepta)}</Alerta> : null}
-      {suaus.map((s) => (
-        <Alerta key={`suau-${s.usuari}-${s.kidNou}`} to="info"
-          onTanca={typeof onTancaSuau === 'function' ? () => onTancaSuau(s.usuari, s.kidNou) : null}>
-          {tr(TEXTOS_XIFRATGE.clauCanviadaSuau, nom(s.usuari))}
-        </Alerta>
-      ))}
+      {suaus.map((s) => {
+        const nomSuau = nom(s.usuari);
+        return (
+          <Alerta key={`suau-${s.usuari}-${s.kidNou}`} to="info"
+            onTanca={typeof onTancaSuau === 'function' ? () => onTancaSuau(s.usuari, s.kidNou) : null}>
+            {nomSuau ? tr(TEXTOS_XIFRATGE.clauCanviadaSuau, nomSuau) : tr(TEXTOS_SENSE_NOM.suau)}
+          </Alerta>
+        );
+      })}
     </>
   );
 }

@@ -512,10 +512,14 @@ export function aliesDeLActor(actor, { dataMode = 'remote' } = {}) {
   const alies = new Set();
   if (!actor?.id) return alies;
   alies.add(String(actor.id));
-  if (actor.tipus === 'entitat') {
+  if (actor.tipus === 'entitat' || actor.tipus === 'grup') {
     if (actor.slug) alies.add(String(actor.slug));
     const entitat = entitatSeed(actor.id) || entitatSeed(actor.slug);
-    entitat?.alies.forEach((a) => alies.add(a));
+    if (entitat) {
+      alies.add(String(entitat.id));
+      if (entitat.slug) alies.add(String(entitat.slug));
+      entitat.alies.forEach((a) => alies.add(a));
+    }
     return alies;
   }
   if (dataMode !== 'seed') return alies;

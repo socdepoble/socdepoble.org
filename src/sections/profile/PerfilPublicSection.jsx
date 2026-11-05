@@ -37,6 +37,11 @@ import { enllacMailto } from './contacteOrganitzacio.js';
 import { desaVcard, nomFitxerVcard } from './vcardOrganitzacio.js';
 /* IDEA-25 i V-03 (marató 261101_2143, B4) · La porta única de la targeta de contacte: organització o persona. */
 import { vcardDePerfilPublic } from '../../utils/exportaVCard.js';
+import {
+  COMPTE_INSTITUCIONAL_CANONIC,
+  DESCRIPTOR_IDENTITAT_INSTITUCIONAL_SOCDEPOBLE,
+  construeixEnllacosRelMe
+} from '../../utils/identitatFederadaRelMe.js';
 import { FORMA_USERNAME } from '../onboarding/onboardingModel.js';
 import { rutaFitxaOrganitzacio } from './perfilModel.js';
 import { UniversalPage } from '../../components/universal/UniversalPage';
@@ -657,6 +662,13 @@ export function FitxaPublica({ perfil, ambEdita = true, ambXat = true, chrome = 
     : (perfil.esIA ? rutaFitxaOrganitzacio(perfil.id) : '/el-meu-perfil');
   const correuPublic = esOrganitzacio ? String(perfil.correu || '').trim() : '';
   const mailto = correuPublic ? enllacMailto(correuPublic) : null;
+  const adrecesFedivers = perfil.mastodon || perfil.fedivers || perfil.identitatFederada
+    || (esElProjecte ? DESCRIPTOR_IDENTITAT_INSTITUCIONAL_SOCDEPOBLE.replicaPosseMastodon : null);
+  const enllacosRelMe = adrecesFedivers
+    ? construeixEnllacosRelMe(adrecesFedivers, {
+      urlCanonicaSocDePoble: urlCanonica(rutaCanonicaDePerfil(perfil) || rutaDAutoria({ tipus: perfil.tipus, id: perfil.id }))
+    })
+    : [];
   /* P1-59 (b) (Llibre Mestre, Fita 23 i IDEA-45; guàrdia nocturna 261030) ·
      «📇 Descarrega el contacte (vCard)» a la fitxa d'una organització PÚBLICA
      (entitat o grup): la targeta es fa en local amb el que la pàgina ja
@@ -854,6 +866,20 @@ export function FitxaPublica({ perfil, ambEdita = true, ambXat = true, chrome = 
         <p className="sdp-perfil-public__meta">
           {t('section.perfil.public.correuEtiqueta', 'Correu: ')}
           <a href={mailto}>{correuPublic}</a>
+        </p>
+      ) : null}
+      {enllacosRelMe.length > 0 ? (
+        <p
+          className="sdp-perfil-public__meta"
+          data-compte-institucional={esElProjecte ? COMPTE_INSTITUCIONAL_CANONIC : undefined}
+        >
+          {t('section.perfil.public.fediversEtiqueta', 'Fedivers: ')}
+          {enllacosRelMe.map((item, idx) => (
+            <span key={item.profileUrl}>
+              {idx > 0 ? ', ' : null}
+              <a rel="me noopener noreferrer" href={item.profileUrl} target="_blank">{item.handle}</a>
+            </span>
+          ))}
         </p>
       ) : null}
       {/* P1-59 (b) i IDEA-25 · La targeta de contacte (.vcf), al costat del correu públic d'una organització (el d'una persona no ix mai). */}

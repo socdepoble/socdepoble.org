@@ -7,7 +7,7 @@ import { TITOL_NOTA_PREPARADA } from './notaPreparada.js';
 /**
  * Fitxa compacta de nota per al llistat de la columna NOTES.
  * S'injecta al UniversalWorkspace via `renderItem`; el nucli no la coneix.
- * AH-02 · Totes les notes de la columna de llista (actives o no) es mostren
+ * AH-02 i AH-15 · Totes les notes de la columna de llista (actives o no) es mostren
  * sempre com a fitxa compacta normal (`button.sdp-gestor-fitxa` amb
  * `is-active` i `aria-current="true"`), amb la seua icona/miniatura, títol viu
  * en text pla, data i subtítol/entradilla.

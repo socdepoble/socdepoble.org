@@ -1086,6 +1086,8 @@ function CategoryColumn({
      capçalera no ha de plegar res (cap aria-expanded que no controle res). */
   const headerGroup = grupsVisibles.find((group) => !group.label) || null;
   const isGroupOpen = (id) => !collapsedGroups[id];
+  const commutadorEstret = (mestreDetall && mida === 'estret' && (Boolean(icon) || grupsVisibles.length > 0))
+    || (mida !== 'ample' && Boolean(icon));
 
   /* El plegat d'«ample» (collapsed.left), la decisió de la persona.
      Decisió 4 del Mestre (30-10-2026 ~15:00) · El rail fix de «mitja»
@@ -1274,6 +1276,7 @@ function CategoryColumn({
         esDark={true}
         titol={labels.categories}
         icona={icon}
+        replegaCompacte={commutadorEstret}
         plegable={collapsibleNavigation && Boolean(headerGroup)}
         obert={headerGroup ? isGroupOpen(headerGroup.id) : true}
         onPlega={headerGroup ? () => toggleGroup(headerGroup.id) : null}
@@ -1813,6 +1816,7 @@ function ItemListColumn({
               aria-controls="app-grid-sidebar"
               aria-expanded={panellObert === 'left'}
               data-obri-columna=""
+              data-commutador-columna=""
             >
               {React.createElement(categoryIcon || Folder, { size: 24, "aria-hidden": true, focusable: "false" })}
             </button>
@@ -1836,14 +1840,18 @@ function ItemListColumn({
         /* Ordre d'usabilitat del Mestre (30-10-2026) · Com a la navegació:
            plega la icona de l'esquerra (germana del [|<]) i el títol és fix;
            replegaTotaCapcalera ja no fa de tota la fila un botó. */
-        replegaCompacte={llistaPlegable}
+        replegaCompacte={llistaPlegable || Boolean(obridorNavegacio)}
         /* Corrector del Gauntlet (30-10-2026) · Sempre: com a la navegació. */
         controls="app-grid-list"
         onReplega={() => {
           /* P6 · En estret, plegar és tancar el panell: el detall torna amb
              el rail, i el focus, a l'Expandir del rail. */
-          if (enEstret) tancaPanells();
-          else toggleColumn('middle');
+          if (mida !== 'ample') {
+            tancaPanells();
+            if (enEstret) focusAfterLayout(expandBtnRef);
+            return;
+          }
+          toggleColumn('middle');
           focusAfterLayout(expandBtnRef);
         }}
       />

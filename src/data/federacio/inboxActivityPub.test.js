@@ -482,6 +482,37 @@ describe('inbox: Follow → Accept, Undo i frontera HTTP (atenPeticioInbox)', ()
     expect(base.instantania().activitats).toEqual([]);
     expect((await atenPeticioInbox(peticio(follow), opcions(magatzem))).cos).toEqual({ estat: 'processada' });
   });
+
+  test('ARB-M13-04 · reclamació de tres estats (nova / en_curs / feta): caiguda transitòria d’efecte i alliberament respon 503 abans de 5 min i es reprén després', async () => {
+    const base = creaMagatzemInboxEnMemoria();
+    expect(await base.reclamaEstatActivitat('https://x.example/a/1', { actor: 'https://x.example/u', tipus: 'Follow', rebuda: new Date(ARA).toISOString() })).toBe('nova');
+    expect(await base.reclamaEstatActivitat('https://x.example/a/1', { actor: 'https://x.example/u', tipus: 'Follow', rebuda: new Date(ARA + 1000).toISOString() })).toBe('en_curs');
+    await base.confirmaActivitat('https://x.example/a/1');
+    expect(await base.reclamaEstatActivitat('https://x.example/a/1', { actor: 'https://x.example/u', tipus: 'Follow', rebuda: new Date(ARA + 2000).toISOString() })).toBe('feta');
+
+    let bdCaiguda = true;
+    const magatzem = {
+      ...base,
+      async desaSeguidor(s) {
+        if (bdCaiguda) throw new Error('BD caiguda');
+        return base.desaSeguidor(s);
+      },
+      async alliberaActivitat(id) {
+        if (bdCaiguda) throw new Error('BD caiguda en alliberar');
+        return base.alliberaActivitat(id);
+      }
+    };
+    const f = { ...follow, id: `${REMOT}#follows/m1304` };
+    await expect(atenPeticioInbox(peticio(f), opcions(magatzem, { ara: ARA }))).rejects.toThrow('BD caiguda');
+    bdCaiguda = false;
+    // Abans de REPRESA_EN_CURS_MS (5 min), la rèplica rep 503 en_curs (mai 202 duplicada) perquè el remot reintente.
+    const abans = await atenPeticioInbox(peticio(f), opcions(magatzem, { ara: ARA + 30_000 }));
+    expect([abans.status, abans.cos]).toEqual([503, { estat: 'en_curs', motiu: 'activity_in_progress' }]);
+    // Passats els 5 min, la rèplica reprén la reclamació i aplica l'efecte.
+    const tDespres = ARA + 5 * 60_000 + 1000;
+    const despres = await atenPeticioInbox(peticio(f, { data: new Date(tDespres).toUTCString() }), opcions(magatzem, { ara: tDespres }));
+    expect([despres.status, despres.cos]).toEqual([202, { estat: 'processada' }]);
+  });
 });
 
 describe('alertes municipals federades (Create, Announce, Delete)', () => {

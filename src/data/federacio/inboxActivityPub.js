@@ -60,6 +60,8 @@ export const MARGE_PURGA_ALERTA_MS = 24 * 3_600_000;
 /* B5 · Una reclamació «en curs» de fa més de 5 min és d'un procés que va caure, o d'un efecte i un alliberament que
    van fallar alhora: es torna a prendre (el mateix interval que ap_inbox_reclama). */
 export const REPRESA_EN_CURS_MS = 5 * 60_000;
+/* P1-23 · ARB-M13-04 · Reclamació de tres estats: nova, en_curs i feta. */
+export const ESTATS_RECLAMACIO_INBOX = Object.freeze(['nova', 'en_curs', 'feta']);
 
 const DATA_HTTP = /^(?:Mon|Tue|Wed|Thu|Fri|Sat|Sun), \d{2} (?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) \d{4} \d{2}:\d{2}:\d{2} GMT$/;
 const BASE64 = /^[A-Za-z0-9+/]+={0,2}$/;
@@ -541,23 +543,39 @@ export function creaMagatzemInboxEnMemoria({ maxim = 10_000, maximPerOrigen = 1_
   };
   return Object.freeze({
     async reclamaActivitat(id, registre) {
+      const tresEstats = registre?.tresEstats === true;
       // `rebuda` en ms (Date.parse de l'ISO del processador); sense data, ni la purga ni la represa la toquen.
       const rebuda = Date.parse(registre?.rebuda ?? '');
       const actual = activitats.get(id);
       if (actual) {
         // Represa (com ap_inbox_reclama): una en curs de fa més de REPRESA_EN_CURS_MS es torna a prendre.
         // `presa` compta la represa; `rebuda` (la retenció) no canvia.
-        if (actual.estat !== 'en_curs' || !(rebuda - actual.presa > REPRESA_EN_CURS_MS)) return false;
+        if (actual.estat !== 'en_curs') return tresEstats ? 'feta' : false;
+        if (!(rebuda - actual.presa > REPRESA_EN_CURS_MS)) {
+          if (tresEstats || actual.falladaAlliberament === true) return 'en_curs';
+          return false;
+        }
         actual.presa = rebuda;
-        return true;
+        actual.falladaAlliberament = false;
+        return tresEstats ? 'nova' : true;
       }
       // La quota és per host, no per origen: l'origen porta el port, i urlRemota admet qualsevol port.
       const origen = hostDeQuota(registre?.actor);
       const n = perOrigen.get(origen) ?? 0;
       if (n >= maximPerOrigen) throw new RangeError('Quota de la inbox esgotada per a este origen.');
       capHi(activitats);
-      activitats.set(id, { origen, estat: 'en_curs', rebuda, presa: rebuda });
+      activitats.set(id, { origen, estat: 'en_curs', rebuda, presa: rebuda, falladaAlliberament: false });
       perOrigen.set(origen, n + 1);
+      return tresEstats ? 'nova' : true;
+    },
+    async reclamaEstatActivitat(id, registre) {
+      const estat = await this.reclamaActivitat(id, { ...registre, tresEstats: true });
+      return estat === true ? 'nova' : estat === false ? 'feta' : estat;
+    },
+    async marcaEnCursFallida(id) {
+      const registre = activitats.get(id);
+      if (!registre || registre.estat !== 'en_curs') return false;
+      registre.falladaAlliberament = true;
       return true;
     },
     async alliberaActivitat(id) {
@@ -570,6 +588,7 @@ export function creaMagatzemInboxEnMemoria({ maxim = 10_000, maximPerOrigen = 1_
       const registre = activitats.get(id);
       if (!registre || registre.estat !== 'en_curs') return false;
       registre.estat = 'fet';
+      registre.falladaAlliberament = false;
       return true;
     },
     async desaSeguidor(seguidor) {
@@ -646,10 +665,14 @@ export function creaMagatzemInboxEnMemoria({ maxim = 10_000, maximPerOrigen = 1_
 
 const HTTP = Object.freeze({
   invalid_activity: 400, activity_id_invalid: 400, follow_target_mismatch: 400, local_actor_unknown: 404,
-  actor_mismatch: 401, origin_spoofed: 403, authorship_mismatch: 403
+  actor_mismatch: 401, origin_spoofed: 403, authorship_mismatch: 403, activity_in_progress: 503
 });
 const resultat = (estat, { motiu = null, efectes = [], lliuraments = [] } = {}) => ({
-  estat, motiu, http: estat === 'rebutjada' ? HTTP[motiu] ?? 400 : 202, efectes, lliuraments
+  estat,
+  motiu,
+  http: estat === 'rebutjada' ? HTTP[motiu] ?? 400 : estat === 'en_curs' ? HTTP[motiu] ?? 503 : 202,
+  efectes,
+  lliuraments
 });
 
 /**
@@ -778,8 +801,12 @@ export async function processaActivitatInbox(activitat, {
     }
   }
 
-  // 2 · Idempotència: la reclamació abans de cap efecte.
-  if (!(await magatzem.reclamaActivitat(activitat.id, { actor, tipus: activitat.type, rebuda: new Date(ara).toISOString() }))) {
+  // 2 · Idempotència: la reclamació abans de cap efecte (ARB-M13-04: tres estats nova / en_curs / feta).
+  const reclamada = await magatzem.reclamaActivitat(activitat.id, { actor, tipus: activitat.type, rebuda: new Date(ara).toISOString() });
+  if (reclamada === 'en_curs') {
+    return resultat('en_curs', { motiu: 'activity_in_progress' });
+  }
+  if (!reclamada || reclamada === 'feta') {
     const lliuraments = activitat.type === 'Follow' ? [{ inbox: inboxDeLActor, activitat: await accept(activitat) }] : [];
     return resultat('duplicada', { lliuraments });
   }
@@ -787,8 +814,15 @@ export async function processaActivitatInbox(activitat, {
   try {
     r = await efecte();
   } catch (fallada) {
-    // Si l'alliberament també falla, la reclamació queda en curs fins a la represa (residu ARB-M13-04, al port).
-    await magatzem.alliberaActivitat(activitat.id);
+    // ARB-M13-04: si l'efecte i l'alliberament fallen alhora, la reclamació es marca com a en_curs fallida
+    // perquè una rèplica abans de REPRESA_EN_CURS_MS reba 503 i reintente, mai 202 duplicada.
+    try {
+      await magatzem.alliberaActivitat(activitat.id);
+    } catch {
+      if (typeof magatzem.marcaEnCursFallida === 'function') {
+        try { await magatzem.marcaEnCursFallida(activitat.id); } catch { /* s'ignora */ }
+      }
+    }
     throw fallada;
   }
   // B5 · Fora del try: l'efecte ja és fet i no s'ha d'alliberar. Si la confirmació falla, la

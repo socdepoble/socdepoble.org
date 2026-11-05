@@ -28,7 +28,7 @@
 import { useMemo, useSyncExternalStore } from 'react';
 import { esEntitatDelProjecte, subscriuEntitatDelProjecte, versioEntitatDelProjecte } from '../../config/navigation.js';
 import {
-  ENTITAT_PILOT_ID, ENTITAT_PILOT_SLUG, PERSONA_PILOT, clauFundacional, entitatSeed, fundacionalDeLaClau
+  ENTITAT_PILOT_ID, PERSONA_PILOT, clauFundacional, entitatSeed, fundacionalDeLaClau
 } from '../../data/identitatsSeed.js';
 import { usePublicacionsDelsAlies } from '../mur/usePublicacionsDeLActor.js';
 
@@ -70,7 +70,7 @@ export function aliesDeLaFitxa(perfil) {
     || (delProjecte ? entitatSeed(ENTITAT_PILOT_ID) : null);
   if (llavor) {
     alies.add(String(llavor.id));
-    if (llavor.slug === ENTITAT_PILOT_SLUG) alies.add(ENTITAT_PILOT_SLUG);
+    if (llavor.slug) alies.add(String(llavor.slug));
     (llavor.alies || []).forEach((a) => alies.add(String(a)));
   }
   return alies;

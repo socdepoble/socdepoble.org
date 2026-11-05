@@ -3,7 +3,7 @@
    cost fix (les llistes d'abans fan el mateix) i la xifra a la targeta real
    sense cap canvi de vista. Persones i xifres de mostra. */
 import { createElement } from 'react';
-import { cleanup, render, screen } from '@testing-library/react';
+import { cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 import { afterEach, describe, expect, test } from 'vitest';
 import { comparadorDe, costDesplacamentDe } from './rebost.js';
 import { aplicaAccio, resumDe } from '../nucliComu.js';
@@ -157,5 +157,16 @@ describe('la targeta real pinta la benzina calculada, sense cap canvi de vista',
     pinta(ambArticles({}));
     expect(xifres()).toContain(`A la gran superfície: ${formatEuros(885 + 300)}`);
     expect(xifres().some((t) => t.includes('de desplaçament'))).toBe(false);
+  });
+
+  test('qui governa la llista pot configurar km, consum L/100 km i preu del litre des de la taula i actualitza el comparador', () => {
+    pinta(ambArticles({}));
+    fireEvent.click(screen.getByRole('button', { name: 'Amplia en taula' }));
+    const dialeg = screen.getByRole('dialog', { name: 'Taula: Compra' });
+    fireEvent.change(within(dialeg).getByLabelText('Distància d’anada (km)'), { target: { value: '20' } });
+    fireEvent.change(within(dialeg).getByLabelText('Consum (L/100 km)'), { target: { value: '6,5' } });
+    fireEvent.change(within(dialeg).getByLabelText('Preu del litre (cèntims)'), { target: { value: '165' } });
+    fireEvent.click(within(dialeg).getByRole('button', { name: 'Desa el desplaçament' }));
+    expect(xifres()).toContain(`A la gran superfície: ${formatEuros(885 + 300 + 429)} (amb ${formatEuros(429)} de desplaçament)`);
   });
 });

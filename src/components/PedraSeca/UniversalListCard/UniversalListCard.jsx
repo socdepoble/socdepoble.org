@@ -550,6 +550,42 @@ function FormulariQuantitat({ element, tr, fes }) {
   );
 }
 
+function ConfiguraDesplacament({ llista, tr, fes }) {
+  const id = useId();
+  const actual = llista.configMode?.desplacament ?? {};
+  const [km, setKm] = useState(actual.km === undefined ? '' : String(actual.km).replace('.', ','));
+  const [consum, setConsum] = useState(actual.consumL100km === undefined ? '' : String(actual.consumL100km).replace('.', ','));
+  const [preuLitre, setPreuLitre] = useState(actual.preuLitreCents === undefined ? '' : String(actual.preuLitreCents));
+  const aNumero = (text) => (String(text).trim() === '' ? Number.NaN : Number(String(text).trim().replace(',', '.')));
+  return (
+    <details className="sdp-comu__anota">
+      <summary className="sdp-comu__anota-resum">{tr('rebost.desplacament.titol')}</summary>
+      <form className="sdp-comu__anota-graella" onSubmit={(event) => {
+        event.preventDefault();
+        fes({
+          tipus: 'configuraDesplacament',
+          desplacament: {
+            km: aNumero(km),
+            consumL100km: aNumero(consum),
+            preuLitreCents: aNumero(preuLitre)
+          }
+        });
+      }}>
+        <label className="sdp-comu__etiqueta" htmlFor={`${id}-km`}>{tr('rebost.desplacament.km')}</label>
+        <input id={`${id}-km`} className="sdp-control sdp-comu__camp" type="text" inputMode="decimal"
+          value={km} onChange={(event) => setKm(event.target.value)} />
+        <label className="sdp-comu__etiqueta" htmlFor={`${id}-consum`}>{tr('rebost.desplacament.consum')}</label>
+        <input id={`${id}-consum`} className="sdp-control sdp-comu__camp" type="text" inputMode="decimal"
+          value={consum} onChange={(event) => setConsum(event.target.value)} />
+        <label className="sdp-comu__etiqueta" htmlFor={`${id}-preu`}>{tr('rebost.desplacament.preuLitre')}</label>
+        <input id={`${id}-preu`} className="sdp-control sdp-comu__camp" type="text" inputMode="numeric"
+          value={preuLitre} onChange={(event) => setPreuLitre(event.target.value)} />
+        <Boto varietat="secundari" tipus="submit">{tr('rebost.desplacament.desa')}</Boto>
+      </form>
+    </details>
+  );
+}
+
 function AccionsDeFila({ llista, element, tr, fes, actor, demanaConfirmacio }) {
   const mode = modeDe(llista);
   const gestor = esGestor(llista, actor);
@@ -767,6 +803,7 @@ export function UniversalListCard({
             </tbody>
           </Taula>
         ) : null}
+        {llista.mode === 'rebost' && potTocar && gestor ? <ConfiguraDesplacament llista={llista} tr={tr} fes={fes} /> : null}
         <p role="status">{avisTaula}</p>
       </Dialeg>
 

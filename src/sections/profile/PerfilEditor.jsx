@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { DocumentEditor } from '../../components/universal/DocumentEditor';
-import { usePublicaDocumentViu } from '../../components/universal/TargetaViva.jsx';
+import { AVISOS_TARGETA_VIVA, TargetaViva, usePublicaDocumentViu } from '../../components/universal/TargetaViva.jsx';
 import { LLINDAR_COMPTADOR } from '../../data/limitsText.js';
 import { desaLlicenciaPerDefecte, sincronitzaLlicenciaPerDefecte } from '../../components/universal/drets/herencia.js';
 import { useToast } from '@/components/universal/NotificationContext.jsx';
@@ -28,7 +28,7 @@ import { useResolvedAsset } from '../../hooks/useResolvedAsset.js';
 import { registraEntitatDelProjecte } from '../../config/navigation.js';
 import { esMarcaDeLEntitat, esRutaDelProjecte, isSafeAsset } from '../../components/universal/UniversalUtils.js';
 import {
-  ETIQUETA_IA, avatarDeLaBarraDeFitxa, avatarDeLaFitxa, esFitxaDelPilot, etiquetesDeFitxa, formataPoble, pobleDeReservaDeFitxa, potEditarFitxa,
+  ETIQUETA_IA, TEXTOS_FITXA_PERFIL, avatarDeLaBarraDeFitxa, avatarDeLaFitxa, esFitxaDelPilot, etiquetesDeFitxa, formataPoble, pobleDeReservaDeFitxa, potEditarFitxa,
   rutaDeFitxaPublica, slugDEntitat,
 } from './fitxaDePerfil.js';
 
@@ -567,11 +567,11 @@ export function PerfilEditor({ identitat }) {
     return true;
   }, [esAgent, fitxa.isPublished, isPublicDesat, mena, guardarCampPerfil, identitat.id, ref]);
   const visibilitat = useMemo(() => ({
-    textos: textosDeFitxa(mena),
+    textos: textosDeFitxa(mena, t),
     /* Decisió del Mestre (xat 261031) · Empresa, entitat o ajuntament: sense «Fitxa privada». */
-    bloqueig: bloqueigDeFitxa(mena, dades.kind),
+    bloqueig: bloqueigDeFitxa(mena, dades.kind, t),
     onTria: triaVisibilitat,
-  }), [mena, dades.kind, triaVisibilitat]);
+  }), [mena, dades.kind, triaVisibilitat, t]);
 
   const uploadMedia = useCallback(
     (fitxer) => pujaMitja(fitxer, mena === 'persona' ? 'avatars' : esAgent ? 'agents' : 'organitzacions'),
@@ -859,7 +859,7 @@ export function PerfilEditor({ identitat }) {
 
   /* Les píndoles (fitxaDePerfil.js): el rol i, si cal, «Baixa en curs»,
      «Sense connexió» o l'avís d'IA. */
-  const etiquetes = useMemo(() => etiquetesDeFitxa(identitat), [identitat]);
+  const etiquetes = useMemo(() => etiquetesDeFitxa(identitat, t), [identitat, t]);
 
   /* T50 (decisió del Mestre, 260928: «Llista + dreta si hi cap») · La fitxa
      activa de la columna central és la targeta viva d'este document: el que
@@ -1103,6 +1103,15 @@ export function PerfilEditor({ identitat }) {
          gran i explicatiu») · El títol i el resum diuen què s'hi fa. */
       titolEdicioAvancada: tradueix(t, T.edicioAvancadaTitol),
       resumEdicioAvancada: resumEdicioAvancadaDe(mena, t),
+      previsualitzacioTargeta: (
+        <TargetaViva
+          document={fitxa}
+          autor={{ ...autorTargeta, ruta: rutaFitxa }}
+          etiquetes={etiquetes}
+          avis={AVISOS_TARGETA_VIVA.perfil}
+          actual
+        />
+      ),
       /* L'entitat pilot no pinta mai el logo de la fila: damunt de l'H1 hi va la
          marca fixa de Sóc de Poble (PageFrame), com en lectura. */
       logoAlTitol: !ambAvatarRedo && !esPilot,
@@ -1208,7 +1217,7 @@ export function PerfilEditor({ identitat }) {
   if (esAgent) {
     return (
       <>
-        <Alerta to="avis" titol={ETIQUETA_IA}>{tradueix(t, T.avisIA)}</Alerta>
+        <Alerta to="avis" titol={tradueix(t, TEXTOS_FITXA_PERFIL.ia)}>{tradueix(t, T.avisIA)}</Alerta>
         <DocumentEditor adapter={adapter} onToast={showToast} />
         {dialegsImatge}
         {dialegDEmoticona}

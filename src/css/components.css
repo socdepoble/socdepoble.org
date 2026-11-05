@@ -217,6 +217,8 @@
      perquè el text no hi passe per davall. */
   .sdp-contrasenya { position: relative; }
   .sdp-contrasenya > .sdp-control { padding-inline-end: calc(var(--sdp-touch-min) + var(--sdp-space-1)); }
+  .sdp-contrasenya > .sdp-control[data-contrasenya-visible="true"],
+  .sdp-contrasenya > .sdp-control[data-contrasenya-visible="true"]:-webkit-autofill { -webkit-text-security: none; }
   .sdp-contrasenya > .sdp-control::-ms-reveal { display: none; }
   .sdp-contrasenya__ull {
     position: absolute; inset-block: 0; inset-inline-end: 0;

@@ -13,9 +13,14 @@ import { TEXT_CAL_SEGON_FACTOR, esRebuigDeSegonFactor } from './rebuigSegonFacto
 import { FacetaTaxonomia, FACETA_TAXONOMIA } from './FacetaTaxonomia.jsx';
 import { FacetaEstil, FACETA_ESTIL } from './FacetaEstil.jsx';
 import { usePobleAdministrat } from './pobleAdministrat.jsx';
+import { tradueix, useTraductorOpcional } from '../../components/PedraSeca/hooks/useTraductorOpcional.js';
 
 /* MD (revisió) · La fletxa ← de la llista d'Usuaris i d'Entitats en estret. */
 const TORNAR_AL_TAULER = 'Tornar al Tauler';
+const PARELL_FILTRES_ADMIN = Object.freeze(['section.admin.filtres', 'FILTRES']);
+const PARELL_USUARIS_ADMIN = Object.freeze(['section.admin.usuarisTitol', 'Administració: Usuaris']);
+const PARELL_ENTITATS_ADMIN = Object.freeze(['section.admin.entitatsTitol', 'Administració: Entitats']);
+const PARELL_TORNAR_TAULER = Object.freeze(['section.admin.tornarTauler', TORNAR_AL_TAULER]);
 
 /* Onada 11 (261010; prompt 261010_1730, tasca 2; front D4) · Les facetes
    noves del menú del Tauler, darrere d'Usuaris i Entitats: les etiquetes i
@@ -266,6 +271,7 @@ function PaginaDEstat({ children }) {
 }
 
 function AdminUsersManager({ onBack }) {
+  const t = useTraductorOpcional();
   const { fase, files: users, error } = useLlistaAdmin(adminListUsers, 'Error de permisos o de xarxa en carregar usuaris.');
 
   if (fase === 'sense-capacitat') {
@@ -298,7 +304,11 @@ function AdminUsersManager({ onBack }) {
          seua fletxa ← torna al Tauler (revisió: abans s'hi quedava tancada). */
       mestreDetall="navegacio"
       tornaDeLaLlista={onBack}
-      labels={{ categories: 'FILTRES', items: 'Administració: Usuaris', back: TORNAR_AL_TAULER }}
+      labels={{
+        categories: tradueix(t, PARELL_FILTRES_ADMIN),
+        items: tradueix(t, PARELL_USUARIS_ADMIN),
+        back: tradueix(t, PARELL_TORNAR_TAULER),
+      }}
       renderDetail={({ item }) => (item ? (
          <PaginaDelDetall titol="Detall de l'Usuari">
            <div className="perfil-detall-buit">
@@ -314,6 +324,7 @@ function AdminUsersManager({ onBack }) {
 }
 
 function AdminCompaniesManager({ onBack }) {
+  const t = useTraductorOpcional();
   const { fase, files: companies, error } = useLlistaAdmin(adminListOrganizations, 'Error de permisos o de xarxa en carregar entitats.');
 
   if (fase === 'sense-capacitat') {
@@ -344,7 +355,11 @@ function AdminCompaniesManager({ onBack }) {
       initialSelection={{}}
       mestreDetall="navegacio"
       tornaDeLaLlista={onBack}
-      labels={{ categories: 'FILTRES', items: 'Administració: Entitats', back: TORNAR_AL_TAULER }}
+      labels={{
+        categories: tradueix(t, PARELL_FILTRES_ADMIN),
+        items: tradueix(t, PARELL_ENTITATS_ADMIN),
+        back: tradueix(t, PARELL_TORNAR_TAULER),
+      }}
       renderDetail={({ item }) => (item ? (
          <PaginaDelDetall titol="Detall de l'Entitat">
            <div className="perfil-detall-buit">

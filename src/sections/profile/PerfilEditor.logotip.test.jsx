@@ -283,7 +283,7 @@ test('Relleu 261007 · un membre de l’entitat pilot sense permís (UUID i slug
    viva porten el PNG verd oficial, siga quin siga el logo de la fila (cap,
    una referència opaca o un de propi), també en lectura. */
 const barraTaronja = () => {
-  const barres = document.querySelectorAll('section.bar-orange');
+  const barres = [...document.querySelectorAll('section.bar-orange')].filter((s) => !s.closest('.sdp-targeta-viva-carta'));
   expect(barres).toHaveLength(1);
   return barres[0];
 };

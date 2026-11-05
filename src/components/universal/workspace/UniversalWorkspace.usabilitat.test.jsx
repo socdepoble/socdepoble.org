@@ -278,15 +278,3 @@ for (const forma of [BLOC, DISSENY]) {
     });
   });
 }
-
-test.each([[false], ['navegacio']])('Mòbil · a 375 (mestreDetall=%s) cap icona no és botó: la navegació no porta [|<] visible i la llista porta l’obridor davant', (mestreDetall) => {
-  entorn(375, ({ buida }) => {
-    const { container } = munta(BLOC, { mestreDetall });
-    buida();
-    expect(container.querySelector('.app-grid-shell').dataset.layout).toBe('estret');
-    expect(container.querySelector('.app-grid-col-header__icona')).toBeNull();
-    expect(within(container).queryAllByRole('button', { name: /^Plegar la columna/ })).toEqual([]);
-    /* La icona de la navegació hi és, de dibuix. */
-    expect(container.querySelector('#app-grid-sidebar .app-grid-col-header__plec > svg.lucide-folder')).not.toBeNull();
-  });
-});

@@ -37,7 +37,7 @@ import { ProveidorSincronitzacioTargetes } from '../detail/SincronitzacioTargete
 import { PaginaEmojis } from '../../components/universal/classificacio/PaginaEmojis.jsx';
 import { useToast } from '@/components/universal/NotificationContext.jsx';
 import {
-  CanalEmojisContext, TEXTOS_EMOJIS, carregaCatalegEmojis, copiaAlPortaretalls, textCopiat, textEmojiNoReconegut, useCanalEmojisDelBloc
+  CanalEmojisContext, carregaCatalegEmojis, copiaAlPortaretalls, textCopiat, textEmojiNoReconegut, textosEmojis, useCanalEmojisDelBloc
 } from './canalEmojis.js';
 import { CanalAmbitContext } from '../../components/universal/ambits/canalAmbit.js';
 import { carpetaDeLAmbit } from '../../components/universal/ambits/carpetaAmbit.js';
@@ -240,7 +240,7 @@ function CardDeLEntrada({ mostra, children }) {
 const renderNota = ({ item, active, onSelect, entradaNua = false }) => {
   if (item?.kind === 'publicacio') return <PublicacioFitxa item={item} active={active} onSelect={onSelect} />;
   if (item?.kind === 'connexio') return <ConnexioFitxa item={item} active={active} onSelect={onSelect} />;
-  const fitxa = <NotaFitxa item={item} active={active} onSelect={onSelect} />;
+  const fitxa = <NotaFitxa item={item} active={active} onSelect={onSelect} compacta />;
   if (String(item?.id) !== ID_NOTA_BENVINGUDA) return fitxa;
   return <CardDeLEntrada mostra={entradaNua && active}>{fitxa}</CardDeLEntrada>;
 };
@@ -717,10 +717,11 @@ export default function NotesSection() {
      tries manuals no passen per esta política; una preparada recordada d'una
      carpeta buida no ha de desplaçar una nota que hi ha arribat després. */
   const canAutoSelect = useCallback(({ categoryId, item, candidates = [] }) => {
-    if (modeDesa || (item && item.id !== preparada.id)) return true;
+    const esPreparada = (n) => Boolean(n && (n.id === preparada.id || n.data?.preparada === true));
+    if (modeDesa || (item && !esPreparada(item))) return true;
     const font = fontDe(fontsDelMas, seccioDeCarpeta(categoryId));
     return !ESTATS_PENDENTS.has(font?.status)
-      && (!item || !candidates.some(candidate => candidate.id !== preparada.id));
+      && (!item || !candidates.some((candidate) => !esPreparada(candidate)));
   }, [modeDesa, preparada.id, fontsDelMas]);
 
   const model = useMemo(() => {
@@ -884,21 +885,22 @@ export default function NotesSection() {
      (renderActions): és un Dialeg de Pedra Seca, que ja torna el focus a
      qui l'ha obert. */
   const emojis = useCanalEmojisDelBloc();
+  const textosDelsEmojis = useMemo(() => textosEmojis(t), [t]);
   const { showToast } = useToast();
   const emojiPendent = useRef(null);
   const accionsLlista = useMemo(() => (modeDesa ? undefined : [{
     id: 'emojis',
-    etiqueta: TEXTOS_EMOJIS.etiqueta,
+    etiqueta: textosDelsEmojis.etiqueta,
     icona: SmilePlus,
     onAcciona: emojis.canal.obri
-  }]), [modeDesa, emojis.canal.obri]);
+  }]), [modeDesa, emojis.canal.obri, textosDelsEmojis.etiqueta]);
   const avisaDeLaCopia = useCallback((copia, glif) => {
     if (!copia) {
-      showToast(TEXTOS_EMOJIS.senseCopia, 'error');
+      showToast(textosDelsEmojis.senseCopia, 'error');
       return;
     }
-    copia.then(() => showToast(textCopiat(glif), 'success'), () => showToast(TEXTOS_EMOJIS.noCopiat, 'error'));
-  }, [showToast]);
+    copia.then(() => showToast(textCopiat(glif, t), 'success'), () => showToast(textosDelsEmojis.noCopiat, 'error'));
+  }, [showToast, textosDelsEmojis, t]);
   const { inserir: emojiAlCursor, tanca: tancaEmojis } = emojis;
   const triaEmojiDelCos = useCallback((glif) => {
     if (emojiAlCursor) {
@@ -965,6 +967,7 @@ export default function NotesSection() {
         labels={etiquetesEspai}
         icons={ICONES}
         tagFilter={false}
+        collapsibleNavigation={false}
         renderItem={renderFitxaBloc}
         renderDetail={modeDesa ? renderDesa : renderDetallBloc}
         className="sdp-bloc"
@@ -987,9 +990,9 @@ export default function NotesSection() {
             onTria={triaEmojiDelCos}
             carregaCataleg={carregaCatalegEmojis}
             emojiAlCursor={emojiAlCursor}
-            textNoReconegut={textEmojiNoReconegut}
-            titol={TEXTOS_EMOJIS.titol}
-            descripcio={emojiAlCursor ? TEXTOS_EMOJIS.inserir : TEXTOS_EMOJIS.copiar}
+            textNoReconegut={(glif) => textEmojiNoReconegut(glif, t)}
+            titol={textosDelsEmojis.titol}
+            descripcio={emojiAlCursor ? textosDelsEmojis.inserir : textosDelsEmojis.copiar}
           />
         ) : null
       )}

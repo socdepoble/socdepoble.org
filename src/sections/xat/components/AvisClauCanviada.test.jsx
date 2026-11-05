@@ -215,6 +215,30 @@ describe('el cos presentacional', () => {
     expect(screen.getByRole('button', { name: 'He parlat amb Bar $& Co: continua' })).toBeTruthy();
   });
 
+  test('D-M02-2 · quan nomDe torna buit (directori encara no carregat), usa frases genèriques netes sense espais buits ni «amb :»', () => {
+    const { container } = render(
+      <AvisClauCanviada
+        canvis={canvis({
+          pendents: [
+            pendent({ usuari: 'u-1' }),
+            pendent({ usuari: 'u-2', motiu: 'verificat' }),
+            pendent({ usuari: 'u-3', kidNou: null }),
+          ],
+          suaus: [{ usuari: 'u-4', kidNou: 'k-4' }],
+        })}
+        nomDe={() => '   '}
+        onAccepta={vi.fn()}
+        t={ca}
+      />
+    );
+    expect(screen.getAllByRole('button', { name: 'He parlat amb esta persona: continua' })).toHaveLength(2);
+    expect(screen.getByText(/Este contacte té una clau de seguretat nova/)).toBeTruthy();
+    expect(screen.getByText(/Havies verificat este contacte i la seua clau ha canviat/)).toBeTruthy();
+    expect(screen.getByText(/Este aparell no troba cap clau de seguretat vàlida d’este contacte/)).toBeTruthy();
+    expect(screen.getByText('La clau de seguretat d’este contacte ha canviat i ho ha confirmat la seua clau anterior.')).toBeTruthy();
+    expect(container.textContent).not.toMatch(/amb\s*:|\s{2,}/);
+  });
+
   test('acceptat: si el focus ha caigut al body, va al destí; si és en un altre lloc o no s’ha acceptat, no es mou', async () => {
     const desti = document.createElement('textarea');
     document.body.append(desti);

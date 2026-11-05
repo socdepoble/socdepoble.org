@@ -23,6 +23,7 @@ import { esAppNativa } from '../../config/origenPublic.js';
 import { capturaSessio } from '../../data/identitat.js';
 import { backendScope } from '../../config/backendConfig.js';
 import { omple } from '../../config/moderacio.js';
+import { avaluaRetencioPublicacio } from '../../utils/politicaRetencioIFiltresUsuari.js';
 /* T7 · IDEA-48 (pla 261101_1246) · «Persones de confiança», darrere de la bandera E2EE: apagada, Rollup plega la constant i el bloc no entra al paquet. */
 import { E2EE_ACTIU_PER_DEFECTE } from '../../config/xifratXat.js';
 const BlocPersonesConfianca = E2EE_ACTIU_PER_DEFECTE ? lazy(() => import('./BlocPersonesConfianca.jsx')) : null;
@@ -129,6 +130,10 @@ export const TEXTOS_PRIVACITAT = Object.freeze({
   }),
   politica: Object.freeze({
     llegir: textPrivacitat('politica.llegir', 'Llegir la política'),
+    oblitRuralResum: textPrivacitat(
+      'politica.oblitRuralResum',
+      'Oblit Saludable Rural: la memòria històrica de Sóc de Poble, El Rentonar i la Coordinadora d’Estudis Eòlics del Comtat, juntament amb les publicacions fixades i els marcadors, queda sempre blindada i mai caduca.'
+    ),
   }),
   consentiment: Object.freeze({
     titol: textPrivacitat('consentiment.titol', 'Consentiment'),
@@ -322,6 +327,11 @@ function BlocDades({ config }) {
   const configRef = useConfigActual(config);
   const t = useTraductorOpcional();
   const [estat, setEstat] = useState({ fase: 'repos' });
+  const blindatgePatrimoniVerificat = useMemo(() => (
+    ['socdepoble', 'rentonar', 'coordinadora-comtat'].every(
+      (id) => avaluaRetencioPublicacio({ author_entity_id: id, efimera: true }).maiEsborrar === true
+    ) && avaluaRetencioPublicacio({ bookmarked: true, efimera: true }).maiEsborrar === true
+  ), []);
   /* La sessió i la vista tenen vides distintes: el port comprova la seua
      resposta, i ací tornem a comprovar abans de descarregar o mostrar-la. */
   const vidaRef = useRef({ muntat: false, peticio: 0, control: null, deslliga: null });
@@ -394,6 +404,11 @@ function BlocDades({ config }) {
       {/* P2-08 (pla 261024_1315, T7; auditoria Codex C-04) · La llista honesta
           del que porta l'exportació (migració 2610241410) i el que no hi diu. */}
       <p className="perfil-compte__text">{tradueix(t, TEXTOS_DADES.explica)}</p>
+      {blindatgePatrimoniVerificat ? (
+        <p className="perfil-compte__text" data-oblit-saludable-rural="verificat">
+          {tradueix(t, TEXTOS_PRIVACITAT.politica.oblitRuralResum)}
+        </p>
+      ) : null}
       {estat.fase === 'error' ? <Alerta to="error">{estat.text}</Alerta> : null}
       {estat.fase === 'fet' ? <Alerta to="exit">{omple(tradueix(t, TEXTOS_DADES.fet), { nom: estat.nom })}</Alerta> : null}
       {estat.fase === 'natiu' ? <DadesDinsDeLApp nom={estat.nom} text={estat.text} t={t} /> : null}

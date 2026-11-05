@@ -79,29 +79,53 @@ export function articlesDeCarta(carta, { aComanda = new Set(), establiment, ambI
 }
 
 /**
- * Les opcions del diàleg d'un producte: les variants i, si en té, les del
- * PRIMER grup de modificadors (l'esquelet pinta un sol grup). Cada opció
- * porta el preu final i, a `valor`, una clau que l'app torna a llegir.
- *   valor 'variant~grup~opcio'
+ * Les opcions del diàleg d'un producte: les variants i, si en té, les dels
+ * seus grups de modificadors (D-6: un o diversos grups combinats en ordre).
+ * Cada opció porta el preu final i, a `valor`, una clau que l'app torna a llegir.
+ *   valor 'variant~grup1~opcio1[~grup2~opcio2...]'
  */
 export function opcionsDetall(producte, grups) {
-  const [grup] = grupsDe(producte, grups);
+  const grupsProducte = grupsDe(producte, grups);
   const variants = producte.variants;
-  if (!grup) {
+  if (grupsProducte.length === 0) {
     return variants.map((v) => ({ valor: `${v.id}~~`, etiqueta: v.nom, ajuda: producte.preuObert ? 'Preu obert' : euros(v.preuCents) }));
   }
-  const opcions = grup.min === 0 ? [{ id: '', nom: null, deltaCents: 0 }, ...grup.opcions] : grup.opcions;
-  return variants.flatMap((v) => opcions.map((o) => ({
-    valor: `${v.id}~${o.id ? grup.id : ''}~${o.id}`,
-    etiqueta: [variants.length > 1 ? v.nom : null, o.nom].filter(Boolean).join(' · ') || v.nom,
-    ajuda: euros(v.preuCents + o.deltaCents)
-  })));
+  let combinacions = [[]];
+  for (const grup of grupsProducte) {
+    const opcionsGrup = grup.min === 0
+      ? [{ id: '', nom: null, deltaCents: 0, grupId: '' }, ...grup.opcions.map((o) => ({ ...o, grupId: grup.id }))]
+      : grup.opcions.map((o) => ({ ...o, grupId: grup.id }));
+    combinacions = combinacions.flatMap((previa) => opcionsGrup.map((opcio) => [...previa, opcio]));
+  }
+  return variants.flatMap((v) => combinacions.map((triaGrups) => {
+    const clauGrups = triaGrups.map((o) => `${o.id ? o.grupId : ''}~${o.id}`).join('~');
+    const delta = triaGrups.reduce((suma, o) => suma + o.deltaCents, 0);
+    return {
+      valor: `${v.id}~${clauGrups}`,
+      etiqueta: [variants.length > 1 ? v.nom : null, ...triaGrups.map((o) => o.nom)].filter(Boolean).join(' · ') || v.nom,
+      ajuda: producte.preuObert ? 'Preu obert' : euros(v.preuCents + delta)
+    };
+  }));
 }
 
 /** La clau d'una opció del diàleg → { varianteId, opcions: [{ grupId, opcioId }] }. */
 export function llegixOpcio(valor) {
-  const [varianteId, grupId, opcioId] = String(valor || '').split('~');
-  return { varianteId: varianteId || undefined, opcions: grupId && opcioId ? [{ grupId, opcioId }] : [] };
+  const [varianteId, ...parells] = String(valor || '').split('~');
+  const opcions = [];
+  for (let i = 0; i + 1 < parells.length; i += 2) {
+    const grupId = parells[i];
+    const opcioId = parells[i + 1];
+    if (grupId && opcioId) opcions.push({ grupId, opcioId });
+  }
+  return { varianteId: varianteId || undefined, opcions };
+}
+
+/** El text que demana la tria al diàleg menut del TPV (un o diversos grups, o la variant). */
+export function descripcioTria(producte, grups) {
+  const delProducte = grupsDe(producte, grups);
+  if (delProducte.length === 0) return 'Tria la variant.';
+  if (delProducte.length === 1) return `Tria una opció de «${delProducte[0].nom}».`;
+  return `Tria una opció de ${delProducte.map((g) => `«${g.nom}»`).join(' i ')}.`;
 }
 
 /**

@@ -23,6 +23,8 @@
  * els DialegEmoticona (Notes, Perfil i Snippet) en pinten les mateixes.
  */
 import { createContext, useCallback, useContext, useMemo, useRef, useState } from 'react';
+import { tradueix } from '../../components/PedraSeca/hooks/useTraductorOpcional.js';
+import { omple } from '../../config/moderacio.js';
 import { familiesDelSelector } from './familiesEmojis.js';
 
 export const CanalEmojisContext = createContext(null);
@@ -34,21 +36,35 @@ export const useCanalEmojis = () => useContext(CanalEmojisContext);
 export const carregaCatalegEmojis = () => import('../disseny/cataleg/dades/emojisUnicode18.js')
   .then((modul) => ({ GRUPS_EMOJIS: familiesDelSelector(modul?.GRUPS_EMOJIS) }));
 
-export const TEXTOS_EMOJIS = Object.freeze({
-  titol: 'Emojis',
-  etiqueta: 'Emojis',
-  inserir: 'Toca un emoji i s’escriurà on tenies el cursor, a la nota oberta.',
-  copiar: 'Toca un emoji per copiar-lo al porta-retalls: ara no hi ha cap nota oberta on escriure’l.',
-  tancar: 'Tancar',
-  senseCopia: 'La còpia no està disponible en aquest navegador.',
-  noCopiat: 'No s’ha pogut copiar l’emoji. Torna-ho a provar.'
+const p = (nom, reserva) => Object.freeze([`section.notes.emojis.${nom}`, reserva]);
+export const PARELLS_EMOJIS = Object.freeze({
+  titol: p('titol', 'Emojis'),
+  etiqueta: p('etiqueta', 'Emojis'),
+  inserir: p('inserir', 'Toca un emoji i s’escriurà on tenies el cursor, a la nota oberta.'),
+  copiar: p('copiar', 'Toca un emoji per copiar-lo al porta-retalls: ara no hi ha cap nota oberta on escriure’l.'),
+  tancar: p('tancar', 'Tancar'),
+  senseCopia: p('senseCopia', 'La còpia no està disponible en aquest navegador.'),
+  noCopiat: p('noCopiat', 'No s’ha pogut copiar l’emoji. Torna-ho a provar.'),
+  copiat: p('copiat', 'Copiat {glif} al porta-retalls: ja el pots apegar.'),
+  noReconegut: p('noReconegut', 'Este navegador encara no reconeix {glif} com a emoji: tria’n un altre.'),
 });
-export const textCopiat = (glif) => `Copiat ${glif} al porta-retalls: ja el pots apegar.`;
+
+export const textosEmojis = (t = null) => Object.freeze({
+  titol: tradueix(t, PARELLS_EMOJIS.titol),
+  etiqueta: tradueix(t, PARELLS_EMOJIS.etiqueta),
+  inserir: tradueix(t, PARELLS_EMOJIS.inserir),
+  copiar: tradueix(t, PARELLS_EMOJIS.copiar),
+  tancar: tradueix(t, PARELLS_EMOJIS.tancar),
+  senseCopia: tradueix(t, PARELLS_EMOJIS.senseCopia),
+  noCopiat: tradueix(t, PARELLS_EMOJIS.noCopiat),
+});
+export const TEXTOS_EMOJIS = textosEmojis(null);
+export const textCopiat = (glif, t = null) => omple(tradueix(t, PARELLS_EMOJIS.copiat), { glif });
 /* Correcció de la revisió (261016) · Un emoji del catàleg massa nou per a este
    navegador (utils/emoji · emojiSol el rebutja: Safari 16 porta les dades
    d'Unicode 14) no s'escriu ni es copia: es veuria trencat. El mateix avís que
    el DialegEmoticona (la via d'assignar), amb el que toca fer en el cos. */
-export const textEmojiNoReconegut = (glif) => `Este navegador encara no reconeix ${glif} com a emoji: tria’n un altre.`;
+export const textEmojiNoReconegut = (glif, t = null) => omple(tradueix(t, PARELLS_EMOJIS.noReconegut), { glif });
 
 /**
  * Copia un text amb el porta-retalls del navegador. Torna la promesa de

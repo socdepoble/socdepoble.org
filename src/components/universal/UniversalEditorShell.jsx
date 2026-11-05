@@ -480,6 +480,7 @@ export function UniversalEditorShell({
      desplegables, i el cos (TipTap) no es remunta. Dins, l'ordre de lectura:
      Capçalera → identitat (l'avatar) → Logotip → àmbit → classificació → tancar. */
   posicioEdicioAvancada = 'despres-autoria',
+  previsualitzacioTargeta = null,
   classificacio,
   copyright,
   onCanviaCopyright,
@@ -716,6 +717,7 @@ export function UniversalEditorShell({
         ) : null}
         {ambitEdicioAvancada ? <div className="sdp-edicio-avancada__ambit" data-sdp-ranura="ambit">{ambitEdicioAvancada}</div> : null}
         {classificacio ? <div className="page-title-classificacio">{classificacio}</div> : null}
+        {previsualitzacioTargeta ? <div className="sdp-edicio-avancada__ambit" data-sdp-ranura="targeta-viva">{previsualitzacioTargeta}</div> : null}
         <button
           type="button"
           className="sdp-boto sdp-boto--secundari sdp-edicio-avancada__boto-tancar"

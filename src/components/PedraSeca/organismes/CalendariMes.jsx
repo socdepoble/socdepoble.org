@@ -26,15 +26,28 @@
 import { Boto } from '../atoms/Boto.jsx';
 import { Taula } from './Taula.jsx';
 import { DIES_CURTS, DIES_LLARGS, cursorDe, graellaMes, mouMes } from '../../../utils/calendari.js';
+import { omple } from '../../../config/moderacio.js';
+import { tradueix, useTraductorOpcional } from '../hooks/useTraductorOpcional.js';
 
-const ETIQUETES_PER_DEFECTE = Object.freeze({ anterior: 'Mes anterior', hui: 'Hui', seguent: 'Mes següent' });
+const p = (nom, reserva) => Object.freeze([`calendari.mes.${nom}`, reserva]);
+const TEXTOS_CALENDARI_MES = Object.freeze({
+  anterior: p('anterior', 'Mes anterior'),
+  hui: p('hui', 'Hui'),
+  seguent: p('seguent', 'Mes següent'),
+  titol: p('titol', 'Calendari de {mes}'),
+  marcadorHui: p('marcadorHui', ' (hui)'),
+});
 
-export function NavegacioMes({ cursor, onCanvia, avui = new Date(), className, etiquetes = ETIQUETES_PER_DEFECTE, accions }) {
+export function NavegacioMes({ cursor, onCanvia, avui = new Date(), className, etiquetes, accions }) {
+  const t = useTraductorOpcional();
+  const anterior = etiquetes?.anterior ?? tradueix(t, TEXTOS_CALENDARI_MES.anterior);
+  const hui = etiquetes?.hui ?? tradueix(t, TEXTOS_CALENDARI_MES.hui);
+  const seguent = etiquetes?.seguent ?? tradueix(t, TEXTOS_CALENDARI_MES.seguent);
   return (
     <div className={className}>
-      <Boto varietat="secundari" onClick={() => onCanvia?.(mouMes(cursor, -1))} aria-label={etiquetes.anterior}>‹</Boto>
-      <Boto varietat="secundari" onClick={() => onCanvia?.(cursorDe(avui))}>{etiquetes.hui}</Boto>
-      <Boto varietat="secundari" onClick={() => onCanvia?.(mouMes(cursor, 1))} aria-label={etiquetes.seguent}>›</Boto>
+      <Boto varietat="secundari" onClick={() => onCanvia?.(mouMes(cursor, -1))} aria-label={anterior}>‹</Boto>
+      <Boto varietat="secundari" onClick={() => onCanvia?.(cursorDe(avui))}>{hui}</Boto>
+      <Boto varietat="secundari" onClick={() => onCanvia?.(mouMes(cursor, 1))} aria-label={seguent}>›</Boto>
       {accions ?? null}
     </div>
   );
@@ -43,12 +56,14 @@ export function NavegacioMes({ cursor, onCanvia, avui = new Date(), className, e
 const numeroTalQual = (_dia, { numero }) => numero;
 
 export function GraellaMes({ any, mes, locale, titol, avui = new Date(), renderDia = numeroTalQual, compacta = false, className }) {
+  const t = useTraductorOpcional();
   const setmanes = graellaMes(any, mes);
   const titolMes = new Date(any, mes, 1).toLocaleDateString(locale, { month: 'long', year: 'numeric' });
   const esAvui = (dia) => dia === avui.getDate() && mes === avui.getMonth() && any === avui.getFullYear();
   const classe = [compacta && 'sdp-calendari--compacte', className].filter(Boolean).join(' ') || undefined;
+  const marcadorHui = tradueix(t, TEXTOS_CALENDARI_MES.marcadorHui);
   return (
-    <Taula titol={titol ?? `Calendari de ${titolMes}`} className={classe}>
+    <Taula titol={titol ?? omple(tradueix(t, TEXTOS_CALENDARI_MES.titol), { mes: titolMes })} className={classe}>
       <caption>{titolMes}</caption>
       <thead>
         <tr>{DIES_CURTS.map((d, i) => <th key={d} scope="col"><abbr title={DIES_LLARGS[i]}>{d}</abbr></th>)}</tr>
@@ -59,7 +74,7 @@ export function GraellaMes({ any, mes, locale, titol, avui = new Date(), renderD
             {setmana.map((dia, i) => {
               if (!dia) return <td key={`buit-${i}`}>{null}</td>;
               const hui = esAvui(dia);
-              const numero = hui ? <><strong>{dia}</strong><span className="sdp-nomes-lector"> (hui)</span></> : dia;
+              const numero = hui ? <><strong>{dia}</strong><span className="sdp-nomes-lector">{marcadorHui}</span></> : dia;
               return <td key={dia}>{renderDia(dia, { esAvui: hui, numero })}</td>;
             })}
           </tr>

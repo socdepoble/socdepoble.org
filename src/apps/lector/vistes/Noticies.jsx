@@ -84,18 +84,30 @@ import { CLOSCA, Lector, focusLliure } from './Lector.jsx';
 import {
   NOM_CARPETA_FIXA, carpetaDeOpcio, fontDeOpcio, opcioDeCarpeta, opcioDeFont, opcioDeLaSeleccio, rutaDeSeleccio, seleccioDeRuta
 } from './navegacio.js';
+const tradueix = (t, [clau, reserva]) => (typeof t === 'function' ? t(clau, { defaultValue: reserva }) : reserva);
 
 /* La pell del Lector: tot el que l'espai de treball no ha de saber. */
+const pLector = (nom, reserva) => Object.freeze([`apps.lector.noticies.${nom}`, reserva]);
+export const TEXTOS_ESPAI_LECTOR = Object.freeze({
+  categories: pLector('categories', 'CARPETES'),
+  items: pLector('items', 'NOTÍCIES'),
+  all: pLector('totes', 'Totes'),
+  search: pLector('cercar', 'Cercar notícies'),
+  loading: pLector('carregant', 'Carregant les notícies…'),
+  error: pLector('error', 'No s’han pogut carregar les notícies.'),
+  select: pLector('tria', 'Tria una notícia.'),
+  manage: pLector('gestiona', 'Gestiona les fonts'),
+});
 const ETIQUETES = Object.freeze({
-  categories: 'CARPETES',
-  items: 'NOTÍCIES',
-  all: 'Totes',
-  search: 'Cercar notícies',
-  loading: 'Carregant les notícies…',
-  error: 'No s’han pogut carregar les notícies.',
-  select: 'Tria una notícia.',
+  categories: TEXTOS_ESPAI_LECTOR.categories[1],
+  items: TEXTOS_ESPAI_LECTOR.items[1],
+  all: TEXTOS_ESPAI_LECTOR.all[1],
+  search: TEXTOS_ESPAI_LECTOR.search[1],
+  loading: TEXTOS_ESPAI_LECTOR.loading[1],
+  error: TEXTOS_ESPAI_LECTOR.error[1],
+  select: TEXTOS_ESPAI_LECTOR.select[1],
   /* 261024 (Lector) · L'acció de la capçalera de l'arbre que obri la gestió de fonts. */
-  manage: 'Gestiona les fonts'
+  manage: TEXTOS_ESPAI_LECTOR.manage[1]
 });
 const ICONES = Object.freeze({ categories: Folder, items: Newspaper });
 const ESTAT_DE_L_ESPAI = Object.freeze({ carregant: 'loading', llest: 'ready', error: 'error' });
@@ -388,7 +400,7 @@ function TornaALaLlista({ obert }) {
  * `totes`: si la ruta és la de «Totes».
  */
 export function EspaiNoticies({ params = null, totes = false }) {
-  const { lector, noticies, ara, desfas, ruta, enLinia, personals, llegixPersonals, mitjans } = useVistaLector();
+  const { lector, noticies, ara, desfas, ruta, enLinia, personals, llegixPersonals, mitjans, t = null } = useVistaLector();
   const navigate = useNavigate();
   const { pathname, search } = useLocation();
   const carpetaDelCami = params?.carpeta ?? null;
@@ -568,7 +580,17 @@ export function EspaiNoticies({ params = null, totes = false }) {
   /* El buit de la llista d'una font apagada o pendent ho diu (261024, Lector). */
   const fontDeLaUrl = fontDelCami ? fonts.find((font) => font.id === fontDelCami) || null : null;
   const buitDeFont = fontDeLaUrl ? BUIT_DE_FONT[estatDeFont(fontDeLaUrl, estat)] || null : null;
-  const etiquetes = useMemo(() => ({ ...ETIQUETES, empty: callades ? BUIT_CALLADES : buitDeFont || `${buit[0]}.` }), [buit, callades, buitDeFont]);
+  const etiquetes = useMemo(() => ({
+    categories: tradueix(t, TEXTOS_ESPAI_LECTOR.categories),
+    items: tradueix(t, TEXTOS_ESPAI_LECTOR.items),
+    all: tradueix(t, TEXTOS_ESPAI_LECTOR.all),
+    search: tradueix(t, TEXTOS_ESPAI_LECTOR.search),
+    loading: tradueix(t, TEXTOS_ESPAI_LECTOR.loading),
+    error: tradueix(t, TEXTOS_ESPAI_LECTOR.error),
+    select: tradueix(t, TEXTOS_ESPAI_LECTOR.select),
+    manage: tradueix(t, TEXTOS_ESPAI_LECTOR.manage),
+    empty: callades ? BUIT_CALLADES : buitDeFont || `${buit[0]}.`,
+  }), [t, buit, callades, buitDeFont]);
 
   /* MD (ordre del Mestre, 261003) · En mòbil, primer l'arbre; amb ?article= a l'entrada, la
      notícia (nivellMestreDetall.js). */
@@ -587,6 +609,7 @@ export function EspaiNoticies({ params = null, totes = false }) {
         labels={etiquetes}
         icons={ICONES}
         tagFilter={false}
+        collapsibleNavigation={false}
         renderItem={filaDeNoticia}
         listClassName="sdp-bloc-list--notes"
         renderDetail={renderDetail}

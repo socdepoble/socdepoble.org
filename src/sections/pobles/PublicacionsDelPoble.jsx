@@ -34,7 +34,7 @@ function useTraductor() {
    del SlotErrorBoundary, com una targeta que peta. */
 function PublicacionsDelPobleAmbDades({ poble, textos }) {
   const { elements, estat, error, refresh } = usePublicacionsDelPoble(poble);
-  return <VistaPublicacionsDeLActor elements={elements} estat={estat} error={error} refresh={refresh} textos={textos} />;
+  return <VistaPublicacionsDeLActor elements={elements} estat={estat} error={error} refresh={refresh} textos={textos} varietatPorta="secundari" />;
 }
 
 /** Les targetes publicades des de `poble` (una fitxa de /pobles), en l'ordre del Mur. */

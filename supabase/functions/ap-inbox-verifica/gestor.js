@@ -340,7 +340,8 @@ export function creaGestor({
     }
     // Al registre, només l'estat i el motiu: cap actor ni cap cos.
     registre.info?.(`[ap-inbox-verifica] ${r.status} ${r.cos?.estat ?? r.cos?.error ?? ''}${r.cos?.motiu ? ` ${r.cos.motiu}` : ''}`);
-    return resposta(r.status, r.cos, r.capcaleres);
+    const capcaleresResposta = r.status === 503 ? { 'Retry-After': String(AP.RETRY_AFTER_CAIGUT_S), ...r.capcaleres } : r.capcaleres;
+    return resposta(r.status, r.cos, capcaleresResposta);
   }
 
   async function atenCua(req) {

@@ -477,3 +477,12 @@ describe('TE-01 · en castellà', () => {
     expect(document.body.textContent).not.toMatch(/SDP-|Supabase|sessió iniciada|el servidor no respon/);
   });
 });
+
+test('Ronda 31 · R21-ARCH-02: DetallPrivacitat mostra i verifica la regla d’Oblit Saludable Rural que blinda Sóc de Poble, El Rentonar, Coordinadora, fixats i marcadors', () => {
+  m.caps = new Set(['compte']);
+  const { container } = pinta();
+  const notaOblit = container.querySelector('[data-oblit-saludable-rural="verificat"]');
+  expect(notaOblit).toBeTruthy();
+  expect(notaOblit.textContent).toContain('Oblit Saludable Rural');
+  expect(notaOblit.textContent).toContain('Sóc de Poble, El Rentonar i la Coordinadora');
+});

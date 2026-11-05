@@ -817,3 +817,30 @@ test('Gauntlet 261016 · Onada 1.5: /gent/javi-llinares és la persona pilot en 
   expect(dretsDelTitol(remot.container)).toBeNull();
   expect(screen.queryByRole('button', { name: 'Edita la fitxa' })).toBeNull();
 });
+
+test('Ronda 31 · R21-ARCH-02: la fitxa pública emet enllaç verificat rel="me" per al compte institucional i per a perfils amb identitat federada vinculada', async () => {
+  mocks.id = ENTITAT_PILOT_SLUG;
+  mocks.load.mockResolvedValue(ENTITAT);
+  const { container } = render(<PerfilPublicSection agents={mocks.agents} />);
+  await screen.findByRole('heading', { level: 1, name: 'Sóc de Poble' });
+  const enllacInstitucional = await screen.findByRole('link', { name: '@depoble@mastodont.cat' });
+  expect(enllacInstitucional.getAttribute('href')).toBe('https://mastodont.cat/@depoble');
+  expect(enllacInstitucional.getAttribute('rel')).toContain('me');
+  expect(container.querySelector('[data-compte-institucional="socdepoble@socdepoble.org"]')).toBeTruthy();
+  cleanup();
+
+  mocks.id = 'u-fedivers';
+  mocks.load.mockResolvedValue({
+    ...IAIA,
+    tipus: 'persona',
+    id: 'u-fedivers',
+    nom: 'Maria de La Torre',
+    esIA: false,
+    mastodon: '@maria_la_torre@mastodont.cat'
+  });
+  render(<PerfilPublicSection agents={mocks.agents} />);
+  await screen.findByRole('heading', { level: 1, name: 'Maria de La Torre' });
+  const enllacVei = await screen.findByRole('link', { name: '@maria_la_torre@mastodont.cat' });
+  expect(enllacVei.getAttribute('href')).toBe('https://mastodont.cat/@maria_la_torre');
+  expect(enllacVei.getAttribute('rel')).toBe('me noopener noreferrer');
+});

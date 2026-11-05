@@ -23,6 +23,14 @@ import { parseMarkdown, extreuEditorial, parseMarkdownEnLinia } from './parseMar
 import { ICONES_ITEMS_WIKI, glifDeCarpetaWiki, iconaDeDocument } from './iconesWiki.js';
 import { esperaElRol, maquinariaALaVista } from './maquinaria.js';
 import { metadadesDeDocumentWiki, rutaDeCompartirDocumentWiki } from './seoWiki.js';
+import { tradueix, useTraductorOpcional } from '../../components/PedraSeca/hooks/useTraductorOpcional.js';
+
+const pWiki = (nom, reserva) => Object.freeze([`section.wiki.${nom}`, reserva]);
+export const TEXTOS_ESPAI_WIKI = Object.freeze({
+  categories: pWiki('categories', 'WIKI DE POBLE'),
+  items: pWiki('items', 'DOCUMENTS'),
+  tria: pWiki('tria', 'Tria un document.'),
+});
 
 // La portada és una peça estructural: si la clau desapareix, la pàgina es
 // pinta buida. En desenvolupament ho diem en veu alta (incident del 24-09).
@@ -584,6 +592,7 @@ function WikiDetail({ item }) {
 const CATEGORIA_INICIAL = '__intro_cat';
 
 export default function WikiDePobleSection() {
+  const t = useTraductorOpcional();
   const navigate = useNavigate();
   const location = useLocation();
   const { pageCopy } = useCoreContent();
@@ -768,7 +777,11 @@ export default function WikiDePobleSection() {
       initialSelection={initialSelection}
       selection={selection}
       onSelectionChange={handleSelectionChange}
-      labels={{ categories: 'WIKI DE POBLE', items: 'DOCUMENTS', select: 'Tria un document.' }}
+      labels={{
+        categories: tradueix(t, TEXTOS_ESPAI_WIKI.categories),
+        items: tradueix(t, TEXTOS_ESPAI_WIKI.items),
+        select: tradueix(t, TEXTOS_ESPAI_WIKI.tria),
+      }}
       icons={{ categories: Folder, items: FileText }}
       className="sdp-wiki-workspace"
       renderDetail={({ item }) => <WikiDetail item={item} />}

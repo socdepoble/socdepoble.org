@@ -6,10 +6,10 @@
    contracte comú) i només si en té; la Caixa (articlesDeCarta) no canvia. Les
    insígnies i la carta per emportar continuen com eren. */
 import { describe, expect, test } from 'vitest';
-import { ALERGENS } from '../nucli/cataleg.js';
+import { ALERGENS, resolModificadors } from '../nucli/cataleg.js';
 import { afegeixProducte, creaComanda } from '../nucli/comanda.js';
 import { llavorCarta } from '../nucli/llavor.js';
-import { articlesDeCarta, articlesDelTpv } from './vestits.js';
+import { articlesDeCarta, articlesDelTpv, descripcioTria, euros, llegixOpcio, opcionsDetall } from './vestits.js';
 
 const ARA = '2026-10-02T07:30:00.000Z';
 const perId = (articles) => new Map(articles.map((a) => [a.id, a]));
@@ -104,5 +104,35 @@ describe('articlesDelTpv: la resta no canvia', () => {
     expect(articles.has('cava')).toBe(false);
     expect(articles.get('vi-negre').alergens).toEqual(['sulfits']);
     expect(articles.get('calamars').alergens).toEqual(['gluten', 'molluscs']);
+  });
+});
+
+describe('D-6 · modificadors multi-grup en opcionsDetall, llegixOpcio i descripcioTria', () => {
+  test('combina diversos grups de modificadors en ordre i resol totes les opcions amb el suplement acumulat', () => {
+    const carta = llavorCarta();
+    const torrada = {
+      ...carta.productes.find((p) => p.id === 'torrada-tomaca'),
+      grupsModificadors: ['pa-torrada', 'llet']
+    };
+    expect(descripcioTria(torrada, carta.grups)).toBe('Tria una opció de «Pa» i «Llet».');
+    const opcions = opcionsDetall(torrada, carta.grups);
+    const senseGlutenVegetal = opcions.find((o) => o.etiqueta === 'Pa sense gluten · Beguda vegetal');
+    expect(senseGlutenVegetal).toEqual({
+      valor: 'racio~pa-torrada~sense-gluten~llet~vegetal',
+      etiqueta: 'Pa sense gluten · Beguda vegetal',
+      ajuda: euros(320)
+    });
+    const llegida = llegixOpcio(senseGlutenVegetal.valor);
+    expect(llegida).toEqual({
+      varianteId: 'racio',
+      opcions: [
+        { grupId: 'pa-torrada', opcioId: 'sense-gluten' },
+        { grupId: 'llet', opcioId: 'vegetal' }
+      ]
+    });
+    expect(resolModificadors(torrada, carta.grups, llegida.opcions)).toEqual([
+      { grupId: 'pa-torrada', opcioId: 'sense-gluten', nomCongelat: 'Pa sense gluten', deltaCents: 50 },
+      { grupId: 'llet', opcioId: 'vegetal', nomCongelat: 'Beguda vegetal', deltaCents: 20 }
+    ]);
   });
 });

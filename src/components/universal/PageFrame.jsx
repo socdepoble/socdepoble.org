@@ -19,6 +19,7 @@ import { AvisTraduccio, CosTraduit } from './traduccio/TraduccioPagina.jsx';
 import { LlenguaDelContingut } from './traduccio/llenguaDelContingut.js';
 import { useToast } from './NotificationContext.jsx';
 import { tradueix, useTraductorOpcional } from '../PedraSeca/hooks/useTraductorOpcional.js';
+import { omple } from '../../config/moderacio.js';
 
 /* Ordre del Mestre, 261004 (D-A) · El Traduir d'una pàgina que no es
    traduïx (traduccio={false}: la pàgina de les apps, PaginaApp): ho diu i no
@@ -26,8 +27,15 @@ import { tradueix, useTraductorOpcional } from '../PedraSeca/hooks/useTraductorO
    (AVIS_EINA_LOCAL_SENSE_TRADUCCIO de WikiDePobleSection).
    Gauntlet 261029 (cicle 1, i18n) · L'avís, en la llengua de la interfície
    (parell [clau, reserva]); la reserva valenciana és la constant exportada. */
-const PARELL_SENSE_TRADUCCIO = Object.freeze(['pagina.senseTraduccio', 'Esta pàgina no es traduïx: el que mostra no ix d’este dispositiu.']);
+const pPagina = (nom, reserva) => Object.freeze([`pagina.${nom}`, reserva]);
+const PARELL_SENSE_TRADUCCIO = pPagina('senseTraduccio', 'Esta pàgina no es traduïx: el que mostra no ix d’este dispositiu.');
 export const AVIS_PAGINA_SENSE_TRADUCCIO = PARELL_SENSE_TRADUCCIO[1];
+const PARELL_CANVIA_DRETS_SUFIX = pPagina('canviaDretsSufix', "canviar els drets d'autor");
+const PARELL_CANVIA_DRETS_AMB_VALOR = pPagina('canviaDretsAmbValor', "{drets}: canviar els drets d'autor");
+const PARELL_CANVIA_DRETS = pPagina('canviaDrets', "Canviar els drets d'autor");
+const PARELL_CONNECTAR = pPagina('connectar', 'Connectar');
+const PARELL_CANVIA_AVATAR = pPagina('canviaAvatar', 'Canvia la teua imatge');
+const PARELL_LLEVA_AVATAR = pPagina('llevaAvatar', "Llevar l'avatar");
 
 /* T2 (ordre del Mestre, 260930) · Fins a quin nivell d'encapçalament arriba
    l'Índex: h6 per defecte, perquè tot nivell d'encapçalament del contingut hi
@@ -560,42 +568,26 @@ let seccioConsumida = null;
    comença pel text visible (WCAG 2.5.3: qui dona ordres amb la veu diu el
    que veu) i diu què fa («CC BY 4.0: canviar els drets d'autor»). Un copyright que no
    és text (un node) es queda amb l'acció sola. */
-export const ETIQUETA_CANVIA_DRETS = "canviar els drets d'autor";
-export function nomDelBotoDeDrets(copyright) {
-  if (typeof copyright === 'string' && copyright.trim()) return `${copyright.trim()}: ${ETIQUETA_CANVIA_DRETS}`;
-  return "Canviar els drets d'autor";
+export const ETIQUETA_CANVIA_DRETS = PARELL_CANVIA_DRETS_SUFIX[1];
+export function nomDelBotoDeDrets(copyright, t = null) {
+  if (typeof copyright === 'string' && copyright.trim()) {
+    return omple(tradueix(t, PARELL_CANVIA_DRETS_AMB_VALOR), { drets: copyright.trim() });
+  }
+  return tradueix(t, PARELL_CANVIA_DRETS);
 }
 
 export function PageFrame({
   title, subtitle, lead, labels = [], copyright, showLogos = false,
   chrome = 'page', topBarData = {}, heroImage, heroAlt = '',
-  /* Dimensions conegudes de la portada: es passen juntes per reservar-ne
-     la proporció abans de carregar. Sense un parell vàlid, no s'endevina.
-     La prioritat alta és una decisió explícita de qui posa la portada. */
   heroWidth, heroHeight, heroFetchPriority,
-  /* IDEA-42 (B7h) · `portadaSencera` (només true): una portada vertical de
-     lectura porta també hero-image--sencera i layout.css li lleva el límit
-     d'alçada (la mida natural, mai ampliada). Sense, el DOM de sempre.
-     RESERVADA (corrector B7h, B7h-A03): avui cap pàgina la passa; la portada
-     sola d'una publicació del Mur va per la ranura heroComponent
-     (VisorDePublicacio `sencera`). La fase 2 (D-4) la lliga a un productor
-     real o la lleva, amb la regla de layout.css i la seua prova. */
   portadaSencera = false,
-  /* T6 (ordre del Mestre, 261004) · Sense nom propi (ni ací ni a
-     topBarData), la barra signa amb DEFAULT_AUTHOR i, si ningú hi posa ruta,
-     enllaça al perfil de Sóc de Poble (DEFAULT_AUTHOR.href; Onada 8, 261009:
-     abans, la pàgina del projecte). */
   authorName, authorLocation = DEFAULT_AUTHOR.location,
   authorAvatar = DEFAULT_AUTHOR.avatarUrl,
-  /* T4 · amb ruta, avatar i nom de la barra taronja enllacen al perfil públic. */
   authorHref = null,
   time, date, dateTime,
-  /* Ordre del Mestre, 261001 (tasca 4) · el nom accessible de la pastilla de
-     la barra taronja; UniversalPage hi posa el que diu on porta el clic (el
-     Calendari en eixe mes). Sense, el de DateTimeControl. */
   dateTimeLabel,
   onBack, onForward, onIndex, onTranslate, onComment, onShare, onConnect, onDateTime,
-  connectLabel = 'Connectar', price, layout = 'page',
+  connectLabel, price, layout = 'page',
   /* T43 (ordre del Mestre, 260928, D1) · showConnect={false} amaga el botó
      CONNECTAR de la barra blava (UniversalPage el passa amb onConnect={false}).
      Sense la prop, el de sempre: visible. */
@@ -1042,10 +1034,10 @@ export function PageFrame({
   const logoDeLaRanura = topBarData?.logoComponent || null;
   const logoAutomatic = senseLogo === true ? null
     : (logoDescrit(logoEntitat) ?? (esRutaDelProjecte(barAuthorHref) || showLogos === true ? DEFAULT_AUTHOR.logo : null));
-  const avatarDeCapcalera = logoDeLaRanura || logoAutomatic || senseLogo === true ? null : avatarDescrit(avatarAutor);
+  const avatarDeCapcalera = logoDeLaRanura || logoAutomatic || senseLogo === true ? null : avatarDescrit(avatarAutor, tAvis);
   /* Correcció de la revisió (261008, CONTRACTE-1) · Una referència que no es
      pot pintar, amb les claus per a canviar-la: les píndoles soles. */
-  const accionsSenseAvatar = logoDeLaRanura || logoAutomatic || senseLogo === true || avatarDeCapcalera ? null : accionsDAvatarNoPintable(avatarAutor);
+  const accionsSenseAvatar = logoDeLaRanura || logoAutomatic || senseLogo === true || avatarDeCapcalera ? null : accionsDAvatarNoPintable(avatarAutor, tAvis);
   const ambLogo = Boolean(logoDeLaRanura || logoAutomatic || avatarDeCapcalera || accionsSenseAvatar);
   const hasHeader = Boolean(showPageHeader && (ambLogo || titol || pageLabels.length || copyright || classificacio || accioPrincipal));
 
@@ -1072,7 +1064,7 @@ export function PageFrame({
           onComment={handleComment}
           onShare={handleShare}
           onConnect={handleConnect}
-          connectLabel={connectLabel}
+          connectLabel={connectLabel ?? tradueix(tAvis, PARELL_CONNECTAR)}
           /* T63.2 · Inoperatiu (l'editor, T36) no porta enlloc: el nom no en promet cap xat. */
           comentarXat={accionsInoperatives ? null : comentarXat}
           comentarPrivatAmb={comentarPrivatAmb}
@@ -1202,7 +1194,7 @@ export function PageFrame({
             <p className="sp-card-copyright page-title-copyright">
               {typeof onCanviaCopyright === 'function' ? (
                 <button type="button" className="sp-card-copyright__enllac" data-sdp-drets=""
-                  aria-label={nomDelBotoDeDrets(copyright)} onClick={onCanviaCopyright}>{copyright}</button>
+                  aria-label={nomDelBotoDeDrets(copyright, tAvis)} onClick={onCanviaCopyright}>{copyright}</button>
               ) : LinkComponent === 'a' ? (
                 <a href={RUTA_DRETS_AUTOR} className="sp-card-copyright__enllac">{copyright}</a>
               ) : (
@@ -1356,69 +1348,45 @@ const esDelPort = (src) => src.startsWith('sdp-media://');
    Relleu 261007 («Límits» §5) · esAvatarSegur, camiDe i esMarcaDeLEntitat
    vivien ací, sense exportar, i el detall i el Mercat en portaven còpies:
    ara són d'UniversalUtils.js, amb el mateix cos (DOM idèntic). */
-function avatarDescrit(avatar) {
+function avatarDescrit(avatar, t = null) {
   if (!avatar || typeof avatar !== 'object') return null;
   const src = srcDeLogo(avatar.src);
   if (!src || (!esDelPort(src) && (!esAvatarSegur(src) || esMarcaDeLEntitat(src)))) return null;
   return {
     src,
     alt: typeof avatar.alt === 'string' ? avatar.alt : '',
-    ...clausDeLAvatar(avatar)
+    ...clausDeLAvatar(avatar, t)
   };
 }
 
-/* Les claus d'acció d'un descriptor `avatarAutor`, netes.
-   Contracte-1 (261008) · Les píndoles de davall: un text buit o que no és
-   text és com si no n'hi haguera (srcDeLogo: text net, o null).
-   Línia I1 (pla 261008_1201) · `ajuda`, el mateix criteri que les
-   etiquetes; `pujant`, només amb true (com senseLogo): un text o un 1 no
-   desactiven res. */
-function clausDeLAvatar(avatar) {
+function clausDeLAvatar(avatar, t = null) {
   return {
     onCanvia: typeof avatar.onCanvia === 'function' ? avatar.onCanvia : null,
     etiquetaCanvia: srcDeLogo(avatar.etiquetaCanvia),
     onLleva: typeof avatar.onLleva === 'function' ? avatar.onLleva : null,
-    etiquetaLleva: srcDeLogo(avatar.etiquetaLleva) || ETIQUETA_LLEVA_AVATAR,
+    etiquetaLleva: srcDeLogo(avatar.etiquetaLleva) || tradueix(t, PARELL_LLEVA_AVATAR),
     ajuda: srcDeLogo(avatar.ajuda),
     pujant: avatar.pujant === true
   };
 }
 
-/* Correcció de la revisió (261008, CONTRACTE-1) · Un `avatarAutor` amb una
-   referència que avatarDescrit no deixa pintar (la marca de Sóc de Poble,
-   una adreça que no és segura): sense l'avatar, qui el pot canviar es
-   quedava sense cap control. Ara, les píndoles soles (filaDeLAvatar), també
-   la de llevar, perquè la referència es puga buidar. Sense cap referència
-   (src buit: la pàgina hi posa la seua ranura) o sense les claus noves, null:
-   el DOM de sempre. */
-function accionsDAvatarNoPintable(avatar) {
+function accionsDAvatarNoPintable(avatar, t = null) {
   if (!avatar || typeof avatar !== 'object' || !srcDeLogo(avatar.src)) return null;
-  const claus = clausDeLAvatar(avatar);
+  const claus = clausDeLAvatar(avatar, t);
   return teFilaDeLAvatar(claus) ? <FilaDeLAvatarSola {...claus} /> : null;
 }
 
-/* Correcció de la revisió de la línia I1 (261008) · Les píndoles soles en un
-   component propi: l'id de la línia d'ajuda (useId) només es demana quan la
-   fila es pinta, no a cada PageFrame. */
 function FilaDeLAvatarSola(claus) {
   const id = useId();
   return filaDeLAvatar({ ...claus, idAjuda: `${id}-ajuda` });
 }
 
 /* El nom del botó de l'avatar quan la pàgina és de qui mira. */
-export const ETIQUETA_CANVIA_AVATAR = 'Canvia la teua imatge';
+export const ETIQUETA_CANVIA_AVATAR = PARELL_CANVIA_AVATAR[1];
 /* Contracte-1 (261008) · El text de la píndola que lleva l'avatar, si qui
    passa onLleva no en dona cap. */
-export const ETIQUETA_LLEVA_AVATAR = "Llevar l'avatar";
+export const ETIQUETA_LLEVA_AVATAR = PARELL_LLEVA_AVATAR[1];
 
-/* Contracte-1 (261008) · Una píndola de text davall de l'avatar: la pell de
-   les píndoles de l'editor (.sdp-classificacio-pindola amb la píndola buida
-   de dins, modules.css), amb la seua icona decorativa.
-   Línia I1 (pla 261008_1201) · Amb `pujant`, disabled i aria-busy="true":
-   mentre la imatge puja no es pot canviar ni llevar. Sense, cap atribut nou
-   (React no escriu disabled={false}).
-   Correcció de la revisió de la línia I1 · `descritPer`: l'id de la línia
-   d'ajuda (aria-describedby). Sense, cap atribut. */
 function PindolaDeLAvatar({ icona: Icona, text, onClick, pujant = false, descritPer = undefined }) {
   return (
     <button type="button" className="sdp-classificacio-pindola" onClick={onClick}
@@ -1431,25 +1399,14 @@ function PindolaDeLAvatar({ icona: Icona, text, onClick, pujant = false, descrit
   );
 }
 
-/* Contracte-1 (261008) · La fila de píndoles de davall de l'avatar: «canvia»
-   amb onCanvia i etiquetaCanvia, «lleva» amb onLleva. Sense cap, null.
-   Línia I1 (pla 261008_1201) · `ajuda`: l'últim fill de la fila, un
-   p.sdp-camp__ajuda que ocupa una línia sencera davall de les píndoles
-   (components.css). Sense cap píndola no es pinta: l'ajuda acompanya un
-   control. `pujant` arriba a les dues píndoles.
-   Correcció de la revisió de la línia I1 · `idAjuda` (de qui pinta la fila,
-   amb useId): amb `ajuda`, la línia porta l'id i la píndola «canvia», la
-   que tria la foto, la cita amb aria-describedby, com el Camp de Pedra Seca
-   (formulari.jsx). «Llevar» no: el límit de la foto no li diu res. Sense
-   `ajuda`, cap id ni cap atribut nou. */
 const teFilaDeLAvatar = ({ onCanvia = null, etiquetaCanvia = null, onLleva = null }) => Boolean((onCanvia && etiquetaCanvia) || onLleva);
 
-function filaDeLAvatar({ onCanvia = null, etiquetaCanvia = null, onLleva = null, etiquetaLleva = ETIQUETA_LLEVA_AVATAR, ajuda = null, pujant = false, idAjuda = null }) {
+function filaDeLAvatar({ onCanvia = null, etiquetaCanvia = null, onLleva = null, etiquetaLleva = null, ajuda = null, pujant = false, idAjuda = null, t = null }) {
   if (!teFilaDeLAvatar({ onCanvia, etiquetaCanvia, onLleva })) return null;
   const descritPer = ajuda && idAjuda ? idAjuda : undefined;
   const canvia = onCanvia && etiquetaCanvia
     ? <PindolaDeLAvatar icona={Camera} text={etiquetaCanvia} onClick={onCanvia} pujant={pujant} descritPer={descritPer} /> : null;
-  const lleva = onLleva ? <PindolaDeLAvatar icona={Trash2} text={etiquetaLleva} onClick={onLleva} pujant={pujant} /> : null;
+  const lleva = onLleva ? <PindolaDeLAvatar icona={Trash2} text={etiquetaLleva || tradueix(t, PARELL_LLEVA_AVATAR)} onClick={onLleva} pujant={pujant} /> : null;
   return (
     <div className="page-title-avatar-accions">
       {canvia}
@@ -1459,69 +1416,25 @@ function filaDeLAvatar({ onCanvia = null, etiquetaCanvia = null, onLleva = null,
   );
 }
 
-/* L'avatar redó del bloc del títol, centrat davant de l'H1: més menut que el
-   logotip (--sdp-avatar-capcalera, 300px) i a l'ample de la capçalera en
-   pantalla estreta (modules.css). La caixa reserva el lloc (aspect-ratio)
-   abans que arribe la imatge. Un camí o una URL es resolen en el mateix
-   render (resolveAsset); un sdp-media://, pel port (useResolvedAsset):
-   mentre es resol queda la caixa buida i, si no es pot resoldre, no es pinta
-   res. Sense Referer, com l'avatar de la boina. Amb onCanvia és un botó, amb
-   la marca de la càmera: punxant-hi es canvia la imatge pel flux que ja
-   existix (el passa la pàgina).
-   Contracte-1 (261008) · Amb etiquetaCanvia o onLleva, davall de l'avatar
-   (germà, abans de l'H1) un div.page-title-avatar-accions amb les píndoles:
-   «canvia» crida el mateix onCanvia que l'avatar; «lleva», només si hi ha
-   imatge pintada (mentre el port la resol no hi ha res a llevar). Sense
-   cap píndola, l'avatar sol, com sempre.
-   Correcció de la revisió (261008, CONTRACTE-1) · Sense imatge i sense res a
-   esperar (el port torna 'missing', 'error' o 'unsupported', o la resol a la
-   marca), abans no es pintava res i qui la podia canviar es quedava sense
-   control: ara, amb les claus noves, les píndoles soles, i «lleva» també,
-   perquè la referència trencada es puga buidar. Sense, res, com sempre.
-   Línia I1 (pla 261008_1201) · `ajuda` i `pujant` van a la fila en tots dos
-   camins. L'avatar-botó no canvia: la guarda de la pujada és del
-   consumidor (useImatgeDeFitxa).
-   Correcció de la revisió de la línia I1 · Amb la línia d'ajuda pintada,
-   l'avatar-botó (que també tria la foto) la cita amb aria-describedby, com
-   la píndola «canvia». Sense ajuda, cap atribut nou. */
-/* Encàrrec d'harmonització (261018) · Exportat: el Perfil el pinta dins del
-   desplegable «Edició avançada» (UniversalEditorShell · identitatEdicioAvancada)
-   en lloc de damunt de l'H1. El mateix component, cap còpia.
-   Ordre del Mestre (18-10-2026, relleu del Pla 2000, punt 2: «neteja visual
-   total sota l'avatar»; el clic al cercle obri el retall de la imatge que ja
-   hi ha) · Claus opcionals noves; sense elles, el DOM de sempre:
-     · `nomBoto` (text): el nom accessible del cercle-botó (per defecte,
-       ETIQUETA_CANVIA_AVATAR);
-     · `botoBuit` (només true, i amb onCanvia): sense cap imatge que es puga
-       pintar, el cercle-botó es pinta igual, buit i amb la càmera (el Perfil
-       hi tria la primera foto), en lloc de no pintar res;
-     · `obriFinestra` (només true): el clic obri una finestra (aria-haspopup);
-     · `ocupat` (només true): la imatge puja (aria-busy). El botó no es
-       desactiva: la guarda de la pujada continua sent del consumidor.
-       Correcció de la revisió (Pla 2000) · I es veu: la marca de la càmera
-       passa a ser el carregador que gira (LoaderCircle, com Boto i
-       Carregant), la foto s'esmorteïx i el cursor diu que espera;
-     · `textOcupat` (text, amb onCanvia): una regió d'estat amagada
-       (.sdp-sr-only, role="status"), germana del cercle, que diu el text
-       mentre `ocupat` i queda buida si no. aria-busy en un botó gairebé no
-       s'anuncia. Sense, cap node nou. */
 export function AvatarDeCapcalera({
-  src, alt, onCanvia, etiquetaCanvia = null, onLleva = null, etiquetaLleva = ETIQUETA_LLEVA_AVATAR, ajuda = null, pujant = false,
+  src, alt, onCanvia, etiquetaCanvia = null, onLleva = null, etiquetaLleva = null, ajuda = null, pujant = false,
   nomBoto = null, botoBuit = false, obriFinestra = false, ocupat = false, textOcupat = null,
 }) {
+  const t = useTraductorOpcional();
   const idAjuda = `${useId()}-ajuda`;
   const delPort = esDelPort(src);
   const resolucio = useResolvedAssetState(delPort ? src : '');
   const url = delPort ? resolucio.url : resolveAsset(src);
+  const textLleva = srcDeLogo(etiquetaLleva) || tradueix(t, PARELL_LLEVA_AVATAR);
   // Correcció dels verificadors (261004) · tampoc si el port resol la marca de l'entitat.
   const imatge = url && isSafeAsset(url) && !esMarcaDeLEntitat(url)
     ? <img className="page-title-avatar__imatge" src={url} alt={alt} decoding="async" referrerPolicy="no-referrer" />
     : null;
   const buit = botoBuit === true && typeof onCanvia === 'function';
-  if (!imatge && !(delPort && resolucio.isLoading) && !buit) return filaDeLAvatar({ onCanvia, etiquetaCanvia, onLleva, etiquetaLleva, ajuda, pujant, idAjuda });
-  const accions = filaDeLAvatar({ onCanvia, etiquetaCanvia, onLleva: imatge ? onLleva : null, etiquetaLleva, ajuda, pujant, idAjuda });
+  if (!imatge && !(delPort && resolucio.isLoading) && !buit) return filaDeLAvatar({ onCanvia, etiquetaCanvia, onLleva, etiquetaLleva: textLleva, ajuda, pujant, idAjuda, t });
+  const accions = filaDeLAvatar({ onCanvia, etiquetaCanvia, onLleva: imatge ? onLleva : null, etiquetaLleva: textLleva, ajuda, pujant, idAjuda, t });
   const avatar = onCanvia ? (
-    <button type="button" className="page-title-avatar page-title-avatar--canvia" aria-label={srcDeLogo(nomBoto) || ETIQUETA_CANVIA_AVATAR}
+    <button type="button" className="page-title-avatar page-title-avatar--canvia" aria-label={srcDeLogo(nomBoto) || tradueix(t, PARELL_CANVIA_AVATAR)}
       aria-haspopup={obriFinestra === true ? 'dialog' : undefined} aria-busy={ocupat === true ? 'true' : undefined}
       aria-describedby={accions && ajuda ? idAjuda : undefined} onClick={onCanvia}>
       {imatge}

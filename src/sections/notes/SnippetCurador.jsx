@@ -66,7 +66,7 @@ import { ESTATS_DESTINACIO, useDestinacioEnllac } from '../../apps/plataforma/de
 import { rutaDEntrada } from '../../config/rutaEntrada.js';
 import { reglaDEntrada } from '../connectar/contingutExtern.js';
 import { missatgeDeLError } from '../connectar/abastConnexio.js';
-import { AVIS_CATEGORIA } from './classificacioBloc.js';
+import { avisCategoria } from './classificacioBloc.js';
 import { carregaCatalegEmojis } from './canalEmojis.js';
 import { useCoreContent } from '../../app/contexts/CoreContentContext.jsx';
 import { categoriesBase, etiquetesBase } from '../../data/personalitzacio.js';
@@ -460,7 +460,7 @@ export function SnippetCurador({ carpetes = CAP, carpetaId }) {
           etiquetaNou={tradueix(t, TEXTOS_DESA.categoriesNou)}
           seleccionats={categories}
           minim={1}
-          avisMinim={AVIS_CATEGORIA}
+          avisMinim={avisCategoria(t)}
           onDesa={(valors) => escriu({ categories: valors })}
         />
       ) : null}

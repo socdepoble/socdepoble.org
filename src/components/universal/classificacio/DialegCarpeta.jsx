@@ -14,11 +14,20 @@
  */
 import { useId, useMemo, useState } from 'react';
 import { Dialeg, Boto, GrupOpcions } from '../../PedraSeca/index.js';
+import { tradueix, useTraductorOpcional } from '../../PedraSeca/hooks/useTraductorOpcional.js';
 import { buildWorkspaceFolderForest } from '../workspace/workspaceFolderForest.js';
 
 const CAP = Object.freeze([]);
 /* El sagnat creix fins al tercer nivell (el màxim del Workspace, P5). */
 const NIVELL_MAXIM_SAGNAT = 2;
+const p = (nom, reserva) => Object.freeze([`universal.classificacio.carpeta.${nom}`, reserva]);
+const TEXTOS_CARPETA = Object.freeze({
+  titol: p('titol', 'Carpeta del document'),
+  descripcio: p('descripcio', 'Cada document viu en una carpeta, i només en una.'),
+  llegenda: p('llegenda', 'Carpetes'),
+  cancela: p('cancela', 'Cancel·lar'),
+  desa: p('desa', 'Desar'),
+});
 
 /**
  * Les carpetes en l'ordre de l'arbre (profunditat primer), cadascuna amb el
@@ -38,17 +47,20 @@ export function carpetesEnArbre(opcions = CAP) {
   return files;
 }
 
-const classeDeNivell = (nivell) => (nivell > 0
-  ? `sdp-casella sdp-classificacio-carpeta--nivell-${Math.min(nivell, NIVELL_MAXIM_SAGNAT)}`
-  : 'sdp-casella');
+const classeDeNivell = (nivell) => {
+  if (!(nivell > 0)) return 'sdp-casella';
+  return Math.min(nivell, NIVELL_MAXIM_SAGNAT) === 1
+    ? 'sdp-casella sdp-classificacio-carpeta--nivell-1'
+    : 'sdp-casella sdp-classificacio-carpeta--nivell-2';
+};
 
 /* Les mateixes classes que GrupOpcions (fieldset, casella, control i
    etiqueta): l'única diferència és el sagnat de cada fila. */
-function ArbreCarpetes({ files, valor, onCanvi }) {
+function ArbreCarpetes({ files, valor, onCanvi, llegenda }) {
   const id = useId();
   return (
     <fieldset className="sdp-grup">
-      <legend className="sdp-grup__llegenda">Carpetes</legend>
+      <legend className="sdp-grup__llegenda">{llegenda}</legend>
       {files.map((fila) => {
         const idOpcio = `${id}-${fila.clau}`;
         return (
@@ -74,29 +86,31 @@ function ArbreCarpetes({ files, valor, onCanvi }) {
 }
 
 export function DialegCarpeta({ obert, onTanca, opcions = CAP, seleccionada, onDesa, avis }) {
+  const t = useTraductorOpcional();
   const [triada, setTriada] = useState(seleccionada);
   const valida = opcions.some((o) => o.id === triada);
   const files = useMemo(() => carpetesEnArbre(opcions), [opcions]);
   const arbre = files.some((fila) => fila.nivell > 0);
+  const llegenda = tradueix(t, TEXTOS_CARPETA.llegenda);
   return (
     <Dialeg
       obert={obert}
       onTanca={onTanca}
-      titol="Carpeta del document"
-      descripcio="Cada document viu en una carpeta, i només en una."
+      titol={tradueix(t, TEXTOS_CARPETA.titol)}
+      descripcio={tradueix(t, TEXTOS_CARPETA.descripcio)}
       mida="s"
       accions={(
         <>
-          <Boto varietat="secundari" onClick={() => onTanca?.('boto')}>Cancel·lar</Boto>
-          <Boto varietat="primari" disabled={!valida} onClick={() => onDesa?.(triada)}>Desar</Boto>
+          <Boto varietat="secundari" onClick={() => onTanca?.('boto')}>{tradueix(t, TEXTOS_CARPETA.cancela)}</Boto>
+          <Boto varietat="primari" disabled={!valida} onClick={() => onDesa?.(triada)}>{tradueix(t, TEXTOS_CARPETA.desa)}</Boto>
         </>
       )}
     >
       {arbre ? (
-        <ArbreCarpetes files={files} valor={triada} onCanvi={setTriada} />
+        <ArbreCarpetes files={files} valor={triada} onCanvi={setTriada} llegenda={llegenda} />
       ) : (
         <GrupOpcions
-          llegenda="Carpetes"
+          llegenda={llegenda}
           opcions={opcions.map((o) => ({ valor: o.id, etiqueta: o.nom }))}
           valor={triada}
           onCanvi={setTriada}

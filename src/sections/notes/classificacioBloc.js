@@ -14,7 +14,11 @@
  * còpies locals que portaven NotesEditor i ConnectarSection s'han unificat.
  */
 import { CATEGORIA_GENERAL } from '../../components/universal/classificacio/model.js';
+import { omple } from '../../config/moderacio.js';
+import { tradueix } from '../../components/PedraSeca/hooks/useTraductorOpcional.js';
 
 export { CATEGORIES_BASE, ETIQUETES_BASE } from '../../data/personalitzacio.js';
+export const PARELL_AVIS_CATEGORIA = Object.freeze(['section.notes.editor.avisCategoria', "Cal almenys una categoria. Si vols netejar-les, marca'n una de general, com «{categoria}»."]);
+export const avisCategoria = (t = null) => omple(tradueix(t, PARELL_AVIS_CATEGORIA), { categoria: CATEGORIA_GENERAL });
 /** La regla d'orfandat de les categories, dita a la persona (el mateix text de NotesEditor). */
-export const AVIS_CATEGORIA = `Cal almenys una categoria. Si vols netejar-les, marca'n una de general, com «${CATEGORIA_GENERAL}».`;
+export const AVIS_CATEGORIA = avisCategoria(null);

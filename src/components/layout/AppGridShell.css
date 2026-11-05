@@ -540,6 +540,12 @@
   outline-offset: -2px;
 }
 
+.app-grid-col-header:not(.app-grid-col-header--collapsed) > .app-grid-col-header__accio-icon,
+.app-grid-col-header__plec > .app-grid-col-header__accio-icon {
+  width: var(--sdp-touch-min);
+  height: var(--sdp-touch-min);
+}
+
 /* L'acordió vertical (plegable) només porta la paraula i el chevron, apegat
    a la paraula amb var(--sdp-space-1): van junts dins d'este grup perquè el
    gap del botó (modules.css, el de les files de la navegació) no els separe,

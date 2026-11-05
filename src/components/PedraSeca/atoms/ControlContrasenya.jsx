@@ -34,6 +34,28 @@ export function ControlContrasenya({ id, etiquetaUll = 'Mostra la contrasenya', 
     return () => formulari.removeEventListener('submit', amaga);
   }, []);
 
+  /* IDEA-72 · Safari/iOS WebKit amb -webkit-autofill manté la màscara de punts
+     si només canvia la prop React `type`: forcem l'atribut i webkitTextSecurity
+     i un reflow suau preservant cursor i focus. */
+  const commutaVisibilitat = () => {
+    const el = camp.current;
+    const teniaFocus = Boolean(el && document.activeElement === el);
+    const inici = el?.selectionStart ?? null;
+    const fi = el?.selectionEnd ?? null;
+    const seguent = !visible;
+    flushSync(() => setVisible(seguent));
+    if (!el) return;
+    el.setAttribute('type', seguent ? 'text' : 'password');
+    if (el.style) el.style.webkitTextSecurity = seguent ? 'none' : '';
+    const actual = el.value;
+    el.value = actual;
+    void el.offsetWidth;
+    if (typeof inici === 'number' && typeof fi === 'number') {
+      try { el.setSelectionRange(inici, fi); } catch { /* Safari pot ignorar-ho en estats transitoris */ }
+    }
+    if (teniaFocus) el.focus({ preventScroll: true });
+  };
+
   return (
     <div className="sdp-contrasenya">
       <input
@@ -42,6 +64,7 @@ export function ControlContrasenya({ id, etiquetaUll = 'Mostra la contrasenya', 
         id={idControl}
         className={uneix('sdp-control', className)}
         type={visible ? 'text' : 'password'}
+        data-contrasenya-visible={visible ? 'true' : 'false'}
         disabled={disabled}
         autoCapitalize="none"
         autoCorrect="off"
@@ -55,7 +78,7 @@ export function ControlContrasenya({ id, etiquetaUll = 'Mostra la contrasenya', 
         aria-controls={idControl}
         disabled={disabled}
         onMouseDown={(event) => event.preventDefault()}
-        onClick={() => setVisible((actual) => !actual)}
+        onClick={commutaVisibilitat}
       >
         {visible
           ? <EyeOff size={20} aria-hidden="true" focusable="false" />

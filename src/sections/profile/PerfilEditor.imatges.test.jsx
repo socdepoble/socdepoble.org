@@ -897,8 +897,10 @@ describe('Bloc 3.5.4 · un 403 al desat d’una imatge (P2 de Codex)', () => {
     munta(javi);
     expect(imatgesPropies()).toEqual(totes(VELLA));
     // AH-02 · La fila de la llista és la compacta, amb la capçalera de la fitxa (la regla de FitxaDePerfil).
+    // AH-15 · La Card en viu ja no és a la llista: viu DINS d'«Edició avançada», sota la barra taronja.
     expect(fila().getAttribute('aria-current')).toBe('true');
-    expect(document.querySelector('article.sdp-targeta-viva-carta')).toBeNull();
+    expect(fila().querySelector('article.sdp-targeta-viva-carta')).toBeNull();
+    expect(desplegable().querySelector('article.sdp-targeta-viva-carta')).not.toBeNull();
     expect(imatgeDeLaFila()).toBe(CAPCALERA_VELLA);
     // Encàrrec d'harmonització (261018) · Damunt de l'H1 de la persona, res: l'avatar és a la barra i dins d'«Edició avançada».
     expect(logoDelTitol()).toBeNull();

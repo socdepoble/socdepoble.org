@@ -2,6 +2,13 @@ import { useContext, useState, useMemo, useCallback, useEffect, useRef } from 'r
 /* P1-71 (Gauntlet 261029) · L'objecte de context viu a objectesDeContext.js,
    que no importa res del projecte. */
 import { IdentitatContext } from './objectesDeContext.js';
+import {
+  CAP_MEMBRESIA,
+  clauPreferenciaPerUsuari,
+  estatIdentitatIntern,
+  potSignarPer,
+  ROLS_QUE_SIGNEN
+} from './identitatContextIntern.js';
 import { useSession } from './SessionContext';
 import { getDefaultUserId, getProfile, listMyOrganizations } from '../../data/backendPort';
 import { getVal, setVal, delVal } from '../../config/storage';
@@ -31,30 +38,30 @@ import { llegixLlicenciaPerDefecte, sincronitzaLlicenciaPerDefecte } from '../..
  */
 
 /** Rols que poden signar publicacions en nom de l'organització. */
-export const ROLS_QUE_SIGNEN = Object.freeze(['owner', 'admin']);
-export const potSignarPer = (membership) => Boolean(membership) && ROLS_QUE_SIGNEN.includes(membership.role);
-
-const CLAU_PREFERENCIA = 'actor-preference';
-const clauPerUsuari = (userId) => `${CLAU_PREFERENCIA}:${userId}`;
+export { ROLS_QUE_SIGNEN, potSignarPer };
 
 export function llegixPreferencia(userId) {
   if (!userId) return null;
-  const pref = getVal(clauPerUsuari(userId), null);
+  const pref = getVal(clauPreferenciaPerUsuari(userId), null);
   return pref && typeof pref === 'object' && pref.type && pref.id ? pref : null;
 }
 export function desaPreferencia(userId, pref) {
   if (!userId) return;
-  if (!pref || pref.type === 'persona') delVal(clauPerUsuari(userId));
-  else setVal(clauPerUsuari(userId), pref);
+  if (!pref || pref.type === 'persona') delVal(clauPreferenciaPerUsuari(userId));
+  else setVal(clauPreferenciaPerUsuari(userId), pref);
 }
 
-const CAP = Object.freeze([]);
+const CAP = CAP_MEMBRESIA;
 
 export function IdentitatProvider({ children, config = {} }) {
   const { currentUser, generacio } = useSession();
   const userId = currentUser?.id || null;
 
-  const [memberships, setMemberships] = useState(CAP);
+  const [memberships, setMemberships] = useState(() => (
+    userId && estatIdentitatIntern.userId === userId && estatIdentitatIntern.generacio === generacio
+      ? estatIdentitatIntern.memberships
+      : CAP
+  ));
   const [carregant, setCarregant] = useState(false);
   const [errorMemberships, setErrorMemberships] = useState(null);
   const [pref, setPref] = useState(() => llegixPreferencia(userId));
@@ -75,7 +82,15 @@ export function IdentitatProvider({ children, config = {} }) {
   const [tick, setTick] = useState(0);
   const refresh = useCallback(() => setTick((v) => v + 1), []);
   useEffect(() => {
-    if (!userId) { setMemberships(CAP); setCarregant(false); setErrorMemberships(null); return; }
+    if (!userId) {
+      estatIdentitatIntern.userId = null;
+      estatIdentitatIntern.generacio = generacio;
+      estatIdentitatIntern.memberships = CAP;
+      setMemberships(CAP);
+      setCarregant(false);
+      setErrorMemberships(null);
+      return;
+    }
     let viu = true;
     setCarregant(true);
     setErrorMemberships(null);
@@ -83,7 +98,11 @@ export function IdentitatProvider({ children, config = {} }) {
       .then(() => listMyOrganizations(configRef.current))
       .then((rows) => {
         if (!viu) return;
-        setMemberships(Array.isArray(rows) ? rows : CAP);
+        const resoltes = Array.isArray(rows) ? rows : CAP;
+        estatIdentitatIntern.userId = userId;
+        estatIdentitatIntern.generacio = generacio;
+        estatIdentitatIntern.memberships = resoltes;
+        setMemberships(resoltes);
       })
       .catch((e) => {
         if (!viu) return;

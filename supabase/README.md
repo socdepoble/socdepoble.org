@@ -1572,13 +1572,13 @@ verificador sense avisos.
 | 50 | `2610241400` | `2610241400_normes_exigides_ugc.sql` | Estat remot no acreditat; comprovar abans d’aplicar | normes exigides ugc |
 | 51 | `2610241410` | `2610241410_exporta_dades_moderacio.sql` | Estat remot no acreditat; comprovar abans d’aplicar | exporta dades moderacio |
 | 52 | `2610241420` | `2610241420_revocacio_apple.sql` | Estat remot no acreditat; comprovar abans d’aplicar | revocacio apple |
-| 53 | `2610241430` | `2610241430_seguiments.sql` | Estat remot no acreditat; comprovar abans d’aplicar | seguiments |
+| 53 | `2610241430` | `2610241430_seguiments.sql` | Aplicada al node remot el 261103 (70/70 verificat pel Mestre) | seguiments |
 | 54 | `2610241440` | `2610241440_baixa_completa_ugc_i_fitxers.sql` | Estat remot no acreditat; comprovar abans d’aplicar | baixa completa ugc i fitxers |
-| 55 | `2610242320` | `2610242320_correu_propietaria_nomes_titular.sql` | Estat remot no acreditat; comprovar abans d’aplicar | correu propietaria nomes titular |
-| 56 | `2610250100` | `2610250100_seguiments_des_d_entitat.sql` | Estat remot no acreditat; comprovar abans d’aplicar | seguiments des d entitat |
+| 55 | `2610242320` | `2610242320_correu_propietaria_nomes_titular.sql` | Aplicada al node remot el 261103 (70/70 verificat pel Mestre) | correu propietaria nomes titular |
+| 56 | `2610250100` | `2610250100_seguiments_des_d_entitat.sql` | Aplicada al node remot el 261103 (70/70 verificat pel Mestre) | seguiments des d entitat |
 | 57 | `2610250300` | `2610250300_titular_public.sql` | Estat remot no acreditat; comprovar abans d’aplicar | titular public |
 | 58 | `2610281730` | `2610281730_membres_concurrents_i_correu_public.sql` | Estat remot no acreditat; comprovar abans d’aplicar | membres concurrents i correu public |
-| 59 | `2610282100` | `2610282100_usuari_i_poble_canonic.sql` | Estat remot no acreditat; comprovar abans d’aplicar | usuari i poble canonic |
+| 59 | `2610282100` | `2610282100_usuari_i_poble_canonic.sql` | Aplicada al node remot el 261103 (70/70 verificat pel Mestre) | usuari i poble canonic |
 | 60 | `2610290400` | `2610290400_xat_e2ee_claus_i_sobres.sql` | Estat remot no acreditat; comprovar abans d’aplicar | xat e2ee claus i sobres |
 | 61 | `2610311500` | `2610311500_commutacio_grup_empresa_i_transferencia_propietat.sql` | **NO aplicada: l'aplica el Mestre** | commutacio grup empresa i transferencia propietat |
 | 62 | `2610311800` | `2610311800_e2ee_fases_1b_1c_rpcs_i_adjunts.sql` | **NO aplicada: l'aplica el Mestre** | e2ee fases 1b 1c rpcs i adjunts |

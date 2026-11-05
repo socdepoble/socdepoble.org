@@ -63,6 +63,7 @@ const ConsolaSection = lazyRoute(() => import('../sections/consola/ConsolaSectio
 const TranslationsSection = lazyRoute(() => import('../sections/translations/TranslationsSection'));
 const TextSection = lazyRoute(() => import('../sections/text/TextSection'));
 const TaulerTelemetria = lazyRoute(() => import('../sections/text/TaulerTelemetria'));
+const CroniquesFites261104 = lazyRoute(() => import('../sections/text/CroniquesFites261104.jsx'));
 import RutaWikiDePoble from '../sections/wiki-de-poble/RutaWikiDePoble.jsx';
 const DesignSection = lazyRoute(() => import('../sections/disseny/DesignSection'));
 const SearchSection = lazyRoute(() => import('../sections/search/SearchSection'));
@@ -838,6 +839,7 @@ function TextRouteContingut({ pageKey, pageCopy, status, copiaLocal }) {
       {/* Transparència Radical: el comptador es mostra on s'explica la privacitat.
           Suspense propi perquè el tauler no torne a tapar el text mentre arriba. */}
       {pageKey === 'legal' ? <Suspense fallback={null}><TaulerTelemetria /></Suspense> : null}
+      {pageKey === 'versions' ? <Suspense fallback={null}><CroniquesFites261104 /></Suspense> : null}
       {accioDeTextAlFinal(pageKey) ? <AccioDeLaPaginaDeText pageKey={pageKey} lloc="baix" /> : null}
     </TextSection>
   );
