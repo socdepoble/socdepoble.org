@@ -61,7 +61,14 @@ export function hidratacioRevisada(town, entrada = null, ara = Date.now()) {
 /** Els camps de CAMPS_DE_FITXA que la fitxa no porta. */
 export function campsQueFalten(town) {
   if (!town || typeof town !== 'object') return [...CAMPS_DE_FITXA];
-  return CAMPS_DE_FITXA.filter((camp) => camp === 'image_url' ? !teImatgeReal(town[camp]) : buit(town[camp]));
+  return CAMPS_DE_FITXA.filter((camp) => {
+    if (camp === 'image_url') return !teImatgeReal(town[camp]);
+    /* «Que l'ompla l'Aplec» (Mestre, Onada R6 · Bloc 5) · Amb la població pròpia de la llavor
+       (poblacio_propia, posada per fusionaAmbAplec), l'any no fa incompleta la fitxa: l'Aplec
+       només l'omple quan porta la xifra, i una xifra pròpia sense any no va a la cau. */
+    if (camp === 'population_year' && town.poblacio_propia === true && !buit(town.population)) return false;
+    return buit(town[camp]);
+  });
 }
 
 /** Cert si la fitxa porta totes les dades que pinta la pàgina del poble. */

@@ -26,12 +26,12 @@
     },
     {
       "path": "tooling/node0/verifica-restauracio-node0.mjs",
-      "sha256": "3bebaca3cdf7cc0750eee616f9b95f5ae6678c42ea4a5c718b7fc74ba93c0f4b"
+      "sha256": "1d21be8349bd20e397f08644fac0c9c1add7e46af563480c40bd62a54e154261"
     }
   ],
   "output": {
     "path": "public-bundle/restaura-node0-manual.mjs",
-    "sha256": "c57ded266b38146e95285dd55195414d082233f52d11db921a6d7fa18684aa01"
+    "sha256": "578fc1f446402337832786593f94ed2add7bbcea1882c1e26be92ae90e36acd6"
   },
   "externalImports": [
     "node:child_process",

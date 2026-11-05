@@ -16,6 +16,7 @@ import { CosAmbVisor } from './VisorDePublicacio.jsx';
 import { useSEO } from '../../hooks/useSEO.js';
 import { objecteDe, rutaConnectarObjecte, tipusDeSeccio } from '../../config/navigation.js';
 import { paginaDElement, trobaElement, useElementDeSeccio, useLogoEntitatDElement } from './elementDeSeccio.js';
+import { revisaElement, versioRevisionsEditorials } from '../../data/revisionsEditorials.js';
 import { ProveidorSincronitzacioTargetes } from './SincronitzacioTargetes.jsx';
 /* VQ · Fase 3a de l'eina de pobles nous (261030) · La fitxa incompleta d'un
    poble, amb els buits omplits pel que la Viquipèdia ja va tornar en este
@@ -107,7 +108,17 @@ function DetallDElement() {
   const section = SECTION_META[sectionId];
   /* T54 · el mateix resolvedor que el diàleg Connectar i el lector del MAS. */
   const fallbackItem = trobaElement(section, itemId);
-  const item = location.state?.preloadedItem || fallbackItem;
+  /* P0-25 (Onada R6, Bloc 2) · Un element arribat per location.state (la
+     targeta el passa tal com era) porta també la revisió editorial desada
+     des de /notes després (revisionsEditorials.js); MurContext ja la posa a
+     les llistes, i una revisió nova el torna a pintar. */
+  const preRevisat = location.state?.preloadedItem;
+  const versioRevisions = versioRevisionsEditorials();
+  const preloadedItem = useMemo(() => {
+    void versioRevisions;
+    return revisaElement(sectionId, preRevisat);
+  }, [sectionId, preRevisat, versioRevisions]);
+  const item = preloadedItem || fallbackItem;
   /* VQ · Fase 3a (261030) · Només per a Pobles. La capçalera i el cos llegixen
      la fitxa hidratada; la moderació, el <head> social i el «No trobat», la de
      sempre (les fotos de Commons no hi entren mai). */

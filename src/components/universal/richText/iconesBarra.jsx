@@ -158,6 +158,21 @@ export function IconaTargeta({ strokeWidth = 2, ...props }) {
   );
 }
 
+/** B3-2 (Onada R6 · Bloc 3) · Enllaç de la imatge: el quadre d'una foto (la
+ *  serra) obert pel cantó de baix a la dreta, on hi ha la baula d'enllaç. */
+export function IconaEnllacImatge({ strokeWidth = 2, ...props }) {
+  const prim = strokeWidth * 0.75;
+  return (
+    <Icona nom="enllac-imatge" strokeWidth={strokeWidth} {...props}>
+      <path d="M11 18H6.5A2.5 2.5 0 0 1 4 15.5v-9A2.5 2.5 0 0 1 6.5 4h11A2.5 2.5 0 0 1 20 6.5V10" />
+      <path d="m7 14 3-3 2 2" strokeWidth={prim} />
+      <path d="M15.5 13.5h-1a2.5 2.5 0 0 0 0 5h1" />
+      <path d="M18.5 13.5h1a2.5 2.5 0 0 1 0 5h-1" />
+      <path d="M15.5 16h3" strokeWidth={prim} />
+    </Icona>
+  );
+}
+
 /** Més eines: tres punts en filera («⋯»). */
 export function IconaMesEines(props) {
   return (

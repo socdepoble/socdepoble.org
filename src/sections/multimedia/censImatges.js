@@ -185,6 +185,7 @@ export const CENS_IMATGES = Object.freeze([
 
   ...VINYETES.map(([fitxer, titol, extensio = 'jpg']) => e(`/assets/ui/plugins/${fitxer}_vinyeta.${extensio}`, titol, 'contingut', 'ia')),
   e('/assets/ui/plugins/tpv_vinyeta.webp', 'Vinyeta del Bar', 'contingut', 'ia'),
+  e('/assets/ui/plugins/genealogia_vinyeta.webp', 'Vinyeta de l’Arbre Genealògic', 'contingut', 'ia'),
 
   e('/assets/uploads/ajuntament/la-torre-de-les-macanes/avatar/IMG_20200904_143451.jpg', 'Ajuntament de la Torre de les Maçanes', 'entitat', 'foto', 'la-torre-de-les-macanes'),
   e('/assets/uploads/ajuntament/la-torre-de-les-macanes/post/collita-poma-local.webp', 'Collita de poma local', 'entitat', 'ia'),

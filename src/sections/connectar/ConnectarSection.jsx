@@ -96,9 +96,9 @@
  *     una connexió social i no porta mai al Bloc (cap nota amb el nom del
  *     perfil). Les notes només es munten en 'element'. DEROGAT de D1
  *     «l'únic primari és el del MAS»: un primari per vista, connectar en un
- *     perfil i guardar en un element. El logotip de la capçalera, compacte
- *     (queixa del Mestre: espentava els botons fora de pantalla; regla
- *     .sdp-connectar-pagina de modules.css). El contingut de FORA no canvia de
+ *     perfil i guardar en un element. El logotip de la capçalera manté els
+ *     600px de .page-title-logo (IDEA-93, 261105: derogada l'excepció de 260px).
+ *     El contingut de FORA no canvia de
  *     .sdp-connectar cap avall (la guarda de Notes, PrevisualitzacioExtern).
  */
 import { useEffect, useId, useMemo, useRef, useState } from 'react';
@@ -1135,7 +1135,7 @@ function ConnectarElementIntern() {
       /* Decisions 261030 §7 · Les carpetes i les notes del teu Bloc: Traduir no envia res fora. */
       traduccio={false}
       chrome="system"
-      /* FEDI-22 · El logotip compacte de la capçalera (regla .sdp-connectar-pagina, modules.css). */
+      /* GLOBAL-04 · El contenidor amb nom de la pàgina (modules.css); el logotip, a 600px (IDEA-93). */
       className="sdp-connectar-pagina"
       title={t('section.connectar.kicker', 'Connectar')}
       subtitle={social
@@ -1280,7 +1280,7 @@ function ConnectarContingutExtern({ params }) {
     <UniversalPage
       traduccio={false}
       chrome="system"
-      /* FEDI-22 · Només el logotip compacte: de .sdp-connectar cap avall, la vista de sempre (PrevisualitzacioExtern). */
+      /* GLOBAL-04 · El contenidor amb nom de la pàgina; de .sdp-connectar cap avall, la vista de sempre (PrevisualitzacioExtern). */
       className="sdp-connectar-pagina"
       title={t('section.connectar.kicker', 'Connectar')}
       subtitle={t('section.connectar.where', 'On vols connectar-ho?')}

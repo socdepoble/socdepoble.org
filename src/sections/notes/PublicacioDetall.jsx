@@ -1,7 +1,8 @@
 /**
  * PublicacioDetall.jsx — una publicació pròpia (Mur, Mercat, agenda o
  * Multimèdia) vista des del MAS (T1): fitxa al llistat i lectura a la columna
- * dreta. No és cap nota i no s'edita ací: el botó porta a la publicació de
+ * dreta. P0-25 / IDEA-96 (Onada R6) · Una del Mur o de l'agenda s'edita ací
+ * (PublicacioEditable); la resta es llig i el botó porta a la publicació de
  * veres.
  *
  * Esmena 3 del pla 261007_1645 (ordre del Mestre, 261007: «El component
@@ -57,9 +58,11 @@ import { useEntitatDelProjecte } from '../../hooks/useEntitatDelProjecte.js';
 import { pageKeyDeRuta, propsDePaginaDeText } from '../text/paginaDeText.js';
 import { CosDeLaPagina } from '../text/TextSection.jsx';
 import { ETIQUETA_SECCIO } from './masDeLUsuari.js';
-/* Esmena 2 del pla 261007_1645 · el que l'actor ja té publicat, al peu. */
-import { PublicacionsDeLActor } from '../mur/PublicacionsDeLActor.jsx';
-import { titolDeLHistoric, useVeuHistoric } from '../mur/usePublicacionsDeLActor.js';
+/* P0-25 / IDEA-96 (Onada R6, Bloc 1) · Una publicació pròpia del Mur o de
+   l'agenda s'obri editable al Bloc (PublicacioEditable); la resta, en lectura.
+   Fora el peu «Ja publicat al Mur» (PublicacionsDeLActor) de tot el Bloc. */
+import { PublicacioEditable } from './PublicacioEditable.jsx';
+import { esPublicacioEditable } from './publicacioEditable.js';
 import { signaturaDeQuiSigna } from '../../data/identitatsSeed.js';
 
 /**
@@ -101,15 +104,10 @@ export function PublicacioFitxa({ item, active, onSelect }) {
   );
 }
 
-/* Esmena 2 del pla 261007_1645 · El peu (el que l'actor ja té publicat en la
-   mateixa secció, sense la publicació oberta), o null: les props de PageFrame
-   per a les dues lectures, la d'una publicació i la d'una pàgina del sistema. */
-function peuDeLaPublicacio({ veuHistoric, seccio, id, t }) {
-  return veuHistoric ? {
-    peuDePagina: <PublicacionsDeLActor seccio={seccio} exclouId={id} />,
-    etiquetaPeuDePagina: titolDeLHistoric(seccio, t)
-  } : null;
-}
+/* P0-25 / IDEA-96 (Onada R6, Bloc 1; ordre del Mestre) · Cap lectura del
+   Bloc no pinta el peu «Ja publicat al Mur» (abans peuDeLaPublicacio, Esmena 2
+   del pla 261007_1645): ni la d'una publicació ni la d'una pàgina del sistema.
+   L'històric de l'actor continua al seu perfil i al Mur. */
 
 /**
  * Grup E de l'Onada 4 (prompt 261008_1201, tasca 2; decisió del Mestre del
@@ -130,7 +128,7 @@ function peuDeLaPublicacio({ veuHistoric, seccio, id, t }) {
  *    Cervell), ací també: el mateix div.sdp-pagina-accio darrere del cos,
  *    com a /page/consola i /page/cervell. Va amb el cos: sense cos (una ruta
  *    que no és la pàgina de text d'esta clau), tampoc el botó del final;
- *  · al peu, el que l'entitat ja té publicat al Mur, sense esta pàgina.
+ *  · P0-25 (Onada R6) · cap peu «Ja publicat al Mur».
  * Sense autor propi, com a la ruta i com ConnexioDetall: la barra taronja
  * signa amb el de sèrie.
  * Revisió del grup E (troballa 2) · El cos només quan la ruta és la pàgina de
@@ -139,7 +137,7 @@ function peuDeLaPublicacio({ veuHistoric, seccio, id, t }) {
  * Wiki: el seu copy no és el que pinta la ruta, i el lector es queda amb la
  * capçalera de la targeta del Mur i «Obri la pàgina».
  */
-function LectorDePaginaDelSistema({ pagina, ruta, t, onObri, onShare, peu }) {
+function LectorDePaginaDelSistema({ pagina, ruta, t, onObri, onShare }) {
   const clau = String(pagina.id);
   const ambCos = pageKeyDeRuta(pagina.mainHref) === clau;
   const porta = accioDeLaPagina(clau, t);
@@ -156,7 +154,6 @@ function LectorDePaginaDelSistema({ pagina, ruta, t, onObri, onShare, peu }) {
          amb la interfície en una altra llengua, com a la seua ruta. */
       llenguaDelContingut="ca"
       {...(porta ? { accioPrincipal: <PortaDePagina porta={porta} /> } : null)}
-      {...peu}
     >
       {ruta ? (
         <div className="sdp-alerta__accions">
@@ -173,7 +170,9 @@ function LectorDePaginaDelSistema({ pagina, ruta, t, onObri, onShare, peu }) {
   );
 }
 
-export function PublicacioDetall({ item }) {
+/** El lector d'una publicació (Mercat, Multimèdia, pàgines del sistema i
+ *  qualsevol que no s'edite al Bloc). */
+export function LectorDePublicacio({ item }) {
   const navigate = useNavigate();
   /* Compartir · on està l'app (el router, no la barra d'adreces, que dins
      d'un amfitrió és la seua) i el toast del porta-retalls, com ConnexioDetall. */
@@ -196,9 +195,6 @@ export function PublicacioDetall({ item }) {
      port. Els hooks, abans del retorn anticipat. `logoEnCami`: el port encara
      el resol (revisió adversarial del 261007). */
   const { logo: logoPropi, carregant: logoEnCami } = useLogoEntitatDElement(publicacio);
-  /* Esmena 2 (261007_1645) · Si l'actor actiu veu l'històric d'esta secció
-     (la mateixa regla que PublicacionsDeLActor; el Foraster, no). */
-  const veuHistoric = useVeuHistoric(seccio);
   if (!publicacio) return null;
   /* Grup E (261008) · Una pàgina del sistema: la seua lectura, després dels hooks. */
   if (publicacio.isSystem) {
@@ -209,7 +205,6 @@ export function PublicacioDetall({ item }) {
         t={t}
         onObri={() => navigate(ruta)}
         onShare={ruta ? () => compartix(item.title, urlPerCompartir(ruta, router), showToast) : undefined}
-        peu={peuDeLaPublicacio({ veuHistoric, seccio, id: publicacio.id, t })}
       />
     );
   }
@@ -287,18 +282,6 @@ export function PublicacioDetall({ item }) {
   /* Compartir · l'enllaç de la publicació, mai /notes?… (només l'obri qui la
      té). Sense ruta, el de sèrie de la UniversalPage. */
   const onShare = ruta ? () => compartix(item.title, urlPerCompartir(ruta, router), showToast) : undefined;
-  /* Esmena 2 del pla 261007_1645 (ordre del Mestre, 261007: «Esta lògica de
-     llistar elements de la categoria per a l'avatar actiu ha d'estar
-     disponible per tot el sistema») · A Notes > Mercat, el que s'obri primer
-     és la publicació (la Samarreta), no una nota: davall d'ella, el que l'actor
-     ja té publicat en la mateixa secció, sense ella mateixa. Per la ranura
-     `peuDePagina` de PageFrame, fora de l'article. Multimèdia no en té
-     (pregunta oberta): cap prop nova.
-     Decisió per defecte del Mestre (261007) · el Foraster no veu cap
-     històric. Revisió adversarial del 261007 · Sense la guarda d'actor,
-     PageFrame pintava la regió (amb nom i coixí) encara que el component no
-     pintara res: ara, sense actor o amb el convidat, cap prop nova. */
-  const peu = peuDeLaPublicacio({ veuHistoric, seccio, id: publicacio.id, t });
   return (
     <UniversalPage
       chrome="context"
@@ -333,7 +316,6 @@ export function PublicacioDetall({ item }) {
          Traduir només amb un element públic d'una secció pública
          (traduccio/visibilitatTraduible.js). El botó no canvia. */
       traduccio={elementTraduible(seccio, publicacio)}
-      {...peu}
     >
       <div className="sdp-alerta__accions">
         <Boto varietat="secundari" icona={ExternalLink} onClick={() => navigate(ruta)}>
@@ -349,6 +331,16 @@ export function PublicacioDetall({ item }) {
       {visorDelCos ? <CosAmbVisor className="sdp-visor-cos" {...visorDelCos}>{cosDeLaPublicacio}</CosAmbVisor> : cosDeLaPublicacio}
     </UniversalPage>
   );
+}
+
+/**
+ * P0-25 / IDEA-96 (Onada R6, Bloc 1) · El detall d'una publicació al Bloc:
+ * una pròpia del Mur o de l'agenda (esPublicacioEditable) s'obri viva a
+ * l'editor de notes, amb «Edició avançada» i «Actualitzar al Mur»
+ * (PublicacioEditable); la resta, en lectura (LectorDePublicacio).
+ */
+export function PublicacioDetall({ item }) {
+  return esPublicacioEditable(item) ? <PublicacioEditable item={item} /> : <LectorDePublicacio item={item} />;
 }
 
 export default PublicacioDetall;

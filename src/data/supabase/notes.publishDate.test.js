@@ -6,7 +6,9 @@
 import { beforeEach, expect, test, vi } from 'vitest';
 const mocks = vi.hoisted(() => ({ request: vi.fn(), user: { id: '11111111-1111-4111-8111-111111111111' } }));
 vi.mock('./runtime.js', () => ({
-  request: mocks.request,
+  /* R12 (B4-S1) · loadNotes també llig les carpetes privades (note_folders): esta prova
+     no en té cap, i la seua seqüència de respostes continua sent la de les notes. */
+  request: (ruta, ...resta) => (String(ruta).startsWith('/rest/v1/note_folders') ? Promise.resolve([]) : mocks.request(ruta, ...resta)),
   getResolvedConfig: config => ({ hasSupabaseConfig: true, runtimeDataMode: 'remote', ...config }),
   getCurrentUser: () => mocks.user,
   generateUUID: () => '22222222-2222-4222-8222-222222222222',

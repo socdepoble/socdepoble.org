@@ -203,3 +203,25 @@ export function DetallNodes({ persona, nodes = [], estat, etiquetaEstat }) {
     </UniversalPage>
   );
 }
+
+/**
+ * IDEA-94 · Contenidor canònic per als 6 apartats d'Administració del sistema
+ * dins de la Columna 3 del Perfil: proporciona el marc UniversalPage amb
+ * barra blava de context, barra taronja d'autoria del node i el contenidor
+ * .sdp-universal-page-container--contained amb desplaçament vertical natiu.
+ */
+export function DetallAdministracio({ item, children }) {
+  return (
+    <UniversalPage
+      chrome="context"
+      layout="contained"
+      title={item?.title || 'Administració del sistema'}
+      lead={item?.subtitle || ''}
+      labels={[{ text: 'Administració del sistema' }]}
+      topBarData={AUTORIA_NODE}
+    >
+      {children}
+    </UniversalPage>
+  );
+}
+

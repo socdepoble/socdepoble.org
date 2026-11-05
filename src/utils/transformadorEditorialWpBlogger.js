@@ -11,47 +11,51 @@ import {
   ARTICLES_SIMULADOR_IA_425,
   PAGINES_WP_18,
 } from '../data/taxonomia/tesaurusDoctoralSocDePoble.js';
+/* P1-f (Onada R6, Bloc 2) · L'estat de revisió viu a un mòdul lleuger (sense
+   tesaurus) perquè el detail del Mur el puga usar sense arrossegar este. */
+import { INSIGNIES_CASOS_US_IMPORTACIO, llegeixEstatRevisioEditorial } from './revisioEditorialWp.js';
 
-export const CLAU_STORAGE_REVISIO_WP = 'sdp_revisio_editorial_wp_v1';
+export {
+  CASOS_US_EDITORIALS,
+  CLAU_STORAGE_REVISIO_WP,
+  INSIGNIES_CASOS_US_IMPORTACIO,
+  desaEstatRevisioEditorial,
+  desaRevisioArticleImportat,
+  llegeixEstatRevisioEditorial,
+} from './revisioEditorialWp.js';
 
-export const INSIGNIES_CASOS_US_IMPORTACIO = Object.freeze({
-  galeria_fotos: {
-    id: 'galeria_fotos',
-    icona: '🖼️',
-    etiqueta: 'Galeria de fotos',
-    descripcio: 'Transformada en mosaic Pedra Seca amb VisorImatges accessible.',
-  },
-  video_youtube_vimeo: {
-    id: 'video_youtube_vimeo',
-    icona: '🎬',
-    etiqueta: 'Vídeo (YouTube/Vimeo)',
-    descripcio: ' Incrustació responsive amb càrrega diferida i títol accessible.',
-  },
-  pdf_drive_docs: {
-    id: 'pdf_drive_docs',
-    icona: '📄',
-    etiqueta: 'Document PDF / Drive',
-    descripcio: 'Targeta documental descarregable sense iframe trencat.',
-  },
-  iframe_extern_substituit: {
-    id: 'iframe_extern_substituit',
-    icona: '🛡️',
-    etiqueta: 'Iframe extern substituït',
-    descripcio: 'Substituït per component natiu o targeta d’enllaç segura.',
-  },
-  enllacos_interns_reescrits: {
-    id: 'enllacos_interns_reescrits',
-    icona: '🔗',
-    etiqueta: 'Enllaços interns reescrits',
-    descripcio: 'Enllaços de socdepoble.net redirigits a /mur, /events, /page o /pobles.',
-  },
-  pobles_etiquetats: {
-    id: 'pobles_etiquetats',
-    icona: '📍',
-    etiqueta: 'Pobles etiquetats',
-    descripcio: 'Connectat automàticament al mur de cada poble i comarca.',
-  },
-});
+/* B3-4 (Onada R6, Bloc 3) · INSIGNIES_CASOS_US_IMPORTACIO i CASOS_US_EDITORIALS
+   viuen a revisioEditorialWp.js (el Mur les usa sense el tesaurus); es
+   reexporten ací amb els mateixos noms. */
+
+const HOSTS_VIDEO_SEGURS = new Set([
+  'youtube.com',
+  'www.youtube.com',
+  'youtube-nocookie.com',
+  'www.youtube-nocookie.com',
+  'youtu.be',
+  'vimeo.com',
+  'player.vimeo.com',
+]);
+
+function escapaAtributHtml(valor) {
+  return String(valor || '')
+    .replace(/&/g, '&amp;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
+}
+
+function parsejaUrlExternaSegura(rawUrl) {
+  try {
+    const parsed = new URL(String(rawUrl || '').trim());
+    if (parsed.protocol !== 'https:' && parsed.protocol !== 'http:') return null;
+    return parsed;
+  } catch {
+    return null;
+  }
+}
 
 /**
  * Transforma un fragment HTML de WordPress o Blogger a HTML net Pedra Seca
@@ -80,16 +84,23 @@ export function transformaHtmlEditorialPedraSeca(rawHtml = '', meta = {}) {
     casosUs.add('pdf_drive_docs');
   }
 
-  // 5. Substituir iframes externs insegurs (que no siguen YouTube/Vimeo) per targeta Pedra Seca
+  // 5. Substituir iframes externs insegurs (que no siguen YouTube/Vimeo verificats per hostname) per targeta Pedra Seca
   net = net.replace(
     /<iframe\b[^>]*src=(["'])([^"']+)\1[^>]*>[\s\S]*?<\/iframe>/gi,
-    (fullIframe, _q, srcUrl) => {
-      if (/youtube\.com|youtube-nocookie\.com|player\.vimeo\.com/i.test(srcUrl)) {
+    (_fullIframe, _q, srcUrl) => {
+      const parsedUrl = parsejaUrlExternaSegura(srcUrl);
+      if (!parsedUrl) {
+        casosUs.add('iframe_extern_substituit');
+        return '';
+      }
+      const hrefSegur = escapaAtributHtml(parsedUrl.href);
+      const hostname = parsedUrl.hostname.toLowerCase();
+      if (HOSTS_VIDEO_SEGURS.has(hostname)) {
         casosUs.add('video_youtube_vimeo');
-        return `<div class="sdp-embed-video"><iframe src="${srcUrl}" title="Vídeo incrustat" loading="lazy" allowFullScreen></iframe></div>`;
+        return `<div class="sdp-embed-video"><iframe src="${hrefSegur}" title="Vídeo incrustat" loading="lazy" allowFullScreen></iframe></div>`;
       }
       casosUs.add('iframe_extern_substituit');
-      return `<div class="sdp-targeta-enllac-extern" data-original-iframe="${srcUrl}"><a href="${srcUrl}" target="_blank" rel="noopener noreferrer">Obrir contingut extern verificat (${srcUrl})</a></div>`;
+      return `<div class="sdp-targeta-enllac-extern" data-original-iframe="${hrefSegur}"><a href="${hrefSegur}" target="_blank" rel="noopener noreferrer">Obrir contingut extern verificat (${hrefSegur})</a></div>`;
     }
   );
 
@@ -256,30 +267,6 @@ export function parsejaBloggerAtomXml(xmlText = '') {
   return entries;
 }
 
-export function llegeixEstatRevisioEditorial(storage = typeof window !== 'undefined' ? window.localStorage : null) {
-  if (!storage) return { estats: {}, anotacions: {} };
-  try {
-    const raw = storage.getItem(CLAU_STORAGE_REVISIO_WP);
-    if (!raw) return { estats: {}, anotacions: {} };
-    const parsed = JSON.parse(raw);
-    return {
-      estats: parsed?.estats || {},
-      anotacions: parsed?.anotacions || {},
-    };
-  } catch {
-    return { estats: {}, anotacions: {} };
-  }
-}
-
-export function desaEstatRevisioEditorial(nouEstat, storage = typeof window !== 'undefined' ? window.localStorage : null) {
-  if (!storage) return;
-  try {
-    storage.setItem(CLAU_STORAGE_REVISIO_WP, JSON.stringify(nouEstat));
-  } catch {
-    /* Ignora quota */
-  }
-}
-
 export function obteInventariImportacioComplet() {
   return {
     articles: ARTICLES_SIMULADOR_IA_425,
@@ -287,18 +274,7 @@ export function obteInventariImportacioComplet() {
   };
 }
 
-export const CASOS_US_EDITORIALS = Object.freeze(
-  Object.values(INSIGNIES_CASOS_US_IMPORTACIO).map((c) => ({
-    id: c.id,
-    icona: c.icona,
-    titol: c.etiqueta,
-    label: `${c.icona} ${c.etiqueta}`,
-    etiqueta: c.etiqueta,
-    descripcio: c.descripcio,
-  }))
-);
-
-export function lligArticlesImportatsAmbRevisio(storage = typeof window !== 'undefined' ? window.localStorage : null) {
+export function lligArticlesImportatsAmbRevisio(storage) {
   const { estats, anotacions } = llegeixEstatRevisioEditorial(storage);
   return ARTICLES_SIMULADOR_IA_425.map((art) => {
     const wpId = art.id;
@@ -309,10 +285,13 @@ export function lligArticlesImportatsAmbRevisio(storage = typeof window !== 'und
       .map((id) => INSIGNIES_CASOS_US_IMPORTACIO[id])
       .filter(Boolean)
       .map((c) => ({ id: c.id, icona: c.icona, titol: c.etiqueta, descripcio: c.descripcio }));
+    const rutaCanonica = art.slug === 'aplec-pel-territori-2023'
+      ? '/events/aplec-2023'
+      : (art.rutaDestiCanonica || `/mur/${art.slug}`);
     return {
       ...art,
       wp_id: wpId,
-      ruta_canonica: art.rutaDestiCanonica || `/mur/${art.slug}`,
+      ruta_canonica: rutaCanonica,
       source_url: art.link || `https://socdepoble.net/${art.slug}/`,
       pobles_etiquetats: art.poblesDetectats || [],
       etiquetes_netes: art.etiquetesNetes || [],
@@ -325,14 +304,44 @@ export function lligArticlesImportatsAmbRevisio(storage = typeof window !== 'und
   });
 }
 
-export function desaRevisioArticleImportat(wpId, { estat, nota } = {}, storage = typeof window !== 'undefined' ? window.localStorage : null) {
-  const actual = llegeixEstatRevisioEditorial(storage);
-  const nouEstat = {
-    estats: { ...actual.estats, ...(estat ? { [wpId]: estat } : {}) },
-    anotacions: { ...actual.anotacions, ...(nota !== undefined ? { [wpId]: nota } : {}) },
+export function trobaArticleImportatComAPublicacio(itemId, storage) {
+  if (itemId == null || itemId === '') return null;
+  const clau = String(itemId).trim();
+  const articles = lligArticlesImportatsAmbRevisio(storage);
+  const art = articles.find((a) => String(a.slug) === clau || String(a.wp_id) === clau || String(a.id) === clau);
+  if (!art) return null;
+  const poblePrincipal = art.poblePrincipal || art.pobles_etiquetats[0] || 'La Torre de les Maçanes';
+  const titolSegur = escapaAtributHtml(art.title);
+  const urlSegura = escapaAtributHtml(art.source_url);
+  const resumHtml = art.htmlNet
+    || `<p>Article del fons documental de <strong>Sóc de Poble</strong> (WP #${escapaAtributHtml(art.wp_id)}) catalogat en <strong>${escapaAtributHtml(art.categoria_tematica || 'Memòria i Territori')}</strong> per a <strong>${escapaAtributHtml(poblePrincipal)}</strong>.</p><p><a href="${urlSegura}" target="_blank" rel="noopener noreferrer">Consultar l'entrada original a socdepoble.net (${titolSegur})</a></p>`;
+  return {
+    id: art.slug,
+    slug: art.slug,
+    wp_id: art.wp_id,
+    title: art.title,
+    post_subtitle: art.categoria_tematica
+      ? `${art.categoria_tematica} · Previsualització d'importació editorial de socdepoble.net`
+      : "Previsualització d'importació editorial de socdepoble.net",
+    author: 'Sóc de Poble',
+    town_name: poblePrincipal,
+    created_at: art.date || '2024-01-01',
+    tags: art.etiquetes_netes || [],
+    pobles_etiquetats: art.pobles_etiquetats || [],
+    source_url: art.source_url,
+    ruta_canonica: art.ruta_canonica,
+    casos_us_meta: art.casos_us_meta || [],
+    categoria_tematica: art.categoria_tematica || '',
+    vertical_proposada: art.verticalProposada || 'mur',
+    estat_revisio: art.estat_revisio || 'pendent_admin',
+    nota_revisio: art.nota_revisio || '',
+    num_imatges: art.numImatges || 0,
+    num_videos: art.numVideos || 0,
+    num_iframes: art.numIframes || 0,
+    num_pdfs: art.numPdfs || 0,
+    esImportatWp: true,
+    content: resumHtml,
   };
-  desaEstatRevisioEditorial(nouEstat, storage);
-  return nouEstat;
 }
 
 export function estadistiquesRevisioImportacio(storage = typeof window !== 'undefined' ? window.localStorage : null) {

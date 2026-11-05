@@ -413,6 +413,13 @@ function fetchDelServidor(entrada, opcions = {}) {
     },
     '/rest/v1/section_submissions': () => rutaDePublicacions(url, opcions),
     '/rest/v1/notes': () => rutaDeNotes(url, metode, cos),
+    '/rest/v1/note_folders': () => {
+      expect(metode).toBe('GET');expect(p.get('select')).toBe('id,nom');
+      expect(p.get('tenant_id')).toBe(`eq.${POBLE}`);expect(p.get('owner_user_id')).toBe(`eq.${PERSONA}`);
+      expect(p.get('order')).toBe('id.asc');expect(p.get('limit')).toBe('500');
+      expect(p.get('id')).toBeNull(); // primera pàgina; les següents usen cursor id=gt.<últim>
+      return resposta([]);
+    },
     '/rest/v1/profiles': () => resposta(eq(p.get('id')) === PERSONA ? [{ id: PERSONA, full_name: 'Persona de conformitat', visibility: 'private' }] : []),
     '/rest/v1/rpc/list_my_organizations': () => resposta([]),
     '/rest/v1/rpc/admin_list_users': () => resposta([{ id: PERSONA }]),

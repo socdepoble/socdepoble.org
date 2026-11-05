@@ -358,7 +358,7 @@ describe('les quatre converses de l’ordre', () => {
   });
 
   test('pobleDelXat: el declarat mana; sense, el poble de la llavor amb el nom de l’ordre', () => {
-    expect(POBLE_PER_DEFECTE).toEqual({ id: 'la-torre-de-les-macanes', nom: 'Gent de la Torre', avatar: '/assets/towns/la-torre-de-les-macanes/commons-ah27.webp' });
+    expect(POBLE_PER_DEFECTE).toEqual({ id: 'la-torre-de-les-macanes', nom: 'Gent de la Torre', avatar: '/assets/towns/la-torre-de-les-macanes/2.jpg' });
     expect(Object.isFrozen(POBLE_PER_DEFECTE)).toBe(true);
     expect(pobleDelXat(null)).toBe(POBLE_PER_DEFECTE);
     const sella = { id: 'sella', nom: '' };

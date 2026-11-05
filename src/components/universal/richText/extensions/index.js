@@ -1,5 +1,5 @@
 import Image, { inputRegex as regexImatgeMarkdown } from '@tiptap/extension-image';
-import { nodeInputRule } from '@tiptap/core';
+import { mergeAttributes, nodeInputRule } from '@tiptap/core';
 import { ReactNodeViewRenderer } from '@tiptap/react';
 import { compressImage } from '../../../../utils/imageUtils.js';
 import { fitxerDeDataUrl, tipusReal } from '../../../../utils/pujadaImatge.js';
@@ -17,6 +17,9 @@ import { TargetesIncrustades } from './targetes/targetesIncrustades.js';
 import { PlaceholderCos } from './placeholderCos.js';
 import { GuiaCos, blocsDeGuia } from './guiaCos.js';
 import { ORDRE_SUBTARGETA, Subtargeta, textosDeLOrdre } from './subtargeta.js';
+import { atributsDEnllac, atributsDeLEnllac, hrefDeImatge, destinacioDeImatge, relDeImatge } from './enllacImatge.js';
+import { extensionsDeMaquetacio } from './maquetacio.js';
+import { VideoEditorialNode } from './videoEditorial.js';
 
 /* RICH-EXIF (Onada 4, ADR multimèdia D4) · allowBase64 es queda (les notes
    sense servidor hi desen el data URL de compressImage), però cap data URL
@@ -84,6 +87,31 @@ const SdpImage = Image.extend({
       lng: atributDeFoto('lng', 'data-lng', (v) => FORMA_COORDENADA.test(v)),
       precisio: atributDeFoto('precisio', 'data-precisio', (v) => VALORS_PRECISIO.has(v)),
       captura: atributDeFoto('captura', 'data-captura', (v) => FORMA_CAPTURA.test(v)),
+      /* P0-26 D1 (avís A1 de Gemini) · L'enllaç d'una imatge (enllacImatge.js). */
+      ...atributsDEnllac(),
+    };
+  },
+
+  /* P0-26 D1 · Amb un href segur, l'<img> es pinta dins d'<a class="sdp-image-link">;
+     sense, l'<img> de sempre (una foto de galeria continua obrint el visor). */
+  renderHTML({ node, HTMLAttributes }) {
+    const imatge = ['img', mergeAttributes(this.options.HTMLAttributes, HTMLAttributes)];
+    const enllac = atributsDeLEnllac(node.attrs);
+    return enllac ? ['a', enllac, imatge] : imatge;
+  },
+
+  addCommands() {
+    return {
+      ...this.parent?.(),
+      /* P0-26 D1 · Posa (o, amb un href buit, lleva) l'enllaç de la imatge
+         triada. Un href que no és segur no canvia res i torna false. */
+      enllacaImatge: ({ href = null, target = null, rel = null } = {}) => ({ commands }) => {
+        if (href === null || String(href).trim() === '') return commands.updateAttributes(this.name, { href: null, target: null, rel: null });
+        const segur = hrefDeImatge(String(href));
+        if (!segur) return false;
+        const desti = destinacioDeImatge(target);
+        return commands.updateAttributes(this.name, { href: segur, target: desti, rel: relDeImatge(rel, desti) });
+      },
     };
   },
 
@@ -439,6 +467,12 @@ export function extensionsRiques({
       })
     }),
     Subtargeta,
+    /* P0-26 D1 · Com la subtargeta, SEMPRE: un cos amb galeria, figures o
+       paràgrafs centrats l'ha de llegir qualsevol editor (maquetacio.js). */
+    ...extensionsDeMaquetacio(),
+    /* R12 (Onada R6 Bloc 4) · També SEMPRE: un cos amb el marcador del vídeo
+       (`div[data-sdp-youtube]`) el conserva en desar (videoEditorial.js). */
+    VideoEditorialNode,
     ...(ambTargetes ? [TargetesIncrustades] : []),
     ...(ambPlaceholder ? [PlaceholderCos.configure({ text: placeholderCos })] : []),
     ...(ambGuia ? [GuiaCos.configure({ blocs: guiaCos.blocs, etiqueta: guiaCos.etiqueta || '', resum: guiaCos.resum || '' })] : [])

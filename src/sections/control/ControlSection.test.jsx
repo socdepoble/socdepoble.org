@@ -1191,7 +1191,7 @@ test('Onada 10 · «Maquinària i Sistema» és exactament el Lector RSS i el TP
 test('Onada 10 · M4 · les sis targetes de plugin són canòniques: data i hora de la seua font, Categoria i Etiqueta, i cap botó gran ni porta', () => {
   pinta();
   const targetes = targetesDUtilitats();
-  expect(targetes.map(titolDeTargeta)).toEqual(['Gestoria', 'Rebost Domèstic', 'Salut', 'Snippet', 'Lector RSS', 'TPV del Bar']);
+  expect(targetes.map(titolDeTargeta)).toEqual(['Gestoria', 'Rebost Domèstic', 'Salut', 'Arbre Genealògic', 'Snippet', 'Lector RSS', 'TPV del Bar']);
   for (const targeta of targetes) {
     const titol = titolDeTargeta(targeta);
     const font = fontDeLaTargeta(titol);

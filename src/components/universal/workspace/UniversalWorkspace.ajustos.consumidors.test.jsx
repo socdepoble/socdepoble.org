@@ -16,7 +16,7 @@ import { afterEach, beforeEach, expect, test, vi } from 'vitest';
 import { delVal, setVal } from '../../../config/storage.js';
 import { CLAU_CARPETES_VISIBLES, _reiniciaCarpetesVisibles } from './carpetesVisibles.js';
 
-const m = vi.hoisted(() => ({ perfil: null, usuaris: vi.fn() }));
+const m = vi.hoisted(() => ({ perfil: null, usuaris: vi.fn(), sessio: null }));
 vi.mock('../../../hooks/useResolvedAsset.js', () => ({
   useResolvedAsset: (ref) => ref,
   useResolvedAssetState: (ref) => ({ url: ref, status: ref ? 'ready' : 'idle', error: null, isLoading: false, retry: () => {}, cancel: () => {} })
@@ -26,7 +26,8 @@ vi.mock('../../../app/contexts/CoreContentContext.jsx', () => ({ useCoreContent:
 /* Gauntlet 261016 (Bloc 3.4) · PerfilShell també llig useSessioOpcional (qui és superadmin). */
 vi.mock('../../../app/contexts/SessionContext.jsx', () => ({
   useSession: () => ({ currentUser: null, estat: 'fora' }),
-  useSessioOpcional: () => null,
+  /* Onada R6 · Bloc 2 (P1-b) · la prova AH-29 entra com a superadmin. */
+  useSessioOpcional: () => m.sessio,
 }));
 vi.mock('../../../app/contexts/RouterContext', () => ({
   useRouter: () => ({ navigate: vi.fn(), location: { pathname: '/' } }),
@@ -106,10 +107,16 @@ const obriRoda = (c) => {
 
 test('AH-29 (IDEA-89) · Perfil · la roda dentada s’ha eliminat de la fila Tot de la Columna 1 i s’ha integrat a «🛡️ Administració del sistema»', () => {
   ambAmplada(1400);
-  const { container } = render(<PerfilShell />);
-  expect(within(navegacio(container)).getByRole('button', { name: 'Forn' })).toBeTruthy();
-  expect(within(navegacio(container)).getByRole('button', { name: '🛡️ Administració del sistema' })).toBeTruthy();
-  expect(within(navegacio(container)).queryByRole('button', { name: RODA })).toBeNull();
+  /* Onada R6 · Bloc 2 (P1-b) · El grup d'administració és només per a superadmin. */
+  m.sessio = { esSuperadmin: true };
+  try {
+    const { container } = render(<PerfilShell />);
+    expect(within(navegacio(container)).getByRole('button', { name: 'Forn' })).toBeTruthy();
+    expect(within(navegacio(container)).getByRole('button', { name: '🛡️ Administració del sistema' })).toBeTruthy();
+    expect(within(navegacio(container)).queryByRole('button', { name: RODA })).toBeNull();
+  } finally {
+    m.sessio = null;
+  }
 });
 
 /* Correcció R1 del verificador · El Perfil entra a la persona (o a

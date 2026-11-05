@@ -49,8 +49,9 @@ test('un servidor que confirma una persona diferent no fabrica èxit', async () 
   m.rpc.mockResolvedValue({ orgId: O, personaId: B, rol: 'usuari', estat: 'pendent' });
   await expect(servidor.solicitaUnirSeAEntitat({ orgId: O, rol: 'usuari' })).rejects.toMatchObject({ code: 'DESCONEGUT' });
 });
-test('404 és capacitat absent i els codis SQL de control es conserven', async () => {
-  for (const [error, code] of [[Object.assign(new Error('absent'), { status: 404 }), 'NO-DISPONIBLE'], [Object.assign(new Error('SDP-CONN-002: sense control'), { status: 403 }), 'SDP-CONN-002'], [Object.assign(new Error('SDP-ORGMEM-006: només owner'), { status: 403 }), 'SDP-ORGMEM-006']]) {
+/* Onada R6 · Bloc 5 · Com sondaConnexions.js: només PGRST202/PGRST205 són capacitat absent; un 404 nu és DESCONEGUT. */
+test('PGRST202/PGRST205 són capacitat absent (un 404 nu no) i els codis SQL de control es conserven', async () => {
+  for (const [error, code] of [[Object.assign(new Error('absent'), { status: 404 }), 'DESCONEGUT'], [Object.assign(new Error('absent'), { status: 404, code: 'PGRST205' }), 'NO-DISPONIBLE'], [Object.assign(new Error('absent'), { status: 404, code: 'PGRST202' }), 'NO-DISPONIBLE'], [Object.assign(new Error('SDP-CONN-002: sense control'), { status: 403 }), 'SDP-CONN-002'], [Object.assign(new Error('SDP-ORGMEM-006: només owner'), { status: 403 }), 'SDP-ORGMEM-006']]) {
     m.rpc.mockRejectedValueOnce(error);
     await expect(servidor.inclouPersonaEnEntitat({ orgId: O, personaId: B, rol: 'administrador' })).rejects.toMatchObject({ code });
   }

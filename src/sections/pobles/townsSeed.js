@@ -1,5 +1,6 @@
 import { nomDeLaGent, slugDelPoble } from './nomsDelPoble.js';
 import { DADES_POBLES_APLEC_VIQUIPEDIA } from './poblesAplecViquipedia.js';
+import { fusionaAmbFitxaEditorial } from './fitxaDelPoble.js';
 
 export const MOCK_TOWNS = [
   {
@@ -171,15 +172,31 @@ export const POBLES_APLEC_2023 = Object.freeze([
   ...DADES_POBLES_APLEC_VIQUIPEDIA[slugDelPoble(title)],
   ...(parent ? { parent_poble_id: slugDelPoble(parent), parent_poble_nom: parent } : {})
 })));
+const senseValor = (valor) => valor === undefined || valor === null || (typeof valor === 'string' && !valor.trim());
+
+/**
+ * R5-D5 · La fitxa pròpia mana. Un poble que ja tenim conserva les seues fotos
+ * reals (`image_url`, `avatar_url`), text, cens i coordenades: l'Aplec només
+ * ompli els buits (font, autoria, nucli pare) i la Viquipèdia, via
+ * fusionaAmbFitxaEditorial, només els buits i les fotos de reserva
+ * (teImatgeReal), amb els crèdits de Commons només si la foto és la de Commons.
+ */
+export function fusionaAmbAplec(anterior, poble) {
+  const font = DADES_POBLES_APLEC_VIQUIPEDIA[poble.id] || {};
+  const delAplec = Object.fromEntries(Object.entries(poble)
+    .filter(([camp, valor]) => !Object.hasOwn(font, camp) && senseValor(anterior[camp]) && !senseValor(valor)));
+  /* «Que l'ompla l'Aplec» (Bloc 5) · Si la població és la pròpia de la llavor i l'Aplec en duu una
+     altra amb el seu any, l'any de l'Aplec no s'aparella amb la xifra pròpia: es marca la població
+     com a pròpia perquè fitxaCompleta no la tinga per incompleta. */
+  const poblacioPropia = !senseValor(anterior.population) && senseValor(anterior.population_year)
+    && !senseValor(font.population_year ?? poble.population_year);
+  return fusionaAmbFitxaEditorial({ ...anterior, ...delAplec, ...(poblacioPropia ? { poblacio_propia: true } : {}) });
+}
+
 for (const poble of POBLES_APLEC_2023) {
   const existent = MOCK_TOWNS.findIndex((town) => town.id === poble.id);
   if (existent < 0) MOCK_TOWNS.push(poble);
-  else {
-    const anterior = MOCK_TOWNS[existent];
-    // La hidratació aporta dades i crèdits; conserva la identitat editorial
-    // existent de la comunitat, com «Gent de la Torre», i la seua cronologia.
-    MOCK_TOWNS[existent] = { ...anterior, ...poble, author: anterior.author || poble.author };
-  }
+  else MOCK_TOWNS[existent] = fusionaAmbAplec(MOCK_TOWNS[existent], poble);
 }
 // La Vall d'Ebo apareix al peu de foto, fora de les 21 categories de participants.
 MOCK_TOWNS.push({ id: 'la-vall-d-ebo', type: 'town', title: "La Vall d'Ebo", author: "Gent de la Vall d'Ebo",

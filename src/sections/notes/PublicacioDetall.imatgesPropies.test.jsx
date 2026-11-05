@@ -49,7 +49,9 @@ vi.mock('../mur/MurContext', () => ({ useMur: () => mocks.mur }));
 vi.mock('../../app/contexts/CoreContentContext', () => ({ useCoreContent: () => mocks.core }));
 vi.mock('../multimedia/MultimediaContext', () => ({ useMultimedia: () => mocks.media }));
 
-import { PublicacioDetall, PublicacioFitxa } from './PublicacioDetall.jsx';
+/* P0-25 / IDEA-96 (Onada R6) · El lector de sempre (LectorDePublicacio): al Bloc,
+   una publicació del Mur o de l'agenda ja s'obri a l'editor (PublicacioEditable). */
+import { LectorDePublicacio as PublicacioDetall, PublicacioFitxa } from './PublicacioDetall.jsx';
 import { publicacioComANota } from './masDeLUsuari.js';
 import { permetOrigenMitjans } from '../../utils/sanitize.js';
 

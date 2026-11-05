@@ -12,5 +12,5 @@ const data=await db.query(`SELECT jsonb_build_object('database',current_database
   'policies',(SELECT coalesce(jsonb_agg(jsonb_build_object('name',p.policyname,'roles',p.roles,'command',p.cmd,'using',p.qual,'check',p.with_check) ORDER BY p.policyname),'[]'::jsonb) FROM pg_policies p WHERE p.schemaname=n.nspname AND p.tablename=c.relname)
  ) ORDER BY n.nspname,c.relname) FROM pg_class c JOIN pg_namespace n ON n.oid=c.relnamespace WHERE c.relkind IN ('r','p') AND n.nspname IN ('public','node0','auth','private')),
  'functions',(SELECT jsonb_agg(jsonb_build_object('schema',n.nspname,'name',p.proname,'arguments',pg_get_function_identity_arguments(p.oid),'returns',pg_get_function_result(p.oid),'definer',p.prosecdef) ORDER BY n.nspname,p.proname,p.oid) FROM pg_proc p JOIN pg_namespace n ON n.oid=p.pronamespace WHERE n.nspname IN ('public','node0','auth','private')));`);
-if(data.database!==database||data.migrations!==75||!Array.isArray(data.tables))throw Error('node0_catalogue_target_failed');
+if(data.database!==database||data.migrations!==76||!Array.isArray(data.tables))throw Error('node0_catalogue_target_failed');
 process.stdout.write(JSON.stringify({schema:'sdp.node0.ah10.catalogue.v1',checkedAt:new Date().toISOString(),userRowsRead:0,...data})+'\n');

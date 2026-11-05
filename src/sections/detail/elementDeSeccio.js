@@ -37,12 +37,15 @@ import {
   COPYRIGHT_SDP, COPYRIGHT_VIQUIPEDIA, RUTA_CALENDARI, dataDElement, dataHoraDeBarra, insigniaDeCalendari, rutaCalendariDeLaData
 } from '../../components/universal/editorial.js';
 import { acteAEsdeveniment } from '../mur/agendaMur.js';
+import { revisaElement } from '../../data/revisionsEditorials.js';
 import { DEFAULT_AUTHOR, esAvatarSegur, esMarcaDeLEntitat, esRutaDelProjecte } from '../../components/universal/UniversalUtils.js';
 import { useResolvedAssetState } from '../../hooks/useResolvedAsset.js';
 import { esFontImatgePropia } from '../../utils/sanitize.js';
 import { pageKeyDeRuta, paginaDeRuta, propsDePaginaDeText } from '../text/paginaDeText.js';
 import { nomDeLaGent } from '../pobles/nomsDelPoble.js';
 import { signaturaDeQuiSigna } from '../../data/identitatsSeed.js';
+/* P1-f (Onada R6 · Bloc 2) · El transformador (i el tesaurus de ~450 KB) arriba a demanda: mai al chunk comú. */
+import { trobaArticleImportatComAPublicacio, useEstatArticleImportat } from '../../utils/articlesImportatsMandros.js';
 
 const CAP = Object.freeze([]);
 
@@ -58,6 +61,9 @@ const FONT_DE_SECCIO = new Map([
   ['animalets', 'mur'], ['treball', 'mur'], ['habitatge', 'mur']
 ]);
 
+/* La secció de les revisions editorials (revisionsEditorials.js) de cada llista. */
+const SECCIO_DE_LA_LLISTA = Object.freeze({ '/mur': 'mur', '/calendari': 'events' });
+
 /** L'element d'una secció per id o, si cap id no casa, per slug; null si no hi és.
  *  Auditoria 261007 (B) · Abans es tornava el PRIMER element que casava per
  *  id O per slug. El `slug` d'una fila de section_submissions ve del payload
@@ -68,9 +74,21 @@ const FONT_DE_SECCIO = new Map([
 export function trobaElement(section, itemId) {
   if (!Array.isArray(section?.items) || itemId == null || itemId === '') return null;
   const clau = String(itemId);
-  return section.items.find((item) => item?.id != null && String(item.id) === clau)
+  const directe = section.items.find((item) => item?.id != null && String(item.id) === clau)
     || section.items.find((item) => item?.slug != null && String(item.slug) === clau)
-    || null;
+    || (clau === 'aplec-pel-territori-2023'
+      ? section.items.find((item) => String(item?.id) === 'aplec-2023')
+      : null);
+  /* P0-25 (Onada R6, Bloc 2) · La revisió editorial desada des de /notes
+     (revisionsEditorials.js). MurContext ja la posa a les seues llistes i
+     revisaElement torna el MATEIX element si ja la porta. */
+  if (directe) return revisaElement(SECCIO_DE_LA_LLISTA[section.listPath], directe);
+  /* D-R6-1 (Onada R6, Bloc 3; decisió de MarIA) · Un article importat
+     revisat des de /notes també mostra la seua revisió al detall. */
+  if (section?.listPath === '/mur') {
+    return revisaElement('mur', trobaArticleImportatComAPublicacio(clau));
+  }
+  return null;
 }
 
 /* Ordre E del Mestre (261007, prompt 261007_1628: «no es pot posar el
@@ -323,11 +341,13 @@ export function useElementDeSeccio(sectionId, itemId) {
     ? buildDetailSectionMeta({ events, feedPosts, marketItems, mediaItems, notes: CAP, towns, t })[sectionId]
     : null), [font, sectionId, events, feedPosts, marketItems, mediaItems, towns, t]);
   const item = trobaElement(section, itemId);
+  /* P1-f · Una clau d'article importat espera el transformador ('carregant') i es torna a pintar quan arriba. */
+  const estatImportat = useEstatArticleImportat(!item && section?.listPath === '/mur' ? itemId : null);
   const estatFont = font === 'mur' ? estatMur : font === 'core' ? estatCore : estatMedia;
   const estatSenseElement = !font ? 'absent'
     : estatFont === 'loading' ? 'carregant'
       : estatFont === 'error' ? 'error' : 'absent';
-  const estat = item ? 'trobat' : estatSenseElement;
+  const estat = item ? 'trobat' : (estatImportat || estatSenseElement);
   return { section, item, estat };
 }
 

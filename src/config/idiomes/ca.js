@@ -46,7 +46,8 @@ export default {
   'section.notes.connexio.absentAmbEnllac': "No és entre el que s’ha carregat ací (un perfil, una pàgina, un altre poble o un element retirat). Obri’l a la seua pàgina.",
   'section.notes.connexio.absentSenseEnllac': "No és entre el que s’ha carregat ací i la connexió no en porta l’enllaç.",
   'section.notes.editor.avisCategoria': "Cal almenys una categoria. Si vols netejar-les, marca'n una de general, com «{categoria}».",
-  'section.notes.editor.avisCarpetes': "Crear, reanomenar i esborrar carpetes encara no té contracte de dades amb el servidor. De moment, tria la carpeta d’esta nota.",
+  'section.notes.editor.avisCarpetes': "Les carpetes noves es desen al servidor quan ho permet i, si no, en este navegador. Reanomenar i esborrar carpetes encara no té contracte de dades.",
+  'section.notes.carpetes.errorCrear': "No s’ha pogut crear la carpeta. Torna-ho a provar.",
   'section.notes.editor.avisSenseTotes': "Reanomenar i esborrar estaran disponibles quan s’hagen carregat totes les notes.",
   'section.notes.editor.avisDataDispositiu': "Al servidor encara no hi ha on guardar la data de publicació. Es guarda en este dispositiu i només s’aplica si publiques des d’ací.",
   'section.notes.editor.portadaAlt': "Una llibreta oberta amb algú escrivint",
@@ -549,6 +550,14 @@ export default {
   'section.notes.format.targeta': 'Targeta incrustada',
   /* 261103 (Onada 7, T2.6) · El sentit Enllaç → Card a la segona fila, amb el cursor en un enllaç intern. */
   'section.notes.format.enllacATargeta': 'Convertir en targeta',
+  'section.notes.format.enllacImatge': "Enllaç de la imatge",
+  'section.notes.format.enllacImatgeRefusat': "Esta adreça no és segura: la imatge es queda com estava.",
+  /* D-B4-2 i D-B4-3 (Onada R6, Bloc 4) · El diàleg «Enllaç de la imatge» (DialegEnllacImatge) i el «Reintentar» de la Revisió WP del Mur. */
+  'section.notes.format.enllacImatgeCamp': "Adreça de l’enllaç",
+  'section.notes.format.enllacImatgeAjuda': "Un camí de l’app, una adreça https:// o un mailto:. Deixa-la buida per a llevar l’enllaç.",
+  'section.notes.format.enllacImatgeNoAplicat': "No s’ha pogut canviar l’enllaç: torna a triar la imatge.",
+  'section.notes.format.enllacImatgeDesa': "Desar",
+  'section.mur.revisioWp.reintenta': "Reintentar",
   'section.notes.format.subtargetaTitol': 'Títol de la subtargeta',
   'section.notes.format.subtargetaMeta': 'Una línia de context: data, lloc o autoria',
   'section.notes.format.subtargetaCos': 'Escriu ací el contingut de la subtargeta: paràgrafs, llistes i enllaços.',
@@ -2759,6 +2768,8 @@ export default {
   'editor.imatge.exif.descripcio': "Decidix si es publiquen amb la foto i, la ubicació, amb quina precisió.",
   'editor.imatge.exif.inserir': "Inserir",
   'editor.imatge.exif.titol': "Esta foto porta la seua ubicació o la data",
+  /* R12 (Onada R6 Bloc 4) · Títol accessible d'un vídeo editorial sense títol propi (VideoEditorial.jsx). */
+  'editor.video.titolPerDefecte': "Vídeo de YouTube",
   // P1-64 (261028) · El Mapa Fotogràfic del Mur.
   'section.mur.mapa.acostaGrup': "Zona {n}, {nom}: {recompte}. Acosta el mapa",
   'section.mur.mapa.agrupacio': "Agrupació per distància",
@@ -3576,4 +3587,9 @@ export default {
   'section.pobles.demarcacio.valencia': "Comarques de València",
   'section.pobles.demarcacio.castello': "Comarques de Castelló",
   'section.pobles.territori.veure': "Veure els pobles",
+  'section.notes.publicacio.noActualitzableActe': "Els actes de l’agenda encara no s’actualitzen des del Bloc: el canvi només és en esta vista.",
+  'section.notes.publicacio.noActualitzableLlavor': "Esta publicació és de l’arxiu editorial del poble i encara no s’actualitza des del Bloc: el canvi només és en esta vista.",
+  'section.notes.publicacio.revisioDesada': "Revisió desada en este navegador: el Mur i la pàgina ja la mostren.",
+  'section.notes.publicacio.revisioDesadaServidor': "Revisió desada al servidor: el Mur i la pàgina ja la mostren a tothom.",
+  'section.notes.publicacio.revisioNomesNavegador': "El servidor no ha acceptat la revisió: queda desada només en este navegador.",
 };

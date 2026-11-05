@@ -40,7 +40,7 @@ Si no tens cap de les dues, llista `_wiki_de_poble/04_escriptori/` amb una eina 
 - **Fites consolidades i desplegades en producció (`https://socdepoble.org` i `https://socdepoble.cat`):**
   1. **`FEDI-26` i `D-13` (Connexions Persona↔Persona i Persona↔Entitat sempre al Registre Social, Públiques per Defecte amb Interruptor d'1 Clic, i «Formar part» al Xat de l'Entitat):** Commit `903fb2f7c` pujat a `fork/backup-notes-publish`.
   2. **Cantons quadrats al vídeo protagonista (`.sdp-hero-video` en `src/css/components.css`) + `/page/fediversity` explicat «En paraules de poble» (`src/sections/text/pageContent.js`, frontissa `16/16` aprovada):** Desplegat en viu tant a `https://socdepoble.org` com a `https://socdepoble.cat`.
-  3. **Correu de resposta enviat a Michiel Leenaars i a l'equip d'NLnet (`2026-08-1a6@nlnet.nl`) el 04-11-2026 a les 16:08 CET:** Captura arxivada a `261104_1615_correu_enviat_nlnet_michiel_leenaars_2026_08_1a6.jpg` (captura de 01_produccio no versionada).
+  3. **Correu de resposta enviat a Michiel Leenaars i a l'equip d'NLnet (`2026-08-1a6@nlnet.nl`) el 04-11-2026 a les 16:08 CET:** Captura arxivada a `261104_1615_correu_enviat_nlnet_michiel_leenaars_2026_08_1a6.jpg`.
   4. **Relleu estratègic per al pròxim xat fresc (després del reinici de l'ordinador del Mestre):**
      - **Compte oficial de Mastodon de Sóc de Poble (`https://mastodont.cat/@depoble` · `@depoble@mastodont.cat`):** Connectar un pont bidireccional entre Sóc de Poble i `@depoble@mastodont.cat` perquè el que es publique a Sóc de Poble es publique automàticament a Mastodon i el que es publique des de Mastodon puga entrar a Sóc de Poble.
      - **Xat (Clon de WhatsApp millorat) i Usabilitat del Panell de Control:** Prioritat número 1 per al llançament d'usuaris reals.

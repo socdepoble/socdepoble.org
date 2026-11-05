@@ -62,8 +62,9 @@ describe('F9 · càrregues concurrents', () => {
   test('200 primeres pàgines alhora compartixen la lectura i totes reben la mateixa pàgina', async () => {
     prepara(Array.from({ length: 300 }, (_, i) => uuid(i)));
     const pagines = await Promise.all(Array.from({ length: 200 }, () => loadNotesPage({ ownerUserId: getDefaultUserId(), limit: 50 }, SEED)));
-    /* Una lectura per a la purga de la paperera i una per a la càrrega. */
-    expect(comptes.read).toBeLessThanOrEqual(2);
+    /* Una lectura per a la purga de la paperera, una per a la càrrega i (R12)
+       una per a les carpetes desades al navegador, compartida igual. */
+    expect(comptes.read).toBeLessThanOrEqual(3);
     const primera = pagines[0].notes.map((n) => n.id);
     expect(primera).toHaveLength(50);
     expect(pagines.every((p) => JSON.stringify(p.notes.map((n) => n.id)) === JSON.stringify(primera))).toBe(true);

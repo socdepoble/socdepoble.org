@@ -14,16 +14,16 @@
       "data": "2026-11-03"
     },
     "consola": {
-      "sha256": "266a5883d042aa65d30b2de9999a4867b85d402e69d84d6181ee1f260d67aa98",
+      "sha256": "2716cc5cd51d8f67b226f37ec411350ab055ea6eec96da0589c5eb33503c42e4",
       "html": 5925,
-      "aprovat_per": "Mestre Javi Llinares (ordre unificada nocturna Onades 7-9, 261103 ~05:4x: «aprova'ls amb frontissa-contingut i verifica 16/16»); diff revisat per Claude: Gauntlets O7-O9 i rondes 2-3 de correctors i verificadors (Cards flotants, /versions WP 1.1.12, /fediversity honest, «el Mas» retirat a Consola i Cervell, O6-D8), 2026-11-03",
-      "data": "2026-11-03"
+      "aprovat_per": "Mestre Javi Llinares (COMMIT R5 Marató + IDEA-92 desmetaforització pragmàtica i didàctica 05-11-2026)",
+      "data": "2026-11-05"
     },
     "constitucio": {
-      "sha256": "da33b16b7d2457839d6f756fe7313a62f8a183497822b5aeb70042fa3606257a",
-      "html": 11563,
-      "aprovat_per": "Mestre Javi Llinares (ordre unificada nocturna Onades 7-9, 261103 ~05:4x: «aprova'ls amb frontissa-contingut i verifica 16/16»); diff revisat per Claude: Gauntlets O7-O9 i rondes 2-3 de correctors i verificadors (Cards flotants, /versions WP 1.1.12, /fediversity honest, «el Mas» retirat a Consola i Cervell, O6-D8), 2026-11-03",
-      "data": "2026-11-03"
+      "sha256": "d53eaa8320b382c37d262fc4989cc256122b9baa2a11dcb32a813738fd066ecf",
+      "html": 8850,
+      "aprovat_per": "Mestre Javi Llinares (COMMIT R5 Marató + IDEA-92 desmetaforització pragmàtica i didàctica 05-11-2026)",
+      "data": "2026-11-05"
     },
     "descarregues": {
       "sha256": "e8f9085b1d0a593846f12f65c2e96821a50970f442d24d673c106947c8e9868a",
@@ -38,21 +38,21 @@
       "data": "2026-11-03"
     },
     "drets-autor": {
-      "sha256": "bd3814e8d19f76bb7bcb337de5638f285100d3513c632c3d309f709b80552746",
-      "html": 14211,
-      "aprovat_per": "Mestre Javi Llinares (ordre O6-CLAUDE-1/2, prompt 261102_1532 Onada 6, T2.4: «re-segellant la Frontissa 16/16»; diff revisat per Claude amb verificador, àrbitres i Gauntlet: negretes d'escaneig, i h4+p a versions, drets-autor, fediversity, xat, fedivers i wikidepoble)",
-      "data": "2026-11-03"
+      "sha256": "7eff84477e54c1810daba4a6e0c6e1e1f2b6fb482dc007977b47bf706b62f231",
+      "html": 14200,
+      "aprovat_per": "Mestre Javi Llinares (COMMIT R5 Marató + IDEA-92 desmetaforització pragmàtica i didàctica 05-11-2026)",
+      "data": "2026-11-05"
     },
     "fedivers": {
-      "sha256": "6f80b21d666aca6ff3f90c51c64641744d96895a44212cc8a86e6f63df732748",
-      "html": 10332,
-      "aprovat_per": "Codex · ordre directa AH-22 del Mestre 05-11-2026",
+      "sha256": "16cabf3880eb7e5a9de948cd1605fe42343bd4a4902306a8c0906df7d90bca11",
+      "html": 17246,
+      "aprovat_per": "Mestre Javi Llinares + MarIA (COMMIT R6 Fediversity + Arquitectura IA 05-11-2026)",
       "data": "2026-11-05"
     },
     "fediversity": {
-      "sha256": "1613fa7bd6d71798b8cf7954de885ab6b959c7baf13ecd2588a8645b08843aa6",
-      "html": 50158,
-      "aprovat_per": "Codex · ordre directa AH-22 del Mestre 05-11-2026",
+      "sha256": "59b456b77b35588cc7c6788af77a5e44ae6893875e538709bd0005e02a7fc460",
+      "html": 57073,
+      "aprovat_per": "Mestre Javi Llinares + MarIA (COMMIT R6 Fediversity + Arquitectura IA 05-11-2026)",
       "data": "2026-11-05"
     },
     "habitatge": {
@@ -68,9 +68,9 @@
       "data": "2026-11-03"
     },
     "node-zero": {
-      "sha256": "aa57a368565d2726365867b8a0e27f3accc99625df42a9ac18633be4014e1d41",
-      "html": 10219,
-      "aprovat_per": "Codex · ordre directa AH-22 del Mestre 05-11-2026",
+      "sha256": "731daee2b384ba3b6126c26935e9c14773c5c0d8df12d5d98f3f405c0f69dd19",
+      "html": 17133,
+      "aprovat_per": "Mestre Javi Llinares + MarIA (COMMIT R6 Fediversity + Arquitectura IA 05-11-2026)",
       "data": "2026-11-05"
     },
     "notes": {
@@ -104,16 +104,16 @@
       "data": "2026-11-05"
     },
     "versions": {
-      "sha256": "bd0897eb48752bf9ac5f77a3ce60f134c26c663b447c32aeead3d338fd9d7516",
-      "html": 39977,
-      "aprovat_per": "Codex · ordre directa AH-22 del Mestre 05-11-2026",
+      "sha256": "155acbec90f3d5f57fd95e7d26d76c9ead167d17120f59bcce27d7cb2daf2403",
+      "html": 40576,
+      "aprovat_per": "Mestre Javi Llinares + MarIA (COMMIT R6 Fediversity + Arquitectura IA 05-11-2026)",
       "data": "2026-11-05"
     },
     "wikidepoble": {
-      "sha256": "fcaf389f72cf47e8a013a074f6c75fa0568e7e386bf9e2036b1d5a9f8fc110bb",
-      "html": 2306,
-      "aprovat_per": "Mestre Javi Llinares (ordre unificada nocturna Onades 7-9, 261103 ~05:4x: «aprova'ls amb frontissa-contingut i verifica 16/16»); diff revisat per Claude: Gauntlets O7-O9 i rondes 2-3 de correctors i verificadors (Cards flotants, /versions WP 1.1.12, /fediversity honest, «el Mas» retirat a Consola i Cervell, O6-D8), 2026-11-03",
-      "data": "2026-11-03"
+      "sha256": "4a87d50d0fdf491fe647cce3d27015eb7aff4ab3e7e7886129729f6c56088165",
+      "html": 1916,
+      "aprovat_per": "Mestre Javi Llinares (COMMIT R5 Marató + IDEA-92 desmetaforització pragmàtica i didàctica 05-11-2026)",
+      "data": "2026-11-05"
     },
     "xat": {
       "sha256": "630a9ce34351674f656527c291ae13829a2a7455cd897777204d8fe1bb3e5a30",

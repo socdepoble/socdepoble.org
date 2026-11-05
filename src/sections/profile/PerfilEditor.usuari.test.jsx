@@ -65,24 +65,23 @@ test('la primera entrada: la proposta i «D’acord» la desa per guardarCampPer
    (overflow: hidden), deixava l'editor a 0 px en mòbil. Ara és el peu de la
    pàgina de l'editor: dins del contenidor que fa scroll, després de
    l'article i fora d'ell, en un section amb el nom del bloc. */
-test('el bloc va dins del contenidor que fa scroll de l’editor (peuDePagina), no com a germà', () => {
+test('el bloc va dins d’«Edició avançada de la fitxa» (capcaleraEdicioAvancada), no solt al peu ni com a germà', () => {
   const { container } = render(<PerfilEditor identitat={persona({ username: 'pepsala', username_confirmat_at: null })} />);
   const grup = screen.getByRole('group', { name: TITOL_IDENTITAT_AL_POBLE });
   const closca = container.querySelector('.sdp-editor-shell-atomic');
   const pagina = closca.querySelector('.sdp-universal-page-container');
   expect(pagina.contains(grup)).toBe(true);
-  const peu = screen.getByRole('region', { name: TITOL_IDENTITAT_AL_POBLE });
-  expect(peu.matches('section.sdp-pagina-peu')).toBe(true);
-  expect(peu.contains(grup)).toBe(true);
-  expect(peu.closest('article')).toBeNull();
-  expect([...pagina.children].slice(-2).map((e) => `${e.tagName}.${e.className}`)).toEqual(['ARTICLE.content-wrapper', 'SECTION.sdp-pagina-peu']);
+  const ranura = closca.querySelector('details.sdp-edicio-avancada > .sdp-edicio-avancada__cos > [data-sdp-ranura="identitat-poble"]');
+  expect(ranura).not.toBeNull();
+  expect(ranura.contains(grup)).toBe(true);
+  expect(container.querySelector('.sdp-pagina-peu')).toBeNull();
   // Cap germà del DocumentEditor: el primer fill és la closca i el bloc no hi és fora.
   expect(container.firstElementChild).toBe(closca);
   expect([...container.children].some((fill) => fill !== closca && fill.contains(grup))).toBe(false);
-  // Sense el bloc (cap username), cap peu: el DOM de sempre.
+  // Sense el bloc (cap username), cap ranura identitat-poble: el DOM de sempre.
   cleanup();
   const sense = render(<PerfilEditor identitat={persona()} />);
-  expect(sense.container.querySelector('.sdp-pagina-peu')).toBeNull();
+  expect(sense.container.querySelector('[data-sdp-ranura="identitat-poble"]')).toBeNull();
 });
 
 test('el poble principal es desa per town_name, amb els altres darrere', async () => {

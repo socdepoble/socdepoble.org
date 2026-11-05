@@ -48,16 +48,18 @@ Font: `src/data/contracte.js`. Una implementació vàlida les oferix totes:
 - `subscribeToXat`
 - `unsubscribeFromXat`
 
-## 41 capacitats atòmiques opcionals (`CAPACITATS`)
+## 43 capacitats atòmiques opcionals (`CAPACITATS`)
 
-**98 mètodes addicionals**; **130 mètodes** en `CONTRACTE_BACKEND`. **Recompte obtingut**
+**100 mètodes addicionals**; **132 mètodes** en `CONTRACTE_BACKEND`. **Recompte obtingut**
 amb `Object.keys(CAPACITATS).length`, `CONTRACTE_NUCLI.length` i
 `CONTRACTE_BACKEND.length` del **mòdul executable**, no per recompte manual. Una capacitat
 està disponible només si el port disposa de **tots els seus mètodes**. **No hi ha**
-un camp `capacitats` **obligatori** a l'adaptador ni `capacitatsDisponibles()`. Les 41 són **grups declarats al contracte**, no 41 serveis implementats o desplegats per cada adaptador.
+un camp `capacitats` **obligatori** a l'adaptador ni `capacitatsDisponibles()`. Les 43 són **grups declarats al contracte**, no 43 serveis implementats o desplegats per cada adaptador.
 
 | Capacitat | Mètodes literals |
 | --- | --- |
+| `carpetesNotes` | `creaCarpetaNotes` |
+| `edicioEditorial` | `adminActualitzaPublicacioEditorial` |
 | `sessioExterna` | `adoptaSessioExterna` |
 | `paginacioNotes` | `loadNotesPage` |
 | `paginacioSeccions` | `loadSeccioPage` |
@@ -122,9 +124,21 @@ ni totes les branques possibles de cada mètode.
 
 ### Verificació i recuperació per correu (R6)
 
-El recompte actual és de **182 casos sobre 130 mètodes** i `metodesSenseCas()` buit. Les dues **capacitats opcionals** `verificacioCorreu` i `recuperacioCorreu` afigen **quatre mètodes** i **quatre casos de rebuig** d’entrada malformada al **tall històric** de **178 casos**. Un cas catalogat és cobertura del nom i del seu escenari; **no acredita un èxit funcional ni un servei de correu desplegat**. Els resultats `ok`, `falla` i `omés` continuen separats.
+El recompte actual és de **184 casos sobre 132 mètodes** i `metodesSenseCas()` buit. Les dues **capacitats opcionals** `verificacioCorreu` i `recuperacioCorreu` afigen **quatre mètodes** i **quatre casos de rebuig** d’entrada malformada al **tall històric** de **178 casos**. Un cas catalogat és cobertura del nom i del seu escenari; **no acredita un èxit funcional ni un servei de correu desplegat**. Els resultats `ok`, `falla` i `omés` continuen separats.
 
-L’adaptador local oferix **39 dels 41 grups declarats**. `CAPACITATS_NO_DECLARADES` conté exactament `verificacioCorreu` i `recuperacioCorreu`; els **quatre casos** d’estos grups s’ometen per **capacitat absent**. Les omissions per dades o autorització dels altres casos continuen sent **explícites**. Les **130 declaracions** del port **no són 130 operacions verificades en un servidor remot**.
+L’adaptador local oferix **41 dels 43 grups declarats**. `CAPACITATS_NO_DECLARADES` conté exactament `verificacioCorreu` i `recuperacioCorreu`; els **quatre casos** d’estos grups s’ometen per **capacitat absent**. Les omissions per dades o autorització dels altres casos continuen sent **explícites**. Les **132 declaracions** del port **no són 132 operacions verificades en un servidor remot**.
+
+### Carpetes privades del Bloc de Notes (R12)
+
+La capacitat opcional `carpetesNotes` oferix `creaCarpetaNotes({ nom }, config)`: desa la carpeta privada abans de poder assignar-li notes i retorna `{ id, nom, parentId }`. El servidor deduïx propietari de `auth.uid()` i valida pertinença al tenant; `loadNotes` carrega els noms reals de `note_folders` filtrats pel mateix propietari. La migració76 instal·la RLS i la RPC; el Node0 actual deixa esta capacitat absent. El nou cas neutral comprova el rebuig d'un nom buit abans de qualsevol escriptura; les proves funcionals de la migració acrediten permisos i persistència en un PostgreSQL descartable, sense afirmar aplicació remota.
+
+### Edició editorial de documents publicats (R12)
+
+`adminActualitzaPublicacioEditorial({ seccio, id, canvis, versio }, config)` modifica un element existent de `app_content`: `mur` → `feedPosts`, `events`, `mercat` → `marketItems` o `pagines` → `pages`. Retorna `{ item, versio }`; `_editorialClau` i `_editorialVersio` provenen del backend. La versió de tota la col·lecció es compara sota bloqueig de fila; un desament antic falla amb `conflicte-versio`. La llista blanca admet text, imatges i classificació editorial; l'autoria, el tenant, les rutes i els pobles originals es conserven. Les metadades del payload d'una publicació veïnal no poden fabricar esta font.
+
+La migració **2611051930**, número **76** del catàleg candidat, requerix **superadmin amb AAL2** abans de consultar les dades. El local requerix una política `administracioLocal` injectada explícitament; cap rol declarat pel client la substituïx. La composició Node0 només anuncia la capacitat amb `SDP_NODE0_EDITORIAL=1` i la RPC instal·lada; les sessions Node0 actuals amb **AAL1** continuen denegades i no s'eleven. S'han provat permisos, CAS i preservació en PostgreSQL descartable; això **no acredita desplegament ni una sessió AAL2 de producció**.
+
+Les pàgines de sistema continuen llegint la llavor vigent fins al primer desament explícit amb `editorial_format: html-r6`, conservant els textos d'IDEA-92. Després preval la pàgina desada, inclòs un cos buit. Un canvi del text invalida traduccions estàtiques antigues. El backfill de Manifest/Aplec només substituïx el resum o l'absència coneguts de R5 i conserva edicions divergents.
 
 ### Connexions i pertinença (FEDI-23)
 
@@ -172,7 +186,7 @@ requerixen `adminMultipobleAutoritzat: true` i, per a la lectura, un
 **no atorga permisos** al servidor. Les proves passen també amb l'adaptador remot
 real i un **doble de RPC**; **no acrediten una sessió privilegiada en PostgreSQL**.
 
-L'adaptador local oferix **39 dels 41 grups declarats**; `CAPACITATS_NO_DECLARADES`
+L'adaptador local oferix **41 dels 43 grups declarats**; `CAPACITATS_NO_DECLARADES`
 conté `verificacioCorreu` i `recuperacioCorreu`. `versioMinimaClient` torna honestament `null`, sense transport.
 L'administració multipoble està **denegada per defecte**: requerix el catàleg i
 la política `administracioLocal` injectats en construir la instància. La política

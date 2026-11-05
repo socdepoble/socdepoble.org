@@ -3,7 +3,7 @@
  *
  * Verifica la degradació silenciosa i elegant de ConnexionsPubliques en fitxes
  * públiques (/empresa/rentonar, /gent/:id, /pobles/:id) quan una consulta
- * remota sense sessió rep un error d'esquema absent (PGRST202, 42883, HTTP 404)
+ * remota sense sessió rep un error explícit d'esquema absent (PGRST202, PGRST205, NO-DISPONIBLE)
  * o una denegació de permís per a visitant anònim (PGRST301, 42501, HTTP 401/403,
  * SENSE-SESSIO, PERMISSION_DENIED), mentre preserva l'avís d'error per a fallades
  * inesperades de xarxa o servidor.
@@ -34,10 +34,12 @@ beforeEach(() => {
 });
 
 describe('IDEA-73 · Degradació elegant de ConnexionsPubliques en fitxes públiques', () => {
-  test('classifica com a no disponible els codis PostgREST/PostgreSQL d’RPC o taula absent', () => {
+  test('només classifica com a no disponible l’absència explícita de la capacitat o de l’esquema REST', () => {
     expect(esErrorNoDisponibleConnexions({ code: 'PGRST202', message: 'Could not find the function public.list_public_connections' })).toBe(true);
-    expect(esErrorNoDisponibleConnexions({ code: '42883', message: 'function does not exist' })).toBe(true);
-    expect(esErrorNoDisponibleConnexions({ status: 404, message: 'Not Found' })).toBe(true);
+    expect(esErrorNoDisponibleConnexions({ code: 'PGRST205', message: 'Table missing from schema cache' })).toBe(true);
+    expect(esErrorNoDisponibleConnexions({ code: 'NO-DISPONIBLE' })).toBe(true);
+    expect(esErrorNoDisponibleConnexions({ code: '42883', message: 'function does not exist' })).toBe(false);
+    expect(esErrorNoDisponibleConnexions({ status: 404, message: 'Not Found' })).toBe(false);
     expect(esErrorNoDisponibleConnexions({ code: 'DESCONEGUT', message: 'Error intern' })).toBe(false);
   });
 
@@ -51,6 +53,8 @@ describe('IDEA-73 · Degradació elegant de ConnexionsPubliques en fitxes públi
 
   test.each([
     ['PGRST202 (RPC inexistent)', Object.assign(new Error('Could not find the function in the schema cache'), { code: 'PGRST202' })],
+    ['PGRST205 (taula absent)', Object.assign(new Error('Table missing from schema cache'), { code: 'PGRST205' })],
+    ['NO-DISPONIBLE (capacitat absent)', Object.assign(new Error('Servidor anterior'), { code: 'NO-DISPONIBLE' })],
     ['42501 (permís anònim denegat)', Object.assign(new Error('permission denied for table entity_member_links'), { code: '42501' })],
     ['HTTP 401 (sense sessió)', Object.assign(new Error('Unauthorized'), { status: 401 })],
     ['SENSE-SESSIO', Object.assign(new Error('Cal sessió'), { code: 'SENSE-SESSIO' })]
@@ -61,4 +65,11 @@ describe('IDEA-73 · Degradació elegant de ConnexionsPubliques en fitxes públi
     await waitFor(() => expect(container.textContent).toBe(''));
     expect(screen.queryByText(ERROR_LECTURA)).toBeNull();
   });
+});
+
+test('R6: un HTTP404 puntual es degrada en silenci però el muntatge següent torna a consultar',async()=>{
+ m.membres.mockRejectedValueOnce(Object.assign(new Error('Not Found'),{status:404})).mockResolvedValueOnce([]);
+ const primera=render(<ConnexionsPubliques tipus="entitat" id={UUID_RENTONAR}/>);
+ await waitFor(()=>expect(m.membres).toHaveBeenCalledTimes(1));await waitFor(()=>expect(primera.container.textContent).toBe(''));primera.unmount();
+ render(<ConnexionsPubliques tipus="entitat" id={UUID_RENTONAR}/>);await waitFor(()=>expect(m.membres).toHaveBeenCalledTimes(2));expect(screen.queryByText(ERROR_LECTURA)).toBeNull();
 });

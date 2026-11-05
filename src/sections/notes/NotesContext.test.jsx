@@ -275,6 +275,24 @@ describe('Grup E · la guarda de re-signatura de publishNote', () => {
     expect(mocks.send).not.toHaveBeenCalled();
   });
 
+  /* D-B4-1 (Onada R6, Bloc 4; decisió de MarIA) · La guarda del Mur és la
+     mateixa funció pura que la dels actes: una REVISIÓ del superadmin estable
+     (PublicacioEditable li passa esSuperadmin) hi passa; publishNote no li la
+     passa mai, perquè el seu upsert re-signaria la peça amb l'actor actiu. */
+  test('D-B4-1 · el superadmin revisa la peça d’altri (rebuigDePublicacio), però publishNote no la re-signa', async () => {
+    Object.assign(mocks, { actor: PEP, feed: [delForn('g-9')] });
+    const { result } = renderHook(useNotes, { wrapper: NotesProvider });
+    const motiu = motiuSignaturaAliena('Forn de la Torre');
+    expect(result.current.rebuigDePublicacio(publicada('g-9'), { seccio: false })).toMatchObject({ name: 'ErrorPublicacio', message: motiu });
+    mocks.toast.mockReset();
+    expect(result.current.rebuigDePublicacio(publicada('g-9'), { seccio: false, esSuperadmin: true })).toBeNull();
+    expect(mocks.toast).not.toHaveBeenCalled();
+    let error;
+    await act(async () => { error = await result.current.publishNote(publicada('g-9')).catch((rebuig) => rebuig); });
+    expect(error).toMatchObject({ name: 'ErrorPublicacio', message: motiu });
+    expect(mocks.send).not.toHaveBeenCalled();
+  });
+
   /* idea61-02 (Gauntlet T7a, 261104) · Des d'IDEA-61 publishNote escriu també
      al Mercat (seccioDAmbit): la guarda busca la fila a les dues seccions,
      també quan la nota ja no porta la fitxa del Mercat (la fila no canvia d'id). */

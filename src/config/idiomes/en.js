@@ -46,7 +46,8 @@ export default {
   'section.notes.connexio.absentAmbEnllac': "It is not among the content loaded here (a profile, a page, another village or a removed item). Open its page.",
   'section.notes.connexio.absentSenseEnllac': "It is not among the content loaded here and this connection has no link to it.",
   'section.notes.editor.avisCategoria': "At least one category is required. To clear them, select a general one, such as “{categoria}”.",
-  'section.notes.editor.avisCarpetes': "Creating, renaming and deleting folders is not yet supported by the server data contract. For now, choose a folder for this note.",
+  'section.notes.editor.avisCarpetes': "New folders are saved on the server when it supports them, otherwise in this browser. Renaming and deleting folders has no data contract yet.",
+  'section.notes.carpetes.errorCrear': "The folder could not be created. Please try again.",
   'section.notes.editor.avisSenseTotes': "Renaming and deleting will be available once all notes have loaded.",
   'section.notes.editor.avisDataDispositiu': "The server cannot store the publication date yet. It is saved on this device and only applies if you publish from here.",
   'section.notes.editor.portadaAlt': "An open notebook with someone writing",
@@ -546,6 +547,14 @@ export default {
   'section.notes.format.targeta': 'Embedded card',
   /* 261103 (Onada 7, T2.6) · El sentit Enllaç → Card a la segona fila, amb el cursor en un enllaç intern. */
   'section.notes.format.enllacATargeta': 'Convert to card',
+  'section.notes.format.enllacImatge': "Image link",
+  'section.notes.format.enllacImatgeRefusat': "This address is not safe: the image stays as it was.",
+  /* D-B4-2 i D-B4-3 (Onada R6, Bloc 4) · El diàleg «Enllaç de la imatge» (DialegEnllacImatge) i el «Reintentar» de la Revisió WP del Mur. */
+  'section.notes.format.enllacImatgeCamp': "Link address",
+  'section.notes.format.enllacImatgeAjuda': "An app path, an https:// address or a mailto:. Leave it empty to remove the link.",
+  'section.notes.format.enllacImatgeNoAplicat': "The link could not be changed: select the image again.",
+  'section.notes.format.enllacImatgeDesa': "Save",
+  'section.mur.revisioWp.reintenta': "Retry",
   'section.notes.format.subtargetaTitol': 'Sub-card title',
   'section.notes.format.subtargetaMeta': 'A line of context: date, place or authorship',
   'section.notes.format.subtargetaCos': 'Write the sub-card content here: paragraphs, lists and links.',
@@ -2695,6 +2704,7 @@ export default {
   'editor.imatge.exif.descripcio': "Decide whether they are published with the photo and, for the location, how precisely.",
   'editor.imatge.exif.inserir': "Insert",
   'editor.imatge.exif.titol': "This photo carries its location or date",
+  'editor.video.titolPerDefecte': "YouTube video",
   // P1-64 (261028) · El Mapa Fotogràfic del Mur.
   'section.mur.mapa.acostaGrup': "Area {n}, {nom}: {recompte}. Zoom in",
   'section.mur.mapa.agrupacio': "Grouping by distance",
@@ -3512,4 +3522,9 @@ export default {
   'section.pobles.demarcacio.valencia': "Comarques of València",
   'section.pobles.demarcacio.castello': "Comarques of Castelló",
   'section.pobles.territori.veure': "View the towns",
+  'section.notes.publicacio.noActualitzableActe': "Calendar events are not yet updated from the Notebook: the change applies only in this view.",
+  'section.notes.publicacio.noActualitzableLlavor': "This post belongs to the town’s editorial archive and is not yet updated from the Notebook: the change applies only in this view.",
+  'section.notes.publicacio.revisioDesada': "Revision saved in this browser: the Wall and the page already show it.",
+  'section.notes.publicacio.revisioDesadaServidor': "Revision saved on the server: the Wall and the page now show it to everyone.",
+  'section.notes.publicacio.revisioNomesNavegador': "The server did not accept the revision: it is saved only in this browser.",
 };

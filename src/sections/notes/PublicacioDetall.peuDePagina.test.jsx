@@ -1,15 +1,14 @@
 /**
- * Esmena 2 del pla 261007_1645 (ordre del Mestre, 261007: «En seleccionar la
- * carpeta 'Mur' o 'Mercat' i el perfil 'Sóc de Poble', la part inferior de la
- * nota hauria de llistar totes les notícies/productes ja publicades en eixe
- * context per al perfil actiu») · A Notes > Mercat, amb Sóc de Poble, el que
- * s'obri primer és la Samarreta (PublicacioDetall), no una nota. Davall d'ella,
- * fora de l'article, la regió «Ja publicat al Mercat» amb la resta de
- * productes de l'entitat i sense la Samarreta oberta. Multimèdia no en té, i
- * el Foraster tampoc (decisió per defecte del Mestre, 261007).
+ * P0-25 / IDEA-96 (Onada R6, Bloc 1; ordre del Mestre: fora les Cards «Ja
+ * publicat al Mur» de /notes) · Deroga l'Esmena 2 del pla 261007_1645 dins del
+ * Bloc: cap lectura de PublicacioDetall (publicació ni pàgina del sistema)
+ * pinta el peu de l'històric de l'actor (PublicacionsDeLActor). L'històric
+ * continua al perfil i al Mur.
  */
 import React from 'react';
-import { cleanup, render, screen, within } from '@testing-library/react';
+import { readFileSync } from 'node:fs';
+import path from 'node:path';
+import { cleanup, render, screen } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 
 const mocks = vi.hoisted(() => ({
@@ -46,33 +45,16 @@ beforeEach(() => {
 });
 afterEach(cleanup);
 
-describe('el peu de PublicacioDetall', () => {
-  test('la Samarreta oberta: «Ja publicat al Mercat» davall, fora de l’article, amb la Tassa i sense la Samarreta', () => {
+describe('el peu de PublicacioDetall (P0-25: fora)', () => {
+  test('la Samarreta oberta amb altres productes de l’actor: cap regió «Ja publicat al Mercat» ni cap Card', () => {
     const { container } = render(<PublicacioDetall item={publicacioComANota(SAMARRETA, 'mercat')} />);
-    const peu = screen.getByRole('region', { name: 'Ja publicat al Mercat' });
-    expect(peu.className).toBe('sdp-pagina-peu');
-    expect(peu.closest('article')).toBeNull();
-    const pagina = container.querySelector('.sdp-universal-page-container');
-    expect(pagina.lastElementChild).toBe(peu);
-    expect(within(peu).getByRole('heading', { level: 2 }).textContent).toBe('Ja publicat al Mercat');
-    const titols = [...peu.querySelectorAll('.sp-card-title')].map((titol) => titol.textContent);
-    expect(titols).toEqual(['Tassa Sóc de Poble']);
-    expect(peu.querySelector('.sp-card-link-overlay').getAttribute('href')).toBe('/mercat/tassa-socdepoble');
-    /* L'article i la capçalera de la pàgina continuen sent els de la Samarreta. */
+    expect(screen.queryByRole('region', { name: 'Ja publicat al Mercat' })).toBeNull();
+    expect(container.querySelector('.sdp-pagina-peu')).toBeNull();
+    expect(container.querySelector('.sp-card-title')).toBeNull();
+    /* L'article i la capçalera continuen sent els de la Samarreta. */
     expect(container.querySelector('header.page-title h1').textContent).toContain('Samarreta Sóc de Poble');
   });
 
-  test('sense cap altra publicació de l’actor: la regió amb el text buit', () => {
-    mocks.mur = { ...mocks.mur, sortedMarketItems: MARKET_ITEMS };
-    render(<PublicacioDetall item={publicacioComANota(SAMARRETA, 'mercat')} />);
-    const peu = screen.getByRole('region', { name: 'Ja publicat al Mercat' });
-    expect(within(peu).getByRole('status').textContent).toBe('Amb esta identitat encara no hi ha res publicat al Mercat.');
-  });
-
-  /* Decisió per defecte del Mestre (261007) · el Foraster no veu cap
-     històric. Revisió adversarial del 261007 · Abans PublicacioDetall posava
-     el peu sense guarda d'actor i PageFrame pintava la regió buida, amb nom i
-     coixí. El Foraster de veres porta id (el del convidat). */
   test.each([
     ['el Foraster (el convidat, amb id)', { tipus: 'persona', id: '00000000-0000-4000-8000-0000000c0f1d', rol: 'convidat' }],
     ['sense actor', null]
@@ -80,11 +62,17 @@ describe('el peu de PublicacioDetall', () => {
     mocks.identitat = { actor };
     const { container } = render(<PublicacioDetall item={publicacioComANota(SAMARRETA, 'mercat')} />);
     expect(container.querySelector('.sdp-pagina-peu')).toBeNull();
-    expect(screen.queryByRole('region', { name: 'Ja publicat al Mercat' })).toBeNull();
   });
 
   test('una publicació de Multimèdia: cap peu (el DOM de sempre)', () => {
     const { container } = render(<PublicacioDetall item={publicacioComANota({ id: 'foto', title: 'Foto', src: '/assets/foto.jpg', author_org_id: ENTITAT_PILOT_ID }, 'multimedia')} />);
     expect(container.querySelector('.sdp-pagina-peu')).toBeNull();
+  });
+
+  test('el codi del lector ja no munta PublicacionsDeLActor ni la ranura del peu', () => {
+    const codi = readFileSync(path.join(process.cwd(), 'src/sections/notes/PublicacioDetall.jsx'), 'utf8').replace(/\/\*[\s\S]*?\*\//g, '');
+    expect(codi).not.toMatch(/<PublicacionsDeLActor\b/);
+    expect(codi).not.toMatch(/peuDePagina/);
+    expect(codi).not.toMatch(/useVeuHistoric|titolDeLHistoric/);
   });
 });

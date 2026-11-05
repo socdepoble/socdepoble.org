@@ -101,7 +101,7 @@ describe(`R1 · la fitxa de la persona amb sessió a ${AMPLADA} px`, () => {
     expect(screen.getAllByRole('group', { name: TITOL_IDENTITAT_AL_POBLE })).toHaveLength(1);
   });
 
-  test('el bloc entra per peuDePagina: dins de la closca, al contenidor que fa scroll, després de l’article; mai germà de l’editor al detall', () => {
+  test('el bloc entra per capcaleraEdicioAvancada: dins de «Edició avançada de la fitxa» com a primer bloc abans de les fotos; mai solt al peu ni germà de l’editor', () => {
     const { container } = munta(persona());
     const detall = container.querySelector('.perfil-espai__detall');
     const closca = detall.querySelector('.sdp-editor-shell-atomic');
@@ -110,39 +110,36 @@ describe(`R1 · la fitxa de la persona amb sessió a ${AMPLADA} px`, () => {
     expect(detall.firstElementChild).toBe(closca);
     expect([...detall.children].filter((fill) => fill !== closca && fill.contains(grup))).toEqual([]);
     expect(closca.contains(grup)).toBe(true);
-    /* La cadena de la geometria: closca → document → contenidor amb scroll → peu. */
-    const pagina = closca.querySelector(':scope > .sdp-editor-document > .sdp-universal-page-container--contained');
-    expect(pagina).not.toBeNull();
-    const peu = screen.getByRole('region', { name: TITOL_IDENTITAT_AL_POBLE });
-    expect(peu.matches('section.sdp-pagina-peu')).toBe(true);
-    expect(peu.parentElement).toBe(pagina);
-    expect(pagina.lastElementChild).toBe(peu);
-    expect(peu.previousElementSibling.matches('article.content-wrapper')).toBe(true);
-    expect(peu.closest('article')).toBeNull();
-    expect(peu.contains(grup)).toBe(true);
-    expect(container.querySelectorAll('.sdp-pagina-peu')).toHaveLength(1);
-    /* Les eines de la fitxa (davall de l'entradilla) continuen dins de
-       l'article, abans del cos: el peu no les mou. */
-    const article = peu.previousElementSibling;
+    /* Dins de details.sdp-edicio-avancada > .sdp-edicio-avancada__cos, com a primer bloc (abans de capcalera). */
+    const desplegable = closca.querySelector('details.sdp-edicio-avancada > .sdp-edicio-avancada__cos');
+    expect(desplegable).not.toBeNull();
+    const ranura = desplegable.querySelector('[data-sdp-ranura="identitat-poble"]');
+    expect(ranura).not.toBeNull();
+    expect(desplegable.firstElementChild).toBe(ranura);
+    expect(ranura.nextElementSibling?.getAttribute('data-sdp-ranura')).toBe('capcalera');
+    expect(ranura.contains(grup)).toBe(true);
+    expect(container.querySelector('.sdp-pagina-peu')).toBeNull();
+    /* Les eines de la fitxa (davall de l'entradilla) continuen dins de l'article, abans del cos. */
+    const article = closca.querySelector('article.content-wrapper');
     expect(article.querySelector('.sdp-editor-eines > .sdp-editor-tools')).not.toBeNull();
     expect(article.querySelector('.sdp-editor-full-canvas')).not.toBeNull();
   });
 
-  test('sense el bloc (cap identificador del servidor, o en lectura) el DOM és el de sempre: cap peu', () => {
+  test('sense el bloc (cap identificador del servidor, o en lectura) el DOM és el de sempre: cap ranura identitat-poble', () => {
     const { container } = munta(persona({ username: undefined, username_confirmat_at: undefined }));
-    expect(container.querySelector('.sdp-pagina-peu')).toBeNull();
+    expect(container.querySelector('[data-sdp-ranura="identitat-poble"]')).toBeNull();
     expect(screen.queryByRole('group', { name: TITOL_IDENTITAT_AL_POBLE })).toBeNull();
     cleanup();
     const reserva = munta(persona({ reserva: true }));
-    expect(reserva.container.querySelector('.sdp-pagina-peu')).toBeNull();
+    expect(reserva.container.querySelector('[data-sdp-ranura="identitat-poble"]')).toBeNull();
     expect(reserva.container.querySelector('.sdp-editor-shell-atomic')).not.toBeNull();
   });
 
   /* La font, com a text: la clau de l'adaptador és l'única porta del bloc
      (PerfilEditor.jsx), i el JSX que es retorna no el pinta enlloc més. */
-  test('PerfilEditor.jsx només passa IdentitatAlPoble per peuDePagina (amb el nom del bloc com a etiqueta)', () => {
+  test('PerfilEditor.jsx només passa IdentitatAlPoble per capcaleraEdicioAvancada', () => {
     const font = readFileSync(resolve(process.cwd(), 'src/sections/profile/PerfilEditor.jsx'), 'utf8');
-    expect(font).toMatch(/peuDePagina:\s*identitatAlPoble,\s*etiquetaPeuDePagina:\s*TITOL_IDENTITAT_AL_POBLE/);
+    expect(font).toMatch(/capcaleraEdicioAvancada:\s*identitatAlPoble/);
     expect(font.match(/<IdentitatAlPoble\b/g)).toHaveLength(1);
     const memoria = font.indexOf('const identitatAlPoble = useMemo(');
     const fiMemoria = font.indexOf('[ambIdentitatAlPoble', memoria);

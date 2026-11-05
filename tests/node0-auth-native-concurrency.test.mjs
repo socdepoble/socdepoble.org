@@ -91,7 +91,7 @@ test('native PostgreSQL context serializes logout and credential rotation with r
     const control = creaPostgres({ env });
     const identity = await control.query("SELECT json_build_object('database',current_database(),'operator',session_user,'version',current_setting('server_version_num'),'migrations',(SELECT count(*) FROM node0.schema_migrations));");
     assert.equal(identity.database, 'node0_gauntlet_r4'); assert.equal(identity.operator, 'javi');
-    assert.ok(Number(identity.version) >= 170000 && Number(identity.version) < 180000); assert.equal(identity.migrations, 75);
+    assert.ok(Number(identity.version) >= 170000 && Number(identity.version) < 180000); assert.equal(identity.migrations, 76);
     const authConnection = { query: sql => control.query(`BEGIN; SET LOCAL ROLE node0_authenticator; ${sql} COMMIT;`) };
     const privateConnection = { query: sql => control.query(`SET ROLE node0_authenticator; ${sql}`) };
     const deliveries = [];

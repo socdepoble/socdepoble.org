@@ -13,10 +13,8 @@ import { extractPlainText } from '../../utils/contentAdapter.js';
 import { promoteToPublic, teCapacitat } from '../../data/backendPort.js';
 import { dataIsoONull } from '../../utils/calendari.js';
 import { estatPerAlEditor } from './useEstatDesamentNota.js';
-import { ErrorPublicacio, esRebuigDeSeccio, motiuDesatPendent, motiuModeLocal, motiuSeccioPublicada, motiuSignaturaAliena } from './visibilitatNota.js';
-import { autorDe } from '../../config/navigation.js';
-import { aliesDeLActor } from '../../data/identitatsSeed.js';
-import { pertanyALActor } from './masDeLUsuari.js';
+import { ErrorPublicacio, esRebuigDeSeccio, motiuDesatPendent, motiuModeLocal, motiuSeccioPublicada } from './visibilitatNota.js';
+import { motiuSignaturaDAltri } from './signaturaDAltri.js';
 import { useIdentitatOReserva } from '../../app/contexts/useIdentitatOReserva.js';
 import { ErrorIdentitatDeLectura } from '../../app/contexts/identitatDeReserva.js';
 import { useSession } from '../../app/contexts/SessionContext.jsx';
@@ -283,6 +281,40 @@ export function NotesProvider({ children }) {
     vigentRef.current = { saveNoteField, setLocalNoteField };
   }, [saveNoteField, setLocalNoteField]);
 
+  /* P0-25 (Onada R6, Bloc 2) · Les guardes de publishNote que miren la
+     publicació (signatura aliena i canvi de secció), soles i exposades:
+     PublicacioEditable les passa ABANS d'adoptar o de desar una revisió
+     editorial, i un rebuig no deixa cap nota lligada. Torna l'ErrorPublicacio
+     (amb el toast ja fet) o null. `seccio: false` salta la del canvi de
+     secció (una revisió editorial no canvia mai de secció). El comentari de
+     cada guarda és a publishNote.
+     D-B4-1 (Onada R6, Bloc 4; decisió de MarIA) · La signatura aliena passa
+     per la mateixa funció pura que la dels actes (signaturaDAltri.js).
+     `esSuperadmin` (el de useSuperadminEstable) només el passa qui fa una
+     REVISIÓ editorial, que conserva l'autoria (PublicacioEditable); publishNote
+     no el passa mai, perquè el seu upsert signa amb l'actor actiu i
+     re-signaria la peça d'altri. */
+  const rebuigDePublicacio = useCallback((activeNote, { compartir = false, seccio = true, esSuperadmin = false } = {}) => {
+    if (!activeNote) return null;
+    if (activeNote.isPublished && activeNote.publishedSubmissionId != null && actor?.id) {
+      const publicada = publicacioCarregada(activeNote.publishedSubmissionId)?.element;
+      const motiu = motiuSignaturaDAltri(publicada, { actor, config, esSuperadmin, t });
+      if (motiu) {
+        showToast(motiu, 'info');
+        return new ErrorPublicacio(motiu);
+      }
+    }
+    if (!seccio) return null;
+    const seccioPrevista = seccioDAmbit((compartir ? null : fitxaDeNota(activeNote.fitxa))?.ambit);
+    const seccioDeLaFila = publicacioCarregada(activeNote.publishedSubmissionId || activeNote.id)?.seccio;
+    if (seccioDeLaFila && seccioDeLaFila !== seccioPrevista) {
+      const motiu = motiuSeccioPublicada(seccioDeLaFila, t);
+      showToast(motiu, 'info');
+      return new ErrorPublicacio(motiu);
+    }
+    return null;
+  }, [actor, config, publicacioCarregada, showToast, t]);
+
   /* T5 · `mode: 'compartir'`: la nota és d'altri (origen) i va al mur de la
      persona com a compartida, citant l'origen, mai com a publicació pròpia.
      T47 (ordre del Mestre, 260928) · Torna true (publicada) o false (la xarxa:
@@ -320,16 +352,9 @@ export function NotesProvider({ children }) {
        continue rebutjant amb el mode cru ('seed' o 'local'), el resolt només
        difereix d'eixe en els casos que ja no arriben ací: el canvi no altera
        cap publicació d'avui, però la guarda no tornarà a obrir el forat el
-       dia que la de dalt passe al mode resolt. */
-    if (activeNote.isPublished && activeNote.publishedSubmissionId != null && actor?.id) {
-      /* idea61-02 · La del Mur o la del Mercat (publicacioCarregada). */
-      const publicada = publicacioCarregada(activeNote.publishedSubmissionId)?.element;
-      if (publicada && autorDe(publicada) && !pertanyALActor(publicada, aliesDeLActor(actor, { dataMode: modeDeDadesResolt(config) }))) {
-        const motiu = motiuSignaturaAliena(publicada.author_name || publicada.seller, t);
-        showToast(motiu, 'info');
-        return Promise.reject(new ErrorPublicacio(motiu));
-      }
-    }
+       dia que la de dalt passe al mode resolt.
+       idea61-02 · La del Mur o la del Mercat (publicacioCarregada).
+       P0-25 (Bloc 2) · Esta guarda i la de baix viuen a rebuigDePublicacio. */
     /* idea61-01 (Gauntlet T7a, 261104) · Una publicació no canvia mai de
        secció: el trigger sdp_force_author rebutja l'upsert amb un section_id
        nou (SDP-SEC-002) i la fila es queda on era. Si la fila carregada amb
@@ -338,13 +363,9 @@ export function NotesProvider({ children }) {
        «On es publica?», la carpeta o ?ambit=), no s'envia res i el motiu diu
        on viu i què es pot fer, pel canal de sempre (ErrorPublicacio). Fora de
        la finestra carregada, el rebuig del servidor (al catch de baix). */
+    const rebuig = rebuigDePublicacio(activeNote, { compartir });
+    if (rebuig) return Promise.reject(rebuig);
     const seccioPrevista = seccioDAmbit((compartir ? null : fitxaDeNota(activeNote.fitxa))?.ambit);
-    const seccioDeLaFila = publicacioCarregada(activeNote.publishedSubmissionId || activeNote.id)?.seccio;
-    if (seccioDeLaFila && seccioDeLaFila !== seccioPrevista) {
-      const motiu = motiuSeccioPublicada(seccioDeLaFila, t);
-      showToast(motiu, 'info');
-      return Promise.reject(new ErrorPublicacio(motiu));
-    }
     const key = `${workspaceKey}:${activeNote.id}`;
     if (publishing.current.has(key)) return publishing.current.get(key);
     // Capture and persist the exact visible document, including editor changes
@@ -604,7 +625,7 @@ export function NotesProvider({ children }) {
     }).finally(() => publishing.current.delete(key));
     publishing.current.set(key, result);
     return result;
-  }, [noteFolders, sendSectionSubmission, saveNoteField, externalConfig, autoria, actor, config, workspaceKey, scopeKey, operation, updateNoteContext, clearLocalNoteFields, showToast, nomesLectura, t, publicacioCarregada]);
+  }, [noteFolders, sendSectionSubmission, saveNoteField, externalConfig, autoria, config, workspaceKey, scopeKey, operation, updateNoteContext, clearLocalNoteFields, showToast, nomesLectura, t, rebuigDePublicacio]);
 
   const compartirNota = useCallback((note) => publishNote(note, { mode: 'compartir' }), [publishNote]);
 
@@ -812,6 +833,8 @@ export function NotesProvider({ children }) {
     teSessio: Boolean(currentUser?.id),
     /* D-7 · Cert amb la reserva de només lectura (sense IdentitatProvider). */
     nomesLectura,
+    /* P0-25 (Bloc 2) · Les guardes de publishNote, per a PublicacioEditable. */
+    rebuigDePublicacio,
     informaError,
     obriConfiguracioNotes,
     resolConflicteEsborrany,
@@ -822,7 +845,7 @@ export function NotesProvider({ children }) {
   }), [
     notes, noteFolders, saveNoteField, setLocalNoteField,
     publishNote, compartirNota, canviaEstatPublicacio, creaNota, updateNoteContext, status, error, scopeKey, workspaceKey, notesComplete, resolveNote, refresh, config, canCreate, currentUser, informaError, obriConfiguracioNotes, resolConflicteEsborrany,
-    mouNota, esborraNota, potEsborrar, t, nomesLectura
+    mouNota, esborraNota, potEsborrar, t, nomesLectura, rebuigDePublicacio
   ]);
 
   return (

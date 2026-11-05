@@ -129,7 +129,7 @@ test('els dos espais existixen, en ordre entre «Publica al poble» i les Utilit
 test('R3 · separats: «L’empresa» porta la Gestoria i «La llar» el Rebost i Salut; cap targeta en dos llocs', () => {
   pinta();
   expect(targetesDe(seccioDe('L’empresa')).map(titolDe)).toEqual(['Gestoria']);
-  expect(targetesDe(seccioDe('La llar')).map(titolDe)).toEqual(['Rebost Domèstic', 'Salut']);
+  expect(targetesDe(seccioDe('La llar')).map(titolDe)).toEqual(['Rebost Domèstic', 'Salut', 'Arbre Genealògic']);
   expect(ESPAIS_PLUGINS.map((espai) => targetesDe(seccioDe(espai.titol)).map(titolDe)))
     .toEqual(ESPAIS_PLUGINS.map((espai) => pluginsDeLEspai(espai.id).map((plugin) => plugin.titol)));
   /* Cada targeta d'un espai es pinta UNA vegada en tot el Panell: ni a l'altre
@@ -317,12 +317,12 @@ test('la preferència amaga una targeta d’un espai; un espai buit no es pinta 
   pinta();
   expect(seccioDe('L’empresa')).toBeNull();
   expect(screen.queryByText('Gestoria', { selector: '.sp-card-title' })).toBeNull();
-  expect(targetesDe(seccioDe('La llar')).map(titolDe)).toEqual(['Rebost Domèstic', 'Salut']);
+  expect(targetesDe(seccioDe('La llar')).map(titolDe)).toEqual(['Rebost Domèstic', 'Salut', 'Arbre Genealògic']);
   cleanup();
   localStorage.setItem(CLAU_UTILITATS, JSON.stringify({ salut: false }));
   pinta();
   expect(targetesDe(seccioDe('L’empresa')).map(titolDe)).toEqual(['Gestoria']);
-  expect(targetesDe(seccioDe('La llar')).map(titolDe)).toEqual(['Rebost Domèstic']);
+  expect(targetesDe(seccioDe('La llar')).map(titolDe)).toEqual(['Rebost Domèstic', 'Arbre Genealògic']);
 });
 
 /* Higiene d'amfitrió (ordre del Mestre, 261004) · Quan DetallEspai lleva una
@@ -352,5 +352,5 @@ test('la clau amb prefix mana sobre la de llegat, i la de llegat val si no n’h
   localStorage.setItem(CLAU_PROPIA, JSON.stringify({ gestoria: true, salut: false }));
   pinta();
   expect(targetesDe(seccioDe('L’empresa')).map(titolDe)).toEqual(['Gestoria']);
-  expect(targetesDe(seccioDe('La llar')).map(titolDe)).toEqual(['Rebost Domèstic']);
+  expect(targetesDe(seccioDe('La llar')).map(titolDe)).toEqual(['Rebost Domèstic', 'Arbre Genealògic']);
 });

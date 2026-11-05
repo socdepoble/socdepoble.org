@@ -31,7 +31,7 @@ vi.mock('../../app/contexts/UIContext', () => ({
 vi.mock('../../hooks/useSEO', () => ({ useSEO: () => {} }));
 vi.mock('../../app/contexts/CoreContentContext', () => ({ useCoreContent: () => ({ status: 'ready', error: null, pageCopy: {} }) }));
 vi.mock('../../host.js', () => ({ quanLlest: async () => {} }));
-vi.mock('../../app/contexts/SessionContext.jsx', () => ({ useSession: () => ({ currentUser: null, generacio: 1 }) }));
+vi.mock('../../app/contexts/SessionContext.jsx', () => ({ useSession: () => ({ currentUser: null, generacio: 1 }), useSessioOpcional: () => null }));
 vi.mock('../../app/contexts/IdentitatContext.jsx', () => ({ useIdentitat: () => ({ actorId: 'A', actorKey: 'A' }) }));
 /* L'elecció i l'eixida són les del mòdul neutral: la resolució del mode és la
    real; només es fixa si hi ha elecció i s'evita la recàrrega del document. */

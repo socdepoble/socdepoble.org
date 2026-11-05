@@ -20,15 +20,13 @@ import { DetallCompte } from './DetallCompte.jsx';
 import { DetallPrivacitat } from './DetallPrivacitat.jsx';
 import { DetallVistes } from './DetallVistes.jsx';
 import { DetallMultimedia } from './DetallMultimedia.jsx';
-import { DetallAplicacio, DetallNodes, DetallSenseOrganitzacions } from './DetallEspai.jsx';
+import { DetallAdministracio, DetallAplicacio, DetallNodes, DetallSenseOrganitzacions } from './DetallEspai.jsx';
 import { DialegNovaOrganitzacio } from './DialegNovaOrganitzacio.jsx';
 import { APLICACIONS, aplicacionsValides } from './aplicacions.js';
 import { nodesDelPerfil } from './nodes.js';
 import {
   ID_ADMINISTRACIO_SISTEMA, PARAM_FITXA_ORGANITZACIO, TEXTOS_PRIVACITAT_LLISTA, itemsDAdministracioSistema, itemsDAplicacions, itemsDePerfil, navegacioDePerfil, seleccioInicialDePerfil,
 } from './perfilModel.js';
-import { LaboratoriTaxonomiaDoctoral } from './admin/LaboratoriTaxonomiaDoctoral.jsx';
-import { BancImportacioEditorial } from './admin/BancImportacioEditorial.jsx';
 import {
   PanellAjustosVistesColumnes, PanellCromIntegrat, PanellEmpaquetatsDesplegament, PanellNodesFediversResiliencia,
 } from './admin/PanellsAdministracioSistema.jsx';
@@ -39,6 +37,9 @@ import { documentDeFitxa, fitxaPublicada, menaDeFitxa } from './perfilCamps.js';
 import { ENTITATS_FITXA } from './perfilEscriptor.js';
 import { avatarDeLaFitxa, potEditarFitxa, rutaDeFitxaPublica } from './fitxaDePerfil.js';
 import { textosDeFitxa } from './visibilitatFitxa.js';
+/* P1-f (Onada R6 · Bloc 2) · El Laboratori i el Banc porten el tesaurus sencer: només es carreguen en obrir-los. */
+const LaboratoriTaxonomiaDoctoral = lazy(() => import('./admin/LaboratoriTaxonomiaDoctoral.jsx'));
+const BancImportacioEditorial = lazy(() => import('./admin/BancImportacioEditorial.jsx'));
 
 const PaginaDeLAgent = lazy(() => import('./PerfilPublicSection.jsx').then((modul) => ({ default: modul.PaginaDeLAgent })));
 
@@ -192,9 +193,13 @@ function PerfilManagerInner({ config, aplicacions, preferides, recuperacio = nul
      l'organització demanada per la ruta («Edita la fitxa de {Org}») o la
      que és l'actor actiu; si no és cap de les seues, la persona. */
   const [preferidaRuta, preferidaActor] = preferides || [];
+  /* Onada R6 · Bloc 2 (P1-b) · «🛡️ Administració del sistema» i els seus 6
+     panells només per a superadmin (la mateixa guarda estable de les
+     aplicacions internes): ni el grup, ni els apartats, ni la ruta, ni el detall. */
+  const { esSuperadmin: superadminAdmin } = useSuperadminEstable();
   const initialSelection = useMemo(
-    () => seleccioInicialDePerfil(identitats, [preferidaRuta, preferidaActor]),
-    [identitats, preferidaRuta, preferidaActor],
+    () => seleccioInicialDePerfil(identitats, [preferidaRuta, preferidaActor], { superadmin: superadminAdmin }),
+    [identitats, preferidaRuta, preferidaActor, superadminAdmin],
   );
 
   /* Encàrrec 261018_1220 (Tasca 1, ordre del Mestre: «recuperar fidelment el
@@ -215,7 +220,10 @@ function PerfilManagerInner({ config, aplicacions, preferides, recuperacio = nul
   const t = useTraductorOpcional();
 
   /* Tots els hooks ABANS de cap return condicional (regla de hooks). */
-  const grupsNavegacio = useMemo(() => navegacioDePerfil(identitats, aplicacions), [identitats, aplicacions]);
+  const grupsNavegacio = useMemo(
+    () => navegacioDePerfil(identitats, aplicacions, { superadmin: superadminAdmin }),
+    [identitats, aplicacions, superadminAdmin],
+  );
   const model = useMemo(() => ({
     status: 'ready',
     itemsComplete: true,
@@ -225,21 +233,23 @@ function PerfilManagerInner({ config, aplicacions, preferides, recuperacio = nul
       ...itemsDePerfil(identitats, { ambPrivacitat }).map((item) => (item.data?.vista === 'privacitat'
         ? ambTextosTraduits(item, tradueix(t, TEXTOS_PRIVACITAT_LLISTA.titol), tradueix(t, TEXTOS_PRIVACITAT_LLISTA.subtitol))
         : item)),
-      ...itemsDAdministracioSistema(),
+      ...(superadminAdmin ? itemsDAdministracioSistema() : []),
       ...itemsDAplicacions(aplicacions),
     ],
-  }), [identitats, aplicacions, ambPrivacitat, workspaceKey, grupsNavegacio, t]);
+  }), [identitats, aplicacions, ambPrivacitat, workspaceKey, grupsNavegacio, t, superadminAdmin]);
 
   /* Slot estable: depèn només de coses que ja són estables gràcies al
      context endurit. */
   const renderDetail = useCallback(({ item }) => {
     const vista = item?.data?.vista;
-    if (vista === 'admin-taxonomia') return <LaboratoriTaxonomiaDoctoral />;
-    if (vista === 'admin-importacio') return <BancImportacioEditorial />;
-    if (vista === 'admin-crom') return <PanellCromIntegrat />;
-    if (vista === 'admin-vistes-columnes') return <PanellAjustosVistesColumnes grupsNavegacio={grupsNavegacio} />;
-    if (vista === 'admin-nodes-fedivers') return <PanellNodesFediversResiliencia />;
-    if (vista === 'admin-empaquetats') return <PanellEmpaquetatsDesplegament />;
+    /* Onada R6 · Bloc 2 (P1-b) · Un apartat «admin-*» que arribe sense superadmin no es pinta. */
+    if (typeof vista === 'string' && vista.startsWith('admin-') && !superadminAdmin) return null;
+    if (vista === 'admin-taxonomia') return <DetallAdministracio item={item}><Suspense fallback={null}><LaboratoriTaxonomiaDoctoral /></Suspense></DetallAdministracio>;
+    if (vista === 'admin-importacio') return <DetallAdministracio item={item}><Suspense fallback={null}><BancImportacioEditorial /></Suspense></DetallAdministracio>;
+    if (vista === 'admin-crom') return <DetallAdministracio item={item}><PanellCromIntegrat /></DetallAdministracio>;
+    if (vista === 'admin-vistes-columnes') return <DetallAdministracio item={item}><PanellAjustosVistesColumnes navigationGroups={grupsNavegacio} /></DetallAdministracio>;
+    if (vista === 'admin-nodes-fedivers') return <DetallAdministracio item={item}><PanellNodesFediversResiliencia /></DetallAdministracio>;
+    if (vista === 'admin-empaquetats') return <DetallAdministracio item={item}><PanellEmpaquetatsDesplegament /></DetallAdministracio>;
     if (vista === 'aplicacio') {
       const aplicacio = aplicacions.find((a) => a.id === item.data.aplicacioId);
       return aplicacio ? <DetallAplicacio key={aplicacio.id} aplicacio={aplicacio} /> : null;
@@ -304,7 +314,7 @@ function PerfilManagerInner({ config, aplicacions, preferides, recuperacio = nul
         ambMembres={gestionaMembres}
       />,
     );
-  }, [identitats, contactes, aplicacions, config, guardarAjust, pujaMitja, recarrega, connexio, gestionaMembres, etiquetaFitxaPublica, grupsNavegacio]);
+  }, [identitats, contactes, aplicacions, config, guardarAjust, pujaMitja, recarrega, connexio, gestionaMembres, etiquetaFitxaPublica, grupsNavegacio, superadminAdmin]);
 
   const onCreate = useCallback(() => new Promise((resolve) => {
     setObertures((n) => n + 1);

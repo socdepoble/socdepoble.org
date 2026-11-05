@@ -20,7 +20,7 @@ import {
   valorPerDesar,
 } from './perfilCamps.js';
 import { ENTITATS_FITXA } from './perfilEscriptor.js';
-import { IdentitatAlPoble, TITOL_IDENTITAT_AL_POBLE } from '../onboarding/IdentitatAlPoble.jsx';
+import { IdentitatAlPoble } from '../onboarding/IdentitatAlPoble.jsx';
 import { useCoreContent } from '../../app/contexts/CoreContentContext.jsx';
 import { cuaDesament } from '../../data/autodesament/cua.js';
 import { useAutodesament } from '../../data/autodesament/useAutodesament.js';
@@ -1174,11 +1174,11 @@ export function PerfilEditor({ identitat }) {
          camp CRU i, en edició, el botó que obri el diàleg. */
       emoticona: fitxa.icon || '',
       onObriEmoticona: ambEmoticona ? obriEmoticona : null,
-      /* Revisió del Bloc H (R1) · L'@usuari i el poble (P1-68), al peu de la
-         pàgina: PageFrame el pinta dins del contenidor que fa scroll, en un
-         section amb nom. Sense el bloc, cap clau: el DOM de sempre. La ranura
-         despresAutoria ja la porta «Edició avançada de la fitxa». */
-      ...(identitatAlPoble ? { peuDePagina: identitatAlPoble, etiquetaPeuDePagina: TITOL_IDENTITAT_AL_POBLE } : null),
+      /* Ordre del Mestre (261105, captura 261105_2151) · L'@usuari i el poble
+         (P1-68) van dalt de tot dins de l'acordió «Edició avançada de la fitxa»
+         (capcaleraEdicioAvancada), abans de les fotos, i no solts al peu de
+         l'espai de treball. */
+      ...(identitatAlPoble ? { capcaleraEdicioAvancada: identitatAlPoble } : null),
     };
   }, [mena, esAgent, ambAvatarRedo, esPilot, potEditar, fitxa, identitat, etiquetes, autorTargeta, rutaFitxa, updateLocal, saveRemote, visibilitat, uploadMedia,
     obriCapcalera, ajustaCapcalera, fontDeLaCapcalera, capcaleraPujant, obriImatgePropia, ajustaLogotip, fontDelAvatar, imatgePropiaPujant, etiquetaImatgePropia, ranuraDelLogo, avatarDeCapcalera, avatarDeLEdicio,

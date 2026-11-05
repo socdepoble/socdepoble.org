@@ -321,7 +321,7 @@ async function provaRestauracioAmbRuntime(runtime, { suffix = randomBytes(8).toS
     if (!owner || !/^[0-9]+$/.test(owner.oid ?? "") || owner.owner !== "javi" || owner.proof !== token) fail3("restore_ownership_unproven");
     await runtime.restore(name);
     const counts = await runtime.counts(name);
-    if (!counts || counts.database !== name || counts.serverMajor !== 17 || counts.migrations !== 75 || !Number.isInteger(counts.tables) || counts.tables < 1 || ["publicDocuments", "profiles", "notes", "appContent"].some((key) => !Number.isInteger(counts[key]) || counts[key] < 0)) fail3("restore_counts_invalid");
+    if (!counts || counts.database !== name || counts.serverMajor !== 17 || ![75, 76].includes(counts.migrations) || !Number.isInteger(counts.tables) || counts.tables < 1 || ["publicDocuments", "profiles", "notes", "appContent"].some((key) => !Number.isInteger(counts[key]) || counts[key] < 0)) fail3("restore_counts_invalid");
     const safeCounts = Object.fromEntries(["serverMajor", "tables", "migrations", "publicDocuments", "profiles", "notes", "appContent"].map((key) => [key, counts[key]]));
     result = { counts: safeCounts, restoreCommandsSucceeded: true, nativeRestoreVerified: runtime[REAL] === true, cleanMachineRestoreVerified: false, aclRestored: false, rolesChanged: false, plaintextDumpWritten: false, privateKeyLogged: false, privateIdentityFileRead: false, identityTransport: "anonymous-pipe", externalCustodyVerified: false, r5CustodyClosed: false };
   } catch (error) {

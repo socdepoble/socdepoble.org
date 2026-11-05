@@ -12,7 +12,8 @@ export function rutaTerritorial(provincia, comarca) {
   const params = new URLSearchParams();
   if (provincia) params.set('provincia', provincia);
   if (comarca) params.set('comarca', comarca);
-  return `/pobles${params.size ? `?${params}` : ''}`;
+  const q = params.toString();
+  return q ? `/pobles?${q}` : '/pobles';
 }
 export function arbreTerritorial(pobles = []) {
   return DEMARCACIONS.map((provincia) => {

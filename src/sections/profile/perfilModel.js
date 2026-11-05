@@ -70,10 +70,11 @@ export { PARAM_FITXA_ORGANITZACIO, rutaFitxaOrganitzacio } from '../../config/na
  * que administra («Edita la fitxa» de /iaia): obri la seua fitxa, no la de la
  * persona.
  */
-export function seleccioInicialDePerfil(identitats, preferides = []) {
+export function seleccioInicialDePerfil(identitats, preferides = [], { superadmin = false } = {}) {
   const seleccionables = identitats.filter((identitat) => !esPersona(identitat));
+  /* Onada R6 · Bloc 2 (P1-b) · La ruta no obri l'administració a qui no és superadmin. */
   const triada = preferides.find((id) => id != null && id !== ''
-    && (String(id) === ID_ADMINISTRACIO_SISTEMA
+    && ((superadmin === true && String(id) === ID_ADMINISTRACIO_SISTEMA)
       || seleccionables.some((identitat) => String(identitat.id) === String(id))));
   return { categoryId: triada != null ? String(triada) : 'jo' };
 }
@@ -98,8 +99,9 @@ const opcioDe = (identitat, order) => ({
   order,
 });
 
-/** Primera columna: persona (amb 🛡️ Administració del sistema davall), GRUPS I EMPRESES i APLICACIONS, en este ordre. */
-export function navegacioDePerfil(identitats, aplicacions = []) {
+/** Primera columna: persona (amb 🛡️ Administració del sistema davall, només per a superadmin), GRUPS I EMPRESES i APLICACIONS, en este ordre.
+ * Onada R6 · Bloc 2 (P1-b) · Tancat per defecte: sense `{ superadmin: true }` el grup d'administració no ix. */
+export function navegacioDePerfil(identitats, aplicacions = [], { superadmin = false } = {}) {
   const persones = identitats.filter(esPersona).map(opcioDe);
   const organitzacions = identitats.filter(esOrganitzacio);
   const agents = identitats.filter(esAgent);
@@ -109,12 +111,12 @@ export function navegacioDePerfil(identitats, aplicacions = []) {
       label: null,
       options: [
         ...persones,
-        {
+        ...(superadmin === true ? [{
           id: ID_ADMINISTRACIO_SISTEMA,
           label: '🛡️ Administració del sistema',
           icon: Shield,
           order: persones.length,
-        },
+        }] : []),
       ],
     },
     {

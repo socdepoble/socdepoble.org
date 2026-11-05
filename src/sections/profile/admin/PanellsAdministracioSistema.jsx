@@ -8,6 +8,7 @@ import { Link } from '../../../app/contexts/RouterContext.jsx';
 import { adminDesaPersonalitzacio, teCapacitat } from '../../../data/backendPort.js';
 import { MISSATGE_PERSONALITZACIO } from '../../../data/errorsBackend.js';
 import { ambCrom } from '../../../config/estil.js';
+import { useSuperadminEstable } from '../../../hooks/useSuperadminEstable.js';
 import { aplica, base, CANON_BLAU, deltaDe, previsualitza, restaura } from '../../../config/crom.js';
 
 /* La mostra de color es pinta per DOM (la propietat --sdp-crom-mostra només s'accepta si és un HEX6);
@@ -37,7 +38,11 @@ export function PanellCromIntegrat() {
   const [color, setColor] = useState('');
   const { personalitzacio, refresh } = useCoreContent();
   const estilDesat = personalitzacio?.estil ?? null;
-  const [potDesar] = useState(ambCapacitatPersonalitzacio);
+  const [ambCapacitat] = useState(ambCapacitatPersonalitzacio);
+  /* Onada R6 · Bloc 2 (P1-b) · Desar el Crom per a tot el poble és cosa de superadmin:
+     la capacitat del port sola no basta (el servidor ho torna a comprovar). */
+  const { esSuperadmin } = useSuperadminEstable();
+  const potDesar = ambCapacitat && esSuperadmin;
   const [desant, setDesant] = useState(false);
   const [avis, setAvis] = useState(null);
   const viu = useRef(true);
@@ -79,7 +84,7 @@ export function PanellCromIntegrat() {
   }, [arrel]);
 
   const desarAlPoble = useCallback(() => {
-    if (!arrel) return;
+    if (!arrel || !potDesar) return;
     aplica(arrel, delta);
     setDesant(true);
     setAvis(null);
@@ -104,7 +109,7 @@ export function PanellCromIntegrat() {
       .finally(() => {
         if (viu.current) setDesant(false);
       });
-  }, [arrel, delta, estilDesat, refresh]);
+  }, [arrel, delta, estilDesat, refresh, potDesar]);
 
   return (
     <article ref={setNode} className="sdp-admin-taxonomia" aria-label="Colors i disseny (Crom del sistema)">
@@ -324,7 +329,9 @@ export function PanellNodesFediversResiliencia() {
   }, []);
 
   useEffect(() => {
-    comprovaNode0();
+    if (typeof window !== 'undefined' && window.location?.hostname === 'socdepoble.cat') {
+      comprovaNode0();
+    }
   }, [comprovaNode0]);
 
   return (
@@ -405,13 +412,13 @@ export function PanellNodesFediversResiliencia() {
         </dl>
 
         <div className="sdp-admin-actions-inline sdp-admin-actions-inline--separat-ampli">
-          <Link className="sdp-btn sdp-btn--primari" to="/page/fediversity">
+          <Link className="sdp-boto sdp-boto--primari" to="/page/fediversity">
             Obrir Dossier Fediversity (/page/fediversity)
           </Link>
-          <Link className="sdp-btn sdp-btn--secundari" to="/page/node-zero">
+          <Link className="sdp-boto sdp-boto--secundari" to="/page/node-zero">
             Arquitectura Node 0 (/page/node-zero)
           </Link>
-          <Link className="sdp-btn sdp-btn--secundari" to="/fedivers">
+          <Link className="sdp-boto sdp-boto--secundari" to="/fedivers">
             Explicació del Fedivers (/fedivers)
           </Link>
         </div>
@@ -474,7 +481,7 @@ export function PanellEmpaquetatsDesplegament() {
         </table>
 
         <div className="sdp-admin-actions-inline sdp-admin-actions-inline--separat-ampli">
-          <Link className="sdp-btn sdp-btn--primari" to="/versions">
+          <Link className="sdp-boto sdp-boto--primari" to="/versions">
             Veure Historial de Versions (/versions · v1.2.0)
           </Link>
         </div>

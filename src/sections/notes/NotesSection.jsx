@@ -20,6 +20,7 @@ import { EMOTICONA_PER_DEFECTE, emojiInicial } from '../../utils/emoji.js';
 import { aliesDeLActor } from '../../data/identitatsSeed.js';
 import { modeDeDadesResolt } from './autoriaNota.js';
 import { iconaDeCarpeta, opcionsDeCarpetes } from './carpetes.js';
+import { useCarpetesCreades } from '../../components/universal/classificacio/carpetesCreades.js';
 import { LLAVORS_NOTA, esLlavorDeNota } from './llavorNota.js';
 import { ID_NOTA_BENVINGUDA, KIND_TUTORIAL, NOTA_TUTORIAL, itemTutorial, portaLaNotaTutorial, tutorialRetirada } from './notaTutorial.js';
 import { escriuSeleccio, llegixSeleccio } from '../../components/universal/workspace/seleccioUrl.js';
@@ -234,7 +235,8 @@ function CardDeLEntrada({ mostra, children }) {
   );
 }
 
-/* Una nota s'edita; una publicació pròpia (T1) i una connexió (T71) es llegixen.
+/* Una nota s'edita; una connexió (T71) es llig. P0-25 (Onada R6) · Una publicació
+   pròpia (T1) del Mur o de l'agenda també s'edita (PublicacioDetall → PublicacioEditable).
    IDEA-59 / P1-72 · La Card tutorial de lectura (notaTutorial.js) es pinta
    amb la fitxa de nota de sempre. */
 const renderNota = ({ item, active, onSelect, entradaNua = false }) => {
@@ -247,8 +249,9 @@ const renderNota = ({ item, active, onSelect, entradaNua = false }) => {
 /* Gauntlet 261016 (Bloc 3.9; ordre del Mestre: «Eliminar el bloc inferior
    "Ja publicat al Mur" de la vista d'edició») · El detall ja no rep la secció
    de la carpeta: l'editor no pinta cap peu (deroga a l'editor l'Esmena 2 del
-   pla 261007_1645). Una publicació oberta (PublicacioDetall, lectura) en
-   conserva el seu. */
+   pla 261007_1645). P0-25 / IDEA-96 (Onada R6, Bloc 1; ordre del Mestre) ·
+   Tampoc una publicació oberta: PublicacioDetall ja no pinta cap peu, i una
+   del Mur o de l'agenda s'obri editable (PublicacioEditable). */
 /* IDEA-59 / P1-72 (punt 0) · La Card tutorial de lectura obri l'estat buit
    de l'editor (NotesEditor sense nota): la mateixa Card «Bloc de notes» amb la
    mà i la ploma, en lectura; sense sessió, la còpia de prova de sempre. Mai
@@ -447,7 +450,14 @@ export default function NotesSection() {
   // T7 (P5) · amb el parentId de cada carpeta: l'arbre niat ja el pinta el Workspace.
   /* P1-22 · El nom de les carpetes de sèrie, en la llengua de `t` (només el
      que es pinta: l'id és el que es desa i la llavor no es toca). */
-  const carpetes = useMemo(() => opcionsDeCarpetes(noteFolders, t), [noteFolders, t]);
+  /* Onada R6 · Bloc 2 (P1-d) · Les carpetes creades en línia (per àmbit) també a la primera columna. */
+  const carpetesLocals = useCarpetesCreades(scopeKey);
+  const carpetes = useMemo(() => {
+    const base = opcionsDeCarpetes(noteFolders, t);
+    const extres = carpetesLocals.filter((extra) => !base.some((c) => c.id === String(extra.id)))
+      .map((extra) => ({ id: String(extra.id), nom: extra.nom, parentId: null }));
+    return extres.length ? [...base, ...extres] : base;
+  }, [noteFolders, t, carpetesLocals]);
   /* Totes les entrades de la navegació (carpetes, categories i etiquetes):
      la nota preparada hi pertany (itemPreparadaBase) i, des de la revisió de
      F4 (R6c), són les que l'espai de treball reconeix en una ?carpeta=. */

@@ -30,7 +30,10 @@ export const FORMATS = Object.freeze({
   TARGETA: 'targeta',
   /* T26-01 (Gauntlet O7 · T2.6, «Enllaç ↔ Card» d'1 clic) · El sentit
      Enllaç → Card: l'altre és el botó «Convertir en enllaç» de la targeta. */
-  ENLLAC_A_TARGETA: 'enllacATargeta'
+  ENLLAC_A_TARGETA: 'enllacATargeta',
+  /* B3-2 (Onada R6 · Bloc 3) · Posa o lleva l'enllaç de la imatge triada
+     (l'ordre enllacaImatge de extensions/index.js). Porta valor: l'adreça. */
+  ENLLAC_IMATGE: 'enllacImatge'
 });
 
 /**
@@ -79,7 +82,10 @@ export const TOOLBAR_SCHEMA = Object.freeze([
   { id: FORMATS.DIVISOR,  clauI18n: 'editor.format.divisor',  etiqueta: 'Divisor',  commutable: false, fila: 'segona', slot: { estat: 'isDivisor', accio: 'insertDivisor' } },
   { id: FORMATS.SUBTARGETA, clauI18n: 'section.notes.format.subtargeta', etiqueta: 'Subtargeta', commutable: false, fila: 'segona', slot: { estat: 'isSubtargeta', accio: 'insertSubtargeta' } },
   { id: FORMATS.TARGETA,  clauI18n: 'editor.inserir.targeta', etiqueta: 'Targeta',  commutable: false, fila: 'segona', slot: { estat: 'isTargeta', accio: 'insertTargeta' }, nivell: 'avancat' },
-  { id: FORMATS.ENLLAC_A_TARGETA, clauI18n: 'section.notes.format.enllacATargeta', etiqueta: 'Convertir en targeta', commutable: false, fila: 'segona', slot: { estat: 'isEnllacATargeta', accio: 'convertLinkToCard' }, nivell: 'avancat' }
+  { id: FORMATS.ENLLAC_A_TARGETA, clauI18n: 'section.notes.format.enllacATargeta', etiqueta: 'Convertir en targeta', commutable: false, fila: 'segona', slot: { estat: 'isEnllacATargeta', accio: 'convertLinkToCard' }, nivell: 'avancat' },
+  /* B3-2 · `ambValor`: la ranura passa a l'adaptador el valor que rep ({ href }),
+     no l'esdeveniment del clic. Només hi és amb una imatge triada. */
+  { id: FORMATS.ENLLAC_IMATGE, clauI18n: 'section.notes.format.enllacImatge', etiqueta: 'Enllaç de la imatge', commutable: true, fila: 'segona', ambValor: true, slot: { estat: 'isEnllacImatge', accio: 'setImageLink' } }
 ]);
 
 /** Els botons que UniversalToolbar sap pintar hui (O4-CLAUDE-2 · també la

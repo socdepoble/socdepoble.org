@@ -52,7 +52,7 @@ export function pobleDeConfig(externalConfig) {
 export const POBLE_PER_DEFECTE = Object.freeze({
   id: 'la-torre-de-les-macanes',
   nom: 'Gent de la Torre',
-  avatar: '/assets/towns/la-torre-de-les-macanes/commons-ah27.webp'
+  avatar: '/assets/towns/la-torre-de-les-macanes/2.jpg'
 });
 
 /**

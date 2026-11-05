@@ -284,6 +284,7 @@ export const VARIANTS_SOCIALS = Object.freeze({
   '/assets/ui/plugins/gestoria_vinyeta.jpg': '/assets/ui/plugins/gestoria_vinyeta-social-1200x630.jpg',
   '/assets/ui/plugins/rebost_vinyeta.webp': '/assets/ui/plugins/rebost_vinyeta-social-1200x630.jpg',
   '/assets/ui/plugins/salut_vinyeta.webp': '/assets/ui/plugins/salut_vinyeta-social-1200x630.jpg',
+  '/assets/ui/plugins/genealogia_vinyeta.webp': '/assets/ui/plugins/genealogia_vinyeta-social-1200x630.jpg',
   '/assets/ui/plugins/rss_vinyeta.jpg': '/assets/ui/plugins/rss_vinyeta-social-1200x630.jpg',
   '/assets/ui/plugins/tpv_vinyeta.webp': '/assets/ui/plugins/tpv_vinyeta-social-1200x630.jpg',
   '/assets/ui/plugins/bascula_vinyeta.jpg': '/assets/ui/plugins/bascula_vinyeta-social-1200x630.jpg',

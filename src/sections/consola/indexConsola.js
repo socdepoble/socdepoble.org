@@ -295,7 +295,7 @@ const estatDit = (e) => (SIGNIFICAT_ESTAT[e.text]
 /* ── Què és cada pàgina, en paraules planes (moviment 1, als H3) ─────────── */
 
 const PLA = Object.freeze({
-  pols: 'Com el pols d’una persona, esta pàgina diu si **l’eixam respira bé**: **quant gasta** en tòkens i crèdits, **què llig** (el rebut que deixa un agent quan llig sencer un protocol) i **quantes skills** hi ha al disc comparades amb el manifest. Servix per a preparar l’Acta Marmota **amb proves i no amb impressions**.',
+  pols: 'Com el pols d’una persona, esta pàgina diu si **l’eixam respira bé**: **quant gasta** en tòkens i crèdits, **què llig** (el rebut que deixa un agent quan llig sencer un protocol) i **quantes skills** hi ha al disc comparades amb el manifest. Servix per a auditar cada sessió i preparar l’acta de relleu **amb proves i no amb impressions**.',
   explorador: 'Imagina Sóc de Poble com un poble: cada skill, script, document o agent és **una casa**, i cada relació, **un camí**. L’Explorador és **el plànol del poble**: servix per a saber, **abans de tocar una peça, qui en depén**, i on hi ha camins que porten a cases que ja no hi són.',
   fluxos: 'Un flux de treball és **una cadena de faena**: una peça deixa un document i la següent el llig. Ací només compten les cadenes **declarades als contractes**; el que la prosa insinua es queda en **suggeriment**. Servix per a trobar **els llocs on algú deixa faena i ningú no la recull**.',
   calendari: 'Hi ha faenes que **corren soles**, sense ningú davant: tasques de launchd, hooks de git i rutines programades. El Calendari diu **quines estan vives, quines han mort** i quines estan declarades **sense llançador**, perquè cap vigilància no caiga en silenci.',

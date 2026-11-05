@@ -46,7 +46,8 @@ export default {
   'section.notes.connexio.absentAmbEnllac': "Non está entre o que se cargou aquí (un perfil, unha páxina, outra vila ou un elemento retirado). Ábreo na súa páxina.",
   'section.notes.connexio.absentSenseEnllac': "Non está entre o que se cargou aquí e a conexión non inclúe a súa ligazón.",
   'section.notes.editor.avisCategoria': "Cómpre polo menos unha categoría. Se queres baleiralas, marca unha xeral, como «{categoria}».",
-  'section.notes.editor.avisCarpetes': "Crear, renomear e borrar cartafoles aínda non ten contrato de datos co servidor. De momento, escolle o cartafol desta nota.",
+  'section.notes.editor.avisCarpetes': "Os cartafoles novos gárdanse no servidor cando o permite e, se non, neste navegador. Renomear e borrar cartafoles aínda non ten contrato de datos.",
+  'section.notes.carpetes.errorCrear': "Non se puido crear o cartafol. Téntao de novo.",
   'section.notes.editor.avisSenseTotes': "Renomear e borrar estarán dispoñibles cando se carguen todas as notas.",
   'section.notes.editor.avisDataDispositiu': "O servidor aínda non permite gardar a data de publicación. Gárdase neste dispositivo e só se aplica se publicas desde aquí.",
   'section.notes.editor.portadaAlt': "Un caderno aberto con alguén escribindo",
@@ -550,6 +551,14 @@ export default {
   'section.notes.format.targeta': 'Tarxeta incrustada',
   /* 261103 (Onada 7, T2.6) · El sentit Enllaç → Card a la segona fila, amb el cursor en un enllaç intern. Pendent de revisió nadiua. */
   'section.notes.format.enllacATargeta': 'Converter en tarxeta',
+  'section.notes.format.enllacImatge': "Ligazón da imaxe",
+  'section.notes.format.enllacImatgeRefusat': "Este enderezo non é seguro: a imaxe queda como estaba.",
+  /* D-B4-2 i D-B4-3 (Onada R6, Bloc 4) · El diàleg «Enllaç de la imatge» (DialegEnllacImatge) i el «Reintentar» de la Revisió WP del Mur. Pendent de revisió nadiua. */
+  'section.notes.format.enllacImatgeCamp': "Enderezo da ligazón",
+  'section.notes.format.enllacImatgeAjuda': "Un camiño da app, un enderezo https:// ou un mailto:. Déixao baleiro para quitar a ligazón.",
+  'section.notes.format.enllacImatgeNoAplicat': "Non se puido cambiar a ligazón: volve escoller a imaxe.",
+  'section.notes.format.enllacImatgeDesa': "Gardar",
+  'section.mur.revisioWp.reintenta': "Reintentar",
   'section.notes.format.subtargetaTitol': 'Título da subtarxeta',
   'section.notes.format.subtargetaMeta': 'Unha liña de contexto: data, lugar ou autoría',
   'section.notes.format.subtargetaCos': 'Escribe aquí o contido da subtarxeta: parágrafos, listas e ligazóns.',
@@ -2710,6 +2719,7 @@ export default {
   'editor.imatge.exif.descripcio': "Decide se se publican coa foto e, a localización, con que precisión.",
   'editor.imatge.exif.inserir': "Inserir",
   'editor.imatge.exif.titol': "Esta foto leva a súa localización ou a data",
+  'editor.video.titolPerDefecte': "Vídeo de YouTube",
   // P1-64 (261028) · El Mapa Fotogràfic del Mur.
   'section.mur.mapa.acostaGrup': "Zona {n}, {nom}: {recompte}. Achega o mapa",
   'section.mur.mapa.agrupacio': "Agrupación por distancia",
@@ -3527,4 +3537,9 @@ export default {
   'section.pobles.demarcacio.valencia': "Comarcas de València",
   'section.pobles.demarcacio.castello': "Comarcas de Castelló",
   'section.pobles.territori.veure': "Ver as vilas",
+  'section.notes.publicacio.noActualitzableActe': "Os actos da axenda aínda non se actualizan desde o Caderno: o cambio só é nesta vista.",
+  'section.notes.publicacio.noActualitzableLlavor': "Esta publicación é do arquivo editorial da vila e aínda non se actualiza desde o Caderno: o cambio só é nesta vista.",
+  'section.notes.publicacio.revisioDesada': "Revisión gardada neste navegador: o Muro e a páxina xa a amosan.",
+  'section.notes.publicacio.revisioDesadaServidor': "Revisión gardada no servidor: o Muro e a páxina xa a amosan a todo o mundo.",
+  'section.notes.publicacio.revisioNomesNavegador': "O servidor non aceptou a revisión: queda gardada só neste navegador.",
 };

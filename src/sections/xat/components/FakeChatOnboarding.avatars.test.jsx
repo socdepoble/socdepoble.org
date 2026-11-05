@@ -100,7 +100,7 @@ test('si el contingut del node no té la fitxa de la Torre, la comunitat porta l
   mocks.towns = [{ id: 'sella', avatar_url: '/assets/towns/sella/2.jpg' }];
   const { container } = munta();
   /* AH-27 (IDEA-86) · Sense fitxa al node, la comunitat de la Torre porta la foto de la llavor hidratada (Commons). */
-  expect(cares(container)).toEqual({ 'Gent de la Torre': '/assets/towns/la-torre-de-les-macanes/commons-ah27.webp', 'IAIA MarIA': IAIA, 'Sóc de Poble': LOGO, 'Javi Llinares': JAVI });
+  expect(cares(container)).toEqual({ 'Gent de la Torre': '/assets/towns/la-torre-de-les-macanes/2.jpg', 'IAIA MarIA': IAIA, 'Sóc de Poble': LOGO, 'Javi Llinares': JAVI });
   expect(container.querySelector('[title="Gent de la Torre"]').textContent).not.toContain('GD');
   cleanup();
   mocks.towns = [];

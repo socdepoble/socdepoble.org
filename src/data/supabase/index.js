@@ -86,3 +86,5 @@ export { desaDispositiuAvisos, retiraDispositiuAvisos } from './dispositiusAviso
 /* FEDI23 · Capacitat completa de connexions consentides, sis operacions. */
 export { preferenciesConnexions, desaVisibilitatConnexions, connexionsPubliquesDe,
   membresIEntitatsConnectadesDe, inclouPersonaEnEntitat, solicitaUnirSeAEntitat } from './seguiments.js';
+
+export {adminActualitzaPublicacioEditorial} from './editorialPublicada.js';

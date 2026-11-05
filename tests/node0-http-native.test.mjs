@@ -38,7 +38,7 @@ test('native direct-authenticator HTTP signup, isolation and member-only data',
     const env={PGDATABASE:LAB,PGHOST:SOCKET,PGPORT:'5432',PGUSER:'javi',NODE0_PSQL:PSQL,PGPASSFILE:'/dev/null',PATH:'/usr/bin:/bin',LANG:'C'};
     const operator=creaPostgres({env});
     const target=await operator.query("SELECT json_build_object('database',current_database(),'operator',session_user,'version',current_setting('server_version_num')::int,'migrations',(SELECT count(*) FROM node0.schema_migrations),'authReady',to_regprocedure('private.node0_auth_norms_state(text,uuid)') IS NOT NULL);");
-    assert.equal(target.database,LAB);assert.equal(target.operator,'javi');assert.ok(target.version>=170000&&target.version<180000);assert.equal(target.migrations,75);assert.equal(target.authReady,true);
+    assert.equal(target.database,LAB);assert.equal(target.operator,'javi');assert.ok(target.version>=170000&&target.version<180000);assert.equal(target.migrations,76);assert.equal(target.authReady,true);
     const authDb=creaPostgres({env:{...env,PGUSER:'node0_authenticator'}});
     const roleReady=await authDb.verificaRolAutenticador();
     const roleIdentity=await authDb.query("SELECT json_build_object('login',session_user,'current',current_user);");

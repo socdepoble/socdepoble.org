@@ -1,3 +1,4 @@
+import {capturaEdicioEditorial,CLAU_EDITORIAL_DE_SECCIO,marcaFilesEditorials,aplicaCanvisEditorials} from '../editorialPublicada.js';
 /**
  * contingutLocal.js — El contingut del poble de l'adaptador local (T1 · D01):
  * loadCoreContent, el Mur, la Multimèdia, la pàgina de secció, l'agenda, les
@@ -94,7 +95,13 @@ export function creaContingutLocal(e) {
   const publicacions = new Map();
   /* tenantId → Map(clau → { actual: { payload, versio }, historial: [{ versio, payload, creat, autor }] }) */
   const personalitzacions = new Map();
-  e.alTancar(() => { publicacions.clear(); personalitzacions.clear(); });
+  const editorials = new Map();
+  const editorialDe=clau=>{if(!editorials.has(clau))editorials.set(clau,{items:e.copia(e.coleccio(clau)),versio:1});return editorials.get(clau);};
+  /* B4-S1 · La versió editorial només viatja quan l'edició és possible (política
+     administracioLocal injectada): sense ella, el local i Supabase en mode seed
+     tornen exactament les mateixes dades (conformitat.equivalencia). */
+  const versioVisible=versio=>(e.opcions.administracioLocal?versio:null);
+  e.alTancar(() => { publicacions.clear(); personalitzacions.clear(); editorials.clear(); });
 
   /* Els actes de l'agenda es validen una vegada: un acte que el calendari no
      sabria pintar (sense id o sense inici) no entra al node. */
@@ -124,7 +131,9 @@ export function creaContingutLocal(e) {
   /* La llista de l'administració (llavor o dades, amb el que s'hi ha restaurat) i, si n'hi ha, les dels veïns, com content.js. */
   const llista = (clau) => {
     const restaurada = RESTAURADES_DE_LA_LLISTA[clau];
-    const base = restaurada ? unioPerId(e.copia(e.coleccio(clau)), totesDeLEstat(e.dadesObertes.estat, restaurada)) : e.copia(e.coleccio(clau));
+    const editorial=editorialDe(clau);
+    const originals=marcaFilesEditorials(editorial.items,clau,versioVisible(editorial.versio));
+    const base = restaurada ? unioPerId(originals, totesDeLEstat(e.dadesObertes.estat, restaurada)) : originals;
     const veins = publicacionsDe(SECCIO_DE_LA_LLISTA[clau]);
     return veins.length ? mergeById(base, veins) : base;
   };
@@ -189,7 +198,7 @@ export function creaContingutLocal(e) {
   return {
     async loadCoreContent(ownerUserId = getDefaultUserId()) {
       return {
-        towns: pobles(), pages: e.copia(e.coleccio('pages')), pageCopy: {},
+        towns: pobles(), pages: marcaFilesEditorials(editorialDe('pages').items,'pages',versioVisible(editorialDe('pages').versio)), pageCopy: {},
         agents: e.copia(e.coleccio('agents')), ownerUserId, personalitzacio: personalitzacio()
       };
     },
@@ -257,6 +266,19 @@ export function creaContingutLocal(e) {
 
     /* FEDI-16 · Només el catàleg injectat és administrable; no són els
        pobles públics de loadCoreContent ni els d'una restauració oberta. */
+    async adminActualitzaPublicacioEditorial(input,config={}){
+      const edicio=capturaEdicioEditorial(input),tenantId=tenantSeleccionat(config,false);
+      if(tenantId!==e.configuracio.tenantId)throw errorAdministracioLocal('sense-permis');
+      const autoritat=await autoritzaLocal('adminActualitzaPublicacioEditorial',tenantId,config);
+      autoritat.comprova();
+      const clau=CLAU_EDITORIAL_DE_SECCIO[edicio.seccio],actual=editorialDe(clau);
+      if(actual.versio!==edicio.versio)throw errorDePersonalitzacio(CODI_PERSONALITZACIO.CONFLICTE_VERSIO);
+      const matches=actual.items.filter(item=>item.id===edicio.id);
+      if(matches.length!==1)throw errorAdministracioLocal('no-disponible');
+      const item={...aplicaCanvisEditorials(matches[0],edicio.canvis,edicio.seccio),updated_at:e.ara().toISOString()};
+      actual.items=actual.items.map(v=>v.id===edicio.id?item:v);actual.versio++;
+      return {item:marcaFilesEditorials([item],clau,actual.versio)[0],versio:actual.versio};
+    },
     async adminLlistaPobles(config = {}) {
       tenantSeleccionat(config, false);
       const autoritat = await autoritzaLocal('adminLlistaPobles', null, config);

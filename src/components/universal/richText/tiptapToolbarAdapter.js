@@ -34,8 +34,36 @@ const TRADUCCIO = Object.freeze({
   /* T26-01 (Gauntlet O7 · T2.6) · Enllaç → Card d'1 clic: l'enllaç intern
      sota el cursor passa a Card. Fora d'un enllaç que es pot commutar, o
      sense l'extensió, can() torna fals i la barra no pinta el botó. */
-  enllacATargeta: { actiu: () => false,                                ordena: (c) => c.convertirEnllacEnTargeta() }
+  enllacATargeta: { actiu: () => false,                                ordena: (c) => c.convertirEnllacEnTargeta() },
+  /* B3-2 (Onada R6 · Bloc 3) · L'enllaç de la imatge triada: actiu si ja en
+     té; només es pot amb un NodeSelection del node `image` (updateAttributes
+     tornaria true sense cap imatge). Sense valor (el can() de llegeixEstat)
+     es prova el lleva; un valor sense href de text (un clic) no fa res.
+     D-B4-2 (Bloc 4) · `llig` dona l'enllaç actual al diàleg de la barra. */
+  enllacImatge:   { actiu: (e) => Boolean(imatgeTriada(e.state)?.attrs?.href), ordena: ordenaEnllacImatge, llig: (e) => enllacDeLaImatge(e.state) }
 });
+
+/** El node d'imatge triat (NodeSelection), o null. */
+function imatgeTriada(state) {
+  const node = state?.selection?.node;
+  return node?.type?.name === 'image' ? node : null;
+}
+
+/** D-B4-2 · L'enllaç de la imatge triada ({ href, target }, textos o null), o null. */
+function enllacDeLaImatge(state) {
+  const attrs = imatgeTriada(state)?.attrs;
+  if (!attrs) return null;
+  const text = (valor) => (typeof valor === 'string' ? valor : null);
+  return { href: text(attrs.href), target: text(attrs.target) };
+}
+
+function ordenaEnllacImatge(c, opcions = { href: '' }) {
+  const href = opcions?.href;
+  if (typeof href !== 'string') return c.command(() => false);
+  return c
+    .command(({ state }) => Boolean(imatgeTriada(state)))
+    .enllacaImatge({ href, target: opcions.target ?? null, rel: opcions.rel ?? null });
+}
 
 /**
  * Traducció pura: editor → estat neutre. Sense hooks, sense efectes.
@@ -70,12 +98,26 @@ export function llegeixEstat(editor) {
  *  transacció pròpia (buidaLlavorVerge). Sense, a Chrome el format queia
  *  dins de la plantilla, i a Safari la cadena petava (RangeError) i el botó
  *  no feia res. Un editor sense llavor, o ja escrit, no canvia. */
-export function executa(editor, id) {
+export function executa(editor, id, valor) {
   const fila = TRADUCCIO[id];
   if (!fila || !editor || editor.isDestroyed) return false;
+  /* D-B4-2 (Onada R6, Bloc 4) · La barra és muda (no veu l'editor): per a
+     omplir el diàleg «Enllaç de la imatge» amb l'adreça actual, la ranura
+     accepta { llig(valor) }. Només llig: cap ordre, cap focus, cap transacció
+     (ni la llavor verge). Una fila sense `llig` no respon. */
+  if (valor && typeof valor.llig === 'function') {
+    if (typeof fila.llig !== 'function') return false;
+    try {
+      valor.llig(fila.llig(editor));
+      return true;
+    } catch {
+      return false;
+    }
+  }
   try {
     buidaLlavorVerge(editor);
-    return Boolean(fila.ordena(editor.chain().focus()).run());
+    /* B3-2 · `valor` només el llig la fila que en porta (enllacImatge). */
+    return Boolean((valor === undefined ? fila.ordena(editor.chain().focus()) : fila.ordena(editor.chain().focus(), valor)).run());
   } catch {
     return false;
   }
@@ -128,7 +170,7 @@ export function useTipTapToolbarAdapter(editor) {
     };
   }, [editor]);
 
-  const exec = useCallback((id) => executa(editor, id), [editor]);
+  const exec = useCallback((id, valor) => executa(editor, id, valor), [editor]);
 
   return useMemo(
     () => ({ state, exec: editor ? exec : EXEC_BUIT }),

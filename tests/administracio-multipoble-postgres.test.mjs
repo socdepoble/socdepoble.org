@@ -190,9 +190,9 @@ if (!modulePath || !fs.existsSync(modulePath)) {
       assert.equal(sha(fs.readFileSync(ordrePath)), sha(ordreBytes), 'L’ordre declarat ha canviat durant l’assaig.');
       assert.equal(sourcesStillEqual, true, 'Les fonts SQL han canviat durant l’assaig; resultat no atribuïble al mateix catàleg.');
     });
-    test('les 75 migracions completes s’apliquen amb l’ordre canònic 1800 → 2000 → 1900', () => {
+    test('les 76 migracions completes s’apliquen amb l’ordre canònic 1800 → 2000 → 1900', () => {
       assert.deepEqual(errors, []);
-      assert.equal(captures.length, 75);
+      assert.equal(captures.length, 76);
       assert.deepEqual(applied, files);
       assert.deepEqual(files.filter(f => /^(2610311800|2610311900|2610312000)_/.test(f)).map(f => f.slice(0, 10)), ['2610311800', '2610312000', '2610311900']);
     });

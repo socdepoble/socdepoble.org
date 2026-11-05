@@ -23,6 +23,7 @@ const respostaJson = (body, { status = 200, redirected = false, contentType = 'a
       return null;
     }
   },
+  body: new Response(typeof body === 'string' ? body : JSON.stringify(body)).body,
   text: async () => (typeof body === 'string' ? body : JSON.stringify(body))
 });
 

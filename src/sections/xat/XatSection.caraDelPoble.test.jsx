@@ -94,7 +94,7 @@ Object.defineProperty(HTMLElement.prototype, 'clientWidth', {
 });
 
 const POBLE = { id: 'la-torre-de-les-macanes', nom: 'Gent de la Torre' };
-const CARA = '/assets/towns/la-torre-de-les-macanes/commons-ah27.webp'; /* AH-27: la foto de la fitxa hidratada (IDEA-86) */
+const CARA = '/assets/towns/la-torre-de-les-macanes/2.jpg';
 const TORRE = { id: POBLE.id, title: 'La Torre de les Maçanes', image_url: '/assets/towns/la-torre-de-les-macanes/1.jpg', avatar_url: CARA };
 
 /* La comunitat del poble com la torna el servidor: subjecte amb l'UUID de

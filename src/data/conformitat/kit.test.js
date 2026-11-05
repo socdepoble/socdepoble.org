@@ -813,10 +813,10 @@ describe('FEDI-17 · 120 operacions i refutacions semàntiques', () => {
     return valors[c.metode];
   }
 
-  test('cens exacte del contracte, 32 obligatòries i 98 opcionals; cap nom sense cas', () => {
+  test('cens exacte del contracte, 32 obligatòries i 100 opcionals; cap nom sense cas', () => {
     expect(CONTRACTE_NUCLI).toHaveLength(32);
-    expect(Object.keys(CAPACITATS)).toHaveLength(41);
-    expect(Object.values(CAPACITATS).flat()).toHaveLength(98);
+    expect(Object.keys(CAPACITATS)).toHaveLength(43);
+    expect(Object.values(CAPACITATS).flat()).toHaveLength(100);
     expect(new Set(CASOS.map(c => c.metode))).toEqual(new Set([...CONTRACTE_NUCLI, ...Object.values(CAPACITATS).flat()]));
     expect(metodesSenseCas()).toEqual([]);
   });
@@ -909,7 +909,7 @@ test('FEDI23 · sis casos nous rebutgen resolucions, errors sense codi i codis a
 });
 
 test('R6 · els quatre serveis opcionals de correu preserven els178 casos i refuten errors o èxits aliens', async () => {
-  const nous=CASOS.slice(178);
+  const nous=CASOS.slice(178,182);
   expect(nous).toHaveLength(4);
   expect(nous.map(c=>c.metode)).toEqual([...CAPACITATS.verificacioCorreu,...CAPACITATS.recuperacioCorreu]);
   for(const c of nous){
@@ -920,4 +920,10 @@ test('R6 · els quatre serveis opcionals de correu preserven els178 casos i refu
     for(const mutant of[async()=>true,async()=>{throw Error('network');},async()=>{throw Object.assign(Error('Other domain'),{code:'SDP-USER-001'});}])expect(await executaCas(c,{[c.metode]:mutant},ctx)).toMatchObject({estat:'falla'});
     expect(await executaCas(c,{},ctx)).toMatchObject({estat:'omés',motiu:'capacitat '+c.capacitat+' absent'});
   }
+});
+
+test('R12 · les capacitats opcionals de carpetes i edició rebutgen abans d’escriure i refuten un mutant resolt',async()=>{
+ for(const [metode,good] of [['creaCarpetaNotes',async()=>{throw new TypeError('Nom invàlid');}],['adminActualitzaPublicacioEditorial',async()=>{throw Object.assign(new TypeError('Canvis invàlids'),{code:'editorial-invalid'});}]]){
+  const c=CASOS.find(v=>v.metode===metode),ctx=contextDeConformitat();expect(c.escriu).toBe(false);expect(await executaCas(c,{[metode]:good},ctx)).toMatchObject({estat:'ok'});expect(await executaCas(c,{[metode]:async()=>({id:'f-inventat'})},ctx)).toMatchObject({estat:'falla'});expect(await executaCas(c,{},ctx)).toMatchObject({estat:'omés'});
+ }
 });

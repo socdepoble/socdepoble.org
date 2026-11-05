@@ -95,6 +95,14 @@ export const APLICACIONS = Object.freeze([
     panell: 'salut',
   }),
   Object.freeze({
+    id: 'genealogia',
+    nom: 'Arbre Genealògic',
+    descripcio: 'La memòria de la família, els malnoms i els masos.',
+    icona: HeartHandshake,
+    estat: 'pendent',
+    panell: 'genealogia',
+  }),
+  Object.freeze({
     id: 'lector-rss',
     nom: 'Lector RSS',
     descripcio: 'Les notícies de les entitats del poble, juntes.',

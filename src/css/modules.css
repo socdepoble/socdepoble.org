@@ -8749,10 +8749,8 @@ details[open] summary.accordion-header svg:last-child {
      dues columnes, qui i amb quin barret a l'esquerra i l'avís i el primari
      a la dreta; la píndola triada de «Connectar com a» ja no és blau ple (es
      confonia amb el primari): vora d'acció, fons subtil i una marca.
-     El logotip de la capçalera, al mínim de la norma 261004 (260px), només
-     ací: el Mestre es queixava del cartell gegant que espentava els botons
-     fora de pantalla. Es desfà esborrant este bloc i les classes. */
-  .sdp-connectar-pagina .page-title-logo { width: min(100%, 260px); }
+     Ordre del Mestre (261105 · IDEA-93): eliminada l'excepció de 260px; tot
+     logotip manté sempre fins a 600×600 px (.page-title-logo). */
   /* Ronda 7 (GLOBAL-04) · La pàgina de /connectar (.sdp-universal-page-container,
      que ja és contenidor inline-size a components.css) porta nom: el tall de mòbil
      de T1 i dels seus fills es mesura sobre la pàgina, no cada u sobre el seu
@@ -11201,6 +11199,27 @@ details[open] summary.accordion-header svg:last-child {
   .sdp-subtargeta.ProseMirror-selectednode {
     outline: var(--sdp-focus-gruix) solid var(--sdp-focus);
     outline-offset: var(--sdp-focus-separacio);
+  }
+  /* D-B4-3 (Onada R6, Bloc 4; decisió de MarIA) · El text només per a
+     lectors de pantalla (span.sdp-sr-only, la marca NomesPerALectors: p. ex.
+     «(s’obri en una altra pestanya)» del botó d'adhesió del Manifest), dins
+     de l'editor, es veu i s'edita: l'autor sap que hi és. Fora de .ProseMirror
+     (la lectura pública) continua amagat (base.css, capa legacy; esta capa
+     components hi guanya només dins de l'editor). Discret: cursiva i
+     subratllat de punts del color del text, sense cap mida ni color nou. */
+  .ProseMirror .sdp-sr-only {
+    position: static;
+    width: auto;
+    height: auto;
+    margin: 0;
+    overflow: visible;
+    clip: auto;
+    clip-path: none;
+    white-space: normal;
+    font-style: italic;
+    text-decoration-line: underline;
+    text-decoration-style: dotted;
+    text-underline-offset: var(--sdp-focus-separacio);
   }
 }
 
@@ -14430,6 +14449,7 @@ details[open] summary.accordion-header svg:last-child {
   }
 
   .aplec-2023__galeria figure,
+  .aplec-2023__galeria > div,
   .aplec-2023__organitzadores > div {
     margin: 0;
     min-width: 0;
@@ -14455,10 +14475,21 @@ details[open] summary.accordion-header svg:last-child {
     cursor: pointer;
   }
 
+  /* P0-26 D1 · El peu és el figcaption o el <p> d'una figura o d'una foto de
+     galeria (el que desa l'editor); i, dins de l'editor, l'adreça d'una
+     imatge enllaçada (SdpImageNodeView). */
   .aplec-2023 figcaption,
-  .aplec-2023__peu {
+  .aplec-2023__peu,
+  .aplec-2023__figura > p,
+  .aplec-2023__galeria > div > p,
+  .sdp-image-link__adreca {
     color: var(--sdp-text-suau);
     margin-top: var(--sdp-space-2);
+  }
+
+  .sdp-image-link__adreca {
+    display: block;
+    overflow-wrap: anywhere;
   }
 }
 
@@ -14495,5 +14526,508 @@ details[open] summary.accordion-header svg:last-child {
 
   .manifest-de-poble__adhesio {
     margin-block: var(--sdp-space-6);
+  }
+}
+
+/* ── AH-29 / IDEA-89 / IDEA-94 / R5-D6 · Panells d'Administració del Sistema, Banc d'Importació, Revisió Editorial al Mur i Mode Rural ── */
+@layer components {
+  .sdp-admin-taxonomia,
+  .sdp-admin-importacio {
+    display: flex;
+    flex-direction: column;
+    gap: var(--sdp-space-6);
+    padding-block: var(--sdp-space-4) var(--sdp-space-8);
+    min-width: 0;
+  }
+
+  .sdp-admin-taxonomia__header {
+    display: flex;
+    flex-direction: column;
+    gap: var(--sdp-space-3);
+    padding-block-end: var(--sdp-space-4);
+    border-bottom: 1px solid var(--sdp-vora);
+  }
+
+  .sdp-admin-taxonomia__header h2 {
+    margin: 0;
+    color: var(--sdp-text-titol);
+  }
+
+  .sdp-admin-taxonomia__header p,
+  .sdp-admin-taxonomia__lead {
+    margin: 0;
+    color: var(--sdp-text-cos);
+    font-size: var(--sdp-text-base);
+    line-height: var(--sdp-leading-body);
+  }
+
+  .sdp-admin-taxonomia__badges,
+  .sdp-admin-pills {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--sdp-space-2);
+  }
+
+  .sdp-admin-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--sdp-space-1);
+    padding: var(--sdp-space-1) var(--sdp-space-3);
+    border: 1px solid var(--sdp-vora);
+    border-radius: var(--sdp-radi-boto);
+    background: var(--sdp-fons-subtil);
+    color: var(--sdp-text-titol);
+    font-size: var(--sdp-text-small);
+    font-weight: 600;
+  }
+
+  .sdp-admin-taxonomia__diagnostic {
+    display: flex;
+    flex-direction: column;
+    gap: var(--sdp-space-3);
+    padding: var(--sdp-space-4);
+    border: 1px solid var(--sdp-vora-forta);
+    border-left: 4px solid var(--sdp-accio);
+    border-radius: var(--sdp-radi-m);
+    background: var(--sdp-fons-superficie);
+  }
+
+  .sdp-admin-taxonomia__diagnostic h3,
+  .sdp-admin-taxonomia__diagnostic p,
+  .sdp-admin-taxonomia__diagnostic ul {
+    margin: 0;
+  }
+
+  .sdp-admin-taxonomia__diagnostic ul {
+    padding-inline-start: var(--sdp-space-5);
+    display: flex;
+    flex-direction: column;
+    gap: var(--sdp-space-2);
+  }
+
+  .sdp-admin-taxonomia__tabs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--sdp-space-2);
+  }
+
+  .sdp-admin-taxonomia__section,
+  .sdp-admin-taxonomia__panel,
+  .sdp-admin-taxonomia__simulador {
+    display: flex;
+    flex-direction: column;
+    gap: var(--sdp-space-4);
+    padding: var(--sdp-space-4);
+    border: 1px solid var(--sdp-vora);
+    border-radius: var(--sdp-radi-m);
+    background: var(--sdp-fons-superficie);
+    min-width: 0;
+  }
+
+  .sdp-admin-taxonomia__section h3,
+  .sdp-admin-taxonomia__panel h3,
+  .sdp-admin-taxonomia__simulador h3 {
+    margin: 0;
+    color: var(--sdp-text-titol);
+  }
+
+  .sdp-admin-taxonomia__controls,
+  .sdp-admin-taxonomia__toolbar,
+  .sdp-admin-taxonomia__filters,
+  .sdp-admin-taxonomia__selects {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: var(--sdp-space-3);
+  }
+
+  .sdp-admin-taxonomia__status,
+  .sdp-admin-status-ok {
+    margin: 0;
+    padding: var(--sdp-space-3) var(--sdp-space-4);
+    border: 1px solid var(--sdp-vora);
+    border-radius: var(--sdp-radi-s);
+    background: var(--sdp-fons-subtil);
+    color: var(--sdp-text-titol);
+    font-size: var(--sdp-text-small);
+    font-weight: 600;
+  }
+
+  .sdp-admin-taxonomia__kpis {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 11rem), 1fr));
+    gap: var(--sdp-space-3);
+  }
+
+  .sdp-admin-kpi {
+    display: flex;
+    flex-direction: column;
+    gap: var(--sdp-space-1);
+    padding: var(--sdp-space-4);
+    border: 1px solid var(--sdp-vora);
+    border-radius: var(--sdp-radi-m);
+    background: var(--sdp-fons-superficie);
+  }
+
+  .sdp-admin-kpi strong {
+    font-size: var(--sdp-text-h3);
+    color: var(--sdp-text-titol);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .sdp-admin-kpi span {
+    font-size: var(--sdp-text-meta);
+    color: var(--sdp-text-suau);
+  }
+
+  .sdp-admin-taxonomia__grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 16rem), 1fr));
+    gap: var(--sdp-space-3);
+  }
+
+  .sdp-admin-taxonomia__card,
+  .sdp-admin-importacio__card,
+  .sdp-card {
+    display: flex;
+    flex-direction: column;
+    gap: var(--sdp-space-2);
+    padding: var(--sdp-space-4);
+    border: 1px solid var(--sdp-vora);
+    border-radius: var(--sdp-radi-m);
+    background: var(--sdp-fons-targeta);
+    min-width: 0;
+  }
+
+  .sdp-admin-taxonomia__card-top,
+  .sdp-admin-importacio__card-cap {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--sdp-space-2);
+  }
+
+  .sdp-admin-importacio__badges,
+  .sdp-admin-importacio__accions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--sdp-space-2);
+  }
+
+  .sdp-admin-taxonomia__table-wrap {
+    width: 100%;
+    overflow-x: auto;
+    border: 1px solid var(--sdp-vora);
+    border-radius: var(--sdp-radi-m);
+    background: var(--sdp-fons-targeta);
+  }
+
+  .sdp-admin-table,
+  .sdp-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: var(--sdp-text-small);
+  }
+
+  .sdp-admin-table th,
+  .sdp-admin-table td,
+  .sdp-table th,
+  .sdp-table td {
+    padding: var(--sdp-space-3);
+    border-bottom: 1px solid var(--sdp-vora);
+    text-align: left;
+    vertical-align: top;
+  }
+
+  .sdp-admin-table th,
+  .sdp-table th {
+    background: var(--sdp-taula-capcalera-fons);
+    color: var(--sdp-text-titol);
+    font-weight: 700;
+  }
+
+  .sdp-admin-table tbody tr:last-child td,
+  .sdp-table tbody tr:last-child td {
+    border-bottom: 0;
+  }
+
+  .sdp-fila-seleccionable {
+    cursor: pointer;
+    transition: background-color var(--sdp-t);
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .sdp-fila-seleccionable:hover {
+      background: var(--sdp-fons-subtil);
+    }
+  }
+
+  .sdp-fila-seleccionable.is-selected,
+  .is-selected {
+    background: var(--sdp-accio-subtil);
+  }
+
+  .sdp-admin-importacio__layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr);
+    gap: var(--sdp-space-4);
+    align-items: start;
+  }
+
+  @media (max-width: 960px) {
+    .sdp-admin-importacio__layout {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  .sdp-admin-importacio__inspector {
+    display: flex;
+    flex-direction: column;
+    gap: var(--sdp-space-3);
+    position: sticky;
+    top: var(--sdp-space-4);
+  }
+
+  .sdp-admin-importacio__notes {
+    display: flex;
+    flex-direction: column;
+    gap: var(--sdp-space-2);
+  }
+
+  .sdp-admin-dl {
+    display: grid;
+    grid-template-columns: minmax(9rem, auto) 1fr;
+    gap: var(--sdp-space-2) var(--sdp-space-4);
+    margin: 0;
+  }
+
+  @media (max-width: 640px) {
+    .sdp-admin-dl {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  .sdp-admin-dl dt {
+    font-weight: 700;
+    color: var(--sdp-text-titol);
+  }
+
+  .sdp-admin-dl dd {
+    margin: 0;
+    color: var(--sdp-text-cos);
+    overflow-wrap: anywhere;
+  }
+
+  .sdp-admin-actions-inline,
+  .sdp-admin-pagination,
+  .sdp-admin-taxonomia__pagination {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--sdp-space-2);
+  }
+
+  .sdp-admin-actions-inline--separat {
+    margin-block-start: var(--sdp-space-3);
+  }
+
+  .sdp-admin-actions-inline--separat-ampli {
+    margin-block-start: var(--sdp-space-4);
+  }
+
+  .sdp-admin-accio-fitxer {
+    cursor: pointer;
+  }
+
+  .sdp-input,
+  .sdp-select {
+    min-height: var(--sdp-touch);
+    padding: var(--sdp-space-2) var(--sdp-space-3);
+    border: 1px solid var(--sdp-vora-control);
+    border-radius: var(--sdp-radi-s);
+    background: var(--sdp-fons-app);
+    color: var(--sdp-text-cos);
+    font-family: inherit;
+    font-size: var(--sdp-text-base);
+  }
+
+  .sdp-input:focus-visible,
+  .sdp-select:focus-visible {
+    outline: 2px solid var(--sdp-focus);
+    outline-offset: 2px;
+  }
+
+  .sdp-divider {
+    border: 0;
+    border-top: 1px solid var(--sdp-vora);
+    margin-block: var(--sdp-space-4);
+  }
+
+  .sdp-muted {
+    color: var(--sdp-text-suau);
+  }
+
+  .sdp-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--sdp-space-2);
+    min-height: var(--sdp-touch);
+    padding: var(--sdp-space-2) var(--sdp-space-4);
+    border-radius: var(--sdp-radi-boto);
+    font-weight: 700;
+    text-decoration: none;
+    cursor: pointer;
+  }
+
+  .sdp-btn--primari {
+    background: var(--sdp-accio-control);
+    color: var(--sdp-sobre-accio);
+    border: 2px solid var(--sdp-accio-control);
+  }
+
+  .sdp-btn--secundari {
+    background: var(--sdp-fons-targeta);
+    color: var(--sdp-text-titol);
+    border: 2px solid var(--sdp-vora-forta);
+  }
+
+  /* ── Mode Revisió Editorial al Mur (/mur?revisio=wordpress) ── */
+  .sdp-mur-revisio-bar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--sdp-space-2);
+    padding: var(--sdp-space-2) var(--sdp-space-4);
+    border-bottom: 1px solid var(--sdp-vora);
+    background: var(--sdp-fons-superficie);
+  }
+
+  .sdp-mur-revisio-toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--sdp-space-2);
+    min-height: var(--sdp-touch);
+    padding: var(--sdp-space-2) var(--sdp-space-4);
+    border: 1px solid var(--sdp-vora-forta);
+    border-radius: var(--sdp-radi-boto);
+    background: var(--sdp-fons-targeta);
+    color: var(--sdp-text-titol);
+    font-weight: 700;
+    cursor: pointer;
+  }
+
+  .sdp-mur-revisio-panel {
+    display: flex;
+    flex-direction: column;
+    gap: var(--sdp-space-4);
+    padding: var(--sdp-space-4);
+    margin-block-end: var(--sdp-space-4);
+    border: 1px solid var(--sdp-vora-forta);
+    border-radius: var(--sdp-radi-m);
+    background: var(--sdp-fons-superficie);
+  }
+
+  .sdp-mur-revisio-panel__header {
+    display: flex;
+    flex-direction: column;
+    gap: var(--sdp-space-2);
+  }
+
+  .sdp-mur-revisio-panel__header h2,
+  .sdp-mur-revisio-panel__header p {
+    margin: 0;
+  }
+
+  .sdp-mur-revisio-panel__filtres {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--sdp-space-2);
+  }
+
+  .sdp-mur-revisio-panel__llista {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 20rem), 1fr));
+    gap: var(--sdp-space-3);
+  }
+
+  .sdp-mur-revisio-card {
+    display: flex;
+    flex-direction: column;
+    gap: var(--sdp-space-2);
+    padding: var(--sdp-space-4);
+    border: 1px solid var(--sdp-vora);
+    border-radius: var(--sdp-radi-m);
+    background: var(--sdp-fons-targeta);
+  }
+
+  .sdp-mur-revisio-card__top {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: var(--sdp-space-2);
+  }
+
+  .sdp-mur-revisio-card__titol-link {
+    color: var(--sdp-text-titol);
+    font-weight: 700;
+    text-decoration: none;
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .sdp-mur-revisio-card__titol-link:hover {
+      text-decoration: underline;
+    }
+  }
+
+  .sdp-mur-revisio-card__estat,
+  .sdp-mur-revisio-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: var(--sdp-space-1) var(--sdp-space-2);
+    border: 1px solid var(--sdp-vora);
+    border-radius: var(--sdp-radi-boto);
+    background: var(--sdp-fons-subtil);
+    color: var(--sdp-text-titol);
+    font-size: var(--sdp-text-small);
+    font-weight: 600;
+  }
+
+  .sdp-mur-revisio-card__meta {
+    margin: 0;
+    color: var(--sdp-text-suau);
+    font-size: var(--sdp-text-small);
+  }
+
+  .sdp-mur-revisio-card__insignies,
+  .sdp-mur-revisio-card__accions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--sdp-space-2);
+  }
+
+  /* ── Mode Rural (ModeRural.jsx) ── */
+  .sdp-mode-rural__punts {
+    margin: 0;
+    padding-inline-start: var(--sdp-space-5);
+    display: flex;
+    flex-direction: column;
+    gap: var(--sdp-space-2);
+    color: var(--sdp-text-cos);
+  }
+
+  .sdp-dtn-delta {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--sdp-space-1);
+    color: var(--sdp-text-suau);
+    font-size: var(--sdp-text-small);
   }
 }

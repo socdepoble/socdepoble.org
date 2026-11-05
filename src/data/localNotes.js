@@ -6,6 +6,7 @@ import { emojiSol } from '../utils/emoji.js';
 import { dataIsoONull } from '../utils/calendari.js';
 import { registraIncident } from '../utils/autocuracio.js';
 import { coaccionaAmbit, esFitxaDAmbit } from '../utils/publicacioUniversal.js';
+import { nomDeCarpetaValid, carpetaDeFila } from './carpetesNotes.js';
 
 const STORE = 'notes';
 
@@ -142,8 +143,22 @@ export function createLocalNotesAdapter(storage = persistence, { rellotge = () =
         if (malmeses && registraIncident('dades', 'notes-locals', 'entrada-apartada') === 1) {
           console.warn(`[localNotes] ${malmeses} entrada/es del magatzem local no són notes: es deixen de banda, sense tocar-les.`);
         }
-        return { notes: bones, noteFolders: NOTE_FOLDERS_SEED };
+        const extra = Object.values((await llig(`${clau}:carpetes`)) || {});
+        return { notes: bones, noteFolders: [...NOTE_FOLDERS_SEED, ...extra.map(carpetaDeFila)] };
       });
+    },
+    async createFolder(input, config = {}) {
+      const nom = nomDeCarpetaValid(input);
+      const clau = `${scope(getDefaultUserId(), config)}:carpetes`;
+      let carpeta;
+      await escriu(clau, stored => {
+        const actual = stored || {};
+        carpeta = Object.values(actual).find(row => typeof row.nom === 'string' && row.nom.toLowerCase() === nom.toLowerCase());
+        if (carpeta) return actual;
+        carpeta = { id: `f-${crypto.randomUUID()}`, nom, parentId: null };
+        return { ...actual, [carpeta.id]: carpeta };
+      });
+      return carpetaDeFila(carpeta);
     },
     async create(input, config = {}) {
       const id = input.id || crypto.randomUUID();

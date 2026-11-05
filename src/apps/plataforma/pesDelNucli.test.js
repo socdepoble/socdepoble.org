@@ -55,11 +55,10 @@ if (!HI_HA_BUILD) console.warn('[pesDelNucli] No hi ha wordpress-plugin/dist: el
    1.628.974 B, i amb el logotip negre de BrandMark fora de l'entrada en fa
    1.491.764 B. tests/standalone-build.test.mjs llig esta mateixa constant, i
    així el trinquet es comprova en cada build real, no només sobre el dist vell. */
-/* Apujat a posta el 261105 (integració R8-r57, Claude): 1.591.855 → 1.663.000 B. El build real de l'arbre integrat
-   fa 1.662.351 B (+70.945 B respecte de 064ec0137): +67.169 B són les dades hidratades dels 22 pobles
-   (poblesAplecViquipedia.js, AH-27/IDEA-86, ordre del Mestre) i la resta, retocs menuts d'r49/r55. SquareBadge
+/* Apujat a posta el 261105 (integració R8-r57 + R12 + genealogia, Claude/Codex/MarIA): 1.591.855 → 1.690.000 B. El build real de l'arbre integrat
+   incorpora les dades hidratades dels 22 pobles (poblesAplecViquipedia.js, AH-27/IDEA-86), l'edició editorial i carpetes de notes (R12) i l'Arbre Genealògic. SquareBadge
    té mòdul propi perquè PageFrame no arrossegue UniversalCard (30 KB) a l'entrada. */
-const SOSTRE_DEL_TROS_D_ENTRADA = 1663000;
+const SOSTRE_DEL_TROS_D_ENTRADA = 1690000;
 
 /* Les apps opcionals: el seu codi no ha de ser cap tros del nucli. */
 const CARPETES_DE_LES_APPS = Object.freeze([

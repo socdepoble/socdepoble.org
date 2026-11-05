@@ -455,6 +455,7 @@ export function UniversalEditorShell({
      · `titolEdicioAvancada`: el títol del desplegable (per defecte, «Edició
        avançada»). Amb títol o resum, la barra porta també la icona. */
   identitatEdicioAvancada = null,
+  capcaleraEdicioAvancada = null,
   logoAlTitol = true,
   resumEdicioAvancada = null,
   titolEdicioAvancada = null,
@@ -724,6 +725,7 @@ export function UniversalEditorShell({
           la prop, res.
           AH-03 · Botó gran de tancament al final del panell desplegat. */}
       <div className="sdp-edicio-avancada__cos">
+        {capcaleraEdicioAvancada ? <div className="sdp-edicio-avancada__ambit" data-sdp-ranura="identitat-poble">{capcaleraEdicioAvancada}</div> : null}
         <div className="sdp-edicio-avancada__imatge" data-sdp-ranura="capcalera">{shellData.topBarData.heroComponent}</div>
         {identitatEdicioAvancada ? <div className="sdp-edicio-avancada__identitat">{identitatEdicioAvancada}</div> : null}
         {shellData.topBarData.logoComponent ? (

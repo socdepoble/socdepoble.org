@@ -96,7 +96,7 @@ export function extreuCampsTargeta(targeta) {
 function missatgeDErrorTargeta(error) {
   switch (error?.codi) {
     case CODI_TRADUCCIO.MASSA_LLARGA:
-      return 'Aquesta targeta és massa llarga per a traduir-la d’una vegada.';
+      return 'Esta targeta és massa llarga per a traduir-la d’una vegada.';
     case CODI_TRADUCCIO.INABASTABLE:
       return 'No s’ha pogut connectar amb el servei de traducció.';
     case CODI_TRADUCCIO.SERVIDOR:
@@ -108,7 +108,7 @@ function missatgeDErrorTargeta(error) {
       }
       return 'El servei de traducció no està disponible ara mateix.';
     default:
-      return 'No s’ha pogut traduir aquesta targeta. Torna-ho a provar.';
+      return 'No s’ha pogut traduir esta targeta. Torna-ho a provar.';
   }
 }
 

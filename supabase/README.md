@@ -1418,6 +1418,13 @@ description: "Documentació canònica de Sóc de Poble."
   amb ACL mínimes i auth.uid/rol vigent. Vegeu «FEDI23» al final.
   **NO aplicada: l'aplica el Mestre, mai un agent**.
 
+- `migrations/2611051930_edicio_publicacions_editorials.sql`
+  R12 (kit de Codex, integrat per B4-S1): RPC `admin_actualitza_publicacio_editorial`
+  (superadmin + aal2, camps blancs, CAS sobre `app_content.version`), backfill
+  selectiu del Manifest i l'Aplec, i carpetes privades `note_folders` amb RLS de
+  propietari + pertinença al poble i RPC `crea_carpeta_notes`. Requerix 2610061448.
+  **NO aplicada: l'aplica el Mestre, mai un agent**.
+
 - `seed.sql`
   Contingut inicial del portal.
 
@@ -1595,6 +1602,7 @@ verificador sense avisos.
 | 73 | `2611031500` | `2611031500_notes_logo_mode_nit.sql` | **NO aplicada** | logotip de capçalera de Notes per al mode nit (IDEA-70) |
 | 74 | `2611031700` | `2611031700_administracio_multipoble.sql` | **NO aplicada: l'aplica el Mestre** | selecció de tenants i personalització per poble amb superadmin + aal2 (FEDI-04) |
 | 75 | `2611032100` | `2611032100_connexions_publiques_i_membres.sql` | **NO aplicada: l'aplica el Mestre** | connexions consentides, membres públics i sol·licituds només pendents (FEDI23) |
+| 76 | `2611051930` | `2611051930_edicio_publicacions_editorials.sql` | **NO aplicada: l'aplica el Mestre** | edició editorial amb CAS (superadmin + aal2) i carpetes privades de Notes (R12) |
 
 | Artefacte complementari | Ruta dins de `supabase/` | Rol operatiu |
 | :--- | :--- | :--- |

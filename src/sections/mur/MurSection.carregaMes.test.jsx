@@ -28,7 +28,7 @@ vi.mock('../../app/contexts/UIContext', () => ({
 vi.mock('../../hooks/useSEO', () => ({ useSEO: () => {} }));
 vi.mock('../../app/contexts/CoreContentContext', () => ({ useCoreContent: () => ({ status: 'ready', error: null, pageCopy: {} }) }));
 vi.mock('../../host.js', () => ({ quanLlest: async () => {} }));
-vi.mock('../../app/contexts/SessionContext.jsx', () => ({ useSession: () => ({ currentUser: null, generacio: 1 }) }));
+vi.mock('../../app/contexts/SessionContext.jsx', () => ({ useSession: () => ({ currentUser: null, generacio: 1 }), useSessioOpcional: () => null }));
 vi.mock('../../app/contexts/IdentitatContext.jsx', () => ({ useIdentitat: () => ({ actorId: 'A', actorKey: 'A' }) }));
 vi.mock('../../config/dataMode.js', async (importOriginal) => ({ ...(await importOriginal()), eleccioRemotaActiva: () => false }));
 

@@ -14,6 +14,8 @@ Documents actius de la sessió. Cada àncora correspon a un fitxer físic; la me
 
 ## Activitat en curs
 
+- [[261104_1636_prompt_teler_node0_postgres_mastodon_xat_i_fediversity]] · Mestre 261105: Prompt actiu de l'equip a tres bandes
+- [[261104_1636_pla_implementacio_teler_node0_postgres_mastodon_xat_i_fediversity]] · Mestre 261105: Pla actiu de l'equip a tres bandes
 - [[03_llibre_mestre_tasques_i_idees]] · Mestre 261021: Llibre Mestre permanent
 
 ## Producció humana
@@ -212,3 +214,7 @@ Laboratori evacuat per ordre expressa a `../_investigacio_ia_de_poble/`: 10 elem
 - [[../10_actes/261103_1228_acta_marmota_oli_de_la_torre_node0_i_relleu_fresc_taules_rebost]]
 - [[../10_actes/261103_1412_acta_marmota_aplec2023_traductor_i_relleu_teler_fediversity]]
 - [[../10_actes/261103_1724_acta_marmota_codex_gauntlet_fediversity_i_pendents_verificats]]
+- [[../10_actes/261105_0148_acta_marmota_marato_node0_mastodon_r1_r3_kits_r31_r9_i_onada_r4]]
+- [[../10_actes/261105_0148_acta_marmota_marato_node0_mastodon_r1_r3_kits_r31_r9_i_onada_r4]]
+- [[../10_actes/261105_0148_acta_marmota_marato_node0_mastodon_r1_r3_kits_r31_r9_i_onada_r4]]
+- [[../10_actes/261105_1846_acta_marmota_integracio_r5_c49d173c4_idea91_a_idea97_i_relleu_fresc]]

@@ -152,13 +152,13 @@ describe('PublicacioDetall · una pàgina del sistema', () => {
     expect(container.querySelectorAll('.sdp-pagina-accio')).toHaveLength(1);
   });
 
-  test('al peu, «Ja publicat al Mur» amb les altres pàgines de l’entitat i sense la mateixa', () => {
-    render(<PublicacioDetall item={pagina('xat')} />);
-    const peu = screen.getByRole('region', { name: 'Ja publicat al Mur' });
-    const titols = [...peu.querySelectorAll('.sp-card-title')].map((titol) => titol.textContent);
-    expect(titols).toHaveLength(SISTEMA.length - 1);
-    expect(titols).toContain(PAGE_COPY.projecte.title);
-    expect(titols).not.toContain(PAGE_COPY.xat.title);
+  /* P0-25 / IDEA-96 (Onada R6, Bloc 1; ordre del Mestre) · Fora les Cards
+     «Ja publicat al Mur» de /notes: tampoc al peu d'una pàgina del sistema. */
+  test('cap peu «Ja publicat al Mur» ni cap Card de les altres pàgines de l’entitat', () => {
+    const { container } = render(<PublicacioDetall item={pagina('xat')} />);
+    expect(screen.queryByRole('region', { name: 'Ja publicat al Mur' })).toBeNull();
+    expect(container.querySelector('.sdp-pagina-peu')).toBeNull();
+    expect(container.querySelector('.sp-card-title')).toBeNull();
   });
 
   /* Revisió del grup E (troballa 2) · /disseny munta DesignSection, /notes el

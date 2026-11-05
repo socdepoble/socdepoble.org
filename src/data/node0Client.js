@@ -16,6 +16,10 @@ export const TIMEOUT_NODE_ZERO_DEFECTE = 4000;
 export const MAX_BYTES_NODE_ZERO = 512 * 1024;
 export const REL_NODEINFO_2_1 = 'http://nodeinfo.diaspora.software/ns/schema/2.1';
 
+const typedArrayPrototype = Object.getPrototypeOf(Uint8Array.prototype);
+const typedArrayName = Object.getOwnPropertyDescriptor(typedArrayPrototype, Symbol.toStringTag).get;
+const typedArrayByteLength = Object.getOwnPropertyDescriptor(typedArrayPrototype, 'byteLength').get;
+
 const CLAU_PROHIBIDA = new Set(['__proto__', 'prototype', 'constructor', 'email', 'phone', 'token', 'password', 'secret', 'privateKey', 'privateKeyPem']);
 const CAMPS_TEXT_PUBLICACIO = Object.freeze([
   'id', 'slug', 'type', 'kind', 'sectionId', 'title', 'subtitle', 'summary',
@@ -39,7 +43,7 @@ const cadenaSegura = (v, max = 65536) => {
   return '';
 };
 
-const enterSegur = (v, defecte = 0) => (typeof v === 'number' && Number.isInteger(v) && v >= 0 ? v : defecte);
+const enterSegur = (v, defecte = 0) => (typeof v === 'number' && Number.isSafeInteger(v) && v >= 0 ? v : defecte);
 
 export function normalitzaOrigenNode0(origen = ORIGEN_NODE_ZERO_DEFECTE) {
   if (typeof origen !== 'string' || origen !== origen.trim() || /[\u0000-\u0020\u007f\\]/.test(origen)) {
@@ -62,15 +66,30 @@ export function normalitzaOrigenNode0(origen = ORIGEN_NODE_ZERO_DEFECTE) {
   return url.origin;
 }
 
+/* R6 Bloc 4 (troballa P3 del Bloc 1) · Un camp d'URL només passa si és http(s)
+   absolut sense credencials o un camí relatiu a l'arrel (mai «//»): cap
+   `javascript:`, `data:` ni esquema estrany no arriba a un href o a un src.
+   La barra inversa i els caràcters de control es rebutgen perquè el navegador
+   els reinterpreta (`/\exemple.test` és una URL d'un altre origen). */
+const CAMPS_URL_PUBLICACIO = new Set(['image_url', 'avatar_url', 'hero_url', 'url', 'source_url', 'canonicalUrl', 'uri']);
+const urlSegura = (v) => {
+  if (v === '' || /[\u0000-\u001f\u007f\\]/.test(v)) return '';
+  if (/^\/(?!\/)/.test(v)) return v;
+  try {
+    const url = new URL(v);
+    return (url.protocol === 'https:' || url.protocol === 'http:') && !url.username && !url.password ? v : '';
+  } catch {
+    return '';
+  }
+};
+
 export function sanejaPublicacioNode0(item) {
   if (!esObjectePla(item)) return null;
-  for (const clau of Object.keys(item)) {
-    if (CLAU_PROHIBIDA.has(clau)) continue;
-  }
   const net = {};
   for (const camp of CAMPS_TEXT_PUBLICACIO) {
     if (Object.hasOwn(item, camp) && !CLAU_PROHIBIDA.has(camp)) {
-      const val = cadenaSegura(item[camp]);
+      const cadena = cadenaSegura(item[camp]);
+      const val = CAMPS_URL_PUBLICACIO.has(camp) ? urlSegura(cadena) : cadena;
       if (val !== '') net[camp] = val;
     }
   }
@@ -103,6 +122,11 @@ export function normalitzaEstatNode0(payload) {
   const mastodon = esObjectePla(payload.mastodon) ? payload.mastodon : {};
   const cap = esObjectePla(payload.capabilities) ? payload.capabilities : {};
   const res = esObjectePla(payload.resilience) ? payload.resilience : {};
+  const mirrorContract = Object.hasOwn(res, 'workspaceMirrorConfigured');
+  const mirrorConfigured = mirrorContract ? res.workspaceMirrorConfigured === true : res.encryptedMirrorConfigured === true || res.ok === true;
+  const mirrorOk = mirrorContract ? mirrorConfigured && res.mirrorIntegrityOk === true && res.mirrorAuthenticationVerified === true && res.mirrorRetentionOk !== false : res.ok === true;
+  const counts = esObjectePla(pg.registres) ? Object.values(pg.registres).map(v => enterSegur(v)) : [];
+  const count = counts.reduce((total, v) => Math.min(Number.MAX_SAFE_INTEGER, total + v), 0);
 
   return Object.freeze({
     ok: pg.ok === true,
@@ -111,14 +135,14 @@ export function normalitzaEstatNode0(payload) {
     postgresql: Object.freeze({
       ok: pg.ok === true,
       version: cadenaSegura(pg.version, 64),
-      tables: enterSegur(pg.tables, 0),
-      publicDocuments: enterSegur(pg.publicDocuments, 0),
+      tables: enterSegur(pg.tables, enterSegur(pg.taules)),
+      publicDocuments: enterSegur(pg.publicDocuments, count),
       latencyMs: enterSegur(pg.latencyMs, 0)
     }),
     resilience: Object.freeze({
-      ok: res.ok === true,
-      encryptedMirrorConfigured: Boolean(res.encryptedMirrorConfigured ?? res.ok),
-      status: cadenaSegura(res.status || (res.ok ? 'ready' : 'pending'), 64)
+      ok: mirrorOk,
+      encryptedMirrorConfigured: mirrorConfigured,
+      status: mirrorContract ? (mirrorOk ? 'ready' : 'pending') : cadenaSegura(res.status || (mirrorOk ? 'ready' : 'pending'), 64)
     }),
     activitypub: Object.freeze({
       active: ap.active === true,
@@ -143,51 +167,50 @@ export function normalitzaEstatNode0(payload) {
   });
 }
 
-async function llegixJsonFitat(resposta, maxBytes = MAX_BYTES_NODE_ZERO) {
+async function llegixJsonFitat(resposta, signal, maxBytes = MAX_BYTES_NODE_ZERO) {
+  const failure = codi => Object.assign(new Error('Resposta del Node 0 invàlida.'), {codi});
+  const cancelBody = () => { try { Promise.resolve(resposta?.body?.cancel?.()).catch(() => {}); } catch { /* cos ja tancat */ } };
   if (!resposta || !resposta.ok) {
+    cancelBody();
     const status = Number.isInteger(resposta?.status) ? resposta.status : 0;
-    const err = new Error(`HTTP ${status}`);
-    err.codi = status === 404 ? 'NODE0_NOT_FOUND' : 'NODE0_HTTP_ERROR';
-    err.status = status;
-    throw err;
+    throw Object.assign(new Error(`HTTP ${status}`), {codi: status === 404 ? 'NODE0_NOT_FOUND' : 'NODE0_HTTP_ERROR', status});
   }
-  if (resposta.redirected) {
-    const err = new Error('Redirecció no permesa al Node 0.');
-    err.codi = 'NODE0_REDIRECT_REJECTED';
-    throw err;
-  }
+  if (resposta.redirected) { cancelBody(); throw failure('NODE0_REDIRECT_REJECTED'); }
   const contentType = resposta.headers?.get?.('content-type') || '';
-  if (contentType && !/^application\/(?:json|[a-z0-9.+-]+\+json)(?:;|$)/i.test(contentType)) {
-    const err = new Error('Content-Type invàlid del Node 0.');
-    err.codi = 'NODE0_INVALID_CONTENT_TYPE';
-    throw err;
-  }
+  if (!/^application\/(?:json|[a-z0-9.+-]+\+json)(?:;|$)/i.test(contentType)) { cancelBody(); throw failure('NODE0_INVALID_CONTENT_TYPE'); }
   const contentLength = resposta.headers?.get?.('content-length');
-  if (contentLength && (/^\d+$/.test(contentLength) && Number(contentLength) > maxBytes)) {
-    const err = new Error('Resposta del Node 0 massa gran.');
-    err.codi = 'NODE0_PAYLOAD_TOO_LARGE';
-    throw err;
-  }
+  if (contentLength != null && (!/^\d+$/.test(contentLength) || Number(contentLength) > maxBytes)) { cancelBody(); throw failure('NODE0_PAYLOAD_TOO_LARGE'); }
+  // Fetch streams are consumed incrementally. Never read response.text() before
+  // enforcing the byte ceiling: a chunked response has no trustworthy length.
+  const reader = resposta.body?.getReader?.();
   let textCos;
-  if (typeof resposta.text === 'function') {
-    textCos = await resposta.text();
-  } else if (typeof resposta.json === 'function') {
-    textCos = JSON.stringify(await resposta.json());
+  if (reader) {
+    const decoder = new TextDecoder('utf-8', {fatal: true}), parts = [];
+    let bytes = 0;
+    const cancel = () => { try { Promise.resolve(reader.cancel()).catch(() => {}); } catch { /* flux ja tancat */ } };
+    signal.addEventListener('abort', cancel, {once: true});
+    if (signal.aborted) cancel();
+    try {
+      while (true) {
+        if (signal.aborted) throw failure('NODE0_ABORTED');
+        const {value, done} = await reader.read();
+        if (signal.aborted) throw failure('NODE0_ABORTED');
+        if (done) break;
+        if (!ArrayBuffer.isView(value) || typedArrayName.call(value) !== 'Uint8Array') throw failure('NODE0_INVALID_BODY');
+        bytes += typedArrayByteLength.call(value);
+        if (bytes > maxBytes) throw failure('NODE0_PAYLOAD_TOO_LARGE');
+        parts.push(decoder.decode(value, {stream: true}));
+      }
+      parts.push(decoder.decode());
+      textCos = parts.join('');
+    } catch (cause) { cancel(); throw cause?.codi ? cause : failure('NODE0_INVALID_BODY'); }
+    finally { signal.removeEventListener('abort', cancel); reader.releaseLock(); }
   } else {
-    throw Object.assign(new Error('Resposta sense cos llegible.'), { codi: 'NODE0_INVALID_BODY' });
+    // Browser Fetch exposes body.getReader for JSON. Reject transports that
+    // cannot enforce a streaming ceiling, even with a declared Content-Length.
+    cancelBody(); throw failure('NODE0_INVALID_BODY');
   }
-  if (new TextEncoder().encode(textCos).byteLength > maxBytes) {
-    const err = new Error('Resposta del Node 0 supera el límit de bytes.');
-    err.codi = 'NODE0_PAYLOAD_TOO_LARGE';
-    throw err;
-  }
-  try {
-    return JSON.parse(textCos);
-  } catch {
-    const err = new Error('JSON invàlid del Node 0.');
-    err.codi = 'NODE0_INVALID_JSON';
-    throw err;
-  }
+  try { return JSON.parse(textCos); } catch { throw failure('NODE0_INVALID_JSON'); }
 }
 
 async function peticioGetJson(url, { fetchImpl = globalThis.fetch, timeoutMs = TIMEOUT_NODE_ZERO_DEFECTE, signal } = {}) {
@@ -216,7 +239,7 @@ async function peticioGetJson(url, { fetchImpl = globalThis.fetch, timeoutMs = T
       headers: { Accept: 'application/json' },
       signal: controlador.signal
     });
-    return await llegixJsonFitat(resposta);
+    return await llegixJsonFitat(resposta, controlador.signal);
   } catch (err) {
     if (perTimeout) {
       throw Object.assign(new Error('Temps d’espera esgotat connectant al Node 0.'), { codi: 'NODE0_TIMEOUT' });

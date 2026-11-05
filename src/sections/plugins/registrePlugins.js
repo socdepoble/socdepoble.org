@@ -339,6 +339,19 @@ export const PLUGINS = Object.freeze([
     /* Mòdul B (261021) · L'original .jpg ix de public/: la vinyeta és la WebP. */
     extensioImatge: 'webp'
   }),
+  plugin({
+    id: 'genealogia',
+    titol: 'Arbre Genealògic',
+    subtitol: 'La memòria de la família, els malnoms i els masos',
+    entradilla: 'Guarda els noms, els malnoms i els masos dels teus majors amb una conversa guiada pas a pas. No inventa res i les dades es queden en este dispositiu.',
+    imatgeAlt: 'Una iaia i un iaio conten els malnoms de la família davant d’una olivera plena de retrats antics mentre els nets prenen nota',
+    obrir: null,
+    espai: 'llar',
+    etiquetaObrir: 'Obrir l’Arbre Genealògic',
+    data: DATA_DE_L_ORDRE,
+    etiquetes: classificacio('Família'),
+    extensioImatge: 'webp'
+  }),
   /* Onada 8 (261009) · La Consola, el Cervell i el Panell de Disseny ja no
      són plugins: són pàgines del sistema (vegeu la capçalera). */
   plugin({

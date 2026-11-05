@@ -19,8 +19,8 @@ import {
   suggerixPobleLocal
 } from './suggerimentPobleLocal.js';
 
-/* AH-27 (IDEA-86) · Les coordenades de la fitxa són les de Wikidata (Q1641908). */
-const GPS_TORRE = Object.freeze({ lat: 38.6066667, lng: -0.4191667 });
+/* R5-D5 · La Torre de les Maçanes conserva les coordenades pròpies de la llavor (MOCK_TOWNS). */
+const GPS_TORRE = Object.freeze({ lat: 38.5919, lng: -0.4184 });
 const GPS_ALCOI = Object.freeze({ lat: 38.6985, lng: -0.4743 });
 const GPS_FINESTRAT = Object.freeze({ lat: 38.5672, lng: -0.2125 });
 const GPS_MADRID = Object.freeze({ lat: 40.4168, lng: -3.7038 });

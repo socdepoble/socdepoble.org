@@ -63,7 +63,7 @@ test('native Delete race reproduces legacy resurrection and proves the locked fr
     const env={PGDATABASE:LAB,PGHOST:SOCKET,PGPORT:'5432',PGUSER:'javi',NODE0_PSQL:PSQL,PGPASSFILE:'/dev/null',PATH:'/usr/bin:/bin',LANG:'C'};
     const control=creaPostgres({env}),runtimeEnv={...env};
     const identity=await control.query("SELECT json_build_object('database',current_database(),'operator',session_user,'version',current_setting('server_version_num')::int,'migrations',(SELECT count(*) FROM node0.schema_migrations));");
-    assert.equal(identity.database,LAB);assert.equal(identity.operator,'javi');assert.ok(identity.version>=170000&&identity.version<180000);assert.equal(identity.migrations,75);
+    assert.equal(identity.database,LAB);assert.equal(identity.operator,'javi');assert.ok(identity.version>=170000&&identity.version<180000);assert.equal(identity.migrations,76);
     const runtime=await control.query("SET ROLE node0_runtime; SELECT json_build_object('role',current_user,'login',session_user,'unsafe',rolsuper OR rolbypassrls OR rolcreatedb OR rolcreaterole OR rolreplication,'members',(SELECT count(*) FROM pg_auth_members WHERE member=pg_roles.oid)) FROM pg_roles WHERE rolname=current_user;");
     assert.deepEqual(runtime,{role:'node0_runtime',login:'javi',unsafe:false,members:0});
     await control.query(fs.readFileSync(new URL('../tooling/node0/schema-node0.sql',import.meta.url),'utf8')+'\nSELECT to_jsonb(true);');

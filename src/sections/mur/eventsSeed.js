@@ -1,4 +1,6 @@
 // Dades de calendari recuperades de la versió original.
+import { APLEC_2023_HTML, APLEC_VIDEO } from './articles/aplec2023Content.js';
+
 export const CALENDAR_EVENTS = [{
   date: '2023-01-29',
   created_at: '2022-11-17T21:03:41+01:00',
@@ -26,6 +28,11 @@ export const CALENDAR_EVENTS = [{
   subtitle: "Nou Aplec, arrel de l'incendi d'aquest estiu",
   entradilla: "La Coordinadora d'Estudis Eòlics i l'Associació El Rentonar amb el Projecte Sóc de Poble hem organitzat a Benillup un nou Aplec pel Territori com a resposta a l'incendi que va assolar les nostres comarques en agost del 2022.",
   image_url: '/assets/events/aplec-2023/aplec-pel-territori-2023-A4-1900px-1.jpg',
+  /* P0-26 / IDEA-97 (Onada R6) · L'article sencer, en HTML editable des de
+     /notes; el vídeo de NTC és el complement declaratiu (el sanejador lleva
+     els iframe) que Aplec2023Article pinta damunt del cos. */
+  content: APLEC_2023_HTML,
+  video_youtube: APLEC_VIDEO,
   author_name: 'Sóc de Poble',
   /* T6 (261004) · Qui el signa, per identificador: l'entitat pilot
      (identitatsSeed.js · ENTITAT_PILOT_ID, com la samarreta de marketSeed.js).

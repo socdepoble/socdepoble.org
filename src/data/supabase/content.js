@@ -1,3 +1,4 @@
+import { marcaFilesEditorials } from '../editorialPublicada.js';
 import { getDefaultUserId } from '../appSeed.js';
 import { elementDeFilaPublicada, mapSectionSubmissionToItem, mergeById } from '../mapejadorSeccions.js';
 import { buildSeedAppData, generateUUID, getCurrentUser, getResolvedConfig, mapContentRowsToData, request } from './runtime.js';
@@ -184,7 +185,10 @@ async function loadSections(ownerUserId, config, sections, { ambPaginacio = fals
      sencera del Mur ([...primary] de mergeById); les publicacions dels veïns
      es pinten igual. */
   const llistes = Object.fromEntries(sections.map(([key], index) => {
-    const baseAppContent = llistaDe(rows.find(row => row.key === key)?.payload, key);
+    /* R12 (B4-S1) · Cada element porta la versió de la fila (_editorialVersio):
+       la revisió editorial la necessita per a la RPC amb CAS de versió. */
+    const filaEditorial = rows.find(row => row.key === key);
+    const baseAppContent = marcaFilesEditorials(llistaDe(filaEditorial?.payload, key), key, filaEditorial?.version);
     const ambActePedraSeca = key === 'events' && baseAppContent.some((item) => item?.id === 'aplec-2023')
       ? mergeById([CURSOS_PEDRA_EN_SEC_2026_EVENT], baseAppContent)
       : baseAppContent;

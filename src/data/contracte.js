@@ -76,6 +76,9 @@ export const SECCIONS_PAGINABLES = Object.freeze({
 });
 
 export const CAPACITATS = Object.freeze({
+  carpetesNotes: Object.freeze(['creaCarpetaNotes']),
+  /* R12: patch d'un element existent d'app_content; whole-row version CAS, superadmin+aal2 al servidor. */
+  edicioEditorial: Object.freeze(['adminActualitzaPublicacioEditorial']),
   sessioExterna: Object.freeze(['adoptaSessioExterna']),
   paginacioNotes: Object.freeze(['loadNotesPage']),
   /* Decisió 4 del Mestre (261007) · «Carregar-ne més» al Mur i al Mercat

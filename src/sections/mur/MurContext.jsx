@@ -19,6 +19,7 @@ import {
   subscriuPublicacionsEsborrades,
   versioPublicacionsEsborrades
 } from '../../data/publicacionsEsborrades.js';
+import { revisaLlista, subscriuRevisionsEditorials, versioRevisionsEditorials } from '../../data/revisionsEditorials.js';
 
 import { useSession } from '../../app/contexts/SessionContext.jsx';
 
@@ -174,6 +175,15 @@ export function MurProvider({ children, config }) {
     versioPublicacionsEsborrades,
     versioPublicacionsEsborrades
   );
+  /* P0-25 (Onada R6, Bloc 2) · Les revisions editorials de la llavor i dels
+     actes desades des de /notes (al navegador, revisionsEditorials.js): el Mur,
+     l'agenda, el detall i les rutes dedicades les veuen a l'instant, també si
+     les desa una altra pestanya. */
+  const versioRevisions = useSyncExternalStore(
+    subscriuRevisionsEditorials,
+    versioRevisionsEditorials,
+    versioRevisionsEditorials
+  );
 
   const esborraPublicacio = useCallback(async (seccio, id) => {
     if (nomesLectura) throw new ErrorIdentitatDeLectura();
@@ -278,9 +288,10 @@ export function MurProvider({ children, config }) {
 
   const value = useMemo(() => {
     void versioEsborrades;
+    void versioRevisions;
     const { mur, events, mercat } = seccions;
-    const feedPosts = filtraElementsBloquejats(filtraPublicacionsEsborrades(mur.elements, 'mur'), esElementBloquejat);
-    const elsEvents = filtraElementsBloquejats(filtraPublicacionsEsborrades(events.elements, 'events'), esElementBloquejat);
+    const feedPosts = revisaLlista(filtraElementsBloquejats(filtraPublicacionsEsborrades(mur.elements, 'mur'), esElementBloquejat), 'mur');
+    const elsEvents = revisaLlista(filtraElementsBloquejats(filtraPublicacionsEsborrades(events.elements, 'events'), esElementBloquejat), 'events');
     const marketItems = filtraElementsBloquejats(filtraPublicacionsEsborrades(mercat.elements, 'mercat'), esElementBloquejat);
     return {
       status,
@@ -300,7 +311,7 @@ export function MurProvider({ children, config }) {
       carregantMes,
       errorMes
     };
-  }, [status, error, errorRevalidacio, seccions, esElementBloquejat, versioEsborrades, sendSectionSubmission, esborraPublicacio, refresh, carregaMes, hiHaMes, carregantMes, errorMes]);
+  }, [status, error, errorRevalidacio, seccions, esElementBloquejat, versioEsborrades, versioRevisions, sendSectionSubmission, esborraPublicacio, refresh, carregaMes, hiHaMes, carregantMes, errorMes]);
 
   useRecarregaExterna(refresh);
 

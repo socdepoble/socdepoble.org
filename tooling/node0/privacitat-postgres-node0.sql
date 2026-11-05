@@ -6,7 +6,7 @@ DECLARE setting record;
 BEGIN
   IF current_database() NOT IN ('socdepoble_node0','node0_gauntlet_r4') OR
      to_regclass('node0.schema_migrations') IS NULL OR
-     (SELECT count(*) FROM node0.schema_migrations)<>75 OR
+     (SELECT count(*) FROM node0.schema_migrations)<>76 OR
      NOT EXISTS(SELECT 1 FROM pg_roles WHERE rolname=current_user AND rolsuper) OR
      NOT EXISTS(SELECT 1 FROM pg_roles WHERE rolname='node0_authenticator' AND NOT rolsuper AND NOT rolbypassrls AND NOT rolinherit) THEN
     RAISE EXCEPTION 'node0_private_logging_installer_required';

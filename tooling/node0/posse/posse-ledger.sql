@@ -3,7 +3,7 @@
 BEGIN;
 DO $guard$ BEGIN
  IF current_database() NOT IN ('socdepoble_node0','node0_gauntlet_r4','node0_gauntlet_r6')
- OR (SELECT count(*) FROM node0.schema_migrations)<>75
+ OR (SELECT count(*) FROM node0.schema_migrations)<>76
  OR NOT EXISTS(SELECT 1 FROM pg_roles WHERE rolname=current_user AND (rolsuper OR rolbypassrls))
  THEN RAISE EXCEPTION 'posse_install_guard'; END IF;
  IF EXISTS(SELECT 1 FROM pg_namespace n WHERE n.nspname='node0_posse' AND n.nspowner<>(SELECT oid FROM pg_roles WHERE rolname=current_user))

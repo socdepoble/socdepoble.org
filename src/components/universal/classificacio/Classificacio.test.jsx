@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, screen, cleanup, fireEvent, within } from '@testing-library/react';
+import { render, screen, cleanup, fireEvent, waitFor, within } from '@testing-library/react';
 import { afterEach, expect, test, vi } from 'vitest';
 vi.mock('../../../app/contexts/RouterContext', () => ({ Link: 'a', useNavigate: () => vi.fn() }));
 import { BotoneraClassificacio } from './BotoneraClassificacio.jsx';
@@ -388,7 +388,7 @@ test('T7 · carpetes niades: arbre amb sagnat, camí al nom accessible i una sol
   expect(onDesa).toHaveBeenCalledWith('antigravity');
 });
 
-test('AH-24 · BotoneraClassificacio amb enLinia: 3 files de 2 columnes (Carpeta, Categories, Etiquetes) amb creació en línia i píndoles amb ×', () => {
+test('AH-24 · BotoneraClassificacio amb enLinia: 3 files de 2 columnes (Carpeta, Categories, Etiquetes) amb creació en línia i píndoles amb ×', async () => {
   const onCanviaCarpeta = vi.fn();
   const onCanviaCategories = vi.fn();
   const onCanviaEtiquetes = vi.fn();
@@ -417,7 +417,8 @@ test('AH-24 · BotoneraClassificacio amb enLinia: 3 files de 2 columnes (Carpeta
   expect(onCanviaCarpeta).toHaveBeenCalledWith('foto');
   fireEvent.change(screen.getByLabelText('Crear nova carpeta'), { target: { value: 'Receptes familiars' } });
   fireEvent.keyDown(screen.getByLabelText('Crear nova carpeta'), { key: 'Enter' });
-  expect(onCanviaCarpeta).toHaveBeenLastCalledWith('f-receptes-familiars', 'Receptes familiars');
+  /* Bloc 5 · La creació és asíncrona (servidor si el permet, si no el navegador). */
+  await waitFor(() => expect(onCanviaCarpeta).toHaveBeenLastCalledWith('f-receptes-familiars', 'Receptes familiars'));
   // 2) Categories: selector + crear nova + llevar amb ×
   fireEvent.change(screen.getByLabelText('Categories'), { target: { value: 'Cuina' } });
   expect(onCanviaCategories).toHaveBeenCalledWith(['Sistema', 'Hort', 'Cuina']);

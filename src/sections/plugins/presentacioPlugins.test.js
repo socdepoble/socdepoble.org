@@ -35,7 +35,7 @@ import { sanitizeHtml } from '../../utils/sanitize';
 import { PRESENTACIO_PLUGINS, presentacioDelPlugin } from './presentacioPlugins.js';
 import { IDS_PLUGINS, pluginPerId } from './registrePlugins.js';
 
-const AMB_PRESENTACIO = ['rebost', 'salut', 'gestoria', 'rss'];
+const AMB_PRESENTACIO = ['rebost', 'salut', 'genealogia', 'gestoria', 'rss'];
 const font = (ruta) => readFileSync(path.join(process.cwd(), ruta), 'utf8');
 /* Els elements d'una presentació: un per línia, cada <h3> davant del seu <p>. */
 const linies = (html) => html.split('\n');
@@ -118,7 +118,7 @@ describe('presentació dels plugins', () => {
     /* Gauntlet 261022_0225 (F2) · DEROGAT «el botó pot no fer res»: sense
        destí no hi ha cap botó inert, i el text no ho pot prometre. */
     expect(text).not.toMatch(/no fa res/);
-    if (['rebost', 'salut'].includes(id)) expect(text).toMatch(/en lloc del botó (?:«[^»]+» )?la pàgina et diu per què i què pots fer/);
+    if (['rebost', 'salut', 'genealogia'].includes(id)) expect(text).toMatch(/en lloc del botó (?:«[^»]+» )?la pàgina et diu per què i què pots fer/);
     /* La Gestoria i el Lector: un últim bloc neutre, cert en qualsevol estat
        (també si l'ha desactivada la persona, i el botó de baix és «Torna a
        activar»): ni «la web no la pot obrir» ni «com desactivar-la». */

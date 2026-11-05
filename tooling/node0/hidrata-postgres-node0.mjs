@@ -175,7 +175,7 @@ export function generaSql({ migrations, bootstrap }, hydration = null, { advisor
         ON CONFLICT(tenant_id,key) DO NOTHING;\n`;
     }
   }
-  const hydrate = hydration ? `BEGIN;\n${canonical}\n${inserts.join('\n')}\nCOMMIT;` : '';
+  const hydrate = hydration ? `BEGIN;\n${canonical}\n${inserts.join('\n')}\nUPDATE node0.public_documents d SET document=v.value||jsonb_build_object('_editorialClau',c.key,'_editorialVersio',c.version) FROM public.app_content c CROSS JOIN LATERAL jsonb_array_elements(c.payload) v(value) WHERE c.tenant_id=${literal(hydration.municipalityId)}::uuid AND c.key IN ('feedPosts','events','marketItems','pages') AND d.kind=c.key AND d.id=v.value->>'id';\nCOMMIT;` : '';
   return lock + bootstrap + '\n' + check + '\n' + steps.join('\n') + '\n' + hydrate + unlock;
 }
 

@@ -1,3 +1,4 @@
+import {capturaEdicioEditorial} from '../../src/data/editorialPublicada.js';
 /** Fixed local RPC surface. Session validation and RLS claims share one transaction.
  * No arbitrary table, function, role, tenant or user identifier comes from HTTP.
  */
@@ -62,9 +63,13 @@ export function compilaOperacioNodeZero(action,body,tenantId){
   const tenant=`${sqlText(uuid(tenantId))}::uuid`;
   if(!plain(body))fail('invalid_body');
   // Unknown top-level keys are rejected, including owner_user_id, userId and tenantId.
-  const keys={getProfile:[],elMeuRol:[],updateProfile:['updates'],loadNotes:['noteId','cursor','limit'],createNote:['input'],updateNote:['id','updates','expectedRevision'],listMyOrganizations:[],createOrganization:['organization'],updateOrganization:['id','updates'],appendSectionSubmissionNetworkOnly:['submission'],loadSeccioPage:['sectionId','cursor','limit'],loadFils:[],loadMissatges:['filId','before','after','limit'],enviaMissatge:['filId','id','text','tipus','respostaA','metadades'],marcaLlegit:['filId','rebutFinsSeq','llegitFinsSeq'],creaFilDirecte:['altreUsuariId','titol'],carregaMembres:['cerca','limit']};
+  const keys={adminActualitzaPublicacioEditorial:['edicio'],getProfile:[],elMeuRol:[],updateProfile:['updates'],loadNotes:['noteId','cursor','limit'],createNote:['input'],updateNote:['id','updates','expectedRevision'],listMyOrganizations:[],createOrganization:['organization'],updateOrganization:['id','updates'],appendSectionSubmissionNetworkOnly:['submission'],loadSeccioPage:['sectionId','cursor','limit'],loadFils:[],loadMissatges:['filId','before','after','limit'],enviaMissatge:['filId','id','text','tipus','respostaA','metadades'],marcaLlegit:['filId','rebutFinsSeq','llegitFinsSeq'],creaFilDirecte:['altreUsuariId','titol'],carregaMembres:['cerca','limit']};
   if(!Object.hasOwn(keys,action))fail('operation_unavailable',501);
   if(Object.keys(body).some(key=>!keys[action].includes(key)))fail('unexpected_field');
+  if(action==='adminActualitzaPublicacioEditorial'){
+    const edicio=capturaEdicioEditorial(body.edicio);
+    return result(`public.admin_actualitza_publicacio_editorial(${sqlText(edicio.seccio)},${sqlText(edicio.id)},${sqlJson(edicio.canvis)},${intSql(edicio.versio)},${tenant})`);
+  }
   const noteWhere=`tenant_id=${tenant} AND owner_user_id=(SELECT auth.uid())`;
   if(action==='getProfile')return result(first('SELECT * FROM public.profiles WHERE id=(SELECT auth.uid())'));
   if(action==='elMeuRol')return result("to_jsonb(coalesce((SELECT role FROM public.user_platform_roles WHERE user_id=(SELECT auth.uid()) LIMIT 1),'usuari'))");
@@ -192,11 +197,12 @@ export function compilaOperacioNodeZero(action,body,tenantId){
   fail('operation_unavailable',501);
 }
 
-export function creaBackendPrivatNodeZero({db,tenantId,origin='https://socdepoble.cat'}={}){
+export function creaBackendPrivatNodeZero({db,tenantId,origin='https://socdepoble.cat',editorialReady=false}={}){
   if(typeof db?.query!=='function')throw new TypeError('node0_backend_database_required');uuid(tenantId);
-  return Object.freeze({capabilities:Object.freeze({actorBinding:true,roleRead:true,createOrganization:true,sectionSubmissions:true,paginacioSeccions:true}),async handle(action,{headers={},body={}}={}){
+  return Object.freeze({capabilities:Object.freeze({actorBinding:true,roleRead:true,createOrganization:true,sectionSubmissions:true,paginacioSeccions:true,edicioEditorial:editorialReady===true}),async handle(action,{headers={},body={}}={}){
     if(headers.origin!==origin)return {status:403,body:{error:'origin_rejected'}};
     try{
+      if(action==='adminActualitzaPublicacioEditorial'&&editorialReady!==true)fail('operation_unavailable',501);
       const hash=hashSessioNodeZero(headers);if(!hash)fail('session_required',401);
       const operation=compilaOperacioNodeZero(action,body,tenantId);
       // This header is an assertion to compare, never a source for owner/claims.
@@ -208,8 +214,8 @@ export function creaBackendPrivatNodeZero({db,tenantId,origin='https://socdepobl
     }catch(error){
       const state=error.sqlState;
       const local=error?.[LOCAL_FAILURE]===true;
-      const status=local?error.status:(state==='28000'?401:state==='42501'?403:['23505','N0A01'].includes(state)?409:/^(?:22|23)/.test(state||'')?400:503);
-      return {status,body:{error:local?error.message:state==='N0A01'?'session_actor_changed':status===401?'session_required':status===403?'permission_denied':status===409?'conflict':'node0_private_operation_failed'}};
+      const status=local?error.status:(state==='28000'?401:state==='42501'?403:['23505','N0A01','40001'].includes(state)?409:/^(?:22|23)/.test(state||'')?400:503);
+      return {status,body:{error:local?error.message:state==='N0A01'?'session_actor_changed':status===401?'session_required':status===403?(action==='adminActualitzaPublicacioEditorial'?'editorial_second_factor_required':'permission_denied'):status===409?'conflict':'node0_private_operation_failed'}};
     }
   }});
 }

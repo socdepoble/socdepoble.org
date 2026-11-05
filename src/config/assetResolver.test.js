@@ -12,7 +12,7 @@ import { cleanup, render } from '@testing-library/react';
 import { afterEach, expect, test, vi } from 'vitest';
 
 /* TextSection, reduïda al seu cos: sense closca, sense capçalera. */
-vi.mock('../app/contexts/UIContext', () => ({ useUIActions: () => ({ t: (_, alternativa) => alternativa }), useUIStateOpcional: () => null }));
+vi.mock('../app/contexts/UIContext', () => ({ useUIActions: () => ({ t: (_, alternativa) => alternativa }), useUIActionsOpcional: () => null, useUIStateOpcional: () => null })); /* B4 · VideoEditorial llig useUIActionsOpcional */
 vi.mock('../hooks/useSEO', () => ({ useSEO: () => {} }));
 vi.mock('../components/universal/UniversalPage', () => ({
   UniversalPage: ({ children }) => React.createElement('div', { 'data-pagina': '' }, children)
@@ -30,7 +30,7 @@ import {
   resolveTownImageUrl,
   TOWN_FALLBACK_IMAGES
 } from './assetResolver.js';
-import { sanitizeHtml } from '../utils/sanitize.js';
+import { permetOrigenMitjans, sanitizeHtml } from '../utils/sanitize.js';
 import { segmentsAmbTargetes } from '../components/universal/richText/extensions/targetes/formaDelGrup.js';
 import { DEFAULT_AUTHOR } from '../components/universal/UniversalUtils.js';
 import * as pecesConsola from '../sections/consola/peces.jsx';
@@ -427,6 +427,23 @@ test('resolRecursPropi: amb base, només els "/assets/…"; la resta intacta, i 
   expect(resolRecursPropi(una)).toBe(una);
 });
 
+/* P0-26 (R6 Bloc 1, refet al Bloc 3) · Esta prova va ABANS de les de vi.resetModules: cada còpia nova de
+   sanitize.js penja el seu ganxo al DOMPurify compartit amb una llista d'orígens buida, i esborraria els
+   src del paquet. No la mogueu darrere de carregaAmbScript. */
+test('l’article de l’Aplec pinta les seues imatges amb la base vigent', () => {
+  const srcs = (container) => [...container.querySelectorAll('img')].map((img) => img.getAttribute('src'));
+  const sense = render(React.createElement(Aplec2023Article));
+  const originals = srcs(sense.container);
+  expect(originals).toHaveLength(43);
+  expect(originals).toContain('/assets/events/aplec-2023/ponents-aplec-2023-1900px.jpg');
+  expect(originals.every((src) => src.startsWith('/assets/events/aplec-2023/'))).toBe(true);
+  cleanup();
+  fixaBaseRecursos(PAQUET);
+  permetOrigenMitjans(PAQUET);
+  const amb = render(React.createElement(Aplec2023Article));
+  expect(srcs(amb.container)).toEqual(originals.map((src) => `${PAQUET}${src}`));
+});
+
 /* La base des de l'script clàssic que carrega el paquet: es llig en AVALUAR
    el mòdul. Cada cas en carrega una còpia nova (vi.resetModules) amb
    document.currentScript falsejat, i el deixa com estava. */
@@ -518,19 +535,6 @@ test('la boina de les targetes de la Consola és la de Sóc de Poble, i el seu l
   cleanup();
   fixaBaseRecursos(PAQUET);
   expect(avatar(render(targeta()).container)).toBe(`${PAQUET}${LOGO}`);
-});
-
-test('l’article de l’Aplec pinta les seues imatges amb la base vigent', () => {
-  const srcs = (container) => [...container.querySelectorAll('img')].map((img) => img.getAttribute('src'));
-  const sense = render(React.createElement(Aplec2023Article));
-  const originals = srcs(sense.container);
-  expect(originals).toHaveLength(43);
-  expect(originals).toContain('/assets/events/aplec-2023/ponents-aplec-2023-1900px.jpg');
-  expect(originals.every((src) => src.startsWith('/assets/events/aplec-2023/'))).toBe(true);
-  cleanup();
-  fixaBaseRecursos(PAQUET);
-  const amb = render(React.createElement(Aplec2023Article));
-  expect(srcs(amb.container)).toEqual(originals.map((src) => `${PAQUET}${src}`));
 });
 
 test('TextSection (/projecte): sense base, el cos és idèntic; amb base, les infografies viatgen amb el paquet', () => {

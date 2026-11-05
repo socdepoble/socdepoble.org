@@ -141,7 +141,7 @@ export async function repActivitat({ req, bytes, db, request, now, admetActor })
 export function creaServidor({ db, claus, token, mastodonToken, auth = null, backend = null, posse = null, resilience = null, mastodonInbound = null, identificaClient = null, request = peticioMastodont, now = Date.now } = {}) {
   if (!db || !claus) throw new TypeError('node0_dependencies_required');
   const userBackendReady=typeof auth?.handle==='function'&&typeof backend?.handle==='function'&&typeof identificaClient==='function';
-  const privateCapabilities=Object.fromEntries(['actorBinding','roleRead','createOrganization','sectionSubmissions','paginacioSeccions'].map(key=>[key,userBackendReady&&backend.capabilities?.[key]===true]));
+  const privateCapabilities=Object.fromEntries(['actorBinding','roleRead','createOrganization','sectionSubmissions','paginacioSeccions','edicioEditorial'].map(key=>[key,userBackendReady&&backend.capabilities?.[key]===true]));
   const actors = new Map();let coarseStart=now(),coarseCount=0;let active = 0;
   const admetActor=actor=>{
     const time=now(),entry=actors.get(actor);
@@ -322,7 +322,7 @@ export async function main(env = process.env, dependencies = {}) {
       const {iniciaMantenimentAuthNodeZero}=await import('./manteniment-auth-node0.mjs');
       comprovaArrencadaActiva(startup.signal);
       userBackend={auth:creaAuthNodeZero({db:authDb,rateSecret:env.SDP_NODE0_AUTH_RATE_SECRET,mailTransport:null}),
-        backend:creaBackendPrivatNodeZero({db:authDb,tenantId:NODE0_AUTH_TENANT}),
+        backend:creaBackendPrivatNodeZero({db:authDb,tenantId:NODE0_AUTH_TENANT,editorialReady:env.SDP_NODE0_EDITORIAL==='1'&&await authDb.query("SELECT to_regprocedure('public.admin_actualitza_publicacio_editorial(text,text,jsonb,integer,uuid)') IS NOT NULL AS ready;",{privateValues:true})===true}),
         identificaClient:creaIdentificadorClientNodeZero({proxySecret:env.SDP_NODE0_PROXY_SECRET})};
       if(posseServiceFactory){
         // Runtime cannot install privileged schema or invent institutional

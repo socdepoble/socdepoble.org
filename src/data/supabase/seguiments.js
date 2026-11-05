@@ -227,13 +227,18 @@ function subjecteRemotConnexions(subjecte) {
   if (subjecte.tipus === 'poble' && !RE_UUID.test(subjecte.id) && !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(subjecte.id)) throw errorDeConnexions('SDP-CONN-001');
   return { ...subjecte, id: RE_UUID.test(subjecte.id) ? subjecte.id.toLowerCase() : subjecte.id };
 }
+const CODIS_ESQUEMA_ABSENT = new Set(['PGRST202', 'PGRST205']);
 function errorConnexionsRpc(error) {
   if (error?.name === 'AbortError' || error?.name === 'TimeoutError' || CODIS_CONNEXIONS.has(error?.code)) return error;
   const cos = cosDePostgrest(error), missatge = typeof cos?.message === 'string' ? cos.message : typeof error?.message === 'string' ? error.message : '';
   const membre = /SDP-ORGMEM-\d{3}/.exec(missatge)?.[0];
   if (membre) return errorDeMembre(membre, error);
   const codi = /SDP-CONN-\d{3}/.exec(missatge)?.[0];
-  return errorDeConnexions(CODIS_CONNEXIONS.has(codi) ? codi : error?.status === 404 ? 'NO-DISPONIBLE' : error?.status === 401 ? 'SDP-CONN-000' : 'DESCONEGUT', error);
+  /* Onada R6 · Bloc 5 · Com sondaConnexions.js: només el codi de PostgREST d'esquema absent
+     (PGRST202 funció, PGRST205 taula) és NO-DISPONIBLE. Un 404 nu (passarel·la, ruta) és un error
+     de lectura i no s'ha de memoritzar com a «sense esquema» per a tot l'àmbit. */
+  const senseEsquema = CODIS_ESQUEMA_ABSENT.has(cos?.code) || CODIS_ESQUEMA_ABSENT.has(error?.code);
+  return errorDeConnexions(CODIS_CONNEXIONS.has(codi) ? codi : senseEsquema ? 'NO-DISPONIBLE' : error?.status === 401 ? 'SDP-CONN-000' : 'DESCONEGUT', error);
 }
 async function executaConnexions(ctx, metode, dades, nomRpc, body) {
   ctx.comprova();

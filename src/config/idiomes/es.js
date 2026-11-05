@@ -46,7 +46,8 @@ export default {
   'section.notes.connexio.absentAmbEnllac': "No está entre lo que se ha cargado aquí (un perfil, una página, otro pueblo o un elemento retirado). Ábrelo en su página.",
   'section.notes.connexio.absentSenseEnllac': "No está entre lo que se ha cargado aquí y la conexión no incluye su enlace.",
   'section.notes.editor.avisCategoria': "Hace falta al menos una categoría. Si quieres vaciarlas, marca una general, como «{categoria}».",
-  'section.notes.editor.avisCarpetes': "Crear, renombrar y borrar carpetas aún no tiene contrato de datos con el servidor. De momento, elige la carpeta de esta nota.",
+  'section.notes.editor.avisCarpetes': "Las carpetas nuevas se guardan en el servidor cuando lo permite y, si no, en este navegador. Renombrar y borrar carpetas aún no tiene contrato de datos.",
+  'section.notes.carpetes.errorCrear': "No se ha podido crear la carpeta. Vuelve a intentarlo.",
   'section.notes.editor.avisSenseTotes': "Renombrar y borrar estarán disponibles cuando se hayan cargado todas las notas.",
   'section.notes.editor.avisDataDispositiu': "El servidor aún no permite guardar la fecha de publicación. Se guarda en este dispositivo y solo se aplica si publicas desde aquí.",
   'section.notes.editor.portadaAlt': "Una libreta abierta con alguien escribiendo",
@@ -546,6 +547,14 @@ export default {
   'section.notes.format.targeta': 'Tarjeta incrustada',
   /* 261103 (Onada 7, T2.6) · El sentit Enllaç → Card a la segona fila, amb el cursor en un enllaç intern. */
   'section.notes.format.enllacATargeta': 'Convertir en tarjeta',
+  'section.notes.format.enllacImatge': "Enlace de la imagen",
+  'section.notes.format.enllacImatgeRefusat': "Esta dirección no es segura: la imagen se queda como estaba.",
+  /* D-B4-2 i D-B4-3 (Onada R6, Bloc 4) · El diàleg «Enllaç de la imatge» (DialegEnllacImatge) i el «Reintentar» de la Revisió WP del Mur. */
+  'section.notes.format.enllacImatgeCamp': "Dirección del enlace",
+  'section.notes.format.enllacImatgeAjuda': "Una ruta de la app, una dirección https:// o un mailto:. Déjala vacía para quitar el enlace.",
+  'section.notes.format.enllacImatgeNoAplicat': "No se ha podido cambiar el enlace: vuelve a seleccionar la imagen.",
+  'section.notes.format.enllacImatgeDesa': "Guardar",
+  'section.mur.revisioWp.reintenta': "Reintentar",
   'section.notes.format.subtargetaTitol': 'Título de la subtarjeta',
   'section.notes.format.subtargetaMeta': 'Una línea de contexto: fecha, lugar o autoría',
   'section.notes.format.subtargetaCos': 'Escribe aquí el contenido de la subtarjeta: párrafos, listas y enlaces.',
@@ -2695,6 +2704,7 @@ export default {
   'editor.imatge.exif.descripcio': "Decide si se publican con la foto y, la ubicación, con qué precisión.",
   'editor.imatge.exif.inserir': "Insertar",
   'editor.imatge.exif.titol': "Esta foto lleva su ubicación o la fecha",
+  'editor.video.titolPerDefecte': "Vídeo de YouTube",
   // P1-64 (261028) · El Mapa Fotogràfic del Mur.
   'section.mur.mapa.acostaGrup': "Zona {n}, {nom}: {recompte}. Acerca el mapa",
   'section.mur.mapa.agrupacio': "Agrupación por distancia",
@@ -3512,4 +3522,9 @@ export default {
   'section.pobles.demarcacio.valencia': "Comarcas de Valencia",
   'section.pobles.demarcacio.castello': "Comarcas de Castellón",
   'section.pobles.territori.veure': "Ver los pueblos",
+  'section.notes.publicacio.noActualitzableActe': "Los actos de la agenda todavía no se actualizan desde el Bloc: el cambio solo es en esta vista.",
+  'section.notes.publicacio.noActualitzableLlavor': "Esta publicación es del archivo editorial del pueblo y todavía no se actualiza desde el Bloc: el cambio solo es en esta vista.",
+  'section.notes.publicacio.revisioDesada': "Revisión guardada en este navegador: el Muro y la página ya la muestran.",
+  'section.notes.publicacio.revisioDesadaServidor': "Revisión guardada en el servidor: el Muro y la página ya la muestran a todo el mundo.",
+  'section.notes.publicacio.revisioNomesNavegador': "El servidor no ha aceptado la revisión: queda guardada solo en este navegador.",
 };

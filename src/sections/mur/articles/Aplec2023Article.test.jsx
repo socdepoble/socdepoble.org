@@ -4,7 +4,9 @@ import { cleanup, render } from '@testing-library/react';
 import { readFileSync, existsSync } from 'node:fs';
 import path from 'node:path';
 import { Aplec2023Article } from './Aplec2023Article.jsx';
-import { APLEC_GALLERY, APLEC_PRESS_PARAGRAPHS } from './aplec2023Content.js';
+import { APLEC_2023_HTML, APLEC_GALLERY, APLEC_PRESS_PARAGRAPHS, APLEC_VIDEO } from './aplec2023Content.js';
+import { permetOrigenMitjans, sanitizeHtml } from '../../../utils/sanitize.js';
+import { buildEventsDetailSectionMeta } from '../../detail/detailSectionMeta.jsx';
 import { MOCK_TOWNS, POBLES_APLEC_2023 } from '../../pobles/townsSeed.js';
 import { corresponAPestanyaDelPoble, esDelPoble, parlaDelPoble } from '../../pobles/clauDelPoble.js';
 import { CALENDAR_EVENTS } from '../eventsSeed.js';
@@ -27,8 +29,14 @@ test('el reportatge de NTC només incrusta YouTube nocookie amb alternativa d’
 
 test('conserva les 25 fotografies principals i les 9 addicionals reals de la font', () => {
   const { container } = render(<Aplec2023Article />);
-  expect(container.querySelector('.aplec-2023__galeria').querySelectorAll('figure')).toHaveLength(25);
-  expect(container.querySelector('details').querySelectorAll('figure')).toHaveLength(9);
+  /* P0-26 · Sense figure ni details (el sanejador i l'editor no els tenen): un
+     div per foto, i les 9 complementàries sota el seu títol. */
+  expect(container.querySelector('.aplec-2023__galeria').querySelectorAll(':scope > div[data-wp-media-id]')).toHaveLength(25);
+  expect(container.querySelector('.aplec-2023__complement').querySelectorAll('.aplec-2023__galeria > div[data-wp-media-id]')).toHaveLength(9);
+  expect(container.querySelector('.aplec-2023__complement h4').textContent).toBe('9 fotografies més de l’arxiu original');
+  expect([...container.querySelectorAll('[data-wp-media-id] img')].map((img) => img.getAttribute('src'))).toEqual(APLEC_GALLERY.map((f) => f.src));
+  expect(container.querySelectorAll('[data-wp-media-id] img').length).toBe(34);
+  expect(container.querySelector('[data-wp-media-id] a')).toBeNull();
   expect(new Set(APLEC_GALLERY.map((f) => f.wpId)).size).toBe(34);
   expect(APLEC_GALLERY.map((f) => f.wpId).sort((a, b) => a - b)).toEqual(Array.from({ length: 34 }, (_, i) => 17044 + i));
   for (const foto of APLEC_GALLERY) {
@@ -45,13 +53,17 @@ test('la nota de premsa conserva íntegres els cinc paràgrafs i tots els enlla�
     expect(container.querySelector(`a[href="${href}"]`)).not.toBeNull();
   }
   expect(container.querySelector('a[href*="17H8EY4LTWlImwiusvuXlhv9ScpG3iE9M"]')).not.toBeNull();
-  expect(text).toContain('673 61 98 59');
+  /* B4 (Porta Llavor) · Cap telèfon de tercers a la llavor: el restaurant es nomena sense número. */
+  expect(text).toContain('Balcó de Travadell');
+  expect(text).not.toContain('673 61 98 59');
   expect(container.querySelector('img[src*="aplec-pel-territori-2023-A4"]')).toBeNull();
   expect(container.querySelector('a[href*="aplec-pel-territori-2023-A4"]')).not.toBeNull();
 });
 
 test('totes les fotografies, logotips i enllaços A4 seguixen la base de l’amfitrió', () => {
   fixaBaseRecursos('https://host.test/connector');
+  /* L'amfitrió registra l'origen del paquet (PedraSecaEmbed.jsx). */
+  permetOrigenMitjans('https://host.test/connector');
   const { container } = render(<Aplec2023Article />);
   for (const image of container.querySelectorAll('img')) expect(image.src).toMatch(/^https:\/\/host\.test\/connector\/assets\/events\/aplec-2023\//);
   expect(container.querySelector('a[href*="aplec-pel-territori-2023-A4"]').href).toContain('https://host.test/connector/assets/');
@@ -110,4 +122,35 @@ test('AH-27 · Aplec i Manifest apareixen junts als 21 pobles sense confondre au
   }
   const ebo = MOCK_TOWNS.find(item => item.id === 'la-vall-d-ebo');
   expect(publicacionsDelPoble(fonts, ebo, 'xarxa').map(row => row.item.id)).toEqual(['manifest-de-poble', 'aplec-2023']);
+});
+
+/* P0-26 / IDEA-97 (Onada R6, Bloc 1) · El cos viu en item.content. */
+test('la llavor porta l’article sencer en HTML editable i el vídeo com a complement declaratiu', () => {
+  const event = CALENDAR_EVENTS.find((e) => e.id === 'aplec-2023');
+  expect(event.content).toBe(APLEC_2023_HTML);
+  expect(event.video_youtube).toEqual({ id: 'TlZWYbnGuCE', titol: '2n Aplec pel Territori - Benillup: NTC À Punt' });
+  expect(event.video_youtube).toBe(APLEC_VIDEO);
+  for (const tros of ['El 2n Aplec a À Punt NTC', 'Nota de premsa post-Aplec', 'El format de l’Aplec és innovador', 'href="/mur/manifest-de-poble"',
+    'https://www.youtube.com/watch?v=TlZWYbnGuCE', 'https://t.me/manifest_de_poble']) expect(event.content).toContain(tros);
+  expect(event.content.match(/<img /g)).toHaveLength(43);
+  expect(event.content).not.toMatch(/<(?:figure|figcaption|details|summary|section|time|iframe|h1|h2)\b|\sstyle=|\sid=/);
+  const net = sanitizeHtml(event.content);
+  expect(net.match(/<img /g)).toHaveLength(43);
+  expect(net.match(/<a /g)).toHaveLength(event.content.match(/<a /g).length);
+});
+
+test('la fitxa de l’acte pinta item.content quan és HTML i la llavor quan app_content no porta cos; el vídeo, només amb un id vàlid', () => {
+  const meta = buildEventsDetailSectionMeta({ events: [], t: (_, fallback) => fallback });
+  const base = CALENDAR_EVENTS.find((e) => e.id === 'aplec-2023');
+  const editat = render(meta.renderBody({ ...base, content: '<h3>Crònica revisada</h3><p>Text nou.</p>', video_youtube: { id: 'abcdefghijk', titol: 'Un altre reportatge' } }));
+  expect(editat.container.querySelector('.aplec-2023 h3').textContent).toBe('Crònica revisada');
+  expect(editat.container.querySelector('iframe').getAttribute('src')).toBe('https://www.youtube-nocookie.com/embed/abcdefghijk');
+  expect(editat.container.querySelector('iframe').title).toBe('Un altre reportatge');
+  cleanup();
+  const { content, video_youtube, ...senseCos } = base;
+  void content; void video_youtube;
+  const remot = render(meta.renderBody({ ...senseCos, video_youtube: { id: '"><script>' } }));
+  expect(remot.container.querySelectorAll('[data-wp-media-id] img')).toHaveLength(34);
+  expect(remot.container.querySelector('iframe').getAttribute('src')).toBe('https://www.youtube-nocookie.com/embed/TlZWYbnGuCE');
+  expect(remot.container.querySelectorAll('iframe')).toHaveLength(1);
 });

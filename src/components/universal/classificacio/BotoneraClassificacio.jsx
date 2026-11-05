@@ -34,6 +34,7 @@ import { tradueix, useTraductorOpcional } from '../../PedraSeca/hooks/useTraduct
 import { omple } from '../../../config/moderacio.js';
 import { carpetesEnArbre } from './DialegCarpeta.jsx';
 import { CATEGORIA_GENERAL } from './model.js';
+import { creaCarpetaCreada, useCarpetesCreades } from './carpetesCreades.js';
 
 
 const CAP = Object.freeze([]);
@@ -44,6 +45,7 @@ const TEXTOS_BOTONERA = Object.freeze({
   carpetes: p('carpetes', 'Carpetes'),
   crearCarpeta: p('crearCarpeta', 'Crear nova carpeta'),
   placeholderCarpeta: p('placeholderCarpeta', 'Nom de la carpeta…'),
+  errorCarpeta: ['section.notes.carpetes.errorCrear', 'No s’ha pogut crear la carpeta. Torna-ho a provar.'],
   categories: p('categories', 'Categories'),
   triaCategoria: p('triaCategoria', 'Tria una categoria…'),
   crearCategoria: p('crearCategoria', 'Crear nova categoria'),
@@ -127,16 +129,9 @@ function BotoResum({ tipus, icona: Icona, glif = null, text, resum, onObri }) {
    `text` («Àmbit»). Sense la prop, el DOM de sempre, byte a byte.
    O4-CLAUDE-1 · El botó «Àmbit» no obri cap diàleg (sense aria-haspopup): qui
    munta la botonera hi porta, al bloc «On es publica?» en línia. Continua
-   abans de l'emoticona, que ha de ser l'últim botó (DESTINS_FOCUS.icon). */
-function slugDeCarpeta(nom) {
-  const base = String(nom || '')
-    .toLowerCase()
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-+|-+$/g, '');
-  return `f-${base || 'carpeta'}`;
-}
+   abans de l'emoticona, que ha de ser l'últim botó (DESTINS_FOCUS.icon).
+   Onada R6 · Bloc 2 (P1-d) · L'id d'una carpeta nova i la seua persistència
+   viuen a carpetesCreades.js (resolCarpeta: sense col·lisions d'slug). */
 
 function ClassificacioEnLinia({ enLinia, categories, etiquetes, t }) {
   const {
@@ -148,9 +143,12 @@ function ClassificacioEnLinia({ enLinia, categories, etiquetes, t }) {
     categoriaGeneral = CATEGORIA_GENERAL,
     catalegEtiquetes = CAP,
     onCanviaEtiquetes,
+    ambitCarpetes = null,
+    configCarpetes = null,
   } = enLinia;
   const [novaCarpeta, setNovaCarpeta] = useState('');
-  const [carpetesExtra, setCarpetesExtra] = useState(CAP);
+  /* P1-d · Les carpetes creades en línia persistixen (per àmbit) i tornen en recarregar. */
+  const carpetesExtra = useCarpetesCreades(ambitCarpetes);
   const [novaCategoria, setNovaCategoria] = useState('');
   const [novaEtiqueta, setNovaEtiqueta] = useState('');
 
@@ -163,18 +161,20 @@ function ClassificacioEnLinia({ enLinia, categories, etiquetes, t }) {
     etiqueta: c.cami.length ? `${c.cami.join(' › ')} › ${c.nom}` : c.nom,
   }));
 
-  const afigCarpeta = () => {
-    const net = novaCarpeta.trim();
-    if (!net) return;
-    const existent = totesCarpetes.find(
-      (c) => c.nom.toLowerCase() === net.toLowerCase() || c.id === net
-    );
-    const idDesti = existent ? existent.id : slugDeCarpeta(net);
-    if (!existent) {
-      setCarpetesExtra((prev) => [...prev, { id: idDesti, nom: net }]);
+  const [errorCarpeta, setErrorCarpeta] = useState(false);
+  const afigCarpeta = async () => {
+    /* P1-d · El mateix nom reutilitza la carpeta; un altre amb el mateix slug pren -2, -3…
+       Bloc 5 · Una de nova es crea primer (al servidor si el permet, si no en este
+       navegador) i només després es tria, amb l'id que torna. */
+    setErrorCarpeta(false);
+    try {
+      const resolta = await creaCarpetaCreada(ambitCarpetes, novaCarpeta, { existents: totesCarpetes, config: configCarpetes });
+      if (!resolta) return;
+      setNovaCarpeta('');
+      onCanviaCarpeta?.(resolta.id, resolta.nom);
+    } catch {
+      setErrorCarpeta(true);
     }
-    setNovaCarpeta('');
-    onCanviaCarpeta?.(idDesti, net);
   };
 
   const opcionsCategories = [
@@ -222,7 +222,7 @@ function ClassificacioEnLinia({ enLinia, categories, etiquetes, t }) {
             opcions={opcionsCarpetes}
           />
         </Camp>
-        <Camp etiqueta={tradueix(t, TEXTOS_BOTONERA.crearCarpeta)}>
+        <Camp etiqueta={tradueix(t, TEXTOS_BOTONERA.crearCarpeta)} error={errorCarpeta ? tradueix(t, TEXTOS_BOTONERA.errorCarpeta) : undefined}>
           <CampText
             value={novaCarpeta}
             onChange={(e) => setNovaCarpeta(e.target.value)}

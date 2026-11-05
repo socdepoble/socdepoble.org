@@ -133,7 +133,7 @@ export function BancImportacioEditorial() {
             </p>
           </div>
           <div>
-            <label className="sdp-btn sdp-btn--secundari sdp-admin-accio-fitxer">
+            <label className="sdp-boto sdp-boto--secundari sdp-admin-accio-fitxer">
               Carregar arxiu .XML (WXR / Blogger)
               <input
                 type="file"
@@ -246,6 +246,9 @@ export function BancImportacioEditorial() {
                       </td>
                       <td onClick={(e) => e.stopPropagation()}>
                         <div className="sdp-admin-actions-inline">
+                          <Link className="sdp-boto sdp-boto--secundari" to={art.ruta_canonica}>
+                            👁️ Veure pàgina
+                          </Link>
                           <Boto
                             varietat={art.estat_revisio === 'aprovat' ? 'primari' : 'secundari'}
                             onClick={() => canviaEstatArticle(art.wp_id, 'aprovat')}
@@ -320,6 +323,9 @@ export function BancImportacioEditorial() {
                   placeholder="Anota què cal polir d'aquest article (ex. revisar galeria, separar en dos articles, millorar subtítol)..."
                 />
                 <div className="sdp-admin-actions-inline sdp-admin-actions-inline--separat">
+                  <Link className="sdp-boto sdp-boto--primari" to={seleccionat.ruta_canonica}>
+                    👁️ Veure pàgina completa
+                  </Link>
                   <Boto
                     varietat="primari"
                     onClick={() => canviaEstatArticle(seleccionat.wp_id, 'aprovat', notaEdicio)}

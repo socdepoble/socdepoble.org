@@ -1,4 +1,5 @@
 import { POBLES_APLEC_2023 } from '../pobles/townsSeed.js';
+import { MANIFEST_DE_POBLE_HTML } from './articles/manifestDePobleContent.js';
 
 /** AH-27 · WP 16893. El temps d'importació no substituïx la publicació històrica. */
 export const MANIFEST_DE_POBLE_POST = {
@@ -9,7 +10,9 @@ export const MANIFEST_DE_POBLE_POST = {
   post_subtitle: 'Una veu compartida per als pobles menuts',
   description: 'Un document obert per a afrontar el despoblament i l’abandonament de l’agricultura',
   entradilla: 'Les associacions i el veïnat de l’Alcoià, el Comtat i les Marines unim esforços per a revitalitzar els nostres pobles. El Manifest recull les necessitats comunes i les propostes locals, amb l’Aplec pel Territori com a punt de trobada.',
-  content: 'El Manifest de Poble és un document obert que analitza la problemàtica dels xicotets pobles rurals de l’Alcoià, el Comtat i les Marines i planteja solucions i escenaris de millora. El despoblament i l’abandonament de l’agricultura són els seus dos pilars. Consulta el Manifest, aporta propostes locals i coneix l’Aplec pel Territori de Benillup.',
+  /* P0-26 / IDEA-97 (Onada R6) · El document sencer, en HTML editable des de
+     /notes; el resum de la targeta continua sent l'entradilla. */
+  content: MANIFEST_DE_POBLE_HTML,
   created_at: '2022-11-17T23:50:00+01:00',
   publish_date: '2022-11-17T23:50:00+01:00',
   boinaDataPublicacio: true,

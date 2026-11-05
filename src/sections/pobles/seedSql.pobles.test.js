@@ -12,6 +12,7 @@ import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import { describe, expect, test } from 'vitest';
 import { APP_CONTENT_ROWS } from '../../data/appSeed.js';
+import { MOCK_TOWNS } from './townsSeed.js';
 
 const SQL = readFileSync(path.join(process.cwd(), 'supabase/seed.sql'), 'utf8');
 
@@ -57,5 +58,57 @@ describe('el seed.sql sembra els pobles com les llavors', () => {
   test('Onada 6 · Sella i Relleu porten la seua desambiguació de la Viquipèdia com a dada', () => {
     expect(sembrats.get('sella')).toMatchObject({ wikipedia_title: 'Sella (Marina Baixa)' });
     expect(sembrats.get('relleu')).toMatchObject({ wikipedia_title: 'Relleu (municipi)' });
+  });
+});
+
+/* R6 · Bloc 2 (P0-26 D2) · El seed.sql es va quedar amb la llavor vella de la
+   Torre (749 hab, commons-ah27.webp, coordenades velles) i amb el Manifest en
+   text pla. Estes proves fixen que la foto, l'avatar, la població i les
+   coordenades ixen de MOCK_TOWNS, i que el Manifest viatja amb el seu HTML ric. */
+const CAMPS_DE_FITXA = ['image_url', 'avatar_url', 'population', 'lat', 'lng'];
+
+describe('el seed.sql sembra la foto, l’avatar, la població i les coordenades de MOCK_TOWNS', () => {
+  const sembrats = new Map((filaDelSeedSql('towns') || []).map((town) => [String(town.id), town]));
+
+  test('cada poble de MOCK_TOWNS té els mateixos camps de fitxa al seed.sql', () => {
+    expect(MOCK_TOWNS.length).toBeGreaterThan(0);
+    const divergencies = [];
+    for (const town of MOCK_TOWNS) {
+      const sembrat = sembrats.get(String(town.id));
+      if (!sembrat) { divergencies.push(`${town.id}: absent`); continue; }
+      for (const camp of CAMPS_DE_FITXA) {
+        if ((sembrat[camp] ?? null) !== (town[camp] ?? null)) divergencies.push(`${town.id}: ${camp}`);
+      }
+    }
+    expect(divergencies).toEqual([]);
+  });
+
+  test('la Torre: 700 hab, les seues fotos pròpies i les coordenades del nucli', () => {
+    expect(sembrats.get('la-torre-de-les-macanes')).toMatchObject({
+      population: '700 hab',
+      image_url: '/assets/towns/la-torre-de-les-macanes/1.jpg',
+      avatar_url: '/assets/towns/la-torre-de-les-macanes/2.jpg',
+      lat: 38.5919,
+      lng: -0.4184
+    });
+  });
+});
+
+describe('el seed.sql sembra el Manifest de Poble amb el seu HTML ric', () => {
+  const llavor = APP_CONTENT_ROWS.find(({ key }) => key === 'feedPosts').payload
+    .find(({ id }) => id === 'manifest-de-poble');
+  const sembrat = (filaDelSeedSql('feedPosts') || []).find(({ id }) => id === 'manifest-de-poble');
+
+  test('el contingut del seed.sql és el de la llavor', () => {
+    expect(sembrat).toBeTruthy();
+    expect(sembrat.content).toBe(llavor.content);
+  });
+
+  test('porta els encapçalaments del document, no el resum en text pla', () => {
+    for (const encapcalament of [
+      '<h3>Un document obert dels pobles</h3>',
+      '<h3>Dos pilars per a revitalitzar els pobles</h3>',
+      '<h4>Despoblament</h4>'
+    ]) expect(sembrat.content).toContain(encapcalament);
   });
 });

@@ -37,7 +37,9 @@ vi.mock('../../components/universal/UniversalPage', async (importOriginal) => {
 });
 import { carregaDiccionari, createTranslator } from '../../config/i18n.js';
 import { ConnexioDetall } from './ConnexioDetall.jsx';
-import { PublicacioDetall } from './PublicacioDetall.jsx';
+/* P0-25 / IDEA-96 (Onada R6) · El lector de sempre (LectorDePublicacio): al Bloc,
+   una publicació del Mur o de l'agenda ja s'obri a l'editor (PublicacioEditable). */
+import { LectorDePublicacio as PublicacioDetall } from './PublicacioDetall.jsx';
 import { publicacioComANota } from './masDeLUsuari.js';
 import { ERROR_PUBLICAR, ErrorPublicacio } from './visibilitatNota.js';
 import { TEXTOS_COMENTAR } from '../../components/PedraSeca/organismes/textosComentar.js';

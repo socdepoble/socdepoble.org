@@ -5,6 +5,8 @@ import { existsSync } from 'node:fs';
 import path from 'node:path';
 import { ManifestDePobleArticle, MANIFEST_PDF_URL, MANIFEST_PROPOSTES_URL, MANIFEST_ADHESIO_URL } from './ManifestDePobleArticle.jsx';
 import { MANIFEST_DE_POBLE_POST, MOCK_FEED } from '../feedSeed.js';
+import { MANIFEST_DE_POBLE_HTML } from './manifestDePobleContent.js';
+import { permetOrigenMitjans, sanitizeHtml } from '../../../utils/sanitize.js';
 import { FEED_POSTS } from '../feedContent.js';
 import { IMPORTANTS_HISTORIQUES_DEL_MUR, llavorAmbDatesDeProva } from '../datesDeProvaMur.js';
 import { POBLES_APLEC_2023 } from '../../pobles/townsSeed.js';
@@ -64,7 +66,8 @@ test('el formulari és una acció accessible de Pedra Seca, sense cap iframe ni 
   expect(action.href).toBe(MANIFEST_ADHESIO_URL);
   expect(action.classList.contains('sdp-boto--primari')).toBe(true);
   expect(action.target).toBe('_blank');
-  expect(action.rel).toBe('noopener noreferrer');
+  /* El sanejador del cos hi afig nofollow (sanitize.js, ganxo 2). */
+  expect(action.rel.split(' ')).toEqual(expect.arrayContaining(['noopener', 'noreferrer']));
   expect(container.querySelector('iframe')).toBeNull();
   expect(container.querySelector('[height="9100"],[style*="9100"]')).toBeNull();
 });
@@ -82,6 +85,9 @@ test('la fitxa del Mur munta el Manifest real i mostra el logo una sola vegada',
 
 test('els recursos són locals i conserven la base del paquet quan s’incrusta en un amfitrió', () => {
   fixaBaseRecursos('https://amfitrio.test/plugin');
+  /* L'amfitrió registra l'origen del paquet (PedraSecaEmbed.jsx): sense, el
+     sanejador bloqueja qualsevol imatge d'un altre origen. */
+  permetOrigenMitjans('https://amfitrio.test/plugin');
   const { container } = render(<ManifestDePobleArticle />);
   const images = [...container.querySelectorAll('img')];
   expect(images).toHaveLength(8);
@@ -91,4 +97,32 @@ test('els recursos són locals i conserven la base del paquet quan s’incrusta 
     expect(existsSync(path.resolve('public', '.' + image.getAttribute('src').replace('https://amfitrio.test/plugin', '')))).toBe(true);
   }
   for (const link of container.querySelectorAll('a[href="/events/aplec-2023"]')) expect(link.target).toBe('');
+});
+
+/* P0-26 / IDEA-97 (Onada R6, Bloc 1) · El cos viu en item.content. */
+test('la llavor porta el document sencer en HTML editable: títols, imatges, botons i enllaç a l’Aplec', () => {
+  const html = MANIFEST_DE_POBLE_POST.content;
+  expect(html).toBe(MANIFEST_DE_POBLE_HTML);
+  for (const tros of ['<h3>Un document obert dels pobles</h3>', '<h3>Dos pilars per a revitalitzar els pobles</h3>', '<h4>Despoblament</h4>',
+    '<h4>Abandonament de l’agricultura</h4>', '<h3>Formulari d’Adhesió al Manifest de Poble</h3>', 'data-sdp-subtargeta=""',
+    `href="${MANIFEST_ADHESIO_URL}"`, 'href="/events/aplec-2023"', 'logo-manifest-de-poble-retallat.webp']) expect(html).toContain(tros);
+  expect(html.match(/<img /g)).toHaveLength(8);
+  /* Només nodes que l'editor i el sanejador entenen igual. */
+  expect(html).not.toMatch(/<(?:figure|figcaption|details|summary|section|time|iframe|h1|h2)\b|\sstyle=|\sid=/);
+  const net = sanitizeHtml(html);
+  expect(net.match(/<img /g)).toHaveLength(8);
+  expect(net.match(/<a /g)).toHaveLength(html.match(/<a /g).length);
+});
+
+test('la fitxa pinta item.content quan és HTML (una edició des de /notes) i la llavor quan la còpia és text pla', () => {
+  const meta = buildMurDetailSectionMeta({ feedPosts: [], t: (_, fallback) => fallback });
+  const editat = { ...MANIFEST_DE_POBLE_POST, content: '<h3>Manifest revisat</h3><p>Paràgraf nou del poble.</p>' };
+  const ambEdicio = render(meta.renderBody(editat));
+  expect(ambEdicio.container.querySelector('.manifest-de-poble h3').textContent).toBe('Manifest revisat');
+  expect(ambEdicio.container.textContent).not.toContain('Revitalitzant estos aspectes');
+  cleanup();
+  const remot = { ...MANIFEST_DE_POBLE_POST, content: 'El Manifest de Poble és un document obert (còpia d’app_content en text pla).' };
+  const ambRemot = render(meta.renderBody(remot));
+  expect(ambRemot.container.textContent).toContain('Revitalitzant estos aspectes, la resta fluirà sol!');
+  expect(ambRemot.container.querySelectorAll('.manifest-de-poble img')).toHaveLength(8);
 });

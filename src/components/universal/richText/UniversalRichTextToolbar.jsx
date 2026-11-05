@@ -32,7 +32,9 @@ export function UniversalRichTextToolbar({
   for (const boto of SCHEMA_VISIBLE) {
     formatState[boto.slot.estat] = Boolean(state.actiu?.[boto.id]);
     if (state.disponible && state.pot?.[boto.id]) {
-      formatActions[boto.slot.accio] = () => exec(boto.id);
+      /* B3-2 · Una fila `ambValor` (l'enllaç de la imatge) passa el valor que
+         rep; la resta, cap argument (l'esdeveniment del clic no hi arriba). */
+      formatActions[boto.slot.accio] = boto.ambValor ? (valor) => exec(boto.id, valor) : () => exec(boto.id);
     }
   }
 

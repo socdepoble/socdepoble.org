@@ -19,7 +19,7 @@ const expectedFunctionHashes=Object.fromEntries(FUNCTION_NAMES.map(name=>{
 export async function verificaEsquemaPosseNodeZero({db,ownerConnection=false}={}){
   if(typeof db?.query!=='function'||typeof ownerConnection!=='boolean')throw new TypeError('posse_readiness_database_required');
   let state;try{state=await db.query('SELECT node0_posse.readiness();',{privateValues:!ownerConnection});}catch{throw Error('posse_schema_unavailable');}
-  if(state?.version!=='posse.r11.v1'||state.migrations!==75||state.ownerStable!==true||state.tablesPrivate!==true||state.sourceInstalled!==true||state.remoteInstalled!==true||FUNCTION_NAMES.some(name=>state.functionHashes?.[name]!==expectedFunctionHashes[name]))throw Error('posse_schema_drift');
+  if(state?.version!=='posse.r11.v1'||state.migrations!==76||state.ownerStable!==true||state.tablesPrivate!==true||state.sourceInstalled!==true||state.remoteInstalled!==true||FUNCTION_NAMES.some(name=>state.functionHashes?.[name]!==expectedFunctionHashes[name]))throw Error('posse_schema_drift');
   return true;
 }
 export async function instalaEsquemaPosseNodeZero({db}={}){

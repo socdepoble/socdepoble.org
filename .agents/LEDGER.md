@@ -5,6 +5,13 @@ description: Llibre d'Obra (LEDGER) de Sóc de Poble
 ---
 # Llibre d'Obra (LEDGER) de Sóc de Poble
 
+### 2026-11-05 · Codex · Onada R6 / Kit CAS R12 · torn_46554c4a-a614-42ba-9a06-7cfd913310af
+
+- Ordre humana: auditoria `4ab2d1527..c49d173c4` més worktree, P0-25/26 i R5-D5/D6; rectificació responsive del logotip incorporada.
+- Treball exclusiu en còpia aïllada i kit CAS amb preimatges: persistència editorial, TipTap complet, permisos, carpetes privades, La Torre, CSS, importador, identitat i Node 0. Cap `src/` ni `.git/` viu modificat per Codex.
+- Evidència pròpia a `_wiki_de_poble/04_escriptori/261104_1636_auditoria_codex.md` i `../_investigacio_ia_de_poble/261105_kit_codex_r12_notes_editable_manifest_aplec_i_gauntlet/`; 145 suites/4.239 Vitest verdes (zero omissions),77 SQL/Node/CAS,2 BUILD REAL i7 proves de pes. Web249.157/250.000 B gzip; WP1.680.470/1.684.000 B (ajust motivat). Entrega segellada:151 fitxers,103 precondicions,462 artefactes; manifest131d3fb2da31. CAS base/replay verds, refús del viu divergent; pins íntegres a l’auditoria.
+- Sense desplegament, migració remota ni tut enviat. Tancament estricte compartit afectat per canvis concurrents i incidències documentals alienes, registrats amb el seu resultat real.
+
 ### 2026-11-01T03:08:56+00:00 · QA nocturna Fediversity, passada 1/3 · Codex (torn_ac4e3ecd-3ab5-4e21-b33a-3b5990893846)
 - **Ordre:** lectura íntegra de pla/prompt 261101_0311 i Llibre Mestre, inspecció quirúrgica cada 2 hores, màxim nocturn i tancament automàtic.
 - **Entrega:** `_wiki_de_poble/04_escriptori/261101_0403_auditoria_codex_marato_nocturna.md`; anotació delimitada al Llibre Mestre i ESTAT, sense codi de producte editat.
@@ -1311,3 +1318,6 @@ Informe: 261101_2143_auditoria_claude.
 - **Preservació:** entrada append sobrecosvell íntegre i checksumSHAcanònic (noautoria/clau); Bookworking1624+un bullet real datat i Bookstagedac498+mateixbullet, sense preparar altresideesprivades. Futurrestage82hauràpreservartambéestanovanota, no retornarE/1624vellcegament. Cap font/índex/objecte/humà/secret/lease/altretorn escrit en este pas llevatcontext/ownautoritzats; cap push, SQLremot, correu, ComputerUse/Antigravity o recurrent.
 
 <!-- HASH: 0ecb0eca1a630cc70996a99edaf379b7122480c7d03a14f595efcfc898211e17 -->
+
+
+<!-- HASH: 11806c0a7669f471e7a710a06aab786b4b7d9e0291fb11a7f3f0dcf71a7f3c35 -->

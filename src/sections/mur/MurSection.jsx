@@ -1,6 +1,6 @@
 import { gestionaTeclaGraella } from '../../components/universal/workspace/navegacioTeclat.js';
-import { Component, Suspense, useMemo, useState } from 'react';
-import { useSearchParams } from '../../app/contexts/RouterContext';
+import { Component, Suspense, useEffect, useMemo, useState } from 'react';
+import { Link, useSearchParams } from '../../app/contexts/RouterContext';
 import { UniversalPage } from '../../components/universal/UniversalPage';
 import { ContentProvider } from '../../components/universal/ContentProvider';
 import { useSEO } from '../../hooks/useSEO';
@@ -8,6 +8,7 @@ import { getSectionListPath, objecteDePagina } from '../../config/navigation';
 import { buildMapEmbedUrl } from './mapConfig';
 import { useMur } from './MurContext';
 import { useCoreContent } from '../../app/contexts/CoreContentContext';
+import { useSuperadminEstable } from '../../hooks/useSuperadminEstable.js';
 import { useUIActions } from '../../app/contexts/UIContext';
 import { PillToggle, Carregant, Boto, Alerta } from '../../components/PedraSeca/index.js';
 import { dataDElement } from '../../components/universal/editorial.js';
@@ -33,12 +34,11 @@ import { alertaMunicipalDe, caducaAl, candidatsAAlerta, esVigent, properaCaducit
 import { useAjuntamentsDelMur } from './useAjuntamentsDelMur.js';
 import { useRellotgeAlertes } from './useRellotgeAlertes.js';
 import { RegioAlertesVigents } from './AlertaMunicipal.jsx';
-import {
-  CASOS_US_EDITORIALS,
-  lligArticlesImportatsAmbRevisio,
-  desaRevisioArticleImportat,
-  estadistiquesRevisioImportacio,
-} from '../../utils/transformadorEditorialWpBlogger.js';
+/* B3-4 (Onada R6, Bloc 3) · El Mur no importa el transformador: les constants
+   i el desat de la revisió són del mòdul lleuger, i els 425 articles (amb el
+   tesaurus) arriben amb carregaArticlesImportats() només en Mode Revisió. */
+import { CASOS_US_EDITORIALS, desaRevisioArticleImportat } from '../../utils/revisioEditorialWp.js';
+import { carregaArticlesImportats } from '../../utils/articlesImportatsMandros.js';
 
 /* P1-64 (pla 261028_1526 §3.7.1; decisions 1 i 9 del Mestre, 261028) · El
    Mapa Fotogràfic es carrega en diferit, només quan s'obri la pestanya
@@ -149,20 +149,41 @@ export default function MurSection() {
   const [modeRevisioLocal, setModeRevisioLocal] = useState(false);
   const [filtreCasUsWp, setFiltreCasUsWp] = useState('tots');
   const [versioRevisioWp, setVersioRevisioWp] = useState(0);
+  /* B3-5 · El mateix criteri que el Perfil: el rol no «parpelleja» mentre la
+     sessió es torna a comprovar; convidats i no superadmins, sense barra. */
+  const { esSuperadmin: esSuperadminMur } = useSuperadminEstable();
   const modeRevisioWp = revisioParam === 'wordpress' || modeRevisioLocal;
+  const mostraBarraRevisioWp = esSuperadminMur || modeRevisioWp;
+  const [transformadorWp, setTransformadorWp] = useState(null);
+  const [errorRevisioWp, setErrorRevisioWp] = useState(false);
+  /* D-B4-3 (Onada R6, Bloc 4; decisió de MarIA) · «Reintentar» torna a demanar
+     la càrrega: cada intent nou torna a córrer l'efecte, i el carregador ja no
+     guarda la promesa fallida (articlesImportatsMandros.js, D-B4-4). */
+  const [intentRevisioWp, setIntentRevisioWp] = useState(0);
+
+  useEffect(() => {
+    if (!modeRevisioWp || transformadorWp) return undefined;
+    let viu = true;
+    setErrorRevisioWp(false);
+    carregaArticlesImportats().then(
+      (modul) => { if (viu) setTransformadorWp(modul); },
+      () => { if (viu) setErrorRevisioWp(true); },
+    );
+    return () => { viu = false; };
+  }, [modeRevisioWp, transformadorWp, intentRevisioWp]);
 
   const dadesRevisioWp = useMemo(() => {
-    if (!modeRevisioWp) return { articles: [], stats: null };
-    const tots = lligArticlesImportatsAmbRevisio();
+    if (!modeRevisioWp || !transformadorWp) return { articles: [], stats: null };
+    const tots = transformadorWp.lligArticlesImportatsAmbRevisio();
     const filtrats = filtreCasUsWp === 'tots'
       ? tots
       : tots.filter((a) => Array.isArray(a.casos_us) && a.casos_us.includes(filtreCasUsWp));
     return {
       articles: filtrats.slice(0, 60),
       totalFiltrats: filtrats.length,
-      stats: estadistiquesRevisioImportacio(),
+      stats: transformadorWp.estadistiquesRevisioImportacio(),
     };
-  }, [modeRevisioWp, filtreCasUsWp, versioRevisioWp]); // eslint-disable-line react-hooks/exhaustive-deps -- versioRevisioWp refresca l'estat localStorage
+  }, [modeRevisioWp, transformadorWp, filtreCasUsWp, versioRevisioWp]); // eslint-disable-line react-hooks/exhaustive-deps -- versioRevisioWp refresca l'estat localStorage
 
   useSEO({
     title: t('section.mur.kicker', 'Mur'),
@@ -351,22 +372,36 @@ export default function MurSection() {
             ]}
           />
 
-          <div className="sdp-mur-revisio-bar">
-            <Boto
-              className="sdp-mur-revisio-toggle"
-              aria-pressed={modeRevisioWp}
-              onClick={() => {
-                if (modeRevisioWp) {
-                  setModeRevisioLocal(false);
-                  if (revisioParam === 'wordpress') setSearchParams({ revisio: null });
-                } else {
-                  setModeRevisioLocal(true);
-                }
-              }}
-            >
-              🔍 Mode Revisió d&apos;Importació (Admin)
-            </Boto>
-          </div>
+          {mostraBarraRevisioWp && (
+            <div className="sdp-mur-revisio-bar">
+              <Boto
+                className="sdp-mur-revisio-toggle"
+                aria-pressed={modeRevisioWp}
+                onClick={() => {
+                  if (modeRevisioWp) {
+                    setModeRevisioLocal(false);
+                    if (revisioParam === 'wordpress') setSearchParams({ revisio: null });
+                  } else {
+                    setModeRevisioLocal(true);
+                  }
+                }}
+              >
+                🔍 Mode Revisió d&apos;Importació (Admin)
+              </Boto>
+            </div>
+          )}
+
+          {modeRevisioWp && !transformadorWp && (errorRevisioWp
+            ? (
+              <Alerta to="error" accions={(
+                <Boto varietat="secundari" onClick={() => setIntentRevisioWp((intent) => intent + 1)}>
+                  {t('section.mur.revisioWp.reintenta', 'Reintentar')}
+                </Boto>
+              )}>
+                {t('error.xarxa', 'Revisa la connexió i torna-ho a provar.')}
+              </Alerta>
+            )
+            : <Carregant etiqueta={t('loading.content', 'Carregant contingut...')} />)}
 
           {modeRevisioWp && dadesRevisioWp.stats && (
             <section className="sdp-mur-revisio-panel" aria-label="Mode Revisió d'Importació de WordPress" data-testid="mur-revisio-wordpress">
@@ -395,13 +430,20 @@ export default function MurSection() {
                 {dadesRevisioWp.articles.map((art) => (
                   <article key={art.wp_id} className="sdp-mur-revisio-card" data-wp-id={art.wp_id}>
                     <div className="sdp-mur-revisio-card__top">
-                      <strong>{art.title}</strong>
+                      <Link className="sdp-mur-revisio-card__titol-link" to={art.ruta_canonica}>
+                        <strong>{art.title}</strong>
+                      </Link>
                       <span className="sdp-mur-revisio-card__estat" data-estat={art.estat_revisio}>
                         {art.estat_revisio === 'aprovat' ? '✅ Aprovat' : art.estat_revisio === 'amb_observacions' ? '📝 Amb observacions' : '⏳ Pendent'}
                       </span>
                     </div>
                     <div className="sdp-mur-revisio-card__meta">
-                      <span>Ruta Pedra Seca: <code>{art.ruta_canonica}</code></span>
+                      <span>
+                        Ruta Pedra Seca:{' '}
+                        <Link to={art.ruta_canonica}>
+                          <code>{art.ruta_canonica}</code>
+                        </Link>
+                      </span>
                       {' · '}
                       <a href={art.source_url} target="_blank" rel="noopener noreferrer">
                         Original socdepoble.net ↗
@@ -415,6 +457,9 @@ export default function MurSection() {
                       </div>
                     )}
                     <div className="sdp-mur-revisio-card__accions">
+                      <Link className="sdp-boto sdp-boto--primari" to={art.ruta_canonica}>
+                        👁️ Veure pàgina completa
+                      </Link>
                       <Boto
                         onClick={() => {
                           desaRevisioArticleImportat(art.wp_id, { estat: 'aprovat' });

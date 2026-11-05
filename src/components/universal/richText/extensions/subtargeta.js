@@ -77,6 +77,13 @@ import { Plugin, PluginKey, TextSelection } from '@tiptap/pm/state';
 export const NOM_SUBTARGETA = 'sdpSubtargeta';
 export const MARCA_SUBTARGETA = 'data-sdp-subtargeta';
 export const CLASSE_SUBTARGETA = 'sdp-subtargeta';
+/* B3-3 (Onada R6, Bloc 3) · UNA classe més de la primitiva, en llista blanca:
+   el quadre d'adhesió del Manifest (manifestDePobleContent.js). Cap altra no
+   entra; sense, el primer desat la perdia. */
+export const CLASSES_DE_SUBTARGETA = Object.freeze(['manifest-de-poble__adhesio']);
+const classeDeSubtargeta = (valor) => (typeof valor === 'string'
+  ? valor.split(/\s+/).find((token) => CLASSES_DE_SUBTARGETA.includes(token)) ?? null
+  : null);
 /* La reserva del nivell del títol: la de nivellDAbans (una caixa de qui no
    se sap res) i la d'inserirSubtargeta quan el nivell del context no és entre
    els admesos. La caixa nova pren el nivell del context (nivellDeContext). */
@@ -308,14 +315,22 @@ export const Subtargeta = Node.create({
     })];
   },
 
+  addAttributes() {
+    return {
+      classe: { default: null, rendered: false, parseHTML: (element) => classeDeSubtargeta(element.getAttribute('class')) },
+    };
+  },
+
   parseHTML() {
     return [{ tag: `div[${MARCA_SUBTARGETA}]` }];
   },
 
-  /* La primitiva, byte a byte: la classe i després la marca (l'ordre que
-     DOMPurify conserva en tornar-la a escriure). */
-  renderHTML() {
-    return ['div', { class: CLASSE_SUBTARGETA, [MARCA_SUBTARGETA]: '' }, 0];
+  /* La primitiva, byte a byte: la classe (amb la de CLASSES_DE_SUBTARGETA, si
+     en porta) i després la marca (l'ordre que DOMPurify conserva en tornar-la
+     a escriure). */
+  renderHTML({ node }) {
+    const classe = node.attrs.classe ? `${CLASSE_SUBTARGETA} ${node.attrs.classe}` : CLASSE_SUBTARGETA;
+    return ['div', { class: classe, [MARCA_SUBTARGETA]: '' }, 0];
   },
 
   addCommands() {

@@ -12,14 +12,14 @@ const FORMA_UUID = /^[0-9a-f]{8}-(?:[0-9a-f]{4}-){3}[0-9a-f]{12}$/i;
 const FORMES = Object.freeze({ core: ['towns', 'pages', 'agents'], mur: ['feedPosts', 'events', 'marketItems'], multimedia: ['mediaItems'], notes: ['notes', 'noteFolders'] });
 /* Projecció primitive explícita: cap spread del DTO, correu, telèfon o rol
    de gestió. Els camps estructurats no suportats es deixen fora en este MVP. */
-const TEXT = Object.freeze(['id','slug','type','kind','sectionId','name','title','subtitle','summary','description','content','lead',
+const TEXT = Object.freeze(['id','slug','type','kind','sectionId','name','title','subtitle','summary','description','content','lead','html','hero_image','logo_image','logo_image_dark','publish_date','entradilla','_editorialClau','editorial_format',
   'author','author_name','authorAvatar','author_avatar','author_org_id','authorOrgId','author_entity_id','ownerUserId','created_at','updated_at',
   'date','time','inici','fi','zona','uid','recurrencia','image_url','avatar_url','hero_url','logoImage','logo','image','avatar',
   'url','external_url','logo_url','href','linkTo','location','town_name','town','poble_id','provincia','comarca','population','role','short_bio','bio','lema',
   'presentacio_html','tag','icon','copyright','price','currency','seller','category','categoryId','folderId','post_subtitle',
   'post_title','post_content','alt','format','source','canonicalUrl','uri','searchText','body','text','source_url','author_handle','visibility','content_warning']);
 const BOOL = Object.freeze(['isPublished','is_public','pinned','featured','portada_sencera','sensitive']);
-const NUM = Object.freeze(['lat','lng','revision','duration','width','height']);
+const NUM = Object.freeze(['lat','lng','revision','duration','width','height','_editorialVersio']);
 const LIST = Object.freeze(['labels','tags','images','image_urls','gallery','categories']);
 const error = (codi, missatge, status) => Object.assign(new Error(missatge), { code:codi, codi, ...(status ? {status} : {}) });
 const invalid = () => error('BACKEND_RESPOSTA_INVALIDA', 'El Node 0 ha tornat dades invàlides.');

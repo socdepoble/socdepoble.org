@@ -153,10 +153,26 @@ const RSS = [
   '<p>Si ací baix <strong>no tens el botó</strong>, davall et diem <strong>per què</strong> i què <strong>pots fer</strong>. <strong>Desactivar-lo</strong> o tornar-lo a activar <strong>no esborra</strong> res.</p>'
 ];
 
+const GENEALOGIA = [
+  '<h3>Què és l’Arbre Genealògic</h3>',
+  '<p>L’<strong>Arbre Genealògic</strong> guarda la <strong>memòria de la família</strong> sense perdre els <strong>malnoms de la casa</strong>, els <strong>oficis antics</strong> ni el nom dels <strong>masos i caserius</strong>. Pots dibuixar cada branca pas a pas, o muntar-la parlant amb una <strong>entrevista oral guiada</strong> pensada per a <strong>escoltar els majors</strong>.</p>',
+  '<h3>Com funciona l’entrevista oral guiada</h3>',
+  '<p>Comences per tu o pels <strong>avis i besavis</strong> que vulgues recordar, dient en <strong>veu alta</strong> o escrivint el <strong>nom, el malnom i el poble</strong>. L’assistent et fa <strong>tres o quatre preguntes</strong> curtes cada vegada sobre <strong>pares, germans i casaments</strong> per a <strong>estirar del fil</strong> sense atabalar.</p>',
+  '<h3>Els malnoms de la casa i els masos</h3>',
+  '<p>Al poble una persona es coneix pel <strong>malnom de la nissaga</strong> i per la <strong>casa o el mas</strong> on vivia. Per això cada fitxa separa els <strong>cognoms del registre</strong> del <strong>malnom popular</strong> i del <strong>lloc de vida</strong>, connectant les famílies que van habitar <strong>la mateixa teulada</strong>.</p>',
+  '<h3>Com es tracten els dubtes sense inventar res</h3>',
+  '<p>La <strong>memòria oral</strong> té <strong>buits i dates aproximades</strong> que ningú no ha de falsejar. L’assistent <strong>no inventa cap dada</strong> ni ompli pel seu compte el que no saps: diferencia el que és <strong>segur, aproximat o dubtós</strong> i deixa anotades les <strong>preguntes pendents</strong> per al <strong>pròxim dinar familiar</strong>.</p>',
+  '<h3>Què obtens al final de cada conversa</h3>',
+  '<p>Servix per a <strong>qualsevol casa</strong> que vulga <strong>salvar la història oral</strong> dels seus majors abans que es perda i deixar-la <strong>clara per als nets</strong>. En acabar cada conversa tens una <strong>fitxa ordenada de la branca</strong>, el <strong>mapa de parentius</strong> i una <strong>llista de buits</strong> per continuar investigant.</p>',
+  '<h3>On es queden les dades i què ix d’ací</h3>',
+  '<p>Tot es guarda <strong>en este dispositiu</strong> i <strong>no s’envia enlloc</strong> sense el teu permís, i quan vulgues pots traure un <strong>fitxer GEDCOM</strong> o un <strong>arbre per a imprimir</strong>. Encara està <strong>en proves</strong>: si ací no es pot obrir, en lloc del botó <strong>«Obrir l’Arbre Genealògic»</strong> la pàgina et diu <strong>per què</strong> i què pots fer.</p>'
+];
+
 /** Sis blocs didàctics per eina, sense duplicar els títols de la pàgina. */
 export const PRESENTACIO_PLUGINS = Object.freeze({
   rebost: REBOST.join('\n'),
   salut: SALUT.join('\n'),
+  genealogia: GENEALOGIA.join('\n'),
   gestoria: GESTORIA.join('\n'),
   rss: RSS.join('\n')
 });

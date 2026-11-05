@@ -77,6 +77,9 @@ export function creaNotesLocal(e) {
         notesComplete: false, noteResolution: { id, status: notes.length ? 'found' : 'not-found' } });
     },
 
+    async creaCarpetaNotes(input, config = {}) {
+      return e.notes.createFolder(input, e.ci(config));
+    },
     async createNote(input, config = {}) {
       return e.copia(await e.notes.create(exigixObjecte(input, 'La nota'), e.ci(config)));
     },

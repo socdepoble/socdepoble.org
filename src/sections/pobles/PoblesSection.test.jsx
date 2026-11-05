@@ -323,9 +323,9 @@ test('Onada 5 · un poble remot sense author rep nomDeLaGent del seu nom i obri 
 });
 
 /* Llei del Píxel · Els 8 pobles sense enriquiment AH-27 conserven els drets
-   anteriors. La Torre conserva autor i article, amb la foto i el crèdit
-   Commons contrastats, sense atribuir-li una llicència CC que no té. */
-test('Onada 5 · la llavor conserva author i article; AH-27 acredita la foto real de La Torre', () => {
+   anteriors. R5-D5: la Torre conserva autor, article i la seua foto pròpia,
+   sense atribuir-la a Commons ni a una llicència CC que no té. */
+test('Onada 5 · la llavor conserva author i article; R5-D5 la Torre no acredita a Commons la seua foto pròpia', () => {
   const { container } = render(<PoblesSection />);
   const ARTICLES = {
     'la-torre-de-les-macanes': 'La_Torre_de_les_Ma%C3%A7anes',
@@ -343,10 +343,9 @@ test('Onada 5 · la llavor conserva author i article; AH-27 acredita la foto rea
     const targeta = targetaDe(container, town.title);
     expect(autor(targeta)).toBe(town.author);
     expect(viquipedia(targeta)).toBe(`https://ca.wikipedia.org/wiki/${ARTICLES[town.id]}`);
-    if (town.id === 'la-torre-de-les-macanes') {
-      expect(drets(targeta)).toBe('Text: Viquipèdia CC BY-SA 4.0 · Foto: Torre (Public domain)');
-      expect(town.wikipedia_provenance.photo).toMatchObject({ autor: 'Torre', llicencia: 'Public domain', fitxer: 'El riu251.jpg' });
-    } else expect(drets(targeta)).toBe('© Viquipèdia / Wikimedia Commons (CC BY-SA)');
+    // R5-D5 · La Torre conserva la seua foto pròpia (1.jpg): no s'acredita a Commons.
+    if (town.id === 'la-torre-de-les-macanes') expect(town.wikipedia_provenance.photo).toBeNull();
+    expect(drets(targeta)).toBe('© Viquipèdia / Wikimedia Commons (CC BY-SA)');
   }
   expect(autor(targetaDe(container, 'La Torre de les Maçanes'))).toBe('Gent de la Torre');
 });
@@ -499,7 +498,7 @@ test('Onada 5 · la targeta es classifica per província (categoria) i comarca (
     ['Pobles', 'sdp-badge-system'],
     ['Alacant', 'sdp-badge-category'],
     ['L\'Alacantí', 'sdp-badge-tag'],
-    ['749 hab', 'sdp-badge-accent'],
+    ['700 hab', 'sdp-badge-accent'],
     ['Enllaç a Wikipedia', 'sdp-badge-neutral']
   ]);
   expect(etiquetes(targetaDe(container, 'Remot'))).toEqual([

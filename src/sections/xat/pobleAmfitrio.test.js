@@ -86,7 +86,7 @@ describe('avatarDelPoble (Onada 3, P2)', () => {
   /* P1-70 (ordre del Mestre, 261029 18:20) · «Gent de la Torre», mai «GD»: la
      foto de la llavor (townsSeed.js) quan el node no en dona cap avatar_url. */
   it('P1-70 · la Torre sense fitxa, sense fitxes o sense avatar_url porta la seua foto de la llavor; la fitxa del node mana', () => {
-    expect(POBLE_PER_DEFECTE.avatar).toBe('/assets/towns/la-torre-de-les-macanes/commons-ah27.webp');
+    expect(POBLE_PER_DEFECTE.avatar).toBe('/assets/towns/la-torre-de-les-macanes/2.jpg');
     expect(POBLE_PER_DEFECTE.avatar).toBe(MOCK_TOWNS.find((town) => town.id === POBLE.id).avatar_url);
     expect(existsSync(path.join(process.cwd(), 'public', POBLE_PER_DEFECTE.avatar))).toBe(true);
     expect(existsSync(path.join(process.cwd(), 'public', POBLE_PER_DEFECTE.avatar.replace(/\.jpg$/, '.webp')))).toBe(true);
@@ -99,15 +99,15 @@ describe('avatarDelPoble (Onada 3, P2)', () => {
     expect(pobleDelXat(null)).toEqual({
       id: 'la-torre-de-les-macanes',
       nom: 'Gent de la Torre',
-      avatar: '/assets/towns/la-torre-de-les-macanes/commons-ah27.webp'
+      avatar: '/assets/towns/la-torre-de-les-macanes/2.jpg'
     });
-    expect(avatarDelPoble(pobleDelXat(null), [])).toBe('/assets/towns/la-torre-de-les-macanes/commons-ah27.webp');
+    expect(avatarDelPoble(pobleDelXat(null), [])).toBe('/assets/towns/la-torre-de-les-macanes/2.jpg');
     expect(avatarDelPoble(pobleDelXat(undefined), undefined)).not.toBe('GD');
   });
 });
 
 describe('la comunitat del poble amb la cara del poble (Onada 3, P2, revisió)', () => {
-  const CARA = '/assets/towns/la-torre-de-les-macanes/commons-ah27.webp'; /* AH-27: la foto de la fitxa hidratada (IDEA-86) */
+  const CARA = '/assets/towns/la-torre-de-les-macanes/2.jpg';
   const subjecte = { tipus: 'poble', id: 'uuid-torre', ruta: '/pobles/la-torre-de-les-macanes' };
   const torre = { id: 'c-torre', tipus: 'comunitat', subjecte, avatar_url: null };
   const avisos = { id: 'a-torre', tipus: 'canal', comunitatId: 'c-torre', subjecte, avatar_url: null };

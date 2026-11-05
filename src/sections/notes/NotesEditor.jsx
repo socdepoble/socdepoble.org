@@ -30,6 +30,7 @@ import {
   TEXT_DRETS_RESERVATS, TITOL_DRETS_RESERVATS, bloqueigDeNota, publicaAmbMotiu, textosAmbDrets, textosDeNota, textosExtern
 } from './visibilitatNota.js';
 import { nomDeCarpeta } from './carpetes.js';
+import { carpetesCreades, creaCarpetaCreada, useCarpetesCreades } from '../../components/universal/classificacio/carpetesCreades.js';
 import { Alerta, Insignia } from '../../components/PedraSeca';
 import { llicenciaDeLActor } from '../../components/universal/drets/herencia.js';
 import { ID_COPIA_PROVA, ID_NOTA_BENVINGUDA, autoriaDeLActor, modeDeDadesResolt, signaturaDeNota } from './autoriaNota.js';
@@ -72,10 +73,10 @@ const NOTA_BENVINGUDA = NOTA_TUTORIAL;
 const CARPETA_PER_DEFECTE = 'f-notes';
 
 const AVIS_CATEGORIA = ["section.notes.editor.avisCategoria", "Cal almenys una categoria. Si vols netejar-les, marca'n una de general, com «{categoria}»."];
-/* Carpetes: el port de dades (backendPort.js) no té cap mètode per a crear,
-   reanomenar ni esborrar carpetes; el catàleg és el de sèrie. Fins que hi haja
-   contracte amb Sollutia (AGENTS §8) només es pot triar. */
-const AVIS_CARPETES = ["section.notes.editor.avisCarpetes", "Crear, reanomenar i esborrar carpetes encara no té contracte de dades amb el servidor. De moment, tria la carpeta d’esta nota."];
+/* Carpetes (Onada R6 · Bloc 5) · Crear ja té contracte: creaCarpetaCreada desa la
+   carpeta nova al servidor (capacitat carpetesNotes, migració 76) i, si el
+   servidor no en té, en este navegador. Reanomenar i esborrar encara no. */
+const AVIS_CARPETES = ["section.notes.editor.avisCarpetes", "Les carpetes noves es desen al servidor quan ho permet i, si no, en este navegador. Reanomenar i esborrar carpetes encara no té contracte de dades."];
 const AVIS_SENSE_TOTES = ["section.notes.editor.avisSenseTotes", "Reanomenar i esborrar estaran disponibles quan s’hagen carregat totes les notes."];
 /* T40 (ordre del Mestre, 260928) · Sense la columna publish_date (D2), la data
    queda en quarantena al dispositiu i publishNote la pren de la nota d'ací:
@@ -163,8 +164,9 @@ function entradesDeTargetes({ publicacions, actes, productes, pobles, pagines })
    Gauntlet 261016 (Bloc 3.9; ordre del Mestre: «Eliminar el bloc inferior
    "Ja publicat al Mur" de la vista d'edició») · Fora la prop `seccio` i el peu
    que en feia (PublicacionsDeLActor, Esmena 2 del pla 261007_1645): l'editor
-   no porta cap peu, tampoc a Mercat ni a Esdeveniments. La lectura d'una
-   publicació (PublicacioDetall) conserva el seu. */
+   no porta cap peu, tampoc a Mercat ni a Esdeveniments. P0-25 / IDEA-96
+   (Onada R6) · Tampoc la lectura d'una publicació (PublicacioDetall): cap peu
+   «Ja publicat al Mur» en tot el Bloc. */
 export default function NotesEditor({ activeNote, onToast = null }) {
   const {
     saveNoteField, setLocalNoteField, publishNote, compartirNota, noteFolders, t, config, workspaceKey,
@@ -337,14 +339,17 @@ export default function NotesEditor({ activeNote, onToast = null }) {
   const documents = useMemo(() => (esSandbox ? [sandbox, ...notes] : notes), [esSandbox, sandbox, notes]);
   /* T7 (P5/P8) · Contracte amb el Lot A: { id, nom, parentId }. Amb parentId,
      DialegCarpeta pinta l'arbre amb sagnat; la llavor és plana i es veu igual. */
-  const [carpetesLocals, setCarpetesLocals] = useState(CAP);
+  /* Onada R6 · Bloc 2 (P1-d) · Les carpetes creades en línia persistixen per àmbit
+     (scopeKey) i tornen en recarregar: cap nota no apunta a una carpeta fantasma. */
+  const carpetesLocals = useCarpetesCreades(scopeKey);
   const carpetes = useMemo(() => {
     const llista = noteFolders?.length ? noteFolders : NOTE_FOLDERS_SEED;
     /* P1-22 · El nom de sèrie en la llengua de l'app (nomDeCarpeta); l'id és el que es desa. */
     const base = llista.filter((f) => String(f.id) !== 'f-tot').map((f) => ({
       id: String(f.id), nom: nomDeCarpeta(f, t), parentId: f.parentId == null ? null : String(f.parentId)
     }));
-    const extres = carpetesLocals.filter((extra) => !base.some((c) => c.id === extra.id));
+    const extres = carpetesLocals.filter((extra) => !base.some((c) => c.id === extra.id))
+      .map((extra) => ({ id: extra.id, nom: extra.nom, parentId: null }));
     return [...base, ...extres];
   }, [noteFolders, t, carpetesLocals]);
   const classificacio = useMemo(() => (notaEnEdicio ? classificacioDe(notaEnEdicio) : null), [notaEnEdicio]);
@@ -389,10 +394,7 @@ export default function NotesEditor({ activeNote, onToast = null }) {
      l'àmbit en dos casos (carpetaAmbit.js): moure la nota a la carpeta del
      Mercat li posa l'àmbit Mercat, i traure-la'n cap a la del Mur amb l'àmbit
      Mercat la torna al Mur (cap fitxa). En la mateixa escriptura. */
-  const desaCarpeta = useCallback((id, nomNou = null) => {
-    if (nomNou) {
-      setCarpetesLocals((prev) => (prev.some((c) => c.id === id) ? prev : [...prev, { id: String(id), nom: nomNou, parentId: null }]));
-    }
+  const assignaCarpeta = useCallback((id) => {
     if (notaEnEdicio && id && id !== carpetaId) {
       const canvis = { folderId: id };
       const ambitNou = sincronitzaAmbit ? ambitPerCanviDeCarpeta({
@@ -402,8 +404,18 @@ export default function NotesEditor({ activeNote, onToast = null }) {
       else if (ambitNou) canvis.fitxa = { ambit: ambitNou, estat: ESTAT_PER_DEFECTE, dades: {} };
       escriu([{ doc: notaEnEdicio, canvis }]);
     }
-    setDialeg(null);
   }, [notaEnEdicio, carpetaId, escriu, sincronitzaAmbit, fitxaDAmbit]);
+  const desaCarpeta = useCallback((id, nomNou = null) => {
+    setDialeg(null);
+    /* P1-d (Bloc 5) · Idempotent: una carpeta que ja hi és (de sèrie o creada, també per la
+       Botonera, que ja l'ha desada abans de cridar-nos) no es torna a crear. Una de nova es
+       crea primer (al servidor si el permet) i la nota pren l'id que torna, mai un id fantasma. */
+    const coneguda = carpetes.some((c) => c.id === String(id)) || carpetesCreades(scopeKey).some((c) => c.id === String(id));
+    if (!nomNou || coneguda) { assignaCarpeta(id); return; }
+    creaCarpetaCreada(scopeKey, nomNou, { existents: carpetes, config })
+      .then((carpeta) => { if (carpeta?.id) assignaCarpeta(carpeta.id); })
+      .catch(() => { showToast(t('section.notes.carpetes.errorCrear', 'No s’ha pogut crear la carpeta. Torna-ho a provar.'), 'error'); });
+  }, [assignaCarpeta, carpetes, scopeKey, config, showToast, t]);
 
   const desaValors = useCallback((camp, valors) => {
     if (notaEnEdicio) {
@@ -711,6 +723,8 @@ export default function NotesEditor({ activeNote, onToast = null }) {
             carpetaId,
             carpetes,
             onCanviaCarpeta: desaCarpeta,
+            ambitCarpetes: scopeKey,
+            configCarpetes: config,
             catalegCategories: cataleg(documents, 'categories', CATEGORIES_BASE),
             onCanviaCategories: (valors) => desaValors('categories', valors),
             categoriaGeneral: CATEGORIA_GENERAL,
@@ -793,7 +807,7 @@ export default function NotesEditor({ activeNote, onToast = null }) {
          l'ordre «/» Emoji. Totes dues funcions són estables (canalEmojis.js). */
       ...(canalEmojis ? { registraInsercio: canalEmojis.registra, obreEmojis: canalEmojis.obri } : {})
     };
-  }, [notaEnEdicio, documentPerAlEditor, esSandbox, esPreparada, creacioPreparada, escriuPreparada, desaPreparada, senseSessio, actor, actorId, autoria, memberships, actualitzaSandbox, setLocalNoteField, saveNoteField, publishNote, compartirNota, connexio, dretsReservats, dretsDeLOriginal, extern, citaOrigen, pucBorrar, obriBorrar, noteFolders, t, signatura, emptyDocument, config, classificacio, carpetes, carpetaId, desaCarpeta, desaValors, documents, CATEGORIES_BASE, ETIQUETES_BASE, estatDesament, dataNomesAlDispositiu, targetes, canalEmojis, asseguraNormes, memoriaOral, ambAmbit, fitxaDAmbit, obriClassificacio, documentDePrevisualitzacio, desaAmbit, errorsAmbit, peticioAmbit, peticioAmbitAtesa]);
+  }, [notaEnEdicio, documentPerAlEditor, esSandbox, esPreparada, creacioPreparada, escriuPreparada, desaPreparada, senseSessio, actor, actorId, autoria, memberships, actualitzaSandbox, setLocalNoteField, saveNoteField, publishNote, compartirNota, connexio, dretsReservats, dretsDeLOriginal, extern, citaOrigen, pucBorrar, obriBorrar, noteFolders, t, signatura, emptyDocument, config, classificacio, carpetes, carpetaId, desaCarpeta, desaValors, documents, CATEGORIES_BASE, ETIQUETES_BASE, estatDesament, dataNomesAlDispositiu, targetes, canalEmojis, asseguraNormes, memoriaOral, ambAmbit, fitxaDAmbit, obriClassificacio, documentDePrevisualitzacio, desaAmbit, errorsAmbit, peticioAmbit, peticioAmbitAtesa, scopeKey]);
 
   // Reanomenar i esborrar necessiten veure totes les notes: amb el llistat a
   // mitges, una nota no carregada es quedaria amb el nom vell.

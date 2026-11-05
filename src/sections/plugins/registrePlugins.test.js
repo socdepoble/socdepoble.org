@@ -37,11 +37,11 @@ import {
   rutaDelPlugin
 } from './registrePlugins.js';
 
-const ORDRE = ['mapa', 'vehicle', 'animalets', 'gestoria', 'rebost', 'salut', 'rss', 'tpv'];
+const ORDRE = ['mapa', 'vehicle', 'animalets', 'gestoria', 'rebost', 'salut', 'genealogia', 'rss', 'tpv'];
 /* Onada 10 (decisió M4 del Mestre, 261010) · Els que tenen targeta de plugin
    al Panell, i per tant data i etiquetes. Mapa, Vehicle Compartit i Animalets
    no: la seua targeta del Panell és la de dalt, la de publicació (W4-08). */
-const AMB_TARGETA_DE_PLUGIN = ['gestoria', 'rebost', 'salut', 'rss', 'tpv'];
+const AMB_TARGETA_DE_PLUGIN = ['gestoria', 'rebost', 'salut', 'genealogia', 'rss', 'tpv'];
 const SENSE_TARGETA_DE_PLUGIN = ['mapa', 'vehicle', 'animalets'];
 /* L'hora del document de l'ordre (prompt 261004_0015), el criteri de les
    targetes de dalt (destinsControl.test.js). Pendent del Mestre: confirmar-la. */
@@ -92,7 +92,7 @@ describe('registre de plugins', () => {
   test('huit ids, en l’ordre del Mestre, sense repetits', () => {
     expect(IDS_PLUGINS).toEqual(ORDRE);
     expect(PLUGINS.map((p) => p.id)).toEqual(ORDRE);
-    expect(new Set(IDS_PLUGINS).size).toBe(8);
+    expect(new Set(IDS_PLUGINS).size).toBe(9);
   });
 
   /* Onada 8 (261009) · La Consola, el Cervell i el Panell de Disseny ja no
@@ -130,7 +130,7 @@ describe('registre de plugins', () => {
      _multimedia_de_poble/originals_raster_public/) i la bessona, amb les
      mateixes mides, és la il·lustració. La Gestoria i l'RSS continuen en .jpg.
      Abans: només la del TPV era .webp. */
-  const EN_WEBP = new Set(['mapa', 'vehicle', 'animalets', 'rebost', 'salut', 'tpv']);
+  const EN_WEBP = new Set(['mapa', 'vehicle', 'animalets', 'rebost', 'salut', 'genealogia', 'tpv']);
   test('cada il·lustració és /assets/ui/plugins/<id>_vinyeta.jpg (la del TPV i les del Mòdul B, .webp) i existix a public/', () => {
     expect(IMATGES_PLUGINS).toBe('/assets/ui/plugins');
     for (const { id, imatge } of PLUGINS) {
@@ -188,6 +188,7 @@ describe('registre de plugins', () => {
       gestoria: '/app/gestoria',
       rebost: '/app/nevera/casa',
       salut: '/app/salut',
+      genealogia: null,
       rss: '/app/lector',
       tpv: '/app/bar'
     });
@@ -266,7 +267,7 @@ describe('registre de plugins', () => {
   test('la Gestoria només s’obri en desenvolupament', () => {
     expect(Object.fromEntries(PLUGINS.map((p) => [p.id, p.entorn]))).toEqual({
       mapa: null, vehicle: null, animalets: null, gestoria: 'desenvolupament',
-      rebost: null, salut: null, rss: null, tpv: null
+      rebost: null, salut: null, genealogia: null, rss: null, tpv: null
     });
     // La Gestoria diu, honestament, que està en obres i on s'obri (ja no «dins de la Wiki»).
     expect(pluginPerId('gestoria').entradilla).toMatch(/en obres/);
@@ -286,10 +287,10 @@ describe('registre de plugins', () => {
     }
     expect(Object.fromEntries(PLUGINS.map((p) => [p.id, p.espai]))).toEqual({
       mapa: null, vehicle: null, animalets: null, gestoria: 'empresa',
-      rebost: 'llar', salut: 'llar', rss: null, tpv: null
+      rebost: 'llar', salut: 'llar', genealogia: 'llar', rss: null, tpv: null
     });
     expect(pluginsDeLEspai('empresa').map((p) => p.id)).toEqual(['gestoria']);
-    expect(pluginsDeLEspai('llar').map((p) => p.id)).toEqual(['rebost', 'salut']);
+    expect(pluginsDeLEspai('llar').map((p) => p.id)).toEqual(['rebost', 'salut', 'genealogia']);
     // Cap id compartit entre els dos espais.
     const empresa = new Set(pluginsDeLEspai('empresa').map((p) => p.id));
     expect(pluginsDeLEspai('llar').filter((p) => empresa.has(p.id))).toEqual([]);
@@ -316,7 +317,7 @@ describe('registre de plugins', () => {
     ];
     expect(textos.filter((text) => /\d/.test(text))).toEqual([]);
     // Sonda: la data sí que porta xifres, i per això no és a la llista de dalt.
-    expect(pluginsDeLEspai('llar').map((p) => /\d/.test(p.data))).toEqual([true, true]);
+    expect(pluginsDeLEspai('llar').map((p) => /\d/.test(p.data))).toEqual([true, true, true]);
   });
 
   /* Onada 10 (261010; pla 261010_1121; decisió del Mestre del 261010, M4:
@@ -387,6 +388,7 @@ describe('registre de plugins', () => {
       gestoria: ['Eina', 'Factures'],
       rebost: ['Eina', 'Compra'],
       salut: ['Eina', 'Cures'],
+      genealogia: ['Eina', 'Família'],
       rss: ['Eina', 'Notícies'],
       tpv: ['Eina', 'Hostaleria']
     });
@@ -402,7 +404,7 @@ describe('registre de plugins', () => {
   test('appDelPlugin diu de quina app de la plataforma és l’«Obrir» (per als interruptors), o null', () => {
     expect(Object.fromEntries(PLUGINS.map((p) => [p.id, appDelPlugin(p)]))).toEqual({
       mapa: null, vehicle: null, animalets: null, gestoria: 'gestoria',
-      rebost: 'nevera', salut: 'salut', rss: 'lector', tpv: 'bar'
+      rebost: 'nevera', salut: 'salut', genealogia: null, rss: 'lector', tpv: 'bar'
     });
     expect(appDelPlugin(null)).toBeNull();
   });

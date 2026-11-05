@@ -163,6 +163,7 @@ export const getRuntimeDataMode = asseguraMetode('getRuntimeDataMode');
 
 // Nous mètodes per al Xat v2 i el pont amb Notes
 export const createNote = asseguraMetode('createNote');
+export const creaCarpetaNotes = asseguraMetode('creaCarpetaNotes');
 export const loadFils = asseguraMetode('loadFils');
 export const loadMissatges = asseguraMetode('loadMissatges');
 export const enviaMissatge = asseguraMetode('enviaMissatge');
@@ -318,6 +319,7 @@ export const retiraFactor = asseguraMetode('retiraFactor');
    loadCoreContent (camp additiu `personalitzacio`). */
 export const adminDesaPersonalitzacio = asseguraMetode('adminDesaPersonalitzacio');
 export const adminHistorialPersonalitzacio = asseguraMetode('adminHistorialPersonalitzacio');
+export const adminActualitzaPublicacioEditorial = asseguraMetode('adminActualitzaPublicacioEditorial');
 export const adminLlistaPobles = asseguraMetode('adminLlistaPobles');
 export const adminLligPersonalitzacio = asseguraMetode('adminLligPersonalitzacio');
 

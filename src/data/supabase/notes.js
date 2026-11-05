@@ -5,6 +5,46 @@ import { emojiSol } from '../../utils/emoji.js';
 import { dataIsoONull } from '../../utils/calendari.js';
 import { ambDescartats, creaColumnesOpcionals } from './columnesOpcionals.js';
 import { coaccionaAmbit, esFitxaDAmbit } from '../../utils/publicacioUniversal.js';
+import { nomDeCarpetaValid, carpetaDeFila } from '../carpetesNotes.js';
+
+async function carpetesPrivades(config, ownerUserId) {
+  const { tenantId } = getResolvedConfig(config);
+  validateScope(tenantId);
+  try {
+    const folders = [];
+    let after = '';
+    for (;;) {
+      const rows = await request(`/rest/v1/note_folders?select=id,nom&tenant_id=eq.${encodeURIComponent(tenantId)}&owner_user_id=eq.${encodeURIComponent(ownerUserId)}&order=id.asc&limit=500${after ? `&id=gt.${encodeURIComponent(after)}` : ''}`, config, { signal: config.signal });
+      if (!Array.isArray(rows) || rows.length > 500) throw new TypeError('Resposta de carpetes invàlida.');
+      const page = rows.map(carpetaDeFila);
+      for (const folder of page) {
+        if (after && folder.id <= after) throw new TypeError('La pàgina de carpetes no avança.');
+        after = folder.id;
+        folders.push(folder);
+      }
+      if (rows.length < 500) return [...NOTE_FOLDERS_SEED, ...folders];
+    }
+  } catch (error) {
+    // Un servidor anterior a R12 continua llegint Notes; no fingix crear carpetes.
+    /* B4-S1 · ErrorSupabase no porta `code`: PostgREST respon 404 amb PGRST205
+       al cos quan la taula no existix (la migració 76 encara no s'ha aplicat). */
+    if (['42P01', 'PGRST205'].includes(error?.code) || error?.status === 404 || /PGRST205|42P01/.test(String(error?.message || ''))) return NOTE_FOLDERS_SEED;
+    throw error;
+  }
+}
+
+export async function creaCarpetaNotes(input, config = {}) {
+  const nom = nomDeCarpetaValid(input);
+  const { runtimeDataMode, tenantId, hasSupabaseConfig } = getResolvedConfig(config);
+  if (runtimeDataMode !== 'remote') {
+    const { localNotes } = await import('../localNotes.js');
+    return localNotes.createFolder({ nom }, config);
+  }
+  if (!hasSupabaseConfig) throw new Error('No es pot crear la carpeta sense connexió.');
+  validateScope(tenantId);
+  const row = await request('/rest/v1/rpc/crea_carpeta_notes', config, { method: 'POST', body: JSON.stringify({ p_nom: nom, p_tenant_id: tenantId }) });
+  return carpetaDeFila(Array.isArray(row) ? row[0] : row);
+}
 
 /* T47b (ordre del Mestre, 260928) · Columnes de `notes` que el client ja
    escriu i que el servidor pot no tindre encara (cap migració aplicada, D2).
@@ -148,7 +188,7 @@ export async function loadNotesPage({ ownerUserId = getDefaultUserId(), cursor =
   if (range && rows.length && Number(range[1]) + 1 !== rows.length) throw new Error('Rang de Notes inconsistent.');
   if (total !== null && total < rows.length) throw new Error('Total de Notes inconsistent.');
   const complete = rows.length === 0 || total === rows.length;
-  return { notes: rows.map(summary), noteFolders: NOTE_FOLDERS_SEED, complete,
+  return { notes: rows.map(summary), noteFolders: await carpetesPrivades(config, ownerUserId), complete,
     nextCursor: complete ? null : JSON.stringify([tenantId, ownerUserId, rows.at(-1).id]) };
 }
 
@@ -162,10 +202,12 @@ export async function loadNotes(ownerUserId = getDefaultUserId(), config = {}) {
   if (!id) throw new Error('Cal un ID de nota no buit.');
   const { runtimeDataMode, hasSupabaseConfig, tenantId } = getResolvedConfig(config);
   let notes;
+  let carpetesLocals = null;
   if (runtimeDataMode !== 'remote') {
     const { localNotes } = await import('../localNotes.js');
     const seed = await localNotes.load(ownerUserId, config);
     notes = (seed.notes || []).filter(note => String(note.id) === id && activa(note));
+    carpetesLocals = seed.noteFolders;
   } else {
     if (!hasSupabaseConfig) throw new Error('Falten credencials de Supabase per carregar les Notes.');
     validateScope(tenantId); requireUuid(ownerUserId, 'Propietari'); requireUuid(id, 'Nota');
@@ -175,7 +217,7 @@ export async function loadNotes(ownerUserId = getDefaultUserId(), config = {}) {
     if (!Array.isArray(rows) || rows.length > 1 || rows.some(row => row.id !== id)) throw new Error('Detall de Notes invàlid.');
     notes = rows.map(nota);
   }
-  return { notes: notes.map(note => ({ ...note, contentLoaded: true })), noteFolders: NOTE_FOLDERS_SEED,
+  return { notes: notes.map(note => ({ ...note, contentLoaded: true })), noteFolders: carpetesLocals ?? await carpetesPrivades(config, ownerUserId),
     notesComplete: false, noteResolution: { id, status: notes.length ? 'found' : 'not-found' } };
 }
 

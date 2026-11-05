@@ -137,7 +137,8 @@ describe('l’adaptador local (conversesLocal)', () => {
       // No email service exists in the offline adapter; preserve every prior
       // capability, including push's explicit no-service rejection.
       expect(CAPACITATS_NO_DECLARADES).toEqual(['verificacioCorreu','recuperacioCorreu']);
-      expect(Object.keys(CAPACITATS)).toHaveLength(41);
+      /* Onada R6 · R12 (migració 76) · +carpetesNotes i +edicioEditorial: 43 capacitats. */
+      expect(Object.keys(CAPACITATS)).toHaveLength(43);
     } finally {
       await a.destroy();
     }

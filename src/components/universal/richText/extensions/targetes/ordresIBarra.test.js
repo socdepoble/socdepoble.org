@@ -100,7 +100,7 @@ describe('la barra: fila «targeta» de nivell avançat', () => {
     expect(fila).toEqual({ id: 'targeta', clauI18n: 'editor.inserir.targeta', etiqueta: 'Targeta', commutable: false, fila: 'segona', slot: { estat: 'isTargeta', accio: 'insertTargeta' }, nivell: 'avancat' });
     expect(TOOLBAR_SCHEMA.find((boto) => boto.id === FORMATS.SUBTARGETA)).toEqual({ id: 'subtargeta', clauI18n: 'section.notes.format.subtargeta', etiqueta: 'Subtargeta', commutable: false, fila: 'segona', slot: { estat: 'isSubtargeta', accio: 'insertSubtargeta' } });
     expect(TOOLBAR_SCHEMA.find((boto) => boto.id === FORMATS.ENLLAC_A_TARGETA)).toEqual({ id: 'enllacATargeta', clauI18n: 'section.notes.format.enllacATargeta', etiqueta: 'Convertir en targeta', commutable: false, fila: 'segona', slot: { estat: 'isEnllacATargeta', accio: 'convertLinkToCard' }, nivell: 'avancat' });
-    expect(SCHEMA_VISIBLE.map((boto) => boto.id)).toEqual(['subtitol', 'h4', 'h5', 'h6', 'titol', 'negreta', 'cursiva', 'llista', 'llistaNumerada', 'ratllat', 'citacio', 'divisor', 'subtargeta', 'targeta', 'enllacATargeta']);
+    expect(SCHEMA_VISIBLE.map((boto) => boto.id)).toEqual(['subtitol', 'h4', 'h5', 'h6', 'titol', 'negreta', 'cursiva', 'llista', 'llistaNumerada', 'ratllat', 'citacio', 'divisor', 'subtargeta', 'targeta', 'enllacATargeta', 'enllacImatge']);
   });
 
   test('sense l’extensió, la fila ix apagada i no peta', () => {

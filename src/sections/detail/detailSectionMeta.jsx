@@ -55,6 +55,7 @@ import { variacioActiva, variacionsDelProducte } from '../mercat/variacionsDePro
 import {
   CAMPS, TO_PER_ESTAT, ambitDe, esFitxaDAmbit, etiquetaDAmbit, etiquetaDEstat, etiquetaDOpcio, etiquetaDeCamp, normalitzaDades, normalitzaEstat, perAmbit
 } from '../../utils/publicacioUniversal.js';
+import { desaRevisioArticleImportat, llegeixEstatRevisioEditorial } from '../../utils/revisioEditorialWp.js'; /* P1-f (R6 · Bloc 2) · sense el tesaurus */
 
 const PublicacionsDelPoble = lazyRoute(() => import('../pobles/PublicacionsDelPoble.jsx'));
 /* P1-11 (pla 261024_2230, T5B-01) · El panell «Empreses i entitats», també en
@@ -773,6 +774,68 @@ export function buildNotesDetailSectionMeta({ notes = [], t }) {
   };
 }
 
+function VistaCompletaArticleImportatWp({ item }) {
+  const [estatLocal, setEstatLocal] = useState(() => {
+    const desat = llegeixEstatRevisioEditorial();
+    return desat.estats[item.wp_id] || item.estat_revisio || 'pendent_admin';
+  });
+
+  const canviaEstat = (nouEstat, nota) => {
+    desaRevisioArticleImportat(item.wp_id, { estat: nouEstat, ...(nota !== undefined ? { nota } : {}) });
+    setEstatLocal(nouEstat);
+  };
+
+  return (
+    <article className="sdp-admin-taxonomia" aria-label="Previsualització i revisió de pàgina importada">
+      <section className="sdp-admin-importacio__card">
+        <div className="sdp-admin-importacio__card-cap">
+          <strong>🔍 Revisió d’Importació Editorial · WordPress #{item.wp_id}</strong>
+          <Insignia to={estatLocal === 'aprovat' ? 'exit' : estatLocal === 'amb_observacions' ? 'avis' : 'neutre'}>
+            {estatLocal === 'aprovat' ? '✅ Aprovat per publicar' : estatLocal === 'amb_observacions' ? '📝 Amb observacions' : '⏳ Pendent de revisió'}
+          </Insignia>
+        </div>
+        <p>
+          Aquesta és la fitxa completa de previsualització Pedra Seca per a la publicació importada des de{' '}
+          <code>socdepoble.net</code>. Pots verificar la classificació biblioteconòmica i territorial, consultar l’original o aprovar-la directament des d’ací.
+        </p>
+        <dl>
+          <dt>Ruta canònica en Sóc de Poble</dt>
+          <dd><code>{item.ruta_canonica}</code></dd>
+          <dt>Data de publicació original</dt>
+          <dd>{String(item.created_at || '').slice(0, 10)}</dd>
+          <dt>Faceta Temàtica (PMEST)</dt>
+          <dd>{item.categoria_tematica || 'Comunitat i Territori'}</dd>
+          <dt>Faceta Geogràfica (Pobles etiquetats)</dt>
+          <dd>{Array.isArray(item.pobles_etiquetats) && item.pobles_etiquetats.length > 0 ? item.pobles_etiquetats.join(' · ') : item.town_name}</dd>
+          <dt>Etiquetes del Tesaurus SKOS</dt>
+          <dd>{Array.isArray(item.tags) && item.tags.length > 0 ? item.tags.join(' · ') : 'Sense etiquetes addicionals'}</dd>
+          <dt>Casos d’ús i estructura multimèdia</dt>
+          <dd>
+            {Array.isArray(item.casos_us_meta) && item.casos_us_meta.length > 0
+              ? item.casos_us_meta.map((c) => `${c.icona} ${c.titol}`).join(' · ')
+              : 'Text editorial estàndard'}{' '}
+            ({item.num_imatges || 0} imatges · {item.num_videos || 0} vídeos · {item.num_pdfs || 0} documents PDF)
+          </dd>
+        </dl>
+        <div className="sdp-admin-importacio__accions">
+          <Boto varietat="primari" onClick={() => canviaEstat('aprovat')}>
+            ✅ Aprovar aquesta pàgina
+          </Boto>
+          <Boto varietat="secundari" onClick={() => canviaEstat('amb_observacions', 'Revisar maquetació Pedra Seca')}>
+            📝 Marcar amb observacions
+          </Boto>
+          <a className="sdp-boto sdp-boto--secundari" href="/mur?revisio=wordpress">
+            ← Tornar al Mode Revisió del Mur
+          </a>
+          <a className="sdp-boto sdp-boto--fantasma" href={item.source_url} target="_blank" rel="noopener noreferrer">
+            🌐 Obrir original a socdepoble.net ↗
+          </a>
+        </div>
+      </section>
+    </article>
+  );
+}
+
 export function buildMurDetailSectionMeta({ feedPosts = [], t }) {
   return {
     title: t('section.detail.mur.title', 'Mur'),
@@ -799,8 +862,10 @@ export function buildMurDetailSectionMeta({ feedPosts = [], t }) {
         </div>
         {/* Decisió 3 (261007) · Cap <img> de tercers al cos de la publicació. */}
         {item.id === 'manifest-de-poble'
-          ? <ManifestDePobleArticle />
-          : renderPostContent(cosAmbImatgesPropies(item.content || item.summary))}
+          ? <ManifestDePobleArticle item={item} />
+          : item.esImportatWp
+            ? <VistaCompletaArticleImportatWp item={item} />
+            : renderPostContent(cosAmbImatgesPropies(item.content || item.summary))}
         {Array.isArray(item.tags) && item.tags.length > 0 ? (
           <div className="badge-row detail-tags">
             {item.tags.map((tag) => (
@@ -931,7 +996,7 @@ export function buildEventsDetailSectionMeta({ events = [], t }) {
         
         {/* Decisió 3 (261007) · L'agenda és del Mur: cap <img> de tercers al cos. */}
         {item.id === 'aplec-2023' ? (
-          <Aplec2023Article />
+          <Aplec2023Article item={item} />
         ) : (
           renderRichText(cosAmbImatgesPropies(item.description || item.content))
         )}

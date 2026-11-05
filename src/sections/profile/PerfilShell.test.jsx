@@ -93,19 +93,12 @@ test('primera columna: tres grups en ordre, la persona amb el seu nom i Administ
   expect(grups().map((g) => g.id)).toEqual(['persona', 'organitzacions', 'aplicacions']);
   // Com les carpetes de Notes: el primer grup no porta etiqueta, el títol de la columna li fa de capçalera.
   expect(grups().map((g) => g.label)).toEqual([null, 'GRUPS I EMPRESES', 'APLICACIONS']);
-  expect(grups()[0].options.map((o) => [o.id, o.label])).toEqual([
-    ['jo', 'Pep'],
-    ['administracio-sistema', '🛡️ Administració del sistema'],
-  ]);
+  /* Onada R6 · Bloc 2 (P1-b) · Expectativa actualitzada a propòsit: sense
+     superadmin, ni «🛡️ Administració del sistema» ni els seus 6 apartats
+     (amb superadmin, la prova P1-b de davall). */
+  expect(grups()[0].options.map((o) => [o.id, o.label])).toEqual([['jo', 'Pep']]);
   expect(m.workspace.amagaRodaAjustos).toBe(true);
-  expect(filsDe('administracio-sistema')).toEqual([
-    'admin-taxonomia',
-    'admin-importacio',
-    'admin-crom',
-    'admin-vistes-columnes',
-    'admin-nodes-fedivers',
-    'admin-empaquetats',
-  ]);
+  expect(filsDe('administracio-sistema')).toEqual([]);
   expect(grups()[1].options.map((o) => [o.id, o.label])).toEqual([['O', 'Forn'], ['G', 'Colla']]);
   /* Gauntlet 261016 (Bloc 3.4; ordre del Mestre: «retirar definitivament la
      maquinària interna de desenvolupament de l'aside en pantalles d'usuari»)
@@ -134,6 +127,30 @@ test('Bloc 3.4 · amb superadmin, APLICACIONS porta també la Consola de Mètriq
     ['app-metriques', 'Consola de Mètriques'], ['app-cervell', 'Cervell (Node Graph)'],
   ]);
   for (const opcio of grups()[2].options) expect(opcio.icon).toBeTruthy();
+});
+
+/* Onada R6 · Bloc 2 (P1-b) · «🛡️ Administració del sistema» és només per a superadmin. */
+test('P1-b · sense superadmin: ni el grup, ni els 6 apartats, ni la ruta, ni el detall d’un panell; amb superadmin, tots 6', async () => {
+  const { itemsDAdministracioSistema } = await import('./perfilModel.js');
+  const panells = itemsDAdministracioSistema();
+  expect(panells).toHaveLength(6);
+  for (const sessio of [null, { esSuperadmin: false }, { rol: 'veí' }]) {
+    cleanup();
+    m.sessio = sessio;
+    m.params = new URLSearchParams('organitzacio=administracio-sistema');
+    render(<PerfilShell />);
+    expect(grups().flatMap((g) => g.options).map((o) => o.id)).not.toContain('administracio-sistema');
+    expect(m.workspace.model.items.filter((i) => i.id.startsWith('admin-'))).toEqual([]);
+    expect(m.workspace.initialSelection).toEqual({ categoryId: 'jo' });
+    for (const panell of panells) expect(m.workspace.renderDetail({ item: panell })).toBeNull();
+  }
+  cleanup();
+  m.sessio = { esSuperadmin: true };
+  render(<PerfilShell />);
+  expect(grups()[0].options.map((o) => o.id)).toEqual(['jo', 'administracio-sistema']);
+  expect(filsDe('administracio-sistema')).toEqual(panells.map((p) => p.id));
+  expect(m.workspace.initialSelection).toEqual({ categoryId: 'administracio-sistema' });
+  for (const panell of panells) expect(m.workspace.renderDetail({ item: panell })).not.toBeNull();
 });
 
 test('Bloc 3.4 · una llista federada sense la marca `intern` no canvia: totes les seues utilitats, també sense superadmin', () => {

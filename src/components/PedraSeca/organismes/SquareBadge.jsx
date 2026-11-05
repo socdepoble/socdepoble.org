@@ -64,7 +64,15 @@ export function SquareBadge({ badge }) {
         className="sp-card-calendar-badge"
         aria-label={etiqueta}
         dateTime={badge.dateTime}
+        role={navegaAlCalendari ? 'button' : undefined}
+        tabIndex={navegaAlCalendari ? 0 : undefined}
         onClick={navegaAlCalendari}
+        onKeyDown={navegaAlCalendari ? (event) => {
+          if (event.key === 'Enter' || event.key === ' ') {
+            event.preventDefault();
+            navegaAlCalendari(event);
+          }
+        } : undefined}
       >
         {contingut}
       </time>

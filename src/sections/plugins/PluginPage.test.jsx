@@ -214,7 +214,7 @@ describe('cada plugin té la seua pàgina', () => {
        2, Mòdul B, P0-14) · Les del Mapa, Vehicle, Animalets, el Rebost i Salut
        també són WebP: el seu original .jpg ix de public/ i la bessona, amb les
        mateixes mides, és la portada. Abans: només la del TPV. */
-    const enWebp = ['mapa', 'vehicle', 'animalets', 'rebost', 'salut', 'tpv'].includes(id);
+    const enWebp = ['mapa', 'vehicle', 'animalets', 'rebost', 'salut', 'genealogia', 'tpv'].includes(id);
     expect(portada.getAttribute('src')).toBe(`/assets/ui/plugins/${id}_vinyeta.${enWebp ? 'webp' : 'jpg'}`);
     expect(portada.getAttribute('alt')).toBe(plugin.imatgeAlt);
     // La portada és plegable i es veu per defecte.
@@ -240,7 +240,7 @@ describe('Onada 10 · la pàgina porta la data i les etiquetes de la targeta', (
   const SENSE_DATA = PLUGINS.filter((p) => p.data === null);
 
   test('el cens: cinc amb data i etiquetes (Gestoria, Rebost, Salut, Lector RSS i TPV); tres sense', () => {
-    expect(AMB_DATA.map((p) => p.id)).toEqual(['gestoria', 'rebost', 'salut', 'rss', 'tpv']);
+    expect(AMB_DATA.map((p) => p.id)).toEqual(['gestoria', 'rebost', 'salut', 'genealogia', 'rss', 'tpv']);
     expect(SENSE_DATA.map((p) => p.id)).toEqual(['mapa', 'vehicle', 'animalets']);
     expect(PLUGINS.filter((p) => p.etiquetes.length > 0)).toEqual(AMB_DATA);
   });
@@ -286,19 +286,29 @@ describe('Onada 10 · la pàgina porta la data i les etiquetes de la targeta', (
    «Obrir…» dalt i al final. La resta de plugins, el DOM de l'article d'abans
    amb un sol botó. */
 describe('Onada 10 · presentació de sis blocs i botó dalt i al final (Rebost i Salut)', () => {
+  const AMB_PRESENTACIO_I_DESTI = AMB_PRESENTACIO.filter((p) => p.obrir !== null);
+
   test('el cens: només el Rebost i Salut tenen presentació', () => {
-    expect(AMB_PRESENTACIO.map((p) => p.id)).toEqual(['gestoria', 'rebost', 'salut', 'rss']);
-    expect(Object.keys(PRESENTACIO_PLUGINS)).toEqual(['rebost', 'salut', 'gestoria', 'rss']);
+    expect(AMB_PRESENTACIO.map((p) => p.id)).toEqual(['gestoria', 'rebost', 'salut', 'genealogia', 'rss']);
+    expect(Object.keys(PRESENTACIO_PLUGINS)).toEqual(['rebost', 'salut', 'genealogia', 'gestoria', 'rss']);
     expect(SENSE_PRESENTACIO.map((p) => p.id)).toEqual(['mapa', 'vehicle', 'animalets', 'tpv']);
   });
 
   test.each(AMB_PRESENTACIO.map((p) => [p.id, p]))('/plugin/%s: el cos de sis blocs, un H3 i el seu paràgraf, entre l’entradilla i l’acció', (id, plugin) => {
     const { container } = munta(`/plugin/${id}`);
-    // L'article, de dalt a baix: l'H2 i l'entradilla, el cos i el botó. Cap avís: ací es pot obrir.
-    expect([...article(container).children].map((fill) => fill.className)).toEqual(['page-intro', 'cms-preview', 'sdp-pagina-accio']);
+    const enObres = plugin.obrir === null;
+    // L'article, de dalt a baix: l'H2 i l'entradilla, el cos, l'avís si està en obres, i el botó.
+    if (enObres) {
+      const fills = [...article(container).children];
+      expect(fills).toHaveLength(4);
+      expect([fills[0].className, fills[1].className, fills[3].className]).toEqual(['page-intro', 'cms-preview', 'sdp-pagina-accio']);
+      expect(fills[2].textContent).toBe('Esta eina encara està en obres.');
+    } else {
+      expect([...article(container).children].map((fill) => fill.className)).toEqual(['page-intro', 'cms-preview', 'sdp-pagina-accio']);
+    }
     const cos = article(container).querySelector(':scope > article.cms-preview');
     expect(cos.previousElementSibling).toBe(container.querySelector('.page-intro'));
-    expect(cos.nextElementSibling).toBe(accio(container));
+    if (!enObres) expect(cos.nextElementSibling).toBe(accio(container));
     // Sis blocs, fills directes: un <h3> i el seu <p>, amb el text literal de la presentació.
     expect([...cos.children].map((fill) => fill.tagName)).toEqual(Array.from({ length: 12 }, (_, index) => (index % 2 ? 'P' : 'H3')));
     expect([...cos.children].map((fill) => fill.textContent)).toEqual(liniesDe(id));
@@ -316,7 +326,7 @@ describe('Onada 10 · presentació de sis blocs i botó dalt i al final (Rebost 
     expect(container.querySelectorAll('h2')).toHaveLength(1);
   });
 
-  test.each(AMB_PRESENTACIO.map((p) => [p.id, p]))('/plugin/%s: dos controls «Obrir…», el de dalt dins del bloc blanc de l’H1 i el de baix al final', (id, plugin) => {
+  test.each(AMB_PRESENTACIO_I_DESTI.map((p) => [p.id, p]))('/plugin/%s: dos controls «Obrir…», el de dalt dins del bloc blanc de l’H1 i el de baix al final', (id, plugin) => {
     const { container } = munta(`/plugin/${id}`);
     expect(controlsObrir(container, plugin)).toHaveLength(2);
     const { dalt, baix } = elsDosControls(container, 'link', plugin.etiquetaObrir);
@@ -340,7 +350,7 @@ describe('Onada 10 · presentació de sis blocs i botó dalt i al final (Rebost 
      dos són inerts» (M2): sense destí, cap «Obrir…», ni dalt ni baix. L'avís
      en text es diu una sola vegada, entre el cos i l'acció, i baix hi ha
      l'estat buit: el camí i «Desactiva esta eina». */
-  test.each(AMB_PRESENTACIO.map((p) => [p.id, p]))('/plugin/%s en producció: cap «Obrir…», un sol avís entre el cos i l’acció, i l’estat buit baix', (id, plugin) => {
+  test.each(AMB_PRESENTACIO_I_DESTI.map((p) => [p.id, p]))('/plugin/%s en producció: cap «Obrir…», un sol avís entre el cos i l’acció, i l’estat buit baix', (id, plugin) => {
     const { container } = munta(`/plugin/${id}`, { entorn: ENTORN_PRODUCCIO });
     expect(screen.queryByRole('link', { name: new RegExp(plugin.etiquetaObrir) })).toBeNull();
     expect(controlsObrir(container, plugin)).toEqual([]);

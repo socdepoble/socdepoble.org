@@ -15,6 +15,16 @@ function memoryDisk() {
   };
 }
 const config = { dataMode: 'local', tenantId: '00000000-0000-4000-8000-000000000000' };
+test('R12 · carpetes persistents entre adaptadors, noms amb accent sense col·lisió i tenants aïllats', async () => {
+  const storage = memoryDisk(), a = createLocalNotesAdapter(storage);
+  const primera = await a.createFolder({ nom: 'Festes' }, config);
+  expect(await a.createFolder({ nom: ' FESTES ' }, config)).toEqual(primera);
+  const segona = await a.createFolder({ nom: 'Fèstes' }, config);
+  expect(segona.id).not.toBe(primera.id);
+  const b = createLocalNotesAdapter(storage);
+  expect((await b.load(getDefaultUserId(), config)).noteFolders).toEqual(expect.arrayContaining([primera, segona]));
+  expect((await b.load(getDefaultUserId(), { ...config, tenantId: '00000000-0000-4000-8000-000000000001' })).noteFolders).not.toContainEqual(primera);
+});
 test('IDEA-70 · els dos logotips persistixen i llevar el de nit conserva el de dia', async () => {
   const storage = memoryDisk();
   const adapter = createLocalNotesAdapter(storage);

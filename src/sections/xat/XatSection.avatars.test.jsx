@@ -93,7 +93,7 @@ Object.defineProperty(HTMLElement.prototype, 'clientWidth', {
 const PAQUET = 'https://amfitrio.example/wp-content/plugins/socdepoble-enxufe/dist';
 const NODE = 'https://node.example';
 const POBLE = { id: 'la-torre-de-les-macanes', nom: 'Gent de la Torre' };
-const CARA = '/assets/towns/la-torre-de-les-macanes/commons-ah27.webp'; /* AH-27: la foto de la fitxa hidratada (IDEA-86) */
+const CARA = '/assets/towns/la-torre-de-les-macanes/2.jpg';
 const TORRE = { id: POBLE.id, title: 'La Torre de les Maçanes', image_url: '/assets/towns/la-torre-de-les-macanes/1.jpg', avatar_url: CARA };
 /* Onada 6 (tasca 12) · La IAIA arriba amb l'avatar del padró i el xat pinta la
    seua cara: la il·lustració «Festa del Poble», retallada per l'enquadrament

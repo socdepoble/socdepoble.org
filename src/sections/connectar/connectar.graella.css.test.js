@@ -93,8 +93,9 @@ describe('les regles noves', () => {
     expect(una('.sdp-connectar--graella').cos).toBe('max-width: none;');
   });
 
-  test('el logotip compacte, només a /connectar: 260px, el mínim de la norma 261004', () => {
-    expect(una('.sdp-connectar-pagina .page-title-logo').cos).toBe('width: min(100%, 260px);');
+  test('IDEA-93 · el logotip manté els 600px canònics (.page-title-logo) sense excepció de 260px a /connectar', () => {
+    expect(amb('.sdp-connectar-pagina .page-title-logo')).toHaveLength(0);
+    expect(una('.page-title-logo').cos).toBe('width: min(100%, 600px); min-width: min(100%, 260px);');
   });
 
   test('C8 · la llegenda i les píndoles del selector, centrades a les targetes; cap línia centrada més llarga que la mesura', () => {

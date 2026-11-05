@@ -46,7 +46,8 @@ export default {
   'section.notes.connexio.absentAmbEnllac': "Ez dago hemen kargatutako edukien artean (profil bat, orri bat, beste herri bat edo kendutako elementu bat). Ireki haren orria.",
   'section.notes.connexio.absentSenseEnllac': "Ez dago hemen kargatutako edukien artean, eta konexioak ez du haren estekarik.",
   'section.notes.editor.avisCategoria': "Gutxienez kategoria bat behar da. Garbitzeko, hautatu orokor bat, adibidez «{categoria}».",
-  'section.notes.editor.avisCarpetes': "Karpetak sortzea, izenez aldatzea eta ezabatzea ez dago oraindik zerbitzariaren datu-kontratuan. Oraingoz, aukeratu ohar honen karpeta.",
+  'section.notes.editor.avisCarpetes': "Karpeta berriak zerbitzarian gordetzen dira hark onartzen duenean, eta bestela nabigatzaile honetan. Karpetak izenez aldatzeak eta ezabatzeak ez du oraindik datu-kontraturik.",
+  'section.notes.carpetes.errorCrear': "Ezin izan da karpeta sortu. Saiatu berriro.",
   'section.notes.editor.avisSenseTotes': "Ohar guztiak kargatutakoan egongo dira erabilgarri izenez aldatzea eta ezabatzea.",
   'section.notes.editor.avisDataDispositiu': "Zerbitzariak ezin du oraindik argitalpen-data gorde. Gailu honetan gordetzen da eta hemendik argitaratzen baduzu soilik aplikatzen da.",
   'section.notes.editor.portadaAlt': "Koaderno ireki bat, norbait idazten ari dela",
@@ -557,6 +558,14 @@ export default {
   'section.notes.format.targeta': 'Txartel txertatua',
   /* 261103 (Onada 7, T2.6) · El sentit Enllaç → Card a la segona fila, amb el cursor en un enllaç intern. Ronda 3 · el resultat davant del verb, com 'Kide arrunt bihurtu' (abans «Bihurtu txartel»). Pendent de revisió nadiua. */
   'section.notes.format.enllacATargeta': 'Txartel bihurtu',
+  'section.notes.format.enllacImatge': "Irudiaren esteka",
+  'section.notes.format.enllacImatgeRefusat': "Helbide hau ez da segurua: irudia zegoen bezala geratzen da.",
+  /* D-B4-2 i D-B4-3 (Onada R6, Bloc 4) · El diàleg «Enllaç de la imatge» (DialegEnllacImatge) i el «Reintentar» de la Revisió WP del Mur. Pendent de revisió nadiua. */
+  'section.notes.format.enllacImatgeCamp': "Estekaren helbidea",
+  'section.notes.format.enllacImatgeAjuda': "Aplikazioko bide bat, https:// helbide bat edo mailto: bat. Utzi hutsik esteka kentzeko.",
+  'section.notes.format.enllacImatgeNoAplicat': "Ezin izan da esteka aldatu: hautatu berriro irudia.",
+  'section.notes.format.enllacImatgeDesa': "Gorde",
+  'section.mur.revisioWp.reintenta': "Berriro saiatu",
   'section.notes.format.subtargetaTitol': 'Azpitxartelaren izenburua',
   'section.notes.format.subtargetaMeta': 'Testuinguru-lerro bat: data, lekua edo egiletza',
   'section.notes.format.subtargetaCos': 'Idatzi hemen azpitxartelaren edukia: paragrafoak, zerrendak eta estekak.',
@@ -2712,6 +2721,7 @@ export default {
   'editor.imatge.exif.descripcio': "Erabaki argazkiarekin argitaratzen diren eta, kokapenari dagokionez, zein zehaztasunekin.",
   'editor.imatge.exif.inserir': "Txertatu",
   'editor.imatge.exif.titol': "Argazki honek bere kokapena edo data darama",
+  'editor.video.titolPerDefecte': "YouTubeko bideoa",
   // P1-64 (261028) · El Mapa Fotogràfic del Mur.
   'section.mur.mapa.acostaGrup': "{n}. eremua, {nom}: {recompte}. Hurbildu mapa",
   'section.mur.mapa.agrupacio': "Distantziaren araberako taldekatzea",
@@ -3529,4 +3539,9 @@ export default {
   'section.pobles.demarcacio.valencia': "Valentziako eskualdeak",
   'section.pobles.demarcacio.castello': "Castellóko eskualdeak",
   'section.pobles.territori.veure': "Ikusi herriak",
+  'section.notes.publicacio.noActualitzableActe': "Agendako ekitaldiak oraindik ez dira Bloketik eguneratzen: aldaketa ikuspegi honetan bakarrik da.",
+  'section.notes.publicacio.noActualitzableLlavor': "Argitalpen hau herriko artxibo editorialekoa da eta oraindik ez da Bloketik eguneratzen: aldaketa ikuspegi honetan bakarrik da.",
+  'section.notes.publicacio.revisioDesada': "Berrikuspena nabigatzaile honetan gorde da: Hormak eta orriak dagoeneko erakusten dute.",
+  'section.notes.publicacio.revisioDesadaServidor': "Berrikuspena zerbitzarian gorde da: Hormak eta orriak denei erakusten diete dagoeneko.",
+  'section.notes.publicacio.revisioNomesNavegador': "Zerbitzariak ez du berrikuspena onartu: nabigatzaile honetan bakarrik gorde da.",
 };

@@ -22,24 +22,20 @@ const SENSE_CONNEXIONS = new Set();
 const CODIS_ESQUEMA_NO_DISPONIBLE = new Set([
   'NO-DISPONIBLE',
   'PGRST202',
-  'PGRST205',
-  '42883',
-  '42P01'
+  'PGRST205'
 ]);
 
 /**
  * Si un error indica que el servidor encara no té la migració o les RPC/taules
  * de connexions públiques (tant si l'adaptador ja l'ha normalitzat a
- * `NO-DISPONIBLE` com si arriba cru des de PostgREST/PostgreSQL).
+ * `NO-DISPONIBLE` com si arriba amb PGRST202/PGRST205 de PostgREST).
  */
 export function esErrorNoDisponibleConnexions(error) {
   if (!error || typeof error !== 'object') return false;
-  const code = String(error.code ?? '').trim().toUpperCase();
-  if (CODIS_ESQUEMA_NO_DISPONIBLE.has(code)) return true;
-  const status = Number(error.status ?? error.statusCode ?? 0);
-  if (status === 404) return true;
-  const msg = String(error.message ?? error.details ?? error.hint ?? '');
-  return /could not find the function|does not exist in the schema cache|relation .* does not exist/i.test(msg);
+  const code = typeof error.code === 'string' ? error.code.trim().toUpperCase() : '';
+  // Un 404 nu també pot vindre d'una passarel·la o d'una fitxa absent. No
+  // desactiva tota la capacitat durant la resta de la sessió del document.
+  return CODIS_ESQUEMA_NO_DISPONIBLE.has(code);
 }
 
 /** La clau del backend; una configuració il·legible és un àmbit més. */

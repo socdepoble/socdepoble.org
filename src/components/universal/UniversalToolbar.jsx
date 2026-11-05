@@ -6,8 +6,9 @@ import { useMenuEmergent } from '../PedraSeca/hooks/useMenuEmergent.js';
 import { useCapaEnrere } from '../PedraSeca/hooks/useCapaEnrere.js';
 import {
   IconaCitacio, IconaCursiva, IconaDesplega, IconaDivisor, IconaLlista, IconaLlistaNumerada, IconaMesEines, IconaNegreta, IconaRatllat,
-  IconaSubtargeta, IconaTargeta
+  IconaSubtargeta, IconaTargeta, IconaEnllacImatge
 } from './richText/iconesBarra.jsx';
+import { DialegEnllacImatge } from './DialegEnllacImatge.jsx';
 
 /* Ordre del Mestre (261026_2126, prompt Tasca 3 i pla 261026_1615 §6) · Una
    sola mida de glif, la de les capçaleres de columna: 24px (abans 20), dins de
@@ -42,7 +43,9 @@ const EINES_PRINCIPALS = Object.freeze(['encapcalament', 'negreta', 'cursiva', '
    es pinten si el motor n'oferix l'acció (vegeu `eina`). */
 /* T26-01 (Gauntlet O7 · T2.6) · I darrere, «Convertir en targeta», només amb
    el cursor en un enllaç intern que es pot commutar. */
-const EINES_SECUNDARIES = Object.freeze(['ratllat', 'citacio', 'divisor', 'subtargeta', 'targeta', 'enllacATargeta']);
+/* B3-2 (Onada R6 · Bloc 3) · I, al final, l'enllaç de la imatge: només amb una
+   imatge triada (el motor n'oferix l'acció setImageLink). */
+const EINES_SECUNDARIES = Object.freeze(['ratllat', 'citacio', 'divisor', 'subtargeta', 'targeta', 'enllacATargeta', 'enllacImatge']);
 
 /* T7 (P2) · El tall de la barra d'eines ve de la font única de la graella.
    IDEA-59 / P1-72 · També torna l'amplària mesurada: la barra ampla la fa
@@ -312,6 +315,10 @@ export default function UniversalToolbar({
      segona fila (just a sota, dins de la barra); en compacte, les opcions de
      format (el lloc del «Aa» d'abans, la mateixa capa de sempre). */
   const [ampliada, setAmpliada] = useState(false);
+  /* D-B4-2 · El diàleg «Enllaç de la imatge»: { clau, href, obert } o null.
+     La clau en fa un de nou a cada obertura (el camp torna a partir de l'adreça
+     actual); tancat, es queda muntat perquè el focus torne al botó. */
+  const [dialegEnllac, setDialegEnllac] = useState(null);
   const formatId = useId();
   const segonaId = useId();
   const toggleRef = useRef(null);
@@ -404,12 +411,26 @@ export default function UniversalToolbar({
   );
 
   const {
-    isList, isOrderedList, isBold, isItalic, isStrike, isCitacio
+    isList, isOrderedList, isBold, isItalic, isStrike, isCitacio, isEnllacImatge
   } = formatState;
   const {
     toggleList, toggleOrderedList, toggleBold, toggleItalic, toggleStrike, toggleCitacio, insertDivisor,
-    insertSubtargeta, insertTargeta, convertLinkToCard
+    insertSubtargeta, insertTargeta, convertLinkToCard, setImageLink
   } = formatActions;
+
+  /* B3-2 · L'adreça de l'enllaç de la imatge (buida = lleva l'enllaç).
+     D-B4-2 (Onada R6, Bloc 4; decisió de MarIA) · En un diàleg de la casa
+     (DialegEnllacImatge), no en window.prompt: arriba ple amb l'adreça actual
+     (la ranura la llig amb { llig }, sense cap ordre) i una adreça insegura es
+     diu dins del diàleg. */
+  const obreEnllacImatge = () => {
+    if (typeof setImageLink !== 'function') return;
+    let href = '';
+    setImageLink({ llig: (enllac) => { href = typeof enllac?.href === 'string' ? enllac.href : ''; } });
+    setDialegEnllac((previ) => ({ clau: (previ?.clau ?? 0) + 1, href, obert: true }));
+  };
+  const desaEnllacImatge = (adreca) => typeof setImageLink === 'function' && setImageLink({ href: adreca }) === true;
+  const tancaEnllacImatge = () => setDialegEnllac((previ) => (previ ? { ...previ, obert: false } : previ));
 
   /* Cada eina, per id (data-eina: la barra en mesura l'amplària). */
   const eina = (id) => {
@@ -457,6 +478,11 @@ export default function UniversalToolbar({
         return typeof convertLinkToCard !== 'function' ? null : (
           <BlocIcon key={id} data-eina={id} icon={IconaTargeta} active={undefined}
             label={t('section.notes.format.enllacATargeta', 'Convertir en targeta')} onClick={convertLinkToCard} />
+        );
+      case 'enllacImatge':
+        return typeof setImageLink !== 'function' ? null : (
+          <BlocIcon key={id} data-eina={id} icon={IconaEnllacImatge} active={Boolean(isEnllacImatge)}
+            label={t('section.notes.format.enllacImatge', 'Enllaç de la imatge')} aria-haspopup="dialog" onClick={obreEnllacImatge} />
         );
       default:
         return null;
@@ -534,6 +560,10 @@ export default function UniversalToolbar({
           {EINES_SECUNDARIES.map(eina)}
         </div>
       )}
+      {dialegEnllac ? (
+        <DialegEnllacImatge key={dialegEnllac.clau} obert={dialegEnllac.obert} hrefInicial={dialegEnllac.href}
+          onDesa={desaEnllacImatge} onTanca={tancaEnllacImatge} t={t} />
+      ) : null}
     </div>
   );
 }
