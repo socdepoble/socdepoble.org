@@ -1,4 +1,7 @@
 import {capturaEdicioEditorial} from '../../src/data/editorialPublicada.js';
+import {capturaAdminUsuaris} from '../../src/data/adminUsuaris.js';
+import {validaLotDadesObertes} from '../../src/data/dadesObertesLot.js';
+import {llegeixPaquetOpenData} from '../../src/data/importaMunicipiOpenData.js';
 /** Fixed local RPC surface. Session validation and RLS claims share one transaction.
  * No arbitrary table, function, role, tenant or user identifier comes from HTTP.
  */
@@ -62,6 +65,18 @@ export function sqlContextSessioNodeZero(hash,expectedActor){
 export function compilaOperacioNodeZero(action,body,tenantId){
   const tenant=`${sqlText(uuid(tenantId))}::uuid`;
   if(!plain(body))fail('invalid_body');
+  if(action==='restauraDadesObertes'){
+    if(Object.keys(body).some(k=>k!=='lot')||validaLotDadesObertes(body.lot).length||body.lot.versio!=='1.2.0')fail('invalid_opendata_lot');
+    return result(`public.importa_municipi_open_data(${tenant},${sqlJson(body.lot)})`);
+  }
+  if(['adminLlistaUsuarisRegistrats','adminAssignaMembreOrganitzacio','adminConnectaUsuari'].includes(action)){
+    if(Object.keys(body).some(k=>k!=='entrada'))fail('unexpected_field');
+    const operation=action==='adminLlistaUsuarisRegistrats'?'llista':action==='adminAssignaMembreOrganitzacio'?'membre':'connecta';
+    let input;try{input=capturaAdminUsuaris(body.entrada,operation);}catch{fail('invalid_admin_input');}
+    if(operation==='llista')return result(`public.admin_llista_usuaris_registrats(${tenant},${intSql(input.limit)},${intSql(input.offset)})`);
+    if(operation==='membre')return result(`public.admin_assigna_membre_organitzacio(${tenant},${sqlText(input.usuariId)}::uuid,${sqlText(input.organitzacioId)}::uuid,${sqlText(input.rol)},${input.lleva?'true':'false'})`);
+    return result(`public.admin_connecta_usuari(${tenant},${sqlText(input.usuariId)}::uuid,${sqlText(input.categoria)})`);
+  }
   // Unknown top-level keys are rejected, including owner_user_id, userId and tenantId.
   const keys={adminActualitzaPublicacioEditorial:['edicio'],getProfile:[],elMeuRol:[],updateProfile:['updates'],loadNotes:['noteId','cursor','limit'],createNote:['input'],updateNote:['id','updates','expectedRevision'],listMyOrganizations:[],createOrganization:['organization'],updateOrganization:['id','updates'],appendSectionSubmissionNetworkOnly:['submission'],loadSeccioPage:['sectionId','cursor','limit'],loadFils:[],loadMissatges:['filId','before','after','limit'],enviaMissatge:['filId','id','text','tipus','respostaA','metadades'],marcaLlegit:['filId','rebutFinsSeq','llegitFinsSeq'],creaFilDirecte:['altreUsuariId','titol'],carregaMembres:['cerca','limit']};
   if(!Object.hasOwn(keys,action))fail('operation_unavailable',501);
@@ -197,14 +212,22 @@ export function compilaOperacioNodeZero(action,body,tenantId){
   fail('operation_unavailable',501);
 }
 
-export function creaBackendPrivatNodeZero({db,tenantId,origin='https://socdepoble.cat',editorialReady=false}={}){
+export function creaBackendPrivatNodeZero({db,tenantId,origin='https://socdepoble.cat',editorialReady=false,adminUsuarisReady=false,restauracioReady=false}={}){
   if(typeof db?.query!=='function')throw new TypeError('node0_backend_database_required');uuid(tenantId);
-  return Object.freeze({capabilities:Object.freeze({actorBinding:true,roleRead:true,createOrganization:true,sectionSubmissions:true,paginacioSeccions:true,edicioEditorial:editorialReady===true}),async handle(action,{headers={},body={}}={}){
+  return Object.freeze({capabilities:Object.freeze({actorBinding:true,roleRead:true,createOrganization:true,sectionSubmissions:true,paginacioSeccions:true,edicioEditorial:editorialReady===true,administracioUsuaris:adminUsuarisReady===true,restauracioDadesObertes:restauracioReady===true}),async handle(action,{headers={},body={}}={}){
     if(headers.origin!==origin)return {status:403,body:{error:'origin_rejected'}};
     try{
       if(action==='adminActualitzaPublicacioEditorial'&&editorialReady!==true)fail('operation_unavailable',501);
+      if(['adminLlistaUsuarisRegistrats','adminAssignaMembreOrganitzacio','adminConnectaUsuari'].includes(action)&&adminUsuarisReady!==true)fail('operation_unavailable',501);
+      if(['restauraDadesObertes','importaMunicipiOpenData'].includes(action)&&restauracioReady!==true)fail('operation_unavailable',501);
       const hash=hashSessioNodeZero(headers);if(!hash)fail('session_required',401);
-      const operation=compilaOperacioNodeZero(action,body,tenantId);
+      let compiledAction=action,compiledBody=body;
+      if(action==='importaMunicipiOpenData'){
+        if(!plain(body)||Object.keys(body).some(k=>!['zipBase64','sha256Esperat'].includes(k))||typeof body.zipBase64!=='string'||body.zipBase64.length>1400000||!/^([A-Za-z0-9+/]{4})*([A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$/.test(body.zipBase64)||!/^[a-f0-9]{64}$/.test(body.sha256Esperat??''))fail('invalid_opendata_package');
+        let parsed;try{parsed=await llegeixPaquetOpenData(new Uint8Array(Buffer.from(body.zipBase64,'base64')),{sha256Esperat:body.sha256Esperat});}catch{fail('invalid_opendata_package');}
+        compiledAction='restauraDadesObertes';compiledBody={lot:parsed.lot};
+      }
+      const operation=compilaOperacioNodeZero(compiledAction,compiledBody,tenantId);
       // This header is an assertion to compare, never a source for owner/claims.
       // A cross-tab cookie change must not silently act as the new person.
       const expected=headers['x-sdp-expected-actor'];

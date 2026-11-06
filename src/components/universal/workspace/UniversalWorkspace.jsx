@@ -37,7 +37,8 @@ import { TEXTOS_LLAVOR } from '../textosLlavor.js';
  *                       nom, darrere del nom, amb la Insignia de Pedra Seca
  *                       (to neutre; més de 99, «99+», com la pastilla del
  *                       Xat), i el nom accessible el suma amb `labels.count`
- *                       (per defecte «{n} sense llegir»: «Tecnologia 6 sense
+ *                       (plantilla o formatador pur que rep el recompte;
+ *                       per defecte «{n} sense llegir»: «Tecnologia 6 sense
  *                       llegir»); el rail plegat el suma al nom i al title,
  *                       sense cap xifra pintada. 0, absent o qualsevol valor
  *                       que no siga un enter: cap número, i el DOM és el de
@@ -338,8 +339,12 @@ const recompteDe = (node) => (Number.isSafeInteger(node?.count) && node.count > 
 /* La xifra que es veu: més de 99, «99+», com la pastilla de no llegits del
    Xat (PastillaNoLlegits.jsx). El lector de pantalla rep el número sencer. */
 const xifraDelRecompte = (n) => (n > 99 ? '99+' : String(n));
-/* El text del recompte per al nom accessible (`labels.count`). */
-const textDelRecompte = (plantilla, n) => omple(typeof plantilla === 'string' ? plantilla : DEFAULT_LABELS.count, { n });
+/* El nom accessible admet una plantilla o un formatador per al recompte.
+   El consumidor tria el singular de la seua llengua; la xifra visible no canvia. */
+const textDelRecompte = (plantilla, n) => {
+  const text = typeof plantilla === 'function' ? plantilla(n) : plantilla;
+  return omple(typeof text === 'string' ? text : DEFAULT_LABELS.count, { n });
+};
 
 /* Si la persona filtra la llista: una cerca o una etiqueta activa. És el
    criteri del «Netejar» de la llista (ItemListColumn) i, des de l'F2 del

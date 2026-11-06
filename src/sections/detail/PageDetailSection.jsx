@@ -1,6 +1,7 @@
+import { lazy, Suspense } from 'react';
 import { Navigate, useParams } from '../../app/contexts/RouterContext';
 import { useCoreContent } from '../../app/contexts/CoreContentContext';
-import { useUIActions } from '../../app/contexts/UIContext';
+import { useUIActions, useUIActionsOpcional } from '../../app/contexts/UIContext';
 import { resolvePageSlugPath } from '../../config/navigation';
 import { esAppNativa } from '../../config/origenPublic.js';
 import { accioAlFinal, accioDeLaPagina, esPaginaVisible } from '../../config/systemPages.js';
@@ -12,6 +13,19 @@ import { PublicarDeLaPagina } from '../control/PublicarDeLaPagina.jsx';
 import { destiDePagina } from '../control/destinsControl.js';
 import { InstalaLaPwa, useInstalacioDeLaPagina } from './InstalaLaPwa.jsx';
 import { PAGINA_DE_LA_PASTILLA, pastillaDeVersio } from './pastillaDeVersio.js';
+
+/* IDEA-109 (onada R7) · El visor d'Anatomia Rural és un chunk lazy: no pesa a
+   l'entrada, només es baixa a /page/anatomia-rural. */
+const PAGINA_DEL_VISOR = 'anatomia-rural';
+const VisorAnatomiaRural3D = lazy(() => import('../../components/patrimoni/VisorAnatomiaRural3D.jsx'));
+
+/* El text de càrrega del visor, en la llengua de la interfície (i18n); fora de
+   l'app, la reserva en valencià. */
+function CarregantElVisor() {
+  const t = useUIActionsOpcional()?.t;
+  const text = typeof t === 'function' ? t('patrimoni.anatomia.carregant', 'S’està carregant el visor…') : 'S’està carregant el visor…';
+  return <span className="sr-only">{text}</span>;
+}
 
 /* Ordre del Mestre (261007) · L'acció gran d'una pàgina del sistema
    (accioDeLaPagina de systemPages.js): «Anar al xat» a /page/xat, «Obrir la
@@ -121,6 +135,13 @@ export default function PageDetailSection() {
     let alFinal = <PublicarDeLaPagina clau={slug} />;
     if (accioAlFinal(slug)) alFinal = <AccioDeLaPagina clau={slug} lloc="baix" />;
     else if (instalacio) alFinal = <InstalaLaPwa instalacio={instalacio} lloc="baix" />;
+    else if (slug === PAGINA_DEL_VISOR) {
+      alFinal = (
+        <Suspense fallback={<div role="status" aria-live="polite"><CarregantElVisor /></div>}>
+          <VisorAnatomiaRural3D />
+        </Suspense>
+      );
+    }
     /* P1-46 (Fita 10; guàrdia nocturna 261030) · La pastilla de versió de
        Descàrregues, l'última de la fila d'etiquetes, cap a /versions. Es
        passa com a funció del traductor: TextSection és qui té el `t`. A

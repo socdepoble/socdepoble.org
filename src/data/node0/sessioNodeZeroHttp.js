@@ -16,6 +16,8 @@ const AUTH = Object.freeze({
   login: ['email','password'], logout: [], password: ['currentPassword','password'], norms: ['accept','version'], 'norms-state': []
 });
 const PRIVAT = Object.freeze({
+  adminLlistaUsuarisRegistrats:['entrada'],adminAssignaMembreOrganitzacio:['entrada'],adminConnectaUsuari:['entrada'],
+  restauraDadesObertes:['lot'],importaMunicipiOpenData:['zipBase64','sha256Esperat'],
   getProfile: [], elMeuRol: [], updateProfile: ['updates'], loadNotes: ['noteId','cursor','limit'],
   createNote: ['input'], updateNote: ['id','updates','expectedRevision'],
   listMyOrganizations: [], createOrganization: ['organization'], updateOrganization: ['id','updates'], loadFils: [],

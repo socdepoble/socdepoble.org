@@ -22,39 +22,31 @@ const pindoles = (container) => [...container.querySelectorAll('.badge-row .pill
 
 afterEach(cleanup);
 
-describe('seguretat-01 · les píndoles del detall d’un acte només pinten text', () => {
-  test('un date_label o un type_label que no és text (app_content) no tomba el detall: la reserva de quan falta', () => {
+describe('P0-27 / IDEA-102 · el cos del detall d’un acte ja no pinta la fila de píndoles', () => {
+  test('cap .badge-row ni .pill: el dia el diu el SquareBadge davall de l’entradilla (PageFrame)', () => {
+    const { container } = pinta({ id: 'a', title: 'Hola', date: '2026-11-14', type: 'event', author_name: 'Veí', description: '<p>Cos</p>' });
+    expect(container.querySelector('.badge-row')).toBeNull();
+    expect(container.querySelector('.pill')).toBeNull();
+    expect(pindoles(container)).toEqual([]);
+    expect(container.textContent).toContain('Cos');
+  });
+
+  test('seguretat-01 · un date_label o type_label que no és text (app_content) continua sense tombar el detall', () => {
     const item = {
       id: 'h', title: 'Hola', date: '2026-11-14', type: 'event', author_name: 'Veí',
       date_label: JSON.parse('{"toString":0}'), type_label: JSON.parse('[{"toString":0}]')
     };
-    let container = null;
-    expect(() => { ({ container } = pinta(item)); }).not.toThrow();
-    expect(pindoles(container)).toEqual(['2026-11-14', 'event', 'Veí']);
-  });
-
-  test('la publicació d’un veí amb date_label i type_label hostils es pinta', () => {
-    const item = elementDeFilaPublicada({
+    expect(() => pinta(item)).not.toThrow();
+    cleanup();
+    const fila = elementDeFilaPublicada({
       id: 'p', sectionId: 'events', titol: 'Veí', createdAt: '2026-11-04T10:00:00Z', ownerUserId: 'U',
       payload: JSON.parse('{"title":"Acte","description":"<p>x</p>","date_label":{"trampa":1},"type_label":{"toString":0}}')
     });
-    let container = null;
-    expect(() => { ({ container } = pinta(item)); }).not.toThrow();
-    expect(pindoles(container)).toEqual(['', 'Agenda', 'Veí']);
+    expect(() => pinta(fila)).not.toThrow();
   });
 
-  test('un número es pinta com el seu text, i un valor buit cau a la reserva, com abans', () => {
-    expect(pindoles(pinta({ id: 'n', date: '2026-11-14', type: 'event', date_label: 5, type_label: 7 }).container)).toEqual(['5', '7', 'Organització']);
-    cleanup();
-    expect(pindoles(pinta({ id: 'z', date: '2026-11-14', type: 'event', date_label: 0, type_label: '' }).container)).toEqual(['2026-11-14', 'event', 'Organització']);
-  });
-
-  test('Llei del Píxel · les píndoles dels Cursos de pedra en sec, les de sempre', () => {
+  test('Cursos de pedra en sec · sense píndoles (el quadrat «23–14 OCT–NOV» ve de calendar_badge)', () => {
     const { container } = pinta(CURSOS_PEDRA_EN_SEC_2026_EVENT);
-    expect(pindoles(container)).toEqual([
-      '23, 24, 30 i 31 d’octubre (Fageca) · 6, 7 i 14 de novembre de 2026 (Alcosser)',
-      'Curs teoricopràctic',
-      'El Rentonar'
-    ]);
+    expect(pindoles(container)).toEqual([]);
   });
 });

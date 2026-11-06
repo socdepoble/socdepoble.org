@@ -7435,6 +7435,19 @@ details[open] summary.accordion-header svg:last-child {
     background: var(--sdp-fons-app);
     color: var(--sdp-text-cos);
   }
+  /* P0-28 / IDEA-105 · Dins d'El compte (.perfil-compte > bloc), «Drets
+     d'autor» no fa scroll propi: ja fa tota la seua alçada. Però continuava
+     sent un scroll container amb overscroll-behavior: contain, i Chromium
+     talla l'encadenament de la roda i del tàctil també quan no desborda: la
+     pàgina (.sdp-universal-page-container--contained) es quedava gelada amb
+     el ratolí damunt. Ací la vista és un tros de la pàgina: overflow visible
+     (el peu sticky passa a enganxar-se al scroll de la pàgina). La columna
+     de l'editor (T39) conserva el seu scroll de dalt. */
+  .perfil-compte .sdp-drets {
+    flex: none;
+    overflow: visible;
+    overscroll-behavior: auto;
+  }
   .sdp-drets__cap,
   .sdp-drets__cos,
   .sdp-drets__peu {

@@ -7,6 +7,17 @@ const json = (value, init = {}) => new Response(JSON.stringify(value), { headers
 const buit = { towns: [], pages: [], agents: [] };
 const barrera = () => { let resolve; const promise = new Promise(r => { resolve = r; }); return { promise, resolve }; };
 
+test('Open Data selects one explicit municipality and rejects another municipality response',async()=>{
+  const calls=[],data={noticies:[],agenda:[],memoria:[],memoriaOral:[]};
+  let slug='sella';
+  const a=creaAdaptadorNodeZeroHttp({fetchImpl:async(url,options)=>{calls.push({url,options});return json({poble:{slug,nom:'Sella'},dades:data});}});
+  assert.deepEqual(await a.llegixDadesObertes({poble:{slug:'sella',nom:'Sella'}}),data);
+  assert.equal(calls[0].url,URL_NODE_ZERO+'/opendata/sella');assert.equal(calls[0].options.credentials,'omit');
+  slug='xixona';await assert.rejects(a.llegixDadesObertes({poble:{slug:'sella',nom:'Sella'}}),e=>e.code==='BACKEND_RESPOSTA_INVALIDA');
+  await assert.rejects(a.llegixDadesObertes({poble:{slug:'../private',nom:'Sella'}}),TypeError);
+  a.destroy();
+});
+
 test('endpoint: HTTPS i loopback de proves, sense credencials ni rutes arbitràries', () => {
   assert.equal(normalitzaEndpointNodeZero(), URL_NODE_ZERO);
   assert.equal(normalitzaEndpointNodeZero(`${URL_NODE_ZERO}/`), URL_NODE_ZERO);
@@ -35,7 +46,7 @@ test('configuració fixa i mètodes nucli presents; només capacitat salut', asy
   assert.equal(a.getBackendConfigurat(), true); assert.equal(a.getCurrentUser(), null);
   assert.equal(a.getDefaultUserId(), CONVIDAT_NODE_ZERO);
   for (const name of CONTRACTE_NUCLI) assert.equal(typeof a[name], 'function', name);
-  assert.deepEqual(Object.entries(CAPACITATS).filter(([, methods]) => methods.every(name => typeof a[name] === 'function')).map(([cap]) => cap), ['salut']);
+  assert.deepEqual(Object.entries(CAPACITATS).filter(([, methods]) => methods.every(name => typeof a[name] === 'function')).map(([cap]) => cap), ['salut','dadesObertes']);
   assert.deepEqual(a.operacions, { lecturaPublica: true, escriptura: false, autenticacio: false, xat: false });
   assert.equal(await a.getProfile('altra-persona'), null); assert.deepEqual(await a.listMyOrganizations(), []);
   a.destroy();

@@ -24,6 +24,7 @@ import { sanitizeHtml } from '../../../../../utils/sanitize.js';
 import { useImatgeResolta } from '../../../../../hooks/useImatgeTargeta.js';
 import { propsDeTargetaIncrustada } from './formaDelGrup.js';
 import { useTargetaSincronitzada } from './TargetesSincronitzadesContext.js';
+import { renderHtmlEditorial } from '../../htmlEditorial.jsx';
 
 /* O5-CLAUDE-1 (ordre del Mestre, Onada 5) · La navegació, si n'hi ha. La
    forma `return useNavigate()` dins del try és la de useUbicacioApp
@@ -84,13 +85,17 @@ function TargetaDeLectura({ attrs }) {
    (.sdp-cos-tros). Les targetes no: hi ha botons de la interfície. Sense la
    prop, cap atribut. */
 export function CosAmbTargetes({ segments = [], className = null, lang = undefined }) {
-  const trossos = segments.map((segment, index) => (segment.tipus === 'targetes' ? (
-    <div key={`g${index}`} className="sdp-targetes" data-forma={segment.forma} data-alineacio={segment.alineacio}>
-      {segment.targetes.map((attrs, posicio) => <TargetaDeLectura key={`${attrs.clau}#${posicio}`} attrs={attrs} />)}
-    </div>
-  ) : (
-    <div key={`h${index}`} className="sdp-cos-tros" lang={lang} dangerouslySetInnerHTML={{ __html: sanitizeHtml(segment.html) }} />
-  )));
+  const trossos = segments.map((segment, index) => {
+    if (segment.tipus === 'targetes') return (
+      <div key={`g${index}`} className="sdp-targetes" data-forma={segment.forma} data-alineacio={segment.alineacio}>
+        {segment.targetes.map((attrs, posicio) => <TargetaDeLectura key={`${attrs.clau}#${posicio}`} attrs={attrs} />)}
+      </div>
+    );
+    const editorial = renderHtmlEditorial(segment.html);
+    return editorial ? (
+      <div key={`h${index}`} className="sdp-cos-tros" lang={lang}>{editorial}</div>
+    ) : <div key={`h${index}`} className="sdp-cos-tros" lang={lang} dangerouslySetInnerHTML={{ __html: sanitizeHtml(segment.html) }} />;
+  });
   if (typeof className === 'string' && className.trim()) {
     return <article className={[className.trim(), 'sdp-amb-targetes'].join(' ')}>{trossos}</article>;
   }

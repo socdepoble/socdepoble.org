@@ -137,6 +137,21 @@ describe('amb recompte', () => {
     expect(poble.querySelector('.sdp-insignia [aria-hidden="true"]').textContent).toBe('3');
   });
 
+  test.each([['arbre', arbre], ['rail', rail]])('ARB-07 · %s usa el recompte singular o plural sense canviar les xifres', (_nom, pinta) => {
+    const nav = pinta(ambRecomptes({ 'f-tec': 2, 'f-ia': 1, 'f-poble': 1 }), {
+      labels: { count: (n) => n === 1 ? '{n} resultat' : '{n} resultats' }
+    });
+    const poble = within(nav).getByRole('button', { name: 'Poble 1 resultat' });
+    expect(within(nav).getByRole('button', { name: 'Tecnologia 2 resultats' })).toBeTruthy();
+    if (_nom === 'arbre') {
+      expect(within(nav).getByRole('button', { name: 'IA 1 resultat' })).toBeTruthy();
+      expect(poble.querySelector('.sdp-insignia [aria-hidden="true"]').textContent).toBe('1');
+    } else {
+      expect(poble.getAttribute('title')).toBe('Poble 1 resultat');
+      expect(nav.querySelector('.sdp-insignia')).toBeNull();
+    }
+  });
+
   test('triar la fila amb recompte fa el mateix que sense', () => {
     const onSelectionChange = vi.fn();
     const nav = arbre(ambRecomptes({ 'f-poble': 4 }), { onSelectionChange });

@@ -304,7 +304,8 @@ test('la Consola: les rutes de seoConsola.js, a l’evidència; una imatge bloqu
 const PLUGINS_DE_L_ORDRE=Object.freeze(['mapa','vehicle','animalets','gestoria','rebost','salut','rss','tpv']);
 const EXCLOSES_DE_PAGE=Object.freeze({
   notes_shared:'còpia antiga de la fitxa del Bloc de notes (/page/notes), amb el logotip SVG com a imatge: no és cap presentació pròpia',
-  'node-zero':'article didàctic del servidor local de l’habitació (/page/node-zero), enllaçat bidireccionalment amb /fedivers'
+  'node-zero':'article didàctic del servidor local de l’habitació (/page/node-zero), enllaçat bidireccionalment amb /fedivers',
+  'anatomia-rural':'visor d’Anatomia Rural (IDEA-109, /page/anatomia-rural): sense portada pròpia fins que hi haja una il·lustració real; no s’inventa cap imatge'
 });
 test('cobertura de l’arbre de veres: les 18 presentacions, /disseny, /wikidepoble i la Consola, amb portada pròpia servible',async()=>{
   const {manifest}=await buildSocialManifest({root:policyRoot,origin,policyRoot,estricte:true});

@@ -175,6 +175,9 @@ export const unsubscribeFromXat = asseguraMetode('unsubscribeFromXat');
 
 // Mode Administrador
 export const adminListUsers = asseguraMetode('adminListUsers');
+export const adminLlistaUsuarisRegistrats = asseguraMetode('adminLlistaUsuarisRegistrats');
+export const adminAssignaMembreOrganitzacio = asseguraMetode('adminAssignaMembreOrganitzacio');
+export const adminConnectaUsuari = asseguraMetode('adminConnectaUsuari');
 export const adminListOrganizations = asseguraMetode('adminListOrganizations');
 
 
@@ -256,6 +259,7 @@ export const listPublicOrganizations = asseguraMetode('listPublicOrganizations')
    listPublicOrganizations, la forma la valida qui crida). */
 export const llegixDadesObertes = asseguraMetode('llegixDadesObertes');
 export const restauraDadesObertes = asseguraMetode('restauraDadesObertes');
+export const importaMunicipiOpenData = asseguraMetode('importaMunicipiOpenData');
 export const listMyAgents = asseguraMetode('listMyAgents');
 export const updateAgent = asseguraMetode('updateAgent');
 

@@ -302,3 +302,6 @@ REGISTRE.push({ nom: 'RellotgeViu', fitxer: 'PedraSeca/atoms/RellotgeViu.jsx', p
    sobre fons fosc») · el visor de fotos de l'Arxiu visual (/multimedia), sobre el Dialeg de mida
    'completa'. Espècimen: EspecimenVisorImatges (superposicions/visor-imatges). */
 REGISTRE.push({ nom: 'VisorImatges', fitxer: 'PedraSeca/organismes/VisorImatges.jsx', pagina: 'superposicions', estat: 'viu' });
+
+/* IDEA-108 (onada R7) · el botó «Escolta la IAIA». Espècimen: EspecimenBotoVeuIaia (fonaments/boto-veu-iaia). */
+REGISTRE.push({ nom: 'BotoVeuIaia', fitxer: 'PedraSeca/molecules/BotoVeuIaia.jsx', pagina: 'fonaments', estat: 'viu' });

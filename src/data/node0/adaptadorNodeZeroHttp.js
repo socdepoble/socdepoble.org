@@ -6,7 +6,7 @@ import { CODI_BACKEND_INABASTABLE } from '../errorsBackend.js';
 export const BACKEND_ID_NODE_ZERO = 'sdp-node0-http';
 export const URL_NODE_ZERO = 'https://socdepoble.cat/api/v1/node0';
 export const CONVIDAT_NODE_ZERO = '00000000-0000-4000-8000-000000000001';
-export const CAPACITATS_NODE_ZERO = Object.freeze(['salut']);
+export const CAPACITATS_NODE_ZERO = Object.freeze(['salut','dadesObertes']);
 const MAX_BYTES = 2 * 1024 * 1024;
 const FORMA_UUID = /^[0-9a-f]{8}-(?:[0-9a-f]{4}-){3}[0-9a-f]{12}$/i;
 const FORMES = Object.freeze({ core: ['towns', 'pages', 'agents'], mur: ['feedPosts', 'events', 'marketItems'], multimedia: ['mediaItems'], notes: ['notes', 'noteFolders'] });
@@ -135,6 +135,17 @@ export function creaAdaptadorNodeZeroHttp(opcions = {}) {
     getProfile: async () => { obert(); return null; }, listMyOrganizations: async () => { obert(); return []; }, logout: async () => { obert(); return true; },
     async comprovaServidor(config) { try { return {ok:(await demana('status',config))?.postgresql?.ok===true}; } catch { return {ok:false}; } },
     lligEstatNodeZero: config => demana('status',config),
+    async llegixDadesObertes(filtre={},config={}){
+      const poble=filtre.poble;
+      if(!pla(poble)||typeof poble.slug!=='string'||!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(poble.slug)||poble.slug.length>120||typeof poble.nom!=='string'||!poble.nom.trim())throw new TypeError('Cal un poble explícit.');
+      const slug=poble.slug,nom=poble.nom;
+      const result=await demana(`opendata/${slug}`,{...config,...(filtre.signal?{signal:filtre.signal}:{})});
+      if(result?.poble?.slug!==slug||result?.poble?.nom!==nom||!pla(result.dades))throw invalid();
+      const out={};for(const key of ['noticies','agenda','memoria','memoriaOral']){
+        if(!Array.isArray(result.dades[key])||result.dades[key].length>5000)throw invalid();out[key]=result.dades[key];
+      }
+      return out;
+    },
     destroy() { if(tancat)return; tancat=true; for(const c of controls)c.abort(error('NODE0_TANCAT','L’adaptador del Node 0 està tancat.')); controls.clear(); },
     configuracio,operacions:Object.freeze({lecturaPublica:true,escriptura:false,autenticacio:false,xat:false})
   });

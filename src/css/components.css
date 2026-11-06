@@ -1733,10 +1733,20 @@ time.sp-card-calendar-badge .sp-card-calendar-badge__any,
   color: var(--sdp-sobre-color);
 }
 .sp-card-body.has-price > .sp-card-calendar-badge,
-.page-title.has-price > .sp-card-calendar-badge,
+.sdp-pagina-insignia--preu > .sp-card-calendar-badge,
 .sp-card-calendar-badge[data-tipus="price"] {
   background-color: var(--sdp-accio-control);
   color: var(--sdp-sobre-color);
+}
+/* P0-27 / IDEA-102 (R7) · El quadrat dins de la fila .sdp-pagina-insignia
+   (layout.css, capa legacy): el float, el marge esquerre i el marge inferior
+   de la regla base .sp-card-calendar-badge (capa components, ací dalt) guanyen
+   a qualsevol regla de la capa legacy, sigui quina sigui l'especificitat. Per
+   això l'anul·lació va en esta capa, després de la base. */
+.sdp-pagina-insignia > .sp-card-calendar-badge {
+  float: none;
+  margin: 0;
+  flex: none;
 }
 @media (hover: hover) and (pointer: fine) {
   time.sp-card-calendar-badge:hover,
@@ -3873,5 +3883,258 @@ section.bar-orange > .sdp-emoticona-barra--boto:focus-visible { outline-color: v
     text-overflow: ellipsis;
     white-space: nowrap;
     color: var(--sdp-text-cos);
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   Visor d'Anatomia Rural (IDEA-109, onada R7) · VisorAnatomiaRural3D.jsx
+   Només tokens semàntics de Pedra Seca: cap color literal, cap ombra
+   decorativa. Les transicions viuen NOMÉS dins de
+   `prefers-reduced-motion: no-preference`.
+   ═══════════════════════════════════════════════════════════════════ */
+@layer components {
+  .anatomia {
+    display: flex;
+    flex-direction: column;
+    gap: var(--sdp-space-4);
+    margin-block: var(--sdp-space-8);
+    color: var(--sdp-text-cos);
+  }
+
+  .anatomia__titol {
+    margin: 0;
+    color: var(--sdp-text-titol);
+  }
+
+  .anatomia__selector {
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+
+  .anatomia__resum,
+  .anatomia__font,
+  .anatomia__nota,
+  .anatomia__avis {
+    margin: 0;
+    line-height: 1.6;
+  }
+
+  .anatomia__nota,
+  .anatomia__avis {
+    color: var(--sdp-text-suau);
+    font-size: var(--sdp-text-meta);
+  }
+
+  /* ── Control lliscant ── */
+  .anatomia__control {
+    display: flex;
+    flex-direction: column;
+    gap: var(--sdp-space-2);
+    padding: var(--sdp-space-4);
+    background: var(--sdp-fons-targeta);
+    border: 1px solid var(--sdp-vora);
+    border-radius: var(--sdp-radi-m);
+  }
+
+  .anatomia__etiqueta {
+    font-weight: 600;
+    color: var(--sdp-text-titol);
+  }
+
+  .anatomia__lliscant {
+    width: 100%;
+    min-height: var(--sdp-touch);
+    accent-color: var(--sdp-accio-control);
+    cursor: pointer;
+  }
+
+  .anatomia__lliscant:focus-visible,
+  .anatomia__peca-boto:focus-visible,
+  .anatomia__canal:focus-visible {
+    outline: var(--sdp-focus-gruix) solid var(--sdp-focus);
+    outline-offset: var(--sdp-focus-separacio);
+  }
+
+  /* ── Escenari: l'SVG i els punts calents damunt ── */
+  .anatomia__escenari {
+    position: relative;
+    width: 100%;
+    max-width: 40rem;
+    margin-inline: auto;
+    aspect-ratio: 600 / 520;
+    background: var(--sdp-fons-app);
+    border: 1px solid var(--sdp-vora);
+    border-radius: var(--sdp-radi-m);
+    overflow: hidden;
+  }
+
+  .anatomia__svg {
+    display: block;
+    width: 100%;
+    height: 100%;
+  }
+
+  .anatomia__peca {
+    cursor: pointer;
+  }
+
+  .anatomia__cara {
+    stroke: var(--sdp-vora-forta);
+    stroke-width: 1.5;
+    stroke-linejoin: round;
+    fill: var(--sdp-fons-subtil);
+  }
+
+  .anatomia__cara--filera {
+    fill: none;
+    stroke-dasharray: 10 4;
+    stroke-width: 1;
+  }
+
+  .anatomia__ombra {
+    fill: var(--sdp-fons-invers);
+    stroke: none;
+    pointer-events: none;
+  }
+
+  .anatomia__ombra--1 { fill: color-mix(in srgb, var(--sdp-fons-invers) 14%, transparent); }
+  .anatomia__ombra--2 { fill: color-mix(in srgb, var(--sdp-fons-invers) 26%, transparent); }
+
+  .anatomia__peca--pedra .anatomia__cara { fill: var(--sdp-fons-subtil); }
+  .anatomia__peca--neu .anatomia__cara { fill: var(--sdp-fons-targeta); }
+  .anatomia__peca--palla .anatomia__cara { fill: var(--sdp-accent-subtil); }
+  .anatomia__peca--fusta .anatomia__cara { fill: var(--sdp-fons-app); stroke: var(--sdp-accent-text); }
+  .anatomia__peca--calc .anatomia__cara { fill: var(--sdp-fons-lectura); }
+  .anatomia__peca .anatomia__cara--filera { fill: none; }
+
+  .anatomia__peca.is-seleccionada .anatomia__cara {
+    stroke: var(--sdp-accio-control);
+    stroke-width: 3;
+  }
+
+  .anatomia__marcador-cercle {
+    fill: var(--sdp-accio-subtil);
+    stroke: var(--sdp-accio-control);
+    stroke-width: 2;
+  }
+
+  .anatomia__marcador-glif {
+    fill: var(--sdp-text-titol);
+    font-size: var(--sdp-text-base);
+    pointer-events: none;
+  }
+
+  .anatomia__viva {
+    min-height: var(--sdp-touch);
+  }
+
+  /* La diana tàctil és el cercle gran i transparent; el punt que es veu és el xicotet. */
+  .anatomia__punt {
+    fill: transparent;
+    stroke: none;
+    cursor: pointer;
+  }
+
+  .anatomia__punt-marca {
+    fill: var(--sdp-accio-control);
+    stroke: var(--sdp-sobre-accio);
+    stroke-width: 2;
+    pointer-events: none;
+  }
+
+  .anatomia__peca.is-seleccionada .anatomia__punt-marca {
+    r: 9px;
+  }
+
+  /* ── Llista de peces (la via robusta quan els punts es toquen) ── */
+  .anatomia__peces {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: var(--sdp-space-2);
+  }
+
+  .anatomia__peca-boto {
+    min-height: var(--sdp-touch);
+    padding: 0 var(--sdp-space-4);
+    background: var(--sdp-fons-targeta);
+    color: var(--sdp-text-cos);
+    border: 1px solid var(--sdp-vora-control);
+    border-radius: var(--sdp-radi-pastilla);
+    cursor: pointer;
+  }
+
+  .anatomia__peca-boto[aria-pressed="true"] {
+    background: var(--sdp-accio-control);
+    color: var(--sdp-sobre-accio);
+    border-color: var(--sdp-accio-control);
+  }
+
+  /* ── Panell de detall ── */
+  .anatomia__detall,
+  .anatomia__documental {
+    padding: var(--sdp-space-4);
+    background: var(--sdp-fons-targeta);
+    border: 1px solid var(--sdp-vora);
+    border-radius: var(--sdp-radi-m);
+  }
+
+  .anatomia__terme,
+  .anatomia__documental-titol {
+    margin: 0 0 var(--sdp-space-2);
+    color: var(--sdp-text-titol);
+  }
+
+  .anatomia__definicio,
+  .anatomia__pendent,
+  .anatomia__buit,
+  .anatomia__autoria {
+    margin: 0 0 var(--sdp-space-2);
+    line-height: 1.6;
+  }
+
+  .anatomia__pendent {
+    color: var(--sdp-text-suau);
+    font-size: var(--sdp-text-meta);
+  }
+
+  .anatomia__veu {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: var(--sdp-space-2);
+    margin-top: var(--sdp-space-4);
+  }
+
+  .anatomia__canal {
+    color: var(--sdp-accio-text);
+    font-weight: 600;
+  }
+
+  .anatomia__sensevideo {
+    color: var(--sdp-text-suau);
+    font-size: var(--sdp-text-meta);
+  }
+
+  .anatomia__documental iframe {
+    display: block;
+    width: 100%;
+    height: auto;
+    aspect-ratio: 16 / 9;
+    border: 0;
+    border-radius: var(--sdp-radi-m);
+  }
+
+  /* ── Moviment: només amb permís; amb moviment reduït, cap transició ── */
+  @media (prefers-reduced-motion: no-preference) {
+    .anatomia__punt-marca {
+      transition: r var(--sdp-t);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .anatomia__punt-marca {
+      transition: none;
+    }
   }
 }

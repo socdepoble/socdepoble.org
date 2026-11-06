@@ -153,14 +153,29 @@ const ordreDe = (q) => cercaEntrades(ENTRADES, q, 'tot').llista.map((entrada) =>
 const escripturesDe = (camp) => estat.escriptures.filter(({ nous }) => camp in nous);
 
 describe('les tres columnes', () => {
+  test.each([
+    ['ca', '1 resultat', '2 resultats'],
+    ['es', '1 resultado', '2 resultados'],
+    ['en', '1 result', '2 results'],
+    ['eu', '1 emaitza', '2 emaitza'],
+    ['gl', '1 resultado', '2 resultados']
+  ])('ARB-07 · %s anuncia una coincidència en singular i diverses en plural', (idioma, singular, plural) => {
+    estat.t = createTranslator(idioma);
+    pinta('mode=espai&q=festa');
+    const nav = within(screen.getByRole('complementary', { name: estat.t('section.search.espai.navegacio') }));
+    expect(nav.getAllByRole('button', { name: new RegExp(` ${singular}$`) }).length).toBeGreaterThan(0);
+    expect(nav.getAllByRole('button', { name: new RegExp(` ${plural}$`) }).length).toBeGreaterThan(0);
+    if (singular !== plural.replace('2 ', '1 ')) expect(nav.queryAllByRole('button', { name: new RegExp(` ${plural.replace('2 ', '1 ')}$`) })).toHaveLength(0);
+  });
+
   test('criteris Tipus, Pobles i Data amb el recompte de cada opció, la llista en l’ordre del rànquing i el detall que demana triar', () => {
     pinta('mode=espai&q=festa');
     expect(vi.mocked(useCercaGlobal)).toHaveBeenLastCalledWith({ q: 'festa', tipus: 'tot' });
     const nav = within(criteris());
     for (const grup of ['Tipus', 'Pobles', 'Data']) expect(nav.getByRole('button', { name: grup }).getAttribute('aria-expanded')).toBe('true');
-    for (const opcio of ['Publicacions 2 resultats', 'Calendari 1 resultats', 'Notes 1 resultats', 'Persones 1 resultats',
-      'Benifallim 2 resultats', 'La Torre de les Maçanes 1 resultats',
-      'Pròximament 1 resultats', 'Hui 1 resultats', 'Esta setmana 1 resultats', 'Este mes 1 resultats', 'Este any 1 resultats', 'Abans 2 resultats']) {
+    for (const opcio of ['Publicacions 2 resultats', 'Calendari 1 resultat', 'Notes 1 resultat', 'Persones 1 resultat',
+      'Benifallim 2 resultats', 'La Torre de les Maçanes 1 resultat',
+      'Pròximament 1 resultat', 'Hui 1 resultat', 'Esta setmana 1 resultat', 'Este mes 1 resultat', 'Este any 1 resultat', 'Abans 2 resultats']) {
       expect(nav.getByRole('button', { name: opcio })).toBeTruthy();
     }
     /* Cap opció sense resultats (Pobles, Mercat…), i cap correu ni grup buit. */
@@ -215,8 +230,8 @@ describe('les tres columnes', () => {
       ambEntrades([dePublicacio({ id: 'oct', title: 'Festa d’octubre', created_at: '2026-10-01T22:00:00.000Z' })]);
       pinta('mode=espai&q=festa');
       const nav = within(criteris());
-      expect(nav.getByRole('button', { name: 'Este mes 1 resultats' })).toBeTruthy();
-      expect(nav.getByRole('button', { name: 'Este any 1 resultats' })).toBeTruthy();
+      expect(nav.getByRole('button', { name: 'Este mes 1 resultat' })).toBeTruthy();
+      expect(nav.getByRole('button', { name: 'Este any 1 resultat' })).toBeTruthy();
       expect(nav.queryByRole('button', { name: /^Esta setmana/ })).toBeNull();
     } finally {
       zona.mockRestore();
@@ -297,7 +312,7 @@ describe('la consulta i l’URL', () => {
 describe('els criteris', () => {
   test('un criteri filtra la llista i fa push de ?faceta=; «Tots els resultats» el lleva', () => {
     pinta('mode=espai&q=festa');
-    const agenda = within(criteris()).getByRole('button', { name: 'Calendari 1 resultats' });
+    const agenda = within(criteris()).getByRole('button', { name: 'Calendari 1 resultat' });
     fireEvent.click(agenda);
     expect(titols()).toEqual(['Concert de festa']);
     expect(url().get('faceta')).toBe('tipus:calendari');
@@ -319,7 +334,7 @@ describe('els criteris', () => {
 
   test('l’Arrere després de triar un criteri torna a «Tots els resultats» i a la llista sencera', async () => {
     pinta('mode=espai&q=festa');
-    fireEvent.click(within(criteris()).getByRole('button', { name: 'Calendari 1 resultats' }));
+    fireEvent.click(within(criteris()).getByRole('button', { name: 'Calendari 1 resultat' }));
     expect(titols()).toEqual(['Concert de festa']);
     await enrere();
     expect(url().has('faceta')).toBe(false);
@@ -348,7 +363,7 @@ describe('els criteris', () => {
     expect(escripturesDe('faceta')).toEqual([]);
     const benifallim = within(criteris()).getByRole('button', { name: 'Benifallim' });
     expect(benifallim.getAttribute('aria-current')).toBe('page');
-    expect(within(criteris()).getByRole('button', { name: 'Calendari 1 resultats' }).getAttribute('aria-current')).toBeNull();
+    expect(within(criteris()).getByRole('button', { name: 'Calendari 1 resultat' }).getAttribute('aria-current')).toBeNull();
     expect(titols()).toEqual([]);
     expect(within(screen.getByRole('complementary', { name: 'RESULTATS' })).getByText('Cap resultat per a «concert»')).toBeTruthy();
   });
@@ -384,11 +399,11 @@ describe('IDEA-61 · l’Estat de les fitxes d’àmbit', () => {
     const posicions = ['Tipus', 'Estat', 'Pobles', 'Data'].map((nom) => noms.indexOf(nom));
     expect(posicions.every((posicio, i) => posicio >= 0 && (i === 0 || posicio > posicions[i - 1]))).toBe(true);
     expect(noms.slice(noms.indexOf('Estat') + 1, noms.indexOf('Pobles'))).toEqual(['Disponible', 'Reservat']);
-    for (const opcio of ['Compartir cotxe 2 resultats', 'Disponible 1 resultats', 'Reservat 1 resultats', 'Benifallim 1 resultats']) {
+    for (const opcio of ['Compartir cotxe 2 resultats', 'Disponible 1 resultat', 'Reservat 1 resultat', 'Benifallim 1 resultat']) {
       expect(nav.getByRole('button', { name: opcio })).toBeTruthy();
     }
     expect(titols()).toHaveLength(2);
-    const reservat = nav.getByRole('button', { name: 'Reservat 1 resultats' });
+    const reservat = nav.getByRole('button', { name: 'Reservat 1 resultat' });
     fireEvent.click(reservat);
     expect(titols()).toEqual(['Cotxe a Xixona']);
     expect(url().get('faceta')).toBe('estat:reservat');
@@ -413,7 +428,7 @@ describe('IDEA-61 · l’Estat de les fitxes d’àmbit', () => {
   test('?faceta=estat:… de l’URL filtra des del primer pintat; un estat que no ho és mostra «Tots els resultats»; un de vàlid sense resultats es pinta al seu lloc', () => {
     ambEntrades(AMB_COTXES);
     const vista = pinta('mode=espai&q=cotxe&faceta=estat%3Adisponible');
-    expect(within(criteris()).getByRole('button', { name: 'Disponible 1 resultats' }).getAttribute('aria-current')).toBe('page');
+    expect(within(criteris()).getByRole('button', { name: 'Disponible 1 resultat' }).getAttribute('aria-current')).toBe('page');
     expect(titols()).toEqual(['Cotxe a Alcoi dilluns']);
     expect(estat.escriptures).toEqual([]);
     vista.unmount();
@@ -531,8 +546,8 @@ describe('les llengües', () => {
     pinta('mode=espai&q=festa');
     const nav = within(screen.getByRole('complementary', { name: 'CRITERIOS' }));
     expect(screen.getByRole('complementary', { name: 'RESULTADOS' })).toBeTruthy();
-    for (const nom of ['Tipo', 'Pueblos', 'Fecha', 'Todos los resultados', 'Hoy 1 resultados', 'Próximamente 1 resultados',
-      'Antes 2 resultados', 'Este año 1 resultados']) {
+    for (const nom of ['Tipo', 'Pueblos', 'Fecha', 'Todos los resultados', 'Hoy 1 resultado', 'Próximamente 1 resultado',
+      'Antes 2 resultados', 'Este año 1 resultado']) {
       expect(nav.getByRole('button', { name: nom })).toBeTruthy();
     }
     expect(within(detall()).getByText('Elige un resultado para verlo aquí.')).toBeTruthy();
@@ -549,14 +564,14 @@ describe('les llengües', () => {
     pinta('mode=espai&q=cotxe');
     const columna = screen.getByRole('complementary', { name: 'CRITERIOS' });
     const nav = within(columna);
-    for (const nom of ['Tipo', 'Estado', 'Pueblos', 'Fecha', 'Compartir coche 2 resultados', 'Disponible 1 resultados', 'Reservado 1 resultados']) {
+    for (const nom of ['Tipo', 'Estado', 'Pueblos', 'Fecha', 'Compartir coche 2 resultados', 'Disponible 1 resultado', 'Reservado 1 resultado']) {
       expect(nav.getByRole('button', { name: nom })).toBeTruthy();
     }
     /* Cap etiqueta en la llengua de la reserva. */
-    for (const nom of ['Estat', 'Reservat 1 resultats', 'Compartir cotxe 2 resultats']) expect(nav.queryByRole('button', { name: nom })).toBeNull();
+    for (const nom of ['Estat', 'Reservat 1 resultat', 'Compartir cotxe 2 resultats']) expect(nav.queryByRole('button', { name: nom })).toBeNull();
     const noms = [...columna.querySelectorAll('.sdp-workspace-nav-item__label')].map((node) => node.textContent);
     expect(noms.slice(noms.indexOf('Estado') + 1, noms.indexOf('Pueblos'))).toEqual(['Disponible', 'Reservado']);
-    fireEvent.click(nav.getByRole('button', { name: 'Reservado 1 resultados' }));
+    fireEvent.click(nav.getByRole('button', { name: 'Reservado 1 resultado' }));
     expect(titols()).toEqual(['Cotxe a Xixona']);
     expect(url().get('faceta')).toBe('estat:reservat');
   });

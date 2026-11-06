@@ -27,7 +27,7 @@ test('Node 0 s’injecta abans d’arrenca, es segella i llig PostgreSQL pel por
   expect(getCurrentUser()).toBeNull();
   expect((await loadCoreContent()).towns[0].title).toBe('La Torre');
   expect((await loadMur()).feedPosts[0].id).toBe('publicacio-postgresql');
-  expect(Object.keys(CAPACITATS).filter(teCapacitat)).toEqual(['salut']);
+  expect(Object.keys(CAPACITATS).filter(teCapacitat)).toEqual(['salut','dadesObertes']);
   await expect(appendSectionSubmissionNetworkOnly({ title: 'No s’ha de publicar' })).rejects.toMatchObject({ codi: 'sense-capacitat' });
   expect(fetchImpl).toHaveBeenCalledTimes(2);
   expect(calls.every(({ init }) => init.method === 'GET' && init.credentials === 'omit')).toBe(true);

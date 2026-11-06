@@ -1,6 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import DetallPoble from '../pobles/DetallPoble.jsx';
-import { CalendarDays, MapPin, UserRound, MessageCircle } from 'lucide-react';
+import { MapPin, UserRound, MessageCircle } from 'lucide-react';
 import { renderRichText, renderPostContent } from './detailRichText.jsx';
 import { getFirstImage, semblaHtml } from './detailHelpers.jsx';
 import { Aplec2023Article } from '../mur/articles/Aplec2023Article.jsx';
@@ -964,15 +964,6 @@ export function buildMultimediaDetailSectionMeta({ mediaItems = [], t }) {
   };
 }
 
-/* seguretat-01 (261104) · El text d'una píndola del detall d'un acte (el dia i
-   el tipus): una cadena, tal qual; un número finit, el seu text (React ja el
-   pintava igual); una buida (0, ''), cap, i passa la següent, com feia el ||;
-   qualsevol altra cosa, cap. El traductor d'entrada (mapejadorSeccions.js) ja
-   neteja date_label i type_label d'una publicació d'un veí, però la llavor i
-   app_content no hi passen: un objecte com a fill de React tombava la pàgina de
-   l'acte («Objects are not valid as a React child»). */
-const textDeLaPindola = (valor) => (valor && (typeof valor === 'string' || Number.isFinite(valor)) ? String(valor) : '');
-
 export function buildEventsDetailSectionMeta({ events = [], t }) {
   return {
     title: t('section.detail.events.title', 'Events'),
@@ -987,13 +978,9 @@ export function buildEventsDetailSectionMeta({ events = [], t }) {
     getImage: (item) => item.image_url || null,
     renderBody: (item) => (
       <>
-        <div className="badge-row">
-          <span className="pill"><CalendarDays size={14} /> {textDeLaPindola(item.date_label) || textDeLaPindola(item.date)}</span>
-          <span className="pill">{textDeLaPindola(item.type_label) || textDeLaPindola(item.type) || t('section.detail.events.typeFallback', 'Agenda')}</span>
-          <span className="pill"><UserRound size={14} /> {item.author_name || t('section.detail.events.organisation', 'Organització')}</span>
-          {item.file ? <span className="pill">{item.file}</span> : null}
-        </div>
-        
+        {/* P0-27 / IDEA-102 (R7) · Cap fila de píndoles al cos d'un acte: el dia ja
+            el diu el quadrat (SquareBadge) davall de l'entradilla, el nom de qui
+            publica la barra taronja i el tipus l'etiqueta de la capçalera. */}
         {/* Decisió 3 (261007) · L'agenda és del Mur: cap <img> de tercers al cos. */}
         {item.id === 'aplec-2023' ? (
           <Aplec2023Article item={item} />

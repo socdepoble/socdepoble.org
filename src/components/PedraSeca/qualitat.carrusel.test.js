@@ -346,7 +346,8 @@ describe('el lloc a la cascada (ordre del Mestre, 261007: «Moure a components.c
        del 31-10-2026, ordre del Mestre, el set: taulers.css, el Quadre de
        Comandament, darrere de modules.css). */
     expect(posteriors.map((i) => i.fitxer)).toEqual(['src/css/modules.css', 'src/css/taulers.css', 'src/components/layout/AppGridShell.css',
-      'src/sections/profile/PerfilShell.css', 'src/apps/plataforma/apps.css', 'src/css/tipografia-estreta.css', 'src/css/utilities.css']);
+      'src/sections/profile/PerfilShell.css', 'src/apps/plataforma/apps.css',
+      'src/css/tipografia-estreta.css', 'src/css/utilities.css']);
     expect(posteriors[0]).toEqual({ fitxer: 'src/css/modules.css', capa: '' });
     expect(posteriors[posteriors.length - 1].fitxer).toBe('src/css/utilities.css');
     expect(posteriors.find((i) => i.fitxer === 'src/sections/profile/PerfilShell.css')?.capa).toBe('components');

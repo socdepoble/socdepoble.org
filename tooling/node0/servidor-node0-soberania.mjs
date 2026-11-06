@@ -141,7 +141,7 @@ export async function repActivitat({ req, bytes, db, request, now, admetActor })
 export function creaServidor({ db, claus, token, mastodonToken, auth = null, backend = null, posse = null, resilience = null, mastodonInbound = null, identificaClient = null, request = peticioMastodont, now = Date.now } = {}) {
   if (!db || !claus) throw new TypeError('node0_dependencies_required');
   const userBackendReady=typeof auth?.handle==='function'&&typeof backend?.handle==='function'&&typeof identificaClient==='function';
-  const privateCapabilities=Object.fromEntries(['actorBinding','roleRead','createOrganization','sectionSubmissions','paginacioSeccions','edicioEditorial'].map(key=>[key,userBackendReady&&backend.capabilities?.[key]===true]));
+  const privateCapabilities=Object.fromEntries(['actorBinding','roleRead','createOrganization','sectionSubmissions','paginacioSeccions','edicioEditorial','administracioUsuaris','restauracioDadesObertes'].map(key=>[key,userBackendReady&&backend.capabilities?.[key]===true]));
   const actors = new Map();let coarseStart=now(),coarseCount=0;let active = 0;
   const admetActor=actor=>{
     const time=now(),entry=actors.get(actor);
@@ -195,7 +195,7 @@ export function creaServidor({ db, claus, token, mastodonToken, auth = null, bac
             try{remoteAddress=identificaClient(req);}catch{throw errorHttp(503,'trusted_ingress_required');}
             if(typeof remoteAddress!=='string'||!remoteAddress)throw errorHttp(503,'trusted_ingress_required');
           }
-          const bytes=await llegixCos(req,kind==='auth'?16384:768*1024);
+          const bytes=await llegixCos(req,kind==='auth'?16384:action==='importaMunicipiOpenData'?1500000:768*1024);
           try{body=JSON.parse(new TextDecoder('utf-8',{fatal:true}).decode(bytes));}catch{throw errorHttp(400,'invalid_json');}
         }
         const answer=await handler.handle(action,{headers:req.headers,body,remoteAddress});
@@ -204,6 +204,13 @@ export function creaServidor({ db, claus, token, mastodonToken, auth = null, bac
       if(req.method==='GET')res.setHeader?.('Access-Control-Allow-Origin','*');
       if (req.headers.origin && req.headers.origin !== ORIGIN && req.method!=='GET') throw errorHttp(403, 'origin_rejected');
       if (req.method === 'GET') {
+        const openDataRoute=/^\/api\/v1\/node0\/opendata\/([a-z0-9]+(?:-[a-z0-9]+)*)$/.exec(route);
+        if(openDataRoute){
+          if(url.search||typeof db.dadesObertesMunicipi!=='function')throw errorHttp(404,'opendata_unavailable');
+          const data=await db.dadesObertesMunicipi(openDataRoute[1]);
+          if(!data)throw errorHttp(404,'municipality_unavailable');
+          return json(res,200,data);
+        }
         if (route === '/api/v1/node0/status') {
           const start = now(); let pg;
           let inboundState=normalitzaMastodonInbound(null);
@@ -321,8 +328,12 @@ export async function main(env = process.env, dependencies = {}) {
       ]);
       const {iniciaMantenimentAuthNodeZero}=await import('./manteniment-auth-node0.mjs');
       comprovaArrencadaActiva(startup.signal);
+      const rpcReady=async(flag,signature)=>flag==='1'&&(await authDb.query(`SELECT json_build_object('ready',to_regprocedure('${signature}') IS NOT NULL);`,{privateValues:true}))?.ready===true;
       userBackend={auth:creaAuthNodeZero({db:authDb,rateSecret:env.SDP_NODE0_AUTH_RATE_SECRET,mailTransport:null}),
-        backend:creaBackendPrivatNodeZero({db:authDb,tenantId:NODE0_AUTH_TENANT,editorialReady:env.SDP_NODE0_EDITORIAL==='1'&&await authDb.query("SELECT to_regprocedure('public.admin_actualitza_publicacio_editorial(text,text,jsonb,integer,uuid)') IS NOT NULL AS ready;",{privateValues:true})===true}),
+        backend:creaBackendPrivatNodeZero({db:authDb,tenantId:NODE0_AUTH_TENANT,
+          editorialReady:await rpcReady(env.SDP_NODE0_EDITORIAL,'public.admin_actualitza_publicacio_editorial(text,text,jsonb,integer,uuid)'),
+          adminUsuarisReady:await rpcReady(env.SDP_NODE0_ADMIN_USUARIS,'public.admin_llista_usuaris_registrats(uuid,integer,integer)'),
+          restauracioReady:await rpcReady(env.SDP_NODE0_RESTAURACIO,'public.importa_municipi_open_data(uuid,jsonb)')}),
         identificaClient:creaIdentificadorClientNodeZero({proxySecret:env.SDP_NODE0_PROXY_SECRET})};
       if(posseServiceFactory){
         // Runtime cannot install privileged schema or invent institutional

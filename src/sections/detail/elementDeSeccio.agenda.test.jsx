@@ -70,10 +70,10 @@ test('el detall i la targeta porten al mateix dia', () => {
   }
 });
 
-test('AH-20 · el quadrat de 128×128 px d’un acte és clicable al mes de l’acte tant a la Card com a la Page, i sense logotip aplica has-aside--sense-logo', () => {
+test('P0-27 / IDEA-102 · el quadrat de 128×128 px d’un acte va davall de l’entradilla (no a la capçalera), és clicable al mes de l’acte i la capçalera no porta classes d’aside', () => {
   vi.stubEnv('TZ', 'Europe/Madrid');
   mocks.navigate.mockClear();
-  const item = { id: 'fira', title: 'Fira de tardor', date: '2026-11-14' };
+  const item = { id: 'fira', title: 'Fira de tardor', date: '2026-11-14', entradilla: 'Una entradilla.' };
   const pagina = paginaDElement(ACTES, item);
   expect(pagina.calendarBadge).toEqual({
     dia: '14',
@@ -88,20 +88,35 @@ test('AH-20 · el quadrat de 128×128 px d’un acte és clicable al mes de l’
     </PageFrame>
   );
   const capSenseLogo = cSenseLogo.querySelector('header.page-title');
-  expect(capSenseLogo.classList.contains('has-aside')).toBe(true);
-  expect(capSenseLogo.classList.contains('has-aside--sense-logo')).toBe(true);
-  const quadratPagina = capSenseLogo.querySelector('.sp-card-calendar-badge');
+  expect(capSenseLogo.classList.contains('has-aside')).toBe(false);
+  expect(capSenseLogo.classList.contains('has-aside--sense-logo')).toBe(false);
+  expect(capSenseLogo.querySelector('.sp-card-calendar-badge')).toBeNull();
+  const fila = cSenseLogo.querySelector('article.content-wrapper > .sdp-pagina-insignia');
+  expect(fila).toBeTruthy();
+  const quadratPagina = fila.querySelector('.sp-card-calendar-badge');
   expect(quadratPagina).toBeTruthy();
+  // L'ordre de lectura: capçalera, entradilla, quadrat, cos.
+  const lead = cSenseLogo.querySelector('.page-intro .lead');
+  expect(lead.compareDocumentPosition(fila) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  expect(fila.compareDocumentPosition(cSenseLogo.querySelector('article.content-wrapper > p')) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  expect(fila.getAttribute('translate')).toBe('no');
   act(() => { quadratPagina.click(); });
   expect(mocks.navigate).toHaveBeenCalledWith('/calendari?mes=2026-11');
   cleanup();
 
-  const { container: cAmbLogo } = render(
-    <PageFrame {...pagina} showLogos={true}>
+  // Sense entradilla: el quadrat és el primer fill del cos.
+  const { container: cSenseLead } = render(
+    <PageFrame {...paginaDElement(ACTES, { id: 'f2', title: 'Fira', date: '2026-11-14' })} showLogos={true}>
       <p>Cos</p>
     </PageFrame>
   );
-  const capAmbLogo = cAmbLogo.querySelector('header.page-title');
-  expect(capAmbLogo.classList.contains('has-aside')).toBe(true);
-  expect(capAmbLogo.classList.contains('has-aside--sense-logo')).toBe(false);
+  expect(cSenseLead.querySelector('header.page-title .sp-card-calendar-badge')).toBeNull();
+  expect(cSenseLead.querySelector('article.content-wrapper').firstElementChild.classList.contains('sdp-pagina-insignia')).toBe(true);
+});
+
+test('P0-27 / IDEA-102 · un preu a PageFrame pinta el quadrat en la fila pròpia amb el modificador --preu (el color d’acció)', () => {
+  const { container } = render(<PageFrame title="Tomaques" price="15 €" lead="Entradilla"><p>Cos</p></PageFrame>);
+  expect(container.querySelector('header.page-title .sp-card-calendar-badge')).toBeNull();
+  const fila = container.querySelector('article > .sdp-pagina-insignia.sdp-pagina-insignia--preu');
+  expect(fila.querySelector('.sp-card-calendar-badge__dia').textContent).toBe('15 €');
 });

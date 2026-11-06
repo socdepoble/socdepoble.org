@@ -506,7 +506,8 @@ describe('Assalt 10/10 · /versions té l’entrada honesta de la tarda de l’1
   test('les peces que es poden derivar del codi', () => {
     expect(VERSIO_FORMAT).toBe('1.2.0');
     expect(titolsH4(entregaAssalt)).toContain('Novetat · Dades obertes 1.2.0 i restaurador');
-    expect(CAPACITATS_NO_DECLARADES).toEqual(['verificacioCorreu','recuperacioCorreu']);
+    // R7 (arbitratge 261106): importacioPaquetMunicipal és al contracte de R13, però el seu SQL (2611060010) queda fora fins a la Fase 2.
+    expect(CAPACITATS_NO_DECLARADES).toEqual(['importacioPaquetMunicipal','verificacioCorreu','recuperacioCorreu']);
     expect(pla).toContain("llevat de la versió mínima de l'app");
     expect(entregaAssalt).toContain('<code>src/data/federacio/inboxActivityPub.js</code>');
   });

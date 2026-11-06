@@ -1,5 +1,5 @@
 {
-  description = "Façana municipal Fediversity de Sóc de Poble; Nginx, lectura AP i Open Data";
+  description = "Node municipal Fediversity de Sóc de Poble: façana, Node 0 PostgreSQL 17 i contenidor NixOS opt-in";
 
   # Revisió pública immutable observada el 2026-11-03 amb git ls-remote.
   # Falta generar/verificar flake.lock amb Nix real en CI; no s'inventa narHash.
@@ -19,6 +19,19 @@
         enableActivityPub = true;
         enableOpenData = true;
       };
+      # Cap .env, claus, dumps ni docker.env de supabase entra al magatzem.
+      nodeZeroSource = lib.fileset.toSource {
+        root = ../.;
+        fileset = lib.fileset.unions [
+          ../package.json ../src ../tooling ../scripts/supabase
+          ../supabase/migrations ../supabase/ordre_desplegament.json
+          ./start-node0.mjs ./bootstrap-node0.mjs
+        ];
+      };
+      mkNodeZeroRuntime = pkgs: pkgs.runCommand "socdepoble-node0-runtime" {} ''
+        mkdir -p "$out/share/socdepoble-node0"
+        cp -R ${nodeZeroSource}/. "$out/share/socdepoble-node0/"
+      '';
       mkMunicipalWeb = pkgs: settings:
         let
           cfg = example // settings;
@@ -64,16 +77,19 @@
           '';
         });
     in {
-      lib = { inherit mkMunicipalWeb; };
+      lib = { inherit mkMunicipalWeb mkNodeZeroRuntime; };
       nixosModules.default = import ./module.nix {
         inherit release;
+        mkNodeZeroRuntime = hostPkgs: mkNodeZeroRuntime nixpkgs.legacyPackages.${hostPkgs.stdenv.hostPlatform.system};
         # El sistema amfitrió tria l'arquitectura, no una versió flotant del builder.
         mkMunicipalWeb = hostPkgs: settings:
           mkMunicipalWeb nixpkgs.legacyPackages.${hostPkgs.stdenv.hostPlatform.system} settings;
       };
       nixosModules.socdepoble = self.nixosModules.default;
+      nixosModules.containers = import ./containers.nix { municipalModule = self.nixosModules.default; };
       packages = each (pkgs: rec {
         web = mkMunicipalWeb pkgs example;
+        node0-runtime = mkNodeZeroRuntime pkgs;
         default = web;
       });
       # La comprovació d'avaluació no reemplaça la VM HTTP de la release.
@@ -88,11 +104,79 @@
             }) ];
           };
           config = nodeConfig { };
+          nodeZero = nodeConfig {
+            domain = "socdepoble.cat";
+            node0.enable = true;
+            enableOpenData = false;
+          };
+          container = nixpkgs.lib.nixosSystem {
+            inherit system;
+            modules = [ self.nixosModules.containers ({ ... }: {
+              services.socdepobleContainer.enable = true;
+              boot.isContainer = true;
+              system.stateVersion = "26.05";
+            }) ];
+          };
           shorthand = nodeConfig { municipality = example.municipality.slug; };
           newShorthand = nodeConfig { municipality = "sella"; enableOpenData = false; };
           pkgs = nixpkgs.legacyPackages.${system};
         in {
           web = self.packages.${system}.web;
+          node0-runtime = self.packages.${system}.node0-runtime;
+          node0-evaluation =
+            assert lib.all (a: a.assertion) nodeZero.config.assertions;
+            assert nodeZero.config.services.postgresql.package.version == pkgs.postgresql_17.version;
+            assert nodeZero.config.services.postgresql.enableTCPIP == false;
+            assert nodeZero.config.systemd.services.socdepoble-node0.serviceConfig.User == "node0_runtime";
+            assert nodeZero.config.services.caddy.enable;
+            pkgs.writeText "socdepoble-node0-evaluation" (builtins.toJSON {
+              postgres = nodeZero.config.services.postgresql.package.version;
+              service = nodeZero.config.systemd.services.socdepoble-node0.serviceConfig.ExecStart;
+              credential = nodeZero.config.systemd.services.socdepoble-node0.serviceConfig.LoadCredential;
+            });
+          container-evaluation =
+            assert lib.all (a: a.assertion) container.config.assertions;
+            assert container.config.containers.socdepoble-node0.privateNetwork;
+            assert container.config.containers.socdepoble-node0.autoStart == false;
+            assert lib.all (a: a.assertion) container.config.containers.socdepoble-node0.config.assertions;
+            assert container.config.containers.socdepoble-node0.config.services.socdepoble.node0.enable;
+            pkgs.writeText "socdepoble-container-evaluation" container.config.containers.socdepoble-node0.localAddress;
+          # Real Linux VM: schema bootstrap, peer identity, gateway and closed API.
+          # This public fixture token is confined to the test VM, not a deployment secret.
+          node0-http = pkgs.testers.runNixOSTest {
+            name = "socdepoble-node0-postgresql17";
+            nodes.node0 = { ... }: {
+              imports = [ self.nixosModules.default ];
+              services.socdepoble = example // {
+                enable = true;
+                domain = "socdepoble.cat";
+                enableOpenData = false;
+                node0 = { enable = true; credentialFile = "/run/secrets/node0-test.env"; };
+              };
+              systemd.tmpfiles.rules = [
+                "d /run/secrets 0700 root root -"
+                "f /run/secrets/node0-test.env 0600 root root - SDP_NODE0_ADMIN_TOKEN=public-test-token-never-use-in-deployment-0000000000"
+              ];
+            };
+            testScript = ''
+              start_all()
+              node0.wait_for_unit("postgresql.service")
+              node0.wait_for_unit("socdepoble-node0.service")
+              node0.wait_for_unit("caddy.service")
+              node0.wait_for_open_port(80)
+              def status(route):
+                  return node0.succeed(f"curl -s -o /dev/null -w '%{{http_code}}' -H 'Host: socdepoble.cat' http://127.0.0.1{route}").strip()
+              assert status("/api/v1/node0/status") == "200"
+              assert status("/ap/actors/socdepoble") == "200"
+              assert status("/opendata/manifest.json") == "404"
+              assert node0.succeed("sudo -u postgres psql -d socdepoble_node0 -Atc 'SHOW server_version_num'").strip().startswith("17")
+              assert node0.succeed("sudo -u node0_runtime psql -d socdepoble_node0 -Atc 'SELECT current_user'").strip() == "node0_runtime"
+              privileges = node0.succeed("""sudo -u postgres psql -d socdepoble_node0 -Atc "SELECT rolsuper OR rolbypassrls OR rolcreatedb OR rolcreaterole FROM pg_roles WHERE rolname='node0_runtime'" """)
+              assert privileges.strip() == "f"
+              assert "0.0.0.0:5432" not in node0.succeed("ss -lnt")
+              assert node0.succeed("stat -c %a /var/lib/socdepoble-node0/node0_ed25519.json").strip() == "600"
+            '';
+          };
           # La via d'openDataSource (path → magatzem) dins del sandbox, amb el paquet real de La Torre.
           web-open-data-source = mkMunicipalWeb pkgs (example // { openDataSource = ../public/opendata; });
           module-evaluation = assert config.config.services.nginx.enable;

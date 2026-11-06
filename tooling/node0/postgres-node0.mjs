@@ -104,6 +104,10 @@ export function creaPostgres({ env = process.env, executable = env.NODE0_PSQL ||
       return true;
     },
     documents: (kind) => query(`SELECT coalesce(json_agg(document ORDER BY id),'[]'::json) FROM node0.public_documents WHERE kind=${sqlText(kind)};`),
+    dadesObertesMunicipi: slug => {
+      if(typeof slug!=='string'||!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slug)||slug.length>120)throw new TypeError('node0_municipality_slug_invalid');
+      return query(`SELECT public.llegix_municipi_open_data_per_slug(${sqlText(slug)});`);
+    },
     desaDocuments: (kind, documents) => query(sqlDesaDocuments(kind, documents)),
     status: () => query(`SELECT json_build_object('ok',true,'version',current_setting('server_version'),'schemaVersion',(SELECT max(version) FROM node0.schema_migrations),'taules',(SELECT count(*) FROM pg_class c JOIN pg_namespace n ON n.oid=c.relnamespace WHERE n.nspname IN ('public','node0') AND c.relkind='r'),'registres',(SELECT coalesce(json_object_agg(kind,n),'{}'::json) FROM (SELECT kind,count(*) AS n FROM node0.public_documents GROUP BY kind) t),'activitypub',json_build_object('received',(SELECT count(*) FROM node0.inbox WHERE actor='https://mastodont.cat/users/depoble'),'followers',(SELECT count(*) FROM node0.followers),'pending',(SELECT count(*) FROM node0.outbox WHERE delivered_at IS NULL),'outbox',${SQL_ESTAT_OUTBOX_NODE0}));`)
   });

@@ -207,9 +207,10 @@ function etiquetaDeLaSeccio(section, item) {
   return ruta === RUTA_CALENDARI ? etiqueta : { ...etiqueta, className: 'sdp-badge-system sp-card-label--enllac', href: ruta };
 }
 
-/* AH-20 (IDEA-77, 261105) · El quadrat de 128×128 px d'un acte d'agenda
-   (SquareBadge) també es pinta dalt a la dreta de header.page-title a la
-   UniversalPage. Calcula exactament la mateixa insígnia que EventCard. */
+/* P0-27 / IDEA-102 (R7, substituïx AH-20 / IDEA-77) · El quadrat de 128×128 px
+   d'un acte d'agenda (SquareBadge) es pinta a la UniversalPage en una fila
+   pròpia (.sdp-pagina-insignia) davall de l'entradilla, no a header.page-title.
+   Calcula exactament la mateixa insígnia que EventCard. */
 function insigniaDElement(section, item) {
   const esActe = section?.listPath === RUTA_CALENDARI || item?.type === 'event' || Boolean(item?.calendar_badge);
   if (!esActe) return null;

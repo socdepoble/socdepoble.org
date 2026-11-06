@@ -369,6 +369,7 @@ test('Pilar1: text estructural dels .nix (equilibri, interruptors, MIME i guarde
   const arrel = read('flake.nix');
   // Equilibri de {[( fora de cadenes i comentaris, amb controls negatius perquè no siga buit.
   parellsNix(flake);
+  for (const name of ['nix/node0.nix', 'nix/containers.nix']) parellsNix(read(name));
   const parells = parellsNix(module);
   assert.throws(() => parellsNix(module.slice(0, module.lastIndexOf('}'))), /sense tancar/);
   assert.throws(() => parellsNix(flake.replace('outputs = { self, nixpkgs }:', 'outputs = { self, nixpkgs :')), /sense tancar|desaparellat/);
@@ -472,7 +473,7 @@ test('Pilar1: sintaxi Nix real i ERE de les guardes si l’eina està disponible
     return;
   }
   assert.equal(nix.status, 0, nix.stderr);
-  for (const name of ['flake.nix', 'module.nix']) {
+  for (const name of ['flake.nix', 'module.nix', 'node0.nix', 'containers.nix']) {
     const parsed = spawnSync('nix-instantiate', ['--parse', path.join(ROOT, 'nix', name)], { encoding: 'utf8', timeout: 15000 });
     assert.equal(parsed.status, 0, parsed.stderr);
   }

@@ -1041,14 +1041,17 @@ export function PageFrame({
   const accionsSenseAvatar = logoDeLaRanura || logoAutomatic || senseLogo === true || avatarDeCapcalera ? null : accionsDAvatarNoPintable(avatarAutor, tAvis);
   const ambLogo = Boolean(logoDeLaRanura || logoAutomatic || avatarDeCapcalera || accionsSenseAvatar);
   const activeBadge = squareBadge || (price ? { type: 'price', value: price } : null) || calendarBadge;
-  const classesTitol = [
-    'page-title',
-    price && 'has-price',
-    activeBadge && 'has-calendar-badge',
-    (price || activeBadge) && 'has-aside',
-    (price || activeBadge) && !ambLogo && 'has-aside--sense-logo'
-  ].filter(Boolean).join(' ');
-  const hasHeader = Boolean(showPageHeader && (ambLogo || titol || pageLabels.length || copyright || classificacio || accioPrincipal || activeBadge));
+  /* P0-27 / IDEA-102 (R7) · El quadrat ja no penja de la capçalera: va en una fila
+     pròpia davall de l'entradilla (filaInsignia), de manera que la capçalera no
+     porta classes d'aside ni compta com a contingut. translate="no": ni el
+     traductor ni l'Índex llegeixen el dia o el preu. */
+  const classesTitol = 'page-title';
+  const hasHeader = Boolean(showPageHeader && (ambLogo || titol || pageLabels.length || copyright || classificacio || accioPrincipal));
+  const filaInsignia = activeBadge ? (
+    <div className={activeBadge.type === 'price' || (!squareBadge && price) ? 'sdp-pagina-insignia sdp-pagina-insignia--preu' : 'sdp-pagina-insignia'} translate="no">
+      <SquareBadge badge={activeBadge} />
+    </div>
+  ) : null;
 
   return (
     <>
@@ -1212,7 +1215,6 @@ export function PageFrame({
               )}
             </p>
           )}
-          {activeBadge ? <SquareBadge badge={activeBadge} /> : null}
         </header>
       )}
 
@@ -1238,6 +1240,7 @@ export function PageFrame({
             {lead && <p className="lead">{lead}</p>}
           </div>
         )}
+        {filaInsignia}
         <LlenguaDelContingut.Provider value={langDelContingut}>
           {children}
         </LlenguaDelContingut.Provider>
@@ -1247,6 +1250,7 @@ export function PageFrame({
           {/* Cicle 4 (traduccio-llista-niuada-hereta-lang-ca) · La llengua de
               la traducció, per als elements traduïts que pengen d'un bloc que
               ha tornat en l'original. */}
+          {filaInsignia}
           <CosTraduit blocs={traduida.blocs} llengua={traduida.lang} />
         </article>
       ) : null}

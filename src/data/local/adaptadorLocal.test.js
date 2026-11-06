@@ -78,8 +78,8 @@ describe('opcions de la factoria', () => {
   test('les capacitats no declarades són exactament les que el contracte té i este node deixa a posta', () => {
     const a = creaAdaptadorLocal();
     const absents = Object.keys(CAPACITATS).filter((cap) => CAPACITATS[cap].every((m) => typeof a[m] !== 'function'));
-    expect(Object.keys(CAPACITATS)).toHaveLength(43);
-    expect(CAPACITATS_NO_DECLARADES).toEqual(['verificacioCorreu','recuperacioCorreu']);
+    expect(Object.keys(CAPACITATS)).toHaveLength(45);
+    expect(CAPACITATS_NO_DECLARADES).toEqual(['importacioPaquetMunicipal','verificacioCorreu','recuperacioCorreu']);
     expect(absents).toEqual(CAPACITATS_NO_DECLARADES);
     const deContracte = CONTRACTE_BACKEND.filter((m) => !absents.some((cap) => CAPACITATS[cap].includes(m)));
     expect(deContracte.filter((m) => typeof a[m] !== 'function')).toEqual([]);
@@ -648,6 +648,26 @@ describe('dades obertes: el que el node ja té', () => {
     expect((await a.listPublicOrganizations({})).map((o) => [o.id, o.slug])).toEqual([['b-1', 'publica-de-benillup']]);
     await a.destroy();
   });
+});
+
+cobrix(['adminLlistaUsuarisRegistrats','adminAssignaMembreOrganitzacio','adminConnectaUsuari'],'administració d’usuaris no inferix autoritat de metadades locals',async()=>{
+  const a=creaAdaptadorLocal();entra(a,PERSONA,{role:'superadmin',aal:'aal2'});
+  const config={tenantId:a.configuracio.tenantId};
+  await expect(a.adminLlistaUsuarisRegistrats({},config)).rejects.toMatchObject({code:'no-disponible'});
+  await expect(a.adminAssignaMembreOrganitzacio({usuariId:VEINA,organitzacioId:PERSONA,rol:'editor'},config)).rejects.toMatchObject({code:'no-disponible'});
+  await expect(a.adminConnectaUsuari({usuariId:VEINA,categoria:'amics'},config)).rejects.toMatchObject({code:'no-disponible'});
+  a.destroy();
+});
+
+test('administració local autoritzada actualitza membres reals de la llavor i revoca sense tocar l’owner',async()=>{
+  const tenantId='11111111-1111-4111-8111-111111111111';
+  const a=creaAdaptadorLocal({tenantId,dades:{persones:[{id:PERSONA,nom:'Actora'},{id:VEINA,nom:'Veïna'}]},administracioLocal:{pobles:[{id:tenantId,slug:'la-torre',nom:'La Torre'}],autoritza:async()=>true}});entra(a);
+  const config={tenantId};
+  await expect(a.adminAssignaMembreOrganitzacio({usuariId:VEINA,organitzacioId:'socdepoble',rol:'editor'},config)).resolves.toMatchObject({rol:'editor'});
+  expect((await a.adminLlistaUsuarisRegistrats({},config)).find(p=>p.id===VEINA).organitzacions).toContainEqual({id:'socdepoble',nom:'Sóc de Poble',rol:'editor'});
+  await expect(a.adminAssignaMembreOrganitzacio({usuariId:VEINA,organitzacioId:'socdepoble',lleva:true},config)).resolves.toMatchObject({llevat:true});
+  expect((await a.adminLlistaUsuarisRegistrats({},config)).find(p=>p.id===VEINA).organitzacions).toEqual([]);
+  a.destroy();
 });
 
 test('guarda de cobertura: cada mètode sense cas al kit té la seua prova ací', () => {

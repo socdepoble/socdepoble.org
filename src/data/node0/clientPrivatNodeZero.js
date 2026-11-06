@@ -4,6 +4,8 @@
  */
 import {CONTRACTE_NUCLI,VERSIO_NORMES_CONVIVENCIA} from '../contracte.js';
 import {BACKEND_ID_NODE_ZERO,CONVIDAT_NODE_ZERO} from './adaptadorNodeZeroHttp.js';
+import {capturaAdminUsuaris} from '../adminUsuaris.js';
+import {validaLotDadesObertes} from '../dadesObertesLot.js';
 const UUID=/^[0-9a-f]{8}-(?:[0-9a-f]{4}-){3}[0-9a-f]{12}$/i;
 const plain=value=>value!==null&&typeof value==='object'&&!Array.isArray(value)&&[Object.prototype,null].includes(Object.getPrototypeOf(value));
 const fail=(codi,message='Esta operació no està disponible al Node 0.',extra={})=>Object.assign(new Error(message),{codi,code:codi,retriable:false,...extra});
@@ -194,6 +196,22 @@ export async function preparaClientPrivatNodeZero({publicAdapter,transport,habil
     return {elements,complete:result.complete,nextCursor:cursorOut?encodeCursor(section,captured.id,cursorOut):null};
   }
   const adapter={...publicAdapter};
+  if(bound&&status.capabilities.restauracioDadesObertes===true){
+    adapter.restauraDadesObertes=async(lot,options={})=>{
+      const captured=dataCopy(lot);if(validaLotDadesObertes(captured).length||captured.versio!=='1.2.0')throw fail('NODE0_PAQUET_INVALID');
+      return rpc('restauraDadesObertes',{lot:captured},options,true);
+    };
+    adapter.importaMunicipiOpenData=async(bytes,sha256Esperat,options={})=>{
+      if(!(bytes instanceof Uint8Array)||bytes.length>1048576||!/^[a-f0-9]{64}$/.test(sha256Esperat??''))throw fail('NODE0_PAQUET_INVALID');
+      let binary='';for(const byte of new Uint8Array(bytes))binary+=String.fromCharCode(byte);
+      return rpc('importaMunicipiOpenData',{zipBase64:btoa(binary),sha256Esperat},options,true);
+    };
+  }
+  if(bound&&status.capabilities.administracioUsuaris===true){
+    adapter.adminLlistaUsuarisRegistrats=async(input={},options={})=>list(await rpc('adminLlistaUsuarisRegistrats',{entrada:capturaAdminUsuaris(input)},options));
+    adapter.adminAssignaMembreOrganitzacio=async(input,options={})=>rpc('adminAssignaMembreOrganitzacio',{entrada:capturaAdminUsuaris(input,'membre')},options,true);
+    adapter.adminConnectaUsuari=async(input,options={})=>rpc('adminConnectaUsuari',{entrada:capturaAdminUsuaris(input,'connecta')},options,true);
+  }
   Object.assign(adapter,{
     getCurrentUser:()=>{open();return user;},getDefaultUserId:()=>{open();return user?.id??CONVIDAT_NODE_ZERO;},
     async loginWithPassword(email,password,options={}){return mutate('login',{email,password},options,result=>{userFrom(result);});},

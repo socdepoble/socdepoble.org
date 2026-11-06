@@ -236,7 +236,9 @@ export default function EspaiCerca() {
     search: t('section.search.formulari', 'Cerca a Sóc de Poble'),
     loading: t('section.search.buscant', 'Buscant…'),
     select: t('section.search.espai.tria', "Tria un resultat per a vore'l ací."),
-    count: t('section.search.espai.recompte', '{n} resultats'),
+    count: (n) => n === 1
+      ? t('section.search.espai.recompteU', '{n} resultat')
+      : t('section.search.espai.recompte', '{n} resultats'),
     empty: q
       ? plantilla(t('section.search.buit.titol', 'Cap resultat per a «{q}»'), { q })
       : t('section.search.inicial.titol', 'Què vols buscar?')

@@ -29,7 +29,7 @@ export const ICONES_ESPECIMENS = Object.freeze({
     'cerca-filtres': '🎚️', 'tasques-fitxers': '✅', 'media-externa': '🎬', utilitats: '🧰',
     identitat: '🎭', 'linia-del-temps': '🕰️', histograma: '📊',
     articles: '🏷️', colleccio: '🛍️', 'imatge-apaisada': '🌄', 'graella-targetes': '🎴',
-    'icones-alergens': '🥜', 'carrusel-imatges': '🎠',
+    'icones-alergens': '🥜', 'carrusel-imatges': '🎠', 'boto-veu-iaia': '🔊',
     /* Ordre del Mestre (31-10-2026, prompt 2208, T3.1) · el tauler compacte. */
     'quadre-comandament': '🕹️',
     /* Esmena 2 del pla 261007_1645 · el que l'actor ja té publicat. */
@@ -435,6 +435,13 @@ CATALOG_ITEMS.push(
   especimen('fonaments', 'icones-alergens', 'Icones d’al·lèrgens', 'PedraSeca/molecules/IconesAlergens.jsx', ['molecula', 'alergens', 'carta'],
     'Les xicotetes icones dels 14 al·lèrgens del Reglament, amb els dibuixos del Mestre: una fila d’imatges quadrades i un sol nom per al lector («Al·lèrgens: gluten, llet»). Viatgen dins del paquet, sense xarxa. El TPV les pinta a la cantonada de la rajola i la Carta Digital, dins del cos de la targeta.',
     'alergens al·lergens gluten crustacis ous peix cacauets soja llet fruits closca api mostassa sesam sulfits tramussos molluscs carta digital tpv icones reglament')
+);
+
+/* IDEA-108 (onada R7) · el botó «Escolta la IAIA». */
+CATALOG_ITEMS.push(
+  especimen('fonaments', 'boto-veu-iaia', 'Botó «Escolta la IAIA»', 'PedraSeca/molecules/BotoVeuIaia.jsx', ['molecula', 'veu', 'accessibilitat'],
+    'El botó que fa dir un text en veu alta amb la veu de la IAIA: d’alternança (aria-pressed), s’atura en tornar-lo a prémer i queda desactivat, explicant-ho, si el navegador no té síntesi de veu.',
+    'veu iaia escolta llegir en veu alta sintesi accessibilitat boto')
 );
 
 /* Ordre del Mestre, 261007 («Implementa un carrusel a la imatge principal d'aquesta pàgina

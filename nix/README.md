@@ -82,6 +82,71 @@ Les proves Node alteren, lleven i afigen artefactes de totes les categories, reb
 
 ## Verificació
 
+### R13 · Backend i contenidor preparats, certificació Nix encara oberta
+
+`node0.nix` afegix una opció **desactivada per defecte** `services.socdepoble.node0.enable`:
+PostgreSQL **17** sense TCP, rol de peticions `node0_runtime` sense privilegis administratius,
+migracions canòniques amb les empremtes del ledger, identitat Ed25519 persistent i privada,
+Node 24 en systemd i Caddy davant de la façana Nginx local a `127.0.0.1:8080`.
+La fase d'arrencada crea l'esquema en la base dedicada `socdepoble_node0`; no inventa
+perfils ni importa una instantània pública amb una identitat prestada.
+
+El servidor actual porta l'origen institucional `socdepoble.cat` fixat al codi. Per això
+el mòdul rebutja habilitar-lo sota un altre domini o municipi. La façana estàtica
+continua sent configurable per poble. Esta restricció explícita no acredita un servidor
+Node 0 desplegable arbitràriament en qualsevol ajuntament.
+
+Les credencials es lliuren amb `LoadCredential`, des d'un fitxer extern al magatzem,
+per defecte `/run/secrets/socdepoble-node0.env`. El fitxer conté un token administratiu
+aleatori de 32 caràcters com a mínim i, si cal, el token Mastodon. Només s'admeten
+`SDP_NODE0_ADMIN_TOKEN`, `MASTODON_ACCESS_TOKEN` i `SDP_MASTODON_ACCESS_TOKEN`;
+no pot canviar el rol PostgreSQL, l'executable, la identitat ni activar auth/POSSE.
+Els flags d'autenticació i publicació no s'activen amb esta entrega. La clau privada
+es genera a `/var/lib/socdepoble-node0` amb permisos `0600`; no es genera durant el build.
+
+`nixosModules.containers`, definit en `containers.nix`, permet declarar
+`services.socdepobleContainer.enable = true`. El contenidor té xarxa privada,
+IP pròpia, credencial muntada només en lectura i `autoStart = false` per defecte.
+La xarxa pública, NAT, DNS i TLS de l'amfitrió requerixen la configuració del desplegament;
+el mòdul no la modifica silenciosament.
+
+`tooling/nixos/verifica-flake-reproduible.mjs` comprova el pin de revisió, el graf del
+lock i el digest NAR; després exigix un procés Nix real que resolga el lock sense
+actualitzar-lo, repetisca l'avaluació amb la memòria cau desactivada, construïsca el
+web i el reconstruïsca amb `--rebuild`, calcule SHA-256 NAR de les eixides i execute
+les VM `module-http` i `node0-http`. Finalment comprova que fonts i lock no han canviat.
+Les proves de protocol amb dobles sempre produïxen `evidenceKind: test-double`,
+`verified: false`; no poden convertir una simulació en certificat.
+
+El verificador crea una còpia **només amb les fonts públiques declarades**, incloent
+els fitxers nous d'un kit CAS. No passa l'arrel crua del repositori al fetcher `path:`,
+perquè això copiaria també `.git`, `.env` i altres dades al magatzem llegible per tothom.
+La còpia conserva els modes executables i fixa els temps a l'època canònica `315532800`
+(1980), sense metadades Git de release: és una prova del contingut inventariat,
+no una equivalència amb una release Git amb `shortRev`/data diferents.
+
+```sh
+# Inspecció: eixida 1 si no hi ha certificat complet; no genera cap lock.
+node tooling/nixos/verifica-flake-reproduible.mjs --inspect
+# En un entorn Nix Linux, després de generar i revisar el lock real de nix/:
+node tooling/nixos/verifica-flake-reproduible.mjs --system=aarch64-linux --out=/tmp/prova-nix.json
+# Només avaluació: mai dóna verified:true ni eixida de certificat correcte.
+node tooling/nixos/verifica-flake-reproduible.mjs --evaluation-only
+```
+
+En este amfitrió no hi ha `nix`, `nix-instantiate` ni `/nix`. Docker té client però
+cap daemon disponible. La cerca local de `flake.lock` en `/tmp` i en el workspace
+no ha trobat cap lock aprofitable. La xarxa de processos no resol GitHub (DNS
+`ENOTFOUND`). **No s'ha inventat ni incorporat un `narHash`.** El rebut natiu de
+`evidence/r13/nix/native-preflight.json` conserva `nix_lock_missing` i `nix_unavailable`.
+Ni els fitxers `.nix` nous ni les VM s'han avaluat o executat amb Nix. IDEA-104a
+continua sense certificació Nix completa; les suites Node acrediten les fronteres
+de credencials, fonts, bootstrap i protocol del verificador.
+
+Fonts primàries consultades per a esta ampliació: [referències de flakes i `dir`](https://nix.dev/manual/nix/2.28/command-ref/new-cli/nix3-flake),
+[format NAR](https://nix.dev/manual/nix/2.28/protocols/nix-archive), [PostgreSQL en NixOS](https://wiki.nixos.org/wiki/Postgres)
+i [Caddy en NixOS](https://wiki.nixos.org/wiki/Caddy). La consulta de documentació no substituïx l'avaluació de la revisió fixada.
+
 Sense Nix:
 
 ```sh

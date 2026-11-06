@@ -540,6 +540,21 @@ export async function restauraAmbFrase(cripto, { usuari, registre, indexs, minIt
   }
 }
 
+/** F7: la RK autenticada per Shamir obri la mateixa còpia que F2a.
+ * No adopta públiques del formulari: verifica SDPK/autofirma/kid del registre.
+ * La RK pertany a qui crida; sempre es posa a zero abans de tornar. */
+export async function restauraAmbRk(cripto, { usuari, registre, rk } = {}) {
+  try {
+    const r = await llegixRegistre(cripto, registre, usuari);
+    const claus = await obriCopia(cripto, { rk, iv: r.copia.iv, ct: r.copia.ct, usuari, kid: r.kid });
+    const recuperacio = await rkLocalDe(cripto, { rk, usuari, kid: r.kid });
+    return Object.freeze({
+      usuari, kid: r.kid, sigPub: r.sigPub, dhPub: r.dhPub, creatMs: r.creatMs,
+      sigPriv: claus.sigPriv, dhPriv: claus.dhPriv, clauLlibreta: claus.clauLlibreta, recuperacio
+    });
+  } finally { esborra(rk); }
+}
+
 /**
  * «Paper perdut, mòbil viu» (§5.4, D-07 a): la RK d'este aparell (rkLocal =
  * identitat.recuperacio) es torna a embolcallar amb una frase nova. Mateixa

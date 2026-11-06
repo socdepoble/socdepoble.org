@@ -1,4 +1,4 @@
-{ release, mkMunicipalWeb }:
+{ release, mkMunicipalWeb, mkNodeZeroRuntime }:
 { config, lib, pkgs, ... }:
 let
   inherit (lib) mkEnableOption mkIf mkOption mkForce mkBefore mkAfter types;
@@ -30,7 +30,7 @@ let
     inherit (cfg) domain municipality enableActivityPub enableOpenData openDataSource dataMode supabaseUrl publicKey tenantId;
   };
 in {
-  imports = [ release.nixosModules.default ];
+  imports = [ release.nixosModules.default (import ./node0.nix { inherit mkNodeZeroRuntime; }) ];
   options.services.socdepoble = {
     enable = mkEnableOption "el node municipal declaratiu de Sóc de Poble";
     domain = mkOption {

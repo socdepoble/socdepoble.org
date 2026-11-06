@@ -52,6 +52,8 @@ import { creaNotesLocal } from './notesLocal.js';
 import { creaConversesLocal } from './conversesLocal.js';
 import { creaComunitatLocal } from './comunitatLocal.js';
 import { creaCompteLocal } from './compteLocal.js';
+import { creaAdminUsuarisLocal } from './adminUsuarisLocal.js';
+import { capturaAdminUsuaris } from '../adminUsuaris.js';
 import { creaMitjansLocal } from './mitjansLocal.js';
 import { creaDadesObertesLocal } from './dadesObertesLocal.js';
 import { estatBuitDeDadesObertes } from '../dadesObertesLot.js';
@@ -61,7 +63,7 @@ export const MODES_ADAPTADOR_LOCAL = Object.freeze(['seed', 'local']);
 /* FEDI-16 + FEDI23 · Les 39 capacitats són completes. La versió mínima local és
    null; l'administració multipoble només opera amb autoritat LOCAL injectada.
    Declarar mètodes no concedix autoritat ni permisos sobre cap servidor. */
-export const CAPACITATS_NO_DECLARADES = Object.freeze(['verificacioCorreu','recuperacioCorreu']);
+export const CAPACITATS_NO_DECLARADES = Object.freeze(['importacioPaquetMunicipal','verificacioCorreu','recuperacioCorreu']);
 
 /* Les claus d'abast de qui crida: l'adaptador és amo del seu backend (Model B)
    i mai no parla en nom d'un altre node. La resta (signal, limit, cursors del
@@ -101,7 +103,7 @@ function administracioLocalValidada(entrada) {
   });
   return Object.freeze({ pobles: Object.freeze(pobles), autoritza: entrada.autoritza });
 }
-const ADMINISTRATIUS = new Set(['adminLlistaPobles', 'adminLligPersonalitzacio', 'adminDesaPersonalitzacio', 'adminHistorialPersonalitzacio']);
+const ADMINISTRATIUS = new Set(['adminLlistaPobles', 'adminLligPersonalitzacio', 'adminDesaPersonalitzacio', 'adminHistorialPersonalitzacio','adminLlistaUsuarisRegistrats','adminAssignaMembreOrganitzacio','adminConnectaUsuari']);
 const lligAvortamentNatiu = Object.getOwnPropertyDescriptor(AbortSignal.prototype, 'aborted').get;
 const errorAbastAdmin = () => Object.assign(new TypeError('Cal un tenant explícit i coherent.'), { code: 'abast-invalid' });
 /* Captura síncrona abans de la microtasca de guardat(): només selectors
@@ -131,6 +133,7 @@ function capturaArgumentsAdmin(nom, args) {
   }
   const capturats = [...args];
   capturats[indexConfig] = Object.freeze(selectors);
+  if(nom==='adminLlistaUsuarisRegistrats'||nom==='adminAssignaMembreOrganitzacio'||nom==='adminConnectaUsuari')capturats[0]=capturaAdminUsuaris(args[0],nom==='adminLlistaUsuarisRegistrats'?'llista':nom==='adminAssignaMembreOrganitzacio'?'membre':'connecta',{local:true});
   if (nom === 'adminDesaPersonalitzacio') {
     const entrada = args[0] === undefined ? {} : args[0];
     if (!esObjectePla(entrada)) throw new TypeError('Entrada de personalització invàlida.');
@@ -308,7 +311,7 @@ export function creaAdaptadorLocal({
   });
 
   const metodes = {};
-  for (const part of [creaCompteLocal(e), creaContingutLocal(e), creaNotesLocal(e), creaConversesLocal(e),
+  for (const part of [creaCompteLocal(e), creaAdminUsuarisLocal(e), creaContingutLocal(e), creaNotesLocal(e), creaConversesLocal(e),
     creaComunitatLocal(e), creaMitjansLocal(e), creaDadesObertesLocal(e)]) {
     for (const [nom, fn] of Object.entries(part)) {
       if (Object.hasOwn(metodes, nom)) throw new Error(`[adaptadorLocal] ${nom} ve de dos mòduls.`);

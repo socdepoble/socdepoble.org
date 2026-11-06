@@ -3,6 +3,7 @@ import { resolRecursosDeHtml } from '../../config/assetResolver.js';
 import { MARCA_GRUP, segmentsAmbTargetes } from '../../components/universal/richText/extensions/targetes/formaDelGrup.js';
 import { CosAmbTargetes } from '../../components/universal/richText/extensions/targetes/CosAmbTargetes.jsx';
 import { semblaHtml } from './detailHelpers.jsx';
+import { renderHtmlEditorial } from '../../components/universal/richText/htmlEditorial.jsx';
 
 /* Gauntlet 261030 (cicle 4, lang-ca-nomes-a-textsection) · `lang`: opcional,
    la llengua del text quan la pàgina la declara i la interfície és en una
@@ -23,6 +24,8 @@ export function renderRichText(text, { lang = undefined } = {}) {
       const segments = segmentsAmbTargetes(sanitizeHtml(resolRecursosDeHtml(raw)));
       if (segments.some((segment) => segment.tipus === 'targetes')) return <CosAmbTargetes segments={segments} lang={lang} />;
     }
+    const editorial = renderHtmlEditorial(raw);
+    if (editorial) return <article className="detail-content" lang={lang}>{editorial}</article>;
     return <article className="detail-content" lang={lang} dangerouslySetInnerHTML={{ __html: sanitizeHtml(resolRecursosDeHtml(raw)) }} />;
   }
 

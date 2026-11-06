@@ -23,6 +23,7 @@ export { EstatBuit, Carregant, Esquelet, Progres } from './atoms/estats.jsx';
 export { Alerta } from './molecules/Alerta.jsx';
 export { Botonera } from './molecules/Botonera.jsx';
 export { Pista } from './molecules/Pista.jsx';
+export { BotoVeuIaia } from './molecules/BotoVeuIaia.jsx';
 export { PillToggle } from './molecules/PillToggle.jsx';
 export { Dropdown, DropdownItem } from './molecules/Dropdown.jsx';
 

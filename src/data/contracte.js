@@ -111,6 +111,8 @@ export const CAPACITATS = Object.freeze({
     'adminListUsers',
     'adminListOrganizations'
   ]),
+  administracioUsuaris: Object.freeze(['adminLlistaUsuarisRegistrats','adminAssignaMembreOrganitzacio','adminConnectaUsuari']),
+  importacioPaquetMunicipal: Object.freeze(['importaMunicipiOpenData']),
 
   /* R6 proposal: proof is supplied only by the user's explicit email form.
      No URL/storage reader or pre-registration password is accepted as proof.

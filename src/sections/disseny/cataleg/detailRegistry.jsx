@@ -118,6 +118,8 @@ export const CATALOG_DETAIL_LOADERS = {
   'estructura/llista-comu': lazyRoute(() => import('./detalls/EspecimenUniversalListCard.jsx')),
   /* Ordre del Mestre, 261006 · les icones dels 14 al·lèrgens, per al TPV i la Carta Digital. */
   'fonaments/icones-alergens': lazyRoute(() => import('./detalls/EspecimenIconesAlergens.jsx')),
+  /* IDEA-108 (onada R7) · el botó «Escolta la IAIA». */
+  'fonaments/boto-veu-iaia': lazyRoute(() => import('./detalls/EspecimenBotoVeuIaia.jsx')),
   /* Ordre del Mestre, 261007 · el carrusel de la portada dels productes amb més d'una foto. */
   'fonaments/carrusel-imatges': lazyRoute(() => import('./detalls/EspecimenCarruselImatges.jsx')),
   /* Esmena 2 del pla 261007_1645 · el que l'actor ja té publicat (al peu de l'editor de Notes). */

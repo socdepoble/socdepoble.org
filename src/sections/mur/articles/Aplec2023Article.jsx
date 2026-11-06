@@ -1,5 +1,6 @@
 import { renderRichText } from '../../detail/detailRichText.jsx';
 import { VideoEditorial } from '../../../components/universal/VideoEditorial.jsx';
+import { hiHaVideoEditorial } from '../../../components/universal/richText/htmlEditorial.jsx';
 import { cosDeLArticle, cosPerAPintar } from './cosCanonic.js';
 import { APLEC_2023_HTML, APLEC_VIDEO } from './aplec2023Content.js';
 
@@ -26,12 +27,14 @@ export function videoDeLAplec(item) {
  *  trauria del visor (ordre del Mestre, 30-10-2026, T4.2). */
 export function Aplec2023Article({ item = null } = {}) {
   const video = videoDeLAplec(item);
+  const cos = cosPerAPintar(cosDeLArticle(item, APLEC_2023_HTML));
+  const videoAlCos = hiHaVideoEditorial(cos);
   return (
     <div className="aplec-2023">
-      <div className="aplec-2023__video">
+      {!videoAlCos ? <div className="aplec-2023__video">
         <VideoEditorial id={video.id} title={video.titol} />
-      </div>
-      {renderRichText(cosPerAPintar(cosDeLArticle(item, APLEC_2023_HTML)))}
+      </div> : null}
+      {renderRichText(cos)}
     </div>
   );
 }

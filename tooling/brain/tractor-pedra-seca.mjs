@@ -369,6 +369,8 @@ if (i18n) {
    d'execució i que este graf estàtic no pot veure. Tota excepció ha de portar
    raó escrita: si no en té, no és excepció, és codi mort. */
 const EXCEPCIONS_ORFE = {
+  'src/data/local/adminUsuarisLocal.js': 'mòdul de l’adaptador local (D01, T1): penja de src/data/local/adaptadorLocal.js, fora del paquet de producció a posta · kit R13, arbitratge R7 (R7G-7.3: sense backend fins que es reescriga la migració 2611052345) · revisió del Mestre pendent',
+  'src/data/xifratXatActivacio.js': 'biblioteca F2a de l’E2EE (kit R13): encara sense consumidor de producció, perquè la UI dels fils no està cablejada; la cobrix xifratXatActivacio.seguretat.test.js · arbitratge R7 (K2-01: entra només com a biblioteca) · revisió del Mestre pendent',
   'src/shims/jsx-runtime.js': 'entra per alias de resolve a vite.config (jsxImportSource)',
   'src/assets/fonts/noto-sans.css': 'es carrega en execució via atribut fonts-href',
   /* Decisió del Mestre (31-10-2026, part C) · Obra no cablejada o pausada: cada
