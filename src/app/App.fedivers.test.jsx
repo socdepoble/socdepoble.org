@@ -10,12 +10,13 @@
  * arribava per una ruta diferida d'App.jsx, i només muntant App es veu.
  */
 import { afterEach, expect, test, vi } from 'vitest';
-import { cleanup, render, screen, waitFor } from '@testing-library/react';
+import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import PedraSecaEmbed from '../PedraSecaEmbed';
 import { CONTRACTE_NUCLI } from '../data/contracte.js';
 import { getBackendImplementation, setBackendImplementation } from '../data/backendPort.js';
 import { getSessionState } from '../data/sessionService.js';
 import { PAGE_COPY } from '../sections/text/pageContent.js';
+import { APARADOR_R20_TEXTS } from '../sections/text/pageContent.fediversityR20.js';
 
 /* Com a App.fediversity.test.jsx: l'amfitrió ja és llest i Notes no té esborranys. */
 vi.mock('../host.js', () => ({ quanLlest: async () => undefined }));
@@ -90,5 +91,13 @@ test('/fedivers és la pàgina de text, sense el panell del Node 0: cap consulta
        d'haver són els encapçalaments propis del panell ni les seues classes. */
     expect(screen.queryAllByRole('heading', { name: /mastodon|posse|resiliència/i })).toEqual([]);
     expect(document.querySelector('[class*="sdp-node0"]')).toBeNull();
+    const textos=APARADOR_R20_TEXTS.ca;
+    const aparador=await screen.findByRole('region',{name:textos.compiler},ESPERA);
+    expect(aparador.getAttribute('data-sdp-privat')).toBe('true');
+    fireEvent.change(within(aparador).getByRole('textbox'),{target:{value:'El meu avi Joan collia olives a La Torre de les Maçanes l’any 1952. El record és de l’almàssera i del treball de casa.'}});
+    fireEvent.click(within(aparador).getByRole('button',{name:textos.compile}));
+    await within(aparador).findByText(textos.result,{},ESPERA);
+    expect(aparador.textContent).toContain('SHA-256:');
+    expect(xarxa.mock.calls.map(([url])=>String(url)).filter(url=>url.includes('socdepoble.cat')||url.includes('apertium')||url.includes('deepl'))).toEqual([]);
   });
 });

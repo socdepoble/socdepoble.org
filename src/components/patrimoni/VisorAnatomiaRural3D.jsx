@@ -15,9 +15,11 @@
  *  · Veu: el botó compartit BotoVeuIaia (privat=false: el contingut és
  *    públic) fa dir el terme i la definició; tornar-lo a prémer l'atura. El
  *    visor només crida atura() en desmuntar-se.
- *  · Documental: amb un videoId real, VideoEditorial (youtube-nocookie); sense,
- *    un enllaç al canal d'Eugenio Monesma amb la seua autoria. Mai un id
- *    inventat.
+ *  · Cotes: cada xifra porta la font i un estat (una sola font, fonts que no
+ *    coincidixen, pendent); allò que no està confirmat no es dona per bo.
+ *  · Documental: amb un videoId real, VideoEditorial (youtube-nocookie) amb
+ *    l'autoria i el títol que YouTube consigna; sense, un enllaç al canal
+ *    d'Eugenio Monesma. Mai un id inventat.
  *  · Contingut etnogràfic en valencià; en una altra llengua es manté i s'avisa.
  *    Els termes no es tradueixen.
  */
@@ -33,7 +35,24 @@ import { ALTARIA, AMPLARIA, construeixPeca, separacions } from './anatomiaRuralG
 
 const T_PER_DEFECTE = createTranslator('ca');
 const VALOR_INICIAL = 40;
-const ICONES = { 'pou-de-neu': '❄️', almassera: '🫒', 'forn-de-calc': '🔥' };
+const ICONES = {
+  'pou-de-neu': '❄️',
+  almassera: '🫒',
+  'moli-hidraulic': '💧',
+  'moli-electric': '⚡',
+  'forn-de-calc': '🔥',
+  carbonera: '🪵',
+  'cup-i-premsa': '🍇',
+  'senia-de-sang': '🐴',
+  'carro-valencia': '🛞'
+};
+/* Claus estàtiques de l'estat d'una xifra: 'ok' no du cap marca. */
+const CLAU_ESTAT = {
+  unica: 'patrimoni.anatomia.estat.unica',
+  discrepant: 'patrimoni.anatomia.estat.discrepant',
+  pendent: 'patrimoni.anatomia.estat.pendent'
+};
+
 /* Noms de classe complets i estàtics (mai plantilles): el que no té regla
    pròpia al CSS no du classe. */
 const CLASSE_PECA = {
@@ -98,6 +117,25 @@ export default function VisorAnatomiaRural3D({ estructuraInicial = ESTRUCTURES[0
       </p>
       {llengua !== 'ca' ? (
         <p className="anatomia__avis" role="note">{t('patrimoni.anatomia.avisLlengua', 'El contingut etnogràfic només està en valencià; els termes no es tradueixen.')}</p>
+      ) : null}
+
+      {estructura.cotes.length ? (
+        <details className="anatomia__cotes">
+          <summary className="anatomia__cotes-titol">{t('patrimoni.anatomia.cotes', 'Cotes i dades de les fonts')}</summary>
+          <dl className="anatomia__cotes-llista" lang="ca">
+            {estructura.cotes.map((dada) => (
+              <div key={dada.etiqueta} className="anatomia__cota" data-estat={dada.estat}>
+                <dt className="anatomia__cota-etiqueta">{dada.etiqueta}</dt>
+                <dd className="anatomia__cota-valor">
+                  {dada.valor}
+                  {dada.estat !== 'ok' ? <> <span className="anatomia__estat">{t(CLAU_ESTAT[dada.estat], dada.estat)}</span></> : null}
+                  <span className="anatomia__cota-font"> · {dada.font}</span>
+                  {dada.nota ? <span className="anatomia__cota-nota"> {dada.nota}</span> : null}
+                </dd>
+              </div>
+            ))}
+          </dl>
+        </details>
       ) : null}
 
       <div className="anatomia__control">
@@ -177,6 +215,10 @@ export default function VisorAnatomiaRural3D({ estructuraInicial = ESTRUCTURES[0
             <>
               <h4 className="anatomia__terme" lang="ca">{peca.terme}</h4>
               <p className="anatomia__definicio" lang="ca">{peca.definicio}</p>
+              {peca.num ? <p className="anatomia__num">{t('patrimoni.anatomia.numPlanol', 'Peça {n} del plànol').replace('{n}', () => String(peca.num))}</p> : null}
+              {peca.alies?.length ? <p className="anatomia__alies" lang="ca">{t('patrimoni.anatomia.alies', 'També:')} {peca.alies.join(', ')}</p> : null}
+              {peca.aliesPendents?.length ? <p className="anatomia__alies" lang="ca">{t('patrimoni.anatomia.aliesPendents', 'Nom indicat pel Mestre, pendent de contrastar:')} {peca.aliesPendents.join(', ')}</p> : null}
+              {peca.nota ? <p className="anatomia__nota-peca" lang="ca">{peca.nota}</p> : null}
               {peca.pendent ? (
                 <p className="anatomia__pendent">
                   {fontPendent
@@ -202,7 +244,10 @@ export default function VisorAnatomiaRural3D({ estructuraInicial = ESTRUCTURES[0
           {t('patrimoni.anatomia.autoria', 'Autoria:')} <span translate="no">{documental.autor}</span>
         </p>
         {hiHaVideo ? (
-          <VideoEditorial id={documental.videoId} title={t('patrimoni.anatomia.documentalDe', 'Documental de {nom}').replace('{nom}', () => documental.autor)} />
+          <>
+            {documental.titol ? <p className="anatomia__video-titol"><cite lang={documental.llengua || undefined} translate="no">{documental.titol}</cite></p> : null}
+            <VideoEditorial id={documental.videoId} title={documental.titol || t('patrimoni.anatomia.documentalDe', 'Documental de {nom}').replace('{nom}', () => documental.autor)} />
+          </>
         ) : (
           <p>
             <a className="anatomia__canal" href={documental.canal} target="_blank" rel="noopener noreferrer">

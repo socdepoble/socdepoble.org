@@ -26,6 +26,8 @@ import {
   llenguaDeTraduccio,
   sanejaDestinsDeclarats,
   tradueixTot,
+  exigixTraduccioPublica,
+  contingutNoTraduible,
 } from '../../../data/traductor.js';
 import {
   carregaTraductorLliure,
@@ -68,6 +70,13 @@ function escriuCache(clau, valor) {
  * Extreu els camps de text pla traduïbles d'una targeta en ordre canònic.
  */
 export function extreuCampsTargeta(targeta) {
+  exigixTraduccioPublica([targeta]);
+  return llegeixCampsTargeta(targeta);
+}
+
+/* Lectura sense guarda: el hook la usa per a pintar l'original d'una targeta
+   privada sense llançar en renderitzar; la guarda és al camí de traducció. */
+function llegeixCampsTargeta(targeta) {
   const origen = targeta && typeof targeta === 'object' ? targeta : {};
   const valors = {};
   const clausActives = [];
@@ -201,7 +210,7 @@ export function useTraduccioTargeta(
     [traductorUrl]
   );
   const adaptadorLliureRef = useRef(null);
-  const disponible = Boolean(
+  const disponible = !contingutNoTraduible(targeta) && Boolean(
     traductorServidor?.disponible || transportLliure === 'apertium'
   );
 
@@ -215,7 +224,7 @@ export function useTraduccioTargeta(
   }, [transportLliure, traductorLlengues]);
 
   const { valors: valorsOriginals, empremta } = useMemo(
-    () => extreuCampsTargeta(targeta),
+    () => llegeixCampsTargeta(targeta),
     [targeta]
   );
 

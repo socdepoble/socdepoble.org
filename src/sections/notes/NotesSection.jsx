@@ -1,4 +1,4 @@
-import { useMemo, useCallback, useEffect, useRef, useState } from 'react';
+import { lazy, Suspense, useMemo, useCallback, useEffect, useRef, useState } from 'react';
 import { NotebookPen, Folder, SmilePlus } from 'lucide-react';
 import { useSearchParams } from '../../app/contexts/RouterContext';
 import { useIdentitatOReserva } from '../../app/contexts/useIdentitatOReserva.js';
@@ -43,6 +43,8 @@ import {
 import { CanalAmbitContext } from '../../components/universal/ambits/canalAmbit.js';
 import { carpetaDeLAmbit } from '../../components/universal/ambits/carpetaAmbit.js';
 import { AMBITS } from '../../utils/publicacioUniversal.js';
+
+const ImportacioPaginaWpNotes = lazy(() => import('./ImportacioPaginaWpNotes.jsx'));
 
 /* Pell del Bloc de Notes: tot allò que el UniversalWorkspace no ha de saber.
    B3 · P1-22 (marató 261101_2143) · Els rètols, en parells [clau, reserva]
@@ -296,7 +298,7 @@ function grupDe(id, categories, etiquetes) {
   return etiqueta ? { groupId: 'tags', label: etiqueta.label } : null;
 }
 
-export default function NotesSection() {
+function NotesSectionBase() {
   const { activate, config, nomesLectura: dadesDeLectura = false } = useNotesData();
   useEffect(() => activate(), [activate]);
   const notesContextValue = useNotes();
@@ -1009,4 +1011,16 @@ export default function NotesSection() {
       </CanalEmojisContext.Provider>
     </NotaPreparadaContext.Provider>
   );
+}
+
+/** The full WP corpus and its review editor are outside the ordinary Notes
+ * path and outside the application entry bundle. No note is auto-created. */
+export default function NotesSection() {
+  const [params] = useSearchParams();
+  /* P1-22 (integradora R8) · El rètol de càrrega també passa pel traductor. */
+  const t = useTraductorOpcional();
+  const clau = params.get('importacioWp');
+  return clau
+    ? <Suspense fallback={<p role="status">{tradueix(t, ['section.notes.importacioWp.obrint', 'Obrint la revisió privada…'])}</p>}><ImportacioPaginaWpNotes key={clau} clau={clau} /></Suspense>
+    : <NotesSectionBase />;
 }

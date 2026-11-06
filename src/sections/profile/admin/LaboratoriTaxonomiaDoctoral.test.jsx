@@ -77,7 +77,8 @@ describe('BLOC 2 · AH-29 (IDEA-89) · Administració del sistema, Eliminació d
 
   test('5. El Laboratori Doctoral de Biblioteconomia es renderitza i permet filtrar en viu entre els 425 articles', () => {
     render(<LaboratoriTaxonomiaDoctoral />);
-    expect(screen.getByRole('heading', { level: 2, name: /Taxonomia: Categories i Etiquetes/i })).toBeTruthy();
+    expect(screen.getByRole('article', { name: /Laboratori Doctoral de Biblioteconomia i Classificació/i })).toBeTruthy();
+    expect(screen.queryByRole('heading', { level: 2, name: /Taxonomia: Categories i Etiquetes/i })).toBeNull();
     expect(screen.getByText(/Diagnòstic Doctoral \(Ranganathan PMEST\)/i)).toBeTruthy();
 
     const inputCerca = screen.getByLabelText('Cercar entre els 425 articles');
@@ -87,7 +88,8 @@ describe('BLOC 2 · AH-29 (IDEA-89) · Administració del sistema, Eliminació d
 
   test('6. El panell «🌐 Nodes, Fedivers i Resiliència 3-2-1» mostra PostgreSQL 17.11, les 40 taules, els 32 documents públics, @depoble@mastodont.cat i la còpia 3-2-1 amb age', () => {
     render(<PanellNodesFediversResiliencia />);
-    expect(screen.getByRole('heading', { level: 2, name: /Nodes, Fedivers i Resiliència 3-2-1/i })).toBeTruthy();
+    expect(screen.getByRole('article', { name: /Nodes, Fedivers i Resiliència 3-2-1/i })).toBeTruthy();
+    expect(screen.queryByRole('heading', { level: 2, name: /Nodes, Fedivers i Resiliència 3-2-1/i })).toBeNull();
     expect(screen.getAllByText('17.11').length).toBeGreaterThan(0);
     expect(screen.getAllByText('40').length).toBeGreaterThan(0);
     expect(screen.getAllByText('32').length).toBeGreaterThan(0);
@@ -96,13 +98,15 @@ describe('BLOC 2 · AH-29 (IDEA-89) · Administració del sistema, Eliminació d
 
   test('7. El Banc d’Importació Editorial permet revisar i aprovar o anotar els 425 articles de socdepoble.net', () => {
     render(<BancImportacioEditorial />);
-    expect(screen.getByRole('heading', { name: /Importació i Revisió Editorial/i })).toBeTruthy();
+    expect(screen.getByRole('article', { name: /Importació i Revisió Editorial/i })).toBeTruthy();
+    expect(screen.queryByRole('heading', { level: 2, name: /Importació i Revisió Editorial/i })).toBeNull();
     expect(screen.getAllByText(/425/i).length).toBeGreaterThan(0);
   });
 
   test('8. El panell d’Empaquetats i Desplegament (Mode Jarvis) mostra l’estat de portes i el connector WordPress .zip', () => {
     render(<PanellEmpaquetatsDesplegament />);
-    expect(screen.getByRole('heading', { level: 2, name: /Empaquetats i Desplegament/i })).toBeTruthy();
+    expect(screen.getByRole('article', { name: /Empaquetats i Desplegament/i })).toBeTruthy();
+    expect(screen.queryByRole('heading', { level: 2, name: /Empaquetats i Desplegament/i })).toBeNull();
     expect(screen.getByText(/Connector WordPress/i)).toBeTruthy();
   });
 });

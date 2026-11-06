@@ -14,6 +14,8 @@ import {
 /* P1-f (Onada R6, Bloc 2) · L'estat de revisió viu a un mòdul lleuger (sense
    tesaurus) perquè el detail del Mur el puga usar sense arrossegar este. */
 import { INSIGNIES_CASOS_US_IMPORTACIO, llegeixEstatRevisioEditorial } from './revisioEditorialWp.js';
+import { carregaPaginesTrilogiaIMoliWp, esPaginaTrilogiaIMoliWp, trobaPaginaTrilogiaIMoliWp } from '../data/importacio/paginesTrilogiaIMoliWp.js';
+import { transformaPaginaTrilogiaIMoliWp } from '../data/importacio/paginesTrilogiaIMoliEditorial.js';
 
 export {
   CASOS_US_EDITORIALS,
@@ -304,9 +306,17 @@ export function lligArticlesImportatsAmbRevisio(storage) {
   });
 }
 
-export function trobaArticleImportatComAPublicacio(itemId, storage) {
+export function trobaArticleImportatComAPublicacio(itemId, storage, { revisioPrivada = false } = {}) {
   if (itemId == null || itemId === '') return null;
   const clau = String(itemId).trim();
+  // These full pages are quarantined review drafts: only the private review
+  // asks for the body. Without revisioPrivada the lookup keeps falling to the
+  // metadata-only summary card (the one /mur has always shown), so loading the
+  // admin preview never exposes the body and /mur/<id> does not turn into a 404.
+  if (revisioPrivada && esPaginaTrilogiaIMoliWp(clau)) {
+    const pagina = trobaPaginaTrilogiaIMoliWp(clau);
+    return pagina ? transformaPaginaTrilogiaIMoliWp(pagina) : null;
+  }
   const articles = lligArticlesImportatsAmbRevisio(storage);
   const art = articles.find((a) => String(a.slug) === clau || String(a.wp_id) === clau || String(a.id) === clau);
   if (!art) return null;
@@ -342,6 +352,12 @@ export function trobaArticleImportatComAPublicacio(itemId, storage) {
     esImportatWp: true,
     content: resumHtml,
   };
+}
+
+export async function carregaPaginaImportadaPerRevisio(itemId, { signal } = {}) {
+  if (!esPaginaTrilogiaIMoliWp(itemId)) return null;
+  await carregaPaginesTrilogiaIMoliWp({ signal });
+  return trobaArticleImportatComAPublicacio(itemId, null, { revisioPrivada: true });
 }
 
 export function estadistiquesRevisioImportacio(storage = typeof window !== 'undefined' ? window.localStorage : null) {

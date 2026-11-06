@@ -16577,6 +16577,16 @@ export const PAGINES_WP_18 = Object.freeze([
   }
 ]);
 
+export const CATEGORIES_DOCTORAL_MARES_6 = Object.freeze(
+  FACETA_3_CATEGORIES_MARES_IA.map((cat) => cat.label)
+);
+
+export const ETIQUETES_DOCTORAL_SKOS_49 = Object.freeze(
+  FACETA_4_ETIQUETES_SKOS
+    .filter((tag) => !tag.isEmpty && !tag.isDeprecatedSynonym && Boolean(tag.activaPerDefecte))
+    .map((tag) => tag.name)
+);
+
 export function estatInicialTaxonomiaAdmin() {
   const categoriesActives = Object.fromEntries(
     FACETA_3_CATEGORIES_MARES_IA.map((cat) => [cat.id, Boolean(cat.activaPerDefecte)])
@@ -16587,7 +16597,7 @@ export function estatInicialTaxonomiaAdmin() {
   return {
     categoriesActives,
     etiquetesActives,
-    etiquetesBuidesPodades: false,
+    etiquetesBuidesPodades: true,
   };
 }
 
@@ -16601,7 +16611,7 @@ export function llegeixEstatTaxonomiaAdmin(storage = typeof window !== 'undefine
     return {
       categoriesActives: { ...base.categoriesActives, ...(parsed?.categoriesActives || {}) },
       etiquetesActives: { ...base.etiquetesActives, ...(parsed?.etiquetesActives || {}) },
-      etiquetesBuidesPodades: Boolean(parsed?.etiquetesBuidesPodades),
+      etiquetesBuidesPodades: parsed?.etiquetesBuidesPodades !== undefined ? Boolean(parsed.etiquetesBuidesPodades) : true,
     };
   } catch {
     return base;

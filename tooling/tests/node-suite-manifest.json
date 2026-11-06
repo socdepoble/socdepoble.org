@@ -8,6 +8,7 @@
     "health": "Verd primari i CI no certifiquen verd de laboratori/sessió. npm run test:node:all conserva la visibilitat del deute complet; cap prova ni asserció es retira."
   },
   "requiredPrimary": [
+    "tests/admin-invitacions-r20b.test.mjs",
     "tests/administracio-multipoble-postgres.test.mjs",
     "tests/antigravity-hook.test.mjs",
     "tests/backend_consolidacio.test.mjs",
@@ -83,6 +84,7 @@
     "tests/node0-private-parameters.test.mjs",
     "tests/node0-public-hydration.test.mjs",
     "tests/node0-r12-editorial.test.mjs",
+    "tests/node0-r13-municipal.test.mjs",
     "tests/node0-r4-adversarial.test.mjs",
     "tests/node0-r4-kit-security.test.mjs",
     "tests/node0-r5-kit-security.test.mjs",
@@ -127,6 +129,7 @@
     "tests/portabilitat-fediversity.test.mjs",
     "tests/public_exports.test.mjs",
     "tests/render-pdf.test.mjs",
+    "tests/restauracio-independent-r20b.test.mjs",
     "tests/search-cli-wire.test.mjs",
     "tests/security-chain.test.mjs",
     "tests/sessio-rural-crdt-opfs.test.mjs",
@@ -165,6 +168,11 @@
       "path": "tests/action-contrast.test.mjs",
       "suite": "primary",
       "reason": "Regressió portable del producte o d’una eina permanent; s’executa a la cadena primària, també quan està roja."
+    },
+    {
+      "path": "tests/admin-invitacions-r20b.test.mjs",
+      "suite": "primary",
+      "reason": "R20b K3-02: catàleg76→77 real, invitacions consentides sense escalada ni accés a xats privats; PGlite explícit."
     },
     {
       "path": "tests/administracio-multipoble-postgres.test.mjs",
@@ -572,27 +580,17 @@
       "reason": "O3-CODEX-1 · kits CAS: generació/aplicació amb staging, rollback, paths/symlinks i Frontissa real sobre candidat; fixtures portables, sense xarxa ni temporitzadors."
     },
     {
-      "path": "tests/lint-sessio.test.mjs",
-      "suite": "session",
-      "reason": "FITXERS és una selecció temporal del torn per a lectura engabiada. ESLint complet continua al workflow i a npm run lint."
-    },
-    {
-      "path": "tests/lint-torn-261002.test.mjs",
-      "suite": "session",
-      "reason": "Corredor de lots declarats per la sessió 261002; exclou deliberadament part del producte. ESLint complet continua al workflow."
-    },
-    {
-      "path": "tests/lint_calendari.test.mjs",
-      "suite": "primary",
-      "reason": "Regressió portable del producte o d’una eina permanent; s’executa a la cadena primària, també quan està roja."
-    },
-    {
       "path": "tests/lint_calendari_fonts.test.mjs",
       "suite": "primary",
       "reason": "Regressió portable del producte o d’una eina permanent; s’executa a la cadena primària, també quan està roja."
     },
     {
       "path": "tests/lint_calendari_mes.test.mjs",
+      "suite": "primary",
+      "reason": "Regressió portable del producte o d’una eina permanent; s’executa a la cadena primària, també quan està roja."
+    },
+    {
+      "path": "tests/lint_calendari.test.mjs",
       "suite": "primary",
       "reason": "Regressió portable del producte o d’una eina permanent; s’executa a la cadena primària, també quan està roja."
     },
@@ -615,6 +613,16 @@
       "path": "tests/lint_xat.test.mjs",
       "suite": "primary",
       "reason": "Regressió portable del producte o d’una eina permanent; s’executa a la cadena primària, també quan està roja."
+    },
+    {
+      "path": "tests/lint-sessio.test.mjs",
+      "suite": "session",
+      "reason": "FITXERS és una selecció temporal del torn per a lectura engabiada. ESLint complet continua al workflow i a npm run lint."
+    },
+    {
+      "path": "tests/lint-torn-261002.test.mjs",
+      "suite": "session",
+      "reason": "Corredor de lots declarats per la sessió 261002; exclou deliberadament part del producte. ESLint complet continua al workflow."
     },
     {
       "path": "tests/literals-secrets-node0.test.mjs",
@@ -865,6 +873,11 @@
       "path": "tests/node0-r12-editorial.test.mjs",
       "suite": "primary",
       "reason": "Deute R12: edició editorial Node0, consentiment i autoria verificats en fixture portable."
+    },
+    {
+      "path": "tests/node0-r13-municipal.test.mjs",
+      "suite": "primary",
+      "reason": "IDEA-103b/104c: SQL77/78, permisos, HTTP i restauració municipal; PGlite explícit per proves SQL."
     },
     {
       "path": "tests/node0-r4-adversarial.test.mjs",
@@ -1145,6 +1158,11 @@
       "path": "tests/render-pdf.test.mjs",
       "suite": "primary",
       "reason": "O4-CODEX-1: perfil i memòria cau del navegador aïllats i netejats, opcions vigents; prova amb navegador simulat."
+    },
+    {
+      "path": "tests/restauracio-independent-r20b.test.mjs",
+      "suite": "primary",
+      "reason": "R20b K3: SQL78 independent sobre catàleg76 real, RLS i cap grant directe d’emmagatzematge, importació idempotent; PGlite explícit."
     },
     {
       "path": "tests/run-portes-cens.test.mjs",

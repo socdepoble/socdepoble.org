@@ -1,0 +1,1325 @@
+ARBRES I PLANTES ZONA BASSA
+
+ARBRE BLANC							
+Chopo o Álamo blanco - Called abele
+Populus alba
+Ornamental
+
+
+BEDOLL
+Abedul - Himalayan birch
+Betula utilis 'Doorenbos'
+Ornamental
+
+
+
+ARBRE DEL PARADIS
+Árbol del paraíso - Silver berry
+Elaeagnus angustifolia
+Ornamental
+
+
+LLORER
+Laurel - Sweet bay
+Laurus nobilis
+Alimentación - Ornamental
+
+
+AURÓ
+Arce - Maple
+Acer opalus
+Ornamental
+
+
+TIL·LERA
+Tilo - Largeleaf linden
+Tilia platyphyllos
+Medicinal - Ornamental
+
+
+FLEIX
+Fresno - Ash tree
+Fraxinus Ornus
+Artesanal - Ornamental 
+
+
+AURÓ DEL SUCRE
+Arce plateado - Silver maple
+Acer saccharinum
+Artesanal - Ornamental
+
+
+
+MORERA BLANCA					
+Morera - Mulberry
+Morus alba
+Alimentación - Ornamental
+
+
+ROSER SENSE PUNXES
+Rosal trepador sin espinas - Lady Banks' Rose
+Rosa SPP								
+Ornamental
+
+
+ESPIGOL
+Lavanda - Lavender
+Lavandula angustifolia
+Aromática - Medicinal
+
+
+PIRACANTA
+Espino de fuego - Red firethorn
+Pyracantha coccinea
+Ornamental
+
+
+MARFULL
+Durillo - Laurestine
+Viburnum tinus
+Medicinal - Ornamental
+
+
+GINEBRE
+Enebro - Savin
+Juniperus communis
+Medicinal - Ornamental
+
+
+CORNERA
+Cotonastro - Acuminate cotoneaster
+Cotoneaster acuminatus
+Ornamental
+
+
+MURTA
+Mirto - Myrtle
+Myrtus communis
+Aromática - Medicinal - Ornamental
+
+
+LIL·LERA
+Lila - Lilac
+Syringa vulgaris
+Ornamental
+
+
+BALADRE						-2 CARTELLS-
+Adelfa - Oleander
+Nerium oleander
+Ornamental - Medicinal - Tóxico
+
+
+VARETA DE SANT JOSEP
+Celindo - Cornus
+Philadelphus coronarius
+Ornamental
+
+
+VINCAPERVINCA
+Hierba doncella - Bigleaf periwinkle
+Vinca major
+Ornamental - Medicinal
+
+
+LLIRI BLAU (GIRABLAU) 					-2 CARTELLS-
+Lirio común - Iris
+Iris germánica
+Aromática - Medicinal
+
+
+TEIX
+Tejo -Yew
+Taxus baccata
+Medicinal - Artesanal - Tóxico - Ornamental
+
+
+LLIDONER
+Almez - European nettle tree
+Celtis australis
+Medicinal - Artesanal - Ornamental
+
+
+PI VER
+Pino piñonero - Stone pine
+Pinus pinea
+Alimentación - Ornamental
+
+
+ARBOCER (MADRONYER)
+Madroño - Arbutus
+Arbutus unedo
+Alimentación - Medicinal - Ornamental
+
+
+
+
+CARRASCA						
+Encina - Holm oak
+Quercus ilex
+Alimentación - Ornamental
+
+
+COSCOLLA				
+Coscoja - Kermes oak
+Quercus coccifera
+Alimentación - Ornamental
+
+
+ROMER	REPTANT					-4 CARTELLS-
+Romero rastrero - Rosemary Prostratus
+Rosmarinus officinalis prostratus
+Aromática - Culinaria – Medicinal
+
+
+ACACIA ROBÍNIA
+Falsa Acacia - Black locust
+Robinia pseudoacacia “Casque Rouge”
+Ornamental – Artesanal
+
+
+HEDRERA							OJO
+Hiedra– Ivy
+Hedera hélix
+Ornamental
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+PLANTES ERA
+
+PEBRELLA
+Piperela 
+Thymus Piperella
+Aromática - Culinaria - Medicinal
+
+
+JULIVERT
+Perejil - Parsley
+Petroselinum crispum
+Aromática - Culinaria - Medicinal
+
+
+RUDA
+Ruta								OJO
+Ruta graveolens
+Aromática - Culinaria - Medicinal
+
+
+CEBA MORA
+Cebollino - Chives
+Allium schoenoprasum
+Aromática - Culinaria - Medicinal
+
+
+ENCENS
+Incienso - Incense
+Plectranthus coleoides
+Aromática
+
+
+HERBA-SANA
+Hierbabuena - Peppermint
+Mentha spicata
+Aromática - Culinaria - Medicinal
+
+
+SÀLVIA
+Salvia - Sage
+Salvia officinalis
+Aromática - Medicinal
+
+
+ORENGA
+Orégano - Oregano [OJO, SIN TILDE]
+Origanum vulgare
+Aromática - Culinaria - Medicinal
+
+
+
+
+CAMAMIRLA							OJO
+Manzanilla amarga - Chamomile
+Santonina chamaecyparissus
+Aromática - Medicinal
+
+
+AMOR DE FADRÍ
+Mastranzo - Red sage
+Salvia microphylla
+Aromática - Medicinal
+
+
+TIMÓ
+Tomillo - Thyme
+Thymus vulgaris
+Aromática - Culinaria - Medicinal
+
+
+CURRI
+Curry - Curry
+Helichrysum italicum
+Aromática - Culinaria
+
+
+MENTA
+Menta - Mint
+Mentha piperita
+Aromática - Culinaria - Medicinal
+
+
+ROMER REPTANT
+Romero rastrero - Rosemary Prostratus
+Rosmarinus officinalis prostratus
+Aromática - Culinaria - Medicinal
+
+
+ALFÀBEGA
+Albahaca - Basil
+Ocimum basilicum
+Aromática - Culinaria - Medicinal
+
+
+
+
+
+
+
+
+
+
+
+
+ARBRES DAVANT CASA
+
+
+CIPRER
+Ciprés - Cypress
+Cupressus sempervirens
+Ornamental
+
+
+CASTANYER BORD
+Castaño de Indias - Horse-chestnut
+Aesculus hippocastanum
+Ornamental
+
+
+PERERA DE FLOR
+Peral de Callery - Callery pear  (“The Survivor Tree”)
+Pyrus calleryana “Chanticleer”
+Ornamental
+
+
+ARBRE DE JUDES
+Árbol del amor - Judas tree
+Cercis siliquastrum
+Ornamental
+
+
+ANOUER DEL JAPÓ
+Árbol de los 40 escudos - Maidenhair tree
+Ginkgo biloba
+Ornamental - Medicinal
+
+
+AURÓ VERMELL
+Arce de Freeman - Freeman maple
+Acer x Freemanii “Autumn Blaze”
+Ornamental
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+BANCAL DE FRUITALS
+
+
+PRUNERA
+Ciruelo - Circle
+Prunus domestica
+Alimentación
+
+
+SERVERA
+Serbal - Rowan
+Sorbus domestica
+Alimentación
+
+
+ALBERCOQUER
+Albaricoquero - Apricot
+Prunus armeniaca
+Alimentación
+
+
+NYESPRER
+Nísperero europeo - Common medlar
+Mespilus germanica
+Alimentación
+
+
+GINJOLER
+Azufaifo - Jujube
+Ziziphus jujuba
+Alimentación - Artesanal
+
+
+CAQUIER
+Caqui - Khaki
+Diospyros kaki
+Alimentación
+
+
+CIRER								OJO
+Cerezo - Cherry tree
+Cerasus
+Alimentación
+
+
+BRESQUILLERA
+Melocotonero - Peach tree
+Prunus persica
+Alimentación
+
+
+
+CODONYER
+Membrillero - Quince
+Cydonia oblonga
+Alimentación
+
+
+MAGRANER
+Granado - Pomegranate
+Punica granatum
+Alimentación – Medicinal
+
+
+PERERA
+Peral - Pear tree
+Pyrus communis
+Alimentación
+
+
+POMERA
+Manzano - Apple tree
+Malus domesticus
+Alimentación
+
+
+ATZEROLERA								
+Acerolo - Azarole
+Crataegus azarolus
+Alimentación
+
+
+ANOUER								
+Nogal - Walnut
+Juglans regia
+Alimentación - Medicinal - Ornamental
+
+
+MORERA NEGRA							
+Morera - Mulberry
+Morus nigra
+Alimentación - Ornamental
+
+
+DESCONOCIDO								
+Ciruelo rojo - Red plum
+Prunus cerasifera
+Alimentación - Ornamental
+
+
+GARROFER								
+Algarrobo - Carob tree
+Ceratonia siliqua
+Alimentación - Medicinal
+
+
+NYESPRER								
+Nísperero - Japanese medlar
+Eriobotrya japonica
+Alimentación
+
+
+ARBOCER (MADRONYER)						
+Madroño - Arbutus
+Arbutus unedo
+Alimentación - Medicinal - Ornamental
+
+
+AMETLER								
+Almendro - Almond
+Prunus dulcis
+Alimentación
+
+
+FIGUERA					
+Higuera - Fig tree
+Ficus carica
+Alimentación
+
+
+PARRA							
+Vid - Vine
+Vitis vinifera
+Alimentación
+
+
+BACORERA						
+Higuera - Fig tree
+Ficus carica
+Alimentación
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ARBRES I PLANTES ZONA ALMASSERA I DARRERE
+
+
+OLIVARÓ
+Acebuche - Wild olive
+Olea europea sylvestris
+Ornamental
+
+
+OLIVERA
+Olivo - Olive
+Olea europea
+Ornamental - Alimentación
+
+
+AMETLER					
+Almendro - Almond
+Prunus dulcis
+Alimentación
+
+
+MURTA
+Mirto - Myrtle
+Myrtus communis
+Aromática - Medicinal - Ornamental
+
+		
+BLAT / FORMENT							
+Trigo - Wheat
+Triticum durum
+Alimentación
+
+
+PANÍS / BLAT DE MORO							
+Maíz - Maize
+Zea mays
+Alimentación
+
+
+AVENA									
+Avena - Oats
+Avena sativa
+Alimentación
+
+
+ORDI (CIVADA)								
+Cebada - Barley
+Hordeum vulgare
+Alimentación
+
+
+
+SÈGOL (CENTENO)							
+Centeno - Rye
+Secale cereale
+Alimentación
+
+
+ROSER									
+Rosal - Rosebush
+Rosa
+Aromática - Ornamental
+
+
+LLIRI BLAU (GIRABLAU) 					-2 CARTELLS-
+Lirio común - Iris
+Iris germánica
+Aromática - Medicinal
+
+
+CARRASCA						-2 CARTELLS-		
+Encina - Holm oak
+Quercus ilex
+Alimentación - Ornamental
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+PARTERRE 1 (BAIX)
+
+LAVANDA
+Espliego de jardín - Fringed lavender
+Lavandula dentata
+Aromática - Medicinal
+
+
+ESPIGOL FEMELLA
+Lavanda hembra - Lavender female
+Lavandula oficinalis
+Aromática - Medicinal
+
+
+ESPIGOL
+Lavanda - Lavender
+Lavandula angustifolia
+Aromática - Medicinal
+
+ SÀLVIA
+Salvia - Sage
+Salvia officinalis
+Aromática - Medicinal
+
+
+ROMER REPTANT
+Romero rastrero - Rosemary Prostratus
+Rosmarinus officinalis prostratus
+Aromática - Culinaria - Medicinal
+
+
+CIPRER DE PLATA 							
+Ciprés de Leyland - Leyland ciprus
+Leylandii variegata
+Ornamental
+
+
+GINEBRE
+Enebro - Juniper
+Juniperus communis
+Culinaria - Medicinal - Artesanal
+
+
+LOROPÉTAL
+Loropétalo - Chinese fringe flower
+Loropetalum chinense
+Ornamental
+
+
+
+
+FOTÍNIA ROJA
+Fotinia roja - Photinia “Red Robin”
+Photinia fraserired robin
+Ornamental
+
+
+CORNERA RASTRERA
+Cotonastro rastrero - Rock cotoneaster
+Cotoneaster horizontalis
+Ornamental
+
+
+CORNERA BLANCA
+Cotonastro de flor blanca - Late cotoneaster
+Cotoneaster lactea
+Ornamental
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+PARTERRE 2 (MIG)
+
+CANTUESO
+Cantahueso - Spanish lavender
+Lavandula stoechas
+Aromática - Culinaria - Medicinal
+
+
+RABET DE GAT
+Rabo de gato - Ironwort
+Sideritis angustifolia
+Aromática - Medicinal
+
+
+PEBRELLA
+Piperela 
+Thymus Piperella
+Aromática - Culinaria - Medicinal
+
+
+ROMER REPTANT
+Romero rastrero - Rosemary Prostratus 
+Rosmarinus officinalis prostratus
+Aromática - Culinaria - Medicinal
+
+
+PERICO
+Hipérico - Saint John’s Wort
+Hypericum perforatum
+Aromática - Medicinal
+
+
+CAMAMIRLA
+Manzanilla - Chamomile
+A chamaemelum nobile /  Anthemis nobilis
+Aromática – Medicinal
+
+
+CAMAMIRLA BORDA
+Santolina - Chamomile
+Santolina chamaecyparissus
+Aromática – Medicinal
+
+
+CORNERA BLANCA
+Cotonastro de flor blanca - Late cotoneaster
+Cotoneaster lactea
+Ornamental
+
+
+
+
+ SÀLVIA
+Salvia - Sage
+Salvia officinalis
+Aromática - Medicinal
+
+
+MARIALLUÏSA / HERBALLUÏSA
+Hierba luisa - Lemon verbena
+Aloysia citriodora
+Aromática – Medicinal
+
+
+TIMÓ
+Tomillo - Thyme
+Thymus vulgaris
+Aromática - Culinaria – Medicinal
+
+
+TIMÓ ALLIMONAT
+Tomillo limonero - Citrus thyme
+Thymus x citriodorus
+Aromática - Culinaria – Medicinal
+
+
+SÀLVIA DE MARIOLA
+Salvia de Mariola – Mariola sage
+Salvia Blancoana Mariolensis
+Aromática – Medicinal
+
+
+MARFULL
+Durillo - Laurestine
+Viburnum tinus
+Medicinal - Ornamental
+
+
+ROMER
+Romero - Rosemary
+Rosmarinus officinalis
+Aromática - Culinaria - Medicinal
+
+
+
+
+
+
+
+
+
+
+
+PARTERRE 3 (FRUITES DE LA SERRA)
+
+
+ARBOCER (MADRONYER)				-2 CARTELLS-
+Madroño - Arbutus
+Arbutus unedo
+Alimentación - Medicinal - Ornamental
+
+
+AVELLANER
+Avellanero - Hazel
+Corylus avellana
+Alimentación
+
+
+GERDERA GROGA
+Frambueso amarillo - Yellow raspberry
+Rubus idaeus “Fallgold”
+Alimentación - Medicinal
+
+
+NABIU ROIG
+Arándano rojo - Cranberry
+Vaccinium macrocarpon
+Alimentación
+
+
+NABIU BLAU
+Arándano azul - Blueberry
+Vaccinium corymbosum 
+Alimentación
+
+
+GROSELLER NEGRE
+Zarzaparrilla negra - Black sarsaparilla
+Ribes nigrum
+Alimentación - Medicinal - Ornamental
+
+
+GROSELLER ROIG
+Zarzaparrilla roja - Red sarsaparilla
+Ribes rubrum
+Alimentación - Medicinal - Ornamental
+
+
+ARNET ROIG / CIRERER DE PASTOR
+Espino rosa - Midland hawthorn
+Crataegus laevigata “Paul’s Scarlet”
+Alimentación
+
+
+
+LLENTISCLE
+Lentisco - Mastic
+Pistacea lenticus
+Alimentación - Medicinal
+
+ POMERA BORDA BLANCA
+Manzano de jardín - Evereste
+Malus Perpetu
+Alimentación
+
+
+Pomera borda roja
+Manzano silvestre - Crab apple “Profusion”
+Malus floribunda 
+Ornamental - Alimentación
+
+
+NESTO (NYESTRO)
+Aladierna - Mediterranean buckthorn
+Rhamnus Alaternus
+Medicinal
+
+
+ARANYONER
+Endrino - Blackthorn
+Prunus spinosa
+Alimentación - Medicinal
+
+
+PISTATXER
+Alfóncigo - Pistacia
+Pistacea vera
+Alimentación – Medicinal
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+PARTERRE 4 (FONT D’HERBES)
+
+
+TIMÒ REPTANT
+Tomillo rastrero - Red Creeping Thyme
+Thymus Praecox “Coccineus”
+Aromática - Culinaria - Medicinal
+
+
+ORENGA
+Orégano - Oregano [OJO, SIN TILDE]
+Origanum vulgare
+Aromática - Culinaria - Medicinal
+
+
+NESTO (NYESTRO)
+Aladierna - Mediterranean buckthorn
+Rhamnus Alaternus
+Medicinal
+
+
+CORNERA
+Cotonastro - Acuminate cotoneaster
+Cotoneaster acuminatus
+Ornamental
+
+
+TIMÓ
+Tomillo - Thyme
+Thymus vulgaris
+Aromática - Culinaria - Medicinal
+
+
+ESPIGOL
+Lavanda - Lavender
+Lavandula angustifolia
+Aromática - Medicinal
+
+
+ROMER REPTANT
+Romero rastrero - Rosemary Prostratus
+Rosmarinus officinalis prostratus
+Aromática - Culinaria - Medicinal
+
+
+MAGRANER NANO
+Granado enano – Dwarf pomegranate
+Punica granatum nana
+Alimentación – Medicinal
+
+
+
+PARTERRE ABELLES I BANCAL SUPERIOR
+
+
+
+
+CARRASCA						-4 CARTELLS-		
+Encina - Holm oak
+Quercus ilex
+Alimentación - Ornamental
+
+
+PI							-4 CARTELLS-
+Rosa - Aleppo pine
+Pinus halepensis
+Ornamental
+
+
+ULTIMS
+
+
+GRÈVOL
+Acebo - Holly
+Ilex aquifolium
+Ornamental - Medicinal – Tóxico
+
+
+CAMÈLIA
+Camelia – Camellia						-2 ejemplares-
+Camellia japónica								
+Ornamental
+(blanca, jaspiada, rosa pàl·lid, rosa carmí, rosa forta, roig, roig carmí, roig fosc)
+
+
+MARGARIDA GROGA						-2 ejemplares
+Margarita amarilla - Grey-leaved euryops
+Euryops pectinatus
+Ornamental
+
+
+ROMER	REPTANT					-4 CARTELLS-
+Romero rastrero - Rosemary Prostratus
+Rosmarinus officinalis prostratus
+Aromática - Culinaria – Medicinal
+
+
+CIPRER
+Ciprés - Cypress
+Cupressus sempervirens
+Ornamental
+
+
+
+CIPRER LAMBERT
+Cirprés de Monterrey - Monterey cipress
+Cupressus macrocarpa
+Ornamental
+
+
+CIPRER BLAU
+Ciprés de Arizona – Arizona cypress					
+Cupressus arizonica								
+Ornamental
+
+
+CASTANYER					
+Castaño - Sweet chestnut
+Castanea sativa
+Ornamental - Artesanal – Alimentación
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+					
+CARTELLS ZONES TEMÀTIQUES
+
+					
+CARBONERA
+Carbonera - Coal bunker
+
+
+
+
+[OJO: Llevar el fum de la boca i colocar una pedra gran tapant el forat. La gatera més gran. En ves de “cisca fulles” que pose “brosa”].
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+FORN DE CALÇ
+Calero - Lime kiln
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+SÉNIA
+Noria - Wheel
+Segle XIX
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+MOLÍ FARINER HIDRÀULIC – EVOLUCIÓ TÉCNICA A ELECTRICITAT
+Molino de cereal – Flour mill
+Segles XIV – XX
+
+
+
+
+
+                             
+      Moles mogudes per un motor elèctric (molí)	                        Netejador de cereals elèctric            
+
+
+
+
+
+
+
+ALMÀSSERA
+Molino de aceite – Oil mill
+Segles XIX-XX
+
+
+PROCEDIMENT TRADICIONAL D’EXTRACCIÓ DE L’OLI
+5. Emmagatzemat
+5. Emmagatzemat
+4. Decantació
+4. Decantació
+3. Premsat
+3. Premsat
+2. Batuda
+2. Batuda
+1. Molta
+1. Molta
+
+CARACTERÍSTIQUES DE L’OLI
+
+CUP
+Lagar – Winery
+Edat Antiga – segle XIX
+
+      
+
+
+
+
+PELADORA D’AMETLES
+Despellejadora de almendras – Almond peeler
+Principis segle XX
+
+
+MOLÍ DE MÀ							-Cartel pequeño-
+Molino manual giratorio – Rotating mill
+Edat Antiga/Mitjana
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+LA LLENYA
+Leña - Firewood
+
+
+LLENYER
+Leñero – Firewood
+
+
+Nom		Tipus		Kcal/kg		Brasa
+
+Carrasca	Dura		4.900		Excel·lent
+Olivera 		Dura		4.800		Molt bona
+Orm 		Dura		4.800		Bona
+Ametler 	Dura		4.700		Bona
+Pi 		Blaneta		4.400		Bàsica
+Xop 		Blaneta		4.400		Bàsica
+Sarments	Blaneta		3.900		Excel·lent
+Figuera 	Blaneta		3.800		Roïna
+
+
+
+
+POU DE LA NEU DEL RENTONAR (CAVA) -A 1 Km.
+Nevero - Snow pit
+Segle XVII				-4 EXEMPLARS: 2 FLETXES RECTES. FLETXES DRETA-
+
+
+
+PLANTES I HERBES AROMÀTIQUES I MEDICINALS
+Plantas aromáticas y medicinales - Aromatic and medicinal plants
+
+
+HERBOLARI
+Herboristería – Herboristery
+
+
+
+L’ALCAVÓ (NAIXEMENT – AIGÜES CAVALLERES) - A 200 m.
+Manantial - Spring water
+					-4 EXEMPLARS: 1 FLETXA RECTA. 3 FLETXES DRETA-
+
+
+
+CAMÍ VELL D’ALCOI
+Camino viejo de Alcoy – Alcoy road
+
+-1 EXEMPLAR: 1 FLETXA RECTA-
+
+
+
+
+
+
+JOCS INFANTILS
+JUEGOS INFANTILES
+
+Aptes per a xiquets entre 3 i 12 anys baix vigilància d'adults.
+Aptos para niños entre 3 y 12 años bajo vigilancia de adultos.
+
+L'empresa no es fa responsable.
+La empresa no se hace responsable.
+Emergències
+Emergencias: 
+112
+

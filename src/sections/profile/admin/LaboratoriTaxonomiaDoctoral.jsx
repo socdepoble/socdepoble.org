@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { lazy, Suspense, useMemo, useState } from 'react';
 import { Link } from '../../../app/contexts/RouterContext';
 import { Boto, Insignia } from '../../../components/PedraSeca';
 import { Interruptor } from '../../../components/PedraSeca/organismes/formulari.jsx';
@@ -13,7 +13,10 @@ import {
   desaEstatTaxonomiaAdmin,
 } from '../../../data/taxonomia/tesaurusDoctoralSocDePoble.js';
 
+const PaginesTrilogiaWp = lazy(() => import('./PaginesTrilogiaWp.jsx'));
+
 export function LaboratoriTaxonomiaDoctoral() {
+  const [mostraPaginesWp, setMostraPaginesWp] = useState(false);
   const [estat, setEstat] = useState(() => llegeixEstatTaxonomiaAdmin());
   const [facetaActiva, setFacetaActiva] = useState('totes');
   const [cercaGeografica, setCercaGeografica] = useState('');
@@ -140,7 +143,6 @@ export function LaboratoriTaxonomiaDoctoral() {
           <Insignia to="neutre">Tesaurus ISO 25964 / W3C SKOS</Insignia>
           <Insignia to="exit">{`${RESUM_AUDITORIA_BIBLIOTECONOMIA.totalCategoriesWp} categories · ${RESUM_AUDITORIA_BIBLIOTECONOMIA.totalEtiquetesWp} etiquetes · ${RESUM_AUDITORIA_BIBLIOTECONOMIA.totalArticlesWp} articles`}</Insignia>
         </div>
-        <h2>🏷️ Taxonomia: Categories i Etiquetes</h2>
         <p className="sdp-admin-taxonomia__lead">
           <strong>Explicat de forma clara i humana:</strong> En la web antiga (<code>socdepoble.net</code>), les <strong>114 categories</strong> s’havien usat per a posar el nom del poble o de la comarca (113 geogràfiques), i les <strong>105 etiquetes</strong> barrejaven temes, formats i sinònims duplicats (amb 53 etiquetes buides). Ací separem cada cosa al seu lloc amb quatre facetes netes perquè qualsevol veí o veïna trobe al moment el que busca.
         </p>
@@ -148,6 +150,11 @@ export function LaboratoriTaxonomiaDoctoral() {
           <strong>Diagnòstic Doctoral (Ranganathan PMEST):</strong> {RESUM_AUDITORIA_BIBLIOTECONOMIA.diagnosticRanganathan}
         </blockquote>
       </header>
+
+      <section className="sdp-admin-taxonomia__section" aria-label="Corpus editorial WordPress">
+        <button type="button" className="sdp-boto sdp-boto--secundari" aria-expanded={mostraPaginesWp} onClick={() => setMostraPaginesWp(value => !value)}>Revisa les 10 pàgines de Trilogia Mediterrània i La Torre</button>
+        {mostraPaginesWp && <Suspense fallback={<p role="status">Obrint la revisió privada…</p>}><PaginesTrilogiaWp /></Suspense>}
+      </section>
 
       <nav className="sdp-admin-taxonomia__tabs" aria-label="Facetes de la classificació">
         {[

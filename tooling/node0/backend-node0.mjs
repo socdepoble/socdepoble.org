@@ -73,9 +73,9 @@ export function compilaOperacioNodeZero(action,body,tenantId){
     if(Object.keys(body).some(k=>k!=='entrada'))fail('unexpected_field');
     const operation=action==='adminLlistaUsuarisRegistrats'?'llista':action==='adminAssignaMembreOrganitzacio'?'membre':'connecta';
     let input;try{input=capturaAdminUsuaris(body.entrada,operation);}catch{fail('invalid_admin_input');}
-    if(operation==='llista')return result(`public.admin_llista_usuaris_registrats(${tenant},${intSql(input.limit)},${intSql(input.offset)})`);
-    if(operation==='membre')return result(`public.admin_assigna_membre_organitzacio(${tenant},${sqlText(input.usuariId)}::uuid,${sqlText(input.organitzacioId)}::uuid,${sqlText(input.rol)},${input.lleva?'true':'false'})`);
-    return result(`public.admin_connecta_usuari(${tenant},${sqlText(input.usuariId)}::uuid,${sqlText(input.categoria)})`);
+    if(operation==='llista')return result(`public.admin_llista_usuaris_registrats(${tenant},${input.cursorCreat===null?'NULL':sqlText(input.cursorCreat)+'::timestamptz'},${maybeUuid(input.cursorId)},${intSql(input.limit)})`);
+    if(operation==='membre')return result(`public.admin_convida_a_entitat(${tenant},${sqlText(input.usuariId)}::uuid,${sqlText(input.organitzacioId)}::uuid)`);
+    return result(`public.admin_connecta_usuari(${tenant},${sqlText(input.usuariId)}::uuid)`);
   }
   // Unknown top-level keys are rejected, including owner_user_id, userId and tenantId.
   const keys={adminActualitzaPublicacioEditorial:['edicio'],getProfile:[],elMeuRol:[],updateProfile:['updates'],loadNotes:['noteId','cursor','limit'],createNote:['input'],updateNote:['id','updates','expectedRevision'],listMyOrganizations:[],createOrganization:['organization'],updateOrganization:['id','updates'],appendSectionSubmissionNetworkOnly:['submission'],loadSeccioPage:['sectionId','cursor','limit'],loadFils:[],loadMissatges:['filId','before','after','limit'],enviaMissatge:['filId','id','text','tipus','respostaA','metadades'],marcaLlegit:['filId','rebutFinsSeq','llegitFinsSeq'],creaFilDirecte:['altreUsuariId','titol'],carregaMembres:['cerca','limit']};

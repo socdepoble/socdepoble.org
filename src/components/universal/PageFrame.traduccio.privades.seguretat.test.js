@@ -115,6 +115,6 @@ test('la fitxa en lectura del Perfil: Traduir només amb la marca de l’adaptad
   const editor = llig('components/universal/DocumentEditor.jsx');
   const estatBuit = editor.slice(editor.indexOf('function EmptyDocumentPage('), editor.indexOf('export function DocumentEditor('));
   expect((estatBuit.match(/<UniversalPage\b/g) || []).length).toBe(1);
-  expect(estatBuit).toContain('traduccio={doc.traduccio === true}');
+  expect(estatBuit).toContain('traduccio={doc.traduccio === true && !contingutNoTraduible(doc)}');
   expect(llig('sections/profile/PerfilEditor.jsx')).toContain('traduccio: fitxaPublicada(identitat) && identitat?.dades?.reserva !== true,');
 });

@@ -332,7 +332,7 @@ export async function main(env = process.env, dependencies = {}) {
       userBackend={auth:creaAuthNodeZero({db:authDb,rateSecret:env.SDP_NODE0_AUTH_RATE_SECRET,mailTransport:null}),
         backend:creaBackendPrivatNodeZero({db:authDb,tenantId:NODE0_AUTH_TENANT,
           editorialReady:await rpcReady(env.SDP_NODE0_EDITORIAL,'public.admin_actualitza_publicacio_editorial(text,text,jsonb,integer,uuid)'),
-          adminUsuarisReady:await rpcReady(env.SDP_NODE0_ADMIN_USUARIS,'public.admin_llista_usuaris_registrats(uuid,integer,integer)'),
+          adminUsuarisReady:await rpcReady(env.SDP_NODE0_ADMIN_USUARIS,'public.admin_llista_usuaris_registrats(uuid,timestamptz,uuid,integer)'),
           restauracioReady:await rpcReady(env.SDP_NODE0_RESTAURACIO,'public.importa_municipi_open_data(uuid,jsonb)')}),
         identificaClient:creaIdentificadorClientNodeZero({proxySecret:env.SDP_NODE0_PROXY_SECRET})};
       if(posseServiceFactory){

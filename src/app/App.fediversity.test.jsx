@@ -15,6 +15,7 @@ import { CONTRACTE_NUCLI } from '../data/contracte.js';
 import { getBackendImplementation, setBackendImplementation } from '../data/backendPort.js';
 import { getSessionState } from '../data/sessionService.js';
 import { PAGE_COPY } from '../sections/text/pageContent.js';
+import { APARADOR_R20_TEXTS } from '../sections/text/pageContent.fediversityR20.js';
 import { PAGES_SEED } from '../data/appSeed.js';
 
 /* Com a App.test.jsx: l'amfitrió ja és llest i Notes no té esborranys. */
@@ -101,11 +102,15 @@ test('/fediversity porta a /page/fediversity, amb l’anatomia de la UniversalPa
       '/page/node-zero',
       '/fedivers'
     ]);
-    expect([...cos.querySelectorAll('h3')].filter((h3) => !h3.closest('.sdp-targetes'))).toHaveLength(8);
-    // Ordre definitiva del Mestre (~01:00): cap taula; les quatre partides en H4, amb els seus H5.
+    // El cos conserva els capítols de la font vigent, inclòs l'aparador R20.
+    const font = new DOMParser().parseFromString(PAGE_COPY.fediversity.html, 'text/html');
+    expect([...cos.querySelectorAll('h3')].filter(h3=>!h3.closest('.sdp-targetes')).map(h3=>h3.textContent))
+      .toEqual([...font.querySelectorAll('h3')].filter(h3=>!h3.closest('[data-sdp-targetes]')).map(h3=>h3.textContent));
+    const demostrador=await screen.findByRole('region',{name:APARADOR_R20_TEXTS.ca.compiler},ESPERA);
+    expect(demostrador.getAttribute('data-sdp-privat')).toBe('true');
+    // Ordre definitiva del Mestre (~01:00): cap taula; les quatre partides
+    // pressupostàries en H4 i els seus H5 es comproven dins de les caixes.
     expect(cos.querySelectorAll('table')).toHaveLength(0);
-    expect([...cos.querySelectorAll('h4')].filter((h4) => /^\d · /.test(h4.textContent))).toHaveLength(4);
-    expect(cos.querySelectorAll('h5')).toHaveLength(12);
     /* O4-CLAUDE-2 (ordre del Mestre, 261102 21:38) · Prova posada al dia a propòsit: cada partida és
        una Subtargeta (div.sdp-subtargeta, que el sanejador conserva), amb el seu H4 com a títol i els
        seus tres H5 dins. Els mateixos 3 H3, 4 partides i 12 H5 de dalt. Amb la targeta (T2.6), la
@@ -115,7 +120,6 @@ test('/fediversity porta a /page/fediversity, amb l’anatomia de la UniversalPa
     expect(caixes.map((caixa) => [caixa.firstElementChild.tagName, /^\d · /.test(caixa.firstElementChild.textContent), caixa.querySelectorAll('h5').length]))
       .toEqual(Array(4).fill(['H4', true, 3]));
     // El sanejador conserva els recursos enllaçats per la font; no una xifra històrica fixa.
-    const font = new DOMParser().parseFromString(PAGE_COPY.fediversity.html, 'text/html');
     const fonts = [...font.querySelectorAll('a[href^="/opendata/"]')];
     const enllacos = [...cos.querySelectorAll('a[href^="/opendata/"]')];
     expect(enllacos.map(a => a.getAttribute('href'))).toEqual(fonts.map(a => a.getAttribute('href')));

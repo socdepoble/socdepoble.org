@@ -1,22 +1,24 @@
 import { getCurrentUser, getResolvedConfig, rpc } from './runtime.js';
 import { personalitzacioDeFiles } from './personalitzacio.js';
 import { versioSessio } from '../identitat.js';
-import { capturaAdminUsuaris } from '../adminUsuaris.js';
+import { capturaAdminUsuaris,validaLlistaAdminUsuaris,validaInvitacioAdmin,validaConnexioAdmin } from '../adminUsuaris.js';
 async function adminUsuarisRpc(nom,entrada,operation,config) {
   const captured=capturaAdminUsuaris(entrada,operation);
   if(!UUID.test(config?.tenantId??config?.tenant_id??'')||config.tenantId&&config.tenant_id&&config.tenantId!==config.tenant_id)throw abastInvalid();
   const {tenantId}=configuraMultipoble(config);
   const epoch=versioSessio;
-  const params=operation==='llista'?{p_limit:captured.limit,p_offset:captured.offset}:operation==='membre'
-    ?{p_usuari_id:captured.usuariId,p_organitzacio_id:captured.organitzacioId,p_rol:captured.rol,p_lleva:captured.lleva}
-    :{p_usuari_id:captured.usuariId,p_categoria:captured.categoria};
+  const params=operation==='llista'?{p_limit:captured.limit,p_cursor_creat:captured.cursorCreat,p_cursor_id:captured.cursorId}:operation==='membre'
+    ?{p_usuari_id:captured.usuariId,p_organitzacio_id:captured.organitzacioId}
+    :{p_usuari_id:captured.usuariId};
   const value=await rpc(nom,{p_tenant_id:tenantId,...params},config,{signal:config.signal});
   if(epoch!==versioSessio||config.signal?.aborted)throw new DOMException('La sessió ha canviat.','AbortError');
-  if(operation==='llista'&&!Array.isArray(value)||operation!=='llista'&&(!value||value.usuariId!==captured.usuariId))throw new TypeError('Resposta d’administració invàlida.');
-  return value;
+  if(operation==='llista')return validaLlistaAdminUsuaris(value,captured.limit);
+  if(operation==='membre')return validaInvitacioAdmin(value,captured);
+  return validaConnexioAdmin(value,captured);
 }
 export const adminLlistaUsuarisRegistrats=(entrada={},config={})=>adminUsuarisRpc('admin_llista_usuaris_registrats',entrada,'llista',config);
-export const adminAssignaMembreOrganitzacio=(entrada,config={})=>adminUsuarisRpc('admin_assigna_membre_organitzacio',entrada,'membre',config);
+// Compatibility name: this proposes an invitation; it never assigns membership.
+export const adminAssignaMembreOrganitzacio=(entrada,config={})=>adminUsuarisRpc('admin_convida_a_entitat',entrada,'membre',config);
 export const adminConnectaUsuari=(entrada,config={})=>adminUsuarisRpc('admin_connecta_usuari',entrada,'connecta',config);
 export async function adminListUsers(limit = 100, offset = 0, config = {}) {
   if (!getResolvedConfig(config).hasSupabaseConfig) return [];

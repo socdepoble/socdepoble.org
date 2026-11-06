@@ -94,7 +94,6 @@ export function BancImportacioEditorial() {
           <Insignia to="exit">{stats.aprovat} aprovats</Insignia>
           <Insignia to="neutre">{stats.totalPagines} pàgines estàtiques mapejades</Insignia>
         </div>
-        <h2>📥 Importació i Revisió Editorial (socdepoble.net i Blogger)</h2>
         <p>
           Banc d’auditoria i curació humana de les <strong>{stats.total} publicacions històriques</strong> i{' '}
           <strong>{stats.totalPagines} pàgines</strong> de <code>socdepoble.net</code>. Pots revisar cada article,

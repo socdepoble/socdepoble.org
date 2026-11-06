@@ -54,6 +54,7 @@
 import { caractersDe } from '../../../data/traductor.js';
 
 const SELECTOR_BLOCS = 'h1, h2, h3, h4, h5, h6, p, li, blockquote, dt, dd, figcaption, caption, th, td, summary, legend';
+const PRIVAT = '[data-sdp-e2ee]:not([data-sdp-e2ee="false"]),[data-e2ee="true"],[data-privat="true"],[data-sdp-privat="true"]';
 const FORA = [
   'button', 'select', 'textarea', 'input', 'script', 'style', 'template', 'svg',
   '[aria-hidden="true"]', '[hidden]', '.sr-only', '.sdp-sr-only', '.sdp-nomes-lector',
@@ -68,7 +69,7 @@ const FORA = [
   /* Gauntlet 261030 (cicle 2, traduir-correu-a-registre) · L'atribut
      estàndard translate="no": el que el porta (un correu, un identificador)
      no ix mai cap al motor, com no el traduïx el traductor del navegador. */
-  '[translate="no"]'
+  '[translate="no"]', PRIVAT
 ].join(', ');
 const TITOLS = new Set(['h2', 'h3', 'h4', 'h5', 'h6']);
 const INVISIBLE = new Set(['hidden', 'collapse']);
@@ -329,6 +330,7 @@ function llistaDe(element, llistes) {
 
 export function blocsTraduibles(arrel) {
   if (!arrel?.querySelectorAll) return [];
+  if (arrel.closest?.(PRIVAT)) return [];
   const blocs = [];
   const llistes = new Map();
   /* O4-CLAUDE-3 (D5-a11y-pedra-seca-02) · Les caixes de subtargeta, numerades
@@ -390,6 +392,8 @@ export function blocsTraduibles(arrel) {
   }
   return blocs;
 }
+
+export const arrelTraduccioPrivada = arrel => Boolean(arrel?.closest?.(PRIVAT));
 
 /* ── Traducció amb estructura (C4 + decisió §3) ─────────────────────────── */
 

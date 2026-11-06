@@ -20,6 +20,8 @@ export const CENTRE_X = 300;
 export const BASE_Y = 440;
 /** Separació vertical entre peces consecutives del tot desmuntat (unitats de l'esquema). */
 export const SEPARACIO = 26;
+/** Alçada màxima que pot sumar tota la separació d'una pila (unitats de l'esquema). */
+export const SEPARACIO_TOTAL = 200;
 
 const COS = Math.cos(Math.PI / 6);
 const SIN = 0.5;
@@ -137,13 +139,16 @@ const limita = (valor, min, max) => Math.min(max, Math.max(min, valor));
 export function separacions(peces, valor) {
   const k = limita(Number(valor) / 100 || 0, 0, 1);
   const n = peces.length;
+  /* Amb moltes peces apilades, la separació s'encongix perquè la pila cabega a l'esquema. */
+  const verticals = peces.filter((candidata) => !candidata.lateral).length;
+  const separacio = verticals > 1 ? Math.min(SEPARACIO, Math.floor(SEPARACIO_TOTAL / (verticals - 1))) : SEPARACIO;
   let rang = 0;
   return peces.map((peca, index) => {
     const t = limita(k * n - (n - 1 - index), 0, 1);
     if (peca.lateral) {
       return { id: peca.id, dz: 0, dx: arrodoneix(peca.lateral.dx * t), dy: arrodoneix(peca.lateral.dy * t), t };
     }
-    const dz = arrodoneix(rang * SEPARACIO * t);
+    const dz = arrodoneix(rang * separacio * t);
     rang += 1;
     return { id: peca.id, dz, dx: 0, dy: 0, t };
   });

@@ -1,4 +1,4 @@
-/** Disposable actual75-migration fixture. No production DB, users or secrets. */
+/** Disposable canonical PostgreSQL fixture. No production DB, users or secrets. */
 import fs from 'node:fs';
 import path from 'node:path';
 import {pathToFileURL} from 'node:url';
@@ -9,7 +9,7 @@ import {creaBackendPrivatNodeZero} from '../tooling/node0/backend-node0.mjs';
 import {creaPlaMigracions,preparaHidratacio,generaSql,ROOT} from '../tooling/node0/hidrata-postgres-node0.mjs';
 import {creaRepositoriPosse} from '../tooling/node0/posse/repositori-posse.mjs';
 const H='1'.repeat(64),ARTICLE='2'.repeat(64),PASS='Disposable POSSE fixture 2026 952!';
-export async function creaFixturePosse({modulePath=process.env.SDP_PGLITE_MODULE}={}){
+export async function creaFixturePosse({modulePath=process.env.SDP_PGLITE_MODULE,legacy76=false}={}){
  if(!modulePath)throw Error('SDP_PGLITE_MODULE explicit disposable module required');
  const moduleURL=modulePath.startsWith('file:')?new URL(modulePath):pathToFileURL(path.resolve(modulePath));
  const {PGlite}=await import(moduleURL.href),{pgcrypto}=await import(new URL('./contrib/pgcrypto.js',moduleURL));
@@ -23,7 +23,9 @@ export async function creaFixturePosse({modulePath=process.env.SDP_PGLITE_MODULE
   }catch(error){lastError={code:error.code,message:error.message};await pg.exec('ROLLBACK;RESET ROLE;');throw Object.assign(Error('fixture_database_failed'),{sqlState:error.code});}});queue=task.catch(()=>{});return task;
  }};
  try{
-  await pg.exec(generaSql(creaPlaMigracions(),await preparaHidratacio(),{advisoryLock:false}));
+  const plan=creaPlaMigracions();
+  if(legacy76)plan.migrations=plan.migrations.filter(m=>!['2611052345','2611060010'].includes(m.version));
+  await pg.exec(generaSql(plan,await preparaHidratacio(),{advisoryLock:false}));
   for(const name of ['auth-node0.sql','backend-node0.sql','posse/posse-ledger.sql'])await pg.exec(fs.readFileSync(path.join(ROOT,'tooling/node0',name),'utf8'));
   const deliveries=[],auth=creaAuthNodeZero({db,rateSecret:Buffer.alloc(32,0x47),mailTransport:async m=>deliveries.push(m)}),backend=creaBackendPrivatNodeZero({db,tenantId:NODE0_AUTH_TENANT});
   const req=(body={},person)=>({headers:{origin:'https://socdepoble.cat','content-type':'application/json',...(person?{cookie:person.cookie,'x-sdp-expected-actor':person.id}:{})},body,remoteAddress:'127.0.0.1'});

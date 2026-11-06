@@ -106,6 +106,13 @@ export class ErrorTraductor extends Error {
   }
 }
 
+/** La marca de privadesa domina qualsevol consentiment de traducció. */
+export const contingutNoTraduible = valor => Boolean(valor && typeof valor === 'object' &&
+  (valor.e2ee === true || valor.privat === true || valor.seguretat?.xifrat === true || valor.xifrat != null || valor.visibility === 'private'));
+export function exigixTraduccioPublica(textos, context) {
+  if(contingutNoTraduible(context)||Array.isArray(textos)&&textos.some(contingutNoTraduible))throw new ErrorTraductor(CODI_TRADUCCIO.NO_DISPONIBLE);
+}
+
 /** Caràcters Unicode (punts de codi), com els compta el servidor (preg_match_all('/./us')). */
 export const caractersDe = (text) => Array.from(String(text)).length;
 
@@ -251,7 +258,9 @@ export function creaTraductor({ url, fetch: fetchPropi, termini = TERMINI_TRADUC
   const fer = (opcions) => (fetchPropi ? fetchPropi(adreca, opcions) : globalThis.fetch(adreca, opcions));
   const disponible = Boolean(adreca && (fetchPropi || typeof globalThis.fetch === 'function'));
 
-  async function tradueix(textos, desti, { format = 'text', signal } = {}) {
+  async function tradueix(textos, desti, opcions = {}) {
+    exigixTraduccioPublica(textos,opcions);
+    const {format='text',signal}=opcions;
     if (!disponible) throw new ErrorTraductor(CODI_TRADUCCIO.NO_DISPONIBLE);
     const valids = Array.isArray(textos) && textos.length > 0 && textos.length <= LIMITS_TRADUCCIO.textos
       && textos.every((text) => typeof text === 'string');
@@ -393,7 +402,9 @@ export function restauraNoms(traduit, protegit) {
  * que torna en l'original: el motor l'ha tornat tal com l'ha rebut (no l'ha
  * traduït) o n'ha perdut un nom. Qui pinta hi posa el lang de l'original.
  */
-export async function tradueixTot(traductor, textos, desti, { signal, limits = LIMITS_TRADUCCIO, enOriginal = null } = {}) {
+export async function tradueixTot(traductor, textos, desti, opcions = {}) {
+  exigixTraduccioPublica(textos,opcions);
+  const {signal,limits=LIMITS_TRADUCCIO,enOriginal=null}=opcions;
   const peticions = textos.map((element) => (typeof element === 'string'
     ? { original: element, format: 'text' }
     : { original: String(element?.text ?? ''), format: element?.format === 'html' ? 'html' : 'text' }));

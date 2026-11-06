@@ -167,8 +167,8 @@ test('R8 PostgreSQL migration and synthetic owner lifecycle preserve verified se
     assert.equal((await q('SELECT full_name,username FROM public.profiles WHERE id=$1', [id]))[0].full_name, 'Earlier pending display');
     const candidate = fs.readFileSync(new URL('../tooling/node0/auth-node0.sql', import.meta.url), 'utf8');
     await pg.exec(candidate); await pg.exec(candidate);
-    await t.test('migration is idempotent with 76 canonical migrations and existing pending records', async () => {
-      assert.equal((await q('SELECT count(*)::int n FROM node0.schema_migrations'))[0].n, 76);
+    await t.test('migration is idempotent with 78 canonical migrations and existing pending records', async () => {
+      assert.equal((await q('SELECT count(*)::int n FROM node0.schema_migrations'))[0].n, 78);
       assert.equal((await q('SELECT count(*)::int n FROM auth.users'))[0].n, 1);
       assert.equal((await q('SELECT count(*)::int n FROM public.consentiments WHERE user_id=$1', [id]))[0].n, 0);
       const access = (await q("SELECT has_function_privilege('node0_authenticator','private.node0_auth_challenge_ready(text,text)','EXECUTE') ready,has_function_privilege('node0_authenticator','private.node0_auth_sweep_pending()','EXECUTE') sweep,has_function_privilege('node0_authenticator','private.node0_auth_purge_pending(text)','EXECUTE') purge"))[0];

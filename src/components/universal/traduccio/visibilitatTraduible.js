@@ -24,6 +24,8 @@
  * Pur: sense React ni backend.
  */
 
+import { contingutNoTraduible } from '../../../data/traductor.js';
+
 /* Les claus que diuen «açò ho ha publicat una persona» (fila del veïnat). */
 const MARQUES_DE_PERSONA = Object.freeze(['ownerUserId', 'owner_user_id', 'author_user_id']);
 
@@ -37,6 +39,7 @@ export const SECCIONS_AMB_CONTINGUT_PUBLIC = Object.freeze(['mur', 'mercat', 'ev
  *  persona i amb `visibility` absent o 'public'. */
 export function esElementPublic(element) {
   if (!element || typeof element !== 'object' || Array.isArray(element)) return false;
+  if (contingutNoTraduible(element)) return false;
   if (MARQUES_DE_PERSONA.some((clau) => Object.hasOwn(element, clau))) return false;
   if (Object.hasOwn(element, 'visibility') && element.visibility !== 'public') return false;
   return true;

@@ -1,6 +1,7 @@
 // @vitest-environment node
 import { beforeAll, expect, test, vi } from 'vitest';
 import { creaActivacioXat, restauraIdentitatSocial } from './xifratXatActivacio.js';
+import { serveiXifratXat } from './xifratXat.js';
 import { creaAlta, restauraAmbRk } from './xifratXatAlta.js';
 import { clauIdentitat, creaMagatzemXat } from './xifratXatMagatzem.js';
 import { creaIdbFalsEstructurat } from '../../tests/helpers/idbFalsEstructurat.js';
@@ -55,14 +56,14 @@ function servidorNou() {
   return { claus, missatges, epoques, impl };
 }
 function part(servidor, usuari, extra = {}) {
-  const idb = creaIdbFalsEstructurat();
+  const idb = extra.idb ?? creaIdbFalsEstructurat();
   const magatzem = creaMagatzemXat({ idb, rangs: idb.IDBKeyRange, cripto, ClasseClau: globalThis.CryptoKey, ara: () => T });
   const config = Object.freeze({ backendId: 'supabase', backendUrl: 'https://example.test', dataMode: 'remote' });
   const context = Object.freeze({ usuari, backendId: 'supabase', endpoint: 'https://example.test', ambitEstable: JSON.stringify(['prova', usuari, `persona::${usuari}`]), config });
   let actual = context;
   const impl = servidor.impl(usuari);
   const control = creaActivacioXat({ impl, entorn: { cripto, indexedDB: idb, isSecureContext: true, origen: 'https://socdepoble.org' }, magatzem, capturaContext: () => actual, ara: () => T, opcionsAlta, ...extra });
-  return { control, impl, magatzem, ci: clauIdentitat({ backendId: 'supabase', endpoint: 'https://example.test', joId: usuari }), canvia: () => { actual = Object.freeze({ ...context }); } };
+  return { control, impl, magatzem, idb, ci: clauIdentitat({ backendId: 'supabase', endpoint: 'https://example.test', joId: usuari }), canvia: () => { actual = Object.freeze({ ...context }); } };
 }
 
 test('F2a dues persones → opt-in fil → pipeline real → receptor, servidor només ciphertext', async () => {
@@ -89,6 +90,45 @@ test('F2a no recrea identitat si existeix al servidor i IndexedDB és buit', asy
   await expect(nou.control.alta(async () => true)).rejects.toMatchObject({ codi: 'identitat-ja-existent' });
   expect(nou.impl.publicaIdentitatXat).not.toHaveBeenCalled();
   expect(await nou.magatzem.identitat(nou.ci)).toBeNull();
+});
+
+test('R20 opt-in sobreviu a recàrrega i revocació es veu des de l’altra instància',async()=>{
+ const servidor=servidorNou(),a=part(servidor,A);
+ await a.control.alta(async()=>true);await a.control.activaFil(FIL);
+ expect((await a.control.estatFil(FIL)).actiu).toBe(true);
+ const recarregada=part(servidor,A,{idb:a.idb});
+ expect((await recarregada.control.estatFil(FIL)).actiu).toBe(true);
+ await recarregada.control.revocaFil(FIL);
+ expect((await a.control.estatFil(FIL)).actiu).toBe(false);
+ await expect(a.control.backend.enviaMissatge(FIL,{id:ID,text:'no enviar'})).rejects.toMatchObject({codi:'opt-in-pendent'});
+ expect(a.impl.enviaXifratXat).not.toHaveBeenCalled();
+});
+
+test('R20 revocació durant xifratge torna a comprovar opt-in abans del transport',async()=>{
+ const servidor=servidorNou(),a=part(servidor,A),b=part(servidor,B);
+ await a.control.alta(async()=>true);await b.control.alta(async()=>true);await a.control.activaFil(FIL);
+ const altra=part(servidor,A,{idb:a.idb});
+ a.impl.clausDeXat.mockImplementationOnce(async ids=>{await altra.control.revocaFil(FIL);return ids.map(id=>servidor.claus.get(id)).filter(Boolean);});
+ await expect(a.control.backend.enviaMissatge(FIL,{id:ID,text:'revocat durant el càlcul'})).rejects.toMatchObject({codi:'opt-in-pendent'});
+ expect(a.impl.enviaXifratXat).not.toHaveBeenCalled();expect(servidor.missatges).toEqual([]);
+});
+
+test('R20 cerimònies només al servei intern; F7 sense proveïdor rebutja material absent',async()=>{
+ const a=part(servidorNou(),A);
+ expect(serveiXifratXat(a.control.backend).cerimonies).toBe(a.control);
+ expect(a.control.potRecuperarSocial).toBe(false);
+ await expect(a.control.recuperaAmbAmics()).rejects.toMatchObject({codi:'sense-material-social'});
+});
+
+test('R20 captura F7 exclusiva: no prepara dues peticions ni accepta un context substituït',async()=>{
+ let resol;const preparant=new Promise(r=>{resol=r;}),captura=vi.fn(()=>preparant);
+ const a=part(servidorNou(),A,{capturaRecuperacioSocial:captura,llegixMaterialSocial:vi.fn()});
+ expect(a.control.potRecuperarSocial).toBe(true);
+ const primera=a.control.recuperaAmbAmics();
+ await expect(a.control.recuperaAmbAmics()).rejects.toMatchObject({codi:'cerimonia-en-curs'});
+ expect(captura).toHaveBeenCalledOnce();a.canvia();resol({});
+ await expect(primera).rejects.toMatchObject({codi:'ambit-canviat'});
+ expect(a.impl.laMevaIdentitatXat).not.toHaveBeenCalled();
 });
 
 test('cerimònia cancel·lada no publica ni desa i esborra la frase', async () => {
@@ -225,4 +265,14 @@ test('F7 RK incorrecta no restaura i sempre esborra bytes de qui crida', async (
   const rk = aleatori(cripto, 32);
   await expect(restauraAmbRk(cripto, { usuari: A, registre: social.registre, rk })).rejects.toBeDefined();
   expect(rk.every((n) => n === 0)).toBe(true);
+});
+
+test('G1-12 · un fil en clar (canal) no demana opt-in per enviar', async () => {
+  const servidor = servidorNou(), a = part(servidor, A);
+  await a.control.alta(async () => true);
+  const PUB='99999999-9999-4999-8999-999999999999';
+  a.impl.loadFils.mockImplementation(async()=>[{ id: PUB, tipus: 'canal', altres: [] }]);
+  a.impl.enviaMissatge.mockImplementation(async(f,c)=>({id:c.id,text:c.text}));
+  const r = await a.control.backend.enviaMissatge(PUB, { id: ID, text: 'hola poble' });
+  expect(r.text).toBe('hola poble');
 });

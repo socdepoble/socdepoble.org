@@ -45,7 +45,7 @@ describe('els mitjans externs del directori', () => {
     expect(Object.isFrozen(MITJANS_EXTERNS_DEL_DIRECTORI)).toBe(true);
     expect(Object.isFrozen(MITJANS_EXTERNS_DEL_DIRECTORI.prefixos)).toBe(true);
     expect(MITJANS_EXTERNS_DEL_DIRECTORI.origen).toMatch(/^https:\/\/[^/]+$/);
-    for (const prefix of MITJANS_EXTERNS_DEL_DIRECTORI.prefixos) expect(prefix, prefix).toMatch(/^assets\/[a-z_]+\/$/);
+    for (const prefix of MITJANS_EXTERNS_DEL_DIRECTORI.prefixos) expect(prefix, prefix).toMatch(/^assets\/[a-z_-]+\/$/);
     // La carcassa bàsica de la UI viatja al paquet: cap prefix no la cobrix.
     for (const cami of ['assets/system/ui/logo.png', 'assets/system/ui/socdepoble_logo_color_brutalist.svg',
       'assets/soc_de_poble_ibanez.webp', 'assets/pedra-seca.css', 'rag-index.json', 'fonts/noto-sans.css']) {
@@ -60,10 +60,11 @@ describe('els mitjans externs del directori', () => {
       'assets/ui/',
       'assets/nano_cards/',
       'assets/img/',
-      'assets/notes/'
+      'assets/notes/',
+      'assets/importacio-wp/'
     ]);
     for (const cami of ['assets/uploads/poble/x.jpg', 'assets/ui/plugins/consola_vinyeta.jpg',
-      'assets/nano_cards/mur_nano_card.jpg', 'assets/img/que-es-socdepoble-1.jpg', 'assets/notes/bloc_notes_vintage.jpg']) {
+      'assets/nano_cards/mur_nano_card.jpg', 'assets/img/que-es-socdepoble-1.jpg', 'assets/notes/bloc_notes_vintage.jpg', 'assets/importacio-wp/wp-x.jpg']) {
       expect(esExtern(cami, MITJANS_EXTERNS_DEL_DIRECTORI.prefixos), cami).toBe(true);
     }
   });

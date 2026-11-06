@@ -16,14 +16,18 @@
  * en diu els pendents. Una marca sobre un número pendent (accepta i verifica)
  * torna a llegir els canvis, perquè l'alerta del fil i el compositor ho sàpien.
  */
-import { useRef } from 'react';
+import { lazy, Suspense, useRef } from 'react';
 import { Dialeg } from '../../../components/PedraSeca/index.js';
+import { E2EE_ACTIU_PER_DEFECTE } from '../../../config/xifratXat.js';
+import { getBackendImplementation } from '../../../data/backendPort.js';
+import { serveiXifratXat } from '../../../data/xifratXat.js';
 import { TEXTOS_XIFRATGE } from '../estatXifratgeFil.js';
 import { useNumeroSeguretat } from '../useSeguretatDelFil.js';
 import { useXat } from '../XatContext.jsx';
 import CosSeguretatXat from './CosSeguretatXat.jsx';
 
 const T_RESERVA = (_clau, reserva) => reserva;
+const CerimoniesXat = lazy(() => import('./CerimoniesXat.jsx'));
 
 /** La signatura dels canvis pendents (persona i kid nou), estable i ordenada. Pura. */
 export function signaturaDelsPendents(canvis) {
@@ -49,6 +53,8 @@ export default function PanellSeguretatXat({ obert = false, onTanca, fil, estat,
   /* PC155-02 · L'àmbit de dades del xat (persona i actor) entra a la clau del
      número. Fora del proveïdor, useXat() torna ambitEstable buit i mai llança. */
   const { ambitEstable } = useXat();
+  // Només el controlador instal·lat internament; cap prop externa pot activar-lo.
+  const control = E2EE_ACTIU_PER_DEFECTE ? serveiXifratXat(getBackendImplementation())?.cerimonies : null;
   const [clau, reserva] = TEXTOS_XIFRATGE.menu;
   const signatura = signaturaDelsPendents(canvis);
   /* Els pendents que hi havia en obrir: un cos que naix després, d'un canvi, rescata el focus. */
@@ -60,6 +66,7 @@ export default function PanellSeguretatXat({ obert = false, onTanca, fil, estat,
       <NumeroDelPanell key={signatura} obert={obert} fil={fil} estat={estat} nom={nom} config={config}
         ambit={ambitEstable || null} canvis={canvis} onAccepta={onAccepta}
         rescataFocus={obert && signatura !== enObrir.current} t={t} />
+      {obert && control && <Suspense fallback={null}><CerimoniesXat key={ambitEstable} control={control} filId={fil?.id} t={t} /></Suspense>}
     </Dialeg>
   );
 }

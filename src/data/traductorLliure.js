@@ -65,7 +65,7 @@
  *    Peticions simples, sense comprovació prèvia.
  */
 import {
-  CODI_TRADUCCIO, ErrorTraductor, LIMITS_TRADUCCIO, bytesDe, caractersDe, composaSenyal, llenguaDeTraduccio
+  CODI_TRADUCCIO, ErrorTraductor, LIMITS_TRADUCCIO, bytesDe, caractersDe, composaSenyal, llenguaDeTraduccio, exigixTraduccioPublica
 } from './traductor.js';
 import { fixaCarregadorLliure } from './traductorDelLloc.js';
 
@@ -363,7 +363,9 @@ export function creaTraductorApertium({
     if (motor.motor === 'mymemory') comprovaDiari(pendents);
   }
 
-  async function tradueix(textos, desti, { format = 'text', signal } = {}) {
+  async function tradueix(textos, desti, opcions = {}) {
+    exigixTraduccioPublica(textos,opcions);
+    const {format='text',signal}=opcions;
     if (!disponible) throw new ErrorTraductor(CODI_TRADUCCIO.NO_DISPONIBLE);
     const valids = Array.isArray(textos) && textos.length > 0 && textos.length <= LIMITS_TRADUCCIO.textos
       && textos.every((text) => typeof text === 'string');

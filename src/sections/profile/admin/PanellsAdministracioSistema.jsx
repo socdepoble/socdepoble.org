@@ -118,7 +118,6 @@ export function PanellCromIntegrat() {
           <Insignia to="primari">Pedra Seca · OKLCH / Contrastos AAA</Insignia>
           <Insignia to="neutre">Gir actual: {delta.toFixed(1)}°</Insignia>
         </div>
-        <h2>🎨 Colors i disseny (Crom del sistema)</h2>
         <p>
           Control de la capa de primitius cromàtics (<code>--sdp-primary-*</code> i <code>--sdp-secondary-*</code>).
           Es pren només el to i es conserven la lluminositat i el croma de cada esglaó per garantir els contrastos
@@ -215,7 +214,6 @@ export function PanellAjustosVistesColumnes({ navigationGroups = [] }) {
             Navegació {columnWidths.left}px · Llistat {columnWidths.middle}px
           </Insignia>
         </div>
-        <h2>⚙️ Ajustos de vistes i columnes</h2>
         <p>
           Personalitza l’amplada de les columnes d’este espai de treball i quines entitats o carpetes vols mantindre a
           la vista a la primera columna. Amagar una carpeta no n’esborra cap dada.
@@ -342,7 +340,6 @@ export function PanellNodesFediversResiliencia() {
           <Insignia to="primari">@depoble@mastodont.cat · POSSE</Insignia>
           <Insignia to="neutre">Mirall 3-2-1 Xifrat (age)</Insignia>
         </div>
-        <h2>🌐 Nodes, Fedivers i Resiliència 3-2-1</h2>
         <p>
           Tauler de comandament de la sobirania d’infraestructura per a l’auditoria de{' '}
           <strong>NLnet NGI Fediversity</strong>: parella de nodes germans (<code>socdepoble.org</code> en núvol +{' '}
@@ -438,7 +435,6 @@ export function PanellEmpaquetatsDesplegament() {
           <Insignia to="primari">Model B · Port Neutral</Insignia>
           <Insignia to="exit">v1.2.0 Certificada</Insignia>
         </div>
-        <h2>📦 Empaquetats i Desplegament (Mode Jarvis)</h2>
         <p>
           Estat dels artefactes d’empaquetat autònom: Web Component <code>&lt;soc-de-poble&gt;</code> amb Shadow DOM
           tancat per a WordPress, Joomla o Sollutia, PWA amb còpia local (OPFS) i portes de conformitat de la Fàbrica

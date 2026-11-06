@@ -92,6 +92,14 @@ test('TC3.2 · sense la marca `traduccio` a l’emptyDocument, tampoc (fallada t
   expect(fetch).not.toHaveBeenCalled();
 });
 
+test('R20 · entrevista privat:true i missatge E2EE bloquegen Traduir encara amb traduccio i consentiment', async () => {
+  for (const marca of [{privat:true}, {e2ee:true}, {seguretat:{xifrat:true}}]) {
+    const {container,unmount}=render(<DocumentEditor adapter={{document:null,emptyDocument:{title:'Entrevista inventada privada',content:'<p>Cap paraula ha d’eixir</p>',traduccio:true,consentiment:true,...marca}}}/>);
+    await act(async()=>fireEvent.click(traduir(container)));
+    expect(menu()).toBeNull();expect(fetch).not.toHaveBeenCalled();unmount();
+  }
+});
+
 test('TC3.2 · la fitxa en lectura d’una entitat pública es continua traduint (menú de llengües i Apertium)', async () => {
   const identitat = org('member', 'public');
   expect(fitxaPublicada(identitat)).toBe(true);

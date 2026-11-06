@@ -3,7 +3,8 @@
  * utilitat del node (DetallAplicacio) signa Sóc de Poble, el sistema, i la
  * boina de la barra taronja porta al seu perfil (Onada 8, 261009; abans, a la
  * pàgina del projecte). Llei del Píxel:
- * el nom, el poble («Utilitat d'este node») i l'avatar no canvien.
+ * el nom i l'avatar no canvien; el poble és «La Torre de les Maçanes»
+ * per ordre del Mestre (IDEA-118, P0-29, 261106; abans «Utilitat d'este node»).
  */
 import React from 'react';
 import { cleanup, render } from '@testing-library/react';
@@ -27,14 +28,14 @@ vi.mock('../mur/MurContext', () => ({ useMur: () => mocks.mur }));
 vi.mock('../../app/contexts/CoreContentContext', () => ({ useCoreContent: () => mocks.core }));
 vi.mock('../multimedia/MultimediaContext', () => ({ useMultimedia: () => mocks.media }));
 
-import { DetallAplicacio, DetallNodes, DetallSenseOrganitzacions } from './DetallEspai.jsx';
+import { DetallAdministracio, DetallAplicacio, DetallNodes, DetallSenseOrganitzacions } from './DetallEspai.jsx';
 import { APLICACIONS, aplicacionsValides } from './aplicacions.js';
 import { RUTA_PERFIL_PROJECTE } from '../../config/navigation.js';
 
 afterEach(cleanup);
 
 describe('T6 · la barra taronja d’una utilitat del node', () => {
-  /* Onada 8 (261009) · Al perfil de Sóc de Poble, ja no a /projecte. */
+  /* Onada 8 (261009) + IDEA-118 (P0-29, 261106) · Al perfil de Sóc de Poble (La Torre de les Maçanes). */
   test('signa Sóc de Poble i porta al seu perfil', () => {
     const [aplicacio] = aplicacionsValides(APLICACIONS);
     const { container } = render(<DetallAplicacio aplicacio={aplicacio} />);
@@ -42,7 +43,21 @@ describe('T6 · la barra taronja d’una utilitat del node', () => {
     expect(autor.matches('a.sp-card-author-link')).toBe(true);
     expect(autor.getAttribute('href')).toBe(RUTA_PERFIL_PROJECTE);
     expect(autor.querySelector('.sp-card-author-name').textContent).toBe('Sóc de Poble');
-    expect(autor.querySelector('.sp-card-author-location').textContent).toBe('Utilitat d’este node');
+    expect(autor.querySelector('.sp-card-author-location').textContent).toBe('La Torre de les Maçanes');
+  });
+
+  test('P0-29 · DetallAdministracio pinta la barra taronja canònica amb Sóc de Poble · La Torre de les Maçanes i la pastilla de data', () => {
+    const { container } = render(
+      <DetallAdministracio item={{ id: 'admin-taxonomia', title: '🏷️ Taxonomia: Categories i Etiquetes' }}>
+        <div>Contingut admin</div>
+      </DetallAdministracio>
+    );
+    const autor = container.querySelector('section.bar-orange .sp-card-author');
+    expect(autor.matches('a.sp-card-author-link')).toBe(true);
+    expect(autor.getAttribute('href')).toBe(RUTA_PERFIL_PROJECTE);
+    expect(autor.querySelector('.sp-card-author-name').textContent).toBe('Sóc de Poble');
+    expect(autor.querySelector('.sp-card-author-location').textContent).toBe('La Torre de les Maçanes');
+    expect(container.querySelector('section.bar-orange .btn-date-time')).not.toBeNull();
   });
 
   /* Design Guard (marató del 261007, Llei del Píxel) · El contenidor del botó

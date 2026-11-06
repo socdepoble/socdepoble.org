@@ -4,7 +4,7 @@
  */
 import {CONTRACTE_NUCLI,VERSIO_NORMES_CONVIVENCIA} from '../contracte.js';
 import {BACKEND_ID_NODE_ZERO,CONVIDAT_NODE_ZERO} from './adaptadorNodeZeroHttp.js';
-import {capturaAdminUsuaris} from '../adminUsuaris.js';
+import {capturaAdminUsuaris,validaLlistaAdminUsuaris,validaInvitacioAdmin,validaConnexioAdmin} from '../adminUsuaris.js';
 import {validaLotDadesObertes} from '../dadesObertesLot.js';
 const UUID=/^[0-9a-f]{8}-(?:[0-9a-f]{4}-){3}[0-9a-f]{12}$/i;
 const plain=value=>value!==null&&typeof value==='object'&&!Array.isArray(value)&&[Object.prototype,null].includes(Object.getPrototypeOf(value));
@@ -208,9 +208,9 @@ export async function preparaClientPrivatNodeZero({publicAdapter,transport,habil
     };
   }
   if(bound&&status.capabilities.administracioUsuaris===true){
-    adapter.adminLlistaUsuarisRegistrats=async(input={},options={})=>list(await rpc('adminLlistaUsuarisRegistrats',{entrada:capturaAdminUsuaris(input)},options));
-    adapter.adminAssignaMembreOrganitzacio=async(input,options={})=>rpc('adminAssignaMembreOrganitzacio',{entrada:capturaAdminUsuaris(input,'membre')},options,true);
-    adapter.adminConnectaUsuari=async(input,options={})=>rpc('adminConnectaUsuari',{entrada:capturaAdminUsuaris(input,'connecta')},options,true);
+    adapter.adminLlistaUsuarisRegistrats=async(input={},options={})=>{const captured=capturaAdminUsuaris(input);return validaLlistaAdminUsuaris(await rpc('adminLlistaUsuarisRegistrats',{entrada:captured},options),captured.limit);};
+    adapter.adminAssignaMembreOrganitzacio=async(input,options={})=>{const captured=capturaAdminUsuaris(input,'membre');return validaInvitacioAdmin(await rpc('adminAssignaMembreOrganitzacio',{entrada:captured},options,true),captured);};
+    adapter.adminConnectaUsuari=async(input,options={})=>{const captured=capturaAdminUsuaris(input,'connecta');return validaConnexioAdmin(await rpc('adminConnectaUsuari',{entrada:captured},options,true),captured);};
   }
   Object.assign(adapter,{
     getCurrentUser:()=>{open();return user;},getDefaultUserId:()=>{open();return user?.id??CONVIDAT_NODE_ZERO;},

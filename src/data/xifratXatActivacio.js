@@ -9,8 +9,9 @@ import { ambitDelFil } from './xifratXatAbast.js';
 import { aBase64url, bytesIguals, deBase64url, verificaSignatura } from './xifratXatCripto.js';
 import { clauIdentitat } from './xifratXatMagatzem.js';
 import { kidDe } from './xifratXatFormats.js';
-import { heretaServeiXifratXat } from './xifratXatServei.js';
+import { registraServeiXifratXat } from './xifratXatServei.js';
 import { esOrigenDeConfianca } from '../config/xifratXat.js';
+import { creaMagatzemOptinXat } from './xifratXatOptin.js';
 import {
   comprovaCompromisSas, construeixVerificacio, hashVerificacio, llegixAprovacio,
   llegixDeclaracio, llegixInfoAlliberament, obriAlliberament, recuperaRk
@@ -63,7 +64,7 @@ export async function restauraIdentitatSocial(cripto, {
   } finally { for (const o of oberts) o.fragment.fill(0); }
 }
 
-export function creaActivacioXat({ impl, entorn, magatzem, capturaContext, llegixMaterialSocial = null, ara = Date.now, opcionsAlta = {} }) {
+export function creaActivacioXat({ impl, entorn, magatzem, capturaContext, llegixMaterialSocial = null, capturaRecuperacioSocial = null, ara = Date.now, opcionsAlta = {}, optin = null }) {
   if (entorn?.isSecureContext !== true || !esOrigenDeConfianca(entorn.origen, entorn)) throw falla('origen-no-confiat');
   if (typeof capturaContext !== 'function') throw new TypeError('Cal el context intern verificat.');
   const context = capturaContext();
@@ -72,17 +73,25 @@ export function creaActivacioXat({ impl, entorn, magatzem, capturaContext, llegi
   const ci = clauIdentitat({ backendId, endpoint, joId: usuari });
   const parts = JSON.parse(ambitEstable);
   if (!Array.isArray(parts) || parts.length !== 3 || parts[1] !== usuari || parts[2] !== `persona::${usuari}` || JSON.stringify(parts) !== ambitEstable) throw falla('context-invalid');
-  const decorat = ambXifratXat(impl, { ...entorn, actiu: true, modeDades: 'remote', magatzem });
+  const preferencies = optin ?? creaMagatzemOptinXat({idb:entorn.indexedDB,ara,navegador:null,Canal:null});
+  const transport = {...impl};
+  for(const nom of ['enviaXifratXat','publicaAdjuntXifratXat'])if(typeof impl[nom]==='function')transport[nom]=async(fil,...args)=>{await exigixOptin(fil);return Reflect.apply(impl[nom],impl,[fil,...args]);};
+  const decorat = ambXifratXat(transport, { ...entorn, actiu: true, modeDades: 'remote', magatzem });
   const servei = serveiXifratXat(decorat);
-  const fils = new Set();
   let tancat = false;
   let ocupat = false;
   const exigix = () => {
     if (tancat || capturaContext() !== context) {
-      fils.clear(); servei.oblidaClausXat();
+      servei.oblidaClausXat();
       throw falla('ambit-canviat');
     }
   };
+  const estatFil = async filId => {
+    exigix();const identitat=await magatzem.identitat(ci);exigix();
+    const estat=await preferencies.llegix(ci,filId,{kid:identitat?aBase64url(identitat.kid):null,exigix});exigix();
+    return Object.freeze({usuari,filId,...estat});
+  };
+  const exigixOptin = async filId => {if(!(await estatFil(filId)).actiu)throw falla('opt-in-pendent');exigix();};
   const fixa = () => { exigix(); servei.fixaAmbit(ambitEstable, ci); };
   const exclusiu = async (accio) => {
     exigix();
@@ -100,12 +109,25 @@ export function creaActivacioXat({ impl, entorn, magatzem, capturaContext, llegi
     const files = await impl.laMevaIdentitatXat(config); exigix();
     return registreActiu(files);
   };
+  const restauraSocial = async recuperacio => {
+    if (typeof llegixMaterialSocial !== 'function') throw falla('sense-material-social');
+    const registre = await actiuRemot();
+    const material = await llegixMaterialSocial(context); exigix();
+    if (!material || !Number.isSafeInteger(material.revisio) || typeof material.exigixVigent !== 'function') throw falla('material-social-invalid');
+    const vigent = () => { exigix(); material.exigixVigent(); };
+    vigent();
+    const identitat = await restauraIdentitatSocial(entorn.cripto, { ...recuperacio, declaracioVigent: material.declaracio, usuari, registre, ara, exigix: vigent }); vigent();
+    const actual = await llegixMaterialSocial(context); vigent();
+    if (actual.revisio !== material.revisio || !bytesIguals(actual.declaracio, material.declaracio)) throw falla('material-social-canviat');
+    return desa(identitat);
+  };
   const backend = { ...decorat };
   for (const nom of ['enviaMissatge', 'publicaAdjuntXat']) if (typeof decorat[nom] === 'function') {
     backend[nom] = async (fil, cos, opcions = {}) => {
       exigix();
       const id = typeof fil === 'string' ? fil : fil?.id;
-      if (!fils.has(id)) throw falla('opt-in-pendent');
+      const filObj = fil && typeof fil === 'object' ? fil : (await impl.loadFils(config)).find((f) => f.id === id); exigix();
+      if (!filObj || ambitDelFil(filObj).xifrat) await exigixOptin(id);
       fixa();
       const resultat = await decorat[nom](fil, cos, { ...config, ...(opcions.signal ? { signal: opcions.signal } : {}) }); exigix();
       return resultat;
@@ -121,9 +143,8 @@ export function creaActivacioXat({ impl, entorn, magatzem, capturaContext, llegi
       exigix(); return resultat;
     };
   }
-  heretaServeiXifratXat(decorat, backend);
   fixa();
-  return Object.freeze({
+  const control = Object.freeze({
     backend: Object.freeze(backend),
     alta: (cerimonia) => exclusiu(async () => {
       if (typeof cerimonia !== 'function') throw falla('cerimonia-obligatoria');
@@ -147,17 +168,11 @@ export function creaActivacioXat({ impl, entorn, magatzem, capturaContext, llegi
       const identitat = await restauraAmbFrase(entorn.cripto, { ...opcionsAlta, usuari, registre, indexs }); exigix();
       return desa(identitat);
     }),
-    restauraSocial: (recuperacio) => exclusiu(async () => {
-      if (typeof llegixMaterialSocial !== 'function') throw falla('sense-material-social');
-      const registre = await actiuRemot();
-      const material = await llegixMaterialSocial(context); exigix();
-      if (!material || !Number.isSafeInteger(material.revisio) || typeof material.exigixVigent !== 'function') throw falla('material-social-invalid');
-      const vigent = () => { exigix(); material.exigixVigent(); };
-      vigent();
-      const identitat = await restauraIdentitatSocial(entorn.cripto, { ...recuperacio, declaracioVigent: material.declaracio, usuari, registre, ara, exigix: vigent }); vigent();
-      const actual = await llegixMaterialSocial(context); vigent();
-      if (actual.revisio !== material.revisio || !bytesIguals(actual.declaracio, material.declaracio)) throw falla('material-social-canviat');
-      return desa(identitat);
+    restauraSocial: recuperacio => exclusiu(() => restauraSocial(recuperacio)),
+    potRecuperarSocial: typeof capturaRecuperacioSocial==='function'&&typeof llegixMaterialSocial==='function',
+    recuperaAmbAmics: () => exclusiu(async()=>{
+      if(!control.potRecuperarSocial)throw falla('sense-material-social');
+      const recuperacio=await capturaRecuperacioSocial(context);exigix();return restauraSocial(recuperacio);
     }),
     activaFil: (filId) => exclusiu(async () => {
       const identitat = await magatzem.identitat(ci); exigix();
@@ -167,10 +182,13 @@ export function creaActivacioXat({ impl, entorn, magatzem, capturaContext, llegi
       const fil = llista.find((f) => f.id === filId);
       const abast = ambitDelFil(fil);
       if (!fil || !abast.xifrat || abast.bloquejat || abast.tipusFil === 'entitat') throw falla('fil-no-admissible');
-      fils.add(filId); fixa();
+      await preferencies.activa(ci,filId,aBase64url(identitat.kid),{exigix});exigix();fixa();
       return Object.freeze({ usuari, filId, actiu: true });
     }),
-    estatFil: (filId) => { exigix(); return Object.freeze({ usuari, filId, actiu: fils.has(filId) }); },
-    tanca: () => { tancat = true; fils.clear(); servei.oblidaClausXat(); }
+    estatFil,
+    revocaFil: filId => exclusiu(async()=>{await preferencies.revoca(ci,filId,{exigix});exigix();servei.descartaEstatsFils();return Object.freeze({usuari,filId,actiu:false});}),
+    tanca: () => { tancat = true; preferencies.tanca(); servei.oblidaClausXat(); }
   });
+  registraServeiXifratXat(backend,Object.freeze({...servei,cerimonies:control}));
+  return control;
 }

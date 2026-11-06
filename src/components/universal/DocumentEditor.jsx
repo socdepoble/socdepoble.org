@@ -10,6 +10,7 @@ import { UniversalPage } from './UniversalPage.jsx';
 import { Boto, DateTimeControl, Dialeg } from '../PedraSeca/index.js';
 import { dataHoraAra } from './barres/dataHoraBarra.js';
 import { sanitizeHtml } from '../../utils/sanitize.js';
+import { contingutNoTraduible } from '../../data/traductor.js';
 import {
   useUniversalRichText,
   useTipTapToolbarAdapter,
@@ -322,7 +323,7 @@ function EmptyDocumentPage({ emptyDocument, emptyPlaceholder, barAuthorAvatar, b
         <UniversalPage
           chrome="context"
           layout="contained"
-          traduccio={doc.traduccio === true}
+          traduccio={doc.traduccio === true && !contingutNoTraduible(doc)}
           title={title}
           subtitle={doc.subtitle}
           lead={doc.lead}

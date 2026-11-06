@@ -315,7 +315,7 @@ function Bombolla({
       ref={arrelRef}
       {...propsSeleccio}
     >
-      <div className="sdp-xat-bombolla-wrap">
+      <div className="sdp-xat-bombolla-wrap" data-sdp-e2ee={missatge.e2ee === true || missatge.seguretat?.xifrat === true || missatge.xifrat ? 'true' : undefined}>
         {triable ? (
           <span className="sdp-xat-marca-tria" aria-hidden="true">
             {triat ? <CheckCircle2 size={20} focusable="false" /> : <Circle size={20} focusable="false" />}

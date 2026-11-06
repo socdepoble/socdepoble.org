@@ -13,6 +13,8 @@ import { PublicarDeLaPagina } from '../control/PublicarDeLaPagina.jsx';
 import { destiDePagina } from '../control/destinsControl.js';
 import { InstalaLaPwa, useInstalacioDeLaPagina } from './InstalaLaPwa.jsx';
 import { PAGINA_DE_LA_PASTILLA, pastillaDeVersio } from './pastillaDeVersio.js';
+const HerbariLaTorreSection=lazy(()=>import('../patrimoni/HerbariLaTorreSection.jsx'));
+const AparadorFediversity=lazy(()=>import('../text/AparadorFediversity.jsx'));
 
 /* IDEA-109 (onada R7) · El visor d'Anatomia Rural és un chunk lazy: no pesa a
    l'entrada, només es baixa a /page/anatomia-rural. */
@@ -135,13 +137,9 @@ export default function PageDetailSection() {
     let alFinal = <PublicarDeLaPagina clau={slug} />;
     if (accioAlFinal(slug)) alFinal = <AccioDeLaPagina clau={slug} lloc="baix" />;
     else if (instalacio) alFinal = <InstalaLaPwa instalacio={instalacio} lloc="baix" />;
-    else if (slug === PAGINA_DEL_VISOR) {
-      alFinal = (
-        <Suspense fallback={<div role="status" aria-live="polite"><CarregantElVisor /></div>}>
-          <VisorAnatomiaRural3D />
-        </Suspense>
-      );
-    }
+    if (slug === PAGINA_DEL_VISOR) alFinal = <><Suspense fallback={<div role="status" aria-live="polite"><CarregantElVisor /></div>}><VisorAnatomiaRural3D /></Suspense>{alFinal}</>;
+    else if(slug==='herbari')alFinal=<><Suspense fallback={null}><HerbariLaTorreSection/></Suspense>{alFinal}</>;
+    else if(['fediversity','node-zero'].includes(slug))alFinal=<><Suspense fallback={null}><AparadorFediversity/></Suspense>{alFinal}</>;
     /* P1-46 (Fita 10; guàrdia nocturna 261030) · La pastilla de versió de
        Descàrregues, l'última de la fila d'etiquetes, cap a /versions. Es
        passa com a funció del traductor: TextSection és qui té el `t`. A

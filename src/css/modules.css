@@ -14580,6 +14580,7 @@ details[open] summary.accordion-header svg:last-child {
     flex-wrap: wrap;
     align-items: center;
     gap: var(--sdp-space-2);
+    justify-content: center;
   }
 
   .sdp-admin-pill {
@@ -14623,6 +14624,7 @@ details[open] summary.accordion-header svg:last-child {
     display: flex;
     flex-wrap: wrap;
     gap: var(--sdp-space-2);
+    justify-content: center;
   }
 
   .sdp-admin-taxonomia__section,
@@ -14652,7 +14654,7 @@ details[open] summary.accordion-header svg:last-child {
     display: flex;
     flex-wrap: wrap;
     align-items: flex-end;
-    justify-content: space-between;
+    justify-content: center;
     gap: var(--sdp-space-3);
   }
 
@@ -14729,6 +14731,7 @@ details[open] summary.accordion-header svg:last-child {
     flex-wrap: wrap;
     align-items: center;
     gap: var(--sdp-space-2);
+    justify-content: center;
   }
 
   .sdp-admin-taxonomia__table-wrap {
@@ -14842,6 +14845,11 @@ details[open] summary.accordion-header svg:last-child {
     flex-wrap: wrap;
     align-items: center;
     gap: var(--sdp-space-2);
+    justify-content: center;
+  }
+
+  .sdp-crom-panell .sdp-alerta__accions {
+    justify-content: center;
   }
 
   .sdp-admin-actions-inline--separat {
@@ -15024,6 +15032,7 @@ details[open] summary.accordion-header svg:last-child {
     flex-wrap: wrap;
     align-items: center;
     gap: var(--sdp-space-2);
+    justify-content: center;
   }
 
   /* ── Mode Rural (ModeRural.jsx) ── */

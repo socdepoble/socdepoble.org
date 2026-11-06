@@ -1425,6 +1425,21 @@ description: "Documentació canònica de Sóc de Poble."
   propietari + pertinença al poble i RPC `crea_carpeta_notes`. Requerix 2610061448.
   **NO aplicada: l'aplica el Mestre, mai un agent**.
 
+- `migrations/2611052345_admin_usuaris_i_organitzacions.sql`
+  R20b (kit de Codex, arbitratge G2): llista de perfils amb consentiment del
+  poble seleccionat (correu emmascarat, cursor de 50 files com a màxim) i
+  invitacions de `member` que només la destinatària accepta. Cal superadmin amb
+  `aal2` que ja siga owner/admin de l'entitat; sense autoassignació ni rol admin.
+  Dues taules privades amb RLS i sense permisos de client ni de service_role;
+  `private.admin_accions` només admet insercions. Requerix 2611032100.
+  **NO aplicada: l'aplica el Mestre, mai un agent**.
+
+- `migrations/2611060010_restauracio_municipal_opendata.sql`
+  IDEA-104c: importació idempotent (upsert) de les dades obertes públiques d'un
+  poble (format 1.2.0), sense esborrar els absents; lectura pública fitada.
+  Identificadors globals per col·lecció (K1-06). Independent de 2611052345.
+  **NO aplicada: l'aplica el Mestre, mai un agent**.
+
 - `seed.sql`
   Contingut inicial del portal.
 
@@ -1603,6 +1618,8 @@ verificador sense avisos.
 | 74 | `2611031700` | `2611031700_administracio_multipoble.sql` | **NO aplicada: l'aplica el Mestre** | selecció de tenants i personalització per poble amb superadmin + aal2 (FEDI-04) |
 | 75 | `2611032100` | `2611032100_connexions_publiques_i_membres.sql` | **NO aplicada: l'aplica el Mestre** | connexions consentides, membres públics i sol·licituds només pendents (FEDI23) |
 | 76 | `2611051930` | `2611051930_edicio_publicacions_editorials.sql` | **NO aplicada: l'aplica el Mestre** | edició editorial amb CAS (superadmin + aal2) i carpetes privades de Notes (R12) |
+| 77 | `2611052345` | `2611052345_admin_usuaris_i_organitzacions.sql` | **Proposta R20b provada en laboratori; exclosa de R7, no desplegada** | perfils consentits amb correu emmascarat; invitació de membre amb acceptació pròpia, sense autoassignació ni escalada; auditoria immutable |
+| 78 | `2611060010` | `2611060010_restauracio_municipal_opendata.sql` | **Proposta provada en laboratori; exclosa de R7, no desplegada** | upsert atòmic Open Data 1.2.0 per tenant, lectura pública fitada i conflictes globals; independent de la 77, no esborra dades absents |
 
 | Artefacte complementari | Ruta dins de `supabase/` | Rol operatiu |
 | :--- | :--- | :--- |

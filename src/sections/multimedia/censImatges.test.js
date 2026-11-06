@@ -20,6 +20,7 @@ import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
 import path from 'node:path';
 import { describe, expect, test } from 'vitest';
 import { bessonaDe, bessonesDe } from '../../config/politicaDeMitjans.js';
+import { MITJANS_WP_LOCALS } from '../../data/importacio/paginesTrilogiaIMoliWp.mitjans.js';
 import {
   ALIES_DEL_CENS,
   AMBITS,
@@ -103,10 +104,15 @@ describe('el cens de l’Arxiu visual', () => {
     expect(CENS_IMATGES.filter((entrada) => !AL_DISC.has(entrada.src)).map((entrada) => entrada.src)).toEqual([]);
   });
 
+  test('G5-04 · cada fitxer de public/assets/importacio-wp és al registre MITJANS_WP_LOCALS (quarantena de l’import, fora de l’Arxiu visual)', () => {
+    const registrats = new Set(Object.values(MITJANS_WP_LOCALS).map((registre) => registre.path));
+    expect(DISC.filter((src) => src.startsWith('/assets/importacio-wp/') && !registrats.has(src))).toEqual([]);
+  });
+
   test('cada imatge ràster de public/assets és al cens o a EXCLOSES (fora de system/)', () => {
     const delCens = new Set(CENS_IMATGES.map((entrada) => entrada.src));
     const oblidades = DISC
-      .filter((src) => RASTER.test(src) && !src.startsWith('/assets/system/'))
+      .filter((src) => RASTER.test(src) && !src.startsWith('/assets/system/') && !src.startsWith('/assets/importacio-wp/'))
       .filter((src) => !delCens.has(src) && !Object.hasOwn(EXCLOSES, src) && !esBessona(src));
     expect(oblidades, 'imatges noves sense entrada: afegiu-les a CENS_IMATGES o a EXCLOSES amb el motiu').toEqual([]);
     expect(CENS_IMATGES.length).toBeGreaterThan(100);

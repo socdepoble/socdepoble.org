@@ -8,9 +8,10 @@ import { sanitizeHtml } from '../../utils/sanitize';
 import { propsDePaginaDeText } from './paginaDeText.js';
 import { ProveidorSincronitzacioTargetes } from '../detail/SincronitzacioTargetes.jsx';
 
-import { useMemo } from 'react';
+import { lazy, Suspense, useMemo } from 'react';
 import { useUIActions } from '../../app/contexts/UIContext';
 import { localitzaPagina } from './pageContent.r10.js';
+const AparadorFediversity=lazy(()=>import('./AparadorFediversity.jsx'));
 import { useSEO } from '../../hooks/useSEO';
 import { resolveAsset, resolRecursosDeHtml } from '../../config/assetResolver.js';
 import { esAppNativa } from '../../config/origenPublic.js';
@@ -176,6 +177,7 @@ export default function TextSection({ page: original, pageKey, accioPrincipal = 
       {...(objecte ? { objecte } : null)}
     >
       <CosDeLaPagina html={page.html} />
+      {pageKey==='fedivers'&&<Suspense fallback={null}><AparadorFediversity language={language}/></Suspense>}
       {children}
     </UniversalPage>
   );

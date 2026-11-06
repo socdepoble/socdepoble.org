@@ -38,7 +38,7 @@ import {
   CODI_TRADUCCIO, LIMITS_TRADUCCIO, LLENGUES_TRADUCCIO, caractersDe, creaTraductor, llenguaDeTraduccio, sanejaDestinsDeclarats, tradueixTot
 } from '../../../data/traductor.js';
 import { carregaTraductorLliure, traductorLliureDelLloc } from '../../../data/traductorDelLloc.js';
-import { blocsTraduibles, preparaTraduccio } from '../../universal/traduccio/blocsTraduibles.js';
+import { blocsTraduibles, preparaTraduccio, arrelTraduccioPrivada } from '../../universal/traduccio/blocsTraduibles.js';
 import { tradueix, useTraductorOpcional } from './useTraductorOpcional.js';
 
 export const AVIS_SENSE_TRADUCTOR = 'La traducció automàtica no està disponible en este servidor.';
@@ -188,6 +188,7 @@ export function useTraduccioPagina({ titol = null, cosRef = null } = {}) {
       return;
     }
     if (!llenguaDeTraduccio(codi)) return;
+    if (arrelTraduccioPrivada(cosRef?.current)) { avisa(PARELLS_AVIS_TRADUCCIO.senseTraductor); return; }
     if (!disponible) {
       avisa(PARELLS_AVIS_TRADUCCIO.senseTraductor);
       return;

@@ -15,7 +15,7 @@
  *   · Els mitjans EXTERNS de la variant del directori de WordPress.org
  *     (SDP_VARIANT=wordpress): el contingut pesant del servei i les
  *     il·lustracions editorials/demostratives (uploads/, towns/, fotos/,
- *     events/, ui/, nano_cards/, img/ i notes/) no viatgen dins del zip per
+ *     events/, ui/, nano_cards/, img/, notes/ i importacio-wp/) no viatgen dins del zip per
  *     mantindre el paquet al voltant de 3,6 MB (molt per davall del límit de
  *     10 MB de WordPress.org), i se servixen des de l'origen extern
  *     (https://socdepoble.org). La carcassa bàsica de la interfície (system/,
@@ -86,7 +86,8 @@ export const MITJANS_EXTERNS_DEL_DIRECTORI = Object.freeze({
     'assets/ui/',
     'assets/nano_cards/',
     'assets/img/',
-    'assets/notes/'
+    'assets/notes/',
+    'assets/importacio-wp/'
   ])
 });
 

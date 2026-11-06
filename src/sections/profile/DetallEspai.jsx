@@ -1,6 +1,6 @@
 import { UniversalPage } from '../../components/universal/UniversalPage';
 import { Link } from '../../app/contexts/RouterContext';
-import { dataDeFila } from '../../components/universal/editorial.js';
+import { dataDeFila, dataHoraDeBarra } from '../../components/universal/editorial.js';
 import { LlistaNodes } from '../../components/universal/connexio/LlistaNodes.jsx';
 import { ESTATS_APLICACIO } from './aplicacions.js';
 import { BlocPerfil as Bloc } from './BlocPerfil.jsx';
@@ -17,13 +17,13 @@ import { pobleDeFitxa } from './fitxaDePerfil.js';
    ═══════════════════════════════════════════════════════════════════ */
 
 /* La utilitat és del node, no de cap persona: la barra taronja ho diu.
-   T6 (ordre del Mestre, 261004, prompt 261004_0515 §5) · Signa Sóc de Poble,
-   el sistema, i la boina porta al seu perfil (Onada 8, 261009: abans, a la
-   pàgina del projecte). */
+   T6 (ordre del Mestre, 261004, prompt 261004_0515 §5) + IDEA-118 (P0-29, 261106) ·
+   Signa Sóc de Poble (La Torre de les Maçanes, amb el seu avatar oficial verd
+   256x256) i la boina porta al seu perfil (/socdepoble). */
 const AUTORIA_NODE = Object.freeze({
   authorName: 'Sóc de Poble',
-  authorLocation: 'Utilitat d’este node',
-  authorAvatar: '',
+  authorLocation: 'La Torre de les Maçanes',
+  authorAvatar: '/assets/system/ui/logo-socdepoble-cuadrat-verd-256x256.png',
   authorHref: RUTA_PERFIL_PROJECTE,
 });
 
@@ -205,12 +205,17 @@ export function DetallNodes({ persona, nodes = [], estat, etiquetaEstat }) {
 }
 
 /**
- * IDEA-94 · Contenidor canònic per als 6 apartats d'Administració del sistema
+ * IDEA-94 + IDEA-103 · Contenidor canònic per als 7 apartats d'Administració del sistema
+ * (incloent «👥 Usuaris registrats», vista 'admin-usuaris')
  * dins de la Columna 3 del Perfil: proporciona el marc UniversalPage amb
  * barra blava de context, barra taronja d'autoria del node i el contenidor
  * .sdp-universal-page-container--contained amb desplaçament vertical natiu.
  */
 export function DetallAdministracio({ item, children }) {
+  const datesBarra = dataHoraDeBarra({
+    creat: item?.creat || item?.created_at || new Date().toISOString(),
+    modificat: item?.modificat || item?.updated_at,
+  });
   return (
     <UniversalPage
       chrome="context"
@@ -218,6 +223,7 @@ export function DetallAdministracio({ item, children }) {
       title={item?.title || 'Administració del sistema'}
       lead={item?.subtitle || ''}
       labels={[{ text: 'Administració del sistema' }]}
+      {...datesBarra}
       topBarData={AUTORIA_NODE}
     >
       {children}

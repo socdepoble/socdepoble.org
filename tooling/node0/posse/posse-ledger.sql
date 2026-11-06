@@ -3,7 +3,17 @@
 BEGIN;
 DO $guard$ BEGIN
  IF current_database() NOT IN ('socdepoble_node0','node0_gauntlet_r4','node0_gauntlet_r6')
- OR (SELECT count(*) FROM node0.schema_migrations)<>76
+ -- Support the deployed canonical 76 and the reviewed, complete R20b pair.
+ -- A count alone cannot prove a migration identity or its source bytes.
+ OR NOT EXISTS(
+ SELECT 1 FROM(VALUES
+-- POSSE_MIGRATION_PINS_BEGIN
+(76,'091d1e11b6e773c531cb88a5f79d1d932f96d19bc50fca837cbdd1dea30b0260'),
+(78,'76d70ba0f769ddeda61980e489814adbd318146a00825574879ac985b2be52b1')
+-- POSSE_MIGRATION_PINS_END
+ ) expected(migrations,sha256)
+ CROSS JOIN(SELECT count(*) migrations,encode(public.digest(coalesce(string_agg(version||E'\t'||file||E'\t'||sha256,E'\n' ORDER BY version COLLATE "C"),''),'sha256'),'hex') sha256 FROM node0.schema_migrations) actual
+ WHERE actual.migrations=expected.migrations AND actual.sha256=expected.sha256)
  OR NOT EXISTS(SELECT 1 FROM pg_roles WHERE rolname=current_user AND (rolsuper OR rolbypassrls))
  THEN RAISE EXCEPTION 'posse_install_guard'; END IF;
  IF EXISTS(SELECT 1 FROM pg_namespace n WHERE n.nspname='node0_posse' AND n.nspowner<>(SELECT oid FROM pg_roles WHERE rolname=current_user))
@@ -451,6 +461,7 @@ END $f$;
 CREATE OR REPLACE FUNCTION node0_posse.readiness() RETURNS jsonb
  LANGUAGE sql SECURITY DEFINER SET search_path=pg_catalog,node0_posse AS $f$
  SELECT jsonb_build_object('version','posse.r11.v1','migrations',(SELECT count(*) FROM node0.schema_migrations),
+ 'migrationLedgerSha256',(SELECT encode(public.digest(coalesce(string_agg(version||E'\t'||file||E'\t'||sha256,E'\n' ORDER BY version COLLATE "C"),''),'sha256'),'hex') FROM node0.schema_migrations),
  'ownerStable',NOT EXISTS(SELECT 1 FROM pg_proc p JOIN pg_namespace n ON n.oid=p.pronamespace WHERE n.nspname='node0_posse' AND p.proowner<>n.nspowner) AND NOT EXISTS(SELECT 1 FROM pg_class c JOIN pg_namespace n ON n.oid=c.relnamespace WHERE n.nspname='node0_posse' AND c.relowner<>n.nspowner),
  'tablesPrivate',NOT EXISTS(SELECT 1 FROM pg_class c JOIN pg_namespace n ON n.oid=c.relnamespace CROSS JOIN unnest(ARRAY['anon','authenticated','node0_runtime','node0_authenticator']) role0 CROSS JOIN unnest(ARRAY['SELECT','INSERT','UPDATE','DELETE','TRUNCATE','REFERENCES','TRIGGER']) privilege0 WHERE n.nspname='node0_posse' AND c.relkind IN('r','p','v','m') AND has_table_privilege(role0,c.oid,privilege0))
  AND NOT EXISTS(SELECT 1 FROM pg_proc p JOIN pg_namespace n ON n.oid=p.pronamespace CROSS JOIN unnest(ARRAY['anon','authenticated','node0_runtime','node0_authenticator']) role0 WHERE n.nspname='node0_posse' AND has_function_privilege(role0,p.oid,'EXECUTE') AND NOT (role0='authenticated' AND p.proname='rpc') AND NOT (role0='node0_authenticator' AND p.proname='readiness')),

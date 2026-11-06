@@ -42,6 +42,14 @@ Sense eixa variable o amb un mòdul absent, el resultat és una omissió explíc
 
 El catàleg i l'ordre detallats continuen a [../README.md](../README.md) i [../ordre_desplegament.json](../ordre_desplegament.json), sense aplicar alfabèticament el directori. La nova suite [connexions-publiques-postgres.test.mjs](../../tests/connexions-publiques-postgres.test.mjs) executa tot el catàleg real en PGlite amb el mòdul local explícit. Aplicació remota no acreditada.
 
+## R20b · Propostes d'administració i restauració municipal
+
+Les dos SQL són propostes de laboratori independents sobre el catàleg de 76. La integració R7 activa conserva les 76 i n'exclou ambdues; este kit no les desplega. Aplicades juntes, el catàleg proposat té 78 migracions.
+
+`2611052345_admin_usuaris_i_organitzacions.sql` permet llegir perfils amb consentiment vigent del poble seleccionat, amb correu emmascarat i cursor amb 50 files com a màxim. Crear una invitació requerix superadmin amb `aal2`, consentiment i pertinença al poble, i ser ja owner/admin de l'organització. La invitació no crea cap pertinença: només la destinatària autenticada pot acceptar o rebutjar-la, i l'acceptació revalida l'autoritat i el consentiment. Només admet `member`; no permet autoassignar-se, imposar membres, nomenar administradores ni retirar membres. Els canvis de rol continuen en les RPC canòniques, inclosa la protecció `SDP-ORGMEM-006`. L'auditoria privada és transaccional i no admet UPDATE/DELETE. Les invitacions s'esborren en cascada amb el compte i amb l'entitat, de manera que la purga de baixes no queda bloquejada (G2-03). Seguir una persona actua només com l'actor real, sense crear relació recíproca. L'adaptador local declara la capacitat, però valida l'entrada i rebutja sempre amb `no-disponible` (arbitratge G2). Les notificacions i la interfície d'acceptació no estan connectades en este kit.
+
+`2611060010_restauracio_municipal_opendata.sql` separa les dades públiques importades dels perfils, Notes i pertinences del servidor. El paquet ZIP 1.2.0 es revalida al servidor amb SHA-256 i regeneració canònica; la RPC comprova el tenant, els camps públics, els identificadors globals i els conflictes. La importació fa upsert: no esborra registres absents del paquet. `tests/restauracio-independent-r20b.test.mjs` verifica la 78 sola sobre les 76; `tests/admin-invitacions-r20b.test.mjs` verifica la 77 sola sobre les 76 i la regressió K3-02 dels xats privats. Usen el catàleg i el llibre de migracions reals de PostgreSQL 17 (WASM), sense substituir les guardes. `tests/node0-r13-municipal.test.mjs` conserva les proves integrades de les 78, inclosa la denegació de metadades OKF privades niades i el rollback. `tooling/node0/verifica-restauracio-municipal-321.mjs` restaura tres còpies locals en tres bases netes i declara explícitament que dos mitjans físics i una còpia externa no estan acreditats. No és una prova de desplegament natiu ni de MFA del Node0.
+
 ## Vincles
 
 - [[00_index]]

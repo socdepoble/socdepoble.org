@@ -838,6 +838,24 @@ export const PAGE_COPY = {
       { "text": "Pedra seca", "className": "sdp-badge-tag" }
     ],
     "html": "\n      <h3>Per dins de les obres del poble</h3>\n      <p>Tria una estructura i mou el control per a <strong>muntar o desmuntar</strong> les peces una a una. Cada <strong>punt</strong> de l'esquema té el seu <strong>terme</strong> en valencià i una definició breu. Allò que encara no està contrastat ho diu clarament.</p>\n      <p>Els documentals d'<strong>Eugenio Monesma</strong> expliquen estos oficis amb persones que els van viure; el visor n'enllaça el canal i en cita l'autoria.</p>\n    "
+  },
+  /* Integradora R8 (261106; arbitratge R8, G4 i G6) · «Herbari de La Torre»:
+     les 117 fitxes de l'Excel de l'Herbari amb els rètols de La Canaleta
+     (kits R22 + R25), al visor HerbariLaTorreSection (un chunk lazy) que
+     PageDetailSection posa davall d'este text breu, com a l'anatomia. Abans
+     la pàgina només existia per la reserva d'aplicaAparadorR20, que no es
+     connecta (G1-01, G1-05). Sense portada pròpia (EXCLOSES_DE_PAGE de
+     build-social-manifest). Cap xifra que no siga de la font. */
+  "herbari": {
+    "date": "2026-11-06T12:41:00+01:00",
+    "title": "Herbari de La Torre",
+    "subtitle": "117 plantes del paratge de La Canaleta, a La Torre de les Maçanes",
+    "lead": "Les fitxes de l'herbari de La Torre de les Maçanes: el nom de cada planta en valencià, en castellà i en anglès, el nom científic i els usos tradicionals que en recull la font.",
+    "labels": [
+      { "text": "Patrimoni", "className": "sdp-badge-category" },
+      { "text": "Herbari", "className": "sdp-badge-tag" }
+    ],
+    "html": "\n      <h3>Les plantes de La Canaleta</h3>\n      <p>Cerca una planta pel <strong>nom</strong> o pel <strong>paratge</strong> i obri'n la <strong>fitxa</strong>: hi ha els noms, els usos transcrits i la <strong>pàgina</strong> de la font documental.</p>\n      <p>És una <strong>transcripció documental</strong>: la taxonomia està pendent de revisió i els <strong>usos tradicionals</strong> no són recomanacions de consum. <strong>No mengeu cap planta</strong> sense consell expert.</p>\n    "
   }
 };
 

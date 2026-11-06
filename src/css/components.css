@@ -4125,6 +4125,80 @@ section.bar-orange > .sdp-emoticona-barra--boto:focus-visible { outline-color: v
     border-radius: var(--sdp-radi-m);
   }
 
+  .anatomia__num,
+  .anatomia__alies,
+  .anatomia__nota-peca {
+    margin: 0 0 var(--sdp-space-2);
+    color: var(--sdp-text-suau);
+    font-size: var(--sdp-text-meta);
+    line-height: 1.6;
+  }
+
+  /* ── Cotes: la xifra, la font i, si no està confirmada, la marca ── */
+  .anatomia__cotes {
+    padding: var(--sdp-space-4);
+    background: var(--sdp-fons-targeta);
+    border: 1px solid var(--sdp-vora);
+    border-radius: var(--sdp-radi-m);
+  }
+
+  .anatomia__cotes-titol {
+    min-height: var(--sdp-touch);
+    display: flex;
+    align-items: center;
+    font-weight: 600;
+    color: var(--sdp-text-titol);
+    cursor: pointer;
+  }
+
+  .anatomia__cotes-titol:focus-visible {
+    outline: var(--sdp-focus-gruix) solid var(--sdp-focus);
+    outline-offset: var(--sdp-focus-separacio);
+  }
+
+  .anatomia__cotes-llista {
+    display: flex;
+    flex-direction: column;
+    gap: var(--sdp-space-3);
+    margin: var(--sdp-space-3) 0 0;
+  }
+
+  .anatomia__cota-etiqueta {
+    font-weight: 600;
+    color: var(--sdp-text-titol);
+  }
+
+  .anatomia__cota-valor {
+    margin: 0;
+    line-height: 1.6;
+  }
+
+  .anatomia__cota-font,
+  .anatomia__cota-nota {
+    color: var(--sdp-text-suau);
+    font-size: var(--sdp-text-meta);
+  }
+
+  .anatomia__estat {
+    display: inline-block;
+    padding: 0 var(--sdp-space-2);
+    border: 1px solid var(--sdp-vora-forta);
+    border-radius: var(--sdp-radi-pastilla);
+    font-size: var(--sdp-text-meta);
+    font-weight: 600;
+  }
+
+  .anatomia__cota[data-estat="discrepant"] .anatomia__estat,
+  .anatomia__cota[data-estat="pendent"] .anatomia__estat {
+    background: var(--sdp-accent-subtil);
+    border-color: var(--sdp-accent-text);
+  }
+
+  .anatomia__video-titol {
+    margin: 0 0 var(--sdp-space-2);
+    font-size: var(--sdp-text-meta);
+  }
+
   /* ── Moviment: només amb permís; amb moviment reduït, cap transició ── */
   @media (prefers-reduced-motion: no-preference) {
     .anatomia__punt-marca {
