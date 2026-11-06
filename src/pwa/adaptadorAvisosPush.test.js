@@ -78,9 +78,11 @@ function munta({ permis, resposta, actual = null, waiting = null, produccio = tr
   return { adaptador, finestra: f, registre, navegador, registreActiu, registreDelSw };
 }
 
-/** El registre dels avisos del Xat, nou de trinca (és d'estat de mòdul i només admet un adaptador). */
+/** El registre dels avisos del Xat, nou de trinca (és d'estat de mòdul i només admet un adaptador).
+    Onada R9 (C3): la façana i el motor, que s'hi endolla en avaluar-se, com fa src/main.jsx. */
 async function registreNou() {
   vi.resetModules();
+  await import('../config/motorAvisosPushXat.js');
   return import('../config/avisosPushXat.js');
 }
 

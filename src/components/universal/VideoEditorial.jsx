@@ -9,9 +9,31 @@
  *   · Este component és qui convertix eixe id en un iframe: un id de YouTube
  *     (11 caràcters d'este alfabet) i un sol origen, el de YouTube sense galetes.
  *     Cap URL, cap altre amfitrió, cap atribut que vinga de l'HTML.
+ *   · Gauntlet R9 · G2-04 · Façana de clic, com la del Lector i «Vore mapa».
+ *     Abans del gest, cap iframe ni cap petició a tercers: el títol, l'avís i
+ *     el botó «Veure el vídeo (YouTube)», sense cap miniatura de i.ytimg.com.
+ *     Després del clic, l'iframe de sempre. No es recorda res: un clic per
+ *     vídeo.
+ *   · FBV-02 · /legal 2.5 no nomena YouTube. L'apartat 11 diu el principi (a
+ *     un servei de fora només s'hi va amb un botó), però l'apartat 21 només
+ *     parla d'OpenStreetMap, de «Traduir» i de la Viquipèdia. Per tant, l'únic
+ *     que informa l'usuari és l'avís d'esta façana. Nomenar-lo a /legal és una
+ *     decisió del Mestre (una 2.6). La prova ho vigila.
+ *   · FBV-03 · «Vore mapa» sí que recorda la tria (sdp-mapa-fons) i la
+ *     Viquipèdia té el seu «sí». Són d'altres serveis i /legal els nomena: cap
+ *     d'eixes claus no es reutilitza per a YouTube.
+ *   · FBV-01 · La classe video-editorial__facana deixa que modules.css pinte
+ *     la façana amb el crom quan viu sobre el fons fosc de .aplec-2023__video.
+ *   · FBV-05 · titolVisible={false}: qui ja mostra el títol al costat (el visor
+ *     d'Anatomia Rural, amb el seu <cite>) no el repetix a la façana. L'avís
+ *     passa a ser el títol de la façana i l'iframe conserva el títol accessible.
  */
+import { useEffect, useRef, useState } from 'react';
+import { CirclePlay, Play } from 'lucide-react';
 import { useUIActionsOpcional } from '../../app/contexts/UIContext.jsx';
 import { createTranslator } from '../../config/i18n.js';
+import { Boto } from '../PedraSeca/atoms/Boto.jsx';
+import { EstatBuit } from '../PedraSeca/atoms/estats.jsx';
 
 export const ORIGEN_VIDEO_EDITORIAL = 'https://www.youtube-nocookie.com';
 const FORMA_ID_YOUTUBE = /^[A-Za-z0-9_-]{11}$/;
@@ -25,13 +47,30 @@ export const esIdVideoEditorial = (id) => typeof id === 'string' && FORMA_ID_YOU
 export const titolDeVideoEditorial = (titol) => (typeof titol === 'string' ? titol.replace(/\s+/g, ' ').trim().slice(0, MAXIM_TITOL) : '');
 
 /** El vídeo; sense un id vàlid, res (cap iframe buit ni cap origen alternatiu). */
-export function VideoEditorial({ id, title }) {
+export function VideoEditorial({ id, title, titolVisible = true }) {
   const t = useUIActionsOpcional()?.t || T_PER_DEFECTE;
+  /* El «sí» és d'este vídeo: si el cos canvia d'id (una edició nova), cal un altre clic. */
+  const [obertPer, setObertPer] = useState(null);
+  const obert = obertPer !== null && obertPer === id;
+  const marc = useRef(null);
+  /* Després del gest, el focus passa al reproductor: el botó ja no hi és. */
+  useEffect(() => { if (obert) marc.current?.focus(); }, [obert]);
   if (!esIdVideoEditorial(id)) return null;
+  const titol = titolDeVideoEditorial(title) || t('editor.video.titolPerDefecte');
+  if (!obert) {
+    const avis = t('editor.video.avisTercers');
+    return (
+      <EstatBuit className="video-editorial__facana" icona={CirclePlay} titol={titolVisible ? titol : avis}
+        accio={<Boto varietat="primari" icona={Play} onClick={() => setObertPer(id)}>{t('editor.video.veure')}</Boto>}>
+        {titolVisible ? avis : null}
+      </EstatBuit>
+    );
+  }
   return (
     <iframe
+      ref={marc}
       src={`${ORIGEN_VIDEO_EDITORIAL}/embed/${id}`}
-      title={titolDeVideoEditorial(title) || t('editor.video.titolPerDefecte')}
+      title={titol}
       width="1080" height="608" loading="lazy"
       referrerPolicy="strict-origin-when-cross-origin"
       allow="accelerometer; encrypted-media; gyroscope; picture-in-picture; web-share"

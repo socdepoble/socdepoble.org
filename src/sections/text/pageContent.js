@@ -1,5 +1,7 @@
 import { aplicaDossierR10 } from './pageContent.r10.js';
+import { afigPrimeraTargetaFediversity } from './pageContent.targetaMur.js';
 import { legalContent } from './legalContent.js';
+import { PAGINES_PATRIMONI_R9 } from './pageContent.patrimoniR9.js';
 
 /*
  * `date` · l'instant de publicació de cada pàgina (T4 del prompt 1140, ordre
@@ -845,7 +847,12 @@ export const PAGE_COPY = {
      PageDetailSection posa davall d'este text breu, com a l'anatomia. Abans
      la pàgina només existia per la reserva d'aplicaAparadorR20, que no es
      connecta (G1-01, G1-05). Sense portada pròpia (EXCLOSES_DE_PAGE de
-     build-social-manifest). Cap xifra que no siga de la font. */
+     build-social-manifest). Cap xifra que no siga de la font.
+     Onada R9 (ordre del Mestre del 261106, 14:06) · El mateix text en les
+     altres 4 llengües de la interfície, pel mecanisme de sempre: `translations`
+     i localitzaPagina (pageContent.r10.js), com /page/fediversity. Les frases
+     de consum són les de textosHerbari.js (avís de G6-03, revisat a G6V-02);
+     els topònims no es traduïxen. */
   "herbari": {
     "date": "2026-11-06T12:41:00+01:00",
     "title": "Herbari de La Torre",
@@ -855,9 +862,58 @@ export const PAGE_COPY = {
       { "text": "Patrimoni", "className": "sdp-badge-category" },
       { "text": "Herbari", "className": "sdp-badge-tag" }
     ],
-    "html": "\n      <h3>Les plantes de La Canaleta</h3>\n      <p>Cerca una planta pel <strong>nom</strong> o pel <strong>paratge</strong> i obri'n la <strong>fitxa</strong>: hi ha els noms, els usos transcrits i la <strong>pàgina</strong> de la font documental.</p>\n      <p>És una <strong>transcripció documental</strong>: la taxonomia està pendent de revisió i els <strong>usos tradicionals</strong> no són recomanacions de consum. <strong>No mengeu cap planta</strong> sense consell expert.</p>\n    "
+    "html": "\n      <h3>Les plantes de La Canaleta</h3>\n      <p>Cerca una planta pel <strong>nom</strong> o pel <strong>paratge</strong> i obri'n la <strong>fitxa</strong>: hi ha els noms, els usos transcrits i la <strong>pàgina</strong> de la font documental.</p>\n      <p>És una <strong>transcripció documental</strong>: la taxonomia està pendent de revisió i els <strong>usos tradicionals</strong> no són recomanacions de consum. <strong>No mengeu cap planta</strong> sense consell expert.</p>\n    ",
+    "translations": {
+      "es": {
+        "title": "Herbario de La Torre",
+        "subtitle": "117 plantas del paraje de La Canaleta, en La Torre de les Maçanes",
+        "lead": "Las fichas del herbario de La Torre de les Maçanes: el nombre de cada planta en valenciano, en castellano y en inglés, el nombre científico y los usos tradicionales que recoge la fuente.",
+        "labels": [
+          { "text": "Patrimonio", "className": "sdp-badge-category" },
+          { "text": "Herbario", "className": "sdp-badge-tag" }
+        ],
+        "html": "\n      <h3>Las plantas de La Canaleta</h3>\n      <p>Busca una planta por el <strong>nombre</strong> o por el <strong>paraje</strong> y abre su <strong>ficha</strong>: contiene los nombres, los usos transcritos y la <strong>página</strong> de la fuente documental.</p>\n      <p>Es una <strong>transcripción documental</strong>: la taxonomía está pendiente de revisión y los <strong>usos tradicionales</strong> no son recomendaciones de consumo. <strong>No comáis ninguna planta</strong> sin consejo experto.</p>\n    "
+      },
+      "en": {
+        "title": "La Torre Herbarium",
+        "subtitle": "117 plants from La Canaleta, in La Torre de les Maçanes",
+        "lead": "The records of the La Torre de les Maçanes herbarium: each plant’s name in Valencian, Spanish and English, its scientific name and the traditional uses recorded in the source.",
+        "labels": [
+          { "text": "Heritage", "className": "sdp-badge-category" },
+          { "text": "Herbarium", "className": "sdp-badge-tag" }
+        ],
+        "html": "\n      <h3>The plants of La Canaleta</h3>\n      <p>Search for a plant by <strong>name</strong> or by <strong>place</strong> and open its <strong>record</strong>: it gives the names, the transcribed uses and the <strong>page</strong> of the documentary source.</p>\n      <p>This is a <strong>documentary transcription</strong>: the taxonomy awaits review and the <strong>traditional uses</strong> are not recommendations for consumption. <strong>Do not eat any plant</strong> without expert advice.</p>\n    "
+      },
+      "eu": {
+        "title": "La Torreko herbarioa",
+        "subtitle": "La Canaletako 117 landare, La Torre de les Maçanes herrian",
+        "lead": "La Torre de les Maçanes herriko herbarioaren fitxak: landare bakoitzaren izena valentzieraz, gaztelaniaz eta ingelesez, izen zientifikoa eta iturriak jasotzen dituen erabilera tradizionalak.",
+        "labels": [
+          { "text": "Ondarea", "className": "sdp-badge-category" },
+          { "text": "Herbarioa", "className": "sdp-badge-tag" }
+        ],
+        "html": "\n      <h3>La Canaletako landareak</h3>\n      <p>Bilatu landare bat <strong>izenaren</strong> edo <strong>tokiaren</strong> arabera eta ireki haren <strong>fitxa</strong>: izenak, transkribatutako erabilerak eta dokumentu iturriaren <strong>orrialdea</strong> ditu.</p>\n      <p><strong>Dokumentu transkripzioa</strong> da: taxonomia berrikusteke dago eta <strong>erabilera tradizionalak</strong> ez dira kontsumorako gomendioak. <strong>Ez jan landarerik</strong> aditu baten aholkurik gabe.</p>\n    "
+      },
+      "gl": {
+        "title": "Herbario de La Torre",
+        "subtitle": "117 plantas da paraxe de La Canaleta, en La Torre de les Maçanes",
+        "lead": "As fichas do herbario de La Torre de les Maçanes: o nome de cada planta en valenciano, en castelán e en inglés, o nome científico e os usos tradicionais que recolle a fonte.",
+        "labels": [
+          { "text": "Patrimonio", "className": "sdp-badge-category" },
+          { "text": "Herbario", "className": "sdp-badge-tag" }
+        ],
+        "html": "\n      <h3>As plantas de La Canaleta</h3>\n      <p>Busca unha planta polo <strong>nome</strong> ou pola <strong>paraxe</strong> e abre a súa <strong>ficha</strong>: contén os nomes, os usos transcritos e a <strong>páxina</strong> da fonte documental.</p>\n      <p>É unha <strong>transcrición documental</strong>: a taxonomía está pendente de revisión e os <strong>usos tradicionais</strong> non son recomendacións de consumo. <strong>Non comas ningunha planta</strong> sen consello experto.</p>\n    "
+      }
+    }
   }
 };
 
+/* Onada R9 (261106; carril C5; IDEA-112, IDEA-113 i IDEA-115) · Les tres pàgines de patrimoni amb dades
+   verificades (banc de llavors, rutes de poble i arbres monumentals), al costat de l'herbari i l'anatomia.
+   El text i les traduccions són a pageContent.patrimoniR9.js; aplicaDossierR10 no les toca. */
+Object.assign(PAGE_COPY, PAGINES_PATRIMONI_R9);
+
 // AH-22 · suplement editorial localitzat, sense declarar-lo desplegat.
 aplicaDossierR10(PAGE_COPY);
+// IDEA-116 (Onada R9) · la primera targeta del cos de /page/fediversity: la primera publicació del Mur.
+afigPrimeraTargetaFediversity(PAGE_COPY);

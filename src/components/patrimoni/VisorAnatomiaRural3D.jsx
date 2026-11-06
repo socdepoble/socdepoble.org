@@ -246,7 +246,8 @@ export default function VisorAnatomiaRural3D({ estructuraInicial = ESTRUCTURES[0
         {hiHaVideo ? (
           <>
             {documental.titol ? <p className="anatomia__video-titol"><cite lang={documental.llengua || undefined} translate="no">{documental.titol}</cite></p> : null}
-            <VideoEditorial id={documental.videoId} title={documental.titol || t('patrimoni.anatomia.documentalDe', 'Documental de {nom}').replace('{nom}', () => documental.autor)} />
+            {/* FBV-05 · El títol ja és al <cite>: la façana no el repetix (l'iframe el conserva). */}
+            <VideoEditorial id={documental.videoId} titolVisible={!documental.titol} title={documental.titol || t('patrimoni.anatomia.documentalDe', 'Documental de {nom}').replace('{nom}', () => documental.autor)} />
           </>
         ) : (
           <p>

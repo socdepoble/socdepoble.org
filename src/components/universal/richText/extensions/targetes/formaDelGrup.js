@@ -236,12 +236,19 @@ function imatgeNeta(src) {
   return esFontImatgeSegura(net) ? net : '';
 }
 
+/* G1-N02 (Gauntlet de l'arbre R9) · La llengua del contingut de la targeta (l'atribut estàndard `lang` de
+   l'element desat): un codi de 2 o 3 lletres minúscules, o res. */
+const llenguaNeta = (valor) => (typeof valor === 'string' && /^[a-z]{2,3}$/.test(valor.trim()) ? valor.trim() : '');
+
 /**
  * Els atributs nets d'una targeta. Sense clau vàlida, la clau és '' (el
  * normalitzador de l'editor i la lectura la descarten).
+ * G1-N02 · `llengua` només hi és si la instantània en porta una de vàlida:
+ * sense, la forma de sempre, clau a clau.
  */
 export function netejaAtributs(attrs = {}) {
   const clau = llegeixClau(attrs?.clau) ? attrs.clau : '';
+  const llengua = llenguaNeta(attrs?.llengua);
   return {
     clau,
     ruta: rutaNeta(attrs?.ruta),
@@ -251,7 +258,8 @@ export function netejaAtributs(attrs = {}) {
     imatge: imatgeNeta(attrs?.imatge),
     autor: textNet(attrs?.autor, MAXIM.autor),
     autorRuta: rutaNeta(attrs?.autorRuta),
-    poble: textNet(attrs?.poble, MAXIM.poble)
+    poble: textNet(attrs?.poble, MAXIM.poble),
+    ...(llengua ? { llengua } : null)
   };
 }
 
@@ -349,6 +357,8 @@ export function propsDeTargetaIncrustada(attrs, { mode = 'lectura', avisa = null
     imatgePrivada: true,
     ...autoriaDe(net),
     location: net.poble || undefined,
+    /* G1-N02 · El títol, el subtítol i l'entradeta de la targeta, en la llengua de l'original; el peu, no. */
+    ...(net.llengua ? { llenguaContingut: net.llengua } : null),
     hasFooter: true,
     showTranslate: true,
     showComment: true,
@@ -388,7 +398,8 @@ function attrsDelDom(element) {
     imatge: element.getAttribute('data-imatge'),
     autor: element.getAttribute('data-autor'),
     autorRuta: element.getAttribute('data-autor-ruta'),
-    poble: element.getAttribute('data-poble')
+    poble: element.getAttribute('data-poble'),
+    llengua: element.getAttribute('lang')
   });
 }
 

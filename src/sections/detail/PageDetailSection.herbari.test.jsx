@@ -7,10 +7,12 @@ import { cleanup, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, test, vi } from 'vitest';
 import { MemoryRouter, Route, Routes } from '../../app/contexts/RouterContext';
 
+/* Onada R9 · La llengua de la interfície es pot canviar per prova (ui.language); per defecte, el valencià. */
+const ui = vi.hoisted(() => ({ language: undefined }));
 vi.mock('../../components/universal/NotificationContext.jsx', () => ({ useToast: () => ({ showToast: vi.fn() }) }));
 vi.mock('../../app/contexts/UIContext', async (importOriginal) => ({
   ...(await importOriginal()),
-  useUIActions: () => ({ t: (_, reserva) => reserva })
+  useUIActions: () => ({ t: (_, reserva) => reserva, ...(ui.language ? { language: ui.language } : null) })
 }));
 vi.mock('../../app/contexts/CoreContentContext', () => ({
   useCoreContent: () => ({ status: 'ready', pages: [], pageCopy: {} })
@@ -50,6 +52,28 @@ describe('/page/herbari', () => {
   test('el text de la pàgina no promet cap aval de consum', () => {
     expect(PAGE_COPY.herbari.html).toContain('no són recomanacions de consum');
     expect(PAGE_COPY.herbari.html).toContain('sense consell expert');
+  });
+
+  /* Onada R9 (ordre del Mestre del 261106, 14:06) · /page/herbari traduïda a les altres 4 llengües
+     de la interfície: el títol, el cos i les etiquetes de la traducció, sense lang (contingut i
+     interfície en la mateixa llengua), i el mateix herbari de 117 fitxes davall. */
+  test.each(['es', 'en', 'eu', 'gl'])('%s · la pàgina traduïda, amb l’herbari davall', async (llengua) => {
+    ui.language = llengua;
+    try {
+      const traduccio = PAGE_COPY.herbari.translations[llengua];
+      visita('/page/herbari');
+      expect(screen.getAllByRole('heading', { level: 1 })).toHaveLength(1);
+      const h1 = screen.getByRole('heading', { level: 1 });
+      expect([h1.textContent, h1.getAttribute('lang')]).toEqual([traduccio.title, null]);
+      const cos = document.querySelector('.cms-preview');
+      expect(cos.getAttribute('lang')).toBeNull();
+      expect(cos.querySelector('h3').textContent).toBe(new DOMParser().parseFromString(traduccio.html, 'text/html').querySelector('h3').textContent);
+      for (const etiqueta of traduccio.labels) expect(screen.getByText(etiqueta.text)).toBeTruthy();
+      const estat = await screen.findByText(new RegExp(`^117 / 117 `));
+      expect(cos.compareDocumentPosition(estat.closest('section')) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    } finally {
+      ui.language = undefined;
+    }
   });
 
   test('les altres pàgines no porten l’herbari', async () => {

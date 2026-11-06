@@ -111,9 +111,12 @@ const init = () => {
        import estàtic (D-B8C4-1): @capacitor/core no és lliure d'efectes i, amb
        la bandera apagada, un import estàtic el posaria al tros d'entrada i
        l'arrencaria; així, apagada, Rollup plega el bloc i el tros no existix.
-       Mai tomba l'arrencada. */
+       Mai tomba l'arrencada. Onada R9 (C3): primer el motor del registre
+       (config/motorAvisosPushXat.js), que s'endolla a la façana en avaluar-se;
+       després l'adaptador, que ja troba on registrar-se. */
     if (AVISOS_PUSH_XAT_ACTIUS) {
-      import('./avisosPushNatius.js')
+      import('../config/motorAvisosPushXat.js')
+        .then(() => import('./avisosPushNatius.js'))
         .then(({ adaptadorPushNatiuPerAlRegistre }) => registraAvisosPush(adaptadorPushNatiuPerAlRegistre()))
         .catch((e) => console.error('[natiu] Avisos push no registrats:', e));
     }

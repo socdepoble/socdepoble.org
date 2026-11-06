@@ -24,6 +24,7 @@ import { BrowserRouter, MemoryRouter, useRouter } from '../../app/contexts/Route
 import OnboardingSection from './OnboardingSection.jsx';
 import { CODI_ENTRADA } from '../../data/errorsBackend.js';
 import { RUTA_DESPRES_D_ENTRAR, rutaDEntrada } from '../../config/rutaEntrada.js';
+import { RUTA_POLITICA_PRIVACITAT, VERSIO_POLITICA_PRIVACITAT } from '../../config/politicaPrivacitat.js';
 
 beforeEach(() => {
   for (const f of [m.navigate, m.toast, m.registra, m.entra, m.google]) f.mockReset();
@@ -74,6 +75,26 @@ test('I4 · sense access_token es demana confirmar el correu, en minúscules i s
   expect(m.toast).not.toHaveBeenCalled();
   expect(avis.mock.calls.some(([e]) => e.type === 'sdp:auth-change')).toBe(false);
   avis.mockRestore();
+});
+
+/* Gauntlet R9 · G2-03 i G2-10 · La casella diu la versió i enllaça /legal; l'alta envia la mateixa versió
+   (el client del Node 0 la rebutja sense, i Supabase la registra si és vigent). */
+test('G2-03/G2-10 · la casella diu la versió i enllaça /legal; l’alta envia versio_politica', async () => {
+  m.registra.mockResolvedValue({ id: 'U', email: 'ana@poble.test' });
+  render(<OnboardingSection />);
+  const casella = screen.getByRole('checkbox');
+  const etiqueta = casella.labels[0];
+  expect(etiqueta.textContent).toBe(`He llegit i accepte la Política de privacitat (versió ${VERSIO_POLITICA_PRIVACITAT})`);
+  expect(etiqueta.textContent).not.toMatch(/Llei 05/);
+  const enllac = etiqueta.querySelector('a');
+  expect([enllac.getAttribute('href'), enllac.getAttribute('target'), enllac.getAttribute('rel'), enllac.textContent])
+    .toEqual([RUTA_POLITICA_PRIVACITAT, '_blank', 'noopener noreferrer', 'Política de privacitat']);
+  expect(RUTA_POLITICA_PRIVACITAT).toBe('/legal');
+  omple();
+  await act(async () => { fireEvent.click(screen.getByRole('button', { name: 'Crear el compte' })); });
+  expect(m.registra).toHaveBeenCalledTimes(1);
+  const metadades = m.registra.mock.calls[0][2];
+  expect([metadades.accepta_rgpd, metadades.versio_politica]).toEqual([true, VERSIO_POLITICA_PRIVACITAT]);
 });
 
 test('amb access_token no hi ha targeta de confirmació i sí toast d’èxit', async () => {

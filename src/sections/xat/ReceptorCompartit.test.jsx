@@ -6,17 +6,30 @@
    s'omple una vegada per mòdul: l'adaptador fals es registra ací dalt i en
    guarda el toc. El lot pendent es buida abans i després de cada prova.
    B8C-6 (marató 261101_2143) · El receptor també munta els avisos push del
-   Xat: la ruta de l'avís amb la bandera de debò (apagada) només lleva el
-   marcador, i amb un adaptador push registrat la sincronització corre en
-   muntar (i mai pregunta). La sessió és la del mock (sense proveïdor, fora). */
+   Xat: la ruta de l'avís amb la bandera de debò (encesa des del 261106,
+   Onada R9) i la sessió dins acaba a la llista si no hi ha res nou, i amb un
+   adaptador push registrat la sincronització (un tros diferit) corre en
+   muntar i mai pregunta. La sessió és la del mock (sense proveïdor del Xat).
+   R9V-C3-04 · El tros SincronitzaAvisosPush es compta (en importar-se i en
+   muntar-se) amb un embolcall del mòdul real: sense adaptador no es baixa
+   mai, i amb adaptador es baixa una vegada. */
 import { act, cleanup, render } from '@testing-library/react';
 import { afterEach, beforeEach, expect, test, vi } from 'vitest';
 import ReceptorCompartit from './ReceptorCompartit.jsx';
+import { ESPERA_AVIS_MS } from './useObriDesDeLAvis.js';
 import { descartaCompartit, lliuraCompartit, triaDestiCompartit } from '../../config/compartirNatiu.js';
 import { registraAvisosNatius } from '../../config/avisosNatius.js';
+/* Onada R9 (C3) · El motor del registre, que s'endolla a la façana en avaluar-se (com a l'entrada). */
+import '../../config/motorAvisosPushXat.js';
 import { AVISOS_PUSH_XAT_ACTIUS, fixaServidorAvisosPush, registraAvisosPush } from '../../config/avisosPushXat.js';
 
 const router = vi.hoisted(() => ({ pathname: '/mur', search: '', navigate: vi.fn(), sessio: null }));
+const trosSincronitza = vi.hoisted(() => ({ carregues: 0, muntatges: 0 }));
+vi.mock('./SincronitzaAvisosPush.jsx', async (importOriginal) => {
+  const real = await importOriginal();
+  trosSincronitza.carregues += 1;
+  return { default: function SincronitzaComptada() { trosSincronitza.muntatges += 1; return real.default(); } };
+});
 vi.mock('../../app/contexts/RouterContext', () => ({
   useLocation: () => ({ pathname: router.pathname, search: router.search, state: null, hash: '' }),
   useNavigate: () => router.navigate
@@ -122,23 +135,38 @@ test('el toc d’un avís obri el seu xat, amb l’id codificat a la ruta', () =
 });
 
 /* B8C-6 (marató 261101_2143) · Els avisos push del Xat. */
-test('B8C-6: la ruta de l\'avís amb la bandera de debò (apagada) només lleva el marcador, una sola vegada', async () => {
-  expect(AVISOS_PUSH_XAT_ACTIUS).toBe(false);
-  router.pathname = '/xat';
-  router.search = 'obri=no-llegits';
-  router.sessio = { estat: 'dins', currentUser: { id: 'A' } };
-  vista();
-  await act(async () => {});
-  expect(router.navigate).toHaveBeenCalledTimes(1);
-  expect(router.navigate).toHaveBeenCalledWith('/xat', { replace: true });
+/* Onada R9 (C3, G8-08 c) · La bandera de debò és encesa des del 261106. Amb la
+   sessió DINS (la persona de veres, no la sessió fora), sense proveïdor del
+   Xat (la recàrrega no porta res i la llista és buida): la ruta espera la
+   llista fins al sostre i, sense cap conversa amb missatges nous, lleva el
+   marcador cap a la llista, una sola vegada i substituint-lo. */
+test('B8C-6: la ruta de l\'avís amb la bandera de debò (encesa) i la sessió dins, sense cap conversa nova, acaba a la llista una sola vegada', async () => {
+  expect(AVISOS_PUSH_XAT_ACTIUS).toBe(true);
+  vi.useFakeTimers();
+  try {
+    router.pathname = '/xat';
+    router.search = 'obri=no-llegits';
+    router.sessio = { estat: 'dins', currentUser: { id: 'A' } };
+    vista();
+    await act(async () => { await vi.advanceTimersByTimeAsync(0); });
+    expect(router.navigate).not.toHaveBeenCalled();
+    await act(async () => { await vi.advanceTimersByTimeAsync(ESPERA_AVIS_MS + 10); });
+    expect(router.navigate).toHaveBeenCalledTimes(1);
+    expect(router.navigate).toHaveBeenCalledWith('/xat', { replace: true });
+  } finally {
+    vi.useRealTimers();
+  }
 });
 
 test('B8C-6: sense adaptador push, el receptor no toca res (ni a /xat ni fora)', async () => {
   router.sessio = { estat: 'dins', currentUser: { id: 'A' } };
   const { rerender } = vista();
   vesA('/xat', rerender);
-  await act(async () => {});
+  /* Temps de sobra perquè un import() diferit arribara si s'haguera demanat. */
+  await act(async () => { await new Promise((fi) => setTimeout(fi, 100)); });
   expect(router.navigate).not.toHaveBeenCalled();
+  /* R9V-C3-04: ni en esta prova ni en cap de les anteriors s'ha baixat el tros de la sincronització. */
+  expect(trosSincronitza).toEqual({ carregues: 0, muntatges: 0 });
 });
 
 test('B8C-6: amb un adaptador push registrat i la sessió dins, la sincronització corre en muntar i no pregunta mai', async () => {
@@ -151,10 +179,15 @@ test('B8C-6: amb un adaptador push registrat i la sessió dins, la sincronitzaci
   try {
     router.sessio = { estat: 'dins', currentUser: { id: 'A' } };
     vista();
+    /* Onada R9 (C3): la sincronització és un tros diferit que es munta quan ja
+       hi ha adaptador; s'espera que arribe, i després els mateixos fets. */
+    await vi.waitFor(() => expect(sincronitza).toHaveBeenCalled());
     await act(async () => {});
     /* Sense proveïdor del Xat ni port, no hi ha servidor: la sincronització fa d'interruptor. */
     expect(sincronitza).toHaveBeenCalledTimes(1);
     expect(sincronitza).toHaveBeenCalledWith(expect.objectContaining({ actiu: false }));
+    expect(trosSincronitza.carregues).toBe(1);
+    expect(trosSincronitza.muntatges).toBeGreaterThanOrEqual(1);
     expect(activa).not.toHaveBeenCalled();
     expect(router.navigate).not.toHaveBeenCalled();
   } finally {

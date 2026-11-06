@@ -21,6 +21,7 @@ import { motiuSignaturaDAltri } from './signaturaDAltri.js';
 import { cosDeLArticle } from '../mur/articles/cosCanonic.js';
 import { MANIFEST_DE_POBLE_HTML } from '../mur/articles/manifestDePobleContent.js';
 import { APLEC_2023_HTML } from '../mur/articles/aplec2023Content.js';
+import { NOVES_TECNOLOGIES_CULTURA_RURAL_HTML, NOVES_TECNOLOGIES_CULTURA_RURAL_ID } from '../mur/articles/novesTecnologiesCulturaRuralContent.js';
 import { CAMPS_DE_LA_REVISIO } from '../../data/revisionsEditorials.js';
 
 /* Les seccions la publicació de les quals s'obri a l'editor. El Mercat (amb la
@@ -30,7 +31,9 @@ const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 /* P0-25 (Bloc 2) · D2 · El canònic de la llavor, el mateix que pinten
    ManifestDePobleArticle i Aplec2023Article (cosDeLArticle). */
-const CANONICS = new Map([['manifest-de-poble', MANIFEST_DE_POBLE_HTML], ['aplec-2023', APLEC_2023_HTML]]);
+/* IDEA-116 (Onada R9, carril C2) · i la primera publicació del Mur, amb el mateix contracte. */
+const CANONICS = new Map([['manifest-de-poble', MANIFEST_DE_POBLE_HTML], ['aplec-2023', APLEC_2023_HTML],
+  [NOVES_TECNOLOGIES_CULTURA_RURAL_ID, NOVES_TECNOLOGIES_CULTURA_RURAL_HTML]]);
 
 const text = (valor) => (typeof valor === 'string' ? valor : '');
 const escapa = (valor) => valor.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');

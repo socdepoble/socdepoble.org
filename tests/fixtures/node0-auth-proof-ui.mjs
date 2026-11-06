@@ -5,6 +5,7 @@ import {createRequire} from 'node:module';
 import {pathToFileURL} from 'node:url';
 import {JSDOM} from 'jsdom';
 import assert from 'node:assert/strict';
+import {VERSIO_POLITICA_PRIVACITAT} from '../../src/config/politicaPrivacitat.js';
 const req=createRequire(import.meta.url),{build}=req('esbuild');
 export async function verificaAmbFormulari({token,password,onConfirma}){
  const dom=new JSDOM('<div id="root"></div>',{url:'https://socdepoble.cat/confirmar-correu'}),saved=new Map();
@@ -16,7 +17,7 @@ export async function verificaAmbFormulari({token,password,onConfirma}){
  const root=createRoot(dom.window.document.getElementById('root'));let pending;
  try{
   await act(async()=>root.render(React.createElement(ProvaCorreuAmbContrasenya,{token,onConfirma:(...args)=>{pending=onConfirma(...args);return pending;}})));
-  const inputs=dom.window.document.querySelectorAll('input');assert.equal(inputs[2].checked,false);assert.match(dom.window.document.querySelector('a').textContent,/2\.4/);
+  const inputs=dom.window.document.querySelectorAll('input');assert.equal(inputs[2].checked,false);assert.equal(dom.window.document.querySelector('a').textContent.includes(`versió ${VERSIO_POLITICA_PRIVACITAT}`),true);
   await act(async()=>{fireEvent.change(inputs[0],{target:{value:password}});fireEvent.change(inputs[1],{target:{value:password}});fireEvent.click(inputs[2]);});
   await act(async()=>{fireEvent.submit(dom.window.document.querySelector('form'));await pending;});
   assert.match(dom.window.document.body.textContent,/Ara pots entrar amb el correu/);

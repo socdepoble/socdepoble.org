@@ -87,18 +87,22 @@ test('/fediversity porta a /page/fediversity, amb l’anatomia de la UniversalPa
     /* Ordre 261103_0522, T2.6 (Gauntlet O7-9, ronda 3; LR-G01, LR-G04) · /page/fediversity porta la
        targeta de /fedivers: el cos va per CosAmbTargetes (trossos .sdp-cos-tros i un sol grup) i la
        targeta, la UniversalCard del Mur, porta el seu H3 i el seu H4. Els H3 del text es compten fora
-       de .sdp-targetes, com a TextSection.subtargeta. Prova posada al dia a propòsit. */
+       de .sdp-targetes, com a TextSection.subtargeta. Prova posada al dia a propòsit.
+       IDEA-116 (Onada R9, carril C2; prova posada al dia a propòsit) · El cos comença per la
+       targeta de la primera publicació del Mur (pageContent.targetaMur.js): tres grups, el
+       primer sense cap tros davant. */
     expect(cos.className).toBe('cms-preview sdp-amb-targetes');
     expect([...cos.children].map((fill) => fill.className)).toEqual([
-      'sdp-cos-tros', 'sdp-targetes', 'sdp-cos-tros', 'sdp-targetes', 'sdp-cos-tros'
+      'sdp-targetes', 'sdp-cos-tros', 'sdp-targetes', 'sdp-cos-tros', 'sdp-targetes', 'sdp-cos-tros'
     ]);
     const grups = [...cos.querySelectorAll(':scope > .sdp-targetes')];
-    expect(grups).toHaveLength(2);
+    expect(grups).toHaveLength(3);
     for (const grup of grups) {
       expect([grup.dataset.forma, grup.dataset.alineacio, grup.querySelectorAll(':scope > .sdp-targeta').length]).toEqual(['sola', 'dreta', 1]);
       expect([...grup.querySelectorAll('h3, h4, h5')].map((titol) => titol.tagName)).toEqual(['H3', 'H4']);
     }
     expect(grups.map((grup) => grup.querySelector('a.sp-card-link-overlay')?.getAttribute('href'))).toEqual([
+      '/mur/noves-tecnologies-aplicades-a-la-cultura-rural',
       '/page/node-zero',
       '/fedivers'
     ]);

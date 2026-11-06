@@ -9,6 +9,7 @@ import { Alerta, Boto, ControlContrasenya, PillToggle } from '../../components/P
 import { UniversalCard } from '../../components/universal/../PedraSeca';
 import { ESTAT_RECUPERACIO_INICIAL, RecuperacioStep } from './RecuperacioSteps.jsx';
 import { createTranslator } from '../../config/i18n.js';
+import { RUTA_POLITICA_PRIVACITAT, VERSIO_POLITICA_PRIVACITAT } from '../../config/politicaPrivacitat.js';
 import { useCoreContent } from '../../app/contexts/CoreContentContext.jsx';
 import { POBLE_FUNDACIONAL } from '../../data/identitatsSeed.js';
 
@@ -19,6 +20,21 @@ import { POBLE_FUNDACIONAL } from '../../data/identitatsSeed.js';
    (section.login.loginEmail, …) tornen a tindre qui les cride. Els errors de
    validateRegistration (onboardingModel.js) no són d'ací. */
 const TRADUCTOR_DE_RESERVA = createTranslator('ca');
+
+/* Gauntlet R9 · G2-03 · La casella diu quina versió de la política s'accepta i n'enllaça el text (/legal,
+   en una pestanya nova: el formulari no es perd). La versió és la de politicaPrivacitat.js, la mateixa
+   que viatja amb l'alta (OnboardingSection, consentimentMostrat). Cap «Llei 05»: no és cap llei. */
+function EtiquetaDelConsentiment({ t }) {
+  const [abans, despres = ''] = t('section.login.registre.consentiment', 'He llegit i accepte la {politica} (versió {versio})').split('{politica}');
+  const ambVersio = (text) => text.replace('{versio}', () => VERSIO_POLITICA_PRIVACITAT);
+  return (
+    <>
+      {ambVersio(abans)}
+      <a href={RUTA_POLITICA_PRIVACITAT} target="_blank" rel="noopener noreferrer">{t('section.login.registre.politicaPrivacitat', 'Política de privacitat')}</a>
+      {ambVersio(despres)}
+    </>
+  );
+}
 
 /* T4 (ordre del Mestre, 260930) · El mode de la consulta (?mode=entrar|crear,
    src/config/rutaEntrada.js) al mode intern del formulari. R2 (261003) ·
@@ -359,7 +375,7 @@ export function RegistrationStep({ isBusy, bloquejat = false, error, codiError =
                   className="sdp-casella__control"
                 />
                 <label htmlFor="reg-rgpd" className="sdp-casella__etiqueta">
-                  {t('section.login.registre.consentiment', 'Consent el tractament de dades personals (RGPD Llei 05) exclusivament per a Sóc de Poble.')}
+                  <EtiquetaDelConsentiment t={t} />
                 </label>
                 {errors.rgpd ? <p id="onboarding-rgpd-error" className="sdp-camp__error">{errors.rgpd}</p> : null}
               </div>

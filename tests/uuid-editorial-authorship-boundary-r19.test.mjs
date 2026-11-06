@@ -64,7 +64,7 @@ test('R19 UUID editorial boundary: real owner RLS, entity signature CHECK and ex
       assert.equal(columns.includes('revision'),false);
       const wrapper=fs.readFileSync(new URL('../src/data/revisionsEditorials.js',import.meta.url),'utf8');
       assert.match(wrapper,/_editorialClau/);assert.match(wrapper,/FILA_DE_SECCIO\[seccio\]/);
-      assert.equal((await f.pg.query("SELECT count(*)::integer AS n FROM node0.schema_migrations")).rows[0].n,78,'R19 must not add an unsafe migration79');
+      assert.equal((await f.pg.query("SELECT count(*)::integer AS n FROM node0.schema_migrations")).rows[0].n,79,'R19 must not add an unsafe migration80 (79 = 78 plus the R9 /legal 2.5 seal 2611061520)');
     });
   }finally{await f.close();}
 });

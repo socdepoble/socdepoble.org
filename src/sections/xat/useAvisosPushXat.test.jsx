@@ -47,6 +47,8 @@ vi.mock('../../config/avisosPushXat.js', async (importOriginal) => {
   };
 });
 
+/* Onada R9 (C3) · El motor del registre, que s'endolla a la façana en avaluar-se (com a l'entrada). */
+import '../../config/motorAvisosPushXat.js';
 import * as registre from '../../config/avisosPushXat.js';
 import { MOTIU_IOS_SENSE_INSTALAR, TEXTOS_AVISOS, notesDelsAvisos, useControlAvisosPush, useSincronitzaAvisosPush } from './useAvisosPushXat.js';
 

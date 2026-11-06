@@ -1,0 +1,71 @@
+# Extracte literal de les línies citades per les dades (C5, Onada R9). No substituïx la font.
+# font: _cultura_de_poble/intercanvi_de_llavors_i_varietats_tradicionals/corpus_text/02_Atles_Varietats_Agricoles_PPP.md
+# sha256: 00096126ab51d2ad225cf33a52128530c06eb8521bcf1e4ba204f5f3e805b124
+# linies-font: 497
+# Només el títol, l’autoria i les línies de les 15 fitxes d’espècie.
+1	# Atles de les Varietats Locals i Patrimoni Agrícola (70 pàgines)
+5	Atles de les varietats hortícoles locals catalanes
+6	Catàleg de varietats locals d’interès agrari de Catalunya
+60	La Fundació Miquel Agustí, entitat de referència a Catalunya en l’estudi de la diversitat genètica dels cultius
+61	hortícoles i de l’ús i l’estat de conservació dels recursos fitogenètics, pretén aportar les eines i informacions que
+62	permetin documentar l’inventari de varietats hortícoles locals d’interès agrari de Catalunya. Aquest és el principal
+63	objectiu de la Primera proposta de l’Atles de les varietats hortícoles locals catalanes: realitzar una llista de les
+308	All (Allium sativum L.)
+310	All de Banyoles
+312	All de Belltall, all porro
+314	-
+321	Carbassó (Cucurbita pepo L.)
+323	Carbassó comú o del país Carbassó blanc
+325	-
+327	-
+334	Cigró (Cicer arietinum L.)
+336	Cigronet
+338	Cigró d’Oristà, cigró bossa de ruc, cigró de Marganell. 
+340	Cigronet – cigró menut, cigronet de l’Alta Anoia
+347	Cogombre (Cucumis sativus L.)
+349	Cogombre blanc o del país
+351	Cogombre llarg o de corda.
+353	-
+360	Col de cabdell (Brassica oleracea L. var. capitata / sabauda)
+362	Col pell de galàpet (B.oleracea var. sabauda) Col de cabdell país o comú (B.oleracea var. capitata)
+364	Col fuada, col trapellada, col arrissada d’hivern.
+366	-
+373	Escarola (Cichorium endivia L.)
+375	Escarola cabell d’àngel
+377	Escarola santa coloma, escarola perruqueta del Prat, escarola arrullada.
+379	-
+386	Fajol (Fagopyrum esculentum Moench.)
+388	Fajol de la Garrotxa
+390	-
+392	-
+399	Fava (Vicia faba L.)
+401	Fava muchamiel Fava reina mora
+403	Fava aiguamúrcia, fava comú o del país, fava de tija curta, fava de la Val d’Aro.
+405	-
+412	Fesolet (Vigna unguiculata L. Walp.)
+414	Fesolet de l’ull ros Fesolet de l’ull negre o del país
+416	-
+418	Fesolet - monget
+425	Guixes (Lathyrus sativus L.)
+427	Guixera comú
+429	-
+431	-
+438	Pastanaga (Daucus carota L.)
+440	Pastanaga morada
+442	-
+444	Pastanaga morada – safranòria de ponent
+451	Pèsol (Pisum sativum L.)
+453	Pèsol negre Pèsol de la floreta
+455	Estirabec (Pisum sativum L. var. macrocarpum), pèsol d’olor, pèsol de set setmanes. 
+457	Pèsol de la floreta – pèsol de Llavaneres, pèsol garrofal
+464	Porro (Allium porrum L.)
+466	Porro comú o del país
+468	All-porro.
+476	Salsifí (Tragopogon porrifolius L.)
+478	Salsifí blanc
+480	Salsifí negre (Scorzonera hispanica L.)
+482	Salsifí blanc – salsifí comú, barba de cabra.
+489	Síndria (Citrullus lanatus (Thunb.) Matsum. & Nakai)
+491	Síndria del país o comú
+493	Síndria blanca, síndria ratllada, síndria de pell doble, síndria de pell fina.
+495	-

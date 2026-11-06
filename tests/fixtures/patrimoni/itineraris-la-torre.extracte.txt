@@ -1,0 +1,233 @@
+# Extracte literal de les línies citades per les dades (C5, Onada R9). No substituïx la font.
+# font: _cultura_de_poble/rutes_i_recursos_de_la_torre/corpus_text/01_recursos-de-la-torre-itineraris.md
+# sha256: 6c423110a5dd97ce97aa99e79e25d91a0a41d334d731b0ebd2a11709d61a9d47
+# linies-font: 1672
+# Només la capçalera, l’eix, el lema, el programa, les parades i la mida de cada ruta, i el nom i l’adreça de cada fitxa de recurs. Els telèfons es retiren.
+6	Revisió: 2021‐04‐28 17:46:27
+7	Itineraris per La Torre de les Maçanes
+8	GENT D E LA T O R RE
+9	El Diari de La Torre de les Maçanes
+17	gentdelatorre.netPresentació
+84	SOM PA, SOM OLI
+85	10:00 Visita als Forns de llenya
+86	• Veurem com es cou el pa, mentre parlem 
+87	amb el forner.
+88	10:30 Visita a l'Almàssera
+89	• Explicació del procés d'extracció d'oli. 
+90	Amb material audiovisual.
+91	11:30 Esmorzar
+92	• Degustació gastronòmica: Pa i oli, 
+93	pericana, embotit ...
+94	12:30 Visita al Molí fariner hidràulic
+95	• Explicació sobre el funcionament i 
+96	exposició del procés d'elaboració.
+97	13:00 Visita al Molí fariner elèctric
+98	• Explicació sobre el seu funcionament i 
+99	les innovacions tècniques amb l'arribada 
+100	de l'electricitat a poble.
+120	La Torre de les Maçanes, l’Alacantí 4 h4 h1,3 km
+139	Coneixent l'essència del poble.
+140	La visita s'inicia al forn de pa. Veurem el 
+141	procés de cocció mentre el forner ens parla 
+142	dels productes i receptes locals.
+143	Després d'un xicotet passeig, arribarem a 
+144	l'almàssera, on coneixerem la importància 
+145	que tenen l'oliva i l'oli per a La Torre, i les 
+146	seues implicacions culturals i econòmiques. 
+147	Seguidament, es realitzarà una degustació 
+148	d'oli i productes típics, amb explicació sobre 
+149	la seua elaboració.
+150	Després de l'esmorzar es visitarà el molí 
+151	fariner hidràulic, explicarem la seua història.
+152	I per finalitzar la visita, anirem al molí fariner 
+153	elèctric, on es pot apreciar l'evolució tècnica 
+154	en la construcció entre aquest i l'anterior.
+155	
+191	SOM VINCLES
+192	10:20 Visita a l’Esglèsia de Santa Anna
+193	• Visita a l'església i explicació. 
+194	Arquitectura històrica.
+195	10:50 Visita al Museu de la Casa Alta
+196	• Visita al museu i vídeo explicatiu.
+197	11:40 Visita a la Foia de Cortés
+198	• Explicació del mas fortificat. Natura de 
+199	l’entorn.
+200	12:00 Esmorzar
+201	• Degustació gastronòmica: Pa, oli, 
+202	pericana, embotit ...
+203	13:00 Visita a l'Almàssera
+204	• Explicació del procés d'extracció d'oli. 
+205	Amb material audiovisual.
+242	Farem un recorregut pel patrimoni 
+243	arquitectònic més significatiu del poble.
+244	Començarem per l’Església de Santa Anna i
+245	l’entorn del casc antic.
+246	Recorrem els carrers fins arribar a l’edifici 
+247	més emblemàtic, el que dona nom i identitat al 
+248	poble: La Casa Alta, on podrem comprendre 
+249	millor aspectes històrics i etnogràfics.
+250	Passarem també per La Foia de Cortès, mas 
+251	fortificat amb elements interessants. En arribar 
+252	a la part nova del poble farem una parada per 
+253	esmorzar i gaudir dels productes típics.
+254	Desprès anirem a visitar l’Almàssera per 
+255	endinsar-nos en el procès de producció de l’oli i 
+256	conéixer les seves instal·lacions.
+257	La Torre de les Maçanes, l’Alacantí 4 h1,5 km
+312	SOM AIGUA
+313	10:00 Visita a l'Almàssera
+314	• Explicació del procés d'extracció d'oli. 
+315	Amb material audiovisual.
+316	11:00 Esmorzar
+317	• Degustació gastronòmica: Pa i oli, 
+318	pericana, embotit ...
+319	12:00 Visita a l'antic Llavador del poble
+320	• El Bassi. Explicació. Naturalesa, història, 
+321	arquitectura.
+322	12:30 Passeig cap a l'antic Llavador del riu
+323	• Explicació. Naturalesa, història, 
+324	arquitectura.
+325	13:00 Passeig a la Font Major i al Malecó
+326	• Explicació. Arquitectura tant de la font 
+327	com de les cases.
+328	13:30 Visita al Molí fariner hidràulic
+329	• Explicació sobre el funcionament i 
+330	exposició del procés d'elaboració.
+351	Camins d’aigua.
+352	Començem visitant l’Almàssera per endinsar-
+353	nos en el procès de producció de l’oli coneixent 
+354	les seues instal·lacions.
+355	Després tastarem els productes típics del 
+356	poble: oli, pa, embutits, pericana ...
+357	Coneixerem els recursos creats al llarg del 
+358	temps per a l’aprofitament de les aigües. Per la 
+359	font del poble i el llavador passejarem cap al 
+360	riu per veure el bassi, la font major i el malecó
+361	i algunes restes d’infrastructures hidràuliques. 
+362	Finalment visitarem el molí hidràulic.
+363	La Torre de les Maçanes, l’Alacantí 4 h2 km
+413	Sabors de la terra.
+414	Comença la visita a l’olivar. La cura del camp, 
+415	la collita, el paisatge. 
+416	Després, anirem a visitar l’almàssera del mas 
+417	de La Canaleta on se’ns explicarà com es feia 
+418	l’extracció de l’oli antigament.
+419	Farem una parada per esmorzar i podrem 
+420	gaudir dels productes típics del poble amb 
+421	l’oli, que és l’essència de la visita.
+422	En acabar, coneixerem les instal·lacions de 
+423	l’almàssera per veure el seu funcionament i 
+424	com s’elabora l’oli de La Torre.
+438	SOM TERRA
+439	10:20 Visita a l’Olivar
+440	• Explicació sobre la cura de l'olivar, la 
+441	collita i el paisatge.
+442	11:00 Visita a l'Almàssera del mas de la Canaleta
+443	• Explicació del procés d'extracció d'oli. 
+444	Amb material audiovisual.
+445	12:00 Esmorzar
+446	• Degustació gastronòmica: Pa i oli, 
+447	pericana, embotit ...
+448	13:00 Visita a l'Almàssera de la Cooperativa
+449	• Explicació del procés d'extracció d'oli. 
+450	Amb material audiovisual.
+455	La Torre de les Maçanes, l’Alacantí 4 h2 km
+507	SOM POBLE
+508	10:00 Visita als Forns de llenya
+509	• Veurem com es cou el pa, mentre parlem 
+510	amb el forner.
+511	11:00 Visita a les Carnisseries
+512	• Explicació de l'procés d'elaboració 
+513	d'embotit típic.
+514	12:00 Passeig fins les Eres de batre
+515	• Explicació del procés de treball amb les 
+516	eines tradicionals.
+517	14:00 Dinar
+518	• Degustació gastronòmica: Pa i oli, 
+519	pericana, embotit ...
+520	16:00 Visita a l'Almàssera
+521	• Explicació del procés d'extracció d'oli. 
+522	Amb material audiovisual.
+544	Tastar el poble.
+545	Comencem la visita a la Plaça Major on es 
+546	troben alguns dels comerços tradicionals del 
+547	poble. Visitarem els forns de llenya i les 
+548	carnisseries en les quals s’elaboren els 
+549	embotits artesans.
+550	Després farem un passeig pel poble antic que 
+551	acabarà a les eres de batre des d’on podrem 
+552	contemplar el paisatge de la vall.
+553	A l’hora de dinar tindrem l’oportunitat de tastar
+554	alguns dels productes típics de la gastronomia 
+555	local i acabarem visitant l’Almàssera de la 
+556	cooperativa on ens explicaran el procés 
+557	d’elaboració de l’oli de La Torre.
+558	La Torre de les Maçanes, l’Alacantí 8 h2 km
+596	SOM PAISATGE
+597	10:20 Visita a l’Olivar
+598	• Explicació sobre la cura de l'olivar, la 
+599	collita i el paisatge.
+600	11:00 Excursió al Pou de la Neu
+601	• Es visitarà tant el paratge natural del 
+602	Rentonar com el Pou de la Neu.
+603	13:00 Visita a l'Almàssera del mas de la Canaleta
+604	• Explicació del procés d'extracció d'oli. 
+605	Amb material audiovisual.
+606	14:00 Dinar
+607	• Degustació gastronòmica: Pa i oli, 
+608	pericana, embotit ...
+609	16:00 Visita a l'Almàssera de la Cooperativa
+610	• Explicació del procés d'extracció d'oli. 
+611	Amb material audiovisual.
+648	Sabors de natura.
+649	Comença la visita a l’olivar. La cura del camp, 
+650	la collita, el paisatge. 
+651	Des del camp anirem a fer la ruta de 
+652	senderisme que recorre la serra de El 
+653	Rentonar fins al pou de la neu.
+654	En acabar la ruta de muntanya, anirem a visitar 
+655	l’almàssera del mas de La Canaleta on se’ns 
+656	explicarà com es feia l’extracció de l’oli 
+657	antigament.
+658	Farem una parada per dinar i podrem gaudir 
+659	dels productes típics del poble amb l’oli, que 
+660	és l’essència de la visita.
+661	En acabar el dinar coneixerem les 
+662	instal·lacions de l’almàssera per veure el seu 
+663	funcionament i com s’elabora l’oli de La Torre.
+665	La Torre de les Maçanes, l’Alacantí 8 h6 km
+697	▶ El Poble
+711	La Torre de les Maçanes, l’Alacantí
+732	▶ La Casa Alta
+762	Carrer del Castell, La Torre de les Maçanes, l’Alacantí
+787	▶ La Foia de Cortés
+821	Carrer de l’Abadia, La Torre de les Maçanes, l’Alacantí
+846	▶ Església de Santa Anna
+880	Plaça de l’Església, La Torre de les Maçanes, l’Alacantí
+902	▶ La Font del poble
+933	Av. d’Espanya, La Torre de les Maçanes, l’Alacantí
+954	▶ Llavador municipal. El Bassi
+984	Av. d’Espanya, La Torre de les Maçanes, l’Alacantí
+1007	▶ Llavador del riu
+1039	Riu de La Torre, prop del Parc Municipal, La Torre de les Maçanes, l’Alacantí
+1061	▶ La Font Major i el Malecó
+1092	Parc Municipal, la Font Major, el Malecó i l’antic llavador. La Torre de les Maçanes, l’Alacantí
+1117	▶ Pou de la Neu del Rentonar
+1152	Pou de la Neu de La Torre de les Maçanes, l’Alacantí
+1176	▶ Les eres de batre
+1209	Eres de batre comunals a La Torre de les Maçanes, l’Alacantí
+1231	▶ Molí Fariner Elèctric
+1262	Av. d’Espanya, 34 - La Torre de les Maçanes, l’Alacantí
+1282	▶ Molí Fariner Hidràulic
+1311	Camí de Xixona - La Torre de les Maçanes, l’Alacantí
+1335	▶ Olivars de La Torre
+1368	Cultiu de l'olivera en bancals amb marges de pedra seca, La Torre de les Maçanes, l’Alacantí
+1389	▶ Almàssera - OLI DE LA TORRE
+1419	[telèfon retirat]Almàssera de La Torre, Coop. V. - Carrer Sant Isidre Llaurador, 18
+1440	▶ Almàssera de La Canaleta
+1470	[telèfon retirat]Mas de La Canaleta - Ctra. Benifallim, km 8,5
+1490	▶ Mas de La Canaleta
+1519	[telèfon retirat]Mas de La Canaleta - Ctra. Benifallim, km 8,5
+1540	▶ Els Forns de pa
+1595	▶ Les Carnisseries
+1643	▶ Els Restaurants

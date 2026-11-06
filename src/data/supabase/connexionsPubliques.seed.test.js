@@ -1,4 +1,8 @@
 import { afterAll, beforeEach, expect, test, vi } from 'vitest';
+/* D-P016 (Onada R9) · L'interruptor de les RPC de 2611032100 amb el seu valor
+   real (apagat) per a totes les proves; només la del transport remot l'encén. */
+const bandera = vi.hoisted(() => ({ actiu: false }));
+vi.mock('../../config/connexionsPubliques.js', () => ({ get CONNEXIONS_PUBLIQUES_REMOTES_ACTIVES() { return bandera.actiu; } }));
 import * as adaptador from './index.js';
 import { segueix, preferenciesConnexions, desaVisibilitatConnexions, connexionsPubliquesDe } from './seguiments.js';
 import { bloqueigLocalEntre, bloquejaAutor, reiniciaModeracioLocal } from './moderacio.js';
@@ -9,7 +13,7 @@ const A='1d2e3f40-5a6b-4c7d-8e9f-a0b1c2d3e4f5', B='2e3f4051-6b7c-4d8e-9fa0-b1c2d
 const SEED={dataMode:'seed',tenantId:'7a1b2c3d-4e5f-4a60-8b71-c2d3e4f5a6b7'};
 const xarxa=vi.fn(()=>{throw new Error('FEDI23_XARXA_VETADA');});
 function entra(id){configuraBackendSessio(SEED);const user={id,user_metadata:{full_name:id===A?'Anna':'Berta'}};expect(desaSessio({access_token:'seed-fixture',user})).toBe(true);localPerfils.updateProfile(user,{is_public:true});}
-beforeEach(()=>{vi.stubGlobal('fetch',xarxa);xarxa.mockClear();esborraSessio({abast:'tot'});reiniciaLocalSeguiments();reiniciaLocalPerfils();reiniciaModeracioLocal();entra(A);});
+beforeEach(()=>{bandera.actiu=false;vi.stubGlobal('fetch',xarxa);xarxa.mockClear();esborraSessio({abast:'tot'});reiniciaLocalSeguiments();reiniciaLocalPerfils();reiniciaModeracioLocal();entra(A);});
 afterAll(()=>{esborraSessio({abast:'tot'});vi.unstubAllGlobals();});
 test('seed exposa només un graf consentit també a anon, sense xarxa',async()=>{
   await segueix({tipus:'entitat',id:'rentonar'},SEED);
@@ -38,7 +42,22 @@ test('preferències de dues identitats no es barregen ni s’autoritzen per meta
   expect(xarxa).not.toHaveBeenCalled();
 });
 
+test('D-P016 · amb el valor real de l’interruptor (apagat), l’adaptador index real en remot no fa cap fetch i respon NO-DISPONIBLE a les sis',async()=>{
+  expect((await vi.importActual('../../config/connexionsPubliques.js')).CONNEXIONS_PUBLIQUES_REMOTES_ACTIVES).toBe(false);
+  const REMOT={dataMode:'remote',supabaseUrl:'http://localhost:54321',supabaseAnonKey:'sb_publishable_fixture',tenantId:SEED.tenantId};
+  configuraBackendSessio(REMOT);expect(desaSessio({access_token:'jwt-fedi23-fixture',user:{id:A}})).toBe(true);
+  const O='33333333-3333-4333-8333-333333333333';
+  const fetch=vi.fn(async()=>{throw new Error('D-P016: cap petició');});vi.stubGlobal('fetch',fetch);
+  for(const crida of [()=>adaptador.preferenciesConnexions({tipus:'persona',id:A},REMOT),()=>adaptador.desaVisibilitatConnexions({tipus:'persona',id:A,visibilitatConnexions:'publica'},REMOT),
+    ()=>adaptador.connexionsPubliquesDe({tipus:'persona',id:A},REMOT),()=>adaptador.membresIEntitatsConnectadesDe({tipus:'poble',id:'la-torre-de-les-macanes'},REMOT),
+    ()=>adaptador.inclouPersonaEnEntitat({orgId:O,personaId:B,rol:'treballador'},REMOT),()=>adaptador.solicitaUnirSeAEntitat({orgId:O,rol:'administrador'},REMOT)]){
+    await expect(crida()).rejects.toMatchObject({code:'NO-DISPONIBLE'});
+  }
+  expect(fetch).not.toHaveBeenCalled();
+});
+
 test('adaptador index real executa les sis RPC amb sessió i cos explícit',async()=>{
+  bandera.actiu=true; // el servidor amb la migració 2611032100 aplicada
   const REMOT={dataMode:'remote',supabaseUrl:'http://localhost:54321',supabaseAnonKey:'sb_publishable_fixture',tenantId:SEED.tenantId};
   configuraBackendSessio(REMOT);expect(desaSessio({access_token:'jwt-fedi23-fixture',user:{id:A}})).toBe(true);
   const O='33333333-3333-4333-8333-333333333333';

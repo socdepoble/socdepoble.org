@@ -671,6 +671,26 @@ describe('frontera', () => {
     expect(variableDEntorn(valor.get('produccio'))).toBe('PROD');
   });
 
+  /* Onada R9 · C3 (G8-09) · El motor del registre dels avisos push
+     (config/motorAvisosPushXat.js) no viatja a l'entrada: només el porten,
+     per import() dins del bloc de la bandera i ABANS de l'adaptador (que s'ha
+     de trobar el motor endollat), l'entrada web i la nativa. Cap import estàtic. */
+  test('Onada R9: el motor del registre només arriba per import(), dins del bloc de la bandera i abans de l\'adaptador (web i natiu)', () => {
+    const estatics = PRODUCCIO.filter((ruta) => ruta !== 'src/config/motorAvisosPushXat.js' &&
+      /(?:from|import)\s*['"][^'"]*motorAvisosPushXat(?:\.js)?['"]/.test(llig(ruta)));
+    expect(estatics).toEqual([]);
+    const dinamics = PRODUCCIO.filter((ruta) => /import\(\s*['"][^'"]*motorAvisosPushXat(?:\.js)?['"]\s*\)/.test(llig(ruta))).sort();
+    expect(dinamics).toEqual(['src/main.jsx', 'src/natiu/entrada.jsx']);
+    for (const [ruta, adaptador] of [['src/main.jsx', "import('./pwa/adaptadorAvisosPush.js')"], ['src/natiu/entrada.jsx', "import('./avisosPushNatius.js')"]]) {
+      const codi = llig(ruta);
+      const bandera = codi.indexOf('if (AVISOS_PUSH_XAT_ACTIUS) {');
+      const motor = codi.search(/import\('\.{1,2}\/config\/motorAvisosPushXat\.js'\)/);
+      expect(bandera, ruta).toBeGreaterThan(-1);
+      expect(motor, ruta).toBeGreaterThan(bandera);
+      expect(codi.indexOf(adaptador), ruta).toBeGreaterThan(motor);
+    }
+  });
+
   test('B8C-3: el bloc del push va darrere de registraServiceWorker(); i l\'adaptador no nomena el worker ni cap emmagatzematge', () => {
     const main = llig('src/main.jsx');
     expect(main.indexOf('\nregistraServiceWorker();\n')).toBeGreaterThan(0);

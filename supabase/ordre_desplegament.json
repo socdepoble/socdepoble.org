@@ -109,6 +109,16 @@
       "font": "README P0-21 §13; capçalera de 2611030330"
     },
     {
+      "id": "web-legal-politica-2-5",
+      "tipus": "client",
+      "descripcio": "Tornar a construir i desplegar web/connector amb /legal 2.5 (avisos push del xat) i verificar-ne l’empremta abans del nou consentiment.",
+      "despres": [],
+      "abans": [
+        "2611061520"
+      ],
+      "font": "README P0-21 §14; capçalera de 2611061520"
+    },
+    {
       "id": "funcio-notifica-xat",
       "tipus": "funcio",
       "descripcio": "Desplegar supabase/functions/notifica-xat (secrets SDP_CRON_SECRET, SDP_PUSH_ACTIU i SDP_PUSH_VAPID_*) i programar-la; només després, posar push_xat_actiu = si a private.ajustos.",

@@ -14,6 +14,12 @@
        llegixCapcalera no llig).
    Mestre 261028 (decisió 7): es purguen les 8 d'identitat de Javi i les 2 de
    l'avatar de l'Ajuntament; les 8 de patrimoni de la Torre conserven el GPS.
+   Mestre 261106 (ordre de l'Onada R9, R8-L2): també es neteja el GPS de les 8
+   de patrimoni de la Torre (4 JPEG i les 4 WebP bessones), només la GPS IFD i
+   sense tornar a codificar la imatge. Ja no queda cap llista blanca: cap foto
+   de public/assets no pot portar GPS. Com que no hi ha cap foto real amb GPS,
+   la prova que la porta no és cega es fa amb un JPEG i un WebP sintètics
+   (tests/helpers/jpegProva.js).
    Revisió adversarial 261028 (privacitat, 4) · llegixCapcalera només llig el
    darrer APP1 «Exif» d'un JPEG i no coneix l'HEIC/AVIF ni el perfil «Raw
    profile type exif» d'un PNG: la porta ja no depén d'ell sol. Una foto
@@ -26,16 +32,16 @@ import path from 'node:path';
 import { inflateSync } from 'node:zlib';
 import { describe, expect, test } from 'vitest';
 import { llegixCapcalera } from '../sections/tractors/sentinelles/imatges.js';
+import { gpsTorre, jpegAmbExif, tiff } from '../../tests/helpers/jpegProva.js';
 
 const PUBLIC = path.join(process.cwd(), 'public');
 const IMATGE = /\.(?:jpe?g|png|webp|avif|heic|heif)$/i;
 const IDENTITAT = /(^|\/)(avatars?|gent|usuaris)\/|perfil/i;
 const PURGA = "purga'l amb netejaMetadades (OG-7)";
 
-/* Mestre 261028 · Fotos de patrimoni del nucli de la Torre publicades per
-   l'administració: el GPS es queda (seran les primeres marques verdes del
-   Mapa P1-64). Cap foto d'identitat no pot entrar ací. */
-const FOTOS_DE_PATRIMONI_AMB_GPS = new Set([
+/* Mestre 261106 (R8-L2) · Les 8 fotos de patrimoni del nucli de la Torre que
+   el 261028 conservaven el GPS (decisió 7) ja no en porten. */
+const FOTOS_DE_PATRIMONI_NETEJADES = Object.freeze([
   '/assets/uploads/poble/la-torre-de-les-macanes/DSC00320.JPG',
   '/assets/uploads/poble/la-torre-de-les-macanes/DSC00320.webp',
   '/assets/uploads/poble/la-torre-de-les-macanes/DSC00410.JPG',
@@ -166,6 +172,35 @@ function lecturaIndependent(bytes) {
 }
 const INDEPENDENT = new Map(IMATGES.map((src) => [src, lecturaIndependent(BYTES.get(src))]));
 
+/* Mestre 261106 (R8-L2) · Mostres sintètiques per a provar que els dos lectors
+   no són cecs, ara que cap foto real no porta GPS: un WebP és RIFF + VP8X + un
+   tros EXIF amb el TIFF (amb o sense el prefix «Exif\0\0», com les bessones). */
+function webpAmbExif(bytesTiff, { ambPrefix = false } = {}) {
+  const cos = ambPrefix ? Buffer.concat([CAPCALERA_EXIF, Buffer.from(bytesTiff)]) : Buffer.from(bytesTiff);
+  const tros = (tipus, dades) => {
+    const capcalera = Buffer.alloc(8);
+    capcalera.write(tipus, 0, 'latin1');
+    capcalera.writeUInt32LE(dades.length, 4);
+    return Buffer.concat([capcalera, dades, Buffer.alloc(dades.length % 2)]);
+  };
+  const vp8x = Buffer.alloc(10);
+  vp8x[0] = 0x08; // bit EXIF
+  const trossos = Buffer.concat([tros('VP8X', vp8x), tros('EXIF', cos)]);
+  const riff = Buffer.alloc(12);
+  riff.write('RIFF', 0, 'latin1');
+  riff.writeUInt32LE(4 + trossos.length, 4);
+  riff.write('WEBP', 8, 'latin1');
+  return new Uint8Array(Buffer.concat([riff, trossos]));
+}
+const FABRICANT = [{ tag: 0x010f, tipus: 2, valors: 'Sony' }];
+const MOSTRES_SINTETIQUES = [
+  ['JPEG MM', jpegAmbExif({ ordre: 'MM', ifd0: FABRICANT, gps: gpsTorre() }), jpegAmbExif({ ordre: 'MM', ifd0: FABRICANT })],
+  ['JPEG II', jpegAmbExif({ ordre: 'II', ifd0: FABRICANT, gps: gpsTorre() }), jpegAmbExif({ ordre: 'II', ifd0: FABRICANT })],
+  ['WebP sense prefix', webpAmbExif(tiff({ ordre: 'II', ifd0: FABRICANT, gps: gpsTorre() })), webpAmbExif(tiff({ ordre: 'II', ifd0: FABRICANT }))],
+  ['WebP amb «Exif\\0\\0»', webpAmbExif(tiff({ ordre: 'II', ifd0: FABRICANT, gps: gpsTorre() }), { ambPrefix: true }),
+    webpAmbExif(tiff({ ordre: 'II', ifd0: FABRICANT }), { ambPrefix: true })],
+];
+
 describe('OG-7 · cap foto pública d’identitat amb GPS', () => {
   test('el recorregut no és buit', () => {
     expect(IMATGES.length).toBeGreaterThan(300);
@@ -192,22 +227,29 @@ describe('OG-7 · cap foto pública d’identitat amb GPS', () => {
     expect(brutes).toEqual([]);
   });
 
-  test('fora de la llista blanca del patrimoni, cap foto porta GPS (ni per llegixCapcalera ni pel lector independent)', () => {
+  /* Mestre 261106 (R8-L2) · Sense llista blanca: abans s'hi exceptuaven les 8
+     de patrimoni de la Torre; ara la regla és per a totes. */
+  test('cap foto de public/assets porta GPS (ni per llegixCapcalera ni pel lector independent)', () => {
     const ambGps = IMATGES
-      .filter((src) => (CAPCALERES.get(src).gps === true || INDEPENDENT.get(src).gps) && !FOTOS_DE_PATRIMONI_AMB_GPS.has(src))
+      .filter((src) => CAPCALERES.get(src).gps === true || INDEPENDENT.get(src).gps)
       .map((src) => `${src}: ${PURGA}`);
     expect(ambGps).toEqual([]);
   });
 
-  test('el lector independent veu el GPS de la llista blanca (la porta no és cega)', () => {
-    for (const src of FOTOS_DE_PATRIMONI_AMB_GPS) expect(INDEPENDENT.get(src)?.gps, src).toBe(true);
+  test.each(MOSTRES_SINTETIQUES)('la porta no és cega: %s amb GPS ho diu als dos lectors, i sense GPS, no', (_nom, ambGps, senseGps) => {
+    expect(llegixCapcalera(ambGps).gps).toBe(true);
+    expect(lecturaIndependent(ambGps).gps).toBe(true);
+    expect(llegixCapcalera(senseGps)).toMatchObject({ exif: true, gps: false });
+    expect(lecturaIndependent(senseGps).gps).toBe(false);
   });
 
-  test('la llista blanca no té cap foto d’identitat i cada entrada existix', () => {
+  test('R8-L2 · les 8 fotos de patrimoni de la Torre existixen, no són d’identitat i ja no porten GPS', () => {
     const disc = new Set(IMATGES);
-    for (const src of FOTOS_DE_PATRIMONI_AMB_GPS) {
-      expect(IDENTITAT.test(src), `${src} és d'identitat: no pot conservar el GPS`).toBe(false);
-      expect(disc.has(src), `${src} ja no existix: lleva'l de la llista blanca`).toBe(true);
+    for (const src of FOTOS_DE_PATRIMONI_NETEJADES) {
+      expect(disc.has(src), `${src} ja no existix`).toBe(true);
+      expect(IDENTITAT.test(src), src).toBe(false);
+      expect(CAPCALERES.get(src), src).toMatchObject({ exif: true, gps: false });
+      expect(INDEPENDENT.get(src)?.gps, src).toBe(false);
     }
   });
 

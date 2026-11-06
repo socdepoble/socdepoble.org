@@ -510,7 +510,12 @@ export function UniversalCard({
      Sense `formaMitja` o amb un altre valor, el DOM de sempre, byte a byte. */
   formaMitja,
   posicioMitja,
-  traduccio: ambTraduccio
+  traduccio: ambTraduccio,
+  /* G1-N02 (Gauntlet de l'arbre R9) · `llenguaContingut`: la llengua del títol, el subtítol i el cos quan no és
+     la de la pàgina (una targeta del Mur, en valencià, dins d'una pàgina traduïda). Va a eixos tres i al nom de
+     l'enllaç de tota la targeta, que és el títol; mai al peu, que és de la interfície. Una traducció de la
+     targeta mana sobre ella. Sense la prop, el DOM de sempre. */
+  llenguaContingut
 }) {
   const idDescripcio = useId();
   const safeMainHref = mainHref && isSafeUrl(mainHref) ? mainHref : null;
@@ -844,6 +849,7 @@ export function UniversalCard({
   const extresPrincipal = {
     ...(idElement != null && idElement !== '' ? { 'data-element': String(idElement) } : null),
     ...(descripcio ? { 'aria-describedby': idDescripcio } : null),
+    ...(llenguaContingut && title && !descripcio ? { lang: llenguaContingut } : null),
     /* Com les rajoles (GraellaArticles): el lector anuncia la drecera. */
     ...(ambSecundaria ? { 'aria-keyshortcuts': 'Shift+F10' } : null),
     ...secundaria.handlers
@@ -895,9 +901,9 @@ export function UniversalCard({
         etiquetesAmbAccio={etiquetesAmbAccio === true}
         formaMitja={formaMitja}
         posicioMitja={posicioMitja}
-        langTitle={traduccioVigent?.title ? langTraduccio : undefined}
-        langSubtitle={traduccioVigent?.subtitle ? langTraduccio : undefined}
-        langBody={traduccioVigent?.body ? langTraduccio : undefined}
+        langTitle={traduccioVigent?.title ? langTraduccio : llenguaContingut}
+        langSubtitle={traduccioVigent?.subtitle ? langTraduccio : llenguaContingut}
+        langBody={traduccioVigent?.body ? langTraduccio : llenguaContingut}
       />
 
       {/* P6 (directriu 2325, confirmació 2) · El peu es pinta amb portes o sense. */}

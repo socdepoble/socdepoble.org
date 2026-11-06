@@ -496,7 +496,10 @@ function comprovaDocumentacio(readme, ordre) {
   const vinyeta = readme.split('\n- `seed.sql`')[0].split(`\n- \`migrations/${NOM}\`\n`)[1]?.split('\n\n')[0] ?? '';
   expect(vinyeta, 'la vinyeta').not.toBe('');
   const vinyetaPla = pla(vinyeta);
-  expect(vinyetaPla).toContain("**NO aplicada: l'aplica el Mestre, mai un agent**");
+  /* Gauntlet R9 · FB · L'estat cert (acta 261102_1456 i lectura REST de producció del 6-11-2026: la
+     taula existix). La capçalera del SQL no es toca: la migració ja aplicada no canvia. */
+  expect(vinyetaPla).toContain('**aplicada a producció** (acta 261102_1456; lectura REST del 6-11-2026: la taula `public.xat_dispositius_push` existix)');
+  expect(vinyetaPla).not.toMatch(/NO aplicada/);
   expect(vinyetaPla).toContain('Idempotent i en una sola transacció');
   expect(vinyetaPla).toContain('`src/data/supabase/xatAvisosPush.migracio.test.js`');
   expect(vinyetaPla).toContain('porta `funcio-notifica-xat`');
@@ -506,7 +509,7 @@ function comprovaDocumentacio(readme, ordre) {
   expect(vinyetaPla).toContain(`Verificació posterior (lectura): \`${consulta[1]}\``);
   const files = readme.split('\n').filter((l) => l.includes(`\`${NOM}\``) && l.startsWith('| '));
   expect(files).toHaveLength(1);
-  expect(files[0]).toMatch(new RegExp(`^\\| \\d+ \\| \`${VERSIO}\` \\| \`${NOM}\` \\| \\*\\*NO aplicada: l'aplica el Mestre\\*\\* \\| [^|]+ \\|$`));
+  expect(files[0]).toMatch(new RegExp(`^\\| \\d+ \\| \`${VERSIO}\` \\| \`${NOM}\` \\| Aplicada a producció \\(acta 261102_1456; lectura REST del 6-11: la taula existix\\) \\| [^|]+ \\|$`));
   const inici = readme.indexOf('\n## Funció `notifica-xat` (avisos push del Xat)\n');
   expect(inici, 'la secció de la funció').toBeGreaterThan(0);
   expect(inici).toBeLessThan(readme.indexOf('\n## Funció `noticies` (lector territorial)\n'));
@@ -669,5 +672,9 @@ describe('mutacions: cada comprovació mossega', () => {
     expect(() => comprovaDocumentacio(README, altraVersio)).toThrow();
     expect(() => comprovaDocumentacio(README.replace(`\n- \`migrations/${NOM}\`\n`, '\n'), ORDRE_DESPLEGAMENT)).toThrow();
     expect(() => comprovaDocumentacio(README.replace('SDP_PUSH_VAPID_SUBJECTE', 'SDP_VAPID_SUBJECTE'), ORDRE_DESPLEGAMENT)).toThrow();
+    /* Gauntlet R9 · FB · Tornar a dir «NO aplicada» a la fila o a la vinyeta cau. */
+    const fila = README.split('\n').find((l) => l.startsWith('| ') && l.includes(`\`${NOM}\``));
+    expect(() => comprovaDocumentacio(README.replace(fila, fila.replace(/\| Aplicada a producció[^|]+\|/, "| **NO aplicada: l'aplica el Mestre** |")), ORDRE_DESPLEGAMENT)).toThrow();
+    expect(() => comprovaDocumentacio(README.replace('**aplicada a producció** (acta 261102_1456', "**NO aplicada: l'aplica el Mestre, mai un agent** (acta 261102_1456"), ORDRE_DESPLEGAMENT)).toThrow();
   });
 });

@@ -10,6 +10,9 @@ import { SECCIONS_PAGINABLES } from '../contracte.js';
    amb la seua data de creació). */
 import { llavorAmbDatesDeProva } from '../../sections/mur/datesDeProvaMur.js';
 import { CURSOS_PEDRA_EN_SEC_2026_EVENT } from '../../sections/mur/eventsSeed.js';
+/* IDEA-116 (Onada R9, R9V-C2-01) · La instantània de la primera publicació del Mur: un tros
+   diferit (la llavor, appSeed.js, ja la porta), mai l'entrada. */
+import { NOVES_TECNOLOGIES_CULTURA_RURAL_POST } from '../../sections/mur/articles/novesTecnologiesCulturaRuralContent.js';
 /* Onada 11 (261010; prompt 261010_1730, tasca 2) · La personalització del
    poble (taxonomia i estil) viatja dins de loadCoreContent com a camp
    ADDITIU i opcional: en remot, de les files d'app_content; en seed o local,
@@ -184,16 +187,27 @@ async function loadSections(ownerUserId, config, sections, { ambPaginacio = fals
      objecte on toca una llista es pren buida, en lloc de rebutjar la càrrega
      sencera del Mur ([...primary] de mergeById); les publicacions dels veïns
      es pinten igual. */
+  /* IDEA-116 (Onada R9, carril C2) · El poble de la llavor editorial: app_content
+     porta el Manifest al Mur o l'Aplec a l'agenda (producció, 06-11-2026: l'Aplec
+     i els cursos de pedra en sec es veuen al Mur). */
+  const llavorEditorial = rows.some((row) => Array.isArray(row?.payload)
+    && row.payload.some((item) => item?.id === 'manifest-de-poble' || item?.id === 'aplec-2023'));
   const llistes = Object.fromEntries(sections.map(([key], index) => {
     /* R12 (B4-S1) · Cada element porta la versió de la fila (_editorialVersio):
        la revisió editorial la necessita per a la RPC amb CAS de versió. */
     const filaEditorial = rows.find(row => row.key === key);
     const baseAppContent = marcaFilesEditorials(llistaDe(filaEditorial?.payload, key), key, filaEditorial?.version);
-    const ambActePedraSeca = key === 'events' && baseAppContent.some((item) => item?.id === 'aplec-2023')
+    /* IDEA-116 (Onada R9, carril C2) · Com l'acte de pedra en sec amb l'Aplec:
+       al poble de la llavor editorial hi entra la primera publicació del Mur,
+       que encara no és a app_content. Si un dia hi és amb la mateixa data o
+       una de més nova, mana la d'app_content (mergeById). */
+    const ambLlavorDestacada = key === 'events' && baseAppContent.some((item) => item?.id === 'aplec-2023')
       ? mergeById([CURSOS_PEDRA_EN_SEC_2026_EVENT], baseAppContent)
-      : baseAppContent;
+      : key === 'feedPosts' && llavorEditorial
+        ? mergeById([NOVES_TECNOLOGIES_CULTURA_RURAL_POST], baseAppContent)
+        : baseAppContent;
     return [key, mergeById(
-      ambActePedraSeca,
+      ambLlavorDestacada,
       submissions[index].map((row) => elementDeFila(row, sections[index][1]))
     )];
   }));

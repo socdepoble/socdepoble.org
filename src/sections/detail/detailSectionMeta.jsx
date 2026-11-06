@@ -5,6 +5,7 @@ import { renderRichText, renderPostContent } from './detailRichText.jsx';
 import { getFirstImage, semblaHtml } from './detailHelpers.jsx';
 import { Aplec2023Article } from '../mur/articles/Aplec2023Article.jsx';
 import { ManifestDePobleArticle } from '../mur/articles/ManifestDePobleArticle.jsx';
+import { NOVES_TECNOLOGIES_CULTURA_RURAL_ID } from '../mur/articles/novesTecnologiesCulturaRuralContent.js';
 import { resolRecursPropi, resolRecursosDeHtml, resolveAsset } from '../../config/assetResolver.js';
 import { autorDe, objecteDe, rutaDePerfilPublicDAutor, rutaXatDePagina } from '../../config/navigation.js';
 import { signaturaDeQuiSigna } from '../../data/identitatsSeed.js';
@@ -64,6 +65,10 @@ const EntitatsDelPoble = lazyRoute(() => import('../pobles/EntitatsDelPoble.jsx'
 /* VQ · Fase 3a (261030) · «Porta-ho de la Viquipèdia», en diferit: el
    client de Wikimedia i l'algoritme només baixen per a una fitxa incompleta. */
 const PanellDeViquipedia = lazyRoute(() => import('../pobles/PanellDeViquipedia.jsx'));
+/* IDEA-116 (Onada R9, carril C2) · La primera publicació del Mur porta el
+   reproductor del pou de neu: l'article, el reproductor i l'anatomia baixen
+   en diferit només en obrir-la, com el visor d'IDEA-109. */
+const NovesTecnologiesCulturaRuralArticle = lazyRoute(() => import('../mur/articles/NovesTecnologiesCulturaRuralArticle.jsx'));
 
 /* T5 · Les imatges del cos (variacions del Mercat, Multimèdia) es resolen en
    pintar-les: incrustat, un '/assets/…' penja del paquet. Sense base, el de
@@ -863,6 +868,12 @@ export function buildMurDetailSectionMeta({ feedPosts = [], t }) {
         {/* Decisió 3 (261007) · Cap <img> de tercers al cos de la publicació. */}
         {item.id === 'manifest-de-poble'
           ? <ManifestDePobleArticle item={item} />
+          : item.id === NOVES_TECNOLOGIES_CULTURA_RURAL_ID
+            ? (
+              <React.Suspense fallback={<Carregant etiqueta={t('patrimoni.anatomia.carregant', 'S’està carregant el visor…')} />}>
+                <NovesTecnologiesCulturaRuralArticle item={item} />
+              </React.Suspense>
+            )
           : item.esImportatWp
             ? <VistaCompletaArticleImportatWp item={item} />
             : renderPostContent(cosAmbImatgesPropies(item.content || item.summary))}

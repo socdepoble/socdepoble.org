@@ -45,4 +45,27 @@ describe('CosAmbTargetes fora de RouterProvider', () => {
     const { container } = render(<CosAmbTargetes segments={segmentsAmbTargetes(sanitizeHtml(perillosa))} />);
     expect([...container.querySelectorAll('a')].some((a) => /^javascript:/i.test(a.getAttribute('href') || ''))).toBe(false);
   });
+
+  /* G1-N02 (Gauntlet de l'arbre R9) i FAV-02 · La reserva porta la llengua de l'original, si la
+     instantània la diu (lang="ca" a la targeta): el títol, a l'enllaç o, sense ruta, en un <span>.
+     Sense lang, el DOM de sempre, sense cap atribut lang. */
+  const AMB_LANG = HTML.replace('class="sdp-targeta"', 'class="sdp-targeta" lang="ca"');
+  const tarja = (html) => render(<CosAmbTargetes segments={segmentsAmbTargetes(sanitizeHtml(html))} />)
+    .container.querySelector('.sdp-targetes > .sdp-targeta');
+
+  test('amb lang a la instantània, l’enllaç de la reserva el porta; sense, cap lang', () => {
+    const ambLang = tarja(AMB_LANG);
+    expect([...ambLang.querySelectorAll('a')].map((a) => [a.getAttribute('href'), a.getAttribute('lang')]))
+      .toEqual([['/page/drets-autor', 'ca']]);
+    expect(ambLang.querySelectorAll('[lang]')).toHaveLength(1);
+    cleanup();
+    expect(tarja(HTML).querySelectorAll('[lang]')).toHaveLength(0);
+  });
+
+  test('amb lang i una ruta perillosa, el títol va en un <span lang> i sense cap enllaç', () => {
+    const targeta = tarja(AMB_LANG.replaceAll('/page/drets-autor', 'javascript:alert(1)'));
+    expect(targeta.querySelectorAll('a')).toHaveLength(0);
+    expect([...targeta.querySelectorAll('span[lang]')].map((s) => [s.getAttribute('lang'), s.textContent]))
+      .toEqual([['ca', "Drets d'autor"]]);
+  });
 });

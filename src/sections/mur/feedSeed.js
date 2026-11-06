@@ -36,4 +36,13 @@ export const MANIFEST_DE_POBLE_POST = {
   copyright: 'Font original: Sóc de Poble (socdepoble.net) · CC BY-NC-SA 4.0 Sóc de Poble'
 };
 
+/** AH-27 · Destaquem patrimoni real sense donar-li una data d'esta setmana.
+ * Este registre és separat de la demostració temporal de les pàgines noves.
+ * IDEA-116 (Onada R9, R9V-C2-01) · Viu ací, al costat del Manifest, i
+ * datesDeProvaMur.js el reexporta: així feedContent.js (entrada) no arrossega
+ * les dates de prova, que només fa servir la capa de dades (tros diferit). */
+export const IMPORTANTS_HISTORIQUES_DEL_MUR = Object.freeze([
+  Object.freeze(['feedPosts', 'manifest-de-poble'])
+]);
+
 export const MOCK_FEED = [MANIFEST_DE_POBLE_POST];

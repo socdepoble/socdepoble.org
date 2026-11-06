@@ -14,7 +14,7 @@ const secret = Buffer.alloc(32, 7);
 const headers = { origin, 'content-type': 'application/json' };
 const pass = 'La prova local llarga 42!';
 const signup = (email, name = 'Persona de prova') => ({ email, password: pass,
-  metadata: { accepta_rgpd: true, versio_politica: '2.4', tenant_id: NODE0_AUTH_TENANT, full_name: name } });
+  metadata: { accepta_rgpd: true, versio_politica: '2.5', tenant_id: NODE0_AUTH_TENANT, full_name: name } });
 const verifiedActors = new Map();
 const cookieOf = result => { const cookie=result.headers['Set-Cookie']?.split(';')[0]; if(cookie&&result.body.user?.id)verifiedActors.set(cookie,result.body.user.id); return cookie; };
 const input = (body = {}, cookie, remoteAddress = '127.0.0.1') => ({ headers: { ...headers, ...(cookie ? { cookie, 'x-sdp-expected-actor': verifiedActors.get(cookie) } : {}) }, body, remoteAddress });
@@ -106,7 +106,7 @@ else {
         await db.exec(sql);
         assert.deepEqual(await counts(), { users: 0, profiles: 0, sessions: 0 });
         const policy = await auth.handle('policy');
-        assert.equal(policy.status, 200); assert.equal(policy.body.privacy.version, '2.4');
+        assert.equal(policy.status, 200); assert.equal(policy.body.privacy.version, '2.5');
         assert.equal(policy.body.normsVersion, '2026-10-24');
         for(const signature of ['private.node0_auth_logout(text)','private.node0_auth_password(text,bigint,text,text)','private.node0_auth_norms(text,text)'])assert.equal((await query('SELECT to_regprocedure($1) IS NULL AS removed',[signature])).rows[0].removed,true,'Unbound R4 signature must not remain executable');
       });
@@ -127,7 +127,7 @@ else {
         assert.equal((await query("SELECT count(*)::int n FROM pg_auth_members WHERE member=(SELECT oid FROM pg_roles WHERE rolname='node0_runtime')")).rows[0].n, 0);
       });
       await t.test('explicit current privacy acceptance is required; owner/verified claims are discarded', async () => {
-        for (const metadata of [{}, { accepta_rgpd: 'true', versio_politica: '2.4' }, { accepta_rgpd: true, versio_politica: '2.3' }]) {
+        for (const metadata of [{}, { accepta_rgpd: 'true', versio_politica: '2.5' }, { accepta_rgpd: true, versio_politica: '2.4' }, { accepta_rgpd: true, versio_politica: '2.3' }]) {
           const result = await auth.handle('register', input({ ...signup('invalid@example.test'), metadata }));
           assert.equal(result.status, 422);
         }
@@ -154,8 +154,8 @@ else {
         assert.equal(deliveries.length, 1); assert.match(deliveries[0].token, /^[A-Za-z0-9_-]{43}$/);
         const stored = (await query('SELECT token_hash FROM private.node0_email_challenges')).rows[0].token_hash;
         assert.equal(stored, hashTokenNodeZero(deliveries[0].token)); assert.notEqual(stored, deliveries[0].token);
-        assert.equal((await auth.handle('verify-email', input({ token: deliveries[0].token,password:pass,metadata:{accepta_rgpd:true,versio_politica:'2.4'} }))).status, 200);
-        assert.equal((await auth.handle('verify-email', input({ token: deliveries[0].token,password:pass,metadata:{accepta_rgpd:true,versio_politica:'2.4'} }))).status, 400);
+        assert.equal((await auth.handle('verify-email', input({ token: deliveries[0].token,password:pass,metadata:{accepta_rgpd:true,versio_politica:'2.5'} }))).status, 200);
+        assert.equal((await auth.handle('verify-email', input({ token: deliveries[0].token,password:pass,metadata:{accepta_rgpd:true,versio_politica:'2.5'} }))).status, 400);
       });
       await t.test('cookie sessions persist only hashes, no bearer in JSON, and identify actual registered user', async () => {
         const a = await auth.handle('login', input({ email: 'alice@example.test', password: pass }));
@@ -197,7 +197,7 @@ else {
       await t.test('second real fixture account stays independent; logout cannot revoke client-selected owner', async () => {
         assert.equal((await auth.handle('register', input(signup('bob@example.test', 'Robert prova')))).status, 202);
         const token = deliveries.at(-1).token;
-        assert.equal((await auth.handle('verify-email', input({ token,password:pass,metadata:{accepta_rgpd:true,versio_politica:'2.4'} }))).status, 200);
+        assert.equal((await auth.handle('verify-email', input({ token,password:pass,metadata:{accepta_rgpd:true,versio_politica:'2.5'} }))).status, 200);
         const result = await auth.handle('login', input({ email: 'bob@example.test', password: pass }));
         bobCookie = cookieOf(result); assert.equal(result.status, 200);
         const aliceId=verifiedActors.get(aliceCookie),bobId=result.body.user.id;

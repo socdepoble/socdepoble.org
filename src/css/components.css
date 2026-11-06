@@ -3887,6 +3887,388 @@ section.bar-orange > .sdp-emoticona-barra--boto:focus-visible { outline-color: v
 }
 
 /* ═══════════════════════════════════════════════════════════════════
+   Reproductor explicatiu del Pou de Neu (IDEA-116, Onada R9) ·
+   ReproductorExplicatiuPouNeu3D.jsx. La geometria és la del visor
+   d'Anatomia Rural; ací només hi ha la pantalla (9:16 o 16:9), els
+   controls i les tres propostes d'estil (A, B i C), totes amb tokens
+   semàntics de Pedra Seca. Les transicions viuen NOMÉS dins de
+   `prefers-reduced-motion: no-preference`.
+   ═══════════════════════════════════════════════════════════════════ */
+@layer components {
+  /* L'article del Mur que l'acull (NovesTecnologiesCulturaRuralArticle.jsx). */
+  .noves-tecnologies-rural {
+    display: flex;
+    flex-direction: column;
+    gap: var(--sdp-space-4);
+  }
+
+  .noves-tecnologies-rural__veu {
+    display: flex;
+    justify-content: center;
+  }
+
+  .reproductor-pou {
+    display: flex;
+    flex-direction: column;
+    gap: var(--sdp-space-4);
+    margin-block: var(--sdp-space-8);
+    color: var(--sdp-text-cos);
+  }
+
+  .reproductor-pou__titol {
+    margin: 0;
+    color: var(--sdp-text-titol);
+  }
+
+  .reproductor-pou__avis,
+  .reproductor-pou__nota,
+  .reproductor-pou__font,
+  .reproductor-pou__calcul {
+    margin: 0;
+    color: var(--sdp-text-suau);
+    font-size: var(--sdp-text-meta);
+    line-height: 1.6;
+  }
+
+  .reproductor-pou__opcions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: var(--sdp-space-2);
+  }
+
+  .reproductor-pou__commutador {
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  /* ── La pantalla: 9:16 en vertical, 16:9 en horitzontal ── */
+  .reproductor-pou__pantalla {
+    display: grid;
+    width: 100%;
+    margin-inline: auto;
+    overflow: hidden;
+    background: var(--sdp-fons-app);
+    border: 1px solid var(--sdp-vora);
+    border-radius: var(--sdp-radi-m);
+  }
+
+  .reproductor-pou--vertical .reproductor-pou__pantalla {
+    max-width: 22.5rem;
+    aspect-ratio: 9 / 16;
+    grid-template-rows: minmax(0, 3fr) minmax(0, 2fr);
+  }
+
+  .reproductor-pou--horitzontal .reproductor-pou__pantalla {
+    max-width: 48rem;
+    aspect-ratio: 16 / 9;
+    grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
+  }
+
+  .reproductor-pou__pantalla:focus-visible,
+  .reproductor-pou__boto-pas:focus-visible {
+    outline: var(--sdp-focus-gruix) solid var(--sdp-focus);
+    outline-offset: var(--sdp-focus-separacio);
+  }
+
+  /* R9V-C2-09 · El text del pas s'enfoca (es desplaça en 16:9): el focus va
+     per dins, perquè la pantalla retalla el que ix (overflow: hidden). */
+  .reproductor-pou__subtitol:focus-visible {
+    outline: var(--sdp-focus-gruix) solid var(--sdp-focus);
+    outline-offset: calc(-1 * var(--sdp-focus-gruix));
+  }
+
+  .reproductor-pou__svg {
+    display: block;
+    width: 100%;
+    height: 100%;
+    min-height: 0;
+  }
+
+  .reproductor-pou__subtitol {
+    min-height: 0;
+    overflow-y: auto;
+    padding: var(--sdp-space-4);
+    background: var(--sdp-fons-targeta);
+    border-top: 1px solid var(--sdp-vora);
+  }
+
+  .reproductor-pou--horitzontal .reproductor-pou__subtitol {
+    border-top: 0;
+    border-left: 1px solid var(--sdp-vora);
+  }
+
+  .reproductor-pou__comptador {
+    margin: 0 0 var(--sdp-space-1);
+    color: var(--sdp-text-suau);
+    font-size: var(--sdp-text-meta);
+  }
+
+  .reproductor-pou__pas-titol {
+    margin: 0 0 var(--sdp-space-2);
+    color: var(--sdp-text-titol);
+  }
+
+  .reproductor-pou__pas-text {
+    margin: 0;
+    line-height: 1.6;
+  }
+
+  /* ── El dibuix (estil base, el de la proposta A) ── */
+  .reproductor-pou__cara {
+    fill: var(--sdp-fons-subtil);
+    stroke: var(--sdp-vora-forta);
+    stroke-width: 1.5;
+    stroke-linejoin: round;
+  }
+
+  .reproductor-pou__cara--filera,
+  .reproductor-pou__peca .reproductor-pou__cara--filera {
+    fill: none;
+    stroke-dasharray: 10 4;
+    stroke-width: 1;
+  }
+
+  .reproductor-pou__ombra {
+    stroke: none;
+    pointer-events: none;
+  }
+
+  .reproductor-pou__ombra--1 { fill: color-mix(in srgb, var(--sdp-fons-invers) 14%, transparent); }
+  .reproductor-pou__ombra--2 { fill: color-mix(in srgb, var(--sdp-fons-invers) 26%, transparent); }
+
+  .reproductor-pou__peca--pedra .reproductor-pou__cara { fill: var(--sdp-fons-subtil); }
+  .reproductor-pou__peca--neu .reproductor-pou__cara { fill: var(--sdp-fons-targeta); }
+  .reproductor-pou__peca--palla .reproductor-pou__cara { fill: var(--sdp-accent-subtil); }
+  .reproductor-pou__peca--fusta .reproductor-pou__cara { fill: var(--sdp-fons-app); stroke: var(--sdp-accent-text); }
+
+  /* Les peces que no són del pas: traç discontinu i clar (cap opacitat: Bancal). */
+  .reproductor-pou__peca.is-apagada .reproductor-pou__cara {
+    stroke: var(--sdp-vora);
+    stroke-dasharray: 4 4;
+  }
+
+  .reproductor-pou__peca.is-activa .reproductor-pou__cara {
+    stroke: var(--sdp-accio-control);
+    stroke-width: 3;
+  }
+
+  .reproductor-pou__marcador {
+    fill: var(--sdp-accio-subtil);
+    stroke: var(--sdp-accio-control);
+    stroke-width: 2;
+  }
+
+  .reproductor-pou__cotes-dibuix {
+    pointer-events: none;
+  }
+
+  .reproductor-pou__cota-linia {
+    stroke: var(--sdp-text-titol);
+    stroke-width: 1.5;
+  }
+
+  .reproductor-pou__cota-linia--clara {
+    stroke-dasharray: 6 4;
+  }
+
+  .reproductor-pou__cota-text {
+    fill: var(--sdp-text-titol);
+    font-size: 1.5rem;
+    font-weight: 700;
+    paint-order: stroke;
+    stroke: var(--sdp-fons-app);
+    stroke-width: 4;
+    stroke-linejoin: round;
+  }
+
+  /* La xifra del pas, al costat de la peça que s'explica. */
+  .reproductor-pou__cota-text--pas {
+    font-size: 1.75rem;
+  }
+
+  /* ── Proposta A · Còmic Tinta Viva i Pedra Seca: tinta gruixuda sobre paper càlid ── */
+  .reproductor-pou--estil-a .reproductor-pou__pantalla {
+    background: var(--sdp-fons-lectura);
+  }
+
+  .reproductor-pou--estil-a .reproductor-pou__cara {
+    stroke: var(--sdp-text-titol);
+    stroke-width: 3;
+  }
+
+  .reproductor-pou--estil-a .reproductor-pou__peca--pedra .reproductor-pou__cara {
+    fill: var(--sdp-accent-subtil);
+  }
+
+  .reproductor-pou--estil-a .reproductor-pou__cota-text {
+    stroke: var(--sdp-fons-lectura);
+  }
+
+  /* ── Proposta B · Plànol etnogràfic: traç fi de llapis, sense ombres ni farcit ── */
+  .reproductor-pou--estil-b .reproductor-pou__pantalla {
+    background: var(--sdp-fons-targeta);
+  }
+
+  .reproductor-pou--estil-b .reproductor-pou__cara,
+  .reproductor-pou--estil-b .reproductor-pou__peca .reproductor-pou__cara {
+    fill: transparent;
+    stroke: var(--sdp-text-suau);
+    stroke-width: 1;
+  }
+
+  .reproductor-pou--estil-b .reproductor-pou__peca.is-activa .reproductor-pou__cara {
+    stroke: var(--sdp-accio-control);
+    stroke-width: 3;
+  }
+
+  .reproductor-pou--estil-b .reproductor-pou__ombra {
+    fill: transparent;
+  }
+
+  .reproductor-pou--estil-b .reproductor-pou__cota-linia {
+    stroke-dasharray: 2 3;
+  }
+
+  .reproductor-pou--estil-b .reproductor-pou__cota-text {
+    stroke: var(--sdp-fons-targeta);
+    font-weight: 600;
+  }
+
+  /* ── Proposta C · Blueprint: línies clares sobre el blau d'acció fosc ──
+     R9V-C2-07 · --sdp-accio-control (secondary-700, el del pas actiu), no
+     --sdp-accio (secondary-500): el blanc sobre el 500 fa 3,87:1, i les cotes
+     del dibuix no arriben al llindar de text gran en 9:16. */
+  .reproductor-pou--estil-c .reproductor-pou__pantalla {
+    background: var(--sdp-accio-control);
+  }
+
+  .reproductor-pou--estil-c .reproductor-pou__svg .reproductor-pou__cara,
+  .reproductor-pou--estil-c .reproductor-pou__svg .reproductor-pou__peca .reproductor-pou__cara {
+    fill: transparent;
+    stroke: var(--sdp-sobre-accio);
+    stroke-width: 1.5;
+  }
+
+  .reproductor-pou--estil-c .reproductor-pou__ombra {
+    fill: transparent;
+  }
+
+  .reproductor-pou--estil-c .reproductor-pou__peca.is-activa .reproductor-pou__cara {
+    stroke: var(--sdp-sobre-accio);
+    stroke-width: 4;
+  }
+
+  .reproductor-pou--estil-c .reproductor-pou__cota-linia {
+    stroke: var(--sdp-sobre-accio);
+  }
+
+  .reproductor-pou--estil-c .reproductor-pou__cota-text {
+    fill: var(--sdp-sobre-accio);
+    stroke: var(--sdp-accio-control);
+  }
+
+  .reproductor-pou--estil-c .reproductor-pou__marcador {
+    fill: transparent;
+    stroke: var(--sdp-sobre-accio);
+  }
+
+  /* ── Controls, cotes del pas i passos ── */
+  .reproductor-pou__controls,
+  .reproductor-pou__veu {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: var(--sdp-space-2);
+  }
+
+  .reproductor-pou__detall {
+    display: flex;
+    flex-direction: column;
+    gap: var(--sdp-space-3);
+    padding: var(--sdp-space-4);
+    background: var(--sdp-fons-targeta);
+    border: 1px solid var(--sdp-vora);
+    border-radius: var(--sdp-radi-m);
+  }
+
+  .reproductor-pou__cotes {
+    display: flex;
+    flex-direction: column;
+    gap: var(--sdp-space-3);
+    margin: 0;
+  }
+
+  .reproductor-pou__cota-etiqueta {
+    font-weight: 600;
+    color: var(--sdp-text-titol);
+  }
+
+  .reproductor-pou__cota-valor {
+    margin: 0;
+    line-height: 1.6;
+  }
+
+  .reproductor-pou__cota-font {
+    color: var(--sdp-text-suau);
+    font-size: var(--sdp-text-meta);
+  }
+
+  .reproductor-pou__estat {
+    display: inline-block;
+    padding: 0 var(--sdp-space-2);
+    border: 1px solid var(--sdp-vora-forta);
+    border-radius: var(--sdp-radi-pastilla);
+    font-size: var(--sdp-text-meta);
+    font-weight: 600;
+  }
+
+  .reproductor-pou__cota[data-estat="discrepant"] .reproductor-pou__estat {
+    background: var(--sdp-accent-subtil);
+    border-color: var(--sdp-accent-text);
+  }
+
+  .reproductor-pou__passos {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: var(--sdp-space-2);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .reproductor-pou__boto-pas {
+    min-height: var(--sdp-touch);
+    padding: 0 var(--sdp-space-4);
+    background: var(--sdp-fons-targeta);
+    color: var(--sdp-text-cos);
+    border: 1px solid var(--sdp-vora-control);
+    border-radius: var(--sdp-radi-pastilla);
+    cursor: pointer;
+  }
+
+  .reproductor-pou__boto-pas[aria-current="step"] {
+    background: var(--sdp-accio-control);
+    color: var(--sdp-sobre-accio);
+    border-color: var(--sdp-accio-control);
+  }
+
+  /* ── Moviment: només amb permís; amb moviment reduït, cap transició ── */
+  @media (prefers-reduced-motion: no-preference) {
+    .reproductor-pou__cara {
+      transition: stroke var(--sdp-t), stroke-width var(--sdp-t);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .reproductor-pou__cara {
+      transition: none;
+    }
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════════
    Visor d'Anatomia Rural (IDEA-109, onada R7) · VisorAnatomiaRural3D.jsx
    Només tokens semàntics de Pedra Seca: cap color literal, cap ombra
    decorativa. Les transicions viuen NOMÉS dins de

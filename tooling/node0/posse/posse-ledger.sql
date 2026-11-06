@@ -3,13 +3,17 @@
 BEGIN;
 DO $guard$ BEGIN
  IF current_database() NOT IN ('socdepoble_node0','node0_gauntlet_r4','node0_gauntlet_r6')
- -- Support the deployed canonical 76 and the reviewed, complete R20b pair.
+ -- Support the deployed canonical 76 and the reviewed, complete R20b pair (78),
+ -- each also with the R9 /legal 2.5 seal 2611061520 (77, 79); a changed 2.5 text
+ -- changes its sha256 and needs new pins (tests/node0-posse-sql.cases.mjs).
  -- A count alone cannot prove a migration identity or its source bytes.
  OR NOT EXISTS(
  SELECT 1 FROM(VALUES
 -- POSSE_MIGRATION_PINS_BEGIN
 (76,'091d1e11b6e773c531cb88a5f79d1d932f96d19bc50fca837cbdd1dea30b0260'),
-(78,'76d70ba0f769ddeda61980e489814adbd318146a00825574879ac985b2be52b1')
+(77,'9b021cd927914be1ab8223a976a4b2518a96a0d85f068999aeebd174969dc94e'),
+(78,'76d70ba0f769ddeda61980e489814adbd318146a00825574879ac985b2be52b1'),
+(79,'a4c9054de9898e7a7c0de7825f23fde105c9bed77c833fadee69e2a9c5840798')
 -- POSSE_MIGRATION_PINS_END
  ) expected(migrations,sha256)
  CROSS JOIN(SELECT count(*) migrations,encode(public.digest(coalesce(string_agg(version||E'\t'||file||E'\t'||sha256,E'\n' ORDER BY version COLLATE "C"),''),'sha256'),'hex') sha256 FROM node0.schema_migrations) actual

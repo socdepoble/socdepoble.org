@@ -5922,6 +5922,32 @@ details[open] summary.accordion-header svg:last-child {
     line-height: 1.4;
   }
   .sdp-xat-ajustos__nota--error { color: var(--sdp-error-text); }
+  /* Onada R9 · C3 (IDEA-120 / P0-30) · La píndola dels avisos push, damunt de
+     la llista de converses: el botó d'un sol toc (Boto primari ple) i les
+     notes, o les dues passes d'iOS. Se separa de la llista amb la vora de les
+     files: cap ombra, cap color propi i cap gap dins de la llista. */
+  .sdp-xat-pindola-push {
+    display: grid;
+    gap: var(--sdp-space-2);
+    margin: 0;
+    padding: var(--sdp-space-3) var(--sdp-space-4);
+    border-bottom: 1px solid var(--sdp-vora);
+  }
+  .sdp-xat-pindola-push__text {
+    margin: 0;
+    max-width: var(--sdp-measure);
+    color: var(--sdp-text-suau);
+    font-size: var(--sdp-text-meta);
+    line-height: 1.4;
+  }
+  .sdp-xat-pindola-push__text--error { color: var(--sdp-error-text); }
+  .sdp-xat-pindola-push__passos {
+    margin: 0;
+    padding-inline-start: var(--sdp-space-6);
+    color: var(--sdp-text-suau);
+    font-size: var(--sdp-text-meta);
+    line-height: 1.4;
+  }
   /* B8C-6 · interruptor dels avisos (marató 261101_2143) · La targeta no té
      padding: l'etiqueta comença a l'altura de les notes i de les files
      (--sdp-space-4) i el control respira com el xebró (el seu --sdp-space-2
@@ -14453,6 +14479,28 @@ details[open] summary.accordion-header svg:last-child {
     border: 0;
   }
 
+  /* Gauntlet R9 · FBV-01 · La façana del vídeo (VideoEditorial, un EstatBuit) viu sobre
+     el fons de crom de .aplec-2023__video, que no canvia amb el tema (llei K1). Els colors
+     semàntics de l'EstatBuit sí que canvien: en clar, el títol quedava negre sobre negre
+     i l'avís no es llegia. Ací la façana pinta amb el crom: l'avís, la icona, el títol i
+     l'anell de focus del botó. Dins de .anatomia__documental (fons de targeta) no cal. */
+  .aplec-2023__video > .video-editorial__facana {
+    flex: 1 1 auto;
+    color: var(--sdp-crom-text-suau);
+  }
+
+  .aplec-2023__video > .video-editorial__facana > .sdp-buit {
+    color: inherit;
+  }
+
+  .aplec-2023__video > .video-editorial__facana > .sdp-buit__titol {
+    color: var(--sdp-crom-text);
+  }
+
+  .aplec-2023__video > .video-editorial__facana .sdp-boto:focus-visible {
+    outline-color: var(--sdp-crom-focus);
+  }
+
   .aplec-2023__galeria,
   .aplec-2023__organitzadores {
     display: grid;
@@ -14862,6 +14910,53 @@ details[open] summary.accordion-header svg:last-child {
 
   .sdp-admin-accio-fitxer {
     cursor: pointer;
+  }
+
+  /* Onada R9 · C3 (IDEA-120; G8-12 i G8-15) · L'assistent de botigues de l'Administració, fora del
+     bloc de la Gestoria: el detall del canal i el QR de la guia. El paper i la tinta del QR no
+     canvien amb el tema (--sdp-sobre-roca i --sdp-fons-roca): contrast fix per a qualsevol lector.
+     Les llistes de passos no porten gap ni flex (llei de les llistes). */
+  .sdp-admin-botiga-detall {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 16rem), 1fr));
+    gap: var(--sdp-space-4);
+    align-items: start;
+    margin-block: var(--sdp-space-3);
+    padding: var(--sdp-space-3);
+    border: 1px solid var(--sdp-vora);
+    border-radius: var(--sdp-radi-m);
+    background: var(--sdp-fons-superficie);
+  }
+
+  .sdp-admin-botiga-detall__qr {
+    display: grid;
+    justify-items: center;
+    gap: var(--sdp-space-2);
+  }
+
+  .sdp-admin-botiga-detall__info {
+    display: grid;
+    gap: var(--sdp-space-2);
+  }
+
+  .sdp-admin-qr__svg {
+    width: 9rem;
+    height: 9rem;
+  }
+
+  .sdp-admin-qr__paper { fill: var(--sdp-sobre-roca); }
+  .sdp-admin-qr__tinta { fill: var(--sdp-fons-roca); }
+
+  .sdp-admin-botiga-detall__url {
+    font-size: var(--sdp-text-small);
+    overflow-wrap: anywhere;
+    text-align: center;
+  }
+
+  .sdp-admin-botiga-detall__passos {
+    margin: 0;
+    padding-inline-start: var(--sdp-space-4);
+    font-size: var(--sdp-text-small);
   }
 
   .sdp-input,

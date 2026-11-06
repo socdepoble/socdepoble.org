@@ -1,6 +1,10 @@
 import { beforeEach, expect, test, vi } from 'vitest';
-const m = vi.hoisted(() => ({ user: { id: '11111111-1111-4111-8111-111111111111' }, epoch: 1, mode: 'remote', configured: true, rpc: vi.fn() }));
+const m = vi.hoisted(() => ({ user: { id: '11111111-1111-4111-8111-111111111111' }, epoch: 1, mode: 'remote', configured: true, rpc: vi.fn(), actiu: true }));
 vi.mock('./runtime.js', () => ({ getCurrentUser: () => m.user, getResolvedConfig: () => ({ runtimeDataMode: m.mode, hasSupabaseConfig: m.configured }), rpc: m.rpc }));
+/* D-P016 (Onada R9) · Les proves del transport descriuen el servidor amb la
+   migració 2611032100 aplicada: hi corren amb l'interruptor encés (m.actiu).
+   El valor real (apagat) i el seu efecte es proven al final del fitxer. */
+vi.mock('../../config/connexionsPubliques.js', () => ({ get CONNEXIONS_PUBLIQUES_REMOTES_ACTIVES() { return m.actiu; } }));
 vi.mock('../identitat.js', () => ({ getDefaultUserId: () => 'convidat', capturaSessio: () => { const epoch = m.epoch; return () => { if (m.epoch !== epoch) throw new DOMException('Sessió canviada', 'AbortError'); }; } }));
 vi.mock('./moderacio.js', () => ({ llistaBloquejos: async () => [], bloqueigLocalEntre: () => false }));
 import * as servidor from './seguiments.js';
@@ -8,7 +12,7 @@ const A = '11111111-1111-4111-8111-111111111111', B = '22222222-2222-4222-8222-2
 const metode = ['preferenciesConnexions', 'desaVisibilitatConnexions', 'connexionsPubliquesDe', 'membresIEntitatsConnectadesDe', 'inclouPersonaEnEntitat', 'solicitaUnirSeAEntitat'];
 const fila = { tipus: 'persona', id: B, nom: 'Veïna', avatar: '', ruta: `/gent/${B}`, creatAl: '2026-11-03T12:00:00Z', direccio: 'sortint' };
 const prefs = { tipus: 'persona', id: A, visibilitatConnexions: 'privada', connexions: [{ ...fila, visibilitatConnexions: 'publica' }] };
-beforeEach(() => { m.user = { id: A }; m.epoch = 1; m.mode = 'remote'; m.configured = true; m.rpc.mockReset(); });
+beforeEach(() => { m.user = { id: A }; m.epoch = 1; m.mode = 'remote'; m.configured = true; m.actiu = true; m.rpc.mockReset(); });
 
 test('les sis operacions existixen en el servidor remot', () => { for (const nom of metode) expect(servidor[nom], nom).toBeTypeOf('function'); });
 test('preferències i escriptura usen RPC amb només input validat i no canvien config', async () => {
@@ -77,4 +81,39 @@ test('UUID explícit de poble no accepta resposta d’un altre poble; slug sí q
   m.rpc.mockResolvedValue({...resposta,id:A});
   expect((await servidor.preferenciesConnexions({tipus:'poble',id:A})).id).toBe(A);
   expect((await servidor.preferenciesConnexions({tipus:'poble',id:'sella'})).id).toBe(A);
+});
+
+/* D-P016 (Onada R9, ordre del Mestre del 261106) · Mentre la migració
+   2611032100 no siga a producció, l'interruptor (src/config/connexionsPubliques.js)
+   és apagat: cap de les sis RPC no ix del client en remot. */
+test('D-P016 · el valor real de l’interruptor és apagat fins que s’aplique 2611032100', async () => {
+  const real = await vi.importActual('../../config/connexionsPubliques.js');
+  expect(real.CONNEXIONS_PUBLIQUES_REMOTES_ACTIVES).toBe(false);
+});
+test('D-P016 · apagat, cap de les sis operacions fa RPC en remot: totes responen NO-DISPONIBLE', async () => {
+  m.actiu = false; m.rpc.mockResolvedValue(prefs);
+  const crides = [
+    () => servidor.preferenciesConnexions({ tipus: 'persona', id: A }),
+    () => servidor.desaVisibilitatConnexions({ tipus: 'persona', id: A, visibilitatConnexions: 'publica', connexio: { tipus: 'persona', id: B } }),
+    () => servidor.connexionsPubliquesDe({ tipus: 'persona', id: A }),
+    () => servidor.membresIEntitatsConnectadesDe({ tipus: 'poble', id: 'la-torre-de-les-macanes' }),
+    () => servidor.membresIEntitatsConnectadesDe({ tipus: 'entitat', id: O }),
+    () => servidor.inclouPersonaEnEntitat({ orgId: O, personaId: B, rol: 'treballador' }),
+    () => servidor.solicitaUnirSeAEntitat({ orgId: O, rol: 'usuari' }),
+  ];
+  for (const crida of crides) await expect(crida()).rejects.toMatchObject({ code: 'NO-DISPONIBLE' });
+  // També el visitant sense sessió a la fitxa del poble.
+  m.user = null;
+  await expect(servidor.membresIEntitatsConnectadesDe({ tipus: 'poble', id: 'la-torre-de-les-macanes' })).rejects.toMatchObject({ code: 'NO-DISPONIBLE' });
+  expect(m.rpc).not.toHaveBeenCalled();
+});
+test('D-P016 · apagat, les validacions de sempre van davant (SDP-CONN-000 i SDP-CONN-001) i tampoc no fan RPC', async () => {
+  m.actiu = false; m.user = null;
+  for (const crida of [() => servidor.preferenciesConnexions({ tipus: 'persona', id: A }), () => servidor.inclouPersonaEnEntitat({ orgId: O, personaId: B, rol: 'usuari' }), () => servidor.solicitaUnirSeAEntitat({ orgId: O, rol: 'usuari' })]) {
+    await expect(crida()).rejects.toMatchObject({ code: 'SDP-CONN-000' });
+  }
+  for (const crida of [() => servidor.connexionsPubliquesDe({ tipus: 'persona', id: 'slug-no-remot' }), () => servidor.membresIEntitatsConnectadesDe({ tipus: 'persona', id: A }), () => servidor.membresIEntitatsConnectadesDe({ tipus: 'poble', id: 'No Es Un Slug' })]) {
+    await expect(crida()).rejects.toMatchObject({ code: 'SDP-CONN-001' });
+  }
+  expect(m.rpc).not.toHaveBeenCalled();
 });

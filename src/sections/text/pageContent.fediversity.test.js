@@ -237,9 +237,14 @@ describe('anatomia (skill sdp-universal-page)', () => {
     nivells.slice(1).forEach((nivell, i) => expect([i, nivell <= nivells[i] + 1]).toEqual([i, true]));
     /* Cap estil ni color nou: la classe del logotip (page-title-logo, layout.css) i, O4-CLAUDE-2
        (prova posada al dia a propòsit), la de la primitiva Subtargeta, una per partida (bloc
-       .sdp-subtargeta de modules.css). */
+       .sdp-subtargeta de modules.css). IDEA-116 (Onada R9, prova posada al dia a propòsit) · Davant
+       de tot, la targeta de la primera publicació del Mur (pageContent.targetaMur.js): el seu
+       grup i la seua targeta són les dues primeres classes del cos.
+       pageContent.targetaMur.test.js en prova la clau, la ruta i les cinc llengües. */
     expect(copy.html).not.toMatch(/\sstyle=/);
     expect([...copy.html.matchAll(/\sclass="([^"]*)"/g)].map((m) => m[1])).toEqual([
+      'sdp-targetes',
+      'sdp-targeta',
       'page-title-logo',
       'sdp-targetes',
       'sdp-targeta',

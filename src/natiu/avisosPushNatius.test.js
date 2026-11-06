@@ -91,9 +91,11 @@ function abansDe(ms, promesa) {
 
 const microtasques = () => new Promise((resol) => { setTimeout(resol, 0); });
 
-/** Una instància nova del registre neutre (pur i amb estat de mòdul). */
+/** Una instància nova del registre neutre (pur i amb estat de mòdul).
+    Onada R9 (C3): la façana i el motor, que s'hi endolla en avaluar-se, com fa src/natiu/entrada.jsx. */
 async function registreFresc() {
   vi.resetModules();
+  await import('../config/motorAvisosPushXat.js');
   return import('../config/avisosPushXat.js');
 }
 

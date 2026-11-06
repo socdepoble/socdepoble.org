@@ -15,6 +15,13 @@ import { InstalaLaPwa, useInstalacioDeLaPagina } from './InstalaLaPwa.jsx';
 import { PAGINA_DE_LA_PASTILLA, pastillaDeVersio } from './pastillaDeVersio.js';
 const HerbariLaTorreSection=lazy(()=>import('../patrimoni/HerbariLaTorreSection.jsx'));
 const AparadorFediversity=lazy(()=>import('../text/AparadorFediversity.jsx'));
+/* Onada R9 (carril C5; IDEA-112, IDEA-113 i IDEA-115) · Les consultes de patrimoni, cadascuna en un chunk lazy:
+   només es baixen a la seua pàgina, davall del text breu de PAGE_COPY (com l'herbari). */
+const SECCIONS_DE_PATRIMONI = {
+  'banc-de-llavors': lazy(() => import('../patrimoni/BancLlavorsSection.jsx')),
+  'rutes-de-poble': lazy(() => import('../patrimoni/RutesDePobleSection.jsx')),
+  'arbres-monumentals': lazy(() => import('../patrimoni/ArbresMonumentalsSection.jsx'))
+};
 
 /* IDEA-109 (onada R7) · El visor d'Anatomia Rural és un chunk lazy: no pesa a
    l'entrada, només es baixa a /page/anatomia-rural. */
@@ -139,6 +146,7 @@ export default function PageDetailSection() {
     else if (instalacio) alFinal = <InstalaLaPwa instalacio={instalacio} lloc="baix" />;
     if (slug === PAGINA_DEL_VISOR) alFinal = <><Suspense fallback={<div role="status" aria-live="polite"><CarregantElVisor /></div>}><VisorAnatomiaRural3D /></Suspense>{alFinal}</>;
     else if(slug==='herbari')alFinal=<><Suspense fallback={null}><HerbariLaTorreSection/></Suspense>{alFinal}</>;
+    else if (Object.hasOwn(SECCIONS_DE_PATRIMONI, slug)) { const Consulta = SECCIONS_DE_PATRIMONI[slug]; alFinal = <><Suspense fallback={null}><Consulta /></Suspense>{alFinal}</>; }
     else if(['fediversity','node-zero'].includes(slug))alFinal=<><Suspense fallback={null}><AparadorFediversity/></Suspense>{alFinal}</>;
     /* P1-46 (Fita 10; guàrdia nocturna 261030) · La pastilla de versió de
        Descàrregues, l'última de la fila d'etiquetes, cap a /versions. Es

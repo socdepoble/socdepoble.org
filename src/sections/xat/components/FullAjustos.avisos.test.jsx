@@ -2,7 +2,8 @@
    full Ajustos, muntat de veres dins de ClosCaXat (el banc de
    FullAjustos.test.jsx), amb el registre DE DEBÒ dels avisos push i un
    adaptador fals que s'hi registra quan la prova ho demana.
-     · Bandera apagada (cap adaptador): la pàgina és IDÈNTICA a la de hui
+     · Sense cap adaptador (encara no ha arribat; la bandera és encesa des
+       del 261106, Onada R9): la pàgina és IDÈNTICA a la de hui
        (el DOM de PaginaEnConstruccio de HEAD 333af8c2c, amb els id normalitzats).
      · Amb un adaptador, sessió dins, mode remot, la capacitat i el servidor
        fixat: l'interruptor, i el gest arriba a l'adaptador en el mateix tic.
@@ -14,6 +15,8 @@ import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import { delVal, getVal, setVal } from '../../../config/storage.js';
 import ClosCaXat, { BotoObriRail, CLAU_RAIL } from './ClosCaXat.jsx';
 import PanellInicialMobil from './PanellInicialMobil.jsx';
+/* Onada R9 (C3) · El motor del registre, que s'endolla a la façana en avaluar-se (com a l'entrada). */
+import '../../../config/motorAvisosPushXat.js';
 import {
   AVISOS_PUSH_XAT_ACTIUS, avisosPushDisponibles, fixaServidorAvisosPush, registraAvisosPush
 } from '../../../config/avisosPushXat.js';
@@ -112,9 +115,14 @@ function obriNotificacions() {
 }
 const normalitza = (html) => html.replace(/(id|aria-labelledby)="[^"]*"/g, '$1="ID"');
 
-describe('bandera apagada (la de debò)', () => {
-  test('cap adaptador registrat: la pàgina és idèntica a la de hui, sense interruptor', () => {
-    expect(AVISOS_PUSH_XAT_ACTIUS).toBe(false);
+/* Onada R9 (C3, G8-08 e) · La bandera de debò és encesa des del 261106. Este
+   cas ja no és «la bandera apagada»: és l'estona (o la càrrega sense xarxa) en
+   què el motor i l'adaptador encara no han arribat. Llavors no hi ha res a
+   oferir i la pàgina ha de ser la de hui. La web sense clau VAPID (amb
+   adaptador) és el cas «sense clau» de baix, que també ho prova. */
+describe('bandera encesa (la de debò), abans que arribe cap adaptador', () => {
+  test('cap adaptador registrat encara: la pàgina és idèntica a la de hui, sense interruptor', () => {
+    expect(AVISOS_PUSH_XAT_ACTIUS).toBe(true);
     expect(avisosPushDisponibles()).toBe(false);
     const cos = obriNotificacions();
     expect(normalitza(cos.innerHTML)).toBe(CONSTRUCCIO_DE_HUI);

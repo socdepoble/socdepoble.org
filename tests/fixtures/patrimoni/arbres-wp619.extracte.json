@@ -1,0 +1,147 @@
+{
+ "nota": "Extracte literal de la WP #619 per a les proves de C5 (Onada R9): les línies del camp text i les àncores de les 19 fitxes. No substituïx la font.",
+ "font": "_cultura_de_poble/trilogia_mediterrania_i_moli_la_torre/wp_socdepoble_net/00_10_pagines_completes.json",
+ "sha256": "0e9b0e946186fa82caa6f9931fa54a083100b8a2d16a728a28d68a3f5c1983d6",
+ "id": 619,
+ "link": "https://socdepoble.net/2017/04/10/cataleg-d-arbres-emblematics-i-monumentals-de-la-torre-de-les-macanes/",
+ "date": "2017-04-10T19:00:25",
+ "title": "Catàleg d’Arbres Emblemàtics i Monumentals de La Torre de les Maçanes",
+ "text": {
+  "1": "ACTUALITZACIÓ: ABRIL 2017",
+  "3": "Transcorreguts 10 anys des de l’elaboració del Catàleg d’Arbres Monumentals i Emblemàtics del nostre poble, ens hem proposat tornar-lo a posar en valor difonent-lo, amb un format diferent del original, presentant-lo ara en A4 i en aquesta web, més manejable i que inclou  fotos, d’aquell moment, dels  arbres catalogats que encara no s’havien difós.",
+  "5": "A l’hora ens hem plantejat fer una actualització del catàleg, visitant, fotografiant i arreplegant informació sobre l’estat actual d’ aquests arbres.",
+  "7": "Donat que al nostre grup no comptem amb cap biòleg, no entrarem a detallar aspectes tècnics de l’evolució d’aquestos, bàsicament comentarem el que visualment podem apreciar dels canvis que s’evidencien en el seu estat i el seu entorn.",
+  "9": "Aquesta feina, donat que estem parlant d’un patrimoni natural de tot el poble, encara que molts dels arbres estan situats dins de propietats privades, volem fer-la extensiva i integradora per a totes aquelles persones que puguen sentir-se interessades en col·laborar, ja siga amb aportacions que ens servisquen per ampliar el catàleg amb algun arbre, com aportant la seua opinió sobre aspectes dels arbres que ja estan catalogats.",
+  "11": "PLANTILLA DE LA FITXA D’ARBRES PER A DESCARREGAR",
+  "13": "Hem preparat la fitxa per facilitar el treball d’altres persones o grups que vulgueu realitzar alguna cosa semblant al que hem fet al nostre poble.",
+  "15": "PLANTILLA DE FITXA D’ARBRE",
+  "17": "Aquest és un exemple de geolocalització de recursos",
+  "19": "És part del que pretenem desenvolupar al Portal de Pobles Connectats per facilitar la introducció de dades d’utilitat social. ",
+  "21": "Quan començarem la campanya «La Torre de les Maçanes, Espècie Protegida«, ens vam proposar dos objectius el primer i principal la conscienciació ciudatana per a posar en valor el nostre entorn privilegiat, la nostra història, tradició, i patrimoni cultural; i en segon lloc, dur a cap les mesures necessàries per a preservar i protegir realment aquell patrimoni natural o fet per ma de l ‘home, que considerem d’interès.",
+  "23": "Pedro Ferrer Rodriguez, enginyer tècnic forestal i biòleg amb la col·laboració de l’associació El Rentonar, hem elaborat un catàleg d’arbres, que per la seua grandària, antiguitat, arrels culturals o pel lloc on han crescut, es considera que són emblemàtics per al paisatge i entorn del poble.",
+  "25": "Considerem que aquests arbres són suficientment importants, com per a ser protegits mitjançant l’Ordenança Municipal de Protecció d’Arbres d’Interès Local, en vigor des de l’any 2005, en l’Ajuntament de La Torre de les Maçanes, que els defensen de qualsevol agressió que puguen tindre.",
+  "27": "Aquesta ordenança es un text reglamentari en el que es concreten els objectius i la funció de la protecció dels arbres d’ interès local, regulant també la gestió d’aquestos arbres i el entorn en el que s’encontren.",
+  "29": "Des d’aquesta pàgina, vos convidem a que col·laboreu amb aquesta iniciativa amb la vostra informació (ó participació) per a la millora i ampliació d’aquest catàleg.",
+  "31": "Gràcies als propietaris dels arbres, per acollir-nos tan amablement.",
+  "33": "FITXES DELS ARBRES",
+  "35": "Anar al mapa",
+  "37": "Àlbers blancs del Pont",
+  "39": "Àlborç del Xipreret",
+  "41": "Carrasca de La Foia Blanca",
+  "43": "Carrasca de La Zurca",
+  "45": "Carrasca de Nofre",
+  "47": "Carrasca del Buitre (Monumental)",
+  "49": "Carrasca del Moral",
+  "51": "Fleixos del Barranc d’Horta",
+  "53": "Ginebre de Mitja Orella",
+  "55": "Llorer de Villa María",
+  "57": "Oms de la Plaça de l’Església",
+  "59": "Pi de la Foia Boix",
+  "61": "Pi del Mas de Pipa",
+  "63": "Pi del Pla Verd",
+  "65": "Pi dels Arrendaors (Monumental)",
+  "67": "Roures de Nofre",
+  "69": "Xiprer de la Foia",
+  "71": "Xiprers del Calvari",
+  "73": "Xiprers del Cementeri",
+  "75": "Localització",
+  "77": "Veure el Catàleg d’Arbres Emblemàtics i Monumentals de La Torre de les Maçanes en un mapa més gran."
+ },
+ "ancores": [
+  {
+   "text": "Àlbers blancs del Pont",
+   "nom": "Àlbers blancs del Pont",
+   "href": "https://socdepoble.net/2007/09/07/albers-blancs-del-pont-de-la-torre-de-les-macanes/"
+  },
+  {
+   "text": "Àlborç del Xipreret",
+   "nom": "Àlborç del Xipreret",
+   "href": "https://socdepoble.net/2007/09/07/alborc-del-xipreret-de-la-torre-de-les-macanes/"
+  },
+  {
+   "text": "Carrasca de La Foia Blanca",
+   "nom": "Carrasca de La Foia Blanca",
+   "href": "https://socdepoble.net/2007/09/07/carrasca-de-la-foia-blanca-de-la-torre-de-les-macanes/"
+  },
+  {
+   "text": "Carrasca de La Zurca",
+   "nom": "Carrasca de La Zurca",
+   "href": "https://socdepoble.net/2007/09/07/carrasca-de-la-zurca-de-la-torre-de-les-macanes/"
+  },
+  {
+   "text": "Carrasca de Nofre",
+   "nom": "Carrasca de Nofre",
+   "href": "https://socdepoble.net/2007/09/07/carrasca-de-nofre-de-la-torre-de-les-macanes/"
+  },
+  {
+   "text": "Carrasca del Buitre",
+   "nom": "Carrasca del Buitre",
+   "href": "https://socdepoble.net/2007/09/07/carrasca-del-buitre-de-la-torre-de-les-macanes/"
+  },
+  {
+   "text": "Carrasca del Moral",
+   "nom": "Carrasca del Moral",
+   "href": "https://socdepoble.net/2007/09/07/carrasca-del-moral-de-la-torre-de-les-macanes/"
+  },
+  {
+   "text": "Fleixos del Barranc d’Horta",
+   "nom": "Fleixos del Barranc d’Horta",
+   "href": "https://socdepoble.net/2007/09/07/fleixos-del-barranc-dhorta-de-la-torre-de-les-macanes/"
+  },
+  {
+   "text": "Ginebre de Mitja Orella",
+   "nom": "Ginebre de Mitja Orella",
+   "href": "https://socdepoble.net/2007/09/07/ginebre-de-mitja-orella-de-la-torre-de-les-macanes/"
+  },
+  {
+   "text": "Llorer de Villa María",
+   "nom": "Llorer de Villa María",
+   "href": "https://socdepoble.net/2007/09/07/llorer-de-villa-maria-de-la-torre-de-les-macanes/"
+  },
+  {
+   "text": "Oms de la Plaça de l&#8217;Església",
+   "nom": "Oms de la Plaça de l’Església",
+   "href": "https://socdepoble.net/2007/09/07/oms-de-la-placa-de-lesglesia-de-la-torre-de-les-macanes/"
+  },
+  {
+   "text": "Pi de la Foia Boix",
+   "nom": "Pi de la Foia Boix",
+   "href": "https://socdepoble.net/2007/09/07/pi-de-la-foia-boix-de-la-torre-de-les-macanes/"
+  },
+  {
+   "text": "Pi del Mas de Pipa",
+   "nom": "Pi del Mas de Pipa",
+   "href": "https://socdepoble.net/2007/09/07/pi-del-mas-de-pipa-de-la-torre-de-les-macanes/"
+  },
+  {
+   "text": "Pi del Pla Verd",
+   "nom": "Pi del Pla Verd",
+   "href": "https://socdepoble.net/2007/09/07/pi-del-pla-verd-de-la-torre-de-les-macanes/"
+  },
+  {
+   "text": "Pi dels Arrendaors",
+   "nom": "Pi dels Arrendaors",
+   "href": "https://socdepoble.net/2007/09/07/pi-dels-arrendaors-de-la-torre-de-les-macanes/"
+  },
+  {
+   "text": "Roures de Nofre",
+   "nom": "Roures de Nofre",
+   "href": "https://socdepoble.net/2007/09/07/roures-de-nofre-de-la-torre-de-les-macanes/"
+  },
+  {
+   "text": "Xiprer de la Foia",
+   "nom": "Xiprer de la Foia",
+   "href": "https://socdepoble.net/2007/09/07/xiprer-de-la-foia-de-la-torre-de-les-macanes/"
+  },
+  {
+   "text": "Xiprers del Calvari",
+   "nom": "Xiprers del Calvari",
+   "href": "https://socdepoble.net/2007/09/07/xiprers-del-calvari-de-la-torre-de-les-macanes/"
+  },
+  {
+   "text": "Xiprers del Cementeri",
+   "nom": "Xiprers del Cementeri",
+   "href": "https://socdepoble.net/2007/09/07/xiprers-del-cementeri-de-la-torre-de-les-macanes/"
+  }
+ ]
+}

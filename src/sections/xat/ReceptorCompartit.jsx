@@ -13,22 +13,29 @@
  * Muntat per App.jsx dins de XatProvider, on hi ha el router. A la web, els
  * dos primers registres hi queden buits; els avisos push hi entren només amb
  * la bandera encesa (AVISOS_PUSH_XAT_ACTIUS): apagada, no fan res.
+ * Onada R9 · C3 (G8-09) · La sincronització és un tros diferit
+ * (SincronitzaAvisosPush.jsx) que només es munta quan el registre ja té un
+ * adaptador: sense, el hook no feia res. Si el tros no arriba (sense xarxa),
+ * no es pinta res i l'App continua igual.
  */
-import { useEffect, useRef } from 'react';
+import { Suspense, lazy, useEffect, useRef, useSyncExternalStore } from 'react';
 import { useLocation, useNavigate } from '../../app/contexts/RouterContext';
 import { escoltaTocAvis } from '../../config/avisosNatius.js';
+import { AVISOS_PUSH_XAT_ACTIUS, escoltaAvisosPush, instantaniaAvisosPush } from '../../config/avisosPushXat.js';
 import useCompartitPendent from './useCompartitPendent.js';
-import { useSincronitzaAvisosPush } from './useAvisosPushXat.js';
 import useObriDesDeLAvis from './useObriDesDeLAvis.js';
 
 const RUTA_XAT = /(^|\/)xat(\/|$)/;
+const SenseSincronitzacio = () => null;
+const SincronitzaAvisosPush = /* @__PURE__ */ lazy(() => import('./SincronitzaAvisosPush.jsx')
+  .catch(() => ({ default: SenseSincronitzacio })));
 
 export default function ReceptorCompartit() {
   const lot = useCompartitPendent();
   const { pathname } = useLocation();
   const navigate = useNavigate();
   const portat = useRef(null);
-  useSincronitzaAvisosPush();
+  const { disponible } = useSyncExternalStore(escoltaAvisosPush, instantaniaAvisosPush, instantaniaAvisosPush);
   useObriDesDeLAvis();
   useEffect(() => {
     if (!lot || lot.desti || portat.current === lot.id) return;
@@ -36,5 +43,10 @@ export default function ReceptorCompartit() {
     if (!RUTA_XAT.test(String(pathname || ''))) navigate('/xat');
   }, [lot, pathname, navigate]);
   useEffect(() => escoltaTocAvis(({ filId }) => navigate(`/xat/${encodeURIComponent(filId)}`)), [navigate]);
-  return null;
+  if (!AVISOS_PUSH_XAT_ACTIUS || !disponible) return null;
+  return (
+    <Suspense fallback={null}>
+      <SincronitzaAvisosPush />
+    </Suspense>
+  );
 }

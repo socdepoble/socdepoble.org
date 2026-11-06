@@ -190,12 +190,12 @@ describe('/legal · DSA', () => {
      T8 · D13 (pla 261101_1246) · L'edat mínima passa a 16 anys sense excepció
      (legal.edat.test.js): el rètol puja a la 2.3, en vigor des de l'1 de
      novembre de 2026; el comptador admet «des del» i «des de l'». */
-  test('guardes: ni el «Si no has iniciat sessió» (G-05) ni l’exempció de l’art. 19, i el rètol és el de la versió 2.4', () => {
+  test('guardes: ni el «Si no has iniciat sessió» (G-05) ni l’exempció de l’art. 19, i el rètol és el de la versió 2.5 (avisos push del xat, Onada R9)', () => {
     expect(TEXT).not.toMatch(/Si no has iniciat sessió/);
     expect(TEXT).toMatch(/Bloquejar: amb la sessió oberta/);
     expect(TEXT).not.toMatch(/microempresa|article 19 del Reglament \(UE\) 2022\/2065/);
-    expect(HTML.replace(/<\/?strong>/g, '')).toContain("<p><em>Versió 2.4 · En vigor des del 3 de novembre de 2026. Substitueix qualsevol versió anterior d'aquest text.</em></p>");
-    expect(HTML).not.toMatch(/Versió 2\.[12]\b/);
+    expect(HTML.replace(/<\/?strong>/g, '')).toContain("<p><em>Versió 2.5 · En vigor des del 6 de novembre de 2026. Substitueix qualsevol versió anterior d'aquest text.</em></p>");
+    expect(HTML).not.toMatch(/Versió 2\.[1234]\b/);
     expect([...HTML.replace(/<\/?strong>/g, '').matchAll(/Versió \d+\.\d+ · En vigor des de(?:l| l')/g)]).toHaveLength(1);
     expect(legalContent.date).toBe('2026-09-09T00:00:00.000Z');
   });

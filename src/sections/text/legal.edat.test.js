@@ -43,8 +43,8 @@ describe('Legal · edat mínima de 16 anys (D13 · T8)', () => {
     expect(textDe(apartat(3))).not.toMatch(/LOPDGDD|Llei Orgànica 3\/2018|article 7/);
   });
 
-  test('el rètol editorial puja a la versió 2.4 i la pàgina /legal servix este mateix text', () => {
-    expect(HTML.replace(/<\/?strong>/g, '')).toContain("<p><em>Versió 2.4 · En vigor des del 3 de novembre de 2026. Substitueix qualsevol versió anterior d'aquest text.</em></p>");
+  test('el rètol editorial puja a la versió 2.5 (avisos push del xat, Onada R9) i la pàgina /legal servix este mateix text', () => {
+    expect(HTML.replace(/<\/?strong>/g, '')).toContain("<p><em>Versió 2.5 · En vigor des del 6 de novembre de 2026. Substitueix qualsevol versió anterior d'aquest text.</em></p>");
     expect(PAGE_COPY.legal).toBe(legalContent);
   });
 

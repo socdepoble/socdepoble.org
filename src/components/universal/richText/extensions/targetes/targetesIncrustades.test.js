@@ -739,3 +739,27 @@ describe('les comandes', () => {
     expect(paragrafs).toEqual(['Un', 'DosL’Ànima']);
   });
 });
+
+/* G1-N02 (Gauntlet de l'arbre R9) · La llengua de l'original (l'atribut estàndard `lang` de la targeta) fa el
+   viatge sencer per l'editor: es llig, es desa igual i passa pel sanejador; una llengua mal formada no
+   entra; i una targeta sense llengua es desa com sempre, sense cap lang. */
+describe('G1-N02 · la llengua de la targeta', () => {
+  const AMB_LLENGUA = '<p>Abans</p><div data-sdp-targetes="" data-alineacio="dreta"><div data-sdp-targeta="publicacio:1" data-ruta="/mur/1" lang="ca" data-titol="La festa"></div></div><p>Després</p>';
+
+  test('es llig, es desa igual i el sanejador la deixa', () => {
+    creaEditor(AMB_LLENGUA);
+    const html = editor.getHTML();
+    expect(desat().querySelector('div[data-sdp-targeta]').getAttribute('lang')).toBe('ca');
+    expect(sanitizeHtml(html)).toBe(html);
+    editor.commands.setContent(html, { emitUpdate: false });
+    expect(editor.getHTML()).toBe(html);
+  });
+
+  test('una llengua mal formada no entra, i sense llengua la targeta de sempre', () => {
+    creaEditor(AMB_LLENGUA.replace('lang="ca"', 'lang="ca-ES x"'));
+    expect(desat().querySelector('div[data-sdp-targeta]').hasAttribute('lang')).toBe(false);
+    editor.commands.setContent('<p></p>');
+    editor.commands.inserirTargeta(T(2));
+    expect(desat().querySelector('[lang]')).toBeNull();
+  });
+});

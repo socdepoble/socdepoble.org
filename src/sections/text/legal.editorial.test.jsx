@@ -16,7 +16,12 @@ const sql23 = readFileSync(resolve(process.cwd(), 'supabase/migrations/261101225
 const font = sql23.split('$politica_2_3$')[1];
 const anteriors = paragrafs(font);
 const plans = anteriors.map((p, i) => p.includes('<strong>') ? null : i).filter(i => i !== null);
-const lectura24 = legalContent.html;
+/* Onada R9 · C3 · La 2.4 ja no és el text viu (/legal és la 2.5, amb els avisos
+   push del xat: legal.avisosPush.test.js en guarda la diferència exacta). La
+   projecció 2.3 → 2.4 es continua provant contra la 2.4 SEGELLADA de la seua
+   migració, que és immutable (SDP-RGPD-021). */
+const SHA_24 = '2956bc30112b2e8d097815d502f9cd711e9ee0c213c5c73634340d9657343ff3';
+const lectura24 = readFileSync(resolve(process.cwd(), 'supabase/migrations/2611030330_politica_privacitat_2_4.sql'), 'utf8').split('$politica_2_4$')[1];
 const nouRotul = "<p><em>Versió 2.4 · En vigor des del 3 de novembre de 2026. Substitueix qualsevol versió anterior d'aquest text.</em></p>";
 const cosComparat = font.replace(anteriors[0], nouRotul);
 
@@ -40,6 +45,7 @@ describe('font històrica 2.3 intacta i font editorial 2.4 de /legal', () => {
     expect(createHash('sha256').update(font).digest('hex')).toBe(SHA_23);
     expect(anteriors).toHaveLength(72);
     expect(plans).toHaveLength(29);
+    expect(createHash('sha256').update(lectura24).digest('hex')).toBe(SHA_24);
   });
 
   test('la 2.4 afegix només strong i el rètol nou: cap altre canvi de text, atribut, enllaç, dada o èmfasi anterior', () => {
@@ -91,5 +97,7 @@ describe('font històrica 2.3 intacta i font editorial 2.4 de /legal', () => {
     expect(PAGE_COPY.legal).toBe(legalContent);
     expect(legalContent.date).toBe('2026-09-09T00:00:00.000Z');
     expect(paragrafs(lectura24).filter(p => !p.includes('<strong>'))).toHaveLength(0);
+    /* La 2.5 viva tampoc no porta cap paràgraf pla. */
+    expect(paragrafs(legalContent.html).filter(p => !p.includes('<strong>'))).toHaveLength(0);
   });
 });

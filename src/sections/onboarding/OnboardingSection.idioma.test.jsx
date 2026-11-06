@@ -64,6 +64,7 @@ import { MARCA_SENSE_ENTRADA_AUTOMATICA } from './onboardingModel.js';
 import { MISSATGE_RECUPERACIO_ENVIADA } from './RecuperacioSteps.jsx';
 import { createTranslator } from '../../config/i18n.js';
 import { delEfimer, setEfimer } from '../../config/storage.js';
+import { VERSIO_POLITICA_PRIVACITAT } from '../../config/politicaPrivacitat.js';
 import CA from '../../config/idiomes/ca.js';
 import ES from '../../config/idiomes/es.js';
 import EN from '../../config/idiomes/en.js';
@@ -139,6 +140,21 @@ describe('font · claus, reserves i diccionaris', () => {
       expect([fitxer, aLaVista]).toEqual([fitxer, []]);
     }
   });
+
+  /* FBV-04 (verificadora de la ronda R9) · El comentari de ca.js que encapçala les claus de /registre deia
+     que el valor valencià era «el text de sempre». Des de G2-03, registre.consentiment és text nou en les
+     cinc llengües (versió i enllaç a /legal) i continua pendent de la validació legal del Mestre (D8). */
+  test('FBV-04 · el comentari de ca.js diu que registre.consentiment és text nou i que espera la validació (D8)', () => {
+    const font = readFileSync(path.resolve(process.cwd(), 'src/config/idiomes/ca.js'), 'utf8');
+    const clau = font.indexOf("'section.login.registre.errorContrasenyes'");
+    const inici = font.lastIndexOf('/*', clau);
+    const comentari = font.slice(inici, font.indexOf('*/', inici) + 2).replace(/\s+/g, ' ');
+    expect(comentari).toMatch(/TE-01/);
+    expect(comentari).not.toMatch(/El valor valencià és el text de sempre/);
+    expect(comentari).toMatch(/G2-03 · registre\.consentiment és un text nou en les cinc llengües/);
+    expect(comentari).toMatch(/validació legal del Mestre \(D8\), en valencià i en les altres quatre/);
+    expect(CA['section.login.registre.consentiment']).toMatch(/\{politica\}.*\{versio\}/);
+  });
 });
 
 /* ── Pantalla ───────────────────────────────────────────────────────── */
@@ -180,7 +196,9 @@ async function recorre(codi) {
   /* Crear compte: el consentiment, i els dos errors propis del formulari (parella i RGPD). */
   m.registra.mockResolvedValue({});
   await pinta();
-  expect(screen.getByRole('checkbox').labels[0].textContent).toBe(d['section.login.registre.consentiment']);
+  /* Gauntlet R9 · G2-03 · L'etiqueta porta l'enllaç a la política ({politica}) i la versió ({versio}). */
+  expect(screen.getByRole('checkbox').labels[0].textContent).toBe(d['section.login.registre.consentiment']
+    .replace('{politica}', d['section.login.registre.politicaPrivacitat']).replace('{versio}', VERSIO_POLITICA_PRIVACITAT));
   canvia(d['section.login.placeholder.name'], 'name', 'Ana Puig');
   canvia(d['section.login.loginEmail'], 'email', 'ana@poble.test');
   canvia(d['section.login.loginPassword'], 'password', 'contrasenya-llarga');
@@ -287,7 +305,7 @@ describe('pantalla · la llengua triada', () => {
     m.config = { dataMode: 'seed', tenantId: TENANT };
     await pinta();
     expect(screen.getByRole('checkbox').labels[0].textContent)
-      .toBe('Consent el tractament de dades personals (RGPD Llei 05) exclusivament per a Sóc de Poble.');
+      .toBe(`He llegit i accepte la Política de privacitat (versió ${VERSIO_POLITICA_PRIVACITAT})`);
     expect(screen.getAllByRole('heading').map((h) => h.textContent))
       .toEqual(['Benvinguda al Mas Electrònic', 'Benvinguda a la Beta de Sóc de Poble', 'Accés ràpid amb Google', 'Crea el teu compte']);
     const benvinguda = document.querySelector('.onboarding-card__intro--espaiada');

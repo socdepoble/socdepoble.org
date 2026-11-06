@@ -14,7 +14,7 @@ const moduleURL=process.env.SDP_PGLITE_MODULE?pathToFileURL(process.env.SDP_PGLI
 const {PGlite}=moduleURL?await import(moduleURL.href):{}, {pgcrypto}=moduleURL?await import(new URL('./contrib/pgcrypto.js',moduleURL)):{};
 const testSql=(name,run)=>test(name,{skip:moduleURL?false:'Set SDP_PGLITE_MODULE for the actual disposable PostgreSQL proof'},run);
 const PA='Attacker submitted first password 101!',PV='Victim submitted initial password 102!',PF='Victim explicitly chooses final password 103!',PR='Victim explicitly resets password 104!';
-const consent={accepta_rgpd:true,versio_politica:'2.4'},headers={origin:'https://socdepoble.cat','content-type':'application/json'};
+const consent={accepta_rgpd:true,versio_politica:'2.5'},headers={origin:'https://socdepoble.cat','content-type':'application/json'};
 const signup=(email,password=PA)=>({email,password,metadata:{...consent,tenant_id:NODE0_AUTH_TENANT,full_name:'Disposable proof fixture'}});
 testSql('R6 email proof owns the final password, one-use credential version, consent and24h pending TTL',async t=>{
  const initial=new PGlite();await initial.exec('CREATE DATABASE socdepoble_node0');const image=await initial.dumpDataDir('none');await initial.close();
@@ -29,8 +29,8 @@ testSql('R6 email proof owns the final password, one-use credential version, con
  let email='victim-primary@example.invalid',firstToken,secondToken,firstCookie,secondCookie,id;
  try{
   await pg.exec(generaSql(creaPlaMigracions(),await preparaHidratacio(),{advisoryLock:false}));await pg.exec(sql);
-  await t.test('installation is idempotent, all78 migrations real and zero people precreated',async()=>{
-   assert.equal((await q('SELECT count(*)::int n FROM node0.schema_migrations'))[0].n,78);assert.equal((await q('SELECT count(*)::int n FROM auth.users'))[0].n,0);await pg.exec(sql);
+  await t.test('installation is idempotent, all79 migrations real (R9: plus the /legal 2.5 seal) and zero people precreated',async()=>{
+   assert.equal((await q('SELECT count(*)::int n FROM node0.schema_migrations'))[0].n,79);assert.equal((await q('SELECT count(*)::int n FROM auth.users'))[0].n,0);await pg.exec(sql);
    assert.equal((await q("SELECT to_regprocedure('private.node0_auth_verify(text)') IS NULL missing"))[0].missing,true);
   });
   await t.test('pending registration has no attributed canonical consent, no session and a24h deadline',async()=>{
@@ -57,7 +57,7 @@ testSql('R6 email proof owns the final password, one-use credential version, con
    const verified=await verify(secondToken);assert.equal(verified.status,200);assert.deepEqual(verified.body,{verified:true,login_required:true});assert.equal(verified.headers['Set-Cookie'],undefined);assert.equal((await verify(secondToken)).status,400);
    for(const password of [PA,PV])assert.equal((await call('login',{email,password})).status,401);
    const login=await call('login',{email,password:PF});assert.equal(login.status,200);firstCookie=login.headers['Set-Cookie'].split(';')[0];
-   const c=(await q("SELECT versio_politica,accio,origen FROM public.consentiments WHERE user_id=$1 AND tipus='rgpd_acepta'",[id]));assert.deepEqual(c.map(r=>[r.versio_politica,r.accio,r.origen]),[['2.4','atorga','alta']]);
+   const c=(await q("SELECT versio_politica,accio,origen FROM public.consentiments WHERE user_id=$1 AND tipus='rgpd_acepta'",[id]));assert.deepEqual(c.map(r=>[r.versio_politica,r.accio,r.origen]),[['2.5','atorga','alta']]);
   });
   await t.test('verified duplicate registration does not rotate credentials, notify, revoke or overwrite the account',async()=>{
    const before=(await q('SELECT version::int,digest FROM private.node0_credentials WHERE user_id=$1',[id]))[0],sent=mail.length;
@@ -127,7 +127,7 @@ testSql('R6 email proof owns the final password, one-use credential version, con
   await t.test('installer reapply preserves NEW valid proof but old token-only entry point and helper gates stay inaccessible',async()=>{
    const email='reapply@example.invalid';await call('register',signup(email));const token=latest(email).token;await pg.exec(sql);assert.equal((await verify(token)).status,200);
    for(const role of ['anon','authenticated','node0_runtime','node0_authenticator']){
-    await pg.exec('SET ROLE '+role);try{await assert.rejects(pg.query("SELECT private.node0_auth_finish_email(repeat('0',64),'verify',repeat('0',32),repeat('0',128),'2.4')"),e=>e.code==='42501');await assert.rejects(pg.query('SELECT private.node0_auth_purge_pending()'),e=>e.code==='42501');}finally{await pg.exec('RESET ROLE');}
+    await pg.exec('SET ROLE '+role);try{await assert.rejects(pg.query("SELECT private.node0_auth_finish_email(repeat('0',64),'verify',repeat('0',32),repeat('0',128),'2.5')"),e=>e.code==='42501');await assert.rejects(pg.query('SELECT private.node0_auth_purge_pending()'),e=>e.code==='42501');}finally{await pg.exec('RESET ROLE');}
    }
   });
  }finally{await pg.close();}

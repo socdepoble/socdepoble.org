@@ -4,7 +4,8 @@
    defecte.» Dos hooks sobre el registre neutre (src/config/avisosPushXat.js):
 
      · useSincronitzaAvisosPush() · el munta ReceptorCompartit, una vegada per
-       càrrega. Fixa el servidor de la persona de la sessió (Model B: el port,
+       càrrega (Onada R9: pel tros diferit SincronitzaAvisosPush.jsx, només quan
+       ja hi ha un adaptador; abans, el cas (i)). Fixa el servidor de la persona de la sessió (Model B: el port,
        capacitat 'avisosPush') i sincronitza sense preguntar MAI:
          (i)   sense adaptador (la bandera apagada), no fa res;
          (ii)  amb la sessió en 'comprovant', espera;

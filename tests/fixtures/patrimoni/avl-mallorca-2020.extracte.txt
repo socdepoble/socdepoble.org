@@ -1,0 +1,233 @@
+# Extracte literal de les línies citades per les dades (C5, Onada R9). No substituïx la font.
+# font: _cultura_de_poble/intercanvi_de_llavors_i_varietats_tradicionals/corpus_text/01_AVL_Cataleg_de_Llavors_2020.md
+# sha256: 77e2002fb982d31f37d08793c6e3658d7a94f3d122c8543b5cf6130c6b6c0bef
+# linies-font: 1104
+# Només el títol, l’autoria, la web, les capçaleres de temporada i el nom, el nom científic i l’origen de cada varietat: cap descripció.
+1	# Catàleg de Llavors AVL 2020 (Acadèmia Valenciana de la Llengua) (32 pàgines)
+5	catàleg de llavors 
+6	2020
+19	L’Associació de Varietats Locals (AVL en endavant) és 
+20	una entitat sense ànim de lucre creada l’any 2002, per 
+21	promoure i fomentar l’ús i la conservació de les varietats 
+22	locals d’hortalisses, llegums, cereals i fruiters de Mallorca. 
+30	a diferents públics. (Més info: www.varietatslocals.org)
+237	Varietats d’estiu
+242	Varietats d’estiu
+244	Alfabeguera de fulla verda 
+245	Ocimum basilicum
+246	Origen: Can Nicolau, Sant Joan, Mallorca.
+249	Albergínia morada 
+250	Solanum melongena
+251	Origen: Son Fortuny, Sant Joan, Mallorca.
+256	Alfabeguera de fulla morada 
+257	Ocimum basilicum
+258	Origen: Can Nicolau, Sant Joan, Mallorca.
+263	Blat de les Índies
+264	Zea mays L.
+265	Origen: Prospectada a Sa Pobla, Mallorca, pel CRF.
+278	Varietats d’estiu
+280	Carabassa d’encarabassat
+281	Citrullus lanatus
+282	Origen: Ca Na Justa, Porreres, Mallorca.
+290	Carabassa de cabell d’àngel 
+291	Cucurbita ficifolia
+292	Origen: Manacor, Mallorca.
+296	Carabassa de fregall
+297	Luffa cylindrica
+298	Origen: Ses Pedreres, Manacor, Mallorca.
+305	Carabassa llarga 
+306	Cucurbita moschata
+307	Origen: Son Ripoll, Montuïri, Mallorca.
+323	Varietats d’estiu
+325	Fesol
+326	Vigna unguiculata
+327	Origen: Prospectada a Mallorca pel Centro de Recursos 
+328	Fitogenéticos.
+335	Carabassa petita
+336	Cucurbita moschata
+337	Origen: Montuïri, Mallorca.
+341	Enciam de tres ulls
+342	Lactuca sativa
+343	Origen: Ca na Justa, Porreres, Mallorca.
+348	Fesol llarg o de metro
+349	Phaseolus vulgaris
+350	Origen: Ses Pedreres, Manacor, Mallorca.
+367	Varietats d’estiu
+369	Meló fei rodó
+370	Cucumis melo
+371	Origen: Son Ajaume Nou, Palma, Mallorca.
+379	Meló des clot des pou
+380	Cucumis melo
+381	Origen: S’Horta, Felanitx, Mallorca.
+385	Meló eriçó
+386	Cucumis melo
+387	Origen: Son Amadora, Vilafranca, Mallorca.
+394	Meló manto del Senyor
+395	Cucumis melo
+396	Origen: Felanitx, Mallorca.
+415	Varietats d’estiu
+417	Mongeta negra
+418	Phaseolus vulgaris
+419	Origen: Prospectada a Mallorca pel Centro de Recursos 
+420	Fitogenéticos.
+426	Mongeta blanca
+427	Phaseolus vulgaris
+428	Origen: Prospectada a Mallorca pel Centro de Recursos 
+429	Fitogenéticos.
+433	Mongeta de careta
+434	Phaseolus vulgaris
+435	Origen: Prospectada a Mallorca pel Centro de Recursos 
+436	Fitogenéticos.
+440	Mongeta tendra blanca
+441	Phaseolus vulgaris
+442	Origen: Sos Fulles, Artà, Mallorca.
+460	Varietats d’estiu
+462	Pebre de Padrón
+463	Capsicum annuum
+464	Origen: Son Fortuny, Sant Joan, Mallorca.
+468	Pebre de banya de cabra
+469	Capsicum annuum
+470	Origen: Son Fortuny, Sant Joan, Mallorca.
+473	Pebre de fulla d’olivera
+474	Capsicum annuum
+475	Origen: Can Pou, Sant Jordi, Mallorca.
+482	Pebre de tap de cortí
+483	Capsicum annuum
+484	Origen: Sa Teulera, Manacor, Mallorca.
+501	Varietats d’estiu
+503	Pebre ros gruixat
+504	Capsicum annuum
+505	Origen: Muro, Mallorca.
+508	Pebre d’envinagrar
+509	Capsicum annuum
+510	Origen: Son Fortuny, Sant Joan, Mallorca.
+513	Pebre ros
+514	Capsicum annuum
+515	Origen: Sant Jordi, Mallorca.
+518	Síndria blanca i allargada
+519	Citrullus lanatus
+520	Origen: Son Vell, Son Macià, Mallorca.
+541	Varietats d’estiu
+543	Tomàtiga de bombilla
+544	Solanum lycopersicum
+545	Origen: Manacor, Mallorca.
+550	Síndria de pinyol blanc
+551	Citrullus lanatus
+552	Origen: Sant Joan, Mallorca.
+555	Síndria de pinyol vermell
+556	Citrullus lanatus
+557	Origen: Jardí Botànic de Sóller, Mallorca.
+561	Tomàtiga de cor de bou
+562	Solanum lycopersicum
+563	Origen: S’Hostalet, Sant Joan, Mallorca.
+584	Varietats d’estiu
+586	Tomàtiga de ramellet de canyisset
+587	Solanum lycopersicum
+588	Origen: Son Macià, Mallorca.
+593	Tomàtiga de Mutxamel
+594	Solanum lycopersicum
+595	Origen: Son Juny, Sant Joan, Mallorca.
+603	Tomàtiga de pera 
+604	Solanum lycopersicum
+605	Origen: Ca Na Justa, Porreres, Mallorca.
+610	Tomàtiga de ramellet de ferro
+611	Solanum lycopersicum
+612	Origen: Son Fortuny, Sant Joan, Mallorca.
+638	Varietats d’estiu
+640	Tomàtiga de Valldemossa
+641	Solanum lycopersicum
+642	Origen: Jardí botànic de Sóller, Mallorca.
+646	Tomàtiga de ramellet de mateta
+647	Solanum lycopersicum
+648	Origen: Son Fortuny, Sant Joan, Mallorca.
+658	Tomàtiga de ramellet de na Solereta
+659	Solanum lycopersicum
+660	Origen: Son Negre, Felanitx, Mallorca.
+665	Tomàtiga negra
+666	Solanum lycopersicum
+667	Origen: Manacor, Mallorca.
+693	Varietats d’hivern
+698	Varietats d’hivern
+700	Ciuró mallorquí 
+701	Cicer arietinum
+702	Origen: Son Ajaume Nou, Palma, Mallorca.
+708	Ceba blanca mallorquina
+709	Allium cepa
+710	Origen: Horteta, Sant Joan, Mallorca.
+716	Ceba vermella d’Andratx
+717	Allium cepa
+718	Origen: Estellencs, Mallorca.
+721	Col borratxona
+722	Brassica oleracea
+723	Origen: Muro, Mallorca.
+741	Varietats d’hivern
+743	Col de cabdell
+744	Brassica oleracea capitata L.
+745	Origen: Muro, Mallorca.
+749	Col borratxona petita (o de 7 setmanes) 
+750	Brassica oleracea
+751	Origen: Muro, Mallorca.
+754	Col caputxina 
+755	Brassica oleracea
+756	Origen: Ca na Justa, Porreres, Mallorca.
+760	Colflori de fulla d’espasa 
+761	Brassica oleracea capitata L.
+762	Origen: Alcúdia, Mallorca.
+814	Varietats d’hivern
+816	Colflori de Sant Antoni   
+817	Brassica oleracea botrytis L.
+818	Origen: Alcúdia, Mallorca.
+820	Colflori de la Puríssima 
+821	Brassica oleracea botrytis L.
+822	Origen: Alcúdia, Mallorca.
+828	Colflori de Nadal 
+829	Brassica oleracea botrytis L.
+830	Origen: Alcúdia, Mallorca.
+832	Colflori de Sant Josep
+833	Brassica oleracea botrytis L.
+834	Origen: Alcúdia, Mallorca.
+866	Varietats d’hivern
+868	Colflori d’orella d’ase
+869	Brassica oleracea botrytis L.
+870	Origen: Alcúdia, Mallorca.
+873	Colflori de Tots Sants
+874	Brassica oleracea botrytis L.
+875	Origen: Alcúdia, Mallorca.
+880	Colflori de Ram o de Pasqua 
+881	Brassica oleracea botrytis L.
+882	Origen: Alcúdia, Mallorca.
+885	Enciam negre
+886	Lactuca sativa
+887	Origen: Prospectada a Sant Llorenç de Balàfia, Eivissa, 
+888	pel CITA.
+935	Varietats d’hivern
+937	Fava negra
+938	Vicia faba
+939	Origen: Es Maiol, Artà, Mallorca.
+944	Enciam revull blanc
+945	Lactuca sativa
+946	Origen: Ca na Justa, Porreres, Mallorca.
+953	Fava mallorquina
+954	Vicia faba
+955	Origen: Son Vell, Son Macià, Mallorca.
+961	Julivert mallorquí
+962	Petroselinum crispum
+963	Origen: Es Maiol, Artà, Mallorca.
+975	Varietats d’hivern
+977	Pèsol de bullir
+978	Pisum sativum
+979	Origen: Es Maiol, Artà, Mallorca.
+983	Lletuga murtera
+984	Lactuca sativa
+985	Origen: Prospectada a Eivissa pel Centro de Recursos 
+986	Fitogenéticos.
+992	Pastanaga morada
+993	Daucus carota
+994	Origen: Es Moradet, Montuïri, Mallorca.
+998	Pèsol d’esclovellar
+999	Pisum sativum
+1000	Origen: Centro de Recursos Fitogenéticos, INIA.
+1031	Varietats d’hivern SEMBRA TRASPLANTAMENT RECOL·LECCIÓ DISTÀNCIA DE SEMBRA PES I UNITATS aprox.
+1032	Rave mallorquí
+1033	Raphanus sativus L.
+1034	Origen: S’Hort des Pla, Sant Jordi, Mall0rca.

@@ -200,6 +200,11 @@
       "reason": "P1-24 (C1645-03/04): arrencada del cervell del bot amb corpus mínim a mkdtemp, sense xarxa ni credencials (@google/genai fals); contracte productor→public/rag-index.json→hydrateRagIndex→search→prompt, frontera de la Wiki pública (publication-policy) per a cada entrada de l’índex, historial fitat a 8 i immunite.mjs linkat."
     },
     {
+      "path": "tests/botigues.estat.test.mjs",
+      "suite": "primary",
+      "reason": "Onada R9 · C3 (IDEA-120 / P0-30): scripts/botigues/estat.mjs i preflight --estat, l'estat honest de les botigues llegit de fitxers sintètics a mkdtemp (versions, SDK, identificadors, conformitat, avisos push, eliminació del compte) i del projecte només per la forma; cap xarxa, cap eina ni cap valor de .env a l'eixida."
+    },
+    {
       "path": "tests/botigues.test.mjs",
       "suite": "primary",
       "reason": "Regressió portable dels scripts de pujada a les botigues (scripts/botigues/): peces pures, fitxers temporals fora del repositori i git de només lectura (més un repositori de mostra en una carpeta temporal per al paquet caducat, BOT-A4); cap compilació, signatura ni pujada, i cap crida a xcodebuild, altool, gradle, keytool ni fastlane (el preflight rep consultes fingides)."

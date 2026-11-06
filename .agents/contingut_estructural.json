@@ -44,15 +44,15 @@
       "data": "2026-11-05"
     },
     "fedivers": {
-      "sha256": "8dbc76b2b009f0bff3ac612f69080ae00cda02398429e21b193d0e99d01c7f6c",
-      "html": 17261,
-      "aprovat_per": "Codex: execució autoritzada R7, revisió tècnica automatitzada",
+      "sha256": "2ebec91f28fad1153f53de6de8ee5e2a46d371c511dab23bbea68ebd3fc8a36c",
+      "html": 19939,
+      "aprovat_per": "Mestre Javi Llinares (ordre Onada R9 261106 14:06 i ordre de producció 261106 21:2x: «aprova les 4 empremtes de la Frontissa (fedivers, fediversity, node-zero, legal)»); diff revisat per Claude: 5 carrils verificats, Gauntlet de l'arbre, 2 rondes d'arreglos FA/FB i verificació final VT/VC/VF, 2026-11-06",
       "data": "2026-11-06"
     },
     "fediversity": {
-      "sha256": "e018de7ec5051d545d28d813ad39e550cdb3fddee3baae74aa9866bde1202bf0",
-      "html": 57127,
-      "aprovat_per": "Codex: execució autoritzada R7, revisió tècnica automatitzada",
+      "sha256": "505b1010e3f2c8be8a3ea3e2983cbe9deef39e22e16af99bedb3d0e949250405",
+      "html": 60782,
+      "aprovat_per": "Mestre Javi Llinares (ordre Onada R9 261106 14:06 i ordre de producció 261106 21:2x: «aprova les 4 empremtes de la Frontissa (fedivers, fediversity, node-zero, legal)»); diff revisat per Claude: 5 carrils verificats, Gauntlet de l'arbre, 2 rondes d'arreglos FA/FB i verificació final VT/VC/VF, 2026-11-06",
       "data": "2026-11-06"
     },
     "habitatge": {
@@ -62,15 +62,15 @@
       "data": "2026-11-05"
     },
     "legal": {
-      "sha256": "0fce35ffeec3e42147a1ad2ab129908d16439c25d58c8f13e4b899c77ab89d04",
-      "html": 55706,
-      "aprovat_per": "Mestre Javi Llinares (ordre O6 T2.4: kit CAS de Codex 261103_kit_codex_onada6_legal_i_tancament integrat per Claude amb el registre rebasat; text legal 2.4, sense cap canvi de paraula fora de la línia de versió)",
-      "data": "2026-11-03"
+      "sha256": "0a903b4b1739120ddfc9d6fd275a6e26effd5329d061a431dcf2686e0f28173c",
+      "html": 59594,
+      "aprovat_per": "Mestre Javi Llinares (ordre Onada R9 261106 14:06 i ordre de producció 261106 21:2x: «aprova les 4 empremtes de la Frontissa (fedivers, fediversity, node-zero, legal)»); diff revisat per Claude: 5 carrils verificats, Gauntlet de l'arbre, 2 rondes d'arreglos FA/FB i verificació final VT/VC/VF, 2026-11-06",
+      "data": "2026-11-06"
     },
     "node-zero": {
-      "sha256": "ad8760ffbb200c39dc1641105a6436fce44aae49cd44ca9db0a2b8519f8adecb",
-      "html": 17148,
-      "aprovat_per": "Codex: execució autoritzada R7, revisió tècnica automatitzada",
+      "sha256": "201963fb1cbf69785745e330bca37f3c5f54dbd72f84ad4ff2b75518a766eb12",
+      "html": 19826,
+      "aprovat_per": "Mestre Javi Llinares (ordre Onada R9 261106 14:06 i ordre de producció 261106 21:2x: «aprova les 4 empremtes de la Frontissa (fedivers, fediversity, node-zero, legal)»); diff revisat per Claude: 5 carrils verificats, Gauntlet de l'arbre, 2 rondes d'arreglos FA/FB i verificació final VT/VC/VF, 2026-11-06",
       "data": "2026-11-06"
     },
     "notes": {

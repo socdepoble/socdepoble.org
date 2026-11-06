@@ -404,6 +404,9 @@ describe('visor · teclat i panell de detall', () => {
 describe('visor · documental', () => {
   test('pou de neu: el vídeo de Monesma, amb autoria, títol i només l’origen de YouTube sense galetes', () => {
     const { container } = render(<VisorAnatomiaRural3D />);
+    /* Gauntlet R9 · G2-04 · Façana de clic: abans del gest, cap iframe; el botó obri el del vídeo. */
+    expect(container.querySelector('iframe')).toBeNull();
+    fireEvent.click(within(container).getByRole('button', { name: 'Veure el vídeo (YouTube)' }));
     const marc = container.querySelector('iframe');
     expect(marc.getAttribute('src')).toBe('https://www.youtube-nocookie.com/embed/3RQv3xjVr-M');
     expect(marc.getAttribute('title')).toMatch(/^Los EMPOZADORES y las NEVERAS naturales de HIELO/);
@@ -412,10 +415,27 @@ describe('visor · documental', () => {
     expect(screen.queryByRole('link', { name: /Eugenio Monesma a YouTube/ })).toBeNull();
   });
 
+  /* FBV-05 (verificadora de la ronda R9) · El <cite> ja diu el títol: la façana no el repetix. Abans del
+     clic, el títol hi és una sola vegada; després, el <cite> continua i l'iframe porta el mateix títol. */
+  test('FBV-05 · el títol del documental no es repetix a la façana', () => {
+    const { container } = render(<VisorAnatomiaRural3D />);
+    const cite = container.querySelector('.anatomia__video-titol cite');
+    const titol = cite.textContent;
+    expect(titol).toMatch(/^Los EMPOZADORES y las NEVERAS naturales de HIELO/);
+    const documental = container.querySelector('.anatomia__documental');
+    expect(documental.textContent.split(titol)).toHaveLength(2);
+    expect(documental.querySelector('.video-editorial__facana > .sdp-buit__titol').textContent).toBe('En prémer, YouTube rebrà la teua adreça IP.');
+    fireEvent.click(within(container).getByRole('button', { name: 'Veure el vídeo (YouTube)' }));
+    expect(container.querySelector('.anatomia__video-titol cite').textContent).toBe(titol);
+    expect(container.querySelector('iframe').getAttribute('title')).toBe(titol);
+  });
+
   test('els altres vídeos reals porten l’autoria que consigna YouTube, no la de Monesma', () => {
     const esperats = { almassera: '_knm0PiGE9A', 'moli-hidraulic': 'VBzEBQq_4LA', 'moli-electric': 'VBzEBQq_4LA', 'cup-i-premsa': 'vpTVDipdXi4' };
     for (const [id, videoId] of Object.entries(esperats)) {
       const { container, unmount } = render(<VisorAnatomiaRural3D estructuraInicial={id} />);
+      expect(container.querySelector('iframe'), id).toBeNull();
+      fireEvent.click(within(container).getByRole('button', { name: 'Veure el vídeo (YouTube)' }));
       expect(container.querySelector('iframe').getAttribute('src'), id).toBe(`https://www.youtube-nocookie.com/embed/${videoId}`);
       expect(container.textContent, id).toMatch(/Autoria:\s*Sangonereta Gastronomia/);
       expect(container.textContent, id).not.toMatch(/Eugenio Monesma/);

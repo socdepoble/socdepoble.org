@@ -21,7 +21,10 @@ export function LaboratoriTaxonomiaDoctoral() {
   const [facetaActiva, setFacetaActiva] = useState('totes');
   const [cercaGeografica, setCercaGeografica] = useState('');
   const [cercaEtiquetes, setCercaEtiquetes] = useState('');
-  const [mostraBuides, setMostraBuides] = useState(true);
+  /* G10-11 (IDEA-117; ordre del Mestre del 261106, Onada R9) · La taula comença
+     sense les 53 etiquetes buides, d'acord amb `etiquetesBuidesPodades: true`
+     de l'estat inicial; el botó de davall les torna a mostrar. */
+  const [mostraBuides, setMostraBuides] = useState(false);
   const [cercaArticles, setCercaArticles] = useState('');
   const [filtreCatIA, setFiltreCatIA] = useState('totes');
   const [filtrePoble, setFiltrePoble] = useState('tots');

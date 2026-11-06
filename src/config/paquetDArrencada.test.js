@@ -41,6 +41,8 @@ describe('trossDArrencada (vite.config.js)', () => {
     ['/x/src/sections/mur/articles/manifestDePobleContent.js', 'pobles-aplec'],
     ['/x/src/data/taxonomia/indexArticlesImportats.js', 'pobles-aplec'],
     ['/x/src/sections/pobles/pobleDeViquipedia.js', null],
+    // IDEA-116 (Onada R9, R9V-C2-01) · la primera publicació del Mur no baixa a l'arrencada: tros diferit.
+    ['/x/src/sections/mur/articles/novesTecnologiesCulturaRuralContent.js', null],
     ['/x/node_modules/lucide-react/dist/esm/icons/house.mjs', null],
     ['/x/node_modules/react-is/index.js', null],
     ['/x/node_modules/@tiptap/core/dist/index.js', null],

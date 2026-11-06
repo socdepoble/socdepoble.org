@@ -95,8 +95,11 @@ describe('la llavor del Mur amb les dates de prova', () => {
        Abans, com a molt nou.
        Ordre del Mestre (30-10-2026; candidatura NLnet NGI Fediversity) · Onze:
        «Candidatura Europea NLnet · NGI Fediversity» hi entra la primera, com
-       Descàrregues. Abans, com a molt deu. */
-    expect(N).toBeLessThanOrEqual(11);
+       Descàrregues. Abans, com a molt deu.
+       Ordre del Mestre (261106; IDEA-116, Onada R9) · Dotze: «Noves tecnologies
+       aplicades a la cultura rural» hi entra la primera, com la primera
+       publicació del Mur. Abans, com a molt onze. */
+    expect(N).toBeLessThanOrEqual(12);
   });
 
   test.each(MOMENTS)('%s: les importants dalt, les tècniques del 2 al 15 de setembre i els actes al seu dia', (_, ara) => {

@@ -196,9 +196,10 @@ test('P1-23 · /ap/**: application/activity+json, CORS i Cache-Control curt, l�
   // Cap altra regla posa Content-Type fora de la federació: /ap/**, el host-meta, els JRD de WebFinger i NodeInfo,
   // i (O4-CLAUDE-3) les dades obertes, davant de /ap/** (prova de /opendata/, més avall). Inventari exacte a propòsit:
   // G-D-01: la regla pròpia d'ActivityStreams és darrere de la de JSON.
+  // R8-L2 (Onada R9, ordre del Mestre del 261106): les sumes .sha256, en text pla (prova pròpia, més avall).
   expect(hosting.headers.filter((r) => r.headers.some((h) => h.key === 'Content-Type')).map((r) => r.source ?? 'regex:webfinger'))
     .toEqual(['/.well-known/host-meta', 'regex:webfinger', '/.well-known/nodeinfo', '/nodeinfo/2.1.json',
-      '/opendata/*.jsonld', '/opendata/*.json', '/opendata/activitystreams.json', '/ap/**']);
+      '/opendata/*.jsonld', '/opendata/*.json', '/opendata/activitystreams.json', '**/*.sha256', '/ap/**']);
   // Cap redirecció, i cap camí de /ap/ no cau a cap reescriptura:
   // ni els que el build publica ni els que no hi són (Firebase hi torna el seu 404).
   expect(hosting.redirects).toBeUndefined();
@@ -283,6 +284,40 @@ test('O4-CLAUDE-3 · /opendata/: JSON-LD i JSON amb tipus, CORS i memòria cau c
   for (const cami of ['/opendatax', '/nodeinfox', '/descarregues', '/page/descarregues']) expect(reescritA(cami), cami).toBe('/index.html');
   // I cap ruta del router no viu davall de /opendata/ ni de /nodeinfo/: Firebase li tornaria 404.
   expect(readFileSync(path.join(process.cwd(), 'src/app/App.jsx'), 'utf8')).not.toMatch(/path="\/?(?:opendata|nodeinfo)(?:\/|")/);
+});
+
+/* R8-L2 (Onada R9, ordre del Mestre del 261106) · Firebase servia la suma
+   /opendata/…20261103.zip.sha256 com a text/html quan el client negociava
+   gzip, i com a text/plain sense compressió (lectures amb curl i fetch de
+   l'informe del 261106, R8-L2, i de la verificadora de R9). La causa no s'ha
+   comprovat.
+   Una regla pròpia, «**\/*.sha256», hi posa
+   text/plain; charset=utf-8 a qualsevol carpeta. Com les dades obertes, va
+   davant de /ap/**, que continua sent l'última; cap altra regla no posa
+   Content-Type a un .sha256, de manera que la darrera que casa és esta. */
+test('R8-L2 · cada .sha256 publicat ix com a text/plain; charset=utf-8, sense tocar cap altre camí', () => {
+  const regles = hosting.headers.filter((r) => r.source === '**/*.sha256');
+  expect(regles).toEqual([{ source: '**/*.sha256', headers: [{ key: 'Content-Type', value: 'text/plain; charset=utf-8' }] }]);
+  const posicio = (font) => hosting.headers.findIndex((r) => r.source === font);
+  expect(posicio('**/*.sha256')).toBeGreaterThan(posicio('!/@(assets|fonts)/**'));
+  expect(posicio('**/*.sha256')).toBeLessThan(posicio('/ap/**'));
+  const efectives = (cami) => Object.fromEntries(hosting.headers.filter((r) => casaRegla(r, cami)).flatMap((r) => r.headers.map((h) => [h.key, h.value])));
+  const publics = readdirSync(path.join(process.cwd(), 'public'), { recursive: true })
+    .map((f) => `/${String(f).split(path.sep).join('/')}`)
+    .filter((f) => f.endsWith('.sha256'));
+  expect(publics).toContain('/opendata/dades-obertes-la-torre-de-les-macanes-20261103.zip.sha256');
+  for (const cami of [...publics, '/opendata/a.zip.sha256', '/assets/x.sha256', '/x.sha256']) {
+    expect(efectives(cami)['Content-Type'], cami).toBe('text/plain; charset=utf-8');
+    // La CSP i les tres de conformitat de la regla global continuen.
+    expect(Object.keys(efectives(cami)), cami).toEqual(expect.arrayContaining(['Content-Security-Policy', ...Object.keys(CAPCALERES_GLOBALS)]));
+  }
+  // El fitxer continua sent estàtic: /opendata/ no cau a l'SPA.
+  expect(reescritA('/opendata/dades-obertes-la-torre-de-les-macanes-20261103.zip.sha256')).toBeUndefined();
+  // Els altres tipus no canvien: el ZIP, el JSON, el JSON-LD i ActivityStreams.
+  for (const cami of ['/opendata/dades-obertes-la-torre-de-les-macanes-20261103.zip', '/opendata/manifest.json',
+    '/opendata/municipi.jsonld', '/opendata/activitystreams.json', '/ap/actors/socdepoble.json', '/index.html', '/assets/index-abcdef12.js']) {
+    expect(hosting.headers.filter((r) => r.source === '**/*.sha256').some((r) => casaRegla(r, cami)), cami).toBe(false);
+  }
 });
 
 /* P1-23 · WebFinger al lloc estàtic (ordre del Mestre del 30-10-2026:

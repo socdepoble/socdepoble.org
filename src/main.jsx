@@ -123,9 +123,13 @@ registraServiceWorker();
    encesa: apagada, Rollup lleva este bloc i el tros de l'adaptador no existix.
    L'adaptador es carrega en arrencar, no en tocar l'interruptor (el gest no
    pot esperar cap import()). De l'entorn, només la clau pública VAPID: sense
-   una clau vàlida, motiu() diu 'sense-clau' i no s'oferix res. */
+   una clau vàlida, motiu() diu 'sense-clau' i no s'oferix res.
+   Onada R9 (C3, G8-09) · Primer el motor del registre
+   (config/motorAvisosPushXat.js), que s'endolla a la façana en avaluar-se, i
+   després l'adaptador: cap dels dos viatja a l'entrada. */
 if (AVISOS_PUSH_XAT_ACTIUS) {
-  import('./pwa/adaptadorAvisosPush.js')
+  import('./config/motorAvisosPushXat.js')
+    .then(() => import('./pwa/adaptadorAvisosPush.js'))
     .then(({ creaAvisosPushWeb }) => registraAvisosPush(creaAvisosPushWeb({
       registreActiu, registreDelSw, esdevenimentToc: ESDEVENIMENT_AVIS_XAT,
       clau: import.meta.env.VITE_PUSH_VAPID_PUBLICA, produccio: import.meta.env.PROD

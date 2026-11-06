@@ -10,14 +10,17 @@
    recàrrega tarda 50 ms i porta un fil nou amb un missatge: després del toc,
    la ruta ha de ser la d'eixe fil.
 
-   La bandera és la de debò (apagada): el toc no en depén (només arriba si hi
-   ha un adaptador registrat), i la ruta de l'avís només lleva el marcador. */
+   La bandera és la de debò (encesa des del 261106, Onada R9): el toc no en
+   depén (només arriba si hi ha un adaptador registrat), i la ruta de l'avís
+   recarrega una sola vegada i obri la conversa. */
 import { act, cleanup, render, waitFor } from '@testing-library/react';
 import { afterEach, beforeEach, expect, test, vi } from 'vitest';
 import '../../host.js';
 import { MemoryRouter } from '../../app/contexts/RouterContext';
 import { XatProvider, useXat } from './XatContext.jsx';
 import { ambXatsPerDefecte } from '../../data/xatsPerDefecte.js';
+/* Onada R9 (C3) · El motor del registre, que s'endolla a la façana en avaluar-se (com a l'entrada). */
+import '../../config/motorAvisosPushXat.js';
 import { AVISOS_PUSH_XAT_ACTIUS, registraAvisosPush } from '../../config/avisosPushXat.js';
 import useObriDesDeLAvis from './useObriDesDeLAvis.js';
 
@@ -111,14 +114,27 @@ test('toc amb la llista ja fresca i cap no llegit: la persona es queda on és', 
   expect(rutes).toEqual(abans);
 });
 
-test('amb la bandera de debò (apagada), /xat?obri=no-llegits només lleva el marcador i no recarrega res de més', async () => {
-  expect(AVISOS_PUSH_XAT_ACTIUS).toBe(false);
-  munta('/xat?obri=no-llegits');
-  await waitFor(() => expect(ultimaRuta()).toBe('/xat'));
+/* Onada R9 (C3, G8-08 b) · La bandera de debò és encesa des del 261106. La
+   ruta de l'avís ja no només lleva el marcador: recarrega la llista UNA sola
+   vegada més que la càrrega pròpia del proveïdor (cap de més) i obri l'única
+   conversa amb missatges nous, substituint el marcador a l'historial. */
+test('amb la bandera de debò (encesa), /xat?obri=no-llegits recarrega una sola vegada pel marcador i obri l’única conversa amb missatges nous', async () => {
+  expect(AVISOS_PUSH_XAT_ACTIUS).toBe(true);
+  /* La càrrega pròpia del proveïdor, sense el marcador: la referència. */
+  munta('/mur');
   await waitFor(() => expect(value?.status).toBe('ready'));
-  /* Només la càrrega inicial del proveïdor (i el que faça per ell mateix), cap pel marcador. */
-  const carregues = mock.loadFils.mock.calls.length;
   await act(async () => { await new Promise((r) => { setTimeout(r, 30); }); });
-  expect(mock.loadFils.mock.calls.length).toBe(carregues);
+  const propies = mock.loadFils.mock.calls.length;
+  expect(propies).toBeGreaterThan(0);
+  cleanup();
+  mock.loadFils.mockClear();
+  rutes = [];
+  value = null;
+  mock.loadFils.mockResolvedValue(ambXatsPerDefecte([filDePepa(), filDeQuim()]));
+  munta('/xat?obri=no-llegits');
+  await waitFor(() => expect(ultimaRuta()).toBe('/xat/f-quim'));
+  await act(async () => { await new Promise((r) => { setTimeout(r, 30); }); });
+  expect(mock.loadFils.mock.calls.length).toBe(propies + 1);
   expect(rutes.filter((r) => r.includes('obri='))).toEqual(['/xat?obri=no-llegits']);
+  expect(ultimaRuta()).toBe('/xat/f-quim');
 });

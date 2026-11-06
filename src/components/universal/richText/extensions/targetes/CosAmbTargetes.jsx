@@ -59,10 +59,12 @@ function TargetaDeLaApp({ attrs, navigate }) {
    cos es llig fora de l'app»): un enllaç amb el títol cap a la ruta de
    l'original, amb el mateix sanejament que la targeta de lectura. */
 function TargetaDeReserva({ attrs }) {
-  const { title, mainHref } = propsDeTargetaIncrustada(attrs, { mode: 'lectura' });
+  const { title, mainHref, llenguaContingut } = propsDeTargetaIncrustada(attrs, { mode: 'lectura' });
+  /* G1-N02 · La reserva és només el títol: porta la llengua de l'original, si la instantània la diu.
+     Sense, el DOM de sempre. */
   return (
     <div className="sdp-targeta">
-      {mainHref ? <a href={mainHref}>{title}</a> : title}
+      {mainHref ? <a href={mainHref} lang={llenguaContingut}>{title}</a> : llenguaContingut ? <span lang={llenguaContingut}>{title}</span> : title}
     </div>
   );
 }

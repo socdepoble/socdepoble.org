@@ -35,7 +35,9 @@ import {
 export { clauDeRutaInterna, rutaDeClau };
 
 /* Cada atribut de la targeta i el seu data-* a l'HTML, en l'ordre en què
-   s'escriuen. La clau és la marca mateixa del node. */
+   s'escriuen. La clau és la marca mateixa del node.
+   G1-N02 (Gauntlet de l'arbre R9) · La llengua de l'original va en l'atribut
+   estàndard `lang` de la targeta: l'editor el conserva, i només s'escriu si n'hi ha. */
 const ATRIBUTS = Object.freeze([
   ['clau', MARCA_TARGETA],
   ['ruta', 'data-ruta'],
@@ -45,7 +47,8 @@ const ATRIBUTS = Object.freeze([
   ['imatge', 'data-imatge'],
   ['autor', 'data-autor'],
   ['autorRuta', 'data-autor-ruta'],
-  ['poble', 'data-poble']
+  ['poble', 'data-poble'],
+  ['llengua', 'lang']
 ]);
 
 /* Arrossegar i deixar anar (drag*, drop), com fa el stopEvent de sèrie de

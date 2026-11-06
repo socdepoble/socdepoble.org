@@ -54,6 +54,8 @@ import { SessionProvider, useSessioOpcional } from './SessionContext.jsx';
 import { LIMIT_EIXIDA_MS } from '../../data/autodesament/sessio.js';
 import { cuaDesament } from '../../data/autodesament/cua.js';
 import { expulsaPerLEixidaDeVeres } from '../../data/expulsioAmfitrio.js';
+/* Onada R9 (C3) · El motor del registre, que s'endolla a la façana en avaluar-se (com a l'entrada). */
+import '../../config/motorAvisosPushXat.js';
 import {
   baixaAvisosPushEnEixir, baixaLocalAvisosPushEnEntrar, fixaServidorAvisosPush, instantaniaAvisosPush,
   oblidaAvisosPushEnEixir, registraAvisosPush, reprenAvisosPushTrasEixidaFallida

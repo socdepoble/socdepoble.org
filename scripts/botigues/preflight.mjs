@@ -6,6 +6,7 @@
  * i els avisos push (B9, marató 261101_2143), tests/botigues.produccio.test.js.
  *
  *   node scripts/botigues/preflight.mjs --plataforma ios|android|totes [--signa] [--canal intern|produccio] [--push]
+ *   node scripts/botigues/preflight.mjs --estat     (Onada R9: l'estat honest, fora de línia; scripts/botigues/estat.mjs)
  *
  * Només llig: el fitxer d'entorn (mai n'imprimix cap valor), les rutes que nomena, les eines i
  * l'estat de l'arbre (amb iOS, també que cap fitxer porte el SDK de Facebook: P1-08, 261028).
@@ -24,6 +25,7 @@ import {
   CANALS, EIXIDA, JDK_MAXIM, JDK_MINIM, SEGELL, analitzaArguments, arbreNet, arrelDelRepositori, carregaEntorn, commitDeHead,
   comprovaVariables, gitIgnora, jdkPerAGradle, llegixAjuda, llegixSegell, mateixContingut, mostraCami, plega, problemesDelSegell
 } from './entorn.mjs';
+import { estatDeLesBotigues, liniesDeLEstat } from './estat.mjs';
 
 /** L'arrel on viu el script instal·lat: scripts/botigues/ → dos nivells amunt. */
 export const ARREL_DEL_SCRIPT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
@@ -473,12 +475,19 @@ export function arrelComprovada() {
 }
 
 function main(argv) {
-  const { opcions, errors } = analitzaArguments(argv, { plataforma: true, signa: false, canal: true, push: false, ajuda: false });
-  const us = 'Ús: --plataforma ios|android|totes [--signa] [--canal intern|produccio] [--push]';
+  const { opcions, errors } = analitzaArguments(argv, { plataforma: true, signa: false, canal: true, push: false, ajuda: false, estat: false });
+  const us = 'Ús: --plataforma ios|android|totes [--signa] [--canal intern|produccio] [--push] · o --estat';
   if (opcions.ajuda) {
     process.stdout.write(`node scripts/botigues/preflight.mjs ${us.slice(4)}\n`
       + '  --canal intern (per defecte) o produccio: producció exigix SDP_BUILDS_DIR (registre de pujades) i afig avisos de botiga.\n'
-      + '  --push: l\'app anunciarà avisos remots; sense el connector @capacitor/push-notifications, falla.\n');
+      + '  --push: l\'app anunciarà avisos remots; sense el connector @capacitor/push-notifications, falla.\n'
+      + '  --estat: només l\'estat honest de les botigues (scripts/botigues/estat.mjs), fora de línia, sense eines ni git; llig els .env de build només per saber si VITE_PUSH_VAPID_PUBLICA hi té valor; no en guarda ni n\'imprimix cap.\n');
+    return EIXIDA.BE;
+  }
+  /* Onada R9 · C3 · L'estat, sense res més: llig fitxers del projecte i ix amb 0 (no és cap porta). */
+  if (opcions.estat) {
+    if (errors.length || Object.keys(opcions).length > 1) return plega(EIXIDA.US, '--estat va sol', errors);
+    process.stdout.write(`${liniesDeLEstat(estatDeLesBotigues(ARREL_DEL_SCRIPT)).join('\n')}\n`);
     return EIXIDA.BE;
   }
   const plataformes = { ios: ['ios'], android: ['android'], totes: ['ios', 'android'] }[opcions.plataforma];

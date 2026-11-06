@@ -3,13 +3,24 @@
    Xat (avisosPushXat.js): la cadena síncrona del gest, el servidor per persona,
    la generació que talla els desats en vol, l'eixida i l'entrada que no es
    pengen mai, el toc sense dades i l'instantània estable. Cada cas carrega un
-   mòdul nou (el registre és d'estat de mòdul). Tot és sintètic. */
+   mòdul nou (el registre és d'estat de mòdul). Tot és sintètic.
+   Onada R9 · C3 (G8-09) · El registre és ara una façana (avisosPushXat.js) i
+   un motor (motorAvisosPushXat.js) que s'hi endolla en avaluar-se. `carrega`
+   porta els dos, com fan l'entrada web i la nativa abans de registrar cap
+   adaptador; les proves de la façana sola (el temps abans que el motor
+   arribe) són al bloc «façana sense motor». */
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import { afterEach, describe, expect, test, vi } from 'vitest';
 import { especificadorsImport } from '../../tests/helpers/especificadorsImport.js';
 
 const carrega = async () => {
+  vi.resetModules();
+  await import('./motorAvisosPushXat.js');
+  return import('./avisosPushXat.js');
+};
+/* La façana sola, sense el motor (el que veu l'entrada fins que arriba). */
+const carregaFacana = async () => {
   vi.resetModules();
   return import('./avisosPushXat.js');
 };
@@ -52,12 +63,12 @@ const activaQueDesa = (a, dades) => vi.fn(({ desa }) => {
 afterEach(() => { vi.useRealTimers(); });
 
 describe('constants i bandera', () => {
-  test('la bandera és apagada i literal (Rollup la plega), el límit és de 2,5 s', async () => {
+  test('la bandera és encesa (ordre del Mestre del 261106) i literal (Rollup la plega), el límit és de 2,5 s', async () => {
     const r = await carrega();
-    expect(r.AVISOS_PUSH_XAT_ACTIUS).toBe(false);
+    expect(r.AVISOS_PUSH_XAT_ACTIUS).toBe(true);
     expect(r.LIMIT_BAIXA_PUSH_MS).toBe(2500);
     const codi = readFileSync(path.join(process.cwd(), 'src/config/avisosPushXat.js'), 'utf8');
-    expect(codi).toMatch(/^export const AVISOS_PUSH_XAT_ACTIUS = false;$/m);
+    expect(codi).toMatch(/^export const AVISOS_PUSH_XAT_ACTIUS = true;$/m);
     expect(Object.isFrozen(r.ESTAT_AVISOS)).toBe(true);
     expect(Object.values(r.ESTAT_AVISOS)).toEqual(['no-disponible', 'no-oferit', 'inactiu', 'actiu', 'denegat',
       'sense-gest', 'sense-worker', 'sense-connector', 'sense-servidor', 'error']);
@@ -740,5 +751,125 @@ describe('frontera', () => {
     expect(codi).not.toMatch(new RegExp(['capa', 'citor'].join(''), 'i'));
     expect(codi).not.toMatch(new RegExp(['service', 'Worker|Push', 'Manager|push', 'Manager'].join('')));
     expect(codi).not.toMatch(new RegExp(['local', 'Storage|session', 'Storage|indexed', 'DB'].join(''), 'i'));
+  });
+
+  test('(9) el motor només importa la façana, i tampoc nomena el pont natiu, el worker ni cap emmagatzematge', () => {
+    const fitxer = 'src/config/motorAvisosPushXat.js';
+    const codi = readFileSync(path.join(process.cwd(), fitxer), 'utf8');
+    expect(especificadorsImport(codi, fitxer)).toEqual(['./avisosPushXat.js']);
+    expect(codi).not.toMatch(new RegExp(['capa', 'citor'].join(''), 'i'));
+    expect(codi).not.toMatch(new RegExp(['service', 'Worker|Push', 'Manager|push', 'Manager'].join('')));
+    expect(codi).not.toMatch(new RegExp(['local', 'Storage|session', 'Storage|indexed', 'DB'].join(''), 'i'));
+  });
+});
+
+/* Onada R9 · C3 (G8-09) · El temps entre l'arrencada i l'arribada del motor:
+   la façana respon el que el registre responia sense adaptador, no pregunta
+   res, no perd cap toc ni cap oient i recorda una eixida començada. */
+describe('façana sense motor', () => {
+  test('sense motor, tot és inert i no rebutja: el que el registre deia sense adaptador', async () => {
+    const r = await carregaFacana();
+    expect(r.avisosPushDisponibles()).toBe(false);
+    expect(r.registraAvisosPush(null)).toBe(false);
+    expect(r.instantaniaAvisosPush()).toEqual({
+      disponible: false, tipus: null, motiu: null, estat: 'no-disponible',
+      error: null, ocupat: false, ambServidor: false, eixint: false
+    });
+    await expect(r.activaAvisosPush()).resolves.toEqual({ estat: 'no-disponible' });
+    await expect(r.desactivaAvisosPush()).resolves.toEqual({ estat: 'no-disponible' });
+    await expect(r.sincronitzaAvisosPush()).resolves.toEqual({ estat: 'no-disponible' });
+    await expect(r.netejaAvisosPushMostrats()).resolves.toBeUndefined();
+    await expect(r.oblidaAvisosPushEnEixir()).resolves.toBeUndefined();
+    await expect(r.baixaLocalAvisosPushEnEntrar()).resolves.toBeUndefined();
+    /* Sense motor no hi ha on guardar un servidor: es refusa; null sempre s'accepta. */
+    expect(r.fixaServidorAvisosPush(servidorFals())).toBe(false);
+    expect(r.fixaServidorAvisosPush(null)).toBe(true);
+    expect(r.instantaniaAvisosPush().ambServidor).toBe(false);
+  });
+
+  test('registrar un adaptador abans del motor llança (l’entrada carrega el motor primer) i no deixa res a mitges', async () => {
+    const r = await carregaFacana();
+    const a = adaptadorFals();
+    expect(() => r.registraAvisosPush(a)).toThrow(/motor/);
+    expect(a.escoltaToc).not.toHaveBeenCalled();
+    expect(r.avisosPushDisponibles()).toBe(false);
+    await import('./motorAvisosPushXat.js');
+    expect(r.registraAvisosPush(a)).toBe(true);
+    expect(r.avisosPushDisponibles()).toBe(true);
+  });
+
+  test('els oients d’abans del motor el veuen arribar (una instantània nova) i després reben els seus canvis', async () => {
+    const r = await carregaFacana();
+    const oient = vi.fn();
+    r.escoltaAvisosPush(oient);
+    const abans = r.instantaniaAvisosPush();
+    await import('./motorAvisosPushXat.js');
+    expect(oient).toHaveBeenCalledTimes(1);
+    expect(r.instantaniaAvisosPush()).toEqual(abans);
+    r.registraAvisosPush(adaptadorFals());
+    expect(oient).toHaveBeenCalledTimes(2);
+    expect(r.instantaniaAvisosPush()).toMatchObject({ disponible: true, tipus: 'web', estat: 'inactiu' });
+  });
+
+  test('un segon motor no s’endolla i no canvia res', async () => {
+    const r = await carrega();
+    const enllaca = vi.fn();
+    expect(r.connectaMotorAvisosPush({ enllaca })).toBe(false);
+    expect(r.connectaMotorAvisosPush(null)).toBe(false);
+    expect(enllaca).not.toHaveBeenCalled();
+    expect(r.registraAvisosPush(adaptadorFals())).toBe(true);
+  });
+
+  test('un oient del toc d’abans del motor rep el toc de l’adaptador, sense dades', async () => {
+    const r = await carregaFacana();
+    const oient = vi.fn();
+    r.escoltaTocAvisPush(oient);
+    await import('./motorAvisosPushXat.js');
+    const a = adaptadorFals();
+    r.registraAvisosPush(a);
+    a.toca({ filId: 'fil-secret' });
+    expect(oient).toHaveBeenCalledTimes(1);
+    expect(oient).toHaveBeenCalledWith({});
+  });
+
+  test('una eixida començada abans del motor continua sent eixida: el motor la reprén i un adaptador nou no la desfà', async () => {
+    const r = await carregaFacana();
+    await expect(r.baixaAvisosPushEnEixir()).resolves.toBeUndefined();
+    expect(r.instantaniaAvisosPush().eixint).toBe(true);
+    await import('./motorAvisosPushXat.js');
+    expect(r.instantaniaAvisosPush().eixint).toBe(true);
+    const a = adaptadorFals();
+    r.registraAvisosPush(a);
+    expect(r.instantaniaAvisosPush()).toMatchObject({ disponible: true, eixint: true });
+    await expect(r.sincronitzaAvisosPush()).resolves.toEqual({ estat: 'inactiu' });
+    expect(a.sincronitza).not.toHaveBeenCalled();
+    /* La sessió ja és fora: null tanca l'eixida, com sempre. */
+    expect(r.fixaServidorAvisosPush(null)).toBe(true);
+    expect(r.instantaniaAvisosPush().eixint).toBe(false);
+  });
+
+  test('sense motor, reprendre o entrar tanquen l’eixida, i el motor arriba sense eixida', async () => {
+    const r = await carregaFacana();
+    r.baixaAvisosPushEnEixir();
+    r.reprenAvisosPushTrasEixidaFallida();
+    expect(r.instantaniaAvisosPush().eixint).toBe(false);
+    r.baixaAvisosPushEnEixir();
+    await r.baixaLocalAvisosPushEnEntrar();
+    expect(r.instantaniaAvisosPush().eixint).toBe(false);
+    await import('./motorAvisosPushXat.js');
+    expect(r.instantaniaAvisosPush().eixint).toBe(false);
+  });
+
+  test('(1) amb el motor, activaAvisosPush continua cridant adaptador.activa en el mateix tic a través de la façana', async () => {
+    const r = await carregaFacana();
+    await import('./motorAvisosPushXat.js');
+    const a = adaptadorFals();
+    r.registraAvisosPush(a);
+    r.fixaServidorAvisosPush(servidorFals());
+    let rebut = false;
+    a.activa.mockImplementation(() => { rebut = true; return Promise.resolve({ estat: 'actiu' }); });
+    const promesa = r.activaAvisosPush();
+    expect(rebut).toBe(true);
+    await expect(promesa).resolves.toEqual({ estat: 'actiu' });
   });
 });

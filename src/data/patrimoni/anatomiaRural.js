@@ -118,7 +118,8 @@ const POU = estructura({
     cota('Cim dels Plans', '1.330 m', CORPUS, 'unica', 'L’article només diu que el pou és «baix del cim».'),
     cota('Alçada total', '18 m: 15 m de pou i 3 m de falsa volta', CORPUS, 'unica', 'No és a l’article, que parla de la fondària des de les finestres.'),
     cota('Fondària des de les finestres superiors', '13,75 m', ARTICLE),
-    cota('Diàmetre interior', '9,75 m al plànol; 9,80 m a l’article', `${CORPUS}; ${ARTICLE}`, 'discrepant'),
+    cota('Diàmetre interior', '9,75 m al plànol; 9,80 m a l’article', `${CORPUS}; ${ARTICLE}`, 'discrepant',
+      'La llegenda del mateix plànol diu 10 m d’amplària.'),
     cota('Capacitat estimada', '1.030 m³ a l’article; el corpus diu més de 1.100 m³', `${ARTICLE}; ${CORPUS}`, 'discrepant'),
     cota('Capacitat històrica', '20.000 arroves, calculades per Manuel Rico García (1880)', ARTICLE),
     cota('Túnel d’accés sud', '9,10 m de longitud', ARTICLE),
@@ -453,6 +454,34 @@ const CARRO = estructura({
     l('capcana', 'capçana', 'Cabeçó, frontalera, antoixos, galtera, morrera i serretó.', 'palla', 'dreta', pris(0, 0, 0)),
     l('llaurant', 'llaurant amb el matxo', 'El forcat romà i la xaruga (amb pala giratòria), i la garrafa d’espart (fent trena per cordar-la).', 'fusta', 'esquerra', pris(0, 0, 0))
   ]
+});
+
+/* IDEA-116 (Onada R9, carril C2) · Les mesures del pou en xifres, per al
+   reproductor explicatiu (ReproductorExplicatiuPouNeu3D.jsx), que les dibuixa
+   com a cotes i en fa el càlcul de comprovació del volum. Són les mateixes
+   xifres de `cotes` (la prova ho comprova una a una), no unes altres: cada
+   una porta la font d'on ix. PLA és el plànol «Pozo de nieve "EL RENTONAR"»
+   (grafics_etnografics_de_poble/pou-de-neu/76150.jpg); WP_3656, l'article.
+   `decimals` és la precisió amb què la font escriu la xifra (9,80 m, no 9,8). */
+const PLA = 'plànol de Gràfics de Poble';
+const mesura = (valor, unitat, font, decimals = 0) => Object.freeze({ valor, unitat, font, decimals });
+export const MESURES_POU = Object.freeze({
+  alcadaTotal: mesura(18, 'm', PLA),
+  alcadaPou: mesura(15, 'm', PLA),
+  alcadaCupula: mesura(3, 'm', PLA),
+  fondariaFinestres: mesura(13.75, 'm', ARTICLE, 2),
+  diametrePla: mesura(9.75, 'm', PLA, 2),
+  diametreLlegenda: mesura(10, 'm', PLA),
+  diametreArticle: mesura(9.8, 'm', ARTICLE, 2),
+  capacitatArticle: mesura(1030, 'm³', ARTICLE),
+  /* La del corpus de síntesi, que no en cita cap font primària (per això la cota és 'discrepant'). */
+  capacitatCorpus: mesura(1100, 'm³', CORPUS),
+  galeria: mesura(29, 'm', `${ARTICLE}; ${PLA}`),
+  galeriaTram1: mesura(24, 'm', PLA),
+  galeriaTram2: mesura(5, 'm', PLA),
+  entradaGaleria: mesura(43, 'cm', PLA),
+  tunel: mesura(9.1, 'm', ARTICLE, 2),
+  cota: mesura(1160, 'm', ARTICLE)
 });
 
 export const ESTRUCTURES = Object.freeze([POU, ALMASSERA, MOLI_HIDRAULIC, MOLI_ELECTRIC, FORN, CARBONERA, CUP, SENIA, CARRO]);

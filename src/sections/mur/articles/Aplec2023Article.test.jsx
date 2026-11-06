@@ -1,6 +1,6 @@
 import React from 'react';
 import { afterEach, expect, test } from 'vitest';
-import { cleanup, render } from '@testing-library/react';
+import { cleanup, fireEvent, render, within } from '@testing-library/react';
 import { readFileSync, existsSync } from 'node:fs';
 import path from 'node:path';
 import { Aplec2023Article } from './Aplec2023Article.jsx';
@@ -17,9 +17,17 @@ import { MANIFEST_DE_POBLE_POST } from '../feedSeed.js';
 import { publicacionsDelPoble } from '../../pobles/publicacionsDelPoble.js';
 
 afterEach(() => { cleanup(); fixaBaseRecursos(''); });
+/* Gauntlet R9 · G2-04 · Façana de clic: abans del gest, cap iframe; el clic obri el del vídeo. */
+const obriVideos = (root) => {
+  const botons = within(root).queryAllByRole('button', { name: 'Veure el vídeo (YouTube)' });
+  for (const boto of botons) fireEvent.click(boto);
+  return botons.length;
+};
 
 test('el reportatge de NTC només incrusta YouTube nocookie amb alternativa d’enllaç', () => {
   const { container } = render(<Aplec2023Article />);
+  expect(container.querySelector('iframe')).toBeNull();
+  expect(obriVideos(container)).toBe(1);
   const frames = container.querySelectorAll('iframe');
   expect(frames).toHaveLength(1);
   expect(frames[0].src).toBe('https://www.youtube-nocookie.com/embed/TlZWYbnGuCE');
@@ -144,6 +152,7 @@ test('la fitxa de l’acte pinta item.content quan és HTML i la llavor quan app
   const base = CALENDAR_EVENTS.find((e) => e.id === 'aplec-2023');
   const editat = render(meta.renderBody({ ...base, content: '<h3>Crònica revisada</h3><p>Text nou.</p>', video_youtube: { id: 'abcdefghijk', titol: 'Un altre reportatge' } }));
   expect(editat.container.querySelector('.aplec-2023 h3').textContent).toBe('Crònica revisada');
+  expect(obriVideos(editat.container)).toBe(1);
   expect(editat.container.querySelector('iframe').getAttribute('src')).toBe('https://www.youtube-nocookie.com/embed/abcdefghijk');
   expect(editat.container.querySelector('iframe').title).toBe('Un altre reportatge');
   cleanup();
@@ -151,6 +160,7 @@ test('la fitxa de l’acte pinta item.content quan és HTML i la llavor quan app
   void content; void video_youtube;
   const remot = render(meta.renderBody({ ...senseCos, video_youtube: { id: '"><script>' } }));
   expect(remot.container.querySelectorAll('[data-wp-media-id] img')).toHaveLength(34);
+  expect(obriVideos(remot.container)).toBe(1);
   expect(remot.container.querySelector('iframe').getAttribute('src')).toBe('https://www.youtube-nocookie.com/embed/TlZWYbnGuCE');
   expect(remot.container.querySelectorAll('iframe')).toHaveLength(1);
 });

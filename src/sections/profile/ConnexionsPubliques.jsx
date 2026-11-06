@@ -10,10 +10,11 @@ const reserva = (_clau, text) => text;
 /* llibre-deutes-01 i connectar-01 (261104, P0-16 · IDEA-73) · La capacitat del
    port no diu si el servidor té la migració 2611032100: es consulta la sonda de
    /connectar (sondaConnexions.js, GLOBAL-06). Si este backend ja ha dit
-   NO-DISPONIBLE, el bloc no es pinta ni es torna a preguntar. Mentre no
-   s'aplique la migració (D-10), queda una crida per document i backend, amb
-   el seu 404 a la consola del navegador (els límits de la sonda en dos
-   muntatges alhora són els de sondaConnexions.js). */
+   NO-DISPONIBLE, el bloc no es pinta ni es torna a preguntar (els límits de
+   la sonda en dos muntatges alhora són els de sondaConnexions.js). Mentre no
+   s'aplique la migració (D-10), l'interruptor CONNEXIONS_PUBLIQUES_REMOTES_ACTIVES
+   (src/config) és apagat: l'adaptador remot respon NO-DISPONIBLE sense fer cap
+   crida, i la consola no veu cap 404 (D-P016, Onada R9). */
 const disponible = config => connexionsPotserDisponibles(ambitDeConnexions(config));
 /* A la fitxa pública no hi ha res a mostrar si el servidor no té les connexions
    (NO-DISPONIBLE / PostgREST 404 / PGRST202), si el subjecte no existix per al

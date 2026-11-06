@@ -20,6 +20,7 @@ import { CODI_ENTRADA_EN_MARC, googleEnMarcAlie, urlPerAObrirFora } from '../../
 import { PERSONA_PILOT } from '../../data/identitatsSeed.js';
 import { entradaPilotDisponible } from '../../data/sessioPilot.js';
 import { createTranslator } from '../../config/i18n.js';
+import { consentimentMostrat } from '../../config/politicaPrivacitat.js';
 import { CODI_ENTRADA_NATIVA, abandonaCredencialNativa, botonsNatius, esSilenciNatiu, plataformaNativa } from '../../config/entradaNativa.js';
 import { EntradaNativa } from './EntradaNativa.jsx';
 import { entraAmbProveidorNatiu } from './fluxEntradaNativa.js';
@@ -340,12 +341,17 @@ export default function OnboardingSection() {
      2610282100 els llig una sola vegada (l'identificador, normalitzat i amb
      -2 si ja és d'algú; el poble, si la fila no en porta cap). Sense, el
      servidor fa l'identificador del nom i hi posa el poble de sèrie. */
+  /* Gauntlet R9 · G2-03 i G2-10 · La versió de la política que la casella mostra viatja amb l'alta
+     (consentimentMostrat): el client del Node 0 l'exigix, i Supabase la registra si és vigent (si no ho
+     és, handle_new_user hi posa la vigent, com abans). Sense la casella, ni versió ni consentiment. */
   const handleRegister = async (fields) => {
     const op = obriIntent('register');
     setErrorEntrada(null);
     try {
+      const consentiment = consentimentMostrat(Boolean(fields.rgpd));
       const metadades = {
-        full_name: fields.name, avatar_url: fields.avatar_url, accepta_rgpd: Boolean(fields.rgpd), tenant_id: normalizedConfig.tenantId,
+        full_name: fields.name, avatar_url: fields.avatar_url, accepta_rgpd: consentiment.rgpd, tenant_id: normalizedConfig.tenantId,
+        ...(consentiment.versio_politica ? { versio_politica: consentiment.versio_politica } : null),
         ...(fields.username ? { username: fields.username } : null),
         ...(fields.poble ? { town_name: fields.poble } : null)
       };

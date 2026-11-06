@@ -2,14 +2,16 @@
    router fals (per a vore el `replace`), el Xat simulat i el registre DE
    DEBÒ dels avisos push (src/config/avisosPushXat.js) amb un adaptador fals
    que en guarda el toc. La bandera es llig a cada accés: encesa per defecte
-   en este fitxer; la prova (7) la torna a l'apagada de debò.
+   en este fitxer; la prova (7) la llig del mòdul de debò (encesa des del
+   261106) i la (7b) la torna a apagar.
      (1) /xat?obri=no-llegits amb un sol fil no llegit → /xat/<id>, replace;
      (2) amb dos → /xat;
      (3) amb cap → /xat, replace;
      (4) un toc a /xat/123 sense cap no llegit → no navega;
      (5) sense sessió → /xat sense recarregar;
      (6) amb una recàrrega penjada, als 8 s resol amb el que hi ha;
-     (7) amb la bandera apagada, la ruta només lleva el marcador;
+     (7) amb la bandera de debò (encesa), la ruta recarrega i obri la conversa;
+     (7b) amb la bandera apagada, la ruta només lleva el marcador;
      (8) recarrega torna null (superada): espera el canvi següent de la
          llista i resol amb la nova. */
 import { act, cleanup, render } from '@testing-library/react';
@@ -31,6 +33,8 @@ vi.mock('../../config/avisosPushXat.js', async (importOriginal) => {
   return modul;
 });
 
+/* Onada R9 (C3) · El motor del registre, que s'endolla a la façana en avaluar-se (com a l'entrada). */
+import '../../config/motorAvisosPushXat.js';
 import { registraAvisosPush } from '../../config/avisosPushXat.js';
 import useObriDesDeLAvis, { ESPERA_AVIS_MS } from './useObriDesDeLAvis.js';
 
@@ -140,10 +144,26 @@ describe('la ruta de l\'avís (/xat?obri=no-llegits)', () => {
     expect(mock.navigate).toHaveBeenCalledWith('/xat/f-1', { replace: true });
   });
 
-  test('(7) amb la bandera de debò (apagada), la ruta només fa navigate(\'/xat\', { replace: true }) i no recarrega (ARB-15)', async () => {
+  /* Onada R9 (C3, G8-08 d) · La bandera de debò ara és encesa (ordre del
+     Mestre del 261106): el cas de debò la llig del mòdul real i prova el camí
+     encés sencer (recàrrega i conversa). La branca apagada continua al codi
+     (si el Mestre la torna a apagar) i té la seua prova pròpia, amb el nom que
+     diu què és. */
+  test('(7) amb la bandera de debò (encesa), la ruta recarrega i obri l’única conversa amb missatges nous, amb replace', async () => {
     const real = await vi.importActual('../../config/avisosPushXat.js');
-    expect(real.AVISOS_PUSH_XAT_ACTIUS).toBe(false);
+    expect(real.AVISOS_PUSH_XAT_ACTIUS).toBe(true);
     mock.bandera = real.AVISOS_PUSH_XAT_ACTIUS;
+    aLaRutaDeLAvis();
+    mock.fils = [fil('f-1', 1)];
+    render(<Obri />);
+    await buida();
+    expect(mock.recarrega).toHaveBeenCalledTimes(1);
+    expect(mock.navigate).toHaveBeenCalledTimes(1);
+    expect(mock.navigate).toHaveBeenCalledWith('/xat/f-1', { replace: true });
+  });
+
+  test('(7b) amb la bandera apagada (si el Mestre l’apaga), la ruta només fa navigate(\'/xat\', { replace: true }) i no recarrega (ARB-15)', async () => {
+    mock.bandera = false;
     aLaRutaDeLAvis();
     mock.fils = [fil('f-1', 1)];
     render(<Obri />);

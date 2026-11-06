@@ -112,6 +112,7 @@ import LlistaConverses, { esFilaTriable } from './components/LlistaConverses.jsx
 import FiltreConverses from './components/FiltreConverses.jsx';
 import Conversa from './components/Conversa.jsx';
 import PanellInicialMobil from './components/PanellInicialMobil.jsx';
+import PindolaAvisosPushXat from './components/PindolaAvisosPushXat.jsx';
 import BarraSeleccio from './components/BarraSeleccio.jsx';
 import FiltresCerca, { IconaFiltre } from './components/FiltresCerca.jsx';
 import ResultatsCercaXat from './components/ResultatsCercaXat.jsx';
@@ -1738,6 +1739,10 @@ function XatWorkspace({ origen = null }) {
       {!vistaNode && !comunitatId && !modeSeleccio && (cercaOberta || filtre !== 'tot') ? (
         <FiltreConverses opcions={FILTRES} filtre={filtre} onTria={triaFiltre} onBlur={alPerdreFocus} onKeyDown={alEscapeDelDesplegament} refGrup={pindolesRef} idGrup={idPindoles} t={t} />
       ) : null}
+      {/* Onada R9 · C3 (IDEA-120) · Un sol toc per a encendre els avisos push
+          del Xat, a la llista de converses i només quan s'oferixen (sense
+          clau, en una vista del rail, en una comunitat o seleccionant, res). */}
+      {!vistaNode && !comunitatId && !modeSeleccio ? <PindolaAvisosPushXat t={t} /> : null}
       {/* P1-54 · Les vistes del rail (Comunitats, Multimèdia, «En
           construcció») ja no porten l'accés: no són l'aterratge. */}
       {vistaNode ? null : <div className={peuDAcces ? 'sdp-workspace-column__body sdp-xat-cos--amb-peu' : 'sdp-workspace-column__body'}>{cos}{peuDAcces}</div>}

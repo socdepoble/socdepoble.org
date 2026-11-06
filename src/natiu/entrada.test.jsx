@@ -448,8 +448,20 @@ describe('B8C-4 · els avisos push natius, darrere de la bandera', () => {
     carrega.fabrica = null;
   });
 
-  test('amb la bandera de debò (apagada): l’adaptador ni es carrega i el registre continua sense adaptador', async () => {
+  /* Onada R9 (C3, G8-08 f) · La bandera de debò és encesa des del 261106: el
+     camí apagat (si el Mestre la torna a apagar) es prova apagant-la a mà. */
+  const ambBanderaApagada = () => {
+    vi.doMock('../config/avisosPushXat.js', async (importOriginal) => ({ ...(await importOriginal()), AVISOS_PUSH_XAT_ACTIUS: false }));
+  };
+
+  test('la bandera de debò és encesa (ordre del Mestre del 261106)', async () => {
+    const real = await vi.importActual('../config/avisosPushXat.js');
+    expect(real.AVISOS_PUSH_XAT_ACTIUS).toBe(true);
+  });
+
+  test('amb la bandera apagada: l’adaptador ni es carrega i el registre continua sense adaptador', async () => {
     ambAdaptador(nucliSenseConnector());
+    ambBanderaApagada();
     await avalua();
     await new Promise((r) => setTimeout(r, 0));
     const registre = await import('../config/avisosPushXat.js');

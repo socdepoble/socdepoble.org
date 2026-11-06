@@ -1337,7 +1337,8 @@ description: "Documentació canònica de Sóc de Poble."
   `rpc()` de `notifica-xat`). Va abans del desplegament de `notifica-xat`
   (porta `funcio-notifica-xat`); `push_xat_actiu` es posa només després del
   cron (vegeu «Funció `notifica-xat`»). Idempotent i en una sola transacció;
-  **NO aplicada: l'aplica el Mestre, mai un agent**.
+  **aplicada a producció** (acta 261102_1456; lectura REST del 6-11-2026: la
+  taula `public.xat_dispositius_push` existix). Cap agent no la torna a aplicar.
 
 - `migrations/2611021800_notes_fitxa_ambit.sql`
   IDEA-61 (T0, prompt 261102_1532; carril L1): la fitxa d'àmbit d'una nota del
@@ -1423,7 +1424,8 @@ description: "Documentació canònica de Sóc de Poble."
   (superadmin + aal2, camps blancs, CAS sobre `app_content.version`), backfill
   selectiu del Manifest i l'Aplec, i carpetes privades `note_folders` amb RLS de
   propietari + pertinença al poble i RPC `crea_carpeta_notes`. Requerix 2610061448.
-  **NO aplicada: l'aplica el Mestre, mai un agent**.
+  **Aplicada a producció**: la lectura REST del 6-11 dona `note_folders` (401 42501), i
+  només la crea esta migració. No hi ha cap acta que ho registre.
 
 - `migrations/2611052345_admin_usuaris_i_organitzacions.sql`
   R20b (kit de Codex, arbitratge G2): llista de perfils amb consentiment del
@@ -1438,6 +1440,24 @@ description: "Documentació canònica de Sóc de Poble."
   IDEA-104c: importació idempotent (upsert) de les dades obertes públiques d'un
   poble (format 1.2.0), sense esborrar els absents; lectura pública fitada.
   Identificadors globals per col·lecció (K1-06). Independent de 2611052345.
+  **NO aplicada: l'aplica el Mestre, mai un agent**.
+
+- `migrations/2611061520_politica_privacitat_2_5.sql`
+  Onada R9 (C3, IDEA-120 / P0-30): `/legal` diu els avisos push del xat,
+  que l'ordre del Mestre del 261106 encén (`AVISOS_PUSH_XAT_ACTIUS`).
+  Rètol 2.5 en vigor des del 6 de novembre de 2026; canvien només els
+  apartats 8, 9, 10, 11, 12 i 20 (ho guarda
+  `src/sections/text/legal.avisosPush.test.js`). La 2.3 i la 2.4 no es
+  reescriuen (`SDP-RGPD-021`). Una sola inserció idempotent, amb la
+  comprovació transaccional del conflicte. L'HTML exacte té SHA-256 `ea13f0c4ca8f69ebf8c29035d6f7804d401d48dbdc6e3b5d5fb2b1b975fc1fc7`.
+  Abans (lectura): comprovar les versions i que la 2.3 conserva l'empremta
+  `abd827d07af5aa30dc364f156a551deed4e9a43a830b9f57eca5a861ea4eadca`.
+  Després (lectura): comprovar l'empremta de la 2.5 i tornar a comprovar la 2.3.
+  Primer tornar a construir i desplegar web/connector amb el text 2.5 i
+  verificar-ne l'empremta; només després, la migració (pas 14 de l'ordre).
+  `estat_consentiment()` demanarà tornar a acceptar a qui tenia una versió
+  anterior.
+  Prova: `src/data/supabase/politicaPrivacitat25.migracio.test.js`.
   **NO aplicada: l'aplica el Mestre, mai un agent**.
 
 - `seed.sql`
@@ -1537,6 +1557,7 @@ verificador sense avisos.
   12. Primer el desplegament web amb el text final de `/legal`; després `2611012257` (T11-05: si s'aplica abans, el servidor demana acceptar la 2.3 mentre `/legal` encara mostra la 2.2; i només després de llegir la consulta «Abans» de la seua vinyeta). Abans de desplegar, cal tornar a construir el web i el connector (els `dist/` de l'1-11 a les 19:28 porten una altra «Versió 2.3», sense la ubicació de les fotos) i comprovar que el `/legal` desplegat té l'empremta de la migració.
 
   13. Primer tornar a construir i desplegar web/connector amb `/legal` 2.4 i verificar-ne l'empremta; després `2611030330` (Onada 6; conserva la 2.3, demana nou consentiment; cap agent no l'aplica).
+  14. Primer tornar a construir i desplegar web/connector amb `/legal` 2.5 i verificar-ne l'empremta; després `2611061520` (Onada R9, avisos push del xat; conserva la 2.3 i la 2.4, demana nou consentiment; cap agent no l'aplica). Al Node 0 amb POSSE (`SDP_NODE0_POSSE=1`), no es torna a hidratar fins que `tooling/node0/posse/posse-ledger.sql` no porte els llibres 77 i 79 amb esta migració exacta (R9V-C3-01): si el text de la 2.5 canvia, els pins s'han de tornar a calcular.
 
 ### Taula canònica ordenada: 60 fitxers de R1 + candidates 1500, 1800, 1900 i 2000 + assalt 2611011500, 2611011510 i 2611011800 + marató 2611012257 i 2611020106 + `seed.sql` + 2 snippets (`P0-05` / `DF-06`)
 
@@ -1611,15 +1632,16 @@ verificador sense avisos.
 | 67 | `2611011800` | `2611011800_contracte_exportacio_federacio_v1.sql` | **NO aplicada: l'aplica el Mestre** | contracte v1 de l'exportació de federació (P2-09) |
 | 68 | `2611012257` | `2611012257_politica_privacitat_2_3.sql` | **NO aplicada: l'aplica el Mestre** | política de privacitat 2.3 segellada (T11-05) |
 | 69 | `2611020106` | `2611020106_ap_inbox_persistencia_i_cua.sql` | **NO aplicada: l'aplica el Mestre** | persistència de la inbox ActivityPub i cua d'eixida (P1-23 fase 2) |
-| 70 | `2611020417` | `2611020417_xat_avisos_push.sql` | **NO aplicada: l'aplica el Mestre** | avisos push del Xat: aparells, silenci i cua (B8) |
+| 70 | `2611020417` | `2611020417_xat_avisos_push.sql` | Aplicada a producció (acta 261102_1456; lectura REST del 6-11: la taula existix) | avisos push del Xat: aparells, silenci i cua (B8) |
 | 71 | `2611021800` | `2611021800_notes_fitxa_ambit.sql` | **NO aplicada: l'aplica el Mestre** | fitxa d'àmbit de les notes del Flux Universal de Publicació (IDEA-61, T0) |
 | 72 | `2611030330` | `2611030330_politica_privacitat_2_4.sql` | **NO aplicada: l'aplica el Mestre** | política 2.4: èmfasi editorial, 2.3 intacta (Onada 6) |
 | 73 | `2611031500` | `2611031500_notes_logo_mode_nit.sql` | **NO aplicada** | logotip de capçalera de Notes per al mode nit (IDEA-70) |
 | 74 | `2611031700` | `2611031700_administracio_multipoble.sql` | **NO aplicada: l'aplica el Mestre** | selecció de tenants i personalització per poble amb superadmin + aal2 (FEDI-04) |
 | 75 | `2611032100` | `2611032100_connexions_publiques_i_membres.sql` | **NO aplicada: l'aplica el Mestre** | connexions consentides, membres públics i sol·licituds només pendents (FEDI23) |
-| 76 | `2611051930` | `2611051930_edicio_publicacions_editorials.sql` | **NO aplicada: l'aplica el Mestre** | edició editorial amb CAS (superadmin + aal2) i carpetes privades de Notes (R12) |
+| 76 | `2611051930` | `2611051930_edicio_publicacions_editorials.sql` | Aplicada a producció (lectura REST del 6-11: la taula `note_folders` existix; cap acta) | edició editorial amb CAS (superadmin + aal2) i carpetes privades de Notes (R12) |
 | 77 | `2611052345` | `2611052345_admin_usuaris_i_organitzacions.sql` | **Proposta R20b provada en laboratori; exclosa de R7, no desplegada** | perfils consentits amb correu emmascarat; invitació de membre amb acceptació pròpia, sense autoassignació ni escalada; auditoria immutable |
 | 78 | `2611060010` | `2611060010_restauracio_municipal_opendata.sql` | **Proposta provada en laboratori; exclosa de R7, no desplegada** | upsert atòmic Open Data 1.2.0 per tenant, lectura pública fitada i conflictes globals; independent de la 77, no esborra dades absents |
+| 79 | `2611061520` | `2611061520_politica_privacitat_2_5.sql` | **NO aplicada: l'aplica el Mestre** | política 2.5: avisos push del xat, 2.3 i 2.4 intactes (Onada R9) |
 
 | Artefacte complementari | Ruta dins de `supabase/` | Rol operatiu |
 | :--- | :--- | :--- |

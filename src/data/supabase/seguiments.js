@@ -34,6 +34,7 @@ import { capturaSessio, getDefaultUserId } from '../identitat.js';
 import { MISSATGES_SEGUIMENTS, TIPUS_SEGUIT, comDelContracte, errorDeSeguiment, seguitDelContracte } from '../contracte.js';
 import { bloqueigLocalEntre, llistaBloquejos } from './moderacio.js';
 import { errorDeConnexions, errorDeMembre, subjecteConnexionsDelContracte, visibilitatConnexionsDelContracte, inclusioPersonaDelContracte, sollicitudEntitatDelContracte } from '../contracte.js';
+import { CONNEXIONS_PUBLIQUES_REMOTES_ACTIVES } from '../../config/connexionsPubliques.js';
 
 const MODES_LOCALS = new Set(['seed', 'local']);
 const esModeLocal = (config) => MODES_LOCALS.has(getResolvedConfig(config).runtimeDataMode);
@@ -247,6 +248,14 @@ async function executaConnexions(ctx, metode, dades, nomRpc, body) {
     if (ctx.local) {
       const servidor = await seguimentsLocals(), context = await contextLocal(ctx.config);
       ctx.comprova(); resultat = await servidor[metode](dades, context);
+    } else if (!CONNEXIONS_PUBLIQUES_REMOTES_ACTIVES) {
+      /* D-P016 (Onada R9) · Sense la migració 2611032100 a producció, cap
+         petició i el NO-DISPONIBLE que preveu el disseny. Hui, en canvi, el
+         404 arriba de runtime.rpc() sense el PGRST202 i acaba en DESCONEGUT
+         (l'avís de lectura). Les validacions de dalt (SDP-CONN-000/001) no
+         canvien. S'encén a src/config/connexionsPubliques.js quan s'aplique
+         2611032100. */
+      throw errorDeConnexions('NO-DISPONIBLE');
     } else resultat = await rpc(nomRpc, body, ctx.config, { signal: ctx.config.signal });
     ctx.comprova(); return resultat;
   } catch (error) { ctx.comprova(); throw errorConnexionsRpc(error); }

@@ -9,7 +9,7 @@ import {creaBackendPrivatNodeZero} from '../tooling/node0/backend-node0.mjs';
 import {creaPlaMigracions,preparaHidratacio,generaSql,ROOT} from '../tooling/node0/hidrata-postgres-node0.mjs';
 import {creaRepositoriPosse} from '../tooling/node0/posse/repositori-posse.mjs';
 const H='1'.repeat(64),ARTICLE='2'.repeat(64),PASS='Disposable POSSE fixture 2026 952!';
-export async function creaFixturePosse({modulePath=process.env.SDP_PGLITE_MODULE,legacy76=false}={}){
+export async function creaFixturePosse({modulePath=process.env.SDP_PGLITE_MODULE,exclou=[]}={}){
  if(!modulePath)throw Error('SDP_PGLITE_MODULE explicit disposable module required');
  const moduleURL=modulePath.startsWith('file:')?new URL(modulePath):pathToFileURL(path.resolve(modulePath));
  const {PGlite}=await import(moduleURL.href),{pgcrypto}=await import(new URL('./contrib/pgcrypto.js',moduleURL));
@@ -24,7 +24,8 @@ export async function creaFixturePosse({modulePath=process.env.SDP_PGLITE_MODULE
  }};
  try{
   const plan=creaPlaMigracions();
-  if(legacy76)plan.migrations=plan.migrations.filter(m=>!['2611052345','2611060010'].includes(m.version));
+  // Versions left out to build an earlier reviewed ledger (tests/node0-posse-sql.cases.mjs).
+  if(exclou.length)plan.migrations=plan.migrations.filter(m=>!exclou.includes(m.version));
   await pg.exec(generaSql(plan,await preparaHidratacio(),{advisoryLock:false}));
   for(const name of ['auth-node0.sql','backend-node0.sql','posse/posse-ledger.sql'])await pg.exec(fs.readFileSync(path.join(ROOT,'tooling/node0',name),'utf8'));
   const deliveries=[],auth=creaAuthNodeZero({db,rateSecret:Buffer.alloc(32,0x47),mailTransport:async m=>deliveries.push(m)}),backend=creaBackendPrivatNodeZero({db,tenantId:NODE0_AUTH_TENANT});

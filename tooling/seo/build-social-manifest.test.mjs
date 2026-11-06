@@ -306,7 +306,10 @@ const EXCLOSES_DE_PAGE=Object.freeze({
   notes_shared:'còpia antiga de la fitxa del Bloc de notes (/page/notes), amb el logotip SVG com a imatge: no és cap presentació pròpia',
   'node-zero':'article didàctic del servidor local de l’habitació (/page/node-zero), enllaçat bidireccionalment amb /fedivers',
   'anatomia-rural':'visor d’Anatomia Rural (IDEA-109, /page/anatomia-rural): sense portada pròpia fins que hi haja una il·lustració real; no s’inventa cap imatge',
-  herbari:'Herbari de La Torre (IDEA-110, /page/herbari): sense portada pròpia, l’Excel de l’Herbari no porta cap imatge per espècie; no s’inventa cap imatge'
+  herbari:'Herbari de La Torre (IDEA-110, /page/herbari): sense portada pròpia, l’Excel de l’Herbari no porta cap imatge per espècie; no s’inventa cap imatge',
+  'banc-de-llavors':'Banc de llavors (IDEA-112, /page/banc-de-llavors): sense portada pròpia, els tres catàlegs no porten cap imatge pròpia nostra; no s’inventa cap imatge',
+  'rutes-de-poble':'Rutes de poble (IDEA-113, /page/rutes-de-poble): sense portada pròpia, cap imatge de la font no té els drets verificats (Decisió 3, 261007); no s’inventa cap imatge',
+  'arbres-monumentals':'Arbres monumentals (IDEA-115, /page/arbres-monumentals): sense portada pròpia, les fotos de la WP 619 són de tercers (Decisió 3, 261007); no s’inventa cap imatge'
 });
 test('cobertura de l’arbre de veres: les 18 presentacions, /disseny, /wikidepoble i la Consola, amb portada pròpia servible',async()=>{
   const {manifest}=await buildSocialManifest({root:policyRoot,origin,policyRoot,estricte:true});

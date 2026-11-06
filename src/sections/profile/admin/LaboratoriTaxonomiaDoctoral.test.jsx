@@ -86,6 +86,43 @@ describe('BLOC 2 · AH-29 (IDEA-89) · Administració del sistema, Eliminació d
     expect(screen.getByText('Manifest de Poble')).toBeTruthy();
   });
 
+  /* G10-11 (IDEA-117; ordre del Mestre del 261106, Onada R9) · La taula del
+     tesaurus comença sense les etiquetes buides (mostraBuides = false) i el
+     commutador continua mostrant-les i amagant-les. Els recomptes ixen de les
+     dades, no del text dels botons. */
+  test('5b. G10-11 · la taula SKOS comença sense les 53 etiquetes buides i el commutador les mostra i les torna a amagar', () => {
+    localStorage.clear();
+    const buides = FACETA_4_ETIQUETES_SKOS.filter((t) => t.isEmpty).length;
+    const ambArticles = FACETA_4_ETIQUETES_SKOS.length - buides;
+    expect([buides, ambArticles]).toEqual([53, 52]);
+    const { container } = render(<LaboratoriTaxonomiaDoctoral />);
+    const taula = screen.getByRole('table', { name: 'Tesaurus SKOS de 105 etiquetes' });
+    const files = () => [...taula.querySelectorAll('tbody tr')];
+    const filesBuides = () => files().filter((tr) => tr.getAttribute('data-empty') === 'true');
+
+    expect(files()).toHaveLength(ambArticles);
+    expect(filesBuides()).toHaveLength(0);
+    // L'avís de poda de l'estat inicial ja no conviu amb les buides a la taula.
+    expect(screen.getByRole('status').textContent).toMatch(/S’han desactivat i podat les 53 etiquetes buides/);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Mostrar també les 53 etiquetes buides' }));
+    expect(files()).toHaveLength(FACETA_4_ETIQUETES_SKOS.length);
+    expect(filesBuides()).toHaveLength(buides);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Amagar etiquetes de 0 articles de la taula' }));
+    expect(files()).toHaveLength(ambArticles);
+    expect(filesBuides()).toHaveLength(0);
+
+    // Podar també les amaga, encara que abans s'hagen mostrat.
+    fireEvent.click(screen.getByRole('button', { name: 'Mostrar també les 53 etiquetes buides' }));
+    expect(filesBuides()).toHaveLength(buides);
+    fireEvent.click(screen.getByRole('button', { name: /Podar les 53 etiquetes buides/ }));
+    expect(filesBuides()).toHaveLength(0);
+    expect(screen.getByRole('button', { name: 'Mostrar també les 53 etiquetes buides' })).toBeTruthy();
+    expect(container.querySelector('[data-empty="true"]')).toBeNull();
+    localStorage.clear();
+  });
+
   test('6. El panell «🌐 Nodes, Fedivers i Resiliència 3-2-1» mostra PostgreSQL 17.11, les 40 taules, els 32 documents públics, @depoble@mastodont.cat i la còpia 3-2-1 amb age', () => {
     render(<PanellNodesFediversResiliencia />);
     expect(screen.getByRole('article', { name: /Nodes, Fedivers i Resiliència 3-2-1/i })).toBeTruthy();

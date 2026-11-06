@@ -10,6 +10,8 @@ import { MISSATGE_PERSONALITZACIO } from '../../../data/errorsBackend.js';
 import { ambCrom } from '../../../config/estil.js';
 import { useSuperadminEstable } from '../../../hooks/useSuperadminEstable.js';
 import { aplica, base, CANON_BLAU, deltaDe, previsualitza, restaura } from '../../../config/crom.js';
+import { AVISOS_PUSH_XAT_ACTIUS, escoltaAvisosPush, instantaniaAvisosPush } from '../../../config/avisosPushXat.js';
+import { CANALS_BOTIGUES, ESTAT_SERVIDOR_PUSH, FITXA_NATIVA, PASSOS_SERVIDOR_PUSH, QR_GUIA_DESCARREGUES, URL_GUIA_DESCARREGUES, frasePushDelNavegador } from './assistentBotigues.js';
 
 /* La mostra de color es pinta per DOM (la propietat --sdp-crom-mostra només s'accepta si és un HEX6);
    el Design Guard no admet style en línia fora de PanellCrom.jsx. */
@@ -424,6 +426,110 @@ export function PanellNodesFediversResiliencia() {
   );
 }
 
+/* Onada R9 · C3 (G8-12, G8-14) · El QR de la guia de descàrregues: el camí precalculat amb el
+   codificador de la Gestoria (assistentBotigues.js), paper clar i tinta fosca que no canvien amb el
+   tema, amb la zona de silenci de la norma. */
+function QrGuiaDescarregues() {
+  const { costat, d, text } = QR_GUIA_DESCARREGUES;
+  return (
+    <svg className="sdp-admin-qr__svg" viewBox={`0 0 ${costat} ${costat}`} role="img"
+      aria-label={`QR de la guia de descàrregues: ${text}`} shapeRendering="crispEdges" data-testid="qr-svg-botigues">
+      <rect className="sdp-admin-qr__paper" x="0" y="0" width={costat} height={costat} />
+      <path className="sdp-admin-qr__tinta" d={d} />
+    </svg>
+  );
+}
+
+/* Onada R9 · C3 (IDEA-120) · L'estat honest dels avisos push: la bandera, el que diu el registre
+   d'este navegador (sense clau VAPID, l'adaptador diu 'sense-clau') i els passos del servidor. */
+function EstatAvisosPushAdmin() {
+  const inst = useSyncExternalStore(escoltaAvisosPush, instantaniaAvisosPush, instantaniaAvisosPush);
+  return (
+    <div className="sdp-admin-botiga-detall__info" data-testid="estat-avisos-push-admin">
+      <h4>🔔 Avisos push del xat</h4>
+      <dl className="sdp-admin-dl">
+        <dt>Bandera</dt>
+        <dd><code>AVISOS_PUSH_XAT_ACTIUS</code> · {AVISOS_PUSH_XAT_ACTIUS ? 'encesa (ordre del Mestre del 261106)' : 'apagada'}</dd>
+        <dt>En este navegador</dt>
+        <dd>{frasePushDelNavegador(inst)}</dd>
+      </dl>
+      {/* FBV-04 · Primer el fet llegit a producció; després, només el que encara falta. */}
+      <p className="sdp-muted" data-testid="estat-servidor-push">{ESTAT_SERVIDOR_PUSH}</p>
+      <p className="sdp-muted">Perquè arriben avisos (pendent del Mestre):</p>
+      <ul className="sdp-admin-botiga-detall__passos">
+        {PASSOS_SERVIDOR_PUSH.map((pas) => <li key={pas}>{pas}</li>)}
+      </ul>
+    </div>
+  );
+}
+
+/* Onada R9 · C3 (IDEA-120; G8-04, G8-12, G8-16) · L'assistent de botigues: tres canals amb dades
+   dels fitxers del projecte, un sol QR real (la guia pública: no hi ha cap fitxa de botiga
+   publicada que es puga enllaçar) i res de «certificat» ni de «verificat». */
+function AssistentBotigues() {
+  const [canalActiuId, setCanalActiuId] = useState('pwa');
+  const canalActiu = CANALS_BOTIGUES.find((c) => c.id === canalActiuId) || CANALS_BOTIGUES[0];
+  return (
+    <section className="sdp-admin-taxonomia__panel" aria-label="Botigues, guia de descàrregues i avisos push" data-testid="assistent-botigues-qr-admin">
+      <h3>📲 Botigues i guia de descàrregues</h3>
+      <p className="sdp-muted">
+        El QR porta a la guia pública de descàrregues. No és cap enllaç d’instal·lació de l’App Store, de TestFlight
+        ni de Google Play: la disponibilitat a cada botiga no es verifica des d’este panell.
+      </p>
+      <div className="sdp-admin-actions-inline" role="group" aria-label="Canals d’instal·lació">
+        {CANALS_BOTIGUES.map((c) => (
+          <Boto key={c.id} varietat={c.id === canalActiu.id ? 'primari' : 'secundari'} aria-pressed={c.id === canalActiu.id}
+            onClick={() => setCanalActiuId(c.id)} data-testid={`boto-canal-botiga-${c.id}`}>
+            {c.titol}
+          </Boto>
+        ))}
+      </div>
+      <div className="sdp-admin-botiga-detall" data-testid={`detall-canal-botiga-${canalActiu.id}`}>
+        <div className="sdp-admin-botiga-detall__qr">
+          <QrGuiaDescarregues />
+          <code className="sdp-admin-botiga-detall__url">{URL_GUIA_DESCARREGUES}</code>
+        </div>
+        <div className="sdp-admin-botiga-detall__info">
+          <h4>{canalActiu.titol}</h4>
+          <dl className="sdp-admin-dl">
+            <dt>Identificador</dt>
+            <dd><code>{canalActiu.identificador}</code></dd>
+            <dt>Versió</dt>
+            <dd>{canalActiu.versio}</dd>
+            <dt>Estat</dt>
+            <dd><Insignia to="primari">{canalActiu.estat}</Insignia></dd>
+            {canalActiu.comandament ? (
+              <>
+                <dt>Ordre de compilació</dt>
+                <dd><code>{canalActiu.comandament}</code></dd>
+              </>
+            ) : null}
+          </dl>
+          <ul className="sdp-admin-botiga-detall__passos">
+            {canalActiu.passos.map((pas) => <li key={pas}>{pas}</li>)}
+          </ul>
+          <div className="sdp-admin-actions-inline">
+            <Link className="sdp-boto sdp-boto--primari" to="/descarregues">Obrir la guia pública (/descarregues)</Link>
+            <Link className="sdp-boto sdp-boto--secundari" to="/xat">Obrir el xat (/xat)</Link>
+          </div>
+        </div>
+      </div>
+      <div className="sdp-admin-botiga-detall">
+        <EstatAvisosPushAdmin />
+        <div className="sdp-admin-botiga-detall__info" data-testid="checklist-conformitat-botigues">
+          <h4>Conformitat que es veu als fitxers</h4>
+          <ul className="sdp-admin-botiga-detall__passos">
+            <li>Eliminació del compte (App Store 5.1.1(v) i Google Play): dins de l’app, a Privacitat, i a <code>https://socdepoble.org/legal#esborra-compte</code>.</li>
+            <li>Zero rastreig: <code>PrivacyInfo.xcprivacy</code> declara <code>NSPrivacyTracking = false</code>, i cap SDK de Facebook (sentinella del preflight i de <code>src/natiu/projecteIos.test.js</code>).</li>
+            <li>Universal Links i App Links: cap domini associat ni <code>assetlinks.json</code> publicat (falten les empremtes de Play Console).</li>
+            <li>L’estat sencer, fora de línia: <code>node scripts/botigues/preflight.mjs --estat</code>.</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+  );
+}
+
 /**
  * Apartat 6 · 📦 Empaquetats i Desplegament (Mode Jarvis)
  */
@@ -433,14 +539,16 @@ export function PanellEmpaquetatsDesplegament() {
       <header className="sdp-admin-taxonomia__header">
         <div className="sdp-admin-taxonomia__badges">
           <Insignia to="primari">Model B · Port Neutral</Insignia>
-          <Insignia to="exit">v1.2.0 Certificada</Insignia>
+          <Insignia to="primari">{`Web ${FITXA_NATIVA.versioWeb} · apps ${FITXA_NATIVA.versio} (build ${FITXA_NATIVA.build})`}</Insignia>
         </div>
         <p>
           Estat dels artefactes d’empaquetat autònom: Web Component <code>&lt;soc-de-poble&gt;</code> amb Shadow DOM
-          tancat per a WordPress, Joomla o Sollutia, PWA amb còpia local (OPFS) i portes de conformitat de la Fàbrica
-          de Programari.
+          tancat per a WordPress, Joomla o Sollutia, PWA amb còpia local (OPFS), apps d’iPhone i d’Android
+          (<code>{FITXA_NATIVA.paquet}</code>) i portes de conformitat de la Fàbrica de Programari.
         </p>
       </header>
+
+      <AssistentBotigues />
 
       <section className="sdp-admin-taxonomia__panel">
         <h3>📦 Artefactes i Portes de Seguretat</h3>
@@ -478,7 +586,7 @@ export function PanellEmpaquetatsDesplegament() {
 
         <div className="sdp-admin-actions-inline sdp-admin-actions-inline--separat-ampli">
           <Link className="sdp-boto sdp-boto--primari" to="/versions">
-            Veure Historial de Versions (/versions · v1.2.0)
+            Veure l’historial de versions (/versions)
           </Link>
         </div>
       </section>

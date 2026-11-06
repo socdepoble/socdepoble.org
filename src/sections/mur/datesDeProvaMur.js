@@ -22,19 +22,16 @@
  * Els actes de l'agenda (eventsSeed.js) no hi són: la seua data és el dia de
  * l'acte, no el de la publicació, i el Calendari els pinta el dia que passen.
  *
- * Mòdul pur, sense imports: `ara` s'injecta a les proves.
+ * Mòdul pur: `ara` s'injecta a les proves. L'únic import és el reexport del
+ * registre dels importants històrics (feedSeed.js, R9V-C2-01): este mòdul no
+ * va a l'entrada, només el carrega la capa de dades (content.js) en diferit.
  */
+export { IMPORTANTS_HISTORIQUES_DEL_MUR } from './feedSeed.js';
 
 /** L'arrencada de la demostració: una sola per a totes les càrregues. El Mur
     (loadMur) i les pàgines (loadCoreContent) es demanen en moments diferents
     i no poden repartir-se unes altres hores. */
 const ARRENCADA = new Date();
-
-/** AH-27 · Destaquem patrimoni real sense donar-li una data d'esta setmana.
- * Este registre és separat de la demostració temporal de les pàgines noves. */
-export const IMPORTANTS_HISTORIQUES_DEL_MUR = Object.freeze([
-  Object.freeze(['feedPosts', 'manifest-de-poble'])
-]);
 
 /** On porta la data de creació cada col·lecció de la llavor. El copy d'una
     pàgina, a `date` (MurSection la passa a created_at; TextSection i
@@ -70,8 +67,18 @@ const CAMP_DE_DATA = Object.freeze({ pages: 'date', feedPosts: 'created_at', mar
  * publicació més recent. Amb ella en són onze. Pendent del Mestre, com la de
  * Descàrregues: si l'ha de deixar amb la seua data real, n'hi ha prou a llevar
  * esta fila i tornar el sostre de la prova a deu.
+ *
+ * Ordre del Mestre (261106; IDEA-116, Onada R9) · «Noves tecnologies
+ * aplicades a la cultura rural» ha de ser la PRIMERA publicació del Mur:
+ * entra la primera, la més nova. Amb ella en són dotze. En remot mana la
+ * seua data real (06-11-2026, la de l'escriptura). Si el Mestre la vol amb
+ * la data real també en la demostració, n'hi ha prou a llevar esta fila i
+ * tornar el sostre de la prova a onze. L'id és literal, com els altres: la
+ * instantània de la publicació baixa en un tros diferit (R9V-C2-01), i una
+ * prova en fixa la igualtat (NovesTecnologiesCulturaRuralArticle.test.jsx).
  */
 export const IMPORTANTS_DEL_MUR = Object.freeze([
+  ['feedPosts', 'noves-tecnologies-aplicades-a-la-cultura-rural'],
   ['pages', 'fediversity'],
   ['pages', 'descarregues'],
   ['pages', 'xat'],
