@@ -44,16 +44,16 @@
       "data": "2026-11-05"
     },
     "fedivers": {
-      "sha256": "16cabf3880eb7e5a9de948cd1605fe42343bd4a4902306a8c0906df7d90bca11",
-      "html": 17246,
-      "aprovat_per": "Mestre Javi Llinares + MarIA (COMMIT R6 Fediversity + Arquitectura IA 05-11-2026)",
-      "data": "2026-11-05"
+      "sha256": "8dbc76b2b009f0bff3ac612f69080ae00cda02398429e21b193d0e99d01c7f6c",
+      "html": 17261,
+      "aprovat_per": "Codex: execució autoritzada R7, revisió tècnica automatitzada",
+      "data": "2026-11-06"
     },
     "fediversity": {
-      "sha256": "59b456b77b35588cc7c6788af77a5e44ae6893875e538709bd0005e02a7fc460",
-      "html": 57073,
-      "aprovat_per": "Mestre Javi Llinares + MarIA (COMMIT R6 Fediversity + Arquitectura IA 05-11-2026)",
-      "data": "2026-11-05"
+      "sha256": "e018de7ec5051d545d28d813ad39e550cdb3fddee3baae74aa9866bde1202bf0",
+      "html": 57127,
+      "aprovat_per": "Codex: execució autoritzada R7, revisió tècnica automatitzada",
+      "data": "2026-11-06"
     },
     "habitatge": {
       "sha256": "77c25f12150cc07c8bb56b6ebd1f3b5a2d057ac6ec3f02997f47654ce0b94da2",
@@ -68,10 +68,10 @@
       "data": "2026-11-03"
     },
     "node-zero": {
-      "sha256": "731daee2b384ba3b6126c26935e9c14773c5c0d8df12d5d98f3f405c0f69dd19",
-      "html": 17133,
-      "aprovat_per": "Mestre Javi Llinares + MarIA (COMMIT R6 Fediversity + Arquitectura IA 05-11-2026)",
-      "data": "2026-11-05"
+      "sha256": "ad8760ffbb200c39dc1641105a6436fce44aae49cd44ca9db0a2b8519f8adecb",
+      "html": 17148,
+      "aprovat_per": "Codex: execució autoritzada R7, revisió tècnica automatitzada",
+      "data": "2026-11-06"
     },
     "notes": {
       "sha256": "39cf0339b0694fc1ed39bdcac47064fadb725d844e6410753a9af90e1fc4e94c",
@@ -104,10 +104,10 @@
       "data": "2026-11-05"
     },
     "versions": {
-      "sha256": "155acbec90f3d5f57fd95e7d26d76c9ead167d17120f59bcce27d7cb2daf2403",
-      "html": 40576,
-      "aprovat_per": "Mestre Javi Llinares + MarIA (COMMIT R6 Fediversity + Arquitectura IA 05-11-2026)",
-      "data": "2026-11-05"
+      "sha256": "c6bcc386865fba180b39540f91f4e09dfddd1c3a5bdf1741b2978e9df79c39a7",
+      "html": 40591,
+      "aprovat_per": "Codex: execució autoritzada R7, revisió tècnica automatitzada",
+      "data": "2026-11-06"
     },
     "wikidepoble": {
       "sha256": "4a87d50d0fdf491fe647cce3d27015eb7aff4ab3e7e7886129729f6c56088165",
