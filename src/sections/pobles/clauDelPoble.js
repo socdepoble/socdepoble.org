@@ -44,6 +44,7 @@
 import { dataDeDocument } from '../../components/universal/editorial.js';
 import { DEFAULT_AUTHOR } from '../../components/universal/UniversalUtils.js';
 import { poblePrincipal, slugDelPoble } from './nomsDelPoble.js';
+import { esPublicada } from '../../config/publicationPolicy.js';
 
 const CAP = Object.freeze([]);
 
@@ -210,6 +211,64 @@ export function poblesAmbNaixement(towns, fonts) {
       if (creacio && (!mes || creacio.instant < mes.instant)) mes = creacio;
     }
     return !mes || mes.valor === town.created_at ? town : { ...town, created_at: mes.valor };
+  });
+  return pobles.every((poble, i) => poble === towns[i]) ? towns : pobles;
+}
+
+/* Arbitratge R11 (R37-L2-04, R37-L2-05) · Una publicació pública compta pel
+   seu created_at (creacioDe: el que conserva el servidor), i res més la veta.
+   publish_date és la data triada al calendari (T40, NotesContext: «No
+   programa res»): el Mur la pinta i l'ordena amb ella encara que siga futura,
+   i /pobles no la pot descartar. created_at tampoc es compara amb el rellotge
+   del client: l'assigna el servidor, i un client endarrerit uns segons no ha
+   d'amagar la publicació que acaba de fer (el memo de PoblesSection no es
+   recalcula pel temps). */
+function instantDePublicacio(item) {
+  for (const capa of [item, item.attributes ?? {}]) {
+    if (!esPublicada(capa) || (capa.isPublished !== undefined && capa.isPublished !== true)) return null;
+  }
+  return creacioDe(item.created_at);
+}
+
+function ultimesPublicacionsDeclarades(fonts) {
+  const perClau = new Map();
+  if (!fonts || typeof fonts !== 'object') return perClau;
+  for (const [, font] of FONTS_DEL_POBLE) {
+    for (const item of Array.isArray(fonts[font]) ? fonts[font] : CAP) {
+      if (!item || typeof item !== 'object' || item.id == null || esDeSistema(item)) continue;
+      const clau = pobleDeclaratDe(item);
+      const creacio = clau === null ? null : instantDePublicacio(item);
+      if (!creacio) continue;
+      const anterior = perClau.get(clau);
+      if (!anterior || creacio.instant > anterior.instant) perClau.set(clau, creacio);
+    }
+  }
+  return perClau;
+}
+
+/**
+ * P0-39 / IDEA-166 · Ordenació dinàmica de /pobles per l'última publicació
+ * pública (Mur, Mercat, Esdeveniments), separada de la creació/edició de la
+ * fitxa. Sense publicació vàlida, null: no es fabrica una data de naixement
+ * com si fora activitat pública. L'inici d'un acte no participa en el càlcul.
+ * Arbitratge R11 · _ultimaPublicacioPublica és el created_at tal com ve (com
+ * poblesAmbNaixement): una data sense hora no es torna una pastilla amb una
+ * hora 00:00 que la dada no porta. Per a /pobles, la mateixa publicació diu
+ * l'activitat; la pàgina del poble (detailSectionMeta.jsx) continua amb el
+ * naixement: divergència respecte a T51 pendent de decisió del Mestre.
+ */
+export function poblesAmbUltimaPublicacio(towns, fonts) {
+  if (!Array.isArray(towns)) return CAP;
+  const perClau = ultimesPublicacionsDeclarades(fonts);
+  const pobles = towns.map((town) => {
+    if (!town || typeof town !== 'object') return town;
+    let mes = null;
+    for (const clau of clausDelPoble(town)) {
+      const ultima = perClau.get(clau);
+      if (ultima && (!mes || ultima.instant > mes.instant)) mes = ultima;
+    }
+    const valor = mes ? mes.valor : null;
+    return town._ultimaPublicacioPublica === valor ? town : { ...town, _ultimaPublicacioPublica: valor };
   });
   return pobles.every((poble, i) => poble === towns[i]) ? towns : pobles;
 }

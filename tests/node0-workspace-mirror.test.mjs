@@ -3,17 +3,19 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import os from 'node:os';
-import {createHash,randomBytes} from 'node:crypto';
+import {createHash,createHmac,randomBytes} from 'node:crypto';
 import {EventEmitter} from 'node:events';
 import {PassThrough} from 'node:stream';
 import {spawn} from 'node:child_process';
-import {exportaMirall,inspeccionaMirall,creaRunnerSnapshot,validaRecipientAge,CARPETES_MIRALL} from '../tooling/node0/exporta-mirall-workspace-node0.mjs';
+import {pathToFileURL,fileURLToPath} from 'node:url';
+import {exportaMirall,inspeccionaMirall,creaRunnerSnapshot,validaRecipientAge,CARPETES_MIRALL,SQL_OBRI_CAPTURA_LEDGER,validaLedgerCapturat} from '../tooling/node0/exporta-mirall-workspace-node0.mjs';
 
 const SHA=value=>createHash('sha256').update(value).digest('hex'),H='a'.repeat(64);
 const NOW=Date.parse('2026-11-04T20:20:00.123Z'),GEN='20261104T202000Z-0123456789abcdef';
 // Synthetic public X25519 recipient bytes, not an actual newly generated key.
 function recipient(){const alphabet='qpzry9x8gf2tvdw0s3jn54khce6mua7l',data=Array(52).fill(0);let chk=1;for(const v of[3,3,3,0,1,7,5,...data,0,0,0,0,0,0]){const top=chk>>>25;chk=((chk&0x1ffffff)<<5)^v;for(let i=0;i<5;i++)if((top>>>i)&1)chk^=[0x3b6a57b2,0x26508e6d,0x1ea119fa,0x3d4233dd,0x2a1462b3][i];}chk^=1;return'age1'+data.map(v=>alphabet[v]).join('')+Array.from({length:6},(_,i)=>alphabet[(chk>>>(5*(5-i)))&31]).join('');}
 const RECIPIENT=recipient(),CIPHER=Buffer.concat([Buffer.from('age-encryption.org/v1\n'),Buffer.alloc(150,72)]);
+const LEDGER=Object.freeze({migrations:80,migrationLedgerSha256:'b'.repeat(64)}),CAPTURE_PROTOCOL='sdp.node0.snapshot-ledger.v1';
 import {exportaMunicipiOpenData} from '../src/data/exportaMunicipiOpenData.js';
 const FIXTURE_INPUT={municipi:{slug:'sella',nom:'Sella'},ara:'2026-11-04T00:00:00Z',noticies:[{id:'synthetic-public-fixture',title:'Relat de prova',poble_id:'sella',author_entity_id:'synthetic-organisation',body:'Relat públic de prova.',copyright:'CC BY 4.0'}]};
 const ZIP=(await exportaMunicipiOpenData(FIXTURE_INPUT)).zip;
@@ -30,7 +32,7 @@ async function fixture(t){
   const providers={listPublicArticles:async()=>articles,listPublicMedia:async()=>medias,listPublicOpenData:async()=>zips};
   const authDir=path.join(base,'local-auth');await fs.mkdir(authDir,{mode:0o700});const authentication={keyFile:path.join(authDir,'authentication.bin'),keyId:'r8-local-test'};await fs.writeFile(authentication.keyFile,randomBytes(32),{mode:0o600});
   const reviewedSourceRoots=['media','opendata','restore'].map(kind=>({kind,root:sources}));
-  const options={mirrorDir,stateDir,authentication,reviewedSourceRoots,recipient:RECIPIENT,providers,now:()=>NOW,generationId:GEN,runner:async({recipient})=>{runs++;assert.equal(recipient,RECIPIENT);return{ciphertext:CIPHER,completed:true,encrypted:true,format:'pg_dump-custom-gzip-6',encryption:'age-X25519'};}};
+  const options={mirrorDir,stateDir,authentication,reviewedSourceRoots,recipient:RECIPIENT,providers,now:()=>NOW,generationId:GEN,runner:async({recipient})=>{runs++;assert.equal(recipient,RECIPIENT);return{ciphertext:CIPHER,completed:true,encrypted:true,format:'pg_dump-custom-gzip-6',encryption:'age-X25519',captureProtocol:CAPTURE_PROTOCOL,migrationLedger:LEDGER};}};
   return{base,mirrorDir,stateDir,authentication,sources,media,zip,options,runs:()=>runs,setArticles:value=>{articles=value;},setMedia:value=>{medias=value;},setZips:value=>{zips=value;}};
 }
 async function current(f){return JSON.parse(await fs.readFile(path.join(f.mirrorDir,'CURRENT.json'),'utf8'));}
@@ -179,23 +181,116 @@ test('obvious plaintext credential markers cannot enter public article or attach
   f.setArticles([ARTICLE]);const bytes=Buffer.from('%PDF-1.4\nBearer LAB_SECRET_SENTINEL');await fs.writeFile(path.join(f.sources,'bad.pdf'),bytes);f.setMedia([{...f.media,relativePath:'bad.pdf',canonicalName:'bad.pdf',sha256:SHA(bytes),bytes:bytes.length,mimeType:'application/pdf'}]);await assert.rejects(exportaMirall({...f.options,apply:true}),/secret_marker/);assert.equal(f.runs(),0);assert.deepEqual(await fs.readdir(f.mirrorDir),[]);
 });
 
-function fakeSpawn({exit=0,hang=false,large=false}={}){
+const META={protocol:CAPTURE_PROTOCOL,database:'socdepoble_node0',serverMajor:17,isolation:'repeatable read',readOnly:true,snapshotId:'00000003-0000001B-1',...LEDGER};
+function fakeSpawn({exit=0,hang=false,large=false,metadata=META,duplicate=false,controlLimit=false,dieCapture=false,ageExit=0,captureExit=0,closeDelay=0,ignoreTerm=false,partialTail=false,interleavedClose=false}={}){
   const calls=[],children=[];let seenPlain=Buffer.alloc(0);
-  function run(file,args,options){const c=new EventEmitter();c.stdin=new PassThrough();c.stdout=new PassThrough();c.stderr=new PassThrough();c.killed=false;c.kill=()=>{c.killed=true;};children.push(c);calls.push({file,args,options});
-    if(file.endsWith('/age')){c.stdin.on('data',b=>{seenPlain=Buffer.concat([seenPlain,b]);});c.stdin.on('end',()=>{if(!hang){c.stdout.end(large?Buffer.alloc(200):CIPHER);setImmediate(()=>c.emit('close',0));}});}
-    else if(!hang){queueMicrotask(()=>{c.stdout.end(Buffer.from('PGDMP PRIVATE_DB_SENTINEL'));setImmediate(()=>c.emit('close',exit));});}return c;}
+  const close=(c,code)=>{if(c.closed)return;c.closed=true;c.stdout.end();c.stderr.end();c.emit('close',code);};
+  function run(file,args,options){const c=new EventEmitter();c.stdin=new PassThrough();c.stdout=new PassThrough();c.stderr=new PassThrough();c.closed=false;c.killed=false;c.signals=[];c.kind=file.endsWith('/psql')?'capture':file.endsWith('/age')?'age':'dump';c.kill=signal=>{c.killed=true;c.signals.push(signal);if(!(ignoreTerm&&signal==='SIGTERM'))setTimeout(()=>close(c,null),closeDelay);return true;};children.push(c);calls.push({file,args,options});
+    if(c.kind==='capture'){
+      let sent=false;c.stdin.on('data',b=>{const text=b.toString();if(text.includes('BEGIN ISOLATION')){assert.ok(text.indexOf('pg_advisory_lock_shared')<text.indexOf('BEGIN ISOLATION'));assert.equal(sent,false);sent=true;if(hang===true||hang==='capture')return;queueMicrotask(()=>{const line=controlLimit?'x'.repeat(9000):JSON.stringify(metadata);c.stdout.write('\n'+line.slice(0,7));queueMicrotask(()=>{c.stdout.write(line.slice(7)+'\n'+(duplicate?line+'\n':'')+(partialTail?'extra':''));if(dieCapture)close(c,0);});});}else assert.equal(text,'ROLLBACK;\n');});
+      c.stdin.on('finish',()=>setImmediate(()=>close(c,captureExit)));
+    }else if(c.kind==='age'){c.stdin.on('data',b=>{seenPlain=Buffer.concat([seenPlain,b]);});c.stdin.on(interleavedClose?'finish':'end',()=>{if(hang!==true&&hang!=='age'){c.stdout.end(large?Buffer.alloc(200):CIPHER);if(interleavedClose){close(c,ageExit);close(children.find(child=>child.kind==='dump'),exit);}else setImmediate(()=>close(c,ageExit));}});}
+    else if(hang!==true&&hang!=='dump'){assert.equal(children.find(x=>x.kind==='capture').closed,false,'exporting snapshot must stay alive');queueMicrotask(()=>{if(c.closed||c.killed)return;c.stdout.end(Buffer.from('PGDMP PRIVATE_DB_SENTINEL'));setImmediate(()=>close(c,exit));});}return c;}
   return{run,calls,children,plain:()=>seenPlain};
 }
-const SNAP={pgDump:'/safe/pg_dump',age:'/safe/age',database:'socdepoble_node0',socket:'/safe/socket',user:'javi',timeoutMs:1000};
+const SNAP={pgDump:'/safe/pg_dump',psql:'/safe/psql',age:'/safe/age',database:'socdepoble_node0',socket:'/safe/socket',user:'javi',timeoutMs:1000};
 test('native runner has a direct stdout pipe, compressed consistent pg_dump flags and an isolated nonsecret environment',async()=>{
   const fake=fakeSpawn(),run=creaRunnerSnapshot({...SNAP,spawnImpl:fake.run}),out=await run({recipient:RECIPIENT});assert.deepEqual(out.ciphertext,CIPHER);assert.equal(out.encrypted,true);assert.ok(fake.plain().includes('PRIVATE_DB_SENTINEL'));
-  assert.deepEqual(fake.calls[0].args,['--encrypt','--recipient',RECIPIENT]);const args=fake.calls[1].args;assert.ok(args.includes('--format=custom'));assert.ok(args.includes('--compress=gzip:6'));assert.ok(args.includes('--no-password'));assert.equal(args.some(v=>v.includes('PGDATA')||v.includes('--file')),false);
+  assert.deepEqual(fake.calls.find(c=>c.file.endsWith('/age')).args,['--encrypt','--recipient',RECIPIENT]);const args=fake.calls.find(c=>c.file.endsWith('/pg_dump')).args;assert.ok(args.includes('--format=custom'));assert.ok(args.includes('--compress=gzip:6'));assert.ok(args.includes('--no-password'));assert.equal(args.some(v=>v.includes('PGDATA')||v.includes('--file')),false);
+  assert.ok(args.includes('--snapshot='+META.snapshotId));assert.deepEqual(out.migrationLedger,LEDGER);assert.equal(Object.isFrozen(out.migrationLedger),true);assert.equal(out.nativeCaptureVerified,false);assert.ok(fake.children.every(c=>c.closed));
   for(const c of fake.calls){assert.equal(c.options.shell,false);assert.equal(c.options.env.PGPASSFILE,'/dev/null');assert.equal('PGPASSWORD'in c.options.env,false);assert.equal('HOME'in c.options.env,false);}
 });
 test('native runner requires both process exits and bounds timeout/output without logging private stderr',async()=>{
   const fail=fakeSpawn({exit:2});await assert.rejects(creaRunnerSnapshot({...SNAP,spawnImpl:fail.run})({recipient:RECIPIENT}),e=>e.code==='mirror_snapshot_process_failed'&&!e.message.includes('PRIVATE'));
-  const timed=fakeSpawn({hang:true});await assert.rejects(creaRunnerSnapshot({...SNAP,timeoutMs:10,spawnImpl:timed.run})({recipient:RECIPIENT}),/timeout/);assert.ok(timed.children.every(c=>c.killed));
-  const large=fakeSpawn({large:true});await assert.rejects(creaRunnerSnapshot({...SNAP,maxBytes:64,spawnImpl:large.run})({recipient:RECIPIENT}),/limit/);assert.ok(large.children.every(c=>c.killed));
+  const timed=fakeSpawn({hang:'dump'});await assert.rejects(creaRunnerSnapshot({...SNAP,timeoutMs:10,spawnImpl:timed.run})({recipient:RECIPIENT}),/timeout/);assert.equal(timed.children.length,3);assert.ok(timed.children.every(c=>c.closed));
+  const large=fakeSpawn({large:true});await assert.rejects(creaRunnerSnapshot({...SNAP,maxBytes:64,spawnImpl:large.run})({recipient:RECIPIENT}),/limit/);assert.ok(large.children.every(c=>c.closed));
+});
+
+test('R42 capture protocol rejects malformed metadata, duplicate responses and early capture loss without surviving children',async()=>{
+  for(const change of[{database:'foreign'},{serverMajor:18},{isolation:'read committed'},{readOnly:false},{migrations:0},{migrations:1.5},{migrationLedgerSha256:'bad'},{snapshotId:'untrusted token'},{extra:true}]){
+    const fake=fakeSpawn({metadata:{...META,...change}});await assert.rejects(creaRunnerSnapshot({...SNAP,spawnImpl:fake.run})({recipient:RECIPIENT}),/protocol_invalid/);assert.equal(fake.children.length,1);assert.ok(fake.children.every(c=>c.closed));
+  }
+  for(const options of[{duplicate:true},{controlLimit:true},{dieCapture:true},{partialTail:true},{ageExit:3},{captureExit:2}]){const fake=fakeSpawn(options);await assert.rejects(creaRunnerSnapshot({...SNAP,spawnImpl:fake.run})({recipient:RECIPIENT}),/mirror_snapshot_/);assert.ok(fake.children.every(c=>c.closed));}
+});
+test('R42 cancellation waits for owned child close and escalates ignored SIGTERM',async()=>{
+  const fake=fakeSpawn({hang:'dump',ignoreTerm:true,closeDelay:5}),started=Date.now();
+  await assert.rejects(creaRunnerSnapshot({...SNAP,timeoutMs:20,spawnImpl:fake.run})({recipient:RECIPIENT}),/timeout/);
+  assert.ok(Date.now()-started>=250);assert.ok(fake.children.every(c=>c.closed&&c.signals.includes('SIGKILL')));
+});
+test('R42 actual spawn ENOENT for each process waits for close and reaps every previously created child',async()=>{
+  for(const suffix of ['/psql','/age','/pg_dump']){
+    const fake=fakeSpawn();let missingClosed=false;
+    const spawnImpl=(file,args,options)=>{if(file.endsWith(suffix)){const child=spawn('/TEST_ONLY/r42-no-such-executable'+suffix,args,options);child.once('close',()=>{missingClosed=true;});return child;}return fake.run(file,args,options);};
+    await assert.rejects(creaRunnerSnapshot({...SNAP,spawnImpl})({recipient:RECIPIENT}),error=>/^mirror_snapshot_/.test(error.code)&&!error.message.includes('TEST_ONLY'));
+    assert.equal(missingClosed,true);assert.ok(fake.children.every(c=>c.closed));
+  }
+});
+test('R45 valid EOF and writable finish may precede a deferred pipeline callback despite interleaved process closes',async()=>{
+  const fake=fakeSpawn({interleavedClose:true}),out=await creaRunnerSnapshot({...SNAP,spawnImpl:fake.run})({recipient:RECIPIENT});
+  assert.equal(out.completed,true);assert.equal(out.nativeCaptureVerified,false);assert.deepEqual(out.ciphertext,CIPHER);assert.ok(fake.children.every(child=>child.closed));
+});
+test('R45 three real Node subprocess doubles require a complete pipe as well as all process closes',async t=>{
+  const fixture=fileURLToPath(new URL('./fixtures/node0-snapshot-child.mjs',import.meta.url));
+  for(const scenario of ['success-control','success-fast-close','success-delayed-dump-close','age-early-zero','age-prefix-zero','dump-open-after-eof','dump-late-error','abort-pipe'])await t.test(scenario,async()=>{
+    const owned=[];let pipeAborted=false;
+    const spawnImpl=(file,args,options)=>{
+      const role=file.endsWith('/psql')?'capture':file.endsWith('/pg_dump')?'dump':'age',child=spawn(process.execPath,[fixture,role,scenario,...args],options),state={role,child,closed:false,exited:false,stdoutEnded:false};owned.push(state);
+      child.once('exit',code=>{state.exited=true;state.exitCode=code;});child.once('close',()=>{state.closed=true;});child.stdout.once('end',()=>{state.stdoutEnded=true;});
+      if(role==='dump'&&scenario==='abort-pipe')child.stdout.once('data',()=>{pipeAborted=true;child.stdout.destroy(Error('PRIVATE_PIPE_ABORT_SENTINEL'));});
+      return child;
+    };
+    const run=creaRunnerSnapshot({...SNAP,timeoutMs:scenario==='dump-open-after-eof'?500:2000,spawnImpl});
+    if(scenario.startsWith('success-')){const out=await run({recipient:RECIPIENT});assert.equal(out.completed,true);assert.equal(out.nativeCaptureVerified,false);}
+    else await assert.rejects(run({recipient:RECIPIENT}),error=>/^mirror_snapshot_/.test(error.code)&&(scenario!=='dump-open-after-eof'||error.code==='mirror_snapshot_timeout')&&!error.message.includes('PRIVATE')&&!error.message.includes(META.snapshotId));
+    assert.equal(owned.length,3);assert.ok(owned.every(state=>state.closed&&state.exited));
+    for(const {child}of owned)assert.throws(()=>process.kill(child.pid,0),error=>error.code==='ESRCH');
+    if(scenario==='abort-pipe')assert.equal(pipeAborted,true);
+    if(scenario==='dump-open-after-eof'){assert.equal(owned.find(state=>state.role==='dump').stdoutEnded,true);assert.equal(owned.find(state=>state.role==='age').exitCode,0);}
+  });
+  t.diagnostic('Simulation only: real Node children with deliberately fake PostgreSQL/age semantics; no native database or cryptographic interoperability claim.');
+});
+test('R42 source ledger validator returns an immutable exact copy and refuses accessor authority',()=>{
+  const input={...LEDGER},copy=validaLedgerCapturat(input);input.migrations=1;assert.deepEqual(copy,LEDGER);assert.ok(Object.isFrozen(copy));
+  for(const value of[null,{},Object.assign(Object.create(LEDGER),{}),{...LEDGER,verified:true},Object.defineProperty({...LEDGER},'migrations',{get(){throw Error('must not execute');}})])assert.throws(()=>validaLedgerCapturat(value),/mirror_/);
+});
+test('R42 authenticated manifest binds the captured ledger; semantic validation keeps legacy manual backups readable',async t=>{
+  const f=await fixture(t),originalRunner=f.options.runner;
+  await exportaMirall({...f.options,apply:true,runner:async input=>({...await originalRunner(input),nativeCaptureVerified:true,verified:true})});
+  const pointer=await current(f),generation=path.join(f.mirrorDir,'generacions',pointer.generation),manifestPath=path.join(generation,'MANIFEST.json'),original=JSON.parse(await fs.readFile(manifestPath));
+  assert.deepEqual(original.snapshot.migrationLedger,LEDGER);assert.equal(original.snapshot.migrationLedgerCapture.nativeVerified,false);assert.equal(original.snapshot.restoreVerified,false);assert.equal(original.publicSelection.atomicWithDatabaseDump,false);assert.equal(JSON.stringify(original).includes(META.snapshotId),false);
+  const originalSums=await fs.readFile(path.join(generation,'SHA256SUMS'),'utf8'),key=await fs.readFile(f.authentication.keyFile);
+  const rewrite=async(mutator,authenticate)=>{
+    const manifest=structuredClone(original);mutator(manifest);const bytes=Buffer.from(JSON.stringify(manifest,null,2)+'\n'),sums=Buffer.from(originalSums.replace(/^[a-f0-9]{64} {2}MANIFEST.json$/m,SHA(bytes)+'  MANIFEST.json'));
+    await fs.writeFile(manifestPath,bytes);await fs.writeFile(path.join(generation,'SHA256SUMS'),sums);await fs.writeFile(path.join(f.mirrorDir,'CURRENT.json'),JSON.stringify({...pointer,manifestSha256:SHA(bytes),sumsSha256:SHA(sums)}));
+    if(authenticate){const mac=createHmac('sha256',key).update(Buffer.concat([Buffer.from('sdp.node0.mirror.authentication.v1\0'),bytes,Buffer.from('\0'),sums])).digest('hex');await fs.writeFile(path.join(generation,'AUTHENTICITY.json'),JSON.stringify({algorithm:'HMAC-SHA256',keyId:f.authentication.keyId,mac,schema:'sdp.node0.mirror.authentication.v1'})+'\n');}
+  };
+  try{
+    await rewrite(m=>{m.snapshot.migrationLedger.migrations++;},false);assert.equal((await inspeccionaMirall({mirrorDir:f.mirrorDir,authentication:f.authentication})).integrityOk,false,'new SHA/pointer cannot replace the trusted MAC');
+    for(const mutate of[m=>{m.snapshot.migrationLedger.migrations=0;},m=>{m.snapshot.migrationLedger.migrations=true;},m=>{m.snapshot.migrationLedger.migrationLedgerSha256='bad';},m=>{m.snapshot.migrationLedger.extra=true;},m=>{m.snapshot.migrationLedgerCapture.nativeVerified=true;},m=>{delete m.snapshot.migrationLedgerCapture;},m=>{delete m.snapshot.migrationLedger;delete m.snapshot.migrationLedgerCapture;}]){await rewrite(mutate,true);assert.equal((await inspeccionaMirall({mirrorDir:f.mirrorDir,authentication:f.authentication})).integrityOk,false,'even a valid MAC does not authorize an invalid ledger protocol');}
+    await rewrite(m=>{delete m.snapshot.migrationLedger;delete m.snapshot.migrationLedgerCapture;m.snapshot.consistent='pg_dump-transaction';},true);assert.equal((await inspeccionaMirall({mirrorDir:f.mirrorDir,authentication:f.authentication})).integrityOk,true,'legacy metadata remains readable without a native/coherent-source claim');
+  }finally{key.fill(0);}
+});
+test('R42 new publication refuses a missing source ledger and preserves the previous generation on capture failure',async t=>{
+  const f=await fixture(t);await exportaMirall({...f.options,apply:true});const pointer=await fs.readFile(path.join(f.mirrorDir,'CURRENT.json')),state=await fs.readFile(path.join(f.stateDir,'workspace-mirror-state.json'));
+  for(const runner of[async()=>({ciphertext:CIPHER,completed:true,encrypted:true,format:'pg_dump-custom-gzip-6',encryption:'age-X25519'}),async()=>{throw Error('PRIVATE_CAPTURE_DIAGNOSTIC');}])await assert.rejects(exportaMirall({...f.options,apply:true,generationId:GEN.slice(0,-1)+'0',runner}),e=>/^mirror_snapshot_/.test(e.code)&&!e.message.includes('PRIVATE'));
+  assert.deepEqual(await fs.readFile(path.join(f.mirrorDir,'CURRENT.json')),pointer);assert.deepEqual(await fs.readFile(path.join(f.stateDir,'workspace-mirror-state.json')),state);assert.equal((await inspeccionaMirall({mirrorDir:f.mirrorDir,authentication:f.authentication})).integrityOk,true);
+});
+test('R42 actual PostgreSQL capture SQL reads the source ledger in RR read-only and owns only a shared session lock',{skip:!process.env.SDP_PGLITE_MODULE&&'Set SDP_PGLITE_MODULE for actual PostgreSQL SQL proof'},async t=>{
+  const {PGlite}=await import(pathToFileURL(process.env.SDP_PGLITE_MODULE).href),{sentenciesSql}=await import('../tooling/node0/hidrata-postgres-node0.mjs');
+  const initial=new PGlite();await initial.exec('CREATE DATABASE socdepoble_node0');const image=await initial.dumpDataDir('none');await initial.close();
+  const db=new PGlite({database:'socdepoble_node0',loadDataDir:image}),rows=[{version:'2611070600',file:'2611070600_seed_revisions.sql',sha256:'a'.repeat(64)},{version:'2611011800',file:'2611011800_exportació.sql',sha256:'b'.repeat(64)}];
+  try{
+    await db.exec('CREATE SCHEMA node0;CREATE TABLE node0.schema_migrations(version text PRIMARY KEY,file text NOT NULL,sha256 text NOT NULL)');for(const row of rows)await db.query('INSERT INTO node0.schema_migrations VALUES($1,$2,$3)',[row.version,row.file,row.sha256]);
+    let result;for(const statement of sentenciesSql(SQL_OBRI_CAPTURA_LEDGER))result=await db.exec(statement);
+    const captured=result.at(-1).rows[0].json_build_object,expected=SHA([...rows].sort((a,b)=>a.version<b.version?-1:1).map(row=>`${row.version}\t${row.file}\t${row.sha256}`).join('\n'));
+    assert.deepEqual(validaLedgerCapturat({migrations:captured.migrations,migrationLedgerSha256:captured.migrationLedgerSha256}),{migrations:2,migrationLedgerSha256:expected});assert.equal(captured.database,'socdepoble_node0');assert.equal(captured.serverMajor,17);assert.equal(captured.isolation,'repeatable read');assert.equal(captured.readOnly,true);assert.match(captured.snapshotId,/^[a-f0-9]+(?:-[a-f0-9]+){2}$/i);
+    // PGlite has one backend and exposes advisory pid=NULL (backend_pid=0).
+    // The exact two-int lock key remains observable; no multi-backend claim.
+    const locks=async()=>await db.query("SELECT mode,granted FROM pg_locks WHERE locktype='advisory' AND classid=1935960372::oid AND objid=1701737586::oid AND objsubid=2");assert.deepEqual((await locks()).rows,[{mode:'ShareLock',granted:true}]);
+    await assert.rejects(db.exec("INSERT INTO node0.schema_migrations VALUES('9999999999','forbidden.sql',repeat('0',64))"),error=>error.code==='25006');await db.exec('ROLLBACK');assert.deepEqual((await locks()).rows,[{mode:'ShareLock',granted:true}],'ROLLBACK alone cannot release a session lock');
+    assert.equal((await db.query('SELECT pg_advisory_unlock_shared(1935960372,1701737586) AS released')).rows[0].released,true);assert.deepEqual((await locks()).rows,[]);
+    t.diagnostic('PGlite PostgreSQL17, one backend: SQL, hash, RR/read-only and shared lock verified; no cross-connection pg_dump/age/native guarantee.');
+  }finally{await db.exec('ROLLBACK;SELECT pg_advisory_unlock_all()');await db.close();}
 });
 
 test('R8 source roots are closed and sensitive ancestors remain forbidden even if mistakenly reviewed',async t=>{

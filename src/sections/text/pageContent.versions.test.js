@@ -416,7 +416,10 @@ describe('T8 · D-12 · capçalera estàtica i entrada de les Rondes 1, 2 i 3', 
     const capcalera = subtitle.match(/^Versió actual: v(\d+\.\d+\.\d+) · Connector WordPress v(\d+\.\d+\.\d+) a WordPress\.org$/);
     expect(capcalera?.[1]).toBe(PAQUET.version);
     const publicada = capcalera[2];
-    expect(labels.map((l) => l.text)).toEqual([`v${PAQUET.version} · WP v${publicada}`, 'Registre de canvis', 'Sistema']);
+    /* P0-40/IDEA-167 (ordre directa del Mestre, 261107 05:23) · La insígnia de versió es conserva i va primer, com
+       abans (INSIGNIES_SISTEMA_RETIRADES no la nomena; cadena R11, Loop 3, L2-03), després Sistema, i fora
+       «Registre de canvis»: la mare i l'etiqueta canònica. */
+    expect(labels.map((l) => l.text)).toEqual([`v${PAQUET.version} · WP v${publicada}`, 'Sistema', '💻 Tecnologia Lliure, Dades Obertes i Disseny', 'Documentació']);
     for (const t of [subtitle, ...labels.map((l) => l.text)]) expect(t).not.toMatch(/build|\b\d{6}\b/i);
     /* La publicada és la que diu l'entrada més recent que nomena una versió a WordPress.org (el
        registre va de la més nova a la més vella): les entrades velles són història i no es

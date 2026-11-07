@@ -1,3 +1,4 @@
+import {NOMS_CATEGORIES_CANONIQUES,NOMS_ETIQUETES_CANONIQUES_49} from './taxonomia/taxonomiaCanonica.js';
 /* Onada 11 (261010; prompt 261010_1730, tasca 2) · La taxonomia
    personalitzable, pura: Llei del Píxel (sense personalització, el mateix
    objecte), fusió de les etiquetes, descarts i validació. */
@@ -36,8 +37,8 @@ test('sense taxonomia, categoriesBase i etiquetesBase tornen les llistes de sèr
     expect(categoriesBase(taxonomia)).toBe(CATEGORIES_BASE);
     expect(etiquetesBase(taxonomia)).toBe(ETIQUETES_BASE);
   }
-  expect(CATEGORIES_BASE).toEqual(['Sistema']);
-  expect(ETIQUETES_BASE).toEqual(['Productivitat', 'Tutorial']);
+  expect(CATEGORIES_BASE).toEqual(['Sistema',...NOMS_CATEGORIES_CANONIQUES]);
+  expect(ETIQUETES_BASE).toEqual(NOMS_ETIQUETES_CANONIQUES_49);
   expect(Object.isFrozen(CATEGORIES_BASE) && Object.isFrozen(ETIQUETES_BASE)).toBe(true);
 });
 
@@ -75,10 +76,10 @@ test('descarts: una classe fora del conjunt, un text buit o una etiqueta que no 
 });
 
 test('categoriesBase i etiquetesBase: la base davant, els textos nets, sense repetits ni els que ja són a la base', () => {
-  expect(categoriesBase(TAXONOMIA)).toEqual(['Sistema', 'Festes']);
-  expect(etiquetesBase(TAXONOMIA)).toEqual(['Productivitat', 'Tutorial', 'Tomaca', 'Reg']);
-  expect(categoriesBase({ v: 1, categories: [' Festes ', 'Festes', 'Sistema', '', 7, 'Agricultura'] })).toEqual(['Sistema', 'Festes', 'Agricultura']);
-  expect(etiquetesBase({ v: 1, etiquetes: ['x'.repeat(MAX_TEXT + 1), 'Reg'] })).toEqual(['Productivitat', 'Tutorial', 'Reg']);
+  expect(categoriesBase(TAXONOMIA)).toEqual([...CATEGORIES_BASE, 'Festes']);
+  expect(etiquetesBase(TAXONOMIA)).toEqual([...ETIQUETES_BASE, 'Tomaca', 'Reg']);
+  expect(categoriesBase({ v: 1, categories: [' Festes ', 'Festes', 'Sistema', '', 7, 'Agricultura'] })).toEqual([...CATEGORIES_BASE, 'Festes', 'Agricultura']);
+  expect(etiquetesBase({ v: 1, etiquetes: ['x'.repeat(MAX_TEXT + 1), 'Reg'] })).toEqual([...ETIQUETES_BASE, 'Reg']);
 });
 
 /* ── Validació ── */
@@ -100,18 +101,18 @@ test('validaTaxonomia diu cada defecte, en valencià i amb la ruta', () => {
   expect(validaTaxonomia({ v: 1, pagines: { xat: {} } })).toEqual(['La pàgina «xat» ha de portar una llista «labels».']);
   const errors = validaTaxonomia({
     v: 1,
-    pagines: { xat: { labels: ['cadena', { text: '', className: 'sdp-badge-tag' }, { text: 'x'.repeat(41), className: 'sdp-badge-tag' }, { text: 'Bé', className: 'tailwind' }] } },
+    pagines: { xat: { labels: ['cadena', { text: '', className: 'sdp-badge-tag' }, { text: 'x'.repeat(MAX_TEXT+1), className: 'sdp-badge-tag' }, { text: 'Bé', className: 'tailwind' }] } },
     categories: 'Festes',
     etiquetes: ['', 'Reg', 42]
   });
   expect(errors).toEqual([
     'L’etiqueta 1 de «xat» ha de ser un objecte { text, className }.',
-    'L’etiqueta 2 de «xat» necessita un text d’1 a 40 caràcters.',
-    'L’etiqueta 3 de «xat» necessita un text d’1 a 40 caràcters.',
+    'L’etiqueta 2 de «xat» necessita un text d’1 a 64 caràcters.',
+    'L’etiqueta 3 de «xat» necessita un text d’1 a 64 caràcters.',
     'L’etiqueta 4 de «xat» té una classe fora del conjunt: "tailwind".',
     '«categories» ha de ser una llista de textos.',
-    'El valor 1 de «etiquetes» necessita un text d’1 a 40 caràcters.',
-    'El valor 3 de «etiquetes» necessita un text d’1 a 40 caràcters.'
+    'El valor 1 de «etiquetes» necessita un text d’1 a 64 caràcters.',
+    'El valor 3 de «etiquetes» necessita un text d’1 a 64 caràcters.'
   ]);
 });
 

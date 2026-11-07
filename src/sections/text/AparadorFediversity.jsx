@@ -1,8 +1,11 @@
-import {useEffect,useRef,useState} from 'react';
+import {Fragment,useEffect,useRef,useState} from 'react';
 import {useUIActionsOpcional} from '../../app/contexts/UIContext.jsx';
+import ProtocolEmergenciesOfflineCard from '../../components/emergencies/ProtocolEmergenciesOfflineCard.jsx';
+import BatecDeVidaCard from '../../components/salut/BatecDeVidaCard.jsx';
 import {APARADOR_R20_TEXTS} from './pageContent.fediversityR20.js';
 import {PAGE_COPY} from './pageContent.js';
 import {localitzaPagina} from './pageContent.r10.js';
+import {FEDIVERSITY_ACTORS,FEDIVERSITY_FLOW,FEDIVERSITY_ARCHITECTURE_URL,FEDIVERSITY_ARCHITECTURE_TEXTS,SDP_NIX_EVIDENCE,FEDIVERSITY_CONTRACT_COUNTS} from './fediversityArchitectureR11.js';
 const loadCompiler=()=>Promise.all([import('../../data/karpathyWikiCompiler.js'),import('../notes/memoriaOral.js')]);
 /* Onada R9 (ordre del Mestre del 261106, 14:06) · Les cinc pàgines de patrimoni amb font, enllaçades
    des de /fedivers, /page/fediversity i /page/node-zero. El títol i el subtítol de cada enllaç són els de
@@ -14,6 +17,7 @@ const PAGINES_DE_PATRIMONI=['anatomia-rural','herbari','banc-de-llavors','rutes-
 /** La prova conserva el relat al dispositiu; mai no publica ni envia el text. */
 export default function AparadorFediversity({language:idioma,carrega=loadCompiler}) {
  const ui=useUIActionsOpcional(),language=idioma??ui?.language??'ca',t=APARADOR_R20_TEXTS[language]??APARADOR_R20_TEXTS.ca;
+ const architecture=FEDIVERSITY_ARCHITECTURE_TEXTS[language]??FEDIVERSITY_ARCHITECTURE_TEXTS.ca;
  const [text,setText]=useState(''),[result,setResult]=useState(null),[state,setState]=useState('idle');const revision=useRef(0);
  useEffect(()=>()=>{revision.current++;},[]);
  const change=value=>{revision.current++;setText(value);setResult(null);setState('idle');};
@@ -32,7 +36,17 @@ export default function AparadorFediversity({language:idioma,carrega=loadCompile
   }catch{if(current===revision.current)setState('failed');}
  };
  const patrimoni=PAGINES_DE_PATRIMONI.filter(clau=>Object.hasOwn(PAGE_COPY,clau)).map(clau=>[clau,localitzaPagina(PAGE_COPY[clau],language)]);
- return <>{patrimoni.length?<nav aria-label={t.patrimoni}>
+ return <><section aria-label={architecture.title}>
+  <h3>{architecture.title}</h3>
+  <p>{architecture.contract.replace('{capacitats}',FEDIVERSITY_CONTRACT_COUNTS.capacitats).replace('{metodes}',FEDIVERSITY_CONTRACT_COUNTS.metodes)}</p>
+  <p><a href={FEDIVERSITY_ARCHITECTURE_URL} target="_blank" rel="noopener noreferrer">{architecture.source}</a></p>
+  {/* R11 loop 3 (R35-L2-01): dt i dd són fills directes del dl. La graella de sèrie de :where(dl) (sdp.css) els espera així;
+      amb un <div> per parella, en mòbil la primera columna prenia l'amplària de la frase més llarga i Developers i Operator quedaven fora. */}
+  <dl>{Object.entries(FEDIVERSITY_ACTORS).map(([role,actor])=><Fragment key={role}><dt lang="en"><strong>{actor}</strong></dt><dd>{architecture.actors[role]}</dd></Fragment>)}</dl>
+  <p><code>{FEDIVERSITY_FLOW}</code></p><p>{architecture.flow}</p><p>{architecture.sourceUi}</p>
+  <h4>{architecture.portability}</h4><ol>{architecture.steps.map(step=><li key={step}>{step}</li>)}</ol>
+  <p>{architecture.evidence}</p><ul>{SDP_NIX_EVIDENCE.map(({path,url})=><li key={path}><a href={url} target="_blank" rel="noopener noreferrer"><code>{path}</code></a></li>)}</ul>
+ </section>{patrimoni.length?<nav aria-label={t.patrimoni}>
   <h3>{t.patrimoni}</h3>
   {patrimoni.map(([clau,pagina])=>{const lang=pagina.contentLanguage||'ca',altra=lang!==language;return <p key={clau} {...(altra?{lang}:{})}><a href={`/page/${clau}`} {...(altra?{hrefLang:lang}:{})}><strong>{pagina.title}</strong></a>: {pagina.subtitle}</p>;})}
  </nav>:null}<section data-sdp-privat="true" aria-label={t.compiler}>
@@ -41,5 +55,5 @@ export default function AparadorFediversity({language:idioma,carrega=loadCompile
   <div className="sdp-alerta__accions"><button className="sdp-boto sdp-boto--primari" type="button" onClick={compile} disabled={state==='working'}>{state==='working'?t.working:t.compile}</button><button className="sdp-boto sdp-boto--secundari" type="button" onClick={()=>change('')}>{t.clear}</button></div>
   {['failed','empty'].includes(state)?<p role="status">{t[state]}</p>:null}
   {result?<div aria-live="polite"><h4>{t.result}</h4><p>SHA-256: <code>{result.sha256}</code></p><pre>{result.markdown}</pre></div>:null}
- </section></>;
+ </section><BatecDeVidaCard idioma={language} /><ProtocolEmergenciesOfflineCard idioma={language} /></>;
 }

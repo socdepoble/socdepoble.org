@@ -167,6 +167,49 @@ nix build --no-update-lock-file --rebuild 'git+file:///ruta/absoluta/release?dir
 
 Fonts primàries: [Fediversity, allotjament basat en NixOS](https://fediversity.eu/), [manual de mòduls NixOS](https://nixos.org/manual/nixos/stable/#sec-writing-modules), [buildNpmPackage/importNpmLock de Nixpkgs](https://github.com/NixOS/nixpkgs/blob/master/doc/languages-frameworks/javascript.section.md) i [revisió fixada de Nixpkgs](https://github.com/NixOS/nixpkgs/tree/7dcdd87373d72e7a2173e4db02e20d3d7f495cfd).
 
+## Restauració: identitat exacta del ledger d'origen
+
+`tooling/node0/verifica-restauracio-node0.mjs` i la recepta distribuïble
+`tooling/node0/receptes-mirall/restaura-node0-bundle.mjs` exigixen, en `--apply`,
+`--migrations-count` i `--migration-ledger-sha256`, a més del digest del xifrat
+i la identitat rebuda per un pipe anònim. El recompte i l'empremta esperats
+han de vindre del registre fiable de la còpia **d'origen**. Cal obtindre'ls
+amb una captura coherent amb el dump; este verificador no certifica eixa captura.
+
+**R42 implementa el protocol de captura coherent del productor, encara sense
+prova nativa entre processos.** L'exportador manté un `psql` amb lock compartit
+de l'hidratador i transacció `REPEATABLE READ READ ONLY`; el count/digest i el
+token de `pg_export_snapshot()` es lligen en eixa sessió. El token passa només
+a `pg_dump --snapshot`, amb stdout directe a age, i la sessió continua viva
+fins que acaben els dos processos. Només es publica després de tancar els tres.
+El MANIFEST inclou `snapshot.migrationLedger` (`migrations` i
+`migrationLedgerSha256`) i `migrationLedgerCapture.nativeVerified:false`.
+El MAC local existent autentica eixos bytes; cal verificar-lo amb la clau de
+confiança externa al mirall abans d'usar-los com a registre d'origen.
+
+El catàleg i els pins POSSE descriuen codi, no el dump. Les còpies antigues sense
+estos camps conserven la via de registre manual fiable i coherent. El
+verificador no inferix l'esperat del catàleg o del target, i manté
+`sourceMigrationLedgerCaptureVerified:false`: no certifica com s'ha capturat o
+autenticat l'origen. Els dobles de procés i PGlite no acrediten el circuit natiu
+psql/pg_dump/age/restauració ni cap còpia productiva o trasllat de proveïdor.
+
+El digest és SHA-256 UTF-8 de les tuples `version`, `file` i `sha256`, separades
+per TAB, ordenades per `version COLLATE "C"` i separades per LF sense LF final.
+En la base restaurada es calcula amb `pg_catalog.sha256` del nucli, sense
+dependre de l'extensió `pgcrypto` ni de l'esquema on estiga instal·lada.
+Després de restaurar en una base temporal pròpia es comproven recompte i digest
+exactes: un hash de migració diferent amb el mateix recompte falla. No s'inferix
+l'esperat a partir del resultat restaurat ni s'amplia una llista de versions.
+Sense prova d'origen, el mode d'aplicació es nega abans d'obrir la còpia.
+
+La CLI manté el pla sec sense operacions de base de dades quan no s'indica
+`--apply`. La prova SQL en PGlite verifica el càlcul quan s'executa amb
+`SDP_PGLITE_MODULE` (sense eixa variable es marca com a omesa); els dobles de lifecycle
+continuen sense certificar restauració nativa, ACL, custòdia externa o canvi
+de màquina. La portabilitat completa també requerix desplegar al nou host,
+reconfigurar connexions/URL i verificar DNS i serveis.
+
 ## Vincles
 
 - [[00_index]]

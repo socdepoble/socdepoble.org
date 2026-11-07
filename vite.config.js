@@ -88,12 +88,14 @@ export function trossDArrencada(id) {
   if (cami.includes('/node_modules/')) return undefined;
   if (cami.endsWith('/src/css/index.css?inline')) return 'estils';
   if (cami.endsWith('/src/config/idiomes/ca.js')) return 'ca';
-  // AH-27 + Onada R6: snapshots editorials purs (sense imports), cachejables a banda de la closca.
+  // AH-27 + Onada R6: dades pures (sense imports), cachejables a banda de la closca.
+  // R38: el vocabulari curt compartix este tros ja existent; les traduccions continuen diferides.
   if (
     cami.endsWith('/src/sections/pobles/poblesAplecViquipedia.js') ||
     cami.endsWith('/src/sections/mur/articles/aplec2023Content.js') ||
     cami.endsWith('/src/sections/mur/articles/manifestDePobleContent.js') ||
-    cami.endsWith('/src/data/taxonomia/indexArticlesImportats.js')
+    cami.endsWith('/src/data/taxonomia/indexArticlesImportats.js') ||
+    cami.endsWith('/src/data/taxonomia/vocabulariCanonic.js')
   ) return 'pobles-aplec';
   return undefined;
 }

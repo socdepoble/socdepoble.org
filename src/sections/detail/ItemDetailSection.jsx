@@ -16,6 +16,7 @@ import { CosAmbVisor } from './VisorDePublicacio.jsx';
 import { useSEO } from '../../hooks/useSEO.js';
 import { objecteDe, rutaConnectarObjecte, tipusDeSeccio } from '../../config/navigation.js';
 import { paginaDElement, trobaElement, useElementDeSeccio, useLogoEntitatDElement } from './elementDeSeccio.js';
+import { localitzaCategoriesMares } from '../../data/taxonomia/taxonomiaCanonica.js';
 import { revisaElement, versioRevisionsEditorials } from '../../data/revisionsEditorials.js';
 import { ProveidorSincronitzacioTargetes } from './SincronitzacioTargetes.jsx';
 /* VQ · Fase 3a de l'eina de pobles nous (261030) · La fitxa incompleta d'un
@@ -99,7 +100,7 @@ function DetallDElement() {
   const { towns } = useCoreContent();
   const { notes, status: estatNotes } = useNotesData();
   const { mediaItems } = useMultimedia();
-  const { t } = useUIActions();
+  const { t, language = 'ca' } = useUIActions();
   const { rol = null } = useSessioSegura() ?? {};
   const { sectionId, itemId } = useParams();
   const navigate = useNavigate();
@@ -162,7 +163,12 @@ function DetallDElement() {
      Pura: es calcula abans del retorn anticipat perquè també la llig useSEO.
      Fase D (261020, tasca 2) · Del que has bloquejat, cap: ni la portada
      arriba al <head> (useSEO, més avall). */
-  const pagina = section && item && !bloquejat ? paginaDElement(section, itemHidratat) : null;
+  const paginaCrua = section && item && !bloquejat ? paginaDElement(section, itemHidratat) : null;
+  /* Cadena R11, Loop 3 (L2-09) · Les categories mares (P0-40) de la capçalera
+     en la llengua de la interfície, com a la targeta del Mur. En valencià, o
+     sense cap mare, les mateixes props. */
+  const etiquetesLocals = localitzaCategoriesMares(paginaCrua?.labels, language);
+  const pagina = paginaCrua && etiquetesLocals !== paginaCrua.labels ? { ...paginaCrua, labels: etiquetesLocals } : paginaCrua;
 
   /* Decisió 3 del Mestre (261007, confirmada) · «Imatges externes al Mur:
      PROHIBIDES (PRIVACITAT).» Relleu 261007 (peça «imatges-detall») · og:image

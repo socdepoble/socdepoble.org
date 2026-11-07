@@ -39,6 +39,8 @@ import { GUIA_NOTA, LLAVORS_NOTA } from './llavorNota.js';
 import { NOTA_TUTORIAL } from './notaTutorial.js';
 import { proposaCard } from './proposaCard.js';
 import { memoriaOralDelBloc } from './memoriaOralDelBloc.js';
+import RevisorEditorialNode0Panel from './RevisorEditorialNode0Panel.jsx';
+import { useUIStateOpcional } from '../../app/contexts/UIContext.jsx';
 import { categoriesBase, etiquetesBase } from '../../data/personalitzacio.js';
 import { useMur } from '../mur/MurContext';
 import { esAppNativa } from '../../config/origenPublic.js';
@@ -103,6 +105,23 @@ async function pujarImatgeDeNota(fitxer, config) {
      garantixWebp); un PDF o un WebP passen tal qual. */
   const res = await uploadToStorage(await garantixWebp(fitxer), { carpeta: 'notes', tenantId: config?.tenantId }, config);
   return res.url;
+}
+
+/* IDEA-164 · R11 Loop 3 · Camp de la nota ↔ clau de la proposta de la revisora. */
+const CAMPS_DEL_REVISOR = Object.freeze([['title', 'title'], ['subtitle', 'subtitle'], ['lead', 'entradilla'], ['content', 'content']]);
+
+/* La llengua de la interfície per a la revisora, o 'ca' fora de l'app (sense UIProvider) o amb una
+   prova que simula UIContext sense useUIStateOpcional (el patró de DocumentPrintPreview, TE-08). */
+function useEstatDeLaInterficie() {
+  try {
+    return useUIStateOpcional();
+  } catch {
+    return null;
+  }
+}
+function useLlenguaDeLaInterficie() {
+  const estat = useEstatDeLaInterficie();
+  return String(estat?.llenguaDelText || estat?.language || 'ca').slice(0, 2);
 }
 
 /* T7 (ordre del Mestre, prompt 261004_0515) · Les targetes que el Bloc pot
@@ -582,6 +601,52 @@ export default function NotesEditor({ activeNote, onToast = null }) {
     authorName: signatura.nom || null, authorAvatar: signatura.avatar || null, authorLocation: signatura.poble || null
   } : null), [notaEnEdicio, signatura]);
 
+  /* IDEA-164 (R93/R104) · Revisor Editorial i de Taxonomia SKOS (sense IA), aplicant les
+     propostes pel canal viu de la nota (`escriu`) amb reversibilitat d'1 clic.
+     R11 Loop 3 (arbitratge de Claude):
+     · L2-01 · El panell rep els camps CRUS (HTML) i les regles només toquen el text visible: cap
+       «Aplicar» no reescriu el títol, el subtítol o l'entradeta en text pla, i «Restaurar» torna
+       l'HTML d'abans. Només s'escriu el camp que la revisora ha canviat de veres.
+     · L2-02 · La categoria mare suggerida (FACETA_3 del tesaurus, fora del vocabulari de Notes) és
+       només informativa fins que el Mestre decidisca el vocabulari: no s'escriu ni se substituïx
+       cap categoria. Les etiquetes SKOS s'afigen a les de la nota.
+     · L1 (idioma) · `t` és una funció i no porta `lang`: la llengua ix de la interfície. */
+  const idiomaRevisor = useLlenguaDeLaInterficie();
+  const aplicaPropostaRevisor = useCallback((proposta) => {
+    if (!notaEnEdicio || !proposta) return;
+    const canvis = {};
+    for (const [camp, clau] of CAMPS_DEL_REVISOR) {
+      const valor = proposta[clau];
+      if (typeof valor === 'string' && valor !== String(notaEnEdicio[camp] ?? '')) canvis[camp] = valor;
+    }
+    if (Array.isArray(proposta.etiquetesSkos)) {
+      const actuals = classificacioDe(notaEnEdicio).tags;
+      const seguents = [...new Set(proposta.etiquetesSkos.map((v) => String(v ?? '').trim()).filter(Boolean))];
+      const iguals = seguents.length === actuals.length && seguents.every((v, i) => v === actuals[i]);
+      if (!iguals) Object.assign(canvis, canvisDeClassificacio(notaEnEdicio, { tags: seguents }));
+    }
+    if (Object.keys(canvis).length) escriu([{ doc: notaEnEdicio, canvis }]);
+  }, [notaEnEdicio, escriu]);
+
+  /* L2-03 · Dins de l'«Edició avançada» (plegada), per la ranura `revisioEdicioAvancada` de la
+     closca: ni peu de pàgina (contracte del Bloc 3.9) ni germà del DocumentEditor (la lliçó de
+     PerfilEditor: un germà deixava l'editor a 0 px en mòbil). */
+  const revisorEditorial = useMemo(() => {
+    if (!notaEnEdicio || citaOrigen) return null;
+    return (
+      <RevisorEditorialNode0Panel
+        key={`revisor:${notaEnEdicio.id}`}
+        idioma={idiomaRevisor}
+        title={notaEnEdicio.title ?? ''}
+        subtitle={notaEnEdicio.subtitle ?? ''}
+        entradilla={notaEnEdicio.lead ?? ''}
+        content={notaEnEdicio.content ?? ''}
+        etiquetesSkos={classificacio?.tags ?? []}
+        onAplicaProposta={aplicaPropostaRevisor}
+      />
+    );
+  }, [notaEnEdicio, citaOrigen, idiomaRevisor, classificacio, aplicaPropostaRevisor]);
+
   const notesAdapter = useMemo(() => {
     /* T41 (ordre del Mestre, 260928) · PUBLICAR (i la bola del món) obrin el
        selector de visibilitat: publicar o compartir al Mur només en confirmar.
@@ -749,6 +814,9 @@ export default function NotesEditor({ activeNote, onToast = null }) {
           t={t}
         />
       ) : null,
+      /* IDEA-164 · R11 Loop 3 (L2-03) · La revisora editorial, dins de l'«Edició avançada»,
+         després de la classificació. Pendent de decisió del Mestre si ha de viure a l'edició. */
+      revisioEdicioAvancada: revisorEditorial,
       peticioAmbit: notaEnEdicio && ambAmbit && peticioAmbit?.nota === notaEnEdicio.id ? peticioAmbit : null,
       onPeticioAmbitAtesa: peticioAmbitAtesa,
       /* T51 (ordre del Mestre, 260928) · L'espai central de la barra taronja:
@@ -807,7 +875,7 @@ export default function NotesEditor({ activeNote, onToast = null }) {
          l'ordre «/» Emoji. Totes dues funcions són estables (canalEmojis.js). */
       ...(canalEmojis ? { registraInsercio: canalEmojis.registra, obreEmojis: canalEmojis.obri } : {})
     };
-  }, [notaEnEdicio, documentPerAlEditor, esSandbox, esPreparada, creacioPreparada, escriuPreparada, desaPreparada, senseSessio, actor, actorId, autoria, memberships, actualitzaSandbox, setLocalNoteField, saveNoteField, publishNote, compartirNota, connexio, dretsReservats, dretsDeLOriginal, extern, citaOrigen, pucBorrar, obriBorrar, noteFolders, t, signatura, emptyDocument, config, classificacio, carpetes, carpetaId, desaCarpeta, desaValors, documents, CATEGORIES_BASE, ETIQUETES_BASE, estatDesament, dataNomesAlDispositiu, targetes, canalEmojis, asseguraNormes, memoriaOral, ambAmbit, fitxaDAmbit, obriClassificacio, documentDePrevisualitzacio, desaAmbit, errorsAmbit, peticioAmbit, peticioAmbitAtesa, scopeKey]);
+  }, [notaEnEdicio, documentPerAlEditor, esSandbox, esPreparada, creacioPreparada, escriuPreparada, desaPreparada, senseSessio, actor, actorId, autoria, memberships, actualitzaSandbox, setLocalNoteField, saveNoteField, publishNote, compartirNota, connexio, dretsReservats, dretsDeLOriginal, extern, citaOrigen, pucBorrar, obriBorrar, noteFolders, t, signatura, emptyDocument, config, classificacio, carpetes, carpetaId, desaCarpeta, desaValors, documents, CATEGORIES_BASE, ETIQUETES_BASE, estatDesament, dataNomesAlDispositiu, targetes, canalEmojis, asseguraNormes, memoriaOral, ambAmbit, fitxaDAmbit, obriClassificacio, documentDePrevisualitzacio, desaAmbit, errorsAmbit, peticioAmbit, peticioAmbitAtesa, scopeKey, revisorEditorial]);
 
   // Reanomenar i esborrar necessiten veure totes les notes: amb el llistat a
   // mitges, una nota no carregada es quedaria amb el nom vell.

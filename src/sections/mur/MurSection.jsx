@@ -137,7 +137,7 @@ export default function MurSection() {
     carregaMes = SENSE_CARREGA, hiHaMes = SENSE_MES, carregantMes = SENSE_MES, errorMes = SENSE_ERROR
   } = useMur();
   const { pageCopy, status: estatContingut, towns } = useCoreContent();
-  const { t } = useUIActions();
+  const { t, language = 'ca' } = useUIActions();
   const [searchParams, setSearchParams] = useSearchParams();
   const dateFilter = searchParams.get('date');
   const categoryFilter = searchParams.get('category');
@@ -188,13 +188,14 @@ export default function MurSection() {
   });
 
   const systemPages = useMemo(() => targetesDeSistema(pageCopy, {
+    language,
     // Una pàgina declarada i absent es deixa de pintar; en desenvolupament
     // ho diu en veu alta (incident del 24-09: `wikidepoble` → `skills`).
     // Només amb el contingut carregat: mentre carrega, `pageCopy` és buit.
     quanFalta: (clau) => {
       if (import.meta.env?.DEV && estatContingut === 'ready') console.warn(`[Mur] Falta la pàgina de sistema «${clau}» a PAGE_COPY; la targeta no es pinta.`);
     }
-  }), [pageCopy, estatContingut]);
+  }), [pageCopy, estatContingut, language]);
 
   /* T5 · El model de cada acte (acteAEsdeveniment), una sola vegada per
      llista: el lligen l'ordre, el filtre ?date= i la targeta. */

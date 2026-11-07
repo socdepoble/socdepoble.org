@@ -29,7 +29,7 @@ const ARA = new Date('2026-11-01T10:00:00.000Z');
 const ara = () => new Date(ARA);
 const RENTONAR = 'rentonar';
 /* Les claus del format socdepoble.exportacio.v1, en l'ordre de sempre. */
-const CLAUS_V1 = ['format', 'node', 'generatAl', 'perfil', 'notes', 'seguiments', 'bloquejos', 'normes', 'consentiments', 'baixa'];
+const CLAUS_V1 = ['format', 'node', 'generatAl', 'perfil', 'notes', 'seguiments', 'bloquejos', 'normes', 'consentiments', 'seed_revisions', 'baixa'];
 const NOTA_ANNA = { id: 'nota-anna', folderId: 'f-notes', title: 'Meua', content: 'meua', revision: 0,
   createdAt: '2026-11-01T10:00:00.000Z', updatedAt: '2026-11-01T10:00:00.000Z' };
 

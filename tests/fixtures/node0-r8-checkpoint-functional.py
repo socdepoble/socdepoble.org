@@ -48,6 +48,9 @@ class CheckpointFunctional(unittest.TestCase):
             'schema': 'sdp.node0.workspace-mirror.v1', 'generation': GENERATION,
             'createdAt': '2026-11-04T21:25:15.000Z', 'folders': list(self.worker.FOLDERS),
             'files': [{'path': self.worker.FOLDERS[0] + '/notice.txt', 'sha256': sha(content), 'bytes': len(content), 'kind': 'public'}],
+            # Arbitratge R46, Loop 3 (L2-01) · R42 valida el snapshot del manifest: el de la fixture és el llegat
+            # que escrivia l'exportador anterior (pg_dump-transaction, sense ledger capturat).
+            'snapshot': {'consistent': 'pg_dump-transaction', 'format': 'pg_dump-custom-gzip-6', 'encryption': 'age-X25519', 'recipientSha256': sha(b'synthetic-recipient'), 'restoreVerified': False},
         }
         manifest_bytes = (json.dumps(manifest, sort_keys=True, separators=(',', ':')) + '\n').encode()
         write(self.generation / 'MANIFEST.json', manifest_bytes)

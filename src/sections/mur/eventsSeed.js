@@ -48,6 +48,21 @@ export const CALENDAR_EVENTS = [{
   author_entity_id: 'socdepoble',
   author_location: 'La Torre de les Maçanes',
   author_avatar: '/assets/system/ui/logo-socdepoble-cuadrat-verd-256x256.png',
+  /* P0-40 (R88 → R34; cadena R11, Loop 3, L2-07 i L2-08) · La categoria mare
+     porta al dia de l'acte al Calendari (Onada 6, tasca 16), com la dels
+     Cursos: amb labels propis, EventCard ja no hi posa l'«Agenda» de reserva.
+     Les etiquetes són les de WP 16880 al tesaurus: «Incendis» ix del text
+     (l'Aplec es fa arran de l'incendi d'agost del 2022; «ruta», «excursió» o
+     «sender» no hi ixen cap vegada) i «Associacionisme», de qui l'organitza. */
+  categoria_tematica_id: 'defensa-territori',
+  category: '⚖️ Defensa del Territori, Ecologia i Reivindicació',
+  tags: ['Aplec pel Territori', 'Incendis', 'Associacionisme'],
+  labels: [
+    { text: '⚖️ Defensa del Territori, Ecologia i Reivindicació', className: 'sdp-badge-category sp-card-label--enllac', href: '/calendari?vista=mes&date=2023-01-29' },
+    { text: 'Aplec pel Territori', className: 'sdp-badge-tag' },
+    { text: 'Incendis', className: 'sdp-badge-tag' },
+    { text: 'Associacionisme', className: 'sdp-badge-tag' }
+  ],
   portada_sencera: true
 }];
 
@@ -82,10 +97,17 @@ export const CURSOS_PEDRA_EN_SEC_2026_EVENT = Object.freeze({
   author_avatar: '/assets/uploads/grup/el-rentonar/avatars/logo-rentonar-socdepoble-1600-c.jpg',
   town_name: 'Muro d’Alcoi',
   copyright: 'Font original: Ajuntament de Muro (vilademuro.net) i Generalitat Valenciana · Redacció pròpia CC BY-NC-SA 4.0 El Rentonar / Sóc de Poble',
+  /* Cadena R11, Loop 3 (L2-08) · P0-40 (Llibre, línia 439) nomena «#Pedra Seca»
+     per als Cursos: el text diu «pedra en sec» 12 vegades. */
+  categoria_tematica_id: 'recursos-locals',
+  category: '🌾 Recursos Locals, Agricultura i Sobirania',
+  tags: ['Pedra Seca', 'Bioconstrucció', 'Patrimoni', 'Activitats'],
   labels: [
-    { text: 'Agenda', className: 'sdp-badge-category sp-card-label--enllac', href: '/calendari?vista=mes&date=2026-10-23' },
-    { text: 'Pedra en sec', className: 'sdp-badge-category' },
-    { text: 'Formació agrària', className: 'sdp-badge-tag' }
+    { text: '🌾 Recursos Locals, Agricultura i Sobirania', className: 'sdp-badge-category sp-card-label--enllac', href: '/calendari?vista=mes&date=2026-10-23' },
+    { text: 'Pedra Seca', className: 'sdp-badge-tag' },
+    { text: 'Bioconstrucció', className: 'sdp-badge-tag' },
+    { text: 'Patrimoni', className: 'sdp-badge-tag' },
+    { text: 'Activitats', className: 'sdp-badge-tag' }
   ],
   description: `
     <h3>L’art dels marges torna a escola a les nostres muntanyes</h3>

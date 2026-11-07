@@ -69,7 +69,12 @@ describe('useDadesDeLOriginal: una pàgina, la miniatura de la seua UniversalPag
       imageUrl: COMIC,
       imageAlt: pagina.imageAlt,
       imatgePrivada: false,
-      labels: [{ text: 'Sistema', className: 'sdp-badge-system' }],
+      // P0-40/IDEA-167 (ordre directa del Mestre, 261107 05:23) · Sistema + la categoria mare + l'etiqueta canònica.
+      labels: [
+        { text: 'Sistema', className: 'sdp-badge-system' },
+        { text: '🎭 Cultura, Música i Llengua', className: 'sdp-badge-category' },
+        { text: 'Documentació', className: 'sdp-badge-tag' }
+      ],
       copyright: COPYRIGHT_SDP,
       time: '00:00',
       date: '30/01/26',
@@ -104,7 +109,8 @@ describe('useDadesDeLOriginal: una pàgina, la miniatura de la seua UniversalPag
     expect(props.title).toBe(PAGE_COPY[clau].title);
     expect(Object.hasOwn(props, 'accio')).toBe(false);
     expect(props.labels).toEqual(PAGE_COPY[clau].labels);
-    expect(props.labels.map((etiqueta) => etiqueta.className)).toEqual(['sdp-badge-category', 'sdp-badge-tag']);
+    // P0-40/IDEA-167 (ordre directa del Mestre, 261107 05:23) · Sistema + la categoria mare + les etiquetes canòniques.
+    expect(props.labels.map((etiqueta) => etiqueta.className)).toEqual(['sdp-badge-system', 'sdp-badge-category', 'sdp-badge-tag', 'sdp-badge-tag']);
   });
 
   test('una pàgina que no existix, una clau no vàlida o una secció sense dades: null (la instantània)', () => {
@@ -189,7 +195,8 @@ describe('lectura: «Drets d’autor» dins de «Legal i privacitat», una targe
     expect(carta.querySelector('.sp-card-author-location').textContent).toBe('La Torre de les Maçanes');
     expect(carta.querySelector('.sp-card-meta').textContent).toContain('00:00');
     expect(carta.querySelector('.sp-card-meta').textContent).toContain('30/01/26');
-    expect([...carta.querySelectorAll('.sp-card-label')].map((etiqueta) => etiqueta.textContent)).toEqual(['Sistema']);
+    // P0-40/IDEA-167 (ordre directa del Mestre, 261107 05:23) · «Sistema» primer, i la mare i l'etiqueta canònica.
+    expect([...carta.querySelectorAll('.sp-card-label')].map((etiqueta) => etiqueta.textContent)).toEqual(['Sistema', '🎭 Cultura, Música i Llengua', 'Documentació']);
     expect(carta.querySelector('.sp-card-copyright').textContent).toBe(COPYRIGHT_SDP);
     // La targeta continua portant a la seua pàgina, i la boina al perfil de Sóc de Poble (Onada 8).
     expect(carta.querySelector('a.sp-card-link-overlay').getAttribute('to')).toBe('/page/drets-autor');

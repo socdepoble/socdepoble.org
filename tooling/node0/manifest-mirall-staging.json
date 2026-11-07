@@ -27,7 +27,7 @@
     },
     {
       "path": "src/data/contracte.js",
-      "sha256": "f637c918dfa6696da70e0f52f57845a758b24728983592a89d95af24dd8e2c91"
+      "sha256": "a08ee0ddef16f52bfbfe67ed07ea4aae04e4ae3ff671e3cfe35a031431c9d7a6"
     },
     {
       "path": "src/data/dadesObertesLot.js",
@@ -35,7 +35,7 @@
     },
     {
       "path": "src/data/exportaMunicipiOpenData.js",
-      "sha256": "9c14fcd4babd95358d2bd1603bbc07acd656679059a699d017b3327b40d3d979"
+      "sha256": "ad59e8eef02d36c5a8ac413289e71e06e55d29c71a54ddb1c6cd33803620d4fa"
     },
     {
       "path": "src/data/importaMunicipiOpenData.js",
@@ -43,7 +43,7 @@
     },
     {
       "path": "src/data/personalitzacio.js",
-      "sha256": "69f271ae90f119d37911cbbdc7800185d54785dac1db308063d50c9ddf1770f6"
+      "sha256": "fe781a5ec677e9a9cd3c5dca49b3618b2a167f3a192eae210baaf1121359c34c"
     },
     {
       "path": "src/sections/notes/llavorNota.js",
@@ -67,7 +67,7 @@
     },
     {
       "path": "src/sections/pobles/townsSeed.js",
-      "sha256": "d976d46f5d71e7322474a5b46a3828f8392a21881c5027876c0fa3af2d53ec1b"
+      "sha256": "5d697f50cace7079b5bf805a86a3305bc51acb5e4f22471831b11d5751b156c7"
     },
     {
       "path": "src/utils/calendari.js",
@@ -99,15 +99,15 @@
     },
     {
       "path": "tooling/node0/executa-mirall-staging-node0.mjs",
-      "sha256": "0c2bbf5a850b30d2981811e6bc9a12aae0a9cd9c30227ed1e07843737de41a7f"
+      "sha256": "c3fc08af26c763058adf2cbcd944baa9aa2fdb5d6b8e36d5d120ace5535ec69a"
     },
     {
       "path": "tooling/node0/exporta-mirall-workspace-node0.mjs",
-      "sha256": "698026b85fb707f1336a38ecf3d4d2f14f2186b50774e4931ae3841c45bd1ce9"
+      "sha256": "9c8dfebe4a88e4e7e9daa8cfedf774e397ff55eec385be8b2f710eb5e64fa4bd"
     },
     {
       "path": "tooling/node0/fitxers-mirall.py",
-      "sha256": "4ba94625e2737c209fe6cba1735908ec983c62007b022b41b1f7a016e7460191"
+      "sha256": "d587a78a423a21476147742bcb0752b6e7ffa515115c03a32c38b2a92f20c83c"
     },
     {
       "path": "tooling/node0/fonts-publiques-mirall-node0.mjs",
@@ -119,11 +119,11 @@
     },
     {
       "path": "tooling/node0/receptes-mirall/manifest-bundle-restauracio.json",
-      "sha256": "04166254f0de47218ad8892ed4ccf08cfbd9c42d8263d656ca0451a4815ff9bc"
+      "sha256": "57211feaf046c500b5247e6adeff29af92d0b7424bbce9aa28ec8106d900c0f7"
     },
     {
       "path": "tooling/node0/receptes-mirall/restaura-node0-bundle.mjs",
-      "sha256": "c57ded266b38146e95285dd55195414d082233f52d11db921a6d7fa18684aa01"
+      "sha256": "93cbab116d687f8ef549571b951b7a6d0e9f799a566c8d76390e9ebbb77601f4"
     },
     {
       "path": "tooling/node0/receptes-mirall/restaura-node0-manual.mjs",
@@ -135,7 +135,7 @@
     },
     {
       "path": "tooling/node0/verifica-restauracio-node0.mjs",
-      "sha256": "3bebaca3cdf7cc0750eee616f9b95f5ae6678c42ea4a5c718b7fc74ba93c0f4b"
+      "sha256": "3bc662b90a25682c0fb14eee49699419d8434c9715a742d1c4f81e0d88f7f211"
     }
   ]
 }

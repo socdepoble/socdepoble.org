@@ -102,7 +102,8 @@ describe('Pedra Seca', () => {
     }
     expect(lector).not.toMatch(/dangerouslySetInnerHTML/);
     expect(llig('src/sections/text/TextSection.jsx')).toContain('export function CosDeLaPagina({ html })');
-    expect(llig('src/sections/mur/usePublicacionsDeLActor.js')).toContain('targetesDeSistema(pageCopy)');
+    // Arbitratge R46, Loop 3 · R41 hi passa la llengua de la interfície; la maquinària és la mateixa.
+    expect(llig('src/sections/mur/usePublicacionsDeLActor.js')).toContain('targetesDeSistema(pageCopy, { language })');
     expect(llig('src/sections/notes/NotesSection.jsx')).toContain('usePaginesDelSistema()');
   });
 });

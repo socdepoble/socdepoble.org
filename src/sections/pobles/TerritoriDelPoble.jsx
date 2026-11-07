@@ -4,10 +4,10 @@ import { arbreTerritorial, DEMARCACIONS, provinciaDelPoble, comarcaDelPoble, rut
 /* Reutilitza la llista niada sdp-arbre de l'espècimen ArbreUniversal. */
 export function ArbreTerritorial({ pobles, t }) {
   return (
-    <nav aria-label={t('section.pobles.territori', 'Territori')}>
-      <details>
-        <summary>{t('section.pobles.xarxa', 'Xarxa de Pobles')}</summary>
-        <ul className="sdp-arbre">
+    <nav className="sdp-xarxa-pobles" aria-label={t('section.pobles.territori', 'Territori')}>
+      <details className="sdp-xarxa-pobles__desplegable">
+        <summary className="sdp-boto sdp-boto--secundari sdp-xarxa-pobles__boto">{t('section.pobles.xarxa', 'Xarxa de Pobles')}</summary>
+        <ul className="sdp-arbre sdp-xarxa-pobles__arbre">
           <li><Link to="/pobles">{t('section.pobles.xarxa', 'Xarxa de Pobles')}</Link>
             <ul>{arbreTerritorial(pobles).map((provincia) => (
               <li key={provincia.id}><details>

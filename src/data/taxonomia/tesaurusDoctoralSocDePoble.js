@@ -1,3 +1,16 @@
+import {nomCategoriaCanonica,ETIQUETES_RETIRADES,NOMS_ETIQUETES_CANONIQUES_49,normalitzaValorTaxonomia} from './taxonomiaCanonica.js';
+const TERMES_SKOS_NOVES = Object.freeze([
+ [1001,'Pedra Seca','pedra-seca','natura-excursions',['Pedra en sec','Pedra seca']],
+ [1002,'Herbari','herbari','natura-excursions',[]],
+ [1003,'Llavors','llavors','recursos-locals',[]],
+ [1004,'NGI Fediversity','ngi-fediversity','tecnologia-lliure',[]],
+ [1005,'Node 0','node-0','tecnologia-lliure',[]]
+].map(([id,name,slug,broaderTermId,useFor])=>Object.freeze({id,name,slug,broaderTermId,useFor:Object.freeze(useFor),count:0,description:'Terme editorial canònic R34; no és un recompte d’articles WordPress.',relatedTerms:Object.freeze([]),isDeprecatedSynonym:false,isEmpty:false,activaPerDefecte:true})));
+
+function preparaTermeSkos(tag){
+ const activa=NOMS_ETIQUETES_CANONIQUES_49.includes(tag.name)&&!tag.isDeprecatedSynonym;
+ return {...tag,broaderTermLabel:nomCategoriaCanonica(tag.broaderTermId),canonica:activa,activaPerDefecte:activa,isDeprecatedSynonym:ETIQUETES_RETIRADES.includes(tag.name)||Boolean(tag.isDeprecatedSynonym),...(activa?{isEmpty:false}:{})};
+}
 /**
  * tesaurusDoctoralSocDePoble.js — Estudi Doctoral de Biblioteconomia i Classificació
  *
@@ -1935,9 +1948,9 @@ export const FACETA_3_CATEGORIES_MARES_IA = Object.freeze([
   },
   {
     "id": "natura-excursions",
-    "icona": "🥾",
-    "label": "🥾 Natura, Excursions i Camins",
-    "nomCurt": "Natura, Excursions i Camins",
+    "icona": "🌿",
+    "label": "🌿 Natura i Patrimoni",
+    "nomCurt": "Natura i Patrimoni",
     "skosNotation": "SDP.F3.03",
     "ranganathanFacet": "Space + Time (Itineraris, cims, arbres monumentals i paisatge)",
     "descripcio": "Rutes senderistes, Camí de Santiago, El Camí, arbres monumentals, fonts, parcs naturals (Font Roja, Serra de Mariola, Aitana, Puig Campana) i esport a la natura.",
@@ -1945,9 +1958,9 @@ export const FACETA_3_CATEGORIES_MARES_IA = Object.freeze([
   },
   {
     "id": "patrimoni-cultura",
-    "icona": "🏛️",
-    "label": "🏛️ Patrimoni, Cultura, Música i Llengua",
-    "nomCurt": "Patrimoni, Cultura i Llengua",
+    "icona": "🎭",
+    "label": "🎭 Cultura, Música i Llengua",
+    "nomCurt": "Cultura, Música i Llengua",
     "skosNotation": "SDP.F3.04",
     "ranganathanFacet": "Personality (Memòria oral, patrimoni arquitectònic i cultura viva)",
     "descripcio": "Pous de neu, castells, pedra seca, Gent que Fa Música, llibres, Cims per la llengua, festes tradicionals i cròniques històriques dels nostres pobles.",
@@ -1956,8 +1969,8 @@ export const FACETA_3_CATEGORIES_MARES_IA = Object.freeze([
   {
     "id": "comunitat-rural",
     "icona": "🤝",
-    "label": "🤝 Comunitat, Associacionisme i Món Rural",
-    "nomCurt": "Comunitat i Associacionisme",
+    "label": "🤝 Món Rural",
+    "nomCurt": "Món Rural",
     "skosNotation": "SDP.F3.05",
     "ranganathanFacet": "Personality + Energy (Teixit veïnal, centres rurals i trobades)",
     "descripcio": "Vida comunitària, El Rentonar, El Planet, El Carreró, esdeveniments veïnals, memfotisme crític, opinió ciutadana i xarxes de suport mutu contra el despoblament.",
@@ -1977,13 +1990,33 @@ export const FACETA_3_CATEGORIES_MARES_IA = Object.freeze([
 
 export const FACETA_4_ETIQUETES_SKOS = Object.freeze([
   {
+    "id": 999,
+    "name": "Associacionisme",
+    "slug": "associacionisme",
+    "origen": "sdp",
+    "count": 2,
+    "description": "Associacions locals, col·lectius veïnals, centres rurals i autogestió al món rural.",
+    "broaderTermId": "comunitat-rural",
+    "broaderTermLabel": "🤝 Món Rural",
+    "relatedTerms": [
+      "Esdeveniments",
+      "Activitats",
+      "El Planet Centre Rural d'Experimentació",
+      "El Rentonar"
+    ],
+    "useFor": ["Associacions", "Col·lectius", "Comunitat"],
+    "isDeprecatedSynonym": false,
+    "isEmpty": false,
+    "activaPerDefecte": true
+  },
+  {
     "id": 68,
     "name": "Activitats",
     "slug": "activitats",
     "count": 10,
     "description": "",
     "broaderTermId": "comunitat-rural",
-    "broaderTermLabel": "🤝 Comunitat, Associacionisme i Món Rural",
+    "broaderTermLabel": "🤝 Món Rural",
     "relatedTerms": [
       "Esdeveniments",
       "Memfotisme",
@@ -2020,7 +2053,7 @@ export const FACETA_4_ETIQUETES_SKOS = Object.freeze([
     "count": 1,
     "description": "",
     "broaderTermId": "comunitat-rural",
-    "broaderTermLabel": "🤝 Comunitat, Associacionisme i Món Rural",
+    "broaderTermLabel": "🤝 Món Rural",
     "relatedTerms": [
       "Esdeveniments",
       "Memfotisme",
@@ -2039,7 +2072,7 @@ export const FACETA_4_ETIQUETES_SKOS = Object.freeze([
     "count": 0,
     "description": "",
     "broaderTermId": "comunitat-rural",
-    "broaderTermLabel": "🤝 Comunitat, Associacionisme i Món Rural",
+    "broaderTermLabel": "🤝 Món Rural",
     "relatedTerms": [
       "Esdeveniments",
       "Memfotisme",
@@ -2134,9 +2167,9 @@ export const FACETA_4_ETIQUETES_SKOS = Object.freeze([
     "count": 2,
     "description": "",
     "broaderTermId": "natura-excursions",
-    "broaderTermLabel": "🥾 Natura, Excursions i Camins",
+    "broaderTermLabel": "🌿 Natura i Patrimoni",
     "relatedTerms": [
-      "Excursions",
+      "Rutes",
       "Arbres Monumentals",
       "Font Roja",
       "El Camí"
@@ -2153,9 +2186,9 @@ export const FACETA_4_ETIQUETES_SKOS = Object.freeze([
     "count": 21,
     "description": "",
     "broaderTermId": "natura-excursions",
-    "broaderTermLabel": "🥾 Natura, Excursions i Camins",
+    "broaderTermLabel": "🌿 Natura i Patrimoni",
     "relatedTerms": [
-      "Excursions",
+      "Rutes",
       "Font Roja",
       "El Camí"
     ],
@@ -2176,7 +2209,7 @@ export const FACETA_4_ETIQUETES_SKOS = Object.freeze([
     "count": 0,
     "description": "",
     "broaderTermId": "comunitat-rural",
-    "broaderTermLabel": "🤝 Comunitat, Associacionisme i Món Rural",
+    "broaderTermLabel": "🤝 Món Rural",
     "relatedTerms": [
       "Esdeveniments",
       "Memfotisme",
@@ -2195,7 +2228,7 @@ export const FACETA_4_ETIQUETES_SKOS = Object.freeze([
     "count": 0,
     "description": "",
     "broaderTermId": "comunitat-rural",
-    "broaderTermLabel": "🤝 Comunitat, Associacionisme i Món Rural",
+    "broaderTermLabel": "🤝 Món Rural",
     "relatedTerms": [
       "Esdeveniments",
       "Memfotisme",
@@ -2214,7 +2247,7 @@ export const FACETA_4_ETIQUETES_SKOS = Object.freeze([
     "count": 0,
     "description": "",
     "broaderTermId": "comunitat-rural",
-    "broaderTermLabel": "🤝 Comunitat, Associacionisme i Món Rural",
+    "broaderTermLabel": "🤝 Món Rural",
     "relatedTerms": [
       "Esdeveniments",
       "Memfotisme",
@@ -2233,7 +2266,7 @@ export const FACETA_4_ETIQUETES_SKOS = Object.freeze([
     "count": 0,
     "description": "",
     "broaderTermId": "comunitat-rural",
-    "broaderTermLabel": "🤝 Comunitat, Associacionisme i Món Rural",
+    "broaderTermLabel": "🤝 Món Rural",
     "relatedTerms": [
       "Esdeveniments",
       "Memfotisme",
@@ -2269,7 +2302,7 @@ export const FACETA_4_ETIQUETES_SKOS = Object.freeze([
     "count": 15,
     "description": "",
     "broaderTermId": "comunitat-rural",
-    "broaderTermLabel": "🤝 Comunitat, Associacionisme i Món Rural",
+    "broaderTermLabel": "🤝 Món Rural",
     "relatedTerms": [
       "Esdeveniments",
       "Memfotisme",
@@ -2288,9 +2321,9 @@ export const FACETA_4_ETIQUETES_SKOS = Object.freeze([
     "count": 1,
     "description": "",
     "broaderTermId": "natura-excursions",
-    "broaderTermLabel": "🥾 Natura, Excursions i Camins",
+    "broaderTermLabel": "🌿 Natura i Patrimoni",
     "relatedTerms": [
-      "Excursions",
+      "Rutes",
       "Arbres Monumentals",
       "Font Roja",
       "El Camí"
@@ -2307,7 +2340,7 @@ export const FACETA_4_ETIQUETES_SKOS = Object.freeze([
     "count": 0,
     "description": "",
     "broaderTermId": "comunitat-rural",
-    "broaderTermLabel": "🤝 Comunitat, Associacionisme i Món Rural",
+    "broaderTermLabel": "🤝 Món Rural",
     "relatedTerms": [
       "Esdeveniments",
       "Memfotisme",
@@ -2326,7 +2359,7 @@ export const FACETA_4_ETIQUETES_SKOS = Object.freeze([
     "count": 2,
     "description": "",
     "broaderTermId": "patrimoni-cultura",
-    "broaderTermLabel": "🏛️ Patrimoni, Cultura, Música i Llengua",
+    "broaderTermLabel": "🎭 Cultura, Música i Llengua",
     "relatedTerms": [
       "Patrimoni",
       "Gent que Fa Música",
@@ -2363,7 +2396,7 @@ export const FACETA_4_ETIQUETES_SKOS = Object.freeze([
     "count": 0,
     "description": "",
     "broaderTermId": "comunitat-rural",
-    "broaderTermLabel": "🤝 Comunitat, Associacionisme i Món Rural",
+    "broaderTermLabel": "🤝 Món Rural",
     "relatedTerms": [
       "Esdeveniments",
       "Memfotisme",
@@ -2382,7 +2415,7 @@ export const FACETA_4_ETIQUETES_SKOS = Object.freeze([
     "count": 0,
     "description": "",
     "broaderTermId": "patrimoni-cultura",
-    "broaderTermLabel": "🏛️ Patrimoni, Cultura, Música i Llengua",
+    "broaderTermLabel": "🎭 Cultura, Música i Llengua",
     "relatedTerms": [
       "Patrimoni",
       "Gent que Fa Música",
@@ -2401,7 +2434,7 @@ export const FACETA_4_ETIQUETES_SKOS = Object.freeze([
     "count": 0,
     "description": "",
     "broaderTermId": "comunitat-rural",
-    "broaderTermLabel": "🤝 Comunitat, Associacionisme i Món Rural",
+    "broaderTermLabel": "🤝 Món Rural",
     "relatedTerms": [
       "Esdeveniments",
       "Memfotisme",
@@ -2439,7 +2472,7 @@ export const FACETA_4_ETIQUETES_SKOS = Object.freeze([
     "count": 0,
     "description": "",
     "broaderTermId": "patrimoni-cultura",
-    "broaderTermLabel": "🏛️ Patrimoni, Cultura, Música i Llengua",
+    "broaderTermLabel": "🎭 Cultura, Música i Llengua",
     "relatedTerms": [
       "Patrimoni",
       "Gent que Fa Música",
@@ -2458,7 +2491,7 @@ export const FACETA_4_ETIQUETES_SKOS = Object.freeze([
     "count": 0,
     "description": "",
     "broaderTermId": "comunitat-rural",
-    "broaderTermLabel": "🤝 Comunitat, Associacionisme i Món Rural",
+    "broaderTermLabel": "🤝 Món Rural",
     "relatedTerms": [
       "Esdeveniments",
       "Memfotisme",
@@ -2477,7 +2510,7 @@ export const FACETA_4_ETIQUETES_SKOS = Object.freeze([
     "count": 0,
     "description": "",
     "broaderTermId": "comunitat-rural",
-    "broaderTermLabel": "🤝 Comunitat, Associacionisme i Món Rural",
+    "broaderTermLabel": "🤝 Món Rural",
     "relatedTerms": [
       "Esdeveniments",
       "Memfotisme",
@@ -2496,7 +2529,7 @@ export const FACETA_4_ETIQUETES_SKOS = Object.freeze([
     "count": 0,
     "description": "",
     "broaderTermId": "comunitat-rural",
-    "broaderTermLabel": "🤝 Comunitat, Associacionisme i Món Rural",
+    "broaderTermLabel": "🤝 Món Rural",
     "relatedTerms": [
       "Esdeveniments",
       "Memfotisme",
@@ -2534,7 +2567,7 @@ export const FACETA_4_ETIQUETES_SKOS = Object.freeze([
     "count": 0,
     "description": "",
     "broaderTermId": "comunitat-rural",
-    "broaderTermLabel": "🤝 Comunitat, Associacionisme i Món Rural",
+    "broaderTermLabel": "🤝 Món Rural",
     "relatedTerms": [
       "Esdeveniments",
       "Memfotisme",
@@ -2591,7 +2624,7 @@ export const FACETA_4_ETIQUETES_SKOS = Object.freeze([
     "count": 0,
     "description": "",
     "broaderTermId": "comunitat-rural",
-    "broaderTermLabel": "🤝 Comunitat, Associacionisme i Món Rural",
+    "broaderTermLabel": "🤝 Món Rural",
     "relatedTerms": [
       "Esdeveniments",
       "Memfotisme",
@@ -2610,9 +2643,9 @@ export const FACETA_4_ETIQUETES_SKOS = Object.freeze([
     "count": 6,
     "description": "",
     "broaderTermId": "natura-excursions",
-    "broaderTermLabel": "🥾 Natura, Excursions i Camins",
+    "broaderTermLabel": "🌿 Natura i Patrimoni",
     "relatedTerms": [
-      "Excursions",
+      "Rutes",
       "Arbres Monumentals",
       "Font Roja"
     ],
@@ -2628,7 +2661,7 @@ export const FACETA_4_ETIQUETES_SKOS = Object.freeze([
     "count": 12,
     "description": "",
     "broaderTermId": "patrimoni-cultura",
-    "broaderTermLabel": "🏛️ Patrimoni, Cultura, Música i Llengua",
+    "broaderTermLabel": "🎭 Cultura, Música i Llengua",
     "relatedTerms": [
       "Patrimoni",
       "Gent que Fa Música",
@@ -2647,7 +2680,7 @@ export const FACETA_4_ETIQUETES_SKOS = Object.freeze([
     "count": 0,
     "description": "",
     "broaderTermId": "comunitat-rural",
-    "broaderTermLabel": "🤝 Comunitat, Associacionisme i Món Rural",
+    "broaderTermLabel": "🤝 Món Rural",
     "relatedTerms": [
       "Esdeveniments",
       "Memfotisme",
@@ -2666,7 +2699,7 @@ export const FACETA_4_ETIQUETES_SKOS = Object.freeze([
     "count": 15,
     "description": "Un lloc on compartir coneixements, experiències, idees i nous projectes mitjançant cursos, tallers, xerrades, exposicions, actuacions, reunions, quedades, treballs col·laboratius i d’altres propostes d'utilitat social.",
     "broaderTermId": "comunitat-rural",
-    "broaderTermLabel": "🤝 Comunitat, Associacionisme i Món Rural",
+    "broaderTermLabel": "🤝 Món Rural",
     "relatedTerms": [
       "Esdeveniments",
       "Memfotisme",
@@ -2684,7 +2717,7 @@ export const FACETA_4_ETIQUETES_SKOS = Object.freeze([
     "count": 1,
     "description": "",
     "broaderTermId": "comunitat-rural",
-    "broaderTermLabel": "🤝 Comunitat, Associacionisme i Món Rural",
+    "broaderTermLabel": "🤝 Món Rural",
     "relatedTerms": [
       "Esdeveniments",
       "Memfotisme",
@@ -2702,7 +2735,7 @@ export const FACETA_4_ETIQUETES_SKOS = Object.freeze([
     "count": 0,
     "description": "",
     "broaderTermId": "comunitat-rural",
-    "broaderTermLabel": "🤝 Comunitat, Associacionisme i Món Rural",
+    "broaderTermLabel": "🤝 Món Rural",
     "relatedTerms": [
       "Esdeveniments",
       "Memfotisme",
@@ -2721,7 +2754,7 @@ export const FACETA_4_ETIQUETES_SKOS = Object.freeze([
     "count": 0,
     "description": "",
     "broaderTermId": "comunitat-rural",
-    "broaderTermLabel": "🤝 Comunitat, Associacionisme i Món Rural",
+    "broaderTermLabel": "🤝 Món Rural",
     "relatedTerms": [
       "Esdeveniments",
       "Memfotisme",
@@ -2740,7 +2773,7 @@ export const FACETA_4_ETIQUETES_SKOS = Object.freeze([
     "count": 71,
     "description": "",
     "broaderTermId": "comunitat-rural",
-    "broaderTermLabel": "🤝 Comunitat, Associacionisme i Món Rural",
+    "broaderTermLabel": "🤝 Món Rural",
     "relatedTerms": [
       "Memfotisme",
       "El Rentonar",
@@ -2758,9 +2791,9 @@ export const FACETA_4_ETIQUETES_SKOS = Object.freeze([
     "count": 6,
     "description": "",
     "broaderTermId": "natura-excursions",
-    "broaderTermLabel": "🥾 Natura, Excursions i Camins",
+    "broaderTermLabel": "🌿 Natura i Patrimoni",
     "relatedTerms": [
-      "Excursions",
+      "Rutes",
       "Arbres Monumentals",
       "Font Roja",
       "El Camí"
@@ -2772,18 +2805,18 @@ export const FACETA_4_ETIQUETES_SKOS = Object.freeze([
   },
   {
     "id": 182,
-    "name": "Excursions",
-    "slug": "excursions",
+    "name": "Rutes",
+    "slug": "rutes",
     "count": 98,
-    "description": "",
+    "description": "Rutes pel territori amb track GPX/KML o sense track, excursions i camins.",
     "broaderTermId": "natura-excursions",
-    "broaderTermLabel": "🥾 Natura, Excursions i Camins",
+    "broaderTermLabel": "🌿 Natura i Patrimoni",
     "relatedTerms": [
       "Arbres Monumentals",
       "Font Roja",
       "El Camí"
     ],
-    "useFor": [],
+    "useFor": ["Excursions", "Camins", "Tracks"],
     "isDeprecatedSynonym": false,
     "isEmpty": false,
     "activaPerDefecte": true
@@ -2795,7 +2828,7 @@ export const FACETA_4_ETIQUETES_SKOS = Object.freeze([
     "count": 1,
     "description": "",
     "broaderTermId": "comunitat-rural",
-    "broaderTermLabel": "🤝 Comunitat, Associacionisme i Món Rural",
+    "broaderTermLabel": "🤝 Món Rural",
     "relatedTerms": [
       "Esdeveniments",
       "Memfotisme",
@@ -2814,7 +2847,7 @@ export const FACETA_4_ETIQUETES_SKOS = Object.freeze([
     "count": 3,
     "description": "",
     "broaderTermId": "patrimoni-cultura",
-    "broaderTermLabel": "🏛️ Patrimoni, Cultura, Música i Llengua",
+    "broaderTermLabel": "🎭 Cultura, Música i Llengua",
     "relatedTerms": [
       "Patrimoni",
       "Gent que Fa Música",
@@ -2832,9 +2865,9 @@ export const FACETA_4_ETIQUETES_SKOS = Object.freeze([
     "count": 12,
     "description": "",
     "broaderTermId": "natura-excursions",
-    "broaderTermLabel": "🥾 Natura, Excursions i Camins",
+    "broaderTermLabel": "🌿 Natura i Patrimoni",
     "relatedTerms": [
-      "Excursions",
+      "Rutes",
       "Arbres Monumentals",
       "El Camí"
     ],
@@ -2869,7 +2902,7 @@ export const FACETA_4_ETIQUETES_SKOS = Object.freeze([
     "count": 0,
     "description": "",
     "broaderTermId": "comunitat-rural",
-    "broaderTermLabel": "🤝 Comunitat, Associacionisme i Món Rural",
+    "broaderTermLabel": "🤝 Món Rural",
     "relatedTerms": [
       "Esdeveniments",
       "Memfotisme",
@@ -2888,7 +2921,7 @@ export const FACETA_4_ETIQUETES_SKOS = Object.freeze([
     "count": 0,
     "description": "",
     "broaderTermId": "comunitat-rural",
-    "broaderTermLabel": "🤝 Comunitat, Associacionisme i Món Rural",
+    "broaderTermLabel": "🤝 Món Rural",
     "relatedTerms": [
       "Esdeveniments",
       "Memfotisme",
@@ -2907,7 +2940,7 @@ export const FACETA_4_ETIQUETES_SKOS = Object.freeze([
     "count": 0,
     "description": "",
     "broaderTermId": "comunitat-rural",
-    "broaderTermLabel": "🤝 Comunitat, Associacionisme i Món Rural",
+    "broaderTermLabel": "🤝 Món Rural",
     "relatedTerms": [
       "Esdeveniments",
       "Memfotisme",
@@ -2926,7 +2959,7 @@ export const FACETA_4_ETIQUETES_SKOS = Object.freeze([
     "count": 3,
     "description": "",
     "broaderTermId": "comunitat-rural",
-    "broaderTermLabel": "🤝 Comunitat, Associacionisme i Món Rural",
+    "broaderTermLabel": "🤝 Món Rural",
     "relatedTerms": [
       "Esdeveniments",
       "Memfotisme",
@@ -2945,7 +2978,7 @@ export const FACETA_4_ETIQUETES_SKOS = Object.freeze([
     "count": 0,
     "description": "",
     "broaderTermId": "comunitat-rural",
-    "broaderTermLabel": "🤝 Comunitat, Associacionisme i Món Rural",
+    "broaderTermLabel": "🤝 Món Rural",
     "relatedTerms": [
       "Esdeveniments",
       "Memfotisme",
@@ -2964,7 +2997,7 @@ export const FACETA_4_ETIQUETES_SKOS = Object.freeze([
     "count": 16,
     "description": "",
     "broaderTermId": "patrimoni-cultura",
-    "broaderTermLabel": "🏛️ Patrimoni, Cultura, Música i Llengua",
+    "broaderTermLabel": "🎭 Cultura, Música i Llengua",
     "relatedTerms": [
       "Patrimoni",
       "Llibres",
@@ -3001,7 +3034,7 @@ export const FACETA_4_ETIQUETES_SKOS = Object.freeze([
     "count": 0,
     "description": "",
     "broaderTermId": "comunitat-rural",
-    "broaderTermLabel": "🤝 Comunitat, Associacionisme i Món Rural",
+    "broaderTermLabel": "🤝 Món Rural",
     "relatedTerms": [
       "Esdeveniments",
       "Memfotisme",
@@ -3020,7 +3053,7 @@ export const FACETA_4_ETIQUETES_SKOS = Object.freeze([
     "count": 0,
     "description": "",
     "broaderTermId": "comunitat-rural",
-    "broaderTermLabel": "🤝 Comunitat, Associacionisme i Món Rural",
+    "broaderTermLabel": "🤝 Món Rural",
     "relatedTerms": [
       "Esdeveniments",
       "Memfotisme",
@@ -3057,7 +3090,7 @@ export const FACETA_4_ETIQUETES_SKOS = Object.freeze([
     "count": 0,
     "description": "",
     "broaderTermId": "comunitat-rural",
-    "broaderTermLabel": "🤝 Comunitat, Associacionisme i Món Rural",
+    "broaderTermLabel": "🤝 Món Rural",
     "relatedTerms": [
       "Esdeveniments",
       "Memfotisme",
@@ -3076,7 +3109,7 @@ export const FACETA_4_ETIQUETES_SKOS = Object.freeze([
     "count": 0,
     "description": "",
     "broaderTermId": "comunitat-rural",
-    "broaderTermLabel": "🤝 Comunitat, Associacionisme i Món Rural",
+    "broaderTermLabel": "🤝 Món Rural",
     "relatedTerms": [
       "Esdeveniments",
       "Memfotisme",
@@ -3095,7 +3128,7 @@ export const FACETA_4_ETIQUETES_SKOS = Object.freeze([
     "count": 0,
     "description": "",
     "broaderTermId": "comunitat-rural",
-    "broaderTermLabel": "🤝 Comunitat, Associacionisme i Món Rural",
+    "broaderTermLabel": "🤝 Món Rural",
     "relatedTerms": [
       "Esdeveniments",
       "Memfotisme",
@@ -3114,7 +3147,7 @@ export const FACETA_4_ETIQUETES_SKOS = Object.freeze([
     "count": 0,
     "description": "",
     "broaderTermId": "comunitat-rural",
-    "broaderTermLabel": "🤝 Comunitat, Associacionisme i Món Rural",
+    "broaderTermLabel": "🤝 Món Rural",
     "relatedTerms": [
       "Esdeveniments",
       "Memfotisme",
@@ -3133,7 +3166,7 @@ export const FACETA_4_ETIQUETES_SKOS = Object.freeze([
     "count": 5,
     "description": "",
     "broaderTermId": "patrimoni-cultura",
-    "broaderTermLabel": "🏛️ Patrimoni, Cultura, Música i Llengua",
+    "broaderTermLabel": "🎭 Cultura, Música i Llengua",
     "relatedTerms": [
       "Patrimoni",
       "Gent que Fa Música",
@@ -3151,7 +3184,7 @@ export const FACETA_4_ETIQUETES_SKOS = Object.freeze([
     "count": 0,
     "description": "",
     "broaderTermId": "comunitat-rural",
-    "broaderTermLabel": "🤝 Comunitat, Associacionisme i Món Rural",
+    "broaderTermLabel": "🤝 Món Rural",
     "relatedTerms": [
       "Esdeveniments",
       "Memfotisme",
@@ -3170,7 +3203,7 @@ export const FACETA_4_ETIQUETES_SKOS = Object.freeze([
     "count": 90,
     "description": "",
     "broaderTermId": "comunitat-rural",
-    "broaderTermLabel": "🤝 Comunitat, Associacionisme i Món Rural",
+    "broaderTermLabel": "🤝 Món Rural",
     "relatedTerms": [
       "Esdeveniments",
       "El Rentonar",
@@ -3206,7 +3239,7 @@ export const FACETA_4_ETIQUETES_SKOS = Object.freeze([
     "count": 0,
     "description": "",
     "broaderTermId": "comunitat-rural",
-    "broaderTermLabel": "🤝 Comunitat, Associacionisme i Món Rural",
+    "broaderTermLabel": "🤝 Món Rural",
     "relatedTerms": [
       "Esdeveniments",
       "Memfotisme",
@@ -3262,7 +3295,7 @@ export const FACETA_4_ETIQUETES_SKOS = Object.freeze([
     "count": 0,
     "description": "",
     "broaderTermId": "comunitat-rural",
-    "broaderTermLabel": "🤝 Comunitat, Associacionisme i Món Rural",
+    "broaderTermLabel": "🤝 Món Rural",
     "relatedTerms": [
       "Esdeveniments",
       "Memfotisme",
@@ -3281,7 +3314,7 @@ export const FACETA_4_ETIQUETES_SKOS = Object.freeze([
     "count": 0,
     "description": "",
     "broaderTermId": "comunitat-rural",
-    "broaderTermLabel": "🤝 Comunitat, Associacionisme i Món Rural",
+    "broaderTermLabel": "🤝 Món Rural",
     "relatedTerms": [
       "Esdeveniments",
       "Memfotisme",
@@ -3300,7 +3333,7 @@ export const FACETA_4_ETIQUETES_SKOS = Object.freeze([
     "count": 4,
     "description": "",
     "broaderTermId": "comunitat-rural",
-    "broaderTermLabel": "🤝 Comunitat, Associacionisme i Món Rural",
+    "broaderTermLabel": "🤝 Món Rural",
     "relatedTerms": [
       "Esdeveniments",
       "Memfotisme",
@@ -3319,7 +3352,7 @@ export const FACETA_4_ETIQUETES_SKOS = Object.freeze([
     "count": 0,
     "description": "",
     "broaderTermId": "comunitat-rural",
-    "broaderTermLabel": "🤝 Comunitat, Associacionisme i Món Rural",
+    "broaderTermLabel": "🤝 Món Rural",
     "relatedTerms": [
       "Esdeveniments",
       "Memfotisme",
@@ -3338,7 +3371,7 @@ export const FACETA_4_ETIQUETES_SKOS = Object.freeze([
     "count": 0,
     "description": "",
     "broaderTermId": "comunitat-rural",
-    "broaderTermLabel": "🤝 Comunitat, Associacionisme i Món Rural",
+    "broaderTermLabel": "🤝 Món Rural",
     "relatedTerms": [
       "Esdeveniments",
       "Memfotisme",
@@ -3356,8 +3389,8 @@ export const FACETA_4_ETIQUETES_SKOS = Object.freeze([
     "slug": "patrimoni",
     "count": 28,
     "description": "",
-    "broaderTermId": "patrimoni-cultura",
-    "broaderTermLabel": "🏛️ Patrimoni, Cultura, Música i Llengua",
+    "broaderTermId": "natura-excursions",
+    "broaderTermLabel": "🌿 Natura i Patrimoni",
     "relatedTerms": [
       "Gent que Fa Música",
       "Llibres",
@@ -3375,7 +3408,7 @@ export const FACETA_4_ETIQUETES_SKOS = Object.freeze([
     "count": 0,
     "description": "",
     "broaderTermId": "patrimoni-cultura",
-    "broaderTermLabel": "🏛️ Patrimoni, Cultura, Música i Llengua",
+    "broaderTermLabel": "🎭 Cultura, Música i Llengua",
     "relatedTerms": [
       "Patrimoni",
       "Gent que Fa Música",
@@ -3431,7 +3464,7 @@ export const FACETA_4_ETIQUETES_SKOS = Object.freeze([
     "count": 0,
     "description": "",
     "broaderTermId": "comunitat-rural",
-    "broaderTermLabel": "🤝 Comunitat, Associacionisme i Món Rural",
+    "broaderTermLabel": "🤝 Món Rural",
     "relatedTerms": [
       "Esdeveniments",
       "Memfotisme",
@@ -3469,8 +3502,8 @@ export const FACETA_4_ETIQUETES_SKOS = Object.freeze([
     "slug": "pou-de-neu",
     "count": 1,
     "description": "",
-    "broaderTermId": "patrimoni-cultura",
-    "broaderTermLabel": "🏛️ Patrimoni, Cultura, Música i Llengua",
+    "broaderTermId": "natura-excursions",
+    "broaderTermLabel": "🌿 Natura i Patrimoni",
     "relatedTerms": [
       "Patrimoni",
       "Gent que Fa Música",
@@ -3525,7 +3558,7 @@ export const FACETA_4_ETIQUETES_SKOS = Object.freeze([
     "count": 1,
     "description": "",
     "broaderTermId": "comunitat-rural",
-    "broaderTermLabel": "🤝 Comunitat, Associacionisme i Món Rural",
+    "broaderTermLabel": "🤝 Món Rural",
     "relatedTerms": [
       "Esdeveniments",
       "Memfotisme",
@@ -3544,7 +3577,7 @@ export const FACETA_4_ETIQUETES_SKOS = Object.freeze([
     "count": 2,
     "description": "",
     "broaderTermId": "comunitat-rural",
-    "broaderTermLabel": "🤝 Comunitat, Associacionisme i Món Rural",
+    "broaderTermLabel": "🤝 Món Rural",
     "relatedTerms": [
       "Esdeveniments",
       "Memfotisme",
@@ -3640,7 +3673,7 @@ export const FACETA_4_ETIQUETES_SKOS = Object.freeze([
     "count": 1,
     "description": "",
     "broaderTermId": "comunitat-rural",
-    "broaderTermLabel": "🤝 Comunitat, Associacionisme i Món Rural",
+    "broaderTermLabel": "🤝 Món Rural",
     "relatedTerms": [
       "Esdeveniments",
       "Memfotisme",
@@ -3678,7 +3711,7 @@ export const FACETA_4_ETIQUETES_SKOS = Object.freeze([
     "count": 1,
     "description": "",
     "broaderTermId": "comunitat-rural",
-    "broaderTermLabel": "🤝 Comunitat, Associacionisme i Món Rural",
+    "broaderTermLabel": "🤝 Món Rural",
     "relatedTerms": [
       "Esdeveniments",
       "Memfotisme",
@@ -3697,7 +3730,7 @@ export const FACETA_4_ETIQUETES_SKOS = Object.freeze([
     "count": 1,
     "description": "",
     "broaderTermId": "patrimoni-cultura",
-    "broaderTermLabel": "🏛️ Patrimoni, Cultura, Música i Llengua",
+    "broaderTermLabel": "🎭 Cultura, Música i Llengua",
     "relatedTerms": [
       "Patrimoni",
       "Gent que Fa Música",
@@ -3716,9 +3749,9 @@ export const FACETA_4_ETIQUETES_SKOS = Object.freeze([
     "count": 0,
     "description": "",
     "broaderTermId": "natura-excursions",
-    "broaderTermLabel": "🥾 Natura, Excursions i Camins",
+    "broaderTermLabel": "🌿 Natura i Patrimoni",
     "relatedTerms": [
-      "Excursions",
+      "Rutes",
       "Arbres Monumentals",
       "Font Roja",
       "El Camí"
@@ -3735,9 +3768,9 @@ export const FACETA_4_ETIQUETES_SKOS = Object.freeze([
     "count": 1,
     "description": "",
     "broaderTermId": "natura-excursions",
-    "broaderTermLabel": "🥾 Natura, Excursions i Camins",
+    "broaderTermLabel": "🌿 Natura i Patrimoni",
     "relatedTerms": [
-      "Excursions",
+      "Rutes",
       "Arbres Monumentals",
       "Font Roja",
       "El Camí"
@@ -3754,9 +3787,9 @@ export const FACETA_4_ETIQUETES_SKOS = Object.freeze([
     "count": 0,
     "description": "",
     "broaderTermId": "natura-excursions",
-    "broaderTermLabel": "🥾 Natura, Excursions i Camins",
+    "broaderTermLabel": "🌿 Natura i Patrimoni",
     "relatedTerms": [
-      "Excursions",
+      "Rutes",
       "Arbres Monumentals",
       "Font Roja",
       "El Camí"
@@ -3773,9 +3806,9 @@ export const FACETA_4_ETIQUETES_SKOS = Object.freeze([
     "count": 0,
     "description": "",
     "broaderTermId": "natura-excursions",
-    "broaderTermLabel": "🥾 Natura, Excursions i Camins",
+    "broaderTermLabel": "🌿 Natura i Patrimoni",
     "relatedTerms": [
-      "Excursions",
+      "Rutes",
       "Arbres Monumentals",
       "Font Roja",
       "El Camí"
@@ -3792,7 +3825,7 @@ export const FACETA_4_ETIQUETES_SKOS = Object.freeze([
     "count": 0,
     "description": "",
     "broaderTermId": "comunitat-rural",
-    "broaderTermLabel": "🤝 Comunitat, Associacionisme i Món Rural",
+    "broaderTermLabel": "🤝 Món Rural",
     "relatedTerms": [
       "Esdeveniments",
       "Memfotisme",
@@ -3811,7 +3844,7 @@ export const FACETA_4_ETIQUETES_SKOS = Object.freeze([
     "count": 0,
     "description": "",
     "broaderTermId": "comunitat-rural",
-    "broaderTermLabel": "🤝 Comunitat, Associacionisme i Món Rural",
+    "broaderTermLabel": "🤝 Món Rural",
     "relatedTerms": [
       "Esdeveniments",
       "Memfotisme",
@@ -3848,7 +3881,7 @@ export const FACETA_4_ETIQUETES_SKOS = Object.freeze([
     "count": 0,
     "description": "",
     "broaderTermId": "comunitat-rural",
-    "broaderTermLabel": "🤝 Comunitat, Associacionisme i Món Rural",
+    "broaderTermLabel": "🤝 Món Rural",
     "relatedTerms": [
       "Esdeveniments",
       "Memfotisme",
@@ -3867,7 +3900,7 @@ export const FACETA_4_ETIQUETES_SKOS = Object.freeze([
     "count": 3,
     "description": "",
     "broaderTermId": "comunitat-rural",
-    "broaderTermLabel": "🤝 Comunitat, Associacionisme i Món Rural",
+    "broaderTermLabel": "🤝 Món Rural",
     "relatedTerms": [
       "Esdeveniments",
       "Memfotisme",
@@ -3886,7 +3919,7 @@ export const FACETA_4_ETIQUETES_SKOS = Object.freeze([
     "count": 0,
     "description": "",
     "broaderTermId": "comunitat-rural",
-    "broaderTermLabel": "🤝 Comunitat, Associacionisme i Món Rural",
+    "broaderTermLabel": "🤝 Món Rural",
     "relatedTerms": [
       "Esdeveniments",
       "Memfotisme",
@@ -3905,7 +3938,7 @@ export const FACETA_4_ETIQUETES_SKOS = Object.freeze([
     "count": 0,
     "description": "",
     "broaderTermId": "comunitat-rural",
-    "broaderTermLabel": "🤝 Comunitat, Associacionisme i Món Rural",
+    "broaderTermLabel": "🤝 Món Rural",
     "relatedTerms": [
       "Esdeveniments",
       "Memfotisme",
@@ -3942,7 +3975,7 @@ export const FACETA_4_ETIQUETES_SKOS = Object.freeze([
     "count": 0,
     "description": "",
     "broaderTermId": "comunitat-rural",
-    "broaderTermLabel": "🤝 Comunitat, Associacionisme i Món Rural",
+    "broaderTermLabel": "🤝 Món Rural",
     "relatedTerms": [
       "Esdeveniments",
       "Memfotisme",
@@ -3954,7 +3987,7 @@ export const FACETA_4_ETIQUETES_SKOS = Object.freeze([
     "isEmpty": true,
     "activaPerDefecte": false
   }
-]);
+].concat(TERMES_SKOS_NOVES).map(preparaTermeSkos));
 
 export const ARTICLES_SIMULADOR_IA_425 = Object.freeze([
   {
@@ -4120,9 +4153,7 @@ export const ARTICLES_SIMULADOR_IA_425 = Object.freeze([
     ],
     "etiquetesNetes": [
       "Aplec pel Territori",
-      "Esdeveniments",
-      "Posant en Valor els Recursos Locals",
-      "Reivindicant"
+      "Associacionisme"
     ],
     "estat_revisio": "pendent_admin",
     "casosUsDetectats": [
@@ -4174,9 +4205,8 @@ export const ARTICLES_SIMULADOR_IA_425 = Object.freeze([
     ],
     "etiquetesNetes": [
       "Aplec pel Territori",
-      "Esdeveniments",
-      "Posant en Valor els Recursos Locals",
-      "Reivindicant"
+      "Incendis",
+      "Associacionisme"
     ],
     "estat_revisio": "pendent_admin",
     "casosUsDetectats": [
@@ -4368,13 +4398,13 @@ export const ARTICLES_SIMULADOR_IA_425 = Object.freeze([
       "La Marina Alta"
     ],
     "categoriaTematicaProposadaId": "natura-excursions",
-    "categoriaTematicaProposadaLabel": "🥾 Natura, Excursions i Camins",
+    "categoriaTematicaProposadaLabel": "🌿 Natura i Patrimoni",
     "etiquetesOriginals": [
       "Excursions",
       "Posant en Valor els Recursos Locals"
     ],
     "etiquetesNetes": [
-      "Excursions",
+      "Rutes",
       "Posant en Valor els Recursos Locals"
     ],
     "estat_revisio": "pendent_admin",
@@ -4399,13 +4429,13 @@ export const ARTICLES_SIMULADOR_IA_425 = Object.freeze([
     "poblePrincipal": "Agost",
     "comarquesDetectades": [],
     "categoriaTematicaProposadaId": "natura-excursions",
-    "categoriaTematicaProposadaLabel": "🥾 Natura, Excursions i Camins",
+    "categoriaTematicaProposadaLabel": "🌿 Natura i Patrimoni",
     "etiquetesOriginals": [
       "Excursions",
       "Posant en Valor els Recursos Locals"
     ],
     "etiquetesNetes": [
-      "Excursions",
+      "Rutes",
       "Posant en Valor els Recursos Locals"
     ],
     "estat_revisio": "pendent_admin",
@@ -4603,7 +4633,7 @@ export const ARTICLES_SIMULADOR_IA_425 = Object.freeze([
     "poblePrincipal": "La Torre de les Maçanes",
     "comarquesDetectades": [],
     "categoriaTematicaProposadaId": "patrimoni-cultura",
-    "categoriaTematicaProposadaLabel": "🏛️ Patrimoni, Cultura, Música i Llengua",
+    "categoriaTematicaProposadaLabel": "🎭 Cultura, Música i Llengua",
     "etiquetesOriginals": [
       "Memfotisme",
       "Patrimoni"
@@ -4632,7 +4662,7 @@ export const ARTICLES_SIMULADOR_IA_425 = Object.freeze([
     "poblePrincipal": "L'Alacantí",
     "comarquesDetectades": [],
     "categoriaTematicaProposadaId": "natura-excursions",
-    "categoriaTematicaProposadaLabel": "🥾 Natura, Excursions i Camins",
+    "categoriaTematicaProposadaLabel": "🌿 Natura i Patrimoni",
     "etiquetesOriginals": [
       "Cims per la llengua",
       "Esdeveniments",
@@ -4641,7 +4671,7 @@ export const ARTICLES_SIMULADOR_IA_425 = Object.freeze([
     "etiquetesNetes": [
       "Cims per la llengua",
       "Esdeveniments",
-      "Excursions"
+      "Rutes"
     ],
     "estat_revisio": "pendent_admin",
     "casosUsDetectats": [
@@ -4666,7 +4696,7 @@ export const ARTICLES_SIMULADOR_IA_425 = Object.freeze([
       "La Marina Alta"
     ],
     "categoriaTematicaProposadaId": "natura-excursions",
-    "categoriaTematicaProposadaLabel": "🥾 Natura, Excursions i Camins",
+    "categoriaTematicaProposadaLabel": "🌿 Natura i Patrimoni",
     "etiquetesOriginals": [
       "El Camí",
       "Esdeveniments",
@@ -4675,7 +4705,7 @@ export const ARTICLES_SIMULADOR_IA_425 = Object.freeze([
     "etiquetesNetes": [
       "El Camí",
       "Esdeveniments",
-      "Excursions"
+      "Rutes"
     ],
     "estat_revisio": "pendent_admin",
     "casosUsDetectats": [
@@ -4725,14 +4755,14 @@ export const ARTICLES_SIMULADOR_IA_425 = Object.freeze([
     "poblePrincipal": "L'Alacantí",
     "comarquesDetectades": [],
     "categoriaTematicaProposadaId": "natura-excursions",
-    "categoriaTematicaProposadaLabel": "🥾 Natura, Excursions i Camins",
+    "categoriaTematicaProposadaLabel": "🌿 Natura i Patrimoni",
     "etiquetesOriginals": [
       "Cims per la llengua",
       "Excursions"
     ],
     "etiquetesNetes": [
       "Cims per la llengua",
-      "Excursions"
+      "Rutes"
     ],
     "estat_revisio": "pendent_admin",
     "casosUsDetectats": [
@@ -4759,7 +4789,7 @@ export const ARTICLES_SIMULADOR_IA_425 = Object.freeze([
       "El Comtat"
     ],
     "categoriaTematicaProposadaId": "natura-excursions",
-    "categoriaTematicaProposadaLabel": "🥾 Natura, Excursions i Camins",
+    "categoriaTematicaProposadaLabel": "🌿 Natura i Patrimoni",
     "etiquetesOriginals": [
       "El Camí",
       "Esdeveniments",
@@ -4768,7 +4798,7 @@ export const ARTICLES_SIMULADOR_IA_425 = Object.freeze([
     "etiquetesNetes": [
       "El Camí",
       "Esdeveniments",
-      "Excursions"
+      "Rutes"
     ],
     "estat_revisio": "pendent_admin",
     "casosUsDetectats": [
@@ -4844,7 +4874,7 @@ export const ARTICLES_SIMULADOR_IA_425 = Object.freeze([
     "poblePrincipal": "Xarxa de Pobles",
     "comarquesDetectades": [],
     "categoriaTematicaProposadaId": "comunitat-rural",
-    "categoriaTematicaProposadaLabel": "🤝 Comunitat, Associacionisme i Món Rural",
+    "categoriaTematicaProposadaLabel": "🤝 Món Rural",
     "etiquetesOriginals": [
       "Opinió"
     ],
@@ -4869,7 +4899,7 @@ export const ARTICLES_SIMULADOR_IA_425 = Object.freeze([
     "poblePrincipal": "La Torre de les Maçanes",
     "comarquesDetectades": [],
     "categoriaTematicaProposadaId": "comunitat-rural",
-    "categoriaTematicaProposadaLabel": "🤝 Comunitat, Associacionisme i Món Rural",
+    "categoriaTematicaProposadaLabel": "🤝 Món Rural",
     "etiquetesOriginals": [
       "Esdeveniments"
     ],
@@ -4954,7 +4984,7 @@ export const ARTICLES_SIMULADOR_IA_425 = Object.freeze([
     "poblePrincipal": "La Torre de les Maçanes",
     "comarquesDetectades": [],
     "categoriaTematicaProposadaId": "comunitat-rural",
-    "categoriaTematicaProposadaLabel": "🤝 Comunitat, Associacionisme i Món Rural",
+    "categoriaTematicaProposadaLabel": "🤝 Món Rural",
     "etiquetesOriginals": [
       "Esdeveniments"
     ],
@@ -4981,7 +5011,7 @@ export const ARTICLES_SIMULADOR_IA_425 = Object.freeze([
     "poblePrincipal": "Benilloba",
     "comarquesDetectades": [],
     "categoriaTematicaProposadaId": "comunitat-rural",
-    "categoriaTematicaProposadaLabel": "🤝 Comunitat, Associacionisme i Món Rural",
+    "categoriaTematicaProposadaLabel": "🤝 Món Rural",
     "etiquetesOriginals": [
       "Esdeveniments"
     ],
@@ -5010,7 +5040,7 @@ export const ARTICLES_SIMULADOR_IA_425 = Object.freeze([
     "poblePrincipal": "El Campello",
     "comarquesDetectades": [],
     "categoriaTematicaProposadaId": "natura-excursions",
-    "categoriaTematicaProposadaLabel": "🥾 Natura, Excursions i Camins",
+    "categoriaTematicaProposadaLabel": "🌿 Natura i Patrimoni",
     "etiquetesOriginals": [
       "El Camí",
       "Esdeveniments",
@@ -5019,7 +5049,7 @@ export const ARTICLES_SIMULADOR_IA_425 = Object.freeze([
     "etiquetesNetes": [
       "El Camí",
       "Esdeveniments",
-      "Excursions"
+      "Rutes"
     ],
     "estat_revisio": "pendent_admin",
     "casosUsDetectats": [
@@ -5044,7 +5074,7 @@ export const ARTICLES_SIMULADOR_IA_425 = Object.freeze([
     "poblePrincipal": "Castelló de Rugat",
     "comarquesDetectades": [],
     "categoriaTematicaProposadaId": "natura-excursions",
-    "categoriaTematicaProposadaLabel": "🥾 Natura, Excursions i Camins",
+    "categoriaTematicaProposadaLabel": "🌿 Natura i Patrimoni",
     "etiquetesOriginals": [
       "El Camí",
       "Esdeveniments",
@@ -5053,7 +5083,7 @@ export const ARTICLES_SIMULADOR_IA_425 = Object.freeze([
     "etiquetesNetes": [
       "El Camí",
       "Esdeveniments",
-      "Excursions"
+      "Rutes"
     ],
     "estat_revisio": "pendent_admin",
     "casosUsDetectats": [
@@ -5079,7 +5109,7 @@ export const ARTICLES_SIMULADOR_IA_425 = Object.freeze([
       "La Safor"
     ],
     "categoriaTematicaProposadaId": "natura-excursions",
-    "categoriaTematicaProposadaLabel": "🥾 Natura, Excursions i Camins",
+    "categoriaTematicaProposadaLabel": "🌿 Natura i Patrimoni",
     "etiquetesOriginals": [
       "El Camí",
       "Esdeveniments",
@@ -5088,7 +5118,7 @@ export const ARTICLES_SIMULADOR_IA_425 = Object.freeze([
     "etiquetesNetes": [
       "El Camí",
       "Esdeveniments",
-      "Excursions"
+      "Rutes"
     ],
     "estat_revisio": "pendent_admin",
     "casosUsDetectats": [
@@ -5112,7 +5142,7 @@ export const ARTICLES_SIMULADOR_IA_425 = Object.freeze([
     "poblePrincipal": "Alcoi",
     "comarquesDetectades": [],
     "categoriaTematicaProposadaId": "natura-excursions",
-    "categoriaTematicaProposadaLabel": "🥾 Natura, Excursions i Camins",
+    "categoriaTematicaProposadaLabel": "🌿 Natura i Patrimoni",
     "etiquetesOriginals": [
       "El Camí",
       "Esdeveniments",
@@ -5121,7 +5151,7 @@ export const ARTICLES_SIMULADOR_IA_425 = Object.freeze([
     "etiquetesNetes": [
       "El Camí",
       "Esdeveniments",
-      "Excursions"
+      "Rutes"
     ],
     "estat_revisio": "pendent_admin",
     "casosUsDetectats": [
@@ -5143,7 +5173,7 @@ export const ARTICLES_SIMULADOR_IA_425 = Object.freeze([
     "poblePrincipal": "Alcoi",
     "comarquesDetectades": [],
     "categoriaTematicaProposadaId": "patrimoni-cultura",
-    "categoriaTematicaProposadaLabel": "🏛️ Patrimoni, Cultura, Música i Llengua",
+    "categoriaTematicaProposadaLabel": "🎭 Cultura, Música i Llengua",
     "etiquetesOriginals": [
       "Patrimoni",
       "Reivindicant"
@@ -5171,13 +5201,13 @@ export const ARTICLES_SIMULADOR_IA_425 = Object.freeze([
     "poblePrincipal": "Banyeres de Mariola",
     "comarquesDetectades": [],
     "categoriaTematicaProposadaId": "natura-excursions",
-    "categoriaTematicaProposadaLabel": "🥾 Natura, Excursions i Camins",
+    "categoriaTematicaProposadaLabel": "🌿 Natura i Patrimoni",
     "etiquetesOriginals": [
       "Excursions",
       "Posant en Valor els Recursos Locals"
     ],
     "etiquetesNetes": [
-      "Excursions",
+      "Rutes",
       "Posant en Valor els Recursos Locals"
     ],
     "estat_revisio": "pendent_admin",
@@ -5203,13 +5233,13 @@ export const ARTICLES_SIMULADOR_IA_425 = Object.freeze([
     "poblePrincipal": "L'Alacantí",
     "comarquesDetectades": [],
     "categoriaTematicaProposadaId": "natura-excursions",
-    "categoriaTematicaProposadaLabel": "🥾 Natura, Excursions i Camins",
+    "categoriaTematicaProposadaLabel": "🌿 Natura i Patrimoni",
     "etiquetesOriginals": [
       "Excursions",
       "Posant en Valor els Recursos Locals"
     ],
     "etiquetesNetes": [
-      "Excursions",
+      "Rutes",
       "Posant en Valor els Recursos Locals"
     ],
     "estat_revisio": "pendent_admin",
@@ -5377,13 +5407,13 @@ export const ARTICLES_SIMULADOR_IA_425 = Object.freeze([
     "poblePrincipal": "Alcoi",
     "comarquesDetectades": [],
     "categoriaTematicaProposadaId": "natura-excursions",
-    "categoriaTematicaProposadaLabel": "🥾 Natura, Excursions i Camins",
+    "categoriaTematicaProposadaLabel": "🌿 Natura i Patrimoni",
     "etiquetesOriginals": [
       "Excursions",
       "Posant en Valor els Recursos Locals"
     ],
     "etiquetesNetes": [
-      "Excursions",
+      "Rutes",
       "Posant en Valor els Recursos Locals"
     ],
     "estat_revisio": "pendent_admin",
@@ -5410,13 +5440,13 @@ export const ARTICLES_SIMULADOR_IA_425 = Object.freeze([
       "El Comtat"
     ],
     "categoriaTematicaProposadaId": "natura-excursions",
-    "categoriaTematicaProposadaLabel": "🥾 Natura, Excursions i Camins",
+    "categoriaTematicaProposadaLabel": "🌿 Natura i Patrimoni",
     "etiquetesOriginals": [
       "Excursions",
       "Posant en Valor els Recursos Locals"
     ],
     "etiquetesNetes": [
-      "Excursions",
+      "Rutes",
       "Posant en Valor els Recursos Locals"
     ],
     "estat_revisio": "pendent_admin",
@@ -5473,7 +5503,7 @@ export const ARTICLES_SIMULADOR_IA_425 = Object.freeze([
     "poblePrincipal": "Alcoleja",
     "comarquesDetectades": [],
     "categoriaTematicaProposadaId": "natura-excursions",
-    "categoriaTematicaProposadaLabel": "🥾 Natura, Excursions i Camins",
+    "categoriaTematicaProposadaLabel": "🌿 Natura i Patrimoni",
     "etiquetesOriginals": [
       "Memfotisme",
       "Reivindicant"
@@ -5501,12 +5531,12 @@ export const ARTICLES_SIMULADOR_IA_425 = Object.freeze([
     "poblePrincipal": "La Torre de les Maçanes",
     "comarquesDetectades": [],
     "categoriaTematicaProposadaId": "natura-excursions",
-    "categoriaTematicaProposadaLabel": "🥾 Natura, Excursions i Camins",
+    "categoriaTematicaProposadaLabel": "🌿 Natura i Patrimoni",
     "etiquetesOriginals": [
       "Excursions"
     ],
     "etiquetesNetes": [
-      "Excursions"
+      "Rutes"
     ],
     "estat_revisio": "pendent_admin",
     "casosUsDetectats": [
@@ -5530,13 +5560,13 @@ export const ARTICLES_SIMULADOR_IA_425 = Object.freeze([
       "El Baix Vinalopó"
     ],
     "categoriaTematicaProposadaId": "natura-excursions",
-    "categoriaTematicaProposadaLabel": "🥾 Natura, Excursions i Camins",
+    "categoriaTematicaProposadaLabel": "🌿 Natura i Patrimoni",
     "etiquetesOriginals": [
       "Excursions",
       "Posant en Valor els Recursos Locals"
     ],
     "etiquetesNetes": [
-      "Excursions",
+      "Rutes",
       "Posant en Valor els Recursos Locals"
     ],
     "estat_revisio": "pendent_admin",
@@ -5562,14 +5592,14 @@ export const ARTICLES_SIMULADOR_IA_425 = Object.freeze([
       "L'Horta Nord"
     ],
     "categoriaTematicaProposadaId": "natura-excursions",
-    "categoriaTematicaProposadaLabel": "🥾 Natura, Excursions i Camins",
+    "categoriaTematicaProposadaLabel": "🌿 Natura i Patrimoni",
     "etiquetesOriginals": [
       "Excursions",
       "Posant en Valor els Recursos Locals",
       "Vídeos"
     ],
     "etiquetesNetes": [
-      "Excursions",
+      "Rutes",
       "Posant en Valor els Recursos Locals",
       "Vídeos"
     ],
@@ -5596,13 +5626,13 @@ export const ARTICLES_SIMULADOR_IA_425 = Object.freeze([
     "poblePrincipal": "Alacant",
     "comarquesDetectades": [],
     "categoriaTematicaProposadaId": "natura-excursions",
-    "categoriaTematicaProposadaLabel": "🥾 Natura, Excursions i Camins",
+    "categoriaTematicaProposadaLabel": "🌿 Natura i Patrimoni",
     "etiquetesOriginals": [
       "Excursions",
       "Posant en Valor els Recursos Locals"
     ],
     "etiquetesNetes": [
-      "Excursions",
+      "Rutes",
       "Posant en Valor els Recursos Locals"
     ],
     "estat_revisio": "pendent_admin",
@@ -5686,13 +5716,13 @@ export const ARTICLES_SIMULADOR_IA_425 = Object.freeze([
       "La Marina Alta"
     ],
     "categoriaTematicaProposadaId": "natura-excursions",
-    "categoriaTematicaProposadaLabel": "🥾 Natura, Excursions i Camins",
+    "categoriaTematicaProposadaLabel": "🌿 Natura i Patrimoni",
     "etiquetesOriginals": [
       "Excursions",
       "Posant en Valor els Recursos Locals"
     ],
     "etiquetesNetes": [
-      "Excursions",
+      "Rutes",
       "Posant en Valor els Recursos Locals"
     ],
     "estat_revisio": "pendent_admin",
@@ -5772,13 +5802,13 @@ export const ARTICLES_SIMULADOR_IA_425 = Object.freeze([
       "La Marina Baixa"
     ],
     "categoriaTematicaProposadaId": "natura-excursions",
-    "categoriaTematicaProposadaLabel": "🥾 Natura, Excursions i Camins",
+    "categoriaTematicaProposadaLabel": "🌿 Natura i Patrimoni",
     "etiquetesOriginals": [
       "Excursions",
       "Posant en Valor els Recursos Locals"
     ],
     "etiquetesNetes": [
-      "Excursions",
+      "Rutes",
       "Posant en Valor els Recursos Locals"
     ],
     "estat_revisio": "pendent_admin",
@@ -5804,13 +5834,13 @@ export const ARTICLES_SIMULADOR_IA_425 = Object.freeze([
       "La Marina Baixa"
     ],
     "categoriaTematicaProposadaId": "natura-excursions",
-    "categoriaTematicaProposadaLabel": "🥾 Natura, Excursions i Camins",
+    "categoriaTematicaProposadaLabel": "🌿 Natura i Patrimoni",
     "etiquetesOriginals": [
       "Excursions",
       "Posant en Valor els Recursos Locals"
     ],
     "etiquetesNetes": [
-      "Excursions",
+      "Rutes",
       "Posant en Valor els Recursos Locals"
     ],
     "estat_revisio": "pendent_admin",
@@ -5861,14 +5891,14 @@ export const ARTICLES_SIMULADOR_IA_425 = Object.freeze([
     "poblePrincipal": "Alcoi",
     "comarquesDetectades": [],
     "categoriaTematicaProposadaId": "natura-excursions",
-    "categoriaTematicaProposadaLabel": "🥾 Natura, Excursions i Camins",
+    "categoriaTematicaProposadaLabel": "🌿 Natura i Patrimoni",
     "etiquetesOriginals": [
       "Excursions",
       "Posant en Valor els Recursos Locals",
       "Vídeos"
     ],
     "etiquetesNetes": [
-      "Excursions",
+      "Rutes",
       "Posant en Valor els Recursos Locals",
       "Vídeos"
     ],
@@ -5922,13 +5952,13 @@ export const ARTICLES_SIMULADOR_IA_425 = Object.freeze([
     "poblePrincipal": "Agres",
     "comarquesDetectades": [],
     "categoriaTematicaProposadaId": "natura-excursions",
-    "categoriaTematicaProposadaLabel": "🥾 Natura, Excursions i Camins",
+    "categoriaTematicaProposadaLabel": "🌿 Natura i Patrimoni",
     "etiquetesOriginals": [
       "Excursions",
       "Reivindicant"
     ],
     "etiquetesNetes": [
-      "Excursions",
+      "Rutes",
       "Reivindicant"
     ],
     "estat_revisio": "pendent_admin",
@@ -5951,13 +5981,13 @@ export const ARTICLES_SIMULADOR_IA_425 = Object.freeze([
     "poblePrincipal": "Alcoi",
     "comarquesDetectades": [],
     "categoriaTematicaProposadaId": "natura-excursions",
-    "categoriaTematicaProposadaLabel": "🥾 Natura, Excursions i Camins",
+    "categoriaTematicaProposadaLabel": "🌿 Natura i Patrimoni",
     "etiquetesOriginals": [
       "Excursions",
       "Posant en Valor els Recursos Locals"
     ],
     "etiquetesNetes": [
-      "Excursions",
+      "Rutes",
       "Posant en Valor els Recursos Locals"
     ],
     "estat_revisio": "pendent_admin",
@@ -6034,7 +6064,7 @@ export const ARTICLES_SIMULADOR_IA_425 = Object.freeze([
     "poblePrincipal": "La Torre de les Maçanes",
     "comarquesDetectades": [],
     "categoriaTematicaProposadaId": "comunitat-rural",
-    "categoriaTematicaProposadaLabel": "🤝 Comunitat, Associacionisme i Món Rural",
+    "categoriaTematicaProposadaLabel": "🤝 Món Rural",
     "etiquetesOriginals": [
       "Activitats"
     ],
@@ -6090,7 +6120,7 @@ export const ARTICLES_SIMULADOR_IA_425 = Object.freeze([
     "poblePrincipal": "La Torre de les Maçanes",
     "comarquesDetectades": [],
     "categoriaTematicaProposadaId": "comunitat-rural",
-    "categoriaTematicaProposadaLabel": "🤝 Comunitat, Associacionisme i Món Rural",
+    "categoriaTematicaProposadaLabel": "🤝 Món Rural",
     "etiquetesOriginals": [
       "Activitats"
     ],
@@ -6119,13 +6149,13 @@ export const ARTICLES_SIMULADOR_IA_425 = Object.freeze([
     "poblePrincipal": "Benissa",
     "comarquesDetectades": [],
     "categoriaTematicaProposadaId": "natura-excursions",
-    "categoriaTematicaProposadaLabel": "🥾 Natura, Excursions i Camins",
+    "categoriaTematicaProposadaLabel": "🌿 Natura i Patrimoni",
     "etiquetesOriginals": [
       "Excursions",
       "Posant en Valor els Recursos Locals"
     ],
     "etiquetesNetes": [
-      "Excursions",
+      "Rutes",
       "Posant en Valor els Recursos Locals"
     ],
     "estat_revisio": "pendent_admin",
@@ -6148,7 +6178,7 @@ export const ARTICLES_SIMULADOR_IA_425 = Object.freeze([
     "poblePrincipal": "La Torre de les Maçanes",
     "comarquesDetectades": [],
     "categoriaTematicaProposadaId": "comunitat-rural",
-    "categoriaTematicaProposadaLabel": "🤝 Comunitat, Associacionisme i Món Rural",
+    "categoriaTematicaProposadaLabel": "🤝 Món Rural",
     "etiquetesOriginals": [
       "Activitats"
     ],
@@ -6174,7 +6204,7 @@ export const ARTICLES_SIMULADOR_IA_425 = Object.freeze([
     "poblePrincipal": "La Torre de les Maçanes",
     "comarquesDetectades": [],
     "categoriaTematicaProposadaId": "comunitat-rural",
-    "categoriaTematicaProposadaLabel": "🤝 Comunitat, Associacionisme i Món Rural",
+    "categoriaTematicaProposadaLabel": "🤝 Món Rural",
     "etiquetesOriginals": [
       "Activitats",
       "Esdeveniments"
@@ -6232,13 +6262,13 @@ export const ARTICLES_SIMULADOR_IA_425 = Object.freeze([
     "poblePrincipal": "La Vall de Gallinera",
     "comarquesDetectades": [],
     "categoriaTematicaProposadaId": "natura-excursions",
-    "categoriaTematicaProposadaLabel": "🥾 Natura, Excursions i Camins",
+    "categoriaTematicaProposadaLabel": "🌿 Natura i Patrimoni",
     "etiquetesOriginals": [
       "Excursions",
       "Posant en Valor els Recursos Locals"
     ],
     "etiquetesNetes": [
-      "Excursions",
+      "Rutes",
       "Posant en Valor els Recursos Locals"
     ],
     "estat_revisio": "pendent_admin",
@@ -6264,13 +6294,13 @@ export const ARTICLES_SIMULADOR_IA_425 = Object.freeze([
     "poblePrincipal": "L'Alacantí",
     "comarquesDetectades": [],
     "categoriaTematicaProposadaId": "natura-excursions",
-    "categoriaTematicaProposadaLabel": "🥾 Natura, Excursions i Camins",
+    "categoriaTematicaProposadaLabel": "🌿 Natura i Patrimoni",
     "etiquetesOriginals": [
       "Excursions",
       "Posant en Valor els Recursos Locals"
     ],
     "etiquetesNetes": [
-      "Excursions",
+      "Rutes",
       "Posant en Valor els Recursos Locals"
     ],
     "estat_revisio": "pendent_admin",
@@ -6294,13 +6324,13 @@ export const ARTICLES_SIMULADOR_IA_425 = Object.freeze([
     "poblePrincipal": "Altea",
     "comarquesDetectades": [],
     "categoriaTematicaProposadaId": "natura-excursions",
-    "categoriaTematicaProposadaLabel": "🥾 Natura, Excursions i Camins",
+    "categoriaTematicaProposadaLabel": "🌿 Natura i Patrimoni",
     "etiquetesOriginals": [
       "Excursions",
       "Posant en Valor els Recursos Locals"
     ],
     "etiquetesNetes": [
-      "Excursions",
+      "Rutes",
       "Posant en Valor els Recursos Locals"
     ],
     "estat_revisio": "pendent_admin",
@@ -6324,13 +6354,13 @@ export const ARTICLES_SIMULADOR_IA_425 = Object.freeze([
     "poblePrincipal": "La Torre de les Maçanes",
     "comarquesDetectades": [],
     "categoriaTematicaProposadaId": "natura-excursions",
-    "categoriaTematicaProposadaLabel": "🥾 Natura, Excursions i Camins",
+    "categoriaTematicaProposadaLabel": "🌿 Natura i Patrimoni",
     "etiquetesOriginals": [
       "Excursions",
       "Posant en Valor els Recursos Locals"
     ],
     "etiquetesNetes": [
-      "Excursions",
+      "Rutes",
       "Posant en Valor els Recursos Locals"
     ],
     "estat_revisio": "pendent_admin",
@@ -6354,13 +6384,13 @@ export const ARTICLES_SIMULADOR_IA_425 = Object.freeze([
     "poblePrincipal": "La Torre de les Maçanes",
     "comarquesDetectades": [],
     "categoriaTematicaProposadaId": "natura-excursions",
-    "categoriaTematicaProposadaLabel": "🥾 Natura, Excursions i Camins",
+    "categoriaTematicaProposadaLabel": "🌿 Natura i Patrimoni",
     "etiquetesOriginals": [
       "Excursions",
       "Posant en Valor els Recursos Locals"
     ],
     "etiquetesNetes": [
-      "Excursions",
+      "Rutes",
       "Posant en Valor els Recursos Locals"
     ],
     "estat_revisio": "pendent_admin",
@@ -6389,13 +6419,13 @@ export const ARTICLES_SIMULADOR_IA_425 = Object.freeze([
       "La Marina Baixa"
     ],
     "categoriaTematicaProposadaId": "natura-excursions",
-    "categoriaTematicaProposadaLabel": "🥾 Natura, Excursions i Camins",
+    "categoriaTematicaProposadaLabel": "🌿 Natura i Patrimoni",
     "etiquetesOriginals": [
       "Excursions",
       "Posant en Valor els Recursos Locals"
     ],
     "etiquetesNetes": [
-      "Excursions",
+      "Rutes",
       "Posant en Valor els Recursos Locals"
     ],
     "estat_revisio": "pendent_admin",
@@ -6489,12 +6519,12 @@ export const ARTICLES_SIMULADOR_IA_425 = Object.freeze([
     "poblePrincipal": "Quatretondeta",
     "comarquesDetectades": [],
     "categoriaTematicaProposadaId": "natura-excursions",
-    "categoriaTematicaProposadaLabel": "🥾 Natura, Excursions i Camins",
+    "categoriaTematicaProposadaLabel": "🌿 Natura i Patrimoni",
     "etiquetesOriginals": [
       "Excursions"
     ],
     "etiquetesNetes": [
-      "Excursions"
+      "Rutes"
     ],
     "estat_revisio": "pendent_admin",
     "casosUsDetectats": [
@@ -6516,13 +6546,13 @@ export const ARTICLES_SIMULADOR_IA_425 = Object.freeze([
     "poblePrincipal": "Alcoi",
     "comarquesDetectades": [],
     "categoriaTematicaProposadaId": "natura-excursions",
-    "categoriaTematicaProposadaLabel": "🥾 Natura, Excursions i Camins",
+    "categoriaTematicaProposadaLabel": "🌿 Natura i Patrimoni",
     "etiquetesOriginals": [
       "Excursions",
       "Reivindicant"
     ],
     "etiquetesNetes": [
-      "Excursions",
+      "Rutes",
       "Reivindicant"
     ],
     "estat_revisio": "pendent_admin",
@@ -6574,12 +6604,12 @@ export const ARTICLES_SIMULADOR_IA_425 = Object.freeze([
     "poblePrincipal": "Quatretondeta",
     "comarquesDetectades": [],
     "categoriaTematicaProposadaId": "natura-excursions",
-    "categoriaTematicaProposadaLabel": "🥾 Natura, Excursions i Camins",
+    "categoriaTematicaProposadaLabel": "🌿 Natura i Patrimoni",
     "etiquetesOriginals": [
       "Excursions"
     ],
     "etiquetesNetes": [
-      "Excursions"
+      "Rutes"
     ],
     "estat_revisio": "pendent_admin",
     "casosUsDetectats": [
@@ -6624,14 +6654,14 @@ export const ARTICLES_SIMULADOR_IA_425 = Object.freeze([
     "poblePrincipal": "Xarxa de Pobles",
     "comarquesDetectades": [],
     "categoriaTematicaProposadaId": "natura-excursions",
-    "categoriaTematicaProposadaLabel": "🥾 Natura, Excursions i Camins",
+    "categoriaTematicaProposadaLabel": "🌿 Natura i Patrimoni",
     "etiquetesOriginals": [
       "Excursions",
       "Posant en Valor els Recursos Locals",
       "Vídeos"
     ],
     "etiquetesNetes": [
-      "Excursions",
+      "Rutes",
       "Posant en Valor els Recursos Locals",
       "Vídeos"
     ],
@@ -6768,14 +6798,14 @@ export const ARTICLES_SIMULADOR_IA_425 = Object.freeze([
     "poblePrincipal": "Sant Vicent del Raspeig",
     "comarquesDetectades": [],
     "categoriaTematicaProposadaId": "natura-excursions",
-    "categoriaTematicaProposadaLabel": "🥾 Natura, Excursions i Camins",
+    "categoriaTematicaProposadaLabel": "🌿 Natura i Patrimoni",
     "etiquetesOriginals": [
       "Excursions",
       "Posant en Valor els Recursos Locals",
       "Reivindicant"
     ],
     "etiquetesNetes": [
-      "Excursions",
+      "Rutes",
       "Posant en Valor els Recursos Locals",
       "Reivindicant"
     ],
@@ -6799,13 +6829,13 @@ export const ARTICLES_SIMULADOR_IA_425 = Object.freeze([
     "poblePrincipal": "La Torre de les Maçanes",
     "comarquesDetectades": [],
     "categoriaTematicaProposadaId": "natura-excursions",
-    "categoriaTematicaProposadaLabel": "🥾 Natura, Excursions i Camins",
+    "categoriaTematicaProposadaLabel": "🌿 Natura i Patrimoni",
     "etiquetesOriginals": [
       "Excursions",
       "Posant en Valor els Recursos Locals"
     ],
     "etiquetesNetes": [
-      "Excursions",
+      "Rutes",
       "Posant en Valor els Recursos Locals"
     ],
     "estat_revisio": "pendent_admin",
@@ -6828,7 +6858,7 @@ export const ARTICLES_SIMULADOR_IA_425 = Object.freeze([
     "poblePrincipal": "Sella",
     "comarquesDetectades": [],
     "categoriaTematicaProposadaId": "patrimoni-cultura",
-    "categoriaTematicaProposadaLabel": "🏛️ Patrimoni, Cultura, Música i Llengua",
+    "categoriaTematicaProposadaLabel": "🎭 Cultura, Música i Llengua",
     "etiquetesOriginals": [
       "Esdeveniments",
       "Gent que Fa Música"
@@ -6887,13 +6917,13 @@ export const ARTICLES_SIMULADOR_IA_425 = Object.freeze([
     "poblePrincipal": "Alacant",
     "comarquesDetectades": [],
     "categoriaTematicaProposadaId": "natura-excursions",
-    "categoriaTematicaProposadaLabel": "🥾 Natura, Excursions i Camins",
+    "categoriaTematicaProposadaLabel": "🌿 Natura i Patrimoni",
     "etiquetesOriginals": [
       "Excursions",
       "Posant en Valor els Recursos Locals"
     ],
     "etiquetesNetes": [
-      "Excursions",
+      "Rutes",
       "Posant en Valor els Recursos Locals"
     ],
     "estat_revisio": "pendent_admin",
@@ -6945,13 +6975,13 @@ export const ARTICLES_SIMULADOR_IA_425 = Object.freeze([
     "poblePrincipal": "La Torre de les Maçanes",
     "comarquesDetectades": [],
     "categoriaTematicaProposadaId": "natura-excursions",
-    "categoriaTematicaProposadaLabel": "🥾 Natura, Excursions i Camins",
+    "categoriaTematicaProposadaLabel": "🌿 Natura i Patrimoni",
     "etiquetesOriginals": [
       "Excursions",
       "Posant en Valor els Recursos Locals"
     ],
     "etiquetesNetes": [
-      "Excursions",
+      "Rutes",
       "Posant en Valor els Recursos Locals"
     ],
     "estat_revisio": "pendent_admin",
@@ -7031,13 +7061,13 @@ export const ARTICLES_SIMULADOR_IA_425 = Object.freeze([
     "poblePrincipal": "Xixona",
     "comarquesDetectades": [],
     "categoriaTematicaProposadaId": "natura-excursions",
-    "categoriaTematicaProposadaLabel": "🥾 Natura, Excursions i Camins",
+    "categoriaTematicaProposadaLabel": "🌿 Natura i Patrimoni",
     "etiquetesOriginals": [
       "Excursions",
       "Posant en Valor els Recursos Locals"
     ],
     "etiquetesNetes": [
-      "Excursions",
+      "Rutes",
       "Posant en Valor els Recursos Locals"
     ],
     "estat_revisio": "pendent_admin",
@@ -7126,14 +7156,14 @@ export const ARTICLES_SIMULADOR_IA_425 = Object.freeze([
     "poblePrincipal": "Busot",
     "comarquesDetectades": [],
     "categoriaTematicaProposadaId": "natura-excursions",
-    "categoriaTematicaProposadaLabel": "🥾 Natura, Excursions i Camins",
+    "categoriaTematicaProposadaLabel": "🌿 Natura i Patrimoni",
     "etiquetesOriginals": [
       "Excursions",
       "Posant en Valor els Recursos Locals",
       "Reivindicant"
     ],
     "etiquetesNetes": [
-      "Excursions",
+      "Rutes",
       "Posant en Valor els Recursos Locals",
       "Reivindicant"
     ],
@@ -7157,14 +7187,14 @@ export const ARTICLES_SIMULADOR_IA_425 = Object.freeze([
     "poblePrincipal": "Tibi",
     "comarquesDetectades": [],
     "categoriaTematicaProposadaId": "natura-excursions",
-    "categoriaTematicaProposadaLabel": "🥾 Natura, Excursions i Camins",
+    "categoriaTematicaProposadaLabel": "🌿 Natura i Patrimoni",
     "etiquetesOriginals": [
       "Excursions",
       "Posant en Valor els Recursos Locals",
       "Reivindicant"
     ],
     "etiquetesNetes": [
-      "Excursions",
+      "Rutes",
       "Posant en Valor els Recursos Locals",
       "Reivindicant"
     ],
@@ -7189,14 +7219,14 @@ export const ARTICLES_SIMULADOR_IA_425 = Object.freeze([
     "poblePrincipal": "Benifallim",
     "comarquesDetectades": [],
     "categoriaTematicaProposadaId": "natura-excursions",
-    "categoriaTematicaProposadaLabel": "🥾 Natura, Excursions i Camins",
+    "categoriaTematicaProposadaLabel": "🌿 Natura i Patrimoni",
     "etiquetesOriginals": [
       "Excursions",
       "Posant en Valor els Recursos Locals",
       "Reivindicant"
     ],
     "etiquetesNetes": [
-      "Excursions",
+      "Rutes",
       "Posant en Valor els Recursos Locals",
       "Reivindicant"
     ],
@@ -7252,14 +7282,14 @@ export const ARTICLES_SIMULADOR_IA_425 = Object.freeze([
     "poblePrincipal": "Xixona",
     "comarquesDetectades": [],
     "categoriaTematicaProposadaId": "natura-excursions",
-    "categoriaTematicaProposadaLabel": "🥾 Natura, Excursions i Camins",
+    "categoriaTematicaProposadaLabel": "🌿 Natura i Patrimoni",
     "etiquetesOriginals": [
       "Excursions",
       "Posant en Valor els Recursos Locals",
       "Reivindicant"
     ],
     "etiquetesNetes": [
-      "Excursions",
+      "Rutes",
       "Posant en Valor els Recursos Locals",
       "Reivindicant"
     ],
@@ -7312,13 +7342,13 @@ export const ARTICLES_SIMULADOR_IA_425 = Object.freeze([
     "poblePrincipal": "La Torre de les Maçanes",
     "comarquesDetectades": [],
     "categoriaTematicaProposadaId": "natura-excursions",
-    "categoriaTematicaProposadaLabel": "🥾 Natura, Excursions i Camins",
+    "categoriaTematicaProposadaLabel": "🌿 Natura i Patrimoni",
     "etiquetesOriginals": [
       "Excursions",
       "Reivindicant"
     ],
     "etiquetesNetes": [
-      "Excursions",
+      "Rutes",
       "Reivindicant"
     ],
     "estat_revisio": "pendent_admin",
@@ -8027,12 +8057,12 @@ export const ARTICLES_SIMULADOR_IA_425 = Object.freeze([
     "poblePrincipal": "Alcoi",
     "comarquesDetectades": [],
     "categoriaTematicaProposadaId": "natura-excursions",
-    "categoriaTematicaProposadaLabel": "🥾 Natura, Excursions i Camins",
+    "categoriaTematicaProposadaLabel": "🌿 Natura i Patrimoni",
     "etiquetesOriginals": [
       "Excursions"
     ],
     "etiquetesNetes": [
-      "Excursions"
+      "Rutes"
     ],
     "estat_revisio": "pendent_admin",
     "casosUsDetectats": [
@@ -8245,7 +8275,7 @@ export const ARTICLES_SIMULADOR_IA_425 = Object.freeze([
       "El Comtat"
     ],
     "categoriaTematicaProposadaId": "natura-excursions",
-    "categoriaTematicaProposadaLabel": "🥾 Natura, Excursions i Camins",
+    "categoriaTematicaProposadaLabel": "🌿 Natura i Patrimoni",
     "etiquetesOriginals": [
       "Memfotisme",
       "Reivindicant"
@@ -8299,13 +8329,13 @@ export const ARTICLES_SIMULADOR_IA_425 = Object.freeze([
     "poblePrincipal": "La Vila Joiosa",
     "comarquesDetectades": [],
     "categoriaTematicaProposadaId": "natura-excursions",
-    "categoriaTematicaProposadaLabel": "🥾 Natura, Excursions i Camins",
+    "categoriaTematicaProposadaLabel": "🌿 Natura i Patrimoni",
     "etiquetesOriginals": [
       "Excursions",
       "Posant en Valor els Recursos Locals"
     ],
     "etiquetesNetes": [
-      "Excursions",
+      "Rutes",
       "Posant en Valor els Recursos Locals"
     ],
     "estat_revisio": "pendent_admin",
@@ -8328,12 +8358,12 @@ export const ARTICLES_SIMULADOR_IA_425 = Object.freeze([
     "poblePrincipal": "Cocentaina",
     "comarquesDetectades": [],
     "categoriaTematicaProposadaId": "natura-excursions",
-    "categoriaTematicaProposadaLabel": "🥾 Natura, Excursions i Camins",
+    "categoriaTematicaProposadaLabel": "🌿 Natura i Patrimoni",
     "etiquetesOriginals": [
       "Excursions"
     ],
     "etiquetesNetes": [
-      "Excursions"
+      "Rutes"
     ],
     "estat_revisio": "pendent_admin",
     "casosUsDetectats": [
@@ -8356,12 +8386,12 @@ export const ARTICLES_SIMULADOR_IA_425 = Object.freeze([
     "poblePrincipal": "Cocentaina",
     "comarquesDetectades": [],
     "categoriaTematicaProposadaId": "natura-excursions",
-    "categoriaTematicaProposadaLabel": "🥾 Natura, Excursions i Camins",
+    "categoriaTematicaProposadaLabel": "🌿 Natura i Patrimoni",
     "etiquetesOriginals": [
       "Excursions"
     ],
     "etiquetesNetes": [
-      "Excursions"
+      "Rutes"
     ],
     "estat_revisio": "pendent_admin",
     "casosUsDetectats": [
@@ -8384,13 +8414,13 @@ export const ARTICLES_SIMULADOR_IA_425 = Object.freeze([
     "poblePrincipal": "La Torre de les Maçanes",
     "comarquesDetectades": [],
     "categoriaTematicaProposadaId": "natura-excursions",
-    "categoriaTematicaProposadaLabel": "🥾 Natura, Excursions i Camins",
+    "categoriaTematicaProposadaLabel": "🌿 Natura i Patrimoni",
     "etiquetesOriginals": [
       "Excursions",
       "Posant en Valor els Recursos Locals"
     ],
     "etiquetesNetes": [
-      "Excursions",
+      "Rutes",
       "Posant en Valor els Recursos Locals"
     ],
     "estat_revisio": "pendent_admin",
@@ -8414,14 +8444,14 @@ export const ARTICLES_SIMULADOR_IA_425 = Object.freeze([
     "poblePrincipal": "La Torre de les Maçanes",
     "comarquesDetectades": [],
     "categoriaTematicaProposadaId": "natura-excursions",
-    "categoriaTematicaProposadaLabel": "🥾 Natura, Excursions i Camins",
+    "categoriaTematicaProposadaLabel": "🌿 Natura i Patrimoni",
     "etiquetesOriginals": [
       "Activitats",
       "Excursions"
     ],
     "etiquetesNetes": [
       "Activitats",
-      "Excursions"
+      "Rutes"
     ],
     "estat_revisio": "pendent_admin",
     "casosUsDetectats": [
@@ -8441,7 +8471,7 @@ export const ARTICLES_SIMULADOR_IA_425 = Object.freeze([
     "poblePrincipal": "Xarxa de Pobles",
     "comarquesDetectades": [],
     "categoriaTematicaProposadaId": "comunitat-rural",
-    "categoriaTematicaProposadaLabel": "🤝 Comunitat, Associacionisme i Món Rural",
+    "categoriaTematicaProposadaLabel": "🤝 Món Rural",
     "etiquetesOriginals": [
       "Projectes"
     ],
@@ -8464,7 +8494,7 @@ export const ARTICLES_SIMULADOR_IA_425 = Object.freeze([
     "poblePrincipal": "Xarxa de Pobles",
     "comarquesDetectades": [],
     "categoriaTematicaProposadaId": "comunitat-rural",
-    "categoriaTematicaProposadaLabel": "🤝 Comunitat, Associacionisme i Món Rural",
+    "categoriaTematicaProposadaLabel": "🤝 Món Rural",
     "etiquetesOriginals": [
       "Desenvolupament Sostenible",
       "Opinió"
@@ -8637,13 +8667,13 @@ export const ARTICLES_SIMULADOR_IA_425 = Object.freeze([
     "poblePrincipal": "La Torre de les Maçanes",
     "comarquesDetectades": [],
     "categoriaTematicaProposadaId": "natura-excursions",
-    "categoriaTematicaProposadaLabel": "🥾 Natura, Excursions i Camins",
+    "categoriaTematicaProposadaLabel": "🌿 Natura i Patrimoni",
     "etiquetesOriginals": [
       "Excursions",
       "Reivindicant"
     ],
     "etiquetesNetes": [
-      "Excursions",
+      "Rutes",
       "Reivindicant"
     ],
     "estat_revisio": "pendent_admin",
@@ -8729,7 +8759,7 @@ export const ARTICLES_SIMULADOR_IA_425 = Object.freeze([
     "poblePrincipal": "La Torre de les Maçanes",
     "comarquesDetectades": [],
     "categoriaTematicaProposadaId": "natura-excursions",
-    "categoriaTematicaProposadaLabel": "🥾 Natura, Excursions i Camins",
+    "categoriaTematicaProposadaLabel": "🌿 Natura i Patrimoni",
     "etiquetesOriginals": [
       "Esdeveniments",
       "Excursions",
@@ -8737,7 +8767,7 @@ export const ARTICLES_SIMULADOR_IA_425 = Object.freeze([
     ],
     "etiquetesNetes": [
       "Esdeveniments",
-      "Excursions",
+      "Rutes",
       "Reivindicant"
     ],
     "estat_revisio": "pendent_admin",
@@ -9193,7 +9223,7 @@ export const ARTICLES_SIMULADOR_IA_425 = Object.freeze([
     "poblePrincipal": "La Torre de les Maçanes",
     "comarquesDetectades": [],
     "categoriaTematicaProposadaId": "comunitat-rural",
-    "categoriaTematicaProposadaLabel": "🤝 Comunitat, Associacionisme i Món Rural",
+    "categoriaTematicaProposadaLabel": "🤝 Món Rural",
     "etiquetesOriginals": [
       "Brull Viu"
     ],
@@ -9783,12 +9813,12 @@ export const ARTICLES_SIMULADOR_IA_425 = Object.freeze([
     "poblePrincipal": "La Torre de les Maçanes",
     "comarquesDetectades": [],
     "categoriaTematicaProposadaId": "natura-excursions",
-    "categoriaTematicaProposadaLabel": "🥾 Natura, Excursions i Camins",
+    "categoriaTematicaProposadaLabel": "🌿 Natura i Patrimoni",
     "etiquetesOriginals": [
       "Excursions"
     ],
     "etiquetesNetes": [
-      "Excursions"
+      "Rutes"
     ],
     "estat_revisio": "pendent_admin",
     "casosUsDetectats": [
@@ -9851,7 +9881,7 @@ export const ARTICLES_SIMULADOR_IA_425 = Object.freeze([
     "etiquetesNetes": [
       "Activitats",
       "Arbres Monumentals",
-      "Excursions",
+      "Rutes",
       "Incendis",
       "Reivindicant",
       "Vídeos"
@@ -9886,7 +9916,7 @@ export const ARTICLES_SIMULADOR_IA_425 = Object.freeze([
       "Reivindicant"
     ],
     "etiquetesNetes": [
-      "Excursions",
+      "Rutes",
       "Incendis",
       "Reivindicant"
     ],
@@ -9939,7 +9969,7 @@ export const ARTICLES_SIMULADOR_IA_425 = Object.freeze([
     "poblePrincipal": "La Torre de les Maçanes",
     "comarquesDetectades": [],
     "categoriaTematicaProposadaId": "patrimoni-cultura",
-    "categoriaTematicaProposadaLabel": "🏛️ Patrimoni, Cultura, Música i Llengua",
+    "categoriaTematicaProposadaLabel": "🎭 Cultura, Música i Llengua",
     "etiquetesOriginals": [
       "El Carreró Centre Cultural i Tecnològic",
       "Esdeveniments",
@@ -10009,7 +10039,7 @@ export const ARTICLES_SIMULADOR_IA_425 = Object.freeze([
       "Reivindicant"
     ],
     "etiquetesNetes": [
-      "Excursions",
+      "Rutes",
       "Incendis",
       "Reivindicant"
     ],
@@ -10205,7 +10235,7 @@ export const ARTICLES_SIMULADOR_IA_425 = Object.freeze([
     "poblePrincipal": "Polop",
     "comarquesDetectades": [],
     "categoriaTematicaProposadaId": "patrimoni-cultura",
-    "categoriaTematicaProposadaLabel": "🏛️ Patrimoni, Cultura, Música i Llengua",
+    "categoriaTematicaProposadaLabel": "🎭 Cultura, Música i Llengua",
     "etiquetesOriginals": [
       "Esdeveniments",
       "Gent que Fa Música"
@@ -10260,7 +10290,7 @@ export const ARTICLES_SIMULADOR_IA_425 = Object.freeze([
     "poblePrincipal": "Penàguila",
     "comarquesDetectades": [],
     "categoriaTematicaProposadaId": "patrimoni-cultura",
-    "categoriaTematicaProposadaLabel": "🏛️ Patrimoni, Cultura, Música i Llengua",
+    "categoriaTematicaProposadaLabel": "🎭 Cultura, Música i Llengua",
     "etiquetesOriginals": [
       "Gent que Fa Música",
       "Projecte Sóc de Poble"
@@ -10398,12 +10428,12 @@ export const ARTICLES_SIMULADOR_IA_425 = Object.freeze([
       "La Marina Baixa"
     ],
     "categoriaTematicaProposadaId": "natura-excursions",
-    "categoriaTematicaProposadaLabel": "🥾 Natura, Excursions i Camins",
+    "categoriaTematicaProposadaLabel": "🌿 Natura i Patrimoni",
     "etiquetesOriginals": [
       "Excursions"
     ],
     "etiquetesNetes": [
-      "Excursions"
+      "Rutes"
     ],
     "estat_revisio": "pendent_admin",
     "casosUsDetectats": [
@@ -10426,12 +10456,12 @@ export const ARTICLES_SIMULADOR_IA_425 = Object.freeze([
     "poblePrincipal": "Dénia",
     "comarquesDetectades": [],
     "categoriaTematicaProposadaId": "natura-excursions",
-    "categoriaTematicaProposadaLabel": "🥾 Natura, Excursions i Camins",
+    "categoriaTematicaProposadaLabel": "🌿 Natura i Patrimoni",
     "etiquetesOriginals": [
       "Excursions"
     ],
     "etiquetesNetes": [
-      "Excursions"
+      "Rutes"
     ],
     "estat_revisio": "pendent_admin",
     "casosUsDetectats": [
@@ -10481,12 +10511,12 @@ export const ARTICLES_SIMULADOR_IA_425 = Object.freeze([
     "poblePrincipal": "Dénia",
     "comarquesDetectades": [],
     "categoriaTematicaProposadaId": "natura-excursions",
-    "categoriaTematicaProposadaLabel": "🥾 Natura, Excursions i Camins",
+    "categoriaTematicaProposadaLabel": "🌿 Natura i Patrimoni",
     "etiquetesOriginals": [
       "Excursions"
     ],
     "etiquetesNetes": [
-      "Excursions"
+      "Rutes"
     ],
     "estat_revisio": "pendent_admin",
     "casosUsDetectats": [
@@ -10508,7 +10538,7 @@ export const ARTICLES_SIMULADOR_IA_425 = Object.freeze([
     "poblePrincipal": "La Torre de les Maçanes",
     "comarquesDetectades": [],
     "categoriaTematicaProposadaId": "patrimoni-cultura",
-    "categoriaTematicaProposadaLabel": "🏛️ Patrimoni, Cultura, Música i Llengua",
+    "categoriaTematicaProposadaLabel": "🎭 Cultura, Música i Llengua",
     "etiquetesOriginals": [
       "Festes dels Pobles",
       "Gent de La Torre",
@@ -10538,13 +10568,13 @@ export const ARTICLES_SIMULADOR_IA_425 = Object.freeze([
     "poblePrincipal": "Alcoi",
     "comarquesDetectades": [],
     "categoriaTematicaProposadaId": "natura-excursions",
-    "categoriaTematicaProposadaLabel": "🥾 Natura, Excursions i Camins",
+    "categoriaTematicaProposadaLabel": "🌿 Natura i Patrimoni",
     "etiquetesOriginals": [
       "Excursions",
       "Propostes"
     ],
     "etiquetesNetes": [
-      "Excursions",
+      "Rutes",
       "Propostes"
     ],
     "estat_revisio": "pendent_admin",
@@ -10567,12 +10597,12 @@ export const ARTICLES_SIMULADOR_IA_425 = Object.freeze([
     "poblePrincipal": "Alcoi",
     "comarquesDetectades": [],
     "categoriaTematicaProposadaId": "natura-excursions",
-    "categoriaTematicaProposadaLabel": "🥾 Natura, Excursions i Camins",
+    "categoriaTematicaProposadaLabel": "🌿 Natura i Patrimoni",
     "etiquetesOriginals": [
       "Excursions"
     ],
     "etiquetesNetes": [
-      "Excursions"
+      "Rutes"
     ],
     "estat_revisio": "pendent_admin",
     "casosUsDetectats": [
@@ -10622,7 +10652,7 @@ export const ARTICLES_SIMULADOR_IA_425 = Object.freeze([
     "poblePrincipal": "La Torre de les Maçanes",
     "comarquesDetectades": [],
     "categoriaTematicaProposadaId": "natura-excursions",
-    "categoriaTematicaProposadaLabel": "🥾 Natura, Excursions i Camins",
+    "categoriaTematicaProposadaLabel": "🌿 Natura i Patrimoni",
     "etiquetesOriginals": [
       "Activitats",
       "Excursions",
@@ -10630,7 +10660,7 @@ export const ARTICLES_SIMULADOR_IA_425 = Object.freeze([
     ],
     "etiquetesNetes": [
       "Activitats",
-      "Excursions",
+      "Rutes",
       "Posant en Valor els Recursos Locals"
     ],
     "estat_revisio": "pendent_admin",
@@ -10654,13 +10684,13 @@ export const ARTICLES_SIMULADOR_IA_425 = Object.freeze([
     "poblePrincipal": "La Torre de les Maçanes",
     "comarquesDetectades": [],
     "categoriaTematicaProposadaId": "natura-excursions",
-    "categoriaTematicaProposadaLabel": "🥾 Natura, Excursions i Camins",
+    "categoriaTematicaProposadaLabel": "🌿 Natura i Patrimoni",
     "etiquetesOriginals": [
       "Excursions",
       "Reivindicant"
     ],
     "etiquetesNetes": [
-      "Excursions",
+      "Rutes",
       "Reivindicant"
     ],
     "estat_revisio": "pendent_admin",
@@ -10854,7 +10884,7 @@ export const ARTICLES_SIMULADOR_IA_425 = Object.freeze([
     "poblePrincipal": "Polop",
     "comarquesDetectades": [],
     "categoriaTematicaProposadaId": "patrimoni-cultura",
-    "categoriaTematicaProposadaLabel": "🏛️ Patrimoni, Cultura, Música i Llengua",
+    "categoriaTematicaProposadaLabel": "🎭 Cultura, Música i Llengua",
     "etiquetesOriginals": [
       "Esdeveniments",
       "Gent que Fa Música"
@@ -10912,12 +10942,12 @@ export const ARTICLES_SIMULADOR_IA_425 = Object.freeze([
     "poblePrincipal": "Alcira",
     "comarquesDetectades": [],
     "categoriaTematicaProposadaId": "natura-excursions",
-    "categoriaTematicaProposadaLabel": "🥾 Natura, Excursions i Camins",
+    "categoriaTematicaProposadaLabel": "🌿 Natura i Patrimoni",
     "etiquetesOriginals": [
       "Excursions"
     ],
     "etiquetesNetes": [
-      "Excursions"
+      "Rutes"
     ],
     "estat_revisio": "pendent_admin",
     "casosUsDetectats": [
@@ -10941,12 +10971,12 @@ export const ARTICLES_SIMULADOR_IA_425 = Object.freeze([
     "poblePrincipal": "Dénia",
     "comarquesDetectades": [],
     "categoriaTematicaProposadaId": "natura-excursions",
-    "categoriaTematicaProposadaLabel": "🥾 Natura, Excursions i Camins",
+    "categoriaTematicaProposadaLabel": "🌿 Natura i Patrimoni",
     "etiquetesOriginals": [
       "Excursions"
     ],
     "etiquetesNetes": [
-      "Excursions"
+      "Rutes"
     ],
     "estat_revisio": "pendent_admin",
     "casosUsDetectats": [
@@ -11012,7 +11042,7 @@ export const ARTICLES_SIMULADOR_IA_425 = Object.freeze([
       "Reivindicant"
     ],
     "etiquetesNetes": [
-      "Excursions",
+      "Rutes",
       "Memfotisme",
       "Reivindicant"
     ],
@@ -11214,7 +11244,7 @@ export const ARTICLES_SIMULADOR_IA_425 = Object.freeze([
     "poblePrincipal": "La Torre de les Maçanes",
     "comarquesDetectades": [],
     "categoriaTematicaProposadaId": "comunitat-rural",
-    "categoriaTematicaProposadaLabel": "🤝 Comunitat, Associacionisme i Món Rural",
+    "categoriaTematicaProposadaLabel": "🤝 Món Rural",
     "etiquetesOriginals": [
       "Brull Viu"
     ],
@@ -11240,7 +11270,7 @@ export const ARTICLES_SIMULADOR_IA_425 = Object.freeze([
     "poblePrincipal": "La Torre de les Maçanes",
     "comarquesDetectades": [],
     "categoriaTematicaProposadaId": "comunitat-rural",
-    "categoriaTematicaProposadaLabel": "🤝 Comunitat, Associacionisme i Món Rural",
+    "categoriaTematicaProposadaLabel": "🤝 Món Rural",
     "etiquetesOriginals": [
       "Brull Viu"
     ],
@@ -11411,14 +11441,14 @@ export const ARTICLES_SIMULADOR_IA_425 = Object.freeze([
       "La Marina Baixa"
     ],
     "categoriaTematicaProposadaId": "natura-excursions",
-    "categoriaTematicaProposadaLabel": "🥾 Natura, Excursions i Camins",
+    "categoriaTematicaProposadaLabel": "🌿 Natura i Patrimoni",
     "etiquetesOriginals": [
       "Excursions",
       "Memfotisme",
       "Reivindicant"
     ],
     "etiquetesNetes": [
-      "Excursions",
+      "Rutes",
       "Memfotisme",
       "Reivindicant"
     ],
@@ -11442,7 +11472,7 @@ export const ARTICLES_SIMULADOR_IA_425 = Object.freeze([
     "poblePrincipal": "Alcoi",
     "comarquesDetectades": [],
     "categoriaTematicaProposadaId": "natura-excursions",
-    "categoriaTematicaProposadaLabel": "🥾 Natura, Excursions i Camins",
+    "categoriaTematicaProposadaLabel": "🌿 Natura i Patrimoni",
     "etiquetesOriginals": [
       "Memfotisme",
       "Reivindicant"
@@ -11470,7 +11500,7 @@ export const ARTICLES_SIMULADOR_IA_425 = Object.freeze([
     "poblePrincipal": "La Torre de les Maçanes",
     "comarquesDetectades": [],
     "categoriaTematicaProposadaId": "comunitat-rural",
-    "categoriaTematicaProposadaLabel": "🤝 Comunitat, Associacionisme i Món Rural",
+    "categoriaTematicaProposadaLabel": "🤝 Món Rural",
     "etiquetesOriginals": [
       "El Carreró Centre Cultural i Tecnològic"
     ],
@@ -11497,12 +11527,12 @@ export const ARTICLES_SIMULADOR_IA_425 = Object.freeze([
     "poblePrincipal": "Benifallim",
     "comarquesDetectades": [],
     "categoriaTematicaProposadaId": "natura-excursions",
-    "categoriaTematicaProposadaLabel": "🥾 Natura, Excursions i Camins",
+    "categoriaTematicaProposadaLabel": "🌿 Natura i Patrimoni",
     "etiquetesOriginals": [
       "Excursions"
     ],
     "etiquetesNetes": [
-      "Excursions"
+      "Rutes"
     ],
     "estat_revisio": "pendent_admin",
     "casosUsDetectats": [
@@ -11524,7 +11554,7 @@ export const ARTICLES_SIMULADOR_IA_425 = Object.freeze([
     "poblePrincipal": "La Torre de les Maçanes",
     "comarquesDetectades": [],
     "categoriaTematicaProposadaId": "comunitat-rural",
-    "categoriaTematicaProposadaLabel": "🤝 Comunitat, Associacionisme i Món Rural",
+    "categoriaTematicaProposadaLabel": "🤝 Món Rural",
     "etiquetesOriginals": [
       "El Carreró Centre Cultural i Tecnològic"
     ],
@@ -11602,7 +11632,7 @@ export const ARTICLES_SIMULADOR_IA_425 = Object.freeze([
     "poblePrincipal": "La Torre de les Maçanes",
     "comarquesDetectades": [],
     "categoriaTematicaProposadaId": "comunitat-rural",
-    "categoriaTematicaProposadaLabel": "🤝 Comunitat, Associacionisme i Món Rural",
+    "categoriaTematicaProposadaLabel": "🤝 Món Rural",
     "etiquetesOriginals": [
       "Brull Viu"
     ],
@@ -11628,7 +11658,7 @@ export const ARTICLES_SIMULADOR_IA_425 = Object.freeze([
     "poblePrincipal": "La Torre de les Maçanes",
     "comarquesDetectades": [],
     "categoriaTematicaProposadaId": "patrimoni-cultura",
-    "categoriaTematicaProposadaLabel": "🏛️ Patrimoni, Cultura, Música i Llengua",
+    "categoriaTematicaProposadaLabel": "🎭 Cultura, Música i Llengua",
     "etiquetesOriginals": [
       "Gent que Fa Música"
     ],
@@ -11654,14 +11684,14 @@ export const ARTICLES_SIMULADOR_IA_425 = Object.freeze([
     "poblePrincipal": "La Torre de les Maçanes",
     "comarquesDetectades": [],
     "categoriaTematicaProposadaId": "natura-excursions",
-    "categoriaTematicaProposadaLabel": "🥾 Natura, Excursions i Camins",
+    "categoriaTematicaProposadaLabel": "🌿 Natura i Patrimoni",
     "etiquetesOriginals": [
       "Brull Viu",
       "Excursions"
     ],
     "etiquetesNetes": [
       "Brull Viu",
-      "Excursions"
+      "Rutes"
     ],
     "estat_revisio": "pendent_admin",
     "casosUsDetectats": [
@@ -11683,7 +11713,7 @@ export const ARTICLES_SIMULADOR_IA_425 = Object.freeze([
     "poblePrincipal": "La Torre de les Maçanes",
     "comarquesDetectades": [],
     "categoriaTematicaProposadaId": "patrimoni-cultura",
-    "categoriaTematicaProposadaLabel": "🏛️ Patrimoni, Cultura, Música i Llengua",
+    "categoriaTematicaProposadaLabel": "🎭 Cultura, Música i Llengua",
     "etiquetesOriginals": [
       "El Carreró Centre Cultural i Tecnològic",
       "Esdeveniments",
@@ -11741,7 +11771,7 @@ export const ARTICLES_SIMULADOR_IA_425 = Object.freeze([
     "poblePrincipal": "Alacant",
     "comarquesDetectades": [],
     "categoriaTematicaProposadaId": "patrimoni-cultura",
-    "categoriaTematicaProposadaLabel": "🏛️ Patrimoni, Cultura, Música i Llengua",
+    "categoriaTematicaProposadaLabel": "🎭 Cultura, Música i Llengua",
     "etiquetesOriginals": [
       "El Carreró Centre Cultural i Tecnològic",
       "Gent que Fa Música",
@@ -11800,7 +11830,7 @@ export const ARTICLES_SIMULADOR_IA_425 = Object.freeze([
     "poblePrincipal": "Polop",
     "comarquesDetectades": [],
     "categoriaTematicaProposadaId": "patrimoni-cultura",
-    "categoriaTematicaProposadaLabel": "🏛️ Patrimoni, Cultura, Música i Llengua",
+    "categoriaTematicaProposadaLabel": "🎭 Cultura, Música i Llengua",
     "etiquetesOriginals": [
       "Esdeveniments",
       "Gent que Fa Música"
@@ -11855,7 +11885,7 @@ export const ARTICLES_SIMULADOR_IA_425 = Object.freeze([
     "poblePrincipal": "La Torre de les Maçanes",
     "comarquesDetectades": [],
     "categoriaTematicaProposadaId": "patrimoni-cultura",
-    "categoriaTematicaProposadaLabel": "🏛️ Patrimoni, Cultura, Música i Llengua",
+    "categoriaTematicaProposadaLabel": "🎭 Cultura, Música i Llengua",
     "etiquetesOriginals": [
       "El Carreró Centre Cultural i Tecnològic",
       "Gent que Fa Música"
@@ -12147,7 +12177,7 @@ export const ARTICLES_SIMULADOR_IA_425 = Object.freeze([
     "poblePrincipal": "La Torre de les Maçanes",
     "comarquesDetectades": [],
     "categoriaTematicaProposadaId": "comunitat-rural",
-    "categoriaTematicaProposadaLabel": "🤝 Comunitat, Associacionisme i Món Rural",
+    "categoriaTematicaProposadaLabel": "🤝 Món Rural",
     "etiquetesOriginals": [
       "Brull Viu"
     ],
@@ -12173,7 +12203,7 @@ export const ARTICLES_SIMULADOR_IA_425 = Object.freeze([
     "poblePrincipal": "La Torre de les Maçanes",
     "comarquesDetectades": [],
     "categoriaTematicaProposadaId": "comunitat-rural",
-    "categoriaTematicaProposadaLabel": "🤝 Comunitat, Associacionisme i Món Rural",
+    "categoriaTematicaProposadaLabel": "🤝 Món Rural",
     "etiquetesOriginals": [
       "Brull Viu"
     ],
@@ -12199,7 +12229,7 @@ export const ARTICLES_SIMULADOR_IA_425 = Object.freeze([
     "poblePrincipal": "La Torre de les Maçanes",
     "comarquesDetectades": [],
     "categoriaTematicaProposadaId": "comunitat-rural",
-    "categoriaTematicaProposadaLabel": "🤝 Comunitat, Associacionisme i Món Rural",
+    "categoriaTematicaProposadaLabel": "🤝 Món Rural",
     "etiquetesOriginals": [
       "Brull Viu"
     ],
@@ -12263,7 +12293,7 @@ export const ARTICLES_SIMULADOR_IA_425 = Object.freeze([
       "La Marina Baixa"
     ],
     "categoriaTematicaProposadaId": "comunitat-rural",
-    "categoriaTematicaProposadaLabel": "🤝 Comunitat, Associacionisme i Món Rural",
+    "categoriaTematicaProposadaLabel": "🤝 Món Rural",
     "etiquetesOriginals": [
       "Esports"
     ],
@@ -12367,7 +12397,7 @@ export const ARTICLES_SIMULADOR_IA_425 = Object.freeze([
     "poblePrincipal": "La Torre de les Maçanes",
     "comarquesDetectades": [],
     "categoriaTematicaProposadaId": "comunitat-rural",
-    "categoriaTematicaProposadaLabel": "🤝 Comunitat, Associacionisme i Món Rural",
+    "categoriaTematicaProposadaLabel": "🤝 Món Rural",
     "etiquetesOriginals": [
       "Reunions"
     ],
@@ -12394,12 +12424,12 @@ export const ARTICLES_SIMULADOR_IA_425 = Object.freeze([
     "poblePrincipal": "Aigües",
     "comarquesDetectades": [],
     "categoriaTematicaProposadaId": "natura-excursions",
-    "categoriaTematicaProposadaLabel": "🥾 Natura, Excursions i Camins",
+    "categoriaTematicaProposadaLabel": "🌿 Natura i Patrimoni",
     "etiquetesOriginals": [
       "Excursions"
     ],
     "etiquetesNetes": [
-      "Excursions"
+      "Rutes"
     ],
     "estat_revisio": "pendent_admin",
     "casosUsDetectats": [
@@ -12421,12 +12451,12 @@ export const ARTICLES_SIMULADOR_IA_425 = Object.freeze([
     "poblePrincipal": "La Torre de les Maçanes",
     "comarquesDetectades": [],
     "categoriaTematicaProposadaId": "natura-excursions",
-    "categoriaTematicaProposadaLabel": "🥾 Natura, Excursions i Camins",
+    "categoriaTematicaProposadaLabel": "🌿 Natura i Patrimoni",
     "etiquetesOriginals": [
       "Excursions"
     ],
     "etiquetesNetes": [
-      "Excursions"
+      "Rutes"
     ],
     "estat_revisio": "pendent_admin",
     "casosUsDetectats": [
@@ -12448,7 +12478,7 @@ export const ARTICLES_SIMULADOR_IA_425 = Object.freeze([
     "poblePrincipal": "La Torre de les Maçanes",
     "comarquesDetectades": [],
     "categoriaTematicaProposadaId": "comunitat-rural",
-    "categoriaTematicaProposadaLabel": "🤝 Comunitat, Associacionisme i Món Rural",
+    "categoriaTematicaProposadaLabel": "🤝 Món Rural",
     "etiquetesOriginals": [
       "Brull Viu"
     ],
@@ -12500,7 +12530,7 @@ export const ARTICLES_SIMULADOR_IA_425 = Object.freeze([
     "poblePrincipal": "Xarxa de Pobles",
     "comarquesDetectades": [],
     "categoriaTematicaProposadaId": "comunitat-rural",
-    "categoriaTematicaProposadaLabel": "🤝 Comunitat, Associacionisme i Món Rural",
+    "categoriaTematicaProposadaLabel": "🤝 Món Rural",
     "etiquetesOriginals": [
       "Gent Sostenible"
     ],
@@ -12525,12 +12555,12 @@ export const ARTICLES_SIMULADOR_IA_425 = Object.freeze([
     "poblePrincipal": "Xixona",
     "comarquesDetectades": [],
     "categoriaTematicaProposadaId": "natura-excursions",
-    "categoriaTematicaProposadaLabel": "🥾 Natura, Excursions i Camins",
+    "categoriaTematicaProposadaLabel": "🌿 Natura i Patrimoni",
     "etiquetesOriginals": [
       "Excursions"
     ],
     "etiquetesNetes": [
-      "Excursions"
+      "Rutes"
     ],
     "estat_revisio": "pendent_admin",
     "casosUsDetectats": [
@@ -12552,7 +12582,7 @@ export const ARTICLES_SIMULADOR_IA_425 = Object.freeze([
     "poblePrincipal": "La Torre de les Maçanes",
     "comarquesDetectades": [],
     "categoriaTematicaProposadaId": "comunitat-rural",
-    "categoriaTematicaProposadaLabel": "🤝 Comunitat, Associacionisme i Món Rural",
+    "categoriaTematicaProposadaLabel": "🤝 Món Rural",
     "etiquetesOriginals": [
       "Brull Viu"
     ],
@@ -12578,12 +12608,12 @@ export const ARTICLES_SIMULADOR_IA_425 = Object.freeze([
     "poblePrincipal": "La Torre de les Maçanes",
     "comarquesDetectades": [],
     "categoriaTematicaProposadaId": "natura-excursions",
-    "categoriaTematicaProposadaLabel": "🥾 Natura, Excursions i Camins",
+    "categoriaTematicaProposadaLabel": "🌿 Natura i Patrimoni",
     "etiquetesOriginals": [
       "Excursions"
     ],
     "etiquetesNetes": [
-      "Excursions"
+      "Rutes"
     ],
     "estat_revisio": "pendent_admin",
     "casosUsDetectats": [
@@ -12605,12 +12635,12 @@ export const ARTICLES_SIMULADOR_IA_425 = Object.freeze([
     "poblePrincipal": "La Torre de les Maçanes",
     "comarquesDetectades": [],
     "categoriaTematicaProposadaId": "natura-excursions",
-    "categoriaTematicaProposadaLabel": "🥾 Natura, Excursions i Camins",
+    "categoriaTematicaProposadaLabel": "🌿 Natura i Patrimoni",
     "etiquetesOriginals": [
       "Excursions"
     ],
     "etiquetesNetes": [
-      "Excursions"
+      "Rutes"
     ],
     "estat_revisio": "pendent_admin",
     "casosUsDetectats": [
@@ -12633,7 +12663,7 @@ export const ARTICLES_SIMULADOR_IA_425 = Object.freeze([
     "poblePrincipal": "La Torre de les Maçanes",
     "comarquesDetectades": [],
     "categoriaTematicaProposadaId": "patrimoni-cultura",
-    "categoriaTematicaProposadaLabel": "🏛️ Patrimoni, Cultura, Música i Llengua",
+    "categoriaTematicaProposadaLabel": "🎭 Cultura, Música i Llengua",
     "etiquetesOriginals": [
       "El Carreró Centre Cultural i Tecnològic",
       "Esdeveniments",
@@ -12664,7 +12694,7 @@ export const ARTICLES_SIMULADOR_IA_425 = Object.freeze([
     "poblePrincipal": "La Torre de les Maçanes",
     "comarquesDetectades": [],
     "categoriaTematicaProposadaId": "comunitat-rural",
-    "categoriaTematicaProposadaLabel": "🤝 Comunitat, Associacionisme i Món Rural",
+    "categoriaTematicaProposadaLabel": "🤝 Món Rural",
     "etiquetesOriginals": [
       "Brull Viu"
     ],
@@ -12691,12 +12721,12 @@ export const ARTICLES_SIMULADOR_IA_425 = Object.freeze([
     "poblePrincipal": "La Torre de les Maçanes",
     "comarquesDetectades": [],
     "categoriaTematicaProposadaId": "natura-excursions",
-    "categoriaTematicaProposadaLabel": "🥾 Natura, Excursions i Camins",
+    "categoriaTematicaProposadaLabel": "🌿 Natura i Patrimoni",
     "etiquetesOriginals": [
       "Excursions"
     ],
     "etiquetesNetes": [
-      "Excursions"
+      "Rutes"
     ],
     "estat_revisio": "pendent_admin",
     "casosUsDetectats": [
@@ -12718,7 +12748,7 @@ export const ARTICLES_SIMULADOR_IA_425 = Object.freeze([
     "poblePrincipal": "La Torre de les Maçanes",
     "comarquesDetectades": [],
     "categoriaTematicaProposadaId": "comunitat-rural",
-    "categoriaTematicaProposadaLabel": "🤝 Comunitat, Associacionisme i Món Rural",
+    "categoriaTematicaProposadaLabel": "🤝 Món Rural",
     "etiquetesOriginals": [
       "Brull Viu"
     ],
@@ -12744,7 +12774,7 @@ export const ARTICLES_SIMULADOR_IA_425 = Object.freeze([
     "poblePrincipal": "La Torre de les Maçanes",
     "comarquesDetectades": [],
     "categoriaTematicaProposadaId": "comunitat-rural",
-    "categoriaTematicaProposadaLabel": "🤝 Comunitat, Associacionisme i Món Rural",
+    "categoriaTematicaProposadaLabel": "🤝 Món Rural",
     "etiquetesOriginals": [
       "El Rentonar"
     ],
@@ -12770,12 +12800,12 @@ export const ARTICLES_SIMULADOR_IA_425 = Object.freeze([
     "poblePrincipal": "La Torre de les Maçanes",
     "comarquesDetectades": [],
     "categoriaTematicaProposadaId": "natura-excursions",
-    "categoriaTematicaProposadaLabel": "🥾 Natura, Excursions i Camins",
+    "categoriaTematicaProposadaLabel": "🌿 Natura i Patrimoni",
     "etiquetesOriginals": [
       "Excursions"
     ],
     "etiquetesNetes": [
-      "Excursions"
+      "Rutes"
     ],
     "estat_revisio": "pendent_admin",
     "casosUsDetectats": [
@@ -12823,7 +12853,7 @@ export const ARTICLES_SIMULADOR_IA_425 = Object.freeze([
     "poblePrincipal": "La Torre de les Maçanes",
     "comarquesDetectades": [],
     "categoriaTematicaProposadaId": "comunitat-rural",
-    "categoriaTematicaProposadaLabel": "🤝 Comunitat, Associacionisme i Món Rural",
+    "categoriaTematicaProposadaLabel": "🤝 Món Rural",
     "etiquetesOriginals": [
       "El Carreró Centre Cultural i Tecnològic"
     ],
@@ -12849,7 +12879,7 @@ export const ARTICLES_SIMULADOR_IA_425 = Object.freeze([
     "poblePrincipal": "La Torre de les Maçanes",
     "comarquesDetectades": [],
     "categoriaTematicaProposadaId": "comunitat-rural",
-    "categoriaTematicaProposadaLabel": "🤝 Comunitat, Associacionisme i Món Rural",
+    "categoriaTematicaProposadaLabel": "🤝 Món Rural",
     "etiquetesOriginals": [
       "Brull Viu"
     ],
@@ -12875,7 +12905,7 @@ export const ARTICLES_SIMULADOR_IA_425 = Object.freeze([
     "poblePrincipal": "La Torre de les Maçanes",
     "comarquesDetectades": [],
     "categoriaTematicaProposadaId": "comunitat-rural",
-    "categoriaTematicaProposadaLabel": "🤝 Comunitat, Associacionisme i Món Rural",
+    "categoriaTematicaProposadaLabel": "🤝 Món Rural",
     "etiquetesOriginals": [
       "Brull Viu"
     ],
@@ -12901,7 +12931,7 @@ export const ARTICLES_SIMULADOR_IA_425 = Object.freeze([
     "poblePrincipal": "La Torre de les Maçanes",
     "comarquesDetectades": [],
     "categoriaTematicaProposadaId": "comunitat-rural",
-    "categoriaTematicaProposadaLabel": "🤝 Comunitat, Associacionisme i Món Rural",
+    "categoriaTematicaProposadaLabel": "🤝 Món Rural",
     "etiquetesOriginals": [
       "Brull Viu"
     ],
@@ -13086,7 +13116,7 @@ export const ARTICLES_SIMULADOR_IA_425 = Object.freeze([
     "poblePrincipal": "La Torre de les Maçanes",
     "comarquesDetectades": [],
     "categoriaTematicaProposadaId": "comunitat-rural",
-    "categoriaTematicaProposadaLabel": "🤝 Comunitat, Associacionisme i Món Rural",
+    "categoriaTematicaProposadaLabel": "🤝 Món Rural",
     "etiquetesOriginals": [
       "Activitats"
     ],
@@ -13168,12 +13198,12 @@ export const ARTICLES_SIMULADOR_IA_425 = Object.freeze([
     "poblePrincipal": "La Torre de les Maçanes",
     "comarquesDetectades": [],
     "categoriaTematicaProposadaId": "natura-excursions",
-    "categoriaTematicaProposadaLabel": "🥾 Natura, Excursions i Camins",
+    "categoriaTematicaProposadaLabel": "🌿 Natura i Patrimoni",
     "etiquetesOriginals": [
       "Excursions"
     ],
     "etiquetesNetes": [
-      "Excursions"
+      "Rutes"
     ],
     "estat_revisio": "pendent_admin",
     "casosUsDetectats": [
@@ -13195,12 +13225,12 @@ export const ARTICLES_SIMULADOR_IA_425 = Object.freeze([
     "poblePrincipal": "La Torre de les Maçanes",
     "comarquesDetectades": [],
     "categoriaTematicaProposadaId": "natura-excursions",
-    "categoriaTematicaProposadaLabel": "🥾 Natura, Excursions i Camins",
+    "categoriaTematicaProposadaLabel": "🌿 Natura i Patrimoni",
     "etiquetesOriginals": [
       "Excursions"
     ],
     "etiquetesNetes": [
-      "Excursions"
+      "Rutes"
     ],
     "estat_revisio": "pendent_admin",
     "casosUsDetectats": [
@@ -13223,12 +13253,12 @@ export const ARTICLES_SIMULADOR_IA_425 = Object.freeze([
     "poblePrincipal": "La Torre de les Maçanes",
     "comarquesDetectades": [],
     "categoriaTematicaProposadaId": "natura-excursions",
-    "categoriaTematicaProposadaLabel": "🥾 Natura, Excursions i Camins",
+    "categoriaTematicaProposadaLabel": "🌿 Natura i Patrimoni",
     "etiquetesOriginals": [
       "Excursions"
     ],
     "etiquetesNetes": [
-      "Excursions"
+      "Rutes"
     ],
     "estat_revisio": "pendent_admin",
     "casosUsDetectats": [
@@ -13277,12 +13307,12 @@ export const ARTICLES_SIMULADOR_IA_425 = Object.freeze([
     "poblePrincipal": "La Torre de les Maçanes",
     "comarquesDetectades": [],
     "categoriaTematicaProposadaId": "natura-excursions",
-    "categoriaTematicaProposadaLabel": "🥾 Natura, Excursions i Camins",
+    "categoriaTematicaProposadaLabel": "🌿 Natura i Patrimoni",
     "etiquetesOriginals": [
       "Excursions"
     ],
     "etiquetesNetes": [
-      "Excursions"
+      "Rutes"
     ],
     "estat_revisio": "pendent_admin",
     "casosUsDetectats": [
@@ -13332,7 +13362,7 @@ export const ARTICLES_SIMULADOR_IA_425 = Object.freeze([
     "poblePrincipal": "La Torre de les Maçanes",
     "comarquesDetectades": [],
     "categoriaTematicaProposadaId": "comunitat-rural",
-    "categoriaTematicaProposadaLabel": "🤝 Comunitat, Associacionisme i Món Rural",
+    "categoriaTematicaProposadaLabel": "🤝 Món Rural",
     "etiquetesOriginals": [
       "El Carreró Centre Cultural i Tecnològic"
     ],
@@ -13358,7 +13388,7 @@ export const ARTICLES_SIMULADOR_IA_425 = Object.freeze([
     "poblePrincipal": "La Torre de les Maçanes",
     "comarquesDetectades": [],
     "categoriaTematicaProposadaId": "comunitat-rural",
-    "categoriaTematicaProposadaLabel": "🤝 Comunitat, Associacionisme i Món Rural",
+    "categoriaTematicaProposadaLabel": "🤝 Món Rural",
     "etiquetesOriginals": [
       "Replantacions"
     ],
@@ -13384,7 +13414,7 @@ export const ARTICLES_SIMULADOR_IA_425 = Object.freeze([
     "poblePrincipal": "La Torre de les Maçanes",
     "comarquesDetectades": [],
     "categoriaTematicaProposadaId": "patrimoni-cultura",
-    "categoriaTematicaProposadaLabel": "🏛️ Patrimoni, Cultura, Música i Llengua",
+    "categoriaTematicaProposadaLabel": "🎭 Cultura, Música i Llengua",
     "etiquetesOriginals": [
       "El Carreró Centre Cultural i Tecnològic",
       "Fotos",
@@ -13472,7 +13502,7 @@ export const ARTICLES_SIMULADOR_IA_425 = Object.freeze([
     "poblePrincipal": "La Torre de les Maçanes",
     "comarquesDetectades": [],
     "categoriaTematicaProposadaId": "patrimoni-cultura",
-    "categoriaTematicaProposadaLabel": "🏛️ Patrimoni, Cultura, Música i Llengua",
+    "categoriaTematicaProposadaLabel": "🎭 Cultura, Música i Llengua",
     "etiquetesOriginals": [
       "Fadrins",
       "Festes dels Pobles",
@@ -13500,7 +13530,7 @@ export const ARTICLES_SIMULADOR_IA_425 = Object.freeze([
     "poblePrincipal": "Xarxa de Pobles",
     "comarquesDetectades": [],
     "categoriaTematicaProposadaId": "comunitat-rural",
-    "categoriaTematicaProposadaLabel": "🤝 Comunitat, Associacionisme i Món Rural",
+    "categoriaTematicaProposadaLabel": "🤝 Món Rural",
     "etiquetesOriginals": [
       "Opinió"
     ],
@@ -13527,13 +13557,13 @@ export const ARTICLES_SIMULADOR_IA_425 = Object.freeze([
     "poblePrincipal": "Alcoi",
     "comarquesDetectades": [],
     "categoriaTematicaProposadaId": "natura-excursions",
-    "categoriaTematicaProposadaLabel": "🥾 Natura, Excursions i Camins",
+    "categoriaTematicaProposadaLabel": "🌿 Natura i Patrimoni",
     "etiquetesOriginals": [
       "Excursions",
       "Reivindicant"
     ],
     "etiquetesNetes": [
-      "Excursions",
+      "Rutes",
       "Reivindicant"
     ],
     "estat_revisio": "pendent_admin",
@@ -13594,13 +13624,13 @@ export const ARTICLES_SIMULADOR_IA_425 = Object.freeze([
     "poblePrincipal": "Alcoi",
     "comarquesDetectades": [],
     "categoriaTematicaProposadaId": "natura-excursions",
-    "categoriaTematicaProposadaLabel": "🥾 Natura, Excursions i Camins",
+    "categoriaTematicaProposadaLabel": "🌿 Natura i Patrimoni",
     "etiquetesOriginals": [
       "Excursions",
       "Reivindicant"
     ],
     "etiquetesNetes": [
-      "Excursions",
+      "Rutes",
       "Reivindicant"
     ],
     "estat_revisio": "pendent_admin",
@@ -13699,12 +13729,12 @@ export const ARTICLES_SIMULADOR_IA_425 = Object.freeze([
     "poblePrincipal": "La Torre de les Maçanes",
     "comarquesDetectades": [],
     "categoriaTematicaProposadaId": "natura-excursions",
-    "categoriaTematicaProposadaLabel": "🥾 Natura, Excursions i Camins",
+    "categoriaTematicaProposadaLabel": "🌿 Natura i Patrimoni",
     "etiquetesOriginals": [
       "Excursions"
     ],
     "etiquetesNetes": [
-      "Excursions"
+      "Rutes"
     ],
     "estat_revisio": "pendent_admin",
     "casosUsDetectats": [
@@ -13944,7 +13974,7 @@ export const ARTICLES_SIMULADOR_IA_425 = Object.freeze([
       "El Baix Segura"
     ],
     "categoriaTematicaProposadaId": "natura-excursions",
-    "categoriaTematicaProposadaLabel": "🥾 Natura, Excursions i Camins",
+    "categoriaTematicaProposadaLabel": "🌿 Natura i Patrimoni",
     "etiquetesOriginals": [
       "Memfotisme",
       "Reivindicant"
@@ -13972,7 +14002,7 @@ export const ARTICLES_SIMULADOR_IA_425 = Object.freeze([
     "poblePrincipal": "Alcoi",
     "comarquesDetectades": [],
     "categoriaTematicaProposadaId": "natura-excursions",
-    "categoriaTematicaProposadaLabel": "🥾 Natura, Excursions i Camins",
+    "categoriaTematicaProposadaLabel": "🌿 Natura i Patrimoni",
     "etiquetesOriginals": [
       "Font Roja",
       "Memfotisme",
@@ -14002,7 +14032,7 @@ export const ARTICLES_SIMULADOR_IA_425 = Object.freeze([
     "poblePrincipal": "Alcoi",
     "comarquesDetectades": [],
     "categoriaTematicaProposadaId": "natura-excursions",
-    "categoriaTematicaProposadaLabel": "🥾 Natura, Excursions i Camins",
+    "categoriaTematicaProposadaLabel": "🌿 Natura i Patrimoni",
     "etiquetesOriginals": [
       "Font Roja",
       "Memfotisme",
@@ -14032,7 +14062,7 @@ export const ARTICLES_SIMULADOR_IA_425 = Object.freeze([
     "poblePrincipal": "Alcoi",
     "comarquesDetectades": [],
     "categoriaTematicaProposadaId": "natura-excursions",
-    "categoriaTematicaProposadaLabel": "🥾 Natura, Excursions i Camins",
+    "categoriaTematicaProposadaLabel": "🌿 Natura i Patrimoni",
     "etiquetesOriginals": [
       "Font Roja",
       "Memfotisme",
@@ -14095,7 +14125,7 @@ export const ARTICLES_SIMULADOR_IA_425 = Object.freeze([
     "poblePrincipal": "Alcoi",
     "comarquesDetectades": [],
     "categoriaTematicaProposadaId": "natura-excursions",
-    "categoriaTematicaProposadaLabel": "🥾 Natura, Excursions i Camins",
+    "categoriaTematicaProposadaLabel": "🌿 Natura i Patrimoni",
     "etiquetesOriginals": [
       "Font Roja",
       "Memfotisme",
@@ -14159,7 +14189,7 @@ export const ARTICLES_SIMULADOR_IA_425 = Object.freeze([
     "poblePrincipal": "La Torre de les Maçanes",
     "comarquesDetectades": [],
     "categoriaTematicaProposadaId": "patrimoni-cultura",
-    "categoriaTematicaProposadaLabel": "🏛️ Patrimoni, Cultura, Música i Llengua",
+    "categoriaTematicaProposadaLabel": "🎭 Cultura, Música i Llengua",
     "etiquetesOriginals": [
       "Festes dels Pobles",
       "Gent de La Torre",
@@ -14218,12 +14248,12 @@ export const ARTICLES_SIMULADOR_IA_425 = Object.freeze([
     "poblePrincipal": "La Torre de les Maçanes",
     "comarquesDetectades": [],
     "categoriaTematicaProposadaId": "natura-excursions",
-    "categoriaTematicaProposadaLabel": "🥾 Natura, Excursions i Camins",
+    "categoriaTematicaProposadaLabel": "🌿 Natura i Patrimoni",
     "etiquetesOriginals": [
       "Excursions"
     ],
     "etiquetesNetes": [
-      "Excursions"
+      "Rutes"
     ],
     "estat_revisio": "pendent_admin",
     "casosUsDetectats": [
@@ -14299,7 +14329,7 @@ export const ARTICLES_SIMULADOR_IA_425 = Object.freeze([
     "poblePrincipal": "La Torre de les Maçanes",
     "comarquesDetectades": [],
     "categoriaTematicaProposadaId": "natura-excursions",
-    "categoriaTematicaProposadaLabel": "🥾 Natura, Excursions i Camins",
+    "categoriaTematicaProposadaLabel": "🌿 Natura i Patrimoni",
     "etiquetesOriginals": [
       "Esports"
     ],
@@ -14325,7 +14355,7 @@ export const ARTICLES_SIMULADOR_IA_425 = Object.freeze([
     "poblePrincipal": "Alcoi",
     "comarquesDetectades": [],
     "categoriaTematicaProposadaId": "natura-excursions",
-    "categoriaTematicaProposadaLabel": "🥾 Natura, Excursions i Camins",
+    "categoriaTematicaProposadaLabel": "🌿 Natura i Patrimoni",
     "etiquetesOriginals": [
       "Font Roja",
       "Memfotisme",
@@ -14355,7 +14385,7 @@ export const ARTICLES_SIMULADOR_IA_425 = Object.freeze([
     "poblePrincipal": "Alcoi",
     "comarquesDetectades": [],
     "categoriaTematicaProposadaId": "natura-excursions",
-    "categoriaTematicaProposadaLabel": "🥾 Natura, Excursions i Camins",
+    "categoriaTematicaProposadaLabel": "🌿 Natura i Patrimoni",
     "etiquetesOriginals": [
       "Font Roja",
       "Memfotisme",
@@ -14414,7 +14444,7 @@ export const ARTICLES_SIMULADOR_IA_425 = Object.freeze([
     "poblePrincipal": "Alcoi",
     "comarquesDetectades": [],
     "categoriaTematicaProposadaId": "natura-excursions",
-    "categoriaTematicaProposadaLabel": "🥾 Natura, Excursions i Camins",
+    "categoriaTematicaProposadaLabel": "🌿 Natura i Patrimoni",
     "etiquetesOriginals": [
       "Font Roja",
       "Memfotisme",
@@ -14444,7 +14474,7 @@ export const ARTICLES_SIMULADOR_IA_425 = Object.freeze([
     "poblePrincipal": "Alcoi",
     "comarquesDetectades": [],
     "categoriaTematicaProposadaId": "natura-excursions",
-    "categoriaTematicaProposadaLabel": "🥾 Natura, Excursions i Camins",
+    "categoriaTematicaProposadaLabel": "🌿 Natura i Patrimoni",
     "etiquetesOriginals": [
       "Font Roja",
       "Memfotisme",
@@ -14527,7 +14557,7 @@ export const ARTICLES_SIMULADOR_IA_425 = Object.freeze([
     "poblePrincipal": "Alcoi",
     "comarquesDetectades": [],
     "categoriaTematicaProposadaId": "natura-excursions",
-    "categoriaTematicaProposadaLabel": "🥾 Natura, Excursions i Camins",
+    "categoriaTematicaProposadaLabel": "🌿 Natura i Patrimoni",
     "etiquetesOriginals": [
       "Font Roja",
       "Memfotisme",
@@ -14584,7 +14614,7 @@ export const ARTICLES_SIMULADOR_IA_425 = Object.freeze([
     "poblePrincipal": "Alcoi",
     "comarquesDetectades": [],
     "categoriaTematicaProposadaId": "natura-excursions",
-    "categoriaTematicaProposadaLabel": "🥾 Natura, Excursions i Camins",
+    "categoriaTematicaProposadaLabel": "🌿 Natura i Patrimoni",
     "etiquetesOriginals": [
       "Font Roja",
       "Memfotisme",
@@ -14614,7 +14644,7 @@ export const ARTICLES_SIMULADOR_IA_425 = Object.freeze([
     "poblePrincipal": "Alcoi",
     "comarquesDetectades": [],
     "categoriaTematicaProposadaId": "natura-excursions",
-    "categoriaTematicaProposadaLabel": "🥾 Natura, Excursions i Camins",
+    "categoriaTematicaProposadaLabel": "🌿 Natura i Patrimoni",
     "etiquetesOriginals": [
       "Font Roja",
       "Memfotisme",
@@ -14733,12 +14763,12 @@ export const ARTICLES_SIMULADOR_IA_425 = Object.freeze([
     "poblePrincipal": "La Torre de les Maçanes",
     "comarquesDetectades": [],
     "categoriaTematicaProposadaId": "natura-excursions",
-    "categoriaTematicaProposadaLabel": "🥾 Natura, Excursions i Camins",
+    "categoriaTematicaProposadaLabel": "🌿 Natura i Patrimoni",
     "etiquetesOriginals": [
       "Excursions"
     ],
     "etiquetesNetes": [
-      "Excursions"
+      "Rutes"
     ],
     "estat_revisio": "pendent_admin",
     "casosUsDetectats": [
@@ -14788,14 +14818,14 @@ export const ARTICLES_SIMULADOR_IA_425 = Object.freeze([
     "poblePrincipal": "Alcoi",
     "comarquesDetectades": [],
     "categoriaTematicaProposadaId": "natura-excursions",
-    "categoriaTematicaProposadaLabel": "🥾 Natura, Excursions i Camins",
+    "categoriaTematicaProposadaLabel": "🌿 Natura i Patrimoni",
     "etiquetesOriginals": [
       "Esports",
       "Excursions"
     ],
     "etiquetesNetes": [
       "Esports",
-      "Excursions"
+      "Rutes"
     ],
     "estat_revisio": "pendent_admin",
     "casosUsDetectats": [
@@ -14875,13 +14905,13 @@ export const ARTICLES_SIMULADOR_IA_425 = Object.freeze([
     "poblePrincipal": "La Torre de les Maçanes",
     "comarquesDetectades": [],
     "categoriaTematicaProposadaId": "natura-excursions",
-    "categoriaTematicaProposadaLabel": "🥾 Natura, Excursions i Camins",
+    "categoriaTematicaProposadaLabel": "🌿 Natura i Patrimoni",
     "etiquetesOriginals": [
       "Excursions",
       "Reivindicant"
     ],
     "etiquetesNetes": [
-      "Excursions",
+      "Rutes",
       "Reivindicant"
     ],
     "estat_revisio": "pendent_admin",
@@ -14928,7 +14958,7 @@ export const ARTICLES_SIMULADOR_IA_425 = Object.freeze([
     "poblePrincipal": "Xarxa de Pobles",
     "comarquesDetectades": [],
     "categoriaTematicaProposadaId": "natura-excursions",
-    "categoriaTematicaProposadaLabel": "🥾 Natura, Excursions i Camins",
+    "categoriaTematicaProposadaLabel": "🌿 Natura i Patrimoni",
     "etiquetesOriginals": [
       "Gent Sostenible"
     ],
@@ -14953,7 +14983,7 @@ export const ARTICLES_SIMULADOR_IA_425 = Object.freeze([
     "poblePrincipal": "La Torre de les Maçanes",
     "comarquesDetectades": [],
     "categoriaTematicaProposadaId": "natura-excursions",
-    "categoriaTematicaProposadaLabel": "🥾 Natura, Excursions i Camins",
+    "categoriaTematicaProposadaLabel": "🌿 Natura i Patrimoni",
     "etiquetesOriginals": [
       "Memfotisme",
       "Reivindicant"
@@ -15011,14 +15041,14 @@ export const ARTICLES_SIMULADOR_IA_425 = Object.freeze([
       "La Marina Baixa"
     ],
     "categoriaTematicaProposadaId": "natura-excursions",
-    "categoriaTematicaProposadaLabel": "🥾 Natura, Excursions i Camins",
+    "categoriaTematicaProposadaLabel": "🌿 Natura i Patrimoni",
     "etiquetesOriginals": [
       "Excursions",
       "Memfotisme",
       "Reivindicant"
     ],
     "etiquetesNetes": [
-      "Excursions",
+      "Rutes",
       "Memfotisme",
       "Reivindicant"
     ],
@@ -15124,14 +15154,14 @@ export const ARTICLES_SIMULADOR_IA_425 = Object.freeze([
     "poblePrincipal": "La Torre de les Maçanes",
     "comarquesDetectades": [],
     "categoriaTematicaProposadaId": "natura-excursions",
-    "categoriaTematicaProposadaLabel": "🥾 Natura, Excursions i Camins",
+    "categoriaTematicaProposadaLabel": "🌿 Natura i Patrimoni",
     "etiquetesOriginals": [
       "Camí de Santiago",
       "Excursions"
     ],
     "etiquetesNetes": [
       "Camí de Santiago",
-      "Excursions"
+      "Rutes"
     ],
     "estat_revisio": "pendent_admin",
     "casosUsDetectats": [
@@ -15182,12 +15212,12 @@ export const ARTICLES_SIMULADOR_IA_425 = Object.freeze([
     "poblePrincipal": "La Torre de les Maçanes",
     "comarquesDetectades": [],
     "categoriaTematicaProposadaId": "natura-excursions",
-    "categoriaTematicaProposadaLabel": "🥾 Natura, Excursions i Camins",
+    "categoriaTematicaProposadaLabel": "🌿 Natura i Patrimoni",
     "etiquetesOriginals": [
       "Excursions"
     ],
     "etiquetesNetes": [
-      "Excursions"
+      "Rutes"
     ],
     "estat_revisio": "pendent_admin",
     "casosUsDetectats": [
@@ -15320,7 +15350,7 @@ export const ARTICLES_SIMULADOR_IA_425 = Object.freeze([
     "poblePrincipal": "La Torre de les Maçanes",
     "comarquesDetectades": [],
     "categoriaTematicaProposadaId": "comunitat-rural",
-    "categoriaTematicaProposadaLabel": "🤝 Comunitat, Associacionisme i Món Rural",
+    "categoriaTematicaProposadaLabel": "🤝 Món Rural",
     "etiquetesOriginals": [
       "Activitats",
       "Replantacions"
@@ -15923,7 +15953,7 @@ export const ARTICLES_SIMULADOR_IA_425 = Object.freeze([
       "Reivindicant"
     ],
     "etiquetesNetes": [
-      "Excursions",
+      "Rutes",
       "Incendis",
       "Reivindicant"
     ],
@@ -15947,12 +15977,12 @@ export const ARTICLES_SIMULADOR_IA_425 = Object.freeze([
     "poblePrincipal": "La Torre de les Maçanes",
     "comarquesDetectades": [],
     "categoriaTematicaProposadaId": "natura-excursions",
-    "categoriaTematicaProposadaLabel": "🥾 Natura, Excursions i Camins",
+    "categoriaTematicaProposadaLabel": "🌿 Natura i Patrimoni",
     "etiquetesOriginals": [
       "Excursions"
     ],
     "etiquetesNetes": [
-      "Excursions"
+      "Rutes"
     ],
     "estat_revisio": "pendent_admin",
     "casosUsDetectats": [
@@ -15976,14 +16006,14 @@ export const ARTICLES_SIMULADOR_IA_425 = Object.freeze([
     "poblePrincipal": "Alcoi",
     "comarquesDetectades": [],
     "categoriaTematicaProposadaId": "natura-excursions",
-    "categoriaTematicaProposadaLabel": "🥾 Natura, Excursions i Camins",
+    "categoriaTematicaProposadaLabel": "🌿 Natura i Patrimoni",
     "etiquetesOriginals": [
       "Esdeveniments",
       "Excursions"
     ],
     "etiquetesNetes": [
       "Esdeveniments",
-      "Excursions"
+      "Rutes"
     ],
     "estat_revisio": "pendent_admin",
     "casosUsDetectats": [
@@ -16122,14 +16152,14 @@ export const ARTICLES_SIMULADOR_IA_425 = Object.freeze([
       "La Marina Baixa"
     ],
     "categoriaTematicaProposadaId": "natura-excursions",
-    "categoriaTematicaProposadaLabel": "🥾 Natura, Excursions i Camins",
+    "categoriaTematicaProposadaLabel": "🌿 Natura i Patrimoni",
     "etiquetesOriginals": [
       "Esdeveniments",
       "Excursions"
     ],
     "etiquetesNetes": [
       "Esdeveniments",
-      "Excursions"
+      "Rutes"
     ],
     "estat_revisio": "pendent_admin",
     "casosUsDetectats": [
@@ -16152,14 +16182,14 @@ export const ARTICLES_SIMULADOR_IA_425 = Object.freeze([
     "poblePrincipal": "La Torre de les Maçanes",
     "comarquesDetectades": [],
     "categoriaTematicaProposadaId": "natura-excursions",
-    "categoriaTematicaProposadaLabel": "🥾 Natura, Excursions i Camins",
+    "categoriaTematicaProposadaLabel": "🌿 Natura i Patrimoni",
     "etiquetesOriginals": [
       "Esdeveniments",
       "Excursions"
     ],
     "etiquetesNetes": [
       "Esdeveniments",
-      "Excursions"
+      "Rutes"
     ],
     "estat_revisio": "pendent_admin",
     "casosUsDetectats": [
@@ -16182,7 +16212,7 @@ export const ARTICLES_SIMULADOR_IA_425 = Object.freeze([
     "poblePrincipal": "Alcoi",
     "comarquesDetectades": [],
     "categoriaTematicaProposadaId": "natura-excursions",
-    "categoriaTematicaProposadaLabel": "🥾 Natura, Excursions i Camins",
+    "categoriaTematicaProposadaLabel": "🌿 Natura i Patrimoni",
     "etiquetesOriginals": [
       "Esdeveniments",
       "Excursions",
@@ -16191,7 +16221,7 @@ export const ARTICLES_SIMULADOR_IA_425 = Object.freeze([
     ],
     "etiquetesNetes": [
       "Esdeveniments",
-      "Excursions",
+      "Rutes",
       "Posant en Valor els Recursos Locals",
       "Reivindicant"
     ],
@@ -16301,14 +16331,14 @@ export const ARTICLES_SIMULADOR_IA_425 = Object.freeze([
     "poblePrincipal": "La Torre de les Maçanes",
     "comarquesDetectades": [],
     "categoriaTematicaProposadaId": "natura-excursions",
-    "categoriaTematicaProposadaLabel": "🥾 Natura, Excursions i Camins",
+    "categoriaTematicaProposadaLabel": "🌿 Natura i Patrimoni",
     "etiquetesOriginals": [
       "Excursions",
       "Pou de neu",
       "Serra dels Plans"
     ],
     "etiquetesNetes": [
-      "Excursions",
+      "Rutes",
       "Pou de neu",
       "Serra dels Plans"
     ],
@@ -16320,7 +16350,7 @@ export const ARTICLES_SIMULADOR_IA_425 = Object.freeze([
     ],
     "rutaDestiCanonica": "/mur/excursio-pou-de-neu-del-rentonar"
   }
-]);
+] .map(article=>({...article,etiquetesNetes:[...new Set(article.etiquetesNetes.map(t=>normalitzaValorTaxonomia(t,'etiquetes')).filter(t=>NOMS_ETIQUETES_CANONIQUES_49.includes(t)))]})));
 
 export const PAGINES_WP_18 = Object.freeze([
   {
@@ -16581,11 +16611,7 @@ export const CATEGORIES_DOCTORAL_MARES_6 = Object.freeze(
   FACETA_3_CATEGORIES_MARES_IA.map((cat) => cat.label)
 );
 
-export const ETIQUETES_DOCTORAL_SKOS_49 = Object.freeze(
-  FACETA_4_ETIQUETES_SKOS
-    .filter((tag) => !tag.isEmpty && !tag.isDeprecatedSynonym && Boolean(tag.activaPerDefecte))
-    .map((tag) => tag.name)
-);
+export const ETIQUETES_DOCTORAL_SKOS_49 = NOMS_ETIQUETES_CANONIQUES_49;
 
 export function estatInicialTaxonomiaAdmin() {
   const categoriesActives = Object.fromEntries(
@@ -16609,8 +16635,8 @@ export function llegeixEstatTaxonomiaAdmin(storage = typeof window !== 'undefine
     if (!raw) return base;
     const parsed = JSON.parse(raw);
     return {
-      categoriesActives: { ...base.categoriesActives, ...(parsed?.categoriesActives || {}) },
-      etiquetesActives: { ...base.etiquetesActives, ...(parsed?.etiquetesActives || {}) },
+      categoriesActives: Object.fromEntries(FACETA_3_CATEGORIES_MARES_IA.map(cat=>[cat.id,typeof parsed?.categoriesActives?.[cat.id]==='boolean'?parsed.categoriesActives[cat.id]:base.categoriesActives[cat.id]])),
+      etiquetesActives: Object.fromEntries(FACETA_4_ETIQUETES_SKOS.map(tag=>[tag.slug,tag.canonica&&(typeof parsed?.etiquetesActives?.[tag.slug]==='boolean'?parsed.etiquetesActives[tag.slug]:base.etiquetesActives[tag.slug])])),
       etiquetesBuidesPodades: parsed?.etiquetesBuidesPodades !== undefined ? Boolean(parsed.etiquetesBuidesPodades) : true,
     };
   } catch {

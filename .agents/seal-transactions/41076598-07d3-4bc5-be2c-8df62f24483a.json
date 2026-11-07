@@ -1,0 +1,87 @@
+{
+  "id": "41076598-07d3-4bc5-be2c-8df62f24483a",
+  "session": "fd8a050a-17a3-4fcc-8cd8-7dd382b4928e",
+  "operationId": "onada-r11-govern-tooling-r46-i-skills-p041",
+  "claim": "fd8a050a-17a3-4fcc-8cd8-7dd382b4928e:governance-write",
+  "planHash": "793bb0f4e40e37df9236939ae544e42a945841ac4748b723c5693fa1ed78b895",
+  "beforeSeal": "11da5460fa894c1a5c94bfac1e3f7b4d39b4ed593c0e8a9785f87cbbdecb72f6",
+  "files": [
+    {
+      "path": "tooling/node0/executa-mirall-staging-node0.mjs",
+      "before": "0c2bbf5a850b30d2981811e6bc9a12aae0a9cd9c30227ed1e07843737de41a7f",
+      "after": "c3fc08af26c763058adf2cbcd944baa9aa2fdb5d6b8e36d5d120ace5535ec69a"
+    },
+    {
+      "path": "tooling/node0/exporta-mirall-workspace-node0.mjs",
+      "before": "698026b85fb707f1336a38ecf3d4d2f14f2186b50774e4931ae3841c45bd1ce9",
+      "after": "9c8dfebe4a88e4e7e9daa8cfedf774e397ff55eec385be8b2f710eb5e64fa4bd"
+    },
+    {
+      "path": "tooling/node0/fitxers-mirall.py",
+      "before": "4ba94625e2737c209fe6cba1735908ec983c62007b022b41b1f7a016e7460191",
+      "after": "d587a78a423a21476147742bcb0752b6e7ffa515115c03a32c38b2a92f20c83c"
+    },
+    {
+      "path": "tooling/node0/manifest-mirall-staging.json",
+      "before": "ab7bab7c8ba6e0f4b6ba521b3002c18121513c23bad63f455b7735707f50e047",
+      "after": "fd438a49062a106203af746c23a58f895e8fd5b5a730120ffdb572d714d5ff3d"
+    },
+    {
+      "path": "tooling/node0/posse/instal-la-posse-node0.mjs",
+      "before": "644b00c9b3a5ebe678194877129134bb2ffee229cc1b62febcb61b5575b95f20",
+      "after": "d05d3e68db354ccb1e7d0c451d7a4fca6235a843ede2f9341bec50e29137ce9e"
+    },
+    {
+      "path": "tooling/node0/posse/posse-ledger.sql",
+      "before": "d6d366f2967c8f2b079a8ff660ae9159e297ee0d484c2776a4d35084d716df70",
+      "after": "c6aaa75545e95e76d9f17add8bfd93bbcb640d70d32eed7b7a05fbce9eb85049"
+    },
+    {
+      "path": "tooling/node0/receptes-mirall/manifest-bundle-restauracio.json",
+      "before": "b5f6deff8d40d777610f4ead763a48204ea081ebad86e8bcaa14b527ca3ee19b",
+      "after": "57211feaf046c500b5247e6adeff29af92d0b7424bbce9aa28ec8106d900c0f7"
+    },
+    {
+      "path": "tooling/node0/receptes-mirall/restaura-node0-bundle.mjs",
+      "before": "578fc1f446402337832786593f94ed2add7bbcea1882c1e26be92ae90e36acd6",
+      "after": "93cbab116d687f8ef549571b951b7a6d0e9f799a566c8d76390e9ebbb77601f4"
+    },
+    {
+      "path": "tooling/node0/verifica-restauracio-node0.mjs",
+      "before": "1d21be8349bd20e397f08644fac0c9c1add7e46af563480c40bd62a54e154261",
+      "after": "3bc662b90a25682c0fb14eee49699419d8434c9715a742d1c4f81e0d88f7f211"
+    },
+    {
+      "path": "tooling/tests/node-suite-manifest.json",
+      "before": "d32c08d9a9caa862a5a39726b46ee28a017128b0d4ce7206f29f3fe36b848b6d",
+      "after": "663ada0911b820aa9c28c4f33c454b1e63ca2f842a9fb927325004e2af158b29"
+    },
+    {
+      "path": "tooling/wiki/wiki-baseline.lock.json",
+      "before": "4a1428ed4d40616edbebddb4615c6e5b960a1b033378931515d430b96ba1ffd7",
+      "after": "cd8c58603fb1747f3fda329ccf3cf73ef27c8cfe20319f1c49a3f9407f78442b"
+    },
+    {
+      "path": ".agents/skills/core-gauntlet-loop/SKILL.md",
+      "before": "a4946c507d9e79bc86f4a43297435ca5f55a036d7982610d33b3c2d1859bc0e8",
+      "after": "c7cb676b5380893a4177290f889237d1a7096391e55dbc063471dd73de1614dc"
+    },
+    {
+      "path": ".agents/skills/core-llegibilitat-text/SKILL.md",
+      "before": "a8596e5e046f67b71d933881765616807ec373a5332d284b38b7d4722f2b9a19",
+      "after": "1b95aa0b58108931e52901045a70ef04024b801446be1d53c14aa0dfd7003691"
+    },
+    {
+      "path": ".agents/skills/sdp-casos-us-essencials/SKILL.md",
+      "before": "559d067fb97406818761ce2fb99e69aea5e21fc04b9be2f591e45644769a3f63",
+      "after": "49c9bed0d681d09c9eae1076edb14a7dd03da7c156ed839ded3f4a78fc24a4e7"
+    },
+    {
+      "path": ".agents/skills/sdp-importacio-editorial/SKILL.md",
+      "before": "d6a8b56de8c0603dba84ffe5b44bc168ca740317d9364162be5967a203200c10",
+      "after": "82ff8b21c09d4ccdac66a4effadffc54b02635d3b55d49d374011245eef9bee0"
+    }
+  ],
+  "state": "accepted",
+  "afterSeal": "5f74f08d9558f1d6b128b87ea5ff5dd96b45585d23d569a1ab52675171cc2a37"
+}

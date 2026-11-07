@@ -157,20 +157,30 @@ describe('Onada 10 · el botó de la targeta, el del final de la pàgina i les e
   /* Les etiquetes són la font única de la targeta, de la capçalera de la
      pàgina i de la targeta incrustada. Valors d'esborrany per al Mestre; el
      text «Sistema» es conserva a propòsit, perquè el filtre ?category= del
-     Mur compara el text de les etiquetes (MurSection.jsx). */
+     Mur compara el text de les etiquetes (MurSection.jsx).
+     P0-40/IDEA-167 (ordre directa del Mestre, 261107 05:23) · Fora «MUR»,
+     «Disseny UI», «Manteniment» i «Graf»: Sistema + la categoria mare + les
+     etiquetes canòniques (classificacioPaginesPubliques.js). R41 («Sistema»
+     únic, sense «Mur») ho aplica també a Disseny. Arbitratge R46, Loop 3. */
   test('PAGE_COPY: la Consola i el Cervell porten Categoria i Etiqueta; Disseny, les seues dos i una tercera', () => {
+    const TECNOLOGIA = '💻 Tecnologia Lliure, Dades Obertes i Disseny';
     expect(PAGE_COPY.consola.labels).toEqual([
-      { text: 'Sistema', className: 'sdp-badge-category' },
-      { text: 'Manteniment', className: 'sdp-badge-tag' }
+      { text: 'Sistema', className: 'sdp-badge-system' },
+      { text: TECNOLOGIA, className: 'sdp-badge-category' },
+      { text: 'Node 0', className: 'sdp-badge-tag' },
+      { text: 'Documentació', className: 'sdp-badge-tag' }
     ]);
     expect(PAGE_COPY.cervell.labels).toEqual([
-      { text: 'Sistema', className: 'sdp-badge-category' },
-      { text: 'Graf', className: 'sdp-badge-tag' }
+      { text: 'Sistema', className: 'sdp-badge-system' },
+      { text: TECNOLOGIA, className: 'sdp-badge-category' },
+      { text: 'Node 0', className: 'sdp-badge-tag' },
+      { text: 'Documentació', className: 'sdp-badge-tag' }
     ]);
     expect(PAGE_COPY.disseny.labels).toEqual([
-      { text: 'MUR', className: 'sdp-badge-system' },
-      { text: 'Disseny UI', className: 'sdp-badge-category' },
-      { text: 'Pedra Seca', className: 'sdp-badge-tag' }
+      { text: 'Sistema', className: 'sdp-badge-system' },
+      { text: TECNOLOGIA, className: 'sdp-badge-category' },
+      { text: 'Pedra Seca', className: 'sdp-badge-tag' },
+      { text: 'Documentació', className: 'sdp-badge-tag' }
     ]);
     for (const clau of ['consola', 'cervell']) {
       expect([clau, PAGE_COPY[clau].labels.some((etiqueta) => etiqueta.text === 'Sistema')]).toEqual([clau, true]);
@@ -235,10 +245,11 @@ describe('261026_2126 · Descàrregues i Aplicacions', () => {
        el que cau a la cistella són robotets i cervellets amb potetes, no xips. */
     expect(copy.imageAlt).toContain('robotets i cervellets amb potetes');
     expect(copy.imageAlt).not.toMatch(/xips/i);
+    // P0-40/IDEA-167 (ordre del Mestre, 261107 05:23) · fora «Descàrregues»: categoria mare i etiqueta canònica.
     expect(copy.labels).toEqual([
       { text: 'Sistema', className: 'sdp-badge-system' },
-      { text: 'Descàrregues', className: 'sdp-badge-category' },
-      { text: 'Multiplataforma', className: 'sdp-badge-tag' }
+      { text: '💻 Tecnologia Lliure, Dades Obertes i Disseny', className: 'sdp-badge-category' },
+      { text: 'Documentació', className: 'sdp-badge-tag' }
     ]);
   });
 
@@ -343,7 +354,9 @@ describe('30-10-2026 · Candidatura Europea NLnet · NGI Fediversity', () => {
     expect(copy).toMatchObject({ title: 'Candidatura Europea NLnet · NGI Fediversity', image: '/assets/uploads/fediversity-hero.webp' });
     expect(existsSync(path.join(process.cwd(), 'public', copy.image))).toBe(true);
     expect(copy.imageAlt.trim().length).toBeGreaterThan(20);
-    expect(copy.labels.map((etiqueta) => etiqueta.className)).toEqual(['sdp-badge-system', 'sdp-badge-category', 'sdp-badge-tag']);
+    // P0-40/IDEA-167 (ordre del Mestre, 261107 05:23) · fora «Candidatura europea»: Sistema, la mare i dues etiquetes canòniques.
+    expect(copy.labels.map((etiqueta) => etiqueta.className)).toEqual(['sdp-badge-system', 'sdp-badge-category', 'sdp-badge-tag', 'sdp-badge-tag']);
+    expect(copy.labels.map((etiqueta) => etiqueta.text)).toEqual(['Sistema', '💻 Tecnologia Lliure, Dades Obertes i Disseny', 'NGI Fediversity', 'Documentació']);
   });
 });
 

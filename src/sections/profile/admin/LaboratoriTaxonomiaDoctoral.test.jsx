@@ -22,6 +22,7 @@ import {
   FACETA_4_ETIQUETES_SKOS,
   ARTICLES_SIMULADOR_IA_425,
   PAGINES_WP_18,
+  CLAU_STORAGE_TAXONOMIA_ADMIN,
 } from '../../../data/taxonomia/tesaurusDoctoralSocDePoble.js';
 import {
   ID_ADMINISTRACIO_SISTEMA,
@@ -62,7 +63,7 @@ describe('BLOC 2 · AH-29 (IDEA-89) · Administració del sistema, Eliminació d
     ]);
   });
 
-  test('4. El Tesaurus Doctoral exposa les 114 categories, 105 etiquetes, 425 articles, 18 pàgines i les 4 facetes ortogonals (PMEST + SKOS)', () => {
+  test('4. El Tesaurus Doctoral exposa les 114 categories, 105 etiquetes WP + Associacionisme (111 SKOS), 425 articles, 18 pàgines i les 4 facetes ortogonals (PMEST + SKOS)', () => {
     expect(RESUM_AUDITORIA_BIBLIOTECONOMIA.totalArticlesWp).toBe(425);
     expect(RESUM_AUDITORIA_BIBLIOTECONOMIA.totalPaginesWp).toBe(18);
     expect(RESUM_AUDITORIA_BIBLIOTECONOMIA.totalCategoriesWp).toBe(114);
@@ -70,9 +71,21 @@ describe('BLOC 2 · AH-29 (IDEA-89) · Administració del sistema, Eliminació d
     expect(FACETA_1_CATEGORIES_GEOGRAFIQUES).toHaveLength(114);
     expect(FACETA_2_VERTICALS_SISTEMA).toHaveLength(8);
     expect(FACETA_3_CATEGORIES_MARES_IA).toHaveLength(6);
-    expect(FACETA_4_ETIQUETES_SKOS).toHaveLength(105);
+    expect(FACETA_4_ETIQUETES_SKOS).toHaveLength(111);
     expect(ARTICLES_SIMULADOR_IA_425).toHaveLength(425);
     expect(PAGINES_WP_18).toHaveLength(18);
+
+    const cat03 = FACETA_3_CATEGORIES_MARES_IA.find((c) => c.skosNotation === 'SDP.F3.03');
+    const cat04 = FACETA_3_CATEGORIES_MARES_IA.find((c) => c.skosNotation === 'SDP.F3.04');
+    const cat05 = FACETA_3_CATEGORIES_MARES_IA.find((c) => c.skosNotation === 'SDP.F3.05');
+    expect(cat03).toMatchObject({ label: '🌿 Natura i Patrimoni', nomCurt: 'Natura i Patrimoni' });
+    expect(cat04).toMatchObject({ label: '🎭 Cultura, Música i Llengua', nomCurt: 'Cultura, Música i Llengua' });
+    expect(cat05).toMatchObject({ label: '🤝 Món Rural', nomCurt: 'Món Rural' });
+
+    const tagRutes = FACETA_4_ETIQUETES_SKOS.find((t) => t.id === 182);
+    const tagAssoc = FACETA_4_ETIQUETES_SKOS.find((t) => t.id === 999);
+    expect(tagRutes).toMatchObject({ name: 'Rutes', slug: 'rutes', useFor: ['Excursions', 'Camins', 'Tracks'] });
+    expect(tagAssoc).toMatchObject({ name: 'Associacionisme', slug: 'associacionisme', broaderTermLabel: '🤝 Món Rural', useFor: ['Associacions', 'Col·lectius', 'Comunitat'] });
   });
 
   test('5. El Laboratori Doctoral de Biblioteconomia es renderitza i permet filtrar en viu entre els 425 articles', () => {
@@ -94,9 +107,9 @@ describe('BLOC 2 · AH-29 (IDEA-89) · Administració del sistema, Eliminació d
     localStorage.clear();
     const buides = FACETA_4_ETIQUETES_SKOS.filter((t) => t.isEmpty).length;
     const ambArticles = FACETA_4_ETIQUETES_SKOS.length - buides;
-    expect([buides, ambArticles]).toEqual([53, 52]);
+    expect([buides, ambArticles]).toEqual([53, 58]);
     const { container } = render(<LaboratoriTaxonomiaDoctoral />);
-    const taula = screen.getByRole('table', { name: 'Tesaurus SKOS de 105 etiquetes' });
+    const taula = screen.getByRole('table', { name: 'Tesaurus SKOS de 111 termes, 49 canònics' });
     const files = () => [...taula.querySelectorAll('tbody tr')];
     const filesBuides = () => files().filter((tr) => tr.getAttribute('data-empty') === 'true');
 
@@ -131,6 +144,23 @@ describe('BLOC 2 · AH-29 (IDEA-89) · Administració del sistema, Eliminació d
     expect(screen.getAllByText('40').length).toBeGreaterThan(0);
     expect(screen.getAllByText('32').length).toBeGreaterThan(0);
     expect(screen.getAllByText('@depoble@mastodont.cat').length).toBeGreaterThan(0);
+  });
+
+  test('R34 · el laboratori bloqueja termes retirats i neteja l’estat antic en desar un canvi vàlid',()=>{
+    localStorage.setItem(CLAU_STORAGE_TAXONOMIA_ADMIN,JSON.stringify({etiquetesActives:{reivindicant:true,esdeveniments:true,inventada:true}}));
+    try{
+      render(<LaboratoriTaxonomiaDoctoral/>);
+      const retired=screen.getByRole('switch',{name:'Activar etiqueta Reivindicant (reivindicant)'});
+      expect(retired.disabled).toBe(true);expect(retired.getAttribute('aria-checked')).toBe('false');
+      fireEvent.click(retired);expect(retired.getAttribute('aria-checked')).toBe('false');
+      const current=screen.getByRole('switch',{name:'Activar etiqueta Node 0 (node-0)'});
+      expect(current.disabled).toBe(false);fireEvent.click(current);
+      const category=screen.getByRole('switch',{name:'Activar categoria ⚖️ Defensa del Territori, Ecologia i Reivindicació'});
+      expect(category.getAttribute('aria-checked')).toBe('true');fireEvent.click(category);expect(category.getAttribute('aria-checked')).toBe('false');
+      const saved=JSON.parse(localStorage.getItem(CLAU_STORAGE_TAXONOMIA_ADMIN));
+      expect(saved.etiquetesActives.reivindicant).toBe(false);expect(saved.etiquetesActives.esdeveniments).toBe(false);expect(saved.etiquetesActives['node-0']).toBe(false);expect(Object.hasOwn(saved.etiquetesActives,'inventada')).toBe(false);
+      expect(saved.categoriesActives['defensa-territori']).toBe(false);
+    }finally{localStorage.clear();}
   });
 
   test('7. El Banc d’Importació Editorial permet revisar i aprovar o anotar els 425 articles de socdepoble.net', () => {

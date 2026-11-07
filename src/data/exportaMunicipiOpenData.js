@@ -835,9 +835,15 @@ function entitatsDelDirectori(triades, base, recompte, municipi) {
 
 /* ── Configuració (taxonomia i estil: formes tancades i validades) ──────── */
 
-/* Els textos de la taxonomia (validaTaxonomia només en mira la llargària):
-   també sense marcatge. */
+/* Els registres anteriors podien contindre «<» com a text. Es neutralitza
+   abans de validar la forma actual; no es perden en l'exportació del poble. */
 function taxonomiaNeta(payload) {
+  if (!esObjecte(payload)) return null;
+  const netText=text=>typeof text==='string'?senseMarcatge(text.trim()):text;
+  payload={...payload,
+    ...(esObjecte(payload.pagines)?{pagines:Object.fromEntries(Object.entries(payload.pagines).map(([key,page])=>[key,esObjecte(page)&&Array.isArray(page.labels)?{...page,labels:page.labels.map(label=>esObjecte(label)?{...label,text:netText(label.text)}:label)}:page]))}:{}),
+    ...(Array.isArray(payload.categories)?{categories:payload.categories.map(netText)}:{}),
+    ...(Array.isArray(payload.etiquetes)?{etiquetes:payload.etiquetes.map(netText)}:{})};
   if (validaTaxonomia(payload).length) return null;
   const pagines = esObjecte(payload.pagines) ? payload.pagines : {};
   const net = (text) => senseMarcatge(text.trim());

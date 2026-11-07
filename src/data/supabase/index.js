@@ -88,3 +88,4 @@ export { preferenciesConnexions, desaVisibilitatConnexions, connexionsPubliquesD
   membresIEntitatsConnectadesDe, inclouPersonaEnEntitat, solicitaUnirSeAEntitat } from './seguiments.js';
 
 export {adminActualitzaPublicacioEditorial} from './editorialPublicada.js';
+export { loadSeedRevisions, desaRevisioSeed } from './seedRevisions.js';

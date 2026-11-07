@@ -34,7 +34,7 @@ import PoblesSection from './PoblesSection.jsx';
 import { TOWNS as TOTS_ELS_POBLES } from './townsContent.js';
 // Regressió visual de les 9 fitxes completes anteriors a l'Aplec; el lot nou es prova a territori.r10.test.jsx.
 const TOWNS = TOTS_ELS_POBLES.filter((poble) => poble.created_at);
-import { COPYRIGHT_VIQUIPEDIA, dataDElement } from '../../components/universal/editorial.js';
+import { COPYRIGHT_VIQUIPEDIA } from '../../components/universal/editorial.js';
 import { fixaBaseRecursos } from '../../config/assetResolver.js';
 import { rutaXatDePagina } from '../../config/navigation';
 import { nomDeLaGent } from './nomsDelPoble.js';
@@ -73,21 +73,19 @@ afterEach(() => {
   fixaBaseRecursos('/');
 });
 
-test('T2 · cada poble de la llavor porta el seu avatar i la pastilla sencera (hora i dia)', () => {
+test('T2 · cada poble conserva avatar; sense publicacions no inventa una pastilla de naixement', () => {
   const { container } = render(<PoblesSection />);
   const llista = targetes(container);
   expect(llista).toHaveLength(TOWNS.length);
   for (const targeta of llista) {
     const town = TOWNS.find((t) => t.title === titol(targeta));
     expect(targeta.querySelector('.sp-card-author img.sp-card-avatar').getAttribute('src')).toBe(town.avatar_url);
-    const { time, date } = dataDElement(town);
-    expect(time).toMatch(/^\d{2}:\d{2}$/);
-    expect(date).toMatch(/^\d{2}\/\d{2}\/\d{2}$/);
-    expect(pastilla(targeta)).toEqual([time, date]);
+    expect(pastilla(targeta)).toBeNull();
   }
 });
 
-test('T2 · la pastilla diu la data de creació en hora local i porta al Calendari d’eixe mes', () => {
+test('T2 · la pastilla diu la publicació en hora local i porta al Calendari d’eixe mes', () => {
+  mocks.mur.feedPosts = [{ id: 'publicacio', poble_id: 'la-torre-de-les-macanes', created_at: '2026-08-20T08:00:00Z' }];
   render(<PoblesSection />);
   // La Torre: created_at «2026-08-20T08:00:00.000Z» → 10:00 a València.
   const boto = screen.getByRole('button', { name: '10:00 20/08/26 · Obri el calendari d’eixe mes' });
@@ -95,24 +93,23 @@ test('T2 · la pastilla diu la data de creació en hora local i porta al Calenda
   expect(mocks.navigate).toHaveBeenCalledWith('/calendari?mes=2026-08');
 });
 
-test('T2 · l’ordre ix de la mateixa data que la pastilla: de la més nova a la més vella', () => {
+test('T2 · sense publicació no s’ordena pel naixement: es conserva el directori estable', () => {
   const { container } = render(<PoblesSection />);
-  expect(targetes(container).map(titol)).toEqual([
-    'La Torre de les Maçanes', 'Xixona', 'Tibi', 'Alcoleja', 'Relleu', 'Orxeta', 'Sella', 'Penàguila', 'Benifallim'
-  ]);
+  expect(targetes(container).map(titol)).toEqual(TOWNS.map(town => town.title));
 });
 
-test('T2 · una versió posterior guanya a la creació; sense cap data real, cap pastilla inventada i al final', () => {
+test('T2 · una edició de fitxa no puja el poble; sense publicació real, cap pastilla inventada', () => {
   mocks.core = llavor([
     { id: 'sense', title: 'Sense data', comarca: 'Enlloc', content: '.' },
     { id: 'vell', title: 'Vell', comarca: 'L’Alcoià', content: '.', created_at: '2026-08-01T08:00:00Z', updated_at: '2026-09-30T16:45:00Z' },
     { id: 'nou', title: 'Nou', comarca: 'L’Alcoià', content: '.', created_at: '2026-09-01T08:00:00Z' }
   ]);
+  mocks.mur.feedPosts = [{ id: 'publicacio-nou', poble_id: 'nou', created_at: '2026-09-01T08:00:00Z' }];
   const { container } = render(<PoblesSection />);
   const llista = targetes(container);
-  expect(llista.map(titol)).toEqual(['Vell', 'Nou', 'Sense data']);
-  expect(pastilla(llista[0])).toEqual(['18:45', '30/09/26']);
-  expect(pastilla(llista[1])).toEqual(['10:00', '01/09/26']);
+  expect(llista.map(titol)).toEqual(['Nou', 'Sense data', 'Vell']);
+  expect(pastilla(llista[0])).toEqual(['10:00', '01/09/26']);
+  expect(pastilla(llista[1])).toBeNull();
   expect(pastilla(llista[2])).toBeNull();
   expect(llista[2].textContent).not.toMatch(/--/);
 });
@@ -390,12 +387,21 @@ test('Onada 6 · cap id ni nom de poble escrit a PoblesSection.jsx', async () =>
   expect('const b = `Sella`;').toMatch(new RegExp(`['"\`]${escapa('Sella')}['"\`]`));
 });
 
-/* Onada 6 (requisit 15 de l'Onada 5: «En crear un poble per primera vegada,
-   s'hi assignarà la data i hora d'aquella primera publicació de naixement del
-   poble») · La pastilla d'un poble és el seu naixement: la més antiga entre
-   la fitxa i el created_at de les publicacions que el DECLAREN (poble_id).
-   L'ordre llig la mateixa data (T51). */
-test('Onada 6 · la pastilla diu el naixement del poble i l’ordre la seguix', () => {
+/* P0-39 / IDEA-166 · Ordenació dinàmica de /pobles per l'última publicació
+   pública (Mur, Mercat, Esdeveniments), mostrant el rellotge de l'última
+   activitat i situant La Torre de les Maçanes en #1, més el botó desplegable
+   centrat de Xarxa de Pobles davall de l'entradilla. */
+test('P0-39 / IDEA-166 · el bloc de Xarxa de Pobles és un botó desplegable centrat davall de l’entradilla', () => {
+  const { container } = render(<PoblesSection />);
+  const nav = container.querySelector('nav.sdp-xarxa-pobles');
+  expect(nav).not.toBeNull();
+  const boto = nav.querySelector('details.sdp-xarxa-pobles__desplegable > summary.sdp-xarxa-pobles__boto');
+  expect(boto).not.toBeNull();
+  expect(boto.textContent).toBe('Xarxa de Pobles');
+  expect(boto.className).toContain('sdp-boto--secundari');
+});
+
+test('P0-39 / IDEA-166 · la pastilla diu l’última publicació pública del poble i l’ordre la seguix', () => {
   mocks.core = llavor([
     { id: 'nou', title: 'Nou', content: '.', created_at: '2026-09-01T08:00:00Z' },
     { id: 'vell', title: 'Vell', content: '.', created_at: '2026-08-01T08:00:00Z' }
@@ -403,14 +409,14 @@ test('Onada 6 · la pastilla diu el naixement del poble i l’ordre la seguix', 
   mocks.mur = {
     status: 'ready',
     feedPosts: [
-      // La primera publicació de «Nou» és anterior a la seua fitxa: naix el 01-07.
+      // La publicació conserva la seua data encara que precedisca la fitxa del poble.
       { id: 'p1', poble_id: 'nou', created_at: '2026-07-01T08:00:00Z' },
-      // Una publicació posterior de «Vell» no el fa més jove.
+      // Una publicació posterior de «Vell» el fa pujar per davant.
       { id: 'p2', poble_id: 'vell', created_at: '2026-09-15T08:00:00Z' },
-      // La data triada al calendari no és la creació real (cap naixement en 1950).
+      // La data triada al calendari no és la creació real: mana el created_at de l'última publicació.
       { id: 'p3', poble_id: 'vell', publish_date: '1950-01-01T08:00:00Z', created_at: '2026-09-20T08:00:00Z' },
       // Revisió adversarial · El text del lloc d'abans no data cap poble.
-      { id: 'p4', author_location: 'Vell', created_at: '2026-01-01T08:00:00Z' }
+      { id: 'p4', author_location: 'Vell', created_at: '2026-10-01T08:00:00Z' }
     ],
     marketItems: [],
     events: []
@@ -418,11 +424,11 @@ test('Onada 6 · la pastilla diu el naixement del poble i l’ordre la seguix', 
   const { container } = render(<PoblesSection />);
   const llista = targetes(container);
   expect(llista.map(titol)).toEqual(['Vell', 'Nou']);
-  expect(pastilla(llista[0])).toEqual(['10:00', '01/08/26']);
+  expect(pastilla(llista[0])).toEqual(['10:00', '20/09/26']);
   expect(pastilla(llista[1])).toEqual(['10:00', '01/07/26']);
 });
 
-test('Onada 6 · un poble sense data a la fitxa naix amb la seua primera publicació declarada; un sense res, sense pastilla', () => {
+test('P0-39 / IDEA-166 · un poble sense data a la fitxa mostra la seua última publicació declarada; un sense res, sense pastilla', () => {
   mocks.core = llavor([
     { id: 'el-campello', title: 'El Campello', content: '.' },
     { id: 'buit', title: 'Buit', content: '.' },
@@ -440,38 +446,29 @@ test('Onada 6 · un poble sense data a la fitxa naix amb la seua primera publica
   const { container } = render(<PoblesSection />);
   const [campello, buit, nomesText] = targetes(container);
   expect(titol(campello)).toBe('El Campello');
-  expect(pastilla(campello)).toEqual(['18:45', '02/09/26']);
+  expect(pastilla(campello)).toEqual(['10:00', '05/09/26']);
   expect(pastilla(buit)).toBeNull();
-  // Casat només pel text: com abans d'esta onada, sense pastilla.
+  // Casat només pel text: sense pastilla.
   expect(titol(nomesText)).toBe('Només Text');
   expect(pastilla(nomesText)).toBeNull();
 });
 
-/* Revisió adversarial de l'Onada 6 · Els 8 pobles no modificats conserven
-   ordre i pastilles. El Manifest restaurat declara La Torre amb la seua
-   data històrica real, que és anterior a la creació de la fitxa de 2026:
-   la regla de la primera publicació la situa al final, també en mode seed. */
 test.each([
-  ['dates crues de la llavor (supabase/seed.sql)', () => APP_SEED],
-  ['dates del mode seed (llavorAmbDatesDeProva)', () => llavorAmbDatesDeProva(APP_SEED, new Date(2026, 9, 9, 4, 0))]
-])('Onada 6 · Llei del Píxel: els 8 pobles estables i el naixement històric de La Torre (%s)', (_, llavorDelMur) => {
+  ['dates crues de la llavor (supabase/seed.sql)', () => APP_SEED, ['14:29', '06/11/26']],
+  ['dates del mode seed (llavorAmbDatesDeProva)', () => llavorAmbDatesDeProva(APP_SEED, new Date(2026, 9, 9, 4, 0)), ['19:40', '08/10/26']]
+])('P0-39 / IDEA-166 · La Torre de les Maçanes és #1 amb el rellotge de l’última publicació (%s)', (_, llavorDelMur, rellotgeTorre) => {
   const { feedPosts, marketItems, events } = llavorDelMur();
   expect(marketItems.some((item) => item.population === 'La Torre de les Maçanes')).toBe(true);
   mocks.mur = { status: 'ready', feedPosts, marketItems, events };
   const { container } = render(<PoblesSection />);
   const llista = targetes(container);
-  expect(llista.map(titol)).toEqual([
-    'Xixona', 'Tibi', 'Alcoleja', 'Relleu', 'Orxeta', 'Sella', 'Penàguila', 'Benifallim', 'La Torre de les Maçanes'
-  ]);
+  expect(llista.map(titol)).toEqual(TOWNS.map(town => town.title));
   for (const targeta of llista) {
     const town = TOWNS.find((t) => t.title === titol(targeta));
-    if (town.id === 'la-torre-de-les-macanes') expect(pastilla(targeta)).toEqual(['23:50', '17/11/22']);
-    else {
-      const { time, date } = dataDElement(town);
-      expect(pastilla(targeta), town.id).toEqual([time, date]);
-    }
+    if (town.id === 'la-torre-de-les-macanes') expect(pastilla(targeta)).toEqual(rellotgeTorre);
+    else expect(pastilla(targeta), town.id).toBeNull();
   }
-  expect(pastilla(llista.at(-1))).toEqual(['23:50', '17/11/22']);
+  expect(pastilla(llista[0])).toEqual(rellotgeTorre);
 });
 
 test('Onada 6 · «Comentar · En públic» de la targeta porta al xat de la gent; Connectar, com sempre', () => {

@@ -110,17 +110,22 @@ describe('dades · les fonts del Mestre', () => {
     expect(per['Cota del pou'].valor).toMatch(/1\.160 m/);
     expect(per['Cim dels Plans']).toMatchObject({ estat: 'unica' });
     expect(per['Cim dels Plans'].valor).toMatch(/1\.330 m/);
-    expect(per['Alçada total']).toMatchObject({ estat: 'unica' });
-    expect(per['Alçada total'].valor).toMatch(/18 m.*15 m.*3 m/);
+    /* Loop 3 (R11) · Les cotes són les de Segura (1987); les xifres de l'esbós 76150 (18 m = 15 + 3,
+       Ø 9,75 m, 24 + 5 m, 43 cm) només queden a la nota de discrepància, mai com a valor. */
+    expect(per['Alçada total']).toBeUndefined();
     expect(per['Fondària des de les finestres superiors']).toMatchObject({ estat: 'ok', valor: '13,75 m' });
-    expect(per['Diàmetre interior']).toMatchObject({ estat: 'discrepant' });
-    expect(per['Diàmetre interior'].valor).toMatch(/9,75.*9,80/);
-    expect(per['Capacitat estimada']).toMatchObject({ estat: 'discrepant' });
-    expect(per['Capacitat estimada'].valor).toMatch(/1\.030 m³/);
+    expect(per['Fondària des de les finestres superiors'].nota).toMatch(/falsa cúpula hemisfèrica.*76150.*18 m/);
+    expect(per['Diàmetre interior']).toMatchObject({ estat: 'ok', valor: '9,80 m' });
+    expect(per['Diàmetre interior'].nota).toMatch(/76150.*9,75 m/);
+    expect(per['Gruix del mur'].valor).toMatch(/1,50 m/);
+    expect(per['Capacitat estimada']).toMatchObject({ estat: 'ok', valor: '1.030 m³' });
     expect(per['Capacitat històrica'].valor).toMatch(/20\.000 arroves/);
-    expect(per['Túnel d’accés sud'].valor).toMatch(/9,10 m/);
-    expect(per['Galeria d’escorredor, a l’est']).toMatchObject({ estat: 'discrepant' });
-    expect(per['Galeria d’escorredor, a l’est'].valor).toMatch(/29 m.*24 m.*5 m.*43 cm/);
+    expect(per['Túnel d’accés sud'].valor).toMatch(/9,10 m.*2,35 m.*1,35 × 1,55 m a \+10,00 m/);
+    expect(per['Galeria d’escorredor, a l’est']).toMatchObject({ estat: 'ok' });
+    expect(per['Galeria d’escorredor, a l’est'].valor).toMatch(/29 m.*0,50 m.*0,70 m/);
+    expect(per['Galeria d’escorredor, a l’est'].nota).toMatch(/24 m i 5 m.*43 cm/);
+    expect(per['Finestres superiors'].valor).toMatch(/1,55 m.*1,70 m/);
+    for (const dada of cotes('pou-de-neu')) expect(dada.valor, dada.etiqueta).not.toMatch(/\b18 m|9,75|43 cm|24 m/);
     expect(per['Estreps d’arcs'].valor).toMatch(/4,.*2 arcs creuats/);
     expect(per['Època'].valor).toMatch(/segles XVII i XVIII/);
   });
@@ -300,9 +305,10 @@ describe('visor · teclat i panell de detall', () => {
     const cotes = [...desplegable.querySelectorAll('.anatomia__cota')];
     expect(cotes).toHaveLength(ESTRUCTURES[0].cotes.length);
     const diametre = cotes.find((c) => /Diàmetre interior/.test(c.textContent));
-    expect(diametre.getAttribute('data-estat')).toBe('discrepant');
-    expect(diametre.textContent).toMatch(/9,75 m al plànol; 9,80 m a l’article/);
-    expect(diametre.textContent).toMatch(/Les fonts no coincidixen/);
+    expect(diametre.getAttribute('data-estat')).toBe('ok');
+    expect(diametre.querySelector('.anatomia__estat')).toBeNull();
+    expect(diametre.textContent).toMatch(/9,80 m.*WP 3656/);
+    expect(diametre.querySelector('.anatomia__cota-nota').textContent).toMatch(/esbós 76150.*9,75 m/);
     const fondaria = cotes.find((c) => /Fondària/.test(c.textContent));
     expect(fondaria.querySelector('.anatomia__estat')).toBeNull();
     expect(fondaria.textContent).toMatch(/13,75 m.*WP 3656/);

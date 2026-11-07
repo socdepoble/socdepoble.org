@@ -425,22 +425,22 @@ export function PanellNodesFediversResiliencia() {
 
       <section
         className="sdp-admin-taxonomia__panel"
-        aria-label="Funcionament del Node 0, les 4 IAIAs Sobiranes, Revisor Editorial i la Consola Incrustada"
+        aria-label="Funcionament del Node 0, la IAIA, el Revisor Editorial i la Consola Incrustada"
         data-testid="admin-node0-explicatiu-consola"
       >
-        <div className="sdp-admin-node0-head">
+        <div className="sdp-admin-taxonomia__toolbar">
           <div>
-            <h3>🧠 Com funciona el Node 0 (Mac mini M4), les 4 IAIAs Revisores i la Consola Incrustada</h3>
+            <h3>🧠 Com funciona el Node 0 (Mac mini M4), la IAIA, les Revisores i la Consola Incrustada</h3>
             <p className="sdp-muted">
-              El servidor físic local (<code>socdepoble.cat</code> · Mac mini M4) coordina les 4 IAIAs sobiranes, el Sentinella Diari de Skills (<code>43/43</code>) i la Mesa de Revisió Editorial.
+              El servidor físic local (<code>socdepoble.cat</code> · Mac mini M4) coordina la IAIA i l’equip local del Node 0, el Sentinella Diari de Skills (<code>43/43</code>) i la Mesa de Revisió Editorial.
             </p>
           </div>
           <Insignia to="primari">43/43 Skills · 3/3 Vigilants</Insignia>
         </div>
         <dl className="sdp-admin-dl">
-          <dt>1 · Servidor Domèstic i 4 IAIAs Sobiranes</dt>
+          <dt>1 · Servidor Domèstic i la IAIA al Node 0</dt>
           <dd>
-            El <strong>Mac mini Apple M4</strong> executa en local (zero cost de tòkens) les 4 IAIAs sobiranes (<code>iaia-maria:latest</code>, <code>qwen3:8b</code>, <code>qwen2.5-coder:14b</code> i <code>nemotron-mini:latest</code>) per a auditar l’arquitectura i les 43 skills.
+            El <strong>Mac mini Apple M4</strong> executa en local (zero cost de tòkens) la IAIA i l’equip local del Node 0 (<code>iaia:latest</code> / <code>iaia-maria:latest</code>, <code>qwen3:8b</code>, <code>qwen2.5-coder:14b</code> i <code>nemotron-mini:latest</code>) per a auditar l’arquitectura i les 43 skills.
           </dd>
           <dt>2 · Mesa de Revisió Editorial i Sentinella Diari de Skills</dt>
           <dd>

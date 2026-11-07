@@ -749,7 +749,9 @@ export async function verificaObjecteFediversityFep8b32(
     });
   }
 
-  const { proof } = documentSignat;
+  // R11-PORT-02: les metadades retornades també han de ser les signades,
+  // encara que el cridador edite el proof mentre WebCrypto verifica.
+  const proof = { ...documentSignat.proof };
   if (
     proof.type !== 'DataIntegrityProof' ||
     proof.cryptosuite !== CRYPTOSUITE_FEP8B32 ||
@@ -992,14 +994,30 @@ export async function exportaPaquetSobiraniaMunicipal({
  * d'un ancoratge de confiança, mai del mateix paquet.
  */
 export async function importaPaquetSobiraniaMunicipal(
-  paquet,
-  { publicKeyJwk, actorDesti = null } = {},
+  paquetInput,
+  { publicKeyJwk, actorDesti: actorDestiInput = null } = {},
 ) {
   const motius = [];
-  if (!esObjectePla(paquet)) {
+  if (!esObjectePla(paquetInput)) {
     return congelaProfund({
       valid: false,
       motius: ['El paquet de sobirania ha de ser un objecte pla JSON-LD.'],
+      municipi: null,
+      dadesRestaurades: null,
+    });
+  }
+  // R11-PORT-01: WebCrypto cedeix el control. La comprovació dels resums,
+  // la signatura i les dades restaurades han d'usar una única instantània;
+  // el cridador pot continuar editant el fitxer o l'actor de destí en vol.
+  let paquet;
+  let actorDesti;
+  try {
+    paquet = clonaSenseClausProhibides(paquetInput);
+    actorDesti = clonaSenseClausProhibides(actorDestiInput);
+  } catch {
+    return congelaProfund({
+      valid: false,
+      motius: ['El paquet o l’actor de destí no són objectes JSON-LD admesos.'],
       municipi: null,
       dadesRestaurades: null,
     });

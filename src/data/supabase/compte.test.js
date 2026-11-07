@@ -16,7 +16,7 @@ import { cancelaBaixa, demanaBaixa, estatBaixa, estatConsentiment, exportaLesMeu
 const deferred = () => { let resolve; const promise = new Promise(r => { resolve = r; }); return { promise, resolve }; };
 /* La sessió canvia quan la petició JA és a la xarxa: és la resposta la que arriba tard. */
 const quanSiguaEnviada = () => vi.waitFor(() => expect(m.rpc).toHaveBeenCalledTimes(1));
-const EXPORTACIO = { format: 'socdepoble.exportacio.v1', perfil: { id: 'A' } };
+const EXPORTACIO = { format: 'socdepoble.exportacio.v1', perfil: { id: 'A' }, seed_revisions: [] };
 beforeEach(() => {
   m.gen = 0; m.user = { id: 'A' }; m.jwt = 'jwt.A'; m.hasConfig = true; m.ordre = [];
   m.jwtPerBackend.mockReset(); m.jwtPerBackend.mockImplementation(() => m.jwt);
@@ -54,6 +54,29 @@ test('l’exportació torna l’objecte tal qual i amplia el temps d’espera', 
   const [nom, cos, , opcions] = m.rpc.mock.calls[0];
   expect(nom).toBe('exporta_les_meues_dades'); expect(cos).toEqual({});
   expect(opcions.timeoutMs).toBeGreaterThan(12000); expect(opcions.signal).toBe(controller.signal);
+});
+test('seed revisions: a legacy server reports the omitted resource explicitly without a second RPC', async () => {
+  m.rpc.mockResolvedValueOnce({ format: 'socdepoble.exportacio.v1', perfil: { id: 'A' } });
+  expect(await exportaLesMeuesDades()).toMatchObject({ seed_revisions: { error: 'SDP-SEED-EXPORT-NO-DISPONIBLE' } });
+  expect(m.rpc).toHaveBeenCalledTimes(1);
+});
+test('seed revisions: only the captured actor’s explicit projected rows can enter the account export', async () => {
+  const own = { id: 'seed-row', tenant_id: '11111111-1111-4111-8111-111111111111', section: 'mur', seed_id: 'post',
+    payload: { title: 'My revision' }, version: 1, source_version: 1, author_id: 'A',
+    created_at: '2026-11-07T05:00:00Z', updated_at: '2026-11-07T05:00:00Z' };
+  m.rpc.mockResolvedValueOnce({ ...EXPORTACIO, seed_revisions: [own] });
+  expect((await exportaLesMeuesDades()).seed_revisions).toEqual([own]);
+  for (const row of [{ ...own, author_id: 'B' }, { ...own, author_id: null }, { ...own, other_author_email: 'foreign@example.invalid' }, { ...own, payload: { author_id: 'B' } }]) {
+    m.rpc.mockResolvedValueOnce({ ...EXPORTACIO, seed_revisions: [row] });
+    await expect(exportaLesMeuesDades()).rejects.toMatchObject({ code: 'seed-export-invalid' });
+  }
+});
+test('seed revisions: a delayed personal response is not delivered to a new actor', async () => {
+  const pending = deferred(); m.rpc.mockReturnValueOnce(pending.promise);
+  const result = exportaLesMeuesDades(), rejected = expect(result).rejects.toMatchObject({ name: 'AbortError' });
+  await quanSiguaEnviada(); m.user = { id: 'B' }; m.jwt = 'jwt.B'; m.gen++;
+  pending.resolve({ ...EXPORTACIO, seed_revisions: [{ author_id: 'A', payload: { content: 'A own export sentinel' } }] });
+  await rejected;
 });
 for (const dolenta of [null, [], 'text', { format: 'altre.v9' }]) {
   test(`l’exportació rebutja una resposta amb forma ${JSON.stringify(dolenta)}`, async () => {

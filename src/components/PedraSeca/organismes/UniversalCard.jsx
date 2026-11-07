@@ -267,7 +267,7 @@ function Etiqueta({ label }) {
   const href = typeof label === 'string' ? null : label.href;
   const segur = href && isSafeUrl(href) ? href : null;
   return (
-    <li className={`sp-card-label ${classe}`}>
+    <li className={`sp-card-label ${classe}`} lang={typeof label === 'string' ? undefined : label.lang}>
       {!segur ? text : segur.startsWith('http') ? (
         <a href={segur} target="_blank" rel="noopener noreferrer" className="sp-card-label">{text}</a>
       ) : (

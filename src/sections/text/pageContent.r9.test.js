@@ -31,7 +31,12 @@
  *    VFT-02 (negació datada del push), VFT-05 (la 2.5 ja hi és), VFT-06 («si en falta qualsevol»),
  *    VFT-07 (entorns, «cada onada» i l'ancoratge de les proves), VFT-08 (el dossier antic) i VFT-03 (cap
  *    negació d'aplicació al costat d'una migració aplicada, en cap llengua). El títol «producció R1–R8»
- *    és literal de l'ordre del Mestre de R9 (G1-10).
+ *    era literal de l'ordre del Mestre de R9 (G1-10).
+ * 7. Onada R11 (kit R89 de Gemini; ordre del Mestre, ESTAT 261107_0457) · Els títols passen a
+ *    «producció R1–R10» i «R5–R10» (literals de l'ordre). Arbitratge R11 (R89-L2-03) · El balanç
+ *    passa al 7 de novembre (el COMMIT R10, 09a664171, és del 7-11): el primer paràgraf nomena el
+ *    COMMIT R10 i ja no el COMMIT R1–R8, i el pilot socdepoble.cat va amb la lectura HTTP datada
+ *    del 7-11 (el seu fragment de pageContent encara no portava el balanç R9–R10).
  */
 import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import path from 'node:path';
@@ -65,11 +70,11 @@ const seccio = (body, titol) => {
 };
 
 const BALANC = {
-  ca: ['6 de novembre de 2026 · Balanç verificat · producció R1–R8', 'Preparat al codi i novetats integrades en R5–R8', 'Què falta demostrar'],
-  es: ['6 de noviembre de 2026 · Balance verificado · producción R1–R8', 'Preparado en el código y novedades integradas en R5–R8', 'Qué falta demostrar'],
-  en: ['6 November 2026 · Verified balance · R1–R8 in production', 'Prepared in the code and features integrated in R5–R8', 'What remains to be demonstrated'],
-  eu: ['2026ko azaroaren 6a · Egiaztatutako balantzea · R1–R8 produkzioan', 'Kodean prestatuta eta R5–R8 olatuetan integratuta', 'Zer falta da frogatzeko'],
-  gl: ['6 de novembro de 2026 · Balance verificado · produción R1–R8', 'Preparado no código e novidades integradas en R5–R8', 'Que falta demostrar']
+  ca: ['7 de novembre de 2026 · Balanç verificat · producció R1–R10', 'Preparat al codi i novetats integrades en R5–R10', 'Què falta demostrar'],
+  es: ['7 de noviembre de 2026 · Balance verificado · producción R1–R10', 'Preparado en el código y novedades integradas en R5–R10', 'Qué falta demostrar'],
+  en: ['7 November 2026 · Verified balance · R1–R10 in production', 'Prepared in the code and features integrated in R5–R10', 'What remains to be demonstrated'],
+  eu: ['2026ko azaroaren 7a · Egiaztatutako balantzea · R1–R10 produkzioan', 'Kodean prestatuta eta R5–R10 olatuetan integratuta', 'Zer falta da frogatzeko'],
+  gl: ['7 de novembro de 2026 · Balance verificado · produción R1–R10', 'Preparado no código e novidades integradas en R5–R10', 'Que falta demostrar']
 };
 /* Les frases exactes de cada negació (text pintat, sense etiquetes). */
 const NEGA = {
@@ -110,7 +115,18 @@ const NEGA = {
   }
 };
 
-describe('Onada R9 · balanç del 6 de novembre (producció R1–R8)', () => {
+/* Arbitratge R11 (R89-L2-03) · El pilot no servix «el mateix COMMIT»: la lectura HTTP del 7-11-2026
+   (07:07, només GET) troba el text R9–R10 al fragment de pageContent de socdepoble.org i no al de
+   socdepoble.cat. La frase ho diu amb la data de la lectura. */
+const PILOT = {
+  ca: 'segons la lectura HTTP del 7 de novembre, el pilot socdepoble.cat encara servia una compilació anterior a este balanç',
+  es: 'según la lectura HTTP del 7 de noviembre, el piloto socdepoble.cat aún servía una compilación anterior a este balance',
+  en: 'according to the 7 November HTTP check, the socdepoble.cat pilot was still serving a build older than this balance',
+  eu: 'azaroaren 7ko HTTP irakurketaren arabera, socdepoble.cat pilotuak balantze hau baino lehenagoko konpilazio bat zerbitzatzen zuen oraindik',
+  gl: 'segundo a lectura HTTP do 7 de novembro, o piloto socdepoble.cat aínda servía unha compilación anterior a este balance'
+};
+
+describe('Onada R9 i R11 · balanç del 7 de novembre (producció R1–R10)', () => {
   test.each(LLENGUES)('%s · les tres pàgines obrin amb el balanç nou i els tres dominis en ordre', (llengua) => {
     for (const clau of PAGINES) {
       const body = doc(pagina(clau, llengua).html).body;
@@ -121,7 +137,11 @@ describe('Onada R9 · balanç del 6 de novembre (producció R1–R8)', () => {
       const externs = produccio.flatMap((n) => [...n.querySelectorAll('a[href^="https://"]')].map((a) => a.getAttribute('href')));
       expect(externs.slice(0, 3)).toEqual(['https://socdepoble.org', 'https://gentdelatorre.net', 'https://socdepoble.cat']);
       const text = produccio.map((n) => n.textContent).join(' ');
-      expect(text).toContain('R1–R8');
+      // R89-L2-03 · el primer paràgraf nomena el COMMIT R10 (R1–R10), mai el COMMIT R1–R8 d'abans.
+      expect(text).toContain('R1–R10');
+      expect(text, `${clau} ${llengua}`).toMatch(/COMMIT R10|R10 COMMITa/);
+      expect(text, `${clau} ${llengua}`).not.toMatch(/COMMIT R1–R8|R1–R8 COMMITa|mateix COMMIT|mismo COMMIT|same COMMIT|COMMIT bera|mesmo COMMIT/);
+      expect(text, `${clau} ${llengua}`).toContain(PILOT[llengua]);
       expect(text).not.toContain('R1–R6');
       // R9V-C1-03 · cap font no diu quina versió servix gentdelatorre.net: el text no la dona per igual.
       expect(text, `${clau} ${llengua}`).toContain(NEGA[llengua].versio);
@@ -523,7 +543,8 @@ describe('Gauntlet R9 · G1-03, G1-04 i G1-05 · la secció d’IA i el Node 0 d
     const fonts = readdirSync(path.join(ARREL, 'src'), { recursive: true })
       .map((f) => String(f).split(path.sep).join('/'))
       .filter((f) => /\.(?:js|jsx|mjs)$/.test(f) && !f.includes('.test.') && f !== 'sections/text/pageContent.r10.js');
-    expect(fonts.filter((f) => /\bollama\b|11434/i.test(readFileSync(path.join(ARREL, 'src', f), 'utf8')))).toEqual([]);
+    // El port 11434 com a nombre sencer: no el confon amb les xifres d'una dada generada (68.711434826 a pouNeuOrderKeys.js).
+    expect(fonts.filter((f) => /\bollama\b|(?<![\d.])11434(?!\d)/i.test(readFileSync(path.join(ARREL, 'src', f), 'utf8')))).toEqual([]);
   });
 });
 
@@ -549,5 +570,16 @@ describe('Gauntlet R9 · G1-09 · gallec i anglés de les pàgines de patrimoni'
     const text = textDe('arbres-monumentals', 'en');
     expect(text).not.toContain('the municipal Ordenança Municipal');
     expect(text).toContain('it cites the Ordenança Municipal de Protecció d’Arbres d’Interès Local');
+  });
+  test('R89 · clear: both al segon encapçalament de les pàgines amb targetes flotants (fediversity i node-zero)', () => {
+    const css = llegix('src/css/modules.css');
+    expect(css).toContain('.sdp-amb-targetes .sdp-cos-tros > h2 ~ h2');
+    expect(css).toContain('.sdp-amb-targetes .sdp-cos-tros > h3 ~ h3');
+    expect(css).toContain('clear: both;');
+    // Cadena R11, Loop 3 (L2-01) · L'overflow dels encapçalaments només val quan hi ha columna al
+    // costat de la flotant (> 40rem). A 375px, amb la targeta a tota l'amplària, el h2 quedava amb
+    // 0px d'ample i el text retallat.
+    expect(css).toMatch(/@media \(min-width: 40\.01rem\) \{\s*\.sdp-amb-targetes h2,\s*\.sdp-amb-targetes h3 \{\s*overflow: hidden;\s*\}\s*\}/);
+    expect(css.replace(/@media \(min-width: 40\.01rem\) \{\s*\.sdp-amb-targetes h2,\s*\.sdp-amb-targetes h3 \{\s*overflow: hidden;\s*\}\s*\}/, '')).not.toMatch(/\.sdp-amb-targetes h2,\s*\.sdp-amb-targetes h3 \{\s*overflow: hidden;/);
   });
 });

@@ -50,6 +50,7 @@ export function LaboratoriTaxonomiaDoctoral() {
   };
 
   const alternaEtiqueta = (slug, activa) => {
+    if (!FACETA_4_ETIQUETES_SKOS.some(tag=>tag.slug===slug&&tag.canonica)) return;
     actualitzaEstat((prev) => ({
       ...prev,
       etiquetesActives: {
@@ -275,9 +276,9 @@ export function LaboratoriTaxonomiaDoctoral() {
                   <div className="sdp-admin-taxonomia__card-top">
                     <h3>{cat.label}</h3>
                     <Interruptor
-                      checked={activa}
-                      onChange={(val) => alternaCategoriaMare(cat.id, val)}
-                      aria-label={`Activar categoria ${cat.label}`}
+                      actiu={activa}
+                      onCanvi={(val) => alternaCategoriaMare(cat.id, val)}
+                      etiqueta={`Activar categoria ${cat.label}`}
                     />
                   </div>
                   <p>{cat.descripcio}</p>
@@ -328,7 +329,7 @@ export function LaboratoriTaxonomiaDoctoral() {
           ) : null}
 
           <div className="sdp-admin-taxonomia__table-wrap">
-            <table className="sdp-table" aria-label="Tesaurus SKOS de 105 etiquetes">
+            <table className="sdp-table" aria-label={`Tesaurus SKOS de ${FACETA_4_ETIQUETES_SKOS.length} termes, 49 canònics`}>
               <thead>
                 <tr>
                   <th>Activa</th>
@@ -346,9 +347,10 @@ export function LaboratoriTaxonomiaDoctoral() {
                     <tr key={tag.id} data-empty={String(tag.isEmpty)}>
                       <td>
                         <Interruptor
-                          checked={activa}
-                          onChange={(val) => alternaEtiqueta(tag.slug, val)}
-                          aria-label={`Activar etiqueta ${tag.name} (${tag.slug})`}
+                          actiu={activa}
+                          desactivat={!tag.canonica}
+                          onCanvi={(val) => alternaEtiqueta(tag.slug, val)}
+                          etiqueta={`Activar etiqueta ${tag.name} (${tag.slug})`}
                         />
                       </td>
                       <td>

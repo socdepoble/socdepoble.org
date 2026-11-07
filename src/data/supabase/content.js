@@ -1,4 +1,6 @@
 import { marcaFilesEditorials } from '../editorialPublicada.js';
+import { aplicaRevisionsSeed, marcaFontRevisioSeed } from '../seedRevisions.js';
+import { loadSeedRevisions } from './seedRevisions.js';
 import { getDefaultUserId } from '../appSeed.js';
 import { elementDeFilaPublicada, mapSectionSubmissionToItem, mergeById } from '../mapejadorSeccions.js';
 import { buildSeedAppData, generateUUID, getCurrentUser, getResolvedConfig, mapContentRowsToData, request } from './runtime.js';
@@ -192,11 +194,27 @@ async function loadSections(ownerUserId, config, sections, { ambPaginacio = fals
      i els cursos de pedra en sec es veuen al Mur). */
   const llavorEditorial = rows.some((row) => Array.isArray(row?.payload)
     && row.payload.some((item) => item?.id === 'manifest-de-poble' || item?.id === 'aplec-2023'));
-  const llistes = Object.fromEntries(sections.map(([key], index) => {
+  const llistes = Object.fromEntries(await Promise.all(sections.map(async ([key, section], index) => {
     /* R12 (B4-S1) · Cada element porta la versió de la fila (_editorialVersio):
        la revisió editorial la necessita per a la RPC amb CAS de versió. */
     const filaEditorial = rows.find(row => row.key === key);
-    const baseAppContent = marcaFilesEditorials(llistaDe(filaEditorial?.payload, key), key, filaEditorial?.version);
+    let baseAppContent = marcaFilesEditorials(llistaDe(filaEditorial?.payload, key), key, filaEditorial?.version);
+    if (section === 'mur' || section === 'events') {
+      const ids = [...new Set(baseAppContent.map(item => item.id).filter(id => typeof id === 'string' && /^[A-Za-z0-9_-]{1,128}$/.test(id)))];
+      const revisions = [];
+      try {
+        for (let offset = 0; offset < ids.length; offset += 200) revisions.push(...await loadSeedRevisions({ seccio: section, ids: ids.slice(offset, offset + 200) }, config));
+        /* Àrbitre R11 (R33-L2-01) · Només amb la lectura reeixida: sense taula o
+           sense resposta, la peça no oferix el camí d'escriptura de llavor. */
+        baseAppContent = marcaFontRevisioSeed(aplicaRevisionsSeed(baseAppContent, revisions, filaEditorial?.version), filaEditorial?.version);
+      } catch (error) {
+        /* Àrbitre R11 (R33-L2-03) · L'overlay és opcional: un esquema antic, una
+           fila il·legible, un 500 o un temps esgotat servixen la font canònica.
+           Només l'avortament del cridador talla la càrrega. */
+        if (error?.name === 'AbortError' && config?.signal?.aborted) throw error;
+        if (error?.code !== 'no-disponible') console.warn('[supabase] Revisions de llavor no llegides; es mostra la font canònica:', error?.code ?? error?.name ?? 'error');
+      }
+    }
     /* IDEA-116 (Onada R9, carril C2) · Com l'acte de pedra en sec amb l'Aplec:
        al poble de la llavor editorial hi entra la primera publicació del Mur,
        que encara no és a app_content. Si un dia hi és amb la mateixa data o
@@ -210,7 +228,7 @@ async function loadSections(ownerUserId, config, sections, { ambPaginacio = fals
       ambLlavorDestacada,
       submissions[index].map((row) => elementDeFila(row, sections[index][1]))
     )];
-  }));
+  })));
   if (!ambPaginacio) return llistes;
   /* Decisió 4 · El cursor de cada secció ix de l'última fila de
      section_submissions de la primera pàgina (mai d'app_content).

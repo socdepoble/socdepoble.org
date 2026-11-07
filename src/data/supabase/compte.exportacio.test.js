@@ -45,7 +45,7 @@ beforeEach(() => { m.rpc.mockReset(); });
 test('l’exportació ampliada arriba sencera, amb l’àudio sense peu i la seua referència', async () => {
   m.rpc.mockResolvedValueOnce(structuredClone(AMPLIADA));
   const dades = await exportaLesMeuesDades();
-  expect(dades).toEqual(AMPLIADA);
+  expect(dades).toEqual({ ...AMPLIADA, seed_revisions: { error: 'SDP-SEED-EXPORT-NO-DISPONIBLE' } });
   const [audio] = dades.xat.missatges_propis;
   expect(audio.text).toBeNull();
   expect(audio.metadades.adjunt.id).toBe(dades.xat.adjunts_propis[0].nom);
@@ -55,7 +55,7 @@ test('l’exportació ampliada arriba sencera, amb l’àudio sense peu i la seu
 test('sense la moderació, els seguiments ni Apple aplicats (claus null), l’exportació continua sent vàlida', async () => {
   const sense = { ...structuredClone(AMPLIADA), moderacio: null, seguiments: null, apple: null };
   m.rpc.mockResolvedValueOnce(sense);
-  expect(await exportaLesMeuesDades()).toEqual(sense);
+  expect(await exportaLesMeuesDades()).toEqual({ ...sense, seed_revisions: { error: 'SDP-SEED-EXPORT-NO-DISPONIBLE' } });
 });
 
 test('P2-09 · filtra files alienes colades per inferència d’UUID a federacio_no_versionada i retalla columnes no autoritzades', async () => {

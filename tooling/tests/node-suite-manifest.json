@@ -8,6 +8,8 @@
     "health": "Verd primari i CI no certifiquen verd de laboratori/sessió. npm run test:node:all conserva la visibilitat del deute complet; cap prova ni asserció es retira."
   },
   "requiredPrimary": [
+    "tests/exportacio-federacio-postgres.test.mjs",
+    "tests/seed-revisions-r11.test.mjs",
     "tests/admin-invitacions-r20b.test.mjs",
     "tests/administracio-multipoble-postgres.test.mjs",
     "tests/antigravity-hook.test.mjs",
@@ -164,6 +166,16 @@
     "tooling/wiki/tests/contradiction_engine.t11.test.mjs"
   ],
   "files": [
+    {
+      "path": "tests/exportacio-federacio-postgres.test.mjs",
+      "suite": "primary",
+      "reason": "P2-08/P2-09: exportació federada amb dos comptes i esquema explícit en PostgreSQL WASM; aïllament sense dades de producció."
+    },
+    {
+      "path": "tests/seed-revisions-r11.test.mjs",
+      "suite": "primary",
+      "reason": "P1-75: migració idempotent, font autoritativa, CAS per peça, RLS i dos comptes en PostgreSQL WASM explícit; cap producció."
+    },
     {
       "path": "tests/action-contrast.test.mjs",
       "suite": "primary",

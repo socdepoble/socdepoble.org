@@ -40,6 +40,8 @@ describe('trossDArrencada (vite.config.js)', () => {
     ['/x/src/sections/mur/articles/aplec2023Content.js', 'pobles-aplec'],
     ['/x/src/sections/mur/articles/manifestDePobleContent.js', 'pobles-aplec'],
     ['/x/src/data/taxonomia/indexArticlesImportats.js', 'pobles-aplec'],
+    ['/x/src/data/taxonomia/vocabulariCanonic.js', 'pobles-aplec'],
+    ['/x/src/data/taxonomia/taxonomiaCanonica.js', null],
     ['/x/src/sections/pobles/pobleDeViquipedia.js', null],
     // IDEA-116 (Onada R9, R9V-C2-01) · la primera publicació del Mur no baixa a l'arrencada: tros diferit.
     ['/x/src/sections/mur/articles/novesTecnologiesCulturaRuralContent.js', null],
@@ -96,6 +98,7 @@ console.log(JSON.stringify({
     expect(especificadors(path.join(ARREL, 'src/sections/mur/articles/aplec2023Content.js'))).toEqual([]);
     expect(especificadors(path.join(ARREL, 'src/sections/mur/articles/manifestDePobleContent.js'))).toEqual([]);
     expect(especificadors(path.join(ARREL, 'src/data/taxonomia/indexArticlesImportats.js'))).toEqual([]);
+    expect(especificadors(path.join(ARREL, 'src/data/taxonomia/vocabulariCanonic.js'))).toEqual([]);
     const dependencies = (paquet) => Object.keys(JSON.parse(llig(`node_modules/${paquet}/package.json`)).dependencies ?? {})
       // loose-envify és una transformació de browserify: cap import en temps d'execució.
       .filter((nom) => nom !== 'loose-envify');

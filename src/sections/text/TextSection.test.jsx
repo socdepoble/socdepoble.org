@@ -172,8 +172,9 @@ test('261007 · El Xat: les props de la seua UniversalPage', () => {
     showLogos: true,
     // Cicle 3 (tc3-lang-ca-sobre-interficie-traduida): les de PAGE_COPY declaren el valencià.
     labels: [
-      { text: 'Comunicació', className: 'sdp-badge-system', lang: 'ca' },
-      { text: 'Eina', className: 'sdp-badge-category', lang: 'ca' }
+      { text: 'Sistema', className: 'sdp-badge-system', lang: 'ca' },
+      { text: '🤝 Món Rural', className: 'sdp-badge-category', lang: 'ca' },
+      { text: 'Associacionisme', className: 'sdp-badge-tag', lang: 'ca' }
     ],
     copyright: COPYRIGHT_SDP,
     ...dataHoraDeBarra({ creat: '2026-10-27T01:30:00+01:00' }),

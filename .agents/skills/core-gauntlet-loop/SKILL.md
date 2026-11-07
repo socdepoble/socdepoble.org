@@ -88,7 +88,7 @@ El Mestre humà no és informàtic i no ha de patir l'ofegament d'un IDE o d'un 
 - Canal de comunicació en valencià planer.
 
 ## 4.1 Revisió Adversarial Obligatòria d'Articles, Visors 3D i Usabilitat amb les 4 IAIAs del Node 0 (`IDEA-160` + `IDEA-161` + `IDEA-163`)
-Cap IA pot publicar un article o un visor interactiu en solitari sense passar la revisió adversarial de les **4 IAIAs Sobiranes del Node 0 (`192.168.0.23:11434`)** sobre tres invariants d'usabilitat i veracitat:
+Cap IA pot publicar un article o un visor interactiu en solitari sense passar la revisió adversarial de les **4 IAIAs del Node 0 (`192.168.0.23:11434`)** sobre tres invariants d'usabilitat i veracitat:
 1. **Simplicitat i Zero Duplicitat d'Organismes:** Verificar que no s'hagen deixat dos visors o components redundants del mateix tema en la mateixa pàgina (p. ex. un visor 3D nou i l'esquema antic a sota). Si hi ha un visor nou, cal fusionar-hi el text, les cotes i la veu de l'antic i deixar **un sol visor**.
 2. **Fidelitat Documental 100% (`_cultura_de_poble/` + `anatomiaRural.js`):** Cap motor 3D (`wheresryan22/anatomy`) pot modelar mesures genèriques si existeix documentació arqueològica, plànols o documentals primaris del poble (com els `18 m = 15 + 3`, `Ø 9,75 m`, 6 finestres i galeria de `29 m / 43 cm` del Pou de Neu del Rentonar).
 3. **Interactivitat Completa en Pantalla Completa (`is-fullscreen`):** Verificar que en prémer `⛶ Pantalla completa`, tots els comandaments per interactuar (girar, desmuntar, canviar d'assemblatge o pas) estiguen visibles dins de la pantalla sense haver d'eixir ni fer scroll.

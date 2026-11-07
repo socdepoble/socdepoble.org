@@ -1220,7 +1220,8 @@ export const CASOS = Object.freeze([
   cas({metode:'creaCarpetaNotes',capacitat:'carpetesNotes',espera:'rebutja',titol:'R12: nom de carpeta buit rebutja abans de persistir',arguments:ctx=>[{nom:'  '},ctx.config],comprova:error=>error?.name==='TypeError'?[]:['ha de rebutjar el nom invàlid amb TypeError']}),
   cas({metode:'adminActualitzaPublicacioEditorial',capacitat:'edicioEditorial',espera:'rebutja',titol:'R12: entrada editorial malformada rebutja abans de qualsevol efecte',arguments:ctx=>[{},ctx.config],comprova:rebuigAmbCodi('editorial-invalid')}),
   ...['adminLlistaUsuarisRegistrats','adminAssignaMembreOrganitzacio','adminConnectaUsuari'].map(metode=>cas({metode,capacitat:'administracioUsuaris',espera:'rebutja',titol:`R13: ${metode} rebutja arguments invàlids abans de qualsevol efecte`,arguments:ctx=>[{limit:0},ctx.config],comprova:error=>error?.name==='TypeError'?[]:['cal TypeError abans d’operar']})),
-  cas({metode:'importaMunicipiOpenData',capacitat:'importacioPaquetMunicipal',espera:'rebutja',titol:'R13: un paquet municipal sense bytes ni SHA no s’importa',arguments:ctx=>[null,'',ctx.config],comprova:error=>error instanceof Error?[]:['cal rebutjar el paquet invàlid']})
+  cas({metode:'importaMunicipiOpenData',capacitat:'importacioPaquetMunicipal',espera:'rebutja',titol:'R13: un paquet municipal sense bytes ni SHA no s’importa',arguments:ctx=>[null,'',ctx.config],comprova:error=>error instanceof Error?[]:['cal rebutjar el paquet invàlid']}),
+  ...['loadSeedRevisions', 'desaRevisioSeed'].map(metode => cas({ metode, capacitat: 'revisionsLlavor', espera: 'rebutja', titol: `P1-75: ${metode} rebutja dades malformades abans de qualsevol efecte`, arguments: ctx => [{}, ctx.config], comprova: rebuigAmbCodi('seed-invalid') }))
 ]);
 
 /**

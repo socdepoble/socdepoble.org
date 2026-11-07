@@ -488,3 +488,38 @@ test('R2F-06 · JCS, signador i verificador rebutgen arrays amb forats abans de 
   // Un valor null explícit continua sent JSON vàlid i no es confon amb un forat.
   assert.equal(canonitzaJsonJcs({ array: [null, 1] }), '{"array":[null,1]}');
 });
+
+test('R11-PORT-01 · la restauració retorna exactament la instantània signada encara que el cridador edite el paquet en vol', async () => {
+  const { claus, actorDesti, paquet } = await paquetDeProva();
+  const original = structuredClone(paquet);
+  const destiMutable = structuredClone(actorDesti);
+  const pendent = importaPaquetSobiraniaMunicipal(paquet, { publicKeyJwk: claus.publicKeyJwk, actorDesti: destiMutable });
+  paquet.notes[0].titol = 'Edició posterior a la crida';
+  paquet.colleccions.followers.push('https://altre.example/actors/nou');
+  paquet.municipi = 'Altre municipi';
+  paquet.migracioFep7628.target = 'https://altre.example/actors/desti';
+  destiMutable.alsoKnownAs.length = 0;
+  const r = await pendent;
+  assert.equal(r.valid, true);
+  assert.equal(r.municipi, original.municipi);
+  assert.deepEqual(r.dadesRestaurades.notes, original.notes);
+  assert.deepEqual(r.dadesRestaurades.followers, original.colleccions.followers);
+  assert.equal(r.dadesRestaurades.migracioFep7628.target, IRI_DESTI);
+  assert.equal(r.sha256Paquet, (await verificaObjecteFediversityFep8b32(original, { publicKeyJwk: claus.publicKeyJwk })).sha256Document);
+  assert.equal(Object.isFrozen(paquet), false, 'el verificador no congela dades del cridador');
+  assert.equal(Object.isFrozen(r.dadesRestaurades.notes[0]), true);
+});
+
+test('R11-PORT-02 · les metadades d’una prova vàlida són les comprovades abans de l’espera criptogràfica', async () => {
+  const { claus, paquet } = await paquetDeProva();
+  const esperades = { verificationMethod: paquet.proof.verificationMethod, created: paquet.proof.created };
+  const pendent = verificaObjecteFediversityFep8b32(paquet, {
+    publicKeyJwk: claus.publicKeyJwk, verificationMethodEsperat: esperades.verificationMethod,
+  });
+  paquet.proof.verificationMethod = 'https://altre.example/actors/nou#key';
+  paquet.proof.created = '2099-01-01T00:00:00Z';
+  const r = await pendent;
+  assert.equal(r.valid, true);
+  assert.equal(r.verificationMethod, esperades.verificationMethod);
+  assert.equal(r.created, esperades.created);
+});

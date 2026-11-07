@@ -10,7 +10,7 @@ import {preparaFonts,directoriPrivat,desaPublicCache} from './fonts-publiques-mi
 import {exportaMirall,creaRunnerSnapshot,validaRecipientAge} from './exporta-mirall-workspace-node0.mjs';
 import {autenticitatMirallLocal} from './autenticitat-mirall-node0.mjs';
 import {exigeixAbsenciaIdentitatLocal} from './custodia-age-node0.mjs';
-export const TARGET=Object.freeze({workspaceRoot:'/Users/javi/socdepoble-node0-soberania',mirrorDir:'/Users/javi/socdepoble-node0/mirall-workspace-staging',cacheDir:'/Users/javi/socdepoble-node0/mirall-workspace-public-cache',stateDir:'/Users/javi/.config/socdepoble',socket:'/Users/javi/socdepoble-node0/dades/run/postgres17',pgDump:'/Users/javi/local/postgres17/Postgres.app/Contents/Versions/17/bin/pg_dump',age:'/Users/javi/local/age-v1.3.2/age'});
+export const TARGET=Object.freeze({workspaceRoot:'/Users/javi/socdepoble-node0-soberania',mirrorDir:'/Users/javi/socdepoble-node0/mirall-workspace-staging',cacheDir:'/Users/javi/socdepoble-node0/mirall-workspace-public-cache',stateDir:'/Users/javi/.config/socdepoble',socket:'/Users/javi/socdepoble-node0/dades/run/postgres17',pgDump:'/Users/javi/local/postgres17/Postgres.app/Contents/Versions/17/bin/pg_dump',psql:'/Users/javi/local/postgres17/Postgres.app/Contents/Versions/17/bin/psql',age:'/Users/javi/local/age-v1.3.2/age'});
 const sha=b=>createHash('sha256').update(b).digest('hex');
 const here=path.dirname(fileURLToPath(import.meta.url));
 export async function preparaRecepta({recipient,cacheDir=TARGET.cacheDir}={}){

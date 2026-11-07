@@ -132,24 +132,32 @@ export function configDe(env = {}) {
 }
 
 /** Llig un flux amb un sostre: els bytes, o null si en passa (i el cancel·la sense llegir-ne més). */
-export async function llegixFluxFitat(flux, maxim) {
+export async function llegixFluxFitat(flux, maxim, senyal = null) {
   if (!flux) return new Uint8Array(0);
   const lector = flux.getReader();
   const trossos = [];
   let n = 0;
+  const talla = () => {
+    try { lector.cancel().catch(() => {}); } catch { /* flux ja tancat */ }
+  };
+  senyal?.addEventListener('abort', talla, { once: true });
+  if (senyal?.aborted) talla();
   try {
     for (;;) {
-      const { done, value } = await lector.read();
+      const lectura = senyal ? finsAlTopall(lector.read(), senyal) : lector.read();
+      const { done, value } = await lectura;
+      if (senyal?.aborted) throw Object.assign(new Error('temps'), { codi: 'temps' });
       if (done) break;
       const tros = typeof value === 'string' ? enc.encode(value) : value instanceof Uint8Array ? value : new Uint8Array(value);
       n += tros.byteLength;
       if (n > maxim) {
-        await lector.cancel().catch(() => {});
+        talla();
         return null;
       }
       trossos.push(tros);
     }
   } finally {
+    senyal?.removeEventListener('abort', talla);
     try { lector.releaseLock(); } catch { /* ja alliberat */ }
   }
   const eixida = new Uint8Array(n);
@@ -159,7 +167,7 @@ export async function llegixFluxFitat(flux, maxim) {
 }
 
 /** El cos d'una petició amb un sostre (null: passa de `maxim`). Mai req.arrayBuffer(). */
-export const llegixCosFitat = (req, maxim) => llegixFluxFitat(req?.body ?? null, maxim);
+export const llegixCosFitat = (req, maxim, senyal = null) => llegixFluxFitat(req?.body ?? null, maxim, senyal);
 
 /**
  * Les obtencions remotes de la inbox: obtenDocument(id) i
@@ -211,7 +219,7 @@ export function creaObtenidor({
       if (!TIPUS_DOCUMENT.includes(tipus)) throw new Error('tipus');
       const declarada = Number(r.headers.get('content-length'));
       if (Number.isFinite(declarada) && declarada > maximBytes) throw new Error('massa_gran');
-      const bytes = await finsAlTopall(llegixFluxFitat(r.body, maximBytes), control.signal);
+      const bytes = await finsAlTopall(llegixFluxFitat(r.body, maximBytes, control.signal), control.signal);
       if (!bytes) throw new Error('massa_gran');
       const document = JSON.parse(new TextDecoder('utf-8', { fatal: true }).decode(bytes));
       if (!document || typeof document !== 'object' || Array.isArray(document)) throw new Error('document');
@@ -301,7 +309,20 @@ export function creaGestor({
     if (tipus !== 'application/activity+json' && tipus !== 'application/ld+json') return resposta(415, { error: 'unsupported_media_type' });
     const declarada = Number(req.headers.get('content-length'));
     if (Number.isFinite(declarada) && declarada > MAXIM_COS_INBOX) return resposta(413, { error: 'payload_too_large' });
-    const bytes = await llegixCosFitat(req, MAXIM_COS_INBOX);
+    // R11-AP-01: el sostre d'octets no basta si el transport no acaba.
+    // Un cos interromput és una petició invàlida, no una excepció del gestor.
+    const controlCos = new AbortController();
+    const rellotgeCos = setTimeout(() => controlCos.abort(), AP.TOPALL_MS);
+    let bytes;
+    try {
+      bytes = await llegixCosFitat(req, MAXIM_COS_INBOX, controlCos.signal);
+    } catch {
+      return resposta(controlCos.signal.aborted ? 408 : 400, {
+        error: controlCos.signal.aborted ? 'request_timeout' : 'invalid_body'
+      });
+    } finally {
+      clearTimeout(rellotgeCos);
+    }
     if (!bytes) return resposta(413, { error: 'payload_too_large' });
     // El host i el camí que es verifiquen són els públics: la passarel·la no els pot canviar.
     const capcaleres = new Map();

@@ -32,15 +32,8 @@ import { opcionsDeLaImatgeSocial } from '../../config/opcionsImatgeSocial.js';
    l'app nativa, sense cap altra plataforma mòbil (regla 2.3.10 de l'App Store). */
 import { htmlPerAppNativa, paginaPerAppNativa } from './perAppNativa.js';
 
-/* Gauntlet 261030 (cicle 3, tc3-lang-ca-sobre-interficie-traduida) · Una
-   etiqueta de PAGE_COPY que declara la seua llengua (PageFrame en posa el
-   lang només si la interfície és en una altra): el mateix text, la mateixa
-   classe i el mateix enllaç. */
-const etiquetaEnValencia = (label) => {
-  if (typeof label === 'string') return { text: label, lang: 'ca' };
-  return label && typeof label === 'object' ? { ...label, lang: 'ca' } : label;
-};
-
+/* Les etiquetes públiques localitzades declaren la seua llengua; les altres
+   hereten la del contingut. Traduir una píndola no traduïx el cos. */
 /* Ordre del Mestre (261007) · El cos d'una pàgina de text amb targetes
    incrustades (un grup data-sdp-targetes de primer nivell: la de «Drets
    d'autor» dins de «Legal i privacitat», apartat 4) es llig pel MATEIX camí
@@ -110,7 +103,7 @@ export function CosDeLaPagina({ html }) {
    quan n'hi ha: sense, o si la funció torna null, les etiquetes de sempre. */
 export default function TextSection({ page: original, pageKey, accioPrincipal = null, onConnect = null, objecte = null, etiquetaFinal = null, children = null }) {
   const { t, language = 'ca' } = useUIActions();
-  const page = useMemo(() => paginaPerAppNativa(localitzaPagina(original, language)), [original, language]);
+  const page = useMemo(() => paginaPerAppNativa(localitzaPagina(original, language, pageKey)), [original, language, pageKey]);
   const contentLanguage = page.contentLanguage || 'ca';
   const etiquetaExtra = typeof etiquetaFinal === 'function' ? etiquetaFinal(t) : etiquetaFinal;
   /* Pla 261027_1154 (P1-61), Fase 1 (ordre del Mestre, 261027) · Abans, la
@@ -159,7 +152,7 @@ export default function TextSection({ page: original, pageKey, accioPrincipal = 
      ho declara i PageFrame en posa el lang amb la interfície en una altra
      llengua. Les de reserva (la clau i «Pàgina», amb t) i la pastilla final
      (etiquetaFinal, amb t) són de la interfície: tal qual. */
-  const etiquetes = Array.isArray(page.labels) ? propsDeText.labels.map(label => contentLanguage === 'ca' ? etiquetaEnValencia(label) : (typeof label === 'string' ? { text:label, lang:contentLanguage } : { ...label, lang:contentLanguage })) : propsDeText.labels;
+  const etiquetes = Array.isArray(page.labels) ? propsDeText.labels.map(label => typeof label === 'string' ? { text:label, lang:contentLanguage } : { ...label, lang:label?.lang||contentLanguage }) : propsDeText.labels;
   return (
     <UniversalPage
       {...propsDeText}

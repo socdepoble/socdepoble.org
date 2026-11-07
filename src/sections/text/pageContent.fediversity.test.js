@@ -209,11 +209,12 @@ describe('anatomia (skill sdp-universal-page)', () => {
     expect(VARIANTS_SOCIALS[copy.image]).toBe('/assets/uploads/fediversity-hero-social-1200x630.jpg');
   });
 
-  test('etiquetes: Sistema, una categoria i una etiqueta, sense duplicats', () => {
+  test('etiquetes: Sistema, categoria mare i etiquetes canòniques, sense duplicats', () => {
     expect(copy.labels).toEqual([
       { text: 'Sistema', className: 'sdp-badge-system' },
-      { text: 'Candidatura europea', className: 'sdp-badge-category' },
-      { text: 'NGI Fediversity', className: 'sdp-badge-tag' }
+      { text: '💻 Tecnologia Lliure, Dades Obertes i Disseny', className: 'sdp-badge-category' },
+      { text: 'NGI Fediversity', className: 'sdp-badge-tag' },
+      { text: 'Documentació', className: 'sdp-badge-tag' }
     ]);
   });
 

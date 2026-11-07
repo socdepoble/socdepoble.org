@@ -157,7 +157,9 @@ test('conserva els antecedents i admet la correctora explícita de federació', 
   const correctora = '2610311900_exporta_dades_filtre_servidor_rgpd.sql';
   /* Actualitzada a posta (assalt 261101, P2-09): la 2611011800 posa el contracte v1 a una funció privada. */
   const contracte = '2611011800_contracte_exportacio_federacio_v1.sql';
-  expect(amb).toEqual([F1, NOM, correctora, contracte]);
+  /* R43 · SQL80 conserva la base canònica privada i afig el wrapper d'exportació
+     de seed_revisions pròpies; la llista continua tancada als cinc SQL explícits. */
+  expect(amb).toEqual([F1, NOM, correctora, contracte, '2611070600_seed_revisions.sql']);
   const nou = llig(correctora);
   expect(nou).toContain('SDP-FED-ESQUEMA-NO-ADMES');
   expect(nou).not.toContain("c.column_name not in ('id', 'tenant_id')");

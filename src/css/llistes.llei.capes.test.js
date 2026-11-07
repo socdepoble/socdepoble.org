@@ -1,6 +1,7 @@
 // @vitest-environment node
 import { readdirSync, readFileSync, statSync } from 'node:fs';
 import { join, relative, resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { expect, test } from 'vitest';
 
 /* Llei de llistes · Ordre del Mestre (31-10-2026): els ítems (<li>) d'una
@@ -19,7 +20,7 @@ import { expect, test } from 'vitest';
    Límit: un <li> pintat per un component fill no es resol (el cens és una
    cota baixa); una classe muntada amb clsx() tampoc. */
 
-const ARREL = process.cwd();
+const ARREL = resolve(fileURLToPath(new URL('../..', import.meta.url)));
 const senseComentaris = (css) => css.replace(/\/\*[\s\S]*?\*\//g, '');
 
 /** Regles fulla d'un full: { prelud, cos }. */
@@ -94,7 +95,7 @@ const MARGE_VERTICAL = /(^|;)\s*margin(-top|-bottom|-block(-start|-end)?)?\s*:/;
 const SENSE_MARCADORS = /(^|;)\s*list-style(-type)?\s*:\s*none\b/;
 const sumaGap = (regla) => GAP.test(regla.cos) || GRID_O_FLEX.test(regla.cos);
 
-const CLASSE_JSX = /className=(?:"([^"]+)"|\{`([^`]+)`\}|\{'([^']+)'\}|\{"([^"]+)"\})/;
+const CLASSE_JSX = /(?:className|class)=(?:"([^"]+)"|\{`([^`]+)`\}|\{'([^']+)'\}|\{"([^"]+)"\})/;
 const classesJsx = (atributs) => {
   const m = CLASSE_JSX.exec(atributs);
   if (!m) return [];

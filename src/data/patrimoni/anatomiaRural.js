@@ -116,15 +116,19 @@ const POU = estructura({
   cotes: [
     cota('Cota del pou', '1.160 m s/n/m, al ventisquer orientat a llevant', ARTICLE),
     cota('Cim dels Plans', '1.330 m', CORPUS, 'unica', 'L’article només diu que el pou és «baix del cim».'),
-    cota('Alçada total', '18 m: 15 m de pou i 3 m de falsa volta', CORPUS, 'unica', 'No és a l’article, que parla de la fondària des de les finestres.'),
-    cota('Fondària des de les finestres superiors', '13,75 m', ARTICLE),
-    cota('Diàmetre interior', '9,75 m al plànol; 9,80 m a l’article', `${CORPUS}; ${ARTICLE}`, 'discrepant',
-      'La llegenda del mateix plànol diu 10 m d’amplària.'),
-    cota('Capacitat estimada', '1.030 m³ a l’article; el corpus diu més de 1.100 m³', `${ARTICLE}; ${CORPUS}`, 'discrepant'),
+    /* Loop 3 (R11) · Les cotes són les de Josep Mª Segura Martí (Eines 7-8, 1987), que reproduïx
+       l'article: les mateixes de pouNeuRentonar.js. Les xifres de l'esbós divulgatiu 76150
+       (sense autor ni escala) només queden com a nota de discrepància. */
+    cota('Fondària des de les finestres superiors', '13,75 m', ARTICLE, 'ok',
+      'Damunt, una falsa cúpula hemisfèrica de filades. L’esbós divulgatiu 76150 (sense autor ni escala) diu 18 m d’alçada total (15 m de pou i 3 m de falsa volta): no concorda amb Segura.'),
+    cota('Diàmetre interior', '9,80 m', ARTICLE, 'ok', 'L’esbós 76150 hi posa 9,75 m i, a la llegenda, 10 m d’amplària: sense escala.'),
+    cota('Gruix del mur', '1,50 m, mesurat a la finestra de l’oest', ARTICLE),
+    cota('Capacitat estimada', '1.030 m³', ARTICLE, 'ok', 'El corpus de síntesi diu més de 1.100 m³, sense cap font primària.'),
     cota('Capacitat històrica', '20.000 arroves, calculades per Manuel Rico García (1880)', ARTICLE),
-    cota('Túnel d’accés sud', '9,10 m de longitud', ARTICLE),
-    cota('Galeria d’escorredor, a l’est', '29 m en línia recta, de 0,50 m d’ample per 0,70 m d’altura; el plànol la parteix en 24 m i 5 m i dona una boca de 43 cm', `${ARTICLE}; ${CORPUS}`, 'discrepant'),
-    cota('Finestres superiors', '3 (nord, oest i est); només la de l’oest és oberta', ARTICLE),
+    cota('Túnel d’accés sud', '9,10 m de longitud, amb volta rebaixada de maçoneria: boca de 2,35 m d’ample i ingrés d’1,35 × 1,55 m a +10,00 m sobre el fons', ARTICLE),
+    cota('Galeria d’escorredor, a l’est', '29 m en línia recta, de 0,50 m d’ample per 0,70 m d’altura', ARTICLE, 'ok',
+      'L’esbós 76150 la parteix en 24 m i 5 m i hi dona una boca de 43 cm.'),
+    cota('Finestres superiors', '3 (nord, oest i est), d’1,55 m d’ample i 1,70 m d’altura màxima; hui només la de l’oest és oberta', ARTICLE),
     cota('Estreps d’arcs', '4, que formen 2 arcs creuats (NE-SW i NW-SE)', ARTICLE),
     cota('Època', 'bastit entre els segles XVII i XVIII; documentat de 1724 a 1880', ARTICLE)
   ],
@@ -149,7 +153,7 @@ const POU = estructura({
       'pedra', cup(78, 70, 3), { alies: ['falsa volta'], nota: 'La fàbrica en sec és el terme del Mestre; l’article diu «filades de pedra» sense precisar el morter.' }),
     v('boca', 'boca d’entrada', 'Boca d’entrada de la cava.', 'pedra', pris(30, 30, 24)),
     l('galeria', 'galeria d’escorredor',
-      'Estret passadís a l’est que, des del punt més baix del pou, desemboca a l’exterior: uns 29 m en línia recta, quasi tot excavat en terra i enllosat al principi i al final.',
+      'Estret passadís a l’est que, des del punt més baix del pou, desemboca a l’exterior: uns 29 m en línia recta, la major part excavat en terra (tap) i, al principi i al final, amb el sostre enllosat de grans pedres planes.',
       'pedra', 'dreta', pris(0, 0, 0), { alies: ['desguàs'], nota: 'El plànol dona 24 m i 5 m amb una boca de 43 cm; l’article, 29 m i 0,50 × 0,70 m.' }),
     l('tunel-sud', 'túnel d’accés sud',
       'Túnel amb volta rebaixada de maçoneria, de 9,10 m de longitud, que s’estreta fins a l’ingrés (1,35 m d’ample per 1,55 m d’altura), a 10 m damunt del fons del pou.',
@@ -454,34 +458,6 @@ const CARRO = estructura({
     l('capcana', 'capçana', 'Cabeçó, frontalera, antoixos, galtera, morrera i serretó.', 'palla', 'dreta', pris(0, 0, 0)),
     l('llaurant', 'llaurant amb el matxo', 'El forcat romà i la xaruga (amb pala giratòria), i la garrafa d’espart (fent trena per cordar-la).', 'fusta', 'esquerra', pris(0, 0, 0))
   ]
-});
-
-/* IDEA-116 (Onada R9, carril C2) · Les mesures del pou en xifres, per al
-   reproductor explicatiu (ReproductorExplicatiuPouNeu3D.jsx), que les dibuixa
-   com a cotes i en fa el càlcul de comprovació del volum. Són les mateixes
-   xifres de `cotes` (la prova ho comprova una a una), no unes altres: cada
-   una porta la font d'on ix. PLA és el plànol «Pozo de nieve "EL RENTONAR"»
-   (grafics_etnografics_de_poble/pou-de-neu/76150.jpg); WP_3656, l'article.
-   `decimals` és la precisió amb què la font escriu la xifra (9,80 m, no 9,8). */
-const PLA = 'plànol de Gràfics de Poble';
-const mesura = (valor, unitat, font, decimals = 0) => Object.freeze({ valor, unitat, font, decimals });
-export const MESURES_POU = Object.freeze({
-  alcadaTotal: mesura(18, 'm', PLA),
-  alcadaPou: mesura(15, 'm', PLA),
-  alcadaCupula: mesura(3, 'm', PLA),
-  fondariaFinestres: mesura(13.75, 'm', ARTICLE, 2),
-  diametrePla: mesura(9.75, 'm', PLA, 2),
-  diametreLlegenda: mesura(10, 'm', PLA),
-  diametreArticle: mesura(9.8, 'm', ARTICLE, 2),
-  capacitatArticle: mesura(1030, 'm³', ARTICLE),
-  /* La del corpus de síntesi, que no en cita cap font primària (per això la cota és 'discrepant'). */
-  capacitatCorpus: mesura(1100, 'm³', CORPUS),
-  galeria: mesura(29, 'm', `${ARTICLE}; ${PLA}`),
-  galeriaTram1: mesura(24, 'm', PLA),
-  galeriaTram2: mesura(5, 'm', PLA),
-  entradaGaleria: mesura(43, 'cm', PLA),
-  tunel: mesura(9.1, 'm', ARTICLE, 2),
-  cota: mesura(1160, 'm', ARTICLE)
 });
 
 export const ESTRUCTURES = Object.freeze([POU, ALMASSERA, MOLI_HIDRAULIC, MOLI_ELECTRIC, FORN, CARBONERA, CUP, SENIA, CARRO]);

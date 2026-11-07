@@ -85,7 +85,11 @@ const fillsAmbRanura = (el) => [...el.children].map((e) => (e.dataset.sdpRanura 
 const desplegable = (container) => container.querySelector('details.sdp-edicio-avancada');
 const ranuraAmbit = (container) => container.querySelector('[data-sdp-ranura="ambit"]');
 
-test('dins de l’«Edició avançada», l’ordre exacte: capçalera > logotip > «On es publica?» > classificació > botó tancar', () => {
+/* IDEA-164 (R104) · R11 Loop 3 (L2-03) · La revisora editorial entra dins del desplegable, després
+   de la classificació i abans de tancar (ranura «revisio»): l'ordre del Mestre (capçalera > logotip
+   > «On es publica?» > classificació) no canvia. Si la revisora ha de viure a l'edició, ho decidix
+   el Mestre. */
+test('dins de l’«Edició avançada», l’ordre exacte: capçalera > logotip > «On es publica?» > classificació > revisora > botó tancar', () => {
   const { container } = render(<CanalAmbitContext.Provider value={CANAL_BUIT}><NotaViva inicial={NOTA} /></CanalAmbitContext.Provider>);
   const cos = desplegable(container).querySelector(':scope > .sdp-edicio-avancada__cos');
   expect(fillsAmbRanura(cos)).toEqual([
@@ -93,8 +97,12 @@ test('dins de l’«Edició avançada», l’ordre exacte: capçalera > logotip 
     'sdp-edicio-avancada__imatge [logotip]',
     'sdp-edicio-avancada__ambit [ambit]',
     'page-title-classificacio',
+    'sdp-edicio-avancada__ambit [revisio]',
     'sdp-boto sdp-boto--secundari sdp-edicio-avancada__boto-tancar'
   ]);
+  expect(cos.querySelector('[data-sdp-ranura="revisio"] [data-sdp-revisor-editorial-node0="true"]')).not.toBeNull();
+  // Ni germana del DocumentEditor ni fora del desplegable.
+  expect(container.querySelectorAll('[data-sdp-revisor-editorial-node0]')).toHaveLength(1);
   const bloc = within(ranuraAmbit(container)).getByRole('group', { name: 'On es publica?' });
   expect(within(bloc).getByLabelText('Àmbit').options).toHaveLength(8);
   // Plegat, com sempre: cap diàleg, cap salt.

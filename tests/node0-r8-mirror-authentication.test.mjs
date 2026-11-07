@@ -14,12 +14,14 @@ import {autenticitatMirallLocal} from '../tooling/node0/autenticitat-mirall-node
 const DATE='2026-11-04T22:00:00.000Z',NOW=Date.parse(DATE),R='age1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq5cu47z';
 const workerFile=fileURLToPath(new URL('../tooling/node0/fitxers-mirall.py',import.meta.url));
 const sha=b=>createHash('sha256').update(b).digest('hex');
+// Arbitratge R46, Loop 3 (L2-01) · Contracte R42 del runner: el doble de prova porta el ledger capturat, com a node0-workspace-mirror.
+const LEDGER=Object.freeze({migrations:80,migrationLedgerSha256:'b'.repeat(64)}),CAPTURE_PROTOCOL='sdp.node0.snapshot-ledger.v1';
 function worker(request){return new Promise((resolve,reject)=>{const child=spawn('/usr/bin/python3',['-I','-B',workerFile],{stdio:['pipe','pipe','ignore'],env:{PATH:'/usr/bin:/bin',LANG:'C'}});let out='';child.stdout.on('data',c=>{out+=c;});child.on('error',reject);child.on('close',()=>{const v=JSON.parse(out);v.ok?resolve(v.result):reject(Error(v.error));});child.stdin.end(JSON.stringify(request));});}
 async function fixture(t){
  const home=await fs.realpath(await fs.mkdtemp(path.join(os.tmpdir(),'sdp-r8-authenticated-'))),config=path.join(home,'.config/socdepoble'),mirrorDir=path.join(home,'Library/CloudStorage/GoogleDrive-socdepoble@socdepoble.org/Mi unidad/Sóc de Poble · Mirall Sobirà Node 0');
  await fs.mkdir(config,{recursive:true,mode:0o700});await fs.mkdir(mirrorDir,{recursive:true,mode:0o700});t.after(()=>fs.rm(home,{recursive:true,force:true}));
  const authentication=autenticitatMirallLocal(home);await fs.writeFile(authentication.keyFile,randomBytes(32),{mode:0o600});
- await exportaMirall({mirrorDir,stateDir:config,recipient:R,authentication,providers:{listPublicArticles:async()=>[],listPublicMedia:async()=>[],listPublicOpenData:async()=>[]},reviewedSourceRoots:[],apply:true,now:()=>NOW,runner:async()=>({ciphertext:Buffer.concat([Buffer.from('age-encryption.org/v1\n'),Buffer.alloc(128,11)]),completed:true,encrypted:true,format:'pg_dump-custom-gzip-6',encryption:'age-X25519'})});
+ await exportaMirall({mirrorDir,stateDir:config,recipient:R,authentication,providers:{listPublicArticles:async()=>[],listPublicMedia:async()=>[],listPublicOpenData:async()=>[]},reviewedSourceRoots:[],apply:true,now:()=>NOW,runner:async()=>({ciphertext:Buffer.concat([Buffer.from('age-encryption.org/v1\n'),Buffer.alloc(128,11)]),completed:true,encrypted:true,format:'pg_dump-custom-gzip-6',encryption:'age-X25519',captureProtocol:CAPTURE_PROTOCOL,migrationLedger:LEDGER})});
  const probe=creaSalutMirallWorkspace({homeDir:home,mirrorDir,recipient:R,now:()=>NOW}),certify=creaCertificadorMirall({homeDir:home,resolveTarget:async()=>({workspaceMirrorConfigured:true,mirrorDir}),worker,readBack:probe,authentication,retentionOk:true,now:()=>NOW});
  return{home,config,mirrorDir,authentication,probe,certify:()=>certify({mirrorDir,recipient:R})};
 }

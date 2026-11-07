@@ -138,7 +138,7 @@ describe('l’adaptador local (conversesLocal)', () => {
       // capability, including push's explicit no-service rejection.
       expect(CAPACITATS_NO_DECLARADES).toEqual(['importacioPaquetMunicipal','verificacioCorreu','recuperacioCorreu']);
       /* Onada R6 · R12 (migració 76) · +carpetesNotes i +edicioEditorial: 43 capacitats. */
-      expect(Object.keys(CAPACITATS)).toHaveLength(45);
+      expect(Object.keys(CAPACITATS)).toHaveLength(46);
     } finally {
       await a.destroy();
     }

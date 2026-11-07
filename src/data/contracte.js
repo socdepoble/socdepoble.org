@@ -79,6 +79,8 @@ export const CAPACITATS = Object.freeze({
   carpetesNotes: Object.freeze(['creaCarpetaNotes']),
   /* R12: patch d'un element existent d'app_content; whole-row version CAS, superadmin+aal2 al servidor. */
   edicioEditorial: Object.freeze(['adminActualitzaPublicacioEditorial']),
+  /* P1-75 · Revisions vigents per peça; CAS 0 inicia, autoria autoritativa al servidor. */
+  revisionsLlavor: Object.freeze(['loadSeedRevisions', 'desaRevisioSeed']),
   sessioExterna: Object.freeze(['adoptaSessioExterna']),
   paginacioNotes: Object.freeze(['loadNotesPage']),
   /* Decisió 4 del Mestre (261007) · «Carregar-ne més» al Mur i al Mercat

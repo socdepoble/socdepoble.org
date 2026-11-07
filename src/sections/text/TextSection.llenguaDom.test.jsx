@@ -16,7 +16,7 @@ const estat = vi.hoisted(() => ({ toast: vi.fn(), ui: { externalConfig: {} } }))
 vi.mock('../../components/universal/NotificationContext.jsx', () => ({ useToast: () => ({ showToast: estat.toast }) }));
 vi.mock('../../app/contexts/UIContext', async (importOriginal) => ({
   ...(await importOriginal()),
-  useUIActions: () => ({ t: (_, reserva) => reserva }),
+  useUIActions: () => ({ t: (_, reserva) => reserva, language: estat.ui.language || 'ca' }),
   useUIState: () => estat.ui,
   useUIActionsOpcional: () => null
 }));
@@ -94,4 +94,24 @@ test('«Legal i privacitat» (cos amb targetes) amb la interfície en anglés: e
   expect(trossos.map((tros) => tros.getAttribute('lang'))).toEqual(trossos.map(() => 'ca'));
   expect(langDe(cos.querySelector('.sdp-targetes'))).toBeNull();
   expect(langDe(container.querySelector('.peu-de-prova button'))).toBeNull();
+});
+
+test.each([
+  ['ca', ['Sistema', '🤝 Món Rural', 'Associacionisme']],
+  ['es', ['Sistema', '🤝 Mundo Rural', 'Asociacionismo']],
+  ['en', ['System', '🤝 Rural Communities', 'Community associations']],
+  ['eu', ['Sistema', '🤝 Landa Mundua', 'Elkartegintza']],
+  ['gl', ['Sistema', '🤝 Mundo Rural', 'Asociacionismo']]
+])('R41 · píndoles públiques en %s, cos valencià i cap traducció fictícia', (language, labels) => {
+  estat.ui = { externalConfig: {}, language, llenguaDelText: language };
+  // Com CoreContent/API: clon amb etiquetes antigues, sense identitat WeakMap.
+  const copy = { xat: { ...PAGE_COPY.xat, html: '<p>Cos valencià intacte.</p>', contentLanguage: 'ca', translations: undefined, labels: [{ text: 'Comunicació', className: 'sdp-badge-system' }, { text: 'Eina', className: 'sdp-badge-category' }] } };
+  const { container } = render(<MemoryRouter rutaInicial="/xat"><TextSection page={copy.xat} pageKey="xat" /></MemoryRouter>);
+  const badges = [...container.querySelectorAll('header.page-title .page-title-labels > li')];
+  expect(badges.map(li => li.textContent)).toEqual(labels);
+  // PageFrame omet lang quan coincidix amb la llengua de la interfície.
+  expect(badges.map(li => li.getAttribute('lang'))).toEqual([null, null, null]);
+  const body = container.querySelector('article.cms-preview');
+  expect(body.innerHTML).toBe('<p>Cos valencià intacte.</p>');
+  expect(langDe(body)).toBe(language === 'ca' ? null : 'ca');
 });

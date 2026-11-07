@@ -176,6 +176,21 @@ def auth_bytes(manifest, sums, auth):
     message = b'sdp.node0.mirror.authentication.v1\x00' + manifest + b'\x00' + sums
     return (json.dumps({'schema':'sdp.node0.mirror.authentication.v1', 'algorithm':'HMAC-SHA256', 'keyId':key_id, 'mac':hmac.new(key, message, hashlib.sha256).hexdigest()}, sort_keys=True, separators=(',', ':')) + '\n').encode('utf8')
 
+def validate_snapshot_ledger(manifest):
+    snapshot = manifest.get('snapshot')
+    if not isinstance(snapshot, dict):
+        bad('mirror_snapshot_ledger_invalid')
+    # Legacy manifests remain usable with a separate trusted manual source.
+    if 'migrationLedger' not in snapshot and 'migrationLedgerCapture' not in snapshot:
+        if snapshot.get('consistent') == 'pg_dump-transaction':
+            return
+        bad('mirror_snapshot_ledger_invalid')
+    ledger, capture = snapshot.get('migrationLedger'), snapshot.get('migrationLedgerCapture')
+    if not isinstance(ledger, dict) or set(ledger) != {'migrations', 'migrationLedgerSha256'} or type(ledger.get('migrations')) is not int or not 1 <= ledger['migrations'] <= 9007199254740991 or not isinstance(ledger.get('migrationLedgerSha256'), str) or not HASH.fullmatch(ledger['migrationLedgerSha256']):
+        bad('mirror_snapshot_ledger_invalid')
+    if not isinstance(capture, dict) or set(capture) != {'method', 'isolation', 'readOnly', 'nativeVerified'} or capture.get('method') != 'pg-exported-snapshot' or capture.get('isolation') != 'repeatable read' or capture.get('readOnly') is not True or capture.get('nativeVerified') is not False or snapshot.get('consistent') != 'pg-exported-snapshot':
+        bad('mirror_snapshot_ledger_invalid')
+
 def remove_tree(parent, name, budget=None):
     # Only called for unselected generation/staging directories under the
     # held export lock. Do not follow links or touch an independently moved root.
@@ -473,6 +488,7 @@ def inspect(root, pointer=None, auth=None):
         manifest = json.loads(manifest_bytes)
         if manifest.get('schema') != 'sdp.node0.workspace-mirror.v1' or manifest.get('generation') != pointer['generation'] or not isinstance(manifest.get('files'), list) or len(manifest['files']) > 20000 or manifest.get('folders') != list(FOLDERS):
             bad('mirror_manifest_invalid')
+        validate_snapshot_ledger(manifest)
         expected = {}
         total_bytes = 0
         for row in manifest['files']:
@@ -702,6 +718,7 @@ def publish(req):
         manifest_bytes = base64.b64decode(req['manifest'], validate=True)
         manifest = json.loads(manifest_bytes)
         generation_name = manifest.get('generation', '')
+        validate_snapshot_ledger(manifest)
         if not GEN.fullmatch(generation_name):
             bad('mirror_generation_invalid')
         if manifest.get('files') != [{'path':i['path'], 'sha256':i['sha256'], 'bytes':i['bytes'], 'kind':i['kind']} for i in entries]:

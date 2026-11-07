@@ -26,12 +26,12 @@
     },
     {
       "path": "tooling/node0/verifica-restauracio-node0.mjs",
-      "sha256": "1d21be8349bd20e397f08644fac0c9c1add7e46af563480c40bd62a54e154261"
+      "sha256": "3bc662b90a25682c0fb14eee49699419d8434c9715a742d1c4f81e0d88f7f211"
     }
   ],
   "output": {
     "path": "public-bundle/restaura-node0-manual.mjs",
-    "sha256": "578fc1f446402337832786593f94ed2add7bbcea1882c1e26be92ae90e36acd6"
+    "sha256": "93cbab116d687f8ef549571b951b7a6d0e9f799a566c8d76390e9ebbb77601f4"
   },
   "externalImports": [
     "node:child_process",
@@ -41,5 +41,19 @@
     "node:path",
     "node:url"
   ],
-  "privateMaterialRead": false
+  "privateMaterialRead": false,
+  "sourceMigrationLedger": {
+    "requiredForApply": true,
+    "cliArguments": [
+      "--migrations-count",
+      "--migration-ledger-sha256"
+    ],
+    "trustedSource": "Origin backup record supplied through the same trusted channel as the ciphertext digest; never derive expected values from the restored database.",
+    "digest": "SHA-256 of version + TAB + file + TAB + sha256, sorted by version COLLATE C and joined with LF, without trailing LF.",
+    "restoredDigestFunction": "pg_catalog.sha256(convert_to(..., 'UTF8')); no pgcrypto dependency.",
+    "note": "Count and ledger digest must describe the source dump. This tool does not attest how the source backup record was captured or authenticated.",
+    "currentExporterManifestCarriesLedger": true,
+    "producerNativeLifecycleVerified": false,
+    "producerStatus": "R42 implements a persistent read-only repeatable-read session and a shared migration lock; pg_dump imports its exported snapshot. New manifests carry snapshot.migrationLedger authenticated by the existing local HMAC. Native multi-process capture/restore is not certified here. The restorer still requires a trusted origin record and keeps sourceMigrationLedgerCaptureVerified:false. Legacy backups retain the trusted coherent manual-source path; never infer the source ledger from the repository or restored target."
+  }
 }

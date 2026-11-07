@@ -1,3 +1,4 @@
+import {NOMS_CATEGORIES_CANONIQUES,NOMS_ETIQUETES_CANONIQUES_49} from '../../data/taxonomia/taxonomiaCanonica.js';
 /* Onada 11 (261010; prompt 261010_1730, tasca 2) · Les tres còpies de
    CATEGORIES_BASE (classificacioBloc.js, NotesEditor.jsx i
    ConnectarSection.jsx) s'han unificat: una sola font, a
@@ -15,8 +16,8 @@ import * as dades from '../../data/personalitzacio.js';
 const font = (ruta) => readFileSync(path.join(process.cwd(), 'src/sections', ruta), 'utf8');
 
 test('els valors de sèrie són els de sempre i la mateixa referència que la capa de dades', () => {
-  expect(CATEGORIES_BASE).toEqual(['Sistema']);
-  expect(ETIQUETES_BASE).toEqual(['Productivitat', 'Tutorial']);
+  expect(CATEGORIES_BASE).toEqual(['Sistema',...NOMS_CATEGORIES_CANONIQUES]);
+  expect(ETIQUETES_BASE).toEqual(NOMS_ETIQUETES_CANONIQUES_49);
   expect(CATEGORIES_BASE).toBe(dades.CATEGORIES_BASE);
   expect(ETIQUETES_BASE).toBe(dades.ETIQUETES_BASE);
   expect(AVIS_CATEGORIA).toMatch(/^Cal almenys una categoria/);

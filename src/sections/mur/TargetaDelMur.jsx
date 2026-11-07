@@ -65,6 +65,7 @@ import { CLASSE_DE_LA_TARGETA, DistintiuAlertaMunicipal } from './AlertaMunicipa
    del detall, les dues etiquetes (àmbit i estat) i el resum de la fitxa. Un
    element sense àmbit no rep res (Llei del Píxel). */
 import { ambitDe, esFitxaDAmbit, etiquetesDAmbit, resumDeFitxa, rutaDAmbit } from '../../utils/publicacioUniversal.js';
+import { localitzaCategoriesMares } from '../../data/taxonomia/taxonomiaCanonica.js';
 
 /**
  * T6 (ordre del Mestre, 261004, prompt 261004_0515 §5) · On porta la boina
@@ -88,8 +89,13 @@ export function rutaDeLaBoinaDelMur(item) {
    alertaMunicipalDe, amb useAjuntamentsDelMur). La targeta no ho decidix: el
    MurSection és qui pregunta al directori. Sense la prop (el Calendari,
    l'històric de l'actor, el peu «Ja publicat»), el DOM de sempre. */
-export function TargetaDelMur({ item, esdeveniment = null, alertaMunicipal = null, varietatPorta = 'primari' }) {
-  const { t } = useUIActions();
+export function TargetaDelMur({ item: original, esdeveniment = null, alertaMunicipal = null, varietatPorta = 'primari' }) {
+  const { t, language = 'ca' } = useUIActions();
+  /* Cadena R11, Loop 3 (L2-09) · Les categories mares (P0-40) es lligen en la
+     llengua de la interfície, com a les pàgines (localitzaPagina). En
+     valencià, o sense cap mare, l'element és el mateix objecte. */
+  const etiquetesLocals = localitzaCategoriesMares(original.labels, language);
+  const item = etiquetesLocals === original.labels ? original : { ...original, labels: etiquetesLocals };
   const navigate = useNavigate();
   /* T6 en remot · l'id de servidor de l'entitat pilot: quan arriba, la boina
      de les seues publicacions torna a pintar-se i porta al seu perfil. */

@@ -473,6 +473,10 @@ export function UniversalEditorShell({
      · `onPeticioAmbitAtesa(peticio)`: avisa qui l'ha demanada quan ja està
        atesa (el Bloc l'oblida: un remuntatge no hi torna). */
   ambitEdicioAvancada = null,
+  /* IDEA-164 · R11 Loop 3 (L2-03) · Opcional, i sense ella el DOM de sempre: un node (la
+     revisora editorial del Bloc de Notes) que es pinta dins del desplegable, després de la
+     classificació, a la ranura data-sdp-ranura="revisio". Sense `edicioAvancada`, res. */
+  revisioEdicioAvancada = null,
   peticioAmbit = null,
   onPeticioAmbitAtesa = null,
   /* Pla 261028_1526 (P1-58; Llibre Mestre, Fita 22) i AH-03 · `posicioEdicioAvancada`:
@@ -733,6 +737,7 @@ export function UniversalEditorShell({
         ) : null}
         {ambitEdicioAvancada ? <div className="sdp-edicio-avancada__ambit" data-sdp-ranura="ambit">{ambitEdicioAvancada}</div> : null}
         {classificacio ? <div className="page-title-classificacio">{classificacio}</div> : null}
+        {revisioEdicioAvancada ? <div className="sdp-edicio-avancada__ambit" data-sdp-ranura="revisio">{revisioEdicioAvancada}</div> : null}
         {previsualitzacioTargeta ? <div className="sdp-edicio-avancada__ambit" data-sdp-ranura="targeta-viva">{previsualitzacioTargeta}</div> : null}
         <button
           type="button"

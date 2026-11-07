@@ -324,6 +324,8 @@ export const retiraFactor = asseguraMetode('retiraFactor');
 export const adminDesaPersonalitzacio = asseguraMetode('adminDesaPersonalitzacio');
 export const adminHistorialPersonalitzacio = asseguraMetode('adminHistorialPersonalitzacio');
 export const adminActualitzaPublicacioEditorial = asseguraMetode('adminActualitzaPublicacioEditorial');
+export const loadSeedRevisions = asseguraMetode('loadSeedRevisions');
+export const desaRevisioSeed = asseguraMetode('desaRevisioSeed');
 export const adminLlistaPobles = asseguraMetode('adminLlistaPobles');
 export const adminLligPersonalitzacio = asseguraMetode('adminLligPersonalitzacio');
 

@@ -207,6 +207,36 @@ function etiquetaDeLaSeccio(section, item) {
   return ruta === RUTA_CALENDARI ? etiqueta : { ...etiqueta, className: 'sdp-badge-system sp-card-label--enllac', href: ruta };
 }
 
+/* P0-40 (Kit R88; arbitratge R11) · Les etiquetes pròpies d'un element
+   (labels) passen al detall en dos casos: un acte del Calendari, com abans, i
+   una targeta recategoritzada amb la taxonomia acotada (porta
+   categoria_tematica_id: el Manifest de Poble, el Pou de Neu 3D, l'Aplec i els
+   Cursos). La resta (una publicació del veïnat, un producte del Mercat)
+   continua amb [secció, id] (Llei del Píxel). Una etiqueta pròpia que porta al
+   mateix lloc que la de la secció (el dia de l'acte al Calendari) no hi
+   repeteix l'enllaç: ja hi porta la de la secció. */
+function etiquetaSenseEnllac(etiqueta) {
+  const resultat = {};
+  for (const [clau, valor] of Object.entries(etiqueta)) if (clau !== 'href') resultat[clau] = valor;
+  if (typeof etiqueta.className === 'string') {
+    resultat.className = etiqueta.className.split(/\s+/).filter((c) => c && c !== 'sp-card-label--enllac').join(' ');
+  }
+  return resultat;
+}
+
+function etiquetesDelDetall(section, item) {
+  const deLaSeccio = etiquetaDeLaSeccio(section, item);
+  const ambPropies = Array.isArray(item.labels) && item.labels.length > 0
+    && (section?.listPath === RUTA_CALENDARI || Boolean(textNet(item.categoria_tematica_id)));
+  if (!ambPropies) return [deLaSeccio, { text: item.id, className: 'sdp-badge-category' }];
+  return [
+    deLaSeccio,
+    ...item.labels
+      .filter((l) => (typeof l === 'string' ? l : l?.text) !== section.label)
+      .map((l) => (l && typeof l === 'object' && deLaSeccio.href && l.href === deLaSeccio.href ? etiquetaSenseEnllac(l) : l))
+  ];
+}
+
 /* P0-27 / IDEA-102 (R7, substituïx AH-20 / IDEA-77) · El quadrat de 128×128 px
    d'un acte d'agenda (SquareBadge) es pinta a la UniversalPage en una fila
    pròpia (.sdp-pagina-insignia) davall de l'entradilla, no a header.page-title.
@@ -291,15 +321,7 @@ export function paginaDElement(section, item) {
         { text: textNet(item.provincia), className: 'sdp-badge-category' },
         { text: textNet(item.comarca), className: 'sdp-badge-tag' }
       ].filter((label) => label.text)
-      : (section?.listPath === RUTA_CALENDARI && Array.isArray(item.labels) && item.labels.length > 0)
-        ? [
-          etiquetaDeLaSeccio(section, item),
-          ...item.labels.filter((l) => (typeof l === 'string' ? l : l?.text) !== section.label)
-        ]
-        : [
-          etiquetaDeLaSeccio(section, item),
-          { text: item.id, className: 'sdp-badge-category' }
-        ],
+      : etiquetesDelDetall(section, item),
     /* T39 · els drets triats a la publicació; el text de sèrie, només si no en porta.
        Onada 5 · El d'un poble és el de la Viquipèdia (CC BY-SA), el de la seua targeta. */
     copyright: item.copyright || (esPoble ? COPYRIGHT_VIQUIPEDIA : COPYRIGHT_SDP),

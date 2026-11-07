@@ -24,7 +24,7 @@ describe('Pou de la Neu · SI physics and architecture', () => {
   it('keeps physical elevation distinct from illustration displacement', () => {
     const rest = pouNeuState({ assembly: 'volta-cupula' });
     const apart = pouNeuState({ assembly: 'volta-cupula', shares: { 'volta-cupula': 1 } });
-    expect(apart.z).toBe(rest.z); expect(apart.explodedZ - rest.z).toBeCloseTo(8.4, 8);
+    expect(apart.z).toBe(rest.z); expect(apart.explodedZ - rest.z).toBeCloseTo(9.5, 8);
     for (const a of POU_ASSEMBLIES) {
       const s = pouNeuState({ assembly: a.id });
       for (const key of ['z', 'temperature', 'density', 'massTonnes', 'drainageLh']) expect(Number.isFinite(s[key])).toBe(true);
@@ -38,7 +38,7 @@ describe('Pou de la Neu · SI physics and architecture', () => {
     expect(new Set(s.parts.map(({ assembly }) => assembly)).size).toBe(7);
     expect(new Set(s.parts.map(({ id }) => id)).size).toBe(s.parts.length);
     expect(s.parts.every(({ paths, shapes }) => paths.fill && shapes.length)).toBe(true);
-    expect(s.effect.iceTops).toHaveLength(6); expect(s.engraving.text).toBe('CAVA DE DALT · RENTADOR');
+    expect(s.effect.iceTops).toHaveLength(6); expect(s.engraving.text).toBe('POU DE NEU · EL RENTONAR');
     expect(s.recorder.items).toHaveLength(s.parts.length);
     expect(s.recorder.solids.length + s.recorder.tubes.length).toBe(s.physicalSolidCount);
   });
@@ -51,6 +51,31 @@ describe('Pou de la Neu · SI physics and architecture', () => {
       expect(state.densityScope).toBe('dominant-material');
     }
     expect(scene.assemblyVolumes['base-roca']).toBeGreaterThan(84.5);
+  });
+  it('follows the Rentonar survey by Segura (1987) with 103 solids in 7 assemblies', () => {
+    expect(POU_DIMENSIONS).toMatchObject({ depth: 13.75, diameter: 9.8, innerRadius: 4.9, wall: 1.5, ingressHeight: 10, tunnelLength: 9.1, drainLength: 29 });
+    expect(POU_DIMENSIONS.diameter).toBeCloseTo(2 * POU_DIMENSIONS.innerRadius, 12);
+    // Segura rounds π·4,90²·13,75 m³ to 1.030 m³.
+    expect(Math.PI * POU_DIMENSIONS.innerRadius ** 2 * POU_DIMENSIONS.depth).toBeGreaterThan(1030);
+    expect(Math.PI * POU_DIMENSIONS.innerRadius ** 2 * POU_DIMENSIONS.depth).toBeLessThan(1040);
+    const s = buildPouNeuScene();
+    expect(s.physicalSolidCount).toBe(103);
+    expect(POU_ASSEMBLIES.map(({ id }) => id)).toEqual(['base-roca', 'pou-cilindric', 'estrats-gel', 'volta-cupula', 'portell-empouar', 'porta-extraccio', 'desaigue-fusio']);
+    const byPhysical = new Map(s.parts.map((part) => [part.physicalId, part]));
+    const courses = [...byPhysical.values()].filter(({ physicalId }) => physicalId.startsWith('wall.course-'));
+    expect(courses).toHaveLength(24);
+    const radii = courses.flatMap(({ sector }) => sector.profile.map(([, r]) => r));
+    const heights = courses.flatMap(({ sector }) => sector.profile.map(([z]) => z));
+    expect(Math.min(...radii)).toBeCloseTo(49, 9); expect(Math.max(...radii)).toBeCloseTo(64, 9);
+    expect(Math.min(...heights)).toBeCloseTo(2, 9); expect(Math.max(...heights)).toBeCloseTo(139.5, 9);
+    for (const id of ['wall.window-frame-0', 'wall.window-frame-1', 'wall.window-frame-2']) expect(byPhysical.get(id).shape.s0).toBeCloseTo(139.5, 9);
+    for (const id of ['dome.arch-springer-0', 'dome.arch-springer-1', 'dome.arch-springer-2']) {
+      expect(byPhysical.get(id).shape.s0).toBeCloseTo(102, 9); expect(byPhysical.get(id).shape.s1).toBeCloseTo(139.5, 9);
+    }
+    for (const id of ['door.tunnel-wall-0', 'door.tunnel-wall-1']) expect(byPhysical.get(id).shape.s0).toBeCloseTo(102, 9);
+    expect([...byPhysical.keys()].filter((id) => id.startsWith('wall.step-'))).toHaveLength(6);
+    expect(Math.max(...s.effect.iceTops) + 1.3).toBeLessThanOrEqual(138 + 1e-9);
+    expect(s.effect.drainOrigin[0]).toBeGreaterThan(64);
   });
   it('reprojects a stable world box across camera and disassembly', () => {
     const compact = buildPouNeuScene({ azimuth: 25 });

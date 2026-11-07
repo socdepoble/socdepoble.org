@@ -27,7 +27,14 @@ export const MANIFEST_DE_POBLE_POST = {
   town_name: 'La Torre de les Maçanes',
   poble_id: 'la-torre-de-les-macanes',
   pobles_etiquetats: [...POBLES_APLEC_2023.map((poble) => poble.id), 'la-vall-d-ebo'],
-  tags: ['Aplec pel Territori', 'Esdeveniments', 'Posant en Valor els Recursos Locals', 'Reivindicant'],
+  categoria_tematica_id: 'defensa-territori',
+  category: '⚖️ Defensa del Territori, Ecologia i Reivindicació',
+  tags: ['Aplec pel Territori', 'Associacionisme'],
+  labels: [
+    { text: '⚖️ Defensa del Territori, Ecologia i Reivindicació', className: 'sdp-badge-category' },
+    { text: 'Aplec pel Territori', className: 'sdp-badge-tag' },
+    { text: 'Associacionisme', className: 'sdp-badge-tag' }
+  ],
   image_url: '/assets/mur/manifest-de-poble/logo-manifest-de-poble-retallat.webp',
   image_alt: 'Logotip del Manifest de Poble',
   source_url: 'https://socdepoble.net/2022/11/17/manifest-de-poble/',

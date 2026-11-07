@@ -12,6 +12,7 @@ import { dataDeDocument, momentDElement } from '../../components/universal/edito
 import { esAppNativa } from '../../config/origenPublic.js';
 import { esPaginaVisible, SYSTEM_PAGES } from '../../config/systemPages.js';
 import { paginaPerAppNativa } from '../text/perAppNativa.js';
+import { clauDePaginaPublica, etiquetesDePaginaPublica } from '../../data/taxonomia/classificacioPaginesPubliques.js';
 
 /**
  * Les pàgines del sistema (SYSTEM_PAGES) que el Mur barreja amb les
@@ -33,9 +34,11 @@ const PAGINES_PATRIMONI_MUR = Object.freeze([
   { key: 'arbres-monumentals', href: '/page/arbres-monumentals', isAvis: false }
 ]);
 
-export function targetesDeSistema(pageCopy, { quanFalta, nativa = esAppNativa() } = {}) {
+export function targetesDeSistema(pageCopy, { quanFalta, nativa = esAppNativa(), language = 'ca' } = {}) {
   const paginesPatrimoni = PAGINES_PATRIMONI_MUR.filter((item) => Boolean(pageCopy?.[item.key]));
   return [...SYSTEM_PAGES.filter((item) => esPaginaVisible(item.key, { nativa })), ...paginesPatrimoni].map((item) => {
+    // Només documents del namespace públic; cap marker d’un post orgànic dona accés.
+    if (pageCopy?.[item.key] && !clauDePaginaPublica(pageCopy[item.key], item.key)) return null;
     const data = paginaPerAppNativa(pageCopy?.[item.key], { nativa });
     if (!data) {
       quanFalta?.(item.key);
@@ -43,6 +46,7 @@ export function targetesDeSistema(pageCopy, { quanFalta, nativa = esAppNativa() 
     }
     return {
       ...data,
+      labels: etiquetesDePaginaPublica(item.key, data.labels, language),
       /* T51 · La data del copy és la de CREACIÓ de la pàgina (com a
          TextSection): un dia serialitzat, que la regla pinta com el dia sol.
          No és el dia d'un acte (`date`), que dataDElement llegiria com a data

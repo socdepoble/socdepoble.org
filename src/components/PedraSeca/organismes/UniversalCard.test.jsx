@@ -59,6 +59,21 @@ afterEach(() => {
 const pinta = (props) => act(() => { render(<UniversalCard {...props} />, { container: arrel }); });
 const troba = (selector) => arrel.querySelector(selector);
 
+test('R41 · les píndoles públiques traduïdes declaren idioma propi sense traduir el cos', () => {
+  pinta({ title: 'Document', body: 'Cos original en valencià', llenguaContingut: 'ca', labels: [
+    { text: 'System', className: 'sdp-badge-system', lang: 'en' },
+    { text: 'Documentation', className: 'sdp-badge-tag', lang: 'en' }
+  ] });
+  expect([...arrel.querySelectorAll('.sp-card-labels > li')].map(li => [li.textContent, li.getAttribute('lang')])).toEqual([['System', 'en'], ['Documentation', 'en']]);
+  expect(arrel.textContent).toContain('Cos original en valencià');
+});
+
+test('R41 · les etiquetes orgàniques sense idioma explícit conserven text i DOM', () => {
+  pinta({ title: 'Nota personal', labels: [{ text: 'Eina', className: 'sdp-badge-category' }] });
+  const label = troba('.sp-card-labels > li');
+  expect(label.textContent).toBe('Eina');expect(label.getAttribute('lang')).toBeNull();
+});
+
 test('Connectar porta el títol en el nom accessible', () => {
   pinta({ title: 'Fira del Porrat', hasFooter: true });
   expect(troba('.sp-card-connect').getAttribute('aria-label')).toBe('Connectar amb Fira del Porrat');

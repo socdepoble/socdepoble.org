@@ -196,11 +196,12 @@ function modeDeDades(config) {
  */
 export function usePaginesDelSistema() {
   const core = useCoreContent();
+  const language = useEstatDeLApp()?.language || 'ca';
   const pageCopy = core?.pageCopy;
   const targetes = useMemo(() => {
-    const llista = targetesDeSistema(pageCopy);
+    const llista = targetesDeSistema(pageCopy, { language });
     return llista.length ? llista : CAP;
-  }, [pageCopy]);
+  }, [pageCopy, language]);
   const carregant = typeof core?.refresh === 'function' && core.status === 'loading';
   return { targetes, carregant };
 }

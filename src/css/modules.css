@@ -10973,6 +10973,54 @@ details[open] summary.accordion-header svg:last-child {
   }
 }
 
+/* P0-39 / IDEA-166 · /pobles · Xarxa de Pobles (kit R89 de Gemini, radi de
+   R37 de Codex) · L'arbre territorial passa a ser un botó desplegable
+   centrat davall de l'entradilla (TerritoriDelPoble.jsx · ArbreTerritorial).
+   Cadena R11, Loop 3 (L2-02) · Fora del bloc T7: les targetes incrustades
+   tenen el seu contracte de qualitat (targetes/qualitat.test.js: cap ombra i
+   la lletra a la mida meta), i esta peça no n'és cap. */
+@layer components {
+  .sdp-xarxa-pobles {
+    display: flex;
+    justify-content: center;
+    margin-block: var(--sdp-space-3) var(--sdp-space-6);
+  }
+  .sdp-xarxa-pobles__desplegable {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    inline-size: min(100%, 42rem);
+  }
+  .sdp-xarxa-pobles__boto {
+    list-style: none;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--sdp-space-2);
+  }
+  .sdp-xarxa-pobles__boto::-webkit-details-marker {
+    display: none;
+  }
+  .sdp-xarxa-pobles__boto::after {
+    content: '▾';
+    font-size: 0.9em;
+  }
+  .sdp-xarxa-pobles__desplegable[open] > .sdp-xarxa-pobles__boto::after {
+    content: '▴';
+  }
+  .sdp-xarxa-pobles__arbre {
+    inline-size: 100%;
+    margin-block-start: var(--sdp-space-3);
+    padding: var(--sdp-space-4) var(--sdp-space-5);
+    background: var(--sdp-fons-targeta);
+    border: 1px solid var(--sdp-vora);
+    border-radius: var(--sdp-radi-g);
+    box-shadow: var(--sdp-ombra-1);
+    text-align: start;
+  }
+}
+
 /* T7 · Ordre del Mestre, 261004 (prompt 261004_0515) · Front «editor».
    TARGETES INCRUSTADES al cos de l'UniversalEditor i de la lectura
    (components/universal/richText/extensions/targetes). Es tracten com una
@@ -11051,6 +11099,24 @@ details[open] summary.accordion-header svg:last-child {
   }
   .sdp-cos-tros {
     display: contents;
+  }
+  /* Cadena R11, Loop 3 (L2-01) · Fins a 40rem la targeta sola ocupa tota
+     l'amplària (regla de dalt): un encapçalament amb context de format de
+     bloc al seu costat quedava amb 0px d'amplària i el text retallat (375px,
+     /page/fediversity). L'overflow només s'aplica quan hi ha columna de text
+     al costat de la flotant; per davall, l'encapçalament torna a passar per
+     davall de la targeta, com a HEAD. */
+  @media (min-width: 40.01rem) {
+    .sdp-amb-targetes h2,
+    .sdp-amb-targetes h3 {
+      overflow: hidden;
+    }
+  }
+  .sdp-amb-targetes .sdp-cos-tros > h2 ~ h2,
+  .sdp-amb-targetes .sdp-cos-tros > h3 ~ h3,
+  .sdp-amb-targetes > h2 ~ h2,
+  .sdp-amb-targetes > h3 ~ h3 {
+    clear: both;
   }
   .sdp-targeta.ProseMirror-selectednode {
     outline: var(--sdp-focus-gruix) solid var(--sdp-focus);
@@ -14670,9 +14736,6 @@ details[open] summary.accordion-header svg:last-child {
 
   .sdp-admin-taxonomia__diagnostic ul {
     padding-inline-start: var(--sdp-space-5);
-    display: flex;
-    flex-direction: column;
-    gap: var(--sdp-space-2);
   }
 
   .sdp-admin-taxonomia__tabs {
@@ -15130,24 +15193,5 @@ details[open] summary.accordion-header svg:last-child {
     gap: var(--sdp-space-1);
     color: var(--sdp-text-suau);
     font-size: var(--sdp-text-small);
-  }
-
-  /* ── P0-37 / IDEA-156 · Primitives Pedra Seca per a pàgines complexes ── */
-  .sdp-diapositiva-plena {
-    width: 100%;
-    max-width: 100%;
-  }
-  .sdp-diapositiva-plena.is-fullscreen {
-    min-block-size: 100vh;
-    min-block-size: 100dvh;
-  }
-  .sdp-diapositiva-plena__prosa {
-    height: auto;
-    overflow: visible;
-  }
-  .sdp-graella-cotes {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(min(100%, 14rem), 1fr));
-    gap: var(--sdp-space-3);
   }
 }

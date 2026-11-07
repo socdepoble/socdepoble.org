@@ -2,74 +2,74 @@
   "schema": "sdp.contingut.v1",
   "claus": {
     "anatomia-rural": {
-      "sha256": "48ec02daeed13725b8d3b96effbad050522d68a7b7b0c6f0bd1a9ef5dab42225",
+      "sha256": "15f52b596cc27926135607d69b2500cfdef64bd43c2b0f066ff87023e3a5f4c0",
       "html": 800,
       "aprovat_per": "Mestre Javi",
       "data": "2026-11-07"
     },
     "anima": {
-      "sha256": "3734664621f6896baf4a6d1fff8c320d5ea3069fa967dd92934f1a8b30cb64bd",
+      "sha256": "0d1d152aec7820f9810ac62a7b2f1e65bc488d2ef8d1f4bdec19bba7e2c9f873",
       "html": 12046,
-      "aprovat_per": "Mestre Javi Llinares (ordre directa 261107 04:12: P0-38 / IDEA-157 «de poble», IDEA-159 Consola Incrustada Node 0 i portada Ibáñez Pou 3D + Multimèdia)",
+      "aprovat_per": "Mestre Javi",
       "data": "2026-11-07"
     },
     "arbres-monumentals": {
-      "sha256": "8e9dfd8a46a1fe1df314a4239018a6aae71e1259908ae163be2ecd3dc517fba7",
+      "sha256": "d122af0655d0a71217bac280ae880b9ec902e27d3ef4bec2310c6da9395986ed",
       "html": 636,
       "aprovat_per": "Mestre Javi",
       "data": "2026-11-07"
     },
     "banc-de-llavors": {
-      "sha256": "3d7292d5dc81aded65ce17648ffddea585595d7815191af73e4d9bf0f609cc39",
+      "sha256": "1f0de487fd99ee8dfd8532c64c56cca2e9d52c5d9ead14aca2af72ae3823a32e",
       "html": 571,
       "aprovat_per": "Mestre Javi",
       "data": "2026-11-07"
     },
     "cervell": {
-      "sha256": "3d7fbeb778cabb3e71969d7082eb63669f52b5c4a205e7d2c90215ab38d0e5ef",
+      "sha256": "e0f9f647a5bb26e3d7e1938ec09eab4e0485e06a730fefb8d88895f79863b3ed",
       "html": 4179,
-      "aprovat_per": "Mestre Javi Llinares (ordre unificada nocturna Onades 7-9, 261103 ~05:4x: «aprova'ls amb frontissa-contingut i verifica 16/16»); diff revisat per Claude: Gauntlets O7-O9 i rondes 2-3 de correctors i verificadors (Cards flotants, /versions WP 1.1.12, /fediversity honest, «el Mas» retirat a Consola i Cervell, O6-D8), 2026-11-03",
-      "data": "2026-11-03"
+      "aprovat_per": "Mestre Javi",
+      "data": "2026-11-07"
     },
     "consola": {
-      "sha256": "2716cc5cd51d8f67b226f37ec411350ab055ea6eec96da0589c5eb33503c42e4",
+      "sha256": "bad063697c69fd6396d4dd28375b88cc9c9968b7166a4eccb7b400132b6331b3",
       "html": 5925,
-      "aprovat_per": "Mestre Javi Llinares (COMMIT R5 Marató + IDEA-92 desmetaforització pragmàtica i didàctica 05-11-2026)",
-      "data": "2026-11-05"
+      "aprovat_per": "Mestre Javi",
+      "data": "2026-11-07"
     },
     "constitucio": {
-      "sha256": "d53eaa8320b382c37d262fc4989cc256122b9baa2a11dcb32a813738fd066ecf",
+      "sha256": "e74f1b491cb58f4284aeeb71008c65ab86af49a562694551a33deadadb986510",
       "html": 8850,
-      "aprovat_per": "Mestre Javi Llinares (COMMIT R5 Marató + IDEA-92 desmetaforització pragmàtica i didàctica 05-11-2026)",
-      "data": "2026-11-05"
+      "aprovat_per": "Mestre Javi",
+      "data": "2026-11-07"
     },
     "descarregues": {
-      "sha256": "e8f9085b1d0a593846f12f65c2e96821a50970f442d24d673c106947c8e9868a",
+      "sha256": "3f0d94613013948bada6bf56c8df064dba530c3c98b2b39472daeb5fb1cc9cc8",
       "html": 8250,
-      "aprovat_per": "MarIA, absent el Mestre",
-      "data": "2026-11-03"
+      "aprovat_per": "Mestre Javi",
+      "data": "2026-11-07"
     },
     "disseny": {
-      "sha256": "f6fca5d8cab5ad751f9eff2c45eb1ba3f5e9172e07c90929b89444d7d07fc04a",
+      "sha256": "da7b7421eb914af150d8eb92311ba494020e2423a0dd77c3af901b0868dd57f6",
       "html": 2319,
-      "aprovat_per": "Mestre Javi Llinares (ordre directa 261107 04:12: P0-38 / IDEA-157 «de poble», IDEA-159 Consola Incrustada Node 0 i portada Ibáñez Pou 3D + Multimèdia)",
+      "aprovat_per": "Mestre Javi",
       "data": "2026-11-07"
     },
     "drets-autor": {
-      "sha256": "7eff84477e54c1810daba4a6e0c6e1e1f2b6fb482dc007977b47bf706b62f231",
+      "sha256": "8b8413172e4c133ae0f60c1577b3c0189a9cf39725f9558f9ca3170c5fd4af37",
       "html": 14200,
-      "aprovat_per": "Mestre Javi Llinares (COMMIT R5 Marató + IDEA-92 desmetaforització pragmàtica i didàctica 05-11-2026)",
-      "data": "2026-11-05"
+      "aprovat_per": "Mestre Javi",
+      "data": "2026-11-07"
     },
     "fedivers": {
-      "sha256": "27358c0b3a3440e504e5a1043b2ab804d913fb6eaab417d359af0204402c9b26",
-      "html": 21306,
+      "sha256": "b0513b57f965b35f11556d223a6b710da1b0fcaebc23e5e851d71eb861140645",
+      "html": 21289,
       "aprovat_per": "Mestre Javi",
       "data": "2026-11-07"
     },
     "fediversity": {
-      "sha256": "899232639382e79b9371b107d4370e5d795e2b6d155b604cba57edb1b3f46276",
-      "html": 62357,
+      "sha256": "33b3f8bc8f936c1dda1786955851d13efc69e955bd58dd26fce0964bbcca5b5b",
+      "html": 62426,
       "aprovat_per": "Mestre Javi",
       "data": "2026-11-07"
     },
@@ -80,33 +80,33 @@
       "data": "2026-11-05"
     },
     "herbari": {
-      "sha256": "6b36f77f4ea1e870ff3eca0ef88771a1d935e9c46205c649fe7bc76f287bcc2a",
+      "sha256": "72d97776a0be179afc5cf2e4dbe3ddf6713bd43191a85703f8fe756077cc77aa",
       "html": 486,
       "aprovat_per": "Mestre Javi",
       "data": "2026-11-07"
     },
     "legal": {
-      "sha256": "0a903b4b1739120ddfc9d6fd275a6e26effd5329d061a431dcf2686e0f28173c",
+      "sha256": "0a08fd743c2b4139e322cdd457e489f5dab6003bfe53d93a5d424cb457495b94",
       "html": 59594,
-      "aprovat_per": "Mestre Javi Llinares (ordre Onada R9 261106 14:06 i ordre de producció 261106 21:2x: «aprova les 4 empremtes de la Frontissa (fedivers, fediversity, node-zero, legal)»); diff revisat per Claude: 5 carrils verificats, Gauntlet de l'arbre, 2 rondes d'arreglos FA/FB i verificació final VT/VC/VF, 2026-11-06",
-      "data": "2026-11-06"
+      "aprovat_per": "Mestre Javi",
+      "data": "2026-11-07"
     },
     "node-zero": {
-      "sha256": "925b64fe5fdd0c1b09487c587a9d61c51e44c7033e4ea5f06af5a867d7885494",
-      "html": 21194,
+      "sha256": "9aa3749bd96899622a9ec91d3c7e13a0dd12fad31bb3343e6233e5c1b82f2639",
+      "html": 21177,
       "aprovat_per": "Mestre Javi",
       "data": "2026-11-07"
     },
     "notes": {
-      "sha256": "39cf0339b0694fc1ed39bdcac47064fadb725d844e6410753a9af90e1fc4e94c",
+      "sha256": "336230c5e5b9c3ce193ba63d75cd66d2d51261e3efad78d6f294af702697f42d",
       "html": 0,
-      "aprovat_per": "Mestre",
-      "data": "2026-10-01"
+      "aprovat_per": "Mestre Javi",
+      "data": "2026-11-07"
     },
     "projecte": {
-      "sha256": "e7af243f3418aa9ffb6b9e87779b15c571fb96441b4701a909699a37fd332a4d",
+      "sha256": "473c40701453480ae661bb4c21dad73adf4dae1003dad3c3042fd3e4babdfcd3",
       "html": 10672,
-      "aprovat_per": "Mestre Javi Llinares (ordre directa 261107 04:12: P0-38 / IDEA-157 «de poble», IDEA-159 Consola Incrustada Node 0 i portada Ibáñez Pou 3D + Multimèdia)",
+      "aprovat_per": "Mestre Javi",
       "data": "2026-11-07"
     },
     "publicar_mapa": {
@@ -116,13 +116,13 @@
       "data": "2026-11-05"
     },
     "roadmap": {
-      "sha256": "56a4b34a38022e6758a78c10b55de98f3adcaf399e5bbf91221dc9812c0a10f1",
+      "sha256": "ad6c52700476ea5352ac533f441566557c5b4c72449ce58c70c6b13e5382831d",
       "html": 31391,
-      "aprovat_per": "Mestre Javi Llinares (ordre directa 261107 04:12: P0-38 / IDEA-157 «de poble», IDEA-159 Consola Incrustada Node 0 i portada Ibáñez Pou 3D + Multimèdia)",
+      "aprovat_per": "Mestre Javi",
       "data": "2026-11-07"
     },
     "rutes-de-poble": {
-      "sha256": "3c89a8934ac51774b6edcef2311ba2900fc7d24263660ed519d67457698a4f45",
+      "sha256": "87367fd239f48bf072b6e19fc7e91d980a2a3e82a7575801c7b1a6df1e782a93",
       "html": 712,
       "aprovat_per": "Mestre Javi",
       "data": "2026-11-07"
@@ -134,22 +134,22 @@
       "data": "2026-11-05"
     },
     "versions": {
-      "sha256": "03e140272a42ecd03cea45a35b809c232544af475ded1d0c59002f54a1eec08b",
+      "sha256": "b16cf5e00d5537650aa1e9d26e04ee39e623071297506da455b6223bfb31eabb",
       "html": 40590,
-      "aprovat_per": "Mestre Javi Llinares (ordre directa 261107 04:12: P0-38 / IDEA-157 «de poble», IDEA-159 Consola Incrustada Node 0 i portada Ibáñez Pou 3D + Multimèdia)",
+      "aprovat_per": "Mestre Javi",
       "data": "2026-11-07"
     },
     "wikidepoble": {
-      "sha256": "4a87d50d0fdf491fe647cce3d27015eb7aff4ab3e7e7886129729f6c56088165",
+      "sha256": "173f180d9f83ee98232cb6a6df7c65673763a5f761a757521bb33a0b3fbcb1e4",
       "html": 1916,
-      "aprovat_per": "Mestre Javi Llinares (COMMIT R5 Marató + IDEA-92 desmetaforització pragmàtica i didàctica 05-11-2026)",
-      "data": "2026-11-05"
+      "aprovat_per": "Mestre Javi",
+      "data": "2026-11-07"
     },
     "xat": {
-      "sha256": "630a9ce34351674f656527c291ae13829a2a7455cd897777204d8fe1bb3e5a30",
+      "sha256": "820cc41446c09c7952becc0400fc1b1136e6fc3eccf4aa95527d032a90e8aab1",
       "html": 2363,
-      "aprovat_per": "Mestre Javi Llinares (Teler 261103)",
-      "data": "2026-11-03"
+      "aprovat_per": "Mestre Javi",
+      "data": "2026-11-07"
     }
   }
 }

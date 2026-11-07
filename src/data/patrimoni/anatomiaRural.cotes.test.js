@@ -36,18 +36,20 @@ describe('r75 · D-G4 · cens de les cotes no confirmades de l’Anatomia Rural'
     expect(cens.desconegut).toEqual([]);
   });
 
-  it('D-G4-1 · exactament 3 cotes discrepants, totes del pou de neu', () => {
-    expect(cens.discrepant).toEqual([
-      'pou-de-neu:Diàmetre interior',
-      'pou-de-neu:Capacitat estimada',
-      'pou-de-neu:Galeria d’escorredor, a l’est',
-    ]);
+  /* Loop 3 (R11) · Les tres discrepants i l'«Alçada total» del pou eren xifres de l'esbós 76150
+     (sense autor ni escala) contra Segura (1987). Ara el pou du les cotes de Segura i l'esbós
+     només queda a la nota: cap cota discrepant, i 3 d'una sola font. */
+  it('D-G4-1 · cap cota discrepant: el pou de neu du les de Segura i l’esbós 76150 només a la nota', () => {
+    expect(cens.discrepant).toEqual([]);
+    const pou = ESTRUCTURES.find((e) => e.id === 'pou-de-neu');
+    for (const etiqueta of ['Fondària des de les finestres superiors', 'Diàmetre interior', 'Galeria d’escorredor, a l’est']) {
+      expect(pou.cotes.find((c) => c.etiqueta === etiqueta).nota, etiqueta).toMatch(/76150/);
+    }
   });
 
-  it('D-G4-2 · exactament 4 cotes d’una sola font', () => {
+  it('D-G4-2 · exactament 3 cotes d’una sola font', () => {
     expect(cens.unica).toEqual([
       'pou-de-neu:Cim dels Plans',
-      'pou-de-neu:Alçada total',
       'moli-electric:Tancament',
       'forn-de-calc:Temperatura de cocció',
     ]);

@@ -92,14 +92,19 @@ test('Onada 10 · ?category= filtra pel text de qualsevol etiqueta: «sistema» 
   mocks.core = ambPagines(['consola', 'cervell', 'disseny']);
   mocks.params = new URLSearchParams({ category: 'sistema' });
   render(<MurSection />);
-  // De més nova a més vella: el Cervell (09-09) i la Consola (08-09). Disseny no porta «Sistema».
-  expect(titols()).toEqual(['El Cervell', 'Consola Termodinàmica']);
+  /* De més nova a més vella. R41 (P0-40/IDEA-167, «Sistema» únic a totes les pàgines
+     classificades de PAGE_COPY): ara Disseny també porta «Sistema», i ja no «Mur».
+     Arbitratge R46, Loop 3. */
+  expect(titols()).toEqual(['Disseny Pedra Seca', 'El Cervell', 'Consola Termodinàmica']);
   cleanup();
 
-  // La segona etiqueta també casa: no és només la primera.
-  mocks.params = new URLSearchParams({ category: 'Manteniment' });
+  /* Una etiqueta que no és la primera també casa. P0-40/IDEA-167 (ordre directa
+     del Mestre, 261107 05:23) lleva «Manteniment»: la Consola i el Cervell porten
+     ara l'etiqueta canònica «Node 0» (la tercera). Conseqüència declarada: un
+     enllaç vell /mur?category=Manteniment ja no troba la Consola. */
+  mocks.params = new URLSearchParams({ category: 'Node 0' });
   render(<MurSection />);
-  expect(titols()).toEqual(['Consola Termodinàmica']);
+  expect(titols()).toEqual(['El Cervell', 'Consola Termodinàmica']);
   cleanup();
 
   mocks.params = new URLSearchParams({ category: 'Pedra Seca' });

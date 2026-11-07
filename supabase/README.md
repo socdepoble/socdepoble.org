@@ -1517,6 +1517,36 @@ description: "Documentació canònica de Sóc de Poble."
   vigent des del 2026-11-05T23:00Z, amb l'empremta `ea13f0c4…` d'esta
   migració; aplicada pel Mestre el 6-11). Cap agent no la torna a aplicar.
 
+- `migrations/2611070600_seed_revisions.sql`
+  P1-75: revisió vigent per poble, secció i peça de llavor; CAS inicial 0,
+  increment per peça, camps blancs i font única d'`app_content`. `fontVersio`
+  ha de ser la versió llegida d'eixa fila: qualsevol canvi de font oculta
+  l'overlay antic, també l'edició d'una altra peça de la mateixa fila (la
+  versió és de la fila sencera, no de la peça). El CAS és sobre el parell (`fontVersio`, `versio`): com que
+  la fila d'una font antiga és invisible per a tothom, el rebase comença amb
+  versió 0 sobre la font nova, reinicia la versió a 1 i només
+  conserva els camps revisats de nou, sense ressuscitar camps de la font antiga.
+  Les longituds es compten en unitats UTF-16, com el client, i la fila fusionada
+  no pot passar de 700000 octets. Només
+  superadmin amb `private.es_superadmin()` o `owner_user_id` de la font
+  autoritativa (sense signatura d'entitat) poden escriure per RPC. Sense
+  vinculació UUID, l'autoria textual no dona permís. Lectura pública fitada;
+  cap INSERT, UPDATE o DELETE directe del client. La migració del storage
+  antic és explícita i seleccionada: no es publica ni s'esborra en arrencar.
+  P2-08: la RPC única `exporta_les_meues_dades()` conserva l'exportador canònic
+  com a base privada sense permisos de client i afig les revisions de qui
+  crida. `author_payload` conserva només els camps aportats per l'autor actual,
+  separats del cos públic fusionat amb edicions anteriors; cap camp d'un autor
+  anterior es reatribueix a l'exportació del nou. Si es reaplica `2611011800`,
+  cal reaplicar després `2611070600` per restaurar l'extensió d'exportació.
+  El veto explícit de publicació es comprova a l'arrel i dins dels contenidors
+  `attributes` i `payload`, també combinats; la mateixa regla governa la RPC,
+  la lectura RLS i el model local. No interpreta la data d'inici d'un acte.
+  La transacció notifica explícitament `pgrst, 'reload schema'` perquè el
+  descobriment de la nova signatura no depenga d'un DDL watcher del proveïdor.
+  **NO aplicada: l'aplica el Mestre** després de verificar la font i el client.
+  Prova: `tests/seed-revisions-r11.test.mjs`.
+
 - `seed.sql`
   Contingut inicial del portal.
 
@@ -1699,6 +1729,7 @@ verificador sense avisos.
 | 77 | `2611052345` | `2611052345_admin_usuaris_i_organitzacions.sql` | Aplicada a producció (lectura REST del 6-11: `admin_llista_usuaris_registrats`, `admin_convida_a_entitat`, `admin_connecta_usuari` i `les_meues_invitacions_admin` existixen, 401 42501; aplicada pel Mestre el 6-11) | perfils consentits amb correu emmascarat; invitació de membre amb acceptació pròpia, sense autoassignació ni escalada; auditoria immutable |
 | 78 | `2611060010` | `2611060010_restauracio_municipal_opendata.sql` | Aplicada a producció (lectura REST del 6-11: `llegix_municipi_open_data_per_slug` respon 200 a anon; aplicada pel Mestre el 6-11) | upsert atòmic Open Data 1.2.0 per tenant, lectura pública fitada i conflictes globals; independent de la 77, no esborra dades absents |
 | 79 | `2611061520` | `2611061520_politica_privacitat_2_5.sql` | Aplicada a producció (lectura REST del 6-11: `politiques_privacitat` té la 2.5, vigent des del 2026-11-05T23:00Z, amb l'empremta `ea13f0c4…` d'esta migració; aplicada pel Mestre el 6-11) | política 2.5: avisos push del xat, 2.3 i 2.4 intactes (Onada R9) |
+| 80 | `2611070600` | `2611070600_seed_revisions.sql` | **NO aplicada: l'aplica el Mestre** | P1-75: revisió vigent de llavor, CAS per peça i autoria autoritativa |
 
 | Artefacte complementari | Ruta dins de `supabase/` | Rol operatiu |
 | :--- | :--- | :--- |

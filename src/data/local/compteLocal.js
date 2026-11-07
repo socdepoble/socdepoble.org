@@ -184,6 +184,12 @@ export function creaCompteLocal(e) {
         bloquejos: e.bloquejosDe(persona),
         normes: normes ? { versio: normes.versio, acceptadaAl: normes.acceptadaAl } : null,
         consentiments: consentiments.get(persona) ?? [],
+        seed_revisions: [...(e.revisionsLlavor?.actuals ?? new Map()).entries()].flatMap(([key, row]) => {
+          const metadata = e.revisionsLlavor.autoria.get(key);
+          return metadata?.authorId === persona ? [{ id: metadata.id, tenant_id: e.configuracio.tenantId, section: row.seccio,
+            seed_id: row.id, payload: metadata.authorPayload, version: row.versio, source_version: row.fontVersio, author_id: persona,
+            created_at: metadata.createdAt, updated_at: metadata.updatedAt }] : [];
+        }),
         baixa: estatDeBaixa(persona)
       });
       const lectura = await e.notes.load(persona, e.ci(config));
@@ -196,6 +202,7 @@ export function creaCompteLocal(e) {
         bloquejos: propies.bloquejos,
         normes: propies.normes,
         consentiments: propies.consentiments,
+        seed_revisions: propies.seed_revisions,
         baixa: propies.baixa
       });
     },

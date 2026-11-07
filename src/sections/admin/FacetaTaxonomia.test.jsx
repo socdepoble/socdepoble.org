@@ -22,8 +22,11 @@ import { FACETA_TAXONOMIA, FacetaTaxonomia, nomFitxerExportacio, payloadDe } fro
 import { SYSTEM_PAGES } from '../../config/systemPages.js';
 import { PAGE_COPY } from '../text/pageContent.js';
 import { CODI_PERSONALITZACIO, MISSATGE_PERSONALITZACIO, errorDePersonalitzacio } from '../../data/errorsBackend.js';
+import { NOMS_ETIQUETES_CANONIQUES_49 } from '../../data/taxonomia/taxonomiaCanonica.js';
 
-const ETIQUETES_CONSOLA = [{ text: 'Sistema', className: 'sdp-badge-category' }, { text: 'Manteniment', className: 'sdp-badge-tag' }];
+/* P0-40/IDEA-167 (ordre directa del Mestre, 261107 05:23) · Les de sèrie de la Consola: Sistema + la mare + les etiquetes canòniques. */
+const TECNOLOGIA = '💻 Tecnologia Lliure, Dades Obertes i Disseny';
+const ETIQUETES_CONSOLA = [{ text: 'Sistema', className: 'sdp-badge-system' }, { text: TECNOLOGIA, className: 'sdp-badge-category' }, { text: 'Node 0', className: 'sdp-badge-tag' }, { text: 'Documentació', className: 'sdp-badge-tag' }];
 const pageCopyDeSerie = () => Object.fromEntries(SYSTEM_PAGES.map(({ key }) => [key, { ...PAGE_COPY[key], id: key }]));
 const core = (extra = {}) => ({ status: 'ready', pageCopy: pageCopyDeSerie(), personalitzacio: null, refresh: m.refresh, ...extra });
 
@@ -81,18 +84,20 @@ test('pinta un bloc per pàgina de SYSTEM_PAGES amb les etiquetes actuals (text 
   expect(titols.slice(2)).toEqual(SYSTEM_PAGES.map(({ key }) => `Pàgina «${PAGE_COPY[key]?.title || key}»`));
   const bloc = consola();
   expect(within(bloc).getByLabelText(`Text de l’etiqueta 1 de ${PAGE_COPY.consola.title}`).value).toBe('Sistema');
-  expect(within(bloc).getByLabelText(`Classe de l’etiqueta 1 de ${PAGE_COPY.consola.title}`).value).toBe('sdp-badge-category');
-  expect(within(bloc).getByLabelText(`Text de l’etiqueta 2 de ${PAGE_COPY.consola.title}`).value).toBe('Manteniment');
-  expect(within(bloc).getByLabelText(`Classe de l’etiqueta 2 de ${PAGE_COPY.consola.title}`).value).toBe('sdp-badge-tag');
+  expect(within(bloc).getByLabelText(`Classe de l’etiqueta 1 de ${PAGE_COPY.consola.title}`).value).toBe('sdp-badge-system');
+  expect(within(bloc).getByLabelText(`Text de l’etiqueta 2 de ${PAGE_COPY.consola.title}`).value).toBe(TECNOLOGIA);
+  expect(within(bloc).getByLabelText(`Classe de l’etiqueta 2 de ${PAGE_COPY.consola.title}`).value).toBe('sdp-badge-category');
   /* La previsualització usa el mateix marcatge que la targeta. */
   const previsualitzacio = within(bloc).getByRole('list', { name: `Previsualització de les etiquetes de ${PAGE_COPY.consola.title}` });
-  expect([...previsualitzacio.querySelectorAll('li')].map((li) => li.className)).toEqual(['sp-card-label sdp-badge-category', 'sp-card-label sdp-badge-tag']);
+  expect([...previsualitzacio.querySelectorAll('li')].map((li) => li.className)).toEqual(ETIQUETES_CONSOLA.map((l) => `sp-card-label ${l.className}`));
   /* El selector oferix el conjunt tancat, amb noms llegibles. */
   const opcions = [...within(bloc).getByLabelText(`Classe de l’etiqueta 1 de ${PAGE_COPY.consola.title}`).options];
   expect(opcions.map((o) => o.value)).toEqual(['sdp-badge-buit', 'sdp-badge-system', 'sdp-badge-accent', 'sdp-badge-category', 'sdp-badge-tag', 'sdp-badge-neutral']);
   expect(opcions.map((o) => o.textContent)).toContain('Sistema (blau fosc)');
-  expect(within(seccio('Categories de sèrie del Bloc')).getByText('De sèrie, sempre: Sistema.')).toBeTruthy();
-  expect(within(seccio('Etiquetes de sèrie del Bloc')).getByText('De sèrie, sempre: Productivitat, Tutorial.')).toBeTruthy();
+  /* P0-40 · Les 6 mares al Bloc; fora «Productivitat» i «Tutorial». De sèrie, les 49 canòniques
+     d'R34 (ETIQUETES_BASE): si se'n lleva cap o no, ho decidix el Mestre (D-3). Arbitratge R46, Loop 3. */
+  expect(within(seccio('Categories de sèrie del Bloc')).getByText('De sèrie, sempre: Sistema, ⚖️ Defensa del Territori, Ecologia i Reivindicació, 🌾 Recursos Locals, Agricultura i Sobirania, 🌿 Natura i Patrimoni, 🎭 Cultura, Música i Llengua, 🤝 Món Rural, 💻 Tecnologia Lliure, Dades Obertes i Disseny.')).toBeTruthy();
+  expect(within(seccio('Etiquetes de sèrie del Bloc')).getByText(`De sèrie, sempre: ${NOMS_ETIQUETES_CANONIQUES_49.join(', ')}.`)).toBeTruthy();
   expect(screen.getByText('Encara no hi ha cap versió desada: tot és de sèrie.')).toBeTruthy();
 });
 
@@ -126,7 +131,8 @@ test('editar text i classe, afegir i llevar etiquetes i afegir una categoria: el
   const titol = PAGE_COPY.consola.title;
   fireEvent.change(within(bloc).getByLabelText(`Text de l’etiqueta 1 de ${titol}`), { target: { value: ' Maquinària ' } });
   fireEvent.change(within(bloc).getByLabelText(`Classe de l’etiqueta 1 de ${titol}`), { target: { value: 'sdp-badge-system' } });
-  fireEvent.click(within(bloc).getByRole('button', { name: `Llevar l’etiqueta 2 de ${titol}` }));
+  // P0-40 · la Consola porta ara 4 etiquetes de sèrie: es lleven les tres darrere de la primera.
+  for (let i = 1; i < ETIQUETES_CONSOLA.length; i += 1) fireEvent.click(within(bloc).getByRole('button', { name: `Llevar l’etiqueta 2 de ${titol}` }));
   fireEvent.click(within(bloc).getByRole('button', { name: `Afegir una etiqueta a ${titol}` }));
   fireEvent.change(within(bloc).getByLabelText(`Text de l’etiqueta 2 de ${titol}`), { target: { value: 'IAIA' } });
   fireEvent.change(within(bloc).getByLabelText(`Classe de l’etiqueta 2 de ${titol}`), { target: { value: 'sdp-badge-accent' } });
@@ -159,7 +165,8 @@ test('una etiqueta sense text no es desa: l’error diu la pàgina i el port no 
   expect(m.desa).not.toHaveBeenCalled();
   const alerta = screen.getByRole('alert');
   expect(alerta.textContent).toContain('Hi ha errors a la taxonomia i no s’ha desat');
-  expect(alerta.textContent).toContain('L’etiqueta 3 de «consola» necessita un text d’1 a 40 caràcters.');
+  // P0-40: la nova és la cinquena de la Consola; R34 puja MAX_TEXT a 64 perquè hi càpien les 6 mares.
+  expect(alerta.textContent).toContain('L’etiqueta 5 de «consola» necessita un text d’1 a 64 caràcters.');
 });
 
 test('conflicte de versió: «Algú ha desat una versió nova: recarrega» i el botó torna a llegir el contingut core i reinicia l’esborrany', async () => {

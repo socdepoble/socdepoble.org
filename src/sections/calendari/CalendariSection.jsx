@@ -261,7 +261,7 @@ function CalendariDeLesVistes({ targetes, pantalla, avisError }) {
 export default function CalendariSection() {
   const { status, error, refresh, sortedEvents, sortedFeedPosts, sortedMarketItems } = useMur();
   const { pageCopy } = useCoreContent();
-  const { t } = useUIActions();
+  const { t, language = 'ca' } = useUIActions();
   /* Pantalla completa · ací, per damunt de la branca de càrrega: un refresc
      del Mur no en trau ningú. */
   const pantalla = usePantallaCompleta();
@@ -271,7 +271,7 @@ export default function CalendariSection() {
     description: t('section.calendari.subtitle', 'Cada publicació, acte i producte, el dia de la seua data.')
   });
 
-  const pagines = useMemo(() => targetesDeSistema(pageCopy), [pageCopy]);
+  const pagines = useMemo(() => targetesDeSistema(pageCopy, { language }), [pageCopy, language]);
   const targetes = useMemo(
     () => entradesDelCalendari(sortedEvents, sortedFeedPosts, sortedMarketItems, pagines),
     [sortedEvents, sortedFeedPosts, sortedMarketItems, pagines]

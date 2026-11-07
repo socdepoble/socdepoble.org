@@ -121,7 +121,8 @@ describe.each(PAGINES)('Onada 10 · /page/%s', (clau, verb, desti) => {
   test('la capçalera pinta Categoria i Etiqueta, les de la targeta del Mur, i la il·lustració de la pàgina', () => {
     visita(clau);
     const etiquetes = PAGE_COPY[clau].labels;
-    expect(etiquetes.map((etiqueta) => etiqueta.className)).toEqual(['sdp-badge-category', 'sdp-badge-tag']);
+    // P0-40/IDEA-167 (ordre directa del Mestre, 261107 05:23) · Sistema + la categoria mare + les etiquetes canòniques.
+    expect(etiquetes.map((etiqueta) => etiqueta.className)).toEqual(['sdp-badge-system', 'sdp-badge-category', 'sdp-badge-tag', 'sdp-badge-tag']);
     for (const etiqueta of etiquetes) {
       const pindola = [...capcalera().querySelectorAll(`.${etiqueta.className}`)].find((node) => node.textContent === etiqueta.text);
       expect([clau, etiqueta.text, Boolean(pindola)]).toEqual([clau, etiqueta.text, true]);

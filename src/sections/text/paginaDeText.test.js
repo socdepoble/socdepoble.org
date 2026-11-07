@@ -161,7 +161,12 @@ describe('261007 · /page/drets-autor és «Drets d’autor»', () => {
       // la pàgina, no les reserves de sempre (que també passarien).
       heroImage: '/assets/nano_cards/drets_autor_comic.jpg',
       heroAlt: "Un foraster intentant copiar una recepta mentre la gent del poble se'l mira rient (Còmic)",
-      labels: [{ text: 'Sistema', className: 'sdp-badge-system' }],
+      // P0-40/IDEA-167 (ordre directa del Mestre, 261107 05:23) · Sistema + la categoria mare + l'etiqueta canònica.
+      labels: [
+        { text: 'Sistema', className: 'sdp-badge-system' },
+        { text: '🎭 Cultura, Música i Llengua', className: 'sdp-badge-category' },
+        { text: 'Documentació', className: 'sdp-badge-tag' }
+      ],
       copyright: COPYRIGHT_SDP,
       ...dataHoraDeBarra({ creat: '2026-01-30T00:00:00+01:00' })
     });

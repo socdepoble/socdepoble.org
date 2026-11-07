@@ -220,6 +220,12 @@ function json(text) {
     fail3("restore_command_protocol");
   }
 }
+function validaLedgerOrigenRestauracio(value) {
+  if (!value || typeof value !== "object" || Array.isArray(value) || Object.getPrototypeOf(value) !== Object.prototype || Object.keys(value).sort().join(",") !== "migrationLedgerSha256,migrations") fail3("restore_source_ledger_required");
+  const { migrations, migrationLedgerSha256 } = value;
+  if (!Number.isSafeInteger(migrations) || migrations < 1 || typeof migrationLedgerSha256 !== "string" || !/^[a-f0-9]{64}$/.test(migrationLedgerSha256)) fail3("restore_source_ledger_invalid");
+  return Object.freeze({ migrations, migrationLedgerSha256 });
+}
 var CONTROL = ["-X", "-w", "-qAt", "-v", "ON_ERROR_STOP=1", "-v", "VERBOSITY=sqlstate", "--dbname=postgres"];
 function control(sql) {
   return command(POSTGRES_BIN + "psql", [...CONTROL, "-c", sql]);
@@ -280,6 +286,7 @@ async function restauraAmbIdentitatPipe(cipher, identity, name, { spawnImpl = sp
     identity?.fill(0);
   }
 }
+var SQL_RECOMPTE_RESTAURACIO = `SELECT json_build_object('database',current_database(),'serverMajor',current_setting('server_version_num')::int/10000,'tables',(SELECT count(*) FROM pg_class c JOIN pg_namespace n ON n.oid=c.relnamespace WHERE c.relkind='r' AND n.nspname IN ('public','node0','private','auth')),'migrations',(SELECT count(*) FROM node0.schema_migrations),'migrationLedgerSha256',(SELECT encode(pg_catalog.sha256(convert_to(coalesce(string_agg(version||E'\\t'||file||E'\\t'||sha256,E'\\n' ORDER BY version COLLATE "C"),''),'UTF8')),'hex') FROM node0.schema_migrations),'publicDocuments',(SELECT count(*) FROM node0.public_documents),'profiles',(SELECT count(*) FROM public.profiles),'notes',(SELECT count(*) FROM public.notes),'appContent',(SELECT count(*) FROM public.app_content));`;
 function nativeRuntime(cipher, identity) {
   return {
     [REAL]: true,
@@ -305,13 +312,14 @@ function nativeRuntime(cipher, identity) {
       return restauraAmbIdentitatPipe(cipher, identity, name);
     },
     async counts(name) {
-      return json(await command(POSTGRES_BIN + "psql", ["-X", "-w", "-qAt", "-v", "ON_ERROR_STOP=1", "-v", "VERBOSITY=sqlstate", "--dbname=" + name, "-c", `SELECT json_build_object('database',current_database(),'serverMajor',current_setting('server_version_num')::int/10000,'tables',(SELECT count(*) FROM pg_class c JOIN pg_namespace n ON n.oid=c.relnamespace WHERE c.relkind='r' AND n.nspname IN ('public','node0','private','auth')),'migrations',(SELECT count(*) FROM node0.schema_migrations),'publicDocuments',(SELECT count(*) FROM node0.public_documents),'profiles',(SELECT count(*) FROM public.profiles),'notes',(SELECT count(*) FROM public.notes),'appContent',(SELECT count(*) FROM public.app_content));`], name));
+      return json(await command(POSTGRES_BIN + "psql", ["-X", "-w", "-qAt", "-v", "ON_ERROR_STOP=1", "-v", "VERBOSITY=sqlstate", "--dbname=" + name, "-c", SQL_RECOMPTE_RESTAURACIO], name));
     }
   };
 }
-async function provaRestauracioAmbRuntime(runtime, { suffix = randomBytes(8).toString("hex"), token = randomBytes(16).toString("hex") } = {}) {
+async function provaRestauracioAmbRuntime(runtime, { suffix = randomBytes(8).toString("hex"), token = randomBytes(16).toString("hex"), expectedMigrationLedger } = {}) {
   const name = "node0_restore_" + suffix;
   if (!nomRestauracioValid(name) || !/^[a-f0-9]{32}$/.test(token)) fail3("restore_database_name_invalid");
+  const expected = validaLedgerOrigenRestauracio(expectedMigrationLedger);
   let created = false, owner = null, result = null, failure = null, dropped = false;
   try {
     await runtime.versions();
@@ -321,9 +329,10 @@ async function provaRestauracioAmbRuntime(runtime, { suffix = randomBytes(8).toS
     if (!owner || !/^[0-9]+$/.test(owner.oid ?? "") || owner.owner !== "javi" || owner.proof !== token) fail3("restore_ownership_unproven");
     await runtime.restore(name);
     const counts = await runtime.counts(name);
-    if (!counts || counts.database !== name || counts.serverMajor !== 17 || ![75, 76].includes(counts.migrations) || !Number.isInteger(counts.tables) || counts.tables < 1 || ["publicDocuments", "profiles", "notes", "appContent"].some((key) => !Number.isInteger(counts[key]) || counts[key] < 0)) fail3("restore_counts_invalid");
-    const safeCounts = Object.fromEntries(["serverMajor", "tables", "migrations", "publicDocuments", "profiles", "notes", "appContent"].map((key) => [key, counts[key]]));
-    result = { counts: safeCounts, restoreCommandsSucceeded: true, nativeRestoreVerified: runtime[REAL] === true, cleanMachineRestoreVerified: false, aclRestored: false, rolesChanged: false, plaintextDumpWritten: false, privateKeyLogged: false, privateIdentityFileRead: false, identityTransport: "anonymous-pipe", externalCustodyVerified: false, r5CustodyClosed: false };
+    if (!counts || counts.database !== name || counts.serverMajor !== 17 || !Number.isSafeInteger(counts.migrations) || counts.migrations < 1 || !Number.isSafeInteger(counts.tables) || counts.tables < 1 || ["publicDocuments", "profiles", "notes", "appContent"].some((key) => !Number.isSafeInteger(counts[key]) || counts[key] < 0)) fail3("restore_counts_invalid");
+    if (counts.migrations !== expected.migrations || counts.migrationLedgerSha256 !== expected.migrationLedgerSha256) fail3("restore_migration_ledger_mismatch");
+    const safeCounts = Object.fromEntries(["serverMajor", "tables", "migrations", "migrationLedgerSha256", "publicDocuments", "profiles", "notes", "appContent"].map((key) => [key, counts[key]]));
+    result = { counts: safeCounts, migrationLedgerMatched: true, sourceMigrationLedgerCaptureVerified: false, restoreCommandsSucceeded: true, nativeRestoreVerified: runtime[REAL] === true, cleanMachineRestoreVerified: false, aclRestored: false, rolesChanged: false, plaintextDumpWritten: false, privateKeyLogged: false, privateIdentityFileRead: false, identityTransport: "anonymous-pipe", externalCustodyVerified: false, r5CustodyClosed: false };
   } catch (error) {
     failure = error;
   } finally {
@@ -342,12 +351,16 @@ async function provaRestauracioAmbRuntime(runtime, { suffix = randomBytes(8).toS
   return { ...result, newDisposableDatabaseCreated: created, ownedDisposableDatabaseDropped: dropped };
 }
 async function verificaRestauracioNodeZero(value) {
-  if (!value || typeof value !== "object" || Array.isArray(value) || Object.getPrototypeOf(value) !== Object.prototype || Object.keys(value).some((key) => !["ciphertextPath", "expectedSha256", "apply", "identityStdin"].includes(key))) fail3("restore_options_invalid");
+  if (!value || typeof value !== "object" || Array.isArray(value) || Object.getPrototypeOf(value) !== Object.prototype || Object.keys(value).some((key) => !["ciphertextPath", "expectedSha256", "expectedMigrationLedger", "apply", "identityStdin"].includes(key))) fail3("restore_options_invalid");
   if (typeof value.ciphertextPath !== "string" || !path2.isAbsolute(value.ciphertextPath) || !value.ciphertextPath.endsWith(".dump.age") || /[\r\n\0]/.test(value.ciphertextPath) || !/^[a-f0-9]{64}$/.test(value.expectedSha256 ?? "")) fail3("restore_input_required");
   if (value.identityStdin !== void 0 && typeof value.identityStdin !== "boolean") fail3("restore_options_invalid");
   if (value.apply !== void 0 && typeof value.apply !== "boolean") fail3("restore_options_invalid");
-  if (value.apply !== true) return { apply: false, newDatabasePattern: "node0_restore_<16hex>", template: "template0", willWritePlaintextDump: false, identityPipeRequired: true, privateIdentityFileAccepted: false, externalCustodyVerified: false, r5CustodyClosed: false, cleanMachineRestoreVerified: false };
+  if (value.apply !== true) {
+    if (value.expectedMigrationLedger !== void 0) validaLedgerOrigenRestauracio(value.expectedMigrationLedger);
+    return { apply: false, newDatabasePattern: "node0_restore_<16hex>", template: "template0", willWritePlaintextDump: false, identityPipeRequired: true, sourceMigrationLedgerRequired: true, privateIdentityFileAccepted: false, externalCustodyVerified: false, r5CustodyClosed: false, cleanMachineRestoreVerified: false };
+  }
   if (value.identityStdin !== true) fail3("restore_identity_pipe_required");
+  const expectedMigrationLedger = validaLedgerOrigenRestauracio(value.expectedMigrationLedger);
   if (process.platform !== "darwin" || os2.arch() !== "arm64" || os2.homedir() !== HOME || os2.userInfo().username !== "javi" || !Object.values(os2.networkInterfaces()).flat().some((item) => item?.address === "192.168.0.23")) fail3("restore_node0_machine_required");
   exigeixAbsenciaIdentitatLocal({ homeDir: HOME });
   const held = [];
@@ -364,7 +377,7 @@ async function verificaRestauracioNodeZero(value) {
       const tool = obriRegularRestauracio(POSTGRES_BIN + name, { mode: 493, minBytes: 1, maxBytes: 32 * 1024 * 1024 });
       held.push(tool.fd);
     }
-    return await provaRestauracioAmbRuntime(nativeRuntime(cipher, identity));
+    return await provaRestauracioAmbRuntime(nativeRuntime(cipher, identity), { expectedMigrationLedger });
   } finally {
     identity?.fill(0);
     for (const fd of held) fs3.closeSync(fd);
@@ -372,7 +385,7 @@ async function verificaRestauracioNodeZero(value) {
 }
 async function mainRestauracio(argv = process.argv.slice(2)) {
   try {
-    const input = {};
+    const input = {}, ledger = {};
     for (let index = 0; index < argv.length; index++) {
       const arg = argv[index];
       if (arg === "--apply" || arg === "--identity-stdin") {
@@ -380,11 +393,17 @@ async function mainRestauracio(argv = process.argv.slice(2)) {
         if (input[key] !== void 0) fail3("restore_arguments_invalid");
         input[key] = true;
       } else {
-        const name = { "--ciphertext": "ciphertextPath", "--sha256": "expectedSha256" }[arg];
-        if (!name || input[name] !== void 0 || !argv[index + 1]) fail3("restore_arguments_invalid");
-        input[name] = argv[++index];
+        const ledgerKey = { "--migrations-count": "migrations", "--migration-ledger-sha256": "migrationLedgerSha256" }[arg];
+        const name = ledgerKey ?? { "--ciphertext": "ciphertextPath", "--sha256": "expectedSha256" }[arg], target = ledgerKey ? ledger : input;
+        if (!name || Object.hasOwn(target, name) || !argv[index + 1]) fail3("restore_arguments_invalid");
+        const value = argv[++index];
+        if (name === "migrations") {
+          if (!/^[1-9]\d*$/.test(value)) fail3("restore_source_ledger_invalid");
+          target[name] = Number(value);
+        } else target[name] = value;
       }
     }
+    if (Object.keys(ledger).length) input.expectedMigrationLedger = ledger;
     process.stdout.write(JSON.stringify(await verificaRestauracioNodeZero(input)) + "\n");
   } catch (error) {
     process.stderr.write(JSON.stringify({ ok: false, error: /^(?:restore_[a-z_]+|custody_legacy_local_identity_present|custody_metadata_unproven)$/.test(error?.message ?? "") ? error.message : "restore_failed", newDisposableDatabaseCreated: error?.newDisposableDatabaseCreated === true, ownedDisposableDatabaseDropped: error?.ownedDisposableDatabaseDropped === true }) + "\n");
@@ -393,11 +412,13 @@ async function mainRestauracio(argv = process.argv.slice(2)) {
 }
 if (process.argv[1] && import.meta.url === pathToFileURL(path2.resolve(process.argv[1])).href) await mainRestauracio();
 export {
+  SQL_RECOMPTE_RESTAURACIO,
   hashCipherRestauracio,
   mainRestauracio,
   nomRestauracioValid,
   obriRegularRestauracio,
   provaRestauracioAmbRuntime,
   restauraAmbIdentitatPipe,
+  validaLedgerOrigenRestauracio,
   verificaRestauracioNodeZero
 };

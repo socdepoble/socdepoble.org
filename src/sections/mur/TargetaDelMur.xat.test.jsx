@@ -112,11 +112,16 @@ describe('Onada 10 · les targetes de la Consola i del Cervell: etiquetes i cap 
     const article = container.querySelector('article');
     const etiquetes = [...article.querySelectorAll('.sp-card-body ul.sp-card-labels > li')];
     expect(etiquetes.map((etiqueta) => etiqueta.textContent)).toEqual(PAGE_COPY[clau].labels.map((etiqueta) => etiqueta.text));
-    expect(etiquetes).toHaveLength(2);
-    expect(etiquetes[0].classList.contains('sdp-badge-category')).toBe(true);
-    expect(etiquetes[1].classList.contains('sdp-badge-tag')).toBe(true);
-    // Ni la píndola de reserva «Sistema» (sdp-badge-system) ni cap botó gran.
-    expect(article.querySelector('.sdp-badge-system')).toBeNull();
+    /* P0-40/IDEA-167 (ordre directa del Mestre, 261107 05:23) · «utilitzar
+       sempre Sistema + la nova categoria mare i etiqueta canònica»: la insígnia
+       Sistema és ara la de PAGE_COPY (una sola), no la píndola de reserva. */
+    expect(etiquetes).toHaveLength(4);
+    expect(etiquetes[0].classList.contains('sdp-badge-system')).toBe(true);
+    expect(etiquetes[1].classList.contains('sdp-badge-category')).toBe(true);
+    expect(etiquetes[2].classList.contains('sdp-badge-tag')).toBe(true);
+    expect(etiquetes[3].classList.contains('sdp-badge-tag')).toBe(true);
+    // Una sola insígnia de sistema, «Sistema», i cap botó gran.
+    expect([...article.querySelectorAll('.sdp-badge-system')].map((n) => n.textContent)).toEqual(['Sistema']);
     expect(article.querySelector('.sp-card-accio')).toBeNull();
     expect(article.querySelector('.sdp-boto--gran')).toBeNull();
     expect(screen.queryByRole('link', { name: verb })).toBeNull();
@@ -131,7 +136,8 @@ describe('Onada 10 · les targetes de la Consola i del Cervell: etiquetes i cap 
      MurSection.xat.test.jsx amb el Mur muntat. */
   test('la primera etiqueta de la targeta és la Categoria «Sistema» (la dada que llig el filtre ?category= del Mur)', () => {
     for (const clau of ['consola', 'cervell']) {
-      expect([clau, sistema(clau).labels[0]]).toEqual([clau, { text: 'Sistema', className: 'sdp-badge-category' }]);
+      // P0-40/IDEA-167 (ordre del Mestre, 261107 05:23) · «Sistema» va primer com a insígnia de sistema; la categoria és la mare.
+      expect([clau, sistema(clau).labels[0]]).toEqual([clau, { text: 'Sistema', className: 'sdp-badge-system' }]);
     }
   });
 });
@@ -152,9 +158,10 @@ describe('Onada 10 · les tres targetes que ixen del Panell viuen al Mur, sencer
   const dia = (iso) => new Date(iso).toLocaleDateString('ca-ES', { day: '2-digit', month: '2-digit', year: '2-digit' });
 
   test.each([
-    ['consola', 'Consola Termodinàmica', '2026-09-08T00:00:00+02:00', ['sdp-badge-category', 'sdp-badge-tag']],
-    ['cervell', 'El Cervell', '2026-09-09T00:00:00+02:00', ['sdp-badge-category', 'sdp-badge-tag']],
-    ['disseny', 'Disseny Pedra Seca', '2026-09-10T00:00:00+02:00', ['sdp-badge-system', 'sdp-badge-category', 'sdp-badge-tag']]
+    // P0-40/IDEA-167 (ordre directa del Mestre, 261107 05:23) · Sistema (o «Mur», a Disseny) + la mare + dues etiquetes canòniques.
+    ['consola', 'Consola Termodinàmica', '2026-09-08T00:00:00+02:00', ['sdp-badge-system', 'sdp-badge-category', 'sdp-badge-tag', 'sdp-badge-tag']],
+    ['cervell', 'El Cervell', '2026-09-09T00:00:00+02:00', ['sdp-badge-system', 'sdp-badge-category', 'sdp-badge-tag', 'sdp-badge-tag']],
+    ['disseny', 'Disseny Pedra Seca', '2026-09-10T00:00:00+02:00', ['sdp-badge-system', 'sdp-badge-category', 'sdp-badge-tag', 'sdp-badge-tag']]
   ])('%s: «%s», boina de Sóc de Poble, la data del Mestre, la il·lustració de la pàgina i les seues etiquetes', (clau, titol, data, classes) => {
     const copy = PAGE_COPY[clau];
     expect([copy.title, copy.date]).toEqual([titol, data]);

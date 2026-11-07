@@ -6,6 +6,8 @@ DO $guard$ BEGIN
  -- Support the deployed canonical 76 and the reviewed, complete R20b pair (78),
  -- each also with the R9 /legal 2.5 seal 2611061520 (77, 79); a changed 2.5 text
  -- changes its sha256 and needs new pins (tests/node0-posse-sql.cases.mjs).
+ -- R33 adds the exact full catalogue80 with P1-75 seed revisions. This pin
+ -- does not advertise private Node0 revision methods or apply SQL remotely.
  -- A count alone cannot prove a migration identity or its source bytes.
  OR NOT EXISTS(
  SELECT 1 FROM(VALUES
@@ -13,10 +15,11 @@ DO $guard$ BEGIN
 (76,'091d1e11b6e773c531cb88a5f79d1d932f96d19bc50fca837cbdd1dea30b0260'),
 (77,'9b021cd927914be1ab8223a976a4b2518a96a0d85f068999aeebd174969dc94e'),
 (78,'76d70ba0f769ddeda61980e489814adbd318146a00825574879ac985b2be52b1'),
-(79,'a4c9054de9898e7a7c0de7825f23fde105c9bed77c833fadee69e2a9c5840798')
+(79,'a4c9054de9898e7a7c0de7825f23fde105c9bed77c833fadee69e2a9c5840798'),
+(80,'6d03b86a5f9236a3d1734b4c52e23752c23b42a19009b666e22b40f0ba14d858')
 -- POSSE_MIGRATION_PINS_END
  ) expected(migrations,sha256)
- CROSS JOIN(SELECT count(*) migrations,encode(public.digest(coalesce(string_agg(version||E'\t'||file||E'\t'||sha256,E'\n' ORDER BY version COLLATE "C"),''),'sha256'),'hex') sha256 FROM node0.schema_migrations) actual
+ CROSS JOIN(SELECT count(*) migrations,encode(pg_catalog.sha256(convert_to(coalesce(string_agg(version||E'\t'||file||E'\t'||sha256,E'\n' ORDER BY version COLLATE "C"),''),'UTF8')),'hex') sha256 FROM node0.schema_migrations) actual
  WHERE actual.migrations=expected.migrations AND actual.sha256=expected.sha256)
  OR NOT EXISTS(SELECT 1 FROM pg_roles WHERE rolname=current_user AND (rolsuper OR rolbypassrls))
  THEN RAISE EXCEPTION 'posse_install_guard'; END IF;
@@ -118,7 +121,7 @@ ALTER TABLE node0_posse.remote_bindings ADD COLUMN IF NOT EXISTS scopes jsonb NO
 
 CREATE OR REPLACE FUNCTION node0_posse.source_revision(s public.section_submissions) RETURNS text
  LANGUAGE sql IMMUTABLE SET search_path=pg_catalog AS $f$
- SELECT encode(public.digest(to_jsonb(s)::text,'sha256'),'hex') $f$;
+ SELECT encode(pg_catalog.sha256(convert_to(to_jsonb(s)::text,'UTF8')),'hex') $f$;
 CREATE OR REPLACE FUNCTION node0_posse.source_current(t uuid,s text,i uuid) RETURNS jsonb
  LANGUAGE plpgsql SET search_path=pg_catalog,public,node0_posse AS $f$
  DECLARE row0 public.section_submissions;c node0_posse.publication_certifications;o public.organizations;rev text;commercial0 boolean; BEGIN
@@ -138,7 +141,7 @@ CREATE OR REPLACE FUNCTION node0_posse.source_current(t uuid,s text,i uuid) RETU
  'source','socdepoble','canonicalUrl',c.canonical_uri,'articleSha256',c.article_sha256,'title',row0.title,'summary',coalesce(row0.description,''),
  'tags',CASE WHEN jsonb_typeof(row0.payload->'tags')='array' THEN row0.payload->'tags' ELSE '[]'::jsonb END,
  'editorialProvenance',jsonb_build_object('authorKind',CASE WHEN row0.author_org_id IS NULL THEN 'person' ELSE 'entity' END,
- 'authorId',coalesce(row0.author_org_id,row0.owner_user_id),'proofSha256',encode(public.digest(jsonb_build_object('sourceRevision',rev,'article',c.article_sha256,'proof',c.proof_sha256,'author',coalesce(row0.author_org_id,row0.owner_user_id),'commercial',commercial0,'cover',c.cover)::text,'sha256'),'hex'),'commercial',commercial0))
+ 'authorId',coalesce(row0.author_org_id,row0.owner_user_id),'proofSha256',encode(pg_catalog.sha256(convert_to(jsonb_build_object('sourceRevision',rev,'article',c.article_sha256,'proof',c.proof_sha256,'author',coalesce(row0.author_org_id,row0.owner_user_id),'commercial',commercial0,'cover',c.cover)::text,'UTF8')),'hex'),'commercial',commercial0))
  || CASE WHEN c.cover IS NOT NULL THEN jsonb_build_object('cover',c.cover) ELSE '{}'::jsonb END;
  END $f$;
 CREATE OR REPLACE FUNCTION node0_posse.remote_current(b uuid,d uuid,i text) RETURNS jsonb
@@ -156,7 +159,7 @@ CREATE OR REPLACE FUNCTION node0_posse.credential_proof(b node0_posse.bridges) R
  DECLARE rb node0_posse.remote_bindings;BEGIN
  SELECT * INTO rb FROM node0_posse.remote_bindings WHERE id=b.binding_id AND credential_sha256 IS NOT NULL AND revoked_at IS NULL AND verified_at<=clock_timestamp() AND expires_at>clock_timestamp() FOR SHARE;
  IF rb.id IS NULL THEN RETURN NULL; END IF;
- RETURN encode(public.digest(jsonb_build_object('id',rb.id,'proof',rb.proof_sha256,'token',rb.credential_sha256,'scopes',rb.scopes,'account',rb.remote_account)::text,'sha256'),'hex');
+ RETURN encode(pg_catalog.sha256(convert_to(jsonb_build_object('id',rb.id,'proof',rb.proof_sha256,'token',rb.credential_sha256,'scopes',rb.scopes,'account',rb.remote_account)::text,'UTF8')),'hex');
  END $f$;
 CREATE OR REPLACE FUNCTION node0_posse.assert_default_policy(b node0_posse.bridges) RETURNS void
  LANGUAGE plpgsql SET search_path=pg_catalog,public,node0_posse AS $f$
@@ -227,7 +230,7 @@ CREATE OR REPLACE FUNCTION node0_posse.bridge_json(b node0_posse.bridges) RETURN
  LANGUAGE sql STABLE SET search_path=pg_catalog,node0_posse AS $f$
  SELECT jsonb_build_object('id',b.id,'tenantId',b.tenant_id,'ownerUserId',b.owner_user_id,'ownerOrgId',b.owner_org_id,
  'configRevision',b.policy_revision::text,'remoteAccountIdentity',b.remote_account,
- 'policyProofSha256',encode(public.digest((jsonb_build_object('policy',b.policy,'authors',coalesce((SELECT jsonb_agg(jsonb_build_object('kind',a.kind,'id',a.author_id,'enabled',true) ORDER BY a.kind,a.author_id) FROM node0_posse.bridge_authors a WHERE a.bridge_id=b.id),'[]'::jsonb),'revision',b.policy_revision,'remote',b.remote_account))::text,'sha256'),'hex'),
+ 'policyProofSha256',encode(pg_catalog.sha256(convert_to((jsonb_build_object('policy',b.policy,'authors',coalesce((SELECT jsonb_agg(jsonb_build_object('kind',a.kind,'id',a.author_id,'enabled',true) ORDER BY a.kind,a.author_id) FROM node0_posse.bridge_authors a WHERE a.bridge_id=b.id),'[]'::jsonb),'revision',b.policy_revision,'remote',b.remote_account))::text,'UTF8')),'hex'),
  'linkedAuthors',coalesce((SELECT jsonb_agg(jsonb_build_object('kind',a.kind,'id',a.author_id,'enabled',true) ORDER BY a.kind,a.author_id) FROM node0_posse.bridge_authors a WHERE a.bridge_id=b.id),'[]'::jsonb),
  'policy',b.policy,'defaultTags',b.default_tags,'enabled',b.enabled)
  $f$;
@@ -391,7 +394,7 @@ CREATE OR REPLACE FUNCTION node0_posse.rpc(op text,p jsonb) RETURNS jsonb
   INSERT INTO node0_posse.canonical_uris(remote_account,uri,record_id) VALUES(b.remote_account,s->'draft'->>'canonicalUrl',r.id) ON CONFLICT DO NOTHING;
   IF NOT EXISTS(SELECT 1 FROM node0_posse.canonical_uris WHERE remote_account=b.remote_account AND uri=s->'draft'->>'canonicalUrl' AND record_id=r.id) THEN RAISE EXCEPTION 'posse_canonical_uri_owned'; END IF;
   UPDATE node0_posse.records SET canonical_uri=s->'draft'->>'canonicalUrl' WHERE id=r.id;
-  INSERT INTO node0_posse.drafts(record_id,snapshot,snapshot_sha256,draft_hash,ready) VALUES(r.id,s,encode(public.digest(s::text,'sha256'),'hex'),p->>'draftHash',(p->>'ready')::boolean) ON CONFLICT(record_id,draft_hash) DO NOTHING;
+  INSERT INTO node0_posse.drafts(record_id,snapshot,snapshot_sha256,draft_hash,ready) VALUES(r.id,s,encode(pg_catalog.sha256(convert_to(s::text,'UTF8')),'hex'),p->>'draftHash',(p->>'ready')::boolean) ON CONFLICT(record_id,draft_hash) DO NOTHING;
   SELECT * INTO d FROM node0_posse.drafts WHERE record_id=r.id AND draft_hash=p->>'draftHash';
   RETURN jsonb_build_object('preparedId',d.id);
  END IF;
@@ -465,11 +468,11 @@ END $f$;
 CREATE OR REPLACE FUNCTION node0_posse.readiness() RETURNS jsonb
  LANGUAGE sql SECURITY DEFINER SET search_path=pg_catalog,node0_posse AS $f$
  SELECT jsonb_build_object('version','posse.r11.v1','migrations',(SELECT count(*) FROM node0.schema_migrations),
- 'migrationLedgerSha256',(SELECT encode(public.digest(coalesce(string_agg(version||E'\t'||file||E'\t'||sha256,E'\n' ORDER BY version COLLATE "C"),''),'sha256'),'hex') FROM node0.schema_migrations),
+ 'migrationLedgerSha256',(SELECT encode(pg_catalog.sha256(convert_to(coalesce(string_agg(version||E'\t'||file||E'\t'||sha256,E'\n' ORDER BY version COLLATE "C"),''),'UTF8')),'hex') FROM node0.schema_migrations),
  'ownerStable',NOT EXISTS(SELECT 1 FROM pg_proc p JOIN pg_namespace n ON n.oid=p.pronamespace WHERE n.nspname='node0_posse' AND p.proowner<>n.nspowner) AND NOT EXISTS(SELECT 1 FROM pg_class c JOIN pg_namespace n ON n.oid=c.relnamespace WHERE n.nspname='node0_posse' AND c.relowner<>n.nspowner),
  'tablesPrivate',NOT EXISTS(SELECT 1 FROM pg_class c JOIN pg_namespace n ON n.oid=c.relnamespace CROSS JOIN unnest(ARRAY['anon','authenticated','node0_runtime','node0_authenticator']) role0 CROSS JOIN unnest(ARRAY['SELECT','INSERT','UPDATE','DELETE','TRUNCATE','REFERENCES','TRIGGER']) privilege0 WHERE n.nspname='node0_posse' AND c.relkind IN('r','p','v','m') AND has_table_privilege(role0,c.oid,privilege0))
  AND NOT EXISTS(SELECT 1 FROM pg_proc p JOIN pg_namespace n ON n.oid=p.pronamespace CROSS JOIN unnest(ARRAY['anon','authenticated','node0_runtime','node0_authenticator']) role0 WHERE n.nspname='node0_posse' AND has_function_privilege(role0,p.oid,'EXECUTE') AND NOT (role0='authenticated' AND p.proname='rpc') AND NOT (role0='node0_authenticator' AND p.proname='readiness')),
- 'functionHashes',(SELECT jsonb_object_agg(p.proname,encode(public.digest(p.prosrc,'sha256'),'hex')) FROM pg_proc p JOIN pg_namespace n ON n.oid=p.pronamespace WHERE n.nspname='node0_posse' AND p.proname=ANY(ARRAY['source_current','source_for_bridge','remote_current','assert_current','assert_history','rpc','credential_proof'])),
+ 'functionHashes',(SELECT jsonb_object_agg(p.proname,encode(pg_catalog.sha256(convert_to(p.prosrc,'UTF8')),'hex')) FROM pg_proc p JOIN pg_namespace n ON n.oid=p.pronamespace WHERE n.nspname='node0_posse' AND p.proname=ANY(ARRAY['source_current','source_for_bridge','remote_current','assert_current','assert_history','rpc','credential_proof'])),
  'sourceInstalled',to_regprocedure('node0_posse.source_current(uuid,text,uuid)') IS NOT NULL,
  'remoteInstalled',to_regprocedure('node0_posse.remote_current(uuid,uuid,text)') IS NOT NULL)
  $f$;

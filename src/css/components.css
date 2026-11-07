@@ -3887,15 +3887,12 @@ section.bar-orange > .sdp-emoticona-barra--boto:focus-visible { outline-color: v
 }
 
 /* ═══════════════════════════════════════════════════════════════════
-   Reproductor explicatiu del Pou de Neu (IDEA-116, Onada R9) ·
-   ReproductorExplicatiuPouNeu3D.jsx. La geometria és la del visor
-   d'Anatomia Rural; ací només hi ha la pantalla i el text complet, els
-   controls i les tres propostes d'estil (A, B i C), totes amb tokens
-   semàntics de Pedra Seca. Les transicions viuen NOMÉS dins de
-   `prefers-reduced-motion: no-preference`.
+   Article «Noves tecnologies aplicades a la cultura rural» (IDEA-116,
+   Onada R9) · NovesTecnologiesCulturaRuralArticle.jsx. IDEA-161: el
+   reproductor explicatiu duplicat s'ha retirat; l'únic visor del Pou de
+   Neu és PouDeLaNeuAnatomiaCard, amb els seus estils propis.
    ═══════════════════════════════════════════════════════════════════ */
 @layer components {
-  /* L'article del Mur que l'acull (NovesTecnologiesCulturaRuralArticle.jsx). */
   .noves-tecnologies-rural {
     display: flex;
     flex-direction: column;
@@ -3905,385 +3902,6 @@ section.bar-orange > .sdp-emoticona-barra--boto:focus-visible { outline-color: v
   .noves-tecnologies-rural__veu {
     display: flex;
     justify-content: center;
-  }
-
-  .reproductor-pou {
-    display: flex;
-    flex-direction: column;
-    width: 100%;
-    min-width: 0;
-    gap: var(--sdp-space-4);
-    margin-block: var(--sdp-space-8);
-    color: var(--sdp-text-cos);
-  }
-
-  .reproductor-pou__titol {
-    margin: 0;
-    color: var(--sdp-text-titol);
-  }
-
-  .reproductor-pou__avis,
-  .reproductor-pou__nota,
-  .reproductor-pou__font,
-  .reproductor-pou__calcul {
-    margin: 0;
-    color: var(--sdp-text-suau);
-    font-size: var(--sdp-text-meta);
-    line-height: 1.6;
-  }
-
-  .reproductor-pou__opcions {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: center;
-    gap: var(--sdp-space-2);
-  }
-
-  .reproductor-pou__commutador {
-    flex-wrap: wrap;
-    justify-content: center;
-  }
-
-  /* El text creix amb cada pas; només el dibuix té proporció fixa. */
-  .reproductor-pou__pantalla {
-    display: grid;
-    width: 100%;
-    min-width: 0;
-    height: auto;
-    margin-inline: auto;
-    overflow: visible;
-    background: var(--sdp-fons-app);
-    border: 1px solid var(--sdp-vora);
-    border-radius: var(--sdp-radi-m);
-  }
-
-  .reproductor-pou--vertical .reproductor-pou__pantalla {
-    grid-template-columns: minmax(0, 1fr);
-    grid-template-rows: auto auto;
-  }
-
-  .reproductor-pou--horitzontal .reproductor-pou__pantalla {
-    grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
-  }
-
-  .reproductor-pou__pantalla:focus-visible,
-  .reproductor-pou__boto-pas:focus-visible {
-    outline: var(--sdp-focus-gruix) solid var(--sdp-focus);
-    outline-offset: var(--sdp-focus-separacio);
-  }
-
-  /* El focus del text conserva el contrast amb el fons de la regió. */
-  .reproductor-pou__subtitol:focus-visible {
-    outline: var(--sdp-focus-gruix) solid var(--sdp-focus);
-    outline-offset: calc(-1 * var(--sdp-focus-gruix));
-  }
-
-  .reproductor-pou__svg {
-    display: block;
-    width: 100%;
-    height: auto;
-    aspect-ratio: 16 / 10;
-    min-height: 0;
-    align-self: start;
-  }
-
-  .reproductor-pou__subtitol {
-    min-height: 0;
-    min-width: 0;
-    height: auto;
-    overflow: visible;
-    padding: var(--sdp-space-4);
-    background: var(--sdp-fons-targeta);
-    border-top: 1px solid var(--sdp-vora);
-  }
-
-  .reproductor-pou--horitzontal .reproductor-pou__subtitol {
-    border-top: 0;
-    border-left: 1px solid var(--sdp-vora);
-  }
-
-  @media (width < 48rem) {
-    .reproductor-pou--horitzontal .reproductor-pou__pantalla {
-      grid-template-columns: minmax(0, 1fr);
-    }
-
-    .reproductor-pou__svg {
-      aspect-ratio: 4 / 3;
-    }
-
-    .reproductor-pou--horitzontal .reproductor-pou__subtitol {
-      border-top: 1px solid var(--sdp-vora);
-      border-left: 0;
-    }
-  }
-
-  .reproductor-pou__comptador {
-    margin: 0 0 var(--sdp-space-1);
-    color: var(--sdp-text-suau);
-    font-size: var(--sdp-text-meta);
-  }
-
-  .reproductor-pou__pas-titol {
-    margin: 0 0 var(--sdp-space-2);
-    color: var(--sdp-text-titol);
-  }
-
-  .reproductor-pou__pas-text {
-    margin: 0;
-    line-height: 1.6;
-  }
-
-  /* ── El dibuix (estil base, el de la proposta A) ── */
-  .reproductor-pou__cara {
-    fill: var(--sdp-fons-subtil);
-    stroke: var(--sdp-vora-forta);
-    stroke-width: 1.5;
-    stroke-linejoin: round;
-  }
-
-  .reproductor-pou__cara--filera,
-  .reproductor-pou__peca .reproductor-pou__cara--filera {
-    fill: none;
-    stroke-dasharray: 10 4;
-    stroke-width: 1;
-  }
-
-  .reproductor-pou__ombra {
-    stroke: none;
-    pointer-events: none;
-  }
-
-  .reproductor-pou__ombra--1 { fill: color-mix(in srgb, var(--sdp-fons-invers) 14%, transparent); }
-  .reproductor-pou__ombra--2 { fill: color-mix(in srgb, var(--sdp-fons-invers) 26%, transparent); }
-
-  .reproductor-pou__peca--pedra .reproductor-pou__cara { fill: var(--sdp-fons-subtil); }
-  .reproductor-pou__peca--neu .reproductor-pou__cara { fill: var(--sdp-fons-targeta); }
-  .reproductor-pou__peca--palla .reproductor-pou__cara { fill: var(--sdp-accent-subtil); }
-  .reproductor-pou__peca--fusta .reproductor-pou__cara { fill: var(--sdp-fons-app); stroke: var(--sdp-accent-text); }
-
-  /* Les peces que no són del pas: traç discontinu i clar (cap opacitat: Bancal). */
-  .reproductor-pou__peca.is-apagada .reproductor-pou__cara {
-    stroke: var(--sdp-vora);
-    stroke-dasharray: 4 4;
-  }
-
-  .reproductor-pou__peca.is-activa .reproductor-pou__cara {
-    stroke: var(--sdp-accio-control);
-    stroke-width: 3;
-  }
-
-  .reproductor-pou__marcador {
-    fill: var(--sdp-accio-subtil);
-    stroke: var(--sdp-accio-control);
-    stroke-width: 2;
-  }
-
-  .reproductor-pou__cotes-dibuix {
-    pointer-events: none;
-  }
-
-  .reproductor-pou__cota-linia {
-    stroke: var(--sdp-text-titol);
-    stroke-width: 1.5;
-  }
-
-  .reproductor-pou__cota-linia--clara {
-    stroke-dasharray: 6 4;
-  }
-
-  .reproductor-pou__cota-text {
-    fill: var(--sdp-text-titol);
-    font-size: 1.5rem;
-    font-weight: 700;
-    paint-order: stroke;
-    stroke: var(--sdp-fons-app);
-    stroke-width: 4;
-    stroke-linejoin: round;
-  }
-
-  /* La xifra del pas, al costat de la peça que s'explica. */
-  .reproductor-pou__cota-text--pas {
-    font-size: 1.75rem;
-  }
-
-  /* ── Proposta A · Còmic Tinta Viva i Pedra Seca: tinta gruixuda sobre paper càlid ── */
-  .reproductor-pou--estil-a .reproductor-pou__pantalla {
-    background: var(--sdp-fons-lectura);
-  }
-
-  .reproductor-pou--estil-a .reproductor-pou__cara {
-    stroke: var(--sdp-text-titol);
-    stroke-width: 3;
-  }
-
-  .reproductor-pou--estil-a .reproductor-pou__peca--pedra .reproductor-pou__cara {
-    fill: var(--sdp-accent-subtil);
-  }
-
-  .reproductor-pou--estil-a .reproductor-pou__cota-text {
-    stroke: var(--sdp-fons-lectura);
-  }
-
-  /* ── Proposta B · Plànol etnogràfic: traç fi de llapis, sense ombres ni farcit ── */
-  .reproductor-pou--estil-b .reproductor-pou__pantalla {
-    background: var(--sdp-fons-targeta);
-  }
-
-  .reproductor-pou--estil-b .reproductor-pou__cara,
-  .reproductor-pou--estil-b .reproductor-pou__peca .reproductor-pou__cara {
-    fill: transparent;
-    stroke: var(--sdp-text-suau);
-    stroke-width: 1;
-  }
-
-  .reproductor-pou--estil-b .reproductor-pou__peca.is-activa .reproductor-pou__cara {
-    stroke: var(--sdp-accio-control);
-    stroke-width: 3;
-  }
-
-  .reproductor-pou--estil-b .reproductor-pou__ombra {
-    fill: transparent;
-  }
-
-  .reproductor-pou--estil-b .reproductor-pou__cota-linia {
-    stroke-dasharray: 2 3;
-  }
-
-  .reproductor-pou--estil-b .reproductor-pou__cota-text {
-    stroke: var(--sdp-fons-targeta);
-    font-weight: 600;
-  }
-
-  /* ── Proposta C · Blueprint: línies clares sobre el blau d'acció fosc ──
-     R9V-C2-07 · --sdp-accio-control (secondary-700, el del pas actiu), no
-     --sdp-accio (secondary-500): el blanc sobre el 500 fa 3,87:1, i les cotes
-     del dibuix no arriben al llindar de text gran en 9:16. */
-  .reproductor-pou--estil-c .reproductor-pou__pantalla {
-    background: var(--sdp-accio-control);
-  }
-
-  .reproductor-pou--estil-c .reproductor-pou__svg .reproductor-pou__cara,
-  .reproductor-pou--estil-c .reproductor-pou__svg .reproductor-pou__peca .reproductor-pou__cara {
-    fill: transparent;
-    stroke: var(--sdp-sobre-accio);
-    stroke-width: 1.5;
-  }
-
-  .reproductor-pou--estil-c .reproductor-pou__ombra {
-    fill: transparent;
-  }
-
-  .reproductor-pou--estil-c .reproductor-pou__peca.is-activa .reproductor-pou__cara {
-    stroke: var(--sdp-sobre-accio);
-    stroke-width: 4;
-  }
-
-  .reproductor-pou--estil-c .reproductor-pou__cota-linia {
-    stroke: var(--sdp-sobre-accio);
-  }
-
-  .reproductor-pou--estil-c .reproductor-pou__cota-text {
-    fill: var(--sdp-sobre-accio);
-    stroke: var(--sdp-accio-control);
-  }
-
-  .reproductor-pou--estil-c .reproductor-pou__marcador {
-    fill: transparent;
-    stroke: var(--sdp-sobre-accio);
-  }
-
-  /* ── Controls, cotes del pas i passos ── */
-  .reproductor-pou__controls,
-  .reproductor-pou__veu {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: center;
-    gap: var(--sdp-space-2);
-  }
-
-  .reproductor-pou__detall {
-    display: flex;
-    flex-direction: column;
-    gap: var(--sdp-space-3);
-    padding: var(--sdp-space-4);
-    background: var(--sdp-fons-targeta);
-    border: 1px solid var(--sdp-vora);
-    border-radius: var(--sdp-radi-m);
-  }
-
-  .reproductor-pou__cotes {
-    display: flex;
-    flex-direction: column;
-    gap: var(--sdp-space-3);
-    margin: 0;
-  }
-
-  .reproductor-pou__cota-etiqueta {
-    font-weight: 600;
-    color: var(--sdp-text-titol);
-  }
-
-  .reproductor-pou__cota-valor {
-    margin: 0;
-    line-height: 1.6;
-  }
-
-  .reproductor-pou__cota-font {
-    color: var(--sdp-text-suau);
-    font-size: var(--sdp-text-meta);
-  }
-
-  .reproductor-pou__estat {
-    display: inline-block;
-    padding: 0 var(--sdp-space-2);
-    border: 1px solid var(--sdp-vora-forta);
-    border-radius: var(--sdp-radi-pastilla);
-    font-size: var(--sdp-text-meta);
-    font-weight: 600;
-  }
-
-  .reproductor-pou__cota[data-estat="discrepant"] .reproductor-pou__estat {
-    background: var(--sdp-accent-subtil);
-    border-color: var(--sdp-accent-text);
-  }
-
-  .reproductor-pou__passos {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: center;
-    gap: var(--sdp-space-2);
-    margin: 0;
-    padding: 0;
-    list-style: none;
-  }
-
-  .reproductor-pou__boto-pas {
-    min-height: var(--sdp-touch);
-    padding: 0 var(--sdp-space-4);
-    background: var(--sdp-fons-targeta);
-    color: var(--sdp-text-cos);
-    border: 1px solid var(--sdp-vora-control);
-    border-radius: var(--sdp-radi-pastilla);
-    cursor: pointer;
-  }
-
-  .reproductor-pou__boto-pas[aria-current="step"] {
-    background: var(--sdp-accio-control);
-    color: var(--sdp-sobre-accio);
-    border-color: var(--sdp-accio-control);
-  }
-
-  /* ── Moviment: només amb permís; amb moviment reduït, cap transició ── */
-  @media (prefers-reduced-motion: no-preference) {
-    .reproductor-pou__cara {
-      transition: stroke var(--sdp-t), stroke-width var(--sdp-t);
-    }
-  }
-
-  @media (prefers-reduced-motion: reduce) {
-    .reproductor-pou__cara {
-      transition: none;
-    }
   }
 }
 
@@ -4628,7 +4246,16 @@ section.bar-orange > .sdp-emoticona-barra--boto:focus-visible { outline-color: v
   .pou-neu-heading p, .pou-neu-description p { margin: 0.5rem 0; }
   .pou-neu-kicker, .pou-neu-caption { color: var(--sdp-text-suau); font-variant-numeric: tabular-nums; font-size: 1rem; }
   .pou-neu-figure { margin: 1rem 0; }
-  .pou-neu-stage { position: relative; aspect-ratio: 760 / 720; isolation: isolate; color: var(--sdp-text-suau); }
+  /* Àlies locals del dibuix (fora de l'espai --sdp-*): per defecte, els tokens de sempre; l'estil
+     «Làmina de Leonardo» (bloc R11, E1) només els reassigna, sense cap fill ni stroke propi. */
+  .pou-neu-stage {
+    position: relative; aspect-ratio: 760 / 720; isolation: isolate;
+    --pou-neu-paper: var(--sdp-pou-paper);
+    --pou-neu-ombra-0: var(--sdp-pou-shade-0); --pou-neu-ombra-1: var(--sdp-pou-shade-1);
+    --pou-neu-ombra-2: var(--sdp-pou-shade-2); --pou-neu-ombra-3: var(--sdp-pou-shade-3);
+    --pou-neu-tinta: var(--sdp-text-suau); --pou-neu-tinta-forta: var(--sdp-text-cos); --pou-neu-fons: var(--sdp-fons-targeta);
+    color: var(--pou-neu-tinta);
+  }
   .pou-neu-svg { display: block; position: relative; z-index: 0; width: 100%; height: 100%; overflow: visible; }
   .pou-neu-gl, .pou-neu-front { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
   .pou-neu-gl { z-index: 1; }
@@ -4636,41 +4263,45 @@ section.bar-orange > .sdp-emoticona-barra--boto:focus-visible { outline-color: v
   .pou-neu-front .pou-neu-part { pointer-events: visiblePainted; }
   .pou-neu-part { cursor: pointer; }
   .pou-neu-stage[data-season="winter"] .pou-neu-part[data-fluid="outflow"] { visibility: hidden; pointer-events: none; }
-  .pou-neu-fill { fill: var(--sdp-pou-shade-1); }
-  .pou-neu-shade[data-shade="0"] { fill: var(--sdp-pou-shade-0); }
-  .pou-neu-shade[data-shade="1"] { fill: var(--sdp-pou-shade-1); }
-  .pou-neu-shade[data-shade="2"] { fill: var(--sdp-pou-shade-2); }
-  .pou-neu-shade[data-shade="3"] { fill: var(--sdp-pou-shade-3); }
-  .pou-neu-top { fill: var(--sdp-pou-paper); }
-  .pou-neu-line { fill: none; stroke: var(--sdp-text-suau); stroke-width: 0.6; stroke-linejoin: round; stroke-linecap: round; }
+  .pou-neu-fill { fill: var(--pou-neu-ombra-1); }
+  .pou-neu-shade[data-shade="0"] { fill: var(--pou-neu-ombra-0); }
+  .pou-neu-shade[data-shade="1"] { fill: var(--pou-neu-ombra-1); }
+  .pou-neu-shade[data-shade="2"] { fill: var(--pou-neu-ombra-2); }
+  .pou-neu-shade[data-shade="3"] { fill: var(--pou-neu-ombra-3); }
+  .pou-neu-top { fill: var(--pou-neu-paper); }
+  .pou-neu-line { fill: none; stroke: var(--pou-neu-tinta); stroke-width: 0.6; stroke-linejoin: round; stroke-linecap: round; }
   .pou-neu-line[data-tone="lo"] { stroke-opacity: 0.4; }
   .pou-neu-line[data-tone="mid"] { stroke-opacity: 0.65; }
-  .pou-neu-part[data-tone="lo"] .pou-neu-line { stroke: var(--sdp-text-suau); }
-  .pou-neu-part[data-tone="hi"] .pou-neu-line { stroke: var(--sdp-text-cos); }
+  .pou-neu-part[data-tone="lo"] .pou-neu-line { stroke: var(--pou-neu-tinta); }
+  .pou-neu-part[data-tone="hi"] .pou-neu-line { stroke: var(--pou-neu-tinta-forta); }
   .pou-neu-part[data-selected="true"] .pou-neu-line { stroke: var(--sdp-accio-text); }
   /* Marca de les arestes de contorn: la llig tooling/anatomia/qa-browser.mjs. */
   .pou-neu-edge { stroke-linejoin: round; }
-  .pou-neu-part[data-lit="true"] .pou-neu-top { fill: color-mix(in srgb, var(--sdp-accio-subtil) 45%, var(--sdp-fons-targeta)); }
-  .pou-neu-dot { fill: var(--sdp-text-suau); }
-  .pou-neu-halo { fill: var(--sdp-text-cos); fill-opacity: 0.1; }
-  .pou-neu-engraving { fill: var(--sdp-text-cos); font-family: var(--sdp-font); font-weight: 600; }
-  .pou-neu-ink-probe { position: absolute; width: 0; height: 0; visibility: hidden; color: var(--sdp-text-suau); background: var(--sdp-fons-targeta); }
+  .pou-neu-part[data-lit="true"] .pou-neu-top { fill: color-mix(in srgb, var(--sdp-accio-subtil) 45%, var(--pou-neu-fons)); }
+  .pou-neu-dot { fill: var(--pou-neu-tinta); }
+  .pou-neu-halo { fill: var(--pou-neu-tinta-forta); fill-opacity: var(--pou-neu-halo-opacitat, 0.1); }
+  .pou-neu-engraving { fill: var(--pou-neu-tinta-forta); font-family: var(--sdp-font); font-weight: 600; }
+  .pou-neu-ink-probe { position: absolute; width: 0; height: 0; visibility: hidden; color: var(--pou-neu-tinta); background: var(--pou-neu-fons); }
   .pou-neu-caption { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 0.5rem; border-block: 1px solid var(--sdp-vora); padding: 0.5rem 0; }
   .pou-neu-controls { display: flex; flex-wrap: wrap; align-items: end; justify-content: center; gap: 1rem; }
   .pou-neu-field { display: grid; flex: 1 1 12rem; gap: 0.5rem; font-size: 1rem; }
-  .pou-neu-field output { font-variant-numeric: tabular-nums; }
+  /* A11Y-06 · El valor de l'àzimut és només visual (aria-hidden): el lliscant ja el diu amb aria-valuetext. */
+  .pou-neu-field__valor { font-variant-numeric: tabular-nums; }
   .pou-neu-field select, .pou-neu-field input { width: 100%; min-height: var(--sdp-touch); accent-color: var(--sdp-accio); }
   .pou-neu-field select { background: var(--sdp-fons-targeta); color: var(--sdp-text-cos); border: 1px solid var(--sdp-vora-control); border-radius: var(--sdp-radi-s); padding: 0.5rem; font: inherit; }
   .pou-neu-explode, .pou-neu-choice { min-height: var(--sdp-touch); border: 1px solid var(--sdp-vora-control); border-radius: var(--sdp-radi-s); padding: 0.5rem 1rem; background: var(--sdp-fons-targeta); color: var(--sdp-text-cos); font: inherit; cursor: pointer; }
   .pou-neu-explode { background: var(--sdp-accio-control); color: var(--sdp-sobre-accio); }
-  .pou-neu-choice[aria-pressed="true"] { background: var(--sdp-accio-subtil); color: var(--sdp-accio-text); border-color: var(--sdp-accio); }
+  /* A11Y-03 · L'explosió és un commutador de rètol fix: l'estat premut es veu com el de les altres tries. */
+  .pou-neu-choice[aria-pressed="true"], .pou-neu-explode[aria-pressed="true"] { background: var(--sdp-accio-subtil); color: var(--sdp-accio-text); border-color: var(--sdp-accio); }
   @media (hover: hover) and (pointer: fine) {
     .pou-neu-explode:hover, .pou-neu-choice:hover { border-color: var(--sdp-accio); }
   }
-  .pou-neu-card :is(button,input,select):focus-visible { outline: 3px solid var(--sdp-accio); outline-offset: 3px; }
+  /* A11Y-04 · El contorn del focus és el del sistema (--sdp-focus): passa de 3:1 sobre la targeta i sobre el
+     pergamí del visor en clar i en fosc (--sdp-accio feia 2,91:1 sobre el pergamí clar). */
+  .pou-neu-card :is(button,input,select,summary):focus-visible { outline: 3px solid var(--sdp-focus); outline-offset: 3px; }
   .pou-neu-assemblies { display: flex; flex-wrap: wrap; justify-content: center; gap: 0.5rem; margin: 1rem 0; }
   .pou-neu-choice span { font-variant-numeric: tabular-nums; }
-  .pou-neu-hint, .pou-neu-note { font-size: 1rem; line-height: 1.6; color: var(--sdp-text-suau); }
+  .pou-neu-hint, .pou-neu-note, .pou-neu-fitxa__nota { font-size: 1rem; line-height: 1.6; color: var(--sdp-text-suau); }
   .pou-neu-readout { display: grid; grid-template-columns: repeat(auto-fit,minmax(8rem,1fr)); gap: 1rem; padding: 1rem 0; border-block: 1px solid var(--sdp-vora); }
   .pou-neu-readout dt { font-size: 1rem; color: var(--sdp-text-suau); }
   .pou-neu-readout dd { margin: 0.5rem 0 0; font-size: 1.125rem; font-weight: 600; font-variant-numeric: tabular-nums; color: var(--sdp-text-titol); }
@@ -4694,6 +4325,216 @@ section.bar-orange > .sdp-emoticona-barra--boto:focus-visible { outline-color: v
   [data-element-fullscreen]:fullscreen .pou-neu-stage {
     width: min(100%, 84.444dvh); margin-inline: auto;
   }
+}
+
+/* ── IDEA-161 + IDEA-165 + IDEA-160 · Visor únic del Pou de Neu del Rentonar (Onada R11) ──
+   Tres modes (dins del pou, tall seccional i desmuntatge). Fora de la pantalla
+   completa tot s'apila. A pantalla completa (bucle 3) el HUD va superposat a la
+   vista, no apilat: estacions dalt, accions a la dreta, relat i IAIA davall de
+   les estacions i coixinet baix a l'esquerra; a l'escriptori apaïsat, el HUD
+   passa a la columna dreta (PouNeuInterior el pinta dins de .pou-neu-hud__interior). */
+@layer components {
+  .pou-neu-card [hidden] { display: none; }
+  .pou-neu-card__toolbar { align-items: center; }
+  .pou-neu-modes { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-inline-end: auto; }
+  .pou-neu-choice { min-width: var(--sdp-touch); }
+  .pou-neu-choice:disabled { cursor: not-allowed; color: var(--sdp-text-desactivat); border-color: var(--sdp-vora); }
+  .pou-neu-etiqueta-curta { display: none; }
+  .pou-neu-avis-webgl {
+    margin: 0.5rem 0; padding-inline-start: 0.5rem; border-inline-start: 0.25rem solid var(--sdp-accio);
+    font-size: 1rem; line-height: 1.6; color: var(--sdp-text-cos);
+  }
+  .pou-neu-hud, .pou-neu-hud__interior { display: grid; gap: 0.75rem; }
+  .pou-neu-talls { display: flex; flex-wrap: wrap; justify-content: center; gap: 0.25rem; }
+  /* L'àzimut i el seu valor en una línia; el control lliscant, davall. */
+  .pou-neu-field--azimut { grid-template-columns: minmax(0, 1fr) auto; align-items: baseline; }
+  .pou-neu-field--azimut input { grid-column: 1 / -1; }
+  /* E1 · Co-creació R11 (empelt de la proposta de Gemini i MarIA): la làmina de l'interior també al
+     desmuntatge. Només es reassignen els àlies --pou-neu-* de l'escenari amb els tokens de material
+     de tokens.css (cap token nou, cap fill ni stroke): la selecció (--sdp-accio-text) i la llum
+     continuen manant. Cada assemblatge porta el seu material, com el codi de colors d'un tall
+     d'enginyeria, amb les barreges del shader de l'interior (iso/pouNeuInterior.js): la porta, argila
+     i fusta com el trespol; el desguàs, la terra del tap. */
+  /* VIS-08 · Si la fila de controls s'estira (contenidor estret), els botons no: es queden arran del lliscant. */
+  .pou-neu-estils { display: flex; flex: 0 0 auto; align-items: end; gap: 0.25rem; }
+  /* VIS-06 · La làmina és dibuix de ploma: sense l'halo difuminat de la Pedra Seca. */
+  .pou-neu-stage[data-estil="lamina"] {
+    --pou-neu-material: var(--sdp-pou-calcaria); --pou-neu-halo-opacitat: 0;
+    --pou-neu-tinta: var(--sdp-pou-tinta); --pou-neu-tinta-forta: var(--sdp-pou-tinta); --pou-neu-fons: var(--sdp-pou-pergami);
+    background: var(--sdp-pou-pergami); border-radius: var(--sdp-radi-s);
+  }
+  .pou-neu-stage[data-estil="lamina"] .pou-neu-part {
+    --pou-neu-paper: color-mix(in srgb, var(--pou-neu-material) 30%, var(--sdp-pou-pergami));
+    --pou-neu-ombra-0: color-mix(in srgb, var(--sdp-pou-tinta) 30%, var(--pou-neu-material));
+    --pou-neu-ombra-1: color-mix(in srgb, var(--sdp-pou-tinta) 16%, var(--pou-neu-material));
+    --pou-neu-ombra-2: color-mix(in srgb, var(--pou-neu-material) 75%, var(--sdp-pou-pergami));
+    --pou-neu-ombra-3: color-mix(in srgb, var(--pou-neu-material) 50%, var(--sdp-pou-pergami));
+  }
+  .pou-neu-stage[data-estil="lamina"] .pou-neu-part[data-assembly="base-roca"] { --pou-neu-material: color-mix(in srgb, var(--sdp-pou-calcaria) 70%, var(--sdp-pou-carrasca)); }
+  .pou-neu-stage[data-estil="lamina"] .pou-neu-part[data-assembly="estrats-gel"] { --pou-neu-material: var(--sdp-pou-gel); }
+  .pou-neu-stage[data-estil="lamina"] .pou-neu-part[data-assembly="portell-empouar"] { --pou-neu-material: var(--sdp-pou-palla); }
+  .pou-neu-stage[data-estil="lamina"] .pou-neu-part[data-assembly="porta-extraccio"] { --pou-neu-material: color-mix(in srgb, var(--sdp-pou-argila) 65%, var(--sdp-pou-carrasca)); }
+  .pou-neu-stage[data-estil="lamina"] .pou-neu-part[data-assembly="desaigue-fusio"] { --pou-neu-material: color-mix(in srgb, var(--sdp-pou-argila) 60%, var(--sdp-pou-vegetacio)); }
+  .pou-neu-stage[data-estil="lamina"] .pou-neu-line { stroke-width: 0.75; }
+  /* E2 · La fitxa de Segura (1987): files generades de SEGURA_1987, amb la línia del corpus. */
+  .pou-neu-fitxa { border-block-end: 1px solid var(--sdp-vora); padding-block-end: 0.5rem; }
+  .pou-neu-fitxa summary { box-sizing: border-box; min-height: var(--sdp-touch); padding-block: 0.75rem; cursor: pointer; font-weight: 600; color: var(--sdp-text-titol); }
+  .pou-neu-fitxa dl { display: grid; grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr)); gap: 0.5rem 1rem; margin: 0.5rem 0; }
+  .pou-neu-fitxa dt { font-size: 1rem; color: var(--sdp-text-suau); }
+  .pou-neu-fitxa dd { margin: 0; font-weight: 600; font-variant-numeric: tabular-nums; color: var(--sdp-text-cos); }
+  .pou-neu-fitxa__linia { font-weight: 400; color: var(--sdp-text-suau); }
+  .pou-neu-interior { position: relative; display: grid; gap: 0.75rem; }
+  .pou-neu-interior__reserva, .pou-neu-interior__vista {
+    aspect-ratio: 16 / 10; border: 1px solid var(--sdp-vora); border-radius: var(--sdp-radi-s); background: var(--sdp-pou-pergami);
+  }
+  .pou-neu-interior__sondes { position: absolute; width: 0; height: 0; overflow: hidden; visibility: hidden; }
+  .pou-neu-sonda[data-sonda="paper"] { color: var(--sdp-pou-pergami); }
+  .pou-neu-sonda[data-sonda="tinta"] { color: var(--sdp-pou-tinta); }
+  .pou-neu-sonda[data-sonda="calcaria"] { color: var(--sdp-pou-calcaria); }
+  .pou-neu-sonda[data-sonda="argila"] { color: var(--sdp-pou-argila); }
+  .pou-neu-sonda[data-sonda="palla"] { color: var(--sdp-pou-palla); }
+  .pou-neu-sonda[data-sonda="vegetacio"] { color: var(--sdp-pou-vegetacio); }
+  .pou-neu-sonda[data-sonda="carrasca"] { color: var(--sdp-pou-carrasca); }
+  .pou-neu-sonda[data-sonda="gel"] { color: var(--sdp-pou-gel); }
+  .pou-neu-sonda[data-sonda="ombra"] { color: var(--sdp-pou-ombra); }
+  /* VH-13 · Fora de la pantalla completa la vista deixa desplaçar la pàgina (pan-y). */
+  .pou-neu-interior__vista { position: relative; overflow: hidden; touch-action: pan-y; cursor: grab; }
+  .pou-neu-interior[data-mode="tall"] .pou-neu-interior__vista { cursor: default; }
+  .pou-neu-interior__vista:focus-visible { outline: 3px solid var(--sdp-focus); outline-offset: 3px; }
+  /* A11Y-05 · Quan el focus hi arriba amb Tab, la pàgina deixa lloc a tot el contorn (3 px + 3 px). */
+  .pou-neu-interior__vista, .pou-neu-card :is(button, input, select, summary) { scroll-margin-block: var(--sdp-space-2); }
+  .pou-neu-interior__canvas { display: block; width: 100%; height: 100%; }
+  .pou-neu-interior[data-perdut="true"] .pou-neu-interior__canvas { visibility: hidden; }
+  .pou-neu-interior__cotes { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+  .pou-neu-interior__cotes [data-visible="false"] { display: none; }
+  /* VH-11 · Cota de làmina: línia contínua d'1 px i trets a 45° als extrems (marcadors SVG). */
+  .pou-neu-interior__cota-linia, .pou-neu-interior__cota-tret { fill: none; stroke: var(--sdp-pou-tinta); stroke-width: 1; stroke-linecap: butt; }
+  .pou-neu-interior__cota-text {
+    fill: var(--sdp-pou-tinta); font-family: var(--sdp-font); font-weight: 600; font-size: 1rem; font-variant-numeric: tabular-nums;
+    paint-order: stroke; stroke: var(--sdp-pou-pergami); stroke-width: 0.25rem; stroke-linejoin: round;
+  }
+  /* El coixinet sempre en dues files de 4: la 4a columna mira amunt i avall a peu (E3), i puja i baixa en vol. */
+  .pou-neu-interior__coixinet {
+    position: absolute; inset-inline-start: 0.75rem; inset-block-end: 0.75rem;
+    display: grid; grid-template-columns: repeat(4, var(--sdp-touch)); gap: 0.25rem;
+  }
+  .pou-neu-interior__tecla {
+    min-width: var(--sdp-touch); min-height: var(--sdp-touch); touch-action: none; cursor: pointer;
+    border: 1px solid var(--sdp-pou-tinta); border-radius: var(--sdp-radi-s);
+    background: color-mix(in srgb, var(--sdp-pou-pergami) 78%, transparent); color: var(--sdp-pou-tinta); font: inherit; font-size: 1.25rem;
+  }
+  .pou-neu-interior__tecla:focus-visible { outline: 3px solid var(--sdp-focus); outline-offset: 2px; }
+  .pou-neu-interior__ajuda, .pou-neu-interior__avis { margin: 0; font-size: 1rem; line-height: 1.5; color: var(--sdp-text-suau); }
+  .pou-neu-interior__avis { color: var(--sdp-text-cos); border-inline-start: 0.25rem solid var(--sdp-accio); padding-inline-start: 0.5rem; }
+  .pou-neu-interior__cameres, .pou-neu-interior__accions { display: flex; flex-wrap: wrap; justify-content: center; gap: 0.5rem; }
+  .pou-neu-interior__relat { display: grid; justify-items: start; gap: 0.5rem; padding-block: 0.75rem; border-block: 1px solid var(--sdp-vora); }
+  .pou-neu-interior__relat p { margin: 0; line-height: 1.6; }
+  .pou-neu-interior__relat .pou-neu-interior__iaia { min-height: var(--sdp-touch); border-width: 1px; border-radius: var(--sdp-radi-s); }
+  @container (max-width: 34rem) { .pou-neu-interior__vista, .pou-neu-interior__reserva { aspect-ratio: 3 / 4; } }
+
+  /* IDEA-160 · Pantalla completa (VH-01, CP-05): la vista és la fila elàstica i el HUD hi va
+     damunt, no apilat. La capçalera passa a .sdp-sr-only (JSX); la llegenda, la nota i les
+     ajudes s'amaguen. Cap fila de desplaçament: el que no cap fa salt de línia (VH-09).
+     A pantalla completa la targeta ocupa la vista: les consultes són de la vista. */
+  :is(.pou-neu-card.is-fullscreen, .pou-neu-card:fullscreen) {
+    display: grid; grid-template-columns: minmax(0, 1fr); grid-template-rows: auto minmax(0, 1fr) auto auto;
+    grid-template-areas: "eines" "figura" "hud" "peces"; gap: 0.5rem; overflow: hidden;
+  }
+  :is(.pou-neu-card.is-fullscreen, .pou-neu-card:fullscreen) .pou-neu-card__toolbar { grid-area: eines; flex-wrap: nowrap; }
+  :is(.pou-neu-card.is-fullscreen, .pou-neu-card:fullscreen) .pou-neu-modes { flex-wrap: nowrap; }
+  :is(.pou-neu-card.is-fullscreen, .pou-neu-card:fullscreen) .pou-neu-choice { flex: 0 0 auto; }
+  /* VIS-02 · La figura és un contenidor de mida: l'escenari del desmuntatge hi cap sencer
+     (contain) i conserva la proporció 760/720 que comparteixen l'SVG i la capa WebGL. */
+  :is(.pou-neu-card.is-fullscreen, .pou-neu-card:fullscreen) .pou-neu-figure {
+    grid-area: figura; display: grid; grid-template-columns: minmax(0, 1fr); grid-template-rows: minmax(0, 1fr);
+    min-height: 0; margin: 0; container-type: size;
+  }
+  :is(.pou-neu-card.is-fullscreen, .pou-neu-card:fullscreen) .pou-neu-avis-webgl {
+    grid-area: figura; z-index: 1; align-self: start; margin: 0; padding: 0.25rem 0.5rem; background: var(--sdp-fons-targeta);
+  }
+  :is(.pou-neu-card.is-fullscreen, .pou-neu-card:fullscreen) :is(.pou-neu-caption, .pou-neu-description, .pou-neu-readout, .pou-neu-note, .pou-neu-hint, .pou-neu-interior__ajuda, .pou-neu-interior__relat p) { display: none; }
+  :is(.pou-neu-card.is-fullscreen, .pou-neu-card:fullscreen) .pou-neu-stage {
+    width: min(100cqw, 100cqh * 760 / 720); height: auto; max-width: 100%; min-height: 0; justify-self: center; align-self: center;
+  }
+  :is(.pou-neu-card.is-fullscreen, .pou-neu-card:fullscreen) .pou-neu-interior { min-height: 0; grid-template-rows: minmax(0, 1fr); }
+  :is(.pou-neu-card.is-fullscreen, .pou-neu-card:fullscreen) :is(.pou-neu-interior__vista, .pou-neu-interior__reserva) { aspect-ratio: auto; min-height: 0; }
+  /* VH-13 · Dins de la pantalla completa el gest és del joc. */
+  :is(.pou-neu-card.is-fullscreen, .pou-neu-card:fullscreen) .pou-neu-interior__vista { touch-action: none; }
+  :is(.pou-neu-card.is-fullscreen, .pou-neu-card:fullscreen) .pou-neu-interior__avis {
+    position: absolute; inset-inline: 0.5rem; inset-block-end: calc(2 * var(--sdp-touch) + var(--sdp-space-6));
+    padding: 0.25rem 0.5rem; background: color-mix(in srgb, var(--sdp-pou-pergami) 90%, transparent);
+  }
+  :is(.pou-neu-card.is-fullscreen, .pou-neu-card:fullscreen) .pou-neu-controls { grid-area: hud; justify-content: start; gap: 0.5rem; }
+  :is(.pou-neu-card.is-fullscreen, .pou-neu-card:fullscreen) .pou-neu-explode { width: auto; flex: 0 0 auto; align-self: center; }
+  :is(.pou-neu-card.is-fullscreen, .pou-neu-card:fullscreen) .pou-neu-field { flex: 0 1 9rem; min-width: 0; }
+  :is(.pou-neu-card.is-fullscreen, .pou-neu-card:fullscreen) .pou-neu-field select { max-width: 9rem; text-overflow: ellipsis; }
+  :is(.pou-neu-card.is-fullscreen, .pou-neu-card:fullscreen) .pou-neu-talls { flex: 0 0 auto; align-self: end; }
+  :is(.pou-neu-card.is-fullscreen, .pou-neu-card:fullscreen) .pou-neu-assemblies { grid-area: peces; justify-content: start; margin: 0; gap: 0.25rem; }
+  /* El HUD superposat: .pou-neu-hud i la ranura de l'interior no fan caixa; els seus fills són de la graella. */
+  :is(.pou-neu-card.is-fullscreen, .pou-neu-card:fullscreen) :is(.pou-neu-hud, .pou-neu-hud__interior):not([hidden]) { display: contents; }
+  :is(.pou-neu-card.is-fullscreen, .pou-neu-card:fullscreen) :is(.pou-neu-interior__cameres, .pou-neu-interior__accions, .pou-neu-interior__relat) { grid-area: figura; z-index: 1; align-self: start; }
+  :is(.pou-neu-card.is-fullscreen, .pou-neu-card:fullscreen) .pou-neu-interior__cameres { justify-self: start; justify-content: start; gap: 0.25rem; margin: var(--sdp-space-2); }
+  :is(.pou-neu-card.is-fullscreen, .pou-neu-card:fullscreen) .pou-neu-interior__accions {
+    justify-self: end; flex-direction: column; flex-wrap: nowrap; gap: 0.25rem;
+    margin: calc(var(--sdp-touch) + var(--sdp-space-4)) var(--sdp-space-2) 0;
+  }
+  :is(.pou-neu-card.is-fullscreen, .pou-neu-card:fullscreen) .pou-neu-interior__relat {
+    justify-self: start; display: flex; flex-wrap: wrap; align-items: center; gap: 0.25rem 0.5rem;
+    max-width: calc(100% - var(--sdp-touch) - var(--sdp-space-8)); margin: calc(var(--sdp-touch) + var(--sdp-space-4)) var(--sdp-space-2) 0;
+    padding: 0.25rem 0.5rem; border: 1px solid var(--sdp-pou-tinta); border-radius: var(--sdp-radi-s);
+    background: color-mix(in srgb, var(--sdp-pou-pergami) 88%, transparent); color: var(--sdp-pou-tinta);
+  }
+  /* Pantalla estreta o baixa: rètols curts (el nom accessible és el sencer); estacions i assemblatges, amb el número. */
+  @media (max-width: 48rem), (max-height: 30rem) {
+    :is(.pou-neu-card.is-fullscreen, .pou-neu-card:fullscreen) .pou-neu-etiqueta { display: none; }
+    :is(.pou-neu-card.is-fullscreen, .pou-neu-card:fullscreen) .pou-neu-etiqueta-curta { display: inline; }
+    :is(.pou-neu-card.is-fullscreen, .pou-neu-card:fullscreen) :is(.pou-neu-card__toolbar, .pou-neu-modes) { gap: 0.25rem; }
+    :is(.pou-neu-card.is-fullscreen, .pou-neu-card:fullscreen) .pou-neu-choice { padding-inline: 0.5rem; }
+  }
+  /* Telèfon dret: «Amaga» i «Eixir» només amb la icona. */
+  @media (max-width: 30rem) {
+    :is(.pou-neu-card.is-fullscreen, .pou-neu-card:fullscreen) .pou-neu-etiqueta-curta--opcional { display: none; }
+  }
+  /* VH-10 · Escriptori apaïsat: el HUD és la columna dreta i la vista es queda neta. */
+  @media (min-width: 60rem) and (orientation: landscape) and (height > 30rem) {
+    :is(.pou-neu-card.is-fullscreen, .pou-neu-card:fullscreen) {
+      grid-template-columns: minmax(0, 1fr) minmax(18rem, 24rem); grid-template-rows: auto minmax(0, 1fr);
+      grid-template-areas: "eines eines" "figura hud";
+    }
+    :is(.pou-neu-card.is-fullscreen, .pou-neu-card:fullscreen) :is(.pou-neu-hud, .pou-neu-hud__interior):not([hidden]) { display: grid; align-content: start; gap: 0.75rem; }
+    /* A11Y-05 · La columna desplaçable deixa lloc al contorn del focus (3 px + 3 px) dels controls arran de vora. */
+    :is(.pou-neu-card.is-fullscreen, .pou-neu-card:fullscreen) .pou-neu-hud:not([hidden]) { grid-area: hud; min-height: 0; overflow-y: auto; padding: var(--sdp-space-2); }
+    :is(.pou-neu-card.is-fullscreen, .pou-neu-card:fullscreen) :is(.pou-neu-controls, .pou-neu-talls, .pou-neu-assemblies, .pou-neu-interior__cameres, .pou-neu-interior__accions, .pou-neu-interior__relat) {
+      grid-area: auto; z-index: auto; align-self: auto; justify-self: stretch; max-width: none; margin: 0; flex-wrap: wrap;
+    }
+    :is(.pou-neu-card.is-fullscreen, .pou-neu-card:fullscreen) .pou-neu-interior__accions { flex-direction: row; justify-content: start; }
+    :is(.pou-neu-card.is-fullscreen, .pou-neu-card:fullscreen) .pou-neu-field { flex: 1 1 9rem; }
+    :is(.pou-neu-card.is-fullscreen, .pou-neu-card:fullscreen) .pou-neu-field select { max-width: none; }
+  }
+  /* Telèfon apaïsat: la vista a l'esquerra, els selectors i els talls en columna a la dreta i les peces davall de la vista.
+     VIS-01 · Els desplegables porten el rètol a la mateixa línia, i la columna és un contenidor desplaçable de
+     veritat (la targeta té overflow: hidden): a 740 × 360 o 844 × 340 cap control queda fora d'abast. El farciment
+     (8 px, reixeta de 4 px) deixa lloc al contorn del focus (3 px + 3 px). */
+  @media (max-height: 30rem) {
+    :is(.pou-neu-card.is-fullscreen, .pou-neu-card:fullscreen) {
+      grid-template-columns: minmax(0, 1fr) minmax(12rem, 15rem); grid-template-rows: auto minmax(0, 1fr) auto;
+      grid-template-areas: "eines eines" "figura hud" "peces hud";
+    }
+    :is(.pou-neu-card.is-fullscreen, .pou-neu-card:fullscreen) .pou-neu-controls {
+      flex-direction: column; flex-wrap: nowrap; align-items: stretch; align-self: stretch; gap: 0.25rem;
+      min-height: 0; overflow-y: auto; overscroll-behavior: contain; padding: var(--sdp-space-2);
+    }
+    :is(.pou-neu-card.is-fullscreen, .pou-neu-card:fullscreen) .pou-neu-field { flex: 0 0 auto; gap: 0.25rem; }
+    :is(.pou-neu-card.is-fullscreen, .pou-neu-card:fullscreen) .pou-neu-field:not(.pou-neu-field--azimut) { grid-template-columns: auto minmax(0, 1fr); align-items: center; gap: 0.5rem; }
+    :is(.pou-neu-card.is-fullscreen, .pou-neu-card:fullscreen) .pou-neu-talls { align-self: stretch; }
+    :is(.pou-neu-card.is-fullscreen, .pou-neu-card:fullscreen) .pou-neu-field select { max-width: none; }
+  }
+  /* VIS-01 · Telèfon apaïsat baix (fins a 376 px): les quatre accions de l'interior en dues columnes. */
+  @media (max-height: 23.5rem) {
+    :is(.pou-neu-card.is-fullscreen, .pou-neu-card:fullscreen) .pou-neu-interior__accions { display: grid; grid-template-columns: repeat(2, auto); }
+    :is(.pou-neu-card.is-fullscreen, .pou-neu-card:fullscreen) .pou-neu-interior__relat { max-width: calc(100% - 2 * var(--sdp-touch) - var(--sdp-space-8)); }
+  }
+  @media print { .pou-neu-interior__coixinet, .pou-neu-hud__interior { display: none; } }
 }
 
 /* ── Motor isomètric vendor (iso-kit, lathe i tube; kits R31 i R32) ──

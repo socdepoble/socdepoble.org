@@ -12,15 +12,15 @@ const HASH='3'.repeat(64);
 const sqlPosse=fs.readFileSync(new URL('../tooling/node0/posse/posse-ledger.sql',import.meta.url),'utf8');
 const sha=text=>createHash('sha256').update(text).digest('hex');
 // R9 (R9V-C3-01): the deployed canonical 76, it plus the /legal 2.5 seal (77), the R20b pair (78) and everything (79).
-const R20B=['2611052345','2611060010'],SEGELL25=['2611061520'],PERFILS=[[...R20B,...SEGELL25],R20B,SEGELL25,[]];
+const R20B=['2611052345','2611060010'],SEGELL25=['2611061520'],SEED80=['2611070600'],PERFILS=[[...R20B,...SEGELL25,...SEED80],[...R20B,...SEED80],[...SEGELL25,...SEED80],SEED80,[]];
 const catalogues=(()=>{const all=creaPlaMigracions().migrations;return PERFILS.map(exclou=>all.filter(m=>!exclou.includes(m.version)));})();
 const ledgerHash=rows=>sha([...rows].sort((a,b)=>a.version<b.version?-1:a.version>b.version?1:0).map(m=>`${m.version}\t${m.file}\t${m.sha256}`).join('\n'));
 function ready(rows){
  const functionHashes=Object.fromEntries(['source_current','source_for_bridge','remote_current','assert_current','assert_history','rpc','credential_proof'].map(name=>{const start=sqlPosse.indexOf(`CREATE OR REPLACE FUNCTION node0_posse.${name}(`),body=sqlPosse.indexOf('AS $f$',start),end=sqlPosse.indexOf('$f$;',body+6);return[name,sha(sqlPosse.slice(body+6,end))];}));
  return{version:'posse.r11.v1',migrations:rows.length,migrationLedgerSha256:ledgerHash(rows),ownerStable:true,tablesPrivate:true,sourceInstalled:true,remoteInstalled:true,functionHashes};
 }
-test('R23 readiness accepts only complete canonical source ledgers 76, 77, 78 and 79',async()=>{
- assert.deepEqual(catalogues.map(rows=>rows.length),[76,77,78,79]);
+test('R23/R33 readiness accepts only exact canonical source ledgers 76 through 80',async()=>{
+ assert.deepEqual(catalogues.map(rows=>rows.length),[76,77,78,79,80]);
  for(const rows of catalogues){let calls=0;assert.equal(await verificaEsquemaPosseNodeZero({db:{async query(sql,options){calls++;assert.equal(sql,'SELECT node0_posse.readiness();');assert.equal(options.privateValues,true);return ready(rows);}}}),true);assert.equal(calls,1);}
 });
 test('R23 counts without exact source identity proof never establish readiness',async()=>{
@@ -30,7 +30,11 @@ test('R23 counts without exact source identity proof never establish readiness',
  for(const state of[{...base,migrationLedgerSha256:undefined},{...base,migrationLedgerSha256:'0'.repeat(64)},ready(wrong),ready(unknown),ready(unknownVersion),{...base,migrations:75},{...base,migrations:77},{...base,migrations:78},{...base,migrations:79},{...base,migrations:80},{...ready(catalogues[3]),migrationLedgerSha256:ledgerHash(catalogues[2])}])await assert.rejects(verificaEsquemaPosseNodeZero({db:{query:async()=>state}}),/posse_schema_drift/);
  for(const change of[{ownerStable:false},{tablesPrivate:false},{sourceInstalled:false},{remoteInstalled:false},{functionHashes:{}}])await assert.rejects(verificaEsquemaPosseNodeZero({db:{query:async()=>({...base,...change})}}),/posse_schema_drift/);
 });
-test('R23 PostgreSQL actual installs all four exact profiles (76, 77, 78, 79) and rejects incomplete, unknown or drifted ledgers',{skip:!process.env.SDP_PGLITE_MODULE&&'Set SDP_PGLITE_MODULE for actual PostgreSQL SQL proof'},async t=>{
+test('R39 POSSE hashes use the PostgreSQL core without a pgcrypto schema assumption',()=>{
+ assert.doesNotMatch(sqlPosse,/\b(?:public\.)?digest\(/);
+ assert.equal([...sqlPosse.matchAll(/pg_catalog\.sha256\(convert_to\(/g)].length,8);
+});
+test('R23/R33 PostgreSQL installs five exact profiles and rejects incomplete, unknown or drifted ledgers',{skip:!process.env.SDP_PGLITE_MODULE&&'Set SDP_PGLITE_MODULE for actual PostgreSQL SQL proof'},async t=>{
  for(const [index,exclou] of PERFILS.entries()){
   const f=await creaFixturePosse({exclou});
   try{
@@ -38,6 +42,12 @@ test('R23 PostgreSQL actual installs all four exact profiles (76, 77, 78, 79) an
    const expected=catalogues[index],saved=(await f.pg.query('SELECT version,file,sha256 FROM node0.schema_migrations ORDER BY version COLLATE "C"')).rows;
    assert.deepEqual(saved,expected.map(({version,file,sha256})=>({version,file,sha256})).sort((a,b)=>a.version<b.version?-1:1));
    assert.equal(await verificaEsquemaPosseNodeZero({db:f.db}),true);
+   const before=(await f.pg.query('SELECT node0_posse.readiness() AS ready')).rows[0].ready;
+   await f.pg.exec('CREATE SCHEMA extensions;ALTER EXTENSION pgcrypto SET SCHEMA extensions');
+   assert.equal((await f.pg.query("SELECT n.nspname FROM pg_extension e JOIN pg_namespace n ON n.oid=e.extnamespace WHERE e.extname='pgcrypto'")).rows[0].nspname,'extensions');
+   assert.equal(await verificaEsquemaPosseNodeZero({db:f.db}),true);
+   await f.pg.exec(sqlPosse);
+   assert.deepEqual((await f.pg.query('SELECT node0_posse.readiness() AS ready')).rows[0].ready,before);
    const scalar=async sql=>Object.values((await f.pg.query(sql)).rows[0])[0];
    assert.equal(await scalar("SELECT node0_posse.readiness()->>'migrationLedgerSha256'"),ledgerHash(expected));
    const rejectBoth=async()=>{
@@ -53,14 +63,19 @@ test('R23 PostgreSQL actual installs all four exact profiles (76, 77, 78, 79) an
    await f.pg.query("UPDATE node0.schema_migrations SET version=$1 WHERE version='9999999999'",[row.version]);
    await f.pg.query("INSERT INTO node0.schema_migrations(version,file,sha256) VALUES('9999999999','unknown.sql',repeat('0',64))");await rejectBoth();
    await f.pg.query("DELETE FROM node0.schema_migrations WHERE version='9999999999'");
-   if(!exclou.length){
-    const extra=saved.find(r=>r.version==='2611060010');await f.pg.query('DELETE FROM node0.schema_migrations WHERE version=$1',[extra.version]);assert.equal(await scalar('SELECT count(*)::int FROM node0.schema_migrations'),78);await rejectBoth();
-    await f.pg.query('INSERT INTO node0.schema_migrations(version,file,sha256) VALUES($1,$2,$3)',[extra.version,extra.file,extra.sha256]);
-    const removed=saved.slice(0,2);for(const r of removed)await f.pg.query('DELETE FROM node0.schema_migrations WHERE version=$1',[r.version]);assert.equal(await scalar('SELECT count(*)::int FROM node0.schema_migrations'),77);await rejectBoth();
-    for(const r of removed)await f.pg.query('INSERT INTO node0.schema_migrations(version,file,sha256) VALUES($1,$2,$3)',[r.version,r.file,r.sha256]);
-    // Without the 2.5 seal the full ledger is exactly the reviewed 78 ledger: identity, not a count, decides.
+   if(saved.length===79){
     const seal=saved.find(r=>r.version==='2611061520');await f.pg.query('DELETE FROM node0.schema_migrations WHERE version=$1',[seal.version]);
     assert.equal(await scalar("SELECT node0_posse.readiness()->>'migrationLedgerSha256'"),ledgerHash(catalogues[2]));assert.equal(await verificaEsquemaPosseNodeZero({db:f.db}),true);
+    await f.pg.query('INSERT INTO node0.schema_migrations(version,file,sha256) VALUES($1,$2,$3)',[seal.version,seal.file,seal.sha256]);
+   }
+   if(!exclou.length){
+    const extra=saved.find(r=>r.version==='2611060010');await f.pg.query('DELETE FROM node0.schema_migrations WHERE version=$1',[extra.version]);assert.equal(await scalar('SELECT count(*)::int FROM node0.schema_migrations'),79);await rejectBoth();
+    await f.pg.query('INSERT INTO node0.schema_migrations(version,file,sha256) VALUES($1,$2,$3)',[extra.version,extra.file,extra.sha256]);
+    const removed=saved.slice(0,2);for(const r of removed)await f.pg.query('DELETE FROM node0.schema_migrations WHERE version=$1',[r.version]);assert.equal(await scalar('SELECT count(*)::int FROM node0.schema_migrations'),78);await rejectBoth();
+    for(const r of removed)await f.pg.query('INSERT INTO node0.schema_migrations(version,file,sha256) VALUES($1,$2,$3)',[r.version,r.file,r.sha256]);
+    // SQL80 without the legal seal is not a reviewed profile, despite its count79.
+    const seal=saved.find(r=>r.version==='2611061520');await f.pg.query('DELETE FROM node0.schema_migrations WHERE version=$1',[seal.version]);
+    assert.equal(await scalar('SELECT count(*)::int FROM node0.schema_migrations'),79);await rejectBoth();
     await f.pg.query('UPDATE node0.schema_migrations SET sha256=repeat(\'0\',64) WHERE version=$1',[saved.at(-2).version]);await rejectBoth();
     await f.pg.query('UPDATE node0.schema_migrations SET sha256=$1 WHERE version=$2',[saved.at(-2).sha256,saved.at(-2).version]);
     await f.pg.query('INSERT INTO node0.schema_migrations(version,file,sha256) VALUES($1,$2,$3)',[seal.version,seal.file,seal.sha256]);

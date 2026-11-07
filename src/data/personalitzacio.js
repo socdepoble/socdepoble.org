@@ -25,11 +25,12 @@
  * capa de dades no importe de les seccions.
  */
 import { SYSTEM_PAGES } from '../config/systemPages.js';
+import {NOMS_CATEGORIES_CANONIQUES,NOMS_ETIQUETES_CANONIQUES_49,normalitzaValorTaxonomia} from './taxonomia/vocabulariCanonic.js';
 
 /** Categories que sempre existixen al Bloc, encara que cap nota les use. */
-export const CATEGORIES_BASE = Object.freeze(['Sistema']);
+export const CATEGORIES_BASE = Object.freeze(['Sistema',...NOMS_CATEGORIES_CANONIQUES]);
 /** Etiquetes que sempre existixen al Bloc, encara que cap nota les use. */
-export const ETIQUETES_BASE = Object.freeze(['Productivitat', 'Tutorial']);
+export const ETIQUETES_BASE = NOMS_ETIQUETES_CANONIQUES_49;
 
 /** El conjunt tancat de classes d'etiqueta (modules.css, «Sistema de Badges Universals»). */
 export const CLASSES_ETIQUETA = Object.freeze([
@@ -37,15 +38,15 @@ export const CLASSES_ETIQUETA = Object.freeze([
 ]);
 /** La versió de la forma que entén este mòdul. */
 export const VERSIO_TAXONOMIA = 1;
-/** Un text d'etiqueta o de categoria: d'1 a 40 caràcters, sense espais als extrems. */
-export const MAX_TEXT = 40;
+/** Un text d'etiqueta o de categoria: d'1 a 64 caràcters, sense espais als extrems. */
+export const MAX_TEXT = 64;
 
 const CLAUS_DE_PAGINA = Object.freeze(SYSTEM_PAGES.map((pagina) => pagina.key));
 const CLASSES = new Set(CLASSES_ETIQUETA);
 
 const esObjecte = (valor) => valor !== null && typeof valor === 'object' && !Array.isArray(valor);
 const textNet = (valor) => (typeof valor === 'string' ? valor.trim() : '');
-const textValid = (valor) => { const net = textNet(valor); return net.length >= 1 && net.length <= MAX_TEXT; };
+const textValid = (valor) => { const net = textNet(valor); return net.length >= 1 && net.length <= MAX_TEXT && !/[<\u0000-\u001f\u007f]/.test(net); };
 
 /* La forma mínima perquè aplicaPersonalitzacio s'hi fixe: objecte, v: 1 i, si
    hi són, `pagines` objecte i `categories` / `etiquetes` llistes. Les
@@ -62,16 +63,17 @@ function formaValida(taxonomia) {
 /* Una etiqueta neta ({ text, className }) o null si s'ha de descartar. */
 function etiquetaNeta(label) {
   if (!esObjecte(label)) return null;
-  const text = textNet(label.text);
-  if (!text || !CLASSES.has(label.className)) return null;
+  const camp=label.className==='sdp-badge-category'?'categories':'etiquetes';
+  const text = normalitzaValorTaxonomia(textNet(label.text),camp);
+  if (!text || !textValid(text) || !CLASSES.has(label.className)) return null;
   return { text, className: label.className };
 }
 
 /**
  * Els defectes d'una taxonomia, en valencià i amb la ruta de cada un; [] si
  * és vàlida. Una taxonomia vàlida té `v: 1`, només claus de pàgina de
- * SYSTEM_PAGES, etiquetes amb text d'1 a 40 caràcters i classe del conjunt
- * tancat, i categories i etiquetes de sèrie amb text d'1 a 40 caràcters. Pura.
+ * SYSTEM_PAGES, etiquetes amb text d'1 a 64 caràcters i classe del conjunt
+ * tancat, i categories i etiquetes de sèrie amb text d'1 a 64 caràcters. Pura.
  */
 export function validaTaxonomia(payload) {
   if (!esObjecte(payload)) return ['La taxonomia ha de ser un objecte.'];
@@ -126,7 +128,7 @@ export function aplicaPersonalitzacio(pageCopy, taxonomia) {
    davant; la base mateixa (===) si la taxonomia no n'afig cap. */
 function unioAmbBase(base, taxonomia, camp) {
   if (!formaValida(taxonomia) || !Array.isArray(taxonomia[camp])) return base;
-  const extres = taxonomia[camp].map(textNet).filter((text) => textValid(text) && !base.includes(text));
+  const extres = taxonomia[camp].map(textNet).map(text=>normalitzaValorTaxonomia(text,camp)).filter((text) => textValid(text) && !base.includes(text));
   if (!extres.length) return base;
   return [...base, ...new Set(extres)];
 }

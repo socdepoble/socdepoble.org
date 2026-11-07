@@ -54,6 +54,7 @@ import { creaComunitatLocal } from './comunitatLocal.js';
 import { creaCompteLocal } from './compteLocal.js';
 import { creaAdminUsuarisLocal } from './adminUsuarisLocal.js';
 import { capturaAdminUsuaris } from '../adminUsuaris.js';
+import { capturaConsultaRevisionsSeed, capturaRevisioSeed } from '../seedRevisions.js';
 import { creaMitjansLocal } from './mitjansLocal.js';
 import { creaDadesObertesLocal } from './dadesObertesLocal.js';
 import { estatBuitDeDadesObertes } from '../dadesObertesLot.js';
@@ -103,7 +104,7 @@ function administracioLocalValidada(entrada) {
   });
   return Object.freeze({ pobles: Object.freeze(pobles), autoritza: entrada.autoritza });
 }
-const ADMINISTRATIUS = new Set(['adminLlistaPobles', 'adminLligPersonalitzacio', 'adminDesaPersonalitzacio', 'adminHistorialPersonalitzacio','adminLlistaUsuarisRegistrats','adminAssignaMembreOrganitzacio','adminConnectaUsuari']);
+const ADMINISTRATIUS = new Set(['adminLlistaPobles', 'adminLligPersonalitzacio', 'adminDesaPersonalitzacio', 'adminHistorialPersonalitzacio','adminLlistaUsuarisRegistrats','adminAssignaMembreOrganitzacio','adminConnectaUsuari', 'loadSeedRevisions', 'desaRevisioSeed']);
 const lligAvortamentNatiu = Object.getOwnPropertyDescriptor(AbortSignal.prototype, 'aborted').get;
 const errorAbastAdmin = () => Object.assign(new TypeError('Cal un tenant explícit i coherent.'), { code: 'abast-invalid' });
 /* Captura síncrona abans de la microtasca de guardat(): només selectors
@@ -134,6 +135,8 @@ function capturaArgumentsAdmin(nom, args) {
   const capturats = [...args];
   capturats[indexConfig] = Object.freeze(selectors);
   if(nom==='adminLlistaUsuarisRegistrats'||nom==='adminAssignaMembreOrganitzacio'||nom==='adminConnectaUsuari')capturats[0]=capturaAdminUsuaris(args[0],nom==='adminLlistaUsuarisRegistrats'?'llista':nom==='adminAssignaMembreOrganitzacio'?'membre':'connecta',{local:true});
+  if (nom === 'loadSeedRevisions') capturats[0] = capturaConsultaRevisionsSeed(args[0]);
+  if (nom === 'desaRevisioSeed') capturats[0] = capturaRevisioSeed(args[0]);
   if (nom === 'adminDesaPersonalitzacio') {
     const entrada = args[0] === undefined ? {} : args[0];
     if (!esObjectePla(entrada)) throw new TypeError('Entrada de personalització invàlida.');
@@ -266,6 +269,9 @@ export function creaAdaptadorLocal({
   /* T2 · D04/D10 · El magatzem de les dades obertes restaurades: el llig
      també el directori, els pobles i el Mur; una restauració l'intercanvia sencer. */
   const dadesObertes = { estat: estatBuitDeDadesObertes() };
+  /* P1-75/P2-08: internal current rows and their last authenticated writer;
+     public read DTOs never contain this ownership metadata. */
+  const revisionsLlavor = { actuals: new Map(), autoria: new Map() };
   const usuari = () => usuariDeSessio();
   /* Qui actua en local: la sessió o, sense sessió, el convidat (com moderacio.js en seed). */
   const qui = () => usuari()?.id || getDefaultUserId();
@@ -295,7 +301,7 @@ export function creaAdaptadorLocal({
   };
 
   const e = Object.freeze({
-    mode, configuracio, ci, ara, nouId, coleccio, copia, notes, perfils, seguiments, subscripcions, moderacio, dadesObertes,
+    mode, configuracio, ci, ara, nouId, coleccio, copia, notes, perfils, seguiments, subscripcions, moderacio, dadesObertes, revisionsLlavor,
     usuari, qui, bloquejosDe, tancaCanals, abast,
     opcions: Object.freeze({
       personalitzacioOberta: personalitzacioOberta === true, restauracioOberta: restauracioOberta === true,

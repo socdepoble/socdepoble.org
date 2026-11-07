@@ -1,4 +1,5 @@
 import {capturaEdicioEditorial,CLAU_EDITORIAL_DE_SECCIO,marcaFilesEditorials,aplicaCanvisEditorials} from '../editorialPublicada.js';
+import { capturaConsultaRevisionsSeed, capturaRevisioSeed, capturaRespostaRevisioSeed, aplicaRevisionsSeed, errorRevisioSeed, esFontPublicaRevisioSeed, marcaFontRevisioSeed } from '../seedRevisions.js';
 /**
  * contingutLocal.js — El contingut del poble de l'adaptador local (T1 · D01):
  * loadCoreContent, el Mur, la Multimèdia, la pàgina de secció, l'agenda, les
@@ -96,12 +97,18 @@ export function creaContingutLocal(e) {
   /* tenantId → Map(clau → { actual: { payload, versio }, historial: [{ versio, payload, creat, autor }] }) */
   const personalitzacions = new Map();
   const editorials = new Map();
+  const revisionsSeed = e.revisionsLlavor?.actuals ?? new Map();
+  const autoriaRevisionsSeed = e.revisionsLlavor?.autoria ?? new Map();
   const editorialDe=clau=>{if(!editorials.has(clau))editorials.set(clau,{items:e.copia(e.coleccio(clau)),versio:1});return editorials.get(clau);};
+  const fontSeedPublica = (seccio, id) => {
+    const sources = editorialDe(CLAU_EDITORIAL_DE_SECCIO[seccio]).items.filter(item => item.id === id);
+    return sources.length === 1 && esFontPublicaRevisioSeed(sources[0]) ? sources[0] : null;
+  };
   /* B4-S1 · La versió editorial només viatja quan l'edició és possible (política
      administracioLocal injectada): sense ella, el local i Supabase en mode seed
      tornen exactament les mateixes dades (conformitat.equivalencia). */
   const versioVisible=versio=>(e.opcions.administracioLocal?versio:null);
-  e.alTancar(() => { publicacions.clear(); personalitzacions.clear(); editorials.clear(); });
+  e.alTancar(() => { publicacions.clear(); personalitzacions.clear(); editorials.clear(); revisionsSeed.clear(); autoriaRevisionsSeed.clear(); });
 
   /* Els actes de l'agenda es validen una vegada: un acte que el calendari no
      sabria pintar (sense id o sense inici) no entra al node. */
@@ -132,7 +139,10 @@ export function creaContingutLocal(e) {
   const llista = (clau) => {
     const restaurada = RESTAURADES_DE_LA_LLISTA[clau];
     const editorial=editorialDe(clau);
-    const originals=marcaFilesEditorials(editorial.items,clau,versioVisible(editorial.versio));
+    const seccioSeed = clau === 'feedPosts' ? 'mur' : clau === 'events' ? 'events' : null;
+    const revisades = seccioSeed ? aplicaRevisionsSeed(editorial.items, [...revisionsSeed.values()].filter(row => row.seccio === seccioSeed && fontSeedPublica(row.seccio, row.id)), editorial.versio) : editorial.items;
+    /* Àrbitre R11 (R33-L2-01) · La font de la revisió viatja amb la mateixa política que _editorialVersio. */
+    const originals=marcaFilesEditorials(seccioSeed ? marcaFontRevisioSeed(revisades, versioVisible(editorial.versio)) : revisades,clau,versioVisible(editorial.versio));
     const base = restaurada ? unioPerId(originals, totesDeLEstat(e.dadesObertes.estat, restaurada)) : originals;
     const veins = publicacionsDe(SECCIO_DE_LA_LLISTA[clau]);
     return veins.length ? mergeById(base, veins) : base;
@@ -278,6 +288,41 @@ export function creaContingutLocal(e) {
       const item={...aplicaCanvisEditorials(matches[0],edicio.canvis,edicio.seccio),updated_at:e.ara().toISOString()};
       actual.items=actual.items.map(v=>v.id===edicio.id?item:v);actual.versio++;
       return {item:marcaFilesEditorials([item],clau,actual.versio)[0],versio:actual.versio};
+    },
+    async loadSeedRevisions(input, config = {}) {
+      const query = capturaConsultaRevisionsSeed(input), tenantId = tenantSeleccionat(config, false);
+      if (tenantId !== e.configuracio.tenantId) throw errorRevisioSeed('sense-permis');
+      const sourceVersion = editorialDe(CLAU_EDITORIAL_DE_SECCIO[query.seccio]).versio;
+      return e.copia([...revisionsSeed.values()].filter(row => row.seccio === query.seccio && query.ids.includes(row.id) && row.fontVersio === sourceVersion && fontSeedPublica(row.seccio, row.id)));
+    },
+    async desaRevisioSeed(input, config = {}) {
+      const revision = capturaRevisioSeed(input), tenantId = tenantSeleccionat(config, false), checkScope = e.abast();
+      if (tenantId !== e.configuracio.tenantId) throw errorRevisioSeed('sense-permis');
+      const actor = e.usuari()?.id;
+      if (!actor) throw errorRevisioSeed('sense-sessio');
+      const source = fontSeedPublica(revision.seccio, revision.id);
+      if (!source) throw errorRevisioSeed('no-disponible');
+      const sourceVersion = editorialDe(CLAU_EDITORIAL_DE_SECCIO[revision.seccio]).versio;
+      if (sourceVersion !== revision.fontVersio) throw errorRevisioSeed('conflicte-versio');
+      if (source.owner_user_id !== actor || source.author_org_id) {
+        const authority = await autoritzaLocal('desaRevisioSeed', tenantId, config);
+        authority.comprova();
+      }
+      comprova(checkScope, config);
+      if (editorialDe(CLAU_EDITORIAL_DE_SECCIO[revision.seccio]).versio !== sourceVersion || !fontSeedPublica(revision.seccio, revision.id)) throw errorRevisioSeed('conflicte-versio');
+      const key = `${revision.seccio}:${revision.id}`, previous = revisionsSeed.get(key);
+      /* Àrbitre R11 (R33-L2-02) · Mateix CAS que l'SQL: sobre el parell (font, versió); una font nova comença a 0. */
+      const vigent = previous?.fontVersio === revision.fontVersio ? previous.versio : 0;
+      if (vigent !== revision.versio) throw errorRevisioSeed('conflicte-versio');
+      const row = { ...revision, camps: { ...(vigent ? previous.camps : {}), ...revision.camps }, versio: revision.versio + 1 };
+      /* R33-L2-03 · La fila fusionada ha de ser llegible: ni més llarga ni més gran que el que accepta el lector. */
+      capturaRespostaRevisioSeed(row);
+      const previousAuthor = autoriaRevisionsSeed.get(key), now = e.ara().toISOString();
+      revisionsSeed.set(key, e.copia(row));
+      autoriaRevisionsSeed.set(key, { id: previousAuthor?.id ?? e.nouId(), authorId: actor,
+        authorPayload: { ...(previousAuthor?.authorId === actor && previous?.fontVersio === revision.fontVersio ? previousAuthor.authorPayload : {}), ...revision.camps },
+        createdAt: previousAuthor?.createdAt ?? now, updatedAt: now });
+      return e.copia(row);
     },
     async adminLlistaPobles(config = {}) {
       tenantSeleccionat(config, false);

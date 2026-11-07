@@ -26,6 +26,7 @@
 import { capturaSessio, jwtPerBackend } from '../identitat.js';
 import { CODI_ENTRADA, ambCodi } from '../errorsBackend.js';
 import { getResolvedConfig, request, rpc } from './runtime.js';
+import { capturaExportacioRevisionsSeed } from '../seedRevisions.js';
 import { asseguraUsuari, logout } from './auth.js';
 import { aplicaContracteExportacioFederacio } from './contracteExportacioFederacio.js';
 
@@ -109,7 +110,7 @@ export async function exportaLesMeuesDades(config = {}) {
     { timeoutMs: TEMPS_EXPORTACIO_MS, signal: capturat.signal }));
   current();
   if (!esObjecte(dades) || dades.format !== FORMAT_EXPORTACIO) throw formatInesperat('Exportació de dades');
-  return aplicaContracteExportacioFederacio(dades, usuari.id);
+  return capturaExportacioRevisionsSeed(aplicaContracteExportacioFederacio(dades, usuari.id), usuari.id);
 }
 
 export async function estatBaixa(config = {}) {

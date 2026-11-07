@@ -1,6 +1,12 @@
 import { useEffect, useRef } from 'react';
 import { A, glCamera, glLayer, settle, smooth } from './ruralIsoEngine.js';
-import { pouNeuState } from './modelPouNeu.js';
+import { POU_DIMENSIONS, WORLD_UNITS_PER_METRE, pouNeuState } from './modelPouNeu.js';
+
+// Segura (1987) cotes in world units: inner wall face, sill level and the removed wedge.
+const glFloat = (value) => Number(value.toFixed(3)).toString().replace(/^(-?\d+)$/, '$1.');
+const WALL_RADIUS = glFloat(POU_DIMENSIONS.innerRadius * WORLD_UNITS_PER_METRE);
+const WALL_TOP = glFloat(2 + POU_DIMENSIONS.depth * WORLD_UNITS_PER_METRE);
+const CUT_COS = Math.cos((360 - POU_DIMENSIONS.cutawayDegrees) / 2 * Math.PI / 180);
 
 /** World-space fields share the kit camera. Structural solids remain SVG. */
 export const POU_NEU_FRAGMENT = `
@@ -20,17 +26,18 @@ uniform vec3 uPaper;
 float visibleAt(vec3 p,vec3 V){
   float cover=0.;
   vec3 q=p-uWallMove;
-  float a=dot(V.xy,V.xy),b=dot(q.xy,V.xy),c=dot(q.xy,q.xy)-42.*42.;
+  float a=dot(V.xy,V.xy),b=dot(q.xy,V.xy),c=dot(q.xy,q.xy)-${WALL_RADIUS}*${WALL_RADIUS};
   float disc=b*b-a*c;
   if(disc>0.){
     float t=(-b+sqrt(disc))/a;
     vec3 hit=q+t*V;
-    float retained=1.-smoothstep(.49,.51,dot(normalize(hit.xy),normalize(vec2(1.))));
-    cover=max(cover,smoothstep(0.,.25,t)*window(hit.z,2.,112.,.15)*retained);
+    float retained=1.-smoothstep(${glFloat(CUT_COS - 0.01)},${glFloat(CUT_COS + 0.01)},dot(normalize(hit.xy),normalize(vec2(1.))));
+    cover=max(cover,smoothstep(0.,.25,t)*window(hit.z,2.,${WALL_TOP},.15)*retained);
   }
+  float straw=uRadius+.6;
   for(int i=0;i<6;i++){
     vec3 sp=p-uIceMove;
-    float sb=dot(sp.xy,V.xy),sc=dot(sp.xy,sp.xy)-39.1*39.1;
+    float sb=dot(sp.xy,V.xy),sc=dot(sp.xy,sp.xy)-straw*straw;
     float sd=sb*sb-a*sc;
     if(sd>0.){
       float enter=max((-sb-sqrt(sd))/a,(uIceTops[i]-sp.z)/V.z);
@@ -85,7 +92,7 @@ void main(){
   float flow=0.;
   if(wd>0.){
     vec3 water=waterRay+((-wb+sqrt(wd))/(2.*wa))*V;
-    float radius=.7-.028*water.x;
+    float radius=2.2-.09*water.x;
     float mask=window(water.x,0.,10.,.4)*(1.-smoothstep(radius*.65,radius,abs(water.y)));
     float ripple=pow(.5+.5*sin(water.x*.9-uTime*.6),8.);
     flow=mask*ripple*uFlow*.18;
@@ -155,7 +162,7 @@ export function usePouNeuWebgl({ stage, probe, scene, progress, season, noWebgl 
       const move=(effect.iceMove || [0,0,0]).map((n)=>n*share);
       const drain=(effect.drainOrigin || [54,8,-118]).map((n,i)=>n+(effect.drainMove?.[i] || 0)*share);
       const assemblyMove=(id)=>(current.scene.assemblies.find((a)=>a.id===id)?.move || [0,0,0]).map((n)=>n*share);
-      const portal=current.scene.parts.filter((part)=>/^door\.(chamfered-|timber-leaf)/.test(part.physicalId || part.id)).map((part)=>A.boundsOf(part.shape));
+      const portal=current.scene.parts.filter((part)=>/^door\.(tunnel-|iron-grille)/.test(part.physicalId || part.id)).map((part)=>A.boundsOf(part.shape));
       layer.draw({uIceTops:effect.iceTops,uIceBottoms:effect.iceLayers.map((layer)=>layer.z),uIceMove:move,uDrain:drain,
         uWallMove:assemblyMove('pou-cilindric'),uDoorMove:assemblyMove('porta-extraccio'),
         uDoorMin:portal.flatMap((box)=>box.min),uDoorMax:portal.flatMap((box)=>box.max),

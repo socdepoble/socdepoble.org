@@ -23,7 +23,8 @@ test('WP 16893 conserva la publicació històrica, autoria, territori, quatre et
     publish_date: '2022-11-17T23:50:00+01:00', boinaDataPublicacio: true, author_entity_id: 'socdepoble', author_name: 'Sóc de Poble',
     author_location: 'La Torre de les Maçanes', town: 'La Torre de les Maçanes', poble_id: 'la-torre-de-les-macanes',
     source_url: 'https://socdepoble.net/2022/11/17/manifest-de-poble/', license: 'CC BY-NC-SA 4.0', wp_id: 16893 });
-  expect(post.tags).toEqual(['Aplec pel Territori', 'Esdeveniments', 'Posant en Valor els Recursos Locals', 'Reivindicant']);
+  expect(post.category).toBe('⚖️ Defensa del Territori, Ecologia i Reivindicació');
+  expect(post.tags).toEqual(['Aplec pel Territori', 'Associacionisme']);
   expect(post.pobles_etiquetats).toEqual([...POBLES_APLEC_2023.map(poble => poble.id), 'la-vall-d-ebo']);
   expect(new Set(post.pobles_etiquetats).size).toBe(22);
   expect(dataDElement(post).date).toBe('17/11/22');

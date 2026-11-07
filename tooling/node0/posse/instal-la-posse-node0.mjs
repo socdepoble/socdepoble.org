@@ -11,8 +11,8 @@ import {creaPostgres} from '../postgres-node0.mjs';
 const schema=fs.readFileSync(new URL('./posse-ledger.sql',import.meta.url),'utf8');
 // Single pin source shared with direct SQL installation; never accept just a count.
 const migrationPins=schema.match(/-- POSSE_MIGRATION_PINS_BEGIN\n([\s\S]*?)\n-- POSSE_MIGRATION_PINS_END/)?.[1];
-const migrationPairs=[...(migrationPins??'').matchAll(/\((76|77|78|79),'([a-f0-9]{64})'\)/g)].map(([,count,hash])=>[count,hash]);
-if(migrationPairs.length!==4||new Set(migrationPairs.map(([count])=>count)).size!==4)throw Error('posse_migration_pins_missing');
+const migrationPairs=[...(migrationPins??'').matchAll(/\((76|77|78|79|80),'([a-f0-9]{64})'\)/g)].map(([,count,hash])=>[count,hash]);
+if(migrationPairs.length!==5||new Set(migrationPairs.map(([count])=>count)).size!==5)throw Error('posse_migration_pins_missing');
 const expectedMigrationLedgers=Object.freeze(Object.fromEntries(migrationPairs));
 const FUNCTION_NAMES=['source_current','source_for_bridge','remote_current','assert_current','assert_history','rpc','credential_proof'];
 const expectedFunctionHashes=Object.fromEntries(FUNCTION_NAMES.map(name=>{

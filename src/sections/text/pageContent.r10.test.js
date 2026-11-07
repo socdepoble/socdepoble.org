@@ -39,10 +39,10 @@ describe('AH-22 · rural content and dated production balance in five languages'
  });
  test.each(languages)('%s keeps contract counts aligned with code without announcing activation', language => {
   const text=doc(localitzaPagina(PAGE_COPY.fediversity,language).html).body.textContent;
-  const phrases={ca:'45 capacitats i 136 mètodes amb 188 casos',es:'45 capacidades y 136 métodos con 188',en:'45 capabilities and 136 methods with 188',eu:'45 gaitasun eta 136 metodo ditu 188',gl:'45 capacidades e 136 métodos con 188'};
-  expect(Object.keys(CAPACITATS)).toHaveLength(45);
-  expect(CONTRACTE_BACKEND).toHaveLength(136);
-  expect(CASOS).toHaveLength(188);
+  const phrases={ca:'46 capacitats i 138 mètodes amb 190 casos',es:'46 capacidades y 138 métodos con 190',en:'46 capabilities and 138 methods with 190',eu:'46 gaitasun eta 138 metodo ditu 190',gl:'46 capacidades e 138 métodos con 190'};
+  expect(Object.keys(CAPACITATS)).toHaveLength(46);
+  expect(CONTRACTE_BACKEND).toHaveLength(138);
+  expect(CASOS).toHaveLength(190);
   expect(text).toContain(phrases[language]);
   expect(text).not.toMatch(/43 (?:capacitats|capacidades|capabilities|gaitasun)/);
   // El canvi és un inventari local; els pendents reals conserven la seua

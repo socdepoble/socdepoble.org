@@ -5,7 +5,7 @@
    signada, quota (429) i base caiguda (503), la passada de la cua amb el secret del cron,
    l'obtenidor de claus i documents (redirecció, sostre, DNS, memòria cau, rotació) i la frontera
    d'imports del mòdul. Cap xarxa: el fetch i el resoledor són dobles; les claus es generen ací. */
-import { describe, expect, test } from 'vitest';
+import { describe, expect, test, vi } from 'vitest';
 import { createHash, createSign, generateKeyPairSync, webcrypto } from 'node:crypto';
 import { readFileSync, readdirSync } from 'node:fs';
 import path from 'node:path';
@@ -134,6 +134,41 @@ describe('apagada per defecte i configuració', () => {
 });
 
 describe('la frontera HTTP de la inbox', () => {
+  test('R11-AP-01 · un cos interromput retorna 400 sense propagar errors ni detalls del flux', async () => {
+    const { gestor, magatzem } = munta();
+    const body = new ReadableStream({ start(control) { control.error(new Error('detall privat del transport')); } });
+    const r = await gestor(peticio(URL_INBOX, { headers: { 'content-type': 'application/activity+json' }, body }));
+    expect([r.status, await cosDe(r)]).toEqual([400, { error: 'invalid_body' }]);
+    expect(magatzem.instantania().activitats).toEqual([]);
+  });
+
+  test('R11-AP-01 · el termini de lectura talla i cancel·la un cos que no acaba', async () => {
+    const { gestor, magatzem } = munta();
+    let cancelat = false;
+    const body = new ReadableStream({ cancel() { cancelat = true; } });
+    // Importació WebCrypto real abans de substituir els rellotges.
+    await gestor(peticio(URL_INBOX, { headers: { 'content-type': 'application/activity+json' }, cos: '{' }));
+    vi.useFakeTimers();
+    try {
+      const pendent = gestor(peticio(URL_INBOX, { headers: { 'content-type': 'application/activity+json' }, body }));
+      await vi.advanceTimersByTimeAsync(AP.TOPALL_MS + 1);
+      const r = await pendent;
+      expect([r.status, await cosDe(r), cancelat]).toEqual([408, { error: 'request_timeout' }, true]);
+      expect(magatzem.instantania().activitats).toEqual([]);
+    } finally { vi.useRealTimers(); }
+  });
+
+  test('R11-AP-01 · rebutjar un cos massa gran no espera una cancel·lació bloquejada', async () => {
+    const { gestor } = munta();
+    let cancelat = false;
+    const body = new ReadableStream({
+      start(control) { control.enqueue(new Uint8Array(MAXIM_COS_INBOX + 1)); },
+      cancel() { cancelat = true; return new Promise(() => {}); }
+    });
+    const r = await gestor(peticio(URL_INBOX, { headers: { 'content-type': 'application/activity+json' }, body }));
+    expect([r.status, await cosDe(r), cancelat]).toEqual([413, { error: 'payload_too_large' }, true]);
+  });
+
   test('405, 404 (ruta, inbox sense clau o actor no federat), 415 i 400', async () => {
     const { gestor } = munta();
     const get = await gestor(peticio(URL_INBOX, { method: 'GET' }));

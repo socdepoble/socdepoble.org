@@ -233,6 +233,9 @@ describe('IDEA-112 · banc de llavors', () => {
 
 describe('IDEA-113 · rutes de poble', () => {
   const { rutes, recursos, font: fontR } = RUTES_LA_TORRE;
+  const senseCanaleta = (text) => String(text)
+    .replace(/del mas de [Ll]a Canaleta/g, 'tradicional')
+    .replace(/de [Ll]a Canaleta/g, 'tradicional');
   it('els 6 eixos són els de la font, amb la durada i la distància de cada ruta (G9-02)', () => {
     expect(rutes.map((r) => r.eix)).toEqual(['SOM PA, SOM OLI', 'SOM VINCLES', 'SOM AIGUA', 'SOM TERRA', 'SOM POBLE', 'SOM PAISATGE']);
     expect(rutes.map((r) => r.distancia)).toEqual(['1,3 km', '1,5 km', '2 km', '2 km', '2 km', '6 km']);
@@ -245,7 +248,7 @@ describe('IDEA-113 · rutes de poble', () => {
       expect(mida.endsWith(r.distancia), mida).toBe(true);
       if (r.lema) expect(norm(linia(EX_ITINERARIS, r.linies.lema))).toBe(r.lema);
       else expect(r.numero).toBe(2);
-      expect(tros(EX_ITINERARIS, ...r.linies.programa)).toBe(r.programa);
+      expect(senseCanaleta(tros(EX_ITINERARIS, ...r.linies.programa))).toBe(r.programa);
     }
   });
 
@@ -254,10 +257,10 @@ describe('IDEA-113 · rutes de poble', () => {
     for (const r of rutes) {
       for (const p of r.parades) {
         const [a, b] = p.linies;
-        expect(norm(linia(EX_ITINERARIS, a))).toBe(`${p.hora} ${p.titol}`);
+        expect(senseCanaleta(norm(linia(EX_ITINERARIS, a)))).toBe(`${p.hora} ${p.titol}`);
         const resta = [];
         for (let n = a + 1; n <= b; n += 1) resta.push(linia(EX_ITINERARIS, n).replace(/^\s*•\s*/, ''));
-        expect(uneix(resta)).toBe(p.explicacio);
+        expect(senseCanaleta(uneix(resta))).toBe(p.explicacio);
       }
     }
     expect(rutes[5].parades[1]).toMatchObject({ hora: '11:00', titol: 'Excursió al Pou de la Neu' });
@@ -267,7 +270,7 @@ describe('IDEA-113 · rutes de poble', () => {
     expect(recursos).toHaveLength(19);
     expect(recursos.map((x) => x.pagina)).toEqual(Array.from({ length: 19 }, (_, i) => i + 15));
     for (const x of recursos) {
-      expect(norm(linia(EX_ITINERARIS, x.linies.nom))).toBe(`▶ ${x.nom}`);
+      expect(senseCanaleta(norm(linia(EX_ITINERARIS, x.linies.nom)))).toBe(`▶ ${x.nom}`);
       if (x.adreca) expect(linia(EX_ITINERARIS, x.linies.adreca)).toContain(x.adreca);
     }
     expect(recursos.filter((x) => x.establiments).map((x) => x.nom)).toEqual(['Els Forns de pa', 'Les Carnisseries', 'Els Restaurants']);
@@ -286,7 +289,7 @@ describe('IDEA-113 · rutes de poble', () => {
 
   it('cap dada del kit rebutjat r65 ni de cap altre poble; sempre «mas», com a la regla del repo (G9-08)', () => {
     const dades = JSON.stringify(RUTES_LA_TORRE);
-    for (const prohibit of ['Tia Martina', 'Corral de Lipo', 'Monerris', 'Racó dels Pèsols', 'Penyes del Roget', 'Teularet', 'Esquerdo', 'Torre Grossa', 'Casa del Delme', '16,6 km', '580 m', '1658', 'Pa Beneït']) {
+    for (const prohibit of ['Tia Martina', 'Corral de Lipo', 'Monerris', 'Racó dels Pèsols', 'Penyes del Roget', 'Teularet', 'Esquerdo', 'Torre Grossa', 'Casa del Delme', '16,6 km', '580 m', '1658', 'Pa Beneït', 'Canaleta']) {
       expect(dades.includes(prohibit), prohibit).toBe(false);
     }
     expect(dades).not.toMatch(/mas[ií]a|masies/i);

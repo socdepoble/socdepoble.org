@@ -67,8 +67,8 @@ const EntitatsDelPoble = lazyRoute(() => import('../pobles/EntitatsDelPoble.jsx'
    client de Wikimedia i l'algoritme només baixen per a una fitxa incompleta. */
 const PanellDeViquipedia = lazyRoute(() => import('../pobles/PanellDeViquipedia.jsx'));
 /* IDEA-116 (Onada R9, carril C2) · La primera publicació del Mur porta el
-   reproductor del pou de neu: l'article, el reproductor i l'anatomia baixen
-   en diferit només en obrir-la, com el visor d'IDEA-109. */
+   visor del pou de neu (IDEA-161: un sol visor, PouDeLaNeuAnatomiaCard): l'article
+   i el visor baixen en diferit només en obrir-la, com el visor d'IDEA-109. */
 const NovesTecnologiesCulturaRuralArticle = lazyRoute(() => import('../mur/articles/NovesTecnologiesCulturaRuralArticle.jsx'));
 
 /* T5 · Les imatges del cos (variacions del Mercat, Multimèdia) es resolen en
@@ -702,8 +702,13 @@ export function buildPoblesDetailSectionMeta({ towns = [], t, publicacions = nul
        fitxa porta el seu naixement a created_at (clauDelPoble.js ·
        poblesAmbNaixement: només les publicacions que declaren el poble amb
        poble_id el poden avançar): la barra taronja de la pàgina i el lector
-       del MAS diuen la mateixa data que la pastilla de /pobles. Sense, les
-       fitxes tal qual. */
+       del MAS diuen el naixement. Sense, les fitxes tal qual.
+       Arbitratge R11 (R37-L2-07) · /pobles ja no diu el naixement: la seua
+       pastilla i el seu ordre diuen l'última publicació pública que DECLARA
+       el poble (clauDelPoble.js · poblesAmbUltimaPublicacio, P0-39), i sense
+       cap no hi ha pastilla. Per al mateix poble, /pobles i esta pàgina poden
+       dir dates diferents: divergència respecte a T51 pendent de decisió del
+       Mestre. La fixa tests/pobles-publicacio-r37.test.jsx. */
     items: publicacions ? poblesAmbNaixement(towns, publicacions) : towns,
     getTitle,
     getSubtitle: (item) => item.title || item.name || '',

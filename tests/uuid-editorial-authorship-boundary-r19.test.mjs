@@ -32,8 +32,10 @@ test('R19 UUID editorial boundary: real owner RLS, entity signature CHECK and ex
         error=>error.code==='P0002'
       );
       assert.deepEqual(await snapshot(),before);
-      assert.equal((await f.pg.query("SELECT to_regclass('public.seed_revisions') AS table0,to_regclass('private.seed_revisions') AS private0")).rows[0].table0,null);
+      assert.equal((await f.pg.query("SELECT to_regclass('public.seed_revisions') AS table0,to_regclass('private.seed_revisions') AS private0")).rows[0].table0,'seed_revisions');
       assert.equal((await f.pg.query("SELECT to_regclass('private.seed_revisions') AS table0")).rows[0].table0,null);
+      await assert.rejects(as(f.alice.id,{},'SELECT public.desa_revisio_seed($1,$2,$3,$4,$5,$6)',[f.tenantId,'mur',source.id,{content:'<p>Must not persist</p>'},0,1]), error=>error.code==='P0002');
+      assert.equal((await f.pg.query('SELECT count(*)::integer AS n FROM public.seed_revisions')).rows[0].n,0);
     });
     await t.test('ordinary superadmin UPDATE sees zero writable foreign-owner rows; forged author fields have no authority',async()=>{
       const changed=await as(f.alice.id,{},'UPDATE public.section_submissions SET title=$1 WHERE id=$2 RETURNING id',['Must not edit another owner',source.id]);
@@ -64,7 +66,7 @@ test('R19 UUID editorial boundary: real owner RLS, entity signature CHECK and ex
       assert.equal(columns.includes('revision'),false);
       const wrapper=fs.readFileSync(new URL('../src/data/revisionsEditorials.js',import.meta.url),'utf8');
       assert.match(wrapper,/_editorialClau/);assert.match(wrapper,/FILA_DE_SECCIO\[seccio\]/);
-      assert.equal((await f.pg.query("SELECT count(*)::integer AS n FROM node0.schema_migrations")).rows[0].n,79,'R19 must not add an unsafe migration80 (79 = 78 plus the R9 /legal 2.5 seal 2611061520)');
+      assert.equal((await f.pg.query("SELECT count(*)::integer AS n FROM node0.schema_migrations")).rows[0].n,80,'R11 adds per-seed revisions without granting access to UUID submissions');
     });
   }finally{await f.close();}
 });

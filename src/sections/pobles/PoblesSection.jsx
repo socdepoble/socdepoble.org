@@ -11,7 +11,7 @@ import { useUIActions } from '../../app/contexts/UIContext';
 import { useMur } from '../mur/MurContext';
 import { COPYRIGHT_VIQUIPEDIA, dataDElement, momentDElement } from '../../components/universal/editorial.js';
 import { nomDeLaGent } from './nomsDelPoble.js';
-import { poblesAmbNaixement } from './clauDelPoble.js';
+import { poblesAmbUltimaPublicacio } from './clauDelPoble.js';
 import { objecteDelPobleXat } from './xatDelPoble.js';
 import { ArbreTerritorial } from './TerritoriDelPoble.jsx';
 import { filtraTerritori } from './territoriDelPoble.js';
@@ -24,34 +24,20 @@ export default function PoblesSection() {
   const navigate = useNavigate();
   const [cerca] = useSearchParams();
 
-  /* T2 (prompt 1140, 261001) · La pastilla i l'ordre ixen de la mateixa data
-     (editorial.js · dataDElement / momentDElement, la regla de Pedra Seca
-     §10): la de creació del poble, o la de l'última versió si és posterior.
-     Abans es llegien `dynamic_time` i `dynamic_date`, que no escriu cap codi:
-     la targeta quedava sense pastilla i l'ordre, a mercé d'un text.
-     Onada 6 (requisit 15 de l'Onada 5: «En crear un poble per primera vegada,
-     s'hi assignarà la data i hora d'aquella primera publicació de naixement
-     del poble») · La data de creació és el NAIXEMENT del poble: la més antiga
-     entre la de la fitxa i el created_at de la primera publicació que el
-     DECLARA (poble_id; clauDelPoble.js · poblesAmbNaixement, sobre les dades
-     del Mur). Les publicacions casades només pel text del lloc no el daten
-     (vegeu-ne el perquè a clauDelPoble.js): amb la llavor, també la de
-     supabase/seed.sql, cap fitxa canvia. La mateixa regla la llig la seua
-     pàgina (buildPoblesDetailSectionMeta): pastilla, ordre i barra taronja
-     diuen la mateixa data (T51). Sense cap publicació declarada anterior a
-     la fitxa, la de la fitxa, com abans.
-     DEUTE CONEGUT (revisió de T2, 261001) · La pastilla porta al Calendari
-     d'eixe mes, però el Calendari encara no rep els pobles
-     (CalendariSection · entradesDelCalendari; type 'town', no 'poble'): el
-     poble no hi ix. Pendent de decisió del Mestre. */
+  /* P0-39 / R37 · La publicació pública declarada data l'activitat del poble.
+     No modifica el naixement ni l'edició de la fitxa. Ordre i pastilla lligen
+     exactament este instant; sense publicació, no es fabrica cap rellotge.
+     Arbitratge R11 (R37-L2-07) · La pàgina del poble continua amb el
+     naixement (detailSectionMeta.jsx · poblesAmbNaixement): divergència
+     respecte a T51 pendent de decisió del Mestre. */
   const pobles = React.useMemo(
-    () => poblesAmbNaixement(sortedTowns, { feedPosts, marketItems, events }),
+    () => poblesAmbUltimaPublicacio(sortedTowns, { feedPosts, marketItems, events }),
     [sortedTowns, feedPosts, marketItems, events]
   );
   const sortedAndActiveTowns = React.useMemo(() => {
     return [...pobles].sort((a, b) => {
-      const dateA = momentDElement(a);
-      const dateB = momentDElement(b);
+      const dateA = momentDElement({ created_at: a._ultimaPublicacioPublica });
+      const dateB = momentDElement({ created_at: b._ultimaPublicacioPublica });
       if (dateA === null && dateB === null) return 0;
       if (dateA === null) return 1;
       if (dateB === null) return -1;
@@ -81,16 +67,10 @@ export default function PoblesSection() {
    * Funciona exclusivament mostrant de forma automàtica la targeta
    * de l'últim publicador al Mur. Quan un poble publica una notícia,
    * automàticament puja a dalt de tot en aquesta llista.
-   * La resta de pobles apareixen aleatòriament per ara.
+   * Els pobles sense publicació conserven l'ordre estable del directori.
    * =========================================================================
-   * Onada 6 (estat real, no aplicada encara) · La pastilla diu el NAIXEMENT
-   * del poble (requisit 15 i decisió 3 de la nit del 261009) i T51 mana que
-   * l'ordre llija la mateixa data que la pastilla: la llista s'ordena pel
-   * naixement, del més recent al més antic. Fer pujar dalt el poble que
-   * publica obligaria la pastilla a dir l'última activitat (o una excepció
-   * a T51): pregunta oberta al Mestre a l'informe de l'Onada 6. Mentre el Mur
-   * carrega, l'ordre és el de les fitxes; si una publicació declarada és
-   * anterior a una fitxa, eixe poble canvia de lloc quan arriba el Mur.
+   * R37 · Mur, Mercat i Esdeveniments compten només publicacions públiques.
+   * La data d'inici d'un acte i updated_at no alteren esta classificació.
    */
 
   return (
@@ -149,7 +129,7 @@ export default function PoblesSection() {
           const portaDelXat = xatDelPoble
             ? { id: 'xat-del-poble', verb: t('section.xat.anarAlXat', 'Anar al xat'), desti: xatDelPoble, varietat: 'secundari' }
             : null;
-          const data = dataDElement(town);
+          const data = dataDElement({ created_at: town._ultimaPublicacioPublica });
           /* Onada 5 (F5, fase 3) · Les dades manen: l'`author` de la fitxa
              (la llavor porta el nom curt «Gent de la Torre») i, si no en porta,
              la regla única de nomsDelPoble.js, la mateixa de l'H1 i de la barra

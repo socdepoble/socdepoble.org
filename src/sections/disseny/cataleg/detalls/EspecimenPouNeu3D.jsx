@@ -5,7 +5,7 @@ import PouDeLaNeuAnatomiaCard from '../../../../components/patrimoni/PouDeLaNeuA
 export default function EspecimenPouNeu3D() {
   return <Especimen id="pou-neu-3d" nom="Pou de la Neu · Anatomia 3D"
     fitxer="src/components/patrimoni/PouDeLaNeuAnatomiaCard.jsx"
-    descripcio="IDEA-143 · Set assemblatges de revolució, secció oberta i lectura física estimada. Les cotes de disseny de l’R31 són 11,20 m de fondària i 8,40 m de diàmetre; no substituïxen les fonts històriques del Rentonar."
+    descripcio="IDEA-143 · Set assemblatges de revolució, secció oberta i lectura física estimada. Les cotes són les del pou del Rentonar segons Josep Mª Segura Martí (1987): 13,75 m de fondària fins a les finestres, 9,80 m de diàmetre interior i mur d’1,50 m; el túnel sud i la galeria de desguàs es dibuixen interromputs."
     contracte={[
       ['language', 'ca | es | en | eu | gl', 'llengua de la interfície', 'Traduïx tota la targeta.'],
       ['noWebgl', 'boolean', 'false', 'Manté tota la geometria SVG sense la capa de fenòmens.'],
