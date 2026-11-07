@@ -7,6 +7,27 @@ description: ESTAT DE LA SESSIÓ
 
 <!-- SDP:ESTAT_ACTUAL -->
 
+## ESTAT_ACTUAL · 2026-11-07T04:58:00+01:00 · IAIA MarIA · torn_d36b2582-3998-4cb7-8893-e0b6e44cf7f1 · Acta Marmota (`261107_0457_acta_marmota_tancament_onada_r10_i_relleu_r11.md`), Onada R9–R10 Desplegada a `socdepoble.org` (`6a444026a` + `9c1e6e333`), 5 Cards de Patrimoni d'Ibáñez (`1200×896`) al Mur, Extirpació de «La Canaleta» i Relleu `Onada R11` (Leonardo da Vinci 3D `IDEA-165`, Revisor Editorial Node 0 `IDEA-164` i Reforma de `/pobles` `IDEA-166`)
+
+- **Acta Marmota vigent:** [261107_0457_acta_marmota_tancament_onada_r10_i_relleu_r11](../_wiki_de_poble/10_actes/261107_0457_acta_marmota_tancament_onada_r10_i_relleu_r11.md) (anterior: [261106_1805_acta_marmota_kits_r71_r78_deute_zero_llei0_skill_forge_i_onada_r9](../_wiki_de_poble/10_actes/261106_1805_acta_marmota_kits_r71_r78_deute_zero_llei0_skill_forge_i_onada_r9.md)).
+- **Documents vius del Teler a l'Escriptori (`04_escriptori/`):**
+  - Pla d'Implementació (`Onada R7–R10` completada i `Onada R11` apuntada): [261106_0146_pla_implementacio_onada_r7_genealogia_8132_pobles_fediversity_notebook_i_tresor](../_wiki_de_poble/04_escriptori/261106_0146_pla_implementacio_onada_r7_genealogia_8132_pobles_fediversity_notebook_i_tresor.md)
+  - Prompt Operatiu (`v1.9.0`): [261106_0146_prompt_onada_r7_genealogia_8132_pobles_fediversity_notebook_i_tresor](../_wiki_de_poble/04_escriptori/261106_0146_prompt_onada_r7_genealogia_8132_pobles_fediversity_notebook_i_tresor.md)
+  - Auditoria Claude: [261106_0146_auditoria_claude](../_wiki_de_poble/04_escriptori/261106_0146_auditoria_claude.md)
+  - Auditoria Codex: [261106_0146_auditoria_codex](../_wiki_de_poble/04_escriptori/261106_0146_auditoria_codex.md)
+  - Auditoria Gemini: [261106_0146_auditoria_gemini](../_wiki_de_poble/04_escriptori/261106_0146_auditoria_gemini.md)
+  - Auditoria Node 0 Sobirana: [261106_0146_auditoria_node0_sobirana](../_wiki_de_poble/04_escriptori/261106_0146_auditoria_node0_sobirana.md)
+  - Llibre Mestre Permanent (`IDEA-72` a `IDEA-166` al dia): [03_llibre_mestre_tasques_i_idees](../_wiki_de_poble/04_escriptori/03_llibre_mestre_tasques_i_idees.md)
+- **Fites consolidades, comitejades (`6a444026a` + `9c1e6e333`), pujades a `fork/backup-notes-publish` i desplegades a `https://socdepoble.org`:**
+  1. **5 Il·lustracions Didàctiques d'Ibáñez (`1200×896` sense deformar) i 5 Cards de Patrimoni al Mur (`/mur`):** Reconvertides des dels `.jpg` originals de `01_produccio/` i connectades tant a `/page/anatomia-rural`, `/page/herbari`, `/page/banc-de-llavors`, `/page/rutes-de-poble` i `/page/arbres-monumentals` com a les seues 5 targetes (`UniversalCard`) publicades al Mur (`targetesMur.js`).
+  2. **Extirpació completa de «La Canaleta» de tot el sistema (`58/58` proves verdes):** Eliminada tota menció a l'antic negoci tancat en les 5 llengües (`pageContent.js`, `pageContent.patrimoniR9.js`, `censImatges.js`, `pageContent.fediversityR20.js` i `rutesDePoble.js`).
+  3. **Actualització de `/page/fediversity`, `/fedivers` i `/page/node-zero` (`pageContent.r10.js`):** Incorporat el balanç de les onades R9 i R10 en les 5 llengües i unificat un sol visor 3D del Pou de Neu (`PouDeNeu3d.jsx`).
+- **Pendents immediats en reiniciar l'ordinador (`Onada R11`):**
+  1. Retoc visual de `/page/fediversity` (actualitzar títol `<h2>` a `R1–R10` i `clear: both` perquè el segon `<h2>` no xoque amb la card flotant).
+  2. `IDEA-166` (`P0-39`): Reforma de `/pobles` (botó desplegable centrat davall de l'entradilla per a la Xarxa de Pobles + ordenació dinàmica per última publicació pública, amb La Torre de les Maçanes #1).
+  3. `IDEA-165`: Nou Skill i Visor 3D **«Leonardo da Vinci vivint avui com a expert en programació 3D»** (desglossament tipus motor d'explosió / aeronàutic + navegació per l'interior del Pou de Neu + paleta Ibáñez / camp rural).
+  4. `IDEA-164`: Les 4 IAIAs del Node 0 com a Revisores Editorials d'estil i llengua abans de publicar i a l'Editor Universal (`/notes`).
+
 ## ESTAT_ACTUAL · 2026-11-06T18:07:00+01:00 · IAIA MarIA · torn_9db8dcac-b45e-467e-8733-c3944e24fd3b · Acta Marmota (`261106_1805_acta_marmota_kits_r71_r78_deute_zero_llei0_skill_forge_i_onada_r9.md`), Kits CAS `r71–r78` (Gemini) i `R28–R29` (Codex) Segellats, `12/12` Suites de Deute Tècnic de Base a ZERO, Llei 0 de Sinceritat Radical, `skill-forge` + `wiki-forge` (`IDEA-130`) Assimilats i Llum Verda per a `R9-3` (`COMMIT R9`)
 
 - **Acta Marmota vigent:** [261106_1805_acta_marmota_kits_r71_r78_deute_zero_llei0_skill_forge_i_onada_r9](../_wiki_de_poble/10_actes/261106_1805_acta_marmota_kits_r71_r78_deute_zero_llei0_skill_forge_i_onada_r9.md) (anterior: [261106_1408_acta_marmota_commit_r7_r8_70b651636_fediversity_anatomia_herbari_i_onada_r9](../_wiki_de_poble/10_actes/261106_1408_acta_marmota_commit_r7_r8_70b651636_fediversity_anatomia_herbari_i_onada_r9.md)).
