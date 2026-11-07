@@ -68,4 +68,28 @@ describe('AH-22 · rural content and dated production balance in five languages'
   expect(PAGE_COPY.versions.html).toContain('3 de novembre de 2026 · v1.1.0');
   expect(doc(localitzaPagina(PAGE_COPY.versions,'es').html).querySelector('div[lang="ca"]')).not.toBeNull();
  });
+ test('P0-38 / IDEA-157 · Regla del Cosí Guillermo: /anima, /projecte, /disseny i /anatomia-rural usen l’imaginari i conceptes «de poble» en les 5 llengües', () => {
+  expect(PAGE_COPY.projecte.html).not.toContain('La IAIA usa les imatges del poble per a explicar la tecnologia.');
+  expect(PAGE_COPY.projecte.html).toContain("La IAIA utilitza l'imaginari de poble per a explicar la tecnologia.");
+  expect(PAGE_COPY.projecte.html).toContain('una <strong>utilitat social</strong> bàsica amb vocació de poble.');
+  expect(PAGE_COPY.projecte.html).toContain('Són <strong>eines de poble</strong> que anem construint i revisant');
+  expect(PAGE_COPY.projecte.html).toContain('fer arribar els <strong>canvis</strong> a tota la gent de poble.');
+  expect(PAGE_COPY.disseny.html).toContain('<h3>El llenguatge visual de poble</h3>');
+  expect(PAGE_COPY.disseny.html).toContain('<p>La veu de poble s’escriu amb <strong>Noto Sans</strong>.');
+  expect(PAGE_COPY['anatomia-rural'].html).toContain('<h3>Per dins de les obres de poble</h3>');
+  expect(PAGE_COPY.anima.lead).toContain("La IAIA utilitza l'imaginari de poble per a explicar la tecnologia.");
+  expect(PAGE_COPY.anima.html).toContain('El relat dona a la IAIA un <strong>propòsit</strong> clar amb vocació de <strong>poble</strong>');
+  expect(PAGE_COPY.anima.html).toContain('aproxima el llenguatge informàtic a les experiències de <strong>poble</strong>.');
+  expect(PAGE_COPY.anima.html).toContain('per a explicar la <strong>tecnologia</strong> amb paraules de <strong>poble</strong>.');
+  const esperat = {
+   ca: "La IAIA utilitza l'imaginari de poble per a explicar la tecnologia.",
+   es: 'La IAIA utiliza el imaginario de pueblo para explicar la tecnología.',
+   en: 'IAIA uses the village imaginary to explain technology.',
+   eu: 'IAIAk herriko iruditeria erabiltzen du teknologia azaltzeko.',
+   gl: 'A IAIA utiliza o imaxinario de vila para explicar a tecnoloxía.'
+  };
+  for (const [lang, frase] of Object.entries(esperat)) {
+   expect(localitzaPagina(PAGE_COPY.anima, lang).lead).toContain(frase);
+  }
+ });
 });

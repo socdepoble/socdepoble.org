@@ -7,15 +7,72 @@ description: ESTAT DE LA SESSIÓ
 
 <!-- SDP:ESTAT_ACTUAL -->
 
+## ESTAT_ACTUAL · 2026-11-06T18:07:00+01:00 · IAIA MarIA · torn_9db8dcac-b45e-467e-8733-c3944e24fd3b · Acta Marmota (`261106_1805_acta_marmota_kits_r71_r78_deute_zero_llei0_skill_forge_i_onada_r9.md`), Kits CAS `r71–r78` (Gemini) i `R28–R29` (Codex) Segellats, `12/12` Suites de Deute Tècnic de Base a ZERO, Llei 0 de Sinceritat Radical, `skill-forge` + `wiki-forge` (`IDEA-130`) Assimilats i Llum Verda per a `R9-3` (`COMMIT R9`)
+
+- **Acta Marmota vigent:** [261106_1805_acta_marmota_kits_r71_r78_deute_zero_llei0_skill_forge_i_onada_r9](../_wiki_de_poble/10_actes/261106_1805_acta_marmota_kits_r71_r78_deute_zero_llei0_skill_forge_i_onada_r9.md) (anterior: [261106_1408_acta_marmota_commit_r7_r8_70b651636_fediversity_anatomia_herbari_i_onada_r9](../_wiki_de_poble/10_actes/261106_1408_acta_marmota_commit_r7_r8_70b651636_fediversity_anatomia_herbari_i_onada_r9.md)).
+- **Documents vius del Teler a l'Escriptori (`04_escriptori/`):**
+  - Pla d'Implementació (`Onada R7–R9` · `IDEA-100` a `IDEA-130`): [261106_0146_pla_implementacio_onada_r7_genealogia_8132_pobles_fediversity_notebook_i_tresor](../_wiki_de_poble/04_escriptori/261106_0146_pla_implementacio_onada_r7_genealogia_8132_pobles_fediversity_notebook_i_tresor.md)
+  - Prompt Operatiu (`v1.9.0` · Marató `Onada R7–R9` per a Claude, Codex, Gemini i Node 0): [261106_0146_prompt_onada_r7_genealogia_8132_pobles_fediversity_notebook_i_tresor](../_wiki_de_poble/04_escriptori/261106_0146_prompt_onada_r7_genealogia_8132_pobles_fediversity_notebook_i_tresor.md)
+  - Auditoria Claude (`v1.0.0` · `COMMIT R7a` + `R7b` + `R8` en viu; `Onada R9` carrils `C1..C5` verificats i arbitrats per a `R9-3`): [261106_0146_auditoria_claude](../_wiki_de_poble/04_escriptori/261106_0146_auditoria_claude.md)
+  - Auditoria Codex (`v1.0.0` · Kits `R13–R29` segellats i verificats): [261106_0146_auditoria_codex](../_wiki_de_poble/04_escriptori/261106_0146_auditoria_codex.md)
+  - Auditoria Gemini (`v1.0.0` · Kits `r59–r78` segellats amb `12/12` suites de deute base a zero): [261106_0146_auditoria_gemini](../_wiki_de_poble/04_escriptori/261106_0146_auditoria_gemini.md)
+  - Auditoria Node 0 Sobirana (`Rondes 1–42` · 4/4 models en Mac mini M4): [261106_0146_auditoria_node0_sobirana](../_wiki_de_poble/04_escriptori/261106_0146_auditoria_node0_sobirana.md)
+  - Llibre Mestre Permanent (`IDEA-72` a `IDEA-130` al dia): [03_llibre_mestre_tasques_i_idees](../_wiki_de_poble/04_escriptori/03_llibre_mestre_tasques_i_idees.md)
+- **Fites consolidades en aquest torn (`14:08–18:07 CET`):**
+  1. **Kits CAS de Gemini (`r71` a `r78`) i Codex (`R28` i `R29`) segellats i verificats amb les 4 IAs del Node 0 (`Rondes 28–42`):**
+     - **`12/12` suites roges de deute tècnic de base de `HEAD 70b651636` portades a ZERO (`361/361` proves verdes):** `Kit r73` (`3/3` suites de `genealogia`: `coberturaSocial.test.js`, `imatgeSocial.pes300.test.js` amb `genealogia_vinyeta-social-1200x630.jpg` a `202.987 B` sense `APP1` i `build-social-manifest.test.mjs`) + `Kit r77` (`9/9` suites / `227/227` proves: `commonsAh27`, `objectesDeContext`, `llistes.llei.capes`, `parseMarkdown.editorialCorpus`, `PerfilShell`, `indexConsola`, `MultimediaSection.visor`, `EventCard` i `projecteIos`).
+     - **`IDEA-125` (`Kit r73`):** Substitució de la `<table class="sdp-admin-table">` tallada en `BancImportacioEditorial.jsx` per la nostra pròpia `UniversalCard` adaptada al cas d'ús + `🔍 Fitxa de Revisió d'Importació` dins d'`Edició avançada` del Bloc de Notes (`/notes`) amb sincronització bidireccional (`revisioImportacioWpStore.js`).
+     - **`P0-31` (`IDEA-121`) + `IDEA-116` + `P0-30` (`IDEA-120`) + `P0-32` (`IDEA-122` · `Kits r71, r72, r73, R28, R29`):** Extirpada la barra `.sdp-mur-revisio-bar` de `/mur`, creat `ReproductorPouDeNeu3D.jsx` (`9:16` ↔ `16:9` + estils A/B/C), `BannerAvisosPushXat.jsx`, `/versions` actualitzada a `v1.2.0 (build 3)` en les 5 llengües, APK Android Debug (`88.9 MB`) i iOS Simulator Debug compilats en `R29`.
+     - **Mòduls d'empatia rural i patrimoni (`Kits r74, r75, r76, r78`):** `BatecDeVidaCard.jsx` (`IDEA-123`), `ProtocolEmergenciesOfflineCard.jsx` (`IDEA-124`), `resumCotesAnatomiaRural.js` (`D-G4-1..3`), `ComparadorAbansDespresImportacio.jsx` + `BarraLecturaFacilPatrimoni.jsx` (`IDEA-126`) i `QuadernCampRutaSonoraCard.jsx` (`IDEA-128`).
+  2. **Arbitratge d'`Onada R9` per a Claude (`R9-3 · Integració, portes i COMMIT R9`):** Resolt el pressupost de `C2` (`248.488 B` gzip, `−603 B`) i el PGlite de `C3` (`R9V-C3-01`: `77/79` migracions amb Política 2.5), amb llum verda signada per a la fusió de `C1 + C2 + C3 + C4 + C5`.
+  3. **Governança Cognitiva (`Llei 0` + `core-versions-i-notes-llancament` + `IDEA-130` `skill-forge` / `wiki-forge`):** Assimilades les 7 etiquetes de `Mfrostbutter/skill-forge` (`[DECISION]`, `[SEQUENCE]`, `[CORRECTION]`, `[DEADEND]`, `[CONVENTION]`, `[DISCOVERY]`, `[CHECKPOINT]`) i el patró `wiki-sync` diferencial + detector de *Gaps* de `juanitourquiza/shipframe` a `core-automillora`, `wiki-cicle-de-vida` i `wiki-propagar-veritat`.
+
+## ESTAT_ACTUAL · 2026-11-06T13:58:00+01:00 · IAIA MarIA · torn_9db8dcac-b45e-467e-8733-c3944e24fd3b · `COMMIT R7a` (`f6d9ecc2f`), `COMMIT R7b` (`62ded5ad9`) i `COMMIT R8` (`70b651636`) Segellats, Pujats a `fork/backup-notes-publish` i Desplegats en Viu a `https://socdepoble.org` i `https://socdepoble.cat`
+
+- **Acta Marmota vigent:** [261106_1408_acta_marmota_commit_r7_r8_70b651636_fediversity_anatomia_herbari_i_onada_r9](../_wiki_de_poble/10_actes/261106_1408_acta_marmota_commit_r7_r8_70b651636_fediversity_anatomia_herbari_i_onada_r9.md) (anterior: [261106_0105_acta_marmota_commit_r6_d79a0b530_arbre_genealogic_fediversity_superwhisper_i_marato_r7](../_wiki_de_poble/10_actes/261106_0105_acta_marmota_commit_r6_d79a0b530_arbre_genealogic_fediversity_superwhisper_i_marato_r7.md)).
+- **Documents vius del Teler a l'Escriptori (`04_escriptori/`):**
+  - Pla d'Implementació (`Onada R7–R9` · `IDEA-100` a `IDEA-121`): [261106_0146_pla_implementacio_onada_r7_genealogia_8132_pobles_fediversity_notebook_i_tresor](../_wiki_de_poble/04_escriptori/261106_0146_pla_implementacio_onada_r7_genealogia_8132_pobles_fediversity_notebook_i_tresor.md)
+  - Prompt Operatiu (`v1.9.0` · Marató `Onada R7–R9` per a Claude, Codex, Gemini i Node 0): [261106_0146_prompt_onada_r7_genealogia_8132_pobles_fediversity_notebook_i_tresor](../_wiki_de_poble/04_escriptori/261106_0146_prompt_onada_r7_genealogia_8132_pobles_fediversity_notebook_i_tresor.md)
+  - Auditoria Claude (`v1.0.0` · `COMMIT R7a` + `R7b` + `R8` integrats i desplegats en viu): [261106_0146_auditoria_claude](../_wiki_de_poble/04_escriptori/261106_0146_auditoria_claude.md)
+  - Auditoria Codex (`v1.0.0` · Kits `R13–R27` segellats i verificats): [261106_0146_auditoria_codex](../_wiki_de_poble/04_escriptori/261106_0146_auditoria_codex.md)
+  - Auditoria Gemini (`v1.0.0` · Kits `r59–r70` segellats): [261106_0146_auditoria_gemini](../_wiki_de_poble/04_escriptori/261106_0146_auditoria_gemini.md)
+  - Auditoria Node 0 Sobirana (`Rondes 1–27` · 4/4 models en Mac mini M4): [261106_0146_auditoria_node0_sobirana](../_wiki_de_poble/04_escriptori/261106_0146_auditoria_node0_sobirana.md)
+  - Llibre Mestre Permanent (`IDEA-72` a `IDEA-121` al dia): [03_llibre_mestre_tasques_i_idees](../_wiki_de_poble/04_escriptori/03_llibre_mestre_tasques_i_idees.md)
+- **Fites consolidades, pujades a `fork/backup-notes-publish` i desplegades en viu (`socdepoble.org` + `socdepoble.cat`):**
+  1. **`COMMIT R7a` (`f6d9ecc2f`, 90 fitxers) + `COMMIT R7b` (`62ded5ad9`, 8 fitxers):** Kits `R13–R19` de Codex arbitrats, `SquareBadge` davall de l'entradilla (`P0-27` / `IDEA-102`), scroll de «Drets d'autor» (`P0-28` / `IDEA-105`), veu local de la IAIA (`IDEA-108`: `veuIaiaService.js`, `veuNode0.js`, `BotoVeuIaia.jsx`), visor `/page/anatomia-rural` (`IDEA-109`), compilador determinista Karpathy (`karpathyWikiCompiler.js`), lèxic dialectal (`R14–R15` + `R19`) i contracte públic actualitzat a `45 capacitats i 136 mètodes amb 188 casos`.
+  2. **`COMMIT R8` (`70b651636`, 149 fitxers, `+10.198 / -431 línies`):**
+     - `G1 (R20)`: Opt-in E2EE per conversa en IndexedDB (`xifratXatOptin.js`, `xifratXatActivacio.js`), cerimònies de recuperació social alineades en 5 idiomes («6 paraules i 3 amics»), desbloqueig de fils en clar (`G1-12`), guarda de privacitat del traductor (`traductorLliure.js`) i demostrador interactiu del Compilador Karpathy (`AparadorFediversity.jsx`) en `/page/fediversity`, `/fedivers` i `/page/node-zero`.
+     - `G2 (R20b)`: Migració `2611052345_admin_usuaris_i_organitzacions.sql` reescrita com a invitació amb acceptació i auditoria append-only (`SDP-ORGMEM-006` blindat) + migració `2611060010_restauracio_municipal_opendata.sql` amb 78 migracions PGlite en verd.
+     - `G3 (R21 / IDEA-111)` + `G5 (R24)`: Hidratació *lazy* i revisió privada de les 10 pàgines de `socdepoble.net` (`PaginesTrilogiaWp.jsx`, `ImportacioPaginaWpNotes.jsx`), amb el correu de tercer retirat (`R8R-01`) i 47 imatges locals a `public/assets/importacio-wp/` verificades amb 0 coordenades GPS EXIF.
+     - `G4 (F1 / IDEA-109)`: `/page/anatomia-rural` (`VisorAnatomiaRural3D.jsx`, `anatomiaRural.js`) amb 9 estructures i 12 cotes verificades del Pou de Neu del Rentonar (`18 m = 15 m + 3 m`, `Ø 9,75/9,80 m`, galeria de `29 m`, boca de `43 cm`, font `WP #3656` Josep Maria Segura Martí) + vídeo d'Eugenio Monesma (`3RQv3xjVr-M`).
+     - `G6 (R22 + R25 / IDEA-110)`: `/page/herbari` (`HerbariLaTorreSection.jsx`, `herbariLaTorre117.js`, `PAGE_COPY.herbari`) amb les 117 espècies reals de La Canaleta, Parterres 1–4, cerca `l·l`, locutor de veu local i avisos de toxicitat en 5 idiomes.
+     - `G10 (r67 / P0-29 / IDEA-118 + IDEA-117)`: Restaurada la Barra Taronja canònica a `DetallEspai.jsx` (`Sóc de Poble` + `La Torre de les Maçanes` + avatar quadrat verd + `dataHoraDeBarra`), eliminats els `<h2>` duplicats, centrades les barres de botons (`justify-content: center`) a `modules.css` i activada `etiquetesBuidesPodades: true` per defecte a `tesaurusDoctoralSocDePoble.js`.
+  3. **Desplegament en viu i sincronització GitHub (`13:42–13:57 CET`):**
+     - Publicat a Firebase Hosting `live` (`socdepoble.org`, release `a99adc2f99140bc3`) i sincronitzat per `rsync` al Node 0 (`socdepoble.cat`), servint `/assets/index-BhqiZS2s.js` (`249.091 B` gzip < `250.000 B`).
+     - Verificat amb `sonda_p016.mjs` (Chrome headless), `sonda_pagines_remot.mjs` i `certifica-enllacos.mjs --remot` (`HTTP 200` en `/page/fediversity`, `/fedivers`, `/page/node-zero`, `/page/anatomia-rural`, `/page/herbari` i `/notes`).
+     - Pujada la cadena `d79a0b530..70b651636` (`R7a` + `R7b` + `R8`) a `fork/backup-notes-publish`.
+
+## ESTAT_ACTUAL · 2026-11-06T01:09:30+01:00 · IAIA MarIA · torn_db24cdce-ee25-486e-9ad7-1fc145038711 · Acta Marmota de Tancament (`261106_0105_acta_marmota_commit_r6_d79a0b530_arbre_genealogic_fediversity_superwhisper_i_marato_r7.md`), `COMMIT R6` (`d79a0b530`) Pujat a `fork/backup-notes-publish` i Marató Nocturna `Onada R7` (`IDEA-100` a `IDEA-107`) en Marxa
+
+- **Acta Marmota vigent:** [261106_1408_acta_marmota_commit_r7_r8_70b651636_fediversity_anatomia_herbari_i_onada_r9](../_wiki_de_poble/10_actes/261106_1408_acta_marmota_commit_r7_r8_70b651636_fediversity_anatomia_herbari_i_onada_r9.md) (anterior: [261106_0105_acta_marmota_commit_r6_d79a0b530_arbre_genealogic_fediversity_superwhisper_i_marato_r7](../_wiki_de_poble/10_actes/261106_0105_acta_marmota_commit_r6_d79a0b530_arbre_genealogic_fediversity_superwhisper_i_marato_r7.md)).
+- **Documents vius del Teler a l'Escriptori (`04_escriptori/`):**
+  - Pla d'Implementació (`Onada R6` completada + `Onada R7` `IDEA-100` a `IDEA-107`): [261104_1636_pla_implementacio_teler_node0_postgres_mastodon_xat_i_fediversity](../_wiki_de_poble/90_arxiu_historic/261104_1636_pla_implementacio_teler_node0_postgres_mastodon_xat_i_fediversity.md)
+  - Prompt Operatiu (`v1.5.0` · Marató Nocturna `Onada R7` per a Gemini, Codex, Claude i OpenCode Mac mini): [261104_1636_prompt_teler_node0_postgres_mastodon_xat_i_fediversity](../_wiki_de_poble/90_arxiu_historic/261104_1636_prompt_teler_node0_postgres_mastodon_xat_i_fediversity.md)
+  - Llibre Mestre Permanent (`IDEA-72` a `IDEA-107` al dia): [03_llibre_mestre_tasques_i_idees](../_wiki_de_poble/04_escriptori/03_llibre_mestre_tasques_i_idees.md)
+- **Fites consolidades i segellades (`COMMIT R6` · `d79a0b530` pujat a `fork/backup-notes-publish`):**
+  1. **`COMMIT R6` (`d79a0b530`, 211 fitxers, `+14.075 / −1.266 línies`):** Blocs 1 a 5 complets, Kit `r58` de Gemini, Kit `R12` de Codex, edició real al Bloc de Notes (`/notes`) per a publicacions del Mur/Esdeveniments/Projectes/Mercat (`P0-25`/`P0-26`), `VideoEditorial.jsx`, `DialegEnllacImatge.jsx`, targeta d'**Arbre Genealògic** amb vinyeta Ibáñez/Berlanga (`1600×900`), Dossier públic `/page/fediversity` en 5 llengües amb la governança d'IA explicada (`Z.ai · Qwen · Deepseek · Dola · Kimi · Claude · Perplexity · Mistral Vibe · Grok · Gemini · Copilot · ChatGPT Codex`), fotos pròpies de La Torre (`1.jpg` i `2.jpg`) i fix del `404` a `seguiments.js`.
+  2. **OpenCode (`iaia-maria-sobirana`) + Superwhisper Local (`Whisper Large v3 Turbo`):** Configurats i operatius al Mac amb valencià i castellà en local i sense traducció a l'anglès.
+  3. **Marató Nocturna `Onada R7` (`IDEA-100` a `IDEA-107` · Zero Botons per a l'Humà):** En curs amb Gemini (`r59+`), Codex (`R13+`), Claude (Auditora Adversarial 6% + relleu a les 11:00 a.m.) i OpenCode del Mac Mini sobre `/app/genealogia` (`IDEA-100`), Nomenclàtor de 8.132 municipis (`IDEA-101`), `SquareBadge` davall de l'entradilla i fora 3 xips d'`events` (`IDEA-102`), apartat `👥 Usuaris registrats` a Administració (`IDEA-103`), 100% de `/page/fediversity` completat i demostrat (`IDEA-104`), scroll de «Drets d'autor» (`IDEA-105`), Biblioteca Cultural Mode Jarvis MacBook → Mac mini Node 0 ↔ Google Drive ↔ NotebookLM 600 fonts (`IDEA-106`) i Base de Dades Dialectal a PostgreSQL 17 amb les 1.086 pàgines del *Tresor del valencià meridional* + *DCVB* + Joc Social a 2 Persones amb Whisper (`IDEA-107`).
+
 ## ESTAT_ACTUAL · 2026-11-05T22:18:00+01:00 · IAIA MarIA · torn_c8cd2144-3187-4eab-862a-6308997159cc · Integració `Onada R6` (`Bloc 1` a `Bloc 4` de Claude + Kits `R12` i `r58` + Auditoria Local `OpenCode` Mac mini M4), `/plugin/genealogia` (`IDEA-100` / `P2-06`) amb Vinyeta `1600 × 1600 px`, `IDEA-101` (8.132 Municipis) i Actualització de `/page/fediversity` amb l'Arquitectura i Ús de la IA
 
 - **Acta Marmota vigent:** [261105_1846_acta_marmota_integracio_r5_c49d173c4_idea91_a_idea97_i_relleu_fresc](../_wiki_de_poble/10_actes/261105_1846_acta_marmota_integracio_r5_c49d173c4_idea91_a_idea97_i_relleu_fresc.md).
 - **Documents vius del Teler a l'Escriptori (`04_escriptori/`):**
-  - Pla d'Implementació (`AH-01` a `AH-30` + `Onada R6` i `Onada R7`): [261104_1636_pla_implementacio_teler_node0_postgres_mastodon_xat_i_fediversity](../_wiki_de_poble/04_escriptori/261104_1636_pla_implementacio_teler_node0_postgres_mastodon_xat_i_fediversity.md)
-  - Prompt Operatiu (`v1.4.0` · Integració `Onada R6` i especificació `Onada R7`): [261104_1636_prompt_teler_node0_postgres_mastodon_xat_i_fediversity](../_wiki_de_poble/04_escriptori/261104_1636_prompt_teler_node0_postgres_mastodon_xat_i_fediversity.md)
-  - Auditoria Claude (`v1.8.0` · `Blocs 1–4` completats i verificats sobre 84 suites / 1.345 proves): `261104_1636_auditoria_claude`
-  - Auditoria Gemini (`v3.8.0` · Kit `r58` segellat i reconciliat): `261104_1636_auditoria_gemini`
-  - Auditoria Codex (`v3.8.0` · Kit `R12` segellat i reconciliat): `261104_1636_auditoria_codex`
+  - Pla d'Implementació (`AH-01` a `AH-30` + `Onada R6` i `Onada R7`): [261104_1636_pla_implementacio_teler_node0_postgres_mastodon_xat_i_fediversity](../_wiki_de_poble/90_arxiu_historic/261104_1636_pla_implementacio_teler_node0_postgres_mastodon_xat_i_fediversity.md)
+  - Prompt Operatiu (`v1.4.0` · Integració `Onada R6` i especificació `Onada R7`): [261104_1636_prompt_teler_node0_postgres_mastodon_xat_i_fediversity](../_wiki_de_poble/90_arxiu_historic/261104_1636_prompt_teler_node0_postgres_mastodon_xat_i_fediversity.md)
+  - Auditoria Claude (`v1.8.0` · `Blocs 1–4` completats i verificats sobre 84 suites / 1.345 proves): [261104_1636_auditoria_claude](../_wiki_de_poble/90_arxiu_historic/261104_1636_auditoria_claude.md)
+  - Auditoria Gemini (`v3.8.0` · Kit `r58` segellat i reconciliat): [261104_1636_auditoria_gemini](../_wiki_de_poble/90_arxiu_historic/261104_1636_auditoria_gemini.md)
+  - Auditoria Codex (`v3.8.0` · Kit `R12` segellat i reconciliat): [261104_1636_auditoria_codex](../_wiki_de_poble/90_arxiu_historic/261104_1636_auditoria_codex.md)
   - Llibre Mestre Permanent (`IDEA-72` a `IDEA-101` al dia): [03_llibre_mestre_tasques_i_idees](../_wiki_de_poble/04_escriptori/03_llibre_mestre_tasques_i_idees.md)
 - **Fites aconseguides i verificades (`18:50–22:18 CET`):**
   1. **Integració completa d'`Onada R6` (`Blocs 1–4` de Claude Opus Ultracode + Kit `R12` de Codex + Kit `r58` de Gemini + Auditoria Local `OpenCode` `Qwen 2.5 Coder 14B` al Mac mini M4):**
@@ -39,11 +96,11 @@ description: ESTAT DE LA SESSIÓ
 
 - **Acta Marmota vigent:** [261105_1846_acta_marmota_integracio_r5_c49d173c4_idea91_a_idea97_i_relleu_fresc](../_wiki_de_poble/10_actes/261105_1846_acta_marmota_integracio_r5_c49d173c4_idea91_a_idea97_i_relleu_fresc.md).
 - **Documents vius del Teler a l'Escriptori (`04_escriptori/`):**
-  - Pla d'Implementació (`AH-01` a `AH-30` + Inventari Consolidat dels Kits Nocturns): [261104_1636_pla_implementacio_teler_node0_postgres_mastodon_xat_i_fediversity](../_wiki_de_poble/04_escriptori/261104_1636_pla_implementacio_teler_node0_postgres_mastodon_xat_i_fediversity.md)
-  - Prompt Operatiu (`v1.2.0` · Ordre Matinal d'Integració per a Claude): [261104_1636_prompt_teler_node0_postgres_mastodon_xat_i_fediversity](../_wiki_de_poble/04_escriptori/261104_1636_prompt_teler_node0_postgres_mastodon_xat_i_fediversity.md)
-  - Auditoria Claude (`v1.6.0` · `COMMIT R5` `c49d173c4` integrat amb 484 fitxers i 0 escuts): `261104_1636_auditoria_claude`
-  - Auditoria Gemini (`v3.7.0` · Kits `r49`, `r55`, `r56` i `r57` segellats i fusionats): `261104_1636_auditoria_gemini`
-  - Auditoria Codex (`v3.7.0` · `R8`, `R9`, `R10` i `R11` segellats i fusionats): `261104_1636_auditoria_codex`
+  - Pla d'Implementació (`AH-01` a `AH-30` + Inventari Consolidat dels Kits Nocturns): [261104_1636_pla_implementacio_teler_node0_postgres_mastodon_xat_i_fediversity](../_wiki_de_poble/90_arxiu_historic/261104_1636_pla_implementacio_teler_node0_postgres_mastodon_xat_i_fediversity.md)
+  - Prompt Operatiu (`v1.2.0` · Ordre Matinal d'Integració per a Claude): [261104_1636_prompt_teler_node0_postgres_mastodon_xat_i_fediversity](../_wiki_de_poble/90_arxiu_historic/261104_1636_prompt_teler_node0_postgres_mastodon_xat_i_fediversity.md)
+  - Auditoria Claude (`v1.6.0` · `COMMIT R5` `c49d173c4` integrat amb 484 fitxers i 0 escuts): [261104_1636_auditoria_claude](../_wiki_de_poble/90_arxiu_historic/261104_1636_auditoria_claude.md)
+  - Auditoria Gemini (`v3.7.0` · Kits `r49`, `r55`, `r56` i `r57` segellats i fusionats): [261104_1636_auditoria_gemini](../_wiki_de_poble/90_arxiu_historic/261104_1636_auditoria_gemini.md)
+  - Auditoria Codex (`v3.7.0` · `R8`, `R9`, `R10` i `R11` segellats i fusionats): [261104_1636_auditoria_codex](../_wiki_de_poble/90_arxiu_historic/261104_1636_auditoria_codex.md)
   - Llibre Mestre Permanent (`IDEA-72` a `IDEA-97` al dia): [03_llibre_mestre_tasques_i_idees](../_wiki_de_poble/04_escriptori/03_llibre_mestre_tasques_i_idees.md)
 - **Fites resoltes i verificades (`17:13–17:45 CET`):**
   1. **`IDEA-94` · Restauració del Scroll Vertical i del Marc `UniversalPage` a `🛡️ Administració del sistema` (`/el-meu-perfil`) + Silenci del 404 Local de `/api/v1/node0/status`:** Embolcallats els 6 apartats d'administració dins de `<DetallAdministracio item={item}>` (`DetallEspai.jsx` + `PerfilShell.jsx` + `PerfilShell.css`), que aporta el contenidor `.sdp-universal-page-container--contained` amb scroll vertical complet a la Columna 3 del Perfil, i condicionat el `fetch('/api/v1/node0/status')` de `PanellsAdministracioSistema.jsx` a `socdepoble.cat` per eliminar els 2 errors `404 (Not Found)` de la consola a `localhost:3340`.
@@ -56,11 +113,11 @@ description: ESTAT DE LA SESSIÓ
 
 - **Acta Marmota vigent:** [261105_0148_acta_marmota_marato_node0_mastodon_r1_r3_kits_r31_r9_i_onada_r4](../_wiki_de_poble/10_actes/261105_0148_acta_marmota_marato_node0_mastodon_r1_r3_kits_r31_r9_i_onada_r4.md).
 - **Documents vius del Teler a l'Escriptori (`04_escriptori/`):**
-  - Pla d'Implementació (`AH-01` a `AH-30` + Inventari Consolidat dels Kits Nocturns): [261104_1636_pla_implementacio_teler_node0_postgres_mastodon_xat_i_fediversity](../_wiki_de_poble/04_escriptori/261104_1636_pla_implementacio_teler_node0_postgres_mastodon_xat_i_fediversity.md)
-  - Prompt Operatiu (`v1.2.0` · Ordre Matinal d'Integració per a Claude): [261104_1636_prompt_teler_node0_postgres_mastodon_xat_i_fediversity](../_wiki_de_poble/04_escriptori/261104_1636_prompt_teler_node0_postgres_mastodon_xat_i_fediversity.md)
-  - Auditoria Claude (`v1.6.0` · `COMMIT R5` `c49d173c4` integrat amb 484 fitxers i 0 escuts): `261104_1636_auditoria_claude`
-  - Auditoria Gemini (`v3.7.0` · Kits `r49`, `r55`, `r56` i `r57` segellats i fusionats): `261104_1636_auditoria_gemini`
-  - Auditoria Codex (`v3.7.0` · `R8`, `R9`, `R10` i `R11` segellats i fusionats): `261104_1636_auditoria_codex`
+  - Pla d'Implementació (`AH-01` a `AH-30` + Inventari Consolidat dels Kits Nocturns): [261104_1636_pla_implementacio_teler_node0_postgres_mastodon_xat_i_fediversity](../_wiki_de_poble/90_arxiu_historic/261104_1636_pla_implementacio_teler_node0_postgres_mastodon_xat_i_fediversity.md)
+  - Prompt Operatiu (`v1.2.0` · Ordre Matinal d'Integració per a Claude): [261104_1636_prompt_teler_node0_postgres_mastodon_xat_i_fediversity](../_wiki_de_poble/90_arxiu_historic/261104_1636_prompt_teler_node0_postgres_mastodon_xat_i_fediversity.md)
+  - Auditoria Claude (`v1.6.0` · `COMMIT R5` `c49d173c4` integrat amb 484 fitxers i 0 escuts): [261104_1636_auditoria_claude](../_wiki_de_poble/90_arxiu_historic/261104_1636_auditoria_claude.md)
+  - Auditoria Gemini (`v3.7.0` · Kits `r49`, `r55`, `r56` i `r57` segellats i fusionats): [261104_1636_auditoria_gemini](../_wiki_de_poble/90_arxiu_historic/261104_1636_auditoria_gemini.md)
+  - Auditoria Codex (`v3.7.0` · `R8`, `R9`, `R10` i `R11` segellats i fusionats): [261104_1636_auditoria_codex](../_wiki_de_poble/90_arxiu_historic/261104_1636_auditoria_codex.md)
   - Llibre Mestre Permanent (`IDEA-72` a `IDEA-93` al dia): [03_llibre_mestre_tasques_i_idees](../_wiki_de_poble/04_escriptori/03_llibre_mestre_tasques_i_idees.md)
 - **Fites aconseguides i verificades (`16:29–17:02 CET`):**
   1. **Integració de `COMMIT R5` (`c49d173c4` de Claude `Sonnet 5.5 Extra · Ultracode`, cost d'1% de quota setmanal: 93% → 94%):** Fusionats 484 camins dels Kits `R8`–`R11` de Codex i `r55`–`r57` de Gemini sobre `backup-notes-publish`, amb 0 escuts municipals (`IDEA-90`), `test:precommit` en verd (`301/301` Node) i `build:web` en `245.058 B gzip` (sota el sostre de `250.000 B`).
@@ -72,11 +129,11 @@ description: ESTAT DE LA SESSIÓ
 
 - **Acta Marmota vigent:** [261105_0148_acta_marmota_marato_node0_mastodon_r1_r3_kits_r31_r9_i_onada_r4](../_wiki_de_poble/10_actes/261105_0148_acta_marmota_marato_node0_mastodon_r1_r3_kits_r31_r9_i_onada_r4.md).
 - **Documents vius del Teler a l'Escriptori (`04_escriptori/`):**
-  - Pla d'Implementació (`AH-01` a `AH-30` + Inventari Consolidat dels Kits Nocturns): [261104_1636_pla_implementacio_teler_node0_postgres_mastodon_xat_i_fediversity](../_wiki_de_poble/04_escriptori/261104_1636_pla_implementacio_teler_node0_postgres_mastodon_xat_i_fediversity.md)
-  - Prompt Operatiu (`v1.2.0` · Ordre Matinal d'Integració per a Claude): [261104_1636_prompt_teler_node0_postgres_mastodon_xat_i_fediversity](../_wiki_de_poble/04_escriptori/261104_1636_prompt_teler_node0_postgres_mastodon_xat_i_fediversity.md)
-  - Auditoria Claude (`v1.5.0` · `COMMIT R4a` `064ec0137` aplicat i verificat): `261104_1636_auditoria_claude`
-  - Auditoria Gemini (`v3.7.0` · Kits `r49`, `r55`, `r56` i `r57` segellats): `261104_1636_auditoria_gemini`
-  - Auditoria Codex (`v3.7.0` · `R8`, `R9`, `R10` i `R11` segellats i aturat): `261104_1636_auditoria_codex`
+  - Pla d'Implementació (`AH-01` a `AH-30` + Inventari Consolidat dels Kits Nocturns): [261104_1636_pla_implementacio_teler_node0_postgres_mastodon_xat_i_fediversity](../_wiki_de_poble/90_arxiu_historic/261104_1636_pla_implementacio_teler_node0_postgres_mastodon_xat_i_fediversity.md)
+  - Prompt Operatiu (`v1.2.0` · Ordre Matinal d'Integració per a Claude): [261104_1636_prompt_teler_node0_postgres_mastodon_xat_i_fediversity](../_wiki_de_poble/90_arxiu_historic/261104_1636_prompt_teler_node0_postgres_mastodon_xat_i_fediversity.md)
+  - Auditoria Claude (`v1.5.0` · `COMMIT R4a` `064ec0137` aplicat i verificat): [261104_1636_auditoria_claude](../_wiki_de_poble/90_arxiu_historic/261104_1636_auditoria_claude.md)
+  - Auditoria Gemini (`v3.7.0` · Kits `r49`, `r55`, `r56` i `r57` segellats): [261104_1636_auditoria_gemini](../_wiki_de_poble/90_arxiu_historic/261104_1636_auditoria_gemini.md)
+  - Auditoria Codex (`v3.7.0` · `R8`, `R9`, `R10` i `R11` segellats i aturat): [261104_1636_auditoria_codex](../_wiki_de_poble/90_arxiu_historic/261104_1636_auditoria_codex.md)
   - Llibre Mestre Permanent (`IDEA-72` a `IDEA-90` al dia): [03_llibre_mestre_tasques_i_idees](../_wiki_de_poble/04_escriptori/03_llibre_mestre_tasques_i_idees.md)
 - **Estat en GitHub i Servidor Local (`HEAD 064ec0137`):**
   1. **`COMMIT R4a` (`064ec0137`) pujat a GitHub (`fork/backup-notes-publish`):** Conté el Kit `r31` de Gemini (`90 fitxers`: `AH-14` + `AH-15` + `AH-16`).
@@ -96,11 +153,11 @@ description: ESTAT DE LA SESSIÓ
 
 - **Acta Marmota vigent:** [261105_0148_acta_marmota_marato_node0_mastodon_r1_r3_kits_r31_r9_i_onada_r4](../_wiki_de_poble/10_actes/261105_0148_acta_marmota_marato_node0_mastodon_r1_r3_kits_r31_r9_i_onada_r4.md).
 - **Documents vius del Teler a l'Escriptori (`04_escriptori/`):**
-  - Pla d'Implementació (`AH-01` a `AH-26` + Govern FinOps): [261104_1636_pla_implementacio_teler_node0_postgres_mastodon_xat_i_fediversity](../_wiki_de_poble/04_escriptori/261104_1636_pla_implementacio_teler_node0_postgres_mastodon_xat_i_fediversity.md)
-  - Prompt Operatiu (`v1.1.0` · Onada R4): [261104_1636_prompt_teler_node0_postgres_mastodon_xat_i_fediversity](../_wiki_de_poble/04_escriptori/261104_1636_prompt_teler_node0_postgres_mastodon_xat_i_fediversity.md)
-  - Auditoria Claude (`v1.3.0` · `COMMIT R1–R3` `4ab2d1527` + Veredicte R6): `261104_1636_auditoria_claude`
-  - Auditoria Gemini (`v3.4.0` · Rondes 31–48 `AH-14` + `AH-15` + `AH-16` segellades): `261104_1636_auditoria_gemini`
-  - Auditoria Codex (`v3.5.2` · `R8` i `R9_resiliencia` segellats i Goal pausat): `261104_1636_auditoria_codex`
+  - Pla d'Implementació (`AH-01` a `AH-26` + Govern FinOps): [261104_1636_pla_implementacio_teler_node0_postgres_mastodon_xat_i_fediversity](../_wiki_de_poble/90_arxiu_historic/261104_1636_pla_implementacio_teler_node0_postgres_mastodon_xat_i_fediversity.md)
+  - Prompt Operatiu (`v1.1.0` · Onada R4): [261104_1636_prompt_teler_node0_postgres_mastodon_xat_i_fediversity](../_wiki_de_poble/90_arxiu_historic/261104_1636_prompt_teler_node0_postgres_mastodon_xat_i_fediversity.md)
+  - Auditoria Claude (`v1.3.0` · `COMMIT R1–R3` `4ab2d1527` + Veredicte R6): [261104_1636_auditoria_claude](../_wiki_de_poble/90_arxiu_historic/261104_1636_auditoria_claude.md)
+  - Auditoria Gemini (`v3.4.0` · Rondes 31–48 `AH-14` + `AH-15` + `AH-16` segellades): [261104_1636_auditoria_gemini](../_wiki_de_poble/90_arxiu_historic/261104_1636_auditoria_gemini.md)
+  - Auditoria Codex (`v3.5.2` · `R8` i `R9_resiliencia` segellats i Goal pausat): [261104_1636_auditoria_codex](../_wiki_de_poble/90_arxiu_historic/261104_1636_auditoria_codex.md)
   - Llibre Mestre Permanent (`IDEA-74` a `IDEA-84`): [03_llibre_mestre_tasques_i_idees](../_wiki_de_poble/04_escriptori/03_llibre_mestre_tasques_i_idees.md)
 - **Estat en producció (`HEAD 4ab2d1527` desplegat a `https://socdepoble.org` i `https://socdepoble.cat`, bundle `index-yR1QQLN5.js`):**
   1. **`COMMIT R3` (`4ab2d1527`) en viu:** Fusió del kit `v3.0.0` de Gemini (`AH-01` a `AH-12`: 8 verticals de publicació, estudi de 10 eixos de Mastodon `AGPLv3`, 17 correccions d'`AH-04` i 2 claus i18n noves), amb `1.830` fitxers Vitest (`32.700` proves en verd) i sonda de consola en producció (`48` visites, `0 errors`, `0 avisos`).

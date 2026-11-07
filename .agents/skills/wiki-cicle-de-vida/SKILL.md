@@ -42,10 +42,12 @@ En acabar, tanca processos, sessions i temporitzadors que hages creat per a la t
 
 El procés únic uneix Llibre Mestre, retenció, pla i prompt. Marca FET només els ítems verificats i trasllada al pla següent els pendents amb la font citada. Un commit o un pla nou no consumix informes encara necessaris: conserva cada consumidor, torn vigent o retenció acreditada. MarIA aplica el procediment mecànic de [[core-higiene-escriptori/SKILL|core-higiene-escriptori]] només als consumits, primer en mode sec, després amb el relleu de rebut que corresponga. Crea el pla abans dels prompts pel circuit de [[wiki-documentacio-i-reflex/SKILL|wiki-documentacio-i-reflex]] i verifica portes i motius de retenció abans de convocar. No reescrigues rebuts tancats ni buides la taula.
 
-## Retenció i memòria
+## Retenció, memòria i cristal·lització (forja de skills i forja documental · `IDEA-130`)
 
 La plantilla d’acta és `_wiki_de_poble/03_actuar/plantilles/acta.md`. Inclou inici, final observat, resultats i següent acció. No inventes mètriques d’eficiència ni d’estat humà. El coneixement consultiu viu a [[memoria_aprenentatges]].
-El Somiador requerix un encàrrec explícit; no mou documents ancorats ni vinculats a torns. No s’executa per a fabricar un verd. No hi ha purga per antiguitat ni escriptures en `01_produccio` sense ordre explícita.
+- **Etiquetatge d'aprenentatges (`[DECISION]`, `[SEQUENCE]`, `[CORRECTION]`, `[DEADEND]`, `[CONVENTION]`, `[DISCOVERY]`, `[CHECKPOINT]`):** En fer una auto-compactació al 75% de fatiga (`[CHECKPOINT]`) o en redactar l'Acta Marmota de tancament, etiqueta les lliçons apreses durant el torn segons l'esquema de [[core-automillora/SKILL|core-automillora]] perquè qualsevol `[CORRECTION]` del Mestre o `[DEADEND]` tècnic puga cristal·litzar-se en la skill corresponent sense perdre el rastre entre sessions.
+- **Auditoria d'evidència (`evidence-audit` / Llei 0):** Cap ítem d'una acta, informe o llibre mestre es marca com a verificat sense indicar la comanda real executada, el recompte observat i el hash o ruta del rebut.
+- El Somiador requerix un encàrrec explícit; no mou documents ancorats ni vinculats a torns. No s’executa per a fabricar un verd. No hi ha purga per antiguitat ni escriptures en `01_produccio` sense ordre explícita.
 
 ## Lliçons del Mestre
 

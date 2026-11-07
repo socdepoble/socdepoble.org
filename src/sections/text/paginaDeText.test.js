@@ -84,7 +84,7 @@ test('/fedivers es resol per la ruta i per /page/fedivers, i el cos comença en 
     ['https://socdepoble.org', 'socdepoble.org'], ['https://gentdelatorre.net', 'gentdelatorre.net'],
     ['https://socdepoble.cat', 'socdepoble.cat'], ['https://socdepoble.cat/api/v1/node0/status', 'API pública d’estat'],
     ['https://mastodont.cat/@depoble', '@depoble@mastodont.cat'], ['/notes', 'Bloc de Notes'],
-    ['/mur', 'Mur del Poble'], ['/mercat', 'Mercat Local'], ['/calendari', 'Calendari i Agenda'],
+    ['/mur', 'Mur de Poble'], ['/mercat', 'Mercat Local'], ['/calendari', 'Calendari i Agenda'],
     ['/mapa', 'Mapa del Territori'], ['/page/treball', 'Treball'], ['/page/habitatge', 'Habitatge'],
     ['/pobles', 'Pobles'], ['/page/node-zero', 'Node 0 · Mac mini M4'], ['https://socdepoble.cat', 'socdepoble.cat'],
     ['https://socdepoble.org', 'socdepoble.org'], ['https://gentdelatorre.net', 'gentdelatorre.net'],

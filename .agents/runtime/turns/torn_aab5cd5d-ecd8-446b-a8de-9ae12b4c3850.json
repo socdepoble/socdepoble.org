@@ -3,10 +3,10 @@
   "turn_id": "torn_aab5cd5d-ecd8-446b-a8de-9ae12b4c3850",
   "actor": "Codex",
   "scope": "code",
-  "state": "context_loaded",
-  "revision": 9,
+  "state": "closed",
+  "revision": 10,
   "createdAt": "2026-11-03T22:49:12.983Z",
-  "updatedAt": "2026-11-04T15:25:15.831Z",
+  "updatedAt": "2026-11-07T02:00:38.210Z",
   "expiresAt": "2026-11-04T22:49:12.985Z",
   "contractHash": "991dd78cf520045e1a0a0144bc2a0efc35d43623f2ebc4d04bb99b623fdd45e5",
   "humanInventoryVersion": 1,
@@ -4801,6 +4801,12 @@
           "to": "_wiki_de_poble/90_arxiu_historic/261103_2350_pla_tancament_verificat_codex_fediversity.md"
         }
       ]
+    },
+    {
+      "state": "closed",
+      "action": "expire-close",
+      "previousState": "context_loaded",
+      "at": "2026-11-07T02:00:38.210Z"
     }
   ],
   "ownedPaths": [
@@ -4816,5 +4822,10 @@
     "_wiki_de_poble/04_escriptori/261103_1604_auditoria_codex_gauntlet_fediversity.md",
     "_wiki_de_poble/04_escriptori/261103_1624_auditoria_claude.md",
     "_wiki_de_poble/04_escriptori/261103_2350_pla_tancament_verificat_codex_fediversity.md"
-  ]
+  ],
+  "closure": {
+    "reason": "expired",
+    "at": "2026-11-07T02:00:38.210Z",
+    "previousState": "context_loaded"
+  }
 }

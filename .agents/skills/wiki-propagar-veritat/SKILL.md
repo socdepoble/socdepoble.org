@@ -38,12 +38,15 @@ Prepara un diff sobre els fitxers declarats, preservant els exemples, cites i re
 
 Si hi ha treball concurrent sobre un fitxer, coordina la propietat i torna a llegir-ne la versió abans d’aplicar el pegat. Claude i Codex preparen i verifiquen els canvis de codi; la classificació i els moviments de documents corresponen a `core-higiene-escriptori` i no són part d’esta skill.
 
-## 4. Aplicar i verificar
+## 4. Aplicar, sincronitzar per diff i verificar (`IDEA-130`)
 
 1. Aplica el pegat autoritzat pel carril d’execució vigent; esta skill no substituïx les portes ni els controls d’abast.
 2. Revisa el diff i comprova que només han canviat els fitxers declarats. Verifica explícitament que l’arxiu i les zones protegides s’han conservat.
 3. Repetix la cerca dins de la mateixa superfície i executa les comprovacions corresponents al canvi. Declara els rastres pendents amb la seua ruta i motiu; zero coincidències no acredita coherència semàntica completa.
 4. Si la decisió afecta plantilles, rutes o metadades, reconcilia `.agents/protocolledge.json` i els seus consumidors dins de l’abast autoritzat. La creació i el rebut documental continuen en `wiki-documentacio-i-reflex`; no dupliques eixe circuit ací.
+5. **Sincronització diferencial per Git i detecció de *Gaps* (`tooling/wiki/wiki-forja-lint.mjs`, adaptat de `juanitourquiza/shipframe`, MIT):**
+   - Quan es consolida un commit d’onada que modifica superfícies amb impacte documental (`src/data/**`, `supabase/migrations/**`, `src/config/**`, `.agents/skills/**`), inspecciona el `git log <last-hash>..HEAD --name-status` per identificar quines pàgines de `_wiki_de_poble/02_saber/` han d’ampliar-se (sense reescriure-les de zero).
+   - Quan s’ingereix un corpus nou a `04_escriptori/01_produccio/` o `_cultura_de_poble/` (intocable en cru), vincula’l des d’una pàgina pont o índex de `_wiki_de_poble/02_saber/` i revisa si hi ha *Gaps* (conceptes estructurals repetits en actes o auditories que encara no tenen pàgina canònica pròpia a `02_saber/`).
 
 ## Vincles
 

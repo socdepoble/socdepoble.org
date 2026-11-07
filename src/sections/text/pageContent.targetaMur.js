@@ -34,7 +34,7 @@ const grupDeLaTargeta = (llengua) => [
   '<div data-sdp-targetes="" class="sdp-targetes" data-forma="sola" data-alineacio="dreta">',
   `<div data-sdp-targeta="${CLAU_PRIMERA_TARGETA_FEDIVERSITY}" class="sdp-targeta" data-ruta="${RUTA_PRIMERA_TARGETA_FEDIVERSITY}"${llengua ? ` lang="${llengua}"` : ''}`,
   ` data-titol="${atribut(PUBLICACIO.title)}" data-subtitol="${atribut(PUBLICACIO.post_subtitle)}"`,
-  ` data-entradilla="${atribut(PUBLICACIO.entradilla)}" data-autor="${atribut(PUBLICACIO.author_name)}" data-autor-ruta="/projecte">`,
+  ` data-entradilla="${atribut(PUBLICACIO.entradilla)}"${PUBLICACIO.image_url ? ` data-imatge="${atribut(PUBLICACIO.image_url)}"` : ''} data-autor="${atribut(PUBLICACIO.author_name)}" data-autor-ruta="/projecte">`,
   `<a href="${RUTA_PRIMERA_TARGETA_FEDIVERSITY}" rel="noopener noreferrer nofollow">${atribut(PUBLICACIO.title)}</a>`,
   '</div></div>'
 ].join('');

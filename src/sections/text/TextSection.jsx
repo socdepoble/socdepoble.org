@@ -12,6 +12,7 @@ import { lazy, Suspense, useMemo } from 'react';
 import { useUIActions } from '../../app/contexts/UIContext';
 import { localitzaPagina } from './pageContent.r10.js';
 const AparadorFediversity=lazy(()=>import('./AparadorFediversity.jsx'));
+const ConsolaIncrustada=lazy(()=>import('../consola/ConsolaSection.jsx').then((m)=>({default:m.ConsolaIncrustada})));
 import { useSEO } from '../../hooks/useSEO';
 import { resolveAsset, resolRecursosDeHtml } from '../../config/assetResolver.js';
 import { esAppNativa } from '../../config/origenPublic.js';
@@ -178,6 +179,7 @@ export default function TextSection({ page: original, pageKey, accioPrincipal = 
     >
       <CosDeLaPagina html={page.html} />
       {pageKey==='fedivers'&&<Suspense fallback={null}><AparadorFediversity language={language}/></Suspense>}
+      {pageKey==='node-zero'&&<Suspense fallback={null}><section className="cms-preview" data-testid="node-zero-consola-incrustada-section"><ConsolaIncrustada/></section></Suspense>}
       {children}
     </UniversalPage>
   );

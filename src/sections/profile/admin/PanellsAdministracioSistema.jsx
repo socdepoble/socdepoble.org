@@ -422,6 +422,44 @@ export function PanellNodesFediversResiliencia() {
           </Link>
         </div>
       </section>
+
+      <section
+        className="sdp-admin-taxonomia__panel"
+        aria-label="Funcionament del Node 0, les 4 IAIAs Sobiranes, Revisor Editorial i la Consola Incrustada"
+        data-testid="admin-node0-explicatiu-consola"
+      >
+        <div className="sdp-admin-node0-head">
+          <div>
+            <h3>🧠 Com funciona el Node 0 (Mac mini M4), les 4 IAIAs Revisores i la Consola Incrustada</h3>
+            <p className="sdp-muted">
+              El servidor físic local (<code>socdepoble.cat</code> · Mac mini M4) coordina les 4 IAIAs sobiranes, el Sentinella Diari de Skills (<code>43/43</code>) i la Mesa de Revisió Editorial.
+            </p>
+          </div>
+          <Insignia to="primari">43/43 Skills · 3/3 Vigilants</Insignia>
+        </div>
+        <dl className="sdp-admin-dl">
+          <dt>1 · Servidor Domèstic i 4 IAIAs Sobiranes</dt>
+          <dd>
+            El <strong>Mac mini Apple M4</strong> executa en local (zero cost de tòkens) les 4 IAIAs sobiranes (<code>iaia-maria:latest</code>, <code>qwen3:8b</code>, <code>qwen2.5-coder:14b</code> i <code>nemotron-mini:latest</code>) per a auditar l’arquitectura i les 43 skills.
+          </dd>
+          <dt>2 · Mesa de Revisió Editorial i Sentinella Diari de Skills</dt>
+          <dd>
+            Les 4 IAIAs actuen com a <strong>Revisores Editorials</strong> (ortografia, gramàtica, lèxic genuí, Llei «DE POBLE», detecció de duplicitats i proposta de redacció millorada tant per al sistema com per als usuaris) i vigilen diàriament el segell criptogràfic <code>.agents/SKILLS_SEAL.json</code> i el dimoni <code>org.socdepoble.higiene</code>.
+          </dd>
+          <dt>3 · Consola Termodinàmica Incrustada en Directe a l’Article del Mac mini</dt>
+          <dd>
+            A partir d’este apartat, el component <code>&lt;ConsolaIncrustada /&gt;</code> està incrustat en directe dins de l’article publicat del Mac mini M4 (<code>/page/node-zero</code>) perquè qualsevol veí o avaluador puga vore el cervell i les 43 skills funcionant en temps real.
+          </dd>
+        </dl>
+        <div className="sdp-admin-actions-inline sdp-admin-actions-inline--separat-ampli">
+          <Link className="sdp-boto sdp-boto--primari" to="/page/node-zero">
+            Vore l’article del Mac mini amb la Consola en directe (/page/node-zero)
+          </Link>
+          <Link className="sdp-boto sdp-boto--secundari" to="/consola">
+            Obrir la Consola Termodinàmica completa (/consola)
+          </Link>
+        </div>
+      </section>
     </article>
   );
 }

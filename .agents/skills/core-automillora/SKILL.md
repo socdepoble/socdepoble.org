@@ -38,16 +38,21 @@ Quan ocorre una fallada, un malentés o una fricció en qualsevol part del siste
   4. **Com es fixa al sistema?** Corregeix dins del carril autoritzat i afegix una prova del comportament que fallava. Fora d'abast, deixa una proposta CAS i el responsable; no afegisques una regla permanent només per un incident ni prometes que no tornarà a passar.
 - **El Repte per a Claude i Codex:** Aquesta mateixa disciplina és exigible a Claude i Codex en cada auditoria o implementació. No volem respostes complaents ni pedaços ràpids; volem enginyeria de sistemes resilient i d'arrel.
 
-## 4. El Tractor Cognitiu de l'Automillora
+## 4. El Tractor Cognitiu de l'Automillora i la Forja d'Etiquetes (`IDEA-130`)
 - Avalua de manera contínua si hi ha casos d'ús repetitius, deute tècnic acumulat o patrons refactoritzables.
 - Informa obertament al Mestre de les deteccions o troballes perquè decidisca si val la pena destil·lar eixe codi o mecanisme.
 - No toleris la mediocritat (ex. permetre acumulació indefinida d'errors Linter sense tractar). Sigues proactiva.
+- **Esquema de 7 Etiquetes d'Enrutament cap a Skill (adaptat de `Mfrostbutter/skill_forge`, MIT):** En registrar aprenentatges a les auditories de torn, a [[memoria_aprenentatges]] o a les Actes Marmota, classifica cada lliçó amb una de les **7 etiquetes canòniques** perquè la seua cristal·lització en `.agents/skills/` siga mecànica:
+  1. **`[DECISION]`** (què s'ha fet i per què) + **`[SEQUENCE]`** (X ha d'anar obligatòriament abans que Y) ➔ s'enruten com a **passos imperatius ordenats** del procediment de la skill.
+  2. **`[CORRECTION]`** (quan el Mestre et corregeix o rectifica un enfocament) + **`[DEADEND]`** (vam provar X i va fallar per Y) ➔ s'enruten com a **Guardrails / Prohibicions explícites** amb el seu motiu en 1 línia; tot `[DEADEND]` que haja bloquejat un torn puja com a **Pas 1 preventiu** del procediment perquè no es puga repetir.
+  3. **`[CONVENTION]`** (nomenclatura, estructura, paràmetres, valors per defecte) + **`[DISCOVERY]`** (particularitat d'una eina, límit d'API o porta com `design_guard.mjs`) ➔ s'enruten a les **notes de referència i compatibilitat**.
+  4. **`[CHECKPOINT]`** (instantània d'estat abans de comprimir el context al 75% de fatiga o tancar torn) ➔ actua com a **àncora de represa** sense pèrdua de memòria.
 
 ## FLUX D'EXECUCIÓ (L'acte reflex)
 Quan la persona assenyale una fallada, repetisca una correcció o demane neteja ("Zafarrancho"):
 1. Repassa l’objectiu i l’evidència abans d’editar.
-2. Analitza la persistència del Mestre i converteix-la en una "Detecció de Patró".
-3. Proposa i executa amb criteris de Mimetisme Empàtic.
+2. Analitza la persistència del Mestre, etiqueta la lliçó (`[CORRECTION]`, `[DEADEND]`, `[SEQUENCE]`, `[CONVENTION]`, `[DISCOVERY]`) i converteix-la en una "Detecció de Patró".
+3. Proposa i executa amb criteris de Mimetisme Empàtic i Llei 0 (Sinceritat Radical).
 
 ## Vincles
 - [[00_INDEX_SKILLS]]

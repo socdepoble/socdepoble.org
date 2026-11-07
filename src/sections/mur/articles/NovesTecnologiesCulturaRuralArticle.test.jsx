@@ -50,9 +50,9 @@ describe('la primera publicació del Mur', () => {
     // ni una data inventada; sense publish_date, que manaria sobre la de prova.
     expect(POST.created_at).toBe('2026-11-06T14:29:00+01:00');
     expect(POST.publish_date).toBeUndefined();
-    // Cap portada: cap foto de tercers (Decisió 3).
-    expect(POST.image_url).toBeUndefined();
-    expect(FEED_POSTS.find((item) => item.id === POST.id).imageSrc).toBeFalsy();
+    // Portada Ibáñez pròpia generada per al Pou de la Neu, l'almàssera i el forn de calç (cap foto de tercers).
+    expect(POST.image_url).toBe('/assets/uploads/patrimoni/anatomia-rural-pou-neu-ibanez.webp');
+    expect(FEED_POSTS.find((item) => item.id === POST.id).imageSrc).toBe('/assets/uploads/patrimoni/anatomia-rural-pou-neu-ibanez.webp');
   });
 
   test('amb les dates de prova del Mur és la més nova de totes les targetes de la llavor', () => {
@@ -176,7 +176,7 @@ describe('l’article', () => {
     const item = FEED_POSTS.find((post) => post.id === POST.id);
     const meta = buildMurDetailSectionMeta({ feedPosts: FEED_POSTS, t: (_, reserva) => reserva });
     expect(meta.items).toContain(item);
-    expect(meta.getImage(item)).toBeNull();
+    expect(meta.getImage(item)).toBe('/assets/uploads/patrimoni/anatomia-rural-pou-neu-ibanez.webp');
     const { container } = render(meta.renderBody(item));
     await waitFor(() => expect(container.querySelector('section.reproductor-pou')).not.toBeNull(), { timeout: 10000 });
     expect(container.querySelector('.noves-tecnologies-rural')).not.toBeNull();

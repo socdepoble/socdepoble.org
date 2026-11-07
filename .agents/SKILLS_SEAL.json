@@ -1,10 +1,10 @@
 {
-  "timestamp": "2026-11-05T21:27:06.731Z",
-  "hash": "76092c5a1f3d7dc229b7e7cd4b2e0836bf97111746bd45a86f0b8285cc72be38",
+  "timestamp": "2026-11-07T02:59:36.229Z",
+  "hash": "d11a0ddc633ace741809cb9b8fa2f9dffd6f4b2fcad3f046e4d0949566599102",
   "filesCount": 44,
   "manifest": {
     ".agents/skills/00_INDEX_SKILLS.md": "b439baf81efaa56f2fa581b54a9950c4d855ac1de158c5342616792441f2e5d0",
-    ".agents/skills/core-automillora/SKILL.md": "ebd713523f4016956a0039fecc49ffed971d0b9b660b1eded861766b05a0389c",
+    ".agents/skills/core-automillora/SKILL.md": "bbd92b5d1252788fda100b1b2973f3643acaaeaa0cb33c731c1cc5cbeceb4a56",
     ".agents/skills/core-calibratge-visual-nano/SKILL.md": "07dece6a7fb4e54296c2f3180df07f56da9cf39bb9664edf4b43aba568a0673a",
     ".agents/skills/core-comprensio-reflexiva/SKILL.md": "2eb05336863e420ccd26e773d6e6b0c2e91785c94699ebecef745238f8e1dbb9",
     ".agents/skills/core-consell-i-colmena/SKILL.md": "1cc9d40a959191f659b3f4b3901da8b141345afa4fc954ff1dff597a076e258b",
@@ -13,12 +13,12 @@
     ".agents/skills/core-edicio-segura/SKILL.md": "ea6130b683b61a08fcb7dda49f6ba7a19eb7b7f76f44231340b2d8c2cec5cdd9",
     ".agents/skills/core-empaquetat-wp/SKILL.md": "5bbc76b39921a4309b1b3e55bf3be0f92dd4bf31f130034d939cde7fbff5260c",
     ".agents/skills/core-estrategia-ia/SKILL.md": "13a12ed12f4e78ac2c62109aaaaa23f740ac0603168118ebf9764c81750e6a62",
-    ".agents/skills/core-gauntlet-loop/SKILL.md": "8a3401c12cdd9a5f7390ed162617a8bfded2a4cb8aa70007d75d1051a335e829",
+    ".agents/skills/core-gauntlet-loop/SKILL.md": "a4946c507d9e79bc86f4a43297435ca5f55a036d7982610d33b3c2d1859bc0e8",
     ".agents/skills/core-higiene-escriptori/SKILL.md": "5c51af1bda339dc4620a71468bc917c00d8d887e6504f07fc30718944d8fe7f4",
     ".agents/skills/core-identitat-visual/SKILL.md": "55f4dd35ecc8cfd7b45e2005ce5d112e4b9869a063c23c28afe03a2ed78ea829",
-    ".agents/skills/core-identitat/SKILL.md": "30ff715722347735a08c6c8003de9164a81b28cde4fed671d1f58841f6cdb330",
+    ".agents/skills/core-identitat/SKILL.md": "14f61f3a44616905a564ce1ceb8127eeb7be2bed7df47411026c32bec6532be2",
     ".agents/skills/core-informes-pdf/SKILL.md": "4a7efdfd01194bede623da4b74f95256802344a0a678d4cf42da3219e1f47c54",
-    ".agents/skills/core-llegibilitat-text/SKILL.md": "4bbedcd7d4fb857570d7951f31211d886690d2c9e6389d9994c2310755ae983a",
+    ".agents/skills/core-llegibilitat-text/SKILL.md": "c2777329afe912b40f4080000b8db471d7c790605fe2443c118245783d6b6382",
     ".agents/skills/core-maquetacio-markdown/SKILL.md": "d291b21e1bc1e09ce501e2bce115d5b008a19e2f9d4d384ec097c46eb6ee6fd3",
     ".agents/skills/core-memoria-historica/SKILL.md": "227ae95cc465b4a527ec35cd92393580146324a751524b66a4143c9a531acf8f",
     ".agents/skills/core-neteja-brossa/SKILL.md": "5f445715dd85b762a17e8fd39c30ba7692a6fff917153a033c3a589995e6a260",
@@ -37,16 +37,16 @@
     ".agents/skills/sdp-clon-loiverse/SKILL.md": "0af9f6d0a258ce69d61fd56b779ee1d8401bc9c58d616365ac8b3da051c92d8b",
     ".agents/skills/sdp-clon-whatsapp/SKILL.md": "70acacaaa8501ae05fa071dd5601a2006266ecc432a14b73222178ede6760893",
     ".agents/skills/sdp-estudi-mercat/SKILL.md": "d7dccd1b065cd51d9c3e09dd9e5de54be7d02a1e026c96cfb4c99722a7eadb94",
-    ".agents/skills/sdp-importacio-editorial/SKILL.md": "d995b9a166b44f8d2fd47679506e5d415bdd74e133fb624be68c39603710ccfb",
-    ".agents/skills/sdp-pedra-seca/SKILL.md": "ccc8c9ff7a3070e21a1c6d06b33de9d0c8fa8ece5d312c00592c2c89f7ef8948",
+    ".agents/skills/sdp-importacio-editorial/SKILL.md": "d6a8b56de8c0603dba84ffe5b44bc168ca740317d9364162be5967a203200c10",
+    ".agents/skills/sdp-pedra-seca/SKILL.md": "f656470401357b1ddbd40cff0b032d54c3356a6f839fb81b2642cb3f89595db1",
     ".agents/skills/sdp-universal-editor/SKILL.md": "ac16dbc017344c3fefbc206218b44af9ee84ffee16ccd9ecda09770262989b9d",
-    ".agents/skills/sdp-universal-page/SKILL.md": "fe4843cae065ed76298ce9b81406824f8502524b6d1bbf4ba5b75eff77c27807",
+    ".agents/skills/sdp-universal-page/SKILL.md": "df53d776e40cf13a813ee6989152e56528a156402ec7498fcd1486861c855bee",
     ".agents/skills/sdp-vigilant-tellado/SKILL.md": "78b6d7bec4015c5fc11126f95eea186486d4c166122aff2b75f6fe8b67ad987c",
     ".agents/skills/sdp-workflow/SKILL.md": "30fb3978bd59303d970cbcbfc189bb262d2dfac6eda83f2c2d27ff6f8af1950b",
     ".agents/skills/wiki-busca-skills/SKILL.md": "11a6a67cf6e44957e3fe77eb999635503a986f2ea34cbe8ee8a8d5d0022517ff",
-    ".agents/skills/wiki-cicle-de-vida/SKILL.md": "2ae90a27e098d6650a4b23f299772c9f2f887480dc93adc52f3e02b8b45df3ec",
+    ".agents/skills/wiki-cicle-de-vida/SKILL.md": "7ff7d78e75fd08fe8158f2e55c842d0734bf75367fec2871356a480bf9b9401a",
     ".agents/skills/wiki-documentacio-i-reflex/SKILL.md": "763f5f7c69406da008f196e4f944fa063d1cd404b8a12016e31fdd164e46b8bb",
-    ".agents/skills/wiki-propagar-veritat/SKILL.md": "8092c14a4d4496156fee8dd4f37067a455dc0a1fc50876241942c4dc5276017b"
+    ".agents/skills/wiki-propagar-veritat/SKILL.md": "40d6bd46a45395327f51535581dddacfeaa7f1b1269cc37ab97aebf904e69947"
   },
-  "transaction": "2bd91d30-b6f4-4bda-bd06-284e35ffd790"
+  "transaction": "8e0fdb5a-17e6-4f10-9544-a702edc27520"
 }

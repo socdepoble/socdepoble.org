@@ -3,10 +3,10 @@
   "turn_id": "torn_73df43cb-e9c8-47f3-8c99-857669036387",
   "actor": "Codex",
   "scope": "code",
-  "state": "planned",
-  "revision": 6,
+  "state": "closed",
+  "revision": 7,
   "createdAt": "2026-11-03T02:19:50.555Z",
-  "updatedAt": "2026-11-03T13:12:02.623Z",
+  "updatedAt": "2026-11-07T02:00:38.210Z",
   "expiresAt": "2026-11-04T02:19:50.556Z",
   "contractHash": "1839756fa153a68d945b48956d870a4a082ab80adcf874a04dd10fc1327d8c45",
   "humanInventoryVersion": 1,
@@ -4591,6 +4591,12 @@
           "to": "_wiki_de_poble/90_arxiu_historic/261102_1836_auditoria_maria.md"
         }
       ]
+    },
+    {
+      "state": "closed",
+      "action": "expire-close",
+      "previousState": "planned",
+      "at": "2026-11-07T02:00:38.210Z"
     }
   ],
   "relocated": [
@@ -4600,5 +4606,10 @@
     "_wiki_de_poble/04_escriptori/261102_1640_auditoria_claude.md",
     "_wiki_de_poble/04_escriptori/261102_1832_auditoria_gemini.md",
     "_wiki_de_poble/04_escriptori/261102_1836_auditoria_maria.md"
-  ]
+  ],
+  "closure": {
+    "reason": "expired",
+    "at": "2026-11-07T02:00:38.210Z",
+    "previousState": "planned"
+  }
 }

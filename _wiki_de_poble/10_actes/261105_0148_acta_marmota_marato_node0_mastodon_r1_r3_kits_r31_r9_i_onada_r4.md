@@ -99,6 +99,6 @@ requereix_auditoria: true
 
 - [[00_index]]
 - [[00_index_escriptori]]
-- [[../04_escriptori/261104_1636_pla_implementacio_teler_node0_postgres_mastodon_xat_i_fediversity]]
-- [[../04_escriptori/261104_1636_prompt_teler_node0_postgres_mastodon_xat_i_fediversity]]
+- [[../90_arxiu_historic/261104_1636_pla_implementacio_teler_node0_postgres_mastodon_xat_i_fediversity|../04_escriptori/261104_1636_pla_implementacio_teler_node0_postgres_mastodon_xat_i_fediversity]]
+- [[../90_arxiu_historic/261104_1636_prompt_teler_node0_postgres_mastodon_xat_i_fediversity|../04_escriptori/261104_1636_prompt_teler_node0_postgres_mastodon_xat_i_fediversity]]
 - [[../04_escriptori/03_llibre_mestre_tasques_i_idees]]

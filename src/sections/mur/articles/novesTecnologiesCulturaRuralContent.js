@@ -51,6 +51,7 @@ export const NOVES_TECNOLOGIES_FONTS = Object.freeze([
 export const NOVES_TECNOLOGIES_CULTURA_RURAL_HTML = [
   '<h3>Per què un pou de neu en 3D</h3>',
   '<p>Les <strong>noves tecnologies</strong> també servixen per a entendre el <strong>patrimoni rural</strong>. Damunt d’este text, un <strong>esquema isomètric</strong> generat amb codi desmunta el <strong>Pou de Neu del Rentonar</strong>, a <strong>La Torre de les Maçanes</strong>: cap fotografia, i cada xifra amb la seua <strong>font</strong>. Quan dues fonts <strong>no coincidixen</strong>, ho diem.</p>',
+  '<p><strong>Nota sobre les imatges i els models:</strong> no vos espanteu si veieu il·lustracions o esquemes <strong>experimentals</strong>; encara no pretenem que siguen exactes al mil·límetre, sinó que estem <strong>provant maneres de fer</strong> les coses dins de <strong>Sóc de Poble</strong>.</p>',
   '<h3>Què diu l’estudi</h3>',
   '<blockquote><p>«autèntics magatzems de neu amb què abastir els pobles durant l’estiu»</p></blockquote>',
   `<p>Així definix els pous de neu <strong>Josep Mª Segura Martí</strong>, del Museu Arqueològic Municipal d’Alcoi, a l’article que ${enllac('https://socdepoble.net/2020/04/17/el-pou-de-la-neu-del-rentonar/', 'Sóc de Poble conserva')}, amb les dades del seu treball a la revista <em>Eines</em> (<strong>1987</strong>). El pou està a <strong>1.160 m</strong>, té un <strong>túnel</strong> d’accés al sud i una <strong>galeria de desguàs</strong> de <strong>29 m</strong>, i els documents en parlen de <strong>1724</strong> a <strong>1880</strong>.</p>`,
@@ -78,6 +79,8 @@ export const NOVES_TECNOLOGIES_CULTURA_RURAL_POST = {
   post_subtitle: 'Un esquema generat amb codi, capa a capa, amb la font de cada xifra',
   description: 'El Pou de Neu del Rentonar, a La Torre de les Maçanes, explicat pas a pas',
   entradilla: 'Desmuntem el Pou de Neu del Rentonar peça a peça: la cúpula, les finestres, els estreps, el pou, el túnel i la galeria de desguàs. Un esquema generat amb codi, sense cap fotografia, on cada xifra porta la seua font i on es diu quan les fonts no coincidixen.',
+  image_url: '/assets/uploads/patrimoni/anatomia-rural-pou-neu-ibanez.webp',
+  image_alt: "Il·lustració didàctica de còmic d'estil Ibáñez del Pou de la Neu del Rentonar, l'almàssera i el forn de calç a La Torre de les Maçanes",
   content: NOVES_TECNOLOGIES_CULTURA_RURAL_HTML,
   /* Sense publish_date (la data triada al calendari, que manaria sobre la de
      prova del Mur en mode seed): la data és la de creació. */

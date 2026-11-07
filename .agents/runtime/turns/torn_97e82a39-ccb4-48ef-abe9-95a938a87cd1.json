@@ -3,10 +3,10 @@
   "turn_id": "torn_97e82a39-ccb4-48ef-abe9-95a938a87cd1",
   "actor": "gemini",
   "scope": "documents",
-  "state": "context_loaded",
-  "revision": 5,
+  "state": "closed",
+  "revision": 6,
   "createdAt": "2026-11-02T17:32:37.999Z",
-  "updatedAt": "2026-11-03T13:12:02.623Z",
+  "updatedAt": "2026-11-07T02:00:38.210Z",
   "expiresAt": "2026-11-03T17:32:38.000Z",
   "contractHash": "1839756fa153a68d945b48956d870a4a082ab80adcf874a04dd10fc1327d8c45",
   "humanInventoryVersion": 1,
@@ -4633,6 +4633,12 @@
           "to": "_wiki_de_poble/90_arxiu_historic/261102_1640_auditoria_claude.md"
         }
       ]
+    },
+    {
+      "state": "closed",
+      "action": "expire-close",
+      "previousState": "context_loaded",
+      "at": "2026-11-07T02:00:38.210Z"
     }
   ],
   "relocated": [
@@ -4642,5 +4648,10 @@
     "_wiki_de_poble/04_escriptori/261102_1532_pla_implementacio_mode_jarvis_idea60_fediversity_i_deute_llibre_mestre.md",
     "_wiki_de_poble/04_escriptori/261102_1638_auditoria_codex.md",
     "_wiki_de_poble/04_escriptori/261102_1640_auditoria_claude.md"
-  ]
+  ],
+  "closure": {
+    "reason": "expired",
+    "at": "2026-11-07T02:00:38.210Z",
+    "previousState": "context_loaded"
+  }
 }

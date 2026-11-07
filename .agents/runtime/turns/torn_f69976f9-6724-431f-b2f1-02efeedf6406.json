@@ -3,10 +3,10 @@
   "turn_id": "torn_f69976f9-6724-431f-b2f1-02efeedf6406",
   "actor": "maria",
   "scope": "documents",
-  "state": "planned",
-  "revision": 52,
+  "state": "closed",
+  "revision": 53,
   "createdAt": "2026-11-02T17:21:54.622Z",
-  "updatedAt": "2026-11-03T13:12:02.623Z",
+  "updatedAt": "2026-11-07T02:00:38.210Z",
   "expiresAt": "2026-11-03T17:21:54.623Z",
   "contractHash": "1839756fa153a68d945b48956d870a4a082ab80adcf874a04dd10fc1327d8c45",
   "humanInventoryVersion": 1,
@@ -5433,6 +5433,12 @@
           "to": "_wiki_de_poble/90_arxiu_historic/261102_1640_auditoria_claude.md"
         }
       ]
+    },
+    {
+      "state": "closed",
+      "action": "expire-close",
+      "previousState": "planned",
+      "at": "2026-11-07T02:00:38.210Z"
     }
   ],
   "relocated": [
@@ -5451,5 +5457,10 @@
     "_wiki_de_poble/90_arxiu_historic/261102_2138_prompt_onada4_nocturna_claude_eixam_codex_gemini_10_de_10.md",
     "_wiki_de_poble/90_arxiu_historic/261102_1532_prompt_onada5_reconciliacio_botigues_i_tancament_10_de_10.md",
     "_wiki_de_poble/90_arxiu_historic/261102_1532_prompt_onada6_disseny_editorial_negrites_versions_1_1_0_i_tancament.md"
-  ]
+  ],
+  "closure": {
+    "reason": "expired",
+    "at": "2026-11-07T02:00:38.210Z",
+    "previousState": "planned"
+  }
 }

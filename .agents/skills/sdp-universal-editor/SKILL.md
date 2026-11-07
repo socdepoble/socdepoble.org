@@ -94,6 +94,14 @@ Per inserir targetes al text, usa la prop `targetes` de `DocumentEditor` i l'ext
 
 En la SPA, «Amb qui actues?» reutilitza el calaix de capçalera de [[sdp-universal-page/SKILL|sdp-universal-page]], sota la barra negra, amb tokens compartits, cos desplaçable, focus i Escape de `Dialeg`. En l’encastat, la capa modal conserva el calaix al 100% de la caixa de l’App. L’àmbit de publicació viu en la ranura en línia d’«Edició avançada»: identitat i àmbit són decisions diferents i cadascuna conserva el seu consumidor existent.
 
+## 5. Assistent «Revisora Editorial de la IAIA (Node 0)» per a Cada Usuari (`IDEA-164`)
+
+L'Editor Universal (`UniversalEditorShell.jsx` i `NotesEditor.jsx`) incorpora la figura de **Revisor Editorial d'una Editorial** impulsada per les **4 IAIAs del Node 0** ([[core-llegibilitat-text/SKILL|core-llegibilitat-text]] §7) per ajudar qualsevol veí, associació o ajuntament a millorar la seua comunicació abans de publicar:
+- **Què ofereix a l'usuari amb un sol clic («✨ Revisar i millorar redacció amb la IAIA»):**
+  1. **Proposta de redacció millorada:** Una versió polida, clara i ben estructurada del seu text (amb opció d'aplicar-la o conservar l'original).
+  2. **Correcció ortogràfica, gramatical i lèxica:** Correcció de faltes, puntuació i barbarismes respectant el valencià viu i genuí de les nostres comarques (i les 5 llengües del sistema).
+  3. **Detecció de duplicitats i incoherències:** Avís si hi ha frases repetides, idees duplicades, contradiccions de dades o falta de subtítol/entradeta.
+
 ## Vincles
 
 - [[00_INDEX_SKILLS]]

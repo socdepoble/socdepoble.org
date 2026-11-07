@@ -5,6 +5,11 @@ description: Llibre d'Obra (LEDGER) de Sóc de Poble
 ---
 # Llibre d'Obra (LEDGER) de Sóc de Poble
 
+### 2026-11-06T01:09:00+01:00 · IAIA MarIA · Acta Marmota de Tancament (`261106_0105`), `COMMIT R6` (`d79a0b530`) Pujat a `fork/backup-notes-publish` i Marató Nocturna `Onada R7` (`IDEA-100` a `IDEA-107`) · torn_db24cdce-ee25-486e-9ad7-1fc145038711
+- **Front:** Governança Documental, Consolidació `COMMIT R6` (`d79a0b530`), Superwhisper Local (`Whisper Large v3 Turbo`), Biblioteca Cultural Mode Jarvis (`IDEA-106`), Base de Dades Dialectal `node0.corpus_dialectal_valencia` (`IDEA-107`) i Acta Marmota de Relleu (`261106_0105`).
+- **Acció:** Emissió i validació de l'Acta Marmota `_wiki_de_poble/10_actes/261106_0105_acta_marmota_commit_r6_d79a0b530_arbre_genealogic_fediversity_superwhisper_i_marato_r7.md` (`reflex: sdp:torn_db24cdce-ee25-486e-9ad7-1fc145038711:c8097d97-ec8a-44dc-b88d-05508caf904c`), desbloqueig i segellat del `COMMIT R6` (`d79a0b530`, 211 fitxers, `+14.075 / −1.266 línies`, pujat a `fork/backup-notes-publish` amb hook complet sense `--no-verify`), reparació del mode local de Superwhisper (`~/superwhisper/modes/voice to text.json` amb `large-v3-turbo` i `language: auto`), i especificació d'`IDEA-105`, `IDEA-106` i `IDEA-107` al Llibre Mestre, Pla i Prompt Operatiu `v1.5.0`.
+- **Autor:** IAIA MarIA (Direcció Tècnica i Governança), sota la direcció del Mestre Javi Llinares.
+
 ### 2026-11-05 · Codex · Onada R6 / Kit CAS R12 · torn_46554c4a-a614-42ba-9a06-7cfd913310af
 
 - Ordre humana: auditoria `4ab2d1527..c49d173c4` més worktree, P0-25/26 i R5-D5/D6; rectificació responsive del logotip incorporada.
@@ -1317,7 +1322,12 @@ Informe: 261101_2143_auditoria_claude.
 - **Seguiment:** nous documents encara candidats; CAS6/bind/close d’este torn, preflight5sobreíndexfinal i checkpointnormalambhooks pendents. Laboratori13casos requereix futurcarrilcausal sense reclassificar/relaxar perverd; F26/defaultpúblic/R7 paral·lels nointegrats/validats en estecheckpoint. Font14roots1a2aad intacta, Actac57/baselinea4fixes.
 - **Preservació:** entrada append sobrecosvell íntegre i checksumSHAcanònic (noautoria/clau); Bookworking1624+un bullet real datat i Bookstagedac498+mateixbullet, sense preparar altresideesprivades. Futurrestage82hauràpreservartambéestanovanota, no retornarE/1624vellcegament. Cap font/índex/objecte/humà/secret/lease/altretorn escrit en este pas llevatcontext/ownautoritzats; cap push, SQLremot, correu, ComputerUse/Antigravity o recurrent.
 
+### 2026-11-06T18:07:00+01:00 · IAIA MarIA · Tancament d'Onada amb Kits CAS `r71–r78` i `R28–R29`, Deute Base `12/12` a Zero, Llei 0 i Assimilació de `skill-forge` / `wiki-forge` (`IDEA-130`) (`torn_9db8dcac-b45e-467e-8733-c3944e24fd3b`)
+
+- **Acta Marmota i governança:** creada i validada `_wiki_de_poble/10_actes/261106_1805_acta_marmota_kits_r71_r78_deute_zero_llei0_skill_forge_i_onada_r9.md`, ancorada a `_wiki_de_poble/00_index.md`. Assimilades les 4 mecàniques de `Mfrostbutter/skill-forge` i `juanitourquiza/shipframe` (`wiki-forge` / `wiki-sync` / `evidence-audit`, MIT, `IDEA-130`) a `.agents/skills/core-automillora/SKILL.md`, `.agents/skills/wiki-cicle-de-vida/SKILL.md` i `.agents/skills/wiki-propagar-veritat/SKILL.md` (`cataleg_skills.mjs --check` `ok: true`, `fronteres-skills.mjs` `0` violacions noves).
+- **Kits CAS i verificació:** segellats en còpia aïllada sobre `HEAD 70b651636` els Kits `r71` (`10/10`), `r72` (`8/8`), `r73` (`18/18`), `r74` (`5/5`), `r75` (`2/2`), `r76` (`4/4`), `r77` (`10` fitxers, `9/9` suites / `227/227` proves Vitest verdes) i `r78` (`2/2` fitxers, `4/4` proves verdes) de Gemini, més `R28` (`19` camins) i `R29` (`261` fitxers segellats) de Codex, i auditats en les Rondes `28–42` per les 4 IAs del Node 0 al Mac mini M4. Les `12/12` suites roges de deute base de `HEAD 70b651636` queden resoltes a `0` fallades en `Kit r73 + Kit r77`. Temporitzadors de fons cancel·lats.
+
 <!-- HASH: 0ecb0eca1a630cc70996a99edaf379b7122480c7d03a14f595efcfc898211e17 -->
 
 
-<!-- HASH: 11806c0a7669f471e7a710a06aab786b4b7d9e0291fb11a7f3f0dcf71a7f3c35 -->
+<!-- HASH: 0947ec08cce91e75afc10f441fc1fef4e059d90f7a1729289b1ed6b4acb38ae5 -->
