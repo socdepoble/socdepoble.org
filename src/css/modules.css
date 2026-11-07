@@ -14501,6 +14501,13 @@ details[open] summary.accordion-header svg:last-child {
     outline-color: var(--sdp-crom-focus);
   }
 
+  /* Gauntlet R10 · VFC-04 · La icona de la façana (la CirclePlay de l'EstatBuit) porta la classe
+     sdp-buit, i el farciment de .sdp-buit (space-10 dalt i baix) li deixava el contingut a 0 d'alt:
+     no es pintava mai. Dins de la façana, i en els dos llocs on viu, la icona va sense farciment. */
+  .video-editorial__facana > svg {
+    padding: 0;
+  }
+
   .aplec-2023__galeria,
   .aplec-2023__organitzadores {
     display: grid;
@@ -15012,32 +15019,9 @@ details[open] summary.accordion-header svg:last-child {
     border: 2px solid var(--sdp-vora-forta);
   }
 
-  /* ── Mode Revisió Editorial al Mur (/mur?revisio=wordpress) ── */
-  .sdp-mur-revisio-bar {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    justify-content: space-between;
-    gap: var(--sdp-space-2);
-    padding: var(--sdp-space-2) var(--sdp-space-4);
-    border-bottom: 1px solid var(--sdp-vora);
-    background: var(--sdp-fons-superficie);
-  }
-
-  .sdp-mur-revisio-toggle {
-    display: inline-flex;
-    align-items: center;
-    gap: var(--sdp-space-2);
-    min-height: var(--sdp-touch);
-    padding: var(--sdp-space-2) var(--sdp-space-4);
-    border: 1px solid var(--sdp-vora-forta);
-    border-radius: var(--sdp-radi-boto);
-    background: var(--sdp-fons-targeta);
-    color: var(--sdp-text-titol);
-    font-weight: 700;
-    cursor: pointer;
-  }
-
+  /* ── Mode Revisió Editorial al Mur (/mur?revisio=wordpress) ──
+     P0-31 / IDEA-121 · Sense barra ni botó al Mur: la bancada viu a
+     /el-meu-perfil. Només hi queda el panell que obri l'enllaç directe. */
   .sdp-mur-revisio-panel {
     display: flex;
     flex-direction: column;
@@ -15146,5 +15130,24 @@ details[open] summary.accordion-header svg:last-child {
     gap: var(--sdp-space-1);
     color: var(--sdp-text-suau);
     font-size: var(--sdp-text-small);
+  }
+
+  /* ── P0-37 / IDEA-156 · Primitives Pedra Seca per a pàgines complexes ── */
+  .sdp-diapositiva-plena {
+    width: 100%;
+    max-width: 100%;
+  }
+  .sdp-diapositiva-plena.is-fullscreen {
+    min-block-size: 100vh;
+    min-block-size: 100dvh;
+  }
+  .sdp-diapositiva-plena__prosa {
+    height: auto;
+    overflow: visible;
+  }
+  .sdp-graella-cotes {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 14rem), 1fr));
+    gap: var(--sdp-space-3);
   }
 }

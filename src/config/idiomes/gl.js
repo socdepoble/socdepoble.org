@@ -614,7 +614,7 @@ export default {
   'section.xat.tab.empreses': 'Empresas',
   'section.xat.tab.institucions': 'Institucións',
   'section.xat.searchPlaceholder': 'Busca chats, persoas ou grupos...',
-  'section.xat.composePlaceholder': 'Escribe unha mensaxe...',
+  'section.xat.composePlaceholder': 'Escribe…',
   'section.xat.send': 'Enviar',
   'section.xat.selected': 'Seleccionado',
   'section.xat.memberFallback': 'Membro da comunidade',
@@ -969,6 +969,7 @@ export default {
   'section.detail.mur.town': 'La Torre de les Maçanes',
   'section.detail.mur.comments': 'comentarios',
   'section.detail.mur.likes': 'gústame',
+  'section.detail.mur.revisioWp.tornaBancada': '← Volver a Importación e Revisión Editorial',
   'section.detail.mercat.title': 'Mercado',
   'section.detail.mercat.label': 'Produto',
   'section.detail.mercat.itemTitle': 'Produto',
@@ -1132,6 +1133,8 @@ export default {
   'section.login.registre.botoEntrar': 'Entrar na conta',
   'section.login.registre.botoCrear': 'Crear a conta',
   'section.login.registre.oblidada': 'Esqueciches o contrasinal?',
+  /* IDEA-133 (Onada R10, B2-03) · El botó d'1 clic de l'avís de compte existent o de credencials. */
+  'section.login.registre.recuperaAmbEnllac': 'Entrabas con Google ou non tes contrasinal? Recibe unha ligazón no correo',
   'section.login.recuperacio.enviada': 'Se hai unha conta con ese correo, chegarache unha ligazón para definir un contrasinal novo. Mira tamén o cartafol de correo lixo.',
   'section.login.recuperacio.titol': 'Recupera o contrasinal',
   'section.login.recuperacio.intro': 'Escribe o correo da túa conta e enviarémosche unha ligazón para definir un contrasinal novo.',
@@ -2379,6 +2382,8 @@ export default {
   'section.xat.fake.sdp2': 'Rexístrate para descubrir todo o que ofrecemos.',
   /* P1-52 (261029) · La resposta simulada, en el to pla del Mestre. Pendent de revisió nadiua. */
   'section.xat.fake.reply': 'Isto é unha simulación. Se queres gardar a conversa, tes que rexistrarte, e xa está.',
+  /* IDEA-133 (Onada R10, B2-01) · L'enllaç a /registre de la bombolla de simulació. */
+  'section.xat.fake.registre': 'Entra ou rexístrate agora →',
   'section.xat.fake.botoRegistrat': 'Rexístrate',
   'section.xat.ajustos.titol': 'Axustes',
   'section.xat.ajustos.obri': 'Ti: axustes',

@@ -164,4 +164,10 @@ describe('la línia de qui signa', () => {
     expect(camp().getAttribute('aria-describedby')).toBe('xat-message-comptador');
     expect(document.getElementById('xat-message-signa')).toBeNull();
   });
+
+  test('P0-36 / IDEA-154 · el camp mostra el placeholder curt «Escriu…» per a mòbil mantenint l’aria-label accessible «Escriu un missatge»', () => {
+    pinta({ fil: directe() });
+    const camp = screen.getByRole('textbox', { name: 'Escriu un missatge' });
+    expect(camp.getAttribute('placeholder')).toBe('Escriu…');
+  });
 });

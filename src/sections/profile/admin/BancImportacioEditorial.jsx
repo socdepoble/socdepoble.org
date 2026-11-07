@@ -97,9 +97,8 @@ export function BancImportacioEditorial() {
         <p>
           Banc d’auditoria i curació humana de les <strong>{stats.total} publicacions històriques</strong> i{' '}
           <strong>{stats.totalPagines} pàgines</strong> de <code>socdepoble.net</code>. Pots revisar cada article,
-          comparar-lo amb l’original de WordPress, verificar els casos d’ús multimèdia (galeries, vídeos, PDFs,
-          iframes d’agenda/mapes reescrits a components natius i enllaços interns) o obrir el{' '}
-          <Link to="/mur?revisio=wordpress"><strong>🔍 Mode Revisió d’Importació en viu al Mur</strong></Link>.
+          comparar-lo amb l’original de WordPress i verificar els casos d’ús multimèdia (galeries, vídeos, PDFs,
+          iframes d’agenda/mapes reescrits a components natius i enllaços interns).
         </p>
       </header>
 

@@ -26,7 +26,8 @@ vi.mock('../../hooks/useSEO', () => ({ useSEO: () => {} }));
 vi.mock('../../app/contexts/CoreContentContext', () => ({ useCoreContent: () => mocks.core }));
 vi.mock('./MurContext', () => ({ useMur: () => mocks.mur }));
 vi.mock('./MapaFotografic.jsx', () => ({ default: () => null }));
-/* B3-5 · El Mur llig el rol per useSuperadminEstable, com el Perfil. */
+/* P0-31 / IDEA-121 · El Mur ja no consulta el rol (MurSection.p031.test.js). La sessió simulada es queda
+   perquè, si mai tornara una barra només per a superadmin, les proves de baix caurien. */
 vi.mock('../../app/contexts/SessionContext.jsx', async (importOriginal) => ({
   ...(await importOriginal()),
   useSessioOpcional: () => mocks.sessio,
@@ -65,27 +66,26 @@ test('AH-28 / IDEA-88 · /mur?revisio=wordpress obri el Mode Revisió d’Import
   expect(panell.textContent).toContain('1 aprovats');
 });
 
-test('B3-5 · sense ?revisio, un convidat i un no superadmin no veuen la barra de revisió', () => {
+test('P0-31 / IDEA-121 · sense ?revisio, un convidat i un no superadmin no veuen la barra de revisió', () => {
   mocks.params = new URLSearchParams('');
   const { container, rerender } = render(<MurSection />);
   expect(container.querySelector('.sdp-mur-revisio-bar')).toBeNull();
+  expect(container.querySelector('.sdp-mur-revisio-toggle')).toBeNull();
   mocks.sessio = { estat: 'llest', currentUser: { id: 'u1' }, esSuperadmin: false, rol: 'veí' };
   rerender(<MurSection />);
   expect(container.querySelector('.sdp-mur-revisio-bar')).toBeNull();
+  expect(container.querySelector('.sdp-mur-revisio-toggle')).toBeNull();
   expect(screen.queryByTestId('mur-revisio-wordpress')).toBeNull();
 });
 
-test('B3-5 · un superadmin (useSuperadminEstable) veu la barra i el mode no carrega res fins que l’activa', async () => {
+test('P0-31 / IDEA-121 · el botó 🔍 Mode Revisió d’Importació (Admin) s’ha eliminat de /mur fins i tot per a superadmin (la bancada viu a /el-meu-perfil)', () => {
   mocks.params = new URLSearchParams('');
   mocks.sessio = { estat: 'llest', currentUser: { id: 'u1' }, esSuperadmin: true, rol: 'superadmin' };
   const { container } = render(<MurSection />);
-  const boto = container.querySelector('.sdp-mur-revisio-toggle');
-  expect(boto).toBeTruthy();
-  expect(boto.getAttribute('aria-pressed')).toBe('false');
+  expect(container.querySelector('.sdp-mur-revisio-bar')).toBeNull();
+  expect(container.querySelector('.sdp-mur-revisio-toggle')).toBeNull();
+  expect(screen.queryByText(/Mode Revisió d.Importació \(Admin\)/i)).toBeNull();
   expect(screen.queryByTestId('mur-revisio-wordpress')).toBeNull();
-  fireEvent.click(boto);
-  const panell = await screen.findByTestId('mur-revisio-wordpress');
-  expect(panell.textContent).toContain('425 articles');
 });
 
 /* D-B4-3 (Onada R6, Bloc 4; decisió de MarIA) · Si la càrrega dels articles

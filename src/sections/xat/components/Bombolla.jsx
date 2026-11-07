@@ -61,6 +61,15 @@
  * cru, i pot portar enllaços dins; als enllaços no s'hi busquen asteriscs.
  * «2 * 3 = 6», «a*b» o una llista «* element» no canvien. Sense cap negreta,
  * el DOM de sempre. «Copia el text» copia el text cru, amb els asteriscs.
+ *
+ * IDEA-133 (Onada R10, ordre del Mestre del 261106, B2-01) · Un missatge amb
+ * `accioRegistre` (la bombolla de simulació del xat de mostra,
+ * FakeChatOnboarding) porta, davall del seu text i dins de la bombolla,
+ * l'enllaç «Entra o registra’t ara →» cap a /registre (RUTA_ENTRADA). La ruta
+ * i el text són fixos: cap ve del missatge. La fletxa és decorativa
+ * (aria-hidden) i el nom de l'enllaç és el text. En el mode de selecció no és
+ * interactiu, com la resta d'enllaços (EnllacQuiet). Sense el camp, el DOM de
+ * sempre.
  */
 import { memo, useCallback, useEffect, useRef, useState } from 'react';
 import { AlertTriangle, Ban, CheckCircle2, Circle, Copy, Flag, MoreVertical, Reply } from 'lucide-react';
@@ -80,6 +89,7 @@ import TargetaLlistaComu from './TargetaLlistaComu.jsx';
 import AdjuntXat from './AdjuntXat.jsx';
 import { mouFocusDelMenu } from './Compositor.jsx';
 import { llistaDeMissatge } from '../llistaComu.js';
+import { RUTA_ENTRADA } from '../../../config/rutaEntrada.js';
 
 /**
  * Lògica d'Usuari (T3, T4): el nom de qui escriu es pinta als grups i, fora
@@ -157,6 +167,19 @@ function TextAmbEnllacos({ text, t, rutesDeLaWiki = false, interactiu = true }) 
   return segmentaNegreta(segments).flatMap((tram, i) => (tram.negreta
     ? [<strong key={`n${i}`}>{tram.segments.map((segment, j) => pintaSegment(segment, j, t, interactiu))}</strong>]
     : tram.segments.map((segment, j) => pintaSegment(segment, `${i}-${j}`, t, interactiu))));
+}
+
+/* IDEA-133 (B2-01) · L'enllaç a /registre de la bombolla de simulació. */
+function EnllacARegistre({ t, interactiu }) {
+  const text = t('section.xat.fake.registre', 'Entra o registra’t ara →');
+  const ambFletxa = text.endsWith('→');
+  const nom = ambFletxa ? text.slice(0, -1).trimEnd() : text;
+  const contingut = <>{nom}{ambFletxa ? <span aria-hidden="true"> →</span> : null}</>;
+  return (
+    <p className="sdp-xat-bombolla__text">
+      {interactiu ? <Link className="sdp-xat-enllac" to={RUTA_ENTRADA}>{contingut}</Link> : <span className="sdp-xat-enllac">{contingut}</span>}
+    </p>
+  );
 }
 
 function textDeSistema(missatge, t) {
@@ -352,6 +375,7 @@ function Bombolla({
                i els números al seu lloc); la làpida és text de la interfície. */
             <p className="sdp-xat-bombolla__text" dir="auto"><TextAmbEnllacos text={text} t={t} rutesDeLaWiki={rutesDeLaWiki} interactiu={!triable} /></p>
           )}
+          {missatge.accioRegistre === true && !meu && !esborrat ? <EnllacARegistre t={t} interactiu={!triable} /> : null}
           <span className="sdp-xat-bombolla__meta">
             {hora ? <time dateTime={missatge.creatAl || undefined}>{hora}</time> : null}
             {meu && !esborrat ? <MarquesEstat estat={estat} t={t} /> : null}

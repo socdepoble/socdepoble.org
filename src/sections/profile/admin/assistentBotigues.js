@@ -92,10 +92,13 @@ export function frasePushDelNavegador(inst) {
 }
 
 /* Gauntlet R9 · G3-01 i G3-02 · El catàleg del servidor (els noms dels secrets, l'ordre i les ordres) és
-   supabase/README.md, secció «Funció notifica-xat»: ací no se'n copia cap nom ni cap RPC de la funció
-   (les fronteres de notifica-xat/gestor.test.js i purga-fitxers/gestor.test.js ho vigilen). L'estat és el
-   llegit a producció el 6-11-2026 amb GET de lectura: la taula de la 2611020417 existix i el build web
-   no porta la clau pública VAPID. */
+   supabase/README.md, secció «Funció notifica-xat»: ací no se'n copia cap nom ni cap RPC de la funció.
+   Ho vigilen dues coses. A tot src/, les fronteres de notifica-xat/gestor.test.js i
+   purga-fitxers/gestor.test.js: cada RPC que criden els dos workers (des de R10 · VFC-05, també la que
+   desa les credencials dels enviadors natius) i els secrets privats, no tots els noms del catàleg. En
+   este mòdul, la prova G3 d'assistentBotigues.test.jsx, que hi prohibix qualsevol nom de secret del
+   servidor. L'estat és el llegit a producció el 6-11-2026 amb GET de lectura: la taula de la 2611020417
+   existix i el build web no porta la clau pública VAPID. */
 export const CATALEG_SERVIDOR_PUSH = 'supabase/README.md, secció «Funció notifica-xat»';
 
 /* FBV-04 · El fet llegit va a part: no és cap pas pendent del Mestre. */

@@ -1,13 +1,14 @@
 import React, { useMemo, useState } from 'react';
 import DetallPoble from '../pobles/DetallPoble.jsx';
-import { MapPin, UserRound, MessageCircle } from 'lucide-react';
+import { UserRound } from 'lucide-react';
 import { renderRichText, renderPostContent } from './detailRichText.jsx';
 import { getFirstImage, semblaHtml } from './detailHelpers.jsx';
 import { Aplec2023Article } from '../mur/articles/Aplec2023Article.jsx';
 import { ManifestDePobleArticle } from '../mur/articles/ManifestDePobleArticle.jsx';
 import { NOVES_TECNOLOGIES_CULTURA_RURAL_ID } from '../mur/articles/novesTecnologiesCulturaRuralContent.js';
 import { resolRecursPropi, resolRecursosDeHtml, resolveAsset } from '../../config/assetResolver.js';
-import { autorDe, objecteDe, rutaDePerfilPublicDAutor, rutaXatDePagina } from '../../config/navigation.js';
+import { autorDe, objecteDe, rutaDePerfilPublicDAutor, rutaFitxaOrganitzacio, rutaXatDePagina } from '../../config/navigation.js';
+import { Link } from '../../app/contexts/RouterContext.jsx';
 import { signaturaDeQuiSigna } from '../../data/identitatsSeed.js';
 import { portadaDeLaPublicacio } from '../../data/mapejadorSeccions.js';
 import { imatgesDeProducte } from '../mercat/imatgesDeProducte.js';
@@ -779,7 +780,13 @@ export function buildNotesDetailSectionMeta({ notes = [], t }) {
   };
 }
 
-function VistaCompletaArticleImportatWp({ item }) {
+/* P0-31 / IDEA-121 (Onada R10, K1) · La fitxa ja no torna al mode del Mur: torna a «📥 Importació i Revisió
+   Editorial» d'«🛡️ Administració del sistema» (perfilModel.js: ID_ADMINISTRACIO_SISTEMA i l'apartat
+   admin-importacio, que pinta BancImportacioEditorial). ?organitzacio= obri l'administració (només a superadmin);
+   ?apartat= hi tria l'apartat quan el Perfil el llig (IDEA-132); si no, s'obri el primer apartat. */
+const RUTA_BANCADA_IMPORTACIO = `${rutaFitxaOrganitzacio('administracio-sistema')}&apartat=admin-importacio`;
+
+function VistaCompletaArticleImportatWp({ item, t }) {
   const [estatLocal, setEstatLocal] = useState(() => {
     const desat = llegeixEstatRevisioEditorial();
     return desat.estats[item.wp_id] || item.estat_revisio || 'pendent_admin';
@@ -829,9 +836,9 @@ function VistaCompletaArticleImportatWp({ item }) {
           <Boto varietat="secundari" onClick={() => canviaEstat('amb_observacions', 'Revisar maquetació Pedra Seca')}>
             📝 Marcar amb observacions
           </Boto>
-          <a className="sdp-boto sdp-boto--secundari" href="/mur?revisio=wordpress">
-            ← Tornar al Mode Revisió del Mur
-          </a>
+          <Link className="sdp-boto sdp-boto--secundari" to={RUTA_BANCADA_IMPORTACIO}>
+            {t('section.detail.mur.revisioWp.tornaBancada', '← Tornar a Importació i Revisió Editorial')}
+          </Link>
           <a className="sdp-boto sdp-boto--fantasma" href={item.source_url} target="_blank" rel="noopener noreferrer">
             🌐 Obrir original a socdepoble.net ↗
           </a>
@@ -848,23 +855,20 @@ export function buildMurDetailSectionMeta({ feedPosts = [], t }) {
     listPath: '/mur',
     items: feedPosts,
     getTitle: (item) => item.title || t('section.detail.mur.itemTitle', 'Publicació'),
-    getSubtitle: (item) => item.post_subtitle || item.description || '',
-    // AH-27: la figura inicial mostra el logo una sola vegada; la Card conserva image_url.
-    getImage: (item) => item.id === 'manifest-de-poble' ? null : item.imageSrc || getFirstImage(item.image_url || item.image) || null,
+    getSubtitle: (item) => item.post_subtitle || item.subtitle || item.description || '',
+    // P0-35 / IDEA-152 (ordre del Mestre, 261107): el segell del Manifest de Poble va com a imatge principal a la Hero (com tota UniversalPage), mai ocultat ni relegat al cos.
+    getImage: (item) => item.imageSrc || getFirstImage(item.image_url || item.image) || null,
     renderBody: (item) => (
       <>
         {/* IDEA-61 (T0, prompt 261102_1532; correcció L3-A2) · Una fitxa d'àmbit
             porta la fitxa de lectura davant del cos, també a /mur/<id>: és la
             ruta del subjecte del xat (contracte.js · PREFIX_DE_SUBJECTE.publicacio)
             i elementDeSeccio hi resol qualsevol feedPost. Una publicació sense
-            àmbit, byte a byte com sempre (null no pinta res). */}
+            àmbit, byte a byte com sempre (null no pinta res).
+            P0-34 / IDEA-151 (ordre del Mestre, 261107) · Extirpada la
+            .badge-row inventada amb autor, poble, comentaris 0 i «0 m'agrada»:
+            l'autoria ja viu a la Barra Taronja superior. */}
         {esFitxaDAmbit(item) ? <FitxaDeLectura ambit={ambitDe(item)} item={item} t={t} /> : null}
-        <div className="badge-row">
-          <span className="pill"><UserRound size={14} /> {item.author || t('section.detail.mur.author', 'Sóc de Poble')}</span>
-          <span className="pill"><MapPin size={14} /> {item.town_name || t('section.detail.mur.town', 'La Torre de les Maçanes')}</span>
-          <span className="pill"><MessageCircle size={14} /> {item.comments || 0}</span>
-          <span className="pill">{item.likes || 0} {t('section.mur.likes', "m'agrada")}</span>
-        </div>
         {/* Decisió 3 (261007) · Cap <img> de tercers al cos de la publicació. */}
         {item.id === 'manifest-de-poble'
           ? <ManifestDePobleArticle item={item} />
@@ -875,7 +879,7 @@ export function buildMurDetailSectionMeta({ feedPosts = [], t }) {
               </React.Suspense>
             )
           : item.esImportatWp
-            ? <VistaCompletaArticleImportatWp item={item} />
+            ? <VistaCompletaArticleImportatWp item={item} t={t} />
             : renderPostContent(cosAmbImatgesPropies(item.content || item.summary))}
         {Array.isArray(item.tags) && item.tags.length > 0 ? (
           <div className="badge-row detail-tags">

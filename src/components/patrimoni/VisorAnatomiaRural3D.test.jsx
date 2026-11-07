@@ -406,7 +406,7 @@ describe('visor · documental', () => {
     const { container } = render(<VisorAnatomiaRural3D />);
     /* Gauntlet R9 · G2-04 · Façana de clic: abans del gest, cap iframe; el botó obri el del vídeo. */
     expect(container.querySelector('iframe')).toBeNull();
-    fireEvent.click(within(container).getByRole('button', { name: 'Veure el vídeo (YouTube)' }));
+    fireEvent.click(within(container).getByRole('button', { name: /^Veure el vídeo \(YouTube\) / }));
     const marc = container.querySelector('iframe');
     expect(marc.getAttribute('src')).toBe('https://www.youtube-nocookie.com/embed/3RQv3xjVr-M');
     expect(marc.getAttribute('title')).toMatch(/^Los EMPOZADORES y las NEVERAS naturales de HIELO/);
@@ -425,7 +425,7 @@ describe('visor · documental', () => {
     const documental = container.querySelector('.anatomia__documental');
     expect(documental.textContent.split(titol)).toHaveLength(2);
     expect(documental.querySelector('.video-editorial__facana > .sdp-buit__titol').textContent).toBe('En prémer, YouTube rebrà la teua adreça IP.');
-    fireEvent.click(within(container).getByRole('button', { name: 'Veure el vídeo (YouTube)' }));
+    fireEvent.click(within(container).getByRole('button', { name: /^Veure el vídeo \(YouTube\) / }));
     expect(container.querySelector('.anatomia__video-titol cite').textContent).toBe(titol);
     expect(container.querySelector('iframe').getAttribute('title')).toBe(titol);
   });
@@ -435,7 +435,7 @@ describe('visor · documental', () => {
     for (const [id, videoId] of Object.entries(esperats)) {
       const { container, unmount } = render(<VisorAnatomiaRural3D estructuraInicial={id} />);
       expect(container.querySelector('iframe'), id).toBeNull();
-      fireEvent.click(within(container).getByRole('button', { name: 'Veure el vídeo (YouTube)' }));
+      fireEvent.click(within(container).getByRole('button', { name: /^Veure el vídeo \(YouTube\) / }));
       expect(container.querySelector('iframe').getAttribute('src'), id).toBe(`https://www.youtube-nocookie.com/embed/${videoId}`);
       expect(container.textContent, id).toMatch(/Autoria:\s*Sangonereta Gastronomia/);
       expect(container.textContent, id).not.toMatch(/Eugenio Monesma/);

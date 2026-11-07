@@ -621,7 +621,7 @@ export default {
   'section.xat.tab.empreses': 'Enpresak',
   'section.xat.tab.institucions': 'Erakundeak',
   'section.xat.searchPlaceholder': 'Bilatu txatak, pertsonak edo taldeak...',
-  'section.xat.composePlaceholder': 'Idatzi mezua...',
+  'section.xat.composePlaceholder': 'Idatzi…',
   'section.xat.send': 'Bidali',
   'section.xat.selected': 'Aukeratuta',
   'section.xat.memberFallback': 'Komunitateko kidea',
@@ -976,6 +976,7 @@ export default {
   'section.detail.mur.town': 'La Torre de les Maçanes',
   'section.detail.mur.comments': 'iruzkinak',
   'section.detail.mur.likes': 'atsegin dut',
+  'section.detail.mur.revisioWp.tornaBancada': '← Itzuli Inportazio eta Berrikuspen Editorialera',
   'section.detail.mercat.title': 'Merkatua',
   'section.detail.mercat.label': 'Produktua',
   'section.detail.mercat.itemTitle': 'Produktua',
@@ -1137,6 +1138,8 @@ export default {
   'section.login.registre.botoEntrar': 'Sartu kontuan',
   'section.login.registre.botoCrear': 'Sortu kontua',
   'section.login.registre.oblidada': 'Pasahitza ahaztu duzu?',
+  /* IDEA-133 (Onada R10, B2-03) · El botó d'1 clic de l'avís de compte existent o de credencials. */
+  'section.login.registre.recuperaAmbEnllac': 'Google-rekin sartzen zinen edo ez duzu pasahitzik? Jaso esteka bat posta elektronikoan',
   'section.login.recuperacio.enviada': 'Helbide horrekin konturen bat badago, pasahitz berri bat ezartzeko esteka bat jasoko duzu. Begiratu spam karpetan ere.',
   'section.login.recuperacio.titol': 'Berreskuratu pasahitza',
   'section.login.recuperacio.intro': 'Idatzi zure kontuaren helbide elektronikoa eta pasahitz berri bat ezartzeko esteka bat bidaliko dizugu.',
@@ -2381,6 +2384,8 @@ export default {
   'section.xat.fake.sdp2': 'Erregistratu eskaintzen dugun guztia ezagutzeko.',
   /* P1-52 (261029) · La resposta simulada, en el to pla del Mestre. Pendent de revisió nadiua. */
   'section.xat.fake.reply': 'Simulazio bat da hau. Elkarrizketa gorde nahi baduzu, erregistratu behar duzu, eta kito.',
+  /* IDEA-133 (Onada R10, B2-01) · L'enllaç a /registre de la bombolla de simulació. */
+  'section.xat.fake.registre': 'Sartu edo erregistratu orain →',
   'section.xat.fake.botoRegistrat': 'Erregistratu',
   'section.xat.ajustos.titol': 'Ezarpenak',
   'section.xat.ajustos.obri': 'Zu: ezarpenak',

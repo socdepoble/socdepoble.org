@@ -746,7 +746,10 @@ function Formulari({ valor, onCanvia, onEnvia, t, desactivat, onEscapa, campRef,
           onKeyDown={alTeclat}
           onCompositionStart={() => { compon.current = true; }}
           onCompositionEnd={() => { compon.current = false; }}
-          placeholder={t('section.xat.composePlaceholder', 'Escriu un missatge...')}
+          /* IDEA-133 (Onada R10, B2-02) · El placeholder curt de l'ordre del
+             Mestre («Escriu…»), que no es talla al mòbil amb lletra gran. El
+             nom accessible no canvia: és l'aria-label («Escriu un missatge»). */
+          placeholder={t('section.xat.composePlaceholder', 'Escriu…')}
           aria-label={t('section.xat.compositor.etiqueta', 'Escriu un missatge')}
           aria-describedby={descritPer}
           enterKeyHint={retornEnvia ? 'send' : 'enter'}

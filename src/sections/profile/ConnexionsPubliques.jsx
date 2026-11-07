@@ -11,10 +11,11 @@ const reserva = (_clau, text) => text;
    port no diu si el servidor té la migració 2611032100: es consulta la sonda de
    /connectar (sondaConnexions.js, GLOBAL-06). Si este backend ja ha dit
    NO-DISPONIBLE, el bloc no es pinta ni es torna a preguntar (els límits de
-   la sonda en dos muntatges alhora són els de sondaConnexions.js). Mentre no
-   s'aplique la migració (D-10), l'interruptor CONNEXIONS_PUBLIQUES_REMOTES_ACTIVES
-   (src/config) és apagat: l'adaptador remot respon NO-DISPONIBLE sense fer cap
-   crida, i la consola no veu cap 404 (D-P016, Onada R9). */
+   la sonda en dos muntatges alhora són els de sondaConnexions.js). L'interruptor
+   CONNEXIONS_PUBLIQUES_REMOTES_ACTIVES (src/config) es va apagar a R9 perquè la
+   migració 2611032100 no hi era (D-P016); IDEA-133 (Onada R10, B2-04) l'encén
+   perquè ja és a producció (lectura GET del 6-11-2026). Apagat, l'adaptador
+   remot respon NO-DISPONIBLE sense fer cap crida i el bloc calla. */
 const disponible = config => connexionsPotserDisponibles(ambitDeConnexions(config));
 /* A la fitxa pública no hi ha res a mostrar si el servidor no té les connexions
    (NO-DISPONIBLE / PostgREST 404 / PGRST202), si el subjecte no existix per al

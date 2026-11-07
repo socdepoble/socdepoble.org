@@ -12,6 +12,7 @@ import { createTranslator } from '../../config/i18n.js';
 import { RUTA_POLITICA_PRIVACITAT, VERSIO_POLITICA_PRIVACITAT } from '../../config/politicaPrivacitat.js';
 import { useCoreContent } from '../../app/contexts/CoreContentContext.jsx';
 import { POBLE_FUNDACIONAL } from '../../data/identitatsSeed.js';
+import { CODI_ENTRADA } from '../../data/errorsBackend.js';
 
 /* Gauntlet 261025_0545 (TE-01) · El formulari parla la llengua triada: els
    textos passen pel traductor `t` (el de la interfície, des
@@ -84,6 +85,17 @@ const modeDelFormulari = (modeInicial, potRecuperar = false) => {
  * «Tria un poble…» i cap poble fins que la persona en tria un; sense catàleg
  * (useCoreContent buit) no es pinta. Sense poble, el servidor hi posa el de
  * sèrie.
+ *
+ * IDEA-133 (Onada R10, ordre del Mestre del 261106, B2-03) · Quan l'avís és
+ * d'un compte que ja existix (CODI_ENTRADA.COMPTE_EXISTENT) o de credencials
+ * que no casen (CODI_ENTRADA.CREDENCIALS) i hi ha recuperació (`onRecupera`),
+ * l'Alerta porta un botó d'1 clic, «Entraves amb Google o no tens
+ * contrasenya? Rep un enllaç al correu», que obri la vista de recuperació
+ * amb el correu escrit (obriRecuperacio). Les `accionsError` d'abans (tornar
+ * al mode de proves) continuen. El botó és el fantasma i ple de «Has oblidat
+ * la contrasenya?» (Boto): a 360 px el text llarg ocupa l'amplada de l'avís
+ * sense quedar en un oval de vora. Sense recuperació, o amb un altre codi,
+ * l'Alerta de sempre.
  */
 export function RegistrationStep({ isBusy, bloquejat = false, error, codiError = null, accionsError = null, modeInicial = 'crear', confirmationEmail, onRegister, onLogin, onClearError, onTornar, onRecupera = null, introEntrada = null, t = TRADUCTOR_DE_RESERVA }) {
   const potRecuperar = typeof onRecupera === 'function';
@@ -187,6 +199,17 @@ export function RegistrationStep({ isBusy, bloquejat = false, error, codiError =
     onClearError?.();
   };
 
+  /* IDEA-133 (B2-03) · Els dos codis que solen ser un compte nascut amb Google. */
+  const ofereixEnllac = potRecuperar && (codiError === CODI_ENTRADA.COMPTE_EXISTENT || codiError === CODI_ENTRADA.CREDENCIALS);
+  const accionsDeLAvis = ofereixEnllac ? (
+    <>
+      {accionsError}
+      <Boto varietat="fantasma" ple onClick={obriRecuperacio} disabled={desactivat}>
+        {t('section.login.registre.recuperaAmbEnllac', 'Entraves amb Google o no tens contrasenya? Rep un enllaç al correu')}
+      </Boto>
+    </>
+  ) : accionsError;
+
   if (mode === 'recuperar' && typeof onRecupera === 'function' && !confirmationEmail) {
     return (
       <RecuperacioStep
@@ -262,7 +285,7 @@ export function RegistrationStep({ isBusy, bloquejat = false, error, codiError =
             />
           </div>
 
-          {error ? <Alerta to={toDeLErrorDEntrada(codiError)} accions={accionsError}>{error}</Alerta> : null}
+          {error ? <Alerta to={toDeLErrorDEntrada(codiError)} accions={accionsDeLAvis}>{error}</Alerta> : null}
 
           <form className="onboarding-form" onSubmit={submit} noValidate>
             {mode === 'register' && (

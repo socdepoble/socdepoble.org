@@ -308,8 +308,8 @@ export const CAPACITATS = Object.freeze({
          sense servidor (seed o local) o un servidor sense la migració.
      Els errors només són els de no arribar (l'estat HTTP, un tall, una
      cancel·lació): l'app no es bloqueja mai per un error (fail-open). Ho
-     servix 2611011510_versio_minima_client.sql (NO aplicada: l'aplica el
-     Mestre). */
+     servix 2611011510_versio_minima_client.sql (aplicada a producció: la
+     lectura REST del 6-11-2026 la troba, 200 a anon). */
   versioClient: Object.freeze([
     'versioMinimaClient'
   ]),
@@ -673,8 +673,8 @@ export const CAPACITATS = Object.freeze({
      (SDP-PUSH-011: l'aparell és d'una altra sessió i cal el gest) i
      NO-DISPONIBLE (sense servidor, un servidor sense la migració o amb els
      avisos apagats, SDP-PUSH-010). Ho servixen xat_push_desa i
-     xat_push_retira de 2611020417_xat_avisos_push.sql (B8-SERVIDOR; NO
-     aplicada: l'aplica el Mestre). Un node sense servidor la declara amb el rebuig honest
+     xat_push_retira de 2611020417_xat_avisos_push.sql (B8-SERVIDOR; aplicada
+     a producció: lectura REST del 6-11-2026). Un node sense servidor la declara amb el rebuig honest
      NO-DISPONIBLE (src/data/local/conversesLocal.js). */
   avisosPush: Object.freeze([
     'desaDispositiuAvisos',
@@ -697,7 +697,7 @@ export const CAPACITATS = Object.freeze({
      cap petició, o SDP-XAT-050 del servidor), XAT_NO_PARTICIPANT (no eres
      membre actiu del fil, SDP-XAT-006) i NO-DISPONIBLE (un servidor sense la
      RPC). Ho servix xat_silencia(p_fil_id, p_durada) de
-     2611020417_xat_avisos_push.sql (NO aplicada: l'aplica el Mestre), i la data de fi la posa el
+     2611020417_xat_avisos_push.sql (aplicada a producció: lectura REST del 6-11-2026), i la data de fi la posa el
      rellotge del servidor; en llavor i en local, finsAlDelSilenci (davall). */
   silenciXat: Object.freeze([
     'silenciaFil'

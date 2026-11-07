@@ -402,7 +402,7 @@ export async function updateProfile(entrada, config = {}) {
       fila = await desaElMeuUsername(username, config);
     } catch (error) {
       perfilVigent();
-      /* APP-D1 · Sense la RPC al servidor (NO-DISPONIBLE: 2610282100 pendent)
+      /* APP-D1 · Sense la RPC al servidor (NO-DISPONIBLE: un node sense la 2610282100)
          i amb més camps, la resta es desa igual i la fila diu què no s'ha
          desat (campsNoDesats, el contracte de columnesOpcionals): cap camp
          es dona per desat ni es descarta en silenci. Qualsevol altre error,

@@ -221,11 +221,13 @@ describe('2611012257 · la política de privacitat 2.3 segellada (T11-05)', () =
   test('supabase/README.md: vinyeta, fila del catàleg i pas de l’ordre obligatori', () => {
     const empremta = filaDe(SQL).empremta;
     expect(README).toContain(`- \`migrations/${NOM}\``);
-    expect(README).toMatch(new RegExp(`^\\| \\d+ \\| \`2611012257\` \\| \`${NOM}\` \\| \\*\\*NO aplicada: l'aplica el Mestre\\*\\* \\| [^|]+ \\|$`, 'm'));
+    // Onada R10 · B4 (VFT-01): la lectura REST del 6-11-2026 hi troba la 2.3 amb l'empremta d'esta migració.
+    expect(README).toMatch(new RegExp(`^\\| \\d+ \\| \`2611012257\` \\| \`${NOM}\` \\| Aplicada a producció \\(lectura REST del 6-11: \`politiques_privacitat\` té la 2\\.3 amb l'empremta \`${empremta.slice(0, 8)}…\` [^|]+\\) \\| [^|]+ \\|$`, 'm'));
     const vinyeta = README.slice(README.indexOf(`- \`migrations/${NOM}\``), README.indexOf('- `seed.sql`'));
     expect(vinyeta).toContain('src/data/supabase/politicaPrivacitat23.migracio.test.js');
     expect(vinyeta).toContain(empremta);
-    expect(vinyeta).toMatch(/NO aplicada: l'aplica el Mestre, mai un agent/);
+    expect(vinyeta.replace(/\s+/g, ' ')).toContain(`**aplicada a producció** (lectura REST del 6-11-2026: \`politiques_privacitat\` té la 2.3, vigent des del 2026-10-31T23:00Z, amb l'empremta \`${empremta.slice(0, 8)}…\` d'esta migració)`);
+    expect(vinyeta.split('\n\n')[0]).not.toMatch(/NO aplicada/);
     const ordre = README.slice(README.indexOf("### Nota d'auditoria `DF-06`"), README.indexOf('### Taula canònica'));
     expect(ordre).toMatch(/^ {2}\d+\. Primer el desplegament web amb el text final de `\/legal`; després `2611012257`/m);
     // Els dist/ vells porten una altra «Versió 2.3»: el pas diu que cal tornar a construir i comprovar l'empremta.

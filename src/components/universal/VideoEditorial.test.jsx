@@ -36,8 +36,11 @@ const editor = (content) => {
 };
 const cos = (html) => new DOMParser().parseFromString(`<body>${html}</body>`, 'text/html').body;
 
-/* Gauntlet R9 · G2-04 · La façana: el botó del vídeo, en la llengua de la interfície (ací, la de reserva). */
-const obri = (container) => fireEvent.click(within(container).getByRole('button', { name: ca['editor.video.veure'] }));
+/* Gauntlet R9 · G2-04 · La façana: el botó del vídeo, en la llengua de la interfície (ací, la de reserva).
+   R10 · VFC-09 · El seu nom comença pel text visible del botó i acaba amb el títol del vídeo. */
+const VEURE = ca['editor.video.veure'];
+const esBotoDeVideo = (nom) => nom.startsWith(VEURE);
+const obri = (container) => fireEvent.click(within(container).getByRole('button', { name: esBotoDeVideo }));
 
 describe('VideoEditorial · l’únic iframe', () => {
   test('G2-04 · abans del clic, cap iframe ni cap adreça de tercers; després, un sol iframe', () => {
@@ -52,7 +55,7 @@ describe('VideoEditorial · l’únic iframe', () => {
     expect(ca['editor.video.veure']).toBe('Veure el vídeo (YouTube)');
     obri(container);
     expect(container.querySelectorAll('iframe')).toHaveLength(1);
-    expect(within(container).queryByRole('button', { name: ca['editor.video.veure'] })).toBeNull();
+    expect(within(container).queryByRole('button', { name: esBotoDeVideo })).toBeNull();
     expect(document.activeElement).toBe(container.querySelector('iframe'));
   });
 
@@ -82,11 +85,68 @@ describe('VideoEditorial · l’únic iframe', () => {
 
   test('cada vídeo demana el seu clic: obrir-ne un no obri l’altre', () => {
     const { container } = render(<><VideoEditorial id={ID} title="Un" /><VideoEditorial id="abcdefghijk" title="Dos" /></>);
-    fireEvent.click(screen.getAllByRole('button', { name: ca['editor.video.veure'] })[0]);
+    fireEvent.click(screen.getByRole('button', { name: `${VEURE} Un` }));
     const frames = container.querySelectorAll('iframe');
     expect(frames).toHaveLength(1);
     expect(frames[0].getAttribute('src')).toBe(`${ORIGEN_VIDEO_EDITORIAL}/embed/${ID}`);
-    expect(screen.getAllByRole('button', { name: ca['editor.video.veure'] })).toHaveLength(1);
+    expect(screen.getAllByRole('button', { name: esBotoDeVideo }).map((boto) => boto.textContent)).toEqual([VEURE]);
+    expect(screen.getByRole('button', { name: `${VEURE} Dos` })).toBeTruthy();
+  });
+
+  /* Gauntlet R10 · VFC-09 · Dos vídeos, dos noms: a la llista de botons d'un lector de pantalla es
+     distingixen pel títol. El nom comença pel text visible (WCAG 2.5.3) i la descripció és l'avís. */
+  test('VFC-09 · amb dos vídeos, cada botó té un nom propi, amb el títol, i l’avís de descripció', () => {
+    render(<><VideoEditorial id={ID} title="2n Aplec" /><VideoEditorial id="abcdefghijk" title="El pou" /></>);
+    const botons = screen.getAllByRole('button', { name: esBotoDeVideo });
+    expect(botons).toHaveLength(2);
+    expect(screen.getByRole('button', { name: `${VEURE} 2n Aplec`, description: ca['editor.video.avisTercers'] })).toBe(botons[0]);
+    expect(screen.getByRole('button', { name: `${VEURE} El pou`, description: ca['editor.video.avisTercers'] })).toBe(botons[1]);
+    /* El text visible del botó no canvia: el nom hi afig el títol darrere (2.5.3, l'etiqueta dins del nom). */
+    for (const boto of botons) expect(boto.textContent).toBe(VEURE);
+    /* La descripció és l'avís de la seua façana: ids de useId, un per instància. */
+    const descrits = botons.map((boto) => document.getElementById(boto.getAttribute('aria-describedby')));
+    expect(new Set(descrits.map((node) => node.id)).size).toBe(2);
+    descrits.forEach((node, i) => expect(node.closest('.video-editorial__facana')).toBe(botons[i].closest('.video-editorial__facana')));
+  });
+
+  test('VFC-09 · amb titolVisible={false}, el títol entra al nom i el text de la façana no el repetix', () => {
+    const { container } = render(<><VideoEditorial id={ID} title="Documental del pou" titolVisible={false} /><VideoEditorial id="abcdefghijk" title="Documental de l’almàssera" titolVisible={false} /></>);
+    expect(screen.getByRole('button', { name: `${VEURE} Documental del pou`, description: ca['editor.video.avisTercers'] })).toBeTruthy();
+    expect(screen.getByRole('button', { name: `${VEURE} Documental de l’almàssera`, description: ca['editor.video.avisTercers'] })).toBeTruthy();
+    expect(container.textContent).not.toMatch(/Documental/);
+  });
+
+  /* Gauntlet R10 · VFC-01 · Al Visor d'Anatomia Rural el mateix lloc passa d'un vídeo a l'altre (el pou,
+     l'almàssera, el pou). El «sí» del primer no torna: cap iframe sense un clic nou, i el focus no se'n va
+     del control que l'usuari fa servir. */
+  test('VFC-01 · A→B→A amb el focus fora: cap iframe sense un clic nou i el focus no es mou', () => {
+    const B = 'abcdefghijk';
+    const Visor = ({ id }) => <><button type="button">Fora</button><VideoEditorial id={id} title="Documental" /></>;
+    const { container, rerender } = render(<Visor id={ID} />);
+    const fora = screen.getByRole('button', { name: 'Fora' });
+    obri(container);
+    expect(document.activeElement).toBe(container.querySelector('iframe'));
+    fora.focus();
+    rerender(<Visor id={B} />);
+    expect(container.querySelector('iframe')).toBeNull();
+    rerender(<Visor id={ID} />);
+    expect(container.querySelector('iframe')).toBeNull();
+    expect(within(container).getByRole('button', { name: `${VEURE} Documental` })).toBeTruthy();
+    expect(document.activeElement).toBe(fora);
+    obri(container);
+    expect(container.querySelector('iframe').getAttribute('src')).toBe(`${ORIGEN_VIDEO_EDITORIAL}/embed/${ID}`);
+    expect(document.activeElement).toBe(container.querySelector('iframe'));
+  });
+
+  test('VFC-01 · amb el vídeo obert, un render nou (un altre títol) no torna a moure el focus', () => {
+    const Visor = ({ titol }) => <><button type="button">Fora</button><VideoEditorial id={ID} title={titol} /></>;
+    const { container, rerender } = render(<Visor titol="Un" />);
+    obri(container);
+    const fora = screen.getByRole('button', { name: 'Fora' });
+    fora.focus();
+    rerender(<Visor titol="Un, retocat" />);
+    expect(container.querySelector('iframe').title).toBe('Un, retocat');
+    expect(document.activeElement).toBe(fora);
   });
 
   test('el «sí» és d’un vídeo: si el mateix lloc passa a un altre id, cal un altre clic', () => {
@@ -198,9 +258,11 @@ describe('node videoEditorial · marcador inert al cos', () => {
   });
 });
 
-/* FBV-02 · /legal 2.5 (text segellat) no nomena YouTube: ni l'apartat 11 ni el 21. El comentari del component
+/* FBV-02 · /legal 2.5 (text segellat) no nomena YouTube ni a l'apartat 11 ni al 21. El comentari del component
    ho ha de dir, perquè l'únic que informa l'usuari és l'avís de la façana. Si una /legal nova nomena YouTube a
-   l'apartat 21, esta prova cau i cal posar el comentari al dia. */
+   l'apartat 21, esta prova cau i cal posar el comentari al dia.
+   Gauntlet R10 · VFC-07 · Però l'apartat 23 (agraïments) sí que enllaça canals de YouTube: el comentari no pot
+   dir que tota /legal 2.5 no el nomena, només els apartats 11 i 21. */
 describe('FBV-02 · el comentari diu la veritat sobre /legal', () => {
   const llig = (rel) => readFileSync(path.resolve(process.cwd(), rel), 'utf8');
   const apartat = (html, n) => html.slice(html.indexOf(`<h4>${n}. `), html.indexOf(`<h4>${n + 1}. `));
@@ -214,7 +276,8 @@ describe('FBV-02 · el comentari diu la veritat sobre /legal', () => {
     }
     expect(apartat(legal, 21)).toMatch(/OpenStreetMap/);
     const capcalera = llig('src/components/universal/VideoEditorial.jsx').split('*/')[0].replace(/\s*\n\s*\*\s*/g, ' ');
-    expect(capcalera).toMatch(/\/legal 2\.5 no nomena YouTube/);
+    expect(capcalera).toMatch(/[Nn]i l'apartat 11 ni el 21 de \/legal 2\.5 no nomenen YouTube/);
+    expect(capcalera).not.toMatch(/\/legal 2\.5 no nomena YouTube/);
     expect(capcalera).toMatch(/l'únic que informa l'usuari és l'avís d'esta façana/);
     expect(capcalera).not.toMatch(/apartats 11 i 21: a un servei de fora només s'hi va amb un botó/);
     /* FBV-03 · «Vore mapa» sí que recorda la tria: el comentari no pot dir el contrari. */

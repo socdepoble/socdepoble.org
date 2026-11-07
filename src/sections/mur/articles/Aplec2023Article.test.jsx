@@ -19,7 +19,7 @@ import { publicacionsDelPoble } from '../../pobles/publicacionsDelPoble.js';
 afterEach(() => { cleanup(); fixaBaseRecursos(''); });
 /* Gauntlet R9 · G2-04 · Façana de clic: abans del gest, cap iframe; el clic obri el del vídeo. */
 const obriVideos = (root) => {
-  const botons = within(root).queryAllByRole('button', { name: 'Veure el vídeo (YouTube)' });
+  const botons = within(root).queryAllByRole('button', { name: /^Veure el vídeo \(YouTube\) / });
   for (const boto of botons) fireEvent.click(boto);
   return botons.length;
 };

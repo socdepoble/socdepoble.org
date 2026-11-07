@@ -940,10 +940,22 @@ describe('la frontera', () => {
   const GENERATS = new Set(['src/data/wikiManifest.js']);
   const sensComentaris = (text) => text.replace(/\/\*[\s\S]*?\*\//g, ' ').replace(/^\s*\/\/.*$/gm, ' ');
 
+  /* Gauntlet R10 · VFC-05 · La frontera cobrix les cinc RPC del worker, també xat_push_desa_credencial (la
+     dels enviadors natius, natius.js), i no les del client (xat_push_desa i xat_push_retira, de
+     dispositiusAvisos.js) ni la funció privada de validació que els comentaris de src/ citen. */
+  const RPC_FRONTERA = /xat_push_(?:reclama|expulsa|neteja|(?:desa_)?credencial)/;
+  const FRONTERA = new RegExp(`${RPC_FRONTERA.source}|SDP_PUSH_VAPID_PRIVADA|SDP_APNS_CLAU_P8|SDP_FCM_COMPTE_SERVEI`);
+
+  test('VFC-05 · la frontera cobrix cada RPC de RPC_DEL_WORKER i deixa passar les del client', () => {
+    for (const nom of RPC_DEL_WORKER) expect(nom).toMatch(RPC_FRONTERA);
+    expect(RPC_DEL_WORKER).toContain('xat_push_desa_credencial');
+    for (const nom of ['xat_push_desa', 'xat_push_retira', 'private.xat_push_adreca_valida']) expect(nom).not.toMatch(FRONTERA);
+  });
+
   test('cap fitxer de src/ crida les RPC del worker ni nomena els secrets del servidor', () => {
     const trobats = fitxers(path.join(ARREL, 'src'))
       .filter((f) => !/\.test\.jsx?$/.test(f) && !GENERATS.has(path.relative(ARREL, f)))
-      .filter((f) => /xat_push_(reclama|expulsa|neteja|credencial)|SDP_PUSH_VAPID_PRIVADA|SDP_APNS_CLAU_P8|SDP_FCM_COMPTE_SERVEI/.test(readFileSync(f, 'utf8')))
+      .filter((f) => FRONTERA.test(readFileSync(f, 'utf8')))
       .map((f) => path.relative(ARREL, f));
     expect(trobats).toEqual([]);
   });

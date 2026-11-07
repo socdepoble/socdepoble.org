@@ -27,7 +27,8 @@ async function carpetesPrivades(config, ownerUserId) {
   } catch (error) {
     // Un servidor anterior a R12 continua llegint Notes; no fingix crear carpetes.
     /* B4-S1 · ErrorSupabase no porta `code`: PostgREST respon 404 amb PGRST205
-       al cos quan la taula no existix (la migració 76 encara no s'ha aplicat). */
+       al cos quan la taula no existix (un node sense la migració 76, 2611051930; a producció,
+       la lectura REST del 6-11-2026 ja la troba). */
     if (['42P01', 'PGRST205'].includes(error?.code) || error?.status === 404 || /PGRST205|42P01/.test(String(error?.message || ''))) return NOTE_FOLDERS_SEED;
     throw error;
   }

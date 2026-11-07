@@ -5,24 +5,23 @@
    membres_i_entitats_connectades_de, inclou_persona_en_entitat i
    solicita_unir_se_a_entitat.
 
-   ENCENDRE (true) QUAN S'APLIQUE 2611032100 a la base de Supabase de producció.
+   ENCENDRE (true) QUAN S'APLIQUE 2611032100: fet a l'Onada R10 (IDEA-133, B2-04).
 
-   Hui (R8, sense la migració) cada lectura fa un 404 a la consola, i
-   runtime.rpc() (src/data/supabase/runtime.js) el torna com un error sense
-   `code`: es perd el PGRST202, errorConnexionsRpc en fa DESCONEGUT, la vista
-   pinta l'avís «No s’han pogut llegir les connexions» i sondaConnexions.js no
-   ho recorda. Mesurat el 261106 amb el dist de R8 a
-   /pobles/la-torre-de-les-macanes i a fitxes /empresa/:id.
+   El fet llegit (6-11-2026, 22:00, GET de només lectura a la base de
+   producció): connexions_publiques_de i membres_i_entitats_connectades_de
+   responen 200 a anon, i el Mestre diu que hi ha aplicat la 2611032100. Abans
+   (R8 i R9, sense la migració) cada lectura feia un 404 PGRST202 a la consola, i
+   runtime.rpc() (src/data/supabase/runtime.js) el tornava com un error sense
+   `code`: la vista pintava l'avís «No s’han pogut llegir les connexions». Per
+   això R9 el va deixar apagat.
 
-   Apagat, l'adaptador remot (src/data/supabase/seguiments.js, executaConnexions)
-   no fa cap petició: després de les mateixes validacions de sempre, respon el
-   NO-DISPONIBLE que preveu el disseny (ConnexionsPubliques.sonda.test.jsx). La
-   vista calla (ni bloc ni avís), sondaConnexions.js recorda que este backend
-   no les té i la consola no veu cap 404 (P0-16). Això canvia el que es veu a
-   les vistes de connexions (D-C4-1). Els modes seed i local no en depenen: el
-   seu servidor és localSeguiments.js.
+   Encés, l'adaptador remot (src/data/supabase/seguiments.js, executaConnexions)
+   crida les RPC: la fitxa del poble i les fitxes públiques tornen a pintar el
+   bloc de connexions (D-C4-1). Apagat, després de les mateixes validacions de
+   sempre, respon el NO-DISPONIBLE que preveu el disseny
+   (ConnexionsPubliques.sonda.test.jsx), sense cap petició. Els modes seed i
+   local no en depenen: el seu servidor és localSeguiments.js.
 
-   Una constant literal, com AVISOS_PUSH_XAT_ACTIUS: Rollup la plega i, apagada,
-   la crida rpc() de les connexions no viatja al paquet. És d'abast de build:
-   un node amb un backend propi que ja tinga 2611032100 també l'ha d'encendre. */
-export const CONNEXIONS_PUBLIQUES_REMOTES_ACTIVES = false;
+   Una constant literal, com AVISOS_PUSH_XAT_ACTIUS: Rollup la plega. És d'abast
+   de build: un node amb un backend propi sense 2611032100 l'ha d'apagar. */
+export const CONNEXIONS_PUBLIQUES_REMOTES_ACTIVES = true;

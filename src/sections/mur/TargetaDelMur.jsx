@@ -190,7 +190,20 @@ export function TargetaDelMur({ item, esdeveniment = null, alertaMunicipal = nul
     nom: item.author_name || item.seller || "Sóc de Poble",
     avatar: item.author_avatar || item.avatar_url || (signaPersona ? null : DEFAULT_AUTHOR.avatarUrl)
   });
-  const cos = item.lead || <p className="sp-card-text">{item.description}</p>;
+  /* P0-33 / IDEA-150 (Llei 1:1 UniversalPage ↔ UniversalCard, 261107) · La
+     targeta del Mur pinta la mateixa entradilla (entradilla || lead) i el
+     mateix subtítol (subtitle || post_subtitle) que la seua UniversalPage.
+     Abans llegia només item.lead i queia a item.description. */
+  const textEntradilla = item.entradilla || item.lead || item.description;
+  const cos = typeof textEntradilla === 'string'
+    ? <p className="sp-card-text">{textEntradilla}</p>
+    : textEntradilla;
+  /* El subtítol de reserva (post_subtitle) no repetix l'entradeta: una
+     publicació de /notes sense subtítol hi porta la mateixa descripció. */
+  const textNet = (v) => String(v ?? '').replace(/\s+/g, ' ').trim();
+  const subtitolDeReserva = textNet(item.post_subtitle) !== textNet(typeof textEntradilla === 'string' ? textEntradilla : '')
+    ? item.post_subtitle
+    : undefined;
   /* T3.3 · Una alerta municipal porta el distintiu (text visible i icona
      redundant, sense regió viva) al capdamunt del cos, davall del títol i
      del subtítol (qui salta per encapçalaments el troba en arribar), la
@@ -237,7 +250,7 @@ export function TargetaDelMur({ item, esdeveniment = null, alertaMunicipal = nul
       /* T51 · l'emoticona que la nota porta al payload (icon); la
          targeta només la pinta si és un sol emoji. */
       emoticona={item.icon}
-      subtitle={resum || item.subtitle}
+      subtitle={resum || item.subtitle || subtitolDeReserva}
       body={alerta ? (
         <>
           <DistintiuAlertaMunicipal tipus={alerta.clau} />

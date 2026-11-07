@@ -1,0 +1,10 @@
+import '../../src/css/index.css';
+import { createRoot } from 'react-dom/client';
+import PouDeLaNeuAnatomiaCard from '../../src/components/patrimoni/PouDeLaNeuAnatomiaCard.jsx';
+import './preview.css';
+const media = matchMedia('(prefers-color-scheme: dark)');
+const applyTheme = () => { document.documentElement.dataset.theme = media.matches ? 'dark' : 'light'; };
+applyTheme();
+media.addEventListener('change', applyTheme);
+const params = new URLSearchParams(location.search);
+createRoot(document.getElementById('root')).render(<main className="pou-neu-preview"><PouDeLaNeuAnatomiaCard language={params.get('lang') || 'ca'} noWebgl={params.has('no-webgl')} initialExploded={params.has('exploded')} /></main>);

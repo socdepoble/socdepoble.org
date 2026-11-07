@@ -728,12 +728,25 @@ describe('01-11-2026 · fet hui, verificable, i enllaçat en un clic', () => {
     const li=elementAmb('El connector oficial per a WordPress');
     expect([...li.querySelectorAll('a')].map(a=>[a.getAttribute('href'),a.getAttribute('target'),a.getAttribute('rel')])).toEqual([[WORDPRESS,'_blank','noopener noreferrer'],['https://gentdelatorre.net','_blank','noopener noreferrer']]);
     expect(canalsOberts().map(c=>c.url)).toContain(WORDPRESS);
-    expect(pendent).toContain('2611031700_administracio_multipoble.sql encara no s’han aplicat');
+    // R10 · B4 (VFT-03): la lectura REST del 6-11-2026 troba admin_llista_pobles() i admin_llegix_personalitzacio(uuid)
+    // a producció (401 42501 a anon). L'agenda viva ho diu i ja no ho nega.
+    expect(pendent).toContain('la lectura REST del 6 de novembre troba a producció les noves RPC de 2611031700_administracio_multipoble.sql');
+    expect(pendent).not.toMatch(/2611031700_administracio_multipoble\.sql encara no|falta activar-lo al servidor central/);
     expect(pendent).toContain('superadmin amb segon factor aal2');
     expect(pendent).toContain('un rol admin de poble no obté eixe privilegi');
     expect(pendent).toContain('activació voluntària i permisos explícits');
     expect(pendent).toContain('no es declara tota l’aplicació autònoma fora de línia');
     expect(PAGE_COPY.fediversity.html).not.toMatch(/operacions signad/);
+  });
+
+  // R10 · B4 segona ronda (B4V-T2): FEDI-04 i FEDI23 són la 2611031700 i la 2611032100, i la lectura REST del
+  // 6-11-2026 en troba les RPC (401 42501 i 200 a anon). Ni la fita ni el «Pendent» poden dir que estan sense aplicar.
+  test('B4V-T2 · la fita FEDI-04/23 i el pendent multipoble no neguen les migracions aplicades', () => {
+    const fita = elementAmb('FEDI-04 / FEDI-16 / FEDI-17 / FEDI-23').textContent.replace(/\s+/g, ' ');
+    expect(fita).toContain('Les dues migracions SQL (2611031700 i 2611032100) ja són a producció: la lectura REST del 6 de novembre en troba les RPC.');
+    const multipoble = elementAmb('RPC multipoble').textContent.replace(/\s+/g, ' ');
+    expect(multipoble).toContain('Provar al servidor de producció les RPC multipoble (la lectura REST del 6 de novembre ja les hi troba) abans de declarar');
+    expect(copy.html).not.toMatch(/sense aplicar a producció|Aplicar i provar al servidor de producció les <strong>RPC multipoble/);
   });
 
   test('partida 2: les comprovacions automàtiques d’accessibilitat són les que hi ha al repositori', () => {

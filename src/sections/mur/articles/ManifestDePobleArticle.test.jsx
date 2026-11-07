@@ -72,11 +72,11 @@ test('el formulari és una acció accessible de Pedra Seca, sense cap iframe ni 
   expect(container.querySelector('[height="9100"],[style*="9100"]')).toBeNull();
 });
 
-test('la fitxa del Mur munta el Manifest real i mostra el logo una sola vegada', () => {
+test('la fitxa del Mur munta el Manifest real: el segell a la Hero (P0-35, ordre del Mestre del 261107) i una sola vegada dins del cos', () => {
   const item = FEED_POSTS.find(post => post.id === 'manifest-de-poble');
   const meta = buildMurDetailSectionMeta({ feedPosts: FEED_POSTS, t: (_, fallback) => fallback });
   expect(meta.items).toContain(item);
-  expect(meta.getImage(item)).toBeNull();
+  expect(meta.getImage(item)).toBe('/assets/mur/manifest-de-poble/logo-manifest-de-poble-retallat.webp');
   const { container } = render(meta.renderBody(item));
   expect(container.querySelectorAll('img[src$="logo-manifest-de-poble-retallat.webp"]')).toHaveLength(1);
   expect(container.querySelector('.manifest-de-poble')).not.toBeNull();

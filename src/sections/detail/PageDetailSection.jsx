@@ -23,9 +23,10 @@ const SECCIONS_DE_PATRIMONI = {
   'arbres-monumentals': lazy(() => import('../patrimoni/ArbresMonumentalsSection.jsx'))
 };
 
-/* IDEA-109 (onada R7) · El visor d'Anatomia Rural és un chunk lazy: no pesa a
-   l'entrada, només es baixa a /page/anatomia-rural. */
+/* IDEA-109 + IDEA-143 · Els dos visors d'Anatomia Rural són chunks lazy:
+   només es baixen a /page/anatomia-rural i cadascun es carrega independentment. */
 const PAGINA_DEL_VISOR = 'anatomia-rural';
+const PouDeLaNeuAnatomiaCard = lazy(() => import('../../components/patrimoni/PouDeLaNeuAnatomiaCard.jsx'));
 const VisorAnatomiaRural3D = lazy(() => import('../../components/patrimoni/VisorAnatomiaRural3D.jsx'));
 
 /* El text de càrrega del visor, en la llengua de la interfície (i18n); fora de
@@ -144,7 +145,7 @@ export default function PageDetailSection() {
     let alFinal = <PublicarDeLaPagina clau={slug} />;
     if (accioAlFinal(slug)) alFinal = <AccioDeLaPagina clau={slug} lloc="baix" />;
     else if (instalacio) alFinal = <InstalaLaPwa instalacio={instalacio} lloc="baix" />;
-    if (slug === PAGINA_DEL_VISOR) alFinal = <><Suspense fallback={<div role="status" aria-live="polite"><CarregantElVisor /></div>}><VisorAnatomiaRural3D /></Suspense>{alFinal}</>;
+    if (slug === PAGINA_DEL_VISOR) alFinal = <><Suspense fallback={null}><PouDeLaNeuAnatomiaCard /></Suspense><Suspense fallback={<div role="status" aria-live="polite"><CarregantElVisor /></div>}><VisorAnatomiaRural3D /></Suspense>{alFinal}</>;
     else if(slug==='herbari')alFinal=<><Suspense fallback={null}><HerbariLaTorreSection/></Suspense>{alFinal}</>;
     else if (Object.hasOwn(SECCIONS_DE_PATRIMONI, slug)) { const Consulta = SECCIONS_DE_PATRIMONI[slug]; alFinal = <><Suspense fallback={null}><Consulta /></Suspense>{alFinal}</>; }
     else if(['fediversity','node-zero'].includes(slug))alFinal=<><Suspense fallback={null}><AparadorFediversity/></Suspense>{alFinal}</>;

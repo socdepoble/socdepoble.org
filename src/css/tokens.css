@@ -125,6 +125,12 @@
   /* Fons */
   --sdp-fons-app:        var(--sdp-pedra-150);
   --sdp-fons-targeta:    var(--sdp-blanc-pur);
+  /* IDEA-155 · Pou de la Neu 3D: paper i ombres del dibuix, derivats del cos i del fons de la targeta. */
+  --sdp-pou-paper: var(--sdp-fons-targeta);
+  --sdp-pou-shade-0: color-mix(in srgb, var(--sdp-text-cos) 34%, var(--sdp-fons-targeta));
+  --sdp-pou-shade-1: color-mix(in srgb, var(--sdp-text-cos) 24%, var(--sdp-fons-targeta));
+  --sdp-pou-shade-2: color-mix(in srgb, var(--sdp-text-cos) 15%, var(--sdp-fons-targeta));
+  --sdp-pou-shade-3: color-mix(in srgb, var(--sdp-text-cos) 8%, var(--sdp-fons-targeta));
   --sdp-fons-elevat:     var(--sdp-blanc-pur);
   --sdp-fons-superficie: var(--sdp-blanc-pur);
 
@@ -669,6 +675,14 @@
 
   --sdp-fons-app:        var(--sdp-pedra-900);
   --sdp-fons-targeta:    var(--sdp-pedra-850);
+  /* Verificació final R10 (P1-c): el paper del reproductor i del visor d'anatomia també en fosc. */
+  --sdp-fons-lectura:    var(--sdp-pedra-850);
+  /* IDEA-155 · Pou de la Neu 3D: paper i ombres del dibuix, derivats del cos i del fons de la targeta. */
+  --sdp-pou-paper: var(--sdp-fons-targeta);
+  --sdp-pou-shade-0: color-mix(in srgb, var(--sdp-text-cos) 34%, var(--sdp-fons-targeta));
+  --sdp-pou-shade-1: color-mix(in srgb, var(--sdp-text-cos) 24%, var(--sdp-fons-targeta));
+  --sdp-pou-shade-2: color-mix(in srgb, var(--sdp-text-cos) 15%, var(--sdp-fons-targeta));
+  --sdp-pou-shade-3: color-mix(in srgb, var(--sdp-text-cos) 8%, var(--sdp-fons-targeta));
   --sdp-fons-elevat:     var(--sdp-pedra-800);
   --sdp-fons-superficie: var(--sdp-pedra-850);
   --sdp-fons-subtil:     var(--sdp-pedra-750);

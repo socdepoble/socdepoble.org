@@ -3,7 +3,8 @@ const m = vi.hoisted(() => ({ user: { id: '11111111-1111-4111-8111-111111111111'
 vi.mock('./runtime.js', () => ({ getCurrentUser: () => m.user, getResolvedConfig: () => ({ runtimeDataMode: m.mode, hasSupabaseConfig: m.configured }), rpc: m.rpc }));
 /* D-P016 (Onada R9) · Les proves del transport descriuen el servidor amb la
    migració 2611032100 aplicada: hi corren amb l'interruptor encés (m.actiu).
-   El valor real (apagat) i el seu efecte es proven al final del fitxer. */
+   IDEA-133 (Onada R10, B2-04) · El valor real ja és encés; l'efecte d'apagar-lo
+   (un backend sense la migració) es prova al final del fitxer. */
 vi.mock('../../config/connexionsPubliques.js', () => ({ get CONNEXIONS_PUBLIQUES_REMOTES_ACTIVES() { return m.actiu; } }));
 vi.mock('../identitat.js', () => ({ getDefaultUserId: () => 'convidat', capturaSessio: () => { const epoch = m.epoch; return () => { if (m.epoch !== epoch) throw new DOMException('Sessió canviada', 'AbortError'); }; } }));
 vi.mock('./moderacio.js', () => ({ llistaBloquejos: async () => [], bloqueigLocalEntre: () => false }));
@@ -83,12 +84,14 @@ test('UUID explícit de poble no accepta resposta d’un altre poble; slug sí q
   expect((await servidor.preferenciesConnexions({tipus:'poble',id:'sella'})).id).toBe(A);
 });
 
-/* D-P016 (Onada R9, ordre del Mestre del 261106) · Mentre la migració
-   2611032100 no siga a producció, l'interruptor (src/config/connexionsPubliques.js)
-   és apagat: cap de les sis RPC no ix del client en remot. */
-test('D-P016 · el valor real de l’interruptor és apagat fins que s’aplique 2611032100', async () => {
+/* D-P016 (Onada R9, ordre del Mestre del 261106) · L'interruptor
+   (src/config/connexionsPubliques.js) es va apagar mentre la 2611032100 no era
+   a producció. IDEA-133 (Onada R10, B2-04) · Ja hi és (GET del 6-11-2026): el
+   valor real és encés. Apagat (un backend sense la migració), cap de les sis
+   RPC no ix del client en remot. */
+test('B2-04 · el valor real de l’interruptor és encés: la 2611032100 és a producció', async () => {
   const real = await vi.importActual('../../config/connexionsPubliques.js');
-  expect(real.CONNEXIONS_PUBLIQUES_REMOTES_ACTIVES).toBe(false);
+  expect(real.CONNEXIONS_PUBLIQUES_REMOTES_ACTIVES).toBe(true);
 });
 test('D-P016 · apagat, cap de les sis operacions fa RPC en remot: totes responen NO-DISPONIBLE', async () => {
   m.actiu = false; m.rpc.mockResolvedValue(prefs);

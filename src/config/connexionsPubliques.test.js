@@ -1,6 +1,8 @@
 // @vitest-environment node
 /* D-P016 (Onada R9, ordre del Mestre del 261106) · Un sol interruptor per a les
-   sis RPC de 2611032100, apagat fins que s'aplique la migració a producció.
+   sis RPC de 2611032100. IDEA-133 (Onada R10, B2-04) · Encés: la migració és a
+   producció (GET de només lectura del 6-11-2026: connexions_publiques_de i
+   membres_i_entitats_connectades_de responen 200).
      · és una constant literal (Rollup la plega, com AVISOS_PUSH_XAT_ACTIUS);
      · les sis funcions que nomena són les que crea la migració, i totes passen
        per executaConnexions, l'únic lloc de seguiments.js que la consulta;
@@ -15,12 +17,18 @@ const llig = (rel) => readFileSync(path.join(arrel, rel), 'utf8');
 const RPC = ['preferencies_connexions', 'desa_visibilitat_connexions', 'connexions_publiques_de',
   'membres_i_entitats_connectades_de', 'inclou_persona_en_entitat', 'solicita_unir_se_a_entitat'];
 
-test('apagat, com a constant literal, i documentat per a encendre’l quan s’aplique 2611032100', () => {
-  expect(CONNEXIONS_PUBLIQUES_REMOTES_ACTIVES).toBe(false);
+test('encés (B2-04), com a constant literal, i documentat amb el fet llegit a producció', () => {
+  expect(CONNEXIONS_PUBLIQUES_REMOTES_ACTIVES).toBe(true);
   const font = llig('src/config/connexionsPubliques.js');
-  expect(font).toMatch(/^export const CONNEXIONS_PUBLIQUES_REMOTES_ACTIVES = (?:true|false);$/m);
-  expect(font).toMatch(/ENCENDRE \(true\) QUAN S'APLIQUE 2611032100/);
+  expect(font).toMatch(/^export const CONNEXIONS_PUBLIQUES_REMOTES_ACTIVES = true;$/m);
+  expect(font).toMatch(/ENCENDRE \(true\) QUAN S'APLIQUE 2611032100: fet a l'Onada R10/);
+  // El comentari diu el fet llegit, no l'estat apagat de R9.
+  expect(font).toMatch(/connexions_publiques_de i membres_i_entitats_connectades_de\s+responen 200 a anon/);
+  expect(font).not.toMatch(/Hui \(R8, sense la migració\)/);
   for (const nom of RPC) expect(font, nom).toContain(nom);
+  // Ni seguiments.js ni la vista no diuen ja que la migració no és a producció.
+  expect(llig('src/data/supabase/seguiments.js')).not.toMatch(/Sense la migració 2611032100 a producció/);
+  expect(llig('src/sections/profile/ConnexionsPubliques.jsx')).not.toMatch(/Mentre no\s+s'aplique la migració \(D-10\)/);
 });
 
 test('les sis RPC són les que crea la migració 2611032100 i totes passen per executaConnexions', () => {

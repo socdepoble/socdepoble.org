@@ -5,10 +5,14 @@ import { afterEach, beforeEach, expect, test, vi } from 'vitest';
    (/pobles/la-torre-de-les-macanes) amb la cadena real de dades: el port
    delega en l'adaptador de Supabase de veres (seguiments.js) i en el seu
    runtime (runtime.js); només el fetch és de mentida.
-     · Amb l'interruptor de 2611032100 apagat (el valor real), cap petició: el
-       bloc de connexions no es pinta i no hi ha cap avís (el disseny de
-       ConnexionsPubliques.sonda.test.jsx), la consola no veu cap 404 i
-       sondaConnexions.js recorda que este backend no les té.
+     · IDEA-133 (Onada R10, B2-04) · Amb l'interruptor encés (el valor real) i
+       la migració a producció (GET del 6-11-2026: membres_i_entitats_connectades_de
+       respon 200 i cap fila per al poble), una sola petició: la fitxa pinta el
+       títol, el buit, cap avís, i la sonda no recorda cap NO-DISPONIBLE.
+     · Amb l'interruptor apagat (un build per a un backend sense la migració),
+       cap petició: el bloc de connexions no es pinta i no hi ha cap avís (el
+       disseny de ConnexionsPubliques.sonda.test.jsx), la consola no veu cap
+       404 i sondaConnexions.js recorda que este backend no les té.
      · Amb l'interruptor encés i un servidor sense la migració (la producció
        de R8, mesurada amb c4/sonda_poble.mjs el 261106): PostgREST torna 404
        PGRST202, runtime.rpc() el convertix en un error sense codi, l'adaptador
@@ -39,12 +43,29 @@ const COS_404 = JSON.stringify({ code: 'PGRST202', details: null, hint: null,
   message: 'Could not find the function public.membres_i_entitats_connectades_de(p_id, p_tipus) in the schema cache' });
 const respira = () => new Promise((resol) => { setTimeout(resol, 30); });
 const fetch404 = () => vi.fn(async () => ({ ok: false, status: 404, headers: { get: () => null }, text: async () => COS_404, json: async () => JSON.parse(COS_404) }));
+const fetch200 = (files) => vi.fn(async () => ({ ok: true, status: 200, headers: { get: () => null }, text: async () => JSON.stringify(files), json: async () => files }));
+const BUIT = /No hi ha connexions públiques per a mostrar/;
 
 afterEach(() => { cleanup(); vi.unstubAllGlobals(); });
 beforeEach(() => { oblidaSondaConnexions(); bandera.actiu = false; });
 
-test('D-P016 · interruptor apagat (valor real): cap petició, ni títol ni avís de connexions, i la resta de la fitxa hi és', async () => {
-  expect((await vi.importActual('../../config/connexionsPubliques.js')).CONNEXIONS_PUBLIQUES_REMOTES_ACTIVES).toBe(false);
+test('B2-04 · interruptor encés (valor real) i la migració a producció: una petició, títol i buit, cap avís de lectura', async () => {
+  bandera.actiu = (await vi.importActual('../../config/connexionsPubliques.js')).CONNEXIONS_PUBLIQUES_REMOTES_ACTIVES;
+  expect(bandera.actiu).toBe(true);
+  const fetch = fetch200([]); vi.stubGlobal('fetch', fetch);
+  render(<DetallPoble poble={POBLE} config={REMOT} />);
+  expect(await screen.findByText(BUIT)).toBeTruthy();
+  expect(screen.getByRole('heading', { name: TITOL })).toBeTruthy();
+  expect(screen.queryByText(ERROR_LECTURA)).toBeNull();
+  expect(fetch).toHaveBeenCalledTimes(1);
+  expect(String(fetch.mock.calls[0][0])).toBe('http://localhost:54321/rest/v1/rpc/membres_i_entitats_connectades_de');
+  expect(JSON.parse(fetch.mock.calls[0][1].body)).toEqual({ p_tipus: 'poble', p_id: 'la-torre-de-les-macanes' });
+  expect(screen.getByRole('button', { name: /Descarregar paquet Open Data/ })).toBeTruthy();
+  expect(connexionsPotserDisponibles(ambitDeConnexions(REMOT))).toBe(true);
+});
+
+test('D-P016 · interruptor apagat (backend sense la migració): cap petició, ni títol ni avís de connexions, i la resta de la fitxa hi és', async () => {
+  bandera.actiu = false;
   const fetch = fetch404(); vi.stubGlobal('fetch', fetch);
   expect(connexionsPotserDisponibles(ambitDeConnexions(REMOT))).toBe(true);
   render(<DetallPoble poble={POBLE} config={REMOT} />);

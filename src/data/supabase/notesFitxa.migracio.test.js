@@ -105,14 +105,18 @@ describe('la capçalera', () => {
 });
 
 describe('el catàleg supabase/README.md', () => {
-  test('la vinyeta va després de 2611020417 i abans de seed.sql, diu NO aplicada, la prova i la verificació', () => {
+  /* Onada R10 · B4 segona ronda (B4V-T3) · La lectura REST del 6-11-2026 (23:53, només GET amb la clau anònima)
+     troba la columna: notes?select=fitxa respon 200, i una columna inexistent, 400 42703. La vinyeta i la fila ho
+     diuen, i cap de les dues no torna a «NO aplicada» ni a «Fins que s'aplique». */
+  test('la vinyeta va després de 2611020417 i abans de seed.sql, diu aplicada a producció, la prova i la verificació', () => {
     const posicio = README.indexOf(`- \`migrations/${NOM}\``);
     expect(posicio, 'falta l’entrada al README').toBeGreaterThanOrEqual(0);
     expect(posicio).toBeGreaterThan(README.indexOf('- `migrations/2611020417_xat_avisos_push.sql`'));
     expect(posicio).toBeLessThan(README.indexOf('- `seed.sql`'));
     const entrada = README.slice(posicio).split('\n\n')[0].replace(/\s+/g, ' ');
     expect(entrada).toContain('IDEA-61 (T0, prompt 261102_1532');
-    expect(entrada).toContain("**NO aplicada: l'aplica el Mestre, mai un agent**");
+    expect(entrada).toContain('**aplicada a producció** (lectura REST del 6-11-2026: la columna `notes.fitxa` respon 200 a anon). Cap agent no la torna a aplicar.');
+    expect(entrada).not.toMatch(/NO aplicada|Fins que s'aplique/);
     expect(entrada).toContain('Idempotent i en una sola transacció');
     expect(entrada).toContain('`notes_fitxa_objecte`');
     expect(entrada).toContain('`src/data/supabase/notesFitxa.migracio.test.js`');
@@ -124,7 +128,7 @@ describe('el catàleg supabase/README.md', () => {
   test('la fila de la taula canònica, única i amb el número següent al de 2611020417', () => {
     const files = README.split('\n').filter((l) => l.startsWith('| ') && l.includes(`\`${NOM}\``));
     expect(files).toHaveLength(1);
-    const fila = files[0].match(/^\| (\d+) \| `(\d{10})` \| `([^`]+)` \| \*\*NO aplicada: l'aplica el Mestre\*\* \| [^|]+ \|$/);
+    const fila = files[0].match(/^\| (\d+) \| `(\d{10})` \| `([^`]+)` \| Aplicada a producció \(lectura REST del 6-11: la columna `notes\.fitxa` respon 200 a anon\) \| [^|]+ \|$/);
     expect(fila, 'la forma de la fila').not.toBeNull();
     expect(fila[2]).toBe(VERSIO);
     expect(fila[3]).toBe(NOM);

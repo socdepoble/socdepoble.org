@@ -159,14 +159,17 @@ test('l’adaptador versioClient.js crida la RPC amb p_plataforma, i el contract
   expect(CONTRACTE_NUCLI).not.toContain('versioMinimaClient');
 });
 
-test('el catàleg supabase/README.md la nomena després de 2610312000, abans de seed.sql, NO aplicada, amb l’ordre, en un sol paràgraf', () => {
+test('el catàleg supabase/README.md la nomena després de 2610312000, abans de seed.sql, aplicada a producció, amb l’ordre, en un sol paràgraf', () => {
   const posicio = README.indexOf(`- \`migrations/${NOM}\`\n`);
   expect(posicio, 'falta l’entrada al README').toBeGreaterThanOrEqual(0);
   expect(posicio).toBeGreaterThan(README.indexOf('- `migrations/2610312000_e2ee_lot3_validadors_service_role.sql`\n'));
   expect(posicio).toBeLessThan(README.indexOf('- `seed.sql`'));
   const entrada = README.slice(posicio).split('\n\n')[0];
   expect(entrada).toMatch(/P0-23 \(BOT-A2; Gauntlet Claude 261025_1705\)/);
-  expect(entrada).toMatch(/\*\*NO aplicada:\s+l'aplica el\s+Mestre, mai un agent\*\*/);
+  // Onada R10 · B4: la lectura REST del 6-11-2026 hi troba la funció (200 a anon); la fila diu el mateix.
+  expect(entrada.replace(/\s+/g, ' ')).toContain("**aplicada a producció** (lectura REST del 6-11-2026: `versio_minima_client('android')` respon 200 a anon; acta 261102_1456)");
+  expect(entrada).not.toMatch(/NO aplicada/);
+  expect(README).toMatch(/^\| \d+ \| `2611011510` \| `2611011510_versio_minima_client\.sql` \| Aplicada a producció \(lectura REST del 6-11: `versio_minima_client\('android'\)` respon 200 a anon; acta 261102_1456\) \| [^|]+ \|$/m);
   for (const text of ['`public.versio_minima_client(p_plataforma)`', '`VERSIO_CLIENT_NATIU`', '`versioClient`', 'build 1', 'build 2', '2610241400',
     'grant execute on function public.versio_minima_client(text) to anon, authenticated;', 'src/data/supabase/versioMinimaClient.migracio.test.js']) {
     expect(entrada, text).toContain(text);

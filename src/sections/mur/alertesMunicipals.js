@@ -26,10 +26,10 @@
  *  la propietària o una administradora de l'entitat
  *  (pot_signar_com_organitzacio, 2609261200) i elementDeFilaPublicada
  *  (data/mapejadorSeccions.js) mai no la pren del payload. D-6 (assalt
- *  261101, migració 2611011500, NO aplicada fins que l'aplique el Mestre):
- *  un ajuntament, a més, només signa al seu poble (el tenant_id de
- *  l'entitat ha de ser el de la publicació). Fins llavors, qualsevol
- *  ajuntament del node; el client no hi mira el poble a posta (amb la
+ *  261101, migració 2611011500, aplicada a producció segons la lectura REST
+ *  del 6-11-2026): un ajuntament, a més, només signa al seu poble (el
+ *  tenant_id de l'entitat ha de ser el de la publicació). En un node sense
+ *  la migració, qualsevol ajuntament del node; el client no hi mira el poble a posta (amb la
  *  divisió de tenants del node amagaria alertes legítimes). Un ajuntament
  *  (kind 'city_hall') no es crea ni es commuta des del client: només per
  *  reclamació revisada (2609281500, 2610311500). El tipus de l'entitat no

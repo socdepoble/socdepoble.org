@@ -249,12 +249,13 @@ async function executaConnexions(ctx, metode, dades, nomRpc, body) {
       const servidor = await seguimentsLocals(), context = await contextLocal(ctx.config);
       ctx.comprova(); resultat = await servidor[metode](dades, context);
     } else if (!CONNEXIONS_PUBLIQUES_REMOTES_ACTIVES) {
-      /* D-P016 (Onada R9) · Sense la migració 2611032100 a producció, cap
-         petició i el NO-DISPONIBLE que preveu el disseny. Hui, en canvi, el
-         404 arriba de runtime.rpc() sense el PGRST202 i acaba en DESCONEGUT
-         (l'avís de lectura). Les validacions de dalt (SDP-CONN-000/001) no
-         canvien. S'encén a src/config/connexionsPubliques.js quan s'aplique
-         2611032100. */
+      /* D-P016 (Onada R9) · Apagat, cap petició i el NO-DISPONIBLE que
+         preveu el disseny; les validacions de dalt (SDP-CONN-000/001) no
+         canvien. IDEA-133 (Onada R10, B2-04) · Encés des de R10: la 2611032100
+         és a producció (lectura GET del 6-11-2026: connexions_publiques_de i
+         membres_i_entitats_connectades_de responen 200). Esta branca queda per
+         a un build que l'apague (un backend sense la migració, on el 404 de
+         runtime.rpc() arribaria sense el PGRST202 i acabaria en DESCONEGUT). */
       throw errorDeConnexions('NO-DISPONIBLE');
     } else resultat = await rpc(nomRpc, body, ctx.config, { signal: ctx.config.signal });
     ctx.comprova(); return resultat;

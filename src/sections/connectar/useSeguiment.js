@@ -53,7 +53,8 @@ function capacitat(nom) {
    destí de qui mira no té xat, i sense la capacitat no hi hauria res a fer. */
 export const teSeguiments = () => capacitat('seguiments');
 
-/* El servidor encara no té l'esquema (2610241430_seguiments.sql, NO aplicada): com sense la capacitat. */
+/* Un servidor sense l'esquema de 2610241430_seguiments.sql (a producció, aplicada el 261103 segons la
+   taula canònica de supabase/README.md) respon NO-DISPONIBLE: com sense la capacitat. */
 const esNoDisponible = (error) => error?.code === 'NO-DISPONIBLE';
 
 /**

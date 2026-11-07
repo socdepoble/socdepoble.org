@@ -8,7 +8,6 @@ import { getSectionListPath, objecteDePagina } from '../../config/navigation';
 import { buildMapEmbedUrl } from './mapConfig';
 import { useMur } from './MurContext';
 import { useCoreContent } from '../../app/contexts/CoreContentContext';
-import { useSuperadminEstable } from '../../hooks/useSuperadminEstable.js';
 import { useUIActions } from '../../app/contexts/UIContext';
 import { PillToggle, Carregant, Boto, Alerta } from '../../components/PedraSeca/index.js';
 import { dataDElement } from '../../components/universal/editorial.js';
@@ -146,14 +145,12 @@ export default function MurSection() {
 
   const [filterType, setFilterType] = useState('all');
   const [isMapOpen, setIsMapOpen] = useState(false);
-  const [modeRevisioLocal, setModeRevisioLocal] = useState(false);
   const [filtreCasUsWp, setFiltreCasUsWp] = useState('tots');
   const [versioRevisioWp, setVersioRevisioWp] = useState(0);
-  /* B3-5 · El mateix criteri que el Perfil: el rol no «parpelleja» mentre la
-     sessió es torna a comprovar; convidats i no superadmins, sense barra. */
-  const { esSuperadmin: esSuperadminMur } = useSuperadminEstable();
-  const modeRevisioWp = revisioParam === 'wordpress' || modeRevisioLocal;
-  const mostraBarraRevisioWp = esSuperadminMur || modeRevisioWp;
+  /* P0-31 / IDEA-121 · La bancada d'importació i revisió editorial viu a
+     /el-meu-perfil (BancImportacioEditorial.jsx); al Mur públic s'elimina el
+     botó i la barra «🔍 Mode Revisió d'Importació (Admin)». */
+  const modeRevisioWp = revisioParam === 'wordpress';
   const [transformadorWp, setTransformadorWp] = useState(null);
   const [errorRevisioWp, setErrorRevisioWp] = useState(false);
   /* D-B4-3 (Onada R6, Bloc 4; decisió de MarIA) · «Reintentar» torna a demanar
@@ -371,25 +368,6 @@ export default function MurSection() {
               { valor: 'mapa', text: 'Mapa' },
             ]}
           />
-
-          {mostraBarraRevisioWp && (
-            <div className="sdp-mur-revisio-bar">
-              <Boto
-                className="sdp-mur-revisio-toggle"
-                aria-pressed={modeRevisioWp}
-                onClick={() => {
-                  if (modeRevisioWp) {
-                    setModeRevisioLocal(false);
-                    if (revisioParam === 'wordpress') setSearchParams({ revisio: null });
-                  } else {
-                    setModeRevisioLocal(true);
-                  }
-                }}
-              >
-                🔍 Mode Revisió d&apos;Importació (Admin)
-              </Boto>
-            </div>
-          )}
 
           {modeRevisioWp && !transformadorWp && (errorRevisioWp
             ? (

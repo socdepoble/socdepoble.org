@@ -1,6 +1,8 @@
 import { afterAll, beforeEach, expect, test, vi } from 'vitest';
-/* D-P016 (Onada R9) · L'interruptor de les RPC de 2611032100 amb el seu valor
-   real (apagat) per a totes les proves; només la del transport remot l'encén. */
+/* D-P016 (Onada R9) · L'interruptor de les RPC de 2611032100, apagat a posta
+   per a les proves locals (seed i local no en depenen). IDEA-133 (Onada R10,
+   B2-04) · El valor real ja és encés: la prova del transport remot hi corre amb
+   el valor real, i la d'apagat descriu un backend sense la migració. */
 const bandera = vi.hoisted(() => ({ actiu: false }));
 vi.mock('../../config/connexionsPubliques.js', () => ({ get CONNEXIONS_PUBLIQUES_REMOTES_ACTIVES() { return bandera.actiu; } }));
 import * as adaptador from './index.js';
@@ -42,8 +44,8 @@ test('preferències de dues identitats no es barregen ni s’autoritzen per meta
   expect(xarxa).not.toHaveBeenCalled();
 });
 
-test('D-P016 · amb el valor real de l’interruptor (apagat), l’adaptador index real en remot no fa cap fetch i respon NO-DISPONIBLE a les sis',async()=>{
-  expect((await vi.importActual('../../config/connexionsPubliques.js')).CONNEXIONS_PUBLIQUES_REMOTES_ACTIVES).toBe(false);
+test('D-P016 · amb l’interruptor apagat (un backend sense 2611032100), l’adaptador index real en remot no fa cap fetch i respon NO-DISPONIBLE a les sis',async()=>{
+  bandera.actiu=false;
   const REMOT={dataMode:'remote',supabaseUrl:'http://localhost:54321',supabaseAnonKey:'sb_publishable_fixture',tenantId:SEED.tenantId};
   configuraBackendSessio(REMOT);expect(desaSessio({access_token:'jwt-fedi23-fixture',user:{id:A}})).toBe(true);
   const O='33333333-3333-4333-8333-333333333333';
@@ -57,7 +59,9 @@ test('D-P016 · amb el valor real de l’interruptor (apagat), l’adaptador ind
 });
 
 test('adaptador index real executa les sis RPC amb sessió i cos explícit',async()=>{
-  bandera.actiu=true; // el servidor amb la migració 2611032100 aplicada
+  // B2-04 · El valor real (encés): el servidor amb la migració 2611032100 aplicada, com producció des del 6-11-2026.
+  bandera.actiu=(await vi.importActual('../../config/connexionsPubliques.js')).CONNEXIONS_PUBLIQUES_REMOTES_ACTIVES;
+  expect(bandera.actiu).toBe(true);
   const REMOT={dataMode:'remote',supabaseUrl:'http://localhost:54321',supabaseAnonKey:'sb_publishable_fixture',tenantId:SEED.tenantId};
   configuraBackendSessio(REMOT);expect(desaSessio({access_token:'jwt-fedi23-fixture',user:{id:A}})).toBe(true);
   const O='33333333-3333-4333-8333-333333333333';

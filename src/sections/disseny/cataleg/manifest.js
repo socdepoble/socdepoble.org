@@ -36,6 +36,7 @@ export const ICONES_ESPECIMENS = Object.freeze({
     'publicacions-actor': '📚'
   }),
   estructura: Object.freeze({
+    'pou-neu-3d': '❄️',
     arbre: '🌳', shell: '🐚', page: '📄', gestor: '🏛️', universalworkspace: '🖥️',
     columnes: '📰', divisor: '↔️', composicio: '🧩', 'barra-eines': '🛠️',
     'marc-columna': '🖼️', 'esquelet-bar': '🍺', 'esquelet-compra': '🛒', 'pagina-app': '📱',
@@ -347,6 +348,8 @@ const SUPERPOSICIONS = [
 ];
 
 export const CATALOG_ITEMS = [
+  especimen('estructura', 'pou-neu-3d', 'Pou de la Neu · Anatomia 3D', 'Set assemblatges · IDEA-143', ['organisme', 'patrimoni', '3d'],
+    'Reconstrucció didàctica d’un pou de neu: secció de maçoneria, sis estrats, corriola i drenatge. Explosió amb molles, càmera ajustable i model físic estimat.', 'neu gel pou anatomy lathe tube webgl'),
   ...FONAMENTS,
   /* La 🌻 que portava a mà ara ix d'ICONES_ESPECIMENS, com la de la resta. */
   especimen('emoticones', 'xl', 'Emojis XL', 'Emoticones del poble per famílies', ['emoticona', 'cataleg', 'accessibilitat'],

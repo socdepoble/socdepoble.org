@@ -410,10 +410,22 @@ describe('la frontera', () => {
   /* wikiManifest.js el genera la Wiki (com a identitatDual.guarda.test.js): és prosa, no codi. */
   const GENERATS = new Set(['src/data/wikiManifest.js']);
 
+  /* Gauntlet R10 · VFC-05 · El mateix patró que la frontera de notifica-xat: una llista escrita a mà que es
+     podia quedar arrere. Ara la frontera ha de cobrir cada RPC que el gestor crida de veres. */
+  const FRONTERA = /purga_fitxers_(?:reclama|fets|fallits)|SDP_CRON_SECRET|SUPABASE_SERVICE_ROLE_KEY/;
+
+  test('VFC-05 · la frontera cobrix cada RPC que crida el gestor', () => {
+    const codi = readFileSync(path.join(ARREL, 'supabase/functions/purga-fitxers/gestor.js'), 'utf8')
+      .replace(/\/\*[\s\S]*?\*\//g, ' ').replace(/^\s*\/\/.*$/gm, ' ');
+    const cridades = [...new Set([...codi.matchAll(/\brpc\(\s*'([a-z_]+)'/g)].map((m) => m[1]))];
+    expect(cridades).toEqual(['purga_fitxers_reclama', 'purga_fitxers_fets', 'purga_fitxers_fallits']);
+    for (const nom of cridades) expect(nom).toMatch(FRONTERA);
+  });
+
   test('cap fitxer de src/ crida les RPC del worker ni nomena els seus secrets', () => {
     const trobats = fitxers(path.join(ARREL, 'src'))
       .filter((f) => !/\.test\.jsx?$/.test(f) && !GENERATS.has(path.relative(ARREL, f)))
-      .filter((f) => /purga_fitxers_(reclama|fets|fallits)|SDP_CRON_SECRET|SUPABASE_SERVICE_ROLE_KEY/.test(readFileSync(f, 'utf8')))
+      .filter((f) => FRONTERA.test(readFileSync(f, 'utf8')))
       .map((f) => path.relative(ARREL, f));
     expect(trobats).toEqual([]);
   });

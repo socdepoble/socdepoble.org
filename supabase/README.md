@@ -30,7 +30,18 @@ description: "Documentació canònica de Sóc de Poble."
   Correcció estricta RLS per a perfils i organitzacions.
 
 - `migrations/2609121600_admin_panel.sql`
-  Funcions RPC per a l'admin panel.
+  Funcions RPC per a l'admin panel: `admin_list_users()` i
+  `admin_list_organizations()`. **Estat remot no acreditat sencer**: la
+  lectura REST del 6-11-2026 hi troba `admin_list_users()` (401 42501).
+  `admin_list_organizations()` donava 404 PGRST202 a les 22:08 CET (era el 404
+  de «Calcula els indicadors» de la captura de les 21:53), i a les 23:22 i a
+  les 23:53 respon 401 42501: algú l'ha creada entremig, sense cap migració
+  nova al repositori, i no se sap si amb esta migració sencera. No la torneu a
+  aplicar sencera: tornaria a concedir a `authenticated` l'EXECUTE
+  d'`admin_list_users()`, que la 2609200300 revoca. Si ja s'hi ha tornat a
+  aplicar, ho dirà
+  `select has_function_privilege('authenticated', 'public.admin_list_users()', 'EXECUTE');`
+  (lectura), i caldrà tornar a passar-hi la revocació de la 2609200300.
 
 - `migrations/2609130500_bucket_mitjans.sql`
   Creació del bucket `mitjans` per a àudios i avatars.
@@ -1044,8 +1055,9 @@ description: "Documentació canònica de Sóc de Poble."
   `NO-DISPONIBLE` i deixa d'oferir-la. Abans:
   `select kind, visibility, count(*) from
   public.organizations group by 1, 2;`. Va després de 2610290400. Idempotent i
-  en una sola transacció;
-  **NO aplicada: l'aplica el Mestre, mai un agent**.
+  en una sola transacció; **aplicada a producció** (lectura REST del 6-11-2026:
+  `transfereix_propietat_organitzacio(uuid, uuid)` existix, 401 42501; acta
+  261101_0334). Cap agent no la torna a aplicar.
 
 - `migrations/2610311800_e2ee_fases_1b_1c_rpcs_i_adjunts.sql`
   P1-12 i D03 · E2EE fases 1b i 1c (`sdp-xat-v1`: P-256, una identitat per
@@ -1076,7 +1088,9 @@ description: "Documentació canònica de Sóc de Poble."
   No activa res: el client continua amb `E2EE_ACTIU_PER_DEFECTE = false` i
   cap gènesi és possible sense la cohort que afig el Mestre. Codis
   `SDP-XAT-001`..`045`, `429` i `900`. Va després de 2610290400. Idempotent i
-  en una sola transacció; **NO aplicada: l'aplica el Mestre, mai un agent**.
+  en una sola transacció; **aplicada a producció** (lectura REST del 6-11-2026:
+  la taula `xat_epoques` existix, 401 42501; acta 261101_0334). Cap agent no
+  la torna a aplicar.
 
 - `migrations/2610311900_exporta_dades_filtre_servidor_rgpd.sql`
   P2-09 (Lot 6 de Codex): torna a crear `public.exporta_les_meues_dades()` amb
@@ -1091,7 +1105,11 @@ description: "Documentació canònica de Sóc de Poble."
   columnes fora del contracte s'ometen. Mateixa ACL (només `authenticated`),
   `SECURITY DEFINER` i `search_path = ''`. Va després de 2610241410 i
   **abans de publicar el client** que l'espera. Idempotent i en una sola
-  transacció; **NO aplicada: l'aplica el Mestre, mai un agent**.
+  transacció. **Estat remot no acreditat**: l'acta 261101_0334 la dona
+  aplicada (diu «64 migracions», de la 2610241400 a la 2610312000, però en eixe
+  tram n'hi ha 15), i la lectura REST no veu el cos
+  d'`exporta_les_meues_dades()`. Ho pot acreditar el Pas 0. Cap agent no
+  l'aplica.
 
 - `migrations/2610312000_e2ee_lot3_validadors_service_role.sql`
   Esmena de l'auditoria Claude al Lot 3 (261031). Les CHECK
@@ -1103,8 +1121,10 @@ description: "Documentació canònica de Sóc de Poble."
   funcions, pures i sense accés a dades, passen a SECURITY DEFINER amb el
   mateix `search_path` i només `service_role` rep EXECUTE. Va just després de
   2610311800 i s'ha de tornar a aplicar si mai es reaplica el 2610311800.
-  Idempotent i en una sola transacció; **NO aplicada: l'aplica el Mestre, mai
-  un agent**.
+  Idempotent i en una sola transacció. **Estat remot no acreditat**: l'acta
+  261101_0334 la dona aplicada, però la lectura REST no veu
+  `private.xat_lot3_b64`. Ho pot acreditar la columna `te_esmena_2610312000`
+  del Pas 0. Cap agent no l'aplica.
 
 - `migrations/2611011500_autoria_ajuntament_mateix_poble.sql`
   D-6 (informe 261101_0409; assalt 261101_1246, T7): un ajuntament només
@@ -1135,7 +1155,10 @@ description: "Documentació canònica de Sóc de Poble."
   23 comprovacions) la va fer el torn torn_3f5652a2 a PGlite 0.3.16, fora
   del repositori: és evidència no versionada. La prova estàtica és
   `src/data/supabase/autoriaAjuntamentPoble.migracio.test.js`.
-  Idempotent i en una sola transacció; **NO aplicada: l'aplica el Mestre, mai un agent**.
+  Idempotent i en una sola transacció; **aplicada a producció** (lectura REST del 6-11-2026:
+  `pot_signar_com_organitzacio(uuid, uuid)` existix, 401 42501, i la
+  signatura vella `(uuid)` ja no, 404 PGRST202; acta 261102_1456). Cap agent
+  no la torna a aplicar.
 
 - `migrations/2611011510_versio_minima_client.sql`
   P0-23 (BOT-A2; Gauntlet Claude 261025_1705): la porta de versió mínima de
@@ -1171,7 +1194,9 @@ description: "Documentació canònica de Sóc de Poble."
   Verificació posterior (lectura):
   `select public.versio_minima_client('ios'), public.versio_minima_client('android'), public.versio_minima_client('web');`
   (els dos objectes, amb `versio_minima` 2, i `null`). Idempotent i en una
-  sola transacció; **NO aplicada: l'aplica el Mestre, mai un agent**.
+  sola transacció; **aplicada a producció** (lectura REST del 6-11-2026:
+  `versio_minima_client('android')` respon 200 a anon; acta 261102_1456). Cap
+  agent no la torna a aplicar.
 
 - `migrations/2611011800_contracte_exportacio_federacio_v1.sql`
   P2-09 (kit Onada 2 de Codex, integrat a l'assalt 261101): contracte
@@ -1217,7 +1242,11 @@ description: "Documentació canònica de Sóc de Poble."
   la reaplicació i la inversa: 65 comprovacions) la va fer el torn torn_3f5652a2 a PGlite
   0.3.16, fora del repositori: és evidència no versionada. La prova estàtica
   és `src/data/supabase/exportacioFederacio.contracte.test.js`. Idempotent i
-  en una sola transacció; **NO aplicada: l'aplica el Mestre, mai un agent**.
+  en una sola transacció; **aplicada segons l'acta 261102_1456** (sense
+  lectura REST: `private.exporta_federacio_v1` i el cos
+  d'`exporta_les_meues_dades()` no són visibles per a anon; ho pot confirmar
+  la columna `te_contracte_federacio_2611011800` del Pas 0, encara sense
+  resultat registrat). Cap agent no la torna a aplicar.
 
 - `migrations/2611012257_politica_privacitat_2_3.sql`
   T11-05 (Gemini, Tall 11; marató 261101_2143): segella per primera vegada
@@ -1252,8 +1281,11 @@ description: "Documentació canònica de Sóc de Poble."
   `src/data/supabase/politicaPrivacitat23.migracio.test.js`: comprova la
   migració per dins (una 2.4 en una migració nova no la fa caure) i exigix
   que l'última versió segellada porte el text que `/legal` servix hui (§18).
-  Idempotent i en una sola transacció;
-  **NO aplicada: l'aplica el Mestre, mai un agent**.
+  Idempotent i en una sola transacció; **aplicada a producció** (lectura REST del 6-11-2026:
+  `politiques_privacitat` té la 2.3, vigent des del 2026-10-31T23:00Z, amb
+  l'empremta `abd827d0…` d'esta migració). L'acta 261102_1456 la cita amb un
+  altre nom de fitxer (`2611012257_b2_kid_monoton_i_f2a.sql`). Cap agent no la
+  torna a aplicar.
 
 - `migrations/2611020106_ap_inbox_persistencia_i_cua.sql`
   P1-23 (fase 2) i la part ActivityPub de P2-07 (marató 261101_2143, carril
@@ -1290,7 +1322,11 @@ description: "Documentació canònica de Sóc de Poble."
   (també la paritat dels noms i dels paràmetres de les RPC amb
   `magatzemPostgrest.js`). Va abans del desplegament de la funció (vegeu
   «Funció `ap-inbox-verifica`»). Idempotent i en una sola transacció;
-  **NO aplicada: l'aplica el Mestre, mai un agent**.
+  **aplicada a producció** (lectura REST del 6-11-2026: `ap_alertes_vigents(timestamptz)`,
+  que només crea esta migració, existix, 401 42501). L'acta 261102_1456 la
+  cita amb un altre nom de fitxer
+  (`2611020106_b5_dades_obertes_i_cua_federacio.sql`). Cap agent no la torna a
+  aplicar.
 
 - `migrations/2611020417_xat_avisos_push.sql`
   B8 (marató 261101_2143, carril P01-B8S-MIGRACIO; ordre del Mestre 261101):
@@ -1338,7 +1374,8 @@ description: "Documentació canònica de Sóc de Poble."
   (porta `funcio-notifica-xat`); `push_xat_actiu` es posa només després del
   cron (vegeu «Funció `notifica-xat`»). Idempotent i en una sola transacció;
   **aplicada a producció** (acta 261102_1456; lectura REST del 6-11-2026: la
-  taula `public.xat_dispositius_push` existix). Cap agent no la torna a aplicar.
+  taula `public.xat_dispositius_push` existix). L'acta la cita amb un altre nom
+  de fitxer (`2611020417_b8_push_xat.sql`). Cap agent no la torna a aplicar.
 
 - `migrations/2611021800_notes_fitxa_ambit.sql`
   IDEA-61 (T0, prompt 261102_1532; carril L1): la fitxa d'àmbit d'una nota del
@@ -1350,8 +1387,8 @@ description: "Documentació canònica de Sóc de Poble."
   la coacciona el client (`src/utils/publicacioUniversal.js` ·
   `coaccionaAmbit`) en escriure-la i en llegir-la; la fitxa publicada viu al
   payload de `section_submissions` (secció `mur` o `mercat`: cap `section_id`
-  nou). Cap política, permís, índex, funció, disparador ni backfill. Fins que
-  s'aplique, el client la tracta com a columna opcional
+  nou). Cap política, permís, índex, funció, disparador ni backfill. En un
+  node sense la columna, el client la tracta com a columna opcional
   (`src/data/supabase/columnesOpcionals.js`, PGRST204): la fitxa es queda en
   quarantena al dispositiu, la resta de la nota es desa i publicar funciona
   igual, perquè `publishNote` la llig de la nota viva. Abans (lectura), ha de
@@ -1361,8 +1398,9 @@ description: "Documentació canònica de Sóc de Poble."
   `select exists (select 1 from information_schema.columns where table_schema = 'public' and table_name = 'notes' and column_name = 'fitxa') as te_fitxa, exists (select 1 from pg_constraint where conname = 'notes_fitxa_objecte') as te_check;`
   (cert i cert). Per a desfer-la: `alter table public.notes drop column if exists fitxa;`.
   La prova estàtica és `src/data/supabase/notesFitxa.migracio.test.js`.
-  Idempotent i en una sola transacció; **NO aplicada: l'aplica el Mestre, mai
-  un agent**.
+  Idempotent i en una sola transacció; **aplicada a producció** (lectura REST
+  del 6-11-2026: la columna `notes.fitxa` respon 200 a anon). Cap agent no la
+  torna a aplicar.
 
 - `migrations/2611030330_politica_privacitat_2_4.sql`
   Onada 6: presentació editorial de `/legal`, amb 6–8 negretes als 29
@@ -1380,7 +1418,10 @@ description: "Documentació canònica de Sóc de Poble."
   `estat_consentiment()` demanarà tornar a acceptar a qui tenia una versió
   anterior. No s'executa SQL des del kit ni s'activen serveis nous.
   Prova: `src/data/supabase/politicaPrivacitat24.migracio.test.js`.
-  **NO aplicada: l'aplica el Mestre, mai un agent**.
+  **Aplicada a producció** (lectura REST del 6-11-2026: `politiques_privacitat` té la 2.4,
+  vigent des del 2026-11-02T23:00Z, amb l'empremta `2956bc30…` d'esta
+  migració; la lectura de R9 del mateix dia encara no la hi trobava). Cap
+  agent no la torna a aplicar.
 
 - `migrations/2611031500_notes_logo_mode_nit.sql`
   IDEA-70: afig `notes.logo_image_dark` (`text`, opcional) per al logotip de
@@ -1391,7 +1432,8 @@ description: "Documentació canònica de Sóc de Poble."
   `src/data/supabase/notes.logoDark.test.js`. Verificació posterior (lectura):
   `select column_name from information_schema.columns where table_schema = 'public' and table_name = 'notes' and column_name = 'logo_image_dark';`.
   Per a desfer-la: `alter table public.notes drop column if exists logo_image_dark;`.
-  **NO aplicada en este carril: pendent d'aplicació i verificació remota**.
+  **Aplicada a producció** (lectura REST del 6-11-2026: la columna
+  `notes.logo_image_dark` respon 200 a anon). Cap agent no la torna a aplicar.
 
 - `migrations/2611031700_administracio_multipoble.sql`
   FEDI-04: afig les RPC `admin_llista_pobles()` i
@@ -1409,7 +1451,9 @@ description: "Documentació canònica de Sóc de Poble."
   Verificació posterior (lectura):
   `select to_regprocedure('public.admin_llista_pobles()'), to_regprocedure('public.admin_llegix_personalitzacio(uuid)');`.
   Les proves de rol, segon factor i tenant contra PostgreSQL continuen
-  pendents. **NO aplicada: l'aplica el Mestre, mai un agent**.
+  pendents. **Aplicada a producció** (lectura REST del 6-11-2026: `admin_llista_pobles()`
+  i `admin_llegix_personalitzacio(uuid)` existixen, 401 42501; la 2611032100,
+  que la requerix, també hi és). Cap agent no la torna a aplicar.
 
 - `migrations/2611032100_connexions_publiques_i_membres.sql`
   FEDI23: connexions públiques només amb consentiment global i per vincle,
@@ -1417,15 +1461,19 @@ description: "Documentació canònica de Sóc de Poble."
   Requerix 2610250100, 2610281730, 2610282100 i el catàleg fins a 2611031700.
   Quatre taules privades amb RLS sense permisos client/service_role; sis RPC
   amb ACL mínimes i auth.uid/rol vigent. Vegeu «FEDI23» al final.
-  **NO aplicada: l'aplica el Mestre, mai un agent**.
+  **Aplicada a producció** (lectura REST del 6-11-2026: `connexions_publiques_de` i
+  `membres_i_entitats_connectades_de` responen 200 a anon; aplicada pel
+  Mestre el 6-11). Cap agent no la torna a aplicar.
 
 - `migrations/2611051930_edicio_publicacions_editorials.sql`
   R12 (kit de Codex, integrat per B4-S1): RPC `admin_actualitza_publicacio_editorial`
   (superadmin + aal2, camps blancs, CAS sobre `app_content.version`), backfill
   selectiu del Manifest i l'Aplec, i carpetes privades `note_folders` amb RLS de
   propietari + pertinença al poble i RPC `crea_carpeta_notes`. Requerix 2610061448.
-  **Aplicada a producció**: la lectura REST del 6-11 dona `note_folders` (401 42501), i
-  només la crea esta migració. No hi ha cap acta que ho registre.
+  **Aplicada a producció** (lectura REST del 6-11-2026: la taula `note_folders` i les RPC
+  `crea_carpeta_notes` i `admin_actualitza_publicacio_editorial` existixen,
+  401 42501, i només les crea esta migració; aplicada pel Mestre el 6-11).
+  Cap agent no la torna a aplicar.
 
 - `migrations/2611052345_admin_usuaris_i_organitzacions.sql`
   R20b (kit de Codex, arbitratge G2): llista de perfils amb consentiment del
@@ -1434,13 +1482,20 @@ description: "Documentació canònica de Sóc de Poble."
   `aal2` que ja siga owner/admin de l'entitat; sense autoassignació ni rol admin.
   Dues taules privades amb RLS i sense permisos de client ni de service_role;
   `private.admin_accions` només admet insercions. Requerix 2611032100.
-  **NO aplicada: l'aplica el Mestre, mai un agent**.
+  **Aplicada a producció** (lectura REST del 6-11-2026: `admin_llista_usuaris_registrats`,
+  `admin_convida_a_entitat`, `admin_connecta_usuari` i
+  `les_meues_invitacions_admin` existixen, 401 42501; aplicada pel Mestre el
+  6-11). Abans d'encendre `administracioUsuaris` continuen per decidir G2-04
+  i G2-08 (informe 261106_0146). Cap agent no la torna a aplicar.
 
 - `migrations/2611060010_restauracio_municipal_opendata.sql`
   IDEA-104c: importació idempotent (upsert) de les dades obertes públiques d'un
   poble (format 1.2.0), sense esborrar els absents; lectura pública fitada.
   Identificadors globals per col·lecció (K1-06). Independent de 2611052345.
-  **NO aplicada: l'aplica el Mestre, mai un agent**.
+  **Aplicada a producció** (lectura REST del 6-11-2026: `llegix_municipi_open_data_per_slug`
+  respon 200 a anon; aplicada pel Mestre el 6-11). La lectura pública ja és
+  oberta a anon: G2V-02 (fitxes orals `draft`) i G2V-03 (cap paginació)
+  continuen per decidir (informe 261106_0146). Cap agent no la torna a aplicar.
 
 - `migrations/2611061520_politica_privacitat_2_5.sql`
   Onada R9 (C3, IDEA-120 / P0-30): `/legal` diu els avisos push del xat,
@@ -1458,7 +1513,9 @@ description: "Documentació canònica de Sóc de Poble."
   `estat_consentiment()` demanarà tornar a acceptar a qui tenia una versió
   anterior.
   Prova: `src/data/supabase/politicaPrivacitat25.migracio.test.js`.
-  **NO aplicada: l'aplica el Mestre, mai un agent**.
+  **Aplicada a producció** (lectura REST del 6-11-2026: `politiques_privacitat` té la 2.5,
+  vigent des del 2026-11-05T23:00Z, amb l'empremta `ea13f0c4…` d'esta
+  migració; aplicada pel Mestre el 6-11). Cap agent no la torna a aplicar.
 
 - `seed.sql`
   Contingut inicial del portal.
@@ -1569,7 +1626,7 @@ verificador sense avisos.
 | 04 | `2609080300` | `2609080300_xat_v2_membres.sql` | Estat remot no acreditat; comprovar abans d’aplicar | xat v2 membres |
 | 05 | `2609110600` | `2609110600_perfil_avatar_i_permisos.sql` | Estat remot no acreditat; comprovar abans d’aplicar | perfil avatar i permisos |
 | 06 | `2609121500` | `2609121500_correccio_privacitat_perfils.sql` | Estat remot no acreditat; comprovar abans d’aplicar | correccio privacitat perfils |
-| 07 | `2609121600` | `2609121600_admin_panel.sql` | Estat remot no acreditat; comprovar abans d’aplicar | admin panel |
+| 07 | `2609121600` | `2609121600_admin_panel.sql` | Estat remot no acreditat sencer (lectura REST del 6-11: `admin_list_users()` existix, 401 42501; `admin_list_organizations()` donava 404 PGRST202 a les 22:08 CET i respon 401 42501 a les 23:22 i a les 23:53, sense cap migració nova al repositori); no la torneu a aplicar sencera | admin panel |
 | 08 | `2609130500` | `2609130500_bucket_mitjans.sql` | Estat remot no acreditat; comprovar abans d’aplicar | bucket mitjans |
 | 09 | `2609140000` | `2609140000_schema_notes.sql` | Estat remot no acreditat; comprovar abans d’aplicar | schema notes |
 | 10 | `2609140100` | `2609140100_auditoria_rls_fixes.sql` | Estat remot no acreditat; comprovar abans d’aplicar | auditoria rls fixes |
@@ -1623,25 +1680,25 @@ verificador sense avisos.
 | 58 | `2610281730` | `2610281730_membres_concurrents_i_correu_public.sql` | Estat remot no acreditat; comprovar abans d’aplicar | membres concurrents i correu public |
 | 59 | `2610282100` | `2610282100_usuari_i_poble_canonic.sql` | Aplicada al node remot el 261103 (70/70 verificat pel Mestre) | usuari i poble canonic |
 | 60 | `2610290400` | `2610290400_xat_e2ee_claus_i_sobres.sql` | Estat remot no acreditat; comprovar abans d’aplicar | xat e2ee claus i sobres |
-| 61 | `2610311500` | `2610311500_commutacio_grup_empresa_i_transferencia_propietat.sql` | **NO aplicada: l'aplica el Mestre** | commutacio grup empresa i transferencia propietat |
-| 62 | `2610311800` | `2610311800_e2ee_fases_1b_1c_rpcs_i_adjunts.sql` | **NO aplicada: l'aplica el Mestre** | e2ee fases 1b 1c rpcs i adjunts |
-| 63 | `2610311900` | `2610311900_exporta_dades_filtre_servidor_rgpd.sql` | **NO aplicada: l'aplica el Mestre** | filtre RGPD al servidor |
-| 64 | `2610312000` | `2610312000_e2ee_lot3_validadors_service_role.sql` | **NO aplicada: l'aplica el Mestre** | validadors E2EE per a service_role |
-| 65 | `2611011500` | `2611011500_autoria_ajuntament_mateix_poble.sql` | **NO aplicada: l'aplica el Mestre** | autoria d'ajuntament al seu poble (D-6) |
-| 66 | `2611011510` | `2611011510_versio_minima_client.sql` | **NO aplicada: l'aplica el Mestre** | versió mínima de l'app nativa (P0-23) |
-| 67 | `2611011800` | `2611011800_contracte_exportacio_federacio_v1.sql` | **NO aplicada: l'aplica el Mestre** | contracte v1 de l'exportació de federació (P2-09) |
-| 68 | `2611012257` | `2611012257_politica_privacitat_2_3.sql` | **NO aplicada: l'aplica el Mestre** | política de privacitat 2.3 segellada (T11-05) |
-| 69 | `2611020106` | `2611020106_ap_inbox_persistencia_i_cua.sql` | **NO aplicada: l'aplica el Mestre** | persistència de la inbox ActivityPub i cua d'eixida (P1-23 fase 2) |
+| 61 | `2610311500` | `2610311500_commutacio_grup_empresa_i_transferencia_propietat.sql` | Aplicada a producció (lectura REST del 6-11: `transfereix_propietat_organitzacio(uuid, uuid)` existix, 401 42501; acta 261101_0334) | commutacio grup empresa i transferencia propietat |
+| 62 | `2610311800` | `2610311800_e2ee_fases_1b_1c_rpcs_i_adjunts.sql` | Aplicada a producció (lectura REST del 6-11: la taula `xat_epoques` existix, 401 42501; acta 261101_0334) | e2ee fases 1b 1c rpcs i adjunts |
+| 63 | `2610311900` | `2610311900_exporta_dades_filtre_servidor_rgpd.sql` | Estat remot no acreditat (l'acta 261101_0334 la dona aplicada; la lectura REST no veu el cos d'`exporta_les_meues_dades()`); ho pot acreditar el Pas 0 | filtre RGPD al servidor |
+| 64 | `2610312000` | `2610312000_e2ee_lot3_validadors_service_role.sql` | Estat remot no acreditat (l'acta 261101_0334 la dona aplicada; la lectura REST no veu `private.xat_lot3_b64`); ho pot acreditar la columna `te_esmena_2610312000` del Pas 0 | validadors E2EE per a service_role |
+| 65 | `2611011500` | `2611011500_autoria_ajuntament_mateix_poble.sql` | Aplicada a producció (lectura REST del 6-11: `pot_signar_com_organitzacio(uuid, uuid)` existix, 401 42501, i la signatura vella `(uuid)` ja no, 404 PGRST202; acta 261102_1456) | autoria d'ajuntament al seu poble (D-6) |
+| 66 | `2611011510` | `2611011510_versio_minima_client.sql` | Aplicada a producció (lectura REST del 6-11: `versio_minima_client('android')` respon 200 a anon; acta 261102_1456) | versió mínima de l'app nativa (P0-23) |
+| 67 | `2611011800` | `2611011800_contracte_exportacio_federacio_v1.sql` | Aplicada segons l'acta 261102_1456 (sense lectura REST: els seus objectes no són visibles per a anon) | contracte v1 de l'exportació de federació (P2-09) |
+| 68 | `2611012257` | `2611012257_politica_privacitat_2_3.sql` | Aplicada a producció (lectura REST del 6-11: `politiques_privacitat` té la 2.3 amb l'empremta `abd827d0…` d'esta migració; acta 261102_1456, amb un altre nom de fitxer) | política de privacitat 2.3 segellada (T11-05) |
+| 69 | `2611020106` | `2611020106_ap_inbox_persistencia_i_cua.sql` | Aplicada a producció (lectura REST del 6-11: `ap_alertes_vigents(timestamptz)` existix, 401 42501; acta 261102_1456, amb un altre nom de fitxer) | persistència de la inbox ActivityPub i cua d'eixida (P1-23 fase 2) |
 | 70 | `2611020417` | `2611020417_xat_avisos_push.sql` | Aplicada a producció (acta 261102_1456; lectura REST del 6-11: la taula existix) | avisos push del Xat: aparells, silenci i cua (B8) |
-| 71 | `2611021800` | `2611021800_notes_fitxa_ambit.sql` | **NO aplicada: l'aplica el Mestre** | fitxa d'àmbit de les notes del Flux Universal de Publicació (IDEA-61, T0) |
-| 72 | `2611030330` | `2611030330_politica_privacitat_2_4.sql` | **NO aplicada: l'aplica el Mestre** | política 2.4: èmfasi editorial, 2.3 intacta (Onada 6) |
-| 73 | `2611031500` | `2611031500_notes_logo_mode_nit.sql` | **NO aplicada** | logotip de capçalera de Notes per al mode nit (IDEA-70) |
-| 74 | `2611031700` | `2611031700_administracio_multipoble.sql` | **NO aplicada: l'aplica el Mestre** | selecció de tenants i personalització per poble amb superadmin + aal2 (FEDI-04) |
-| 75 | `2611032100` | `2611032100_connexions_publiques_i_membres.sql` | **NO aplicada: l'aplica el Mestre** | connexions consentides, membres públics i sol·licituds només pendents (FEDI23) |
-| 76 | `2611051930` | `2611051930_edicio_publicacions_editorials.sql` | Aplicada a producció (lectura REST del 6-11: la taula `note_folders` existix; cap acta) | edició editorial amb CAS (superadmin + aal2) i carpetes privades de Notes (R12) |
-| 77 | `2611052345` | `2611052345_admin_usuaris_i_organitzacions.sql` | **Proposta R20b provada en laboratori; exclosa de R7, no desplegada** | perfils consentits amb correu emmascarat; invitació de membre amb acceptació pròpia, sense autoassignació ni escalada; auditoria immutable |
-| 78 | `2611060010` | `2611060010_restauracio_municipal_opendata.sql` | **Proposta provada en laboratori; exclosa de R7, no desplegada** | upsert atòmic Open Data 1.2.0 per tenant, lectura pública fitada i conflictes globals; independent de la 77, no esborra dades absents |
-| 79 | `2611061520` | `2611061520_politica_privacitat_2_5.sql` | **NO aplicada: l'aplica el Mestre** | política 2.5: avisos push del xat, 2.3 i 2.4 intactes (Onada R9) |
+| 71 | `2611021800` | `2611021800_notes_fitxa_ambit.sql` | Aplicada a producció (lectura REST del 6-11: la columna `notes.fitxa` respon 200 a anon) | fitxa d'àmbit de les notes del Flux Universal de Publicació (IDEA-61, T0) |
+| 72 | `2611030330` | `2611030330_politica_privacitat_2_4.sql` | Aplicada a producció (lectura REST del 6-11: `politiques_privacitat` té la 2.4 amb l'empremta `2956bc30…` d'esta migració; aplicada el 6-11, perquè la lectura de R9 d'eixe dia encara no la hi trobava) | política 2.4: èmfasi editorial, 2.3 intacta (Onada 6) |
+| 73 | `2611031500` | `2611031500_notes_logo_mode_nit.sql` | Aplicada a producció (lectura REST del 6-11: la columna `notes.logo_image_dark` respon 200 a anon) | logotip de capçalera de Notes per al mode nit (IDEA-70) |
+| 74 | `2611031700` | `2611031700_administracio_multipoble.sql` | Aplicada a producció (lectura REST del 6-11: `admin_llista_pobles()` i `admin_llegix_personalitzacio(uuid)` existixen, 401 42501) | selecció de tenants i personalització per poble amb superadmin + aal2 (FEDI-04) |
+| 75 | `2611032100` | `2611032100_connexions_publiques_i_membres.sql` | Aplicada a producció (lectura REST del 6-11: `connexions_publiques_de` i `membres_i_entitats_connectades_de` responen 200 a anon; aplicada pel Mestre el 6-11) | connexions consentides, membres públics i sol·licituds només pendents (FEDI23) |
+| 76 | `2611051930` | `2611051930_edicio_publicacions_editorials.sql` | Aplicada a producció (lectura REST del 6-11: la taula `note_folders` i les RPC `crea_carpeta_notes` i `admin_actualitza_publicacio_editorial` existixen, 401 42501; aplicada pel Mestre el 6-11) | edició editorial amb CAS (superadmin + aal2) i carpetes privades de Notes (R12) |
+| 77 | `2611052345` | `2611052345_admin_usuaris_i_organitzacions.sql` | Aplicada a producció (lectura REST del 6-11: `admin_llista_usuaris_registrats`, `admin_convida_a_entitat`, `admin_connecta_usuari` i `les_meues_invitacions_admin` existixen, 401 42501; aplicada pel Mestre el 6-11) | perfils consentits amb correu emmascarat; invitació de membre amb acceptació pròpia, sense autoassignació ni escalada; auditoria immutable |
+| 78 | `2611060010` | `2611060010_restauracio_municipal_opendata.sql` | Aplicada a producció (lectura REST del 6-11: `llegix_municipi_open_data_per_slug` respon 200 a anon; aplicada pel Mestre el 6-11) | upsert atòmic Open Data 1.2.0 per tenant, lectura pública fitada i conflictes globals; independent de la 77, no esborra dades absents |
+| 79 | `2611061520` | `2611061520_politica_privacitat_2_5.sql` | Aplicada a producció (lectura REST del 6-11: `politiques_privacitat` té la 2.5, vigent des del 2026-11-05T23:00Z, amb l'empremta `ea13f0c4…` d'esta migració; aplicada pel Mestre el 6-11) | política 2.5: avisos push del xat, 2.3 i 2.4 intactes (Onada R9) |
 
 | Artefacte complementari | Ruta dins de `supabase/` | Rol operatiu |
 | :--- | :--- | :--- |
@@ -1652,7 +1709,7 @@ verificador sense avisos.
 
 ### Contracte explícit d'exportació RGPD per a les taules de federació (`P2-09` · `D06/D07`)
 
-Per a neutralitzar el risc `P2-09` (inferència per qualsevol columna `uuid` al bloc `federacio_no_versionada` d'`exporta_les_meues_dades()`), el mòdul `src/data/supabase/contracteExportacioFederacio.js` i l'adaptador `src/data/supabase/compte.js` imposen este contracte explícit de propietat i projecció de columnes en el navegador, abans que la resposta isca de l'adaptador i es mostre o es descarregue. El filtre del servidor és la 2610311900 i, damunt d'ella, el contracte v1 de la 2611011800 (`supabase/contracts/exportacio_federacio.v1.json`: una sola columna de propietat amb FK validada cap a un compte, i tipus per columna), totes dues **NO aplicades: les aplica el Mestre**; fins aleshores, les files arriben al navegador abans del filtre. La taula següent és el contracte del client, més ample que el v1 del servidor (admet alternatives de propietat i més columnes): el que projecta el servidor v1 hi passa sencer, i la prova `src/data/supabase/exportacioFederacio.contracte.test.js` ho comprova:
+Per a neutralitzar el risc `P2-09` (inferència per qualsevol columna `uuid` al bloc `federacio_no_versionada` d'`exporta_les_meues_dades()`), el mòdul `src/data/supabase/contracteExportacioFederacio.js` i l'adaptador `src/data/supabase/compte.js` imposen este contracte explícit de propietat i projecció de columnes en el navegador, abans que la resposta isca de l'adaptador i es mostre o es descarregue. El filtre del servidor és la 2610311900 i, damunt d'ella, el contracte v1 de la 2611011800 (`supabase/contracts/exportacio_federacio.v1.json`: una sola columna de propietat amb FK validada cap a un compte, i tipus per columna). La 2610311900 consta a la taula canònica amb l'estat remot no acreditat (l'acta 261101_0334 la dona aplicada), i la 2611011800, aplicada segons l'acta 261102_1456, sense lectura REST. Fins que el Pas 0 ho acredite, el client no compta amb el filtre del servidor: les files poden arribar al navegador abans del filtre. La taula següent és el contracte del client, més ample que el v1 del servidor (admet alternatives de propietat i més columnes): el que projecta el servidor v1 hi passa sencer, i la prova `src/data/supabase/exportacioFederacio.contracte.test.js` ho comprova:
 
 | Recurs (`federacio_no_versionada`) | Columna canònica de propietat (`=== auth.uid()`) | Precedència admesa | Columnes UUID excloses d'inferència | Columnes exportades permeses |
 | :--- | :--- | :--- | :--- | :--- |
@@ -1676,7 +1733,8 @@ ORDER BY table_name, ordinal_position;
 
 La taula anterior agrupa 60 fitxers de R1, les quatre candidates 1500, 1800,
 1900 i 2000, i les tres de l'assalt 261101 (2611011500, D-6; 2611011510,
-P0-23; i 2611011800, P2-09), NO aplicades. És una fotografia d’inventari, **no un recompte fix del
+P0-23; i 2611011800, P2-09), que no estaven aplicades quan es van integrar
+(ara, vegeu la taula: lectura REST del 6-11-2026 o acta 261102_1456). És una fotografia d’inventari, **no un recompte fix del
  directori ni una acreditació d’aplicació remota**. Les migracions posteriors
 han de documentar-se ací amb el nom complet abans d’integrar-les. La prova de
 catàleg exigix cobertura de tots els fitxers presents i rebutja els desconeguts;
@@ -1684,11 +1742,12 @@ no exigix que les candidates encara no integrades existisquen en R1.
 
 - Candidat Lot 6: `migrations/2610311900_exporta_dades_filtre_servidor_rgpd.sql`.
   Endurix al servidor la selecció i projecció de les taules de federació.
-  Transaccional, idempotent, només candidat; no executat en remot.
+  Transaccional i idempotent. Estat remot no acreditat: l'acta 261101_0334 la
+  dona aplicada (vegeu la taula canònica).
 - `migrations/2610312000_e2ee_lot3_validadors_service_role.sql`: esmena de
   Claude al Lot 3 perquè `service_role` puga escriure `xat_fils`/`xat_missatges`
-  amb les CHECK del 2610311800. Documentada a la llista; **NO aplicada: l'aplica
-  el Mestre, mai un agent**.
+  amb les CHECK del 2610311800. Documentada a la llista; estat remot no
+  acreditat: l'acta 261101_0334 la dona aplicada (vegeu la taula canònica).
 - `2610311600`: era un bloc diagnòstic il·lustratiu del Kit 1 de Gemini,
   substituït per les sondes d’este README; **no és una migració independent**
   (confirmació del Mestre en Lot 6). No es compta com a fitxer SQL.
@@ -2700,8 +2759,9 @@ especificació B5): el camp `inbox` dels actors publicats continua apuntant a
 `/ap/inbox/<slug>`, que el web respon amb 405 (D-1: on arriba el POST, directe
 a la funció o per un proxy al mateix origen); els actors no publiquen
 `publicKey` ni hi ha cap clau (D-2), de manera que cap remot no pot verificar
-un Accept; la llista de nodes de confiança és buida (D-3); la migració no
-està aplicada ni la funció desplegada (D-4); i el text de privacitat per a
+un Accept; la llista de nodes de confiança és buida (D-3); la migració ja és
+a producció (lectura REST del 6-11-2026), però el desplegament de la funció no s'ha
+comprovat (D-4); i el text de privacitat per a
 les dades dels seguidors remots està pendent (D-5). La interoperabilitat real
 amb Mastodon no s'ha provat: no hi ha desplegament ni endpoint públic. El
 residu de DNS rebinding és el mateix de `noticies`: cal un egrés aïllat abans
@@ -2709,7 +2769,7 @@ d'encendre-ho.
 
 ## FEDI23 · Connexions públiques i pertinences consentides
 
-`migrations/2611032100_connexions_publiques_i_membres.sql` és candidata local, pendent d'aplicació remota. Requerix el catàleg anterior: especialment `2610250100` (seguiments d'entitat), `2610281730` (membres concurrents), `2610282100` (poble canònic) i `2611031700`. L'ordre executable viu a `ordre_desplegament.json`: la 2100 va després de 1700; la restricció 1800→2000→1900 es conserva. El client no inventa resultats públics quan falta l'RPC: rep `NO-DISPONIBLE`.
+`migrations/2611032100_connexions_publiques_i_membres.sql` és a producció: l'hi va aplicar el Mestre el 6-11-2026, i la lectura REST del 6-11-2026 troba les dues RPC públiques (200 a anon). Requerix el catàleg anterior: especialment `2610250100` (seguiments d'entitat), `2610281730` (membres concurrents), `2610282100` (poble canònic) i `2611031700`. L'ordre executable viu a `ordre_desplegament.json`: la 2100 va després de 1700; la restricció 1800→2000→1900 es conserva. El client no inventa resultats públics quan falta l'RPC: rep `NO-DISPONIBLE`.
 
 Quatre taules `private.connexions_*`, totes amb RLS i sense concessions a PUBLIC, anon, authenticated o service_role, guarden preferències, excepcions per vincle, rol funcional i sol·licituds pendents. Les referències de persona/entitat/poble es purguen en cascada. El rol funcional treballador/usuari només té sentit sobre una pertinença viva; el rol owner/admin real preval, i una promoció/degradació antiga neteja etiquetes anteriors.
 

@@ -1553,6 +1553,11 @@
       "path": "tooling/wiki/tests/contradiction_engine.t11.test.mjs",
       "suite": "primary",
       "reason": "Regressió portable T11: coherència, catàlegs, ancoratge compartit i consulta documental sense efectes laterals."
+    },
+    {
+      "path": "tooling/wiki/wiki-forja-lint.test.mjs",
+      "suite": "primary",
+      "reason": "IDEA-130 (kit r79, integrat per K3 a l'Onada R10) · wiki-forja-lint de només lectura sobre una Wiki sintètica temporal: wiki-sync per fitxers, ## Vincles, rutes src/ inexistents o fora de l'arrel, etiquetes skill-forge sense llegir 90_arxiu_historic, i cap --diff que comence per «-» arriba a git (executor injectat, cap git real)."
     }
   ]
 }

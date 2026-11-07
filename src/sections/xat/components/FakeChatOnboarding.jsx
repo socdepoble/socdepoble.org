@@ -60,6 +60,13 @@
  * la bombolla en fa enllaços interns. La resta de fils de mostra, com abans
  * (P1-52), i el de Javi continua de només lectura: ni ell ni la IAIA hi
  * responen mai. `respostaIAIA` és injectable per a les proves.
+ *
+ * IDEA-133 (Onada R10, ordre del Mestre del 261106, B2-01) · La bombolla de
+ * simulació (section.xat.fake.reply) porta `accioRegistre`: Bombolla hi
+ * afig, davall del literal (intacte) i dins de la bombolla, l'enllaç «Entra o
+ * registra’t ara →» cap a /registre. Només esta bombolla: ni la IAIA, ni els
+ * Avisos, ni el fil de Javi. El camp no ve mai del servidor (mapejaMissatge
+ * no el copia), i la ruta i el text són fixos a Bombolla.
  */
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { XatContext } from '../XatContext.jsx';
@@ -315,6 +322,8 @@ function MostraDelXat({ originalContext, children, respostaIAIA = respostaDeLaIA
         sender: 'other',
         author: fil.name,
         is_ai: fil.tipus === 'ia',
+        /* IDEA-133 (B2-01) · L'enllaç a /registre, davall del literal. */
+        accioRegistre: true,
         creatAl: new Date().toISOString()
       };
       setMessages((prev) => ({ ...prev, [filId]: [...(prev[filId] || []), reply] }));

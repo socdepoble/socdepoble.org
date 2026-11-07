@@ -183,8 +183,10 @@ test('supabase/README.md la documenta: vinyeta en ordre, fila 65 i la sonda de l
   const text = README.slice(vinyeta, README.indexOf('\n\n', vinyeta));
   expect(text).toMatch(/D-6/);
   expect(text).toMatch(/city_hall/);
-  expect(text).toMatch(/\*\*NO aplicada: l'aplica el Mestre, mai un agent\*\*/);
-  expect(README).toMatch(/^\| 65 \| `2611011500` \| `2611011500_autoria_ajuntament_mateix_poble\.sql` \| \*\*NO aplicada: l'aplica el Mestre\*\* \| [^|]*D-6[^|]* \|$/m);
+  // Onada R10 · B4: la lectura REST del 6-11-2026 la troba a producció (la signatura nova sí, la vella no).
+  expect(text.replace(/\s+/g, ' ')).toContain('**aplicada a producció** (lectura REST del 6-11-2026: `pot_signar_com_organitzacio(uuid, uuid)` existix, 401 42501, i la signatura vella `(uuid)` ja no, 404 PGRST202; acta 261102_1456)');
+  expect(text).not.toMatch(/NO aplicada/);
+  expect(README).toMatch(/^\| 65 \| `2611011500` \| `2611011500_autoria_ajuntament_mateix_poble\.sql` \| Aplicada a producció \(lectura REST del 6-11: [^|]*\) \| [^|]*D-6[^|]* \|$/m);
   expect(text).toContain("to_regprocedure('public.pot_signar_com_organitzacio(uuid,uuid)') IS NOT NULL AS te_autoria_poble_2611011500");
   expect(text).toContain("to_regprocedure('public.pot_signar_com_organitzacio(uuid)') IS NULL AS sense_signatura_vella");
   // Les dues consultes d'abans, també la dels ajuntaments que no han signat res.

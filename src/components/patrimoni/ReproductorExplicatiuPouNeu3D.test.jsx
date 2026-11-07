@@ -2,7 +2,7 @@
    Pou de Neu del Rentonar.
    Es prova: (1) que les xifres són les d'anatomiaRural.js (MESURES_POU = les
    cotes, una a una) i que els passos només nomenen peces i cotes que hi són;
-   (2) el format 9:16/16:9 de partida i el commutador; (3) els tres estils;
+   (2) la disposició de partida i el commutador; (3) els tres estils;
    (4) reproduir, pausa, anterior, següent i les tecles; (5) les cotes amb la
    discrepància i el càlcul de comprovació etiquetat; (6) l'accessibilitat
    (cap control dins de l'SVG, regió viva, cap estil en línia); (7) la veu,
@@ -91,7 +91,7 @@ describe('les dades: les d’anatomiaRural.js, sense cap xifra pròpia', () => {
 });
 
 describe('format i estil', () => {
-  test('sense matchMedia, horitzontal 16:9; en pantalla estreta, vertical 9:16', () => {
+  test('sense matchMedia, horitzontal; en pantalla estreta, vertical', () => {
     expect(formatDePartida(undefined)).toBe('horitzontal');
     expect(formatDePartida({ matchMedia: (consulta) => ({ matches: consulta === CONSULTA_MOBIL }) })).toBe('vertical');
     expect(formatDePartida({ matchMedia: () => ({ matches: false }) })).toBe('horitzontal');
@@ -103,14 +103,14 @@ describe('format i estil', () => {
     expect(seccio.classList.contains('reproductor-pou--vertical')).toBe(true);
   });
 
-  test('el commutador «📱 Vertical 9:16 / 🖥️ Horitzontal 16:9» canvia el format', () => {
+  test('el commutador canvia la disposició sense prometre una proporció fixa al text', () => {
     const { container } = render(<ReproductorExplicatiuPouNeu3D />);
     const seccio = container.querySelector('section.reproductor-pou');
     expect(seccio.dataset.format).toBe('horitzontal');
     const grup = screen.getByRole('group', { name: 'Format de la pantalla' });
-    const vertical = within(grup).getByRole('button', { name: /Vertical 9:16/ });
-    expect(vertical.textContent).toBe('📱Vertical 9:16');
-    expect(within(grup).getByRole('button', { name: /Horitzontal 16:9/ }).textContent).toBe('🖥️Horitzontal 16:9');
+    const vertical = within(grup).getByRole('button', { name: 'Vertical' });
+    expect(vertical.textContent).toBe('📱Vertical');
+    expect(within(grup).getByRole('button', { name: 'Horitzontal' }).textContent).toBe('🖥️Horitzontal');
     fireEvent.click(vertical);
     expect(seccio.dataset.format).toBe('vertical');
     expect(vertical.getAttribute('aria-pressed')).toBe('true');
@@ -126,6 +126,63 @@ describe('format i estil', () => {
     expect(seccio.dataset.estil).toBe('c');
     expect(seccio.classList.contains('reproductor-pou--estil-c')).toBe(true);
     expect(seccio.classList.contains('reproductor-pou--estil-a')).toBe(false);
+  });
+});
+
+describe('pantalla completa amb el hook compartit real', () => {
+  test.each([
+    ['ca', 'Pantalla completa', 'Eixir de pantalla completa'],
+    ['es', 'Pantalla completa', 'Salir de pantalla completa'],
+    ['en', 'Full screen', 'Exit full screen'],
+    ['eu', 'Pantaila osoa', 'Irten pantaila osotik'],
+    ['gl', 'Pantalla completa', 'Saír da pantalla completa']
+  ])('%s: obri, anuncia i tanca amb Escape sense alterar el text del pas', async (llengua, obri, tanca) => {
+    mocks.ui = { t: createTranslator(llengua), language: llengua };
+    const { container } = render(<ReproductorExplicatiuPouNeu3D />);
+    const root = container.querySelector('section.reproductor-pou');
+    const boto = screen.getByRole('button', { name: obri });
+    const textAbans = viva(container).textContent;
+    const overflowAbans = document.body.style.overflow;
+    boto.focus();
+    expect(root.hasAttribute('data-element-fullscreen')).toBe(true);
+    expect(boto.getAttribute('aria-pressed')).toBe('false');
+    fireEvent.click(boto);
+    await waitFor(() => expect(root.classList.contains('is-fullscreen')).toBe(true));
+    expect(screen.getByRole('button', { name: tanca }).getAttribute('aria-pressed')).toBe('true');
+    /* LLEI_06: la pantalla completa no toca el <body> amfitrió. */
+    expect(document.body.style.overflow).toBe(overflowAbans);
+    expect(viva(container).textContent).toBe(textAbans);
+    fireEvent.keyDown(document, { key: 'Escape' });
+    await waitFor(() => expect(root.classList.contains('is-fullscreen')).toBe(false));
+    expect(screen.getByRole('button', { name: obri }).getAttribute('aria-pressed')).toBe('false');
+    expect(document.body.style.overflow).toBe(overflowAbans);
+    expect(document.activeElement).toBe(boto);
+  });
+
+  test('la petició nativa pertany al reproductor i seguix fullscreenchange en entrar i eixir', async () => {
+    const elementDescriptor = Object.getOwnPropertyDescriptor(document, 'fullscreenElement');
+    const exitDescriptor = Object.getOwnPropertyDescriptor(document, 'exitFullscreen');
+    let active = null;
+    Object.defineProperty(document, 'fullscreenElement', { configurable: true, get: () => active });
+    const exit = vi.fn(async () => { active = null; document.dispatchEvent(new Event('fullscreenchange')); });
+    Object.defineProperty(document, 'exitFullscreen', { configurable: true, value: exit });
+    try {
+      const { container, unmount } = render(<ReproductorExplicatiuPouNeu3D />);
+      const root = container.querySelector('section.reproductor-pou');
+      root.requestFullscreen = vi.fn(async () => { active = root; document.dispatchEvent(new Event('fullscreenchange')); });
+      fireEvent.click(screen.getByRole('button', { name: 'Pantalla completa' }));
+      await waitFor(() => expect(root.classList.contains('is-fullscreen')).toBe(true));
+      expect(root.requestFullscreen).toHaveBeenCalledOnce();
+      fireEvent.click(screen.getByRole('button', { name: 'Eixir de pantalla completa' }));
+      await waitFor(() => expect(root.classList.contains('is-fullscreen')).toBe(false));
+      expect(exit).toHaveBeenCalledOnce();
+      unmount();
+    } finally {
+      if (elementDescriptor) Object.defineProperty(document, 'fullscreenElement', elementDescriptor);
+      else delete document.fullscreenElement;
+      if (exitDescriptor) Object.defineProperty(document, 'exitFullscreen', exitDescriptor);
+      else delete document.exitFullscreen;
+    }
   });
 });
 
@@ -157,7 +214,7 @@ describe('reproduir i navegar', () => {
     expect(container.querySelector('section').dataset.pas).toBe('muntat');
     fireEvent.keyDown(pant, { key: 'Home' });
     expect(container.querySelector('section').dataset.pas).toBe('sencer');
-    // R9V-C2-09 · Dins del text del pas, les fletxes el desplacen: no canvien de pas.
+    // Llegir el text del pas amb les fletxes no canvia el pas.
     fireEvent.keyDown(viva(container), { key: 'ArrowRight' });
     expect(container.querySelector('section').dataset.pas).toBe('sencer');
     const passos = within(screen.getByRole('list', { name: 'Tots els passos' })).getAllByRole('button');
@@ -233,11 +290,19 @@ describe('accessibilitat i Pedra Seca', () => {
     expect([...svg.querySelectorAll('*')].some((node) => [...node.attributes].some((attr) => attr.name.startsWith('on')))).toBe(false);
     expect(container.querySelector('[style]')).toBeNull();
     expect(container.querySelectorAll('[aria-live]')).toHaveLength(1);
-    // R9V-C2-09 · El text del pas (que en 16:9 es pot desplaçar) és una regió amb nom que s'enfoca amb el teclat.
+    // El text complet del pas és una regió amb nom que s'enfoca amb el teclat.
     expect(viva(container)).toBe(screen.getByRole('region', { name: 'Text del pas' }));
     expect(viva(container).getAttribute('tabindex')).toBe('0');
     expect(screen.getByRole('group', { name: 'Reproductor: les fletxes canvien de pas' })).toBe(pantalla(container));
+    expect(pantalla(container).classList.contains('sdp-diapositiva-plena')).toBe(true);
+    /* Verificació final R10 (P1-a): sense scrollytelling sticky, que tapava el text del pas en vertical. */
+    expect(pantalla(container).classList.contains('sdp-scrolly-pedra-seca')).toBe(false);
+    expect(viva(container).classList.contains('sdp-diapositiva-plena__prosa')).toBe(true);
+    expect(container.querySelector('.reproductor-pou__cotes').classList.contains('sdp-graella-cotes')).toBe(true);
     expect(container.querySelector('.reproductor-pou__font').textContent).toContain(FONT_POU);
+    cleanup();
+    const { container: containerPlena } = render(<ReproductorExplicatiuPouNeu3D pantallaPlena />);
+    expect(pantalla(containerPlena).classList.contains('is-fullscreen')).toBe(true);
   });
 
   test('la veu de la IAIA diu el pas en valencià, amb el servei de veres', async () => {
@@ -290,6 +355,21 @@ describe('el CSS (components.css)', () => {
     expect(inici).toBeGreaterThan(0);
     expect(fi).toBeGreaterThan(inici);
     expect(bloc).toContain('@layer components {');
+  });
+
+  test('P0-37: amplada completa, text sense retall ni scroll interior i proporció només al dibuix', () => {
+    const regla = (selector) => bloc.slice(bloc.indexOf(`${selector} {`)).split('}')[0];
+    expect(regla('.reproductor-pou')).toMatch(/width:\s*100%/);
+    const pantalles = [...bloc.matchAll(/([^{}]*\.reproductor-pou__pantalla)\s*\{([^{}]*)\}/g)].map(([, , propietats]) => propietats);
+    expect(pantalles.length).toBeGreaterThanOrEqual(3);
+    for (const propietats of pantalles) expect(propietats).not.toMatch(/aspect-ratio:|max-width:|overflow:\s*hidden/);
+    expect(regla('.reproductor-pou__pantalla')).toMatch(/width:\s*100%/);
+    const text = regla('.reproductor-pou__subtitol');
+    expect(text).toMatch(/height:\s*auto/);
+    expect(text).toMatch(/overflow:\s*visible/);
+    expect(bloc).not.toMatch(/overflow(?:-y)?:\s*(?:auto|scroll|hidden)/);
+    expect(regla('.reproductor-pou__svg')).toMatch(/aspect-ratio:\s*16\s*\/\s*10/);
+    expect(bloc).toMatch(/@media\s*\(width\s*<\s*48rem\)[\s\S]*?\.reproductor-pou__svg\s*\{\s*aspect-ratio:\s*4\s*\/\s*3/);
   });
 
   test('cada classe del component té regla; cap color literal; cap rem fora dels múltiples de 0,25', () => {

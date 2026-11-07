@@ -73,10 +73,12 @@ describe('la fitxa de lectura, davant del cos de sempre', () => {
     const insignia = container.querySelector('dl dd .sdp-insignia');
     expect(insignia.className).toBe('sdp-insignia sdp-insignia--avis');
     expect(insignia.textContent).toBe('Reservat');
-    /* La fitxa va ABANS del cos de sempre (la fila de píndoles i el contingut). */
+    /* La fitxa va ABANS del cos de sempre. P0-34 (261107): la fila de píndoles
+       inventada ja no hi és; l'àncora és el paràgraf del contingut. */
     const dl = container.querySelector('dl');
-    const cos = container.querySelector('.badge-row');
-    expect(cos).not.toBeNull();
+    expect(container.querySelector('.badge-row')).toBeNull();
+    const cos = [...container.querySelectorAll('p')].find((el) => el.textContent === 'Isc a les huit.');
+    expect(cos).toBeTruthy();
     expect(dl.compareDocumentPosition(cos) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
     expect(container.textContent).toContain('Isc a les huit.');
   });
@@ -138,7 +140,8 @@ describe('la fitxa de lectura també a /mur/<id> (correcció L3-A2)', () => {
     expect(files(mur)[0]).toEqual(['Estat', 'Reservat']);
     expect(mur.querySelectorAll('dl')).toHaveLength(1);
     expect(mur.querySelectorAll('.sdp-insignia')).toHaveLength(1);
-    expect(mur.querySelector('dl').compareDocumentPosition(mur.querySelector('.badge-row')) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    const cosMur = [...mur.querySelectorAll('p')].find((el) => el.textContent === 'Isc a les huit.');
+    expect(mur.querySelector('dl').compareDocumentPosition(cosMur) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
     const html = mur.innerHTML;
     cleanup();
     const vertical = render(registre().vehicle.renderBody(viatge)).container;
@@ -150,7 +153,8 @@ describe('la fitxa de lectura també a /mur/<id> (correcció L3-A2)', () => {
     const sense = render(registre().mur.renderBody(deSempre)).container;
     expect(sense.querySelector('dl')).toBeNull();
     expect(sense.querySelector('.sdp-insignia')).toBeNull();
-    expect(sense.querySelector('.badge-row')).not.toBeNull();
+    /* P0-34 (261107): cap barra inventada d'autor, poble, comentaris i m'agrada. */
+    expect(sense.querySelector('.badge-row')).toBeNull();
     expect(sense.textContent).toContain('Diumenge.');
     const html = sense.innerHTML;
     cleanup();

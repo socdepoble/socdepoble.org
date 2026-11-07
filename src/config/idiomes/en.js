@@ -613,7 +613,7 @@ export default {
   'section.xat.tab.empreses': 'Companies',
   'section.xat.tab.institucions': 'Institutions',
   'section.xat.searchPlaceholder': 'Search chats, people or groups...',
-  'section.xat.composePlaceholder': 'Write a message...',
+  'section.xat.composePlaceholder': 'Write…',
   'section.xat.send': 'Send',
   'section.xat.selected': 'Selected',
   'section.xat.memberFallback': 'Community member',
@@ -967,6 +967,7 @@ export default {
   'section.detail.mur.town': 'La Torre de les Maçanes',
   'section.detail.mur.comments': 'comments',
   'section.detail.mur.likes': 'likes',
+  'section.detail.mur.revisioWp.tornaBancada': '← Back to Editorial Import and Review',
   'section.detail.mercat.title': 'Market',
   'section.detail.mercat.label': 'Product',
   'section.detail.mercat.itemTitle': 'Product',
@@ -1128,6 +1129,8 @@ export default {
   'section.login.registre.botoEntrar': 'Sign in to the account',
   'section.login.registre.botoCrear': 'Create the account',
   'section.login.registre.oblidada': 'Forgot your password?',
+  /* IDEA-133 (Onada R10, B2-03) · El botó d'1 clic de l'avís de compte existent o de credencials. */
+  'section.login.registre.recuperaAmbEnllac': 'Used Google to sign in, or have no password? Get a link by email',
   'section.login.recuperacio.enviada': 'If there is an account with that email, you will receive a link to set a new password. Check your spam folder too.',
   'section.login.recuperacio.titol': 'Recover your password',
   'section.login.recuperacio.intro': 'Enter your account’s email and we will send you a link to set a new password.',
@@ -2366,6 +2369,8 @@ export default {
   'section.xat.fake.sdp2': 'Sign up to discover everything we offer.',
   /* P1-52 (261029) · La resposta simulada, en el to pla del Mestre. */
   'section.xat.fake.reply': 'This is a simulation. If you want to keep the conversation, you have to sign up, and that’s it.',
+  /* IDEA-133 (Onada R10, B2-01) · L'enllaç a /registre de la bombolla de simulació. */
+  'section.xat.fake.registre': 'Sign in or sign up now →',
   'section.xat.fake.botoRegistrat': 'Sign up',
   'section.xat.ajustos.titol': 'Settings',
   'section.xat.ajustos.obri': 'You: settings',

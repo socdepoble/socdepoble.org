@@ -144,7 +144,7 @@ describe('l’article', () => {
     expect(screen.getByRole('heading', { name: 'Per què un pou de neu en 3D' })).toBeTruthy();
     // Gauntlet R9 · G2-04 · Façana de clic: abans del gest, cap iframe; el botó obri el del vídeo.
     expect(container.querySelector('iframe')).toBeNull();
-    fireEvent.click(within(container).getByRole('button', { name: 'Veure el vídeo (YouTube)' }));
+    fireEvent.click(within(container).getByRole('button', { name: /^Veure el vídeo \(YouTube\) / }));
     const iframes = container.querySelectorAll('iframe');
     expect(iframes).toHaveLength(1);
     expect(iframes[0].getAttribute('src')).toBe(`https://www.youtube-nocookie.com/embed/${NOVES_TECNOLOGIES_VIDEO.id}`);
@@ -180,6 +180,13 @@ describe('l’article', () => {
     const { container } = render(meta.renderBody(item));
     await waitFor(() => expect(container.querySelector('section.reproductor-pou')).not.toBeNull(), { timeout: 10000 });
     expect(container.querySelector('.noves-tecnologies-rural')).not.toBeNull();
+    await waitFor(() => expect(container.querySelectorAll('.pou-neu-card')).toHaveLength(1), { timeout: 10000 });
+    const hero = container.querySelector('.pou-neu-card');
+    const reproductor = container.querySelector('section.reproductor-pou');
+    expect(hero.compareDocumentPosition(reproductor) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(hero.querySelector('.pou-neu-note').textContent).toContain('no mesures del monument');
+    expect(screen.getAllByRole('button', { name: /^Escolta la IAIA/ })).toHaveLength(2);
+    expect(container.querySelector('article.detail-content').textContent).toContain('Per què un pou de neu en 3D');
   });
 });
 

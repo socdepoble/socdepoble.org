@@ -9,7 +9,8 @@
    política oberta, cada SECURITY DEFINER amb search_path, cap permís per a
    anon, l'E2EE apagat per defecte (configuració general=false, cohort buida i
    la constant del client a false), l'esmena D1 (només service_role) i les
-   entrades «NO aplicada: l'aplica el Mestre» de supabase/README.md.
+   entrades de supabase/README.md (Onada R10, B4 segona ronda: la 2610311800 és a
+   producció segons la lectura REST del 6-11-2026; la 2610312000, no acreditada).
    L'execució de veres (cadena de 60 + 1500 + 1800 + 1900 + 2000 dues voltes)
    es fa a PGlite fora del repositori; aplicar-les és cosa del Mestre. */
 import { createHash } from 'node:crypto';
@@ -120,14 +121,18 @@ describe('2610312000 · esmena D1: validadors per a service_role (fitxer, NO apl
   });
 });
 
-describe('supabase/README.md · el catàleg les llista sense aplicar', () => {
+/* Onada R10 · B4 segona ronda (B4V-T3) · La lectura REST del 6-11-2026 (només GET amb la clau anònima) troba la
+   taula xat_epoques (401 42501), que només crea la 2610311800. La 2610312000 només canvia dues funcions de
+   private, que anon no veu: l'acta 261101_0334 la dona aplicada, i la fila ho diu sense donar-la per acreditada. */
+describe('supabase/README.md · el catàleg en diu l’estat remot que acredita la lectura', () => {
   test.each([
-    ['2610311800', NOM_1800],
-    ['2610312000', NOM_2000]
-  ])('%s consta com «NO aplicada: l’aplica el Mestre»', (versio, nom) => {
+    ['2610311800', NOM_1800, '| Aplicada a producció (lectura REST del 6-11: la taula `xat_epoques` existix, 401 42501; acta 261101_0334) |'],
+    ['2610312000', NOM_2000, "| Estat remot no acreditat (l'acta 261101_0334 la dona aplicada; la lectura REST no veu `private.xat_lot3_b64`); ho pot acreditar la columna `te_esmena_2610312000` del Pas 0 |"]
+  ])('%s consta amb el seu estat i la seua evidència', (versio, nom, estat) => {
     expect(README).toContain(`migrations/${nom}`);
     const fila = README.split('\n').find((linia) => linia.startsWith('|') && linia.includes(`\`${versio}\``));
     expect(fila, versio).toBeTruthy();
-    expect(fila).toContain("**NO aplicada: l'aplica el Mestre**");
+    expect(fila).toContain(estat);
+    expect(fila).not.toContain('NO aplicada');
   });
 });

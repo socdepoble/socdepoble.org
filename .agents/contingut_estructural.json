@@ -44,16 +44,16 @@
       "data": "2026-11-05"
     },
     "fedivers": {
-      "sha256": "2ebec91f28fad1153f53de6de8ee5e2a46d371c511dab23bbea68ebd3fc8a36c",
-      "html": 19939,
-      "aprovat_per": "Mestre Javi Llinares (ordre Onada R9 261106 14:06 i ordre de producció 261106 21:2x: «aprova les 4 empremtes de la Frontissa (fedivers, fediversity, node-zero, legal)»); diff revisat per Claude: 5 carrils verificats, Gauntlet de l'arbre, 2 rondes d'arreglos FA/FB i verificació final VT/VC/VF, 2026-11-06",
-      "data": "2026-11-06"
+      "sha256": "8df6e98bc86ead59beaddc2ad5d6aaf802d395c342a1f73df11505b7eea8fccc",
+      "html": 20345,
+      "aprovat_per": "Mestre Javi Llinares (ordre pre-deploy R10 261107 ~02:42: «Amb l'autorització del Mestre, actualitza les 3 empremtes de la Frontissa (fedivers, fediversity, node-zero -> 20/20)»); diff revisat per Claude: textos de balanç del tall R10 (carril B4, veritat d'estat) sobre HEAD b8904b465, Gauntlet pre-deploy",
+      "data": "2026-11-07"
     },
     "fediversity": {
-      "sha256": "505b1010e3f2c8be8a3ea3e2983cbe9deef39e22e16af99bedb3d0e949250405",
-      "html": 60782,
-      "aprovat_per": "Mestre Javi Llinares (ordre Onada R9 261106 14:06 i ordre de producció 261106 21:2x: «aprova les 4 empremtes de la Frontissa (fedivers, fediversity, node-zero, legal)»); diff revisat per Claude: 5 carrils verificats, Gauntlet de l'arbre, 2 rondes d'arreglos FA/FB i verificació final VT/VC/VF, 2026-11-06",
-      "data": "2026-11-06"
+      "sha256": "7bb1b0943213b2c73f0a1e15d3de5e02a9abf19f3f7f775ca0219ec85697970f",
+      "html": 61321,
+      "aprovat_per": "Mestre Javi Llinares (ordre pre-deploy R10 261107 ~02:42: «Amb l'autorització del Mestre, actualitza les 3 empremtes de la Frontissa (fedivers, fediversity, node-zero -> 20/20)»); diff revisat per Claude: textos de balanç del tall R10 (carril B4, veritat d'estat) sobre HEAD b8904b465, Gauntlet pre-deploy",
+      "data": "2026-11-07"
     },
     "habitatge": {
       "sha256": "77c25f12150cc07c8bb56b6ebd1f3b5a2d057ac6ec3f02997f47654ce0b94da2",
@@ -68,10 +68,10 @@
       "data": "2026-11-06"
     },
     "node-zero": {
-      "sha256": "201963fb1cbf69785745e330bca37f3c5f54dbd72f84ad4ff2b75518a766eb12",
-      "html": 19826,
-      "aprovat_per": "Mestre Javi Llinares (ordre Onada R9 261106 14:06 i ordre de producció 261106 21:2x: «aprova les 4 empremtes de la Frontissa (fedivers, fediversity, node-zero, legal)»); diff revisat per Claude: 5 carrils verificats, Gauntlet de l'arbre, 2 rondes d'arreglos FA/FB i verificació final VT/VC/VF, 2026-11-06",
-      "data": "2026-11-06"
+      "sha256": "72262cd3ca34d5a19a3cf0d12efbff5cfc06194fef46d23a946cfed9b581f752",
+      "html": 20234,
+      "aprovat_per": "Mestre Javi Llinares (ordre pre-deploy R10 261107 ~02:42: «Amb l'autorització del Mestre, actualitza les 3 empremtes de la Frontissa (fedivers, fediversity, node-zero -> 20/20)»); diff revisat per Claude: textos de balanç del tall R10 (carril B4, veritat d'estat) sobre HEAD b8904b465, Gauntlet pre-deploy",
+      "data": "2026-11-07"
     },
     "notes": {
       "sha256": "39cf0339b0694fc1ed39bdcac47064fadb725d844e6410753a9af90e1fc4e94c",

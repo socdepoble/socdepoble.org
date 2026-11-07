@@ -72,6 +72,23 @@ describe('FBV-01 · la façana del vídeo pinta amb el crom dins de .aplec-2023_
     expect(llig('src/css/components.css')).toMatch(/\.sdp-buit__titol \{[^}]*color: var\(--sdp-text-titol\)/);
   });
 
+  /* Gauntlet R10 · VFC-04 · L'EstatBuit posa la classe sdp-buit a la icona (estats.jsx, que no es toca), i el
+     farciment de .sdp-buit (space-10 dalt i baix) deixava la CirclePlay amb 0 d'alt: Chrome la mesurava amb una
+     caixa de 56×80 i un contingut de 24×0. Dins de la façana, en tots dos llocs (el crom de l'Aplec i el visor
+     d'Anatomia Rural), la icona va sense farciment: la caixa torna a ser de 56×56. */
+  test('VFC-04 · dins de la façana, la icona no hereta el farciment de .sdp-buit', () => {
+    expect(reglaDe('.video-editorial__facana > svg')).toBe('padding: 0;');
+    /* La causa continua sent la mateixa: si l'EstatBuit deixa de posar sdp-buit a la icona, la regla sobra. */
+    expect(llig('src/components/PedraSeca/atoms/estats.jsx')).toMatch(/<Icona className="sdp-buit" size=\{56\}/);
+    expect(llig('src/css/components.css')).toMatch(/\.sdp-buit \{[^}]*padding: var\(--sdp-space-10\) var\(--sdp-space-4\);/);
+    /* A la capa components, com la de .sdp-buit: amb (0,1,1) guanya el (0,1,0) sense cap !important. */
+    const capa = MODULS.lastIndexOf('@layer components {', MODULS.indexOf('.video-editorial__facana > svg {'));
+    expect(capa).toBe(MODULS.lastIndexOf('@layer components {', MODULS.indexOf('.aplec-2023__video {')));
+    const tros = MODULS.slice(capa, MODULS.indexOf('.video-editorial__facana > svg {'));
+    expect((tros.match(/\{/g) || []).length).toBe((tros.match(/\}/g) || []).length + 1);
+    expect(reglaDe('.video-editorial__facana > svg')).not.toMatch(/!important/);
+  });
+
   test('sobre el fons de crom, el títol i l’avís arriben a AAA (7:1) i l’anell de focus a 3:1', () => {
     const fons = rgb(valorDe('--sdp-crom-fons'));
     expect(contrast(rgb(valorDe('--sdp-crom-text')), fons)).toBeGreaterThanOrEqual(7);

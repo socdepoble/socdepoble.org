@@ -15,7 +15,8 @@ const ID='TlZWYbnGuCE';
 const marcador=`<div data-sdp-youtube="${ID}" data-titol="Reportatge del poble"><a href="https://www.youtube.com/watch?v=${ID}">Reserva</a></div>`;
 afterEach(()=>{cleanup();fixaBaseRecursos('');});
 /* Gauntlet R9 · G2-04 · Façana de clic: abans del gest no hi ha cap iframe; el clic obri el de cada vídeo. */
-const VEURE='Veure el vídeo (YouTube)';
+/* Gauntlet R10 · VFC-09 · El nom del botó és el text visible i, darrere, el títol del vídeo. */
+const VEURE=/^Veure el vídeo \(YouTube\) /;
 const obriVideos=root=>{const botons=within(root).queryAllByRole('button',{name:VEURE});for(const boto of botons)fireEvent.click(boto);return botons.length;};
 
 test('R18 un vídeo desat per l’editor es torna a veure incrustat en lectura',()=>{

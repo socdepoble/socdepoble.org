@@ -26,7 +26,7 @@ describe('IDEA-111 · previsualització privada del Laboratori', () => {
       fireEvent.change(selector, { target: { value: String(index) } });
       /* Gauntlet R9 · G2-04 · Façana de clic: cada vídeo s'obri amb el seu botó. */
       expect(container.querySelector('iframe')).toBeNull();
-      fireEvent.click(screen.getByRole('button', { name: 'Veure el vídeo (YouTube)' }));
+      fireEvent.click(screen.getByRole('button', { name: /^Veure el vídeo \(YouTube\) / }));
       const frames = container.querySelectorAll('iframe'); expect(frames).toHaveLength(1);
       expect(frames[0].src).toBe(`https://www.youtube-nocookie.com/embed/${id}`);
       expect(frames[0].getAttribute('loading')).toBe('lazy'); expect(container.querySelectorAll('img').length).toBeGreaterThan(0);

@@ -9,8 +9,9 @@
  *    per a les cotes del dibuix i el càlcul de comprovació). Cap dada pròpia:
  *    els passos només diuen quines peces i quines cotes es mostren.
  *    Geometria: anatomiaRuralGeometria.js, la del visor.
- *  · Format: vertical 9:16 de partida en pantalles estretes (matchMedia) i
- *    horitzontal 16:9 en les amples; el commutador el canvia.
+ *  · Format: text davall del dibuix de partida en pantalles estretes
+ *    (matchMedia) i al costat en les amples; el commutador el canvia.
+ *    El text sempre creix amb el contingut, sense desplaçament interior.
  *  · Tres propostes d'estil (A, B i C) perquè el Mestre en trie una: només
  *    canvien tokens de Pedra Seca (src/css/components.css), cap color literal.
  *  · Accessibilitat: tots els controls són botons natius; a la pantalla, les
@@ -27,11 +28,13 @@
 import { useCallback, useEffect, useId, useMemo, useState } from 'react';
 import { useUIActionsOpcional } from '../../app/contexts/UIContext.jsx';
 import { createTranslator } from '../../config/i18n.js';
+import { useElementFullscreen } from '../../hooks/useElementFullscreen.js';
 import { BotoVeuIaia } from '../PedraSeca/molecules/BotoVeuIaia.jsx';
 import { PillToggle } from '../PedraSeca/molecules/PillToggle.jsx';
 import { Boto } from '../PedraSeca/atoms/Boto.jsx';
 import { MESURES_POU, estructuraPerId } from '../../data/patrimoni/anatomiaRural.js';
 import { ALTARIA, AMPLARIA, CENTRE_X, BASE_Y, construeixPeca, separacions } from './anatomiaRuralGeometria.js';
+import { POU_NEU_TEXT } from './iso/pouNeuTextos.js';
 
 const T_PER_DEFECTE = createTranslator('ca');
 export const POU = estructuraPerId('pou-de-neu');
@@ -114,10 +117,12 @@ export function textDelPas(pas, estructura = POU) {
   return peces.map((peca) => `${peca.terme}: ${peca.definicio}${peca.nota ? ` (${peca.nota})` : ''}`).join(' ');
 }
 
-export default function ReproductorExplicatiuPouNeu3D({ formatInicial = null, estilInicial = 'a' }) {
+export default function ReproductorExplicatiuPouNeu3D({ formatInicial = null, estilInicial = 'a', pantallaPlena = false }) {
   const ui = useUIActionsOpcional();
   const t = ui?.t || T_PER_DEFECTE;
   const llengua = ui?.language || 'ca';
+  const { elementRef, isFullscreen, toggleFullscreen } = useElementFullscreen();
+  const fullscreenText = POU_NEU_TEXT[llengua] || POU_NEU_TEXT.ca;
   const id = useId();
   const [index, setIndex] = useState(0);
   const [reproduint, setReproduint] = useState(false);
@@ -154,8 +159,8 @@ export default function ReproductorExplicatiuPouNeu3D({ formatInicial = null, es
     setReproduint(true);
   };
 
-  /* Només a la pantalla mateixa: dins del text del pas (R9V-C2-09), les
-     fletxes el desplacen, com en qualsevol regió amb desplaçament. */
+  /* Només a la pantalla mateixa: llegir el text del pas amb les fletxes
+     no canvia el pas. */
   const tecla = (esdeveniment) => {
     if (esdeveniment.target !== esdeveniment.currentTarget) return;
     const accions = { ArrowRight: index + 1, ArrowDown: index + 1, ArrowLeft: index - 1, ArrowUp: index - 1, Home: 0, End: ultim };
@@ -211,13 +216,13 @@ export default function ReproductorExplicatiuPouNeu3D({ formatInicial = null, es
     .replace('{v2}', () => numero.format(Math.round(volumCilindre(MESURES_POU.diametrePla.valor, MESURES_POU.alcadaPou.valor))))
     .replace('{c2}', () => xifra('capacitatCorpus')) : null;
 
-  const classes = ['reproductor-pou', CLASSE_FORMAT[format], CLASSE_ESTIL[estil]].join(' ');
+  const classes = ['reproductor-pou', CLASSE_FORMAT[format], CLASSE_ESTIL[estil], isFullscreen && 'is-fullscreen'].filter(Boolean).join(' ');
   const titolPas = titolDe(pas);
   const comptador = t('patrimoni.reproductorPou.comptador', 'Pas {n} de {total}')
     .replace('{n}', () => String(index + 1)).replace('{total}', () => String(PASSOS.length));
 
   return (
-    <section className={classes} aria-labelledby={`${id}-titol`} data-format={format} data-estil={estil} data-pas={pas.id}>
+    <section ref={elementRef} data-element-fullscreen="" className={classes} aria-labelledby={`${id}-titol`} data-format={format} data-estil={estil} data-pas={pas.id}>
       <h3 id={`${id}-titol`} className="reproductor-pou__titol">{t('patrimoni.reproductorPou.titol', 'El Pou de Neu del Rentonar, pas a pas')}</h3>
       {llengua !== 'ca' ? (
         <p className="reproductor-pou__avis" role="note">{t('patrimoni.anatomia.avisLlengua', 'El contingut etnogràfic només està en valencià; els termes no es tradueixen.')}</p>
@@ -227,8 +232,8 @@ export default function ReproductorExplicatiuPouNeu3D({ formatInicial = null, es
         <PillToggle
           etiqueta={t('patrimoni.reproductorPou.format', 'Format de la pantalla')}
           opcions={[
-            { valor: 'vertical', icona: '📱', text: t('patrimoni.reproductorPou.formatVertical', 'Vertical 9:16') },
-            { valor: 'horitzontal', icona: '🖥️', text: t('patrimoni.reproductorPou.formatHoritzontal', 'Horitzontal 16:9') }
+            { valor: 'vertical', icona: '📱', text: t('patrimoni.reproductorPou.formatVertical', 'Vertical').replace(/\s+\d+:\d+$/, '') },
+            { valor: 'horitzontal', icona: '🖥️', text: t('patrimoni.reproductorPou.formatHoritzontal', 'Horitzontal').replace(/\s+\d+:\d+$/, '') }
           ]}
           valor={format}
           onCanvi={setFormat}
@@ -241,10 +246,13 @@ export default function ReproductorExplicatiuPouNeu3D({ formatInicial = null, es
           onCanvi={setEstil}
           className="reproductor-pou__commutador"
         />
+        <Boto varietat="secundari" aria-pressed={isFullscreen} onClick={toggleFullscreen}>
+          <span aria-hidden="true">⛶</span> {isFullscreen ? fullscreenText.exitFullscreen : fullscreenText.fullscreen}
+        </Boto>
       </div>
 
       <div
-        className="reproductor-pou__pantalla"
+        className={['reproductor-pou__pantalla', 'sdp-diapositiva-plena', pantallaPlena ? 'is-fullscreen' : ''].filter(Boolean).join(' ')}
         role="group"
         tabIndex={0}
         aria-label={t('patrimoni.reproductorPou.pantalla', 'Reproductor: les fletxes canvien de pas')}
@@ -296,10 +304,10 @@ export default function ReproductorExplicatiuPouNeu3D({ formatInicial = null, es
           ) : null}
         </svg>
 
-        {/* R9V-C2-09 · En 16:9 el text d'alguns passos no cap i es desplaça:
-            la regió s'enfoca amb el teclat (també a Safari) i porta nom. */}
+        {/* La regió conserva el focus i el nom accessible; el text complet
+            ocupa l'alçada que necessita, sense retall ni scroll interior. */}
         <div
-          className="reproductor-pou__subtitol"
+          className="reproductor-pou__subtitol sdp-diapositiva-plena__prosa"
           role="region"
           tabIndex={0}
           aria-label={t('patrimoni.reproductorPou.textPas', 'Text del pas')}
@@ -326,7 +334,7 @@ export default function ReproductorExplicatiuPouNeu3D({ formatInicial = null, es
 
       <div className="reproductor-pou__detall">
         {cotes.length ? (
-          <dl className="reproductor-pou__cotes" lang="ca">
+          <dl className="reproductor-pou__cotes sdp-graella-cotes" lang="ca">
             {cotes.map((dada) => (
               <div key={dada.etiqueta} className="reproductor-pou__cota" data-estat={dada.estat}>
                 <dt className="reproductor-pou__cota-etiqueta">{dada.etiqueta}</dt>

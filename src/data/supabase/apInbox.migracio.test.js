@@ -304,14 +304,16 @@ describe('la migració de la inbox ActivityPub i la cua d’eixida', () => {
     expect(paritat(FUNCIONS, crides)).toEqual([]);
   });
 
-  test('el catàleg del README (vinyeta i fila, NO aplicada) i la porta de la funció a ordre_desplegament.json', () => {
+  test('el catàleg del README (vinyeta i fila, aplicada a producció) i la porta de la funció a ordre_desplegament.json', () => {
     const posicio = README.indexOf(`- \`migrations/${NOM}\`\n`);
     expect(posicio, 'falta la vinyeta').toBeGreaterThanOrEqual(0);
     expect(posicio).toBeLessThan(README.indexOf('\n- `seed.sql`'));
     const vinyeta = README.slice(posicio).split('\n\n')[0];
-    expect(vinyeta).toMatch(/\*\*NO aplicada: l'aplica el Mestre, mai un agent\*\*/);
+    // Onada R10 · B4 (VFT-01): la lectura REST del 6-11-2026 hi troba ap_alertes_vigents, que només crea esta migració.
+    expect(vinyeta.replace(/\s+/g, ' ')).toContain('**aplicada a producció** (lectura REST del 6-11-2026: `ap_alertes_vigents(timestamptz)`, que només crea esta migració, existix, 401 42501)');
+    expect(vinyeta).not.toMatch(/NO aplicada/);
     expect(vinyeta).toContain('src/data/supabase/apInbox.migracio.test.js');
-    expect(README).toMatch(new RegExp(`^\\| \\d+ \\| \`${VERSIO}\` \\| \`${NOM.replace(/\./g, '\\.')}\` \\| \\*\\*NO aplicada: l'aplica el Mestre\\*\\* \\| [^|]+ \\|$`, 'm'));
+    expect(README).toMatch(new RegExp(`^\\| \\d+ \\| \`${VERSIO}\` \\| \`${NOM.replace(/\./g, '\\.')}\` \\| Aplicada a producció \\(lectura REST del 6-11: \`ap_alertes_vigents\\(timestamptz\\)\` existix[^|]+\\) \\| [^|]+ \\|$`, 'm'));
     expect(README).toMatch(/^## Funció `ap-inbox-verifica` \(inbox ActivityPub, fase 2\)$/m);
     const porta = ORDRE_DESPLEGAMENT.portes.find((p) => p.id === 'funcio-ap-inbox-verifica');
     expect(porta).toMatchObject({ tipus: 'funcio', despres: [VERSIO], abans: [] });

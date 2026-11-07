@@ -108,7 +108,7 @@ test('primera columna: tres grups en ordre, la persona amb el seu nom i Administ
   expect(grups()[2].options.map((o) => [o.id, o.label])).toEqual([
     /* Encàrrec d'harmonització (261018) · el catàleg complet del Panell, i «Lector RSS». */
     ['app-gestoria', 'Gestoria de Poble'], ['app-rebost', 'Rebost Domèstic'], ['app-salut', 'Salut'],
-    ['app-lector-rss', 'Lector RSS'], ['app-tpv', 'TPV del Bar'], ['app-snippet', 'Snippet'],
+    ['app-genealogia', 'Arbre Genealògic'], ['app-lector-rss', 'Lector RSS'], ['app-tpv', 'TPV del Bar'], ['app-snippet', 'Snippet'],
   ]);
   for (const opcio of grups().flatMap((g) => g.options)) expect(opcio.icon).toBeTruthy();
   expect(grups()[1].options[0].icon).not.toBe(grups()[1].options[1].icon);
@@ -123,7 +123,7 @@ test('Bloc 3.4 · amb superadmin, APLICACIONS porta també la Consola de Mètriq
   render(<PerfilShell />);
   expect(grups()[2].options.map((o) => [o.id, o.label])).toEqual([
     ['app-gestoria', 'Gestoria de Poble'], ['app-rebost', 'Rebost Domèstic'], ['app-salut', 'Salut'],
-    ['app-lector-rss', 'Lector RSS'], ['app-tpv', 'TPV del Bar'], ['app-snippet', 'Snippet'],
+    ['app-genealogia', 'Arbre Genealògic'], ['app-lector-rss', 'Lector RSS'], ['app-tpv', 'TPV del Bar'], ['app-snippet', 'Snippet'],
     ['app-metriques', 'Consola de Mètriques'], ['app-cervell', 'Cervell (Node Graph)'],
   ]);
   for (const opcio of grups()[2].options) expect(opcio.icon).toBeTruthy();

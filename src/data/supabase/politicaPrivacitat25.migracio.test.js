@@ -83,10 +83,37 @@ describe('2.5 append-only: els avisos push del xat', () => {
     for (const m of mutants) { expect(m).not.toBe(SQL); expect(problemes(m).length).toBeGreaterThan(0); }
   });
 
-  test('README i ordre declaren la publicació web abans de la migració nova, sense aplicar-la', () => {
+  test('README i ordre declaren la publicació web abans de la migració nova, i el README la dona aplicada pel Mestre el 6-11', () => {
     expect(README).toContain(`- \`migrations/${NOM}\``);
     expect(README).toContain(sha(legalContent.html));
-    expect(README).toMatch(/\| 79 \| `2611061520` \| `2611061520_politica_privacitat_2_5.sql` \| \*\*NO aplicada: l'aplica el Mestre\*\*/);
+    // Onada R10 · B4: la lectura REST del 6-11-2026 hi troba la 2.5 amb l'empremta del /legal d'este build.
+    expect(README).toMatch(new RegExp(`\\| 79 \\| \`2611061520\` \\| \`2611061520_politica_privacitat_2_5.sql\` \\| Aplicada a producció \\(lectura REST del 6-11: \`politiques_privacitat\` té la 2\\.5, vigent des del 2026-11-05T23:00Z, amb l'empremta \`${sha(legalContent.html).slice(0, 8)}…\` d'esta migració; aplicada pel Mestre el 6-11\\)`));
     expect(ORDRE.portes.find(p => p.id === 'web-legal-politica-2-5')).toMatchObject({ tipus: 'client', abans: ['2611061520'] });
+  });
+});
+
+/* Onada R10 · B4 (VFC-02 de R9) · El comentari de src/config/politicaPrivacitat.js diu com es comporta cada
+   servidor quan la versió que envia el formulari no és la del servidor, i cada frase té la peça que la sosté:
+   handle_new_user (2609261500) la substituïx en silenci per la vigent; el Node 0 rebutja l'alta. */
+describe('VFC-02 · el comentari de la versió de la política diu el que fa cada servidor', () => {
+  const COMENTARI = readFileSync(resolve(process.cwd(), 'src/config/politicaPrivacitat.js'), 'utf8').split('*/')[0];
+  test('Supabase registra la vigent si no troba la versió; el Node 0 rebutja', () => {
+    expect(COMENTARI).not.toMatch(/A server mismatch must reject the\s+\* registration/);
+    for (const peca of ['handle_new_user (2609261500)', 'private.versio_vigent()', 'la substituïx en silenci', '2611061520', 'consent_version_invalid (422)']) expect(COMENTARI, peca).toContain(peca);
+    const alta = readFileSync(resolve(process.cwd(), 'supabase/migrations/2609261500_identitat_perfil_f1.sql'), 'utf8');
+    expect(alta).toContain('v_versio := coalesce(v_versio, private.versio_vigent());');
+    expect(alta).toContain("where p.versio = v_meta ->> 'versio_politica'\n        and p.vigent_des_de <= now();");
+    expect(readFileSync(resolve(process.cwd(), 'tooling/node0/auth-node0.mjs'), 'utf8')).toContain("meta.versio_politica !== policy.privacy.version) throw failure('consent_version_invalid', 422)");
+    // La 2.5 entra en vigor el 6-11-2026 a les 00:00 CET, com diu el comentari.
+    expect(SQL).toContain("timestamptz '2026-11-06 00:00:00+01'");
+    expect(VERSIO_POLITICA_PRIVACITAT).toBe('2.5');
+  });
+  // B4 segona ronda (B4V-T5, MV10): la frase del Node 0 és la que diu el codi (auth-node0.mjs llança, no substituïx).
+  test('la frase del Node 0: no substituïx res i rebutja; mai «també la substituïx»', () => {
+    const pla = COMENTARI.replace(/\n \* /g, ' ').replace(/\s+/g, ' ');
+    expect(pla).toContain("El Node 0 (tooling/node0/auth-node0.mjs) no substituïx res: si no coincidix amb la política del node, rebutja l'alta (i la verificació) amb consent_version_invalid (422).");
+    const node0 = pla.split(/(?<=\.)\s+/).filter((frase) => frase.includes('Node 0'));
+    expect(node0).toHaveLength(1);
+    expect(node0[0]).not.toMatch(/també|en silenci|la substituïx|registra la vigent/);
   });
 });

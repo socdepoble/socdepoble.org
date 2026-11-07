@@ -1,0 +1,4 @@
+html, body, #root { height: auto; min-height: 100%; overflow: auto; }
+#root { display: block; }
+.pou-neu-preview { width: 100%; max-width: 68rem; margin-inline: auto; padding: var(--sdp-space-6); }
+@media (max-width: 48rem) { .pou-neu-preview { padding: var(--sdp-space-2); } }

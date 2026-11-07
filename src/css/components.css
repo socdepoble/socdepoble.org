@@ -3889,7 +3889,7 @@ section.bar-orange > .sdp-emoticona-barra--boto:focus-visible { outline-color: v
 /* ═══════════════════════════════════════════════════════════════════
    Reproductor explicatiu del Pou de Neu (IDEA-116, Onada R9) ·
    ReproductorExplicatiuPouNeu3D.jsx. La geometria és la del visor
-   d'Anatomia Rural; ací només hi ha la pantalla (9:16 o 16:9), els
+   d'Anatomia Rural; ací només hi ha la pantalla i el text complet, els
    controls i les tres propostes d'estil (A, B i C), totes amb tokens
    semàntics de Pedra Seca. Les transicions viuen NOMÉS dins de
    `prefers-reduced-motion: no-preference`.
@@ -3910,6 +3910,8 @@ section.bar-orange > .sdp-emoticona-barra--boto:focus-visible { outline-color: v
   .reproductor-pou {
     display: flex;
     flex-direction: column;
+    width: 100%;
+    min-width: 0;
     gap: var(--sdp-space-4);
     margin-block: var(--sdp-space-8);
     color: var(--sdp-text-cos);
@@ -3942,26 +3944,25 @@ section.bar-orange > .sdp-emoticona-barra--boto:focus-visible { outline-color: v
     justify-content: center;
   }
 
-  /* ── La pantalla: 9:16 en vertical, 16:9 en horitzontal ── */
+  /* El text creix amb cada pas; només el dibuix té proporció fixa. */
   .reproductor-pou__pantalla {
     display: grid;
     width: 100%;
+    min-width: 0;
+    height: auto;
     margin-inline: auto;
-    overflow: hidden;
+    overflow: visible;
     background: var(--sdp-fons-app);
     border: 1px solid var(--sdp-vora);
     border-radius: var(--sdp-radi-m);
   }
 
   .reproductor-pou--vertical .reproductor-pou__pantalla {
-    max-width: 22.5rem;
-    aspect-ratio: 9 / 16;
-    grid-template-rows: minmax(0, 3fr) minmax(0, 2fr);
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: auto auto;
   }
 
   .reproductor-pou--horitzontal .reproductor-pou__pantalla {
-    max-width: 48rem;
-    aspect-ratio: 16 / 9;
     grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
   }
 
@@ -3971,8 +3972,7 @@ section.bar-orange > .sdp-emoticona-barra--boto:focus-visible { outline-color: v
     outline-offset: var(--sdp-focus-separacio);
   }
 
-  /* R9V-C2-09 · El text del pas s'enfoca (es desplaça en 16:9): el focus va
-     per dins, perquè la pantalla retalla el que ix (overflow: hidden). */
+  /* El focus del text conserva el contrast amb el fons de la regió. */
   .reproductor-pou__subtitol:focus-visible {
     outline: var(--sdp-focus-gruix) solid var(--sdp-focus);
     outline-offset: calc(-1 * var(--sdp-focus-gruix));
@@ -3981,13 +3981,17 @@ section.bar-orange > .sdp-emoticona-barra--boto:focus-visible { outline-color: v
   .reproductor-pou__svg {
     display: block;
     width: 100%;
-    height: 100%;
+    height: auto;
+    aspect-ratio: 16 / 10;
     min-height: 0;
+    align-self: start;
   }
 
   .reproductor-pou__subtitol {
     min-height: 0;
-    overflow-y: auto;
+    min-width: 0;
+    height: auto;
+    overflow: visible;
     padding: var(--sdp-space-4);
     background: var(--sdp-fons-targeta);
     border-top: 1px solid var(--sdp-vora);
@@ -3996,6 +4000,21 @@ section.bar-orange > .sdp-emoticona-barra--boto:focus-visible { outline-color: v
   .reproductor-pou--horitzontal .reproductor-pou__subtitol {
     border-top: 0;
     border-left: 1px solid var(--sdp-vora);
+  }
+
+  @media (width < 48rem) {
+    .reproductor-pou--horitzontal .reproductor-pou__pantalla {
+      grid-template-columns: minmax(0, 1fr);
+    }
+
+    .reproductor-pou__svg {
+      aspect-ratio: 4 / 3;
+    }
+
+    .reproductor-pou--horitzontal .reproductor-pou__subtitol {
+      border-top: 1px solid var(--sdp-vora);
+      border-left: 0;
+    }
   }
 
   .reproductor-pou__comptador {
@@ -4593,4 +4612,107 @@ section.bar-orange > .sdp-emoticona-barra--boto:focus-visible { outline-color: v
       transition: none;
     }
   }
+}
+
+/* ── IDEA-155 · Pou de la Neu 3D (kits R31 i R32 de Codex, tall pre-deploy 261107) ──
+   Abans era src/components/patrimoni/PouDeLaNeuAnatomiaCard.css; la Porta Vocabulari
+   no admet CSS de secció. Els seus tokens viuen als blocs de tema de tokens.css. */
+@layer components {
+  .pou-neu-card {
+    background: var(--sdp-fons-targeta); color: var(--sdp-text-cos);
+    border: 1px solid var(--sdp-vora); border-radius: var(--sdp-radi-g);
+    overflow: hidden; padding: 1rem; container-type: inline-size;
+  }
+  .pou-neu-card__toolbar { display: flex; justify-content: end; flex-wrap: wrap; gap: 0.5rem; }
+  .pou-neu-heading h3 { font-size: clamp(1.25rem, 3vw, 1.75rem); margin: 0.5rem 0; color: var(--sdp-text-titol); }
+  .pou-neu-heading p, .pou-neu-description p { margin: 0.5rem 0; }
+  .pou-neu-kicker, .pou-neu-caption { color: var(--sdp-text-suau); font-variant-numeric: tabular-nums; font-size: 1rem; }
+  .pou-neu-figure { margin: 1rem 0; }
+  .pou-neu-stage { position: relative; aspect-ratio: 760 / 720; isolation: isolate; color: var(--sdp-text-suau); }
+  .pou-neu-svg { display: block; position: relative; z-index: 0; width: 100%; height: 100%; overflow: visible; }
+  .pou-neu-gl, .pou-neu-front { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+  .pou-neu-gl { z-index: 1; }
+  .pou-neu-front { z-index: 2; }
+  .pou-neu-front .pou-neu-part { pointer-events: visiblePainted; }
+  .pou-neu-part { cursor: pointer; }
+  .pou-neu-stage[data-season="winter"] .pou-neu-part[data-fluid="outflow"] { visibility: hidden; pointer-events: none; }
+  .pou-neu-fill { fill: var(--sdp-pou-shade-1); }
+  .pou-neu-shade[data-shade="0"] { fill: var(--sdp-pou-shade-0); }
+  .pou-neu-shade[data-shade="1"] { fill: var(--sdp-pou-shade-1); }
+  .pou-neu-shade[data-shade="2"] { fill: var(--sdp-pou-shade-2); }
+  .pou-neu-shade[data-shade="3"] { fill: var(--sdp-pou-shade-3); }
+  .pou-neu-top { fill: var(--sdp-pou-paper); }
+  .pou-neu-line { fill: none; stroke: var(--sdp-text-suau); stroke-width: 0.6; stroke-linejoin: round; stroke-linecap: round; }
+  .pou-neu-line[data-tone="lo"] { stroke-opacity: 0.4; }
+  .pou-neu-line[data-tone="mid"] { stroke-opacity: 0.65; }
+  .pou-neu-part[data-tone="lo"] .pou-neu-line { stroke: var(--sdp-text-suau); }
+  .pou-neu-part[data-tone="hi"] .pou-neu-line { stroke: var(--sdp-text-cos); }
+  .pou-neu-part[data-selected="true"] .pou-neu-line { stroke: var(--sdp-accio-text); }
+  /* Marca de les arestes de contorn: la llig tooling/anatomia/qa-browser.mjs. */
+  .pou-neu-edge { stroke-linejoin: round; }
+  .pou-neu-part[data-lit="true"] .pou-neu-top { fill: color-mix(in srgb, var(--sdp-accio-subtil) 45%, var(--sdp-fons-targeta)); }
+  .pou-neu-dot { fill: var(--sdp-text-suau); }
+  .pou-neu-halo { fill: var(--sdp-text-cos); fill-opacity: 0.1; }
+  .pou-neu-engraving { fill: var(--sdp-text-cos); font-family: var(--sdp-font); font-weight: 600; }
+  .pou-neu-ink-probe { position: absolute; width: 0; height: 0; visibility: hidden; color: var(--sdp-text-suau); background: var(--sdp-fons-targeta); }
+  .pou-neu-caption { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 0.5rem; border-block: 1px solid var(--sdp-vora); padding: 0.5rem 0; }
+  .pou-neu-controls { display: flex; flex-wrap: wrap; align-items: end; justify-content: center; gap: 1rem; }
+  .pou-neu-field { display: grid; flex: 1 1 12rem; gap: 0.5rem; font-size: 1rem; }
+  .pou-neu-field output { font-variant-numeric: tabular-nums; }
+  .pou-neu-field select, .pou-neu-field input { width: 100%; min-height: var(--sdp-touch); accent-color: var(--sdp-accio); }
+  .pou-neu-field select { background: var(--sdp-fons-targeta); color: var(--sdp-text-cos); border: 1px solid var(--sdp-vora-control); border-radius: var(--sdp-radi-s); padding: 0.5rem; font: inherit; }
+  .pou-neu-explode, .pou-neu-choice { min-height: var(--sdp-touch); border: 1px solid var(--sdp-vora-control); border-radius: var(--sdp-radi-s); padding: 0.5rem 1rem; background: var(--sdp-fons-targeta); color: var(--sdp-text-cos); font: inherit; cursor: pointer; }
+  .pou-neu-explode { background: var(--sdp-accio-control); color: var(--sdp-sobre-accio); }
+  .pou-neu-choice[aria-pressed="true"] { background: var(--sdp-accio-subtil); color: var(--sdp-accio-text); border-color: var(--sdp-accio); }
+  @media (hover: hover) and (pointer: fine) {
+    .pou-neu-explode:hover, .pou-neu-choice:hover { border-color: var(--sdp-accio); }
+  }
+  .pou-neu-card :is(button,input,select):focus-visible { outline: 3px solid var(--sdp-accio); outline-offset: 3px; }
+  .pou-neu-assemblies { display: flex; flex-wrap: wrap; justify-content: center; gap: 0.5rem; margin: 1rem 0; }
+  .pou-neu-choice span { font-variant-numeric: tabular-nums; }
+  .pou-neu-hint, .pou-neu-note { font-size: 1rem; line-height: 1.6; color: var(--sdp-text-suau); }
+  .pou-neu-readout { display: grid; grid-template-columns: repeat(auto-fit,minmax(8rem,1fr)); gap: 1rem; padding: 1rem 0; border-block: 1px solid var(--sdp-vora); }
+  .pou-neu-readout dt { font-size: 1rem; color: var(--sdp-text-suau); }
+  .pou-neu-readout dd { margin: 0.5rem 0 0; font-size: 1.125rem; font-weight: 600; font-variant-numeric: tabular-nums; color: var(--sdp-text-titol); }
+  @container (max-width: 26rem) { .pou-neu-card .pou-neu-controls { align-items: stretch; } .pou-neu-explode { width: 100%; } }
+  @media print { .pou-neu-controls, .pou-neu-hint { display: none; } .pou-neu-card { break-inside: avoid; } }
+}
+
+/* ── Pantalla completa d'un element (useElementFullscreen, kit R32): reserva CSS quan l'API no hi és ──
+   Abans era src/hooks/elementFullscreen.css (Llei de la porta única). */
+@layer components {
+  [data-element-fullscreen].is-fullscreen,
+  [data-element-fullscreen]:fullscreen {
+    position: fixed; inset: 0; z-index: calc(var(--z-calaix) + 1);
+    box-sizing: border-box; width: 100%; max-width: none;
+    height: 100vh; height: 100dvh; max-height: none; margin: 0; border-radius: 0;
+    padding: max(1rem, env(safe-area-inset-top)) max(1rem, env(safe-area-inset-right)) max(1rem, env(safe-area-inset-bottom)) max(1rem, env(safe-area-inset-left));
+    overflow: auto; overscroll-behavior: contain;
+    background: var(--sdp-fons-targeta); color: var(--sdp-text-cos);
+  }
+  [data-element-fullscreen].is-fullscreen .pou-neu-stage,
+  [data-element-fullscreen]:fullscreen .pou-neu-stage {
+    width: min(100%, 84.444dvh); margin-inline: auto;
+  }
+}
+
+/* ── Motor isomètric vendor (iso-kit, lathe i tube; kits R31 i R32) ──
+   Vocabulari de l'SVG que escriuen les seues funcions de text. El card del Pou
+   pinta amb .pou-neu-*; estes regles hi donen la mateixa paleta Pedra Seca. */
+@layer components {
+  .iso-fill, .tb-body { fill: var(--sdp-pou-shade-1); }
+  .iso-shade[data-shade="0"] { fill: var(--sdp-pou-shade-0); }
+  .iso-shade[data-shade="1"] { fill: var(--sdp-pou-shade-1); }
+  .iso-shade[data-shade="2"], .tb-shade { fill: var(--sdp-pou-shade-2); }
+  .iso-shade[data-shade="3"] { fill: var(--sdp-pou-shade-3); }
+  .iso-top, .tb-shine { fill: var(--sdp-pou-paper); }
+  .iso-halo { fill: var(--sdp-text-cos); fill-opacity: 0.1; }
+  .iso-line, .iso-edge, .iso-crease, .iso-bevel, .iso-wire, .tb-edge, .tb-ring {
+    fill: none; stroke: var(--sdp-text-suau); stroke-width: 0.6; stroke-linejoin: round; stroke-linecap: round;
+  }
+  .iso-line[data-tone="lo"], .tb-ring[data-tone="lo"] { stroke-opacity: 0.4; }
+  .iso-line[data-tone="mid"], .tb-ring[data-tone="mid"] { stroke-opacity: 0.65; }
+  .iso-wire-end, .iso-dots { fill: var(--sdp-text-suau); }
+  .iso-face-text { fill: var(--sdp-text-cos); font-family: var(--sdp-font); font-weight: 600; }
+  .iso-fade, .tb { pointer-events: none; }
 }

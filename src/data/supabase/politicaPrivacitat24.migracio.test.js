@@ -59,10 +59,11 @@ describe('2.4 append-only d’enriquiment editorial', () => {
     const mutants = [SQL.replace('NIF 21476359V', 'NIF 00000000X'), SQL.replace(SHA_24, '0'.repeat(64)), SQL.replace("  '2.4',", "  '2.3',"), SQL.replace('on conflict (versio) do nothing;', 'on conflict (versio) do update set text_complet = excluded.text_complet;'), SQL.replace('commit;', 'drop table public.politiques_privacitat; commit;'), SQL.replace('commit;', "delete from public.politiques_privacitat where versio = '2.3'; commit;"), SQL.replace("timestamptz '2026-11-03 00:00:00+01'", "timestamptz '2026-11-01 00:00:00+01'"), SQL.replace('if not exists (', 'if exists ('), SQL.replace("and url = '/legal'", "and url = '/privacitat'"), SQL.replace("and text_sha256 = '2956bc30112b2e8d097815d502f9cd711e9ee0c213c5c73634340d9657343ff3'", "and text_sha256 = '0000000000000000000000000000000000000000000000000000000000000000'"), SQL.replace("and text_complet is not null", "and true")];
     for (const m of mutants) { expect(m).not.toBe(SQL); expect(problemes(m).length).toBeGreaterThan(0); }
   });
-  test('README i ordre declaren la publicació web abans de la nova migració, sense aplicar-la', () => {
+  test('README i ordre declaren la publicació web abans de la nova migració, i el README la dona aplicada amb la lectura del 6-11', () => {
     expect(README).toContain(`- \`migrations/${NOM}\``);
     expect(README).toContain(SHA_24);
-    expect(README).toMatch(/\| 72 \| `2611030330` \| `2611030330_politica_privacitat_2_4.sql` \| \*\*NO aplicada: l'aplica el Mestre\*\*/);
+    // Onada R10 · B4: la lectura REST del 6-11-2026 hi troba la 2.4 amb l'empremta d'esta migració.
+    expect(README).toMatch(new RegExp(`\\| 72 \\| \`2611030330\` \\| \`2611030330_politica_privacitat_2_4.sql\` \\| Aplicada a producció \\(lectura REST del 6-11: \`politiques_privacitat\` té la 2\\.4 amb l'empremta \`${SHA_24.slice(0, 8)}…\``));
     expect(ORDRE.portes.find(p => p.id === 'web-legal-politica-2-4')).toMatchObject({ tipus: 'client', abans: ['2611030330'] });
   });
 });
