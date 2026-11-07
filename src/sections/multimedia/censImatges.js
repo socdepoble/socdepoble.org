@@ -258,7 +258,7 @@ export const CENS_IMATGES = Object.freeze([
   e('/assets/uploads/patrimoni/anatomia-rural-pou-neu-ibanez.webp', 'Anatomia rural: el Pou de la Neu, l’almàssera i el forn de calç', 'contingut', 'ia', 'la-torre-de-les-macanes'),
   e('/assets/uploads/patrimoni/arbres-monumentals-ibanez.webp', 'Arbres monumentals de les nostres comarques', 'contingut', 'ia', 'la-torre-de-les-macanes'),
   e('/assets/uploads/patrimoni/banc-de-llavors-ibanez.webp', 'Banc de llavors tradicional', 'contingut', 'ia', 'la-torre-de-les-macanes'),
-  e('/assets/uploads/patrimoni/herbari-la-torre-ibanez.webp', 'Herbari de La Torre: les 117 plantes de La Canaleta', 'contingut', 'ia', 'la-torre-de-les-macanes'),
+  e('/assets/uploads/patrimoni/herbari-la-torre-ibanez.webp', 'Herbari de La Torre: les 117 plantes del terme', 'contingut', 'ia', 'la-torre-de-les-macanes'),
   e('/assets/uploads/patrimoni/rutes-de-poble-ibanez.webp', 'Rutes de Poble i camins de ferradura', 'contingut', 'ia', 'la-torre-de-les-macanes'),
 
   e('/assets/uploads/companies/mercat/aitana.png', 'Oli verge', 'entitat', 'ia'),

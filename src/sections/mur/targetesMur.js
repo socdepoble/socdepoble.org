@@ -25,8 +25,17 @@ import { paginaPerAppNativa } from '../text/perAppNativa.js';
  * entra passat per paginaPerAppNativa: dins de l'app, cap altra plataforma
  * mòbil al títol, al lema ni a l'entradeta (a la web, el mateix objecte).
  */
+const PAGINES_PATRIMONI_MUR = Object.freeze([
+  { key: 'anatomia-rural', href: '/page/anatomia-rural', isAvis: false },
+  { key: 'herbari', href: '/page/herbari', isAvis: false },
+  { key: 'banc-de-llavors', href: '/page/banc-de-llavors', isAvis: false },
+  { key: 'rutes-de-poble', href: '/page/rutes-de-poble', isAvis: false },
+  { key: 'arbres-monumentals', href: '/page/arbres-monumentals', isAvis: false }
+]);
+
 export function targetesDeSistema(pageCopy, { quanFalta, nativa = esAppNativa() } = {}) {
-  return SYSTEM_PAGES.filter((item) => esPaginaVisible(item.key, { nativa })).map((item) => {
+  const paginesPatrimoni = PAGINES_PATRIMONI_MUR.filter((item) => Boolean(pageCopy?.[item.key]));
+  return [...SYSTEM_PAGES.filter((item) => esPaginaVisible(item.key, { nativa })), ...paginesPatrimoni].map((item) => {
     const data = paginaPerAppNativa(pageCopy?.[item.key], { nativa });
     if (!data) {
       quanFalta?.(item.key);

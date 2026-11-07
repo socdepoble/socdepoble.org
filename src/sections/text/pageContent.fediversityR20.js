@@ -18,6 +18,6 @@ export function aplicaAparadorR20(copy) {
   if(!page.html?.includes('data-sdp-aparador-r20'))page.html=(page.html??'')+htmlAparadorR20('ca');
   for(const language of Object.keys(APARADOR_R20_TEXTS))if(page.translations?.[language]&&!page.translations[language].html?.includes('data-sdp-aparador-r20'))page.translations[language].html=(page.translations[language].html??'')+htmlAparadorR20(language);
  }
- const translations=Object.fromEntries(Object.entries(APARADOR_R20_TEXTS).map(([lang,t])=>[lang,{title:t.herbari,subtitle:'La Torre de les Maçanes · La Canaleta',lead:t.herbari,html:`<p>${escape(t.herbari)}.</p>`}]));
+ const translations=Object.fromEntries(Object.entries(APARADOR_R20_TEXTS).map(([lang,t])=>[lang,{title:t.herbari,subtitle:'La Torre de les Maçanes',lead:t.herbari,html:`<p>${escape(t.herbari)}.</p>`}]));
  copy.herbari??={...translations.ca,translations,contentLanguage:'ca',labels:[]};
 }

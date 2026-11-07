@@ -253,7 +253,7 @@ const CONSUM = {
 };
 
 describe('Onada R9 · /page/herbari en les 5 llengües', () => {
-  test('les dades que diu el text: 117 fitxes, totes amb un rètol de La Canaleta', () => {
+  test('les dades que diu el text: 117 fitxes del terme', () => {
     expect(ESPECIES_HERBARI_LA_TORRE_117).toHaveLength(117);
     expect(ESPECIES_HERBARI_LA_TORRE_117.every((e) => e.localitzacionsCanaleta.length > 0)).toBe(true);
     expect(new Set(ESPECIES_HERBARI_LA_TORRE_117.map((e) => e.font.document))).toEqual(new Set(['Herbari de La Torre de les Maçanes']));
@@ -264,11 +264,13 @@ describe('Onada R9 · /page/herbari en les 5 llengües', () => {
     expect(p.contentLanguage ?? 'ca').toBe(llengua);
     if (llengua !== 'ca') expect(p.title).not.toBe(PAGE_COPY.herbari.title);
     expect(p.subtitle).toContain('117');
-    for (const toponim of ['La Canaleta', 'La Torre de les Maçanes']) expect(p.subtitle).toContain(toponim);
+    expect(p.subtitle).toContain('La Torre de les Maçanes');
+    expect(p.subtitle).not.toContain('La Canaleta');
     expect(p.lead).toContain('La Torre de les Maçanes');
     const body = doc(p.html).body;
     expect([...body.children].map((n) => n.tagName)).toEqual(['H3', 'P', 'P']);
-    expect(body.querySelector('h3').textContent).toContain('La Canaleta');
+    expect(body.querySelector('h3').textContent).toContain('La Torre');
+    expect(body.querySelector('h3').textContent).not.toContain('La Canaleta');
     expect([...body.querySelectorAll('p')].every((n) => n.querySelector('strong'))).toBe(true);
     expect(body.querySelectorAll('strong')).toHaveLength(doc(PAGE_COPY.herbari.html).body.querySelectorAll('strong').length);
     expect(body.querySelector('h1,h2,h4,script,img,a,section')).toBeNull();
@@ -530,14 +532,15 @@ describe('Gauntlet R9 · G1-09 · gallec i anglés de les pàgines de patrimoni'
     const p = pagina(clau, llengua);
     return [p.title, p.subtitle, p.lead, doc(p.html).body.textContent].join(' ');
   };
-  test('gallec: «de La Torre de les Maçanes», «de La Canaleta» i «Herbario de La Torre», com el títol de l’herbari', () => {
+  test('gallec: «de La Torre de les Maçanes», «do termo» i «Herbario de La Torre», sense La Canaleta', () => {
     for (const clau of ['banc-de-llavors', 'rutes-de-poble', 'arbres-monumentals']) {
       expect(textDe(clau, 'gl'), clau).not.toMatch(/\bda (?:Torre|Canaleta)\b/);
+      expect(textDe(clau, 'gl'), clau).not.toContain('Canaleta');
     }
     expect(textDe('rutes-de-poble', 'gl')).toContain('Os 6 itinerarios de La Torre de les Maçanes');
     expect(textDe('arbres-monumentals', 'gl')).toContain('As 19 árbores do catálogo de La Torre de les Maçanes');
     for (const clau of ['banc-de-llavors', 'arbres-monumentals']) {
-      expect(textDe(clau, 'gl'), clau).toContain('as plantas de La Canaleta');
+      expect(textDe(clau, 'gl'), clau).toContain('as plantas do termo');
       expect(textDe(clau, 'gl'), clau).toContain('Herbario de La Torre');
     }
     expect(pagina('herbari', 'gl').title).toContain('de La Torre');

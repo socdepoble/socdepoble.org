@@ -288,7 +288,7 @@ export const RUTES_LA_TORRE = congela({
    "temps": "4 h",
    "distancia": "2 km",
    "pagina": 10,
-   "programa": "Comença la visita a l’olivar. La cura del camp, la collita, el paisatge. Després, anirem a visitar l’almàssera del mas de La Canaleta on se’ns explicarà com es feia l’extracció de l’oli antigament. Farem una parada per esmorzar i podrem gaudir dels productes típics del poble amb l’oli, que és l’essència de la visita. En acabar, coneixerem les instal·lacions de l’almàssera per veure el seu funcionament i com s’elabora l’oli de La Torre.",
+   "programa": "Comença la visita a l’olivar. La cura del camp, la collita, el paisatge. Després, anirem a visitar l’almàssera tradicional on se’ns explicarà com es feia l’extracció de l’oli antigament. Farem una parada per esmorzar i podrem gaudir dels productes típics del poble amb l’oli, que és l’essència de la visita. En acabar, coneixerem les instal·lacions de l’almàssera per veure el seu funcionament i com s’elabora l’oli de La Torre.",
    "parades": [
     {
      "hora": "10:20",
@@ -301,7 +301,7 @@ export const RUTES_LA_TORRE = congela({
     },
     {
      "hora": "11:00",
-     "titol": "Visita a l'Almàssera del mas de la Canaleta",
+     "titol": "Visita a l'Almàssera tradicional",
      "explicacio": "Explicació del procés d'extracció d'oli. Amb material audiovisual.",
      "linies": [
       442,
@@ -409,7 +409,7 @@ export const RUTES_LA_TORRE = congela({
    "temps": "8 h",
    "distancia": "6 km",
    "pagina": 14,
-   "programa": "Comença la visita a l’olivar. La cura del camp, la collita, el paisatge. Des del camp anirem a fer la ruta de senderisme que recorre la serra de El Rentonar fins al pou de la neu. En acabar la ruta de muntanya, anirem a visitar l’almàssera del mas de La Canaleta on se’ns explicarà com es feia l’extracció de l’oli antigament. Farem una parada per dinar i podrem gaudir dels productes típics del poble amb l’oli, que és l’essència de la visita. En acabar el dinar coneixerem les instal·lacions de l’almàssera per veure el seu funcionament i com s’elabora l’oli de La Torre.",
+   "programa": "Comença la visita a l’olivar. La cura del camp, la collita, el paisatge. Des del camp anirem a fer la ruta de senderisme que recorre la serra de El Rentonar fins al pou de la neu. En acabar la ruta de muntanya, anirem a visitar l’almàssera tradicional on se’ns explicarà com es feia l’extracció de l’oli antigament. Farem una parada per dinar i podrem gaudir dels productes típics del poble amb l’oli, que és l’essència de la visita. En acabar el dinar coneixerem les instal·lacions de l’almàssera per veure el seu funcionament i com s’elabora l’oli de La Torre.",
    "parades": [
     {
      "hora": "10:20",
@@ -431,7 +431,7 @@ export const RUTES_LA_TORRE = congela({
     },
     {
      "hora": "13:00",
-     "titol": "Visita a l'Almàssera del mas de la Canaleta",
+     "titol": "Visita a l'Almàssera tradicional",
      "explicacio": "Explicació del procés d'extracció d'oli. Amb material audiovisual.",
      "linies": [
       603,
@@ -625,9 +625,9 @@ export const RUTES_LA_TORRE = congela({
   },
   {
    "pagina": 29,
-   "id": "recurs-29-almassera-de-la-canaleta",
-   "nom": "Almàssera de La Canaleta",
-   "adreca": "Mas de La Canaleta - Ctra. Benifallim, km 8,5",
+   "id": "recurs-29-almassera-tradicional",
+   "nom": "Almàssera tradicional",
+   "adreca": "Ctra. Benifallim, km 8,5",
    "establiments": false,
    "linies": {
     "nom": 1440,
@@ -636,9 +636,9 @@ export const RUTES_LA_TORRE = congela({
   },
   {
    "pagina": 30,
-   "id": "recurs-30-mas-de-la-canaleta",
-   "nom": "Mas de La Canaleta",
-   "adreca": "Mas de La Canaleta - Ctra. Benifallim, km 8,5",
+   "id": "recurs-30-mas-tradicional",
+   "nom": "Mas tradicional",
+   "adreca": "Ctra. Benifallim, km 8,5",
    "establiments": false,
    "linies": {
     "nom": 1490,

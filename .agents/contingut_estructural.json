@@ -13,6 +13,18 @@
       "aprovat_per": "Mestre Javi Llinares (ordre directa 261107 04:12: P0-38 / IDEA-157 «de poble», IDEA-159 Consola Incrustada Node 0 i portada Ibáñez Pou 3D + Multimèdia)",
       "data": "2026-11-07"
     },
+    "arbres-monumentals": {
+      "sha256": "8e9dfd8a46a1fe1df314a4239018a6aae71e1259908ae163be2ecd3dc517fba7",
+      "html": 636,
+      "aprovat_per": "Mestre Javi",
+      "data": "2026-11-07"
+    },
+    "banc-de-llavors": {
+      "sha256": "3d7292d5dc81aded65ce17648ffddea585595d7815191af73e4d9bf0f609cc39",
+      "html": 571,
+      "aprovat_per": "Mestre Javi",
+      "data": "2026-11-07"
+    },
     "cervell": {
       "sha256": "3d7fbeb778cabb3e71969d7082eb63669f52b5c4a205e7d2c90215ab38d0e5ef",
       "html": 4179,
@@ -67,6 +79,12 @@
       "aprovat_per": "Codex · ordre directa AH-22 del Mestre 05-11-2026",
       "data": "2026-11-05"
     },
+    "herbari": {
+      "sha256": "6b36f77f4ea1e870ff3eca0ef88771a1d935e9c46205c649fe7bc76f287bcc2a",
+      "html": 486,
+      "aprovat_per": "Mestre Javi",
+      "data": "2026-11-07"
+    },
     "legal": {
       "sha256": "0a903b4b1739120ddfc9d6fd275a6e26effd5329d061a431dcf2686e0f28173c",
       "html": 59594,
@@ -101,6 +119,12 @@
       "sha256": "56a4b34a38022e6758a78c10b55de98f3adcaf399e5bbf91221dc9812c0a10f1",
       "html": 31391,
       "aprovat_per": "Mestre Javi Llinares (ordre directa 261107 04:12: P0-38 / IDEA-157 «de poble», IDEA-159 Consola Incrustada Node 0 i portada Ibáñez Pou 3D + Multimèdia)",
+      "data": "2026-11-07"
+    },
+    "rutes-de-poble": {
+      "sha256": "3c89a8934ac51774b6edcef2311ba2900fc7d24263660ed519d67457698a4f45",
+      "html": 712,
+      "aprovat_per": "Mestre Javi",
       "data": "2026-11-07"
     },
     "treball": {
