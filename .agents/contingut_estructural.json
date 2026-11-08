@@ -44,10 +44,10 @@
       "data": "2026-11-07"
     },
     "descarregues": {
-      "sha256": "3f0d94613013948bada6bf56c8df064dba530c3c98b2b39472daeb5fb1cc9cc8",
-      "html": 8250,
+      "sha256": "5ab60519370f542b4588a9fc67a459f2beb84338a34aaa25b65c80f8b09ddc94",
+      "html": 9909,
       "aprovat_per": "Mestre Javi",
-      "data": "2026-11-07"
+      "data": "2026-11-08"
     },
     "disseny": {
       "sha256": "da7b7421eb914af150d8eb92311ba494020e2423a0dd77c3af901b0868dd57f6",
@@ -134,10 +134,10 @@
       "data": "2026-11-05"
     },
     "versions": {
-      "sha256": "b16cf5e00d5537650aa1e9d26e04ee39e623071297506da455b6223bfb31eabb",
-      "html": 40590,
+      "sha256": "73d7e6708618d6c31c58f0c05a4e2247b09135533be7124838c8d416a278db05",
+      "html": 41391,
       "aprovat_per": "Mestre Javi",
-      "data": "2026-11-07"
+      "data": "2026-11-08"
     },
     "wikidepoble": {
       "sha256": "173f180d9f83ee98232cb6a6df7c65673763a5f761a757521bb33a0b3fbcb1e4",

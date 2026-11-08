@@ -8,6 +8,8 @@ DO $guard$ BEGIN
  -- changes its sha256 and needs new pins (tests/node0-posse-sql.cases.mjs).
  -- R33 adds the exact full catalogue80 with P1-75 seed revisions. This pin
  -- does not advertise private Node0 revision methods or apply SQL remotely.
+ -- R13-C7 adds the exact full catalogue81 with the superadmin-only session
+ -- counts (2611082238); every earlier profile excludes it, as with SQL80.
  -- A count alone cannot prove a migration identity or its source bytes.
  OR NOT EXISTS(
  SELECT 1 FROM(VALUES
@@ -16,7 +18,8 @@ DO $guard$ BEGIN
 (77,'9b021cd927914be1ab8223a976a4b2518a96a0d85f068999aeebd174969dc94e'),
 (78,'76d70ba0f769ddeda61980e489814adbd318146a00825574879ac985b2be52b1'),
 (79,'a4c9054de9898e7a7c0de7825f23fde105c9bed77c833fadee69e2a9c5840798'),
-(80,'6d03b86a5f9236a3d1734b4c52e23752c23b42a19009b666e22b40f0ba14d858')
+(80,'6d03b86a5f9236a3d1734b4c52e23752c23b42a19009b666e22b40f0ba14d858'),
+(81,'2b805488de510fb5c433c238dcf81b14d1b877920c2c4b221c88005c86ee8187')
 -- POSSE_MIGRATION_PINS_END
  ) expected(migrations,sha256)
  CROSS JOIN(SELECT count(*) migrations,encode(pg_catalog.sha256(convert_to(coalesce(string_agg(version||E'\t'||file||E'\t'||sha256,E'\n' ORDER BY version COLLATE "C"),''),'UTF8')),'hex') sha256 FROM node0.schema_migrations) actual

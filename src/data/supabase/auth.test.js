@@ -8,7 +8,9 @@ vi.mock('../recuperacioPendent.js', () => ({
   ESTAT_ENLLAC: Object.freeze({ PENDENT: 'pendent', PERDUT: 'perdut' }),
   marcaRecuperacioPendent: vi.fn(), oblidaRecuperacioPendent: vi.fn(),
   anunciaEnllacDeRecuperacio: vi.fn(), oblidaEnllacDeRecuperacio: vi.fn(),
-  estatEnllacDeRecuperacio: () => null, escoltaRecuperacioPendent: () => () => {}
+  estatEnllacDeRecuperacio: () => null, escoltaRecuperacioPendent: () => () => {},
+  /* P0-63 · L'adreça d'arribada del document: cap tornada de recuperació ací. */
+  prenAdrecaDArribada: () => null
 }));
 /* D1: auth.js tria el refresh token amb triaRefresc; ací sempre és el de la pestanya. */
 vi.mock('../identitat.js', () => ({ configuraBackendSessio: vi.fn(), esBackendDeSessio: () => true, jwtPerBackend: () => 'synthetic-refresh', CLAU_REFRESC: 'refresh', CLAU_JWT: 'jwt', CLAU_ORIGEN: 'origen', get versioSessio() { return m.epoch; },

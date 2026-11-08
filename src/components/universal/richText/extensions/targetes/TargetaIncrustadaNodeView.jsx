@@ -24,7 +24,7 @@
  */
 import { useCallback } from 'react';
 import { NodeViewWrapper } from '@tiptap/react';
-import { AlignLeft, AlignRight, Link2, Trash2 } from 'lucide-react';
+import { AlignCenter, AlignLeft, AlignRight, Link2, Trash2 } from 'lucide-react';
 /* Directes, no pel barril de PedraSeca: el mòdul d'extensions el carrega
    l'editor, i el barril arrossegaria tot el sistema de disseny. */
 import { UniversalCard } from '../../../../PedraSeca/organismes/UniversalCard.jsx';
@@ -86,6 +86,9 @@ export default function TargetaIncrustadaNodeView({ node, editor, getPos, select
             <>
               <Boto icona={AlignLeft} aria-pressed={grup.alineacio === 'esquerra'} onClick={() => alinea('esquerra')}>
                 {t('editor.targetes.esquerra', 'Esquerra')}
+              </Boto>
+              <Boto icona={AlignCenter} aria-pressed={grup.alineacio === 'centre'} onClick={() => alinea('centre')}>
+                {t('editor.targetes.centre', 'Centre')}
               </Boto>
               <Boto icona={AlignRight} aria-pressed={grup.alineacio === 'dreta'} onClick={() => alinea('dreta')}>
                 {t('editor.targetes.dreta', 'Dreta')}

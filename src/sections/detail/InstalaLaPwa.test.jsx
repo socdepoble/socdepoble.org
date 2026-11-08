@@ -30,10 +30,13 @@ const WORDPRESS = 'https://wordpress.org/plugins/socdepoble/';
 const APK = 'https://socdepoble.org/descarregues/socdepoble-android-latest.apk';
 const TESTFLIGHT = 'https://testflight.apple.com/join/AbCd1234';
 const CLASSE_BOTIGA = 'sdp-boto sdp-boto--secundari sdp-boto--gran';
+/* P0-62 bis (08-11-2026; ordre del Mestre al xat de Claude) · L'App Store oberta, amb el botó de marca d'Apple. */
+const CLASSE_APP_STORE = 'sdp-boto sdp-boto--marca sdp-boto--apple sdp-boto--gran';
 const nav = (userAgent, maxTouchPoints = 0) => ({ userAgent, maxTouchPoints });
 /* Res que anuncie una botiga encara tancada, ni cap adreça (decisió del Mestre: cap «pròximament»). */
 const BOTIGUES = /Google Play|App Store|WordPress|TestFlight|APK|prompte|aviat|pròximament|https?:/i;
-/* Les botigues que encara no són obertes (01-11-2026: totes menys WordPress.org). */
+/* Les botigues que no eren obertes l'01-11-2026 (totes menys WordPress.org; des del 08-11-2026, P0-62,
+   l'App Store també ho és: les proves amb les ranures de veres en lleven els enllaços abans de mirar-ho). */
 const TANCADES = /Google Play|App Store|TestFlight|APK|prompte|aviat|pròximament|https?:/i;
 
 afterEach(cleanup);
@@ -114,17 +117,29 @@ const ranura = () => document.querySelector('[data-testid="ranura"]');
 describe('les ranures de botiga', () => {
   /* 01-11-2026 (ordre del Mestre 261101_0311, T1) · Amb les ranures de veres
      (CANALS_DE_BOTIGA), només WordPress.org és obert: un sol enllaç, a la
-     fitxa del connector, i res de les botigues mòbils, que continuen tancades. */
-  test('hui, només WordPress.org: un enllaç a la fitxa del connector i cap botiga tancada ni «pròximament»', () => {
+     fitxa del connector, i res de les botigues mòbils, que continuen tancades.
+     P0-62 (08-11-2026) · L'App Store també és oberta: «Disponible a l'App
+     Store» a la fitxa de veres, davant de WordPress.org; Google Play, l'APK i
+     TestFlight, res. */
+  test('hui, l’App Store i WordPress.org: un enllaç a cada fitxa i cap botiga tancada ni «pròximament»', () => {
     render(<Ranures />);
     const enllacos = [...ranura().querySelectorAll('a')];
-    expect(enllacos.map((a) => [a.getAttribute('href'), a.className, a.textContent]))
-      .toEqual([[WORDPRESS, 'sdp-boto sdp-boto--secundari sdp-boto--gran', 'WordPress.org']]);
-    expect(enllacos[0].parentElement.className).toBe('sdp-accions');
-    // Sense manera d'instal·lar-la (Firefox d'escriptori): cap botó, només la botiga oberta.
+    expect(enllacos.map((a) => [a.getAttribute('href'), a.className, a.textContent])).toEqual([
+      ['https://apps.apple.com/es/app/s%C3%B3c-de-poble/id6826441844', CLASSE_APP_STORE, "Disponible a l'App Store"],
+      [WORDPRESS, CLASSE_BOTIGA, 'WordPress.org']
+    ]);
+    expect(enllacos.map((a) => a.parentElement.className)).toEqual(['sdp-accions', 'sdp-accions']);
+    // P0-62 bis · El logotip d'Apple (LogotipsDeMarca.jsx), decoratiu: el nom és el text visible.
+    const logotip = enllacos[0].querySelector('svg.sdp-boto__logotip--apple');
+    expect([logotip?.getAttribute('aria-hidden'), enllacos[0].firstElementChild === logotip, enllacos[1].querySelector('svg')]).toEqual(['true', true, null]);
+    // Sense manera d'instal·lar-la (Firefox d'escriptori): cap botó, només les botigues obertes.
     expect(ranura().querySelectorAll('button')).toHaveLength(0);
-    expect(ranura().textContent).toBe('WordPress.org');
-    expect(TANCADES.test(ranura().textContent)).toBe(false);
+    expect(ranura().textContent).toBe("Disponible a l'App StoreWordPress.org");
+    // Fora dels enllaços de les botigues obertes, cap botiga tancada ni cap «pròximament».
+    const senseEnllacos = ranura().cloneNode(true);
+    senseEnllacos.querySelectorAll('a').forEach((a) => a.remove());
+    expect(TANCADES.test(senseEnllacos.textContent)).toBe(false);
+    expect(ranura().textContent).not.toMatch(/Google Play|TestFlight|APK|prompte|aviat|pròximament/i);
   });
 
   test('amb totes les ranures tancades, no pinta res, ni un enllaç ni cap «pròximament»', () => {
@@ -151,7 +166,9 @@ describe('les ranures de botiga', () => {
 
   /* B9 (marató 261101_2143) · L'App Store oberta: el mateix botó normal, amb
      «Disponible a l'App Store». El nom accessible és el text visible (cap
-     aria-label, WCAG 2.5.3) i l'enllaç s'obri en la mateixa pestanya. */
+     aria-label, WCAG 2.5.3) i l'enllaç s'obri en la mateixa pestanya.
+     P0-62 bis (08-11-2026; ordre del Mestre al xat de Claude) · El botó de
+     marca d'Apple (classeDeBotiga), no el secundari; la resta, igual. */
   test('l’App Store oberta pinta «Disponible a l’App Store», sense aria-label ni pestanya nova', () => {
     render(<Ranures canals={[
       { id: 'google-play', nom: 'Google Play', url: null },
@@ -160,8 +177,8 @@ describe('les ranures de botiga', () => {
     ]} />);
     const enllacos = [...ranura().querySelectorAll('.sdp-accions > a')];
     expect(enllacos.map((a) => [a.getAttribute('href'), a.className, a.textContent])).toEqual([
-      [APP_STORE, 'sdp-boto sdp-boto--secundari sdp-boto--gran', "Disponible a l'App Store"],
-      [WORDPRESS, 'sdp-boto sdp-boto--secundari sdp-boto--gran', 'WordPress.org']
+      [APP_STORE, CLASSE_APP_STORE, "Disponible a l'App Store"],
+      [WORDPRESS, CLASSE_BOTIGA, 'WordPress.org']
     ]);
     for (const a of enllacos) expect([a.hasAttribute('aria-label'), a.hasAttribute('target')]).toEqual([false, false]);
     expect(ranura().textContent).not.toMatch(/beta|TestFlight|prompte|aviat|pròximament/i);
@@ -316,9 +333,10 @@ describe('IDEA-60 · instal·lació immediata (APK directe i TestFlight)', () =>
     expect([container.querySelectorAll('a').length, container.querySelectorAll('ol').length, container.querySelectorAll('.sdp-alerta').length]).toEqual([0, 0, 0]);
     cleanup();
     render(<Ranures />);
+    // P0-62 · Dos enllaços (l'App Store i WordPress.org), cap download, cap guia ni cap suma.
     expect([ranura().querySelectorAll('a').length, ranura().querySelectorAll('a[download]').length, ranura().querySelectorAll('ol').length, ranura().querySelectorAll('p').length])
-      .toEqual([1, 0, 0, 0]);
-    expect(TANCADES.test(ranura().textContent)).toBe(false);
+      .toEqual([2, 0, 0, 0]);
+    expect(ranura().textContent).not.toMatch(/Google Play|TestFlight|APK|prompte|aviat|pròximament|https?:/i);
   });
 });
 

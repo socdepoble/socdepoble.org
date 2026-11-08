@@ -259,37 +259,85 @@ describe('261026_2126 · Descàrregues i Aplicacions', () => {
      adreça de fora que porta el cos és la d'un canal obert de
      canalsDeBotiga.js (hui, només la fitxa de WordPress.org), i la promesa
      «no enllaça botigues que encara no estan obertes» continua certa. Quan
-     el Mestre òbriga un altre canal, esta prova canvia amb ell. */
-  test('honestedat: l’única adreça de fora és la d’una botiga oberta (WordPress.org); cap botiga tancada ni cap APK', () => {
+     el Mestre òbriga un altre canal, esta prova canvia amb ell.
+     P0-62 (08-11-2026) · L'App Store és oberta: el cos porta les adreces dels
+     dos canals oberts, en l'ordre de canalsDeBotiga.js (la fitxa d'Apple i la
+     de WordPress.org), i cap de Google Play, de TestFlight ni d'un APK. Ja no
+     nomena TestFlight (FRASES_DE_BOTIGA_TANCADA['app-store']).
+     P0-62 bis (08-11-2026; ordre del Mestre al xat de Claude) · DEROGA, per
+     a una sola adreça, el «cap de Google Play»: els tres passos dels
+     verificadors porten al pas 1 la pàgina on Google els apunta
+     (ADRECA_VERIFICADORS). La guarda només l'admet exacta, una sola vegada i
+     com a enllaç del primer element de la llista numerada de la Subtargeta
+     «Els tres passos a Google Play», dins de l'apartat Google Play. Cap altra
+     adreça de play.google.com, ni de proves internes. */
+  test('honestedat: les úniques adreces de fora són les de les botigues obertes (App Store i WordPress.org) i, al pas 1 de Google Play, la dels verificadors; cap botiga tancada ni cap APK', () => {
     const { html } = PAGE_COPY.descarregues;
     const doc = new DOMParser().parseFromString(html, 'text/html');
     const oberts = canalsOberts().map((canal) => canal.url);
-    expect(oberts).toEqual(['https://wordpress.org/plugins/socdepoble/']);
-    expect([...new Set([...html.matchAll(/https?:\/\/[^"'\s<]+/gi)].map((m) => m[0]))]).toEqual(oberts);
+    expect(oberts).toEqual(['https://apps.apple.com/es/app/s%C3%B3c-de-poble/id6826441844', 'https://wordpress.org/plugins/socdepoble/']);
+    const ADRECA_VERIFICADORS = 'https://play.google.com/apps/testing/org.socdepoble.app';
+    // Les de veres, en l'ordre del cos: el pas 1 d'Android, la fitxa de l'App Store i la de WordPress.org.
+    expect([...new Set([...html.matchAll(/https?:\/\/[^"'\s<]+/gi)].map((m) => m[0]))]).toEqual([ADRECA_VERIFICADORS, ...oberts]);
+    expect(html.split(ADRECA_VERIFICADORS)).toHaveLength(2);
     expect([...doc.querySelectorAll('a')].map((a) => [a.getAttribute('href'), a.getAttribute('target'), a.getAttribute('rel')]))
-      .toEqual(oberts.map((url) => [url, '_blank', 'noopener noreferrer']));
-    expect(html).not.toMatch(/play\.google\.com|apps\.apple\.com|testflight\.apple\.com|internaltest|\.apk\b/i);
+      .toEqual([ADRECA_VERIFICADORS, ...oberts].map((url) => [url, '_blank', 'noopener noreferrer']));
+    // On és: el primer pas de la llista numerada de la Subtargeta que ve després de l'H4 «Google Play».
+    const verificadors = doc.querySelector(`a[href="${ADRECA_VERIFICADORS}"]`);
+    const pas = verificadors.closest('li');
+    const caixa = pas.closest('div.sdp-subtargeta');
+    expect([pas.parentElement.tagName, pas.parentElement.firstElementChild === pas, caixa.firstElementChild.textContent])
+      .toEqual(['OL', true, 'Els tres passos a Google Play']);
+    let titol = caixa.previousElementSibling;
+    while (titol && titol.tagName !== 'H4') titol = titol.previousElementSibling;
+    expect(titol?.textContent).toBe('Google Play');
+    // El text de l'enllaç és la mateixa adreça sense el protocol, també una sola vegada.
+    const TEXT_VERIFICADORS = ADRECA_VERIFICADORS.replace('https://', '');
+    expect([verificadors.textContent, html.split(TEXT_VERIFICADORS).length]).toEqual([TEXT_VERIFICADORS, 3]);
+    // Fora d'eixa adreça exacta (l'href i el seu text), res de Google Play, de TestFlight, de proves internes ni d'un APK.
+    expect(html.replace(ADRECA_VERIFICADORS, '').replace(TEXT_VERIFICADORS, '')).not.toMatch(/play\.google\.com|testflight\.apple\.com|internaltest|\.apk\b/i);
     // Cap canal tancat no porta adreça ni enllaç al cos.
     for (const canal of CANALS_DE_BOTIGA.filter((c) => c.url === null)) {
       expect([canal.id, [...doc.querySelectorAll('a')].some((a) => a.textContent.includes(canal.nom))]).toEqual([canal.id, false]);
     }
     expect(doc.body.textContent).toContain('Una promesa: esta pàgina no enllaça botigues que encara no estan obertes.');
-    for (const cami of ['Google Play', 'APK', 'TestFlight', 'App Store', 'Windows, Mac i Linux', 'WordPress.org', 'CRDT', 'ADR-2026-08']) {
+    for (const cami of ['Google Play', 'APK', 'App Store', 'Windows, Mac i Linux', 'WordPress.org', 'CRDT', 'ADR-2026-08']) {
       expect([cami, html.includes(cami)]).toEqual([cami, true]);
     }
+    expect(html).not.toMatch(/TestFlight/i);
     const text = new DOMParser().parseFromString(html, 'text/html').body.textContent;
     expect(text).toContain('hui això és una visió, no una funció');
   });
 
   /* Revisió (261026_2126, segona volta) · De cada camí, el que diuen les actes
-     i res més: de TestFlight, que la 1.0.0 (1) «ja està disponible per a
-     instal·lar» per al grup intern (acta 261026_1630), no que ja l'usen; de
-     l'APK, el fet i on eixirà l'enllaç, sense cap consell que ningú no ha
-     demanat. */
-  test('honestedat: de TestFlight i de l’APK, només el fet', () => {
+     i res més: de l'APK, el fet i on eixirà l'enllaç, sense cap consell que
+     ningú no ha demanat. P0-62 (08-11-2026) · De l'App Store, el que diu la
+     consulta d'Apple del 08-11-2026 (versió 1.0 del 6 de novembre, gratis,
+     iOS 16.0 o posterior) i l'enllaç a la fitxa, el mateix del canal obert.
+     De Google Play, que encara no és per a tothom, sense cap enllaç.
+     P0-62 bis (08-11-2026; ordre del Mestre al xat de Claude) · L'App Store,
+     amb el botó gran de marca, centrat (div.sdp-accions, les classes
+     canòniques de components.css). Google Play, amb els tres passos literals
+     de les tres pantalles i l'únic enllaç d'instruccions del pas 1 (la prova
+     de dalt en guarda l'adreça); la fitxa de la botiga, encara cap. */
+  test('honestedat: de l’App Store, de Google Play i de l’APK, només el fet', () => {
     const { html } = PAGE_COPY.descarregues;
-    const text = new DOMParser().parseFromString(html, 'text/html').body.textContent;
-    expect(text).toContain('ja la pot instal·lar el grup de treball intern');
+    const doc = new DOMParser().parseFromString(html, 'text/html');
+    const text = doc.body.textContent.replace(/\s+/g, ' ');
+    expect(text).toContain("Sóc de Poble ja és a l'App Store d'Apple per a iPhone i iPad, gratis: Apple en va publicar la versió 1.0 el 6 de novembre de 2026, i cal tindre iOS o iPadOS 16 o posterior.");
+    const fitxa = doc.querySelector('a[href^="https://apps.apple.com/"]');
+    expect([fitxa?.textContent, fitxa?.className, fitxa?.parentElement.className, fitxa?.parentElement.children.length])
+      .toEqual(["Disponible a l'App Store", 'sdp-boto sdp-boto--marca sdp-boto--apple sdp-boto--gran', 'sdp-accions', 1]);
+    expect(canalsOberts().find((canal) => canal.id === 'app-store')?.url).toBe(fitxa.getAttribute('href'));
+    expect(text).not.toMatch(/encara no és a l[’']App Store|TestFlight|grup de treball intern/);
+    expect(text).toContain("L'aplicació per a Android ja està donada d'alta a Google Play, però encara no està publicada per a tothom");
+    // Els tres passos: una llista numerada de tres, amb els rètols de les pantalles literals, en anglés.
+    const passos = [...doc.querySelectorAll('div.sdp-subtargeta ol > li')].map((li) => li.textContent.replace(/\s+/g, ' '));
+    expect(passos).toHaveLength(3);
+    expect(passos[0]).toMatch(/^Pas 1 · Pantalla 1\. Entra a play\.google\.com\/apps\/testing\/org\.socdepoble\.app i prem el botó blau gran «Become a tester» \(Convertir-se en verificador\)\.$/);
+    expect(passos[1]).toMatch(/^Pas 2 · Pantalla 2, «You're a tester»\. NO toques el botó de baix, «Leave the program».*«download it on Google Play»\.$/);
+    expect(passos[2]).toMatch(/^Pas 3 · Pantalla 3, Google Play\. Prem «Instal·lar» i deixa l'app instal·lada al mòbil\..*12 verificadors.*14 dies\.$/);
+    expect(text).toContain("L'adreça del primer pas no és la fitxa de la botiga");
     expect(html).not.toContain('la fa servir el grup');
     expect(text).toContain("Hui encara no hi ha APK públic de Sóc de Poble. Quan n'hi haja un, l'enllaç oficial eixirà en esta pàgina.");
     expect(html).not.toContain('no instal·les');

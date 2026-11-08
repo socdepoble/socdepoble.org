@@ -24,6 +24,7 @@ import { VERSIO_FORMAT, exportaMunicipiOpenData } from '../../data/exportaMunici
 import { webcrypto } from 'node:crypto';
 import { VIGENCIA_ALERTA_MS } from '../mur/alertesMunicipals.js';
 import { PAGE_COPY } from './pageContent.js';
+import { localitzaPagina } from './pageContent.r10.js';
 import { CAPACITATS_NO_DECLARADES } from '../../data/local/adaptadorLocal.js';
 import { PLATAFORMA_ALIENA } from './perAppNativa.js';
 import { AMBITS, RESERVES_I18N } from '../../utils/publicacioUniversal.js';
@@ -73,6 +74,9 @@ const rutaExistix = (href) => {
 const interns = (fragment) => [...fragment.matchAll(/href="(\/[^"]*)"/g)].map((m) => m[1]);
 
 const TITOL_110 = `3 de novembre de 2026 · v1.1.0 (build pendent de desplegar) · Connector WordPress v${CONNECTOR} a WordPress.org`;
+/* P0-62 / IDEA-193 (ordre del Mestre, 261108) · La fita de l'App Store, al capdamunt. */
+const TITOL_FITA_APP_STORE = '6 de novembre de 2026 · Fita · L’app d’iPhone i iPad, publicada a l’App Store (versió 1.0)';
+const fitaAppStore = blocDe(TITOL_FITA_APP_STORE);
 const entrega110 = blocDe('3 de novembre de 2026 · v');
 const entregaAssalt = blocDe('1 de novembre de 2026, tarda');
 const entrega261101 = blocDe('1 de novembre de 2026 · v');
@@ -108,6 +112,8 @@ describe('Onada 6 · /versions sense llistes: h3 + obertura + h4 amb prefix i pa
   test('els títols de les entregues, amb numeració pròpia i de la més nova a la més vella', () => {
     const titols = [...html.matchAll(/<h3>([^<]+)<\/h3>/g)].map((m) => m[1]);
     expect(titols).toEqual([
+      // P0-62 · La fita de l'App Store obri la pàgina (no és una entrega numerada del web).
+      TITOL_FITA_APP_STORE,
       '5 de novembre de 2026 · v1.2.0 · suplement pendent d’integració',
       TITOL_110,
       '1 de novembre de 2026, tarda · v1.0.4 (build pendent de desplegar) · Connector WordPress v1.1.11 al repositori',
@@ -127,7 +133,8 @@ describe('Onada 6 · /versions sense llistes: h3 + obertura + h4 amb prefix i pa
   test('cada entrega: h3, obertura i apartats «Novetat · / Millora · / Correcció ·» en este ordre, sense els h4 de categoria', () => {
     const ORDRE = ['Novetat', 'Millora', 'Correcció'];
     const entregues = html.split(/(?=<h3>)/).filter((b) => b.startsWith('<h3>') && !b.startsWith('<h3>Crònica') && !b.includes('v1.2.0 · suplement'));
-    expect(entregues).toHaveLength(7);
+    // P0-62 · Set entregues i la fita de l'App Store, amb el mateix format.
+    expect(entregues).toHaveLength(8);
     for (const entrega of entregues) {
       const titol = entrega.match(/^<h3>([^<]+)<\/h3>/)[1];
       expect(entrega, titol).toMatch(/^<h3>[^<]+<\/h3>\n {6}<p>/);
@@ -348,7 +355,8 @@ describe('Onada 6 · l’entrada de la 1.1.0, la primera i honesta', () => {
 describe('Gauntlet 2 261101 · /versions té l’entrada honesta de l’1 de novembre', () => {
   test('és la tercera entrada, darrere de la 1.1.0 i de la de l’assalt, amb el format de les altres', () => {
     const titols = [...html.matchAll(/<h3>([^<]+)<\/h3>/g)].map((m) => m[1]);
-    expect(titols[3]).toMatch(/^1 de novembre de 2026 · v/);
+    // P0-62 · Una posició més avall: la fita de l'App Store obri la pàgina.
+    expect(titols[4]).toMatch(/^1 de novembre de 2026 · v/);
     expect(entrega261101).toMatch(/^<h3>1 de novembre de 2026 · v1\.0\.3 \(build pendent de desplegar\) · Connector WordPress v1\.1\.10<\/h3>\n {6}<p>/);
     expect(titolsH4(entrega261101)).toEqual([
       'Novetat · Connector a WordPress.org (wordpress.org/plugins/socdepoble)', 'Novetat · Alertes municipals al Mur',
@@ -479,7 +487,8 @@ describe('Assalt 10/10 · /versions té l’entrada honesta de la tarda de l’1
 
   test('és la segona entrada, darrere de la 1.1.0, amb el format de les altres', () => {
     const titols = [...html.matchAll(/<h3>([^<]+)<\/h3>/g)].map((m) => m[1]);
-    expect(titols[2]).toMatch(/^1 de novembre de 2026, tarda · /);
+    // P0-62 · Una posició més avall: la fita de l'App Store obri la pàgina.
+    expect(titols[3]).toMatch(/^1 de novembre de 2026, tarda · /);
     expect(entregaAssalt).toMatch(/^<h3>1 de novembre de 2026, tarda · v1\.0\.4 \(build pendent de desplegar\) · Connector WordPress v(\d+\.\d+\.\d+) al repositori<\/h3>\n {6}<p>/);
     expect(titolsH4(entregaAssalt).map((t) => t.split(' · ')[0])).toEqual([
       ...Array(6).fill('Novetat'), ...Array(12).fill('Millora'), ...Array(3).fill('Correcció')
@@ -519,5 +528,52 @@ describe('Assalt 10/10 · /versions té l’entrada honesta de la tarda de l’1
   test('cap enllaç intern ni «masia»', () => {
     expect([...entregaAssalt.matchAll(/href="(\/[^"]*)"/g)]).toHaveLength(0);
     expect(entregaAssalt).not.toMatch(/masia/i);
+  });
+});
+
+/* P0-62 / IDEA-193 (ordre del Mestre, 261108) · Apple va publicar Sóc de Poble 1.0 a l'App Store el
+   6-11-2026 (consulta d'Apple del 8-11-2026: trackId 6826441844, gratis, iOS 16.0 o posterior). La
+   fita obri /versions en les cinc llengües, davant de l'entrada del 5 de novembre; l'enllaç és el del
+   canal obert app-store de canalsDeBotiga.js, i el bloc no nomena cap altra plataforma mòbil (/versions
+   s'obri dins de l'app d'iPhone). */
+describe('P0-62 · /versions s’obri amb la fita de l’App Store', () => {
+  const APP_STORE = CANALS_DE_BOTIGA.find((c) => c.id === 'app-store').url;
+
+  test('és la primera entrada, amb la data real, la versió 1.0 i el format de les entregues', () => {
+    expect(html.trimStart().startsWith(`<h3>${TITOL_FITA_APP_STORE}</h3>`)).toBe(true);
+    expect(fitaAppStore).toMatch(/^<h3>[^<]+<\/h3>\n {6}<p>/);
+    expect(titolsH4(fitaAppStore)).toEqual(['Novetat · Sóc de Poble a l’App Store']);
+    const pla = text(fitaAppStore);
+    expect(pla).toContain('Apple ha aprovat i publicat l’app de Sóc de Poble per a iPhone i iPad: la versió 1.0 és a l’App Store des del 6 de novembre de 2026, gratis i per a iOS i iPadOS 16 o posterior.');
+    expect(pla).toContain('Ho hem comprovat el 8 de novembre a la consulta pública d’Apple.');
+    // La fita no és cap entrega del web: no porta cap número vX.Y.Z que entre en l'ordre de les versions.
+    expect(TITOL_FITA_APP_STORE).not.toMatch(/ · v\d+\.\d+\.\d+/);
+  });
+
+  test('l’enllaç és la fitxa del canal obert, i cap altra plataforma mòbil al bloc', () => {
+    expect(APP_STORE).toBe('https://apps.apple.com/es/app/s%C3%B3c-de-poble/id6826441844');
+    expect([...fitaAppStore.matchAll(/href="([^"]+)"/g)].map((m) => m[1])).toEqual([APP_STORE]);
+    expect(fitaAppStore).toContain(`<a href="${APP_STORE}" target="_blank" rel="noopener noreferrer">enllaç directe a la fitxa</a>`);
+    expect(PLATAFORMA_ALIENA.test(text(fitaAppStore))).toBe(false);
+    expect(fitaAppStore).not.toMatch(/TestFlight|\bbeta\b|en proves/i);
+  });
+
+  test('les cinc llengües s’obrin amb la fita, davant de l’entrada del 5 de novembre i del registre en valencià', () => {
+    const inicis = {
+      ca: ['6 de novembre de 2026 · Fita', '5 de novembre de 2026 · '],
+      es: ['6 de noviembre de 2026 · Hito', '5 de noviembre de 2026 · '],
+      en: ['6 November 2026 · Milestone', '5 November 2026 · '],
+      eu: ['2026ko azaroaren 6a · Mugarria', '2026ko azaroaren 5a · '],
+      gl: ['6 de novembro de 2026 · Fito', '5 de novembro de 2026 · ']
+    };
+    for (const [llengua, [inici, seguent]] of Object.entries(inicis)) {
+      const pagina = localitzaPagina(PAGE_COPY.versions, llengua);
+      const cos = pagina.html.trimStart();
+      expect([llengua, cos.startsWith(`<h3>${inici}`)]).toEqual([llengua, true]);
+      const h3 = [...cos.matchAll(/<h3>([^<]+)<\/h3>/g)].map((m) => m[1]);
+      expect([llengua, h3[1].startsWith(seguent)]).toEqual([llengua, true]);
+      expect([llengua, [...cos.slice(0, cos.indexOf(h3[1])).matchAll(/href="([^"]+)"/g)].map((m) => m[1])]).toEqual([llengua, [APP_STORE]]);
+      expect([llengua, cos.indexOf('<div lang="ca">') === -1 || cos.indexOf('<div lang="ca">') > cos.indexOf(h3[1])]).toEqual([llengua, true]);
+    }
   });
 });

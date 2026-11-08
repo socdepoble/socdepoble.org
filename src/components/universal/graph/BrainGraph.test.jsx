@@ -1,12 +1,21 @@
 import React from 'react';
 import { act, render, screen, fireEvent, cleanup, within } from '@testing-library/react';
 import { afterEach, beforeEach, expect, test, vi } from 'vitest';
-import BrainGraph, { grafDeLaWiki } from './BrainGraph';
+import BrainGraph, { grafDeLaWiki, traçDeVincle } from './BrainGraph';
 import useForceLayout from './useForceLayout';
 const MANIFEST = {
   categories: [{ id: 'cat', label: 'Saber' }],
   items: [{ id: 'doc', title: 'Olivera', categoryId: 'cat', tags: ['poble'] }]
 };
+
+test('coaparició, SKOS i candidatura tenen traços distints; el pes és només documental', () => {
+  expect(traçDeVincle({ tipus: 'coaparicio', weight: 1 }).patro).toBe('continu');
+  expect(traçDeVincle({ tipus: 'skos' }).patro).toBe('punts');
+  expect(traçDeVincle({ tipus: 'candidatura', proposta: true, discontinu: true }).patro).toBe('ratlles');
+  expect(traçDeVincle({ weight: 8 }, 2).gruix).toBe(2);
+  expect(traçDeVincle({ tipus: 'skos' }, 2).gruix).toBe(.5);
+  expect(traçDeVincle({ source: 'a', target: 'b' }, 1, 'c').opacitat).toBeLessThan(traçDeVincle({ source: 'a', target: 'b' }, 1, 'a').opacitat);
+});
 const GRAF = grafDeLaWiki(MANIFEST);
 vi.mock('./useForceLayout', () => ({ default: vi.fn(({ nodes }) => ({ current: nodes.map((node, i) => ({ ...node, x: 350 + i * 70, y: 300 })) })) }));
 

@@ -29,6 +29,14 @@ export async function adminListOrganizations(config = {}) {
   if (!getResolvedConfig(config).hasSupabaseConfig) return [];
   const rows = await rpc('admin_list_organizations', {}, config); return Array.isArray(rows) ? rows : [];
 }
+/* R13-C7 (ordre del Mestre, 08-11-2026) · Els recomptes de persones amb sessió activa per camí de
+   2611082238_admin_resum_sessions_dispositius.sql. Com admin_list_users, la guarda és la del servidor
+   (private.es_superadmin(), aal2); torna el JSON tal qual i src/data/resumSessionsDispositius.js el
+   valida. Sense servidor configurat no hi ha cap xifra que tornar: no-disponible, mai un resum buit. */
+export async function adminResumSessionsDispositius(config = {}) {
+  if (!getResolvedConfig(config).hasSupabaseConfig) throw Object.assign(new Error('El resum de sessions requerix un servidor configurat.'), { code: 'no-disponible' });
+  return rpc('admin_resum_sessions_dispositius', {}, config, { signal: config.signal });
+}
 
 const UUID = /^[0-9a-f]{8}-(?:[0-9a-f]{4}-){3}[0-9a-f]{12}$/i;
 const abastInvalid = () => Object.assign(new TypeError('Cal el tenant explícit i vàlid del poble seleccionat.'), { code: 'abast-invalid' });

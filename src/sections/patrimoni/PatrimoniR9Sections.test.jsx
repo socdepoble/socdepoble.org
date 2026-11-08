@@ -46,55 +46,130 @@ describe('/page/banc-de-llavors · BancLlavorsSection', () => {
     expect(container.querySelector('form, input:not([type=search]), textarea')).toBeNull();
   });
 
-  test('la fitxa del Catàleg valencià: informació tècnica literal, nom de l’índex, pàgina i empremta', () => {
+  test('la fitxa del Catàleg valencià es desplega in-situ (sense modal): barra de 12 mesos, nutrició, informació tècnica literal, nom de l’índex, pàgina i empremta', () => {
     render(<BancLlavorsSection />);
     fireEvent.change(screen.getByRole('searchbox'), { target: { value: 'quarantena' } });
     fireEvent.click(screen.getByRole('button', { name: /Tomaca quarantena/ }));
-    const dialeg = screen.getByRole('dialog');
-    const v = VARIETATS_CATALEG_VALENCIA.find((x) => x.nom === 'Tomaca quarantena');
-    expect(within(dialeg).getByText('Pes mitjà del fruit: 180 – 220 g')).toBeTruthy();
-    expect(within(dialeg).getByText('Tomaca quarentena')).toBeTruthy();
-    // R9V-C5-10 · les pàgines són les del PDF (el número imprés pot ser un altre).
-    expect(dialeg.textContent).toContain(`Pàgina ${v.pagina} del PDF`);
-    expect(dialeg.textContent).toContain(FONTS_BANC_LLAVORS[0].sha256.slice(0, 8));
-    expect(dialeg.textContent).toContain(`Document: ${FONTS_BANC_LLAVORS[0].document}`);
-    expect(dialeg.textContent).toContain('no s’ha transcrit');
-    fireEvent.click(within(dialeg).getByRole('button', { name: 'Tancar' }));
     expect(screen.queryByRole('dialog')).toBeNull();
+    const fitxa = screen.getByRole('region', { name: 'Tomaca quarantena' });
+    const v = VARIETATS_CATALEG_VALENCIA.find((x) => x.nom === 'Tomaca quarantena');
+    expect(within(fitxa).getByText('Pes mitjà del fruit: 180 – 220 g')).toBeTruthy();
+    expect(within(fitxa).getByText('Tomaca quarentena')).toBeTruthy();
+    expect(within(fitxa).getAllByRole('listitem').length).toBeGreaterThanOrEqual(12);
+    expect(fitxa.textContent).toContain('18 kcal / 100 g');
+    // Cap prosa sense font (fitonutrients, rebost, cuina).
+    expect(fitxa.textContent).not.toMatch(/Licopè|Conservació al rebost|Cuina tradicional|fitonutrients/);
+    // R9V-C5-10 · les pàgines són les del PDF (el número imprés pot ser un altre).
+    expect(fitxa.textContent).toContain(`Pàgina ${v.pagina} del PDF`);
+    expect(fitxa.textContent).toContain(FONTS_BANC_LLAVORS[0].sha256.slice(0, 8));
+    expect(fitxa.textContent).toContain(`Document: ${FONTS_BANC_LLAVORS[0].document}`);
+    expect(fitxa.textContent).not.toContain('no s’ha transcrit');
+    // Els valors nutricionals diuen de quin registre de l'USDA són i que no venen de la font del catàleg.
+    expect(within(fitxa).getByRole('heading', { name: 'Valors nutricionals de referència (per 100 g)' })).toBeTruthy();
+    expect(fitxa.textContent).toContain('Valors de referència per 100 g: «Tomatoes, red, ripe, raw, year round average», USDA FoodData Central SR Legacy, FDC 170457; no són de la font del catàleg.');
+    expect(fitxa.textContent).toContain('1,2 g de fibra · 94,52 g d’aigua');
+    // La barra: dotze mesos G..D, la llegenda del PDF (p. 14: Sembra, Trasplantament, Recol·lecció, Maduració)
+    // i, per al lector, les fases en paraules. La collita porta un símbol neutre.
+    const barra = within(fitxa).getByRole('region', { name: 'Calendari dels 12 mesos' });
+    const llegenda = [...barra.querySelectorAll('.sdp-barra-12-mesos__llegenda-item')].map((s) => s.textContent);
+    expect(llegenda).toEqual(['🌱 Sembra', '🌿 Trasplantament', '🧺 Recol·lecció', '🌾 Maduració llavors']);
+    expect(barra.textContent).not.toContain('🍆');
+    const mesos = barra.querySelectorAll('.sdp-barra-12-mesos__mes');
+    expect([...mesos].map((m) => m.querySelector('.sdp-barra-12-mesos__inicial').textContent).join('')).toBe('GFMAMJJASOND');
+    for (const mes of mesos) expect(mes.getAttribute('aria-label')).toMatch(/^(Gener|Febrer|Març|Abril|Maig|Juny|Juliol|Agost|Setembre|Octubre|Novembre|Desembre): (repòs|(Sembra|Trasplantament|Recol·lecció|Maduració llavors)(, (Sembra|Trasplantament|Recol·lecció|Maduració llavors))*)$/);
+    expect(mesos[11].getAttribute('aria-label')).toBe('Desembre: Sembra');
+    expect(mesos[1].getAttribute('aria-label')).toBe('Febrer: Trasplantament');
+    fireEvent.click(within(fitxa).getByRole('button', { name: 'Tancar' }));
+    expect(screen.queryByRole('region', { name: 'Tomaca quarantena' })).toBeNull();
   });
 
-  test('l’AVL i l’Atles: origen, temporada i llistes literals', () => {
+  test('sense finestra: en obrir, el focus va al títol de la fitxa; en tancar, torna al botó de la llista', () => {
+    render(<BancLlavorsSection />);
+    const boto = screen.getByRole('button', { name: /Tomaca de pera/ });
+    boto.focus();
+    fireEvent.click(boto);
+    expect(document.activeElement).toBe(screen.getByRole('heading', { name: 'Tomaca de pera' }));
+    fireEvent.click(within(screen.getByRole('region', { name: 'Tomaca de pera' })).getByRole('button', { name: 'Tancar' }));
+    expect(document.activeElement).toBe(screen.getByRole('button', { name: /Tomaca de pera/ }));
+  });
+
+  test('les varietats germanes (mateix nom científic de la font) canvien la fitxa sense tancar-la', () => {
+    render(<BancLlavorsSection />);
+    fireEvent.click(screen.getByRole('button', { name: /Albergínia blanca/ }));
+    const grup = screen.getByRole('group', { name: 'Varietats de la mateixa espècie' });
+    expect(within(grup).getAllByRole('button').map((b) => b.textContent)).toEqual(
+      VARIETATS_CATALEG_VALENCIA.filter((v) => v.nomCientific === 'Solanum melongena L.').map((v) => v.nom)
+    );
+    expect(within(grup).getByRole('button', { name: 'Albergínia blanca' }).getAttribute('aria-pressed')).toBe('true');
+    fireEvent.click(within(grup).getByRole('button', { name: 'Albergínia roja de Gandia' }));
+    expect(screen.getByRole('region', { name: 'Albergínia roja de Gandia' })).toBeTruthy();
+    expect(screen.queryByRole('region', { name: 'Albergínia blanca' })).toBeNull();
+  });
+
+  test('la nutrició només casa per l’espècie, i una espècie sense perfil no porta cap bloc ni cap excusa', () => {
+    render(<BancLlavorsSection />);
+    fireEvent.click(screen.getByRole('button', { name: 'Mostra’n més' }));
+    fireEvent.click(screen.getByRole('button', { name: /Cacau del collaret/ }));
+    const cacau = screen.getByRole('region', { name: 'Cacau del collaret' });
+    expect(within(cacau).queryByRole('region', { name: 'Valors nutricionals de referència (per 100 g)' })).toBeNull();
+    expect(cacau.textContent).not.toMatch(/kcal|USDA/);
+    fireEvent.click(within(cacau).getByRole('button', { name: 'Tancar' }));
+    fireEvent.click(screen.getByRole('button', { name: /Bajoca de ferradura/ }));
+    const bajoca = screen.getByRole('region', { name: 'Bajoca de ferradura' });
+    expect(within(bajoca).queryByRole('region', { name: 'Valors nutricionals de referència (per 100 g)' })).toBeNull();
+    expect(bajoca.textContent).not.toMatch(/kcal|USDA/);
+  });
+
+  test('la llegenda d’una fitxa de sembra directa és la del PDF: Sembra directa, sense Trasplantament', () => {
+    render(<BancLlavorsSection />);
+    fireEvent.click(screen.getByRole('button', { name: /Bajoca de ferradura/ }));
+    const barra = within(screen.getByRole('region', { name: 'Bajoca de ferradura' })).getByRole('region', { name: 'Calendari dels 12 mesos' });
+    const llegenda = [...barra.querySelectorAll('.sdp-barra-12-mesos__llegenda-item')].map((s) => s.textContent);
+    expect(llegenda).toEqual(['🌱 Sembra directa', '🧺 Recol·lecció', '🌾 Maduració llavors']);
+    expect(barra.querySelectorAll('.sdp-barra-12-mesos__mes')[2].getAttribute('aria-label')).toBe('Març: Sembra directa');
+    // Les 11 fitxes de sembra directa del PDF (pàgines 18-23, 25, 26, 38, 40 i 48), i cap altra.
+    expect(VARIETATS_CATALEG_VALENCIA.filter((v) => v.calendari?.sembraDirecta === true).map((v) => v.pagina))
+      .toEqual([18, 19, 20, 21, 22, 23, 25, 26, 38, 40, 48]);
+  });
+
+  test('l’AVL i l’Atles es despleguen in-situ: origen, temporada i llistes literals', () => {
     render(<BancLlavorsSection />);
     fireEvent.change(screen.getByRole('combobox'), { target: { value: 'avl-mallorca' } });
     expect(screen.getByRole('status').textContent).toBe('65 de 65');
     expect(screen.getByRole('link', { name: 'www.varietatslocals.org' }).getAttribute('href')).toBe('https://www.varietatslocals.org');
     fireEvent.change(screen.getByRole('searchbox'), { target: { value: 'tomatiga mutxamel' } });
     fireEvent.click(screen.getByRole('button', { name: /Tomàtiga de Mutxamel/ }));
-    let dialeg = screen.getByRole('dialog');
-    expect(dialeg.textContent).toContain('Son Juny, Sant Joan, Mallorca');
-    expect(dialeg.textContent).toContain('Varietats d’estiu');
-    fireEvent.click(within(dialeg).getByRole('button', { name: 'Tancar' }));
+    let fitxa = screen.getByRole('region', { name: 'Tomàtiga de Mutxamel' });
+    expect(fitxa.textContent).toContain('Son Juny, Sant Joan, Mallorca');
+    expect(fitxa.textContent).toContain('Varietats d’estiu');
+    // Sense calendari transcrit: cap barra i cap frase d'excusa. Solanum lycopersicum sí que té perfil.
+    expect(within(fitxa).queryByRole('region', { name: 'Calendari dels 12 mesos' })).toBeNull();
+    expect(fitxa.textContent).not.toContain('no s’ha transcrit');
+    expect(fitxa.textContent).toContain('FDC 170457');
+    fireEvent.click(within(fitxa).getByRole('button', { name: 'Tancar' }));
     fireEvent.change(screen.getByRole('combobox'), { target: { value: 'atles-catalunya' } });
     fireEvent.change(screen.getByRole('searchbox'), { target: { value: '' } });
     expect(screen.getByRole('status').textContent).toBe('15 de 15');
     fireEvent.click(screen.getByRole('button', { name: /^Pèsol/ }));
-    dialeg = screen.getByRole('dialog');
-    expect(within(dialeg).getByText('Pèsol de la floreta – pèsol de Llavaneres, pèsol garrofal')).toBeTruthy();
+    fitxa = screen.getByRole('region', { name: 'Pèsol' });
+    expect(within(fitxa).getByText('Pèsol de la floreta – pèsol de Llavaneres, pèsol garrofal')).toBeTruthy();
+    expect(within(fitxa).queryByRole('region', { name: 'Calendari dels 12 mesos' })).toBeNull();
+    expect(fitxa.textContent).not.toMatch(/no s’ha transcrit|kcal/);
   });
 
   test('l’Atles: la línia d’OCR que ajunta dues varietats es mostra partida i amb l’avís (R9V-C5-04)', () => {
     render(<BancLlavorsSection />);
     fireEvent.change(screen.getByRole('combobox'), { target: { value: 'atles-catalunya' } });
     fireEvent.click(screen.getByRole('button', { name: /^Pèsol/ }));
-    const dialeg = screen.getByRole('dialog');
-    const regio = within(dialeg).getByRole('region', { name: 'Varietats locals' });
+    const fitxa = screen.getByRole('region', { name: 'Pèsol' });
+    const regio = within(fitxa).getByRole('region', { name: 'Varietats locals' });
     expect(within(regio).getAllByRole('listitem').map((li) => li.textContent)).toEqual(['Pèsol negre', 'Pèsol de la floreta']);
     // L'avís va just davall de la llista que s'ha partit.
     expect(regio.querySelector('ul + p')?.textContent).toContain('A la línia 453 del text extret del PDF hi ha 2 varietats juntes; el PDF (pàgina 59)');
-    fireEvent.click(within(dialeg).getByRole('button', { name: 'Tancar' }));
+    fireEvent.click(within(fitxa).getByRole('button', { name: 'Tancar' }));
     // Una espècie sense línies juntes no porta cap avís ni cap partició.
     fireEvent.click(screen.getByRole('button', { name: /^All · / }));
-    const all = screen.getByRole('dialog');
+    const all = screen.getByRole('region', { name: 'All' });
     expect(within(within(all).getByRole('region', { name: 'Varietats locals' })).getAllByRole('listitem').map((li) => li.textContent)).toEqual(ESPECIES_ATLES_CATALUNYA[0].llista);
     expect(all.textContent).not.toContain('text extret del PDF');
   });

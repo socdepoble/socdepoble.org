@@ -3,6 +3,31 @@
    Fitxa de gestor, estructura del gestor, 404, pindola i panell d'admin.
    ==================================================================== */
 
+/* P0-61 · Vista comuna del Brain; el text conserva desplaçament natural. */
+@layer components {
+  .sdp-taxonomia-brain { container-type: inline-size; min-width: 0; }
+  .sdp-taxonomia__accions { display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: var(--sdp-space-2); margin-block: var(--sdp-space-2); }
+  .sdp-taxonomia__xarxa { display: grid; grid-template-columns: minmax(0, 1fr) minmax(18rem, 24rem); gap: var(--sdp-space-4); align-items: start; }
+  .sdp-taxonomia__graf { height: 32rem; min-width: 0; }
+  .sdp-taxonomia__graf > .sdp-brain-graph-wrapper { height: 100%; min-height: 0; }
+  .sdp-taxonomia__inspector { min-width: 0; overflow-wrap: anywhere; }
+  .sdp-taxonomia__inspector button { min-height: var(--sdp-touch); }
+  .sdp-taxonomia__enllac { color: var(--sdp-accio); background: transparent; border: 0; text-decoration: underline; font: inherit; padding: var(--sdp-space-1); cursor: pointer; }
+  .sdp-taxonomia__llegenda { display: flex; justify-content: center; flex-wrap: wrap; gap: var(--sdp-space-2); }
+  .sdp-taxonomia__candidatura { border: 1px dashed var(--sdp-accent); padding: var(--sdp-space-1); }
+  .sdp-taxonomia__preview { container-type: inline-size; margin-block: var(--sdp-space-4); min-width: 0; }
+  .sdp-taxonomia__frame { display: block; margin-inline: auto; border: 0; outline: 1px solid var(--sdp-vora); background: var(--sdp-fons-lectura); }
+  .sdp-taxonomia__frame--mobil { width: 375px; zoom: 1; }
+  .sdp-taxonomia__frame--escriptori { width: 1440px; zoom: .5; }
+  .sdp-taxonomia__preview-cos { margin: 0; padding: 0; height: auto; min-height: 0; overflow: hidden; color: var(--sdp-text-cos); background: var(--sdp-fons-lectura); }
+  .sdp-taxonomia__preview-contingut.sdp-root { height: auto; min-height: 0; overflow: visible; }
+  @container (max-width: 48rem) { .sdp-taxonomia__xarxa { grid-template-columns: minmax(0, 1fr); } }
+  @container (max-width: 47rem) { .sdp-taxonomia__frame--escriptori { zoom: .2; } }
+  @container (max-width: 24rem) { .sdp-taxonomia__frame--mobil { zoom: .8; } }
+  @container (max-width: 18rem) { .sdp-taxonomia__frame--mobil { zoom: .64; } }
+  @container (min-width: 90rem) { .sdp-taxonomia__frame--escriptori { zoom: 1; } }
+}
+
 @layer components {
 
 /* ═══ FITXA DE GESTOR · LLEI DE PEDRA SECA ═══════════════════════════
@@ -11054,7 +11079,8 @@ details[open] summary.accordion-header svg:last-child {
        és el margin-block-end de la targeta, com sempre. Amb float: none, el
        text de davall baixava 8px a totes les pàgines amb targeta, també a
        375px (/legal, /drets-autor). La regla només canvia la caixa de la
-       targeta.
+       targeta. P0-59 / IDEA-190 · O centrada (data-alineacio="centre"):
+       sense flotant, sola en la seua fila i el text no l'envolta.
      · 2 («parella»): centrades, en una fila que es plega.
      · 3 o més («graella»): la mateixa fórmula de .sdp-card-grid.
    La targeta del Mur porta marge i un sostre de 500px: ací mana el grup. El
@@ -11081,6 +11107,11 @@ details[open] summary.accordion-header svg:last-child {
   .sdp-targetes[data-forma="sola"][data-alineacio="dreta"] > .sdp-targeta {
     float: right;
     margin-left: var(--sdp-space-6);
+  }
+  .sdp-targetes[data-forma="sola"][data-alineacio="centre"] {
+    clear: both;
+    display: flex;
+    justify-content: center;
   }
   @media (max-width: 40rem) {
     .sdp-targetes[data-forma="sola"][data-alineacio] > .sdp-targeta {
@@ -15208,5 +15239,132 @@ details[open] summary.accordion-header svg:last-child {
     gap: var(--sdp-space-1);
     color: var(--sdp-text-suau);
     font-size: var(--sdp-text-small);
+  }
+
+  /* ── P0-59 / IDEA-190 · La fitxa del Banc de Llavors desplegada a la pàgina (BancLlavorsSection.jsx):
+     cap finestra emergent ni scroll intern; la barra dels 12 mesos cap sencera també en mòbil. ── */
+  .sdp-fitxa-didactica {
+    display: flex;
+    flex-direction: column;
+    gap: var(--sdp-space-4);
+    margin-block: var(--sdp-space-3);
+    padding: var(--sdp-space-4);
+    border: 2px solid var(--sdp-accio);
+    border-radius: var(--sdp-radi-g);
+    background: var(--sdp-fons-targeta);
+  }
+
+  .sdp-fitxa-didactica__cap {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: var(--sdp-space-3);
+  }
+
+  .sdp-fitxa-didactica__titol {
+    margin: 0;
+    font-size: var(--sdp-text-h3);
+    color: var(--sdp-text-titol);
+  }
+
+  .sdp-fitxa-didactica__bloc {
+    display: flex;
+    flex-direction: column;
+    gap: var(--sdp-space-2);
+  }
+
+  .sdp-fitxa-didactica__variants {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: var(--sdp-space-2);
+  }
+
+  .sdp-fitxa-didactica__nutricio-dl {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 13rem), 1fr));
+    gap: var(--sdp-space-3);
+    margin: 0;
+  }
+
+  .sdp-fitxa-didactica__nutricio-item {
+    display: flex;
+    flex-direction: column;
+    gap: var(--sdp-space-1);
+    min-width: 0;
+  }
+
+  .sdp-fitxa-didactica__nutricio-item dt {
+    font-weight: 700;
+    color: var(--sdp-text-titol);
+  }
+
+  .sdp-fitxa-didactica__nutricio-item dd {
+    margin: 0;
+    color: var(--sdp-text-cos);
+  }
+
+  .sdp-fitxa-didactica__font-nutricio {
+    margin: 0;
+    font-size: var(--sdp-text-small);
+    color: var(--sdp-text-suau);
+  }
+
+  .sdp-barra-12-mesos {
+    display: grid;
+    grid-template-columns: repeat(12, minmax(0, 1fr));
+    gap: var(--sdp-space-1);
+  }
+
+  .sdp-barra-12-mesos__mes {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--sdp-space-1);
+    min-width: 0;
+    min-height: var(--sdp-touch);
+    padding: var(--sdp-space-1) 0;
+    border: 1px solid var(--sdp-vora);
+    border-radius: var(--sdp-radi-s);
+    background: var(--sdp-fons-subtil);
+    color: var(--sdp-text-suau);
+    font-size: var(--sdp-text-small);
+  }
+
+  .sdp-barra-12-mesos__mes--actiu {
+    border-color: var(--sdp-exit);
+    background: var(--sdp-exit-fons);
+    color: var(--sdp-text-cos);
+    font-weight: 700;
+  }
+
+  .sdp-barra-12-mesos__inicial {
+    font-weight: 700;
+  }
+
+  .sdp-barra-12-mesos__icones {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .sdp-barra-12-mesos__repos {
+    color: var(--sdp-text-suau);
+  }
+
+  .sdp-barra-12-mesos__llegenda {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--sdp-space-3);
+    margin: 0;
+    font-size: var(--sdp-text-small);
+    color: var(--sdp-text-suau);
+  }
+
+  .sdp-barra-12-mesos__llegenda-item {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--sdp-space-1);
   }
 }

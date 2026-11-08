@@ -148,6 +148,7 @@
  * espais (R3).
  */
 import {
+  KeyRound,
   LogOut,
   MessageSquare
 } from 'lucide-react';
@@ -168,6 +169,7 @@ import { AVISOS_XAT_CORPORATIU } from './xatCorporatiu.js';
 import { ESPAIS_PLUGINS, PLUGINS, pluginsDeLEspai, rutaDelPlugin } from '../plugins/registrePlugins.js';
 import { TEXTOS_MODE_RURAL } from './textosModeRural.js';
 import { TEXTOS_RESTAURADOR } from '../pobles/RestauradorOpenData.jsx';
+import { RUTA_COMPTE } from '../../config/rutaEntrada.js';
 const ModeRural = lazy(() => import('./ModeRural.jsx'));
 const FitxaOpenData = lazy(() => import('./FitxaOpenData.jsx'));
 
@@ -581,6 +583,22 @@ function PanellControl({ vistaRef, abansDeLaFitxa }) {
             className="sdp-btn-ample"
           >
             {t('section.control.dubtes', 'Missatges per a dubtes')}
+          </UniversalButton>
+
+          {/* P0-63 / IDEA-194 (ordre del Mestre, 261108) · La contrasenya viu a
+              «El compte» del Perfil: qui la busca ací (per a entrar a l'App
+              mòbil amb correu i contrasenya) hi va d'un toc. Sense sessió, la
+              barrera del Perfil (RequireAuth) porta a l'entrada amb tornada, i
+              en entrar s'aterra al compte (rutaEntrada.js, RUTA_COMPTE).
+              UniversalButton és Boto (PedraSeca/index.js): la clau 🔑 va per
+              `icona`, la seua API; `icon` i `variant` no hi arriben. */}
+          <UniversalButton
+            onClick={() => navigate(RUTA_COMPTE)}
+            varietat="secundari"
+            icona={KeyRound}
+            className="sdp-btn-ample"
+          >
+            {t('section.control.compte', 'Compte i contrasenya')}
           </UniversalButton>
 
           <UniversalButton

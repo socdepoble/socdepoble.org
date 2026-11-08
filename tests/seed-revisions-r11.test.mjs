@@ -122,7 +122,7 @@ test('P1-75: canonical SQL, author binding, current public revision and per-piec
       await assert.rejects(save(owner, 'owned', { title: 'Duplicate authority' }, 0), e => e.code === 'P0002');
       await pg.query("UPDATE public.app_content SET payload=$2 WHERE tenant_id=$1 AND key='feedPosts'", [tenant, sources.filter(row => row.id !== 'owned')]);
       assert.equal((await as(null, "SELECT seed_id FROM public.seed_revisions WHERE seed_id='owned'", [], { role: 'anon' })).length, 0);
-      assert.equal((await pg.query('SELECT count(*)::int AS n FROM node0.schema_migrations')).rows[0].n, 80);
+      assert.equal((await pg.query('SELECT count(*)::int AS n FROM node0.schema_migrations')).rows[0].n, 81); // R13-C7: + 2611082238 (recomptes de sessions)
     });
     await t.test('nested withdrawal hides an accepted revision under RLS without relying on a source version change', async () => {
       const source = (await pg.query("SELECT payload FROM public.app_content WHERE tenant_id=$1 AND key='feedPosts'", [tenant])).rows[0].payload;

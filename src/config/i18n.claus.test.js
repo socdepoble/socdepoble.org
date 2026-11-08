@@ -360,6 +360,10 @@ const CLAUS = {
   'editor.targetes.dreta': {
     ca: 'Dreta', es: 'Derecha', en: 'Right', eu: 'Eskuina', gl: 'Dereita'
   },
+  /* P0-59 / IDEA-190 · La tercera alineació de la targeta sola. */
+  'editor.targetes.centre': {
+    ca: 'Centre', es: 'Centro', en: 'Centre', eu: 'Erdia', gl: 'Centro'
+  },
   'editor.targetes.lleva': {
     ca: 'Llevar la targeta', es: 'Quitar la tarjeta', en: 'Remove the card', eu: 'Kendu txartela', gl: 'Quitar a tarxeta'
   },
@@ -771,7 +775,9 @@ const IGUALS_AL_VALENCIA = Object.freeze({
   'editor.targetes.dialeg.inserir': ['gl'],
   /* 261007 (M9) · El nom del patró de l'APG és el mateix en castellà i en gallec. */
   'carrusel.rol': ['es', 'gl'],
-  'carrusel.rolDiapositiva': ['es', 'gl']
+  'carrusel.rolDiapositiva': ['es', 'gl'],
+  /* P0-59 / IDEA-190 · «Centre» és també l'anglés del diccionari (britànic, com «centre» a en.js). */
+  'editor.targetes.centre': ['en']
 });
 
 const LLENGUES = SUPPORTED_LANGUAGES.map(({ code }) => code);

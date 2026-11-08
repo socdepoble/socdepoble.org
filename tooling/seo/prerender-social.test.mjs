@@ -231,9 +231,11 @@ test('dades de veres del repositori: /anima, /fedivers, la samarreta i el Llibre
      i el canonical del manifest, i la imatge és un JPEG o PNG del dist de
      300 000 B com a molt (cap targeta genèrica). */
   const {manifest}=await buildSocialManifest({root:projectRoot,origin,estricte:true});
-  const inventari=Object.keys(manifest.routes).filter(ruta=>/^\/(?:page\/(?:publicar_|vehicle_compartit|animalets|treball|habitatge|notes|wikidepoble)|plugin\/|consola(?:\/|$)|disseny$|wikidepoble$)/.test(ruta));
-  /* COMMIT R6 (d79a0b530) · /plugin/genealogia (Arbre Genealògic, IDEA-100) és el nové plugin. */
-  assert.equal(inventari.length,10+9+1+1+14,inventari.join(' '));
+  const inventari=Object.keys(manifest.routes).filter(ruta=>/^\/(?:page\/(?:publicar_|vehicle_compartit|animalets|treball|habitatge|notes|wikidepoble|herbari|banc-de-llavors|rutes-de-poble|arbres-monumentals)|plugin\/|consola(?:\/|$)|disseny$|wikidepoble$|mur\/(?:manifest-de-poble|noves-tecnologies-aplicades-a-la-cultura-rural)$)/.test(ruta));
+  /* COMMIT R6 (d79a0b530) · /plugin/genealogia (Arbre Genealògic, IDEA-100) és el nové plugin.
+     P0-60 / IDEA-191 (bcb067a27) · + les quatre pàgines de patrimoni i les dos publicacions de llavor
+     del Mur: el head servit de dist/, no sols el manifest. */
+  assert.equal(inventari.length,14+9+1+1+14+2,inventari.join(' '));
   for(const ruta of inventari) {
     const entrada=manifest.routes[ruta];
     const d=llig(dist,`${ruta.slice(1)}/index.html`);
@@ -259,6 +261,18 @@ test('dades de veres del repositori: /anima, /fedivers, la samarreta i el Llibre
   assert.equal(prop('wikidepoble/03_llibre_d_or_memoria_episodica/index.html','og:image'),origin+'/assets/system/ui/og-llibre-d-or-1200x630.png');
   assert.equal(prop('wikidepoble/03_llibre_d_or_memoria_episodica/index.html','og:url'),origin+'/wikidepoble/03_llibre_d_or_memoria_episodica');
   assert.equal(llig(dist,'wikidepoble/03_llibre_d_or_memoria_episodica/index.html').querySelector('link[rel="canonical"]').href,origin+'/wikidepoble?item=03_llibre_d_or_memoria_episodica');
+  /* P0-60 / IDEA-191 (bcb067a27) · L'article del Pou de Neu es servix com a article amb la variant JPEG
+     de la il·lustració, i l'àlies /page/anatomia-rural té el seu fitxer amb el mateix head i el
+     canonical de la publicació (no és cap ruta pròpia). El Manifest de Poble, també article. */
+  const POU='/mur/noves-tecnologies-aplicades-a-la-cultura-rural';
+  const imatgePou=origin+'/assets/uploads/patrimoni/anatomia-rural-pou-neu-ibanez-social-1200x630.jpg';
+  assert.deepEqual(rebut.aliases.filter(a=>a.from==='/page/anatomia-rural'),[{from:'/page/anatomia-rural',to:POU}]);
+  assert.ok(!rebut.routesWritten.includes('/page/anatomia-rural'));
+  for(const rel of [`${POU.slice(1)}/index.html`,'page/anatomia-rural/index.html']) {
+    assert.deepEqual(['og:type','og:image','og:image:type','og:url'].map(nom=>prop(rel,nom)),['article',imatgePou,'image/jpeg',origin+POU],rel);
+    assert.equal(llig(dist,rel).querySelector('link[rel="canonical"]')?.href??null,origin+POU,rel);
+  }
+  assert.equal(prop('mur/manifest-de-poble/index.html','og:type'),'article');
   const segon=cli();
   assert.equal(segon.status,1);assert.equal(JSON.parse(segon.stderr.trim()).valid,false);
 });

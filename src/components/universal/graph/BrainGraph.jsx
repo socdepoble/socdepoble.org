@@ -69,6 +69,18 @@ const DESPLACAMENT_TECLAT = Object.freeze({
 
 const limita = (valor, min, max) => Math.min(max, Math.max(min, valor));
 
+/** Òptic per a grafs de documents: els pesos són recomptes aportats pel model. */
+export function traçDeVincle(link, zoom = 1, seleccio = '') {
+  const ponderat = Number.isSafeInteger(link.weight) && link.weight > 0;
+  const connectat = !seleccio || link.source === seleccio || link.target === seleccio;
+  return {
+    gruix: (ponderat ? 1 + Math.min(4, Math.log2(link.weight)) : 1) / zoom,
+    opacitat: connectat ? (link.proposta ? 0.9 : 0.5) : 0.08,
+    discontinu: Boolean(link.discontinu), proposta: Boolean(link.proposta),
+    patro: link.tipus === 'skos' ? 'punts' : link.discontinu ? 'ratlles' : 'continu',
+  };
+}
+
 /** Amplia `factor` vegades mantenint quiet el punt (x, y) del canvas, dins dels límits. */
 function zoomSobre(t, factor, x, y) {
   const k = limita(t.k * factor, ZOOM_MIN, ZOOM_MAX);
@@ -264,7 +276,7 @@ const GRAF_BUIT = Object.freeze({ nodes: [], links: [] });
 
 export default function BrainGraph({
   onNodeClick, className = '', graf, estil = ESTIL_WIKI, forces, fletxes = false, textos = TEXTOS_WIKI,
-  enquadra = false, seleccio, onSeleccio, inspector = true
+  enquadra = false, seleccio, onSeleccio, inspector = true, vinclesPonderats = false
 }) {
   const t = useTraductorOpcional();
   const nodeSelectId = useId();
@@ -393,12 +405,24 @@ export default function BrainGraph({
         });
         ctx.stroke();
       };
-      traca(continus);
-      // Un vincle inferit (de prosa) es pinta discontinu: no val igual que un declarat.
-      if (discontinus.length) {
-        ctx.setLineDash([4 / k, 4 / k]);
-        traca(discontinus);
+      if (vinclesPonderats) {
+        for (const link of links) {
+          const traç = traçDeVincle(link, k, selectedId);
+          ctx.lineWidth = traç.gruix;
+          ctx.globalAlpha = traç.opacitat;
+          ctx.strokeStyle = traç.proposta ? colors.proposta || colors.link : colors.link;
+          ctx.setLineDash(traç.patro === 'punts' ? [1 / k, 5 / k] : traç.patro === 'ratlles' ? [4 / k, 4 / k] : []);
+          traca([link]);
+        }
         ctx.setLineDash([]);
+      } else {
+        traca(continus);
+        // Un vincle inferit (de prosa) es pinta discontinu: no val igual que un declarat.
+        if (discontinus.length) {
+          ctx.setLineDash([4 / k, 4 / k]);
+          traca(discontinus);
+          ctx.setLineDash([]);
+        }
       }
       if (fletxes) {
         ctx.globalAlpha = 0.5;
@@ -454,7 +478,7 @@ export default function BrainGraph({
     vista.pinta = render;
     vista.ara();
     return () => { vista.pinta = null; };
-  }, [vista, dimensions, links, selectedId, nodesRef, paleta, estil, fletxes, tema]);
+  }, [vista, dimensions, links, selectedId, nodesRef, paleta, estil, fletxes, tema, vinclesPonderats]);
 
   useEffect(() => () => vista.cancela(), [vista]);
 

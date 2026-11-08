@@ -4,6 +4,7 @@ import { BotoVisibilitat } from './barres/BotoVisibilitat.jsx';
 import { ETIQUETA_RESERVA_ARA, dataHoraEdicio } from './barres/dataHoraBarra.js';
 import { sanitizeHtml } from '../../utils/sanitize.js';
 import { extractPlainText } from '../../utils/contentAdapter.js';
+import { inserixTextAlCursor, normalitzaText, textPlaDelPortaretalls, unaLinia } from './enganxatCamps.js';
 import useHeroImageHandler, { validaFitxerImatge } from '../../hooks/useHeroImageHandler.js';
 import { useResolvedAsset } from '../../hooks/useResolvedAsset.js';
 import { resolRecursPropi } from '../../config/assetResolver.js';
@@ -233,7 +234,20 @@ function AvisosCamps({ avisos, onAccio }) {
   );
 }
 
-export function EditableField({ html, placeholder, onChange, onBlur, className }) {
+/* P0-58 (IDEA-189) · El que s'enganxa o es deixa anar a un camp de la
+   capçalera entra com a text pla d'una línia (enganxatCamps.js). Pel camí
+   natiu (execCommand) el navegador dispara `input` i el onInput de sempre fa
+   la resta; pel camí manual, l'avís del canvi és ací, una sola vegada. */
+function inserixAlCamp(camp, text, onChange, punt = null) {
+  if (!text) return;
+  if (inserixTextAlCursor(camp, text, punt) === 'manual') onChange?.(valorDelCamp(camp.innerHTML));
+}
+const delPortaretalls = (dades) => ({
+  html: dades.getData('text/html') || '',
+  text: dades.getData('text/plain') || '',
+});
+
+export function EditableField({ html, placeholder, onChange, onBlur, className, onEnganxaBloc = null }) {
   /* A2 · Mentre el camp té el focus, el DOM és de qui escriu. Si el valor que
      torna del pare es reinjectara a cada tecla, React reescriuria el contingut,
      el cursor tornaria a l'inici i «Hola» eixiria «aloH». El camp pinta un
@@ -241,14 +255,52 @@ export function EditableField({ html, placeholder, onChange, onBlur, className }
      abans del return null perquè l'ordre no canvie entre renders. */
   const [enfocat, setEnfocat] = useState(false);
   const [mostrat, setMostrat] = useState(html);
+  /* P0-58 · Un arrossegament que naix dins del mateix camp (moure una
+     paraula) és del navegador: el drop no el toca. */
+  const arrossegantDins = useRef(false);
   if (!enfocat && mostrat !== html) setMostrat(html);
   if (html === null) return null;
+  /* P0-58 · Enganxar: text pla d'una línia, sense cap etiqueta ni imatge.
+     Amb `onEnganxaBloc` (només el títol d'una nota, DocumentEditor) i el camp
+     buit, el document enganxat es pot repartir: el pare torna { titol } (el
+     que va al camp; '' si no hi va res) o null (l'enganxat d'una línia). */
+  const enganxa = (e) => {
+    const dades = e.clipboardData;
+    if (!dades) return;
+    e.preventDefault();
+    const camp = e.currentTarget;
+    const porta = delPortaretalls(dades);
+    if (typeof onEnganxaBloc === 'function' && !valorDelCamp(camp.innerHTML)) {
+      let repartit = null;
+      try {
+        repartit = onEnganxaBloc(porta);
+      } catch {
+        repartit = null;
+      }
+      if (repartit) {
+        inserixAlCamp(camp, unaLinia(normalitzaText(repartit.titol)), onChange);
+        return;
+      }
+    }
+    inserixAlCamp(camp, unaLinia(textPlaDelPortaretalls(porta)), onChange);
+  };
+  const deixaAnar = (e) => {
+    if (arrossegantDins.current) return;
+    const dades = e.dataTransfer;
+    if (!dades) return;
+    e.preventDefault();
+    inserixAlCamp(e.currentTarget, unaLinia(textPlaDelPortaretalls(delPortaretalls(dades))), onChange, { x: e.clientX, y: e.clientY });
+  };
   return (
     <span
       className={className}
       contentEditable
       suppressContentEditableWarning
       onFocus={() => setEnfocat(true)}
+      onPaste={enganxa}
+      onDrop={deixaAnar}
+      onDragStart={() => { arrossegantDins.current = true; }}
+      onDragEnd={() => { arrossegantDins.current = false; }}
       onInput={(e) => onChange?.(valorDelCamp(e.currentTarget.innerHTML))}
       onBlur={(e) => {
         const valor = valorDelCamp(e.currentTarget.innerHTML);
@@ -488,6 +540,14 @@ export function UniversalEditorShell({
      Capçalera → identitat (l'avatar) → Logotip → àmbit → classificació → tancar. */
   posicioEdicioAvancada = 'despres-autoria',
   previsualitzacioTargeta = null,
+  /* P0-58 (IDEA-189) · Opcional, i sense ella el DOM i el comportament de
+     sempre (el Perfil i el catàleg només reben l'enganxat pla d'una línia):
+     `onEnganxaDocument({ html, text })`, que només rep el títol (com a
+     onEnganxaBloc de l'EditableField). DocumentEditor la passa a una nota amb
+     «🎴 Proposa Card»: enganxar un document sencer sobre l'H1 d'una nota buida
+     el reparteix entre el títol, el subtítol, l'entradilla i el cos. Es
+     desestructura ací perquè no passe per ...rest a la UniversalPage. */
+  onEnganxaDocument = null,
   classificacio,
   copyright,
   onCanviaCopyright,
@@ -806,6 +866,7 @@ export function UniversalEditorShell({
                 placeholder={placeholderTitol || TEXTOS_LLAVOR.titol}
                 onChange={(val) => handleFieldChange('title', val)}
                 onBlur={(val) => handleFieldBlur('title', val)}
+                {...(typeof onEnganxaDocument === 'function' ? { onEnganxaBloc: onEnganxaDocument } : null)}
               />
             }
             subtitle={

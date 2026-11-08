@@ -44,7 +44,7 @@ describe('BLOC 2 · AH-29 (IDEA-89) · Administració del sistema, Eliminació d
     expect(perfilShellSource).toContain('amagaRodaAjustos={true}');
   });
 
-  test('3. Columna 1 (PERFIL) mostra «🛡️ Administració del sistema» just davall de Javi Llinares i obri els 6 apartats a la Columna 2', () => {
+  test('3. Columna 1 (PERFIL) mostra «🛡️ Administració del sistema» just davall de Javi Llinares i obri els 7 apartats a la Columna 2', () => {
     /* Onada R6 · Bloc 2 (P1-b) · El grup d'administració és només per a superadmin. */
     const grups = navegacioDePerfil([{ id: 'jo', mena: 'persona', nom: 'Javi Llinares', dades: {} }], [], { superadmin: true });
     expect(grups[0].options.map((o) => [o.id, o.label])).toEqual([
@@ -60,6 +60,8 @@ describe('BLOC 2 · AH-29 (IDEA-89) · Administració del sistema, Eliminació d
       ['admin-vistes-columnes', '⚙️ Ajustos de vistes i columnes'],
       ['admin-nodes-fedivers', '🌐 Nodes, Fedivers i Resiliència 3-2-1'],
       ['admin-empaquetats', '📦 Empaquetats i Desplegament (Mode Jarvis)'],
+      /* R13-C7 (ordre del Mestre, 08-11-2026) · El 7é apartat, just davall d'Empaquetats. Actualitzada a posta. */
+      ['administracio-usuaris-i-dispositius', '👥 Usuaris, Dispositius i Botigues (Google i Apple)'],
     ]);
   });
 

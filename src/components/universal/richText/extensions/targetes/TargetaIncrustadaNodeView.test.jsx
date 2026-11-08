@@ -164,15 +164,16 @@ for (const nom of [/Compartir La festa/, /Connectar amb La festa/, /Comentar La 
   });
 }
 
-test('sense triar-la, cap eina; triada i sola, Esquerra (premuda), Dreta, Convertir en enllaç i Llevar', async () => {
+test('sense triar-la, cap eina; triada i sola, Esquerra (premuda), Centre, Dreta, Convertir en enllaç i Llevar', async () => {
   const { container } = await munta();
   expect(container.querySelector('.sdp-targeta-incrustada__eines')).toBeNull();
   await tria('publicacio:1');
   const eines = container.querySelector('.sdp-targeta-incrustada__eines');
   const botons = within(eines).getAllByRole('button');
-  expect(botons.map((boto) => boto.textContent)).toEqual(['Esquerra', 'Dreta', 'Convertir en enllaç', 'Llevar la targeta']);
+  expect(botons.map((boto) => boto.textContent)).toEqual(['Esquerra', 'Centre', 'Dreta', 'Convertir en enllaç', 'Llevar la targeta']);
   expect(botons[0].getAttribute('aria-pressed')).toBe('true');
   expect(botons[1].getAttribute('aria-pressed')).toBe('false');
+  expect(botons[2].getAttribute('aria-pressed')).toBe('false');
 });
 
 test('Dreta canvia l’alineació del grup, i Llevar se’n du la targeta i el grup', async () => {

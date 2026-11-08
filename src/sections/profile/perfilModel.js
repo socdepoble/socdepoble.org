@@ -62,6 +62,12 @@ const SUBTITOLS_MULTIMEDIA = Object.freeze({
    font única que també llig la barra; ací es reexporta per als consumidors. */
 export { PARAM_FITXA_ORGANITZACIO, rutaFitxaOrganitzacio } from '../../config/navigation.js';
 
+/* P0-63 / IDEA-194 (ordre del Mestre, 261108) · ?vista=compte obri «El
+   compte» de la persona, on viu la contrasenya (RUTA_COMPTE, rutaEntrada.js:
+   l'accés «Compte i contrasenya» de /control). Cap altre valor no fa res. */
+export const PARAM_VISTA = 'vista';
+export const VISTA_COMPTE = 'compte';
+
 /**
  * La primera categoria del Perfil: l'organització demanada per la ruta o,
  * si no, la que és l'actor actiu, sempre que siga una de les seues; si no,
@@ -69,8 +75,13 @@ export { PARAM_FITXA_ORGANITZACIO, rutaFitxaOrganitzacio } from '../../config/na
  * Ordre del Mestre (261021, prompt 261021_0015, tasca 7) · També un agent IA
  * que administra («Edita la fitxa» de /iaia): obri la seua fitxa, no la de la
  * persona.
+ * P0-63 (261108) · Amb `vista` VISTA_COMPTE, «El compte» de la persona (la
+ * categoria i l'element), per damunt de l'actor actiu i de la ruta: la
+ * contrasenya és del compte de la persona, no d'una organització.
  */
-export function seleccioInicialDePerfil(identitats, preferides = [], { superadmin = false } = {}) {
+export function seleccioInicialDePerfil(identitats, preferides = [], { superadmin = false, vista = null } = {}) {
+  const persona = vista === VISTA_COMPTE ? identitats.find(esPersona) : null;
+  if (persona) return { categoryId: String(persona.id), itemId: `${persona.id}-compte` };
   const seleccionables = identitats.filter((identitat) => !esPersona(identitat));
   /* Onada R6 · Bloc 2 (P1-b) · La ruta no obri l'administració a qui no és superadmin. */
   const triada = preferides.find((id) => id != null && id !== ''
@@ -330,11 +341,16 @@ export const ICONES_ADMINISTRACIO_SISTEMA = Object.freeze({
   vistesColumnes: '\u{2699}\u{FE0F}', // ⚙️
   nodesFedivers: '\u{1F310}', // 🌐
   empaquetats: '\u{1F4E6}', // 📦
+  usuarisBotigues: '\u{1F465}', // 👥
 });
 
 /**
- * AH-29 (IDEA-89) · Els 6 apartats d'«🛡️ Administració del sistema» a la Columna 2 (APARTATS).
+ * AH-29 (IDEA-89) · Els apartats d'«🛡️ Administració del sistema» a la Columna 2 (APARTATS).
  * El primer apartat per defecte és «🏷️ Taxonomia: Categories i Etiquetes» (Laboratori Doctoral).
+ * R13-C7 (ordre del Mestre, 08-11-2026) · El 7é, just davall d'«📦 Empaquetats»: «👥 Usuaris,
+ * Dispositius i Botigues», amb l’id i el subtítol de l’encàrrec mestre R13+R14 (23:00). La xifra
+ * de verificadors només es llig a Google Play Console: la card no en porta cap de fixa.
+ * Dins de l'app d'iOS (regla 2.3.10) la card porta els textos d'admin/appNativaIos.js (PerfilShell.jsx).
  */
 export function itemsDAdministracioSistema() {
   const categoryIds = [ID_ADMINISTRACIO_SISTEMA];
@@ -392,6 +408,16 @@ export function itemsDAdministracioSistema() {
       icon: ICONES_ADMINISTRACIO_SISTEMA.empaquetats,
       searchText: 'empaquetats desplegament mode jarvis wordpress zip pwa portes verificacio',
       data: { vista: 'admin-empaquetats' },
+    },
+    {
+      id: 'administracio-usuaris-i-dispositius',
+      categoryIds,
+      title: '👥 Usuaris, Dispositius i Botigues (Google i Apple)',
+      subtitle: 'Directori d’usuaris registrats i distribució en viu per canal (Google Play, App Store i Web)',
+      icon: ICONES_ADMINISTRACIO_SISTEMA.usuarisBotigues,
+      searchText: 'usuaris dispositius botigues google play app store iphone ipad web verificadors sessions connectats',
+      // La vista conserva el prefix admin-: la porta de superadmin de PerfilShell.jsx filtra per eixe prefix.
+      data: { vista: 'admin-usuaris-i-dispositius' },
     },
   ];
 }

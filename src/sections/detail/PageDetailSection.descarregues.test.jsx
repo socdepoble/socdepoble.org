@@ -19,7 +19,8 @@
  *  · Firefox d'escriptori, fora de l'entrada pròpia (paquet autònom) o en un
  *    iframe: res, ni cap div buit;
  *  · les ranures de botiga: només la de WordPress.org és oberta (01-11-2026),
- *    un sol enllaç dalt; les tancades, cap.
+ *    un sol enllaç dalt; les tancades, cap. P0-62 (08-11-2026) · També l'App
+ *    Store: dalt, «Disponible a l'App Store» i WordPress.org.
  * L'entrada pròpia (src/main.jsx) crida la captura amb la finestra de veres;
  * ací, amb una de mostra (jsdom no té l'esdeveniment, com Safari i Firefox).
  * Revisió adversarial (261028) · senseBotigues() a cada escenari (amb la
@@ -72,23 +73,36 @@ const baix = () => article().querySelector(':scope > .sdp-pagina-accio');
 const INSTALAR = "Instal·lar l'App (PWA)";
 const INSTALADA = 'Aplicació ja instal·lada en aquest dispositiu';
 const CLASSE = 'sdp-boto sdp-boto--primari sdp-boto--gran sdp-boto--ple';
+/* P0-62 bis (08-11-2026; ordre del Mestre al xat de Claude) · Les botigues de dalt: l'App Store, amb el
+   botó de marca d'Apple (InstalaLaPwa.jsx, classeDeBotiga); la resta, el secundari gran de sempre. */
+const CLASSE_APP_STORE = 'sdp-boto sdp-boto--marca sdp-boto--apple sdp-boto--gran';
+const CLASSE_BOTIGA = 'sdp-boto sdp-boto--secundari sdp-boto--gran';
 const PLAY = 'https://play.google.com/store/apps/details?id=org.socdepoble.app';
 const APP_STORE = 'https://apps.apple.com/app/id1234567890';
 const WORDPRESS = 'https://wordpress.org/plugins/socdepoble/';
 /* IDEA-60 (T1, prompt 261102_1532) · L'APK signat al domini propi. */
 const APK = 'https://socdepoble.org/descarregues/socdepoble-android-latest.apk';
+/* P0-62 (08-11-2026) · La fitxa de veres de l'App Store (canal obert de canalsDeBotiga.js) i el seu botó. */
+const APP_STORE_DE_VERES = 'https://apps.apple.com/es/app/s%C3%B3c-de-poble/id6826441844';
+const BOTO_APP_STORE = "Disponible a l'App Store";
+/* P0-62 bis (08-11-2026) · La pàgina on Google apunta els verificadors (pas 1 de Google Play, al cos). */
+const VERIFICADORS = 'https://play.google.com/apps/testing/org.socdepoble.app';
+/* Els botons de dalt amb les botigues obertes de veres: l'App Store i WordPress.org. */
+const BOTIGUES_DE_VERES = [[APP_STORE_DE_VERES, BOTO_APP_STORE], [WORDPRESS, 'WordPress.org']];
 
 /* Decisió d'honestedat: a les zones d'acció, cap enllaç ni res que anuncie
    una botiga tancada (ni «pròximament»), en cap escenari.
    01-11-2026 (ordre del Mestre 261101_0311, T1) · L'única botiga oberta és
    WordPress.org: dalt, un sol enllaç per canal obert (el de veres,
-   canalsOberts), i baix, cap. Fora dels enllaços, cap nom de botiga. */
+   canalsOberts), i baix, cap. Fora dels enllaços, cap nom de botiga.
+   P0-62 (08-11-2026) · Les botigues obertes són l'App Store (amb el text
+   «Disponible a l'App Store», B9) i WordPress.org. */
 function senseBotigues() {
   const oberts = canalsOberts(botigues.llista);
-  expect(oberts.map((canal) => canal.url)).toEqual([WORDPRESS]);
+  expect(oberts.map((canal) => canal.url)).toEqual([APP_STORE_DE_VERES, WORDPRESS]);
   const zones = [dalt(), baix()].filter(Boolean);
   for (const zona of zones) {
-    const esperats = zona === dalt() ? oberts.map((canal) => [canal.url, canal.nom]) : [];
+    const esperats = zona === dalt() ? oberts.map((canal) => [canal.url, canal.id === 'app-store' ? BOTO_APP_STORE : canal.nom]) : [];
     expect([...zona.querySelectorAll('a')].map((a) => [a.getAttribute('href'), a.textContent])).toEqual(esperats);
     const senseEnllacos = zona.cloneNode(true);
     senseEnllacos.querySelectorAll('a').forEach((a) => a.remove());
@@ -103,12 +117,12 @@ function accio(zona) {
   copia.querySelectorAll('.sdp-accions').forEach((botigues) => botigues.remove());
   return copia.textContent;
 }
-/* Cap acció d'instal·lar: dalt, només la botiga oberta; baix, res (cap div buit). */
+/* Cap acció d'instal·lar: dalt, només les botigues obertes; baix, res (cap div buit). */
 function nomesLaBotigaOberta() {
   expect(screen.queryAllByRole('button', { name: INSTALAR })).toHaveLength(0);
   expect(dalt().querySelectorAll('button')).toHaveLength(0);
-  expect([...dalt().querySelectorAll('a')].map((a) => [a.getAttribute('href'), a.textContent])).toEqual([[WORDPRESS, 'WordPress.org']]);
-  expect(dalt().textContent).toBe('WordPress.org');
+  expect([...dalt().querySelectorAll('a')].map((a) => [a.getAttribute('href'), a.textContent])).toEqual(BOTIGUES_DE_VERES);
+  expect(dalt().textContent).toBe(`${BOTO_APP_STORE}WordPress.org`);
   expect(baix()).toBeNull();
 }
 /* Obri la guia (si el botó en té) i comprova les zones. */
@@ -195,7 +209,7 @@ test('/page/descarregues: l’H1 del Mestre, la il·lustració i «📲 Instal·
   for (const boto of botons) {
     expect([boto.className, boto.hasAttribute('aria-expanded'), boto.textContent]).toEqual([CLASSE, false, `📲 ${INSTALAR}`]);
   }
-  // Les ranures de botiga: dalt, només WordPress.org; baix, cap enllaç.
+  // Les ranures de botiga: dalt, l'App Store i WordPress.org (P0-62); baix, cap enllaç.
   expect(senseBotigues()).toBe(2);
 });
 
@@ -210,20 +224,36 @@ test('/page/descarregues: un apartat per a cada camí i un per a la visió, amb 
     'A la web del teu poble, amb WordPress',
     'Com funciona per dins: hui i demà'
   ]);
-  expect(text('h4')).toEqual(expect.arrayContaining(['Google Play', 'APK directe', 'Apple TestFlight', 'App Store', TITOL_INSTRUCCIONS, 'WordPress.org']));
-  expect(text('h5')).toEqual(["A l'ordinador", 'Al mòbil i a la tauleta']);
+  expect(text('h4')).toEqual(expect.arrayContaining(['Google Play', 'APK directe', 'App Store', TITOL_INSTRUCCIONS, 'WordPress.org']));
+  // P0-62 · Amb l'App Store oberta, l'apartat de TestFlight se'n va (FRASES_DE_BOTIGA_TANCADA['app-store']).
+  expect(text('h4')).not.toContain('Apple TestFlight');
+  expect(text('h5')).toEqual(['Els tres passos a Google Play', "A l'ordinador", 'Al mòbil i a la tauleta']);
   /* O4-CLAUDE-2 (ordre del Mestre, 261102 21:38) · Prova posada al dia a propòsit: els dos blocs
      de les instruccions són dues Subtargetes (div.sdp-subtargeta, fills directes del cos), amb el
-     seu H5 com a títol i la seua llista; la resta del cos, fora. Els mateixos títols de dalt. */
+     seu H5 com a títol i la seua llista; la resta del cos, fora. Els mateixos títols de dalt.
+     P0-62 bis (08-11-2026; ordre del Mestre al xat de Claude) · I, abans, la dels tres passos de
+     Google Play: el seu H5 i una llista numerada (OL) de tres. */
   const caixes = [...cos().querySelectorAll(':scope > div.sdp-subtargeta[data-sdp-subtargeta]')];
-  expect(caixes.map((caixa) => [...caixa.children].map((fill) => fill.tagName))).toEqual([['H5', 'UL'], ['H5', 'UL']]);
-  expect(caixes.map((caixa) => caixa.firstElementChild.textContent)).toEqual(["A l'ordinador", 'Al mòbil i a la tauleta']);
-  expect(caixes[0].previousElementSibling.textContent).toBe(TITOL_INSTRUCCIONS);
+  expect(caixes.map((caixa) => [...caixa.children].map((fill) => fill.tagName))).toEqual([['H5', 'OL'], ['H5', 'UL'], ['H5', 'UL']]);
+  expect(caixes.map((caixa) => caixa.firstElementChild.textContent)).toEqual(['Els tres passos a Google Play', "A l'ordinador", 'Al mòbil i a la tauleta']);
+  expect(caixes[0].querySelectorAll('ol > li')).toHaveLength(3);
+  expect(caixes[1].previousElementSibling.textContent).toBe(TITOL_INSTRUCCIONS);
   /* 01-11-2026 (T1) · Un sol enllaç al cos: la fitxa pública del connector a
      WordPress.org, en una pestanya nova i amb el rel del sanejador. Cap
-     botiga mòbil ni cap APK, que encara no són públics per a tothom. */
+     botiga mòbil ni cap APK, que encara no són públics per a tothom.
+     P0-62 (08-11-2026) · I, abans, la fitxa de l'App Store, que ja és oberta.
+     Cap enllaç de Google Play ni de cap APK, que continuen tancats.
+     P0-62 bis (08-11-2026; ordre del Mestre al xat de Claude) · L'App Store, amb el botó gran de
+     marca, centrat (div.sdp-accions). I, al pas 1 de Google Play, la pàgina on Google apunta els
+     verificadors: un enllaç d'instruccions, no la fitxa (systemPages.test.js en guarda l'adreça). */
   expect([...cos().querySelectorAll('a')].map((a) => [a.getAttribute('href'), a.getAttribute('target'), a.getAttribute('rel'), a.textContent]))
-    .toEqual([[WORDPRESS, '_blank', 'noopener noreferrer nofollow', 'wordpress.org/plugins/socdepoble']]);
+    .toEqual([
+      [VERIFICADORS, '_blank', 'noopener noreferrer nofollow', 'play.google.com/apps/testing/org.socdepoble.app'],
+      [APP_STORE_DE_VERES, '_blank', 'noopener noreferrer nofollow', BOTO_APP_STORE],
+      [WORDPRESS, '_blank', 'noopener noreferrer nofollow', 'wordpress.org/plugins/socdepoble']
+    ]);
+  const botoGran = cos().querySelector(`a[href="${APP_STORE_DE_VERES}"]`);
+  expect([botoGran.className, botoGran.parentElement.className]).toEqual(['sdp-boto sdp-boto--marca sdp-boto--apple sdp-boto--gran', 'sdp-accions']);
   // La guia troba les instruccions pel text de l'H4: si el copy el canvia, esta prova ho diu.
   expect(PAGE_COPY.descarregues.html).toContain(`<h4>${TITOL_INSTRUCCIONS}</h4>`);
 });
@@ -444,8 +474,8 @@ describe('P1-69 · res que no es puga complir, i cap div buit', () => {
       const enllacos = document.querySelectorAll(`a[href="${PLAY}"]`);
       expect(enllacos).toHaveLength(1);
       expect([dalt().contains(enllacos[0]), baix().querySelectorAll('a').length]).toEqual([true, 0]);
-      // Dalt, una per canal obert, en l'ordre de la llista: Google Play (B9: on és l'app) i WordPress.org.
-      expect([...dalt().querySelectorAll('a')].map((a) => a.textContent)).toEqual(['Disponible a Google Play', 'WordPress.org']);
+      // Dalt, una per canal obert, en l'ordre de la llista: Google Play (B9: on és l'app), l'App Store (P0-62) i WordPress.org.
+      expect([...dalt().querySelectorAll('a')].map((a) => a.textContent)).toEqual(['Disponible a Google Play', BOTO_APP_STORE, 'WordPress.org']);
       expect(screen.getAllByRole('button', { name: INSTALAR })).toHaveLength(2);
       // L'oferta, gastada (una captura nova no la buida: en una càrrega de veres només n'hi ha una).
       await pagina.instalada();
@@ -481,9 +511,9 @@ describe('P1-69 · res que no es puga complir, i cap div buit', () => {
         expect([href, enllacos.length, dalt().contains(enllacos[0])]).toEqual([href, 1, true]);
       }
       expect([...dalt().querySelectorAll('.sdp-accions > a')].map((a) => [a.getAttribute('href'), a.className, a.textContent])).toEqual([
-        [PLAY, 'sdp-boto sdp-boto--secundari sdp-boto--gran', 'Disponible a Google Play'],
-        [APP_STORE, 'sdp-boto sdp-boto--secundari sdp-boto--gran', "Disponible a l'App Store"],
-        [WORDPRESS, 'sdp-boto sdp-boto--secundari sdp-boto--gran', 'WordPress.org']
+        [PLAY, CLASSE_BOTIGA, 'Disponible a Google Play'],
+        [APP_STORE, CLASSE_APP_STORE, "Disponible a l'App Store"],
+        [WORDPRESS, CLASSE_BOTIGA, 'WordPress.org']
       ]);
       expect(baix().querySelectorAll('a')).toHaveLength(0);
       for (const zona of [dalt(), baix()]) expect(zona.textContent).not.toMatch(/\bbeta\b|TestFlight|prompte|aviat|pròximament/i);
@@ -518,15 +548,17 @@ describe('P1-69 · res que no es puga complir, i cap div buit', () => {
       expect([dalt().contains(enllacos[0]), enllacos[0].getAttribute('download'), baix().querySelectorAll('a').length])
         .toEqual([true, 'socdepoble-android-latest.apk', 0]);
       expect([...dalt().querySelectorAll('.sdp-accions > a')].map((a) => [a.getAttribute('href'), a.className, a.textContent, a.hasAttribute('download')])).toEqual([
-        [APK, 'sdp-boto sdp-boto--secundari sdp-boto--gran', "Descarregar l'APK d'Android", true],
-        [WORDPRESS, 'sdp-boto sdp-boto--secundari sdp-boto--gran', 'WordPress.org', false]
+        // P0-62 · L'App Store de veres va davant, en l'ordre de la llista.
+        [APP_STORE_DE_VERES, CLASSE_APP_STORE, BOTO_APP_STORE, false],
+        [APK, CLASSE_BOTIGA, "Descarregar l'APK d'Android", true],
+        [WORDPRESS, CLASSE_BOTIGA, 'WordPress.org', false]
       ]);
       const suma = document.querySelectorAll(`a[href="${APK}.sha256"]`);
       expect([suma.length, dalt().contains(suma[0]), suma[0].closest('.sdp-accions'), suma[0].parentElement.tagName, suma[0].textContent])
         .toEqual([1, true, null, 'P', 'Comprovar la suma SHA-256 del fitxer']);
       expect(dalt().querySelector('.sdp-accions').nextElementSibling).toBe(suma[0].parentElement);
-      // Dalt, tres enllaços en total (l'APK, la suma i WordPress.org) i cap guia.
-      expect([dalt().querySelectorAll('ol').length, dalt().querySelectorAll('a').length]).toEqual([0, 3]);
+      // Dalt, quatre enllaços en total (l'App Store, l'APK, la suma i WordPress.org) i cap guia.
+      expect([dalt().querySelectorAll('ol').length, dalt().querySelectorAll('a').length]).toEqual([0, 4]);
       for (const zona of [dalt(), baix()]) expect(zona.textContent).not.toMatch(/TestFlight|\bbeta\b|prompte|aviat|pròximament/i);
       expect(screen.getAllByRole('button', { name: INSTALAR })).toHaveLength(2);
       expect(dalt().querySelectorAll('.sdp-boto--primari')).toHaveLength(1);

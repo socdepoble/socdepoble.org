@@ -182,7 +182,10 @@ const DIFERITS = [
   'src/config/idiomes/es.js', 'src/config/idiomes/en.js', 'src/config/idiomes/eu.js', 'src/config/idiomes/gl.js',
   'src/sections/text/pageContent.js',
   'src/data/supabase/index.js',
-  'src/sections/disseny/cataleg/dades/emojisUnicode18.js'
+  'src/sections/disseny/cataleg/dades/emojisUnicode18.js',
+  // P0-61 / IDEA-192 · El Brain de categories i etiquetes, el seu model i el graf.
+  'src/sections/taxonomia/BrainTaxonomia.jsx', 'src/data/taxonomia/brainTaxonomia.js',
+  'src/components/universal/graph/BrainGraph.jsx'
 ];
 const PAQUETS_DIFERITS = ['@tiptap/core', '@tiptap/react', '@tiptap/starter-kit', 'leaflet', '@supabase/supabase-js'];
 
@@ -209,10 +212,20 @@ describe('la clausura estàtica de la Consola (T4a-C)', () => {
   let graf;
   beforeAll(() => { graf = clausura('src/sections/consola/ConsolaSection.jsx'); });
 
-  test('arriba al detall d’una peça i al graf (la prova no és buida)', () => {
+  /* P0-61 / IDEA-192 · Expectativa actualitzada a posta: BrainGraph ja és diferit
+     (React.lazy a ExploradorMapa.jsx i a BrainTaxonomia.jsx), amb tros propi que
+     compartixen la Consola i el Brain de taxonomia. La prova continua sense ser
+     buida per l'Explorador del Mapa, que és qui pinta el graf. */
+  test('arriba al detall d’una peça i a l’Explorador (la prova no és buida)', () => {
     expect(graf.fitxers.has('src/sections/consola/mapa/DetallPeca.jsx')).toBe(true);
-    expect(graf.fitxers.has('src/components/universal/graph/BrainGraph.jsx')).toBe(true);
+    expect(graf.fitxers.has('src/sections/consola/mapa/ExploradorMapa.jsx')).toBe(true);
     expect(graf.fitxers.has('src/data/carregaWikiManifest.js')).toBe(true);
+  });
+
+  test('no arriba al graf ni al Brain de taxonomia, que són diferits (P0-61)', () => {
+    expect(graf.fitxers.has('src/components/universal/graph/BrainGraph.jsx')).toBe(false);
+    expect(graf.fitxers.has('src/sections/taxonomia/BrainTaxonomia.jsx')).toBe(false);
+    expect(graf.fitxers.has('src/data/taxonomia/tesaurusDoctoralSocDePoble.js')).toBe(false);
   });
 
   test('no arriba a la Wiki compilada', () => {

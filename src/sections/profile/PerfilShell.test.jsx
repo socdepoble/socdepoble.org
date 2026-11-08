@@ -94,7 +94,7 @@ test('primera columna: tres grups en ordre, la persona amb el seu nom i Administ
   // Com les carpetes de Notes: el primer grup no porta etiqueta, el títol de la columna li fa de capçalera.
   expect(grups().map((g) => g.label)).toEqual([null, 'GRUPS I EMPRESES', 'APLICACIONS']);
   /* Onada R6 · Bloc 2 (P1-b) · Expectativa actualitzada a propòsit: sense
-     superadmin, ni «🛡️ Administració del sistema» ni els seus 6 apartats
+     superadmin, ni «🛡️ Administració del sistema» ni els seus 7 apartats
      (amb superadmin, la prova P1-b de davall). */
   expect(grups()[0].options.map((o) => [o.id, o.label])).toEqual([['jo', 'Pep']]);
   expect(m.workspace.amagaRodaAjustos).toBe(true);
@@ -130,10 +130,10 @@ test('Bloc 3.4 · amb superadmin, APLICACIONS porta també la Consola de Mètriq
 });
 
 /* Onada R6 · Bloc 2 (P1-b) · «🛡️ Administració del sistema» és només per a superadmin. */
-test('P1-b · sense superadmin: ni el grup, ni els 6 apartats, ni la ruta, ni el detall d’un panell; amb superadmin, tots 6', async () => {
+test('P1-b · sense superadmin: ni el grup, ni els 7 apartats, ni la ruta, ni el detall d’un panell; amb superadmin, tots 7 (R13-C7: el 7é, «👥 Usuaris, Dispositius i Botigues»)', async () => {
   const { itemsDAdministracioSistema } = await import('./perfilModel.js');
   const panells = itemsDAdministracioSistema();
-  expect(panells).toHaveLength(6);
+  expect(panells).toHaveLength(7);
   for (const sessio of [null, { esSuperadmin: false }, { rol: 'veí' }]) {
     cleanup();
     m.sessio = sessio;
@@ -151,6 +151,38 @@ test('P1-b · sense superadmin: ni el grup, ni els 6 apartats, ni la ruta, ni el
   expect(filsDe('administracio-sistema')).toEqual(panells.map((p) => p.id));
   expect(m.workspace.initialSelection).toEqual({ categoryId: 'administracio-sistema' });
   for (const panell of panells) expect(m.workspace.renderDetail({ item: panell })).not.toBeNull();
+});
+
+/* R13-C7 (ordre del Mestre, 08-11-2026) · El 7é apartat, just davall d'Empaquetats, obri el seu panell
+   diferit (React.lazy). Dins de l'app d'iOS (regla 2.3.10), ni la card ni la capçalera ni el panell no
+   nomenen Android ni Google Play. */
+test('R13-C7 · «👥 Usuaris, Dispositius i Botigues»: el panell diferit, i a l’app d’iOS sense nomenar Google', async () => {
+  const { nomenaPlataformaAliena } = await import('../text/perAppNativa.js');
+  const { TEXTOS_APP_IOS } = await import('./admin/appNativaIos.js');
+  m.sessio = { esSuperadmin: true };
+  render(<PerfilShell />);
+  expect(filsDe('administracio-sistema').slice(-2)).toEqual(['admin-empaquetats', 'administracio-usuaris-i-dispositius']);
+  render(m.workspace.renderDetail({ item: item('administracio-usuaris-i-dispositius') }));
+  expect(await screen.findByTestId('panell-usuaris-dispositius-botigues')).toBeTruthy();
+  expect(screen.getByRole('heading', { level: 1, name: '👥 Usuaris, Dispositius i Botigues (Google i Apple)' })).toBeTruthy();
+  expect(screen.getByTestId('boto-descarrega-google-play')).toBeTruthy();
+  cleanup();
+  window.Capacitor = { isNativePlatform: () => true, getPlatform: () => 'ios' };
+  try {
+    render(<PerfilShell />);
+    const apartat = item('administracio-usuaris-i-dispositius');
+    expect(apartat).toMatchObject({ ...TEXTOS_APP_IOS, data: { vista: 'admin-usuaris-i-dispositius' } });
+    for (const a of m.workspace.model.items.filter((i) => i.id.startsWith('admin-'))) {
+      expect(nomenaPlataformaAliena(`${a.title} ${a.subtitle} ${a.searchText}`), a.id).toBe(false);
+    }
+    render(m.workspace.renderDetail({ item: apartat }));
+    expect(await screen.findByTestId('panell-usuaris-dispositius-botigues')).toBeTruthy();
+    expect(screen.getByRole('heading', { level: 1, name: TEXTOS_APP_IOS.title })).toBeTruthy();
+    expect(screen.queryByTestId('boto-descarrega-google-play')).toBeNull();
+    expect(nomenaPlataformaAliena(document.body.textContent)).toBe(false);
+  } finally {
+    delete window.Capacitor;
+  }
 });
 
 test('Bloc 3.4 · una llista federada sense la marca `intern` no canvia: totes les seues utilitats, també sense superadmin', () => {
@@ -493,6 +525,29 @@ test('T43 · «Edita la fitxa de {Org}» (?organitzacio=ID) mana sobre l’actor
   m.params = new URLSearchParams('organitzacio=G');
   render(<PerfilShell />);
   expect(m.workspace.initialSelection).toEqual({ categoryId: 'G' });
+});
+
+/* P0-63 / IDEA-194 (ordre del Mestre, 261108) · ?vista=compte (RUTA_COMPTE,
+   l'accés «Compte i contrasenya» de /control) obri «El compte» de la persona,
+   on viu la contrasenya: la categoria i l'element, i en mòbil el detall
+   (mestreDetall amb element). Per damunt de l'actor actiu. */
+test('P0-63 · ?vista=compte obri «El compte» de la persona, també amb una organització com a actor', async () => {
+  const { RUTA_COMPTE } = await import('../../config/rutaEntrada.js');
+  m.actor = { tipus: 'entitat', id: 'O', nom: 'Forn' };
+  m.params = new URLSearchParams(RUTA_COMPTE.split('?')[1]);
+  render(<PerfilShell />);
+  expect(m.workspace.initialSelection).toEqual({ categoryId: 'jo', itemId: 'jo-compte' });
+  expect(m.workspace.mestreDetall).toEqual({ clau: 'perfil', element: 'vista=compte' });
+  expect(item('jo-compte').data).toEqual({ vista: 'compte', identitatId: 'jo' });
+  render(apartatDe(m.workspace.renderDetail({ item: item('jo-compte') })));
+  expect(screen.getByText('compte de Pep')).toBeTruthy();
+});
+
+test.each(['vista=fitxa', 'vista=COMPTE', 'vista='])('P0-63 · ?%s no obri res de nou: la selecció de sempre', (consulta) => {
+  m.params = new URLSearchParams(consulta);
+  render(<PerfilShell />);
+  expect(m.workspace.initialSelection).toEqual({ categoryId: 'jo' });
+  expect(m.workspace.mestreDetall).toEqual({ clau: 'perfil', element: null });
 });
 
 /* Encàrrec 261018_1220 (Tasca 1) · El Workspace només llig initialSelection en

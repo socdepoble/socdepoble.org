@@ -1,7 +1,13 @@
-import { useMemo, useRef, useState } from 'react';
+import { lazy, Suspense, useMemo, useRef, useState } from 'react';
 import { RotateCcw } from 'lucide-react';
-import { Boto, Camp, CampText, Interruptor, PillToggle } from '../../../components/PedraSeca';
-import BrainGraph from '../../../components/universal/graph/BrainGraph';
+import { Boto, Camp, CampText, Carregant, Interruptor, PillToggle } from '../../../components/PedraSeca';
+
+/* P0-61 / IDEA-192 · El graf és diferit també ací: el Brain de taxonomia
+   (src/sections/taxonomia) el comparteix des de /consola/taxonomia i des del
+   panell d'Administració. Amb un import estàtic, BrainGraph vivia dins del tros
+   de la Consola i el Brain l'havia de demanar sencer; així té tros propi, el de
+   la Consola s'aprima i l'entrada no guanya cap byte. */
+const BrainGraph = lazy(() => import('../../../components/universal/graph/BrainGraph'));
 import { Link, useSearchParams } from '../../../app/contexts/RouterContext';
 import { de, plural } from '../concordanca.js';
 import { CLAU_PECA } from '../consolaPagines.js';
@@ -185,8 +191,10 @@ export function ExploradorMapa({ mapa }) {
       </div>
       <div className="sdp-explorador__marc">
         <div className="sdp-wiki-graf sdp-explorador__graf">
-          <BrainGraph graf={graf} estil={ESTIL_MAPA} forces={FORCES[densitat]} fletxes={filtres.fletxes} enquadra
-            textos={TEXTOS_EXPLORADOR} inspector={false} seleccio={seleccio} onSeleccio={setSeleccio} />
+          <Suspense fallback={<Carregant etiqueta="Obrint el graf…" />}>
+            <BrainGraph graf={graf} estil={ESTIL_MAPA} forces={FORCES[densitat]} fletxes={filtres.fletxes} enquadra
+              textos={TEXTOS_EXPLORADOR} inspector={false} seleccio={seleccio} onSeleccio={setSeleccio} />
+          </Suspense>
           {graf.nodes.length === 0 && (
             <div className="sdp-explorador__buit" role="status">
               <p>{filtres.cerca.trim()

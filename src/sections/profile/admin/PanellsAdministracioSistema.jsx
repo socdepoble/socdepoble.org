@@ -12,7 +12,6 @@ import { useSuperadminEstable } from '../../../hooks/useSuperadminEstable.js';
 import { aplica, base, CANON_BLAU, deltaDe, previsualitza, restaura } from '../../../config/crom.js';
 import { AVISOS_PUSH_XAT_ACTIUS, escoltaAvisosPush, instantaniaAvisosPush } from '../../../config/avisosPushXat.js';
 import { CANALS_BOTIGUES, ESTAT_SERVIDOR_PUSH, FITXA_NATIVA, PASSOS_SERVIDOR_PUSH, QR_GUIA_DESCARREGUES, URL_GUIA_DESCARREGUES, frasePushDelNavegador } from './assistentBotigues.js';
-
 /* La mostra de color es pinta per DOM (la propietat --sdp-crom-mostra només s'accepta si és un HEX6);
    el Design Guard no admet style en línia fora de PanellCrom.jsx. */
 function pintaMostraCrom(el, hex) {
@@ -502,8 +501,13 @@ function EstatAvisosPushAdmin() {
 }
 
 /* Onada R9 · C3 (IDEA-120; G8-04, G8-12, G8-16) · L'assistent de botigues: tres canals amb dades
-   dels fitxers del projecte, un sol QR real (la guia pública: no hi ha cap fitxa de botiga
-   publicada que es puga enllaçar) i res de «certificat» ni de «verificat». */
+   dels fitxers del projecte, un sol QR real (la guia pública, que des de P0-62 enllaça la fitxa de
+   l'App Store; Google Play encara no en té cap de pública) i res de «certificat» ni de «verificat».
+   P0-62 bis (08-11-2026; ordre del Mestre al xat de Claude) · L'iPhone porta el botó de marca de
+   l'App Store (les classes del de /page/descarregues; sense el logotip, que viu al tros de la pàgina i
+   ací en faria un de compartit més, que l'entrada hauria de llistar: +49 B) i la versió de la botiga a part de la
+   del projecte; Google Play, els tres passos dels verificadors amb l'enllaç del pas 1 i el camí als
+   Indicadors. */
 function AssistentBotigues() {
   const [canalActiuId, setCanalActiuId] = useState('pwa');
   const canalActiu = CANALS_BOTIGUES.find((c) => c.id === canalActiuId) || CANALS_BOTIGUES[0];
@@ -511,8 +515,9 @@ function AssistentBotigues() {
     <section className="sdp-admin-taxonomia__panel" aria-label="Botigues, guia de descàrregues i avisos push" data-testid="assistent-botigues-qr-admin">
       <h3>📲 Botigues i guia de descàrregues</h3>
       <p className="sdp-muted">
-        El QR porta a la guia pública de descàrregues. No és cap enllaç d’instal·lació de l’App Store, de TestFlight
-        ni de Google Play: la disponibilitat a cada botiga no es verifica des d’este panell.
+        El QR porta a la guia pública de descàrregues, que ja porta el botó de l’App Store i els tres passos de
+        Google Play per als verificadors. No és cap enllaç d’instal·lació directa: des d’este panell no es llig
+        l’estat de cap botiga.
       </p>
       <div className="sdp-admin-actions-inline" role="group" aria-label="Canals d’instal·lació">
         {CANALS_BOTIGUES.map((c) => (
@@ -532,7 +537,14 @@ function AssistentBotigues() {
           <dl className="sdp-admin-dl">
             <dt>Identificador</dt>
             <dd><code>{canalActiu.identificador}</code></dd>
-            <dt>Versió</dt>
+            {/* P0-62 bis · La versió de la botiga i la del projecte, cadascuna amb el seu nom. */}
+            {canalActiu.versioBotiga ? (
+              <>
+                <dt>Versió a la botiga</dt>
+                <dd>{canalActiu.versioBotiga}</dd>
+              </>
+            ) : null}
+            <dt>Versió del projecte</dt>
             <dd>{canalActiu.versio}</dd>
             <dt>Estat</dt>
             <dd><Insignia to="primari">{canalActiu.estat}</Insignia></dd>
@@ -543,6 +555,28 @@ function AssistentBotigues() {
               </>
             ) : null}
           </dl>
+          {canalActiu.fitxa ? (
+            <div className="sdp-accions">
+              <a className="sdp-boto sdp-boto--marca sdp-boto--apple sdp-boto--gran" href={canalActiu.fitxa}
+                target="_blank" rel="noopener noreferrer" data-testid="boto-fitxa-app-store">
+                Disponible a l’App Store
+              </a>
+            </div>
+          ) : null}
+          {canalActiu.verificadors ? (
+            <div data-testid="passos-verificadors-google-play">
+              <h5>Els tres passos dels verificadors a Google Play</h5>
+              <ol className="sdp-admin-botiga-detall__passos">
+                {canalActiu.verificadors.passos.map((pas) => <li key={pas}>{pas}</li>)}
+              </ol>
+              <div className="sdp-admin-actions-inline">
+                <a className="sdp-boto sdp-boto--secundari" href={canalActiu.verificadors.adreca} target="_blank" rel="noopener noreferrer">
+                  Obrir la pàgina dels verificadors (pas 1)
+                </a>
+                <Link className="sdp-boto sdp-boto--secundari" to="/admin">Aparells amb l’app: Indicadors del Tauler (/admin)</Link>
+              </div>
+            </div>
+          ) : null}
           <ul className="sdp-admin-botiga-detall__passos">
             {canalActiu.passos.map((pas) => <li key={pas}>{pas}</li>)}
           </ul>

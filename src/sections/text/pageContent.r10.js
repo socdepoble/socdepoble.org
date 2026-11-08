@@ -250,6 +250,41 @@ const dossier = {
  }
 };
 
+/* P0-62 / IDEA-193 (ordre del Mestre, 261108 18:27) · La fita que obri /versions: Apple va publicar
+   Sóc de Poble 1.0 a l'App Store el 6-11-2026 (consulta d'Apple del 8-11-2026: trackId 6826441844,
+   gratis, iOS 16.0 o posterior). Va al capdamunt, davant de l'entrada del 5 de novembre, amb el format
+   de les entregues (h3, obertura i un apartat «Novetat ·»), en les cinc llengües. L'adreça és la del
+   canal app-store de src/config/canalsDeBotiga.js (pageContent.versions.test.js ho contrasta). Cap
+   altra plataforma mòbil al bloc: /versions s'obri dins de l'app d'iPhone (regla 2.3.10). */
+const FITXA_APP_STORE = 'https://apps.apple.com/es/app/s%C3%B3c-de-poble/id6826441844';
+const FITA_APP_STORE = {
+ ca: ['6 de novembre de 2026 · Fita · L’app d’iPhone i iPad, publicada a l’App Store (versió 1.0)',
+  '<strong>Apple</strong> ha <strong>aprovat i publicat</strong> l’app de Sóc de Poble per a <strong>iPhone</strong> i <strong>iPad</strong>: la <strong>versió 1.0</strong> és a l’<strong>App Store</strong> des del <strong>6 de novembre de 2026</strong>, <strong>gratis</strong> i per a iOS i iPadOS 16 o posterior. Ho hem comprovat el 8 de novembre a la consulta pública d’Apple.',
+  'Novetat · Sóc de Poble a l’App Store',
+  `La trobaràs buscant <strong>«Sóc de Poble»</strong> a l’<strong>App Store</strong> o amb este ${link(FITXA_APP_STORE, 'enllaç directe a la fitxa')}.`],
+ es: ['6 de noviembre de 2026 · Hito · La app de iPhone y iPad, publicada en el App Store (versión 1.0)',
+  '<strong>Apple</strong> ha <strong>aprobado y publicado</strong> la app de Sóc de Poble para <strong>iPhone</strong> y <strong>iPad</strong>: la <strong>versión 1.0</strong> está en el <strong>App Store</strong> desde el <strong>6 de noviembre de 2026</strong>, <strong>gratis</strong> y para iOS y iPadOS 16 o posterior. Lo comprobamos el 8 de noviembre en la consulta pública de Apple.',
+  'Novedad · Sóc de Poble en el App Store',
+  `La encontrarás buscando <strong>«Sóc de Poble»</strong> en el <strong>App Store</strong> o con este ${link(FITXA_APP_STORE, 'enlace directo a la ficha')}.`],
+ en: ['6 November 2026 · Milestone · The iPhone and iPad app, published on the App Store (version 1.0)',
+  '<strong>Apple</strong> has <strong>approved and published</strong> the Sóc de Poble app for <strong>iPhone</strong> and <strong>iPad</strong>: <strong>version 1.0</strong> has been on the <strong>App Store</strong> since <strong>6 November 2026</strong>, <strong>free</strong>, for iOS and iPadOS 16 or later. We checked it on 8 November in Apple’s public lookup.',
+  'New · Sóc de Poble on the App Store',
+  `Search for <strong>“Sóc de Poble”</strong> on the <strong>App Store</strong> or use this ${link(FITXA_APP_STORE, 'direct link to the listing')}.`],
+ eu: ['2026ko azaroaren 6a · Mugarria · iPhone eta iPad gailuetarako aplikazioa, App Store-n argitaratuta (1.0 bertsioa)',
+  '<strong>Applek</strong> Sóc de Poble-ren aplikazioa <strong>iPhone</strong> eta <strong>iPad</strong> gailuetarako <strong>onartu eta argitaratu</strong> du: <strong>1.0 bertsioa</strong> <strong>App Store</strong>-n dago <strong>2026ko azaroaren 6tik</strong>, <strong>doan</strong>, iOS eta iPadOS 16 edo berriagorako. Azaroaren 8an egiaztatu dugu Appleren kontsulta publikoan.',
+  'Berritasuna · Sóc de Poble App Store-n',
+  `Bilatu <strong>«Sóc de Poble»</strong> <strong>App Store</strong>-n edo erabili ${link(FITXA_APP_STORE, 'fitxarako esteka zuzen hau')}.`],
+ gl: ['6 de novembro de 2026 · Fito · A app de iPhone e iPad, publicada na App Store (versión 1.0)',
+  '<strong>Apple</strong> <strong>aprobou e publicou</strong> a app de Sóc de Poble para <strong>iPhone</strong> e <strong>iPad</strong>: a <strong>versión 1.0</strong> está na <strong>App Store</strong> desde o <strong>6 de novembro de 2026</strong>, <strong>de balde</strong>, para iOS e iPadOS 16 ou posterior. Comprobámolo o 8 de novembro na consulta pública de Apple.',
+  'Novidade · Sóc de Poble na App Store',
+  `Atoparala buscando <strong>«Sóc de Poble»</strong> na <strong>App Store</strong> ou nesta ${link(FITXA_APP_STORE, 'ligazón directa á ficha')}.`]
+};
+/* L'entrada de la fita: h3, obertura i l'apartat (h4 i paràgraf), i la línia en blanc de les entregues. */
+const fitaAppStore = (language) => {
+ const [titol, obertura, apartat, cos] = FITA_APP_STORE[language];
+ return `${section('h3', titol, obertura)}\n      ${subSection(apartat, cos)}\n\n      `;
+};
+
 const ruralPage = (row) => ({ title: row[0], subtitle: row[1], lead: row[2], html: section('h3', row[1])+'\n      '+row.slice(3).map(s => section('h5', ...s)).join('\n      '), labels: [] });
 /* Onada R9 (ordre del Mestre del 261106, 14:06) · El balanç de /fedivers, /page/fediversity i
    /page/node-zero passa al 6 de novembre (producció R1–R8: COMMIT R8 = 70b651636, desplegat a
@@ -300,9 +335,11 @@ export function aplicaDossierR10(copy) {
    } else if (key === 'versions') {
     const entry = section('h3', `${d.date} · ${d.version}`, d.prod, d.db, d.bridge, d.kit, d.todo);
     // The old register is history in its original language; do not present it as translated.
-    content = language === 'ca' ? { html:`\n      ${entry}\n      ${originals.versions.html}` } : {
+    // P0-62 · La fita de l'App Store obri la pàgina, en la llengua de la pàgina.
+    const fita = fitaAppStore(language);
+    content = language === 'ca' ? { html:`\n      ${fita}${entry}\n      ${originals.versions.html}` } : {
      title: ({es:'Versiones',en:'Versions',eu:'Bertsioak',gl:'Versións'})[language], subtitle:d.version, lead:d.lead,
-     html:`\n      ${entry}<div lang="ca">${originals.versions.html}</div>`, labels:[]
+     html:`\n      ${fita}${entry}<div lang="ca">${originals.versions.html}</div>`, labels:[]
     };
    } else {
     const title = d.titles[['fedivers','fediversity','node-zero'].indexOf(key)];

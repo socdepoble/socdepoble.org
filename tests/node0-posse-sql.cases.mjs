@@ -12,29 +12,30 @@ const HASH='3'.repeat(64);
 const sqlPosse=fs.readFileSync(new URL('../tooling/node0/posse/posse-ledger.sql',import.meta.url),'utf8');
 const sha=text=>createHash('sha256').update(text).digest('hex');
 // R9 (R9V-C3-01): the deployed canonical 76, it plus the /legal 2.5 seal (77), the R20b pair (78) and everything (79).
-const R20B=['2611052345','2611060010'],SEGELL25=['2611061520'],SEED80=['2611070600'],PERFILS=[[...R20B,...SEGELL25,...SEED80],[...R20B,...SEED80],[...SEGELL25,...SEED80],SEED80,[]];
+// R13-C7: the superadmin-only session counts (81) are left out of every earlier profile, as SQL80 was.
+const R20B=['2611052345','2611060010'],SEGELL25=['2611061520'],SEED80=['2611070600'],SESSIONS81=['2611082238'],PERFILS=[[...R20B,...SEGELL25,...SEED80,...SESSIONS81],[...R20B,...SEED80,...SESSIONS81],[...SEGELL25,...SEED80,...SESSIONS81],[...SEED80,...SESSIONS81],SESSIONS81,[]];
 const catalogues=(()=>{const all=creaPlaMigracions().migrations;return PERFILS.map(exclou=>all.filter(m=>!exclou.includes(m.version)));})();
 const ledgerHash=rows=>sha([...rows].sort((a,b)=>a.version<b.version?-1:a.version>b.version?1:0).map(m=>`${m.version}\t${m.file}\t${m.sha256}`).join('\n'));
 function ready(rows){
  const functionHashes=Object.fromEntries(['source_current','source_for_bridge','remote_current','assert_current','assert_history','rpc','credential_proof'].map(name=>{const start=sqlPosse.indexOf(`CREATE OR REPLACE FUNCTION node0_posse.${name}(`),body=sqlPosse.indexOf('AS $f$',start),end=sqlPosse.indexOf('$f$;',body+6);return[name,sha(sqlPosse.slice(body+6,end))];}));
  return{version:'posse.r11.v1',migrations:rows.length,migrationLedgerSha256:ledgerHash(rows),ownerStable:true,tablesPrivate:true,sourceInstalled:true,remoteInstalled:true,functionHashes};
 }
-test('R23/R33 readiness accepts only exact canonical source ledgers 76 through 80',async()=>{
- assert.deepEqual(catalogues.map(rows=>rows.length),[76,77,78,79,80]);
+test('R23/R33/R13-C7 readiness accepts only exact canonical source ledgers 76 through 81',async()=>{
+ assert.deepEqual(catalogues.map(rows=>rows.length),[76,77,78,79,80,81]);
  for(const rows of catalogues){let calls=0;assert.equal(await verificaEsquemaPosseNodeZero({db:{async query(sql,options){calls++;assert.equal(sql,'SELECT node0_posse.readiness();');assert.equal(options.privateValues,true);return ready(rows);}}}),true);assert.equal(calls,1);}
 });
 test('R23 counts without exact source identity proof never establish readiness',async()=>{
  const base=ready(catalogues[0]),wrong=structuredClone(catalogues[0]);wrong[0].sha256='0'.repeat(64);
  const unknown=structuredClone(catalogues[1]);unknown[0].file='unknown.sql';
  const unknownVersion=structuredClone(catalogues[0]);unknownVersion[0].version='9999999999';
- for(const state of[{...base,migrationLedgerSha256:undefined},{...base,migrationLedgerSha256:'0'.repeat(64)},ready(wrong),ready(unknown),ready(unknownVersion),{...base,migrations:75},{...base,migrations:77},{...base,migrations:78},{...base,migrations:79},{...base,migrations:80},{...ready(catalogues[3]),migrationLedgerSha256:ledgerHash(catalogues[2])}])await assert.rejects(verificaEsquemaPosseNodeZero({db:{query:async()=>state}}),/posse_schema_drift/);
+ for(const state of[{...base,migrationLedgerSha256:undefined},{...base,migrationLedgerSha256:'0'.repeat(64)},ready(wrong),ready(unknown),ready(unknownVersion),{...base,migrations:75},{...base,migrations:77},{...base,migrations:78},{...base,migrations:79},{...base,migrations:80},{...base,migrations:81},{...ready(catalogues[3]),migrationLedgerSha256:ledgerHash(catalogues[2])}])await assert.rejects(verificaEsquemaPosseNodeZero({db:{query:async()=>state}}),/posse_schema_drift/);
  for(const change of[{ownerStable:false},{tablesPrivate:false},{sourceInstalled:false},{remoteInstalled:false},{functionHashes:{}}])await assert.rejects(verificaEsquemaPosseNodeZero({db:{query:async()=>({...base,...change})}}),/posse_schema_drift/);
 });
 test('R39 POSSE hashes use the PostgreSQL core without a pgcrypto schema assumption',()=>{
  assert.doesNotMatch(sqlPosse,/\b(?:public\.)?digest\(/);
  assert.equal([...sqlPosse.matchAll(/pg_catalog\.sha256\(convert_to\(/g)].length,8);
 });
-test('R23/R33 PostgreSQL installs five exact profiles and rejects incomplete, unknown or drifted ledgers',{skip:!process.env.SDP_PGLITE_MODULE&&'Set SDP_PGLITE_MODULE for actual PostgreSQL SQL proof'},async t=>{
+test('R23/R33/R13-C7 PostgreSQL installs six exact profiles and rejects incomplete, unknown or drifted ledgers',{skip:!process.env.SDP_PGLITE_MODULE&&'Set SDP_PGLITE_MODULE for actual PostgreSQL SQL proof'},async t=>{
  for(const [index,exclou] of PERFILS.entries()){
   const f=await creaFixturePosse({exclou});
   try{
@@ -69,13 +70,13 @@ test('R23/R33 PostgreSQL installs five exact profiles and rejects incomplete, un
     await f.pg.query('INSERT INTO node0.schema_migrations(version,file,sha256) VALUES($1,$2,$3)',[seal.version,seal.file,seal.sha256]);
    }
    if(!exclou.length){
-    const extra=saved.find(r=>r.version==='2611060010');await f.pg.query('DELETE FROM node0.schema_migrations WHERE version=$1',[extra.version]);assert.equal(await scalar('SELECT count(*)::int FROM node0.schema_migrations'),79);await rejectBoth();
+    const extra=saved.find(r=>r.version==='2611060010');await f.pg.query('DELETE FROM node0.schema_migrations WHERE version=$1',[extra.version]);assert.equal(await scalar('SELECT count(*)::int FROM node0.schema_migrations'),saved.length-1);await rejectBoth();
     await f.pg.query('INSERT INTO node0.schema_migrations(version,file,sha256) VALUES($1,$2,$3)',[extra.version,extra.file,extra.sha256]);
-    const removed=saved.slice(0,2);for(const r of removed)await f.pg.query('DELETE FROM node0.schema_migrations WHERE version=$1',[r.version]);assert.equal(await scalar('SELECT count(*)::int FROM node0.schema_migrations'),78);await rejectBoth();
+    const removed=saved.slice(0,2);for(const r of removed)await f.pg.query('DELETE FROM node0.schema_migrations WHERE version=$1',[r.version]);assert.equal(await scalar('SELECT count(*)::int FROM node0.schema_migrations'),saved.length-2);await rejectBoth();
     for(const r of removed)await f.pg.query('INSERT INTO node0.schema_migrations(version,file,sha256) VALUES($1,$2,$3)',[r.version,r.file,r.sha256]);
-    // SQL80 without the legal seal is not a reviewed profile, despite its count79.
+    // The full catalogue without the legal seal is not a reviewed profile, despite its count80 (R13-C7: pin 80 is another ledger).
     const seal=saved.find(r=>r.version==='2611061520');await f.pg.query('DELETE FROM node0.schema_migrations WHERE version=$1',[seal.version]);
-    assert.equal(await scalar('SELECT count(*)::int FROM node0.schema_migrations'),79);await rejectBoth();
+    assert.equal(await scalar('SELECT count(*)::int FROM node0.schema_migrations'),saved.length-1);await rejectBoth();
     await f.pg.query('UPDATE node0.schema_migrations SET sha256=repeat(\'0\',64) WHERE version=$1',[saved.at(-2).version]);await rejectBoth();
     await f.pg.query('UPDATE node0.schema_migrations SET sha256=$1 WHERE version=$2',[saved.at(-2).sha256,saved.at(-2).version]);
     await f.pg.query('INSERT INTO node0.schema_migrations(version,file,sha256) VALUES($1,$2,$3)',[seal.version,seal.file,seal.sha256]);

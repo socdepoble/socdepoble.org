@@ -388,7 +388,7 @@ describe('les comandes', () => {
     expect([...grup.children].map((fill) => fill.getAttribute('data-sdp-targeta'))).toEqual(['publicacio:1', 'publicacio:2', 'publicacio:3']);
   });
 
-  test('alineaTargetes: dreta i esquerra, només dins d’un grup', () => {
+  test('alineaTargetes: dreta, centre i esquerra, només dins d’un grup', () => {
     creaEditor('<p>Hola</p>');
     expect(editor.commands.alineaTargetes('dreta')).toBe(false);
     editor.commands.inserirTargeta(T(1));
@@ -398,7 +398,9 @@ describe('les comandes', () => {
     });
     expect(editor.commands.alineaTargetes('dreta', posTargeta)).toBe(true);
     expect(grups(desat())[0].getAttribute('data-alineacio')).toBe('dreta');
-    expect(editor.commands.alineaTargetes('centre', posTargeta)).toBe(false);
+    expect(editor.commands.alineaTargetes('centre', posTargeta)).toBe(true);
+    expect(grups(desat())[0].getAttribute('data-alineacio')).toBe('centre');
+    expect(editor.commands.alineaTargetes('invalida', posTargeta)).toBe(false);
   });
 
   test('clauDeRutaInterna i rutaDeClau resolen les rutes internes de Sóc de Poble i rebutgen les externes', () => {

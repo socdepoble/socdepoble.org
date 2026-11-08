@@ -181,6 +181,8 @@ const TEXTOS_PANELL = [
   ['section.control.maquinaria.titol', 'Maquinària i Sistema'],
   ['section.control.maquinaria.lead', "Panells d'administració i eines internes de la plataforma. Aquestes utilitats normalment s'activen només per a l'equip d'administració."],
   ['section.control.dubtes', 'Missatges per a dubtes'],
+  /* P0-63 / IDEA-194 (261108) · L'accés directe a «El compte» del Perfil. */
+  ['section.control.compte', 'Compte i contrasenya'],
   ['section.control.eixir', 'Eixir del poble']
 ];
 const marca = (clau) => `⟦${clau}⟧`;
@@ -201,12 +203,13 @@ test('control-06 · cap h2, entradeta ni botó d’acció del Panell queda sense
   expect(leads.length).toBeGreaterThan(0);
   expect(leads.filter((text) => !/^⟦.+⟧$/.test(text))).toEqual([]);
   const accions = [...document.querySelectorAll('.sdp-control-actions button')].map((b) => b.textContent.trim());
-  expect(accions).toHaveLength(4);
+  expect(accions).toHaveLength(5);
   expect(accions.filter((text) => !/^⟦.+⟧$/.test(text))).toEqual([]);
   expect(accions).toEqual([
     marca('section.control.rural.titol'),
     marca('section.pobles.restaurador.titol'),
     marca('section.control.dubtes'),
+    marca('section.control.compte'),
     marca('section.control.eixir')
   ]);
 });
@@ -223,4 +226,5 @@ test('control-06 · cada text nou es demana amb la seua clau i la reserva d’ab
   expect(screen.getByText(TEXTOS_PANELL[3][1], { selector: 'p.lead' })).toBeTruthy();
   expect(screen.getByRole('button', { name: TEXTOS_PANELL[4][1] })).toBeTruthy();
   expect(screen.getByRole('button', { name: TEXTOS_PANELL[5][1] })).toBeTruthy();
+  expect(screen.getByRole('button', { name: TEXTOS_PANELL[6][1] })).toBeTruthy();
 });

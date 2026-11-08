@@ -11,6 +11,8 @@ import { PRECISIONS, PRECISIO_PER_DEFECTE_PUBLICACIO, geolocalitzacio } from '..
 import { FORMAT_JPEG, FORMAT_WEBP, netejaFontImatge } from '../../enquadrament/netejaMetadades.js';
 import { fotoDelBucketPublic } from '../../../../utils/mitjaOpac.js';
 import { netejaHtmlEnganxat } from './imatgesEnganxades.js';
+import { EnganxatDeText, netejaFormatEnganxat } from './enganxatNet.js';
+import { markdownAHtml, paragrafsDeText, semblaMarkdown } from '../markdownEnganxat.js';
 import SlashMenu from './slash.js';
 import SdpImageNodeView from './SdpImageNodeView.jsx';
 import { TargetesIncrustades } from './targetes/targetesIncrustades.js';
@@ -79,6 +81,37 @@ function senseRegistreDeFoto(html) {
   return canviat ? plantilla.innerHTML : html;
 }
 
+/**
+ * P0-58 (IDEA-189) · La porta ÚNICA de l'HTML que entra al cos de fora:
+ * enganxar, deixar anar i repartir un document enganxat. Les fotos sense
+ * metadades (netejaHtmlEnganxat), sense el registre de foto si no és un
+ * enganxat intern d'una pujada pròpia (senseRegistreDeFoto) i sense la brossa
+ * de format (netejaFormatEnganxat: codi amb URL → enllaç, h1 → h2, enllaços
+ * nets). Sense res a fer, la MATEIXA cadena.
+ * Qui inserix sense passar per l'enganxat (setContent no crida
+ * transformPastedHTML) l'ha de cridar a mà: si no, una foto amb el GPS de
+ * casa entraria al cos.
+ */
+export function netejaHtmlPerAlCos(html) {
+  return netejaFormatEnganxat(senseRegistreDeFoto(netejaHtmlEnganxat(html)));
+}
+
+/**
+ * P0-58 · L'HTML del cos per a un porta-retalls ({ html, text }, el que
+ * porten text/html i text/plain): amb HTML, netejaHtmlPerAlCos; si no, el
+ * Markdown del text (markdownAHtml) o, sense forma de Markdown, un paràgraf
+ * per línia (paragrafsDeText). '' si no porta res.
+ * Ordre per a qui el desa: LLIG-LO PRIMER AMB L'ESQUEMA (createDocument i
+ * getHTMLFromFragment, com cosNormalitzat de DocumentEditor) i sanitizeHtml
+ * DESPRÉS. L'esquema llig el font-weight i el font-style de Google Docs, i
+ * el sanejador lleva tot style: al revés, les negretes es perden.
+ */
+export function htmlDelPortaretalls({ html = '', text = '' } = {}) {
+  if (typeof html === 'string' && html.trim()) return netejaHtmlPerAlCos(html);
+  if (typeof text !== 'string' || !text.trim()) return '';
+  return semblaMarkdown(text) ? markdownAHtml(text) : paragrafsDeText(text);
+}
+
 const SdpImage = Image.extend({
   addAttributes() {
     return {
@@ -120,9 +153,10 @@ const SdpImage = Image.extend({
   },
 
   /* Enganxar i deixar anar HTML: ProseMirror crida esta mateixa funció.
-     P1-64 · I sense els data-* del registre d'una foto (sempre netes). */
+     P1-64 · I sense els data-* del registre d'una foto (sempre netes).
+     P0-58 · I sense la brossa de format (netejaHtmlPerAlCos). */
   transformPastedHTML(html) {
-    return senseRegistreDeFoto(netejaHtmlEnganxat(html));
+    return netejaHtmlPerAlCos(html);
   },
 
   /* La regla de Markdown de TipTap, amb la font neta. Una imatge que no es
@@ -446,6 +480,9 @@ export function creaOrdres({
  * pàgines del sistema, una nota) l'ha de llegir qualsevol editor, o el
  * primer desat en perdria la caixa. Els textos de mostra traduïts no hi
  * entren per ací: van pel magatzem de l'extensió (DocumentEditor).
+ * P0-58 (IDEA-189) · EnganxatDeText (enganxatNet.js) hi és SEMPRE, darrere
+ * de les fixes: el text pla amb Markdown entra amb el nostre format. Cap node
+ * ni marca nova: l'esquema és el de sempre.
  */
 export function extensionsRiques({
   onImageUpload = null, ambTargetes = false, onToast = null, obreEmojis = null, demanaExif = null, placeholderCos = null,
@@ -473,6 +510,10 @@ export function extensionsRiques({
     /* R12 (Onada R6 Bloc 4) · També SEMPRE: un cos amb el marcador del vídeo
        (`div[data-sdp-youtube]`) el conserva en desar (videoEditorial.js). */
     VideoEditorialNode,
+    /* P0-58 (IDEA-189) · També SEMPRE: el text pla amb Markdown entra amb el
+       nostre format (enganxatNet.js). Darrere de les fixes i davant de les
+       opcionals; SdpImage continua a l'índex 0. */
+    EnganxatDeText,
     ...(ambTargetes ? [TargetesIncrustades] : []),
     ...(ambPlaceholder ? [PlaceholderCos.configure({ text: placeholderCos })] : []),
     ...(ambGuia ? [GuiaCos.configure({ blocs: guiaCos.blocs, etiqueta: guiaCos.etiqueta || '', resum: guiaCos.resum || '' })] : [])

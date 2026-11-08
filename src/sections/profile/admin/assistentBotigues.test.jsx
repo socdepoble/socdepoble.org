@@ -9,7 +9,13 @@ import { cleanup, fireEvent, render, screen, within } from '@testing-library/rea
 import { afterEach, expect, test, vi } from 'vitest';
 import { RouterProvider } from '../../../app/contexts/RouterContext.jsx';
 import { PanellEmpaquetatsDesplegament } from './PanellsAdministracioSistema.jsx';
-import { CANALS_BOTIGUES, CATALEG_SERVIDOR_PUSH, ESTAT_SERVIDOR_PUSH, FITXA_NATIVA, MOTIU_SENSE_CLAU, PASSOS_SERVIDOR_PUSH, QR_GUIA_DESCARREGUES, URL_GUIA_DESCARREGUES, frasePushDelNavegador } from './assistentBotigues.js';
+import {
+  ADRECA_VERIFICADORS_GOOGLE_PLAY, CANALS_BOTIGUES, CATALEG_SERVIDOR_PUSH, ESTAT_APP_STORE, ESTAT_SERVIDOR_PUSH, FITXA_NATIVA, MOTIU_SENSE_CLAU,
+  PASSOS_SERVIDOR_PUSH, PASSOS_VERIFICADOR_GOOGLE_PLAY, QR_GUIA_DESCARREGUES, URL_FITXA_APP_STORE, URL_GUIA_DESCARREGUES, VERIFICADORS_DE_GOOGLE,
+  frasePushDelNavegador
+} from './assistentBotigues.js';
+import { CANALS_DE_BOTIGA } from '../../../config/canalsDeBotiga.js';
+import { PAGE_COPY } from '../../text/pageContent.js';
 import { codificaQR, camiSvgQR } from '../../gestoria/facturacio/qrDibuix.js';
 import { MOTIU_PUSH } from '../../../pwa/avisosPush.js';
 import { estatDeLesBotigues } from '../../../../scripts/botigues/estat.mjs';
@@ -85,6 +91,68 @@ test('G8-03/G8-16 · textos honestos: guia, no instal·lació; cap «certificat�
   fireEvent.click(screen.getByTestId('boto-canal-botiga-android'));
   expect(screen.getByTestId('detall-canal-botiga-android').textContent).toContain('canal local d’avisos «Missatges del xat»');
   expect(screen.getByRole('article', { name: /Empaquetats i Desplegament/i }).textContent).not.toMatch(/v1\.2\.0/);
+});
+
+/* P0-62 / IDEA-193 (ordre del Mestre, 261108) · El canal d'iPhone i iPad diu el fet llegit i datat: publicada
+   en obert a l'App Store (id6826441844), versió 1.0 del 6-11-2026. L'identificador és el de la fitxa del canal
+   obert app-store de canalsDeBotiga.js; Google Play continua amb la guia de preparació. */
+test('P0-62 · l’App Store (iOS / iPadOS): publicada en obert, amb l’identificador del canal obert; Google Play, la guia', () => {
+  const ios = CANALS_BOTIGUES.find((c) => c.id === 'ios');
+  expect(ios.estat).toBe(ESTAT_APP_STORE);
+  expect(ESTAT_APP_STORE).toMatch(/^Publicada en obert a l’App Store \(id6826441844\): versió 1\.0, del 6-11-2026/);
+  const fitxa = CANALS_DE_BOTIGA.find((c) => c.id === 'app-store').url;
+  expect(fitxa.endsWith(`/${/\((id\d+)\)/.exec(ESTAT_APP_STORE)[1]}`)).toBe(true);
+  expect(CANALS_BOTIGUES.find((c) => c.id === 'android').estat).toMatch(/^Guia de preparació/);
+  munta();
+  fireEvent.click(screen.getByTestId('boto-canal-botiga-ios'));
+  expect(screen.getByTestId('detall-canal-botiga-ios').textContent).toContain(ESTAT_APP_STORE);
+  fireEvent.click(screen.getByTestId('boto-canal-botiga-android'));
+  expect(screen.getByTestId('detall-canal-botiga-android').textContent).not.toContain('Publicada en obert');
+});
+
+/* P0-62 bis (08-11-2026; ordre del Mestre al xat de Claude) · El títol de l'iPhone ja no diu TestFlight; la
+   versió de la botiga (1.0) va a part de la del projecte (1.1.0 build 2); el botó de marca de l'App Store porta
+   a la fitxa del canal obert; i Google Play diu els tres passos dels verificadors, els mateixos del cos de
+   /page/descarregues, amb l'enllaç del pas 1 (que no és cap canal: google-play continua tancat). */
+test('P0-62 bis · l’App Store amb el seu botó i les dues versions; Google Play, els tres passos dels verificadors', () => {
+  const ios = CANALS_BOTIGUES.find((c) => c.id === 'ios');
+  const android = CANALS_BOTIGUES.find((c) => c.id === 'android');
+  expect(ios.titol).toBe('🍎 App Store (iPhone i iPad)');
+  expect(CANALS_BOTIGUES.map((c) => c.titol).join(' ')).not.toMatch(/TestFlight/);
+  expect([ios.versioBotiga, ios.versio]).toEqual(['1.0, publicada a l’App Store el 6-11-2026', `${FITXA_NATIVA.versio} (build ${FITXA_NATIVA.build}), la dels fitxers del projecte (la pròxima que es compile), no la publicada`]);
+  expect(URL_FITXA_APP_STORE).toBe(CANALS_DE_BOTIGA.find((c) => c.id === 'app-store').url);
+  expect(ios.fitxa).toBe(URL_FITXA_APP_STORE);
+  expect(CANALS_DE_BOTIGA.find((c) => c.id === 'google-play').url).toBeNull();
+  expect(ADRECA_VERIFICADORS_GOOGLE_PLAY).toBe('https://play.google.com/apps/testing/org.socdepoble.app');
+  expect(android.verificadors).toEqual({ adreca: ADRECA_VERIFICADORS_GOOGLE_PLAY, passos: PASSOS_VERIFICADOR_GOOGLE_PLAY });
+  expect(PASSOS_VERIFICADOR_GOOGLE_PLAY).toHaveLength(3);
+  // Els rètols de les tres pantalles, literals, i els mateixos al cos de la guia pública.
+  const cos = new DOMParser().parseFromString(PAGE_COPY.descarregues.html, 'text/html');
+  const passosDelCos = [...cos.querySelectorAll('div.sdp-subtargeta ol > li')].map((li) => li.textContent);
+  for (const [i, retols] of [['Become a tester', 'Convertir-se en verificador'], ['You’re a tester', 'Leave the program', 'download it on Google Play'], ['Instal·lar', '12 verificadors', '14 dies']].entries()) {
+    for (const retol of retols) {
+      expect([i, retol, PASSOS_VERIFICADOR_GOOGLE_PLAY[i].includes(retol), passosDelCos[i].replace(/'/g, '’').includes(retol)]).toEqual([i, retol, true, true]);
+    }
+  }
+  expect(cos.querySelector(`a[href="${ADRECA_VERIFICADORS_GOOGLE_PLAY}"]`)).not.toBeNull();
+  expect(VERIFICADORS_DE_GOOGLE).toEqual({ persones: 12, dies: 14 });
+  munta();
+  fireEvent.click(screen.getByTestId('boto-canal-botiga-ios'));
+  const detallIos = screen.getByTestId('detall-canal-botiga-ios');
+  const boto = within(detallIos).getByTestId('boto-fitxa-app-store');
+  expect([boto.getAttribute('href'), boto.className, boto.textContent, boto.parentElement.className])
+    .toEqual([URL_FITXA_APP_STORE, 'sdp-boto sdp-boto--marca sdp-boto--apple sdp-boto--gran', 'Disponible a l’App Store', 'sdp-accions']);
+  expect([...detallIos.querySelectorAll('dt')].map((dt) => dt.textContent)).toEqual(['Identificador', 'Versió a la botiga', 'Versió del projecte', 'Estat', 'Ordre de compilació']);
+  expect(within(detallIos).queryByTestId('passos-verificadors-google-play')).toBeNull();
+  fireEvent.click(screen.getByTestId('boto-canal-botiga-android'));
+  const detallAndroid = screen.getByTestId('detall-canal-botiga-android');
+  const passos = within(detallAndroid).getByTestId('passos-verificadors-google-play');
+  expect([...passos.querySelectorAll('ol > li')].map((li) => li.textContent)).toEqual([...PASSOS_VERIFICADOR_GOOGLE_PLAY]);
+  expect(within(passos).getByRole('link', { name: 'Obrir la pàgina dels verificadors (pas 1)' }).getAttribute('href')).toBe(ADRECA_VERIFICADORS_GOOGLE_PLAY);
+  expect(within(passos).getByRole('link', { name: /Indicadors del Tauler/ }).getAttribute('href')).toBe('/admin');
+  expect(within(detallAndroid).queryByTestId('boto-fitxa-app-store')).toBeNull();
+  // Cap paraula de proves al text dels verificadors (la guia pública, amb l'App Store oberta, tampoc en pot dir).
+  expect(PASSOS_VERIFICADOR_GOOGLE_PLAY.join(' ')).not.toMatch(/\bbeta\b|\ben proves\b/i);
 });
 
 test('l’estat dels avisos push és el del registre d’este navegador i el motiu sense clau és el de l’adaptador web', () => {

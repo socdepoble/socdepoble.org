@@ -53,6 +53,22 @@ export const ESTAT_ENLLAC = Object.freeze({ PENDENT: 'pendent', PERDUT: 'perdut'
 let enMemoria = null;
 /* L'enllaç d'este document: només que n'hi ha un. El token és de l'adaptador. */
 let enllacEnMemoria = false;
+/* P0-63 (ordre del Mestre, 261108) · L'adreça amb què ha ARRIBAT este
+   document, només si porta una tornada de recuperació (type=recovery). Un
+   enllaç que cau a «/» (la Site URL de GoTrue) el reescriu <Navigate replace>
+   en el primer pintat (App.jsx), i amb sessió la redirecció de /registre
+   (OnboardingSection), abans que l'adaptador la llegisca: el fragment es
+   perdia. Es pren a l'avaluació del mòdul (abans de pintar res), només en
+   memòria i d'un sol ús (prenAdrecaDArribada): la llig l'adaptador, que és
+   qui en sap el format. Mai a cap emmagatzematge. */
+let adrecaDArribada = /[#?&]type=recovery/.test(globalThis.location?.href) ? location.href : null;
+
+/** L'adreça d'arribada (o null), una sola vegada: la recull l'adaptador. */
+export function prenAdrecaDArribada() {
+  const adreca = adrecaDArribada;
+  adrecaDArribada = null;
+  return adreca;
+}
 
 const avisa = () => globalThis.window?.dispatchEvent(new CustomEvent(EVENT_RECUPERACIO_PENDENT));
 

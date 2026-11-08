@@ -1547,6 +1547,23 @@ description: "Documentació canònica de Sóc de Poble."
   **NO aplicada: l'aplica el Mestre** després de verificar la font i el client.
   Prova: `tests/seed-revisions-r11.test.mjs`.
 
+- `migrations/2611082238_admin_resum_sessions_dispositius.sql`
+  R13-C7 (ordre del Mestre del 8-11-2026, apartat «👥 Usuaris, Dispositius i
+  Botigues» de l'Administració del sistema): `admin_resum_sessions_dispositius()`
+  compta les persones distintes amb una sessió activa d'`auth.sessions` per camí
+  (app d'iPhone i iPad, Safari d'iOS, app d'Android, navegador d'Android,
+  escriptori i altres) en 24 hores, 7 dies i 14 dies, segons el `user_agent`.
+  Només recomptes: cap identificador, nom, correu, IP ni `user_agent` no ix de
+  la funció. Superadmin amb `aal2` (`private.es_superadmin()`); sense execució
+  per a `anon`. Requerix 2610061448 i les columnes `user_agent`, `updated_at` i
+  `refreshed_at` de GoTrue. Abans (lectura): les tres columnes existixen.
+  Després (lectura): la funció existix i `anon` no la pot executar.
+  **NO aplicada: l'aplica el Mestre.** Mentre no hi siga, el panell ho diu i no
+  mostra cap xifra. Al Node 0 amb POSSE, el catàleg sencer de 81 té el seu pin a
+  `tooling/node0/posse/posse-ledger.sql` (i els perfils anteriors l'excloen): un
+  canvi d'este fitxer obliga a recalcular el pin 81.
+  Prova: `tests/migracio-admin-resum-sessions-dispositius.test.mjs`.
+
 - `seed.sql`
   Contingut inicial del portal.
 
@@ -1730,6 +1747,7 @@ verificador sense avisos.
 | 78 | `2611060010` | `2611060010_restauracio_municipal_opendata.sql` | Aplicada a producció (lectura REST del 6-11: `llegix_municipi_open_data_per_slug` respon 200 a anon; aplicada pel Mestre el 6-11) | upsert atòmic Open Data 1.2.0 per tenant, lectura pública fitada i conflictes globals; independent de la 77, no esborra dades absents |
 | 79 | `2611061520` | `2611061520_politica_privacitat_2_5.sql` | Aplicada a producció (lectura REST del 6-11: `politiques_privacitat` té la 2.5, vigent des del 2026-11-05T23:00Z, amb l'empremta `ea13f0c4…` d'esta migració; aplicada pel Mestre el 6-11) | política 2.5: avisos push del xat, 2.3 i 2.4 intactes (Onada R9) |
 | 80 | `2611070600` | `2611070600_seed_revisions.sql` | **NO aplicada: l'aplica el Mestre** | P1-75: revisió vigent de llavor, CAS per peça i autoria autoritativa |
+| 81 | `2611082238` | `2611082238_admin_resum_sessions_dispositius.sql` | **NO aplicada: l'aplica el Mestre** | R13-C7: recomptes de persones amb sessió activa per camí (24 h, 7 i 14 dies), superadmin amb aal2 |
 
 | Artefacte complementari | Ruta dins de `supabase/` | Rol operatiu |
 | :--- | :--- | :--- |

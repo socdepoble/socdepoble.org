@@ -296,6 +296,22 @@ test('D3 · «Missatges per a dubtes» obri el Xat (/xat), no un fil inexistent'
   expect(ubicacio()).toBe('/xat');
 });
 
+/* P0-63 / IDEA-194 (ordre del Mestre, 261108) · La verificadora buscava ací
+   on posar-se la contrasenya per a entrar a l'App mòbil: «Compte i
+   contrasenya» porta d'un toc a «El compte» del Perfil (RUTA_COMPTE), també a
+   /utilitats. Sense sessió, la barrera del Perfil fa la resta (App, RequireAuth). */
+test.each(['/control', '/utilitats'])('P0-63 · %s: «Compte i contrasenya» porta a «El compte» del Perfil', (ruta) => {
+  pinta(ruta);
+  const boto = screen.getByRole('button', { name: /Compte i contrasenya/ });
+  expect(boto.closest('.sdp-control-actions')).toBeTruthy();
+  /* La clau, amb l'API de Boto (`icona`), i cap atribut que no siga de l'HTML. */
+  expect(boto.querySelector('svg')).toBeTruthy();
+  expect(boto.className).toBe('sdp-boto sdp-boto--secundari sdp-btn-ample');
+  expect(boto.hasAttribute('icon') || boto.hasAttribute('variant')).toBe(false);
+  fireEvent.click(boto);
+  expect(ubicacio()).toBe('/el-meu-perfil?vista=compte');
+});
+
 /* CU (Onada 3, 261003) · Control › Utilitats guanya el Snippet, amb la seua
    fitxa de detall (FitxaSnippet.test.jsx en prova el contingut).
    P7-B · Les utilitats del registre es poden repartir en més d'una graella

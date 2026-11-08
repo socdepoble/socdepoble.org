@@ -23,10 +23,11 @@ describe('formaDe · les regles del Mestre', () => {
     expect(formaDe('2')).toBe('parella');
   });
 
-  test('l’alineació és esquerra o dreta; la resta cau a esquerra', () => {
+  test('l’alineació és esquerra, dreta o centre; la resta cau a esquerra', () => {
     expect(alineacioValida('dreta')).toBe('dreta');
     expect(alineacioValida('esquerra')).toBe('esquerra');
-    expect(alineacioValida('centre')).toBe('esquerra');
+    expect(alineacioValida('centre')).toBe('centre');
+    expect(alineacioValida('invalida')).toBe('esquerra');
     expect(alineacioValida(null)).toBe('esquerra');
   });
 });

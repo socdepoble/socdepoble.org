@@ -390,7 +390,10 @@ test('T4 · ?mode=entrar obri directament Entrar, en memòria i al navegador', (
   expect(screen.getByRole('button', { name: 'Entrar al compte' })).toBeTruthy();
 });
 
-test.each(['/registre?mode=crear', '/registre', '/registre?mode=recuperar'])('T4 · %s obri Crear compte (sense mode, o amb un de desconegut, com sempre)', (ruta) => {
+/* P0-63 / IDEA-194 (ordre del Mestre, 261108) · ?mode=recuperar ja no és
+   desconegut: obri «Recupera la contrasenya» o, amb sessió, «El compte»
+   (OnboardingSection.recuperacio.test.jsx). Un mode desconegut de veres, com sempre. */
+test.each(['/registre?mode=crear', '/registre', '/registre?mode=desconegut'])('T4 · %s obri Crear compte (sense mode, o amb un de desconegut, com sempre)', (ruta) => {
   render(<MemoryRouter rutaInicial={ruta}><OnboardingSection /></MemoryRouter>);
   expect(screen.getByRole('button', { name: 'Crear compte', pressed: true })).toBeTruthy();
   expect(screen.getByLabelText('Nom i cognoms')).toBeTruthy();

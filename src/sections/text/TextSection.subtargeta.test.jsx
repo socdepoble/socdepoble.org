@@ -76,7 +76,8 @@ describe('la lectura: dins de la carta, sense hidratació', () => {
     /* C2-04 (àrbitre) · «Les quatre infografies històriques» es queda fora: el seu primer
        paràgraf és cos (l'avís d'honestedat), i la caixa el pintaria com una metadada. */
     ['projecte', 'H3', ['D’on venim']],
-    ['descarregues', 'H5', ["A l'ordinador", 'Al mòbil i a la tauleta']],
+    // P0-62 bis (08-11-2026; ordre del Mestre al xat de Claude) · Davant, la caixa dels tres passos de Google Play.
+    ['descarregues', 'H5', ['Els tres passos a Google Play', "A l'ordinador", 'Al mòbil i a la tauleta']],
     ['fediversity', 'H4', [
       '1 · Arquitectura Model B (160 h · 8.000 €)',
       '2 · UX/WCAG AAA + Fletxes IDEA-58 + Traductor Apertium IDEA-31 (240 h · 12.000 €)',

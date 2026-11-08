@@ -13,6 +13,8 @@ vi.mock('../../app/contexts/UIContext', () => ({
 vi.mock('@/components/universal/NotificationContext.jsx', () => ({ useToast: () => ({ showToast: vi.fn() }) }));
 vi.mock('../../hooks/useSEO', () => ({ useSEO: () => {} }));
 vi.mock('../../components/universal/graph/BrainGraph', () => ({ default: () => null }));
+// P0-61 · El Brain de taxonomia és diferit i té proves pròpies (src/sections/taxonomia): ací només es navega.
+vi.mock('../taxonomia/BrainTaxonomia.jsx', () => ({ default: () => null }));
 vi.mock('./mapa/useMapa.js', () => ({
   useMapa: () => ({ estat: 'ready', mapa: fonts.mapa, error: null, carrega: () => {} })
 }));
@@ -210,7 +212,9 @@ test('al tauler de /consola, cada pàgina té exactament una targeta, i cada xif
      propòsit: el total suma eixa porta. */
   const delsEmpaquetats = cap('/consola', screen.getByRole('navigation', { name: ETIQUETA_NAV_EMPAQUETATS }));
   expect(delsEmpaquetats).toEqual([RUTA_EMPAQUETATS]);
-  expect(cap('/consola').length).toBe(paginesConsola().length + xifres.length + delIndex.length + delAcces.length + delGovern.length + delsEmpaquetats.length);
+  const delBrain = cap('/consola', screen.getByRole('navigation', { name: 'Brain de taxonomia' }));
+  expect(delBrain).toEqual(['/consola/taxonomia']);
+  expect(cap('/consola').length).toBe(paginesConsola().length + xifres.length + delIndex.length + delAcces.length + delGovern.length + delsEmpaquetats.length + delBrain.length);
   expect(errors).not.toHaveBeenCalled();
 });
 
@@ -358,4 +362,25 @@ test('una subruta desconeguda torna al tauler sense deixar-la a l’historial', 
   await esperaElTauler();
   expect(window.location.pathname).toBe('/consola');
   expect(window.history.length).toBe(abans);
+});
+
+/* P0-61 / IDEA-192 · La targeta del Brain és al peu del tauler: entrar a
+   /consola/taxonomia torna al cim (el comodí no canvia `id`, i la pàgina no
+   tornava dalt), i la molla de pa torna al tauler, també al cim. */
+test('/consola/taxonomia: la targeta del peu del tauler obri la pàgina al cim, i la molla torna al tauler', async () => {
+  const contenidor = contenidorDesplacat(0);
+  render(<Aplicacio />, { container: contenidor });
+  await esperaElTauler();
+
+  contenidor.scrollTop = 900;
+  fireEvent.click(within(screen.getByRole('navigation', { name: 'Brain de taxonomia' })).getByRole('link', { name: 'Categories i etiquetes' }));
+  expect(window.location.pathname).toBe('/consola/taxonomia');
+  expect(h1()).toBe('Categories i etiquetes');
+  expect(contenidor.scrollTop).toBe(0);
+
+  contenidor.scrollTop = 450;
+  fireEvent.click(within(screen.getByRole('navigation', { name: 'Molla de pa' })).getByRole('link', { name: 'Consola Termodinàmica' }));
+  expect(window.location.pathname).toBe('/consola');
+  expect(contenidor.scrollTop).toBe(0);
+  contenidor.remove();
 });

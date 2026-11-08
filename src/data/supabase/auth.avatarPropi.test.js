@@ -11,7 +11,9 @@ vi.mock('../recuperacioPendent.js', () => ({
   ESTAT_ENLLAC: Object.freeze({ PENDENT: 'pendent', PERDUT: 'perdut' }),
   marcaRecuperacioPendent: vi.fn(), oblidaRecuperacioPendent: vi.fn(),
   anunciaEnllacDeRecuperacio: vi.fn(), oblidaEnllacDeRecuperacio: vi.fn(),
-  estatEnllacDeRecuperacio: () => null, escoltaRecuperacioPendent: () => () => {}
+  estatEnllacDeRecuperacio: () => null, escoltaRecuperacioPendent: () => () => {},
+  /* P0-63 · L'adreça d'arribada del document: cap tornada de recuperació ací. */
+  prenAdrecaDArribada: () => null
 }));
 vi.mock('../identitat.js', () => ({
   configuraBackendSessio: vi.fn(), esBackendDeSessio: () => true, jwtPerBackend: () => null,

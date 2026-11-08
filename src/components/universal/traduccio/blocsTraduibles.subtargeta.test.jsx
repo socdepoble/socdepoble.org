@@ -58,17 +58,23 @@ test('fediversity: 4 caixes a l’original i 4 a la vista traduïda, cada una am
   }
 });
 
+/* P0-62 bis (08-11-2026; ordre del Mestre al xat de Claude) · Descàrregues porta una caixa més, davant:
+   els tres passos de Google Play (h5 i una llista numerada de tres). Les dues veïnes de les instruccions
+   de cada navegador continuen tornant com a dos div. */
 test('dues caixes veïnes (descàrregues) tornen com a dos div, i el que hi ha fora no hi entra', () => {
   const arrel = arrelDe(PAGE_COPY.descarregues.html);
-  expect(caixesDe(arrel)).toHaveLength(2);
+  expect(caixesDe(arrel)).toHaveLength(3);
+  expect(caixesDe(arrel)[0].querySelectorAll(':scope > ol > li')).toHaveLength(3);
   const { container } = render(createElement(CosTraduit, { blocs: tradueix(blocsTraduibles(arrel)), llengua: 'es' }));
   const caixes = caixesDe(container);
-  expect(caixes).toHaveLength(2);
-  expect(caixes.map((caixa) => caixa.firstElementChild.tagName.toLowerCase())).toEqual(['h5', 'h5']);
-  expect(caixes.map((caixa) => caixa.querySelectorAll('li').length)).toEqual([3, 2]);
-  // El paràgraf de darrere de les caixes és fora de la segona.
-  expect(caixes[1].nextElementSibling?.tagName.toLowerCase()).toBe('p');
-  expect(caixes[1].textContent).not.toContain('El nom exacte de cada opció');
+  expect(caixes).toHaveLength(3);
+  expect(caixes.map((caixa) => caixa.firstElementChild.tagName.toLowerCase())).toEqual(['h5', 'h5', 'h5']);
+  expect(caixes.map((caixa) => caixa.querySelectorAll('li').length)).toEqual([3, 3, 2]);
+  // El paràgraf de darrere de la caixa dels passos és fora d'ella, i el de darrere de les veïnes, fora de la segona.
+  expect(caixes[0].nextElementSibling?.tagName.toLowerCase()).toBe('p');
+  expect(caixes[0].textContent).not.toContain('Si no formes part del grup');
+  expect(caixes[2].nextElementSibling?.tagName.toLowerCase()).toBe('p');
+  expect(caixes[2].textContent).not.toContain('El nom exacte de cada opció');
 });
 
 test('una pàgina sense subtargetes no porta cap caixa nova', () => {

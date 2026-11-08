@@ -27,6 +27,13 @@ export const RUTA_ENTRADA = '/registre';
    la barrera RequireAuth, que passa per /registre). Mai el Panell de Control. */
 export const RUTA_DESPRES_D_ENTRAR = '/el-meu-perfil';
 
+/* P0-63 / IDEA-194 (ordre del Mestre, 261108) · «El compte» del propi perfil,
+   on viu la contrasenya (DetallCompte · DetallAjust): el porta l'accés
+   «Compte i contrasenya» de /control i, amb sessió, la recuperació sense
+   token. PerfilShell l'obri amb ?vista=compte. És la pròpia identitat: com a
+   tornada exacta, també mana després d'entrar (aterratgeDespresDEntrar). */
+export const RUTA_COMPTE = `${RUTA_DESPRES_D_ENTRAR}?vista=compte`;
+
 /* Correcció de la revisió T1–T4 (260930) · La tornada té un topall propi, el
    d'una adreça (MAXIM_URL d'origenNota.js), i no hereta els 300 caràcters d'un
    objecte connectable (MAXIM_RUTA d'esRutaInterna): un /connectar amb una
@@ -63,12 +70,14 @@ const ENTRADA_DE_LA_GESTORIA = /^\/app\/gestoria\/[a-z0-9-]+(?:[?#]|$)/;
 /**
  * On aterra una entrada correcta: la tornada, si és segura i és una entrada
  * de la Gestoria; si no, sempre el propi perfil (ordre del Mestre, 261002).
+ * P0-63 (261108) · També «El compte» del propi perfil (RUTA_COMPTE), exacta:
+ * és el perfil, i qui hi anava sense sessió (/control) hi torna en entrar.
  * @param {unknown} tornar el ?tornar de la consulta
  * @returns {string}
  */
 export function aterratgeDespresDEntrar(tornar) {
   const tornada = tornadaSegura(tornar);
-  return tornada && ENTRADA_DE_LA_GESTORIA.test(tornada) ? tornada : RUTA_DESPRES_D_ENTRAR;
+  return tornada && (tornada === RUTA_COMPTE || ENTRADA_DE_LA_GESTORIA.test(tornada)) ? tornada : RUTA_DESPRES_D_ENTRAR;
 }
 
 /** /registre amb `mode` i `tornar`, sense cap paràmetre que no siga vàlid. */

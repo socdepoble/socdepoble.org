@@ -1025,6 +1025,40 @@ test('R2 · una tornada de recuperació arriba sense sessió: /registre amb la p
   { recullTornadaOAuth: recull, ...ambRecuperacio(() => null) });
 });
 
+/* P0-63 / IDEA-194 (ordre del Mestre, 261108) · El cas de la verificadora:
+   l'enllaç del correu cau a «/» (la Site URL) en un Chrome on JA hi ha la
+   sessió de Google. «/» redirigix a /xat en el primer pintat; la sessió arriba;
+   l'adaptador recull el token (de l'adreça d'arribada: supabase/
+   auth.arribadaRecuperacio.test.js) i torna `recuperacio: true`. La closca porta
+   a /registre i la pantalla genèrica passa davant de la sessió: ni el perfil
+   ni el Xat, i «Desa» definix la contrasenya nova. */
+test('P0-63 · enllaç a «/» amb la sessió de Google activa: /registre amb «Definix la contrasenya nova», ni Xat ni perfil, i «Desa» la definix', async () => {
+  vi.stubGlobal('innerWidth', 1024);
+  let usuari = null;
+  let resol = null;
+  const recull = vi.fn(() => new Promise((r) => { resol = r; }));
+  const desa = vi.fn(async () => true);
+  await muntaSenseSessio('/', async () => {
+    await barres();
+    expect(window.location.pathname).toBe('/xat');
+    expect(recull).toHaveBeenCalledTimes(1);
+    usuari = { id: 'u-p063-google', email: 'ana@poble.test' };
+    await act(async () => { window.dispatchEvent(new CustomEvent('sdp:auth-change', { detail: { user: usuari } })); });
+    await waitFor(() => expect(getSessionState().estat).toBe('dins'));
+    await act(async () => { resol({ recuperacio: true }); });
+    await waitFor(() => expect(window.location.pathname).toBe('/registre'));
+    expect(estatEnllacDeRecuperacio()).toBe(ESTAT_ENLLAC.PENDENT);
+    expect(await screen.findByRole('heading', { name: TITOL_NOVA })).toBeTruthy();
+    expect(screen.queryByText(/Compte:/)).toBeNull();
+    await act(async () => { await new Promise((r) => setTimeout(r, 0)); });
+    expect(window.location.pathname).toBe('/registre');
+    await omplIDesa();
+    expect(desa).toHaveBeenCalledWith(NOVA, expect.objectContaining({ dataMode: 'remote' }));
+    await waitFor(() => expect(window.location.pathname).toBe('/el-meu-perfil'));
+  }, { routerType: 'browser', dataMode: 'remote' },
+  { recullTornadaOAuth: recull, ...ambRecuperacio(() => usuari, { definixContrasenyaNova: desa }) });
+});
+
 /* R2 · Sense sessió, la guarda també porta qualsevol ruta a la pantalla; «Desa»
    (el port verifica i definix) obri la sessió, oblida l'enllaç i l'entrada és
    la normal, al perfil, sense tornar enrere. */

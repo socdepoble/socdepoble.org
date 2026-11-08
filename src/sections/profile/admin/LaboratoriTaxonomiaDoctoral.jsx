@@ -14,6 +14,7 @@ import {
 } from '../../../data/taxonomia/tesaurusDoctoralSocDePoble.js';
 
 const PaginesTrilogiaWp = lazy(() => import('./PaginesTrilogiaWp.jsx'));
+const BrainTaxonomia = lazy(() => import('../../taxonomia/BrainTaxonomia.jsx'));
 
 export function LaboratoriTaxonomiaDoctoral() {
   const [mostraPaginesWp, setMostraPaginesWp] = useState(false);
@@ -162,6 +163,7 @@ export function LaboratoriTaxonomiaDoctoral() {
 
       <nav className="sdp-admin-taxonomia__tabs" aria-label="Facetes de la classificació">
         {[
+          ['brain', '🧠 Brain i laboratori de decisions'],
           ['totes', '📚 Vista Integral (4 Facetes)'],
           ['faceta1', '1. 📍 Faceta Geogràfica (On · 113)'],
           ['faceta2', '2. 🧩 Faceta Funcional (Què és · 8 Verticals)'],
@@ -179,6 +181,8 @@ export function LaboratoriTaxonomiaDoctoral() {
           </button>
         ))}
       </nav>
+
+      {facetaActiva === 'brain' && <Suspense fallback={<p role="status">Obrint el Brain de taxonomia…</p>}><BrainTaxonomia /></Suspense>}
 
       {/* FACETA 1 · GEOGRÀFICA */}
       {(facetaActiva === 'totes' || facetaActiva === 'faceta1') && (

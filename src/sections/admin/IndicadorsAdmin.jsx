@@ -28,8 +28,23 @@
  * Estats: sense la capacitat 'admin' (un node que no l'oferix), en espera
  * (encara no s'ha demanat), carregant, error (amb reintent), buit, protegit
  * (dins de cada pregunta) i parcial (el sostre de persones).
+ *
+ * P0-42 i P0-53 (ordre del Mestre, 08-11-2026, al xat de Claude) · Els
+ * aparells amb l'app instal·lada i connectada, en quatre camins (📱 App
+ * Android de Google Play, 🍎 App d'iPhone i iPad, 🌐 Android web i 💻
+ * Escriptori), sempre a la vista. Cap font real del servidor no els compta
+ * per plataforma: admin_list_users només torna el correu, l'alta i l'última
+ * entrada; public.xat_dispositius_push (2611020417, a producció) diu el
+ * tipus d'avís (web, apns, fcm), però cada persona només en veu els seus,
+ * no hi ha cap RPC d'administració que l'agregue i, sense la clau pública
+ * VAPID al build web ni el push natiu (assistentBotigues.js), encara no s'hi
+ * registra cap aparell; i la RPC agregada de P0-42 (el resum per
+ * plataforma d'auth.sessions) no és a cap migració. Per això el bloc no
+ * mostra cap xifra: diu, per a cada camí, «sense xifra» i on es pot llegir
+ * hui (Google Play Console, App Store Connect). Comptar-ho ací és una
+ * migració nova, decisió del Mestre.
  */
-import { useState } from 'react';
+import { useId, useState } from 'react';
 import { ShieldCheck } from 'lucide-react';
 import AppGridColumn from '../../components/layout/AppGridColumn';
 import { Alerta, Boto, Carregant, EstatBuit, Histograma, MarcColumna, Pila, Taula } from '../../components/PedraSeca/index.js';
@@ -48,6 +63,42 @@ const UNITAT_ENTITATS = Object.freeze(['entitat', 'entitats']);
 
 const TEXT_SERIE_PROTEGIDA = `No es mostra: amb tan poques persones, restant es podria saber la xifra d’un grup de menys de ${LLINDAR_GRUP_PETIT}.`;
 const TEXT_XIFRES_PROTEGIDES = `Algunes xifres es protegixen: sense això, restant del total es podria saber la d’un grup de menys de ${LLINDAR_GRUP_PETIT}.`;
+
+/* P0-42 i P0-53 · Els quatre camins que el Mestre vol seguir i on es pot llegir hui cadascun. Cap té font
+   al servidor: el valor és un estat, mai una xifra (vegeu la capçalera). */
+export const SENSE_XIFRA = 'sense xifra';
+export const APARELLS = Object.freeze([
+  Object.freeze({ clau: 'android-app', nom: '📱 App Android (Google Play)', on: 'Google Play Console › Proves › Prova tancada: Google en demana 12 verificadors amb l’app instal·lada durant 14 dies seguits.' }),
+  Object.freeze({ clau: 'ios-app', nom: '🍎 App iPhone i iPad (App Store oberta, id6826441844)', on: 'App Store Connect › Analítica (instal·lacions de la 1.0, publicada el 6-11-2026).' }),
+  Object.freeze({ clau: 'android-web', nom: '🌐 Android web', on: 'Cap font.' }),
+  Object.freeze({ clau: 'escriptori', nom: '💻 Escriptori', on: 'Cap font.' })
+]);
+export const TEXT_APARELLS_SENSE_FONT = 'Cap consulta del servidor no compta encara els aparells per camí, i ací no es mostra cap xifra que no vinga d’una font real. Comptar-los des d’este Tauler demana una consulta agregada nova al servidor (P0-42): és una decisió del Mestre.';
+
+export const TITOL_APARELLS = 'Aparells amb l’app instal·lada i connectada';
+export const TAULA_APARELLS = 'Aparells amb l’app, per camí';
+
+/* Sempre a la vista i sense cap crida: no hi ha res a baixar. Un títol, la Taula de Pedra Seca (una fila
+   per camí: el nom, l'estat i on es llig hui) i l'avís informatiu. Només peces que este tros ja porta: el
+   bloc no afig cap dependència a la ruta /admin (la llista de dependències de cada ruta viu a l'entrada,
+   que no pot créixer). */
+function AparellsAmbLApp() {
+  const id = useId();
+  return (
+    <section aria-labelledby={id}>
+      <Pila gap={3}>
+        <h3 id={id}>{TITOL_APARELLS}</h3>
+        <Taula titol={TAULA_APARELLS}>
+          <thead><tr><th scope="col">Camí</th><th scope="col">Aparells</th><th scope="col">On es llig hui</th></tr></thead>
+          <tbody>
+            {APARELLS.map(({ clau, nom, on }) => <tr key={clau}><th scope="row">{nom}</th><td>{SENSE_XIFRA}</td><td>{on}</td></tr>)}
+          </tbody>
+        </Taula>
+        <Alerta to="info" viva={false} titol="Sense font de dades al servidor">{TEXT_APARELLS_SENSE_FONT}</Alerta>
+      </Pila>
+    </section>
+  );
+}
 
 const files = (valor) => (Array.isArray(valor) ? valor.filter((f) => f && typeof f === 'object') : []);
 /* Només el que es compta: ni el correu, ni l'identificador, ni el nom. */
@@ -178,6 +229,7 @@ export function IndicadorsAdmin({ ara = null }) {
   return (
     <MarcColumna capcalera={<AppGridColumn titol="Indicadors" />} etiqueta="Indicadors">
       <Pila gap={6}>
+        <AparellsAmbLApp />
         <Contingut estat={estat} ara={ara} calcula={calcula} />
       </Pila>
     </MarcColumna>

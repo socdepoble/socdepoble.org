@@ -20,8 +20,9 @@
  *    guia (dos passos a l'iPhone i a l'iPad, el menú Arxiu al Safari del Mac,
  *    el menú del navegador a Chromium i Android);
  *  · null · Firefox d'escriptori i la resta: cap botó que no puga complir.
- * Darrere, les ranures de botiga (config/canalsDeBotiga.js): hui només la de
- * WordPress.org és oberta (01-11-2026), i les tancades no pinten res.
+ * Darrere, les ranures de botiga (config/canalsDeBotiga.js): hui són obertes
+ * la de WordPress.org (01-11-2026) i la de l'App Store (08-11-2026, P0-62), i
+ * les tancades no pinten res.
  * B9 (marató 261101_2143) · Una botiga d'apps oberta diu on és l'app
  * (etiquetaDeBotiga: «Disponible a Google Play / a l'App Store», en cinc llengües).
  * IDEA-60 (T1, prompt 261102_1532) · Instal·lació immediata: la ranura de
@@ -57,6 +58,7 @@ import { esAppNativa } from '../../config/origenPublic.js';
 import { INSTALACIO, esFinestraDApp } from '../../pwa/instalacio.js';
 import { Alerta } from '../../components/PedraSeca/molecules/Alerta.jsx';
 import { Boto } from '../../components/PedraSeca/atoms/Boto.jsx';
+import { LogotipApple } from '../onboarding/LogotipsDeMarca.jsx';
 
 /* La clau de la pàgina del sistema que porta l'acció (SYSTEM_PAGES, nomesWeb). */
 export const PAGINA_D_INSTALACIO = 'descarregues';
@@ -83,6 +85,16 @@ export function etiquetaDeBotiga(canal, t) {
   if (canal?.id === 'apk-directe') return t('section.descarregues.botiga.apk', "Descarregar l'APK d'Android");
   if (canal?.id === 'testflight') return t('section.descarregues.botiga.testflight', "Provar-la a l'iPhone i a l'iPad amb TestFlight");
   return canal?.nom ?? '';
+}
+
+/* P0-62 bis (08-11-2026; ordre del Mestre al xat de Claude) · L'App Store oberta, amb el botó de marca
+   d'Apple (fons negre, o blanc en mode fosc, i el logotip de LogotipsDeMarca.jsx): les classes
+   canòniques de components.css (sdp-boto--marca sdp-boto--apple), les mateixes del botó gran que el
+   cos de /page/descarregues porta al centre de l'apartat de l'iPhone. La resta de botigues, el botó
+   secundari de sempre. Cap distintiu baixat d'Apple ni cap recurs de fora. */
+export function classeDeBotiga(canal) {
+  if (canal?.id === 'app-store') return 'sdp-boto sdp-boto--marca sdp-boto--apple sdp-boto--gran';
+  return 'sdp-boto sdp-boto--secundari sdp-boto--gran';
 }
 
 /* IDEA-60 (T1, prompt 261102_1532) · El nom del fitxer d'una adreça ja validada
@@ -317,10 +329,11 @@ export function InstalaLaPwa({ instalacio, lloc = 'dalt' }) {
           {canals.map((canal) => (
             <a
               key={canal.id}
-              className="sdp-boto sdp-boto--secundari sdp-boto--gran"
+              className={classeDeBotiga(canal)}
               href={canal.url}
               download={canal.id === 'apk-directe' ? nomDelFitxer(canal.url) : undefined}
             >
+              {canal.id === 'app-store' ? <LogotipApple /> : null}
               {etiquetaDeBotiga(canal, t)}
             </a>
           ))}

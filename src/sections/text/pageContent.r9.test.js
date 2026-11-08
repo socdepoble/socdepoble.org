@@ -191,7 +191,11 @@ describe('Onada R9 i R11 · balanç del 7 de novembre (producció R1–R10)', ()
       expect(seccio(body, BALANC.ca[1]).map((n) => n.textContent).join(' ')).not.toContain('segellats en còpia aïllada');
     }
     const versions = doc(PAGE_COPY.versions.html).body;
-    expect(versions.querySelector('h3').textContent).toBe('5 de novembre de 2026 · v1.2.0 · suplement pendent d’integració');
+    // P0-62 (08-11-2026) · La fita de l'App Store obri /versions; l'entrada del 5 de novembre és la segona, intacta.
+    expect([...versions.querySelectorAll('h3')].slice(0, 2).map((h3) => h3.textContent)).toEqual([
+      '6 de novembre de 2026 · Fita · L’app d’iPhone i iPad, publicada a l’App Store (versió 1.0)',
+      '5 de novembre de 2026 · v1.2.0 · suplement pendent d’integració'
+    ]);
     expect(versions.textContent).toContain('COMMIT R1–R6');
     expect(versions.textContent).not.toContain('R1–R8');
   });

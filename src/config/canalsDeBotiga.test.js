@@ -9,13 +9,18 @@
    IDEA-60 (T1, prompt 261102_1532) · Dues ranures més, tancades: l'APK
    directe (el fitxer signat al domini propi) i TestFlight (l'única ranura on
    una adreça de proves és la bona). Quan s'òbriguen, les seues frases del
-   cos caduquen, com les de les botigues. */
+   cos caduquen, com les de les botigues.
+   P0-62 / IDEA-193 (ordre del Mestre, 261108) · L'App Store és oberta amb
+   la fitxa pública d'Apple (trackId 6826441844, publicada el 06-11-2026):
+   el cos real ja no diu cap frase de botiga tancada d'Apple ni de proves. */
 import { describe, expect, test } from 'vitest';
 import { CANALS_DE_BOTIGA, FRASES_DE_BOTIGA_TANCADA, FRASES_DE_PROVES, canalsOberts, frasesCaducades, urlDeCanal } from './canalsDeBotiga.js';
 import { PAGE_COPY } from '../sections/text/pageContent.js';
 
 const PLAY = 'https://play.google.com/store/apps/details?id=org.socdepoble.app';
 const WORDPRESS = 'https://wordpress.org/plugins/socdepoble/';
+/* P0-62 · La fitxa pública de Sóc de Poble a l'App Store (consulta d'Apple del 08-11-2026). */
+const APP_STORE = 'https://apps.apple.com/es/app/s%C3%B3c-de-poble/id6826441844';
 /* IDEA-60 · L'APK signat al domini propi i un enllaç públic de TestFlight. */
 const APK = 'https://socdepoble.org/descarregues/socdepoble-android-latest.apk';
 const TESTFLIGHT = 'https://testflight.apple.com/join/AbCd1234';
@@ -39,16 +44,24 @@ describe('CANALS_DE_BOTIGA', () => {
      en done les adreces públiques, esta prova canvia amb elles.
      IDEA-60 (02-11-2026) · L'APK encara no s'ha generat ni publicat i
      l'enllaç públic de TestFlight encara no existix: les dues ranures,
-     tancades. */
-  test('només WordPress.org és obert, amb la fitxa del connector socdepoble; Google Play, App Store, APK directe i TestFlight, tancats', () => {
+     tancades.
+     P0-62 (08-11-2026) · L'App Store, oberta amb la fitxa pública d'Apple
+     (trackId 6826441844): l'adreça passa FORMES['app-store'] tal com és. */
+  test('l’App Store (fitxa id6826441844) i WordPress.org (connector socdepoble), oberts; Google Play, APK directe i TestFlight, tancats', () => {
     expect(CANALS_DE_BOTIGA.map((canal) => [canal.id, canal.url])).toEqual([
       ['google-play', null],
-      ['app-store', null],
+      ['app-store', APP_STORE],
       ['apk-directe', null],
       ['testflight', null],
       ['wordpress-org', WORDPRESS]
     ]);
-    expect(canalsOberts()).toEqual([{ id: 'wordpress-org', nom: 'WordPress.org', url: WORDPRESS }]);
+    expect(urlDeCanal({ id: 'app-store', url: APP_STORE })).toBe(APP_STORE);
+    expect(canalsOberts()).toEqual([
+      { id: 'app-store', nom: 'App Store', url: APP_STORE },
+      { id: 'wordpress-org', nom: 'WordPress.org', url: WORDPRESS }
+    ]);
+    // La mateixa adreça en una altra ranura no obri res: només és la fitxa de l'App Store.
+    for (const id of ['google-play', 'apk-directe', 'testflight', 'wordpress-org']) expect([id, urlDeCanal({ id, url: APP_STORE })]).toEqual([id, null]);
   });
 });
 
@@ -107,6 +120,11 @@ describe('urlDeCanal', () => {
       ['google-play', `${PLAY}&q=%E0%A4%A`],
       ['app-store', 'https://apps.apple.com/app/soc-de-poble/id1234567890?beta'],
       ['app-store', 'https://apps.apple.com/app/soc-de-poble/id1234567890?Beta=1'],
+      // P0-62 · La fitxa de veres tampoc no passa amb un paràmetre de proves, en http ni en un altre host.
+      ['app-store', `${APP_STORE}?beta=1`],
+      ['app-store', `${APP_STORE}#beta`],
+      ['app-store', APP_STORE.replace('https:', 'http:')],
+      ['app-store', APP_STORE.replace('apps.apple.com', 'apps.apple.com.evil.org')],
       ['google-play', 'https://apps.apple.com/app/id1234567890'],
       ['app-store', 'https://testflight.apple.com/join/ABCDEF12'],
       ['app-store', 'https://apps.apple.com/'],
@@ -290,11 +308,17 @@ describe('frasesCaducades', () => {
      real d'avui: obertes, troben les seues frases («Hui encara no hi ha APK
      públic», «hem demanat a Apple un enllaç públic»), el mecanisme
      d'honestedat de sempre; tancades, res. No són botigues d'apps: les frases
-     generals de proves no hi compten. */
-  test('IDEA-60 · apk-directe i testflight oberts sobre el cos real troben les seues frases; tancats, cap', () => {
+     generals de proves no hi compten.
+     P0-62 (08-11-2026) · Amb l'App Store oberta, el cos ja no pot nomenar
+     TestFlight (FRASES_DE_BOTIGA_TANCADA['app-store']): les frases de la
+     ranura testflight ja no hi són i, sobre el cos real, no en troba cap. Les
+     frases continuen a la llista i mosseguen el paràgraf vell de TestFlight
+     (el de HEAD bcb067a27, vellTestflight, ací baix). */
+  test('IDEA-60 · apk-directe obert sobre el cos real troba les seues frases; testflight, cap (P0-62); tancats, cap', () => {
     const { lead, subtitle, html } = PAGE_COPY.descarregues;
     expect(frases(frasesCaducades(html, APK_OBERT))).toEqual(['apk-directe: no hi ha APK públic', "apk-directe: Quan n[’']hi haja un"]);
-    expect(frases(frasesCaducades(html, TESTFLIGHT_OBERT))).toEqual(['testflight: hem demanat a Apple un enllaç públic', 'testflight: Mentre Apple no el revise']);
+    expect(frasesCaducades([lead, subtitle, html], TESTFLIGHT_OBERT)).toEqual([]);
+    expect(html).not.toMatch(/TestFlight/i);
     expect(frasesCaducades('Versió beta, en proves. En quin punt estan les proves.', [...APK_OBERT, ...TESTFLIGHT_OBERT])).toEqual([]);
     // Les frases de cada ranura són seues: amb l'altra oberta, o amb WordPress.org, cap.
     expect(frasesCaducades("Hui encara no hi ha APK públic. Quan n'hi haja un, l'enllaç eixirà ací.", TESTFLIGHT_OBERT)).toEqual([]);
@@ -304,30 +328,40 @@ describe('frasesCaducades', () => {
     expect(frases(frasesCaducades('<strong>Hui encara no hi ha APK públic</strong>. Quan n’hi haja un…', APK_OBERT)))
       .toEqual(['apk-directe: no hi ha APK públic', "apk-directe: Quan n[’']hi haja un"]);
     // Per la cadena de veres: la ranura oberta en una còpia de CANALS_DE_BOTIGA (canalsOberts → frasesCaducades) fa caure la guarda.
-    for (const [id, url] of [['apk-directe', APK], ['testflight', TESTFLIGHT]]) {
-      const ambRanura = CANALS_DE_BOTIGA.map((canal) => (canal.id === id ? { ...canal, url } : canal));
-      expect([id, frasesCaducades([lead, subtitle, html], canalsOberts(ambRanura)).map((trobada) => trobada.id)]).toEqual([id, [id, id]]);
-    }
+    const ambApk = CANALS_DE_BOTIGA.map((canal) => (canal.id === 'apk-directe' ? { ...canal, url: APK } : canal));
+    expect(frasesCaducades([lead, subtitle, html], canalsOberts(ambApk)).map((trobada) => trobada.id)).toEqual(['apk-directe', 'apk-directe']);
+    // P0-62 · TestFlight obert al costat de l'App Store oberta: el cos real ja no en diu res.
+    const ambTestflight = CANALS_DE_BOTIGA.map((canal) => (canal.id === 'testflight' ? { ...canal, url: TESTFLIGHT } : canal));
+    expect(frasesCaducades([lead, subtitle, html], canalsOberts(ambTestflight))).toEqual([]);
+    /* P0-62 · Les frases de testflight encara mosseguen: el paràgraf de TestFlight del cos fins al 08-11-2026,
+       amb la ranura oberta, dona les dues; i per la cadena de veres, també (al costat de les de l'App Store tancada). */
+    const vellTestflight = "<p>La versió per a iPhone i iPad (iOS i iPadOS) es prova amb <strong>TestFlight</strong>, el programa de proves d'Apple. La versió <strong>1.0.0</strong> (1) ja la pot instal·lar el grup de <strong>treball intern</strong>, i hem demanat a Apple un <strong>enllaç públic</strong> de proves perquè s'hi puga apuntar més gent. Mentre Apple no el revise i l'aprove <strong>no el podem compartir</strong>; quan el tinguem, eixirà ací.</p>";
+    expect(frases(frasesCaducades(vellTestflight, TESTFLIGHT_OBERT)))
+      .toEqual(['testflight: hem demanat a Apple un enllaç públic', 'testflight: Mentre Apple no el revise']);
+    expect(frasesCaducades(vellTestflight, canalsOberts(ambTestflight)).filter((trobada) => trobada.id === 'testflight').map((trobada) => trobada.frase))
+      .toEqual(['hem demanat a Apple un enllaç públic', 'Mentre Apple no el revise']);
   });
 
-  /* La guarda real. Hui només és obert WordPress.org, i el text (cert hui)
-     pot parlar de proves. Quan el Mestre òbriga Google Play o l'App Store en
-     canalsDeBotiga.js, esta prova cau i diu quines frases sobren: es
-     reescriu el text (annex A de la spec B9) i es torna a aprovar la
-     frontissa (node tooling/gates/frontissa-contingut.mjs --aprova descarregues). */
+  /* La guarda real. Fins al 08-11-2026 només era obert WordPress.org, i el
+     text podia parlar de proves. P0-62 (08-11-2026) · L'App Store és oberta i
+     el text s'ha reescrit: cap frase de botiga tancada d'Apple (TestFlight,
+     «encara no és a l'App Store»…) ni de proves («beta», «en proves»).
+     Google Play continua tancat i el text ho diu («no està publicada per a
+     tothom»): el dia que el Mestre l'òbriga en canalsDeBotiga.js, esta prova
+     cau i diu quines frases sobren, i es torna a aprovar la frontissa
+     (node tooling/gates/frontissa-contingut.mjs --aprova descarregues). */
   test('PAGE_COPY.descarregues (lead, subtítol i cos) no diu res caducat per als canals oberts de veres', () => {
     const { lead, subtitle, html } = PAGE_COPY.descarregues;
     // Els canals oberts de veres, explícits: la guarda no depén del valor per defecte de frasesCaducades.
+    expect(canalsOberts().map((canal) => canal.id)).toEqual(['app-store', 'wordpress-org']);
     expect(frasesCaducades([lead, subtitle, html], canalsOberts()), "Una botiga d'apps oberta: reescriu PAGE_COPY.descarregues amb l'annex A de la spec B9-BOTIGUES i torna a aprovar la frontissa (node tooling/gates/frontissa-contingut.mjs --aprova descarregues --per Mestre)")
       .toEqual([]);
-    /* La guarda mossega el text d'avui (el dia que es reescriga amb l'annex A, estes cinc línies se'n van amb ell):
-       la cadena de veres, amb Google Play obert en una còpia de CANALS_DE_BOTIGA (canalsOberts → frasesCaducades),
-       cau; amb una botiga d'apps oberta, el lead sol ja cau, i el lead suma al cos. */
+    // L'App Store sola, explícita: ni les seues frases ni les generals de proves.
+    expect(frasesCaducades([lead, subtitle, html], STORE_OBERT)).toEqual([]);
+    /* La guarda mossega el text d'avui per a Google Play: la cadena de veres, amb Google Play obert en una còpia
+       de CANALS_DE_BOTIGA (canalsOberts → frasesCaducades), cau per la frase que només és certa amb la botiga
+       tancada. El dia que s'òbriga de veres, esta línia se'n va amb el text. */
     const ambPlay = CANALS_DE_BOTIGA.map((canal) => (canal.id === 'google-play' ? { ...canal, url: PLAY } : canal));
-    expect(frasesCaducades([lead, subtitle, html], canalsOberts(ambPlay)).length).toBeGreaterThanOrEqual(1);
-    expect(frasesCaducades([lead], PLAY_OBERT).length).toBeGreaterThanOrEqual(1);
-    expect(frasesCaducades([lead], STORE_OBERT).length).toBeGreaterThanOrEqual(1);
-    expect(frasesCaducades([lead, subtitle, html], PLAY_OBERT).length).toBeGreaterThan(frasesCaducades(html, PLAY_OBERT).length);
-    expect(frases(frasesCaducades(html, STORE_OBERT))).toEqual(expect.arrayContaining(['app-store: TestFlight', 'app-store: grup de treball intern']));
+    expect(frases(frasesCaducades([lead, subtitle, html], canalsOberts(ambPlay)))).toEqual(['google-play: no està publicada per a tothom']);
   });
 });

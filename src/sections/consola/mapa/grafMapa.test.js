@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { createElement } from 'react';
-import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
+import { afterEach, beforeAll, beforeEach, describe, expect, test, vi } from 'vitest';
 import { act, cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import {
   ESTIL_MAPA, TEXTOS_AVIS, dadesDelNode, documentWiki, etiquetaNode, filtresInicials, fitxerDelNode, grafDelMapa,
@@ -271,6 +271,14 @@ const pinta = (mapa = MAPA, privat = false) => render(
 const detall = (container) => container.querySelector('.sdp-explorador__detall');
 const tria = (id) => act(() => { grafRebut.props.onSeleccio(id); });
 const titolDetall = (container) => detall(container).querySelector('h3');
+/* P0-61 / IDEA-192 · El graf de l'Explorador és diferit (React.lazy): un primer
+   pintat el resol una sola vegada per a tot el fitxer, i les proves síncrones de
+   davall el troben carregat, també quan se n'executa una sola. */
+beforeAll(async () => {
+  const { container } = pinta();
+  await waitFor(() => expect(container.querySelector('.sdp-wiki-graf canvas')).toBeTruthy());
+  cleanup();
+});
 
 describe('Explorador: la llegenda i els filtres primer, el graf al final (T3)', () => {
   afterEach(cleanup);

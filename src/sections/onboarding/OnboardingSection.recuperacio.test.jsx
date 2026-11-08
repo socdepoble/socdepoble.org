@@ -9,7 +9,7 @@
    compte i «Eixir del compte». El port es simula al context de sessió, com en
    OnboardingSection.test.jsx; l'estat de l'enllaç, amb una botiga reactiva. */
 import React from 'react';
-import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
+import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { afterEach, beforeEach, expect, test, vi } from 'vitest';
 const m = vi.hoisted(() => {
   const escoltes = new Set();
@@ -18,6 +18,9 @@ const m = vi.hoisted(() => {
     navigate: vi.fn(), toast: vi.fn(), demana: vi.fn(), definix: vi.fn(), entra: vi.fn(), eix: vi.fn(), oblidaEnllac: vi.fn(),
     usuari: { valor: null }, capacitat: { valor: true }, recuperacio: { valor: false }, enllac, escoltes,
     posaEnllac(valor) { enllac.valor = valor; for (const avisa of escoltes) avisa(); },
+    /* P0-63 · Una sessió que arriba amb la vista muntada (com sdp:auth-change): torna a pintar. */
+    versioUsuari: { valor: 0 },
+    posaUsuari(valor) { this.usuari.valor = valor; this.versioUsuari.valor += 1; for (const avisa of escoltes) avisa(); },
     config: Object.freeze({ tenantId: '00000000-0000-4000-8000-000000000000' })
   };
 });
@@ -30,8 +33,10 @@ vi.mock('@/components/universal/NotificationContext.jsx', () => ({ useToast: () 
 vi.mock('../../app/contexts/SessionContext', async () => {
   const { useSyncExternalStore } = await import('react');
   const subscriu = (avisa) => { m.escoltes.add(avisa); return () => { m.escoltes.delete(avisa); }; };
+  const useVersioUsuari = () => useSyncExternalStore(subscriu, () => m.versioUsuari.valor);
   return {
     useSession: () => ({
+      versioUsuari: useVersioUsuari(),
       currentUser: m.usuari.valor,
       registerWithPassword: vi.fn(), loginWithPassword: m.entra, loginWithGoogle: vi.fn(),
       teCapacitat: (nom) => nom === 'recuperacioContrasenya' && m.capacitat.valor,
@@ -509,4 +514,122 @@ test('R · sense sessió, la marca tampoc obri la pantalla nova', () => {
   render(<BrowserRouter><OnboardingSection /></BrowserRouter>);
   expect(screen.queryByRole('heading', { name: TITOL_NOVA })).toBeNull();
   expect(screen.getByRole('button', { name: 'Entrar al compte' })).toBeTruthy();
+});
+
+/* ── P0-63 / IDEA-194 (ordre del Mestre, 261108) · Recuperació amb sessió ──
+   L'enllaç del correu (token_hash) obert en un navegador que ja té sessió:
+   la pantalla genèrica de sempre i, només quan el token ja no val (caducat o
+   perdut en recarregar), el camí bo amb sessió, «El compte» del Perfil
+   (RUTA_COMPTE). Sense sessió, res d'això. ?mode=recuperar: amb sessió, «El
+   compte»; sense, «Recupera la contrasenya» (el correu i l'enllaç, res més). */
+const RUTA_COMPTE = '/el-meu-perfil?vista=compte';
+const AL_COMPTE = 'Canvia la contrasenya des del teu compte';
+const SESSIO_GOOGLE = Object.freeze({ id: 'G', email: 'ana@poble.test' });
+const caducat = () => Object.assign(new Error('Supabase 403'), { code: CODI_ENTRADA.ENLLAC_CADUCAT });
+
+test('P0-63 · sessió activa + token: «Definix la contrasenya nova» directa, sense el botó del compte i sense salt', async () => {
+  ambEnllac('pendent', SESSIO_GOOGLE);
+  expect(screen.getByRole('heading', { name: TITOL_NOVA })).toBeTruthy();
+  expect(screen.queryByRole('button', { name: AL_COMPTE })).toBeNull();
+  expect(m.navigate).not.toHaveBeenCalled();
+  m.definix.mockResolvedValue(true);
+  omplNova(NOVA);
+  await act(async () => { fireEvent.click(botoDesa()); });
+  expect(m.definix).toHaveBeenCalledWith(NOVA, CONFIG);
+  expect(m.navigate).toHaveBeenCalledWith('/el-meu-perfil', { replace: true });
+});
+
+test('P0-63 · sessió activa + token caducat: l’avís oferix «El compte» i hi porta, deixant l’enllaç', async () => {
+  m.definix.mockRejectedValue(caducat());
+  ambEnllac('pendent', SESSIO_GOOGLE);
+  omplNova(NOVA);
+  await act(async () => { fireEvent.click(botoDesa()); });
+  expect(botoDesa().disabled).toBe(true);
+  const avis = screen.getByRole('status');
+  const boto = screen.getByRole('button', { name: AL_COMPTE });
+  expect(avis.contains(boto)).toBe(true);
+  expect(screen.getByRole('button', { name: 'Demana un enllaç nou' })).toBeTruthy();
+  expect(m.navigate).not.toHaveBeenCalled();
+  fireEvent.click(boto);
+  expect(m.oblidaEnllac).toHaveBeenCalledTimes(1);
+  expect(m.navigate).toHaveBeenLastCalledWith(RUTA_COMPTE, { replace: true });
+  expect(m.definix).toHaveBeenCalledTimes(1);
+});
+
+test('P0-63 · sense sessió + token caducat: cap botó del compte, «Demana un enllaç nou» com sempre', async () => {
+  m.definix.mockRejectedValue(caducat());
+  ambEnllac('pendent');
+  omplNova(NOVA);
+  await act(async () => { fireEvent.click(botoDesa()); });
+  expect(screen.queryByRole('button', { name: AL_COMPTE })).toBeNull();
+  expect(screen.getByRole('button', { name: 'Demana un enllaç nou' })).toBeTruthy();
+});
+
+test('P0-63 · sessió activa + enllaç perdut en recarregar: el primer botó porta a «El compte»', () => {
+  ambEnllac('perdut', SESSIO_GOOGLE);
+  const botons = screen.getAllByRole('button').map((boto) => boto.textContent);
+  expect(botons).toEqual([AL_COMPTE, 'Demana un enllaç nou', 'Torna a entrar']);
+  expect(screen.queryByLabelText('Contrasenya nova')).toBeNull();
+  fireEvent.click(screen.getByRole('button', { name: AL_COMPTE }));
+  expect(m.oblidaEnllac).toHaveBeenCalledTimes(1);
+  expect(m.navigate).toHaveBeenLastCalledWith(RUTA_COMPTE, { replace: true });
+});
+
+test('P0-63 · sessió activa + enllaç perdut: «Demana un enllaç nou» ja no acaba a la fitxa, sinó a «El compte»', () => {
+  ambEnllac('perdut', SESSIO_GOOGLE);
+  fireEvent.click(screen.getByRole('button', { name: 'Demana un enllaç nou' }));
+  expect(m.navigate).toHaveBeenLastCalledWith(RUTA_COMPTE, { replace: true });
+});
+
+test('P0-63 · sense sessió + enllaç perdut: els botons de sempre, sense el del compte', () => {
+  ambEnllac('perdut');
+  expect(screen.getAllByRole('button').map((boto) => boto.textContent)).toEqual(['Demana un enllaç nou', 'Torna a entrar']);
+});
+
+test('P0-63 · sessió activa + ?mode=recuperar: cap formulari de contrasenya, a «El compte» del Perfil', () => {
+  m.usuari.valor = SESSIO_GOOGLE;
+  window.history.replaceState(null, '', '/registre?mode=recuperar');
+  render(<BrowserRouter><OnboardingSection /></BrowserRouter>);
+  expect(screen.queryByLabelText('Contrasenya nova')).toBeNull();
+  expect(m.navigate).toHaveBeenCalledWith(RUTA_COMPTE, { replace: true });
+  expect(m.definix).not.toHaveBeenCalled();
+});
+
+test('P0-63 · sessió activa + ?mode=recuperar en MEMÒRIA (WordPress): també a «El compte»', () => {
+  m.usuari.valor = SESSIO_GOOGLE;
+  render(<MemoryRouter rutaInicial="/registre?mode=recuperar"><OnboardingSection /></MemoryRouter>);
+  expect(m.navigate).toHaveBeenCalledWith(RUTA_COMPTE, { replace: true });
+});
+
+test('P0-63 · sense sessió + ?mode=recuperar: «Recupera la contrasenya» (només el correu), mai «Definix la contrasenya nova»', () => {
+  window.history.replaceState(null, '', '/registre?mode=recuperar');
+  render(<BrowserRouter><OnboardingSection /></BrowserRouter>);
+  expect(screen.getByRole('heading', { name: 'Recupera la contrasenya' })).toBeTruthy();
+  expect(screen.queryByLabelText('Contrasenya nova')).toBeNull();
+  expect(screen.queryByLabelText('Contrasenya')).toBeNull();
+  expect(m.navigate).not.toHaveBeenCalled();
+});
+
+test('P0-63 · sense sessió + ?mode=recuperar i un port sense la capacitat: «Entrar», i quan el port la declara, «Recupera la contrasenya»', () => {
+  m.capacitat.valor = false;
+  window.history.replaceState(null, '', '/registre?mode=recuperar');
+  const { rerender } = render(<BrowserRouter><OnboardingSection /></BrowserRouter>);
+  expect(screen.getByRole('button', { name: 'Entrar al compte' })).toBeTruthy();
+  m.capacitat.valor = true;
+  rerender(<BrowserRouter><OnboardingSection /></BrowserRouter>);
+  expect(screen.getByRole('heading', { name: 'Recupera la contrasenya' })).toBeTruthy();
+});
+
+test('P0-63 · ?mode=recuperar i una entrada feta ací: aterra al perfil de sempre, no al compte', async () => {
+  /* La sessió arriba quan l'entrada ja treballa (com sdp:auth-change), no en cridar el port. */
+  m.entra.mockImplementation(async () => { await Promise.resolve(); m.posaUsuari(SESSIO_GOOGLE); });
+  window.history.replaceState(null, '', '/registre?mode=recuperar');
+  render(<BrowserRouter><OnboardingSection /></BrowserRouter>);
+  fireEvent.click(screen.getByRole('button', { name: 'Torna a entrar' }));
+  fireEvent.change(screen.getByLabelText('Correu electrònic'), { target: { name: 'email', value: 'ana@poble.test' } });
+  fireEvent.change(screen.getByLabelText('Contrasenya'), { target: { name: 'password', value: 'contrasenya-de-sempre' } });
+  await act(async () => { fireEvent.click(screen.getByRole('button', { name: 'Entrar al compte' })); });
+  expect(m.entra).toHaveBeenCalledTimes(1);
+  await waitFor(() => expect(m.navigate).toHaveBeenCalledWith('/el-meu-perfil', { replace: true }));
+  expect(m.navigate).not.toHaveBeenCalledWith(RUTA_COMPTE, expect.anything());
 });

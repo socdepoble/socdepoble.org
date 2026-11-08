@@ -29,8 +29,8 @@ testSql('R6 email proof owns the final password, one-use credential version, con
  let email='victim-primary@example.invalid',firstToken,secondToken,firstCookie,secondCookie,id;
  try{
   await pg.exec(generaSql(creaPlaMigracions(),await preparaHidratacio(),{advisoryLock:false}));await pg.exec(sql);
-  await t.test('installation is idempotent, all80 migrations real (R33: seed revisions and own export) and zero people precreated',async()=>{
-   assert.equal((await q('SELECT count(*)::int n FROM node0.schema_migrations'))[0].n,80);assert.equal((await q('SELECT count(*)::int n FROM auth.users'))[0].n,0);await pg.exec(sql);
+  await t.test('installation is idempotent, all81 migrations real (R33: seed revisions and own export; R13-C7: session counts) and zero people precreated',async()=>{
+   assert.equal((await q('SELECT count(*)::int n FROM node0.schema_migrations'))[0].n,81);assert.equal((await q('SELECT count(*)::int n FROM auth.users'))[0].n,0);await pg.exec(sql);
    assert.equal((await q("SELECT to_regprocedure('private.node0_auth_verify(text)') IS NULL missing"))[0].missing,true);
   });
   await t.test('pending registration has no attributed canonical consent, no session and a24h deadline',async()=>{

@@ -11,7 +11,7 @@ import { RegistrationStep } from './OnboardingSteps.jsx';
 import { ContrasenyaNovaStep, EnllacPerdutStep } from './RecuperacioSteps.jsx';
 import { normalizeBackendConfig } from '../../config/backendConfig.js';
 import { eleccioRemotaActiva, enterRemoteMode, enterTestMode, exitRemoteMode } from '../../config/dataMode.js';
-import { RUTA_DESPRES_D_ENTRAR, aterratgeDespresDEntrar, modeDEntrada } from '../../config/rutaEntrada.js';
+import { RUTA_COMPTE, RUTA_DESPRES_D_ENTRAR, aterratgeDespresDEntrar, modeDEntrada } from '../../config/rutaEntrada.js';
 import { delEfimer, getEfimer, setEfimer } from '../../config/storage.js';
 import { CODI_ENTRADA } from '../../data/errorsBackend.js';
 import { ESTAT_ENLLAC } from '../../data/recuperacioPendent.js';
@@ -86,9 +86,7 @@ export default function OnboardingSection() {
   const { showToast } = useToast();
   const navigate = useNavigate();
   const consultaDeMemoria = useConsultaDeMemoria();
-  /* T4 (ordre del Mestre, 260930) · ?mode=entrar|crear obri el formulari en
-     eixe mode. Sense mode, com sempre: crear el compte. */
-  const modeInicial = modeDEntrada(new URLSearchParams(consultaDeLApp(consultaDeMemoria)).get('mode')) || 'crear';
+  const modeDeLaConsulta = new URLSearchParams(consultaDeLApp(consultaDeMemoria)).get('mode');
   const {
     currentUser, loginWithGoogle, loginWithPassword, registerWithPassword, teCapacitat, comprovaServidor,
     demanaRecuperacioContrasenya, definixContrasenyaNova, recuperacioPendent: recuperacioDeLaSessio, logout,
@@ -123,6 +121,16 @@ export default function OnboardingSection() {
   const potRecuperar = teLaCapacitat(teCapacitat, 'recuperacioContrasenya')
     && typeof demanaRecuperacioContrasenya === 'function'
     && typeof definixContrasenyaNova === 'function';
+  /* T4 (ordre del Mestre, 260930) · ?mode=entrar|crear obri el formulari en
+     eixe mode. Sense mode, com sempre: crear el compte.
+     P0-63 / IDEA-194 (ordre del Mestre, 261108) · ?mode=recuperar s'admet
+     NOMÉS ací (rutaEntrada.js no el construïx mai): sense sessió, obri
+     «Recupera la contrasenya» (el correu i l'enllaç, res més) quan el port ja
+     té la capacitat, i «Entrar» mentrestant; amb sessió, «El compte» del
+     Perfil (més avall). Cap camí no canvia una contrasenya sense el token del
+     correu o la sessió pròpia. */
+  const demanaRecuperar = modeDeLaConsulta === 'recuperar';
+  const modeInicial = modeDEntrada(modeDeLaConsulta) || (demanaRecuperar ? (potRecuperar ? 'recuperar' : 'entrar') : 'crear');
   /* R2 (decisió del Mestre, 261003) · L'enllaç del correu espera «Desa» sense
      sessió (data/recuperacioPendent.js, via SessionContext): 'pendent', la
      pantalla genèrica; 'perdut', la pàgina s'ha recarregat i cal tornar a
@@ -137,6 +145,12 @@ export default function OnboardingSection() {
   const recuperacioEnCurs = enllac !== null || recuperacioPendent;
   /* «Demana un enllaç nou» (enllaç caducat o perdut) obri «Recupera la contrasenya». */
   const [obreRecuperacio, setObreRecuperacio] = useState(false);
+  /* P0-63 (261108) · «Canvia la contrasenya des del teu compte» (amb sessió i
+     sense un enllaç que valga): la redirecció de la sessió porta a RUTA_COMPTE. */
+  const [volElCompte, setVolElCompte] = useState(false);
+  /* P0-63 · Una entrada feta en esta vista (contrasenya, alta, Google, full
+     natiu): aterra on aterra sempre, encara que la consulta diga recuperar. */
+  const entradaFeta = useRef(false);
   const [busyStep, setBusyStep] = useState(null);
   const [googleError, setGoogleError] = useState('');
   /* B (Onada 4, quarta passada, 261003; directriu de MarIA 261003_2221) · En un
@@ -274,6 +288,7 @@ export default function OnboardingSection() {
   const intent = useRef(0);
   const obriIntent = (pas) => {
     const id = ++intent.current;
+    entradaFeta.current = true;
     setBusyStep(pas);
     return {
       viu: () => intent.current === id,
@@ -304,11 +319,19 @@ export default function OnboardingSection() {
      el botó: data/oauthRelay.js, urlDeTornada).
      Excepció estreta (261012_2148): una tornada a una entrada de la Gestoria
      (/app/gestoria/<entrada>) sí que mana (aterratgeDespresDEntrar); la
-     resta, també la de les altres apps, al perfil. */
+     resta, també la de les altres apps, al perfil.
+     P0-63 / IDEA-194 (ordre del Mestre, 261108) · Amb sessió i sense un
+     enllaç que valga, el camí bo per a la contrasenya és «El compte» del
+     Perfil (RUTA_COMPTE): hi porten «Canvia la contrasenya des del teu compte»,
+     «Demana un enllaç nou» (amb sessió no s'hi pot demanar cap correu: la
+     redirecció ho tapava i acabava a la fitxa) i ?mode=recuperar. Una entrada
+     feta ací mateix aterra com sempre. */
   const tornar = new URLSearchParams(consultaDeLApp(consultaDeMemoria)).get('tornar');
   useEffect(() => {
-    if (currentUser && modeDades === 'remote' && !recuperacioEnCurs) navigate(aterratgeDespresDEntrar(tornar), { replace: true });
-  }, [currentUser, modeDades, navigate, recuperacioEnCurs, tornar]);
+    if (!currentUser || modeDades !== 'remote' || recuperacioEnCurs) return;
+    const perLaContrasenya = volElCompte || (!entradaFeta.current && (obreRecuperacio || demanaRecuperar));
+    navigate(perLaContrasenya ? RUTA_COMPTE : aterratgeDespresDEntrar(tornar), { replace: true });
+  }, [currentUser, modeDades, navigate, recuperacioEnCurs, tornar, volElCompte, obreRecuperacio, demanaRecuperar]);
 
   /* R · Les dues crides de la recuperació, pel port amb la configuració del node. */
   const demanaRecuperacio = (correu) => demanaRecuperacioContrasenya(correu, externalConfig);
@@ -333,6 +356,9 @@ export default function OnboardingSection() {
   const [modeForcat, setModeForcat] = useState(null);
   const tornaAEntrar = () => { setModeForcat('entrar'); setObreRecuperacio(false); oblidaEnllac(); };
   const demanaUnAltre = () => { setObreRecuperacio(true); oblidaEnllac(); };
+  /* P0-63 (261108) · Només amb sessió: deixa l'enllaç que ja no val i la
+     redirecció de la sessió porta a «El compte» (RUTA_COMPTE). */
+  const alCompte = currentUser ? () => { setVolElCompte(true); oblidaEnllac(); } : null;
 
   const activeStep = 0;
 
@@ -538,9 +564,9 @@ export default function OnboardingSection() {
     let pas;
     if (enllac === ESTAT_ENLLAC.PENDENT) {
       /* Genèrica a posta (decisió del Mestre): ni sessió ni compte fins a «Desa». */
-      pas = <ContrasenyaNovaStep onDesa={desaContrasenyaNova} onTorna={tornaAEntrar} onDemanaUnAltre={demanaUnAltre} t={tr} />;
+      pas = <ContrasenyaNovaStep onDesa={desaContrasenyaNova} onTorna={tornaAEntrar} onDemanaUnAltre={demanaUnAltre} onCompte={alCompte} t={tr} />;
     } else if (enllac === ESTAT_ENLLAC.PERDUT) {
-      pas = <EnllacPerdutStep onDemanaUnAltre={demanaUnAltre} onTorna={tornaAEntrar} t={tr} />;
+      pas = <EnllacPerdutStep onDemanaUnAltre={demanaUnAltre} onTorna={tornaAEntrar} onCompte={alCompte} t={tr} />;
     } else {
       pas = (
         <ContrasenyaNovaStep

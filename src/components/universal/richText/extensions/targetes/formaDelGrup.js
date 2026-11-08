@@ -68,7 +68,7 @@ const SECCIO_DE_TIPUS = Object.freeze({
   publicacio: 'mur', producte: 'mercat', esdeveniment: 'events', poble: 'pobles', pagina: ''
 });
 
-export const ALINEACIONS = Object.freeze(['esquerra', 'dreta']);
+export const ALINEACIONS = Object.freeze(['esquerra', 'dreta', 'centre']);
 export const ALINEACIO_PER_DEFECTE = 'esquerra';
 
 /* La marca del grup a l'HTML desat: la lectura només hidrata si hi és. */

@@ -8,11 +8,15 @@
  *     amb scripts/botigues/estat.mjs i cau si divergixen (G8-04: minSdk 24, targetSdk 36, 1.1.0);
  *   · el QR és el de la guia pública de descàrregues, l'única adreça que existix per als tres
  *     canals: /descarregues redirigix a /page/descarregues i no llig cap paràmetre de plataforma
- *     (App.jsx, <Navigate>); no hi ha cap fitxa publicada a l'App Store ni a Google Play que es
- *     puga enllaçar. El camí SVG és precalculat (qrGuiaDescarregues.js) amb el codificador de la
+ *     (App.jsx, <Navigate>). P0-62 (08-11-2026) · La guia ja enllaça la fitxa de l'App Store (canal
+ *     app-store de src/config/canalsDeBotiga.js); Google Play encara no en té cap de pública. El camí
+ *     SVG és precalculat (qrGuiaDescarregues.js) amb el codificador de la
  *     Gestoria, que des d'ací no es pot importar (G8-14);
  *   · el canal d'Android és el canal LOCAL d'avisos «Missatges del xat» (LocalNotifications), no
- *     cap canal de FCM (G8-16): l'app nativa encara no porta avisos push remots.
+ *     cap canal de FCM (G8-16): l'app nativa encara no porta avisos push remots;
+ *   · P0-62 bis (08-11-2026; ordre del Mestre al xat de Claude) · l'App Store oberta (la fitxa i la
+ *     versió de la botiga, 1.0, a part de la del projecte, 1.1.0 build 2) i, a Google Play, els tres
+ *     passos dels verificadors, els mateixos de /page/descarregues.
  * Pur: sense React, DOM ni xarxa.
  */
 import { QR_GUIA_DESCARREGUES } from './qrGuiaDescarregues.js';
@@ -35,14 +39,33 @@ export const FITXA_NATIVA = Object.freeze({
   targetSdk: 36
 });
 
-const ESTAT_BOTIGA = 'Guia de preparació: la disponibilitat a la botiga no es verifica des d’este panell';
+/* P0-62 / IDEA-193 (ordre del Mestre, 261108) · El fet llegit, datat: Apple va publicar la 1.0 el
+   6-11-2026 (consulta d'Apple del 8-11-2026, trackId 6826441844). El panell no ho torna a llegir;
+   assistentBotigues.test.jsx contrasta l'identificador amb el canal app-store de canalsDeBotiga.js. */
+export const ESTAT_APP_STORE = 'Publicada en obert a l’App Store (id6826441844): versió 1.0, del 6-11-2026 (consulta d’Apple del 8-11-2026)';
+
+/* P0-62 bis (08-11-2026; ordre del Mestre al xat de Claude) · L'App Store oberta i els tres passos de
+   Google Play, els mateixos de /page/descarregues (PAGE_COPY.descarregues; la prova ho contrasta).
+   La fitxa és la del canal app-store de src/config/canalsDeBotiga.js (la prova la contrasta: ací no
+   s'importa, perquè el panell va en un altre tros diferit). L'adreça dels verificadors és un enllaç
+   d'instruccions, NO cap canal de botiga: google-play continua tancat a canalsDeBotiga.js. */
+export const URL_FITXA_APP_STORE = 'https://apps.apple.com/es/app/s%C3%B3c-de-poble/id6826441844';
+export const ADRECA_VERIFICADORS_GOOGLE_PLAY = 'https://play.google.com/apps/testing/org.socdepoble.app';
+/* Google demana 12 verificadors amb l'app instal·lada durant 14 dies seguits per a publicar-la (P0-53). */
+export const VERIFICADORS_DE_GOOGLE = Object.freeze({ persones: 12, dies: 14 });
+export const PASSOS_VERIFICADOR_GOOGLE_PLAY = Object.freeze([
+  'Pas 1 · Pantalla 1: entrar a play.google.com/apps/testing/org.socdepoble.app i prémer el botó blau gran «Become a tester» (Convertir-se en verificador).',
+  'Pas 2 · Pantalla 2, «You’re a tester»: NO tocar el botó de baix, «Leave the program», sinó l’enllaç blau del final del segon paràgraf, el que diu «download it on Google Play».',
+  `Pas 3 · Pantalla 3, Google Play: prémer «Instal·lar» perquè l’app quede instal·lada al mòbil. És imprescindible: Google només compta dins dels ${VERIFICADORS_DE_GOOGLE.persones} verificadors qui la té instal·lada durant ${VERIFICADORS_DE_GOOGLE.dies} dies.`
+]);
+const ESTAT_GOOGLE_PLAY = `Guia de preparació: prova tancada amb el grup de verificadors (Google en demana ${VERIFICADORS_DE_GOOGLE.persones} durant ${VERIFICADORS_DE_GOOGLE.dies} dies seguits). Este panell no llig quants en són: és a Google Play Console › Proves › Prova tancada`;
 
 export const CANALS_BOTIGUES = Object.freeze([
   Object.freeze({
     id: 'pwa',
     titol: '📲 Web i PWA (Android, iPhone, iPad i ordinador)',
     identificador: 'https://socdepoble.org/manifest.webmanifest',
-    versio: `web ${FITXA_NATIVA.versioWeb}`,
+    versio: `web ${FITXA_NATIVA.versioWeb}, la dels fitxers del projecte`,
     estat: 'Pública: la guia és a /descarregues (redirigix a /page/descarregues)',
     comandament: null,
     passos: Object.freeze([
@@ -52,13 +75,17 @@ export const CANALS_BOTIGUES = Object.freeze([
   }),
   Object.freeze({
     id: 'ios',
-    titol: '🍎 App Store i TestFlight (iPhone i iPad)',
+    // P0-62 bis · L'App Store és oberta: el títol ja no diu TestFlight, i la versió de la botiga va a part de la del projecte.
+    titol: '🍎 App Store (iPhone i iPad)',
     identificador: `${FITXA_NATIVA.paquet} · iOS ${FITXA_NATIVA.iosMinim} o posterior · extensió ${FITXA_NATIVA.extensioCompartir}`,
-    versio: `${FITXA_NATIVA.versio} (build ${FITXA_NATIVA.build})`,
-    estat: ESTAT_BOTIGA,
+    versioBotiga: '1.0, publicada a l’App Store el 6-11-2026',
+    versio: `${FITXA_NATIVA.versio} (build ${FITXA_NATIVA.build}), la dels fitxers del projecte (la pròxima que es compile), no la publicada`,
+    estat: ESTAT_APP_STORE,
+    fitxa: URL_FITXA_APP_STORE,
     comandament: 'npm run build:natiu && npx cap sync ios',
     passos: Object.freeze([
-      'Obri ios/App/App.xcodeproj amb Xcode → Product › Archive → Distribute App › App Store Connect (TestFlight).',
+      'Per a instal·lar-la: a l’iPhone o a l’iPad, obri la fitxa de l’App Store (el botó «Disponible a l’App Store») i instal·la-la, gratis.',
+      'Per a una versió nova: obri ios/App/App.xcodeproj amb Xcode → Product › Archive → Distribute App › App Store Connect, i envia-la a revisió d’Apple.',
       'Els avisos push natius encara no hi són: falten el connector de push natiu de Capacitor (push-notifications), aps-environment a App.entitlements i la clau d’APNs als secrets de notifica-xat. Decidir-ho és del Mestre.'
     ])
   }),
@@ -66,8 +93,10 @@ export const CANALS_BOTIGUES = Object.freeze([
     id: 'android',
     titol: '🤖 Google Play (Android App Bundle .aab)',
     identificador: `${FITXA_NATIVA.paquet} · minSdk ${FITXA_NATIVA.minSdk} · targetSdk ${FITXA_NATIVA.targetSdk}`,
-    versio: `${FITXA_NATIVA.versio} (versionCode ${FITXA_NATIVA.build}) · canal local d’avisos «Missatges del xat»`,
-    estat: ESTAT_BOTIGA,
+    versioBotiga: 'cap de pública: prova tancada amb el grup de verificadors',
+    versio: `${FITXA_NATIVA.versio} (versionCode ${FITXA_NATIVA.build}), la dels fitxers del projecte · canal local d’avisos «Missatges del xat»`,
+    estat: ESTAT_GOOGLE_PLAY,
+    verificadors: Object.freeze({ adreca: ADRECA_VERIFICADORS_GOOGLE_PLAY, passos: PASSOS_VERIFICADOR_GOOGLE_PLAY }),
     comandament: 'npm run build:natiu && npx cap sync android && cd android && ./gradlew bundleRelease',
     passos: Object.freeze([
       'Genera l’AAB signat: android/app/build/outputs/bundle/release/app-release.aab.',

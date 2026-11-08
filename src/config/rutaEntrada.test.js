@@ -1,5 +1,5 @@
 import { expect, test } from 'vitest';
-import { MAXIM_TORNADA, RUTA_DESPRES_D_ENTRAR, aterratgeDespresDEntrar, esRutaDEntrada, modeDEntrada, rutaDEntrada, tornadaSegura } from './rutaEntrada.js';
+import { MAXIM_TORNADA, RUTA_COMPTE, RUTA_DESPRES_D_ENTRAR, aterratgeDespresDEntrar, esRutaDEntrada, modeDEntrada, rutaDEntrada, tornadaSegura } from './rutaEntrada.js';
 import { esRutaInterna } from './objecteConnectable.js';
 
 /* Correcció de la revisió T1–T4 (260930) · Un /connectar de Web Share Target
@@ -84,5 +84,27 @@ test.each([
   ['la mateixa entrada', '/registre?mode=entrar&tornar=%2Fapp%2Fgestoria%2Ftauler'],
   ['massa llarga', `/app/gestoria/tauler?x=${'a'.repeat(MAXIM_TORNADA)}`],
 ])('261012 · aterratge: %s continua anant al perfil', (_nom, tornar) => {
+  expect(aterratgeDespresDEntrar(tornar)).toBe(RUTA_DESPRES_D_ENTRAR);
+});
+
+/* P0-63 / IDEA-194 (ordre del Mestre, 261108) · «Compte i contrasenya» de
+   /control sense sessió: la barrera del Perfil porta a l'entrada amb la
+   tornada, i en entrar s'aterra a «El compte». Només eixa ruta, exacta. */
+test('P0-63 · RUTA_COMPTE és «El compte» del propi perfil, i com a tornada exacta mana', () => {
+  expect(RUTA_COMPTE).toBe('/el-meu-perfil?vista=compte');
+  expect(aterratgeDespresDEntrar(RUTA_COMPTE)).toBe(RUTA_COMPTE);
+  /* La porta de RequireAuth (rutaDEntrada) i la tornada que en llig l'entrada. */
+  const ida = rutaDEntrada({ mode: 'entrar', tornar: RUTA_COMPTE });
+  expect(ida).toBe('/registre?mode=entrar&tornar=%2Fel-meu-perfil%3Fvista%3Dcompte');
+  expect(aterratgeDespresDEntrar(new URLSearchParams(ida.split('?')[1]).get('tornar'))).toBe(RUTA_COMPTE);
+});
+
+test.each([
+  ['una altra vista', '/el-meu-perfil?vista=fitxa'],
+  ['una organització', '/el-meu-perfil?organitzacio=org-1'],
+  ['el compte amb més consulta', '/el-meu-perfil?vista=compte&tornar=/mur'],
+  ['el compte amb fragment', '/el-meu-perfil?vista=compte#contrasenya'],
+  ['el compte fora de l’app', '//dolent.test/el-meu-perfil?vista=compte'],
+])('P0-63 · aterratge: %s continua anant al perfil de sempre', (_nom, tornar) => {
   expect(aterratgeDespresDEntrar(tornar)).toBe(RUTA_DESPRES_D_ENTRAR);
 });

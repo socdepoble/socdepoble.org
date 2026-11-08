@@ -4,7 +4,9 @@
  * reproduïx amb la prova patrimoniR9.fonts.test.js, que les contrasta lletra a lletra amb els extractes de
  * tests/fixtures/patrimoni/ (i amb la font sencera quan és a ../_cultura_de_poble).
  * No és cap banc d'intercanvi: cap custodi, cap lot, cap formulari, cap registre. Les descripcions en prosa dels
- * catàlegs no es copien; el calendari de sembra és un gràfic a les fonts i no s'ha transcrit.
+ * catàlegs no es copien; el calendari dels 12 mesos del Catàleg valencià prové del gràfic vectorial de les
+ * pàgines 4 a 48 del PDF de la font: `sembra`, `plantacio` (Trasplantament), `collita` (Recol·lecció) i
+ * `maduracioLlavors`, i `sembraDirecta: true` on la llegenda de la pàgina diu «Sembra directa».
  * Rebutjos que no s'han de repetir: G9-03 (AVL no és l'Acadèmia), G9-04 (fitxes inventades), G9-05 (lots i custodis).
  */
 const congela = (valor) => {
@@ -124,6 +126,7 @@ export const VARIETATS_CATALEG_VALENCIA = congela([
  {
   "id": "cv-04-alberginia-blanca",
   "pagina": 4,
+  "calendari": {"sembra":[3,4],"plantacio":[4,5],"collita":[7,8,9,10],"maduracioLlavors":[9,10,11]},
   "nom": "Albergínia blanca",
   "nomCientific": "Solanum melongena L.",
   "familia": "Solanàcies",
@@ -216,6 +219,7 @@ export const VARIETATS_CATALEG_VALENCIA = congela([
  {
   "id": "cv-05-alberginia-llistada-de-gandia",
   "pagina": 5,
+  "calendari": {"sembra":[2,3],"plantacio":[3,4,5],"collita":[7,8,9,10],"maduracioLlavors":[9,10,11]},
   "nom": "Albergínia llistada de Gandia",
   "nomCientific": "Solanum melongena L.",
   "familia": "Solanàcies",
@@ -308,6 +312,7 @@ export const VARIETATS_CATALEG_VALENCIA = congela([
  {
   "id": "cv-06-alberginia-roja-de-gandia",
   "pagina": 6,
+  "calendari": {"sembra":[2,3],"plantacio":[3,4,5],"collita":[7,8,9,10],"maduracioLlavors":[9,10,11]},
   "nom": "Albergínia roja de Gandia",
   "nomCientific": "Solanum melongena L.",
   "familia": "Solanàcies",
@@ -400,6 +405,7 @@ export const VARIETATS_CATALEG_VALENCIA = congela([
  {
   "id": "cv-07-pimento-del-cuerno",
   "pagina": 7,
+  "calendari": {"sembra":[3,4],"plantacio":[4,5],"collita":[6,7],"maduracioLlavors":[8,9]},
   "nom": "Pimentó “del cuerno”",
   "nomCientific": "Capsicum annuum L.",
   "familia": "Solanàcies",
@@ -500,6 +506,7 @@ export const VARIETATS_CATALEG_VALENCIA = congela([
  {
   "id": "cv-08-pimento-quatre-morros",
   "pagina": 8,
+  "calendari": {"sembra":[2,3,4],"plantacio":[4,5],"collita":[6,7,8,9,10],"maduracioLlavors":[8,9,10]},
   "nom": "Pimentó quatre morros",
   "nomCientific": "Capsicum annuum L.",
   "familia": "Solanàcies",
@@ -600,6 +607,7 @@ export const VARIETATS_CATALEG_VALENCIA = congela([
  {
   "id": "cv-09-pimento-valencia",
   "pagina": 9,
+  "calendari": {"sembra":[2,3,4],"plantacio":[4,5],"collita":[6,7,8,9,10],"maduracioLlavors":[8,9,10]},
   "nom": "Pimentó valencià",
   "nomCientific": "Capsicum annuum L.",
   "familia": "Solanàcies",
@@ -700,6 +708,7 @@ export const VARIETATS_CATALEG_VALENCIA = congela([
  {
   "id": "cv-10-pimento-nyora",
   "pagina": 10,
+  "calendari": {"sembra":[1,2,3],"plantacio":[3,4,5],"collita":[7,8,9],"maduracioLlavors":[7,8,9]},
   "nom": "Pimentó nyora",
   "nomCientific": "Capsicum annuum L.",
   "familia": "Solanàcies",
@@ -800,6 +809,7 @@ export const VARIETATS_CATALEG_VALENCIA = congela([
  {
   "id": "cv-11-tomaca-mutxamel",
   "pagina": 11,
+  "calendari": {"sembra":[5,6],"plantacio":[7,8],"collita":[9,10,11,12],"maduracioLlavors":[11,12]},
   "nom": "Tomaca mutxamel",
   "nomCientific": "Lycopersicon esculentum Mill.",
   "familia": null,
@@ -884,6 +894,7 @@ export const VARIETATS_CATALEG_VALENCIA = congela([
  {
   "id": "cv-12-tomaca-del-pebre",
   "pagina": 12,
+  "calendari": {"sembra":[1,2,3,4],"plantacio":[3,4,5],"collita":[7,8],"maduracioLlavors":[7,8]},
   "nom": "Tomaca del pebre",
   "nomCientific": "Lycopersicon esculentum Mill.",
   "familia": null,
@@ -968,6 +979,7 @@ export const VARIETATS_CATALEG_VALENCIA = congela([
  {
   "id": "cv-13-tomaca-de-pera",
   "pagina": 13,
+  "calendari": {"sembra":[1,2,3,4],"plantacio":[3,4,5],"collita":[7,8,9],"maduracioLlavors":[7,8,9]},
   "nom": "Tomaca de pera",
   "nomCientific": "Lycopersicon esculentum Mill.",
   "familia": null,
@@ -1052,6 +1064,7 @@ export const VARIETATS_CATALEG_VALENCIA = congela([
  {
   "id": "cv-14-tomaca-quarantena",
   "pagina": 14,
+  "calendari": {"sembra":[1,12],"plantacio":[2,3],"collita":[4,5,6],"maduracioLlavors":[5,6]},
   "nom": "Tomaca quarantena",
   "nomCientific": "Lycopersicon esculentum Mill.",
   "familia": null,
@@ -1140,6 +1153,7 @@ export const VARIETATS_CATALEG_VALENCIA = congela([
  {
   "id": "cv-15-tomaca-rosada-d-altea",
   "pagina": 15,
+  "calendari": {"sembra":[2,3],"plantacio":[3,4,5],"collita":[5,6,7,8,9],"maduracioLlavors":[7,8,9]},
   "nom": "Tomaca rosada d’Altea",
   "nomCientific": "Lycopersicon esculentum Mill.",
   "familia": null,
@@ -1224,6 +1238,7 @@ export const VARIETATS_CATALEG_VALENCIA = congela([
  {
   "id": "cv-16-tomaca-valenciana-blanca",
   "pagina": 16,
+  "calendari": {"sembra":[2,3],"plantacio":[3,4,5],"collita":[5,6,7,8,9],"maduracioLlavors":[7,8,9]},
   "nom": "Tomaca valenciana blanca",
   "nomCientific": "Lycopersicon esculentum Mill.",
   "familia": null,
@@ -1308,6 +1323,7 @@ export const VARIETATS_CATALEG_VALENCIA = congela([
  {
   "id": "cv-17-tomaca-valenciana-masclet",
   "pagina": 17,
+  "calendari": {"sembra":[2,3],"plantacio":[3,4,5],"collita":[5,6,7,8,9],"maduracioLlavors":[7,8,9]},
   "nom": "Tomaca valenciana masclet",
   "nomCientific": "Lycopersicon esculentum Mill.",
   "familia": null,
@@ -1392,6 +1408,7 @@ export const VARIETATS_CATALEG_VALENCIA = congela([
  {
   "id": "cv-18-garrofo-pintat",
   "pagina": 18,
+  "calendari": {"sembra":[3,4],"plantacio":[4,5],"collita":[6,7,8,9,10],"maduracioLlavors":[9,10,11],"sembraDirecta":true},
   "nom": "Garrofó pintat",
   "nomCientific": "Phaseolus lunatus L.",
   "familia": "Lleguminoses",
@@ -1476,6 +1493,7 @@ export const VARIETATS_CATALEG_VALENCIA = congela([
  {
   "id": "cv-19-bajoca-de-ferradura",
   "pagina": 19,
+  "calendari": {"sembra":[3,4],"plantacio":[],"collita":[6,7,8],"maduracioLlavors":[8,9],"sembraDirecta":true},
   "nom": "Bajoca de ferradura",
   "nomCientific": "Phaseolus vulgaris L.",
   "familia": "Lleguminoses",
@@ -1568,6 +1586,7 @@ export const VARIETATS_CATALEG_VALENCIA = congela([
  {
   "id": "cv-20-bajoca-de-la-mantega",
   "pagina": 20,
+  "calendari": {"sembra":[3,4,7,8],"plantacio":[],"collita":[6,7,8,9,10],"maduracioLlavors":[8,9],"sembraDirecta":true},
   "nom": "Bajoca de la mantega",
   "nomCientific": "Phaseolus vulgaris L.",
   "familia": "Lleguminoses",
@@ -1664,6 +1683,7 @@ export const VARIETATS_CATALEG_VALENCIA = congela([
  {
   "id": "cv-21-bajoca-roget",
   "pagina": 21,
+  "calendari": {"sembra":[3,4,6,7],"plantacio":[],"collita":[6,7,8,9,10],"maduracioLlavors":[8,9,10],"sembraDirecta":true},
   "nom": "Bajoca roget",
   "nomCientific": "Phaseolus vulgaris L.",
   "familia": "Lleguminoses",
@@ -1756,6 +1776,7 @@ export const VARIETATS_CATALEG_VALENCIA = congela([
  {
   "id": "cv-22-bajoca-de-careta-curta",
   "pagina": 22,
+  "calendari": {"sembra":[3,4,5,6],"plantacio":[],"collita":[6,7,8,9],"maduracioLlavors":[8,9,10],"sembraDirecta":true},
   "nom": "Bajoca de careta curta",
   "nomCientific": "Vigna unguiculata (L.) Walp.",
   "familia": "Lleguminoses",
@@ -1848,6 +1869,7 @@ export const VARIETATS_CATALEG_VALENCIA = congela([
  {
   "id": "cv-23-pesol-de-trencar",
   "pagina": 23,
+  "calendari": {"sembra":[9,10,11,12],"plantacio":[],"collita":[1,2,3,4,12],"maduracioLlavors":[2,3,4,5],"sembraDirecta":true},
   "nom": "Pésol de trencar",
   "nomCientific": "Pisum sativum L. subsp. sativum var. sativum",
   "familia": "Lleguminoses",
@@ -1956,6 +1978,7 @@ export const VARIETATS_CATALEG_VALENCIA = congela([
  {
   "id": "cv-24-pesol-fi",
   "pagina": 24,
+  "calendari": {"sembra":[10,11,12],"plantacio":[],"collita":[3,4,5],"maduracioLlavors":[6,7,8]},
   "nom": "Pésol fi",
   "nomCientific": "Pisum sativum L. subsp. sativum var. arvense (L.) Poir",
   "familia": "Lleguminoses",
@@ -2048,6 +2071,7 @@ export const VARIETATS_CATALEG_VALENCIA = congela([
  {
   "id": "cv-25-fava-de-betera",
   "pagina": 25,
+  "calendari": {"sembra":[9,10,11],"plantacio":[],"collita":[3,4],"maduracioLlavors":[5,6],"sembraDirecta":true},
   "nom": "Fava de Bétera",
   "nomCientific": "Vicia faba L.",
   "familia": "Lleguminoses",
@@ -2116,6 +2140,7 @@ export const VARIETATS_CATALEG_VALENCIA = congela([
  {
   "id": "cv-26-cacau-del-collaret",
   "pagina": 26,
+  "calendari": {"sembra":[4,5,6],"plantacio":[],"collita":[9,10],"maduracioLlavors":[9,10],"sembraDirecta":true},
   "nom": "Cacau del collaret",
   "nomCientific": "Arachis hypogaea L.",
   "familia": "Lleguminoses",
@@ -2224,6 +2249,7 @@ export const VARIETATS_CATALEG_VALENCIA = congela([
  {
   "id": "cv-27-carabassa-xata-de-torrar",
   "pagina": 27,
+  "calendari": {"sembra":[3,4],"plantacio":[4,5],"collita":[8,9],"maduracioLlavors":[8,9,10,11]},
   "nom": "Carabassa xata de torrar",
   "nomCientific": "Cucurbita maxima Duchesne",
   "familia": "Cucurbitàcies",
@@ -2332,6 +2358,7 @@ export const VARIETATS_CATALEG_VALENCIA = congela([
  {
   "id": "cv-28-carabassa-de-cacauet",
   "pagina": 28,
+  "calendari": {"sembra":[3,4,5],"plantacio":[4,5,6],"collita":[8,9],"maduracioLlavors":[8,9,10,11]},
   "nom": "Carabassa de cacauet",
   "nomCientific": "Cucurbita moschata Duchesne",
   "familia": "Cucurbitàcies",
@@ -2444,6 +2471,7 @@ export const VARIETATS_CATALEG_VALENCIA = congela([
  {
   "id": "cv-29-carabasseta-blanca",
   "pagina": 29,
+  "calendari": {"sembra":[2,3,4,5,6],"plantacio":[3,4,5,6,7],"collita":[4,5,6,7,8,9,10],"maduracioLlavors":[8,9,10,11]},
   "nom": "Carabasseta blanca",
   "nomCientific": "Cucurbita pepo L.",
   "familia": "Cucurbitàcies",
@@ -2512,6 +2540,7 @@ export const VARIETATS_CATALEG_VALENCIA = congela([
  {
   "id": "cv-30-carabasseta-d-utiel",
   "pagina": 30,
+  "calendari": {"sembra":[3,4],"plantacio":[4,5],"collita":[6,7,8,9],"maduracioLlavors":[9,10,11]},
   "nom": "Carabasseta d’Utiel",
   "nomCientific": "Cucurbita pepo L.",
   "familia": "Cucurbitàcies",
@@ -2583,6 +2612,7 @@ export const VARIETATS_CATALEG_VALENCIA = congela([
  {
   "id": "cv-31-cogombre-curt-de-vinagre",
   "pagina": 31,
+  "calendari": {"sembra":[3,4],"plantacio":[4,5],"collita":[6,7],"maduracioLlavors":[8,9]},
   "nom": "Cogombre curt de vinagre",
   "nomCientific": "Cucumis sativus L.",
   "familia": "Cucurbitàcies",
@@ -2691,6 +2721,7 @@ export const VARIETATS_CATALEG_VALENCIA = congela([
  {
   "id": "cv-32-cogombre-de-la-nucia",
   "pagina": 32,
+  "calendari": {"sembra":[3,4],"plantacio":[4,5],"collita":[6,7],"maduracioLlavors":[8,9]},
   "nom": "Cogombre de la Nucia",
   "nomCientific": "Cucumis sativus L.",
   "familia": "Cucurbitàcies",
@@ -2799,6 +2830,7 @@ export const VARIETATS_CATALEG_VALENCIA = congela([
  {
   "id": "cv-33-melo-d-alger-pipa-roja",
   "pagina": 33,
+  "calendari": {"sembra":[2,3,4],"plantacio":[4,5,6],"collita":[7,8,9],"maduracioLlavors":[7,8,9]},
   "nom": "Meló d’Alger pipa roja",
   "nomCientific": "Citrullus lanatus (Thunb.) Matsum. & Nakai",
   "familia": "Cucurbitàcies",
@@ -2899,6 +2931,7 @@ export const VARIETATS_CATALEG_VALENCIA = congela([
  {
   "id": "cv-34-melo-d-alger-sang-de-bou",
   "pagina": 34,
+  "calendari": {"sembra":[2,3,4],"plantacio":[4,5,6],"collita":[7,8,9],"maduracioLlavors":[7,8,9]},
   "nom": "Meló d’Alger sang de bou",
   "nomCientific": "Citrullus lanatus (Thunb.) Matsum. & Nakai",
   "familia": "Cucurbitàcies",
@@ -2999,6 +3032,7 @@ export const VARIETATS_CATALEG_VALENCIA = congela([
  {
   "id": "cv-35-melona",
   "pagina": 35,
+  "calendari": {"sembra":[3,4],"plantacio":[4,5],"collita":[7,8],"maduracioLlavors":[7,8]},
   "nom": "Melona",
   "nomCientific": "Citrullus lanatus (Thunb.) Matsum. & Nakai",
   "familia": "Cucurbitàcies",
@@ -3107,6 +3141,7 @@ export const VARIETATS_CATALEG_VALENCIA = congela([
  {
   "id": "cv-36-melo-blanc-ratllat",
   "pagina": 36,
+  "calendari": {"sembra":[3,4],"plantacio":[4,5],"collita":[6,7,8],"maduracioLlavors":[6,7,8]},
   "nom": "Meló blanc ratllat",
   "nomCientific": "Cucumis melo L.",
   "familia": "Cucurbitàcies",
@@ -3223,6 +3258,7 @@ export const VARIETATS_CATALEG_VALENCIA = congela([
  {
   "id": "cv-37-melo-tendral-negre",
   "pagina": 37,
+  "calendari": {"sembra":[4,5],"plantacio":[5,6],"collita":[8,9],"maduracioLlavors":[9,10,11,12]},
   "nom": "Meló tendral negre",
   "nomCientific": "Cucumis melo L.",
   "familia": "Cucurbitàcies",
@@ -3339,6 +3375,7 @@ export const VARIETATS_CATALEG_VALENCIA = congela([
  {
   "id": "cv-38-safanoria-morada",
   "pagina": 38,
+  "calendari": {"sembra":[8,9,10,11],"plantacio":[],"collita":[1,2,3,11,12],"maduracioLlavors":[6,7,8],"sembraDirecta":true},
   "nom": "Safanòria morada",
   "nomCientific": "Daucus carota subsp. sativus (Hoffm.) Arcang.",
   "familia": "Umbel.líferes",
@@ -3415,6 +3452,7 @@ export const VARIETATS_CATALEG_VALENCIA = congela([
  {
   "id": "cv-39-col-de-xativa",
   "pagina": 39,
+  "calendari": {"sembra":[7,8],"plantacio":[8,9],"collita":[1,2,3,12],"maduracioLlavors":[5,6]},
   "nom": "Col de Xàtiva",
   "nomCientific": "Brassica oleracea var. capitata L.",
   "familia": "Crucíferes",
@@ -3499,6 +3537,7 @@ export const VARIETATS_CATALEG_VALENCIA = congela([
  {
   "id": "cv-40-rave-roig",
   "pagina": 40,
+  "calendari": {"sembra":[1,2,3,4,5,6,7,8,9,10,11,12],"plantacio":[],"collita":[1,2,3,4,8,9,10,11,12],"maduracioLlavors":[6,7],"sembraDirecta":true},
   "nom": "Rave roig",
   "nomCientific": "Raphanus sativus L.",
   "familia": "Crucíferes",
@@ -3559,6 +3598,7 @@ export const VARIETATS_CATALEG_VALENCIA = congela([
  {
   "id": "cv-41-ceba-bavosa",
   "pagina": 41,
+  "calendari": {"sembra":[9,10],"plantacio":[10,11],"collita":[4,5,6],"maduracioLlavors":[6]},
   "nom": "Ceba bavosa",
   "nomCientific": "Allium cepa L.",
   "familia": "Liliàcies",
@@ -3651,6 +3691,7 @@ export const VARIETATS_CATALEG_VALENCIA = congela([
  {
   "id": "cv-42-ceba-de-mig-gra",
   "pagina": 42,
+  "calendari": {"sembra":[11,12],"plantacio":[2,3],"collita":[6],"maduracioLlavors":[6]},
   "nom": "Ceba de mig gra",
   "nomCientific": "Allium cepa L.",
   "familia": "Liliàcies",
@@ -3743,6 +3784,7 @@ export const VARIETATS_CATALEG_VALENCIA = congela([
  {
   "id": "cv-43-ceba-de-gra",
   "pagina": 43,
+  "calendari": {"sembra":[1,11,12],"plantacio":[3,4],"collita":[7,8],"maduracioLlavors":[6]},
   "nom": "Ceba de gra",
   "nomCientific": "Allium cepa L.",
   "familia": "Liliàcies",
@@ -3835,6 +3877,7 @@ export const VARIETATS_CATALEG_VALENCIA = congela([
  {
   "id": "cv-44-encisam-mantegos-d-ademus",
   "pagina": 44,
+  "calendari": {"sembra":[9,10,11,12],"plantacio":[1,2,9,10,11,12],"collita":[1,2,3,4,12],"maduracioLlavors":[7]},
   "nom": "Encisam mantegós d’Ademús",
   "nomCientific": "Lactuca sativa L.",
   "familia": "Compostes",
@@ -3911,6 +3954,7 @@ export const VARIETATS_CATALEG_VALENCIA = congela([
  {
   "id": "cv-45-encisam-morat-de-morella",
   "pagina": 45,
+  "calendari": {"sembra":[8,9,10,11],"plantacio":[1,9,10,11,12],"collita":[1,2,3,11,12],"maduracioLlavors":[6]},
   "nom": "Encisam morat de Morella",
   "nomCientific": "Lactuca sativa L.",
   "familia": "Compostes",
@@ -3987,6 +4031,7 @@ export const VARIETATS_CATALEG_VALENCIA = congela([
  {
   "id": "cv-46-encisam-meravella-d-espada",
   "pagina": 46,
+  "calendari": {"sembra":[2,3,4],"plantacio":[3,4],"collita":[4,5,6],"maduracioLlavors":[8]},
   "nom": "Encisam meravella d’Espadà",
   "nomCientific": "Lactuca sativa L.",
   "familia": "Compostes",
@@ -4067,6 +4112,7 @@ export const VARIETATS_CATALEG_VALENCIA = congela([
  {
   "id": "cv-47-encisam-orella-de-burro",
   "pagina": 47,
+  "calendari": {"sembra":[1,8,9,10,11,12],"plantacio":[1,2,9,10,11,12],"collita":[1,2,3,4,11,12],"maduracioLlavors":[7]},
   "nom": "Encisam “orella de burro”",
   "nomCientific": "Lactuca sativa L.",
   "familia": "Compostes",
@@ -4143,6 +4189,7 @@ export const VARIETATS_CATALEG_VALENCIA = congela([
  {
   "id": "cv-48-bleda-d-eslida",
   "pagina": 48,
+  "calendari": {"sembra":[1,2,5,7,8,9,10,11,12],"plantacio":[],"collita":[1,2,3,4,8,9,10,11,12],"maduracioLlavors":[7,8],"sembraDirecta":true},
   "nom": "Bleda d’Eslida",
   "nomCientific": "Beta vulgaris var. cicla",
   "familia": "Quenopodiàcies",

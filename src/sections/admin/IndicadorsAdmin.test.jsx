@@ -11,7 +11,7 @@ vi.mock('../../data/backendPort.js', () => ({
   adminListUsers: (...args) => m.usuaris(...args),
   adminListOrganizations: (...args) => m.entitats(...args)
 }));
-import { IndicadorsAdmin, LIMIT_PERSONES } from './IndicadorsAdmin.jsx';
+import { APARELLS, IndicadorsAdmin, LIMIT_PERSONES, SENSE_XIFRA, TAULA_APARELLS, TEXT_APARELLS_SENSE_FONT, TITOL_APARELLS } from './IndicadorsAdmin.jsx';
 
 const ARA = new Date('2026-10-15T10:00:00Z');
 const DIA = 24 * 60 * 60 * 1000;
@@ -182,6 +182,42 @@ describe('IndicadorsAdmin', () => {
     expect(container.querySelector('[style]')).toBeNull();
   });
 
+  /* P0-42 i P0-53 (ordre del Mestre, 08-11-2026) · Els aparells amb l'app, en quatre camins, sempre a la
+     vista i sense cap crida. Cap font real del servidor no els compta per plataforma: cap xifra, «sense
+     xifra» a cada camí, on es llig hui i que comptar-ho és una decisió del Mestre (P0-42). */
+  test('P0-42 · els quatre camins dels aparells, a la vista abans de demanar res i sense cap xifra inventada', async () => {
+    render(<IndicadorsAdmin ara={ARA} />);
+    expect(m.usuaris).not.toHaveBeenCalled();
+    const bloc = screen.getByRole('region', { name: TITOL_APARELLS });
+    expect(within(bloc).getByRole('heading', { level: 3 }).textContent).toBe('Aparells amb l’app instal·lada i connectada');
+    // Abans que l'avís de «Calcula els indicadors»: és el primer que es veu.
+    expect(bloc.compareDocumentPosition(screen.getByRole('button', { name: 'Calcula els indicadors' })) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    const taula = within(bloc).getByRole('region', { name: TAULA_APARELLS });
+    expect([...taula.querySelectorAll('thead th')].map((th) => th.textContent)).toEqual(['Camí', 'Aparells', 'On es llig hui']);
+    const fileres = [...taula.querySelectorAll('tbody tr')].map((tr) => [tr.querySelector('th').textContent, tr.querySelector('td').textContent]);
+    expect(fileres).toEqual([
+      ['📱 App Android (Google Play)', SENSE_XIFRA],
+      ['🍎 App iPhone i iPad (App Store oberta, id6826441844)', SENSE_XIFRA],
+      ['🌐 Android web', SENSE_XIFRA],
+      ['💻 Escriptori', SENSE_XIFRA]
+    ]);
+    expect(APARELLS.map((a) => a.clau)).toEqual(['android-app', 'ios-app', 'android-web', 'escriptori']);
+    const avis = bloc.querySelector('.sdp-alerta');
+    expect([avis.hasAttribute('role'), avis.querySelector('.sdp-alerta__titol').textContent]).toEqual([false, 'Sense font de dades al servidor']);
+    expect(bloc.textContent).toContain(TEXT_APARELLS_SENSE_FONT);
+    expect(bloc.textContent).toContain('Google Play Console › Proves › Prova tancada');
+    expect(bloc.textContent).toContain('App Store Connect › Analítica');
+    // Cap xifra al bloc, fora dels fets datats (12 verificadors, 14 dies, l'id, la versió i la data d'Apple) i de P0-42.
+    const senseFets = bloc.textContent.replace(/id6826441844|6-11-2026|1\.0|12 verificadors|14 dies|P0-42/g, '');
+    expect(senseFets).not.toMatch(/\d/);
+    // Amb els indicadors calculats, el bloc continua igual, sense figura ni botó propis i amb una sola taula.
+    calcula();
+    await screen.findAllByRole('figure');
+    expect(screen.getAllByRole('figure')).toHaveLength(3);
+    expect(screen.getAllByRole('region', { name: TITOL_APARELLS })).toHaveLength(1);
+    expect([bloc.querySelectorAll('figure, button').length, bloc.querySelectorAll('table').length]).toEqual([0, 1]);
+  });
+
   test('sense la capacitat «admin», ho diu, no oferix el botó i no crida el port', () => {
     m.caps = new Set();
     render(<IndicadorsAdmin ara={ARA} />);
@@ -236,7 +272,8 @@ describe('IndicadorsAdmin', () => {
     expect(await screen.findAllByText('Encara no hi ha cap persona registrada.')).toHaveLength(2);
     expect(screen.getByText('Encara no hi ha cap entitat.')).toBeTruthy();
     expect(screen.queryByRole('figure')).toBeNull();
-    expect(screen.queryByRole('table')).toBeNull();
+    // P0-42 (08-11-2026) · L'única taula és la dels aparells, que sempre hi és: cap de les preguntes.
+    expect(screen.getAllByRole('table').map((taula) => taula.parentElement.getAttribute('aria-label'))).toEqual([TAULA_APARELLS]);
   });
 
   test('zeros i un sol tipus: totes les barres hi són, a zero les que no en tenen', async () => {

@@ -142,6 +142,11 @@
     border: 1px solid var(--sdp-marca-google-vora);
     background: var(--sdp-marca-google-fons); color: var(--sdp-marca-google-text); font-weight: 500;
   }
+  /* P0-62 bis (08-11-2026; ordre del Mestre) · El botó de marca gran («Disponible a l'App Store» de
+     /page/descarregues i de l'assistent de botigues): 58px d'alt, com les accions de bancal, però amb
+     el farciment lateral curt del distintiu d'Apple, perquè el text i el logotip càpien en una línia
+     dins del bloc del títol d'un mòbil de 375px. */
+  .sdp-boto--marca.sdp-boto--gran { padding-inline: var(--sdp-space-3); }
   .sdp-boto__logotip { flex: none; }
   .sdp-boto__logotip--apple { block-size: var(--sdp-marca-apple-logotip); inline-size: var(--sdp-marca-apple-logotip); }
   .sdp-boto__logotip--google { block-size: var(--sdp-marca-google-logotip); inline-size: var(--sdp-marca-google-logotip); }

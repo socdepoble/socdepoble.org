@@ -17,8 +17,10 @@ import { netejaFontImatge } from '../../enquadrament/netejaMetadades.js';
 
 /* Per a llegir l'HTML sense executar-lo ni carregar-ne res: un document de
    DOMParser és inert, i el contingut d'un <template> s'analitza com un
-   fragment (un <td> solt es queda <td>, igual que el llig ProseMirror). */
-function plantillaDe(html) {
+   fragment (un <td> solt es queda <td>, igual que el llig ProseMirror).
+   P0-58 · Exportada: la neteja del format enganxat (enganxatNet.js) llig
+   l'HTML amb el mateix sobre. */
+export function plantillaDe(html) {
   if (typeof DOMParser === 'undefined') return null;
   const doc = new DOMParser().parseFromString(`<template>${html}</template>`, 'text/html');
   const plantilla = doc.head.firstElementChild;

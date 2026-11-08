@@ -66,7 +66,7 @@ test('R19 UUID editorial boundary: real owner RLS, entity signature CHECK and ex
       assert.equal(columns.includes('revision'),false);
       const wrapper=fs.readFileSync(new URL('../src/data/revisionsEditorials.js',import.meta.url),'utf8');
       assert.match(wrapper,/_editorialClau/);assert.match(wrapper,/FILA_DE_SECCIO\[seccio\]/);
-      assert.equal((await f.pg.query("SELECT count(*)::integer AS n FROM node0.schema_migrations")).rows[0].n,80,'R11 adds per-seed revisions without granting access to UUID submissions');
+      assert.equal((await f.pg.query("SELECT count(*)::integer AS n FROM node0.schema_migrations")).rows[0].n,81,'R11 adds per-seed revisions (and R13-C7 the session counts) without granting access to UUID submissions');
     });
   }finally{await f.close();}
 });

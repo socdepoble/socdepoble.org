@@ -38,6 +38,13 @@
  * Mestre ha demanat enllaçar: és l'única ranura on ADRECA_DE_PROVES no tanca
  * el canal. Obrir-les és la mateixa línia de sempre; mentre el cos diga «no hi
  * ha APK públic» o «hem demanat a Apple un enllaç públic», canalsDeBotiga.test.js cau.
+ *
+ * P0-62 / IDEA-193 (ordre del Mestre, 261108 18:27) · L'App Store és oberta:
+ * Apple va publicar Sóc de Poble 1.0 per a iPhone i iPad (trackId 6826441844)
+ * el 06-11-2026. La consulta d'Apple
+ * (itunes.apple.com/lookup?bundleId=org.socdepoble.app&country=es) i la fitxa
+ * responen 200, comprovat el 08-11-2026. Google Play, l'APK directe i
+ * TestFlight continuen tancats.
  */
 
 /* L'identificador de l'app d'Android (capacitor.config.json, appId). */
@@ -51,7 +58,8 @@ const FITXER_APK = '/descarregues/socdepoble-android-latest.apk';
 
 export const CANALS_DE_BOTIGA = Object.freeze([
   Object.freeze({ id: 'google-play', nom: 'Google Play', url: null }),
-  Object.freeze({ id: 'app-store', nom: 'App Store', url: null }),
+  // P0-62 · La fitxa pública d'Apple (trackId 6826441844), oberta el 08-11-2026.
+  Object.freeze({ id: 'app-store', nom: 'App Store', url: 'https://apps.apple.com/es/app/s%C3%B3c-de-poble/id6826441844' }),
   // IDEA-60 (T1, prompt 261102_1532) · Tancades fins que el Mestre done l'adreça (una línia cada una).
   Object.freeze({ id: 'apk-directe', nom: 'APK directe', url: null }),
   Object.freeze({ id: 'testflight', nom: 'TestFlight', url: null }),
@@ -106,7 +114,8 @@ export function urlDeCanal(canal) {
 
 /**
  * Els canals oberts, en l'ordre de la llista: { id, nom, url } amb l'adreça
- * ja validada. Hui, només WordPress.org (des del 01-11-2026).
+ * ja validada. Hui, l'App Store (des del 08-11-2026) i WordPress.org (des
+ * del 01-11-2026).
  * @param {ReadonlyArray<{ id: string, nom: string, url: string|null }>} [canals]
  */
 export function canalsOberts(canals = CANALS_DE_BOTIGA) {

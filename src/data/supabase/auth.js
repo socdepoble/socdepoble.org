@@ -6,8 +6,10 @@ import { entraAmbGoogle, exigeixSenseMarcAlie, gestionaTornada, recullMarcaDeRec
 import { MOTIU_TORNADA, TIPUS_RECUPERACIO, llegixTornadaDeRecuperacio, netejaTornadaDeRecuperacio } from '../tornadaRecuperacio.js';
 import {
   ESTAT_ENLLAC, anunciaEnllacDeRecuperacio, escoltaRecuperacioPendent, estatEnllacDeRecuperacio, oblidaEnllacDeRecuperacio,
-  oblidaRecuperacioPendent
+  oblidaRecuperacioPendent, prenAdrecaDArribada
 } from '../recuperacioPendent.js';
+import { esAppNativa, origenPublic } from '../../config/origenPublic.js';
+import { RUTA_ENTRADA } from '../../config/rutaEntrada.js';
 import { configuraRefrescSessio, getCurrentUser, getResolvedConfig, request, rpc } from './runtime.js';
 import { tancaRealtime } from './realtime.js';
 import { resetClient } from './config.js';
@@ -928,9 +930,18 @@ const enllacCaducat = (causa) => ambCodi(
   CODI_ENTRADA.ENLLAC_CADUCAT
 );
 
+/* P0-63 (ordre del Mestre, 261108) · Dins de l'App nativa la pàgina no és
+   cap web: capacitor://localhost a iOS (urlDeTornada la rebutja: cap correu) i
+   https://localhost a Android (fora de les Redirect URLs de GoTrue, que cau en
+   silenci a la Site URL, sense camí ni marca). L'enllaç del correu s'obri al
+   navegador del telèfon: la tornada és l'entrada a l'origen públic
+   (origenPublic.js: el canònic del build o socdepoble.org), amb la marca de
+   sempre. A la web, la pàgina on s'ha demanat, com sempre. */
+const paginaDeLaRecuperacio = () => (esAppNativa() ? { href: `${origenPublic()}${RUTA_ENTRADA}` } : window.location);
+
 function rutaRecuperacio() {
   let tornada;
-  try { tornada = urlDeTornadaRecuperacio(); } catch { throw new Error(SENSE_TORNADA_RECUPERACIO); }
+  try { tornada = urlDeTornadaRecuperacio(paginaDeLaRecuperacio()); } catch { throw new Error(SENSE_TORNADA_RECUPERACIO); }
   return `/auth/v1/recover?redirect_to=${encodeURIComponent(tornada)}`;
 }
 
@@ -1126,11 +1137,17 @@ const deRecuperacio = (error) => {
    de GoTrue (l'enllaç caducat o ja usat de la plantilla per defecte): l'avís
    en valencià, ENLLAC_CADUCAT, i la URL neta. Fins ara no deia res i l'error es
    quedava a la URL. La mecànica del token_hash no canvia: es llig i es neteja
-   primer, i la marca se'n va després. */
+   primer, i la marca se'n va després.
+   P0-63 (ordre del Mestre, 261108) · Si la barra d'adreces ja no el porta (una
+   redirecció del primer pintat l'ha reescrita: «/» → /xat, o /registre → el
+   perfil amb sessió), el token es llig de l'adreça amb què ha arribat el
+   document (recuperacioPendent.js, d'un sol ús). Mana el de la barra. */
 function recullTornadaDeRecuperacio() {
   if (typeof window === 'undefined') return null;
-  const tornada = llegixTornadaDeRecuperacio(window.location.href);
-  if (tornada) netejaTornadaDeRecuperacio();
+  const arribada = prenAdrecaDArribada();
+  const enLaBarra = llegixTornadaDeRecuperacio(window.location.href);
+  const tornada = enLaBarra || llegixTornadaDeRecuperacio(arribada);
+  if (enLaBarra) netejaTornadaDeRecuperacio();
   const marca = recullMarcaDeRecuperacio();
   if (!tornada) {
     if (!marca?.error) return null;

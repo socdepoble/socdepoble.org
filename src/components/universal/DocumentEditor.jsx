@@ -1,7 +1,10 @@
 import { useCallback, useEffect, useLayoutEffect, useMemo, useReducer, useRef, useState } from 'react';
-import { closeHistory } from '@tiptap/pm/history';
+import { closeHistory, isHistoryTransaction } from '@tiptap/pm/history';
 import { createDocument, getHTMLFromFragment } from '@tiptap/core';
 import { UniversalEditorShell } from './UniversalEditorShell';
+/* P0-58 · Els camps plans que torna el repartiment (enganxatCamps.js) i el text d'un camp. */
+import { normalitzaText, unaLinia } from './enganxatCamps.js';
+import { extractPlainText } from '../../utils/contentAdapter.js';
 import { SelectorVisibilitat, TEXTOS_VISIBILITAT } from './SelectorVisibilitat.jsx';
 import BotoDretsAutor from './CopyrightSelector.jsx';
 import { CopyrightPage } from './drets/CopyrightPage.jsx';
@@ -18,6 +21,11 @@ import {
   UniversalRichTextContent,
 } from './richText';
 import { extensionsRiques } from './richText/extensions';
+/* P0-58 · El text pla amb Markdown, o un paràgraf per línia, per al
+   repartiment d'un document enganxat. Pel seu camí: les proves que
+   substituïxen './richText/extensions' amb fàbriques tancades no el veuen
+   (qualitat.test.js de les targetes). */
+import { markdownAHtml, paragrafsDeText, semblaMarkdown } from './richText/markdownEnganxat.js';
 /* T7 · Les peces de les targetes incrustades viuen en camins a banda: les
    proves que substituïxen './richText' i './richText/extensions' amb
    fàbriques tancades no les veuen. */
@@ -27,7 +35,7 @@ import { NOM_SUBTARGETA } from './richText/extensions/subtargeta.js';
 import { attrsDeEntrada } from './richText/extensions/targetes/formaDelGrup.js';
 /* Correcció de la revisió (261016) · També pel seu camí: la plantilla verge
    s'esvaeix abans de qualsevol ordre que arriba de fora del cos. */
-import { buidaLlavorVerge } from './richText/useUniversalRichText.js';
+import { buidaLlavorVerge, esLlavorVerge, llistaDeLlavors } from './richText/useUniversalRichText.js';
 /* Gauntlet 261101 · X-C-notes (C-09) · La guia del cos, pel traductor. */
 import { traduixGuia } from './richText/extensions/guiaCos.js';
 import { useUIActions } from '../../app/contexts/UIContext';
@@ -45,6 +53,9 @@ const FORA_DE_LA_VISTA = '[inert], [aria-hidden="true"], [hidden]';
    text a l'inici que no complix cap regla. */
 const MOTIU_PROPOSTA = 'proposta';
 const MOTIU_RES = 'res';
+/* P0-58 · La meta de «Desfés la proposta»: com Cmd/Ctrl+Z, torna els camps
+   d'un repartiment (seguix). */
+const META_DESFES_PROPOSTA = 'sdpDesfesProposta';
 /* T3.2 · Cert si un HTML porta algun caràcter de text fora de les etiquetes
    (la disponibilitat de la fitxa de memòria oral): una sola passada, sense
    parser; un cos de només imatges no en porta. */
@@ -55,6 +66,55 @@ const textDelCamp = (html) => String(html ?? '')
   .replace(/&nbsp;/gi, ' ').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/&amp;/g, '&')
   .replace(/\s+/g, ' ')
   .trim();
+/* P0-58 · Un paràgraf sense text que només porta salts (<br>): els que
+   Google Docs posa entre paràgrafs per a les línies en blanc. */
+function esParagrafBlanc(bloc) {
+  if (bloc.type.name !== 'paragraph' || /\S/.test(bloc.textContent)) return false;
+  let nomesSalts = true;
+  bloc.forEach((fill) => { if (!fill.isText && fill.type.name !== 'hardBreak') nomesSalts = false; });
+  return nomesSalts;
+}
+/* P0-58 · Les línies d'un tros enganxat, llegit amb l'esquema: cada bloc que
+   no és de text (una llista, una imatge, una cita…) en compta una, i un
+   paràgraf o un títol, una per cada tros amb text entre salts (Maj+Retorn),
+   com les línies del motor de «Proposa Card». Els paràgrafs blancs no compten. */
+function liniesDelTros(doc) {
+  let linies = 0;
+  doc.forEach((bloc) => {
+    if (!bloc.isTextblock) {
+      linies += 1;
+      return;
+    }
+    let tros = '';
+    bloc.forEach((fill) => {
+      if (fill.type.name === 'hardBreak') {
+        if (/\S/.test(tros)) linies += 1;
+        tros = '';
+      } else {
+        tros += fill.isText ? fill.text : '\uFFFC';
+      }
+    });
+    if (/\S/.test(tros)) linies += 1;
+  });
+  return linies;
+}
+/* P0-58 · El cos repartit sense els paràgrafs blancs del principi i del final
+   (les línies en blanc del porta-retalls que voregen el que s'ha pujat als
+   camps). Els de dins es queden. */
+function senseVoresBlanques(html, schema) {
+  if (!html) return html;
+  const doc = createDocument(html, schema);
+  const blocs = [];
+  doc.forEach((bloc) => blocs.push(bloc));
+  let inici = 0;
+  let fi = blocs.length;
+  while (inici < fi && esParagrafBlanc(blocs[inici])) inici += 1;
+  while (fi > inici && esParagrafBlanc(blocs[fi - 1])) fi -= 1;
+  if (inici === 0 && fi === blocs.length) return html;
+  if (inici === fi) return '';
+  const mida = (fins) => blocs.slice(0, fins).reduce((total, bloc) => total + bloc.nodeSize, 0);
+  return getHTMLFromFragment(doc.content.cut(mida(inici), mida(fi)), schema);
+}
 /* Els camps que encara diuen `de` passen a dir `a`; un camp que la persona ha tocat després, no. */
 function campsQueTornen(actual, de, a) {
   const valors = {};
@@ -235,6 +295,10 @@ function campsQueTornen(actual, de, a) {
  *                            // «🎴 Proposa Card», apagat si no hi ha res a
  *                            // proposar. Sense la clau, la barra i el DOM de
  *                            // sempre (Perfil i catàleg). No passa per ...rest.
+ *                            // P0-58 (IDEA-189) · Amb ell, enganxar un document
+ *                            // sencer sobre l'H1 d'una nota buida el reparteix
+ *                            // amb el mateix motor (repartixEnganxat, la prop
+ *                            // onEnganxaDocument de la closca).
  *   memoriaOral: { estructura, revisa } // Opcional (T3.2, marató 261101;
  *                            // només amb proposaCard). L'estructurador local
  *                            // de memòria oral del consumidor (el Bloc:
@@ -834,13 +898,20 @@ export function DocumentEditor({ adapter, onToast }) {
      seguixen el cos quan torna al d'abans o al de després de la proposta. */
   useEffect(() => {
     if (!ambProposta || !editor) return undefined;
-    const seguix = () => {
+    const seguix = ({ transaction } = {}) => {
       if (!propostesFetes.current.length || editor.isDestroyed) return;
       const actual = documentViu.current;
       // Les propostes d'un altre document ja no tenen res a seguir.
       propostesFetes.current = propostesFetes.current.filter((feta) => actual && feta.id === actual.id);
       const doc = editor.state.doc;
+      /* P0-58 · Un repartiment d'un document enganxat partix d'un cos BUIT:
+         buidar el cos a mà (seleccionar-ho tot i esborrar) també hi torna, i
+         això no ha de buidar el subtítol ni l'entradilla. Els seus camps només
+         tornen amb Cmd/Ctrl+Z (una transacció de l'historial) o amb el botó
+         «Desfés la proposta». */
+      const desfent = Boolean(transaction && (isHistoryTransaction(transaction) || transaction.getMeta(META_DESFES_PROPOSTA)));
       for (const feta of propostesFetes.current) {
+        if (feta.nomesDesfent && !desfent && !feta.desfeta) continue;
         if (!feta.desfeta && doc.eq(feta.docAbans)) {
           escriuCamps(feta.id, campsQueTornen(actual, feta.camps, feta.abans));
           feta.desfeta = true;
@@ -869,6 +940,7 @@ export function DocumentEditor({ adapter, onToast }) {
         .command(({ tr }) => {
           closeHistory(tr);
           tr.replaceWith(0, tr.doc.content.size, feta.docAbans.content);
+          tr.setMeta(META_DESFES_PROPOSTA, true);
           return true;
         })
         .run();
@@ -913,6 +985,123 @@ export function DocumentEditor({ adapter, onToast }) {
     if (!ambFitxa) onToastRef.current?.(t('editor.proposaCard.feta', 'Card proposada. Per a tornar-la arrere: «Desfés la proposta» o Cmd/Ctrl+Z.'));
     repintaProposta();
   }, [editor, escriuCamps, obreFitxaMemoria, t]);
+
+  /* P0-58 (IDEA-189; decisions 2, 4 i 5 de l'àrbitre) · Enganxar un document
+     sencer (títol, entradilla i paràgrafs) sobre l'H1 d'una nota BUIDA el
+     reparteix: el títol, el subtítol, l'entradilla i el cos. Una sola regla al
+     Mas: el criteri és el motor de «🎴 Proposa Card» (adapter.proposaCard),
+     de manera que enganxar sobre l'H1 dona el mateix que enganxar al cos i
+     prémer el botó. Només a una nota amb el motor (ambProposta: mai una
+     connexió ni un contingut de fora) i amb els quatre camps buits (el cos,
+     buit o la llavor verge); si no, null i el camp fa l'enganxat d'una línia.
+       · L'HTML entra per la porta ÚNICA del cos (el transformPastedHTML de
+         l'editor, és a dir netejaHtmlPerAlCos: fotos sense EXIF, codi amb URL
+         → enllaç, h1 → h2) o, sense HTML, pel Markdown o pels paràgrafs del
+         text pla. setContent NO passa per transformPastedHTML: per això la
+         neteja va ací, abans.
+       · Es llig amb l'esquema de l'editor (com cosNormalitzat) i DESPRÉS es
+         saneja: al revés, el sanejador lleva els style de Google Docs i les
+         seues negretes i cursives es perden.
+       · Un sol bloc (decisió 5): null, l'enganxat normal d'una línia.
+       · Sense cap línia apta per al títol (decisió 4): tot al cos i el títol buit.
+       · Amb títol: el cos que resta, en un pas propi de l'historial
+         (closeHistory davant i darrere, setContent i no pasteHTML, que
+         desplaçaria la pàgina fins al cos); el subtítol i l'entradilla pel camí
+         de sempre (escriuCamps) i apuntats a propostesFetes, de manera que
+         Cmd/Ctrl+Z al cos els torna buits (seguix). El títol el torna i
+         l'inserix el camp enfocat (A2 i el desfer natiu). */
+  const repartixEnganxat = useCallback(({ html = '', text = '' } = {}) => {
+    const actual = documentViu.current;
+    const motor = proposaCardRef.current;
+    if (!actual || !editor || editor.isDestroyed || !editor.isEditable || typeof motor !== 'function') return null;
+    if (['title', 'subtitle', 'lead'].some((camp) => extractPlainText(actual[camp], Infinity))) return null;
+    if (!editor.isEmpty && !esLlavorVerge(editor, llistaDeLlavors(seedContent))) return null;
+    /* La porta ÚNICA de l'HTML que entra al cos: el mateix
+       transformPastedHTML que ProseMirror aplica en enganxar i en deixar anar
+       (TipTap el compon de les extensions; SdpImage hi posa
+       netejaHtmlPerAlCos: fotos sense EXIF ni registre, codi amb URL →
+       enllaç, h1 → h2). setContent no hi passa: per això es crida ací, a mà.
+       Sense HTML, el Markdown del text (markdownAHtml) o un paràgraf per
+       línia (paragrafsDeText), que mai no porten cap <img>. */
+    const perLaPorta = ({ html: deFora = '', text: pla = '' }) => {
+      if (typeof deFora === 'string' && deFora.trim()) {
+        let net = deFora;
+        editor.view.someProp('transformPastedHTML', (transforma) => { net = transforma(net, editor.view); });
+        return typeof net === 'string' ? net : '';
+      }
+      if (typeof pla !== 'string' || !pla.trim()) return '';
+      return semblaMarkdown(pla) ? markdownAHtml(pla) : paragrafsDeText(pla);
+    };
+    /* L'HTML del porta-retalls llegit amb l'esquema (i sanejat després) i
+       quantes línies porta (liniesDelTros); sense cap línia (un text/html
+       sense res), el text pla. */
+    const llig = (porta) => {
+      const brut = perLaPorta(porta);
+      if (!brut) return null;
+      const llegit = createDocument(brut, editor.schema);
+      const linies = liniesDelTros(llegit);
+      return linies ? { normal: sanitizeHtml(getHTMLFromFragment(llegit.content, editor.schema)), linies } : null;
+    };
+    let lectura = null;
+    try {
+      lectura = llig({ html, text }) || (typeof html === 'string' && html.trim() ? llig({ text }) : null);
+    } catch {
+      lectura = null;
+    }
+    /* Un sol bloc d'una línia (decisió 5): l'enganxat d'una línia. */
+    if (!lectura?.normal || lectura.linies < 2) return null;
+    const { normal } = lectura;
+
+    let proposta = null;
+    try {
+      proposta = motor({ title: '', subtitle: '', lead: '', content: normal });
+    } catch {
+      proposta = null;
+    }
+    const titol = proposta?.motiu === MOTIU_PROPOSTA && typeof proposta.cos === 'string'
+      ? proposta.mogudes?.find((moguda) => moguda.camp === 'title')?.text ?? ''
+      : '';
+    const camps = {};
+    if (titol) {
+      for (const [camp, valor] of Object.entries(proposta.camps || {})) {
+        if (camp !== 'title') camps[camp] = unaLinia(normalitzaText(valor));
+      }
+    }
+    let cos = titol ? proposta.cos : normal;
+    try {
+      cos = senseVoresBlanques(cos, editor.schema);
+    } catch { /* el cos tal qual */ }
+
+    buidaLlavorVerge(editor);
+    /* C-04 · P1-02: un cos igual que la llavor però ja consumit (la persona
+       l'ha tornat a escriure i desat) no és cap llavor verge, i
+       buidaLlavorVerge no l'ha buidat: és text de la persona i no es
+       sobreescriu. L'enganxat d'una línia. */
+    if (!editor.isEmpty) return null;
+    const docAbans = editor.state.doc;
+    /* Tot pujat als camps (el cos, ja buit): cap pas buit a l'historial. */
+    if (cos) {
+      editor.chain()
+        .command(({ tr }) => { closeHistory(tr); return true; })
+        .setContent(cos, { emitUpdate: true })
+        .run();
+      editor.chain().command(({ tr }) => { closeHistory(tr); return true; }).run();
+    }
+    if (Object.keys(camps).length) {
+      /* Només amb un pas del cos que desfer: si el cos no ha canviat, cap cos
+         buit d'abans no ha de buidar els camps quan s'hi torne. */
+      if (!editor.state.doc.eq(docAbans)) {
+        const abans = Object.fromEntries(Object.keys(camps).map((camp) => [camp, actual[camp] ?? '']));
+        propostesFetes.current = [
+          ...propostesFetes.current.filter((f) => f.id === actual.id),
+          { id: actual.id, docAbans, docDespres: editor.state.doc, camps, abans, desfeta: false, nomesDesfent: true }
+        ];
+      }
+      escriuCamps(actual.id, camps);
+    }
+    repintaProposta();
+    return { titol };
+  }, [editor, escriuCamps, seedContent]);
 
   if (!document) {
     return (
@@ -1039,6 +1228,9 @@ export function DocumentEditor({ adapter, onToast }) {
       /* Bloc 3.9 (261016) · Opt-in: sense les claus, cap prop nova a la closca. */
       {...(placeholderTitol ? { placeholderTitol } : null)}
       {...(edicioAvancada ? { edicioAvancada: true } : null)}
+      /* P0-58 (IDEA-189) · Opt-in: només una nota amb «🎴 Proposa Card»
+         reparteix el document enganxat sobre l'H1; sense, cap prop nova. */
+      {...(ambProposta ? { onEnganxaDocument: repartixEnganxat } : null)}
       className={classeCloscat}
       classificacio={ranuraClassificacio}
       copyright={ambDrets ? copyrightValue : undefined}

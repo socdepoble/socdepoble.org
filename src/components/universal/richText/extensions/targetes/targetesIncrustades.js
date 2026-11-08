@@ -420,7 +420,10 @@ export const TargetesIncrustades = Extension.create({
           if (grup) cursorDarrere(tr, grup.pos + grup.node.nodeSize);
           return true;
         }
-        const grup = tipusGrup.create({ alineacio: ALINEACIO_PER_DEFECTE }, targeta);
+        const alineacioInicial = atributs && typeof atributs === 'object' && atributs.alineacio
+          ? alineacioValida(atributs.alineacio)
+          : ALINEACIO_PER_DEFECTE;
+        const grup = tipusGrup.create({ alineacio: alineacioInicial }, targeta);
         const { inici, fi } = llocDelGrup(selection);
         tr.replaceWith(inici, fi, grup);
         cursorDarrere(tr, inici + grup.nodeSize);

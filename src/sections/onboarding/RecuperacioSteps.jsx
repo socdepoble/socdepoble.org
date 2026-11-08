@@ -196,8 +196,12 @@ export function RecuperacioStep({
  * Compatibilitat (una sessió que encara ha de triar la contrasenya): `correu`
  * és el del compte, perquè qui obri un enllaç que no és seu veja de qui és, i
  * `onEix()` (promesa) és l'única altra eixida.
+ * P0-63 / IDEA-194 (ordre del Mestre, 261108) · `onCompte()` (opcional) només
+ * arriba quan el navegador ja té sessió: si l'enllaç ja no val, l'avís oferix
+ * també canviar la contrasenya des d'«El compte» del Perfil, el camí bo amb
+ * sessió i sense token. Mentre l'enllaç val, la pantalla no canvia.
  */
-export function ContrasenyaNovaStep({ correu = '', onDesa, onEix = null, onTorna = null, onDemanaUnAltre = null, t = TRADUCTOR_DE_RESERVA }) {
+export function ContrasenyaNovaStep({ correu = '', onDesa, onEix = null, onTorna = null, onDemanaUnAltre = null, onCompte = null, t = TRADUCTOR_DE_RESERVA }) {
   const [fields, setFields] = useState({ password: '', confirmPassword: '' });
   const [errors, setErrors] = useState({});
   const [error, setError] = useState(null);
@@ -270,9 +274,14 @@ export function ContrasenyaNovaStep({ correu = '', onDesa, onEix = null, onTorna
           {error ? (
             <Alerta
               to={toDeLErrorDEntrada(error.codi)}
-              accions={enllacMort && typeof onDemanaUnAltre === 'function'
-                ? <Boto varietat="secundari" icona={Send} onClick={onDemanaUnAltre}>{t('section.login.recuperacio.demanaEnllac', 'Demana un enllaç nou')}</Boto>
-                : null}
+              accions={enllacMort && (typeof onDemanaUnAltre === 'function' || typeof onCompte === 'function') ? (
+                <>
+                  {typeof onCompte === 'function' ? <BotoDelCompte onCompte={onCompte} t={t} /> : null}
+                  {typeof onDemanaUnAltre === 'function'
+                    ? <Boto varietat="secundari" icona={Send} onClick={onDemanaUnAltre}>{t('section.login.recuperacio.demanaEnllac', 'Demana un enllaç nou')}</Boto>
+                    : null}
+                </>
+              ) : null}
             >
               {error.text}
             </Alerta>
@@ -346,13 +355,25 @@ export function ContrasenyaNovaStep({ correu = '', onDesa, onEix = null, onTorna
   );
 }
 
+/* P0-63 / IDEA-194 (261108) · «Canvia la contrasenya des del teu compte»: amb
+   sessió i sense un enllaç que valga, el camí bo és «El compte» del Perfil. */
+function BotoDelCompte({ onCompte, t, ple = false }) {
+  return (
+    <Boto varietat="secundari" ple={ple} icona={KeyRound} onClick={onCompte}>
+      {t('section.login.recuperacio.compte', 'Canvia la contrasenya des del teu compte')}
+    </Boto>
+  );
+}
+
 /**
  * R2 · «Torna a obrir l'enllaç del correu». La pàgina s'ha recarregat i, per
  * seguretat, l'enllaç només vivia en la memòria del document. Si encara no
  * s'havia premut «Desa», el mateix enllaç continua valent. `onDemanaUnAltre()`
  * obri «Recupera la contrasenya»; `onTorna()`, el formulari d'entrada.
+ * P0-63 (261108) · `onCompte()` (opcional, només amb sessió): el primer botó,
+ * cap a «El compte» del Perfil.
  */
-export function EnllacPerdutStep({ onDemanaUnAltre, onTorna, t = TRADUCTOR_DE_RESERVA }) {
+export function EnllacPerdutStep({ onDemanaUnAltre, onTorna, onCompte = null, t = TRADUCTOR_DE_RESERVA }) {
   return (
     <UniversalCard
       variant="onboarding"
@@ -365,6 +386,11 @@ export function EnllacPerdutStep({ onDemanaUnAltre, onTorna, t = TRADUCTOR_DE_RE
           </p>
 
           <div className="onboarding-form">
+            {typeof onCompte === 'function' ? (
+              <div className="onboarding-card__action--ple">
+                <BotoDelCompte onCompte={onCompte} t={t} ple />
+              </div>
+            ) : null}
             <div className="onboarding-card__action--ple">
               <Boto varietat="secundari" ple icona={Send} onClick={onDemanaUnAltre}>
                 {t('section.login.recuperacio.demanaEnllac', 'Demana un enllaç nou')}

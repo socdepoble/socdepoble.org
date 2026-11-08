@@ -55,6 +55,7 @@
     "tests/lint_enxufe.test.mjs",
     "tests/llaurador-managed-region.test.mjs",
     "tests/mapa-consola.test.mjs",
+    "tests/migracio-admin-resum-sessions-dispositius.test.mjs",
     "tests/migracio-convergencia-perfil.test.mjs",
     "tests/migracio-xat-de-pagina.test.mjs",
     "tests/nixos-reproducible-verifier.test.mjs",
@@ -660,6 +661,11 @@
       "path": "tests/mapa-consola.test.mjs",
       "suite": "primary",
       "reason": "Regressió portable del producte o d’una eina permanent; s’executa a la cadena primària, també quan està roja."
+    },
+    {
+      "path": "tests/migracio-admin-resum-sessions-dispositius.test.mjs",
+      "suite": "primary",
+      "reason": "R13-C7: forma, guarda superadmin aal2, permisos i claus tancades de la RPC de recomptes de sessions; SQL real amb PGlite explícit i sessions sintètiques, cap base remota."
     },
     {
       "path": "tests/migracio-convergencia-perfil.test.mjs",

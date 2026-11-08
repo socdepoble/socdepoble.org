@@ -25,11 +25,12 @@ import { DialegNovaOrganitzacio } from './DialegNovaOrganitzacio.jsx';
 import { APLICACIONS, aplicacionsValides } from './aplicacions.js';
 import { nodesDelPerfil } from './nodes.js';
 import {
-  ID_ADMINISTRACIO_SISTEMA, PARAM_FITXA_ORGANITZACIO, TEXTOS_PRIVACITAT_LLISTA, itemsDAdministracioSistema, itemsDAplicacions, itemsDePerfil, navegacioDePerfil, seleccioInicialDePerfil,
+  ID_ADMINISTRACIO_SISTEMA, PARAM_FITXA_ORGANITZACIO, PARAM_VISTA, TEXTOS_PRIVACITAT_LLISTA, VISTA_COMPTE, itemsDAdministracioSistema, itemsDAplicacions, itemsDePerfil, navegacioDePerfil, seleccioInicialDePerfil,
 } from './perfilModel.js';
 import {
   PanellAjustosVistesColumnes, PanellCromIntegrat, PanellEmpaquetatsDesplegament, PanellNodesFediversResiliencia,
 } from './admin/PanellsAdministracioSistema.jsx';
+import { ambTextosPerAppIos, esAppNativaIos } from './admin/appNativaIos.js';
 import { tradueix, useTraductorOpcional } from '../../components/PedraSeca/hooks/useTraductorOpcional.js';
 import { omple } from '../../config/moderacio.js';
 import { useAutodesament } from '../../data/autodesament/useAutodesament.js';
@@ -40,6 +41,8 @@ import { textosDeFitxa } from './visibilitatFitxa.js';
 /* P1-f (Onada R6 · Bloc 2) · El Laboratori i el Banc porten el tesaurus sencer: només es carreguen en obrir-los. */
 const LaboratoriTaxonomiaDoctoral = lazy(() => import('./admin/LaboratoriTaxonomiaDoctoral.jsx'));
 const BancImportacioEditorial = lazy(() => import('./admin/BancImportacioEditorial.jsx'));
+/* R13-C7 (ordre del Mestre, 08-11-2026) · «👥 Usuaris, Dispositius i Botigues»: el panell i les seues dades, diferits. */
+const PanellUsuarisDispositiusBotigues = lazy(() => import('./admin/PanellUsuarisDispositiusBotigues.jsx'));
 
 const PaginaDeLAgent = lazy(() => import('./PerfilPublicSection.jsx').then((modul) => ({ default: modul.PaginaDeLAgent })));
 
@@ -167,7 +170,7 @@ export function AccesFitxaPublica({ identitat, etiqueta }) {
   );
 }
 
-function PerfilManagerInner({ config, aplicacions, preferides, recuperacio = null, connexio, etiquetaFitxaPublica }) {
+function PerfilManagerInner({ config, aplicacions, preferides, vista = null, recuperacio = null, connexio, etiquetaFitxaPublica }) {
   const { showToast } = useToast();
   const {
     identitats, contactes, guardarAjust, pujaMitja, creaOrganitzacio, recarrega, carregant, error, ambMembres,
@@ -197,9 +200,10 @@ function PerfilManagerInner({ config, aplicacions, preferides, recuperacio = nul
      panells només per a superadmin (la mateixa guarda estable de les
      aplicacions internes): ni el grup, ni els apartats, ni la ruta, ni el detall. */
   const { esSuperadmin: superadminAdmin } = useSuperadminEstable();
+  /* P0-63 (261108) · ?vista=compte (RUTA_COMPTE): «El compte» de la persona. */
   const initialSelection = useMemo(
-    () => seleccioInicialDePerfil(identitats, [preferidaRuta, preferidaActor], { superadmin: superadminAdmin }),
-    [identitats, preferidaRuta, preferidaActor, superadminAdmin],
+    () => seleccioInicialDePerfil(identitats, [preferidaRuta, preferidaActor], { superadmin: superadminAdmin, vista }),
+    [identitats, preferidaRuta, preferidaActor, superadminAdmin, vista],
   );
 
   /* Encàrrec 261018_1220 (Tasca 1, ordre del Mestre: «recuperar fidelment el
@@ -218,6 +222,8 @@ function PerfilManagerInner({ config, aplicacions, preferides, recuperacio = nul
      text de sempre. La resta de la fila no canvia; la cerca, vegeu
      ambTextosTraduits (G2-T7-01). */
   const t = useTraductorOpcional();
+  /* R13-C7 · Dins de l'app d'iOS (regla 2.3.10), la card «👥 Usuaris, Dispositius i Botigues» no nomena Google. */
+  const [appIos] = useState(esAppNativaIos);
 
   /* Tots els hooks ABANS de cap return condicional (regla de hooks). */
   const grupsNavegacio = useMemo(
@@ -233,10 +239,10 @@ function PerfilManagerInner({ config, aplicacions, preferides, recuperacio = nul
       ...itemsDePerfil(identitats, { ambPrivacitat }).map((item) => (item.data?.vista === 'privacitat'
         ? ambTextosTraduits(item, tradueix(t, TEXTOS_PRIVACITAT_LLISTA.titol), tradueix(t, TEXTOS_PRIVACITAT_LLISTA.subtitol))
         : item)),
-      ...(superadminAdmin ? itemsDAdministracioSistema() : []),
+      ...(superadminAdmin ? itemsDAdministracioSistema().map((item) => (appIos ? ambTextosPerAppIos(item) : item)) : []),
       ...itemsDAplicacions(aplicacions),
     ],
-  }), [identitats, aplicacions, ambPrivacitat, workspaceKey, grupsNavegacio, t, superadminAdmin]);
+  }), [identitats, aplicacions, ambPrivacitat, workspaceKey, grupsNavegacio, t, superadminAdmin, appIos]);
 
   /* Slot estable: depèn només de coses que ja són estables gràcies al
      context endurit. */
@@ -250,6 +256,7 @@ function PerfilManagerInner({ config, aplicacions, preferides, recuperacio = nul
     if (vista === 'admin-vistes-columnes') return <DetallAdministracio item={item}><PanellAjustosVistesColumnes navigationGroups={grupsNavegacio} /></DetallAdministracio>;
     if (vista === 'admin-nodes-fedivers') return <DetallAdministracio item={item}><PanellNodesFediversResiliencia /></DetallAdministracio>;
     if (vista === 'admin-empaquetats') return <DetallAdministracio item={item}><PanellEmpaquetatsDesplegament /></DetallAdministracio>;
+    if (vista === 'admin-usuaris-i-dispositius') return <DetallAdministracio item={item}><Suspense fallback={null}><PanellUsuarisDispositiusBotigues /></Suspense></DetallAdministracio>;
     if (vista === 'aplicacio') {
       const aplicacio = aplicacions.find((a) => a.id === item.data.aplicacioId);
       return aplicacio ? <DetallAplicacio key={aplicacio.id} aplicacio={aplicacio} /> : null;
@@ -379,8 +386,9 @@ function PerfilManagerInner({ config, aplicacions, preferides, recuperacio = nul
         /* MD (ordre del Mestre, 261003) · En mòbil, primer PERFIL; amb
            ?organitzacio= a l'entrada («Edita la fitxa de…»), la fitxa, tret
            que la persona torne amb l'Arrere a on l'havia deixada: llavors, el
-           nivell on era (nivellMestreDetall.js). */
-        mestreDetall={{ clau: 'perfil', element: preferidaRuta }}
+           nivell on era (nivellMestreDetall.js).
+           P0-63 (261108) · Amb ?vista=compte, també el detall: «El compte». */
+        mestreDetall={{ clau: 'perfil', element: vista ? `${PARAM_VISTA}=${vista}` : preferidaRuta }}
         labels={etiquetesWorkspace}
         icons={ICONES}
         tagFilter={false}
@@ -437,6 +445,8 @@ export default function PerfilShell({ aplicacions = APLICACIONS, nodes = SENSE_N
      triar què s'obri primer. */
   const [params] = useSearchParams();
   const preferidaRuta = params?.get?.(PARAM_FITXA_ORGANITZACIO) || null;
+  /* P0-63 (261108) · ?vista=compte, «El compte» de la persona; cap altre valor. */
+  const vista = params?.get?.(PARAM_VISTA) === VISTA_COMPTE ? VISTA_COMPTE : null;
   /* Revisió adversarial (261018) · La clau del Workspace depén de l'actor: si
      una relectura de les pertinences falla (IdentitatContext buida la llista i
      l'actor cau a la persona), es conserva l'organització d'abans i el Perfil
@@ -480,6 +490,7 @@ export default function PerfilShell({ aplicacions = APLICACIONS, nodes = SENSE_N
         config={config}
         aplicacions={utilitats}
         preferides={preferides}
+        vista={vista}
         recuperacio={recuperacio}
         connexio={connexio}
         etiquetaFitxaPublica={etiquetaFitxaPublica}

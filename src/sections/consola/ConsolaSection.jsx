@@ -1,5 +1,5 @@
 import { gestionaTeclaGraella } from '../../components/universal/workspace/navegacioTeclat.js';
-import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { lazy, Suspense, useCallback, useEffect, useId, useLayoutEffect, useRef, useState } from 'react';
 import {
   Activity, ArrowLeftRight, Bot, CalendarClock, HeartPulse, Network, Puzzle, RefreshCw, Users, Workflow
 } from 'lucide-react';
@@ -49,6 +49,26 @@ import { TEXTOS_AVIS } from './mapa/grafMapa.js';
 import { useGovern } from './govern/useGovern.js';
 import { PaginaDeGovern, SeccioGovern } from './govern/GovernConsola.jsx';
 import { TITOL_SALA_MAQUINES, paginaGovern, segmentGovern } from './govern/governConsola.js';
+import { PAGINA_BRAIN_TAXONOMIA, esRutaBrainTaxonomia } from '../../data/taxonomia/paginaBrainTaxonomia.js';
+
+/* P0-61 / IDEA-192 · El Brain de categories i etiquetes, diferit: ni el tros
+   d'entrada ni el de la Consola porten el model, el tesaurus ni les targetes. */
+const BrainTaxonomia = lazy(() => import('../taxonomia/BrainTaxonomia.jsx'));
+
+/* P0-61 · El bloc del tauler: el seu H2 i una sola targeta cap a /consola/taxonomia,
+   com el dels empaquetats. Només ací: ni la Consola incrustada de la Wiki ni l'Índex. */
+function SeccioBrainTaxonomia() {
+  const id = useId();
+  const pagina = PAGINA_BRAIN_TAXONOMIA;
+  return (
+    <section aria-labelledby={id}>
+      <h2 id={id}>{pagina.title}</h2>
+      <nav className="sdp-card-grid sdp-consola__graella" onKeyDown={gestionaTeclaGraella} aria-label={pagina.etiquetaNav}>
+        <TargetaConsola icona={Network} titol={pagina.title} subtitol={pagina.subtitle} entradilla={pagina.lead} a={pagina.ruta} creat={copyConsola().date} />
+      </nav>
+    </section>
+  );
+}
 
 /* IDEA-50 (pàgina de versions; pla 261029_1605, Bloc G) · La ruta de la
    pàgina de versions, de la SSOT de rutes (config/navigation.js). */
@@ -406,7 +426,7 @@ function ContingutPagina({ id, consola, mapa, locale }) {
    seua pàgina (lliçó 261004 de sdp-universal-page). No en fa la portada
    (hero): la Llei Visual del quadrat no cobrix la portada de PageFrame i
    canviaria els píxels de nou pàgines sense l'ordre del Mestre. */
-function seoDe({ copy, pagina, slugXifra, xifra, llegint, idPanell, panell, idGovern, paginaDeGovern, deEmpaquetats, privat }) {
+function seoDe({ copy, pagina, slugXifra, xifra, llegint, idPanell, panell, idGovern, paginaDeGovern, deEmpaquetats, deTaxonomia, privat }) {
   if (slugXifra !== null) {
     // Mentre les fonts es lligen no se sap si la xifra existix (PaginaXifra espera).
     if (!xifra && llegint) return { title: `Sóc de Poble en xifres · ${copy.title}`, description: copy.lead };
@@ -429,6 +449,12 @@ function seoDe({ copy, pagina, slugXifra, xifra, llegint, idPanell, panell, idGo
     const p = paginaEmpaquetats();
     return { title: `${p.title} · ${copy.title}`, description: p.lead };
   }
+  /* P0-61 / IDEA-192 · /consola/taxonomia, com /consola/empaquetats: el head del
+     client, fora del prerender social. La cobertura social de la Consola
+     (tooling/seo, QA-VES-01) exigix a cada ruta prerenderitzada una portada
+     pròpia (PNG o JPEG de public/, cap targeta genèrica) i el Brain encara no
+     en té cap: fins que el Mestre n'aprove una, el servidor dona el shell. */
+  if (deTaxonomia) return { title: `${PAGINA_BRAIN_TAXONOMIA.title} · ${copy.title}`, description: PAGINA_BRAIN_TAXONOMIA.lead };
   if (pagina) return headPublic(metadadesDeSubpagina(pagina, copy, opcionsDeLaImatgeSocial()));
   return headPublic(metadadesDelTauler(copy, opcionsDeLaImatgeSocial()));
 }
@@ -453,7 +479,9 @@ export default function ConsolaSection() {
   const idGovern = slugXifra === null && idPanell === null ? segmentGovern(comodi) : null;
   // P1-35 (pla 261028_1526 §3.5.2) · /consola/empaquetats, la pàgina dels empaquetats.
   const deEmpaquetats = slugXifra === null && idPanell === null && idGovern === null && esRutaEmpaquetats(comodi);
-  const sensePropia = slugXifra === null && idPanell === null && idGovern === null && !deEmpaquetats;
+  // P0-61 / IDEA-192 · /consola/taxonomia, el Brain de categories i etiquetes.
+  const deTaxonomia = slugXifra === null && idPanell === null && idGovern === null && !deEmpaquetats && esRutaBrainTaxonomia(comodi);
+  const sensePropia = slugXifra === null && idPanell === null && idGovern === null && !deEmpaquetats && !deTaxonomia;
   const id = sensePropia ? segmentPagina(comodi) : '';
   const pagina = sensePropia && id ? paginaConsola(id) : null;
   const paginaDeGovern = idGovern === null ? null : paginaGovern(idGovern);
@@ -471,11 +499,12 @@ export default function ConsolaSection() {
   const panell = idPanell === null ? null : panellPols(idPanell);
 
   const llegint = mapa.estat === 'loading' || consola.estat === 'loading';
-  useSEO(seoDe({ copy, pagina, slugXifra, xifra, llegint, idPanell, panell, idGovern, paginaDeGovern, deEmpaquetats, privat }));
+  useSEO(seoDe({ copy, pagina, slugXifra, xifra, llegint, idPanell, panell, idGovern, paginaDeGovern, deEmpaquetats, deTaxonomia, privat }));
 
   /* /consola/* és un sol element muntat: canviar de pàgina no desmunta res i
-     el contenidor de scroll de l'aplicació es quedava on era. */
-  useLayoutEffect(() => { tornaAlCim(cim.current); }, [id, slugXifra, idPanell, idGovern, deEmpaquetats]);
+     el contenidor de scroll de l'aplicació es quedava on era. P0-61 · També en
+     entrar a /consola/taxonomia des de la seua targeta, al peu del tauler. */
+  useLayoutEffect(() => { tornaAlCim(cim.current); }, [id, slugXifra, idPanell, idGovern, deEmpaquetats, deTaxonomia]);
 
   /* Obrir una pàgina amb la seua font carregada la marca com a vista: el
      tauler només dirà «Canvis nous» si el resum canvia després. */
@@ -506,6 +535,21 @@ export default function ConsolaSection() {
   }
 
   if (deEmpaquetats) return <PaginaEmpaquetats font={empaquetats} privat={privat} peu={peu('empaquetats')} />;
+
+  /* P0-61 / IDEA-192 · Com les altres pàgines de la Consola: molla de pa, text en
+     valencià declarat (llenguaDelContingut) i sense Traductor. La molla porta el
+     cim (cimRef) per a tornar dalt en entrar-hi des del tauler. */
+  if (deTaxonomia) {
+    return (
+      <UniversalPage title={PAGINA_BRAIN_TAXONOMIA.title} subtitle={PAGINA_BRAIN_TAXONOMIA.subtitle} lead={PAGINA_BRAIN_TAXONOMIA.lead}
+        chrome="system" nivellMaxIndex={6} traduccio={false} llenguaDelContingut="ca">
+        <div ref={cim}>
+          <MollaPa className="sdp-molla--panell" passos={[{ etiqueta: copy.title, a: RUTA_CONSOLA }, { etiqueta: PAGINA_BRAIN_TAXONOMIA.title }]} />
+        </div>
+        <Suspense fallback={<Carregant etiqueta={PAGINA_BRAIN_TAXONOMIA.obrint} />}><BrainTaxonomia /></Suspense>
+      </UniversalPage>
+    );
+  }
 
   if (id === null) return <Navigate to={RUTA_CONSOLA} replace />;
 
@@ -561,6 +605,7 @@ export default function ConsolaSection() {
         <PrivacitatConsola.Provider value={privat}>
           <TaulerAmbGovern consola={consola} mapa={mapa} govern={govern} ara={ara} cimRef={cim} ambImatges locale={locale} />
           <SeccioEmpaquetats font={empaquetats} />
+          <SeccioBrainTaxonomia />
           <IndexConsola fonts={fontsDe(consola, mapa)} govern={govern} empaquetats={empaquetats} locale={locale} ara={ara} />
           <DiagnosiConsola fonts={fontsDe(consola, mapa)} locale={locale} ara={ara} />
         </PrivacitatConsola.Provider>
