@@ -96,6 +96,11 @@
  *     Per defecte, 'a'.
  * Sense rutaDeLEsdeveniment, el DOM de sempre.
  *
+ * R51 (P0-46; troballa R12G-BH-02) · esTraduible · (esd) => boolean, opcional,
+ * com a VistaAgenda i VistaSetmana: amb false, la peça porta translate="no"
+ * (la capa ja és aria-hidden i el Traduir de la pàgina no la llig; l'atribut
+ * també ho diu al traductor del navegador). Sense la prop, el DOM de sempre.
+ *
  * Importa per camí directe (mai per index.js): la porta de dependències
  * circulars de Pedra Seca ho exigix.
  */
@@ -160,7 +165,7 @@ export function EnllacDeLEsdeveniment({ ruta, LinkComponent = 'a', children, ...
    En compacte, la tira o el punt sols: el nom del dia ja diu el títol.
    Onada 6 · Amb `ruta` i fora del compacte, el contingut és l'enllaç a la
    publicació (tabIndex -1: la capa és aria-hidden). */
-function PecaDelMes({ peca, compacte, ruta = null, LinkComponent }) {
+function PecaDelMes({ peca, compacte, ruta = null, LinkComponent, traduible = true }) {
   const ref = useRef(null);
   usePropietatsCss(ref, { '--cal-col-inici': peca.colInici + 1, '--cal-col-fi': peca.colFi + 1, '--cal-carril': peca.carril + 1 });
   const { ocurrencia, tipus } = peca.segment;
@@ -181,7 +186,7 @@ function PecaDelMes({ peca, compacte, ruta = null, LinkComponent }) {
     </>
   );
   return (
-    <li ref={ref} className={classe}>
+    <li ref={ref} className={classe} translate={traduible ? undefined : 'no'}>
       {enllac ? <EnllacDeLEsdeveniment ruta={enllac} LinkComponent={LinkComponent} tabIndex={-1}>{contingut}</EnllacDeLEsdeveniment> : contingut}
     </li>
   );
@@ -190,7 +195,7 @@ function PecaDelMes({ peca, compacte, ruta = null, LinkComponent }) {
 export function VistaMes({
   esdeveniments, cursor, avui = new Date(), diaTriat = null, onTriaDia, maxCarrils,
   setmanes = 'justes', dilluns = null, densitat = 'responsiva',
-  recompte = recompteEsdeveniments, titol, locale, className, rutaDeLEsdeveniment, LinkComponent = 'a'
+  recompte = recompteEsdeveniments, titol, locale, className, rutaDeLEsdeveniment, LinkComponent = 'a', esTraduible
 }) {
   const arrel = useRef(null);
   // Un número primitiu per a les dependències: un Date nou a cada pintada no recalcula res.
@@ -296,7 +301,8 @@ export function VistaMes({
             <ol className="sdp-cal-mes__barres" aria-hidden="true">
               {fila.peces.map((peca) => (
                 <PecaDelMes key={`${peca.segment.ocurrencia.clau}·${peca.colInici}`} peca={peca} compacte={compacte}
-                  ruta={rutaDeLEsdeveniment?.(peca.segment.ocurrencia.esd) ?? null} LinkComponent={LinkComponent} />
+                  ruta={rutaDeLEsdeveniment?.(peca.segment.ocurrencia.esd) ?? null} LinkComponent={LinkComponent}
+                  traduible={esTraduible?.(peca.segment.ocurrencia.esd) !== false} />
               ))}
             </ol>
           </li>

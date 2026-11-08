@@ -395,9 +395,15 @@ function creaMotor({ L, element, tr: traductor, enVista, enAvisDelFons, enObriFo
   };
 
   /* La targeta d'un grup o d'una parada: el número i el nom (el botó de dalt),
-     fins a tres miniatures i dues línies de dades. */
-  function targetaDeConjunt({ numero, nom, fotos, linies, ocre, etiquetaDelCap, enCap, enMiniatura }) {
+     fins a tres miniatures i dues línies de dades.
+     R51 (P0-46; troballa R12G-SB-02) · `traduible` (true per defecte): la
+     targeta d'una parada pinta el títol de la seua publicació en un <p> de
+     dades, que el Traduir de la pàgina (blocsTraduibles) recull. Amb false
+     (la publicació té 'none', la revisada o un error), translate="no" a tota
+     la targeta: el títol no ix cap al motor ni el traduïx el navegador. */
+  function targetaDeConjunt({ numero, nom, fotos, linies, ocre, etiquetaDelCap, enCap, enMiniatura, traduible = true }) {
     const targeta = node('div', `sdp-mapa-targeta${ocre ? ' sdp-mapa-targeta--ocre' : ''}`);
+    if (!traduible) targeta.setAttribute('translate', 'no');
     targeta.setAttribute('role', 'group');
     targeta.setAttribute('aria-label', `${numero} · ${nom}`);
     targeta.title = tr('section.mur.mapa.arrossega', 'Arrossega per a moure-la; prem per a vore les fotos. Amb el teclat, Alt + fletxes.');
@@ -498,7 +504,7 @@ function creaMotor({ L, element, tr: traductor, enVista, enAvisDelFons, enObriFo
       const lloc = L.latLng(parada.lat, parada.lng);
       const fotosText = fotos.length === 1 ? tr('section.mur.mapa.unaFoto', '1 foto') : tr('section.mur.mapa.fotos', '{n} fotos', { n: fotos.length });
       const targeta = targetaDeConjunt({
-        numero, nom, fotos, ocre: parada.estimada,
+        numero, nom, fotos, ocre: parada.estimada, traduible: parada.traduible !== false,
         linies: [parada.lloc ? parada.titol : '', [diesDe(fotos, zoom >= ZOOM_AMB_HORA), fotosText, precisioDe(parada)].filter(Boolean).join(' · ')],
         etiquetaDelCap: tr('section.mur.mapa.obriParada', 'Parada {n}, {nom}: obri les seues fotos', { n: numero, nom }),
         enCap: () => fotos[0] && obri(parada.fotos, fotos.find((foto) => foto.miniatura) || fotos[0]),
@@ -543,6 +549,8 @@ function creaMotor({ L, element, tr: traductor, enVista, enAvisDelFons, enObriFo
         n: foto.ordre, quan: `${dia ? `, ${dia}${hora ? ` ${hora}` : ''}` : ''}${frase}`
       }));
       targeta.dataset.rol = 'foto';
+      // R51 (troballa R12G-SB-02) · El títol d'una publicació protegida, tampoc al traductor del navegador.
+      if (foto.traduible === false) targeta.setAttribute('translate', 'no');
       const marc = node('span', 'sdp-mapa-foto__marc');
       if (foto.miniatura) {
         const img = miniatura(foto.miniatura);

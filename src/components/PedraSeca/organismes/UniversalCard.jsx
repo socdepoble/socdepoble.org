@@ -171,6 +171,7 @@ import { usePropietatsCss } from '../../../hooks/usePropietatsCss.js';
 import { useResolvedAsset } from '../../../hooks/useResolvedAsset.js';
 import { posicioDeRetall } from '../../universal/enquadrament/enquadrament.js';
 import { MenuTraduir } from '../../universal/traduccio/MenuTraduir.jsx';
+import { allowsMachineTranslation } from '../../universal/traduccio/translationMode.js';
 import { esMitjaOpac } from '../../../utils/mitjaOpac.js';
 import { fontVideoPropia } from '../../../utils/sanitize.js';
 import { isSafeAsset, isSafeUrl, rutaDAutorSegura } from '../../universal/UniversalUtils';
@@ -520,7 +521,12 @@ export function UniversalCard({
      estàndard). El Traduir de la pàgina (blocsTraduibles, que ja exclou
      [translate="no"]) i el del navegador deixen la targeta en l'original.
      Qualsevol altre valor, o sense la prop, el DOM de sempre. */
-  translate
+  translate,
+  /* R51 (P0-46) · `modeTraduccio`: el translation_mode de l'element que pinta la targeta. Defensa en
+     profunditat: amb un mode protegit ('curated_5_langs', 'none' o invàlid; translationMode.js ·
+     allowsMachineTranslation) la targeta no oferix Traduir encara que qui la pinta el demane, i el motor
+     (tradueixTot) el rep i el refusa. Sense la prop, el DOM de sempre. */
+  modeTraduccio
 }) {
   const idDescripcio = useId();
   const safeMainHref = mainHref && isSafeUrl(mainHref) ? mainHref : null;
@@ -564,6 +570,7 @@ export function UniversalCard({
   const pulsacio = usePulsacioLlarga(typeof onAccioSecundaria === 'function'
     ? (_objecte, element) => onAccioSecundaria(element)
     : null);
+  const traduccioAutomatica = allowsMachineTranslation({ translation_mode: modeTraduccio });
 
   const {
     handleConnect,
@@ -586,7 +593,7 @@ export function UniversalCard({
     onComment,
     onShare,
     showConnect,
-    showTranslate,
+    showTranslate: traduccioAutomatica ? showTranslate : false,
     showComment,
     showShare,
     hasFooter,
@@ -663,6 +670,7 @@ export function UniversalCard({
   const esObjecteNoPublic = esPrivat(objecte)
     || Boolean(objecte && Object.hasOwn(objecte, 'visibility') && objecte.visibility !== 'public');
   const bloquejadaPerPrivacitat = ambTraduccio === false
+    || !traduccioAutomatica
     || esObjecteNoPublic
     || (esTargetaDApp && ambTraduccio !== true);
   const traduccioDisponible = !onTranslate && !bloquejadaPerPrivacitat && traduccioDePaginesDisponible(urlTraductor);
@@ -747,7 +755,8 @@ export function UniversalCard({
       const originals = new Set();
       const traduccions = await tradueixTot(motor, camps.map(([, valor]) => valor), codi, {
         signal: control?.signal,
-        enOriginal: (index) => originals.add(index)
+        enOriginal: (index) => originals.add(index),
+        translation_mode: modeTraduccio
       });
       if (id !== vida.peticio) return;
       vida.control = null;
@@ -761,7 +770,7 @@ export function UniversalCard({
       vida.control = null;
       avisaTraduccio(parellDError(error));
     }
-  }, [avisaTraduccio, clauContingutCard, destinsDelServei, servidorTraductor, subtitle, textCosCard, title, traduccioDisponible, traduccioVigent?.llengua]);
+  }, [avisaTraduccio, clauContingutCard, destinsDelServei, modeTraduccio, servidorTraductor, subtitle, textCosCard, title, traduccioDisponible, traduccioVigent?.llengua]);
 
   const onClicTraduir = !onTranslate && bloquejadaPerPrivacitat
     ? () => avisaTraduccio(PARELL_SENSE_TRADUCCIO)

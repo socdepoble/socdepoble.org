@@ -768,11 +768,25 @@ function netejaAmbit(payload, sectionId) {
   payload.dades = fitxa.dades;
 }
 
+/* R51 (P0-46; troballa R12G-SB-03) · Un translation_mode que no és text (true,
+   false, {}, [], un número) és un mode INVÀLID, i un mode invàlid és protegit:
+   esborrar-lo el convertia en absent, és a dir, en el camí de sempre amb la
+   traducció automàtica oferida. Ara viatja com este text, que no és cap mode
+   del contracte: normalizeTranslationMode el refusa, el pla torna 'error'
+   (l'original, sense Traduir, amb l'avís) i el pis mínim
+   (allowsMachineTranslation) diu que no. Sense mode (absent o null), res no
+   canvia. */
+const MODE_DE_TRADUCCIO_ILLEGIBLE = 'R51_TRANSLATION_MODE_INVALID';
+
 function netejaTipusDelPayload(dades) {
   for (const clau of CLAUS_DE_TEXT_DEL_PAYLOAD) {
     const valor = dades[clau];
     if (valor == null || typeof valor === 'string') continue;
     if (clau === 'price' && esNumeroFinit(valor)) continue;
+    if (clau === 'translation_mode') {
+      dades[clau] = MODE_DE_TRADUCCIO_ILLEGIBLE;
+      continue;
+    }
     const text = textDelPayload(valor);
     if (text === null) delete dades[clau];
     else dades[clau] = text;

@@ -47,6 +47,12 @@
  * rutaDeLEsdeveniment, les files no són interactives (els enllaços viuen a
  * les targetes de davall) i el DOM és el de sempre.
  *
+ * R51 (P0-46; troballa R12G-BH-02) · esTraduible · (esd) => boolean, opcional:
+ * qui munta la vista diu si el text de l'acte es pot traduir a màquina (el
+ * pla del contracte de la seua publicació). Amb false, la fila porta
+ * translate="no": el Traduir de la pàgina (blocsTraduibles) i el del navegador
+ * la deixen en l'original. Sense la prop, o amb true, el DOM de sempre.
+ *
  * Importa per camí directe (mai per index.js): la porta de dependències
  * circulars de Pedra Seca ho exigix.
  */
@@ -106,7 +112,7 @@ const LiniaAra = () => <li className="sdp-cal-agenda__ara" aria-hidden="true" />
 
 export function VistaAgenda({
   esdeveniments, desde, fins, avui = new Date(), ara = null, buit = 'Cap acte en este període.',
-  nivellTitol = 3, titol, locale, className, rutaDeLEsdeveniment, LinkComponent = 'a'
+  nivellTitol = 3, titol, locale, className, rutaDeLEsdeveniment, LinkComponent = 'a', esTraduible
 }) {
   const idBase = useId();
   // Números primitius per a les dependències: un Date nou a cada pintada no recalcula res.
@@ -145,7 +151,8 @@ export function VistaAgenda({
                     return (
                       <Fragment key={fila.clau}>
                         {i === linia ? <LiniaAra /> : null}
-                        <li className={`sdp-cal-agenda__acte ${classeDeFont(fila.esd)}${ruta ? ' sdp-cal-agenda__acte--enllac' : ''}`}>
+                        <li className={`sdp-cal-agenda__acte ${classeDeFont(fila.esd)}${ruta ? ' sdp-cal-agenda__acte--enllac' : ''}`}
+                          translate={esTraduible?.(fila.esd) === false ? 'no' : undefined}>
                           <span className="sdp-cal-agenda__punt" aria-hidden="true" />
                           <span className="sdp-cal-agenda__hora">{fila.hora}</span>{' '}
                           <span className="sdp-cal-agenda__titol">

@@ -37,8 +37,18 @@ function useNavegacioOpcional() {
   }
 }
 
+/* R51 (P0-46; troballes R12G-BH-01, RIG-01 i D2) · Mentre l'original no es
+   resol, la targeta pinta la instantània de l'HTML, que no porta el
+   translation_mode de l'original: el mode és desconegut i es tracta com a
+   protegit (cap Traduir de la targeta, cap text de la instantània cap al
+   motor). Resolt, el veredicte del pla de l'original (SincronitzacioTargetes
+   · propsDeLOriginal: showTranslate: false si el pla no oferix Traduir;
+   troballes RIG2-01 i DIS-R2-01), i UniversalCard torna a comprovar el mode
+   de l'original com a defensa en profunditat. */
+const RESERVA_SENSE_TRADUCCIO = Object.freeze({ showTranslate: false });
+
 function TargetaDeLaApp({ attrs, navigate }) {
-  const props = useTargetaSincronitzada(attrs, propsDeTargetaIncrustada(attrs, { mode: 'lectura' }));
+  const props = useTargetaSincronitzada(attrs, propsDeTargetaIncrustada(attrs, { mode: 'lectura' }), { reserva: RESERVA_SENSE_TRADUCCIO });
   const imatge = useImatgeResolta(props.imageUrl);
   const objecte = props.objecte;
   return (

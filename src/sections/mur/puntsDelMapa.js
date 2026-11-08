@@ -38,6 +38,7 @@ import { esMitjaOpac } from '../../utils/mitjaOpac.js';
 import { PRECISIONS } from '../../components/universal/enquadrament/geolocalitzacio.js';
 import { MOCK_TOWNS } from '../pobles/townsSeed.js';
 import { slugDelPoble } from '../pobles/nomsDelPoble.js';
+import { publicacioTraduible } from '../../components/universal/traduccio/planTraduccioPublicacio.js';
 import {
   comparaCaptures, distanciaKm, esPuntValid, estimaUbicacions, instantDeCaptura, modeDeComparacio, pobleMesProper
 } from './mapaFotografic.js';
@@ -196,9 +197,9 @@ function paradesDe(fotos) {
 /**
  * Els punts del mapa d'una llista d'elements del Mur:
  *   · fotos: cada foto amb lloc, en ordre de captura, amb { publicacio, titol,
- *     estat, origen, inferencia, lloc, parada, ordre } i, si és estimada,
+ *     traduible, estat, origen, inferencia, lloc, parada, ordre } i, si és estimada,
  *     { referencia, diferencia_s, incertesaAlta } (els d'inferencia, en solt);
- *   · parades: { id, publicacio, titol, lat, lng, estat, origen, inferencia,
+ *   · parades: { id, publicacio, titol, traduible, lat, lng, estat, origen, inferencia,
  *     precisio, precisio_m, dataCaptura, lloc, fotos: [índexs de fotos],
  *     estimada }, en ordre de la primera captura (el número de cada grup és el
  *     de la seua primera visita);
@@ -221,20 +222,25 @@ export function puntsDelMapa(items, { pobles = null } = {}) {
     const refPoble = textDe(item.poble_id) || textDe(item.dades?.municipi) || textDe(item.town_name);
     const poble = coordenadesDelPoble(refPoble, pobles);
     const titol = textDe(item.title) || textDe(item.name);
-    const comunes = { publicacio, titol, poble_id: poble ? slugDelPoble(textDe(item.poble_id) || poble.title || refPoble) : null };
+    /* R51 (P0-46; troballa R12G-SB-02) · El veredicte de traducció de la
+       publicació (el del seu pla, publicacioTraduible) viatja amb el seu
+       títol a cada foto i a cada parada: la targeta del mapa que el pinta
+       porta translate="no" si és false ('none', la revisada o un error). */
+    const traduible = publicacioTraduible(item);
+    const comunes = { publicacio, titol, traduible, poble_id: poble ? slugDelPoble(textDe(item.poble_id) || poble.title || refPoble) : null };
     const estimades = estimaUbicacions(fotos, { centreDelPoble: poble }).map((foto) => ({ ...foto, ...comunes }));
     for (const foto of estimades) {
       if (foto.estat === 'pendent') pendents.push(foto);
     }
     const ambLloc = estimades.filter((foto) => foto.estat !== 'pendent')
       .map((foto) => ({ ...foto, lloc: llocDe(foto, poble), instant: instantDeCaptura(foto.dataCaptura) }));
-    if (ambLloc.length) publicacions.push({ publicacio, titol, fotos: ambLloc });
+    if (ambLloc.length) publicacions.push({ publicacio, titol, traduible, fotos: ambLloc });
   }
   const mode = modeDeComparacio(publicacions.flatMap((p) => p.fotos.map((foto) => foto.instant)));
   const perCaptura = (a, b) => comparaCaptures(a.foto.instant, b.foto.instant, mode) || a.index - b.index;
   const enOrdre = (fotos) => fotos.map((foto, index) => ({ foto, index })).sort(perCaptura).map((entrada) => entrada.foto);
 
-  const crues = publicacions.flatMap((p) => paradesDe(enOrdre(p.fotos)).map((parada, k) => ({ ...parada, publicacio: p.publicacio, titol: p.titol, k })));
+  const crues = publicacions.flatMap((p) => paradesDe(enOrdre(p.fotos)).map((parada, k) => ({ ...parada, publicacio: p.publicacio, titol: p.titol, traduible: p.traduible, k })));
   const paradesEnOrdre = crues.map((parada, index) => ({ foto: parada.fotos[0], parada, index }))
     .sort(perCaptura).map((entrada) => entrada.parada);
 
@@ -250,6 +256,7 @@ export function puntsDelMapa(items, { pobles = null } = {}) {
       id: `${parada.publicacio}~${parada.k}`,
       publicacio: parada.publicacio,
       titol: parada.titol,
+      traduible: parada.traduible,
       lat: primera.lat,
       lng: primera.lng,
       estat: primera.estat,

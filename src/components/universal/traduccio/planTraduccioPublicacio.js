@@ -94,3 +94,13 @@ export function planTraduccioPublicacio(element, llenguaInterficie) {
 
 /** Si una vista pot oferir el Traduir segons el pla: sense pla (cap mode declarat), sí. */
 export const ofereixTraduir = (pla) => !pla || pla.traduible === true;
+
+/**
+ * R51 (P0-46; troballa R12G-BH-02) · El mateix veredicte d'ofereixTraduir per
+ * a un text d'una publicació que es pinta sense el seu pla (el títol d'un acte
+ * a l'Agenda o a la Setmana del calendari). No depén de la llengua de la
+ * interfície: entre les cinc, el pla només tria quin text revisat es pinta,
+ * mai si es pot traduir a màquina. Sense mode, sí; amb 'none', la revisada o
+ * un error, no.
+ */
+export const publicacioTraduible = (element) => ofereixTraduir(planTraduccioPublicacio(element, TRANSLATION_LANGUAGES[0]));

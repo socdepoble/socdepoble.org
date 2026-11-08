@@ -98,15 +98,25 @@ export function rutaDeLaBoinaDeLActe(item, deQuiSigna) {
    del seu nom (vegeu avatarUrl). components/ no llig qui signa (autorDe és de
    navigation.js): ho diu qui pinta la targeta (TargetaDelMur).
    Fase D (261020, tasca 2) · `ambModeracio` (false), explícita: «Més
-   opcions» a la caputxa (UniversalCard). Sense, el DOM de sempre. */
-export function EventCard({ item, esdeveniment = null, onConnect, objecte, authorHref, authorName, authorAvatar, ambModeracio = false, enquadramentTargeta = null }) {
+   opcions» a la caputxa (UniversalCard). Sense, el DOM de sempre.
+   R51 (P0-46 / IDEA-177; forat G1 de l'auditoria R11) · El Traduir de l'acte
+   el decidix qui pinta la targeta (TargetaDelMur, amb el pla del contracte),
+   com a la targeta d'una publicació: `showTranslate` (true per defecte, el
+   de sempre), `translate` ('no' perquè el Traduir de la pàgina no n'envie
+   cap text), `modeTraduccio` (el translation_mode, que UniversalCard torna a
+   comprovar) i `avis` (l'avís d'una traducció mal configurada, al capdamunt
+   del cos). Sense elles, el DOM de sempre. */
+export function EventCard({ item, esdeveniment = null, onConnect, objecte, authorHref, authorName, authorAvatar, ambModeracio = false, enquadramentTargeta = null, showTranslate = true, translate, modeTraduccio, avis = null }) {
   const data = dataDeLActe(esdeveniment, item);
   const insignia = insigniaDeCalendari(esdeveniment, data.dateTime, item);
 
   // Use entradilla if available, then lead, then description (unless omitted for protagonist video cards)
-  const bodyContent = item.ometEntradillaTargeta === true
+  const entradilla = item.ometEntradillaTargeta === true
     ? null
     : (item.entradilla || item.lead || (item.description ? <p className="sp-card-text">{item.description}</p> : null));
+  const bodyContent = avis
+    ? <>{avis}{typeof entradilla === 'string' ? <p className="sp-card-text">{entradilla}</p> : entradilla}</>
+    : entradilla;
 
   // Custom badges for event
   /* Onada 6 · «Agenda» porta al dia de l'acte al Calendari (el de la insígnia). */
@@ -155,7 +165,9 @@ export function EventCard({ item, esdeveniment = null, onConnect, objecte, autho
       mainHref={esRutaInterna(item.mainHref) ? item.mainHref : `/events/${item.id}`}
       showPin={item.isAvis || false}
       hasFooter={true}
-      showTranslate={true}
+      showTranslate={showTranslate}
+      translate={translate}
+      modeTraduccio={modeTraduccio}
       showComment={true}
       showShare={true}
       showConnect={true}

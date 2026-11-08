@@ -78,3 +78,15 @@ export function planTraduccioPagina(page, llenguaInterficie) {
     return Object.freeze({ tipus: 'error', codi: error?.code || 'R51_TRANSLATION_MODE_INVALID', traduccio: false, pagina });
   }
 }
+
+/**
+ * R51 (P0-46; troballes RIG2-01 i DIS-R2-01) · El veredicte del pla d'una
+ * pàgina que es pinta sense el seu pla (la targeta incrustada d'una pàgina,
+ * SincronitzacioTargetes · propsDeLOriginal), el mateix que TextSection
+ * (traduccio: false). Com publicacioTraduible, no depén de la llengua de la
+ * interfície: entre les cinc, el pla només tria quin text revisat es pinta,
+ * mai si es pot traduir a màquina. Sense mode declarat, sí; amb 'none', la
+ * revisada o un error (també translation_mode null, l'automàtica, sense una
+ * llengua original de les cinc), no.
+ */
+export const paginaTraduible = (page) => planTraduccioPagina(page, TRANSLATION_LANGUAGES[0])?.traduccio !== false;

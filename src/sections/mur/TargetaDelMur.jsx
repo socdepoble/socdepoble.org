@@ -67,7 +67,7 @@ import { CLASSE_DE_LA_TARGETA, DistintiuAlertaMunicipal } from './AlertaMunicipa
 import { ambitDe, esFitxaDAmbit, etiquetesDAmbit, resumDeFitxa, rutaDAmbit } from '../../utils/publicacioUniversal.js';
 import { localitzaCategoriesMares } from '../../data/taxonomia/taxonomiaCanonica.js';
 import { Alerta } from '../../components/PedraSeca/molecules/Alerta.jsx';
-import { ofereixTraduir, planTraduccioPublicacio } from '../../components/universal/traduccio/planTraduccioPublicacio.js';
+import { ofereixTraduir, planTraduccioPublicacio, propia } from '../../components/universal/traduccio/planTraduccioPublicacio.js';
 
 /**
  * T6 (ordre del Mestre, 261004, prompt 261004_0515 §5) · On porta la boina
@@ -113,6 +113,19 @@ export function TargetaDelMur({ item: original, esdeveniment = null, alertaMunic
      (portadaDeLaPublicacio és pura i idempotent): la llavor i app_content no
      passen pel mapejador. Sense enquadrament net, la targeta de sempre. */
   const { targeta: enquadrament } = portadaDeLaPublicacio(item);
+  /* R51V-03 · Un translation_mode o una configuració de traducció invàlids:
+     l'original, sense Traduir, i ho diu a la targeta (sense regió viva: una
+     llista no anuncia cada targeta en pintar-se). Val per a l'acte i per a
+     la publicació. */
+  const errorDeTraduccio = plaTraduccio?.tipus === 'error' ? (
+    <Alerta to="avis" viva={false}>
+      {t('section.mur.traduccioR51Error', 'Esta publicació no té la traducció ben configurada: es mostra en la llengua original, sense traducció automàtica.')}
+    </Alerta>
+  ) : null;
+  /* R51 (defensa en profunditat) · El mode declarat (propietat pròpia de
+     dades, com el llig el pla) també va a UniversalCard, a l'acte i a la
+     publicació: el torna a comprovar i el passa al motor (tradueixTot). */
+  const modeTraduccio = propia(item, 'translation_mode');
 
   if (item.type === 'event') {
     /* T43 (ordre del Mestre, 260928) · el calendari també es connecta amb el seu
@@ -149,6 +162,15 @@ export function TargetaDelMur({ item: original, esdeveniment = null, alertaMunic
            el passarà a UniversalCard (formaMitja i posicioMitja) quan el seu
            carril l'accepte: fins llavors, la targeta de sempre. */
         enquadramentTargeta={enquadrament}
+        /* R51 (P0-46; forats G1 i G1b de l'auditoria R11) · L'acte segueix
+           el pla com la publicació: amb 'none', la revisada o un error, cap
+           Traduir a la targeta, l'avís de l'error i translate="no" a
+           l'article (el Traduir de la pàgina no n'envia cap text). Abans
+           EventCard posava Traduir sempre. */
+        showTranslate={ofereixTraduir(plaTraduccio)}
+        translate={ofereixTraduir(plaTraduccio) ? undefined : 'no'}
+        modeTraduccio={modeTraduccio}
+        avis={errorDeTraduccio}
       />
     );
   }
@@ -231,14 +253,6 @@ export function TargetaDelMur({ item: original, esdeveniment = null, alertaMunic
      interfície (el parell de TIPUS_ALERTA); en valencià, el de sempre. */
   const alerta = !item.isSystem && seccio !== 'mercat' && Object.hasOwn(TIPUS_ALERTA, alertaMunicipal)
     ? TIPUS_ALERTA[alertaMunicipal] : null;
-  /* R51V-03 · Un translation_mode o una configuració de traducció invàlids:
-     l'original, sense Traduir, i ho diu a la targeta (sense regió viva: una
-     llista no anuncia cada targeta en pintar-se). */
-  const errorDeTraduccio = plaTraduccio?.tipus === 'error' ? (
-    <Alerta to="avis" viva={false}>
-      {t('section.mur.traduccioR51Error', 'Esta publicació no té la traducció ben configurada: es mostra en la llengua original, sense traducció automàtica.')}
-    </Alerta>
-  ) : null;
   /* IDEA-61 (T0, prompt 261102_1532) · Les etiquetes de sempre, tal qual (un
      element sense àmbit les rep byte a byte). Una fitxa d'àmbit porta
      davant les dues del contracte (l'àmbit i l'estat), calculades en pintar.
@@ -350,6 +364,7 @@ export function TargetaDelMur({ item: original, esdeveniment = null, alertaMunic
          UniversalCard va en un tros a banda, no a l'entrada (pressupost). */
       showTranslate={ofereixTraduir(plaTraduccio)}
       translate={ofereixTraduir(plaTraduccio) ? undefined : 'no'}
+      modeTraduccio={modeTraduccio}
       showComment={true}
       showShare={true}
       showConnect={true}

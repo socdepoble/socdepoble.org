@@ -39,6 +39,7 @@ import { Link } from '../../app/contexts/RouterContext';
 import { esRutaInterna, getSectionItemPath } from '../../config/navigation';
 import { useLocaleOpcional } from '../multimedia/useLocaleOpcional.js';
 import { TEXTOS_ALERTES, TIPUS_ALERTA, esInstantRepresentable, trossosDeCaducitat } from './alertesMunicipals.js';
+import { publicacioTraduible } from '../../components/universal/traduccio/planTraduccioPublicacio.js';
 
 const ICONA = Object.freeze({ alerta: TriangleAlert, bandol_urgent: Megaphone });
 
@@ -112,7 +113,13 @@ export function RegioAlertesVigents({ activa = false, alertes = [] }) {
           <ul>
             {vigents.map(({ item, tipus, caducaAl }) => (
               <li key={`${item.type}-${item.id}`}>
-                {tradueix(t, TIPUS_ALERTA[tipus].etiqueta)}: <Link to={rutaDe(item)} className="sdp-mur-alertes__enllac">{item.title || item.name}</Link>
+                {/* R51 (P0-46; forat G3 de l'auditoria R11) · El títol d'una alerta amb translation_mode
+                    protegit ('curated_5_langs', 'none' o invàlid) porta translate="no": el Traduir de la
+                    pàgina (blocsTraduibles) no l'envia al motor. Troballa DQ-01 · El veredicte és el del pla
+                    (publicacioTraduible), el mateix que la targeta de l'alerta al Mur: 'on_the_fly' sense
+                    llengua original de les cinc també és un error i porta translate="no". Sense mode o amb
+                    on_the_fly ben configurat, el DOM de sempre. */}
+                {tradueix(t, TIPUS_ALERTA[tipus].etiqueta)}: <Link to={rutaDe(item)} className="sdp-mur-alertes__enllac" translate={publicacioTraduible(item) ? undefined : 'no'}>{item.title || item.name}</Link>
                 <VigentFins caducaAl={caducaAl} t={t} locale={locale} />
               </li>
             ))}

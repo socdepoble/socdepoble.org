@@ -75,6 +75,13 @@
  * enllaç (els enllaços viuen a les targetes de davall) i el DOM és el de
  * sempre.
  *
+ * R51 (P0-46; troballa R12G-BH-02) · esTraduible · (esd) => boolean, opcional:
+ * qui munta la vista diu si el text de l'acte es pot traduir a màquina (el
+ * pla del contracte de la seua publicació). Amb false, el bloc de la graella
+ * i la barra de la franja porten translate="no": el Traduir de la pàgina
+ * (blocsTraduibles) i el del navegador els deixen en l'original. Sense la
+ * prop, o amb true, el DOM de sempre.
+ *
  * Importa per camí directe (mai per index.js): la porta de dependències
  * circulars de Pedra Seca ho exigix.
  */
@@ -100,7 +107,7 @@ const dataLlarga = (data, locale) => data.toLocaleDateString(locale, { weekday: 
    «10:00–11:30», o «10:00» si no té durada; un acte que passa de mitjanit diu
    les dos hores. Un bloc curt només mostra l'inici, i la fi queda per al
    lector (sdp-sr-only): el text sencer és el mateix en totes les formes. */
-function BlocSetmana({ disposat, densitat, ruta = null, LinkComponent }) {
+function BlocSetmana({ disposat, densitat, ruta = null, LinkComponent, traduible = true }) {
   const ref = useRef(null);
   const { segment, columna, columnes, amplada, iniciVisualMin, fiVisualMin } = disposat;
   usePropietatsCss(ref, {
@@ -114,7 +121,7 @@ function BlocSetmana({ disposat, densitat, ruta = null, LinkComponent }) {
     'sdp-cal-setmana__bloc', forma !== 'llarg' && `sdp-cal-setmana__bloc--${forma}`, classeDeFont(ocurrencia.esd)
   ].filter(Boolean).join(' ');
   return (
-    <li ref={ref} className={classe}>
+    <li ref={ref} className={classe} translate={traduible ? undefined : 'no'}>
       <span className="sdp-cal-setmana__quan">
         {horaDe(new Date(ocurrencia.inici))}
         {fi && forma === 'curt' ? <span className="sdp-sr-only">{fi}</span> : fi}
@@ -129,7 +136,7 @@ function BlocSetmana({ disposat, densitat, ruta = null, LinkComponent }) {
 /* Una barra de la franja de tot el dia: les línies de graella són 1-based.
    onClick · tocar-la tria el seu primer dia de la setmana (vegeu
    triaDesDeLaGraella). */
-function BarraDeLaFranja({ peca, ruta = null, LinkComponent, onClick }) {
+function BarraDeLaFranja({ peca, ruta = null, LinkComponent, onClick, traduible = true }) {
   const ref = useRef(null);
   usePropietatsCss(ref, { '--cal-col-inici': peca.colInici + 1, '--cal-col-fi': peca.colFi + 1, '--cal-carril': peca.carril + 1 });
   const { esd } = peca.segment.ocurrencia;
@@ -138,7 +145,7 @@ function BarraDeLaFranja({ peca, ruta = null, LinkComponent, onClick }) {
     ruta && 'sdp-cal-barra--enllac'
   ].filter(Boolean).join(' ');
   return (
-    <li ref={ref} className={classe} onClick={onClick}>
+    <li ref={ref} className={classe} onClick={onClick} translate={traduible ? undefined : 'no'}>
       {ruta ? <EnllacDeLEsdeveniment ruta={ruta} LinkComponent={LinkComponent}>{esd.titol}</EnllacDeLEsdeveniment> : esd.titol}
     </li>
   );
@@ -153,9 +160,11 @@ function LiniaAra({ minut }) {
 export function VistaSetmana({
   esdeveniments, dilluns, avui = new Date(), ara = null, diaTriat = null, onTriaDia,
   recompte = recompteEsdeveniments, minimMinuts = 30, densitat = 'responsiva', titol, locale, className,
-  rutaDeLEsdeveniment, LinkComponent = 'a'
+  rutaDeLEsdeveniment, LinkComponent = 'a', esTraduible
 }) {
   const rutaDe = (esd) => rutaDeLEsdeveniment?.(esd) ?? null;
+  // R51 (troballa R12G-BH-02) · Sense esTraduible, tot traduïble: el DOM de sempre.
+  const traduibleDe = (esd) => esTraduible?.(esd) !== false;
   const idFranja = useId();
   const arrel = useRef(null);
   const graella = useRef(null);
@@ -255,7 +264,7 @@ export function VistaSetmana({
         <ol className="sdp-cal-setmana__barres" aria-labelledby={idFranja}>
           {franja.peces.map((peca) => (
             <BarraDeLaFranja key={`${peca.segment.ocurrencia.clau}·${peca.colInici}`} peca={peca}
-              ruta={rutaDe(peca.segment.ocurrencia.esd)} LinkComponent={LinkComponent} onClick={clicDelDia(diesGraella[peca.colInici]?.clau)} />
+              ruta={rutaDe(peca.segment.ocurrencia.esd)} traduible={traduibleDe(peca.segment.ocurrencia.esd)} LinkComponent={LinkComponent} onClick={clicDelDia(diesGraella[peca.colInici]?.clau)} />
           ))}
         </ol>
       </div>
@@ -273,7 +282,7 @@ export function VistaSetmana({
             <ol className="sdp-cal-setmana__blocs" aria-label={dataLlarga(dia.data, locale)}>
               {perDia.get(dia.clau).map((disposat) => (
                 <BlocSetmana key={disposat.segment.ocurrencia.clau} disposat={disposat} densitat={densitat}
-                  ruta={rutaDe(disposat.segment.ocurrencia.esd)} LinkComponent={LinkComponent} />
+                  ruta={rutaDe(disposat.segment.ocurrencia.esd)} traduible={traduibleDe(disposat.segment.ocurrencia.esd)} LinkComponent={LinkComponent} />
               ))}
             </ol>
             {posicio?.clau === dia.clau ? <LiniaAra minut={posicio.minut} /> : null}

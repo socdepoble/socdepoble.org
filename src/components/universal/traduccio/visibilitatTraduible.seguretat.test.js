@@ -60,7 +60,9 @@ test('les superfícies del veïnat passen la visibilitat real a traduccio=', () 
     /* R51 (P0-46 / IDEA-177; R51V-03) · La regla, i a més el pla del contracte:
        cap Traduir amb 'none', amb la revisada ni amb un mode invàlid. */
     'sections/notes/PublicacioDetall.jsx': 'traduccio={elementTraduible(seccio, publicacio) && ofereixTraduir(plaTraduccio)}',
-    'sections/multimedia/PaginesEspaiMultimedia.jsx': 'traduccio={esElementPublic(item)}',
+    /* R51 (P0-46; troballa R12G-SB-01) · La regla, i a més el veredicte del pla de
+       la publicació d'on ve la foto (mediaContent.js · proteccioDeLArticle). */
+    'sections/multimedia/PaginesEspaiMultimedia.jsx': 'traduccio={esElementPublic(item) && publicacioTraduible(item)}',
     'sections/profile/PerfilPublicSection.jsx': 'traduccio={fitxaTraduible}'
   };
   for (const [rel, prop] of Object.entries(SUPERFICIES)) expect(llig(rel), rel).toContain(prop);

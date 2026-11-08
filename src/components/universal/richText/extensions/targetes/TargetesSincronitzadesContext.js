@@ -38,11 +38,18 @@ const senseOriginal = () => null;
  * qui pinta: l'original només porta dades. El descriptor de l'objecte
  * (Comentar i Connectar) pren el títol viu: el xat públic d'una publicació
  * es diu com la seua targeta.
+ * R51 (P0-46; troballes R12G-BH-01, RIG-01 i D2) · `reserva` (opcional): les
+ * props que qui pinta posa damunt de la instantània quan l'original NO es
+ * resol (encara carrega, ja no hi és, és d'una altra finestra del Mur o
+ * d'un altre poble, o no hi ha proveïdor). La lectura (CosAmbTargetes) hi
+ * posa { showTranslate: false }: la instantània no sap el translation_mode
+ * de l'original, i un mode desconegut es tracta com a protegit. Sense
+ * `reserva` (l'editor), la instantània de sempre, byte a byte.
  */
-export function useTargetaSincronitzada(attrs, props) {
+export function useTargetaSincronitzada(attrs, props, { reserva = null } = {}) {
   const useDadesDeLOriginal = useContext(TargetesSincronitzadesContext) || senseOriginal;
   const fresques = useDadesDeLOriginal(attrs);
-  if (!fresques) return props;
+  if (!fresques) return reserva ? { ...props, ...reserva } : props;
   const objecte = props?.objecte && fresques.title
     ? { ...props.objecte, titol: String(fresques.title) }
     : props?.objecte;

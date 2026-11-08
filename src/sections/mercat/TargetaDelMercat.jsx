@@ -35,7 +35,7 @@ import { useUIActions } from '../../app/contexts/UIContext';
 import { isSafeAsset } from '../../components/universal/UniversalUtils.js';
 import { fontImatgePropia } from '../../utils/sanitize.js';
 import { propsDeTargetaDeProducte } from './targetaDeProducte.js';
-import { ofereixTraduir, planTraduccioPublicacio } from '../../components/universal/traduccio/planTraduccioPublicacio.js';
+import { ofereixTraduir, planTraduccioPublicacio, propia } from '../../components/universal/traduccio/planTraduccioPublicacio.js';
 
 /* Decisió 3 (261007) · El filtre de sempre de la targeta (isSafeAsset, el
    d'UniversalCard sense imatgePrivada) i, a més, el mode estricte: el que es
@@ -89,6 +89,12 @@ export function TargetaDelMercat({ item }) {
       hasFooter={true}
       showTranslate={traduible}
       translate={traduible ? undefined : 'no'}
+      /* R51 (defensa en profunditat; troballa DQ-02) · El mode declarat
+         (propietat pròpia de dades, com el llig el pla) també va a
+         UniversalCard, com a TargetaDelMur: el torna a comprovar i el passa al
+         motor (tradueixTot), que refusa un mode protegit encara que esta
+         vista deixara d'apagar el Traduir. */
+      modeTraduccio={propia(item, 'translation_mode')}
       showComment={true}
       showShare={true}
       showConnect={true}

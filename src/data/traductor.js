@@ -401,9 +401,33 @@ export function restauraNoms(traduit, protegit) {
  * Gauntlet 261030 (cicle 2) · `enOriginal(index)`, opcional, rep cada text
  * que torna en l'original: el motor l'ha tornat tal com l'ha rebut (no l'ha
  * traduït) o n'ha perdut un nom. Qui pinta hi posa el lang de l'original.
+ * R51 (P0-46) · Defensa en profunditat: `translation_mode`, opcional, és el
+ * de l'element que es traduïx (UniversalCard · triaLlenguaCard el passa). Un
+ * mode protegit ('curated_5_langs', 'none' o invàlid) es refusa amb
+ * NO_DISPONIBLE, com la marca de privadesa, ABANS del pressupost
+ * (comprovaPagina) i de cap petició. Només cobrix qui li passa el mode
+ * (troballes D1 i DQ-02): UniversalCard, NOMÉS quan qui la pinta li passa
+ * la prop `modeTraduccio`. Avui la passen TargetaDelMur (la publicació i
+ * l'acte, per EventCard), TargetaDelMercat i la targeta incrustada d'un
+ * original resolt (SincronitzacioTargetes · propsDeLOriginal); la resta de
+ * targetes no porten mode i el motor no hi refusa res. El Traduir de la
+ * pàgina (useTraduccioPagina) i useTraduccioTargeta tenen la guarda a la
+ * vista (translate="no", blocsTraduibles i extreuCampsTargeta). El valor es
+ * llig una sola vegada, també si ve heretat (Object.create): s'avalua com a
+ * propietat pròpia d'un registre nou. El pis mínim del contracte per a qui
+ * només té el mode (translationMode.js · allowsMachineTranslation), demanat amb import() només
+ * quan hi ha un mode: traductor.js va al tros d'entrada i translationMode.js
+ * no (és un tros a banda al build, sense cap avís de Vite; el sostre de
+ * l'entrada va just). Si el tros no baixa, la promesa es rebutja: cap text
+ * ix cap al motor.
  */
 export async function tradueixTot(traductor, textos, desti, opcions = {}) {
   exigixTraduccioPublica(textos,opcions);
+  const modeDemanat = opcions.translation_mode;
+  if (modeDemanat !== undefined) {
+    const { allowsMachineTranslation } = await import('../components/universal/traduccio/translationMode.js');
+    if (!allowsMachineTranslation({ translation_mode: modeDemanat })) throw new ErrorTraductor(CODI_TRADUCCIO.NO_DISPONIBLE);
+  }
   const {signal,limits=LIMITS_TRADUCCIO,enOriginal=null}=opcions;
   const peticions = textos.map((element) => (typeof element === 'string'
     ? { original: element, format: 'text' }

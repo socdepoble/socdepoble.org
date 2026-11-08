@@ -21,6 +21,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   CODI_TRADUCCIO,
+  ErrorTraductor,
   LLENGUES_TRADUCCIO,
   creaTraductor,
   llenguaDeTraduccio,
@@ -33,6 +34,7 @@ import {
   carregaTraductorLliure,
   traductorLliureDelLloc,
 } from '../../../data/traductorDelLloc.js';
+import { publicacioTraduible } from '../../universal/traduccio/planTraduccioPublicacio.js';
 
 export const CAMPS_TARGETA_TRADUIBLES = Object.freeze([
   'title',
@@ -71,6 +73,11 @@ function escriuCache(clau, valor) {
  */
 export function extreuCampsTargeta(targeta) {
   exigixTraduccioPublica([targeta]);
+  /* R51 (P0-46) · Una targeta amb translation_mode protegit ('curated_5_langs', 'none' o invàlid) no es
+     traduïx a màquina: es refusa abans de la memòria cau i del motor, com la marca de privadesa.
+     Troballa DQ-01 · Amb l'element sencer, el veredicte del pla (publicacioTraduible): 'on_the_fly'
+     sense llengua original de les cinc també és un error i es refusa. */
+  if (!publicacioTraduible(targeta)) throw new ErrorTraductor(CODI_TRADUCCIO.NO_DISPONIBLE);
   return llegeixCampsTargeta(targeta);
 }
 
@@ -210,7 +217,7 @@ export function useTraduccioTargeta(
     [traductorUrl]
   );
   const adaptadorLliureRef = useRef(null);
-  const disponible = !contingutNoTraduible(targeta) && Boolean(
+  const disponible = !contingutNoTraduible(targeta) && publicacioTraduible(targeta) && Boolean(
     traductorServidor?.disponible || transportLliure === 'apertium'
   );
 

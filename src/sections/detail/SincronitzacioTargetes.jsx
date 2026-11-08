@@ -48,7 +48,9 @@ import { propsDeTargetaDeLaPagina } from '../../components/universal/targetaDeLa
 import { objecteDeTargeta } from '../../components/universal/richText/extensions/targetes/formaDelGrup.js';
 import { TargetesSincronitzadesContext } from '../../components/universal/richText/extensions/targetes/TargetesSincronitzadesContext.js';
 import { accioDeLaTargeta } from '../../config/systemPages.js';
+import { propia, publicacioTraduible } from '../../components/universal/traduccio/planTraduccioPublicacio.js';
 import { propsDePaginaDeText } from '../text/paginaDeText.js';
+import { paginaTraduible } from '../text/planTraduccioPagina.js';
 import { paginaDElement, useOriginalDeConnexio } from './elementDeSeccio.js';
 
 /**
@@ -66,19 +68,62 @@ export function origenDeTargeta(attrs) {
   };
 }
 
+/* R51 (P0-46 / IDEA-177; forat G2 de l'auditoria R11) · La targeta
+   incrustada d'un original RESOLT porta el translation_mode de l'original
+   (propietat pròpia), i UniversalCard no hi oferix Traduir amb un mode
+   protegit ('curated_5_langs', 'none' o invàlid). Mentre l'original no es
+   resol, la targeta pinta la instantània, que no sap el mode: la lectura
+   (CosAmbTargetes) no hi oferix Traduir (troballes R12G-BH-01, RIG-01 i D2;
+   un mode desconegut es tracta com a protegit). Amb tots dos camins, cap
+   text d'un original protegit ix cap al motor des del botó de la targeta.
+   Abast mínim: la targeta continua pintant el text de l'original; la versió
+   revisada (curated) dins de la targeta incrustada queda fora d'este pas.
+   Sense mode, les props de sempre.
+   Troballa DQ-01 · El mode es llig com el llig el pla de cada original: una
+   publicació, propietat pròpia de DADES (planTraduccioPublicacio.js · propia,
+   com TargetaDelMur; un accessor no s'executa i hi compta com a absent); una
+   pàgina, propietat pròpia (planTraduccioPagina, que en llig el valor).
+   Troballes RIG2-01 i DIS-R2-01 · El mode sol no basta perquè la targeta
+   incrustada no discrepe de la de l'original: UniversalCard només en fa el
+   pis mínim (translationMode.js · allowsMachineTranslation), i un original
+   amb 'on_the_fly' (o una pàgina amb translation_mode null) sense llengua
+   original de les cinc passa eixe pis, quan el seu pla és un error i la seua
+   targeta al Mur, el seu detall o TextSection el pinten sense Traduir. Ací hi
+   ha l'element SENCER: la targeta porta també el veredicte del pla
+   (publicacioTraduible o paginaTraduible), i sense Traduir quan el pla no
+   l'oferix (showTranslate: false, com TargetaDelMur). El mode continua
+   viatjant com a defensa en profunditat (UniversalCard i tradueixTot). Amb
+   un pla que oferix Traduir, o sense mode, cap clau nova. */
+const modeDeLaPublicacio = (item) => propia(item, 'translation_mode');
+const modeDeLaPagina = (page) => (Object.hasOwn(page, 'translation_mode') ? page.translation_mode : undefined);
+const SENSE_TRADUIR = Object.freeze({ showTranslate: false });
+const ambTraduccioDeLOriginal = (props, mode, traduible) => {
+  if (!props) return props;
+  const ambMode = mode !== undefined ? { ...props, modeTraduccio: mode } : props;
+  return traduible ? ambMode : { ...ambMode, ...SENSE_TRADUIR };
+};
+
 /**
  * Pur · Les props de dades d'UniversalCard d'un original resolt
  * (useOriginalDeConnexio), o null si no s'ha resolt.
  */
 export function propsDeLOriginal(original, t) {
   if (original?.tipus === 'pagina' && original.page) {
-    const props = propsDeTargetaDeLaPagina(propsDePaginaDeText(original.page, original.pageKey, t));
+    const props = ambTraduccioDeLOriginal(
+      propsDeTargetaDeLaPagina(propsDePaginaDeText(original.page, original.pageKey, t)),
+      modeDeLaPagina(original.page),
+      paginaTraduible(original.page)
+    );
     if (!props) return null;
     const porta = accioDeLaTargeta(original.pageKey, t);
     return porta ? { ...props, accio: <PortaDePagina porta={porta} /> } : props;
   }
   if (original?.tipus === 'seccio' && original.section && original.item) {
-    return propsDeTargetaDeLaPagina(paginaDElement(original.section, original.item));
+    return ambTraduccioDeLOriginal(
+      propsDeTargetaDeLaPagina(paginaDElement(original.section, original.item)),
+      modeDeLaPublicacio(original.item),
+      publicacioTraduible(original.item)
+    );
   }
   return null;
 }

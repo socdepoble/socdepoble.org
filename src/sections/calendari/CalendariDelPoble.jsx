@@ -45,6 +45,7 @@ import {
   NavegacioPeriode, UniversalCard, VistaAgenda, VistaAny, VistaMes, VistaSetmana
 } from '../../components/PedraSeca/index.js';
 import { fontsDeLActe } from '../../components/universal/EventCard.jsx';
+import { publicacioTraduible } from '../../components/universal/traduccio/planTraduccioPublicacio.js';
 import { dataHoraDeBarra } from '../../components/universal/editorial.js';
 import { recurrenciaSuportada } from '../../utils/esdeveniment.js';
 import { clauDeData, sumaDies } from '../../utils/periodes.js';
@@ -141,6 +142,24 @@ function useRutesDeLesEntrades(entrades) {
   }, [entrades]);
 }
 
+/* R51 (P0-46; troballa R12G-BH-02) · Si el text de cada esdeveniment de les
+   vistes es pot traduir a màquina: el mateix veredicte que la targeta de
+   davall (TargetaDelMur · ofereixTraduir del pla), per l'objecte
+   esdeveniment, com les rutes. Una publicació amb 'none', la revisada o un
+   mode invàlid porta translate="no" a l'Agenda, a la Setmana i al Mes: el
+   Traduir de la pàgina (que s'encén quan tot el calendari és públic) no
+   n'envia el títol al motor. Sense targeta (l'agenda de Sollutia, les fonts
+   de Google), el de sempre: amb elles el Traduir de la pàgina ja s'apaga. */
+function useTraduiblesDeLesEntrades(entrades) {
+  return useMemo(() => {
+    const protegits = new Set();
+    for (const entrada of entrades) {
+      if (entrada.esdeveniment && entrada.item && !publicacioTraduible(entrada.item)) protegits.add(entrada.esdeveniment);
+    }
+    return (esdeveniment) => !protegits.has(esdeveniment);
+  }, [entrades]);
+}
+
 export function CalendariDelPoble({
   estat, navega, canviaVista, triaDia, obriDia, entrades, avui, senseData = 0,
   avisos = null, avisAgenda = null, accions = null, LinkComponent = Link
@@ -153,6 +172,7 @@ export function CalendariDelPoble({
      comença: es diu, perquè la graella i la llista no discrepen en silenci. */
   const sensePintar = useMemo(() => esdeveniments.filter((esd) => !recurrenciaSuportada(esd)).length, [esdeveniments]);
   const rutaDeLEsdeveniment = useRutesDeLesEntrades(entrades);
+  const esTraduible = useTraduiblesDeLesEntrades(entrades);
   /* La llista de davall: el dia triat; el mes natural a la vista Mes (com
      sempre); i a la resta, el rang que pinta la vista. L'Agenda no marca ni
      deixa llevar el dia triat que hereta de Mes o de Setmana: la llista diu
@@ -168,7 +188,8 @@ export function CalendariDelPoble({
   const buit = delDia ? 'Cap publicació este dia.' : textos.buit;
   const comunes = { esdeveniments, avui, recompte: recompteTargetes, locale: LOCALE, titol: textos.regio };
   // Onada 6 · Les vistes amb peces d'esdeveniment porten l'enllaç a la publicació.
-  const enllacos = { rutaDeLEsdeveniment, LinkComponent };
+  // R51 (troballa R12G-BH-02) · I el veredicte de traducció de cada esdeveniment.
+  const enllacos = { rutaDeLEsdeveniment, LinkComponent, esTraduible };
   const titolSuperior = textos.periode.charAt(0).toUpperCase() + textos.periode.slice(1);
 
   return (

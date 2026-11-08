@@ -43,6 +43,41 @@ const idDeLArticle = (item, index) => (item?.id != null && String(item.id) !== '
    deia «Autor: Soc de Poble» en lloc de «Desconegut». */
 const fontDeclarada = (valor) => (typeof valor === 'string' && valor.trim() !== '' ? { source: valor } : {});
 
+/* R51 (P0-46; troballa R12G-SB-01) · La foto derivada copiava el títol de
+   l'article però no la seua protecció, i la fitxa de la foto (FitxaWeb) oferia
+   el Traduir de la pàgina amb el títol d'una publicació amb 'none' o amb la
+   revisada. Ara la foto porta:
+    · el translation_mode i la source_language de l'article, com els llig el
+      seu pla (planTraduccioPublicacio.js · propia: propietat pròpia de dades;
+      un accessor no s'executa i no viatja), perquè la fitxa en demane el
+      mateix veredicte (publicacioTraduible);
+    · la marca de visibilitat de l'article (TC3.2), la mateixa regla que
+      navigation.js · marcaDeVisibilitat: la seua `visibility` si no és
+      'public' i, si porta la marca d'una persona (una fila del veïnat,
+      section_submissions: només per als membres), 'members'. No es copia qui
+      l'ha publicada (ownerUserId): la foto no canvia d'autor ni de Connectar.
+   Un article sense cap d'estes claus fa la foto de sempre, sense cap clau nova
+   (la llavor i supabase/seed.sql no canvien). */
+const MARQUES_DE_PERSONA = Object.freeze(['ownerUserId', 'owner_user_id', 'author_user_id']);
+const dadaPropia = (objecte, clau) => {
+  const descriptor = Object.getOwnPropertyDescriptor(objecte, clau);
+  return descriptor && Object.hasOwn(descriptor, 'value') ? descriptor.value : undefined;
+};
+function proteccioDeLArticle(item) {
+  const proteccio = {};
+  for (const clau of ['translation_mode', 'source_language']) {
+    const valor = dadaPropia(item, clau);
+    if (valor !== undefined) proteccio[clau] = valor;
+  }
+  /* Mai String() d'un valor del payload: un {"toString":0} tombaria el
+     proveïdor, que és damunt de la frontera d'error de la ruta (F3). Una
+     visibilitat que no és text, o un accessor, compta com a 'members'. */
+  const visibilitat = dadaPropia(item, 'visibility');
+  if (Object.hasOwn(item, 'visibility') && visibilitat !== 'public') proteccio.visibility = typeof visibilitat === 'string' && visibilitat ? visibilitat : 'members';
+  else if (MARQUES_DE_PERSONA.some((clau) => Object.hasOwn(item, clau))) proteccio.visibility = 'members';
+  return proteccio;
+}
+
 /** Les fotos de les publicacions del Mur (la portada de cada una). */
 export const fotosDelMur = (publicacions) => publicacions
   .map((item, index) => {
@@ -61,6 +96,7 @@ export const fotosDelMur = (publicacions) => publicacions
       created_at: item.created_at,
       sectionId: 'multimedia',
       article: { sectionId: 'mur', id: item.id },
+      ...proteccioDeLArticle(item),
       searchText: buildSearchText([item.title, item.post_subtitle, item.content, item.author, 'Mur'])
     };
   })
@@ -97,6 +133,7 @@ export const fotosDelMercat = (productes) => productes
       created_at: item.created_at,
       sectionId: 'multimedia',
       article: { sectionId: 'mercat', id: item.id },
+      ...proteccioDeLArticle(item),
       searchText: buildSearchText([item.title, item.subtitle, item.seller, 'Mercat'])
     };
   })
@@ -146,6 +183,7 @@ export const fotosDeLAgenda = (actes) => actes
       created_at: item.created_at || item.publish_date || null,
       sectionId: 'multimedia',
       article: { sectionId: 'events', id: item.id },
+      ...proteccioDeLArticle(item),
       searchText: buildSearchText([item.title, item.subtitle, item.author_name, 'Agenda'])
     };
   })

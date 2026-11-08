@@ -45,6 +45,7 @@ import { resolRecursPropi } from '../../config/assetResolver.js';
 import { objecteDe, rutaConnectarObjecte } from '../../config/navigation.js';
 import { esMitjaOpac } from '../../utils/mitjaOpac.js';
 import { esElementPublic, totsPublics } from '../../components/universal/traduccio/visibilitatTraduible.js';
+import { publicacioTraduible } from '../../components/universal/traduccio/planTraduccioPublicacio.js';
 import { MOCK_TOWNS } from '../pobles/townsSeed.js';
 import {
   GALERIA_CRONOLOGIA, GALERIA_IAIA, GALERIA_TOTS, ITEM_PORTADA, PREFIX_ARXIU_LOCAL, categoriaDeVista, esIdLocal,
@@ -292,8 +293,13 @@ export function FitxaWeb({ espai, item }) {
       refTitol={espai.refTitol}
       /* Gauntlet 261030 (Fase 3, TC3.2) · Traduir només amb una imatge
          pública: una del veïnat (section_submissions, només per als membres)
-         no ix cap al motor (traduccio/visibilitatTraduible.js). */
-      traduccio={esElementPublic(item)}
+         no ix cap al motor (traduccio/visibilitatTraduible.js).
+         R51 (P0-46; troballa R12G-SB-01) · I amb el veredicte del pla: la
+         foto derivada d'una publicació porta el seu translation_mode
+         (mediaContent.js · proteccioDeLArticle), i amb 'none', la revisada o
+         un error el títol de l'article no ix cap al motor (el de la pàgina ni
+         el de la fila «Publicat a»). Sense mode, el de sempre. */
+      traduccio={esElementPublic(item) && publicacioTraduible(item)}
       {...dataHoraDeBarra({ creat: textNet(item.created_at) || null })}
     >
       <div className="sdp-espai-multimedia__cos">

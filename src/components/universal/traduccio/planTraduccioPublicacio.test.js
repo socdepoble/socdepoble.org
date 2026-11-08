@@ -4,7 +4,7 @@
    (el camí de sempre); amb mode, original, curated, on_the_fly o error, i
    només on_the_fly ofereix Traduir. */
 import { describe, expect, test } from 'vitest';
-import { ofereixTraduir, planTraduccioPublicacio, traduccionsDelContracte } from './planTraduccioPublicacio.js';
+import { ofereixTraduir, planTraduccioPublicacio, publicacioTraduible, traduccionsDelContracte } from './planTraduccioPublicacio.js';
 
 const revisades = (llengues = ['ca', 'es', 'en', 'eu', 'gl'], extra = {}) => Object.fromEntries(llengues.map((codi) => [codi, { title: `T ${codi}`, content: `<p>C ${codi}</p>`, reviewed: true, ...extra }]));
 const base = { id: 'p', title: 'Original', content: '<p>Cos</p>', description: 'Entradeta', subtitle: 'Sub' };
@@ -69,5 +69,24 @@ describe('planTraduccioPublicacio', () => {
     Object.defineProperty(entrada, 'title', { enumerable: true, get() { cridat = true; return 'T'; } });
     expect(traduccionsDelContracte({ ca: entrada }).ca.title).toBeUndefined();
     expect(cridat).toBe(false);
+  });
+});
+
+/* Troballa R12G-BH-02 · El veredicte per a un text que es pinta sense el seu
+   pla (el calendari): el d'ofereixTraduir, el mateix en les cinc llengües. */
+describe('publicacioTraduible', () => {
+  test.each([
+    ['sense mode', base, true],
+    ['amb l’automàtica', { ...base, translation_mode: 'on_the_fly', source_language: 'ca' }, true],
+    ['amb none', { ...base, translation_mode: 'none', source_language: 'ca' }, false],
+    ['amb la revisada', { ...base, translation_mode: 'curated_5_langs', source_language: 'es', translations: revisades() }, false],
+    ['amb una revisada incompleta', { ...base, translation_mode: 'curated_5_langs', source_language: 'es', translations: revisades(['ca']) }, false],
+    ['amb un mode invàlid', { ...base, translation_mode: 'auto', source_language: 'ca' }, false],
+    ['amb l’automàtica sense llengua original', { ...base, translation_mode: 'on_the_fly' }, false]
+  ])('%s: el veredicte d’ofereixTraduir en les cinc llengües', (_, element, esperat) => {
+    expect(publicacioTraduible(element)).toBe(esperat);
+    for (const llengua of ['ca', 'es', 'en', 'eu', 'gl']) {
+      expect(ofereixTraduir(planTraduccioPublicacio(element, llengua)), llengua).toBe(esperat);
+    }
   });
 });
