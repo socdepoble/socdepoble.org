@@ -6,7 +6,7 @@ import { MemoryRouter } from '../../app/contexts/RouterContext.jsx';
 import { UniversalPage } from './UniversalPage.jsx';
 import { buidaCauTraduccions } from '../PedraSeca/hooks/useTraduccioPagina.js';
 
-/* Traductor Sobirà (ordre del Mestre, 260930 · via B) · El descobriment de
+/* Traductor de Poble (ordre del Mestre, 260930 · via B) · El descobriment de
    veres, sense cap doble del context: l'externalConfig.traductorUrl que el
    plugin fa arribar (traductor-url → PedraSecaEmbed, ronda D1 de Codex) i el
    UIProvider real. Amb el router en memòria, com a tota incrustació: la

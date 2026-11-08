@@ -45,7 +45,7 @@ export default function TranslationsSection() {
   };
 
   /* La traducció de cada targeta solta encara no existix: on una pàgina no té
-     el Traductor Sobirà, el botó Traduir només navega ací (useAccions.js). Es
+     el Traductor de Poble, el botó Traduir només navega ací (useAccions.js). Es
      diu, no s'amaga. El de pàgines sí que funciona (la secció de dalt). */
   const informacio = [
     {
@@ -123,7 +123,7 @@ export default function TranslationsSection() {
           </div>
         </section>
 
-        {/* IDEA-31 (C0545-S2) · El Traductor Sobirà de pàgines ja funciona: el botó
+        {/* IDEA-31 (C0545-S2) · El Traductor de Poble per a pàgines ja funciona: el botó
             Traduir de la Barra Blava (useTraduccioPagina.js) amb un proveïdor lliure,
             al servidor o, a socdepoble.org estàtic, des del navegador
             (data/traductorLliure.js): Apertium per al castellà, el gallec, l'anglés i
@@ -133,7 +133,7 @@ export default function TranslationsSection() {
             La traducció de targetes soltes continua en obres, a la secció següent. */}
         <section aria-labelledby="sdp-traductor-pagines">
           <h2 id="sdp-traductor-pagines">
-            {t('section.translations.pages.title', 'Traductor Sobirà de Pàgines')}
+            {t('section.translations.pages.title', 'Traductor de Poble per a Pàgines')}
           </h2>
 
           <p className="lead">

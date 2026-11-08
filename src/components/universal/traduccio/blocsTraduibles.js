@@ -1,6 +1,6 @@
 /**
  * blocsTraduibles.js — Els blocs de text d'una pàgina, per al Traductor
- * Sobirà (ordre del Mestre, 260930 · via B).
+ * de Poble (ordre del Mestre, 260930 · via B).
  *
  * Es traduïx TEXT, mai HTML (contracte D1 amb Codex, format 'text'): el
  * servidor compta 5000 caràcters per petició, marcatge inclòs, i cada text

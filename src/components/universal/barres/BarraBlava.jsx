@@ -24,13 +24,13 @@
  *     Traduir també, i el clic diu onClickInoperatiu('traduir'); sense, com
  *     sempre) ·
  *   menuTraduir ({ obert, opcions, actual, onTria, onTanca } | null: el
- *     Traductor Sobirà, ordre del Mestre, 260930; el posa useAccions) ·
+ *     Traductor de Poble, ordre del Mestre, 260930; el posa useAccions) ·
  *   indexControla (l'id del diàleg de l'Índex obert: ordre del Mestre,
  *     261004, integració final; el posa PageFrame mentre l'Índex propi és
  *     obert. Sense, el botó no porta aria-controls i el marcatge és el de
  *     sempre)
  *
- * Traductor Sobirà · Amb menuTraduir, Traduir diu que obri un menú
+ * Traductor de Poble · Amb menuTraduir, Traduir diu que obri un menú
  * (aria-haspopup, aria-expanded) i, obert, el menú de llengües es pinta just
  * després del botó, dins del trio: el focus hi entra en obrir-lo i, des de
  * la Fase 3 del Gauntlet 261030 (TC3.3, patró de menú de WAI-ARIA), les

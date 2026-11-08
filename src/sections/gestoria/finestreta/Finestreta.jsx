@@ -1,6 +1,6 @@
 /**
  * Finestreta.jsx — la vista «Identitat i Finestreta» de la Gestoria
- * (/app/gestoria/identitat): la Fitxa d'identitat privada sobirana i la
+ * (/app/gestoria/identitat): la Fitxa d'identitat privada i la
  * Finestreta única.
  *
  * Ordre del Mestre, 13-10-2026 (pla 261013_1405, front H): «extraure les

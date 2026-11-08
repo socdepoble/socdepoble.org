@@ -771,7 +771,7 @@ export const PAGE_COPY = {
      d'emergència rural i el sincronitzador de carpeta són codi i proves que
      cap pantalla no importa: passen a «Pendent», com el xifratge. Fora els
      ítems que citaven fitxers que no existixen (el servidor i l'arrancador
-     del Node 0, els enxufes sobirans, l'embolcall fora de línia, el
+     del Node 0, els enxufes propis, l'embolcall fora de línia, el
      Rhizome, la IAIA del Node 0 i el catàleg DCAT-AP). El pilot «Node 0 La
      Torre de les Maçanes» (un Mac Mini amb Apple M4 i 24 GB) es diu en
      preparació, amb l'arquitectura prevista, sense cap xifra que no estiga

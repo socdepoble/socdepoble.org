@@ -359,9 +359,9 @@ export function esAvatarDeProveidorOAuth(url) {
 }
 
 /* Ordre del Mestre (03-11-2026) · Vídeo protagonista allotjat al servidor
-   sobirà de mitjans (Node 0 · https://socdepoble.cat/media/...) o al mateix
+   de mitjans del Node 0 (https://socdepoble.cat/media/...) o al mateix
    origen. Cap servidor de tercers (YouTube, Vimeo, CDN alienes). */
-const ORIGENS_VIDEO_SOBIRA = Object.freeze([
+const ORIGENS_VIDEO_NODE0 = Object.freeze([
   'https://socdepoble.cat',
   'https://socdepoble.org'
 ]);
@@ -377,7 +377,7 @@ export function esFontVideoPropia(url) {
     if (typeof window !== 'undefined' && u.origin === window.location.origin) return true;
     if (u.protocol !== 'https:') return false;
     if (origensPropis.includes(u.origin)) return true;
-    return ORIGENS_VIDEO_SOBIRA.includes(u.origin) && u.pathname.startsWith('/media/');
+    return ORIGENS_VIDEO_NODE0.includes(u.origin) && u.pathname.startsWith('/media/');
   } catch {
     return false;
   }

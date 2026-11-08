@@ -10,7 +10,7 @@ import { act, cleanup, fireEvent, render, screen, waitFor, within } from '@testi
    origen, Apertium o MyMemory), com a /consola (ConsolaSection.traduccio.test.jsx).
    Ruta real: el router de veres, la Wiki amb el seu workspace, la UniversalPage
    i el PageFrame de veres, el tros de la Consola carregat a demanda, el Traductor
-   Sobirà disponible pels dos transports i el clic de la persona: Traduir i, si
+   de Poble disponible pels dos transports i el clic de la persona: Traduir i, si
    hi haguera menú, una llengua. Només es falsegen les fonts (sense xarxa), el
    manifest de la Wiki (un document públic, la sonda), els avisos, el SEO i el
    llenç del graf.
@@ -73,7 +73,7 @@ const MAPA = vi.hoisted(() => ({
 }));
 
 const URL_SERVEI = '/wp-json/socdepoble/v1/traduir';
-/* Els dos transports del Traductor Sobirà (IDEA-31): el servei del mateix
+/* Els dos transports del Traductor de Poble (IDEA-31): el servei del mateix
    origen (en desenvolupament, /__iaia/traduir), i el lliure del navegador
    (Apertium; el basc i l'alemany, MyMemory). */
 const TRANSPORTS = Object.freeze([
@@ -164,7 +164,7 @@ async function provaDeTraduir(container, llengua) {
 }
 const peticionsDeTraduccio = () => fetch.mock.calls.map(([url]) => String(url)).filter(esDeTraduccio);
 
-describe.each(TRANSPORTS)('ALT-C1 · la Consola dins de la Wiki, amb el Traductor Sobirà disponible per $nom', ({ llengua, prepara }) => {
+describe.each(TRANSPORTS)('ALT-C1 · la Consola dins de la Wiki, amb el Traductor de Poble disponible per $nom', ({ llengua, prepara }) => {
   test('el tauler amb dades d’este ordinador: Traduir avisa i cap text ix cap al motor', async () => {
     prepara();
     const container = await obriLaConsola();

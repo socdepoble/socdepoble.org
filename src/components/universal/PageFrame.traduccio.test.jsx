@@ -12,7 +12,7 @@ import {
 import { AVIS_TRADUIT, VEURE_ORIGINAL } from './traduccio/TraduccioPagina.jsx';
 import { NOM_MENU_TRADUIR } from './traduccio/MenuTraduir.jsx';
 
-/* Traductor Sobirà (ordre del Mestre, 260930 · via B) · La pàgina: Traduir
+/* Traductor de Poble (ordre del Mestre, 260930 · via B) · La pàgina: Traduir
    obri el menú, la llengua triada crida el servei de l'amfitrió i el títol i
    el cos canvien EN LOCAL (sense navegar ni recarregar), amb l'avís i «Veure
    l'original». Es traduïx text i es pinta com a text: un <script> de la

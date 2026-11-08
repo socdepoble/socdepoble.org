@@ -8,7 +8,7 @@ import { blocsTraduibles, preparaTraduccio } from '../../components/universal/tr
 /* Gauntlet 261030 (cicle 2, traduir-correu-a-registre) · La confirmació de
    l'alta i la contrasenya nova pinten el correu de la persona dins d'una
    frase. Encara que una pàgina amb Traduir actiu les muntara, el correu porta
-   translate="no" i el Traductor Sobirà (blocsTraduibles) no l'envia mai: ni
+   translate="no" i el Traductor de Poble (blocsTraduibles) no l'envia mai: ni
    en HTML (Apertium) ni en text (MyMemory, en una URL GET). El correu és
    inventat. */
 const CORREU = 'maria.prova@example.org';

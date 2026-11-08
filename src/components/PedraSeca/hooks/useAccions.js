@@ -320,7 +320,7 @@ export async function compartix(titol, url, showToast) {
  * diu per què, desactivada (amagar-la canviaria la forma del menú).
  * Connectar no el fa servir: continua amb onConnect.
  *
- * `traduccio` (Traductor Sobirà, ordre del Mestre, 260930 · via B) és el que
+ * `traduccio` (Traductor de Poble, ordre del Mestre, 260930 · via B) és el que
  * torna useTraduccioPagina: el munta PageFrame per a la barra d'una pàgina.
  * Traduir ja no porta a /traduccions: obri el menú de llengües (menuTraduir,
  * per a BarraBlava) i la llengua triada crida el servei de l'amfitrió; sense

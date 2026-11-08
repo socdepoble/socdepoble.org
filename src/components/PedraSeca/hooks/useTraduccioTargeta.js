@@ -1,9 +1,9 @@
 /**
  * useTraduccioTargeta.js — Traducció dinàmica de targetes individuals (P2-13 ·
- * ADR-2026-14-SERVEI-LLIURE-TRADUCCIO-SOBIRA · Kit r56).
+ * ADR-2026-14, servei lliure de traducció · Kit r56).
  *
  * Traduïx a demanda els camps de text d'una targeta (`title`, `subtitle`,
- * `summary`, `content`) usant el mateix transport sobirà que `useTraduccioPagina`
+ * `summary`, `content`) amb el mateix transport que `useTraduccioPagina`
  * (`creaTraductor` o el carregador diferit de `traductorDelLloc`), sense importar
  * mai `traductorLliure.js` de forma estàtica per preservar l'invariant del paquet
  * d'entrada (`traductorLliure.test.js`).

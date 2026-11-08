@@ -1,4 +1,4 @@
-/* Traductor Sobirà (ordre del Mestre, 260930 · via B) · El client neutre del
+/* Traductor de Poble (ordre del Mestre, 260930 · via B) · El client neutre del
    servei de traducció: el contracte acordat amb Codex (auditoria 260930_2150,
    ronda D1), la validació de la resposta i els errors tipats. */
 import { readFileSync } from 'node:fs';

@@ -7,7 +7,7 @@ import {
 import { CosTraduit } from './TraduccioPagina.jsx';
 import { sanitizeHtml } from '../../../utils/sanitize.js';
 
-/* Traductor Sobirà (ordre del Mestre, 260930 · via B) · Es traduïx text, mai
+/* Traductor de Poble (ordre del Mestre, 260930 · via B) · Es traduïx text, mai
    HTML: els blocs de lectura de l'article, el més extern de cada niu, sense
    controls ni el que no es veu. */
 afterEach(() => { cleanup(); document.body.replaceChildren(); });

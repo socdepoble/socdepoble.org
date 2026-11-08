@@ -1205,10 +1205,10 @@ export default {
   'section.translations.option.en': 'Interfaz en inglés',
   'section.translations.option.eu': 'Interfaz en euskera',
   'section.translations.option.gl': 'Interfaz en gallego',
-  'section.translations.pages.title': 'Traductor soberano de páginas',
+  'section.translations.pages.title': 'Traductor de Pueblo para páginas',
   'section.translations.pages.lead': 'Traduce la página que estás leyendo sin salir de ella: con Apertium, software libre, y, para el euskera y el alemán, con MyMemory.',
   'section.translations.pages.card.title': 'Botón «Traduir» de la barra azul',
-  /* Gauntlet 261030 (cicle 2, traductor-client) · La app nativa y los textos del Traductor Sobirà. */
+  /* Gauntlet 261030 (cicle 2, traductor-client) · La app nativa y los textos del Traductor de Pueblo. */
   'section.translations.pages.card.natiu': 'En la aplicación nativa, de momento, el botón todavía no traduce nada: si lo pulsas, te lo dice.',
   'section.traduir.menu': 'Traducir la página',
   'section.traduir.original': 'Original (valenciano)',

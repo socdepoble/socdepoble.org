@@ -1,6 +1,6 @@
 /**
  * MenuTraduir.jsx — El desplegable de llengües del botó «Traduir» de la barra
- * blava (Traductor Sobirà, ordre del Mestre, 260930 · via B).
+ * blava (Traductor de Poble, ordre del Mestre, 260930 · via B).
  *
  * La llista és TANCADA (data/traductor.js): Castellà, Gallec, Basc, Anglés,
  * Francés i Alemany i, quan la pàgina ja està traduïda, «Original (valencià)».

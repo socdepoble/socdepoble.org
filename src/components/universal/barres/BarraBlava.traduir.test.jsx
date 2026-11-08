@@ -5,7 +5,7 @@ import { BarraBlava } from './BarraBlava.jsx';
 import { MenuTraduir, NOM_MENU_TRADUIR, NOM_ORIGINAL } from '../traduccio/MenuTraduir.jsx';
 import { LLENGUES_TRADUCCIO } from '../../../data/traductor.js';
 
-/* Traductor Sobirà (ordre del Mestre, 260930 · via B) · El botó Traduir de
+/* Traductor de Poble (ordre del Mestre, 260930 · via B) · El botó Traduir de
    la barra blava obri un menú de llengües: rols menu/menuitemradio,
    aria-expanded, Escape que tanca i consumix l'esdeveniment, focus que entra
    a la primera opció i torna a Traduir. Tancat, la barra no canvia. */

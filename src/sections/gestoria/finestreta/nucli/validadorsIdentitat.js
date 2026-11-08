@@ -1,6 +1,6 @@
 /**
  * validadorsIdentitat.js — els validadors purs de la Fitxa d'identitat
- * sobirana i de la Finestreta, i el catàleg tancat dels seus camps.
+ * privada i de la Finestreta, i el catàleg tancat dels seus camps.
  *
  * Ordre del Mestre, 13-10-2026 (pla 261013_1405, front H): extraure les dades
  * legals dels papers de la persona (DNI o NIE, número d'afiliació, domicili

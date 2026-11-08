@@ -45,7 +45,7 @@ const init = async () => {
         tenantId: import.meta.env.VITE_TENANT_ID
       });
     }
-    /* IDEA-31 (QA-R2-13) · El Traductor Sobirà del lloc propi. VITE_TRADUCTOR_URL
+    /* IDEA-31 (QA-R2-13) · El Traductor de Poble del lloc propi. VITE_TRADUCTOR_URL
        declara un servei en qualsevol build; el servidor de desenvolupament
        (http://localhost:3340) servix /__iaia/traduir i ho diu amb
        SDP_TRADUCTOR_DEV (tooling/vite/traductor-iaia.mjs). Sense cap dels dos,

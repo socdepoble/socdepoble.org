@@ -2,7 +2,7 @@
  * controls.jsx — botons i controls sense router.
  * Trasllat literal des d'UniversalElements.jsx (260910). Cap canvi de comportament.
  *
- * Traductor Sobirà (ordre del Mestre, 260930) · ActionControl i IconButton
+ * Traductor de Poble (ordre del Mestre, 260930) · ActionControl i IconButton
  * admeten `refBoto` (on torna el focus un desplegable en tancar-se) i
  * `ariaHaspopup` / `ariaExpanded` (un botó que obri un menú ho diu). Sense
  * elles, el marcatge és el de sempre: React no pinta un atribut undefined.

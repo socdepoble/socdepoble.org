@@ -1,6 +1,6 @@
 /**
- * useTraduccioPagina.js — L'estat del Traductor Sobirà d'una pàgina (ordre
- * del Mestre, 260930 · via B; P2-13 · C0545-S1/S2 · ADR-2026-14-SERVEI-LLIURE-TRADUCCIO-SOBIRA).
+ * useTraduccioPagina.js — L'estat del Traductor de Poble d'una pàgina (ordre
+ * del Mestre, 260930 · via B; P2-13 · C0545-S1/S2 · ADR-2026-14, servei lliure de traducció).
  * El munta PageFrame i el passa a useAccions, que hi posa el botó «Traduir» de
  * la barra blava, distingint honestament les pàgines públiques amb traducció
  * disponible de les targetes soltes (que continuen portant a /traduccions

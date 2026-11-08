@@ -1,6 +1,6 @@
 /**
  * TraduccioPagina.jsx — Les dues peces que PageFrame pinta quan una pàgina es
- * traduïx (Traductor Sobirà, ordre del Mestre, 260930 · via B).
+ * traduïx (Traductor de Poble, ordre del Mestre, 260930 · via B).
  *
  *  · AvisTraduccio: l'avís en línia (Alerta «info», role=status). Mentre
  *    arriba la resposta, «Traduint al castellà…»; amb la traducció, «Traduït

@@ -1,5 +1,5 @@
 /**
- * fitxaIdentitat.js — la Fitxa d'identitat sobirana: els camps legals de la
+ * fitxaIdentitat.js — la Fitxa d'identitat privada: els camps legals de la
  * persona, de la seua activitat, de les entitats que representa, dels seus
  * tributs locals i de les representacions, cadascun amb la seua font i el seu
  * estat.

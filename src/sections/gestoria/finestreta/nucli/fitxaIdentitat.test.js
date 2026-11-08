@@ -1,5 +1,5 @@
 // @vitest-environment node
-/* Finestreta · nucli · Fitxa d'identitat sobirana. Ordre del Mestre,
+/* Finestreta · nucli · Fitxa d'identitat privada. Ordre del Mestre,
    13-10-2026 (pla 261013_1405, front H): propostes en memòria, conflictes
    que no es trien sols, confirmats que cap proposta sobreescriu i, al cofre,
    només el confirmat. Identificadors generats amb el seu control. */

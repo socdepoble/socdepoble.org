@@ -1982,7 +1982,7 @@ export const FACETA_3_CATEGORIES_MARES_IA = Object.freeze([
     "label": "💻 Tecnologia Lliure, Dades Obertes i Disseny",
     "nomCurt": "Tecnologia Lliure i Dades Obertes",
     "skosNotation": "SDP.F3.06",
-    "ranganathanFacet": "Energy + Matter (Infraestructura digital sobirana i Fedivers)",
+    "ranganathanFacet": "Energy + Matter (Infraestructura digital pròpia i Fedivers)",
     "descripcio": "Projecte TIC, digitalització rural, Fedivers, Node 0, documentació tècnica, plànols, vídeos divulgatius i sobirania tecnològica per als municipis menuts.",
     "activaPerDefecte": true
   }

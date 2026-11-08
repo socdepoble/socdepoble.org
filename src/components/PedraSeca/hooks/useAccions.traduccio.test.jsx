@@ -5,7 +5,7 @@ vi.mock('../../../app/contexts/RouterContext', () => ({ useNavigate: () => mocks
 vi.mock('../../universal/NotificationContext.jsx', () => ({ useToast: () => ({ showToast: mocks.toast }) }));
 import { useAccions } from './useAccions.js';
 
-/* Traductor Sobirà (ordre del Mestre, 260930 · via B) · Traduir de la barra
+/* Traductor de Poble (ordre del Mestre, 260930 · via B) · Traduir de la barra
    d'una pàgina ja no porta a /traduccions: obri el menú de llengües. Un
    onTranslate propi mana com sempre; les targetes (sense `traduccio`)
    continuen com abans. */

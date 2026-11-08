@@ -3,7 +3,7 @@
  * estil Obsidian (Vault Markdown + JSON-LD) per a Sóc de Poble (Onada 8 i 9).
  *
  * Permet que qualsevol veí, cooperativa o ajuntament munte una carpeta del seu
- * ordinador com a Vault sobirà de notes i pàgines de la Wiki de Poble usant la
+ * ordinador com a Vault propi de notes i pàgines de la Wiki de Poble amb la
  * File System Access API (`FileSystemDirectoryHandle`), amb fallback universal
  * d'exportació/importació per als navegadors sense `showDirectoryPicker`.
  *

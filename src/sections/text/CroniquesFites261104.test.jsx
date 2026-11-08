@@ -21,7 +21,7 @@ describe('CroniquesFites261104 — Consumidor UI a /versions del catàleg fitesA
     expect(
       screen.getByRole('heading', {
         level: 4,
-        name: /Node 0 Sobirà al Mac mini M4 i Arquitectura de Resiliència Rural 3-2-1/i,
+        name: /Node 0 al Mac mini M4 i Arquitectura de Resiliència Rural 3-2-1/i,
       }),
     ).toBeTruthy();
     expect(

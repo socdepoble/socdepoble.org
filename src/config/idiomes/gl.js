@@ -1212,10 +1212,10 @@ export default {
   'section.translations.option.en': 'Interface en inglés',
   'section.translations.option.eu': 'Interface en éuscaro',
   'section.translations.option.gl': 'Interface en galego',
-  'section.translations.pages.title': 'Tradutor soberano de páxinas',
+  'section.translations.pages.title': 'Tradutor de Pobo para páxinas',
   'section.translations.pages.lead': 'Traduce a páxina que estás a ler sen saír dela: con Apertium, software libre, e, para o éuscaro e o alemán, con MyMemory.',
   'section.translations.pages.card.title': 'Botón «Traduir» da barra azul',
-  /* Gauntlet 261030 (cicle 2, traductor-client) · A aplicación nativa e os textos do Traductor Sobirà. */
+  /* Gauntlet 261030 (cicle 2, traductor-client) · A aplicación nativa e os textos do Tradutor de Pobo. */
   'section.translations.pages.card.natiu': 'Na aplicación nativa, polo de agora, o botón aínda non traduce nada: se o premes, dío.',
   'section.traduir.menu': 'Traducir a páxina',
   'section.traduir.original': 'Orixinal (valenciano)',

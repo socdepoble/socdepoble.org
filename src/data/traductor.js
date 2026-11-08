@@ -1,8 +1,8 @@
 /**
- * traductor.js — El Traductor Sobirà (ordre del Mestre, 260930 · via B; P2-13 · C0545-S1/S2).
+ * traductor.js — El Traductor de Poble (ordre del Mestre, 260930 · via B; P2-13 · C0545-S1/S2).
  *
  * Client NEUTRE del servei de traducció que oferix l'amfitrió
- * (ADR-2026-14-SERVEI-LLIURE-TRADUCCIO-SOBIRA). És agnòstic del proveïdor que opere al
+ * (ADR-2026-14, servei lliure de traducció). És agnòstic del proveïdor que opere al
  * servidor (Apertium, extrem autohospedat compatible amb LibreTranslate via
  * SDP_TRADUCCIO_URL, o DeepL quan l'amfitrió hi haja configurat clau) i de
  * l'amfitrió (WordPress): només parla el contracte acordat

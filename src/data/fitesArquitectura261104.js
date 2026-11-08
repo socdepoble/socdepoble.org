@@ -23,7 +23,7 @@ export const METADADES_INSTITUCIONALS_261104 = Object.freeze({
   origenCanonic: 'https://socdepoble.org',
   compteInstitucionalCanonic: 'socdepoble@socdepoble.org',
   webfingerCanonic: 'acct:socdepoble@socdepoble.org',
-  node0DominiSobira: 'https://socdepoble.cat',
+  node0Domini: 'https://socdepoble.cat',
   node0ActorAcct: 'socdepoble@socdepoble.cat',
   replicaPosseMastodon: '@depoble@mastodont.cat',
   carpetaArrelMirallWorkspace: 'Sóc de Poble · Mirall Sobirà Node 0/',
@@ -202,7 +202,7 @@ export const CATALOG_FITES_261104 = Object.freeze({
     ]),
     idiomes: Object.freeze({
       ca: Object.freeze({
-        titol: 'Node 0 Sobirà al Mac mini M4 i Arquitectura de Resiliència Rural 3-2-1',
+        titol: 'Node 0 al Mac mini M4 i Arquitectura de Resiliència Rural 3-2-1',
         subtitol: 'PostgreSQL 17.11 al poble, Time Machine local i Mirall Navegable de 20 TB sota socdepoble@socdepoble.org',
         entradeta:
           'El servidor físic Node 0 batega al poble amb PostgreSQL 17.11 i signatures criptogràfiques Ed25519, protegit per una triple capa que garanteix que, encara que salte la llum a casa amb el forn i el microones, la web mai cau ni es perd cap memòria.',
@@ -211,7 +211,7 @@ export const CATALOG_FITES_261104 = Object.freeze({
             titolH3: 'Tres capes de protecció per a la sobirania de dades del poble',
             paragrafs: Object.freeze([
               'La **Capa 1** és el **Node 0 al Mac mini M4** (`socdepoble.cat`) amb **PostgreSQL 17.11** i recuperació automàtica d\'arrancada; la **Capa 2** és la còpia contínua en disc físic local mitjançant **Time Machine**.',
-              'La **Capa 3** és el **Mirall Sobirà Navegable als 20 TB de Google Workspace Drive** sota el compte institucional **`socdepoble@socdepoble.org`** (`Sóc de Poble · Mirall Sobirà Node 0/`), que combina buidats atòmics de base de dades amb carpetes d\'articles i patrimoni llegibles per qualsevol persona.',
+              'La **Capa 3** és el **Mirall Navegable als 20 TB de Google Workspace Drive** sota el compte institucional **`socdepoble@socdepoble.org`** (`Sóc de Poble · Mirall Sobirà Node 0/`), que combina buidats atòmics de base de dades amb carpetes d\'articles i patrimoni llegibles per qualsevol persona.',
             ]),
           }),
           Object.freeze({
@@ -224,7 +224,7 @@ export const CATALOG_FITES_261104 = Object.freeze({
         ]),
       }),
       es: Object.freeze({
-        titol: 'Nodo 0 Soberano en el Mac mini M4 y Arquitectura de Resiliencia Rural 3-2-1',
+        titol: 'Nodo 0 en el Mac mini M4 y Arquitectura de Resiliencia Rural 3-2-1',
         subtitol: 'PostgreSQL 17.11 en el pueblo, Time Machine local y Espejo Navegable de 20 TB bajo socdepoble@socdepoble.org',
         entradeta:
           'El servidor físico Nodo 0 late en el pueblo con PostgreSQL 17.11 y firmas criptográficas Ed25519, protegido por una triple capa que garantiza que, aunque salte la luz en casa con el horno y el microondas, la web nunca cae ni se pierde ninguna memoria.',
@@ -233,7 +233,7 @@ export const CATALOG_FITES_261104 = Object.freeze({
             titolH3: 'Tres capas de protección para la soberanía de datos del pueblo',
             paragrafs: Object.freeze([
               'La **Capa 1** es el **Nodo 0 en el Mac mini M4** (`socdepoble.cat`) con **PostgreSQL 17.11** y recuperación automática de arranque; la **Capa 2** es la copia continua en disco físico local mediante **Time Machine**.',
-              'La **Capa 3** es el **Espejo Soberano Navegable en los 20 TB de Google Workspace Drive** bajo la cuenta institucional **`socdepoble@socdepoble.org`** (`Sóc de Poble · Mirall Sobirà Node 0/`), que combina volcados atómicos de base de datos con carpetas de artículos y patrimonio legibles por cualquier persona.',
+              'La **Capa 3** es el **Espejo Navegable en los 20 TB de Google Workspace Drive** bajo la cuenta institucional **`socdepoble@socdepoble.org`** (`Sóc de Poble · Mirall Sobirà Node 0/`), que combina volcados atómicos de base de datos con carpetas de artículos y patrimonio legibles por cualquier persona.',
             ]),
           }),
           Object.freeze({
@@ -246,7 +246,7 @@ export const CATALOG_FITES_261104 = Object.freeze({
         ]),
       }),
       en: Object.freeze({
-        titol: 'Sovereign Node 0 on Mac mini M4 and 3-2-1 Rural Resilience Architecture',
+        titol: 'Node 0 on Mac mini M4 and 3-2-1 Rural Resilience Architecture',
         subtitol: 'PostgreSQL 17.11 in the village, local Time Machine, and 20 TB Browsable Mirror under socdepoble@socdepoble.org',
         entradeta:
           'The physical Node 0 server beats in the village with PostgreSQL 17.11 and Ed25519 cryptographic signatures, protected by a three-layer architecture ensuring that even if the home power trips with the oven and microwave, the website never goes down and no memory is lost.',
@@ -255,7 +255,7 @@ export const CATALOG_FITES_261104 = Object.freeze({
             titolH3: 'Three layers of protection for village data sovereignty',
             paragrafs: Object.freeze([
               '**Layer 1** is **Node 0 on the Mac mini M4** (`socdepoble.cat`) running **PostgreSQL 17.11** with automatic boot recovery; **Layer 2** is the continuous local physical disk backup via **Time Machine**.',
-              '**Layer 3** is the **Browsable Sovereign Mirror on 20 TB of Google Workspace Drive** under the institutional account **`socdepoble@socdepoble.org`** (`Sóc de Poble · Mirall Sobirà Node 0/`), combining atomic database snapshots with human-readable article and heritage folders.',
+              '**Layer 3** is the **Browsable Mirror on 20 TB of Google Workspace Drive** under the institutional account **`socdepoble@socdepoble.org`** (`Sóc de Poble · Mirall Sobirà Node 0/`), combining atomic database snapshots with human-readable article and heritage folders.',
             ]),
           }),
           Object.freeze({
@@ -268,7 +268,7 @@ export const CATALOG_FITES_261104 = Object.freeze({
         ]),
       }),
       eu: Object.freeze({
-        titol: '0 Nodo Burujabea Mac mini M4an eta 3-2-1 Landa Erresilientzia Arkitektura',
+        titol: '0 Nodoa Mac mini M4an eta 3-2-1 Landa Erresilientzia Arkitektura',
         subtitol: 'PostgreSQL 17.11 herrian, Time Machine lokala eta 20 TB-ko Ispilu Nabigagarria socdepoble@socdepoble.org kontupean',
         entradeta:
           '0 Nodo zerbitzari fisikoak herrian bertan egiten du taupada PostgreSQL 17.11 eta Ed25519 sinadura kriptografikoekin; hiru geruzako babesari esker, etxean labearekin eta mikrouhin-labearekin argia joanda ere, webgunea ez da inoiz erortzen eta ez da oroimenik galtzen.',
@@ -277,7 +277,7 @@ export const CATALOG_FITES_261104 = Object.freeze({
             titolH3: 'Hiru babes-geruza herriko datuen burujabetzarako',
             paragrafs: Object.freeze([
               '**1. Geruza** **Mac mini M4ko 0 Nodoa** da (`socdepoble.cat`), **PostgreSQL 17.11** eta abio automatikoarekin; **2. Geruza** disko fisiko lokaleko etengabeko kopia da **Time Machine** bidez.',
-              '**3. Geruza** **Google Workspace Driveko 20 TB-etan dagoen Ispilu Burujabe Nabigagarria** da, **`socdepoble@socdepoble.org`** kontu instituzionalaren pean (`Sóc de Poble · Mirall Sobirà Node 0/`), datu-basearen kopia atomikoak eta edonork irakurtzeko moduko artikulu-karpetak uztartuz.',
+              '**3. Geruza** **Google Workspace Driveko 20 TB-etan dagoen Ispilu Nabigagarria** da, **`socdepoble@socdepoble.org`** kontu instituzionalaren pean (`Sóc de Poble · Mirall Sobirà Node 0/`), datu-basearen kopia atomikoak eta edonork irakurtzeko moduko artikulu-karpetak uztartuz.',
             ]),
           }),
           Object.freeze({
@@ -290,7 +290,7 @@ export const CATALOG_FITES_261104 = Object.freeze({
         ]),
       }),
       gl: Object.freeze({
-        titol: 'Nodo 0 Soberano no Mac mini M4 e Arquitectura de Resiliencia Rural 3-2-1',
+        titol: 'Nodo 0 no Mac mini M4 e Arquitectura de Resiliencia Rural 3-2-1',
         subtitol: 'PostgreSQL 17.11 na aldea, Time Machine local e Espello Navegable de 20 TB baixo socdepoble@socdepoble.org',
         entradeta:
           'O servidor físico Nodo 0 latexa na aldea con PostgreSQL 17.11 e sinaturas criptográficas Ed25519, protexido por unha tripla capa que garante que, aínda que salte a luz na casa co forno e o microondas, a web nunca cae nin se perde ningunha memoria.',
@@ -299,7 +299,7 @@ export const CATALOG_FITES_261104 = Object.freeze({
             titolH3: 'Tres capas de protección para a soberanía de datos da aldea',
             paragrafs: Object.freeze([
               'A **Capa 1** é o **Nodo 0 no Mac mini M4** (`socdepoble.cat`) con **PostgreSQL 17.11** e recuperación automática de arranque; a **Capa 2** é a copia continua en disco físico local mediante **Time Machine**.',
-              'A **Capa 3** é o **Espello Soberano Navegable nos 20 TB de Google Workspace Drive** baixo a conta institucional **`socdepoble@socdepoble.org`** (`Sóc de Poble · Mirall Sobirà Node 0/`), que combina copias atómicas de base de datos con carpetas de artigos e patrimonio lexibles por calquera persoa.',
+              'A **Capa 3** é o **Espello Navegable nos 20 TB de Google Workspace Drive** baixo a conta institucional **`socdepoble@socdepoble.org`** (`Sóc de Poble · Mirall Sobirà Node 0/`), que combina copias atómicas de base de datos con carpetas de artigos e patrimonio lexibles por calquera persoa.',
             ]),
           }),
           Object.freeze({

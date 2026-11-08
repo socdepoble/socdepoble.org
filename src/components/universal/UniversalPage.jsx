@@ -180,7 +180,7 @@ export function UniversalPage(props) {
      ara no n'hi ha cap) o, sense, el xat comú de la 'pagina' d'on està la
      persona. onComment={false} vol dir «sense botó», com onConnect={false}. */
   const senseComentar = props.onComment === false;
-  /* Traductor Sobirà (ordre del Mestre, 260930 · via B) · En lectura, sense
+  /* Traductor de Poble (ordre del Mestre, 260930 · via B) · En lectura, sense
      handler propi, Traduir obri el menú de llengües: ho decidix PageFrame →
      useAccions (useTraduccioPagina). Només l'editor (accionsInoperatives,
      T36) continua portant a /traduccions: traduir-lo substituiria el cos que

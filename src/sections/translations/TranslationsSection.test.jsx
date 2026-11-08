@@ -56,18 +56,18 @@ test('la pàgina existix i no és buida: crom de sistema, signada per Sóc de Po
   expect(m.pagina.authorHref).toBeUndefined();
   expect(m.pagina.title).toBe('Traduccions i llengua');
   expect(seccio('Idioma del Sistema')).toBeTruthy();
-  expect(seccio('Traductor Sobirà de Pàgines')).toBeTruthy();
+  expect(seccio('Traductor de Poble per a Pàgines')).toBeTruthy();
   expect(seccio('Traducció Dinàmica de Targetes')).toBeTruthy();
   expect(container.querySelectorAll('article.sp-card')).toHaveLength(SUPPORTED_LANGUAGES.length + 4);
 });
 
-/* IDEA-31 (C0545-S2) · El Traductor Sobirà de pàgines ja funciona: es diu,
+/* IDEA-31 (C0545-S2) · El Traductor de Poble per a pàgines ja funciona: es diu,
    amb veritat, abans de la traducció de targetes, que continua en obres. */
-test('el Traductor Sobirà de Pàgines es declara ACTIU, amb Apertium i MyMemory dits amb veritat, abans de les targetes', () => {
+test('el Traductor de Poble per a Pàgines es declara ACTIU, amb Apertium i MyMemory dits amb veritat, abans de les targetes', () => {
   render(<TranslationsSection />);
   const titols = screen.getAllByRole('heading', { level: 2 }).map((h) => h.textContent);
-  expect(titols).toEqual(['Idioma del Sistema', 'Traductor Sobirà de Pàgines', 'Traducció Dinàmica de Targetes']);
-  const pagines = seccio('Traductor Sobirà de Pàgines');
+  expect(titols).toEqual(['Idioma del Sistema', 'Traductor de Poble per a Pàgines', 'Traducció Dinàmica de Targetes']);
+  const pagines = seccio('Traductor de Poble per a Pàgines');
   const targeta = within(pagines).getByRole('heading', { level: 3, name: 'Botó Traduir de la Barra Blava' }).closest('article');
   expect(within(targeta).getByText('ACTIU').classList.contains('sdp-badge-system')).toBe(true);
   expect(within(targeta).queryByText('EN OBRES')).toBeNull();
@@ -93,7 +93,7 @@ test('el Traductor Sobirà de Pàgines es declara ACTIU, amb Apertium i MyMemory
 test('a l’app nativa (cap servei ni transport lliure): la targeta diu «En obres» i que el botó encara no traduïx', () => {
   fixaTraductorLliure(null);
   render(<TranslationsSection />);
-  const targeta = within(seccio('Traductor Sobirà de Pàgines')).getByRole('heading', { level: 3, name: 'Botó Traduir de la Barra Blava' }).closest('article');
+  const targeta = within(seccio('Traductor de Poble per a Pàgines')).getByRole('heading', { level: 3, name: 'Botó Traduir de la Barra Blava' }).closest('article');
   expect(within(targeta).queryByText('ACTIU')).toBeNull();
   expect(within(targeta).getByText('EN OBRES').classList.contains('sdp-badge-tag')).toBe(true);
   expect(targeta.textContent).toMatch(/A l’aplicació nativa, de moment, el botó encara no fa cap traducció: si el prems, t’ho diu\. El botó Traduir de la Barra Blava traduïx/);
@@ -154,7 +154,7 @@ test('en una altra llengua la pàgina es tradueix sencera', () => {
   m.language = 'en';
   const { container } = render(<TranslationsSection />);
   expect(seccio('System language')).toBeTruthy();
-  expect(seccio('Sovereign page translator')).toBeTruthy();
+  expect(seccio('Village Translator for pages')).toBeTruthy();
   expect(seccio('Dynamic card translation')).toBeTruthy();
   expect(within(targetaDe('English')).getByText('ACTIVE')).toBeTruthy();
   expect(container.textContent).not.toMatch(/section\.translations\./);

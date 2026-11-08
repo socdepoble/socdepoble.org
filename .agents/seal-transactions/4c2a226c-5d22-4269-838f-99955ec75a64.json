@@ -1,0 +1,17 @@
+{
+  "id": "4c2a226c-5d22-4269-838f-99955ec75a64",
+  "session": "6f29191f-1608-413c-b90a-91f5b06cd7a0",
+  "operationId": "r12-whatsapp-iaia-r94",
+  "claim": "6f29191f-1608-413c-b90a-91f5b06cd7a0:governance-write",
+  "planHash": "7f9c6df879e66a9acba849cd98390dc1053369e1a3f809ebf3bfdb6bf45d70f6",
+  "beforeSeal": "ba0ddd6e9387d019231d299a7594dd6597454d80ae5f504691637cd4f0a57492",
+  "files": [
+    {
+      "path": "tooling/node0/hermes-whatsapp-iaia-bridge.mjs",
+      "before": null,
+      "after": "44e43cdae8d074c89ca1b46d7c5895578766989f9a4292cfc5047e66954948f0"
+    }
+  ],
+  "state": "accepted",
+  "afterSeal": "5f74f08d9558f1d6b128b87ea5ff5dd96b45585d23d569a1ab52675171cc2a37"
+}

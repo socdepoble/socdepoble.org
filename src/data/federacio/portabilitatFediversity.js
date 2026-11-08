@@ -508,7 +508,7 @@ export function verificaEnllacBidireccionalAlsoKnownAs(actorOrigenInput, actorDe
 export function emetActivitatMoveActivityPub({
   actorOrigen,
   actorDesti,
-  resum = 'Migració sobirana de node rural Sóc de Poble (FEP-7628).',
+  resum = 'Migració de node rural Sóc de Poble (FEP-7628).',
   publicatEl = '2026-11-03T00:00:00Z',
   idActivitat = null,
 } = {}) {

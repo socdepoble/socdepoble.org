@@ -217,7 +217,7 @@ describe('D-A · traduccio={false} i telemetria={{ comptar: false }}', () => {
   const traduir = (container) => container.querySelector('header.bar-blue button[aria-label="Traduir"]');
   const connectar = (container) => container.querySelector('header.bar-blue .btn-connectar.sp-card-connect');
 
-  test('sense la prop, Traduir obri el menú de llengües (el Traductor Sobirà de sempre)', () => {
+  test('sense la prop, Traduir obri el menú de llengües (el Traductor de Poble de sempre)', () => {
     const { container } = render(<PageFrame chrome="full" title="Notícia" />);
     fireEvent.click(traduir(container));
     expect(traduir(container).getAttribute('aria-expanded')).toBe('true');

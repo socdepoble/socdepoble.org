@@ -80,7 +80,7 @@ describe('efectes declarats', () => {
 });
 
 describe('Cursos de pedra en sec a Fageca i Alcosser (El Rentonar · vídeo protagonista i esdeveniment multi-dia)', () => {
-  test('signa El Rentonar amb la data exacta de l’Ajuntament de Muro, quadrat multi-dia i vídeo sobirà', () => {
+  test('signa El Rentonar amb la data exacta de l’Ajuntament de Muro, quadrat multi-dia i vídeo propi', () => {
     expect(CURSOS_PEDRA_EN_SEC_2026_EVENT.author_entity_id).toBe(ENTITAT_RENTONAR_SLUG);
     expect(CURSOS_PEDRA_EN_SEC_2026_EVENT.author_name).toBe('El Rentonar');
     expect(autorDe(CURSOS_PEDRA_EN_SEC_2026_EVENT)).toEqual({ tipus: 'entitat', id: ENTITAT_RENTONAR_SLUG });

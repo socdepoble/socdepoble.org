@@ -1217,10 +1217,10 @@ export default {
   'section.translations.option.en': 'Interfazea ingelesez',
   'section.translations.option.eu': 'Interfazea euskaraz',
   'section.translations.option.gl': 'Interfazea galegoz',
-  'section.translations.pages.title': 'Orrien itzultzaile burujabea',
+  'section.translations.pages.title': 'Orrietarako Herriko Itzultzailea',
   'section.translations.pages.lead': 'Irakurtzen ari zaren orria itzultzen du, handik irten gabe: Apertium software librearekin eta, euskararako eta alemanerako, MyMemoryrekin.',
   'section.translations.pages.card.title': 'Barra urdineko «Traduir» botoia',
-  /* Gauntlet 261030 (cicle 2, traductor-client) · Aplikazio natiboa eta Traductor Sobiràren testuak. */
+  /* Gauntlet 261030 (cicle 2, traductor-client) · Aplikazio natiboa eta Traductor de Pobleren testuak. */
   'section.translations.pages.card.natiu': 'Aplikazio natiboan, oraingoz, botoiak ez du ezer itzultzen oraindik: sakatzen baduzu, hala esaten dizu.',
   'section.traduir.menu': 'Orria itzuli',
   'section.traduir.original': 'Jatorrizkoa (valentziera)',

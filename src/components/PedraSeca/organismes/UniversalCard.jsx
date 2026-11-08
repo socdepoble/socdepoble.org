@@ -640,7 +640,7 @@ export function UniversalCard({
     && <EmoticonaBarra emoticona={emoticona} />;
 
   /* FEDI-11 (ordre del Mestre, 261103) · Traducció instantània a les targetes:
-     quan el Traductor Sobirà o el transport lliure d'Apertium està actiu i la
+     quan el Traductor de Poble o el transport lliure d'Apertium està actiu i la
      targeta no porta un onTranslate propi, el clic a Traduir obri el menú
      flotant MenuTraduir (com a les pàgines) i traduïx al vol title, subtitle i
      body en el mateix lloc, amb opció de tornar a «Original (valencià)». Sense

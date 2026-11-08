@@ -1226,11 +1226,11 @@ export default {
   'section.translations.option.en': 'Interfície en anglés',
   'section.translations.option.eu': 'Interfície en basc',
   'section.translations.option.gl': 'Interfície en gallec',
-  'section.translations.pages.title': 'Traductor Sobirà de Pàgines',
+  'section.translations.pages.title': 'Traductor de Poble per a Pàgines',
   'section.translations.pages.lead': 'Traduïx la pàgina que llegixes sense eixir-ne: amb Apertium, programari lliure, i, per al basc i l’alemany, amb MyMemory.',
   'section.translations.pages.card.title': 'Botó Traduir de la Barra Blava',
   /* Gauntlet 261030 (cicle 2, traductor-client) · L'app nativa encara no traduïx (traduccions-actiu-a-app-nativa)
-     i els textos del Traductor Sobirà en la llengua de la interfície (menu-traduir-noms-sense-i18n). */
+     i els textos del Traductor de Poble en la llengua de la interfície (menu-traduir-noms-sense-i18n). */
   'section.translations.pages.card.natiu': 'A l’aplicació nativa, de moment, el botó encara no fa cap traducció: si el prems, t’ho diu.',
   'section.traduir.menu': 'Traduir la pàgina',
   'section.traduir.original': 'Original (valencià)',

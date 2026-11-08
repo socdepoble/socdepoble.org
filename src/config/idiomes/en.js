@@ -1208,10 +1208,10 @@ export default {
   'section.translations.option.en': 'Interface in English',
   'section.translations.option.eu': 'Interface in Basque',
   'section.translations.option.gl': 'Interface in Galician',
-  'section.translations.pages.title': 'Sovereign page translator',
+  'section.translations.pages.title': 'Village Translator for pages',
   'section.translations.pages.lead': 'Translate the page you are reading without leaving it: with Apertium, free software, and, for Basque and German, with MyMemory.',
   'section.translations.pages.card.title': 'The «Traduir» (Translate) button on the blue bar',
-  /* Gauntlet 261030 (cicle 2, traductor-client) · The native app and the texts of the Traductor Sobirà. */
+  /* Gauntlet 261030 (cicle 2, traductor-client) · The native app and the texts of the Village Translator. */
   'section.translations.pages.card.natiu': 'In the native app, for now, the button does not translate anything yet: if you press it, it tells you so.',
   'section.traduir.menu': 'Translate the page',
   'section.traduir.original': 'Original (Valencian)',

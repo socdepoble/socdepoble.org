@@ -15,6 +15,11 @@ import { InstalaLaPwa, useInstalacioDeLaPagina } from './InstalaLaPwa.jsx';
 import { PAGINA_DE_LA_PASTILLA, pastillaDeVersio } from './pastillaDeVersio.js';
 const HerbariLaTorreSection=lazy(()=>import('../patrimoni/HerbariLaTorreSection.jsx'));
 const AparadorFediversity=lazy(()=>import('../text/AparadorFediversity.jsx'));
+/* R94 · IDEA-171 (decisió D-R11-4 del Mestre, 261107) · El WhatsApp de la IAIA: la targeta del pont
+   Hermes + Node 0 i del mapa honest del saber. Va en un chunk lazy i només a /page/node-zero, la pàgina
+   del Node 0, davant de l'aparador de Fediversity. El text de PAGE_COPY no canvia. */
+const PAGINA_DEL_WHATSAPP_DE_LA_IAIA = 'node-zero';
+const IaiaWhatsappCard = lazy(() => import('../../components/patrimoni/IaiaWhatsappCard.jsx'));
 /* Onada R9 (carril C5; IDEA-112, IDEA-113 i IDEA-115) · Les consultes de patrimoni, cadascuna en un chunk lazy:
    només es baixen a la seua pàgina, davall del text breu de PAGE_COPY (com l'herbari). */
 const SECCIONS_DE_PATRIMONI = {
@@ -153,7 +158,7 @@ export default function PageDetailSection() {
     if (slug === PAGINA_DEL_VISOR) alFinal = <><Suspense fallback={<div role="status" aria-live="polite"><CarregantElVisor /></div>}><PouDeLaNeuAnatomiaCard /></Suspense>{alFinal}</>;
     else if(slug==='herbari')alFinal=<><Suspense fallback={null}><HerbariLaTorreSection/></Suspense>{alFinal}</>;
     else if (Object.hasOwn(SECCIONS_DE_PATRIMONI, slug)) { const Consulta = SECCIONS_DE_PATRIMONI[slug]; alFinal = <><Suspense fallback={null}><Consulta /></Suspense>{alFinal}</>; }
-    else if(['fediversity','node-zero'].includes(slug))alFinal=<><Suspense fallback={null}><AparadorFediversity/></Suspense>{alFinal}</>;
+    else if(['fediversity','node-zero'].includes(slug))alFinal=<>{slug === PAGINA_DEL_WHATSAPP_DE_LA_IAIA ? <Suspense fallback={null}><IaiaWhatsappCard /></Suspense> : null}<Suspense fallback={null}><AparadorFediversity/></Suspense>{alFinal}</>;
     /* P1-46 (Fita 10; guàrdia nocturna 261030) · La pastilla de versió de
        Descàrregues, l'última de la fila d'etiquetes, cap a /versions. Es
        passa com a funció del traductor: TextSection és qui té el `t`. A

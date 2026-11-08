@@ -203,7 +203,7 @@ export const CENS_IMATGES = Object.freeze([
   e('/assets/uploads/avatars/nano_cita_metge.png', 'Cita amb el metge', 'ia', 'ia'),
   e('/assets/uploads/avatars/nano_escola_comic.png', 'L’escola', 'ia', 'ia'),
   e('/assets/uploads/avatars/nano_salut_comic.png', 'La salut', 'ia', 'ia'),
-  e('/assets/uploads/avatars/nano_simbiosi_sobirana.png', 'Simbiosi sobirana', 'ia', 'ia'),
+  e('/assets/uploads/avatars/nano_simbiosi_sobirana.png', 'La simbiosi', 'ia', 'ia'),
   e('/assets/uploads/avatars/pepica-vall-comic.png', 'Pepica la Vall', 'ia', 'ia'),
   e('/assets/uploads/avatars/vicent-ferris-comic.png', 'Vicent Ferris', 'ia', 'ia'),
 

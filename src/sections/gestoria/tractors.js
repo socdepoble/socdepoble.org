@@ -309,7 +309,7 @@ export const TRACTOR_HISTORIC = Object.freeze({
 });
 
 /* Ordre del Mestre, 13-10-2026 (pla 261013_1405, front H): la Fitxa
-   d'identitat privada sobirana i la Finestreta única. Auditoria Codex
+   d'identitat privada i la Finestreta única. Auditoria Codex
    261013_1510 §2.1: un model privat separat, cap dada legal a
    public.profiles, a cap metadata ni a la xarxa. Tractor NOU, separat dels
    altres (el precedent del Tauler, 261004, i de l'Històric, 261009): les

@@ -10,7 +10,7 @@ import { act, cleanup, fireEvent, render, screen, waitFor, within } from '@testi
    les fonts del servidor local (consola.json, el Mapa, els empaquetats). Cap
    d'elles pot eixir cap a un motor de traducció (el servei del mateix origen,
    Apertium o MyMemory). Ruta real: el router de veres, la UniversalPage i el
-   PageFrame de veres, el Traductor Sobirà disponible pels dos transports
+   PageFrame de veres, el Traductor de Poble disponible pels dos transports
    (el servei del lloc i el lliure del navegador, que porta el basc a
    MyMemory), i el clic de la persona: Traduir i, si hi haguera menú, una
    llengua. Cap pàgina de /consola no fa cap petició de traducció, i Traduir
@@ -98,7 +98,7 @@ const MATRIU_LOCAL = {
 };
 
 const URL_SERVEI = '/wp-json/socdepoble/v1/traduir';
-/* Els dos transports del Traductor Sobirà (IDEA-31): el servei del mateix
+/* Els dos transports del Traductor de Poble (IDEA-31): el servei del mateix
    origen, i el lliure del navegador (Apertium; el basc i l'alemany, MyMemory). */
 const TRANSPORTS = Object.freeze([
   { nom: 'el servei del lloc', llengua: 'Anglés', prepara: () => { mocks.ui = { locale: 'ca-ES', externalConfig: { traductorUrl: URL_SERVEI } }; } },
@@ -204,7 +204,7 @@ const PAGINES = Object.freeze([
   { nom: 'una xifra de Sóc de Poble', ruta: rutaXifra(SLUGS_XIFRES[0]) }
 ]);
 
-describe.each(TRANSPORTS)('ALT-C1 · amb el Traductor Sobirà disponible per $nom', ({ llengua, prepara }) => {
+describe.each(TRANSPORTS)('ALT-C1 · amb el Traductor de Poble disponible per $nom', ({ llengua, prepara }) => {
   test('la matriu de requeriments oberta d’un fitxer d’este ordinador: Traduir avisa i cap text ix cap al motor', async () => {
     prepara();
     const container = await obri('/consola/govern/requeriments');

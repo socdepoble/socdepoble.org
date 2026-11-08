@@ -1,4 +1,4 @@
-/* IDEA-31 (QA-R2-13) · main.jsx declara el Traductor Sobirà del lloc propi:
+/* IDEA-31 (QA-R2-13) · main.jsx declara el Traductor de Poble del lloc propi:
    VITE_TRADUCTOR_URL en qualsevol build; SDP_TRADUCTOR_DEV, que només definix
    el servidor de desenvolupament (tooling/vite/traductor-iaia.mjs); i cap clau
    sense cap dels dos (la web publicada, l'app nativa i Vitest), on Traduir

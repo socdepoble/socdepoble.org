@@ -646,7 +646,7 @@ export function PageFrame({
   accioPrincipalDalt = false,
   /* Ordre del Mestre, 261004 (D-A) · `traduccio={false}`: la pàgina no es
      traduïx. Traduir avisa (AVIS_PAGINA_SENSE_TRADUCCIO) i el Traductor
-     Sobirà queda inert: cap text ix cap al servei. Sense la prop, el de
+     de Poble queda inert: cap text ix cap al servei. Sense la prop, el de
      sempre. */
   traduccio: ambTraduccio = true,
   /* Gauntlet 261030 (Fase 3, TC3.3; lang-interficie-sobre-contingut-valencia)
@@ -774,7 +774,7 @@ export function PageFrame({
   const capcaleraRef = useRef(null);
   const tocIdPrefix = `toc-${useId().replace(/:/g, '')}`;
 
-  /* Traductor Sobirà (ordre del Mestre, 260930 · via B) · L'estat de la
+  /* Traductor de Poble (ordre del Mestre, 260930 · via B) · L'estat de la
      traducció d'esta pàgina. La font és sempre l'article original
      (containerRef), que no es desmunta mai. A l'editor (T36) no hi ha
      traducció: substituiria el cos que s'està escrivint. */
@@ -1228,7 +1228,7 @@ export function PageFrame({
         </header>
       )}
 
-      {/* Traductor Sobirà · L'avís, entre el títol i el cos: «Traduint…» o
+      {/* Traductor de Poble · L'avís, entre el títol i el cos: «Traduint…» o
           «Traduït automàticament del valencià · Veure l'original». Sense
           traducció no es pinta res (Llei del Píxel). */}
       {ambTraductor ? (
