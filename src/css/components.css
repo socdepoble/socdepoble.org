@@ -3912,6 +3912,17 @@ section.bar-orange > .sdp-emoticona-barra--boto:focus-visible { outline-color: v
   .noves-tecnologies-rural .aplec-2023__video {
     margin-block-end: var(--sdp-space-5);
   }
+
+  /* P0-52 / IDEA-183 (R53, arbitratge de Claude) · Les nou figures del pou
+     porten width i height (cap salt de maquetació mentre es carreguen), però
+     este article no té l'embolcall .aplec-2023: cap regla no els tornava
+     height:auto i, en una columna més estreta que la foto, es deformaven. */
+  .noves-tecnologies-rural .aplec-2023__figura img {
+    display: block;
+    max-width: 100%;
+    height: auto;
+    margin-inline: auto;
+  }
 }
 
 /* ═══════════════════════════════════════════════════════════════════

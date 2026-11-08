@@ -63,9 +63,10 @@ describe('Grup E · les pàgines del sistema al MAS', () => {
   const ENTITAT_REMOTA = aliesDeLActor({ tipus: 'entitat', id: 'uuid-org', slug: ENTITAT_PILOT_SLUG });
   /* 9c1e6e333 (261107_0455, «publish 5 heritage cards in Mur») ·
      targetesDeSistema afig, darrere de SYSTEM_PAGES, les cinc pàgines de
-     patrimoni (PAGINES_PATRIMONI_MUR de targetesMur.js), amb la seua ruta. */
+     patrimoni (PAGINES_PATRIMONI_MUR de targetesMur.js), amb la seua ruta.
+     P0-51 / IDEA-182 (Mestre, 261108; R53) · Anatomia rural ja no hi és:
+     l'article complet del Pou de Neu és l'única targeta del pou. */
   const PATRIMONI_AL_MUR = [
-    { key: 'anatomia-rural', href: '/page/anatomia-rural' },
     { key: 'herbari', href: '/page/herbari' },
     { key: 'banc-de-llavors', href: '/page/banc-de-llavors' },
     { key: 'rutes-de-poble', href: '/page/rutes-de-poble' },

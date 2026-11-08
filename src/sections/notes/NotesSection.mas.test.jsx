@@ -170,11 +170,13 @@ test('F4 · editar una nota no refà les publicacions: els objectes són els mat
    9c1e6e333 (261107_0455, «publish 5 heritage cards in Mur») · Dènou
    targetes: darrere de les catorze de SYSTEM_PAGES, les cinc pàgines de
    patrimoni que targetesDeSistema hi afig (PAGINES_PATRIMONI_MUR). Abans,
-   catorze. */
+   catorze.
+   P0-51 / IDEA-182 (Mestre, 261108; R53) · Díhuit: Anatomia rural ix del
+   Mur (l'article complet del Pou de Neu és l'única targeta del pou). */
 const NUCLI = Object.freeze({ status: 'ready', pageCopy: PAGE_COPY, refresh: () => {} });
-const PATRIMONI_AL_MUR = ['anatomia-rural', 'herbari', 'banc-de-llavors', 'rutes-de-poble', 'arbres-monumentals'];
+const PATRIMONI_AL_MUR = ['herbari', 'banc-de-llavors', 'rutes-de-poble', 'arbres-monumentals'];
 const SISTEMA = [...SYSTEM_PAGES.map((pagina) => pagina.key), ...PATRIMONI_AL_MUR].map((clau) => `publicacio:mur:${clau}`);
-const PAGINES_DEL_SISTEMA = 19;
+const PAGINES_DEL_SISTEMA = 18;
 const delMur = (items) => publicacions(items).filter((item) => item.categoryIds.includes('f-mur'));
 
 test('Grup E · amb el contingut core, l’entitat Sóc de Poble veu les catorze pàgines del sistema a «Mur», darrere de les seues publicacions', () => {

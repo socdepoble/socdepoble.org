@@ -39,6 +39,8 @@
 import { existsSync, readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { PAGE_COPY } from '../../src/sections/text/pageContent.js';
+import { APP_SEED } from '../../src/data/appSeed.js';
+import { getSectionItemPath, resolvePageSlugPath } from '../../src/config/navigation.js';
 import { SECTIONS } from '../../src/config/sections.js';
 import { pageKeyDeRuta } from '../../src/sections/text/paginaDeText.js';
 import { IDS_PAGINES, paginaConsola } from '../../src/sections/consola/consolaPagines.js';
@@ -53,8 +55,20 @@ const RUTES_VIVES = new Set([
   ...SECTIONS.flatMap((seccio) => [seccio.path, ...(seccio.subrutes ?? [])]),
   '/consola', ...IDS_PAGINES.map((id) => paginaConsola(id).ruta)
 ]);
-const rutaViva = (href) => RUTES_VIVES.has(href)
-  || (/^\/page\/[a-z0-9-]+$/.test(href) && Object.hasOwn(PAGE_COPY, href.slice(6)) && pageKeyDeRuta(href) === href.slice(6));
+/* Un àlies de /page pot acabar en una publicació orgànica. Verifiquem el
+   destí real contra recursos de la llavor, mai una excepció per slug ni un
+   prefix /mur acceptat sense saber si la publicació existix. */
+const DETALLS_VIUS = new Set([
+  ['mur', APP_SEED.feedPosts], ['mercat', APP_SEED.marketItems],
+  ['events', APP_SEED.events], ['pobles', APP_SEED.towns]
+].flatMap(([seccio, items]) => items.map(({ id }) => getSectionItemPath(seccio, id))));
+export function rutaViva(href, visitades = new Set()) {
+  if (RUTES_VIVES.has(href) || DETALLS_VIUS.has(href)) return true;
+  if (typeof href !== 'string' || !/^\/page\/[a-z0-9-]+$/.test(href) || visitades.has(href)) return false;
+  const slug = href.slice(6), canonica = resolvePageSlugPath(slug);
+  if (canonica) return rutaViva(canonica, new Set([...visitades, href]));
+  return Object.hasOwn(PAGE_COPY, slug) && pageKeyDeRuta(href) === slug;
+}
 /** Les mides d'una WebP (VP8X, VP8 o VP8L), dels seus bytes. */
 export function midesWebp(cami) {
   const bytes = readFileSync(resolve(process.cwd(), 'public', cami.replace(/^\//, '')));

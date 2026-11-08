@@ -5,7 +5,7 @@
    APP_SEED.feedPosts, sense passar per MOCK_FEED ni per l'entrada (R9V-C2-01);
    la primera de les importants i, amb les dates de prova, la més nova), signada per
    l'entitat, amb la data real d'escriptura i sense portada; (2) l'honestedat
-   del cos: cap imatge, només el documental d'Eugenio Monesma, les fonts amb
+   del cos: nou imatges documentades i els documentals d'Eugenio Monesma, les fonts amb
    URL de veres i cap dels noms o fets rebutjats a G10-05; (3) l'article: la
    veu de la IAIA, el visor únic del pou (IDEA-161: PouDeLaNeuAnatomiaCard, en
    diferit; cap reproductor) i el cos, editat o canònic; (4) la fitxa del
@@ -30,14 +30,15 @@ import NovesTecnologiesCulturaRuralArticle, { textPlaDelCos } from './NovesTecno
 import { nomDeLaVeu } from './nomDeLaVeu.js';
 import {
   NOVES_TECNOLOGIES_CULTURA_RURAL_HTML, NOVES_TECNOLOGIES_CULTURA_RURAL_ID, NOVES_TECNOLOGIES_CULTURA_RURAL_POST,
-  NOVES_TECNOLOGIES_FONTS, NOVES_TECNOLOGIES_VIDEO, NOVES_TECNOLOGIES_VIDEO_CONSTRUCCIO, NOVES_TECNOLOGIES_VIDEOS
+  NOVES_TECNOLOGIES_FONTS, NOVES_TECNOLOGIES_IMATGES, NOVES_TECNOLOGIES_VIDEO, NOVES_TECNOLOGIES_VIDEO_CONSTRUCCIO, NOVES_TECNOLOGIES_VIDEOS
 } from './novesTecnologiesCulturaRuralContent.js';
 import { MOCK_FEED } from '../feedSeed.js';
 import { FEED_POSTS as PUBLICACIONS_DE_MOCK_FEED } from '../feedContent.js';
 import { IMPORTANTS_DEL_MUR, llavorAmbDatesDeProva } from '../datesDeProvaMur.js';
 import { APP_SEED } from '../../../data/appSeed.js';
 import { PAGE_COPY } from '../../text/pageContent.js';
-import { momentDElement } from '../../../components/universal/editorial.js';
+import { momentDeLaTargeta, perMomentDescendent, targetesDeSistema } from '../targetesMur.js';
+import { acteAEsdeveniment, esActeDelCalendari } from '../agendaMur.js';
 import { buildMurDetailSectionMeta } from '../../detail/detailSectionMeta.jsx';
 import { cosDeLaPublicacio, esFilaActualitzable, esPublicacioEditable, esRevisioEditorial, notaDeLaPublicacio } from '../../notes/publicacioEditable.js';
 import { ESTRUCTURES } from '../../../data/patrimoni/anatomiaRural.js';
@@ -68,9 +69,9 @@ describe('la primera publicació del Mur', () => {
     expect(POST).toMatchObject({ author_entity_id: 'socdepoble', author_name: 'Sóc de Poble', poble_id: 'la-torre-de-les-macanes', important: true });
     // P0-49 / IDEA-180 · La data real de la versió nova (07-11-2026, 21:20 CET, hora del commit), no una data de prova ni una
     // data inventada; abans, el naixement del fitxer (06-11-2026, 14:29, R9V-C2-06). Sense publish_date, que manaria
-    // sobre la de prova. És la mateixa que la d'«Anatomia rural»: en l'empat, el Mur posa l'article primer.
+    // sobre la de prova. P0-51: la ruta d’Anatomia rural continua viva encara que la targeta no isca al Mur.
     expect(POST.created_at).toBe('2026-11-07T21:20:00+01:00');
-    expect(PAGE_COPY['anatomia-rural'].date).toBe(POST.created_at);
+    expect(PAGE_COPY['anatomia-rural']).toBeDefined(); // La ruta directa continua viva, independent de la targeta del Mur.
     expect(POST.publish_date).toBeUndefined();
     // Portada Ibáñez pròpia generada per al Pou de la Neu, l'almàssera i el forn de calç (cap foto de tercers).
     expect(POST.image_url).toBe('/assets/uploads/patrimoni/anatomia-rural-pou-neu-ibanez.webp');
@@ -99,25 +100,41 @@ describe('la primera publicació del Mur', () => {
   test('amb les dates de prova del Mur és la més nova de totes les targetes de la llavor', () => {
     const ara = new Date(2026, 10, 6, 18, 0);
     const llavor = llavorAmbDatesDeProva(APP_SEED, ara);
-    const nostra = momentDElement(llavor.feedPosts.find((item) => item.id === POST.id));
-    const altres = [
-      ...llavor.feedPosts.filter((item) => item.id !== POST.id),
-      ...llavor.marketItems,
-      ...llavor.pages.map((pagina) => ({ ...pagina, created_at: pagina.date, date: undefined }))
-    ].map(momentDElement).filter(Number.isFinite);
-    expect(altres.length).toBeGreaterThan(5);
-    expect(altres.every((moment) => moment < nostra)).toBe(true);
-    expect(nostra).toBeLessThan(ara.getTime());
+    const pageCopy = Object.fromEntries(llavor.pages.map((pagina) => [pagina.id, pagina]));
+    expect(pageCopy['anatomia-rural']).toBeDefined(); // La pàgina directa no és una targeta visible del Mur.
+    for (const nativa of [false, true]) {
+      // La mateixa projecció completa que MurSection: actes, publicacions, Mercat i targetes del sistema.
+      // No es comparen totes les pàgines del core: inclouen documents que el Mur no publica.
+      const targetes = [
+        ...llavor.events,
+        ...llavor.feedPosts,
+        ...llavor.marketItems,
+        ...targetesDeSistema(pageCopy, { nativa })
+      ];
+      expect(targetes.some((item) => item.id === 'anatomia-rural')).toBe(false);
+      expect(targetes.filter((item) => item.id === POST.id)).toHaveLength(1);
+      const ordenades = targetes.map((item) => ({
+        item,
+        moment: momentDeLaTargeta(item, esActeDelCalendari(item) ? acteAEsdeveniment(item) : null)
+      })).sort(perMomentDescendent);
+      const nostra = ordenades.find(({ item }) => item.id === POST.id).moment;
+      const altres = ordenades.filter(({ item }) => item.id !== POST.id).map(({ moment }) => moment).filter(Number.isFinite);
+      expect(altres.length).toBeGreaterThan(5);
+      expect(altres.every((moment) => moment < nostra)).toBe(true);
+      expect(ordenades[0].item.id).toBe(POST.id);
+      expect(nostra).toBeLessThan(ara.getTime());
+    }
   });
 });
 
-describe('el cos: honest i sense fotos de tercers', () => {
+describe('el cos: honest, amb nou imatges documentades', () => {
   const cos = doc(NOVES_TECNOLOGIES_CULTURA_RURAL_HTML);
 
   /* P0-47 / IDEA-178 · Els dos documentals d'Eugenio Monesma (id, títol i canal de l'oEmbed de YouTube), amb el
      patró de sempre: marcador inert al cos (cap iframe a l'HTML desat), enllaç de reserva i enllaç de fora. */
-  test('cap imatge; els dos vídeos documentals d’Eugenio Monesma sobre pous de neu, amb el títol oficial', () => {
-    expect(cos.querySelectorAll('img, picture, figure, iframe')).toHaveLength(0);
+  test('nou imatges documentades; els dos vídeos documentals d’Eugenio Monesma sobre pous de neu, amb el títol oficial', () => {
+    expect(cos.querySelectorAll('img')).toHaveLength(9);
+    expect(cos.querySelectorAll('picture, figure, iframe')).toHaveLength(0);
     const videos = [...cos.querySelectorAll('[data-sdp-youtube]')];
     expect(videos.map((node) => node.getAttribute('data-sdp-youtube'))).toEqual(['3RQv3xjVr-M', 'A3Vgk0rStvU']);
     expect(NOVES_TECNOLOGIES_VIDEOS).toEqual([NOVES_TECNOLOGIES_VIDEO, NOVES_TECNOLOGIES_VIDEO_CONSTRUCCIO]);
@@ -156,6 +173,8 @@ describe('el cos: honest i sense fotos de tercers', () => {
   /* P0-47 / IDEA-178 · L'objectiu real de la publicació, abans de les mides. */
   test('l’objectiu: bona documentació i tecnologia 3D lliure; el pou, primer cas d’estudi', () => {
     const [primer, segon] = [...cos.querySelectorAll('p')].map((p) => p.textContent);
+    expect(primer).not.toContain('sense cap fotografia');
+    expect(primer).toContain('fotografies i plànols documentats');
     expect(primer).toContain('Esta publicació vol mostrar què passa quan ajuntem una bona documentació');
     expect(primer).toContain('amb tecnologia 3D lliure, per a ensenyar el nostre patrimoni d’una manera distinta');
     expect(segon).toContain('Pou de Neu del Rentonar n’és el primer cas d’estudi');
@@ -164,9 +183,11 @@ describe('el cos: honest i sense fotos de tercers', () => {
     expect(segon).toContain('codi lliure (llicència AGPL)');
     const paquet = JSON.parse(readFileSync(path.join(process.cwd(), 'package.json'), 'utf8'));
     expect(paquet.license).toMatch(/^AGPL-/);
-    // L'enllaç a l'Anatomia rural no promet estructures que encara no hi són.
+    // La ruta antiga ara és un àlies d'esta publicació: no hi ha un autoenllaç ni una pàgina curta separada.
     const darrer = [...cos.querySelectorAll('p')].at(-1);
-    expect(darrer.querySelector('a[href="/page/anatomia-rural"]')).not.toBeNull();
+    expect(darrer.querySelector('strong')?.textContent).toBe('Anatomia rural.');
+    expect(darrer.textContent).toContain('Esta publicació reunix el visor del pou, les fotografies, els plànols i les fonts.');
+    expect(darrer.querySelector('a')).toBeNull();
     expect(darrer.textContent).toContain('quan en tinguem la documentació');
     expect(cos.body.textContent).not.toMatch(/nou estructures/);
   });
@@ -217,7 +238,7 @@ describe('el cos: honest i sense fotos de tercers', () => {
     // En ordre de data.
     const dies = NOVES_TECNOLOGIES_FONTS.map(([data]) => data.split('-').reverse().join('-'));
     expect(dies).toEqual([...dies].sort());
-    expect(cos.querySelector('a[href="/page/anatomia-rural"]')).not.toBeNull();
+    expect(cos.querySelector('a[href="/page/anatomia-rural"]')).toBeNull();
     // IDEA-165 · L'esbós 76150 (sense autor ni escala) hi queda com a idea pedagògica, sense cap de les seues xifres.
     const lis = [...cos.querySelectorAll('li')].map((li) => li.textContent);
     const esbos = lis.find((li) => li.startsWith('Esbós divulgatiu'));
@@ -382,7 +403,9 @@ describe('l’article', () => {
     const visor = container.querySelector('.pou-neu-card');
     const cos = container.querySelector('article.detail-content');
     expect(visor.compareDocumentPosition(cos) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
-    expect(container.querySelector('img')).toBeNull();
+    expect([...cos.querySelectorAll('img')].map((img) => img.getAttribute('src'))).toEqual(
+      ['exterior', 'escala-humana', 'planta', 'interior', 'galeria-sud', 'seccions', 'falsa-volta', 'fissura', 'carrasca'].map((id) => NOVES_TECNOLOGIES_IMATGES.find((img) => img.id === id).src)
+    );
   });
 
   test('una versió editada des de /notes es pinta; una còpia en text pla torna al canònic', () => {

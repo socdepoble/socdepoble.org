@@ -30,8 +30,10 @@ import { clauDePaginaPublica, etiquetesDePaginaPublica } from '../../data/taxono
  * entra passat per paginaPerAppNativa: dins de l'app, cap altra plataforma
  * mòbil al títol, al lema ni a l'entradeta (a la web, el mateix objecte).
  */
+/* P0-51 · Anatomia rural ja no és cap targeta (la seua adreça porta a
+   l'article per l'àlies de navigation.js); l'article del Pou de Neu és
+   l'única targeta amb eixa portada al Mur i al Calendari. */
 const PAGINES_PATRIMONI_MUR = Object.freeze([
-  { key: 'anatomia-rural', href: '/page/anatomia-rural', isAvis: false },
   { key: 'herbari', href: '/page/herbari', isAvis: false },
   { key: 'banc-de-llavors', href: '/page/banc-de-llavors', isAvis: false },
   { key: 'rutes-de-poble', href: '/page/rutes-de-poble', isAvis: false },

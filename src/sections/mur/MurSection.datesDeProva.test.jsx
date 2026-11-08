@@ -14,15 +14,13 @@
  * Ordre del Mestre (261026_2126; prompt 261026_2130, tasca 1) · Les
  * importants ja són deu: «Descàrregues i Aplicacions» n'és la primera, com El
  * Xat (IMPORTANTS_DEL_MUR, datesDeProvaMur.js).
- * P0-49 / IDEA-180 (decisió del Mestre i MarIA, 261107) · Les importants ja
- * són tretze, i les dues primeres són les publicacions estrella: «Noves
- * tecnologies aplicades a la cultura rural» i «Anatomia rural». Les altres
- * quatre pàgines de patrimoni (herbari, banc de llavors, rutes i arbres) no
- * són importants: porten la seua data real (PAGE_COPY, 06-11-2026) i van on
- * les posa. Abans no hi eren a la prova, i per això fallava des que el Mur
- * les publica (9c1e6e333). Els tres `ara` fixos passen a la setmana del 9 al
- * 15 de novembre de 2026, amb els mateixos dies i hores: un `ara` anterior al
- * 6 de novembre posava eixes pàgines en el futur, dalt de tot.
+ * P0-51 / IDEA-182 (ordre del Mestre, 261108) · Les importants tornen a
+ * ser dotze: Anatomia rural no es publica com a targeta al Mur ni al
+ * Calendari, perquè repetia la portada del pou, i la seua adreça porta a
+ * l'article complet (àlies de navigation.js).
+ * Les quatre pàgines de patrimoni restants porten la data real del copy
+ * (06-11-2026). Els tres `ara` fixos són de la setmana del 9 al 15 de
+ * novembre: abans del dia 6 eixes pàgines es posarien en el futur.
  *
  * El Mur de veres (MurSection) amb la llavor tal com la servix el mode seed:
  * les importants no es reordenen a la prova; només s'hi intercalen, per la
@@ -112,9 +110,12 @@ test.each([
   const tecniques = TECNIQUES_DEL_MUR.map((fila) => titolDe(llavor, fila));
   const avall = [titolDe(llavor, ['pages', 'drets-autor']), ...IMPORTANTS_HISTORIQUES_DEL_MUR.map(fila => titolDe(llavor, fila)), '2n Aplec pel Territori'];
   expect(titols()).toEqual([...dalt, ...maquinaria, ...tecniques, ...avall]);
-  // Les dues publicacions estrella, dalt de tot del Mur: l'article del Pou de Neu i Anatomia rural.
-  expect(IMPORTANTS_DEL_MUR.slice(0, 2)).toEqual([['feedPosts', 'noves-tecnologies-aplicades-a-la-cultura-rural'], ['pages', 'anatomia-rural']]);
-  expect(titols().slice(0, 2)).toEqual([importants[0], 'Anatomia rural']);
+  // El pou té una sola targeta: l'article (i /page/anatomia-rural hi porta per l'àlies).
+  expect(IMPORTANTS_DEL_MUR).toHaveLength(12);
+  expect(titols()[0]).toBe(importants[0]);
+  expect(titols().filter((titol) => titol === importants[0])).toHaveLength(1);
+  expect(titols()).not.toContain('Anatomia rural');
+  expect(document.querySelector('.sdp-card-grid a[href="/page/anatomia-rural"]')).toBeNull();
   // Cada targeta amb data de prova pinta l'hora i el dia (la pastilla sencera).
   for (const targeta of targetes().slice(0, dalt.length + maquinaria.length + tecniques.length)) {
     const [hora, dia] = pastilla(targeta);

@@ -261,6 +261,21 @@ export const CENS_IMATGES = Object.freeze([
   e('/assets/uploads/patrimoni/herbari-la-torre-ibanez.webp', 'Herbari de La Torre: les 117 plantes del terme', 'contingut', 'ia', 'la-torre-de-les-macanes'),
   e('/assets/uploads/patrimoni/rutes-de-poble-ibanez.webp', 'Rutes de Poble i camins de ferradura', 'contingut', 'ia', 'la-torre-de-les-macanes'),
 
+  /* P0-52 / IDEA-183 (ordres del Mestre del 08-11-2026; R53) · Les imatges de
+     l'article del Pou de Neu del Rentonar, al terme de La Torre de les Maçanes:
+     sis fotos del Mestre del 17-10-2023, els dos plànols de Josep Mª Segura
+     Martí (1987) i la fissura del sostre (Associació El Rentonar, 2020). Totes
+     són documents reals ('foto'), sense GPS (OG-7). */
+  e('/assets/uploads/patrimoni/pou-neu-rentonar-exterior-frontal-2023.jpg', 'Pou de Neu del Rentonar: la façana i l’entrada', 'contingut', 'foto', 'la-torre-de-les-macanes'),
+  e('/assets/uploads/patrimoni/pou-neu-rentonar-cupula-escala-humana-2023.jpg', 'Pou de Neu del Rentonar: la cúpula a escala humana', 'contingut', 'foto', 'la-torre-de-les-macanes'),
+  e('/assets/uploads/patrimoni/pou-neu-rentonar-galeria-sud-volta-2023.jpg', 'Pou de Neu del Rentonar: la galeria sud', 'contingut', 'foto', 'la-torre-de-les-macanes'),
+  e('/assets/uploads/patrimoni/pou-neu-rentonar-interior-cilindre-finestres-2023.jpg', 'Pou de Neu del Rentonar: el mur interior', 'contingut', 'foto', 'la-torre-de-les-macanes'),
+  e('/assets/uploads/patrimoni/pou-neu-rentonar-falsa-volta-filades-2023.jpg', 'Pou de Neu del Rentonar: la falsa volta', 'contingut', 'foto', 'la-torre-de-les-macanes'),
+  e('/assets/uploads/patrimoni/pou-neu-rentonar-carrasca-entorn-2023.jpg', 'Pou de Neu del Rentonar: l’entorn i la carrasca', 'contingut', 'foto', 'la-torre-de-les-macanes'),
+  e('/assets/uploads/patrimoni/pou-neu-rentonar-planta-segura-1987.jpg', 'Pou de Neu del Rentonar: planta (Segura, 1987)', 'contingut', 'foto', 'la-torre-de-les-macanes'),
+  e('/assets/uploads/patrimoni/pou-neu-rentonar-seccions-segura-1987.jpg', 'Pou de Neu del Rentonar: seccions (Segura, 1987)', 'contingut', 'foto', 'la-torre-de-les-macanes'),
+  e('/assets/uploads/patrimoni/pou-neu-rentonar-fissura-sostre-2020.jpg', 'Pou de Neu del Rentonar: la fissura del sostre (2020)', 'contingut', 'foto', 'la-torre-de-les-macanes'),
+
   e('/assets/uploads/companies/mercat/aitana.png', 'Oli verge', 'entitat', 'ia'),
   e('/assets/uploads/companies/mercat/camiseta_portada.png', 'Samarreta', 'entitat', 'ia'),
   e('/assets/uploads/companies/mercat/flowers_bouquet.png', 'Ram de flors', 'entitat', 'ia'),

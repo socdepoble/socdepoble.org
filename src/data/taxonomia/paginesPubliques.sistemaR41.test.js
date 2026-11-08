@@ -86,7 +86,8 @@ const PAGES=[
 // P6 · les huit pàgines d'acció (publicar i saber-ne més del Panell): cap etiqueta, en cap llengua.
 const ACTION_PAGES=['publicar_mur','publicar_mercat','publicar_calendari','publicar_mapa','vehicle_compartit','animalets','treball','habitatge'];
 // Publicació vigent anterior a R41: 14 documents del sistema + 5 de patrimoni.
-const PUBLISHED_19=['projecte','wikidepoble','constitucio','roadmap','notes','disseny','consola','cervell','versions','legal','xat','drets-autor','descarregues','fediversity','anatomia-rural','herbari','banc-de-llavors','rutes-de-poble','arbres-monumentals'];
+// P0-51 / IDEA-182 (Mestre, 261108; R53) · Anatomia rural ix de les targetes del Mur: en queden 4 de patrimoni.
+const PUBLISHED_18=['projecte','wikidepoble','constitucio','roadmap','notes','disseny','consola','cervell','versions','legal','xat','drets-autor','descarregues','fediversity','herbari','banc-de-llavors','rutes-de-poble','arbres-monumentals'];
 
 function assertClassification(labels,key,category,requiredTag,language){
  expect(Array.isArray(labels)).toBe(true);
@@ -213,7 +214,7 @@ describe('R41 independent public-page contract',()=>{
   copy['private-note']={private:true,html:'Secret original',labels:[{text:'Eina',className:'sdp-badge-category'}]};
   const before=structuredClone(copy);
   const cards=targetesDeSistema(copy,{nativa:false,language});
-  expect(cards.map(card=>card.id).sort()).toEqual([...PUBLISHED_19].sort());
+  expect(cards.map(card=>card.id).sort()).toEqual([...PUBLISHED_18].sort());
   for(const card of cards){
    const [,category,tag]=PAGES.find(([key])=>key===card.id);
    assertClassification(card.labels,card.id,category,tag,language);

@@ -1,10 +1,142 @@
 /* Ordre del Mestre, 261001 · Les targetes del Mur, pures: les pàgines del
    sistema, l'instant de cada targeta i l'ordre. Les compartixen el Mur i la
    pàgina /calendari. */
+import { createHash } from 'node:crypto';
+import { existsSync, readFileSync } from 'node:fs';
+import path from 'node:path';
 import { describe, expect, test, vi } from 'vitest';
 import { clauDeLaTargeta, momentDeLaTargeta, momentEditorial, perMomentDescendent, targetesDeSistema } from './targetesMur.js';
 import { acteAEsdeveniment } from './agendaMur.js';
 import { SYSTEM_PAGES } from '../../config/systemPages.js';
+import { resolveAsset } from '../../config/assetResolver.js';
+import { resolvePageSlugPath } from '../../config/navigation.js';
+import { APP_SEED } from '../../data/appSeed.js';
+import { PAGE_COPY } from '../text/pageContent.js';
+import { paginaDeRuta, pageKeyDeRuta } from '../text/paginaDeText.js';
+import { entradesDelCalendari, rutaDeLaTargeta } from '../calendari/calendariGlobal.js';
+
+/* P0-51 · El Mur no filtra cap bandera `hidden`/`isPublished` de la llavor:
+   l'invariant inclou TOTES les publicacions i les pàgines que realment genera.
+   Una imatge local amb URL absoluta, escapada o amb paràmetres és el mateix
+   recurs. El digest també troba còpies idèntiques amb noms de fitxer diferents.
+   Per a les notícies conservem els paràmetres d'identitat (?p=…), llevant només
+   els de seguiment; el mateix títol, slug, origen o destí tampoc es pot repetir. */
+const ORIGEN_SEED = 'https://socdepoble.org';
+function recursCanonic(valor, { senseConsulta = false } = {}) {
+  if (typeof valor !== 'string' || !valor.trim()) return null;
+  const url = new URL(valor.trim(), ORIGEN_SEED);
+  url.hash = '';
+  for (const clau of [...url.searchParams.keys()]) {
+    if (senseConsulta || /^(utm_|fbclid$|gclid$)/i.test(clau)) url.searchParams.delete(clau);
+  }
+  url.searchParams.sort();
+  const cami = decodeURIComponent(url.pathname).replace(/\/+$/, '') || '/';
+  return `${url.origin}${cami}${url.search}`;
+}
+
+function identitatsDeTargeta(item) {
+  const claus = new Set();
+  const ruta = rutaDeLaTargeta(item);
+  const url = new URL(ruta, ORIGEN_SEED);
+  const slug = url.origin === ORIGEN_SEED ? /^\/page\/([^/]+)\/?$/.exec(url.pathname)?.[1] : null;
+  const desti = slug ? resolvePageSlugPath(decodeURIComponent(slug)) || ruta : ruta;
+  const pagina = pageKeyDeRuta(desti);
+  claus.add(`desti:${pagina ? `pagina:${pagina}` : recursCanonic(desti, { senseConsulta: true })}`);
+  const titol = item.title?.normalize('NFKD').replace(/\p{M}/gu, '').toLowerCase().replace(/[^\p{L}\p{N}]+/gu, ' ').trim();
+  if (titol) claus.add(`titol:${titol}`);
+  if (item.slug) claus.add(`slug:${item.slug}`);
+  if (item.source_url) claus.add(`font:${recursCanonic(item.source_url)}`);
+  if (item.wp_id) claus.add(`wp:${new URL(item.source_url || 'https://socdepoble.net').hostname}:${item.wp_id}`);
+  const imatges = [item.image, item.image_url, item.imageSrc, item.images].flat(Infinity);
+  for (const valor of imatges.flatMap((font) => typeof font === 'string' ? [font, resolveAsset(font)] : [])) {
+    const recurs = recursCanonic(valor, { senseConsulta: true });
+    if (!recurs) continue;
+    claus.add(`imatge:${recurs}`);
+    const url = new URL(recurs);
+    if (url.origin === ORIGEN_SEED && url.pathname.startsWith('/assets/')) {
+      const fitxer = path.join(process.cwd(), 'public', decodeURIComponent(url.pathname));
+      if (existsSync(fitxer)) claus.add(`imatge-sha256:${createHash('sha256').update(readFileSync(fitxer)).digest('hex')}`);
+    }
+  }
+  return claus;
+}
+
+function duplicatsDeTargetes(targetes) {
+  const vistos = new Map();
+  const duplicats = [];
+  for (const [index, item] of targetes.entries()) {
+    const nom = `${index}:${item.id}`;
+    for (const clau of identitatsDeTargeta(item)) {
+      if (vistos.has(clau)) duplicats.push({ clau, targetes: [vistos.get(clau), nom] });
+      else vistos.set(clau, nom);
+    }
+  }
+  return duplicats;
+}
+
+const targetesReals = (nativa) => [...APP_SEED.events, ...APP_SEED.feedPosts, ...APP_SEED.marketItems, ...targetesDeSistema(PAGE_COPY, { nativa })];
+
+describe('P0-51 · invariant antiduplicats del Mur i del Calendari', () => {
+  test.each([false, true])('la llavor visible no repetix cap imatge ni notícia (nativa=%s)', (nativa) => {
+    expect(duplicatsDeTargetes(targetesReals(nativa))).toEqual([]);
+  });
+
+  test('Anatomia és un àlies de l’article complet, l’única targeta del pou al Mur i al Calendari', () => {
+    const ruta = '/page/anatomia-rural';
+    expect(paginaDeRuta(ruta)).toBeNull();
+    expect(resolvePageSlugPath('anatomia-rural')).toBe('/mur/noves-tecnologies-aplicades-a-la-cultura-rural');
+    for (const nativa of [false, true]) {
+      const mur = targetesReals(nativa);
+      expect(mur.filter((item) => item.id === 'noves-tecnologies-aplicades-a-la-cultura-rural')).toHaveLength(1);
+      expect(mur.some((item) => item.id === 'anatomia-rural' || item.mainHref === ruta)).toBe(false);
+      const calendari = entradesDelCalendari(mur);
+      expect(calendari.filter(({ item }) => item.id === 'noves-tecnologies-aplicades-a-la-cultura-rural' && item.image_url)).toHaveLength(1);
+      expect(calendari.some(({ item }) => item.id === 'anatomia-rural')).toBe(false);
+    }
+  });
+
+  test.each([
+    ['imatge absoluta amb query i fragment', { id: 'copia', title: 'Un altre títol', image: 'https://socdepoble.org/assets/uploads/patrimoni/%61natomia-rural-pou-neu-ibanez.webp?v=2#foto' }],
+    ['mateixa notícia amb una altra portada i id', { id: 'copia', title: APP_SEED.feedPosts[0].title, image: '/assets/una-altra.webp' }],
+    ['mateix destí amb un altre títol', { id: 'copia', title: 'Un altre títol', mainHref: '/mur/noves-tecnologies-aplicades-a-la-cultura-rural' }],
+    ['mateix article amb una consulta i fragment diferents', { id: 'copia', title: 'Un altre títol', mainHref: '/mur/noves-tecnologies-aplicades-a-la-cultura-rural?from=calendari#cos' }],
+    ['àlies de l’article amb consulta i fragment diferents', { id: 'copia', title: 'Un altre títol', mainHref: '/page/anatomia-rural?from=calendari#cos' }],
+    ['mateix slug amb un altre id', { id: 'copia', title: 'Un altre títol', slug: APP_SEED.feedPosts[0].slug }],
+    ['mateixa font amb paràmetre de seguiment', { id: 'copia', title: 'Un altre títol', source_url: `${APP_SEED.feedPosts[1].source_url}?utm_source=prova#cos` }],
+    ['la visibilitat privada tampoc els amaga', { ...APP_SEED.feedPosts[0], id: 'copia', visibility: 'private' }],
+    ['la bandera hidden no amaga duplicats', { ...APP_SEED.feedPosts[0], id: 'copia', hidden: true, isPublished: false }]
+  ])('la guarda detecta una regressió: %s', (_, copia) => {
+    expect(duplicatsDeTargetes([...targetesReals(false), copia]).length).toBeGreaterThan(0);
+  });
+
+  test('l’àlies només es resol per al nostre origen; una web externa amb el mateix camí és un altre recurs', () => {
+    expect(duplicatsDeTargetes([
+      { id: 'local', title: 'Article local', mainHref: '/mur/noves-tecnologies-aplicades-a-la-cultura-rural' },
+      { id: 'extern', title: 'Article extern', mainHref: 'https://example.org/page/anatomia-rural' }
+    ])).toEqual([]);
+  });
+
+  test.each(['events', 'marketItems'])('la guarda també veu les imatges de %s, part real del Mur', (font) => {
+    const original = APP_SEED[font][0];
+    const imatge = original.image || original.image_url || original.imageSrc || original.images;
+    expect(imatge).toBeTruthy();
+    const copia = { id: 'copia-imatge', title: 'Imatge repetida amb altre destí', image: imatge };
+    expect(duplicatsDeTargetes([...targetesReals(false), copia]).some(({ clau }) => clau.startsWith('imatge:'))).toBe(true);
+  });
+
+  test('les rutes curta i /page de la mateixa pàgina no creen dues notícies', () => {
+    expect(duplicatsDeTargetes([
+      { id: 'curta', title: 'Un títol', mainHref: '/projecte#cos' },
+      { id: 'slug', title: 'Un altre títol', mainHref: '/page/projecte?from=mur' }
+    ]).map(({ clau }) => clau)).toContain('desti:pagina:projecte');
+  });
+
+  test('dos articles WordPress amb ?p= diferents no són la mateixa notícia', () => {
+    const originals = [1, 2].map((id) => ({ id: `p-${id}`, title: `Article ${id}`, source_url: `https://socdepoble.net/?p=${id}` }));
+    expect(duplicatsDeTargetes(originals)).toEqual([]);
+  });
+});
+
 
 describe('targetesDeSistema', () => {
   test('cada pàgina del copy és una targeta del sistema amb la data de CREACIÓ, mai com a dia d’acte', () => {

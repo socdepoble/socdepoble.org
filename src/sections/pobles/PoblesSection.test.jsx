@@ -456,10 +456,12 @@ test('P0-39 / IDEA-166 · un poble sense data a la fitxa mostra la seua última 
 });
 
 /* P0-49 / IDEA-180 (261107) · La data real de l'article del Pou de Neu (07-11-2026, 21:20, l'hora del commit) i, en mode seed,
-   el primer dels tretze moments de les importants (IMPORTANTS_DEL_MUR, ara amb «Anatomia rural»): 19:50. */
+   el primer dels moments de les importants (IMPORTANTS_DEL_MUR).
+   P0-51 / IDEA-182 (Mestre, 261108; R53) · «Anatomia rural» ix de les importants: tornen a ser dotze moments, i el
+   primer, el de l'article, és el de les 19:40 (amb tretze era el de les 19:50). */
 test.each([
   ['dates crues de la llavor (supabase/seed.sql)', () => APP_SEED, ['21:20', '07/11/26']],
-  ['dates del mode seed (llavorAmbDatesDeProva)', () => llavorAmbDatesDeProva(APP_SEED, new Date(2026, 9, 9, 4, 0)), ['19:50', '08/10/26']]
+  ['dates del mode seed (llavorAmbDatesDeProva)', () => llavorAmbDatesDeProva(APP_SEED, new Date(2026, 9, 9, 4, 0)), ['19:40', '08/10/26']]
 ])('P0-39 / IDEA-166 · La Torre de les Maçanes és #1 amb el rellotge de l’última publicació (%s)', (_, llavorDelMur, rellotgeTorre) => {
   const { feedPosts, marketItems, events } = llavorDelMur();
   expect(marketItems.some((item) => item.population === 'La Torre de les Maçanes')).toBe(true);

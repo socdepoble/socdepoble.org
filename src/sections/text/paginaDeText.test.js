@@ -27,7 +27,7 @@ import { toDeColor } from '../consola/semafor.js';
    seues eines viuen a lleiT8Prova.js (només per a les proves): la mateixa
    que passen els qui pinten el cos (PageDetailSection.consola.test.jsx i
    PublicacioDetall.sistema.test.jsx), sense cap còpia. */
-import { cosDe, infraccionsT8, midesWebp } from '../../../tests/helpers/lleiT8Prova.js';
+import { cosDe, infraccionsT8, midesWebp, rutaViva } from '../../../tests/helpers/lleiT8Prova.js';
 
 /* Gauntlet 261016_1530 (Bloc 3.6.3; F64) · Ampliada a posta: el manifest és a
    /anima, i /iaia (la seua ruta d'abans, ara la fitxa de la IAIA) i /ia es
@@ -738,4 +738,17 @@ test('FEDI · els tres textos i les seues Cards no recuperen les afirmacions ref
   const node=cosDe(PAGE_COPY['node-zero'].html).textContent;
   expect(node).toContain('s’hi han executat les proves i els builds');
   expect(node).toContain('no acredita que este haja executat les suites del portàtil');
+});
+
+/* R53 · Anatomia ara és un àlies de publicació, no una segona pàgina breu.
+   La prova d'enllaços ha de validar el recurs canònic real sense donar per
+   bona qualsevol ruta /mur o /page que tinga forma correcta. */
+test('un àlies de pàgina a un article real és viu, però els destins inexistents no', () => {
+  const article = '/mur/noves-tecnologies-aplicades-a-la-cultura-rural';
+  expect(pageKeyDeRuta('/page/anatomia-rural')).toBeNull();
+  expect(paginaDeRuta('/page/anatomia-rural')).toBeNull();
+  for (const ruta of ['/page/anatomia-rural', article, '/page/projecte', '/projecte']) expect(rutaViva(ruta), ruta).toBe(true);
+  for (const ruta of ['/mur/article-inexistent', '/page/article-inexistent', '/page/constructor', '//socdepoble.org/mur', 'https://socdepoble.org/mur']) {
+    expect(rutaViva(ruta), ruta).toBe(false);
+  }
 });

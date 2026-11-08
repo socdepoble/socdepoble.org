@@ -221,7 +221,7 @@ describe('usePublicacionsDeLActor', () => {
 describe('Grup E · les pàgines del sistema al Mur de l’actor', () => {
   const NUCLI = Object.freeze({ status: 'ready', pageCopy: PAGE_COPY, refresh: () => {} });
   const SENSE_PAGINES = POSTS.filter((post) => !post.isSystem);
-  const CLAUS = [...SYSTEM_PAGES.map((pagina) => pagina.key), 'anatomia-rural', 'herbari', 'banc-de-llavors', 'rutes-de-poble', 'arbres-monumentals'].map((key) => `mur:${key}`);
+  const CLAUS = [...SYSTEM_PAGES.map((pagina) => pagina.key), 'herbari', 'banc-de-llavors', 'rutes-de-poble', 'arbres-monumentals'].map((key) => `mur:${key}`);
 
   test('sense proveïdor: cap targeta, la mateixa constant congelada entre pintades, i cap espera', () => {
     const { result, rerender } = renderHook(() => usePaginesDelSistema());
@@ -240,10 +240,14 @@ describe('Grup E · les pàgines del sistema al Mur de l’actor', () => {
      Ordre del Mestre (30-10-2026; candidatura NLnet NGI Fediversity) ·
      Catorze: hi entra «Candidatura Europea NLnet · NGI Fediversity». Abans,
      tretze. */
-  test('amb el contingut core: les14 pàgines i les5 de patrimoni del Mur, memoritzades sobre pageCopy', () => {
+  test('amb el contingut core: les14 pàgines i les4 de patrimoni del Mur, memoritzades sobre pageCopy', () => {
     mocks.core = NUCLI;
     const { result, rerender } = renderHook(() => useTargetesDeSistema());
     expect(SYSTEM_PAGES).toHaveLength(14);
+    expect(CLAUS).toHaveLength(18);
+    expect(result.current).toHaveLength(18);
+    expect(result.current.some((targeta) => targeta.id === 'anatomia-rural')).toBe(false);
+    expect(PAGE_COPY['anatomia-rural']).toBeDefined(); // El document directe es conserva; la targeta no forma part de la projecció del Mur.
     expect(result.current.map((targeta) => targeta.id)).toEqual(CLAUS.map((key) => key.slice(4)));
     expect(result.current.every((targeta) => targeta.isSystem && targeta.type === 'sistema')).toBe(true);
     // Les mateixes targetes que MurSection (targetesDeSistema), sense cap forma pròpia.
@@ -265,7 +269,7 @@ describe('Grup E · les pàgines del sistema al Mur de l’actor', () => {
     expect(renderHook(() => usePaginesDelSistema()).result.current.carregant).toBe(false);
   });
 
-  test('el Mur de l’entitat pilot (llavor i remot) porta les19 pàgines amb les seues publicacions, en l’ordre del Mur', () => {
+  test('el Mur de l’entitat pilot (llavor i remot) porta les18 pàgines amb les seues publicacions, en l’ordre del Mur', () => {
     mocks.core = NUCLI;
     mocks.mur = { ...mocks.mur, sortedFeedPosts: SENSE_PAGINES };
     const llavor = renderHook(() => usePublicacionsDeLActor('mur')).result.current.elements;
@@ -273,11 +277,13 @@ describe('Grup E · les pàgines del sistema al Mur de l’actor', () => {
     mocks.ui = { externalConfig: { dataMode: 'remote' } };
     const remot = renderHook(() => usePublicacionsDeLActor('mur')).result.current.elements;
     for (const elements of [llavor, remot]) {
-      expect(ids(elements)).toEqual(expect.arrayContaining([...CLAUS, 'mur:nou', 'mur:vell']));
+      expect(ids(elements)).toEqual(expect.arrayContaining([...CLAUS, 'mur:nou', 'mur:sub-de-nota', 'mur:vell', 'mur:sense-data']));
+      expect(ids(elements)).not.toContain('mur:anatomia-rural');
       expect(elements).toHaveLength(CLAUS.length + 4);
       const moments = elements.map(({ item, esdeveniment }) => ({ moment: momentDeLaTargeta(item, esdeveniment) }));
       moments.slice(1).forEach((moment, posicio) => expect(perMomentDescendent(moments[posicio], moment)).toBeLessThanOrEqual(0));
     }
+    expect(ids(remot)).toEqual(ids(llavor));
     // Cada targeta és l'element cru que pinta TargetaDelMur.
     expect(llavor.find((element) => element.id === 'mur:xat').item).toMatchObject({ isSystem: true, mainHref: '/page/xat' });
   });
@@ -332,7 +338,10 @@ describe('Grup E · les pàgines del sistema al Mur de l’actor', () => {
     mocks.mur = { status: 'error', error, refresh: vi.fn(), sortedFeedPosts: [], sortedMarketItems: [], sortedEvents: [] };
     expect(renderHook(() => usePublicacionsDeLActor('mur')).result.current).toMatchObject({ elements: [], estat: 'error', error });
     mocks.mur = { status: 'ready', error: null, refresh: vi.fn(), sortedFeedPosts: [], sortedMarketItems: [], sortedEvents: [] };
-    expect(ids(renderHook(() => usePublicacionsDeLActor('mur')).result.current.elements)).toEqual(expect.arrayContaining(CLAUS));
+    const llest = renderHook(() => usePublicacionsDeLActor('mur')).result.current.elements;
+    expect(ids(llest)).toEqual(expect.arrayContaining(CLAUS));
+    expect(llest).toHaveLength(18);
+    expect(ids(llest)).not.toContain('mur:anatomia-rural');
   });
 
   test('amb les pàgines, els objectes conserven la identitat entre pintades', () => {

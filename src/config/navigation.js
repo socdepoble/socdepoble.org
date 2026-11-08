@@ -30,7 +30,10 @@ const PAGE_ROUTE_MAP = {
   /* T8 (261001) · la cerca i /page/fedivers van a la ruta canònica. */
   fedivers: '/fedivers',
   /* Àlies defensiu cap a la candidatura NLnet Fediversity (/page/fediversity). */
-  'projecte-fediversity': '/page/fediversity'
+  'projecte-fediversity': '/page/fediversity',
+  /* Ordre del Mestre (R53, 261108) · Una sola publicació completa del pou:
+     l'adreça antiga entra a l'article del Mur amb el replace de PageDetailSection. */
+  'anatomia-rural': '/mur/noves-tecnologies-aplicades-a-la-cultura-rural'
 };
 const KNOWN_PAGE_SLUGS = new Set(Object.keys(PAGE_ROUTE_MAP));
 

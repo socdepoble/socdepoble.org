@@ -77,7 +77,7 @@ describe('/page/herbari', () => {
   });
 
   test('les altres pàgines no porten l’herbari', async () => {
-    visita('/page/anatomia-rural');
+    visita('/page/drets-autor');
     await screen.findByRole('heading', { level: 1 });
     expect(screen.queryByText('117 / 117 fitxes')).toBeNull();
   });

@@ -15,7 +15,7 @@
    Segura Martí (socdepoble.net, WP 3656), les entrades d'El Rentonar (WP 3653
    i 16761, rentonar.blogspot.com) i, sense cap xifra, l'esbós de Gràfics de Poble
    (76150.jpg). El pou és de propietat privada i d'accés lliure (WP 3653): no
-   s'hi nomena cap particular. Cap fotografia: l'esquema el dibuixa el codi.
+   s'hi nomena cap particular. El visor es genera amb codi; les fotografies i els plànols del cos tenen crèdit propi.
    Les URL del blog són les del camp `link rel=alternate` del volcat Blogger.
 
    IDEA-165 (Onada R11 · kit R91 de Gemini, adaptat a la tesi de l'àrbitre):
@@ -65,9 +65,9 @@
 
    Data (P0-49 / IDEA-180, ordre del Mestre del 07-11-2026): la de hui, a les
    21:20 (CET), l'hora del commit que va demanar el Mestre (P0-49). És la
-   mateixa que la d'«Anatomia rural» (PAGE_COPY['anatomia-rural'].date): en un
-   empat, el Mur posa l'article primer (MurSection: les publicacions van abans
-   que les pàgines, i l'ordenació és estable). Abans,
+   mateixa que la d'«Anatomia rural» (PAGE_COPY['anatomia-rural'].date) en
+   integrar P0-49. P0-51 retira aquella targeta duplicada del Mur, i l'adreça
+   /page/anatomia-rural porta ara a este article (àlies de navigation.js). Abans,
    el 06-11-2026 a les 14:29, quan naixia este fitxer (R9V-C2-06). */
 
 export const NOVES_TECNOLOGIES_CULTURA_RURAL_ID = 'noves-tecnologies-aplicades-a-la-cultura-rural';
@@ -111,11 +111,108 @@ export const NOVES_TECNOLOGIES_FONTS = Object.freeze([
   ['26-04-2025', 'Excursió al Pou de Neu del Rentonar amb Anna Garcia Barrachina', 'https://rentonar.blogspot.com/2025/04/excursio-al-pou-de-neu-del-rentonar-amb.html']
 ].map((fila) => Object.freeze(fila)));
 
+/** P0-52 / IDEA-183 · Nou imatges documentades del Pou de Neu del Rentonar.
+ *  Les sis fotografies de Javi (17-10-2023) i els tres JPEG del corpus d’El
+ *  Rentonar es conserven sense recodificar. Les mides són les dels fitxers;
+ *  les fotografies no aporten mesures noves al model de Segura (1987). */
+export const NOVES_TECNOLOGIES_IMATGES = Object.freeze([
+  {
+    "id": "exterior",
+    "src": "/assets/uploads/patrimoni/pou-neu-rentonar-exterior-frontal-2023.jpg",
+    "alt": "Façana del Pou de Neu del Rentonar, amb l’entrada en arc de pedra, la reixa i la cúpula al darrere.",
+    "width": 1600,
+    "height": 1200,
+    "titol": "Façana exterior.",
+    "peu": "L’entrada en arc de pedra i la cúpula del Pou de Neu del Rentonar. Fotografia de Javi, 17-10-2023."
+  },
+  {
+    "id": "escala-humana",
+    "src": "/assets/uploads/patrimoni/pou-neu-rentonar-cupula-escala-humana-2023.jpg",
+    "alt": "Una persona al costat de la cúpula de pedra del Pou de Neu del Rentonar, damunt de l’accés.",
+    "width": 1600,
+    "height": 1200,
+    "titol": "La cúpula a escala humana.",
+    "peu": "Una persona al costat de la cúpula permet apreciar la grandària de la construcció i del talús. Fotografia de Javi, 17-10-2023."
+  },
+  {
+    "id": "galeria-sud",
+    "src": "/assets/uploads/patrimoni/pou-neu-rentonar-galeria-sud-volta-2023.jpg",
+    "alt": "Interior de la galeria sud del Pou de Neu del Rentonar, amb volta de maçoneria i una reixa al fons.",
+    "width": 1600,
+    "height": 1200,
+    "titol": "La galeria sud.",
+    "peu": "La volta de maçoneria del corredor d’accés, mirant cap a la reixa. Segura en dona una longitud de 9,10 m. Fotografia de Javi, 17-10-2023."
+  },
+  {
+    "id": "interior",
+    "src": "/assets/uploads/patrimoni/pou-neu-rentonar-interior-cilindre-finestres-2023.jpg",
+    "alt": "Mur interior circular del Pou de Neu del Rentonar, amb una obertura lluminosa, obertures cegades i una fornícula.",
+    "width": 1600,
+    "height": 1200,
+    "titol": "Dins del dipòsit.",
+    "peu": "El mur circular, les obertures a diferents nivells i la fornícula es veuen des de l’interior. Fotografia de Javi, 17-10-2023."
+  },
+  {
+    "id": "falsa-volta",
+    "src": "/assets/uploads/patrimoni/pou-neu-rentonar-falsa-volta-filades-2023.jpg",
+    "alt": "Vista cap amunt de la falsa volta del Pou de Neu del Rentonar, amb filades concèntriques i dues obertures cegades.",
+    "width": 1600,
+    "height": 1200,
+    "titol": "La falsa volta.",
+    "peu": "Vista contrapicada de les filades concèntriques de pedra i de dues obertures superiors cegades. Fotografia de Javi, 17-10-2023."
+  },
+  {
+    "id": "carrasca",
+    "src": "/assets/uploads/patrimoni/pou-neu-rentonar-carrasca-entorn-2023.jpg",
+    "alt": "El Pou de Neu del Rentonar i el camí d’accés sota les branques d’una carrasca.",
+    "width": 1600,
+    "height": 1200,
+    "titol": "El pou i la carrasca.",
+    "peu": "La construcció i el camí d’accés sota la carrasca de l’entorn del Rentonar. Fotografia de Javi, 17-10-2023."
+  },
+  {
+    "id": "planta",
+    "src": "/assets/uploads/patrimoni/pou-neu-rentonar-planta-segura-1987.jpg",
+    "alt": "Planta del Pou de Neu del Rentonar amb nord, escala gràfica, línies de secció A-B i C-D, i galeria de desguàs.",
+    "width": 702,
+    "height": 589,
+    "titol": "Planta del pou.",
+    "peu": "Josep Mª Segura Martí (1987), reproduïda per El Rentonar a l’entrada del 17-04-2020. S’hi veuen el dipòsit circular, les línies de secció i el traçat del desguàs.",
+    "font": "https://socdepoble.net/2020/04/17/el-pou-de-la-neu-del-rentonar/"
+  },
+  {
+    "id": "seccions",
+    "src": "/assets/uploads/patrimoni/pou-neu-rentonar-seccions-segura-1987.jpg",
+    "alt": "Seccions A-B i C-D del Pou de Neu del Rentonar, amb la cúpula, el dipòsit, l’accés i la galeria de desguàs.",
+    "width": 716,
+    "height": 602,
+    "titol": "Les seccions del pou.",
+    "peu": "Josep Mª Segura Martí (1987), reproduïdes per El Rentonar a l’entrada del 17-04-2020. Les seccions A-B i C-D mostren el dipòsit, la coberta i les galeries.",
+    "font": "https://socdepoble.net/2020/04/17/el-pou-de-la-neu-del-rentonar/"
+  },
+  {
+    "id": "fissura",
+    "src": "/assets/uploads/patrimoni/pou-neu-rentonar-fissura-sostre-2020.jpg",
+    "alt": "Filades concèntriques de pedra al sostre del Pou de Neu del Rentonar, amb una fissura de llum i la data 28-10-2020 sobreimpresa.",
+    "width": 1600,
+    "height": 900,
+    "titol": "La fissura del sostre.",
+    "peu": "Associació El Rentonar, 28-10-2020, publicada a l’entrada del 30-10-2020. La llum entra per la fissura entre les filades de pedra del sostre.",
+    "font": "https://socdepoble.net/2020/10/30/la-fissura-del-sostre-del-pou-de-neu/"
+  }
+].map((imatge) => Object.freeze(imatge)));
+
+const figuraDelPou = (id) => {
+  const { src, alt, width, height, titol, peu, font } = NOVES_TECNOLOGIES_IMATGES.find((imatge) => imatge.id === id);
+  return `<div class="aplec-2023__figura"><img src="${src}" alt="${alt}" width="${width}" height="${height}" loading="lazy" decoding="async" /><p class="aplec-2023__peu"><strong>${titol}</strong> ${peu}${font ? ` ${enllac(font, 'Font publicada')}.` : ''}${['planta', 'seccions'].includes(id) ? ` ${enllac(src, 'Obrir el plànol a mida completa')}.` : ''}</p></div>`;
+};
+
 export const NOVES_TECNOLOGIES_CULTURA_RURAL_HTML = [
   '<h3>Per què un pou de neu en 3D</h3>',
-  '<p>Les <strong>noves tecnologies</strong> també servixen per a entendre el <strong>patrimoni rural</strong>. Esta publicació vol mostrar què passa quan ajuntem una <strong>bona documentació</strong> (l’arqueologia, els arxius i la memòria de l’associació) amb <strong>tecnologia 3D lliure</strong>, per a ensenyar el nostre patrimoni d’una <strong>manera distinta</strong>. Damunt d’este text, un <strong>sol visor</strong> generat amb codi, sense cap fotografia, mostra el <strong>Pou de Neu del Rentonar</strong>, a <strong>La Torre de les Maçanes</strong>, de tres maneres: <strong>«Dins del pou»</strong>, per a recórrer-lo per dins; <strong>«Tall seccional»</strong>, per a veure’l tallat per la meitat des de fora; i <strong>«Desmuntar en 3D»</strong>, per a separar-ne les peces una a una. Si el navegador no té WebGL2, només hi ha el desmuntatge. Cada xifra porta la seua <strong>font</strong>, i quan dues fonts <strong>no coincidixen</strong>, ho diem.</p>',
+  '<p>Les <strong>noves tecnologies</strong> també servixen per a entendre el <strong>patrimoni rural</strong>. Esta publicació vol mostrar què passa quan ajuntem una <strong>bona documentació</strong> (l’arqueologia, els arxius i la memòria de l’associació) amb <strong>tecnologia 3D lliure</strong>, per a ensenyar el nostre patrimoni d’una <strong>manera distinta</strong>. Damunt d’este text, un <strong>sol visor</strong> generat amb codi, acompanyat ací per fotografies i plànols documentats, mostra el <strong>Pou de Neu del Rentonar</strong>, a <strong>La Torre de les Maçanes</strong>, de tres maneres: <strong>«Dins del pou»</strong>, per a recórrer-lo per dins; <strong>«Tall seccional»</strong>, per a veure’l tallat per la meitat des de fora; i <strong>«Desmuntar en 3D»</strong>, per a separar-ne les peces una a una. Si el navegador no té WebGL2, només hi ha el desmuntatge. Cada xifra porta la seua <strong>font</strong>, i quan dues fonts <strong>no coincidixen</strong>, ho diem.</p>',
   '<p>El visor funciona dins del navegador amb un <strong>motor propi</strong>, de <strong>codi lliure</strong> (llicència AGPL), com la resta del codi de <strong>Sóc de Poble</strong>. El <strong>Pou de Neu del Rentonar</strong> n’és el <strong>primer cas d’estudi</strong>: és el que volem fer també amb la resta d’<strong>artefactes agrícoles</strong> i d’enginyeria tradicional dels nostres pobles (almàsseres, molins fariners, forns de calç, carboneres, cups, sénies i carros) quan en tinguem la <strong>documentació</strong>.</p>',
   '<p><strong>Nota sobre els models:</strong> les mides del visor són les de l’arqueòleg <strong>Josep Mª Segura Martí</strong> (1987). El que cap font no dona (el gruix de la volta, la secció dels arcs, el nombre de graons, la teulada de la primera coberta i el terreny) és <strong>reconstrucció</strong>, i el visor ho diu; les temperatures, la massa i el cabal són estimacions del model, no mesures del monument. Encara estem <strong>provant maneres de fer</strong> les coses dins de <strong>Sóc de Poble</strong>.</p>',
+  figuraDelPou('exterior'),
   '<h3>Què era un pou de neu i per a què servia</h3>',
   '<p>Abans de les <strong>fàbriques de gel</strong>, els <strong>pous de neu</strong> (que també es diuen <strong>neveres</strong> i, a la serra de Mariola i els voltants, <strong>caves</strong>) eren dipòsits de pedra on es guardava la <strong>neu de l’hivern</strong> per a vendre-la a l’<strong>estiu</strong>. Segons <strong>Segura Martí</strong> (1985), el consum de neu es fa popular a partir del <strong>segle XVI</strong>, i durant més de <strong>quatre segles</strong> una xarxa comercial (la recollida, el transport i la venda) va abastir de neu pobles i ciutats. Les primeres fàbriques de gel, entre finals del segle XIX i principis del XX, i la indústria frigorífica, ja consolidada cap a <strong>1920-1930</strong>, en van dur l’abandó. <strong>Cruz Orozco</strong> (2004) en dona una data simbòlica: la <strong>Nevada Grossa de 1926</strong>, l’última que es va empouar de manera generalitzada a les comarques del sud valencià.</p>',
   '<p><strong>Per a la salut.</strong> La medicina del Renaixement va recuperar amb força els usos mèdics del fred, i la primera monografia europea sobre el tema, diu <strong>Cruz Orozco</strong>, és d’un metge de Xàtiva, <strong>Francesc Franco</strong>: el <em>Tractado de la nieve y del uso della</em>, publicat el <strong>1569</strong>. Amb la neu es <strong>rebaixaven febres i inflamacions</strong> i es <strong>tallaven hemorràgies</strong> (Segura Martí, 1985). Els pobles també la volien per a la salut de tots: el <strong>1682</strong>, a Almenara, se’n volia tindre prou «per les febres que maten» (Cruz Orozco, 2004), i un contracte d’arrendament de <strong>1637</strong>, que recull l’estudi de les neveres de Castelló, obligava l’arrendatari a servir neu a qui en demanara per als <strong>malalts</strong>, «així de dia com de nit».</p>',
@@ -127,13 +224,20 @@ export const NOVES_TECNOLOGIES_CULTURA_RURAL_HTML = [
   '<h3>L’arquitectura, amb les mides de Segura</h3>',
   '<p>El pou ocupa un ampli coll al <strong>vessant oriental dels Plans</strong>, baix del cim (<strong>1.330 m</strong>), al terme de La Torre de les Maçanes, on fita amb el de Benifallim. El ventisquer mira a <strong>llevant</strong>, i el dipòsit aprofita el desnivell de l’est: les terres de l’excavació, terraplenades darrere d’un <strong>paredó circular</strong> a manera de talús, li donen més altura. A trenta metres a l’oest, Segura hi va veure una petita edificació que encara feia de corral.</p>',
   '<p><strong>Altitud:</strong> Segura el situa a <strong>1.160 m</strong> sobre el nivell de la mar. La fitxa de treball de la biblioteca de Sóc de Poble (Node 0) diu <strong>1.200 m</strong> sense dir de quin document els trau; entre les seues fonts cita la documentació del bé de rellevància local de 2021-2022, que no hem pogut consultar; la fitxa de l’inventari que reproduïx l’associació (1993) no dona cap altitud. Mentre no aparega una font primària amb els 1.200 m, manen els 1.160 m de Segura.</p>',
+  figuraDelPou('escala-humana'),
+  figuraDelPou('planta'),
   '<p>El <strong>pou</strong> és un cilindre de <strong>9,80 m de diàmetre interior</strong> i <strong>13,75 m de fondària</strong> des del nivell de les finestres fins al fons, de maçoneria lluïda amb morter per dins. Segura n’estima la <strong>capacitat en 1.030 m³</strong> (π · 4,90² · 13,75 ≈ 1.037 m³).</p>',
   '<p>Dalt, s’obrin <strong>tres finestres</strong> (nord, oest i est), parcialment derrocades i hui <strong>cegades amb obra</strong>, llevat de la de l’<strong>oest</strong>, l’única oberta: fa <strong>1,55 m d’amplària</strong> i <strong>1,70 m d’altura màxima</strong>, és bastida en carreus i té una volta rebaixada de maçoneria disposada en sardinell. El <strong>gruix del mur</strong>, en eixe punt, és d’<strong>1,50 m</strong>. Segura només mesura al text la de l’oest; als plànols, posa les mateixes cotes a la del nord (1,55 m) i a la de l’est (1,70 m).</p>',
+  figuraDelPou('interior'),
   '<p>Al <strong>sud</strong>, un <strong>túnel</strong> amb volta rebaixada de maçoneria, de <strong>9,10 m</strong> de longitud, fa <strong>2,35 m d’ample</strong> a l’entrada i <strong>va estretint-se</strong> cap a dins fins a l’<strong>ingrés</strong> del pou, d’<strong>1,35 m d’ample</strong> per <strong>1,55 m d’altura</strong>, a <strong>10,00 m damunt del fons</strong>. Per a l’entrada, el text de Segura diu «12,10 m d’altura», que no pot ser l’altura del túnel: probablement és la cota de la clau sobre el fons del pou (10,00 + 2,10 m), i la secció C-D hi dibuixa uns 2,10 m. Davall de l’ingrés, al mur, hi ha <strong>esglaons</strong> buidats.</p>',
+  figuraDelPou('galeria-sud'),
   '<p>A l’<strong>est</strong>, on el terreny cau més, ix del punt més baix del pou un <strong>desguàs</strong>, cosa poc freqüent en estos dipòsits: un estret passadís de <strong>0,50 m d’ample</strong> per <strong>0,70 m d’altura</strong> que, amb un cert pendent, recorre <strong>29 m en línia recta</strong> fins a l’exterior. Quasi tot està excavat en la terra, i al principi i al final té el sostre <strong>enllosat</strong> amb grans pedres planes, com un alcavó. A fora, Segura no hi va trobar cap bassa que arreplegara l’aigua del desgel.</p>',
+  figuraDelPou('seccions'),
   '<h3>Les dues cobertes</h3>',
   '<p>La <strong>primera coberta</strong> era una volta que, segons Segura, subjectaria un <strong>trespol de teula</strong>. Embotits al mur, entre l’ingrés sud i les finestres, en queden els <strong>quatre estreps</strong> de carreus de <strong>dos arcs creuats</strong> de pedra, l’un de nord-est a sud-oest i l’altre de nord-oest a sud-est: a la planta de Segura són la <strong>X</strong> de línia discontínua.</p>',
   '<p>La <strong>segona coberta</strong>, la que veiem hui, és una <strong>falsa volta</strong>: una coberta <strong>hemisfèrica</strong> perfecta, bastida per aproximació successiva de <strong>filades</strong> de pedra, sense cap arc. Per fora està parcialment <strong>erosionada</strong> i amb molts esbornacs.</p>',
+  figuraDelPou('falsa-volta'),
+  figuraDelPou('fissura'),
   '<p><strong>Quan es va bastir:</strong> per la tipologia dels estreps dels arcs primitius, Segura data el pou entre els <strong>segles XVII i XVIII</strong>, amb paral·lels a Mariola i al Carrascar d’Alcoi i Ibi documentats en eixe moment, que també van conéixer una segona coberta de maçoneria. La fitxa de l’inventari de 1993, en castellà, diu «Principios del s.XVIII». Cap de les fonts consultades no data la segona coberta.</p>',
   '<h3>El cicle de la neu</h3>',
   '<p>A l’article del Rentonar, Segura només hi esmenta el <strong>tragí dels arriers</strong> que encara recorden els avis: als mesos d’estiu, portaven en <strong>sàrries</strong> la neu dels pous, que a l’hivern s’havia arreplegat als <strong>ventisquers</strong>. Com treballaven els nevaters ho conta per als pous de les <strong>muntanyes alacantines</strong> en general (<em>Narria</em>, 1985):</p>',
@@ -147,6 +251,7 @@ export const NOVES_TECNOLOGIES_CULTURA_RURAL_HTML = [
   '<p><strong>El que no podem confirmar:</strong> la fitxa de treball de la biblioteca de Sóc de Poble (Node 0) afig que el pou el va bastir una saga de nevaters d’Alacant, que la neu també anava a Alacant i que la darrera explotació va ser el gener de 1919. Cap dels documents que hem pogut consultar no ho diu, i no ho donem per bo.</p>',
   '<h3>El pou hui</h3>',
   `<p>El pou <strong>no és de titularitat pública</strong>, però és de <strong>lliure accés</strong>. L’<strong>Associació El Rentonar</strong> n’ha documentat la ${enllac('https://socdepoble.net/2020/10/30/la-fissura-del-sostre-del-pou-de-neu/', 'fissura del sostre')} (2020), les ${enllac('https://socdepoble.net/2021/12/25/el-pou-de-neu-del-rentonar-front-a-ladministracio/', 'gestions davant l’Administració')} per l’error d’inscripció com a bé de rellevància local (2020-2022) i les <strong>jornades de neteja</strong> del camí i de l’entorn (2021 i 2023). Segons el blog de l’associació, el <strong>26 d’agost de 2023</strong> l’error encara <strong>no s’havia corregit</strong>.</p>`,
+  figuraDelPou('carrasca'),
   '<p><strong>L’error d’inscripció:</strong> la fitxa de l’Inventari General del Patrimoni Cultural Valencià (codi 1; autor, Segura; 1 de setembre de 1993) el té com a bé de rellevància local de <strong>Benifallim</strong>, i no de La Torre de les Maçanes. El <strong>12 de juliol de 2021</strong>, dos escrits de l’Alcaldia de La Torre el reconeixen com a <strong>bé de rellevància local per determinació legal</strong> (disposició addicional cinquena de la Llei del Patrimoni Cultural Valencià), n’inicien la comunicació a la Conselleria perquè l’inscriga a la secció segona de l’Inventari i obrin un procediment d’ordre d’execució perquè la propietat el conserve. La protecció, per tant, li ve de la llei: la «incoació» que diu la fitxa de treball de la biblioteca de Sóc de Poble no consta en cap dels documents publicats.</p>',
   '<p><strong>26 d’abril de 2025.</strong> En una excursió de l’associació des de Benifallim i La Torre, l’arqueòloga <strong>Anna Garcia Barrachina</strong> hi va fer una xerrada sobre la història del pou i els antics camins del comerç de la neu.</p>',
   '<h3>Els documentals</h3>',
@@ -163,7 +268,7 @@ export const NOVES_TECNOLOGIES_CULTURA_RURAL_HTML = [
   '<li><strong>Bibliografia no consultada</strong> · Francesc Franco, <em>Tractado de la nieve y del uso della</em> (Sevilla, 1569). El coneixem per Cruz Orozco (2004) i pel treball de Castelló.</li>',
   '<li><strong>Esbós divulgatiu</strong> · «Pozo de nieve “EL RENTONAR”», de l’arxiu <strong>Gràfics de Poble</strong>: en prenem la idea pedagògica, no les xifres, perquè no té autor ni escala.</li>',
   '</ul>',
-  '<p>El mateix visor del pou és a l’<a href="/page/anatomia-rural"><strong>Anatomia rural</strong></a>, la pàgina on aniran arribant els altres <strong>artefactes agrícoles</strong> quan en tinguem la documentació.</p>'
+  '<p><strong>Anatomia rural.</strong> Esta publicació reunix el visor del pou, les fotografies, els plànols i les fonts. Anirem documentant altres <strong>artefactes agrícoles</strong> quan en tinguem la documentació.</p>'
 ].join('\n');
 
 /** La primera publicació del Mur. Signa l'entitat Sóc de Poble (com el
@@ -205,5 +310,5 @@ export const NOVES_TECNOLOGIES_CULTURA_RURAL_POST = {
     { text: 'Pou de neu', className: 'sdp-badge-tag' },
     { text: 'Pedra Seca', className: 'sdp-badge-tag' }
   ],
-  copyright: 'Text i esquema: Sóc de Poble · Dades: les fonts citades a la publicació'
+  copyright: 'Text i visor: Sóc de Poble · Fotografies: Javi (2023) i Associació El Rentonar (2020) · Plànols: Josep Mª Segura Martí (1987) · Dades: les fonts citades a la publicació'
 };

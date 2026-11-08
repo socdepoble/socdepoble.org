@@ -46,18 +46,15 @@ const diaLocal = (valor) => {
   return [d.getFullYear(), d.getMonth() + 1, d.getDate()];
 };
 
-/* P0-49 / IDEA-180 (261107) · «Anatomia rural» no és cap pàgina de
-   SYSTEM_PAGES: el Mur la barreja com a pàgina de patrimoni (targetesMur.js).
-   Ací entra la que nomenen les importants; les altres quatre pàgines de
-   patrimoni porten la seua data real (06-11-2026), que en un `ara` anterior
-   les posaria en el futur, i les prova MurSection.datesDeProva.test.jsx. */
-const PATRIMONI_IMPORTANT = Object.freeze(['anatomia-rural']);
+/* P0-51 · Anatomia rural ja no és cap targeta del Mur; conserva la data
+   real en la pàgina. Les quatre pàgines de patrimoni restants es comproven
+   en el Mur real (MurSection.datesDeProva.test.jsx), sense data de prova. */
 
 /* Les targetes del Mur amb la data que els dona MurSection: una pàgina de
    sistema porta el copy com a data de CREACIÓ (created_at), sense `date`. */
 function targetesDelMur(llavor) {
   const pagines = new Map((llavor.pages || []).map((pagina) => [pagina.id, pagina]));
-  const deSistema = [...SYSTEM_PAGES.map(({ key }) => key), ...PATRIMONI_IMPORTANT];
+  const deSistema = SYSTEM_PAGES.map(({ key }) => key);
   return [
     ...llavor.events.map((item) => ({ clau: `events:${item.id}`, item })),
     ...llavor.feedPosts.map((item) => ({ clau: `feedPosts:${item.id}`, item })),
@@ -107,13 +104,14 @@ describe('la llavor del Mur amb les dates de prova', () => {
        Ordre del Mestre (261106; IDEA-116, Onada R9) · Dotze: «Noves tecnologies
        aplicades a la cultura rural» hi entra la primera, com la primera
        publicació del Mur. Abans, com a molt onze.
-       P0-49 / IDEA-180 (decisió del Mestre i MarIA, 261107) · Tretze:
-       «Anatomia rural» hi entra la segona, l'altra publicació estrella.
-       Abans, com a molt dotze. */
-    expect(N).toBeLessThanOrEqual(13);
+       P0-51 / IDEA-182 (261108) · Es retira Anatomia rural del Mur i
+       tornem al sostre de dotze, sense canviar la seua pàgina directa. */
+    expect(N).toBeLessThanOrEqual(12);
+    expect(IMPORTANTS_DEL_MUR).toHaveLength(12);
     expect(IMPORTANTS_DEL_MUR.slice(0, 2).map(clau)).toEqual([
-      'feedPosts:noves-tecnologies-aplicades-a-la-cultura-rural', 'pages:anatomia-rural'
+      'feedPosts:noves-tecnologies-aplicades-a-la-cultura-rural', 'pages:fediversity'
     ]);
+    expect(IMPORTANTS_DEL_MUR.map(clau)).not.toContain('pages:anatomia-rural');
   });
 
   test.each(MOMENTS)('%s: les importants dalt, les tècniques del 2 al 15 de setembre i els actes al seu dia', (_, ara) => {
@@ -166,6 +164,7 @@ describe('la llavor del Mur amb les dates de prova', () => {
     llavorAmbDatesDeProva(APP_SEED, new Date(2026, 8, 30, 15, 0));
     expect(JSON.stringify(APP_SEED.pages.map(({ id, date }) => [id, date]))).toBe(abans);
     expect(APP_SEED.pages.find(({ id }) => id === 'projecte').date).toBe(PAGE_COPY.projecte.date);
+    expect(llavorAmbDatesDeProva(APP_SEED).pages.find(({ id }) => id === 'anatomia-rural').date).toBe(PAGE_COPY['anatomia-rural'].date);
     expect(APP_SEED.marketItems.find(({ id }) => id === 'mac-mini-m4').created_at).toBe('2026-02-15T12:00:00.000Z');
   });
 

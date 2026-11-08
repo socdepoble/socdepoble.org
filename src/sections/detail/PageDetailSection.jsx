@@ -35,7 +35,11 @@ const SECCIONS_DE_PATRIMONI = {
    documentació completa (Segura Martí, 1987). El visor general
    (VisorAnatomiaRural3D: almàssera, molí, forn de calç…) ja no es munta ací;
    el component i les seues dades es conserven per a quan tinguen la seua
-   documentació. */
+   documentació.
+   P0-51 / IDEA-182 (R53) · Mentre l'àlies de navigation.js porte
+   /page/anatomia-rural a l'article complet del Mur, esta branca no s'executa
+   (la redirecció va abans); es conserva perquè tornar enrere siga llevar
+   només aquella línia de PAGE_ROUTE_MAP. */
 const PAGINA_DEL_VISOR = 'anatomia-rural';
 const PouDeLaNeuAnatomiaCard = lazy(() => import('../../components/patrimoni/PouDeLaNeuAnatomiaCard.jsx'));
 

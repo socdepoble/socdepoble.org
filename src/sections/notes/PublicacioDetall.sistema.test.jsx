@@ -182,10 +182,13 @@ describe('PublicacioDetall · una pàgina del sistema', () => {
      9c1e6e333 (261107_0455, «publish 5 heritage cards in Mur») ·
      targetesDeSistema hi afig les cinc pàgines de patrimoni (Anatomia rural,
      Herbari, Banc de llavors, Rutes de poble i Arbres monumentals), totes de
-     text: ara en són setze, i dènou en total. */
+     text: ara en són setze, i dènou en total.
+     P0-51 / IDEA-182 (Mestre, 261108 02:49; R53) · Anatomia rural ix de les
+     targetes del Mur: l'article complet del Pou de Neu és l'única targeta
+     amb eixa portada. Ara en són quinze de text, i díhuit en total. */
   const SENSE_COS = ['disseny', 'notes', 'wikidepoble'];
   test('una pàgina del sistema que no és de text (Disseny, Notes, Wiki) no pinta cap cos: la capçalera i «Obri la pàgina»', () => {
-    expect(SISTEMA).toHaveLength(19);
+    expect(SISTEMA).toHaveLength(18);
     for (const targeta of SISTEMA) {
       const { container, unmount } = render(<PublicacioDetall item={pagina(targeta.id)} />);
       const cos = container.querySelector('article.cms-preview');
