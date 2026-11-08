@@ -210,8 +210,12 @@ async function loadSections(ownerUserId, config, sections, { ambPaginacio = fals
       } catch (error) {
         /* Àrbitre R11 (R33-L2-03) · L'overlay és opcional: un esquema antic, una
            fila il·legible, un 500 o un temps esgotat servixen la font canònica.
-           Només l'avortament del cridador talla la càrrega. */
-        if (error?.name === 'AbortError' && config?.signal?.aborted) throw error;
+           Un avortament (també per canvi de sessió) talla la càrrega.
+           R12a (R47 · P1-75, Loop 3) · checkSession() i sessioCanviada()
+           llancen AbortError sense el senyal del cridador: continuar seria
+           carregar el Mur amb la sessió vella. Un temps esgotat és TimeoutError
+           (runtime.js) i, per tant, continua servint la font canònica. */
+        if (error?.name === 'AbortError') throw error;
         if (error?.code !== 'no-disponible') console.warn('[supabase] Revisions de llavor no llegides; es mostra la font canònica:', error?.code ?? error?.name ?? 'error');
       }
     }

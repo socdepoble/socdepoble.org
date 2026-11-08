@@ -47,6 +47,7 @@ test('R33-L2-03 · the caller abort still stops the load', async () => {
   const controller = new AbortController(); controller.abort();
   servidor.seed = Object.assign(new Error('Operació cancel·lada.'), { name: 'AbortError' });
   await expect(loadMur('U', { signal: controller.signal })).rejects.toMatchObject({ name: 'AbortError' });
+  await expect(loadMur('U', {})).rejects.toMatchObject({ name: 'AbortError' });
 });
 
 test('R33-L2-01 · loadMur → owner save → desa_revisio_seed with the real element shape, also after a source change', async () => {

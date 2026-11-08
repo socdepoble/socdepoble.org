@@ -44,6 +44,7 @@ import { esFontImatgePropia } from '../../utils/sanitize.js';
 import { pageKeyDeRuta, paginaDeRuta, propsDePaginaDeText } from '../text/paginaDeText.js';
 import { nomDeLaGent } from '../pobles/nomsDelPoble.js';
 import { signaturaDeQuiSigna } from '../../data/identitatsSeed.js';
+import { CATEGORIES_CANONIQUES_BASE } from '../../data/taxonomia/vocabulariCanonic.js';
 /* P1-f (Onada R6 · Bloc 2) · El transformador (i el tesaurus de ~450 KB) arriba a demanda: mai al chunk comú. */
 import { trobaArticleImportatComAPublicacio, useEstatArticleImportat } from '../../utils/articlesImportatsMandros.js';
 
@@ -226,8 +227,13 @@ function etiquetaSenseEnllac(etiqueta) {
 
 function etiquetesDelDetall(section, item) {
   const deLaSeccio = etiquetaDeLaSeccio(section, item);
+  /* R12a (R49 · C2-05) · Només una mare canònica, com a propietat pròpia de
+     l'element, dona pas a les etiquetes pròpies: un id inventat, 'constructor',
+     '__proto__' o una mare heretada del prototip no són cap classificació. */
+  const mareCanonica = Object.hasOwn(item, 'categoria_tematica_id') && typeof item.categoria_tematica_id === 'string'
+    && Object.hasOwn(CATEGORIES_CANONIQUES_BASE, item.categoria_tematica_id);
   const ambPropies = Array.isArray(item.labels) && item.labels.length > 0
-    && (section?.listPath === RUTA_CALENDARI || Boolean(textNet(item.categoria_tematica_id)));
+    && (section?.listPath === RUTA_CALENDARI || mareCanonica);
   if (!ambPropies) return [deLaSeccio, { text: item.id, className: 'sdp-badge-category' }];
   return [
     deLaSeccio,

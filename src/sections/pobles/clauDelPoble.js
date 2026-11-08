@@ -267,7 +267,9 @@ export function poblesAmbUltimaPublicacio(towns, fonts) {
       const ultima = perClau.get(clau);
       if (ultima && (!mes || ultima.instant > mes.instant)) mes = ultima;
     }
-    const valor = mes ? mes.valor : null;
+    /* R12a (R48 · A4) · Un created_at que arriba com a Date es desa com a
+       instant ISO: el contracte de _ultimaPublicacioPublica és una cadena. */
+    const valor = mes ? (mes.valor instanceof Date ? mes.valor.toISOString() : mes.valor) : null;
     return town._ultimaPublicacioPublica === valor ? town : { ...town, _ultimaPublicacioPublica: valor };
   });
   return pobles.every((poble, i) => poble === towns[i]) ? towns : pobles;

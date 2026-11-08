@@ -53,6 +53,17 @@ test('R37 · un created_at de només dia no inventa hora a la pastilla', () => {
   expect(rellotge(actual)).toEqual(dataDElement({ created_at: '2026-11-01' }));
   expect(rellotge(actual).time).toBe('');
 });
+/* R12a (R48 · A4) · Un created_at que arriba com a Date es desa com a instant
+   ISO (contracte de cadena), i la segona passada torna el mateix arranjament
+   (memo idempotent). Només la serialització: els vetos de data d'R48 queden
+   fora per l'arbitratge R37-L2-04/05 d'adés (decisió del Mestre, abast T40). */
+test('R48 · un created_at Date es serialitza com a instant ISO i el memo és idempotent', () => {
+  const fonts = { feedPosts: [{ id: 'probe', poble_id: town.id, created_at: new Date(Date.UTC(2026, 10, 1, 10)) }] };
+  const primera = poblesAmbUltimaPublicacio([town], fonts);
+  expect(primera[0]._ultimaPublicacioPublica).toBe('2026-11-01T10:00:00.000Z');
+  expect(Date.parse(rellotge(primera[0]).dateTime)).toBe(Date.UTC(2026, 10, 1, 10));
+  expect(poblesAmbUltimaPublicacio(primera, fonts)).toBe(primera);
+});
 /* Arbitratge R11 (R37-L2-07) · Divergència acceptada respecte a T51, pendent
    de decisió del Mestre: /pobles diu l'última publicació pública declarada (i
    cap pastilla sense publicació); la pàgina del poble i el lector del MAS
