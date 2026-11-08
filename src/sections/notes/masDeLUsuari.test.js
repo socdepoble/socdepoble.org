@@ -61,6 +61,17 @@ describe('Grup E · les pàgines del sistema al MAS', () => {
   const SISTEMA = targetesDeSistema(PAGE_COPY);
   const ENTITAT_LLAVOR = aliesDeLActor({ tipus: 'entitat', id: ENTITAT_PILOT_ID, slug: ENTITAT_PILOT_SLUG }, { dataMode: 'seed' });
   const ENTITAT_REMOTA = aliesDeLActor({ tipus: 'entitat', id: 'uuid-org', slug: ENTITAT_PILOT_SLUG });
+  /* 9c1e6e333 (261107_0455, «publish 5 heritage cards in Mur») ·
+     targetesDeSistema afig, darrere de SYSTEM_PAGES, les cinc pàgines de
+     patrimoni (PAGINES_PATRIMONI_MUR de targetesMur.js), amb la seua ruta. */
+  const PATRIMONI_AL_MUR = [
+    { key: 'anatomia-rural', href: '/page/anatomia-rural' },
+    { key: 'herbari', href: '/page/herbari' },
+    { key: 'banc-de-llavors', href: '/page/banc-de-llavors' },
+    { key: 'rutes-de-poble', href: '/page/rutes-de-poble' },
+    { key: 'arbres-monumentals', href: '/page/arbres-monumentals' }
+  ];
+  const AL_MUR = [...SYSTEM_PAGES, ...PATRIMONI_AL_MUR];
 
   /* Onada 8 (261009) · Dotze: la Consola i el Cervell hi entren com a
      pàgines del sistema. Abans, deu.
@@ -68,14 +79,16 @@ describe('Grup E · les pàgines del sistema al MAS', () => {
      hi entra «Descàrregues i Aplicacions». Abans, dotze.
      Ordre del Mestre (30-10-2026; candidatura NLnet NGI Fediversity) ·
      Catorze: hi entra «Candidatura Europea NLnet · NGI Fediversity». Abans,
-     tretze. */
+     tretze.
+     9c1e6e333 · Les catorze de SYSTEM_PAGES i, darrere, les cinc de
+     patrimoni: dènou targetes. */
   test('les catorze pàgines del Mur, a «Mur» (f-mur), per a l’entitat pilot en llavor i en remot', () => {
-    expect(SISTEMA).toHaveLength(SYSTEM_PAGES.length);
+    expect(SISTEMA).toHaveLength(SYSTEM_PAGES.length + PATRIMONI_AL_MUR.length);
     expect(SYSTEM_PAGES).toHaveLength(14);
     for (const alies of [ENTITAT_LLAVOR, ENTITAT_REMOTA]) {
       expect(esAliesDelProjecte(alies)).toBe(true);
       const items = itemsPublicatsDe({ feedPosts: SISTEMA }, alies);
-      expect(items.map((item) => item.id)).toEqual(SYSTEM_PAGES.map((pagina) => `publicacio:mur:${pagina.key}`));
+      expect(items.map((item) => item.id)).toEqual(AL_MUR.map((pagina) => `publicacio:mur:${pagina.key}`));
       expect(items.every((item) => item.kind === 'publicacio' && item.categoryIds[0] === 'f-mur')).toBe(true);
     }
   });
@@ -99,7 +112,7 @@ describe('Grup E · les pàgines del sistema al MAS', () => {
 
   test('la ruta d’una pàgina del sistema és la seua (mainHref), mai /mur/:id; una de fora, la de sempre', () => {
     const items = itemsPublicatsDe({ feedPosts: SISTEMA }, ENTITAT_REMOTA);
-    expect(items.map((item) => item.data.ruta)).toEqual(SYSTEM_PAGES.map((pagina) => pagina.href));
+    expect(items.map((item) => item.data.ruta)).toEqual(AL_MUR.map((pagina) => pagina.href));
     expect(items.find((item) => item.id === 'publicacio:mur:xat').data).toMatchObject({ seccio: 'mur', ruta: '/page/xat' });
     // Defensa en profunditat (esRutaInterna, com TargetaDelMur): un mainHref de fora no és cap ruta.
     expect(publicacioComANota({ id: 'legal', isSystem: true, mainHref: 'https://fora.example/x' }, 'mur').data.ruta).toBe('/mur/legal');

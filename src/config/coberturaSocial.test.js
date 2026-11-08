@@ -38,7 +38,8 @@ describe('client i prerender: el mateix head a cada ruta nova del manifest socia
   test('els plugins del manifest són exactament els del registre', () => {
     expect(Object.keys(manifest.routes).filter((ruta) => ruta.startsWith('/plugin/')).sort())
       .toEqual(PLUGINS.map((plugin) => rutaDelPlugin(plugin.id)).sort());
-    expect(PLUGINS).toHaveLength(8);
+    /* COMMIT R6 (d79a0b530) · L'Arbre Genealògic (IDEA-100) és el nové plugin. */
+    expect(PLUGINS).toHaveLength(9);
   });
 
   test.each(PLUGINS.map((plugin) => [rutaDelPlugin(plugin.id), plugin]))('%s · PluginPage (metadadesDePlugin)', (ruta, plugin) => {

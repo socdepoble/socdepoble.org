@@ -232,7 +232,8 @@ test('dades de veres del repositori: /anima, /fedivers, la samarreta i el Llibre
      300 000 B com a molt (cap targeta genèrica). */
   const {manifest}=await buildSocialManifest({root:projectRoot,origin,estricte:true});
   const inventari=Object.keys(manifest.routes).filter(ruta=>/^\/(?:page\/(?:publicar_|vehicle_compartit|animalets|treball|habitatge|notes|wikidepoble)|plugin\/|consola(?:\/|$)|disseny$|wikidepoble$)/.test(ruta));
-  assert.equal(inventari.length,10+8+1+1+14,inventari.join(' '));
+  /* COMMIT R6 (d79a0b530) · /plugin/genealogia (Arbre Genealògic, IDEA-100) és el nové plugin. */
+  assert.equal(inventari.length,10+9+1+1+14,inventari.join(' '));
   for(const ruta of inventari) {
     const entrada=manifest.routes[ruta];
     const d=llig(dist,`${ruta.slice(1)}/index.html`);

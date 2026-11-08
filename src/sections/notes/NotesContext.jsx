@@ -858,3 +858,10 @@ export function NotesProvider({ children }) {
 export function useNotes() {
   return useContext(NotesContext);
 }
+
+/* P1-71 · Un valor de notes fix per a un sol editor (PublicacioEditable,
+   ImportacioPaginaWpNotes): l'objecte de context només l'importen este .jsx i
+   NotesDataContext.jsx, i els altres pinten el proveïdor per ací. */
+export function ValorDeNotes({ value, children }) {
+  return <NotesContext.Provider value={value}>{children}</NotesContext.Provider>;
+}

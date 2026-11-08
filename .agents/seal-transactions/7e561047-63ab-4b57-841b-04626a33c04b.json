@@ -1,0 +1,27 @@
+{
+  "id": "7e561047-63ab-4b57-841b-04626a33c04b",
+  "session": "b354ca4c-94b8-4c6e-9ac8-5703879cb73a",
+  "operationId": "r12-deute-proves-heretades",
+  "claim": "b354ca4c-94b8-4c6e-9ac8-5703879cb73a:governance-write",
+  "planHash": "b0919fcdf0b1c088295a09a1f296c69b12fa175a3f5a4229869f7020e9e916d4",
+  "beforeSeal": "6e35f5b07cd4759cab4581250addb25fd619e896bd793ba005c959a2ea93afe2",
+  "files": [
+    {
+      "path": "tooling/seo/build-social-manifest.test.mjs",
+      "before": "f72a44ddbf042ef4b12715db92d7774dfae4bf37cdec7d4a20e5477d61bb7cce",
+      "after": "89f780ac92976c4cb9b1fb8d3df1041edcbe186b18b76b3e49d21d93b5404850"
+    },
+    {
+      "path": "tooling/seo/prerender-social.test.mjs",
+      "before": "4ed9af3f7c591aef8e9f42a83da95606c4273844fa7bb4e016993264785707e3",
+      "after": "d1d323182802106f8467f87be7cf9d5c77eb0120cdc63603ebb99216d37466e6"
+    },
+    {
+      "path": "tooling/wiki/wiki-baseline.lock.json",
+      "before": "157a8d742529d365aa7b004b67e4115915b5a40cce12977c3292b38b1f6cba2a",
+      "after": "155fc4ab58594b294160fa2c071a2d4768129b618ded99ae479e8a62835a25a5"
+    }
+  ],
+  "state": "accepted",
+  "afterSeal": "5f74f08d9558f1d6b128b87ea5ff5dd96b45585d23d569a1ab52675171cc2a37"
+}

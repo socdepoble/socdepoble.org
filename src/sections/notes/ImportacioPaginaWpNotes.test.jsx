@@ -8,7 +8,10 @@ vi.mock('../../app/contexts/useIdentitatOReserva.js', () => ({ useIdentitatORese
 vi.mock('../../components/universal/workspace/UniversalWorkspace.jsx', () => ({ UniversalWorkspace: ({ renderDetail }) => <div data-testid="workspace">{renderDetail()}</div> }));
 vi.mock('./NotesContext.jsx', async () => {
   const { useContext } = await import('react'); const { NotesContext } = await import('./objectesDeContext.js');
-  return { useNotes: () => useContext(NotesContext) ?? state.base };
+  return {
+    useNotes: () => useContext(NotesContext) ?? state.base,
+    ValorDeNotes: ({ value, children }) => <NotesContext.Provider value={value}>{children}</NotesContext.Provider>
+  };
 });
 vi.mock('./NotesEditor.jsx', async () => {
   const { useNotes } = await import('./NotesContext.jsx');

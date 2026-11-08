@@ -7,8 +7,7 @@ import { CanalAmbitContext } from '../../components/universal/ambits/canalAmbit.
 import { CATEGORIA_GENERAL } from '../../components/universal/classificacio/model.js';
 import { carregaPaginaImportadaPerRevisio } from '../../utils/transformadorEditorialWpBlogger.js';
 import { creaPublicadorPaginaWp, potRevisarPaginesWp } from '../../data/importacio/revisioPaginesWp.js';
-import { NotesContext } from './objectesDeContext.js';
-import { useNotes } from './NotesContext.jsx';
+import { useNotes, ValorDeNotes } from './NotesContext.jsx';
 import { nouIdDeNota } from './notaPreparada.js';
 import NotesEditor from './NotesEditor.jsx';
 
@@ -79,13 +78,13 @@ function EsborranyWp({ pagina, base, sessio, ambit, authority }) {
       {message && <p role="status">{message}</p>}
       {createdId && <p><Link to={`/notes?nota=${encodeURIComponent(createdId)}`}>Recupera l’esborrany d’este intent al Bloc</Link>. Si la creació no s’ha confirmat, la nota podria no existir. El Bloc consultarà el servidor abans de continuar; este importador no crearà cap altre UUID.</p>}
     </div>
-    {!createdId && <NotesContext.Provider value={value}>
+    {!createdId && <ValorDeNotes value={value}>
       <CanalAmbitContext.Provider value={canal}>
         <UniversalWorkspace model={model} initialSelection={{ categoryId: 'f-mur', itemId: nota.id }}
           labels={{ items: 'ESBORRANY EN REVISIÓ', categories: 'DESTÍ', empty: 'Cap esborrany' }}
           amagaRodaAjustos renderDetail={() => <NotesEditor activeNote={nota} />} />
       </CanalAmbitContext.Provider>
-    </NotesContext.Provider>}
+    </ValorDeNotes>}
   </>;
 }
 

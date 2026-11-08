@@ -79,10 +79,16 @@ test('/fedivers es resol per la ruta i per /page/fedivers, i el cos comença en 
   // Els dos nodes actius, clicables (ordre del Mestre); la negreta es queda.
   /* Ordre 261103_0522, T2.6 (Gauntlet O7-9, ronda 2; CONS-IL-01) · I l'enllaç contextual fedivers ↔
      fediversity, «horitzó» cap a /page/fediversity: prova posada al dia a propòsit. */
+  /* 6a444026a (R10.1, «balanç R9-R10 Fediversity»; contingut aprovat per la Frontissa a 6fc7c5cc1) ·
+     El paràgraf de les onades R9 i R10 enllaça les 5 pàgines de patrimoni, Fediversity i el Node 0. */
   const enllacos = [...cosDe(html).querySelectorAll('a')].map((a) => [a.getAttribute('href'), a.textContent]);
   expect(enllacos).toEqual([
     ['https://socdepoble.org', 'socdepoble.org'], ['https://gentdelatorre.net', 'gentdelatorre.net'],
-    ['https://socdepoble.cat', 'socdepoble.cat'], ['https://socdepoble.cat/api/v1/node0/status', 'API pública d’estat'],
+    ['https://socdepoble.cat', 'socdepoble.cat'],
+    ['/page/anatomia-rural', 'Anatomia rural'], ['/page/herbari', 'Herbari de La Torre'], ['/page/banc-de-llavors', 'Banc de Llavors'],
+    ['/page/rutes-de-poble', 'Rutes de Poble'], ['/page/arbres-monumentals', 'Arbres Monumentals'],
+    ['/page/fediversity', 'Fediversity'], ['/page/node-zero', 'Node 0'],
+    ['https://socdepoble.cat/api/v1/node0/status', 'API pública d’estat'],
     ['https://mastodont.cat/@depoble', '@depoble@mastodont.cat'], ['/notes', 'Bloc de Notes'],
     ['/mur', 'Mur de Poble'], ['/mercat', 'Mercat Local'], ['/calendari', 'Calendari i Agenda'],
     ['/mapa', 'Mapa del Territori'], ['/page/treball', 'Treball'], ['/page/habitatge', 'Habitatge'],

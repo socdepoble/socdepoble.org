@@ -14,7 +14,10 @@ const mocks = vi.hoisted(() => ({
 }));
 vi.mock('./NotesContext.jsx', async () => {
   const { NotesContext: Context } = await import('./objectesDeContext.js');
-  return { useNotes: () => useContext(Context) };
+  return {
+    useNotes: () => useContext(Context),
+    ValorDeNotes: ({ value, children }) => <Context.Provider value={value}>{children}</Context.Provider>
+  };
 });
 vi.mock('./NotesEditor.jsx', async () => {
   const { NotesContext: Context } = await import('./objectesDeContext.js');

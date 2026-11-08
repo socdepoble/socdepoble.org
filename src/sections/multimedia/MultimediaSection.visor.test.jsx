@@ -199,7 +199,10 @@ describe('el panell', () => {
   const panell = () => visor().querySelector('aside.sdp-visor__panell');
   const fila = (etiqueta) => [...panell().querySelectorAll('.sdp-visor__fila')].find((f) => f.querySelector('dt').textContent === etiqueta)?.querySelector('dd');
 
-  test.each(['benimassot', 'planes', 'la-torre-de-les-macanes', 'l-atzubia'])('AH-27 · %s mostra atribució i enllaços de Commons a la fitxa i al visor', (id) => {
+  /* Decisió R5-D5 (COMMIT R6, d79a0b530) · La Torre conserva la seua foto
+     pròpia i la seua fitxa ja no porta crèdits de Commons: ix d'esta llista i
+     la cobrix la prova «R5-D5 · La Torre…» de commonsAh27.test.js. */
+  test.each(['benimassot', 'planes', 'l-atzubia'])('AH-27 · %s mostra atribució i enllaços de Commons a la fitxa i al visor', (id) => {
     const town = TOWNS.find(item => item.id === id);
     const [fotoCommons] = fotosDelsPobles([town]);
     mocks.multimedia = { status: 'ready', mediaItems: [fotoCommons], mediaTimelineGroups: [] };

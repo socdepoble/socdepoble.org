@@ -360,8 +360,10 @@ describe('seguretat-01 · la insígnia d’un acte només pinta text', () => {
     vi.stubEnv('TZ', 'Europe/Madrid');
     for (const esdeveniment of [acteAEsdeveniment(CURSOS_PEDRA_EN_SEC_2026_EVENT), null]) {
       pinta(CURSOS_PEDRA_EN_SEC_2026_EVENT, esdeveniment);
+      /* d79a0b530 (COMMIT R6) · La insígnia porta al Calendari amb el teclat:
+         role="button" i tabindex="0". Cap píxel canvia. */
       expect(insignia().outerHTML).toBe(
-        '<time class="sp-card-calendar-badge" aria-label="Del 23 d’octubre al 14 de novembre de 2026" datetime="2026-10-23">'
+        '<time class="sp-card-calendar-badge" aria-label="Del 23 d’octubre al 14 de novembre de 2026" datetime="2026-10-23" role="button" tabindex="0">'
         + '<span class="sp-card-calendar-badge__dia" data-mida="mitjana">23–14</span>'
         + '<span class="sp-card-calendar-badge__mes">OCT–NOV</span>'
         + '<span class="sp-card-calendar-badge__any">2026</span></time>'

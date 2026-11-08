@@ -178,10 +178,14 @@ describe('PublicacioDetall · una pàgina del sistema', () => {
      tretze pàgines en total.
      Ordre del Mestre (30-10-2026; candidatura NLnet NGI Fediversity) ·
      «Candidatura Europea NLnet · NGI Fediversity» (/page/fediversity) hi
-     entra com a pàgina de text: ara en són onze, i catorze en total. */
+     entra com a pàgina de text: ara en són onze, i catorze en total.
+     9c1e6e333 (261107_0455, «publish 5 heritage cards in Mur») ·
+     targetesDeSistema hi afig les cinc pàgines de patrimoni (Anatomia rural,
+     Herbari, Banc de llavors, Rutes de poble i Arbres monumentals), totes de
+     text: ara en són setze, i dènou en total. */
   const SENSE_COS = ['disseny', 'notes', 'wikidepoble'];
   test('una pàgina del sistema que no és de text (Disseny, Notes, Wiki) no pinta cap cos: la capçalera i «Obri la pàgina»', () => {
-    expect(SISTEMA).toHaveLength(14);
+    expect(SISTEMA).toHaveLength(19);
     for (const targeta of SISTEMA) {
       const { container, unmount } = render(<PublicacioDetall item={pagina(targeta.id)} />);
       const cos = container.querySelector('article.cms-preview');

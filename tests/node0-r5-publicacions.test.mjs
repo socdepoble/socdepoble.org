@@ -43,7 +43,11 @@ else{
       await t.test('person authority comes only from session and canonical triggers, never payload aliases',async()=>{
         const result=await append({id:randomUUID(),sectionId:'mur',title:'Genuine author fixture',actor:{tipus:'persona',id:alice.id},payload:{ownerUserId:bob.id,owner_user_id:bob.id,authorOrgId:randomUUID(),author_org_id:randomUUID(),author_name:'FORGED',author:'FORGED',source:'system',type:'sistema',isSystem:true,isAvis:true,is_pinned:true,mainHref:'/admin',origen:{abast:'sistema',font:'Fixture origin'}}});
         assert.equal(result.status,201,JSON.stringify({result,lastError}));published=result.body;
-        assert.equal(published.owner_user_id,alice.id);assert.equal(published.tenant_id,tenant);assert.equal(published.author_org_id,null);assert.equal(published.payload.ownerUserId,alice.id);assert.equal(published.payload.authorOrgId,null);assert.equal(published.payload.author_org_id,null);assert.equal(published.payload.author_name,'Publication fixture alice');
+        assert.equal(published.owner_user_id,alice.id);assert.equal(published.tenant_id,tenant);assert.equal(published.author_org_id,null);assert.equal(published.payload.ownerUserId,alice.id);assert.equal(published.payload.authorOrgId,null);assert.equal(published.payload.author_org_id,null);
+        // R8 (tooling/node0/auth-node0.sql, c49d173c4): the first verification discards signup metadata and leaves the neutral 'Veí/na'
+        // (node0-r8-auth-functional.test.mjs). The canonical trigger copies author_name from that profile, never from the payload.
+        const profileName=await scalar('SELECT full_name FROM public.profiles WHERE id=$1',[alice.id]);assert.equal(profileName,'Veí/na');
+        assert.equal(published.payload.author_name,profileName);assert.notEqual(published.payload.author_name,'FORGED');
         assert.equal(published.payload.type,undefined);for(const key of['owner_user_id','author','source','isSystem','isAvis','is_pinned','mainHref'])assert.equal(published.payload[key],undefined,key);assert.deepEqual(published.payload.origen,{font:'Fixture origin'});
       });
       await t.test('another valid member cannot rewrite the first owner id or impersonate a person',async()=>{

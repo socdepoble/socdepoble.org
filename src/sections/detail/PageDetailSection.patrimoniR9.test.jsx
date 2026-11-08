@@ -72,8 +72,11 @@ describe('les tres pàgines de patrimoni de l’Onada R9', () => {
     // R9V-C5-09 · el títol de la pàgina és el de la font: «Catàleg d’Arbres Emblemàtics i Monumentals …».
     expect(FONT_ARBRES_MONUMENTALS.titol).toContain('Arbres Emblemàtics i Monumentals');
     expect(FONT_ARBRES_MONUMENTALS.titol.toLowerCase()).toContain(arbres.title.toLowerCase());
+    /* 9c1e6e333 (261107_0455) · Cada pàgina porta la seua portada Ibáñez a
+       `image`; el cos continua sense cap imatge, marc ni estil en línia. */
     for (const [clau] of PAGINES) {
-      expect(PAGE_COPY[clau].image, clau).toBeUndefined();
+      expect(PAGE_COPY[clau].image, clau).toBe(`/assets/uploads/patrimoni/${clau}-ibanez.webp`);
+      expect(PAGE_COPY[clau].imageAlt, clau).toMatch(/Ibáñez/);
       expect(PAGE_COPY[clau].html, clau).not.toMatch(/<img\b|<iframe\b|style=/i);
     }
   });

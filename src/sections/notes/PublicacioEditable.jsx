@@ -27,8 +27,7 @@ import { useCallback, useMemo, useRef, useState } from 'react';
 import { useSearchParams } from '../../app/contexts/RouterContext';
 import { useToast } from '@/components/universal/NotificationContext.jsx';
 import { escriuSeleccio } from '../../components/universal/workspace/seleccioUrl.js';
-import { useNotes } from './NotesContext.jsx';
-import { NotesContext } from './objectesDeContext.js';
+import { useNotes, ValorDeNotes } from './NotesContext.jsx';
 import NotesEditor from './NotesEditor.jsx';
 import { bgSaveManager } from './GlobalSaveManager.js';
 import { CLAUS_BLOC } from './modeDesa.js';
@@ -152,9 +151,9 @@ export function PublicacioEditable({ item }) {
 
   if (!valor) return null;
   return (
-    <NotesContext.Provider value={valor}>
+    <ValorDeNotes value={valor}>
       <NotesEditor key={nota.id} activeNote={nota} />
-    </NotesContext.Provider>
+    </ValorDeNotes>
   );
 }
 

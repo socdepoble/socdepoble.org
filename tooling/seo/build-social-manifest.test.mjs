@@ -300,8 +300,10 @@ test('la Consola: les rutes de seoConsola.js, a l’evidència; una imatge bloqu
    targeta genèrica) que WhatsApp pot pintar: un fitxer de public/, PNG o JPEG,
    de 300 000 B com a molt. Les eines privades continuen fora. I a l'inrevés: cada
    clau de PAGE_COPY que PageDetailSection servix a /page/<clau> és al manifest
-   (ruta o àlies) o a EXCLOSES_DE_PAGE amb el seu motiu. */
-const PLUGINS_DE_L_ORDRE=Object.freeze(['mapa','vehicle','animalets','gestoria','rebost','salut','rss','tpv']);
+   (ruta o àlies) o a EXCLOSES_DE_PAGE amb el seu motiu. COMMIT R6 (d79a0b530) ·
+   L'Arbre Genealògic (IDEA-100) és el nové plugin del registre: entra a
+   l'inventari amb la seua variant social (VARIANTS_SOCIALS). */
+const PLUGINS_DE_L_ORDRE=Object.freeze(['mapa','vehicle','animalets','gestoria','rebost','salut','rss','tpv','genealogia']);
 const EXCLOSES_DE_PAGE=Object.freeze({
   notes_shared:'còpia antiga de la fitxa del Bloc de notes (/page/notes), amb el logotip SVG com a imatge: no és cap presentació pròpia',
   'node-zero':'article didàctic del servidor local de l’habitació (/page/node-zero), enllaçat bidireccionalment amb /fedivers',
@@ -318,7 +320,7 @@ test('cobertura de l’arbre de veres: les 18 presentacions, /disseny, /wikidepo
     'src/sections/consola/govern/governConsola.js','src/sections/text/pageContent.js','src/config/navigation.js'].map(importa));
   const inventari=[...PAGINES_INFORMATIVES.map(clau=>`/page/${clau}`),...PLUGINS_DE_L_ORDRE.map(id=>`/plugin/${id}`),'/disseny','/wikidepoble','/consola',
     ...IDS_PAGINES.map(id=>`/consola/${id}`),...IDS_GOVERN.map(id=>`/consola/govern/${id}`)];
-  assert.equal(inventari.length,10+8+3+9+4);
+  assert.equal(inventari.length,10+9+3+9+4);
   for(const ruta of inventari) {
     const entrada=manifest.routes[ruta];
     assert.ok(entrada,`${ruta}: absent del manifest`);
