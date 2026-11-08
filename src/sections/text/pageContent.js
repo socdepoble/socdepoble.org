@@ -834,7 +834,7 @@ export const PAGE_COPY = {
      l. 990, 992, 1003, 1020 i 1031). Les altres quatre llengües són a
      TRADUCCIONS_ANATOMIA (pageContent.patrimoniR9.js).
      P0-49 / IDEA-180 (261107) · `date`: el dia i l'hora en què es va
-     integrar este canvi (19:44, hora local, llegida amb `date`), la mateixa
+     fer el commit d'este canvi (21:20, hora local, P0-49), la mateixa
      que la de l'article «Noves tecnologies aplicades a la cultura rural»
      (NOVES_TECNOLOGIES_CULTURA_RURAL_POST.created_at). És una de les dues
      publicacions estrella del Mur (IMPORTANTS_DEL_MUR, datesDeProvaMur.js):

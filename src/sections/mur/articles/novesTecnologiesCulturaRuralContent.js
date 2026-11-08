@@ -64,7 +64,7 @@
       (consultat el 07-11-2026; «Eugenio Monesma - Documentales»).
 
    Data (P0-49 / IDEA-180, ordre del Mestre del 07-11-2026): la de hui, a les
-   19:44 (CET), quan s'integra esta nova versió (`date`: 19:44:05 +0100). És la
+   21:20 (CET), l'hora del commit que va demanar el Mestre (P0-49). És la
    mateixa que la d'«Anatomia rural» (PAGE_COPY['anatomia-rural'].date): en un
    empat, el Mur posa l'article primer (MurSection: les publicacions van abans
    que les pàgines, i l'ordenació és estable). Abans,
@@ -185,7 +185,7 @@ export const NOVES_TECNOLOGIES_CULTURA_RURAL_POST = {
   content: NOVES_TECNOLOGIES_CULTURA_RURAL_HTML,
   /* Sense publish_date (la data triada al calendari, que manaria sobre la de
      prova del Mur en mode seed): la data és la de creació. */
-  /* P0-49 / IDEA-180 · La data i l'hora de la versió nova (07-11-2026, 19:44 CET; `date`). */
+  /* P0-49 / IDEA-180 · La data i l'hora de la versió nova (07-11-2026, 21:20 CET, hora del commit). */
   created_at: '2026-11-07T21:20:00+01:00',
   important: true,
   author_entity_id: 'socdepoble',

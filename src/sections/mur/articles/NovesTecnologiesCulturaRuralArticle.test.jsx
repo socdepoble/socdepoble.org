@@ -66,7 +66,7 @@ describe('la primera publicació del Mur', () => {
     expect(MOCK_FEED.some((item) => item.id === POST.id)).toBe(false);
     expect(IMPORTANTS_DEL_MUR[0]).toEqual(['feedPosts', POST.id]);
     expect(POST).toMatchObject({ author_entity_id: 'socdepoble', author_name: 'Sóc de Poble', poble_id: 'la-torre-de-les-macanes', important: true });
-    // P0-49 / IDEA-180 · La data real de la versió nova (07-11-2026, 19:44 CET, `date`), no una data de prova ni una
+    // P0-49 / IDEA-180 · La data real de la versió nova (07-11-2026, 21:20 CET, hora del commit), no una data de prova ni una
     // data inventada; abans, el naixement del fitxer (06-11-2026, 14:29, R9V-C2-06). Sense publish_date, que manaria
     // sobre la de prova. És la mateixa que la d'«Anatomia rural»: en l'empat, el Mur posa l'article primer.
     expect(POST.created_at).toBe('2026-11-07T21:20:00+01:00');
