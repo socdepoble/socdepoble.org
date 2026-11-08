@@ -6,9 +6,13 @@
  * Mur, amb la mateixa data i el mateix ordre que el Mur. Esta lògica vivia
  * dins de MurSection; ara la compartixen totes dues pàgines, i ni la llista ni
  * la pastilla no poden dir dues dates diferents en cap de les dues.
+ * R51 (P0-49 / IDEA-180) · L'ordre és l'instant editorial R51
+ * (momentEditorial), i la pastilla (editorial.js · dataDElement) ja no hi
+ * posa l'edició: totes dues diuen publish_date o, sense, created_at.
  */
 import { fontsDeLActe } from '../../components/universal/EventCard.jsx';
-import { dataDeDocument, momentDElement } from '../../components/universal/editorial.js';
+import { dataDeDocument } from '../../components/universal/editorial.js';
+import { publicationSortKey } from '../../utils/publicationDateControl.js';
 import { esAppNativa } from '../../config/origenPublic.js';
 import { esPaginaVisible, SYSTEM_PAGES } from '../../config/systemPages.js';
 import { paginaPerAppNativa } from '../text/perAppNativa.js';
@@ -62,26 +66,73 @@ export function targetesDeSistema(pageCopy, { quanFalta, nativa = esAppNativa(),
   }).filter(Boolean);
 }
 
+/* R51 (P0-49 / IDEA-180) · PostgREST envia fins a sis decimals de segon
+   («…T10:00:00.123456+00:00»); el contracte R51 n'admet tres. Es retallen als
+   mil·lisegons, el mateix instant que en llig Date.parse. Només a created_at,
+   la columna del servidor (R51V-05): publish_date l'escriu l'editor amb tres
+   decimals, i un de quatre és invàlid com diu el contracte. Res més no
+   s'adapta: un dia sol o una hora sense zona continuen sent invàlids (D-R51-5). */
+const FRACCIO_LLARGA = /(\.\d{3})\d+(?=Z$|[+-]\d{2}:\d{2}$)/;
+
+function instantR51(valor, retallaFraccio = false) {
+  if (valor instanceof Date) return Number.isNaN(valor.getTime()) ? valor : valor.toISOString();
+  return retallaFraccio && typeof valor === 'string' ? valor.replace(FRACCIO_LLARGA, '$1') : valor;
+}
+
 /**
- * T51 i T5 · L'instant (ms) pel qual s'ordena una targeta: el MATEIX que pinta
- * la seua pastilla. Un acte del model, el del seu inici (EventCard ·
- * fontsDeLActe), encara que el payload porte un altre `date` o una edició
- * posterior; la resta, el de dataDElement (momentDElement). null sense cap
- * data real: no se n'inventa cap per a ordenar.
+ * R51 · L'instant editorial (ms) d'un element de secció: `publish_date` i, si
+ * és absent, null o buit, `created_at` (publicationSortKey). `updated_at` no
+ * hi compta: editar no puja cap peça (D-R51-1). null sense cap instant real.
+ * Un valor present però invàlid NO cau a `created_at`: l'element va al final,
+ * com un sense data, i en desenvolupament ho diu la consola (mai no s'amaga
+ * cap targeta, T40). No llança mai: les llistes porten brossa de tota mena.
+ */
+export function momentEditorial(item) {
+  if (!item || typeof item !== 'object') return null;
+  try {
+    return publicationSortKey({ publish_date: instantR51(item.publish_date), created_at: instantR51(item.created_at, true) });
+  } catch (error) {
+    if (import.meta.env.DEV) avisaUnaVegada(`${error?.code || 'R51_PUBLICATION_DATE_INVALID'}: ${item.type ?? ''}-${item.id ?? ''}`);
+    return null;
+  }
+}
+
+/* En desenvolupament, un avís per element i codi (el Mur es recalcula sovint), amb sostre. */
+const AVISATS = new Set();
+function avisaUnaVegada(motiu) {
+  if (AVISATS.has(motiu) || AVISATS.size >= 500) return;
+  AVISATS.add(motiu);
+  console.warn(`[R51] ${motiu} va al final del Mur.`);
+}
+
+/**
+ * T5 i R51 · L'instant (ms) pel qual s'ordena una targeta. Un acte del model,
+ * el del seu inici (EventCard · fontsDeLActe), fins que el Mestre decidisca
+ * D-R51-3; la resta, i un acte amb la boina de publicació, l'instant
+ * editorial R51 (momentEditorial). null sense cap data real: no se n'inventa
+ * cap per a ordenar.
  */
 export function momentDeLaTargeta(item, esdeveniment) {
-  if (!esdeveniment || item?.boinaDataPublicacio === true) return momentDElement(item);
+  if (!esdeveniment || item?.boinaDataPublicacio === true) return momentEditorial(item);
   return dataDeDocument(fontsDeLActe(esdeveniment))?.instant.getTime() ?? null;
 }
 
 /**
- * T51 · De més nova a més vella per `moment`. Cap data inventada: un element
- * sense cap data real va al final, en l'ordre en què ha arribat (sort és
- * estable des d'ES2019).
+ * T51 i R51 · De més nova a més vella per `moment`; sense cap data real, al
+ * final. Empat (també entre dues sense data): si totes dues entrades porten
+ * `clau` (`${type}-${id}`, la de calendariGlobal · entradaDeLaTargeta), per
+ * clau ascendent en ordre de codi, independent de la llengua (D-R51-2). Sense
+ * clau, l'ordre en què han arribat (sort és estable des d'ES2019).
  */
 export function perMomentDescendent(a, b) {
-  if (a.moment === b.moment) return 0;
-  if (a.moment === null) return 1;
-  if (b.moment === null) return -1;
-  return b.moment - a.moment;
+  if (a.moment !== b.moment) {
+    if (a.moment === null) return 1;
+    if (b.moment === null) return -1;
+    return b.moment - a.moment;
+  }
+  if (typeof a.clau !== 'string' || typeof b.clau !== 'string') return 0;
+  return a.clau < b.clau ? -1 : a.clau > b.clau ? 1 : 0;
 }
+
+/** R51 · La clau d'empat d'una targeta, la mateixa del calendari global. */
+export const clauDeLaTargeta = (item) => `${item?.type}-${item?.id}`;

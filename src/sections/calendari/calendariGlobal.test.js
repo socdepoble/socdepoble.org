@@ -173,8 +173,11 @@ describe('peces de la pàgina', () => {
   test('mesDObertura: el de hui si té targetes; si no, el de la més recent fins a hui; si totes són futures, el de la més pròxima', () => {
     const AVUI = new Date(2026, 9, 1, 12, 0);
     const setembre = entradaDeLaTargeta(publicacio({ created_at: '2026-09-29T10:00:00.000Z' }));
-    const agost = entradaDeLaTargeta(publicacio({ id: 'p2', publish_date: '2026-08-10' }));
-    const hui = entradaDeLaTargeta(producte({ publish_date: '2026-10-01' }));
+    /* R51 (P0-49 / IDEA-180) · L'ordre llig instants amb zona: un publish_date de dia sol
+       ('2026-10-01') no en té cap i va al bucket del final (moment null, D-R51-5). */
+    expect(entradaDeLaTargeta(producte({ publish_date: '2026-10-01' })).moment).toBeNull();
+    const agost = entradaDeLaTargeta(publicacio({ id: 'p2', publish_date: '2026-08-10T08:00:00.000Z' }));
+    const hui = entradaDeLaTargeta(producte({ publish_date: '2026-10-01T08:00:00.000Z' }));
     const desembre = entradaDeLaTargeta(acte({ date: '2026-12-05' }));
     const gener = entradaDeLaTargeta(acte({ id: 'a2', date: '2027-01-20' }));
     const senseData = entradaDeLaTargeta(publicacio({ id: 'p3' }));

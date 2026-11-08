@@ -59,11 +59,11 @@ test('la data de la targeta és la triada al calendari; sense, la de creació', 
   expect(targetaDe('Crònica vella')).toContain(diaDelMur('2026-08-15T10:00:00.000Z'));
 });
 
-/* ── T51 · La data del Mur, pel lector únic (editorial.js) ────────────────
-   La pastilla i l'ordre ixen de la MATEIXA data (dataDElement /
-   momentDElement): el dia de l'acte, la triada o la de creació, i una edició
-   de veres si és posterior. Cap data fixa inventada; la de les pàgines de
-   sistema és l'instant del seu copy (T4 del prompt 1140). */
+/* ── T51 i R51 · La data del Mur, pel lector únic (editorial.js) ──────────
+   La pastilla (dataDElement) diu el dia de l'acte, la triada o la de creació;
+   R51 (SPEC §2) · cap edició (updated_at), i és el mateix instant pel qual el
+   Mur ordena (targetesMur.js · momentEditorial). Cap data fixa inventada; la
+   de les pàgines de sistema és l'instant del seu copy (T4 del prompt 1140). */
 const elementDe = (titol) => [...document.querySelectorAll('.sdp-card-grid > *')].find((element) => element.textContent.includes(titol));
 const pastillaDe = (titol) => [...elementDe(titol).querySelectorAll('.sp-card-header .btn-date-time span')].map((span) => span.textContent);
 const esperada = (item) => {
@@ -85,18 +85,25 @@ test('T4 · la pàgina de sistema porta la pastilla sencera de l’instant del s
   expect(pastillaDe('El projecte')).toEqual(esperada({ created_at: COPY_PROJECTE.date }));
 });
 
-test('T51 · la pastilla de cada publicació és la del lector únic; l’updated_at de la inserció no compta com a edició', () => {
+test('T51 i R51 · la pastilla de cada publicació és la del lector únic; cap updated_at (ni el de la inserció ni una edició) no hi compta', () => {
   mocks.mur.sortedFeedPosts = [...mocks.mur.sortedFeedPosts, publicacio(EDITADA), publicacio(INSERCIO)];
   render(<MurSection />);
   expect(pastillaDe('Recepta de coca')).toEqual(esperada({ publish_date: '2026-10-05T08:30:00.000Z' }));
   expect(pastillaDe('Recepta de coca')).toHaveLength(2);
-  expect(pastillaDe('Crònica editada')).toEqual(esperada({ updated_at: EDITADA.updated_at }));
+  // R51 (SPEC §2) · Editada el 10 de setembre: la pastilla continua dient la creació (1 d'agost).
+  expect(pastillaDe('Crònica editada')).toEqual(esperada({ created_at: EDITADA.created_at }));
+  expect(pastillaDe('Crònica editada')[1]).toBe(diaDelMur(EDITADA.created_at));
   // Publicada sense editar: la data triada (1 de juny), no l'hora d'inserció (1 de juliol).
   expect(pastillaDe('Crònica sense editar')).toEqual(esperada({ publish_date: INSERCIO.publish_date }));
   expect(pastillaDe('Crònica sense editar')[1]).toBe(diaDelMur(INSERCIO.publish_date));
 });
 
-test('T51 · l’ordre és el de la data que pinta la targeta; un element sense cap data va al final, sense data fixa inventada', () => {
+/* R51 (P0-49 / IDEA-180; D-R51-1, fase A) · L'ordre és l'instant editorial:
+   publish_date i, sense, created_at. Una edició (updated_at) ja no puja la
+   peça: «Crònica editada» (creada l'1 d'agost) va darrere d'«El projecte» (20
+   d'agost), i la seua pastilla diu el mateix 1 d'agost: la llista i la
+   pastilla no diuen dues dates diferents. Sense cap data, al final. */
+test('R51 · l’ordre és l’instant editorial (publish_date, si no created_at); l’edició no puja la peça; sense cap data, al final', () => {
   mocks.core = { status: 'ready', error: null, pageCopy: { projecte: COPY_PROJECTE } };
   mocks.mur.sortedFeedPosts = [
     publicacio({ id: 'sense', title: 'Sense cap data' }),
@@ -106,7 +113,7 @@ test('T51 · l’ordre és el de la data que pinta la targeta; un element sense 
   ];
   render(<MurSection />);
   const titols = [...document.querySelectorAll('.sdp-card-grid .sp-card-title')].map((titol) => titol.textContent);
-  expect(titols).toEqual(['Recepta de coca', 'Crònica editada', 'El projecte', 'Crònica vella', 'Crònica sense editar', 'Sense cap data']);
+  expect(titols).toEqual(['Recepta de coca', 'El projecte', 'Crònica vella', 'Crònica editada', 'Crònica sense editar', 'Sense cap data']);
   expect(elementDe('Sense cap data').querySelector('.btn-date-time')).toBeNull();
 });
 

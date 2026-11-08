@@ -134,8 +134,24 @@ export function PublicacioEditable({ item }) {
     return base.publishNote({ ...actual, id, revision, publishedSubmissionId: actual.publishedSubmissionId, isPublished: true });
   }, [actor, base, esSuperadmin, inicial, item, params, setParams, showToast]);
 
+  /* R51 (P0-46 / IDEA-177), fase A · El mode de traducció d'una publicació
+     oberta només el canvia qui la signa o el superadmin estable: la mateixa
+     guarda pura de signatura aliena (motiuPublicacioDAltri). Amb motiu,
+     NotesEditor el mostra desactivat i el diu. */
+  const motiuModeTraduccio = useMemo(
+    () => motiuPublicacioDAltri(item, { actor, config: base?.config, esSuperadmin, t: base?.t }),
+    [item, actor, base?.config, base?.t, esSuperadmin]
+  );
+  /* R51V-02 · Una revisió editorial (la llavor, un acte) no pot portar el
+     mode de traducció (revisionsEditorials i l'RPC tenen llista blanca): el
+     selector diu que només es guarda en este dispositiu. Una fila del Mur,
+     sí: viatja al payload amb «Actualitzar al Mur». */
+  const modeTraduccioNomesLocal = esRevisioEditorial(item);
+
   const valor = useMemo(() => (base ? {
     ...base,
+    motiuModeTraduccio,
+    modeTraduccioNomesLocal,
     setLocalNoteField: escriu,
     saveNoteField: (id, camp, nou) => {
       escriu(id, camp, nou);
@@ -147,7 +163,7 @@ export function PublicacioEditable({ item }) {
     mouNota: undefined,
     esborraNota: undefined,
     potEsborrar: false
-  } : null), [base, escriu, publica]);
+  } : null), [base, escriu, publica, motiuModeTraduccio, modeTraduccioNomesLocal]);
 
   if (!valor) return null;
   return (

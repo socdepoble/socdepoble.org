@@ -72,7 +72,7 @@ const MAQUINARIA = Object.freeze([
   ['consola', 'Consola Termodinàmica', '2026-09-08T00:00:00+02:00']
 ]);
 /* P0-49 / IDEA-180 (261107) · Les quatre pàgines de patrimoni que no són importants: porten la seua
-   data real (PAGE_COPY). En l'ordre en què les barreja el Mur (targetesMur.js), que és el dels empats. */
+   data real (PAGE_COPY). Els empats, per la clau R51 (vegeu més avall). */
 const PATRIMONI_AMB_DATA_REAL = Object.freeze(['herbari', 'banc-de-llavors', 'rutes-de-poble', 'arbres-monumentals']);
 const momentDe = (llavor, [coleccio, id]) => {
   const element = llavor[coleccio].find((e) => e.id === id);
@@ -97,7 +97,11 @@ test.each([
   /* Les importants, en el seu ordre, amb les pàgines de patrimoni de data real intercalades per data:
      només la setmana del 2 al 8 de novembre de 2026 cauen entre les importants; després, darrere. */
   const ambData = (fila) => ({ titol: titolDe(llavor, fila), moment: momentDe(llavor, fila) });
-  const patrimoni = PATRIMONI_AMB_DATA_REAL.map((id) => ambData(['pages', id])).sort((a, b) => b.moment - a.moment);
+  /* R51 (D-R51-2) · Dues pàgines amb el mateix instant s'ordenen per la clau `${type}-${id}`
+     ascendent (targetesMur.js · perMomentDescendent): arbres > banc > rutes, no l'ordre d'arribada. */
+  const clauDe = (id) => `sistema-${id}`;
+  const patrimoni = PATRIMONI_AMB_DATA_REAL.map((id) => ({ ...ambData(['pages', id]), clau: clauDe(id) }))
+    .sort((a, b) => b.moment - a.moment || (a.clau < b.clau ? -1 : a.clau > b.clau ? 1 : 0));
   const dalt = [];
   for (const important of IMPORTANTS_DEL_MUR.map(ambData)) {
     while (patrimoni.length && patrimoni[0].moment > important.moment) dalt.push(patrimoni.shift().titol);

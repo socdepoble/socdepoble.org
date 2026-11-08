@@ -4,8 +4,8 @@
  * Tasca 5 (ordre del Mestre, 261001): «Per comprovar que l'ordenació temporal
  * funciona», les deu targetes importants del Mur (nou fins al 261026_2126)
  * porten dia i hora d'ESTA setmana, i les molt tècniques, una data de fa dues setmanes (entre el 2 i
- * el 15 de setembre de 2026). L'ordre per defecte del Mur (MurSection ·
- * momentDElement, la mateixa data que pinta la pastilla) les deixa així dalt
+ * el 15 de setembre de 2026). L'ordre per defecte del Mur (R51:
+ * targetesMur.js · momentEditorial, la mateixa data que pinta la pastilla) les deixa així dalt
  * de tot, i el Calendari en té per a pintar en la setmana en curs.
  *
  * Per què és una capa a banda i no una data escrita al copy:

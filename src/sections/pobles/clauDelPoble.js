@@ -190,7 +190,8 @@ function naixementsDeclarats(fonts) {
 
 /**
  * Les fitxes amb el seu naixement a created_at, la font que ja lligen la
- * pastilla i l'ordre (editorial.js · dataDElement i momentDElement): el
+ * pastilla i l'ordre de /pobles (editorial.js · dataDElement i
+ * momentDElement; el Mur ordena per R51, mur/targetesMur.js): el
  * valor de data més antic entre el created_at de la fitxa i el de la primera
  * publicació que declara el poble (poble_id contra l'id, el slug o el nom fet
  * slug de la fitxa). Cap data inventada: sense cap data real, la fitxa tal

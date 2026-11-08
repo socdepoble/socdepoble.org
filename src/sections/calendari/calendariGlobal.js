@@ -9,8 +9,9 @@
  *   · un acte del model (acteAEsdeveniment) va els dies que ocorre, i sempre
  *     el dia de la seua pastilla (acteOcorreElDia);
  *   · la resta, el dia de la seua pastilla (dataDElement): la data de
- *     publicació, o la de l'última edició de veres si és posterior. Amb hora,
- *     un esdeveniment amb hora; amb el dia sol, un de tot el dia.
+ *     publicació triada o, sense, la de creació. R51 (SPEC §2) · Mai la
+ *     d'edició (updated_at): editar no canvia el dia. Amb hora, un
+ *     esdeveniment amb hora; amb el dia sol, un de tot el dia.
  * Una targeta sense cap data real no va a cap dia: no se n'inventa cap.
  *
  * Model B · Els actes de l'agenda de Sollutia (capacitat 'agenda') arriben

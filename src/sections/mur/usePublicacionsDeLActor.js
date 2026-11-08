@@ -54,7 +54,7 @@ import { aliesDeLActor } from '../../data/identitatsSeed.js';
 import { itemsPublicatsDe } from '../notes/masDeLUsuari.js';
 import { useMur } from './MurContext';
 import { acteAEsdeveniment } from './agendaMur.js';
-import { momentDeLaTargeta, perMomentDescendent, targetesDeSistema } from './targetesMur.js';
+import { clauDeLaTargeta, momentDeLaTargeta, perMomentDescendent, targetesDeSistema } from './targetesMur.js';
 
 /* Les seccions que tenen històric, en l'ordre del catàleg del Bloc. */
 export const SECCIONS_AMB_HISTORIC = Object.freeze(['mur', 'mercat', 'events']);
@@ -144,7 +144,7 @@ export function publicacionsDeLaSeccio(llista, seccio, alies, { exclouId = null,
     .filter((item) => tipusAutor === null || (item.isSystem ? tipusAutor === 'entitat' : autorDe(item)?.tipus === tipusAutor))
     .map((item) => {
       const esdeveniment = item.type === 'event' ? acteAEsdeveniment(item) : null;
-      return { item, esdeveniment, moment: momentDeLaTargeta(item, esdeveniment) };
+      return { item, esdeveniment, clau: clauDeLaTargeta(item), moment: momentDeLaTargeta(item, esdeveniment) };
     })
     .sort(perMomentDescendent)
     .map(({ item, esdeveniment }) => ({ id: `${seccio}:${item.id}`, item, esdeveniment }));

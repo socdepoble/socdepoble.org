@@ -33,6 +33,8 @@
  */
 import { useMemo } from 'react';
 import { elementTraduible } from '../../components/universal/traduccio/visibilitatTraduible.js';
+import { ofereixTraduir, planTraduccioPublicacio } from '../../components/universal/traduccio/planTraduccioPublicacio.js';
+import { Alerta } from '../../components/PedraSeca/molecules/Alerta.jsx';
 import { ExternalLink } from 'lucide-react';
 import { useNavigate } from '../../app/contexts/RouterContext';
 import { useUIActions } from '../../app/contexts/UIContext';
@@ -178,11 +180,20 @@ export function LectorDePublicacio({ item }) {
      d'un amfitrió és la seua) i el toast del porta-retalls, com ConnexioDetall. */
   const router = useUbicacioApp();
   const { showToast } = useToast();
-  const { t } = useUIActions();
+  const { t, language = 'ca' } = useUIActions();
   /* T6 en remot · l'id de servidor de l'entitat pilot: quan arriba, la barra
      de les seues publicacions torna a pintar-se i porta al seu perfil. */
   useEntitatDelProjecte();
-  const { seccio, item: publicacio, ruta } = item?.data || {};
+  const { seccio, item: publicacioDeLaFont, ruta } = item?.data || {};
+  /* R51 (P0-46 / IDEA-177; R51V-03) · Una publicació que porta translation_mode
+     es pinta segons el pla del contracte (planTraduccioPublicacio.js): la
+     revisada, el títol i el cos de la llengua de la interfície (i cap text de
+     l'original al costat); un mode o una configuració invàlids, l'original
+     amb un avís i sense Traduir. Sense mode, la de sempre. */
+  const plaTraduccio = planTraduccioPublicacio(publicacioDeLaFont, language);
+  const publicacio = plaTraduccio?.element ?? publicacioDeLaFont;
+  const revisada = plaTraduccio?.tipus === 'curated';
+  const titol = revisada ? publicacio.title : item?.title;
   /* Esmena 3 (261007_1645) · La secció del Mercat de detail/, només per a
      llegir-ne les regles (portada, fotos, cos): l'element ja ve a data.item.
      Sense useElementDeSeccio: el lector no parpelleja quan la font recarrega. */
@@ -266,7 +277,7 @@ export function LectorDePublicacio({ item }) {
     ? portadaDElement(seccioMercat, publicacio, pagina, t)
     : seccioAmbVisor && heroDelLector
       ? portadaDElement(seccioAmbVisor, publicacio, {
-        ...paginaDElement(seccioAmbVisor, publicacio), title: item.title, heroImage: heroDelLector, heroAlt: item.title
+        ...paginaDElement(seccioAmbVisor, publicacio), title: titol, heroImage: heroDelLector, heroAlt: titol
       }, t)
       : null;
   /* T4 (pla 261024_1315, P1-06; Gemini G-01) · Les fotos del cos d'un
@@ -276,28 +287,28 @@ export function LectorDePublicacio({ item }) {
   const visorDelCos = esProducte
     ? visorDelCosDElement(seccioMercat, publicacio, pagina, t)
     : seccioAmbVisor
-      ? visorDelCosDElement(seccioAmbVisor, publicacio, { ...paginaDElement(seccioAmbVisor, publicacio), title: item.title }, t)
+      ? visorDelCosDElement(seccioAmbVisor, publicacio, { ...paginaDElement(seccioAmbVisor, publicacio), title: titol }, t)
       : null;
   const cosDeLaPublicacio = esProducte ? seccioMercat.renderBody(publicacio) : renderRichText(cosDelLector);
   /* Compartir · l'enllaç de la publicació, mai /notes?… (només l'obri qui la
      té). Sense ruta, el de sèrie de la UniversalPage. */
-  const onShare = ruta ? () => compartix(item.title, urlPerCompartir(ruta, router), showToast) : undefined;
+  const onShare = ruta ? () => compartix(titol, urlPerCompartir(ruta, router), showToast) : undefined;
   return (
     <UniversalPage
       chrome="context"
       layout="contained"
-      title={item.title}
+      title={titol}
       subtitle={publicacio.subtitle || undefined}
-      lead={(esProducte ? pagina.lead : item.excerpt) || undefined}
+      lead={(esProducte ? pagina.lead : revisada ? publicacio.lead || publicacio.entradilla : item.excerpt) || undefined}
       /* Decisió 3 (261007) · La portada d'un producte ja ve filtrada
          (paginaDElement); la de la fitxa, pel mateix mode estricte. */
       heroImage={(esProducte ? pagina.heroImage : heroDelLector) || undefined}
-      heroAlt={esProducte ? pagina.heroAlt : item.title}
+      heroAlt={esProducte ? pagina.heroAlt : titol}
       labels={item.labels || []}
       copyright={publicacio.copyright || '© Sóc de Poble'}
       /* T51 · la data real de la publicació, la mateixa que el seu detall al
-         Mur (editorial.js · dataDElement): la de publicació o creació, o la
-         d'edició (updated_at) si és posterior. */
+         Mur (editorial.js · dataDElement): la de publicació o, sense, la de
+         creació. R51 (SPEC §2) · Mai la d'edició (updated_at). */
       {...dataDElement(publicacio)}
       topBarData={{ ...autoriaDeLaBarra, ...(portada?.topBarData || {}) }}
       /* Revisió adversarial del 261007 · Mentre el port resol el logotip, cap
@@ -310,13 +321,20 @@ export function LectorDePublicacio({ item }) {
       onShare={onShare}
       /* T63.2 · Comentar obri el xat comú de la publicació (Mur, Mercat o
          agenda), el mateix que la seua targeta: mai un de la vista del MAS. */
-      objecte={objecteDe(publicacio, seccio)}
+      objecte={objecteDe(publicacioDeLaFont, seccio)}
       /* Gauntlet 261030 (Fase 3, TC3.2) · Una publicació pròpia del veïnat
          (section_submissions, només per als membres) no ix cap al motor:
          Traduir només amb un element públic d'una secció pública
-         (traduccio/visibilitatTraduible.js). El botó no canvia. */
-      traduccio={elementTraduible(seccio, publicacio)}
+         (traduccio/visibilitatTraduible.js). El botó no canvia.
+         R51 (P0-46 / IDEA-177; R51V-03) · I només amb el pla on_the_fly (o
+         sense mode declarat): ni 'none', ni la revisada, ni un mode invàlid. */
+      traduccio={elementTraduible(seccio, publicacio) && ofereixTraduir(plaTraduccio)}
+      /* R51 · Amb pla, la llengua del que es pinta; sense, cap prop nova. */
+      {...(plaTraduccio?.llengua ? { llenguaDelContingut: plaTraduccio.llengua } : null)}
     >
+      {plaTraduccio?.tipus === 'error' ? (
+        <Alerta to="avis">{t('section.mur.traduccioR51Error', 'Esta publicació no té la traducció ben configurada: es mostra en la llengua original, sense traducció automàtica.')}</Alerta>
+      ) : null}
       <div className="sdp-alerta__accions">
         <Boto varietat="secundari" icona={ExternalLink} onClick={() => navigate(ruta)}>
           {`Obri al ${etiqueta}`}

@@ -287,11 +287,15 @@ test('Decisió 3 · la targeta de l’original (Connectar, MAS) no porta la port
 });
 
 /* T51 · la regla de data de l'element viu a editorial.js (dataDElement, amb
-   les seues proves); ací, que la pàgina de detall la porta. */
-test('T51 · paginaDElement: una publicació editada després de publicar-se porta la data d’edició (updated_at)', () => {
+   les seues proves); ací, que la pàgina de detall la porta.
+   R51 (P0-49 / IDEA-180; SPEC §2) · El detall diu el mateix instant editorial
+   que la targeta i l'ordre del Mur: una edició (updated_at) no el canvia. */
+test('T51 i R51 · paginaDElement: una publicació editada després de publicar-se continua portant la seua data editorial, no la d’edició', () => {
   const seccio = buildMurDetailSectionMeta({ feedPosts: [], t: mocks.t });
   const editada = paginaDElement(seccio, { id: 'e', title: 'Fira', created_at: '2026-09-01T10:00:00', updated_at: '2026-09-20T12:15:00' });
-  expect(editada).toMatchObject({ date: '20/09/26', time: '12:15' });
+  expect(editada).toMatchObject({ date: '01/09/26', time: '10:00' });
+  const ambTriada = paginaDElement(seccio, { id: 'p', title: 'Fira', publish_date: '2026-08-15T09:30:00', created_at: '2026-09-01T10:00:00', updated_at: '2026-09-20T12:15:00' });
+  expect(ambTriada).toMatchObject({ date: '15/08/26', time: '09:30' });
   expect(paginaDElement(seccio, { id: 's', title: 'Sense data' })).toMatchObject({ time: '', date: '', dateTime: '' });
 });
 

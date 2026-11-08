@@ -515,7 +515,12 @@ export function UniversalCard({
      la de la pàgina (una targeta del Mur, en valencià, dins d'una pàgina traduïda). Va a eixos tres i al nom de
      l'enllaç de tota la targeta, que és el títol; mai al peu, que és de la interfície. Una traducció de la
      targeta mana sobre ella. Sense la prop, el DOM de sempre. */
-  llenguaContingut
+  llenguaContingut,
+  /* R51 (V2-01) · `translate`: només 'no' arriba a l'article (l'atribut
+     estàndard). El Traduir de la pàgina (blocsTraduibles, que ja exclou
+     [translate="no"]) i el del navegador deixen la targeta en l'original.
+     Qualsevol altre valor, o sense la prop, el DOM de sempre. */
+  translate
 }) {
   const idDescripcio = useId();
   const safeMainHref = mainHref && isSafeUrl(mainHref) ? mainHref : null;
@@ -865,7 +870,7 @@ export function UniversalCard({
   const ariaPremuda = typeof premuda === 'boolean' ? { 'aria-pressed': premuda ? 'true' : 'false' } : null;
 
   return (
-    <article className={cardClasses} aria-current={ambPrincipal ? undefined : ariaActual}>
+    <article className={cardClasses} aria-current={ambPrincipal ? undefined : ariaActual} translate={translate === 'no' ? 'no' : undefined}>
       {(autor || centre || pin || headerAction || dataHora || accioModeracio) && (
         <CardHeader autor={autor} autorHref={safeAuthorHref} centre={centre} pin={pin} dataHora={dataHora} headerAction={headerAction}
           accioModeracio={accioModeracio} />

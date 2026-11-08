@@ -3,9 +3,11 @@
  * de /pobles pinten l'avatar del poble i la pastilla de data i hora sencera.
  *
  * Abans la pastilla llegia `dynamic_time` i `dynamic_date`, camps que no
- * escriu cap codi: la targeta eixia sense pastilla. Ara és la regla de Pedra
- * Seca §10 (editorial.js · dataDElement): la data de creació del poble, o la
- * de l'última versió si és posterior. Les proves s'executen a Europe/Madrid
+ * escriu cap codi: la targeta eixia sense pastilla. Ara la pastilla és la de
+ * l'última publicació pública del poble (P0-39 / R37, clauDelPoble.js ·
+ * poblesAmbUltimaPublicacio), amb el lector únic de Pedra Seca §10
+ * (editorial.js · dataDElement); sense publicació, cap. Ni el naixement ni
+ * una edició de la fitxa (updated_at; R51) no hi compten. Les proves s'executen a Europe/Madrid
  * (vite.config.js), i per això les hores literals són les de València.
  */
 import React from 'react';

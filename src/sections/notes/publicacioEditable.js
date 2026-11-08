@@ -23,6 +23,7 @@ import { MANIFEST_DE_POBLE_HTML } from '../mur/articles/manifestDePobleContent.j
 import { APLEC_2023_HTML } from '../mur/articles/aplec2023Content.js';
 import { NOVES_TECNOLOGIES_CULTURA_RURAL_HTML, NOVES_TECNOLOGIES_CULTURA_RURAL_ID } from '../mur/articles/novesTecnologiesCulturaRuralContent.js';
 import { CAMPS_DE_LA_REVISIO } from '../../data/revisionsEditorials.js';
+import { modeDeLaPublicacio } from '../../components/universal/traduccio/modesTraduccioLocals.js';
 
 /* Les seccions la publicació de les quals s'obri a l'editor. El Mercat (amb la
    seua fitxa i variacions) i la Multimèdia continuen en lectura. */
@@ -36,6 +37,7 @@ const CANONICS = new Map([['manifest-de-poble', MANIFEST_DE_POBLE_HTML], ['aplec
   [NOVES_TECNOLOGIES_CULTURA_RURAL_ID, NOVES_TECNOLOGIES_CULTURA_RURAL_HTML]]);
 
 const text = (valor) => (typeof valor === 'string' ? valor : '');
+const esRegistre = (valor) => valor !== null && typeof valor === 'object' && !Array.isArray(valor);
 const escapa = (valor) => valor.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 
 /** Si una publicació del Bloc s'obri a l'editor: pròpia del Mur o de l'agenda, mai una pàgina del sistema. */
@@ -83,7 +85,16 @@ export function notaDeLaPublicacio(item) {
     publishedSubmissionId: String(publicacio.id),
     revision: 0,
     contentLoaded: true,
-    deLaPublicacio: Object.freeze({ seccio, id: String(publicacio.id) })
+    deLaPublicacio: Object.freeze({ seccio, id: String(publicacio.id) }),
+    /* R51V-02 · El mode de traducció que ja porta la publicació (si és del
+       contracte): el selector en parteix, i «Actualitzar al Mur» el conserva. */
+    ...modeDeLaPublicacio(publicacio),
+    /* V2-04 · I les seues traduccions (revisades o no), tal qual: si la fila
+       ja no és a la llista carregada del Mur, publishNote les pren d'ací
+       (modesTraduccioLocals.js · traduccioDelPayload) i republicar una
+       curated_5_langs no les perd. La nota del servidor no les desa mai
+       (campsDeLAdopcio). */
+    ...(esRegistre(publicacio.translations) ? { translations: publicacio.translations } : null)
   };
 }
 

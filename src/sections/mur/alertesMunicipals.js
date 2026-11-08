@@ -40,8 +40,8 @@
  * VIGÈNCIA
  *  Sense cap camp de caducitat al model, una alerta és vigent durant
  *  VIGENCIA_ALERTA_MS des de la data que pinta la seua targeta
- *  (targetesMur.js · momentDeLaTargeta: la triada, la de creació o una
- *  edició de veres posterior), i també si eixa data és futura. Una sense cap
+ *  (targetesMur.js · momentDeLaTargeta: la triada o, sense, la de creació;
+ *  R51, una edició no hi compta), i també si eixa data és futura. Una sense cap
  *  data real no és vigent (no se n'inventa cap). Només les vigents pugen al
  *  capdamunt del Mur i entren a l'avís de dalt; el distintiu de la targeta
  *  diu què és la publicació i es queda sempre.

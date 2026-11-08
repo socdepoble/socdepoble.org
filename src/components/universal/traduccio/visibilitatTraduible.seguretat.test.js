@@ -57,13 +57,18 @@ test('les superfícies del veïnat passen la visibilitat real a traduccio=', () 
     'sections/mercat/MercatSection.jsx': 'traduccio={totsPublics(sortedMarketItems)}',
     'sections/calendari/CalendariSection.jsx': 'traduccio={traduible}',
     'sections/detail/ItemDetailSection.jsx': 'traduccio={traduible}',
-    'sections/notes/PublicacioDetall.jsx': 'traduccio={elementTraduible(seccio, publicacio)}',
+    /* R51 (P0-46 / IDEA-177; R51V-03) · La regla, i a més el pla del contracte:
+       cap Traduir amb 'none', amb la revisada ni amb un mode invàlid. */
+    'sections/notes/PublicacioDetall.jsx': 'traduccio={elementTraduible(seccio, publicacio) && ofereixTraduir(plaTraduccio)}',
     'sections/multimedia/PaginesEspaiMultimedia.jsx': 'traduccio={esElementPublic(item)}',
     'sections/profile/PerfilPublicSection.jsx': 'traduccio={fitxaTraduible}'
   };
   for (const [rel, prop] of Object.entries(SUPERFICIES)) expect(llig(rel), rel).toContain(prop);
   expect(llig('sections/calendari/CalendariSection.jsx')).toContain("totsPublics(sortedEvents, sortedFeedPosts, sortedMarketItems)\n    && !teCapacitat('agenda') && !configFontsDeLEntorn().configurades");
   expect(llig('sections/detail/ItemDetailSection.jsx')).toContain("elementTraduible(sectionId, item) && (sectionId !== 'pobles' || totsPublics(");
+  /* R51V-03 · El detall i la targeta del Mur també passen pel pla del contracte. */
+  expect(llig('sections/detail/ItemDetailSection.jsx')).toContain(')) && ofereixTraduir(plaTraduccio);');
+  expect(llig('sections/mur/TargetaDelMur.jsx')).toContain('showTranslate={ofereixTraduir(plaTraduccio)}');
   expect(llig('sections/profile/PerfilPublicSection.jsx')).toContain('const fitxaTraduible = perfil.publicat === true && !ambVeinatConnectat;');
   expect(llig('sections/multimedia/PaginesEspaiMultimedia.jsx')).toContain('traduccio={totsPublics(categoria === GALERIA_CRONOLOGIA ? cataleg.totes : membres)}');
 });

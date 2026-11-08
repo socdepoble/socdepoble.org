@@ -513,7 +513,8 @@ const CLAUS_DE_TEXT_DEL_PAYLOAD = Object.freeze([
   'plainText', 'body', 'entradilla', 'author', 'author_name', 'seller', 'price', 'author_location',
   'location', 'population', 'town_name', 'provincia', 'comarca', 'tag', 'category_slug', 'category',
   'copyright', 'source', 'autor', 'nomPoble', 'poble', 'poble_id', 'icon', 'imageAlt', 'type', 'kind',
-  'date', 'time', 'publish_date', 'dataCaptura', 'searchText', 'comments', 'likes', 'file', 'sectionId'
+  'date', 'time', 'publish_date', 'dataCaptura', 'searchText', 'comments', 'likes', 'file', 'sectionId',
+  'translation_mode', 'source_language'
 ]);
 /* seguretat-01 (261104) · Les claus de text que la vista llig amb un || (les
    píndoles del detall d'un acte, detailSectionMeta): la regla de

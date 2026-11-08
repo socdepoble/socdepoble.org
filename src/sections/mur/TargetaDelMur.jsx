@@ -66,6 +66,8 @@ import { CLASSE_DE_LA_TARGETA, DistintiuAlertaMunicipal } from './AlertaMunicipa
    element sense àmbit no rep res (Llei del Píxel). */
 import { ambitDe, esFitxaDAmbit, etiquetesDAmbit, resumDeFitxa, rutaDAmbit } from '../../utils/publicacioUniversal.js';
 import { localitzaCategoriesMares } from '../../data/taxonomia/taxonomiaCanonica.js';
+import { Alerta } from '../../components/PedraSeca/molecules/Alerta.jsx';
+import { ofereixTraduir, planTraduccioPublicacio } from '../../components/universal/traduccio/planTraduccioPublicacio.js';
 
 /**
  * T6 (ordre del Mestre, 261004, prompt 261004_0515 §5) · On porta la boina
@@ -95,7 +97,14 @@ export function TargetaDelMur({ item: original, esdeveniment = null, alertaMunic
      llengua de la interfície, com a les pàgines (localitzaPagina). En
      valencià, o sense cap mare, l'element és el mateix objecte. */
   const etiquetesLocals = localitzaCategoriesMares(original.labels, language);
-  const item = etiquetesLocals === original.labels ? original : { ...original, labels: etiquetesLocals };
+  const ambEtiquetes = etiquetesLocals === original.labels ? original : { ...original, labels: etiquetesLocals };
+  /* R51 (P0-46 / IDEA-177; R51V-03) · Una publicació que porta translation_mode
+     es pinta segons el pla del contracte (planTraduccioPublicacio.js): la
+     revisada, el títol i el cos de la llengua de la interfície; un mode o una
+     configuració invàlids, l'original amb un avís i sense Traduir. Sense mode,
+     l'element de sempre. */
+  const plaTraduccio = planTraduccioPublicacio(ambEtiquetes, language);
+  const item = plaTraduccio?.element ?? ambEtiquetes;
   const navigate = useNavigate();
   /* T6 en remot · l'id de servidor de l'entitat pilot: quan arriba, la boina
      de les seues publicacions torna a pintar-se i porta al seu perfil. */
@@ -145,9 +154,10 @@ export function TargetaDelMur({ item: original, esdeveniment = null, alertaMunic
   }
   /* T51 · La pastilla de LECTURA amb el format i el lector únics
      (editorial.js · dataDElement), els mateixos del detall: el dia de
-     l'acte, la data triada o la de creació, i una edició de veres si
-     és posterior. Cap data inventada: sense cap font real, la targeta
-     no porta pastilla (un deute de dades, no de pantalla). */
+     l'acte, la data triada o la de creació. R51 (SPEC §2) · Cap edició
+     (updated_at): el mateix instant editorial pel qual s'ordena la llista.
+     Cap data inventada: sense cap font real, la targeta no porta pastilla
+     (un deute de dades, no de pantalla). */
   const data = dataDElement(item);
   /* Lògica d'Usuari (T4, T5): l'autoria enllaça al perfil públic de qui
      signa, i Connectar s'emporta l'origen sencer cap al MAS.
@@ -221,6 +231,14 @@ export function TargetaDelMur({ item: original, esdeveniment = null, alertaMunic
      interfície (el parell de TIPUS_ALERTA); en valencià, el de sempre. */
   const alerta = !item.isSystem && seccio !== 'mercat' && Object.hasOwn(TIPUS_ALERTA, alertaMunicipal)
     ? TIPUS_ALERTA[alertaMunicipal] : null;
+  /* R51V-03 · Un translation_mode o una configuració de traducció invàlids:
+     l'original, sense Traduir, i ho diu a la targeta (sense regió viva: una
+     llista no anuncia cada targeta en pintar-se). */
+  const errorDeTraduccio = plaTraduccio?.tipus === 'error' ? (
+    <Alerta to="avis" viva={false}>
+      {t('section.mur.traduccioR51Error', 'Esta publicació no té la traducció ben configurada: es mostra en la llengua original, sense traducció automàtica.')}
+    </Alerta>
+  ) : null;
   /* IDEA-61 (T0, prompt 261102_1532) · Les etiquetes de sempre, tal qual (un
      element sense àmbit les rep byte a byte). Una fitxa d'àmbit porta
      davant les dues del contracte (l'àmbit i l'estat), calculades en pintar.
@@ -257,9 +275,10 @@ export function TargetaDelMur({ item: original, esdeveniment = null, alertaMunic
          targeta només la pinta si és un sol emoji. */
       emoticona={item.icon}
       subtitle={resum || item.subtitle || subtitolDeReserva}
-      body={alerta ? (
+      body={alerta || errorDeTraduccio ? (
         <>
-          <DistintiuAlertaMunicipal tipus={alerta.clau} />
+          {alerta ? <DistintiuAlertaMunicipal tipus={alerta.clau} /> : null}
+          {errorDeTraduccio}
           {typeof cos === 'string' ? <p className="sp-card-text">{cos}</p> : cos}
         </>
       ) : cos}
@@ -322,7 +341,15 @@ export function TargetaDelMur({ item: original, esdeveniment = null, alertaMunic
          tota publicació d'algú; mai a una pàgina del sistema. */
       ambModeracio={!item.isSystem}
       hasFooter={true}
-      showTranslate={true}
+      /* R51 (P0-46 / IDEA-177; R51V-03) · Traduir només amb el pla on_the_fly
+         (o sense mode declarat): ni amb 'none', ni amb la revisada, ni amb un
+         mode invàlid. Cap petició ix de la targeta.
+         V2-01 · Ni de la pàgina: amb eixos tres plans, l'article porta
+         translate="no" i el Traduir de la pàgina (PageFrame ·
+         useTraduccioPagina · blocsTraduibles) no n'envia cap text al motor.
+         UniversalCard va en un tros a banda, no a l'entrada (pressupost). */
+      showTranslate={ofereixTraduir(plaTraduccio)}
+      translate={ofereixTraduir(plaTraduccio) ? undefined : 'no'}
       showComment={true}
       showShare={true}
       showConnect={true}

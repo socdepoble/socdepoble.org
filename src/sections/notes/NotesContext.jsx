@@ -491,6 +491,16 @@ export function NotesProvider({ children }) {
         ? await geo.geoDelHero(finalHeroImage).catch(() => ({}))
         : {};
       assertCurrent();
+      /* R51V-02 i V2-04 · El mode de traducció, la llengua original i les
+         traduccions que viatgen al payload (modesTraduccioLocals.js ·
+         traduccioDelPayload, validats amb el contracte). Una còpia compartida
+         (obra d'altri), cap. El tros es demana ací, no a l'entrada
+         (pressupost): el Bloc ja el porta carregat (NotesEditor l'importa).
+         Si no baixa, publicar falla pel catch de sempre (ERROR_PUBLICAR):
+         mai un payload que perda el mode o les traduccions revisades. */
+      const traduccio = compartir ? {} : (await import('../../components/universal/traduccio/modesTraduccioLocals.js'))
+        .traduccioDelPayload(activeNote, activeNote.publishedSubmissionId != null ? publicacioCarregada(activeNote.publishedSubmissionId)?.element : null);
+      assertCurrent();
 
       const dataTriada = dataIsoONull(activeNote.publishDate);
       /* Onada 6 · El poble des d'on es publica (vegeu author_location, baix):
@@ -561,7 +571,18 @@ export function NotesProvider({ children }) {
          reemplaça el payload: llevar-la i republicar la lleva també del Mapa). */
       ...(fotosGeo.length ? { fotos_geo: fotosGeo } : {}),
       ...(geoHero.geolocalitzacio ? { geolocalitzacio: geoHero.geolocalitzacio } : {}),
-      ...(geoHero.dataCaptura ? { dataCaptura: geoHero.dataCaptura } : {})
+      ...(geoHero.dataCaptura ? { dataCaptura: geoHero.dataCaptura } : {}),
+      /* R51 (P0-46 / IDEA-177; R51V-02) · El mode de traducció i la llengua
+         original viatgen al payload (jsonb: cap migració, el camí de la data).
+         Els de la nota (NotesEditor els hi posa, validats, des del dispositiu)
+         o, si no en porta, els de la fila ja publicada: republicar des d'un
+         altre dispositiu, o canviar l'estat d'una fitxa, no els esborra.
+         V2-04 · El de la fila passa per normalizeTranslationMode (un mode
+         invàlid no es copia), i les traduccions revisades de la fila també
+         viatgen: republicar una curated_5_langs no les perd. Una còpia
+         compartida (obra d'altri), cap. Els renderers els validen amb el
+         contracte (planTraduccioPublicacio.js). */
+      ...traduccio
     };
     /* IDEA-61 · Amb fitxa, la projecció del contracte; sense, el de sempre tal qual. */
     const payload = fitxa
@@ -625,7 +646,7 @@ export function NotesProvider({ children }) {
     }).finally(() => publishing.current.delete(key));
     publishing.current.set(key, result);
     return result;
-  }, [noteFolders, sendSectionSubmission, saveNoteField, externalConfig, autoria, config, workspaceKey, scopeKey, operation, updateNoteContext, clearLocalNoteFields, showToast, nomesLectura, t, rebuigDePublicacio]);
+  }, [noteFolders, sendSectionSubmission, saveNoteField, externalConfig, autoria, config, workspaceKey, scopeKey, operation, updateNoteContext, clearLocalNoteFields, showToast, nomesLectura, t, rebuigDePublicacio, publicacioCarregada]);
 
   const compartirNota = useCallback((note) => publishNote(note, { mode: 'compartir' }), [publishNote]);
 

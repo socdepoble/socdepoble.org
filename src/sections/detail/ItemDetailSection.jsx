@@ -3,6 +3,7 @@ import { Link, Navigate, useLocation, useNavigate, useParams } from '../../app/c
 import { UniversalPage } from '../../components/universal/UniversalPage';
 import { useMur } from '../../sections/mur/MurContext';
 import { elementTraduible, totsPublics } from '../../components/universal/traduccio/visibilitatTraduible.js';
+import { ofereixTraduir, planTraduccioPublicacio } from '../../components/universal/traduccio/planTraduccioPublicacio.js';
 import { publicacionsDelPoble } from '../pobles/publicacionsDelPoble.js';
 import { useCoreContent } from '../../app/contexts/CoreContentContext';
 import { useNotesData } from '../../sections/notes/NotesDataContext';
@@ -123,7 +124,14 @@ function DetallDElement() {
   /* VQ · Fase 3a (261030) · Només per a Pobles. La capçalera i el cos llegixen
      la fitxa hidratada; la moderació, el <head> social i el «No trobat», la de
      sempre (les fotos de Commons no hi entren mai). */
-  const itemHidratat = usePobleHidratat(item, sectionId === 'pobles');
+  const itemDelPoble = usePobleHidratat(item, sectionId === 'pobles');
+  /* R51 (P0-46 / IDEA-177; R51V-03) · Una publicació que porta translation_mode
+     es pinta segons el pla del contracte (planTraduccioPublicacio.js): la
+     revisada, el títol i el cos de la llengua de la interfície; un mode o una
+     configuració invàlids, l'original amb un avís i sense Traduir. Sense mode
+     (tota la resta), l'element de sempre. */
+  const plaTraduccio = useMemo(() => planTraduccioPublicacio(itemDelPoble, language), [itemDelPoble, language]);
+  const itemHidratat = plaTraduccio?.element ?? itemDelPoble;
   /* Fase D (261020, tasca 2; crítica 261020, 5) · Bloquejar des d'esta
      mateixa pàgina lleva l'element de useMur (MurContext filtra el que has
      bloquejat), i el detall pintava «Element no trobat» amb la píndola
@@ -260,7 +268,7 @@ function DetallDElement() {
     );
   }
 
-  return <PaginaDelDetall section={section} sectionId={sectionId} item={itemHidratat} pagina={pagina} chrome="full" />;
+  return <PaginaDelDetall section={section} sectionId={sectionId} item={itemHidratat} pagina={pagina} chrome="full" plaTraduccio={plaTraduccio} />;
 }
 
 /* Pla 261027_0845 (Guarda Nocturna), P1-55 · La pàgina d'un element ja
@@ -269,7 +277,7 @@ function DetallDElement() {
    (VistaDelPoble, davall). És el mateix codi que vivia al final de
    DetallDElement, mogut sense canvis. `senseXat`: el cos sense el botó blau
    del xat (renderBody de Pobles) i la barra blava sense «Comentar». */
-function PaginaDelDetall({ section, sectionId, item, pagina, chrome, senseXat = false }) {
+function PaginaDelDetall({ section, sectionId, item, pagina, chrome, senseXat = false, plaTraduccio = null }) {
   const { t } = useUIActions();
   const navigate = useNavigate();
   /* Ordre E del Mestre (261007, prompt 261007_1628) · El logotip que la
@@ -316,12 +324,14 @@ function PaginaDelDetall({ section, sectionId, item, pagina, chrome, senseXat = 
      a la pestanya «Gent de …» les publicacions del poble: totes públiques, o
      res. Fallada tancada; el botó no canvia (PageFrame avisa). */
   const mur = useMur();
+  /* R51 (P0-46 / IDEA-177; R51V-03) · I només amb el pla on_the_fly (o sense
+     mode declarat): ni 'none', ni la revisada, ni un mode invàlid. */
   const traduible = elementTraduible(sectionId, item) && (sectionId !== 'pobles' || totsPublics(
     publicacionsDelPoble(
       { feedPosts: mur?.feedPosts ?? [], marketItems: mur?.marketItems ?? [], events: mur?.events ?? [] },
       { id: String(item?.id ?? ''), slug: String(item?.slug ?? ''), title: String(item?.title || item?.name || '') }
     ).map((publicacio) => publicacio.item)
-  ));
+  )) && ofereixTraduir(plaTraduccio);
 
   return (
     <UniversalPage
@@ -345,8 +355,9 @@ function PaginaDelDetall({ section, sectionId, item, pagina, chrome, senseXat = 
       ambModeracio={SECCIONS_AMB_MODERACIO.has(sectionId)}
       traduccio={traduible}
       /* Gauntlet 261030 (cicle 4) · La secció declara la llengua del seu
-         contingut (Pobles: 'ca'); sense, cap lang (el DOM de sempre). */
-      llenguaDelContingut={section.llenguaDelContingut ?? null}
+         contingut (Pobles: 'ca'); sense, cap lang (el DOM de sempre).
+         R51 · Amb pla, la llengua del que es pinta (l'original o la revisada). */
+      llenguaDelContingut={plaTraduccio?.llengua ?? section.llenguaDelContingut ?? null}
       chrome={chrome}
       /* Pla 261027_0845 (Guarda Nocturna), P1-55 (revisió adversarial) ·
          Amb `senseXat`, tampoc «Comentar» a la barra blava: el xat del poble
@@ -356,6 +367,10 @@ function PaginaDelDetall({ section, sectionId, item, pagina, chrome, senseXat = 
     >
       {/* Ordre del Mestre (261007, «cards de veritat») · Les targetes
           incrustades del cos, sincronitzades amb el seu original. */}
+      {/* R51V-03 · Una configuració de traducció invàlida: l'original i ho diu. */}
+      {plaTraduccio?.tipus === 'error' ? (
+        <Alerta to="avis">{t('section.mur.traduccioR51Error', 'Esta publicació no té la traducció ben configurada: es mostra en la llengua original, sense traducció automàtica.')}</Alerta>
+      ) : null}
       <ProveidorSincronitzacioTargetes>
         <CosAmbVisor className="content-wrapper" {...visorDelCos}>
           {/* Onada 6 · { detall: true }: el cos de la pàgina de la ruta. La

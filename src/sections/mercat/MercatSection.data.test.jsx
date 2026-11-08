@@ -30,7 +30,7 @@ import { dataDElement, dataHoraDeBarra } from '../../components/universal/editor
 
 /* Una hora que toLocaleDateString('ca-ES') pintava «30/9/2026». */
 const MEL = { id: 'mel', type: 'market', title: 'Mel de romer', created_at: '2026-09-30T10:05:00.000Z' };
-/* Editat de veres (més d'un minut després): la pastilla diu la de l'edició. */
+/* Editat de veres (més d'un minut després). R51 · La pastilla continua dient la creació, no l'edició. */
 const OLI = { id: 'oli', type: 'market', title: 'Oli de la Torre', created_at: '2026-09-02T08:00:00.000Z', updated_at: '2026-09-29T17:40:00.000Z' };
 const SENSE_DATA = { id: 'ous', type: 'market', title: 'Ous de corral' };
 
@@ -59,9 +59,12 @@ test('la boina pinta «hh:mm» i «dd/mm/aa» de dataDElement, mai el format de 
     expect(pastilla).toEqual([data.time, data.date]);
     expect(pastilla).toEqual([expect.stringMatching(/^\d{2}:\d{2}$/), expect.stringMatching(/^\d{2}\/\d{2}\/\d{2}$/)]);
   }
-  // L'edició de veres mana (la regla del Mestre: la més recent), com al Mur.
-  const edicio = dataHoraDeBarra({ creat: OLI.updated_at });
-  expect(textos(pastillaDe(targetaDe(arrel, OLI.title)))).toEqual([edicio.time, edicio.date]);
+  /* R51 (P0-49 / IDEA-180; SPEC §2) · Derogada la regla de la més recent per
+     als elements de secció: una edició (updated_at) ja no canvia la pastilla,
+     com al Mur. L'oli diu la seua creació (2 de setembre), no l'edició (29). */
+  const creacio = dataHoraDeBarra({ creat: OLI.created_at });
+  expect(textos(pastillaDe(targetaDe(arrel, OLI.title)))).toEqual([creacio.time, creacio.date]);
+  expect(textos(pastillaDe(targetaDe(arrel, OLI.title)))).not.toEqual([dataHoraDeBarra({ creat: OLI.updated_at }).time, dataHoraDeBarra({ creat: OLI.updated_at }).date]);
   // Sense cap data real, cap pastilla (no se n'inventa cap).
   expect(pastillaDe(targetaDe(arrel, SENSE_DATA.title))).toBeNull();
 });

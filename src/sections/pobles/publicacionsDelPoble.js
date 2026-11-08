@@ -14,7 +14,7 @@
  * sense xarxa i sense dades pròpies.
  */
 import { acteAEsdeveniment } from '../mur/agendaMur.js';
-import { momentDeLaTargeta, perMomentDescendent } from '../mur/targetesMur.js';
+import { clauDeLaTargeta, momentDeLaTargeta, perMomentDescendent } from '../mur/targetesMur.js';
 import { itemsDelPoble } from './clauDelPoble.js';
 
 export {
@@ -36,7 +36,7 @@ export function publicacionsDelPoble(fonts, town, pestanya = 'gent') {
   return trobats
     .map(({ seccio, item }) => {
       const esdeveniment = item.type === 'event' ? acteAEsdeveniment(item) : null;
-      return { id: `${seccio}:${item.id}`, seccio, item, esdeveniment, moment: momentDeLaTargeta(item, esdeveniment) };
+      return { id: `${seccio}:${item.id}`, seccio, item, esdeveniment, clau: clauDeLaTargeta(item), moment: momentDeLaTargeta(item, esdeveniment) };
     })
     .sort(perMomentDescendent)
     .map(({ id, seccio, item, esdeveniment }) => ({ id, seccio, item, esdeveniment }));

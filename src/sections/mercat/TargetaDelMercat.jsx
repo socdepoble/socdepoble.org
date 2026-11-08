@@ -35,6 +35,7 @@ import { useUIActions } from '../../app/contexts/UIContext';
 import { isSafeAsset } from '../../components/universal/UniversalUtils.js';
 import { fontImatgePropia } from '../../utils/sanitize.js';
 import { propsDeTargetaDeProducte } from './targetaDeProducte.js';
+import { ofereixTraduir, planTraduccioPublicacio } from '../../components/universal/traduccio/planTraduccioPublicacio.js';
 
 /* Decisió 3 (261007) · El filtre de sempre de la targeta (isSafeAsset, el
    d'UniversalCard sense imatgePrivada) i, a més, el mode estricte: el que es
@@ -45,18 +46,27 @@ import { propsDeTargetaDeProducte } from './targetaDeProducte.js';
    detail/elementDeSeccio.js). */
 const imatgePropia = (font) => (isSafeAsset(font) ? fontImatgePropia(font) : null);
 
-/* El traductor de l'App, o res fora d'ella. La forma `return useX()` dins
-   d'un try és la que rules-of-hooks accepta (useEntitatDelProjecte.js). */
-function useTraductor() {
+/* Les accions de la interfície de l'App (el traductor i la llengua), o null
+   fora d'ella. La forma `return useX()` dins d'un try és la que
+   rules-of-hooks accepta (useEntitatDelProjecte.js). */
+function useInterficie() {
   try {
-    return useUIActions().t;
+    return useUIActions();
   } catch {
-    return undefined;
+    return null;
   }
 }
 
 export function TargetaDelMercat({ item }) {
-  const t = useTraductor();
+  const interficie = useInterficie();
+  const t = interficie?.t;
+  /* R51 (V2-01) · Un producte publicat des d'una nota amb fitxa del Mercat
+     porta el translation_mode al payload (NotesContext · publishNote). Amb
+     'none', la revisada o un mode invàlid (planTraduccioPublicacio.js), ni
+     Traduir a la targeta ni cap text cap al Traduir de la pàgina (translate="no"
+     a l'article). La revisada i l'avís de la targeta del Mur encara no es
+     pinten ací. Sense mode, el DOM de sempre (Llei del Píxel). */
+  const traduible = ofereixTraduir(planTraduccioPublicacio(item, interficie?.language || 'ca'));
   const navigate = useNavigate();
   /* T63.2 · el descriptor del producte: Connectar se l'emporta i
      Comentar obri el seu xat comú. Lògica d'Usuari (T4, T5):
@@ -77,7 +87,8 @@ export function TargetaDelMercat({ item }) {
       /* Fase D (261020, tasca 2) · «Més opcions»: denunciar i bloquejar. */
       ambModeracio
       hasFooter={true}
-      showTranslate={true}
+      showTranslate={traduible}
+      translate={traduible ? undefined : 'no'}
       showComment={true}
       showShare={true}
       showConnect={true}

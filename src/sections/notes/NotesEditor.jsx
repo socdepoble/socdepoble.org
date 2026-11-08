@@ -40,6 +40,8 @@ import { NOTA_TUTORIAL } from './notaTutorial.js';
 import { proposaCard } from './proposaCard.js';
 import { memoriaOralDelBloc } from './memoriaOralDelBloc.js';
 import RevisorEditorialNode0Panel from './RevisorEditorialNode0Panel.jsx';
+import { BlocModeTraduccio } from '../../components/universal/traduccio/BlocModeTraduccio.jsx';
+import { ambModeTraduccio, modeDeLaPublicacio } from '../../components/universal/traduccio/modesTraduccioLocals.js';
 import { useUIStateOpcional } from '../../app/contexts/UIContext.jsx';
 import { categoriesBase, etiquetesBase } from '../../data/personalitzacio.js';
 import { useMur } from '../mur/MurContext';
@@ -189,7 +191,8 @@ function entradesDeTargetes({ publicacions, actes, productes, pobles, pagines })
 export default function NotesEditor({ activeNote, onToast = null }) {
   const {
     saveNoteField, setLocalNoteField, publishNote, compartirNota, noteFolders, t, config, workspaceKey,
-    notes = CAP, notesComplete, mouNota, esborraNota, potEsborrar = false, scopeKey
+    notes = CAP, notesComplete, mouNota, esborraNota, potEsborrar = false, scopeKey,
+    nomesLectura = false, motiuModeTraduccio = null, modeTraduccioNomesLocal = false
   } = useNotes();
   // D-7 · Fora d'IdentitatProvider, la reserva anònima de només lectura (useIdentitatOReserva.js).
   const { actorId, actor, memberships } = useIdentitatOReserva();
@@ -647,6 +650,36 @@ export default function NotesEditor({ activeNote, onToast = null }) {
     );
   }, [notaEnEdicio, citaOrigen, idiomaRevisor, classificacio, aplicaPropostaRevisor]);
 
+  /* R51 (P0-46 / IDEA-177) · El mode de traducció i la llengua original, a
+     la mateixa ranura, darrere de la revisora. Una nota del Bloc és de qui
+     l'escriu; una publicació d'altri oberta per a editar (PublicacioEditable)
+     porta el motiu si qui l'obri no la pot canviar (motiuModeTraduccio).
+     Sense sessió, en la còpia de prova o en només lectura, desactivat. Una
+     connexió (obra d'altri) no en porta.
+     R51V-02 · L'esborrany és d'este dispositiu i viatja amb la publicació
+     (ambModeTraduccio, a onTria de baix). Sense esborrany, el selector
+     parteix del que ja porta la publicació: la fila del Mur o del Mercat
+     d'esta nota (publishedSubmissionId) o la publicació oberta. Quan arriba,
+     el selector torna a partir (la clau el porta). Una revisió editorial
+     (modeTraduccioNomesLocal, PublicacioEditable) no el pot portar. */
+  const modePublicat = useMemo(() => {
+    if (!notaEnEdicio) return null;
+    const idPublicat = String(notaEnEdicio.publishedSubmissionId ?? '');
+    const files = [...(Array.isArray(mur?.feedPosts) ? mur.feedPosts : []), ...(Array.isArray(mur?.marketItems) ? mur.marketItems : [])];
+    const fila = idPublicat ? files.find((element) => String(element?.id) === idPublicat) : null;
+    return modeDeLaPublicacio(fila) || modeDeLaPublicacio(notaEnEdicio);
+  }, [notaEnEdicio, mur?.feedPosts, mur?.marketItems]);
+  const blocTraduccio = useMemo(() => {
+    if (!notaEnEdicio || citaOrigen) return null;
+    const potEditar = !senseSessio && !esSandbox && !nomesLectura && !motiuModeTraduccio;
+    return (
+      <BlocModeTraduccio key={`traduccio:${notaEnEdicio.id}:${modePublicat?.translation_mode ?? ''}:${modePublicat?.source_language ?? ''}`}
+        id={String(notaEnEdicio.id)} llenguaInicial={idiomaRevisor} publicat={modePublicat} viatja={!modeTraduccioNomesLocal}
+        potEditar={potEditar} motiu={motiuModeTraduccio || null} />
+    );
+  }, [notaEnEdicio, citaOrigen, senseSessio, esSandbox, nomesLectura, motiuModeTraduccio, idiomaRevisor, modePublicat, modeTraduccioNomesLocal]);
+  const ranuraRevisio = useMemo(() => (revisorEditorial || blocTraduccio ? <>{revisorEditorial}{blocTraduccio}</> : null), [revisorEditorial, blocTraduccio]);
+
   const notesAdapter = useMemo(() => {
     /* T41 (ordre del Mestre, 260928) · PUBLICAR (i la bola del món) obrin el
        selector de visibilitat: publicar o compartir al Mur només en confirmar.
@@ -706,8 +739,11 @@ export default function NotesEditor({ activeNote, onToast = null }) {
         if (asseguraNormes && !(await asseguraNormes())) throw new Error(tradueix(t, TEXTOS_MODERACIO.calAcceptar));
         /* Integració 261024 (Codex C-02) · Si el servidor la rebutja igualment
            per les normes (SDP-MOD-428), la porta es torna a obrir i, si les
-           accepta, es publica una sola vegada més (publicaAmbMotiu). */
-        return publicaAmbMotiu(() => (citaOrigen && compartirNota ? compartirNota : publishNote)(doc), {
+           accepta, es publica una sola vegada més (publicaAmbMotiu).
+           R51V-02 · Publicar s'emporta el mode de traducció d'este dispositiu
+           (ambModeTraduccio): publishNote el posa al payload. Compartir (obra
+           d'altri), mai. */
+        return publicaAmbMotiu(() => (citaOrigen && compartirNota ? compartirNota(doc) : publishNote(ambModeTraduccio(doc))), {
           tornaAPreguntar: asseguraNormes ? () => asseguraNormes({ rebutjades: true }) : null,
           /* P1-22 · amb `t`, el motiu de les normes i el de la xarxa ixen traduïts. */
           t
@@ -816,7 +852,7 @@ export default function NotesEditor({ activeNote, onToast = null }) {
       ) : null,
       /* IDEA-164 · R11 Loop 3 (L2-03) · La revisora editorial, dins de l'«Edició avançada»,
          després de la classificació. Pendent de decisió del Mestre si ha de viure a l'edició. */
-      revisioEdicioAvancada: revisorEditorial,
+      revisioEdicioAvancada: ranuraRevisio,
       peticioAmbit: notaEnEdicio && ambAmbit && peticioAmbit?.nota === notaEnEdicio.id ? peticioAmbit : null,
       onPeticioAmbitAtesa: peticioAmbitAtesa,
       /* T51 (ordre del Mestre, 260928) · L'espai central de la barra taronja:
@@ -875,7 +911,7 @@ export default function NotesEditor({ activeNote, onToast = null }) {
          l'ordre «/» Emoji. Totes dues funcions són estables (canalEmojis.js). */
       ...(canalEmojis ? { registraInsercio: canalEmojis.registra, obreEmojis: canalEmojis.obri } : {})
     };
-  }, [notaEnEdicio, documentPerAlEditor, esSandbox, esPreparada, creacioPreparada, escriuPreparada, desaPreparada, senseSessio, actor, actorId, autoria, memberships, actualitzaSandbox, setLocalNoteField, saveNoteField, publishNote, compartirNota, connexio, dretsReservats, dretsDeLOriginal, extern, citaOrigen, pucBorrar, obriBorrar, noteFolders, t, signatura, emptyDocument, config, classificacio, carpetes, carpetaId, desaCarpeta, desaValors, documents, CATEGORIES_BASE, ETIQUETES_BASE, estatDesament, dataNomesAlDispositiu, targetes, canalEmojis, asseguraNormes, memoriaOral, ambAmbit, fitxaDAmbit, obriClassificacio, documentDePrevisualitzacio, desaAmbit, errorsAmbit, peticioAmbit, peticioAmbitAtesa, scopeKey, revisorEditorial]);
+  }, [notaEnEdicio, documentPerAlEditor, esSandbox, esPreparada, creacioPreparada, escriuPreparada, desaPreparada, senseSessio, actor, actorId, autoria, memberships, actualitzaSandbox, setLocalNoteField, saveNoteField, publishNote, compartirNota, connexio, dretsReservats, dretsDeLOriginal, extern, citaOrigen, pucBorrar, obriBorrar, noteFolders, t, signatura, emptyDocument, config, classificacio, carpetes, carpetaId, desaCarpeta, desaValors, documents, CATEGORIES_BASE, ETIQUETES_BASE, estatDesament, dataNomesAlDispositiu, targetes, canalEmojis, asseguraNormes, memoriaOral, ambAmbit, fitxaDAmbit, obriClassificacio, documentDePrevisualitzacio, desaAmbit, errorsAmbit, peticioAmbit, peticioAmbitAtesa, scopeKey, ranuraRevisio]);
 
   // Reanomenar i esborrar necessiten veure totes les notes: amb el llistat a
   // mitges, una nota no carregada es quedaria amb el nom vell.

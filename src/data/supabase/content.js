@@ -171,8 +171,8 @@ async function loadSections(ownerUserId, config, sections, { ambPaginacio = fals
      el client mateix ha escrit. Amb elles el MAS sap quines publicacions són de
      la persona (owner_user_id) o de l'entitat que ha signat (author_org_id).
      T51 · updated_at és la data d'edició (el trigger de 2609261200 l'escriu en
-     cada UPDATE): una publicació editada mostra la de modificació, si és
-     posterior a la de publicació (editorial.js · dataDElement). */
+     cada UPDATE). R51 (SPEC §2) · És auditoria: ni la pastilla ni l'ordre del
+     Mur no la fan servir (editorial.js · dataDElement). */
   /* Decisió 4 · Amb paginació, cada secció porta el seu total (Content-Range). */
   const rangs = sections.map(() => null);
   const [rows, ...submissions] = await Promise.all([

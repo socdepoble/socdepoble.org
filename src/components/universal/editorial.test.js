@@ -33,7 +33,7 @@ vi.mock('../../sections/disseny/cataleg/detailRegistry', () => ({
 vi.mock('../../hooks/useSEO', () => ({ useSEO: () => {} }));
 
 import {
-  COPYRIGHT_SDP, MARGE_INSERCIO_MS, dataDElement, dataDeDocument, dataDeFila, dataDelNom, dataHoraDeBarra, diaAmbHora,
+  COPYRIGHT_SDP, dataDElement, dataDeDocument, dataDeFila, dataDelNom, dataHoraDeBarra, diaAmbHora,
   formatDate, formatTime, llevaPuntFinal, momentDElement, pindolesUniques
 } from './editorial.js';
 import DesignSection from '../../sections/disseny/DesignSection.jsx';
@@ -293,7 +293,7 @@ describe('dataHoraDeBarra i dataDeDocument (T51)', () => {
 /* T51 · La data d'un element de secció (Mur, Mercat, agenda…): pura, aquí,
    perquè el detall, el lector de connexions i el MAS la compartixen. */
 describe('dataDElement', () => {
-  it('el dia i l’hora propis (agenda), la triada al calendari, la creació i la modificació posterior', () => {
+  it('el dia i l’hora propis (agenda), la triada al calendari i la creació; una modificació posterior no hi compta (R51)', () => {
     // Un acte: el seu dia i la seua hora, encara que la fila siga d'abans.
     expect(dataDElement({ date: '2026-10-05', time: '18:30', created_at: '2026-09-01T10:00:00Z' }))
       .toMatchObject({ date: '05/10/26', time: '18:30' });
@@ -302,54 +302,50 @@ describe('dataDElement', () => {
     // Un `date` que no és data no amaga la triada al calendari (T40).
     expect(dataDElement({ date: 'dissabte', publish_date: '2026-10-05T08:30:00', created_at: '2026-09-01T10:00:00' }))
       .toMatchObject({ date: '05/10/26', time: '08:30' });
-    // Només creació; i una modificació posterior a la creació, que guanya.
+    // Només creació; i R51 (SPEC §2) · una modificació posterior ja no la tapa.
     expect(dataDElement({ created_at: '2026-09-01T10:00:00' })).toMatchObject({ date: '01/09/26', time: '10:00' });
-    expect(dataDElement({ created_at: '2026-09-01T10:00:00', updated_at: '2026-09-20T12:15:00' })).toMatchObject({ date: '20/09/26', time: '12:15' });
+    expect(dataDElement({ created_at: '2026-09-01T10:00:00', updated_at: '2026-09-20T12:15:00' })).toMatchObject({ date: '01/09/26', time: '10:00' });
     // Sense cap font real, res (i mai la d'ara).
     expect(dataDElement({ title: 'Sense data' })).toEqual({ time: '', date: '', dateTime: '' });
     expect(dataDElement(null)).toEqual({ time: '', date: '', dateTime: '' });
   });
 
-  it('una publicació de section_submissions editada (updated_at de PostgREST) mostra la d’edició', () => {
+  /* R51 (P0-49 / IDEA-180; SPEC §2) · Derogada per als elements de secció la
+     part de T51 que hi posava la d'edició (W3A D1, més d'un minut després de
+     crear): la pastilla diu l'instant editorial, el mateix que ordena el Mur
+     (publish_date i, sense, created_at). Editar una peça no li canvia la data. */
+  it('R51 · una publicació de section_submissions editada (updated_at de PostgREST) continua mostrant la seua creació', () => {
     const fila = { created_at: '2026-09-01T10:00:00.123456+00:00', updated_at: '2026-09-20T12:15:00.654321+00:00' };
-    expect(dataDElement(fila)).toEqual(dataHoraDeBarra({ modificat: fila.updated_at }));
+    expect(dataDElement(fila)).toEqual(dataHoraDeBarra({ creat: fila.created_at }));
   });
 
-  /* W3A D1 · updated_at naix a la inserció amb el `default now()` del
-     servidor, uns mil·lisegons després del created_at que posa el client: no
-     és cap edició, i no pot trepitjar la data triada ni la de creació. */
-  it('D1 · l’updated_at de la inserció (dins del marge) no compta com a modificació', () => {
-    expect(MARGE_INSERCIO_MS).toBe(60000);
+  it('R51 · ni l’updated_at de la inserció ni una edició de veres trepitgen la triada, el dia de l’acte o la creació', () => {
     const insercio = { created_at: '2026-09-28T10:00:00.120+00:00', updated_at: '2026-09-28T10:00:00.183412+00:00' };
     // Amb data triada al calendari anterior a publicar: la triada, no l'hora d'inserció.
     expect(dataDElement({ ...insercio, publish_date: '2026-09-01T09:00:00' })).toEqual(dataHoraDeBarra({ publicat: '2026-09-01T09:00:00' }));
     // Un acte de l'agenda publicat després del seu dia: el dia de l'acte.
     expect(dataDElement({ ...insercio, date: '2026-09-20', time: '18:30' })).toMatchObject({ date: '20/09/26', time: '18:30' });
-    // Sense res més: la de creació (font `creat`, no `modificat`).
+    // Sense res més: la de creació.
     expect(dataDElement(insercio)).toEqual(dataHoraDeBarra({ creat: insercio.created_at }));
-    // Just al límit (60 s exactes) encara és la inserció.
-    expect(dataDElement({ created_at: '2026-09-28T10:00:00Z', updated_at: '2026-09-28T10:01:00Z', publish_date: '2026-09-01T09:00:00' }))
-      .toMatchObject({ date: '01/09/26', time: '09:00' });
-  });
-
-  it('D1 · una edició de veres (més d’un minut després de crear) sí que guanya a la triada anterior', () => {
+    // Una edició de veres (un minut i un mil·lisegon després, o l'endemà): la triada, igual.
     const editada = { created_at: '2026-09-28T10:00:00Z', updated_at: '2026-09-28T10:01:00.001Z', publish_date: '2026-09-01T09:00:00' };
-    expect(dataDElement(editada)).toEqual(dataHoraDeBarra({ modificat: editada.updated_at }));
-    expect(dataDElement({ ...editada, updated_at: '2026-09-29T08:00:00Z' })).toEqual(dataHoraDeBarra({ modificat: '2026-09-29T08:00:00Z' }));
-    // Sense created_at llegible, l'updated_at és l'única font real i compta.
-    expect(dataDElement({ updated_at: '2026-09-29T08:00:00Z' })).toEqual(dataHoraDeBarra({ modificat: '2026-09-29T08:00:00Z' }));
+    expect(dataDElement(editada)).toEqual(dataHoraDeBarra({ publicat: editada.publish_date }));
+    expect(dataDElement({ ...editada, updated_at: '2026-09-29T08:00:00Z' })).toEqual(dataHoraDeBarra({ publicat: editada.publish_date }));
+    // Sense publicació ni creació, l'updated_at sol no és cap data editorial: cap pastilla.
+    expect(dataDElement({ updated_at: '2026-09-29T08:00:00Z' })).toEqual({ time: '', date: '', dateTime: '' });
   });
 
-  /* T51 · L'ordre del Mur ix de la mateixa data que la pastilla. */
+  /* R51 · momentDElement ja no ordena el Mur (targetesMur.js · momentEditorial):
+     l'ordena /pobles, amb la creació sola. Diu el mateix instant que la pastilla. */
   it('momentDElement: l’instant de la mateixa data que pinta dataDElement; null sense cap data real', () => {
     expect(momentDElement({ date: '2026-10-05', time: '18:30', created_at: '2026-09-01T10:00:00Z' })).toBe(new Date(2026, 9, 5, 18, 30).getTime());
     // Un dia sol és la mitjanit LOCAL d'aquell dia, com a la pastilla.
     expect(momentDElement({ created_at: '2026-08-20' })).toBe(new Date(2026, 7, 20).getTime());
     // T4 (prompt 1140) · La mitjanit UTC és un instant: eixe instant, com a la pastilla.
     expect(momentDElement({ created_at: '2026-08-20T00:00:00.000Z' })).toBe(Date.UTC(2026, 7, 20));
-    // L'updated_at de la inserció no mou l'ordre; una edició de veres, sí.
+    // R51 · Ni l'updated_at de la inserció ni una edició de veres no mouen l'instant.
     expect(momentDElement({ created_at: '2026-09-28T10:00:00Z', updated_at: '2026-09-28T10:00:00.200Z' })).toBe(Date.parse('2026-09-28T10:00:00Z'));
-    expect(momentDElement({ created_at: '2026-09-28T10:00:00Z', updated_at: '2026-09-29T10:00:00Z' })).toBe(Date.parse('2026-09-29T10:00:00Z'));
+    expect(momentDElement({ created_at: '2026-09-28T10:00:00Z', updated_at: '2026-09-29T10:00:00Z' })).toBe(Date.parse('2026-09-28T10:00:00Z'));
     expect(momentDElement({ title: 'Sense data' })).toBeNull();
     expect(momentDElement(null)).toBeNull();
   });

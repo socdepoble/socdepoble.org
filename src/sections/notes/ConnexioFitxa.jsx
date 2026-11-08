@@ -15,9 +15,10 @@
  *     reanomenar-la i pareixeria que l'edició no s'ha desat. Les dades de
  *     l'ORIGINAL resolt (detail/elementDeSeccio.js · useOriginalDeConnexio)
  *     són la caiguda del títol i les de l'autoria: imatge, autor, subtítol o
- *     entradilla i la data de lectura (sdp-pedra-seca §10: creació, o
- *     l'última versió si és posterior). Mai les que l'URL de Connectar va
- *     deixar a l'origen.
+ *     entradilla i la data de lectura, la de la pàgina de l'original (d'un
+ *     element de secció, la triada o, sense, la de creació: R51, mai la
+ *     d'edició; d'una pàgina de text, la seua data). Mai les que l'URL de
+ *     Connectar va deixar a l'origen.
  *   · Sense l'original (perfil, pàgina amb query, element retirat), el que
  *     recorda la connexió: el títol desat i qui la signa sense inventar-lo
  *     (connexions.js · signaturaDeCaiguda), o QUÈ és si no se sap. La data

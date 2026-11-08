@@ -19,7 +19,7 @@ import { dataDElement } from '../../components/universal/editorial.js';
    CalendariMur queda sense importador. */
 import { CalendariDelMur } from './CalendariDelMur.jsx';
 import { TargetaDelMur } from './TargetaDelMur.jsx';
-import { momentDeLaTargeta, perMomentDescendent, targetesDeSistema } from './targetesMur.js';
+import { clauDeLaTargeta, momentDeLaTargeta, perMomentDescendent, targetesDeSistema } from './targetesMur.js';
 import { acteAEsdeveniment, acteOcorreElDia, esActeDelCalendari } from './agendaMur.js';
 // T2 · L'estat d'error de les dades, compartit amb el Mercat.
 import { EstatErrorDades } from './EstatErrorDades.jsx';
@@ -227,10 +227,13 @@ export default function MurSection() {
       ...systemPages
     ].filter(Boolean);
 
-    /* T51 · De més nova a més vella per la MATEIXA data que pinta la targeta
-       (momentDeLaTargeta). Cap data inventada: un element sense cap data real
-       va al final, en l'ordre en què ha arribat (perMomentDescendent, el
-       mateix ordre de la pàgina /calendari).
+    /* T51 i R51 · De més nova a més vella per l'instant editorial
+       (momentDeLaTargeta: publish_date i, sense, created_at; un acte, el seu
+       inici). R51V-01 · La pastilla ja no diu cap edició (editorial.js ·
+       dataDElement, sense updated_at): editar no puja cap peça ni li canvia
+       la data. Cap data inventada: un
+       element sense cap data real va al final; els empats, per la clau
+       `${type}-${id}` (perMomentDescendent, el mateix ordre de /calendari).
        T3.3 · Les alertes municipals VIGENTS (alertesMunicipals.js · esVigent,
        per la mateixa data) pugen al capdamunt, en el seu ordre; la resta, el
        de sempre. La vigència es calcula quan canvien les dades del Mur.
@@ -241,7 +244,7 @@ export default function MurSection() {
     const ara = Date.now();
     const esAlertaVigent = ({ item, moment }) => alertes.has(item) && esVigent(moment, ara);
     const entrades = vigentsDalt(combined
-      .map((item) => ({ item, moment: momentDeLaTargeta(item, esActeDelCalendari(item) ? modelDe(models, item) : null) }))
+      .map((item) => ({ item, clau: clauDeLaTargeta(item), moment: momentDeLaTargeta(item, esActeDelCalendari(item) ? modelDe(models, item) : null) }))
       .sort(perMomentDescendent), esAlertaVigent);
     const vigents = entrades.filter(esAlertaVigent).map(({ item, moment }) => ({ item, tipus: alertes.get(item), caducaAl: caducaAl(moment) }));
     return {
@@ -261,8 +264,9 @@ export default function MurSection() {
 
     if (dateFilter) {
       /* T51 · El filtre llig el MATEIX dia que pinta la pastilla (dateTime local
-         de dataDElement): una publicació editada de veres es troba pel dia de
-         l'edició, el que obri la seua pròpia pastilla.
+         de dataDElement), el que obri la seua pròpia pastilla. R51 · Una
+         publicació editada ja es troba pel dia de publicació o de creació, no
+         pel de l'edició (la pastilla ja no la diu).
          T5 (ordre del Mestre, 260930) · Un acte es troba els dies que el pinta
          el Calendari (acteOcorreElDia, amb el model: tot el dia, amb hora, amb fi o
          repetit) i sempre el dia de la seua pastilla, i una clau que no

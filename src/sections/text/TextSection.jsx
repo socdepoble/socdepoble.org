@@ -11,6 +11,8 @@ import { ProveidorSincronitzacioTargetes } from '../detail/SincronitzacioTargete
 import { lazy, Suspense, useMemo } from 'react';
 import { useUIActions } from '../../app/contexts/UIContext';
 import { localitzaPagina } from './pageContent.r10.js';
+import { planTraduccioPagina } from './planTraduccioPagina.js';
+import { Alerta } from '../../components/PedraSeca/molecules/Alerta.jsx';
 const AparadorFediversity=lazy(()=>import('./AparadorFediversity.jsx'));
 const ConsolaIncrustada=lazy(()=>import('../consola/ConsolaSection.jsx').then((m)=>({default:m.ConsolaIncrustada})));
 import { useSEO } from '../../hooks/useSEO';
@@ -103,7 +105,11 @@ export function CosDeLaPagina({ html }) {
    quan n'hi ha: sense, o si la funció torna null, les etiquetes de sempre. */
 export default function TextSection({ page: original, pageKey, accioPrincipal = null, onConnect = null, objecte = null, etiquetaFinal = null, children = null }) {
   const { t, language = 'ca' } = useUIActions();
-  const page = useMemo(() => paginaPerAppNativa(localitzaPagina(original, language, pageKey)), [original, language, pageKey]);
+  /* R51 (P0-46 / IDEA-177) · Una pàgina que declara el seu translation_mode es
+     pinta segons el pla del contracte (planTraduccioPagina.js); sense, el camí
+     de sempre (localitzaPagina), byte a byte. */
+  const plaR51 = useMemo(() => planTraduccioPagina(original, language), [original, language]);
+  const page = useMemo(() => paginaPerAppNativa(plaR51 ? plaR51.pagina : localitzaPagina(original, language, pageKey)), [plaR51, original, language, pageKey]);
   const contentLanguage = page.contentLanguage || 'ca';
   const etiquetaExtra = typeof etiquetaFinal === 'function' ? etiquetaFinal(t) : etiquetaFinal;
   /* Pla 261027_1154 (P1-61), Fase 1 (ordre del Mestre, 261027) · Abans, la
@@ -169,7 +175,11 @@ export default function TextSection({ page: original, pageKey, accioPrincipal = 
       {...(accioPrincipal ? { accioPrincipal } : null)}
       {...(onConnect ? { onConnect } : null)}
       {...(objecte ? { objecte } : null)}
+      {...(plaR51 && !plaR51.traduccio ? { traduccio: false } : null)}
     >
+      {plaR51?.tipus === 'error' ? (
+        <Alerta to="avis">{t('section.text.traduccioR51Error', 'Esta pàgina no té la traducció ben configurada: es mostra en la llengua original, sense traducció automàtica.')}</Alerta>
+      ) : null}
       <CosDeLaPagina html={page.html} />
       {pageKey==='fedivers'&&<Suspense fallback={null}><AparadorFediversity language={language}/></Suspense>}
       {pageKey==='node-zero'&&<Suspense fallback={null}><section className="cms-preview" data-testid="node-zero-consola-incrustada-section"><ConsolaIncrustada/></section></Suspense>}

@@ -303,26 +303,28 @@ export const formatTime = (valor) => dataHoraDeBarra({ creat: valor }).time;
 
 /**
  * T51 · La pastilla de data d'un element de secció (Mur, Mercat, agenda,
- * Pobles, Multimèdia), amb el format únic i la regla del Mestre (la de
- * creació, o la de l'última modificació si és posterior). L'origen és, per
- * ordre: el dia (i l'hora) propis de l'element, com els d'un acte de
- * l'agenda; la data triada al calendari (T40, publish_date, la mateixa que la
- * targeta del Mur); i, si no, la de creació, que el servidor conserva.
- * `updated_at` és la d'edició de la publicació (section_submissions, que
- * supabase/content.js ja demana), però només quan és una edició de veres
- * (vegeu MARGE_INSERCIO_MS). La fan servir el detall de la ruta
- * (detail/elementDeSeccio.js), el lector de connexions, les publicacions del
- * MAS (notes/PublicacioDetall.jsx) i les targetes del Mur.
+ * Pobles, Multimèdia), amb el format únic. L'origen és, per ordre: el dia (i
+ * l'hora) propis de l'element, com els d'un acte de l'agenda; la data triada
+ * al calendari (T40, publish_date); i, si no, la de creació, que el servidor
+ * conserva. La fan servir el detall de la ruta (detail/elementDeSeccio.js),
+ * el lector de connexions, les publicacions del MAS
+ * (notes/PublicacioDetall.jsx) i les targetes del Mur.
+ * R51 (P0-49 / IDEA-180; SPEC §2: «Mostrar el mateix instant editorial a
+ * card i detall») · Derogada per a un element de secció la part de T51 que
+ * hi posava la d'edició (`updated_at`, més d'un minut després de crear: el
+ * marge W3A D1): és auditoria, no data editorial. La pastilla diu el mateix
+ * instant pel qual el Mur ordena (mur/targetesMur.js · momentEditorial), i
+ * editar una peça no li canvia la data. Les files sense secció (perfils,
+ * entitats: dataDeFila) continuen amb la regla de la més recent.
  */
 export function dataDElement(item) {
   return dataHoraDeBarra(fontsDElement(item));
 }
 
 /**
- * L'instant (ms) de la mateixa data que pinta dataDElement, per a ORDENAR
- * (el Mur, de més nova a més vella): la llista i la pastilla no poden dir
- * dues dates diferents. null si l'element no porta cap data real: no se
- * n'inventa cap per a ordenar-lo.
+ * L'instant (ms) de la mateixa data que pinta dataDElement. Ja no ordena el
+ * Mur (R51: mur/targetesMur.js · momentEditorial); l'ordena /pobles, amb la
+ * creació sola. null si l'element no porta cap data real: no se n'inventa cap.
  */
 export function momentDElement(item) {
   const data = dataDeDocument(fontsDElement(item));
@@ -330,7 +332,7 @@ export function momentDElement(item) {
 }
 
 /* Les fonts d'un element de secció, una sola vegada per a la pastilla i per
-   a l'ordre. */
+   a l'ordre de /pobles. R51 · Sense `modificat`. */
 function fontsDElement(item) {
   return {
     // En actes amb la simetria editorial activada, date/time és la celebració;
@@ -338,38 +340,8 @@ function fontsDElement(item) {
     publicat: item?.boinaDataPublicacio === true
       ? item?.publish_date
       : [diaAmbHora(item?.date, item?.time), item?.publish_date],
-    creat: item?.created_at,
-    modificat: esEdicioReal(item?.created_at, item?.updated_at) ? item?.updated_at : null
+    creat: item?.created_at
   };
-}
-
-/**
- * W3A D1 · Marge perquè l'`updated_at` d'una fila compte com a MODIFICACIÓ.
- *
- * A section_submissions, `updated_at` naix a la inserció amb el `default
- * now()` del servidor (migració 2609261200; el trigger només actua `before
- * update`), mentre que `created_at` el posa el client (supabase/content.js).
- * Una publicació que ningú no ha editat porta, doncs, un `updated_at` uns
- * mil·lisegons posterior a `created_at`, i la regla de la més recent el
- * prendria per una edició: la pastilla diria l'hora d'inserció en lloc de la
- * data triada al calendari (T40) o del dia de l'acte.
- *
- * Una edició de veres arriba, com a mínim, uns segons després de publicar.
- * Per això un `updated_at` només compta si supera `created_at` en MÉS d'un
- * minut. Límit conegut: si el rellotge del client va més d'un minut endarrere
- * del servidor, una publicació sense editar comptaria com a editada. La
- * solució de fons és al servidor (trigger `before insert` que faça
- * `updated_at := created_at` i esmena de les files antigues): decisió pendent.
- */
-export const MARGE_INSERCIO_MS = 60 * 1000;
-
-/** L'`updated_at` és una edició posterior a la inserció (no el `now()` del
-    mateix moment)? Sense creació llegible, qualsevol `updated_at` real compta. */
-function esEdicioReal(creat, modificat) {
-  const canvi = llegixData(modificat);
-  if (!canvi) return false;
-  const creacio = primeraData(creat);
-  return !creacio || canvi.instant.getTime() - creacio.instant.getTime() > MARGE_INSERCIO_MS;
 }
 
 const HORA_SOLTA = /^(\d{1,2})[:.h](\d{2})\s*h?$/i;
