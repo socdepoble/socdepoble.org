@@ -633,8 +633,17 @@ export function PageFrame({
   /* Ordre del Mestre, 261004 (prompt 261004_0515 §6, «el botonaco de
      Publicar») · `accioPrincipal`: l'acció gran de la pàgina, dins del bloc
      del títol, davall de l'H1 i de les etiquetes (o de la classificació) i
-     abans del copyright, en un div.page-title-accio. Sense, el DOM de sempre. */
+     abans del copyright, en un div.page-title-accio. Sense, el DOM de sempre.
+     Ordre del Mestre, 261107 (P0-48 / IDEA-179, cercador a /cerca) ·
+     `accioPrincipalDalt`: quan és true, `div.page-title-accio` es pinta com a
+     primer element dins de `header.page-title` (just davall de la barra
+     taronja, abans del logo i de l'H1), amb el modificador
+     .page-title-accio--dalt (modules.css: sense aire dalt, perquè el bloc
+     blanc ja en porta, i amb l'aire de baix que la separa del logotip).
+     Sense la prop, davall de l'H1 com sempre: el mateix DOM i la mateixa
+     classe (PageFrame.apps.test.jsx). */
   accioPrincipal = null,
+  accioPrincipalDalt = false,
   /* Ordre del Mestre, 261004 (D-A) · `traduccio={false}`: la pàgina no es
      traduïx. Traduir avisa (AVIS_PAGINA_SENSE_TRADUCCIO) i el Traductor
      Sobirà queda inert: cap text ix cap al servei. Sense la prop, el de
@@ -1135,6 +1144,7 @@ export function PageFrame({
 
       {hasHeader && (
         <header className={classesTitol} ref={capcaleraRef}>
+          {accioPrincipal && accioPrincipalDalt ? <div className="page-title-accio page-title-accio--dalt">{accioPrincipal}</div> : null}
           {logoDeLaRanura ? (
             <div className="page-title-logo-personalitzat">
               {logoDeLaRanura}
@@ -1189,7 +1199,7 @@ export function PageFrame({
               })}
             </ul>
           )}
-          {accioPrincipal ? <div className="page-title-accio">{accioPrincipal}</div> : null}
+          {accioPrincipal && !accioPrincipalDalt ? <div className="page-title-accio">{accioPrincipal}</div> : null}
           {/* Ordre del Mestre (261007) · En LECTURA el copyright, siga quin
               siga el text, és SEMPRE un enllaç a la pàgina «Drets d'autor»
               (RUTA_DRETS_AUTOR), amb el LinkComponent de les etiquetes: el

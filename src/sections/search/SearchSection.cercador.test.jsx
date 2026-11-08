@@ -60,15 +60,18 @@ vi.mock('../../app/contexts/RouterContext', async () => {
     NavLink: Link
   };
 });
-/* La Pàgina Universal simulada pinta el títol i, davall, la ranura
-   accioPrincipal dins del bloc del títol, com PageFrame (div.page-title-accio). */
+/* La Pàgina Universal simulada pinta el títol i la ranura accioPrincipal dins
+   del bloc del títol, com PageFrame (div.page-title-accio: dalt de tot, amb
+   .page-title-accio--dalt, quan accioPrincipalDalt és true, o davall del
+   títol per defecte). */
 vi.mock('../../components/universal/UniversalPage', async () => {
   const { createElement } = await import('react');
   return {
-    UniversalPage: ({ title, accioPrincipal, children }) => createElement('main', null,
+    UniversalPage: ({ title, accioPrincipal, accioPrincipalDalt = false, children }) => createElement('main', null,
       createElement('header', { 'data-testid': 'capcalera' },
+        accioPrincipal && accioPrincipalDalt ? createElement('div', { className: 'page-title-accio page-title-accio--dalt' }, accioPrincipal) : null,
         createElement('p', { 'data-testid': 'titol' }, title),
-        accioPrincipal ? createElement('div', { className: 'page-title-accio' }, accioPrincipal) : null),
+        accioPrincipal && !accioPrincipalDalt ? createElement('div', { className: 'page-title-accio' }, accioPrincipal) : null),
       children)
   };
 });

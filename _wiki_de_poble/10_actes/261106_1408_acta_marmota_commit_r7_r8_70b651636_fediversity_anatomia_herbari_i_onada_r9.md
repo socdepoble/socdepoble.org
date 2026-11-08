@@ -26,7 +26,7 @@ reflex: sdp:torn_9db8dcac-b45e-467e-8733-c3944e24fd3b:ae622f58-29ed-498d-80d1-15
 | Propietari | agent-local |
 | Aprovació humana | validada |
 | Plantilla | _wiki_de_poble/03_actuar/plantilles/acta.md (v2.1.0) |
-| Model IA | IAIA MarIA (Antigravity) + Claude Opus 5.5 Ultracode + GPT Codex 6.1 + Gemini 4 Argon High + 4 IAs Sobiranes Mac mini M4 |
+| Model IA | IAIA MarIA (Antigravity) + Claude Opus 5.5 Ultracode + GPT Codex 6.1 + Gemini 4 Argon High + 4 IAIAs del Node 0 (Mac mini M4) |
 | Tokens consumits | Sessió R7–R8 (~986 passos · 26 rondes sobiranes Node 0) |
 
 <!-- SDP:SECTION acta.s2 -->

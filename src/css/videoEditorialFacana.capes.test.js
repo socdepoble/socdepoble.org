@@ -89,6 +89,20 @@ describe('FBV-01 · la façana del vídeo pinta amb el crom dins de .aplec-2023_
     expect(reglaDe('.video-editorial__facana > svg')).not.toMatch(/!important/);
   });
 
+  /* P0-47 / IDEA-178 (verificador visual R11b, V-01) · Els dos documentals d'Eugenio Monesma, seguits dins del cos de
+     «Noves tecnologies…», es pintaven enganxats (0px entre ells i amb el paràgraf). Chrome hi mesura ara 20px, el
+     marge de baix d'un paràgraf; l'Aplec 2023 no canvia perquè la regla viu només dins de .noves-tecnologies-rural. */
+  test('V-01 · dins de l’article del pou, cada vídeo del cos té 20px d’aire baix; el contenidor general, cap marge', () => {
+    const COMPONENTS = llig('src/css/components.css');
+    const inici = COMPONENTS.indexOf('.noves-tecnologies-rural .aplec-2023__video {');
+    expect(inici).toBeGreaterThan(-1);
+    expect(net(COMPONENTS.slice(COMPONENTS.indexOf('{', inici) + 1, COMPONENTS.indexOf('}', inici)))).toBe('margin-block-end: var(--sdp-space-5);');
+    /* A la capa components: cap claudàtor de tancament de la capa entre l'obertura i la regla. */
+    const tros = COMPONENTS.slice(COMPONENTS.lastIndexOf('@layer components {', inici), inici);
+    expect((tros.match(/\{/g) || []).length).toBe((tros.match(/\}/g) || []).length + 1);
+    expect(reglaDe('.aplec-2023__video')).not.toMatch(/margin/);
+  });
+
   test('sobre el fons de crom, el títol i l’avís arriben a AAA (7:1) i l’anell de focus a 3:1', () => {
     const fons = rgb(valorDe('--sdp-crom-fons'));
     expect(contrast(rgb(valorDe('--sdp-crom-text')), fons)).toBeGreaterThanOrEqual(7);

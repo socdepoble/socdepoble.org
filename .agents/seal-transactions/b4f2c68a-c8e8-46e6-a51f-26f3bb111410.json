@@ -1,0 +1,27 @@
+{
+  "id": "b4f2c68a-c8e8-46e6-a51f-26f3bb111410",
+  "session": "89afea3c-6d0c-48f5-b80a-7d5c9c562732",
+  "operationId": "r11c-quatre-punts-tractor-reflex-cens-doctrina",
+  "claim": "89afea3c-6d0c-48f5-b80a-7d5c9c562732:governance-write",
+  "planHash": "fa1843a491e04d5c15c9619407bae98fccf135c3d75ef930df851c427a8256f8",
+  "beforeSeal": "c98593887cd36819ff3e7a417c487c1516008889a1fb3271b7baccf75a084a37",
+  "files": [
+    {
+      "path": "tooling/brain/tractor-pedra-seca.mjs",
+      "before": "08907679bac21d3c2da24bb8a9b6c4aa90d182a15ece3c4d49aaace29b794581",
+      "after": "0812aefe10430cb09948528a7cb5ca277a5599ef92806338aae5c8614dcecc5b"
+    },
+    {
+      "path": "tooling/wiki/wiki-baseline.lock.json",
+      "before": "cd8c58603fb1747f3fda329ccf3cf73ef27c8cfe20319f1c49a3f9407f78442b",
+      "after": "157a8d742529d365aa7b004b67e4115915b5a40cce12977c3292b38b1f6cba2a"
+    },
+    {
+      "path": ".agents/LEDGER.md",
+      "before": "5976bec48e259f28ab839b337307a3f0c7090f25368a132a441dfebb49150867",
+      "after": "a726603f9dfe8a8ba673242fe2e2459ae187f66f99ba6134c4f5df512a62af24"
+    }
+  ],
+  "state": "accepted",
+  "afterSeal": "5f74f08d9558f1d6b128b87ea5ff5dd96b45585d23d569a1ab52675171cc2a37"
+}

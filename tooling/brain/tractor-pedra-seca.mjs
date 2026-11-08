@@ -425,7 +425,16 @@ const EXCEPCIONS_ORFE = {
   'src/sections/connectar/organitzacio/BlocAdministrarOrganitzacio.jsx': 'ja no es munta des del 25-10 (1c110f954): el Mestre decidix si s\'esborra o es torna a connectar · decisió del Mestre 261031 (part C)',
   'src/sections/connectar/organitzacio/useAdministrarOrganitzacio.js': 'ja no es munta des del 25-10 amb BlocAdministrarOrganitzacio.jsx: el Mestre decidix si s\'esborra o es torna a connectar · decisió del Mestre 261031 (part C)',
   'src/sections/notes/ConnexioDetall.jsx': 'cap importació des del 30-09: el Mestre decidix si s\'esborra o es torna a connectar · decisió del Mestre 261031 (part C)',
-  'src/sections/gestoria/facturar/__fixtures__/idbFals.js': 'fixture duplicada que ningú no importa (la còpia bona és tests/helpers/idbFals.js): proposta d\'esborrat per al Mestre · decisió del Mestre 261031 (part C)'
+  'src/sections/gestoria/facturar/__fixtures__/idbFals.js': 'fixture duplicada que ningú no importa (la còpia bona és tests/helpers/idbFals.js): proposta d\'esborrat per al Mestre · decisió del Mestre 261031 (part C)',
+  /* Ordre del Mestre i MarIA del 261107 (P0-45 / IDEA-176) · /page/anatomia-rural
+     hui només mostra el visor del Pou de la Neu del Rentonar, i el visor general
+     d'Anatomia Rural (almàssera, molins, forn de calç…) ja no es munta. Es
+     conserva amb les seues proves fins que el Mestre decidisca si es torna a
+     muntar, quan la resta d'artefactes tinga documentació, o s'esborra: llavors
+     es retiren les tres excepcions. */
+  'src/components/patrimoni/VisorAnatomiaRural3D.jsx': 'visor general d’Anatomia Rural (IDEA-109): despenjat de /page/anatomia-rural fins que la resta d’artefactes tinga documentació; el cobrix VisorAnatomiaRural3D.test.jsx · ordre del Mestre 261107 (P0-45 / IDEA-176) · revisió del Mestre pendent (tornar a muntar o esborrar)',
+  'src/components/patrimoni/anatomiaRuralGeometria.js': 'geometria del visor general d’Anatomia Rural: només la importa VisorAnatomiaRural3D.jsx, despenjat · ordre del Mestre 261107 (P0-45 / IDEA-176) · revisió del Mestre pendent (tornar a muntar o esborrar)',
+  'src/data/patrimoni/anatomiaRural.js': 'dades del visor general d’Anatomia Rural: només les importa VisorAnatomiaRural3D.jsx, despenjat (i les proves del Pou i de l’article del Mur) · ordre del Mestre 261107 (P0-45 / IDEA-176) · revisió del Mestre pendent (tornar a muntar o esborrar)'
 };
 /* Decisió del Mestre (30-10-2026) · Una fixture (dins de __fixtures__/) que una
    prova importa és part de la prova, amb el criteri de la línia de les proves.

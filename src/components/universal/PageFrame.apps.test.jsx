@@ -2,6 +2,8 @@
    opcionals noves de PageFrame i l'autor per defecte enllaçat al projecte:
    · accioPrincipal: dins del bloc del títol, després de les etiquetes i abans
      del copyright (el «botonaco» de Publicar davall de l'H1);
+   · accioPrincipalDalt (261107, P0-48 / IDEA-179): la mateixa ranura com a
+     primer fill del bloc del títol (la caixa de /cerca);
    · refTitol: el focus a l'H1, amb tabIndex -1 només quan es passa;
    · traduccio={false}: Traduir avisa i el servei no rep res;
    · telemetria={{ comptar: false }}: el Connectar de la barra no compta;
@@ -84,6 +86,48 @@ describe('accioPrincipal', () => {
     cleanup();
     const sdp = render(<PageFrame title="T" accioPrincipal={null} />).container;
     expect(fills(sdp.querySelector('header.page-title'))).toEqual([...LOGOS_SDP, 'H1.']);
+  });
+});
+
+/* Ordre del Mestre, 261107 (P0-48 / IDEA-179) · `accioPrincipalDalt`: la
+   ranura és el primer fill del bloc del títol (just davall de la barra
+   taronja, abans del logotip i de l'H1), amb el modificador
+   .page-title-accio--dalt. Sense la prop (o amb false), la de sempre. */
+describe('accioPrincipalDalt', () => {
+  const FORM = <form role="search" aria-label="Cerca"><input type="search" aria-label="Cerca" /></form>;
+
+  test('amb la prop, la ranura és el primer fill: abans del logotip, de l’H1, de les etiquetes i del copyright', () => {
+    const { container } = render(<PageFrame title="Busca dins del contingut" labels={LABELS} copyright="CC BY-NC-SA 4.0 Sóc de Poble"
+      accioPrincipal={FORM} accioPrincipalDalt />);
+    const capcalera = container.querySelector('header.page-title');
+    expect(fills(capcalera)).toEqual([
+      'DIV.page-title-accio page-title-accio--dalt', ...LOGOS_SDP, 'H1.', 'UL.sp-card-labels page-title-labels', 'P.sp-card-copyright page-title-copyright'
+    ]);
+    /* Una sola ranura: l'acció no es pinta dues vegades. */
+    expect(capcalera.querySelectorAll('.page-title-accio')).toHaveLength(1);
+    expect(capcalera.firstElementChild.querySelector('form[role="search"]')).not.toBeNull();
+  });
+
+  test('amb una persona (sense logotip), la ranura també va davant de l’H1', () => {
+    const { container } = render(<PageFrame title="T" accioPrincipal={<span>a</span>} accioPrincipalDalt {...PERSONA} />);
+    expect(fills(container.querySelector('header.page-title'))).toEqual(['DIV.page-title-accio page-title-accio--dalt', 'H1.']);
+  });
+
+  test('sense la prop, o amb false, el DOM de sempre: davall de l’H1 i sense el modificador', () => {
+    const esperat = [...LOGOS_SDP, 'H1.', 'UL.sp-card-labels page-title-labels', 'DIV.page-title-accio', 'P.sp-card-copyright page-title-copyright'];
+    for (const props of [{}, { accioPrincipalDalt: false }]) {
+      const { container } = render(<PageFrame title="Publicar al Mur" labels={LABELS} copyright="CC BY-NC-SA 4.0 Sóc de Poble"
+        accioPrincipal={<a href="/notes" className="sdp-boto">Publicar</a>} {...props} />);
+      expect(fills(container.querySelector('header.page-title'))).toEqual(esperat);
+      expect(container.querySelector('.page-title-accio--dalt')).toBeNull();
+      cleanup();
+    }
+  });
+
+  test('la prop sola, sense acció, no pinta cap ranura buida', () => {
+    const { container } = render(<PageFrame title="T" accioPrincipal={null} accioPrincipalDalt />);
+    expect(container.querySelector('.page-title-accio')).toBeNull();
+    expect(fills(container.querySelector('header.page-title'))).toEqual([...LOGOS_SDP, 'H1.']);
   });
 });
 

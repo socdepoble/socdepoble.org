@@ -10901,6 +10901,21 @@ details[open] summary.accordion-header svg:last-child {
   }
 }
 
+/* Ordre del Mestre, 261107 (P0-48 / IDEA-179) · .page-title-accio--dalt · la
+   ranura `accioPrincipal` pintada com a primer fill de header.page-title
+   (PageFrame, `accioPrincipalDalt`; hui només la caixa de /cerca). Dalt, cap
+   aire propi: el padding del bloc blanc (--sdp-space-6) ja la separa de la
+   barra taronja, i abans hi sumava 32px més (56px en total, mesurat en
+   Chrome). Baix, els 32px de token de la ranura de sempre la separen del
+   logotip de 600px. Va després del bloc «nucli» perquè guanye
+   .page-title-accio amb la mateixa especificitat. Sense la prop no hi ha cap
+   element amb esta classe: la ranura de sempre no canvia. */
+@layer components {
+  .page-title-accio--dalt {
+    margin-block-start: 0;
+  }
+}
+
 /* Ordre del Mestre, 261004 (prompt 261004_0515) · Front «autoria».
      · .sdp-card-llista > .sp-card · en la variant 'llista' de GraellaTargetes
        (la «Revista» del Lector), la targeta plana ocupa tota la columna, com

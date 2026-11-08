@@ -23,11 +23,16 @@ const SECCIONS_DE_PATRIMONI = {
   'arbres-monumentals': lazy(() => import('../patrimoni/ArbresMonumentalsSection.jsx'))
 };
 
-/* IDEA-109 + IDEA-143 · Els dos visors d'Anatomia Rural són chunks lazy:
-   només es baixen a /page/anatomia-rural i cadascun es carrega independentment. */
+/* IDEA-109 + IDEA-143 · El visor d'Anatomia Rural és un chunk lazy: només es
+   baixa a /page/anatomia-rural.
+   P0-45 / IDEA-176 (decisió del Mestre i MarIA, 261107) · Hui la pàgina només
+   mostra el visor 3D del Pou de la Neu del Rentonar, l'únic artefacte amb la
+   documentació completa (Segura Martí, 1987). El visor general
+   (VisorAnatomiaRural3D: almàssera, molí, forn de calç…) ja no es munta ací;
+   el component i les seues dades es conserven per a quan tinguen la seua
+   documentació. */
 const PAGINA_DEL_VISOR = 'anatomia-rural';
 const PouDeLaNeuAnatomiaCard = lazy(() => import('../../components/patrimoni/PouDeLaNeuAnatomiaCard.jsx'));
-const VisorAnatomiaRural3D = lazy(() => import('../../components/patrimoni/VisorAnatomiaRural3D.jsx'));
 
 /* El text de càrrega del visor, en la llengua de la interfície (i18n); fora de
    l'app, la reserva en valencià. */
@@ -145,7 +150,7 @@ export default function PageDetailSection() {
     let alFinal = <PublicarDeLaPagina clau={slug} />;
     if (accioAlFinal(slug)) alFinal = <AccioDeLaPagina clau={slug} lloc="baix" />;
     else if (instalacio) alFinal = <InstalaLaPwa instalacio={instalacio} lloc="baix" />;
-    if (slug === PAGINA_DEL_VISOR) alFinal = <><Suspense fallback={null}><PouDeLaNeuAnatomiaCard /></Suspense><Suspense fallback={<div role="status" aria-live="polite"><CarregantElVisor /></div>}><VisorAnatomiaRural3D /></Suspense>{alFinal}</>;
+    if (slug === PAGINA_DEL_VISOR) alFinal = <><Suspense fallback={<div role="status" aria-live="polite"><CarregantElVisor /></div>}><PouDeLaNeuAnatomiaCard /></Suspense>{alFinal}</>;
     else if(slug==='herbari')alFinal=<><Suspense fallback={null}><HerbariLaTorreSection/></Suspense>{alFinal}</>;
     else if (Object.hasOwn(SECCIONS_DE_PATRIMONI, slug)) { const Consulta = SECCIONS_DE_PATRIMONI[slug]; alFinal = <><Suspense fallback={null}><Consulta /></Suspense>{alFinal}</>; }
     else if(['fediversity','node-zero'].includes(slug))alFinal=<><Suspense fallback={null}><AparadorFediversity/></Suspense>{alFinal}</>;

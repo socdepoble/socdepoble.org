@@ -26,7 +26,7 @@ describe('loadMur en remot', () => {
     servidor.respostes.set('app_content', appContent([MANIFEST]));
     const { feedPosts } = await loadMur('U', {});
     const nostra = feedPosts.find((item) => item.id === POST.id);
-    expect(nostra).toMatchObject({ id: POST.id, title: POST.title, created_at: '2026-11-06T14:29:00+01:00' });
+    expect(nostra).toMatchObject({ id: POST.id, title: POST.title, created_at: '2026-11-07T21:20:00+01:00' });
     // Cap versió d'app_content: la revisió des de /notes es queda al navegador i ho diu (revisionsEditorials.js).
     expect(nostra._editorialVersio).toBeUndefined();
     expect(feedPosts.find((item) => item.id === 'manifest-de-poble')).toMatchObject({ _editorialClau: 'feedPosts', _editorialVersio: 7 });

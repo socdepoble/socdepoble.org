@@ -45,15 +45,17 @@ vi.mock('../../app/contexts/RouterContext', async () => {
     NavLink: Link
   };
 });
-/* La Pàgina Universal simulada pinta el títol i, davall, la ranura
-   accioPrincipal dins del bloc del títol, com PageFrame (div.page-title-accio). */
+/* La Pàgina Universal simulada pinta el títol i la ranura accioPrincipal dins
+   del bloc del títol, com PageFrame (div.page-title-accio: dalt de tot quan
+   accioPrincipalDalt és true, o davall del títol per defecte). */
 vi.mock('../../components/universal/UniversalPage', async () => {
   const { createElement } = await import('react');
   return {
-    UniversalPage: ({ title, accioPrincipal, children }) => createElement('main', null,
+    UniversalPage: ({ title, accioPrincipal, accioPrincipalDalt = false, children }) => createElement('main', null,
       createElement('header', { 'data-testid': 'capcalera' },
+        accioPrincipal && accioPrincipalDalt ? createElement('div', { className: 'page-title-accio page-title-accio--dalt' }, accioPrincipal) : null,
         createElement('p', { 'data-testid': 'titol' }, title),
-        accioPrincipal ? createElement('div', { className: 'page-title-accio' }, accioPrincipal) : null),
+        accioPrincipal && !accioPrincipalDalt ? createElement('div', { className: 'page-title-accio' }, accioPrincipal) : null),
       children)
   };
 });
@@ -384,19 +386,21 @@ test('les notes pròpies surten marcades com a privades', async () => {
   expect(screen.getByText('Privada: només la veus tu')).toBeTruthy();
 });
 
-/* ── Ordre del Mestre (261019 21:34, punt 9) ─────────────────────────────── */
+/* ── Ordre del Mestre (261019 21:34, punt 9 + 261107 P0-48 / IDEA-179) ──── */
 
-test('261019 · la caixa de cerca va davall de l’H1, al bloc del títol, davant dels filtres i dels resultats', async () => {
+test('261107 · la caixa de cerca va dalt de tot del bloc del títol (davall de la barra taronja, abans del logo i de l’H1), de part a part del bloc blanc', async () => {
   mocks.url = '?q=benifallim';
   await pinta();
   const formulari = screen.getByRole('search', { name: 'Cerca a Sóc de Poble' });
-  /* Dins de la ranura del bloc del títol (accioPrincipal), just després de
-     l'H1, en la mesura de lectura de la columna (Centre, .sdp-centre: revisió
-     adversarial, Llei del Píxel). */
+  /* Dins de la ranura del bloc del títol (accioPrincipal + accioPrincipalDalt),
+     abans del títol i sense Centre (.sdp-centre), ocupant tot l'ample interior
+     del bloc blanc. */
   const ranura = formulari.closest('.page-title-accio');
-  expect(formulari.parentElement.classList.contains('sdp-centre')).toBe(true);
-  expect(formulari.parentElement.parentElement).toBe(ranura);
-  expect(ranura.previousElementSibling).toBe(screen.getByTestId('titol'));
+  expect(formulari.parentElement).toBe(ranura);
+  expect(ranura.classList.contains('page-title-accio--dalt')).toBe(true);
+  expect(ranura.parentElement.firstElementChild).toBe(ranura);
+  expect(formulari.closest('.sdp-centre')).toBeNull();
+  expect(ranura.nextElementSibling).toBe(screen.getByTestId('titol'));
   expect(formulari.closest('[data-testid="capcalera"]')).not.toBeNull();
   expect(document.querySelector('.sdp-cerca').contains(formulari)).toBe(false);
   /* Una sola caixa, amb el seu nom, i davant dels filtres, del recompte i dels resultats. */

@@ -2,8 +2,8 @@
   "schema": "sdp.contingut.v1",
   "claus": {
     "anatomia-rural": {
-      "sha256": "15f52b596cc27926135607d69b2500cfdef64bd43c2b0f066ff87023e3a5f4c0",
-      "html": 800,
+      "sha256": "56ce2ba01a8bfa11b879144660d20141ce981588a221498f21eab8d63a2be4cf",
+      "html": 2185,
       "aprovat_per": "Mestre Javi",
       "data": "2026-11-07"
     },
@@ -68,8 +68,8 @@
       "data": "2026-11-07"
     },
     "fediversity": {
-      "sha256": "33b3f8bc8f936c1dda1786955851d13efc69e955bd58dd26fce0964bbcca5b5b",
-      "html": 62426,
+      "sha256": "63417e2e2568b880c8bb9d7a7954fc5c8d87e7bdc36e9dd4bfff131b543006ca",
+      "html": 62498,
       "aprovat_per": "Mestre Javi",
       "data": "2026-11-07"
     },

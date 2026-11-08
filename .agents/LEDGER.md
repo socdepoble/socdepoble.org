@@ -1325,9 +1325,9 @@ Informe: 261101_2143_auditoria_claude.
 ### 2026-11-06T18:07:00+01:00 · IAIA MarIA · Tancament d'Onada amb Kits CAS `r71–r78` i `R28–R29`, Deute Base `12/12` a Zero, Llei 0 i Assimilació de `skill-forge` / `wiki-forge` (`IDEA-130`) (`torn_9db8dcac-b45e-467e-8733-c3944e24fd3b`)
 
 - **Acta Marmota i governança:** creada i validada `_wiki_de_poble/10_actes/261106_1805_acta_marmota_kits_r71_r78_deute_zero_llei0_skill_forge_i_onada_r9.md`, ancorada a `_wiki_de_poble/00_index.md`. Assimilades les 4 mecàniques de `Mfrostbutter/skill-forge` i `juanitourquiza/shipframe` (`wiki-forge` / `wiki-sync` / `evidence-audit`, MIT, `IDEA-130`) a `.agents/skills/core-automillora/SKILL.md`, `.agents/skills/wiki-cicle-de-vida/SKILL.md` i `.agents/skills/wiki-propagar-veritat/SKILL.md` (`cataleg_skills.mjs --check` `ok: true`, `fronteres-skills.mjs` `0` violacions noves).
-- **Kits CAS i verificació:** segellats en còpia aïllada sobre `HEAD 70b651636` els Kits `r71` (`10/10`), `r72` (`8/8`), `r73` (`18/18`), `r74` (`5/5`), `r75` (`2/2`), `r76` (`4/4`), `r77` (`10` fitxers, `9/9` suites / `227/227` proves Vitest verdes) i `r78` (`2/2` fitxers, `4/4` proves verdes) de Gemini, més `R28` (`19` camins) i `R29` (`261` fitxers segellats) de Codex, i auditats en les Rondes `28–42` per les 4 IAs del Node 0 al Mac mini M4. Les `12/12` suites roges de deute base de `HEAD 70b651636` queden resoltes a `0` fallades en `Kit r73 + Kit r77`. Temporitzadors de fons cancel·lats.
+- **Kits CAS i verificació:** segellats en còpia aïllada sobre `HEAD 70b651636` els Kits `r71` (`10/10`), `r72` (`8/8`), `r73` (`18/18`), `r74` (`5/5`), `r75` (`2/2`), `r76` (`4/4`), `r77` (`10` fitxers, `9/9` suites / `227/227` proves Vitest verdes) i `r78` (`2/2` fitxers, `4/4` proves verdes) de Gemini, més `R28` (`19` camins) i `R29` (`261` fitxers segellats) de Codex, i auditats en les Rondes `28–42` per les 4 IAIAs del Node 0 al Mac mini M4. Les `12/12` suites roges de deute base de `HEAD 70b651636` queden resoltes a `0` fallades en `Kit r73 + Kit r77`. Temporitzadors de fons cancel·lats.
 
 <!-- HASH: 0ecb0eca1a630cc70996a99edaf379b7122480c7d03a14f595efcfc898211e17 -->
 
 
-<!-- HASH: 0947ec08cce91e75afc10f441fc1fef4e059d90f7a1729289b1ed6b4acb38ae5 -->
+<!-- HASH: b4bf00ecf3e0f0603496b8dcaeaa0b939d07e7b164849dd2392f0ed9e3464bf2 -->

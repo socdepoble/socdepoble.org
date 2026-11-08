@@ -479,10 +479,16 @@ describe('moviment reduït', () => {
   });
 });
 
+/* P0-45 / IDEA-176 (decisió del Mestre i MarIA, 261107) · /page/anatomia-rural hui només mostra el
+   visor del Pou de la Neu del Rentonar: este visor general ja no s'hi munta (ni estàtic ni lazy) fins
+   que l'almàssera, el molí i la resta tinguen la seua documentació. El component i les dades es
+   conserven, i el visor del pou continua sent un chunk lazy. */
 describe('la ruta /page/anatomia-rural', () => {
-  test('el chunk del visor és lazy i cap altre fitxer no l’importa estàticament', () => {
+  test('la pàgina ja no munta el visor general, i el del pou continua sent lazy', () => {
     const detall = llig('src/sections/detail/PageDetailSection.jsx');
-    expect(detall).toMatch(/lazy\(\(\) => import\('\.\.\/\.\.\/components\/patrimoni\/VisorAnatomiaRural3D\.jsx'\)\)/);
+    expect(detall).not.toMatch(/import\(['"][^'"]*VisorAnatomiaRural3D\.jsx['"]\)/);
     expect(detall).not.toMatch(/^import .*VisorAnatomiaRural3D/m);
+    expect(detall).not.toMatch(/<VisorAnatomiaRural3D\b/);
+    expect(detall).toMatch(/lazy\(\(\) => import\('\.\.\/\.\.\/components\/patrimoni\/PouDeLaNeuAnatomiaCard\.jsx'\)\)/);
   });
 });

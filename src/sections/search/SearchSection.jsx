@@ -10,12 +10,15 @@
  * Estats: inicial (sense consulta), carregant (esquelet només si encara no hi
  * ha res), buit, error per font (la resta de resultats continua visible).
  *
- * Ordre del Mestre (261019 21:34, punt 9) ·
- *  · La caixa de cerca puja davall de l'H1 («Busca dins del contingut»), dins
- *    del bloc del títol: la ranura `accioPrincipal` de la Pàgina Universal
- *    (PageFrame, div.page-title-accio), davant del subtítol, dels filtres i
- *    dels resultats. Així es veu en el primer plec sense cap scroll. Continua
- *    sent l'única caixa (form role=search amb el seu nom).
+ * Ordre del Mestre (261019 21:34, punt 9; derogat en part el 261107, P0-48 /
+ * IDEA-179) ·
+ *  · La caixa de cerca va dins del bloc del títol, a la ranura `accioPrincipal`
+ *    de la Pàgina Universal (PageFrame, div.page-title-accio), i ara amb
+ *    `accioPrincipalDalt`: és el primer que es veu davall de la barra taronja,
+ *    abans del logotip de Sóc de Poble i de l'H1 («Busca dins del contingut»),
+ *    i davant del subtítol, dels filtres i dels resultats. Sense <Centre>: va
+ *    de part a part del bloc blanc, dins del seu marge interior. Continua sent
+ *    l'única caixa (form role=search amb el seu nom).
  *  · Doble vista per a Persones, Entitats, Pobles i Mercat: la llista de
  *    sempre (per defecte) o targetes (?vista=graella, push com els filtres;
  *    targetaDeResultat.js), amb les mateixes dades i el mateix enllaç.
@@ -24,7 +27,7 @@ import { Fragment, Suspense, lazy, useCallback, useEffect, useId, useMemo, useRe
 import { LayoutGrid, List, Search } from 'lucide-react';
 import { UniversalPage } from '../../components/universal/UniversalPage';
 import {
-  Alerta, Boto, Carregant, Centre, EstatBuit, Esquelet, GraellaTargetes, PillToggle, ResultatCerca, UniversalCard, UniversalSearch
+  Alerta, Boto, Carregant, EstatBuit, Esquelet, GraellaTargetes, PillToggle, ResultatCerca, UniversalCard, UniversalSearch
 } from '../../components/PedraSeca/index.js';
 import { Link, useSearchParams } from '../../app/contexts/RouterContext';
 import { useUIActions } from '../../app/contexts/UIContext';
@@ -339,32 +342,27 @@ function CercaClassica() {
     );
   }
 
-  /* Ordre del Mestre (261019 21:34, punt 9: «elevar-lo directament davall de
-     l'H1 … en el primer plec visual sense cap scroll») · La caixa va a la
-     ranura del bloc del títol (accioPrincipal: davall de l'H1, dins de
-     div.page-title-accio), no al cos: abans quedava davall del subtítol.
-     Revisió adversarial (Llei del Píxel) · Dins del bloc del títol la caixa
-     prenia tota l'amplada del bloc (861 px a 1280, desalineada de la columna
-     dels filtres i dels resultats, 622 px). Centre (la primitiva de
-     composició, .sdp-centre: la mesura de lectura i centrada) li torna
-     l'amplada i el lloc de la columna de .sdp-cerca. En mòbil el bloc ja és
-     més estret que la mesura: no hi canvia res. */
+  /* Ordre del Mestre (261107, P0-48 / IDEA-179) · La caixa de cerca va a dalt
+     del tot del bloc blanc del títol (`accioPrincipalDalt`: just davall de la
+     barra taronja, abans del logo de Sóc de Poble i abans de l'H1 «Busca dins
+     del contingut»), i sense `<Centre>` perquè vaja de part a part del bloc
+     blanc (deixant el marge interior de `header.page-title`, --sdp-space-8) i
+     es diferencie clarament del logo de 600 px de davall
+     (.page-title-accio--dalt, modules.css). */
   const formulari = (
-    <Centre>
-      <form
-        role="search"
-        className="sdp-cerca__formulari"
-        aria-label={t('section.search.formulari', 'Cerca a Sóc de Poble')}
-        onSubmit={(event) => { event.preventDefault(); aplica(text, { replace: true }); }}
-      >
-        <UniversalSearch
-          value={text}
-          onChange={(event) => setText(event.target.value)}
-          placeholder={t('section.search.searchPlaceholder', 'Cerca persones, pobles, posts...')}
-          ariaLabel={t('section.search.searchPlaceholder', 'Cerca persones, pobles, posts...')}
-        />
-      </form>
-    </Centre>
+    <form
+      role="search"
+      className="sdp-cerca__formulari"
+      aria-label={t('section.search.formulari', 'Cerca a Sóc de Poble')}
+      onSubmit={(event) => { event.preventDefault(); aplica(text, { replace: true }); }}
+    >
+      <UniversalSearch
+        value={text}
+        onChange={(event) => setText(event.target.value)}
+        placeholder={t('section.search.searchPlaceholder', 'Cerca persones, pobles, posts...')}
+        ariaLabel={t('section.search.searchPlaceholder', 'Cerca persones, pobles, posts...')}
+      />
+    </form>
   );
 
   return (
@@ -377,6 +375,7 @@ function CercaClassica() {
       chrome="system"
       showLogos
       accioPrincipal={formulari}
+      accioPrincipalDalt
     >
       <div className="sdp-cerca">
         <div ref={filtresRef}>

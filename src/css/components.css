@@ -3903,6 +3903,15 @@ section.bar-orange > .sdp-emoticona-barra--boto:focus-visible { outline-color: v
     display: flex;
     justify-content: center;
   }
+
+  /* P0-47 / IDEA-178 (verificador visual R11b, V-01) · Els dos documentals
+     d'Eugenio Monesma van seguits dins del cos: sense marge, es pintaven
+     enganxats entre ells i amb el paràgraf de després (0px). Cada vídeo del cos
+     porta el mateix aire de baix que un paràgraf (20px). Només dins d'este
+     article: l'Aplec 2023 (/events/aplec-2023) no canvia. */
+  .noves-tecnologies-rural .aplec-2023__video {
+    margin-block-end: var(--sdp-space-5);
+  }
 }
 
 /* ═══════════════════════════════════════════════════════════════════

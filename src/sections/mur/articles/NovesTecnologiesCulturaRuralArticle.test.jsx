@@ -13,7 +13,15 @@
    (revisió editorial, P0-25); (6) IDEA-165 (Onada R11, kit R91 de Gemini
    adaptat): les mides de Segura (1987) lligades a SEGURA_1987, el mur d'1,50 m,
    cap xifra de l'esbós 76150, la història amb la font de cada fet i el que
-   només diu la fitxa de treball del Node 0 marcat com a no confirmat. */
+   només diu la fitxa de treball del Node 0 marcat com a no confirmat;
+   (7) P0-47 / IDEA-178 (07-11-2026): l'objectiu real (documentació + 3D lliure;
+   el pou, primer cas d'estudi), «Què era un pou de neu i per a què servia» amb
+   la font de cada fet (Segura 1985, Cruz Orozco 2004 i el treball de Castelló,
+   tots al disc), cap fet que no hi siga, els DOS documentals d'Eugenio Monesma
+   amb façana de clic i enllaç de fora, i la bibliografia completa amb el que no
+   s'ha consultat marcat; (8) P0-49 / IDEA-180: la data de la versió nova. */
+import { readFileSync } from 'node:fs';
+import path from 'node:path';
 import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { afterEach, describe, expect, test, vi } from 'vitest';
 import { FONTS_PER_IDIOMA } from '../../../../tests/helpers/diccionaris.js';
@@ -22,18 +30,21 @@ import NovesTecnologiesCulturaRuralArticle, { textPlaDelCos } from './NovesTecno
 import { nomDeLaVeu } from './nomDeLaVeu.js';
 import {
   NOVES_TECNOLOGIES_CULTURA_RURAL_HTML, NOVES_TECNOLOGIES_CULTURA_RURAL_ID, NOVES_TECNOLOGIES_CULTURA_RURAL_POST,
-  NOVES_TECNOLOGIES_FONTS, NOVES_TECNOLOGIES_VIDEO
+  NOVES_TECNOLOGIES_FONTS, NOVES_TECNOLOGIES_VIDEO, NOVES_TECNOLOGIES_VIDEO_CONSTRUCCIO, NOVES_TECNOLOGIES_VIDEOS
 } from './novesTecnologiesCulturaRuralContent.js';
 import { MOCK_FEED } from '../feedSeed.js';
 import { FEED_POSTS as PUBLICACIONS_DE_MOCK_FEED } from '../feedContent.js';
 import { IMPORTANTS_DEL_MUR, llavorAmbDatesDeProva } from '../datesDeProvaMur.js';
 import { APP_SEED } from '../../../data/appSeed.js';
+import { PAGE_COPY } from '../../text/pageContent.js';
 import { momentDElement } from '../../../components/universal/editorial.js';
 import { buildMurDetailSectionMeta } from '../../detail/detailSectionMeta.jsx';
 import { cosDeLaPublicacio, esFilaActualitzable, esPublicacioEditable, esRevisioEditorial, notaDeLaPublicacio } from '../../notes/publicacioEditable.js';
 import { ESTRUCTURES } from '../../../data/patrimoni/anatomiaRural.js';
 import { SEGURA_1987 } from '../../../components/patrimoni/iso/pouNeuRentonar.js';
 import { POU_NEU_INTERIOR_TEXT } from '../../../components/patrimoni/iso/pouNeuTextosInterior.js';
+import { ORIGEN_VIDEO_EDITORIAL, esIdVideoEditorial } from '../../../components/universal/VideoEditorial.jsx';
+import { sanitizeHtml } from '../../../utils/sanitize.js';
 
 afterEach(() => { cleanup(); vi.useRealTimers(); });
 const POST = NOVES_TECNOLOGIES_CULTURA_RURAL_POST;
@@ -55,13 +66,34 @@ describe('la primera publicació del Mur', () => {
     expect(MOCK_FEED.some((item) => item.id === POST.id)).toBe(false);
     expect(IMPORTANTS_DEL_MUR[0]).toEqual(['feedPosts', POST.id]);
     expect(POST).toMatchObject({ author_entity_id: 'socdepoble', author_name: 'Sóc de Poble', poble_id: 'la-torre-de-les-macanes', important: true });
-    // La data real d'escriptura: el naixement del fitxer de la instantània (14:29:18, R9V-C2-06), no una data de prova
-    // ni una data inventada; sense publish_date, que manaria sobre la de prova.
-    expect(POST.created_at).toBe('2026-11-06T14:29:00+01:00');
+    // P0-49 / IDEA-180 · La data real de la versió nova (07-11-2026, 19:44 CET, `date`), no una data de prova ni una
+    // data inventada; abans, el naixement del fitxer (06-11-2026, 14:29, R9V-C2-06). Sense publish_date, que manaria
+    // sobre la de prova. És la mateixa que la d'«Anatomia rural»: en l'empat, el Mur posa l'article primer.
+    expect(POST.created_at).toBe('2026-11-07T21:20:00+01:00');
+    expect(PAGE_COPY['anatomia-rural'].date).toBe(POST.created_at);
     expect(POST.publish_date).toBeUndefined();
     // Portada Ibáñez pròpia generada per al Pou de la Neu, l'almàssera i el forn de calç (cap foto de tercers).
     expect(POST.image_url).toBe('/assets/uploads/patrimoni/anatomia-rural-pou-neu-ibanez.webp');
     expect(FEED_POSTS.find((item) => item.id === POST.id).imageSrc).toBe('/assets/uploads/patrimoni/anatomia-rural-pou-neu-ibanez.webp');
+  });
+
+  /* P0-47 / IDEA-178 (verificador de contingut R11b, VC-02) · La targeta del Mur (subtítol i entradeta, que també
+     llig la veu) diu el mateix objectiu que el cos: cap «esquema» de capes, que ja no és el que es veu. */
+  test('la targeta diu l’objectiu: documentació i 3D lliure, el primer cas d’estudi, la neu a l’estiu i els dos documentals', () => {
+    expect(POST.post_subtitle).toMatch(/tecnologia 3D lliure/);
+    expect(POST.post_subtitle).toMatch(/primer cas d’estudi/);
+    expect(POST.post_subtitle).not.toMatch(/esquema/);
+    expect(POST.post_subtitle.length).toBeLessThanOrEqual(160);
+    for (const tros of ['bona documentació amb tecnologia 3D lliure', 'n’és el primer cas d’estudi', 'per a què servia la neu a l’estiu', 'els dos documentals d’Eugenio Monesma', 'Cada xifra porta la seua font']) {
+      expect([tros, POST.entradilla.includes(tros)]).toEqual([tros, true]);
+    }
+    // La instantània de la targeta incrustada a /page/fediversity (formaDelGrup.js, MAXIM.entradilla) talla als 400.
+    expect(Array.from(POST.entradilla).length).toBeLessThanOrEqual(400);
+    // El cos sosté cada promesa de la targeta.
+    const cos = doc(NOVES_TECNOLOGIES_CULTURA_RURAL_HTML).body.textContent;
+    for (const tros of ['tecnologia 3D lliure', 'primer cas d’estudi', 'Què era un pou de neu i per a què servia', 'Els dos documentals són d’Eugenio Monesma']) {
+      expect([tros, cos.includes(tros)]).toEqual([tros, true]);
+    }
   });
 
   test('amb les dates de prova del Mur és la més nova de totes les targetes de la llavor', () => {
@@ -82,15 +114,94 @@ describe('la primera publicació del Mur', () => {
 describe('el cos: honest i sense fotos de tercers', () => {
   const cos = doc(NOVES_TECNOLOGIES_CULTURA_RURAL_HTML);
 
-  test('cap imatge; un sol vídeo, el documental d’Eugenio Monesma, amb el títol del visor', () => {
+  /* P0-47 / IDEA-178 · Els dos documentals d'Eugenio Monesma (id, títol i canal de l'oEmbed de YouTube), amb el
+     patró de sempre: marcador inert al cos (cap iframe a l'HTML desat), enllaç de reserva i enllaç de fora. */
+  test('cap imatge; els dos vídeos documentals d’Eugenio Monesma sobre pous de neu, amb el títol oficial', () => {
     expect(cos.querySelectorAll('img, picture, figure, iframe')).toHaveLength(0);
     const videos = [...cos.querySelectorAll('[data-sdp-youtube]')];
-    expect(videos.map((node) => node.getAttribute('data-sdp-youtube'))).toEqual(['3RQv3xjVr-M']);
+    expect(videos.map((node) => node.getAttribute('data-sdp-youtube'))).toEqual(['3RQv3xjVr-M', 'A3Vgk0rStvU']);
+    expect(NOVES_TECNOLOGIES_VIDEOS).toEqual([NOVES_TECNOLOGIES_VIDEO, NOVES_TECNOLOGIES_VIDEO_CONSTRUCCIO]);
+    expect(Object.isFrozen(NOVES_TECNOLOGIES_VIDEOS)).toBe(true);
     const pou = ESTRUCTURES.find((estructura) => estructura.id === 'pou-de-neu');
     expect(NOVES_TECNOLOGIES_VIDEO).toEqual({ id: pou.documental.videoId, titol: pou.documental.titol });
-    expect(videos[0].getAttribute('data-titol')).toBe(pou.documental.titol);
+    expect(pou.documental.autor).toBe('Eugenio Monesma');
+    expect(NOVES_TECNOLOGIES_VIDEO_CONSTRUCCIO).toEqual({
+      id: 'A3Vgk0rStvU',
+      titol: 'POZOS DE NIEVE: construyendo una NEVERA GIGANTE para conservar HIELO EN VERANO (¡SIN electricidad!)'
+    });
+    for (const [index, video] of NOVES_TECNOLOGIES_VIDEOS.entries()) {
+      expect(esIdVideoEditorial(video.id)).toBe(true);
+      expect(videos[index].getAttribute('data-titol')).toBe(video.titol);
+      // L'enllaç de reserva (fora de l'App, el marcador es llig com un enllaç), com el desa el node TipTap.
+      const reserva = videos[index].querySelector('a');
+      expect([reserva.getAttribute('href'), reserva.textContent]).toEqual([`https://www.youtube.com/watch?v=${video.id}`, video.titol]);
+    }
+    // Sanejat, el marcador continua sencer i sense iframe.
+    expect(sanitizeHtml(NOVES_TECNOLOGIES_CULTURA_RURAL_HTML)).not.toContain('<iframe');
+    expect(sanitizeHtml(NOVES_TECNOLOGIES_CULTURA_RURAL_HTML).match(/data-sdp-youtube="/g)).toHaveLength(2);
     expect(cos.body.textContent.match(/Eugenio Monesma/g)).toHaveLength(1);
-    expect(cos.body.textContent).toContain('només este vídeo és seu');
+    expect(cos.body.textContent).toContain('Dels seus documentals, ací només hi ha els vídeos: les dades del Rentonar són les de les fonts d’esta publicació.');
+    // L'enllaç de fora: qui no vol la incrustació els pot obrir directament a YouTube.
+    const fora = [...cos.querySelectorAll('p a[href^="https://www.youtube.com/watch?v="]')].map((a) => [a.getAttribute('href'), a.textContent]);
+    expect(fora).toEqual([
+      ['https://www.youtube.com/watch?v=3RQv3xjVr-M', 'el primer'],
+      ['https://www.youtube.com/watch?v=A3Vgk0rStvU', 'el segon']
+    ]);
+    // CSP (firebase.json): frame-src admet l'origen sense galetes de VideoEditorial.
+    const csp = readFileSync(path.join(process.cwd(), 'firebase.json'), 'utf8');
+    expect(csp).toMatch(/frame-src 'self' https:;/);
+    expect(ORIGEN_VIDEO_EDITORIAL).toBe('https://www.youtube-nocookie.com');
+  });
+
+  /* P0-47 / IDEA-178 · L'objectiu real de la publicació, abans de les mides. */
+  test('l’objectiu: bona documentació i tecnologia 3D lliure; el pou, primer cas d’estudi', () => {
+    const [primer, segon] = [...cos.querySelectorAll('p')].map((p) => p.textContent);
+    expect(primer).toContain('Esta publicació vol mostrar què passa quan ajuntem una bona documentació');
+    expect(primer).toContain('amb tecnologia 3D lliure, per a ensenyar el nostre patrimoni d’una manera distinta');
+    expect(segon).toContain('Pou de Neu del Rentonar n’és el primer cas d’estudi');
+    expect(segon).toMatch(/resta d’artefactes agrícoles[^.]*quan en tinguem la documentació\./);
+    // «Codi lliure (llicència AGPL)»: el que diu el package.json, no una promesa.
+    expect(segon).toContain('codi lliure (llicència AGPL)');
+    const paquet = JSON.parse(readFileSync(path.join(process.cwd(), 'package.json'), 'utf8'));
+    expect(paquet.license).toMatch(/^AGPL-/);
+    // L'enllaç a l'Anatomia rural no promet estructures que encara no hi són.
+    const darrer = [...cos.querySelectorAll('p')].at(-1);
+    expect(darrer.querySelector('a[href="/page/anatomia-rural"]')).not.toBeNull();
+    expect(darrer.textContent).toContain('quan en tinguem la documentació');
+    expect(cos.body.textContent).not.toMatch(/nou estructures/);
+  });
+
+  /* P0-47 / IDEA-178 · Llei 0: cada fet de «Què era un pou de neu» ix d'una obra que és al disc
+     (_cultura_de_poble/grafics_etnografics_de_poble/pou-de-neu/), amb la seua atribució. */
+  test('què era un pou de neu i per a què servia: cada fet amb la seua font, i cap fet sense font', () => {
+    const h3 = [...cos.querySelectorAll('h3')].map((h) => h.textContent);
+    expect(h3.indexOf('Què era un pou de neu i per a què servia')).toBeGreaterThan(-1);
+    expect(h3.indexOf('Què era un pou de neu i per a què servia')).toBeLessThan(h3.indexOf('Què diu l’estudi'));
+    const seccio = [];
+    for (let node = [...cos.querySelectorAll('h3')].find((h) => h.textContent.startsWith('Què era'))?.nextElementSibling; node && node.tagName !== 'H3'; node = node.nextElementSibling) seccio.push(node.textContent);
+    expect(seccio).toHaveLength(4);
+    const text = seccio.join(' ');
+    for (const [fet, font] of [
+      // Segura Martí, Narria 37-38 (1985), p. 2, 9 i 10.
+      ['el consum de neu es fa popular a partir del segle XVI', 'Segura Martí (1985)'],
+      ['es rebaixaven febres i inflamacions i es tallaven hemorràgies', '(Segura Martí, 1985)'],
+      ['apareixen els orxaters i els gelaters', '(Segura Martí, 1985)'],
+      ['l’especialització d’Ibi i de Xixona en la fabricació i la venda de gelats arrenca de finals del segle XIX', 'Segons Segura'],
+      ['a Alcoleja, als peus d’Aitana', 'sorbets i gelats'],
+      // Cruz Orozco, Saitabi 54 (2004), p. 201-203 i 207.
+      ['és d’un metge de Xàtiva, Francesc Franco: el Tractado de la nieve y del uso della, publicat el 1569', 'diu Cruz Orozco'],
+      ['«per les febres que maten» (Cruz Orozco, 2004)', 'el 1682, a Almenara'],
+      ['conservar i transportar aliments (Cruz Orozco, 2004)', 'com la carn i el peix'],
+      ['la Nevada Grossa de 1926', 'Cruz Orozco (2004)'],
+      // El treball de curs de Castelló (2018-2019), p. 14 i 19.
+      ['l’estudi de les neveres de Castelló, obligava l’arrendatari a servir neu', '«així de dia com de nit»'],
+      ['L’estudi de Castelló conta', 'Camí del Peix']
+    ]) expect([fet, font, text.includes(fet), text.includes(font)]).toEqual([fet, font, true, true]);
+    // El que no diu cap obra del disc, fora: ni hospitals ni aigua-llimó ni granissats; Franco no parla de febres.
+    for (const sense of ['hospital', 'aigua-llimó', 'granissat', 'indispensable', 'tres usos', 'detindre', 'Universitat']) {
+      expect([sense, text.includes(sense)]).toEqual([sense, false]);
+    }
+    expect(text).not.toMatch(/Franco[^.]*febres/);
   });
 
   test('les fonts: les set entrades de socdepoble.net i d’El Rentonar, amb data, les obres de Segura i l’esbós sense xifres', () => {
@@ -119,6 +230,19 @@ describe('el cos: honest i sense fotos de tercers', () => {
     expect(lis.filter((li) => li.startsWith('Josep Mª Segura Martí (1987) · «Els pous i l’antic comerç de la neu a Xixona», Eines, núm. 7 i 8'))).toHaveLength(1);
     expect(lis.filter((li) => li.startsWith('Josep Mª Segura Martí (1985) · «La industria de la nieve en las montañas alicantinas», Narria'))).toHaveLength(1);
     expect(lis.find((li) => li.startsWith('Bibliografia no consultada'))).toMatch(/Cruz Orozco.*\(1996\).*no n’hem tret cap xifra/);
+    // P0-47 / IDEA-178 · La bibliografia completa, amb els títols de les obres que són al disc (pou-de-neu/*.pdf) i
+    // marcat el que no s'ha consultat: el llibre de 1996 i el tractat de Franco només els coneixem per Cruz Orozco.
+    expect(lis.find((li) => li.startsWith('Josep Mª Segura Martí (1985)'))).toContain('Narria. Estudios de artes y costumbres populares, núm. 37-38, p. 2-11');
+    expect(lis.filter((li) => li.startsWith('Jorge Cruz Orozco (2004) · «El patrimonio del comercio valenciano del frío», Saitabi, núm. 54, p. 201-221'))).toHaveLength(1);
+    expect(lis.filter((li) => li.startsWith('Treball de curs · Nieves Bejerano Cerdán') && li.includes('«Pozos de nieve en la provincia de Castellón. Comercio de la nieve»') && li.includes('curs 2018-2019'))).toHaveLength(1);
+    const noConsultades = lis.filter((li) => li.startsWith('Bibliografia no consultada'));
+    expect(noConsultades).toHaveLength(2);
+    expect(noConsultades[0]).toContain('El títol és el de la bibliografia de Cruz Orozco (2004)');
+    expect(noConsultades[1]).toMatch(/^Bibliografia no consultada · Francesc Franco, Tractado de la nieve y del uso della \(Sevilla, 1569\)\. El coneixem per Cruz Orozco \(2004\)/);
+    // Cap títol ni cap institució que no siga a les portades del disc.
+    expect(lis.join(' ')).not.toMatch(/comercio valenciano de la nieve|Universitat Jaume I|Universitat de València/);
+    // L'esbós de Gràfics de Poble, l'últim de la llista, com sempre.
+    expect(lis.at(-1).startsWith('Esbós divulgatiu')).toBe(true);
     // Loop 5 (L4-ARQ-03) · La idea pedagògica de l'esbós i cap de les seues xifres en tot el text publicat.
     expect(esbos).toContain('en prenem la idea pedagògica, no les xifres, perquè no té autor ni escala');
     const publicat = `${cos.body.textContent} ${POST.entradilla} ${POST.post_subtitle}`;
@@ -236,13 +360,23 @@ describe('l’article', () => {
     expect(container.querySelector('.noves-tecnologies-rural__veu').textContent).toBe('🔊 Escolta la IAIA');
     expect(container.querySelector('section.reproductor-pou')).toBeNull();
     expect(screen.getByRole('heading', { name: 'Per què un pou de neu en 3D' })).toBeTruthy();
-    // Gauntlet R9 · G2-04 · Façana de clic: abans del gest, cap iframe; el botó obri el del vídeo.
+    // Gauntlet R9 · G2-04 · Façana de clic: abans del gest, cap iframe; els botons obrin els dos vídeos.
     expect(container.querySelector('iframe')).toBeNull();
-    fireEvent.click(within(container).getByRole('button', { name: /^Veure el vídeo \(YouTube\) / }));
+    // Gauntlet R10 · VFC-09 · Amb dos vídeos, cada botó té nom propi: el text visible i, darrere, el títol del vídeo.
+    const botonsVideo = within(container).getAllByRole('button', { name: /^Veure el vídeo \(YouTube\) / });
+    expect(botonsVideo.map((boto) => boto.getAttribute('aria-label'))).toEqual(NOVES_TECNOLOGIES_VIDEOS.map((video) => `Veure el vídeo (YouTube) ${video.titol}`));
+    fireEvent.click(botonsVideo[0]);
     const iframes = container.querySelectorAll('iframe');
     expect(iframes).toHaveLength(1);
     expect(iframes[0].getAttribute('src')).toBe(`https://www.youtube-nocookie.com/embed/${NOVES_TECNOLOGIES_VIDEO.id}`);
     expect(iframes[0].title).toBe(NOVES_TECNOLOGIES_VIDEO.titol);
+    // Un clic per vídeo: el segon continua amb la seua façana fins que se li dona el seu.
+    expect(within(container).getAllByRole('button', { name: /^Veure el vídeo \(YouTube\) / })).toHaveLength(1);
+    fireEvent.click(within(container).getByRole('button', { name: `Veure el vídeo (YouTube) ${NOVES_TECNOLOGIES_VIDEO_CONSTRUCCIO.titol}` }));
+    const dos = [...container.querySelectorAll('iframe')];
+    expect(dos.map((iframe) => [iframe.getAttribute('src'), iframe.title, iframe.getAttribute('referrerpolicy')])).toEqual(NOVES_TECNOLOGIES_VIDEOS.map((video) => (
+      [`https://www.youtube-nocookie.com/embed/${video.id}`, video.titol, 'strict-origin-when-cross-origin']
+    )));
     // El visor únic (en diferit) va damunt del cos.
     await waitFor(() => expect(container.querySelectorAll('.pou-neu-card')).toHaveLength(1), { timeout: 10000 });
     const visor = container.querySelector('.pou-neu-card');

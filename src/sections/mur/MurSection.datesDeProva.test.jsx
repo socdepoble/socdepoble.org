@@ -14,10 +14,20 @@
  * Ordre del Mestre (261026_2126; prompt 261026_2130, tasca 1) · Les
  * importants ja són deu: «Descàrregues i Aplicacions» n'és la primera, com El
  * Xat (IMPORTANTS_DEL_MUR, datesDeProvaMur.js).
+ * P0-49 / IDEA-180 (decisió del Mestre i MarIA, 261107) · Les importants ja
+ * són tretze, i les dues primeres són les publicacions estrella: «Noves
+ * tecnologies aplicades a la cultura rural» i «Anatomia rural». Les altres
+ * quatre pàgines de patrimoni (herbari, banc de llavors, rutes i arbres) no
+ * són importants: porten la seua data real (PAGE_COPY, 06-11-2026) i van on
+ * les posa. Abans no hi eren a la prova, i per això fallava des que el Mur
+ * les publica (9c1e6e333). Els tres `ara` fixos passen a la setmana del 9 al
+ * 15 de novembre de 2026, amb els mateixos dies i hores: un `ara` anterior al
+ * 6 de novembre posava eixes pàgines en el futur, dalt de tot.
  *
  * El Mur de veres (MurSection) amb la llavor tal com la servix el mode seed:
- * cap ordre recalculat a la prova. Es comprova amb diversos `ara` perquè no
- * depenga del dia de la setmana en què s'executa.
+ * les importants no es reordenen a la prova; només s'hi intercalen, per la
+ * seua data, les quatre pàgines de patrimoni. Es comprova amb diversos `ara`
+ * perquè no depenga del dia de la setmana en què s'executa.
  */
 import React from 'react';
 import { cleanup, render } from '@testing-library/react';
@@ -61,6 +71,13 @@ const MAQUINARIA = Object.freeze([
   ['cervell', 'El Cervell', '2026-09-09T00:00:00+02:00'],
   ['consola', 'Consola Termodinàmica', '2026-09-08T00:00:00+02:00']
 ]);
+/* P0-49 / IDEA-180 (261107) · Les quatre pàgines de patrimoni que no són importants: porten la seua
+   data real (PAGE_COPY). En l'ordre en què les barreja el Mur (targetesMur.js), que és el dels empats. */
+const PATRIMONI_AMB_DATA_REAL = Object.freeze(['herbari', 'banc-de-llavors', 'rutes-de-poble', 'arbres-monumentals']);
+const momentDe = (llavor, [coleccio, id]) => {
+  const element = llavor[coleccio].find((e) => e.id === id);
+  return Date.parse(coleccio === 'pages' ? element.date : element.created_at);
+};
 const targetes = () => [...document.querySelectorAll('.sdp-card-grid > *')];
 const titols = () => targetes().map((targeta) => targeta.querySelector('.sp-card-title')?.textContent);
 const pastilla = (targeta) => [...targeta.querySelectorAll('.sp-card-header .btn-date-time span')].map((span) => span.textContent);
@@ -69,20 +86,33 @@ afterEach(cleanup);
 beforeEach(() => vi.clearAllMocks());
 
 test.each([
-  ['dilluns de matinada', new Date(2026, 8, 28, 3, 0)],
-  ['dijous, a l’hora de l’ordre', new Date(2026, 9, 1, 1, 15)],
-  ['diumenge de nit', new Date(2026, 9, 4, 23, 30)],
+  ['dilluns de matinada', new Date(2026, 10, 9, 3, 0)],
+  ['dijous, a l’hora de l’ordre', new Date(2026, 10, 12, 1, 15)],
+  ['diumenge de nit', new Date(2026, 10, 15, 23, 30)],
   ['hui', new Date()]
 ])('%s: les importants dalt, amb hora; les tècniques després; l’Aplec al final', (_, ara) => {
   const llavor = preparaMur(ara);
   render(<MurSection />);
   const importants = IMPORTANTS_DEL_MUR.map((fila) => titolDe(llavor, fila));
+  /* Les importants, en el seu ordre, amb les pàgines de patrimoni de data real intercalades per data:
+     només la setmana del 2 al 8 de novembre de 2026 cauen entre les importants; després, darrere. */
+  const ambData = (fila) => ({ titol: titolDe(llavor, fila), moment: momentDe(llavor, fila) });
+  const patrimoni = PATRIMONI_AMB_DATA_REAL.map((id) => ambData(['pages', id])).sort((a, b) => b.moment - a.moment);
+  const dalt = [];
+  for (const important of IMPORTANTS_DEL_MUR.map(ambData)) {
+    while (patrimoni.length && patrimoni[0].moment > important.moment) dalt.push(patrimoni.shift().titol);
+    dalt.push(important.titol);
+  }
+  dalt.push(...patrimoni.map(({ titol }) => titol));
   const maquinaria = MAQUINARIA.map(([id]) => titolDe(llavor, ['pages', id]));
   const tecniques = TECNIQUES_DEL_MUR.map((fila) => titolDe(llavor, fila));
   const avall = [titolDe(llavor, ['pages', 'drets-autor']), ...IMPORTANTS_HISTORIQUES_DEL_MUR.map(fila => titolDe(llavor, fila)), '2n Aplec pel Territori'];
-  expect(titols()).toEqual([...importants, ...maquinaria, ...tecniques, ...avall]);
+  expect(titols()).toEqual([...dalt, ...maquinaria, ...tecniques, ...avall]);
+  // Les dues publicacions estrella, dalt de tot del Mur: l'article del Pou de Neu i Anatomia rural.
+  expect(IMPORTANTS_DEL_MUR.slice(0, 2)).toEqual([['feedPosts', 'noves-tecnologies-aplicades-a-la-cultura-rural'], ['pages', 'anatomia-rural']]);
+  expect(titols().slice(0, 2)).toEqual([importants[0], 'Anatomia rural']);
   // Cada targeta amb data de prova pinta l'hora i el dia (la pastilla sencera).
-  for (const targeta of targetes().slice(0, importants.length + maquinaria.length + tecniques.length)) {
+  for (const targeta of targetes().slice(0, dalt.length + maquinaria.length + tecniques.length)) {
     const [hora, dia] = pastilla(targeta);
     expect(hora).toMatch(/^\d{2}:\d{2}$/);
     expect(dia).toMatch(/^\d{2}\/\d{2}\/\d{2}$/);

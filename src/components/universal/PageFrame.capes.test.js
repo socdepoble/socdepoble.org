@@ -254,3 +254,19 @@ test('T51 · la caputxa de la targeta només passa a graella amb emoticona (modi
   // La caputxa de sempre continua en flex.
   expect(blocDe(components, '.sp-card-header {', 'display:')).toContain('display: flex;');
 });
+
+/* Ordre del Mestre, 261107 (P0-48 / IDEA-179) · La ranura pintada dalt del
+   bloc del títol (accioPrincipalDalt) no suma aire propi al padding del bloc
+   blanc; baix conserva els 32px de la ranura de sempre, que no canvia. */
+const RANURA = '.page-title-accio { margin-block: var(--sdp-space-8); }';
+const RANURA_DALT = '.page-title-accio--dalt { margin-block-start: 0; }';
+test('P0-48 · .page-title-accio--dalt: sense marge dalt, dins de @layer components i després de la ranura de sempre', () => {
+  expect(moduls).toContain(RANURA);
+  expect(moduls).toContain(RANURA_DALT);
+  expect(blocDe(moduls, '@layer components {', RANURA_DALT)).toContain(RANURA_DALT);
+  /* La mateixa especificitat (una classe) i la mateixa capa: guanya la que va després. */
+  expect(moduls.indexOf(RANURA_DALT)).toBeGreaterThan(moduls.indexOf(RANURA));
+  /* Una sola regla per al modificador, i només toca el marge de dalt. */
+  expect(moduls.split('.page-title-accio--dalt').length - 1).toBe(1);
+  expect(components).not.toContain('page-title-accio--dalt');
+});

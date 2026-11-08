@@ -35,22 +35,68 @@
     · Cap equivalència entre els 1.030 m³ de Segura i les 20.000 arroves de
       Rico (1880): són dues estimacions independents.
 
-   Data: el 06-11-2026 a les 14:29 (CET), quan naix este fitxer (stat: naixement
-   14:29:18; R9V-C2-06), és a dir, quan s'escriu la publicació (ordre del Mestre
-   del 261106, 14:06). Encara no hi ha cap commit que la publique: pendent del
-   Mestre confirmar-la o canviar-la per la del desplegament (D-C2-1). */
+   P0-47 / IDEA-178 (decisió del Mestre amb MarIA, 07-11-2026) · L'objectiu
+   real de la publicació (documentació + tecnologia 3D lliure; el pou, primer
+   cas d'estudi), «Què era un pou de neu i per a què servia» i els DOS
+   documentals d'Eugenio Monesma. Cada fet nou ix d'una obra que és al disc,
+   _cultura_de_poble/grafics_etnografics_de_poble/pou-de-neu/ (text extret amb
+   PDFKit; pàgina = foli imprés):
+    · Segura Martí 1985 (Industria-nieve-montanas-alicantinas-Segura-Marti-1985.pdf,
+      Narria 37-38, p. 2-11): p. 2, rebaixar febres i inflamacions, tallar
+      hemorràgies, refrescar begudes, gelats, Ibi i Xixona (finals del s. XIX),
+      el consum des del s. XVI i «más de cuatro siglos»; p. 4, el quadre de 76
+      dipòsits; p. 9, les fàbriques de gel, la indústria frigorífica cap a
+      1920-30 i Alcoleja (sorbets i gelats, anys quaranta); p. 10, orxaters i
+      gelaters del s. XIX.
+    · Cruz Orozco 2004 (EL_PATRIMONIO_DEL_COMERCIO_VALENCIANO_DE.pdf: «El
+      patrimonio del comercio valenciano del frío», Saitabi 54, p. 201-221):
+      p. 201-202, Franco (1569) i la conservació i el transport d'aliments;
+      p. 203, Almenara (1682), «per les febres que maten»; p. 207, la Nevada
+      Grossa de 1926; p. 208, uns 320 dipòsits i la «cava» de Mariola; p. 216,
+      les fitxes de Franco (1569) i de Cruz i Segura (1996). Les fonts en
+      castellà diuen «Francisco Franco»; l'obra de Franco i el llibre de 1996
+      no són al disc: «no consultada».
+    · Bejerano Cerdán et al. (Pozos-de-nieve-en-la-provincia-de-Castellón.pdf,
+      treball de curs 2018-2019; la portada no nomena cap universitat):
+      p. 14, el peix del Camí del Peix; p. 19, la neu per als malalts (1637);
+      p. 21, la carn, el peix i els gelats.
+    · Els dos vídeos: id, títol i canal tal com els dona l'oEmbed de YouTube
+      (consultat el 07-11-2026; «Eugenio Monesma - Documentales»).
+
+   Data (P0-49 / IDEA-180, ordre del Mestre del 07-11-2026): la de hui, a les
+   19:44 (CET), quan s'integra esta nova versió (`date`: 19:44:05 +0100). És la
+   mateixa que la d'«Anatomia rural» (PAGE_COPY['anatomia-rural'].date): en un
+   empat, el Mur posa l'article primer (MurSection: les publicacions van abans
+   que les pàgines, i l'ordenació és estable). Abans,
+   el 06-11-2026 a les 14:29, quan naixia este fitxer (R9V-C2-06). */
 
 export const NOVES_TECNOLOGIES_CULTURA_RURAL_ID = 'noves-tecnologies-aplicades-a-la-cultura-rural';
 
-/** El documental (només este vídeo és d'Eugenio Monesma): id i títol del
- *  visor d'anatomia (anatomiaRural.js, estructura POU). */
+/** Els dos documentals d'Eugenio Monesma sobre els pous de neu (P0-47 / IDEA-178).
+ *  El primer és el del visor d'anatomia (anatomiaRural.js, estructura POU); el
+ *  segon, el que el Mestre hi afig. Id, títol i canal, els de l'oEmbed de YouTube.
+ *  Van al cos com a marcador inert (`div[data-sdp-youtube]` amb l'enllaç de
+ *  reserva): VideoEditorial hi posa la façana de clic i l'iframe sense galetes. */
 export const NOVES_TECNOLOGIES_VIDEO = Object.freeze({
   id: '3RQv3xjVr-M',
   titol: 'Los EMPOZADORES y las NEVERAS naturales de HIELO. Conservación ancestral de la NIEVE para el verano'
 });
 
+export const NOVES_TECNOLOGIES_VIDEO_CONSTRUCCIO = Object.freeze({
+  id: 'A3Vgk0rStvU',
+  titol: 'POZOS DE NIEVE: construyendo una NEVERA GIGANTE para conservar HIELO EN VERANO (¡SIN electricidad!)'
+});
+
+export const NOVES_TECNOLOGIES_VIDEOS = Object.freeze([
+  NOVES_TECNOLOGIES_VIDEO,
+  NOVES_TECNOLOGIES_VIDEO_CONSTRUCCIO
+]);
+
 const FORA = 'target="_blank" rel="noopener noreferrer"';
 const enllac = (href, text) => `<a href="${href}" ${FORA}><strong>${text}</strong></a>`;
+const aYouTube = ({ id }) => `https://www.youtube.com/watch?v=${id}`;
+/* La forma que desa el node TipTap (richText/extensions/videoEditorial.js): fora de l'App, un enllaç. */
+const marcadorDeVideo = (video) => `<div data-sdp-youtube="${video.id}" data-titol="${video.titol}"><a href="${aYouTube(video)}" ${FORA}>${video.titol}</a></div>`;
 
 /** Les fonts publicades, en ordre de data (data, títol, URL).
  *  G1-N01 (Gauntlet de l'arbre R9) · «les jornades de neteja … (2021 i 2023)»: cada any porta la seua entrada.
@@ -67,8 +113,14 @@ export const NOVES_TECNOLOGIES_FONTS = Object.freeze([
 
 export const NOVES_TECNOLOGIES_CULTURA_RURAL_HTML = [
   '<h3>Per què un pou de neu en 3D</h3>',
-  '<p>Les <strong>noves tecnologies</strong> també servixen per a entendre el <strong>patrimoni rural</strong>. Damunt d’este text, un <strong>sol visor</strong> generat amb codi, sense cap fotografia, mostra el <strong>Pou de Neu del Rentonar</strong>, a <strong>La Torre de les Maçanes</strong>, de tres maneres: <strong>«Dins del pou»</strong>, per a recórrer-lo per dins; <strong>«Tall seccional»</strong>, per a veure’l tallat per la meitat des de fora; i <strong>«Desmuntar en 3D»</strong>, per a separar-ne les peces una a una. Si el navegador no té WebGL2, només hi ha el desmuntatge. Cada xifra porta la seua <strong>font</strong>, i quan dues fonts <strong>no coincidixen</strong>, ho diem.</p>',
+  '<p>Les <strong>noves tecnologies</strong> també servixen per a entendre el <strong>patrimoni rural</strong>. Esta publicació vol mostrar què passa quan ajuntem una <strong>bona documentació</strong> (l’arqueologia, els arxius i la memòria de l’associació) amb <strong>tecnologia 3D lliure</strong>, per a ensenyar el nostre patrimoni d’una <strong>manera distinta</strong>. Damunt d’este text, un <strong>sol visor</strong> generat amb codi, sense cap fotografia, mostra el <strong>Pou de Neu del Rentonar</strong>, a <strong>La Torre de les Maçanes</strong>, de tres maneres: <strong>«Dins del pou»</strong>, per a recórrer-lo per dins; <strong>«Tall seccional»</strong>, per a veure’l tallat per la meitat des de fora; i <strong>«Desmuntar en 3D»</strong>, per a separar-ne les peces una a una. Si el navegador no té WebGL2, només hi ha el desmuntatge. Cada xifra porta la seua <strong>font</strong>, i quan dues fonts <strong>no coincidixen</strong>, ho diem.</p>',
+  '<p>El visor funciona dins del navegador amb un <strong>motor propi</strong>, de <strong>codi lliure</strong> (llicència AGPL), com la resta del codi de <strong>Sóc de Poble</strong>. El <strong>Pou de Neu del Rentonar</strong> n’és el <strong>primer cas d’estudi</strong>: és el que volem fer també amb la resta d’<strong>artefactes agrícoles</strong> i d’enginyeria tradicional dels nostres pobles (almàsseres, molins fariners, forns de calç, carboneres, cups, sénies i carros) quan en tinguem la <strong>documentació</strong>.</p>',
   '<p><strong>Nota sobre els models:</strong> les mides del visor són les de l’arqueòleg <strong>Josep Mª Segura Martí</strong> (1987). El que cap font no dona (el gruix de la volta, la secció dels arcs, el nombre de graons, la teulada de la primera coberta i el terreny) és <strong>reconstrucció</strong>, i el visor ho diu; les temperatures, la massa i el cabal són estimacions del model, no mesures del monument. Encara estem <strong>provant maneres de fer</strong> les coses dins de <strong>Sóc de Poble</strong>.</p>',
+  '<h3>Què era un pou de neu i per a què servia</h3>',
+  '<p>Abans de les <strong>fàbriques de gel</strong>, els <strong>pous de neu</strong> (que també es diuen <strong>neveres</strong> i, a la serra de Mariola i els voltants, <strong>caves</strong>) eren dipòsits de pedra on es guardava la <strong>neu de l’hivern</strong> per a vendre-la a l’<strong>estiu</strong>. Segons <strong>Segura Martí</strong> (1985), el consum de neu es fa popular a partir del <strong>segle XVI</strong>, i durant més de <strong>quatre segles</strong> una xarxa comercial (la recollida, el transport i la venda) va abastir de neu pobles i ciutats. Les primeres fàbriques de gel, entre finals del segle XIX i principis del XX, i la indústria frigorífica, ja consolidada cap a <strong>1920-1930</strong>, en van dur l’abandó. <strong>Cruz Orozco</strong> (2004) en dona una data simbòlica: la <strong>Nevada Grossa de 1926</strong>, l’última que es va empouar de manera generalitzada a les comarques del sud valencià.</p>',
+  '<p><strong>Per a la salut.</strong> La medicina del Renaixement va recuperar amb força els usos mèdics del fred, i la primera monografia europea sobre el tema, diu <strong>Cruz Orozco</strong>, és d’un metge de Xàtiva, <strong>Francesc Franco</strong>: el <em>Tractado de la nieve y del uso della</em>, publicat el <strong>1569</strong>. Amb la neu es <strong>rebaixaven febres i inflamacions</strong> i es <strong>tallaven hemorràgies</strong> (Segura Martí, 1985). Els pobles també la volien per a la salut de tots: el <strong>1682</strong>, a Almenara, se’n volia tindre prou «per les febres que maten» (Cruz Orozco, 2004), i un contracte d’arrendament de <strong>1637</strong>, que recull l’estudi de les neveres de Castelló, obligava l’arrendatari a servir neu a qui en demanara per als <strong>malalts</strong>, «així de dia com de nit».</p>',
+  '<p><strong>Per als aliments.</strong> La neu servia per a <strong>conservar i transportar aliments</strong> (Cruz Orozco, 2004), com la <strong>carn</strong> i el <strong>peix</strong>, i per a <strong>refrescar les begudes</strong>. L’estudi de Castelló conta, per exemple, que les neveres de la Tinença de Benifassà eren importants per al peix que anava del port de Vinaròs a Saragossa pel <strong>Camí del Peix</strong>: per a conservar-lo, sobretot a l’estiu, calia neu.</p>',
+  '<p><strong>Per a refrescar-se: orxates i gelats.</strong> Al <strong>segle XIX</strong>, amb més consum de neu, apareixen els <strong>orxaters</strong> i els <strong>gelaters</strong>, que s’establien a les ciutats o venien d’un lloc a l’altre (Segura Martí, 1985). Segons Segura, l’especialització d’<strong>Ibi</strong> i de <strong>Xixona</strong> en la fabricació i la venda de <strong>gelats</strong> arrenca de finals del segle XIX, lligada directament a l’antic ofici dels <strong>nevaters</strong>. I encara als anys quaranta del segle XX, a <strong>Alcoleja</strong>, als peus d’Aitana, s’omplia un clot de neu, i a l’estiu, al bar del mateix poble, la neu servia per a fer <strong>sorbets i gelats</strong>.</p>',
   '<h3>Què diu l’estudi</h3>',
   '<blockquote><p>«autèntics magatzems de neu amb què abastir els pobles durant l’estiu»</p></blockquote>',
   `<p>Així definix els pous de neu <strong>Josep Mª Segura Martí</strong>, del Museu Arqueològic Municipal d’Alcoi, a l’article que ${enllac('https://socdepoble.net/2020/04/17/el-pou-de-la-neu-del-rentonar/', 'Sóc de Poble conserva')}, amb les dades del seu treball «Els pous i l’antic comerç de la neu a Xixona», publicat a la revista <em>Eines</em> (núm. 7 i 8, <strong>1987</strong>). Ja el <strong>1985</strong>, a la revista <em>Narria</em>, havia posat este pou d’exemple d’aprofitament de l’aigua del desgel, perquè té el <strong>desguàs</strong> a nivell inferior. El pou està a <strong>1.160 m</strong>, té un <strong>túnel</strong> d’accés al sud i una <strong>galeria de desguàs</strong> de <strong>29 m</strong>, i els documents en parlen de <strong>1724</strong> a <strong>1880</strong>.</p>`,
@@ -97,18 +149,21 @@ export const NOVES_TECNOLOGIES_CULTURA_RURAL_HTML = [
   `<p>El pou <strong>no és de titularitat pública</strong>, però és de <strong>lliure accés</strong>. L’<strong>Associació El Rentonar</strong> n’ha documentat la ${enllac('https://socdepoble.net/2020/10/30/la-fissura-del-sostre-del-pou-de-neu/', 'fissura del sostre')} (2020), les ${enllac('https://socdepoble.net/2021/12/25/el-pou-de-neu-del-rentonar-front-a-ladministracio/', 'gestions davant l’Administració')} per l’error d’inscripció com a bé de rellevància local (2020-2022) i les <strong>jornades de neteja</strong> del camí i de l’entorn (2021 i 2023). Segons el blog de l’associació, el <strong>26 d’agost de 2023</strong> l’error encara <strong>no s’havia corregit</strong>.</p>`,
   '<p><strong>L’error d’inscripció:</strong> la fitxa de l’Inventari General del Patrimoni Cultural Valencià (codi 1; autor, Segura; 1 de setembre de 1993) el té com a bé de rellevància local de <strong>Benifallim</strong>, i no de La Torre de les Maçanes. El <strong>12 de juliol de 2021</strong>, dos escrits de l’Alcaldia de La Torre el reconeixen com a <strong>bé de rellevància local per determinació legal</strong> (disposició addicional cinquena de la Llei del Patrimoni Cultural Valencià), n’inicien la comunicació a la Conselleria perquè l’inscriga a la secció segona de l’Inventari i obrin un procediment d’ordre d’execució perquè la propietat el conserve. La protecció, per tant, li ve de la llei: la «incoació» que diu la fitxa de treball de la biblioteca de Sóc de Poble no consta en cap dels documents publicats.</p>',
   '<p><strong>26 d’abril de 2025.</strong> En una excursió de l’associació des de Benifallim i La Torre, l’arqueòloga <strong>Anna Garcia Barrachina</strong> hi va fer una xerrada sobre la història del pou i els antics camins del comerç de la neu.</p>',
-  '<h3>El documental</h3>',
-  `<div data-sdp-youtube="${NOVES_TECNOLOGIES_VIDEO.id}" data-titol="${NOVES_TECNOLOGIES_VIDEO.titol}"><a href="https://www.youtube.com/watch?v=${NOVES_TECNOLOGIES_VIDEO.id}" ${FORA}>${NOVES_TECNOLOGIES_VIDEO.titol}</a></div>`,
-  '<p>Documental d’<strong>Eugenio Monesma</strong>, amb el títol original en castellà: tracta de l’ofici dels <strong>empouadors</strong> i de les <strong>neveres naturals</strong>. Les dades del Rentonar són les de les <strong>fonts</strong> d’esta publicació, i només este vídeo és seu.</p>',
+  '<h3>Els documentals</h3>',
+  ...NOVES_TECNOLOGIES_VIDEOS.map(marcadorDeVideo),
+  `<p>Els dos documentals són d’<strong>Eugenio Monesma</strong> i porten el títol original en castellà, tal com el dona YouTube: el primer tracta de l’ofici dels <strong>empouadors</strong> i de les <strong>neveres naturals</strong>; el segon, com diu el títol, de la construcció d’un gran <strong>pou de neu</strong> per a conservar el gel fins a l’estiu, sense electricitat. Dels seus documentals, ací només hi ha els vídeos: les dades del Rentonar són les de les <strong>fonts</strong> d’esta publicació. Si els preferiu obrir directament a YouTube: ${enllac(aYouTube(NOVES_TECNOLOGIES_VIDEO), 'el primer')} i ${enllac(aYouTube(NOVES_TECNOLOGIES_VIDEO_CONSTRUCCIO), 'el segon')}.</p>`,
   '<h3>Les fonts</h3>',
   '<ul>',
   ...NOVES_TECNOLOGIES_FONTS.map(([data, titol, url]) => `<li><strong>${data}</strong> · ${enllac(url, titol)}</li>`),
   '<li><strong>Josep Mª Segura Martí (1987)</strong> · «Els pous i l’antic comerç de la neu a Xixona», <em>Eines</em>, núm. 7 i 8 (Alcoi): les mides, la planta, les seccions A-B i C-D i els documents de 1724 a 1880, tal com els reproduïx l’entrada del 17-04-2020.</li>',
-  '<li><strong>Josep Mª Segura Martí (1985)</strong> · «La industria de la nieve en las montañas alicantinas», <em>Narria</em>: l’ofici dels nevaters i el desguàs d’este pou.</li>',
-  '<li><strong>Bibliografia no consultada</strong> · Jorge Cruz Orozco i Josep Mª Segura Martí, <em>El comercio de la nieve. La red de pozos de nieve en las tierras valencianas</em> (1996). El títol és el de la biblioteca de Sóc de Poble: no n’hem tret cap xifra.</li>',
+  '<li><strong>Josep Mª Segura Martí (1985)</strong> · «La industria de la nieve en las montañas alicantinas», <em>Narria. Estudios de artes y costumbres populares</em>, núm. 37-38, p. 2-11: l’ofici dels nevaters, el desguàs d’este pou, el quadre per altituds de 76 neveres i pous de la província d’Alacant i de les serres que limiten amb la de València, i els usos de la neu (febres, hemorràgies, begudes i gelats).</li>',
+  '<li><strong>Jorge Cruz Orozco (2004)</strong> · «El patrimonio del comercio valenciano del frío», <em>Saitabi</em>, núm. 54, p. 201-221 (Museu Valencià d’Etnologia): els usos mèdics i alimentaris del fred, l’obra de Francesc Franco (1569), la Nevada Grossa de 1926 i els uns 320 dipòsits valencians que es coneixen.</li>',
+  '<li><strong>Treball de curs</strong> · Nieves Bejerano Cerdán, Teresa Butil Centelles, Purificación Galindo Herrero, Vicente Pascual Gómez Juan i Rosa Prats Batiste, «Pozos de nieve en la provincia de Castellón. Comercio de la nieve» (assignatura Participación Cultural Activa, curs 2018-2019): la carn i el peix, el Camí del Peix i la neu per als malalts (1637).</li>',
+  '<li><strong>Bibliografia no consultada</strong> · Jorge Cruz Orozco i Josep Mª Segura Martí, <em>El comercio de la nieve. La red de pozos de nieve en las tierras valencianas</em> (1996). El títol és el de la bibliografia de Cruz Orozco (2004): no n’hem tret cap xifra.</li>',
+  '<li><strong>Bibliografia no consultada</strong> · Francesc Franco, <em>Tractado de la nieve y del uso della</em> (Sevilla, 1569). El coneixem per Cruz Orozco (2004) i pel treball de Castelló.</li>',
   '<li><strong>Esbós divulgatiu</strong> · «Pozo de nieve “EL RENTONAR”», de l’arxiu <strong>Gràfics de Poble</strong>: en prenem la idea pedagògica, no les xifres, perquè no té autor ni escala.</li>',
   '</ul>',
-  '<p>Les <strong>nou estructures</strong> de l’enginyeria rural, desmuntades peça a peça, són a l’<a href="/page/anatomia-rural"><strong>Anatomia rural</strong></a>.</p>'
+  '<p>El mateix visor del pou és a l’<a href="/page/anatomia-rural"><strong>Anatomia rural</strong></a>, la pàgina on aniran arribant els altres <strong>artefactes agrícoles</strong> quan en tinguem la documentació.</p>'
 ].join('\n');
 
 /** La primera publicació del Mur. Signa l'entitat Sóc de Poble (com el
@@ -119,15 +174,19 @@ export const NOVES_TECNOLOGIES_CULTURA_RURAL_POST = {
   slug: NOVES_TECNOLOGIES_CULTURA_RURAL_ID,
   type: 'post',
   title: 'Noves tecnologies aplicades a la cultura rural: desmuntant en 3D el Pou de Neu del Rentonar',
-  post_subtitle: 'Un esquema generat amb codi, capa a capa, amb la font de cada xifra',
+  /* P0-47 / IDEA-178 (verificador de contingut R11b, VC-02) · La targeta del Mur
+     diu l'objectiu real de la publicació, com el cos: documentació + 3D lliure,
+     el pou com a primer cas d'estudi, per a què servia la neu i els dos documentals. */
+  post_subtitle: 'Bona documentació i tecnologia 3D lliure: el primer cas d’estudi, amb la font de cada xifra',
   description: 'El Pou de Neu del Rentonar, a La Torre de les Maçanes, explicat pas a pas',
-  entradilla: 'Entrem al Pou de Neu del Rentonar, el tallem per la meitat i el desmuntem peça a peça: la cúpula, les finestres, els estreps, el pou, el túnel i la galeria de desguàs. Un sol visor generat amb codi, sense cap fotografia, amb les mides de l’arqueòleg Josep Mª Segura Martí: cada xifra porta la seua font, i es diu quan les fonts no coincidixen.',
+  entradilla: 'Què passa quan ajuntem una bona documentació amb tecnologia 3D lliure? El Pou de Neu del Rentonar, a La Torre de les Maçanes, n’és el primer cas d’estudi: hi entrem, el tallem per la meitat i el desmuntem peça a peça, amb les mides de l’arqueòleg Josep Mª Segura Martí. Contem també per a què servia la neu a l’estiu, amb els dos documentals d’Eugenio Monesma. Cada xifra porta la seua font.',
   image_url: '/assets/uploads/patrimoni/anatomia-rural-pou-neu-ibanez.webp',
   image_alt: "Il·lustració didàctica de còmic d'estil Ibáñez del Pou de la Neu del Rentonar, l'almàssera i el forn de calç a La Torre de les Maçanes",
   content: NOVES_TECNOLOGIES_CULTURA_RURAL_HTML,
   /* Sense publish_date (la data triada al calendari, que manaria sobre la de
      prova del Mur en mode seed): la data és la de creació. */
-  created_at: '2026-11-06T14:29:00+01:00',
+  /* P0-49 / IDEA-180 · La data i l'hora de la versió nova (07-11-2026, 19:44 CET; `date`). */
+  created_at: '2026-11-07T21:20:00+01:00',
   important: true,
   author_entity_id: 'socdepoble',
   author: 'Sóc de Poble',

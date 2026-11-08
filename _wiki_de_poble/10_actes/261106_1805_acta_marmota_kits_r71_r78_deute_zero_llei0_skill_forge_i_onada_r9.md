@@ -45,7 +45,7 @@ Plantilla entregada: _wiki_de_poble/03_actuar/plantilles/acta.md; SHA-256 a60864
 ### 1. Part Tècnica (Graner Ple de Codis, Kits CAS i Governança)
 
 - **Estat del Repositori (`HEAD 70b651636` · `COMMIT R8` desplegat en viu a `socdepoble.org` i `socdepoble.cat`):**
-  - **Kits CAS de Gemini construïts, verificats en `/tmp/sdp_r9_gemini_fediversity/` i segellats a `../_investigacio_ia_de_poble/` (`r71` a `r78`, auditats per les 4 IAs del Node 0 al Mac mini M4 en les Rondes 28–42):**
+  - **Kits CAS de Gemini construïts, verificats en `/tmp/sdp_r9_gemini_fediversity/` i segellats a `../_investigacio_ia_de_poble/` (`r71` a `r78`, auditats per les 4 IAIAs del Node 0 al Mac mini M4 en les Rondes 28–42):**
     1. **`Kit r71` (`261106_kit_gemini_r71_p031_extirpar_mode_revisio_mur_i_pou_neu_3d` · `P0-31` / `IDEA-121` + `IDEA-116` + `IDEA-119`, `10/10` fitxers `[CAS OK]`):** Extirpada de `/mur` (`MurSection.jsx`) la barra `.sdp-mur-revisio-bar` (`🔍 Mode Revisió d'Importació (Admin)`) perquè la bancada ja viu a `/el-meu-perfil` (`📥 Importació i Revisió Editorial`), i construït `ReproductorPouDeNeu3D.jsx` (`9:16` mòbil ↔ `16:9` escriptori + 3 modes visuals A/B/C + locució IAIA).
     2. **`Kit r72` (`261106_kit_gemini_r72_p032_versions_1_2_0_i_xat_push_banner` · `P0-30` / `IDEA-120` + `P0-32` / `IDEA-122`, `8/8` fitxers `[CAS OK]`):** `BannerAvisosPushXat.jsx` d'1 sol toc a `/xat`, actualització sincronitzada a `v1.2.0 (build 3)` i tauler dels 18 usuaris reals (`PanellUsuarisRegistrats18.jsx`).
     3. **`Kit r73` (`261106_kit_gemini_r73_deute_zero_universalcard_importacio_notes_i_versions` · `DEUTE-SOCIAL-GENEALOGIA-300KB` + `IDEA-125` + `P0-32` + `G6-09` + `G1-03`, `18/18` fitxers `[CAS OK]`):**

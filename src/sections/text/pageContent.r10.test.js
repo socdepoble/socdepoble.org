@@ -76,7 +76,18 @@ describe('AH-22 · rural content and dated production balance in five languages'
   expect(PAGE_COPY.projecte.html).toContain('fer arribar els <strong>canvis</strong> a tota la gent de poble.');
   expect(PAGE_COPY.disseny.html).toContain('<h3>El llenguatge visual de poble</h3>');
   expect(PAGE_COPY.disseny.html).toContain('<p>La veu de poble s’escriu amb <strong>Noto Sans</strong>.');
-  expect(PAGE_COPY['anatomia-rural'].html).toContain('<h3>Per dins de les obres de poble</h3>');
+  /* P0-45 / IDEA-176 (261107) · La pàgina ja només parla del Pou de la Neu del Rentonar: el títol de
+     secció conserva el concepte «de poble», ara en les 5 llengües (TRADUCCIONS_ANATOMIA). */
+  const anatomia = {
+   ca: '<h3>Per dins d’una obra de poble</h3>',
+   es: '<h3>Por dentro de una obra de pueblo</h3>',
+   en: '<h3>Inside a piece of village engineering</h3>',
+   eu: '<h3>Herriko obra baten barruan</h3>',
+   gl: '<h3>Por dentro dunha obra de vila</h3>'
+  };
+  for (const [lang, h3] of Object.entries(anatomia)) {
+   expect(localitzaPagina(PAGE_COPY['anatomia-rural'], lang).html).toContain(h3);
+  }
   expect(PAGE_COPY.anima.lead).toContain("La IAIA utilitza l'imaginari de poble per a explicar la tecnologia.");
   expect(PAGE_COPY.anima.html).toContain('El relat dona a la IAIA un <strong>propòsit</strong> clar amb vocació de <strong>poble</strong>');
   expect(PAGE_COPY.anima.html).toContain('aproxima el llenguatge informàtic a les experiències de <strong>poble</strong>.');

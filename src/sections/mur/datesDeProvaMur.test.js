@@ -46,15 +46,23 @@ const diaLocal = (valor) => {
   return [d.getFullYear(), d.getMonth() + 1, d.getDate()];
 };
 
+/* P0-49 / IDEA-180 (261107) · «Anatomia rural» no és cap pàgina de
+   SYSTEM_PAGES: el Mur la barreja com a pàgina de patrimoni (targetesMur.js).
+   Ací entra la que nomenen les importants; les altres quatre pàgines de
+   patrimoni porten la seua data real (06-11-2026), que en un `ara` anterior
+   les posaria en el futur, i les prova MurSection.datesDeProva.test.jsx. */
+const PATRIMONI_IMPORTANT = Object.freeze(['anatomia-rural']);
+
 /* Les targetes del Mur amb la data que els dona MurSection: una pàgina de
    sistema porta el copy com a data de CREACIÓ (created_at), sense `date`. */
 function targetesDelMur(llavor) {
   const pagines = new Map((llavor.pages || []).map((pagina) => [pagina.id, pagina]));
+  const deSistema = [...SYSTEM_PAGES.map(({ key }) => key), ...PATRIMONI_IMPORTANT];
   return [
     ...llavor.events.map((item) => ({ clau: `events:${item.id}`, item })),
     ...llavor.feedPosts.map((item) => ({ clau: `feedPosts:${item.id}`, item })),
     ...llavor.marketItems.map((item) => ({ clau: `marketItems:${item.id}`, item })),
-    ...SYSTEM_PAGES.filter(({ key }) => pagines.has(key)).map(({ key }) => ({
+    ...deSistema.filter((key) => pagines.has(key)).map((key) => ({
       clau: `pages:${key}`, item: { ...pagines.get(key), date: undefined, created_at: pagines.get(key).date }
     }))
   ];
@@ -98,8 +106,14 @@ describe('la llavor del Mur amb les dates de prova', () => {
        Descàrregues. Abans, com a molt deu.
        Ordre del Mestre (261106; IDEA-116, Onada R9) · Dotze: «Noves tecnologies
        aplicades a la cultura rural» hi entra la primera, com la primera
-       publicació del Mur. Abans, com a molt onze. */
-    expect(N).toBeLessThanOrEqual(12);
+       publicació del Mur. Abans, com a molt onze.
+       P0-49 / IDEA-180 (decisió del Mestre i MarIA, 261107) · Tretze:
+       «Anatomia rural» hi entra la segona, l'altra publicació estrella.
+       Abans, com a molt dotze. */
+    expect(N).toBeLessThanOrEqual(13);
+    expect(IMPORTANTS_DEL_MUR.slice(0, 2).map(clau)).toEqual([
+      'feedPosts:noves-tecnologies-aplicades-a-la-cultura-rural', 'pages:anatomia-rural'
+    ]);
   });
 
   test.each(MOMENTS)('%s: les importants dalt, les tècniques del 2 al 15 de setembre i els actes al seu dia', (_, ara) => {

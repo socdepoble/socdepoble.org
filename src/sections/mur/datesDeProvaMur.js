@@ -76,9 +76,22 @@ const CAMP_DE_DATA = Object.freeze({ pages: 'date', feedPosts: 'created_at', mar
  * tornar el sostre de la prova a onze. L'id és literal, com els altres: la
  * instantània de la publicació baixa en un tros diferit (R9V-C2-01), i una
  * prova en fixa la igualtat (NovesTecnologiesCulturaRuralArticle.test.jsx).
+ *
+ * P0-49 / IDEA-180 (decisió del Mestre i MarIA, 261107) · «Anatomia rural»
+ * (/page/anatomia-rural, el visor 3D del Pou de la Neu del Rentonar) és, amb
+ * «Noves tecnologies aplicades a la cultura rural», una de les dues
+ * publicacions estrella: entra la segona, just darrere de l'article. Amb ella
+ * en són tretze. No és cap pàgina de SYSTEM_PAGES: el Mur la barreja com a
+ * pàgina de patrimoni (targetesMur.js), i el seed la porta a `pages`
+ * (PAGES_SEED, de PAGE_COPY). En remot mana la seua data real
+ * (PAGE_COPY['anatomia-rural'].date, 07-11-2026). Les altres quatre pàgines de
+ * patrimoni no hi són: porten la seua data real (06-11-2026) també en la
+ * demostració. Per a tornar enrere, n'hi ha prou a llevar esta fila i tornar
+ * el sostre de la prova (datesDeProvaMur.test.js) a dotze.
  */
 export const IMPORTANTS_DEL_MUR = Object.freeze([
   ['feedPosts', 'noves-tecnologies-aplicades-a-la-cultura-rural'],
+  ['pages', 'anatomia-rural'],
   ['pages', 'fediversity'],
   ['pages', 'descarregues'],
   ['pages', 'xat'],
